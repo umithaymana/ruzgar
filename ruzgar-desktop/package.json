@@ -1,0 +1,13 @@
+{
+  "name": "ruzgar-desktop",
+  "version": "1.0.0",
+  "description": "Rüzgar — yerel asistan masaüstü kabuğu (Electron)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "postinstall": "echo Kurulum tamam"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0"
+  }
+}

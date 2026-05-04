@@ -1,0 +1,66 @@
+{
+  "name": "umit-beyin-sidebar",
+  "displayName": "Rüzgar — menü",
+  "description": "Sol çubukta dosya, düzen, üretim, gelişim, ses, okuma, video, programlama kısayolları.",
+  "version": "0.1.0",
+  "publisher": "local",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "umit-asistan",
+          "title": "Rüzgar",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "umit-asistan": [
+        {
+          "id": "umit-asistan.actions",
+          "name": "Menü"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "umit-asistan.dosya",
+        "title": "dosya — Gezgini aç"
+      },
+      {
+        "command": "umit-asistan.duzen",
+        "title": "düzen — Komut paleti"
+      },
+      {
+        "command": "umit-asistan.uretim",
+        "title": "üretim — ilim-assistant"
+      },
+      {
+        "command": "umit-asistan.gelisim",
+        "title": "gelişim — ilim-mobile"
+      },
+      {
+        "command": "umit-asistan.ses",
+        "title": "ses — ilim-voice"
+      },
+      {
+        "command": "umit-asistan.okuma",
+        "title": "okuma — knowledge"
+      },
+      {
+        "command": "umit-asistan.video",
+        "title": "video — ilim-video"
+      },
+      {
+        "command": "umit-asistan.programlama",
+        "title": "programlama — ilim-assistant"
+      }
+    ]
+  }
+}

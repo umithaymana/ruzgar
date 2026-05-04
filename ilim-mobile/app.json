@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "RÜZGAR",
+    "slug": "ilim-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "scheme": "ilimmobile",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#1a1a2e"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ilim.ruzgar"
+    },
+    "android": {
+      "package": "com.ilim.ruzgar",
+      "usesCleartextTraffic": true
+    }
+  }
+}

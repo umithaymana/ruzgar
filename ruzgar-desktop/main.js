@@ -1,0 +1,392 @@
+const path = require("path");
+const fs = require("fs");
+/**
+ * Chromium (Chrome değil) konuşma tanıması için Google API anahtarı gerekir.
+ * İlk satırı kullanır; # ile başlayan satırlar yorum sayılır.
+ * https://www.electronjs.org/docs/latest/api/environment-variables#google_api_key
+ */
+(function loadGoogleApiKeyForSpeech() {
+  try {
+    if (process.env.GOOGLE_API_KEY) return;
+    const keyFile = path.join(__dirname, "google_api_key.txt");
+    if (!fs.existsSync(keyFile)) return;
+    const raw = fs.readFileSync(keyFile, "utf8");
+    const line = raw.split(/\r?\n/).find((l) => {
+      const t = l.trim();
+      return t.length > 0 && !t.startsWith("#");
+    });
+    if (line) process.env.GOOGLE_API_KEY = line.trim();
+  } catch (_) {
+    /* yok say */
+  }
+})();
+
+const {
+  app,
+  BrowserWindow,
+  Menu,
+  ipcMain,
+  shell,
+  dialog,
+  session,
+} = require("electron");
+const { pathToFileURL } = require("url");
+
+const WORKSPACE_ROOT = path.resolve(__dirname, "..");
+
+function activeWindow(fallback) {
+  return BrowserWindow.getFocusedWindow() || fallback;
+}
+
+function sharedWebPreferences() {
+  return {
+    preload: path.join(__dirname, "preload.js"),
+    contextIsolation: true,
+    nodeIntegration: false,
+    sandbox: false,
+  };
+}
+
+function openIndexMode(mode) {
+  const m = String(mode || "genel");
+  const base = pathToFileURL(path.join(__dirname, "index.html")).href;
+  const win = new BrowserWindow({
+    width: 1280,
+    height: 840,
+    minWidth: 960,
+    minHeight: 600,
+    title: `RÜZGAR — ${m}`,
+    backgroundColor: "#1e1e1e",
+    show: false,
+    webPreferences: sharedWebPreferences(),
+  });
+  const htmlPath = path.join(__dirname, "index.html");
+  win.webContents.on("did-fail-load", (_e, code, desc, url) => {
+    dialog.showErrorBox(
+      "RUZGAR",
+      `Sayfa yuklenemedi: ${desc} (${code})\n${url}\n\nDosya: ${htmlPath}`
+    );
+  });
+  win
+    .loadURL(`${base}?mode=${encodeURIComponent(m)}`)
+    .catch((err) => {
+      dialog.showErrorBox("RUZGAR", `loadURL: ${err.message}\n${htmlPath}`);
+    });
+  win.once("ready-to-show", () => {
+    win.show();
+    win.focus();
+  });
+}
+
+function openSesHub() {
+  const htmlPath = path.join(__dirname, "modes", "ses.html");
+  const win = new BrowserWindow({
+    width: 980,
+    height: 820,
+    minWidth: 720,
+    minHeight: 560,
+    title: "RÜZGAR — Ses modülü",
+    backgroundColor: "#121418",
+    show: false,
+    webPreferences: sharedWebPreferences(),
+  });
+  win.webContents.on("did-fail-load", (_e, code, desc, url) => {
+    dialog.showErrorBox(
+      "RUZGAR",
+      `Ses sayfasi yuklenemedi: ${desc} (${code})\n${url}`
+    );
+  });
+  win.loadFile(htmlPath).catch((err) => {
+    dialog.showErrorBox("RUZGAR", `loadFile: ${err.message}\n${htmlPath}`);
+  });
+  win.once("ready-to-show", () => {
+    win.show();
+    win.focus();
+  });
+}
+
+function safeListDir(rel = "") {
+  const base = path.join(WORKSPACE_ROOT, rel);
+  if (!base.startsWith(WORKSPACE_ROOT)) {
+    return [];
+  }
+  if (!fs.existsSync(base) || !fs.statSync(base).isDirectory()) {
+    return [];
+  }
+  return fs
+    .readdirSync(base, { withFileTypes: true })
+    .filter((e) => !e.name.startsWith(".") || e.name === ".vscode")
+    .map((e) => ({
+      name: e.name,
+      isDir: e.isDirectory(),
+      rel: path.join(rel, e.name).replace(/\\/g, "/"),
+    }))
+    .sort((a, b) => {
+      if (a.isDir !== b.isDir) return a.isDir ? -1 : 1;
+      return a.name.localeCompare(b.name, "tr");
+    });
+}
+
+function buildMenu(mainWin) {
+  const template = [
+    {
+      label: "dosya",
+      submenu: [
+        {
+          label: "Çalışma klasörünü göster",
+          click: () => shell.openPath(WORKSPACE_ROOT),
+        },
+        { type: "separator" },
+        {
+          label: "Yeni sohbet penceresi (genel)",
+          click: () => openIndexMode("genel"),
+        },
+        { type: "separator" },
+        { label: "Çıkış", role: "quit" },
+      ],
+    },
+    {
+      label: "düzen",
+      submenu: [
+        {
+          label: "Düzen modu — yeni pencere",
+          click: () => openIndexMode("duzen"),
+        },
+        { type: "separator" },
+        {
+          label: "Sohbet kutusuna odaklan (aktif pencere)",
+          click: () => {
+            const w = activeWindow(mainWin);
+            w?.webContents.send("ruzgar-menu", "focus-chat");
+          },
+        },
+        { type: "separator" },
+        { label: "Geri al", role: "undo" },
+        { label: "Yinele", role: "redo" },
+        { type: "separator" },
+        { label: "Kes", role: "cut" },
+        { label: "Kopyala", role: "copy" },
+        { label: "Yapıştır", role: "paste" },
+      ],
+    },
+    {
+      label: "üretim",
+      click: () => openIndexMode("uretim"),
+    },
+    {
+      label: "gelişim",
+      submenu: [
+        {
+          label: "Gelişim modu — yeni pencere",
+          click: () => openIndexMode("gelisim"),
+        },
+        { type: "separator" },
+        {
+          label: "Geliştirici araçları",
+          click: () => {
+            const w = activeWindow(mainWin);
+            w?.webContents.toggleDevTools();
+          },
+        },
+      ],
+    },
+    {
+      label: "ses",
+      submenu: [
+        {
+          label: "Ses merkezi — yeni pencere",
+          click: () => openSesHub(),
+        },
+        { type: "separator" },
+        {
+          label: "Mikrofon (yerel Whisper STT, aktif pencere)",
+          click: () => {
+            const w = activeWindow(mainWin);
+            w?.webContents.send("ruzgar-menu", "mic");
+          },
+        },
+      ],
+    },
+    {
+      label: "okuma",
+      submenu: [
+        {
+          label: "Okuma modu — yeni pencere",
+          click: () => openIndexMode("okuma"),
+        },
+        {
+          label: "Son cevabı sesli oku (aktif pencere)",
+          click: () => {
+            const w = activeWindow(mainWin);
+            w?.webContents.send("ruzgar-menu", "speak");
+          },
+        },
+      ],
+    },
+    {
+      label: "video",
+      submenu: [
+        {
+          label: "Video modu — yeni pencere",
+          click: () => openIndexMode("video"),
+        },
+        {
+          label: "ilim-video klasörü",
+          click: () =>
+            shell.openPath(path.join(WORKSPACE_ROOT, "ilim-video")),
+        },
+      ],
+    },
+    {
+      label: "programlama",
+      submenu: [
+        {
+          label: "Programlama modu — yeni pencere",
+          click: () => openIndexMode("programlama"),
+        },
+        { type: "separator" },
+        {
+          label: "ilim-assistant klasörü",
+          click: () =>
+            shell.openPath(path.join(WORKSPACE_ROOT, "ilim-assistant")),
+        },
+        {
+          label: "README (dosya yolu)",
+          click: () =>
+            shell.openPath(
+              path.join(WORKSPACE_ROOT, "ilim-assistant", "README.md")
+            ),
+        },
+      ],
+    },
+  ];
+  return Menu.buildFromTemplate(template);
+}
+
+function createWindow() {
+  const win = new BrowserWindow({
+    width: 1440,
+    height: 900,
+    minWidth: 960,
+    minHeight: 600,
+    title: "Rüzgar",
+    backgroundColor: "#1e1e1e",
+    show: false,
+    webPreferences: sharedWebPreferences(),
+  });
+
+  Menu.setApplicationMenu(buildMenu(win));
+
+  const htmlPath = path.join(__dirname, "index.html");
+  win.webContents.on("did-fail-load", (_e, code, desc, url) => {
+    dialog.showErrorBox(
+      "RUZGAR",
+      `Sayfa yuklenemedi: ${desc} (${code})\n${url}\n\nDosya: ${htmlPath}`
+    );
+  });
+
+  win.loadFile(htmlPath).catch((err) => {
+    dialog.showErrorBox(
+      "RUZGAR",
+      `loadFile: ${err.message}\n${htmlPath}`
+    );
+  });
+
+  win.once("ready-to-show", () => {
+    win.show();
+    win.focus();
+  });
+}
+
+app.whenReady().then(() => {
+  /** Mikrofon / ses yakalama — Windows izin diyaloğu ve Electron oturumu için */
+  session.defaultSession.setPermissionRequestHandler(
+    (_wc, permission, callback) => {
+      const allow = new Set([
+        "media",
+        "audioCapture",
+        "microphone",
+        "display-capture",
+      ]);
+      callback(allow.has(permission));
+    }
+  );
+  session.defaultSession.setPermissionCheckHandler(
+    (_wc, permission /* , origin */) => {
+      return (
+        permission === "media" ||
+        permission === "audioCapture" ||
+        permission === "microphone"
+      );
+    }
+  );
+
+  ipcMain.handle("workspace:list", (_e, rel) => safeListDir(rel || ""));
+  ipcMain.handle("workspace:root", () => WORKSPACE_ROOT);
+  ipcMain.handle("ruzgar:open-mode", (_e, mode) => {
+    openIndexMode(String(mode || "genel"));
+  });
+  ipcMain.handle("ruzgar:open-workspace", (_e, rel) => {
+    const r = String(rel || "").replace(/^[/\\]+/, "");
+    const target = path.resolve(WORKSPACE_ROOT, r);
+    if (!target.startsWith(WORKSPACE_ROOT)) {
+      return false;
+    }
+    shell.openPath(target);
+    return true;
+  });
+  ipcMain.handle("ruzgar:open-external", (_e, url) => {
+    try {
+      const u = new URL(String(url || ""));
+      if (u.hostname !== "127.0.0.1" && u.hostname !== "localhost") {
+        return false;
+      }
+      if (u.protocol !== "http:" && u.protocol !== "https:") {
+        return false;
+      }
+      shell.openExternal(u.href);
+      return true;
+    } catch {
+      return false;
+    }
+  });
+
+  function focusedWebContents() {
+    const w = BrowserWindow.getFocusedWindow();
+    return w?.webContents ?? null;
+  }
+
+  ipcMain.handle("ruzgar:nav-go-back", () => {
+    const wc = focusedWebContents();
+    if (wc && wc.canGoBack()) {
+      wc.goBack();
+      return true;
+    }
+    return false;
+  });
+  ipcMain.handle("ruzgar:nav-go-forward", () => {
+    const wc = focusedWebContents();
+    if (wc && wc.canGoForward()) {
+      wc.goForward();
+      return true;
+    }
+    return false;
+  });
+  ipcMain.handle("ruzgar:nav-reload", () => {
+    const wc = focusedWebContents();
+    if (wc) {
+      wc.reload();
+      return true;
+    }
+    return false;
+  });
+
+  createWindow();
+  app.on("activate", () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
+});
+
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") app.quit();
+});

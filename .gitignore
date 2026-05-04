@@ -1,0 +1,34 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# RAG önbellek (isteğe bağlı: repoda tutmak isterseniz bu satırı silin)
+ilim-assistant/.rag_index/
+
+# Node
+node_modules/
+ruzgar-desktop/node_modules/
+ilim-mobile/node_modules/
+**/dist/
+.npm/
+
+# Ortam / gizli
+.env
+.env.*
+*.local
+ruzgar-desktop/google_api_key.txt
+
+# IDE
+.idea/
+*.swp
+.DS_Store
+
+# Electron / derleme çıktıları
+out/
+build/
+*.log

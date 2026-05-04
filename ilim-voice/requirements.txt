@@ -1,0 +1,18 @@
+# Python 3.10+ önerilir. GPU (CUDA) şiddetle tavsiye edilir.
+torch>=2.1.0
+transformers>=4.38.0
+accelerate>=0.27.0
+sentencepiece>=0.1.99
+protobuf>=4.23.0
+safetensors>=0.4.0
+
+faster-whisper>=1.0.0
+gradio>=4.44.0
+
+numpy>=1.24.0
+soundfile>=0.12.1
+scipy>=1.11.0
+langdetect>=1.0.9
+
+# İnsana yakın çok dilli TTS (ses klonlama: referans .wav gerekir)
+TTS>=0.22.0

@@ -1,0 +1,4 @@
+.rag_index/
+__pycache__/
+*.pyc
+.venv/

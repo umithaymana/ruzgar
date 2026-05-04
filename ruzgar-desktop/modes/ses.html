@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RÜZGAR — Ses modülü</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <style>
+      body {
+        overflow: auto;
+        height: auto;
+        min-height: 100vh;
+      }
+      .ses-wrap {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 28px 24px 40px;
+      }
+      .ses-wrap h1 {
+        font-size: 20px;
+        font-weight: 600;
+        color: #e8e8e8;
+        margin: 0 0 8px;
+      }
+      .ses-wrap .lead {
+        color: #aaa;
+        line-height: 1.55;
+        margin: 0 0 20px;
+      }
+      .ses-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 24px;
+      }
+      .ses-actions button {
+        font: inherit;
+        padding: 10px 16px;
+        border-radius: 8px;
+        border: 1px solid #3c3c3c;
+        background: #2d2d30;
+        color: #e0e0e0;
+        cursor: pointer;
+      }
+      .ses-actions button.primary {
+        background: #0e639c;
+        border-color: #1177bb;
+        color: #fff;
+      }
+      .ses-actions button:hover {
+        filter: brightness(1.08);
+      }
+      .ses-note {
+        font-size: 12px;
+        color: #888;
+        line-height: 1.5;
+        border-left: 3px solid #3c3c3c;
+        padding-left: 12px;
+        margin-top: 16px;
+      }
+      .ses-list {
+        margin: 0;
+        padding-left: 20px;
+        color: #bbb;
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="ses-wrap">
+      <h1>Ses merkezi</h1>
+      <p class="lead">
+        Çok dilli konuşma tanıma, metinden sese, çeviri ve tilavet kalitesi için ağır model
+        yığını <strong>ilim-voice</strong> klasöründe çalışır (Whisper, NLLB, XTTS vb.). Bu
+        pencere RÜZGAR sohbetinden ayrılmış ses odaklı giriş noktasıdır; tam özellikler için
+        Python ortamında ilim-voice’u başlatman gerekir.
+      </p>
+      <div class="ses-actions">
+        <button type="button" class="primary" id="btn-chat-ses">
+          Sohbeti ses modunda aç (yeni pencere)
+        </button>
+        <button type="button" id="btn-open-voice-ui">
+          İlim Voice arayüzü (127.0.0.1:7860)
+        </button>
+        <button type="button" id="btn-open-voice-dir">ilim-voice klasörü</button>
+      </div>
+      <p class="lead" style="margin-bottom: 12px">
+        Hedeflenen diller (örnek): Türkçe, İngilizce, Almanca, Fransızca, Rusça, Arapça,
+        Farsça, Yunanca (Rumca), Osmanlıca için tarihî metin desteği bilgi tabanıyla birlikte,
+        Kur’an tilaveti ve meal için özel öğrenilmiş bağlam (projendeki tilavet /
+        ilim-assistant bilgi dosyaların).
+      </p>
+      <ul class="ses-list">
+        <li><strong>İlim Voice:</strong> <code>python gradio_app.py</code> → tarayıcıda 7860.</li>
+        <li><strong>RÜZGAR sohbet (ses modu):</strong> yerel Ollama ile hafif sohbet; ağır ses
+          işi ilim-voice tarafında.</li>
+        <li><strong>Öğrenme / hafıza:</strong> ilim-assistant içindeki bilgi tabanı ve
+          kayıtlı sohbet özetleri; ses penceresi bunlara masaüstü API üzerinden bağlanır.</li>
+      </ul>
+      <p class="ses-note">
+        Dinî metin çevirisi ve tilavette mutlaka insan kontrolü önerilir; otomatik çıktılar
+        %100 doğruluk iddia etmez.
+      </p>
+    </div>
+    <script>
+      document.getElementById("btn-chat-ses").addEventListener("click", () => {
+        if (window.ruzgarApi?.openModeWindow) {
+          window.ruzgarApi.openModeWindow("ses");
+        }
+      });
+      document.getElementById("btn-open-voice-ui").addEventListener("click", () => {
+        if (window.ruzgarApi?.openLocalhostUrl) {
+          window.ruzgarApi.openLocalhostUrl("http://127.0.0.1:7860");
+        }
+      });
+      document.getElementById("btn-open-voice-dir").addEventListener("click", () => {
+        if (window.ruzgarApi?.openWorkspaceRel) {
+          window.ruzgarApi.openWorkspaceRel("ilim-voice");
+        }
+      });
+    </script>
+  </body>
+</html>

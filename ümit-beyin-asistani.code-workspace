@@ -1,0 +1,14 @@
+{
+  "folders": [
+    {
+      "path": ".",
+      "name": "Rüzgar"
+    }
+  ],
+  "settings": {
+    "window.title": "${dirty}${activeEditorShort}${separator}Rüzgar"
+  },
+  "extensions": {
+    "recommendations": ["MS-CEINTL.vscode-language-pack-tr"]
+  }
+}
