@@ -1,0 +1,5 @@
+# Coqui TTS (XTTS / ses klonlama) — kurulumu ağır; Google Colab'da sık başarısız olur.
+# Önce: pip install -r requirements.txt
+# Sonra (yerel GPU önerilir): pip install -r requirements-tts.txt
+
+TTS>=0.22.0

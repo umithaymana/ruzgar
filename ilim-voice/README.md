@@ -15,6 +15,8 @@
 
 ```bash
 pip install -r requirements.txt
+# Metinden sese (XTTS) için ayrıca — ağır paket, Colab’da çoğu zaman atlayın:
+pip install -r requirements-tts.txt
 python gradio_app.py
 ```
 

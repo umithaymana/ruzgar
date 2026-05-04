@@ -14,5 +14,4 @@ soundfile>=0.12.1
 scipy>=1.11.0
 langdetect>=1.0.9
 
-# İnsana yakın çok dilli TTS (ses klonlama: referans .wav gerekir)
-TTS>=0.22.0
+# Coqui TTS ayrı dosyada: requirements-tts.txt (Colab / hafif ortam için TTS yok)
