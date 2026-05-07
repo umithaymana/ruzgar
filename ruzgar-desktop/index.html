@@ -2,33 +2,42 @@
 <html lang="tr">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' http://127.0.0.1:8777 https://www.google.com https://*.google.com https://*.googleapis.com https://*.gstatic.com wss://*.google.com; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; worker-src 'self' blob:;" />
+    <!-- Colab tünel (ngrok, localtunnel, trycloudflare): http(s)/ws(s) tamam -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' blob: http: https: ws: wss: http://127.0.0.1:8777 ws://127.0.0.1:8777 wss://127.0.0.1:8777 http://localhost:8777 ws://localhost:8777 wss://localhost:8777 https://www.google.com https://*.google.com https://*.googleapis.com https://*.gstatic.com wss://*.google.com; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; worker-src 'self' blob:;" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Rüzgar</title>
+    <title>RÜZGAR — Mimarlar: Ümit & Gökçenur</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div class="title-strip">
-      <span class="title-brand">Rüzgar</span>
-      <span class="title-sub">RÜZGAR — yerel asistan</span>
+      <div class="title-row title-row-info">
+        <span class="title-sub title-main-text">
+          ⏻ Rüzgar-Mimarları: <span class="architect-names">Gökçenur</span> ve
+          <span class="architect-names">Ümit</span>
+          <span id="motor-declaration-header" class="header-motor-declaration"></span>
+        </span>
+      </div>
+      <div class="title-row title-row-motors">
+        <div class="mode-topbar mode-topbar-main" role="tablist" aria-label="Rüzgar modül seçici">
+          <button type="button" class="mode-tab is-active" id="mode-btn-genel" data-mode="genel">ANA MOTOR</button>
+          <button type="button" class="mode-tab" id="mode-btn-okuma" data-mode="okuma">İLİM MOTORU</button>
+          <button type="button" class="mode-tab" id="mode-btn-video" data-mode="video">VİDEO MOTORU</button>
+          <button type="button" class="mode-tab" id="mode-btn-programlama" data-mode="programlama">PROGRAMLAMA MOTORU</button>
+          <button type="button" class="mode-tab mode-tab-hafiza" id="mode-btn-hafiza" data-mode="hafiza">HAFIZA MOTORU</button>
+          <button type="button" class="mode-tab" id="mode-btn-ses" data-mode="ses">SES MOTORU</button>
+        </div>
+        <div class="header-tech-strip" aria-label="Sistem göstergeleri">
+          <span id="api-status" class="tech-chip">API…</span>
+          <span id="cpu-indicator" class="tech-chip">CPU: %24</span>
+          <span id="gpu-indicator" class="tech-chip">GPU: %18</span>
+        </div>
+      </div>
     </div>
 
     <div class="layout">
       <aside class="panel panel-chat">
-        <div class="panel-head">
-          <div class="panel-head-left">
-            <span class="panel-title">Rüzgar</span>
-            <span class="panel-badge mode-tag" id="mode-badge">Genel</span>
-          </div>
-          <span class="panel-badge" id="api-status">API…</span>
-        </div>
         <div class="chat-scroll" id="chat-messages"></div>
         <div class="composer">
-          <textarea
-            id="msg-input"
-            rows="3"
-            placeholder="Soru yazın veya yapıştırın — Web açıkken arama + okuma; doğrudan https:// bağlantısı da okunur."
-          ></textarea>
           <div class="composer-actions">
             <label class="chk"
               ><input type="checkbox" id="opt-web" checked /> Web ara</label
@@ -54,27 +63,124 @@
             <label class="chk" title="Mikrofon metni yazınca otomatik gönderir"
               ><input type="checkbox" id="opt-voice-send" checked /> Konuşunca gönder</label
             >
+            <label class="chk fetch-row" title="5 kaynak paralel web+arşiv taraması (Dinamit — Ümit &amp; Gökçenur)"
+              ><input type="checkbox" id="opt-autonom" /> Otonom araştırma</label
+            >
             <span class="spacer"></span>
-            <button type="button" id="btn-mic" class="btn-icon btn-mic" title="Basılı tutun — ses yerel Whisper ile metne (desktop_server + faster-whisper)">
+            <div id="mic-level-wrap" class="mic-level-wrap" hidden aria-hidden="true" title="Ümit &amp; Gökçenur — giriş sinyali">
+              <span class="mic-level-label">Dinliyorum</span>
+              <div class="mic-level-track">
+                <div id="mic-level-bar" class="mic-level-bar"></div>
+              </div>
+              <span id="mic-level-pct" class="mic-level-pct" hidden aria-hidden="true">—</span>
+            </div>
+            <button type="button" id="btn-mic" class="btn-icon btn-mic" title="Basılı tut: dinle → metin (Whisper veya SpeechRecognition). Ümit &amp; Gökçenur dinleme modülü.">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5-3c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
               </svg>
             </button>
+            <button type="button" id="btn-stop" class="btn-stop" hidden title="Yanıt akışını veya sesli okumayı anında durdur — DUR / STOP" aria-label="DUR — yanıt veya sesi kes">
+              DUR / STOP
+            </button>
             <button type="button" id="btn-send" class="btn-primary">Gönder</button>
           </div>
+          <textarea
+            id="msg-input"
+            rows="3"
+            placeholder="Soru yazın veya yapıştırın — Web açıkken arama + okuma; doğrudan https:// bağlantısı da okunur."
+          ></textarea>
         </div>
       </aside>
 
-      <main class="panel panel-main">
-        <div class="welcome">
-          <div class="logo-mark">◎</div>
-          <p class="welcome-title">RÜZGAR</p>
-          <ul class="shortcuts">
-            <li><kbd>Ctrl</kbd> + <kbd>Enter</kbd> Gönder</li>
-            <li><kbd>Mikrofon</kbd> Konuş → metin; <strong>Sesli yanıt</strong> açıksa cevap okunur</li>
-            <li><strong>Web:</strong> ara + sayfa oku (checkbox); mesaja URL yapıştırınca ilim sunucusu sayfayı çeker</li>
-            <li>Ollama açık olmalı · <code>ollama serve</code></li>
-          </ul>
+      <main class="panel panel-main" id="panel-main">
+        <div
+          id="thinking-center-overlay"
+          class="thinking-center-overlay"
+          hidden
+          aria-hidden="true"
+          role="status"
+        >
+          <div class="thinking-center-backdrop"></div>
+          <div class="thinking-center-card">
+            <div class="thinking-orbit" aria-hidden="true"></div>
+            <p class="thinking-center-title" id="thinking-center-title">
+              Rüzgar düşünüyor…
+            </p>
+            <p class="thinking-center-sub" id="thinking-center-sub">
+              Ümit &amp; Gökçenur — Işık Hızı
+            </p>
+          </div>
+        </div>
+        <div class="workbench-head">
+          <h2 class="workbench-title">ÇALIŞMA SAYFASI</h2>
+          <div class="workbench-controls">
+            <button type="button" id="btn-layout-full" class="btn-secondary btn-compact" title="Tam Ekran">🗖</button>
+            <button type="button" id="btn-layout-split2" class="btn-secondary btn-compact" title="İkiye Böl">◫</button>
+            <button type="button" id="btn-layout-split4" class="btn-secondary btn-compact" title="Dörde Böl">田</button>
+          </div>
+        </div>
+        <div id="dynamic-workbench" class="dynamic-workbench layout-full">
+          <section class="motor-page" id="page-genel">
+            <h3>Ana Motor Dashboard</h3>
+            <p>Motor durumları ve aktif konuşma özeti bu panelde.</p>
+            <div id="dashboard-status" class="mini-card">Ana motor hazır.</div>
+            <div class="dashboard-grid">
+              <div id="dashboard-last-speech" class="mini-card">Son konuşma: (bekleniyor)</div>
+              <div class="mini-card dashboard-avatar">
+                <div class="logo-mark">◎</div>
+                <p>Rüzgar Görsel Paneli</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="motor-page" id="page-hafiza" hidden>
+            <div class="hafiza-split">
+              <div>
+                <h4>Analiz</h4>
+                <div class="hafiza-analyze-head">
+                  <button type="button" id="btn-hafiza-refresh" class="btn-secondary btn-compact">Yenile</button>
+                  <button type="button" id="btn-hafiza-save" class="btn-primary">Hafızaya Al</button>
+                </div>
+                <div id="hafiza-list-view" class="json-view"></div>
+                <div id="hafiza-analyze-actions" class="hafiza-analyze-actions" hidden>
+                  <button type="button" id="btn-hafiza-delete-selected" class="btn-secondary btn-compact">Seçileni Sil</button>
+                  <button type="button" id="btn-hafiza-delete-all" class="btn-secondary btn-compact">Tümünü Temizle</button>
+                  <button type="button" id="btn-hafiza-delete-cancel" class="btn-secondary btn-compact">İptal</button>
+                </div>
+              </div>
+              <div>
+                <h4>Editör</h4>
+                <textarea id="hafiza-input" class="hafiza-textarea" rows="10" placeholder="Yeni bilgi: Soru = Cevap"></textarea>
+                <button type="button" id="btn-hafiza-send" class="btn-primary">Gönder</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="motor-page" id="page-okuma" hidden>
+            <h3>İlim Motoru Kütüphane</h3>
+            <div class="library-grid">
+              <div id="ilim-file-list" class="file-tree"></div>
+              <textarea id="ilim-file-content" class="hafiza-textarea" rows="16" placeholder="Dosya içeriği burada gösterilir"></textarea>
+            </div>
+          </section>
+
+          <section class="motor-page" id="page-video" hidden>
+            <h3>Video Motoru Medya Paneli</h3>
+            <input id="video-file-input" type="file" accept=".mp4,.avi,.mp3,video/*,audio/*" />
+            <video id="video-preview" controls style="width: 100%; max-height: 360px; margin-top: 8px"></video>
+          </section>
+
+          <section class="motor-page" id="page-programlama" hidden>
+            <h3>Programlama Motoru</h3>
+            <textarea id="code-editor" class="hafiza-textarea" rows="18" placeholder="// Kodunuzu buraya yazın"></textarea>
+          </section>
+
+          <section class="motor-page" id="page-ses" hidden>
+            <h3>Ses Motoru Stüdyo</h3>
+            <input id="audio-file-input" type="file" accept=".mp3,.wav,audio/*" />
+            <audio id="audio-preview" controls style="width: 100%; margin-top: 8px"></audio>
+            <div class="mini-card">Dalga formu alanı (demo): ▂▃▅▇▆▃▂</div>
+          </section>
         </div>
       </main>
 
@@ -100,10 +206,128 @@
       </aside>
     </div>
 
+    <div
+      id="sistem-ayarlari-overlay"
+      class="modal-overlay"
+      hidden
+      aria-hidden="true"
+    >
+      <div
+        class="modal sistem-ayarlari-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="sistem-ayarlari-title"
+      >
+        <header class="modal-head">
+          <h2 id="sistem-ayarlari-title">Sistem Ayarları</h2>
+          <p class="modal-mimar">
+            Mimarlar: <span class="architect-names">Ümit &amp; Gökçenur</span>
+          </p>
+        </header>
+        <div class="modal-body">
+          <section class="settings-block">
+            <h3 class="settings-block-title">Mikrofon</h3>
+            <label class="settings-row chk settings-chk-full">
+              <input type="checkbox" id="opt-mic-meter-test" />
+              <span
+                >Seviye testi (açık kalır): basılı tutunca çubuk + sayısal %; hareket
+                kontrolü için.</span
+              >
+            </label>
+            <p class="settings-hint">
+              Açıkken üstte <strong>Mic test</strong> rozeti görünür; İlim Hazinesi ve diğer
+              modlarda arka planda geçerlidir.
+            </p>
+            <label class="settings-label" for="sel-mic-device">Giriş cihazı</label>
+            <div class="settings-row settings-mic-row">
+              <select id="sel-mic-device" class="select-settings" aria-label="Varsayılan mikrofon">
+                <option value="">Sistem varsayılanı (OS)</option>
+              </select>
+              <button type="button" id="btn-mic-refresh" class="btn-secondary btn-compact">
+                Listeyi yenile
+              </button>
+            </div>
+            <p class="settings-hint">
+              İsimler görünmüyorsa önce <strong>Listeyi yenile</strong> (tarayıcı izni gerekir). Sorun
+              sürerse Windows Ses ayarlarından varsayılan girişi değiştirin.
+            </p>
+          </section>
+        </div>
+        <footer class="modal-foot">
+          <button type="button" id="btn-sistem-ayarlari-kapat" class="btn-primary">
+            Kapat
+          </button>
+        </footer>
+      </div>
+    </div>
+
+    <div id="hafiza-yonet-overlay" class="modal-overlay" hidden aria-hidden="true">
+      <div
+        class="modal hafiza-sohbet-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="hafiza-yonet-title"
+      >
+        <header class="modal-head">
+          <h2 id="hafiza-yonet-title">Hafızayı Yönet</h2>
+          <p class="modal-mimar">
+            Kuvve-i Hafıza — <span class="architect-names">Ümit &amp; Gökçenur</span> ·
+            <code class="hafiza-code">hafiza/gecmis_sohbetler.db</code>
+          </p>
+        </header>
+        <div class="modal-body">
+          <p class="hafiza-help">
+            Satır silinince veritabanından gizlenir. <strong class="hafiza-gold-text">Altın</strong>:
+            model bağlamında öncelikli hatırlatma. Sohbette
+            <em>«Bunu unutma»</em> derseniz bir önceki yanıt altınlanır.
+          </p>
+          <div id="hafiza-list" class="hafiza-list" aria-label="Kayıtlı sohbet satırları"></div>
+          <p id="hafiza-list-empty" class="hafiza-help" hidden>Henüz kayıtlı tur yok.</p>
+        </div>
+        <footer class="modal-foot">
+          <button type="button" id="btn-hafiza-yonet-refresh" class="btn-secondary">Listeyi yenile</button>
+          <button type="button" id="btn-hafiza-yonet-kapat" class="btn-primary">Kapat</button>
+        </footer>
+      </div>
+    </div>
+
+    <div id="kisisel-panel-overlay" class="modal-overlay" hidden aria-hidden="true">
+      <div
+        class="modal kisisel-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="kisisel-panel-title"
+      >
+        <header class="modal-head">
+          <h2 id="kisisel-panel-title">Kişisel veri paneli</h2>
+          <p class="modal-mimar">
+            Kuvve-i Hafıza — <span class="architect-names">Ümit &amp; Gökçenur</span>
+          </p>
+        </header>
+        <div class="modal-body">
+          <label class="settings-label" for="kisisel-umit">Ümit — araştırma tercihleri</label>
+          <textarea id="kisisel-umit" class="hafiza-textarea" rows="4" placeholder="Örn. kaynak türleri, diller, dönemler…"></textarea>
+          <label class="settings-label" for="kisisel-gokcenur">Gökçenur — sevdiği eserler</label>
+          <textarea id="kisisel-gokcenur" class="hafiza-textarea" rows="4" placeholder="Örn. şairler, eser adları…"></textarea>
+          <label class="settings-label" for="kisisel-notlar">Notlar</label>
+          <textarea id="kisisel-notlar" class="hafiza-textarea" rows="3" placeholder="Genel notlar"></textarea>
+        </div>
+        <footer class="modal-foot">
+          <button type="button" id="btn-kisisel-iptal" class="btn-secondary">İptal</button>
+          <button type="button" id="btn-kisisel-kaydet" class="btn-primary">Kaydet</button>
+        </footer>
+      </div>
+    </div>
+
     <footer class="statusbar">
       <span id="status-left">Rüzgar</span>
       <span id="status-right">Hazır</span>
     </footer>
+    <div id="ctx-menu" class="ctx-menu" hidden>
+      <button type="button" data-act="cut">Kes</button>
+      <button type="button" data-act="copy">Kopyala</button>
+      <button type="button" data-act="paste">Yapıştır</button>
+    </div>
 
     <script src="app.js"></script>
   </body>
