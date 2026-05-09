@@ -3,8 +3,9 @@ import os
 import re
 import unicodedata
 from datetime import datetime, timezone
+from difflib import SequenceMatcher
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 
 class HafizaIRuzgar:
@@ -20,6 +21,9 @@ class HafizaIRuzgar:
     ESKI_DOSYA_ADLARI = ("hafiza_arsivi.json", "ogrenme_merkezi.json")
     VARSAYILAN_MOTOR_TIPI = "Hafıza"
     BILINMEYEN_YANIT = "Mimar, bunu henüz öğrenmedim, bana öğretir misin?"
+
+    # Fuzzy eşik: 0.70 = %70 benzerlik. RUZGAR_FUZZY_MIN env değişkeniyle override edilebilir.
+    FUZZY_VARSAYILAN_ESIK = 0.70
 
     # Baş/sondaki ayırıcı ve noktalama (Türkçe dahil)
     _STRIP_EDGE_PUNCT = re.compile(
@@ -44,6 +48,54 @@ class HafizaIRuzgar:
                 break
             t = nt
         return t
+
+    # Türkçe → ASCII benzeri tablo: yazım hatası toleransı için fuzzy karşılaştırmada kullanılır.
+    _TR_HARITA = str.maketrans({
+        "ı": "i", "İ": "i", "ş": "s", "Ş": "s",
+        "ğ": "g", "Ğ": "g", "ü": "u", "Ü": "u",
+        "ö": "o", "Ö": "o", "ç": "c", "Ç": "c",
+    })
+
+    @classmethod
+    def _fuzzy_anahtar(cls, metin: str) -> str:
+        """Fuzzy karşılaştırma için ek sadeleştirme: TR karakterleri → ASCII, tüm noktalama silinir.
+
+        Not: birebir/normal eşleşme için kullanılan `_norm_eslesme`'den ayrıdır;
+        sadece Levenshtein/SequenceMatcher skorunu artırmak için kullanılır.
+        """
+        t = cls._norm_eslesme(metin)
+        if not t:
+            return ""
+        t = t.translate(cls._TR_HARITA)
+        # tüm noktalama ve özel karakter sil, sadece harf-rakam-boşluk bırak
+        t = re.sub(r"[^a-z0-9\s]", " ", t)
+        t = re.sub(r"\s+", " ", t).strip()
+        return t
+
+    @classmethod
+    def _benzerlik(cls, a: str, b: str) -> float:
+        """0.0–1.0 arası benzerlik skoru. SequenceMatcher (yerleşik, ek bağımlılık yok)."""
+        if not a or not b:
+            return 0.0
+        if a == b:
+            return 1.0
+        return SequenceMatcher(None, a, b).ratio()
+
+    @classmethod
+    def _fuzzy_esik(cls) -> float:
+        """RUZGAR_FUZZY_MIN env değişkeni ile override; varsayılan 0.70."""
+        raw = (os.environ.get("RUZGAR_FUZZY_MIN") or "").strip()
+        if not raw:
+            return cls.FUZZY_VARSAYILAN_ESIK
+        try:
+            v = float(raw)
+        except ValueError:
+            return cls.FUZZY_VARSAYILAN_ESIK
+        if v <= 0:
+            return cls.FUZZY_VARSAYILAN_ESIK
+        if v > 1.0:
+            v = v / 100.0
+        return max(0.0, min(1.0, v))
 
     def __init__(self) -> None:
         # JSON dosyası proje ana dizininde tutulur.
@@ -166,7 +218,15 @@ class HafizaIRuzgar:
         return self.BILINMEYEN_YANIT
 
     def ogrenme_cevabi_bak(self, metin: str, motor_tipi: str | None = None) -> Optional[str]:
-        """Öğretmez; sözlükte arar. `motor_tipi=None` ise tüm raflarda arar."""
+        """Öğretmez; sözlükte arar. `motor_tipi=None` ise tüm raflarda arar.
+
+        Arama sırası (hızlı → tolerant):
+          1) Birebir tam eşleşme.
+          2) Normalize eşleşme (lowercase + kenar noktalama temizliği).
+          3) FUZZY: SequenceMatcher tabanlı benzerlik skoru; yazım hatası, eksik harf,
+             Türkçe karakter farkı, fazladan kelime gibi hatalara dayanıklı.
+             Eşik varsayılan %70 (RUZGAR_FUZZY_MIN ile değiştirilebilir).
+        """
         self._reload_if_disk_changed()
         t = (metin or "").strip()
         if not t:
@@ -177,17 +237,56 @@ class HafizaIRuzgar:
         adaylar = self._kayitlar
         if mt is not None:
             adaylar = [r for r in self._kayitlar if r.get("motor_tipi") == mt]
+
+        # 1) Birebir
         for row in reversed(adaylar):
             if row.get("soru", "") == t:
                 return row.get("cevap", "")
+
+        # 2) Normalize eşleşme (lowercase + noktalama)
         nq = self._norm_eslesme(t)
-        if not nq:
+        if nq:
+            for row in reversed(adaylar):
+                k = row.get("soru", "")
+                if self._norm_eslesme(k) == nq:
+                    return row.get("cevap", "")
+
+        # 3) Fuzzy: en yüksek skoru veren satırı dön (eşik üstündeyse)
+        en_iyi = self._fuzzy_en_iyi_eslesme(t, adaylar)
+        if en_iyi is not None:
+            return en_iyi[0]
+        return None
+
+    def _fuzzy_en_iyi_eslesme(
+        self, sorgu: str, adaylar: List[Dict[str, str]]
+    ) -> Optional[Tuple[str, str, float]]:
+        """En yüksek benzerlik skoru veren (cevap, soru, skor) üçlüsünü döner.
+
+        Skor `RUZGAR_FUZZY_MIN` (varsayılan 0.70) altındaysa None.
+        Aynı skorda birden çok aday varsa daha yeni eklenen tercih edilir
+        (kayıtlar listesi sondan başa taranır).
+        """
+        if not adaylar:
             return None
+        anahtar = self._fuzzy_anahtar(sorgu)
+        if not anahtar:
+            return None
+        esik = self._fuzzy_esik()
+        en_iyi: Optional[Tuple[str, str, float]] = None
         for row in reversed(adaylar):
             k = row.get("soru", "")
-            if self._norm_eslesme(k) == nq:
-                return row.get("cevap", "")
-        return None
+            cv = row.get("cevap", "")
+            if not k or not cv:
+                continue
+            aday = self._fuzzy_anahtar(k)
+            if not aday:
+                continue
+            skor = self._benzerlik(anahtar, aday)
+            if skor < esik:
+                continue
+            if en_iyi is None or skor > en_iyi[2]:
+                en_iyi = (cv, k, skor)
+        return en_iyi
 
     def tum_bilgiler(self, motor_tipi: str = VARSAYILAN_MOTOR_TIPI) -> Dict[str, str]:
         """Belirtilen motor rafındaki öğrenme sözlüğünün güvenli kopyası."""
