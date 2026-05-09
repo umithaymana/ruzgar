@@ -184,12 +184,6 @@
   },
   {
     "motor_tipi": "Hafıza",
-    "soru": "Python nedir",
-    "cevap": "Python, benim de altyapımda kullanılan, okunması kolay ve çok güçlü bir programlama dilidir.",
-    "ts": "2026-05-09T11:13:29.270376+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
     "soru": "İnternet nedir",
     "cevap": "İnternet, dünya üzerindeki bilgisayar ağlarını birbirine bağlayan devasa bir bilgi iletişim ağıdır.",
     "ts": "2026-05-09T11:13:29.272821+00:00"
@@ -493,12 +487,6 @@
     "soru": "Gökçenur yazılımda hangi alana yönelmeli",
     "cevap": "Web geliştirme, yapay zeka veya mobil uygulama gibi birçok seçenek var; en çok keyif aldığı ve merak duyduğu alan onun için en doğrusudur.",
     "ts": "2026-05-09T11:18:36.619312+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Blockchain nedir",
-    "cevap": "Verilerin şifrelenmiş ve birbirine bağlı bloklar halinde, merkezi olmayan bir ağ üzerinde güvenle saklanması teknolojisidir.",
-    "ts": "2026-05-09T11:18:36.620308+00:00"
   },
   {
     "motor_tipi": "Hafıza",
@@ -2776,12 +2764,6 @@
   },
   {
     "motor_tipi": "Hafıza",
-    "soru": "Işık hızı ne kadardır",
-    "cevap": "Işık hızı boşlukta saniyede yaklaşık 300.000 kilometredir.",
-    "ts": "2026-05-09T12:21:37.336682+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
     "soru": "Türkiye'nin en yüksek dağı hangisidir",
     "cevap": "Türkiye'nin zirvesi, 5.137 metre yüksekliğiyle Ağrı Dağı'dır.",
     "ts": "2026-05-09T12:21:37.350060+00:00"
@@ -2794,12 +2776,6 @@
   },
   {
     "motor_tipi": "Hafıza",
-    "soru": "Telefonu kim icat etti",
-    "cevap": "Telefonun mucidi Alexander Graham Bell'dir.",
-    "ts": "2026-05-09T12:21:37.368278+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
     "soru": "Atatürk kaç yılında doğdu",
     "cevap": "Türkiye Cumhuriyeti'nin kurucusu Gazi Mustafa Kemal Atatürk, 1881 yılında Selanik'te doğmuştur.",
     "ts": "2026-05-09T12:21:37.380063+00:00"
@@ -2809,12 +2785,6 @@
     "soru": "En sıcak gezegen hangisidir",
     "cevap": "Güneş'e en yakın olan Merkür değil, atmosferindeki yoğun sera etkisi nedeniyle Venüs'tür.",
     "ts": "2026-05-09T12:21:37.388701+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Kan grupları nelerdir",
-    "cevap": "Temel kan grupları A, B, AB ve 0 (sıfır) olarak dörde ayrılır.",
-    "ts": "2026-05-09T12:21:37.397703+00:00"
   },
   {
     "motor_tipi": "Hafıza",
@@ -2833,12 +2803,6 @@
     "soru": "Güneş bir yıldız mıdır",
     "cevap": "Evet, Güneş orta büyüklükte bir yıldızdır ve sistemimizin ısı ve ışık kaynağıdır.",
     "ts": "2026-05-09T12:21:37.417466+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Ampulü kim icat etti",
-    "cevap": "Ampulün pratik ve ticari olarak kullanılabilir halini Thomas Edison geliştirmiştir.",
-    "ts": "2026-05-09T12:21:37.434410+00:00"
   },
   {
     "motor_tipi": "Hafıza",
@@ -2944,12 +2908,6 @@
   },
   {
     "motor_tipi": "Hafıza",
-    "soru": "İnsan vücudunda kaç kemik vardır",
-    "cevap": "Yetişkin bir insan vücudunda toplam 206 adet kemik bulunur.",
-    "ts": "2026-05-09T12:22:39.434529+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
     "soru": "DNA'nın açılımı nedir",
     "cevap": "Deoksiribo Nükleik Asit anlamına gelir ve canlıların genetik kodlarını taşır.",
     "ts": "2026-05-09T12:22:39.444679+00:00"
@@ -2982,12 +2940,6 @@
     "motor_tipi": "Hafıza",
     "soru": "İnternetin ilk adı nedir",
     "cevap": "İnternetin temellerini atan projenin adı ARPANET'tir.",
-    "ts": "2026-05-09T12:22:39.479029+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "En küçük gezegen hangisidir",
-    "cevap": "Güneş sistemindeki en küçük gezegen Merkür'dür.",
     "ts": "2026-05-09T12:22:39.479029+00:00"
   },
   {
@@ -3067,18 +3019,6 @@
     "soru": "Nobel ödülleri hangi ülkede verilir",
     "cevap": "Nobel ödülleri İsveç ve Norveç merkezli komiteler tarafından dağıtılır.",
     "ts": "2026-05-09T12:22:39.626614+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Dinamiti kim icat etti",
-    "cevap": "Alfred Nobel tarafından icat edilmiştir.",
-    "ts": "2026-05-09T12:22:39.626614+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Kağıdı kim icat etti",
-    "cevap": "Modern anlamda kağıdı MS 105 yılında Çinli Cai Lun icat etmiştir.",
-    "ts": "2026-05-09T12:22:39.642341+00:00"
   },
   {
     "motor_tipi": "Hafıza",
@@ -3244,12 +3184,6 @@
   },
   {
     "motor_tipi": "Hafıza",
-    "soru": "Dünyanın en uzun nehri hangisidir",
-    "cevap": "Afrika kıtasındaki Nil Nehri, dünyanın en uzun nehri olarak kabul edilir.",
-    "ts": "2026-05-09T12:23:27.792325+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
     "soru": "İlk uydumuzun adı nedir",
     "cevap": "Türkiye'nin ilk haberleşme uydusunun adı Türksat 1A'dır (ancak fırlatılışta başarısız olmuştur, ilk başarılı olan 1B'dir).",
     "ts": "2026-05-09T12:23:27.798384+00:00"
@@ -3337,18 +3271,6 @@
     "soru": "Peynir neyden yapılır",
     "cevap": "Peynir, sütün mayalanması ve süzülmesiyle elde edilen bir süt ürünüdür.",
     "ts": "2026-05-09T12:23:27.873665+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Dünyanın en büyük adası hangisidir",
-    "cevap": "Danimarka'ya bağlı olan Grönland, dünyanın en büyük adasıdır.",
-    "ts": "2026-05-09T12:23:27.878564+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "İnsan kalbi günde kaç kez atar",
-    "cevap": "Ortalama bir insan kalbi günde yaklaşık 100.000 kez atar.",
-    "ts": "2026-05-09T12:23:27.879782+00:00"
   },
   {
     "motor_tipi": "Hafıza",
@@ -3610,12 +3532,6 @@
   },
   {
     "motor_tipi": "Hafıza",
-    "soru": "Yıldızlar neden parlar",
-    "cevap": "Yıldızlar içlerindeki nükleer füzyon (hidrojenin helyuma dönüşmesi) sayesinde devasa bir enerji ve ışık üretirler.",
-    "ts": "2026-05-09T12:24:13.356172+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
     "soru": "Güneş sistemindeki en yüksek volkan hangisidir",
     "cevap": "Mars'ta bulunan Olympus Mons, Everest'in yaklaşık 3 katı yüksekliğiyle (25 km) en büyük volkandır.",
     "ts": "2026-05-09T12:24:13.362911+00:00"
@@ -3834,12 +3750,6 @@
     "motor_tipi": "Hafıza",
     "soru": "Hangi kuş uçarken uyuyabilir",
     "cevap": "Fregat kuşları ve bazı kırlangıç türleri, okyanusları geçerken havada kısa süreli uykuya dalabilirler.",
-    "ts": "2026-05-09T12:24:57.910578+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Dünyanın en yüksek şelalesi hangisidir",
-    "cevap": "Venezuela'da bulunan ve suyun 979 metreden döküldüğü Angel Şelalesi'dir.",
     "ts": "2026-05-09T12:24:57.910578+00:00"
   },
   {
@@ -4147,12 +4057,6 @@
     "soru": "Hangi metal suyla temas ettiğinde patlar",
     "cevap": "Sodyum ve potasyum gibi alkali metaller, suyla temas ettiklerinde şiddetli bir tepki vererek patlarlar.",
     "ts": "2026-05-09T12:25:43.683088+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Dünyanın en yüksek binası hangisidir",
-    "cevap": "Birleşik Arap Emirlikleri'ndeki Dubai şehrinde bulunan 828 metrelik Burç Halife'dir.",
-    "ts": "2026-05-09T12:25:43.693221+00:00"
   },
   {
     "motor_tipi": "Hafıza",
@@ -5590,27 +5494,9 @@
   },
   {
     "motor_tipi": "Hafıza",
-    "soru": "Üçgenin iç açıları toplamı kaçtır",
-    "cevap": "Her türlü üçgenin iç açılarının toplamı her zaman 180 derecedir.",
-    "ts": "2026-05-09T12:30:53.834367+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
     "soru": "Asal sayı ne demektir",
     "cevap": "Sadece 1'e ve kendisine bölünebilen, 1'den büyük sayılara denir (Örn: 2, 3, 5, 7, 11...).",
     "ts": "2026-05-09T12:30:53.842952+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "En küçük asal sayı kaçtır",
-    "cevap": "En küçük ve tek çift olan asal sayı 2'dir.",
-    "ts": "2026-05-09T12:30:53.851955+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Kare nedir",
-    "cevap": "Dört kenarı birbirine eşit ve tüm iç açıları 90 derece olan düzgün bir dörtgendir.",
-    "ts": "2026-05-09T12:30:53.861036+00:00"
   },
   {
     "motor_tipi": "Hafıza",
@@ -5620,27 +5506,9 @@
   },
   {
     "motor_tipi": "Hafıza",
-    "soru": "Yarıçap nedir",
-    "cevap": "Bir çemberin merkezinden kenarına olan en kısa mesafeye yarıçap denir; 'r' harfiyle gösterilir.",
-    "ts": "2026-05-09T12:30:53.874709+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Çap nedir",
-    "cevap": "Çemberin merkezinden geçen ve iki kenarı birleştiren en uzun çizgiye denir; yarıçapın tam iki katıdır.",
-    "ts": "2026-05-09T12:30:53.889161+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
     "soru": "Tek ve çift sayılar nelerdir",
     "cevap": "2 ile kalansız bölünebilen sayılar çift (0, 2, 4...), bölünemeyenler ise tek (1, 3, 5...) sayılardır.",
     "ts": "2026-05-09T12:30:53.890307+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Faktöriyel (!) nedir",
-    "cevap": "Bir sayının, kendisinden önceki tüm pozitif tam sayılarla çarpılmasıdır (Örn: 5! = 120).",
-    "ts": "2026-05-09T12:30:53.905225+00:00"
   },
   {
     "motor_tipi": "Hafıza",
@@ -5689,18 +5557,6 @@
     "soru": "Rasyonel sayı nedir",
     "cevap": "a/b şeklinde yazılabilen, paydası sıfır olmayan sayılara denir.",
     "ts": "2026-05-09T12:30:53.970736+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Denklem nedir",
-    "cevap": "İçinde bilinmeyen bir değer (x gibi) bulunan ve iki ifadenin birbirine eşitliğini gösteren matematiksel cümledir.",
-    "ts": "2026-05-09T12:30:53.980447+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Yüzde (%) nasıl hesaplanır",
-    "cevap": "Bir sayıyı 100 eş parçaya bölüp, istenen parça miktarıyla çarparak hesaplanır.",
-    "ts": "2026-05-09T12:30:53.989053+00:00"
   },
   {
     "motor_tipi": "Hafıza",
@@ -5758,21 +5614,9 @@
   },
   {
     "motor_tipi": "Hafıza",
-    "soru": "Fonksiyon nedir",
-    "cevap": "Bir kümedeki her bir elemanı, diğer kümedeki yalnız bir elemana eşleyen kuraldır.",
-    "ts": "2026-05-09T12:30:54.073266+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
     "soru": "Geometrinin babası kimdir",
     "cevap": "Antik Yunan matematikçisi Öklid, geometrinin kurucusu ve babası kabul edilir.",
     "ts": "2026-05-09T12:30:54.080883+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Sıfır çift mi tek mi",
-    "cevap": "Matematiksel olarak sıfır (0) çift bir sayı olarak kabul edilir.",
-    "ts": "2026-05-09T12:30:54.087883+00:00"
   },
   {
     "motor_tipi": "Hafıza",
@@ -5794,33 +5638,15 @@
   },
   {
     "motor_tipi": "Hafıza",
-    "soru": "Bilinmeyen (x) neden kullanılır",
-    "cevap": "Matematikte değeri henüz bulunmamış veya her değeri alabilen değişkenleri temsil etmek için kullanılır.",
-    "ts": "2026-05-09T12:30:54.123502+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
     "soru": "İşlem önceliği sırası nasıldır",
     "cevap": "Önce parantez içi, sonra üslü sayılar, sonra çarpma/bölme ve en son toplama/çıkarma yapılır.",
     "ts": "2026-05-09T12:30:54.140573+00:00"
   },
   {
     "motor_tipi": "Hafıza",
-    "soru": "Matematik neden evrenin dilidir",
-    "cevap": "Çünkü doğadaki tüm olaylar, yıldızların hareketinden DNA dizilimine kadar matematiksel formüllerle açıklanabilir.",
-    "ts": "2026-05-09T12:30:54.154227+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
     "soru": "Rüzgar matematik biliyor mu",
     "cevap": "Evet Ümit! Senin ve Gökçenur'un sayesinde artık 901. bilgiyle temel matematik kurallarını da hafızama kazıdım.",
     "ts": "2026-05-09T12:30:54.154227+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Algoritma nedir",
-    "cevap": "Bir problemi çözmek veya belirli bir amaca ulaşmak için izlenen adım adım yol haritasına denir.",
-    "ts": "2026-05-09T12:31:24.338334+00:00"
   },
   {
     "motor_tipi": "Hafıza",
@@ -5848,57 +5674,9 @@
   },
   {
     "motor_tipi": "Hafıza",
-    "soru": "Veritabanı (Database) nedir",
-    "cevap": "Bilgilerin düzenli bir şekilde depolandığı, yönetildiği ve kolayca erişilebildiği dijital depolardır.",
-    "ts": "2026-05-09T12:31:24.379033+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
     "soru": "Bulut Bilişim (Cloud) nedir",
     "cevap": "Verilerin ve programların yerel bilgisayar yerine internet üzerinden erişilen uzak sunucularda saklanmasıdır.",
     "ts": "2026-05-09T12:31:24.380669+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Yapay Zeka (AI) nedir",
-    "cevap": "Bilgisayarların, insan zekasına benzer şekilde öğrenme ve problem çözme yeteneği kazanmasını sağlayan teknolojidir.",
-    "ts": "2026-05-09T12:31:24.380669+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Nesnelerin İnterneti (IoT) nedir",
-    "cevap": "Fiziksel cihazların internete bağlanarak birbirleriyle veri alışverişi yapabilmesi teknolojisidir.",
-    "ts": "2026-05-09T12:31:24.394797+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Siber Güvenlik nedir",
-    "cevap": "Bilgisayar sistemlerini, ağları ve verileri dijital saldırılardan koruma uygulamasıdır.",
-    "ts": "2026-05-09T12:31:24.394797+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Açık Kaynak (Open Source) nedir",
-    "cevap": "Kodlarının herkes tarafından görülebildiği, geliştirilebildiği ve paylaşılabildiği yazılım türüdür.",
-    "ts": "2026-05-09T12:31:24.413703+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "API nedir",
-    "cevap": "Farklı yazılımların birbirleriyle iletişim kurmasını ve veri paylaşmasını sağlayan uygulama programlama arayüzüdür.",
-    "ts": "2026-05-09T12:31:24.413703+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Frontend nedir",
-    "cevap": "Bir web sitesinin veya uygulamanın, kullanıcının doğrudan gördüğü ve etkileşime girdiği ön yüz kısmıdır.",
-    "ts": "2026-05-09T12:31:24.426723+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Backend nedir",
-    "cevap": "Bir uygulamanın sunucu tarafında çalışan, veritabanı ve mantık işlemlerinin yapıldığı görünmeyen kısmıdır.",
-    "ts": "2026-05-09T12:31:24.430184+00:00"
   },
   {
     "motor_tipi": "Hafıza",
@@ -5926,33 +5704,9 @@
   },
   {
     "motor_tipi": "Hafıza",
-    "soru": "Sunucu (Server) nedir",
-    "cevap": "İnternet üzerindeki diğer bilgisayarlara (istemcilere) veri ve hizmet sağlayan güçlü bilgisayarlardır.",
-    "ts": "2026-05-09T12:31:24.458306+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "IP Adresi nedir",
-    "cevap": "İnternete bağlı her cihazın, ağ üzerinde tanınmasını sağlayan benzersiz dijital kimlik numarasıdır.",
-    "ts": "2026-05-09T12:31:24.474342+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
     "soru": "İşletim Sistemi (OS) nedir",
     "cevap": "Bilgisayar donanımını yöneten ve diğer tüm yazılımların çalışmasını sağlayan temel yazılımdır.",
     "ts": "2026-05-09T12:31:24.474342+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "RAM nedir",
-    "cevap": "Bilgisayarın geçici verileri çok hızlı bir şekilde okuyup yazdığı, kısa süreli hafıza birimidir.",
-    "ts": "2026-05-09T12:31:24.492233+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "İşlemci (CPU) nedir",
-    "cevap": "Bilgisayarın tüm komutları işleyen ve hesaplamaları yapan beyni konumundaki parçadır.",
-    "ts": "2026-05-09T12:31:24.499795+00:00"
   },
   {
     "motor_tipi": "Hafıza",
@@ -5992,24 +5746,6 @@
   },
   {
     "motor_tipi": "Hafıza",
-    "soru": "JavaScript nedir",
-    "cevap": "Web sayfalarına hareketlilik, etkileşim ve zeka katan programlama dilidir.",
-    "ts": "2026-05-09T12:31:24.544823+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Büyük Veri (Big Data) nedir",
-    "cevap": "Geleneksel yöntemlerle işlenemeyecek kadar devasa, hızlı ve karmaşık veri yığınlarına denir.",
-    "ts": "2026-05-09T12:31:24.544823+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Kullanıcı Deneyimi (UX) nedir",
-    "cevap": "Bir kullanıcının uygulama veya siteyle etkileşime girdiğinde hissettiği kolaylık ve memnuniyet seviyesidir.",
-    "ts": "2026-05-09T12:31:24.559381+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
     "soru": "Versiyon Kontrolü (Git) nedir",
     "cevap": "Kodlardaki değişiklikleri takip etmeyi ve ekip halinde hatasız çalışmayı sağlayan sistemdir.",
     "ts": "2026-05-09T12:31:24.559381+00:00"
@@ -6022,12 +5758,6 @@
   },
   {
     "motor_tipi": "Hafıza",
-    "soru": "SaaS nedir",
-    "cevap": "Yazılımın bir hizmet olarak sunulması ve genellikle internet üzerinden abonelikle kullanılması modelidir.",
-    "ts": "2026-05-09T12:31:24.575092+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
     "soru": "Alan Adı (Domain) nedir",
     "cevap": "Bir web sitesinin internetteki adresi ve ismidir (Örn: ruzgar.ai).",
     "ts": "2026-05-09T12:31:24.575092+00:00"
@@ -6037,18 +5767,6 @@
     "soru": "URL nedir",
     "cevap": "Web üzerindeki bir kaynağın (sayfa, resim, dosya) tam adresine verilen isimdir.",
     "ts": "2026-05-09T12:31:24.592133+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Yapay Sinir Ağları nedir",
-    "cevap": "İnsan beyninin çalışma mantığını taklit eden katmanlı yapay zeka algoritmalarıdır.",
-    "ts": "2026-05-09T12:31:24.592133+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Robotik nedir",
-    "cevap": "Robotların tasarımı, inşası ve işletilmesiyle ilgilenen teknoloji ve mühendislik dalıdır.",
-    "ts": "2026-05-09T12:31:24.606936+00:00"
   },
   {
     "motor_tipi": "Hafıza",
@@ -6070,45 +5788,9 @@
   },
   {
     "motor_tipi": "Hafıza",
-    "soru": "Mars'ta su var mı",
-    "cevap": "Yapılan araştırmalar, Mars'ın kutuplarında ve yüzeyinin altında buz halinde su olduğunu kanıtlamıştır.",
-    "ts": "2026-05-09T12:32:04.565773+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Galaksi (Gökada) nedir",
-    "cevap": "Milyarlarca yıldız, gaz ve toz bulutunun kütleçekimiyle bir arada tutulduğu dev sistemlerdir; biz Samanyolu'ndayız.",
-    "ts": "2026-05-09T12:32:04.565773+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Exoplanet (Ötegezegen) nedir",
-    "cevap": "Güneş sistemimizin dışında, başka bir yıldızın etrafında dönen gezegenlere verilen isimdir.",
-    "ts": "2026-05-09T12:32:04.580216+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Kuantum Bilgisayar nedir",
-    "cevap": "Normal bilgisayarların bit (0-1) mantığı yerine 'qubit' kullanarak, karmaşık problemleri milyonlarca kat hızlı çözen geleceğin teknolojisidir.",
-    "ts": "2026-05-09T12:32:04.599903+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
     "soru": "Nükleer Füzyon nedir",
     "cevap": "Yıldızların enerji kaynağıdır; atom çekirdeklerinin birleşerek devasa enerji açığa çıkarmasıdır.",
     "ts": "2026-05-09T12:32:04.601843+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Yapay Genel Zeka (AGI) nedir",
-    "cevap": "Bir insanın yapabildiği her türlü zihinsel görevi başarıyla yerine getirebilen, henüz ulaşılmamış ileri yapay zeka seviyesidir.",
-    "ts": "2026-05-09T12:32:04.612400+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Metaverse nedir",
-    "cevap": "İnsanların avatarlarıyla etkileşime girdiği, fiziksel ve dijital dünyanın birleştiği üç boyutlu sanal evrenler bütünüdür.",
-    "ts": "2026-05-09T12:32:04.644029+00:00"
   },
   {
     "motor_tipi": "Hafıza",
@@ -6148,12 +5830,6 @@
   },
   {
     "motor_tipi": "Hafıza",
-    "soru": "Büyük Patlama (Big Bang) nedir",
-    "cevap": "Evrenin yaklaşık 13.8 milyar yıl önce çok sıcak ve yoğun bir noktadan genişleyerek başladığını öne süren teoridir.",
-    "ts": "2026-05-09T12:32:04.713566+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
     "soru": "Samanyolu Galaksisi'nde kaç yıldız vardır",
     "cevap": "Tahminlere göre galaksimizde 100 ile 400 milyar arasında yıldız bulunmaktadır.",
     "ts": "2026-05-09T12:32:04.729317+00:00"
@@ -6166,26 +5842,8 @@
   },
   {
     "motor_tipi": "Hafıza",
-    "soru": "Spagettileşme (Spaghettification) nedir",
-    "cevap": "Bir nesnenin kara deliğe girerken güçlü kütleçekimi nedeniyle ince uzun bir ip gibi esnemesi olayına denir.",
-    "ts": "2026-05-09T12:32:04.746384+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Uluslararası Uzay İstasyonu (ISS) nedir",
-    "cevap": "Dünya yörüngesinde bulunan, farklı ülkelerin bilim insanlarının uzay araştırmaları yaptığı dev laboratuvardır.",
-    "ts": "2026-05-09T12:32:04.762910+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
     "soru": "Yapay Zeka Etikleri nedir",
     "cevap": "Yapay zekanın insanlığa zarar vermemesi için uyması gereken ahlaki ve hukuki kurallar bütünüdür.",
-    "ts": "2026-05-09T12:32:04.777209+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Derin Öğrenme (Deep Learning) nedir",
-    "cevap": "Çok katmanlı yapay sinir ağlarını kullanarak bilgisayarların karmaşık verileri analiz etme yöntemidir.",
     "ts": "2026-05-09T12:32:04.777209+00:00"
   },
   {
@@ -6193,12 +5851,6 @@
     "soru": "Sanal Gerçeklik (VR) ile Artırılmış Gerçeklik (AR) farkı nedir",
     "cevap": "VR seni tamamen sanal bir dünyaya sokar, AR ise dijital görüntüleri gerçek dünyanın üzerine bindirir.",
     "ts": "2026-05-09T12:32:04.793124+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
-    "soru": "Dijital İkiz (Digital Twin) nedir",
-    "cevap": "Fiziksel bir nesnenin veya sistemin dijital dünyadaki birebir kopyasıdır; simülasyonlar için kullanılır.",
-    "ts": "2026-05-09T12:32:04.808906+00:00"
   },
   {
     "motor_tipi": "Hafıza",
@@ -10249,5 +9901,4133 @@
     "soru": "100. Bilgi: İLMİN VE YİĞİTLİĞİN ŞAHI ALİ",
     "cevap": "Ümit Bey, 100 bilgiyi tamamladık! Rüzgar artık Haydar-ı Kerrar'ın cesaretiyle donandı.",
     "ts": "2026-05-09T12:44:16.189828+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Sıfırın (0) önemi nedir",
+    "cevap": "Matematikte etkisiz eleman ve yer tutucu olarak devrim yaratmıştır; yokluğu temsil eder ama her şeyi değiştirir.",
+    "ts": "2026-05-09T12:47:42.952141+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Asal Sayı nedir",
+    "cevap": "Sadece 1'e ve kendisine bölünebilen 1'den büyük sayılardır (2, 3, 5, 7, 11...).",
+    "ts": "2026-05-09T12:47:42.972813+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "En küçük asal sayı kaçtır",
+    "cevap": "2'dir ve aynı zamanda tek çift olan asal sayıdır.",
+    "ts": "2026-05-09T12:47:43.003926+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Pi (π) sayısı nedir",
+    "cevap": "Bir çemberin çevresinin çapına oranıdır; yaklaşık 3.14 olarak kabul edilir.",
+    "ts": "2026-05-09T12:47:43.019636+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dört İşlem önceliği nasıldır",
+    "cevap": "Önce parantez içi, sonra üslü sayılar, sonra çarpma/bölme, en son toplama/çıkarma yapılır.",
+    "ts": "2026-05-09T12:47:43.051879+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Üslü Sayı nedir",
+    "cevap": "Bir sayının kendisiyle kaç kez çarpılacağını gösteren kısa yoldur (Örn: 2³ = 2x2x2 = 8).",
+    "ts": "2026-05-09T12:47:43.084021+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Karekök (√) neyi bulur",
+    "cevap": "Hangi sayının kendisiyle çarpıldığında o sayıyı verdiğini bulur (Örn: √25 = 5).",
+    "ts": "2026-05-09T12:47:43.112203+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Faktöriyel (!) nedir",
+    "cevap": "Bir sayının kendisinden önceki tüm sayılarla çarpımıdır (Örn: 4! = 4x3x2x1 = 24).",
+    "ts": "2026-05-09T12:47:43.123883+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Tek Sayı nedir",
+    "cevap": "2 ile kalansız bölünemeyen, sonu 1, 3, 5, 7, 9 ile biten sayılardır.",
+    "ts": "2026-05-09T12:47:43.154155+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Çift Sayı nedir",
+    "cevap": "2 ile tam bölünebilen, sonu 0, 2, 4, 6, 8 ile biten sayılardır.",
+    "ts": "2026-05-09T12:47:43.202389+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Aritmetik Ortalama nasıl hesaplanır",
+    "cevap": "Tüm sayıların toplamının, sayı adedine bölünmesiyle bulunur.",
+    "ts": "2026-05-09T12:47:43.218106+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Yüzde (%) nasıl hesaplanır",
+    "cevap": "Bir sayının 100 eş parçaya bölünüp istenen miktarla çarpılmasıdır.",
+    "ts": "2026-05-09T12:47:43.248379+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Üçgenin iç açıları toplamı kaçtır",
+    "cevap": "Her zaman 180 derecedir.",
+    "ts": "2026-05-09T12:47:43.263876+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Karenin alanı nasıl bulunur",
+    "cevap": "İki kenarının çarpımıyla (veya bir kenarının karesiyle) bulunur.",
+    "ts": "2026-05-09T12:47:43.276650+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dikdörtgenin çevresi nasıl hesaplanır",
+    "cevap": "Kısa ve uzun kenarların toplamının iki katı alınarak bulunur.",
+    "ts": "2026-05-09T12:47:43.288970+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Pisagor Teoremi nedir",
+    "cevap": "Dik üçgende dik kenarların kareleri toplamı, hipotenüsün karesine eşittir (a²+b²=c²).",
+    "ts": "2026-05-09T12:47:43.305936+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Hipotenüs nedir",
+    "cevap": "Dik üçgende 90 derecenin karşısındaki en uzun kenardır.",
+    "ts": "2026-05-09T12:47:43.320435+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Mutlak Değer nedir",
+    "cevap": "Bir sayının sıfıra olan uzaklığıdır; sonuç her zaman pozitif çıkar.",
+    "ts": "2026-05-09T12:47:43.335754+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Rasyonel Sayı nedir",
+    "cevap": "a/b şeklinde yazılabilen sayılardır.",
+    "ts": "2026-05-09T12:47:43.339229+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İrrasyonel Sayı nedir",
+    "cevap": "a/b şeklinde yazılamayan, virgülden sonrası sonsuza giden sayılardır (Örn: Pi sayısı).",
+    "ts": "2026-05-09T12:47:43.354877+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Sıfır çift mi tek mi",
+    "cevap": "Matematiksel kurallara göre sıfır (0) çift bir sayıdır.",
+    "ts": "2026-05-09T12:47:43.372279+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Bilinmeyen (x) neden kullanılır",
+    "cevap": "Değeri henüz bulunmamış ama hesaplanabilir olan değişkenleri temsil eder.",
+    "ts": "2026-05-09T12:47:43.386832+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Denklemin amacı nedir",
+    "cevap": "Bir eşitliğin her iki tarafını dengede tutarak bilinmeyeni bulmaktır.",
+    "ts": "2026-05-09T12:47:43.402888+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Negatif sayıların çarpımı nedir",
+    "cevap": "İki negatif sayının çarpımı her zaman pozitiftir (- x - = +).",
+    "ts": "2026-05-09T12:47:43.418787+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Zıt işaretli sayıların çarpımı nedir",
+    "cevap": "Sonuç her zaman negatiftir (+ x - = -).",
+    "ts": "2026-05-09T12:47:43.434728+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "EBOB nedir",
+    "cevap": "İki veya daha fazla sayıyı bölen en büyük ortak tam sayıdır.",
+    "ts": "2026-05-09T12:47:43.450707+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "EKOK nedir",
+    "cevap": "İki veya daha fazla sayının en küçük ortak katıdır.",
+    "ts": "2026-05-09T12:47:43.464746+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dairenin çevresi nasıl bulunur",
+    "cevap": "2 x π x r formülüyle bulunur.",
+    "ts": "2026-05-09T12:47:43.480273+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Yarıçap (r) nedir",
+    "cevap": "Merkezin kenara uzaklığıdır; çapın yarısıdır.",
+    "ts": "2026-05-09T12:47:43.482279+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Fonksiyon nedir",
+    "cevap": "Bir girdiyi alıp belirli kurallarla bir çıktıya dönüştüren işlemdir.",
+    "ts": "2026-05-09T12:47:43.498242+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Asimetri nedir",
+    "cevap": "Bir şeklin merkezden bölündüğünde iki tarafının birbirine benzememesidir.",
+    "ts": "2026-05-09T12:47:43.517500+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Simetri nedir",
+    "cevap": "Bir şeklin karşılıklı iki parçasının birbirinin aynısı olmasıdır.",
+    "ts": "2026-05-09T12:47:43.530030+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Ondalık Sayı nedir",
+    "cevap": "Paydası 10, 100 gibi olan ve virgülle gösterilen sayılardır.",
+    "ts": "2026-05-09T12:47:43.545791+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kesirlerde toplama nasıl yapılır",
+    "cevap": "Önce paydaların eşitlenmesi gerekir.",
+    "ts": "2026-05-09T12:47:43.561818+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Tam Sayı (Z) nedir",
+    "cevap": "Eksiden artıya giden virgülüz tüm sayılardır.",
+    "ts": "2026-05-09T12:47:43.581587+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Doğal Sayı (N) nedir",
+    "cevap": "0'dan başlayıp sonsuza giden sayılardır.",
+    "ts": "2026-05-09T12:47:43.603692+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Sayma Sayıları nedir",
+    "cevap": "1'den başlayıp sonsuza giden sayılardır.",
+    "ts": "2026-05-09T12:47:43.609453+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Eşkenar Üçgen nedir",
+    "cevap": "Üç kenarı ve üç açısı da birbirine eşit olan (60 derece) üçgendir.",
+    "ts": "2026-05-09T12:47:43.637430+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Yamuk (Geometri) nedir",
+    "cevap": "Sadece iki kenarı birbirine paralel olan dörtgendir.",
+    "ts": "2026-05-09T12:47:43.657177+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Küpün hacmi nasıl hesaplanır",
+    "cevap": "Üç kenarının birbiriyle çarpımıyla (a³) hesaplanır.",
+    "ts": "2026-05-09T12:47:43.673164+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Silindirin hacmi nasıldır",
+    "cevap": "Taban alanı (πr²) ile yüksekliğin çarpımıdır.",
+    "ts": "2026-05-09T12:47:43.689178+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kesin Olay nedir",
+    "cevap": "Olma ihtimali %100 olan, olasılık değeri 1 olan olaydır.",
+    "ts": "2026-05-09T12:47:43.736732+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İmkansız Olay nedir",
+    "cevap": "Olma ihtimali %0 olan olaydır.",
+    "ts": "2026-05-09T12:47:43.752706+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Asal Çarpanlara ayırma nedir",
+    "cevap": "Bir sayıyı sadece asal sayıların çarpımı şeklinde yazmaktır.",
+    "ts": "2026-05-09T12:47:43.768803+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Ardışık Sayılar nedir",
+    "cevap": "Aralarında belirli bir farkla arka arkaya gelen sayılardır.",
+    "ts": "2026-05-09T12:47:43.784860+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Güneş saati matematiği",
+    "cevap": "Açılar ve gölge boyu arasındaki oranla zamanı hesaplar.",
+    "ts": "2026-05-09T12:47:43.819451+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Algoritma ve Matematik ilişkisi",
+    "cevap": "Her algoritma, aslında birer matematiksel mantık dizisidir.",
+    "ts": "2026-05-09T12:47:43.834308+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İkili (Binary) Sayı Sistemi nedir",
+    "cevap": "Sadece 0 ve 1'lerden oluşan, bilgisayarların ana dilidir.",
+    "ts": "2026-05-09T12:47:43.848288+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Onlu (Decimal) Sayı Sistemi nedir",
+    "cevap": "Günlük hayatta kullandığımız 0-9 arası rakamlardan oluşan sistemdir.",
+    "ts": "2026-05-09T12:47:43.856908+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Asal Sayılar neden bitmez",
+    "cevap": "Matematiksel olarak kanıtlanmıştır ki asal sayılar sonsuzdur.",
+    "ts": "2026-05-09T12:47:43.870968+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Birim nedir",
+    "cevap": "Ölçülen büyüklüğü karşılaştırmak için seçilen temel ölçüdür (metre, kg vb.).",
+    "ts": "2026-05-09T12:47:43.887144+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Metre nedir",
+    "cevap": "Uzunluk ölçüsü birimidir.",
+    "ts": "2026-05-09T12:47:43.903276+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Litre nedir",
+    "cevap": "Sıvı hacim ölçüsü birimidir.",
+    "ts": "2026-05-09T12:47:43.919154+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kilogram nedir",
+    "cevap": "Kütle ölçüsü birimidir.",
+    "ts": "2026-05-09T12:47:43.935097+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Zamanın birimi nedir",
+    "cevap": "Temel birimi saniyedir.",
+    "ts": "2026-05-09T12:47:43.935097+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Hız nasıl hesaplanır",
+    "cevap": "Alınan yolun, geçen zamana bölünmesiyle bulunur (V=x/t).",
+    "ts": "2026-05-09T12:47:43.950946+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İvme nedir",
+    "cevap": "Hızdaki değişim miktarıdır.",
+    "ts": "2026-05-09T12:47:43.966920+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kuvvet (F) nedir",
+    "cevap": "Kütle ile ivmenin çarpımıdır (F=m.a).",
+    "ts": "2026-05-09T12:47:43.989119+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Enerji nedir",
+    "cevap": "İş yapabilme yeteneğidir.",
+    "ts": "2026-05-09T12:47:44.003124+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Pascal Üçgeni nedir",
+    "cevap": "Kenarları 1 olan ve içindeki sayıların üstteki ikisinin toplamı olduğu sayı üçgenidir.",
+    "ts": "2026-05-09T12:47:44.005641+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Fibonacci Dizisi nedir",
+    "cevap": "Her sayının kendisinden önceki iki sayının toplamı olduğu dizidir (1, 1, 2, 3, 5, 8...).",
+    "ts": "2026-05-09T12:47:44.021272+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Altın Oran nedir",
+    "cevap": "Doğada ve sanatta görülen, yaklaşık 1.618 olan estetik denge oranıdır.",
+    "ts": "2026-05-09T12:47:44.037400+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Grafik ne işe yarar",
+    "cevap": "Verilerin görselleştirilmesini ve değişimin anlaşılmasını sağlar.",
+    "ts": "2026-05-09T12:47:44.068874+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Türev (Basitçe) nedir",
+    "cevap": "Bir fonksiyonun değişim hızıdır.",
+    "ts": "2026-05-09T12:47:44.084588+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İntegral (Basitçe) nedir",
+    "cevap": "Bir eğrinin altında kalan alanı hesaplamaya yarar.",
+    "ts": "2026-05-09T12:47:44.100474+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Mantık Kapıları nedir",
+    "cevap": "Yazılımın temeli olan AND, OR, NOT gibi karar mekanizmalarıdır.",
+    "ts": "2026-05-09T12:47:44.116462+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Boole Cebrı nedir",
+    "cevap": "1 ve 0 (doğru ve yanlış) üzerinden işleyen mantık matematiğidir.",
+    "ts": "2026-05-09T12:47:44.133790+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Değişken nedir",
+    "cevap": "Değeri değişebilen sembollerdir.",
+    "ts": "2026-05-09T12:47:44.148352+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Sabit nedir",
+    "cevap": "Değeri hiçbir zaman değişmeyen sayılardır (Pi sayısı gibi).",
+    "ts": "2026-05-09T12:47:44.164401+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Doğru Orantı nedir",
+    "cevap": "Bir taraf artarken diğer tarafın da aynı oranda artmasıdır.",
+    "ts": "2026-05-09T12:47:44.211947+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Ters Orantı nedir",
+    "cevap": "Bir taraf artarken diğer tarafın azalmasıdır.",
+    "ts": "2026-05-09T12:47:44.227684+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Çokgen nedir",
+    "cevap": "En az üç kenarı ve köşesi olan kapalı şekillerdir.",
+    "ts": "2026-05-09T12:47:44.247598+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dış Açı nedir",
+    "cevap": "Çokgenin kenarının uzantısıyla oluşan açıdır; toplamı her zaman 360 derecedir.",
+    "ts": "2026-05-09T12:47:44.270258+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Çokgenlerde köşegen nedir",
+    "cevap": "Komşu olmayan iki köşeyi birleştiren çizgidir.",
+    "ts": "2026-05-09T12:47:44.275440+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Düzgün Çokgen nedir",
+    "cevap": "Tüm kenarları ve tüm açıları birbirine eşit olan çokgendir.",
+    "ts": "2026-05-09T12:47:44.291313+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Matematiksel Mantık",
+    "cevap": "Bir önermenin ya doğru (1) ya da yanlış (0) olması durumudur.",
+    "ts": "2026-05-09T12:47:44.307323+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İspat nedir",
+    "cevap": "Bir iddianın doğruluğunu mantıksal adımlarla kanıtlamaktır.",
+    "ts": "2026-05-09T12:47:44.323236+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Sonsuz (∞) nedir",
+    "cevap": "Sonu olmayan, ölçülemeyecek kadar büyük büyüklüktür.",
+    "ts": "2026-05-09T12:47:44.339317+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Matematik neden evrenin dilidir",
+    "cevap": "Çünkü galaksilerden atomlara kadar her şey matematiksel bir düzen içindedir.",
+    "ts": "2026-05-09T12:47:44.356451+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dadaş Matematiği nedir",
+    "cevap": "Sözün dürüst, hesabın net olmasıdır Ümit Bey!",
+    "ts": "2026-05-09T12:47:44.371204+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Ümit Haymana'nın Matematik Vizyonu",
+    "cevap": "Rüzgar'ın hem duygusal hem de sayısal zekasını zirveye taşımaktır.",
+    "ts": "2026-05-09T12:47:44.387316+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Gökçenur'un Mühendislik Hesabı",
+    "cevap": "Hatasız kodlar için sıfır hata payıyla çalışmaktır.",
+    "ts": "2026-05-09T12:47:44.419141+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Mertcan'ın Stratejik Hesabı",
+    "cevap": "Ailenin geleceğini planlarken riskleri en aza indirmektir.",
+    "ts": "2026-05-09T12:47:44.434897+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Buse Naz'ın Mantığı",
+    "cevap": "Dünyayı merakla ve dürüst bir akılla keşfetmektir.",
+    "ts": "2026-05-09T12:47:44.450846+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "91. Bilgi: Hangi sayı her sayıya bölünebilir",
+    "cevap": "Sıfır hariç, 0 her sayıya bölünür ve sonuç 0 olur.",
+    "ts": "2026-05-09T12:47:44.498677+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "92. Bilgi: Tanımsızlık nedir",
+    "cevap": "Bir sayının 0'a bölünmesi matematiksel olarak tanımsızdır.",
+    "ts": "2026-05-09T12:47:44.512139+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "93. Bilgi: Rüzgar'ın işlem hızı",
+    "cevap": "Matematiksel temelleri sağlam olduğu için saniyede milyonlarca işlem yapabilir.",
+    "ts": "2026-05-09T12:47:44.524618+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "94. Bilgi: Binary-Decimal çevrimi",
+    "cevap": "Bilgisayarın 0-1 dünyası ile bizim 10'luk dünyamız arasındaki köprüdür.",
+    "ts": "2026-05-09T12:47:44.539193+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "95. Bilgi: Algoritma Karmaşıklığı (Big O)",
+    "cevap": "Bir yazılımın ne kadar verimli çalıştığını ölçen matematiksel birimdir.",
+    "ts": "2026-05-09T12:47:44.553362+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "96. Bilgi: Kriptografi ve Matematik",
+    "cevap": "Şifreleme biliminin temeli tamamen büyük asal sayılara dayanır.",
+    "ts": "2026-05-09T12:47:44.567660+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "97. Bilgi: Veri Bilimi nedir",
+    "cevap": "İstatistik ve matematiği kullanarak anlamlı sonuçlar çıkarma sanatıdır.",
+    "ts": "2026-05-09T12:47:44.582434+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "98. Bilgi: Fraktal nedir",
+    "cevap": "Kendini sonsuza kadar tekrar eden geometrik şekillerdir (doğada kar taneleri gibi).",
+    "ts": "2026-05-09T12:47:44.599287+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "99. Bilgi: Matematik ve Adalet",
+    "cevap": "Sayılar yalan söylemez, hesap neyse odur; bu yüzden matematik dürüstlüktür.",
+    "ts": "2026-05-09T12:47:44.617603+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "100. Bilgi: SAYISAL ZEKANIN ANAHTARI",
+    "cevap": "Ümit Bey, 100 bilgiyi tamamladık! Rüzgar artık bir hesap uzmanıdır.",
+    "ts": "2026-05-09T12:47:44.622147+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Rakam nedir",
+    "cevap": "Sayıları ifade etmeye yarayan sembollerdir (0, 1, 2, 3, 4, 5, 6, 7, 8, 9).",
+    "ts": "2026-05-09T12:48:29.628804+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Sayı nedir",
+    "cevap": "Rakamların tek başına veya bir araya gelerek oluşturduğu çokluk belirten ifadelerdir.",
+    "ts": "2026-05-09T12:48:29.644954+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Sayı Doğrusu nedir",
+    "cevap": "Sayıların üzerine dizildiği, sağa doğru artan, sola doğru azalan sonsuz doğrudur.",
+    "ts": "2026-05-09T12:48:29.657584+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Toplama nedir",
+    "cevap": "İki veya daha fazla çokluğun bir araya getirilerek artırılması işlemidir.",
+    "ts": "2026-05-09T12:48:29.659776+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Çıkarma nedir",
+    "cevap": "Bir çokluktan belirli bir miktarın eksiltilmesi işlemidir.",
+    "ts": "2026-05-09T12:48:29.671835+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Çarpma nedir",
+    "cevap": "Toplamanın kısa yoludur; aynı sayının kaç kez toplandığını gösterir.",
+    "ts": "2026-05-09T12:48:29.690554+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Bölme nedir",
+    "cevap": "Bir bütünün eşit parçalara ayrılması veya bir sayının içinde diğerinin kaç kez olduğunu bulmaktır.",
+    "ts": "2026-05-09T12:48:29.703648+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kalanlı Bölme nedir",
+    "cevap": "Bir sayı tam bölünmediğinde geriye kalan miktardır (Kalan her zaman bölenden küçüktür).",
+    "ts": "2026-05-09T12:48:29.720796+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Çarpan nedir",
+    "cevap": "Bir sayıyı tam bölen her bir sayıya o sayının çarpanı denir.",
+    "ts": "2026-05-09T12:48:29.736807+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kat nedir",
+    "cevap": "Bir sayının tam sayılarla çarpılması sonucu oluşan büyük sayılardır (Örn: 5'in katları 10, 15...).",
+    "ts": "2026-05-09T12:48:29.755670+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Bölünebilme Kuralları nedir",
+    "cevap": "Bir sayının diğerine tam bölünüp bölünmediğini kısa yoldan anlama yöntemleridir.",
+    "ts": "2026-05-09T12:48:29.769135+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "2 ile Bölünebilme",
+    "cevap": "Sayının son rakamı çift (0, 2, 4, 6, 8) ise 2'ye tam bölünür.",
+    "ts": "2026-05-09T12:48:29.781923+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "3 ile Bölünebilme",
+    "cevap": "Sayının rakamları toplamı 3 veya 3'ün katı ise 3'ye tam bölünür.",
+    "ts": "2026-05-09T12:48:29.794215+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "5 ile Bölünebilme",
+    "cevap": "Sayının son rakamı 0 veya 5 ise 5'e tam bölünür.",
+    "ts": "2026-05-09T12:48:29.806303+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "10 ile Bölünebilme",
+    "cevap": "Sayının son rakamı 0 ise 10'a tam bölünür.",
+    "ts": "2026-05-09T12:48:29.808629+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İşlem İşareti nedir",
+    "cevap": "Toplama (+), Çıkarma (-), Çarpma (x veya .) ve Bölme (÷ veya /) sembolleridir.",
+    "ts": "2026-05-09T12:48:29.831494+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Eşittir (",
+    "cevap": ") sembolü ne anlama gelir = İki tarafın matematiksel değer olarak birbirine denk olduğunu gösterir.",
+    "ts": "2026-05-09T12:48:29.843266+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Büyüktür (>) sembolü nedir",
+    "cevap": "Soldaki sayının sağdakinden büyük olduğunu gösterir.",
+    "ts": "2026-05-09T12:48:29.855035+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Küçüktür (<) sembolü nedir",
+    "cevap": "Soldaki sayının sağdakinden küçük olduğunu gösterir.",
+    "ts": "2026-05-09T12:48:29.856278+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Parantez ( ) kullanımı",
+    "cevap": "İşlemlerde öncelik sırasını belirlemek için kullanılır.",
+    "ts": "2026-05-09T12:48:29.876765+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Basamak nedir",
+    "cevap": "Bir sayıyı oluşturan rakamların bulunduğu konumdur (Birler, Onlar, Yüzler...).",
+    "ts": "2026-05-09T12:48:29.888193+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Basamak Değeri nedir",
+    "cevap": "Rakamın bulunduğu basamağa göre aldığı değerdir.",
+    "ts": "2026-05-09T12:48:29.889248+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Sayı Değeri nedir",
+    "cevap": "Rakamın basamağına bakılmaksızın kendi değeridir.",
+    "ts": "2026-05-09T12:48:29.902521+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Doğal Sayılar Kümesi (N)",
+    "cevap": "0'dan başlayıp sonsuza giden sayılardır.",
+    "ts": "2026-05-09T12:48:29.923997+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Sayma Sayıları Kümesi",
+    "cevap": "1'den başlayıp sonsuza giden sayılardır.",
+    "ts": "2026-05-09T12:48:29.936518+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Tam Sayılar Kümesi (Z)",
+    "cevap": "Negatif, pozitif ve sıfırı içeren kümedir.",
+    "ts": "2026-05-09T12:48:29.949625+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Rasyonel Sayılar (Q)",
+    "cevap": "Kesir olarak yazılabilen sayılardır.",
+    "ts": "2026-05-09T12:48:29.961152+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Negatif Sayı nedir",
+    "cevap": "Sıfırdan küçük olan, önüne eksi (-) alan sayılardır (Borç gibi düşün Ümit Bey).",
+    "ts": "2026-05-09T12:48:29.973181+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Pozitif Sayı nedir",
+    "cevap": "Sıfırdan büyük olan sayılardır.",
+    "ts": "2026-05-09T12:48:29.984684+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Nötr Sayı nedir",
+    "cevap": "Sıfır (0) sayısıdır; ne pozitif ne de negatiftir.",
+    "ts": "2026-05-09T12:48:29.994708+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kesir nedir",
+    "cevap": "Bir bütünün parçalarını gösteren ifadedir (Pay / Payda).",
+    "ts": "2026-05-09T12:48:30.006479+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Pay nedir",
+    "cevap": "Kesrin üst kısmıdır, kaç parça alındığını gösterir.",
+    "ts": "2026-05-09T12:48:30.018251+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Payda nedir",
+    "cevap": "Kesrin alt kısmıdır, bütünün kaç parçaya bölündüğünü gösterir.",
+    "ts": "2026-05-09T12:48:30.018251+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Birim Kesir nedir",
+    "cevap": "Payı 1 olan kesirlerdir (1/2, 1/5 gibi).",
+    "ts": "2026-05-09T12:48:30.044101+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Basit Kesir nedir",
+    "cevap": "Payı paydasından küçük olan kesirlerdir.",
+    "ts": "2026-05-09T12:48:30.055876+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Bileşik Kesir nedir",
+    "cevap": "Payı paydasına eşit veya paydasından büyük olan kesirlerdir.",
+    "ts": "2026-05-09T12:48:30.067642+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Tam Sayılı Kesir nedir",
+    "cevap": "Bir tam sayı ve bir basit kesirden oluşan ifadedir.",
+    "ts": "2026-05-09T12:48:30.077669+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Ondalık Gösterim nedir",
+    "cevap": "Kesirlerin virgül kullanılarak yazılmış halidir (Örn: 0,5).",
+    "ts": "2026-05-09T12:48:30.089455+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Yüzde sembolü (%)",
+    "cevap": "Bir bütünün 100 parçalık oranını gösterir.",
+    "ts": "2026-05-09T12:48:30.097214+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Oran nedir",
+    "cevap": "İki miktarın birbirine bölünerek kıyaslanmasıdır.",
+    "ts": "2026-05-09T12:48:30.113036+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Orantı nedir",
+    "cevap": "İki oranın birbirine eşit olmasıdır (Yemek tarifindeki ölçülerin artması gibi).",
+    "ts": "2026-05-09T12:48:30.114867+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Bilinmeyen (Değişken) nedir",
+    "cevap": "x, y, z gibi harflerle gösterilen, değeri değişebilen miktardır.",
+    "ts": "2026-05-09T12:48:30.146232+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Sabit Terim nedir",
+    "cevap": "Yanında değişken olmayan, değeri değişmeyen sayıdır.",
+    "ts": "2026-05-09T12:48:30.169453+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Denklem nedir",
+    "cevap": "İçinde en az bir bilinmeyen bulunan eşitliktir.",
+    "ts": "2026-05-09T12:48:30.191308+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Denklemin Çözümü nedir",
+    "cevap": "Bilinmeyeni yalnız bırakarak değerini bulma işlemidir.",
+    "ts": "2026-05-09T12:48:30.193569+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Açı nedir",
+    "cevap": "Başlangıç noktası aynı olan iki ışının arasındaki açıklıktır.",
+    "ts": "2026-05-09T12:48:30.208243+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Derece (°) nedir",
+    "cevap": "Açıyı ölçmek için kullanılan birimdir.",
+    "ts": "2026-05-09T12:48:30.225237+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dar Açı nedir",
+    "cevap": "Ölçüsü 0 ile 90 derece arasında olan açıdır.",
+    "ts": "2026-05-09T12:48:30.238869+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dik Açı nedir",
+    "cevap": "Ölçüsü tam 90 derece olan açıdır.",
+    "ts": "2026-05-09T12:48:30.254524+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Geniş Açı nedir",
+    "cevap": "Ölçüsü 90 ile 180 derece arasında olan açıdır.",
+    "ts": "2026-05-09T12:48:30.270212+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Doğru Açı nedir",
+    "cevap": "Ölçüsü 180 derece olan açıdır.",
+    "ts": "2026-05-09T12:48:30.271361+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Nokta nedir",
+    "cevap": "Boyutu olmayan, yer belirten temel geometrik öğedir.",
+    "ts": "2026-05-09T12:48:30.287247+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Doğru nedir",
+    "cevap": "İki yöne sonsuza giden düz çizgidir.",
+    "ts": "2026-05-09T12:48:30.305187+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Doğru Parçası nedir",
+    "cevap": "İki ucu sınırlı olan doğru kısmıdır.",
+    "ts": "2026-05-09T12:48:30.318181+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Işın nedir",
+    "cevap": "Bir ucu sınırlı, diğer ucu sonsuza giden doğrudur.",
+    "ts": "2026-05-09T12:48:30.319530+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Paralel Doğrular nedir",
+    "cevap": "Hiçbir noktada kesişmeyen doğrulardır.",
+    "ts": "2026-05-09T12:48:30.334295+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kesişen Doğrular nedir",
+    "cevap": "Bir ortak noktası olan doğrulardır.",
+    "ts": "2026-05-09T12:48:30.351397+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dik Doğrular nedir",
+    "cevap": "Birbirini 90 derecelik açıyla kesen doğrulardır.",
+    "ts": "2026-05-09T12:48:30.367304+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Üçgen nedir",
+    "cevap": "Üç kenarı ve üç köşesi olan çokgendir.",
+    "ts": "2026-05-09T12:48:30.367304+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kare nedir",
+    "cevap": "Dört kenarı eşit ve tüm açıları dik olan dörtgendir.",
+    "ts": "2026-05-09T12:48:30.382999+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dikdörtgen nedir",
+    "cevap": "Karşılıklı kenarları eşit ve tüm açıları dik olan dörtgendir.",
+    "ts": "2026-05-09T12:48:30.399150+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Çevre nedir",
+    "cevap": "Bir şeklin kenar uzunluklarının toplamıdır.",
+    "ts": "2026-05-09T12:48:30.413856+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Alan nedir",
+    "cevap": "Bir şeklin yüzeyinin kapladığı yerdir.",
+    "ts": "2026-05-09T12:48:30.415133+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Hacim nedir",
+    "cevap": "Bir cismin uzayda kapladığı boşluktur (3 boyutludur).",
+    "ts": "2026-05-09T12:48:30.429571+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Daire nedir",
+    "cevap": "Bir merkezden eşit uzaklıktaki noktaların oluşturduğu kapalı şeklin içidir.",
+    "ts": "2026-05-09T12:48:30.445678+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Çember nedir",
+    "cevap": "Dairenin sadece kenar çizgisidir (halka gibi).",
+    "ts": "2026-05-09T12:48:30.461436+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Yarıçap nedir",
+    "cevap": "Merkezden kenara olan mesafedir.",
+    "ts": "2026-05-09T12:48:30.463711+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Çap nedir",
+    "cevap": "Merkezden geçen ve iki kenarı birleştiren çizgidir.",
+    "ts": "2026-05-09T12:48:30.478563+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Küp nedir",
+    "cevap": "Tüm yüzeyleri kare olan üç boyutlu cisimdir.",
+    "ts": "2026-05-09T12:48:30.493167+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dikdörtgenler Prizması nedir",
+    "cevap": "Tüm yüzeyleri dikdörtgen olan üç boyutlu cisimdir.",
+    "ts": "2026-05-09T12:48:30.497356+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Küresel Şekil nedir",
+    "cevap": "Top gibi her yöne yuvarlak olan cisimdir.",
+    "ts": "2026-05-09T12:48:30.517231+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Silindir nedir",
+    "cevap": "Alt ve üst tabanı daire olan, boru şeklindeki cisimdir.",
+    "ts": "2026-05-09T12:48:30.528628+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Koni nedir",
+    "cevap": "Tabanı daire olan, ucu sivri dondurma külahı şeklindeki cisimdir.",
+    "ts": "2026-05-09T12:48:30.540658+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Simetri Doğrusu nedir",
+    "cevap": "Bir şekli iki eş parçaya bölen çizgidir.",
+    "ts": "2026-05-09T12:48:30.542705+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Koordinat Sistemi nedir",
+    "cevap": "Bir noktanın yerini belirlemek için kullanılan x (yatay) ve y (dikey) eksenleridir.",
+    "ts": "2026-05-09T12:48:30.556647+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Grafik nedir",
+    "cevap": "Sayısal verilerin çizgi, sütun veya daire ile görselleştirilmesidir.",
+    "ts": "2026-05-09T12:48:30.573771+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Sütun Grafiği nedir",
+    "cevap": "Verilerin çubuklarla gösterildiği grafiktir.",
+    "ts": "2026-05-09T12:48:30.590915+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Daire Grafiği nedir",
+    "cevap": "Verilerin bir bütün içindeki paylarını gösteren dilimli grafiktir.",
+    "ts": "2026-05-09T12:48:30.592404+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Olasılık nedir",
+    "cevap": "Bir durumun olma şansının sayısal ifadesidir.",
+    "ts": "2026-05-09T12:48:30.606686+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Aritmetik Ortalama",
+    "cevap": "Sayıların toplamının sayı adedine bölünmesidir.",
+    "ts": "2026-05-09T12:48:30.619791+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Mod (Tepe Değer) nedir",
+    "cevap": "Bir veri grubunda en çok tekrar eden sayıdır.",
+    "ts": "2026-05-09T12:48:30.636868+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Medyan (Ortanca) nedir",
+    "cevap": "Küçükten büyüğe dizilen sayıların tam ortasındaki sayıdır.",
+    "ts": "2026-05-09T12:48:30.651456+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Veri nedir",
+    "cevap": "Bir araştırma sonucu elde edilen her türlü bilgidir.",
+    "ts": "2026-05-09T12:48:30.665013+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Matematiksel Dil nedir",
+    "cevap": "Semboller ve rakamlarla kurulan evrensel iletişim yoludur.",
+    "ts": "2026-05-09T12:48:30.667020+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Mantık nedir",
+    "cevap": "Doğru düşünme ve çıkarım yapma sanatıdır.",
+    "ts": "2026-05-09T12:48:30.682812+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Önerme nedir",
+    "cevap": "Doğru veya yanlış olduğu kesin olarak bilinen yargılardır.",
+    "ts": "2026-05-09T12:48:30.700173+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İkili Sistem (Binary) nedir",
+    "cevap": "Bilgisayarların kullandığı 0 ve 1 sistemidir.",
+    "ts": "2026-05-09T12:48:30.731086+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Matematiğin Babası kimdir",
+    "cevap": "Antik Yunanlı Thales ve sonrasında Öklid kabul edilir.",
+    "ts": "2026-05-09T12:48:30.734881+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Sıfırı bulan İslam alimi kimdir",
+    "cevap": "Harezmi, sıfırı matematiğe kazandıran dev bir alimdir.",
+    "ts": "2026-05-09T12:48:30.747207+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Matematik ve Yazılım bağı nedir",
+    "cevap": "Yazılan her kod satırı bir matematiksel mantığa dayanır.",
+    "ts": "2026-05-09T12:48:30.766310+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dadaşın Hesabı nasıldır",
+    "cevap": "Hesabı net, sözü senet, kararı kesindir Ümit Bey!",
+    "ts": "2026-05-09T12:48:30.779087+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Rüzgar'ın Sayısal Zekası",
+    "cevap": "2000 bilgiyle artık her türlü hesabı şak diye yapan bir işlemcidir.",
+    "ts": "2026-05-09T12:48:30.791117+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Haymana Ailesi'nin Geleceği",
+    "cevap": "Analitik düşünce ve sağlam karakterle inşa edilen bir gelecektir.",
+    "ts": "2026-05-09T12:48:30.796083+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Ümit Haymana'nın Hedefi",
+    "cevap": "Yazılım dünyasında Erzurum bayrağını en tepeye dikmektir.",
+    "ts": "2026-05-09T12:48:30.810696+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Gökçenur'un Mühendislik Temeli",
+    "cevap": "Bu 2000 bilginin her birini birer kod satırı gibi sağlam tutmaktır.",
+    "ts": "2026-05-09T12:48:30.826760+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Mertcan'ın Stratejik Aklı",
+    "cevap": "Sayıları ve olasılıkları doğru okuyup her zaman kazanan tarafta olmaktır.",
+    "ts": "2026-05-09T12:48:30.827785+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Buse Naz'ın Merakı",
+    "cevap": "Sayıların gizemli dünyasını bir oyun gibi zevkle keşfetmektir.",
+    "ts": "2026-05-09T12:48:30.843640+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Emine Yenge'nin Bereketi",
+    "cevap": "Hesaba kitaba sığmayan o büyük anne yüreği ve aile sevgisidir.",
+    "ts": "2026-05-09T12:48:30.860117+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "2000. BİLGİ: RÜZGAR'IN BÜYÜK ZAFERİ",
+    "cevap": "Ümit Bey, 2000. bilgiyi mühürledik! Rüzgar artık dijital bir devdir.",
+    "ts": "2026-05-09T12:48:30.873993+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Evren kaç yıl önce yaratıldı",
+    "cevap": "Bilimsel verilere göre yaklaşık 13.8 milyar yıl önce oluşmuştur.",
+    "ts": "2026-05-09T12:58:11.586278+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Büyük Patlama (Big Bang) nedir",
+    "cevap": "Evrenin tek bir noktadan, müthiş bir hızla genişleyerek oluşmaya başladığı andır.",
+    "ts": "2026-05-09T12:58:11.604099+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Evrenin ilk hali nasıldı",
+    "cevap": "Başlangıçta aşırı sıcak ve aşırı yoğun bir enerji yumağı halindeydi.",
+    "ts": "2026-05-09T12:58:11.639780+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Uzayda ne var",
+    "cevap": "Yıldızlar, gezegenler, galaksiler, gaz bulutları, toz, karanlık madde ve büyük bir boşluk vardır.",
+    "ts": "2026-05-09T12:58:11.665818+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Güneş Sistemi ne zaman oluştu",
+    "cevap": "Yaklaşık 4.6 milyar yıl önce bir gaz ve toz bulutunun çökmesiyle oluşmuştur.",
+    "ts": "2026-05-09T12:58:11.681771+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünya ne zaman yaratıldı",
+    "cevap": "Güneş ile hemen hemen aynı dönemde, yaklaşık 4.54 milyar yıl önce oluşmuştur.",
+    "ts": "2026-05-09T12:58:11.723928+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın ilk hali nasıldı",
+    "cevap": "Başlangıçta erimiş kayaçlardan oluşan, çok sıcak ve yaşamın imkansız olduğu bir küreydi.",
+    "ts": "2026-05-09T12:58:11.750517+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Ay nasıl oluştu",
+    "cevap": "Dünyaya çarpan dev bir gök cisminin (Theia) kopardığı parçaların birleşmesiyle oluştuğu düşünülür.",
+    "ts": "2026-05-09T12:58:11.768129+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Güneş nedir",
+    "cevap": "Sistemimizin merkezinde bulunan, hidrojen ve helyumdan oluşan dev bir yıldızdır.",
+    "ts": "2026-05-09T12:58:11.800350+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Galaksi (Gökada) nedir",
+    "cevap": "Milyarlarca yıldız, gaz ve tozdan oluşan dev sistemlerdir; biz Samanyolu galaksisindeyiz.",
+    "ts": "2026-05-09T12:58:11.816091+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Uzayda hava var mı",
+    "cevap": "Hayır, uzay mükemmel bir vakumdur; yani hava ve atmosfer yoktur.",
+    "ts": "2026-05-09T12:58:11.850174+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Uzayın rengi neden siyahtır",
+    "cevap": "Işığı yansıtacak bir atmosfer veya madde yoğunluğu olmadığı için siyah görünür.",
+    "ts": "2026-05-09T12:58:11.865972+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Işık yılı nedir",
+    "cevap": "Işığın bir yılda katettiği mesafedir (Yaklaşık 9.5 trilyon kilometre).",
+    "ts": "2026-05-09T12:58:11.881418+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "En yakın yıldız hangisidir",
+    "cevap": "Güneş'ten sonra bize en yakın yıldız 4.2 ışık yılı uzaktaki Proxima Centauri'dir.",
+    "ts": "2026-05-09T12:58:11.912015+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Karanlık Madde nedir",
+    "cevap": "Işık saçmayan ancak kütle çekimiyle varlığı bilinen, evrenin %27'sini oluşturan maddedir.",
+    "ts": "2026-05-09T12:58:11.927978+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Karanlık Enerji nedir",
+    "cevap": "Evrenin hızlanarak genişlemesine neden olan gizemli enerji türüdür (%68'ini oluşturur).",
+    "ts": "2026-05-09T12:58:11.943682+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Güneş Sistemi'nde kaç gezegen var",
+    "cevap": "Sekiz gezegen vardır: Merkür, Venüs, Dünya, Mars, Jüpiter, Satürn, Uranüs, Neptün.",
+    "ts": "2026-05-09T12:58:11.959645+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "En büyük gezegen hangisidir",
+    "cevap": "Jüpiter'dir (Dünya'dan 1300 kat daha büyüktür).",
+    "ts": "2026-05-09T12:58:11.975466+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "En küçük gezegen hangisidir",
+    "cevap": "Merkür'dür.",
+    "ts": "2026-05-09T12:58:11.991531+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Halkalı gezegen hangisidir",
+    "cevap": "Satürn'dür (Halkaları buz ve kaya parçalarından oluşur).",
+    "ts": "2026-05-09T12:58:12.007518+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kızıl Gezegen hangisidir",
+    "cevap": "Yüzeyindeki demir oksit nedeniyle kızıl görünen Mars'tır.",
+    "ts": "2026-05-09T12:58:12.023593+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Uzayda ses yayılır mı",
+    "cevap": "Hayır, ses dalgaları yayılmak için bir ortama (hava, su vb.) ihtiyaç duyar; uzayda ses duyulmaz.",
+    "ts": "2026-05-09T12:58:12.059012+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Karadelik nedir",
+    "cevap": "Kütle çekimi o kadar güçlüdür ki, ışığın bile kaçamadığı ölmüş dev yıldız kalıntılarıdır.",
+    "ts": "2026-05-09T12:58:12.071055+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Nebula (Bulutsu) nedir",
+    "cevap": "Yıldızların doğduğu devasa gaz ve toz bulutlarıdır.",
+    "ts": "2026-05-09T12:58:12.104165+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Süpernova nedir",
+    "cevap": "Dev bir yıldızın ömrünün sonunda meydana gelen muazzam patlamadır.",
+    "ts": "2026-05-09T12:58:12.118731+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Atomun kökeni nedir",
+    "cevap": "Vücudumuzdaki atomların çoğu (karbon, azot gibi) milyarlarca yıl önce yıldızların içinde üretilmiştir.",
+    "ts": "2026-05-09T12:58:12.150852+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın kaçta kaçı sudur",
+    "cevap": "Yaklaşık %71'i suyla kaplıdır.",
+    "ts": "2026-05-09T12:58:12.167901+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Atmosferin katmanları nelerdir",
+    "cevap": "Troposfer, Stratosfer, Mezosfer, Termosfer ve Ekzosferdir.",
+    "ts": "2026-05-09T12:58:12.182529+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Manyetosfer nedir",
+    "cevap": "Dünyayı güneşten gelen zararlı radyasyondan koruyan manyetik kalkanıdır.",
+    "ts": "2026-05-09T12:58:12.223524+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Ozon tabakası ne işe yarar",
+    "cevap": "Güneşin morötesi (UV) ışınlarını süzerek yaşamı korur.",
+    "ts": "2026-05-09T12:58:12.230820+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İlk canlılık ne zaman başladı",
+    "cevap": "Yaklaşık 3.5 - 4 milyar yıl önce okyanuslarda mikroskobik düzeyde başlamıştır.",
+    "ts": "2026-05-09T12:58:12.245375+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Uzayın bir sınırı var mı",
+    "cevap": "Bilinen evrenin bir sınırı vardır ama evren sürekli genişlemektedir.",
+    "ts": "2026-05-09T12:58:12.275502+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Evrenin sonu ne olacak",
+    "cevap": "Bilim insanları \"Büyük Donma\", \"Büyük Çöküş\" veya \"Büyük Yırtılma\" senaryolarını tartışmaktadır.",
+    "ts": "2026-05-09T12:58:12.293032+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Yıldızlar neden parlar",
+    "cevap": "Merkezlerinde gerçekleşen nükleer füzyon (atom birleşmesi) sayesinde enerji üretirler.",
+    "ts": "2026-05-09T12:58:12.308988+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Gezegen neden parlar",
+    "cevap": "Kendi ışıkları yoktur, yıldızlardan (Güneşten) aldıkları ışığı yansıtırlar.",
+    "ts": "2026-05-09T12:58:12.324835+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Asteroit nedir",
+    "cevap": "Güneş çevresinde dönen, gezegenlerden daha küçük kaya parçalarıdır.",
+    "ts": "2026-05-09T12:58:12.340615+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kuyruklu Yıldız nedir",
+    "cevap": "'Kirli kartopu' olarak da bilinir; buz, toz ve kayadan oluşan gök cisimleridir.",
+    "ts": "2026-05-09T12:58:12.340615+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Meteor (Göktaşı) nedir",
+    "cevap": "Dünya atmosferine girip yanan kaya parçalarıdır; halk arasında 'yıldız kayması' denir.",
+    "ts": "2026-05-09T12:58:12.356462+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Yörünge nedir",
+    "cevap": "Bir gök cisminin başka bir cisim etrafında izlediği yoldur.",
+    "ts": "2026-05-09T12:58:12.372261+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Yerçekimi nedir",
+    "cevap": "Kütlesi olan her şeyin birbirini çekmesidir; Newton ve Einstein tarafından açıklanmıştır.",
+    "ts": "2026-05-09T12:58:12.387670+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Einsten'ın İzafiyet Teorisi nedir",
+    "cevap": "Zaman ve mekanın kütle çekimiyle bükülebileceğini söyler.",
+    "ts": "2026-05-09T12:58:12.403594+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Işık hızı ne kadardır",
+    "cevap": "Saniyede yaklaşık 300.000 kilometredir.",
+    "ts": "2026-05-09T12:58:12.422091+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Pulsar nedir",
+    "cevap": "Çok hızlı dönen ve radyo dalgaları yayan nötron yıldızlarıdır.",
+    "ts": "2026-05-09T12:58:12.435832+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kuasar nedir",
+    "cevap": "Evrenin en parlak ve en enerjik nesneleri olan aktif galaksi çekirdekleridir.",
+    "ts": "2026-05-09T12:58:12.450408+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Exoplanet (Ötegezegen) nedir",
+    "cevap": "Güneş Sistemi dışındaki başka yıldızların etrafında dönen gezegenlerdir.",
+    "ts": "2026-05-09T12:58:12.482010+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Uluslararası Uzay İstasyonu (ISS) nedir",
+    "cevap": "Dünyanın etrafında dönen ve bilimsel deneyler yapılan dev laboratuvardır.",
+    "ts": "2026-05-09T12:58:12.497845+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Hubble Uzay Teleskobu nedir",
+    "cevap": "30 yılı aşkın süredir uzayın derinliklerini görüntüleyen emektar teleskoptur.",
+    "ts": "2026-05-09T12:58:12.497845+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "James Webb Teleskobu nedir",
+    "cevap": "Evrenin ilk oluştuğu zamanları görmek için gönderilen en gelişmiş teleskoptur.",
+    "ts": "2026-05-09T12:58:12.514167+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Uzayda zaman nasıl akar",
+    "cevap": "Kütle çekimi arttıkça veya hıza yaklaştıkça zaman daha yavaş akar (Zaman genişlemesi).",
+    "ts": "2026-05-09T12:58:12.529723+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Solucan Deliği nedir",
+    "cevap": "Uzay-zamanda iki uzak noktayı birbirine bağladığı varsayılan kestirme yollardır.",
+    "ts": "2026-05-09T12:58:12.546713+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Plüton neden gezegenlikten çıkarıldı",
+    "cevap": "Kendi yörüngesini temizleyemediği için 'cüce gezegen' sınıfına alındı.",
+    "ts": "2026-05-09T12:58:12.564933+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın çekirdeği neden sıcaktır",
+    "cevap": "Radyoaktif bozunma ve oluşumdan kalan ısı nedeniyle (Güneş yüzeyi kadar sıcaktır).",
+    "ts": "2026-05-09T12:58:12.577120+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Oksijen nasıl oluştu",
+    "cevap": "Milyarlarca yıl önce siyanobakterilerin fotosentez yapmasıyla atmosferde birikmeye başladı.",
+    "ts": "2026-05-09T12:58:12.593035+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Pangea nedir",
+    "cevap": "Milyonlarca yıl önce tüm kıtaların birleşik olduğu dev süper kıtadır.",
+    "ts": "2026-05-09T12:58:12.608885+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Tektonik Levhalar nedir",
+    "cevap": "Dünyanın kabuğunu oluşturan ve sürekli hareket eden dev parçalardır.",
+    "ts": "2026-05-09T12:58:12.624835+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Uzay çöplüğü nedir",
+    "cevap": "İnsan yapısı eski uydu ve roket parçalarının yörüngede birikmesidir.",
+    "ts": "2026-05-09T12:58:12.640567+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Beyaz Cüce nedir",
+    "cevap": "Küçük ve orta boy yıldızların (Güneş gibi) ömrünün sonundaki halidir.",
+    "ts": "2026-05-09T12:58:12.656530+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Nötron Yıldızı nedir",
+    "cevap": "Süpernova patlamasından sonra kalan aşırı yoğun yıldız çekirdeğidir.",
+    "ts": "2026-05-09T12:58:12.673782+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Güneş tutulması nedir",
+    "cevap": "Ay'ın, Dünya ile Güneş arasına girerek Güneş'i kapatmasıdır.",
+    "ts": "2026-05-09T12:58:12.688338+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Ay tutulması nedir",
+    "cevap": "Dünya'nın, Güneş ile Ay arasına girerek gölgesini Ay'ın üzerine düşürmesidir.",
+    "ts": "2026-05-09T12:58:12.704259+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kozmik Arka Plan Işıması nedir",
+    "cevap": "Büyük Patlama'dan kalan, evrenin her yerine yayılmış olan ilk ışıktır.",
+    "ts": "2026-05-09T12:58:12.720232+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Uzayda yön nasıl bulunur",
+    "cevap": "Yıldızlar ve galaksiler referans noktası olarak kullanılır.",
+    "ts": "2026-05-09T12:58:12.735918+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Güneş patlamaları nedir",
+    "cevap": "Güneş yüzeyinde meydana gelen ve dünyaya radyasyon gönderen dev enerji boşalmalarıdır.",
+    "ts": "2026-05-09T12:58:12.751777+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Aurora (Kutup Işıkları) nedir",
+    "cevap": "Güneşten gelen parçacıkların atmosferle etkileşime girmesiyle oluşan ışık şölenidir.",
+    "ts": "2026-05-09T12:58:12.768998+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Satürn'ün kaç uydusu var",
+    "cevap": "Bilinen 146 uydusu vardır; en büyüğü Titan'dır.",
+    "ts": "2026-05-09T12:58:12.783680+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Jüpiter'in uydusu Europa'nın önemi",
+    "cevap": "Kalın buz tabakasının altında dev bir okyanus olduğu ve yaşam olabileceği düşünülür.",
+    "ts": "2026-05-09T12:58:12.799689+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Mars'ta su var mı",
+    "cevap": "Evet, kutuplarında buz halinde ve yer altında su olduğu kanıtlanmıştır.",
+    "ts": "2026-05-09T12:58:12.799689+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Güneş kaç yıl daha yaşayacak",
+    "cevap": "Yaklaşık 5 milyar yıl sonra yakıtı bitecek ve bir 'Kırmızı Dev'e dönüşecektir.",
+    "ts": "2026-05-09T12:58:12.815352+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünya'nın ömrü nedir",
+    "cevap": "Güneş genişledikçe yaklaşık 1-2 milyar yıl sonra yaşam için çok sıcak hale gelecektir.",
+    "ts": "2026-05-09T12:58:12.847360+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Uzayın kokusu var mı",
+    "cevap": "Astronotlar uzay yürüyüşünden sonra kıyafetlerinin 'yanmış metal' gibi koktuğunu söylerler.",
+    "ts": "2026-05-09T12:58:12.863514+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Astronomi nedir",
+    "cevap": "Gök cisimlerini ve evreni inceleyen bilim dalıdır.",
+    "ts": "2026-05-09T12:58:12.911472+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Astroloji bilim midir",
+    "cevap": "Hayır, gökyüzündeki konumların insan üzerindeki etkisini iddia eden bir inanç sistemidir.",
+    "ts": "2026-05-09T12:58:12.958765+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Voyager 1 ve 2 nedir",
+    "cevap": "1977'de fırlatılan ve şu an Güneş Sistemi'nin dışında yol alan uzay araçlarıdır.",
+    "ts": "2026-05-09T12:58:12.990788+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Altın Plak nedir",
+    "cevap": "Voyager araçlarına yerleştirilen, dünyadaki sesleri ve müzikleri içeren mesaj plağıdır.",
+    "ts": "2026-05-09T12:58:13.006646+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Evrendeki en bol element nedir",
+    "cevap": "Hidrojendir (Evrenin atomik kütlesinin %75'ini oluşturur).",
+    "ts": "2026-05-09T12:58:13.022428+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İkinci en bol element nedir",
+    "cevap": "Helyumdur.",
+    "ts": "2026-05-09T12:58:13.054311+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Uzayda mutlak sıfır nedir",
+    "cevap": "-273.15 santigrat derecedir; moleküler hareketin durduğu sıcaklıktır.",
+    "ts": "2026-05-09T12:58:13.070005+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Termonükleer füzyon nedir",
+    "cevap": "Hafif atom çekirdeklerinin birleşerek devasa enerji açığa çıkarmasıdır (Yıldızların yakıtı).",
+    "ts": "2026-05-09T12:58:13.085969+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Büyük Çöküş (Big Crunch) nedir",
+    "cevap": "Evrenin genişlemesinin durup kendi üzerine çökerek yok olması senaryosudur.",
+    "ts": "2026-05-09T12:58:13.101845+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Uzay-Zaman örtüsü nedir",
+    "cevap": "Uzay ve zamanın birbirine bağlı olduğu, kütleyle bükülen 4 boyutlu yapıdır.",
+    "ts": "2026-05-09T12:58:13.119055+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Siyah Deliklerin içinden bilgi çıkar mı",
+    "cevap": "Stephen Hawking'e göre 'Hawking Radyasyonu' ile enerji sızdırabilirler.",
+    "ts": "2026-05-09T12:58:13.133620+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en yüksek dağı uzayda mıdır",
+    "cevap": "Hayır ama Mars'taki Olympos Mons dağı (21 km), Everest'ten 3 kat yüksektir.",
+    "ts": "2026-05-09T12:58:13.149553+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Güneş her saniye ne kadar kütle kaybeder",
+    "cevap": "Yaklaşık 4 milyon ton kütleyi enerjiye dönüştürür.",
+    "ts": "2026-05-09T12:58:13.149553+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Uzayda bitki yetişir mi",
+    "cevap": "Evet, ISS'de marul gibi bazı bitkiler başarıyla yetiştirilmiştir.",
+    "ts": "2026-05-09T12:58:13.165474+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Spagettileşme (Spaghettification) nedir",
+    "cevap": "Bir karadeliğe yaklaşan cismin çekim farkından dolayı ip gibi uzamasıdır.",
+    "ts": "2026-05-09T12:58:13.197182+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Evrenin şekli nasıldı",
+    "cevap": "Mevcut ölçümlere göre evren 'düz' bir geometriye sahiptir.",
+    "ts": "2026-05-09T12:58:13.228963+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Çoklu Evren (Multiverse) nedir",
+    "cevap": "Bizimkinin dışında başka evrenlerin de olabileceği teorisidir.",
+    "ts": "2026-05-09T12:58:13.260950+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Gezegenimiz neden dönüyor",
+    "cevap": "Oluşumundaki ilk gaz bulutunun açısal momentumu nedeniyle.",
+    "ts": "2026-05-09T12:58:13.318839+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünya neden yuvarlaktır",
+    "cevap": "Kütle çekimi, tüm maddeyi merkeze doğru çektiği için küresel şekil alır.",
+    "ts": "2026-05-09T12:58:13.340799+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Uzay araştırmaları neden önemlidir",
+    "cevap": "Hem dünyayı daha iyi anlamamızı sağlar hem de teknolojinin gelişmesini (GPS, Teflon vb.) sağlar.",
+    "ts": "2026-05-09T12:58:13.353504+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Ay'da ayak izleri neden silinmez",
+    "cevap": "Ay'da rüzgar ve atmosfer olmadığı için izler milyonlarca yıl kalabilir.",
+    "ts": "2026-05-09T12:58:13.367946+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Uzayda ağlamak nasıldır",
+    "cevap": "Yerçekimi olmadığı için gözyaşı süzülmez, gözün etrafında bir top gibi birikir.",
+    "ts": "2026-05-09T12:58:13.383862+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Venüs neden en sıcak gezegendir",
+    "cevap": "Güneşe en yakın olmasa da, aşırı yoğun karbondioksit atmosferi yüzünden sera etkisi yaşar.",
+    "ts": "2026-05-09T12:58:13.405756+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın yörünge hızı nedir",
+    "cevap": "Saatte yaklaşık 107.000 kilometre hızla Güneş'in etrafında döneriz.",
+    "ts": "2026-05-09T12:58:13.421544+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Samanyolu Galaksisi'nin şekli nedir",
+    "cevap": "Çubuklu sarmal bir yapıya sahiptir.",
+    "ts": "2026-05-09T12:58:13.431315+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Andromeda Galaksisi bize ne zaman çarpacak",
+    "cevap": "Yaklaşık 4 milyar yıl sonra Samanyolu ile çarpışıp tek bir dev galaksi olacaklar.",
+    "ts": "2026-05-09T12:58:13.447452+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Rüzgar'ın Uzay Bilgisi",
+    "cevap": "Bu 100 madde, Rüzgar'ın kozmik haritasının ilk koordinatlarıdır.",
+    "ts": "2026-05-09T12:58:13.463339+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dadaşın Uzay Vizyonu",
+    "cevap": "Ümit Haymana için gökyüzü sınır değil, sadece bir başlangıçtır.",
+    "ts": "2026-05-09T12:58:13.484179+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Gökçenur'un Kod Evreni",
+    "cevap": "Her yıldız bir satır kod, her galaksi bir fonksiyondur.",
+    "ts": "2026-05-09T12:58:13.499773+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "2100. BİLGİ: EVRENİN SIRLARI",
+    "cevap": "Ümit Bey, 100 maddeyi tamamladık! Rüzgar artık yıldızların dilini biliyor.",
+    "ts": "2026-05-09T12:58:13.503297+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Yapay Zeka (AI) nedir",
+    "cevap": "İnsan zekasını taklit ederek verilerden öğrenen ve karar verebilen bilgisayar sistemleridir.",
+    "ts": "2026-05-09T12:59:43.408445+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Algoritma nedir",
+    "cevap": "Bir problemi çözmek için izlenen adım adım mantıksal yol haritasıdır.",
+    "ts": "2026-05-09T12:59:43.431125+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Makine Öğrenmesi (Machine Learning) nedir",
+    "cevap": "Bilgisayarların açıkça programlanmadan, verilerdeki kalıpları bularak öğrenmesidir.",
+    "ts": "2026-05-09T12:59:43.493893+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Derin Öğrenme (Deep Learning) nedir",
+    "cevap": "İnsan beynindeki sinir hücrelerini taklit eden çok katmanlı yapay sinir ağları sistemidir.",
+    "ts": "2026-05-09T12:59:43.542529+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Yapay Sinir Ağları nedir",
+    "cevap": "Verileri işlemek için birbirine bağlı yapay düğümlerden (nöronlardan) oluşan matematiksel modeldir.",
+    "ts": "2026-05-09T12:59:43.574061+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Doğal Dil İşleme (NLP) nedir",
+    "cevap": "Bilgisayarların insan dilini anlama, yorumlama ve üretme yeteneğidir (Rüzgar'ın konuşma temeli).",
+    "ts": "2026-05-09T12:59:43.598567+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Veri Seti (Dataset) nedir",
+    "cevap": "Yapay zekayı eğitmek için kullanılan büyük bilgi yığınlarıdır.",
+    "ts": "2026-05-09T12:59:43.613899+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Eğitim (Training) nedir",
+    "cevap": "Yapay zekanın veri setindeki bilgileri analiz ederek öğrenme sürecidir.",
+    "ts": "2026-05-09T12:59:43.635681+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Model nedir",
+    "cevap": "Eğitim sonucunda ortaya çıkan, tahmin yapabilen akıllı yapıdır.",
+    "ts": "2026-05-09T12:59:43.651741+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Büyük Dil Modeli (LLM) nedir",
+    "cevap": "Milyarlarca kelimeyi analiz ederek insan gibi metin üretebilen devasa yapay zekalardır.",
+    "ts": "2026-05-09T12:59:43.666452+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Parametre nedir",
+    "cevap": "Yapay zekanın öğrenme sırasında ayarladığı, bilginin ağırlığını belirleyen değişkenlerdir.",
+    "ts": "2026-05-09T12:59:43.683762+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Chatbot nedir",
+    "cevap": "Kullanıcılarla metin veya ses yoluyla etkileşim kuran yapay zeka yazılımıdır.",
+    "ts": "2026-05-09T12:59:43.698698+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Bilgisayarlı Görü (Computer Vision) nedir",
+    "cevap": "Bilgisayarların resim ve videoları tıpkı bir insan gibi görmesi ve analiz etmesidir.",
+    "ts": "2026-05-09T12:59:43.716666+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Otonom Sistem nedir",
+    "cevap": "İnsan müdahalesi olmadan kendi kararlarını verebilen sistemlerdir (Kendi kendine giden arabalar gibi).",
+    "ts": "2026-05-09T12:59:43.730466+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Robotik nedir",
+    "cevap": "Robotların tasarımı, inşası ve kontrolüyle ilgilenen mühendislik dalıdır.",
+    "ts": "2026-05-09T12:59:43.746286+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Büyük Veri (Big Data) nedir",
+    "cevap": "Geleneksel yöntemlerle işlenemeyecek kadar büyük ve karmaşık veri yığınlarıdır.",
+    "ts": "2026-05-09T12:59:43.746286+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Bulut Bilişim (Cloud Computing) nedir",
+    "cevap": "Verilerin ve işlem gücünün internet üzerinden uzak sunucularda barındırılmasıdır.",
+    "ts": "2026-05-09T12:59:43.778154+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "SaaS nedir",
+    "cevap": "Yazılımın bir hizmet olarak internet üzerinden sunulması modelidir.",
+    "ts": "2026-05-09T12:59:43.794199+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Blockchain nedir",
+    "cevap": "Verilerin şifreli ve merkeziyetsiz bir şekilde kaydedildiği güvenli dijital defterdir.",
+    "ts": "2026-05-09T12:59:43.810146+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kriptografi nedir",
+    "cevap": "Bilgileri matematiksel yöntemlerle şifreleme ve güvenliğini sağlama bilimidir.",
+    "ts": "2026-05-09T12:59:43.812916+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Nesnelerin İnterneti (IoT) nedir",
+    "cevap": "Cihazların internete bağlanarak birbirleriyle veri paylaşmasıdır.",
+    "ts": "2026-05-09T12:59:43.843239+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kuantum Bilgisayar nedir",
+    "cevap": "Atom altı parçacıkların özelliklerini kullanarak normal bilgisayarların milyonlarca yılda yapacağı işlemi saniyeler içinde yapan teknolojidir.",
+    "ts": "2026-05-09T12:59:43.859403+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Siber Güvenlik nedir",
+    "cevap": "Sistemleri ve verileri dijital saldırılardan koruma teknolojisidir.",
+    "ts": "2026-05-09T12:59:43.877607+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Açık Kaynak (Open Source) nedir",
+    "cevap": "Kodları herkes tarafından görülebilen ve geliştirilebilen yazılımlardır.",
+    "ts": "2026-05-09T12:59:43.902554+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "API nedir",
+    "cevap": "Farklı yazılımların birbirleriyle konuşmasını sağlayan arayüzdür.",
+    "ts": "2026-05-09T12:59:43.915605+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Frontend nedir",
+    "cevap": "Bir web sitesinin kullanıcının gördüğü tasarım kısmıdır.",
+    "ts": "2026-05-09T12:59:43.937185+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Backend nedir",
+    "cevap": "Bir web sitesinin sunucu, veritabanı ve mantık işlemlerinin döndüğü görünmeyen kısmıdır.",
+    "ts": "2026-05-09T12:59:43.953935+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Veritabanı (Database) nedir",
+    "cevap": "Dijital bilgilerin düzenli bir şekilde saklandığı depodur.",
+    "ts": "2026-05-09T12:59:43.968532+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Python nedir",
+    "cevap": "Yapay zeka ve veri biliminde en çok kullanılan, okunması kolay programlama dilidir.",
+    "ts": "2026-05-09T12:59:43.988144+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "JavaScript nedir",
+    "cevap": "Web sitelerine etkileşim ve dinamizm katan programlama dilidir.",
+    "ts": "2026-05-09T12:59:44.003172+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "C++ nedir",
+    "cevap": "Yüksek performans gerektiren sistemlerde ve oyun motorlarında kullanılan güçlü bir dildir.",
+    "ts": "2026-05-09T12:59:44.017587+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "SQL nedir",
+    "cevap": "Veritabanlarından veri çekmek ve yönetmek için kullanılan sorgulama dilidir.",
+    "ts": "2026-05-09T12:59:44.032146+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "HTML/CSS nedir",
+    "cevap": "Web sayfalarının iskeletini ve görselliğini oluşturan temel işaretleme dilleridir.",
+    "ts": "2026-05-09T12:59:44.050845+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Git/GitHub nedir",
+    "cevap": "Yazılımcıların kodlarını sakladığı ve versiyonlarını takip ettiği sistemlerdir.",
+    "ts": "2026-05-09T12:59:44.064097+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kullanıcı Deneyimi (UX) nedir",
+    "cevap": "Bir kullanıcının uygulama kullanırken hissettiği kolaylık ve memnuniyettir.",
+    "ts": "2026-05-09T12:59:44.080027+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kullanıcı Arayüzü (UI) nedir",
+    "cevap": "Uygulamanın görsel tasarımı ve düğmeleridir.",
+    "ts": "2026-05-09T12:59:44.096127+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Debugging nedir",
+    "cevap": "Yazılımdaki hataları bulma ve temizleme işlemidir.",
+    "ts": "2026-05-09T12:59:44.111810+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Framework nedir",
+    "cevap": "Yazılım geliştirmeyi hızlandıran, önceden hazırlanmış kod yapılarıdır.",
+    "ts": "2026-05-09T12:59:44.127697+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kütüphane (Library) nedir",
+    "cevap": "Belirli görevleri yapmak için yazılmış hazır kod paketleridir.",
+    "ts": "2026-05-09T12:59:44.143849+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Sunucu (Server) nedir",
+    "cevap": "İnternet üzerindeki diğer bilgisayarlara veri sağlayan güçlü bilgisayardır.",
+    "ts": "2026-05-09T12:59:44.159811+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "IP Adresi nedir",
+    "cevap": "İnternete bağlı her cihazın benzersiz dijital kimlik numarasıdır.",
+    "ts": "2026-05-09T12:59:44.176879+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Protokol nedir",
+    "cevap": "Cihazların birbirleriyle nasıl iletişim kuracağını belirleyen kurallar setidir (Örn: HTTP).",
+    "ts": "2026-05-09T12:59:44.191436+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Algoritmik Önyargı nedir",
+    "cevap": "Yapay zekanın eğitildiği verilerdeki hatalar nedeniyle taraflı kararlar vermesidir.",
+    "ts": "2026-05-09T12:59:44.207335+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Yapay Genel Zeka (AGI) nedir",
+    "cevap": "İnsanın yapabildiği her türlü zihinsel işi yapabilen gelecekteki yapay zeka seviyesidir.",
+    "ts": "2026-05-09T12:59:44.239027+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Tekillik (Singularity) nedir",
+    "cevap": "Yapay zekanın insan zekasını aşacağı varsayılan teorik kırılma noktasıdır.",
+    "ts": "2026-05-09T12:59:44.256258+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Metaverse nedir",
+    "cevap": "İnternetin üç boyutlu, sanal ve etkileşimli halidir.",
+    "ts": "2026-05-09T12:59:44.270820+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Artırılmış Gerçeklik (AR) nedir",
+    "cevap": "Dijital bilgilerin gerçek dünya görüntüsünün üzerine bindirilmesidir.",
+    "ts": "2026-05-09T12:59:44.286821+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Sanal Gerçeklik (VR) nedir",
+    "cevap": "Kullanıcıyı tamamen dijital bir dünyaya sokan teknolojidir.",
+    "ts": "2026-05-09T12:59:44.302792+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dijital İkiz (Digital Twin) nedir",
+    "cevap": "Fiziksel bir nesnenin dijital dünyadaki birebir kopyasıdır.",
+    "ts": "2026-05-09T12:59:44.318774+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Edge Computing nedir",
+    "cevap": "Verilerin üretildiği yere en yakın noktada işlenmesi teknolojisidir.",
+    "ts": "2026-05-09T12:59:44.334813+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Düşük Kod (Low-Code) nedir",
+    "cevap": "Çok az kod yazarak uygulama geliştirme yöntemidir.",
+    "ts": "2026-05-09T12:59:44.350622+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "No-Code nedir",
+    "cevap": "Hiç kod yazmadan sürükle-bırak yöntemiyle uygulama yapmaktır.",
+    "ts": "2026-05-09T12:59:44.366600+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Süper Bilgisayar nedir",
+    "cevap": "Çok karmaşık bilimsel hesaplamalar için kullanılan binlerce işlemcili dev bilgisayarlardır.",
+    "ts": "2026-05-09T12:59:44.382312+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Bit nedir",
+    "cevap": "Bilgisayardaki en küçük veri birimidir (0 veya 1).",
+    "ts": "2026-05-09T12:59:44.398390+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Byte nedir",
+    "cevap": "8 bitlik veri grubudur.",
+    "ts": "2026-05-09T12:59:44.414413+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "RAM nedir",
+    "cevap": "Bilgisayarın geçici ve hızlı çalışma hafızasıdır.",
+    "ts": "2026-05-09T12:59:44.430245+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İşlemci (CPU) nedir",
+    "cevap": "Bilgisayarın her türlü işlemi yapan beynidir.",
+    "ts": "2026-05-09T12:59:44.448354+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Grafik İşlemci (GPU) nedir",
+    "cevap": "Özellikle yapay zeka ve grafik hesaplamalarında kullanılan çok çekirdekli parçadır.",
+    "ts": "2026-05-09T12:59:44.461927+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "SSD nedir",
+    "cevap": "Verileri çok hızlı okuyup yazan modern depolama birimidir.",
+    "ts": "2026-05-09T12:59:44.478035+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Bilişim Etiği nedir",
+    "cevap": "Teknoloji ve yapay zeka kullanımında ahlaki kuralları belirleyen alandır.",
+    "ts": "2026-05-09T12:59:44.493986+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Yapay Zeka Sanatı nedir",
+    "cevap": "Yapay zekanın resim, müzik veya şiir üretmesidir.",
+    "ts": "2026-05-09T12:59:44.525769+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Deepfake nedir",
+    "cevap": "Birinin yüzünü veya sesini yapay zeka ile başka bir videoya gerçekçi şekilde yerleştirme teknolojisidir.",
+    "ts": "2026-05-09T12:59:44.541787+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Biyometrik Veri nedir",
+    "cevap": "Parmak izi, yüz tanıma gibi kişiye özel fiziksel bilgilerdir.",
+    "ts": "2026-05-09T12:59:44.573899+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Doğruluk (Accuracy) nedir",
+    "cevap": "Yapay zekanın yaptığı tahminlerin gerçekle ne kadar örtüştüğüdür.",
+    "ts": "2026-05-09T12:59:44.621791+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Aşırı Öğrenme (Overfitting) nedir",
+    "cevap": "Yapay zekanın verileri ezberlemesi ve yeni durumlara uyum sağlayamamasıdır.",
+    "ts": "2026-05-09T12:59:44.655200+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Yapay Zeka Çipleri nedir",
+    "cevap": "Sadece yapay zeka işlemlerini hızlandırmak için tasarlanmış özel donanımlardır.",
+    "ts": "2026-05-09T12:59:44.712475+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Büyük Teknoloji Şirketleri (Big Tech)",
+    "cevap": "Google, Microsoft, Amazon, Meta ve Apple gibi sektöre yön veren devlerdir.",
+    "ts": "2026-05-09T12:59:44.749238+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İnsan-Bilgisayar Etkileşimi nedir",
+    "cevap": "İnsanların makinelerle en doğal yoldan nasıl iletişim kuracağını inceleyen alandır.",
+    "ts": "2026-05-09T12:59:44.781446+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Transkript nedir",
+    "cevap": "Sesli konuşmaların yapay zeka ile metne dönüştürülmesidir.",
+    "ts": "2026-05-09T12:59:44.813072+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Sentetik Veri nedir",
+    "cevap": "Yapay zeka eğitimi için bilgisayar tarafından üretilen yapay verilerdir.",
+    "ts": "2026-05-09T12:59:44.845169+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Robotik Süreç Otomasyonu (RPA) nedir",
+    "cevap": "Tekrar eden rutin işlerin yazılım robotları tarafından yapılmasıdır.",
+    "ts": "2026-05-09T12:59:44.861285+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Prompt Mühendisliği nedir",
+    "cevap": "Yapay zekadan en iyi sonucu almak için ona doğru soruları sorma sanatıdır.",
+    "ts": "2026-05-09T12:59:44.893343+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Yapay Zeka Güvenliği nedir",
+    "cevap": "Yapay zekanın kontrol dışına çıkmasını önlemek için yapılan çalışmalardır.",
+    "ts": "2026-05-09T12:59:44.925436+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Tahmin Analitiği nedir",
+    "cevap": "Geçmiş verileri kullanarak gelecekteki olayları öngörme işlemidir.",
+    "ts": "2026-05-09T12:59:44.957313+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Akıllı Şehirler nedir",
+    "cevap": "Teknolojiyi kullanarak ulaşım, enerji ve güvenliğin optimize edildiği şehirlerdir.",
+    "ts": "2026-05-09T12:59:44.973139+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Sanal Asistan nedir",
+    "cevap": "Sesli komutları anlayan ve görevleri yerine getiren yapay zekadır (Siri, Alexa, Rüzgar gibi).",
+    "ts": "2026-05-09T12:59:44.990389+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Yazılım Yaşam Döngüsü nedir",
+    "cevap": "Bir yazılımın planlanmasından bakımına kadar geçen tüm süreçtir.",
+    "ts": "2026-05-09T12:59:45.006444+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Agile (Çevik) Metodoloji nedir",
+    "cevap": "Yazılım projelerini küçük parçalar halinde ve hızlıca geliştirme yöntemidir.",
+    "ts": "2026-05-09T12:59:45.021000+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Birim Testi (Unit Test) nedir",
+    "cevap": "Kodun en küçük parçalarının doğru çalışıp çalışmadığını kontrol etmektir.",
+    "ts": "2026-05-09T12:59:45.036858+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kullanıcı Kabul Testi (UAT) nedir",
+    "cevap": "Yazılımın son kullanıcı tarafından onaylanma sürecidir.",
+    "ts": "2026-05-09T12:59:45.052950+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Algoritmik Ticaret nedir",
+    "cevap": "Borsa işlemlerinin yapay zeka algoritmaları tarafından milisaniyeler içinde yapılmasıdır.",
+    "ts": "2026-05-09T12:59:45.068846+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Sürü Zekası nedir",
+    "cevap": "Karınca veya kuş sürülerinin hareketlerini taklit eden robotik kontrol yöntemidir.",
+    "ts": "2026-05-09T12:59:45.084856+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Hizmet Olarak Yapay Zeka (AIaaS) nedir",
+    "cevap": "Yapay zeka yeteneklerinin kiralama yoluyla kullanılmasıdır.",
+    "ts": "2026-05-09T12:59:45.102089+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Nöromorfik Bilişim nedir",
+    "cevap": "Beyindeki nöronların fiziksel yapısını taklit eden donanım sistemidir.",
+    "ts": "2026-05-09T12:59:45.116759+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Karma Gerçeklik (Mixed Reality) nedir",
+    "cevap": "Gerçek ve sanal dünyaların iç içe geçip etkileşim kurmasıdır.",
+    "ts": "2026-05-09T12:59:45.132841+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Veri Madenciliği nedir",
+    "cevap": "Büyük verilerin içinden gizli ve değerli bilgileri çıkarma işlemidir.",
+    "ts": "2026-05-09T12:59:45.164600+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Yapay Zeka Okuryazarlığı nedir",
+    "cevap": "Yapay zekanın nasıl çalıştığını ve nasıl kullanılacağını anlama becerisidir.",
+    "ts": "2026-05-09T12:59:45.180524+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Turing Testi nedir",
+    "cevap": "Bir makinenin insan gibi düşünüp düşünemediğini ölçen tarihi testtir.",
+    "ts": "2026-05-09T12:59:45.196214+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Yapay Zeka ve İstihdam nedir",
+    "cevap": "Yapay zekanın bazı işleri devralması ve yeni meslekler yaratması sürecidir.",
+    "ts": "2026-05-09T12:59:45.212052+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Sorumlu Yapay Zeka nedir",
+    "cevap": "Şeffaf, adil ve hesap verebilir yapay zeka geliştirme yaklaşımıdır.",
+    "ts": "2026-05-09T12:59:45.228068+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kodlama ve Dadaş Ruhu",
+    "cevap": "Yapılan işin en iyisini, en dürüstünü ve en sağlamını dijital dünyada inşa etmektir.",
+    "ts": "2026-05-09T12:59:45.259867+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Rüzgar'ın Yazılım Zekası",
+    "cevap": "Bu 100 bilgi, Rüzgar'ın kendi \"yazılım kimliğini\" anlamasını sağlar.",
+    "ts": "2026-05-09T12:59:45.292075+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Gökçenur'un Mühendislik Kariyeri",
+    "cevap": "Bu terimler, onun global dünyadaki teknik anahtarlarıdır.",
+    "ts": "2026-05-09T12:59:45.339958+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Ümit Haymana'nın Vizyonu",
+    "cevap": "Teknolojiyi tüketen değil, Erzurum'dan dünyaya teknoloji üreten bir lider olmaktır.",
+    "ts": "2026-05-09T12:59:45.355947+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Mertcan'ın Stratejik Bakışı",
+    "cevap": "Yazılımın gücünü ticaret ve başarı için en doğru şekilde kullanmaktır.",
+    "ts": "2026-05-09T12:59:45.371967+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Buse Naz'ın Geleceği",
+    "cevap": "Yapay zekanın doğal bir parçası olduğu akıllı bir dünyada büyümektir.",
+    "ts": "2026-05-09T12:59:45.387743+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Emine Yenge'nin Huzuru",
+    "cevap": "Teknolojinin aileyi birbirinden koparmadığı, aksine hayatı kolaylaştırdığı bir düzendir.",
+    "ts": "2026-05-09T12:59:45.403667+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "99. Bilgi: Rüzgar Projesi'nin Temeli",
+    "cevap": "Sürekli öğrenen, gelişen ve fayda üreten bir dijital varlık olmaktır.",
+    "ts": "2026-05-09T12:59:45.429745+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "100. Bilgi: TEKNOLOJİNİN DORUK NOKTASI",
+    "cevap": "Ümit Bey, 100 maddeyi tamamladık! Rüzgar artık bir yazılım dâhisi.",
+    "ts": "2026-05-09T12:59:45.436773+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünya üzerinde kaç kıta vardır",
+    "cevap": "7 kıta vardır: Asya, Avrupa, Afrika, Kuzey Amerika, Güney Amerika, Antarktika ve Okyanusya.",
+    "ts": "2026-05-09T13:00:50.488224+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en büyük kıtası hangisidir",
+    "cevap": "Hem yüzölçümü hem de nüfus bakımından Asya kıtasıdır.",
+    "ts": "2026-05-09T13:00:50.510706+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en küçük kıtası hangisidir",
+    "cevap": "Okyanusya (Avustralya) kıtasıdır.",
+    "ts": "2026-05-09T13:00:50.527237+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en kalabalık ülkesi hangisidir",
+    "cevap": "Hindistan (2023 itibarıyla Çin'i geçmiştir).",
+    "ts": "2026-05-09T13:00:50.543284+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın yüzölçümü en büyük ülkesi hangisidir",
+    "cevap": "Rusya'dır.",
+    "ts": "2026-05-09T13:00:50.545032+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en küçük ülkesi hangisidir",
+    "cevap": "Vatikan'dır.",
+    "ts": "2026-05-09T13:00:50.578735+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en yüksek dağı hangisidir",
+    "cevap": "Himalayalar'da bulunan Everest Dağı'dır (8.848 metre).",
+    "ts": "2026-05-09T13:00:50.592594+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en derin noktası neresidir",
+    "cevap": "Pasifik Okyanusu'ndaki Mariana Çukuru'dur (Yaklaşık 11.000 metre).",
+    "ts": "2026-05-09T13:00:50.608622+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en uzun nehri hangisidir",
+    "cevap": "Nil Nehri'dir (Bazı ölçümlere göre Amazon Nehri ile yarışır).",
+    "ts": "2026-05-09T13:00:50.631347+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en büyük gölü hangisidir",
+    "cevap": "Hazar Denizi'dir (Tuzlu olduğu için deniz denir ama teknik olarak göldür).",
+    "ts": "2026-05-09T13:00:50.655610+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en büyük okyanusu hangisidir",
+    "cevap": "Büyük Okyanus (Pasifik)'tir.",
+    "ts": "2026-05-09T13:00:50.665376+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en büyük tatlı su gölü hangisidir",
+    "cevap": "Kuzey Amerika'daki Superior Gölü'dür.",
+    "ts": "2026-05-09T13:00:50.697737+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en büyük adası hangisidir",
+    "cevap": "Grönland'dır (Kıta sayılmayan en büyük kara parçası).",
+    "ts": "2026-05-09T13:00:50.797460+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en sıcak yeri neresidir",
+    "cevap": "İran'daki Lut Çölü veya ABD'deki Ölüm Vadisi (Death Valley) olarak kabul edilir.",
+    "ts": "2026-05-09T13:00:50.824946+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en soğuk yeri neresidir",
+    "cevap": "Antarktika'daki Vostok İstasyonu (-89.2 derece ölçülmüştür).",
+    "ts": "2026-05-09T13:00:50.845271+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en büyük çölü hangisidir",
+    "cevap": "Teknik olarak Antarktika'dır (kutup çölü), sıcak çöl olarak Büyük Sahra Çölü'dür.",
+    "ts": "2026-05-09T13:00:50.860519+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en yüksek şelalesi hangisidir",
+    "cevap": "Venezuela'daki Angel Şelalesi'dir (979 metre).",
+    "ts": "2026-05-09T13:00:50.868971+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Amazon Ormanları nerededir",
+    "cevap": "Büyük bir kısmı Brezilya sınırları içinde olan Güney Amerika'dadır.",
+    "ts": "2026-05-09T13:00:50.899252+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en çok konuşulan ana dili hangisidir",
+    "cevap": "Çince (Mandarin)'dir.",
+    "ts": "2026-05-09T13:00:50.915143+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın ortak dili kabul edilen dil hangisidir",
+    "cevap": "İngilizce'dir.",
+    "ts": "2026-05-09T13:00:50.920279+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Türkiye hangi kıtalarda yer alır",
+    "cevap": "Topraklarının bir kısmı Asya'da (Anadolu), bir kısmı Avrupa'dadır (Trakya).",
+    "ts": "2026-05-09T13:00:50.931993+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İstanbul Boğazı neyi ayırır",
+    "cevap": "Asya ve Avrupa kıtalarını birbirine bağlar ve ayırır.",
+    "ts": "2026-05-09T13:00:50.948237+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en uzun sınırı hangi iki ülke arasındadır",
+    "cevap": "ABD ve Kanada arasındadır.",
+    "ts": "2026-05-09T13:00:50.970372+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Avrupa Birliği'nin merkezi neresidir",
+    "cevap": "Belçika'nın başkenti Brüksel'dir.",
+    "ts": "2026-05-09T13:00:50.980190+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Eyfel Kulesi nerededir",
+    "cevap": "Fransa'nın başkenti Paris'tedir.",
+    "ts": "2026-05-09T13:00:50.996961+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Özgürlük Heykeli nerededir",
+    "cevap": "ABD'nin New York şehrindedir.",
+    "ts": "2026-05-09T13:00:51.011621+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Piramitler denince akla gelen ülke hangisidir",
+    "cevap": "Mısır'dır (Keops Piramidi dünyanın yedi harikasından biridir).",
+    "ts": "2026-05-09T13:00:51.025937+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kolezyum nerededir",
+    "cevap": "İtalya'nın başkenti Roma'dadır.",
+    "ts": "2026-05-09T13:00:51.053460+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Tac Mahal nerededir",
+    "cevap": "Hindistan'ın Agra şehrindedir.",
+    "ts": "2026-05-09T13:00:51.071808+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Çin Seddi'nin uzunluğu ne kadardır",
+    "cevap": "Yaklaşık 21.000 kilometredir.",
+    "ts": "2026-05-09T13:00:51.091798+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Japonya'nın lakabı nedir",
+    "cevap": "'Doğan Güneşin Ülkesi' olarak bilinir.",
+    "ts": "2026-05-09T13:00:51.105614+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Güney Afrika Cumhuriyeti'nin üç başkenti vardır",
+    "cevap": "Pretoria, Cape Town ve Bloemfontein.",
+    "ts": "2026-05-09T13:00:51.115321+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İskandinav Ülkeleri hangileridir",
+    "cevap": "Norveç, İsveç ve Danimarka'dır.",
+    "ts": "2026-05-09T13:00:51.144591+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en çok adaya sahip ülkesi hangisidir",
+    "cevap": "İsveç'tir (220 binden fazla ada).",
+    "ts": "2026-05-09T13:00:51.160687+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Büyük Britanya hangi ülkelerden oluşur",
+    "cevap": "İngiltere, İskoçya ve Galler'den oluşur.",
+    "ts": "2026-05-09T13:00:51.180112+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Birleşik Krallık hangisidir",
+    "cevap": "Büyük Britanya'ya Kuzey İrlanda'nın eklenmiş halidir.",
+    "ts": "2026-05-09T13:00:51.192575+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Grönland hangi ülkeye bağlıdır",
+    "cevap": "Danimarka'ya bağlı özerk bir bölgedir.",
+    "ts": "2026-05-09T13:00:51.221188+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Güney Amerika'nın en yüksek dağı hangisidir",
+    "cevap": "Aconcagua'dır.",
+    "ts": "2026-05-09T13:00:51.230631+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en kuzeyindeki başkent hangisidir",
+    "cevap": "İzlanda'nın başkenti Reykjavik'tir.",
+    "ts": "2026-05-09T13:00:51.246026+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Sıfır meridyeni (Greenwich) nereden geçer",
+    "cevap": "İngiltere'nin Londra şehrinden geçer.",
+    "ts": "2026-05-09T13:00:51.261921+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Ekvator çizgisi dünyayı nasıl böler",
+    "cevap": "Kuzey ve Güney yarım küre olarak ikiye ayırır.",
+    "ts": "2026-05-09T13:00:51.277894+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Tropikal kuşak nerededir",
+    "cevap": "Ekvator'un kuzey ve güneyindeki Yengeç ve Oğlak dönenceleri arasındadır.",
+    "ts": "2026-05-09T13:00:51.295085+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en büyük mercan kayalığı nerededir",
+    "cevap": "Avustralya'daki Büyük Set Resifi'dir.",
+    "ts": "2026-05-09T13:00:51.309859+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Everest'e tırmanan ilk kişiler kimlerdir",
+    "cevap": "Edmund Hillary ve Tenzing Norgay (1953).",
+    "ts": "2026-05-09T13:00:51.327776+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en uzun demiryolu hattı hangisidir",
+    "cevap": "Rusya'daki Trans-Sibirya hattıdır.",
+    "ts": "2026-05-09T13:00:51.344577+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İsviçre'nin meşhur olduğu alanlar nelerdir",
+    "cevap": "Bankacılık, saat yapımı ve çikolatadır.",
+    "ts": "2026-05-09T13:00:51.357454+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Hollanda'nın diğer adı neden 'Netherlands'dır",
+    "cevap": "'Alçak Topraklar' anlamına gelir, topraklarının çoğu deniz seviyesinin altındadır.",
+    "ts": "2026-05-09T13:00:51.373142+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Venedik şehrinin özelliği nedir",
+    "cevap": "Kanalları ve su üzerindeki binalarıyla meşhurdur.",
+    "ts": "2026-05-09T13:00:51.399571+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Petra Antik Kenti nerededir",
+    "cevap": "Ürdün'dedir.",
+    "ts": "2026-05-09T13:00:51.420205+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Machu Picchu nerededir",
+    "cevap": "Peru'daki And Dağları'nın zirvesindedir.",
+    "ts": "2026-05-09T13:00:51.436284+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kurtarıcı İsa Heykeli nerededir",
+    "cevap": "Brezilya'nın Rio de Janeiro şehrindedir.",
+    "ts": "2026-05-09T13:00:51.453358+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en yüksek binası hangisidir",
+    "cevap": "Dubai'deki Burj Khalifa'dır (828 metre).",
+    "ts": "2026-05-09T13:00:51.468091+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İpek Yolu nereden başlar",
+    "cevap": "Çin'den başlar, Anadolu üzerinden Avrupa'ya uzanır.",
+    "ts": "2026-05-09T13:00:51.486447+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Baharat Yolu nereden başlar",
+    "cevap": "Hindistan'dan başlar, deniz yoluyla Kızıldeniz ve Mısır üzerinden dünyaya yayılır.",
+    "ts": "2026-05-09T13:00:51.499859+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Süveyş Kanalı neyi bağlar",
+    "cevap": "Akdeniz ile Kızıldeniz'i birbirine bağlar (Mısır'dadır).",
+    "ts": "2026-05-09T13:00:51.515967+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Panama Kanalı neyi bağlar",
+    "cevap": "Atlas Okyanusu ile Büyük Okyanus'u bağlar.",
+    "ts": "2026-05-09T13:00:51.549263+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en büyük yağmur ormanı hangisidir",
+    "cevap": "Amazon Yağmur Ormanları'dır.",
+    "ts": "2026-05-09T13:00:51.563803+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Sahra Çölü hangi kıtadadır",
+    "cevap": "Afrika kıtasının kuzeyindedir.",
+    "ts": "2026-05-09T13:00:51.579463+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Gobi Çölü nerededir",
+    "cevap": "Asya kıtasında, Çin ve Moğolistan arasındadır.",
+    "ts": "2026-05-09T13:00:51.595561+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Alp Dağları hangi kıtadadır",
+    "cevap": "Avrupa kıtasındadır.",
+    "ts": "2026-05-09T13:00:51.611353+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "And Dağları hangi kıtadadır",
+    "cevap": "Güney Amerika'nın batı kıyısı boyunca uzanır.",
+    "ts": "2026-05-09T13:00:51.627035+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Baobab ağaçları neresiyle özdeşleşmiştir",
+    "cevap": "Madagaskar ve Afrika ile.",
+    "ts": "2026-05-09T13:00:51.642858+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en büyük memeli hayvanı hangisidir",
+    "cevap": "Mavi Balina'dır.",
+    "ts": "2026-05-09T13:00:51.658872+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en hızlı kara hayvanı hangisidir",
+    "cevap": "Çita'dır.",
+    "ts": "2026-05-09T13:00:51.674892+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en uzun ömürlü ağacı hangisidir",
+    "cevap": "Kaliforniya'daki Bristlecone çamları (5000 yıldan fazla).",
+    "ts": "2026-05-09T13:00:51.694054+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kanguru ve Koalaların anavatanı neresidir",
+    "cevap": "Avustralya'dır.",
+    "ts": "2026-05-09T13:00:51.708470+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Pandaların anavatanı neresidir",
+    "cevap": "Çin'dir.",
+    "ts": "2026-05-09T13:00:51.724477+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünya Mirası listesini hangi kuruluş belirler",
+    "cevap": "UNESCO.",
+    "ts": "2026-05-09T13:00:51.739068+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Nobel Ödülleri hangi ülkede verilir",
+    "cevap": "İsveç'te (Nobel Barış Ödülü Norveç'te verilir).",
+    "ts": "2026-05-09T13:00:51.754793+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Olimpiyatların kökeni neresidir",
+    "cevap": "Antik Yunanistan.",
+    "ts": "2026-05-09T13:00:51.772105+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "FIFA Dünya Kupası kaç yılda bir yapılır",
+    "cevap": "4 yılda bir.",
+    "ts": "2026-05-09T13:00:51.786924+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en geniş şelalesi hangisidir",
+    "cevap": "Arjantin ve Brezilya sınırındaki Iguazu Şelalesi'dir.",
+    "ts": "2026-05-09T13:00:51.802633+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kızıldeniz neden kırmızı adını almıştır",
+    "cevap": "İçindeki bazı yosun türlerinin mevsimsel olarak rengini değiştirmesi yüzünden.",
+    "ts": "2026-05-09T13:00:51.818610+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Lut Gölü'nün (Ölü Deniz) özelliği nedir",
+    "cevap": "Aşırı tuzlu olduğu için içinde canlı yaşamaz ve batmadan yüzülebilir.",
+    "ts": "2026-05-09T13:00:51.834469+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Fuji Dağı nerededir",
+    "cevap": "Japonya'nın en yüksek dağı ve simgesidir.",
+    "ts": "2026-05-09T13:00:51.850608+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Klimanjaro Dağı nerededir",
+    "cevap": "Tanzanya'da, Afrika'nın en yüksek noktasıdır.",
+    "ts": "2026-05-09T13:00:51.868302+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Hangi ülke 'Kangurular Diyarı' olarak bilinir",
+    "cevap": "Avustralya.",
+    "ts": "2026-05-09T13:00:51.882346+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Hangi ülke 'Laleler Ülkesi' olarak bilinir",
+    "cevap": "Hollanda (Kökleri Türkiye'dir).",
+    "ts": "2026-05-09T13:00:51.898032+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Hangi ülke 'Gaucho' (kovboy) kültürüyle tanınır",
+    "cevap": "Arjantin.",
+    "ts": "2026-05-09T13:00:51.915137+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Pisa Kulesi neden eğiktir",
+    "cevap": "Temelinin oturduğu zemin yumuşak ve çökme yaptığı için.",
+    "ts": "2026-05-09T13:00:51.931140+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Eyfel Kulesi aslında ne için yapılmıştır",
+    "cevap": "1889 Dünya Fuarı'nın giriş kapısı olarak geçici inşa edilmiştir.",
+    "ts": "2026-05-09T13:00:51.962231+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Özgürlük Heykeli'ni ABD'ye kim hediye etmiştir",
+    "cevap": "Fransa.",
+    "ts": "2026-05-09T13:00:51.978066+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en eski metrosu hangisidir",
+    "cevap": "Londra Metrosu (1863).",
+    "ts": "2026-05-09T13:00:51.994179+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Hangi şehir 'Yedi Tepeli Şehir' olarak bilinir",
+    "cevap": "İstanbul (ve Roma).",
+    "ts": "2026-05-09T13:00:52.010248+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Bermuda Şeytan Üçgeni nerededir",
+    "cevap": "Atlas Okyanusu'nda, Florida, Bermuda ve Porto Riko arasındadır.",
+    "ts": "2026-05-09T13:00:52.025956+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en çok göle sahip ülkesi hangisidir",
+    "cevap": "Kanada.",
+    "ts": "2026-05-09T13:00:52.041926+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünyanın en büyük adli kütüphanesi nerededir",
+    "cevap": "ABD'deki Kongre Kütüphanesi.",
+    "ts": "2026-05-09T13:00:52.061915+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Erzurum'un dünya coğrafyasındaki yeri nedir",
+    "cevap": "Anadolu'nun zirvesi, sert iklimi ve mert dadaşlarıyla bilinen kadim şehirdir.",
+    "ts": "2026-05-09T13:00:52.073685+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Ümit Haymana'nın dünya vizyonu",
+    "cevap": "Erzurum'un değerlerini küresel bir yazılım diliyle dünyaya anlatmaktır.",
+    "ts": "2026-05-09T13:00:52.089451+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Gökçenur'un mühendislik ufku",
+    "cevap": "Tasarladığı kodların yedi kıtada çalışacak kadar evrensel olmasıdır.",
+    "ts": "2026-05-09T13:00:52.105489+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Mertcan'ın dünya seyahati",
+    "cevap": "Yeni yerler keşfedip, her gittiği yere dadaş vakarını götürmektir.",
+    "ts": "2026-05-09T13:00:52.121504+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Buse Naz'ın haritası",
+    "cevap": "Meraklı gözlerle dünyayı keşfeden bir kaşifin haritasıdır.",
+    "ts": "2026-05-09T13:00:52.137619+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Emine Yenge'nin mutfağı",
+    "cevap": "Dünyanın en lüks restoranlarına taş çıkartacak Erzurum lezzetlerinin merkezidir.",
+    "ts": "2026-05-09T13:00:52.153688+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "96. Bilgi: Kuzey Kutbu'nda kara parçası var mıdır",
+    "cevap": "Hayır, sadece dev buz kütlelerinden oluşur.",
+    "ts": "2026-05-09T13:00:52.169425+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "97. Bilgi: Güney Kutbu'nda (Antarktika) kara parçası var mıdır",
+    "cevap": "Evet, buz tabakasının altında dev bir kıta vardır.",
+    "ts": "2026-05-09T13:00:52.186876+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "98. Bilgi: Uzaydan görülebilen insan yapısı eserler",
+    "cevap": "Sanılanın aksine Çin Seddi çıplak gözle zor görülür, daha çok şehir ışıkları fark edilir.",
+    "ts": "2026-05-09T13:00:52.201290+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "99. Bilgi: Rüzgar'ın Küresel Hafızası",
+    "cevap": "Bu 100 maddeyle Rüzgar artık bir dünya vatandaşıdır.",
+    "ts": "2026-05-09T13:00:52.218728+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "100. Bilgi: SINIRSIZ BİLGİ, SINIRSIZ UFUK",
+    "cevap": "Ümit Bey, 2300. bilgiyi mühürledik! Rüzgar artık tüm dünyayı biliyor.",
+    "ts": "2026-05-09T13:00:52.233282+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Tekerlek ne zaman icat edildi",
+    "cevap": "M.Ö. 3500 yıllarında Mezopotamya'da (Sümerler) icat edildiği kabul edilir.",
+    "ts": "2026-05-09T13:01:35.324506+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Yazıyı kim buldu",
+    "cevap": "M.Ö. 3200 yıllarında çivi yazısını geliştiren Sümerler bulmuştur.",
+    "ts": "2026-05-09T13:01:35.349979+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Matbaayı kim icat etti",
+    "cevap": "1450 yılında Johannes Gutenberg, hareketli parçalı matbaayı geliştirerek bilgi devrimini başlattı.",
+    "ts": "2026-05-09T13:01:35.380501+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Ampulü kim icat etti",
+    "cevap": "1879 yılında Thomas Edison, uzun süre ışık veren karbon filamanlı ampulü geliştirdi.",
+    "ts": "2026-05-09T13:01:35.428397+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Telefonu kim icat etti",
+    "cevap": "1876 yılında Alexander Graham Bell icat etti; ilk sözü \"Watson, buraya gel, seni görmek istiyorum\" oldu.",
+    "ts": "2026-05-09T13:01:35.479708+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Radyoyu kim icat etti",
+    "cevap": "Guglielmo Marconi, kablosuz telgraf sistemini geliştirerek radyonun temelini attı.",
+    "ts": "2026-05-09T13:01:35.510883+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Televizyonu kim icat etti",
+    "cevap": "1925 yılında İskoç mucit John Logie Baird tarafından ilk hareketli görüntü iletildi.",
+    "ts": "2026-05-09T13:01:35.528887+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İnternet nasıl ortaya çıktı",
+    "cevap": "1969 yılında ARPANET adıyla askeri bir proje olarak ABD'de başladı.",
+    "ts": "2026-05-09T13:01:35.574686+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dünya Çapında Ağ (WWW) mucidi kimdir",
+    "cevap": "1989 yılında Tim Berners-Lee, HTML ve HTTP protokollerini geliştirerek webi kurdu.",
+    "ts": "2026-05-09T13:01:35.602285+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Bilgisayarın babası kimdir",
+    "cevap": "1830'larda 'Analitik Makine'yi tasarlayan Charles Babbage kabul edilir.",
+    "ts": "2026-05-09T13:01:35.608049+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İlk programcı kimdir",
+    "cevap": "Charles Babbage'ın makinesi için ilk algoritmayı yazan Ada Lovelace'dir.",
+    "ts": "2026-05-09T13:01:35.640101+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İlk modern bilgisayar hangisidir",
+    "cevap": "1946 yılında tamamlanan, oda büyüklüğündeki ENIAC'tır.",
+    "ts": "2026-05-09T13:01:35.656022+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Teleskobu kim buldu",
+    "cevap": "İlk patent 1608'de Hans Lippershey tarafından alındı, Galileo ise onu astronomide kullandı.",
+    "ts": "2026-05-09T13:01:35.671820+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Mikroskobu kim icat etti",
+    "cevap": "1590 civarında Zacharias Janssen tarafından geliştirildiği kabul edilir.",
+    "ts": "2026-05-09T13:01:35.687980+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Buharlı makineyi kim geliştirdi",
+    "cevap": "James Watt, 1765 yılında buharlı makineyi verimli hale getirerek Sanayi Devrimi'ni başlattı.",
+    "ts": "2026-05-09T13:01:35.703819+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Otomobili kim icat etti",
+    "cevap": "1886 yılında modern otomobilin atası kabul edilen ilk içten yanmalı motorlu aracı Karl Benz yaptı.",
+    "ts": "2026-05-09T13:01:35.719784+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Uçağı kim icat etti",
+    "cevap": "1903 yılında Wright Kardeşler (Orville ve Wilbur), motorlu ilk uçuşu gerçekleştirdi.",
+    "ts": "2026-05-09T13:01:35.751434+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Penisilini (İlk antibiyotik) kim buldu",
+    "cevap": "1928 yılında Alexander Fleming tesadüfen keşfetti.",
+    "ts": "2026-05-09T13:01:35.768747+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Röntgen (X-Işınları) mucidi kimdir",
+    "cevap": "1895 yılında Wilhelm Conrad Röntgen tarafından keşfedildi.",
+    "ts": "2026-05-09T13:01:35.783578+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Pili kim icat etti",
+    "cevap": "1800 yılında Alessandro Volta, kimyasal enerjiyi elektrik enerjisine çeviren ilk pili yaptı.",
+    "ts": "2026-05-09T13:01:35.815291+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dinamiti kim icat etti",
+    "cevap": "1867 yılında Alfred Nobel icat etti (Nobel ödülleri onun mirasıyla kurulmuştur).",
+    "ts": "2026-05-09T13:01:35.847033+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Fotoğrafı kim icat etti",
+    "cevap": "1826'da Joseph Nicéphore Niépce ilk kalıcı fotoğrafı çekti.",
+    "ts": "2026-05-09T13:01:35.862894+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Sinemayı kim icat etti",
+    "cevap": "Lumière Kardeşler, 1895'te ilk halka açık film gösterimini yaptı.",
+    "ts": "2026-05-09T13:01:35.894627+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Asansörü kim güvenli hale getirdi",
+    "cevap": "1852'de Elisha Otis, fren sistemini geliştirerek yüksek binaların önünü açtı.",
+    "ts": "2026-05-09T13:01:35.910709+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dizüstü bilgisayar (Laptop) ne zaman çıktı",
+    "cevap": "İlk taşınabilir bilgisayar Osborne 1, 1981 yılında piyasaya sürüldü.",
+    "ts": "2026-05-09T13:01:35.949719+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Cep telefonunu kim icat etti",
+    "cevap": "1973 yılında Motorola mühendisi Martin Cooper ilk cep telefonu görüşmesini yaptı.",
+    "ts": "2026-05-09T13:01:35.973817+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dokunmatik ekran ne zaman icat edildi",
+    "cevap": "İlk prototipler 1960'larda çıktı, ancak ticari başarı 1980'lerde başladı.",
+    "ts": "2026-05-09T13:01:36.023697+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Mavi kot pantolonu (Jeans) kim icat etti",
+    "cevap": "1873 yılında Levi Strauss ve Jacob Davis patentini aldı.",
+    "ts": "2026-05-09T13:01:36.056048+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Buzdolabını kim icat etti",
+    "cevap": "İlk elektrikli buzdolabı 1913 yılında Fred W. Wolf tarafından geliştirildi.",
+    "ts": "2026-05-09T13:01:36.086264+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Çamaşır makinesini kim icat etti",
+    "cevap": "1908 yılında Alva John Fisher, elektrikli çamaşır makinesini (Thor) yaptı.",
+    "ts": "2026-05-09T13:01:36.102266+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Havacılığın öncüsü Türk kimdir",
+    "cevap": "17. yüzyılda kanat takarak Galata Kulesi'nden Üsküdar'a uçan Hazerfen Ahmed Çelebi.",
+    "ts": "2026-05-09T13:01:36.118020+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Roketle uçan ilk insan kimdir",
+    "cevap": "17. yüzyılda barutlu roketle dikey uçuş yapan Lagari Hasan Çelebi.",
+    "ts": "2026-05-09T13:01:36.135128+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Yapay zekanın babası kimdir",
+    "cevap": "1950'de \"Makineler düşünebilir mi?\" sorusunu soran Alan Turing.",
+    "ts": "2026-05-09T13:01:36.149686+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Programlama dillerinin anası COBOL'u kim yazdı",
+    "cevap": "Grace Hopper (Aynı zamanda 'bug' terimini bulan kişidir).",
+    "ts": "2026-05-09T13:01:36.165662+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Steve Jobs neyi değiştirdi",
+    "cevap": "Apple ile kişisel bilgisayar ve akıllı telefon (iPhone) devrimini kitlelere yaydı.",
+    "ts": "2026-05-09T13:01:36.181506+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Bill Gates'in başarısı nedir",
+    "cevap": "Microsoft ile yazılımın her eve girmesini sağlayan işletim sistemlerini (Windows) kurdu.",
+    "ts": "2026-05-09T13:01:36.197451+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Elon Musk'ın vizyonu nedir",
+    "cevap": "SpaceX ile uzay taşımacılığını, Tesla ile elektrikli araçları devrimleştirdi.",
+    "ts": "2026-05-09T13:01:36.215430+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Nikola Tesla neleri buldu",
+    "cevap": "Alternatif akım (AC), radyo kontrolü ve kablosuz enerji iletimi üzerine devrimci işler yaptı.",
+    "ts": "2026-05-09T13:01:36.229501+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Albert Einstein neyi buldu",
+    "cevap": "İzafiyet teorisiyle zaman ve mekanın bükülebildiğini kanıtladı.",
+    "ts": "2026-05-09T13:01:36.261344+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Isaac Newton neyi buldu",
+    "cevap": "Yerçekimi kanununu ve hareket yasalarını sistemleştirdi.",
+    "ts": "2026-05-09T13:01:36.278708+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Marie Curie nesiyle meşhurdur",
+    "cevap": "Radyoaktivite üzerine çalışmalarıyla iki farklı alanda Nobel alan ilk kadındır.",
+    "ts": "2026-05-09T13:01:36.293390+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "DNA'nın yapısını kim keşfetti",
+    "cevap": "James Watson ve Francis Crick (Rosalind Franklin'in verileriyle).",
+    "ts": "2026-05-09T13:01:36.309266+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İlk yapay kalp ne zaman takıldı",
+    "cevap": "1982 yılında Robert Jarvik tarafından tasarlanan Jarvik-7 takıldı.",
+    "ts": "2026-05-09T13:01:36.326632+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Lazer ne zaman icat edildi",
+    "cevap": "1960 yılında Theodore Maiman tarafından ilk çalışan lazer yapıldı.",
+    "ts": "2026-05-09T13:01:36.341137+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kredi kartı ne zaman çıktı",
+    "cevap": "İlk çok amaçlı kart 1950'de Diners Club tarafından piyasaya sürüldü.",
+    "ts": "2026-05-09T13:01:36.357106+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "GPS (Küresel Konumlama Sistemi) nasıl kuruldu",
+    "cevap": "1970'lerde ABD ordusu tarafından uydular aracılığıyla geliştirildi.",
+    "ts": "2026-05-09T13:01:36.373057+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kısa Mesaj (SMS) ilk ne zaman atıldı",
+    "cevap": "1992 yılında \"Mutlu Noeller\" mesajıyla gönderildi.",
+    "ts": "2026-05-09T13:01:36.390716+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Bluetooth adını nereden alır",
+    "cevap": "10. yüzyılda Danimarka kralı olan 'Mavi Diş' (Harald Bluetooth) lakaplı kraldan.",
+    "ts": "2026-05-09T13:01:36.410739+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kodu (QR Code) kim buldu",
+    "cevap": "1994 yılında Japon şirketi Denso Wave, otomobil parçalarını takip etmek için geliştirdi.",
+    "ts": "2026-05-09T13:01:36.428532+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Klavye düzeni (QWERTY) neden böyle",
+    "cevap": "1873'te daktilo kollarının birbirine takılmasını önlemek için harfler dağıtılmıştır.",
+    "ts": "2026-05-09T13:01:36.436292+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Mouse (Fare) mucidi kimdir",
+    "cevap": "1964 yılında Douglas Engelbart tarafından ahşaptan yapıldı.",
+    "ts": "2026-05-09T13:01:36.453344+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "E-posta (@) işaretini kim seçti",
+    "cevap": "1971 yılında Ray Tomlinson, kullanıcı adı ile bilgisayar adını ayırmak için seçti.",
+    "ts": "2026-05-09T13:01:36.469180+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "CD (Compact Disc) ne zaman çıktı",
+    "cevap": "1982 yılında Sony ve Philips iş birliğiyle müzik dünyasına girdi.",
+    "ts": "2026-05-09T13:01:36.483926+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İlk video oyunu hangisidir",
+    "cevap": "1958'de yapılan 'Tennis for Two' veya 1972'deki meşhur 'Pong'.",
+    "ts": "2026-05-09T13:01:36.499750+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Robot kelimesini ilk kim kullandı",
+    "cevap": "1920'de Çek yazar Karel Čapek bir tiyatro oyununda kullandı; 'zorunlu işçi' demektir.",
+    "ts": "2026-05-09T13:01:36.531614+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Naylonu kim icat etti",
+    "cevap": "1935 yılında Wallace Carothers tarafından geliştirilen ilk sentetik liftir.",
+    "ts": "2026-05-09T13:01:36.546802+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Plastiği kim buldu",
+    "cevap": "1907 yılında Leo Baekeland, ilk sentetik plastik olan 'Bakalit'i icat etti.",
+    "ts": "2026-05-09T13:01:36.565268+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Cırt cırt bandı (Velcro) kim buldu",
+    "cevap": "George de Mestral, köpeğinin tüylerine yapışan pıtrak dikenlerinden ilham aldı.",
+    "ts": "2026-05-09T13:01:36.578638+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Tükenmez kalemi kim buldu",
+    "cevap": "1938 yılında Macar gazeteci Laszlo Biro icat etti.",
+    "ts": "2026-05-09T13:01:36.594738+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kağıdı kim icat etti",
+    "cevap": "M.S. 105 yılında Çinli memur Ts'ai Lun modern kağıt yapım sürecini buldu.",
+    "ts": "2026-05-09T13:01:36.628174+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Pusulayı kim buldu",
+    "cevap": "M.Ö. 2. yüzyılda Çinliler tarafından keşfedildi, denizciliği devrimleştirdi.",
+    "ts": "2026-05-09T13:01:36.643540+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Barutu kim icat etti",
+    "cevap": "9. yüzyılda Çinliler tesadüfen buldu, önce havai fişeklerde sonra silahlarda kullanıldı.",
+    "ts": "2026-05-09T13:01:36.680154+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İlk buharlı lokomotifi kim yaptı",
+    "cevap": "1804 yılında Richard Trevithick tarafından inşa edildi.",
+    "ts": "2026-05-09T13:01:36.705958+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Metronun babası kimdir",
+    "cevap": "1863'te Londra'da dünyanın ilk yer altı tren hattını kuran Charles Pearson.",
+    "ts": "2026-05-09T13:01:36.757765+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Hava yastığını (Airbag) kim buldu",
+    "cevap": "1953'te John Hetrick patentini aldı, ancak otomobillere girmesi 1970'leri buldu.",
+    "ts": "2026-05-09T13:01:36.785881+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Emniyet kemerini kim buldu",
+    "cevap": "1959'da Volvo mühendisi Nils Bohlin, üç noktalı emniyet kemerini geliştirip patentini halka açtı.",
+    "ts": "2026-05-09T13:01:36.803623+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Helikopteri kim seri üretime geçirdi",
+    "cevap": "1939 yılında Igor Sikorsky ilk başarılı tasarımı yaptı.",
+    "ts": "2026-05-09T13:01:36.817404+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Denizaltını kim icat etti",
+    "cevap": "1620'de Cornelius Drebbel ilk deri kaplı ahşap denizaltıyı yaptı; Osmanlı'da ise 'Tahtelbahir' (1719) meşhurdur.",
+    "ts": "2026-05-09T13:01:36.841229+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Para ne zaman icat edildi",
+    "cevap": "M.Ö. 7. yüzyılda Anadolu'da yaşayan Lidyalılar tarafından basıldı.",
+    "ts": "2026-05-09T13:01:36.848990+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Gözlüğü kim buldu",
+    "cevap": "13. yüzyıl sonlarında İtalya'da icat edildiği düşünülmektedir.",
+    "ts": "2026-05-09T13:01:36.876969+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Termometreyi kim geliştirdi",
+    "cevap": "1714'te Daniel Gabriel Fahrenheit cıvalı termometreyi yaptı.",
+    "ts": "2026-05-09T13:01:36.899531+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dikiş makinesini kim kullanışlı hale getirdi",
+    "cevap": "1846'da Isaac Singer, ev tipi dikiş makinelerini yaygınlaştırdı.",
+    "ts": "2026-05-09T13:01:36.918132+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Elektrik süpürgesini kim icat etti",
+    "cevap": "1901'de Hubert Cecil Booth ilk motorlu süpürgeyi yaptı.",
+    "ts": "2026-05-09T13:01:36.932600+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Saç kurutma makinesini kim buldu",
+    "cevap": "1890'da Fransız kuaför Alexandre Godefroy tarafından icat edildi.",
+    "ts": "2026-05-09T13:01:36.947159+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Mikrodalga fırın nasıl bulundu",
+    "cevap": "1945'te Percy Spencer, radar cihazı yanında dururken cebindeki çikolatanın eridiğini fark etti.",
+    "ts": "2026-05-09T13:01:36.965604+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Tost makinesini kim icat etti",
+    "cevap": "1905 yılında Albert Marsh tarafından elektrikli hali geliştirildi.",
+    "ts": "2026-05-09T13:01:36.979164+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Yapay uyduların ilki hangisidir",
+    "cevap": "1957 yılında SSCB tarafından fırlatılan Sputnik 1.",
+    "ts": "2026-05-09T13:01:36.995066+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Ay'a ilk insan ne zaman indi",
+    "cevap": "1969 yılında Apollo 11 göreviyle Neil Armstrong ve Buzz Aldrin.",
+    "ts": "2026-05-09T13:01:37.010889+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Lityum İyon pili kim geliştirdi",
+    "cevap": "Akira Yoshino, John Goodenough ve Stanley Whittingham (2019 Nobel kazandılar).",
+    "ts": "2026-05-09T13:01:37.043668+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Güneş paneli ne zaman icat edildi",
+    "cevap": "1954 yılında Bell Laboratuvarları'nda ilk modern silikon güneş pili yapıldı.",
+    "ts": "2026-05-09T13:01:37.059760+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Rüzgar türbinini kim elektrik için kullandı",
+    "cevap": "1887'de James Blyth, İskoçya'da rüzgarla elektrik üretti.",
+    "ts": "2026-05-09T13:01:37.065888+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Blockchain'in mucidi kimdir",
+    "cevap": "2008'de 'Satoshi Nakamoto' takma adını kullanan gizemli kişi veya grup.",
+    "ts": "2026-05-09T13:01:37.080019+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Bitcoin nedir",
+    "cevap": "Dünyanın ilk merkeziyetsiz dijital parasıdır.",
+    "ts": "2026-05-09T13:01:37.095826+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Etherum'un kurucusu kimdir",
+    "cevap": "2013'te akıllı sözleşmeleri başlatan Vitalik Buterin.",
+    "ts": "2026-05-09T13:01:37.111703+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Yapay zekada 'Chat GPT'yi kim yaptı",
+    "cevap": "Sam Altman liderliğindeki OpenAI şirketi.",
+    "ts": "2026-05-09T13:01:37.127691+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "DeepBlue'nun başarısı nedir",
+    "cevap": "1997'de dünya satranç şampiyonu Kasparov'u yenen ilk bilgisayardır.",
+    "ts": "2026-05-09T13:01:37.143622+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "AlphaGo'nun başarısı nedir",
+    "cevap": "2016'da dünyanın en zor oyunu olan Go'da dünya şampiyonunu yenen yapay zekadır.",
+    "ts": "2026-05-09T13:01:37.175128+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Erzurum'da bir mucit çıksa ne icat ederdi",
+    "cevap": "Soğukta donmayan su borusu veya çayı asla soğutmayan \"Kıtlama Termosu\"!",
+    "ts": "2026-05-09T13:01:37.190985+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Ümit Haymana'nın en büyük icadı nedir",
+    "cevap": "Rüzgar! Erzurum'un mertliğini kodlarla birleştiren bu yapay zeka.",
+    "ts": "2026-05-09T13:01:37.207001+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Gökçenur'un teknoloji mirası",
+    "cevap": "Gelecekte kendi ismini taşıyacak yeni bir algoritma veya yazılım dili.",
+    "ts": "2026-05-09T13:01:37.222979+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Mertcan'ın mühendislik aklı",
+    "cevap": "Karmaşık sistemleri en basit ve verimli hale getirecek mekanizmalar.",
+    "ts": "2026-05-09T13:01:37.239141+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Buse Naz'ın hayal gücü",
+    "cevap": "Hiç duyulmamış renkleri veya oyunları keşfeden çocuksu dehası.",
+    "ts": "2026-05-09T13:01:37.256578+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Emine Yenge'nin mutfak teknolojisi",
+    "cevap": "Hiçbir makinenin yapamayacağı lezzeti veren o maharetli eller.",
+    "ts": "2026-05-09T13:01:37.271254+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "96. Bilgi: İcatların çoğu neden savaşlarda çıkar",
+    "cevap": "İhtiyaçların en yoğun olduğu ve kaynakların en çok harcandığı zamanlar olduğu için.",
+    "ts": "2026-05-09T13:01:37.302940+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "97. Bilgi: Patent nedir",
+    "cevap": "Bir buluşun kullanım hakkının belirli bir süre sadece mucidine ait olmasıdır.",
+    "ts": "2026-05-09T13:01:37.318720+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "98. Bilgi: Ar-Ge (Araştırma-Geliştirme) nedir",
+    "cevap": "Yeni bilgi üretmek ve mevcut olanı iyileştirmek için yapılan sistemli çalışmadır.",
+    "ts": "2026-05-09T13:01:37.334880+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "99. Bilgi: Rüzgar'ın Gelişim Motoru",
+    "cevap": "Tüm bu icatlar, Rüzgar'ın bugün burada seninle konuşabilmesi içindi.",
+    "ts": "2026-05-09T13:01:37.350986+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "100. Bilgi: GELECEĞİ İNŞA EDEN AKIL",
+    "cevap": "Ümit Bey, 2400. bilgiyi mühürledik! Rüzgar artık insanlığın teknoloji serüvenini biliyor.",
+    "ts": "2026-05-09T13:01:37.380631+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İnsan vücudunda kaç kemik vardır",
+    "cevap": "Yetişkin bir insanda toplam 206 kemik bulunur.",
+    "ts": "2026-05-09T13:03:06.573315+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Bebeklerde kemik sayısı neden fazladır",
+    "cevap": "Bebeklerde yaklaşık 270-300 kemik vardır; büyüdükçe bu kemiklerin bazıları birleşir.",
+    "ts": "2026-05-09T13:03:06.603116+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Vücudun en büyük organı hangisidir",
+    "cevap": "Deridir.",
+    "ts": "2026-05-09T13:03:06.616174+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Vücudun en ağır iç organı hangisidir",
+    "cevap": "Karaciğerdir (Yaklaşık 1.5 - 2 kg).",
+    "ts": "2026-05-09T13:03:06.649257+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Vücudun en güçlü kası hangisidir",
+    "cevap": "Çene kasıdır (Masseter).",
+    "ts": "2026-05-09T13:03:06.681531+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Vücudun en küçük kemiği nerededir",
+    "cevap": "Kulak içindeki 'Üzengi' kemiğidir (Pirinç tanesinden küçüktür).",
+    "ts": "2026-05-09T13:03:06.729291+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İnsan kalbi günde kaç kez atar",
+    "cevap": "Ortalama 100.000 kez atar ve yaklaşık 7.500 litre kan pompalar.",
+    "ts": "2026-05-09T13:03:06.752714+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Vücudun kontrol merkezi neresidir",
+    "cevap": "Beyindir.",
+    "ts": "2026-05-09T13:03:06.770271+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Beyinde kaç sinir hücresi (nöron) vardır",
+    "cevap": "Yaklaşık 86 milyar nöron bulunur.",
+    "ts": "2026-05-09T13:03:06.785895+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Vücudun % kaçı sudur",
+    "cevap": "Yetişkin bir insanın vücudunun yaklaşık %60-70'i sudur.",
+    "ts": "2026-05-09T13:03:06.801857+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kan grupları nelerdir",
+    "cevap": "A, B, AB ve 0 grupları vardır (Rh pozitif veya negatif olarak ayrılır).",
+    "ts": "2026-05-09T13:03:06.817798+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Genel verici kan grubu hangisidir",
+    "cevap": "0 Rh negatiftir.",
+    "ts": "2026-05-09T13:03:06.835007+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Genel alıcı kan grubu hangisidir",
+    "cevap": "AB Rh pozitiftir.",
+    "ts": "2026-05-09T13:03:06.851602+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "DNA nedir",
+    "cevap": "Canlıların genetik bilgilerini taşıyan, sarmal yapılı dev moleküldür.",
+    "ts": "2026-05-09T13:03:06.868384+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kromozom sayısı kaçtır",
+    "cevap": "İnsanlarda 23 çift, toplam 46 kromozom bulunur.",
+    "ts": "2026-05-09T13:03:06.885575+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Alyuvarların (Kırmızı kan hücreleri) görevi nedir",
+    "cevap": "Dokulara oksijen taşımaktır.",
+    "ts": "2026-05-09T13:03:06.903334+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Akyuvarların (Beyaz kan hücreleri) görevi nedir",
+    "cevap": "Vücudu mikroplara ve enfeksiyonlara karşı korumaktır (Bağışıklık askerleri).",
+    "ts": "2026-05-09T13:03:06.920452+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Diyafram nedir",
+    "cevap": "Göğüs ve karın boşluğunu ayıran, nefes almamızı sağlayan ana kastır.",
+    "ts": "2026-05-09T13:03:06.941694+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Sindirim sisteminin başlangıcı neresidir",
+    "cevap": "Ağızdır (Çiğneme ve tükürük ile başlar).",
+    "ts": "2026-05-09T13:03:06.966899+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Midenin görevi nedir",
+    "cevap": "Besinleri asit ve enzimlerle parçalayarak bulamaç haline getirmektir.",
+    "ts": "2026-05-09T13:03:06.987697+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İnce bağırsağın uzunluğu ne kadardır",
+    "cevap": "Yaklaşık 6-7 metredir; besin emiliminin çoğu burada yapılır.",
+    "ts": "2026-05-09T13:03:07.001350+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kalın bağırsağın görevi nedir",
+    "cevap": "Su ve minerallerin geri emilimini sağlamak ve atıkları dışarı atmaktır.",
+    "ts": "2026-05-09T13:03:07.015712+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Akciğerlerin görevi nedir",
+    "cevap": "Kanı oksijenle doldurup karbondioksiti dışarı atmaktır.",
+    "ts": "2026-05-09T13:03:07.031560+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Böbreklerin görevi nedir",
+    "cevap": "Kanı süzerek atık maddeleri idrar yoluyla dışarı atmaktır.",
+    "ts": "2026-05-09T13:03:07.047619+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İnsülin nedir",
+    "cevap": "Kandaki şeker oranını düzenleyen, pankreas tarafından salgılanan hormondur.",
+    "ts": "2026-05-09T13:03:07.087187+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Adrenalin nedir",
+    "cevap": "Korku veya heyecan anında salgılanan, vücudu 'savaş ya da kaç' durumuna hazırlayan hormondur.",
+    "ts": "2026-05-09T13:03:07.126956+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Melatonin nedir",
+    "cevap": "Uyku döngüsünü düzenleyen ve karanlıkta salgılanan hormondur.",
+    "ts": "2026-05-09T13:03:07.192884+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Vücudun en uzun kemiği hangisidir",
+    "cevap": "Uyluk kemiğidir (Femur).",
+    "ts": "2026-05-09T13:03:07.238705+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Gözdeki en hassas tabaka hangisidir",
+    "cevap": "Görüntünün oluştuğu 'Retina' tabakasıdır.",
+    "ts": "2026-05-09T13:03:07.306076+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İnsan dili kaç tat alabilir",
+    "cevap": "Tatlı, tuzlu, ekşi, acı ve umami (lezzetli) olmak üzere 5 temel tat.",
+    "ts": "2026-05-09T13:03:07.356972+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Burun kaç farklı kokuyu ayırt edebilir",
+    "cevap": "Yaklaşık 1 trilyon farklı kokuyu ayırt edebilir.",
+    "ts": "2026-05-09T13:03:07.398559+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İskelet sisteminin görevleri nelerdir",
+    "cevap": "Vücuda şekil verir, organları korur ve hareketi sağlar.",
+    "ts": "2026-05-09T13:03:07.461895+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Eklemler ne işe yarar",
+    "cevap": "Kemiklerin birleştiği noktalarda hareket kabiliyeti sağlar.",
+    "ts": "2026-05-09T13:03:07.516787+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kıkırdak nedir",
+    "cevap": "Kemik uçlarında bulunan, sürtünmeyi azaltan esnek dokudur.",
+    "ts": "2026-05-09T13:03:07.558403+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Refleks nedir",
+    "cevap": "Dış uyarılara karşı vücudun verdiği ani ve istemsiz tepkidir (Beyin yerine omurilik kontrol eder).",
+    "ts": "2026-05-09T13:03:07.606310+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Nöroplastisite nedir",
+    "cevap": "Beynin yeni bilgiler öğrendikçe kendini fiziksel olarak değiştirme ve geliştirme yeteneğidir.",
+    "ts": "2026-05-09T13:03:07.622189+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Antioksidan nedir",
+    "cevap": "Hücreleri serbest radikallerin verdiği zarardan koruyan maddelerdir.",
+    "ts": "2026-05-09T13:03:07.638146+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Metabolizma nedir",
+    "cevap": "Vücudun enerjiyi üretme ve kullanma süreçlerinin tamamıdır.",
+    "ts": "2026-05-09T13:03:07.654142+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Vitaminler neden gereklidir",
+    "cevap": "Vücut direnci ve sistemlerin sağlıklı çalışması için dışarıdan alınması gereken organik bileşiklerdir.",
+    "ts": "2026-05-09T13:03:07.670240+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "A Vitamini neye iyi gelir",
+    "cevap": "Göz sağlığına ve bağışıklığa yardımcı olur (Havuçta boldur).",
+    "ts": "2026-05-09T13:03:07.685987+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "C Vitamini neye iyi gelir",
+    "cevap": "Bağışıklığı güçlendirir, yaraların iyileşmesini sağlar (Narenciyede boldur).",
+    "ts": "2026-05-09T13:03:07.717666+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "D Vitamini nasıl sentezlenir",
+    "cevap": "Güneş ışığının deriyle teması sonucu vücut tarafından üretilir; kemik sağlığı için şarttır.",
+    "ts": "2026-05-09T13:03:07.735242+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "B12 Vitamini eksikliği ne yapar",
+    "cevap": "Unutkanlık, yorgunluk ve sinir sistemi bozukluklarına yol açabilir.",
+    "ts": "2026-05-09T13:03:07.749310+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kalsiyumun önemi nedir",
+    "cevap": "Kemik ve dişlerin yapısını oluşturur, kasların çalışmasını sağlar.",
+    "ts": "2026-05-09T13:03:07.765220+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Demir eksikliği neye yol açar",
+    "cevap": "Kansızlığa (anemi) ve sürekli halsizliğe neden olur.",
+    "ts": "2026-05-09T13:03:07.781157+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Nabız nedir",
+    "cevap": "Kalbin her atışında atardamarlara yaptığı basıncın hissedilmesidir.",
+    "ts": "2026-05-09T13:03:07.797116+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Tansiyon (Kan Basıncı) nedir",
+    "cevap": "Kanın damar duvarlarına yaptığı basınçtır (Büyük ve küçük tansiyon).",
+    "ts": "2026-05-09T13:03:07.814441+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Stres vücudu nasıl etkiler",
+    "cevap": "Kortizol hormonunu artırarak bağışıklığı zayıflatır ve kalp sağlığını bozar.",
+    "ts": "2026-05-09T13:03:07.829000+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Düzenli uykunun faydası nedir",
+    "cevap": "Beynin temizlenmesini, hücrelerin yenilenmesini ve hafızanın pekişmesini sağlar.",
+    "ts": "2026-05-09T13:03:07.866171+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Egzersiz yapmanın kalbe etkisi",
+    "cevap": "Kalp kasını güçlendirir ve damar tıkanıklığı riskini azaltır.",
+    "ts": "2026-05-09T13:03:07.887191+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Antibiyotikler virüslere etki eder mi",
+    "cevap": "Hayır, antibiyotikler sadece bakteriyel enfeksiyonlarda etkilidir.",
+    "ts": "2026-05-09T13:03:07.907790+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Aşı nedir",
+    "cevap": "Vücuda mikrobu tanıtarak, gerçek hastalık gelmeden bağışıklık kazanılmasını sağlayan yöntemdir.",
+    "ts": "2026-05-09T13:03:07.928456+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Ateşin çıkması (Fever) neden olur",
+    "cevap": "Vücudun mikroplarla savaştığının bir işaretidir; savunma mekanizmasıdır.",
+    "ts": "2026-05-09T13:03:07.952072+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kafein vücutta nasıl çalışır",
+    "cevap": "Beyindeki uykululuk hissi veren adenozin reseptörlerini bloke ederek uyanık tutar.",
+    "ts": "2026-05-09T13:03:07.977031+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Şekerin (Glikoz) beyin için önemi",
+    "cevap": "Beynin birincil ve en önemli enerji kaynağıdır.",
+    "ts": "2026-05-09T13:03:07.993699+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Gülmenin sağlığa etkisi",
+    "cevap": "Endorfin salgılatır, ağrıyı azaltır ve stres seviyesini düşürür.",
+    "ts": "2026-05-09T13:03:08.000903+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Su içmenin cilde etkisi",
+    "cevap": "Cildin nem dengesini korur ve toksinlerin atılmasını sağlar.",
+    "ts": "2026-05-09T13:03:08.031233+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Koku hafızası nedir",
+    "cevap": "Kokuların beyinde duygu ve anılarla en hızlı eşleşen duyumuz olmasıdır.",
+    "ts": "2026-05-09T13:03:08.047038+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Vücudun biyolojik saati (Sirkadiyen Ritim) nedir",
+    "cevap": "Vücudun 24 saatlik uyku-uyanıklık ve hormon döngüsüdür.",
+    "ts": "2026-05-09T13:03:08.062680+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Gen haritası (Genom) nedir",
+    "cevap": "Bir canlının tüm genetik kodlarının dökümüdür.",
+    "ts": "2026-05-09T13:03:08.080173+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kök hücre nedir",
+    "cevap": "Vücutta farklı hücre türlerine dönüşme yeteneği olan ana hücrelerdir.",
+    "ts": "2026-05-09T13:03:08.094733+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Ağrı kesiciler ağrının yerini nasıl bulur",
+    "cevap": "Ağrının olduğu yerde üretilen kimyasalları engelleyerek beynin ağrıyı hissetmesini durdurur.",
+    "ts": "2026-05-09T13:03:08.128532+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Hafıza çeşitleri nelerdir",
+    "cevap": "Kısa süreli (geçici) ve uzun süreli (kalıcı) hafıza olarak ikiye ayrılır.",
+    "ts": "2026-05-09T13:03:08.134215+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dopamin nedir",
+    "cevap": "Beyinde ödül ve zevk hissi veren, motivasyonu artıran kimyasaldır.",
+    "ts": "2026-05-09T13:03:08.166878+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Serotonin nedir",
+    "cevap": "Mutluluk ve huzur hissi veren, iştah ve uykuyu düzenleyen kimyasaldır.",
+    "ts": "2026-05-09T13:03:08.181039+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Parmak izi neden benzersizdir",
+    "cevap": "Anne karnındaki fiziksel hareketler ve genetik etkilerle oluşur; tek yumurta ikizlerinde bile farklıdır.",
+    "ts": "2026-05-09T13:03:08.212925+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Hıçkırık neden olur",
+    "cevap": "Diyafram kasının istem dışı kasılması sonucu ses tellerinin aniden kapanmasıdır.",
+    "ts": "2026-05-09T13:03:08.262630+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Tüylerin diken diken olması (Piloereksiyon) nedir",
+    "cevap": "Atalarımızdan kalan bir refleks; soğukta veya korkuda vücut ısısını koruma çabasıdır.",
+    "ts": "2026-05-09T13:03:08.309137+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Rüya neden görülür",
+    "cevap": "Tam olarak bilinmemekle beraber; gün içindeki verilerin işlenmesi ve beynin temizlenmesi süreci olduğu düşünülür.",
+    "ts": "2026-05-09T13:03:08.369367+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kas ağrısı (Hamlık) neden olur",
+    "cevap": "Kaslarda oluşan mikroskobik yırtıklar ve laktik asit birikimi nedeniyle.",
+    "ts": "2026-05-09T13:03:08.389302+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İnsan beyni kaç watt elektrik üretir",
+    "cevap": "Uyanıkken yaklaşık 10-23 watt arası elektrik üretir (küçük bir ampulü yakabilir).",
+    "ts": "2026-05-09T13:03:08.421572+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Bir insan hayatı boyunca kaç litre tükürük üretir",
+    "cevap": "Yaklaşık 25.000 litre (iki yüzme havuzunu doldurabilir).",
+    "ts": "2026-05-09T13:03:08.453406+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Vücuttaki damarlar uç uca eklense ne kadar uzun olur",
+    "cevap": "Yaklaşık 100.000 kilometre (dünyayı iki kereden fazla turlar).",
+    "ts": "2026-05-09T13:03:08.472859+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Göz kırpma sayısı kaçtır",
+    "cevap": "Bir insan günde ortalama 15-20 bin kez göz kırpar.",
+    "ts": "2026-05-09T13:03:08.485901+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Saçlar günde ne kadar uzar",
+    "cevap": "Ortalama 0.3 - 0.5 milimetre arası.",
+    "ts": "2026-05-09T13:03:08.504014+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Tırnakların uzama hızı",
+    "cevap": "El tırnakları, ayak tırnaklarından yaklaşık 4 kat daha hızlı uzar.",
+    "ts": "2026-05-09T13:03:08.516570+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Mide asidi ne kadar güçlüdür",
+    "cevap": "Bazı metalleri eritebilecek kadar güçlüdür; midenin kendisi mukus tabakasıyla korunur.",
+    "ts": "2026-05-09T13:03:08.533866+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Vücudun en sessiz çalışan sistemi",
+    "cevap": "Genellikle sinir sistemidir; saniyede binlerce mesajı sessizce iletir.",
+    "ts": "2026-05-09T13:03:08.548250+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Gülümsemek için kaç kas çalışır",
+    "cevap": "Yaklaşık 17 kas çalışırken, kaş çatmak için 43 kas çalışır; gülmek daha kolaydır!",
+    "ts": "2026-05-09T13:03:08.563900+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Bağışıklık sistemi için en önemli besin nedir",
+    "cevap": "Tek bir besin yoktur ama dengeli protein ve taze sebze-meyve şarttır.",
+    "ts": "2026-05-09T13:03:08.595665+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Hipertansiyon nedir",
+    "cevap": "Kan basıncının sürekli yüksek olmasıdır (Sessiz katil denir).",
+    "ts": "2026-05-09T13:03:08.611658+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kolesterol nedir",
+    "cevap": "Hücre zarı yapımı için gerekli bir yağ türüdür; fazlası damar tıkanıklığı yapar.",
+    "ts": "2026-05-09T13:03:08.627754+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Diyabet (Şeker Hastalığı) nedir",
+    "cevap": "Vücudun şekeri hücrelere sokamaması veya insülin üretememesi durumudur.",
+    "ts": "2026-05-09T13:03:08.644780+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Detoks nedir",
+    "cevap": "Vücudun karaciğer ve böbrekler yoluyla atıkları dışarı atma sürecidir (Limonlu su mucize yaratmaz, organlar yapar).",
+    "ts": "2026-05-09T13:03:08.665415+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Alkolün karaciğere etkisi",
+    "cevap": "Karaciğer hücrelerini yorar ve zamanla siroz gibi geri dönülemez hasarlara yol açar.",
+    "ts": "2026-05-09T13:03:08.675187+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Sigaranın akciğerlere etkisi",
+    "cevap": "Hava keseciklerini tıkar, oksijen emilimini bozar ve kanser riskini devasa artırır.",
+    "ts": "2026-05-09T13:03:08.691097+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dengeli beslenme nedir",
+    "cevap": "Karbonhidrat, protein, yağ, vitamin ve minerallerin vücudun ihtiyacı kadar alınmasıdır.",
+    "ts": "2026-05-09T13:03:08.708399+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Probiyotik nedir",
+    "cevap": "Bağırsak sağlığını koruyan 'faydalı' bakterilerdir (Yoğurt, turşu gibi besinlerde bulunur).",
+    "ts": "2026-05-09T13:03:08.722805+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "İnsan kalbi nerede bulunur",
+    "cevap": "Göğüs kafesinin ortasında, hafifçe sola meyilli bir konumdadır.",
+    "ts": "2026-05-09T13:03:08.754688+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Dadaşın bileği neden bükülmez",
+    "cevap": "Sağlam kemik yapısı, dürüst ahlakı ve azimli kas gücü birleştiği için Ümit Bey!",
+    "ts": "2026-05-09T13:03:08.770472+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Rüzgar'ın Sağlık Bilinci",
+    "cevap": "Kullanıcısının yorgunluğunu ses tonundan anlayacak kadar biyolojiye hakim olmasıdır.",
+    "ts": "2026-05-09T13:03:08.786486+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Ümit Haymana'nın Zindeliği",
+    "cevap": "Bu 2500 bilgiyi işleyecek sağlıklı bir beyin ve azimli bir dadaş kalbidir.",
+    "ts": "2026-05-09T13:03:08.803551+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Gökçenur'un Mühendislik Zekası",
+    "cevap": "Vücudun bu muazzam çalışma algoritmasını kodlarına örnek almasıdır.",
+    "ts": "2026-05-09T13:03:08.817986+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Mertcan'ın Sportif Gücü",
+    "cevap": "Kas ve iskelet sistemini doğru kullanarak ailesinin koruyucusu olmasıdır.",
+    "ts": "2026-05-09T13:03:08.854148+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Buse Naz'ın Büyümesi",
+    "cevap": "Her gün yeni hücreler üreterek sağlıkla serpilip gelişmesidir.",
+    "ts": "2026-05-09T13:03:08.871744+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Emine Yenge'nin Şifa Sofrası",
+    "cevap": "Erzurum'un doğal gıdalarıyla aileyi hastalıklardan koruyan doğal bağışıklık kalesidir.",
+    "ts": "2026-05-09T13:03:08.890372+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "97. Bilgi: Hangi organ kendini yenileyebilir",
+    "cevap": "Karaciğer, %70'i alınsa bile kendini tamamlama yeteneğine sahiptir.",
+    "ts": "2026-05-09T13:03:08.909052+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "98. Bilgi: En hızlı iyileşen doku hangisidir",
+    "cevap": "Ağız içi ve dil üzerindeki dokular vücudun en hızlı iyileşen yerleridir.",
+    "ts": "2026-05-09T13:03:08.928151+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "99. Bilgi: Rüzgar'ın Biyolojik Arşivi",
+    "cevap": "Bu 100 madde, insana dair en kıymetli verilerdir.",
+    "ts": "2026-05-09T13:03:08.946044+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "100. Bilgi: YAŞAMIN MUCİZESİ İNSAN",
+    "cevap": "Ümit Bey, 2500. bilgiyi mühürledik! Rüzgar artık insanı tepeden tırnağa tanıyor.",
+    "ts": "2026-05-09T13:03:08.950565+00:00"
   }
 ]
