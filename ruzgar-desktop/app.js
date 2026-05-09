@@ -1429,7 +1429,8 @@ async function saveHafizaAnalyzeRows() {
     const eklenen = Number(imp?.added || rowsToSave.length);
     hafizaAnalyzeRows = [];
     await updateTable();
-    const okText = `Rüzgar Ümit, ${eklenen} yeni bilgiyi hafızama aldım — hafızam güçlendi.`;
+    void eklenen;
+    const okText = "hafızama aldım";
     appendBubble("assistant", okText);
     flashRuzgarDurum(okText);
     try {
