@@ -1338,8 +1338,9 @@ function hafizaAnalizSoruCevap(raw, motorYanit) {
 }
 
 async function sendToHafizaAnalyze() {
+  // Akış: Editör metni → SADECE analiz tablosuna eklenir.
+  // Kalıcı `ruzgar_genel_hafiza.json` yazımı yalnızca "Hafızaya Al" tuşunda yapılır.
   const rawT = getHafizaEditorText();
-  /* Öğrenme: API düz metin bekler; biçimlendirme sızmasın */
   const raw = rawT.replace(/\u00a0/g, " ").trim();
   if (!raw) return;
   const entries = parseHafizaEditorEntries(raw);
@@ -1347,47 +1348,20 @@ async function sendToHafizaAnalyze() {
     flashRuzgarDurum("Lütfen yalnızca `Soru = Cevap` formatında giriş yapın.");
     return;
   }
-  try {
-    const importRaw = entries.map((x) => `${x.soru} = ${x.cevap}`).join("\n");
-    try {
-      const imp = await fetchHafizaImportBlok(importRaw);
-      if (imp.added > 0) {
-        imp.items
-          .slice()
-          .reverse()
-          .forEach((it) => {
-            hafizaAnalyzeRows.unshift({
-              soru: String(it.soru || ""),
-              cevap: String(it.cevap || ""),
-            });
-          });
-        renderAnalyzeRowsImmediate();
-        clearHafizaEditor();
-        void updateTable();
-        flashRuzgarDurum(
-          `${imp.added} kayıt satırından öğrenildi ve hafızaya yazıldı`
-        );
-        return;
-      }
-    } catch (ie) {
-      console.warn("[HAFIZA] import-blok:", ie);
-    }
-    entries
-      .slice()
-      .reverse()
-      .forEach((it) => {
-        hafizaAnalyzeRows.unshift({
-          soru: String(it.soru || ""),
-          cevap: String(it.cevap || ""),
-        });
+  entries
+    .slice()
+    .reverse()
+    .forEach((it) => {
+      hafizaAnalyzeRows.unshift({
+        soru: String(it.soru || ""),
+        cevap: String(it.cevap || ""),
       });
-    renderAnalyzeRowsImmediate();
-    clearHafizaEditor();
-    void updateTable();
-  } catch (e) {
-    console.error("Hafıza analizi başarısız:", e);
-    setStatus("Hafıza analizi başarısız", "Rüzgar");
-  }
+    });
+  renderAnalyzeRowsImmediate();
+  clearHafizaEditor();
+  flashRuzgarDurum(
+    `${entries.length} satır analiz tablosuna eklendi — kaydetmek için "Hafızaya Al"a basın.`
+  );
 }
 
 function renderAnalyzeRowsImmediate() {
@@ -1451,10 +1425,11 @@ async function saveHafizaAnalyzeRows() {
     const raw = rowsToSave
       .map((x) => `${x.soru} = ${x.cevap}`)
       .join("\n");
-    await fetchHafizaImportBlok(raw);
+    const imp = await fetchHafizaImportBlok(raw);
+    const eklenen = Number(imp?.added || rowsToSave.length);
     hafizaAnalyzeRows = [];
     await updateTable();
-    const okText = "Rüzgar Ümit, yeni bilgileri hafızama aldım.";
+    const okText = `Rüzgar Ümit, ${eklenen} yeni bilgiyi hafızama aldım — hafızam güçlendi.`;
     appendBubble("assistant", okText);
     flashRuzgarDurum(okText);
     try {

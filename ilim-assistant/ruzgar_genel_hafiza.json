@@ -77,7 +77,13 @@
   {
     "motor_tipi": "Hafıza",
     "soru": "selam",
-    "cevap": "selam nasılsın",
-    "ts": "2026-05-09T09:58:27.135265+00:00"
+    "cevap": "selam",
+    "ts": "2026-05-09T10:10:39.189312+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "hava nasıl",
+    "cevap": "Mimar bugün güneşli, harika bir gün.",
+    "ts": "2026-05-09T10:26:51.842655+00:00"
   }
 ]
