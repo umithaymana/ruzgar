@@ -40,6 +40,13 @@ from ilim_assistant.chat_core import respond
 from ilim_assistant.memory import save_exchange
 from ilim_assistant.safety_policy import DISCLAIMER_TR
 
+try:
+    from ilim_assistant.ruzgar_hafiza_koprusu import ensure_hafiza_bridge_ready
+
+    ensure_hafiza_bridge_ready()
+except Exception:
+    pass
+
 
 def ops_preview(preset_key: str) -> str:
     if not preset_key:

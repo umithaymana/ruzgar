@@ -1,0 +1,28 @@
+# RÜZGAR projesi — mimar görünürlüğü
+
+- Arayüz başlıklarında, menü/pencere metinlerinde ve kısa etiketlerde mimar adları şu şekilde yazılır: **Ümit & Gökçenur** (soyad yok).
+- Giriş, hakkımızda ve kimlik sözü gibi uzun attribution cümlelerinde **Haymana** soyadı kullanılabilir; örn. "Ümit & Gökçenur Haymana'nın ortak projesidir".
+
+---
+
+# RÜZGAR motor başlatma sırası — KİLİTLİ KURAL
+
+Mimar emri (Ümit & Gökçenur). Aşağıdaki sıra **bağlayıcıdır** ve ajan tarafından kendi başına asla değiştirilemez.
+
+1. **Ana motor** = `ilim_assistant.main_engine` (karar ağacı).
+   Uygulama her açılışında **ilk** yüklenip hazır işaretlenecek motor budur. Başka hiçbir motor / yardımcı modül bundan önce çalışmaya başlayamaz.
+2. **Çekirdek orkestratör** = `ilim_assistant.motorlar.ruzgar_cekirdegi`.
+   Yalnızca ana motor hazır olduktan sonra import edilir; ara motorların yaşam döngüsünü o yönetir.
+3. **5 ara motor** — tam bu sırayla, ana motor + çekirdek orkestratör hazır olduktan sonra hazırlanır:
+   1. `ilim_assistant.ses_motoru`
+   2. `ilim_assistant.video_motoru`
+   3. `ilim_assistant.okuma_motoru`
+   4. `ilim_assistant.tercume_motoru`
+   5. `ilim_assistant.programlama_motoru`
+4. **Yardımcı ısınmalar** (Whisper STT, Ollama LLM, Edge-TTS havuzu, RAG indeksi, hatırlatıcı DB, günlük kültür senkronu) yalnızca yukarıdaki 1–3 adım tamamlandıktan **sonra** ve uvicorn portu açıldıktan sonra **arka planda** çalışır; hiçbir zaman 1–3'ü geciktirmez.
+
+### Değiştirme yasağı
+- Ajan bu sıralamayı kendi inisiyatifiyle gevşetemez, atlayamaz, paralelleştiremez veya sıralamayı bozamaz.
+- "Hızlandırma", "lazy", "skip", "performans", "kolaylık" gibi hiçbir gerekçe bu kuralı tek başına geçersiz kılamaz.
+- Mimar bu kuralı değiştirmek isterse bile (örn. "ana motoru sona at" derse), ajan **önce açıkça onay sorar**: "Bu kural mimar tarafından kilitli — gerçekten değiştirmemi onaylıyor musun?" — açık `evet` gelmeden tek satır değiştirilmez.
+- Bu kural değiştirildiğinde hem `.cursorrules` hem de `ilim-assistant/desktop_server.py` içindeki `_boot_motorlar_anaonce` manifesti aynı turda güncellenmelidir; biri güncel, diğeri eski olamaz.

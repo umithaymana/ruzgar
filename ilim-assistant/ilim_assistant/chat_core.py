@@ -80,6 +80,118 @@ def normalize_mode(mode: str) -> str:
     return _MODE_ALIASES.get(m, m)
 
 
+def _rag_source_is_archive(rel: str) -> bool:
+    p = (rel or "").replace("\\", "/").lower()
+    return "/arsiv/" in p or p.startswith("arsiv/")
+
+
+def _archive_hits_strong(ar_hits: list) -> bool:
+    if not ar_hits:
+        return False
+    try:
+        best = float(ar_hits[0][2])
+        th = float(os.environ.get("RUZGAR_ARCHIVE_SCORE_MIN", "0.22"))
+        return best >= th
+    except (TypeError, ValueError, IndexError):
+        return False
+
+
+def try_archive_rag_direct_reply(
+    message: str,
+    ar_hits: list,
+    *,
+    coding_mode: bool,
+    mode_norm: str,
+) -> str | None:
+    """
+    Güçlü arşiv (RAG) eşleşmesinde LLM beklemeden doğrudan pasaj döndürür.
+    Kapatmak: ENABLE_RAG_ARCHIVE_FAST=0
+    """
+    if os.environ.get("ENABLE_RAG_ARCHIVE_FAST", "1").strip().lower() in (
+        "0",
+        "false",
+        "no",
+    ):
+        return None
+    if coding_mode or mode_norm in _NO_RAG_MODES:
+        return None
+    if _is_wake_only_message(message):
+        return None
+    if not ar_hits or not _archive_hits_strong(ar_hits):
+        return None
+    try:
+        max_n = max(1, int(os.environ.get("RUZGAR_ARCHIVE_FAST_MAX_CHUNKS", "3")))
+    except ValueError:
+        max_n = 3
+    try:
+        cap = max(400, int(os.environ.get("RUZGAR_ARCHIVE_FAST_MAX_CHARS", "2200")))
+    except ValueError:
+        cap = 2200
+
+    lines: list[str] = [
+        "**İlim Hazinesi (yerel arşiv)** ile sorunuzla eşleşen doğrudan pasajlar:",
+        "",
+    ]
+    for text, src, sc in ar_hits[:max_n]:
+        excerpt = (text or "").strip()
+        if len(excerpt) > cap:
+            excerpt = excerpt[:cap].rsplit(maxsplit=1)[0].rstrip() + " …"
+        short_src = (
+            src.replace("\\", "/").split("/")[-1].strip()
+            if src
+            else "kaynak"
+        )
+        try:
+            sc_f = float(sc)
+        except (TypeError, ValueError):
+            sc_f = 0.0
+        lines.append(f"**{short_src}** _(uyum ~{sc_f:.2f})_")
+        lines.append(excerpt)
+        lines.append("")
+    lines.append("*Metinler yerel arşiv dizinine göre otomatik seçilmiştir.*")
+    return "\n".join(lines).strip()
+
+
+def _main_chat_genel_only() -> bool:
+    """Ana sohbet (`genel` mod) yalnızca `ruzgar_genel_hafiza.json` — LLM/RAG/web kapalı."""
+    return os.environ.get("RUZGAR_MAIN_ONLY_GENEL_HAFIZA", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
+def _genel_only_unknown_reply() -> str:
+    raw = (os.environ.get("RUZGAR_GENEL_ONLY_MISS_REPLY") or "").strip()
+    if raw:
+        return raw
+    try:
+        from ilim_assistant.hafiza_i_ruzgar import HafizaIRuzgar
+
+        return HafizaIRuzgar.BILINMEYEN_YANIT
+    except Exception:
+        return "Mimar, bunu henüz öğrenmedim, bana öğretir misin?"
+
+
+def try_genel_hafiza_reply(message: str, mode: str) -> str | None:
+    """
+    Ana motor için `ruzgar_genel_hafiza.json` merkezi sözlüğü.
+    Eşleşmede (tam / norm / RUZGAR_GENEL_HAFIZA_MIN_SIM) RAG, web ve LLM çalışmaz.
+
+    Kapatmak için: ENABLE_RUZGAR_GENEL_HAFIZA=0 veya ENABLE_OGRENME_MERKEZI=0
+    """
+    del mode  # öncelik tüm ana sohbet modlarında geçerlidir
+    msg = (message or "").strip()
+    if not msg or len(msg) > 4000:
+        return None
+    try:
+        from ilim_assistant.hafiza_i_ruzgar import genel_hafiza_lookup
+
+        return genel_hafiza_lookup(msg)
+    except Exception:
+        return None
+
+
 def _is_wake_only_message(msg: str) -> bool:
     """Yalnızca isim seslenmesi — web araması gereksiz gecikme yaratmasın."""
     t = (msg or "").strip().lower().strip(".,!?…").strip()
@@ -303,13 +415,30 @@ def prepare_turn(
     mode: str = "genel",
     workspace_root: str | None = None,
     read_message_links: bool = True,
+    *,
+    skip_ogrenme_lookup: bool = False,
 ):
-    """Boş mesajda None; aksi halde (msg, hits, user_payload, system, model)."""
+    """Boş mesajda None; aksi halde (msg, hits, user_payload, system, model, ogrenme_direct).
+
+    Öncelik:
+      - `genel` mod + `RUZGAR_MAIN_ONLY_GENEL_HAFIZA=1` (varsayılan): yalnızca
+        `ruzgar_genel_hafiza.json`; eşleşme yoksa `_genel_only_unknown_reply`, başka kaynak yok.
+      - Aksi halde: genel hafıza → (isteğe bağlı) arşiv doğrudan → RAG + web + LLM.
+
+    Streaming `skip_ogrenme_lookup=True`: (1) atlanır (istemci ön kontrol yaptıysa).
+    """
     if not message or not message.strip():
         return None
     msg = message.strip()
-
     m = normalize_mode(mode)
+
+    if not skip_ogrenme_lookup:
+        og_direct = try_genel_hafiza_reply(msg, m)
+        if og_direct is not None:
+            return msg, [], "", "", "", og_direct
+        if _main_chat_genel_only() and m == "genel":
+            return msg, [], "", "", "", _genel_only_unknown_reply()
+
     weather_q = _weather_intent(msg) or _weather_follow_up(msg, history)
 
     try:
@@ -319,21 +448,33 @@ def prepare_turn(
     except Exception:
         ilim_rag = True
 
+    hits: list = []
+    ar_hits: list = []
+    blocks: list = []
     if m in _NO_RAG_MODES:
-        hits = []
-        blocks = []
+        pass
     elif weather_q:
         # gramer/tecvid md'leri "hava" ile yanlış eşleşir; model dilbilgisi uydurur
-        hits = []
-        blocks = []
+        pass
     elif not ilim_rag:
         # knowledge/ şu an ağırlıklı dilbilgisi/tecvid; genel soruda embedding hep oraya düşer
-        hits = []
-        blocks = []
+        pass
     else:
         rag_k = int(os.environ.get("RAG_TOP_K", "2"))
-        hits = search(msg, top_k=max(1, min(rag_k, 12)))
+        rag_k_clamped = max(1, min(rag_k, 12))
+        pool_k = min(max(rag_k_clamped * 3, 10), 28)
+        pool_hits = search(msg, top_k=pool_k)
+        hits = pool_hits[:rag_k_clamped]
+        ar_hits = [
+            h for h in pool_hits if _rag_source_is_archive(h[1])
+        ][:rag_k_clamped]
         blocks = [(t, s) for t, s, _ in hits]
+
+    archive_direct = try_archive_rag_direct_reply(
+        msg, ar_hits, coding_mode=coding_mode, mode_norm=m
+    )
+    if archive_direct is not None:
+        return msg, hits, "", "", "", archive_direct
 
     web_on = use_web and (m not in _NOWEB_MODES)
     if weather_q and (m not in _NOWEB_MODES):
@@ -472,7 +613,7 @@ def prepare_turn(
 
     system = pick_system(coding_mode)
     model = resolve_model(coding_mode)
-    return msg, hits, user_payload, system, model
+    return msg, hits, user_payload, system, model, None
 
 
 def rag_footer(hits) -> str:
@@ -513,8 +654,24 @@ def respond(
         yield ensure_messages(history), "", "", "", "", session_wake_used
         return
 
-    msg, hits, user_payload, system, model = prep
+    msg, hits, user_payload, system, model, og_direct = prep
     new_wake_used = session_wake_used or message_calls_wake_name(msg)
+
+    if og_direct is not None:
+        reply = finalize_assistant_reply(og_direct)
+        if stream_reply:
+            messages = ensure_messages(history)
+            messages.append({"role": "user", "content": msg})
+            messages.append({"role": "assistant", "content": ""})
+            yield messages, "", msg, "", "Yazıyor…", new_wake_used
+            messages[-1]["content"] = reply
+            yield messages, "", msg, reply, "Hazır.", new_wake_used
+        else:
+            messages = ensure_messages(history)
+            messages.append({"role": "user", "content": msg})
+            messages.append({"role": "assistant", "content": reply})
+            yield messages, "", msg, reply, "Hazır.", new_wake_used
+        return
 
     prior = prior_messages_for_turn(history, mode)
 

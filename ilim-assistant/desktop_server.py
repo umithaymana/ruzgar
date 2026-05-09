@@ -12,14 +12,15 @@ from __future__ import annotations
 import json
 import os
 import tempfile
-from typing import Annotated, Any
+from typing import Annotated, Any, Iterator
 
 import uvicorn
-from fastapi import FastAPI, File, HTTPException, Query, UploadFile
+from fastapi import FastAPI, File, HTTPException, Query, UploadFile, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+
 from pydantic import BaseModel, Field
-from starlette.concurrency import run_in_threadpool
+from starlette.concurrency import iterate_in_threadpool, run_in_threadpool
 
 from ilim_assistant.chat_core import (
     message_calls_wake_name,
@@ -27,6 +28,10 @@ from ilim_assistant.chat_core import (
     prior_messages_for_turn,
     prepare_turn,
     rag_footer,
+)
+from ilim_assistant.hafiza_i_ruzgar import (
+    genel_hafiza_lookup,
+    get_hafiza_motor as _get_hafiza_motor,
 )
 from ilim_assistant.text_encoding import finalize_assistant_reply
 from ilim_assistant.llm_ollama import chat_completion_stream
@@ -50,6 +55,10 @@ async def _warmup_rag() -> None:
         from ilim_assistant.rag_store import warmup_index
 
         warmup_index()
+    except Exception:
+        pass
+    try:
+        _get_hafiza_motor()
     except Exception:
         pass
 
@@ -78,6 +87,84 @@ class ChatRequest(BaseModel):
 
 def _sse(obj: dict) -> str:
     return f"data: {json.dumps(obj, ensure_ascii=False)}\n\n"
+
+
+class HafizaArsivAdd(BaseModel):
+    raw: str = ""
+
+
+class HafizaMotorRead(BaseModel):
+    raw: str = ""
+
+
+class HafizaImportBlok(BaseModel):
+    raw: str = ""
+
+
+class GenelHafizaBakBody(BaseModel):
+    message: str = ""
+
+
+@app.post("/api/hafiza/genel-bak")
+def api_genel_hafiza_bak(body: GenelHafizaBakBody):
+    """Ana sohbet ön kontrol: genel hafızada tam/benzer cevap (UI düşünme balonu atlatma)."""
+    m = (body.message or "").strip()
+    if not m:
+        return {"ok": True, "hit": False, "answer": None}
+    ans = genel_hafiza_lookup(m)
+    if ans is None:
+        return {"ok": True, "hit": False, "answer": None}
+    out = finalize_assistant_reply(ans)
+    return {"ok": True, "hit": True, "answer": out}
+
+
+@app.get("/api/hafiza/arsiv")
+def api_hafiza_arsiv():
+    """Öğrenme sözlüğü — arayüz sadece `data` ile motor cevabı eşlemesi yapar (analiz listesi ayrı)."""
+    m = _get_hafiza_motor()
+    return {"ok": True, "data": m.tum_bilgiler(motor_tipi="Hafıza"), "items": []}
+
+
+@app.post("/api/hafiza/arsiv/add")
+def api_hafiza_arsiv_add(body: HafizaArsivAdd):
+    """Satırları `soru = cevap` formatında ayrıştırır ve kalıcı hafızaya yazar."""
+    m = _get_hafiza_motor()
+    raw = (body.raw or "").strip()
+    if not raw:
+        raise HTTPException(status_code=400, detail="Boş kayıt")
+    added = 0
+    for line in raw.replace("\r\n", "\n").replace("\r", "\n").split("\n"):
+        txt = line.strip()
+        if not txt or txt.startswith("#"):
+            continue
+        if "=" not in txt:
+            continue
+        soru, _, cevap = txt.partition("=")
+        soru = soru.strip()
+        cevap = cevap.strip()
+        if soru and cevap:
+            m.ekle_bilgi(soru, cevap, motor_tipi="Hafıza")
+            added += 1
+
+    if added == 0:
+        raise HTTPException(status_code=400, detail="Geçerli 'Soru = Cevap' satırı yok")
+
+    return {"ok": True, "added": added}
+
+
+@app.post("/api/hafiza/motor-read")
+def api_hafiza_motor_read(body: HafizaMotorRead):
+    m = _get_hafiza_motor()
+    ans = m.cevap_ver(body.raw or "")
+    return {"ok": True, "answer": ans}
+
+
+@app.post("/api/hafiza/import-blok")
+def api_hafiza_import_blok(body: HafizaImportBlok):
+    """Çok satırlı metinde yalnızca `soru = cevap` satırlarını öğrenir."""
+    m = _get_hafiza_motor()
+    items = m.import_metin_blok(body.raw or "", motor_tipi="Hafıza")
+    return {"ok": True, "added": len(items), "items": items}
 
 
 @app.get("/api/health")
@@ -147,57 +234,106 @@ async def api_stt(
                 pass
 
 
-@app.post("/api/chat/stream")
-def chat_stream(req: ChatRequest):
+def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
+    """Gradio / SSE / WS; önce `prepare_turn` → merkezi `ruzgar_genel_hafiza.json` eşlemesi."""
     mode_norm = normalize_mode(req.mode or "genel")
     coding = req.coding_mode or mode_norm == "programlama"
+    prep = prepare_turn(
+        req.message,
+        req.history,
+        req.use_web,
+        req.fetch_pages,
+        coding,
+        req.session_wake_used,
+        mode=mode_norm,
+        workspace_root=req.workspace_root,
+        read_message_links=req.read_message_links,
+    )
+    if prep is None:
+        yield {"type": "error", "text": "Boş mesaj"}
+        return
 
+    msg, hits, user_payload, system, model, og_direct = prep
+    new_wake = req.session_wake_used or message_calls_wake_name(msg)
+
+    if og_direct is not None:
+        full_out = finalize_assistant_reply(og_direct)
+        yield {"type": "meta", "instant_memory": True}
+        yield {"type": "token", "text": full_out}
+        yield {
+            "type": "done",
+            "full_reply": full_out,
+            "user_message": msg,
+            "new_wake_used": new_wake,
+        }
+        return
+
+    prior = prior_messages_for_turn(req.history, mode_norm)
+    reply_body = ""
+    try:
+        for piece in chat_completion_stream(
+            system, user_payload, model=model, prior_messages=prior
+        ):
+            reply_body += piece
+            yield {"type": "token", "text": piece}
+        footer = rag_footer(hits)
+        body_fixed = finalize_assistant_reply(reply_body)
+        full_out = body_fixed + footer
+        yield {
+            "type": "done",
+            "full_reply": full_out,
+            "user_message": msg,
+            "new_wake_used": new_wake,
+        }
+    except Exception as e:
+        yield {"type": "error", "text": str(e)}
+
+
+@app.post("/api/chat/stream")
+def chat_stream(req: ChatRequest):
     def generate():
-        prep = prepare_turn(
-            req.message,
-            req.history,
-            req.use_web,
-            req.fetch_pages,
-            coding,
-            req.session_wake_used,
-            mode=mode_norm,
-            workspace_root=req.workspace_root,
-            read_message_links=req.read_message_links,
-        )
-        if prep is None:
-            yield _sse({"type": "error", "text": "Boş mesaj"})
-            return
-
-        msg, hits, user_payload, system, model = prep
-        new_wake = req.session_wake_used or message_calls_wake_name(msg)
-        prior = prior_messages_for_turn(req.history, mode_norm)
-
-        reply_body = ""
-        try:
-            for piece in chat_completion_stream(
-                system, user_payload, model=model, prior_messages=prior
-            ):
-                reply_body += piece
-                yield _sse({"type": "token", "text": piece})
-            footer = rag_footer(hits)
-            body_fixed = finalize_assistant_reply(reply_body)
-            full_out = body_fixed + footer
-            yield _sse(
-                {
-                    "type": "done",
-                    "full_reply": full_out,
-                    "user_message": msg,
-                    "new_wake_used": new_wake,
-                }
-            )
-        except Exception as e:
-            yield _sse({"type": "error", "text": str(e)})
+        yield ":ruzgar-events\n\n"
+        for obj in iter_chat_turn_events(req):
+            yield _sse(obj)
 
     return StreamingResponse(
         generate(),
         media_type="text/event-stream; charset=utf-8",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+@app.websocket("/ws/chat")
+async def websocket_chat(ws: WebSocket) -> None:
+    """Electron Işık Hızı: SSE ile aynı `iter_chat_turn_events` (önce öğrenme merkezi)."""
+    await ws.accept()
+    try:
+        payload = await ws.receive_json()
+    except Exception:
+        try:
+            await ws.send_json({"type": "error", "text": "Geçersiz veya boş istek"})
+        except Exception:
+            pass
+        await ws.close()
+        return
+    try:
+        req = ChatRequest(**payload)
+    except Exception as e:
+        try:
+            await ws.send_json({"type": "error", "text": f"İstek şeması: {e}"})
+        except Exception:
+            pass
+        await ws.close()
+        return
+    try:
+        async for obj in iterate_in_threadpool(iter_chat_turn_events(req)):
+            await ws.send_json(obj)
+    except Exception:
+        pass
+    try:
+        await ws.close()
+    except Exception:
+        pass
 
 
 if __name__ == "__main__":

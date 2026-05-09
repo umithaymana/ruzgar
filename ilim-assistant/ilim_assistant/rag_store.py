@@ -199,6 +199,12 @@ def warmup_index() -> None:
     _get_cached_index()
 
 
+def _source_is_archive(rel: str) -> bool:
+    """İndeks kaynağı `ilim-assistant/arsiv/...` altında mı? (Windows / POSIX yolu)."""
+    p = (rel or "").replace("\\", "/").lower()
+    return "/arsiv/" in p or p.startswith("arsiv/")
+
+
 def search(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
     """Dönüş: (metin, kaynak, skor) — skor yaklaşık uyum."""
     chunks, emb = _get_cached_index()
@@ -213,3 +219,12 @@ def search(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
     for i in idx:
         out.append((chunks[int(i)].text, chunks[int(i)].source, float(sim[int(i)])))
     return out
+
+
+def search_arsiv(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
+    """Yalnızca arşiv külliyatı kaynakları; geniş aday kümeden süzülür (tek gömme sorgusu)."""
+    tk = max(1, top_k)
+    pool = max(tk * 4, 16)
+    wide = search(query, top_k=min(pool, 48))
+    out = [(t, s, sc) for t, s, sc in wide if _source_is_archive(s)]
+    return out[:tk]

@@ -859,19 +859,57 @@ body {
   border-radius: 6px;
   background: #1e1e1e;
   padding: 10px;
-  min-height: 260px;
-  max-height: 360px;
+}
+#page-hafiza #hafiza-list-view.json-view {
+  flex: 1 1 auto;
+  min-height: 140px;
+  max-height: none;
   overflow: auto;
 }
-.hafiza-analyze-head {
+.hafiza-analyze-column {
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+#page-hafiza .hafiza-split > .hafiza-analyze-column {
+  flex: 1.55 1 0;
+  min-height: 0;
+}
+#page-hafiza .hafiza-split > .hafiza-editor-column {
+  flex: 1 1 0;
+  min-height: 0;
+}
+.hafiza-analyze-toolbar {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
   margin-bottom: 8px;
+}
+.hafiza-analyze-heading {
+  margin: 0;
+  font-size: 1em;
+  font-weight: 600;
+  color: #d4d4d4;
+  flex-shrink: 0;
+  margin-right: 4px;
 }
 .hafiza-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 12px;
+}
+.hafiza-table th:nth-child(1),
+.hafiza-table td:nth-child(1) {
+  width: 38%;
+}
+.hafiza-table th:nth-child(2),
+.hafiza-table td:nth-child(2) {
+  width: 62%;
 }
 .hafiza-table th,
 .hafiza-table td {
@@ -879,6 +917,9 @@ body {
   padding: 6px 8px;
   text-align: left;
   vertical-align: top;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 .hafiza-table th {
   color: #9cdcfe;
@@ -899,12 +940,40 @@ body {
 }
 .dynamic-workbench.layout-split2 #page-hafiza .hafiza-split {
   display: grid;
-  grid-template-rows: 1fr 1fr;
+  grid-template-rows: minmax(200px, 1.55fr) 1fr;
   height: 100%;
+  gap: 10px;
 }
 .dynamic-workbench.layout-split2 #page-hafiza .hafiza-split > div {
   min-height: 0;
-  overflow: auto;
+}
+.dynamic-workbench.layout-split2 #page-hafiza .hafiza-split > div.hafiza-analyze-column {
+  overflow: hidden;
+}
+.hafiza-editor-column {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.hafiza-editor-heading {
+  margin: 0 0 8px;
+  font-size: 1em;
+  font-weight: 600;
+  color: #d4d4d4;
+  flex-shrink: 0;
+}
+#page-hafiza .hafiza-editor-wrap {
+  flex: 1 1 auto;
+  min-height: 100px;
+  margin-bottom: 8px;
+}
+#page-hafiza .hafiza-editor-input.hafiza-editor-rich {
+  margin-bottom: 0;
+}
+#page-hafiza .hafiza-editor-column .btn-primary {
+  flex-shrink: 0;
+  align-self: flex-start;
 }
 .hafiza-q-btn {
   width: 100%;
@@ -915,6 +984,38 @@ body {
   cursor: pointer;
   padding: 0;
   font: inherit;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.hafiza-editor-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.hafiza-editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+  flex-shrink: 0;
+}
+.hafiza-editor-rich {
+  flex: 1 1 auto;
+  min-height: 100px;
+  max-height: 100%;
+  overflow-y: auto;
+  outline: none;
+  line-height: 1.5;
+}
+.hafiza-editor-rich.is-empty:before {
+  content: attr(data-placeholder);
+  color: #6b6b6b;
+  pointer-events: none;
+  white-space: pre-wrap;
+}
+.hafiza-editor-rich:focus {
+  border-color: #0078c8;
 }
 .hafiza-q-btn:hover { color: #c5e8ff; text-decoration: underline; }
 .hafiza-row-selected td {
@@ -922,8 +1023,10 @@ body {
 }
 .hafiza-analyze-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 8px;
+  flex-shrink: 0;
 }
 body.workbench-full .dynamic-workbench.layout-full #page-hafiza .hafiza-split {
   grid-template-rows: 1fr;
@@ -946,6 +1049,11 @@ body.workbench-full .dynamic-workbench.layout-full #page-hafiza .hafiza-split > 
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+/* [hidden], aksi halde display:flex menüyü görünür bırakabilir */
+.ctx-menu[hidden] {
+  display: none !important;
+  pointer-events: none;
 }
 .ctx-menu button {
   background: transparent;

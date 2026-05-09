@@ -123,6 +123,21 @@ function apiToWsBase(api) {
   }
 }
 
+/** Yerel `desktop_server` (8777): WebSocket Köprüsü olmadan doğrudan SSE — öğrenme merkezi her turda garanti */
+function ruzgarLikelyLocalDesktopApi() {
+  try {
+    const u = new URL(API);
+    const h = String(u.hostname || "").toLowerCase();
+    if (h !== "127.0.0.1" && h !== "localhost") return false;
+    const rawPort =
+      u.port ||
+      (u.protocol === "https:" ? "443" : u.protocol === "http:" ? "80" : "");
+    return String(rawPort) === "8777";
+  } catch {
+    return false;
+  }
+}
+
 (function startTunnelKeepAlive() {
   const intervalMs = (() => {
     try {
@@ -707,10 +722,11 @@ function wireDynamicWorkbench() {
   if (el.btnLayoutSplit2) el.btnLayoutSplit2.addEventListener("click", () => setWorkbenchLayout("layout-split2"));
   if (el.btnLayoutSplit4) el.btnLayoutSplit4.addEventListener("click", () => setWorkbenchLayout("layout-split4"));
   if (el.btnHafizaSave) {
-    // Click event köprüsü: editördeki metni doğrudan okuyup kaydeder.
-    el.btnHafizaSave.onclick = () => {
+    // Click event köprüsü: analiz satırlarını kalıcı hafızaya yazar.
+    el.btnHafizaSave.addEventListener("click", (ev) => {
+      ev.preventDefault();
       void saveHafizaAnalyzeRows();
-    };
+    });
   }
   if (el.btnHafizaSend) {
     el.btnHafizaSend.onclick = () => {
@@ -751,11 +767,36 @@ function wireDynamicWorkbench() {
     });
   }
   if (el.hafizaInput) {
-    el.hafizaInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
+    if (el.hafizaInput.isContentEditable) {
+      el.hafizaInput.addEventListener("input", () => syncHafizaEditorEmptyClass());
+      el.hafizaInput.addEventListener("paste", (e) => {
         e.preventDefault();
-        void sendToHafizaAnalyze();
+        const t = e.clipboardData.getData("text/plain");
+        document.execCommand("insertText", false, t);
+        syncHafizaEditorEmptyClass();
+      });
+      document.querySelectorAll(".hafiza-rich-btn[data-rich]").forEach((btn) => {
+        btn.addEventListener("click", (ev) => {
+          ev.preventDefault();
+          el.hafizaInput.focus();
+          const a = btn.getAttribute("data-rich");
+          if (a === "bold") document.execCommand("bold");
+          if (a === "italic") document.execCommand("italic");
+          if (a === "underline") document.execCommand("underline");
+        });
+      });
+    }
+    el.hafizaInput.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter") return;
+      if (e.shiftKey) {
+        if (el.hafizaInput.isContentEditable) {
+          e.preventDefault();
+          document.execCommand("insertLineBreak");
+        }
+        return;
       }
+      e.preventDefault();
+      void sendToHafizaAnalyze();
     });
   }
   if (el.videoFileInput && el.videoPreview) {
@@ -776,46 +817,105 @@ function wireDynamicWorkbench() {
 
 function wireContextMenu() {
   if (!el.ctxMenu) return;
+
   const hideMenu = () => {
     el.ctxMenu.hidden = true;
+    el.ctxMenu.style.display = "none";
+    el.ctxMenu.setAttribute("aria-hidden", "true");
   };
-  document.addEventListener("click", hideMenu);
+
+  const showMenu = (clientX, clientY) => {
+    el.ctxMenu.hidden = false;
+    el.ctxMenu.style.display = "flex";
+    el.ctxMenu.removeAttribute("aria-hidden");
+    requestAnimationFrame(() => {
+      const pad = 6;
+      const w = el.ctxMenu.offsetWidth || 140;
+      const h = el.ctxMenu.offsetHeight || 96;
+      const maxX = Math.max(pad, window.innerWidth - w - pad);
+      const maxY = Math.max(pad, window.innerHeight - h - pad);
+      el.ctxMenu.style.left = `${Math.min(Math.max(pad, clientX), maxX)}px`;
+      el.ctxMenu.style.top = `${Math.min(Math.max(pad, clientY), maxY)}px`;
+    });
+  };
+
+  /** Menü dışına her türlü etkileşimde kapat (click bazen gelmez; scroll iç alanda kabarcıklanmaz). */
+  const closeIfOutside = (e) => {
+    if (!el.ctxMenu || el.ctxMenu.hidden) return;
+    const t = e.target;
+    if (t instanceof Node && el.ctxMenu.contains(t)) return;
+    hideMenu();
+  };
+
+  document.addEventListener("pointerdown", closeIfOutside, true);
+  document.addEventListener("wheel", closeIfOutside, { capture: true, passive: true });
   document.addEventListener("scroll", hideMenu, true);
   window.addEventListener("blur", hideMenu);
   window.addEventListener("resize", hideMenu);
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") hideMenu();
   });
+
   document.addEventListener("contextmenu", (e) => {
     const t = e.target;
     if (!(t instanceof HTMLElement)) return;
-    // Metin girişlerinde işletim sistemi sağ tık menüsünü kullan.
-    if (t.closest("textarea, input")) {
+    // Yerel OS menüsü: düz metin alanları
+    if (t.closest("textarea, input, [contenteditable='true']")) {
       hideMenu();
       return;
     }
     if (!t.closest("pre, .motor-page, .chat-scroll")) return;
     e.preventDefault();
-    el.ctxMenu.style.left = `${e.clientX}px`;
-    el.ctxMenu.style.top = `${e.clientY}px`;
-    el.ctxMenu.hidden = false;
+    showMenu(e.clientX, e.clientY);
   });
+
   el.ctxMenu.querySelectorAll("button[data-act]").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const act = btn.getAttribute("data-act");
-      el.ctxMenu.hidden = true;
-      if (act === "cut") document.execCommand("cut");
-      if (act === "copy") document.execCommand("copy");
-      if (act === "paste") {
-        try {
-          const txt = await navigator.clipboard.readText();
-          const a = document.activeElement;
-          if (a && "value" in a) a.value += txt;
-        } catch (_) {
-          document.execCommand("paste");
+    btn.addEventListener(
+      "click",
+      async (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        const act = btn.getAttribute("data-act");
+        hideMenu();
+        if (act === "cut") {
+          try {
+            document.execCommand("cut");
+          } catch (_) {
+            /* yok say */
+          }
+          return;
         }
-      }
-    });
+        if (act === "copy") {
+          try {
+            document.execCommand("copy");
+          } catch (_) {
+            /* yok say */
+          }
+          return;
+        }
+        if (act === "paste") {
+          try {
+            const txt = await navigator.clipboard.readText();
+            const a = document.activeElement;
+            if (a && "value" in a) {
+              a.value += txt;
+              return;
+            }
+            if (a instanceof HTMLElement && a.isContentEditable) {
+              a.focus();
+              document.execCommand("insertText", false, txt);
+            }
+          } catch (_) {
+            try {
+              document.execCommand("paste");
+            } catch (_2) {
+              /* yok say */
+            }
+          }
+        }
+      },
+      true
+    );
   });
 }
 
@@ -1039,110 +1139,9 @@ function setHeaderMotorDeclaration(text) {
   el.motorDeclarationHeader.textContent = String(text || "").trim();
 }
 
-async function loadHafizaJsonView() {
-  if (!el.hafizaListView) return;
-  try {
-    const r = await fetch(`${API}/api/hafiza/arsiv?t=${Date.now()}`);
-    const j = await r.json();
-    const items = Array.isArray(j.items) ? j.items : [];
-    hafizaLookup = { ...(j.data || {}) };
-    const rows = items.length
-      ? items.map((x) => [x.soru, x.cevap])
-      : Object.entries(j.data || {}).reverse();
-    const bodyRows = [
-      ...hafizaAnalyzeRows.map((x) => [x.soru, x.cevap]),
-      ...rows,
-    ];
-    if (!bodyRows.length) {
-      el.hafizaListView.innerHTML = '<div class="mini-card">Henüz kayıt yok.</div>';
-      return;
-    }
-    const body = bodyRows
-      .map(
-        ([soru, cevap]) =>
-          `<tr><td><button type="button" class="hafiza-q-btn" data-q="${esc(String(
-            soru
-          ))}">${esc(String(soru))}</button></td><td>${esc(String(cevap))}</td></tr>`
-      )
-      .join("");
-    el.hafizaListView.innerHTML = `<table class="hafiza-table"><thead><tr><th>Soru</th><th>Cevap</th></tr></thead><tbody>${body}</tbody></table>`;
-    el.hafizaListView.querySelectorAll(".hafiza-q-btn").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        const q = String(btn.getAttribute("data-q") || "").trim();
-        if (!q) return;
-        if (el.input) el.input.value = q;
-        await sendMessageWithText(q);
-      });
-    });
-  } catch (e) {
-    console.error("[HAFIZA] Liste yükleme hatası:", e);
-    // API okuma hatasında bile analiz satırlarını kaybetme.
-    const localRows = hafizaAnalyzeRows.map(
-      (x) =>
-        `<tr><td>${esc(String(x.soru))}</td><td>${esc(String(x.cevap))}</td></tr>`
-    );
-    if (localRows.length) {
-      el.hafizaListView.innerHTML = `<table class="hafiza-table"><thead><tr><th>Soru</th><th>Cevap</th></tr></thead><tbody>${localRows.join(
-        ""
-      )}</tbody></table>`;
-      return;
-    }
-    el.hafizaListView.innerHTML = '<div class="mini-card">Veri okunamadı.</div>';
-  }
-}
-
-async function updateTable() {
-  // Manuel tazeleme garantisi: clear -> dosyayı tekrar oku -> tabloya bas.
-  if (el.hafizaListView) el.hafizaListView.innerHTML = "";
-  await loadHafizaJsonView();
-}
-
-async function sendToHafizaAnalyze() {
-  const raw = String(el.hafizaInput?.value || "").trim();
-  if (!raw) return;
-  try {
-    // Analiz akışı backend'e bağlı kalmadan hemen çalışsın.
-    let answer =
-      hafizaLookup[raw] || "Mimar, bunu henüz öğrenmedim, bana öğretir misin?";
-    try {
-      const rr = await fetch(`${API}/api/hafiza/motor-read`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ raw }),
-      });
-      const jj = await rr.json();
-      if (rr.ok && jj.ok && jj.answer) {
-        answer = String(jj.answer);
-      }
-    } catch (_) {
-      // Yerel fallback ile devam
-    }
-    hafizaAnalyzeRows.unshift({ soru: raw, cevap: answer });
-    // Garantili görünüm: tablo anında yoksa da doğrudan DOM'a satır bas.
-    prependAnalyzeRowImmediate(raw, answer);
-    renderAnalyzeRowsImmediate();
-    if (el.hafizaInput) el.hafizaInput.value = "";
-    // Arka planda tam veri yenilemesi (DOM anında güncellendiği için UI beklemez)
-    void updateTable();
-  } catch (e) {
-    console.error("Hafıza analizi başarısız:", e);
-    setStatus("Hafıza analizi başarısız", "Rüzgar");
-  }
-}
-
-function renderAnalyzeRowsImmediate() {
+function wireHafizaAnalyzeTableInteractions() {
   if (!el.hafizaListView) return;
   selectedAnalyzeIndex = -1;
-  const rows = hafizaAnalyzeRows.map(
-    (x, idx) =>
-      `<tr data-idx="${idx}"><td><button type="button" class="hafiza-q-btn" data-q="${esc(
-        String(x.soru)
-      )}">${esc(String(x.soru))}</button></td><td>${esc(String(x.cevap))}</td></tr>`
-  );
-  if (!rows.length) return;
-  el.hafizaListView.innerHTML = `<table class="hafiza-table"><thead><tr><th>Soru</th><th>Cevap</th></tr></thead><tbody>${rows.join(
-    ""
-  )}</tbody></table>`;
   const trs = el.hafizaListView.querySelectorAll("tbody tr");
   trs.forEach((tr) => {
     tr.addEventListener("click", () => {
@@ -1161,6 +1160,249 @@ function renderAnalyzeRowsImmediate() {
       await sendMessageWithText(q);
     });
   });
+}
+
+async function loadHafizaJsonView() {
+  if (!el.hafizaListView) return;
+  try {
+    const r = await fetch(`${API}/api/hafiza/arsiv?t=${Date.now()}`);
+    const j = await r.json();
+    // Tam sözlük sadece soru→cevap önizlemesi (Gönder / motor-read) için; analiz tablosunda gösterilmez.
+    hafizaLookup = { ...(j.data || {}) };
+    if (!hafizaAnalyzeRows.length) {
+      el.hafizaListView.innerHTML =
+        '<div class="mini-card">Analiz bekleyen satır yok. Soru girip Gönder ile ekleyin; Hafızaya Al ile kalıcı kaydedilir.</div>';
+      return;
+    }
+    const body = hafizaAnalyzeRows
+      .map(
+        (x, idx) =>
+          `<tr data-idx="${idx}"><td><button type="button" class="hafiza-q-btn" data-q="${esc(String(
+            x.soru
+          ))}">${esc(String(x.soru))}</button></td><td>${esc(String(x.cevap))}</td></tr>`
+      )
+      .join("");
+    el.hafizaListView.innerHTML = `<table class="hafiza-table"><thead><tr><th>Soru</th><th>Cevap</th></tr></thead><tbody>${body}</tbody></table>`;
+    wireHafizaAnalyzeTableInteractions();
+  } catch (e) {
+    console.error("[HAFIZA] Liste yükleme hatası:", e);
+    // API okuma hatasında bile analiz satırlarını kaybetme.
+    const localRows = hafizaAnalyzeRows.map(
+      (x, idx) =>
+        `<tr data-idx="${idx}"><td><button type="button" class="hafiza-q-btn" data-q="${esc(
+          String(x.soru)
+        )}">${esc(String(x.soru))}</button></td><td>${esc(String(x.cevap))}</td></tr>`
+    );
+    if (localRows.length) {
+      el.hafizaListView.innerHTML = `<table class="hafiza-table"><thead><tr><th>Soru</th><th>Cevap</th></tr></thead><tbody>${localRows.join(
+        ""
+      )}</tbody></table>`;
+      wireHafizaAnalyzeTableInteractions();
+      return;
+    }
+    el.hafizaListView.innerHTML = '<div class="mini-card">Veri okunamadı.</div>';
+  }
+}
+
+async function updateTable() {
+  // Manuel tazeleme garantisi: clear -> dosyayı tekrar oku -> tabloya bas.
+  if (el.hafizaListView) el.hafizaListView.innerHTML = "";
+  await loadHafizaJsonView();
+}
+
+function getHafizaEditorText() {
+  const n = el.hafizaInput;
+  if (!n) return "";
+  if (n.tagName === "TEXTAREA") return String(n.value || "");
+  return String(n.innerText ?? n.textContent ?? "").replace(/\u00a0/g, " ");
+}
+
+function clearHafizaEditor() {
+  const n = el.hafizaInput;
+  if (!n) return;
+  if (n.tagName === "TEXTAREA") n.value = "";
+  else {
+    n.textContent = "";
+    n.classList.add("is-empty");
+  }
+}
+
+function syncHafizaEditorEmptyClass() {
+  const n = el.hafizaInput;
+  if (!n || n.tagName === "TEXTAREA") return;
+  const t = getHafizaEditorText().replace(/\s/g, "").length;
+  n.classList.toggle("is-empty", !t);
+}
+
+/** Editörden gelen metni katı biçimde `soru = cevap` satırlarına çevirir. */
+function parseHafizaEditorEntries(rawText) {
+  const out = [];
+  const src = String(rawText || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  const lines = src.split("\n");
+  for (const line of lines) {
+    const t = line.trim();
+    if (!t || t.startsWith("#")) continue;
+    const normalized = t.replace(/＝/g, "=");
+    const idx = normalized.indexOf("=");
+    if (idx <= 0) continue;
+    const soru = normalized.slice(0, idx).trim();
+    const cevap = normalized.slice(idx + 1).trim();
+    if (!soru || !cevap) continue;
+    out.push({ soru, cevap });
+  }
+  return out;
+}
+
+async function fetchHafizaImportBlok(raw) {
+  // Önce yeni endpoint, olmazsa eski endpoint'e düş.
+  try {
+    const rr = await fetch(`${API}/api/hafiza/import-blok`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ raw }),
+    });
+    const jj = await rr.json();
+    if (rr.ok && jj.ok) {
+      return {
+        added: Number(jj.added || 0),
+        items: Array.isArray(jj.items) ? jj.items : [],
+      };
+    }
+  } catch (_) {
+    /* fallback */
+  }
+
+  // Eski sunucu sürümleri için arsiv/add: önce `soru = cevap` ham metin dene.
+  const rr2 = await fetch(`${API}/api/hafiza/arsiv/add`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ raw }),
+  });
+  const jj2 = await rr2.json();
+  if (rr2.ok && jj2.ok) {
+    return {
+      added: Number(jj2.added || 0),
+      items: [],
+    };
+  }
+
+  // Daha da eski parser sürümü: `Soru:\nCevap:` blok formatı.
+  const legacyRows = String(raw || "")
+    .split(/\r?\n/)
+    .map((x) => x.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const i = line.indexOf("=");
+      if (i <= 0) return null;
+      const q = line.slice(0, i).trim();
+      const a = line.slice(i + 1).trim();
+      if (!q || !a) return null;
+      return `Soru: ${q}\nCevap: ${a}`;
+    })
+    .filter(Boolean)
+    .join("\n\n");
+
+  const rr3 = await fetch(`${API}/api/hafiza/arsiv/add`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ raw: legacyRows }),
+  });
+  const jj3 = await rr3.json();
+  if (!rr3.ok || !jj3.ok) {
+    throw new Error(jj3.detail || jj2.detail || "İçe aktarma başarısız");
+  }
+  return {
+    added: Number(jj3.added || 0),
+    items: [],
+  };
+}
+
+function flashRuzgarDurum(mesaj, ms = 3200) {
+  setStatus(mesaj, "Rüzgar");
+  window.setTimeout(() => setStatus("Hazır", "Rüzgar"), ms);
+}
+
+/** Analiz tablosuna düşecek soru/cevap: metni ilk `=` işaretinden böler. */
+function hafizaAnalizSoruCevap(raw, motorYanit) {
+  const t = String(raw || "").trim();
+  const eq = t.indexOf("=");
+  if (eq === -1) {
+    return { soru: t, cevap: motorYanit };
+  }
+  const soru = t.slice(0, eq).trim();
+  const cevap = t.slice(eq + 1).trim();
+  if (soru && cevap) {
+    return { soru, cevap };
+  }
+  return { soru: t, cevap: motorYanit };
+}
+
+async function sendToHafizaAnalyze() {
+  const rawT = getHafizaEditorText();
+  /* Öğrenme: API düz metin bekler; biçimlendirme sızmasın */
+  const raw = rawT.replace(/\u00a0/g, " ").trim();
+  if (!raw) return;
+  const entries = parseHafizaEditorEntries(raw);
+  if (!entries.length) {
+    flashRuzgarDurum("Lütfen yalnızca `Soru = Cevap` formatında giriş yapın.");
+    return;
+  }
+  try {
+    const importRaw = entries.map((x) => `${x.soru} = ${x.cevap}`).join("\n");
+    try {
+      const imp = await fetchHafizaImportBlok(importRaw);
+      if (imp.added > 0) {
+        imp.items
+          .slice()
+          .reverse()
+          .forEach((it) => {
+            hafizaAnalyzeRows.unshift({
+              soru: String(it.soru || ""),
+              cevap: String(it.cevap || ""),
+            });
+          });
+        renderAnalyzeRowsImmediate();
+        clearHafizaEditor();
+        void updateTable();
+        flashRuzgarDurum(
+          `${imp.added} kayıt satırından öğrenildi ve hafızaya yazıldı`
+        );
+        return;
+      }
+    } catch (ie) {
+      console.warn("[HAFIZA] import-blok:", ie);
+    }
+    entries
+      .slice()
+      .reverse()
+      .forEach((it) => {
+        hafizaAnalyzeRows.unshift({
+          soru: String(it.soru || ""),
+          cevap: String(it.cevap || ""),
+        });
+      });
+    renderAnalyzeRowsImmediate();
+    clearHafizaEditor();
+    void updateTable();
+  } catch (e) {
+    console.error("Hafıza analizi başarısız:", e);
+    setStatus("Hafıza analizi başarısız", "Rüzgar");
+  }
+}
+
+function renderAnalyzeRowsImmediate() {
+  if (!el.hafizaListView) return;
+  const rows = hafizaAnalyzeRows.map(
+    (x, idx) =>
+      `<tr data-idx="${idx}"><td><button type="button" class="hafiza-q-btn" data-q="${esc(
+        String(x.soru)
+      )}">${esc(String(x.soru))}</button></td><td>${esc(String(x.cevap))}</td></tr>`
+  );
+  if (!rows.length) return;
+  el.hafizaListView.innerHTML = `<table class="hafiza-table"><thead><tr><th>Soru</th><th>Cevap</th></tr></thead><tbody>${rows.join(
+    ""
+  )}</tbody></table>`;
+  wireHafizaAnalyzeTableInteractions();
 }
 
 function prependAnalyzeRowImmediate(soru, cevap) {
@@ -1182,26 +1424,44 @@ function prependAnalyzeRowImmediate(soru, cevap) {
   tbody.prepend(tr);
 }
 
+function collectAnalyzeRowsFromDom() {
+  if (!el.hafizaListView) return [];
+  const rows = [];
+  const trs = el.hafizaListView.querySelectorAll("tbody tr");
+  trs.forEach((tr) => {
+    const btn = tr.querySelector(".hafiza-q-btn");
+    const q = String(btn?.textContent || "").trim();
+    const tds = tr.querySelectorAll("td");
+    const a = String(tds?.[1]?.textContent || "").trim();
+    if (q && a) rows.push({ soru: q, cevap: a });
+  });
+  return rows;
+}
+
 async function saveHafizaAnalyzeRows() {
-  if (!hafizaAnalyzeRows.length) return;
+  let rowsToSave = Array.isArray(hafizaAnalyzeRows) ? [...hafizaAnalyzeRows] : [];
+  if (!rowsToSave.length) {
+    rowsToSave = collectAnalyzeRowsFromDom();
+  }
+  if (!rowsToSave.length) {
+    flashRuzgarDurum("Kaydedilecek analiz satırı bulunamadı.");
+    return;
+  }
   try {
-    const raw = hafizaAnalyzeRows
-      .map((x) => `Soru: ${x.soru}\nCevap: ${x.cevap}`)
-      .join("\n\n");
-    const rr = await fetch(`${API}/api/hafiza/arsiv/add`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ raw }),
-    });
-    const jj = await rr.json();
-    if (!rr.ok || !jj.ok) {
-      throw new Error(jj.detail || "Hafıza kaydı başarısız");
-    }
+    const raw = rowsToSave
+      .map((x) => `${x.soru} = ${x.cevap}`)
+      .join("\n");
+    await fetchHafizaImportBlok(raw);
     hafizaAnalyzeRows = [];
     await updateTable();
-    const okText = "Hafızamı tazeledim Ümit, yeni bilgiler yerinde!";
+    const okText = "Rüzgar Ümit, yeni bilgileri hafızama aldım.";
     appendBubble("assistant", okText);
-    speakTextImmediate(okText);
+    flashRuzgarDurum(okText);
+    try {
+      speakTextImmediate(okText);
+    } catch (_) {
+      /* sessiz geç */
+    }
   } catch (e) {
     console.error("Hafıza kaydedilemedi:", e);
     setStatus("Hafıza kaydedilemedi", "Rüzgar");
@@ -1851,24 +2111,6 @@ async function streamChat(userText) {
     autonom_research: !!(el.optAutonom && el.optAutonom.checked),
   };
 
-  const streamCtrl = new AbortController();
-  activeChatAbort = streamCtrl;
-  activeChatWs = null;
-  let timedOutAbort = false;
-  /** Tarayıcı setTimeout üst sınırı (yaklaşık 24,8 gün) — MAX_SAFE_INTEGER hemen tetiklenebilir */
-  const STREAM_ABORT_MAX_DELAY_MS = 2147483647;
-  /** @type {ReturnType<typeof setTimeout> | null} */
-  let streamDeadline = null;
-  if (RUZGAR_CHAT_STREAM_HARD_CAP_MS > 0) {
-    streamDeadline = window.setTimeout(
-      () => {
-        timedOutAbort = true;
-        streamCtrl.abort();
-      },
-      Math.min(RUZGAR_CHAT_STREAM_HARD_CAP_MS, STREAM_ABORT_MAX_DELAY_MS),
-    );
-  }
-
   const dec = new TextDecoder("utf-8");
   let buf = "";
   let full = "";
@@ -1882,8 +2124,32 @@ async function streamChat(userText) {
     el.chat.appendChild(responseBubble);
   }
 
+  /** Genel hafıza anında cevaplarda gereksiz "düşünüyor"; SSE gelene kadar ertelenir. */
+  const RUZGAR_DEFER_THINKING_MS = 175;
+  let deferThinkingUntil = null;
+  function clearDeferThinking() {
+    if (deferThinkingUntil != null) {
+      window.clearTimeout(deferThinkingUntil);
+      deferThinkingUntil = null;
+    }
+  }
+  function scheduleDeferThinkingOverlay() {
+    clearDeferThinking();
+    if (currentMode === "hafiza") return;
+    deferThinkingUntil = window.setTimeout(() => {
+      deferThinkingUntil = null;
+      showThinkingCenter(null);
+    }, RUZGAR_DEFER_THINKING_MS);
+  }
+
   /** Token/done/error/status — zorunlu akış + hazırlık durumu (Ümit & Gökçenur Işık Hızı). */
   function processChatEvent(ev) {
+    if (ev.type === "meta" && ev.instant_memory) {
+      clearDeferThinking();
+      hideThinkingCenter();
+      return;
+    }
+    clearDeferThinking();
     if (ev.type === "status") {
       const t = (ev.text || "").trim();
       if (t) {
@@ -1895,6 +2161,7 @@ async function streamChat(userText) {
       return;
     }
     if (ev.type === "token" && ev.text) {
+      hideThinkingCenter();
       ensureReplyBubble();
       full += ev.text;
       responseBubble.innerHTML = esc(repairMojibake(full));
@@ -2046,18 +2313,74 @@ async function streamChat(userText) {
       };
     });
 
+  try {
+    const gr = await fetch(`${API}/api/hafiza/genel-bak`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      body: JSON.stringify({ message: userText }),
+      cache: "no-store",
+    });
+    if (gr.ok) {
+      const gj = await gr.json();
+      if (gj && gj.hit === true && gj.answer) {
+        const txt = repairMojibake(String(gj.answer));
+        const nw =
+          sessionWakeUsed ||
+          /\br[uü]zgar\b/i.test(userText) ||
+          /\bruzgar\b/i.test(userText);
+        hideThinkingCenter();
+        clearDeferThinking();
+        processChatEvent({ type: "token", text: txt });
+        processChatEvent({
+          type: "done",
+          full_reply: txt,
+          user_message: userText,
+          new_wake_used: nw,
+        });
+        activeChatAbort = null;
+        activeChatWs = null;
+        syncInterruptButton();
+        return;
+      }
+    }
+  } catch (_) {
+    /* Köprü yoksa normal akış */
+  }
+
+  const streamCtrl = new AbortController();
+  activeChatAbort = streamCtrl;
+  activeChatWs = null;
+  let timedOutAbort = false;
+  /** Tarayıcı setTimeout üst sınırı (yaklaşık 24,8 gün) — MAX_SAFE_INTEGER hemen tetiklenebilir */
+  const STREAM_ABORT_MAX_DELAY_MS = 2147483647;
+  /** @type {ReturnType<typeof setTimeout> | null} */
+  let streamDeadline = null;
+  if (RUZGAR_CHAT_STREAM_HARD_CAP_MS > 0) {
+    streamDeadline = window.setTimeout(
+      () => {
+        timedOutAbort = true;
+        streamCtrl.abort();
+      },
+      Math.min(RUZGAR_CHAT_STREAM_HARD_CAP_MS, STREAM_ABORT_MAX_DELAY_MS),
+    );
+  }
+
   if (currentMode !== "hafiza") {
-    showThinkingCenter(null);
+    scheduleDeferThinkingOverlay();
   }
   try {
     let usedHttp = false;
-    try {
-      await streamViaWebSocket();
-    } catch (wsErr) {
-      if (wsErr && wsErr.name === "AbortError") {
-        throw wsErr;
-      }
+    if (ruzgarLikelyLocalDesktopApi()) {
       usedHttp = true;
+    } else {
+      try {
+        await streamViaWebSocket();
+      } catch (wsErr) {
+        if (wsErr && wsErr.name === "AbortError") {
+          throw wsErr;
+        }
+        usedHttp = true;
+      }
     }
     if (usedHttp) {
     const res = await fetch(`${API}/api/chat/stream`, {
@@ -2122,6 +2445,7 @@ async function streamChat(userText) {
     throw e;
   } finally {
     if (streamDeadline != null) clearTimeout(streamDeadline);
+    clearDeferThinking();
     hideThinkingCenter();
     activeChatAbort = null;
     activeChatWs = null;

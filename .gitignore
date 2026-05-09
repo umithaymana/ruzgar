@@ -32,3 +32,7 @@ ruzgar-desktop/google_api_key.txt
 out/
 build/
 *.log
+
+# Arşiv PDF'leri (yerelde tutulur; GitHub 100MB limitini aşar)
+ilim-assistant/arsiv/**/*.pdf
+

@@ -135,11 +135,11 @@
 
           <section class="motor-page" id="page-hafiza" hidden>
             <div class="hafiza-split">
-              <div>
-                <h4>Analiz</h4>
-                <div class="hafiza-analyze-head">
+              <div class="hafiza-analyze-column">
+                <div class="hafiza-analyze-toolbar">
+                  <h4 class="hafiza-analyze-heading">Analiz</h4>
                   <button type="button" id="btn-hafiza-refresh" class="btn-secondary btn-compact">Yenile</button>
-                  <button type="button" id="btn-hafiza-save" class="btn-primary">Hafızaya Al</button>
+                  <button type="button" id="btn-hafiza-save" class="btn-primary btn-compact">Hafızaya Al</button>
                 </div>
                 <div id="hafiza-list-view" class="json-view"></div>
                 <div id="hafiza-analyze-actions" class="hafiza-analyze-actions" hidden>
@@ -148,10 +148,24 @@
                   <button type="button" id="btn-hafiza-delete-cancel" class="btn-secondary btn-compact">İptal</button>
                 </div>
               </div>
-              <div>
-                <h4>Editör</h4>
-                <textarea id="hafiza-input" class="hafiza-textarea" rows="10" placeholder="Yeni bilgi: Soru = Cevap"></textarea>
-                <button type="button" id="btn-hafiza-send" class="btn-primary">Gönder</button>
+              <div class="hafiza-editor-column">
+                <h4 class="hafiza-editor-heading">Editör</h4>
+                <div class="hafiza-editor-wrap">
+                  <div class="hafiza-editor-toolbar" role="toolbar" aria-label="Metin biçimi">
+                    <button type="button" class="btn-secondary btn-compact hafiza-rich-btn" data-rich="bold" title="Kalın">B</button>
+                    <button type="button" class="btn-secondary btn-compact hafiza-rich-btn" data-rich="italic" title="İtalik"><i>I</i></button>
+                    <button type="button" class="btn-secondary btn-compact hafiza-rich-btn" data-rich="underline" title="Altı çizili"><u>U</u></button>
+                  </div>
+                  <div
+                    id="hafiza-input"
+                    class="hafiza-textarea hafiza-editor-input hafiza-editor-rich is-empty"
+                    contenteditable="true"
+                    spellcheck="true"
+                    tabindex="0"
+                    data-placeholder=""
+                  ></div>
+                </div>
+                <button type="button" id="btn-hafiza-send" class="btn-primary" title="Gönder (Enter)">Gönder</button>
               </div>
             </div>
           </section>
