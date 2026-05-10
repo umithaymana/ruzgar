@@ -78,21 +78,47 @@ function openIndexMode(mode) {
   });
 }
 
+function safeWorkspaceAbs(relPath) {
+  const trimmed = String(relPath ?? "")
+    .trim()
+    .replace(/^[/\\]+/, "");
+  const abs = trimmed
+    ? path.resolve(WORKSPACE_ROOT, trimmed)
+    : path.resolve(WORKSPACE_ROOT);
+  const root = path.resolve(WORKSPACE_ROOT);
+  const relCheck = path.relative(root, abs);
+  if (relCheck.startsWith("..") || path.isAbsolute(relCheck)) return null;
+  return abs;
+}
+
+const SKIP_DIR_NAMES = new Set([
+  "node_modules",
+  "__pycache__",
+  ".venv",
+  "venv",
+  ".git",
+]);
+
 function safeListDir(rel = "") {
-  const base = path.join(WORKSPACE_ROOT, rel);
-  if (!base.startsWith(WORKSPACE_ROOT)) {
-    return [];
-  }
-  if (!fs.existsSync(base) || !fs.statSync(base).isDirectory()) {
+  const normRel = String(rel ?? "")
+    .trim()
+    .replace(/^[/\\]+/, "")
+    .replace(/\\/g, "/");
+  const base = safeWorkspaceAbs(normRel);
+  if (!base || !fs.existsSync(base) || !fs.statSync(base).isDirectory()) {
     return [];
   }
   return fs
     .readdirSync(base, { withFileTypes: true })
-    .filter((e) => !e.name.startsWith(".") || e.name === ".vscode")
+    .filter((e) => {
+      const n = e.name;
+      if (SKIP_DIR_NAMES.has(n)) return false;
+      return !n.startsWith(".") || n === ".vscode";
+    })
     .map((e) => ({
       name: e.name,
       isDir: e.isDirectory(),
-      rel: path.join(rel, e.name).replace(/\\/g, "/"),
+      rel: normRel ? `${normRel}/${e.name}` : e.name,
     }))
     .sort((a, b) => {
       if (a.isDir !== b.isDir) return a.isDir ? -1 : 1;
@@ -227,6 +253,49 @@ app.whenReady().then(() => {
 
   ipcMain.handle("workspace:list", (_e, rel) => safeListDir(rel || ""));
   ipcMain.handle("workspace:root", () => WORKSPACE_ROOT);
+  ipcMain.handle("workspace:read-text", (_e, rel) => {
+    try {
+      const trimmed = String(rel ?? "").trim().replace(/^[/\\]+/, "");
+      if (!trimmed) {
+        return { ok: false, error: "Dosya yolu gerekli." };
+      }
+      const p = safeWorkspaceAbs(trimmed);
+      if (!p || !fs.existsSync(p) || !fs.statSync(p).isFile()) {
+        return { ok: false, error: "Dosya yok veya bir klasör seçildi." };
+      }
+      const st = fs.statSync(p);
+      if (st.size > 2_000_000) {
+        return { ok: false, error: "Dosya çok büyük (2 MB okuma sınırı)." };
+      }
+      const text = fs.readFileSync(p, "utf8");
+      return { ok: true, text };
+    } catch (e) {
+      return { ok: false, error: e && e.message ? String(e.message) : String(e) };
+    }
+  });
+  ipcMain.handle("workspace:write-text", (_e, payload) => {
+    try {
+      const rawRel = payload && payload.rel != null ? String(payload.rel) : "";
+      const trimmed = rawRel.trim().replace(/^[/\\]+/, "");
+      if (!trimmed) {
+        return { ok: false, error: "Kayıt için göreli dosya yolu gerekli." };
+      }
+      const text = payload && payload.text != null ? String(payload.text) : "";
+      const p = safeWorkspaceAbs(trimmed);
+      if (!p) {
+        return { ok: false, error: "Geçersiz dosya yolu." };
+      }
+      const bytes = Buffer.byteLength(text, "utf8");
+      if (bytes > 2_500_000) {
+        return { ok: false, error: "İçerik çok büyük (yaklaşık 2.5 MB yazma sınırı)." };
+      }
+      fs.mkdirSync(path.dirname(p), { recursive: true });
+      fs.writeFileSync(p, text, "utf8");
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: e && e.message ? String(e.message) : String(e) };
+    }
+  });
   ipcMain.handle("ruzgar:open-mode", (_e, mode) => {
     openIndexMode(String(mode || "genel"));
   });

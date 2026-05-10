@@ -285,6 +285,10 @@ const el = {
   btnCodeTest: document.getElementById("btn-code-test"),
   btnCodeRun: document.getElementById("btn-code-run"),
   btnCodeOutputClear: document.getElementById("btn-code-output-clear"),
+  codeFileTree: document.getElementById("code-file-tree"),
+  btnCodeRefresh: document.getElementById("btn-code-refresh"),
+  btnCodeSave: document.getElementById("btn-code-save"),
+  codeActiveFile: document.getElementById("code-active-file"),
   dashboardStatus: document.getElementById("dashboard-status"),
   dashboardLastSpeech: document.getElementById("dashboard-last-speech"),
   ctxMenu: document.getElementById("ctx-menu"),
@@ -293,6 +297,9 @@ const el = {
 let hafizaAnalyzeRows = [];
 let hafizaLookup = {};
 let selectedAnalyzeIndex = -1;
+
+/** Programlama Atölyesi — Faz 1.2: açık dosya göreli yolu (proje köküne göre) */
+let atolyeOpenRel = null;
 
 const TOP_MODE_BUTTONS = [
   "modeBtnGenel",
@@ -664,7 +671,8 @@ function switchMode(mode) {
     genel: "Şu anda ana motor tam güç ve tam kapasite çalışıyor.",
     okuma: "Okuma motoru açıldı; kütüphane ve İlim Hazinesi bu modda.",
     video: "Video motoru açıldı; sinema atölyesi Faz 5'te tam aktif.",
-    programlama: "Programlama motoru açıldı; atölye Faz 1'de tam aktif.",
+    programlama:
+      "Programlama motoru açıldı; atölye Faz 1.2 — sol ağaçtan dosya, Kaydet / Ctrl+S.",
     hafiza:
       "Hafıza motoru açıldı; bu motorla gelişim ve hafıza teknikleri üzerinde çalışabilirsiniz.",
     ses: "Ses motoru açıldı; stüdyo Faz 4'te tam aktif.",
@@ -719,6 +727,10 @@ function updateDynamicWorkbench() {
   }
   if (currentMode === "hafiza") void loadHafizaJsonView();
   if (currentMode === "okuma") void loadIlimFileList();
+  if (currentMode === "programlama") {
+    updateProgramlamaActiveFileLabel();
+    void programlamaAtolyeRefreshRoot();
+  }
 }
 
 function wireTopModeButtons() {
@@ -803,10 +815,226 @@ async function runCodeFromWorkbench() {
   }
 }
 
+// ---------- Programlama Atölyesi — Faz 1.2 (proje ağacı + dosya oku/yaz) ----------
+function updateProgramlamaActiveFileLabel() {
+  if (!el.codeActiveFile) return;
+  el.codeActiveFile.textContent = atolyeOpenRel
+    ? `Dosya: ${atolyeOpenRel}`
+    : "Dosya: (yeni — Kaydet ile göreli yol verilir)";
+}
+
+function applyLanguageFromFilename(rel) {
+  const low = String(rel || "").toLowerCase();
+  const pairs = [
+    [/\.pyw?$/, "python"],
+    [/\.(js|mjs|cjs)$/, "javascript"],
+    [/\.ts$/, "typescript"],
+    [/\.(tsx|jsx)$/, "typescript"],
+    [/\.(html|htm)$/, "html"],
+    [/\.css$/, "css"],
+    [/\.(json|jsonc)$/, "json"],
+  ];
+  if (!el.codeLanguage) return;
+  for (const [re, val] of pairs) {
+    if (re.test(low)) {
+      const opts = Array.from(el.codeLanguage.options || []);
+      if (opts.some((o) => o.value === val)) el.codeLanguage.value = val;
+      return;
+    }
+  }
+}
+
+function createCodeTreeBranch(it, depth) {
+  const branch = document.createElement("div");
+  branch.className = "code-tree-branch";
+  const pad = 4 + depth * 12;
+  if (it.isDir) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "code-tree-row folder";
+    btn.dataset.rel = it.rel;
+    btn.dataset.depth = String(depth);
+    btn.style.paddingLeft = `${pad}px`;
+    btn.innerHTML =
+      `<span class="code-tree-chev" aria-hidden="true">▸</span>` +
+      `<span class="code-tree-name">${esc(it.name)}</span>`;
+    const kids = document.createElement("div");
+    kids.className = "code-tree-children";
+    kids.hidden = true;
+    branch.appendChild(btn);
+    branch.appendChild(kids);
+  } else {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "code-tree-row file";
+    btn.dataset.rel = it.rel;
+    btn.dataset.depth = String(depth);
+    btn.style.paddingLeft = `${pad}px`;
+    btn.innerHTML =
+      `<span class="code-tree-file-ico" aria-hidden="true">·</span>` +
+      `<span class="code-tree-name">${esc(it.name)}</span>`;
+    branch.appendChild(btn);
+  }
+  return branch;
+}
+
+async function handleCodeTreeClick(ev) {
+  const row = ev.target.closest(".code-tree-row");
+  if (!row || !el.codeFileTree || !el.codeFileTree.contains(row)) return;
+  ev.preventDefault();
+  const rel = row.dataset.rel;
+  if (!rel || !window.ruzgarApi?.listDir) return;
+
+  if (row.classList.contains("folder")) {
+    const branch = row.closest(".code-tree-branch");
+    const kids = branch?.querySelector(":scope > .code-tree-children");
+    if (!kids) return;
+    const depth = Number.parseInt(row.dataset.depth || "0", 10);
+    if (kids.dataset.loaded !== "1") {
+      kids.innerHTML = `<div class="code-tree-loading">${esc("Yükleniyor…")}</div>`;
+      kids.hidden = false;
+      try {
+        const items = await window.ruzgarApi.listDir(rel);
+        kids.innerHTML = "";
+        for (const x of items) {
+          kids.appendChild(createCodeTreeBranch(x, depth + 1));
+        }
+        kids.dataset.loaded = "1";
+      } catch {
+        kids.innerHTML = `<div class="code-tree-err">${esc("Liste okunamadı.")}</div>`;
+        return;
+      }
+      row.classList.add("is-expanded");
+      const chevOpen = row.querySelector(".code-tree-chev");
+      if (chevOpen) chevOpen.textContent = "▾";
+      return;
+    }
+    kids.hidden = !kids.hidden;
+    row.classList.toggle("is-expanded", !kids.hidden);
+    const chev = row.querySelector(".code-tree-chev");
+    if (chev)
+      chev.textContent = kids.hidden ? "▸" : "▾";
+    return;
+  }
+
+  if (row.classList.contains("file")) {
+    void openProgramlamaWorkspaceFile(rel);
+  }
+}
+
+async function openProgramlamaWorkspaceFile(rel) {
+  if (!window.ruzgarApi?.readText) {
+    flashRuzgarDurum("Dosya ağacı ve dosya okuma yalnızca masaüstü Rüzgar’da (Electron).");
+    return;
+  }
+  try {
+    const r = await window.ruzgarApi.readText(rel);
+    if (!r?.ok) {
+      setCodeOutput(r?.error || "Dosya okunamadı.");
+      flashRuzgarDurum("Dosya açılamadı.");
+      return;
+    }
+    atolyeOpenRel = rel;
+    if (el.codeEditor) el.codeEditor.value = String(r.text ?? "");
+    applyLanguageFromFilename(rel);
+    updateProgramlamaActiveFileLabel();
+    setCodeOutput(`Açıldı: ${rel}`);
+    flashRuzgarDurum(`Dosya açıldı: ${rel}`);
+    el.codeEditor?.focus();
+  } catch (e) {
+    setCodeOutput(`Dosya hatası: ${e && e.message ? e.message : e}`);
+  }
+}
+
+async function programlamaAtolyeRefreshRoot() {
+  if (!el.codeFileTree) return;
+  if (!window.ruzgarApi?.listDir) {
+    el.codeFileTree.innerHTML =
+      `<div class="code-file-placeholder">Proje ağacı yalnızca masaüstü Rüzgar (Electron) ile kullanılabilir.</div>`;
+    return;
+  }
+  el.codeFileTree.innerHTML = `<div class="code-tree-loading">${esc("Yükleniyor…")}</div>`;
+  try {
+    const items = await window.ruzgarApi.listDir("");
+    el.codeFileTree.innerHTML = "";
+    for (const it of items) {
+      el.codeFileTree.appendChild(createCodeTreeBranch(it, 0));
+    }
+    if (!items.length) {
+      el.codeFileTree.innerHTML =
+        `<div class="code-file-placeholder">Kök klasör boş veya erişilemiyor.</div>`;
+    }
+  } catch {
+    el.codeFileTree.innerHTML =
+      `<div class="code-file-placeholder">Kök liste okunamadı.</div>`;
+  }
+}
+
+async function saveProgramlamaAtolyeBuffer() {
+  const code = String(el.codeEditor?.value ?? "");
+  let rel = atolyeOpenRel;
+  if (!rel) {
+    const suggested = window.prompt(
+      "Kaydetmek için proje köküne göre göreli yol yazın (örn. ruzgar-desktop/ornek.py):",
+      "ruzgar-desktop/ornek.py"
+    );
+    if (suggested == null) return;
+    rel = suggested.trim().replace(/^[/\\]+/, "");
+    if (!rel) return;
+  }
+  if (!window.ruzgarApi?.writeText) {
+    flashRuzgarDurum("Kaydetme yalnızca masaüstü Rüzgar’da (Electron).");
+    return;
+  }
+  try {
+    const w = await window.ruzgarApi.writeText(rel, code);
+    if (!w?.ok) {
+      setCodeOutput(w?.error || "Yazılamadı.");
+      flashRuzgarDurum("Kaydetme başarısız.");
+      return;
+    }
+    atolyeOpenRel = rel;
+    updateProgramlamaActiveFileLabel();
+    flashRuzgarDurum("Kaydedildi.");
+    setCodeOutput(`Kaydedildi: ${rel}`);
+    void programlamaAtolyeRefreshRoot();
+  } catch (e) {
+    setCodeOutput(`Kayıt hatası: ${e && e.message ? e.message : e}`);
+  }
+}
+
 function wireProgrammingWorkbench() {
+  if (el.codeFileTree && el.codeFileTree.dataset.treeWired !== "1") {
+    el.codeFileTree.dataset.treeWired = "1";
+    el.codeFileTree.addEventListener("click", (ev) => {
+      void handleCodeTreeClick(ev);
+    });
+  }
+  if (el.btnCodeRefresh) {
+    el.btnCodeRefresh.addEventListener("click", () => {
+      void programlamaAtolyeRefreshRoot();
+      flashRuzgarDurum("Proje ağacı yenilendi.");
+    });
+  }
+  if (el.btnCodeSave) {
+    el.btnCodeSave.addEventListener("click", () => {
+      void saveProgramlamaAtolyeBuffer();
+    });
+  }
+  if (el.codeEditor) {
+    el.codeEditor.addEventListener("keydown", (e) => {
+      if (!e.ctrlKey && !e.metaKey) return;
+      if (e.key === "s" || e.key === "S") {
+        e.preventDefault();
+        void saveProgramlamaAtolyeBuffer();
+      }
+    });
+  }
   if (el.btnCodeNew) {
     el.btnCodeNew.addEventListener("click", () => {
       if (el.codeEditor) el.codeEditor.value = "";
+      atolyeOpenRel = null;
+      updateProgramlamaActiveFileLabel();
       setCodeOutput("Yeni çalışma alanı hazır.");
       el.codeEditor?.focus();
     });
@@ -1405,6 +1633,8 @@ function pasteCodeIntoProgramlamaAtolye(code, lang, alsoRun) {
   if (currentMode !== "programlama") {
     switchMode("programlama");
   }
+  atolyeOpenRel = null;
+  updateProgramlamaActiveFileLabel();
   const norm = normalizeCodeLang(lang);
   if (el.codeLanguage) {
     const opts = Array.from(el.codeLanguage.options || []);

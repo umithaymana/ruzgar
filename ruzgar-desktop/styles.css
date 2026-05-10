@@ -994,9 +994,71 @@ body {
   font-size: 11px;
   line-height: 1.45;
 }
+.code-tree-branch {
+  margin: 0;
+}
+.code-tree-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin: 0;
+  padding: 5px 8px 5px 10px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #d4d4d4;
+  font-family: Consolas, "Segoe UI", sans-serif;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+.code-tree-row:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+.code-tree-row.folder.is-expanded {
+  color: #9cdcfe;
+}
+.code-tree-chev {
+  flex-shrink: 0;
+  width: 1em;
+  opacity: 0.85;
+}
+.code-tree-file-ico {
+  flex-shrink: 0;
+  opacity: 0.55;
+}
+.code-tree-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.code-tree-children {
+  margin: 0;
+  padding: 0;
+}
+.code-tree-loading,
+.code-tree-err {
+  padding: 6px 12px;
+  font-size: 11px;
+  color: #888;
+}
+.code-tree-err {
+  color: #f48771;
+}
+.code-active-path {
+  padding: 6px 12px;
+  font-size: 11px;
+  color: #858585;
+  border-bottom: 1px solid #343434;
+  background: #1a1a1a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .code-main {
   display: grid;
-  grid-template-rows: auto minmax(220px, 1fr) minmax(120px, 0.36fr);
+  grid-template-rows: auto auto minmax(220px, 1fr) minmax(120px, 0.36fr);
   overflow: hidden;
 }
 .code-toolbar {

@@ -3,6 +3,9 @@ const { contextBridge, ipcRenderer } = require("electron");
 contextBridge.exposeInMainWorld("ruzgarApi", {
   listDir: (rel) => ipcRenderer.invoke("workspace:list", rel),
   getRoot: () => ipcRenderer.invoke("workspace:root"),
+  readText: (rel) => ipcRenderer.invoke("workspace:read-text", rel),
+  writeText: (rel, text) =>
+    ipcRenderer.invoke("workspace:write-text", { rel, text }),
   openModeWindow: (mode) => ipcRenderer.invoke("ruzgar:open-mode", mode),
   openWorkspaceRel: (rel) => ipcRenderer.invoke("ruzgar:open-workspace", rel),
   openLocalhostUrl: (url) => ipcRenderer.invoke("ruzgar:open-external", url),
