@@ -273,6 +273,8 @@ const el = {
   ilimFileContent: document.getElementById("ilim-file-content"),
   btnIlimRefresh: document.getElementById("btn-ilim-refresh"),
   btnIlimToChat: document.getElementById("btn-ilim-to-chat"),
+  btnIlimSummary: document.getElementById("btn-ilim-summary"),
+  btnIlimComment: document.getElementById("btn-ilim-comment"),
   ilimActiveFile: document.getElementById("ilim-active-file"),
   videoFileInput: document.getElementById("video-file-input"),
   videoPreview: document.getElementById("video-preview"),
@@ -330,9 +332,30 @@ async function readWorkspaceText(rel) {
   const res = await fetch(`${API}/api/workspace/read-text?rel=${encodeURIComponent(rel)}`);
   const j = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(j.detail || `HTTP ${res.status}`);
+    throw new Error(
+      typeof j.detail === "string" ? j.detail : JSON.stringify(j.detail || {}) || `HTTP ${res.status}`
+    );
   }
   return String(j.text ?? "");
+}
+
+/** Okuma atölyesi: .pdf → sunucu metin çıkarma; diğerleri düz metin. */
+async function readArchiveFileForOkuma(rel) {
+  const low = String(rel || "").toLowerCase();
+  if (low.endsWith(".pdf")) {
+    const res = await fetch(`${API}/api/workspace/read-pdf?rel=${encodeURIComponent(rel)}`);
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const d = j.detail;
+      throw new Error(typeof d === "string" ? d : JSON.stringify(d || {}) || `HTTP ${res.status}`);
+    }
+    let out = String(j.text ?? "");
+    if (j.truncated_pages || j.truncated_length) {
+      out += "\n\n— PDF: sayfa/metin sınırı nedeniyle kısaltılmış olabilir.";
+    }
+    return out;
+  }
+  return readWorkspaceText(rel);
 }
 
 const TOP_MODE_BUTTONS = [
@@ -704,7 +727,7 @@ function switchMode(mode) {
   const motorDeclarationByMode = {
     genel: "Şu anda ana motor tam güç ve tam kapasite çalışıyor.",
     okuma:
-      "Okuma motoru açıldı; Faz 2.1 — İlim arşivi ağacı, metin önizleme, sohbete aktar.",
+      "Okuma motoru açıldı; Faz 2.2 — PDF metin, özet ve okuma notu tek tık.",
     video: "Video motoru açıldı; sinema atölyesi Faz 5'te tam aktif.",
     programlama:
       "Programlama motoru açıldı; Faz 1.3 — proje köküne göre çalıştırma, kod yardımcısı üretim modu.",
@@ -1079,7 +1102,7 @@ async function handleOkumaTreeClick(ev) {
 
 async function openOkumaArsivFile(rel) {
   try {
-    const text = await readWorkspaceText(rel);
+    const text = await readArchiveFileForOkuma(rel);
     ilimOpenRel = rel;
     if (el.ilimFileContent) el.ilimFileContent.value = text;
     updateIlimActiveFileLabel();
@@ -1140,6 +1163,33 @@ function wireOkumaAtolye() {
       }
     });
   }
+  if (el.btnIlimSummary) {
+    el.btnIlimSummary.addEventListener("click", () => {
+      void ilimSendPreparedPrompt("summary");
+    });
+  }
+  if (el.btnIlimComment) {
+    el.btnIlimComment.addEventListener("click", () => {
+      void ilimSendPreparedPrompt("comment");
+    });
+  }
+}
+
+async function ilimSendPreparedPrompt(kind) {
+  const t = String(el.ilimFileContent?.value || "").trim();
+  if (!t) {
+    flashRuzgarDurum("Önce bir dosya açın veya metin girin.");
+    return;
+  }
+  const chunk = t.length > 24000 ? `${t.slice(0, 24000)}\n\n… (mimar için kısaltıldı)` : t;
+  const src = ilimOpenRel ? `\n[Kaynak dosya: ${ilimOpenRel}]\n` : "";
+  const prompts = {
+    summary: `${src}Ümit abi, aşağıdaki metni okuma atölyesinden iletiyorum. Kısa ve net bir özet çıkar; gerekiyorsa madde işaretleri kullan. Uzun giriş yazma.\n\n---\n\n${chunk}`,
+    comment: `${src}Ümit abi, aşağıdaki metni okuma atölyesinden iletiyorum. Ana fikirleri, güçlü/zayıf yanları ve open questions (varsa) ile birlikte dengeli bir okuma notu yaz; gereksiz tekrar yapma.\n\n---\n\n${chunk}`,
+  };
+  const msg = prompts[kind] || prompts.summary;
+  flashRuzgarDurum("Rüzgar’a iletiliyor…");
+  await sendMessageWithText(msg, { skipUserBubble: false });
 }
 
 async function saveProgramlamaAtolyeBuffer() {
@@ -2179,9 +2229,13 @@ async function checkApi() {
     const j = await r.json();
     if (j.ok) {
       el.api.textContent = j.stt ? "API ✓ STT" : "API ✓";
-      el.api.title = j.stt
+      let apiTitle = j.stt
         ? "desktop_server — STT: Whisper ve/veya SpeechRecognition (Ümit & Gökçenur dinleme)"
         : "API açık — pip install faster-whisper ve/veya SpeechRecognition";
+      if (j.pdf_text === false) {
+        apiTitle += " | PDF metin: pip install pypdf";
+      }
+      el.api.title = apiTitle;
       el.api.className = "tech-chip ok";
       setStatus("Hazır", "Rüzgar");
       void tryShowHafizaReminder();

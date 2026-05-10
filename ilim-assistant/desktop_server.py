@@ -48,6 +48,15 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 _SKIP_LIST_NAMES = frozenset({"node_modules", "__pycache__", ".venv", "venv", ".git"})
 
 
+def pdf_text_runtime_available() -> bool:
+    try:
+        import pypdf  # noqa: F401
+
+        return True
+    except ImportError:
+        return False
+
+
 def _repo_resolve_under_root(rel_query: str, must_be_dir: bool = False) -> Path:
     raw = (rel_query or "").strip().replace("\\", "/").lstrip("/")
     root = REPO_ROOT.resolve()
@@ -282,6 +291,53 @@ def api_workspace_read_text(rel: str = Query("")) -> dict[str, Any]:
         raise HTTPException(status_code=400, detail="Dosya çok büyük (2 MB).")
     text = target.read_text(encoding="utf-8", errors="replace")
     return {"ok": True, "text": text}
+
+
+@app.get("/api/workspace/read-pdf")
+def api_workspace_read_pdf(rel: str = Query("")) -> dict[str, Any]:
+    """PDF'den düz metin çıkarır (Okuma atölyesi). pypdf yoksa 503."""
+    if not pdf_text_runtime_available():
+        raise HTTPException(
+            status_code=503,
+            detail="PDF metin çıkarma için: pip install pypdf",
+        )
+    raw = (rel or "").strip().replace("\\", "/").lstrip("/")
+    if not raw:
+        raise HTTPException(status_code=400, detail="rel gerekli.")
+    target = _repo_resolve_under_root(raw, must_be_dir=False)
+    if target.suffix.lower() != ".pdf":
+        raise HTTPException(status_code=400, detail="Dosya PDF değil.")
+    max_bytes = 15_000_000
+    if target.stat().st_size > max_bytes:
+        raise HTTPException(status_code=400, detail=f"PDF çok büyük ({max_bytes // 1_000_000} MB sınır).")
+
+    from pypdf import PdfReader
+
+    reader = PdfReader(str(target))
+    n_pages = len(reader.pages)
+    max_pages = min(n_pages, 100)
+    parts: list[str] = []
+    for i in range(max_pages):
+        try:
+            t = reader.pages[i].extract_text() or ""
+        except Exception:
+            t = ""
+        parts.append(t)
+    full = "\n\n".join(parts).strip()
+    hard_cap = 450_000
+    truncated_len = False
+    if len(full) > hard_cap:
+        full = full[:hard_cap] + "\n\n… [metin uzun olduğu için kesildi]"
+        truncated_len = True
+    truncated_pages = max_pages < n_pages
+    return {
+        "ok": True,
+        "text": full,
+        "pages_total": n_pages,
+        "pages_read": max_pages,
+        "truncated_pages": truncated_pages,
+        "truncated_length": truncated_len,
+    }
 
 
 @app.post("/api/code/run")
