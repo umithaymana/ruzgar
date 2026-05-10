@@ -942,6 +942,64 @@ body {
   gap: 10px;
 }
 
+/* Okuma Atölyesi — Faz 2.1 */
+.okuma-workbench {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 10px;
+  height: calc(100% - 92px);
+  min-height: 0;
+}
+.okuma-sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid #3c3c3c;
+  border-radius: 7px;
+  background: #1e1e1e;
+  overflow: hidden;
+}
+.okuma-sidebar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+.okuma-main {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid #3c3c3c;
+  border-radius: 7px;
+  background: #1e1e1e;
+  overflow: hidden;
+}
+.okuma-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 10px;
+  border-bottom: 1px solid #343434;
+  background: #252526;
+}
+.okuma-active-path {
+  flex: 1;
+  min-width: 0;
+}
+.okuma-textarea {
+  flex: 1;
+  min-height: 220px;
+  margin: 0;
+  resize: none;
+  border: 0;
+  border-radius: 0;
+}
+.okuma-file-tree {
+  flex: 1;
+  min-height: 0;
+}
+
 /* Programlama Atölyesi — Faz 1.1 */
 .code-workbench {
   display: grid;

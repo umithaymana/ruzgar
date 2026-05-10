@@ -15,6 +15,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from pathlib import Path
 from typing import Annotated, Any, Iterator
 
 import uvicorn
@@ -41,6 +42,43 @@ from ilim_assistant.llm_ollama import chat_completion_stream
 from ilim_assistant.stt_whisper import stt_runtime_available, transcribe_file
 
 app = FastAPI(title="RÜZGAR Desktop API")
+
+# Proje kökü (YAPAY ZEKA): ilim-assistant/desktop_server.py → iki üst dizin
+REPO_ROOT = Path(__file__).resolve().parent.parent
+_SKIP_LIST_NAMES = frozenset({"node_modules", "__pycache__", ".venv", "venv", ".git"})
+
+
+def _repo_resolve_under_root(rel_query: str, must_be_dir: bool = False) -> Path:
+    raw = (rel_query or "").strip().replace("\\", "/").lstrip("/")
+    root = REPO_ROOT.resolve()
+    target = (root / raw.replace("/", os.sep)).resolve() if raw else root
+    try:
+        target.relative_to(root)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Geçersiz yol (proje dışı).")
+    if must_be_dir:
+        if not target.is_dir():
+            raise HTTPException(status_code=404, detail="Klasör yok.")
+    else:
+        if not target.is_file():
+            raise HTTPException(status_code=404, detail="Dosya yok.")
+    return target
+
+
+def _repo_list_children(rel_query: str) -> list[dict[str, Any]]:
+    raw = (rel_query or "").strip().replace("\\", "/").lstrip("/")
+    target = _repo_resolve_under_root(rel_query, must_be_dir=True)
+    out: list[dict[str, Any]] = []
+    for p in sorted(target.iterdir(), key=lambda x: (not x.is_dir(), x.name.lower())):
+        name = p.name
+        if name in _SKIP_LIST_NAMES:
+            continue
+        if name.startswith(".") and name != ".vscode":
+            continue
+        rel_full = f"{raw}/{name}" if raw else name
+        rel_full = rel_full.replace("\\", "/")
+        out.append({"name": name, "isDir": p.is_dir(), "rel": rel_full})
+    return out
 
 app.add_middleware(
     CORSMiddleware,
@@ -224,6 +262,26 @@ def health():
         "service": "ruzgar-desktop-api",
         "stt": stt_runtime_available(),
     }
+
+
+@app.get("/api/workspace/list")
+def api_workspace_list(rel: str = Query("")) -> dict[str, Any]:
+    """Proje köküne göre klasör içeriği (Okuma / Programlama ağaçları; Electron olmadan da çalışır)."""
+    items = _repo_list_children(rel)
+    return {"ok": True, "items": items}
+
+
+@app.get("/api/workspace/read-text")
+def api_workspace_read_text(rel: str = Query("")) -> dict[str, Any]:
+    """UTF-8 metin dosyası okuma (PDF vb. ikilik içerik kullanıcıya ham görünebilir)."""
+    raw = (rel or "").strip().replace("\\", "/").lstrip("/")
+    if not raw:
+        raise HTTPException(status_code=400, detail="rel gerekli.")
+    target = _repo_resolve_under_root(raw, must_be_dir=False)
+    if target.stat().st_size > 2_000_000:
+        raise HTTPException(status_code=400, detail="Dosya çok büyük (2 MB).")
+    text = target.read_text(encoding="utf-8", errors="replace")
+    return {"ok": True, "text": text}
 
 
 @app.post("/api/code/run")

@@ -271,6 +271,9 @@ const el = {
   btnHafizaDeleteCancel: document.getElementById("btn-hafiza-delete-cancel"),
   ilimFileList: document.getElementById("ilim-file-list"),
   ilimFileContent: document.getElementById("ilim-file-content"),
+  btnIlimRefresh: document.getElementById("btn-ilim-refresh"),
+  btnIlimToChat: document.getElementById("btn-ilim-to-chat"),
+  ilimActiveFile: document.getElementById("ilim-active-file"),
   videoFileInput: document.getElementById("video-file-input"),
   videoPreview: document.getElementById("video-preview"),
   audioFileInput: document.getElementById("audio-file-input"),
@@ -300,6 +303,37 @@ let selectedAnalyzeIndex = -1;
 
 /** Programlama Atölyesi — Faz 1.2: açık dosya göreli yolu (proje köküne göre) */
 let atolyeOpenRel = null;
+
+/** Okuma Atölyesi — İlim arşivinde seçili dosya */
+let ilimOpenRel = null;
+const OKUMA_ARSIV_ROOT = "ilim-assistant/arsiv";
+
+async function workspaceListDir(rel) {
+  const r = String(rel ?? "");
+  if (window.ruzgarApi?.listDir) {
+    return window.ruzgarApi.listDir(r);
+  }
+  const res = await fetch(`${API}/api/workspace/list?rel=${encodeURIComponent(r)}`);
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok || j.ok === false) {
+    throw new Error(j.detail || j.error || `HTTP ${res.status}`);
+  }
+  return j.items || [];
+}
+
+async function readWorkspaceText(rel) {
+  if (window.ruzgarApi?.readText) {
+    const rr = await window.ruzgarApi.readText(rel);
+    if (rr?.ok) return String(rr.text ?? "");
+    throw new Error(rr?.error || "Dosya okunamadı.");
+  }
+  const res = await fetch(`${API}/api/workspace/read-text?rel=${encodeURIComponent(rel)}`);
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(j.detail || `HTTP ${res.status}`);
+  }
+  return String(j.text ?? "");
+}
 
 const TOP_MODE_BUTTONS = [
   "modeBtnGenel",
@@ -669,7 +703,8 @@ function switchMode(mode) {
   updateDynamicWorkbench();
   const motorDeclarationByMode = {
     genel: "Şu anda ana motor tam güç ve tam kapasite çalışıyor.",
-    okuma: "Okuma motoru açıldı; kütüphane ve İlim Hazinesi bu modda.",
+    okuma:
+      "Okuma motoru açıldı; Faz 2.1 — İlim arşivi ağacı, metin önizleme, sohbete aktar.",
     video: "Video motoru açıldı; sinema atölyesi Faz 5'te tam aktif.",
     programlama:
       "Programlama motoru açıldı; Faz 1.3 — proje köküne göre çalıştırma, kod yardımcısı üretim modu.",
@@ -918,7 +953,7 @@ async function handleCodeTreeClick(ev) {
   if (!row || !el.codeFileTree || !el.codeFileTree.contains(row)) return;
   ev.preventDefault();
   const rel = row.dataset.rel;
-  if (!rel || !window.ruzgarApi?.listDir) return;
+  if (!rel) return;
 
   if (row.classList.contains("folder")) {
     const branch = row.closest(".code-tree-branch");
@@ -929,7 +964,7 @@ async function handleCodeTreeClick(ev) {
       kids.innerHTML = `<div class="code-tree-loading">${esc("Yükleniyor…")}</div>`;
       kids.hidden = false;
       try {
-        const items = await window.ruzgarApi.listDir(rel);
+        const items = await workspaceListDir(rel);
         kids.innerHTML = "";
         for (const x of items) {
           kids.appendChild(createCodeTreeBranch(x, depth + 1));
@@ -958,19 +993,10 @@ async function handleCodeTreeClick(ev) {
 }
 
 async function openProgramlamaWorkspaceFile(rel) {
-  if (!window.ruzgarApi?.readText) {
-    flashRuzgarDurum("Dosya ağacı ve dosya okuma yalnızca masaüstü Rüzgar’da (Electron).");
-    return;
-  }
   try {
-    const r = await window.ruzgarApi.readText(rel);
-    if (!r?.ok) {
-      setCodeOutput(r?.error || "Dosya okunamadı.");
-      flashRuzgarDurum("Dosya açılamadı.");
-      return;
-    }
+    const text = await readWorkspaceText(rel);
     atolyeOpenRel = rel;
-    if (el.codeEditor) el.codeEditor.value = String(r.text ?? "");
+    if (el.codeEditor) el.codeEditor.value = text;
     applyLanguageFromFilename(rel);
     updateProgramlamaActiveFileLabel();
     setCodeOutput(`Açıldı: ${rel}`);
@@ -983,14 +1009,9 @@ async function openProgramlamaWorkspaceFile(rel) {
 
 async function programlamaAtolyeRefreshRoot() {
   if (!el.codeFileTree) return;
-  if (!window.ruzgarApi?.listDir) {
-    el.codeFileTree.innerHTML =
-      `<div class="code-file-placeholder">Proje ağacı yalnızca masaüstü Rüzgar (Electron) ile kullanılabilir.</div>`;
-    return;
-  }
   el.codeFileTree.innerHTML = `<div class="code-tree-loading">${esc("Yükleniyor…")}</div>`;
   try {
-    const items = await window.ruzgarApi.listDir("");
+    const items = await workspaceListDir("");
     el.codeFileTree.innerHTML = "";
     for (const it of items) {
       el.codeFileTree.appendChild(createCodeTreeBranch(it, 0));
@@ -999,9 +1020,125 @@ async function programlamaAtolyeRefreshRoot() {
       el.codeFileTree.innerHTML =
         `<div class="code-file-placeholder">Kök klasör boş veya erişilemiyor.</div>`;
     }
-  } catch {
+  } catch (e) {
     el.codeFileTree.innerHTML =
-      `<div class="code-file-placeholder">Kök liste okunamadı.</div>`;
+      `<div class="code-file-placeholder">Kök liste okunamadı: ${esc(String(e && e.message ? e.message : e))}. API (desktop_server) veya Electron köprüsü gerekir.</div>`;
+  }
+}
+
+// ---------- Okuma Atölyesi — Faz 2.1 (İlim arşivi ağacı + metin + sohbete aktar) ----------
+function updateIlimActiveFileLabel() {
+  if (!el.ilimActiveFile) return;
+  el.ilimActiveFile.textContent = ilimOpenRel
+    ? `Metin: ${ilimOpenRel}`
+    : "Metin: (sol listeden dosya seçin)";
+}
+
+async function handleOkumaTreeClick(ev) {
+  const row = ev.target.closest(".code-tree-row");
+  if (!row || !el.ilimFileList || !el.ilimFileList.contains(row)) return;
+  ev.preventDefault();
+  const rel = row.dataset.rel;
+  if (!rel) return;
+
+  if (row.classList.contains("folder")) {
+    const branch = row.closest(".code-tree-branch");
+    const kids = branch?.querySelector(":scope > .code-tree-children");
+    if (!kids) return;
+    const depth = Number.parseInt(row.dataset.depth || "0", 10);
+    if (kids.dataset.loaded !== "1") {
+      kids.innerHTML = `<div class="code-tree-loading">${esc("Yükleniyor…")}</div>`;
+      kids.hidden = false;
+      try {
+        const items = await workspaceListDir(rel);
+        kids.innerHTML = "";
+        for (const x of items) {
+          kids.appendChild(createCodeTreeBranch(x, depth + 1));
+        }
+        kids.dataset.loaded = "1";
+      } catch {
+        kids.innerHTML = `<div class="code-tree-err">${esc("Liste okunamadı.")}</div>`;
+        return;
+      }
+      row.classList.add("is-expanded");
+      const chevOpen = row.querySelector(".code-tree-chev");
+      if (chevOpen) chevOpen.textContent = "▾";
+      return;
+    }
+    kids.hidden = !kids.hidden;
+    row.classList.toggle("is-expanded", !kids.hidden);
+    const chev = row.querySelector(".code-tree-chev");
+    if (chev) chev.textContent = kids.hidden ? "▸" : "▾";
+    return;
+  }
+
+  if (row.classList.contains("file")) {
+    void openOkumaArsivFile(rel);
+  }
+}
+
+async function openOkumaArsivFile(rel) {
+  try {
+    const text = await readWorkspaceText(rel);
+    ilimOpenRel = rel;
+    if (el.ilimFileContent) el.ilimFileContent.value = text;
+    updateIlimActiveFileLabel();
+    flashRuzgarDurum(`Okundu: ${rel}`);
+    el.ilimFileContent?.focus();
+  } catch (e) {
+    if (el.ilimFileContent) {
+      el.ilimFileContent.value = `(okunamadı: ${e && e.message ? e.message : String(e)})`;
+    }
+    flashRuzgarDurum("Dosya okunamadı.");
+  }
+}
+
+async function okumaAtolyeRefreshTree() {
+  if (!el.ilimFileList) return;
+  el.ilimFileList.innerHTML = `<div class="code-tree-loading">${esc("Yükleniyor…")}</div>`;
+  try {
+    const items = await workspaceListDir(OKUMA_ARSIV_ROOT);
+    el.ilimFileList.innerHTML = "";
+    for (const it of items) {
+      el.ilimFileList.appendChild(createCodeTreeBranch(it, 0));
+    }
+    if (!items.length) {
+      el.ilimFileList.innerHTML =
+        `<div class="code-file-placeholder">Arşiv boş veya klasör yok. Klasörü oluşturun: <code>ilim-assistant/arsiv</code> — içine .md / .txt ekleyin.</div>`;
+    }
+  } catch (e) {
+    el.ilimFileList.innerHTML =
+      `<div class="code-file-placeholder">Arşiv listelenemedi: ${esc(String(e && e.message ? e.message : e))}</div>`;
+  }
+}
+
+function wireOkumaAtolye() {
+  if (el.ilimFileList && el.ilimFileList.dataset.okumaWired !== "1") {
+    el.ilimFileList.dataset.okumaWired = "1";
+    el.ilimFileList.addEventListener("click", (ev) => {
+      void handleOkumaTreeClick(ev);
+    });
+  }
+  if (el.btnIlimRefresh) {
+    el.btnIlimRefresh.addEventListener("click", () => {
+      void okumaAtolyeRefreshTree();
+      flashRuzgarDurum("İlim arşivi yenilendi.");
+    });
+  }
+  if (el.btnIlimToChat) {
+    el.btnIlimToChat.addEventListener("click", () => {
+      const t = String(el.ilimFileContent?.value || "").trim();
+      if (!t) {
+        flashRuzgarDurum("Önce sol listeden bir dosya açın veya metin girin.");
+        return;
+      }
+      const chunk = t.length > 12000 ? `${t.slice(0, 12000)}\n\n… (kısaltıldı)` : t;
+      if (el.input) {
+        el.input.value = chunk;
+        el.input.focus();
+        flashRuzgarDurum("Metin sohbet kutusuna aktarıldı.");
+      }
+    });
   }
 }
 
@@ -1101,6 +1238,7 @@ function wireDynamicWorkbench() {
   if (el.btnLayoutSplit2) el.btnLayoutSplit2.addEventListener("click", () => setWorkbenchLayout("layout-split2"));
   if (el.btnLayoutSplit4) el.btnLayoutSplit4.addEventListener("click", () => setWorkbenchLayout("layout-split4"));
   wireProgrammingWorkbench();
+  wireOkumaAtolye();
   if (el.btnHafizaSave) {
     // Click event köprüsü: analiz satırlarını kalıcı hafızaya yazar.
     el.btnHafizaSave.addEventListener("click", (ev) => {
@@ -2031,34 +2169,8 @@ async function initialLoadHafiza() {
 }
 
 async function loadIlimFileList() {
-  if (!el.ilimFileList) return;
-  try {
-    const items = await window.ruzgarApi.listDir("ilim-assistant/arsiv");
-    el.ilimFileList.innerHTML = "";
-    for (const it of items) {
-      const row = document.createElement("div");
-      row.className = `tree-item ${it.isDir ? "folder" : "file"}`;
-      row.textContent = (it.isDir ? "▸ " : "· ") + it.name;
-      if (!it.isDir) {
-        row.style.cursor = "pointer";
-        row.addEventListener("click", async () => {
-          if (!el.ilimFileContent) return;
-          try {
-            const rr = await fetch(
-              `${API}/api/workspace/read-text?rel=${encodeURIComponent(it.rel)}`
-            );
-            const jj = await rr.json();
-            el.ilimFileContent.value = jj.text || "(okunamadı)";
-          } catch {
-            el.ilimFileContent.value = "(okunamadı)";
-          }
-        });
-      }
-      el.ilimFileList.appendChild(row);
-    }
-  } catch {
-    el.ilimFileList.innerHTML = "(kütüphane okunamadı)";
-  }
+  updateIlimActiveFileLabel();
+  await okumaAtolyeRefreshTree();
 }
 
 async function checkApi() {
