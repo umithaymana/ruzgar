@@ -322,12 +322,56 @@
             <div class="atelier-info-strip">
               <span class="phase-badge">Faz 1</span>
               <span class="atelier-promise">
-                <strong>Programlama Atölyesi</strong> — yakında: Monaco editör (VS Code), proje gezgini,
-                Python/JS çalıştırma, Rüzgar yardımcısı (açıklama, hata bulma, refactor).
+                <strong>Programlama Atölyesi</strong> — ilk adım: profesyonel editör düzeni, araç butonları,
+                çıktı paneli, Python/JavaScript çalıştırma ve Rüzgar kod yardımcısı.
               </span>
             </div>
             <h3>Programlama Motoru — Atölye</h3>
-            <textarea id="code-editor" class="hafiza-textarea" rows="18" placeholder="// Kodunuzu buraya yazın"></textarea>
+            <div class="code-workbench">
+              <aside class="code-sidebar">
+                <div class="code-sidebar-head">
+                  <span>Proje</span>
+                  <button type="button" class="btn-secondary btn-compact" id="btn-code-refresh" title="Proje ağacını yenile">Yenile</button>
+                </div>
+                <div class="code-file-tree" id="code-file-tree">
+                  <div class="code-file-placeholder">
+                    Faz 1.2'de proje dosyaları burada listelenecek.
+                  </div>
+                </div>
+              </aside>
+              <div class="code-main">
+                <div class="code-toolbar" role="toolbar" aria-label="Programlama araçları">
+                  <select id="code-language" class="select-mini code-language" aria-label="Kod dili">
+                    <option value="python" selected>Python</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="typescript">TypeScript</option>
+                    <option value="html">HTML</option>
+                    <option value="css">CSS</option>
+                    <option value="json">JSON</option>
+                  </select>
+                  <button type="button" id="btn-code-new" class="btn-secondary btn-compact">Yeni</button>
+                  <button type="button" id="btn-code-explain" class="btn-secondary btn-compact">Açıkla</button>
+                  <button type="button" id="btn-code-fix" class="btn-secondary btn-compact">Hatayı Bul</button>
+                  <button type="button" id="btn-code-refactor" class="btn-secondary btn-compact">Refactor</button>
+                  <button type="button" id="btn-code-test" class="btn-secondary btn-compact">Test Yaz</button>
+                  <span class="spacer"></span>
+                  <button type="button" id="btn-code-run" class="btn-primary btn-compact" title="Python/JavaScript kodunu kontrollü temp dosyada çalıştır">Çalıştır</button>
+                </div>
+                <textarea
+                  id="code-editor"
+                  class="code-editor"
+                  spellcheck="false"
+                  placeholder="# Kodunu buraya yaz. Rüzgar'a kodu açıklatmak, hatayı buldurmak, refactor ettirmek veya test yazdırmak için üstteki araçları kullan."
+                ></textarea>
+                <div class="code-output-panel">
+                  <div class="code-output-head">
+                    <span>Çıktı / Terminal</span>
+                    <button type="button" id="btn-code-output-clear" class="btn-secondary btn-compact">Temizle</button>
+                  </div>
+                  <pre id="code-output" class="code-output">Programlama Atölyesi hazır. Python/JavaScript kodu çalıştırabilir; diğer diller sırayla eklenecek.</pre>
+                </div>
+              </div>
+            </div>
           </section>
 
           <section class="motor-page" id="page-ses" hidden>

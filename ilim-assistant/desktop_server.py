@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
+import sys
 import tempfile
 from typing import Annotated, Any, Iterator
 
@@ -105,6 +107,12 @@ class GenelHafizaBakBody(BaseModel):
     message: str = ""
 
 
+class CodeRunBody(BaseModel):
+    code: str = ""
+    language: str = "python"
+    timeout_sec: float = 8.0
+
+
 @app.post("/api/hafiza/genel-bak")
 def api_genel_hafiza_bak(body: GenelHafizaBakBody):
     """Ana sohbet ön kontrol: genel hafızada tam/benzer cevap (UI düşünme balonu atlatma)."""
@@ -174,6 +182,78 @@ def health():
         "service": "ruzgar-desktop-api",
         "stt": stt_runtime_available(),
     }
+
+
+@app.post("/api/code/run")
+async def api_code_run(body: CodeRunBody):
+    """Programlama Atölyesi: kısa Python/JavaScript kodunu kontrollü temp dosyada çalıştırır.
+
+    Not: Bu ilk yerel geliştirme sürümüdür. Shell kullanılmaz; süre ve çıktı sınırlandırılır.
+    """
+    code = (body.code or "").strip()
+    if not code:
+        raise HTTPException(status_code=400, detail="Çalıştırılacak kod boş.")
+    if len(code) > 80_000:
+        raise HTTPException(status_code=400, detail="Kod çok büyük (80 KB sınırı).")
+
+    lang = (body.language or "python").strip().lower()
+    timeout = max(1.0, min(float(body.timeout_sec or 8.0), 20.0))
+    if lang in ("py", "python", "python3"):
+        filename = "main.py"
+        cmd = [sys.executable, filename]
+    elif lang in ("js", "javascript", "node"):
+        filename = "main.js"
+        cmd = ["node", filename]
+    else:
+        return {
+            "ok": False,
+            "stdout": "",
+            "stderr": f"{lang} dili bu çalıştırma sürümünde desteklenmiyor. İlk sürüm: Python + JavaScript.",
+            "exit_code": None,
+            "timeout": False,
+        }
+
+    def _run() -> dict[str, Any]:
+        with tempfile.TemporaryDirectory(prefix="ruzgar_code_") as td:
+            src = os.path.join(td, filename)
+            with open(src, "w", encoding="utf-8", newline="\n") as f:
+                f.write(code)
+            try:
+                proc = subprocess.run(
+                    cmd,
+                    cwd=td,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                    timeout=timeout,
+                    shell=False,
+                )
+                return {
+                    "ok": proc.returncode == 0,
+                    "stdout": (proc.stdout or "")[:20_000],
+                    "stderr": (proc.stderr or "")[:20_000],
+                    "exit_code": proc.returncode,
+                    "timeout": False,
+                }
+            except subprocess.TimeoutExpired as e:
+                return {
+                    "ok": False,
+                    "stdout": (e.stdout or "")[:20_000] if isinstance(e.stdout, str) else "",
+                    "stderr": f"Zaman aşımı: {timeout:.1f} saniye içinde bitmedi.",
+                    "exit_code": None,
+                    "timeout": True,
+                }
+            except FileNotFoundError as e:
+                return {
+                    "ok": False,
+                    "stdout": "",
+                    "stderr": f"Çalıştırıcı bulunamadı: {cmd[0]} ({e})",
+                    "exit_code": None,
+                    "timeout": False,
+                }
+
+    return await run_in_threadpool(_run)
 
 
 def _normalize_stt_lang(lang: str | None) -> str | None:

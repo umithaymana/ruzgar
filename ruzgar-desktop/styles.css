@@ -941,6 +941,165 @@ body {
   grid-template-columns: 280px 1fr;
   gap: 10px;
 }
+
+/* Programlama Atölyesi — Faz 1.1 */
+.code-workbench {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 10px;
+  height: calc(100% - 92px);
+  min-height: 0;
+}
+.code-sidebar,
+.code-main {
+  min-height: 0;
+  border: 1px solid #3c3c3c;
+  border-radius: 7px;
+  background: #1e1e1e;
+}
+.code-sidebar {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.code-sidebar-head,
+.code-toolbar,
+.code-output-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border-bottom: 1px solid #343434;
+}
+.code-sidebar-head,
+.code-output-head {
+  justify-content: space-between;
+  color: #9cdcfe;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.code-file-tree {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 10px;
+}
+.code-file-placeholder {
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 10px;
+  color: #777;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.code-main {
+  display: grid;
+  grid-template-rows: auto minmax(220px, 1fr) minmax(120px, 0.36fr);
+  overflow: hidden;
+}
+.code-toolbar {
+  background: #252526;
+  flex-wrap: wrap;
+}
+.code-language {
+  min-width: 118px;
+}
+.code-editor {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border: 0;
+  border-bottom: 1px solid #343434;
+  background: #111315;
+  color: #d4d4d4;
+  padding: 12px 14px;
+  resize: none;
+  outline: none;
+  font-family: Consolas, "Cascadia Code", "Courier New", monospace;
+  font-size: 13px;
+  line-height: 1.55;
+  tab-size: 2;
+}
+.code-editor:focus {
+  box-shadow: inset 0 0 0 1px rgba(0, 127, 212, 0.55);
+}
+.code-output-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #151515;
+}
+.code-output {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 10px 12px;
+  overflow: auto;
+  color: #b8d7a3;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+/* Asistan yanıtındaki ```fenced``` kod kartları: tek tık ile atölyeye atılabilir */
+.bubble.assistant .code-card {
+  margin: 8px 0;
+  border: 1px solid #2f3a48;
+  border-radius: 8px;
+  background: #0f1317;
+  overflow: hidden;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.02) inset,
+    0 4px 12px rgba(0, 0, 0, 0.25);
+}
+.bubble.assistant .code-card-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: linear-gradient(180deg, #1a2230 0%, #141b25 100%);
+  border-bottom: 1px solid #2f3a48;
+}
+.bubble.assistant .code-card-lang {
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #8ab4f8;
+  background: rgba(138, 180, 248, 0.08);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(138, 180, 248, 0.18);
+}
+.bubble.assistant .code-card-spacer {
+  flex: 1 1 auto;
+}
+.bubble.assistant .code-card-head .btn-secondary,
+.bubble.assistant .code-card-head .btn-primary {
+  font-size: 11px;
+  padding: 3px 10px;
+}
+.bubble.assistant .code-card-body {
+  margin: 0;
+  padding: 10px 12px;
+  overflow: auto;
+  color: #d4d4d4;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 12.5px;
+  line-height: 1.5;
+  white-space: pre;
+  max-height: 360px;
+}
+.bubble.assistant .code-card-body code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+  white-space: pre;
+}
 .dynamic-workbench.layout-split2 .motor-page {
   height: 100%;
 }

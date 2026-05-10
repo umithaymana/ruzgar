@@ -275,6 +275,16 @@ const el = {
   videoPreview: document.getElementById("video-preview"),
   audioFileInput: document.getElementById("audio-file-input"),
   audioPreview: document.getElementById("audio-preview"),
+  codeEditor: document.getElementById("code-editor"),
+  codeLanguage: document.getElementById("code-language"),
+  codeOutput: document.getElementById("code-output"),
+  btnCodeNew: document.getElementById("btn-code-new"),
+  btnCodeExplain: document.getElementById("btn-code-explain"),
+  btnCodeFix: document.getElementById("btn-code-fix"),
+  btnCodeRefactor: document.getElementById("btn-code-refactor"),
+  btnCodeTest: document.getElementById("btn-code-test"),
+  btnCodeRun: document.getElementById("btn-code-run"),
+  btnCodeOutputClear: document.getElementById("btn-code-output-clear"),
   dashboardStatus: document.getElementById("dashboard-status"),
   dashboardLastSpeech: document.getElementById("dashboard-last-speech"),
   ctxMenu: document.getElementById("ctx-menu"),
@@ -727,10 +737,107 @@ function wireTopModeButtons() {
   });
 }
 
+function selectedCodeLanguageLabel() {
+  const value = String(el.codeLanguage?.value || "python").trim();
+  const opt = el.codeLanguage?.selectedOptions?.[0];
+  return opt?.textContent?.trim() || value || "Python";
+}
+
+function getCodeEditorText() {
+  return String(el.codeEditor?.value || "").trim();
+}
+
+function setCodeOutput(text) {
+  if (!el.codeOutput) return;
+  el.codeOutput.textContent = String(text || "");
+}
+
+function sendCodeAssistantPrompt(action) {
+  const code = getCodeEditorText();
+  if (!code) {
+    setCodeOutput("Önce editöre kod yazın; sonra Rüzgar yardımcısını çağırın.");
+    flashRuzgarDurum("Programlama Atölyesi: editörde kod yok.");
+    return;
+  }
+  const lang = selectedCodeLanguageLabel();
+  const actionPrompts = {
+    explain: "Aşağıdaki kodu mimara sade ve net şekilde açıkla. Hatalı veya riskli yerleri ayrıca belirt.",
+    fix: "Aşağıdaki kodu incele. Olası hataları, bug risklerini ve düzeltme önerilerini sırayla ver.",
+    refactor: "Aşağıdaki kodu daha temiz, okunabilir ve sürdürülebilir hale getirmek için refactor önerisi hazırla.",
+    test: "Aşağıdaki kod için uygun test senaryoları ve mümkünse örnek test kodu yaz.",
+  };
+  const instruction = actionPrompts[action] || actionPrompts.explain;
+  const prompt = `${instruction}\n\nDil: ${lang}\n\n\`\`\`${String(el.codeLanguage?.value || "python")}\n${code}\n\`\`\``;
+  switchMode("programlama");
+  setCodeOutput("Rüzgar kod yardımcısı çağrıldı. Yanıt sağ sohbet panelinde akacak.");
+  void sendMessageWithText(prompt, { skipUserBubble: false });
+}
+
+async function runCodeFromWorkbench() {
+  const code = getCodeEditorText();
+  if (!code) {
+    setCodeOutput("Önce editöre kod yazın.");
+    return;
+  }
+  const language = String(el.codeLanguage?.value || "python").trim().toLowerCase();
+  setCodeOutput("Çalıştırılıyor...");
+  try {
+    const res = await fetch(`${API}/api/code/run`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code, language, timeout_sec: 8 }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.detail || `HTTP ${res.status}`);
+    }
+    const parts = [];
+    parts.push(`Durum: ${data.ok ? "başarılı" : "hata"}${data.exit_code != null ? ` (exit ${data.exit_code})` : ""}`);
+    if (data.timeout) parts.push("Zaman aşımı: kod belirtilen sürede bitmedi.");
+    if (data.stdout) parts.push(`\n--- stdout ---\n${data.stdout}`);
+    if (data.stderr) parts.push(`\n--- stderr ---\n${data.stderr}`);
+    if (!data.stdout && !data.stderr) parts.push("\nÇıktı yok.");
+    setCodeOutput(parts.join("\n"));
+  } catch (e) {
+    setCodeOutput(`Çalıştırma hatası: ${e && e.message ? e.message : e}`);
+  }
+}
+
+function wireProgrammingWorkbench() {
+  if (el.btnCodeNew) {
+    el.btnCodeNew.addEventListener("click", () => {
+      if (el.codeEditor) el.codeEditor.value = "";
+      setCodeOutput("Yeni çalışma alanı hazır.");
+      el.codeEditor?.focus();
+    });
+  }
+  if (el.btnCodeExplain) {
+    el.btnCodeExplain.addEventListener("click", () => sendCodeAssistantPrompt("explain"));
+  }
+  if (el.btnCodeFix) {
+    el.btnCodeFix.addEventListener("click", () => sendCodeAssistantPrompt("fix"));
+  }
+  if (el.btnCodeRefactor) {
+    el.btnCodeRefactor.addEventListener("click", () => sendCodeAssistantPrompt("refactor"));
+  }
+  if (el.btnCodeTest) {
+    el.btnCodeTest.addEventListener("click", () => sendCodeAssistantPrompt("test"));
+  }
+  if (el.btnCodeRun) {
+    el.btnCodeRun.addEventListener("click", () => {
+      void runCodeFromWorkbench();
+    });
+  }
+  if (el.btnCodeOutputClear) {
+    el.btnCodeOutputClear.addEventListener("click", () => setCodeOutput(""));
+  }
+}
+
 function wireDynamicWorkbench() {
   if (el.btnLayoutFull) el.btnLayoutFull.addEventListener("click", () => setWorkbenchLayout("layout-full"));
   if (el.btnLayoutSplit2) el.btnLayoutSplit2.addEventListener("click", () => setWorkbenchLayout("layout-split2"));
   if (el.btnLayoutSplit4) el.btnLayoutSplit4.addEventListener("click", () => setWorkbenchLayout("layout-split4"));
+  wireProgrammingWorkbench();
   if (el.btnHafizaSave) {
     // Click event köprüsü: analiz satırlarını kalıcı hafızaya yazar.
     el.btnHafizaSave.addEventListener("click", (ev) => {
@@ -1127,6 +1234,170 @@ function appendBubble(role, text) {
   div.innerHTML = esc(text);
   el.chat.appendChild(div);
   el.chat.scrollTop = el.chat.scrollHeight;
+}
+
+// ---------- Asistan yanıtında kod bloklarını "akıllı kart" olarak render ----------
+// Programlama Atölyesi'nin DNA'sı: Rüzgar kod yazınca kullanıcı kopyala-yapıştırla
+// uğraşmasın; tek tık ile editöre koysun, çalıştırsın.
+
+const CODE_LANG_NORMALIZE = {
+  py: "python",
+  python: "python",
+  python3: "python",
+  js: "javascript",
+  javascript: "javascript",
+  node: "javascript",
+  nodejs: "javascript",
+  ts: "typescript",
+  typescript: "typescript",
+  html: "html",
+  htm: "html",
+  css: "css",
+  json: "json",
+  bash: "bash",
+  sh: "bash",
+  shell: "bash",
+  text: "text",
+  txt: "text",
+  "": "text",
+};
+
+function normalizeCodeLang(raw) {
+  const t = String(raw || "").trim().toLowerCase();
+  return CODE_LANG_NORMALIZE[t] || t || "text";
+}
+
+function codeLangIsRunnable(lang) {
+  const v = normalizeCodeLang(lang);
+  return v === "python" || v === "javascript";
+}
+
+let _codeCardCounter = 0;
+function renderCodeCard(rawCode, lang) {
+  const code = String(rawCode || "").replace(/\n+$/, "");
+  const norm = normalizeCodeLang(lang);
+  const id = `rc-code-${Date.now().toString(36)}-${++_codeCardCounter}`;
+  const safe = esc(code);
+  const safeLang = esc(norm);
+  const runnable = codeLangIsRunnable(norm);
+  const runBtn = runnable
+    ? `<button type="button" class="btn-primary btn-compact code-card-run" data-card="${id}" data-lang="${safeLang}" title="Programlama Atölyesi'nde çalıştır">Çalıştır</button>`
+    : "";
+  return (
+    `<div class="code-card" id="${id}" data-lang="${safeLang}">` +
+    `<div class="code-card-head">` +
+    `<span class="code-card-lang">${safeLang}</span>` +
+    `<span class="code-card-spacer"></span>` +
+    `<button type="button" class="btn-secondary btn-compact code-card-copy" data-card="${id}" title="Kodu panoya kopyala">Kopyala</button>` +
+    `<button type="button" class="btn-secondary btn-compact code-card-paste" data-card="${id}" data-lang="${safeLang}" title="Programlama Atölyesi editörüne ekle">Editöre Ekle</button>` +
+    runBtn +
+    `</div>` +
+    `<pre class="code-card-body"><code>${safe}</code></pre>` +
+    `</div>`
+  );
+}
+
+/** Asistan metnini güvenli HTML'e çevir; ```fenced``` blokları kart olur. */
+function renderAssistantRichHtml(text) {
+  const src = String(text || "");
+  const fence = /```([a-zA-Z0-9_+-]*)\n([\s\S]*?)```/g;
+  let out = "";
+  let last = 0;
+  let m;
+  while ((m = fence.exec(src)) !== null) {
+    const before = src.slice(last, m.index);
+    if (before) out += esc(before).replace(/\n/g, "<br>");
+    out += renderCodeCard(m[2], m[1]);
+    last = m.index + m[0].length;
+  }
+  const tail = src.slice(last);
+  if (tail) out += esc(tail).replace(/\n/g, "<br>");
+  return out || esc(src);
+}
+
+/** Yanıt balonundaki kod kartı butonlarını canlandır. */
+function wireAssistantCodeButtons(scope) {
+  const root = scope || document;
+  root.querySelectorAll(".code-card-copy").forEach((btn) => {
+    if (btn.dataset.wired === "1") return;
+    btn.dataset.wired = "1";
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-card");
+      const card = id ? document.getElementById(id) : null;
+      const codeEl = card ? card.querySelector("code") : null;
+      const code = codeEl ? codeEl.textContent || "" : "";
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          void navigator.clipboard.writeText(code);
+        } else {
+          const ta = document.createElement("textarea");
+          ta.value = code;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          ta.remove();
+        }
+        flashRuzgarDurum("Kod panoya kopyalandı.");
+      } catch (_) {
+        flashRuzgarDurum("Kopyalama başarısız.");
+      }
+    });
+  });
+  root.querySelectorAll(".code-card-paste").forEach((btn) => {
+    if (btn.dataset.wired === "1") return;
+    btn.dataset.wired = "1";
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-card");
+      const lang = btn.getAttribute("data-lang") || "text";
+      const card = id ? document.getElementById(id) : null;
+      const codeEl = card ? card.querySelector("code") : null;
+      const code = codeEl ? codeEl.textContent || "" : "";
+      pasteCodeIntoProgramlamaAtolye(code, lang, false);
+    });
+  });
+  root.querySelectorAll(".code-card-run").forEach((btn) => {
+    if (btn.dataset.wired === "1") return;
+    btn.dataset.wired = "1";
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-card");
+      const lang = btn.getAttribute("data-lang") || "python";
+      const card = id ? document.getElementById(id) : null;
+      const codeEl = card ? card.querySelector("code") : null;
+      const code = codeEl ? codeEl.textContent || "" : "";
+      pasteCodeIntoProgramlamaAtolye(code, lang, true);
+    });
+  });
+}
+
+/** Kod kartından gelen kodu Programlama Atölyesi editörüne koy; istenirse hemen çalıştır. */
+function pasteCodeIntoProgramlamaAtolye(code, lang, alsoRun) {
+  if (currentMode !== "programlama") {
+    switchMode("programlama");
+  }
+  const norm = normalizeCodeLang(lang);
+  if (el.codeLanguage) {
+    const opts = Array.from(el.codeLanguage.options || []);
+    const match = opts.find((o) => o.value === norm);
+    if (match) el.codeLanguage.value = norm;
+  }
+  if (el.codeEditor) {
+    el.codeEditor.value = String(code || "");
+    el.codeEditor.focus();
+    try {
+      el.codeEditor.setSelectionRange(0, 0);
+      el.codeEditor.scrollTop = 0;
+    } catch (_) {
+      /* ignore */
+    }
+  }
+  if (alsoRun && codeLangIsRunnable(norm)) {
+    flashRuzgarDurum("Kod editöre eklendi, çalıştırılıyor…");
+    void runCodeFromWorkbench();
+  } else if (alsoRun) {
+    flashRuzgarDurum(`${norm} dili henüz çalıştırılamıyor; editöre eklendi.`);
+  } else {
+    flashRuzgarDurum("Kod editöre eklendi.");
+  }
 }
 
 function clearMotorDeclarations() {
@@ -2188,7 +2459,14 @@ async function streamChat(userText) {
         responseBubble.className = "bubble assistant";
         el.chat.appendChild(responseBubble);
       }
-      responseBubble.innerHTML = esc(full);
+      // Streaming bittikten sonra zenginleştirilmiş render: ```fenced``` kod blokları
+      // Programlama Atölyesi'ne tek tıkla atılabilir kart hâline gelir.
+      if (full.includes("```")) {
+        responseBubble.innerHTML = renderAssistantRichHtml(full);
+        wireAssistantCodeButtons(responseBubble);
+      } else {
+        responseBubble.innerHTML = esc(full);
+      }
       lastAssistantReply = full;
       updateDynamicWorkbench();
       chatHistory.push({ role: "user", content: ev.user_message || userText });
