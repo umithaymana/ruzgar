@@ -90,7 +90,7 @@
             <span class="motor-glyph">▤</span>
             <span class="motor-text">
               <span class="motor-name">OKUMA MOTORU</span>
-              <span class="motor-tag">Kütüphane · Faz 2.2</span>
+              <span class="motor-tag">Kütüphane · tamam</span>
             </span>
           </button>
           <button type="button" class="motor-item" data-mode="tercume" id="motor-side-tercume">
@@ -222,8 +222,8 @@
               <div class="motors-overview-grid">
                 <div class="motors-overview-card"><span class="ovx-phase">Faz 0</span><span class="ovx-name">UI iskeleti</span><span class="ovx-status ovx-done">tamam</span></div>
                 <div class="motors-overview-card"><span class="ovx-phase">Faz 1</span><span class="ovx-name">Programlama</span><span class="ovx-status ovx-done">1.3 tamam</span></div>
-                <div class="motors-overview-card"><span class="ovx-phase">Faz 2</span><span class="ovx-name">Okuma</span><span class="ovx-status ovx-now">2.2 devam</span></div>
-                <div class="motors-overview-card"><span class="ovx-phase">Faz 3</span><span class="ovx-name">Tercüme</span><span class="ovx-status">sırada</span></div>
+                <div class="motors-overview-card"><span class="ovx-phase">Faz 2</span><span class="ovx-name">Okuma</span><span class="ovx-status ovx-done">tamam</span></div>
+                <div class="motors-overview-card"><span class="ovx-phase">Faz 3</span><span class="ovx-name">Tercüme</span><span class="ovx-status ovx-now">sırada</span></div>
                 <div class="motors-overview-card"><span class="ovx-phase">Faz 4</span><span class="ovx-name">Ses</span><span class="ovx-status">sırada</span></div>
                 <div class="motors-overview-card"><span class="ovx-phase">Faz 5</span><span class="ovx-name">Video</span><span class="ovx-status">sırada</span></div>
                 <div class="motors-overview-card"><span class="ovx-phase">Faz 6</span><span class="ovx-name">Ana Motor akıl</span><span class="ovx-status">sırada</span></div>
@@ -271,11 +271,12 @@
 
           <section class="motor-page" id="page-okuma" hidden>
             <div class="atelier-info-strip">
-              <span class="phase-badge">Faz 2.2</span>
+              <span class="phase-badge">Faz 2 ✓</span>
               <span class="atelier-promise">
-                <strong>Okuma Atölyesi</strong> — arşiv <strong>ağacı</strong>, metin / <strong>PDF metin çıkarma</strong>,
-                <strong>Özet iste</strong> ve <strong>Okuma notu</strong> ile doğrudan Rüzgar’a gönderim,
-                <strong>Metni sohbete aktar</strong>. EPUB ve OCR sonraki basamak.
+                <strong>Okuma Atölyesi (tamam)</strong> — <code>ilim-assistant/arsiv</code>: ağaç, düz metin,
+                <strong>PDF</strong> ve <strong>DOCX</strong> metin çıkarma, karakter/kelime sayacı,
+                <strong>Özet / Okuma notu / Sohbete aktar</strong>, arşivi dosya gezgininde aç.
+                EPUB ve OCR ileride genişletme.
               </span>
             </div>
             <h3>Okuma Motoru — İlim Arşivi</h3>
@@ -283,9 +284,14 @@
               <aside class="okuma-sidebar">
                 <div class="code-sidebar-head okuma-sidebar-head">
                   <span>İlim arşivi</span>
-                  <button type="button" class="btn-secondary btn-compact" id="btn-ilim-refresh" title="Listeyi yenile">
-                    Yenile
-                  </button>
+                  <div class="okuma-sidebar-btns">
+                    <button type="button" class="btn-secondary btn-compact" id="btn-ilim-open-archive" title="ilim-assistant/arsiv klasörünü aç">
+                      Klasör
+                    </button>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-ilim-refresh" title="Listeyi yenile">
+                      Yenile
+                    </button>
+                  </div>
                 </div>
                 <div id="ilim-file-list" class="code-file-tree okuma-file-tree"></div>
               </aside>
@@ -308,6 +314,7 @@
                   rows="18"
                   placeholder="Sol listeden bir dosya seçin; içerik burada görünür. İstersen düzenleyip sohbete aktarın."
                 ></textarea>
+                <div class="okuma-footer-stats" id="ilim-stats">0 karakter · 0 kelime</div>
               </div>
             </div>
           </section>

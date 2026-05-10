@@ -275,6 +275,8 @@ const el = {
   btnIlimToChat: document.getElementById("btn-ilim-to-chat"),
   btnIlimSummary: document.getElementById("btn-ilim-summary"),
   btnIlimComment: document.getElementById("btn-ilim-comment"),
+  btnIlimOpenArchive: document.getElementById("btn-ilim-open-archive"),
+  ilimStats: document.getElementById("ilim-stats"),
   ilimActiveFile: document.getElementById("ilim-active-file"),
   videoFileInput: document.getElementById("video-file-input"),
   videoPreview: document.getElementById("video-preview"),
@@ -339,7 +341,7 @@ async function readWorkspaceText(rel) {
   return String(j.text ?? "");
 }
 
-/** Okuma atölyesi: .pdf → sunucu metin çıkarma; diğerleri düz metin. */
+/** Okuma atölyesi: PDF/DOCX sunucuda; diğerleri düz metin (UTF-8). */
 async function readArchiveFileForOkuma(rel) {
   const low = String(rel || "").toLowerCase();
   if (low.endsWith(".pdf")) {
@@ -352,6 +354,19 @@ async function readArchiveFileForOkuma(rel) {
     let out = String(j.text ?? "");
     if (j.truncated_pages || j.truncated_length) {
       out += "\n\n— PDF: sayfa/metin sınırı nedeniyle kısaltılmış olabilir.";
+    }
+    return out;
+  }
+  if (low.endsWith(".docx")) {
+    const res = await fetch(`${API}/api/workspace/read-docx?rel=${encodeURIComponent(rel)}`);
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const d = j.detail;
+      throw new Error(typeof d === "string" ? d : JSON.stringify(d || {}) || `HTTP ${res.status}`);
+    }
+    let out = String(j.text ?? "");
+    if (j.truncated_length) {
+      out += "\n\n— DOCX: uzunluk sınırı nedeniyle kısaltılmış olabilir.";
     }
     return out;
   }
@@ -727,7 +742,7 @@ function switchMode(mode) {
   const motorDeclarationByMode = {
     genel: "Şu anda ana motor tam güç ve tam kapasite çalışıyor.",
     okuma:
-      "Okuma motoru açıldı; Faz 2.2 — PDF metin, özet ve okuma notu tek tık.",
+      "Okuma motoru — İlim arşivi tamam: metin, PDF, DOCX; özet ve not tek tık.",
     video: "Video motoru açıldı; sinema atölyesi Faz 5'te tam aktif.",
     programlama:
       "Programlama motoru açıldı; Faz 1.3 — proje köküne göre çalıştırma, kod yardımcısı üretim modu.",
@@ -1057,6 +1072,14 @@ function updateIlimActiveFileLabel() {
     : "Metin: (sol listeden dosya seçin)";
 }
 
+function updateIlimTextStats() {
+  if (!el.ilimStats) return;
+  const t = String(el.ilimFileContent?.value || "");
+  const chars = t.length;
+  const words = t.replace(/\s+/g, " ").trim() ? t.trim().split(/\s+/).length : 0;
+  el.ilimStats.textContent = `${chars.toLocaleString("tr-TR")} karakter · ${words.toLocaleString("tr-TR")} kelime`;
+}
+
 async function handleOkumaTreeClick(ev) {
   const row = ev.target.closest(".code-tree-row");
   if (!row || !el.ilimFileList || !el.ilimFileList.contains(row)) return;
@@ -1106,6 +1129,7 @@ async function openOkumaArsivFile(rel) {
     ilimOpenRel = rel;
     if (el.ilimFileContent) el.ilimFileContent.value = text;
     updateIlimActiveFileLabel();
+    updateIlimTextStats();
     flashRuzgarDurum(`Okundu: ${rel}`);
     el.ilimFileContent?.focus();
   } catch (e) {
@@ -1171,6 +1195,19 @@ function wireOkumaAtolye() {
   if (el.btnIlimComment) {
     el.btnIlimComment.addEventListener("click", () => {
       void ilimSendPreparedPrompt("comment");
+    });
+  }
+  if (el.ilimFileContent) {
+    el.ilimFileContent.addEventListener("input", () => updateIlimTextStats());
+  }
+  if (el.btnIlimOpenArchive) {
+    el.btnIlimOpenArchive.addEventListener("click", () => {
+      if (window.ruzgarApi?.openWorkspaceRel) {
+        void window.ruzgarApi.openWorkspaceRel("ilim-assistant/arsiv");
+        flashRuzgarDurum("Arşiv klasörü açılıyor…");
+      } else {
+        flashRuzgarDurum("Klasörü açmak için masaüstü Rüzgar kullanın.");
+      }
     });
   }
 }
@@ -2220,6 +2257,7 @@ async function initialLoadHafiza() {
 
 async function loadIlimFileList() {
   updateIlimActiveFileLabel();
+  updateIlimTextStats();
   await okumaAtolyeRefreshTree();
 }
 
@@ -2233,7 +2271,10 @@ async function checkApi() {
         ? "desktop_server — STT: Whisper ve/veya SpeechRecognition (Ümit & Gökçenur dinleme)"
         : "API açık — pip install faster-whisper ve/veya SpeechRecognition";
       if (j.pdf_text === false) {
-        apiTitle += " | PDF metin: pip install pypdf";
+        apiTitle += " | PDF: pip install pypdf";
+      }
+      if (j.docx_text === false) {
+        apiTitle += " | DOCX: pip install python-docx";
       }
       el.api.title = apiTitle;
       el.api.className = "tech-chip ok";

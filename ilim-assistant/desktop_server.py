@@ -57,6 +57,15 @@ def pdf_text_runtime_available() -> bool:
         return False
 
 
+def docx_text_runtime_available() -> bool:
+    try:
+        import docx  # noqa: F401
+
+        return True
+    except ImportError:
+        return False
+
+
 def _repo_resolve_under_root(rel_query: str, must_be_dir: bool = False) -> Path:
     raw = (rel_query or "").strip().replace("\\", "/").lstrip("/")
     root = REPO_ROOT.resolve()
@@ -270,6 +279,8 @@ def health():
         "ok": True,
         "service": "ruzgar-desktop-api",
         "stt": stt_runtime_available(),
+        "pdf_text": pdf_text_runtime_available(),
+        "docx_text": docx_text_runtime_available(),
     }
 
 
@@ -338,6 +349,50 @@ def api_workspace_read_pdf(rel: str = Query("")) -> dict[str, Any]:
         "truncated_pages": truncated_pages,
         "truncated_length": truncated_len,
     }
+
+
+def _docx_file_to_plain(target: Path) -> str:
+    from docx import Document
+
+    doc = Document(str(target))
+    chunks: list[str] = []
+    for p in doc.paragraphs:
+        t = (p.text or "").strip()
+        if t:
+            chunks.append(t)
+    for tbl in doc.tables:
+        for row in tbl.rows:
+            cells = [(c.text or "").strip() for c in row.cells]
+            line = " | ".join(x for x in cells if x)
+            if line:
+                chunks.append(line)
+    return "\n\n".join(chunks).strip()
+
+
+@app.get("/api/workspace/read-docx")
+def api_workspace_read_docx(rel: str = Query("")) -> dict[str, Any]:
+    """DOCX (Word) gövdesinden düz metin çıkarır. python-docx yoksa 503."""
+    if not docx_text_runtime_available():
+        raise HTTPException(
+            status_code=503,
+            detail="DOCX okuma için: pip install python-docx",
+        )
+    raw = (rel or "").strip().replace("\\", "/").lstrip("/")
+    if not raw:
+        raise HTTPException(status_code=400, detail="rel gerekli.")
+    target = _repo_resolve_under_root(raw, must_be_dir=False)
+    if target.suffix.lower() != ".docx":
+        raise HTTPException(status_code=400, detail="Dosya DOCX değil (.doc eski format desteklenmez).")
+    max_bytes = 15_000_000
+    if target.stat().st_size > max_bytes:
+        raise HTTPException(status_code=400, detail=f"Dosya çok büyük ({max_bytes // 1_000_000} MB sınır).")
+    full = _docx_file_to_plain(target)
+    hard_cap = 450_000
+    truncated = False
+    if len(full) > hard_cap:
+        full = full[:hard_cap] + "\n\n… [metin uzun olduğu için kesildi]"
+        truncated = True
+    return {"ok": True, "text": full, "truncated_length": truncated}
 
 
 @app.post("/api/code/run")

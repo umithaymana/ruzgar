@@ -965,6 +965,12 @@ body {
   justify-content: space-between;
   width: 100%;
 }
+.okuma-sidebar-btns {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
 .okuma-main {
   display: flex;
   flex-direction: column;
@@ -994,6 +1000,14 @@ body {
   resize: none;
   border: 0;
   border-radius: 0;
+}
+.okuma-footer-stats {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  font-size: 11px;
+  color: #858585;
+  border-top: 1px solid #343434;
+  background: #1a1a1a;
 }
 .okuma-file-tree {
   flex: 1;
