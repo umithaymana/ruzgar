@@ -1834,6 +1834,9 @@ body:has(.layout-v2) .title-row-motors { justify-content: flex-end; }
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
+.ovx-status.ovx-done {
+  color: #89d185;
+}
 .ovx-status.ovx-now {
   color: #58c278;
 }

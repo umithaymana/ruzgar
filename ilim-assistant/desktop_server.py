@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -111,6 +112,47 @@ class CodeRunBody(BaseModel):
     code: str = ""
     language: str = "python"
     timeout_sec: float = 8.0
+    workspace_root: str | None = Field(
+        default=None,
+        description="Electron proje kökü (örn. YAPAY ZEKA); sunucuda doğrulanır.",
+    )
+    cwd_rel: str | None = Field(
+        default=None,
+        description="Çalışma dizini köke göre (örn. ruzgar-desktop); kayıtlı dosyanın klasörü.",
+    )
+
+
+def _normalize_workspace_root(raw: str | None) -> str | None:
+    wr = (raw or "").strip()
+    if not wr:
+        return None
+    n = os.path.normpath(wr)
+    return n if os.path.isdir(n) else None
+
+
+def _is_inside_workspace(workspace_root: str, candidate: str) -> bool:
+    wr = os.path.normpath(workspace_root)
+    ca = os.path.normpath(candidate)
+    try:
+        return os.path.commonpath([wr, ca]) == wr
+    except ValueError:
+        return False
+
+
+def _resolve_workspace_run_dir(workspace_root: str, cwd_rel: str | None) -> str | None:
+    """Güvenli çalışma dizini: kök veya kök altı klasör (dosya yolu verilirse üst klasör)."""
+    wr = _normalize_workspace_root(workspace_root)
+    if not wr:
+        return None
+    rel = (cwd_rel or "").strip().replace("\\", "/").lstrip("/")
+    if not rel:
+        return wr
+    cand = os.path.normpath(os.path.join(wr, rel.replace("/", os.sep)))
+    if not _is_inside_workspace(wr, cand):
+        return None
+    if os.path.isfile(cand):
+        cand = os.path.dirname(cand)
+    return cand if os.path.isdir(cand) else None
 
 
 @app.post("/api/hafiza/genel-bak")
@@ -186,9 +228,9 @@ def health():
 
 @app.post("/api/code/run")
 async def api_code_run(body: CodeRunBody):
-    """Programlama Atölyesi: kısa Python/JavaScript kodunu kontrollü temp dosyada çalıştırır.
+    """Programlama Atölyesi: Python/JavaScript kodunu kontrollü çalıştırır.
 
-    Not: Bu ilk yerel geliştirme sürümüdür. Shell kullanılmaz; süre ve çıktı sınırlandırılır.
+    Kod geçici dosyaya yazılır; workspace_root + cwd_rel ile çalışma dizini proje içine alınır.
     """
     code = (body.code or "").strip()
     if not code:
@@ -200,10 +242,10 @@ async def api_code_run(body: CodeRunBody):
     timeout = max(1.0, min(float(body.timeout_sec or 8.0), 20.0))
     if lang in ("py", "python", "python3"):
         filename = "main.py"
-        cmd = [sys.executable, filename]
+        runner = sys.executable
     elif lang in ("js", "javascript", "node"):
         filename = "main.js"
-        cmd = ["node", filename]
+        runner = "node"
     else:
         return {
             "ok": False,
@@ -213,15 +255,30 @@ async def api_code_run(body: CodeRunBody):
             "timeout": False,
         }
 
+    wr_norm = _normalize_workspace_root(body.workspace_root)
+    run_dir = None
+    cwd_used_rel = None
+    if wr_norm:
+        run_dir = _resolve_workspace_run_dir(body.workspace_root or "", body.cwd_rel)
+        if run_dir:
+            try:
+                cwd_used_rel = os.path.relpath(run_dir, wr_norm).replace("\\", "/")
+            except ValueError:
+                cwd_used_rel = ""
+
     def _run() -> dict[str, Any]:
-        with tempfile.TemporaryDirectory(prefix="ruzgar_code_") as td:
-            src = os.path.join(td, filename)
+        work_td = tempfile.mkdtemp(prefix="ruzgar_code_")
+        src = os.path.join(work_td, filename)
+        try:
             with open(src, "w", encoding="utf-8", newline="\n") as f:
                 f.write(code)
+            abs_src = os.path.abspath(src)
+            proc_cwd = run_dir if run_dir else work_td
+            cmd = [runner, abs_src]
             try:
                 proc = subprocess.run(
                     cmd,
-                    cwd=td,
+                    cwd=proc_cwd,
                     capture_output=True,
                     text=True,
                     encoding="utf-8",
@@ -229,29 +286,40 @@ async def api_code_run(body: CodeRunBody):
                     timeout=timeout,
                     shell=False,
                 )
-                return {
+                out: dict[str, Any] = {
                     "ok": proc.returncode == 0,
                     "stdout": (proc.stdout or "")[:20_000],
                     "stderr": (proc.stderr or "")[:20_000],
                     "exit_code": proc.returncode,
                     "timeout": False,
                 }
+                if cwd_used_rel is not None:
+                    out["cwd_used_rel"] = cwd_used_rel
+                return out
             except subprocess.TimeoutExpired as e:
-                return {
+                out = {
                     "ok": False,
                     "stdout": (e.stdout or "")[:20_000] if isinstance(e.stdout, str) else "",
                     "stderr": f"Zaman aşımı: {timeout:.1f} saniye içinde bitmedi.",
                     "exit_code": None,
                     "timeout": True,
                 }
+                if cwd_used_rel is not None:
+                    out["cwd_used_rel"] = cwd_used_rel
+                return out
             except FileNotFoundError as e:
-                return {
+                out = {
                     "ok": False,
                     "stdout": "",
-                    "stderr": f"Çalıştırıcı bulunamadı: {cmd[0]} ({e})",
+                    "stderr": f"Çalıştırıcı bulunamadı: {runner} ({e})",
                     "exit_code": None,
                     "timeout": False,
                 }
+                if cwd_used_rel is not None:
+                    out["cwd_used_rel"] = cwd_used_rel
+                return out
+        finally:
+            shutil.rmtree(work_td, ignore_errors=True)
 
     return await run_in_threadpool(_run)
 

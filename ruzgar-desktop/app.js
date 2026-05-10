@@ -672,7 +672,7 @@ function switchMode(mode) {
     okuma: "Okuma motoru açıldı; kütüphane ve İlim Hazinesi bu modda.",
     video: "Video motoru açıldı; sinema atölyesi Faz 5'te tam aktif.",
     programlama:
-      "Programlama motoru açıldı; atölye Faz 1.2 — sol ağaçtan dosya, Kaydet / Ctrl+S.",
+      "Programlama motoru açıldı; Faz 1.3 — proje köküne göre çalıştırma, kod yardımcısı üretim modu.",
     hafiza:
       "Hafıza motoru açıldı; bu motorla gelişim ve hafıza teknikleri üzerinde çalışabilirsiniz.",
     ses: "Ses motoru açıldı; stüdyo Faz 4'te tam aktif.",
@@ -779,10 +779,18 @@ function sendCodeAssistantPrompt(action) {
     test: "Aşağıdaki kod için uygun test senaryoları ve mümkünse örnek test kodu yaz.",
   };
   const instruction = actionPrompts[action] || actionPrompts.explain;
-  const prompt = `${instruction}\n\nDil: ${lang}\n\n\`\`\`${String(el.codeLanguage?.value || "python")}\n${code}\n\`\`\``;
+  const proEdge =
+    "Üretim kalitesinde yanıt ver: gereksiz önsöz yok; doğrudan çözüm; güvenlik ve sürdürülebilirlik notları kısa.";
+  const prompt = `${proEdge}\n\n${instruction}\n\nDil: ${lang}\n\n\`\`\`${String(el.codeLanguage?.value || "python")}\n${code}\n\`\`\``;
   switchMode("programlama");
   setCodeOutput("Rüzgar kod yardımcısı çağrıldı. Yanıt sağ sohbet panelinde akacak.");
   void sendMessageWithText(prompt, { skipUserBubble: false });
+}
+
+function deriveCodeRunCwdRelFromOpenFile(rel) {
+  const s = String(rel || "").replace(/\\/g, "/");
+  const i = s.lastIndexOf("/");
+  return i > 0 ? s.slice(0, i) : "";
 }
 
 async function runCodeFromWorkbench() {
@@ -793,11 +801,28 @@ async function runCodeFromWorkbench() {
   }
   const language = String(el.codeLanguage?.value || "python").trim().toLowerCase();
   setCodeOutput("Çalıştırılıyor...");
+  let workspaceRoot = null;
+  try {
+    if (window.ruzgarApi?.getRoot) {
+      workspaceRoot = await window.ruzgarApi.getRoot();
+    }
+  } catch (_) {
+    workspaceRoot = null;
+  }
+  const payload = {
+    code,
+    language,
+    timeout_sec: 8,
+  };
+  if (workspaceRoot && atolyeOpenRel) {
+    payload.workspace_root = workspaceRoot;
+    payload.cwd_rel = deriveCodeRunCwdRelFromOpenFile(atolyeOpenRel);
+  }
   try {
     const res = await fetch(`${API}/api/code/run`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code, language, timeout_sec: 8 }),
+      body: JSON.stringify(payload),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
@@ -805,6 +830,16 @@ async function runCodeFromWorkbench() {
     }
     const parts = [];
     parts.push(`Durum: ${data.ok ? "başarılı" : "hata"}${data.exit_code != null ? ` (exit ${data.exit_code})` : ""}`);
+    if (Object.prototype.hasOwnProperty.call(data, "cwd_used_rel") && data.cwd_used_rel != null) {
+      const cr = data.cwd_used_rel;
+      parts.push(
+        cr === "" || cr === "."
+          ? "\nÇalışma dizini: proje kökü (kayıtlı dosya — göreli import/dosya yolu aktif)."
+          : `\nÇalışma dizini (proje içi): ${cr.replace(/\\/g, "/")}`
+      );
+    } else if (!atolyeOpenRel) {
+      parts.push("\nÇalışma dizini: izole geçici klasör (kayıtlı dosya yok — projeye göre yol için önce Kaydet veya ağaçtan dosya aç).");
+    }
     if (data.timeout) parts.push("Zaman aşımı: kod belirtilen sürede bitmedi.");
     if (data.stdout) parts.push(`\n--- stdout ---\n${data.stdout}`);
     if (data.stderr) parts.push(`\n--- stderr ---\n${data.stderr}`);

@@ -104,7 +104,7 @@
             <span class="motor-glyph">{}</span>
             <span class="motor-text">
               <span class="motor-name">PROGRAMLAMA MOTORU</span>
-              <span class="motor-tag">Atölye · Faz 1.2</span>
+              <span class="motor-tag">Atölye · Faz 1 ✓</span>
             </span>
           </button>
         </div>
@@ -220,9 +220,9 @@
             <div class="motors-overview">
               <h4 class="motors-overview-title">Atölye Yol Haritası</h4>
               <div class="motors-overview-grid">
-                <div class="motors-overview-card"><span class="ovx-phase">Faz 0</span><span class="ovx-name">UI iskeleti</span><span class="ovx-status ovx-now">şimdi</span></div>
-                <div class="motors-overview-card"><span class="ovx-phase">Faz 1</span><span class="ovx-name">Programlama</span><span class="ovx-status ovx-now">1.2 devam</span></div>
-                <div class="motors-overview-card"><span class="ovx-phase">Faz 2</span><span class="ovx-name">Okuma</span><span class="ovx-status">sırada</span></div>
+                <div class="motors-overview-card"><span class="ovx-phase">Faz 0</span><span class="ovx-name">UI iskeleti</span><span class="ovx-status ovx-done">tamam</span></div>
+                <div class="motors-overview-card"><span class="ovx-phase">Faz 1</span><span class="ovx-name">Programlama</span><span class="ovx-status ovx-done">1.3 tamam</span></div>
+                <div class="motors-overview-card"><span class="ovx-phase">Faz 2</span><span class="ovx-name">Okuma</span><span class="ovx-status ovx-now">sırada</span></div>
                 <div class="motors-overview-card"><span class="ovx-phase">Faz 3</span><span class="ovx-name">Tercüme</span><span class="ovx-status">sırada</span></div>
                 <div class="motors-overview-card"><span class="ovx-phase">Faz 4</span><span class="ovx-name">Ses</span><span class="ovx-status">sırada</span></div>
                 <div class="motors-overview-card"><span class="ovx-phase">Faz 5</span><span class="ovx-name">Video</span><span class="ovx-status">sırada</span></div>
@@ -320,11 +320,12 @@
 
           <section class="motor-page" id="page-programlama" hidden>
             <div class="atelier-info-strip">
-              <span class="phase-badge">Faz 1</span>
+              <span class="phase-badge">Faz 1.3</span>
               <span class="atelier-promise">
-                <strong>Programlama Atölyesi</strong> — sol panelde <strong>proje ağacı</strong> (klasörleri aç,
-                dosyaya tıkla), editör, <strong>Kaydet</strong> / Ctrl+S, Python ve JS <strong>Çalıştır</strong>,
-                sohbette <strong>kod kartları</strong> (Faz 1.1). Mobil ve masaüstü teslim zinciri sonraki fazlarda.
+                <strong>Programlama Atölyesi</strong> — <strong>proje ağacı</strong>, <strong>Kaydet</strong> / Ctrl+S,
+                <strong>Çalıştır</strong> (kayıtlı dosyada proje içi çalışma dizini; göreli import ve dosya yolu),
+                sohbette <strong>kod kartları</strong>, <strong>Açıkla / Hata / Refactor / Test</strong> üretim modunda.
+                Paketleme ve mağaza teslimi sonraki fazlar.
               </span>
             </div>
             <h3>Programlama Motoru — Atölye</h3>
@@ -355,7 +356,14 @@
                   <button type="button" id="btn-code-refactor" class="btn-secondary btn-compact">Refactor</button>
                   <button type="button" id="btn-code-test" class="btn-secondary btn-compact">Test Yaz</button>
                   <span class="spacer"></span>
-                  <button type="button" id="btn-code-run" class="btn-primary btn-compact" title="Python/JavaScript kodunu kontrollü temp dosyada çalıştır">Çalıştır</button>
+                  <button
+                    type="button"
+                    id="btn-code-run"
+                    class="btn-primary btn-compact"
+                    title="Python/JavaScript: kayıtlı dosya varsa proje klasöründe çalışır; yoksa izole geçici klasör."
+                  >
+                    Çalıştır
+                  </button>
                 </div>
                 <div class="code-active-path" id="code-active-file">
                   Dosya: (yeni — Kaydet ile göreli yol verilir)
