@@ -1314,3 +1314,299 @@ body.core-busy .perf-chip {
   resize: vertical;
   font-family: inherit;
 }
+
+/* =====================================================================
+   FAZ 0 — Atölye Konsolu (üç bölmeli düzen)
+   Sol: panel-motors  /  Orta: panel-main  /  Sağ: panel-chat
+   Eski yapı (üst mode-topbar + sağ panel-files) layout-v2'de gizlenir.
+   ===================================================================== */
+
+.layout.layout-v2 .title-row-motors .mode-topbar-main { display: none; }
+.layout.layout-v2 ~ * .panel-files,
+.layout.layout-v2 .panel-files { display: none !important; }
+
+/* Eski üst mode-topbar barı tamamen gizlensin (sol motor menüsü onu yerine alır) */
+body:has(.layout-v2) .title-row-motors .mode-topbar-main { display: none; }
+body:has(.layout-v2) .title-row-motors { justify-content: flex-end; }
+
+/* Sol motor paneli */
+.panel-motors {
+  width: 232px;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, #1a1a1c 0%, #16161a 100%);
+  border-right: 1px solid #3c3c3c;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 10px 10px;
+  gap: 10px;
+  overflow-y: auto;
+}
+
+.motors-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 0 4px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.motors-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #ff2d2d;
+}
+.motors-sub {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: #6b7480;
+  text-transform: uppercase;
+}
+
+.motors-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 auto;
+}
+
+.motors-divider {
+  margin: 8px 0 4px;
+  padding: 0 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: #555c66;
+}
+.motors-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.motor-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #b6bbc4;
+  text-align: left;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.motor-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: #e6e6e6;
+}
+.motor-item.is-active {
+  background: rgba(255, 45, 45, 0.08);
+  border-color: rgba(255, 45, 45, 0.45);
+  color: #ffe4e4;
+  box-shadow: inset 3px 0 0 0 #ff2d2d;
+}
+.motor-item:focus-visible {
+  outline: 2px solid #007fd4;
+  outline-offset: 2px;
+}
+
+.motor-glyph {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #d8d8d8;
+  font-family: "Segoe UI Symbol", "Segoe UI Emoji", system-ui, sans-serif;
+}
+.motor-item.is-active .motor-glyph {
+  background: rgba(255, 45, 45, 0.18);
+  color: #ffd6d6;
+}
+
+.motor-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.motor-name {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.motor-tag {
+  font-size: 9.5px;
+  color: #7c8593;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.motor-item.is-active .motor-tag {
+  color: #d4af37;
+}
+
+.motor-item-hafiza .motor-glyph {
+  background: rgba(212, 175, 55, 0.12);
+  color: #d4af37;
+}
+.motor-item-hafiza.is-active {
+  background: rgba(212, 175, 55, 0.10);
+  border-color: rgba(212, 175, 55, 0.45);
+  color: #f3e9c8;
+  box-shadow: inset 3px 0 0 0 #d4af37;
+}
+
+.motors-foot {
+  margin-top: auto;
+  padding: 10px 6px 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.motors-foot-label {
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: #555c66;
+  text-transform: uppercase;
+}
+.motors-foot-name {
+  font-size: 11px;
+  color: #ff2d2d;
+  font-weight: 600;
+}
+
+/* =====================================================================
+   Atölye bilgi şeritleri (her motor sayfasının tepesinde)
+   ===================================================================== */
+.atelier-info-strip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 9px 12px;
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  background: linear-gradient(
+    90deg,
+    rgba(212, 175, 55, 0.08) 0%,
+    rgba(212, 175, 55, 0.02) 100%
+  );
+  border-radius: 6px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: #d6d6d6;
+  text-transform: none;
+  letter-spacing: normal;
+}
+.atelier-info-strip-ana {
+  border-color: rgba(255, 45, 45, 0.30);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 45, 45, 0.10) 0%,
+    rgba(255, 45, 45, 0.02) 100%
+  );
+}
+.phase-badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  background: #d4af37;
+  color: #1a1a1a;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+.phase-badge-ana {
+  background: #ff2d2d;
+  color: #fff;
+}
+.atelier-promise {
+  flex: 1;
+  min-width: 0;
+}
+.atelier-promise strong {
+  color: #ffe4a8;
+}
+.atelier-info-strip-ana .atelier-promise strong {
+  color: #ffd6d6;
+}
+
+.atelier-stub {
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.015);
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #b8b8b8;
+  text-transform: none;
+  letter-spacing: normal;
+}
+.atelier-stub p { margin: 0 0 10px; }
+
+/* =====================================================================
+   Ana motor — Atölye yol haritası kartları
+   ===================================================================== */
+.motors-overview {
+  margin-top: 18px;
+}
+.motors-overview-title {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: #9aa3ad;
+  text-transform: uppercase;
+}
+.motors-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+.motors-overview-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  background: #252526;
+  border: 1px solid #3c3c3c;
+  border-radius: 6px;
+}
+.ovx-phase {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #d4af37;
+  text-transform: uppercase;
+}
+.ovx-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #e0e0e0;
+}
+.ovx-status {
+  font-size: 10px;
+  color: #6b7480;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.ovx-status.ovx-now {
+  color: #58c278;
+}

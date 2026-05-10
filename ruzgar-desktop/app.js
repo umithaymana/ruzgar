@@ -178,10 +178,11 @@ const MODE_LABELS = {
   uretim: "RÜZGAR ÇEKİRDEĞİ",
   gelisim: "Gelişim",
   ses: "SES MOTORU",
-  okuma: "İLİM MOTORU",
+  okuma: "OKUMA MOTORU",
   video: "VİDEO MOTORU",
   programlama: "PROGRAMLAMA MOTORU",
   hafiza: "HAFIZA MOTORU",
+  tercume: "TERCÜME MOTORU",
   duzen: "Düzen",
   dosya: "Dosya",
   hizli: "Hızlı",
@@ -252,6 +253,7 @@ const el = {
   pageGenel: document.getElementById("page-genel"),
   pageHafiza: document.getElementById("page-hafiza"),
   pageOkuma: document.getElementById("page-okuma"),
+  pageTercume: document.getElementById("page-tercume"),
   pageVideo: document.getElementById("page-video"),
   pageProgramlama: document.getElementById("page-programlama"),
   pageSes: document.getElementById("page-ses"),
@@ -292,13 +294,15 @@ const TOP_MODE_BUTTONS = [
 ];
 
 function syncTopModeButtons() {
-  for (const key of TOP_MODE_BUTTONS) {
-    const btn = el[key];
-    if (!btn) continue;
+  // Hem üst topbar (eski) hem sol motor menüsü (Faz 0) aynı `data-mode` ile çalışır.
+  const allModeButtons = document.querySelectorAll("[data-mode]");
+  allModeButtons.forEach((btn) => {
     const mode = String(btn.getAttribute("data-mode") || "").trim().toLowerCase();
-    btn.classList.toggle("is-active", mode === currentMode);
-    btn.setAttribute("aria-pressed", mode === currentMode ? "true" : "false");
-  }
+    if (!mode) return;
+    const isActive = mode === currentMode;
+    btn.classList.toggle("is-active", isActive);
+    btn.setAttribute("aria-pressed", isActive ? "true" : "false");
+  });
 }
 
 /** Sistem paneli + kalıcı mikrofon testi — Ümit & Gökçenur */
@@ -648,12 +652,13 @@ function switchMode(mode) {
   updateDynamicWorkbench();
   const motorDeclarationByMode = {
     genel: "Şu anda ana motor tam güç ve tam kapasite çalışıyor.",
-    okuma: "Kültür ve İlim Hazinesi okuma bölümü açıldı.",
-    video: "Bu motorda sadece video oluşturabilirsiniz.",
-    programlama: "Bu motorla sadece program yazabilirsiniz.",
+    okuma: "Okuma motoru açıldı; kütüphane ve İlim Hazinesi bu modda.",
+    video: "Video motoru açıldı; sinema atölyesi Faz 5'te tam aktif.",
+    programlama: "Programlama motoru açıldı; atölye Faz 1'de tam aktif.",
     hafiza:
       "Hafıza motoru açıldı; bu motorla gelişim ve hafıza teknikleri üzerinde çalışabilirsiniz.",
-    ses: "Ses motoru açıldı; bu motorla ses işleme ve seslendirme yapabilirsiniz.",
+    ses: "Ses motoru açıldı; stüdyo Faz 4'te tam aktif.",
+    tercume: "Tercüme motoru açıldı; ofis paneli Faz 3'te tam aktif.",
   };
   setHeaderMotorDeclaration(motorDeclarationByMode[currentMode] || "");
   clearMotorDeclarations();
@@ -672,6 +677,7 @@ function updateDynamicWorkbench() {
     el.pageGenel,
     el.pageHafiza,
     el.pageOkuma,
+    el.pageTercume,
     el.pageVideo,
     el.pageProgramlama,
     el.pageSes,
@@ -683,6 +689,7 @@ function updateDynamicWorkbench() {
     genel: el.pageGenel,
     hafiza: el.pageHafiza,
     okuma: el.pageOkuma,
+    tercume: el.pageTercume,
     video: el.pageVideo,
     programlama: el.pageProgramlama,
     ses: el.pageSes,
@@ -705,16 +712,19 @@ function updateDynamicWorkbench() {
 }
 
 function wireTopModeButtons() {
-  for (const key of TOP_MODE_BUTTONS) {
-    const btn = el[key];
-    if (!btn) continue;
+  // Tek bir handler hem eski üst topbar hem yeni sol motor menüsü için çalışır.
+  // Idempotent: aynı butona iki kez bağlamayalım diye işaretliyoruz.
+  const allModeButtons = document.querySelectorAll("[data-mode]");
+  allModeButtons.forEach((btn) => {
+    if (btn.dataset.modeWired === "1") return;
+    btn.dataset.modeWired = "1";
     btn.addEventListener("click", () => {
       const mode = String(btn.getAttribute("data-mode") || "").trim().toLowerCase();
       if (!mode) return;
       switchMode(mode);
-      el.input.focus();
+      if (el.input) el.input.focus();
     });
-  }
+  });
 }
 
 function wireDynamicWorkbench() {

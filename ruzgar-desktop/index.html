@@ -34,7 +34,72 @@
       </div>
     </div>
 
-    <div class="layout">
+    <div class="layout layout-v2">
+      <aside class="panel panel-motors" aria-label="Motor seçici">
+        <div class="motors-head">
+          <span class="motors-title">RÜZGAR</span>
+          <span class="motors-sub">Atölye Konsolu</span>
+        </div>
+        <div class="motors-list" role="tablist" aria-label="Rüzgar motor seçici">
+          <button type="button" class="motor-item is-active" data-mode="genel" data-motor-pos="ana" id="motor-side-genel">
+            <span class="motor-glyph">◎</span>
+            <span class="motor-text">
+              <span class="motor-name">ANA MOTOR</span>
+              <span class="motor-tag">Orkestra şefi</span>
+            </span>
+          </button>
+          <button type="button" class="motor-item motor-item-hafiza" data-mode="hafiza" data-motor-pos="kalp" id="motor-side-hafiza">
+            <span class="motor-glyph">⊜</span>
+            <span class="motor-text">
+              <span class="motor-name">HAFIZA MOTORU</span>
+              <span class="motor-tag">Öğrenme &amp; bellek</span>
+            </span>
+          </button>
+          <div class="motors-divider" aria-hidden="true">
+            <span>YARDIMCI MOTORLAR</span>
+          </div>
+          <button type="button" class="motor-item" data-mode="ses" id="motor-side-ses">
+            <span class="motor-glyph">♪</span>
+            <span class="motor-text">
+              <span class="motor-name">SES MOTORU</span>
+              <span class="motor-tag">Stüdyo · Faz 4</span>
+            </span>
+          </button>
+          <button type="button" class="motor-item" data-mode="video" id="motor-side-video">
+            <span class="motor-glyph">▶</span>
+            <span class="motor-text">
+              <span class="motor-name">VİDEO MOTORU</span>
+              <span class="motor-tag">Sinema · Faz 5</span>
+            </span>
+          </button>
+          <button type="button" class="motor-item" data-mode="okuma" id="motor-side-okuma">
+            <span class="motor-glyph">▤</span>
+            <span class="motor-text">
+              <span class="motor-name">OKUMA MOTORU</span>
+              <span class="motor-tag">Kütüphane · Faz 2</span>
+            </span>
+          </button>
+          <button type="button" class="motor-item" data-mode="tercume" id="motor-side-tercume">
+            <span class="motor-glyph">⇄</span>
+            <span class="motor-text">
+              <span class="motor-name">TERCÜME MOTORU</span>
+              <span class="motor-tag">Ofis · Faz 3</span>
+            </span>
+          </button>
+          <button type="button" class="motor-item" data-mode="programlama" id="motor-side-programlama">
+            <span class="motor-glyph">{}</span>
+            <span class="motor-text">
+              <span class="motor-name">PROGRAMLAMA MOTORU</span>
+              <span class="motor-tag">Atölye · Faz 1</span>
+            </span>
+          </button>
+        </div>
+        <div class="motors-foot">
+          <span class="motors-foot-label">Mimar</span>
+          <span class="motors-foot-name">Ümit &amp; Gökçenur</span>
+        </div>
+      </aside>
+
       <aside class="panel panel-chat">
         <div class="chat-scroll" id="chat-messages"></div>
         <div class="composer">
@@ -121,7 +186,14 @@
         </div>
         <div id="dynamic-workbench" class="dynamic-workbench layout-full">
           <section class="motor-page" id="page-genel">
-            <h3>Ana Motor Dashboard</h3>
+            <div class="atelier-info-strip atelier-info-strip-ana">
+              <span class="phase-badge phase-badge-ana">Ana Motor</span>
+              <span class="atelier-promise">
+                Orkestra şefi: <strong>Hafıza</strong> + 5 yardımcı motorun (Ses, Video, Okuma, Tercüme, Programlama)
+                yetkinliklerini tek pencerede toplar. Akıl yürüten asistan modu Faz 6'da tam aktif olur.
+              </span>
+            </div>
+            <h3>Ana Motor — Dashboard</h3>
             <p>Motor durumları ve aktif konuşma özeti bu panelde.</p>
             <div id="dashboard-status" class="mini-card">Ana motor hazır.</div>
             <div class="dashboard-grid">
@@ -129,6 +201,19 @@
               <div class="mini-card dashboard-avatar">
                 <div class="logo-mark">◎</div>
                 <p>Rüzgar Görsel Paneli</p>
+              </div>
+            </div>
+            <div class="motors-overview">
+              <h4 class="motors-overview-title">Atölye Yol Haritası</h4>
+              <div class="motors-overview-grid">
+                <div class="motors-overview-card"><span class="ovx-phase">Faz 0</span><span class="ovx-name">UI iskeleti</span><span class="ovx-status ovx-now">şimdi</span></div>
+                <div class="motors-overview-card"><span class="ovx-phase">Faz 1</span><span class="ovx-name">Programlama</span><span class="ovx-status">sırada</span></div>
+                <div class="motors-overview-card"><span class="ovx-phase">Faz 2</span><span class="ovx-name">Okuma</span><span class="ovx-status">sırada</span></div>
+                <div class="motors-overview-card"><span class="ovx-phase">Faz 3</span><span class="ovx-name">Tercüme</span><span class="ovx-status">sırada</span></div>
+                <div class="motors-overview-card"><span class="ovx-phase">Faz 4</span><span class="ovx-name">Ses</span><span class="ovx-status">sırada</span></div>
+                <div class="motors-overview-card"><span class="ovx-phase">Faz 5</span><span class="ovx-name">Video</span><span class="ovx-status">sırada</span></div>
+                <div class="motors-overview-card"><span class="ovx-phase">Faz 6</span><span class="ovx-name">Ana Motor akıl</span><span class="ovx-status">sırada</span></div>
+                <div class="motors-overview-card"><span class="ovx-phase">Faz 7</span><span class="ovx-name">Cila</span><span class="ovx-status">sırada</span></div>
               </div>
             </div>
           </section>
@@ -171,26 +256,75 @@
           </section>
 
           <section class="motor-page" id="page-okuma" hidden>
-            <h3>İlim Motoru Kütüphane</h3>
+            <div class="atelier-info-strip">
+              <span class="phase-badge">Faz 2</span>
+              <span class="atelier-promise">
+                <strong>Okuma Atölyesi</strong> — yakında: PDF/EPUB okuyucu, OCR (taranmış metin), DOCX/HTML/MD desteği,
+                sayfa özetleme ve sesli okuma.
+              </span>
+            </div>
+            <h3>Okuma Motoru — Kütüphane</h3>
             <div class="library-grid">
               <div id="ilim-file-list" class="file-tree"></div>
               <textarea id="ilim-file-content" class="hafiza-textarea" rows="16" placeholder="Dosya içeriği burada gösterilir"></textarea>
             </div>
           </section>
 
+          <section class="motor-page" id="page-tercume" hidden>
+            <div class="atelier-info-strip">
+              <span class="phase-badge">Faz 3</span>
+              <span class="atelier-promise">
+                <strong>Tercüme Atölyesi</strong> — yakında: çoklu format (TXT, DOCX, PDF, HTML), sol kaynak / sağ
+                hedef paneli, cümle eşleştirme, terim sözlüğü, çevrim dışı tercüme.
+              </span>
+            </div>
+            <h3>Tercüme Motoru — Ofis Paneli</h3>
+            <div class="atelier-stub">
+              <p>
+                Bu atölye Faz 3'te açılacak. Şimdilik kaynak ve hedef metinleri için iki kolon önizlemesi
+                hazırlandı; gerçek çeviri motoru ve dosya açma araçları sonraki adımda eklenecek.
+              </p>
+              <div class="library-grid">
+                <textarea class="hafiza-textarea" rows="14" placeholder="Kaynak metin (Türkçe/İngilizce/Arapça…)" disabled></textarea>
+                <textarea class="hafiza-textarea" rows="14" placeholder="Hedef dile çeviri burada görünecek" disabled></textarea>
+              </div>
+            </div>
+          </section>
+
           <section class="motor-page" id="page-video" hidden>
-            <h3>Video Motoru Medya Paneli</h3>
+            <div class="atelier-info-strip">
+              <span class="phase-badge">Faz 5</span>
+              <span class="atelier-promise">
+                <strong>Video Atölyesi</strong> — yakında: sinema editör, timeline, format dönüştürme (FFmpeg),
+                ses ayırma, otomatik altyazı, çözünürlük/bitrate ayarı.
+              </span>
+            </div>
+            <h3>Video Motoru — Medya Paneli</h3>
             <input id="video-file-input" type="file" accept=".mp4,.avi,.mp3,video/*,audio/*" />
             <video id="video-preview" controls style="width: 100%; max-height: 360px; margin-top: 8px"></video>
           </section>
 
           <section class="motor-page" id="page-programlama" hidden>
-            <h3>Programlama Motoru</h3>
+            <div class="atelier-info-strip">
+              <span class="phase-badge">Faz 1</span>
+              <span class="atelier-promise">
+                <strong>Programlama Atölyesi</strong> — yakında: Monaco editör (VS Code), proje gezgini,
+                Python/JS çalıştırma, Rüzgar yardımcısı (açıklama, hata bulma, refactor).
+              </span>
+            </div>
+            <h3>Programlama Motoru — Atölye</h3>
             <textarea id="code-editor" class="hafiza-textarea" rows="18" placeholder="// Kodunuzu buraya yazın"></textarea>
           </section>
 
           <section class="motor-page" id="page-ses" hidden>
-            <h3>Ses Motoru Stüdyo</h3>
+            <div class="atelier-info-strip">
+              <span class="phase-badge">Faz 4</span>
+              <span class="atelier-promise">
+                <strong>Ses Atölyesi</strong> — yakında: WaveSurfer dalga formu, kayıt, EQ, gürültü temizleme,
+                Whisper STT, Edge-TTS, format dönüştürme.
+              </span>
+            </div>
+            <h3>Ses Motoru — Stüdyo</h3>
             <input id="audio-file-input" type="file" accept=".mp3,.wav,audio/*" />
             <audio id="audio-preview" controls style="width: 100%; margin-top: 8px"></audio>
             <div class="mini-card">Dalga formu alanı (demo): ▂▃▅▇▆▃▂</div>
