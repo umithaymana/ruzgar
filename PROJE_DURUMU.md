@@ -13,6 +13,7 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 - **Genel hafıza (`ruzgar_genel_hafiza.json`):** `HafizaIRuzgar` dosyayı RAM’e alır; fuzzy + token kapsaması ile eşleşme arar. `chat_core.prepare_turn` içinde **ilk bakılan yer** burasıdır; cevap bulunursa çoğu zaman tur burada biter (RAG/web/LLM’e çıkmadan).
 - **RAG / İlim hazinesi (`rag_store`, `knowledge/`):** Yerel bilgi parçaları + gömme önbelleği; `main_engine` ile arşiv önceliği ve güçlü eşleşmede doğrudan pasaj yolu mümkün.
 - **Kritik anahtar — `RUZGAR_MAIN_ONLY_GENEL_HAFIZA`:** Kod varsayılanı artık **tam güç** (`0`). **`1` yapılırsa** `genel` modda JSON eşleşmezse yalnızca “öğrenmedim” yanıtı; RAG/web/LLM kapalı. Dar mod isteyenler ortamda `=1` kullanır.
+- **Genel hafıza:** JSON’da yanlış fuzzy eşleşmeyle «henüz öğrenmedim» dönmesin diye bu metin **anında cevap olarak kullanılmıyor**; akış LLM’e devam eder (`chat_core.try_genel_hafiza_reply`).
 - **Tam boru hattı:** Kısıt kapalıyken sıra tipik olarak: genel hafıza → (yoksa) RAG parçaları + isteğe bağlı web/bağlantı + Ollama ile üretim.
 
 ## İlk ne yapılmalı — yardımcı motorları ana motora ne zaman bağlarız?

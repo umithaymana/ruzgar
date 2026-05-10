@@ -180,7 +180,10 @@ def _genel_only_unknown_reply() -> str:
 def try_genel_hafiza_reply(message: str, mode: str) -> str | None:
     """
     Ana motor için `ruzgar_genel_hafiza.json` merkezi sözlüğü.
-    Eşleşmede (tam / norm / RUZGAR_GENEL_HAFIZA_MIN_SIM) RAG, web ve LLM çalışmaz.
+    Eşleşmede (tam / norm / fuzzy) RAG, web ve LLM çalışmaz.
+
+    «Bilinmeyen» yer tutucu cevap JSON’da yanlışlıkla eşleşirse veya tam güç
+    isteniyorsa LLM’e düşsün diye bu metin **anında cevap sayılmaz** (None döner).
 
     Kapatmak için: ENABLE_RUZGAR_GENEL_HAFIZA=0 veya ENABLE_OGRENME_MERKEZI=0
     """
@@ -189,9 +192,14 @@ def try_genel_hafiza_reply(message: str, mode: str) -> str | None:
     if not msg or len(msg) > 4000:
         return None
     try:
-        from ilim_assistant.hafiza_i_ruzgar import genel_hafiza_lookup
+        from ilim_assistant.hafiza_i_ruzgar import HafizaIRuzgar, genel_hafiza_lookup
 
-        return genel_hafiza_lookup(msg)
+        ans = genel_hafiza_lookup(msg)
+        if ans is None:
+            return None
+        if (ans or "").strip() == HafizaIRuzgar.BILINMEYEN_YANIT.strip():
+            return None
+        return ans
     except Exception:
         return None
 
