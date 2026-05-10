@@ -63,8 +63,8 @@ def message_calls_wake_name(message: str) -> bool:
 
 
 # Yerel arama + web yok: daha az GPU/CPU (masaüstü modları)
-_NO_RAG_MODES = frozenset({"ses", "okuma", "uretim", "video", "hizli"})
-_NOWEB_MODES = frozenset({"ses", "okuma", "uretim", "hizli"})
+_NO_RAG_MODES = frozenset({"ses", "okuma", "tercume", "uretim", "video", "hizli"})
+_NOWEB_MODES = frozenset({"ses", "okuma", "tercume", "uretim", "hizli"})
 
 # İstemciden Türkçe karakterli veya ASCII mod adı gelebilir
 _MODE_ALIASES = {
@@ -72,6 +72,7 @@ _MODE_ALIASES = {
     "gelişim": "gelisim",
     "düzen": "duzen",
     "hızlı": "hizli",
+    "tercüme": "tercume",
 }
 
 
@@ -294,7 +295,7 @@ def _weather_follow_up(msg: str, history: list | None) -> bool:
 
 
 # Hızlı modlar: kısa bağlam = daha az token, daha hızlı üretim
-_HISTORY_FAST_MODES = frozenset({"hizli", "ses", "okuma", "uretim", "video"})
+_HISTORY_FAST_MODES = frozenset({"hizli", "ses", "okuma", "tercume", "uretim", "video"})
 
 
 def _history_msg_cap(mode: str) -> int:
@@ -611,7 +612,7 @@ def prepare_turn(
         session_wake_already_done=session_wake_used,
     )
 
-    system = pick_system(coding_mode)
+    system = pick_system(coding_mode, m)
     model = resolve_model(coding_mode)
     return msg, hits, user_payload, system, model, None
 

@@ -278,6 +278,27 @@ const el = {
   btnIlimOpenArchive: document.getElementById("btn-ilim-open-archive"),
   ilimStats: document.getElementById("ilim-stats"),
   ilimActiveFile: document.getElementById("ilim-active-file"),
+  tercumeFileList: document.getElementById("tercume-file-list"),
+  tercumeSource: document.getElementById("tercume-source"),
+  tercumeTarget: document.getElementById("tercume-target"),
+  tercumeSrcLang: document.getElementById("tercume-src-lang"),
+  tercumeTgtLang: document.getElementById("tercume-tgt-lang"),
+  btnTercumeRefresh: document.getElementById("btn-tercume-refresh"),
+  btnTercumeOpenArchive: document.getElementById("btn-tercume-open-archive"),
+  btnTercumeTranslate: document.getElementById("btn-tercume-translate"),
+  btnTercumeLastToTarget: document.getElementById("btn-tercume-last-to-target"),
+  btnTercumeSourceToChat: document.getElementById("btn-tercume-source-to-chat"),
+  btnTercumeClear: document.getElementById("btn-tercume-clear"),
+  tercumeStats: document.getElementById("tercume-stats"),
+  tercumeActiveFile: document.getElementById("tercume-active-file"),
+  sesSttLang: document.getElementById("ses-stt-lang"),
+  btnSesStt: document.getElementById("btn-ses-stt"),
+  sesSttHint: document.getElementById("ses-stt-hint"),
+  sesTranscript: document.getElementById("ses-transcript"),
+  btnSesToChat: document.getElementById("btn-ses-to-chat"),
+  btnSesSpeak: document.getElementById("btn-ses-speak"),
+  btnSesClear: document.getElementById("btn-ses-clear"),
+  sesSttMeta: document.getElementById("ses-stt-meta"),
   videoFileInput: document.getElementById("video-file-input"),
   videoPreview: document.getElementById("video-preview"),
   audioFileInput: document.getElementById("audio-file-input"),
@@ -310,6 +331,10 @@ let atolyeOpenRel = null;
 
 /** Okuma Atölyesi — İlim arşivinde seçili dosya */
 let ilimOpenRel = null;
+/** Tercüme Atölyesi — kaynak dosya */
+let tercumeOpenRel = null;
+/** Ses önizleme blob URL — yeniden seçimde iptal */
+let sesPreviewObjectUrl = null;
 const OKUMA_ARSIV_ROOT = "ilim-assistant/arsiv";
 
 async function workspaceListDir(rel) {
@@ -574,7 +599,7 @@ function applyModeToUI() {
     if (currentMode === "hafiza") el.code.checked = false;
   }
   if (el.web) {
-    if (["ses", "okuma", "uretim", "hizli", "hafiza"].includes(currentMode)) {
+    if (["ses", "okuma", "tercume", "uretim", "hizli", "hafiza"].includes(currentMode)) {
       el.web.checked = false;
     } else {
       el.web.checked = true;
@@ -584,6 +609,12 @@ function applyModeToUI() {
   if (currentMode === "okuma") {
     el.input.placeholder =
       "Kültür ve İlim Hazinesi: metni yapıştırın; arsiv/ altındaki dört külliyata PDF/TXT ekleyip indeks: python -m ilim_assistant.arsiv_indexle";
+  } else if (currentMode === "tercume") {
+    el.input.placeholder =
+      "İsterseniz çeviriyi buradan da yazın; sol panel «Çevir» ile daha yapılandırılmış gönderir.";
+  } else if (currentMode === "ses") {
+    el.input.placeholder =
+      "Ses motorunda transkripti panelden sohbete aktarabilir veya doğrudan soru yazabilirsiniz.";
   } else {
     el.input.placeholder =
       "Soru yazın veya yapıştırın — Web açıkken arama + okuma; doğrudan https:// bağlantısı da okunur.";
@@ -668,11 +699,13 @@ function synthEdgeMp3ViaWorker(apiRoot, text, karakter, signal, emotion) {
 
 function showThinkingCenter(titleText) {
   if (el.thinkingTitle) {
-    el.thinkingTitle.textContent =
+    el.    thinkingTitle.textContent =
       titleText ||
       (currentMode === "okuma"
         ? "İlim Hazinesi taranıyor…"
-        : "Rüzgar düşünüyor…");
+        : currentMode === "tercume"
+          ? "Çeviri için düşünülüyor…"
+          : "Rüzgar düşünüyor…");
   }
   if (el.thinkingOverlay) {
     el.thinkingOverlay.hidden = false;
@@ -748,8 +781,10 @@ function switchMode(mode) {
       "Programlama motoru açıldı; Faz 1.3 — proje köküne göre çalıştırma, kod yardımcısı üretim modu.",
     hafiza:
       "Hafıza motoru açıldı; bu motorla gelişim ve hafıza teknikleri üzerinde çalışabilirsiniz.",
-    ses: "Ses motoru açıldı; stüdyo Faz 4'te tam aktif.",
-    tercume: "Tercüme motoru açıldı; ofis paneli Faz 3'te tam aktif.",
+    ses:
+      "Ses motoru — Stüdyo: dosya + Whisper STT, transkript; Edge veya tarayıcıdan seslendirme.",
+    tercume:
+      "Tercüme motoru — Ofis paneli: arşiv + iki kolon; Çevir ile Rüzgar’a yapılandırılmış istek.",
   };
   setHeaderMotorDeclaration(motorDeclarationByMode[currentMode] || "");
   clearMotorDeclarations();
@@ -800,6 +835,8 @@ function updateDynamicWorkbench() {
   }
   if (currentMode === "hafiza") void loadHafizaJsonView();
   if (currentMode === "okuma") void loadIlimFileList();
+  if (currentMode === "tercume") void loadTercumeFileList();
+  if (currentMode === "ses") void refreshSesSttHint();
   if (currentMode === "programlama") {
     updateProgramlamaActiveFileLabel();
     void programlamaAtolyeRefreshRoot();
@@ -1080,9 +1117,9 @@ function updateIlimTextStats() {
   el.ilimStats.textContent = `${chars.toLocaleString("tr-TR")} karakter · ${words.toLocaleString("tr-TR")} kelime`;
 }
 
-async function handleOkumaTreeClick(ev) {
+async function handleArsivTreeClick(ev, listEl, onOpenFile) {
   const row = ev.target.closest(".code-tree-row");
-  if (!row || !el.ilimFileList || !el.ilimFileList.contains(row)) return;
+  if (!row || !listEl || !listEl.contains(row)) return;
   ev.preventDefault();
   const rel = row.dataset.rel;
   if (!rel) return;
@@ -1119,7 +1156,7 @@ async function handleOkumaTreeClick(ev) {
   }
 
   if (row.classList.contains("file")) {
-    void openOkumaArsivFile(rel);
+    void onOpenFile(rel);
   }
 }
 
@@ -1140,30 +1177,286 @@ async function openOkumaArsivFile(rel) {
   }
 }
 
-async function okumaAtolyeRefreshTree() {
-  if (!el.ilimFileList) return;
-  el.ilimFileList.innerHTML = `<div class="code-tree-loading">${esc("Yükleniyor…")}</div>`;
+async function openTercumeArsivFile(rel) {
+  try {
+    const text = await readArchiveFileForOkuma(rel);
+    tercumeOpenRel = rel;
+    if (el.tercumeSource) el.tercumeSource.value = text;
+    updateTercumeActiveFileLabel();
+    updateTercumeTextStats();
+    flashRuzgarDurum(`Kaynak yüklendi: ${rel}`);
+    el.tercumeSource?.focus();
+  } catch (e) {
+    if (el.tercumeSource) {
+      el.tercumeSource.value = `(okunamadı: ${e && e.message ? e.message : String(e)})`;
+    }
+    flashRuzgarDurum("Dosya okunamadı.");
+  }
+}
+
+function updateTercumeActiveFileLabel() {
+  if (!el.tercumeActiveFile) return;
+  el.tercumeActiveFile.textContent = tercumeOpenRel
+    ? `Kaynak: ${tercumeOpenRel}`
+    : "Kaynak: (sol listeden dosya seçin)";
+}
+
+function updateTercumeTextStats() {
+  if (!el.tercumeStats) return;
+  const t = String(el.tercumeSource?.value || "");
+  const chars = t.length;
+  const words = t.replace(/\s+/g, " ").trim() ? t.trim().split(/\s+/).length : 0;
+  el.tercumeStats.textContent = `${chars.toLocaleString("tr-TR")} karakter · ${words.toLocaleString("tr-TR")} kelime (kaynak)`;
+}
+
+async function tercumeAtolyeRefreshTree() {
+  await refreshArsivTreeInto(el.tercumeFileList);
+}
+
+async function loadTercumeFileList() {
+  updateTercumeActiveFileLabel();
+  updateTercumeTextStats();
+  await tercumeAtolyeRefreshTree();
+}
+
+async function sendTercumeTranslatePrompt() {
+  const raw = String(el.tercumeSource?.value || "").trim();
+  if (!raw) {
+    flashRuzgarDurum("Önce kaynak metin girin veya soldan dosya açın.");
+    return;
+  }
+  const chunk =
+    raw.length > 28000 ? `${raw.slice(0, 28000)}\n\n… (mimar için kısaltıldı)` : raw;
+  const srcLabel = el.tercumeSrcLang?.selectedOptions?.[0]?.textContent?.trim() || "Otomatik";
+  const tgtLabel = el.tercumeTgtLang?.selectedOptions?.[0]?.textContent?.trim() || "İngilizce";
+  const fileNote = tercumeOpenRel ? `\n[Kaynak dosya: ${tercumeOpenRel}]\n` : "";
+  const msg = `${fileNote}Ümit abi, tercüme atölyesinden iletiyorum.
+
+Kaynak dil: ${srcLabel}
+Hedef dil: ${tgtLabel}
+
+Yalnızca hedef dilde tam çeviriyi ver; uzun giriş veya genel özet yazma. Gerekirse hassas terimler için çok kısa dipnot kullan.
+
+---
+
+${chunk}`;
+  flashRuzgarDurum("Rüzgar’a iletiliyor…");
+  await sendMessageWithText(msg, { skipUserBubble: false });
+}
+
+function wireTercumeAtolye() {
+  if (el.tercumeFileList && el.tercumeFileList.dataset.tercumeWired !== "1") {
+    el.tercumeFileList.dataset.tercumeWired = "1";
+    el.tercumeFileList.addEventListener("click", (ev) => {
+      void handleArsivTreeClick(ev, el.tercumeFileList, openTercumeArsivFile);
+    });
+  }
+  if (el.btnTercumeRefresh) {
+    el.btnTercumeRefresh.addEventListener("click", () => {
+      void tercumeAtolyeRefreshTree();
+      flashRuzgarDurum("Kaynak listesi yenilendi.");
+    });
+  }
+  if (el.btnTercumeOpenArchive) {
+    el.btnTercumeOpenArchive.addEventListener("click", () => {
+      if (window.ruzgarApi?.openWorkspaceRel) {
+        void window.ruzgarApi.openWorkspaceRel("ilim-assistant/arsiv");
+        flashRuzgarDurum("Arşiv klasörü açılıyor…");
+      } else {
+        flashRuzgarDurum("Klasörü açmak için masaüstü Rüzgar kullanın.");
+      }
+    });
+  }
+  if (el.btnTercumeTranslate) {
+    el.btnTercumeTranslate.addEventListener("click", () => {
+      void sendTercumeTranslatePrompt();
+    });
+  }
+  if (el.btnTercumeLastToTarget) {
+    el.btnTercumeLastToTarget.addEventListener("click", () => {
+      const t = String(lastAssistantReply || "").trim();
+      if (!t) {
+        flashRuzgarDurum("Henüz sohbette bir Rüzgar yanıtı yok.");
+        return;
+      }
+      if (el.tercumeTarget) el.tercumeTarget.value = t;
+      flashRuzgarDurum("Son yanıt hedef panele yazıldı.");
+      el.tercumeTarget?.focus();
+    });
+  }
+  if (el.btnTercumeSourceToChat) {
+    el.btnTercumeSourceToChat.addEventListener("click", () => {
+      const t = String(el.tercumeSource?.value || "").trim();
+      if (!t) {
+        flashRuzgarDurum("Kaynak metin boş.");
+        return;
+      }
+      const chunk = t.length > 12000 ? `${t.slice(0, 12000)}\n\n… (kısaltıldı)` : t;
+      if (el.input) {
+        el.input.value = chunk;
+        el.input.focus();
+        flashRuzgarDurum("Kaynak sohbet kutusuna aktarıldı.");
+      }
+    });
+  }
+  if (el.btnTercumeClear) {
+    el.btnTercumeClear.addEventListener("click", () => {
+      if (el.tercumeSource) el.tercumeSource.value = "";
+      if (el.tercumeTarget) el.tercumeTarget.value = "";
+      tercumeOpenRel = null;
+      updateTercumeActiveFileLabel();
+      updateTercumeTextStats();
+      flashRuzgarDurum("Paneller temizlendi.");
+    });
+  }
+  if (el.tercumeSource) {
+    el.tercumeSource.addEventListener("input", () => updateTercumeTextStats());
+  }
+}
+
+async function refreshSesSttHint() {
+  if (!el.sesSttHint) return;
+  try {
+    const r = await fetch(`${API}/api/health`, { method: "GET" });
+    if (!r.ok) throw new Error("no-health");
+    const j = await r.json();
+    if (j.stt) {
+      el.sesSttHint.textContent =
+        "Yerel Whisper hazır (desktop_server). Dosya seçip «Metne dök» deyin; bağımlılık: faster-whisper.";
+    } else {
+      el.sesSttHint.textContent =
+        "STT kapalı (health.stt=false). Kurulum: pip install faster-whisper — ardından sunucuyu yeniden başlatın.";
+    }
+  } catch {
+    el.sesSttHint.textContent =
+      "API yok — «Metne dök» için ilim-assistant desktop_server çalışır olmalı.";
+  }
+}
+
+async function runSesSttFromFile() {
+  const f = el.audioFileInput?.files?.[0];
+  if (!f) {
+    flashRuzgarDurum("Önce bir ses dosyası seçin.");
+    return;
+  }
+  const langRaw = String(el.sesSttLang?.value || "tr").trim();
+  const fd = new FormData();
+  fd.append("file", f, f.name || "audio.webm");
+  flashRuzgarDurum("Metne dökülüyor…");
+  setStatus("STT…", "Rüzgar");
+  try {
+    const q = langRaw === "auto" ? "auto" : encodeURIComponent(langRaw);
+    const res = await fetch(`${API}/api/stt?lang=${q}`, { method: "POST", body: fd });
+    let j = {};
+    try {
+      j = await res.json();
+    } catch {
+      j = {};
+    }
+    if (!res.ok) {
+      let detail = j.detail;
+      if (Array.isArray(detail)) {
+        detail = detail.map((x) => (x && x.msg ? x.msg : JSON.stringify(x))).join("; ");
+      } else if (detail != null && typeof detail !== "string") {
+        detail = JSON.stringify(detail);
+      }
+      flashRuzgarDurum(String(detail || res.statusText || "STT başarısız"));
+      setStatus("Hazır", "Rüzgar");
+      return;
+    }
+    const text = String(j.text ?? "").trim();
+    if (el.sesTranscript) el.sesTranscript.value = text;
+    if (el.sesSttMeta) {
+      el.sesSttMeta.textContent =
+        j.language != null && String(j.language).length ? `Algılanan dil: ${j.language}` : "";
+    }
+    flashRuzgarDurum(text ? "Transkript hazır." : "Boş sonuç döndü.");
+    setStatus("Hazır", "Rüzgar");
+    el.sesTranscript?.focus();
+  } catch (e) {
+    flashRuzgarDurum(e && e.message ? e.message : String(e));
+    setStatus("Hazır", "Rüzgar");
+  }
+}
+
+function wireSesAtolye() {
+  if (el.audioFileInput && el.audioPreview && el.audioFileInput.dataset.sesWired !== "1") {
+    el.audioFileInput.dataset.sesWired = "1";
+    el.audioFileInput.addEventListener("change", () => {
+      const f = el.audioFileInput.files && el.audioFileInput.files[0];
+      if (!f) return;
+      try {
+        if (sesPreviewObjectUrl) URL.revokeObjectURL(sesPreviewObjectUrl);
+      } catch (_) {
+        /* ignore */
+      }
+      sesPreviewObjectUrl = URL.createObjectURL(f);
+      el.audioPreview.src = sesPreviewObjectUrl;
+      if (el.sesSttMeta) el.sesSttMeta.textContent = "";
+    });
+  }
+  if (el.btnSesStt) {
+    el.btnSesStt.addEventListener("click", () => {
+      void runSesSttFromFile();
+    });
+  }
+  if (el.btnSesToChat) {
+    el.btnSesToChat.addEventListener("click", () => {
+      const t = String(el.sesTranscript?.value || "").trim();
+      if (!t) {
+        flashRuzgarDurum("Transkript boş.");
+        return;
+      }
+      const chunk = t.length > 12000 ? `${t.slice(0, 12000)}\n\n… (kısaltıldı)` : t;
+      if (el.input) {
+        el.input.value = chunk;
+        el.input.focus();
+        flashRuzgarDurum("Metin sohbet kutusuna aktarıldı.");
+      }
+    });
+  }
+  if (el.btnSesSpeak) {
+    el.btnSesSpeak.addEventListener("click", () => {
+      void speakStudioTranscript(el.sesTranscript?.value || "");
+    });
+  }
+  if (el.btnSesClear) {
+    el.btnSesClear.addEventListener("click", () => {
+      if (el.sesTranscript) el.sesTranscript.value = "";
+      if (el.sesSttMeta) el.sesSttMeta.textContent = "";
+      flashRuzgarDurum("Transkript temizlendi.");
+    });
+  }
+}
+
+async function refreshArsivTreeInto(containerEl) {
+  if (!containerEl) return;
+  containerEl.innerHTML = `<div class="code-tree-loading">${esc("Yükleniyor…")}</div>`;
   try {
     const items = await workspaceListDir(OKUMA_ARSIV_ROOT);
-    el.ilimFileList.innerHTML = "";
+    containerEl.innerHTML = "";
     for (const it of items) {
-      el.ilimFileList.appendChild(createCodeTreeBranch(it, 0));
+      containerEl.appendChild(createCodeTreeBranch(it, 0));
     }
     if (!items.length) {
-      el.ilimFileList.innerHTML =
+      containerEl.innerHTML =
         `<div class="code-file-placeholder">Arşiv boş veya klasör yok. Klasörü oluşturun: <code>ilim-assistant/arsiv</code> — içine .md / .txt ekleyin.</div>`;
     }
   } catch (e) {
-    el.ilimFileList.innerHTML =
+    containerEl.innerHTML =
       `<div class="code-file-placeholder">Arşiv listelenemedi: ${esc(String(e && e.message ? e.message : e))}</div>`;
   }
+}
+
+async function okumaAtolyeRefreshTree() {
+  await refreshArsivTreeInto(el.ilimFileList);
 }
 
 function wireOkumaAtolye() {
   if (el.ilimFileList && el.ilimFileList.dataset.okumaWired !== "1") {
     el.ilimFileList.dataset.okumaWired = "1";
     el.ilimFileList.addEventListener("click", (ev) => {
-      void handleOkumaTreeClick(ev);
+      void handleArsivTreeClick(ev, el.ilimFileList, openOkumaArsivFile);
     });
   }
   if (el.btnIlimRefresh) {
@@ -1326,6 +1619,8 @@ function wireDynamicWorkbench() {
   if (el.btnLayoutSplit4) el.btnLayoutSplit4.addEventListener("click", () => setWorkbenchLayout("layout-split4"));
   wireProgrammingWorkbench();
   wireOkumaAtolye();
+  wireTercumeAtolye();
+  wireSesAtolye();
   if (el.btnHafizaSave) {
     // Click event köprüsü: analiz satırlarını kalıcı hafızaya yazar.
     el.btnHafizaSave.addEventListener("click", (ev) => {
@@ -1409,13 +1704,6 @@ function wireDynamicWorkbench() {
       const f = el.videoFileInput.files && el.videoFileInput.files[0];
       if (!f) return;
       el.videoPreview.src = URL.createObjectURL(f);
-    });
-  }
-  if (el.audioFileInput && el.audioPreview) {
-    el.audioFileInput.addEventListener("change", () => {
-      const f = el.audioFileInput.files && el.audioFileInput.files[0];
-      if (!f) return;
-      el.audioPreview.src = URL.createObjectURL(f);
     });
   }
 }
@@ -2860,7 +3148,7 @@ async function streamChat(userText) {
   const body = {
     message: userText,
     history: chatHistory,
-    use_web: el.web ? !!el.web.checked : !["ses", "okuma", "hafiza", "hizli"].includes(currentMode),
+    use_web: el.web ? !!el.web.checked : !["ses", "okuma", "tercume", "hafiza", "hizli"].includes(currentMode),
     read_message_links:
       el.linkRead == null ? true : !!el.linkRead.checked,
     fetch_pages: Number.parseInt(String(el.fetchN?.value ?? "0"), 10) || 0,
@@ -3803,6 +4091,48 @@ async function speakLast() {
     setStatus("Hazır");
     syncInterruptButton();
   };
+}
+
+/** Ses atölyesi transkriptini Edge TTS ile (varsa) veya Web Speech ile okur. */
+async function speakStudioTranscript(raw) {
+  const plain = ttsPlainForSpeech(raw || "");
+  if (!plain) {
+    flashRuzgarDurum("Seslendirilecek metin yok.");
+    return;
+  }
+  let kar = "asistan";
+  try {
+    const rs = await fetch(`${API}/api/ses/settings`);
+    if (rs.ok) {
+      const j = await rs.json();
+      kar = normalizeKarakterForTts(j.karakter);
+    }
+  } catch (_) {
+    /* ignore */
+  }
+  try {
+    const res = await fetch(`${API}/api/tts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: plain,
+        karakter: kar,
+        backend: "edge",
+        ...(lastVoiceEmotion && lastVoiceEmotion !== "notr"
+          ? { emotion: lastVoiceEmotion }
+          : {}),
+      }),
+    });
+    if (res.ok) {
+      const blob = await res.blob();
+      await playTtsBlob(blob);
+      setStatus("Hazır");
+      return;
+    }
+  } catch (_) {
+    /* Edge yok */
+  }
+  speakTextImmediate(plain);
 }
 
 function speakTextImmediate(text) {

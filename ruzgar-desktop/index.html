@@ -76,7 +76,7 @@
             <span class="motor-glyph">♪</span>
             <span class="motor-text">
               <span class="motor-name">SES MOTORU</span>
-              <span class="motor-tag">Stüdyo · Faz 4</span>
+              <span class="motor-tag">Stüdyo · tamam</span>
             </span>
           </button>
           <button type="button" class="motor-item" data-mode="video" id="motor-side-video">
@@ -97,7 +97,7 @@
             <span class="motor-glyph">⇄</span>
             <span class="motor-text">
               <span class="motor-name">TERCÜME MOTORU</span>
-              <span class="motor-tag">Ofis · Faz 3</span>
+              <span class="motor-tag">Ofis · tamam</span>
             </span>
           </button>
           <button type="button" class="motor-item" data-mode="programlama" id="motor-side-programlama">
@@ -223,7 +223,7 @@
                 <div class="motors-overview-card"><span class="ovx-phase">Faz 0</span><span class="ovx-name">UI iskeleti</span><span class="ovx-status ovx-done">tamam</span></div>
                 <div class="motors-overview-card"><span class="ovx-phase">Faz 1</span><span class="ovx-name">Programlama</span><span class="ovx-status ovx-done">1.3 tamam</span></div>
                 <div class="motors-overview-card"><span class="ovx-phase">Faz 2</span><span class="ovx-name">Okuma</span><span class="ovx-status ovx-done">tamam</span></div>
-                <div class="motors-overview-card"><span class="ovx-phase">Faz 3</span><span class="ovx-name">Tercüme</span><span class="ovx-status ovx-now">sırada</span></div>
+                <div class="motors-overview-card"><span class="ovx-phase">Faz 3</span><span class="ovx-name">Tercüme</span><span class="ovx-status ovx-done">tamam</span></div>
                 <div class="motors-overview-card"><span class="ovx-phase">Faz 4</span><span class="ovx-name">Ses</span><span class="ovx-status">sırada</span></div>
                 <div class="motors-overview-card"><span class="ovx-phase">Faz 5</span><span class="ovx-name">Video</span><span class="ovx-status">sırada</span></div>
                 <div class="motors-overview-card"><span class="ovx-phase">Faz 6</span><span class="ovx-name">Ana Motor akıl</span><span class="ovx-status">sırada</span></div>
@@ -321,21 +321,90 @@
 
           <section class="motor-page" id="page-tercume" hidden>
             <div class="atelier-info-strip">
-              <span class="phase-badge">Faz 3</span>
+              <span class="phase-badge">Faz 3 ✓</span>
               <span class="atelier-promise">
-                <strong>Tercüme Atölyesi</strong> — yakında: çoklu format (TXT, DOCX, PDF, HTML), sol kaynak / sağ
-                hedef paneli, cümle eşleştirme, terim sözlüğü, çevrim dışı tercüme.
+                <strong>Tercüme Atölyesi</strong> — İlim arşivinden <strong>TXT / PDF / DOCX</strong> kaynak yükleme,
+                kaynak ↔ hedef paneller, dil seçimi, <strong>Rüzgar’a çevirt</strong>, son yanıtı hedefe al ve sohbete aktar.
+                Terim sözlüğü ve çevrim dışı motor ileride.
               </span>
             </div>
             <h3>Tercüme Motoru — Ofis Paneli</h3>
-            <div class="atelier-stub">
-              <p>
-                Bu atölye Faz 3'te açılacak. Şimdilik kaynak ve hedef metinleri için iki kolon önizlemesi
-                hazırlandı; gerçek çeviri motoru ve dosya açma araçları sonraki adımda eklenecek.
-              </p>
-              <div class="library-grid">
-                <textarea class="hafiza-textarea" rows="14" placeholder="Kaynak metin (Türkçe/İngilizce/Arapça…)" disabled></textarea>
-                <textarea class="hafiza-textarea" rows="14" placeholder="Hedef dile çeviri burada görünecek" disabled></textarea>
+            <div class="tercume-workbench">
+              <aside class="okuma-sidebar">
+                <div class="code-sidebar-head okuma-sidebar-head">
+                  <span>Kaynak dosyalar</span>
+                  <div class="okuma-sidebar-btns">
+                    <button type="button" class="btn-secondary btn-compact" id="btn-tercume-open-archive" title="ilim-assistant/arsiv klasörünü aç">
+                      Klasör
+                    </button>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-tercume-refresh" title="Listeyi yenile">
+                      Yenile
+                    </button>
+                  </div>
+                </div>
+                <div id="tercume-file-list" class="code-file-tree okuma-file-tree"></div>
+              </aside>
+              <div class="tercume-main">
+                <div class="tercume-toolbar">
+                  <label class="tercume-lang-label">
+                    Kaynak
+                    <select id="tercume-src-lang" class="tercume-lang-select" aria-label="Kaynak dil">
+                      <option value="auto">Otomatik</option>
+                      <option value="tr">Türkçe</option>
+                      <option value="en">İngilizce</option>
+                      <option value="ar">Arapça</option>
+                      <option value="de">Almanca</option>
+                      <option value="fr">Fransızca</option>
+                      <option value="fa">Farsça</option>
+                      <option value="ru">Rusça</option>
+                    </select>
+                  </label>
+                  <span class="tercume-arrow" aria-hidden="true">⇄</span>
+                  <label class="tercume-lang-label">
+                    Hedef
+                    <select id="tercume-tgt-lang" class="tercume-lang-select" aria-label="Hedef dil">
+                      <option value="tr">Türkçe</option>
+                      <option value="en" selected>İngilizce</option>
+                      <option value="ar">Arapça</option>
+                      <option value="de">Almanca</option>
+                      <option value="fr">Fransızca</option>
+                      <option value="fa">Farsça</option>
+                      <option value="ru">Rusça</option>
+                    </select>
+                  </label>
+                  <button type="button" class="btn-primary btn-compact" id="btn-tercume-translate" title="Kaynak metni Rüzgar’a çevirt">
+                    Çevir
+                  </button>
+                  <button type="button" class="btn-secondary btn-compact" id="btn-tercume-last-to-target" title="Sohbetteki son Rüzgar yanıtını hedef panele">
+                    Son yanıt → hedef
+                  </button>
+                  <button type="button" class="btn-secondary btn-compact" id="btn-tercume-source-to-chat">
+                    Kaynağı sohbete
+                  </button>
+                  <button type="button" class="btn-secondary btn-compact" id="btn-tercume-clear">Temizle</button>
+                  <span class="code-active-path okuma-active-path" id="tercume-active-file">Kaynak: (sol listeden dosya seçin)</span>
+                </div>
+                <div class="tercume-panels">
+                  <div class="tercume-panel">
+                    <div class="tercume-panel-head">Kaynak metin</div>
+                    <textarea
+                      id="tercume-source"
+                      class="hafiza-textarea okuma-textarea tercume-textarea"
+                      rows="14"
+                      placeholder="Sol listeden dosya açın veya metni yapıştırın."
+                    ></textarea>
+                  </div>
+                  <div class="tercume-panel">
+                    <div class="tercume-panel-head">Hedef metin</div>
+                    <textarea
+                      id="tercume-target"
+                      class="hafiza-textarea okuma-textarea tercume-textarea"
+                      rows="14"
+                      placeholder="Çeviri sohbette akar; «Son yanıt → hedef» ile buraya alın veya elle düzenleyin."
+                    ></textarea>
+                  </div>
+                </div>
+                <div class="okuma-footer-stats" id="tercume-stats">0 karakter · 0 kelime (kaynak)</div>
               </div>
             </div>
           </section>
@@ -422,16 +491,52 @@
 
           <section class="motor-page" id="page-ses" hidden>
             <div class="atelier-info-strip">
-              <span class="phase-badge">Faz 4</span>
+              <span class="phase-badge">Faz 4 ✓</span>
               <span class="atelier-promise">
-                <strong>Ses Atölyesi</strong> — yakında: WaveSurfer dalga formu, kayıt, EQ, gürültü temizleme,
-                Whisper STT, Edge-TTS, format dönüştürme.
+                <strong>Ses Atölyesi</strong> — yerel dosya önizleme, <strong>Whisper STT</strong> (desktop_server),
+                transkript düzenleme, <strong>sohbete aktar</strong>, <strong>Edge / tarayıcı seslendirme</strong>.
+                Dalga formu, EQ ve FFmpeg dönüştürme sonraki adım.
               </span>
             </div>
             <h3>Ses Motoru — Stüdyo</h3>
-            <input id="audio-file-input" type="file" accept=".mp3,.wav,audio/*" />
-            <audio id="audio-preview" controls style="width: 100%; margin-top: 8px"></audio>
-            <div class="mini-card">Dalga formu alanı (demo): ▂▃▅▇▆▃▂</div>
+            <div class="ses-workbench">
+              <div class="ses-col ses-col-file">
+                <h4 class="ses-section-title">Ses dosyası</h4>
+                <label class="ses-file-label" for="audio-file-input">Dosya seç (.mp3, .wav, .webm, …)</label>
+                <input id="audio-file-input" type="file" accept=".mp3,.wav,.webm,.ogg,.m4a,.mp4,audio/*" />
+                <audio id="audio-preview" class="ses-audio-preview" controls preload="metadata"></audio>
+                <div class="ses-stt-row">
+                  <label class="ses-lang-label">
+                    STT dili
+                    <select id="ses-stt-lang" class="ses-lang-select" aria-label="Whisper dil">
+                      <option value="auto">Otomatik</option>
+                      <option value="tr" selected>Türkçe</option>
+                      <option value="en">İngilizce</option>
+                      <option value="ar">Arapça</option>
+                      <option value="de">Almanca</option>
+                    </select>
+                  </label>
+                  <button type="button" class="btn-primary btn-compact" id="btn-ses-stt">Metne dök</button>
+                </div>
+                <p id="ses-stt-hint" class="ses-hint"></p>
+              </div>
+              <div class="ses-col ses-col-transcript">
+                <h4 class="ses-section-title">Transkript</h4>
+                <div class="ses-toolbar">
+                  <button type="button" class="btn-secondary btn-compact" id="btn-ses-to-chat">Sohbete aktar</button>
+                  <button type="button" class="btn-primary btn-compact" id="btn-ses-speak">Metni seslendir</button>
+                  <button type="button" class="btn-secondary btn-compact" id="btn-ses-clear">Temizle</button>
+                  <span class="ses-meta" id="ses-stt-meta"></span>
+                </div>
+                <textarea
+                  id="ses-transcript"
+                  class="hafiza-textarea ses-transcript-area"
+                  rows="16"
+                  spellcheck="true"
+                  placeholder="«Metne dök» ile Whisper çıktısı buraya gelir; düzenleyip sohbete veya seslendirmeye gönderebilirsiniz."
+                ></textarea>
+              </div>
+            </div>
           </section>
         </div>
       </main>

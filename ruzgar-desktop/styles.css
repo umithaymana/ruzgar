@@ -1014,6 +1014,169 @@ body {
   min-height: 0;
 }
 
+/* Tercüme Atölyesi — Faz 3 */
+.tercume-workbench {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 10px;
+  height: calc(100% - 92px);
+  min-height: 0;
+}
+.tercume-main {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid #3c3c3c;
+  border-radius: 7px;
+  background: #1e1e1e;
+  overflow: hidden;
+}
+.tercume-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 10px;
+  border-bottom: 1px solid #343434;
+  background: #252526;
+}
+.tercume-lang-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #aaa;
+}
+.tercume-lang-select {
+  max-width: 140px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #454545;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  font-size: 12px;
+}
+.tercume-arrow {
+  color: #858585;
+  font-size: 14px;
+  user-select: none;
+}
+.tercume-panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  flex: 1;
+  min-height: 0;
+}
+.tercume-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid #343434;
+}
+.tercume-panel:last-child {
+  border-right: 0;
+}
+.tercume-panel-head {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #9cdcfe;
+  background: #252526;
+  border-bottom: 1px solid #343434;
+}
+.tercume-textarea {
+  flex: 1;
+  min-height: 180px;
+  margin: 0;
+  resize: none;
+  border: 0;
+  border-radius: 0;
+}
+
+/* Ses Atölyesi — Faz 4 */
+.ses-workbench {
+  display: grid;
+  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+  gap: 12px;
+  height: calc(100% - 88px);
+  min-height: 0;
+  align-items: stretch;
+}
+.ses-col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid #3c3c3c;
+  border-radius: 7px;
+  background: #1e1e1e;
+  padding: 10px 12px;
+  gap: 8px;
+}
+.ses-section-title {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #9cdcfe;
+}
+.ses-file-label {
+  font-size: 11px;
+  color: #aaaaaa;
+}
+.ses-audio-preview {
+  width: 100%;
+  max-height: 120px;
+  margin: 0;
+}
+.ses-stt-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+.ses-lang-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #aaa;
+}
+.ses-lang-select {
+  padding: 5px 8px;
+  border-radius: 4px;
+  border: 1px solid #454545;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  font-size: 12px;
+}
+.ses-hint {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: #858585;
+  line-height: 1.35;
+}
+.ses-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.ses-meta {
+  flex: 1;
+  min-width: 120px;
+  font-size: 11px;
+  color: #6a9955;
+  text-align: right;
+}
+.ses-transcript-area {
+  flex: 1;
+  min-height: 200px;
+  resize: none;
+  margin: 0;
+}
+
 /* Programlama Atölyesi — Faz 1.1 */
 .code-workbench {
   display: grid;
