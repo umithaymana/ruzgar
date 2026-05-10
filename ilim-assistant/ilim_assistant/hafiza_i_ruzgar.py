@@ -25,6 +25,22 @@ class HafizaIRuzgar:
     # Fuzzy eşik: 0.70 = %70 benzerlik. RUZGAR_FUZZY_MIN env değişkeniyle override edilebilir.
     FUZZY_VARSAYILAN_ESIK = 0.70
 
+    # Token kapsama (sorgu kelimelerinin adayda bulunma oranı) → karakter benzerliği yetmediğinde
+    # asıl kararı veren ikinci eksen. Tam kapsama %92 puan değerindedir; eşik %70'i geçer.
+    TOKEN_KAPSAMA_AGIRLIK = 0.92
+    # Token bazlı kelime karşılaştırmasında, iki kelimenin "aynı" sayılması için minimum
+    # SequenceMatcher skoru (typo toleransı). Örn: "phyton" ↔ "python" = 0.92, eşik altı kalmaz.
+    TOKEN_KELIME_BENZERLIK_ESIK = 0.85
+    # Anlamsız kısa Türkçe ekler/edatlar — token kümesinden çıkarılır ki tek başlarına eşleşmesin.
+    # Not: `_fuzzy_anahtar` Türkçe karakterleri ASCII'ye çevirdiği için liste de ASCII'dir.
+    TOKEN_STOPWORDS = frozenset({
+        "ne", "mi", "mu",
+        "bir", "bu", "su", "o",
+        "ve", "veya", "ama", "fakat", "icin",
+        "de", "da", "ki", "ya", "ile",
+        "den", "dan", "yi", "yu", "i", "u",
+    })
+
     # Baş/sondaki ayırıcı ve noktalama (Türkçe dahil)
     _STRIP_EDGE_PUNCT = re.compile(
         r'^[\s!"#$%&\'()*+,\-./:;<=>?@\[\\\]^_`{|}~¡§¨°´¿。“”‘’…、。￥]+|'
@@ -80,6 +96,42 @@ class HafizaIRuzgar:
         if a == b:
             return 1.0
         return SequenceMatcher(None, a, b).ratio()
+
+    @classmethod
+    def _token_kumesi(cls, metin: str) -> frozenset:
+        """Anlamlı kelime kümesi: TR→ASCII sadeleştirilmiş, stopword'siz, en az 2 karakterli.
+
+        Kısa-uzun kıyaslamada "aynı kelimeler geçiyor mu?" sorusunu cevaplamak için kullanılır.
+        """
+        t = cls._fuzzy_anahtar(metin)
+        if not t:
+            return frozenset()
+        return frozenset(
+            w for w in t.split()
+            if w and len(w) >= 2 and w not in cls.TOKEN_STOPWORDS
+        )
+
+    @classmethod
+    def _token_kapsama(cls, sorgu_tok: frozenset, aday_tok: frozenset) -> float:
+        """Sorgu kelimelerinin ne kadarı adayda bulunuyor? (typo toleranslı)
+
+        - 0.0 → ortak hiç kelime yok
+        - 1.0 → sorgudaki tüm kelimeler adayda mevcut (yazım hataları affedilir)
+        Aday adayın kelime sayısı önemli değil; bakış açısı kullanıcının sorgusudur.
+        """
+        if not sorgu_tok or not aday_tok:
+            return 0.0
+        bulundu = 0
+        for s in sorgu_tok:
+            if s in aday_tok:
+                bulundu += 1
+                continue
+            # Typo toleransı: aday kelimelerden biri ile yüksek benzerlik
+            for a in aday_tok:
+                if cls._benzerlik(s, a) >= cls.TOKEN_KELIME_BENZERLIK_ESIK:
+                    bulundu += 1
+                    break
+        return bulundu / len(sorgu_tok)
 
     @classmethod
     def _fuzzy_esik(cls) -> float:
@@ -262,6 +314,13 @@ class HafizaIRuzgar:
     ) -> Optional[Tuple[str, str, float]]:
         """En yüksek benzerlik skoru veren (cevap, soru, skor) üçlüsünü döner.
 
+        İki eksenli skor:
+          - **Karakter benzerliği** (SequenceMatcher): yazım hatalarına dayanıklı.
+          - **Token kapsama**: kullanıcının kelimelerinin hafıza sorusunda geçme oranı;
+            kısa sorgu ↔ uzun hafıza eşleşmelerini yakalar (örn. `sen kimsin` ↔
+            `sen kimsin ne iş yaparsın`).
+        Final skor = max(karakter, token_kapsama * TOKEN_KAPSAMA_AGIRLIK).
+
         Skor `RUZGAR_FUZZY_MIN` (varsayılan 0.70) altındaysa None.
         Aynı skorda birden çok aday varsa daha yeni eklenen tercih edilir
         (kayıtlar listesi sondan başa taranır).
@@ -271,6 +330,7 @@ class HafizaIRuzgar:
         anahtar = self._fuzzy_anahtar(sorgu)
         if not anahtar:
             return None
+        sorgu_tok = self._token_kumesi(sorgu)
         esik = self._fuzzy_esik()
         en_iyi: Optional[Tuple[str, str, float]] = None
         for row in reversed(adaylar):
@@ -281,11 +341,16 @@ class HafizaIRuzgar:
             aday = self._fuzzy_anahtar(k)
             if not aday:
                 continue
-            skor = self._benzerlik(anahtar, aday)
-            if skor < esik:
+            char_skor = self._benzerlik(anahtar, aday)
+            token_skor = 0.0
+            if sorgu_tok:
+                aday_tok = self._token_kumesi(k)
+                token_skor = self._token_kapsama(sorgu_tok, aday_tok)
+            final_skor = max(char_skor, token_skor * self.TOKEN_KAPSAMA_AGIRLIK)
+            if final_skor < esik:
                 continue
-            if en_iyi is None or skor > en_iyi[2]:
-                en_iyi = (cv, k, skor)
+            if en_iyi is None or final_skor > en_iyi[2]:
+                en_iyi = (cv, k, final_skor)
         return en_iyi
 
     def tum_bilgiler(self, motor_tipi: str = VARSAYILAN_MOTOR_TIPI) -> Dict[str, str]:
