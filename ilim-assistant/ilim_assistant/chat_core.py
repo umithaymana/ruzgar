@@ -154,8 +154,11 @@ def try_archive_rag_direct_reply(
 
 
 def _main_chat_genel_only() -> bool:
-    """Ana sohbet (`genel` mod) yalnızca `ruzgar_genel_hafiza.json` — LLM/RAG/web kapalı."""
-    return os.environ.get("RUZGAR_MAIN_ONLY_GENEL_HAFIZA", "1").strip().lower() not in (
+    """True ise `genel` modda yalnızca `ruzgar_genel_hafiza.json`; eşleşmezse LLM/RAG/web yok.
+
+    Varsayılan **tam güç**: kapalı (`0`). Daraltmak için ortamda `RUZGAR_MAIN_ONLY_GENEL_HAFIZA=1`.
+    """
+    return os.environ.get("RUZGAR_MAIN_ONLY_GENEL_HAFIZA", "0").strip().lower() not in (
         "0",
         "false",
         "no",
@@ -422,9 +425,11 @@ def prepare_turn(
     """Boş mesajda None; aksi halde (msg, hits, user_payload, system, model, ogrenme_direct).
 
     Öncelik:
-      - `genel` mod + `RUZGAR_MAIN_ONLY_GENEL_HAFIZA=1` (varsayılan): yalnızca
-        `ruzgar_genel_hafiza.json`; eşleşme yoksa `_genel_only_unknown_reply`, başka kaynak yok.
-      - Aksi halde: genel hafıza → (isteğe bağlı) arşiv doğrudan → RAG + web + LLM.
+      - Önce `ruzgar_genel_hafiza.json` (eşleşirse anında cevap).
+      - `genel` mod + `RUZGAR_MAIN_ONLY_GENEL_HAFIZA=1` ise ve eşleşme yoksa:
+        yalnızca `_genel_only_unknown_reply` (RAG/web/LLM kapalı).
+      - Varsayılan tam güç (`RUZGAR_MAIN_ONLY_GENEL_HAFIZA` yok veya `0`): eşleşme yoksa
+        arşiv doğrudan / RAG + web + LLM.
 
     Streaming `skip_ogrenme_lookup=True`: (1) atlanır (istemci ön kontrol yaptıysa).
     """
