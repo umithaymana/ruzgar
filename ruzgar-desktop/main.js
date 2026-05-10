@@ -78,33 +78,6 @@ function openIndexMode(mode) {
   });
 }
 
-function openSesHub() {
-  const htmlPath = path.join(__dirname, "modes", "ses.html");
-  const win = new BrowserWindow({
-    width: 980,
-    height: 820,
-    minWidth: 720,
-    minHeight: 560,
-    title: "RÜZGAR — Ses modülü",
-    backgroundColor: "#121418",
-    show: false,
-    webPreferences: sharedWebPreferences(),
-  });
-  win.webContents.on("did-fail-load", (_e, code, desc, url) => {
-    dialog.showErrorBox(
-      "RUZGAR",
-      `Ses sayfasi yuklenemedi: ${desc} (${code})\n${url}`
-    );
-  });
-  win.loadFile(htmlPath).catch((err) => {
-    dialog.showErrorBox("RUZGAR", `loadFile: ${err.message}\n${htmlPath}`);
-  });
-  win.once("ready-to-show", () => {
-    win.show();
-    win.focus();
-  });
-}
-
 function safeListDir(rel = "") {
   const base = path.join(WORKSPACE_ROOT, rel);
   if (!base.startsWith(WORKSPACE_ROOT)) {
@@ -128,6 +101,9 @@ function safeListDir(rel = "") {
 }
 
 function buildMenu(mainWin) {
+  // Faz 0: Sol motor menüsü artık ses/okuma/video/programlama/üretim/gelişim/tercüme
+  // motorlarını yönetiyor. Üst native bar yalnızca dosya/düzen ve geliştirici aracıyla
+  // sade tutulur; mod pencerelerini açan eski menüler kaldırıldı.
   const template = [
     {
       label: "dosya",
@@ -135,6 +111,16 @@ function buildMenu(mainWin) {
         {
           label: "Çalışma klasörünü göster",
           click: () => shell.openPath(WORKSPACE_ROOT),
+        },
+        {
+          label: "ilim-assistant klasörü",
+          click: () =>
+            shell.openPath(path.join(WORKSPACE_ROOT, "ilim-assistant")),
+        },
+        {
+          label: "ilim-video klasörü",
+          click: () =>
+            shell.openPath(path.join(WORKSPACE_ROOT, "ilim-video")),
         },
         { type: "separator" },
         {
@@ -148,11 +134,6 @@ function buildMenu(mainWin) {
     {
       label: "düzen",
       submenu: [
-        {
-          label: "Düzen modu — yeni pencere",
-          click: () => openIndexMode("duzen"),
-        },
-        { type: "separator" },
         {
           label: "Sohbet kutusuna odaklan (aktif pencere)",
           click: () => {
@@ -170,92 +151,15 @@ function buildMenu(mainWin) {
       ],
     },
     {
-      label: "üretim",
-      click: () => openIndexMode("uretim"),
-    },
-    {
       label: "gelişim",
       submenu: [
         {
-          label: "Gelişim modu — yeni pencere",
-          click: () => openIndexMode("gelisim"),
-        },
-        { type: "separator" },
-        {
-          label: "Geliştirici araçları",
+          label: "Geliştirici araçları (DevTools)",
+          accelerator: "F12",
           click: () => {
             const w = activeWindow(mainWin);
             w?.webContents.toggleDevTools();
           },
-        },
-      ],
-    },
-    {
-      label: "ses",
-      submenu: [
-        {
-          label: "Ses merkezi — yeni pencere",
-          click: () => openSesHub(),
-        },
-        { type: "separator" },
-        {
-          label: "Mikrofon (yerel Whisper STT, aktif pencere)",
-          click: () => {
-            const w = activeWindow(mainWin);
-            w?.webContents.send("ruzgar-menu", "mic");
-          },
-        },
-      ],
-    },
-    {
-      label: "okuma",
-      submenu: [
-        {
-          label: "Okuma modu — yeni pencere",
-          click: () => openIndexMode("okuma"),
-        },
-        {
-          label: "Son cevabı sesli oku (aktif pencere)",
-          click: () => {
-            const w = activeWindow(mainWin);
-            w?.webContents.send("ruzgar-menu", "speak");
-          },
-        },
-      ],
-    },
-    {
-      label: "video",
-      submenu: [
-        {
-          label: "Video modu — yeni pencere",
-          click: () => openIndexMode("video"),
-        },
-        {
-          label: "ilim-video klasörü",
-          click: () =>
-            shell.openPath(path.join(WORKSPACE_ROOT, "ilim-video")),
-        },
-      ],
-    },
-    {
-      label: "programlama",
-      submenu: [
-        {
-          label: "Programlama modu — yeni pencere",
-          click: () => openIndexMode("programlama"),
-        },
-        { type: "separator" },
-        {
-          label: "ilim-assistant klasörü",
-          click: () =>
-            shell.openPath(path.join(WORKSPACE_ROOT, "ilim-assistant")),
-        },
-        {
-          label: "README (dosya yolu)",
-          click: () =>
-            shell.openPath(
-              path.join(WORKSPACE_ROOT, "ilim-assistant", "README.md")
-            ),
         },
       ],
     },

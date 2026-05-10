@@ -177,6 +177,12 @@ body {
   gap: 2px;
   flex-shrink: 0;
 }
+.header-nav-toolbar {
+  margin-left: 2px;
+  margin-right: 4px;
+  padding-left: 6px;
+  border-left: 1px solid rgba(180, 180, 180, 0.25);
+}
 .btn-nav {
   display: inline-flex;
   align-items: center;
