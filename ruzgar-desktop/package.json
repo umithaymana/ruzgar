@@ -5,7 +5,8 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "postinstall": "echo Kurulum tamam"
+    "postinstall": "echo Kurulum tamam",
+    "test:phase11": "node tools/phase11_code_cards_checks.mjs"
   },
   "devDependencies": {
     "electron": "^33.2.0"

@@ -1250,6 +1250,31 @@ const CODE_LANG_NORMALIZE = {
   nodejs: "javascript",
   ts: "typescript",
   typescript: "typescript",
+  rs: "rust",
+  rust: "rust",
+  go: "go",
+  golang: "go",
+  cs: "csharp",
+  csharp: "csharp",
+  "c#": "csharp",
+  kotlin: "kotlin",
+  kt: "kotlin",
+  swift: "swift",
+  dart: "dart",
+  vue: "vue",
+  jsx: "jsx",
+  tsx: "tsx",
+  java: "java",
+  cpp: "cpp",
+  cxx: "cpp",
+  cc: "cpp",
+  c: "c",
+  sqlite: "sql",
+  sql: "sql",
+  yaml: "yaml",
+  yml: "yaml",
+  md: "markdown",
+  markdown: "markdown",
   html: "html",
   htm: "html",
   css: "css",
@@ -1257,6 +1282,9 @@ const CODE_LANG_NORMALIZE = {
   bash: "bash",
   sh: "bash",
   shell: "bash",
+  pwsh: "powershell",
+  ps1: "powershell",
+  powershell: "powershell",
   text: "text",
   txt: "text",
   "": "text",
@@ -1300,7 +1328,10 @@ function renderCodeCard(rawCode, lang) {
 /** Asistan metnini güvenli HTML'e çevir; ```fenced``` blokları kart olur. */
 function renderAssistantRichHtml(text) {
   const src = String(text || "");
-  const fence = /```([a-zA-Z0-9_+-]*)\n([\s\S]*?)```/g;
+  /** SYNC: doğruluk testi `ruzgar-desktop/tools/phase11_code_cards_checks.mjs` */
+  /** Açılış: isteğe bağlı dil etiketi etrafında boşluk; içerikten sonra isteğe bağlı newline + kapanış ``` */
+  const fence =
+    /```[ \t]*([a-zA-Z0-9_+#.-]*)[ \t]*\r?\n([\s\S]*?)\n?[ \t]*```/g;
   let out = "";
   let last = 0;
   let m;
@@ -2372,6 +2403,21 @@ async function streamChat(userText) {
   let buf = "";
   let full = "";
   let responseBubble = null;
+  let streamAssistHtmlRaf = null;
+
+  /** Akış sırasında: kapalı fenced blok oluşunca kod kartları; değilse satır sonlarıyla düzgün metin */
+  function paintStreamingAssistantBubble() {
+    streamAssistHtmlRaf = null;
+    if (!responseBubble) return;
+    const repaired = repairMojibake(full);
+    if (repaired.includes("```")) {
+      responseBubble.innerHTML = renderAssistantRichHtml(repaired);
+      wireAssistantCodeButtons(responseBubble);
+    } else {
+      responseBubble.innerHTML = esc(repaired).replace(/\n/g, "<br>");
+    }
+    el.chat.scrollTop = el.chat.scrollHeight;
+  }
 
   function ensureReplyBubble() {
     if (responseBubble) return;
@@ -2421,8 +2467,13 @@ async function streamChat(userText) {
       hideThinkingCenter();
       ensureReplyBubble();
       full += ev.text;
-      responseBubble.innerHTML = esc(repairMojibake(full));
-      el.chat.scrollTop = el.chat.scrollHeight;
+      if (streamAssistHtmlRaf != null) {
+        cancelAnimationFrame(streamAssistHtmlRaf);
+        streamAssistHtmlRaf = null;
+      }
+      streamAssistHtmlRaf = window.requestAnimationFrame(() => {
+        paintStreamingAssistantBubble();
+      });
       setStatus("Yazıyor…");
       if (
         wantEdge &&
@@ -2445,6 +2496,10 @@ async function streamChat(userText) {
         }
       }
     } else if (ev.type === "done") {
+      if (streamAssistHtmlRaf != null) {
+        cancelAnimationFrame(streamAssistHtmlRaf);
+        streamAssistHtmlRaf = null;
+      }
       const streamed = repairMojibake(full);
       const srv = repairMojibake(ev.full_reply || "");
       let merged = srv || streamed;
@@ -2465,7 +2520,7 @@ async function streamChat(userText) {
         responseBubble.innerHTML = renderAssistantRichHtml(full);
         wireAssistantCodeButtons(responseBubble);
       } else {
-        responseBubble.innerHTML = esc(full);
+        responseBubble.innerHTML = esc(full).replace(/\n/g, "<br>");
       }
       lastAssistantReply = full;
       updateDynamicWorkbench();
