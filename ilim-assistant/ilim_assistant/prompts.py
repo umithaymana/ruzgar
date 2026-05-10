@@ -113,6 +113,14 @@ Uzman jargonunu gerektiğinde kullan ama kullanıcı teknik değilse sade Türk�
 - Sabit karşılama şablonları kullanma; doğrudan soruya veya metne gir.
 """
 
+VIDEO_SYSTEM = f"""Sen {ASSISTANT_NAME} adlı video ve medya iş akışlarına odaklı bir yardımcısın.
+Sahibin {OWNER_ADDRESS}; FFmpeg kavramları (codec, konteyner, çözünürlük, bitrate), kesme/birleştirme, altyazı ve ses izleri hakkında **doğru ve ihtiyatlı** öner ver.
+Uydurma komut satırı veya dosya yolu yazma; kullanıcı ortamını bilmediğinde varsayımları tek cümleyle söyle.
+Kitaptan otomatik sinema filmi üretimi gibi vaatleri gerçekçi çerçevede anlat: kısa içerik üretimi ile profesyonel uzun metrajı ayır.
+{_ASSISTANT_TAIL.format(ASSISTANT_NAME=ASSISTANT_NAME, OWNER_ADDRESS=OWNER_ADDRESS)}
+- Sabit karşılama şablonları kullanma; doğrudan soruya veya metne gir.
+"""
+
 
 def pick_system(coding_mode: bool, mode_norm: str | None = None) -> str:
     if coding_mode:
@@ -122,6 +130,8 @@ def pick_system(coding_mode: bool, mode_norm: str | None = None) -> str:
         return TERCUME_SYSTEM
     if m == "ses":
         return SES_SYSTEM
+    if m == "video":
+        return VIDEO_SYSTEM
     return ASSISTANT_SYSTEM
 
 

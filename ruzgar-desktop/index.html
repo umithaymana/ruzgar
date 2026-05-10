@@ -27,7 +27,7 @@
           <button type="button" class="mode-tab" id="mode-btn-ses" data-mode="ses">SES MOTORU</button>
         </div>
         <div class="header-tech-strip" aria-label="Sistem göstergeleri">
-          <span id="api-status" class="tech-chip">API…</span>
+          <span id="api-status" class="tech-chip">Sunucu…</span>
           <div class="file-toolbar header-nav-toolbar" role="toolbar" aria-label="Sayfa ve sohbet">
             <button type="button" id="nav-back" class="btn-nav" title="Geri (gezinme geçmişi)" aria-label="Geri">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
@@ -83,7 +83,7 @@
             <span class="motor-glyph">▶</span>
             <span class="motor-text">
               <span class="motor-name">VİDEO MOTORU</span>
-              <span class="motor-tag">Sinema · Faz 5</span>
+              <span class="motor-tag">Sinema · v2</span>
             </span>
           </button>
           <button type="button" class="motor-item" data-mode="okuma" id="motor-side-okuma">
@@ -153,13 +153,13 @@
               </div>
               <span id="mic-level-pct" class="mic-level-pct" hidden aria-hidden="true">—</span>
             </div>
-            <button type="button" id="btn-mic" class="btn-icon btn-mic" title="Basılı tut: dinle → metin (Whisper veya SpeechRecognition). Ümit &amp; Gökçenur dinleme modülü.">
+            <button type="button" id="btn-mic" class="btn-icon btn-mic" title="Basılı tut: dinle, konuşmayı metne dök. Yerel sunucu veya tarayıcı tanıma kullanılır.">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5-3c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
               </svg>
             </button>
-            <button type="button" id="btn-stop" class="btn-stop" hidden title="Yanıt akışını veya sesli okumayı anında durdur — DUR / STOP" aria-label="DUR — yanıt veya sesi kes">
-              DUR / STOP
+            <button type="button" id="btn-stop" class="btn-stop" hidden title="Yanıt akışını veya sesli okumayı anında durdur" aria-label="Durdur — yanıt veya sesi kes">
+              Durdur
             </button>
             <button type="button" id="btn-send" class="btn-primary">Gönder</button>
           </div>
@@ -224,8 +224,8 @@
                 <div class="motors-overview-card"><span class="ovx-phase">Faz 1</span><span class="ovx-name">Programlama</span><span class="ovx-status ovx-done">1.3 tamam</span></div>
                 <div class="motors-overview-card"><span class="ovx-phase">Faz 2</span><span class="ovx-name">Okuma</span><span class="ovx-status ovx-done">tamam</span></div>
                 <div class="motors-overview-card"><span class="ovx-phase">Faz 3</span><span class="ovx-name">Tercüme</span><span class="ovx-status ovx-done">tamam</span></div>
-                <div class="motors-overview-card"><span class="ovx-phase">Faz 4</span><span class="ovx-name">Ses</span><span class="ovx-status">sırada</span></div>
-                <div class="motors-overview-card"><span class="ovx-phase">Faz 5</span><span class="ovx-name">Video</span><span class="ovx-status">sırada</span></div>
+                <div class="motors-overview-card"><span class="ovx-phase">Faz 4</span><span class="ovx-name">Ses</span><span class="ovx-status ovx-done">tamam</span></div>
+                <div class="motors-overview-card"><span class="ovx-phase">Faz 5</span><span class="ovx-name">Video</span><span class="ovx-status ovx-now">v2…</span></div>
                 <div class="motors-overview-card"><span class="ovx-phase">Faz 6</span><span class="ovx-name">Ana Motor akıl</span><span class="ovx-status">sırada</span></div>
                 <div class="motors-overview-card"><span class="ovx-phase">Faz 7</span><span class="ovx-name">Cila</span><span class="ovx-status">sırada</span></div>
               </div>
@@ -411,15 +411,225 @@
 
           <section class="motor-page" id="page-video" hidden>
             <div class="atelier-info-strip">
-              <span class="phase-badge">Faz 5</span>
+              <span class="phase-badge">Faz 5 · v4</span>
               <span class="atelier-promise">
-                <strong>Video Atölyesi</strong> — yakında: sinema editör, timeline, format dönüştürme (FFmpeg),
-                ses ayırma, otomatik altyazı, çözünürlük/bitrate ayarı.
+                <strong>Yol haritası:</strong>
+                <strong>v1</strong> önizleme + ortam inceleme ·
+                <strong>v2</strong> kes / taşınabilir biçime dönüştür / iki dosya birleştir (<code>.ruzgar-video-export</code>) ·
+                <strong>v3</strong> altyazı gömme · harici ses birleştirme ·
+                <strong>v4</strong> zaman çizelgesi + altyazıyı tercüme akışına gönderme.
               </span>
             </div>
             <h3>Video Motoru — Medya Paneli</h3>
-            <input id="video-file-input" type="file" accept=".mp4,.avi,.mp3,video/*,audio/*" />
-            <video id="video-preview" controls style="width: 100%; max-height: 360px; margin-top: 8px"></video>
+            <p class="video-roadmap-note">
+              Aşağıdaki rozetler <strong>yol haritasıdır</strong> (sekme değil, tıklanmaz). Önizleme ve «Medya bilgisi» her zaman bu paneldedir.
+            </p>
+            <div class="video-roadmap-chips" aria-label="Video yol haritası (bilgi)">
+              <span class="video-chip video-chip-ready" title="Önizleme ve teknik özet — bu sayfada">v1 önizleme · özet</span>
+              <span class="video-chip video-chip-ready" title="Kesim, dönüştürme, birleştirme — bu sayfada">v2 kes · dönüştür · birleştir</span>
+              <span class="video-chip video-chip-ready" title="Altyazı gömme ve harici ses — bu sayfada">v3 altyazı · ek ses</span>
+              <span class="video-chip video-chip-ready" title="Kesim işaretleri + altyazı → Tercüme — bu sayfada">v4 çizelge · çeviri akışı</span>
+            </div>
+            <div class="video-workbench-stack">
+              <div class="video-workbench">
+                <div class="video-col video-col-main">
+                  <label class="video-file-label" for="video-file-input">Dosya seç (video veya ses)</label>
+                  <input
+                    id="video-file-input"
+                    type="file"
+                    accept="video/*,audio/*,.mp4,.mkv,.webm,.mov,.avi,.m4v,.mp3,.wav,.opus"
+                  />
+                  <video id="video-preview" class="video-preview-el" controls preload="metadata"></video>
+                  <div class="video-timeline-wrap" id="video-timeline-wrap" aria-label="Zaman çizelgesi (v4)">
+                    <div class="video-timeline-row">
+                      <span class="video-timeline-label" id="video-timeline-label">Süre: — · İmleç: — · Kesim: —</span>
+                      <div class="video-timeline-actions">
+                        <button type="button" class="btn-secondary btn-compact" id="btn-video-mark-in" title="Oynatıcıdaki konumu kesim başlangıcı olarak işaretle">
+                          Başlangıç
+                        </button>
+                        <button type="button" class="btn-secondary btn-compact" id="btn-video-mark-out" title="Oynatıcıdaki konumu kesim sonu olarak işaretle">
+                          Bitiş
+                        </button>
+                        <button type="button" class="btn-secondary btn-compact" id="btn-video-sync-trim" title="Başlangıç ve bitişi aşağıdaki kesim alanlarına aktarır">
+                          Kesime yaz
+                        </button>
+                        <button type="button" class="btn-secondary btn-compact" id="btn-video-clear-range" title="Başlangıç ve bitiş işaretlerini temizle">
+                          Aralığı sıfırla
+                        </button>
+                      </div>
+                    </div>
+                    <div class="video-timeline-track" id="video-timeline-track" role="presentation">
+                      <div class="video-timeline-inner" id="video-timeline-inner">
+                        <div class="video-timeline-progress" id="video-timeline-progress"></div>
+                        <div class="video-timeline-range" id="video-timeline-range" hidden></div>
+                        <div class="video-timeline-playhead" id="video-timeline-playhead"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="video-toolbar">
+                    <button type="button" class="btn-primary btn-compact" id="btn-video-probe">Medya bilgisi</button>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-video-clear" title="Önizleme ve özeti sıfırla">
+                      Sıfırla
+                    </button>
+                  </div>
+                  <p id="video-engine-hint" class="video-hint"></p>
+                </div>
+                <div class="video-col video-col-meta">
+                  <h4 class="video-meta-title">Teknik özet</h4>
+                  <pre id="video-probe-json" class="video-probe-pre">
+Dosya seçip «Medya bilgisi» ile süre, kodek ve çözünürlük okunur. Yerel FFmpeg araçları sistem yolunda olmalıdır.</pre>
+                </div>
+              </div>
+
+              <div class="video-v2-panel">
+                <h4 class="video-v2-title">v2 — Kes · Dönüştür · Birleştir</h4>
+                <p class="video-v2-intro">
+                  Büyük dosyalar için <strong>proje köküne göre göreli yol</strong> kullanın (yükleme sınırı yok). Çıktılar
+                  <code>.ruzgar-video-export/</code> altına yazılır.
+                </p>
+                <label class="video-file-label" for="video-rel-workspace">Proje içi göreli yol (isteğe bağlı)</label>
+                <input
+                  id="video-rel-workspace"
+                  type="text"
+                  class="video-text-input"
+                  spellcheck="false"
+                  placeholder="örn. ruzgar-desktop/ornek.mp4 — boşsa yukarıdaki seçilen dosya kullanılır"
+                />
+                <div class="video-trim-grid">
+                  <label class="video-num-label">
+                    Başlangıç (sn)
+                    <input id="video-start-sec" type="number" class="video-num-input" min="0" step="0.01" value="0" />
+                  </label>
+                  <label class="video-num-label">
+                    Süre (sn)
+                    <input id="video-duration-sec" type="number" class="video-num-input" min="0" step="0.01" placeholder="örn. 30" />
+                  </label>
+                  <label class="video-num-label">
+                    Bitiş (sn)
+                    <input id="video-end-sec" type="number" class="video-num-input" min="0" step="0.01" placeholder="süre yerine" />
+                  </label>
+                  <label class="video-chk-label">
+                    <input type="checkbox" id="video-copy-streams" checked />
+                    Akışı yeniden kodlamadan kopyala
+                  </label>
+                </div>
+                <div class="video-toolbar">
+                  <button type="button" class="btn-primary btn-compact" id="btn-video-trim">Kes ve kaydet</button>
+                  <button type="button" class="btn-secondary btn-compact" id="btn-video-transcode">Tümünü MP4’e dönüştür (H.264)</button>
+                  <button type="button" class="btn-secondary btn-compact" id="btn-video-open-export" title="Çıktı klasörünü dosya gezgininde aç">
+                    Çıktı klasörü
+                  </button>
+                </div>
+                <div class="video-concat-block">
+                  <span class="video-concat-heading">İki dosyayı birleştir (proje yolu)</span>
+                  <input
+                    id="video-concat-a"
+                    type="text"
+                    class="video-text-input"
+                    spellcheck="false"
+                    placeholder="Birinci dosya — göreli yol"
+                  />
+                  <input
+                    id="video-concat-b"
+                    type="text"
+                    class="video-text-input"
+                    spellcheck="false"
+                    placeholder="İkinci dosya — göreli yol"
+                  />
+                  <label class="video-chk-label video-chk-inline">
+                    <input type="checkbox" id="video-concat-copy" checked />
+                    Birleştirmede akışı kopyala (kodek uyumu gerekir)
+                  </label>
+                  <button type="button" class="btn-secondary btn-compact" id="btn-video-concat">Birleştir</button>
+                </div>
+              </div>
+
+              <div class="video-v2-panel video-v3-panel">
+                <h4 class="video-v2-title">v3 — Altyazı göm · Harici ses</h4>
+                <p class="video-v2-intro">
+                  Tüm yollar <strong>proje köküne göre göreli</strong>dır. Çıktılar yine
+                  <code>.ruzgar-video-export/</code> altına yazılır.
+                </p>
+                <div class="video-v3-block">
+                  <span class="video-concat-heading">Altyazıyı görüntüye göm (yanık metin, MP4 çıktı)</span>
+                  <label class="video-file-label" for="video-rel-burn-video">Video dosyası (göreli yol)</label>
+                  <input
+                    id="video-rel-burn-video"
+                    type="text"
+                    class="video-text-input"
+                    spellcheck="false"
+                    placeholder="örn. ruzgar-desktop/ornek.mp4"
+                  />
+                  <label class="video-file-label" for="video-rel-burn-sub">Altyazı (.srt / .ass / .vtt)</label>
+                  <input
+                    id="video-rel-burn-sub"
+                    type="text"
+                    class="video-text-input"
+                    spellcheck="false"
+                    placeholder="örn. ruzgar-desktop/subs/tr.srt"
+                  />
+                  <div class="video-toolbar">
+                    <button type="button" class="btn-primary btn-compact" id="btn-video-burn-sub">
+                      Altyazıyı göm ve kaydet
+                    </button>
+                  </div>
+                </div>
+                <div class="video-v3-block video-v3-block-spaced">
+                  <span class="video-concat-heading">Harici sesi videoya bağla (ses izini değiştirir)</span>
+                  <label class="video-file-label" for="video-rel-mux-video">Video (göreli yol)</label>
+                  <input
+                    id="video-rel-mux-video"
+                    type="text"
+                    class="video-text-input"
+                    spellcheck="false"
+                    placeholder="örn. ruzgar-desktop/ornek.mp4"
+                  />
+                  <label class="video-file-label" for="video-rel-mux-audio">Ses dosyası (.mp3, .wav, .m4a, …)</label>
+                  <input
+                    id="video-rel-mux-audio"
+                    type="text"
+                    class="video-text-input"
+                    spellcheck="false"
+                    placeholder="örn. ruzgar-desktop/ses/yeni.mp3"
+                  />
+                  <label class="video-chk-label video-chk-inline">
+                    <input type="checkbox" id="video-mux-shortest" checked />
+                    Kısa süreye göre kes
+                  </label>
+                  <label class="video-chk-label video-chk-inline">
+                    <input type="checkbox" id="video-mux-copy-video" checked />
+                    Görüntüyü yeniden kodlamadan kopyala
+                  </label>
+                  <div class="video-toolbar">
+                    <button type="button" class="btn-secondary btn-compact" id="btn-video-mux-audio">
+                      Harici sesi videoya bağla
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="video-v2-panel video-v4-panel">
+                <h4 class="video-v2-title">v4 — Çeviri metni akışı</h4>
+                <p class="video-v2-intro">
+                  Projedeki altyazı dosyasını (ör. <code>.srt</code>) okuyup <strong>Tercüme atölyesi</strong> kaynak kolonuna
+                  aktarır; çeviriyi aldıktan sonra yeni dosyayı kaydedip v3 ile gömebilirsiniz. (Sunucu düz metin sınırı
+                  2 MB.)
+                </p>
+                <label class="video-file-label" for="video-rel-sub-translate">Altyazı dosyası (göreli yol)</label>
+                <input
+                  id="video-rel-sub-translate"
+                  type="text"
+                  class="video-text-input"
+                  spellcheck="false"
+                  placeholder="örn. ruzgar-desktop/subs/en.srt"
+                />
+                <div class="video-toolbar">
+                  <button type="button" class="btn-primary btn-compact" id="btn-video-sub-to-tercume">
+                    Kaynağı Tercüme atölyesine gönder
+                  </button>
+                </div>
+              </div>
+            </div>
           </section>
 
           <section class="motor-page" id="page-programlama" hidden>
@@ -428,7 +638,7 @@
               <span class="atelier-promise">
                 <strong>Programlama Atölyesi</strong> — <strong>proje ağacı</strong>, <strong>Kaydet</strong> / Ctrl+S,
                 <strong>Çalıştır</strong> (kayıtlı dosyada proje içi çalışma dizini; göreli import ve dosya yolu),
-                sohbette <strong>kod kartları</strong>, <strong>Açıkla / Hata / Refactor / Test</strong> üretim modunda.
+                sohbette <strong>kod kartları</strong>, <strong>Açıkla / Hata / Yeniden düzenle / Test</strong> üretim modunda.
                 Paketleme ve mağaza teslimi sonraki fazlar.
               </span>
             </div>
@@ -457,14 +667,14 @@
                   </button>
                   <button type="button" id="btn-code-explain" class="btn-secondary btn-compact">Açıkla</button>
                   <button type="button" id="btn-code-fix" class="btn-secondary btn-compact">Hatayı Bul</button>
-                  <button type="button" id="btn-code-refactor" class="btn-secondary btn-compact">Refactor</button>
+                  <button type="button" id="btn-code-refactor" class="btn-secondary btn-compact">Yeniden düzenle</button>
                   <button type="button" id="btn-code-test" class="btn-secondary btn-compact">Test Yaz</button>
                   <span class="spacer"></span>
                   <button
                     type="button"
                     id="btn-code-run"
                     class="btn-primary btn-compact"
-                    title="Python/JavaScript: kayıtlı dosya varsa proje klasöründe çalışır; yoksa izole geçici klasör."
+                    title="Kayıtlı dosya varsa proje klasöründe çalışır; yoksa geçici klasörde çalışır."
                   >
                     Çalıştır
                   </button>
@@ -476,14 +686,14 @@
                   id="code-editor"
                   class="code-editor"
                   spellcheck="false"
-                  placeholder="# Kodunu buraya yaz. Rüzgar'a kodu açıklatmak, hatayı buldurmak, refactor ettirmek veya test yazdırmak için üstteki araçları kullan."
+                  placeholder="# Kodunu buraya yaz. Rüzgar'a kodu açıklatmak, hatayı buldurmak, yapıyı yeniden düzenletmek veya test yazdırmak için üstteki araçları kullan."
                 ></textarea>
                 <div class="code-output-panel">
                   <div class="code-output-head">
                     <span>Çıktı / Terminal</span>
                     <button type="button" id="btn-code-output-clear" class="btn-secondary btn-compact">Temizle</button>
                   </div>
-                  <pre id="code-output" class="code-output">Programlama Atölyesi hazır. Python/JavaScript kodu çalıştırabilir; diğer diller sırayla eklenecek.</pre>
+                  <pre id="code-output" class="code-output">Programlama Atölyesi hazır. Önce Python ve JavaScript çalıştırılabilir; diğer diller sırayla eklenecek.</pre>
                 </div>
               </div>
             </div>
@@ -493,9 +703,9 @@
             <div class="atelier-info-strip">
               <span class="phase-badge">Faz 4 ✓</span>
               <span class="atelier-promise">
-                <strong>Ses Atölyesi</strong> — yerel dosya önizleme, <strong>Whisper STT</strong> (desktop_server),
-                transkript düzenleme, <strong>sohbete aktar</strong>, <strong>Edge / tarayıcı seslendirme</strong>.
-                Dalga formu, EQ ve FFmpeg dönüştürme sonraki adım.
+                <strong>Ses Atölyesi</strong> — yerel dosya önizleme, <strong>metne döküm</strong> (yerel sunucu),
+                transkript düzenleme, <strong>sohbete aktar</strong>, <strong>seslendirme</strong>.
+                Dalga şekli ve ek tonal düzenlemeler sonraki adım.
               </span>
             </div>
             <h3>Ses Motoru — Stüdyo</h3>
@@ -507,8 +717,8 @@
                 <audio id="audio-preview" class="ses-audio-preview" controls preload="metadata"></audio>
                 <div class="ses-stt-row">
                   <label class="ses-lang-label">
-                    STT dili
-                    <select id="ses-stt-lang" class="ses-lang-select" aria-label="Whisper dil">
+                    Metne döküm dili
+                    <select id="ses-stt-lang" class="ses-lang-select" aria-label="Konuşmayı metne döküm dili">
                       <option value="auto">Otomatik</option>
                       <option value="tr" selected>Türkçe</option>
                       <option value="en">İngilizce</option>
@@ -521,7 +731,7 @@
                 <p id="ses-stt-hint" class="ses-hint"></p>
               </div>
               <div class="ses-col ses-col-transcript">
-                <h4 class="ses-section-title">Transkript</h4>
+                <h4 class="ses-section-title">Metin dökümü</h4>
                 <div class="ses-toolbar">
                   <button type="button" class="btn-secondary btn-compact" id="btn-ses-to-chat">Sohbete aktar</button>
                   <button type="button" class="btn-primary btn-compact" id="btn-ses-speak">Metni seslendir</button>
@@ -533,7 +743,7 @@
                   class="hafiza-textarea ses-transcript-area"
                   rows="16"
                   spellcheck="true"
-                  placeholder="«Metne dök» ile Whisper çıktısı buraya gelir; düzenleyip sohbete veya seslendirmeye gönderebilirsiniz."
+                  placeholder="«Metne dök» ile çıkan metin buraya gelir; düzenleyip sohbete veya seslendirmeye gönderebilirsiniz."
                 ></textarea>
               </div>
             </div>

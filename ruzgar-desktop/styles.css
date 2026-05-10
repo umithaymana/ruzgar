@@ -1177,6 +1177,268 @@ body {
   margin: 0;
 }
 
+/* Video Atölyesi — Faz 5 v1 */
+.video-roadmap-note {
+  margin: 0 0 10px;
+  font-size: 11px;
+  color: #a8a8a8;
+  line-height: 1.4;
+}
+.video-roadmap-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+.video-chip {
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #454545;
+  background: #252526;
+  cursor: default;
+  user-select: none;
+}
+/* Tamamlanan / kullanılabilir fazlar — gri “pasif düğme” gibi görünmesin */
+.video-chip-ready {
+  border-color: rgba(137, 209, 133, 0.45);
+  color: #c8e6c9;
+  background: rgba(78, 158, 73, 0.12);
+}
+/* Sonraki fazlar — bilgi amaçlı, devre dışı buton değil */
+.video-chip-next {
+  border-color: #454545;
+  color: #9d9d9d;
+  border-style: dashed;
+  background: #252526;
+}
+.video-workbench {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(260px, 1fr);
+  gap: 12px;
+  align-items: stretch;
+  min-height: 0;
+}
+.video-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  border: 1px solid #3c3c3c;
+  border-radius: 7px;
+  background: #1e1e1e;
+  padding: 10px 12px;
+}
+.video-file-label {
+  font-size: 11px;
+  color: #aaa;
+}
+.video-preview-el {
+  width: 100%;
+  max-height: min(360px, 42vh);
+  background: #000;
+  border-radius: 4px;
+}
+.video-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.video-hint {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: #858585;
+  line-height: 1.35;
+}
+.video-meta-title {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #9cdcfe;
+}
+.video-probe-pre {
+  flex: 1;
+  min-height: 200px;
+  margin: 0;
+  padding: 10px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #d2d2d2;
+  background: #141414;
+  border: 1px solid #343434;
+  border-radius: 6px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.video-workbench-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+}
+.video-v2-panel {
+  border: 1px solid #3c3c3c;
+  border-radius: 7px;
+  background: #1e1e1e;
+  padding: 12px 14px;
+}
+.video-v3-panel {
+  border-color: rgba(156, 220, 254, 0.28);
+}
+.video-v3-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.video-v3-block-spaced {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #343434;
+}
+.video-v4-panel {
+  border-color: rgba(206, 145, 120, 0.35);
+}
+.video-timeline-wrap {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.video-timeline-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.video-timeline-label {
+  font-size: 11px;
+  color: #a8a8a8;
+  flex: 1 1 160px;
+  min-width: 0;
+}
+.video-timeline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+.video-timeline-track {
+  cursor: pointer;
+  padding: 2px 0;
+  user-select: none;
+}
+.video-timeline-inner {
+  position: relative;
+  height: 22px;
+  border-radius: 5px;
+  border: 1px solid #454545;
+  background: #141414;
+  overflow: hidden;
+}
+.video-timeline-progress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0%;
+  background: rgba(0, 122, 204, 0.22);
+  pointer-events: none;
+}
+.video-timeline-range {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0%;
+  width: 0%;
+  background: rgba(156, 220, 254, 0.25);
+  border-left: 1px solid rgba(156, 220, 254, 0.65);
+  border-right: 1px solid rgba(156, 220, 254, 0.65);
+  pointer-events: none;
+  box-sizing: border-box;
+}
+.video-timeline-playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0%;
+  width: 2px;
+  margin-left: -1px;
+  background: #fff;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  z-index: 2;
+}
+.video-v2-title {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ce9178;
+}
+.video-v2-intro {
+  margin: 0 0 10px;
+  font-size: 11px;
+  color: #a8a8a8;
+  line-height: 1.45;
+}
+.video-text-input {
+  width: 100%;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  border: 1px solid #454545;
+  background: #252526;
+  color: #d4d4d4;
+  font-size: 12px;
+  font-family: Consolas, "Courier New", monospace;
+}
+.video-trim-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  align-items: end;
+  margin-bottom: 10px;
+}
+.video-num-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: #aaa;
+}
+.video-num-input {
+  padding: 6px 8px;
+  border-radius: 4px;
+  border: 1px solid #454545;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  font-size: 12px;
+}
+.video-chk-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #ccc;
+}
+.video-chk-inline {
+  margin: 6px 0;
+}
+.video-concat-block {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #343434;
+}
+.video-concat-heading {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #9cdcfe;
+  margin-bottom: 8px;
+}
+
 /* Programlama Atölyesi — Faz 1.1 */
 .code-workbench {
   display: grid;

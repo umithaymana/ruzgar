@@ -301,6 +301,41 @@ const el = {
   sesSttMeta: document.getElementById("ses-stt-meta"),
   videoFileInput: document.getElementById("video-file-input"),
   videoPreview: document.getElementById("video-preview"),
+  btnVideoProbe: document.getElementById("btn-video-probe"),
+  btnVideoClear: document.getElementById("btn-video-clear"),
+  videoEngineHint: document.getElementById("video-engine-hint"),
+  videoProbeJson: document.getElementById("video-probe-json"),
+  videoRelWorkspace: document.getElementById("video-rel-workspace"),
+  videoStartSec: document.getElementById("video-start-sec"),
+  videoDurationSec: document.getElementById("video-duration-sec"),
+  videoEndSec: document.getElementById("video-end-sec"),
+  videoCopyStreams: document.getElementById("video-copy-streams"),
+  btnVideoTrim: document.getElementById("btn-video-trim"),
+  btnVideoTranscode: document.getElementById("btn-video-transcode"),
+  btnVideoConcat: document.getElementById("btn-video-concat"),
+  btnVideoOpenExport: document.getElementById("btn-video-open-export"),
+  videoConcatA: document.getElementById("video-concat-a"),
+  videoConcatB: document.getElementById("video-concat-b"),
+  videoConcatCopy: document.getElementById("video-concat-copy"),
+  videoRelBurnVideo: document.getElementById("video-rel-burn-video"),
+  videoRelBurnSub: document.getElementById("video-rel-burn-sub"),
+  btnVideoBurnSub: document.getElementById("btn-video-burn-sub"),
+  videoRelMuxVideo: document.getElementById("video-rel-mux-video"),
+  videoRelMuxAudio: document.getElementById("video-rel-mux-audio"),
+  videoMuxShortest: document.getElementById("video-mux-shortest"),
+  videoMuxCopyVideo: document.getElementById("video-mux-copy-video"),
+  btnVideoMuxAudio: document.getElementById("btn-video-mux-audio"),
+  videoTimelineLabel: document.getElementById("video-timeline-label"),
+  videoTimelineTrack: document.getElementById("video-timeline-track"),
+  videoTimelineProgress: document.getElementById("video-timeline-progress"),
+  videoTimelineRange: document.getElementById("video-timeline-range"),
+  videoTimelinePlayhead: document.getElementById("video-timeline-playhead"),
+  btnVideoMarkIn: document.getElementById("btn-video-mark-in"),
+  btnVideoMarkOut: document.getElementById("btn-video-mark-out"),
+  btnVideoSyncTrim: document.getElementById("btn-video-sync-trim"),
+  btnVideoClearRange: document.getElementById("btn-video-clear-range"),
+  videoRelSubTranslate: document.getElementById("video-rel-sub-translate"),
+  btnVideoSubToTercume: document.getElementById("btn-video-sub-to-tercume"),
   audioFileInput: document.getElementById("audio-file-input"),
   audioPreview: document.getElementById("audio-preview"),
   codeEditor: document.getElementById("code-editor"),
@@ -335,6 +370,13 @@ let ilimOpenRel = null;
 let tercumeOpenRel = null;
 /** Ses önizleme blob URL — yeniden seçimde iptal */
 let sesPreviewObjectUrl = null;
+/** Video önizleme blob URL */
+let videoPreviewObjectUrl = null;
+/** Son ffprobe özeti (dosya seçili değilken süre için) */
+let lastVideoProbeDurationSec = 0;
+/** v4 zaman çizelgesi In/Out (saniye; null = işaret yok) */
+let videoTimelineIn = null;
+let videoTimelineOut = null;
 const OKUMA_ARSIV_ROOT = "ilim-assistant/arsiv";
 
 async function workspaceListDir(rel) {
@@ -615,6 +657,9 @@ function applyModeToUI() {
   } else if (currentMode === "ses") {
     el.input.placeholder =
       "Ses motorunda transkripti panelden sohbete aktarabilir veya doğrudan soru yazabilirsiniz.";
+  } else if (currentMode === "video") {
+    el.input.placeholder =
+      "Video motorunda FFmpeg, kesme veya altyazı hakkında soru yazın; dosya özeti soldaki panelde.";
   } else {
     el.input.placeholder =
       "Soru yazın veya yapıştırın — Web açıkken arama + okuma; doğrudan https:// bağlantısı da okunur.";
@@ -776,13 +821,14 @@ function switchMode(mode) {
     genel: "Şu anda ana motor tam güç ve tam kapasite çalışıyor.",
     okuma:
       "Okuma motoru — İlim arşivi tamam: metin, PDF, DOCX; özet ve not tek tık.",
-    video: "Video motoru açıldı; sinema atölyesi Faz 5'te tam aktif.",
+    video:
+      "Video motoru — v4: kesim çizelgesi (başlangıç/bitiş), altyazı gömme, ses birleştirme, altyazıyı Tercüme atölyesine aktarma; çıktı .ruzgar-video-export.",
     programlama:
       "Programlama motoru açıldı; Faz 1.3 — proje köküne göre çalıştırma, kod yardımcısı üretim modu.",
     hafiza:
       "Hafıza motoru açıldı; bu motorla gelişim ve hafıza teknikleri üzerinde çalışabilirsiniz.",
     ses:
-      "Ses motoru — Stüdyo: dosya + Whisper STT, transkript; Edge veya tarayıcıdan seslendirme.",
+      "Ses motoru — Stüdyo: dosya + konuşmayı metne dökme, transkript; tarayıcıdan seslendirme.",
     tercume:
       "Tercüme motoru — Ofis paneli: arşiv + iki kolon; Çevir ile Rüzgar’a yapılandırılmış istek.",
   };
@@ -837,6 +883,7 @@ function updateDynamicWorkbench() {
   if (currentMode === "okuma") void loadIlimFileList();
   if (currentMode === "tercume") void loadTercumeFileList();
   if (currentMode === "ses") void refreshSesSttHint();
+  if (currentMode === "video") void refreshVideoEngineHint();
   if (currentMode === "programlama") {
     updateProgramlamaActiveFileLabel();
     void programlamaAtolyeRefreshRoot();
@@ -885,7 +932,8 @@ function sendCodeAssistantPrompt(action) {
   const actionPrompts = {
     explain: "Aşağıdaki kodu mimara sade ve net şekilde açıkla. Hatalı veya riskli yerleri ayrıca belirt.",
     fix: "Aşağıdaki kodu incele. Olası hataları, bug risklerini ve düzeltme önerilerini sırayla ver.",
-    refactor: "Aşağıdaki kodu daha temiz, okunabilir ve sürdürülebilir hale getirmek için refactor önerisi hazırla.",
+    refactor:
+      "Aşağıdaki kodu daha temiz, okunabilir ve sürdürülebilir hale getirmek için yeniden düzenleme önerisi hazırla.",
     test: "Aşağıdaki kod için uygun test senaryoları ve mümkünse örnek test kodu yaz.",
   };
   const instruction = actionPrompts[action] || actionPrompts.explain;
@@ -1097,7 +1145,7 @@ async function programlamaAtolyeRefreshRoot() {
     }
   } catch (e) {
     el.codeFileTree.innerHTML =
-      `<div class="code-file-placeholder">Kök liste okunamadı: ${esc(String(e && e.message ? e.message : e))}. API (desktop_server) veya Electron köprüsü gerekir.</div>`;
+      `<div class="code-file-placeholder">Kök liste okunamadı: ${esc(String(e && e.message ? e.message : e))}. Yerel sunucu (ilim-assistant) veya masaüstü köprüsü gerekir.</div>`;
   }
 }
 
@@ -1322,14 +1370,14 @@ async function refreshSesSttHint() {
     const j = await r.json();
     if (j.stt) {
       el.sesSttHint.textContent =
-        "Yerel Whisper hazır (desktop_server). Dosya seçip «Metne dök» deyin; bağımlılık: faster-whisper.";
+        "Konuşmayı metne dökme hazır. Dosya seçip «Metne dök» deyin; gerekirse: pip install faster-whisper.";
     } else {
       el.sesSttHint.textContent =
-        "STT kapalı (health.stt=false). Kurulum: pip install faster-whisper — ardından sunucuyu yeniden başlatın.";
+        "Metne döküm kapalı. Kurulum: pip install faster-whisper — ardından yerel sunucuyu yeniden başlatın.";
     }
   } catch {
     el.sesSttHint.textContent =
-      "API yok — «Metne dök» için ilim-assistant desktop_server çalışır olmalı.";
+      "Sunucu yok — «Metne dök» için ilim-assistant klasöründe yerel sunucuyu çalıştırın.";
   }
 }
 
@@ -1360,7 +1408,7 @@ async function runSesSttFromFile() {
       } else if (detail != null && typeof detail !== "string") {
         detail = JSON.stringify(detail);
       }
-      flashRuzgarDurum(String(detail || res.statusText || "STT başarısız"));
+      flashRuzgarDurum(String(detail || res.statusText || "Metne döküm başarısız"));
       setStatus("Hazır", "Rüzgar");
       return;
     }
@@ -1370,7 +1418,7 @@ async function runSesSttFromFile() {
       el.sesSttMeta.textContent =
         j.language != null && String(j.language).length ? `Algılanan dil: ${j.language}` : "";
     }
-    flashRuzgarDurum(text ? "Transkript hazır." : "Boş sonuç döndü.");
+    flashRuzgarDurum(text ? "Metin dökümü hazır." : "Boş sonuç döndü.");
     setStatus("Hazır", "Rüzgar");
     el.sesTranscript?.focus();
   } catch (e) {
@@ -1404,7 +1452,7 @@ function wireSesAtolye() {
     el.btnSesToChat.addEventListener("click", () => {
       const t = String(el.sesTranscript?.value || "").trim();
       if (!t) {
-        flashRuzgarDurum("Transkript boş.");
+        flashRuzgarDurum("Metin dökümü boş.");
         return;
       }
       const chunk = t.length > 12000 ? `${t.slice(0, 12000)}\n\n… (kısaltıldı)` : t;
@@ -1424,9 +1472,615 @@ function wireSesAtolye() {
     el.btnSesClear.addEventListener("click", () => {
       if (el.sesTranscript) el.sesTranscript.value = "";
       if (el.sesSttMeta) el.sesSttMeta.textContent = "";
-      flashRuzgarDurum("Transkript temizlendi.");
+      flashRuzgarDurum("Metin dökümü temizlendi.");
     });
   }
+}
+
+function formatDurationSec(sec) {
+  if (sec == null || Number.isNaN(Number(sec))) return "—";
+  const s = Math.max(0, Math.floor(Number(sec)));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const r = s % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
+  return `${m}:${String(r).padStart(2, "0")}`;
+}
+
+function formatVideoSummaryHuman(summary) {
+  if (!summary || typeof summary !== "object") return "(özet yok)";
+  const lines = [];
+  lines.push(
+    `Süre: ${formatDurationSec(summary.duration_sec)} (${Number(summary.duration_sec || 0).toFixed(2)} sn)`
+  );
+  if (summary.size_bytes != null) {
+    const mb = Number(summary.size_bytes) / (1024 * 1024);
+    lines.push(`Boyut: ${mb.toFixed(2)} MB`);
+  }
+  if (summary.format_name) lines.push(`Konteyner / format: ${summary.format_name}`);
+  lines.push(`Akış sayısı: ${summary.stream_count ?? "—"}`);
+  lines.push(`Video: ${summary.has_video ? "var" : "yok"} · Ses: ${summary.has_audio ? "var" : "yok"}`);
+  if (summary.video) {
+    const v = summary.video;
+    lines.push(
+      `Görüntü — kodek: ${v.codec || "?"} · ${v.width || "?"}×${v.height || "?"} · ${v.avg_frame_rate || "?"} kare/sn · ${v.pix_fmt || ""}`
+    );
+  }
+  if (summary.audio) {
+    const a = summary.audio;
+    lines.push(`Ses — kodek: ${a.codec || "?"} · ${a.sample_rate || "?"} Hz · ${a.channels || "?"} kanal`);
+  }
+  return lines.join("\n");
+}
+
+function getVideoEffectiveDurationSec() {
+  const v = el.videoPreview;
+  if (v && Number.isFinite(v.duration) && v.duration > 0) return v.duration;
+  if (lastVideoProbeDurationSec > 0) return lastVideoProbeDurationSec;
+  return 0;
+}
+
+function updateVideoTimelineUI() {
+  const d = getVideoEffectiveDurationSec();
+  const v = el.videoPreview;
+  const cur =
+    v && Number.isFinite(v.currentTime) && v.currentTime >= 0 ? v.currentTime : 0;
+  const safeD = d > 0 ? d : 0.001;
+  const pctPlay = Math.min(100, Math.max(0, (cur / safeD) * 100));
+  if (el.videoTimelineProgress) el.videoTimelineProgress.style.width = `${pctPlay}%`;
+  if (el.videoTimelinePlayhead) el.videoTimelinePlayhead.style.left = `${pctPlay}%`;
+
+  const rangeEl = el.videoTimelineRange;
+  if (rangeEl) {
+    if (videoTimelineIn != null && videoTimelineOut != null) {
+      let a = videoTimelineIn;
+      let b = videoTimelineOut;
+      if (b < a) [a, b] = [b, a];
+      const left = (a / safeD) * 100;
+      const w = ((b - a) / safeD) * 100;
+      rangeEl.hidden = false;
+      rangeEl.style.left = `${Math.min(100, Math.max(0, left))}%`;
+      rangeEl.style.width = `${Math.min(100 - left, Math.max(0, w))}%`;
+    } else {
+      rangeEl.hidden = true;
+    }
+  }
+
+  if (el.videoTimelineLabel) {
+    let cutInfo = "—";
+    if (videoTimelineIn != null && videoTimelineOut != null) {
+      let a = videoTimelineIn;
+      let b = videoTimelineOut;
+      if (b < a) [a, b] = [b, a];
+      cutInfo = `${a.toFixed(1)}–${b.toFixed(1)} sn (${(b - a).toFixed(1)} sn)`;
+    } else if (videoTimelineIn != null) {
+      cutInfo = `Başlangıç ${videoTimelineIn.toFixed(1)} sn`;
+    } else if (videoTimelineOut != null) {
+      cutInfo = `Bitiş ${videoTimelineOut.toFixed(1)} sn`;
+    }
+    const totalStr = d > 0 ? `${d.toFixed(1)} sn` : "— (dosya veya «Medya bilgisi»)";
+    el.videoTimelineLabel.textContent = `Süre: ${totalStr} · İmleç: ${cur.toFixed(1)} sn · Kesim: ${cutInfo}`;
+  }
+}
+
+function resetVideoTimelineMarks() {
+  videoTimelineIn = null;
+  videoTimelineOut = null;
+  updateVideoTimelineUI();
+}
+
+function resetVideoTimelineProbeDuration() {
+  lastVideoProbeDurationSec = 0;
+  updateVideoTimelineUI();
+}
+
+function syncVideoMarksToTrimFields() {
+  if (videoTimelineIn == null || videoTimelineOut == null) {
+    flashRuzgarDurum("Önce oynatıcıda konum seçip başlangıç ve bitiş işaretleyin.");
+    return;
+  }
+  let a = videoTimelineIn;
+  let b = videoTimelineOut;
+  if (b < a) [a, b] = [b, a];
+  if (el.videoStartSec) el.videoStartSec.value = String(Math.max(0, a).toFixed(2));
+  const dur = Math.max(0, b - a);
+  if (el.videoDurationSec) el.videoDurationSec.value = dur > 0.001 ? String(dur.toFixed(2)) : "";
+  if (el.videoEndSec) el.videoEndSec.value = "";
+  flashRuzgarDurum("Kesim alanları güncellendi (v2).");
+}
+
+function seekVideoFromTimelineClientX(clientX) {
+  const track = el.videoTimelineTrack;
+  const v = el.videoPreview;
+  if (!track || !v) return;
+  const rect = track.getBoundingClientRect();
+  const x = (clientX - rect.left) / Math.max(rect.width, 1);
+  const d = getVideoEffectiveDurationSec();
+  if (d <= 0) {
+    flashRuzgarDurum("Önce dosya seçin veya «Medya bilgisi» ile süre alın.");
+    return;
+  }
+  const sec = Math.max(0, Math.min(d, x * d));
+  v.currentTime = sec;
+  updateVideoTimelineUI();
+}
+
+function wireVideoTimeline() {
+  const wrap = document.getElementById("video-timeline-wrap");
+  if (!wrap || wrap.dataset.timelineWired === "1") return;
+  wrap.dataset.timelineWired = "1";
+  if (el.videoPreview) {
+    el.videoPreview.addEventListener("timeupdate", () => updateVideoTimelineUI());
+    el.videoPreview.addEventListener("loadedmetadata", () => updateVideoTimelineUI());
+  }
+  if (el.videoTimelineTrack) {
+    el.videoTimelineTrack.addEventListener("click", (ev) => {
+      seekVideoFromTimelineClientX(ev.clientX);
+    });
+  }
+  if (el.btnVideoMarkIn) {
+    el.btnVideoMarkIn.addEventListener("click", () => {
+      const v = el.videoPreview;
+      if (!v || getVideoEffectiveDurationSec() <= 0) {
+        flashRuzgarDurum("Önce oynatılabilir dosya veya süre bilgisi gerekli.");
+        return;
+      }
+      videoTimelineIn = v.currentTime;
+      updateVideoTimelineUI();
+      flashRuzgarDurum(`Başlangıç işareti: ${videoTimelineIn.toFixed(2)} sn`);
+    });
+  }
+  if (el.btnVideoMarkOut) {
+    el.btnVideoMarkOut.addEventListener("click", () => {
+      const v = el.videoPreview;
+      if (!v || getVideoEffectiveDurationSec() <= 0) {
+        flashRuzgarDurum("Önce oynatılabilir dosya veya süre bilgisi gerekli.");
+        return;
+      }
+      videoTimelineOut = v.currentTime;
+      updateVideoTimelineUI();
+      flashRuzgarDurum(`Bitiş işareti: ${videoTimelineOut.toFixed(2)} sn`);
+    });
+  }
+  if (el.btnVideoSyncTrim) {
+    el.btnVideoSyncTrim.addEventListener("click", () => {
+      syncVideoMarksToTrimFields();
+    });
+  }
+  if (el.btnVideoClearRange) {
+    el.btnVideoClearRange.addEventListener("click", () => {
+      videoTimelineIn = null;
+      videoTimelineOut = null;
+      updateVideoTimelineUI();
+      flashRuzgarDurum("Başlangıç ve bitiş işaretleri sıfırlandı.");
+    });
+  }
+  if (el.btnVideoSubToTercume) {
+    el.btnVideoSubToTercume.addEventListener("click", () => {
+      void sendSubtitleFileToTercumeAtolye();
+    });
+  }
+}
+
+async function sendSubtitleFileToTercumeAtolye() {
+  const rel = String(el.videoRelSubTranslate?.value || "").trim();
+  if (!rel) {
+    flashRuzgarDurum("Altyazı dosyası için göreli yol girin.");
+    return;
+  }
+  const low = rel.toLowerCase();
+  if (!low.endsWith(".srt") && !low.endsWith(".vtt") && !low.endsWith(".txt")) {
+    flashRuzgarDurum("Önerilen uzantılar: .srt, .vtt veya düz .txt");
+  }
+  flashRuzgarDurum("Altyazı okunuyor…");
+  setStatus("Dosya okunuyor…", "Rüzgar");
+  try {
+    const text = await readWorkspaceText(rel);
+    if (!text.trim()) {
+      flashRuzgarDurum("Dosya boş.");
+      setStatus("Hazır", "Rüzgar");
+      return;
+    }
+    if (el.tercumeSource) el.tercumeSource.value = text;
+    switchMode("tercume");
+    flashRuzgarDurum("Kaynak metin Tercüme atölyesine aktarıldı.");
+    setStatus("Hazır", "Rüzgar");
+  } catch (e) {
+    flashRuzgarDurum(e && e.message ? e.message : String(e));
+    setStatus("Hazır", "Rüzgar");
+  }
+}
+
+async function refreshVideoEngineHint() {
+  if (!el.videoEngineHint) return;
+  try {
+    const r = await fetch(`${API}/api/health`, { method: "GET" });
+    if (!r.ok) throw new Error("no-health");
+    const j = await r.json();
+    if (j.ffprobe) {
+      el.videoEngineHint.textContent =
+        "Ortam inceleme hazır — «Medya bilgisi». v2 kesim; v3 altyazı/ses; v4 çizelge + altyazıyı Tercüme’ye gönder. Yerel araçlar sistem yolunda olmalı; çıktı .ruzgar-video-export/.";
+    } else {
+      el.videoEngineHint.textContent =
+        "Ortam inceleme aracı yok — FFmpeg paketini kurup sistem yoluna ekleyin; ardından yerel sunucuyu yeniden başlatın.";
+    }
+  } catch {
+    el.videoEngineHint.textContent =
+      "Sunucu yok — video işlemleri için ilim-assistant yerel sunucusu çalışır olmalıdır.";
+  }
+}
+
+async function runVideoProbeFromFile() {
+  const f = el.videoFileInput?.files?.[0];
+  if (!f) {
+    flashRuzgarDurum("Önce bir dosya seçin.");
+    return;
+  }
+  flashRuzgarDurum("Ortam inceleniyor…");
+  setStatus("Medya özeti…", "Rüzgar");
+  try {
+    const fd = new FormData();
+    fd.append("file", f, f.name || "media.bin");
+    const res = await fetch(`${API}/api/video/probe`, { method: "POST", body: fd });
+    let j = {};
+    try {
+      j = await res.json();
+    } catch {
+      j = {};
+    }
+    if (!res.ok) {
+      let detail = j.detail;
+      if (Array.isArray(detail)) {
+        detail = detail.map((x) => (x && x.msg ? x.msg : JSON.stringify(x))).join("; ");
+      } else if (detail != null && typeof detail !== "string") {
+        detail = JSON.stringify(detail);
+      }
+      if (el.videoProbeJson) el.videoProbeJson.textContent = String(detail || res.statusText || "Hata");
+      flashRuzgarDurum(String(detail || "Medya özeti alınamadı"));
+      setStatus("Hazır", "Rüzgar");
+      return;
+    }
+    const sum = j.summary;
+    if (sum && typeof sum.duration_sec === "number" && Number.isFinite(sum.duration_sec)) {
+      lastVideoProbeDurationSec = Math.max(0, sum.duration_sec);
+    }
+    if (el.videoProbeJson) el.videoProbeJson.textContent = formatVideoSummaryHuman(sum);
+    updateVideoTimelineUI();
+    flashRuzgarDurum("Medya özeti hazır.");
+    setStatus("Hazır", "Rüzgar");
+  } catch (e) {
+    if (el.videoProbeJson) el.videoProbeJson.textContent = String(e && e.message ? e.message : e);
+    flashRuzgarDurum("Medya özeti isteği başarısız.");
+    setStatus("Hazır", "Rüzgar");
+  }
+}
+
+function appendVideoJobNote(rel) {
+  const line = `\n\n— Son çıktı —\n${rel}\n`;
+  if (el.videoProbeJson) {
+    el.videoProbeJson.textContent = `${String(el.videoProbeJson.textContent || "").trimEnd()}${line}`;
+  }
+  flashRuzgarDurum(`Kaydedildi: ${rel}`);
+}
+
+function openVideoExportFolder() {
+  if (window.ruzgarApi?.openWorkspaceRel) {
+    void window.ruzgarApi.openWorkspaceRel(".ruzgar-video-export");
+    flashRuzgarDurum("Çıktı klasörü açılıyor…");
+  } else {
+    flashRuzgarDurum("Klasörü açmak için masaüstü Rüzgar kullanın.");
+  }
+}
+
+async function runVideoTrimJob() {
+  const rel = String(el.videoRelWorkspace?.value || "").trim();
+  const fd = new FormData();
+  fd.append("start_sec", String(el.videoStartSec?.value ?? "0"));
+  const du = String(el.videoDurationSec?.value || "").trim();
+  const en = String(el.videoEndSec?.value || "").trim();
+  if (du) fd.append("duration_sec", du);
+  else if (en) fd.append("end_sec", en);
+  else {
+    flashRuzgarDurum("Süre veya bitiş süresi girin.");
+    return;
+  }
+  fd.append("copy_streams", el.videoCopyStreams?.checked ? "true" : "false");
+  if (rel) {
+    fd.append("rel", rel);
+  } else {
+    const f = el.videoFileInput?.files?.[0];
+    if (!f) {
+      flashRuzgarDurum("Göreli yol yazın veya dosya seçin.");
+      return;
+    }
+    fd.append("file", f, f.name);
+  }
+  flashRuzgarDurum("Kesim işleniyor…");
+  setStatus("Kesim işleniyor…", "Rüzgar");
+  try {
+    const res = await fetch(`${API}/api/video/trim`, { method: "POST", body: fd });
+    let j = {};
+    try {
+      j = await res.json();
+    } catch {
+      j = {};
+    }
+    if (!res.ok) {
+      let detail = j.detail;
+      if (Array.isArray(detail)) {
+        detail = detail.map((x) => (x && x.msg ? x.msg : JSON.stringify(x))).join("; ");
+      } else if (detail != null && typeof detail !== "string") {
+        detail = JSON.stringify(detail);
+      }
+      flashRuzgarDurum(String(detail || res.statusText || "Kesim başarısız"));
+      setStatus("Hazır", "Rüzgar");
+      return;
+    }
+    const out = String(j.output_rel || "").trim();
+    if (out) appendVideoJobNote(out);
+    setStatus("Hazır", "Rüzgar");
+  } catch (e) {
+    flashRuzgarDurum(e && e.message ? e.message : String(e));
+    setStatus("Hazır", "Rüzgar");
+  }
+}
+
+async function runVideoTranscodeJob() {
+  const rel = String(el.videoRelWorkspace?.value || "").trim();
+  const fd = new FormData();
+  if (rel) {
+    fd.append("rel", rel);
+  } else {
+    const f = el.videoFileInput?.files?.[0];
+    if (!f) {
+      flashRuzgarDurum("Göreli yol yazın veya dosya seçin.");
+      return;
+    }
+    fd.append("file", f, f.name);
+  }
+  flashRuzgarDurum("Dönüştürme…");
+  setStatus("Dönüştürülüyor…", "Rüzgar");
+  try {
+    const res = await fetch(`${API}/api/video/transcode`, { method: "POST", body: fd });
+    let j = {};
+    try {
+      j = await res.json();
+    } catch {
+      j = {};
+    }
+    if (!res.ok) {
+      let detail = j.detail;
+      if (Array.isArray(detail)) {
+        detail = detail.map((x) => (x && x.msg ? x.msg : JSON.stringify(x))).join("; ");
+      } else if (detail != null && typeof detail !== "string") {
+        detail = JSON.stringify(detail);
+      }
+      flashRuzgarDurum(String(detail || res.statusText || "Dönüştürme başarısız"));
+      setStatus("Hazır", "Rüzgar");
+      return;
+    }
+    const out = String(j.output_rel || "").trim();
+    if (out) appendVideoJobNote(out);
+    setStatus("Hazır", "Rüzgar");
+  } catch (e) {
+    flashRuzgarDurum(e && e.message ? e.message : String(e));
+    setStatus("Hazır", "Rüzgar");
+  }
+}
+
+async function runVideoConcatJob() {
+  const a = String(el.videoConcatA?.value || "").trim();
+  const b = String(el.videoConcatB?.value || "").trim();
+  if (!a || !b) {
+    flashRuzgarDurum("İki göreli yol girin.");
+    return;
+  }
+  flashRuzgarDurum("Birleştiriliyor…");
+  setStatus("Dosyalar birleştiriliyor…", "Rüzgar");
+  try {
+    const res = await fetch(`${API}/api/video/concat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        rel_a: a,
+        rel_b: b,
+        copy_streams: !!(el.videoConcatCopy && el.videoConcatCopy.checked),
+      }),
+    });
+    let j = {};
+    try {
+      j = await res.json();
+    } catch {
+      j = {};
+    }
+    if (!res.ok) {
+      let detail = j.detail;
+      if (Array.isArray(detail)) {
+        detail = detail.map((x) => (x && x.msg ? x.msg : JSON.stringify(x))).join("; ");
+      } else if (detail != null && typeof detail !== "string") {
+        detail = JSON.stringify(detail);
+      }
+      flashRuzgarDurum(String(detail || res.statusText || "Birleştirme başarısız"));
+      setStatus("Hazır", "Rüzgar");
+      return;
+    }
+    const out = String(j.output_rel || "").trim();
+    if (out) appendVideoJobNote(out);
+    setStatus("Hazır", "Rüzgar");
+  } catch (e) {
+    flashRuzgarDurum(e && e.message ? e.message : String(e));
+    setStatus("Hazır", "Rüzgar");
+  }
+}
+
+async function runVideoBurnSubJob() {
+  const v = String(el.videoRelBurnVideo?.value || "").trim();
+  const s = String(el.videoRelBurnSub?.value || "").trim();
+  if (!v || !s) {
+    flashRuzgarDurum("Video ve altyazı için göreli yol girin.");
+    return;
+  }
+  const fd = new FormData();
+  fd.append("rel_video", v);
+  fd.append("rel_sub", s);
+  flashRuzgarDurum("Altyazı görüntüye gömülüyor…");
+  setStatus("Altyazı işleniyor…", "Rüzgar");
+  try {
+    const res = await fetch(`${API}/api/video/burn-subtitles`, { method: "POST", body: fd });
+    let j = {};
+    try {
+      j = await res.json();
+    } catch {
+      j = {};
+    }
+    if (!res.ok) {
+      let detail = j.detail;
+      if (Array.isArray(detail)) {
+        detail = detail.map((x) => (x && x.msg ? x.msg : JSON.stringify(x))).join("; ");
+      } else if (detail != null && typeof detail !== "string") {
+        detail = JSON.stringify(detail);
+      }
+      flashRuzgarDurum(String(detail || res.statusText || "Altyazı gömme başarısız"));
+      setStatus("Hazır", "Rüzgar");
+      return;
+    }
+    const out = String(j.output_rel || "").trim();
+    if (out) appendVideoJobNote(out);
+    setStatus("Hazır", "Rüzgar");
+  } catch (e) {
+    flashRuzgarDurum(e && e.message ? e.message : String(e));
+    setStatus("Hazır", "Rüzgar");
+  }
+}
+
+async function runVideoMuxAudioJob() {
+  const v = String(el.videoRelMuxVideo?.value || "").trim();
+  const a = String(el.videoRelMuxAudio?.value || "").trim();
+  if (!v || !a) {
+    flashRuzgarDurum("Video ve ses dosyası için göreli yol girin.");
+    return;
+  }
+  const fd = new FormData();
+  fd.append("rel_video", v);
+  fd.append("rel_audio", a);
+  fd.append("copy_video", el.videoMuxCopyVideo?.checked ? "true" : "false");
+  fd.append("shortest", el.videoMuxShortest?.checked ? "true" : "false");
+  flashRuzgarDurum("Ses birleştiriliyor…");
+  setStatus("Ses ekleniyor…", "Rüzgar");
+  try {
+    const res = await fetch(`${API}/api/video/mux-audio`, { method: "POST", body: fd });
+    let j = {};
+    try {
+      j = await res.json();
+    } catch {
+      j = {};
+    }
+    if (!res.ok) {
+      let detail = j.detail;
+      if (Array.isArray(detail)) {
+        detail = detail.map((x) => (x && x.msg ? x.msg : JSON.stringify(x))).join("; ");
+      } else if (detail != null && typeof detail !== "string") {
+        detail = JSON.stringify(detail);
+      }
+      flashRuzgarDurum(String(detail || res.statusText || "Ses birleştirme başarısız"));
+      setStatus("Hazır", "Rüzgar");
+      return;
+    }
+    const out = String(j.output_rel || "").trim();
+    if (out) appendVideoJobNote(out);
+    setStatus("Hazır", "Rüzgar");
+  } catch (e) {
+    flashRuzgarDurum(e && e.message ? e.message : String(e));
+    setStatus("Hazır", "Rüzgar");
+  }
+}
+
+function wireVideoAtolye() {
+  if (el.videoFileInput && el.videoPreview && el.videoFileInput.dataset.videoWired !== "1") {
+    el.videoFileInput.dataset.videoWired = "1";
+    el.videoFileInput.addEventListener("change", () => {
+      const f = el.videoFileInput.files && el.videoFileInput.files[0];
+      if (!f) return;
+      try {
+        if (videoPreviewObjectUrl) URL.revokeObjectURL(videoPreviewObjectUrl);
+      } catch (_) {
+        /* ignore */
+      }
+      videoPreviewObjectUrl = URL.createObjectURL(f);
+      el.videoPreview.src = videoPreviewObjectUrl;
+      videoTimelineIn = null;
+      videoTimelineOut = null;
+      lastVideoProbeDurationSec = 0;
+      if (el.videoProbeJson) {
+        el.videoProbeJson.textContent =
+          "Dosya değişti. «Medya bilgisi» ile teknik özeti güncelleyin.";
+      }
+    });
+  }
+  if (el.btnVideoProbe) {
+    el.btnVideoProbe.addEventListener("click", () => {
+      void runVideoProbeFromFile();
+    });
+  }
+  if (el.btnVideoClear) {
+    el.btnVideoClear.addEventListener("click", () => {
+      try {
+        if (videoPreviewObjectUrl) URL.revokeObjectURL(videoPreviewObjectUrl);
+      } catch (_) {
+        /* ignore */
+      }
+      videoPreviewObjectUrl = null;
+      if (el.videoFileInput) el.videoFileInput.value = "";
+      if (el.videoPreview) {
+        el.videoPreview.removeAttribute("src");
+        el.videoPreview.load();
+      }
+      if (el.videoProbeJson) {
+        el.videoProbeJson.textContent =
+          "Sıfırlandı. Yeni dosya seçip «Medya bilgisi» ile devam edin.";
+      }
+      if (el.videoRelWorkspace) el.videoRelWorkspace.value = "";
+      if (el.videoRelBurnVideo) el.videoRelBurnVideo.value = "";
+      if (el.videoRelBurnSub) el.videoRelBurnSub.value = "";
+      if (el.videoRelMuxVideo) el.videoRelMuxVideo.value = "";
+      if (el.videoRelMuxAudio) el.videoRelMuxAudio.value = "";
+      if (el.videoRelSubTranslate) el.videoRelSubTranslate.value = "";
+      resetVideoTimelineMarks();
+      resetVideoTimelineProbeDuration();
+      flashRuzgarDurum("Video paneli sıfırlandı.");
+    });
+  }
+  if (el.btnVideoTrim) {
+    el.btnVideoTrim.addEventListener("click", () => {
+      void runVideoTrimJob();
+    });
+  }
+  if (el.btnVideoTranscode) {
+    el.btnVideoTranscode.addEventListener("click", () => {
+      void runVideoTranscodeJob();
+    });
+  }
+  if (el.btnVideoConcat) {
+    el.btnVideoConcat.addEventListener("click", () => {
+      void runVideoConcatJob();
+    });
+  }
+  if (el.btnVideoOpenExport) {
+    el.btnVideoOpenExport.addEventListener("click", () => {
+      openVideoExportFolder();
+    });
+  }
+  if (el.btnVideoBurnSub) {
+    el.btnVideoBurnSub.addEventListener("click", () => {
+      void runVideoBurnSubJob();
+    });
+  }
+  if (el.btnVideoMuxAudio) {
+    el.btnVideoMuxAudio.addEventListener("click", () => {
+      void runVideoMuxAudioJob();
+    });
+  }
+  wireVideoTimeline();
 }
 
 async function refreshArsivTreeInto(containerEl) {
@@ -1621,6 +2275,7 @@ function wireDynamicWorkbench() {
   wireOkumaAtolye();
   wireTercumeAtolye();
   wireSesAtolye();
+  wireVideoAtolye();
   if (el.btnHafizaSave) {
     // Click event köprüsü: analiz satırlarını kalıcı hafızaya yazar.
     el.btnHafizaSave.addEventListener("click", (ev) => {
@@ -1697,13 +2352,6 @@ function wireDynamicWorkbench() {
       }
       e.preventDefault();
       void sendToHafizaAnalyze();
-    });
-  }
-  if (el.videoFileInput && el.videoPreview) {
-    el.videoFileInput.addEventListener("change", () => {
-      const f = el.videoFileInput.files && el.videoFileInput.files[0];
-      if (!f) return;
-      el.videoPreview.src = URL.createObjectURL(f);
     });
   }
 }
@@ -2554,15 +3202,21 @@ async function checkApi() {
     const r = await fetch(`${API}/api/health`, { method: "GET" });
     const j = await r.json();
     if (j.ok) {
-      el.api.textContent = j.stt ? "API ✓ STT" : "API ✓";
+      el.api.textContent = j.stt ? "Sunucu ✓ metne döküm" : "Sunucu ✓";
       let apiTitle = j.stt
-        ? "desktop_server — STT: Whisper ve/veya SpeechRecognition (Ümit & Gökçenur dinleme)"
-        : "API açık — pip install faster-whisper ve/veya SpeechRecognition";
+        ? "Yerel sunucu — konuşmayı metne düşürme (yerel model veya tarayıcı tanıma)"
+        : "Sunucu bağlı — konuşmayı metne düşürmek için: pip install faster-whisper ve/veya SpeechRecognition";
       if (j.pdf_text === false) {
-        apiTitle += " | PDF: pip install pypdf";
+        apiTitle += " | PDF için: pip install pypdf";
       }
       if (j.docx_text === false) {
-        apiTitle += " | DOCX: pip install python-docx";
+        apiTitle += " | DOCX için: pip install python-docx";
+      }
+      if (j.ffprobe === false) {
+        apiTitle += " | Video: FFmpeg sistem yolunda olmalı (inceleme aracı)";
+      }
+      if (j.ffmpeg === false) {
+        apiTitle += " | FFmpeg ikilisi bulunamadı";
       }
       el.api.title = apiTitle;
       el.api.className = "tech-chip ok";
@@ -2571,10 +3225,10 @@ async function checkApi() {
       return true;
     }
   } catch {
-    el.api.textContent = "API kapalı";
+    el.api.textContent = "Sunucu kapalı";
     el.api.className = "tech-chip err";
     el.api.title = "";
-    setStatus("Önce desktop_server.py çalıştır", "Rüzgar");
+    setStatus("Önce yerel sunucuyu başlatın (ilim-assistant)", "Rüzgar");
   }
   return false;
 }
@@ -2681,7 +3335,7 @@ async function refreshHafizaListUi() {
             void refreshHafizaListUi();
           } else setStatus("Silinemedi", "Rüzgar");
         } catch {
-          setStatus("API hatası", "Rüzgar");
+          setStatus("Sunucu hatası", "Rüzgar");
         }
       });
     });
@@ -2701,7 +3355,7 @@ async function refreshHafizaListUi() {
             void refreshHafizaListUi();
           } else setStatus("İşlem başarısız", "Rüzgar");
         } catch {
-          setStatus("API hatası", "Rüzgar");
+          setStatus("Sunucu hatası", "Rüzgar");
         }
       });
     });
@@ -2753,7 +3407,7 @@ async function saveKisiselPanel() {
       closeKisiselPanelModal();
     } else setStatus("Kaydedilemedi", "Rüzgar");
   } catch {
-    setStatus("API yok — kayıt atlanamadı", "Rüzgar");
+    setStatus("Sunucu yok — kayıt atlanamadı", "Rüzgar");
   }
 }
 
@@ -2858,7 +3512,7 @@ function wireDinamitFeatures() {
         }
         setStatus("Hazır", "Rüzgar");
       } catch {
-        setStatus("Görsel API hatası", "Rüzgar");
+        setStatus("Görsel üretim hatası", "Rüzgar");
       }
     });
   }
@@ -4268,7 +4922,7 @@ if (window.ruzgarApi?.onMenu) {
           if (r.ok) setStatus(`Ses ayarı: hız ${hiz} · huzur ${huzur}`, "Rüzgar");
           else setStatus("Ses ayarı kaydedilemedi", "Rüzgar");
         })
-        .catch(() => setStatus("API yok — ses ayarı yazılamadı", "Rüzgar"));
+        .catch(() => setStatus("Sunucu yok — ses ayarı yazılamadı", "Rüzgar"));
     }
     if (typeof action === "string" && action.startsWith("mode:")) {
       switchMode(action.slice(5));

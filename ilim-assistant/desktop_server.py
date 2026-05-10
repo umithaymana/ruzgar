@@ -15,11 +15,12 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import uuid
 from pathlib import Path
 from typing import Annotated, Any, Iterator
 
 import uvicorn
-from fastapi import FastAPI, File, HTTPException, Query, UploadFile, WebSocket
+from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
@@ -40,8 +41,24 @@ from ilim_assistant.hafiza_i_ruzgar import (
 from ilim_assistant.text_encoding import finalize_assistant_reply
 from ilim_assistant.llm_ollama import chat_completion_stream
 from ilim_assistant.stt_whisper import stt_runtime_available, transcribe_file
+from ilim_assistant.video_ffmpeg import (
+    MAX_SEGMENT_SECONDS,
+    burn_subtitles_into_mp4,
+    concat_two_files,
+    export_directory,
+    ffmpeg_available,
+    ffprobe_available,
+    ffprobe_json,
+    mux_replace_audio,
+    summarize_probe,
+    transcode_to_mp4,
+    trim_media,
+)
 
 app = FastAPI(title="RÜZGAR Desktop API")
+
+# Video probe: tarayıcıdan gelen dosya üst sınırı (metadata okuma; yine de güvenlik)
+MAX_VIDEO_PROBE_BYTES = 600 * 1024 * 1024
 
 # Proje kökü (YAPAY ZEKA): ilim-assistant/desktop_server.py → iki üst dizin
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -81,6 +98,12 @@ def _repo_resolve_under_root(rel_query: str, must_be_dir: bool = False) -> Path:
         if not target.is_file():
             raise HTTPException(status_code=404, detail="Dosya yok.")
     return target
+
+
+def _parse_bool_form(val: str | None, default: bool = True) -> bool:
+    if val is None or str(val).strip() == "":
+        return default
+    return str(val).strip().lower() in ("1", "true", "yes", "on")
 
 
 def _repo_list_children(rel_query: str) -> list[dict[str, Any]]:
@@ -142,6 +165,14 @@ class ChatRequest(BaseModel):
     workspace_root: str | None = None
     # Web ara kapalı olsa bile mesajdaki https URL’lerini oku
     read_message_links: bool = True
+
+
+class VideoConcatBody(BaseModel):
+    """İki proje içi dosyayı concat ile birleştirir (codec uyumu şarta bağlı)."""
+
+    rel_a: str = ""
+    rel_b: str = ""
+    copy_streams: bool = True
 
 
 def _sse(obj: dict) -> str:
@@ -281,7 +312,352 @@ def health():
         "stt": stt_runtime_available(),
         "pdf_text": pdf_text_runtime_available(),
         "docx_text": docx_text_runtime_available(),
+        "ffmpeg": ffmpeg_available(),
+        "ffprobe": ffprobe_available(),
     }
+
+
+@app.post("/api/video/probe")
+async def api_video_probe(file: UploadFile = File(...)):
+    """Yüklenen video/ses dosyası için ffprobe ile süre, codec, çözünürlük özeti."""
+    if not ffprobe_available():
+        raise HTTPException(
+            status_code=503,
+            detail="ffprobe bulunamadı: FFmpeg kurun ve PATH'e ekleyin.",
+        )
+    raw = await file.read()
+    ln = len(raw)
+    if ln < 32:
+        raise HTTPException(status_code=400, detail="Dosya çok kısa veya boş.")
+    if ln > MAX_VIDEO_PROBE_BYTES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Dosya çok büyük (>{MAX_VIDEO_PROBE_BYTES // (1024 * 1024)} MB).",
+        )
+
+    fn = (file.filename or "").lower()
+    sfx = ".bin"
+    for ext in (
+        ".mkv",
+        ".webm",
+        ".mov",
+        ".avi",
+        ".mp4",
+        ".m4v",
+        ".wav",
+        ".mp3",
+        ".flac",
+        ".ogg",
+        ".opus",
+    ):
+        if fn.endswith(ext):
+            sfx = ext
+            break
+
+    tmp_path = None
+    try:
+        fd, tmp_path = tempfile.mkstemp(suffix=sfx)
+        os.write(fd, raw)
+        os.close(fd)
+
+        def _run():
+            data = ffprobe_json(tmp_path)
+            return summarize_probe(data)
+
+        summary = await run_in_threadpool(_run)
+        return {"ok": True, "summary": summary}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    finally:
+        if tmp_path and os.path.isfile(tmp_path):
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+
+
+@app.post("/api/video/trim")
+async def api_video_trim(
+    start_sec: Annotated[float, Form()] = 0.0,
+    duration_sec: Annotated[float | None, Form()] = None,
+    end_sec: Annotated[float | None, Form()] = None,
+    copy_streams: Annotated[str, Form()] = "true",
+    rel: Annotated[str | None, Form()] = None,
+    file: UploadFile | None = File(None),
+):
+    """Zaman aralığı keser; çıktı `.ruzgar-video-export/` altına yazılır."""
+    if not ffmpeg_available():
+        raise HTTPException(
+            status_code=503,
+            detail="ffmpeg bulunamadı: FFmpeg kurun ve PATH'e ekleyin.",
+        )
+    rel_s = (rel or "").strip()
+    if rel_s and file is not None:
+        raise HTTPException(status_code=400, detail="rel ve file aynı istekte kullanılamaz.")
+    if not rel_s and file is None:
+        raise HTTPException(status_code=400, detail="rel veya file gerekli.")
+
+    copy_flag = _parse_bool_form(copy_streams, True)
+    sp = max(0.0, float(start_sec))
+    dur: float | None = None
+    if duration_sec is not None and float(duration_sec) > 0:
+        dur = float(duration_sec)
+    elif end_sec is not None:
+        dur = float(end_sec) - sp
+    else:
+        raise HTTPException(status_code=400, detail="duration_sec veya end_sec gerekli.")
+    if dur is None or dur <= 0:
+        raise HTTPException(status_code=400, detail="Geçersiz süre (duration veya end).")
+    if dur > MAX_SEGMENT_SECONDS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Kesim süresi en fazla {MAX_SEGMENT_SECONDS // 3600} saat olabilir.",
+        )
+
+    tmp_input: str | None = None
+    try:
+        if rel_s:
+            input_path = _repo_resolve_under_root(rel_s)
+        else:
+            raw = await file.read()
+            if len(raw) < 32:
+                raise HTTPException(status_code=400, detail="Dosya çok kısa veya boş.")
+            if len(raw) > MAX_VIDEO_PROBE_BYTES:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Dosya çok büyük (>{MAX_VIDEO_PROBE_BYTES // (1024 * 1024)} MB); proje içi rel kullanın.",
+                )
+            sfx = ".bin"
+            low = ((file.filename if file else "") or "").lower()
+            for ext in (
+                ".mkv",
+                ".webm",
+                ".mov",
+                ".avi",
+                ".mp4",
+                ".m4v",
+                ".wav",
+                ".mp3",
+            ):
+                if low.endswith(ext):
+                    sfx = ext
+                    break
+            fd, tmp_input = tempfile.mkstemp(suffix=sfx)
+            os.write(fd, raw)
+            os.close(fd)
+            input_path = Path(tmp_input)
+
+        out_dir = export_directory(REPO_ROOT)
+        stem = input_path.stem or "media"
+        suf = ".mp4" if not copy_flag else (input_path.suffix or ".mp4")
+        out_name = f"ruzgar_trim_{uuid.uuid4().hex[:10]}_{stem}{suf}"
+        out_path = out_dir / out_name
+
+        def _run():
+            trim_media(
+                input_path,
+                out_path,
+                start_sec=sp,
+                duration_sec=dur,
+                copy_streams=copy_flag,
+            )
+
+        await run_in_threadpool(_run)
+        rel_out = out_path.relative_to(REPO_ROOT.resolve()).as_posix()
+        return {"ok": True, "output_rel": rel_out}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    finally:
+        if tmp_input and os.path.isfile(tmp_input):
+            try:
+                os.unlink(tmp_input)
+            except OSError:
+                pass
+
+
+@app.post("/api/video/transcode")
+async def api_video_transcode(
+    rel: Annotated[str | None, Form()] = None,
+    file: UploadFile | None = File(None),
+):
+    """Tam dosyayı H.264 + AAC MP4 olarak yeniden kodlar."""
+    if not ffmpeg_available():
+        raise HTTPException(
+            status_code=503,
+            detail="ffmpeg bulunamadı: FFmpeg kurun ve PATH'e ekleyin.",
+        )
+    rel_s = (rel or "").strip()
+    if rel_s and file is not None:
+        raise HTTPException(status_code=400, detail="rel ve file aynı istekte kullanılamaz.")
+    if not rel_s and file is None:
+        raise HTTPException(status_code=400, detail="rel veya file gerekli.")
+
+    tmp_input: str | None = None
+    try:
+        if rel_s:
+            input_path = _repo_resolve_under_root(rel_s)
+        else:
+            raw = await file.read()
+            if len(raw) < 64:
+                raise HTTPException(status_code=400, detail="Dosya çok kısa veya boş.")
+            if len(raw) > MAX_VIDEO_PROBE_BYTES:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Dosya çok büyük (>{MAX_VIDEO_PROBE_BYTES // (1024 * 1024)} MB); proje içi rel kullanın.",
+                )
+            low = ((file.filename if file else "") or "").lower()
+            sfx = ".bin"
+            for ext in (".mkv", ".webm", ".mov", ".avi", ".mp4", ".m4v", ".mp3", ".wav"):
+                if low.endswith(ext):
+                    sfx = ext
+                    break
+            fd, tmp_input = tempfile.mkstemp(suffix=sfx)
+            os.write(fd, raw)
+            os.close(fd)
+            input_path = Path(tmp_input)
+
+        out_dir = export_directory(REPO_ROOT)
+        out_path = out_dir / f"ruzgar_x264_{uuid.uuid4().hex[:10]}.mp4"
+
+        def _run():
+            transcode_to_mp4(input_path, out_path)
+
+        await run_in_threadpool(_run)
+        rel_out = out_path.relative_to(REPO_ROOT.resolve()).as_posix()
+        return {"ok": True, "output_rel": rel_out}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    finally:
+        if tmp_input and os.path.isfile(tmp_input):
+            try:
+                os.unlink(tmp_input)
+            except OSError:
+                pass
+
+
+@app.post("/api/video/concat")
+async def api_video_concat(body: VideoConcatBody):
+    """İki proje içi dosyayı birleştirir (ffmpeg concat demuxer)."""
+    if not ffmpeg_available():
+        raise HTTPException(
+            status_code=503,
+            detail="ffmpeg bulunamadı: FFmpeg kurun ve PATH'e ekleyin.",
+        )
+    a = (body.rel_a or "").strip()
+    b = (body.rel_b or "").strip()
+    if not a or not b:
+        raise HTTPException(status_code=400, detail="rel_a ve rel_b gerekli.")
+    pa = _repo_resolve_under_root(a)
+    pb = _repo_resolve_under_root(b)
+    out_dir = export_directory(REPO_ROOT)
+    out_path = out_dir / f"ruzgar_concat_{uuid.uuid4().hex[:12]}.mp4"
+
+    def _run():
+        concat_two_files(pa, pb, out_path, copy_streams=bool(body.copy_streams))
+
+    try:
+        await run_in_threadpool(_run)
+        rel_out = out_path.relative_to(REPO_ROOT.resolve()).as_posix()
+        return {"ok": True, "output_rel": rel_out}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+MAX_SUBTITLE_BYTES = 12 * 1024 * 1024
+
+
+@app.post("/api/video/burn-subtitles")
+async def api_video_burn_subtitles(
+    rel_video: Annotated[str, Form()],
+    rel_sub: Annotated[str, Form()],
+):
+    """Altyazıyı (SRT/ASS/VTT) videoya gömer; çıktı `.ruzgar-video-export/` altına yazılır."""
+    if not ffmpeg_available():
+        raise HTTPException(
+            status_code=503,
+            detail="ffmpeg bulunamadı: FFmpeg kurun ve PATH'e ekleyin.",
+        )
+    rv = (rel_video or "").strip()
+    rs = (rel_sub or "").strip()
+    if not rv or not rs:
+        raise HTTPException(status_code=400, detail="rel_video ve rel_sub gerekli.")
+    video_path = _repo_resolve_under_root(rv)
+    sub_path = _repo_resolve_under_root(rs)
+    if sub_path.stat().st_size > MAX_SUBTITLE_BYTES:
+        raise HTTPException(status_code=400, detail="Altyazı dosyası çok büyük.")
+    low = sub_path.suffix.lower()
+    if low not in (".srt", ".ass", ".ssa", ".vtt"):
+        raise HTTPException(
+            status_code=400,
+            detail="Altyazı uzantısı desteklenmiyor (.srt, .ass, .ssa, .vtt).",
+        )
+    out_dir = export_directory(REPO_ROOT)
+    stem = video_path.stem or "video"
+    out_path = out_dir / f"ruzgar_subburn_{uuid.uuid4().hex[:10]}_{stem}.mp4"
+
+    def _run():
+        burn_subtitles_into_mp4(video_path, sub_path, out_path)
+
+    try:
+        await run_in_threadpool(_run)
+        rel_out = out_path.relative_to(REPO_ROOT.resolve()).as_posix()
+        return {"ok": True, "output_rel": rel_out}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@app.post("/api/video/mux-audio")
+async def api_video_mux_audio(
+    rel_video: Annotated[str, Form()],
+    rel_audio: Annotated[str, Form()],
+    copy_video: Annotated[str, Form()] = "true",
+    shortest: Annotated[str, Form()] = "true",
+):
+    """Harici ses dosyasını videonun ses izine bağlar (çoğu durumda eski ses yerine geçer)."""
+    if not ffmpeg_available():
+        raise HTTPException(
+            status_code=503,
+            detail="ffmpeg bulunamadı: FFmpeg kurun ve PATH'e ekleyin.",
+        )
+    rv = (rel_video or "").strip()
+    ra = (rel_audio or "").strip()
+    if not rv or not ra:
+        raise HTTPException(status_code=400, detail="rel_video ve rel_audio gerekli.")
+    video_path = _repo_resolve_under_root(rv)
+    audio_path = _repo_resolve_under_root(ra)
+    copy_v = _parse_bool_form(copy_video, True)
+    short = _parse_bool_form(shortest, True)
+    out_dir = export_directory(REPO_ROOT)
+    stem = video_path.stem or "video"
+    out_path = out_dir / f"ruzgar_muxaud_{uuid.uuid4().hex[:10]}_{stem}.mp4"
+
+    def _run():
+        mux_replace_audio(
+            video_path,
+            audio_path,
+            out_path,
+            copy_video=copy_v,
+            shortest=short,
+        )
+
+    try:
+        await run_in_threadpool(_run)
+        rel_out = out_path.relative_to(REPO_ROOT.resolve()).as_posix()
+        return {"ok": True, "output_rel": rel_out}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @app.get("/api/workspace/list")
