@@ -744,7 +744,7 @@ function synthEdgeMp3ViaWorker(apiRoot, text, karakter, signal, emotion) {
 
 function showThinkingCenter(titleText) {
   if (el.thinkingTitle) {
-    el.    thinkingTitle.textContent =
+    el.thinkingTitle.textContent =
       titleText ||
       (currentMode === "okuma"
         ? "İlim Hazinesi taranıyor…"
@@ -4047,12 +4047,20 @@ async function streamChat(userText) {
     });
 
   try {
-    const gr = await fetch(`${API}/api/hafiza/genel-bak`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json; charset=utf-8" },
-      body: JSON.stringify({ message: userText }),
-      cache: "no-store",
-    });
+    const genelBakCtrl = new AbortController();
+    const genelBakTo = window.setTimeout(() => genelBakCtrl.abort(), 6000);
+    let gr;
+    try {
+      gr = await fetch(`${API}/api/hafiza/genel-bak`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json; charset=utf-8" },
+        body: JSON.stringify({ message: userText }),
+        cache: "no-store",
+        signal: genelBakCtrl.signal,
+      });
+    } finally {
+      window.clearTimeout(genelBakTo);
+    }
     if (gr.ok) {
       const gj = await gr.json();
       if (gj && gj.hit === true && gj.answer) {

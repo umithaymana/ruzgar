@@ -39,3 +39,6 @@ build/
 # Arşiv PDF'leri (yerelde tutulur; GitHub 100MB limitini aşar)
 ilim-assistant/arsiv/**/*.pdf
 
+# TDK ham JSON (~9 MB): Git’te tutulmaz; yerelde kalır, `tdk_kaynak_convert` ve yeniden ingest için kullanılır.
+ilim-assistant/knowledge/tdk/tdk_kaynak.json
+

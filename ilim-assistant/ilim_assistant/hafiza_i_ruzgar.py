@@ -247,6 +247,18 @@ class HafizaIRuzgar:
     def _now_iso() -> str:
         return datetime.now(timezone.utc).isoformat()
 
+    @classmethod
+    def _cevap_yer_tutucu_mu(cls, cevap: str) -> bool:
+        """JSON satırı 'bilinmiyor' yer tutucusuysa anında yanıt veya fuzzy adayı olmasın."""
+        if not (cevap or "").strip():
+            return True
+        c = unicodedata.normalize("NFKC", str(cevap).strip()).lower()
+        if c == unicodedata.normalize("NFKC", cls.BILINMEYEN_YANIT).strip().lower():
+            return True
+        if "öğrenmedim" not in c and "ogrenmedim" not in c:
+            return False
+        return "mimar" in c or "öğretir" in c or "ogretir" in c
+
     # ----------------- Dış API -----------------
     def cevap_ver(self, metin: str) -> str:
         """
@@ -293,7 +305,10 @@ class HafizaIRuzgar:
         # 1) Birebir
         for row in reversed(adaylar):
             if row.get("soru", "") == t:
-                return row.get("cevap", "")
+                ans = row.get("cevap", "")
+                if self._cevap_yer_tutucu_mu(ans):
+                    continue
+                return ans
 
         # 2) Normalize eşleşme (lowercase + noktalama)
         nq = self._norm_eslesme(t)
@@ -301,7 +316,10 @@ class HafizaIRuzgar:
             for row in reversed(adaylar):
                 k = row.get("soru", "")
                 if self._norm_eslesme(k) == nq:
-                    return row.get("cevap", "")
+                    ans = row.get("cevap", "")
+                    if self._cevap_yer_tutucu_mu(ans):
+                        continue
+                    return ans
 
         # 3) Fuzzy: en yüksek skoru veren satırı dön (eşik üstündeyse)
         en_iyi = self._fuzzy_en_iyi_eslesme(t, adaylar)
@@ -337,6 +355,8 @@ class HafizaIRuzgar:
             k = row.get("soru", "")
             cv = row.get("cevap", "")
             if not k or not cv:
+                continue
+            if self._cevap_yer_tutucu_mu(cv):
                 continue
             aday = self._fuzzy_anahtar(k)
             if not aday:

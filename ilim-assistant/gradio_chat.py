@@ -24,6 +24,8 @@ Ortam:
   LOCAL_TOOLS_TZ — varsayılan Europe/Istanbul; LOCAL_TOOLS_FILE_MAX_CHARS — tek dosya üst sınırı (karakter)
   Web: ENABLE_WEB_LINK_READ — mesajdaki https URL’lerini oku (1); ENABLE_WEB_SEARCH — DuckDuckGo araması (1)
   WEB_ANSWER_FROM_SOURCES — web bağlamından kullanıcıya özet talimatı (1); RUZGAR_DEFAULT_FETCH_PAGES — masaüstü varsayılan sayfa okuma (1)
+  WEB_QUERY_MAX_CHARS — DDG arama sorgusu üst sınırı (varsayılan 240); RUZGAR_WEATHER_WEB_SUPPLEMENT — hava sorusunda canlı API varken DuckDuckGo’yu da çek (1; varsayılan 0 = hız için atla)
+  RUZGAR_WEATHER_BEFORE_JSON — anlık hava cevabını genel hafıza JSON taramasından önce ver (0 = eski sıra; varsayılan 1)
 """
 
 from __future__ import annotations

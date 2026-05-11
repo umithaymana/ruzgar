@@ -69,7 +69,11 @@ def _get_embedder():
     return _cached_embedder
 
 
-def build_index(knowledge_root: Path | None = None, force: bool = False) -> dict:
+def build_index(
+    knowledge_root: Path | None = None,
+    force: bool = False,
+    incremental: bool = False,
+) -> dict:
     root = knowledge_root or _KNOWLEDGE_ROOT
     root = Path(root)
     manifest_path = _INDEX_DIR / "manifest.json"
@@ -79,11 +83,21 @@ def build_index(knowledge_root: Path | None = None, force: bool = False) -> dict
     _INDEX_DIR.mkdir(parents=True, exist_ok=True)
 
     files_payload = _load_markdown_files(root)
-    h = hashlib.sha256()
+    payload_map = {rel: body for rel, body in files_payload}
+
+    # Dosya bazlı hash: incremental (kademeli) gömme güncellemeleri için.
+    file_digests: dict[str, str] = {}
+    overall_h = hashlib.sha256()
     for rel, body in files_payload:
-        h.update(rel.encode("utf-8"))
-        h.update(body.encode("utf-8"))
-    digest = h.hexdigest()
+        one_h = hashlib.sha256()
+        one_h.update(rel.encode("utf-8"))
+        one_h.update(b"\0")
+        one_h.update(body.encode("utf-8"))
+        fd = one_h.hexdigest()
+        file_digests[rel] = fd
+        overall_h.update(rel.encode("utf-8"))
+        overall_h.update(fd.encode("utf-8"))
+    digest = overall_h.hexdigest()
 
     if (
         not force
@@ -92,9 +106,102 @@ def build_index(knowledge_root: Path | None = None, force: bool = False) -> dict
         and emb_path.is_file()
     ):
         old = json.loads(manifest_path.read_text(encoding="utf-8"))
-        if old.get("digest") == digest:
-            return {"status": "cached", "chunks": old.get("num_chunks", 0), "digest": digest}
+        old_digest = old.get("digest")
+        if not incremental and old_digest == digest:
+            return {
+                "status": "cached",
+                "chunks": old.get("num_chunks", 0),
+                "digest": digest,
+            }
 
+        # Incremental: sadece değişen/eklenen/çıkarılan md dosyalarının chunk'larını yeniden gömecek.
+        if incremental and old.get("model") == _MODEL_NAME and isinstance(old.get("file_digests"), dict):
+            old_file_digests: dict[str, str] = old.get("file_digests") or {}
+            changed_rels = [rel for rel, fd in file_digests.items() if old_file_digests.get(rel) != fd]
+            removed_rels = [rel for rel in old_file_digests.keys() if rel not in file_digests]
+
+            if not changed_rels and not removed_rels:
+                return {
+                    "status": "cached",
+                    "chunks": old.get("num_chunks", 0),
+                    "digest": digest,
+                }
+
+            try:
+                old_chunks = _load_chunks()
+                old_emb = _load_embeddings()
+            except Exception:
+                old_chunks, old_emb = [], None
+
+            if not old_chunks or old_emb is None or len(old_chunks) != len(old_emb):
+                # Eski indeks bozuksa veya uyumsuzsa tam rebuild yap.
+                force = True
+            else:
+                changed_set = set(changed_rels)
+                removed_set = set(removed_rels)
+
+                keep_indices: list[int] = []
+                kept_chunks: List[Chunk] = []
+                for i, c in enumerate(old_chunks):
+                    if c.source in removed_set:
+                        continue
+                    if c.source in changed_set:
+                        continue
+                    # Kaynak hâlâ mevcutsa tut.
+                    if c.source in file_digests:
+                        keep_indices.append(i)
+                        kept_chunks.append(c)
+
+                texts_kept = None  # sadece emtpy tutucu
+                keep_emb = old_emb[keep_indices] if keep_indices else old_emb[:0]
+
+                # Değişen kaynakların chunk'larını yeniden üret + embed et.
+                changed_payload = [(rel, payload_map[rel]) for rel in sorted(changed_rels) if rel in payload_map]
+                new_chunks: List[Chunk] = []
+                for rel, body in changed_payload:
+                    for piece in _split_text(body):
+                        new_chunks.append(Chunk(text=piece, source=rel))
+
+                if new_chunks:
+                    model = _get_embedder()
+                    texts_new = [c.text for c in new_chunks]
+                    emb_new = model.encode(texts_new, normalize_embeddings=True, show_progress_bar=True)
+                    emb_out = np.vstack([keep_emb, emb_new]) if len(keep_indices) else emb_new
+                else:
+                    emb_out = keep_emb
+
+                chunks_out = kept_chunks + new_chunks
+                # Persist
+                np.save(str(emb_path), emb_out)
+                with chunks_path.open("w", encoding="utf-8") as f:
+                    for c in chunks_out:
+                        f.write(
+                            json.dumps({"text": c.text, "source": c.source}, ensure_ascii=False)
+                            + "\n"
+                        )
+
+                manifest_path.write_text(
+                    json.dumps(
+                        {
+                            "digest": digest,
+                            "num_chunks": len(chunks_out),
+                            "model": _MODEL_NAME,
+                            "file_digests": file_digests,
+                        },
+                        ensure_ascii=False,
+                        indent=2,
+                    ),
+                    encoding="utf-8",
+                )
+                return {
+                    "status": "incremental",
+                    "chunks": len(chunks_out),
+                    "digest": digest,
+                    "changed_files": len(changed_rels),
+                    "removed_files": len(removed_rels),
+                }
+
+    # Tam rebuild (cached / incremental koşulları dışında kalır).
     chunks: List[Chunk] = []
     for rel, body in files_payload:
         for piece in _split_text(body):
@@ -111,7 +218,12 @@ def build_index(knowledge_root: Path | None = None, force: bool = False) -> dict
 
     manifest_path.write_text(
         json.dumps(
-            {"digest": digest, "num_chunks": len(chunks), "model": _MODEL_NAME},
+            {
+                "digest": digest,
+                "num_chunks": len(chunks),
+                "model": _MODEL_NAME,
+                "file_digests": file_digests,
+            },
             ensure_ascii=False,
             indent=2,
         ),

@@ -931,6 +931,8 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
     """Gradio / SSE / WS; önce `prepare_turn` → merkezi `ruzgar_genel_hafiza.json` eşlemesi."""
     mode_norm = normalize_mode(req.mode or "genel")
     coding = req.coding_mode or mode_norm == "programlama"
+    # İstemci ilk baytı hemen alsın (Electron SSE arabelleği + uzun prepare_turn algısı).
+    yield {"type": "status", "text": "Rüzgar hazırlanıyor…"}
     prep = prepare_turn(
         req.message,
         req.history,
@@ -951,7 +953,6 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
 
     if og_direct is not None:
         full_out = finalize_assistant_reply(og_direct)
-        yield {"type": "meta", "instant_memory": True}
         yield {"type": "token", "text": full_out}
         yield {
             "type": "done",

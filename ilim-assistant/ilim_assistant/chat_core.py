@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import unicodedata
 
 from ilim_assistant.defaults import DEFAULT_OLLAMA_CHAT_MODEL
 from ilim_assistant.llm_ollama import chat_completion, chat_completion_stream
@@ -18,7 +19,7 @@ from ilim_assistant.rag_store import search
 from ilim_assistant.web_tools import (
     build_message_link_context,
     build_web_context,
-    strip_urls_for_search,
+    refined_search_query,
 )
 
 
@@ -156,13 +157,11 @@ def try_archive_rag_direct_reply(
 def _main_chat_genel_only() -> bool:
     """True ise `genel` modda yalnızca `ruzgar_genel_hafiza.json`; eşleşmezse LLM/RAG/web yok.
 
-    Varsayılan **tam güç**: kapalı (`0`). Daraltmak için ortamda `RUZGAR_MAIN_ONLY_GENEL_HAFIZA=1`.
+    Varsayılan **tam güç**: kapalı. Yalnızca ortamda açıkça `RUZGAR_MAIN_ONLY_GENEL_HAFIZA=1`
+    (veya `true` / `yes` / `on`) ise açılır. Boş, tanınmayan veya `0` değerleri tam güç sayılır.
     """
-    return os.environ.get("RUZGAR_MAIN_ONLY_GENEL_HAFIZA", "0").strip().lower() not in (
-        "0",
-        "false",
-        "no",
-    )
+    raw = (os.environ.get("RUZGAR_MAIN_ONLY_GENEL_HAFIZA") or "").strip().lower()
+    return raw in ("1", "true", "yes", "on")
 
 
 def _genel_only_unknown_reply() -> str:
@@ -177,17 +176,40 @@ def _genel_only_unknown_reply() -> str:
         return "Mimar, bunu henüz öğrenmedim, bana öğretir misin?"
 
 
+def _looks_like_genel_hafiza_miss_reply(ans: str) -> bool:
+    """Fuzzy eşleşmeyle gelen '… öğrenmedim …' yer tutucularını anında cevap sayma."""
+    if not ans or not str(ans).strip():
+        return False
+    a = unicodedata.normalize("NFKC", str(ans).strip()).lower()
+    if "öğrenmedim" not in a and "ogrenmedim" not in a:
+        return False
+    return "mimar" in a or "öğretir" in a or "ogretir" in a
+
+
 def try_genel_hafiza_reply(message: str, mode: str) -> str | None:
     """
     Ana motor için `ruzgar_genel_hafiza.json` merkezi sözlüğü.
     Eşleşmede (tam / norm / fuzzy) RAG, web ve LLM çalışmaz.
 
-    «Bilinmeyen» yer tutucu cevap JSON’da yanlışlıkla eşleşirse veya tam güç
-    isteniyorsa LLM’e düşsün diye bu metin **anında cevap sayılmaz** (None döner).
+    «Bilinmeyen» yer tutucu cevap JSON’da yanlışlıkla eşleşirse — LLM’e düşsün diye
+    **anında cevap sayılmaz** (None döner).
 
-    Kapatmak için: ENABLE_RUZGAR_GENEL_HAFIZA=0 veya ENABLE_OGRENME_MERKEZI=0
+    Anında JSON kısayolunu tamamen kapatmak: `ENABLE_RUZGAR_GENEL_HAFIZA=0`
+    (veya `ENABLE_OGRENME_MERKEZI=0`).
     """
     del mode  # öncelik tüm ana sohbet modlarında geçerlidir
+    if os.environ.get("ENABLE_RUZGAR_GENEL_HAFIZA", "1").strip().lower() in (
+        "0",
+        "false",
+        "no",
+    ):
+        return None
+    if os.environ.get("ENABLE_OGRENME_MERKEZI", "1").strip().lower() in (
+        "0",
+        "false",
+        "no",
+    ):
+        return None
     msg = (message or "").strip()
     if not msg or len(msg) > 4000:
         return None
@@ -198,6 +220,8 @@ def try_genel_hafiza_reply(message: str, mode: str) -> str | None:
         if ans is None:
             return None
         if (ans or "").strip() == HafizaIRuzgar.BILINMEYEN_YANIT.strip():
+            return None
+        if _looks_like_genel_hafiza_miss_reply(ans):
             return None
         return ans
     except Exception:
@@ -211,9 +235,20 @@ def _is_wake_only_message(msg: str) -> bool:
 
 
 def _weather_intent(msg: str) -> bool:
-    """Anahtar kelime + (isteğe bağlı) NB sınıflandırıcı — hava niyeti."""
+    """Anahtar kelime + isteğe bağlı NB sınıflandırıcı — hava niyeti.
+
+    ÖNEMLİ:
+    - Varsayılan artık **yalnızca anahtar kelime temelli** (\"hava\", \"yağmur\", \"kaç derece\" vb.).
+    - `intent_router.predict_intent` sadece ortamda açıkça `WEATHER_NB_INTENT=1`
+      ise devreye girer. Böylece tarih/siyasi soru gibi metinler yanlışlıkla
+      \"weather\" sınıfına düşüp canlı hava motorunu tetiklemez.
+    """
     if _is_live_weather_query(msg):
         return True
+
+    raw = (os.environ.get("WEATHER_NB_INTENT") or "").strip().lower()
+    if raw not in ("1", "true", "yes", "on"):
+        return False
     try:
         from ilim_assistant.intent_router import predict_intent
 
@@ -233,6 +268,10 @@ def _is_live_weather_query(msg: str) -> bool:
         "hava durumu",
         "hava bugün",
         "hava yarın",
+        # Cümle sırası değiştiğinde de yakala: "yarın hava nasıl"
+        "yarın hava nasıl",
+        "yarın hava durumu",
+        "yarın hava",
         "havalar nasıl",
         "kaç derece",
         "derece mi",
@@ -255,6 +294,31 @@ def _is_live_weather_query(msg: str) -> bool:
     if s in ("hava", "hava bugün", "hava şimdi"):
         return True
     return False
+
+
+def _weather_instant_allowed(msg: str, *, coding_mode: bool) -> bool:
+    """Uzun / kod / URL içeren mesajlarda anlık hava şablonunu devre dışı bırak."""
+    if coding_mode:
+        return False
+    try:
+        cap = int(os.environ.get("RUZGAR_WEATHER_INSTANT_MAX_CHARS", "360"))
+    except ValueError:
+        cap = 360
+    t = (msg or "").strip()
+    if len(t) > cap:
+        return False
+    low = t.lower()
+    if "http://" in low or "https://" in low or "```" in t:
+        return False
+    try:
+        from ilim_assistant.weather_live import _norm_match
+
+        n = _norm_match(t)
+    except Exception:
+        n = low
+    if any(k in n for k in ("def ", "class ", "import ", "fonksiyon ", "kod yaz")):
+        return False
+    return True
 
 
 def _weather_follow_up(msg: str, history: list | None) -> bool:
@@ -446,6 +510,34 @@ def prepare_turn(
     msg = message.strip()
     m = normalize_mode(mode)
 
+    weather_q = _weather_intent(msg) or _weather_follow_up(msg, history)
+    live_weather_ctx = ""
+    weather_instant: str | None = None
+    if weather_q and os.environ.get("ENABLE_LIVE_WEATHER", "1").strip() not in (
+        "0",
+        "false",
+        "no",
+    ):
+        try:
+            from ilim_assistant.weather_live import compute_live_weather_outcome
+
+            live_weather_ctx, weather_instant = compute_live_weather_outcome(msg)
+        except Exception:
+            live_weather_ctx = ""
+            weather_instant = None
+
+    # Canlı hava anında yanıtı — `ruzgar_genel_hafiza.json` taramasından ÖNCE (büyük dosyada gecikme yok).
+    if (
+        os.environ.get("RUZGAR_WEATHER_BEFORE_JSON", "1").strip()
+        not in ("0", "false", "no")
+        and weather_q
+        and weather_instant
+        and _weather_instant_allowed(msg, coding_mode=coding_mode)
+        and os.environ.get("RUZGAR_WEATHER_INSTANT_REPLY", "1").strip()
+        not in ("0", "false", "no")
+    ):
+        return msg, [], "", "", "", weather_instant
+
     if not skip_ogrenme_lookup:
         og_direct = try_genel_hafiza_reply(msg, m)
         if og_direct is not None:
@@ -453,13 +545,27 @@ def prepare_turn(
         if _main_chat_genel_only() and m == "genel":
             return msg, [], "", "", "", _genel_only_unknown_reply()
 
-    weather_q = _weather_intent(msg) or _weather_follow_up(msg, history)
+    if (
+        os.environ.get("RUZGAR_WEATHER_BEFORE_JSON", "1").strip() in ("0", "false", "no")
+        and weather_q
+        and weather_instant
+        and _weather_instant_allowed(msg, coding_mode=coding_mode)
+        and os.environ.get("RUZGAR_WEATHER_INSTANT_REPLY", "1").strip()
+        not in ("0", "false", "no")
+    ):
+        return msg, [], "", "", "", weather_instant
 
-    try:
-        from ilim_assistant.intent_router import should_use_ilim_rag
+    # Lokal vektör (knowledge/*.md) araması öncelikli olsun.
+    # Varsayılan: tüm mesajlarda RAG denensin; ilgili bağlam skoru alt sınırın altındaysa bağlam eklenmez.
+    local_rag_always_on = os.environ.get("RUZGAR_LOCAL_RAG_ALWAYS_ON", "1").strip().lower()
+    if local_rag_always_on in ("0", "false", "no"):
+        try:
+            from ilim_assistant.intent_router import should_use_ilim_rag
 
-        ilim_rag = should_use_ilim_rag(msg)
-    except Exception:
+            ilim_rag = should_use_ilim_rag(msg)
+        except Exception:
+            ilim_rag = True
+    else:
         ilim_rag = True
 
     hits: list = []
@@ -470,17 +576,19 @@ def prepare_turn(
     elif weather_q:
         # gramer/tecvid md'leri "hava" ile yanlış eşleşir; model dilbilgisi uydurur
         pass
-    elif not ilim_rag:
-        # knowledge/ şu an ağırlıklı dilbilgisi/tecvid; genel soruda embedding hep oraya düşer
-        pass
     else:
         rag_k = int(os.environ.get("RAG_TOP_K", "2"))
         rag_k_clamped = max(1, min(rag_k, 12))
         pool_k = min(max(rag_k_clamped * 3, 10), 28)
         pool_hits = search(msg, top_k=pool_k)
-        hits = pool_hits[:rag_k_clamped]
+        rag_score_min = float(os.environ.get("RAG_SCORE_MIN", "0.20"))
+        # Skor alt sınırının altındaysa bağlam eklemeyelim (karışma olmasın).
+        good_hits = [h for h in pool_hits if h[2] >= rag_score_min]
+        hits = good_hits[:rag_k_clamped]
         ar_hits = [
-            h for h in pool_hits if _rag_source_is_archive(h[1])
+            h
+            for h in good_hits
+            if _rag_source_is_archive(h[1])
         ][:rag_k_clamped]
         blocks = [(t, s) for t, s, _ in hits]
 
@@ -498,46 +606,52 @@ def prepare_turn(
 
     web_extra = ""
     if not _is_wake_only_message(msg):
+        # Web'i ikinci plana al: lokal hafıza / vektör araması bir bağlam üretmişse
+        # (hits/blocks boş değilse) DuckDuckGo + link okuma gecikmeli devreye girer.
+        web_secondary_only_on_empty = (
+            os.environ.get("RUZGAR_WEB_SECONDARY_ONLY_ON_EMPTY", "1").strip().lower()
+            in ("1", "true", "yes", "on")
+        )
+        local_rag_present = bool(blocks or hits or ar_hits) or bool(live_weather_ctx)
+        allow_web = True
+        if web_secondary_only_on_empty and local_rag_present:
+            allow_web = False
+
         web_parts: list[str] = []
-        if (
-            link_on
-            and os.environ.get("ENABLE_WEB_LINK_READ", "1").strip()
-            not in ("0", "false", "no")
-        ):
-            try:
-                link_ctx = build_message_link_context(msg)
-                if link_ctx:
-                    web_parts.append(link_ctx)
-            except Exception:
-                pass
-        if web_on and os.environ.get("ENABLE_WEB_SEARCH", "1") == "1":
-            text_q = strip_urls_for_search(msg).strip()
-            n_fetch = int(min(max(fetch_pages, 0), 5))
-            if text_q:
+        if allow_web:
+            if (
+                link_on
+                and os.environ.get("ENABLE_WEB_LINK_READ", "1").strip()
+                not in ("0", "false", "no")
+            ):
                 try:
-                    search_ctx = build_web_context(
-                        text_q,
-                        max_results=int(os.environ.get("WEB_MAX_RESULTS", "10")),
-                        fetch_first_n_urls=n_fetch,
-                    )
-                    if search_ctx:
-                        web_parts.append(search_ctx)
+                    link_ctx = build_message_link_context(msg)
+                    if link_ctx:
+                        web_parts.append(link_ctx)
                 except Exception:
                     pass
+            if web_on and os.environ.get("ENABLE_WEB_SEARCH", "1") == "1":
+                text_q = refined_search_query(msg).strip()
+                n_fetch = int(min(max(fetch_pages, 0), 5))
+                skip_ddg = (
+                    weather_q
+                    and live_weather_ctx
+                    and len(live_weather_ctx.strip()) > 48
+                    and os.environ.get("RUZGAR_WEATHER_WEB_SUPPLEMENT", "0").strip()
+                    not in ("1", "true", "yes", "on")
+                )
+                if text_q and not skip_ddg:
+                    try:
+                        search_ctx = build_web_context(
+                            text_q,
+                            max_results=int(os.environ.get("WEB_MAX_RESULTS", "10")),
+                            fetch_first_n_urls=n_fetch,
+                        )
+                        if search_ctx:
+                            web_parts.append(search_ctx)
+                    except Exception:
+                        pass
         web_extra = "\n\n".join(web_parts)
-
-    live_weather_ctx = ""
-    if weather_q and os.environ.get("ENABLE_LIVE_WEATHER", "1").strip() not in (
-        "0",
-        "false",
-        "no",
-    ):
-        try:
-            from ilim_assistant.weather_live import fetch_live_weather_context
-
-            live_weather_ctx = fetch_live_weather_context()
-        except Exception:
-            live_weather_ctx = ""
 
     tools_ctx = ""
     try:
@@ -594,7 +708,9 @@ def prepare_turn(
         )
         if live_weather_ctx:
             tail += (
-                "Üstteki **=== Güncel hava ===** bloğu gerçek ölçümdür; kullanıcıya **kısa** (1–3 cümle) aktar.\n"
+                "Üstteki **Güncel hava (Open-Meteo / OpenWeatherMap)** bloğu gerçek tahmindir; "
+                "Ümit abi’ye **arkadaşça** 2–4 cümlede özetle (şemsiye/layer gibi pratik notlar serbest). "
+                "Rakamları abartmadan yorumla; tahmin olduğunu gerektiğinde hafifçe hatırlatabilirsin.\n"
             )
         tail += (
             "Kullanıcıyı weather.com veya Google’a **yönlendirme**; önce üstteki ölçüm veya web özetini kullan.\n"

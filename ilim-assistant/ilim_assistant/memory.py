@@ -47,6 +47,6 @@ def save_exchange(
 
     msg = f"Kaydedildi: {path}"
     if rebuild_index:
-        info = build_index(force=False)
+        info = build_index(force=False, incremental=True)
         msg += f" | İndeks: {info.get('status')} ({info.get('chunks', '?')} parça)"
     return path, msg

@@ -69,9 +69,9 @@ def _task_full_index(msg: str, k: int) -> str:
 
 
 def _task_web_packed(msg: str, fetch_n: int, label: str) -> str:
-    from ilim_assistant.web_tools import build_web_context, strip_urls_for_search
+    from ilim_assistant.web_tools import build_web_context, refined_search_query
 
-    q = strip_urls_for_search(msg).strip()
+    q = refined_search_query(msg).strip()
     if not q:
         return f"{label}\n[Web: boş sorgu.]\n"
     try:
@@ -85,9 +85,9 @@ def _task_web_packed(msg: str, fetch_n: int, label: str) -> str:
 
 
 def _task_web_variant(msg: str, suffix: str, fetch_n: int, label: str) -> str:
-    from ilim_assistant.web_tools import build_web_context, strip_urls_for_search
+    from ilim_assistant.web_tools import build_web_context, refined_search_query
 
-    q = (strip_urls_for_search(msg) + " " + suffix).strip()
+    q = (refined_search_query(msg) + " " + suffix).strip()
     if not q:
         return f"{label}\n[Web: boş sorgu.]\n"
     try:

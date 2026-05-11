@@ -47,6 +47,36 @@ def strip_urls_for_search(text: str) -> str:
     return re.sub(r"\s+", " ", t).strip()
 
 
+_LEADING_WAKE = re.compile(r"^\s*(rüzgar|ruzgar)[\s,;:–\-]*", re.IGNORECASE)
+_FILLER_PHRASES = re.compile(
+    r"\b(lütfen|rica\s*ederim|rica\s*etsem|bana\s+söyle|bana\s+anlat|"
+    r"söyler\s*misin|söyler\s*mısın|anlatır\s*mısın|yardım\s*et|"
+    r"merhaba|selam|iyi\s*günler|iyi\s*akşamlar|saygılar)\b\.?",
+    re.IGNORECASE,
+)
+
+
+def refined_search_query(message: str) -> str:
+    """
+    DuckDuckGo için daha kısa ve odaklı sorgu (hız + daha ilgili snippet).
+    Boş kalırsa strip_urls_for_search çıktısına düşer.
+    """
+    raw = (message or "").strip()
+    t = strip_urls_for_search(raw)
+    t = _LEADING_WAKE.sub("", t).strip()
+    t = _FILLER_PHRASES.sub(" ", t)
+    t = re.sub(r"\s+", " ", t).strip()
+    if not t:
+        t = strip_urls_for_search(raw).strip()
+    try:
+        cap = max(80, int(os.environ.get("WEB_QUERY_MAX_CHARS", "240")))
+    except ValueError:
+        cap = 240
+    if len(t) > cap:
+        t = t[:cap].rsplit(" ", 1)[0].strip()
+    return t
+
+
 def build_message_link_context(message: str) -> str:
     """
     Kullanıcı mesajına yapıştırdığı doğrudan bağlantıları okur ve metin özetleri üretir.
