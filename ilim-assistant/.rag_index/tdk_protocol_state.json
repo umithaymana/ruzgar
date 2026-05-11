@@ -1,0 +1,18 @@
+{
+  "phase": "tdk_only",
+  "status": "complete",
+  "exclusive_tdk": false,
+  "started_at": "2026-05-11T19:26:23+00:00",
+  "batches_written": 185,
+  "file_line_offset": 92406,
+  "lines_ingested": 92406,
+  "source_path": "D:\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\knowledge\\tdk\\tdk_protocol_source.txt",
+  "last_ingest_at": "2026-05-11T19:35:52+00:00",
+  "last_batch_relpath": "tdk/incremental/tdk_batch_00185.md",
+  "completed_at": "2026-05-11T19:35:56+00:00",
+  "finalize_index": {
+    "status": "cached",
+    "chunks": 7861,
+    "digest": "65ad5fb0d4076dcbb18f1c6c5f17005c129543fc471c7fb49df2be0a903b394c"
+  }
+}

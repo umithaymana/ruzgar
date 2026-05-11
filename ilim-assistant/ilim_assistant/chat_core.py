@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 import unicodedata
 
 from ilim_assistant.defaults import DEFAULT_OLLAMA_CHAT_MODEL
@@ -15,7 +16,12 @@ from ilim_assistant.prompts import (
     pick_system,
 )
 from ilim_assistant.persona import WAKE_GREETING, WAKE_GREETING_CODING
-from ilim_assistant.rag_store import search
+from ilim_assistant.rag_store import (
+    search,
+    search_tarih_hafiza,
+    search_tdk_exact_lemma,
+    source_is_tdk,
+)
 from ilim_assistant.web_tools import (
     build_message_link_context,
     build_web_context,
@@ -85,6 +91,202 @@ def normalize_mode(mode: str) -> str:
 def _rag_source_is_archive(rel: str) -> bool:
     p = (rel or "").replace("\\", "/").lower()
     return "/arsiv/" in p or p.startswith("arsiv/")
+
+
+def _tarih_intent(msg: str) -> bool:
+    """
+    Tarih / medeniyet soruları — önce TARIH_VE_KULTUR vektör hafızası taranır.
+    Kapatmak: RUZGAR_TARIH_INTENT=0
+    """
+    if os.environ.get("RUZGAR_TARIH_INTENT", "1").strip().lower() in ("0", "false", "no"):
+        return False
+    raw = (msg or "").strip()
+    if len(raw) < 6:
+        return False
+    low = unicodedata.normalize("NFKD", raw).encode("ascii", "ignore").decode("ascii").lower()
+    low_tr = raw.lower()
+    blob = low_tr + " " + low
+    needles = (
+        "lale devri",
+        "gokturk",
+        "göktürk",
+        "osmanli",
+        "osmanlı",
+        "selcuklu",
+        "selçuklu",
+        "turk tarih kurumu",
+        "türk tarih kurumu",
+        " turk tarih",
+        " turk tarih kurumu",
+        "ottoman",
+        "padisah",
+        "padişah",
+        "hanedan",
+        " malazgirt",
+        "manzikert",
+        "kurtulus savasi",
+        "kurtuluş savaşı",
+        "bizans",
+        "fatih sultan",
+        "kanuni sultan",
+        "yavuz sultan",
+        "orhun",
+        "bilge kag",
+        "bumin kag",
+        "buyuk turk tarihi",
+        "büyük türk tarihi",
+        "mezopotamya",
+        "anadolu selcuk",
+        "anzak",
+        "canakkale savas",
+        "çanakkale savaş",
+        "tanzimat",
+        "ilk turk ",
+        "ilk türk ",
+        "gokturkler",
+        "göktürkler",
+        " osmanli imparator",
+        " osmanlı imparator",
+        " saltanat",
+        " cumhuriyet ilan",
+        " cumhuriyet'in ilan",
+    )
+    if any(n in blob for n in needles):
+        return True
+    if any(x in blob for x in (" ttk ", " ttk,", " (ttk", "[ttk", "ttk ", "ttk'n")):
+        return True
+    if "tarih" in blob or "tarihi" in blob:
+        hints = (
+            "nedir",
+            "kim",
+            "ne zaman",
+            "hangi",
+            "nasil",
+            "nasıl",
+            "donem",
+            "dönem",
+            "devir",
+            "olayi",
+            "olayı",
+            " savas",
+            " savaş",
+            " imparator",
+            "beylik",
+            "yonetimi",
+            "yönetimi",
+            "hanedan",
+            "padişah",
+            "padisah",
+            "sultan",
+        )
+        if any(h in blob for h in hints):
+            return True
+    return False
+
+
+_FILL_TDK_Q = frozenset(
+    {
+        "nedir",
+        "ne",
+        "demek",
+        "demektir",
+        "dir",
+        "dır",
+        "dur",
+        "tur",
+        "tir",
+        "tır",
+        "mi",
+        "mı",
+        "mu",
+        "mü",
+        "midir",
+        "mıdır",
+        "mudur",
+        "müdür",
+        "anlamı",
+        "anlamıdır",
+        "anlamını",
+        "tanımı",
+        "tanımını",
+        "kelimesi",
+        "kelimesinin",
+        "kelime",
+        "için",
+        "tdk",
+        "gts",
+        "sözlük",
+        "sözlükte",
+        "güncel",
+        "türkçe",
+        "turkce",
+        "olduğu",
+        "oldugu",
+        "olan",
+        "hakkında",
+        "hakkinda",
+        "kısaca",
+        "kisaca",
+    }
+)
+
+
+def _ascii_fold_lower(s: str) -> str:
+    return unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode("ascii").lower()
+
+
+def _extract_lemma_for_tdk(msg: str) -> str | None:
+    """Sözlük sorusundan madde metnini çıkarır (TDK `##` başlığı ile tam eşleşecek biçimde)."""
+    raw = (msg or "").strip().strip(' "\'«»“”‘’').strip()
+    if not raw or len(raw) > 120:
+        return None
+    parts = re.split(r"\s+", raw)
+    tokens: list[str] = []
+    for p in parts:
+        t = p.strip(".,;:?!\"'«»()[]{}…")
+        if t:
+            tokens.append(t)
+    if not tokens:
+        return None
+    fold = [_ascii_fold_lower(x) for x in tokens]
+    while fold and fold[-1] in _FILL_TDK_Q:
+        fold.pop()
+        tokens.pop()
+    while fold and fold[0] in _FILL_TDK_Q:
+        fold.pop(0)
+        tokens.pop(0)
+    if not tokens:
+        return None
+    if len(tokens) > 4:
+        return None
+    core = " ".join(tokens)
+    if len(core.replace(" ", "")) < 2:
+        return None
+    return core
+
+
+def _tdk_exact_path_allowed(msg: str, lemma: str | None) -> bool:
+    """Kısa / sözlük nitelikli sorularda vektör 'hayalet' eşlemesine düşmeden yalnızca tam madde aranır."""
+    if not lemma:
+        return False
+    low = (msg or "").lower()
+    hints = (
+        "nedir",
+        "ne demek",
+        "anlamı",
+        "tanımı",
+        "kelimesi",
+        " tdk",
+        "tdk ",
+        "sözlük",
+        "gts ",
+        " gts",
+    )
+    if any(h in low for h in hints):
+        return True
+    if len(lemma.split()) <= 3 and len((msg or "").strip()) <= 52:
+        return True
+    return False
 
 
 def _archive_hits_strong(ar_hits: list) -> bool:
@@ -580,10 +782,47 @@ def prepare_turn(
         rag_k = int(os.environ.get("RAG_TOP_K", "2"))
         rag_k_clamped = max(1, min(rag_k, 12))
         pool_k = min(max(rag_k_clamped * 3, 10), 28)
-        pool_hits = search(msg, top_k=pool_k)
         rag_score_min = float(os.environ.get("RAG_SCORE_MIN", "0.20"))
-        # Skor alt sınırının altındaysa bağlam eklemeyelim (karışma olmasın).
-        good_hits = [h for h in pool_hits if h[2] >= rag_score_min]
+        tarih_on = _tarih_intent(msg)
+        tdk_lem: str | None = None
+        tdk_exact_on = False
+        if (
+            not tarih_on
+            and os.environ.get("RUZGAR_TDK_EXACT_LEMMA", "1").strip().lower()
+            not in ("0", "false", "no")
+        ):
+            tdk_lem = _extract_lemma_for_tdk(msg)
+            tdk_exact_on = _tdk_exact_path_allowed(msg, tdk_lem)
+
+        if tdk_exact_on and tdk_lem:
+            # TDK: yalnızca `##` başlığı tam eşleşmesi — semantik yakınlıkla başka maddeye sıçrama yok.
+            good_hits = search_tdk_exact_lemma(tdk_lem, top_k=rag_k_clamped)
+        else:
+            pool_hits = search(msg, top_k=pool_k)
+            good_hits = [h for h in pool_hits if h[2] >= rag_score_min]
+            if tarih_on:
+                # Tarih turunda TDK sözlük pasajları birleşik listeye girmesin (hafıza çakışması).
+                good_hits = [h for h in good_hits if not source_is_tdk(h[1])]
+                tarih_scan = max(32, int(os.environ.get("RUZGAR_TARIH_SCAN_CAP", "96")))
+                tarih_top = max(rag_k_clamped, int(os.environ.get("RUZGAR_TARIH_TOP_K", "4")))
+                th = search_tarih_hafiza(msg, top_k=tarih_top, scan_cap=tarih_scan)
+                th_ok = [h for h in th if h[2] >= rag_score_min]
+                if not th_ok and th:
+                    try:
+                        weak = float(os.environ.get("RUZGAR_TARIH_WEAK_SCORE", "0.12"))
+                    except ValueError:
+                        weak = 0.12
+                    if float(th[0][2]) >= weak:
+                        th_ok = [th[0]]
+                seen: set[tuple[str, str]] = set()
+                merged: list = []
+                for h in th_ok + good_hits:
+                    key = (h[1], h[0][:200])
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    merged.append(h)
+                good_hits = merged
         hits = good_hits[:rag_k_clamped]
         ar_hits = [
             h

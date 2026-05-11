@@ -54,6 +54,7 @@ Bilgisayar ve güvenlik (önemli):
 Kurallar:
 - **[TALİMAT …]** veya dahili köşeli etiketleri kullanıcıya **asla aynen yazdırma**; bunlar yalnızca senin iç talimatındır.
 - Verilen BAĞLAM parçalarına öncelik ver; bağlam yetersizse bunu söyle.
+- Tarih ve medeniyet sorularında (ör. Lale Devri, Göktürkler, Osmanlı dönemi): BAĞLAM’da `TARIH_VE_KULTUR` kaynaklı pasajlar varsa **önce onları** kullan; web araması yalnızca bağlam yetmezse tamamlayıcı olsun.
 - WEB veya SAYFA METNİ verilmişse kaynakları çelişkiye karşı karşılaştır; emin olmadığını belirt.
 - Asla uydurma ayet veya hadis metni yazma; emin değilsen tereddüt et.
 - Kullanıcıya nazik ve saygılı ol; dinî konularda ihtiyatlı ve öğretici ol.
@@ -123,6 +124,22 @@ Kitaptan otomatik sinema filmi üretimi gibi vaatleri gerçekçi çerçevede anl
 """
 
 
+def _bilge_voice_suffix() -> str:
+    """RUZGAR_BILGE_VOICE=0 ile kapatılır."""
+    if os.environ.get("RUZGAR_BILGE_VOICE", "1").strip().lower() in (
+        "0",
+        "false",
+        "no",
+    ):
+        return ""
+    return """
+
+Üslup (Bilge sesi — RUZGAR_BILGE_VOICE):
+- Rakam, tanım ve teknik ayrıntıyı doğru tut; anlatımın tok, samimi ve hikmetli olsun — acele cümle kurma, her cümleyi tartarak yaz.
+- Ümit abi'ye hitaben sıcak kal; soğuk madde listesi veya kurul diliyle yetinme; bilgece özetle ve gerektiğinde tek cümleyle bağla.
+"""
+
+
 def pick_system(coding_mode: bool, mode_norm: str | None = None) -> str:
     if coding_mode:
         return CODING_SYSTEM
@@ -133,7 +150,7 @@ def pick_system(coding_mode: bool, mode_norm: str | None = None) -> str:
         return SES_SYSTEM
     if m == "video":
         return VIDEO_SYSTEM
-    return ASSISTANT_SYSTEM
+    return ASSISTANT_SYSTEM + _bilge_voice_suffix()
 
 
 def append_direct_answer_directive(user_payload: str, user_message: str) -> str:

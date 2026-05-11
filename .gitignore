@@ -7,9 +7,6 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 
-# RAG önbellek (isteğe bağlı: repoda tutmak isterseniz bu satırı silin)
-ilim-assistant/.rag_index/
-
 # Node
 node_modules/
 ruzgar-desktop/node_modules/

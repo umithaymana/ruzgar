@@ -1,0 +1,18 @@
+{
+  "phase": "tarih_ve_kultur",
+  "status": "complete",
+  "exclusive_tarih": false,
+  "started_at": "2026-05-11T21:12:01+00:00",
+  "batches_written": 25,
+  "file_line_offset": 12190,
+  "lines_ingested": 12190,
+  "source_path": "D:\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\knowledge\\TARIH_VE_KULTUR\\tarih_kaynak_buyuk.json",
+  "last_ingest_at": "2026-05-11T21:15:15+00:00",
+  "last_batch_relpath": "TARIH_VE_KULTUR/incremental/tarih_batch_00025.md",
+  "completed_at": "2026-05-11T21:15:17+00:00",
+  "finalize_index": {
+    "status": "cached",
+    "chunks": 10320,
+    "digest": "b02d7f12c4017f6c10056c5b71878366c8dcebdec6280ab21a61b5face301cee"
+  }
+}

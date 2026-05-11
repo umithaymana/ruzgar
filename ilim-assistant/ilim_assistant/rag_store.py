@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Tuple
@@ -317,6 +318,66 @@ def _source_is_archive(rel: str) -> bool:
     return "/arsiv/" in p or p.startswith("arsiv/")
 
 
+def _source_is_tarih_hafiza(rel: str) -> bool:
+    """`knowledge/TARIH_VE_KULTUR/...` altındaki Tarih Hafızası kaynakları."""
+    p = (rel or "").replace("\\", "/").lower()
+    return "tarih_ve_kultur" in p or "tarh_ve_kultur" in p
+
+
+def source_is_tarih_hafiza(rel: str) -> bool:
+    """Dışarıdan: kaynak yolu Tarih Hafızası mı?"""
+    return _source_is_tarih_hafiza(rel)
+
+
+def source_is_tdk(rel: str) -> bool:
+    """TDK sözlük / kademeli paket kaynakları (`knowledge/tdk/...`)."""
+    p = (rel or "").replace("\\", "/").lower()
+    return "/tdk/" in p or p.startswith("tdk/")
+
+
+def _lemma_norm(s: str) -> str:
+    t = unicodedata.normalize("NFKD", (s or "").strip()).casefold()
+    return " ".join(t.split())
+
+
+def _tdk_chunk_has_exact_lemma(text: str, lemma: str) -> bool:
+    """Chunk 900 karakter dilimlerine bölünebildiği için tüm `##` başlıkları taranır."""
+    want = _lemma_norm(lemma)
+    if not want:
+        return False
+    for line in (text or "").splitlines():
+        s = line.strip()
+        if s.startswith("## "):
+            if _lemma_norm(s[3:].strip()) == want:
+                return True
+    return False
+
+
+def search_tdk_exact_lemma(lemma: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
+    """
+    TDK paketlerinde madde başlığı (## satırı) ile tam eşleşme — vektör benzerliği yok, skor sabit 1.0.
+    Yakın ses/yazım eşlemesi yapmaz (Hayalet / Haya karışması riskini azaltır).
+    """
+    want = _lemma_norm(lemma)
+    if not want:
+        return []
+    tk = max(1, top_k)
+    chunks, emb = _get_cached_index()
+    if not chunks or emb is None:
+        return []
+
+    out: List[Tuple[str, str, float]] = []
+    for c in chunks:
+        if not source_is_tdk(c.source):
+            continue
+        if not _tdk_chunk_has_exact_lemma(c.text, lemma):
+            continue
+        out.append((c.text, c.source, 1.0))
+        if len(out) >= tk:
+            break
+    return out
+
+
 def search(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
     """Dönüş: (metin, kaynak, skor) — skor yaklaşık uyum."""
     chunks, emb = _get_cached_index()
@@ -340,3 +401,34 @@ def search_arsiv(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
     wide = search(query, top_k=min(pool, 48))
     out = [(t, s, sc) for t, s, sc in wide if _source_is_archive(s)]
     return out[:tk]
+
+
+def search_tarih_hafiza(
+    query: str, top_k: int = 5, scan_cap: int = 96
+) -> List[Tuple[str, str, float]]:
+    """
+    Yalnızca `TARIH_VE_KULTUR/` altındaki kaynaklar; benzerlik sırasına göre tarama.
+    `scan_cap`: en yüksek skorlu ilk kaç aday içinde tarih kaynağı aranır.
+    """
+    chunks, emb = _get_cached_index()
+    if not chunks or emb is None or len(chunks) != len(emb):
+        return []
+
+    tk = max(1, top_k)
+    cap = max(tk * 8, int(scan_cap))
+    cap = min(cap, len(chunks))
+
+    model = _get_embedder()
+    q = model.encode([query], normalize_embeddings=True, show_progress_bar=False)[0]
+    sim = emb @ q
+    order = np.argsort(-sim)
+
+    out: List[Tuple[str, str, float]] = []
+    for j in range(cap):
+        i = int(order[j])
+        src = chunks[i].source
+        if _source_is_tarih_hafiza(src):
+            out.append((chunks[i].text, src, float(sim[i])))
+            if len(out) >= tk:
+                break
+    return out

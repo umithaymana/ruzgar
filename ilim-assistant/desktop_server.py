@@ -143,6 +143,15 @@ async def _warmup_rag() -> None:
         _get_hafiza_motor()
     except Exception:
         pass
+    if os.environ.get("RUZGAR_PRINT_READY_SEAL", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    ):
+        print(
+            "Rüzgar Kullanıma Hazır, Sistemi Yeniden Başlatabilirsiniz.",
+            flush=True,
+        )
 
 
 def _default_fetch_pages() -> float:

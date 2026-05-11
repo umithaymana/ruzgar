@@ -30,6 +30,8 @@ Ortam:
 
 from __future__ import annotations
 
+import os
+
 import gradio as gr
 
 from ilim_assistant.approved_executor import (
@@ -229,4 +231,13 @@ if __name__ == "__main__":
         warmup_index()
     except Exception:
         pass
+    if os.environ.get("RUZGAR_PRINT_READY_SEAL", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    ):
+        print(
+            "Rüzgar Kullanıma Hazır, Sistemi Yeniden Başlatabilirsiniz.",
+            flush=True,
+        )
     build_ui().launch(server_name="0.0.0.0", server_port=7861)
