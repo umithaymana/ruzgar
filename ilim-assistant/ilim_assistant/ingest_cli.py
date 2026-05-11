@@ -5,7 +5,8 @@ from __future__ import annotations
 import argparse
 
 from ilim_assistant.rag_store import _KNOWLEDGE_ROOT, build_index
-from ilim_assistant.tdk_incremental_protocol import protocol_lock_active
+from ilim_assistant.tarih_incremental_protocol import protocol_lock_active as tarih_protocol_lock_active
+from ilim_assistant.tdk_incremental_protocol import protocol_lock_active as tdk_protocol_lock_active
 
 
 def main():
@@ -19,16 +20,23 @@ def main():
     p.add_argument(
         "--allow-other-knowledge",
         action="store_true",
-        help="TDK kademeli protokolü (exclusive) aktifken bile genel indekslemeye izin ver.",
+        help="TDK veya Tarih kademeli protokolü (exclusive) aktifken bile genel indekslemeye izin ver.",
     )
     p.add_argument("--knowledge", default=str(_KNOWLEDGE_ROOT), type=str)
     args = p.parse_args()
-    if protocol_lock_active() and not args.allow_other_knowledge:
-        raise SystemExit(
-            "TDK kademeli yükleme kilidi aktif (tdk_incremental_protocol in_progress). "
-            "Genel indekslemeyi ertelemek veya zorunluysa: "
-            "`python -m ilim_assistant.ingest_cli ... --allow-other-knowledge`"
-        )
+    if not args.allow_other_knowledge:
+        if tdk_protocol_lock_active():
+            raise SystemExit(
+                "TDK kademeli yükleme kilidi aktif (tdk_incremental_protocol in_progress). "
+                "Genel indekslemeyi ertelemek veya zorunluysa: "
+                "`python -m ilim_assistant.ingest_cli ... --allow-other-knowledge`"
+            )
+        if tarih_protocol_lock_active():
+            raise SystemExit(
+                "Tarih kademeli yükleme kilidi aktif (tarih_incremental_protocol in_progress). "
+                "Genel indekslemeyi ertelemek veya zorunluysa: "
+                "`python -m ilim_assistant.ingest_cli ... --allow-other-knowledge`"
+            )
     r = build_index(
         knowledge_root=args.knowledge,
         force=args.force,

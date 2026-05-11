@@ -1,0 +1,1607 @@
+{
+  "_meta": {
+    "built_at": "2026-05-11T19:58:25+00:00",
+    "sources": [
+      {
+        "name": "Digital Ottomans — Hac Yolunda Bir Karınca (demo)",
+        "urls": [
+          "https://digitalottomans.github.io/demo/assets/data/metadata.json",
+          "https://digitalottomans.github.io/demo/assets/data/timelinejs.json"
+        ],
+        "note": "Osmanlı tarihi / dijital beşeri bilimler araştırma koleksiyonu meta verisi ve zaman çizelgesi."
+      }
+    ]
+  },
+  "entries": [
+    {
+      "title": "Buruk Ölümler",
+      "body": "description: Vefatının ardından Adnan Ekşigil tarafından Birikim dergisinde hakkında yazılanlar.\ndate: 2021-04-03\nsubject: Vefeyat;Adnan Ekşigil\nlocation: İstanbul\nsource: Birikim Güncel\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=1",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Arşive Ruh Veren Tarihçi: Mehmet Genç",
+      "body": "description: Vefatının ardından Mustafa Özel tarafından Derin Tarih dergisinde hakkında yazılanlar.\ndate: 2021-04\nsubject: Vefeyat;Mustafa Özel\nlocation: İstanbul\nsource: Derin Tarih\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=2",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "\"Hac Yolunda Bir Karınca\": Mehmet Genç",
+      "body": "description: Vefatının ardından Prof. Dr. Ayhan Aktar tarafından Diken dergisinde hakkında yazılanlar.\ndate: 2021-03-19\nsubject: Vefeyat;Ayhan Aktar\nlocation: İstanbul\nsource: Diken\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=3",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İlim Yolunda Bir Karınca",
+      "body": "description: 2016 yılında Ayçe Örer tarafından hazırlanmış portre\ndate: 2016-01-18\nsubject: Portre;Ayçe Örer\nlocation: İstanbul\nsource: Gerçek Hayat\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=4",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İktisat Tarihinde Bir Müctehid: Mehmet Genç",
+      "body": "description: Vefatının ardından Asım Öz tarafından Kriter dergisinde hakkında yazılanlar.\ndate: 2021-04\nsubject: Vefeyat;Asım Öz\nlocation: İstanbul\nsource: Kriter\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=5",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç'in Ardından: Osmanlı Nasıl Yükseldi?",
+      "body": "description: Vefatının ardından İskender Öksüz tarafından MSAK dergisinde hakkında yazılanlar.\ndate: 2021-03-20\nsubject: Vefeyat;İskender Öksüz\nlocation: İstanbul\nsource: Milli Strateji Araştırma Kurulu\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=6",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Her Kâğıdın İki Yüzü Vardır",
+      "body": "description: Vefatının ardından Köln Başkonsolosluğu Eğitim Ataşesi Mustafa Gençer tarafından Star Gazetesi'nde hakkında yazılanlar.\ndate: 2021-04-16\nsubject: Vefeyat;Mustafa Gençer\nlocation: İstanbul\nsource: Star Gazetesi\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=7",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç Hoca'nın Ardından",
+      "body": "description: Vefatının ardından Kenan Eroğlu tarafından Ülkücü Yazarlar Derneği web sitesinde hakkında yazılanlar.\ndate: 2021-03-21\nsubject: Vefeyat;Kenan Eroğlu\nlocation: İstanbul\nsource: Ülkücü Yazarlar Derneği\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=8",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç Hoca'nın Ardından Bir Akademi Muhasebesi",
+      "body": "description: Vefatının ardından Yasin Aktay tarafından Yeni Şafak Gazetesi'nde hakkında yazılanlar.\ndate: 2021-03-29\nsubject: Vefeyat;Yasin Aktay\nlocation: İstanbul\nsource: Yeni Şafak\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=9",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Dünyasına Bilge Bir Bakış: Mehmet Genç",
+      "body": "description: Vefatının ardından Kitap Dergisi'nde hakkında yazılanlar.\nsubject: Vefeyat\nlocation: İstanbul\nsource: Kitap Dergisi\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=10",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç İhtifali",
+      "body": "description: Mehmet Genç İhtifali\ndate: 2021-04-17\nsubject: Anma Programı\nlocation: İstanbul,Fatih;Bilim ve Sanat Vakfı\nsource: Bilim ve Sanat Vakfı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=11",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Devletinde İç Gümrük Rejimi",
+      "body": "description: Osmanlı Devletinde İç Gümrük Rejimi\ndate: 1985\nsubject: Ansiklopedi Maddesi;İktisat;Ticaret\nlocation: İstanbul\nsource: Tanzimat'tan Cumhuriyet'e Türkiye Ansiklopedisi, İletişim Yayınları, 3: 786-790\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=12",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Esham",
+      "body": "description: Esham\ndate: 1995\nsubject: Ansiklopedi Maddesi;İktisat;Maliye;Vergi\nlocation: İstanbul\nsource: TDV İslam Ansiklopedisi, 11: 376-380\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=13",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "18. Yüzyılda Osmanlı Sanayiinde Değişmeler ve Devletin Rolü",
+      "body": "description: 18. Yüzyılda Osmanlı Sanayiinde Değişmeler ve Devletin Rolü\ndate: 1999\nsubject: Ansiklopedi Maddesi;İktisat;Sanayii;18.Yy\nlocation: Ankara\nsource: Güler Eren ed. Osmanlı Ansiklopedisi, 3: 263-268\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=14",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İltizam",
+      "body": "description: İltizam\ndate: 2000\nsubject: Ansiklopedi Maddesi;İktisat;Maliye;Vergi\nlocation: İstanbul\nsource: TDV İslam Ansiklopedisi, 22: 154-158\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=15",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Malikane",
+      "body": "description: Malikane\ndate: 2003\nsubject: Ansiklopedi Maddesi;İktisat;Maliye;Vergi\nlocation: İstanbul\nsource: TDV İslam Ansiklopedisi, 27: 516-518\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=16",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Malikane Divani",
+      "body": "description: Malikane Divani\ndate: 2003\nsubject: Ansiklopedi Maddesi;İktisat;Maliye;Vergi\nlocation: Ankara\nsource: TDV İslam Ansiklopedisi, 27: 518-519\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=17",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Nazır",
+      "body": "description: Nazır\ndate: 2006\nsubject: Ansiklopedi Maddesi;Devlet;Bürokrasi;Yönetim\nlocation: İstanbul\nsource: TDV İslam Ansiklopedisi, 32: 449-450\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=18",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mukataa",
+      "body": "description: Mukataa\ndate: 2006\nsubject: Ansiklopedi Maddesi;İktisat;Maliye;Vergi\nlocation: İstanbul\nsource: TDV İslam Ansiklopedisi, 31: 129-132\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=19",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlılar: İktisadî ve Ticarî Yapı",
+      "body": "description: Osmanlılar: İktisadî ve Ticarî Yapı\ndate: 2007\nsubject: Ansiklopedi Maddesi;İktisat;Ticaret\nlocation: İstanbul\nsource: TDV İslam Ansiklopedisi, 33: 525-532\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=20",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Yed-i Vahid",
+      "body": "description: Yed-i Vahid\ndate: 2013\nsubject: Ansiklopedi Maddesi;İktisat;Maliye;Vergi\nlocation: İstanbul\nsource: TDV İslam Ansiklopedisi, 43: 378-383\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=21",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Economy and Economic Policy",
+      "body": "description: Economy and Economic Policy\ndate: 2009\nsubject: Ansiklopedi Maddesi;İktisat;İktisadi Politika\nlocation: New York\nsource: Gabor Agoston and Bruce Master ed. Encyclopaedia of the Ottoman Empire, Facts on File 192-195\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=22",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Katsumi Fukasawa, Toilerie et Commerce du Levant au XVIII Siècle d'Alep à Marseille",
+      "body": "description: Katsumi Fukasawa, Toilerie et Commerce du Levant au XVIII Siècle d'Alep à Marseille, Kitap Değerlendirmesi\ndate: 1988\nsubject: Kitap Değerlendirmesi;Ticaret;Akdeniz;Şehirler;Halep;Marsilya;Yüzyıllar;18.Yy\nlocation: İstanbul\nsource: Türk-Arab İlişkileri İncelemeleri Yıllığı: 191-196\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=23",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Modern İktisadi Büyüme Karşısında Osmanlı Sistemi ve Ekonomisi",
+      "body": "description: Modern İktisadi Büyüme Karşısında Osmanlı Sistemi ve Ekonomisi\ndate: 2014\nsubject: Makale;İktisat;Dönemler;Modern\nlocation: İstanbul\nsource: Türkiye Günlüğü, 119: 5-15\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=24",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Klasik Osmanlı Sosyal-İktisadî Sistemi ve Vakıflar",
+      "body": "description: Klasik Osmanlı Sosyal-İktisadî Sistemi ve Vakıflar\ndate: 2014\nsubject: Makale;İktisat;İktisadi Sistem;Toplum;Vakıflar;Dönemler;Klasik\nlocation: İstanbul\nsource: Vakıflar Dergisi, 42: 9-18\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=25",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "19. Yüzyılda Osmanlı İktisadî Dünya Görüşünün Klasik Prensiplerindeki Değişmeler",
+      "body": "description: 19. Yüzyılda Osmanlı İktisadî Dünya Görüşünün Klasik Prensiplerindeki Değişmeler\ndate: 1999-06\nsubject: Makale;İktisat;İktisadi Düşünce;Dönemler;Modern;Yüzyıllar;19.Yy\nlocation: İstanbul\nsource: Divan: Disiplinlerarası Çalışmalar Dergisi, 6: 1-8\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=26",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "L'Économie Ottomane et la Guerre au XVIII e Siècle",
+      "body": "description: L'Économie Ottomane et la Guerre au XVIII e Siècle\ndate: 1995\nsubject: Makale;İktisat;Devlet;Savaş;Yüzyıllar;18.Yy\nlocation: İstanbul\nsource: Turcica, 27: 177-196\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=27",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı’da Devlet ve Ekonomi Üzerine",
+      "body": "description: Osmanlı’da Devlet ve Ekonomi Üzerine\ndate: 2003\nsubject: Makale;İktisat;Devlet\nlocation: İstanbul;Türkiye Araştırmaları Literatür Dergisi\nsource: Türkiye Araştırmaları Literatür Dergisi, 1/1: 369-384\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=28",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "18. Yüzyılda Osmanlı Sanayii",
+      "body": "description: 18. Yüzyılda Osmanlı Sanayii\ndate: 1991\nsubject: Makale;İktisat;Sanayii;Yüzyıllar;18.Yy\nlocation: İstanbul\nsource: Toplum ve Ekonomi, 2: 99-124\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=29",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "19. Yüzyılın Ortalarında Osmanlı Ekonomisi",
+      "body": "description: 19. Yüzyılın Ortalarında Osmanlı Ekonomisi\ndate: 2012\nsubject: Makale;İktisat;Dönemler;Modern;Yüzyıllar;19.Yy\nlocation: İstanbul\nsource: Milli Saraylar Sanat Tarih Mimarlık Dergisi, 10: 11-21\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=30",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı İktisadî Dünya Görüşünün İlkeleri",
+      "body": "description: Osmanlı İktisadî Dünya Görüşünün İlkeleri\ndate: 1989\nsubject: Makale;İktisat;İktisadi Düşünce\nlocation: İstanbul\nsource: İstanbul Üniversitesi Edebiyat Fakültesi Sosyoloji Dergisi, 3/1: 175-185\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=31",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "18. Yüzyılda Türkiye’den Fransa’ya Yapılan Pamuklu İhracatı ile İlgili Bir Araştırma Hakkında Düşünceler",
+      "body": "description: 18. Yüzyılda Türkiye’den Fransa’ya Yapılan Pamuklu İhracatı ile İlgili Bir Araştırma Hakkında Düşünceler\ndate: 1988\nsubject: Makale;Ticaret;İhracat;Pamuk;Ülkeler;Fransa\nlocation: İstanbul\nsource: Türk Dünyasını Araştırmaları Dergisi, 57: 152-156\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=32",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "18. Yüzyıla Ait Osmanlı Mali Verilerinin İktisadi Faaliyetin Göstergesi Olarak Kullanılabilirliği Üzerinde Bir Çalışma",
+      "body": "description: 18. Yüzyıla Ait Osmanlı Mali Verilerinin İktisadi Faaliyetin Göstergesi Olarak Kullanılabilirliği Üzerinde Bir Çalışma\ndate: 1981-02\nsubject: Makale;İktisat;İktisadi Faaliyet;Maliye;Yüzyıllar;18.Yy\nlocation: İstanbul\nsource: Türk Dünyası Araştırmaları Dergisi, 2/10: 33-77\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=33",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "17-19. Yüzyıllarda Sanayi ve Ticaret Merkezi Olarak Tokat",
+      "body": "description: 17-19. Yüzyıllarda Sanayi ve Ticaret Merkezi Olarak Tokat\ndate: 1988\nsubject: Makale;Ticaret;İktisat;Sanayii;Şehirler;Tokat;Yüzyıllar;17.Yy;19.Yy\nlocation: İstanbul\nsource: Türklük Araştırma Dergisi, 3: 35-56\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=34",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "18. Yüzyılda Osmanlı Ekonomisi ve Savaş",
+      "body": "description: 18. Yüzyılda Osmanlı Ekonomisi ve Savaş\ndate: 1984-05\nsubject: Makale;İktisat;Devlet;Savaş;Yüzyıllar;18.Yy\nlocation: İstanbul\nsource: Yapıt, Toplumsal Araştırmalar Dergisi, 49, Mayıs: 52-61\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=35",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İki İmparatorluğun Başkenti",
+      "body": "description: İki İmparatorluğun Başkenti\ndate: 1998-10\nsubject: Makale;Şehirler;İstanbul\nlocation: İstanbul\nsource: İstanbullu, 12-14\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=37",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Contrôle et Taxation du Commerce du Café dans l’Empire Ottoman fin XVIIe—Première Moitié du XVIIIe Siècle",
+      "body": "description: Contrôle et Taxation du Commerce du Café dans l’Empire Ottoman fin XVIIe—Première Moitié du XVIIIe Siècle\ndate: 2001\nsubject: Kitap Bölümü;İktisat;Maliye;Vergi;Ticaret;Kahve;Yüzyıllar;17.Yy;18.Yy\nlocation: Mısır,Kahire\nsource: Michel Tuchscherer ed. Le Commerce du Café: Avant l’ére des Plantations Coloniales Espaces, Réseaux, Sociétés (XVe-XIXe Siécle): 161-179\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=38",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı’da Zanaat, Ahlâk ve İktisat İlişkisi",
+      "body": "description: Osmanlı’da Zanaat, Ahlâk ve İktisat İlişkisi\ndate: 1995\nsubject: Kitap Bölümü;İktisat;İktisadi Düşünce;Ticaret;Zanaat\nlocation: İstanbul\nsource: Anatomi Dersleri: Osmanlı Kültürü, Yapı Kredi Yayınları, 106-145\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=39",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Ottoman Industry in the Eighteenth Century: General Framework, Characteristics and Main Trends",
+      "body": "description: Ottoman Industry in the Eighteenth Century: General Framework, Characteristics and Main Trends\ndate: 1994\nsubject: Kitap Bölümü;İktisat;Sanayii;Yüzyıllar;18.Yy\nlocation: New York\nsource: Donald Quataert ed., Manufacturing in the Ottoman Empire and Turkey (1500-1950), State University of New York Press, 59-86\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=40",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Tarih Araştırmaları Üzerine Yorum",
+      "body": "description: Tarih Araştırmaları Üzerine Yorum\ndate: 1986\nsubject: Kitap Bölümü;Tarihçilik\nlocation: Ankara\nsource: Sevil Atauz ed., Türkiye'de Sosyal Bilim Araştırmalarının Gelişimi, Türk Sosyal Bilimler Derneği Yayınları, 439-446\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=41",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "A Study of the Feasibility of Using Eighteenth-century Ottoman Financial Records as an Indicator of Economic Activity",
+      "body": "description: A Study of the Feasibility of Using Eighteenth-century Ottoman Financial Records as an Indicator of Economic Activity\ndate: 1987\nsubject: Kitap Bölümü;İktisat;Yüzyıllar;18.Yy\nlocation: Cambridge\nsource: Huri İslamoğlu-İnan ed., The Ottoman Empire and the World-Economy, Cambridge University Press, p. 345-373\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=42",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Tarihsel Sosyoloji Üzerine Söyleşi",
+      "body": "description: Tarihsel Sosyoloji Üzerine Söyleşi\ndate: 2008\nsubject: Kitap Bölümü;Tarihçilik;Tarihsel Sosyoloji\nlocation: Ankara\nsource: Elizabeth Özdalga ed., Tarihsel Sosyoloji, Doğu Batı Yayınları, 63-96\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=43",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Tarihimize Giydirilen Deli Gömleği: Osmanlı Tarihinde Dönemlendirme Meselesi",
+      "body": "description: Tarihimize Giydirilen Deli Gömleği: Osmanlı Tarihinde Dönemlendirme Meselesi\ndate: 2011\nsubject: Kitap Bölümü;Tarihçilik;Dönemlendirme\nlocation: İstanbul\nsource: Mustafa Armağan ed., Osmanlı Tarihini Yeniden Yazmak Gerileme Paradigmasının Sonu, Timaş Yayınları, 319-326\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=44",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Klasik Osmanlı İktisadî Sisteminde İstanbul’un Yeri",
+      "body": "description: Klasik Osmanlı İktisadî Sisteminde İstanbul’un Yeri\ndate: 2010\nsubject: Kitap Bölümü;İktisat;İktisadi Sistem;Şehirler;İstanbul;Dönemler;Klasik\nlocation: İstanbul\nsource: Kültür Başkenti İstanbul, Türk Kültürüne Hizmet Vakfı Yayınları, 224-231\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=45",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Yaptıklarım Yapacaklarımın Yan Ürünüdür",
+      "body": "description: Yaptıklarım Yapacaklarımın Yan Ürünüdür\ndate: 2006\nsubject: Kitap Bölümü;Tarihçilik\nlocation: İstanbul\nsource: Türk Tarihçiliğinde Dört Sima, Timaş Yayınları, 249-254.\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=46",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İktisat Tarihi Bakımından Osmanlı Arşivinde Kısa Bir Gezinti",
+      "body": "description: İktisat Tarihi Bakımından Osmanlı Arşivinde Kısa Bir Gezinti\ndate: 2004\nsubject: Kitap Bölümü;İktisat;Tarihçilik;Kaynaklar;Arşiv\nlocation: İstanbul\nsource: Ertan Eğribel, Ufuk Özcan ed., Sosyoloji Yıllığı, Kitap 11, Baykan Sezer’e Armağan: Baykan Sezer ve Türk Sosyolojisi, 287-294\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=47",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "State and the Economy in the Age of Reforms: Continuity and Change",
+      "body": "description: State and the Economy in the Age of Reforms: Continuity and Change\ndate: 2000\nsubject: Kitap Bölümü;İktisat;Devlet;Reform\nlocation: Leiden\nsource: Kemal H. Karpat ed., Ottoman Past and Today’s Turkey, Brill, Leiden, Boston, Köln, 180-187.\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=48",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Maliyesinde Mukataa Kavramı",
+      "body": "description: Osmanlı Maliyesinde Mukataa Kavramı\ndate: 2006\nsubject: Kitap Bölümü;İktisat;Maliye;Vergi\nlocation: İstanbul\nsource: Mehmed Genç, Erol Özvar eds., Osmanlı Maliyesi Kurumlar ve Bütçeler-1, Osmanlı Bankası Arşiv ve Araştırma Merkezi, 57-64\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=49",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı İmparatorluğu'nda Devlet ve Ekonomi",
+      "body": "description: Osmanlı İmparatorluğu'nda Devlet ve Ekonomi\ndate: 2000\nsubject: Kitap;İktisat;Devlet\nlocation: İstanbul\nsource: Ötüken Yayınları\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=50",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Ekonomisine Dair Konuşmalar I",
+      "body": "description: Osmanlı Ekonomisine Dair Konuşmalar I\ndate: 2021\nsubject: Kitap;İktisat\nlocation: İstanbul\nsource: Ötüken Yayınları\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=51",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Maliyesi Kurumlar ve Bütçeler-1",
+      "body": "description: Osmanlı Maliyesi Kurumlar ve Bütçeler-1\ndate: 2006\nsubject: Kitap;İktisat;Maliye;Kurumlar;Bütçe\nlocation: İstanbul\nsource: Mehmed Genç, Erol Özvar eds.,Osmanlı Bankası Arşiv ve Araştırma Merkezi\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=53",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Maliyesi Kurumlar ve Bütçeler-2",
+      "body": "description: Osmanlı Maliyesi Kurumlar ve Bütçeler-2\ndate: 2006\nsubject: Kitap;İktisat;Maliye;Kurumlar;Bütçe\nlocation: İstanbul\nsource: Mehmed Genç, Erol Özvar eds.,Osmanlı Bankası Arşiv ve Araştırma Merkezi\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=54",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Ahmed Djevad, Yabancılara Göre Eski Türkler",
+      "body": "description: Ahmed Djevad, Yabancılara Göre Eski Türkler\ndate: 2013\nsubject: Çeviri;Toplum;Türkler;Yabancılar;Kişiler;Ahmed Djevad\nlocation: İstanbul\nsource: Kitabevi Yayınları\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=55",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Cipolla, Dünya Nüfusunun İktisat Tarihi",
+      "body": "description: Cipolla, Dünya Nüfusunun İktisat Tarihi\ndate: 1980\nsubject: Çeviri;İktisat;Kişiler;Carlo M. Cipollo;Mehmet Sırrı Gezgin\nlocation: İstanbul\nsource: Ötüken Yayınları\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=56",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Ahmed Refik, Bizans İmparatoriçeleri",
+      "body": "description: Ahmed Refik, Bizans İmparatoriçeleri\ndate: 2003-12\nsubject: Editörlük;Devlet;Bizans\nlocation: İstanbul\nsource: Mehmet Genç, ed. Oku Yayınları\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=57",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Kuruluşundan Günümüze Fotoğraflarla Sivas Platformu",
+      "body": "description: Kuruluşundan Günümüze Fotoğraflarla Sivas Platformu\ndate: 2010\nsubject: Editörlük;Şehirler;Sivas\nlocation: İstanbul\nsource: Ahmet Özdemir, İbrahim Subaşı, Salih Güzel, Ahmet Arslantürk, İbrahim Aksoy, Mehmet Genç, eds.Sivas Platformu Yayınları\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=58",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Environment and urbanism in the Ottoman Empire",
+      "body": "description: Environment and urbanism in the Ottoman Empire\ndate: 2016\nsubject: Proje;Şehircilik\nlocation: Ankara,Çankaya;Çevre ve Şehircilik Bakanlığı\nsource: Fehmi Yılmaz Proje Yürütücüsü, Mehmet Genç Proje Baş Dnaışmanı, T.C. Çevre ve Şehircilik Bakanlığı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=59",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı İmparatorluğunda Çevre ve Şehir",
+      "body": "description: Osmanlı İmparatorluğunda Çevre ve Şehir\ndate: 2015\nsubject: Proje;Şehircilik\nlocation: Ankara,Çankaya;Çevre ve Şehircilik Bakanlığı\nsource: Fehmi Yılmaz Proje Yürütücüsü, Mehmet Genç Proje Baş Dnaışmanı, T.C. Çevre ve Şehircilik Bakanlığı\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=60",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "1126 tarihli Üsküdar Şer’iye Sicili",
+      "body": "description: Le Commerce du Café, Son Contrôl et Sa Taxation Dans l’Empire Otoman Entre la fi du 17éme Siècle Début du 18éme Siècle\ndate: 1997-10-09\nsubject: Bildiri;İktisat;Maliye;Vergi;Ticaret;Kahve;Yüzyıllar;17.Yy;18.Yy\nlocation: Fransa,Montpellier\nsource: Le Café avant l’ère des Plantations Coloniales Espaces et Réseaux, Sociétés (XVe-XVIIIe siècles)\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=61",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Fethin İktisadi Sonuçları",
+      "body": "description: İstanbul’un Fethi: İktisadi Sonuçları\ndate: 1997\nsubject: Bildiri;İktisat;Devlet;Fetih;Şehirler;İstanbul\nlocation: İstanbul\nsource: İkinci Uluslararası İstanbul’un Fethi Konferansı, 30-31 Mayıs, 1 Haziran 1997, Bildiriler: İBB Kültür İşleri Daire Başkanlığı Yayınları, 199-203\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=62",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İkinci Uluslararası İstanbul’un Fethi Konferansı",
+      "body": "description: Genel Değerlendirme\ndate: 1997\nsubject: Bildiri;Değerlendirme\nlocation: İstanbul\nsource: İkinci Uluslararası İstanbul’un Fethi Konferansı, 30-31 Mayıs, 1 Haziran 1997, Bildiriler: İBB Kültür İşleri Daire Başkanlığı Yayınları, 310-313\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=63",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İktisadî Açıdan Osmanlı’da Zekât Uygulamaları",
+      "body": "description: İktisadî Açıdan Osmanlı’da Zekât Uygulamaları\ndate: 2017\nsubject: Bildiri;İktisat;Zekat\nlocation: İstanbul\nsource: Tarihte ve Günümüzde Zekât Uygulamaları Milletlerarası Tartışmalı İlmî Toplantı, 03-04 Aralık 2016, Ensar Neşriyat, 255-261\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=64",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Kalkınma Meselemize Tarihî Yaklaşım",
+      "body": "description: Kalkınma Meselemize Tarihî Yaklaşım\ndate: 1987\nsubject: Bildiri;İktisat;İktisadi Büyüme;Kalkınma\nlocation: İstanbul\nsource: İktisadi Kalkınma ve İslam, İslami Araştırma Vakfı Yayınları, 211-221\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=65",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Neden Fetih?",
+      "body": "description: Neden Fetih?\ndate: 1997\nsubject: Bildiri;Devlet;Fetih;Şehirler;İstanbul\nlocation: İstanbul\nsource: Birinci Uluslararası İstanbul’un Fethi Konferansı, 24-25 Mayıs 1996, Bildiriler: İBB Kültür İşleri Daire Başkanlığı Yayınları, 96-98\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=66",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Birinci Uluslararası İstanbul’un Fethi Konferansı",
+      "body": "description: Genel Değerlendirme\ndate: 1997\nsubject: Bildiri;Değerlendirme\nlocation: İstanbul\nsource: Birinci Uluslararası İstanbul’un Fethi Konferansı, 24-25 Mayıs 1996, Bildiriler: İBB Kültür İşleri Daire Başkanlığı Yayınları, 219-222\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=67",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı İmparatorluğunda Devlet ve Ekonomi",
+      "body": "description: Osmanlı İmparatorluğunda Devlet ve Ekonomi\ndate: 1990\nsubject: Bildiri;İktisat;Devlet\nlocation: İstanbul\nsource: V. Milletlerarası Türkiye Sosyal ve İktisat Tarihi Kongresi,  21-25 Ağustos 1989, Tebliğler: TTK Yayınları, 13-25\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=68",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Arşivlerinden Yararlanma Yöntemi",
+      "body": "description: Osmanlı Arşivlerinden Yararlanma Yöntemi\ndate: 1985-05\nsubject: Bildiri;Tarihçilik;Kaynaklar;Arşiv\nlocation: İstanbul\nsource: Osmanlı Arşivleri ve Osmanlı Araştırmaları Sempozyumu (Mayıs 1985), Türk-Arap İlişkileri İncelemeleri Vakfı, 155-162\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=69",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İktisat ve Deniz Ticaret Tarihinde Doğu Akdeniz ve Mersin’e Nasıl Yaklaşılmalı?",
+      "body": "description: İktisat ve Deniz Ticaret Tarihinde Doğu Akdeniz ve Mersin’e Nasıl Yaklaşılmalı?\ndate: 2011\nsubject: Bildiri;İktisat;Ticaret;Deniz Ticareti;Akdeniz;Tarihçilik;Şehirler;Mersin\nlocation: Mersin;Mersin Üniversitesi\nsource: Fevzi Demir ed. Açılış Konuşması, Türk Deniz Ticareti Tarihi Sempozyumu III Mersin ve Doğu Akdeniz 7-8 Nisan 2011, Bildiriler Kitabı, Mersin Üniversitesi, 8-12\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=70",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Esnafı ve Devletle İlişkileri",
+      "body": "description: Osmanlı Esnafı ve Devletle İlişkileri\ndate: 1986\nsubject: Bildiri;Ticaret;Esnaf;Devlet\nlocation: İstanbul\nsource: Ahilik ve Esnaf: Konferanslar ve Seminer, Metinler-Tartışmalar, İstanbul Esnaf ve Sanatkarlar Dernekleri Birliği Yayınları, 113-124\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=71",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı’da 17. Yüzyılın Sosyal ve Siyasal Yapısında Değişmeler",
+      "body": "description: Osmanlı’da 17. Yüzyılın Sosyal ve Siyasal Yapısında Değişmeler\ndate: 2013\nsubject: Bildiri;Toplum;Devlet;Yüzyıllar;17.Yy\nlocation: İstanbul\nsource: Itri ve Dönemine Disiplinlerarası Bakışlar, İKSV ve OMAR, 13-18\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=72",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Örnek Bir Aydın Olarak Erol Güngör",
+      "body": "description: Örnek Bir Aydın Olarak Erol Güngör\ndate: 2009\nsubject: Bildiri;Kişiler;Erol Güngör\nlocation: İstanbul\nsource: Kültür Ocağında Bir Mütefekkir Erol Güngör, Koçav Yayınları,231-234\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=73",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Ömer Lütfi Barkan",
+      "body": "description: Ömer Lütfi Barkan\ndate: 2011\nsubject: Bildiri;Kişiler;Ömer Lütfi Barkan\nlocation: Ankara;TTK\nsource: Mehmet Öz ed., Cumhuriyet Döneminde Türkiye`de Tarihçilik ve Tarih Yayıncılığı Sempozyumu (Bildiriler), Türk Tarih Kurumu Yayınları, 18-20 Mart 2010\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=74",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Maliyesinde Malikâne Sistemi",
+      "body": "description: Osmanlı Maliyesinde Malikâne Sistemi\ndate: 1975\nsubject: Bildiri;İktisat;Maliye;Vergi;Malikane Sistemi\nlocation: Ankara\nsource: Osman Okyar-Ünal Nalbantoğlu ed., Türkiye İktisat Tarihi Semineri, Metinler/Tartışmalar (8-l0 Temmuz 1973), Hacettepe Üniversitesi Yayınları, 231-296\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=75",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Aya Mavra in the Beginning of the Eighteenth Century",
+      "body": "description: Aya Mavra in the Beginning of the Eighteenth Century\ndate: 1996\nsubject: Bildiri;Şehirler;Aya Mavra;Yüzyıllar;18.Yy\nlocation: Yunanistan,Atina\nsource: From the Local to Global History. The Xemple of Lefkada, 15-19th centuries, Proceedings of IV Conference of Ionian Islands Civilization (Aya Mavra 8-12 Sept. 1993), Conference dedicated to Panos G. Rontoyannis, 65-74\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=76",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Dünyasında Dilencilik",
+      "body": "description: Osmanlı Dünyasında Dilencilik\ndate: 2008\nsubject: Bildiri;Toplum;Dilencilik\nlocation: İstanbul\nsource: Suvat Parin ed., Bir Kent Sorunu: Dilencilik Tebliğler Kitabı, İBB Zabıta Daire Başkanlığı, 13-15\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=77",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "XV. ve XVI Yüzyıllarda Osmanlı Devleti’nin İç ve Dış Ticareti",
+      "body": "description: XV. ve XVI Yüzyıllarda Osmanlı Devleti’nin İç ve Dış Ticareti\ndate: 1997\nsubject: Bildiri;Ticaret;İhracat;İç Ticaret;Dönemler;Klasik;Yüzyıllar;15.Yy;16.Yy\nlocation: İstanbul\nsource: XV. ve XVI. Asırları Türk Asrı Yapan Değerler, 395-408\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=78",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Devlet ve Girişimciler",
+      "body": "description: Devlet ve Girişimciler\ndate: 2009\nsubject: Bildiri;Ticaret;Girişimcilik;Devlet\nlocation: Konya\nsource: Abdullah Ecevit Öksüz ed., Anadolu’da Girişimcilik Kültürü Sempozyumu Tebliğ Kitabı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=79",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Entreprises d'état et Attitude Politique dans l'Industrie Ottomane au XVIIIe Siècle",
+      "body": "description: Entreprises d'état et Attitude Politique dans l'Industrie Ottomane au XVIIIe Siècle\ndate: 1987\nsubject: Bildiri;İktisat;Sanayii;Ticaret;Girişimcilik;Yüzyıllar;18.Yy\nsource: l' Accession de la Turquie à la Civilisation Indusrielle, Facteurs Internes. Actes du Colloque d'Istanbul, (2-4 December 1985), Editions ISIS, İstanbul-Paris, 5-12.\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=80",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mustafa Özel, Türkiye’de İktisadî Modernleşme Sürecine",
+      "body": "description: Mustafa Özel, Türkiye’de İktisadî Modernleşme Sürecine\ndate: 2001\nsubject: Müzakere;İktisat;İktisadi Modernleşme;Ülkeler;Türkiye;Kişiler;Mustafa Özel\nlocation: İstanbul\nsource: Yorum, Modernleşme, İslam Dünyası ve Türkiye, 321-327\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=81",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "18. Yy'a Ait Osmanlı Mali Verilerinin İktisadi Faliyetin Göstergesi Olarak Kullanılabilirliği Üzerinde Bir Çalışma",
+      "body": "description: 18. Yy'a Ait Osmanlı Mali Verilerinin İktisadi Faliyetin Göstergesi Olarak Kullanılabilirliği Üzerinde Bir Çalışma\ndate: 1980\nsubject: Bildiri;İktisat;İktisadi Faaliyet;Maliye;Yüzyıllar;18.Yy\nsource: 278-315\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=82",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "III. Selim’e Sunulan Layihalar Üzerine Düşünceler",
+      "body": "description: III. Selim’e Sunulan Layihalar Üzerine Düşünceler\ndate: 2008-12-22\nsubject: Bildiri;Devlet;Bürokrasi;Kişiler;III. Selim;Tarihçilik;Kaynaklar;Yüzyıllar;18.Yy;19.Yy\nlocation: İstanbul,Altunizade;İSAM\nsource: Nizam-ı Kadim’den Nizam-ı Cedid’e: Ölümünün 200. Yılında III. Selim ve Dönemi Uluslararası Sempozyumu, İSAM\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=83",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "1860’larda Osmanlı Sanayisinin Problemleri ve Islah-ı Sanayi Komisyonu",
+      "body": "description: 1860’larda Osmanlı Sanayisinin Problemleri ve Islah-ı Sanayi Komisyonu\ndate: 1980\nsubject: Seminer;İktisat;Sanayii;Yüzyıllar;19.Yy\nlocation: İstanbul,Fatih;İstanbul Üniversitesi;Ziraat Bankası\nsource: İstanbul Üniversitesi, Siyasal Bilgiler Fakültesi ve Ziraat Bankası, Mithat Paşa Semineri\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=84",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı İmparatorluğunda 1700-1850 Arasında Sanayileşme Politikası ve Dış Ticaret",
+      "body": "description: Osmanlı İmparatorluğunda 1700-1850 Arasında Sanayileşme Politikası ve Dış Ticaret\ndate: 1981\nsubject: Seminer;İktisat;Sanayii;Sanayii Politikası;Ticaret;İhracat;Yüzyıllar;18.Yy;19.Yy\nlocation: İstanbul,Bebek;Boğaziçi Üniversitesi\nsource: Boğaziçi Üniversitesi, Sanayileşme ve Dış Ticaret Semineri\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=85",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Türkiye İktisat Tarihinde Tanzimatın Yeri",
+      "body": "description: Türkiye İktisat Tarihinde Tanzimatın Yeri\ndate: 1984\nsubject: Seminer;Tarihçilik;İktisat Tarihçiliği;Tanzimat;Ülkeler;Türkiye\nlocation: İstanbul,Fatih;İstanbul Üniversitesi\nsource: İstanbul Üniversitesi, Siyasal Bilgiler Fakültesi, Tanzimat Semineri\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=86",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı İktisadi ve Sosyal Tarihinin Kaynağı Olarak Özel Muhasebe Defterleri",
+      "body": "description: Osmanlı İktisadi ve Sosyal Tarihinin Kaynağı Olarak Özel Muhasebe Defterleri\ndate: 1996\nsubject: Seminer;Tarihçilik;İktisat Tarihçiliği;Kaynaklar;Arşiv\nlocation: İstanbul,Fatih;İstanbul Üniversitesi\nsource: İstanbul Üniversitesi Edebiyat Fakültesi, Türk Tarihinin Kaynakları Semineri\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=87",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İktisat Tarihi Araştırmaları için Osmanlı Arşivi’nin Değeri",
+      "body": "description: İktisat Tarihi Araştırmaları için Osmanlı Arşivi’nin Değeri\ndate: 1996-11-13\nsubject: Seminer;Tarihçilik;İktisat Tarihçiliği;Kaynaklar;Arşiv\nlocation: İstanbul\nsource: Tarih Vakfı Arşiv Semineri\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=88",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "19. Yüzyılın Ortalarında Osmanlı İktisat Politikasında Himayeci Gümrük Telakkisinin Doğuşu",
+      "body": "description: 19. Yüzyılın Ortalarında Osmanlı İktisat Politikasında Himayeci Gümrük Telakkisinin Doğuşu\ndate: 1977\nsubject: Seminer;İktisat;İktisadi Politika;Maliye;Vergi;Dönemler;Modern;Yüzyıllar;19.Yy\nlocation: Ankara,Çankaya;Hacettepe Üniversitesi\nsource: Hacettepe Üniversitesi, Uluslararası Türkiye İktisadi ve Sosyal Tarih Semineri\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=90",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı İktisadi Sisteminde Esnaf Loncalarının Fonksiyonu",
+      "body": "description: Osmanlı İktisadi Sisteminde Esnaf Loncalarının Fonksiyonu\ndate: 2002-05-09\nsubject: Seminer;İktisat;İktisadi Sistem;Ticaret;Esnaf\nlocation: İstanbul,Fatih;İstanbul Üniversitesi\nsource: İstanbul Üniversitesi, seminer\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=91",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı İktisat Tarihi Üzerine 6 seminer",
+      "body": "description: Osmanlı İktisat Tarihi Üzerine 6 seminer\ndate: 2002-07-22\nsubject: Seminer;Tarihçilik;İktisat Tarihçiliği\nlocation: Çanakkale,Adatepe;İstanbul Bilgi Üniversitesi\nsource: İstanbul Bilgi Üniversitesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=92",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı’da Toplum ve Ekonomi Semineri",
+      "body": "description: Osmanlı’da Toplum ve Ekonomi Semineri\nsubject: Seminer;Ekonomi;Toplum\nlocation: Yalova,Armutlu\nsource: Yalova, Armutlu\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=93",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Tarihi Seminerleri",
+      "body": "description: Osmanlı Tarihi Seminerleri\ndate: 2012\nsubject: Seminer;Tarihçilik\nlocation: İstanbul,Fatih;Bilim ve Sanat Vakfı\nsource: Bilim ve Sanat Vakfı, Osmanlı Tarihi Seminerleri 6 oturum: 30 Ekim, 5, 12, 19, 26 Kasım, 3 Aralık 2012\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=94",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Tarihinin Dönemlendirilmesi",
+      "body": "description: Osmanlı Tarihinin Dönemlendirilmesi\ndate: 1999-05-22\nsubject: Konferans;Tarihçilik;Dönemlendirme\nlocation: İstanbul,Fatih;Bilim ve Sanat Vakfı\nsource: Bilim ve Sanat Vakfı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=97",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İstanbul’un Demografik Yapısı 1454-2003",
+      "body": "description: İstanbul’un Demografik Yapısı 1454-2003\ndate: 2003-06-06\nsubject: Konferans;Toplum;Demografi;Şehirler;İstanbul;Yüzyıllar;15.Yy;21.Yy\nlocation: İstanbul,Fatih;Bilim ve Sanat Vakfı\nsource: Bilim ve Sanat Vakfı, İstanbul Şehir ve Medeniyet Sempozyum\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=98",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "18. Yüzyıl Osmanlısında İktisat ve Siyaset",
+      "body": "description: 18. Yüzyıl Osmanlısında İktisat ve Siyaset\ndate: 2008-05-10\nsubject: Konferans;İktisat;Devlet;Siyaset;Yüzyıllar;18.Yy\nlocation: İstanbul,Fatih;Bilim ve Sanat Vakfı\nsource: Bilim ve Sanat Vakfı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=99",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "18. Yüzyılda Osmanlı Ekonomisinde Değişmeler",
+      "body": "description: 18. Yüzyılda Osmanlı Ekonomisinde Değişmeler\ndate: 1983-12-15\nsubject: Konferans;İktisat;Yüzyıllar;18.Yy\nlocation: Gürcistan,Tiflis\nsource: Academy of Seciences of Soviet Union, Oriental Institute\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=100",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "17-19. Yüzyıllarda Ticaret Merkezi Olarak Tokat",
+      "body": "description: 17-19. Yüzyıllarda Ticaret Merkezi Olarak Tokat\ndate: 1986-07-02\nsubject: Konferans;Ticaret;Şehirler;Tokat;Yüzyıllar;17.Yy;19.Yy\nlocation: Tokat\nsource: Türk Tarihinde ve Kültüründe Tokat Sempozyumu\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=101",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "18. Yüzyılda Osmanlı Limanlarında Gümrük Merkezleri",
+      "body": "description: 18. Yüzyılda Osmanlı Limanlarında Gümrük Merkezleri\ndate: 1998-04-20\nsubject: Konferans;İktisat;Maliye;Vergi;Ticaret;Yüzyıllar;18.Yy\nlocation: İstanbul,Bebek;Boğaziçi Üniversitesi\nsource: Boğaziçi Üniversitesi, International Symposium on the Ottoman Port Towns: Material Culture and Organization, 1600-1900\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=102",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Ekonomisinde Müteşebbis",
+      "body": "description: Osmanlı Ekonomisinde Müteşebbis\ndate: 2007\nsubject: Konferans;İktisat;Girişimcilik;Müteşebis\nlocation: Konya;İttifak Holding\nsource: İttifak Holding\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=103",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Malikâne-Divani Sistemi",
+      "body": "description: Malikâne-Divani Sistemi\ndate: 2003-05-16\nsubject: Konferans;İktisat;Maliye;Vergi\nlocation: İstanbul,Bebek;Boğaziçi Üniversitesi\nsource: Boğaziçi Üniversitesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=104",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Sisteminin Ayırıcı Vasıfları Üzerine",
+      "body": "description: Osmanlı Sisteminin Ayırıcı Vasıfları Üzerine\ndate: 2007-05-23\nsubject: Konferans\nlocation: İstanbul,Bebek;Boğaziçi Üniversitesi\nsource: Boğaziçi Üniversitesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=105",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Kültür ve Kalkınma",
+      "body": "description: Kültür ve Kalkınma\ndate: 1990-01-13\nsubject: Konferans;Kalkınma;Kültür\nlocation: İstanbul\nsource: Türkiye Mimar ve Mühendis Odalar Birliği, Kalkınma Kültür ve Demokrasi Sempozyumu\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=106",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Coğrafi Keşiflerin İstanbul’dan Görünüşü",
+      "body": "description: Coğrafi Keşiflerin İstanbul’dan Görünüşü\ndate: 1992-10-12\nsubject: Konferans;Coğrafi Keşifler;Şehirler;İstanbul\nlocation: İstanbul,Fatih;İstanbul Üniversitesi\nsource: İstanbul Üniversitesi, Edebiyat Fakültesi Sosyoloji Bölümü, Amerika’nın Keşfinin 500. Yılı Toplantıları\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=107",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Şeref Doktorası Tevcihinde Yapılan Konuşma",
+      "body": "description: Şeref Doktorası Tevcihinde Yapılan Konuşma\ndate: 1996-02-08\nsubject: Konferans;Şeref Doktorası\nlocation: İstanbul,Fatih;İstanbul Üniversitesi\nsource: İstanbul Üniversitesi, Edebiyat Fakültesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=108",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı İktisadi Dünya Görüşünün Klasik İlkeleri ve Temel Değerleri",
+      "body": "description: Osmanlı İktisadi Dünya Görüşünün Klasik İlkeleri ve Temel Değerleri\ndate: 1992\nsubject: Konferans;İktisat;İktisadi Düşünce\nlocation: İstanbul\nsource: Birlik Vakfı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=109",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı’da Zanaat, Ahlak, İktisat İlişkisi",
+      "body": "description: Osmanlı’da Zanaat, Ahlak, İktisat İlişkisi\ndate: 1994\nsubject: Konferans;İktisat;İktisadi Düşünce;Ticaret;Zanaat\nlocation: İstanbul\nsource: Yapı Kredi Kültür Merkezi Salı Toplantıları, Kültür Mirası\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=110",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Tarihi Araştırmalarının Bugünkü Durumu",
+      "body": "description: Osmanlı Tarihi Araştırmalarının Bugünkü Durumu\ndate: 1999-02-10\nsubject: Konferans;Tarihçilik\nlocation: İstanbul\nsource: İstanbul Üniversitesi Edebiyat Fakültesi Sosyoloji Bölümü\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=111",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Devleti ve Modern İktisadi Büyüme",
+      "body": "description: Osmanlı Devleti ve Modern İktisadi Büyüme\ndate: 2001-12-28\nsubject: Konferans;İktisat;Kalkınma;İktisadi Büyüme;Dönemler;Modern\nlocation: İstanbul,Altunizade;İSAM\nsource: İSAM\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=112",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Tarihçiliğinin Bugünkü Meseleleri",
+      "body": "description: Osmanlı Tarihçiliğinin Bugünkü Meseleleri\ndate: 2004-05-26\nsubject: Konferans;Tarihçilik\nlocation: İstanbul,Altunizade;İSAM\nsource: İSAM\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=113",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı İktisadi ve Sosyal Tarih Çalışmalarının Değerlendirilmesi",
+      "body": "description: Osmanlı İktisadi ve Sosyal Tarih Çalışmalarının Değerlendirilmesi\ndate: 2001-02-24\nsubject: Konferans;Tarihçilik;İktisat Tarihçiliği;Sosyal Tarih\nlocation: İstanbul,Altunizade;İSAM\nsource: İSAM\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=114",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Devletini Uzun Ömürlü Kılan Sebepler IV: Mali Yapısının Özellikleri",
+      "body": "description: Osmanlı Devletini Uzun Ömürlü Kılan Sebepler IV: Mali Yapısının Özellikleri\ndate: 2011-05-31\nsubject: Konferans;İktisat;Maliye;Mali Yapı\nlocation: İstanbul,Altunizade;Altunizade Kültür Merkezi\nsource: Altunizade Kültür Merkezi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=115",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Devletini Uzun Ömürlü Kılan Faktörler V: İktisadi Yapı Özellikleri",
+      "body": "description: Osmanlı Devletini Uzun Ömürlü Kılan Faktörler V: İktisadi Yapı Özellikleri\ndate: 2011-10-20\nsubject: Konferans;İktisat;İktisadi Yapı\nlocation: İstanbul,Altunizade;Altunizade Kültür Merkezi\nsource: Altunizade Kültür Merkezi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=116",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Devletini Uzun Ömürlü Kılan Faktörler VI: İletişimin Örgütlenmesi",
+      "body": "description: Osmanlı Devletini Uzun Ömürlü Kılan Faktörler VI: İletişimin Örgütlenmesi\ndate: 2011-11-17\nsubject: Konferans;İletişim\nlocation: İstanbul,Altunizade;Altunizade Kültür Merkezi\nsource: Altunizade Kültür Merkezi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=117",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Sanayii",
+      "body": "description: Osmanlı Sanayii\ndate: 2011-01-14\nsubject: Konferans;İktisat;Sanayii\nlocation: İstanbul,Altunizade;Altunizade Kültür Merkezi\nsource: Altunizade Kültür Merkezi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=118",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Devletini Uzun Ömürlü Kılan Faktörler I: Giriş",
+      "body": "description: Osmanlı Devletini Uzun Ömürlü Kılan Faktörler I: Giriş\ndate: 2011-02-11\nsubject: Konferans\nlocation: İstanbul,Altunizade;Altunizade Kültür Merkezi\nsource: Altunizade Kültür Merkezi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=119",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Devletini Uzun Ömürlü Kılan Faktörler II: Siyasi Yapısının Özellikleri",
+      "body": "description: Osmanlı Devletini Uzun Ömürlü Kılan Faktörler II: Siyasi Yapısının Özellikleri\ndate: 2011-03-11\nsubject: Konferans;Devlet;Siyaset\nlocation: İstanbul,Altunizade;Altunizade Kültür Merkezi\nsource: Altunizade Kültür Merkezi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=120",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Devleti’ni Uzun Ömürlü Kılan Faktörler III: Bürokrasisinin Organizasyonel Yapısı",
+      "body": "description: Osmanlı Devleti’ni Uzun Ömürlü Kılan Faktörler III: Bürokrasisinin Organizasyonel Yapısı\ndate: 2011-04-14\nsubject: Konferans;Devlet;Bürokrasi;Bürokratik Yapı\nlocation: İstanbul,Altunizade;Altunizade Kültür Merkezi\nsource: Altunizade Kültür Merkezi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=121",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "1800’de Osmanlı İmparatorluğunun Genel Durumu",
+      "body": "description: 1800’de Osmanlı İmparatorluğunun Genel Durumu\ndate: 2001-03-16\nsubject: Konferans;Yüzyıllar;18.Yy\nlocation: İstanbul,Tuzla;Sabancı Üniversitesi\nsource: Sabancı Üniversitesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=122",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı İltizam Rejimi ve Değişmeleri",
+      "body": "description: Osmanlı İltizam Rejimi ve Değişmeleri\ndate: 2000-12-13\nsubject: Konferans;İktisat;Maliye;Vergi;Değişim\nlocation: İstanbul\nsource: Osmanlı Bankası Araştırma Merkezi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=123",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Onsekizinci Yüzyılda Osmanlı İmparatorluğunun İktisadi Durumu",
+      "body": "description: Onsekizinci Yüzyılda Osmanlı İmparatorluğunun İktisadi Durumu\ndate: 1992-05-11\nsubject: Konferans;İktisat;İktisadi Durum;Yüzyıllar;18.Yy\nlocation: Ankara,Çankaya;Bilkent Üniversitesi\nsource: Bilkent Üniversitesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=124",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Erol Güngör’ün Şahsiyeti",
+      "body": "description: Erol Güngör’ün Şahsiyeti\ndate: 1996-04-24\nsubject: Konferans;Kişiler;Erol Güngör\nlocation: İstanbul\nsource: Türk Kültür Vakfı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=125",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Aydın Erol Güngör",
+      "body": "description: Aydın Erol Güngör\ndate: 2003-04-19\nsubject: Konferans;Kişiler;Erol Güngör\nlocation: İstanbul\nsource: Kültür Ocağı Vakfı, Örnek Bir Şahsiyet Olarak Erol Güngör\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=126",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Tarihçiliği Nasıl Anlamalı",
+      "body": "description: Tarihçiliği Nasıl Anlamalı\ndate: 1998-02-22\nsubject: Konferans;Tarihçilik\nlocation: İstanbul\nsource: Belgesel Sinemacılar Birliği\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=127",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "A Comparative Study of The Life-Term Tax Ferming Data and The Volume of Commercial and Industrial Activities in the Ottoman Empire in the Second Half of the 18th Century",
+      "body": "description: A Comparative Study of The Life-Term Tax Ferming Data and The Volume of Commercial and Industrial Activities in the Ottoman Empire in the Second Half of the 18th Century\ndate: 1976-03-22\nsubject: Konferans;İktisat;Maliye;Vergi;Sanayii;Ticaret;Yüzyıllar;18.Yy\nlocation: Almanya,Hamburg\nsource: AIESEE, South Eastern European and Balkan Cities Confronting the Industrial Revolution in the Western Europe\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=128",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "18. ve 19. Yüzyıllarda Osmanlı İmparatorluğunda Sanayileşme Teşebbüsleri",
+      "body": "description: 18. ve 19. Yüzyıllarda Osmanlı İmparatorluğunda Sanayileşme Teşebbüsleri\ndate: 1999-05-29\nsubject: Konferans;İktisat;Sanayii;Yüzyıllar;18.Yy;19.Yy\nlocation: İstanbul\nsource: Türk Kültür Ocağı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=129",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Kanuni Devrinde Osmanlı Performansı",
+      "body": "description: Kanuni Devrinde Osmanlı Performansı\ndate: 2013-01-28\nsubject: Konferans;Kişiler;Kanuni Sultan Süleyman;Dönemler;Klasik\nlocation: İstanbul,Başakşehir;Başakşehir Belediyesi\nsource: Başakşehir Belediyesi Kültür Merkezi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=130",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İslam Ekonomisi ve Osmanlı Uygulaması",
+      "body": "description: İslam Ekonomisi ve Osmanlı Uygulaması\ndate: 2013-05-11\nsubject: Konferans;İktisat;İslam Ekonomisi;Osmanlı Uygulaması\nlocation: İstanbul,Mecidiyeköy;İstanbul Bilimler Akademisi Vakfı\nsource: İstanbul Bilimler Akademisi Vakfı, Murat Çizakça ile birlikte, Bab-ı Tarih Sohbetleri\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=131",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı İktisadi Kurumları: Vakıflar ve Para Vakıfları, Vergi Sistemi ve Dış Ticaret",
+      "body": "description: Osmanlı İktisadi Kurumları: Vakıflar ve Para Vakıfları, Vergi Sistemi ve Dış Ticaret\ndate: 2013-05-25\nsubject: Konferans;İktisat;İktisadi Kurumlar;Maliye;Vergi;Ticaret;İhracat;Toplum;Vakıflar;Para Vakfı\nlocation: İstanbul,Mecidiyeköy;İstanbul Bilimler Akademisi Vakfı\nsource: İstanbul Bilimler Akademisi Vakfı, Murat Çizakça ile birlikte, Bab-ı Tarih Sohbetleri\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=132",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Ekonomisinde Sermaye Birikimi ve Servet Dağılımı",
+      "body": "description: Osmanlı Ekonomisinde Sermaye Birikimi ve Servet Dağılımı\ndate: 2013-03-26\nsubject: Konferans;İktisat;Sermaye\nlocation: İstanbul,Fatih;İstanbul Üniversitesi\nsource: İstanbul Üniversitesi, Kongre Kültür Merkezi, 37. İktisatçılar Haftası, Cumhuriyetin 90. Yılında Hak, Adalet, İktisat Başlıklı Oturum\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=133",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlıda 17. Yüzyılın Sosyal ve Siyasal Yapısı",
+      "body": "description: Osmanlıda 17. Yüzyılın Sosyal ve Siyasal Yapısı\ndate: 2012-12-03\nsubject: Konferans;Devlet;Siyaset;Sosyal Yapı;Yüzyıllar;17.Yy\nlocation: İstanbul,Şişhane;İstanbul Kültür Sanat Vakfı\nsource: İstanbul Kültür Sanat Vakfı Osmanlı Dönemi Müzik Uygulama ve Araştırma Merkezi, Itri ve Dönemine Disiplinlerarası Bakışlar\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=134",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Değerlendirme Konuşması",
+      "body": "description: Değerlendirme Konuşması\ndate: 2007-09-07\nsubject: Konferans;Değerlendirme\nlocation: İstanbul,Göztepe;Marmara Üniversitesi\nsource: I. Türkiye İktisat Tarihi Kongresi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=135",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Ekonomisinde Esnafın Yeri",
+      "body": "description: Osmanlı Ekonomisinde Esnafın Yeri\ndate: 2004-10-13\nsubject: Konferans;İktisat;Ticaret;Esnaf\nlocation: İstanbul\nsource: 17. Ahilik Kültürü Haftası Kutlamaları\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=136",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "15. ve 16. Yüzyıllarda Osmanlı İmparatorluğunda İç ve Dış Ticaret",
+      "body": "description: 15. ve 16. Yüzyıllarda Osmanlı İmparatorluğunda İç ve Dış Ticaret\ndate: 1996-11-09\nsubject: Konferans;Ticaret;İç Ticaret;İhracat;Dönemler;Klasik;Yüzyıllar;15.Yy;16.Yy\nlocation: İstanbul\nsource: 15 ve 16. Asırları Türk Asrı yapan Değerler Sempozyum\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=137",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlıda İktisadi Düşüncenin Gelişimi",
+      "body": "description: Osmanlıda İktisadi Düşüncenin Gelişimi\ndate: 2009-04-14\nsubject: Konferans;İktisat;İktisadi Düşünce\nlocation: İstanbul\nsource: Yapı Kredi Kültür Merkezi Salı Toplantıları\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=138",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İstanbul’un Fethi",
+      "body": "description: İstanbul’un Fethi\ndate: 2008-05-28\nsubject: Konferans;Devlet,Fetih;Şehirler;İstanbul;Dönemler;Klasik;Yüzyıllar;15.Yy\nlocation: İstanbul,Bayrampaşa;Bayrampaşa Belediyesi\nsource: Bayrampaşa Belediyesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=139",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "17. Ve 18. Yüzyıllarda Osmanlı Mukataa Sistemindeki Değişmeler",
+      "body": "description: 17. Ve 18. Yüzyıllarda Osmanlı Mukataa Sistemindeki Değişmeler\ndate: 2002-01-23\nsubject: Konferans;İktisat;Maliye;Vergi;Yüzyıllar;17.Yy;18.Yy\nlocation: İstanbul,Büyükçekmece;Fatih Üniversitesi\nsource: Fatih Üniversitesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=140",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Modern İktisadi Büyüme Karşısında Osmanlı Tutumu",
+      "body": "description: Modern İktisadi Büyüme Karşısında Osmanlı Tutumu\ndate: 2003-01-08\nsubject: Konferans;İktisat;İktisadi Büyüme;Dönemler;Modern\nlocation: İstanbul,Büyükçekmece;Fatih Üniversitesi\nsource: Fatih Üniversitesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=141",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İktisat Tarihi Araştırmasındaki Serüvenim",
+      "body": "description: İktisat Tarihi Araştırmasındaki Serüvenim\ndate: 2000-01-20\nsubject: Konferans;İktisat;İktisat Tarihçiliği\nlocation: İstanbul,Fatih;Tarih Vakfı\nsource: Tarih Vakfı, Tarihçinin Mutfağı Serisi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=142",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Devleti’nin 18. 19. Yüzyıllarda Özel Sermaye Birikim Karşısındaki Tutumu ve Etkileri",
+      "body": "description: Osmanlı Devleti’nin 18. 19. Yüzyıllarda Özel Sermaye Birikim Karşısındaki Tutumu ve Etkileri\ndate: 2009-06-08\nsubject: Konferans;İktisat;Sermaye;Yüzyıllar;18.Yy;19.Yy\nlocation: İstanbul;İstanbul Bilgi Üniversitesi;TÜBA\nsource: TÜBA Forumu, İstanbul Bilgi Üniversitesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=143",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İpek Yolu, Baharat Yolu, Ortadoğu ve Osmanlı Devleti",
+      "body": "description: İpek Yolu, Baharat Yolu, Ortadoğu ve Osmanlı Devleti\ndate: 2009-02-06\nsubject: Konferans;Ticaret;İpek Yolu;Baharat Yolu;Bölgeler;Ortadoğu\nlocation: İstanbul;İSMEK\nsource: İSMEK\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=144",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İstanbul’un Fethi: Sebepleri ve Sonuçları",
+      "body": "description: İstanbul’un Fethi: Sebepleri ve Sonuçları\ndate: 1996-05-24\nsubject: Konferans;Devlet;Fetih;Şehirler;İstanbul;Dönemler;Klasik;Yüzyıllar;15.Yy\nlocation: İstanbul;İstanbul Büyükşehir Belediyesi\nsource: İstanbul Büyük Şehir Belediyesi, I. Uluslararası İstanbul’un Fethi Konferansı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=147",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İstanbul’un Fethi: İktisadi Sonuçları",
+      "body": "description: İstanbul’un Fethi: İktisadi Sonuçları\ndate: 1997-05-30\nsubject: Konferans;İktisat;Devlet;Fetih;Şehirler;İstanbul;Dönemler;Klasik;Yüzyıllar;15.Yy\nlocation: İstanbul;İstanbul Büyükşehir Belediyesi\nsource: İstanbul Büyük Şehir Belediyesi, II. Uluslararası İstanbul’un Fethi Konferansı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=148",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı İktisat Tarihi Üzerine Düşünceler",
+      "body": "description: Osmanlı İktisat Tarihi Üzerine Düşünceler\ndate: 1995-01-21\nsubject: Konferans;Tarihçilik;İktisat Tarihçiliği\nlocation: İstanbul,Cağaloğlu;IRCICA\nsource: IRCICA\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=149",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "18. Yüzyılda Osmanlı İmparatorluğunda Değerli Maden Üretimi",
+      "body": "description: 18. Yüzyılda Osmanlı İmparatorluğunda Değerli Maden Üretimi\ndate: 1997-11-28\nsubject: Konferans;İktisat;Sanayi;Maden;Yüzyıllar;18.Yy\nlocation: İstanbul,Beyoğlu;IFEA\nsource: Institut Français d’Études Anatoliennes, International Syposium on the Money and Mints in the Ottoman Empire 1680-1850\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=150",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı İmparatorluğunda Siyasi ve İktisadi İktidar İlişkileri",
+      "body": "description: Osmanlı İmparatorluğunda Siyasi ve İktisadi İktidar İlişkileri\ndate: 1996-01-04\nsubject: Konferans;İktisat;Devlet;Siyaset\nlocation: İstanbul,Beyoğlu;IFEA\nsource: Institut Français d’Études Anatoliennes\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=151",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "19. Yüzyıl Öncesi Osmanlı Ekonomisinde Özel Sermaye Birikimi Üzerinde Devletin Etkileri",
+      "body": "description: 19. Yüzyıl Öncesi Osmanlı Ekonomisinde Özel Sermaye Birikimi Üzerinde Devletin Etkileri\ndate: 2008-10-16\nsubject: Konferans;İktisat;Sermaye;Dönemler;Modern;Yüzyıllar;19.Yy\nlocation: İstanbul,Beyoğlu;NIT\nsource: Netherlands Institute in Turkey, Comparing Notes: Current Research on Ottoman History and Literature in the Netherlands and Turkey\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=152",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "The Education of the Ottman Bureaucrats in the Pre-Tanzimat Era",
+      "body": "description: The Education of the Ottman Bureaucrats in the Pre-Tanzimat Era\ndate: 1999-10-22\nsubject: Konferans;Devlet;Bürokrasi;Tanzimat\nlocation: İstanbul;Bilgi Üniversitesi\nsource: İstanbul Bilgi Üniversitesi, Education in the Ottoman Empire\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=153",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Kapitalizm Karşısında Osmanlı İktisadı",
+      "body": "description: Kapitalizm Karşısında Osmanlı İktisadı\ndate: 2007-10-26\nsubject: Konferans;İktisat;Kapitalizm\nlocation: İstanbul,Üsküdar;İlmi Etüdler Derneği\nsource: İlmi Etüdler Derneği 2007-2008 Açılış Konferansı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=154",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İktisat Tarihi ve Osmanlı Dünyası",
+      "body": "description: İktisat Tarihi ve Osmanlı Dünyası\ndate: 1995-05-18\nsubject: Konferans;Tarihçilik;İktisat Tarihçiliği\nlocation: İzmir\nsource: Tarih Vakfı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=155",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "19. Yüzyılda Osmanlı İktisadi Dünya Görüşünde Değişmeler",
+      "body": "description: 19. Yüzyılda Osmanlı İktisadi Dünya Görüşünde Değişmeler\ndate: 1999-04\nsubject: Konferans;İktisat;İktisadi Düşünce;Dönemler;Modern;Yüzyıllar;19.Yy\nlocation: İzmir\nsource: Tarih Vakfı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=156",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Ticaret Merkezi Olarak İzmir",
+      "body": "description: Osmanlı Ticaret Merkezi Olarak İzmir\ndate: 2008-06\nsubject: Konferans;Ticaret;Şehirler;İzmir\nlocation: İzmir;İzmir Ticaret Odası\nsource: İzmir Ticaret Odası\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=157",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı’da Devlet, Ekonomi ve Toplum",
+      "body": "description: Osmanlı’da Devlet, Ekonomi ve Toplum\ndate: 2009-01-19\nsubject: Konferans;İktisat;Devlet;Toplum\nlocation: İzmir\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=158",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Sosyal Nizamı ve İstinad Ettiği İktisadi Yapı",
+      "body": "description: Osmanlı Sosyal Nizamı ve İstinad Ettiği İktisadi Yapı\ndate: 2011-06-02\nsubject: Konferans;İktisat;İktisadi Yapı;Toplum;Sosyal Nizam\nlocation: Bilecik;Bilecik Üniversitesi\nsource: Bilecik Şeyh Edebali Üniversitesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=159",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Modern İktisadi Büyüme Karşısında Osmanlı Ekonomisi",
+      "body": "description: Modern İktisadi Büyüme Karşısında Osmanlı Ekonomisi\ndate: 2011-05-13\nsubject: Konferans;İktisat;İktisadi Büyüme;Dönemler;Modern\nlocation: Malatya,Battalgazi;İnönü Üniversitesi\nsource: İnönü Üniversitesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=160",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "War and Economy in the Eighteenth Century Ottoman Empire",
+      "body": "description: War and Economy in the Eighteenth Century Ottoman Empire\ndate: 1983-08-24\nsubject: Konferans;İktisat;Devlet;Savaş;Yüzyıllar;18.Yy\nlocation: AB,New Jersey;Princeton Üniversitesi\nsource: Princeton Universitesi, Third International Congress on the Economic and Social History of Turkey\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=161",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı İktisadi Dünya Görüşünün Prensipleri ve Sonuçları",
+      "body": "description: Osmanlı İktisadi Dünya Görüşünün Prensipleri ve Sonuçları\ndate: 1983-08-04\nsubject: Konferans;İktisat;İktisadi Düşünce\nlocation: Almanya,Münih\nsource: IV. Internationaler Kongress für Türkische Wirtschafts und Sozialgeschichte (1071-1920)\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=162",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "17. Yüzyıl Dönüşümüne Genel Bakış",
+      "body": "description: 17. Yüzyıl Dönüşümüne Genel Bakış\ndate: 2013-02-07\nsubject: Konferans;Yüzyıllar;17.Yy\nlocation: Ankara,Çankaya;ODTÜ\nsource: Açılış Konuşması 17. Yüzyılda Osmanlı İmparatorluğunda Kriz ve Dönüşüm III. Çalıştay: Kriz ve Değişmeler\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=163",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Yönetiminin Özellikleri",
+      "body": "description: Osmanlı Yönetiminin Özellikleri\ndate: 2013-06-15\nsubject: Konferans;Devlet;Yönetim\nlocation: Ankara;İç İşleri Bakanlığı\nsource: Osmanlı Sisteminden Günümüz İdarecilerinin Alabileceği Dersler, TC. İçişleri Bakanlığı Eğitim Dairesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=164",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Devletinin Uzun Ömürlü Olmasını Sağlayan Temelleri",
+      "body": "description: Osmanlı Devletinin Uzun Ömürlü Olmasını Sağlayan Temelleri\ndate: 2013-06-28\nsubject: Konferans;Devlet;Yönetim\nlocation: Ankara;TTK\nsource: TTK Yüksek Lisans ve Doktora Öğrencileri için Konferans\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=165",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Dostum Mehmet Çavuşoğlu",
+      "body": "description: Dostum Mehmet Çavuşoğlu\ndate: 2011-03-31\nsubject: Konferans;Kişiler;Mehmet Çavuşoğlu\nlocation: Ankara,Yeni Mahalle;Gazi Üniversitesi\nsource: Dostum Mehmet Çavuşoğlu”, Merhum Prof. Dr. Mehmet Çavuşoğlu Hakkında Anma Toplantısı, Gazi Üniversitesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=166",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç-Perşembe Konuşmaları",
+      "body": "description: Mehmet Genç-Perşembe Konuşmaları\ndate: 2012\nsubject: Konferans;Kişiler;Mehmet Genç\nlocation: İstanbul,Fatih;Tarih Vakfı\nsource: Tarih Vakfı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=167",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Devleti'nin İktisadi Geçmişi",
+      "body": "description: Osmanlı Devleti'nin İktisadi Geçmişi\ndate: 2017\nsubject: Konferans;İktisat\nsource: Saray Konferansları\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=168",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İktisat ve Deniz Ticaret Tarihinde Doğu Akdeniz ve Mersin’e Nasıl Yaklaşılmalı",
+      "body": "description: İktisat ve Deniz Ticaret Tarihinde Doğu Akdeniz ve Mersin’e Nasıl Yaklaşılmalı\ndate: 2011-04-07\nsubject: Konferans;İktisat;Ticaret;Doğu Akdeniz;Tarihçilik;İktisat Tarihçiliği;Şehirler;Mersin\nlocation: Mersin\nsource: Açılış Konuşması, Türk Deniz Ticareti Tarihi Sempozyumu III Mersin ve Doğu Akdeniz 7-8 Nisan 2011\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=169",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Ekonomik Sistemi",
+      "body": "description: Osmanlı Ekonomik Sistemi\ndate: 2010-05\nsubject: Konferans;İktisat;İktisadi Sistem\nlocation: Sakarya,Serdivan;Sakarya Üniversitesi\nsource: Sakarya Üniversitesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=170",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Sisteminin Temel Özellikleri",
+      "body": "description: Osmanlı Sisteminin Temel Özellikleri\ndate: 2018\nsubject: Konferans\nlocation: İstanbul,Küçükçekmece;Avrasya Bir Vakfı\nsource: Avrasya Bir Vakfı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=171",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlıda Kayıt ve Yazışmanın Önemi",
+      "body": "description: Osmanlıda Kayıt ve Yazışmanın Önemi\ndate: 2004\nsubject: Konferans;Devlet;Bürokrasi;Kayıt ve Yazışma\nlocation: Ankara,Yeni Mahalle;Nüfus ve Vatandaşlık İşleri Genel Müdürlüğü\nsource: Nüfus ve Vatandaşlık İşleri Genel Müdürlüğü\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=172",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı İmparatorluğunda Devlet ve Ekonomi Arasındaki İlişkiler",
+      "body": "description: Osmanlı İmparatorluğunda Devlet ve Ekonomi Arasındaki İlişkiler\ndate: 1996-01-11\nsubject: Konferans;İktisat;Devlet\nlocation: Ankara,Çankaya;Fransız Kültür Merkezi\nsource: Fransız Kültür Merkezi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=173",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Türkiye Cumhuriyeti’nin 75. Yılından Osmanlı Tarihine Bakış",
+      "body": "description: Türkiye Cumhuriyeti’nin 75. Yılından Osmanlı Tarihine Bakış\ndate: 1998-11\nsubject: Konferans;Tarihçilik;Ülkeler;Türkiye\nlocation: Erzurum\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=174",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı İktisadi Sistem ve Vakıflar",
+      "body": "description: Osmanlı İktisadi Sistem ve Vakıflar\ndate: 2019-05-08\nsubject: Konferans;İktisat;İktisadi Sistem;Toplum;Vakıflar\nlocation: Sakarya,Serdivan;Sakarya Üniversitesi;SASGEM\nsource: Sakarya Üniversitesi, Akademik ve Sosyal Gelişim Merkezi SASGEM\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=175",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Açılış Konferansı",
+      "body": "description: Açılış Konferansı\ndate: 2015-10-14\nsubject: Konferans\nlocation: Sakarya;OSARK\nsource: Uluslararası Osmanlı Araştırmaları Kongresi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=176",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı’da Sosyal Adalet",
+      "body": "description: Osmanlı’da Sosyal Adalet\ndate: 2013\nsubject: Konferans;Devlet;Yönetim;Sosyal Adalet\nlocation: Kocaeli,İzmit;İzmit Belediyesi\nsource: İzmit Belediyesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=177",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Some Thoughts on the İltizam System",
+      "body": "description: Some Thoughts on the İltizam System\ndate: 1995-07\nsubject: Konferans;İktisat;Maliye;Vergi;İltizam Sistemi\nlocation: Almanya,Heidelberg;Heidelberg Üniversitesi\nsource: Heidelberg Universitesi, VII. International Kongress Für Turkische Wirtschafts und Sozialgeschichte (1071-1921)\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=178",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "18. Yüzyıl Osmanlı Ekonomisinin Temel Eğilimleri",
+      "body": "description: 18. Yüzyıl Osmanlı Ekonomisinin Temel Eğilimleri\ndate: 1998-05-05\nsubject: Konferans;İktisat;Yüzyıllar;18.Yy\nlocation: İstanbul,Beyoğlu;Orient-Institut\nsource: The Ottoman Eighteenth Century, Orient-Institut Der Deutshen Morgenländischen Gesselschaft\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=179",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Ottoman State and Economy in the Age of Reforms: Continuity and Change",
+      "body": "description: Ottoman State and Economy in the Age of Reforms: Continuity and Change\ndate: 1996-06\nsubject: Konferans;İktisat;Devlet;Reform\nlocation: ABD,Madison;University of Wisconsin-Madison,\nsource: University of Wisconsin-Madison, A Conference on the Ottomen State, Modernism and the Euro-Islamic Synthesis: Revisionist Approach\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=180",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "The Impact of the State on Capital Accumulation in the Ottoman Empire Before the 19th Century",
+      "body": "description: The Impact of the State on Capital Accumulation in the Ottoman Empire Before the 19th Century\ndate: 2008-12-03\nsubject: Konferans;İktisat;Devlet;Dönemler;Modern;Yüzyıllar;19.Yy\nlocation: Hollanda,Leiden;Leiden University\nsource: Leiden University Turkish Studies, Faculty of Arts, Finance, Capital and State in the Ottoman Empire\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=181",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İktisat Tarihimizde Bursa’nın Yeri",
+      "body": "description: İktisat Tarihimizde Bursa’nın Yeri\ndate: 2013-05-07\nsubject: Konferans;İktisat;Şehirler;Bursa\nlocation: Bursa,Nilüfer;Uludağ Üniversitesi\nsource: Uludağ Üniversitesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=182",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Klasik Osmanlı Sisteminde Kâr, Faiz ve Kredi İlişkilerinin Özel Sermaye Birikimine Etkileri",
+      "body": "description: Klasik Osmanlı Sisteminde Kâr, Faiz ve Kredi İlişkilerinin Özel Sermaye Birikimine Etkileri\ndate: 2013-02-27\nsubject: Konferans;İktisat;Sermaye;Dönemler;Klasik\nlocation: Antalya,Konyaaltı;Akdeniz Üniversitesi\nsource: Akdeniz Üniversitesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=183",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Mali Sisteminde Tuz ve Tuzlaların Mahiyeti",
+      "body": "description: Osmanlı Mali Sisteminde Tuz ve Tuzlaların Mahiyeti\ndate: 2013-05-01\nsubject: Konferans;İktisat;Maliye;Tuz\nlocation: Kayseri\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=184",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Ekonomisinde Özel Sermaye Birikimi Karşısında Devletin Tutumu",
+      "body": "description: Osmanlı Ekonomisinde Özel Sermaye Birikimi Karşısında Devletin Tutumu\ndate: 2010-04-20\nsubject: Konferans;İktisat,Sermaye\nlocation: Kayseri,Talas;Erciyes Üniversitesi\nsource: Erciyes Üniversitesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=185",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Erol Güngör Hakkında",
+      "body": "description: Erol Güngör Hakkında\ndate: 2010-04-26\nsubject: Konferans;Kişiler;Erol Güngör\nlocation: Eskişehir,Odunpazarı;Eskişehir Osmangazi Üniversitesi\nsource: Eskişehir Osmangazi Üniversitesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=186",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Devleti ve Ekonomi",
+      "body": "description: Osmanlı Devleti ve Ekonomi\ndate: 2004-04-26\nsubject: Konferans;İktisat;Devlet\nlocation: Eskişehir,Odunpazarı;Eskişehir Osmangazi Üniversitesi\nsource: Eskişehir Osmangazi Üniversitesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=187",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı’da Ekonomik Yapı ve Devlet",
+      "body": "description: Osmanlı’da Ekonomik Yapı ve Devlet\ndate: 2007-11-06\nsubject: Konferans;İktisat;İktisadi Yapı;Devlet\nlocation: Eskişehir,Odunpazarı;Eskişehir Osmangazi Üniversitesi\nsource: Eskişehir Osmangazi Üniversitesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=188",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Silk Road and the Middle East Economy in History",
+      "body": "description: Silk Road and the Middle East Economy in History\ndate: 1997-06-29\nsubject: Konferans;Ticaret;İpek Yolu;Bölgeler;Orta Doğu\nlocation: Japonya,Yamagata;Yamagata University\nsource: Yamagata University\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=189",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "The Black Sea Economic Cooperation in its Historical Perspective",
+      "body": "description: The Black Sea Economic Cooperation in its Historical Perspective\ndate: 1997-06-29\nsubject: Konferans;İktisat;Bölgeler;Karadeniz\nlocation: Japonya,Yamagata;Yamagata University\nsource: Yamagata University\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=190",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "State and Economy in the Ottoman Empire",
+      "body": "description: State and Economy in the Ottoman Empire\ndate: 1997-06-29\nsubject: Konferans;İktisat;Devlet\nlocation: Japonya,Yamagata;Yamagata University\nsource: Yamagata University\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=191",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Balkanlarda Osmanlı Varlığı",
+      "body": "description: Balkanlarda Osmanlı Varlığı\ndate: 2007-12-17\nsubject: Konferans;Bölgeler;Balkanlar\nlocation: Üsküp\nsource: Üsküp’te İstanbul Günleri\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=195",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Main Trends in the Ottoman Economy in the Eighteenth Century",
+      "body": "description: Main Trends in the Ottoman Economy in the Eighteenth Century\ndate: 1990-11\nsubject: Konferans;İktisat;Yüzyıllar;18.Yy\nlocation: ABD,Cambridge,MA;Harvard University\nsource: Harvard University\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=196",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Bütçelerinin Yapısal Özellikleri",
+      "body": "description: Osmanlı Bütçelerinin Yapısal Özellikleri\ndate: 2006-11-15\nsubject: Konferans;İktisat;Bütçe\nlocation: Almanya,Münih;Ludwig Maximilian University of Munich\nsource: Ludwig Maximilian University of Munich\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=198",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İktisat Tarihinin İktisat ve Tarih Disiplinleri Arasındaki Konumu",
+      "body": "description: İktisat Tarihinin İktisat ve Tarih Disiplinleri Arasındaki Konumu\ndate: 2010-06-24\nsubject: Konferans;Tarihçilik;İktisat Tarihçiliği\nlocation: Elazığ\nsource: Açılış Tebliği, II. Türk İktisat Tarihi Kongresi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=199",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Bürokrasisi ve İmparatorluk Ölçüsünde İletişim Ağı",
+      "body": "description: Osmanlı Bürokrasisi ve İmparatorluk Ölçüsünde İletişim Ağı\ndate: 2004-05-17\nsubject: Konferans;Devlet;Bürokrasi;İletişim\nlocation: Kırgızistan,Bişkek;Kırgızistan-Türkiye Manas Üniversitesi\nsource: Mytilini kai Kydonies: Mia Amphidromi schesi sto Voreioanatoliko Aigaio\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=201",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Olive Oil Production Trends in Eighteenth and Nineteenth Centuries in Mitilini",
+      "body": "description: Olive Oil Production Trends in Eighteenth and Nineteenth Centuries in Mitilini\ndate: 2003-10-03\nsubject: Konferans;İktisat;Sanayii;Zeytinyağı;Yüzyıllar;Şehirler;Mitilini;18.Yy;19.Yy\nlocation: Yunanistan,Midilli\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=202",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Relation Between Ottoman Economic Structure and State Policy",
+      "body": "description: Relation Between Ottoman Economic Structure and State Policy\ndate: 1991-12-03\nsubject: Konferans;İktisat;İktisadi Yapı;Devlet\nlocation: Yunanistan,Atina\nsource: National Secientific Foundation\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=203",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "18. Yüzyılda Osmanlı Dış Ticaretinde Değişme Eğilimleri",
+      "body": "description: 18. Yüzyılda Osmanlı Dış Ticaretinde Değişme Eğilimleri\ndate: 2013-07-27\nsubject: Konferans;Ticaret;İhracat;Yüzyıllar;18.Yy\nlocation: Yalova;Yalova Üniversitesi\nsource: Yalova Üniversitesi, Osmanlı Sosyal ve Ekonomik Tarihi Kongresi I\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=204",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Sources Ottomanes sur le Commerce Intérieur et Exteriéur des Ports de la Mediterranée Orientale",
+      "body": "description: Sources Ottomanes sur le Commerce Intérieur et Exteriéur des Ports de la Mediterranée Orientale\ndate: 1991-11-29\nsubject: Konferans;Ticaret;İç Ticaret;İhracat;Tarihçilik;Kaynaklar;Arşiv;Bölgeler;Doğu Akdeniz\nlocation: Fransa;CNRS;L'Université d'Aix-Marseille\nsource: CNRS, L'Université d'Aix-Marseille, Echanges Maritimes et Contacts Eocio-economiques en Mediterranée et Mers Proches\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=205",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Arşiv Kaynaklarına Göre Hocabey’in (Odessa) Kuruluşu",
+      "body": "description: Osmanlı Arşiv Kaynaklarına Göre Hocabey’in (Odessa) Kuruluşu\ndate: 2013-04-18\nsubject: Konferans;Tarihçilik;Kaynaklar;Arşiv;Şehirler;Odessa;Hocabey\nlocation: Ukrayna\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=206",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Ottoman Industry in the Eighteenth Century",
+      "body": "description: Ottoman Industry in the Eighteenth Century\ndate: 1990-11\nsubject: Konferans;İktisat;Sanayi;Yüzyıllar;18.Yy\nlocation: ABD,Binghamton;State University of New York\nsource: State University of New York, Binghamton, International Conference on Manifacturing in the Ottoman Empire and Turkey 1500-1900\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=207",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "18. Yüzyılda Karadeniz Bölgesinde Ticari İlişkilerin Yapısı",
+      "body": "description: 18. Yüzyılda Karadeniz Bölgesinde Ticari İlişkilerin Yapısı\ndate: 1990-10\nsubject: Konferans;Ticaret;Bölgeler;Karadeniz;Yüzyıllar;18.Yy\nlocation: Ukrayna,Kiev\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=208",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Tecrübe Konuşuyor",
+      "body": "description: Tecrübe Konuşuyor\ndate: 2015-02\nsubject: Röportaj;Kişiler;Mehmet Genç\nlocation: İstanbul\nsource: Yedikıta Dergisi 78: 60-66\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=209",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Tevazuyu Hakikati Ararken Öğrendim",
+      "body": "description: Tevazuyu Hakikati Ararken Öğrendim\ndate: 2012-05-27\nsubject: Röportaj;Kişiler;Mehmet Genç\nlocation: İstanbul\nsource: Yeni Şafak Gazetesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=210",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Dünyasında Bayramların Fonksiyonu",
+      "body": "description: Osmanlı Dünyasında Bayramların Fonksiyonu\ndate: 1996-05-02\nsubject: Röportaj;Toplum;Bayram\nlocation: İstanbul\nsource: Kanal TV 7\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=211",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Röportaj",
+      "body": "description: Röportaj\ndate: 2013\nsubject: Röportaj;Kişiler;Mehmet Genç\nlocation: İstanbul\nsource: Derin Tarih\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=212",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç 'Mesele bulmacayı çözmekti, ünvan değil'",
+      "body": "description: Röportaj\ndate: 2013-07-21\nsubject: Röportaj;Kişiler;Mehmet Genç\nlocation: İstanbul\nsource: Star Gazetesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=213",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Devletin Bekasında İktisadın Yeri Ne?",
+      "body": "description: Devletin Bekasında İktisadın Yeri Ne?\ndate: 2019-02-24\nsubject: Röportaj;Kişiler;Mehmet Genç;İktisat\nlocation: İstanbul\nsource: Büyük Sorular Programı, Habertürk TV\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=214",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç’le Yapılan Bir Röportaj",
+      "body": "description: Mehmet Genç’le Yapılan Bir Röportaj\nsubject: Röportaj;Kişiler;Mehmet Genç\nlocation: İstanbul\nsource: İslam Ekonomisi: Talim ve Tedrik Merkezi\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=215",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Tarihimizde Ticaret Ahlakının Kurumsal Gelişimi: Osmanlı’da Esnaf Teşkilatları",
+      "body": "description: Tarihimizde Ticaret Ahlakının Kurumsal Gelişimi: Osmanlı’da Esnaf Teşkilatları\ndate: 2011\nsubject: Söyleşi;Ticaret;Ticaret Ahlakı;Esnaf\nlocation: İstanbul\nsource: Kırmızı Beyaz Hayat Kültür Dergisi, 10: 7-13\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=216",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı'da Devlet ve Ekonomi",
+      "body": "description: Osmanlı'da Devlet ve Ekonomi\ndate: 2011-06-01\nsubject: Söyleşi;Kişiler;Mehmet Genç;İktisat;Devlet\nlocation: Bilecik\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=217",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İslami Finans Kurumlarının Osmanlı Kökenleri",
+      "body": "description: İslami Finans Kurumlarının Osmanlı Kökenleri\ndate: 2013-06-22\nsubject: Söyleşi;Kişiler;Mehmet Genç;İktisat;İslami Finans\nlocation: İstanbul,Mecidiyeköy;İstanbul Bilimler Akademisi Vakfı\nsource: İstanbul Bilimler Akademisi Vakfı, Murat Çizakça ile birlikte, Bab-ı Tarih Sohbetleri\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=218",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç ile Osmanlı’da Ekonomi",
+      "body": "description: Mehmet Genç ile Osmanlı’da Ekonomi\ndate: 2013-04-09\nsubject: Söyleşi;Kişiler;Mehmet Genç;İktisat\nlocation: Kocaeli,İzmit;Kocaeli Büyükşehir Belediyesi;Türkiye Dil ve Edebiyat Derneği Kocaeli Şubesi\nsource: Kocaeli Büyükşehir Belediyesi, Türkiye Dil ve Edebiyat Derneği Kocaeli Şubesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=220",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç İle Söyleşi",
+      "body": "description: Mehmet Genç İle Söyleşi\ndate: 2015\nsubject: Söyleşi;Kişiler;Mehmet Genç\nlocation: İstanbul\nsource: Sabah Ülkesi: Kültür-sanat ve Felsefe Dergisi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=221",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı İktisadi Sistem",
+      "body": "description: Osmanlı İktisadi Sistem\ndate: 2017-12-02\nsubject: Söyleşi;Kişiler;Mehmet Genç;İktisat;İktisadi Sistem\nlocation: İstanbul\nsource: Turing\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=222",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç İle Türk Tarihçiliği",
+      "body": "description: Mehmet Genç İle Türk Tarihçiliği\ndate: 2017-01-29\nsubject: Söyleşi;Kişiler;Mehmet Genç;Tarihçilik;Türk Tarihçiliği\nlocation: İstanbul\nsource: Sancaktepe Kültür Sanat\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=223",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı'da İktisat Kültürü",
+      "body": "description: Osmanlı'da İktisat Kültürü\ndate: 2017\nsubject: Söyleşi;Kişiler;Mehmet Genç;İktisat;İktisadi Düşünce\nlocation: İstanbul,Üsküdar;Mavera Eğitim ve Sağlık Vakfı\nsource: Mavera Eğitim ve Sağlık Vakfı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=224",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Tarihine İktisadi Bakış",
+      "body": "description: Osmanlı Tarihine İktisadi Bakış\ndate: 2019-03-02\nsubject: Söyleşi;Kişiler;Mehmet Genç;İktisat;İktisadi Düşünce\nlocation: İstanbul\nsource: Önder Çarşamba Sohbetleri\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=225",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç ile Hayatını ve İlim Yolculuğu",
+      "body": "description: Mehmet Genç ile Hayatını ve İlim Yolculuğu\ndate: 2018\nsubject: Söyleşi;Kişiler;Mehmet Genç\nlocation: İstanbul\nsource: Dünya bizim\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=226",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Söyleşi",
+      "body": "description: Söyleşi\ndate: 2021\nsubject: Söyleşi;Kişiler;Mehmet Genç\nlocation: İstanbul\nsource: Dünya bizim\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=227",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Artvinli Ünlü Tarihçi Mehmet Genç'le Söyleşi",
+      "body": "description: Artvinli Ünlü Tarihçi Mehmet Genç'le Söyleşi\ndate: 2021-03-19\nsubject: Söyleşi;Kişiler;Mehmet Genç\nlocation: İstanbul\nsource: Türkiye Yazarlar Birliği\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=228",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "15 Sayfayı 10 Senede Yazdım",
+      "body": "description: 15 Sayfayı 10 Senede Yazdım\ndate: 2019-02-04\nsubject: Söyleşi;Kişiler;Mehmet Genç\nlocation: İstanbul\nsource: Türk Kahvesi Programı, TVNET\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=229",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Dr. Mehmet Genç ile Söyleşi",
+      "body": "description: Dr. Mehmet Genç ile Söyleşi\ndate: 2020-09-04\nsubject: Söyleşi;Kişiler;Mehmet Genç\nlocation: İstanbul\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=230",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Veyis Ateş ile Büyük Sorular Programı",
+      "body": "description: Veyis Ateş ile Büyük Sorular Programı\ndate: 2019-02-24\nsubject: TV Programı;Tarihçilik;İktisat\nlocation: İstanbul\nsource: Habertürk\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=231",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Ayşe Böhürler ile Türk Kahvesi Programı",
+      "body": "description: Ayşe Böhürler ile Türk Kahvesi Programı\ndate: 2019-02-04\nsubject: TV Programı\nlocation: İstanbul\nsource: TVNET\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=232",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Salih Tuna ile La Havle Programı",
+      "body": "description: Salih Tuna ile La Havle Programı\ndate: 2012-02-22\nsubject: TV Programı\nlocation: İstanbul\nsource: TVNET\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=233",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İnsanlık Hali Programı",
+      "body": "description: İnsanlık Hali Programı\ndate: 2018-07-29\nsubject: TV Programı;Tarihçilik\nlocation: İstanbul\nsource: TRT Haber\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=234",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Uluslararası Genç Derneği, Mehmet Genç hayatını anlatıyor",
+      "body": "description: Uluslararası Genç Derneği, Mehmet Genç hayatını anlatıyor\ndate: 2018-10-05\nsubject: TV Programı\nlocation: İstanbul\nsource: Akademik Çalışmalar Youtube Kanalı\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=235",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Derin Tarih Programı, Osmanlı Ekonomisinin Bilinmeyenleri",
+      "body": "description: Derin Tarih Programı, Osmanlı Ekonomisinin Bilinmeyenleri\ndate: 2017-04-22\nsubject: TV Programı;İktisat;İktisadi Sistem;Kapitülasyonlar;Tarihçilik;Dönemlendirme\nlocation: İstanbul\nsource: Derin Tarih Youtube Kanalı\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=236",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Söz Sende Programı",
+      "body": "description: Söz Sende Programı\ndate: 2011-07-19\nsubject: TV Programı\nlocation: İstanbul\nsource: Habertürk\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=241",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı İmparatorluğu'nun Klasik Dönemde Devletin Ekonomiye Bakışı",
+      "body": "description: Osmanlı İmparatorluğu'nun Klasik Dönemde Devletin Ekonomiye Bakışı\ndate: 2016-04-23\nsubject: Konuşma;Klasik Dönem;İktisat;İktisadi Sistem\nlocation: İstanbul\nsource: Turing Kültür Sanat Youtube Kanalı\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=242",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı İktisadi ve İçtimai Sisteminde Vakıflar",
+      "body": "description: Osmanlı İktisadi ve İçtimai Sisteminde Vakıflar\ndate: 2016-03-30\nsubject: Konuşma;Toplum;Vakıflar;İktisat;İktisadi Sistem;Kurumlar\nlocation: İstanbul\nsource: Türkiye Bilimler Akademisi Youtube Kanalı\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=243",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Türkiye’de İktisat Tarihçiliğinin Dünü Bugünü ve Otobiyografik Gözlemler",
+      "body": "description: Türkiye’de İktisat Tarihçiliğinin Dünü Bugünü ve Otobiyografik Gözlemler\ndate: 2012-02-23\nsubject: Konuşma;Tarihçilik;İktisat Tarihçiliği\nlocation: İstanbul\nsource: Tarih Vakfı Youtube Kanalı\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=244",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Türk Tarihçiliği",
+      "body": "description: Türk Tarihçiliği\ndate: 2017-01-26\nsubject: Konuşma;Tarihçilik;Türk Tarihçiliği;Kişiler;Erol Özvar\nlocation: İstanbul\nsource: Sancaktepe Kültür Sanat Youtube Kanalı\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=245",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı İktisadi Sistemi",
+      "body": "description: Osmanlı İktisadi Sistemi\ndate: 2017-12-02\nsubject: Konuşma;İktisat;İktisadi Sistem\nlocation: İstanbul\nsource: Turing Kültür Sanat Youtube Kanalı\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=247",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Türkiye Tarihçiliği",
+      "body": "description: Türkiye Tarihçiliği\ndate: 2019-01-20\nsubject: Konuşma;Tarihçilik;Türk Tarihçiliği\nlocation: İstanbul\nsource: Turing Kültür Sanat Youtube Kanalı\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=248",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı İmparatorluğunda Devlet ve Ekonomi Sempozyumu",
+      "body": "description: 'Osmanlı İmparatorluğunda Devlet ve Ekonomi'' kitabı üzerine\ndate: 2002-04-29\nsubject: Konferans;Tarihçilik\nlocation: İstanbul,Fatih;Bilim ve Sanat Vakfı\nsource: Bilim ve Sanat Vakfı TV\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=251",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Taşköprülüzade'nin Dünyası Sempozyumu Açılış Oturumu - 16. Yüzyıl Osmanlı Dünyasına Genel Bir Bakış",
+      "body": "description: Taşköprülüzade'nin Dünyası Sempozyumu Açılış Oturumu - 16. Yüzyıl Osmanlı Dünyasına Genel Bir Bakış\ndate: 2018-07-23\nsubject: Sempozyum;16.yy;Kişiler;Taşköprülüzade\nlocation: İstanbul\nsource: Akademik Çalışmalar Youtube Kanalı\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=252",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı İktisadi Sistemi ve Vakıflar",
+      "body": "description: Osmanlı İktisadi Sistemi ve Vakıflar\ndate: 2019-05-08\nsubject: Konferans;Toplum;Vakıflar;İktisat;İktisadi Sistem\nlocation: Sakarya\nsource: Sasgem SAU Youtube Kanalı\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=253",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "OSARK - 2015 Açılış Konferansı- I",
+      "body": "description: OSARK - 2015 Açılış Konferansı- I\ndate: 2015-10-14\nsubject: Konferans;Tarihçilik;Kaynaklar\nlocation: Sakarya\nsource: SAU Tarih Bölümü Youtube Kanalı\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=254",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Marmara Üniversitesi Akademik Yıl Açılış Dersi",
+      "body": "description: \"Osmanlı İmparatorluğu’nda Devlet ve Ekonomi\" | Marmara Ü. Akademik Yıl Açılış Dersi\ndate: 2020-10-28\nsubject: Konferans\nlocation: İstanbul\nsource: Akademik Çalışmalar Youtube Kanalı\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=255",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı’da Ermeni Esnaflar",
+      "body": "description: Osmanlı’da Ermeni Esnaflar\ndate: 2018-12-08\nsubject: Konferans;Ticaret;Esnaf;Toplum;Ermeniler\nlocation: İstanbul\nsource: Ortaköy Lusavorich Foundation Research Society\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=256",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Türk Tarih Kurumu Sosyal Bilimler Seminerleri - Osmanlı İktisat Tarihi ve Kurumları Üzerine",
+      "body": "description: Türk Tarih Kurumu Sosyal Bilimler Seminerleri - Osmanlı İktisat Tarihi ve Kurumları Üzerine\ndate: 2013\nsubject: Konferans;Tarihçilik;İktisat Tarihçiliği;İktisat;Kurumlar\nlocation: İstanbul\nsource: Akademik Çalışmalar Youtube Kanalı\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=257",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç Belgeseli 1. Bölüm",
+      "body": "description: Mehmet Genç Belgeseli 1. Bölüm\ndate: 2011-10-30\nsubject: Belgesel\nlocation: İstanbul\nsource: Tarih TV Youtube Kanalı\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=258",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "\"Arhavi'den Arşive\" Mehmet Genç'in Ardından",
+      "body": "description: \"Arhavi'den Arşive\" Mehmet Genç'in Ardından\ndate: 2021-04-11\nsubject: Konuşma\nlocation: İstanbul\nsource: İstanbul İktisat Fakültesi Youtube Kanalı\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=260",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İstanbul Şehir Üniversitesi Doğu Kampüsü",
+      "body": "description: İstanbul Şehir Üniversitesi Doğu Kampüsü'nden bir fotoğraf.\ndate: 2011-01-22\nsubject: Portre;İstanbul Şehir Üniversitesi\nlocation: İstanbul,Altunizade;İstanbul Şehir Üniversitesi\nsource: Abdullah Bilal Akbulut\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=261",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Dünya Bizim Röportajı",
+      "body": "description: Dünya Bizim Röportajı\ndate: 2021-04-15\nsubject: Röportaj\nlocation: İstanbul\nsource: Dünya Bizim\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=262",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Kadem Semineri",
+      "body": "description: Kadem Semineri\ndate: 2019\nsubject: Seminer\nlocation: İstanbul\nsource: KADEM\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=264",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Academia Profil Fotoğrafı",
+      "body": "description: Academia Profil Fotoğrafı\nsubject: Portre\nlocation: İstanbul\nsource: Academia\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=266",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Halil İnalcık Anma Programı",
+      "body": "description: Halil İnalcık Anma Programı\ndate: 2019\nsubject: Anma Programı;İlber Ortaylı;Özer Ergenç\nlocation: İstanbul\nsource: Anadolu Ajansı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=267",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "TÜBA 2015 Ödül Töreni",
+      "body": "description: TÜBA 2015 Ödül Töreni\ndate: 2015\nsubject: Ödül Töreni;Recep Tayyip Erdoğan\nlocation: Ankara\nsource: Anadolu Ajansı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=268",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Derin Tarih Dergisi 5. Yıl Töreni",
+      "body": "description: Derin Tarih Dergisi 5. Yıl Töreni\ndate: 2017-04-06\nsubject: Portre\nlocation: İstanbul,Topkapı\nsource: Anonim\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=271",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Erol Güngör Anma Programı",
+      "body": "description: Erol Güngör Anma Programı\ndate: 2018-11-27\nsubject: Anma Programı;Doğan Cüceloğlu\nlocation: İstanbul\nsource: Anonim\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=272",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Kristal Lale Ödülleri",
+      "body": "description: Kristal Lale Ödülleri\ndate: 2016\nsubject: Ödül Töreni\nlocation: İstanbul\nsource: Anonim\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=273",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Vefat Haberi",
+      "body": "description: Vefat Haberi\ndate: 2021-03-18\nsubject: Portre\nlocation: İstanbul\nsource: Marmara Üniversitesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=274",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Artvin Mehmet Genç Kültür Evi açılışı",
+      "body": "description: Artvin Mehmet Genç Kültür Evi açılışı\ndate: 2009-06\nsubject: Açılış\nlocation: Artvin\nsource: Türkiye Yazarlar Birliği\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=275",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Yedikıta Dergisi Röportaj",
+      "body": "description: Yedikıta Dergisi Röportaj\ndate: 2015\nsubject: Röportaj\nlocation: İstanbul\nsource: Yedi Kıta Dergisi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=279",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Ekonomi Tarihine Adanmış Bir Ömür: Mehmet Genç",
+      "body": "description: Osmanlı Ekonomi Tarihine Adanmış Bir Ömür: Mehmet Genç\ndate: 2021-03-19\nsubject: Haber\nlocation: İstanbul\nsource: Anadolu Ajansı\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=280",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç",
+      "body": "description: Mehmet Genç\nsubject: Portre\nlocation: İstanbul\nsource: Zeynep Çiğdem Hanım Twitter Hesabı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=281",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç Evinde",
+      "body": "description: Mehmet Genç Evinde\ndate: 2020\nsubject: Portre\nlocation: İstanbul,Koşuyolu\nsource: Zeynep Çiğdem Hanım Twitter Hesabı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=282",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç Çalışırken",
+      "body": "description: Mehmet Genç Çalışırken\ndate: 2020\nsubject: Portre\nlocation: Yalova\nsource: Zeynep Çiğdem Hanım Twitter Hesabı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=283",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İsmail Hakkı Kadı'nın Leiden Üniversitesi'ndeki Doktora Savunması",
+      "body": "description: İsmail Hakkı Kadı'nın Leiden Üniversitesi'ndeki Doktora Savunması\ndate: 2008-12-03\nsubject: Doktora savunması\nlocation: Hollanda,Leiden\nsource: İsmail Hakkı Kadı Twitter Hesabı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=287",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İsmail Hakkı Kadı'nın Leiden Üniversitesi'ndeki Doktora Savunması,Erol Güngör",
+      "body": "description: İsmail Hakkı Kadı'nın Leiden Üniversitesi'ndeki Doktora Savunması,Erol Özvar\ndate: 2008-12-04\nsubject: Gezi;Erol Özvar\nlocation: Hollanda,Amsterdam\nsource: İsmail Hakkı Kadı Twitter Hesabı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=292",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İstanbul Şehir Üniversitesi İstanbul Tarihi Dersi 2019-Bahar",
+      "body": "description: İstanbul Şehir Üniversitesi İstanbul Tarihi Dersi 2019-Bahar\ndate: 2019\nsubject: Ders;Yunus Uğur;İstanbul Şehir Üniversitesi\nlocation: İstanbul,Altunizade;İstanbul Şehir Üniversitesi\nsource: Anonim\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=296",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İstanbul Şehir Üniversitesi Mezuniyet Buluşması",
+      "body": "description: İstanbul Şehir Üniversitesi Mezuniyet Buluşması\ndate: 2018\nsubject: Öğrenci Buluşması;İstanbul Şehir Üniversitesi\nlocation: İstanbul,Dragos;İstanbul Şehir Üniversitesi\nsource: Anonim\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=298",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İstanbul Şehir Üniversitesi Paleografya Dersi",
+      "body": "description: İstanbul Şehir Üniversitesi Paleografya Dersi\ndate: 2019\nsubject: Ders;Fehmi Yılmaz;İstanbul Şehir Üniversitesi\nlocation: İstanbul,Altunizade;İstanbul Şehir Üniversitesi\nsource: Nimet İpek Twitter Hesabı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=299",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İstanbul Şehir Üniversitesi Tarih Bölümü İftar Programı",
+      "body": "description: İstanbul Şehir Üniversitesi Tarih Bölümü İftar Programı\ndate: 2019\nsubject: Öğrenci Buluşması;İstanbul Şehir Üniversitesi\nlocation: İstanbul,Dragos;İstanbul Şehir Üniversitesi\nsource: Anonim\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=303",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Hac Yolundaki Karıncanın Vedası: Mehmet Genç",
+      "body": "description: Vefatının ardından Coşkun Yılmaz ile Lacivert Dergisi'nde yapılan röportaj\ndate: 2021-04\nsubject: Vefeyat;Söyleşi;Coşkun Yılmaz\nlocation: İstanbul\nsource: Lacivert Dergisi\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=304",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı İktisat Tarihinde Bir Çınar: Mehmet Genç",
+      "body": "description: Vefatının ardından Aslıhan Nakiboğlu tarafından hazırlanan araştırma-inceleme yazısı\ndate: 2021-04-22\nsubject: Araştırma;Aslıhan Nakiboğlu\nlocation: İstanbul\nsource: Ulesam\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=305",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Arşivi İslam'ın Arşividir",
+      "body": "description: Osmanlı Arşivi İslam'ın Arşividir başlıklı röportaj\ndate: 2018-09-10\nsubject: Röportaj\nlocation: İstanbul\nsource: Gerçek Hayat\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=306",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Zeyrek Gezisi",
+      "body": "description: Zeyrek Gezisi\ndate: 2016\nsubject: Gezi;Yunus Uğur\nlocation: İstanbul,Zeyrek\nsource: Beyza Topuz Demir\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=307",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İstanbul Şehir Üniversitesi",
+      "body": "description: İstanbul Şehir Üniversitesi\ndate: 2016\nsubject: Portre\nlocation: İstanbul,Altunizade;İstanbul Şehir Üniversitesi\nsource: Beyza Topuz Demir\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=313",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Sakarya Üniversitesi Osmanlı İktisadi Sistemi ve Vakıflar Konferansı",
+      "body": "description: Sakarya Üniversitesi Osmanlı İktisadi Sistemi ve Vakıflar Konferansı\ndate: 2019-05-08\nsubject: Konferans\nlocation: Sakarya\nsource: Sakarya Üniversitesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=314",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Yeni Şafak Gazetesi Tevazuyu Hakikati Ararken Öğrendim Başlıklı Röportajı",
+      "body": "description: Tevazuyu Hakikati Ararken Öğrendim\ndate: 2012-05-27\nsubject: Röportaj\nlocation: İstanbul\nsource: Yeni Şafak Gazetesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=318",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Kapitalizm İlişkisi Başlıklı Söyleşi",
+      "body": "description: Osmanlı Kapitalizm İlişkisi\ndate: 2021-03-19\nsubject: Söyleşi\nlocation: İstanbul,Altunizade\nsource: Dünyabizim\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=319",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç'i Anma ve Anlama Paneli",
+      "body": "description: Mehmet Genç'i Anma ve Anlama Paneli\ndate: 2021-05-03\nsubject: Panel\nlocation: İstanbul\nsource: Tarihçiler Medya Youtube Kanalı\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=321",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Osmanlı Sosyal ve Ekonomik Tarihi Sempozyumu",
+      "body": "description: Osmanlı Sosyal ve Ekonomik Tarihi Sempozyumu\ndate: 2013-08-02\nsubject: Sempozyum\nlocation: Yalova\nsource: Yalova Üniversitesi\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=322",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Marmara Kıraathanesi",
+      "body": "description: Marmara Kıraathanesi\nsubject: Belgesel\nlocation: İstanbul\nsource: Yedirenk Film Youtube Kanalı\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=323",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İsam Cuma Toplantıları",
+      "body": "description: İsam Cuma Toplantıları\ndate: 2020-04-21\nsubject: Toplantı;İsmail Erünsal\nlocation: İstanbul, Altunizade\nsource: Kenan Yıldız Twitter Hesabı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=324",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç: Legendary Turkish Historian of Ottoman Economics",
+      "body": "description: Vefatının ardından Daily Sabah Gazetesinde yayınlanan Hakan Asrlanbenzer'in yazısı\ndate: 2021-03-29\nsubject: Vefeyat;Hakan Arslanbenzer\nlocation: İstanbul\nsource: Daily Sabah\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=327",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "In Memoriam: Mehmet Genç",
+      "body": "description: Vefatının ardından Bilig Dergisinde yayınlanan Murat Çizakça'nın yazısı\ndate: 2021\nsubject: Vefeyat;Murat Çizakça\nlocation: İstanbul\nsource: Bilig\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=328",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Giant of Ottoman Economic history, Mehmet Genc, Laid to Rest",
+      "body": "description: Vefatının ardından yayınlanan yazı\ndate: 2021-03-19\nsubject: Vefeyat\nlocation: İstanbul\nsource: TRT World\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=329",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Kitap Değerlendirmesi, Murathan Küçükali",
+      "body": "description: Osmanlı İmparatorluğu’nda Devlet ve Ekonomi isimli kitap hakkında Murathan Küçükali'nin değerlendirmesi\ndate: 2015\nsubject: Kitap Değerlendirmesi;Murathan Küçükali\nlocation: İstanbul\nsource: Ötüken\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=330",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Kitap Değerlendirmesi, Anonim",
+      "body": "description: Osmanlı İmparatorluğu’nda Devlet ve Ekonomi isimli kitap hakkında anonim bir değerlendirme\ndate: 2003\nsubject: Kitap Değerlendirmesi;Fehmi Yılmaz\nlocation: İstanbul\nsource: Literatür Dergisi\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=331",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Kitap Değerlendirmesi, Erol Özvar",
+      "body": "description: Osmanlı İmparatorluğu’nda Devlet ve Ekonomi isimli kitap hakkında Erol Özvar'ın değerlendirmesi\ndate: 2001\nsubject: Kitap Değerlendirmesi;Erol Özvar\nlocation: İstanbul\nsource: Turkish Studies Association Bulletin\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=332",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç'in Osmanlı Klasik Sistemini Algılayışı",
+      "body": "description: Mehmet Genç'in Osmanlı Klasik Sistemini Algılayışı\ndate: 2013\nsubject: Kitap Bölümü;Portre;Kişiler;Edhem Eldem\nlocation: İstanbul\nsource: Türk Tarihçiliğinde Dört Sima, Timaş Yayınları, 173-184.\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=333",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç: Belgeden Modele Uzanan Bir Portre",
+      "body": "description: Mehmet Genç: Belgeden Modele Uzanan Bir Portre\ndate: 2013\nsubject: Kitap Bölümü;Portre;Kişiler;Erol Özvar\nlocation: İstanbul\nsource: Türk Tarihçiliğinde Dört Sima, Timaş Yayınları, 233-248.\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=334",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç, İktisat Tarihçisi",
+      "body": "description: Mehmet Genç, İktisat Tarihçisi\ndate: 2013\nsubject: Kitap Bölümü;Portre;Kişiler;Ariel Salzmann\nlocation: İstanbul\nsource: Türk Tarihçiliğinde Dört Sima, Timaş Yayınları, 195-212\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=335",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Bir Entelektüel Olarak Mehmet Genç: Milli Tarih Şuuru Oluşturmak ya da Türk-İslam Ahlâkı ve Osmanlı'nın Ruhu",
+      "body": "description: Bir Entelektüel Olarak Mehmet Genç: Milli Tarih Şuuru Oluşturmak ya da Türk-İslam Ahlâkı ve Osmanlı'nın Ruhu\ndate: 2013\nsubject: Kitap Bölümü;Portre;Kişiler;Abdullah Mesud Küçükkalay\nlocation: İstanbul\nsource: Türk Tarihçiliğinde Dört Sima, Timaş Yayınları, 213-248.\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=336",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mustafa Özel ile Mehmet Genç",
+      "body": "description: Mustafa Özel ile Mehmet Genç\ndate: 2021\nsubject: Portre;Mustafa Özel\nlocation: İstanbul\nsource: Mustafa Özel Twitter Hesabı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=337",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Kemal Karpat'ı Anma Toplantısı",
+      "body": "description: Kemal Karpat'ı Anma Toplantısı\ndate: 2019\nsubject: Toplantı;Kişiler;Kemal Karpat\nlocation: İstanbul,Dragos\nsource: Büşranur Bekman\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=338",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Ödül Haberi",
+      "body": "description: Twitterda Paylaşılan Ödül Haberi\ndate: 2015-10-30\nsubject: Portre\nlocation: İstanbul\nsource: Ozan Sağsöz twitter hesabı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=339",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Cogito Dergisinden",
+      "body": "description: Cogito Dergisinden\ndate: 1999\nsubject: Portre\nlocation: İstanbul\nsource: Halil Solak twitter hesabından\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=340",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Beş Şehirli Programı",
+      "body": "description: Haluk Dursun'un düzenlediği Beş Şehirli Programının ardından bir hatıra fotoğrafı\ndate: 2021-03-19\nsubject: Kitap Tanıtımı;Kişiler;Emin Işık;İrfan Çiftçi;İsmail Kara;Haluk Dursun\nlocation: İstanbul\nsource: Mehmet Yalçın Yılmaz twitter hesabından\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=341",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Türk Tarihi ve Tarihçiliği Konferansı",
+      "body": "description: Okçular Vakfında gerçekleştirilen \"Türk Tarihi ve Tarihçiliği\" Konferansı\ndate: 2017-11-10\nsubject: Konferans;Kişiler;Erol Özvar;Okçular Vakfı\nlocation: İstanbul\nsource: Okçular Vakfı twitter hesabından\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=343",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç ve Nuri Pakdil",
+      "body": "description: Mehmet Genç ve Nuri Pakdil\nsubject: Toplantı;Kişiler;Nuri Pakdil;Arif Bilgin\nsource: Arif Bilgin\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=345",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Avrasya Bir Vakfı Mehmet Genç Konferansı",
+      "body": "description: Avrasya Bir Vakfı Mehmet Genç Konferansı\ndate: 2018-12-22\nsubject: Konferans;Tarihçililk;Osmanlı Tarihçiliği;Kişiler;Hakan Sağlam\nlocation: İstanbul,Küçükçekmece\nsource: Avrasya Bir Vakfı Youtube Kanalı\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=346",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Bir Alimin Portresi - Selçuk Çiçek ile Asıl Mesele Programı",
+      "body": "description: Bir Alimin Portresi - Selçuk Çiçek ile Asıl Mesele Programı\ndate: 2021-03-22\nsubject: Tv Programı;Vefeyat;Kişiler;İhsan Ayal;Selçuk Çiçek\nsource: Camia TV Youtube Kanalı\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=347",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Türkiye'de Yükseköğretim - İSAR Kapanış Konuşması",
+      "body": "description: Türkiye'de Yükseköğretim - İSAR Kapanış Konuşması\ndate: 2019-02-05\nsubject: Konuşma;Tarihçilik;Kişiler;Erol Özvar;İSAR\nlocation: İstanbul,Üsküdar,İSAR\nsource: Akademik Çalışmalar Youtube Kanalı\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=348",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç için",
+      "body": "description: Vefatının ardından Dergâh Dergisinde yayınlanan İdris Bostan'ın yazısı\ndate: 2021\nsubject: Vefeyat;İdris Bostan\nlocation: İstanbul\nsource: Dergah Dergisi\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=349",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç öğrencileriyle",
+      "body": "description: Mehmet Genç öğrencileriyle\ndate: 2021-04-04\nsubject: Portre;Kişiler;Muhammed Esat Altıntaş\nlocation: İstanbul\nsource: Muhammed Esat Altıntaş Twitter Hesabı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=350",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Derin Tarih Programında",
+      "body": "description: Mehmet Genç Derin Tarih Programında\ndate: 2021-03-21\nsubject: TV Programı;Kişiler;Yavuz Bahadıroğlu;Mustafa Armağan\nlocation: İstanbul\nsource: Mustafa Armağan Twitter Hesabı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=351",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç ile Yasin Aktay",
+      "body": "description: Mehmet Genç ile Yasin Aktay\ndate: 2021-03-19\nsubject: Portre;Kişiler;Yasin Aktay\nsource: Yasin Aktay Twitter Hesabı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=353",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç İlim Yayma Cemiyeti'nde",
+      "body": "description: Mehmet Genç İlim Yayma Cemiyeti'nde\ndate: 2021-03-18\nsubject: Portre;İlim Yayma Cemiyeti\nlocation: İstanbul\nsource: İlim Yayma Cemiyeti Vakfı Twitter Hesabı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=354",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Taşköprülüzade'nin Dünyası Sempozyumu",
+      "body": "description: Taşköprülüzade'nin Dünyası Sempozyumu\ndate: 2021-03-18\nsubject: Sempozyum;16.yy;Kişiler;İhsan Fazlıoğlu\nlocation: İstanbul\nsource: İhsan Fazlıoğlu Twitter Hesabı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=355",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç Meçnikov Üniversitesi'nde",
+      "body": "description: Meçnikov Üniversitesi'nde bir belgenin fotoğrafını alırken\ndate: 2013-04-17/19\nsubject: Portre;Meçnikov Üniversitesi;Odessa;Kahraman Şakul\nlocation: Ukrayna,Odessa\nsource: Kahraman Şakul Twitter Hesabı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=359",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç Potemkin Merdivenleri'nde",
+      "body": "description: Mehmet Genç Potemkin Merdivenleri'nde\ndate: 2013-04-17/19\nsubject: Kişiler;Mehmet İpşirli;Feridun Emecen;Kahraman Şakul\nlocation: Ukrayna,Odessa\nsource: Kahraman Şakul Twitter Hesabı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=361",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Akkerman Kalesi Yolunda",
+      "body": "description: Akkerman Kalesi Yolunda\ndate: 2013-04-17/19\nsubject: Kişiler;Mehmet İpşirli;Feridun Emecen;Kahraman Şakul\nlocation: Ukrayna,Odessa;Akkerman\nsource: Kahraman Şakul Twitter Hesabı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=362",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Akkerman Kalesi'nde",
+      "body": "description: Akkerman Kalesi'nde\ndate: 2013-04-17/19\nsubject: Kişiler;Mehmet İpşirli;Feridun Emecen;Kahraman Şakul\nlocation: Ukrayna,Odessa;Akkerman\nsource: Kahraman Şakul Twitter Hesabı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=364",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Engin Deniz Akarlı’nın Gözünden Mehmet Genç",
+      "body": "description: 17 Nisan 2021 tarihinde, BİSAV bünyesinde gerçekleştirilen ihtifalde sunulmak üzere\ndate: 2021-05-06\nsubject: Anma Programı;Engin Deniz Akarlı\nlocation: İstanbul,Fatih;Bilim ve Sanat Vakfı\nsource: Bilim ve Sanat Vakfı\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=368",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç Hocadan Bana Kalan",
+      "body": "description: Erol Göka tarafından şahsi bloğunda yayınlanan yazı\ndate: 2021-03-19\nsubject: Vefeyat;Erol Göka\nsource: Erol Göka Blog Sayfası\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=369",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Kalanlardan Mehmet Genç",
+      "body": "description: Abdülhamit Kırmızı tarafından Serbestite'te yayınlanan anma yazısı\ndate: 2021-03-21\nsubject: Vefeyat;Abdulhamit Kırmızı\nsource: Serbestiyet\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=370",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Tarihçiye saygı",
+      "body": "description: Taha Akyol tarafından Hürriyet Gazetesinde yayınlanan portre yazısı\ndate: 2015-12-11\nsubject: Portre;Taha Akyol\nsource: Hürriyet Gazetesi\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=371",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Kaotik Bilgiden Senkronik Bilgiye Bir İktisat Tarihi Teorisyeni: Mehmet Genç",
+      "body": "description: Abdullah Mesut Küçükalay tarafından Disiplinlerarası Çalışmalar Dergisi'nde yayınlanan yazı\ndate: 2007-01\nsubject: Hakkında;Abdullah Mesut Küçükalay\nsource: Disiplinlerarası Çalışmalar Dergisi\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=372",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Fariza-i Haccı eda eden bir karınca",
+      "body": "description: Şükrü Hanioğlu'nun Karar'da yayınlanan yazısı\ndate: 2021-03-23\nsubject: Vefeyat;Şükrü Hanioğlu\nsource: Karar Gazetesi\ntype: Döküman\nreference_url: https://digitalottomans.github.io/demo/item.html?id=373",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Odessa'da bir Osmamlı mezar taşının fotoğrafını alırken",
+      "body": "description: Odessa'da bir Osmamlı mezar taşının fotoğrafını alırken\ndate: 2013-04-17/19\nsubject: Gezi;Kişiler;Mehmet İpşirli\nlocation: Moldova,Bender\nsource: Kahraman Şakul Twitter Hesabı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=374",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Bender Kalesi Gezisi",
+      "body": "description: Bender Kalesi Gezisi\ndate: 2013-04-17\nsubject: Gezi;Portre;Kişiler;Kahraman Şakul\nlocation: Moldova,Bender\nsource: Kahraman Şakul Twitter Hesabı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=375",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç ile Hülya Canbakal",
+      "body": "description: Mehmet Genç ile Hülya Canbakal\ndate: 2013\nsubject: Kişiler;Hülya Canbakal;Kahraman Şakul\nlocation: Ankara;ODTÜ\nsource: Kahraman Şakul Twitter Hesabı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=378",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç meslekdaşlarıyla",
+      "body": "description: Mehmet Genç meslekdaşlarıyla\ndate: 2013\nsubject: Kişiler;Hülya Canbakal;Kahraman Şakul;Erol Özvar;Rhoads Murphey\nlocation: Ankara;ODTÜ\nsource: Kahraman Şakul Twitter Hesabı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=379",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "Mehmet Genç ile Mehmet Öz",
+      "body": "description: Mehmet Genç ile Mehmet Öz\ndate: 2013\nsubject: Kişiler;Mehmet Öz;Kahraman Şakul\nlocation: Ankara;ODTÜ\nsource: Kahraman Şakul Twitter Hesabı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=380",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "ODTÜ Osmanlı Ekonomi Tarihi Çalıştayı",
+      "body": "description: ODTÜ Osmanlı Ekonomi Tarihi Çalıştayı\ndate: 2013\nsubject: Çalıştay;Kişiler;Erol Özvar;Emrah Sefa Gürkan;Polat Safi;Kahraman Şakul;Fikret Yılmaz;ODTÜ\nlocation: Ankara;ODTÜ\nsource: Kahraman Şakul Twitter Hesabı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=381",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İstanbul Şehir Üniversitesi 17. yüzyılda Osmanlı Çalıştayı",
+      "body": "description: İstanbul Şehir Üniversitesi  17. yüzyılda Osmanlı Çalıştayı\ndate: 2012\nsubject: Çalıştay;Kişiler;Özer Ergenç;Fikret Yılmaz;Kahraman Şakul;17.yy;İstanbul Şehir Üniversitesi\nlocation: İstanbul,Altunizade;İstanbul Şehir Üniversitesi\nsource: Kahraman Şakul Twitter Hesabı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=382",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "İstanbul Şehir Üniversitesi 18. yüzyılda Osmanlı Çalıştayı",
+      "body": "description: İstanbul Şehir Üniversitesi 18. yüzyılda Osmanlı Çalıştayı\ndate: 2013\nsubject: Çalıştay;Kişiler;Özer Ergenç;Nuran Tezcan;Engin Deniz Akarlı;Suraiya Faroqhi;Kahraman Şakul;18.yy;İstanbul Şehir Üniversitesi\nlocation: İstanbul,Altunizade;İstanbul Şehir Üniversitesi\nsource: Kahraman Şakul Twitter Hesabı\ntype: Görüntü\nreference_url: https://digitalottomans.github.io/demo/item.html?id=384",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    },
+    {
+      "title": "TVNET Makam Arabası Programı",
+      "body": "description: TVNET Makam Arabası Programı\ndate: 2013\nsubject: TV Programı;Kişiler;İbrahim Paşalı\nlocation: İstanbul\nsource: TVNET\ntype: Video\nreference_url: https://digitalottomans.github.io/demo/item.html?id=390",
+      "category": "osmanli_dijital_koleksiyon_meta"
+    }
+  ]
+}
