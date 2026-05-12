@@ -410,7 +410,7 @@ def _compose_instant_weather_reply(
         fact = _ow_user_line(ow_block)
         if fact:
             parts.append(f"{addr}, {cd} için şu an: {fact}.")
-    elif j:
+    if not parts and j:
         cur = j.get("current") or {}
         temp = cur.get("temperature_2m")
         if temp is not None:

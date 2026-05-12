@@ -258,6 +258,8 @@ def _load_embeddings() -> np.ndarray | None:
 _index_mtime_ns: int | None = None
 _cached_chunks_list: List[Chunk] | None = None
 _cached_emb_arr: np.ndarray | None = None
+# `search_tarih_hafiza` için: tam indeks üzerinde argsort yerine yalnız tarih satırları.
+_tarih_chunk_row_indices: np.ndarray | None = None
 
 
 def _rag_cache_enabled() -> bool:
@@ -266,7 +268,7 @@ def _rag_cache_enabled() -> bool:
 
 def _get_cached_index() -> tuple[List[Chunk], np.ndarray | None]:
     """İndeks dosyalarını her aramada diskten okumaz; embeddings.npy değişince yeniler."""
-    global _index_mtime_ns, _cached_chunks_list, _cached_emb_arr
+    global _index_mtime_ns, _cached_chunks_list, _cached_emb_arr, _tarih_chunk_row_indices
     emb_path = _INDEX_DIR / "embeddings.npy"
     chunks_path = _INDEX_DIR / "chunks.jsonl"
     if not emb_path.is_file() or not chunks_path.is_file():
@@ -297,10 +299,15 @@ def _get_cached_index() -> tuple[List[Chunk], np.ndarray | None]:
         _cached_chunks_list = chunks
         _cached_emb_arr = emb
         _index_mtime_ns = mtime
+        _tarih_chunk_row_indices = np.array(
+            [i for i, c in enumerate(chunks) if _source_is_tarih_hafiza(c.source)],
+            dtype=np.int64,
+        )
     else:
         _cached_chunks_list = None
         _cached_emb_arr = None
         _index_mtime_ns = None
+        _tarih_chunk_row_indices = None
     return chunks, emb
 
 
@@ -403,32 +410,55 @@ def search_arsiv(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
     return out[:tk]
 
 
+def _tarih_row_indices(chunks: List[Chunk]) -> np.ndarray:
+    """TARIH_VE_KULTUR satırları — önbellekli indeksle aynı liste ise tek seferlik dizi."""
+    global _cached_chunks_list, _tarih_chunk_row_indices
+    if (
+        _rag_cache_enabled()
+        and _cached_chunks_list is not None
+        and _tarih_chunk_row_indices is not None
+        and chunks is _cached_chunks_list
+    ):
+        return _tarih_chunk_row_indices
+    return np.array(
+        [i for i, c in enumerate(chunks) if _source_is_tarih_hafiza(c.source)],
+        dtype=np.int64,
+    )
+
+
 def search_tarih_hafiza(
     query: str, top_k: int = 5, scan_cap: int = 96
 ) -> List[Tuple[str, str, float]]:
     """
-    Yalnızca `TARIH_VE_KULTUR/` altındaki kaynaklar; benzerlik sırasına göre tarama.
-    `scan_cap`: en yüksek skorlu ilk kaç aday içinde tarih kaynağı aranır.
+    Yalnızca `TARIH_VE_KULTUR/` kaynakları; gömme kosinüsü **yalnız bu alt küme** üzerinde
+    (tüm indekste argsort + süzme yok — TTK/tarih havuzu için daha hızlı).
     """
     chunks, emb = _get_cached_index()
     if not chunks or emb is None or len(chunks) != len(emb):
         return []
 
+    row_idx = _tarih_row_indices(chunks)
+    if row_idx.size == 0:
+        return []
+
     tk = max(1, top_k)
-    cap = max(tk * 8, int(scan_cap))
-    cap = min(cap, len(chunks))
+    try:
+        cap = int(scan_cap)
+    except ValueError:
+        cap = 96
+    cap = max(tk, min(cap, int(row_idx.size)))
 
     model = _get_embedder()
     q = model.encode([query], normalize_embeddings=True, show_progress_bar=False)[0]
-    sim = emb @ q
-    order = np.argsort(-sim)
+    sub = emb[row_idx]
+    sim = sub @ q
+    order = np.argsort(-sim)[:cap]
 
     out: List[Tuple[str, str, float]] = []
-    for j in range(cap):
-        i = int(order[j])
-        src = chunks[i].source
-        if _source_is_tarih_hafiza(src):
-            out.append((chunks[i].text, src, float(sim[i])))
-            if len(out) >= tk:
-                break
+    for j in order:
+        ji = int(j)
+        gi = int(row_idx[ji])
+        out.append((chunks[gi].text, chunks[gi].source, float(sim[ji])))
+        if len(out) >= tk:
+            break
     return out
