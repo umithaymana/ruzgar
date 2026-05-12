@@ -2337,3 +2337,41 @@ body:has(.layout-v2) .title-row-motors { justify-content: flex-end; }
 .ovx-status.ovx-now {
   color: #58c278;
 }
+
+/* Ana motor → yardımcı çalışma sayfası köprüleri */
+.orchestra-bridge {
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #3c4a5c;
+  background: linear-gradient(135deg, #1e2a38 0%, #252526 100%);
+}
+.orchestra-bridge[hidden] {
+  display: none !important;
+}
+.orchestra-bridge-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8ab4d8;
+  margin-bottom: 6px;
+}
+.orchestra-bridge-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.btn-orchestra-bridge {
+  font-size: 11px;
+  padding: 5px 10px;
+  border-radius: 4px;
+  border: 1px solid #4a6278;
+  background: #2d3d4d;
+  color: #e8eef5;
+  cursor: pointer;
+}
+.btn-orchestra-bridge:hover {
+  border-color: #c9a227;
+  color: #fff8e1;
+}

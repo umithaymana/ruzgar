@@ -15,6 +15,28 @@ from ilim_assistant.text_encoding import repair_utf8_mojibake
 _http_session: requests.Session | None = None
 
 
+def _ollama_http_timeout(*, streaming: bool) -> float | tuple[float, float]:
+    """
+    (bağlan, oku) — okuma süresi iki kez arasında veya ilk bayta kadar boşluktur.
+    Ağır model / uzun istemde ilk token 300 sn'yi aşabildiği için okuma üst sınırı env ile genişletilebilir.
+    """
+    try:
+        conn = float(os.environ.get("RUZGAR_OLLAMA_CONNECT_TIMEOUT_SEC", "30"))
+    except ValueError:
+        conn = 30.0
+    read_default = "900" if streaming else "480"
+    raw_read = os.environ.get("RUZGAR_OLLAMA_READ_TIMEOUT_SEC", "").strip()
+    if not raw_read:
+        raw_read = os.environ.get("OLLAMA_REQUEST_READ_TIMEOUT_SEC", read_default)
+    try:
+        read_s = float(raw_read)
+    except ValueError:
+        read_s = float(read_default)
+    read_s = max(60.0, min(read_s, 86400.0))
+    conn = max(5.0, min(conn, 120.0))
+    return (conn, read_s)
+
+
 def _http_session_singleton() -> requests.Session:
     """Ollama’ya tekrarlayan isteklerde TCP bağlantısını yeniden kullan (keep-alive)."""
     global _http_session
@@ -101,7 +123,10 @@ def chat_completion(
     }
     try:
         resp = _http_session_singleton().post(
-            url, json=payload, headers=headers, timeout=300
+            url,
+            json=payload,
+            headers=headers,
+            timeout=_ollama_http_timeout(streaming=False),
         )
         # Windows: Content-Type'ta charset yoksa requests ISO-8859-1 varsayabiliyor; Türkçe bozulur.
         resp.encoding = "utf-8"
@@ -149,7 +174,7 @@ def chat_completion_stream(
             json=payload,
             headers=headers,
             stream=True,
-            timeout=300,
+            timeout=_ollama_http_timeout(streaming=True),
         ) as resp:
             resp.encoding = "utf-8"
             if resp.status_code >= 400:

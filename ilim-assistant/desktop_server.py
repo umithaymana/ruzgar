@@ -34,6 +34,7 @@ from ilim_assistant.chat_core import (
     prepare_turn,
     rag_footer,
 )
+from ilim_assistant.stream_orchestra import prefetch_main_engine_bundle_for_stream
 from ilim_assistant.hafiza_i_ruzgar import (
     genel_hafiza_lookup,
     get_hafiza_motor as _get_hafiza_motor,
@@ -130,9 +131,29 @@ app.add_middleware(
 )
 
 
+def _boot_motorlar_anaonce() -> None:
+    """.cursorrules — Ana motor → çekirdek → 5 yardımcı (sıra kilitli)."""
+    import importlib
+
+    importlib.import_module("ilim_assistant.main_engine")
+    importlib.import_module("ilim_assistant.motorlar.ruzgar_cekirdegi")
+    for name in (
+        "ilim_assistant.ses_motoru",
+        "ilim_assistant.video_motoru",
+        "ilim_assistant.bilim_motoru",
+        "ilim_assistant.tercume_motoru",
+        "ilim_assistant.programlama_motoru",
+    ):
+        importlib.import_module(name)
+
+
 @app.on_event("startup")
 async def _warmup_rag() -> None:
     """İlk sohbet turunda RAG disk okumasını ve gömme modelini önceden yükle."""
+    try:
+        _boot_motorlar_anaonce()
+    except Exception:
+        pass
     try:
         from ilim_assistant.rag_store import warmup_index
 
@@ -937,11 +958,28 @@ async def api_stt(
 
 
 def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
-    """Gradio / SSE / WS; önce `prepare_turn` → merkezi `ruzgar_genel_hafiza.json` eşlemesi."""
+    """SSE/WS: Ana motor durumları → prepare_turn (İdrak + orkestra) → LLM."""
     mode_norm = normalize_mode(req.mode or "genel")
     coding = req.coding_mode or mode_norm == "programlama"
-    # İstemci ilk baytı hemen alsın (Electron SSE arabelleği + uzun prepare_turn algısı).
     yield {"type": "status", "text": "Rüzgar hazırlanıyor…"}
+
+    orch: dict[str, Any] = {}
+    reuse_b = None
+    if os.environ.get("RUZGAR_STREAM_PREFETCH_BUNDLE", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    ):
+        bundle, evs = prefetch_main_engine_bundle_for_stream(
+            req.message,
+            req.history,
+            req.mode or "genel",
+        )
+        for ev in evs:
+            yield ev
+        if evs or bundle.hits or (bundle.ilim_citation_tail or "").strip():
+            reuse_b = bundle
+
     prep = prepare_turn(
         req.message,
         req.history,
@@ -952,6 +990,8 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
         mode=mode_norm,
         workspace_root=req.workspace_root,
         read_message_links=req.read_message_links,
+        reuse_main_engine_bundle=reuse_b,
+        orchestration_out=orch,
     )
     if prep is None:
         yield {"type": "error", "text": "Boş mesaj"}
@@ -963,12 +1003,15 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
     if og_direct is not None:
         full_out = finalize_assistant_reply(og_direct)
         yield {"type": "token", "text": full_out}
-        yield {
+        done_og: dict[str, Any] = {
             "type": "done",
             "full_reply": full_out,
             "user_message": msg,
             "new_wake_used": new_wake,
         }
+        if orch:
+            done_og["orchestra"] = orch
+        yield done_og
         return
 
     prior = prior_messages_for_turn(req.history, mode_norm)
@@ -982,12 +1025,15 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
         footer = rag_footer(hits)
         body_fixed = finalize_assistant_reply(reply_body)
         full_out = body_fixed + footer
-        yield {
+        done_llm: dict[str, Any] = {
             "type": "done",
             "full_reply": full_out,
             "user_message": msg,
             "new_wake_used": new_wake,
         }
+        if orch:
+            done_llm["orchestra"] = orch
+        yield done_llm
     except Exception as e:
         yield {"type": "error", "text": str(e)}
 

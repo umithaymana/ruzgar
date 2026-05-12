@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from typing import Any
 import re
 import unicodedata
 
@@ -695,6 +696,8 @@ def prepare_turn(
     read_message_links: bool = True,
     *,
     skip_ogrenme_lookup: bool = False,
+    reuse_main_engine_bundle: Any | None = None,
+    orchestration_out: dict[str, Any] | None = None,
 ):
     """Boş mesajda None; aksi halde (msg, hits, user_payload, system, model, ogrenme_direct).
 
@@ -711,6 +714,9 @@ def prepare_turn(
         return None
     msg = message.strip()
     m = normalize_mode(mode)
+    ilim_merge_tail = ""
+    me_suppress_web = False
+    archive_primary_flag = False
 
     weather_q = _weather_intent(msg) or _weather_follow_up(msg, history)
     live_weather_ctx = ""
@@ -794,35 +800,71 @@ def prepare_turn(
             tdk_lem = _extract_lemma_for_tdk(msg)
             tdk_exact_on = _tdk_exact_path_allowed(msg, tdk_lem)
 
-        if tdk_exact_on and tdk_lem:
+        _bundle_in = reuse_main_engine_bundle
+        if _bundle_in is not None and ((tdk_exact_on and tdk_lem) or tarih_on):
+            _bundle_in = None
+
+        good_hits: list = []
+
+        if _bundle_in is not None:
+            bh = list(_bundle_in.hits)
+            good_hits = [h for h in bh if float(h[2]) >= rag_score_min]
+            if not good_hits and bh:
+                good_hits = bh[:rag_k_clamped]
+            ilim_merge_tail = (_bundle_in.ilim_citation_tail or "").strip()
+            me_suppress_web = bool(_bundle_in.suppress_main_web_search)
+            archive_primary_flag = bool(_bundle_in.archive_was_primary)
+        elif tdk_exact_on and tdk_lem:
             # TDK: yalnızca `##` başlığı tam eşleşmesi — semantik yakınlıkla başka maddeye sıçrama yok.
             good_hits = search_tdk_exact_lemma(tdk_lem, top_k=rag_k_clamped)
+        elif tarih_on:
+            pool_hits = search(msg, top_k=pool_k)
+            good_hits = [h for h in pool_hits if h[2] >= rag_score_min]
+            good_hits = [h for h in good_hits if not source_is_tdk(h[1])]
+            tarih_scan = max(32, int(os.environ.get("RUZGAR_TARIH_SCAN_CAP", "96")))
+            tarih_top = max(rag_k_clamped, int(os.environ.get("RUZGAR_TARIH_TOP_K", "4")))
+            th = search_tarih_hafiza(msg, top_k=tarih_top, scan_cap=tarih_scan)
+            th_ok = [h for h in th if h[2] >= rag_score_min]
+            if not th_ok and th:
+                try:
+                    weak = float(os.environ.get("RUZGAR_TARIH_WEAK_SCORE", "0.12"))
+                except ValueError:
+                    weak = 0.12
+                if float(th[0][2]) >= weak:
+                    th_ok = [th[0]]
+            seen: set[tuple[str, str]] = set()
+            merged: list = []
+            for h in th_ok + good_hits:
+                key = (h[1], h[0][:200])
+                if key in seen:
+                    continue
+                seen.add(key)
+                merged.append(h)
+            good_hits = merged
+        elif os.environ.get("RUZGAR_MAIN_ENGINE_FIRST", "1").strip().lower() not in (
+            "0",
+            "false",
+            "no",
+        ):
+            from ilim_assistant.main_engine import run_retrieval_with_status_events
+
+            me_bundle, _me_unused = run_retrieval_with_status_events(
+                msg,
+                m,
+                weather_q=weather_q,
+                ilim_rag=ilim_rag,
+                rag_top_k=rag_k_clamped,
+            )
+            bh = list(me_bundle.hits)
+            good_hits = [h for h in bh if float(h[2]) >= rag_score_min]
+            if not good_hits and bh:
+                good_hits = bh[:rag_k_clamped]
+            ilim_merge_tail = (me_bundle.ilim_citation_tail or "").strip()
+            me_suppress_web = bool(me_bundle.suppress_main_web_search)
+            archive_primary_flag = bool(me_bundle.archive_was_primary)
         else:
             pool_hits = search(msg, top_k=pool_k)
             good_hits = [h for h in pool_hits if h[2] >= rag_score_min]
-            if tarih_on:
-                # Tarih turunda TDK sözlük pasajları birleşik listeye girmesin (hafıza çakışması).
-                good_hits = [h for h in good_hits if not source_is_tdk(h[1])]
-                tarih_scan = max(32, int(os.environ.get("RUZGAR_TARIH_SCAN_CAP", "96")))
-                tarih_top = max(rag_k_clamped, int(os.environ.get("RUZGAR_TARIH_TOP_K", "4")))
-                th = search_tarih_hafiza(msg, top_k=tarih_top, scan_cap=tarih_scan)
-                th_ok = [h for h in th if h[2] >= rag_score_min]
-                if not th_ok and th:
-                    try:
-                        weak = float(os.environ.get("RUZGAR_TARIH_WEAK_SCORE", "0.12"))
-                    except ValueError:
-                        weak = 0.12
-                    if float(th[0][2]) >= weak:
-                        th_ok = [th[0]]
-                seen: set[tuple[str, str]] = set()
-                merged: list = []
-                for h in th_ok + good_hits:
-                    key = (h[1], h[0][:200])
-                    if key in seen:
-                        continue
-                    seen.add(key)
-                    merged.append(h)
-                good_hits = merged
         hits = good_hits[:rag_k_clamped]
         ar_hits = [
             h
@@ -840,6 +882,8 @@ def prepare_turn(
     web_on = use_web and (m not in _NOWEB_MODES)
     if weather_q and (m not in _NOWEB_MODES):
         web_on = True
+    if me_suppress_web:
+        web_on = False
 
     link_on = read_message_links and (m not in _NOWEB_MODES)
 
@@ -969,6 +1013,47 @@ def prepare_turn(
             "\"nasıl yardımcı olabilirim\" / sabit karşılama ile yanıtlama. "
             "Kullanıcı bilgi veya iş istiyorsa doğrudan yerine getir.\n"
         )
+
+    if ilim_merge_tail:
+        from ilim_assistant.main_engine import merge_ilim_tail
+
+        user_payload = merge_ilim_tail(user_payload, ilim_merge_tail)
+
+    if os.environ.get("RUZGAR_ORKESTRA_CONTEXT", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    ):
+        try:
+            from ilim_assistant.motorlar.ruzgar_cekirdegi import build_core_context
+
+            _oc = build_core_context(msg).strip()
+            if _oc:
+                user_payload = (
+                    "[ORKESTRA ŞEFİ — dahili rehber; kullanıcıya aynen okuma]\n"
+                    + _oc
+                    + "\n\n---\n"
+                    + user_payload
+                )
+        except Exception:
+            pass
+
+    from ilim_assistant.ilim_ve_idrak import append_global_directive
+
+    user_payload = append_global_directive(user_payload)
+
+    from ilim_assistant.idrak_entegrasyon import append_idrak_agent_layer
+
+    user_payload = append_idrak_agent_layer(
+        user_payload,
+        msg,
+        m,
+        hits,
+        web_on,
+        ilim_rag,
+        archive_primary=archive_primary_flag,
+        orchestration_out=orchestration_out,
+    )
 
     user_payload = append_direct_answer_directive(user_payload, msg)
     user_payload = _append_anti_repeat_instruction(user_payload, history)

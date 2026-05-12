@@ -178,7 +178,7 @@ const MODE_LABELS = {
   uretim: "RÜZGAR ÇEKİRDEĞİ",
   gelisim: "Gelişim",
   ses: "SES MOTORU",
-  okuma: "OKUMA MOTORU",
+  okuma: "BİLİM MOTORU",
   video: "VİDEO MOTORU",
   programlama: "PROGRAMLAMA MOTORU",
   hafiza: "HAFIZA MOTORU",
@@ -190,6 +190,7 @@ const MODE_LABELS = {
 
 const el = {
   chat: document.getElementById("chat-messages"),
+  orchestraBridge: document.getElementById("orchestra-bridge"),
   input: document.getElementById("msg-input"),
   send: document.getElementById("btn-send"),
   stop: document.getElementById("btn-stop"),
@@ -820,7 +821,7 @@ function switchMode(mode) {
   const motorDeclarationByMode = {
     genel: "Şu anda ana motor tam güç ve tam kapasite çalışıyor.",
     okuma:
-      "Okuma motoru — İlim arşivi tamam: metin, PDF, DOCX; özet ve not tek tık.",
+      "Bilim motoru — İlim, tabiat ve tarih: arşiv + derin okuma; ana motorla köprülü çalışır.",
     video:
       "Video motoru — v4: kesim çizelgesi (başlangıç/bitiş), altyazı gömme, ses birleştirme, altyazıyı Tercüme atölyesine aktarma; çıktı .ruzgar-video-export.",
     programlama:
@@ -834,6 +835,82 @@ function switchMode(mode) {
   };
   setHeaderMotorDeclaration(motorDeclarationByMode[currentMode] || "");
   clearMotorDeclarations();
+}
+
+function clearOrchestraBridge() {
+  const wrap = el.orchestraBridge;
+  if (!wrap) return;
+  wrap.hidden = true;
+  wrap.innerHTML = "";
+}
+
+function applyMotorHandoff(modeId, handoffText) {
+  const t = String(handoffText || "").trim();
+  const mid = String(modeId || "").trim().toLowerCase();
+  switch (mid) {
+    case "tercume":
+      switchMode("tercume");
+      if (el.tercumeSource) el.tercumeSource.value = t;
+      updateTercumeTextStats();
+      el.tercumeSource?.focus();
+      break;
+    case "video":
+      switchMode("video");
+      flashRuzgarDurum("Video motoru: metin panoya kopyalandı.");
+      void navigator.clipboard?.writeText(t);
+      break;
+    case "ses":
+      switchMode("ses");
+      if (el.sesTranscript) el.sesTranscript.value = t;
+      el.sesTranscript?.focus();
+      break;
+    case "programlama":
+      switchMode("programlama");
+      if (el.codeEditor) el.codeEditor.value = t;
+      updateProgramlamaActiveFileLabel();
+      break;
+    case "okuma":
+      switchMode("okuma");
+      if (el.input) el.input.value = t;
+      el.input?.focus();
+      break;
+    case "hafiza":
+      switchMode("hafiza");
+      if (el.hafizaInput) el.hafizaInput.value = t.slice(0, 8000);
+      break;
+    default:
+      switchMode("genel");
+      if (el.input) el.input.value = t;
+      el.input?.focus();
+  }
+  setStatus(`Köprü: ${mid}`, "Rüzgar");
+}
+
+function renderOrchestraBridge(orch) {
+  const wrap = el.orchestraBridge;
+  if (!wrap || !orch || !Array.isArray(orch.motors) || orch.motors.length === 0) {
+    clearOrchestraBridge();
+    return;
+  }
+  wrap.hidden = false;
+  wrap.innerHTML = "";
+  const title = document.createElement("div");
+  title.className = "orchestra-bridge-title";
+  title.textContent = "Ana motor — çalışma sayfası köprüleri";
+  wrap.appendChild(title);
+  const row = document.createElement("div");
+  row.className = "orchestra-bridge-actions";
+  for (const m of orch.motors) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "btn-orchestra-bridge";
+    b.textContent = m.label || m.id || "Motor";
+    const id = String(m.id || "").trim().toLowerCase();
+    const ho = String(m.handoff || "").trim();
+    b.addEventListener("click", () => applyMotorHandoff(id, ho));
+    row.appendChild(b);
+  }
+  wrap.appendChild(row);
 }
 
 function setWorkbenchLayout(kind) {
@@ -3938,6 +4015,7 @@ async function streamChat(userText) {
       }
       lastAssistantReply = full;
       updateDynamicWorkbench();
+      renderOrchestraBridge(ev.orchestra);
       chatHistory.push({ role: "user", content: ev.user_message || userText });
       chatHistory.push({ role: "assistant", content: full });
       setStatus("Hazır");
@@ -4202,6 +4280,7 @@ async function sendMessageWithText(t, opts = {}) {
   const text = (t || "").trim();
   if (!text) return;
   silenceVoiceOutputNow();
+  clearOrchestraBridge();
   const ok = await checkApi();
   if (!ok) return;
 

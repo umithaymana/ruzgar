@@ -20,7 +20,7 @@
       <div class="title-row title-row-motors">
         <div class="mode-topbar mode-topbar-main" role="tablist" aria-label="Rüzgar modül seçici">
           <button type="button" class="mode-tab is-active" id="mode-btn-genel" data-mode="genel">ANA MOTOR</button>
-          <button type="button" class="mode-tab" id="mode-btn-okuma" data-mode="okuma">İLİM MOTORU</button>
+          <button type="button" class="mode-tab" id="mode-btn-okuma" data-mode="okuma">BİLİM MOTORU</button>
           <button type="button" class="mode-tab" id="mode-btn-video" data-mode="video">VİDEO MOTORU</button>
           <button type="button" class="mode-tab" id="mode-btn-programlama" data-mode="programlama">PROGRAMLAMA MOTORU</button>
           <button type="button" class="mode-tab mode-tab-hafiza" id="mode-btn-hafiza" data-mode="hafiza">HAFIZA MOTORU</button>
@@ -89,8 +89,8 @@
           <button type="button" class="motor-item" data-mode="okuma" id="motor-side-okuma">
             <span class="motor-glyph">▤</span>
             <span class="motor-text">
-              <span class="motor-name">OKUMA MOTORU</span>
-              <span class="motor-tag">Kütüphane · tamam</span>
+              <span class="motor-name">BİLİM MOTORU</span>
+              <span class="motor-tag">İlim · tabiat · tarih</span>
             </span>
           </button>
           <button type="button" class="motor-item" data-mode="tercume" id="motor-side-tercume">
@@ -116,6 +116,7 @@
 
       <aside class="panel panel-chat">
         <div class="chat-scroll" id="chat-messages"></div>
+        <div id="orchestra-bridge" class="orchestra-bridge" hidden aria-live="polite"></div>
         <div class="composer">
           <div class="composer-actions">
             <label class="chk"
