@@ -15,7 +15,7 @@ def _norm_ascii(s: str) -> str:
 def motor_niyeti_heuristic(message: str) -> dict[str, bool]:
     raw = (message or "").strip()
     if not raw:
-        return {k: False for k in ("ses", "video", "programlama", "tercume", "bilim", "bellek")}
+        return {k: False for k in ("ses", "video", "programlama", "tercume", "bilim", "bellek", "hizir")}
     low = raw.lower()
     asc = _norm_ascii(raw)
     blob = low + " " + asc
@@ -111,6 +111,27 @@ def motor_niyeti_heuristic(message: str) -> dict[str, bool]:
                 "geçmiş sohbet",
             )
         ),
+        "hizir": any(
+            x in blob
+            for x in (
+                "hizir",
+                "hızır",
+                "arbitraj",
+                "dropship",
+                "trendyol satıcı",
+                "amazon satıcı",
+                "kar marjı",
+                "kâr marjı",
+                "pazar komisyonu",
+                "stop loss",
+                "stop-loss",
+                "ekonomik av",
+                "fiyat farkı",
+                "otomatik listeleme",
+                "stok takip",
+                "pazar yerini tara",
+                "pazar tara",
+                "hava durumuna bak",
     }
 
 
@@ -155,6 +176,12 @@ def build_idrak_protocol_block(
     )
     aktif = [k for k, v in motor_flags.items() if v]
     aktif_s = ", ".join(aktif) if aktif else "(şimdilik özel motor ipucu yok — ana motor yanıtı yeter)"
+    extra_hizir = ""
+    if motor_flags.get("hizir"):
+        extra_hizir = (
+            "E) **HIZIR / ticaret:** Mesajda **OPERASYON MERKEZİ** veya **Merkezi bellek** blokları varsa "
+            "bunlar araç çıktısıdır; mock veya önbellek verisini **gerçek fiyat** gibi sunma.\n"
+        )
     return (
         "\n\n[TALİMAT — İDRAK VE ENTEGRASYON — Ümit & Gökçenur — dahili]\n"
         "Sen yalnızca metin basan bir bot değilsin; **Rüzgar temsilcisisin**: önce düşün, sonra üret.\n"
@@ -166,7 +193,8 @@ def build_idrak_protocol_block(
         "ölçülü, saygılı, gerektiğinde kısa tarihî veya kavramsal çerçeveyle zenginleştir.\n"
         "D) Çıktı biçimi: yanıt yalnız metin mi, yoksa kullanıcı ses/video/çeviri/kod atölyesine geçecek mi? "
         "Gerekirse tek cümleyle hangi motorun işine yarayacağını belirt (emir verme, nazikçe öner).\n"
-        "Yardımcı motor ipuçları (heuristik): "
+        + extra_hizir
+        + "Yardımcı motor ipuçları (heuristik): "
         + aktif_s
         + ".\n"
         "Liste istenmedikçe düz madde yığını verme; anlatımı insanî ve bilge bir üslupla bağla.\n"
@@ -200,6 +228,8 @@ def build_orchestra_ui_payload(
         add("okuma", "Bilim / okuma çalışma sayfası")
     if motor_flags.get("bellek"):
         add("hafiza", "Hafıza motoru")
+    if motor_flags.get("hizir"):
+        add("hizir", "HIZIR — Ekonomik avcı (fırsat / mizan)")
     return {"motors": motors, "query": (message or "").strip()[:500]}
 
 

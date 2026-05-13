@@ -24,6 +24,7 @@
           <button type="button" class="mode-tab" id="mode-btn-video" data-mode="video">VİDEO MOTORU</button>
           <button type="button" class="mode-tab" id="mode-btn-programlama" data-mode="programlama">PROGRAMLAMA MOTORU</button>
           <button type="button" class="mode-tab mode-tab-hafiza" id="mode-btn-hafiza" data-mode="hafiza">HAFIZA MOTORU</button>
+          <button type="button" class="mode-tab mode-tab-hizir" id="mode-btn-hizir" data-mode="hizir">HIZIR</button>
           <button type="button" class="mode-tab" id="mode-btn-ses" data-mode="ses">SES MOTORU</button>
         </div>
         <div class="header-tech-strip" aria-label="Sistem göstergeleri">
@@ -67,6 +68,13 @@
             <span class="motor-text">
               <span class="motor-name">HAFIZA MOTORU</span>
               <span class="motor-tag">Öğrenme &amp; bellek</span>
+            </span>
+          </button>
+          <button type="button" class="motor-item motor-item-hizir" data-mode="hizir" id="motor-side-hizir">
+            <span class="motor-glyph">⚡</span>
+            <span class="motor-text">
+              <span class="motor-name">HIZIR</span>
+              <span class="motor-tag">Ekonomik avcı · Operasyon</span>
             </span>
           </button>
           <div class="motors-divider" aria-hidden="true">
@@ -217,6 +225,18 @@
                 <div class="logo-mark">◎</div>
                 <p>Rüzgar Görsel Paneli</p>
               </div>
+              <div class="mini-card dashboard-hizir-card">
+                <strong>HIZIR</strong>
+                <p class="dashboard-hizir-blurb">Merkezi bellek (ticaret + önbellek) ve pazar taraması.</p>
+                <button
+                  type="button"
+                  class="btn-secondary btn-compact"
+                  id="btn-open-hizir-panel"
+                  title="Uygula — HIZIR sekmesine geç ve merkezi belleği yenile"
+                >
+                  HIZIR panelini aç — Uygula
+                </button>
+              </div>
             </div>
             <div class="motors-overview">
               <h4 class="motors-overview-title">Atölye Yol Haritası</h4>
@@ -266,6 +286,49 @@
                   ></div>
                 </div>
                 <button type="button" id="btn-hafiza-send" class="btn-primary" title="Gönder (Enter)">Gönder</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="motor-page" id="page-hizir" hidden>
+            <div class="atelier-info-strip">
+              <span class="phase-badge phase-badge-hizir">Operasyon</span>
+              <span class="atelier-promise">
+                <strong>HIZIR — Ekonomik avcı</strong> — Merkezi bellek v3: <code>hizir_ticaret</code> fırsatları ve
+                <code>genel_onbellek</code> keşifleri. Sohbette «Pazar yerini tara» veya bu sekmeden tarama tetikleyin.
+              </span>
+            </div>
+            <h3>HIZIR — Merkezi bellek ve pazar</h3>
+            <div id="hizir-status" class="mini-card hizir-status-line" aria-live="polite"></div>
+            <div class="hizir-toolbar" role="toolbar" aria-label="HIZIR araçları">
+              <button type="button" class="btn-secondary btn-compact" id="btn-hizir-refresh" title="Merkezi belleği sunucudan yeniden yükle">
+                Yenile
+              </button>
+              <input
+                type="text"
+                id="hizir-tara-query"
+                class="hizir-tara-input"
+                placeholder="Tarama sorgusu (boş bırakılabilir)"
+                autocomplete="off"
+                aria-label="Pazar tarama sorgusu"
+              />
+              <button
+                type="button"
+                class="btn-primary btn-compact"
+                id="btn-hizir-tara"
+                title="Uygula — sunucuda pazar taraması (POST /api/hizir/pazar-tara)"
+              >
+                Pazar tara — Uygula
+              </button>
+            </div>
+            <div class="hizir-split">
+              <div class="hizir-col">
+                <h4 class="hizir-col-title">Ticari fırsatlar</h4>
+                <div id="hizir-firsatlar-wrap" class="hizir-firsatlar-wrap"></div>
+              </div>
+              <div class="hizir-col">
+                <h4 class="hizir-col-title">Genel önbellek</h4>
+                <div id="hizir-onbellek-wrap" class="hizir-onbellek-wrap"></div>
               </div>
             </div>
           </section>

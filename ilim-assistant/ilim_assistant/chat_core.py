@@ -476,6 +476,8 @@ def _is_live_weather_query(msg: str) -> bool:
         "yarın hava durumu",
         "yarın hava",
         "havalar nasıl",
+        "hava durumuna bak",
+        "hava durumu bak",
         "kaç derece",
         "derece mi",
         "yağmur var",
@@ -945,9 +947,24 @@ def prepare_turn(
     except Exception:
         tools_ctx = ""
 
+    op_ctx = ""
+    try:
+        from ilim_assistant.hizir.tool_bridge import build_dynamic_operasyon_context
+
+        op_ctx = build_dynamic_operasyon_context(
+            msg,
+            weather_q=weather_q,
+            has_live_weather_block=bool((live_weather_ctx or "").strip()),
+            mode_norm=m,
+        )
+    except Exception:
+        op_ctx = ""
+
     user_payload = build_user_prompt(msg, blocks)
     if tools_ctx:
         user_payload = tools_ctx + "\n\n" + user_payload
+    if op_ctx:
+        user_payload = op_ctx + "\n\n" + user_payload
     if live_weather_ctx:
         user_payload = live_weather_ctx + "\n\n" + user_payload
     if web_extra:

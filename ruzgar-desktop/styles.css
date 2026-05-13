@@ -298,6 +298,14 @@ body {
   border-color: #2aa3ff;
   color: #fff;
 }
+.mode-tab-hizir {
+  border-color: #2a6f5a;
+}
+.mode-tab-hizir.is-active {
+  background: #007acc;
+  border-color: #2aa3ff;
+  color: #fff;
+}
 .panel-badge {
   font-size: 10px;
   padding: 2px 6px;
@@ -850,9 +858,112 @@ body {
 }
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 1.3fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 10px;
 }
+.dashboard-hizir-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+.dashboard-hizir-blurb {
+  margin: 0;
+  font-size: 12px;
+  color: #b8c0cc;
+  line-height: 1.45;
+}
+
+/* HIZIR operasyon sayfası */
+.hizir-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 10px;
+}
+.hizir-tara-input {
+  flex: 1 1 220px;
+  min-width: 160px;
+  padding: 7px 10px;
+  border: 1px solid #3c3c3c;
+  border-radius: 6px;
+  background: #252526;
+  color: #e0e0e0;
+  font-size: 13px;
+}
+.hizir-status-line {
+  margin-bottom: 12px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.hizir-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  min-height: 0;
+}
+@media (max-width: 900px) {
+  .hizir-split {
+    grid-template-columns: 1fr;
+  }
+}
+.hizir-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+.hizir-col-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #c8d0da;
+}
+.hizir-firsatlar-wrap,
+.hizir-onbellek-wrap {
+  flex: 1 1 auto;
+  min-height: 120px;
+  max-height: 52vh;
+  overflow: auto;
+  border: 1px solid #3c3c3c;
+  border-radius: 6px;
+  background: #1e1e1e;
+  padding: 8px;
+}
+.hizir-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.hizir-table th,
+.hizir-table td {
+  border-bottom: 1px solid #333;
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+.hizir-table th {
+  color: #9fb0c0;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  background: #252526;
+  z-index: 1;
+}
+.hizir-table tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+.hizir-pre {
+  margin: 0;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #c5d4e0;
+}
+
 .dashboard-avatar {
   display: flex;
   flex-direction: column;
@@ -2193,6 +2304,17 @@ body:has(.layout-v2) .title-row-motors { justify-content: flex-end; }
   box-shadow: inset 3px 0 0 0 #d4af37;
 }
 
+.motor-item-hizir .motor-glyph {
+  background: rgba(46, 204, 113, 0.14);
+  color: #2ecc71;
+}
+.motor-item-hizir.is-active {
+  background: rgba(46, 204, 113, 0.08);
+  border-color: rgba(46, 204, 113, 0.45);
+  color: #dff5ea;
+  box-shadow: inset 3px 0 0 0 #2ecc71;
+}
+
 .motors-foot {
   margin-top: auto;
   padding: 10px 6px 4px;
@@ -2259,6 +2381,10 @@ body:has(.layout-v2) .title-row-motors { justify-content: flex-end; }
 .phase-badge-ana {
   background: #ff2d2d;
   color: #fff;
+}
+.phase-badge-hizir {
+  background: #1e6b52;
+  color: #e8fff4;
 }
 .atelier-promise {
   flex: 1;

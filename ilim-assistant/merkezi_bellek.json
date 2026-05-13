@@ -1,0 +1,62 @@
+{
+  "version": 3,
+  "schema": "ruzgar_merkezi_v1",
+  "engine": "ruzgar",
+  "kategoriler": {
+    "hizir_ticaret": {
+      "firsatlar": [],
+      "stop_loss_log": [],
+      "mizan_hareketleri": [],
+      "kullanici_mizan": {}
+    },
+    "genel_onbellek": {
+      "girdiler": [
+        {
+          "tip": "pazar_keşif",
+          "anahtar": "trendyolda kulaklik fiyat ne kadar",
+          "veri": {
+            "plugin_id": "marketplace_commercial",
+            "data": {
+              "ok": true,
+              "tool": "hizir_market_listings",
+              "result": {
+                "ok": true,
+                "query": "kulaklik fiyat ne kadar",
+                "trendyol": [
+                  {
+                    "name": "kulaklik fiyat ne kadar (Trendyol mock)",
+                    "price": 100.0,
+                    "in_stock": true,
+                    "id": "TY-MOCK-001"
+                  },
+                  {
+                    "name": "kulaklik fiyat ne kadar — ekonomik seçenek",
+                    "price": 95.5,
+                    "in_stock": true,
+                    "id": "TY-MOCK-002"
+                  }
+                ],
+                "amazon": [
+                  {
+                    "name": "kulaklik fiyat ne kadar (Amazon mock)",
+                    "price": 210.0,
+                    "in_stock": true,
+                    "id": "AZ-MOCK-100"
+                  },
+                  {
+                    "name": "kulaklik fiyat ne kadar — satıcı B",
+                    "price": 175.0,
+                    "in_stock": false,
+                    "id": "AZ-MOCK-101"
+                  }
+                ]
+              }
+            }
+          },
+          "tarih": "2026-05-13T07:58:37.402271+00:00"
+        }
+      ]
+    }
+  },
+  "updated_at": "2026-05-13T07:58:37.402271+00:00"
+}

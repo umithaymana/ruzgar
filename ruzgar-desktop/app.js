@@ -186,6 +186,7 @@ const MODE_LABELS = {
   duzen: "Düzen",
   dosya: "Dosya",
   hizli: "Hızlı",
+  hizir: "HIZIR — Ekonomik avcı",
 };
 
 const el = {
@@ -249,6 +250,7 @@ const el = {
   modeBtnHafiza: document.getElementById("mode-btn-hafiza"),
   modeBtnOkuma: document.getElementById("mode-btn-okuma"),
   modeBtnSes: document.getElementById("mode-btn-ses"),
+  modeBtnHizir: document.getElementById("mode-btn-hizir"),
   motorDeclarationHeader: document.getElementById("motor-declaration-header"),
   dynamicWorkbench: document.getElementById("dynamic-workbench"),
   pageGenel: document.getElementById("page-genel"),
@@ -258,6 +260,14 @@ const el = {
   pageVideo: document.getElementById("page-video"),
   pageProgramlama: document.getElementById("page-programlama"),
   pageSes: document.getElementById("page-ses"),
+  pageHizir: document.getElementById("page-hizir"),
+  btnOpenHizirPanel: document.getElementById("btn-open-hizir-panel"),
+  btnHizirRefresh: document.getElementById("btn-hizir-refresh"),
+  btnHizirTara: document.getElementById("btn-hizir-tara"),
+  hizirTaraQuery: document.getElementById("hizir-tara-query"),
+  hizirStatus: document.getElementById("hizir-status"),
+  hizirFirsatlarWrap: document.getElementById("hizir-firsatlar-wrap"),
+  hizirOnbellekWrap: document.getElementById("hizir-onbellek-wrap"),
   btnLayoutFull: document.getElementById("btn-layout-full"),
   btnLayoutSplit2: document.getElementById("btn-layout-split2"),
   btnLayoutSplit4: document.getElementById("btn-layout-split4"),
@@ -448,6 +458,7 @@ const TOP_MODE_BUTTONS = [
   "modeBtnHafiza",
   "modeBtnOkuma",
   "modeBtnSes",
+  "modeBtnHizir",
 ];
 
 function syncTopModeButtons() {
@@ -642,7 +653,7 @@ function applyModeToUI() {
     if (currentMode === "hafiza") el.code.checked = false;
   }
   if (el.web) {
-    if (["ses", "okuma", "tercume", "uretim", "hizli", "hafiza"].includes(currentMode)) {
+    if (["ses", "okuma", "tercume", "uretim", "hizli", "hafiza", "hizir"].includes(currentMode)) {
       el.web.checked = false;
     } else {
       el.web.checked = true;
@@ -661,6 +672,9 @@ function applyModeToUI() {
   } else if (currentMode === "video") {
     el.input.placeholder =
       "Video motorunda FFmpeg, kesme veya altyazı hakkında soru yazın; dosya özeti soldaki panelde.";
+  } else if (currentMode === "hizir") {
+    el.input.placeholder =
+      "Örn: «Pazar yerini tara», «Hava durumuna bak», Trendyol fiyat. Yanıt sohbette; veri HIZIR sekmesinde güncellenir.";
   } else {
     el.input.placeholder =
       "Soru yazın veya yapıştırın — Web açıkken arama + okuma; doğrudan https:// bağlantısı da okunur.";
@@ -832,6 +846,8 @@ function switchMode(mode) {
       "Ses motoru — Stüdyo: dosya + konuşmayı metne dökme, transkript; tarayıcıdan seslendirme.",
     tercume:
       "Tercüme motoru — Ofis paneli: arşiv + iki kolon; Çevir ile Rüzgar’a yapılandırılmış istek.",
+    hizir:
+      "HIZIR — Merkezi Bellek v3: ticari fırsatlar ve genel keşif önbelleği; sunucu API ile canlı yenilenir.",
   };
   setHeaderMotorDeclaration(motorDeclarationByMode[currentMode] || "");
   clearMotorDeclarations();
@@ -878,6 +894,13 @@ function applyMotorHandoff(modeId, handoffText) {
       switchMode("hafiza");
       if (el.hafizaInput) el.hafizaInput.value = t.slice(0, 8000);
       break;
+    case "hizir":
+      switchMode("hizir");
+      if (el.input) el.input.value = t;
+      el.input?.focus();
+      void HIZIR_MODU.refreshPanel();
+      flashRuzgarDurum("HIZIR paneli: merkezi bellek sunucudan yenilendi.");
+      break;
     default:
       switchMode("genel");
       if (el.input) el.input.value = t;
@@ -921,10 +944,162 @@ function setWorkbenchLayout(kind) {
   setStatus(`Çalışma sayfası düzeni: ${kind.replace("layout-", "")}`, "Rüzgar");
 }
 
+/**
+ * HIZIR — merkezi bellek (GET) + pazar taraması (POST); desktop_server ile uyumlu.
+ * Tek giriş noktası: wire(), refreshPanel(), pazarTara().
+ */
+const HIZIR_MODU = {
+  _wired: false,
+
+  merkeziBellekUrl() {
+    return `${API}/api/merkezi-bellek?t=${Date.now()}`;
+  },
+
+  pazarTaraUrl() {
+    return `${API}/api/hizir/pazar-tara`;
+  },
+
+  renderMerkeziBellek(root) {
+    const kat = root.kategoriler || {};
+    const ht = kat.hizir_ticaret || {};
+    const rows = Array.isArray(ht.firsatlar) ? ht.firsatlar : [];
+    const gen = kat.genel_onbellek || {};
+    const girdiler = Array.isArray(gen.girdiler) ? gen.girdiler : [];
+    if (el.hizirFirsatlarWrap) {
+      if (!rows.length) {
+        el.hizirFirsatlarWrap.innerHTML =
+          '<div class="mini-card">Henüz kayıtlı ticari fırsat yok (ana motorda AVLA sonrası buraya düşer).</div>';
+      } else {
+        const head =
+          '<table class="hizir-table"><thead><tr><th>Tarih</th><th>Ürün</th><th>Kaynak</th><th>Hedef</th><th>Net</th></tr></thead><tbody>';
+        const body = rows
+          .slice()
+          .reverse()
+          .slice(0, 80)
+          .map((r) => {
+            const dt = esc(String(r.tarih ?? ""));
+            const ua = esc(String(r.urun_adi ?? ""));
+            const kf = esc(String(r.kaynak_fiyat ?? ""));
+            const hf = esc(String(r.hedef_fiyat ?? ""));
+            const pk = esc(String(r.potansiyel_kar ?? ""));
+            return `<tr><td>${dt}</td><td>${ua}</td><td>${kf}</td><td>${hf}</td><td>${pk}</td></tr>`;
+          })
+          .join("");
+        el.hizirFirsatlarWrap.innerHTML = head + body + "</tbody></table>";
+      }
+    }
+    if (el.hizirOnbellekWrap) {
+      const slice = girdiler.slice(-20);
+      const pre = document.createElement("pre");
+      pre.className = "hizir-pre";
+      pre.textContent = JSON.stringify(slice, null, 2);
+      el.hizirOnbellekWrap.replaceChildren(pre);
+    }
+  },
+
+  async refreshPanel() {
+    if (!el.pageHizir) return;
+    if (el.hizirStatus) el.hizirStatus.textContent = "Sunucudan yükleniyor…";
+    try {
+      const res = await fetch(this.merkeziBellekUrl());
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.ok) {
+        const d = j.detail;
+        throw new Error(typeof d === "string" ? d : `HTTP ${res.status}`);
+      }
+      this.renderMerkeziBellek(j.data || {});
+      if (el.hizirStatus) {
+        const p = esc(String(j.path || ""));
+        const v = esc(String(j.version ?? ""));
+        const sc = esc(String(j.schema || ""));
+        el.hizirStatus.innerHTML = `<strong>Merkezi bellek</strong> yüklendi · <strong>Hemen şimdi</strong> aramaya hazır.<br>Şema: <code>${sc}</code> · sürüm <code>${v}</code><br>Dosya: <code>${p}</code>`;
+      }
+    } catch (e) {
+      if (el.hizirStatus) {
+        el.hizirStatus.textContent = `Yükleme hatası: ${e && e.message ? e.message : e}`;
+      }
+    }
+  },
+
+  async pazarTara() {
+    const q = el.hizirTaraQuery ? String(el.hizirTaraQuery.value || "").trim() : "";
+    if (el.hizirStatus) el.hizirStatus.textContent = "Pazar taraması çalışıyor…";
+    try {
+      const res = await fetch(this.pazarTaraUrl(), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: q }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.ok) {
+        const d = j.detail;
+        throw new Error(typeof d === "string" ? d : `HTTP ${res.status}`);
+      }
+      if (el.hizirStatus) {
+        el.hizirStatus.textContent = `Tarama tamam (Uygula). Araç bağlamı: ${j.tool_context_chars || 0} karakter.`;
+      }
+      await this.refreshPanel();
+    } catch (e) {
+      if (el.hizirStatus) {
+        el.hizirStatus.textContent = `Tarama hatası: ${e && e.message ? e.message : e}`;
+      }
+    }
+  },
+
+  shouldRefreshAfterChat(userText) {
+    const utLow = String(userText || "").toLowerCase();
+    return (
+      currentMode === "hizir" ||
+      /\b(pazar\s+yerini|pazarı\s+tara|pazar\s+tara|hava\s+durumuna\s+bak|hemen\s+şimdi)\b/i.test(
+        utLow
+      ) ||
+      utLow.includes("trendyol") ||
+      utLow.includes("amazon") ||
+      /\bavla\b/i.test(utLow)
+    );
+  },
+
+  bootStatusIfEmpty() {
+    if (!el.hizirStatus) return;
+    const t = (el.hizirStatus.textContent || "").trim();
+    if (!t) {
+      el.hizirStatus.textContent =
+        "HIZIR — Hemen şimdi aramaya hazır. «Yenile» ile merkezi bellek; «Pazar tara — Uygula» ile POST taraması.";
+    }
+  },
+
+  wire() {
+    if (this._wired) return;
+    this._wired = true;
+    this.bootStatusIfEmpty();
+    if (el.btnHizirRefresh) {
+      el.btnHizirRefresh.addEventListener("click", () => {
+        void this.refreshPanel();
+      });
+    }
+    if (el.btnHizirTara) {
+      el.btnHizirTara.addEventListener("click", () => {
+        void this.pazarTara();
+      });
+    }
+    if (el.btnOpenHizirPanel) {
+      el.btnOpenHizirPanel.addEventListener("click", () => {
+        switchMode("hizir");
+        void this.refreshPanel();
+      });
+    }
+  },
+};
+
+async function refreshHizirOperasyonPanel() {
+  return HIZIR_MODU.refreshPanel();
+}
+
 function updateDynamicWorkbench() {
   const pages = [
     el.pageGenel,
     el.pageHafiza,
+    el.pageHizir,
     el.pageOkuma,
     el.pageTercume,
     el.pageVideo,
@@ -937,6 +1112,7 @@ function updateDynamicWorkbench() {
   const map = {
     genel: el.pageGenel,
     hafiza: el.pageHafiza,
+    hizir: el.pageHizir,
     okuma: el.pageOkuma,
     tercume: el.pageTercume,
     video: el.pageVideo,
@@ -965,6 +1141,7 @@ function updateDynamicWorkbench() {
     updateProgramlamaActiveFileLabel();
     void programlamaAtolyeRefreshRoot();
   }
+  if (currentMode === "hizir") void refreshHizirOperasyonPanel();
 }
 
 function wireTopModeButtons() {
@@ -2431,6 +2608,7 @@ function wireDynamicWorkbench() {
       void sendToHafizaAnalyze();
     });
   }
+  HIZIR_MODU.wire();
 }
 
 function wireContextMenu() {
@@ -4016,6 +4194,10 @@ async function streamChat(userText) {
       lastAssistantReply = full;
       updateDynamicWorkbench();
       renderOrchestraBridge(ev.orchestra);
+      const ut = String(ev.user_message || userText || "");
+      if (HIZIR_MODU.shouldRefreshAfterChat(ut)) {
+        void HIZIR_MODU.refreshPanel();
+      }
       chatHistory.push({ role: "user", content: ev.user_message || userText });
       chatHistory.push({ role: "assistant", content: full });
       setStatus("Hazır");

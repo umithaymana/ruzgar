@@ -225,6 +225,10 @@ class GenelHafizaBakBody(BaseModel):
     message: str = ""
 
 
+class HizirPazarTaraBody(BaseModel):
+    query: str = Field(default="", description="Ürün veya arama (boşsa genel tarama metni)")
+
+
 class CodeRunBody(BaseModel):
     code: str = ""
     language: str = "python"
@@ -345,6 +349,48 @@ def health():
         "ffmpeg": ffmpeg_available(),
         "ffprobe": ffprobe_available(),
     }
+
+
+@app.get("/api/merkezi-bellek")
+def api_merkezi_bellek():
+    """Merkezi Bellek v3 — HIZIR ticaret + genel önbellek (salt okunur JSON)."""
+    try:
+        from ilim_assistant.hizir.bellek import load_merkezi_bellek, merkezi_bellek_path
+
+        data = load_merkezi_bellek()
+        return {
+            "ok": True,
+            "path": str(merkezi_bellek_path()),
+            "schema": data.get("schema"),
+            "version": data.get("version"),
+            "data": data,
+        }
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/hizir/pazar-tara")
+def api_hizir_pazar_tara(body: HizirPazarTaraBody):
+    """Panelden canlı keşif: Tool-Bridge + UniversalScraper; sonuç `merkezi_bellek`e yazılır."""
+    try:
+        from ilim_assistant.hizir.bellek import load_merkezi_bellek
+        from ilim_assistant.hizir.tool_bridge import build_dynamic_operasyon_context
+
+        q = (body.query or "").strip()
+        msg = f"Pazar yerini tara: {q}" if q else "Pazar yerini tara"
+        ctx = build_dynamic_operasyon_context(
+            msg,
+            weather_q=False,
+            has_live_weather_block=False,
+            mode_norm="genel",
+        )
+        return {
+            "ok": True,
+            "tool_context_chars": len(ctx),
+            "data": load_merkezi_bellek(),
+        }
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
 @app.post("/api/video/probe")
