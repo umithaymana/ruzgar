@@ -129,6 +129,13 @@ def append_genel_onbellek_girdi(
     _atomic_write_json(p, doc)
 
 
+def save_merkezi_bellek(doc: dict[str, Any], path: Path | None = None) -> None:
+    """Tam belge yazımı (Ticaret Avcısı senkronu vb.)."""
+    p = path or merkezi_bellek_path()
+    doc["updated_at"] = datetime.now(timezone.utc).isoformat()
+    _atomic_write_json(p, doc)
+
+
 def _parse_iso(ts: str) -> datetime | None:
     try:
         return datetime.fromisoformat(ts.replace("Z", "+00:00"))

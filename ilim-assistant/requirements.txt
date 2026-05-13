@@ -5,6 +5,8 @@ scikit-learn>=1.3.0
 sentence-transformers>=2.6.0
 requests>=2.31.0
 beautifulsoup4>=4.12.0
+# HIZIR canlı Amazon TR (Product Advertising API 5) — anahtarlar ortam değişkeninde
+python-amazon-paapi>=5.2.0,<6
 gradio>=4.44.0
 
 # Web araması (DuckDuckGo; API anahtarı gerekmez)

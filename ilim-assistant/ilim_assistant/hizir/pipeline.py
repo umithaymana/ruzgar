@@ -33,7 +33,7 @@ def evaluate_mock_cross_market(
     if not src_list or not dst_list:
         return {
             "ok": False,
-            "reason": "no_in_stock_mock_rows",
+            "reason": "no_in_stock_listings",
             "analysis": None,
         }
 

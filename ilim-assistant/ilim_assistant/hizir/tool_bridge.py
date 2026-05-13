@@ -167,6 +167,12 @@ def build_dynamic_operasyon_context(
                     }
                 )
                 _maybe_append_margin_tool(uni, parts)
+        try:
+            from ilim_assistant.hizir.ticaret_avci import reconcile_ticaret_avci_firsatlar
+
+            reconcile_ticaret_avci_firsatlar()
+        except Exception:
+            pass
     elif _flight_intent(msg):
         cached = find_fresh_genel_girdi(
             tip="ucus_stub", anahtar=cache_key, max_age_sec=ttl
@@ -204,7 +210,8 @@ def build_dynamic_operasyon_context(
     tail = (
         "\n\n[TALİMAT — OPERASYON MERKEZİ]\n"
         "Bu blok **Rüzgar araçları** ile üretildi (Merkezi Bellek + HIZIR / UniversalScraper). "
-        "Mock fiyatlar **gerçek değildir**; kullanıcıya açıkça belirt. "
-        "Ticari karar için resmi API ve sözleşmeleri hatırlat.\n"
+        "Pazar satırları **canlı çekim** ise yine de fiyat/stok için mağaza sayfasında teyit iste; "
+        "HIZIR_MOCK_MARKETPLACE=1 ile sahte veri kullanıldıysa bunu açıkça belirt. "
+        "Ticari karar için sözleşme ve resmi kanalları hatırlat.\n"
     )
     return "\n\n".join(parts) + tail

@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from typing import Any
+
+from ilim_assistant.hizir.market_live import use_mock_marketplace
 
 
 @dataclass(frozen=True)
@@ -15,6 +18,31 @@ class ProductListing:
     external_id: str = ""
     currency: str = "TRY"
     extra: dict[str, object] = field(default_factory=dict)
+
+
+def _dict_rows_to_listings(rows: list[dict[str, Any]], marketplace: str) -> list[ProductListing]:
+    out: list[ProductListing] = []
+    for r in rows:
+        if not isinstance(r, dict):
+            continue
+        name = str(r.get("name") or "").strip() or "Ürün"
+        try:
+            price = float(r.get("price") or 0)
+        except (TypeError, ValueError):
+            continue
+        if price <= 0:
+            continue
+        out.append(
+            ProductListing(
+                marketplace=marketplace,
+                product_name=name[:240],
+                price=price,
+                in_stock=bool(r.get("in_stock", True)),
+                external_id=str(r.get("id") or "")[:80],
+                extra=dict(r.get("extra") or {}),
+            )
+        )
+    return out
 
 
 class MarketplaceScraper(ABC):
@@ -34,10 +62,12 @@ class MarketplaceScraper(ABC):
 
 
 class TrendyolScraperScaffold(MarketplaceScraper):
-    marketplace_code = "trendyol"
+    """Trendyol: canlı discovery JSON veya mock (HIZIR_MOCK_MARKETPLACE=1)."""
 
-    def fetch_listings(self, query: str, *, limit: int = 10) -> list[ProductListing]:
-        """Canlı modda: oturum, hız sınırı, robots.txt ve `_not_implemented_http_hint` politikası uygulanır."""
+    marketplace_code = "trendyol"
+    last_live_error: str | None = None
+
+    def _mock_listings(self, query: str, *, limit: int) -> list[ProductListing]:
         q = (query or "").strip() or "örnek ürün"
         mock = [
             ProductListing(
@@ -58,12 +88,26 @@ class TrendyolScraperScaffold(MarketplaceScraper):
         ]
         return mock[: max(1, min(limit, len(mock)))]
 
+    def fetch_listings(self, query: str, *, limit: int = 10) -> list[ProductListing]:
+        type(self).last_live_error = None
+        if use_mock_marketplace():
+            return self._mock_listings(query, limit=limit)
+        from ilim_assistant.hizir import market_live as ml
+
+        rows, err = ml.fetch_trendyol_live(query, limit=limit)
+        type(self).last_live_error = err
+        if rows:
+            return _dict_rows_to_listings(rows, self.marketplace_code)
+        return []
+
 
 class AmazonScraperScaffold(MarketplaceScraper):
-    marketplace_code = "amazon"
+    """Amazon TR: PA-API 5 (anahtarlar tanımlıysa) veya mock."""
 
-    def fetch_listings(self, query: str, *, limit: int = 10) -> list[ProductListing]:
-        """Canlı modda: oturum, hız sınırı, robots.txt ve `_not_implemented_http_hint` politikası uygulanır."""
+    marketplace_code = "amazon"
+    last_live_error: str | None = None
+
+    def _mock_listings(self, query: str, *, limit: int) -> list[ProductListing]:
         q = (query or "").strip() or "örnek ürün"
         mock = [
             ProductListing(
@@ -83,3 +127,15 @@ class AmazonScraperScaffold(MarketplaceScraper):
             ),
         ]
         return mock[: max(1, min(limit, len(mock)))]
+
+    def fetch_listings(self, query: str, *, limit: int = 10) -> list[ProductListing]:
+        type(self).last_live_error = None
+        if use_mock_marketplace():
+            return self._mock_listings(query, limit=limit)
+        from ilim_assistant.hizir import market_live as ml
+
+        rows, err = ml.fetch_amazon_live(query, limit=limit)
+        type(self).last_live_error = err
+        if rows:
+            return _dict_rows_to_listings(rows, self.marketplace_code)
+        return []

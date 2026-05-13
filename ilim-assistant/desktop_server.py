@@ -340,6 +340,17 @@ def api_hafiza_import_blok(body: HafizaImportBlok):
 
 @app.get("/api/health")
 def health():
+    import os as _os
+
+    _m = _os.environ.get("HIZIR_MOCK_MARKETPLACE", "0").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+    _ak = (_os.environ.get("HIZIR_AMAZON_ACCESS_KEY") or "").strip()
+    _sk = (_os.environ.get("HIZIR_AMAZON_SECRET_KEY") or "").strip()
+    _tg = (_os.environ.get("HIZIR_AMAZON_PARTNER_TAG") or "").strip()
     return {
         "ok": True,
         "service": "ruzgar-desktop-api",
@@ -349,17 +360,22 @@ def health():
         "ffmpeg": ffmpeg_available(),
         "ffprobe": ffprobe_available(),
         "merkezi_bellek": True,
+        "hizir": {
+            "mock_marketplace": _m,
+            "amazon_paapi_credentials": bool(_ak and _sk and _tg),
+        },
     }
 
 
 @app.get("/api/merkezi-bellek")
 @app.get("/api/merkezi-bellek/")
 def api_merkezi_bellek():
-    """Merkezi Bellek v3 — HIZIR ticaret + genel önbellek (salt okunur JSON)."""
+    """Merkezi Bellek v3 — Ticaret Avcısı senkronu + HIZIR ticaret + genel önbellek."""
     try:
         from ilim_assistant.hizir.bellek import load_merkezi_bellek, merkezi_bellek_path
+        from ilim_assistant.hizir.ticaret_avci import reconcile_ticaret_avci_firsatlar
 
-        data = load_merkezi_bellek()
+        data = reconcile_ticaret_avci_firsatlar()
         return {
             "ok": True,
             "path": str(merkezi_bellek_path()),
@@ -375,7 +391,6 @@ def api_merkezi_bellek():
 def api_hizir_pazar_tara(body: HizirPazarTaraBody):
     """Panelden canlı keşif: Tool-Bridge + UniversalScraper; sonuç `merkezi_bellek`e yazılır."""
     try:
-        from ilim_assistant.hizir.bellek import load_merkezi_bellek
         from ilim_assistant.hizir.tool_bridge import build_dynamic_operasyon_context
 
         q = (body.query or "").strip()
@@ -386,10 +401,13 @@ def api_hizir_pazar_tara(body: HizirPazarTaraBody):
             has_live_weather_block=False,
             mode_norm="genel",
         )
+        from ilim_assistant.hizir.ticaret_avci import reconcile_ticaret_avci_firsatlar
+
+        data = reconcile_ticaret_avci_firsatlar()
         return {
             "ok": True,
             "tool_context_chars": len(ctx),
-            "data": load_merkezi_bellek(),
+            "data": data,
         }
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc

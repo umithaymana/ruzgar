@@ -7,20 +7,33 @@ from ilim_assistant.hizir.avci import HizirAvci
 
 
 def _listings_dict(query: str) -> dict[str, Any]:
+    from ilim_assistant.hizir import market_live as ml
     from ilim_assistant.hizir.scraper import AmazonScraperScaffold, TrendyolScraperScaffold
 
+    q = (query or "").strip() or "ürün"
     ty = TrendyolScraperScaffold()
     am = AmazonScraperScaffold()
+    ty_rows = ty.fetch_listings(q, limit=6)
+    am_rows = am.fetch_listings(q, limit=6)
+    live = not ml.use_mock_marketplace()
+    errors: dict[str, str] = {}
+    if live:
+        if TrendyolScraperScaffold.last_live_error:
+            errors["trendyol"] = TrendyolScraperScaffold.last_live_error
+        if AmazonScraperScaffold.last_live_error:
+            errors["amazon"] = AmazonScraperScaffold.last_live_error
     return {
         "ok": True,
-        "query": query,
+        "query": q,
+        "live": live,
+        "errors": errors,
         "trendyol": [
             {"name": x.product_name, "price": x.price, "in_stock": x.in_stock, "id": x.external_id}
-            for x in ty.fetch_listings(query, limit=6)
+            for x in ty_rows
         ],
         "amazon": [
             {"name": x.product_name, "price": x.price, "in_stock": x.in_stock, "id": x.external_id}
-            for x in am.fetch_listings(query, limit=6)
+            for x in am_rows
         ],
     }
 
@@ -58,7 +71,7 @@ _TOOL_REGISTRY: dict[str, Callable[..., dict[str, Any]]] = {
 HIZIR_TOOL_SPECS: list[dict[str, Any]] = [
     {
         "name": "hizir_market_listings",
-        "description": "Trendyol ve Amazon (mock veya API) için ürün adı, fiyat, stok listesi döndürür.",
+        "description": "Trendyol ve Amazon için ürün adı, fiyat, stok listesi (canlı: varsayılan; HIZIR_MOCK_MARKETPLACE=1 ile sahte).",
         "parameters": {
             "type": "object",
             "properties": {"query": {"type": "string"}},

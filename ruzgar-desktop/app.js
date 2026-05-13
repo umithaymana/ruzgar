@@ -1022,6 +1022,23 @@ const HIZIR_MODU = {
     return `${API}/api/hizir/pazar-tara`;
   },
 
+  lastPazarScanSummary(girdiler) {
+    const arr = Array.isArray(girdiler) ? girdiler.slice().reverse() : [];
+    const g = arr.find((x) => x && x.tip === "pazar_keşif");
+    if (!g || !g.veri || !g.veri.data) return { text: "", title: "" };
+    const inner = g.veri.data.result;
+    if (!inner || typeof inner !== "object") return { text: "", title: "" };
+    const head = [];
+    if (inner.live === true) head.push("Canlı pazar");
+    else if (inner.live === false) head.push("Simülasyon");
+    const er = inner.errors && typeof inner.errors === "object" ? inner.errors : {};
+    const errBits = [];
+    if (er.trendyol) errBits.push(`Trendyol: ${String(er.trendyol).slice(0, 180)}`);
+    if (er.amazon) errBits.push(`Amazon: ${String(er.amazon).slice(0, 180)}`);
+    const text = [...head, ...errBits].filter(Boolean).join(" — ");
+    return { text, title: errBits.join("\n") };
+  },
+
   renderMerkeziBellek(root) {
     const kat = root.kategoriler || {};
     const ht = kat.hizir_ticaret || {};
@@ -1031,24 +1048,46 @@ const HIZIR_MODU = {
     if (el.hizirFirsatlarWrap) {
       if (!rows.length) {
         el.hizirFirsatlarWrap.innerHTML =
-          '<div class="mini-card">Henüz kayıtlı ticari fırsat yok (ana motorda AVLA sonrası buraya düşer).</div>';
+          '<div class="hizir-firsatlar-hint">Pazar tara veya Yenile ile Ticaret Avcısı kartlarını güncelleyin.</div>';
       } else {
-        const head =
-          '<table class="hizir-table"><thead><tr><th>Tarih</th><th>Ürün</th><th>Kaynak</th><th>Hedef</th><th>Net</th></tr></thead><tbody>';
-        const body = rows
-          .slice()
-          .reverse()
-          .slice(0, 80)
+        const sorted = rows.slice().sort((a, b) => {
+          const rank = (r) => {
+            const t = String(r.tur || "");
+            if (t === "ARBITRAJ") return 3;
+            if (r.otomatik) return 2;
+            return 1;
+          };
+          const d = rank(b) - rank(a);
+          if (d !== 0) return d;
+          const pa = Number(a.potansiyel_kar);
+          const pb = Number(b.potansiyel_kar);
+          if (Number.isFinite(pa) && Number.isFinite(pb) && pa !== pb) return pb - pa;
+          return 0;
+        });
+        const slice = sorted.slice(0, 80);
+        const html = slice
           .map((r) => {
+            const ozet = String(r.ozet_metin || "").trim();
+            const tur = String(r.tur || "").trim();
+            const otm = Boolean(r.otomatik);
+            let mod = "hizir-firsat-card hizir-firsat-card--manual";
+            if (tur === "ARBITRAJ") mod = "hizir-firsat-card hizir-firsat-card--arbitraj";
+            else if (otm) mod = "hizir-firsat-card hizir-firsat-card--deal";
+            if (ozet) {
+              const metaPl = esc(String(r.platform || "—"));
+              const metaDt = esc(String(r.tarih || "").slice(0, 19).replace("T", " "));
+              return `<article class="${mod}"><p class="hizir-firsat-card-text">${esc(ozet)}</p><footer class="hizir-firsat-card-meta">${metaPl} · ${metaDt}</footer></article>`;
+            }
             const dt = esc(String(r.tarih ?? ""));
             const ua = esc(String(r.urun_adi ?? ""));
             const kf = esc(String(r.kaynak_fiyat ?? ""));
             const hf = esc(String(r.hedef_fiyat ?? ""));
             const pk = esc(String(r.potansiyel_kar ?? ""));
-            return `<tr><td>${dt}</td><td>${ua}</td><td>${kf}</td><td>${hf}</td><td>${pk}</td></tr>`;
+            const line = `${ua} — kaynak ${kf} → hedef ${hf} · net ${pk}`;
+            return `<article class="${mod}"><p class="hizir-firsat-card-text">${line}</p><footer class="hizir-firsat-card-meta">${dt}</footer></article>`;
           })
           .join("");
-        el.hizirFirsatlarWrap.innerHTML = head + body + "</tbody></table>";
+        el.hizirFirsatlarWrap.innerHTML = `<div class="hizir-firsatlar-grid" role="list">${html}</div>`;
       }
     }
     if (el.hizirOnbellekWrap) {
@@ -1057,6 +1096,21 @@ const HIZIR_MODU = {
       pre.className = "hizir-pre";
       pre.textContent = JSON.stringify(slice, null, 2);
       el.hizirOnbellekWrap.replaceChildren(pre);
+    }
+    const scan = this.lastPazarScanSummary(girdiler);
+    let strip = document.getElementById("hizir-live-strip");
+    if (scan.text && el.pageHizir && !strip) {
+      strip = document.createElement("div");
+      strip.id = "hizir-live-strip";
+      strip.className = "hizir-live-strip";
+      strip.setAttribute("aria-live", "polite");
+      const split = el.pageHizir.querySelector(".hizir-split");
+      if (split && split.parentNode) split.parentNode.insertBefore(strip, split);
+    }
+    if (strip) {
+      strip.textContent = scan.text || "";
+      strip.title = scan.title || "";
+      strip.hidden = !scan.text;
     }
   },
 

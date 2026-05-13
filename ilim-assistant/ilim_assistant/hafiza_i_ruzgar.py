@@ -440,7 +440,10 @@ class HafizaIRuzgar:
         parca = parca.strip()
         if not parca or "=" not in parca:
             return None
-        soru_k, _, cevap_k = parca.split("=", 1)
+        parts = parca.split("=", 1)
+        if len(parts) < 2:
+            return None
+        soru_k, cevap_k = parts[0], parts[1]
         s, c = soru_k.strip(), cevap_k.strip()
         if s and c:
             return {"soru": s, "cevap": c}

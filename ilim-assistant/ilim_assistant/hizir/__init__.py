@@ -37,6 +37,7 @@ from ilim_assistant.hizir.scraper import (
 from ilim_assistant.hizir.tool_bridge import build_dynamic_operasyon_context
 from ilim_assistant.hizir.tools import HIZIR_TOOL_SPECS, run_hizir_tool, run_hizir_tool_json
 from ilim_assistant.hizir.universal_scraper import UniversalScraper
+from ilim_assistant.hizir.market_live import use_mock_marketplace
 
 __all__ = [
     "HizirAvci",
@@ -69,4 +70,5 @@ __all__ = [
     "run_hizir_tool_json",
     "HIZIR_TOOL_SPECS",
     "UniversalScraper",
+    "use_mock_marketplace",
 ]
