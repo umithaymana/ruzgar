@@ -14030,5 +14030,29 @@
     "soru": "trafik",
     "cevap": "karmaşa",
     "ts": "2026-05-10T13:32:08.362506+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "ben buse naz",
+    "cevap": "sayın savcı  hanım hoş geldiniz geldiniz. size şimdiden savcı hanım diyorum  çok iyi bir savcı olacağına inanıyorum .",
+    "ts": "2026-05-13T11:30:46.957072+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "ben gökçenur",
+    "cevap": "a a a mühendis hanım hoş geldiniz . nasıl sınız iyimisiniz ? yolculuk nasıl geçti .",
+    "ts": "2026-05-13T11:30:47.020369+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "ben geldim",
+    "cevap": "sen kim sin",
+    "ts": "2026-05-13T11:30:47.058207+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Cursor oturumu — Video atölyesi devam noktası (2026-05-13)",
+    "cevap": "Rüzgar masaüstü Video motoru yenilendi: ruzgar-desktop/index.html içinde #page-video iki sütun (video-split-root), solda yapışkan oynatıcı paneli (video-player-sticky), sağda kaydırmalı operasyonlar (video-ops-scroll), üstte dört hızlı işlem (video-quick-create/trim/audio/export). ruzgar-desktop/app.js wireVideoQuickBar ile kısayollar bağlandı. ruzgar-desktop/styles.css ile oynatıcı baskın grid oranı (1.22fr / 0.78fr), önizleme boyutu min(480px, 65vh) ve clamp ile minimum yükseklik, genişlik ≤900px tek sütun. Diğer motor çalışma sayfalarına dokunulmadı. Yarın yapılacaklar: Video sekmesinde Electron veya tarayıcıda smoke test; gerekirse önizleme veya grid ince ayarı.",
+    "ts": "2026-05-13T20:00:00+00:00"
   }
 ]

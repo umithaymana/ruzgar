@@ -54,9 +54,97 @@
             }
           },
           "tarih": "2026-05-13T07:58:37.402271+00:00"
+        },
+        {
+          "tip": "pazar_keşif",
+          "anahtar": "pazar yerini tara: trendyol üzerinde en çok satan kablosuz kulaklıkları bul ve fiyat karşılaştırması yap.",
+          "veri": {
+            "plugin_id": "marketplace_commercial",
+            "data": {
+              "ok": true,
+              "tool": "hizir_market_listings",
+              "result": {
+                "ok": true,
+                "query": "pazar yerini tara üzerinde en çok satan kablosuz kulaklıkları bul ve fiyat karşılaştırması yap",
+                "trendyol": [
+                  {
+                    "name": "pazar yerini tara üzerinde en çok satan kablosuz kulaklıkları bul ve fiyat karşılaştırması yap (Trendyol mock)",
+                    "price": 100.0,
+                    "in_stock": true,
+                    "id": "TY-MOCK-001"
+                  },
+                  {
+                    "name": "pazar yerini tara üzerinde en çok satan kablosuz kulaklıkları bul ve fiyat karşılaştırması yap — ekonomik seçenek",
+                    "price": 95.5,
+                    "in_stock": true,
+                    "id": "TY-MOCK-002"
+                  }
+                ],
+                "amazon": [
+                  {
+                    "name": "pazar yerini tara üzerinde en çok satan kablosuz kulaklıkları bul ve fiyat karşılaştırması yap (Amazon mock)",
+                    "price": 210.0,
+                    "in_stock": true,
+                    "id": "AZ-MOCK-100"
+                  },
+                  {
+                    "name": "pazar yerini tara üzerinde en çok satan kablosuz kulaklıkları bul ve fiyat karşılaştırması yap — satıcı B",
+                    "price": 175.0,
+                    "in_stock": false,
+                    "id": "AZ-MOCK-101"
+                  }
+                ]
+              }
+            }
+          },
+          "tarih": "2026-05-13T11:07:10.975081+00:00"
+        },
+        {
+          "tip": "pazar_keşif",
+          "anahtar": "pazar yerini tara: pazar yeri tara",
+          "veri": {
+            "plugin_id": "marketplace_commercial",
+            "data": {
+              "ok": true,
+              "tool": "hizir_market_listings",
+              "result": {
+                "ok": true,
+                "query": "pazar yerini tara pazar yeri tara",
+                "trendyol": [
+                  {
+                    "name": "pazar yerini tara pazar yeri tara (Trendyol mock)",
+                    "price": 100.0,
+                    "in_stock": true,
+                    "id": "TY-MOCK-001"
+                  },
+                  {
+                    "name": "pazar yerini tara pazar yeri tara — ekonomik seçenek",
+                    "price": 95.5,
+                    "in_stock": true,
+                    "id": "TY-MOCK-002"
+                  }
+                ],
+                "amazon": [
+                  {
+                    "name": "pazar yerini tara pazar yeri tara (Amazon mock)",
+                    "price": 210.0,
+                    "in_stock": true,
+                    "id": "AZ-MOCK-100"
+                  },
+                  {
+                    "name": "pazar yerini tara pazar yeri tara — satıcı B",
+                    "price": 175.0,
+                    "in_stock": false,
+                    "id": "AZ-MOCK-101"
+                  }
+                ]
+              }
+            }
+          },
+          "tarih": "2026-05-13T11:22:26.793968+00:00"
         }
       ]
     }
   },
-  "updated_at": "2026-05-13T07:58:37.402271+00:00"
+  "updated_at": "2026-05-13T11:22:26.793968+00:00"
 }

@@ -128,8 +128,11 @@ body {
   position: relative;
   flex: 1;
   background: #1e1e1e;
+  display: flex;
+  flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
+  min-height: 0;
   padding: 10px;
 }
 .panel-main.thinking-dim .welcome {
@@ -815,6 +818,58 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  flex-wrap: wrap;
+}
+.workbench-head-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.hizir-workbench-strip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.hizir-wb-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid #3a4a42;
+  color: #c5e8d8;
+  background: rgba(46, 204, 113, 0.08);
+  white-space: nowrap;
+}
+.hizir-wb-pill-active .hizir-wb-glyph {
+  font-size: 12px;
+  line-height: 1;
+}
+.hizir-wb-server {
+  border-color: #4a5560;
+  background: rgba(255, 255, 255, 0.04);
+  color: #a8b4c4;
+}
+.hizir-wb-server-ok {
+  border-color: rgba(46, 204, 113, 0.45);
+  color: #b8f0d4;
+  background: rgba(46, 204, 113, 0.12);
+}
+.hizir-wb-server-err {
+  border-color: rgba(255, 107, 107, 0.45);
+  color: #ffc9c9;
+  background: rgba(180, 60, 60, 0.15);
+}
+.hizir-wb-server-unknown {
+  border-color: #555c66;
+  color: #9aa5b5;
 }
 .workbench-controls {
   display: flex;
@@ -831,8 +886,12 @@ body {
   background: #252526;
   border-radius: 8px;
   padding: 10px;
+  flex: 1 1 auto;
+  min-height: 0;
   height: calc(100% - 46px);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 .motor-page h3 {
   margin: 0 0 8px;
@@ -841,6 +900,17 @@ body {
 .motor-page {
   height: 100%;
   min-height: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+/* [hidden] + display:flex çakışmasını kır — aksi halde tüm motor sayfaları üst üste görünür */
+.motor-page[hidden],
+.dynamic-workbench > .motor-page[hidden] {
+  display: none !important;
+}
+#hizir-workbench-strip[hidden] {
+  display: none !important;
 }
 .mini-card {
   border: 1px solid #3c3c3c;
@@ -874,13 +944,68 @@ body {
   line-height: 1.45;
 }
 
-/* HIZIR operasyon sayfası */
+/* HIZIR — kompakt operasyon sayfası (.motor-page zaten flex; burada display verme — [hidden] ile çakışmasın) */
+.motor-page-hizir {
+  min-height: 0;
+  padding: 0;
+}
+.hizir-page-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+.hizir-compact-head {
+  flex: 0 0 auto;
+}
+.hizir-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+  min-height: 0;
+}
+.hizir-top-titles {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #b8c8d6;
+  letter-spacing: 0.02em;
+}
+.hizir-top-sep {
+  color: #5a6570;
+  font-weight: 400;
+}
+.hizir-top-title {
+  color: #dce6ef;
+}
+.hizir-inline-status {
+  margin: 0;
+  font-size: 11px;
+  color: #9fb0c0;
+  text-align: right;
+  flex: 1 1 160px;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hizir-inline-status code {
+  font-size: 10px;
+  color: #8ec8ff;
+}
 .hizir-toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
-  margin: 0 0 10px;
+  gap: 8px;
+  margin: 0;
 }
 .hizir-tara-input {
   flex: 1 1 220px;
@@ -892,39 +1017,30 @@ body {
   color: #e0e0e0;
   font-size: 13px;
 }
-.hizir-status-line {
-  margin-bottom: 12px;
-  font-size: 12px;
-  line-height: 1.5;
-}
 .hizir-split {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  grid-template-rows: minmax(0, 1fr);
+  gap: 10px;
+  flex: 1 1 auto;
   min-height: 0;
 }
 @media (max-width: 900px) {
   .hizir-split {
     grid-template-columns: 1fr;
+    grid-template-rows: none;
   }
 }
-.hizir-col {
+.hizir-col-data {
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  min-height: 0;
-}
-.hizir-col-title {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 600;
-  color: #c8d0da;
 }
 .hizir-firsatlar-wrap,
 .hizir-onbellek-wrap {
   flex: 1 1 auto;
-  min-height: 120px;
-  max-height: 52vh;
+  min-height: 0;
+  max-height: none;
   overflow: auto;
   border: 1px solid #3c3c3c;
   border-radius: 6px;
@@ -1288,47 +1404,108 @@ body {
   margin: 0;
 }
 
-/* Video Atölyesi — Faz 5 v1 */
+/* Video Atölyesi — iki sütun + yapışkan oynatıcı (yalnız #page-video) */
+.motor-page-video {
+  --video-preview-max-h: min(480px, 65vh);
+  --video-preview-min-h: clamp(220px, 36vh, 420px);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.video-quick-bar {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #3c3c3c;
+}
+.video-split-root {
+  display: grid;
+  /* Oynatıcı sütunu baskın: ~%50+ genişlik, dar ekranda da anlamlı minimum */
+  grid-template-columns: minmax(clamp(300px, 52vw, 640px), 1.22fr) minmax(260px, 0.78fr);
+  gap: 16px;
+  flex: 1 1 auto;
+  min-height: 0;
+  align-items: stretch;
+}
+.video-split-player {
+  min-width: 0;
+  min-height: 0;
+}
+.video-player-sticky {
+  position: sticky;
+  top: 6px;
+  align-self: start;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid rgba(156, 220, 254, 0.22);
+  border-radius: 10px;
+  background: linear-gradient(165deg, #1f2328 0%, #181a1d 100%);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 8px 28px rgba(0, 0, 0, 0.35);
+}
+.video-split-ops {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.video-ops-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 4px 8px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.video-split-ops .video-col-meta {
+  max-height: none;
+}
+.video-ops-scroll .video-probe-pre {
+  min-height: 80px;
+  max-height: min(220px, 28vh);
+}
+@media (max-width: 900px) {
+  .video-split-root {
+    grid-template-columns: 1fr;
+  }
+  .video-player-sticky {
+    position: relative;
+    top: auto;
+    max-height: none;
+  }
+  .motor-page-video {
+    --video-preview-max-h: min(520px, 58vh);
+    --video-preview-min-h: clamp(240px, 42vh, 480px);
+  }
+}
 .video-roadmap-note {
   margin: 0 0 10px;
   font-size: 11px;
   color: #a8a8a8;
   line-height: 1.4;
 }
-.video-roadmap-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0 0 12px;
-}
-.video-chip {
-  font-size: 10px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid #454545;
-  background: #252526;
-  cursor: default;
-  user-select: none;
-}
-/* Tamamlanan / kullanılabilir fazlar — gri “pasif düğme” gibi görünmesin */
-.video-chip-ready {
-  border-color: rgba(137, 209, 133, 0.45);
-  color: #c8e6c9;
-  background: rgba(78, 158, 73, 0.12);
-}
-/* Sonraki fazlar — bilgi amaçlı, devre dışı buton değil */
-.video-chip-next {
-  border-color: #454545;
-  color: #9d9d9d;
-  border-style: dashed;
-  background: #252526;
-}
 .video-workbench {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(260px, 1fr);
+  grid-template-columns: minmax(0, 1.2fr) minmax(240px, 1fr);
   gap: 12px;
-  align-items: stretch;
+  align-items: start;
   min-height: 0;
+  flex: 0 1 auto;
+}
+@media (max-width: 1100px) {
+  .video-workbench {
+    grid-template-columns: 1fr;
+  }
 }
 .video-col {
   display: flex;
@@ -1339,16 +1516,41 @@ body {
   border-radius: 7px;
   background: #1e1e1e;
   padding: 10px 12px;
+  overflow: hidden;
+}
+.video-col-main {
+  min-height: 0;
+}
+.video-col-meta {
+  max-height: min(52vh, 520px);
+  overflow: auto;
+}
+.video-preview-wrap {
+  flex: 1 1 auto;
+  min-height: var(--video-preview-min-h, clamp(200px, 32vh, 360px));
+  max-height: var(--video-preview-max-h, min(480px, 65vh));
+  width: 100%;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .video-file-label {
   font-size: 11px;
   color: #aaa;
 }
 .video-preview-el {
+  display: block;
   width: 100%;
-  max-height: min(360px, 42vh);
+  max-width: 100%;
+  height: auto;
+  max-height: var(--video-preview-max-h, min(480px, 65vh));
+  object-fit: contain;
+  vertical-align: middle;
   background: #000;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 .video-toolbar {
   display: flex;
@@ -1386,7 +1588,7 @@ body {
 .video-workbench-stack {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   min-height: 0;
 }
 .video-v2-panel {

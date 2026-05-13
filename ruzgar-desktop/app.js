@@ -285,7 +285,9 @@ const el = {
   btnHizirRefresh: document.getElementById("btn-hizir-refresh"),
   btnHizirTara: document.getElementById("btn-hizir-tara"),
   hizirTaraQuery: document.getElementById("hizir-tara-query"),
-  hizirStatus: document.getElementById("hizir-status"),
+  hizirInlineStatus: document.getElementById("hizir-inline-status"),
+  hizirWorkbenchStrip: document.getElementById("hizir-workbench-strip"),
+  hizirWbServer: document.getElementById("hizir-wb-server"),
   hizirFirsatlarWrap: document.getElementById("hizir-firsatlar-wrap"),
   hizirOnbellekWrap: document.getElementById("hizir-onbellek-wrap"),
   btnLayoutFull: document.getElementById("btn-layout-full"),
@@ -367,6 +369,10 @@ const el = {
   btnVideoClearRange: document.getElementById("btn-video-clear-range"),
   videoRelSubTranslate: document.getElementById("video-rel-sub-translate"),
   btnVideoSubToTercume: document.getElementById("btn-video-sub-to-tercume"),
+  videoQuickCreate: document.getElementById("video-quick-create"),
+  videoQuickTrim: document.getElementById("video-quick-trim"),
+  videoQuickAudio: document.getElementById("video-quick-audio"),
+  videoQuickExport: document.getElementById("video-quick-export"),
   audioFileInput: document.getElementById("audio-file-input"),
   audioPreview: document.getElementById("audio-preview"),
   codeEditor: document.getElementById("code-editor"),
@@ -700,6 +706,7 @@ function applyModeToUI() {
       "Soru yazın veya yapıştırın — Web açıkken arama + okuma; doğrudan https:// bağlantısı da okunur.";
   }
   syncTopModeButtons();
+  syncHizirWorkbenchStripVisibility();
 }
 applyModeToUI();
 if (el.web) el.web.addEventListener("change", syncWebFetchUi);
@@ -965,6 +972,42 @@ function setWorkbenchLayout(kind) {
 }
 
 /**
+ * HIZIR — çalışma başlığı şeridi (yalnızca hizir modunda).
+ */
+function syncHizirWorkbenchStripVisibility() {
+  if (!el.hizirWorkbenchStrip) return;
+  const show = currentMode === "hizir";
+  el.hizirWorkbenchStrip.hidden = !show;
+  if (!show) return;
+  const apiChipOk = !!(el.api && el.api.classList.contains("ok"));
+  setHizirWorkbenchServerPill(apiChipOk, el.api?.title || "");
+}
+
+function setHizirWorkbenchServerPill(connected, tooltipDetail) {
+  const pill = el.hizirWbServer;
+  if (!pill) return;
+  pill.classList.remove("hizir-wb-server-ok", "hizir-wb-server-err", "hizir-wb-server-unknown");
+  if (connected) {
+    pill.textContent = "Sunucu: Bağlı";
+    pill.classList.add("hizir-wb-server-ok");
+    pill.title = tooltipDetail ? String(tooltipDetail) : "Yerel masaüstü API yanıt veriyor.";
+  } else {
+    pill.textContent = "Sunucu: Kopuk";
+    pill.classList.add("hizir-wb-server-err");
+    pill.title = tooltipDetail ? String(tooltipDetail) : "Önce ilim-assistant içinde desktop_server başlatın.";
+  }
+}
+
+function setHizirWorkbenchServerPillUnknown() {
+  const pill = el.hizirWbServer;
+  if (!pill) return;
+  pill.classList.remove("hizir-wb-server-ok", "hizir-wb-server-err");
+  pill.classList.add("hizir-wb-server-unknown");
+  pill.textContent = "Sunucu: …";
+  pill.title = "";
+}
+
+/**
  * HIZIR — merkezi bellek (GET) + pazar taraması (POST); desktop_server ile uyumlu.
  * Tek giriş noktası: wire(), refreshPanel(), pazarTara().
  */
@@ -1019,7 +1062,11 @@ const HIZIR_MODU = {
 
   async refreshPanel() {
     if (!el.pageHizir) return;
-    if (el.hizirStatus) el.hizirStatus.textContent = "Sunucudan yükleniyor…";
+    if (el.hizirInlineStatus) {
+      el.hizirInlineStatus.textContent = "Yükleniyor…";
+      el.hizirInlineStatus.removeAttribute("title");
+    }
+    if (currentMode === "hizir") setHizirWorkbenchServerPillUnknown();
     try {
       const url = this.merkeziBellekUrl();
       const res = await fetch(url);
@@ -1035,22 +1082,33 @@ const HIZIR_MODU = {
         throw new Error(typeof d === "string" ? d : `HTTP ${res.status}`);
       }
       this.renderMerkeziBellek(j.data || {});
-      if (el.hizirStatus) {
-        const p = esc(String(j.path || ""));
+      const rawPath = String(j.path || "");
+      if (el.hizirInlineStatus) {
         const v = esc(String(j.version ?? ""));
         const sc = esc(String(j.schema || ""));
-        el.hizirStatus.innerHTML = `<strong>Merkezi bellek</strong> yüklendi · <strong>Hemen şimdi</strong> aramaya hazır.<br>Şema: <code>${sc}</code> · sürüm <code>${v}</code><br>Dosya: <code>${p}</code>`;
+        el.hizirInlineStatus.innerHTML = `Bellek ok · şema <code>${sc}</code> · sürüm <code>${v}</code> · hazır`;
+        if (rawPath) el.hizirInlineStatus.title = rawPath;
+        else el.hizirInlineStatus.removeAttribute("title");
+      }
+      if (currentMode === "hizir") {
+        setHizirWorkbenchServerPill(true, rawPath || el.api?.title || "");
       }
     } catch (e) {
-      if (el.hizirStatus) {
-        el.hizirStatus.textContent = `Yükleme hatası: ${e && e.message ? e.message : e}`;
+      const msg = e && e.message ? String(e.message) : String(e);
+      if (el.hizirInlineStatus) {
+        el.hizirInlineStatus.textContent = `Yükleme hatası: ${msg}`;
+        el.hizirInlineStatus.title = msg.length > 120 ? msg : "";
       }
+      if (currentMode === "hizir") setHizirWorkbenchServerPill(false, msg);
     }
   },
 
   async pazarTara() {
     const q = el.hizirTaraQuery ? String(el.hizirTaraQuery.value || "").trim() : "";
-    if (el.hizirStatus) el.hizirStatus.textContent = "Pazar taraması çalışıyor…";
+    if (el.hizirInlineStatus) {
+      el.hizirInlineStatus.textContent = "Tarama çalışıyor…";
+      el.hizirInlineStatus.removeAttribute("title");
+    }
     try {
       const res = await fetch(this.pazarTaraUrl(), {
         method: "POST",
@@ -1062,13 +1120,16 @@ const HIZIR_MODU = {
         const d = j.detail;
         throw new Error(typeof d === "string" ? d : `HTTP ${res.status}`);
       }
-      if (el.hizirStatus) {
-        el.hizirStatus.textContent = `Tarama tamam (Uygula). Araç bağlamı: ${j.tool_context_chars || 0} karakter.`;
+      if (el.hizirInlineStatus) {
+        el.hizirInlineStatus.textContent = `Tarama bitti · araç bağlamı ${j.tool_context_chars || 0} karakter`;
+        el.hizirInlineStatus.removeAttribute("title");
       }
       await this.refreshPanel();
     } catch (e) {
-      if (el.hizirStatus) {
-        el.hizirStatus.textContent = `Tarama hatası: ${e && e.message ? e.message : e}`;
+      const msg = e && e.message ? String(e.message) : String(e);
+      if (el.hizirInlineStatus) {
+        el.hizirInlineStatus.textContent = `Tarama hatası: ${msg}`;
+        el.hizirInlineStatus.title = msg;
       }
     }
   },
@@ -1087,11 +1148,12 @@ const HIZIR_MODU = {
   },
 
   bootStatusIfEmpty() {
-    if (!el.hizirStatus) return;
-    const t = (el.hizirStatus.textContent || "").trim();
+    if (!el.hizirInlineStatus) return;
+    const t = (el.hizirInlineStatus.textContent || "").trim();
     if (!t) {
-      el.hizirStatus.textContent =
-        "HIZIR — Hemen şimdi aramaya hazır. «Yenile» ile merkezi bellek; «Pazar tara — Uygula» ile POST taraması.";
+      el.hizirInlineStatus.textContent =
+        "Merkezi bellek: Yenile · Pazar: Pazar tara — Uygula";
+      el.hizirInlineStatus.removeAttribute("title");
     }
   },
 
@@ -1133,8 +1195,11 @@ function updateDynamicWorkbench() {
     el.pageProgramlama,
     el.pageSes,
   ];
+  /* hidden + display:flex çakışması / önbellek: yalnızca aktif sayfa görünsün */
   pages.forEach((p) => {
-    if (p) p.hidden = true;
+    if (!p) return;
+    p.hidden = true;
+    p.style.display = "none";
   });
   const map = {
     genel: el.pageGenel,
@@ -1147,9 +1212,14 @@ function updateDynamicWorkbench() {
     ses: el.pageSes,
   };
   const active = map[currentMode] || el.pageGenel;
-  if (active) active.hidden = false;
+  if (active) {
+    active.hidden = false;
+    active.style.display = "";
+  }
   if (currentMode === "hafiza") {
     setWorkbenchLayout("layout-split2");
+  } else if (el.dynamicWorkbench?.classList.contains("layout-split2")) {
+    setWorkbenchLayout("layout-full");
   }
   if (el.dashboardStatus)
     el.dashboardStatus.textContent = `Aktif motor: ${MODE_LABELS[currentMode] || currentMode}`;
@@ -2362,6 +2432,56 @@ function wireVideoAtolye() {
     });
   }
   wireVideoTimeline();
+  wireVideoQuickBar();
+}
+
+function wireVideoQuickBar() {
+  const root = el.pageVideo;
+  if (!root || root.dataset.videoQuickBarWired === "1") return;
+  root.dataset.videoQuickBarWired = "1";
+
+  const scrollToEl = (target) => {
+    if (!target) return;
+    target.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  };
+
+  if (el.videoQuickCreate) {
+    el.videoQuickCreate.addEventListener("click", () => {
+      const sticky = root.querySelector(".video-player-sticky");
+      scrollToEl(sticky);
+      try {
+        el.videoFileInput?.click();
+      } catch (_) {
+        el.videoFileInput?.focus();
+      }
+      flashRuzgarDurum("Kaynak dosya seçin; önizleme solda güncellenir.");
+    });
+  }
+  if (el.videoQuickTrim) {
+    el.videoQuickTrim.addEventListener("click", () => {
+      const a = document.getElementById("video-anchor-v2");
+      scrollToEl(a);
+      window.setTimeout(() => {
+        el.videoStartSec?.focus?.({ preventScroll: true });
+      }, 320);
+    });
+  }
+  if (el.videoQuickAudio) {
+    el.videoQuickAudio.addEventListener("click", () => {
+      const a = document.getElementById("video-anchor-v3-mux");
+      scrollToEl(a);
+      window.setTimeout(() => {
+        el.videoRelMuxVideo?.focus?.({ preventScroll: true });
+      }, 320);
+    });
+  }
+  if (el.videoQuickExport) {
+    el.videoQuickExport.addEventListener("click", () => {
+      const a = document.getElementById("video-anchor-v2");
+      scrollToEl(a);
+      openVideoExportFolder();
+    });
+  }
 }
 
 async function refreshArsivTreeInto(containerEl) {
@@ -3503,6 +3623,7 @@ async function checkApi() {
       el.api.title = apiTitle;
       el.api.className = "tech-chip ok";
       setStatus("Hazır", "Rüzgar");
+      if (currentMode === "hizir") syncHizirWorkbenchStripVisibility();
       void tryShowHafizaReminder();
       return true;
     }
@@ -3510,6 +3631,7 @@ async function checkApi() {
     el.api.textContent = "Sunucu kapalı";
     el.api.className = "tech-chip err";
     el.api.title = "";
+    if (currentMode === "hizir") setHizirWorkbenchServerPill(false, "");
     setStatus("Önce yerel sunucuyu başlatın (ilim-assistant)", "Rüzgar");
   }
   return false;
