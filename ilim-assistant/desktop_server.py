@@ -348,10 +348,12 @@ def health():
         "docx_text": docx_text_runtime_available(),
         "ffmpeg": ffmpeg_available(),
         "ffprobe": ffprobe_available(),
+        "merkezi_bellek": True,
     }
 
 
 @app.get("/api/merkezi-bellek")
+@app.get("/api/merkezi-bellek/")
 def api_merkezi_bellek():
     """Merkezi Bellek v3 — HIZIR ticaret + genel önbellek (salt okunur JSON)."""
     try:

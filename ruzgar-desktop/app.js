@@ -1,31 +1,51 @@
 /**
  * Bağlantı hattı: UI → Tünel → Colab API (aynı köke WebSocket/SSE/Fetch).
- * Beyin adresi önceliği: ruzgar_remote_api.txt ile yüklenen uç > ?api > localStorage > yalın yerel.
+ * Beyin adresi önceliği: preload + ruzgar_remote_api.txt > ?api > localStorage > yalın yerel.
+ * Kök sonda `/api` ise kırpılır — aksi halde fetch `.../api/api/merkezi-bellek` ile 404 verir.
  */
+function normalizeRuzgarApiRootTail(raw) {
+  let s = String(raw || "").trim().replace(/\/+$/, "");
+  if (!s) return "";
+  if (/\/api$/i.test(s)) {
+    s = s.replace(/\/api$/i, "").replace(/\/+$/, "");
+  }
+  return s;
+}
+
 function resolveRuzgarApiRoot() {
+  const fallback = "http://127.0.0.1:8777";
   try {
     const remote =
       typeof window !== "undefined" &&
       window.ruzgarApi?.getRemoteBrainEndpoint?.();
-    if (remote) return String(remote).trim().replace(/\/$/, "");
+    if (remote) {
+      const n = normalizeRuzgarApiRootTail(String(remote).trim());
+      if (n) return n;
+    }
   } catch (_) {
     /* yok say */
   }
   try {
     const qs = new URLSearchParams(window.location.search).get("api");
-    if (qs) return String(qs).trim().replace(/\/$/, "");
+    if (qs) {
+      const n = normalizeRuzgarApiRootTail(String(qs).trim());
+      if (n) return n;
+    }
   } catch (_) {
     /* yok say */
   }
   try {
     if (typeof localStorage !== "undefined") {
       const ls = localStorage.getItem("ruzgarApi");
-      if (ls) return String(ls).trim().replace(/\/$/, "");
+      if (ls) {
+        const n = normalizeRuzgarApiRootTail(String(ls).trim());
+        if (n) return n;
+      }
     }
   } catch (_) {
     /* yok say */
   }
-  return "http://127.0.0.1:8777";
+  return normalizeRuzgarApiRootTail(fallback) || fallback;
 }
 
 const API = resolveRuzgarApiRoot();
@@ -1001,10 +1021,17 @@ const HIZIR_MODU = {
     if (!el.pageHizir) return;
     if (el.hizirStatus) el.hizirStatus.textContent = "Sunucudan yükleniyor…";
     try {
-      const res = await fetch(this.merkeziBellekUrl());
+      const url = this.merkeziBellekUrl();
+      const res = await fetch(url);
       const j = await res.json().catch(() => ({}));
       if (!res.ok || !j.ok) {
         const d = j.detail;
+        const base = typeof d === "string" ? d : `HTTP ${res.status}`;
+        if (res.status === 404) {
+          throw new Error(
+            `${base} — ${url} (Kök: ${API}). Kökte sondaki /api varsa kaldırın; ilim-assistant içinde güncel desktop_server çalıştırın.`
+          );
+        }
         throw new Error(typeof d === "string" ? d : `HTTP ${res.status}`);
       }
       this.renderMerkeziBellek(j.data || {});

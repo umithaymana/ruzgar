@@ -1,6 +1,26 @@
 const { contextBridge, ipcRenderer } = require("electron");
+const fs = require("fs");
+const path = require("path");
+
+/** ruzgar_remote_api.txt — ilk yorum dışı satır = API kökü (tünel); yoksa boş. */
+function readRemoteBrainEndpointFromDisk() {
+  try {
+    const p = path.join(__dirname, "ruzgar_remote_api.txt");
+    if (!fs.existsSync(p)) return "";
+    const raw = fs.readFileSync(p, "utf8");
+    const line = raw.split(/\r?\n/).find((l) => {
+      const t = String(l || "").trim();
+      return t.length > 0 && !t.startsWith("#");
+    });
+    return line ? String(line).trim().replace(/\/+$/, "") : "";
+  } catch (_) {
+    return "";
+  }
+}
 
 contextBridge.exposeInMainWorld("ruzgarApi", {
+  /** Köprü kökü — app.js normalize eder; sonda /api olmamalı (çift /api/api önlenir). */
+  getRemoteBrainEndpoint: () => readRemoteBrainEndpointFromDisk(),
   listDir: (rel) => ipcRenderer.invoke("workspace:list", rel),
   getRoot: () => ipcRenderer.invoke("workspace:root"),
   readText: (rel) => ipcRenderer.invoke("workspace:read-text", rel),

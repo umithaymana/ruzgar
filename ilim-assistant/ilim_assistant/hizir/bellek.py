@@ -7,13 +7,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from ilim_assistant.ruzgar_hafiza_koprusu import ilim_assistant_root
-
 _SCHEMA = "ruzgar_merkezi_v1"
 
 
 def merkezi_bellek_path() -> Path:
-    return ilim_assistant_root() / "merkezi_bellek.json"
+    """ilim-assistant kökündeki merkezi_bellek.json (paket klasörü değil)."""
+    return Path(__file__).resolve().parents[2] / "merkezi_bellek.json"
 
 
 def _default_document() -> dict[str, Any]:
