@@ -308,47 +308,58 @@
 
           <section class="motor-page motor-page-hizir" id="page-hizir" hidden>
             <div class="hizir-page-inner">
-              <header class="hizir-compact-head">
-                <div class="hizir-top-row">
-                  <div class="hizir-top-titles" aria-hidden="false">
-                    <span class="hizir-top-title">Ticari fırsatlar</span>
-                    <span class="hizir-top-sep" aria-hidden="true">/</span>
-                    <span class="hizir-top-title">Genel önbellek</span>
+              <header class="hizir-compact-head hizir-vitrin-head">
+                <div class="hizir-vitrin-toolbar">
+                  <div class="hizir-vitrin-toolbar__search" role="search">
+                    <input
+                      type="text"
+                      id="hizir-tara-query"
+                      class="hizir-vitrin-search"
+                      placeholder="Ürün veya pazar ara…"
+                      autocomplete="off"
+                      aria-label="Pazar tarama sorgusu"
+                    />
+                    <button
+                      type="button"
+                      class="btn-secondary btn-hizir-icon"
+                      id="btn-hizir-refresh"
+                      title="Merkezi belleği yenile"
+                      aria-label="Yenile"
+                    >
+                      ↻
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-primary btn-hizir-tara-main"
+                      id="btn-hizir-tara"
+                      title="Canlı pazar taraması"
+                    >
+                      Tara
+                    </button>
                   </div>
-                  <p id="hizir-inline-status" class="hizir-inline-status" aria-live="polite"></p>
+                  <div class="hizir-vitrin-toolbar__meta">
+                    <span id="hizir-inline-status" class="hizir-vitrin-status" aria-live="polite"></span>
+                    <button
+                      type="button"
+                      class="hizir-scan-info-btn"
+                      id="hizir-scan-info-btn"
+                      aria-expanded="false"
+                      aria-controls="hizir-scan-popover"
+                      title="Tarama ve sunucu detayları"
+                    >
+                      <span class="hizir-scan-info-glyph" aria-hidden="true">i</span>
+                    </button>
+                  </div>
                 </div>
-                <div class="hizir-toolbar" role="toolbar" aria-label="HIZIR araçları">
-                  <button
-                    type="button"
-                    class="btn-secondary btn-compact"
-                    id="btn-hizir-refresh"
-                    title="Merkezi belleği sunucudan yeniden yükle"
-                  >
-                    Yenile
-                  </button>
-                  <input
-                    type="text"
-                    id="hizir-tara-query"
-                    class="hizir-tara-input"
-                    placeholder="Tarama sorgusu (boş bırakılabilir)"
-                    autocomplete="off"
-                    aria-label="Pazar tarama sorgusu"
-                  />
-                  <button
-                    type="button"
-                    class="btn-primary btn-compact"
-                    id="btn-hizir-tara"
-                    title="Uygula — sunucuda pazar taraması (POST /api/hizir/pazar-tara)"
-                  >
-                    Pazar tara — Uygula
-                  </button>
-                </div>
+                <div id="hizir-scan-popover" class="hizir-scan-popover" role="tooltip" hidden></div>
               </header>
-              <div class="hizir-split" role="region" aria-label="HIZIR veri panelleri">
-                <div class="hizir-col hizir-col-data" aria-label="Ticari fırsatlar">
+              <div class="hizir-split hizir-split--vitrin" role="region" aria-label="HIZIR ticari vitrin">
+                <div class="hizir-col hizir-col-vitrin" aria-label="Arbitraj vitrini">
+                  <h3 class="hizir-col-title">Fırsat vitrini</h3>
                   <div id="hizir-firsatlar-wrap" class="hizir-firsatlar-wrap"></div>
                 </div>
-                <div class="hizir-col hizir-col-data" aria-label="Genel önbellek">
+                <div class="hizir-col hizir-col-aside" aria-label="Senkron özeti">
+                  <h3 class="hizir-col-title">Senkron</h3>
                   <div id="hizir-onbellek-wrap" class="hizir-onbellek-wrap"></div>
                 </div>
               </div>
