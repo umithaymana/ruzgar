@@ -1007,12 +1007,141 @@ function setHizirWorkbenchServerPillUnknown() {
   pill.title = "";
 }
 
+/** HIZIR vitrin — pazar logosu sınıfı (CSS ile renk). */
+function hizirMpClass(platform) {
+  const s = String(platform || "").toLowerCase();
+  if (s.includes("trendyol")) return "hizir-mp hizir-mp--ty";
+  if (s.includes("amazon")) return "hizir-mp hizir-mp--amz";
+  if (s.includes("ebay")) return "hizir-mp hizir-mp--ebay";
+  if (s.includes("aliexpress")) return "hizir-mp hizir-mp--ae";
+  return "hizir-mp hizir-mp--gen";
+}
+
+function hizirMpInitials(platform) {
+  const s = String(platform || "").trim();
+  if (!s) return "?";
+  const parts = s.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase().slice(0, 3);
+  return s.slice(0, 2).toUpperCase();
+}
+
+function hizirFmtPrice(val, cur) {
+  const c = String(cur || "TRY").toUpperCase();
+  const n = Number(val);
+  if (!Number.isFinite(n)) return "—";
+  if (c === "TRY") {
+    const t = n.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    return `${t} TL`;
+  }
+  return `${n.toFixed(2)} ${c}`;
+}
+
+function hizirRenderArbitrajVitrin(r) {
+  const rawImg = String(r.gorsel_url || "").trim();
+  const mediaInner = rawImg
+    ? `<img class="hizir-vitrin-card__img" src="${esc(rawImg)}" alt="" loading="lazy" width="128" height="128" decoding="async" referrerpolicy="no-referrer" />`
+    : `<div class="hizir-vitrin-card__img hizir-vitrin-card__img--ph" role="img" aria-label="Önizleme yok"></div>`;
+  const title = esc(String(r.urun_adi || "Ürün"));
+  const bolge = esc(String(r.bolge || ""));
+  const pb = String(r.para_birimi || "TRY").toUpperCase();
+  const cheapPlRaw = String(r.ucuz_platform || "Kaynak");
+  const expPlRaw = String(r.pahali_platform || "Hedef");
+  const cheapPl = esc(cheapPlRaw);
+  const expPl = esc(expPlRaw);
+  const cheapName = esc(String(r.kaynak_urun_adi || r.urun_adi || ""));
+  const expName = esc(String(r.hedef_urun_adi || r.urun_adi || ""));
+  const kf = esc(hizirFmtPrice(r.kaynak_fiyat, pb));
+  const hf = esc(hizirFmtPrice(r.hedef_fiyat, pb));
+  const pkRaw = hizirFmtPrice(r.potansiyel_kar, pb);
+  const pk = esc(pkRaw);
+  const nm =
+    r.net_marj_yuzde != null && Number.isFinite(Number(r.net_marj_yuzde))
+      ? esc(`${Number(r.net_marj_yuzde).toFixed(1)}%`)
+      : "—";
+  const dt = esc(String(r.tarih || "").slice(0, 19).replace("T", " "));
+  const clsCheap = hizirMpClass(cheapPlRaw);
+  const clsExp = hizirMpClass(expPlRaw);
+  const iniC = esc(hizirMpInitials(cheapPlRaw));
+  const iniE = esc(hizirMpInitials(expPlRaw));
+  return `<article class="hizir-vitrin-card hizir-vitrin-card--arb" role="listitem">
+  <div class="hizir-vitrin-card__media">
+    ${mediaInner}
+  </div>
+  <div class="hizir-vitrin-card__body">
+    <header class="hizir-vitrin-card__head">
+      <span class="hizir-vitrin-card__bolge">${bolge}</span>
+      <h4 class="hizir-vitrin-card__title">${title}</h4>
+    </header>
+    <div class="hizir-vitrin-cmp">
+      <div class="hizir-vitrin-cmp__row hizir-vitrin-cmp__row--kaynak">
+        <span class="${clsCheap}" title="${cheapPl}">${iniC}</span>
+        <div class="hizir-vitrin-cmp__txt">
+          <span class="hizir-vitrin-cmp__label">Kaynak · ${cheapPl}</span>
+          <span class="hizir-vitrin-cmp__name">${cheapName}</span>
+          <span class="hizir-vitrin-cmp__price hizir-vitrin-cmp__price--low">${kf}</span>
+        </div>
+      </div>
+      <div class="hizir-vitrin-badge-wrap">
+        <div class="hizir-vitrin-badge" aria-label="Tahmini net kâr">
+          <span class="hizir-vitrin-badge__profit">+${pk}</span>
+          <span class="hizir-vitrin-badge__pct">${nm}</span>
+        </div>
+      </div>
+      <div class="hizir-vitrin-cmp__row hizir-vitrin-cmp__row--hedef">
+        <span class="${clsExp}" title="${expPl}">${iniE}</span>
+        <div class="hizir-vitrin-cmp__txt">
+          <span class="hizir-vitrin-cmp__label">Hedef · ${expPl}</span>
+          <span class="hizir-vitrin-cmp__name">${expName}</span>
+          <span class="hizir-vitrin-cmp__price">${hf}</span>
+        </div>
+      </div>
+    </div>
+    <footer class="hizir-vitrin-card__foot">${dt}</footer>
+  </div>
+</article>`;
+}
+
+function hizirRenderDealVitrin(r) {
+  const rawImg = String(r.gorsel_url || "").trim();
+  const mediaInner = rawImg
+    ? `<img class="hizir-vitrin-card__img" src="${esc(rawImg)}" alt="" loading="lazy" width="88" height="88" decoding="async" referrerpolicy="no-referrer" />`
+    : `<div class="hizir-vitrin-card__img hizir-vitrin-card__img--ph" role="img" aria-label="Önizleme yok"></div>`;
+  const title = esc(String(r.urun_adi || "Ürün"));
+  const bolge = esc(String(r.bolge || ""));
+  const pb = String(r.para_birimi || "TRY").toUpperCase();
+  const plRaw = String(r.platform || "");
+  const pl = esc(plRaw);
+  const price = esc(hizirFmtPrice(r.kaynak_fiyat, pb));
+  const ozet = esc(String(r.ozet_metin || "").slice(0, 220));
+  const cls = hizirMpClass(plRaw);
+  const ini = esc(hizirMpInitials(plRaw));
+  return `<article class="hizir-vitrin-card hizir-vitrin-card--deal" role="listitem">
+    <div class="hizir-vitrin-card__media hizir-vitrin-card__media--sm">
+      ${mediaInner}
+    </div>
+    <div class="hizir-vitrin-card__body">
+      <span class="hizir-vitrin-card__bolge">${bolge}</span>
+      <div class="hizir-vitrin-deal-row">
+        <span class="${cls}" title="${pl}">${ini}</span>
+        <div>
+          <h4 class="hizir-vitrin-card__title hizir-vitrin-card__title--sm">${title}</h4>
+          <p class="hizir-vitrin-deal__price">${price}</p>
+        </div>
+      </div>
+      <p class="hizir-vitrin-deal__hint">${ozet}</p>
+    </div>
+  </article>`;
+}
+
 /**
  * HIZIR — merkezi bellek (GET) + pazar taraması (POST); desktop_server ile uyumlu.
  * Tek giriş noktası: wire(), refreshPanel(), pazarTara().
  */
 const HIZIR_MODU = {
   _wired: false,
+  _scanPopoverHtml: "",
+  _pazarTaraDetail: "",
+  _lastScanShort: "",
 
   merkeziBellekUrl() {
     return `${API}/api/merkezi-bellek?t=${Date.now()}`;
@@ -1025,21 +1154,57 @@ const HIZIR_MODU = {
   lastPazarScanSummary(girdiler) {
     const arr = Array.isArray(girdiler) ? girdiler.slice().reverse() : [];
     const g = arr.find((x) => x && x.tip === "pazar_keşif");
-    if (!g || !g.veri || !g.veri.data) return { text: "", title: "" };
+    if (!g || !g.veri || !g.veri.data) {
+      return { shortLine: "", popoverHtml: "", errorCount: 0 };
+    }
     const inner = g.veri.data.result;
-    if (!inner || typeof inner !== "object") return { text: "", title: "" };
-    const head = [];
-    if (inner.live === true) head.push("Canlı pazar");
-    else if (inner.live === false) head.push("Simülasyon");
+    if (!inner || typeof inner !== "object") {
+      return { shortLine: "", popoverHtml: "", errorCount: 0 };
+    }
+    const mode =
+      inner.live === true ? "Canlı motor" : inner.data_mode === "mock" ? "Geliştirici" : "Veri";
     const er = inner.errors && typeof inner.errors === "object" ? inner.errors : {};
-    const errBits = [];
-    if (er.trendyol) errBits.push(`Trendyol: ${String(er.trendyol).slice(0, 180)}`);
-    if (er.amazon) errBits.push(`Amazon: ${String(er.amazon).slice(0, 180)}`);
-    const text = [...head, ...errBits].filter(Boolean).join(" — ");
-    return { text, title: errBits.join("\n") };
+    const keys = Object.keys(er);
+    const errLines = keys.map((k) => `<div class="hizir-pop-err"><strong>${esc(k)}</strong><p>${esc(String(er[k]))}</p></div>`);
+    const errCount = keys.length;
+    const shortLine =
+      errCount > 0 ? `${mode} · ${errCount} kanal notu` : `${mode} · tarama temiz`;
+    const q = inner.query != null ? esc(String(inner.query)) : "—";
+    const popoverHtml = [
+      `<p class="hizir-pop-lead">Son pazar keşfi · <code>${q}</code></p>`,
+      errLines.length ? errLines.join("") : "<p>Şu an kayıtlı hata satırı yok.</p>",
+    ].join("");
+    return { shortLine, popoverHtml, errorCount: errCount };
+  },
+
+  _closeScanPopover() {
+    const pop = document.getElementById("hizir-scan-popover");
+    const btn = document.getElementById("hizir-scan-info-btn");
+    if (pop) pop.hidden = true;
+    if (btn) btn.setAttribute("aria-expanded", "false");
+  },
+
+  _toggleScanPopover() {
+    const pop = document.getElementById("hizir-scan-popover");
+    const btn = document.getElementById("hizir-scan-info-btn");
+    if (!pop || !btn) return;
+    const open = pop.hidden;
+    pop.hidden = !open;
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+    if (open) {
+      const parts = [this._scanPopoverHtml, this._pazarTaraDetail].filter(Boolean);
+      const body =
+        parts.length > 0
+          ? parts.join('<hr class="hizir-pop-hr" />')
+          : '<p class="hizir-pop-lead">Henüz kayıtlı tarama özeti yok. <strong>Tara</strong> veya <strong>Yenile</strong> deneyin.</p>';
+      pop.innerHTML = `<div class="hizir-scan-popover__inner">${body}</div>`;
+    }
   },
 
   renderMerkeziBellek(root) {
+    const oldStrip = document.getElementById("hizir-live-strip");
+    if (oldStrip) oldStrip.remove();
+
     const kat = root.kategoriler || {};
     const ht = kat.hizir_ticaret || {};
     const rows = Array.isArray(ht.firsatlar) ? ht.firsatlar : [];
@@ -1048,7 +1213,7 @@ const HIZIR_MODU = {
     if (el.hizirFirsatlarWrap) {
       if (!rows.length) {
         el.hizirFirsatlarWrap.innerHTML =
-          '<div class="hizir-firsatlar-hint">Pazar tara veya Yenile ile Ticaret Avcısı kartlarını güncelleyin.</div>';
+          '<div class="hizir-firsatlar-hint">Arama yapın veya <strong>Yenile</strong> ile vitrini güncelleyin.</div>';
       } else {
         const sorted = rows.slice().sort((a, b) => {
           const rank = (r) => {
@@ -1067,51 +1232,45 @@ const HIZIR_MODU = {
         const slice = sorted.slice(0, 80);
         const html = slice
           .map((r) => {
-            const ozet = String(r.ozet_metin || "").trim();
             const tur = String(r.tur || "").trim();
+            if (tur === "ARBITRAJ") return hizirRenderArbitrajVitrin(r);
             const otm = Boolean(r.otomatik);
-            let mod = "hizir-firsat-card hizir-firsat-card--manual";
-            if (tur === "ARBITRAJ") mod = "hizir-firsat-card hizir-firsat-card--arbitraj";
-            else if (otm) mod = "hizir-firsat-card hizir-firsat-card--deal";
-            if (ozet) {
-              const metaPl = esc(String(r.platform || "—"));
-              const metaDt = esc(String(r.tarih || "").slice(0, 19).replace("T", " "));
-              return `<article class="${mod}"><p class="hizir-firsat-card-text">${esc(ozet)}</p><footer class="hizir-firsat-card-meta">${metaPl} · ${metaDt}</footer></article>`;
-            }
-            const dt = esc(String(r.tarih ?? ""));
-            const ua = esc(String(r.urun_adi ?? ""));
-            const kf = esc(String(r.kaynak_fiyat ?? ""));
-            const hf = esc(String(r.hedef_fiyat ?? ""));
-            const pk = esc(String(r.potansiyel_kar ?? ""));
-            const line = `${ua} — kaynak ${kf} → hedef ${hf} · net ${pk}`;
-            return `<article class="${mod}"><p class="hizir-firsat-card-text">${line}</p><footer class="hizir-firsat-card-meta">${dt}</footer></article>`;
+            if (otm && r.gorsel_url) return hizirRenderDealVitrin(r);
+            const ozet = String(r.ozet_metin || "").trim();
+            const mod = otm ? "hizir-vitrin-card hizir-vitrin-card--plain" : "hizir-vitrin-card hizir-vitrin-card--manual";
+            const metaDt = esc(String(r.tarih || "").slice(0, 19).replace("T", " "));
+            const bolge = r.bolge != null ? esc(String(r.bolge)) : "";
+            const body = ozet
+              ? `<p class="hizir-vitrin-plain__text">${esc(ozet)}</p>`
+              : `<p class="hizir-vitrin-plain__text">${esc(String(r.urun_adi || ""))}</p>`;
+            return `<article class="${mod}" role="listitem">${body}<footer class="hizir-vitrin-card__foot">${bolge ? `${bolge} · ` : ""}${metaDt}</footer></article>`;
           })
           .join("");
-        el.hizirFirsatlarWrap.innerHTML = `<div class="hizir-firsatlar-grid" role="list">${html}</div>`;
+        el.hizirFirsatlarWrap.innerHTML = `<div class="hizir-firsatlar-grid hizir-firsatlar-grid--vitrin" role="list">${html}</div>`;
       }
     }
     if (el.hizirOnbellekWrap) {
       const slice = girdiler.slice(-20);
-      const pre = document.createElement("pre");
-      pre.className = "hizir-pre";
-      pre.textContent = JSON.stringify(slice, null, 2);
-      el.hizirOnbellekWrap.replaceChildren(pre);
+      try {
+        window.__ruzgarHizirOnbellek = slice;
+      } catch (_) {
+        /* ignore */
+      }
+      const n = slice.length;
+      const last = slice.length ? slice[slice.length - 1] : null;
+      const tip = last && last.tip ? esc(String(last.tip)) : "—";
+      const when =
+        last && last.tarih ? esc(String(last.tarih).slice(0, 19).replace("T", " ")) : "—";
+      el.hizirOnbellekWrap.innerHTML = `<div class="hizir-cache-vitrin">
+        <p class="hizir-cache-vitrin__stat"><strong>${n}</strong> önbellek kaydı</p>
+        <p class="hizir-cache-vitrin__sub">Son: <em>${tip}</em> · ${when}</p>
+        <p class="hizir-cache-vitrin__note">Ham JSON arayüzden kaldırıldı; veri bellekte işlenmeye devam eder.</p>
+      </div>`;
     }
     const scan = this.lastPazarScanSummary(girdiler);
-    let strip = document.getElementById("hizir-live-strip");
-    if (scan.text && el.pageHizir && !strip) {
-      strip = document.createElement("div");
-      strip.id = "hizir-live-strip";
-      strip.className = "hizir-live-strip";
-      strip.setAttribute("aria-live", "polite");
-      const split = el.pageHizir.querySelector(".hizir-split");
-      if (split && split.parentNode) split.parentNode.insertBefore(strip, split);
-    }
-    if (strip) {
-      strip.textContent = scan.text || "";
-      strip.title = scan.title || "";
-      strip.hidden = !scan.text;
-    }
+    this._scanPopoverHtml = scan.popoverHtml || "";
+    this._lastScanShort = scan.shortLine || "";
+    this._closeScanPopover();
   },
 
   async refreshPanel() {
@@ -1139,19 +1298,23 @@ const HIZIR_MODU = {
       const rawPath = String(j.path || "");
       if (el.hizirInlineStatus) {
         const v = esc(String(j.version ?? ""));
-        const sc = esc(String(j.schema || ""));
-        el.hizirInlineStatus.innerHTML = `Bellek ok · şema <code>${sc}</code> · sürüm <code>${v}</code> · hazır`;
+        el.hizirInlineStatus.textContent = `Bellek hazır · sürüm ${v}`;
         if (rawPath) el.hizirInlineStatus.title = rawPath;
         else el.hizirInlineStatus.removeAttribute("title");
+      }
+      if (el.hizirInlineStatus && this._lastScanShort) {
+        el.hizirInlineStatus.textContent += ` · ${this._lastScanShort}`;
       }
       if (currentMode === "hizir") {
         setHizirWorkbenchServerPill(true, rawPath || el.api?.title || "");
       }
     } catch (e) {
       const msg = e && e.message ? String(e.message) : String(e);
+      this._pazarTaraDetail = `<div class="hizir-pop-err"><strong>Yükleme</strong><p>${esc(msg)}</p></div>`;
+      this._lastScanShort = "";
       if (el.hizirInlineStatus) {
-        el.hizirInlineStatus.textContent = `Yükleme hatası: ${msg}`;
-        el.hizirInlineStatus.title = msg.length > 120 ? msg : "";
+        el.hizirInlineStatus.textContent = "Bellek yüklenemedi";
+        el.hizirInlineStatus.title = msg.length > 200 ? msg.slice(0, 200) : msg;
       }
       if (currentMode === "hizir") setHizirWorkbenchServerPill(false, msg);
     }
@@ -1160,7 +1323,7 @@ const HIZIR_MODU = {
   async pazarTara() {
     const q = el.hizirTaraQuery ? String(el.hizirTaraQuery.value || "").trim() : "";
     if (el.hizirInlineStatus) {
-      el.hizirInlineStatus.textContent = "Tarama çalışıyor…";
+      el.hizirInlineStatus.textContent = "Taranıyor…";
       el.hizirInlineStatus.removeAttribute("title");
     }
     try {
@@ -1174,15 +1337,18 @@ const HIZIR_MODU = {
         const d = j.detail;
         throw new Error(typeof d === "string" ? d : `HTTP ${res.status}`);
       }
+      const ch = j.tool_context_chars || 0;
+      this._pazarTaraDetail = `<div class="hizir-pop-block"><strong>Son tarama</strong><p>Araç bağlamı <code>${esc(String(ch))}</code> karakter · sorgu: <code>${esc(q || "(boş)")}</code></p></div>`;
       if (el.hizirInlineStatus) {
-        el.hizirInlineStatus.textContent = `Tarama bitti · araç bağlamı ${j.tool_context_chars || 0} karakter`;
+        el.hizirInlineStatus.textContent = "Tarama tamamlandı";
         el.hizirInlineStatus.removeAttribute("title");
       }
       await this.refreshPanel();
     } catch (e) {
       const msg = e && e.message ? String(e.message) : String(e);
+      this._pazarTaraDetail = `<div class="hizir-pop-err"><strong>Tarama hatası</strong><p>${esc(msg)}</p></div>`;
       if (el.hizirInlineStatus) {
-        el.hizirInlineStatus.textContent = `Tarama hatası: ${msg}`;
+        el.hizirInlineStatus.textContent = "Tarama başarısız";
         el.hizirInlineStatus.title = msg;
       }
     }
@@ -1205,8 +1371,7 @@ const HIZIR_MODU = {
     if (!el.hizirInlineStatus) return;
     const t = (el.hizirInlineStatus.textContent || "").trim();
     if (!t) {
-      el.hizirInlineStatus.textContent =
-        "Merkezi bellek: Yenile · Pazar: Pazar tara — Uygula";
+      el.hizirInlineStatus.textContent = "Yenile · Tara";
       el.hizirInlineStatus.removeAttribute("title");
     }
   },
@@ -1231,6 +1396,25 @@ const HIZIR_MODU = {
         void this.refreshPanel();
       });
     }
+    const infoBtn = document.getElementById("hizir-scan-info-btn");
+    const pop = document.getElementById("hizir-scan-popover");
+    if (infoBtn) {
+      infoBtn.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        this._toggleScanPopover();
+      });
+    }
+    if (pop) {
+      pop.addEventListener("click", (ev) => ev.stopPropagation());
+    }
+    document.addEventListener("click", (ev) => {
+      const btn = document.getElementById("hizir-scan-info-btn");
+      const p = document.getElementById("hizir-scan-popover");
+      if (!p || p.hidden) return;
+      if (btn && (ev.target === btn || btn.contains(ev.target))) return;
+      if (ev.target === p || p.contains(ev.target)) return;
+      this._closeScanPopover();
+    });
   },
 };
 
