@@ -182,7 +182,7 @@ def build_idrak_protocol_block(
     if motor_flags.get("hizir"):
         extra_hizir = (
             "E) **HIZIR / ticaret:** Mesajda **OPERASYON MERKEZİ** veya **Merkezi bellek** blokları varsa "
-            "bunlar araç çıktısıdır; mock veya önbellek verisini **gerçek fiyat** gibi sunma.\n"
+            "bunlar araç çıktısıdır; fiyatları **satıcı sayfasında teyit** etmeden kesin bilgi gibi sunma.\n"
         )
     return (
         "\n\n[TALİMAT — İDRAK VE ENTEGRASYON — Ümit & Gökçenur — dahili]\n"

@@ -233,8 +233,14 @@ const el = {
   navForward: document.getElementById("nav-forward"),
   navRefresh: document.getElementById("nav-refresh"),
   navClearChat: document.getElementById("nav-clear-chat"),
-  cpu: document.getElementById("cpu-indicator"),
-  gpu: document.getElementById("gpu-indicator"),
+  cpu: null,
+  gpu: null,
+  workbenchLayoutTools: document.getElementById("workbench-layout-tools"),
+  workbenchHizirTools: document.getElementById("workbench-hizir-tools"),
+  btnHizirScanHistory: document.getElementById("btn-hizir-scan-history"),
+  hizirScanHistoryMenu: document.getElementById("hizir-scan-history-menu"),
+  btnHizirSayfaTemizleWb: document.getElementById("btn-hizir-sayfa-temizle-wb"),
+  btnHizirHizliYenileWb: document.getElementById("btn-hizir-hizli-yenile-wb"),
   micLevelWrap: document.getElementById("mic-level-wrap"),
   micLevelBar: document.getElementById("mic-level-bar"),
   micLevelPct: document.getElementById("mic-level-pct"),
@@ -284,11 +290,17 @@ const el = {
   btnOpenHizirPanel: document.getElementById("btn-open-hizir-panel"),
   btnHizirRefresh: document.getElementById("btn-hizir-refresh"),
   btnHizirTara: document.getElementById("btn-hizir-tara"),
+  btnHizirPazarlar: document.getElementById("btn-hizir-pazarlar"),
+  hizirPazarlarPanel: document.getElementById("hizir-pazarlar-panel"),
+  hizirPazarlarWrap: document.getElementById("hizir-pazarlar-wrap"),
+  hizirAktifKanallar: document.getElementById("hizir-aktif-kanallar"),
   hizirTaraQuery: document.getElementById("hizir-tara-query"),
   hizirInlineStatus: document.getElementById("hizir-inline-status"),
   hizirWorkbenchStrip: document.getElementById("hizir-workbench-strip"),
   hizirWbServer: document.getElementById("hizir-wb-server"),
   hizirFirsatlarWrap: document.getElementById("hizir-firsatlar-wrap"),
+  /** UI Fix — HIZIR vitrin iç kaydırma kabı (yükseklik zinciri) */
+  hizirFirsatlarScroll: document.getElementById("hizir-firsatlar-scroll"),
   hizirOnbellekWrap: document.getElementById("hizir-onbellek-wrap"),
   btnLayoutFull: document.getElementById("btn-layout-full"),
   btnLayoutSplit2: document.getElementById("btn-layout-split2"),
@@ -707,6 +719,20 @@ function applyModeToUI() {
   }
   syncTopModeButtons();
   syncHizirWorkbenchStripVisibility();
+  syncWorkbenchHizirToolbar();
+  if (el.navRefresh) {
+    const tips = {
+      genel: "Ana motor panelini yenile",
+      hafiza: "Hafıza JSON görünümünü yenile",
+      hizir: "HIZIR: merkezi bellek + fırsat listesini yenile (Ana Motor değişmez)",
+      okuma: "İlim dosya listesini yenile",
+      tercume: "Tercüme dosya listesini yenile",
+      ses: "Ses motoru ipuçlarını yenile",
+      video: "Video motoru özetini yenile",
+      programlama: "Programlama atölyesi kökünü yenile",
+    };
+    el.navRefresh.title = tips[currentMode] || "Aktif modülü yenile";
+  }
 }
 applyModeToUI();
 if (el.web) el.web.addEventListener("change", syncWebFetchUi);
@@ -936,21 +962,89 @@ function applyMotorHandoff(modeId, handoffText) {
   setStatus(`Köprü: ${mid}`, "Rüzgar");
 }
 
+let dashboardAgentWrapEl = null;
+let dashboardAgentListEl = null;
+
+function ensureDashboardAgentUi() {
+  if (dashboardAgentWrapEl) return;
+  if (!el.dashboardStatus?.parentElement) return;
+  const wrap = document.createElement("div");
+  wrap.id = "dashboard-agent-steps";
+  wrap.className = "dashboard-agent-steps mini-card";
+  wrap.hidden = true;
+  const title = document.createElement("strong");
+  title.className = "dashboard-agent-title";
+  title.textContent = "Ajan adımları";
+  const ol = document.createElement("ol");
+  ol.id = "dashboard-agent-list";
+  ol.className = "dashboard-agent-list";
+  wrap.append(title, ol);
+  el.dashboardStatus.insertAdjacentElement("afterend", wrap);
+  dashboardAgentWrapEl = wrap;
+  dashboardAgentListEl = ol;
+}
+
+function renderDashboardAgentSteps(steps) {
+  ensureDashboardAgentUi();
+  if (!dashboardAgentListEl || !dashboardAgentWrapEl) return;
+  const list = Array.isArray(steps) ? steps : [];
+  if (!list.length) {
+    dashboardAgentWrapEl.hidden = true;
+    dashboardAgentListEl.innerHTML = "";
+    return;
+  }
+  dashboardAgentWrapEl.hidden = false;
+  dashboardAgentListEl.innerHTML = "";
+  for (const s of list) {
+    const li = document.createElement("li");
+    const st = String(s.status || "skip");
+    li.className = `agent-step agent-step-${st}`;
+    const lab = esc(String(s.label || s.id || ""));
+    const det = esc(String(s.detail || ""));
+    li.innerHTML = `<span class="agent-step-label">${lab}</span><span class="agent-step-detail">${det}</span>`;
+    dashboardAgentListEl.appendChild(li);
+  }
+}
+
 function renderOrchestraBridge(orch) {
   const wrap = el.orchestraBridge;
-  if (!wrap || !orch || !Array.isArray(orch.motors) || orch.motors.length === 0) {
+  if (!orch) {
+    clearOrchestraBridge();
+    renderDashboardAgentSteps([]);
+    return;
+  }
+  if (Array.isArray(orch.agent_steps) && orch.agent_steps.length) {
+    renderDashboardAgentSteps(orch.agent_steps);
+  }
+  const motors = Array.isArray(orch.motors) ? orch.motors : [];
+  const plan = orch.plan && typeof orch.plan === "object" ? orch.plan : null;
+  if (!wrap) return;
+  if (!plan && motors.length === 0) {
     clearOrchestraBridge();
     return;
   }
   wrap.hidden = false;
   wrap.innerHTML = "";
+  if (plan && plan.primary) {
+    const hint = document.createElement("div");
+    hint.className = "orchestra-plan-hint";
+    const sec =
+      Array.isArray(plan.secondary) && plan.secondary.length
+        ? ` · ${plan.secondary.slice(0, 2).join(", ")}`
+        : "";
+    const lab = plan.label_tr || plan.primary;
+    const src = plan.sources ? ` · ${plan.sources}` : "";
+    hint.textContent = `Soru planı: ${lab}${src}${sec}`;
+    wrap.appendChild(hint);
+  }
+  if (motors.length === 0) return;
   const title = document.createElement("div");
   title.className = "orchestra-bridge-title";
   title.textContent = "Ana motor — çalışma sayfası köprüleri";
   wrap.appendChild(title);
   const row = document.createElement("div");
   row.className = "orchestra-bridge-actions";
-  for (const m of orch.motors) {
+  for (const m of motors) {
     const b = document.createElement("button");
     b.type = "button";
     b.className = "btn-orchestra-bridge";
@@ -983,6 +1077,27 @@ function syncHizirWorkbenchStripVisibility() {
   setHizirWorkbenchServerPill(apiChipOk, el.api?.title || "");
 }
 
+/** HIZIR modunda düzen seçicileri gizle; HIZIR araç çubuğunu göster. */
+function syncWorkbenchHizirToolbar() {
+  const layout = el.workbenchLayoutTools || document.getElementById("workbench-layout-tools");
+  const hiz = el.workbenchHizirTools || document.getElementById("workbench-hizir-tools");
+  if (!layout || !hiz) return;
+  const isH = currentMode === "hizir";
+  /* UI Fix — HIZIR sayfasında «sayfayı böl» araçlarını akıştan tamamen çıkar */
+  layout.hidden = isH;
+  layout.style.display = isH ? "none" : "";
+  const wbCtl = document.querySelector(".workbench-controls");
+  if (wbCtl) wbCtl.classList.toggle("workbench-controls--hizir", isH);
+  if (isH) {
+    hiz.removeAttribute("hidden");
+    hiz.style.removeProperty("display");
+  } else {
+    hiz.setAttribute("hidden", "");
+    hiz.style.display = "none";
+  }
+  document.body.classList.toggle("workbench-hizir-active", isH);
+}
+
 function setHizirWorkbenchServerPill(connected, tooltipDetail) {
   const pill = el.hizirWbServer;
   if (!pill) return;
@@ -1007,10 +1122,87 @@ function setHizirWorkbenchServerPillUnknown() {
   pill.title = "";
 }
 
+function escAttr(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;");
+}
+
+async function openHizirProductUrl(url) {
+  const u = String(url || "").trim();
+  if (!u || !/^https?:\/\//i.test(u)) return false;
+  try {
+    if (typeof window !== "undefined" && window.ruzgarApi?.openExternalUrl) {
+      const ok = await window.ruzgarApi.openExternalUrl(u);
+      if (ok) return true;
+    }
+  } catch (_) {
+    /* preload yok */
+  }
+  try {
+    if (typeof window !== "undefined" && window.ruzgarApi?.openLocalhostUrl) {
+      const ok2 = await window.ruzgarApi.openLocalhostUrl(u);
+      if (ok2) return true;
+    }
+  } catch (_) {
+    /* */
+  }
+  try {
+    window.open(u, "_blank", "noopener,noreferrer");
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+/** Ürün görseli yüklenene kadar iskelet / spinner gösterir. */
+function wireHizirImagePlaceholders(rootEl) {
+  if (!rootEl) return;
+  rootEl.querySelectorAll(".hizir-vitrin-card__img-wrap .hizir-vitrin-card__img--contain").forEach((img) => {
+    const sk = img.previousElementSibling;
+    if (!sk || !sk.classList.contains("hizir-img-skel")) return;
+    const done = () => {
+      sk.hidden = true;
+      img.classList.add("is-loaded");
+    };
+    if (img.complete && img.naturalWidth > 0) done();
+    else {
+      img.addEventListener("load", done, { once: true });
+    }
+  });
+}
+
+/** Kırık görsel URL → yer tutucu ikon (HIZIR vitrin) */
+function wireHizirImageErrorFallback(rootEl) {
+  if (!rootEl) return;
+  const ph =
+    '<span class="hizir-ph-glyph hizir-ph-glyph--sm" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.4"/><path d="M20.5 16.5l-4.2-4.2-3.3 3.2-2.8-2.8-5.2 5.2"/></svg></span>';
+  rootEl.querySelectorAll(".hizir-vitrin-card__img-wrap .hizir-vitrin-card__img--contain").forEach((img) => {
+    if (img.dataset.hizirImgErr) return;
+    img.dataset.hizirImgErr = "1";
+    img.addEventListener(
+      "error",
+      () => {
+        const sk = img.previousElementSibling;
+        if (sk && sk.classList.contains("hizir-img-skel")) {
+          sk.hidden = false;
+          sk.classList.add("hizir-img-skel--fallback");
+          sk.innerHTML = ph;
+        }
+        img.classList.remove("is-loaded");
+        img.style.display = "none";
+      },
+      { once: true },
+    );
+  });
+}
+
 /** HIZIR vitrin — pazar logosu sınıfı (CSS ile renk). */
 function hizirMpClass(platform) {
   const s = String(platform || "").toLowerCase();
   if (s.includes("trendyol")) return "hizir-mp hizir-mp--ty";
+  if (s.includes("hepsiburada") || s.includes("hepsi")) return "hizir-mp hizir-mp--hb";
   if (s.includes("amazon")) return "hizir-mp hizir-mp--amz";
   if (s.includes("ebay")) return "hizir-mp hizir-mp--ebay";
   if (s.includes("aliexpress")) return "hizir-mp hizir-mp--ae";
@@ -1038,9 +1230,11 @@ function hizirFmtPrice(val, cur) {
 
 function hizirRenderArbitrajVitrin(r) {
   const rawImg = String(r.gorsel_url || "").trim();
+  const phIcon = `<span class="hizir-ph-glyph" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.4"/><path d="M20.5 16.5l-4.2-4.2-3.3 3.2-2.8-2.8-5.2 5.2"/></svg></span>`;
+  const skel = `<div class="hizir-img-skel" aria-hidden="true"><span class="hizir-img-spin"></span></div>`;
   const mediaInner = rawImg
-    ? `<img class="hizir-vitrin-card__img" src="${esc(rawImg)}" alt="" loading="lazy" width="128" height="128" decoding="async" referrerpolicy="no-referrer" />`
-    : `<div class="hizir-vitrin-card__img hizir-vitrin-card__img--ph" role="img" aria-label="Önizleme yok"></div>`;
+    ? `<div class="hizir-vitrin-card__img-wrap">${skel}<img class="hizir-vitrin-card__img hizir-vitrin-card__img--contain" src="${esc(rawImg)}" alt="" loading="lazy" width="128" height="128" decoding="async" referrerpolicy="no-referrer" /></div>`
+    : `<div class="hizir-vitrin-card__img-wrap"><div class="hizir-vitrin-card__img hizir-vitrin-card__img--ph" role="img" aria-label="Ürün görseli">${phIcon}</div></div>`;
   const title = esc(String(r.urun_adi || "Ürün"));
   const bolge = esc(String(r.bolge || ""));
   const pb = String(r.para_birimi || "TRY").toUpperCase();
@@ -1063,6 +1257,10 @@ function hizirRenderArbitrajVitrin(r) {
   const clsExp = hizirMpClass(expPlRaw);
   const iniC = esc(hizirMpInitials(cheapPlRaw));
   const iniE = esc(hizirMpInitials(expPlRaw));
+  const kid = esc(String(r.kart_id || ""));
+  const satRaw = String(r.satinal_url || "").trim();
+  const satDis = satRaw ? "" : "disabled";
+  const pasDis = kid ? "" : "disabled";
   return `<article class="hizir-vitrin-card hizir-vitrin-card--arb" role="listitem">
   <div class="hizir-vitrin-card__media">
     ${mediaInner}
@@ -1096,16 +1294,24 @@ function hizirRenderArbitrajVitrin(r) {
         </div>
       </div>
     </div>
-    <footer class="hizir-vitrin-card__foot">${dt}</footer>
+    <footer class="hizir-vitrin-card__foot hizir-vitrin-card__foot--arb">
+      <span class="hizir-vitrin-card__dt">${dt}</span>
+      <div class="hizir-vitrin-card__actions">
+        <button type="button" class="hizir-vitrin-btn hizir-vitrin-btn--buy" data-hizir="satinal" data-url="${escAttr(satRaw)}" ${satDis}>AVLA / SATIN AL</button>
+        <button type="button" class="hizir-vitrin-btn hizir-vitrin-btn--skip" data-hizir="pas" data-kart-id="${kid}" ${pasDis}>PAS GEÇ</button>
+      </div>
+    </footer>
   </div>
 </article>`;
 }
 
 function hizirRenderDealVitrin(r) {
   const rawImg = String(r.gorsel_url || "").trim();
+  const phIcon = `<span class="hizir-ph-glyph" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.4"/><path d="M20.5 16.5l-4.2-4.2-3.3 3.2-2.8-2.8-5.2 5.2"/></svg></span>`;
+  const skel = `<div class="hizir-img-skel" aria-hidden="true"><span class="hizir-img-spin"></span></div>`;
   const mediaInner = rawImg
-    ? `<img class="hizir-vitrin-card__img" src="${esc(rawImg)}" alt="" loading="lazy" width="88" height="88" decoding="async" referrerpolicy="no-referrer" />`
-    : `<div class="hizir-vitrin-card__img hizir-vitrin-card__img--ph" role="img" aria-label="Önizleme yok"></div>`;
+    ? `<div class="hizir-vitrin-card__img-wrap">${skel}<img class="hizir-vitrin-card__img hizir-vitrin-card__img--contain" src="${esc(rawImg)}" alt="" loading="lazy" width="88" height="88" decoding="async" referrerpolicy="no-referrer" /></div>`
+    : `<div class="hizir-vitrin-card__img-wrap"><div class="hizir-vitrin-card__img hizir-vitrin-card__img--ph" role="img" aria-label="Ürün görseli">${phIcon}</div></div>`;
   const title = esc(String(r.urun_adi || "Ürün"));
   const bolge = esc(String(r.bolge || ""));
   const pb = String(r.para_birimi || "TRY").toUpperCase();
@@ -1133,15 +1339,165 @@ function hizirRenderDealVitrin(r) {
   </article>`;
 }
 
+/** Search & Compare — Fiyat Dedektifi vitrin kartı (pazar yeri, kargo notu, AVLA). */
+function hizirRenderFiyatListesiVitrin(r) {
+  const rawImg = String(r.gorsel_url || "").trim();
+  const phIcon = `<span class="hizir-ph-glyph" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.4"/><path d="M20.5 16.5l-4.2-4.2-3.3 3.2-2.8-2.8-5.2 5.2"/></svg></span>`;
+  const skel = `<div class="hizir-img-skel" aria-hidden="true"><span class="hizir-img-spin"></span></div>`;
+  const mediaInner = rawImg
+    ? `<div class="hizir-vitrin-card__img-wrap">${skel}<img class="hizir-vitrin-card__img hizir-vitrin-card__img--contain" src="${esc(rawImg)}" alt="" loading="lazy" width="88" height="88" decoding="async" referrerpolicy="no-referrer" /></div>`
+    : `<div class="hizir-vitrin-card__img-wrap"><div class="hizir-vitrin-card__img hizir-vitrin-card__img--ph" role="img" aria-label="Ürün görseli">${phIcon}</div></div>`;
+  const title = esc(String(r.urun_adi || "Ürün"));
+  const bolge = esc(String(r.bolge || ""));
+  const plRaw = String(r.pazar_yeri || r.platform || "");
+  const pl = esc(plRaw);
+  const pb = String(r.para_birimi || "TRY").toUpperCase();
+  const price = esc(hizirFmtPrice(r.kaynak_fiyat, pb));
+  const kargo = esc(String(r.kargo_notu || "").slice(0, 180));
+  const grp = String(r.grup_etiketi || "").trim();
+  const grpHdr =
+    r.yeni_grup && grp
+      ? `<div class="hizir-vitrin-grup-hdr" role="separator" aria-label="Grup"><span>${esc(grp)}</span></div>`
+      : "";
+  const lider = r.lider_fiyat
+    ? `<span class="hizir-vitrin-badge hizir-vitrin-badge--lider">LİDER FİYAT</span>`
+    : "";
+  const cls = hizirMpClass(plRaw);
+  const ini = esc(hizirMpInitials(plRaw));
+  const kid = esc(String(r.kart_id || ""));
+  const satRaw = String(r.satinal_url || "").trim();
+  const satDis = satRaw ? "" : "disabled";
+  const pasDis = kid ? "" : "disabled";
+  const dt = esc(String(r.tarih || "").slice(0, 19).replace("T", " "));
+  return `${grpHdr}<article class="hizir-vitrin-card hizir-vitrin-card--cmp" role="listitem">
+    <div class="hizir-vitrin-card__media hizir-vitrin-card__media--sm">${mediaInner}</div>
+    <div class="hizir-vitrin-card__body">
+      <div class="hizir-vitrin-cmp__rowbar">
+        <span class="${cls}" title="${pl}">${ini}</span>
+        ${lider}
+        <span class="hizir-vitrin-card__bolge hizir-vitrin-card__bolge--tr">${bolge}</span>
+      </div>
+      <h4 class="hizir-vitrin-card__title hizir-vitrin-card__title--sm">${title}</h4>
+      <p class="hizir-vitrin-cmp__plprice"><strong>${pl}</strong> · <span class="hizir-vitrin-deal__price">${price}</span></p>
+      <p class="hizir-vitrin-deal__hint">${kargo}</p>
+      <footer class="hizir-vitrin-card__foot hizir-vitrin-card__foot--arb">
+        <span class="hizir-vitrin-card__dt">${dt}</span>
+        <div class="hizir-vitrin-card__actions">
+          <button type="button" class="hizir-vitrin-btn hizir-vitrin-btn--buy" data-hizir="satinal" data-url="${escAttr(satRaw)}" ${satDis}>AVLA</button>
+          <button type="button" class="hizir-vitrin-btn hizir-vitrin-btn--skip" data-hizir="pas" data-kart-id="${kid}" ${pasDis}>PAS GEÇ</button>
+        </div>
+      </footer>
+    </div>
+  </article>`;
+}
+
+/** pazar_keşif girdisinden arama metnini çıkarır (tarama geçmişi menüsü). */
+function hizirExtractPazarQuery(g) {
+  if (!g || g.tip !== "pazar_keşif") return "";
+    const inner = g.veri && g.veri.data && g.veri.data.result;
+    if (inner && inner.query != null && String(inner.query).trim()) {
+      let q = String(inner.query).trim();
+      q = q.replace(/^pazar\s+yerini\s+tara\s*:?\s*/i, "").trim();
+      return q || String(inner.query).trim();
+    }
+  const k = String(g.anahtar || "");
+  const idx = k.indexOf(":");
+  if (idx >= 0) {
+    const tail = k.slice(idx + 1).trim().replace(/_/g, " ");
+    if (tail) return tail;
+  }
+  return "";
+}
+
+const HIZIR_PAZAR_CH_STORAGE = "ruzgar:hizir:pazar-kanallari";
+
+function hizirCollectPazarCheckboxIds() {
+  const panel = el.hizirPazarlarPanel || document.getElementById("hizir-pazarlar-panel");
+  if (!panel) return [];
+  const out = [];
+  panel.querySelectorAll("input[data-hizir-ch]").forEach((inp) => {
+    if (inp.checked) out.push(String(inp.getAttribute("data-hizir-ch") || ""));
+  });
+  return out;
+}
+
+function hizirPersistPazarChecks() {
+  try {
+    localStorage.setItem(HIZIR_PAZAR_CH_STORAGE, JSON.stringify(hizirCollectPazarCheckboxIds()));
+  } catch (_) {}
+}
+
+function hizirLoadPazarChecksFromStorage() {
+  const panel = el.hizirPazarlarPanel;
+  if (!panel) return;
+  let raw = null;
+  try {
+    raw = localStorage.getItem(HIZIR_PAZAR_CH_STORAGE);
+  } catch (_) {}
+  if (!raw) return;
+  let arr = null;
+  try {
+    arr = JSON.parse(raw);
+  } catch (_) {
+    return;
+  }
+  if (!Array.isArray(arr)) return;
+  const want = new Set(arr);
+  panel.querySelectorAll("input[data-hizir-ch]").forEach((inp) => {
+    const id = String(inp.getAttribute("data-hizir-ch") || "");
+    inp.checked = want.has(id);
+  });
+}
+
+function hizirSetAllPazarChecks(on) {
+  const panel = el.hizirPazarlarPanel;
+  if (!panel) return;
+  panel.querySelectorAll("input[data-hizir-ch]").forEach((inp) => {
+    inp.checked = !!on;
+  });
+  hizirPersistPazarChecks();
+}
+
+function hizirRenderAktifKanallarStripFromGirdiler(girdiler) {
+  const wrap = el.hizirAktifKanallar;
+  if (!wrap) return;
+  const scans = Array.isArray(girdiler) ? girdiler.filter((x) => x && x.tip === "pazar_keşif") : [];
+  const last = scans.length ? scans[scans.length - 1] : null;
+  const inner = last && last.veri && last.veri.data && last.veri.data.result;
+  const meta = inner && Array.isArray(inner.aktif_kanallar) ? inner.aktif_kanallar : [];
+  if (!meta.length) {
+    wrap.innerHTML = "";
+    wrap.hidden = true;
+    return;
+  }
+  wrap.hidden = false;
+  const chips = meta
+    .map((x) => {
+      const lab = esc(String((x && x.label) || (x && x.id) || ""));
+      const cls = hizirMpClass(String((x && x.label) || ""));
+      const ini = esc(hizirMpInitials(String((x && x.label) || (x && x.id) || "")));
+      return `<span class="hizir-ak-chip ${cls}" title="${lab}"><span class="hizir-ak-chip__ini" aria-hidden="true">${ini}</span><span class="hizir-ak-chip__txt">${lab}</span></span>`;
+    })
+    .join("");
+  wrap.innerHTML = `<span class="hizir-ak-lead">Aktif kanallar</span>${chips}`;
+}
+
 /**
  * HIZIR — merkezi bellek (GET) + pazar taraması (POST); desktop_server ile uyumlu.
  * Tek giriş noktası: wire(), refreshPanel(), pazarTara().
  */
 const HIZIR_MODU = {
   _wired: false,
+  _cardDeckBound: false,
+  _historyMenuWired: false,
+  _pazarlarWired: false,
   _scanPopoverHtml: "",
   _pazarTaraDetail: "",
   _lastScanShort: "",
+  /** Son render edilen girdiler (tarama geçmişi menüsü için). */
+  _lastGirdilerSnapshot: [],
+  /** Yeniden → eskiye; öğe: { girdi } */
+  _pazarHistory: [],
 
   merkeziBellekUrl() {
     return `${API}/api/merkezi-bellek?t=${Date.now()}`;
@@ -1149,6 +1505,10 @@ const HIZIR_MODU = {
 
   pazarTaraUrl() {
     return `${API}/api/hizir/pazar-tara`;
+  },
+
+  firsatKaldirUrl() {
+    return `${API}/api/hizir/firsat-kaldir`;
   },
 
   lastPazarScanSummary(girdiler) {
@@ -1163,12 +1523,15 @@ const HIZIR_MODU = {
     }
     const mode =
       inner.live === true ? "Canlı motor" : inner.data_mode === "mock" ? "Geliştirici" : "Veri";
+    const scanM = inner.scan_mode === "fiyat_dedektifi" ? " · Fiyat Dedektifi" : "";
     const er = inner.errors && typeof inner.errors === "object" ? inner.errors : {};
     const keys = Object.keys(er);
     const errLines = keys.map((k) => `<div class="hizir-pop-err"><strong>${esc(k)}</strong><p>${esc(String(er[k]))}</p></div>`);
     const errCount = keys.length;
     const shortLine =
-      errCount > 0 ? `${mode} · ${errCount} kanal notu` : `${mode} · tarama temiz`;
+      errCount > 0
+        ? `${mode}${scanM} · ${errCount} kanal notu`
+        : `${mode}${scanM} · tarama temiz`;
     const q = inner.query != null ? esc(String(inner.query)) : "—";
     const popoverHtml = [
       `<p class="hizir-pop-lead">Son pazar keşfi · <code>${q}</code></p>`,
@@ -1201,6 +1564,94 @@ const HIZIR_MODU = {
     }
   },
 
+  _scanHistoryTitle(g) {
+    const when = g && g.tarih ? String(g.tarih).slice(0, 16).replace("T", " ") : "—";
+    const q = hizirExtractPazarQuery(g) || "Sorgu yok";
+    return `${when} · ${q}`;
+  },
+
+  _buildScanHistoryMenu(girdiler) {
+    const menu = el.hizirScanHistoryMenu;
+    const trig = el.btnHizirScanHistory;
+    if (!menu) return;
+    const arr = Array.isArray(girdiler) ? girdiler : [];
+    const scans = arr.filter((x) => x && x.tip === "pazar_keşif");
+    const last20 = scans.slice(-20).reverse();
+    this._pazarHistory = last20.map((g) => ({ girdi: g }));
+    if (!last20.length) {
+      menu.innerHTML = `<div class="hizir-wb-dd-empty" role="presentation">Henüz kayıtlı tarama yok</div>`;
+    } else {
+      menu.innerHTML = last20
+        .map((g, i) => {
+          const title = this._scanHistoryTitle(g);
+          return `<button type="button" class="hizir-wb-dd-item" role="menuitem" data-hizir-scan-idx="${i}">${esc(title)}</button>`;
+        })
+        .join("");
+    }
+    if (trig) {
+      if (!last20.length) trig.setAttribute("data-empty", "true");
+      else trig.removeAttribute("data-empty");
+    }
+  },
+
+  _closeScanHistoryMenu() {
+    const menu = el.hizirScanHistoryMenu;
+    const trig = el.btnHizirScanHistory;
+    if (menu) menu.hidden = true;
+    if (trig) trig.setAttribute("aria-expanded", "false");
+  },
+
+  _toggleScanHistoryMenu() {
+    const menu = el.hizirScanHistoryMenu;
+    const trig = el.btnHizirScanHistory;
+    if (!menu || !trig) return;
+    const open = menu.hidden;
+    menu.hidden = !open;
+    trig.setAttribute("aria-expanded", open ? "true" : "false");
+  },
+
+  _applyScanHistoryIndex(i) {
+    const row = Array.isArray(this._pazarHistory) ? this._pazarHistory[i] : null;
+    if (!row || !row.girdi) return;
+    const g = row.girdi;
+    const q = hizirExtractPazarQuery(g);
+    if (el.hizirTaraQuery) el.hizirTaraQuery.value = q;
+    const scan = this.lastPazarScanSummary([g]);
+    this._scanPopoverHtml = scan.popoverHtml || "";
+    this._lastScanShort = scan.shortLine || "";
+    this._pazarTaraDetail = `<div class="hizir-pop-block"><strong>Geçmiş tarama</strong><p>Sorgu: <code>${esc(q || "(boş)")}</code></p></div>`;
+    this._closeScanHistoryMenu();
+    void this.pazarTara();
+  },
+
+  _wireScanHistoryMenuOnce() {
+    if (this._historyMenuWired) return;
+    this._historyMenuWired = true;
+    const trig = el.btnHizirScanHistory;
+    const menu = el.hizirScanHistoryMenu;
+    if (trig) {
+      trig.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        this._buildScanHistoryMenu(this._lastGirdilerSnapshot || []);
+        this._toggleScanHistoryMenu();
+      });
+    }
+    if (menu) {
+      menu.addEventListener("click", (ev) => {
+        const btn = ev.target && ev.target.closest ? ev.target.closest("[data-hizir-scan-idx]") : null;
+        if (!btn || !menu.contains(btn)) return;
+        ev.stopPropagation();
+        const idx = Number(btn.getAttribute("data-hizir-scan-idx"));
+        if (!Number.isFinite(idx)) return;
+        this._applyScanHistoryIndex(idx);
+      });
+    }
+    document.addEventListener("click", () => {
+      const m = el.hizirScanHistoryMenu;
+      if (m && !m.hidden) this._closeScanHistoryMenu();
+    });
+  },
+
   renderMerkeziBellek(root) {
     const oldStrip = document.getElementById("hizir-live-strip");
     if (oldStrip) oldStrip.remove();
@@ -1210,6 +1661,8 @@ const HIZIR_MODU = {
     const rows = Array.isArray(ht.firsatlar) ? ht.firsatlar : [];
     const gen = kat.genel_onbellek || {};
     const girdiler = Array.isArray(gen.girdiler) ? gen.girdiler : [];
+    this._lastGirdilerSnapshot = girdiler;
+    hizirRenderAktifKanallarStripFromGirdiler(girdiler);
     if (el.hizirFirsatlarWrap) {
       if (!rows.length) {
         el.hizirFirsatlarWrap.innerHTML =
@@ -1218,12 +1671,24 @@ const HIZIR_MODU = {
         const sorted = rows.slice().sort((a, b) => {
           const rank = (r) => {
             const t = String(r.tur || "");
+            if (t === "FIYAT_LISTESI") return 4;
             if (t === "ARBITRAJ") return 3;
             if (r.otomatik) return 2;
             return 1;
           };
           const d = rank(b) - rank(a);
           if (d !== 0) return d;
+          const ta = String(a.tur || "");
+          const tb = String(b.tur || "");
+          if (ta === "FIYAT_LISTESI" && tb === "FIYAT_LISTESI") {
+            const sa = Number(a.vitrin_sira);
+            const sb = Number(b.vitrin_sira);
+            if (Number.isFinite(sa) && Number.isFinite(sb) && sa !== sb) return sa - sb;
+            const ea = Number(a.potansiyel_kar);
+            const eb = Number(b.potansiyel_kar);
+            if (Number.isFinite(ea) && Number.isFinite(eb) && ea !== eb) return ea - eb;
+            return 0;
+          }
           const pa = Number(a.potansiyel_kar);
           const pb = Number(b.potansiyel_kar);
           if (Number.isFinite(pa) && Number.isFinite(pb) && pa !== pb) return pb - pa;
@@ -1233,6 +1698,7 @@ const HIZIR_MODU = {
         const html = slice
           .map((r) => {
             const tur = String(r.tur || "").trim();
+            if (tur === "FIYAT_LISTESI") return hizirRenderFiyatListesiVitrin(r);
             if (tur === "ARBITRAJ") return hizirRenderArbitrajVitrin(r);
             const otm = Boolean(r.otomatik);
             if (otm && r.gorsel_url) return hizirRenderDealVitrin(r);
@@ -1247,6 +1713,15 @@ const HIZIR_MODU = {
           })
           .join("");
         el.hizirFirsatlarWrap.innerHTML = `<div class="hizir-firsatlar-grid hizir-firsatlar-grid--vitrin" role="list">${html}</div>`;
+        wireHizirImageErrorFallback(el.hizirFirsatlarWrap);
+        wireHizirImagePlaceholders(el.hizirFirsatlarWrap);
+      }
+      /* UI Fix — HIZIR: yenileme sonrası vitrin kabının boyutu sıfırlanmasın; liste üstten görünsün */
+      try {
+        const sc = el.hizirFirsatlarScroll || document.getElementById("hizir-firsatlar-scroll");
+        if (sc) sc.scrollTop = 0;
+      } catch (_) {
+        /* ignore */
       }
     }
     if (el.hizirOnbellekWrap) {
@@ -1256,20 +1731,19 @@ const HIZIR_MODU = {
       } catch (_) {
         /* ignore */
       }
-      const n = slice.length;
       const last = slice.length ? slice[slice.length - 1] : null;
       const tip = last && last.tip ? esc(String(last.tip)) : "—";
       const when =
         last && last.tarih ? esc(String(last.tarih).slice(0, 19).replace("T", " ")) : "—";
       el.hizirOnbellekWrap.innerHTML = `<div class="hizir-cache-vitrin">
-        <p class="hizir-cache-vitrin__stat"><strong>${n}</strong> önbellek kaydı</p>
-        <p class="hizir-cache-vitrin__sub">Son: <em>${tip}</em> · ${when}</p>
-        <p class="hizir-cache-vitrin__note">Ham JSON arayüzden kaldırıldı; veri bellekte işlenmeye devam eder.</p>
+        <p class="hizir-cache-vitrin__sub">Son kayıt: <em>${tip}</em> · ${when}</p>
+        <p class="hizir-cache-vitrin__note">Özet; tam veri arka planda işlenir.</p>
       </div>`;
     }
     const scan = this.lastPazarScanSummary(girdiler);
     this._scanPopoverHtml = scan.popoverHtml || "";
     this._lastScanShort = scan.shortLine || "";
+    this._buildScanHistoryMenu(girdiler);
     this._closeScanPopover();
   },
 
@@ -1305,6 +1779,18 @@ const HIZIR_MODU = {
       if (el.hizirInlineStatus && this._lastScanShort) {
         el.hizirInlineStatus.textContent += ` · ${this._lastScanShort}`;
       }
+      try {
+        const kat = (j.data && j.data.kategoriler) || {};
+        const gen = kat.genel_onbellek || {};
+        const girdiler = Array.isArray(gen.girdiler) ? gen.girdiler : [];
+        const pz = [...girdiler].reverse().find((x) => x && x.tip === "pazar_keşif");
+        const inner = pz && pz.veri && pz.veri.data && pz.veri.data.result;
+        if (el.hizirInlineStatus && inner && inner.mock_marketplace) {
+          el.hizirInlineStatus.textContent += " · Geliştirici mock (HIZIR_MOCK_MARKETPLACE=0 önerilir)";
+        }
+      } catch (_) {
+        /* ignore */
+      }
       if (currentMode === "hizir") {
         setHizirWorkbenchServerPill(true, rawPath || el.api?.title || "");
       }
@@ -1330,7 +1816,7 @@ const HIZIR_MODU = {
       const res = await fetch(this.pazarTaraUrl(), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: q }),
+        body: JSON.stringify({ query: q, channels: hizirCollectPazarCheckboxIds() }),
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok || !j.ok) {
@@ -1352,6 +1838,65 @@ const HIZIR_MODU = {
         el.hizirInlineStatus.title = msg;
       }
     }
+  },
+
+  sayfaTemizle() {
+    this._closeScanHistoryMenu();
+    if (el.hizirFirsatlarWrap) {
+      el.hizirFirsatlarWrap.innerHTML =
+        '<div class="hizir-firsatlar-hint">Vitrin kartları temizlendi. <strong>Yenile</strong> veya <strong>Tara</strong> ile merkezi bellekten tekrar yükleyebilirsiniz.</div>';
+    }
+    if (el.hizirInlineStatus) {
+      el.hizirInlineStatus.textContent = "Kart görünümü temizlendi";
+      el.hizirInlineStatus.removeAttribute("title");
+    }
+  },
+
+  async hizliYenile() {
+    await this.pazarTara();
+  },
+
+  async pasGecKart(kartId) {
+    const kid = String(kartId || "").trim();
+    if (!kid) return;
+    try {
+      const res = await fetch(this.firsatKaldirUrl(), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kart_id: kid }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const d = j.detail;
+        throw new Error(typeof d === "string" ? d : `HTTP ${res.status}`);
+      }
+      await this.refreshPanel();
+    } catch (e) {
+      const msg = e && e.message ? String(e.message) : String(e);
+      this._pazarTaraDetail = `<div class="hizir-pop-err"><strong>PAS GEÇ</strong><p>${esc(msg)}</p></div>`;
+    }
+  },
+
+  _wireCardActionsOnce() {
+    if (this._cardDeckBound) return;
+    this._cardDeckBound = true;
+    const deck = el.hizirFirsatlarWrap;
+    if (!deck) return;
+    deck.addEventListener("click", (ev) => {
+      const t = ev.target;
+      const btn = t && t.closest ? t.closest("[data-hizir]") : null;
+      if (!btn || !deck.contains(btn)) return;
+      const act = btn.getAttribute("data-hizir");
+      if (act === "satinal") {
+        const u = btn.getAttribute("data-url");
+        if (u) void openHizirProductUrl(u);
+        return;
+      }
+      if (act === "pas") {
+        const id = btn.getAttribute("data-kart-id");
+        if (id) void this.pasGecKart(id);
+      }
+    });
   },
 
   shouldRefreshAfterChat(userText) {
@@ -1415,6 +1960,71 @@ const HIZIR_MODU = {
       if (ev.target === p || p.contains(ev.target)) return;
       this._closeScanPopover();
     });
+    if (el.btnHizirSayfaTemizleWb) {
+      el.btnHizirSayfaTemizleWb.addEventListener("click", () => {
+        this.sayfaTemizle();
+      });
+    }
+    if (el.btnHizirHizliYenileWb) {
+      el.btnHizirHizliYenileWb.addEventListener("click", () => {
+        void this.hizliYenile();
+      });
+    }
+    this._wireScanHistoryMenuOnce();
+    this._wireCardActionsOnce();
+    this._wirePazarlarOnce();
+  },
+
+  _closePazarlarPanel() {
+    const p = el.hizirPazarlarPanel;
+    const b = el.btnHizirPazarlar;
+    if (p) p.hidden = true;
+    if (b) b.setAttribute("aria-expanded", "false");
+  },
+
+  _togglePazarlarPanel() {
+    const p = el.hizirPazarlarPanel;
+    const b = el.btnHizirPazarlar;
+    if (!p || !b) return;
+    const open = !!p.hidden;
+    p.hidden = !open;
+    b.setAttribute("aria-expanded", open ? "true" : "false");
+  },
+
+  _wirePazarlarOnce() {
+    if (this._pazarlarWired) return;
+    this._pazarlarWired = true;
+    hizirLoadPazarChecksFromStorage();
+    if (el.btnHizirPazarlar && el.hizirPazarlarPanel) {
+      el.btnHizirPazarlar.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        this._togglePazarlarPanel();
+      });
+    }
+    const panel = el.hizirPazarlarPanel;
+    if (panel) {
+      panel.addEventListener("click", (ev) => ev.stopPropagation());
+      const allB = panel.querySelector("[data-hizir-ch-all]");
+      const noneB = panel.querySelector("[data-hizir-ch-none]");
+      if (allB)
+        allB.addEventListener("click", (e) => {
+          e.stopPropagation();
+          hizirSetAllPazarChecks(true);
+        });
+      if (noneB)
+        noneB.addEventListener("click", (e) => {
+          e.stopPropagation();
+          hizirSetAllPazarChecks(false);
+        });
+      panel.querySelectorAll("input[data-hizir-ch]").forEach((inp) => {
+        inp.addEventListener("change", () => hizirPersistPazarChecks());
+      });
+    }
+    document.addEventListener("click", (ev) => {
+      const wrap = el.hizirPazarlarWrap;
+      if (wrap && (ev.target === wrap || wrap.contains(ev.target))) return;
+      this._closePazarlarPanel();
+    });
   },
 };
 
@@ -1477,6 +2087,7 @@ function updateDynamicWorkbench() {
     void programlamaAtolyeRefreshRoot();
   }
   if (currentMode === "hizir") void refreshHizirOperasyonPanel();
+  syncWorkbenchHizirToolbar();
 }
 
 function wireTopModeButtons() {
@@ -3232,8 +3843,56 @@ function wireNavToolbar() {
   }
   if (el.navRefresh) {
     el.navRefresh.addEventListener("click", async () => {
-      if (api?.navReload) await api.navReload();
-      else window.location.reload();
+      const mode = String(currentMode || "").trim().toLowerCase();
+      try {
+        /* UI Fix — Üst «Yenile»: yalnızca aktif modül; tam uygulama/Electron reload yok */
+        if (mode === "hizir") {
+          await refreshHizirOperasyonPanel();
+          setStatus("HIZIR: bellek ve fırsat listesi güncellendi", "Rüzgar");
+          return;
+        }
+        if (mode === "hafiza") {
+          await loadHafizaJsonView();
+          setStatus("Hafıza görünümü yenilendi", "Rüzgar");
+          return;
+        }
+        if (mode === "okuma") {
+          await loadIlimFileList();
+          setStatus("İlim dosya listesi yenilendi", "Rüzgar");
+          return;
+        }
+        if (mode === "tercume") {
+          await loadTercumeFileList();
+          setStatus("Tercüme dosya listesi yenilendi", "Rüzgar");
+          return;
+        }
+        if (mode === "ses") {
+          await refreshSesSttHint();
+          setStatus("Ses motoru bilgisi yenilendi", "Rüzgar");
+          return;
+        }
+        if (mode === "video") {
+          await refreshVideoEngineHint();
+          setStatus("Video motoru özeti yenilendi", "Rüzgar");
+          return;
+        }
+        if (mode === "programlama") {
+          await programlamaAtolyeRefreshRoot();
+          setStatus("Programlama atölyesi kökü yenilendi", "Rüzgar");
+          return;
+        }
+        if (mode === "genel") {
+          updateDynamicWorkbench();
+          setStatus("Ana motor paneli güncellendi", "Rüzgar");
+          return;
+        }
+      } catch (e) {
+        const msg = e && e.message ? String(e.message) : String(e);
+        setStatus(`Yenileme: ${msg.slice(0, 120)}`, null);
+        return;
+      }
+      updateDynamicWorkbench();
+      setStatus("Çalışma paneli güncellendi", "Rüzgar");
     });
   }
   if (el.navClearChat) {
@@ -3857,6 +4516,14 @@ async function checkApi() {
       }
       if (j.ffmpeg === false) {
         apiTitle += " | FFmpeg ikilisi bulunamadı";
+      }
+      const am = j.ana_motor || {};
+      if (am.main_only_genel_hafiza) {
+        apiTitle +=
+          " | UYARI: Ana Motor genel modda yalnızca hafıza JSON — LLM/RAG/web kapalı (RUZGAR_MAIN_ONLY_GENEL_HAFIZA=1 kapatın)";
+        el.api.textContent = "Sunucu ⚠ hafıza-only";
+      } else if (am.ollama_chat_model) {
+        apiTitle += ` | Model: ${am.ollama_chat_model}`;
       }
       el.api.title = apiTitle;
       el.api.className = "tech-chip ok";
@@ -4502,7 +5169,49 @@ async function streamChat(userText) {
   }
 
   /** Token/done/error/status — zorunlu akış + hazırlık durumu (Ümit & Gökçenur Işık Hızı). */
+  function renderPlanPreview(plan) {
+    if (!plan || !plan.primary) return;
+    ensureDashboardAgentUi();
+    if (!dashboardAgentWrapEl || !dashboardAgentListEl) return;
+    dashboardAgentWrapEl.hidden = false;
+    const lab = plan.label_tr || plan.primary || "";
+    const src = plan.sources || "";
+    const wq = (plan.web_query || "").trim();
+    const rq = (plan.rag_query || "").trim();
+    const items = [
+      { label: "Plan", detail: lab, status: "done" },
+      { label: "Kaynaklar", detail: src, status: "done" },
+    ];
+    if (rq) {
+      items.push({
+        label: "İndeks sorgusu",
+        detail: rq.length > 80 ? `${rq.slice(0, 77)}…` : rq,
+        status: "done",
+      });
+    }
+    if (wq) {
+      items.push({
+        label: "Web sorgusu",
+        detail: wq.length > 80 ? `${wq.slice(0, 77)}…` : wq,
+        status: "active",
+      });
+    }
+    renderDashboardAgentSteps(items);
+    if (el.dashboardStatus && currentMode === "genel") {
+      el.dashboardStatus.textContent = `Plan: ${lab} · ${src}`;
+    }
+  }
+
   function processChatEvent(ev) {
+    if (ev.type === "meta" && ev.plan) {
+      clearDeferThinking();
+      renderPlanPreview(ev.plan);
+      if (ev.plan.status_text) {
+        showThinkingCenter(ev.plan.status_text);
+        setStatus(ev.plan.status_text, "Rüzgar");
+      }
+      return;
+    }
     if (ev.type === "meta" && ev.instant_memory) {
       clearDeferThinking();
       hideThinkingCenter();
@@ -4619,8 +5328,12 @@ async function streamChat(userText) {
     } else if (ev.type === "error") {
       hideThinkingCenter();
       ensureReplyBubble();
-      responseBubble.innerHTML = esc(ev.text || "Hata");
-      setStatus("Hata");
+      const errText = String(ev.text || "Bilinmeyen hata").trim();
+      responseBubble.innerHTML =
+        `<p class="chat-error-lead"><strong>Yanıt üretilemedi</strong></p>` +
+        `<p>${esc(errText)}</p>`;
+      setStatus("Hata — ayrıntı sohbette", "Rüzgar");
+      flashRuzgarDurum(errText.slice(0, 120));
     }
   }
 

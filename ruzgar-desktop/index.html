@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <!-- Colab tünel (ngrok, localtunnel, trycloudflare): http(s)/ws(s) tamam -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' blob: http: https: ws: wss: http://127.0.0.1:8777 ws://127.0.0.1:8777 wss://127.0.0.1:8777 http://localhost:8777 ws://localhost:8777 wss://localhost:8777 https://www.google.com https://*.google.com https://*.googleapis.com https://*.gstatic.com wss://*.google.com; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; worker-src 'self' blob:;" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' blob: http: https: ws: wss: http://127.0.0.1:8777 ws://127.0.0.1:8777 wss://127.0.0.1:8777 http://localhost:8777 ws://localhost:8777 wss://localhost:8777 https://www.google.com https://*.google.com https://*.googleapis.com https://*.gstatic.com wss://*.google.com; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://upload.wikimedia.org https://*.wikimedia.org; media-src 'self' blob:; worker-src 'self' blob:;" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RÜZGAR — Mimarlar: Ümit & Gökçenur</title>
     <link rel="stylesheet" href="styles.css" />
@@ -43,8 +43,6 @@
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
             </button>
           </div>
-          <span id="cpu-indicator" class="tech-chip">CPU: %24</span>
-          <span id="gpu-indicator" class="tech-chip">GPU: %18</span>
         </div>
       </div>
     </div>
@@ -218,9 +216,33 @@
             </div>
           </div>
           <div class="workbench-controls">
-            <button type="button" id="btn-layout-full" class="btn-secondary btn-compact" title="Tam Ekran">🗖</button>
-            <button type="button" id="btn-layout-split2" class="btn-secondary btn-compact" title="İkiye Böl">◫</button>
-            <button type="button" id="btn-layout-split4" class="btn-secondary btn-compact" title="Dörde Böl">田</button>
+            <div class="workbench-layout-tools" id="workbench-layout-tools">
+              <button type="button" id="btn-layout-full" class="btn-secondary btn-compact" title="Tam Ekran">🗖</button>
+              <button type="button" id="btn-layout-split2" class="btn-secondary btn-compact" title="İkiye Böl">◫</button>
+              <button type="button" id="btn-layout-split4" class="btn-secondary btn-compact" title="Dörde Böl">田</button>
+            </div>
+            <div class="workbench-hizir-tools" id="workbench-hizir-tools" hidden>
+              <div class="hizir-wb-dd-wrap">
+                <button
+                  type="button"
+                  id="btn-hizir-scan-history"
+                  class="hizir-wb-dd-trigger"
+                  aria-expanded="false"
+                  aria-haspopup="menu"
+                  aria-controls="hizir-scan-history-menu"
+                  title="Son pazar taramaları"
+                >
+                  Tarama geçmişi
+                </button>
+                <div id="hizir-scan-history-menu" class="hizir-wb-dd-menu" role="menu" hidden></div>
+              </div>
+              <button type="button" id="btn-hizir-sayfa-temizle-wb" class="chrome-hizir-btn chrome-hizir-btn--wb" title="Yalnızca vitrin kartlarını ekrandan kaldırır">
+                Sayfayı Temizle
+              </button>
+              <button type="button" id="btn-hizir-hizli-yenile-wb" class="chrome-hizir-btn chrome-hizir-btn--wb chrome-hizir-btn--accent" title="Mevcut sorguyla pazar taramasını yeniler">
+                Hızlı Yenile
+              </button>
+            </div>
           </div>
         </div>
         <div id="dynamic-workbench" class="dynamic-workbench layout-full">
@@ -228,8 +250,8 @@
             <div class="atelier-info-strip atelier-info-strip-ana">
               <span class="phase-badge phase-badge-ana">Ana Motor</span>
               <span class="atelier-promise">
-                Orkestra şefi: <strong>Hafıza</strong> + 5 yardımcı motorun (Ses, Video, Okuma, Tercüme, Programlama)
-                yetkinliklerini tek pencerede toplar. Akıl yürüten asistan modu Faz 6'da tam aktif olur.
+                Orkestra şefi: <strong>Hafıza</strong> + 5 yardımcı motor. <strong>Faz 6 aktif:</strong> soru planı,
+                kaynak seçimi (arşiv / indeks / web), workspace okuma ve ajan adımları.
               </span>
             </div>
             <h3>Ana Motor — Dashboard</h3>
@@ -263,7 +285,7 @@
                 <div class="motors-overview-card"><span class="ovx-phase">Faz 3</span><span class="ovx-name">Tercüme</span><span class="ovx-status ovx-done">tamam</span></div>
                 <div class="motors-overview-card"><span class="ovx-phase">Faz 4</span><span class="ovx-name">Ses</span><span class="ovx-status ovx-done">tamam</span></div>
                 <div class="motors-overview-card"><span class="ovx-phase">Faz 5</span><span class="ovx-name">Video</span><span class="ovx-status ovx-now">v2…</span></div>
-                <div class="motors-overview-card"><span class="ovx-phase">Faz 6</span><span class="ovx-name">Ana Motor akıl</span><span class="ovx-status">sırada</span></div>
+                <div class="motors-overview-card"><span class="ovx-phase">Faz 6</span><span class="ovx-name">Ana Motor akıl</span><span class="ovx-status ovx-active">aktif</span></div>
                 <div class="motors-overview-card"><span class="ovx-phase">Faz 7</span><span class="ovx-name">Cila</span><span class="ovx-status">sırada</span></div>
               </div>
             </div>
@@ -336,6 +358,40 @@
                     >
                       Tara
                     </button>
+                    <div class="hizir-pazarlar-dd" id="hizir-pazarlar-wrap">
+                      <button
+                        type="button"
+                        class="btn-secondary btn-hizir-pazarlar"
+                        id="btn-hizir-pazarlar"
+                        aria-expanded="false"
+                        aria-haspopup="true"
+                        aria-controls="hizir-pazarlar-panel"
+                        title="Pazar yerlerini seç"
+                      >
+                        Pazarlar
+                      </button>
+                      <div id="hizir-pazarlar-panel" class="hizir-pazarlar-panel" hidden role="dialog" aria-label="Pazar seçimi">
+                        <div class="hizir-pazarlar-panel__quick">
+                          <button type="button" class="hizir-pazarlar-link" data-hizir-ch-all>Hepsini Seç</button>
+                          <span aria-hidden="true">·</span>
+                          <button type="button" class="hizir-pazarlar-link" data-hizir-ch-none>Hepsini Kaldır</button>
+                        </div>
+                        <fieldset class="hizir-pazarlar-fs">
+                          <legend>Yerel (TR)</legend>
+                          <label class="hizir-pazarlar-lb"><input type="checkbox" data-hizir-ch="trendyol" checked /> Trendyol</label>
+                          <label class="hizir-pazarlar-lb"><input type="checkbox" data-hizir-ch="amazon_tr" checked /> Amazon TR</label>
+                          <label class="hizir-pazarlar-lb"><input type="checkbox" data-hizir-ch="hepsiburada" checked /> Hepsiburada</label>
+                        </fieldset>
+                        <fieldset class="hizir-pazarlar-fs">
+                          <legend>Global</legend>
+                          <label class="hizir-pazarlar-lb"><input type="checkbox" data-hizir-ch="amazon_us" checked /> Amazon US</label>
+                          <label class="hizir-pazarlar-lb"><input type="checkbox" data-hizir-ch="amazon_gb" checked /> Amazon UK</label>
+                          <label class="hizir-pazarlar-lb"><input type="checkbox" data-hizir-ch="amazon_de" checked /> Amazon DE</label>
+                          <label class="hizir-pazarlar-lb"><input type="checkbox" data-hizir-ch="ebay" checked /> eBay</label>
+                          <label class="hizir-pazarlar-lb"><input type="checkbox" data-hizir-ch="aliexpress" checked /> AliExpress</label>
+                        </fieldset>
+                      </div>
+                    </div>
                   </div>
                   <div class="hizir-vitrin-toolbar__meta">
                     <span id="hizir-inline-status" class="hizir-vitrin-status" aria-live="polite"></span>
@@ -356,7 +412,17 @@
               <div class="hizir-split hizir-split--vitrin" role="region" aria-label="HIZIR ticari vitrin">
                 <div class="hizir-col hizir-col-vitrin" aria-label="Arbitraj vitrini">
                   <h3 class="hizir-col-title">Fırsat vitrini</h3>
-                  <div id="hizir-firsatlar-wrap" class="hizir-firsatlar-wrap"></div>
+                  <div id="hizir-aktif-kanallar" class="hizir-aktif-kanallar" aria-label="Aktif kanallar"></div>
+                  <!-- UI Fix — vitrin: üst araç çubuğu sabit; kartlar bu alanda kayar -->
+                  <div
+                    id="hizir-firsatlar-scroll"
+                    class="hizir-firsatlar-scroll"
+                    role="region"
+                    aria-label="Fırsat kartları"
+                    tabindex="0"
+                  >
+                    <div id="hizir-firsatlar-wrap" class="hizir-firsatlar-wrap"></div>
+                  </div>
                 </div>
                 <div class="hizir-col hizir-col-aside" aria-label="Senkron özeti">
                   <h3 class="hizir-col-title">Senkron</h3>

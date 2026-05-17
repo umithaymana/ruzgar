@@ -40,7 +40,7 @@ from ilim_assistant.hafiza_i_ruzgar import (
     get_hafiza_motor as _get_hafiza_motor,
 )
 from ilim_assistant.text_encoding import finalize_assistant_reply
-from ilim_assistant.llm_ollama import chat_completion_stream
+from ilim_assistant.llm_ollama import chat_completion_stream, format_llm_user_error
 from ilim_assistant.stt_whisper import stt_runtime_available, transcribe_file
 from ilim_assistant.video_ffmpeg import (
     MAX_SEGMENT_SECONDS,
@@ -227,6 +227,14 @@ class GenelHafizaBakBody(BaseModel):
 
 class HizirPazarTaraBody(BaseModel):
     query: str = Field(default="", description="Ürün veya arama (boşsa genel tarama metni)")
+    channels: list[str] | None = Field(
+        default=None,
+        description="Pazar kanalları (trendyol, amazon_tr, hepsiburada, amazon_us, amazon_gb, amazon_de, ebay, aliexpress); boş veya atlanırsa tümü",
+    )
+
+
+class HizirFirsatKaldirBody(BaseModel):
+    kart_id: str = Field(default="", description="ARBITRAJ kart_id (Ticaret Avcısı)")
 
 
 class CodeRunBody(BaseModel):
@@ -351,6 +359,19 @@ def health():
     _ak = (_os.environ.get("HIZIR_AMAZON_ACCESS_KEY") or "").strip()
     _sk = (_os.environ.get("HIZIR_AMAZON_SECRET_KEY") or "").strip()
     _tg = (_os.environ.get("HIZIR_AMAZON_PARTNER_TAG") or "").strip()
+    _eb = bool(
+        (_os.environ.get("HIZIR_EBAY_CLIENT_ID") or "").strip()
+        and (_os.environ.get("HIZIR_EBAY_CLIENT_SECRET") or "").strip()
+    )
+    _ae = bool(
+        (_os.environ.get("HIZIR_ALIEXPRESS_APP_KEY") or "").strip()
+        and (_os.environ.get("HIZIR_ALIEXPRESS_APP_SECRET") or "").strip()
+        and (_os.environ.get("HIZIR_ALIEXPRESS_ACCESS_TOKEN") or "").strip()
+    )
+    from ilim_assistant.chat_core import _main_chat_genel_only, _web_secondary_policy_enabled
+    from ilim_assistant.defaults import DEFAULT_OLLAMA_CHAT_MODEL
+
+    _main_only = _main_chat_genel_only()
     return {
         "ok": True,
         "service": "ruzgar-desktop-api",
@@ -360,9 +381,32 @@ def health():
         "ffmpeg": ffmpeg_available(),
         "ffprobe": ffprobe_available(),
         "merkezi_bellek": True,
+        "ana_motor": {
+            "main_only_genel_hafiza": _main_only,
+            "main_only_warning": (
+                "Genel modda yalnızca hafıza JSON; LLM/RAG/web kapalı"
+                if _main_only
+                else None
+            ),
+            "web_secondary_strong_rag_only": _web_secondary_policy_enabled(),
+            "question_plan_enabled": os.environ.get("RUZGAR_ANA_MOTOR_PLAN", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "clarify_enabled": os.environ.get("RUZGAR_ANA_MOTOR_CLARIFY", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "ollama_chat_model": os.environ.get("OLLAMA_CHAT_MODEL", DEFAULT_OLLAMA_CHAT_MODEL),
+            "enable_web_search": os.environ.get("ENABLE_WEB_SEARCH", "1") == "1",
+            "rag_top_k_default": os.environ.get("RAG_TOP_K", "2"),
+            "rag_top_k_genel": os.environ.get("RUZGAR_GENEL_RAG_TOP_K", "4"),
+            "archive_score_min": os.environ.get("RUZGAR_ARCHIVE_SCORE_MIN", "0.22"),
+            "web_suppress_rag_min": os.environ.get("RUZGAR_WEB_SUPPRESS_RAG_MIN", "0.38"),
+            "ana_motor_agent_enabled": os.environ.get("RUZGAR_ANA_MOTOR_AGENT", "1").strip().lower()
+            not in ("0", "false", "no"),
+        },
         "hizir": {
             "mock_marketplace": _m,
             "amazon_paapi_credentials": bool(_ak and _sk and _tg),
+            "ebay_browse_credentials": bool(_eb),
+            "aliexpress_open_credentials": bool(_ae),
         },
     }
 
@@ -400,6 +444,7 @@ def api_hizir_pazar_tara(body: HizirPazarTaraBody):
             weather_q=False,
             has_live_weather_block=False,
             mode_norm="genel",
+            pazar_kanallari=body.channels,
         )
         from ilim_assistant.hizir.ticaret_avci import reconcile_ticaret_avci_firsatlar
 
@@ -409,6 +454,30 @@ def api_hizir_pazar_tara(body: HizirPazarTaraBody):
             "tool_context_chars": len(ctx),
             "data": data,
         }
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/hizir/temizle")
+def api_hizir_temizle():
+    """HIZIR vitrin: otomatik fırsatlar + pazar önbelleği + pas geç listesi temizlenir."""
+    try:
+        from ilim_assistant.hizir.bellek import clear_hizir_vitrin_state, merkezi_bellek_path
+
+        data = clear_hizir_vitrin_state()
+        return {"ok": True, "path": str(merkezi_bellek_path()), "data": data}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/hizir/firsat-kaldir")
+def api_hizir_firsat_kaldir(body: HizirFirsatKaldirBody):
+    """PAS GEÇ: kartı pas_gecildi listesine alır ve listeyi yeniden üretir."""
+    try:
+        from ilim_assistant.hizir.bellek import merkezi_bellek_path, pas_gec_hizir_kart
+
+        data = pas_gec_hizir_kart((body.kart_id or "").strip())
+        return {"ok": True, "path": str(merkezi_bellek_path()), "data": data}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
@@ -1030,21 +1099,82 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
     yield {"type": "status", "text": "Rüzgar hazırlanıyor…"}
 
     orch: dict[str, Any] = {}
-    reuse_b = None
-    if os.environ.get("RUZGAR_STREAM_PREFETCH_BUNDLE", "1").strip().lower() not in (
+    turn_plan = None
+    if os.environ.get("RUZGAR_ANA_MOTOR_PLAN", "1").strip().lower() not in (
         "0",
         "false",
         "no",
     ):
+        if mode_norm in ("genel", "uretim", "gelisim"):
+            try:
+                from ilim_assistant.ana_motor_plan import plan_question
+                from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
+
+                _flags = motor_niyeti_heuristic(req.message)
+                turn_plan = plan_question(req.message, mode_norm, _flags)
+                yield {"type": "status", "text": turn_plan.status_text}
+                plan_dict = turn_plan.to_dict()
+                orch["plan"] = plan_dict
+                yield {"type": "meta", "plan": plan_dict}
+            except Exception:
+                turn_plan = None
+
+    agent_context = ""
+    workspace_step = None
+    retrieval_notes: list[str] = []
+    if mode_norm in ("genel", "uretim", "gelisim"):
+        try:
+            from ilim_assistant.ana_motor_agent import run_agent_workspace_phase
+
+            agent_context, workspace_step, ws_events = run_agent_workspace_phase(
+                req.message,
+                mode_norm,
+                turn_plan,
+                workspace_root=req.workspace_root,
+            )
+            for ev in ws_events:
+                yield ev
+        except Exception:
+            agent_context = ""
+            workspace_step = None
+
+    reuse_b = None
+    _skip_prefetch = (
+        turn_plan is not None
+        and hasattr(turn_plan, "use_ilim_rag")
+        and not bool(turn_plan.use_ilim_rag)
+    )
+    if os.environ.get("RUZGAR_STREAM_PREFETCH_BUNDLE", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    ) and not _skip_prefetch:
         bundle, evs = prefetch_main_engine_bundle_for_stream(
             req.message,
             req.history,
             req.mode or "genel",
+            question_plan=turn_plan,
         )
         for ev in evs:
+            txt = str(ev.get("text") or "").strip()
+            if txt:
+                retrieval_notes.append(txt[:72])
             yield ev
         if evs or bundle.hits or (bundle.ilim_citation_tail or "").strip():
             reuse_b = bundle
+
+    if mode_norm in ("genel", "uretim", "gelisim"):
+        try:
+            from ilim_assistant.ana_motor_agent import build_agent_steps
+
+            orch["agent_steps"] = [
+                s.to_dict()
+                for s in build_agent_steps(
+                    turn_plan, workspace_step, retrieval_notes
+                )
+            ]
+        except Exception:
+            pass
 
     prep = prepare_turn(
         req.message,
@@ -1058,6 +1188,8 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
         read_message_links=req.read_message_links,
         reuse_main_engine_bundle=reuse_b,
         orchestration_out=orch,
+        question_plan=turn_plan,
+        agent_context=agent_context or None,
     )
     if prep is None:
         yield {"type": "error", "text": "Boş mesaj"}
@@ -1076,6 +1208,13 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
             "new_wake_used": new_wake,
         }
         if orch:
+            try:
+                from ilim_assistant.ana_motor_agent import mark_agent_answer_done
+
+                if orch.get("agent_steps"):
+                    orch["agent_steps"] = mark_agent_answer_done(orch["agent_steps"])
+            except Exception:
+                pass
             done_og["orchestra"] = orch
         yield done_og
         return
@@ -1098,10 +1237,17 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
             "new_wake_used": new_wake,
         }
         if orch:
+            try:
+                from ilim_assistant.ana_motor_agent import mark_agent_answer_done
+
+                if orch.get("agent_steps"):
+                    orch["agent_steps"] = mark_agent_answer_done(orch["agent_steps"])
+            except Exception:
+                pass
             done_llm["orchestra"] = orch
         yield done_llm
     except Exception as e:
-        yield {"type": "error", "text": str(e)}
+        yield {"type": "error", "text": format_llm_user_error(e)}
 
 
 @app.post("/api/chat/stream")

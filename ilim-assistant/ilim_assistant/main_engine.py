@@ -2,16 +2,14 @@
 """
 Rüzgar ana karar ağacı — İlim Hazinesi önceliği, sonra internet, akıllı filtre.
 
-Mantık (Decision Tree):
-  1) Önce arşiv (Mektubat, Hadis külliyatı vb.): yalnızca arsiv/ indeks parçaları.
-  2) Güven yetersizse tam yerel indeks + (isteğe bağlı) DuckDuckGo web araması.
-  3) Ümit & Gökçenur vizyonu: vakur, âlim/edip üslubu için sistem ve kullanıcı ekleri.
+Mantık (Decision Tree v2 — Ana Motor planı ile):
+  - gundelik / islem / hafiza: retrieval yok (doğrudan LLM + web planı)
+  - bilgi: yerel indeks; arşiv atlanır; web kapatılmaz
+  - bilim: arşiv önce (güçlü eşleşmede web kapalı)
+  - dilbilgisi: yalnızca knowledge indeksi
+  - varsayılan: arşiv → tam indeks (v1)
 
 Durum metinleri masaüstü API akışında anlık olarak iletilir (desktop_server).
-
-Web: DuckDuckGo + sayfa gövdesi ``ilim_ve_idrak.active_reader_fetch_url`` (BeautifulSoup, isteğe bağlı Playwright).
-PDF derin okuma ve özet: ``ilim_ve_idrak`` + ``chat_core.prepare_turn``.
-Tavily/Google ayrı anahtar ileride eklenebilir.
 """
 
 from __future__ import annotations
@@ -30,6 +28,9 @@ STATUS_ARCHIVE_MATCH = "Arşivde eşleşme bulundu — alıntı zemini hazırlan
 STATUS_INTERNET_HADITH = "İnternette hadisler ve ilgili metinler araştırılıyor…"
 STATUS_WEB_SCAN = "İnternette hızlı tarama yapılıyor (DuckDuckGo)…"
 STATUS_FULL_INDEX = "Yerel indeks taranıyor (bilgi + arşiv birlikte)…"
+STATUS_BILGI_INDEX = "Genel bilgi — yerel ilim indeksi taranıyor…"
+STATUS_DILBILGISI_INDEX = "Dilbilgisi notları taranıyor…"
+STATUS_SKIP_RETRIEVAL = "Kaynak taraması atlandı — doğrudan yanıt…"
 
 
 def _score_threshold() -> float:
@@ -45,6 +46,26 @@ def archive_match_is_strong(hits: list[tuple[str, str, float]]) -> bool:
         return False
     best = float(hits[0][2])
     return best >= _score_threshold()
+
+
+def _plan_primary(question_plan: Any | None) -> str:
+    if question_plan is None:
+        return ""
+    if hasattr(question_plan, "primary"):
+        return str(getattr(question_plan, "primary", "") or "").strip().lower()
+    if isinstance(question_plan, dict):
+        return str(question_plan.get("primary") or "").strip().lower()
+    return ""
+
+
+def _plan_prefer_archive(question_plan: Any | None) -> bool:
+    if question_plan is None:
+        return False
+    if hasattr(question_plan, "prefer_archive"):
+        return bool(question_plan.prefer_archive)
+    if isinstance(question_plan, dict):
+        return bool(question_plan.get("prefer_archive"))
+    return False
 
 
 @dataclass
@@ -63,7 +84,7 @@ def ilim_hazinesi_citation_directive() -> str:
         "\n\n[TALİMAT — İLİM HAZİNESİ — Ümit & Gökçenur]\n"
         "Aşağıdaki bağlam **Kültür ve İlim Hazinesi** (arsiv külliyatı) kaynaklıdır. "
         "Yanıtta mümkünse **kaynak dosya veya külliyat adını** kısaca belirt; "
-        "alıntıları asgarî doğrudan metinle, **vakur ve edebî** bir üslupla (âlim/edip) sun.\n"
+        "alıntları asgarî doğrudan metinle, **vakur ve edebî** bir üslupla (âlim/edip) sun.\n"
     )
 
 
@@ -77,34 +98,45 @@ def smart_filter_vision_directive() -> str:
     )
 
 
-def iter_archive_first_decision(
-    msg: str,
-    *,
-    mode_norm: str,
-    weather_q: bool,
-    ilim_rag: bool,
-    rag_top_k: int,
-) -> Iterator[dict[str, Any]]:
-    """
-    Karar ağacını uygular; her adımda durum sözlüğü yield eder, sonunda sonuç.
-
-    Yield edilen sözlükler:
-      - {"kind": "status", "phase": str, "text": str}
-      - {"kind": "result", "bundle": RetrievalBundle}
-    """
-    from ilim_assistant.rag_store import search as rag_search
-    from ilim_assistant.rag_store import search_arsiv
-
-    _empty = RetrievalBundle(
+def _empty_bundle() -> RetrievalBundle:
+    return RetrievalBundle(
         hits=[],
         suppress_main_web_search=False,
         archive_was_primary=False,
         ilim_citation_tail="",
     )
 
-    if mode_norm in no_rag_modes() or weather_q or not ilim_rag:
-        yield {"kind": "result", "bundle": _empty}
-        return
+
+def _yield_index_only(
+    msg: str,
+    rag_top_k: int,
+    *,
+    status_text: str,
+    suppress_web: bool,
+) -> Iterator[dict[str, Any]]:
+    from ilim_assistant.rag_store import search as rag_search
+
+    yield {"kind": "status", "phase": "full_index", "text": status_text}
+    k = max(1, min(rag_top_k, 12))
+    hits = rag_search(msg, top_k=k)
+    tail = smart_filter_vision_directive()
+    yield {
+        "kind": "result",
+        "bundle": RetrievalBundle(
+            hits=hits,
+            suppress_main_web_search=suppress_web,
+            archive_was_primary=False,
+            ilim_citation_tail=tail,
+        ),
+    }
+
+
+def _yield_archive_first(
+    msg: str,
+    rag_top_k: int,
+) -> Iterator[dict[str, Any]]:
+    from ilim_assistant.rag_store import search as rag_search
+    from ilim_assistant.rag_store import search_arsiv
 
     yield {"kind": "status", "phase": "archive", "text": STATUS_MEKTUBAT_SHELVES}
     yield {"kind": "status", "phase": "archive_detail", "text": STATUS_ILIM_SCAN}
@@ -155,6 +187,70 @@ def iter_archive_first_decision(
     }
 
 
+def iter_archive_first_decision(
+    msg: str,
+    *,
+    mode_norm: str,
+    weather_q: bool,
+    ilim_rag: bool,
+    rag_top_k: int,
+    question_plan: Any | None = None,
+    search_text: str | None = None,
+) -> Iterator[dict[str, Any]]:
+    """
+    Karar ağacını uygular; her adımda durum sözlüğü yield eder, sonunda sonuç.
+
+    Yield edilen sözlükler:
+      - {"kind": "status", "phase": str, "text": str}
+      - {"kind": "result", "bundle": RetrievalBundle}
+    """
+    if mode_norm in no_rag_modes() or weather_q or not ilim_rag:
+        yield {"kind": "result", "bundle": _empty_bundle()}
+        return
+
+    q = (search_text or msg or "").strip() or msg
+    primary = _plan_primary(question_plan)
+    plan_on = os.environ.get("RUZGAR_ANA_MOTOR_PLAN", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+    if plan_on and primary:
+        if primary in ("gundelik", "islem", "dosya", "hafiza", "hava"):
+            yield {
+                "kind": "status",
+                "phase": "skip",
+                "text": STATUS_SKIP_RETRIEVAL,
+            }
+            yield {"kind": "result", "bundle": _empty_bundle()}
+            return
+
+        if primary == "dilbilgisi":
+            yield from _yield_index_only(
+                q,
+                rag_top_k,
+                status_text=STATUS_DILBILGISI_INDEX,
+                suppress_web=False,
+            )
+            return
+
+        if primary == "bilgi":
+            yield from _yield_index_only(
+                q,
+                rag_top_k,
+                status_text=STATUS_BILGI_INDEX,
+                suppress_web=False,
+            )
+            return
+
+        if primary == "bilim" or _plan_prefer_archive(question_plan):
+            yield from _yield_archive_first(q, rag_top_k)
+            return
+
+    yield from _yield_archive_first(q, rag_top_k)
+
+
 def merge_ilim_tail(user_payload: str, tail: str) -> str:
     if not tail:
         return user_payload
@@ -167,6 +263,8 @@ def run_retrieval_with_status_events(
     weather_q: bool,
     ilim_rag: bool,
     rag_top_k: int,
+    question_plan: Any | None = None,
+    search_text: str | None = None,
 ) -> tuple[RetrievalBundle, list[dict[str, Any]]]:
     """
     Masaüstü akışı: durum çerçeveleri + nihai RetrievalBundle (Ümit & Gökçenur).
@@ -179,6 +277,8 @@ def run_retrieval_with_status_events(
         weather_q=weather_q,
         ilim_rag=ilim_rag,
         rag_top_k=rag_top_k,
+        question_plan=question_plan,
+        search_text=search_text,
     ):
         if ev.get("kind") == "status":
             out_events.append(
@@ -191,10 +291,5 @@ def run_retrieval_with_status_events(
         elif ev.get("kind") == "result":
             bundle = ev["bundle"]
     if bundle is None:
-        bundle = RetrievalBundle(
-            hits=[],
-            suppress_main_web_search=False,
-            archive_was_primary=False,
-            ilim_citation_tail="",
-        )
+        bundle = _empty_bundle()
     return bundle, out_events

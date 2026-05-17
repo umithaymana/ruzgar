@@ -15,6 +15,40 @@ from ilim_assistant.text_encoding import repair_utf8_mojibake
 _http_session: requests.Session | None = None
 
 
+def format_llm_user_error(exc: BaseException) -> str:
+    """Masaüstü / Ana Motor: Ollama hatalarını Ümit abi için okunur Türkçe metne çevirir."""
+    raw = str(exc).strip()
+    low = raw.lower()
+    model = os.environ.get("OLLAMA_CHAT_MODEL", DEFAULT_OLLAMA_CHAT_MODEL)
+    base = (os.environ.get("OPENAI_COMPAT_BASE") or "http://127.0.0.1:11434/v1").rstrip("/")
+    if "timed out" in low or "timeout" in low or "read timed out" in low:
+        return (
+            f"Ollama yanıt vermedi (zaman aşımı). Model: {model}. "
+            "Ollama çalışıyor mu? İlk token büyük modellerde dakikalar sürebilir. "
+            "Deneyin: `ollama serve` veya daha hafif model (`ollama pull llama3.2:3b`)."
+        )
+    if (
+        "connection" in low
+        or "refused" in low
+        or "failed to establish" in low
+        or "10061" in raw
+        or "actively refused" in low
+    ):
+        return (
+            f"Ollama'ya bağlanılamadı ({base}). "
+            "Ollama uygulamasını veya `ollama serve` sürecini başlatın; "
+            "Start-Ruzgar.ps1 API ile birlikte Ollama'yı da dener."
+        )
+    if "model" in low and ("not found" in low or "does not exist" in low):
+        return (
+            f"Model bulunamadı: {model}. "
+            f"Kurulum: `ollama pull {model}` veya OLLAMA_CHAT_MODEL ortam değişkenini değiştirin."
+        )
+    if not raw:
+        return "LLM isteği başarısız (ayrıntı yok). Ollama günlüklerine bakın."
+    return f"LLM hatası: {raw[:500]}"
+
+
 def _ollama_http_timeout(*, streaming: bool) -> float | tuple[float, float]:
     """
     (bağlan, oku) — okuma süresi iki kez arasında veya ilk bayta kadar boşluktur.
@@ -136,7 +170,7 @@ def chat_completion(
         out = body["choices"][0]["message"]["content"].strip()
         return repair_utf8_mojibake(out)
     except (requests.RequestException, KeyError, IndexError, json.JSONDecodeError) as e:
-        return f"[Hata] {e}"
+        return format_llm_user_error(e)
 
 
 def chat_completion_stream(
@@ -216,7 +250,7 @@ def chat_completion_stream(
                     # Birleşik onarım yalnızca tam metinde (desktop_server / done).
                     yield piece
     except requests.RequestException as e:
-        yield f"[Hata] {e}"
+        yield format_llm_user_error(e)
 
 
 def optional_web_context(query: str, max_results: int = 3) -> str:

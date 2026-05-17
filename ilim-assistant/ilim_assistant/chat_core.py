@@ -686,6 +686,82 @@ def _append_anti_repeat_instruction(user_payload: str, history: list | None) -> 
     )
 
 
+def _web_secondary_policy_enabled() -> bool:
+    return os.environ.get("RUZGAR_WEB_SECONDARY_ONLY_ON_EMPTY", "1").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+
+
+def _web_suppress_rag_score_floor() -> float:
+    try:
+        return float(os.environ.get("RUZGAR_WEB_SUPPRESS_RAG_MIN", "0.38"))
+    except ValueError:
+        return 0.38
+
+
+def local_rag_strong_enough_to_skip_web(
+    hits: list,
+    ar_hits: list,
+    *,
+    archive_primary: bool,
+) -> bool:
+    """Zayıf vektör eşleşmesi web aramasını kapatmasın (Ana Motor A1)."""
+    if archive_primary:
+        return True
+    if ar_hits:
+        try:
+            from ilim_assistant.main_engine import archive_match_is_strong
+
+            if archive_match_is_strong(ar_hits):
+                return True
+        except Exception:
+            pass
+    if not hits:
+        return False
+    try:
+        best = max(float(h[2]) for h in hits)
+    except (TypeError, ValueError, IndexError):
+        return False
+    return best >= _web_suppress_rag_score_floor()
+
+
+def _genel_no_context_directive() -> str:
+    return (
+        "\n\n[TALİMAT — GENEL SOHBET]\n"
+        "Bu turda yerel arşiv/indeks veya web özeti taşınmadı veya yetersiz kaldı. "
+        "Ümit abi'nin sorusunu doğrudan yanıtla: genel bilgin ve mantığınla, kısa ve net Türkçe. "
+        "Bilmediğin özel güncel olayı uydurma; kesin kaynak göremedim diyebilirsin. "
+        "Nahiv/tecvid dersi gibi çözümleme yapma; günlük sohbet tonunda kal.\n"
+    )
+
+
+def _orkestra_context_for_turn(mode_norm: str, motor_flags: dict[str, bool]) -> bool:
+    if os.environ.get("RUZGAR_ORKESTRA_CONTEXT", "1").strip().lower() in ("0", "false", "no"):
+        return False
+    if mode_norm != "genel":
+        return True
+    if os.environ.get("RUZGAR_ORKESTRA_CONTEXT_GENEL", "0").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    ):
+        return True
+    return any(
+        motor_flags.get(k)
+        for k in ("ses", "video", "programlama", "tercume", "bilim", "bellek", "hizir")
+    )
+
+
+def _hizir_op_context_for_turn(mode_norm: str, motor_flags: dict[str, bool]) -> bool:
+    if mode_norm == "hizir":
+        return True
+    return bool(motor_flags.get("hizir"))
+
+
 def prepare_turn(
     message: str,
     history: list,
@@ -700,6 +776,8 @@ def prepare_turn(
     skip_ogrenme_lookup: bool = False,
     reuse_main_engine_bundle: Any | None = None,
     orchestration_out: dict[str, Any] | None = None,
+    question_plan: Any | None = None,
+    agent_context: str | None = None,
 ):
     """Boş mesajda None; aksi halde (msg, hits, user_payload, system, model, ogrenme_direct).
 
@@ -716,6 +794,27 @@ def prepare_turn(
         return None
     msg = message.strip()
     m = normalize_mode(mode)
+    from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
+
+    motor_flags = motor_niyeti_heuristic(msg)
+    turn_plan = question_plan
+    try:
+        from ilim_assistant.ana_motor_plan import (
+            _plan_enabled,
+            append_plan_directive,
+            maybe_clarification_reply,
+            plan_question,
+        )
+
+        if turn_plan is None and _plan_enabled():
+            turn_plan = plan_question(msg, m, motor_flags)
+        if orchestration_out is not None and turn_plan is not None:
+            orchestration_out.setdefault("plan", turn_plan.to_dict())
+    except Exception:
+        turn_plan = question_plan
+        append_plan_directive = None  # type: ignore[misc, assignment]
+        maybe_clarification_reply = None  # type: ignore[misc, assignment]
+
     ilim_merge_tail = ""
     me_suppress_web = False
     archive_primary_flag = False
@@ -755,6 +854,11 @@ def prepare_turn(
         if _main_chat_genel_only() and m == "genel":
             return msg, [], "", "", "", _genel_only_unknown_reply()
 
+    if maybe_clarification_reply is not None:
+        clar = maybe_clarification_reply(msg, m, motor_flags)
+        if clar:
+            return msg, [], "", "", "", clar
+
     if (
         os.environ.get("RUZGAR_WEATHER_BEFORE_JSON", "1").strip() in ("0", "false", "no")
         and weather_q
@@ -778,6 +882,18 @@ def prepare_turn(
     else:
         ilim_rag = True
 
+    if turn_plan is not None and m in ("genel", "uretim", "gelisim"):
+        ilim_rag = bool(turn_plan.use_ilim_rag)
+
+    search_msg = msg
+    if turn_plan is not None:
+        try:
+            from ilim_assistant.ana_motor_plan import rag_search_query_for_turn
+
+            search_msg = rag_search_query_for_turn(msg, turn_plan)
+        except Exception:
+            search_msg = msg
+
     hits: list = []
     ar_hits: list = []
     blocks: list = []
@@ -787,8 +903,13 @@ def prepare_turn(
         # gramer/tecvid md'leri "hava" ile yanlış eşleşir; model dilbilgisi uydurur
         pass
     else:
-        rag_k = int(os.environ.get("RAG_TOP_K", "2"))
-        rag_k_clamped = max(1, min(rag_k, 12))
+        try:
+            from ilim_assistant.ana_motor_plan import rag_top_k_for_turn
+
+            rag_k_clamped = rag_top_k_for_turn(m, turn_plan)
+        except Exception:
+            rag_k = int(os.environ.get("RAG_TOP_K", "2"))
+            rag_k_clamped = max(1, min(rag_k, 12))
         pool_k = min(max(rag_k_clamped * 3, 10), 28)
         rag_score_min = float(os.environ.get("RAG_SCORE_MIN", "0.20"))
         tarih_on = _tarih_intent(msg)
@@ -820,12 +941,12 @@ def prepare_turn(
             # TDK: yalnızca `##` başlığı tam eşleşmesi — semantik yakınlıkla başka maddeye sıçrama yok.
             good_hits = search_tdk_exact_lemma(tdk_lem, top_k=rag_k_clamped)
         elif tarih_on:
-            pool_hits = search(msg, top_k=pool_k)
+            pool_hits = search(search_msg, top_k=pool_k)
             good_hits = [h for h in pool_hits if h[2] >= rag_score_min]
             good_hits = [h for h in good_hits if not source_is_tdk(h[1])]
             tarih_scan = max(32, int(os.environ.get("RUZGAR_TARIH_SCAN_CAP", "96")))
             tarih_top = max(rag_k_clamped, int(os.environ.get("RUZGAR_TARIH_TOP_K", "4")))
-            th = search_tarih_hafiza(msg, top_k=tarih_top, scan_cap=tarih_scan)
+            th = search_tarih_hafiza(search_msg, top_k=tarih_top, scan_cap=tarih_scan)
             th_ok = [h for h in th if h[2] >= rag_score_min]
             if not th_ok and th:
                 try:
@@ -856,6 +977,8 @@ def prepare_turn(
                 weather_q=weather_q,
                 ilim_rag=ilim_rag,
                 rag_top_k=rag_k_clamped,
+                question_plan=turn_plan,
+                search_text=search_msg,
             )
             bh = list(me_bundle.hits)
             good_hits = [h for h in bh if float(h[2]) >= rag_score_min]
@@ -865,7 +988,7 @@ def prepare_turn(
             me_suppress_web = bool(me_bundle.suppress_main_web_search)
             archive_primary_flag = bool(me_bundle.archive_was_primary)
         else:
-            pool_hits = search(msg, top_k=pool_k)
+            pool_hits = search(search_msg, top_k=pool_k)
             good_hits = [h for h in pool_hits if h[2] >= rag_score_min]
         hits = good_hits[:rag_k_clamped]
         ar_hits = [
@@ -884,6 +1007,13 @@ def prepare_turn(
     web_on = use_web and (m not in _NOWEB_MODES)
     if weather_q and (m not in _NOWEB_MODES):
         web_on = True
+    if (
+        turn_plan is not None
+        and m in ("genel", "uretim", "gelisim")
+        and not turn_plan.prefer_web
+        and not weather_q
+    ):
+        web_on = False
     if me_suppress_web:
         web_on = False
 
@@ -893,14 +1023,17 @@ def prepare_turn(
     if not _is_wake_only_message(msg):
         # Web'i ikinci plana al: lokal hafıza / vektör araması bir bağlam üretmişse
         # (hits/blocks boş değilse) DuckDuckGo + link okuma gecikmeli devreye girer.
-        web_secondary_only_on_empty = (
-            os.environ.get("RUZGAR_WEB_SECONDARY_ONLY_ON_EMPTY", "1").strip().lower()
-            in ("1", "true", "yes", "on")
-        )
+        web_secondary_only_on_empty = _web_secondary_policy_enabled()
         local_rag_present = bool(blocks or hits or ar_hits) or bool(live_weather_ctx)
         allow_web = True
         if web_secondary_only_on_empty and local_rag_present:
-            allow_web = False
+            allow_web = not local_rag_strong_enough_to_skip_web(
+                hits,
+                ar_hits,
+                archive_primary=archive_primary_flag,
+            )
+        if m == "genel" and web_on and not archive_primary_flag and not allow_web:
+            allow_web = True
 
         web_parts: list[str] = []
         if allow_web:
@@ -916,7 +1049,10 @@ def prepare_turn(
                 except Exception:
                     pass
             if web_on and os.environ.get("ENABLE_WEB_SEARCH", "1") == "1":
-                text_q = refined_search_query(msg).strip()
+                if turn_plan is not None and getattr(turn_plan, "web_query", ""):
+                    text_q = str(turn_plan.web_query).strip()
+                else:
+                    text_q = refined_search_query(msg).strip()
                 n_fetch = int(min(max(fetch_pages, 0), 5))
                 skip_ddg = (
                     weather_q
@@ -948,19 +1084,23 @@ def prepare_turn(
         tools_ctx = ""
 
     op_ctx = ""
-    try:
-        from ilim_assistant.hizir.tool_bridge import build_dynamic_operasyon_context
+    if _hizir_op_context_for_turn(m, motor_flags):
+        try:
+            from ilim_assistant.hizir.tool_bridge import build_dynamic_operasyon_context
 
-        op_ctx = build_dynamic_operasyon_context(
-            msg,
-            weather_q=weather_q,
-            has_live_weather_block=bool((live_weather_ctx or "").strip()),
-            mode_norm=m,
-        )
-    except Exception:
-        op_ctx = ""
+            op_ctx = build_dynamic_operasyon_context(
+                msg,
+                weather_q=weather_q,
+                has_live_weather_block=bool((live_weather_ctx or "").strip()),
+                mode_norm=m,
+            )
+        except Exception:
+            op_ctx = ""
 
     user_payload = build_user_prompt(msg, blocks)
+    _agent_ctx = (agent_context or "").strip()
+    if _agent_ctx:
+        user_payload = _agent_ctx + "\n\n" + user_payload
     if tools_ctx:
         user_payload = tools_ctx + "\n\n" + user_payload
     if op_ctx:
@@ -981,6 +1121,14 @@ def prepare_turn(
                 "Önemli bilgiler için kısaca kaynak (site adı veya URL) belirt. "
                 "Sayfa metni çekilemediyse dürüstçe yaz; arama snippet’lerine güvenebilirsin.\n"
             )
+    elif (
+        m == "genel"
+        and not archive_primary_flag
+        and not (live_weather_ctx or "").strip()
+        and not blocks
+        and not (web_extra or "").strip()
+    ):
+        user_payload += _genel_no_context_directive()
 
     intent_classifier_on = os.environ.get("INTENT_CLASSIFIER", "1").strip() not in (
         "0",
@@ -1036,11 +1184,7 @@ def prepare_turn(
 
         user_payload = merge_ilim_tail(user_payload, ilim_merge_tail)
 
-    if os.environ.get("RUZGAR_ORKESTRA_CONTEXT", "1").strip().lower() not in (
-        "0",
-        "false",
-        "no",
-    ):
+    if _orkestra_context_for_turn(m, motor_flags):
         try:
             from ilim_assistant.motorlar.ruzgar_cekirdegi import build_core_context
 
@@ -1058,6 +1202,9 @@ def prepare_turn(
     from ilim_assistant.ilim_ve_idrak import append_global_directive
 
     user_payload = append_global_directive(user_payload)
+
+    if turn_plan is not None and append_plan_directive is not None:
+        user_payload = append_plan_directive(user_payload, turn_plan, m)
 
     from ilim_assistant.idrak_entegrasyon import append_idrak_agent_layer
 
