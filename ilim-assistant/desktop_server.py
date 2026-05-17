@@ -1144,11 +1144,16 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
         and hasattr(turn_plan, "use_ilim_rag")
         and not bool(turn_plan.use_ilim_rag)
     )
-    if os.environ.get("RUZGAR_STREAM_PREFETCH_BUNDLE", "1").strip().lower() not in (
-        "0",
-        "false",
-        "no",
-    ) and not _skip_prefetch:
+    if (
+        mode_norm != "hafiza"
+        and os.environ.get("RUZGAR_STREAM_PREFETCH_BUNDLE", "1").strip().lower()
+        not in (
+            "0",
+            "false",
+            "no",
+        )
+        and not _skip_prefetch
+    ):
         bundle, evs = prefetch_main_engine_bundle_for_stream(
             req.message,
             req.history,

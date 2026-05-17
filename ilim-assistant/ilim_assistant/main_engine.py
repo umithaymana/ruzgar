@@ -204,7 +204,13 @@ def iter_archive_first_decision(
       - {"kind": "status", "phase": str, "text": str}
       - {"kind": "result", "bundle": RetrievalBundle}
     """
-    if mode_norm in no_rag_modes() or weather_q or not ilim_rag:
+    if mode_norm in no_rag_modes() or mode_norm == "hafiza" or weather_q or not ilim_rag:
+        if mode_norm == "hafiza":
+            yield {
+                "kind": "status",
+                "phase": "skip",
+                "text": "Hafıza modu — yerel sözlük / sohbet (ağır indeks atlandı)…",
+            }
         yield {"kind": "result", "bundle": _empty_bundle()}
         return
 
