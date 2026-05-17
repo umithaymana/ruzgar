@@ -1216,6 +1216,10 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
             except Exception:
                 pass
             done_og["orchestra"] = orch
+        if turn_plan is not None and getattr(turn_plan, "clarification", None):
+            clar = str(turn_plan.clarification or "").strip()
+            if clar and str(og_direct or "").strip() == clar:
+                done_og["instant_clarify"] = True
         yield done_og
         return
 

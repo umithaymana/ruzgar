@@ -42,6 +42,7 @@
             <button type="button" id="nav-clear-chat" class="btn-nav" title="Sohbeti temizle (uygulamayı kapatmadan)" aria-label="Sohbeti temizle">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
             </button>
+            <button type="button" id="btn-faz7-help" class="btn-nav btn-faz7-help" title="Kısayollar ve ipuçları (?)" aria-label="Yardım">?</button>
           </div>
         </div>
       </div>
@@ -168,6 +169,7 @@
             <button type="button" id="btn-stop" class="btn-stop" hidden title="Yanıt akışını veya sesli okumayı anında durdur" aria-label="Durdur — yanıt veya sesi kes">
               Durdur
             </button>
+            <span id="tts-status-pill" class="tts-status-pill" hidden aria-live="polite">Sesli okuma…</span>
             <button type="button" id="btn-send" class="btn-primary">Gönder</button>
           </div>
           <textarea
@@ -195,6 +197,7 @@
             <p class="thinking-center-sub" id="thinking-center-sub">
               Ümit &amp; Gökçenur — Işık Hızı
             </p>
+            <p class="thinking-center-elapsed" id="thinking-center-elapsed" hidden aria-live="polite"></p>
           </div>
         </div>
         <div class="workbench-head">
@@ -236,7 +239,7 @@
                 </button>
                 <div id="hizir-scan-history-menu" class="hizir-wb-dd-menu" role="menu" hidden></div>
               </div>
-              <button type="button" id="btn-hizir-sayfa-temizle-wb" class="chrome-hizir-btn chrome-hizir-btn--wb" title="Yalnızca vitrin kartlarını ekrandan kaldırır">
+              <button type="button" id="btn-hizir-sayfa-temizle-wb" class="chrome-hizir-btn chrome-hizir-btn--wb" title="POST /api/hizir/temizle — merkezi bellek vitrin + önbellek temizlenir">
                 Sayfayı Temizle
               </button>
               <button type="button" id="btn-hizir-hizli-yenile-wb" class="chrome-hizir-btn chrome-hizir-btn--wb chrome-hizir-btn--accent" title="Mevcut sorguyla pazar taramasını yeniler">
@@ -248,10 +251,10 @@
         <div id="dynamic-workbench" class="dynamic-workbench layout-full">
           <section class="motor-page" id="page-genel">
             <div class="atelier-info-strip atelier-info-strip-ana">
-              <span class="phase-badge phase-badge-ana">Ana Motor</span>
+              <span class="phase-badge phase-badge-ana phase-badge-faz7">Ana Motor · Cila ✓</span>
               <span class="atelier-promise">
-                Orkestra şefi: <strong>Hafıza</strong> + 5 yardımcı motor. <strong>Faz 6 aktif:</strong> soru planı,
-                kaynak seçimi (arşiv / indeks / web), workspace okuma ve ajan adımları.
+                Orkestra şefi: <strong>Hafıza</strong> + 5 yardımcı motor. <strong>Faz 7 tamam:</strong> cila, hata kartları,
+                ses göstergesi, yardım (? / Ctrl+/) ve HIZIR API temizleme.
               </span>
             </div>
             <h3>Ana Motor — Dashboard</h3>
@@ -285,8 +288,8 @@
                 <div class="motors-overview-card"><span class="ovx-phase">Faz 3</span><span class="ovx-name">Tercüme</span><span class="ovx-status ovx-done">tamam</span></div>
                 <div class="motors-overview-card"><span class="ovx-phase">Faz 4</span><span class="ovx-name">Ses</span><span class="ovx-status ovx-done">tamam</span></div>
                 <div class="motors-overview-card"><span class="ovx-phase">Faz 5</span><span class="ovx-name">Video</span><span class="ovx-status ovx-now">v2…</span></div>
-                <div class="motors-overview-card"><span class="ovx-phase">Faz 6</span><span class="ovx-name">Ana Motor akıl</span><span class="ovx-status ovx-active">aktif</span></div>
-                <div class="motors-overview-card"><span class="ovx-phase">Faz 7</span><span class="ovx-name">Cila</span><span class="ovx-status">sırada</span></div>
+                <div class="motors-overview-card"><span class="ovx-phase">Faz 6</span><span class="ovx-name">Ana Motor akıl</span><span class="ovx-status ovx-done">tamam</span></div>
+                <div class="motors-overview-card"><span class="ovx-phase">Faz 7</span><span class="ovx-name">Cila</span><span class="ovx-status ovx-done">tamam</span></div>
               </div>
             </div>
           </section>
@@ -1020,6 +1023,70 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
       <span id="status-left">Rüzgar</span>
       <span id="status-right">Hazır</span>
     </footer>
+    <div
+      id="faz7-help-overlay"
+      class="faz7-help-overlay"
+      hidden
+      aria-hidden="true"
+      role="dialog"
+      aria-labelledby="faz7-help-title"
+    >
+      <div class="faz7-help-backdrop" data-faz7-close></div>
+      <div class="faz7-help-card">
+        <header class="faz7-help-head">
+          <h2 id="faz7-help-title">Rüzgar — Faz 7 Cila</h2>
+          <button type="button" id="btn-faz7-help-close" class="btn-secondary btn-compact" aria-label="Kapat">Kapat</button>
+        </header>
+        <div class="faz7-help-body">
+          <p class="faz7-help-lead">Kısayollar ve Ana Motor ipuçları (Ümit &amp; Gökçenur).</p>
+          <dl class="faz7-help-dl">
+            <dt>Enter</dt><dd>Soruyu gönder</dd>
+            <dt>Shift+Enter</dt><dd>Yeni satır</dd>
+            <dt>?</dt><dd>Bu yardım penceresi</dd>
+            <dt>Ctrl+/</dt><dd>Yardım (sohbet alanı dışında)</dd>
+            <dt>Escape</dt><dd>Yardım / modalları kapat; Durdur ile akışı kes</dd>
+            <dt>Durdur</dt><dd>Yanıt veya sesli okumayı anında kes</dd>
+          </dl>
+          <h3 class="faz7-help-h3">Ana Motor (genel)</h3>
+          <ul class="faz7-help-ul">
+            <li><strong>Web ara</strong> — DuckDuckGo + sayfa okuma (Sayfa oku: 0–3)</li>
+            <li><strong>@@dosya/yol</strong> — workspace’ten dosya okuma (ör. <code>@@ruzgar-desktop/app.js</code>)</li>
+            <li>Dashboard’da soru planı ve kaynaklar (indeks / web) görünür</li>
+            <li>Kısa belirsiz sorularda netleştirme sorusu gelir (“bu?” gibi)</li>
+          </ul>
+          <h3 class="faz7-help-h3">HIZIR</h3>
+          <ul class="faz7-help-ul">
+            <li><strong>Sayfayı Temizle</strong> — <code>POST /api/hizir/temizle</code> (vitrin + önbellek)</li>
+            <li><strong>Hızlı Yenile</strong> — mevcut sorguyla pazar taraması</li>
+          </ul>
+          <h3 class="faz7-help-h3">Faz 7 — tamamlanan cila</h3>
+          <ul class="faz7-help-ul faz7-help-done">
+            <li>Düşünme süresi + soru planı alt satırı</li>
+            <li>Hata kartları (Ollama / bağlantı / model)</li>
+            <li>Sesli okuma göstergesi · karşılama balonu</li>
+            <li>Dashboard sağlık şeridi · ajan adım animasyonu</li>
+            <li>HIZIR Sayfayı Temizle → <code>POST /api/hizir/temizle</code></li>
+          </ul>
+          <h3 class="faz7-help-h3">Görünüm (Faz 7)</h3>
+          <div class="faz7-help-prefs">
+            <label class="faz7-help-chk"
+              ><input type="checkbox" id="faz7-opt-reduced-motion" /> Azaltılmış animasyon</label
+            >
+            <label class="faz7-help-chk faz7-help-defer"
+              >Düşünme gecikmesi (ms)
+              <input type="number" id="faz7-opt-defer-ms" min="0" max="900" step="25" value="175"
+            /></label>
+          </div>
+          <h3 class="faz7-help-h3">Sorun giderme</h3>
+          <ul class="faz7-help-ul">
+            <li>Sunucu kapalıysa: <code>Start-Ruzgar.ps1</code> veya <code>desktop_server.py</code> (8777)</li>
+            <li>Ollama zaman aşımı: daha hafif model (<code>llama3.2:3b</code>) veya <code>ollama serve</code></li>
+            <li>Yalnızca hafıza yanıtı: <code>RUZGAR_MAIN_ONLY_GENEL_HAFIZA=0</code> olmalı</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
     <div id="ctx-menu" class="ctx-menu" hidden>
       <button type="button" data-act="cut">Kes</button>
       <button type="button" data-act="copy">Kopyala</button>

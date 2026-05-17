@@ -254,6 +254,11 @@ const el = {
   thinkingOverlay: document.getElementById("thinking-center-overlay"),
   thinkingTitle: document.getElementById("thinking-center-title"),
   thinkingSub: document.getElementById("thinking-center-sub"),
+  thinkingElapsed: document.getElementById("thinking-center-elapsed"),
+  ttsStatusPill: document.getElementById("tts-status-pill"),
+  faz7HelpBtn: document.getElementById("btn-faz7-help"),
+  faz7HelpOverlay: document.getElementById("faz7-help-overlay"),
+  faz7HelpClose: document.getElementById("btn-faz7-help-close"),
   hafizaReminder: document.getElementById("hafiza-reminder"),
   hafizaReminderText: document.getElementById("hafiza-reminder-text"),
   btnHafizaReminderKapat: document.getElementById("btn-hafiza-reminder-kapat"),
@@ -810,6 +815,147 @@ function synthEdgeMp3ViaWorker(apiRoot, text, karakter, signal, emotion) {
   });
 }
 
+/** Faz 7 — düşünme süresi ve plan alt satırı */
+let thinkingShownAt = 0;
+let thinkingElapsedTimer = null;
+let lastThinkingPlanHint = "";
+const FAZ7_THINKING_SUB_DEFAULT = "Ümit & Gökçenur — Işık Hızı";
+const LS_FAZ7_DEFER_MS = "ruzgarFaz7DeferMs";
+const LS_FAZ7_REDUCED_MOTION = "ruzgarFaz7ReducedMotion";
+let faz7HealthStripEl = null;
+let apiWasOffline = false;
+let lastHealthSnapshot = null;
+
+function getFaz7DeferThinkingMs() {
+  try {
+    const v = parseInt(localStorage.getItem(LS_FAZ7_DEFER_MS) || "175", 10);
+    return Number.isFinite(v) ? Math.max(0, Math.min(v, 900)) : 175;
+  } catch {
+    return 175;
+  }
+}
+
+function isFaz7ReducedMotion() {
+  try {
+    return localStorage.getItem(LS_FAZ7_REDUCED_MOTION) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function applyFaz7MotionPrefs() {
+  document.body.classList.toggle("faz7-reduced-motion", isFaz7ReducedMotion());
+}
+
+function formatClientChatError(exc) {
+  const raw = String(exc?.message || exc || "").trim();
+  if (raw === "ws-open-timeout") {
+    return (
+      "WebSocket açılamadı (zaman aşımı). Sunucu yanıt vermiyor olabilir; " +
+      "SSE denenir veya Start-Ruzgar.ps1 ile API’yi yeniden başlatın."
+    );
+  }
+  if (exc?.name === "AbortError" || /abort/i.test(raw)) {
+    return "İstek iptal edildi (Durdur tuşu veya yeni soru).";
+  }
+  if (/failed to fetch|networkerror|load failed/i.test(raw)) {
+    return "Ağ hatası: yerel sunucu (8777) erişilemiyor. desktop_server.py çalışıyor mu?";
+  }
+  return raw || "Bilinmeyen istemci hatası";
+}
+
+function ensureFaz7HealthStrip() {
+  if (faz7HealthStripEl || !el.dashboardStatus?.parentElement) return;
+  const strip = document.createElement("div");
+  strip.id = "faz7-health-strip";
+  strip.className = "faz7-health-strip mini-card";
+  strip.hidden = true;
+  el.dashboardStatus.insertAdjacentElement("afterend", strip);
+  faz7HealthStripEl = strip;
+}
+
+function updateFaz7HealthStrip(j) {
+  if (!j || !j.ok) return;
+  ensureFaz7HealthStrip();
+  if (!faz7HealthStripEl) return;
+  const am = j.ana_motor || {};
+  faz7HealthStripEl.hidden = false;
+  faz7HealthStripEl.classList.toggle("faz7-health-warn", !!am.main_only_genel_hafiza);
+  if (am.main_only_genel_hafiza) {
+    faz7HealthStripEl.textContent =
+      "⚠ Genel mod: yalnızca hafıza JSON — LLM/RAG/web kapalı (RUZGAR_MAIN_ONLY_GENEL_HAFIZA=0)";
+    return;
+  }
+  const model = am.ollama_chat_model || "—";
+  const bits = [`Model: ${model}`];
+  if (am.question_plan_enabled) bits.push("soru planı");
+  if (am.ana_motor_agent_enabled) bits.push("mini ajan");
+  if (am.clarify_enabled) bits.push("netleştirme");
+  faz7HealthStripEl.textContent = bits.join(" · ");
+}
+
+function updateDashboardLastSpeech() {
+  if (!el.dashboardLastSpeech) return;
+  const short = (lastAssistantReply || "").trim();
+  el.dashboardLastSpeech.textContent = short
+    ? `Son konuşma: ${short.slice(0, 280)}${short.length > 280 ? "…" : ""}`
+    : "Son konuşma: (bekleniyor)";
+}
+
+function syncTtsStatusPill() {
+  if (!el.ttsStatusPill) return;
+  const busy = !!(
+    ttsPlayingEl ||
+    ttsPumping ||
+    (ttsTextQueue && ttsTextQueue.length > 0)
+  );
+  el.ttsStatusPill.hidden = !busy;
+  if (busy) el.ttsStatusPill.textContent = ttsPlayingEl ? "Sesli okuma…" : "Ses hazırlanıyor…";
+}
+
+function tickThinkingElapsed() {
+  if (!el.thinkingElapsed || thinkingShownAt <= 0) return;
+  const sec = Math.max(0, Math.floor((Date.now() - thinkingShownAt) / 1000));
+  el.thinkingElapsed.textContent = sec > 0 ? `${sec} sn` : "";
+  el.thinkingElapsed.hidden = sec <= 0;
+}
+
+function startThinkingElapsed() {
+  thinkingShownAt = Date.now();
+  if (el.thinkingElapsed) {
+    el.thinkingElapsed.hidden = false;
+    el.thinkingElapsed.textContent = "";
+  }
+  if (thinkingElapsedTimer != null) window.clearInterval(thinkingElapsedTimer);
+  thinkingElapsedTimer = window.setInterval(tickThinkingElapsed, 1000);
+  tickThinkingElapsed();
+}
+
+function stopThinkingElapsed() {
+  if (thinkingElapsedTimer != null) {
+    window.clearInterval(thinkingElapsedTimer);
+    thinkingElapsedTimer = null;
+  }
+  thinkingShownAt = 0;
+  if (el.thinkingElapsed) {
+    el.thinkingElapsed.hidden = true;
+    el.thinkingElapsed.textContent = "";
+  }
+}
+
+function setThinkingPlanHint(plan) {
+  if (!plan || !plan.primary) {
+    lastThinkingPlanHint = "";
+    return;
+  }
+  const lab = plan.label_tr || plan.primary;
+  const src = plan.sources || "";
+  lastThinkingPlanHint = src ? `${lab} · ${src}` : lab;
+  if (el.thinkingSub && el.thinkingOverlay && !el.thinkingOverlay.hidden) {
+    el.thinkingSub.textContent = lastThinkingPlanHint;
+  }
+}
+
 function showThinkingCenter(titleText) {
   if (el.thinkingTitle) {
     el.thinkingTitle.textContent =
@@ -820,19 +966,196 @@ function showThinkingCenter(titleText) {
           ? "Çeviri için düşünülüyor…"
           : "Rüzgar düşünüyor…");
   }
+  if (el.thinkingSub) {
+    el.thinkingSub.textContent = lastThinkingPlanHint || FAZ7_THINKING_SUB_DEFAULT;
+  }
   if (el.thinkingOverlay) {
     el.thinkingOverlay.hidden = false;
     el.thinkingOverlay.removeAttribute("aria-hidden");
   }
   if (el.panelMain) el.panelMain.classList.add("thinking-dim");
+  startThinkingElapsed();
 }
 
 function hideThinkingCenter() {
+  stopThinkingElapsed();
+  lastThinkingPlanHint = "";
+  if (el.thinkingSub) el.thinkingSub.textContent = FAZ7_THINKING_SUB_DEFAULT;
   if (el.thinkingOverlay) {
     el.thinkingOverlay.hidden = true;
     el.thinkingOverlay.setAttribute("aria-hidden", "true");
   }
   if (el.panelMain) el.panelMain.classList.remove("thinking-dim");
+}
+
+function classifyChatError(errText) {
+  const body = String(errText || "").trim();
+  const low = body.toLowerCase();
+  let kind = "generic";
+  let title = "Yanıt üretilemedi";
+  const hints = [];
+  if (/zaman aşımı|timed out|timeout|yanıt vermedi/i.test(body)) {
+    kind = "timeout";
+    title = "Ollama yanıt vermedi";
+    hints.push("Ollama çalışıyor mu: `ollama list` · İlk token büyük modellerde uzun sürebilir.");
+    hints.push("Daha hafif model deneyin: `ollama pull llama3.2:3b`");
+  } else if (/bağlanılamadı|connection|refused|10061|actively refused/i.test(body)) {
+    kind = "connection";
+    title = "Bağlantı kurulamadı";
+    hints.push("Start-Ruzgar.ps1 ile API (8777) ve Ollama birlikte başlatılır.");
+    hints.push("Sunucu çipi kırmızıysa `desktop_server.py` penceresini kontrol edin.");
+  } else if (/model bulunamadı|not found|does not exist/i.test(body)) {
+    kind = "model";
+    title = "Model bulunamadı";
+    hints.push("Kurulum: `ollama pull` ile health’te görünen modeli indirin.");
+    hints.push("Ortam: OLLAMA_CHAT_MODEL değişkenini kontrol edin.");
+  } else if (/hafıza-only|yalnızca hafıza|MAIN_ONLY/i.test(body)) {
+    kind = "main_only";
+    title = "Genel mod — yalnızca hafıza";
+    hints.push("RUZGAR_MAIN_ONLY_GENEL_HAFIZA=0 yapın ve API’yi yeniden başlatın.");
+  } else {
+    hints.push("Sunucu ve Ollama günlüklerine bakın; ? ile yardım panelini açın.");
+  }
+  return { kind, title, body, hints };
+}
+
+function renderChatErrorHtml(errText) {
+  const c = classifyChatError(errText);
+  const hintsHtml = c.hints.map((h) => `<li>${esc(h)}</li>`).join("");
+  return (
+    `<div class="chat-error-card" data-error-kind="${esc(c.kind)}">` +
+    `<p class="chat-error-lead"><strong>${esc(c.title)}</strong></p>` +
+    `<p class="chat-error-body">${esc(c.body)}</p>` +
+    (hintsHtml ? `<ul class="chat-error-hints">${hintsHtml}</ul>` : "") +
+    `<div class="chat-error-actions">` +
+    `<button type="button" class="btn-secondary btn-compact" data-faz7-copy-error>Kopyala</button>` +
+    `</div></div>`
+  );
+}
+
+function openFaz7Help() {
+  if (!el.faz7HelpOverlay) return;
+  el.faz7HelpOverlay.hidden = false;
+  el.faz7HelpOverlay.removeAttribute("aria-hidden");
+  el.faz7HelpClose?.focus();
+}
+
+function closeFaz7Help() {
+  if (!el.faz7HelpOverlay) return;
+  el.faz7HelpOverlay.hidden = true;
+  el.faz7HelpOverlay.setAttribute("aria-hidden", "true");
+}
+
+function dismissChatWelcome() {
+  el.chat?.querySelectorAll(".chat-welcome").forEach((n) => n.remove());
+}
+
+function isChatVisuallyEmpty() {
+  if (!el.chat) return true;
+  return el.chat.querySelectorAll(".bubble:not(.chat-welcome)").length === 0;
+}
+
+function showChatWelcomeIfEmpty() {
+  if (!el.chat || !isChatVisuallyEmpty()) return;
+  dismissChatWelcome();
+  const w = document.createElement("div");
+  w.className = "bubble assistant chat-welcome";
+  w.setAttribute("role", "note");
+  w.innerHTML =
+    `<p class="chat-welcome-lead"><strong>Merhaba — Rüzgar hazır.</strong></p>` +
+    `<ul class="chat-welcome-list">` +
+    `<li>Genel soru yazın; <strong>soru planı</strong> dashboard’da görünür.</li>` +
+    `<li><strong>Web ara</strong> + sayfa okuma ile güncel bilgi.</li>` +
+    `<li><code>@@ruzgar-desktop/app.js</code> — workspace dosyası okuma.</li>` +
+    `<li><kbd>?</kbd> veya <kbd>Ctrl+/</kbd> — kısayol yardımı.</li>` +
+    `</ul>` +
+    `<p class="chat-welcome-actions"><button type="button" class="btn-secondary btn-compact" data-faz7-open-help>Yardımı aç</button></p>` +
+    `<p class="chat-welcome-foot">Faz 7 tamam · Ümit &amp; Gökçenur</p>`;
+  el.chat.appendChild(w);
+  el.chat.scrollTop = 0;
+}
+
+function wireFaz7PrefsUi() {
+  const rm = document.getElementById("faz7-opt-reduced-motion");
+  const defer = document.getElementById("faz7-opt-defer-ms");
+  if (rm) {
+    rm.checked = isFaz7ReducedMotion();
+    rm.addEventListener("change", () => {
+      try {
+        if (rm.checked) localStorage.setItem(LS_FAZ7_REDUCED_MOTION, "1");
+        else localStorage.removeItem(LS_FAZ7_REDUCED_MOTION);
+      } catch {
+        /* yok say */
+      }
+      applyFaz7MotionPrefs();
+    });
+  }
+  if (defer) {
+    defer.value = String(getFaz7DeferThinkingMs());
+    defer.addEventListener("change", () => {
+      try {
+        const v = Math.max(0, Math.min(900, parseInt(defer.value, 10) || 175));
+        defer.value = String(v);
+        localStorage.setItem(LS_FAZ7_DEFER_MS, String(v));
+      } catch {
+        /* yok say */
+      }
+    });
+  }
+  applyFaz7MotionPrefs();
+}
+
+function wireFaz7Cila() {
+  wireFaz7PrefsUi();
+  if (el.faz7HelpBtn) el.faz7HelpBtn.addEventListener("click", () => openFaz7Help());
+  if (el.faz7HelpClose) el.faz7HelpClose.addEventListener("click", () => closeFaz7Help());
+  el.faz7HelpOverlay?.querySelectorAll("[data-faz7-close]").forEach((node) => {
+    node.addEventListener("click", () => closeFaz7Help());
+  });
+  if (el.chat) {
+    el.chat.addEventListener("click", (e) => {
+      const helpBtn =
+        e.target instanceof HTMLElement ? e.target.closest("[data-faz7-open-help]") : null;
+      if (helpBtn) {
+        openFaz7Help();
+        return;
+      }
+      const btn = e.target instanceof HTMLElement ? e.target.closest("[data-faz7-copy-error]") : null;
+      if (!btn) return;
+      const card = btn.closest(".chat-error-card");
+      const body = card?.querySelector(".chat-error-body");
+      const text = body?.textContent?.trim() || "";
+      if (!text) return;
+      void navigator.clipboard?.writeText(text).then(
+        () => setStatus("Hata metni kopyalandı", "Rüzgar"),
+        () => setStatus("Kopyalanamadı", "Rüzgar")
+      );
+    });
+  }
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "?" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      const t = e.target;
+      if (t instanceof HTMLElement && t.closest("textarea, input, [contenteditable='true']")) return;
+      e.preventDefault();
+      openFaz7Help();
+      return;
+    }
+    if (e.key === "F1") {
+      e.preventDefault();
+      openFaz7Help();
+      return;
+    }
+    if (e.key === "/" && (e.ctrlKey || e.metaKey)) {
+      const t = e.target;
+      if (t instanceof HTMLElement && t.closest("textarea, input, [contenteditable='true']")) return;
+      e.preventDefault();
+      openFaz7Help();
+      return;
+    }
+    if (e.key === "Escape" && el.faz7HelpOverlay && !el.faz7HelpOverlay.hidden) {
+      closeFaz7Help();
+    }
+  });
 }
 
 function updatePerformanceIndicators(busy) {
@@ -995,15 +1318,24 @@ function renderDashboardAgentSteps(steps) {
   }
   dashboardAgentWrapEl.hidden = false;
   dashboardAgentListEl.innerHTML = "";
-  for (const s of list) {
+  const reduced = isFaz7ReducedMotion();
+  list.forEach((s, idx) => {
     const li = document.createElement("li");
     const st = String(s.status || "skip");
-    li.className = `agent-step agent-step-${st}`;
+    li.className = `agent-step agent-step-${st}${reduced ? "" : " agent-step-enter"}`;
+    if (!reduced) li.style.animationDelay = `${Math.min(idx * 55, 330)}ms`;
     const lab = esc(String(s.label || s.id || ""));
     const det = esc(String(s.detail || ""));
-    li.innerHTML = `<span class="agent-step-label">${lab}</span><span class="agent-step-detail">${det}</span>`;
+    const dot =
+      st === "active"
+        ? `<span class="agent-step-dot" aria-hidden="true"></span>`
+        : st === "done"
+          ? `<span class="agent-step-check" aria-hidden="true">✓</span>`
+          : "";
+    li.innerHTML =
+      `${dot}<span class="agent-step-label">${lab}</span><span class="agent-step-detail">${det}</span>`;
     dashboardAgentListEl.appendChild(li);
-  }
+  });
 }
 
 function renderOrchestraBridge(orch) {
@@ -1666,7 +1998,7 @@ const HIZIR_MODU = {
     if (el.hizirFirsatlarWrap) {
       if (!rows.length) {
         el.hizirFirsatlarWrap.innerHTML =
-          '<div class="hizir-firsatlar-hint">Arama yapın veya <strong>Yenile</strong> ile vitrini güncelleyin.</div>';
+          '<div class="hizir-firsatlar-hint faz7-empty-hint">Arama yapın veya <strong>Yenile</strong> ile vitrini güncelleyin.</div>';
       } else {
         const sorted = rows.slice().sort((a, b) => {
           const rank = (r) => {
@@ -1840,15 +2172,50 @@ const HIZIR_MODU = {
     }
   },
 
-  sayfaTemizle() {
-    this._closeScanHistoryMenu();
+  _sayfaTemizleUiOnly() {
     if (el.hizirFirsatlarWrap) {
       el.hizirFirsatlarWrap.innerHTML =
-        '<div class="hizir-firsatlar-hint">Vitrin kartları temizlendi. <strong>Yenile</strong> veya <strong>Tara</strong> ile merkezi bellekten tekrar yükleyebilirsiniz.</div>';
+        '<div class="hizir-firsatlar-hint faz7-empty-hint">Vitrin temiz. <strong>Yenile</strong> veya <strong>Tara</strong> ile merkezi bellekten tekrar yükleyebilirsiniz.</div>';
     }
+    this._lastGirdilerSnapshot = [];
+    this._pazarHistory = [];
+    this._scanPopoverHtml = "";
+    this._pazarTaraDetail = "";
+    this._lastScanShort = "";
+  },
+
+  async sayfaTemizle() {
+    this._closeScanHistoryMenu();
+    const btn = el.btnHizirSayfaTemizleWb;
+    if (btn) btn.disabled = true;
     if (el.hizirInlineStatus) {
-      el.hizirInlineStatus.textContent = "Kart görünümü temizlendi";
-      el.hizirInlineStatus.removeAttribute("title");
+      el.hizirInlineStatus.textContent = "Merkezi bellek temizleniyor…";
+    }
+    try {
+      const res = await fetch(`${API}/api/hizir/temizle`, { method: "POST" });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.ok) {
+        const d = j.detail;
+        throw new Error(typeof d === "string" ? d : `HTTP ${res.status}`);
+      }
+      this._sayfaTemizleUiOnly();
+      if (el.hizirInlineStatus) {
+        el.hizirInlineStatus.textContent = "Merkezi bellek vitrin temizlendi";
+        el.hizirInlineStatus.removeAttribute("title");
+      }
+      setStatus("HIZIR vitrin temizlendi", "Rüzgar");
+      await this.refreshPanel();
+    } catch (e) {
+      const msg = e && e.message ? String(e.message) : String(e);
+      this._sayfaTemizleUiOnly();
+      if (el.hizirInlineStatus) {
+        el.hizirInlineStatus.textContent = "API hatası — ekran temizlendi";
+        el.hizirInlineStatus.title = msg;
+      }
+      setStatus("HIZIR temizle: sunucu yanıt vermedi", "Rüzgar");
+      flashRuzgarDurum(msg.slice(0, 100));
+    } finally {
+      if (btn) btn.disabled = false;
     }
   },
 
@@ -1962,7 +2329,7 @@ const HIZIR_MODU = {
     });
     if (el.btnHizirSayfaTemizleWb) {
       el.btnHizirSayfaTemizleWb.addEventListener("click", () => {
-        this.sayfaTemizle();
+        void this.sayfaTemizle();
       });
     }
     if (el.btnHizirHizliYenileWb) {
@@ -2071,12 +2438,7 @@ function updateDynamicWorkbench() {
   }
   if (el.dashboardStatus)
     el.dashboardStatus.textContent = `Aktif motor: ${MODE_LABELS[currentMode] || currentMode}`;
-  if (el.dashboardLastSpeech) {
-    const short = (lastAssistantReply || "").trim();
-    el.dashboardLastSpeech.textContent = short
-      ? `Son konuşma: ${short.slice(0, 280)}`
-      : "Son konuşma: (bekleniyor)";
-  }
+  updateDashboardLastSpeech();
   if (currentMode === "hafiza") void loadHafizaJsonView();
   if (currentMode === "okuma") void loadIlimFileList();
   if (currentMode === "tercume") void loadTercumeFileList();
@@ -3779,6 +4141,7 @@ function syncInterruptButton() {
     (ttsPendingChunks && String(ttsPendingChunks).trim().length > 0)
   );
   el.stop.hidden = !perfBusy && !ttsBusy;
+  syncTtsStatusPill();
 }
 
 function interruptRuzgar() {
@@ -3800,6 +4163,7 @@ function interruptRuzgar() {
     /* yok say */
   }
   hideThinkingCenter();
+  renderDashboardAgentSteps([]);
   setStatus("Durduruldu", "Rüzgar");
   syncInterruptButton();
 }
@@ -3811,6 +4175,9 @@ function clearChatSession() {
   lastAssistantReply = "";
   el.chat.innerHTML = "";
   el.input.value = "";
+  clearOrchestraBridge();
+  renderDashboardAgentSteps([]);
+  showChatWelcomeIfEmpty();
   setStatus("Sohbet temizlendi", "Rüzgar");
   window.setTimeout(() => setStatus("Hazır", "Rüzgar"), 1600);
 }
@@ -3951,12 +4318,23 @@ function repairMojibake(s) {
   return best;
 }
 
-function appendBubble(role, text) {
+function appendBubble(role, text, opts = {}) {
   const div = document.createElement("div");
-  div.className = `bubble ${role}`;
-  div.innerHTML = esc(text);
+  let cls = `bubble ${role}`;
+  if (role === "assistant" && opts.error) cls += " chat-error-bubble";
+  if (role === "assistant" && opts.clarify) cls += " chat-clarify";
+  div.className = cls;
+  if (role === "assistant" && opts.error) {
+    div.innerHTML = renderChatErrorHtml(String(text || ""));
+  } else {
+    div.innerHTML = esc(text).replace(/\n/g, "<br>");
+  }
   el.chat.appendChild(div);
   el.chat.scrollTop = el.chat.scrollHeight;
+  if (role === "assistant" && !opts.error) {
+    lastAssistantReply = String(text || "").trim();
+    updateDashboardLastSpeech();
+  }
 }
 
 // ---------- Asistan yanıtında kod bloklarını "akıllı kart" olarak render ----------
@@ -4501,6 +4879,12 @@ async function checkApi() {
     const r = await fetch(`${API}/api/health`, { method: "GET" });
     const j = await r.json();
     if (j.ok) {
+      if (apiWasOffline) {
+        apiWasOffline = false;
+        flashRuzgarDurum("Yerel sunucu yeniden bağlandı.");
+      }
+      lastHealthSnapshot = j;
+      updateFaz7HealthStrip(j);
       el.api.textContent = j.stt ? "Sunucu ✓ metne döküm" : "Sunucu ✓";
       let apiTitle = j.stt
         ? "Yerel sunucu — konuşmayı metne düşürme (yerel model veya tarayıcı tanıma)"
@@ -4525,14 +4909,28 @@ async function checkApi() {
       } else if (am.ollama_chat_model) {
         apiTitle += ` | Model: ${am.ollama_chat_model}`;
       }
+      if (am.question_plan_enabled) {
+        apiTitle += " | Soru planı açık";
+      }
       el.api.title = apiTitle;
       el.api.className = "tech-chip ok";
+      if (am.ollama_chat_model && !am.main_only_genel_hafiza) {
+        const shortModel = String(am.ollama_chat_model).split(":")[0];
+        if (currentMode === "genel" && el.statusR) {
+          el.statusR.textContent = shortModel;
+        }
+      }
       setStatus("Hazır", "Rüzgar");
       if (currentMode === "hizir") syncHizirWorkbenchStripVisibility();
       void tryShowHafizaReminder();
       return true;
     }
+    apiWasOffline = true;
+    if (faz7HealthStripEl) faz7HealthStripEl.hidden = true;
   } catch {
+    apiWasOffline = true;
+    lastHealthSnapshot = null;
+    if (faz7HealthStripEl) faz7HealthStripEl.hidden = true;
     el.api.textContent = "Sunucu kapalı";
     el.api.className = "tech-chip err";
     el.api.title = "";
@@ -5151,7 +5549,6 @@ async function streamChat(userText) {
   }
 
   /** Genel hafıza anında cevaplarda gereksiz "düşünüyor"; SSE gelene kadar ertelenir. */
-  const RUZGAR_DEFER_THINKING_MS = 175;
   let deferThinkingUntil = null;
   function clearDeferThinking() {
     if (deferThinkingUntil != null) {
@@ -5165,7 +5562,7 @@ async function streamChat(userText) {
     deferThinkingUntil = window.setTimeout(() => {
       deferThinkingUntil = null;
       showThinkingCenter(null);
-    }, RUZGAR_DEFER_THINKING_MS);
+    }, getFaz7DeferThinkingMs());
   }
 
   /** Token/done/error/status — zorunlu akış + hazırlık durumu (Ümit & Gökçenur Işık Hızı). */
@@ -5197,6 +5594,7 @@ async function streamChat(userText) {
       });
     }
     renderDashboardAgentSteps(items);
+    setThinkingPlanHint(plan);
     if (el.dashboardStatus && currentMode === "genel") {
       el.dashboardStatus.textContent = `Plan: ${lab} · ${src}`;
     }
@@ -5279,6 +5677,8 @@ async function streamChat(userText) {
         responseBubble.className = "bubble assistant";
         el.chat.appendChild(responseBubble);
       }
+      responseBubble.classList.toggle("chat-clarify", !!ev.instant_clarify);
+      responseBubble.classList.toggle("chat-instant-memory", !!ev.instant_memory);
       // Streaming bittikten sonra zenginleştirilmiş render: ```fenced``` kod blokları
       // Programlama Atölyesi'ne tek tıkla atılabilir kart hâline gelir.
       if (full.includes("```")) {
@@ -5288,6 +5688,7 @@ async function streamChat(userText) {
         responseBubble.innerHTML = esc(full).replace(/\n/g, "<br>");
       }
       lastAssistantReply = full;
+      updateDashboardLastSpeech();
       updateDynamicWorkbench();
       renderOrchestraBridge(ev.orchestra);
       const ut = String(ev.user_message || userText || "");
@@ -5329,9 +5730,7 @@ async function streamChat(userText) {
       hideThinkingCenter();
       ensureReplyBubble();
       const errText = String(ev.text || "Bilinmeyen hata").trim();
-      responseBubble.innerHTML =
-        `<p class="chat-error-lead"><strong>Yanıt üretilemedi</strong></p>` +
-        `<p>${esc(errText)}</p>`;
+      responseBubble.innerHTML = renderChatErrorHtml(errText);
       setStatus("Hata — ayrıntı sohbette", "Rüzgar");
       flashRuzgarDurum(errText.slice(0, 120));
     }
@@ -5561,10 +5960,18 @@ async function sendMessageWithText(t, opts = {}) {
   const skipUser = !!opts.skipUserBubble;
   const text = (t || "").trim();
   if (!text) return;
+  dismissChatWelcome();
   silenceVoiceOutputNow();
   clearOrchestraBridge();
   const ok = await checkApi();
-  if (!ok) return;
+  if (!ok) {
+    appendBubble(
+      "assistant",
+      "Yerel sunucu kapalı. Start-Ruzgar.ps1 veya ilim-assistant/desktop_server.py (port 8777) ile API’yi başlatın.",
+      { error: true }
+    );
+    return;
+  }
 
   el.input.value = "";
   if (!skipUser) {
@@ -5579,8 +5986,8 @@ async function sendMessageWithText(t, opts = {}) {
   try {
     await streamChat(text);
   } catch (e) {
-    appendBubble("assistant", String(e));
-    setStatus("Hata");
+    appendBubble("assistant", formatClientChatError(e), { error: true });
+    setStatus("Hata — ayrıntı sohbette", "Rüzgar");
   } finally {
     if (el.send) el.send.disabled = false;
     perfBusy = false;
@@ -6301,6 +6708,9 @@ if (window.ruzgarApi?.onMenu) {
 }
 
 wireNavToolbar();
+wireFaz7Cila();
+document.body.classList.add("faz7-complete");
+showChatWelcomeIfEmpty();
 checkApi();
 setInterval(checkApi, 15000);
 refreshPerformanceMetrics();
