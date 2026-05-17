@@ -1092,6 +1092,42 @@ async def api_stt(
                 pass
 
 
+def _iter_instant_chat_events(
+    reply: str,
+    user_message: str,
+    *,
+    session_wake_used: bool,
+    msg_for_wake: str,
+    orch: dict[str, Any] | None = None,
+    instant_gundelik: bool = False,
+    instant_clarify: bool = False,
+) -> Iterator[dict]:
+    """Ollama/RAG beklemeden tek tur bitir (SSE/WS)."""
+    full_out = finalize_assistant_reply(reply)
+    yield {"type": "token", "text": full_out}
+    new_wake = session_wake_used or message_calls_wake_name(msg_for_wake)
+    done: dict[str, Any] = {
+        "type": "done",
+        "full_reply": full_out,
+        "user_message": user_message,
+        "new_wake_used": new_wake,
+    }
+    if orch:
+        try:
+            from ilim_assistant.ana_motor_agent import mark_agent_answer_done
+
+            if orch.get("agent_steps"):
+                orch["agent_steps"] = mark_agent_answer_done(orch["agent_steps"])
+        except Exception:
+            pass
+        done["orchestra"] = orch
+    if instant_gundelik:
+        done["instant_gundelik"] = True
+    if instant_clarify:
+        done["instant_clarify"] = True
+    yield done
+
+
 def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
     """SSE/WS: Ana motor durumları → prepare_turn (İdrak + orkestra) → LLM."""
     mode_norm = normalize_mode(req.mode or "genel")
@@ -1100,6 +1136,7 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
 
     orch: dict[str, Any] = {}
     turn_plan = None
+    motor_flags: dict[str, bool] = {}
     if os.environ.get("RUZGAR_ANA_MOTOR_PLAN", "1").strip().lower() not in (
         "0",
         "false",
@@ -1110,12 +1147,33 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
                 from ilim_assistant.ana_motor_plan import plan_question
                 from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
 
-                _flags = motor_niyeti_heuristic(req.message)
-                turn_plan = plan_question(req.message, mode_norm, _flags)
+                motor_flags = motor_niyeti_heuristic(req.message)
+                turn_plan = plan_question(req.message, mode_norm, motor_flags)
                 yield {"type": "status", "text": turn_plan.status_text}
                 plan_dict = turn_plan.to_dict()
                 orch["plan"] = plan_dict
                 yield {"type": "meta", "plan": plan_dict}
+                try:
+                    from ilim_assistant.ana_motor_plan import maybe_gundelik_instant_reply
+
+                    instant = maybe_gundelik_instant_reply(
+                        req.message,
+                        mode_norm,
+                        motor_flags,
+                        question_plan=turn_plan,
+                    )
+                    if instant:
+                        yield from _iter_instant_chat_events(
+                            instant,
+                            (req.message or "").strip(),
+                            session_wake_used=req.session_wake_used,
+                            msg_for_wake=req.message,
+                            orch=orch,
+                            instant_gundelik=True,
+                        )
+                        return
+                except Exception:
+                    pass
             except Exception:
                 turn_plan = None
 
@@ -1123,20 +1181,30 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
     workspace_step = None
     retrieval_notes: list[str] = []
     if mode_norm in ("genel", "uretim", "gelisim"):
-        try:
-            from ilim_assistant.ana_motor_agent import run_agent_workspace_phase
+        _run_agent = turn_plan is None or bool(
+            getattr(turn_plan, "use_ilim_rag", True)
+        ) or getattr(turn_plan, "primary", "") in (
+            "bilgi",
+            "bilim",
+            "dosya",
+            "islem",
+            "dilbilgisi",
+        )
+        if _run_agent:
+            try:
+                from ilim_assistant.ana_motor_agent import run_agent_workspace_phase
 
-            agent_context, workspace_step, ws_events = run_agent_workspace_phase(
-                req.message,
-                mode_norm,
-                turn_plan,
-                workspace_root=req.workspace_root,
-            )
-            for ev in ws_events:
-                yield ev
-        except Exception:
-            agent_context = ""
-            workspace_step = None
+                agent_context, workspace_step, ws_events = run_agent_workspace_phase(
+                    req.message,
+                    mode_norm,
+                    turn_plan,
+                    workspace_root=req.workspace_root,
+                )
+                for ev in ws_events:
+                    yield ev
+            except Exception:
+                agent_context = ""
+                workspace_step = None
 
     reuse_b = None
     _skip_prefetch = (
@@ -1204,28 +1272,31 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
     new_wake = req.session_wake_used or message_calls_wake_name(msg)
 
     if og_direct is not None:
-        full_out = finalize_assistant_reply(og_direct)
-        yield {"type": "token", "text": full_out}
-        done_og: dict[str, Any] = {
-            "type": "done",
-            "full_reply": full_out,
-            "user_message": msg,
-            "new_wake_used": new_wake,
-        }
-        if orch:
-            try:
-                from ilim_assistant.ana_motor_agent import mark_agent_answer_done
+        _instant_g = False
+        _instant_c = False
+        try:
+            from ilim_assistant.ana_motor_plan import maybe_gundelik_instant_reply
 
-                if orch.get("agent_steps"):
-                    orch["agent_steps"] = mark_agent_answer_done(orch["agent_steps"])
-            except Exception:
-                pass
-            done_og["orchestra"] = orch
+            _instant_g = bool(
+                maybe_gundelik_instant_reply(
+                    msg, mode_norm, motor_flags, question_plan=turn_plan
+                )
+            )
+        except Exception:
+            pass
         if turn_plan is not None and getattr(turn_plan, "clarification", None):
             clar = str(turn_plan.clarification or "").strip()
             if clar and str(og_direct or "").strip() == clar:
-                done_og["instant_clarify"] = True
-        yield done_og
+                _instant_c = True
+        yield from _iter_instant_chat_events(
+            og_direct,
+            msg,
+            session_wake_used=req.session_wake_used,
+            msg_for_wake=msg,
+            orch=orch,
+            instant_gundelik=_instant_g,
+            instant_clarify=_instant_c,
+        )
         return
 
     prior = prior_messages_for_turn(req.history, mode_norm)

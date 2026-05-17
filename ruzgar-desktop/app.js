@@ -5575,18 +5575,22 @@ async function streamChat(userText) {
     const src = plan.sources || "";
     const wq = (plan.web_query || "").trim();
     const rq = (plan.rag_query || "").trim();
+    const skipRetrieval =
+      plan.primary === "gundelik" &&
+      !plan.use_ilim_rag &&
+      !plan.prefer_web;
     const items = [
       { label: "Plan", detail: lab, status: "done" },
       { label: "Kaynaklar", detail: src, status: "done" },
     ];
-    if (rq) {
+    if (rq && !skipRetrieval) {
       items.push({
         label: "İndeks sorgusu",
         detail: rq.length > 80 ? `${rq.slice(0, 77)}…` : rq,
         status: "done",
       });
     }
-    if (wq) {
+    if (wq && plan.prefer_web) {
       items.push({
         label: "Web sorgusu",
         detail: wq.length > 80 ? `${wq.slice(0, 77)}…` : wq,
@@ -5677,7 +5681,7 @@ async function streamChat(userText) {
         responseBubble.className = "bubble assistant";
         el.chat.appendChild(responseBubble);
       }
-      responseBubble.classList.toggle("chat-clarify", !!ev.instant_clarify);
+      responseBubble.classList.toggle("chat-clarify", !!ev.instant_clarify || !!ev.instant_gundelik);
       responseBubble.classList.toggle("chat-instant-memory", !!ev.instant_memory);
       // Streaming bittikten sonra zenginleştirilmiş render: ```fenced``` kod blokları
       // Programlama Atölyesi'ne tek tıkla atılabilir kart hâline gelir.

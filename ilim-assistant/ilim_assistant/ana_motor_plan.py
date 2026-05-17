@@ -253,9 +253,15 @@ def _score_categories(msg: str, mode_norm: str, motor_flags: dict[str, bool]) ->
             "tesekkur",
             "iyi geceler",
             "hoşça kal",
+            "sohbet",
+            "muhabbet",
+            "hal hatir",
+            "hal-hatir",
         )
     ):
         s["gundelik"] += 2.0
+    if "sadece sohbet" in blob or "yalnizca sohbet" in blob:
+        s["gundelik"] += 4.0
 
     if "?" in raw or any(x in blob for x in (" mi", " mı", " mu", " mü")):
         if s["gundelik"] < 1.0 and s["bilim"] < 1.5:
@@ -360,6 +366,11 @@ def plan_question(
     )
     if primary == "bilim" and any(x in low_msg for x in ("güncel", "guncel", "bugün", "bugun")):
         prefer_web = True
+    if primary == "gundelik" and any(
+        x in low_msg for x in ("sohbet", "sadece sohbet", "nasilsin", "nasılsın", "naber")
+    ):
+        prefer_web = False
+        use_ilim_rag = False
     if primary in ("gundelik", "hafiza", "dilbilgisi") and scores.get("bilgi", 0) < 1.0:
         prefer_web = False
     if primary == "hava":
@@ -382,8 +393,10 @@ def plan_question(
     if ambiguous:
         clarification = _build_clarification(primary, secondary, message)
 
-    web_q = rewrite_web_search_query(message, primary, mode_norm)
-    rag_q = rewrite_rag_search_query(message, primary)
+    web_q = (
+        rewrite_web_search_query(message, primary, mode_norm) if prefer_web else ""
+    )
+    rag_q = rewrite_rag_search_query(message, primary) if use_ilim_rag else ""
 
     status = _status_for_plan(primary, web_q if prefer_web else "")
 
@@ -464,6 +477,56 @@ def rewrite_web_search_query(message: str, primary: str, mode_norm: str) -> str:
     if primary == "gundelik" and len(words) > 12:
         base = " ".join(words[:12])
     return base.strip()
+
+
+def maybe_gundelik_instant_reply(
+    message: str,
+    mode_norm: str,
+    motor_flags: dict[str, bool] | None = None,
+    question_plan: QuestionPlan | None = None,
+) -> str | None:
+    """B3b — net sohbet (nasılsın/selam) için Ollama beklemeden kısa yanıt."""
+    if not _plan_enabled():
+        return None
+    if mode_norm not in ("genel", "uretim", "gelisim"):
+        return None
+    plan = question_plan or plan_question(message, mode_norm, motor_flags)
+    if plan.primary != "gundelik" or plan.use_ilim_rag:
+        return None
+    raw = (message or "").strip().lower()
+    blob = _norm_ascii(raw) + " " + raw
+    if any(
+        x in blob
+        for x in (
+            "nasilsin",
+            "nasılsın",
+            "nasilsiniz",
+            "iyi misin",
+            "keyfin nasil",
+            "naber",
+            "ne haber",
+        )
+    ):
+        return (
+            "İyiyim, teşekkür ederim — Rüzgar burada, Ümit abi için hazırım. "
+            "Sen nasılsın, keyfin nasıl?"
+        )
+    if any(
+        x in blob
+        for x in (
+            "selam",
+            "merhaba",
+            "gunaydin",
+            "günaydın",
+            "iyi aksam",
+            "iyi akşam",
+            "iyi geceler",
+        )
+    ):
+        return "Merhaba — ben Rüzgar. Bugün sana nasıl yardımcı olabilirim?"
+    if any(x in blob for x in ("tesekkur", "teşekkür", "sagol", "sağol", "eyvallah")):
+        return "Rica ederim — başka bir konuda yazman yeterli."
+    return None
 
 
 def maybe_clarification_reply(

@@ -38,6 +38,7 @@ def run_offline() -> int:
     )
     from ilim_assistant.ana_motor_plan import (
         maybe_clarification_reply,
+        maybe_gundelik_instant_reply,
         plan_question,
         rag_top_k_for_turn,
     )
@@ -78,6 +79,15 @@ def run_offline() -> int:
         fails += 1
     else:
         _ok("clarify kısa soru")
+
+    gund = maybe_gundelik_instant_reply(
+        "Sadece sohbet — nasılsın diye sormak istedim", "genel", {}
+    )
+    if not gund or "İyiyim" not in gund:
+        _fail("gundelik instant", gund or "boş")
+        fails += 1
+    else:
+        _ok("gundelik: anında nasılsın yanıtı")
 
     print("\n=== RAG top_k (genel) ===")
     k = rag_top_k_for_turn("genel", plan_question("test", "genel", {}))

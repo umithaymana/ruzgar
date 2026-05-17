@@ -848,6 +848,29 @@ def prepare_turn(
     ):
         return msg, [], "", "", "", weather_instant
 
+    _gundelik_fast = (
+        turn_plan is not None
+        and m in ("genel", "uretim", "gelisim")
+        and getattr(turn_plan, "primary", "") == "gundelik"
+        and not bool(getattr(turn_plan, "use_ilim_rag", True))
+    )
+
+    if maybe_clarification_reply is not None and not _gundelik_fast:
+        clar = maybe_clarification_reply(msg, m, motor_flags)
+        if clar:
+            return msg, [], "", "", "", clar
+
+    try:
+        from ilim_assistant.ana_motor_plan import maybe_gundelik_instant_reply
+
+        gundelik_direct = maybe_gundelik_instant_reply(
+            msg, m, motor_flags, question_plan=turn_plan
+        )
+        if gundelik_direct:
+            return msg, [], "", "", "", gundelik_direct
+    except Exception:
+        pass
+
     if not skip_ogrenme_lookup:
         og_direct = try_genel_hafiza_reply(msg, m)
         if og_direct is not None:
@@ -855,7 +878,7 @@ def prepare_turn(
         if _main_chat_genel_only() and m == "genel":
             return msg, [], "", "", "", _genel_only_unknown_reply()
 
-    if maybe_clarification_reply is not None:
+    if maybe_clarification_reply is not None and _gundelik_fast:
         clar = maybe_clarification_reply(msg, m, motor_flags)
         if clar:
             return msg, [], "", "", "", clar
@@ -898,7 +921,12 @@ def prepare_turn(
     hits: list = []
     ar_hits: list = []
     blocks: list = []
-    if m in _NO_RAG_MODES:
+    skip_rag_for_plan = (
+        turn_plan is not None
+        and m in ("genel", "uretim", "gelisim")
+        and not bool(getattr(turn_plan, "use_ilim_rag", True))
+    )
+    if skip_rag_for_plan or m in _NO_RAG_MODES:
         pass
     elif weather_q:
         # gramer/tecvid md'leri "hava" ile yanlış eşleşir; model dilbilgisi uydurur
