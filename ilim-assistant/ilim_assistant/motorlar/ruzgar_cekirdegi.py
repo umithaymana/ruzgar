@@ -19,7 +19,7 @@ def build_core_context(message: str) -> str:
     )
     from ilim_assistant.ses_motoru import build_motor_context as ses_context
     from ilim_assistant.tercume_motoru import build_motor_context as tercume_context
-    from ilim_assistant.video_motoru import build_motor_context as video_context
+    from ilim_assistant.motorlar.video_motoru import build_motor_context as video_context
 
     prompt = (message or "").strip()
     parts = []

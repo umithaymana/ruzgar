@@ -624,6 +624,22 @@
                       <div class="video-timeline-inner" id="video-timeline-inner">
                         <div class="video-timeline-progress" id="video-timeline-progress"></div>
                         <div class="video-timeline-range" id="video-timeline-range" hidden></div>
+                        <button
+                          type="button"
+                          class="video-timeline-handle video-timeline-handle-in"
+                          id="video-timeline-handle-in"
+                          hidden
+                          title="Kesim başlangıcı — sürükleyin"
+                          aria-label="Kesim başlangıcı"
+                        ></button>
+                        <button
+                          type="button"
+                          class="video-timeline-handle video-timeline-handle-out"
+                          id="video-timeline-handle-out"
+                          hidden
+                          title="Kesim bitişi — sürükleyin"
+                          aria-label="Kesim bitişi"
+                        ></button>
                         <div class="video-timeline-playhead" id="video-timeline-playhead"></div>
                       </div>
                     </div>
@@ -757,6 +773,61 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
                       <div class="video-toolbar">
                         <button type="button" class="btn-secondary btn-compact" id="btn-video-mux-audio">Harici sesi videoya bağla</button>
                       </div>
+                    </div>
+                  </div>
+
+                  <div class="video-v2-panel video-v5-panel" id="video-anchor-v5">
+                    <h4 class="video-v2-title">Görsel kurgu — zaman çizelgesi</h4>
+                    <p class="video-v2-intro">
+                      Soldaki şeritte başlangıç/bitiş tutamaçlarını sürükleyin veya işaretleyin. Seçimi kurgu listesine ekleyin;
+                      parçaları sürükleyerek sıralayın (her parça en fazla 5 dk). «Kurguyu birleştir» FFmpeg ile uç uca ekler ve
+                      merkezi havuza kaydeder.
+                    </p>
+                    <label class="video-file-label" for="video-edit-project-name">Kurgu adı (isteğe bağlı)</label>
+                    <input
+                      id="video-edit-project-name"
+                      type="text"
+                      class="video-text-input"
+                      spellcheck="false"
+                      placeholder="örn. tanıtım_v1"
+                    />
+                    <ul class="video-edit-bin" id="video-edit-bin" aria-label="Kurgu parça listesi"></ul>
+                    <p class="video-edit-bin-empty" id="video-edit-bin-empty">Henüz parça yok — zaman çizelgesinden seçip ekleyin.</p>
+                    <label class="video-file-label" for="video-edit-insert-rel">Araya eklenecek dosya (göreli yol)</label>
+                    <input
+                      id="video-edit-insert-rel"
+                      type="text"
+                      class="video-text-input"
+                      spellcheck="false"
+                      placeholder="örn. hafiza/video_indirilen/clip.mp4"
+                    />
+                    <div class="video-trim-grid video-edit-insert-grid">
+                      <label class="video-num-label">
+                        Başlangıç (sn)
+                        <input id="video-edit-insert-start" type="number" class="video-num-input" min="0" step="0.1" value="0" />
+                      </label>
+                      <label class="video-num-label">
+                        Bitiş (sn)
+                        <input id="video-edit-insert-end" type="number" class="video-num-input" min="0" step="0.1" placeholder="boş = +5 dk" />
+                      </label>
+                    </div>
+                    <div class="video-toolbar video-edit-toolbar">
+                      <button type="button" class="btn-secondary btn-compact" id="btn-video-add-clip">
+                        Seçimi listeye ekle
+                      </button>
+                      <button type="button" class="btn-secondary btn-compact" id="btn-video-insert-clip">
+                        Dosyayı listeye ekle
+                      </button>
+                      <button type="button" class="btn-secondary btn-compact" id="btn-video-clear-bin">
+                        Listeyi temizle
+                      </button>
+                      <label class="video-check-label">
+                        <input type="checkbox" id="video-edit-copy-streams" checked />
+                        Akışları kopyala (hızlı)
+                      </label>
+                      <button type="button" class="btn-primary btn-compact" id="btn-video-edit-mix">
+                        Kurguyu birleştir
+                      </button>
                     </div>
                   </div>
 

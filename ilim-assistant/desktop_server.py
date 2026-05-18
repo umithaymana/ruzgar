@@ -140,7 +140,7 @@ def _boot_motorlar_anaonce() -> None:
     for name in (
         "ilim_assistant.ses_motoru",
         "ilim_assistant.video_motoru",
-        "ilim_assistant.bilim_motoru",
+        "ilim_assistant.okuma_motoru",
         "ilim_assistant.tercume_motoru",
         "ilim_assistant.programlama_motoru",
     ):
@@ -203,6 +203,21 @@ class VideoConcatBody(BaseModel):
     rel_a: str = ""
     rel_b: str = ""
     copy_streams: bool = True
+
+
+class VideoEditClipItem(BaseModel):
+    rel: str = ""
+    start_sec: float = 0.0
+    end_sec: float | None = None
+    label: str = ""
+
+
+class VideoEditMixBody(BaseModel):
+    """Timeline kurgusu: kesilmiş parçaları sırayla birleştirir (parça ≤ 5 dk)."""
+
+    clips: list[VideoEditClipItem] = Field(default_factory=list)
+    copy_streams: bool = True
+    project_name: str = ""
 
 
 def _sse(obj: dict) -> str:
@@ -730,6 +745,65 @@ async def api_video_concat(body: VideoConcatBody):
         await run_in_threadpool(_run)
         rel_out = out_path.relative_to(REPO_ROOT.resolve()).as_posix()
         return {"ok": True, "output_rel": rel_out}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@app.post("/api/video/edit/mix")
+async def api_video_edit_mix(body: VideoEditMixBody):
+    """Timeline parçalarını kesip birleştirir; metadata Merkezi Zihin Havuzu'na yazılır."""
+    if not ffmpeg_available():
+        raise HTTPException(
+            status_code=503,
+            detail="ffmpeg bulunamadı: FFmpeg kurun ve PATH'e ekleyin.",
+        )
+    if not body.clips:
+        raise HTTPException(status_code=400, detail="En az bir parça gerekli.")
+
+    from ilim_assistant.motorlar.video_motoru import EDIT_CLIP_MAX_SEC, mix_timeline_clips
+
+    payload = [
+        {
+            "rel": (c.rel or "").strip(),
+            "start_sec": float(c.start_sec or 0),
+            "end_sec": c.end_sec,
+            "label": (c.label or "").strip(),
+        }
+        for c in body.clips
+    ]
+    for i, row in enumerate(payload):
+        if not row["rel"]:
+            raise HTTPException(status_code=400, detail=f"Parça {i + 1}: rel boş.")
+        if row["end_sec"] is not None:
+            span = float(row["end_sec"]) - row["start_sec"]
+            if span > EDIT_CLIP_MAX_SEC + 0.05:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Parça {i + 1}: en fazla {EDIT_CLIP_MAX_SEC // 60} dakika.",
+                )
+
+    def _run():
+        return mix_timeline_clips(
+            payload,
+            workspace_root=str(REPO_ROOT.resolve()),
+            copy_streams=bool(body.copy_streams),
+            project_name=(body.project_name or "").strip(),
+        )
+
+    try:
+        result = await run_in_threadpool(_run)
+        meta = result.to_metadata()
+        return {
+            "ok": result.ok,
+            "output_rel": result.output_rel,
+            "project_id": result.project_id,
+            "parts": result.parts,
+            "total_duration_sec": result.total_duration_sec,
+            "error": result.error,
+            "metadata": meta,
+        }
     except HTTPException:
         raise
     except Exception as e:

@@ -285,6 +285,63 @@ def concat_two_files(
             pass
 
 
+def concat_many_files(
+    paths: list[Path],
+    output_path: Path,
+    *,
+    copy_streams: bool = True,
+    timeout_sec: int = DEFAULT_FFMPEG_TIMEOUT,
+) -> None:
+    """Birden fazla medya dosyasını sırayla birleştirir (kurgu / timeline mix)."""
+    resolved = [Path(p).resolve() for p in paths if str(p).strip()]
+    if len(resolved) < 1:
+        raise ValueError("En az bir dosya gerekli.")
+    if len(resolved) == 1:
+        import shutil
+
+        out_path = Path(output_path)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(resolved[0], out_path)
+        return
+
+    out_path = Path(output_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    list_body = "".join(
+        f"file '{_concat_escape_path(p)}'\n" for p in resolved
+    )
+    tmp_list = out_path.parent / f"_concat_list_{uuid.uuid4().hex}.txt"
+    try:
+        tmp_list.write_text(list_body, encoding="utf-8")
+        argv = ["-y", "-f", "concat", "-safe", "0", "-i", str(tmp_list.resolve())]
+        if copy_streams:
+            argv.extend(["-c", "copy"])
+        else:
+            argv.extend(
+                [
+                    "-c:v",
+                    "libx264",
+                    "-preset",
+                    "fast",
+                    "-crf",
+                    "23",
+                    "-c:a",
+                    "aac",
+                    "-b:a",
+                    "192k",
+                    "-movflags",
+                    "+faststart",
+                ]
+            )
+        argv.append(str(out_path.resolve()))
+        run_ffmpeg_args(argv, timeout_sec=timeout_sec)
+    finally:
+        try:
+            if tmp_list.is_file():
+                tmp_list.unlink()
+        except OSError:
+            pass
+
+
 # Altyazı gömme (burn-in): .srt / .ass / .ssa / .vtt (ffmpeg + libass)
 _ALLOWED_SUBTITLE_SUFFIXES = frozenset({".srt", ".ass", ".ssa", ".vtt"})
 

@@ -1,14 +1,18 @@
 # Created by Ümit & Gökçenur
-"""Video modu icin yardimci motor. İlim ve İdrak: chat_core + ilim_ve_idrak."""
+"""Uyumluluk katmanı: asıl video motoru `motorlar/video_motoru` içindedir."""
 
-
-def build_motor_context(message: str) -> str:
-    from ilim_assistant.dinamit_gelisme import dinamit_heartbeat
-
-    prompt = (message or "").strip()
-    return dinamit_heartbeat() + (
-        "[VIDEO MOTORU]\n"
-        "Bu modda cevaplari sahne, cekim ve kurgu adimlariyla planla. "
-        "Mumkun oldugunda cekim listesi ve akis sirasi belirt.\n"
-        f"Kullanici mesaji: {prompt}"
-    )
+from ilim_assistant.motorlar.video_motoru import (  # noqa: F401
+    EDIT_CLIP_MAX_SEC,
+    EditClipSegment,
+    EditMixResult,
+    MIMAR_IMZA,
+    PROJE_ADI,
+    VideoDownloadResult,
+    build_motor_context,
+    download_video_with_yt_dlp,
+    list_recent_downloads,
+    list_recent_edits,
+    mix_timeline_clips,
+    save_edit_to_central_pool,
+    save_to_central_pool,
+)

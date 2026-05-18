@@ -384,6 +384,19 @@ const el = {
   btnVideoMarkOut: document.getElementById("btn-video-mark-out"),
   btnVideoSyncTrim: document.getElementById("btn-video-sync-trim"),
   btnVideoClearRange: document.getElementById("btn-video-clear-range"),
+  videoTimelineHandleIn: document.getElementById("video-timeline-handle-in"),
+  videoTimelineHandleOut: document.getElementById("video-timeline-handle-out"),
+  videoEditBin: document.getElementById("video-edit-bin"),
+  videoEditBinEmpty: document.getElementById("video-edit-bin-empty"),
+  videoEditProjectName: document.getElementById("video-edit-project-name"),
+  videoEditInsertRel: document.getElementById("video-edit-insert-rel"),
+  videoEditInsertStart: document.getElementById("video-edit-insert-start"),
+  videoEditInsertEnd: document.getElementById("video-edit-insert-end"),
+  videoEditCopyStreams: document.getElementById("video-edit-copy-streams"),
+  btnVideoAddClip: document.getElementById("btn-video-add-clip"),
+  btnVideoInsertClip: document.getElementById("btn-video-insert-clip"),
+  btnVideoClearBin: document.getElementById("btn-video-clear-bin"),
+  btnVideoEditMix: document.getElementById("btn-video-edit-mix"),
   videoRelSubTranslate: document.getElementById("video-rel-sub-translate"),
   btnVideoSubToTercume: document.getElementById("btn-video-sub-to-tercume"),
   videoQuickCreate: document.getElementById("video-quick-create"),
@@ -428,9 +441,14 @@ let sesPreviewObjectUrl = null;
 let videoPreviewObjectUrl = null;
 /** Son ffprobe özeti (dosya seçili değilken süre için) */
 let lastVideoProbeDurationSec = 0;
-/** v4 zaman çizelgesi In/Out (saniye; null = işaret yok) */
+/** v4/v5 zaman çizelgesi In/Out (saniye; null = işaret yok) */
 let videoTimelineIn = null;
 let videoTimelineOut = null;
+/** v5 kurgu parça listesi */
+let videoEditBin = [];
+/** Timeline sürükleme: in | out | scrub | null */
+let videoTimelineDrag = null;
+const VIDEO_EDIT_MAX_CLIP_SEC = 300;
 const OKUMA_ARSIV_ROOT = "ilim-assistant/arsiv";
 
 async function workspaceListDir(rel) {
@@ -3082,6 +3100,63 @@ function getVideoEffectiveDurationSec() {
   return 0;
 }
 
+function getNormalizedTimelineRange() {
+  const d = getVideoEffectiveDurationSec();
+  if (videoTimelineIn == null && videoTimelineOut == null) return null;
+  let a = videoTimelineIn != null ? videoTimelineIn : 0;
+  let b = videoTimelineOut != null ? videoTimelineOut : d > 0 ? d : 0;
+  if (b < a) [a, b] = [b, a];
+  if (d > 0) {
+    a = Math.max(0, Math.min(d, a));
+    b = Math.max(0, Math.min(d, b));
+  }
+  if (b - a > VIDEO_EDIT_MAX_CLIP_SEC) b = a + VIDEO_EDIT_MAX_CLIP_SEC;
+  if (b <= a + 0.01) return null;
+  return { start: a, end: b, duration: b - a };
+}
+
+function timelineSecFromClientX(clientX) {
+  const track = el.videoTimelineTrack;
+  if (!track) return 0;
+  const rect = track.getBoundingClientRect();
+  const x = (clientX - rect.left) / Math.max(rect.width, 1);
+  const d = getVideoEffectiveDurationSec();
+  if (d <= 0) return 0;
+  return Math.max(0, Math.min(d, x * d));
+}
+
+function stopVideoTimelineDrag() {
+  videoTimelineDrag = null;
+  if (el.videoTimelineTrack) el.videoTimelineTrack.classList.remove("is-dragging");
+}
+
+function onVideoTimelinePointerMove(ev) {
+  if (!videoTimelineDrag) return;
+  const sec = timelineSecFromClientX(ev.clientX);
+  const d = getVideoEffectiveDurationSec();
+  if (videoTimelineDrag === "in") {
+    videoTimelineIn = sec;
+    if (videoTimelineOut != null && videoTimelineOut < videoTimelineIn) {
+      videoTimelineOut = videoTimelineIn;
+    }
+    if (videoTimelineOut != null && videoTimelineOut - videoTimelineIn > VIDEO_EDIT_MAX_CLIP_SEC) {
+      videoTimelineOut = Math.min(d, videoTimelineIn + VIDEO_EDIT_MAX_CLIP_SEC);
+    }
+  } else if (videoTimelineDrag === "out") {
+    videoTimelineOut = sec;
+    if (videoTimelineIn != null && videoTimelineOut < videoTimelineIn) {
+      videoTimelineIn = videoTimelineOut;
+    }
+    if (videoTimelineIn != null && videoTimelineOut - videoTimelineIn > VIDEO_EDIT_MAX_CLIP_SEC) {
+      videoTimelineIn = Math.max(0, videoTimelineOut - VIDEO_EDIT_MAX_CLIP_SEC);
+    }
+  } else if (videoTimelineDrag === "scrub") {
+    const v = el.videoPreview;
+    if (v && d > 0) v.currentTime = sec;
+  }
+  updateVideoTimelineUI();
+}
+
 function updateVideoTimelineUI() {
   const d = getVideoEffectiveDurationSec();
   const v = el.videoPreview;
@@ -3093,13 +3168,11 @@ function updateVideoTimelineUI() {
   if (el.videoTimelinePlayhead) el.videoTimelinePlayhead.style.left = `${pctPlay}%`;
 
   const rangeEl = el.videoTimelineRange;
+  const norm = getNormalizedTimelineRange();
   if (rangeEl) {
-    if (videoTimelineIn != null && videoTimelineOut != null) {
-      let a = videoTimelineIn;
-      let b = videoTimelineOut;
-      if (b < a) [a, b] = [b, a];
-      const left = (a / safeD) * 100;
-      const w = ((b - a) / safeD) * 100;
+    if (norm) {
+      const left = (norm.start / safeD) * 100;
+      const w = ((norm.end - norm.start) / safeD) * 100;
       rangeEl.hidden = false;
       rangeEl.style.left = `${Math.min(100, Math.max(0, left))}%`;
       rangeEl.style.width = `${Math.min(100 - left, Math.max(0, w))}%`;
@@ -3108,13 +3181,36 @@ function updateVideoTimelineUI() {
     }
   }
 
+  const showHandles = d > 0;
+  const inPos =
+    videoTimelineIn != null ? videoTimelineIn : norm ? norm.start : 0;
+  const outPos =
+    videoTimelineOut != null
+      ? videoTimelineOut
+      : norm
+        ? norm.end
+        : Math.min(d, VIDEO_EDIT_MAX_CLIP_SEC);
+  if (el.videoTimelineHandleIn) {
+    el.videoTimelineHandleIn.hidden = !showHandles;
+    if (showHandles) {
+      el.videoTimelineHandleIn.style.left = `${(inPos / safeD) * 100}%`;
+    }
+  }
+  if (el.videoTimelineHandleOut) {
+    el.videoTimelineHandleOut.hidden = !showHandles;
+    if (showHandles) {
+      el.videoTimelineHandleOut.style.left = `${(outPos / safeD) * 100}%`;
+    }
+  }
+
   if (el.videoTimelineLabel) {
     let cutInfo = "—";
-    if (videoTimelineIn != null && videoTimelineOut != null) {
-      let a = videoTimelineIn;
-      let b = videoTimelineOut;
-      if (b < a) [a, b] = [b, a];
-      cutInfo = `${a.toFixed(1)}–${b.toFixed(1)} sn (${(b - a).toFixed(1)} sn)`;
+    if (norm) {
+      const capped =
+        norm.duration >= VIDEO_EDIT_MAX_CLIP_SEC - 0.05
+          ? ` (max ${VIDEO_EDIT_MAX_CLIP_SEC / 60} dk)`
+          : "";
+      cutInfo = `${norm.start.toFixed(1)}–${norm.end.toFixed(1)} sn (${norm.duration.toFixed(1)} sn)${capped}`;
     } else if (videoTimelineIn != null) {
       cutInfo = `Başlangıç ${videoTimelineIn.toFixed(1)} sn`;
     } else if (videoTimelineOut != null) {
@@ -3125,9 +3221,169 @@ function updateVideoTimelineUI() {
   }
 }
 
+function newVideoEditClipId() {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+  return `clip_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function renderVideoEditBin() {
+  const list = el.videoEditBin;
+  if (!list) return;
+  list.innerHTML = "";
+  videoEditBin.forEach((clip, idx) => {
+    const li = document.createElement("li");
+    li.className = "video-edit-bin-item";
+    li.draggable = true;
+    li.dataset.clipId = clip.id;
+    const dur = Math.max(0, (clip.end_sec ?? 0) - (clip.start_sec ?? 0));
+    li.innerHTML = `
+      <span class="video-edit-bin-grip" title="Sürükleyerek sırala">⋮⋮</span>
+      <span class="video-edit-bin-meta">
+        <strong>${idx + 1}.</strong> ${esc(clip.label || "Parça")}
+        · ${esc(clip.rel)} · ${Number(clip.start_sec || 0).toFixed(1)}–${Number(clip.end_sec || 0).toFixed(1)} sn (${dur.toFixed(1)} sn)
+      </span>
+      <button type="button" class="btn-secondary btn-compact video-edit-bin-remove" data-remove-id="${esc(clip.id)}">Sil</button>
+    `;
+    li.addEventListener("dragstart", (ev) => {
+      li.classList.add("is-dragging");
+      ev.dataTransfer.setData("text/plain", clip.id);
+      ev.dataTransfer.effectAllowed = "move";
+    });
+    li.addEventListener("dragend", () => li.classList.remove("is-dragging"));
+    li.addEventListener("dragover", (ev) => {
+      ev.preventDefault();
+      ev.dataTransfer.dropEffect = "move";
+    });
+    li.addEventListener("drop", (ev) => {
+      ev.preventDefault();
+      const fromId = ev.dataTransfer.getData("text/plain");
+      if (!fromId || fromId === clip.id) return;
+      const fromIdx = videoEditBin.findIndex((c) => c.id === fromId);
+      const toIdx = videoEditBin.findIndex((c) => c.id === clip.id);
+      if (fromIdx < 0 || toIdx < 0) return;
+      const [moved] = videoEditBin.splice(fromIdx, 1);
+      videoEditBin.splice(toIdx, 0, moved);
+      renderVideoEditBin();
+    });
+    li.querySelector("[data-remove-id]")?.addEventListener("click", () => {
+      videoEditBin = videoEditBin.filter((c) => c.id !== clip.id);
+      renderVideoEditBin();
+    });
+    list.appendChild(li);
+  });
+}
+
+function addClipToVideoEditBin(rel, startSec, endSec, label) {
+  const relTrim = String(rel || "").trim();
+  if (!relTrim) {
+    flashRuzgarDurum("Proje içi göreli yol gerekli (üstteki alan).");
+    return false;
+  }
+  let a = Math.max(0, Number(startSec) || 0);
+  let b = endSec != null && String(endSec).trim() !== "" ? Number(endSec) : null;
+  const d = getVideoEffectiveDurationSec();
+  if (b == null || !Number.isFinite(b)) {
+    b = d > 0 ? d : a + VIDEO_EDIT_MAX_CLIP_SEC;
+  }
+  if (!Number.isFinite(b)) b = a + VIDEO_EDIT_MAX_CLIP_SEC;
+  if (b < a) [a, b] = [b, a];
+  if (b - a > VIDEO_EDIT_MAX_CLIP_SEC) b = a + VIDEO_EDIT_MAX_CLIP_SEC;
+  if (b <= a + 0.01) {
+    flashRuzgarDurum("Geçersiz aralık.");
+    return false;
+  }
+  videoEditBin.push({
+    id: newVideoEditClipId(),
+    rel: relTrim,
+    start_sec: a,
+    end_sec: b,
+    label: label || `Parça ${videoEditBin.length + 1}`,
+  });
+  renderVideoEditBin();
+  return true;
+}
+
+function addCurrentTimelineSelectionToBin() {
+  const rel = String(el.videoRelWorkspace?.value || "").trim();
+  const norm = getNormalizedTimelineRange();
+  if (!norm) {
+    flashRuzgarDurum("Zaman çizelgesinde başlangıç ve bitiş seçin (tutamaçları sürükleyin veya işaretleyin).");
+    return;
+  }
+  if (addClipToVideoEditBin(rel, norm.start, norm.end, "")) {
+    flashRuzgarDurum(`Listeye eklendi: ${norm.duration.toFixed(1)} sn`);
+  }
+}
+
+function addInsertRelClipToBin() {
+  const rel = String(el.videoEditInsertRel?.value || el.videoRelWorkspace?.value || "").trim();
+  const start = Number(el.videoEditInsertStart?.value || 0);
+  let endRaw = String(el.videoEditInsertEnd?.value || "").trim();
+  let end = endRaw ? Number(endRaw) : null;
+  if (end == null || !Number.isFinite(end)) {
+    end = start + VIDEO_EDIT_MAX_CLIP_SEC;
+  }
+  if (addClipToVideoEditBin(rel, start, end, "Ara parça")) {
+    flashRuzgarDurum("Dosya kurgu listesine eklendi.");
+  }
+}
+
+async function runVideoEditMixJob() {
+  if (!videoEditBin.length) {
+    flashRuzgarDurum("Önce kurgu listesine en az bir parça ekleyin.");
+    return;
+  }
+  flashRuzgarDurum("Kurgu birleştiriliyor (FFmpeg)…");
+  setStatus("Video kurgu…", "Rüzgar");
+  const body = {
+    clips: videoEditBin.map((c) => ({
+      rel: c.rel,
+      start_sec: c.start_sec,
+      end_sec: c.end_sec,
+      label: c.label || "",
+    })),
+    copy_streams: el.videoEditCopyStreams?.checked !== false,
+    project_name: String(el.videoEditProjectName?.value || "").trim(),
+  };
+  try {
+    const res = await fetch(`${API}/api/video/edit/mix`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    let j = {};
+    try {
+      j = await res.json();
+    } catch {
+      j = {};
+    }
+    if (!res.ok || !j.ok) {
+      let detail = j.detail || j.error;
+      if (Array.isArray(detail)) {
+        detail = detail.map((x) => (x && x.msg ? x.msg : JSON.stringify(x))).join("; ");
+      }
+      flashRuzgarDurum(String(detail || "Kurgu başarısız."));
+      setStatus("Hazır", "Rüzgar");
+      return;
+    }
+    if (j.output_rel) {
+      appendVideoJobNote(j.output_rel);
+      if (el.videoRelWorkspace) el.videoRelWorkspace.value = j.output_rel;
+    }
+    flashRuzgarDurum(
+      `Kurgu hazır · ${Number(j.total_duration_sec || 0).toFixed(1)} sn · havuz: ${j.project_id || "—"}`
+    );
+    setStatus("Hazır", "Rüzgar");
+  } catch (e) {
+    flashRuzgarDurum(e && e.message ? e.message : String(e));
+    setStatus("Hazır", "Rüzgar");
+  }
+}
+
 function resetVideoTimelineMarks() {
   videoTimelineIn = null;
   videoTimelineOut = null;
+  stopVideoTimelineDrag();
   updateVideoTimelineUI();
 }
 
@@ -3167,19 +3423,100 @@ function seekVideoFromTimelineClientX(clientX) {
   updateVideoTimelineUI();
 }
 
+function wireVideoEditPanel() {
+  const panel = document.getElementById("video-anchor-v5");
+  if (!panel || panel.dataset.editWired === "1") return;
+  panel.dataset.editWired = "1";
+  if (el.btnVideoAddClip) {
+    el.btnVideoAddClip.addEventListener("click", () => addCurrentTimelineSelectionToBin());
+  }
+  if (el.btnVideoInsertClip) {
+    el.btnVideoInsertClip.addEventListener("click", () => addInsertRelClipToBin());
+  }
+  if (el.btnVideoClearBin) {
+    el.btnVideoClearBin.addEventListener("click", () => {
+      videoEditBin = [];
+      renderVideoEditBin();
+      flashRuzgarDurum("Kurgu listesi temizlendi.");
+    });
+  }
+  if (el.btnVideoEditMix) {
+    el.btnVideoEditMix.addEventListener("click", () => {
+      void runVideoEditMixJob();
+    });
+  }
+  renderVideoEditBin();
+}
+
 function wireVideoTimeline() {
   const wrap = document.getElementById("video-timeline-wrap");
   if (!wrap || wrap.dataset.timelineWired === "1") return;
   wrap.dataset.timelineWired = "1";
   if (el.videoPreview) {
     el.videoPreview.addEventListener("timeupdate", () => updateVideoTimelineUI());
-    el.videoPreview.addEventListener("loadedmetadata", () => updateVideoTimelineUI());
+    el.videoPreview.addEventListener("loadedmetadata", () => {
+      const d = getVideoEffectiveDurationSec();
+      if (d > 0 && videoTimelineIn == null && videoTimelineOut == null) {
+        videoTimelineIn = 0;
+        videoTimelineOut = Math.min(d, VIDEO_EDIT_MAX_CLIP_SEC);
+      }
+      updateVideoTimelineUI();
+    });
   }
+  const bindHandle = (handleEl, role) => {
+    if (!handleEl) return;
+    handleEl.addEventListener("pointerdown", (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      const d = getVideoEffectiveDurationSec();
+      if (d <= 0) {
+        flashRuzgarDurum("Önce dosya veya süre bilgisi gerekli.");
+        return;
+      }
+      if (role === "in" && videoTimelineIn == null) videoTimelineIn = timelineSecFromClientX(ev.clientX);
+      if (role === "out" && videoTimelineOut == null) videoTimelineOut = timelineSecFromClientX(ev.clientX);
+      videoTimelineDrag = role;
+      if (el.videoTimelineTrack) el.videoTimelineTrack.classList.add("is-dragging");
+      handleEl.setPointerCapture(ev.pointerId);
+    });
+    handleEl.addEventListener("pointermove", (ev) => {
+      if (videoTimelineDrag === role) onVideoTimelinePointerMove(ev);
+    });
+    handleEl.addEventListener("pointerup", (ev) => {
+      if (videoTimelineDrag === role) {
+        stopVideoTimelineDrag();
+        try {
+          handleEl.releasePointerCapture(ev.pointerId);
+        } catch (_) {
+          /* ignore */
+        }
+        updateVideoTimelineUI();
+      }
+    });
+    handleEl.addEventListener("pointercancel", () => stopVideoTimelineDrag());
+  };
+  bindHandle(el.videoTimelineHandleIn, "in");
+  bindHandle(el.videoTimelineHandleOut, "out");
   if (el.videoTimelineTrack) {
+    el.videoTimelineTrack.addEventListener("pointerdown", (ev) => {
+      if (ev.target.closest(".video-timeline-handle")) return;
+      const d = getVideoEffectiveDurationSec();
+      if (d <= 0) return;
+      videoTimelineDrag = "scrub";
+      el.videoTimelineTrack.classList.add("is-dragging");
+      seekVideoFromTimelineClientX(ev.clientX);
+    });
+    el.videoTimelineTrack.addEventListener("pointermove", (ev) => {
+      if (videoTimelineDrag === "scrub") onVideoTimelinePointerMove(ev);
+    });
+    el.videoTimelineTrack.addEventListener("pointerup", stopVideoTimelineDrag);
+    el.videoTimelineTrack.addEventListener("pointercancel", stopVideoTimelineDrag);
     el.videoTimelineTrack.addEventListener("click", (ev) => {
+      if (ev.target.closest(".video-timeline-handle")) return;
       seekVideoFromTimelineClientX(ev.clientX);
     });
   }
+  window.addEventListener("pointerup", stopVideoTimelineDrag);
   if (el.btnVideoMarkIn) {
     el.btnVideoMarkIn.addEventListener("click", () => {
       const v = el.videoPreview;
@@ -3261,7 +3598,7 @@ async function refreshVideoEngineHint() {
     const j = await r.json();
     if (j.ffprobe) {
       el.videoEngineHint.textContent =
-        "Ortam inceleme hazır — «Medya bilgisi». v2 kesim; v3 altyazı/ses; v4 çizelge + altyazıyı Tercüme’ye gönder. Yerel araçlar sistem yolunda olmalı; çıktı .ruzgar-video-export/.";
+        "Ortam inceleme hazır — v2 kesim; v3 altyazı/ses; v4 altyazı→Tercüme; v5 görsel kurgu (timeline + FFmpeg mix, merkezi havuz). Çıktı: .ruzgar-video-export/.";
     } else {
       el.videoEngineHint.textContent =
         "Ortam inceleme aracı yok — FFmpeg paketini kurup sistem yoluna ekleyin; ardından yerel sunucuyu yeniden başlatın.";
@@ -3643,6 +3980,7 @@ function wireVideoAtolye() {
     });
   }
   wireVideoTimeline();
+  wireVideoEditPanel();
   wireVideoQuickBar();
 }
 
