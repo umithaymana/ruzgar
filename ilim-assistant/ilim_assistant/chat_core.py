@@ -30,7 +30,24 @@ from ilim_assistant.web_tools import (
 )
 
 
-def resolve_model(coding_mode: bool) -> str:
+def resolve_model(
+    coding_mode: bool,
+    *,
+    message: str = "",
+    mode_norm: str = "genel",
+    question_plan: Any | None = None,
+) -> str:
+    try:
+        from ilim_assistant.llm_brain import resolve_brain_model
+
+        return resolve_brain_model(
+            coding_mode,
+            message=message,
+            mode_norm=mode_norm,
+            question_plan=question_plan,
+        )
+    except Exception:
+        pass
     if coding_mode:
         return os.environ.get("OLLAMA_CHAT_MODEL_CODING") or os.environ.get(
             "OLLAMA_CHAT_MODEL", DEFAULT_OLLAMA_CHAT_MODEL
@@ -1259,7 +1276,12 @@ def prepare_turn(
     )
 
     system = pick_system(coding_mode, m)
-    model = resolve_model(coding_mode)
+    model = resolve_model(
+        coding_mode,
+        message=msg,
+        mode_norm=m,
+        question_plan=question_plan,
+    )
     return msg, hits, user_payload, system, model, None
 
 
@@ -1327,9 +1349,23 @@ def respond(
         messages.append({"role": "user", "content": msg})
         messages.append({"role": "assistant", "content": ""})
         reply_body = ""
-        for piece in chat_completion_stream(
-            system, user_payload, model=model, prior_messages=prior
-        ):
+        try:
+            from ilim_assistant.llm_brain import stream_chat_with_brain
+
+            stream_iter = stream_chat_with_brain(
+                system,
+                user_payload,
+                model=model,
+                prior_messages=prior,
+                mode_norm=normalize_mode(mode),
+                coding_mode=coding_mode,
+                message=msg,
+            )
+        except ImportError:
+            stream_iter = chat_completion_stream(
+                system, user_payload, model=model, prior_messages=prior
+            )
+        for piece in stream_iter:
             reply_body += piece
             messages[-1]["content"] = repair_utf8_mojibake(reply_body)
             yield messages, "", msg, messages[-1]["content"], "Yazıyor…", new_wake_used

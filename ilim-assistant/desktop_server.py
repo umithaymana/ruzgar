@@ -40,7 +40,8 @@ from ilim_assistant.hafiza_i_ruzgar import (
     get_hafiza_motor as _get_hafiza_motor,
 )
 from ilim_assistant.text_encoding import finalize_assistant_reply
-from ilim_assistant.llm_ollama import chat_completion_stream, format_llm_user_error
+from ilim_assistant.llm_brain import select_brain_chain, stream_chat_with_brain
+from ilim_assistant.llm_ollama import format_llm_user_error
 from ilim_assistant.stt_whisper import stt_runtime_available, transcribe_file
 from ilim_assistant.video_ffmpeg import (
     MAX_SEGMENT_SECONDS,
@@ -62,8 +63,31 @@ app = FastAPI(title="RÜZGAR Desktop API")
 MAX_VIDEO_PROBE_BYTES = 600 * 1024 * 1024
 
 # Proje kökü (YAPAY ZEKA): ilim-assistant/desktop_server.py → iki üst dizin
-REPO_ROOT = Path(__file__).resolve().parent.parent
+_ILIM_ASSISTANT_ROOT = Path(__file__).resolve().parent
+REPO_ROOT = _ILIM_ASSISTANT_ROOT.parent
 _SKIP_LIST_NAMES = frozenset({"node_modules", "__pycache__", ".venv", "venv", ".git"})
+
+
+def _load_env_file() -> None:
+    """``ilim-assistant/.env`` — GOOGLE_GEMINI_API_KEY vb. (mevcut ortamı ezmez)."""
+    path = _ILIM_ASSISTANT_ROOT / ".env"
+    if not path.is_file():
+        return
+    try:
+        for raw in path.read_text(encoding="utf-8").splitlines():
+            line = raw.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, val = line.partition("=")
+            key = key.strip()
+            val = val.strip().strip('"').strip("'")
+            if key and key not in os.environ:
+                os.environ[key] = val
+    except OSError:
+        pass
+
+
+_load_env_file()
 
 
 def pdf_text_runtime_available() -> bool:
@@ -361,6 +385,15 @@ def api_hafiza_import_blok(body: HafizaImportBlok):
     return {"ok": True, "added": len(items), "items": items}
 
 
+def _super_brain_health_block() -> dict[str, Any]:
+    try:
+        from ilim_assistant.llm_brain import brain_health_snapshot
+
+        return brain_health_snapshot()
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
 @app.get("/api/health")
 def health():
     import os as _os
@@ -417,6 +450,7 @@ def health():
             "ana_motor_agent_enabled": os.environ.get("RUZGAR_ANA_MOTOR_AGENT", "1").strip().lower()
             not in ("0", "false", "no"),
         },
+        "super_brain": _super_brain_health_block(),
         "hizir": {
             "mock_marketplace": _m,
             "amazon_paapi_credentials": bool(_ak and _sk and _tg),
@@ -1374,10 +1408,31 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
         return
 
     prior = prior_messages_for_turn(req.history, mode_norm)
+    try:
+        brain_sel = select_brain_chain(
+            message=msg,
+            mode_norm=mode_norm,
+            coding_mode=coding,
+            question_plan=turn_plan,
+            legacy_model=model,
+        )
+        yield {
+            "type": "meta",
+            "brain": brain_sel.to_public_dict(),
+        }
+    except Exception:
+        pass
     reply_body = ""
     try:
-        for piece in chat_completion_stream(
-            system, user_payload, model=model, prior_messages=prior
+        for piece in stream_chat_with_brain(
+            system,
+            user_payload,
+            model=model,
+            prior_messages=prior,
+            mode_norm=mode_norm,
+            coding_mode=coding,
+            message=msg,
+            question_plan=turn_plan,
         ):
             reply_body += piece
             yield {"type": "token", "text": piece}

@@ -20,7 +20,11 @@ def format_llm_user_error(exc: BaseException) -> str:
     raw = str(exc).strip()
     low = raw.lower()
     model = os.environ.get("OLLAMA_CHAT_MODEL", DEFAULT_OLLAMA_CHAT_MODEL)
-    base = (os.environ.get("OPENAI_COMPAT_BASE") or "http://127.0.0.1:11434/v1").rstrip("/")
+    base = (
+        os.environ.get("OLLAMA_API_BASE")
+        or os.environ.get("OPENAI_COMPAT_BASE")
+        or "http://127.0.0.1:11434/v1"
+    ).rstrip("/")
     if "timed out" in low or "timeout" in low or "read timed out" in low:
         return (
             f"Ollama yanıt vermedi (zaman aşımı). Model: {model}. "
@@ -134,12 +138,15 @@ def chat_completion(
     prior_messages: Optional[list] = None,
 ) -> str:
     """
-    Öncelik: OPENAI_COMPAT varsayılanı.
-    - Ollama: base http://127.0.0.1:11434/v1, api_key=ollama (veya boş)
-    - Model: OLLAMA_CHAT_MODEL veya model parametresi
+    Yerel Ollama — OpenAI uyumlu /v1 uç noktası (OLLAMA_API_BASE).
+    Bulut zeka için ``llm_gemini`` kullanın.
     """
-    base = base_url or os.environ.get("OPENAI_COMPAT_BASE", "http://127.0.0.1:11434/v1")
-    key = api_key if api_key is not None else os.environ.get("OPENAI_COMPAT_KEY", "ollama")
+    base = base_url or os.environ.get("OLLAMA_API_BASE") or os.environ.get(
+        "OPENAI_COMPAT_BASE", "http://127.0.0.1:11434/v1"
+    )
+    key = api_key if api_key is not None else os.environ.get("OLLAMA_API_KEY") or os.environ.get(
+        "OPENAI_COMPAT_KEY", "ollama"
+    )
     m = model or os.environ.get("OLLAMA_CHAT_MODEL", DEFAULT_OLLAMA_CHAT_MODEL)
 
     payload = {
@@ -185,8 +192,12 @@ def chat_completion_stream(
     OpenAI uyumlu streaming (SSE). Her parça assistant içeriğinden bir metin parçası.
     Hata durumunda tek seferlik bir hata metni verilir.
     """
-    base = base_url or os.environ.get("OPENAI_COMPAT_BASE", "http://127.0.0.1:11434/v1")
-    key = api_key if api_key is not None else os.environ.get("OPENAI_COMPAT_KEY", "ollama")
+    base = base_url or os.environ.get("OLLAMA_API_BASE") or os.environ.get(
+        "OPENAI_COMPAT_BASE", "http://127.0.0.1:11434/v1"
+    )
+    key = api_key if api_key is not None else os.environ.get("OLLAMA_API_KEY") or os.environ.get(
+        "OPENAI_COMPAT_KEY", "ollama"
+    )
     m = model or os.environ.get("OLLAMA_CHAT_MODEL", DEFAULT_OLLAMA_CHAT_MODEL)
 
     payload = {

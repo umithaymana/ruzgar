@@ -30,7 +30,7 @@ Modeli sıfırdan eğitmek şart değil. Pratik yol:
 - Kod modu sistem istemi **polyglot** tanımlıdır (istem dilinde çok sayıda dil ailesi); alt modelin gücü ve güncelliği yanıt kalitesini belirler.
 - Arayüzde **Kod / yazılım modu**: ayrı sistem istemi + isteğe bağlı kod modeli.
 - Yerelde güçlü sonuç için örnek: `ollama pull qwen2.5-coder:7b` ve ortamda `OLLAMA_CHAT_MODEL_CODING=qwen2.5-coder:7b`.
-- Bulut API ile üst seviye mantık için `OPENAI_COMPAT_BASE` ve anahtarı kullanabilirsin (OpenAI uyumlu uç noktalar).
+- Bulut zeka (ücretsiz kota): Google Gemini — `GOOGLE_GEMINI_API_KEY` ve `RUZGAR_GEMINI_MODEL` (`RUZGAR_BRAIN.env.example`). Anahtar: https://aistudio.google.com/apikey
 
 ## Hız (gecikme)
 
