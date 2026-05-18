@@ -21,6 +21,14 @@ const fs = require("fs");
   }
 })();
 
+/** Node ile `node main.js` çalıştırılırsa `require("electron")` string döner; `app` tanımsız olur. */
+const electronApi = require("electron");
+if (typeof electronApi === "string" || !electronApi.app) {
+  console.error(
+    "[RÜZGAR] main.js yalnızca Electron ile çalışır. ruzgar-desktop klasöründe: npm start"
+  );
+  process.exit(1);
+}
 const {
   app,
   BrowserWindow,
@@ -29,7 +37,7 @@ const {
   shell,
   dialog,
   session,
-} = require("electron");
+} = electronApi;
 const { pathToFileURL } = require("url");
 
 const WORKSPACE_ROOT = path.resolve(__dirname, "..");
@@ -230,26 +238,32 @@ function createWindow() {
 
 app.whenReady().then(() => {
   /** Mikrofon / ses yakalama — Windows izin diyaloğu ve Electron oturumu için */
-  session.defaultSession.setPermissionRequestHandler(
-    (_wc, permission, callback) => {
-      const allow = new Set([
-        "media",
-        "audioCapture",
-        "microphone",
-        "display-capture",
-      ]);
-      callback(allow.has(permission));
-    }
-  );
-  session.defaultSession.setPermissionCheckHandler(
-    (_wc, permission /* , origin */) => {
-      return (
-        permission === "media" ||
-        permission === "audioCapture" ||
-        permission === "microphone"
+  try {
+    const defaultSession = session && session.defaultSession;
+    if (defaultSession) {
+      defaultSession.setPermissionRequestHandler(
+        (_wc, permission, callback) => {
+          if (typeof callback !== "function") return;
+          const allow = new Set([
+            "media",
+            "audioCapture",
+            "microphone",
+            "display-capture",
+          ]);
+          callback(allow.has(permission));
+        }
       );
+      defaultSession.setPermissionCheckHandler((_wc, permission) => {
+        return (
+          permission === "media" ||
+          permission === "audioCapture" ||
+          permission === "microphone"
+        );
+      });
     }
-  );
+  } catch (e) {
+    console.error("[RÜZGAR] Oturum izin ayarları:", e);
+  }
 
   ipcMain.handle("workspace:list", (_e, rel) => safeListDir(rel || ""));
   ipcMain.handle("workspace:root", () => WORKSPACE_ROOT);
@@ -310,11 +324,13 @@ app.whenReady().then(() => {
   });
   ipcMain.handle("ruzgar:open-external", (_e, url) => {
     try {
-      const u = new URL(String(url || ""));
-      if (u.hostname !== "127.0.0.1" && u.hostname !== "localhost") {
+      const raw = String(url || "").trim();
+      const u = new URL(raw);
+      if (u.protocol !== "http:" && u.protocol !== "https:") {
         return false;
       }
-      if (u.protocol !== "http:" && u.protocol !== "https:") {
+      const h = (u.hostname || "").toLowerCase();
+      if (h === "localhost" || h === "127.0.0.1") {
         return false;
       }
       shell.openExternal(u.href);
@@ -358,6 +374,17 @@ app.whenReady().then(() => {
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
+}).catch((err) => {
+  console.error("[RÜZGAR] whenReady:", err);
+  try {
+    dialog.showErrorBox(
+      "RUZGAR",
+      `Uygulama başlatılamadı: ${err && err.message ? err.message : String(err)}`
+    );
+  } catch (_) {
+    /* dialog yoksa */
+  }
+  app.quit();
 });
 
 app.on("window-all-closed", () => {

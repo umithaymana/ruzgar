@@ -6,42 +6,40 @@ from typing import Any, Callable
 from ilim_assistant.hizir.avci import HizirAvci
 
 
-def _listings_dict(query: str) -> dict[str, Any]:
-    from ilim_assistant.hizir import market_live as ml
-    from ilim_assistant.hizir.scraper import AmazonScraperScaffold, TrendyolScraperScaffold
+def _listings_dict(
+    query: str, *, fiyat_dedektifi: bool = False, channels: list[str] | None = None
+) -> dict[str, Any]:
+    from ilim_assistant.hizir.global_market_engine import build_global_market_listings
 
     q = (query or "").strip() or "ürün"
-    ty = TrendyolScraperScaffold()
-    am = AmazonScraperScaffold()
-    ty_rows = ty.fetch_listings(q, limit=6)
-    am_rows = am.fetch_listings(q, limit=6)
-    live = not ml.use_mock_marketplace()
-    errors: dict[str, str] = {}
-    if live:
-        if TrendyolScraperScaffold.last_live_error:
-            errors["trendyol"] = TrendyolScraperScaffold.last_live_error
-        if AmazonScraperScaffold.last_live_error:
-            errors["amazon"] = AmazonScraperScaffold.last_live_error
+    scan_mode = "fiyat_dedektifi" if fiyat_dedektifi else "otomatik_arbitraj"
+    payload = build_global_market_listings(q, limit=8, scan_mode=scan_mode, channels=channels)
+    errors = dict(payload.get("errors") or {})
     return {
-        "ok": True,
-        "query": q,
-        "live": live,
+        "ok": bool(payload.get("ok", True)),
+        "query": payload.get("query", q),
+        "scan_mode": payload.get("scan_mode", scan_mode),
+        "live": bool(payload.get("live")),
+        "mock_marketplace": bool(payload.get("mock_marketplace")),
+        "canli_pazar": bool(payload.get("canli_pazar")),
+        "data_mode": payload.get("data_mode", "live"),
         "errors": errors,
-        "trendyol": [
-            {"name": x.product_name, "price": x.price, "in_stock": x.in_stock, "id": x.external_id}
-            for x in ty_rows
-        ],
-        "amazon": [
-            {"name": x.product_name, "price": x.price, "in_stock": x.in_stock, "id": x.external_id}
-            for x in am_rows
-        ],
+        "loops": payload.get("loops") or {},
+        "trendyol": payload.get("trendyol") or [],
+        "amazon": payload.get("amazon") or [],
+        "search_compare": payload.get("search_compare") or {},
+        "static_live_fill": payload.get("static_live_fill") or [],
+        "aktif_kanallar": payload.get("aktif_kanallar") or [],
+        "kanal_secimi": payload.get("kanal_secimi") or [],
     }
 
 
-def tool_hizir_market_listings(query: str) -> dict[str, Any]:
-    """Scraper: pazar yerlerinde (iskelet) ürün satırları."""
+def tool_hizir_market_listings(
+    query: str = "", fiyat_dedektifi: bool = False, channels: list[str] | None = None
+) -> dict[str, Any]:
+    """Scraper: pazar yerlerinde ürün satırları; `fiyat_dedektifi` ile Search & Compare vitrin."""
     q = (query or "").strip() or "ürün"
-    return _listings_dict(q)
+    return _listings_dict(q, fiyat_dedektifi=bool(fiyat_dedektifi), channels=channels)
 
 
 def tool_hizir_analyze_opportunity(
@@ -58,7 +56,11 @@ def tool_hizir_analyze_opportunity(
 
 
 _TOOL_REGISTRY: dict[str, Callable[..., dict[str, Any]]] = {
-    "hizir_market_listings": lambda **kw: tool_hizir_market_listings(kw.get("query", "")),
+    "hizir_market_listings": lambda **kw: tool_hizir_market_listings(
+        kw.get("query", ""),
+        fiyat_dedektifi=bool(kw.get("fiyat_dedektifi")),
+        channels=kw.get("channels"),
+    ),
     "hizir_analyze_opportunity": lambda **kw: tool_hizir_analyze_opportunity(
         float(kw.get("source_price", 0)),
         float(kw.get("target_price", 0)),
@@ -71,10 +73,21 @@ _TOOL_REGISTRY: dict[str, Callable[..., dict[str, Any]]] = {
 HIZIR_TOOL_SPECS: list[dict[str, Any]] = [
     {
         "name": "hizir_market_listings",
-        "description": "Trendyol ve Amazon için ürün adı, fiyat, stok listesi (canlı: varsayılan; HIZIR_MOCK_MARKETPLACE=1 ile sahte).",
+        "description": "Global pazar motoru: TR (Trendyol+Amazon TR) ve US/UK/DE (Amazon+eBay+US AliExpress). Varsayılan canlı; HIZIR_MOCK_MARKETPLACE=1 yalnızca geliştirici.",
         "parameters": {
             "type": "object",
-            "properties": {"query": {"type": "string"}},
+            "properties": {
+                "query": {"type": "string"},
+                "fiyat_dedektifi": {
+                    "type": "boolean",
+                    "description": "True: ürün odaklı fiyat karşılaştırma (Fiyat Dedektifi). False: genel arbitraj taraması.",
+                },
+                "channels": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "İsteğe bağlı: trendyol, amazon_tr, hepsiburada, amazon_us, amazon_gb, amazon_de, ebay, aliexpress",
+                },
+            },
             "required": ["query"],
         },
     },

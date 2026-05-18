@@ -10,11 +10,12 @@ from ilim_assistant.hizir.bellek import (
     find_fresh_genel_girdi,
     find_hizir_firsat_summary_lines,
 )
+from ilim_assistant.hizir import pazar_context as pazar_ctx
 from ilim_assistant.hizir.universal_scraper import UniversalScraper
 
 
 def _maybe_append_margin_tool(uni: dict[str, Any], parts: list[str]) -> None:
-    """İlk stoklu Trendyol / Amazon mock fiyatlarıyla hizir_analyze_opportunity çağrısı."""
+    """İlk stoklu Trendyol / Amazon TR satırlarıyla hizir_analyze_opportunity çağrısı."""
     try:
         from ilim_assistant.hizir.tools import run_hizir_tool
 
@@ -24,10 +25,12 @@ def _maybe_append_margin_tool(uni: dict[str, Any], parts: list[str]) -> None:
         res = data.get("result")
         if not isinstance(res, dict):
             return
-        ty = res.get("trendyol") or []
-        am = res.get("amazon") or []
-        src = next((float(x["price"]) for x in ty if x.get("in_stock")), None)
-        tgt = next((float(x["price"]) for x in am if x.get("in_stock")), None)
+        loops = res.get("loops") if isinstance(res.get("loops"), dict) else {}
+        yerel = loops.get("yerel_tr") if isinstance(loops.get("yerel_tr"), dict) else {}
+        ty = yerel.get("trendyol") if isinstance(yerel.get("trendyol"), list) else res.get("trendyol") or []
+        am = yerel.get("amazon_tr") if isinstance(yerel.get("amazon_tr"), list) else res.get("amazon") or []
+        src = next((float(x["price"]) for x in ty if isinstance(x, dict) and x.get("in_stock")), None)
+        tgt = next((float(x["price"]) for x in am if isinstance(x, dict) and x.get("in_stock")), None)
         if src is None or tgt is None:
             return
         comm = float(os.environ.get("HIZIR_DEFAULT_SALE_COMMISSION", "0.15"))
@@ -40,7 +43,7 @@ def _maybe_append_margin_tool(uni: dict[str, Any], parts: list[str]) -> None:
             },
         )
         parts.append(
-            "=== Araç: hizir_analyze_opportunity (kaynak=ilk Trendyol, hedef=ilk Amazon) ===\n"
+            "=== Araç: hizir_analyze_opportunity (kaynak=ilk Trendyol, hedef=ilk Amazon TR) ===\n"
             + json.dumps(out, ensure_ascii=False, default=str)[:4000]
         )
     except Exception:
@@ -61,14 +64,17 @@ def _komuta_pazar_tara(message: str) -> bool:
     )
 
 
-def _norm_cache_key(message: str) -> str:
+def _norm_cache_key(message: str, kanallar: list[str] | None = None) -> str:
     t = re.sub(r"\s+", " ", (message or "").strip().lower())[:400]
+    if kanallar:
+        suf = "|ch:" + ",".join(sorted({str(x).strip().lower() for x in kanallar if str(x).strip()}))
+        return (t + suf)[:480]
     return t
 
 
 def _commercial_intent(message: str) -> bool:
     low = (message or "").lower()
-    if "trendyol" in low or "amazon" in low or "pazaryeri" in low or "pazar yeri" in low:
+    if "trendyol" in low or "amazon" in low or "ebay" in low or "aliexpress" in low or "pazaryeri" in low or "pazar yeri" in low:
         return any(
             x in low
             for x in (
@@ -110,6 +116,7 @@ def build_dynamic_operasyon_context(
     weather_q: bool = False,
     has_live_weather_block: bool = False,
     mode_norm: str = "genel",
+    pazar_kanallari: list[str] | None = None,
 ) -> str:
     """
     Merkezi bellek (önce) + gerekirse UniversalScraper / HIZIR tool çıktısı.
@@ -138,7 +145,7 @@ def build_dynamic_operasyon_context(
         )
 
     ttl = float(os.environ.get("HIZIR_ONBELLEK_TTL_SEC", "300"))
-    cache_key = _norm_cache_key(msg)
+    cache_key = _norm_cache_key(msg, pazar_kanallari)
 
     skip_weather = bool(weather_q and has_live_weather_block)
 
@@ -153,7 +160,11 @@ def build_dynamic_operasyon_context(
             )
         else:
             scraper = UniversalScraper()
-            uni = scraper.fetch(msg, skip_weather=skip_weather)
+            tok = pazar_ctx.set_pazar_kanallari(pazar_ctx.normalize_kanal_listesi(pazar_kanallari))
+            try:
+                uni = scraper.fetch(msg, skip_weather=skip_weather)
+            finally:
+                pazar_ctx.reset_pazar_kanallari(tok)
             if uni:
                 parts.append(
                     "=== Canlı keşif — UniversalScraper + HIZIR araçları ===\n"
@@ -209,9 +220,8 @@ def build_dynamic_operasyon_context(
 
     tail = (
         "\n\n[TALİMAT — OPERASYON MERKEZİ]\n"
-        "Bu blok **Rüzgar araçları** ile üretildi (Merkezi Bellek + HIZIR / UniversalScraper). "
-        "Pazar satırları **canlı çekim** ise yine de fiyat/stok için mağaza sayfasında teyit iste; "
-        "HIZIR_MOCK_MARKETPLACE=1 ile sahte veri kullanıldıysa bunu açıkça belirt. "
+        "Bu blok **Rüzgar araçları** ile üretildi (Merkezi Bellek + HIZIR global pazar motoru). "
+        "Canlı fiyat/stok için satıcı sayfasında teyit iste; API kotası veya ağ hatalarında satır sayısı düşebilir. "
         "Ticari karar için sözleşme ve resmi kanalları hatırlat.\n"
     )
     return "\n\n".join(parts) + tail

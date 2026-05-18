@@ -29,6 +29,7 @@ contextBridge.exposeInMainWorld("ruzgarApi", {
   openModeWindow: (mode) => ipcRenderer.invoke("ruzgar:open-mode", mode),
   openWorkspaceRel: (rel) => ipcRenderer.invoke("ruzgar:open-workspace", rel),
   openLocalhostUrl: (url) => ipcRenderer.invoke("ruzgar:open-external", url),
+  openExternalUrl: (url) => ipcRenderer.invoke("ruzgar:open-external", url),
   /** Pencere geçmişi (dosya yok — tam yeniden yüklemeden çıkmak için) */
   navGoBack: () => ipcRenderer.invoke("ruzgar:nav-go-back"),
   navGoForward: () => ipcRenderer.invoke("ruzgar:nav-go-forward"),

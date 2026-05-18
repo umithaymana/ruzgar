@@ -1,9 +1,14 @@
 {
-  "version": 3,
-  "schema": "ruzgar_merkezi_v1",
+  "version": 4,
+  "schema": "ruzgar_merkezi_v2",
   "engine": "ruzgar",
   "kategoriler": {
     "hizir_ticaret": {
+      "meta": {
+        "global_market_engine": "1",
+        "ticaret_avci": "2",
+        "pas_gecildi": []
+      },
       "firsatlar": [],
       "stop_loss_log": [],
       "mizan_hareketleri": [],
@@ -12,52 +17,21 @@
     "genel_onbellek": {
       "girdiler": [
         {
-          "tip": "pazar_keşif",
-          "anahtar": "trendyolda kulaklik fiyat ne kadar",
+          "tip": "ucus_stub",
+          "anahtar": "selçuklu devletinin kurucusu kimdir",
           "veri": {
-            "plugin_id": "marketplace_commercial",
+            "plugin_id": "flight_stub",
             "data": {
-              "ok": true,
-              "tool": "hizir_market_listings",
-              "result": {
-                "ok": true,
-                "query": "kulaklik fiyat ne kadar",
-                "trendyol": [
-                  {
-                    "name": "kulaklik fiyat ne kadar (Trendyol mock)",
-                    "price": 100.0,
-                    "in_stock": true,
-                    "id": "TY-MOCK-001"
-                  },
-                  {
-                    "name": "kulaklik fiyat ne kadar — ekonomik seçenek",
-                    "price": 95.5,
-                    "in_stock": true,
-                    "id": "TY-MOCK-002"
-                  }
-                ],
-                "amazon": [
-                  {
-                    "name": "kulaklik fiyat ne kadar (Amazon mock)",
-                    "price": 210.0,
-                    "in_stock": true,
-                    "id": "AZ-MOCK-100"
-                  },
-                  {
-                    "name": "kulaklik fiyat ne kadar — satıcı B",
-                    "price": 175.0,
-                    "in_stock": false,
-                    "id": "AZ-MOCK-101"
-                  }
-                ]
-              }
+              "status": "stub",
+              "detail": "Uçuş fiyatı / koltuk API’si (Amadeus, taşıyıcı resmi API) burada bağlanacak.",
+              "message_echo": "selçuklu devletinin kurucusu kimdir"
             }
           },
-          "tarih": "2026-05-13T07:58:37.402271+00:00"
+          "tarih": "2026-05-17T10:13:25.032037+00:00"
         },
         {
           "tip": "pazar_keşif",
-          "anahtar": "pazar yerini tara: trendyol üzerinde en çok satan kablosuz kulaklıkları bul ve fiyat karşılaştırması yap.",
+          "anahtar": "pazar yerini tara|ch:aliexpress,amazon_de,amazon_gb,amazon_tr,amazon_us,ebay,hepsiburada,trendyol",
           "veri": {
             "plugin_id": "marketplace_commercial",
             "data": {
@@ -65,43 +39,117 @@
               "tool": "hizir_market_listings",
               "result": {
                 "ok": true,
-                "query": "pazar yerini tara üzerinde en çok satan kablosuz kulaklıkları bul ve fiyat karşılaştırması yap",
-                "trendyol": [
+                "query": "ürün",
+                "scan_mode": "otomatik_arbitraj",
+                "live": true,
+                "mock_marketplace": false,
+                "canli_pazar": true,
+                "data_mode": "live",
+                "errors": {
+                  "trendyol_tr": "Trendyol (tüm denemeler): apigw.trendyol.com/discovery-web-searchgw-servic → HTTP 556: Service Unavailable | public.trendyol.com/discovery-web-searchgw-servi → ağ: HTTPSConnectionPool(host='public.trendyol.com', port=443): Max retries exceeded with url: /discovery-web-searchgw-service/v2/api/infinite-scroll/sr?q=%C3%BCr%C3%BCn&pi=1&culture=tr-TR (Caused by NameResolutionError(\"HTTPSConnection(host='public.trendyol.com', port=443): Failed to resolve 'public.trendyol.com' ([Errno 11001] getaddrinfo failed)\")) | HTML: Trendyol HTML HTTP 403",
+                  "amazon_tr": "Amazon PA-API anahtarları yok; HTML yedek de sonuç vermedi: Amazon HTML: arama kartı ayrıştırılamadı (sayfa yapısı değişmiş olabilir).",
+                  "aliexpress": "AliExpress: HIZIR_ALIEXPRESS_APP_KEY ve HIZIR_ALIEXPRESS_APP_SECRET tanımlayın (Open Platform uygulaması).",
+                  "amazon_us": "Amazon PA-API anahtarları yok; HTML yedek de sonuç vermedi: Amazon HTML: arama kartı ayrıştırılamadı (sayfa yapısı değişmiş olabilir).",
+                  "ebay_ebay_us": "eBay Browse API: HIZIR_EBAY_CLIENT_ID ve HIZIR_EBAY_CLIENT_SECRET (production uygulama kimlikleri) tanımlayın.",
+                  "amazon_gb": "Amazon PA-API anahtarları yok; HTML yedek de sonuç vermedi: Amazon HTML HTTP 202",
+                  "ebay_ebay_gb": "eBay Browse API: HIZIR_EBAY_CLIENT_ID ve HIZIR_EBAY_CLIENT_SECRET (production uygulama kimlikleri) tanımlayın.",
+                  "amazon_de": "Amazon PA-API anahtarları yok; HTML yedek de sonuç vermedi: Amazon HTML: arama kartı ayrıştırılamadı (sayfa yapısı değişmiş olabilir).",
+                  "ebay_ebay_de": "eBay Browse API: HIZIR_EBAY_CLIENT_ID ve HIZIR_EBAY_CLIENT_SECRET (production uygulama kimlikleri) tanımlayın."
+                },
+                "loops": {
+                  "yerel_tr": {
+                    "trendyol": [],
+                    "amazon_tr": [],
+                    "hepsiburada": [
+                      {
+                        "name": "My Rabbit Çok Amaçlı Oksijenli Toz Leke Çıkarıcı ve Beyazlatıcı 800 gr",
+                        "price": 150.0,
+                        "in_stock": true,
+                        "id": "HBCV00005",
+                        "currency": "TRY",
+                        "url": "https://www.hepsiburada.com/my-rabbit-cok-amacli-oksijenli-toz-leke-cikarici-ve-beyazlatici-800-gr-p-HBCV00005ZAUV8",
+                        "extra": {
+                          "source": "html_scrape"
+                        }
+                      }
+                    ]
+                  },
+                  "global_us": {
+                    "amazon": [],
+                    "ebay": [],
+                    "aliexpress": []
+                  },
+                  "global_gb": {
+                    "amazon": [],
+                    "ebay": [],
+                    "aliexpress": []
+                  },
+                  "global_de": {
+                    "amazon": [],
+                    "ebay": [],
+                    "aliexpress": []
+                  }
+                },
+                "trendyol": [],
+                "amazon": [],
+                "search_compare": {
+                  "mode": "otomatik_arbitraj",
+                  "flat": [],
+                  "groups": []
+                },
+                "static_live_fill": [],
+                "aktif_kanallar": [
                   {
-                    "name": "pazar yerini tara üzerinde en çok satan kablosuz kulaklıkları bul ve fiyat karşılaştırması yap (Trendyol mock)",
-                    "price": 100.0,
-                    "in_stock": true,
-                    "id": "TY-MOCK-001"
+                    "id": "trendyol",
+                    "label": "Trendyol"
                   },
                   {
-                    "name": "pazar yerini tara üzerinde en çok satan kablosuz kulaklıkları bul ve fiyat karşılaştırması yap — ekonomik seçenek",
-                    "price": 95.5,
-                    "in_stock": true,
-                    "id": "TY-MOCK-002"
+                    "id": "amazon_tr",
+                    "label": "Amazon TR"
+                  },
+                  {
+                    "id": "hepsiburada",
+                    "label": "Hepsiburada"
+                  },
+                  {
+                    "id": "amazon_us",
+                    "label": "Amazon US"
+                  },
+                  {
+                    "id": "amazon_gb",
+                    "label": "Amazon UK"
+                  },
+                  {
+                    "id": "amazon_de",
+                    "label": "Amazon DE"
+                  },
+                  {
+                    "id": "ebay",
+                    "label": "eBay"
+                  },
+                  {
+                    "id": "aliexpress",
+                    "label": "AliExpress"
                   }
                 ],
-                "amazon": [
-                  {
-                    "name": "pazar yerini tara üzerinde en çok satan kablosuz kulaklıkları bul ve fiyat karşılaştırması yap (Amazon mock)",
-                    "price": 210.0,
-                    "in_stock": true,
-                    "id": "AZ-MOCK-100"
-                  },
-                  {
-                    "name": "pazar yerini tara üzerinde en çok satan kablosuz kulaklıkları bul ve fiyat karşılaştırması yap — satıcı B",
-                    "price": 175.0,
-                    "in_stock": false,
-                    "id": "AZ-MOCK-101"
-                  }
+                "kanal_secimi": [
+                  "aliexpress",
+                  "amazon_de",
+                  "amazon_gb",
+                  "amazon_tr",
+                  "amazon_us",
+                  "ebay",
+                  "hepsiburada",
+                  "trendyol"
                 ]
               }
             }
           },
-          "tarih": "2026-05-13T11:07:10.975081+00:00"
+          "tarih": "2026-05-17T11:19:10.521419+00:00"
         },
         {
           "tip": "pazar_keşif",
-          "anahtar": "pazar yerini tara: pazar yeri tara",
+          "anahtar": "pazar yerini tara|ch:aliexpress,amazon_de,amazon_gb,amazon_tr,amazon_us,ebay,hepsiburada,trendyol",
           "veri": {
             "plugin_id": "marketplace_commercial",
             "data": {
@@ -109,42 +157,116 @@
               "tool": "hizir_market_listings",
               "result": {
                 "ok": true,
-                "query": "pazar yerini tara pazar yeri tara",
-                "trendyol": [
+                "query": "ürün",
+                "scan_mode": "otomatik_arbitraj",
+                "live": true,
+                "mock_marketplace": false,
+                "canli_pazar": true,
+                "data_mode": "live",
+                "errors": {
+                  "trendyol_tr": "Trendyol (tüm denemeler): apigw.trendyol.com/discovery-web-searchgw-servic → HTTP 556: Service Unavailable | public.trendyol.com/discovery-web-searchgw-servi → ağ: HTTPSConnectionPool(host='public.trendyol.com', port=443): Max retries exceeded with url: /discovery-web-searchgw-service/v2/api/infinite-scroll/sr?q=%C3%BCr%C3%BCn&pi=1&culture=tr-TR (Caused by NameResolutionError(\"HTTPSConnection(host='public.trendyol.com', port=443): Failed to resolve 'public.trendyol.com' ([Errno 11001] getaddrinfo failed)\")) | HTML: Trendyol HTML HTTP 403",
+                  "amazon_tr": "Amazon PA-API anahtarları yok; HTML yedek de sonuç vermedi: Amazon HTML: arama kartı ayrıştırılamadı (sayfa yapısı değişmiş olabilir).",
+                  "aliexpress": "AliExpress: HIZIR_ALIEXPRESS_APP_KEY ve HIZIR_ALIEXPRESS_APP_SECRET tanımlayın (Open Platform uygulaması).",
+                  "amazon_us": "Amazon PA-API anahtarları yok; HTML yedek de sonuç vermedi: Amazon HTML: arama kartı ayrıştırılamadı (sayfa yapısı değişmiş olabilir).",
+                  "ebay_ebay_us": "eBay Browse API: HIZIR_EBAY_CLIENT_ID ve HIZIR_EBAY_CLIENT_SECRET (production uygulama kimlikleri) tanımlayın.",
+                  "amazon_gb": "Amazon PA-API anahtarları yok; HTML yedek de sonuç vermedi: Amazon HTML HTTP 202",
+                  "ebay_ebay_gb": "eBay Browse API: HIZIR_EBAY_CLIENT_ID ve HIZIR_EBAY_CLIENT_SECRET (production uygulama kimlikleri) tanımlayın.",
+                  "amazon_de": "Amazon PA-API anahtarları yok; HTML yedek de sonuç vermedi: Amazon HTML: arama kartı ayrıştırılamadı (sayfa yapısı değişmiş olabilir).",
+                  "ebay_ebay_de": "eBay Browse API: HIZIR_EBAY_CLIENT_ID ve HIZIR_EBAY_CLIENT_SECRET (production uygulama kimlikleri) tanımlayın."
+                },
+                "loops": {
+                  "yerel_tr": {
+                    "trendyol": [],
+                    "amazon_tr": [],
+                    "hepsiburada": [
+                      {
+                        "name": "My Rabbit Çok Amaçlı Oksijenli Toz Leke Çıkarıcı ve Beyazlatıcı 800 gr",
+                        "price": 150.0,
+                        "in_stock": true,
+                        "id": "HBCV00005",
+                        "currency": "TRY",
+                        "url": "https://www.hepsiburada.com/my-rabbit-cok-amacli-oksijenli-toz-leke-cikarici-ve-beyazlatici-800-gr-p-HBCV00005ZAUV8",
+                        "extra": {
+                          "source": "html_scrape"
+                        }
+                      }
+                    ]
+                  },
+                  "global_us": {
+                    "amazon": [],
+                    "ebay": [],
+                    "aliexpress": []
+                  },
+                  "global_gb": {
+                    "amazon": [],
+                    "ebay": [],
+                    "aliexpress": []
+                  },
+                  "global_de": {
+                    "amazon": [],
+                    "ebay": [],
+                    "aliexpress": []
+                  }
+                },
+                "trendyol": [],
+                "amazon": [],
+                "search_compare": {
+                  "mode": "otomatik_arbitraj",
+                  "flat": [],
+                  "groups": []
+                },
+                "static_live_fill": [],
+                "aktif_kanallar": [
                   {
-                    "name": "pazar yerini tara pazar yeri tara (Trendyol mock)",
-                    "price": 100.0,
-                    "in_stock": true,
-                    "id": "TY-MOCK-001"
+                    "id": "trendyol",
+                    "label": "Trendyol"
                   },
                   {
-                    "name": "pazar yerini tara pazar yeri tara — ekonomik seçenek",
-                    "price": 95.5,
-                    "in_stock": true,
-                    "id": "TY-MOCK-002"
+                    "id": "amazon_tr",
+                    "label": "Amazon TR"
+                  },
+                  {
+                    "id": "hepsiburada",
+                    "label": "Hepsiburada"
+                  },
+                  {
+                    "id": "amazon_us",
+                    "label": "Amazon US"
+                  },
+                  {
+                    "id": "amazon_gb",
+                    "label": "Amazon UK"
+                  },
+                  {
+                    "id": "amazon_de",
+                    "label": "Amazon DE"
+                  },
+                  {
+                    "id": "ebay",
+                    "label": "eBay"
+                  },
+                  {
+                    "id": "aliexpress",
+                    "label": "AliExpress"
                   }
                 ],
-                "amazon": [
-                  {
-                    "name": "pazar yerini tara pazar yeri tara (Amazon mock)",
-                    "price": 210.0,
-                    "in_stock": true,
-                    "id": "AZ-MOCK-100"
-                  },
-                  {
-                    "name": "pazar yerini tara pazar yeri tara — satıcı B",
-                    "price": 175.0,
-                    "in_stock": false,
-                    "id": "AZ-MOCK-101"
-                  }
+                "kanal_secimi": [
+                  "aliexpress",
+                  "amazon_de",
+                  "amazon_gb",
+                  "amazon_tr",
+                  "amazon_us",
+                  "ebay",
+                  "hepsiburada",
+                  "trendyol"
                 ]
               }
             }
           },
-          "tarih": "2026-05-13T11:22:26.793968+00:00"
+          "tarih": "2026-05-17T11:19:12.068833+00:00"
         }
       ]
     }
   },
-  "updated_at": "2026-05-13T11:22:26.793968+00:00"
+  "updated_at": "2026-05-17T11:35:58.800522+00:00"
 }

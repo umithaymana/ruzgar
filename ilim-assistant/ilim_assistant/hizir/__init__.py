@@ -15,6 +15,7 @@ from ilim_assistant.hizir.ops_stub import (
     autonomous_listing_stub,
     stop_target_sale_on_source_stockout_stub,
 )
+from ilim_assistant.hizir.global_market_engine import build_global_market_listings
 from ilim_assistant.hizir.pipeline import evaluate_mock_cross_market
 from ilim_assistant.hizir.risk_stop import (
     ListingControlStub,
@@ -55,6 +56,7 @@ __all__ = [
     "persist_if_avla",
     "record_mizan_hareketi",
     "evaluate_mock_cross_market",
+    "build_global_market_listings",
     "stop_loss_should_close",
     "build_stop_loss_event",
     "maybe_log_stop_loss",

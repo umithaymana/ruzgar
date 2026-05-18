@@ -14054,5 +14054,17 @@
     "soru": "Cursor oturumu — Video atölyesi devam noktası (2026-05-13)",
     "cevap": "Rüzgar masaüstü Video motoru yenilendi: ruzgar-desktop/index.html içinde #page-video iki sütun (video-split-root), solda yapışkan oynatıcı paneli (video-player-sticky), sağda kaydırmalı operasyonlar (video-ops-scroll), üstte dört hızlı işlem (video-quick-create/trim/audio/export). ruzgar-desktop/app.js wireVideoQuickBar ile kısayollar bağlandı. ruzgar-desktop/styles.css ile oynatıcı baskın grid oranı (1.22fr / 0.78fr), önizleme boyutu min(480px, 65vh) ve clamp ile minimum yükseklik, genişlik ≤900px tek sütun. Diğer motor çalışma sayfalarına dokunulmadı. Yarın yapılacaklar: Video sekmesinde Electron veya tarayıcıda smoke test; gerekirse önizleme veya grid ince ayarı.",
     "ts": "2026-05-13T20:00:00+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "idare eder",
+    "cevap": "lütfen birbirinizi üzmeyin . ümit abi seni çok seviyor",
+    "ts": "2026-05-14T06:56:52.761917+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "ben emine",
+    "cevap": "emine yenge hoşgeldin nasılsın iyimisin ? ümit abi ile aran nasıl",
+    "ts": "2026-05-14T06:56:52.762913+00:00"
   }
 ]

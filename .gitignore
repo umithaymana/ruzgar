@@ -32,6 +32,9 @@ ruzgar-desktop/google_api_key.txt
 out/
 build/
 *.log
+ruzgar-desktop/_e2.txt
+ruzgar-desktop/_electron_err.txt
+ruzgar-desktop/_electron_out.txt
 
 # Arşiv PDF'leri (yerelde tutulur; GitHub 100MB limitini aşar)
 ilim-assistant/arsiv/**/*.pdf

@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import os
 import re
+import shutil
 import socket
 from datetime import datetime, timezone
 from pathlib import Path
+
+from ilim_assistant.safety_policy import path_is_forbidden
 
 _WORD_TAIL = re.compile(r"[.,;:!?）\]»\"'”]+$")
 
@@ -100,6 +103,72 @@ def safe_read_file_under_root(root: Path, rel: str, max_chars: int) -> tuple[str
     if len(text) > max_chars:
         text = text[:max_chars] + "\n\n[…metin uzun olduğu için kesildi…]"
     return text, None
+
+
+_WRITE_MAX_BYTES = 32 * 1024 * 1024
+_WRITE_TMP_SUFFIX = ".ruzgar_write_tmp"
+
+
+def safe_write_file_under_root(root: Path, file_path: str, content: str) -> bool:
+    """
+    Proje kökü altına güvenli metin yazımı.
+
+    - Path traversal (`..`) ve kök dışı yollar reddedilir.
+    - ``safety_policy.path_is_forbidden`` birebir uygulanır.
+    - Mevcut dosya yazılmadan önce yanına ``.bak`` yedeği alınır; hata olursa geri yüklenir.
+    - Başarılı yazımda True, aksi halde False.
+    """
+    root = root.resolve()
+    rel_norm = file_path.replace("\\", "/").lstrip("/")
+    if not rel_norm:
+        return False
+    if ".." in Path(rel_norm).parts:
+        return False
+
+    cand = (root / rel_norm).resolve()
+    try:
+        cand.relative_to(root)
+    except ValueError:
+        return False
+
+    if path_is_forbidden(cand):
+        return False
+    if cand.exists() and not cand.is_file():
+        return False
+
+    try:
+        payload = content.encode("utf-8")
+    except (UnicodeEncodeError, TypeError):
+        return False
+    if len(payload) > _WRITE_MAX_BYTES:
+        return False
+
+    backup_path = cand.with_name(cand.name + ".bak")
+    had_prior = cand.is_file()
+    if had_prior:
+        try:
+            shutil.copy2(cand, backup_path)
+        except OSError:
+            return False
+
+    tmp_path = cand.with_name(cand.name + _WRITE_TMP_SUFFIX)
+    try:
+        cand.parent.mkdir(parents=True, exist_ok=True)
+        tmp_path.write_bytes(payload)
+        os.replace(tmp_path, cand)
+        return True
+    except OSError:
+        if tmp_path.is_file():
+            try:
+                tmp_path.unlink()
+            except OSError:
+                pass
+        if had_prior and backup_path.is_file():
+            try:
+                shutil.copy2(backup_path, cand)
+            except OSError:
+                pass
+        return False
 
 
 def build_local_tools_context(message: str, workspace_root: str | None) -> str:

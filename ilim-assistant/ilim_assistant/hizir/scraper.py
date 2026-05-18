@@ -4,7 +4,20 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any
 
-from ilim_assistant.hizir.market_live import use_mock_marketplace
+from ilim_assistant.hizir.market_live import (
+    DEMO_PRODUCT_IMAGE_TR_AMAZON,
+    DEMO_PRODUCT_IMAGE_TR_TRENDYOL,
+    use_mock_marketplace,
+)
+from ilim_assistant.hizir.trendyol_resilience import TRENDYOL_LIVE_ENV_KEYS as _TRENDYOL_LIVE_ENV_KEYS
+
+# Trendyol discovery: başlık / vekil / yeniden deneme `trendyol_resilience` içinde;
+# HTTP çağrısı `market_live.fetch_trendyol_live` üzerinden yapılır.
+
+
+def trendyol_live_env_keys() -> tuple[str, ...]:
+    """Trendyol canlı isteklerinde kullanılan HIZIR_* ortam anahtarları (market_live ile ortak)."""
+    return _TRENDYOL_LIVE_ENV_KEYS
 
 
 @dataclass(frozen=True)
@@ -32,6 +45,7 @@ def _dict_rows_to_listings(rows: list[dict[str, Any]], marketplace: str) -> list
             continue
         if price <= 0:
             continue
+        cur = str(r.get("currency") or "TRY").strip()[:8] or "TRY"
         out.append(
             ProductListing(
                 marketplace=marketplace,
@@ -39,6 +53,7 @@ def _dict_rows_to_listings(rows: list[dict[str, Any]], marketplace: str) -> list
                 price=price,
                 in_stock=bool(r.get("in_stock", True)),
                 external_id=str(r.get("id") or "")[:80],
+                currency=cur,
                 extra=dict(r.get("extra") or {}),
             )
         )
@@ -62,7 +77,7 @@ class MarketplaceScraper(ABC):
 
 
 class TrendyolScraperScaffold(MarketplaceScraper):
-    """Trendyol: canlı discovery JSON veya mock (HIZIR_MOCK_MARKETPLACE=1)."""
+    """Trendyol TR: discovery JSON (canlı). Dayanıklılık: `trendyol_live_env_keys()` ile listelenen HIZIR_* değişkenleri + `market_live`."""
 
     marketplace_code = "trendyol"
     last_live_error: str | None = None
@@ -76,7 +91,7 @@ class TrendyolScraperScaffold(MarketplaceScraper):
                 price=100.0,
                 in_stock=True,
                 external_id="TY-MOCK-001",
-                extra={"note": "simulated"},
+                extra={"note": "simulated", "image": DEMO_PRODUCT_IMAGE_TR_TRENDYOL},
             ),
             ProductListing(
                 marketplace=self.marketplace_code,
@@ -84,6 +99,7 @@ class TrendyolScraperScaffold(MarketplaceScraper):
                 price=95.5,
                 in_stock=True,
                 external_id="TY-MOCK-002",
+                extra={"image": DEMO_PRODUCT_IMAGE_TR_TRENDYOL},
             ),
         ]
         return mock[: max(1, min(limit, len(mock)))]
@@ -102,7 +118,7 @@ class TrendyolScraperScaffold(MarketplaceScraper):
 
 
 class AmazonScraperScaffold(MarketplaceScraper):
-    """Amazon TR: PA-API 5 (anahtarlar tanımlıysa) veya mock."""
+    """Amazon TR: PA-API 5 (canlı) veya yalnızca HIZIR_MOCK_MARKETPLACE=1 ile yerel iskele."""
 
     marketplace_code = "amazon"
     last_live_error: str | None = None
@@ -116,7 +132,7 @@ class AmazonScraperScaffold(MarketplaceScraper):
                 price=210.0,
                 in_stock=True,
                 external_id="AZ-MOCK-100",
-                extra={"note": "simulated"},
+                extra={"note": "simulated", "image": DEMO_PRODUCT_IMAGE_TR_AMAZON},
             ),
             ProductListing(
                 marketplace=self.marketplace_code,
@@ -124,6 +140,7 @@ class AmazonScraperScaffold(MarketplaceScraper):
                 price=175.0,
                 in_stock=False,
                 external_id="AZ-MOCK-101",
+                extra={"image": DEMO_PRODUCT_IMAGE_TR_AMAZON},
             ),
         ]
         return mock[: max(1, min(limit, len(mock)))]

@@ -3,6 +3,11 @@ from __future__ import annotations
 import re
 from typing import Any, Protocol, runtime_checkable
 
+_PAZAR_TARA_HEAD = re.compile(
+    r"^\s*(?:pazar\s+yerini\s+tara|pazar\s+yerlerini\s+tara|pazarı\s+tara|pazari\s+tara|pazar\s+tara)\s*(?::\s*)?(.*)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
 
 @runtime_checkable
 class UniversalPlugin(Protocol):
@@ -21,6 +26,11 @@ class UniversalPlugin(Protocol):
 def extract_product_query(message: str) -> str:
     t = (message or "").lower()
     for noise in (
+        "pazar yerini tara",
+        "pazar yerlerini tara",
+        "pazarı tara",
+        "pazari tara",
+        "pazar tara",
         "trendyol'da",
         "trendyolda",
         "trendyol da",
@@ -48,6 +58,29 @@ def extract_product_query(message: str) -> str:
     return t[:160] or "ürün"
 
 
+def parse_pazar_tara_product(message: str) -> tuple[str, bool]:
+    """
+    (api_sorgu, fiyat_dedektifi).
+
+    «Pazar yerini tara» (boş kuyruk) → genel tarama, arbitraj odaklı mod.
+    «Pazar yerini tara: ürün» veya iki nokta sonrası metin → Fiyat Dedektifi.
+    """
+    raw = (message or "").strip()
+    if not raw:
+        return "ürün", False
+    m = _PAZAR_TARA_HEAD.match(raw)
+    if m:
+        tail = (m.group(1) or "").strip()
+        if not tail:
+            return "ürün", False
+        q = extract_product_query(tail)
+        if len(q) < 2 or q == "ürün":
+            return "ürün", False
+        return q, True
+    q = extract_product_query(message)
+    return (q if q else "ürün"), False
+
+
 class CommercialMarketplacePlugin:
     """Pazar yeri satır üretimi — HIZIR `hizir_market_listings` aracını çağırır."""
 
@@ -70,7 +103,7 @@ class CommercialMarketplacePlugin:
             )
         ):
             return True
-        if "trendyol" in low or "amazon" in low or "pazaryeri" in low or "pazar yeri" in low:
+        if "trendyol" in low or "amazon" in low or "ebay" in low or "aliexpress" in low or "pazaryeri" in low or "pazar yeri" in low:
             return any(
                 x in low
                 for x in (
@@ -89,10 +122,15 @@ class CommercialMarketplacePlugin:
         return False
 
     def fetch(self, message: str) -> dict[str, Any]:
+        from ilim_assistant.hizir.pazar_context import get_pazar_kanallari
         from ilim_assistant.hizir.tools import run_hizir_tool
 
-        q = extract_product_query(message)
-        return run_hizir_tool("hizir_market_listings", {"query": q})
+        q, dedektif = parse_pazar_tara_product(message)
+        payload: dict[str, Any] = {"query": q, "fiyat_dedektifi": dedektif}
+        ch = get_pazar_kanallari()
+        if ch is not None:
+            payload["channels"] = ch
+        return run_hizir_tool("hizir_market_listings", payload)
 
 
 class WeatherUniversalPlugin:

@@ -21,8 +21,9 @@ def evaluate_mock_cross_market(
     kullanici_id: str | None = None,
 ) -> dict[str, Any]:
     """
-    İki iskelet scraper'dan ilk stoklu satırları alır, kaynak=Trendyol hedef=Amazon varsayar.
+    İki iskelet scraper'dan ilk stoklu satırları alır, kaynak=Trendyol hedef=Amazon TR varsayar.
     Dönüş: analiz sözlüğü + kaynak/hedef özet; AVLA ise merkezi_bellek.json güncellenir.
+    (Adı tarihî uyumluluk için korunur; canlı akış `global_market_engine` ile aynı PA-API / Trendyol yolunu kullanır.)
     """
     src_scraper = TrendyolScraperScaffold()
     dst_scraper = AmazonScraperScaffold()

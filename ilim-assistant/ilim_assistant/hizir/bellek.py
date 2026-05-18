@@ -8,6 +8,8 @@ from pathlib import Path
 from typing import Any
 
 _SCHEMA = "ruzgar_merkezi_v1"
+_SCHEMA_V2 = "ruzgar_merkezi_v2"
+_VALID_NESTED_SCHEMAS = frozenset({_SCHEMA, _SCHEMA_V2})
 
 
 def merkezi_bellek_path() -> Path:
@@ -17,11 +19,12 @@ def merkezi_bellek_path() -> Path:
 
 def _default_document() -> dict[str, Any]:
     return {
-        "version": 3,
-        "schema": _SCHEMA,
+        "version": 4,
+        "schema": _SCHEMA_V2,
         "engine": "ruzgar",
         "kategoriler": {
             "hizir_ticaret": {
+                "meta": {"global_market_engine": "1", "ticaret_avci": "2"},
                 "firsatlar": [],
                 "stop_loss_log": [],
                 "mizan_hareketleri": [],
@@ -37,7 +40,9 @@ def _hizir_ticaret(doc: dict[str, Any]) -> dict[str, Any]:
     assert isinstance(k, dict)
     h = k.setdefault("hizir_ticaret", {})
     assert isinstance(h, dict)
-    h.setdefault("firsatlar", [])
+    h.setdefault("meta", {})
+    if not isinstance(h.get("meta"), dict):
+        h["meta"] = {}
     h.setdefault("stop_loss_log", [])
     h.setdefault("mizan_hareketleri", [])
     h.setdefault("kullanici_mizan", {})
@@ -60,7 +65,7 @@ def _genel_onbellek(doc: dict[str, Any]) -> dict[str, Any]:
 
 
 def _migrate_flat_to_nested(raw: dict[str, Any]) -> dict[str, Any]:
-    if raw.get("schema") == _SCHEMA and isinstance(raw.get("kategoriler"), dict):
+    if raw.get("schema") in _VALID_NESTED_SCHEMAS and isinstance(raw.get("kategoriler"), dict):
         return raw
     return {
         "version": 3,
@@ -183,9 +188,16 @@ def find_hizir_firsat_summary_lines(
         name = str(r.get("urun_adi") or "").lower()
         if not any(w in name for w in words[:12]):
             continue
+        try:
+            nm_v = float(r.get("net_marj_yuzde"))
+            nm_s = f"{nm_v:.1f}%"
+        except (TypeError, ValueError):
+            nm_s = "—"
         out.append(
-            f"- {r.get('urun_adi')} | kaynak {r.get('kaynak_fiyat')} → hedef {r.get('hedef_fiyat')} | "
-            f"net {r.get('potansiyel_kar')} | {r.get('tarih')}"
+            f"- {r.get('urun_adi')} | Bölge: {r.get('bolge', '—')} | "
+            f"kaynak {r.get('kaynak_fiyat')} → hedef {r.get('hedef_fiyat')} | "
+            f"net kâr {r.get('potansiyel_kar')} | net marj {nm_s} | "
+            f"{r.get('tarih')}"
         )
     return out
 
@@ -287,3 +299,57 @@ def persist_if_avla(
             ek_not=product_name[:200],
         )
     return True
+
+
+def append_hizir_pas_gecildi(kart_id: str, path: Path | None = None) -> None:
+    """PAS GEÇ: kart kimliğini meta.pas_gecildi listesine ekler (yeniden üretimi engeller)."""
+    kid = (kart_id or "").strip()
+    if not kid:
+        return
+    p = path or merkezi_bellek_path()
+    doc = load_merkezi_bellek(p)
+    htc = _hizir_ticaret(doc)
+    meta = htc.setdefault("meta", {})
+    if not isinstance(meta, dict):
+        meta = {}
+        htc["meta"] = meta
+    pg = meta.setdefault("pas_gecildi", [])
+    if not isinstance(pg, list):
+        pg = []
+        meta["pas_gecildi"] = pg
+    if kid not in pg:
+        pg.append(kid)
+    if len(pg) > 400:
+        meta["pas_gecildi"] = pg[-400:]
+    save_merkezi_bellek(doc, path=p)
+
+
+def clear_hizir_vitrin_state(path: Path | None = None) -> dict[str, Any]:
+    """Sayfayı temizle: pazar_keşif girdileri, pas geç listesi ve otomatik fırsatlar silinir; elle satırlar kalır."""
+    p = path or merkezi_bellek_path()
+    doc = load_merkezi_bellek(p)
+    g = _genel_onbellek(doc)
+    g["girdiler"] = [
+        x
+        for x in (g.get("girdiler") or [])
+        if not (isinstance(x, dict) and x.get("tip") == "pazar_keşif")
+    ]
+    htc = _hizir_ticaret(doc)
+    meta = htc.setdefault("meta", {})
+    if not isinstance(meta, dict):
+        meta = {}
+        htc["meta"] = meta
+    meta["pas_gecildi"] = []
+    manual = [r for r in htc["firsatlar"] if isinstance(r, dict) and not r.get("otomatik")]
+    htc["firsatlar"] = manual
+    save_merkezi_bellek(doc, path=p)
+    from ilim_assistant.hizir.ticaret_avci import reconcile_ticaret_avci_firsatlar
+
+    return reconcile_ticaret_avci_firsatlar(path=p)
+
+
+def pas_gec_hizir_kart(kart_id: str, path: Path | None = None) -> dict[str, Any]:
+    append_hizir_pas_gecildi(kart_id, path=path)
+    from ilim_assistant.hizir.ticaret_avci import reconcile_ticaret_avci_firsatlar
+
+    return reconcile_ticaret_avci_firsatlar(path=path)
