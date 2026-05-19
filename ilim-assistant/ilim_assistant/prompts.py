@@ -165,8 +165,12 @@ def append_direct_answer_directive(user_payload: str, user_message: str) -> str:
         user_payload
         + "\n\n[TALİMAT — BU TUR]\n"
         + "Bu kullanıcı mesajında **Rüzgar**/**ruzgar** geçmiyor. "
-        + "Sabit karşılama veya \"Efendim … yardımcı olabilirim\" / \"Buyur …\" gibi **önceki tur şablonlarından hiçbirini yazma**. "
-        + "\"Ümit abi\" diye hitap ederek mesajın içeriğine **doğrudan** yanıt ver.\n"
+        + "Sabit karşılama veya \"Efendim … yardımcı olabilirim\" / "
+        + "\"Buyur …\" gibi **önceki tur şablonlarından hiçbirini yazma**. "
+        + "\"Ümit abi\" diye hitap ederek mesajın içeriğine **doğrudan** yanıt ver. "
+        + "Kısa bilgi sorularında önce tek cümlelik net cevabı ver; "
+        + "gerekirse ardından en fazla 2-4 maddeyle bağlam ekle. "
+        + "Araştırma/kod/iş emri ise sonucu, uygulama adımını ve varsa riski ayrı ayrı kısa yaz.\n"
     )
 
 

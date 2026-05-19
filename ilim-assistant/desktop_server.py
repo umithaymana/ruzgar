@@ -193,6 +193,14 @@ async def _warmup_rag() -> None:
         _get_hafiza_motor()
     except Exception:
         pass
+    try:
+        from ilim_assistant.dinamit_hatirlatici import start_reminder_background_thread
+        from ilim_assistant.gorev_yoneticisi import init_tasks_db
+
+        start_reminder_background_thread()
+        init_tasks_db()
+    except Exception:
+        pass
     if os.environ.get("RUZGAR_PRINT_READY_SEAL", "1").strip().lower() not in (
         "0",
         "false",
@@ -241,6 +249,17 @@ class ReminderAckBody(BaseModel):
     id: str = ""
 
 
+class TaskCreateBody(BaseModel):
+    title: str = ""
+    detail: str = ""
+
+
+class TaskUpdateBody(BaseModel):
+    id: int = 0
+    status: str = "done"
+    detail: str | None = None
+
+
 class VideoConcatBody(BaseModel):
     """İki proje içi dosyayı concat ile birleştirir (codec uyumu şarta bağlı)."""
 
@@ -282,6 +301,11 @@ class HafizaImportBlok(BaseModel):
 
 class GenelHafizaBakBody(BaseModel):
     message: str = ""
+
+
+class IdrakPretreatBody(BaseModel):
+    message: str = ""
+    history: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class HizirPazarTaraBody(BaseModel):
@@ -354,6 +378,21 @@ def api_genel_hafiza_bak(body: GenelHafizaBakBody):
         return {"ok": True, "hit": False, "answer": None}
     out = finalize_assistant_reply(ans)
     return {"ok": True, "hit": True, "answer": out}
+
+
+@app.post("/api/idrak/pretreat")
+def api_idrak_pretreat(body: IdrakPretreatBody):
+    """Ses/STT ve sohbet kutusu için hızlı yazım + devam cümlesi ön-işlemi."""
+    from ilim_assistant.idrak_on_islem import pretreat_user_turn
+
+    pt = pretreat_user_turn(body.message, body.history)
+    return {
+        "ok": True,
+        "text": pt.text,
+        "changed": pt.changed,
+        "continuation": pt.continuation,
+        "replacements": list(pt.replacements),
+    }
 
 
 @app.get("/api/hafiza/arsiv")
@@ -538,13 +577,54 @@ def api_system_metrics():
 
 @app.get("/api/reminders/pending")
 def api_reminders_pending():
-    """Dinamit hatırlatıcılar (şimdilik boş; 404 gürültüsünü keser)."""
-    return {"ok": True, "items": []}
+    """Dinamit hatırlatıcılar — istemci 24 sn'de bir poll eder."""
+    from ilim_assistant.dinamit_hatirlatici import fetch_due_reminders
+
+    return {"ok": True, "items": fetch_due_reminders()}
 
 
 @app.post("/api/reminders/ack")
 def api_reminders_ack(body: ReminderAckBody):
-    return {"ok": True, "id": (body.id or "").strip()}
+    from ilim_assistant.dinamit_hatirlatici import mark_triggered
+
+    raw = (body.id or "").strip()
+    try:
+        rid = int(raw)
+    except ValueError:
+        rid = 0
+    if rid > 0:
+        mark_triggered(rid)
+    return {"ok": True, "id": raw}
+
+
+@app.get("/api/self-test")
+def api_self_test():
+    """Rüzgar kendi sağlık ve mod davranışını hızlı kontrol eder."""
+    from ilim_assistant.ruzgar_selftest import run_self_tests
+
+    return run_self_tests()
+
+
+@app.get("/api/tasks")
+def api_tasks(limit: int = 50):
+    from ilim_assistant.gorev_yoneticisi import list_tasks
+
+    return {"ok": True, "items": list_tasks(limit)}
+
+
+@app.post("/api/tasks")
+def api_tasks_create(body: TaskCreateBody):
+    from ilim_assistant.gorev_yoneticisi import create_task
+
+    return {"ok": True, "task": create_task(body.title, body.detail)}
+
+
+@app.post("/api/tasks/update")
+def api_tasks_update(body: TaskUpdateBody):
+    from ilim_assistant.gorev_yoneticisi import update_task
+
+    ok = update_task(body.id, body.status, body.detail)
+    return {"ok": ok, "id": body.id}
 
 
 @app.get("/api/merkezi-bellek")
@@ -1325,6 +1405,11 @@ def _iter_instant_chat_events(
 
 def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
     """SSE/WS: Ana motor durumları → prepare_turn (İdrak + orkestra) → LLM."""
+    from ilim_assistant.idrak_on_islem import pretreat_user_turn
+
+    pt = pretreat_user_turn(req.message, req.history)
+    if pt.text != (req.message or "").strip():
+        req = req.model_copy(update={"message": pt.text})
     mode_raw = _effective_chat_mode_raw(req)
     mode_norm = normalize_mode(mode_raw)
     coding = req.coding_mode or mode_norm == "programlama"
@@ -1334,11 +1419,38 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
             "mode_raw": (req.mode or "").strip() or None,
             "mode_effective": mode_norm,
             "coding_mode": coding,
+            "idrak_surface": {
+                "changed": pt.changed,
+                "continuation": pt.continuation,
+                "replacements": list(pt.replacements)[:8],
+            },
         },
     }
     yield {"type": "status", "text": "Rüzgar hazırlanıyor…"}
 
     orch: dict[str, Any] = {}
+    for _consumer in (
+        "ilim_assistant.dinamit_hatirlatici:try_consume_hatirlatici_intent",
+        "ilim_assistant.kisisel_hafiza:try_consume_memory_command",
+        "ilim_assistant.gorev_yoneticisi:try_consume_task_command",
+    ):
+        try:
+            mod_name, fn_name = _consumer.split(":", 1)
+            mod = __import__(mod_name, fromlist=[fn_name])
+            reply = getattr(mod, fn_name)(req.message)
+            if reply:
+                yield from _iter_instant_chat_events(
+                    reply,
+                    (req.message or "").strip(),
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=orch,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+
     turn_plan = None
     motor_flags: dict[str, bool] = {}
     if os.environ.get("RUZGAR_ANA_MOTOR_PLAN", "1").strip().lower() not in (

@@ -66,6 +66,51 @@ def run_offline() -> int:
     else:
         _ok(f"rag_query -> {rq[:48]}")
 
+    print("=== Faz 11 — idrak yüzey ön-işlem ===")
+    from ilim_assistant.idrak_on_islem import pretreat_user_turn
+
+    pt = pretreat_user_turn("birsey söyle", [])
+    if "bir şey" not in pt.text:
+        _fail("idrak_pretreat birşey", pt.text)
+        fails += 1
+    else:
+        _ok(f"idrak_pretreat -> {pt.text!r}")
+    pt2 = pretreat_user_turn(
+        "devam et",
+        [{"role": "assistant", "content": "Faz 11 planı"}],
+    )
+    if not pt2.continuation:
+        _fail("idrak_continuation", pt2.text)
+        fails += 1
+    else:
+        _ok("idrak_continuation -> history_context")
+
+    print("=== Faz 14/16 — self-test + görev çekirdeği ===")
+    from ilim_assistant.ruzgar_selftest import run_self_tests
+    from ilim_assistant.gorev_yoneticisi import (
+        create_task,
+        delete_task,
+        list_tasks,
+        update_task,
+    )
+
+    st = run_self_tests()
+    if not st.get("ok"):
+        _fail("self_test", str(st.get("tests"))[:200])
+        fails += 1
+    else:
+        _ok("self_test çekirdeği")
+    task = create_task("smoke-test görev")
+    if not update_task(int(task["id"]), "done"):
+        _fail("task_manager", str(task))
+        fails += 1
+    elif not list_tasks(1):
+        _fail("task_manager list", "boş")
+        fails += 1
+    else:
+        _ok("task_manager create/update/list")
+    delete_task(int(task["id"]))
+
     print("=== Soru planı ===")
     for msg, mode, flags, expect in cases:
         p = plan_question(msg, mode, flags)
