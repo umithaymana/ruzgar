@@ -42,6 +42,11 @@ from ilim_assistant.hafiza_i_ruzgar import (
 from ilim_assistant.text_encoding import finalize_assistant_reply
 from ilim_assistant.llm_brain import select_brain_chain, stream_chat_with_brain
 from ilim_assistant.llm_ollama import format_llm_user_error
+from ilim_assistant.motorlar.programlama_motoru import (
+    apply_assistant_reply_tools,
+    code_debug_max_retries,
+    wants_autonomous_code_debug,
+)
 from ilim_assistant.stt_whisper import stt_runtime_available, transcribe_file
 from ilim_assistant.video_ffmpeg import (
     MAX_SEGMENT_SECONDS,
@@ -214,11 +219,26 @@ class ChatRequest(BaseModel):
     coding_mode: bool = False
     session_wake_used: bool = False
     # genel | ses | okuma | video | uretim | programlama | gelisim | duzen | dosya | hizli
-    mode: str = "genel"
+    # None/boş: eski istemciler veya hatalı JSON; Kod modu açıksa programlama varsayılır (prefetch atlanır).
+    mode: str | None = None
     # Electron getRoot() — @@dosya yolları bu köke göre çözülür
     workspace_root: str | None = None
     # Web ara kapalı olsa bile mesajdaki https URL’lerini oku
     read_message_links: bool = True
+
+
+def _effective_chat_mode_raw(req: ChatRequest) -> str:
+    """Kod modu açıksa her zaman programlama (UI genel kalsa bile tam indeks prefetch kapalı)."""
+    if req.coding_mode:
+        return "programlama"
+    raw = (req.mode or "").strip()
+    return raw or "genel"
+
+
+class ReminderAckBody(BaseModel):
+    """Dinamit hatırlatıcı onayı (masaüstü uyumluluğu)."""
+
+    id: str = ""
 
 
 class VideoConcatBody(BaseModel):
@@ -394,6 +414,53 @@ def _super_brain_health_block() -> dict[str, Any]:
         return {"ok": False, "error": str(e)}
 
 
+def _sample_cpu_percent() -> float | None:
+    """İsteğe bağlı `psutil` — yoksa null (istemci yine 200 alır)."""
+    try:
+        import psutil  # type: ignore[import-not-found]
+
+        return float(psutil.cpu_percent(interval=0.05))
+    except Exception:
+        return None
+
+
+def _sample_gpu_percent() -> float | None:
+    """NVIDIA GPU kullanımı; yoksa null."""
+    try:
+        import shutil
+        import subprocess
+
+        exe = shutil.which("nvidia-smi")
+        if not exe:
+            return None
+        r = subprocess.run(
+            [
+                exe,
+                "--query-gpu=utilization.gpu",
+                "--format=csv,noheader,nounits",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=2,
+        )
+        if r.returncode != 0:
+            return None
+        vals: list[float] = []
+        for line in (r.stdout or "").splitlines():
+            s = line.strip()
+            if not s:
+                continue
+            try:
+                vals.append(float(s))
+            except ValueError:
+                continue
+        if not vals:
+            return None
+        return float(sum(vals) / len(vals))
+    except Exception:
+        return None
+
+
 @app.get("/api/health")
 def health():
     import os as _os
@@ -458,6 +525,26 @@ def health():
             "aliexpress_open_credentials": bool(_ae),
         },
     }
+
+
+@app.get("/api/system-metrics")
+def api_system_metrics():
+    """Masaüstü performans pill — `ruzgar-desktop/app.js` her ~2.5 sn çağırır."""
+    return {
+        "cpu_percent": _sample_cpu_percent(),
+        "gpu_percent": _sample_gpu_percent(),
+    }
+
+
+@app.get("/api/reminders/pending")
+def api_reminders_pending():
+    """Dinamit hatırlatıcılar (şimdilik boş; 404 gürültüsünü keser)."""
+    return {"ok": True, "items": []}
+
+
+@app.post("/api/reminders/ack")
+def api_reminders_ack(body: ReminderAckBody):
+    return {"ok": True, "id": (body.id or "").strip()}
 
 
 @app.get("/api/merkezi-bellek")
@@ -1238,8 +1325,17 @@ def _iter_instant_chat_events(
 
 def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
     """SSE/WS: Ana motor durumları → prepare_turn (İdrak + orkestra) → LLM."""
-    mode_norm = normalize_mode(req.mode or "genel")
+    mode_raw = _effective_chat_mode_raw(req)
+    mode_norm = normalize_mode(mode_raw)
     coding = req.coding_mode or mode_norm == "programlama"
+    yield {
+        "type": "meta",
+        "chat_route": {
+            "mode_raw": (req.mode or "").strip() or None,
+            "mode_effective": mode_norm,
+            "coding_mode": coding,
+        },
+    }
     yield {"type": "status", "text": "Rüzgar hazırlanıyor…"}
 
     orch: dict[str, Any] = {}
@@ -1315,11 +1411,16 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
                 workspace_step = None
 
     reuse_b = None
-    _skip_prefetch = (
+    _skip_prefetch = mode_norm in ("programlama", "hafiza") or coding or (
         turn_plan is not None
         and hasattr(turn_plan, "use_ilim_rag")
         and not bool(turn_plan.use_ilim_rag)
     )
+    if mode_norm == "programlama":
+        yield {
+            "type": "status",
+            "text": "Programlama atölyesi — yerel ilim indeksi atlandı…",
+        }
     if (
         mode_norm != "hafiza"
         and os.environ.get("RUZGAR_STREAM_PREFETCH_BUNDLE", "1").strip().lower()
@@ -1333,7 +1434,7 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
         bundle, evs = prefetch_main_engine_bundle_for_stream(
             req.message,
             req.history,
-            req.mode or "genel",
+            mode_raw,
             question_plan=turn_plan,
         )
         for ev in evs:
@@ -1424,18 +1525,77 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
         pass
     reply_body = ""
     try:
-        for piece in stream_chat_with_brain(
-            system,
-            user_payload,
-            model=model,
-            prior_messages=prior,
-            mode_norm=mode_norm,
-            coding_mode=coding,
-            message=msg,
-            question_plan=turn_plan,
-        ):
-            reply_body += piece
-            yield {"type": "token", "text": piece}
+        wants_dbg = mode_norm == "programlama" and wants_autonomous_code_debug(msg)
+        retry_cap = code_debug_max_retries() if wants_dbg else 0
+        extras_remaining = retry_cap
+        active_prior: list = list(prior) if prior else []
+
+        if wants_dbg:
+            yield {"type": "status", "text": "Otomatik kod hata ayıklama (Faz 10.4)…"}
+
+        while True:
+            round_body = ""
+            for piece in stream_chat_with_brain(
+                system,
+                user_payload,
+                model=model,
+                prior_messages=active_prior,
+                mode_norm=mode_norm,
+                coding_mode=coding,
+                message=msg,
+                question_plan=turn_plan,
+            ):
+                round_body += piece
+                reply_body += piece
+                yield {"type": "token", "text": piece}
+
+            if not wants_dbg:
+                break
+
+            summ, pytest_rep = apply_assistant_reply_tools(
+                round_body,
+                req.workspace_root,
+                run_pytest=True,
+            )
+            if pytest_rep is None:
+                yield {
+                    "type": "status",
+                    "text": "Otomatik doğrulama atlandı — workspace kökü yok (LOCAL_TOOLS_ROOT).",
+                }
+                break
+            if pytest_rep.ok:
+                yield {
+                    "type": "meta",
+                    "code_debug": {"phase": "pytest_ok", "exit": pytest_rep.exit_code},
+                }
+                break
+            if not summ.writes:
+                yield {
+                    "type": "status",
+                    "text": "Otomatik debug durdu — model @@write ile dosya yazmadı.",
+                }
+                break
+            if extras_remaining <= 0:
+                lim_txt = (
+                    "Otomatik tekrar kapalı (RUZGAR_CODE_DEBUG_LOOPS=0) — pytest hâlâ kırmızı."
+                    if retry_cap == 0
+                    else "Otomatik debug: deneme limiti doldu (RUZGAR_CODE_DEBUG_LOOPS)."
+                )
+                yield {"type": "status", "text": lim_txt}
+                break
+
+            extras_remaining -= 1
+            snippet = (pytest_rep.output or "").strip()[:14000]
+            fail_msg = (
+                "[OTOMATIK DEBUG — Ümit & Gökçenur — Faz 10.6]\n"
+                "pytest başarısız. Çıktıyı satır satır oku; **yalnızca gerekli** `@@write yol` + "
+                "kod bloğu ile düzelt. Gereksiz refaktör yok; kabuk komutu yok.\n\n"
+                f"```text\n{snippet}\n```\n"
+            )
+            active_prior = list(active_prior) + [
+                {"role": "assistant", "content": round_body},
+                {"role": "user", "content": fail_msg},
+            ]
         footer = rag_footer(hits)
         body_fixed = finalize_assistant_reply(reply_body)
         full_out = body_fixed + footer

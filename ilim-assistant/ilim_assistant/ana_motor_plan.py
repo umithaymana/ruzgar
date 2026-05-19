@@ -32,6 +32,66 @@ def _norm_ascii(s: str) -> str:
     return unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode("ascii").lower()
 
 
+def looks_like_encyclopedic_fact_question(msg: str) -> bool:
+    """
+    Tek cevaplı genel tarih / devlet sorusu (ör. «Osmanlı devletini kim kurdu»).
+
+    Amaç (Faz 9): Ana motor `bilim` → ağır arşiv+tam indeks zincirine düşmeden
+    `bilgi` veya hızlı indeks turuna yönlendirmek; tasavvuf/ilim derinliği
+    sorusu gibi kalıpları tetiklemez (kim + kurdu / ne zaman + uygarlık vb.).
+    """
+    if os.environ.get("RUZGAR_FAZ9_ENCYCLOPEDIC_BILGI_BOOST", "1").strip().lower() in (
+        "0",
+        "false",
+        "no",
+    ):
+        return False
+    raw = (msg or "").strip()
+    if len(raw) < 8:
+        return False
+    asc = _norm_ascii(raw)
+    low = raw.lower()
+    blob = low + " " + asc
+
+    history_terms = (
+        "osmanlı",
+        "osmanli",
+        "padişah",
+        "padisah",
+        "devlet",
+        "imparator",
+        "hanedan",
+        "selçuk",
+        "selcuk",
+        "bizans",
+        "roma",
+        "kurucu",
+        "ilk ",
+    )
+
+    # «… kim kurdu / kim kurmuş …» (ASCII türevinde güvenli)
+    if re.search(r"\bkim\b", asc) and re.search(
+        r"\b(kurdu|kurdular|kuruldu|kurmus|kurmuş|kurduklari|kurdukları|etti)\b",
+        asc,
+    ):
+        return True
+
+    # «İlk Osmanlı padişahı kimdir?» gibi tek cevaplı kısa tarih soruları.
+    if (
+        re.search(r"\b(kimdir|kimdi|kim)\b", asc)
+        and any(x in blob for x in history_terms)
+        and len(raw) <= 120
+    ):
+        return True
+
+    # «Ne zaman …» + büyük devlet / uygarlık adı (yüzeysel genel tarih)
+    if re.search(r"\bne zaman\b", asc) or re.search(r"\bhangi yil\b", asc):
+        if any(x in blob for x in history_terms + ("halifelik", "abbasi", "abbâsî")):
+            return True
+
+    return False
+
+
 PRIMARY_LABELS_TR: dict[str, str] = {
     "bilgi": "Bilgi araştırması",
     "gundelik": "Sohbet",
@@ -269,6 +329,10 @@ def _score_categories(msg: str, mode_norm: str, motor_flags: dict[str, bool]) ->
 
     if len(raw) < 14:
         s["gundelik"] += 0.6
+
+    # Genel tarih ansiklopedik soru — bilgi önceliği (ağır arşiv turu yok)
+    if looks_like_encyclopedic_fact_question(raw):
+        s["bilgi"] += 2.6
 
     return s
 

@@ -18,7 +18,7 @@ import os
 from dataclasses import dataclass
 from typing import Any, Iterator
 
-from ilim_assistant.merkezi_zihin_havuzu import no_rag_modes
+from ilim_assistant.ana_motor_plan import looks_like_encyclopedic_fact_question
 
 # --- Anlık durum (frontend / WebSocket) ---
 
@@ -29,8 +29,42 @@ STATUS_INTERNET_HADITH = "İnternette hadisler ve ilgili metinler araştırılı
 STATUS_WEB_SCAN = "İnternette hızlı tarama yapılıyor (DuckDuckGo)…"
 STATUS_FULL_INDEX = "Yerel indeks taranıyor (bilgi + arşiv birlikte)…"
 STATUS_BILGI_INDEX = "Genel bilgi — yerel ilim indeksi taranıyor…"
+STATUS_BILIM_FAST_INDEX = "Yerel indeks (hızlı tur) — ağır arşiv atlandı…"
+STATUS_GEMINI_FIRST = "Gemini hızlı yanıt hazırlanıyor — yerel indeks ve web atlandı…"
 STATUS_DILBILGISI_INDEX = "Dilbilgisi notları taranıyor…"
 STATUS_SKIP_RETRIEVAL = "Kaynak taraması atlandı — doğrudan yanıt…"
+
+
+def _bilim_gemini_index_first_enabled() -> bool:
+    """Gemini açıkken ansiklopedik tarih sorusunda arşiv önceliğini atla (Faz 9 hız)."""
+    if os.environ.get("RUZGAR_FAZ9_BILIM_FAST_INDEX", "1").strip().lower() in (
+        "0",
+        "false",
+        "no",
+    ):
+        return False
+    try:
+        from ilim_assistant.llm_gemini import gemini_configured
+
+        return gemini_configured()
+    except Exception:
+        return False
+
+
+def _gemini_first_for_encyclopedic_enabled() -> bool:
+    """Tek cevaplı genel bilgi/tarih sorularında RAG'i tamamen atla (Faz 9 hız)."""
+    if os.environ.get("RUZGAR_FAZ9_GEMINI_FIRST_FOR_FACTS", "1").strip().lower() in (
+        "0",
+        "false",
+        "no",
+    ):
+        return False
+    try:
+        from ilim_assistant.llm_gemini import gemini_configured
+
+        return gemini_configured()
+    except Exception:
+        return False
 
 
 def _score_threshold() -> float:
@@ -131,6 +165,19 @@ def _yield_index_only(
     }
 
 
+def _yield_gemini_first() -> Iterator[dict[str, Any]]:
+    yield {"kind": "status", "phase": "gemini_first", "text": STATUS_GEMINI_FIRST}
+    yield {
+        "kind": "result",
+        "bundle": RetrievalBundle(
+            hits=[],
+            suppress_main_web_search=True,
+            archive_was_primary=False,
+            ilim_citation_tail=smart_filter_vision_directive(),
+        ),
+    }
+
+
 def _yield_archive_first(
     msg: str,
     rag_top_k: int,
@@ -204,7 +251,9 @@ def iter_archive_first_decision(
       - {"kind": "status", "phase": str, "text": str}
       - {"kind": "result", "bundle": RetrievalBundle}
     """
-    if mode_norm in no_rag_modes() or mode_norm == "hafiza" or weather_q or not ilim_rag:
+    from ilim_assistant.chat_core import _NO_RAG_MODES
+
+    if mode_norm in _NO_RAG_MODES or weather_q or not ilim_rag:
         if mode_norm == "hafiza":
             yield {
                 "kind": "status",
@@ -242,6 +291,9 @@ def iter_archive_first_decision(
             return
 
         if primary == "bilgi":
+            if _gemini_first_for_encyclopedic_enabled() and looks_like_encyclopedic_fact_question(q):
+                yield from _yield_gemini_first()
+                return
             yield from _yield_index_only(
                 q,
                 rag_top_k,
@@ -251,6 +303,21 @@ def iter_archive_first_decision(
             return
 
         if primary == "bilim" or _plan_prefer_archive(question_plan):
+            if (
+                primary == "bilim"
+                and (_gemini_first_for_encyclopedic_enabled() or _bilim_gemini_index_first_enabled())
+                and looks_like_encyclopedic_fact_question(q)
+            ):
+                if _gemini_first_for_encyclopedic_enabled():
+                    yield from _yield_gemini_first()
+                else:
+                    yield from _yield_index_only(
+                        q,
+                        rag_top_k,
+                        status_text=STATUS_BILIM_FAST_INDEX,
+                        suppress_web=False,
+                    )
+                return
             yield from _yield_archive_first(q, rag_top_k)
             return
 

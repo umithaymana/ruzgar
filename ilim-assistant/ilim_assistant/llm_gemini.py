@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import os
+import time
 from typing import Any, Iterator, Optional
 
 import requests
@@ -53,14 +54,22 @@ def _normalize_model_name(model: str) -> str:
 
 def _gemini_timeout() -> tuple[float, float]:
     try:
-        conn = float(os.environ.get("RUZGAR_GEMINI_CONNECT_TIMEOUT_SEC", "25"))
+        conn = float(os.environ.get("RUZGAR_GEMINI_CONNECT_TIMEOUT_SEC", "8"))
     except ValueError:
-        conn = 25.0
+        conn = 8.0
     try:
-        read = float(os.environ.get("RUZGAR_GEMINI_READ_TIMEOUT_SEC", "600"))
+        read = float(os.environ.get("RUZGAR_GEMINI_READ_TIMEOUT_SEC", "18"))
     except ValueError:
-        read = 600.0
-    return max(5.0, min(conn, 120.0)), max(60.0, min(read, 86400.0))
+        read = 18.0
+    return max(3.0, min(conn, 60.0)), max(5.0, min(read, 120.0))
+
+
+def _gemini_stream_wall_sec() -> float:
+    try:
+        cap = float(os.environ.get("RUZGAR_GEMINI_STREAM_MAX_SEC", "45"))
+    except ValueError:
+        cap = 45.0
+    return max(12.0, min(cap, 300.0))
 
 
 def format_gemini_user_error(exc: BaseException) -> str:
@@ -227,7 +236,15 @@ def chat_completion_stream_gemini(
                 return
             resp.encoding = "utf-8"
             accumulated = ""
+            stream_deadline = time.monotonic() + _gemini_stream_wall_sec()
             for raw_line in resp.iter_lines(decode_unicode=False):
+                if time.monotonic() > stream_deadline:
+                    yield format_gemini_user_error(
+                        TimeoutError(
+                            f"Gemini akışı {_gemini_stream_wall_sec():.0f} sn içinde tamamlanmadı."
+                        )
+                    )
+                    return
                 if not raw_line:
                     continue
                 try:

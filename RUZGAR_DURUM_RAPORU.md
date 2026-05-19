@@ -211,14 +211,58 @@ Gereksinimler: Python deps (`requirements-api.txt`), Ollama, FFmpeg PATH, isteğ
 
 ---
 
-## 10. Handoff kontrol listesi
+## 10. Git durumu (18 Mayıs 2026 — güncel)
 
-- [ ] `git status` — untracked `motorlar/*.py` dosyalarını stage et
-- [ ] Video panel v5: timeline + mix uçtan uca test
-- [ ] `merkezi_zihin_havuzu.db` commit’e girmesin
-- [ ] `.cursorrules` boot listesi ↔ `desktop_server._boot_motorlar_anaonce` uyumu doğrula
-- [ ] Sonraki iş: Faz 10.4 programlama debug döngüsü veya Faz 9.6 bilgi reflection
+**Remote:** `origin/main` — https://github.com/umithaymana/ruzgar.git (güncel)
+
+| Commit | Özet |
+|--------|------|
+| `bd707f3` | Video timeline editor + merkezi havuz |
+| `5ecb37a` | Google Gemini API + Süper Beyin (`llm_gemini`, `llm_brain`) |
+
+**Commit dışı (yerel):** `ilim-assistant/.env` (API anahtarı), `hafiza/*.db`, `hafiza/video_indirilen/`
 
 ---
 
-*Bu dosya workspace kökünde güncellenebilir; handoff için tek kaynak olarak kullanın.*
+## 11. Son oturum özeti — yarın devam (18 Mayıs 2026)
+
+### Tamamlananlar
+- **Adım A–C:** Programlama motoru, Merkezi Zihin Havuzu, Video motoru (yt-dlp + canlı test).
+- **Adım D:** Görsel timeline / kurgu paneli (v5), `POST /api/video/edit/mix`, FFmpeg `concat_many_files`.
+- **Süper Beyin (Faz 8 başlangıç):** `llm_brain.py` + `llm_gemini.py`; bulut = **yalnızca Google Gemini** (OpenAI kaldırıldı).
+- **`.env`:** `ilim-assistant/.env` oluşturuldu; `desktop_server.py` → `_load_env_file()` ile yükleniyor.
+- **Doğrulama:** `/api/health` → `super_brain.gemini_configured: true`, zincir: `gemini → denge → hizli → kod`.
+- **Push:** `main` güncel (`5ecb37a`).
+
+### Son kullanıcı testi / gözlem
+- Soru: *«osmanlı devletini kim kurdu»* — UI’da **45+ sn** «Yerel indeks taranıyor…» (plan: ilim/tarih, arşiv+indeks, Web ara açık).
+- **Sonuç:** Mimari olarak beklenen (önce RAG/web, sonra LLM); bu tür sorular için **fazla yavaş** — optimizasyon adayı.
+
+### Yarın önerilen sıra
+1. **Hız (isteğe bağlı ilk iş):** Tarih/bilgi sorularında «önce Gemini, RAG hafif/paralel» veya Web kapalıyken benchmark.
+2. **Faz 9.6:** Bilgi self-reflection (cevap → kontrol turu).
+3. **Faz 10.4–10.6:** Programlama otonom debug döngüsü.
+4. Video v5: uçtan uca mix test (isteğe bağlı).
+
+### Yarın başlarken (komutlar)
+```powershell
+# 1) API (ilim-assistant klasöründe — .env otomatik okunur)
+cd "D:\CURSOR PROJELER\YAPAY ZEKA\ilim-assistant"
+python desktop_server.py
+
+# 2) Masaüstü
+cd "D:\CURSOR PROJELER\YAPAY ZEKA\ruzgar-desktop"
+npm start
+```
+Kontrol: http://127.0.0.1:8777/api/health → `gemini_configured: true`
+
+### Ortam hatırlatması
+- Gemini: `GOOGLE_GEMINI_API_KEY` + `RUZGAR_GEMINI_MODEL=gemini-2.0-flash` → `RUZGAR_BRAIN.env.example` şablonu.
+- API anahtarı sohbette göründüyse Google AI Studio’dan **yenilemek** iyi olur.
+
+### Yeni asistana tek cümle
+> «Rüzgar: video+kurgu ve Gemini Süper Beyin push edildi; yarın önce tarih sorularında RAG gecikmesini iyileştirmek veya Faz 9–10’a geçmek istiyoruz.»
+
+---
+
+*Bu dosya workspace kökünde handoff kaynağıdır; yarın `@RUZGAR_DURUM_RAPORU.md` ile devam edin.*

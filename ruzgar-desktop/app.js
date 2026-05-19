@@ -5844,16 +5844,28 @@ async function streamChat(userText) {
     }
   }
 
+  const onProgramlamaPage =
+    el.pageProgramlama && !el.pageProgramlama.hidden;
+  const chatMode =
+    currentMode === "programlama" || onProgramlamaPage
+      ? "programlama"
+      : currentMode;
+  const codingMode =
+    chatMode === "programlama" || !!(el.code && el.code.checked);
   const body = {
     message: userText,
     history: chatHistory,
-    use_web: el.web ? !!el.web.checked : !["ses", "okuma", "tercume", "hafiza", "hizli"].includes(currentMode),
+    use_web: el.web
+      ? !!el.web.checked
+      : !["ses", "okuma", "tercume", "hafiza", "hizli", "programlama"].includes(
+          chatMode,
+        ),
     read_message_links:
       el.linkRead == null ? true : !!el.linkRead.checked,
     fetch_pages: Number.parseInt(String(el.fetchN?.value ?? "0"), 10) || 0,
-    coding_mode: el.code ? !!el.code.checked : currentMode === "programlama",
+    coding_mode: codingMode,
     session_wake_used: sessionWakeUsed,
-    mode: currentMode,
+    mode: chatMode,
     workspace_root: workspaceRoot || undefined,
     autonom_research: !!(el.optAutonom && el.optAutonom.checked),
   };

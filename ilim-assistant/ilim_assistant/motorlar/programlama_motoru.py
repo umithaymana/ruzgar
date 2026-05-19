@@ -190,6 +190,63 @@ def _wants_full_verify(message: str) -> bool:
     )
 
 
+def wants_autonomous_code_debug(message: str) -> bool:
+    """
+    Faz 10.4 — kullanıcı açıkça otonom hata ayıklama isterse (tek turda çok adım).
+
+    Kapatmak: RUZGAR_CODE_DEBUG_AUTO=0
+    """
+    if os.environ.get("RUZGAR_CODE_DEBUG_AUTO", "1").strip().lower() in (
+        "0",
+        "false",
+        "no",
+    ):
+        return False
+    low = (message or "").lower()
+    keys = (
+        "otomatik debug",
+        "otomatik hata ayıklama",
+        "otomatik hata ayiklama",
+        "debug döngüsü",
+        "debug dongusu",
+        "traceback'i düzelt",
+        "tracebacki düzelt",
+        "kendin düzelt",
+        "pytest döngüsü",
+        "pytest dongusu",
+    )
+    return any(k in low for k in keys)
+
+
+def code_debug_max_retries() -> int:
+    """Başarısız pytest sonrası en fazla kaç ek LLM turu (varsayılan 2, tavan 5)."""
+    try:
+        v = int(os.environ.get("RUZGAR_CODE_DEBUG_LOOPS", "2"))
+    except ValueError:
+        v = 2
+    return max(0, min(v, 5))
+
+
+def apply_assistant_reply_tools(
+    reply_body: str,
+    workspace_root: str | Path | None = None,
+    *,
+    run_pytest: bool = True,
+) -> tuple[ToolRunSummary, ExecReport | None]:
+    """
+    Faz 10.4 / 10.6 — LLM cevabındaki @@write bloklarını uygular; istenirse pytest ile doğrular.
+
+    Dönüş: (özet, pytest raporu veya None).
+    """
+    summary, _ = run_tools_for_message((reply_body or "").strip(), workspace_root)
+    pytest_rep: ExecReport | None = None
+    tools = ProgramlamaAraclari(workspace_root)
+    if run_pytest and tools.root is not None:
+        pytest_rep = tools.run_dev_preset("pytest_run")
+        summary.execs.append(pytest_rep)
+    return summary, pytest_rep
+
+
 class ProgramlamaAraclari:
     """Programlama motoru araç seti — okuma, yazma, onaylı exec."""
 
@@ -248,6 +305,8 @@ class ProgramlamaAraclari:
 def run_tools_for_message(
     message: str,
     workspace_root: str | Path | None = None,
+    *,
+    run_presets: bool = True,
 ) -> tuple[ToolRunSummary, str]:
     """
     Mesaja göre okuma / @@write / test-lint preset'lerini çalıştırır.
@@ -284,15 +343,16 @@ def run_tools_for_message(
         else:
             blocks.append(f"=== Yazma: {rel} ===\n[HATA] {wrep.detail}")
 
-    if _wants_full_verify(message):
-        summary.execs.extend(tools.verify_pipeline(lint=True, pytest=True, smoke=False))
-    else:
-        if _wants_lint(message):
-            summary.execs.append(tools.run_dev_preset("ruff_check"))
-        if _wants_pytest(message):
-            summary.execs.append(tools.run_dev_preset("pytest_run"))
-        if _wants_smoke_module(message):
-            summary.execs.append(tools.run_dev_preset("python_module_run"))
+    if run_presets:
+        if _wants_full_verify(message):
+            summary.execs.extend(tools.verify_pipeline(lint=True, pytest=True, smoke=False))
+        else:
+            if _wants_lint(message):
+                summary.execs.append(tools.run_dev_preset("ruff_check"))
+            if _wants_pytest(message):
+                summary.execs.append(tools.run_dev_preset("pytest_run"))
+            if _wants_smoke_module(message):
+                summary.execs.append(tools.run_dev_preset("python_module_run"))
 
     for ex in summary.execs:
         status = "OK" if ex.ok else "HATA"
@@ -341,12 +401,19 @@ def build_motor_context(
     message: str,
     *,
     workspace_root: str | Path | None = None,
+    run_presets: bool = False,
 ) -> str:
-    """Programlama modu LLM bağlamı: talimat + araç çıktıları (okuma/yazma/test)."""
+    """Programlama modu LLM bağlamı: talimat + araç çıktıları (okuma/yazma/test).
+
+    `run_presets=False` (varsayılan): tur hazırlığında pytest/ruff çalıştırma — ağır süreç
+    yalnızca otonom debug döngüsünde (`apply_assistant_reply_tools`) yapılır.
+    """
     from ilim_assistant.dinamit_gelisme import dinamit_heartbeat
 
     prompt = (message or "").strip()
-    _, tools_block = run_tools_for_message(prompt, workspace_root)
+    _, tools_block = run_tools_for_message(
+        prompt, workspace_root, run_presets=run_presets
+    )
 
     base = dinamit_heartbeat() + (
         f"[PROGRAMLAMA MOTORU — {MIMAR_IMZA}]\n"

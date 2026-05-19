@@ -89,8 +89,12 @@ def message_calls_wake_name(message: str) -> bool:
 
 # Yerel arama + web yok: daha az GPU/CPU (masaüstü modları)
 # hafiza: yalnızca ruzgar_genel_hafiza.json + LLM; tam arşiv/indeks taraması dakikalarca sürebilir.
-_NO_RAG_MODES = frozenset({"ses", "okuma", "tercume", "uretim", "video", "hizli", "hafiza"})
-_NOWEB_MODES = frozenset({"ses", "okuma", "tercume", "uretim", "hizli", "hafiza"})
+_NO_RAG_MODES = frozenset(
+    {"ses", "okuma", "tercume", "uretim", "video", "hizli", "hafiza", "programlama"}
+)
+_NOWEB_MODES = frozenset(
+    {"ses", "okuma", "tercume", "uretim", "hizli", "hafiza", "programlama"}
+)
 
 # İstemciden Türkçe karakterli veya ASCII mod adı gelebilir
 _MODE_ALIASES = {
@@ -759,6 +763,9 @@ def _genel_no_context_directive() -> str:
 def _orkestra_context_for_turn(mode_norm: str, motor_flags: dict[str, bool]) -> bool:
     if os.environ.get("RUZGAR_ORKESTRA_CONTEXT", "1").strip().lower() in ("0", "false", "no"):
         return False
+    # Programlama atölyesi: yalnızca programlama motoru bağlamı (ağır çekirdek orkestra yok).
+    if mode_norm == "programlama":
+        return False
     if mode_norm != "genel":
         return True
     if os.environ.get("RUZGAR_ORKESTRA_CONTEXT_GENEL", "0").strip().lower() in (
@@ -812,6 +819,8 @@ def prepare_turn(
         return None
     msg = message.strip()
     m = normalize_mode(mode)
+    if coding_mode and m not in _NO_RAG_MODES:
+        m = "programlama"
     from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
 
     motor_flags = motor_niyeti_heuristic(msg)
@@ -943,7 +952,7 @@ def prepare_turn(
         and m in ("genel", "uretim", "gelisim")
         and not bool(getattr(turn_plan, "use_ilim_rag", True))
     )
-    if skip_rag_for_plan or m in _NO_RAG_MODES:
+    if skip_rag_for_plan or m in _NO_RAG_MODES or coding_mode:
         pass
     elif weather_q:
         # gramer/tecvid md'leri "hava" ile yanlış eşleşir; model dilbilgisi uydurur
@@ -959,6 +968,15 @@ def prepare_turn(
         pool_k = min(max(rag_k_clamped * 3, 10), 28)
         rag_score_min = float(os.environ.get("RAG_SCORE_MIN", "0.20"))
         tarih_on = _tarih_intent(msg)
+        try:
+            from ilim_assistant.ana_motor_plan import looks_like_encyclopedic_fact_question
+
+            encyc_fast = looks_like_encyclopedic_fact_question(msg)
+        except Exception:
+            encyc_fast = False
+        tarih_light = encyc_fast and os.environ.get(
+            "RUZGAR_FAZ9_CHAT_CORE_TARIH_LIGHT", "1"
+        ).strip().lower() not in ("0", "false", "no")
         tdk_lem: str | None = None
         tdk_exact_on = False
         if (
@@ -970,7 +988,11 @@ def prepare_turn(
             tdk_exact_on = _tdk_exact_path_allowed(msg, tdk_lem)
 
         _bundle_in = reuse_main_engine_bundle
-        if _bundle_in is not None and ((tdk_exact_on and tdk_lem) or tarih_on):
+        # Tarih niyeti: prefetch bundle'ı yok sayıp ikinci ağır tarama yapılıyordu (Faz 9 gecikme).
+        # Ansiklopedik «kim kurdu» vb. soruda Ana Motor önbelleğini koru.
+        if _bundle_in is not None and (
+            (tdk_exact_on and tdk_lem) or (tarih_on and not tarih_light)
+        ):
             _bundle_in = None
 
         good_hits: list = []
@@ -987,11 +1009,37 @@ def prepare_turn(
             # TDK: yalnızca `##` başlığı tam eşleşmesi — semantik yakınlıkla başka maddeye sıçrama yok.
             good_hits = search_tdk_exact_lemma(tdk_lem, top_k=rag_k_clamped)
         elif tarih_on:
-            pool_hits = search(search_msg, top_k=pool_k)
-            good_hits = [h for h in pool_hits if h[2] >= rag_score_min]
-            good_hits = [h for h in good_hits if not source_is_tdk(h[1])]
+            pool_k_use = pool_k
             tarih_scan = max(32, int(os.environ.get("RUZGAR_TARIH_SCAN_CAP", "96")))
             tarih_top = max(rag_k_clamped, int(os.environ.get("RUZGAR_TARIH_TOP_K", "4")))
+            if tarih_light:
+                try:
+                    pool_k_use = min(
+                        pool_k,
+                        int(os.environ.get("RUZGAR_FAZ9_TARIH_POOL_K_CAP", "12")),
+                    )
+                except ValueError:
+                    pool_k_use = min(pool_k, 12)
+                try:
+                    tarih_scan = max(
+                        16,
+                        int(os.environ.get("RUZGAR_FAZ9_TARIH_SCAN_CAP", "40")),
+                    )
+                except ValueError:
+                    tarih_scan = 40
+                try:
+                    tarih_top = max(
+                        2,
+                        min(
+                            rag_k_clamped,
+                            int(os.environ.get("RUZGAR_FAZ9_TARIH_TOP_K", "3")),
+                        ),
+                    )
+                except ValueError:
+                    tarih_top = max(2, min(rag_k_clamped, 3))
+            pool_hits = search(search_msg, top_k=pool_k_use)
+            good_hits = [h for h in pool_hits if h[2] >= rag_score_min]
+            good_hits = [h for h in good_hits if not source_is_tdk(h[1])]
             th = search_tarih_hafiza(search_msg, top_k=tarih_top, scan_cap=tarih_scan)
             th_ok = [h for h in th if h[2] >= rag_score_min]
             if not th_ok and th:
@@ -1230,7 +1278,16 @@ def prepare_turn(
 
         user_payload = merge_ilim_tail(user_payload, ilim_merge_tail)
 
-    if _orkestra_context_for_turn(m, motor_flags):
+    if m == "programlama":
+        try:
+            from ilim_assistant.motorlar.programlama_motoru import build_motor_context as prog_ctx
+
+            _pc = prog_ctx(msg, workspace_root=workspace_root).strip()
+            if _pc:
+                user_payload = _pc.rstrip() + "\n\n---\n" + user_payload
+        except Exception:
+            pass
+    elif _orkestra_context_for_turn(m, motor_flags):
         try:
             from ilim_assistant.motorlar.ruzgar_cekirdegi import build_core_context
 

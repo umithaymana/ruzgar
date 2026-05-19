@@ -37,6 +37,7 @@ def run_offline() -> int:
         run_agent_workspace_phase,
     )
     from ilim_assistant.ana_motor_plan import (
+        looks_like_encyclopedic_fact_question,
         maybe_clarification_reply,
         maybe_gundelik_instant_reply,
         plan_question,
@@ -52,6 +53,7 @@ def run_offline() -> int:
         ("selam nasılsın", "genel", {}, "gundelik"),
         ("Python decorator nedir", "genel", {}, "bilgi"),
         ("Osmanlı Fatih dönemi", "genel", {"bilim": True}, "bilim"),
+        ("Osmanlı devletini kim kurdu?", "genel", {}, "bilgi"),
         ("bu?", "genel", {}, None),
     ]
     from ilim_assistant.ana_motor_plan import rewrite_rag_search_query
@@ -131,6 +133,48 @@ def run_offline() -> int:
         fails += 1
     else:
         _ok("bilgi: web kapatilmaz")
+
+    msg_os = "Osmanlı devletini kim kurdu?"
+    if not looks_like_encyclopedic_fact_question(msg_os):
+        _fail("encyclopedic detector", "True bekleniyordu")
+        fails += 1
+    else:
+        _ok("encyclopedic detector (kim kurdu)")
+    p_os = plan_question(msg_os, "genel", {})
+    b_os, evs_os = run_retrieval_with_status_events(
+        msg_os, "genel", False, True, 4, p_os
+    )
+    texts_os = " ".join(str(e.get("text") or "") for e in evs_os)
+    if "Mektubat" in texts_os or "mektubat" in texts_os.lower():
+        _fail("Faz9 retrieval osmanli", "ağır arşiv (Mektubat) beklenmiyordu")
+        fails += 1
+    else:
+        _ok("Faz9 retrieval: mektubat yok (indeks turu)")
+
+    msg_ilk = "İlk Osmanlı padişahı kimdir?"
+    if not looks_like_encyclopedic_fact_question(msg_ilk):
+        _fail("encyclopedic detector ilk padişah", "True bekleniyordu")
+        fails += 1
+    else:
+        _ok("encyclopedic detector (ilk padişah kimdir)")
+
+    prep_os = prepare_turn(
+        msg_os,
+        [],
+        use_web=False,
+        fetch_pages=0,
+        coding_mode=False,
+        session_wake_used=False,
+        mode="genel",
+        skip_ogrenme_lookup=True,
+        reuse_main_engine_bundle=b_os,
+        question_plan=p_os,
+    )
+    if prep_os is None:
+        _fail("prepare_turn Faz9 tarih+bundle", "None")
+        fails += 1
+    else:
+        _ok("prepare_turn: prefetch bundle korundu (tarih çift tarama yok)")
 
     print("\n=== Workspace ajan ===")
     rels = infer_workspace_rel_paths("@@ruzgar-desktop/app.js", repo)
