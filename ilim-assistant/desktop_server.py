@@ -260,6 +260,10 @@ class TaskUpdateBody(BaseModel):
     detail: str | None = None
 
 
+class VideoDownloadBody(BaseModel):
+    url: str = ""
+
+
 class VideoConcatBody(BaseModel):
     """İki proje içi dosyayı concat ile birleştirir (codec uyumu şarta bağlı)."""
 
@@ -566,6 +570,14 @@ def health():
     }
 
 
+@app.get("/api/ui/manifest")
+def api_ui_manifest():
+    """Dashboard/atölye metinleri için tek kaynak; UI statik Faz 7'ye takılmaz."""
+    from ilim_assistant.ruzgar_ui_manifest import build_ui_manifest
+
+    return build_ui_manifest(health=health())
+
+
 @app.get("/api/system-metrics")
 def api_system_metrics():
     """Masaüstü performans pill — `ruzgar-desktop/app.js` her ~2.5 sn çağırır."""
@@ -694,6 +706,36 @@ def api_hizir_firsat_kaldir(body: HizirFirsatKaldirBody):
 
         data = pas_gec_hizir_kart((body.kart_id or "").strip())
         return {"ok": True, "path": str(merkezi_bellek_path()), "data": data}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/video/download")
+async def api_video_download(body: VideoDownloadBody):
+    """YouTube/web video URL'sini yt-dlp ile indirir ve merkezi havuza kaydeder."""
+    url = (body.url or "").strip()
+    if not url:
+        raise HTTPException(status_code=400, detail="URL boş.")
+    from urllib.parse import urlparse
+
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https") or not parsed.netloc:
+        raise HTTPException(status_code=400, detail="Yalnızca geçerli http/https URL kabul edilir.")
+
+    def _run():
+        from ilim_assistant.motorlar.video_motoru import download_video_with_yt_dlp
+
+        result = download_video_with_yt_dlp(url)
+        payload = result.to_metadata()
+        if result.error:
+            payload["error"] = result.error
+        return payload
+
+    try:
+        data = await run_in_threadpool(_run)
+        return {"ok": bool(data.get("ok")), "result": data}
+    except HTTPException:
+        raise
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 

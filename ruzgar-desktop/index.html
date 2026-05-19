@@ -251,10 +251,9 @@
         <div id="dynamic-workbench" class="dynamic-workbench layout-full">
           <section class="motor-page" id="page-genel">
             <div class="atelier-info-strip atelier-info-strip-ana">
-              <span class="phase-badge phase-badge-ana phase-badge-faz7">Ana Motor · Cila ✓</span>
+              <span class="phase-badge phase-badge-ana phase-badge-faz7">Ana Motor · Faz bilgisi yükleniyor…</span>
               <span class="atelier-promise">
-                Orkestra şefi: <strong>Hafıza</strong> + 5 yardımcı motor. <strong>Faz 7 tamam:</strong> cila, hata kartları,
-                ses göstergesi, yardım (? / Ctrl+/) ve HIZIR API temizleme.
+                Rüzgar yetenek manifesti sunucudan okunuyor; yeni backend fazları otomatik bu panele yansır.
               </span>
             </div>
             <h3>Ana Motor — Dashboard</h3>
@@ -281,15 +280,15 @@
             </div>
             <div class="motors-overview">
               <h4 class="motors-overview-title">Atölye Yol Haritası</h4>
-              <div class="motors-overview-grid">
-                <div class="motors-overview-card"><span class="ovx-phase">Faz 0</span><span class="ovx-name">UI iskeleti</span><span class="ovx-status ovx-done">tamam</span></div>
-                <div class="motors-overview-card"><span class="ovx-phase">Faz 1</span><span class="ovx-name">Programlama</span><span class="ovx-status ovx-done">1.3 tamam</span></div>
-                <div class="motors-overview-card"><span class="ovx-phase">Faz 2</span><span class="ovx-name">Okuma</span><span class="ovx-status ovx-done">tamam</span></div>
-                <div class="motors-overview-card"><span class="ovx-phase">Faz 3</span><span class="ovx-name">Tercüme</span><span class="ovx-status ovx-done">tamam</span></div>
-                <div class="motors-overview-card"><span class="ovx-phase">Faz 4</span><span class="ovx-name">Ses</span><span class="ovx-status ovx-done">tamam</span></div>
-                <div class="motors-overview-card"><span class="ovx-phase">Faz 5</span><span class="ovx-name">Video</span><span class="ovx-status ovx-now">v2…</span></div>
-                <div class="motors-overview-card"><span class="ovx-phase">Faz 6</span><span class="ovx-name">Ana Motor akıl</span><span class="ovx-status ovx-done">tamam</span></div>
-                <div class="motors-overview-card"><span class="ovx-phase">Faz 7</span><span class="ovx-name">Cila</span><span class="ovx-status ovx-done">tamam</span></div>
+              <div class="motors-overview-grid" id="motors-overview-grid">
+                <div class="motors-overview-card"><span class="ovx-phase">Faz 9</span><span class="ovx-name">Gemini-first hız</span><span class="ovx-status ovx-done">tamam</span></div>
+                <div class="motors-overview-card"><span class="ovx-phase">Faz 10</span><span class="ovx-name">Otonom debug</span><span class="ovx-status ovx-done">tamam</span></div>
+                <div class="motors-overview-card"><span class="ovx-phase">Faz 11</span><span class="ovx-name">İdrak ön-işlemi</span><span class="ovx-status ovx-done">tamam</span></div>
+                <div class="motors-overview-card"><span class="ovx-phase">Faz 12</span><span class="ovx-name">Cevap kalitesi</span><span class="ovx-status ovx-done">tamam</span></div>
+                <div class="motors-overview-card"><span class="ovx-phase">Faz 13</span><span class="ovx-name">Kişisel hafıza</span><span class="ovx-status ovx-done">tamam</span></div>
+                <div class="motors-overview-card"><span class="ovx-phase">Faz 14</span><span class="ovx-name">Self-test</span><span class="ovx-status ovx-done">tamam</span></div>
+                <div class="motors-overview-card"><span class="ovx-phase">Faz 15</span><span class="ovx-name">Debug v2</span><span class="ovx-status ovx-done">tamam</span></div>
+                <div class="motors-overview-card"><span class="ovx-phase">Faz 16</span><span class="ovx-name">Görevler + hatırlatıcı</span><span class="ovx-status ovx-now">aktif</span></div>
               </div>
             </div>
           </section>
@@ -580,6 +579,9 @@
               <button type="button" class="btn-primary btn-compact video-quick-btn" id="video-quick-create" title="Dosya seçin ve önizleyin">
                 🎥 Video Oluştur
               </button>
+              <button type="button" class="btn-secondary btn-compact video-quick-btn" id="video-quick-youtube" title="YouTube veya web video URL indir">
+                ⬇ YouTube indir
+              </button>
               <button type="button" class="btn-secondary btn-compact video-quick-btn" id="video-quick-trim" title="Kesim ve dönüştürme alanına git">
                 ✂️ Videoyu Dönüştür/Kes
               </button>
@@ -659,6 +661,26 @@
                     <h4 class="video-meta-title">Teknik özet</h4>
                     <pre id="video-probe-json" class="video-probe-pre">
 Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
+                  </div>
+
+                  <div class="video-v2-panel video-download-panel" id="video-anchor-download">
+                    <h4 class="video-v2-title">YouTube / web video indir</h4>
+                    <p class="video-v2-intro">
+                      URL girin; Rüzgar videoyu <code>hafiza/video_indirilen</code> altına indirir ve Merkezi Zihin Havuzu'na kaydeder.
+                    </p>
+                    <label class="video-file-label" for="video-download-url">Video URL</label>
+                    <input
+                      id="video-download-url"
+                      type="url"
+                      class="video-text-input"
+                      spellcheck="false"
+                      placeholder="https://www.youtube.com/watch?v=..."
+                    />
+                    <div class="video-toolbar">
+                      <button type="button" class="btn-primary btn-compact" id="btn-video-download">Videoyu indir</button>
+                    </div>
+                    <p id="video-download-status" class="video-hint">Son indirmeler burada görünür.</p>
+                    <ul id="video-download-recent" class="video-edit-bin" aria-label="Son video indirmeleri"></ul>
                   </div>
 
                   <div class="video-v2-panel" id="video-anchor-v2">
@@ -1105,7 +1127,7 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
       <div class="faz7-help-backdrop" data-faz7-close></div>
       <div class="faz7-help-card">
         <header class="faz7-help-head">
-          <h2 id="faz7-help-title">Rüzgar — Faz 7 Cila</h2>
+          <h2 id="faz7-help-title">Rüzgar — Faz 16 Akıl &amp; Orkestra</h2>
           <button type="button" id="btn-faz7-help-close" class="btn-secondary btn-compact" aria-label="Kapat">Kapat</button>
         </header>
         <div class="faz7-help-body">
@@ -1130,15 +1152,15 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
             <li><strong>Sayfayı Temizle</strong> — <code>POST /api/hizir/temizle</code> (vitrin + önbellek)</li>
             <li><strong>Hızlı Yenile</strong> — mevcut sorguyla pazar taraması</li>
           </ul>
-          <h3 class="faz7-help-h3">Faz 7 — tamamlanan cila</h3>
+          <h3 class="faz7-help-h3">Faz 9–16 — tamamlanan kabiliyetler</h3>
           <ul class="faz7-help-ul faz7-help-done">
-            <li>Düşünme süresi + soru planı alt satırı</li>
-            <li>Hata kartları (Ollama / bağlantı / model)</li>
-            <li>Sesli okuma göstergesi · karşılama balonu</li>
-            <li>Dashboard sağlık şeridi · ajan adım animasyonu</li>
-            <li>HIZIR Sayfayı Temizle → <code>POST /api/hizir/temizle</code></li>
+            <li>Gemini-first hız ve ağır indeks atlama</li>
+            <li>Kod modunda yerel ilim indeksini atlama</li>
+            <li>İdrak ön-işlemi ve devam cümlesi genişletme</li>
+            <li>hatırla / unut / profil / görev komutları</li>
+            <li>YouTube/web video indirme ve merkezi havuz kaydı</li>
           </ul>
-          <h3 class="faz7-help-h3">Görünüm (Faz 7)</h3>
+          <h3 class="faz7-help-h3">Görünüm</h3>
           <div class="faz7-help-prefs">
             <label class="faz7-help-chk"
               ><input type="checkbox" id="faz7-opt-reduced-motion" /> Azaltılmış animasyon</label

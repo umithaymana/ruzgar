@@ -355,6 +355,10 @@ const el = {
   btnVideoClear: document.getElementById("btn-video-clear"),
   videoEngineHint: document.getElementById("video-engine-hint"),
   videoProbeJson: document.getElementById("video-probe-json"),
+  videoDownloadUrl: document.getElementById("video-download-url"),
+  btnVideoDownload: document.getElementById("btn-video-download"),
+  videoDownloadStatus: document.getElementById("video-download-status"),
+  videoDownloadRecent: document.getElementById("video-download-recent"),
   videoRelWorkspace: document.getElementById("video-rel-workspace"),
   videoStartSec: document.getElementById("video-start-sec"),
   videoDurationSec: document.getElementById("video-duration-sec"),
@@ -400,6 +404,7 @@ const el = {
   videoRelSubTranslate: document.getElementById("video-rel-sub-translate"),
   btnVideoSubToTercume: document.getElementById("btn-video-sub-to-tercume"),
   videoQuickCreate: document.getElementById("video-quick-create"),
+  videoQuickYoutube: document.getElementById("video-quick-youtube"),
   videoQuickTrim: document.getElementById("video-quick-trim"),
   videoQuickAudio: document.getElementById("video-quick-audio"),
   videoQuickExport: document.getElementById("video-quick-export"),
@@ -448,6 +453,7 @@ let videoTimelineOut = null;
 let videoEditBin = [];
 /** Timeline sürükleme: in | out | scrub | null */
 let videoTimelineDrag = null;
+let lastUiManifest = null;
 const VIDEO_EDIT_MAX_CLIP_SEC = 300;
 const OKUMA_ARSIV_ROOT = "ilim-assistant/arsiv";
 
@@ -1076,6 +1082,7 @@ function isChatVisuallyEmpty() {
 function showChatWelcomeIfEmpty() {
   if (!el.chat || !isChatVisuallyEmpty()) return;
   dismissChatWelcome();
+  const foot = lastUiManifest?.dashboard?.welcome_foot || "Faz 16 aktif · Ümit & Gökçenur";
   const w = document.createElement("div");
   w.className = "bubble assistant chat-welcome";
   w.setAttribute("role", "note");
@@ -1088,9 +1095,106 @@ function showChatWelcomeIfEmpty() {
     `<li><kbd>?</kbd> veya <kbd>Ctrl+/</kbd> — kısayol yardımı.</li>` +
     `</ul>` +
     `<p class="chat-welcome-actions"><button type="button" class="btn-secondary btn-compact" data-faz7-open-help>Yardımı aç</button></p>` +
-    `<p class="chat-welcome-foot">Faz 7 tamam · Ümit &amp; Gökçenur</p>`;
+    `<p class="chat-welcome-foot">${esc(foot)}</p>`;
   el.chat.appendChild(w);
   el.chat.scrollTop = 0;
+}
+
+function renderRecentVideoDownloads(items) {
+  if (!el.videoDownloadRecent) return;
+  const rows = Array.isArray(items) ? items.filter((x) => x && typeof x === "object") : [];
+  el.videoDownloadRecent.innerHTML = "";
+  if (!rows.length) {
+    const li = document.createElement("li");
+    li.className = "video-edit-bin-empty";
+    li.textContent = "Henüz indirme kaydı yok.";
+    el.videoDownloadRecent.appendChild(li);
+    return;
+  }
+  rows.slice(0, 8).forEach((row) => {
+    const li = document.createElement("li");
+    li.className = "video-edit-bin-item";
+    const title = String(row.title || row.url || "video").slice(0, 90);
+    const filePath = String(row.file_path || "").slice(0, 140);
+    li.textContent = filePath ? `${title} · ${filePath}` : title;
+    el.videoDownloadRecent.appendChild(li);
+  });
+}
+
+function applyUiManifest(manifest) {
+  if (!manifest || manifest.ok === false) return;
+  lastUiManifest = manifest;
+
+  const dash = manifest.dashboard || {};
+  const badge = document.querySelector(".atelier-info-strip-ana .phase-badge-ana");
+  if (badge && dash.badge) badge.textContent = dash.badge;
+  const promise = document.querySelector(".atelier-info-strip-ana .atelier-promise");
+  if (promise && dash.promise) promise.textContent = dash.promise;
+
+  const grid = document.getElementById("motors-overview-grid");
+  const phases = Array.isArray(manifest.phases) ? manifest.phases : [];
+  if (grid && phases.length) {
+    grid.innerHTML = "";
+    const current = Number(manifest.current_phase || 0);
+    phases.forEach((p) => {
+      const card = document.createElement("div");
+      card.className = "motors-overview-card";
+      const ph = document.createElement("span");
+      ph.className = "ovx-phase";
+      ph.textContent = String(p.phase || "");
+      const nm = document.createElement("span");
+      nm.className = "ovx-name";
+      nm.textContent = String(p.name || "");
+      const st = document.createElement("span");
+      const n = parseInt(String(p.phase || "").replace(/\D+/g, ""), 10);
+      st.className = `ovx-status ${Number.isFinite(n) && n >= current ? "ovx-now" : "ovx-done"}`;
+      st.textContent = String(p.status || "tamam");
+      card.append(ph, nm, st);
+      grid.appendChild(card);
+    });
+  }
+
+  const motors = manifest.motors || {};
+  Object.entries(motors).forEach(([mode, meta]) => {
+    const safeMode =
+      window.CSS && typeof CSS.escape === "function"
+        ? CSS.escape(mode)
+        : String(mode).replace(/[^a-z0-9_-]/gi, "");
+    const tag = document.querySelector(`#motor-side-${safeMode} .motor-tag`);
+    if (tag && meta?.tag) tag.textContent = String(meta.tag);
+  });
+
+  if (dash.help_title) {
+    const title = document.getElementById("faz7-help-title");
+    if (title) title.textContent = dash.help_title;
+  }
+  const caps = Array.isArray(manifest.capabilities) ? manifest.capabilities : [];
+  const done = document.querySelector(".faz7-help-done");
+  if (done && caps.length) {
+    done.innerHTML = "";
+    caps.forEach((cap) => {
+      const li = document.createElement("li");
+      li.textContent = String(cap);
+      done.appendChild(li);
+    });
+  }
+
+  const existingFoot = el.chat?.querySelector(".chat-welcome-foot");
+  if (existingFoot && dash.welcome_foot) existingFoot.textContent = dash.welcome_foot;
+  renderRecentVideoDownloads(manifest.video?.recent_downloads || []);
+}
+
+async function refreshUiManifest() {
+  try {
+    const r = await fetch(`${API}/api/ui/manifest`, { method: "GET", cache: "no-store" });
+    const j = await r.json();
+    if (!r.ok || j.ok === false) throw new Error(j.detail || `HTTP ${r.status}`);
+    applyUiManifest(j);
+    return j;
+  } catch (e) {
+    console.warn("[RÜZGAR] UI manifest okunamadı:", e);
+    return null;
+  }
 }
 
 function wireFaz7PrefsUi() {
@@ -3894,6 +3998,49 @@ async function runVideoMuxAudioJob() {
   }
 }
 
+async function runVideoDownloadJob() {
+  const url = String(el.videoDownloadUrl?.value || "").trim();
+  if (!url) {
+    flashRuzgarDurum("İndirmek için önce video URL girin.");
+    el.videoDownloadUrl?.focus();
+    return;
+  }
+  const btn = el.btnVideoDownload;
+  if (btn) btn.disabled = true;
+  if (el.videoDownloadStatus) el.videoDownloadStatus.textContent = "İndiriliyor… Bu işlem video boyutuna göre sürebilir.";
+  flashRuzgarDurum("Video indiriliyor…");
+  try {
+    const res = await fetch(`${API}/api/video/download`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || j.ok === false) {
+      const detail = j.detail || j.result?.error || `HTTP ${res.status}`;
+      throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+    }
+    const result = j.result || {};
+    const rel = String(result.file_path || "").trim();
+    const title = String(result.title || "video").trim();
+    if (el.videoDownloadStatus) {
+      el.videoDownloadStatus.textContent = rel ? `İndirildi: ${title} · ${rel}` : `İndirildi: ${title}`;
+    }
+    if (rel) {
+      if (el.videoRelWorkspace) el.videoRelWorkspace.value = rel;
+      if (el.videoEditInsertRel) el.videoEditInsertRel.value = rel;
+    }
+    flashRuzgarDurum("Video indirildi ve merkezi havuza kaydedildi.");
+    await refreshUiManifest();
+  } catch (e) {
+    const msg = String(e && e.message ? e.message : e);
+    if (el.videoDownloadStatus) el.videoDownloadStatus.textContent = `İndirme başarısız: ${msg}`;
+    flashRuzgarDurum("Video indirme başarısız.");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
 function wireVideoAtolye() {
   if (el.videoFileInput && el.videoPreview && el.videoFileInput.dataset.videoWired !== "1") {
     el.videoFileInput.dataset.videoWired = "1";
@@ -3979,6 +4126,19 @@ function wireVideoAtolye() {
       void runVideoMuxAudioJob();
     });
   }
+  if (el.btnVideoDownload) {
+    el.btnVideoDownload.addEventListener("click", () => {
+      void runVideoDownloadJob();
+    });
+  }
+  if (el.videoDownloadUrl) {
+    el.videoDownloadUrl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        void runVideoDownloadJob();
+      }
+    });
+  }
   wireVideoTimeline();
   wireVideoEditPanel();
   wireVideoQuickBar();
@@ -4004,6 +4164,15 @@ function wireVideoQuickBar() {
         el.videoFileInput?.focus();
       }
       flashRuzgarDurum("Kaynak dosya seçin; önizleme solda güncellenir.");
+    });
+  }
+  if (el.videoQuickYoutube) {
+    el.videoQuickYoutube.addEventListener("click", () => {
+      const a = document.getElementById("video-anchor-download");
+      scrollToEl(a);
+      window.setTimeout(() => {
+        el.videoDownloadUrl?.focus?.({ preventScroll: true });
+      }, 320);
     });
   }
   if (el.videoQuickTrim) {
@@ -5223,6 +5392,7 @@ async function checkApi() {
       }
       lastHealthSnapshot = j;
       updateFaz7HealthStrip(j);
+      void refreshUiManifest();
       el.api.textContent = j.stt ? "Sunucu ✓ metne döküm" : "Sunucu ✓";
       let apiTitle = j.stt
         ? "Yerel sunucu — konuşmayı metne düşürme (yerel model veya tarayıcı tanıma)"
@@ -7064,7 +7234,7 @@ if (window.ruzgarApi?.onMenu) {
 wireNavToolbar();
 wireFaz7Cila();
 document.body.classList.add("faz7-complete");
-showChatWelcomeIfEmpty();
+void refreshUiManifest().finally(() => showChatWelcomeIfEmpty());
 checkApi();
 setInterval(checkApi, 15000);
 refreshPerformanceMetrics();
