@@ -617,6 +617,55 @@ def api_self_test():
     return run_self_tests()
 
 
+@app.get("/api/system-health-report")
+def api_system_health_report(mode: str = "genel"):
+    """Kısa kişisel asistan sağlık raporu: aktif mod + hafıza kapasitesi."""
+    from ilim_assistant.ruzgar_session_context import memory_capacity_snapshot
+    from ilim_assistant.ruzgar_ui_manifest import build_ui_manifest
+
+    mode_norm = normalize_mode(mode)
+    h = health()
+    manifest = build_ui_manifest(health=h)
+    memory = memory_capacity_snapshot()
+    super_brain = h.get("super_brain") or {}
+    ana_motor = h.get("ana_motor") or {}
+    lines = [
+        "Sistem Sağlık Raporu",
+        f"- Aktif mod: {mode_norm}",
+        f"- Faz: {manifest.get('current_phase_label')}",
+        f"- Gemini: {'hazır' if super_brain.get('gemini_configured') else 'kapalı/eksik'}",
+        f"- Ana Motor ajan: {'aktif' if ana_motor.get('ana_motor_agent_enabled') else 'kapalı'}",
+        (
+            "- Hafıza kapasitesi: "
+            f"{memory.get('hafiza_total', 0)} kalıcı kayıt, "
+            f"{memory.get('personal_notes', 0)} kişisel not, "
+            f"{memory.get('shared_sqlite_context', 0)} SQLite bağlam, "
+            f"{memory.get('active_tasks', 0)} aktif görev, "
+            f"{memory.get('pending_reminders', 0)} bekleyen hatırlatıcı"
+        ),
+        f"- Oturum hafıza context'i: {'aktif' if memory.get('session_memory_context_enabled') else 'kapalı'}",
+    ]
+    try:
+        from ilim_assistant.ruzgar_debug_report import last_debug_report
+
+        dbg = last_debug_report()
+    except Exception:
+        dbg = None
+    if dbg:
+        lines.append(f"- Son debug: exit={dbg.get('exit_code')} · {dbg.get('likely_cause')}")
+    else:
+        lines.append("- Son debug: kayıt yok")
+
+    return {
+        "ok": True,
+        "mode": mode_norm,
+        "phase": manifest.get("current_phase_label"),
+        "health": h,
+        "memory": memory,
+        "report": "\n".join(lines),
+    }
+
+
 @app.get("/api/tasks")
 def api_tasks(limit: int = 50):
     from ilim_assistant.gorev_yoneticisi import list_tasks
@@ -1723,6 +1772,35 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
                     "code_debug": {"phase": "pytest_ok", "exit": pytest_rep.exit_code},
                 }
                 break
+            try:
+                from ilim_assistant.ruzgar_debug_report import (
+                    build_debug_report,
+                    format_debug_report,
+                    publish_debug_report,
+                )
+
+                dbg_report = build_debug_report(
+                    message=msg,
+                    workspace_root=req.workspace_root,
+                    pytest_report=pytest_rep,
+                    writes_count=len(summ.writes),
+                    retries_left=extras_remaining,
+                )
+                publish_debug_report(dbg_report)
+                yield {
+                    "type": "meta",
+                    "code_debug": {"phase": "pytest_failed", **dbg_report},
+                }
+                yield {
+                    "type": "status",
+                    "text": "Otonom debug v2 raporu terminale yazıldı.",
+                }
+                yield {
+                    "type": "status",
+                    "text": format_debug_report(dbg_report)[:1800],
+                }
+            except Exception:
+                pass
             if not summ.writes:
                 yield {
                     "type": "status",
@@ -1785,6 +1863,52 @@ def chat_stream(req: ChatRequest):
         media_type="text/event-stream; charset=utf-8",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+@app.post("/api/chat/full")
+def chat_full(req: ChatRequest):
+    """Streaming kapalı UI yolu: tüm cevabı üret, tek JSON yanıt olarak döndür."""
+    events: list[dict[str, Any]] = []
+    full_reply = ""
+    done_event: dict[str, Any] | None = None
+    for obj in iter_chat_turn_events(req):
+        typ = obj.get("type")
+        if typ in ("meta", "status"):
+            events.append(obj)
+        elif typ == "token":
+            full_reply += str(obj.get("text") or "")
+        elif typ == "done":
+            done_event = obj
+            full_reply = str(obj.get("full_reply") or full_reply)
+            break
+        elif typ == "error":
+            return {
+                "ok": False,
+                "error": str(obj.get("text") or "Bilinmeyen hata"),
+                "events": events,
+            }
+
+    if done_event is None:
+        full_reply = finalize_assistant_reply(full_reply)
+        new_wake = req.session_wake_used or message_calls_wake_name(req.message)
+        done_event = {
+            "type": "done",
+            "full_reply": full_reply,
+            "user_message": (req.message or "").strip(),
+            "new_wake_used": new_wake,
+        }
+
+    return {
+        "ok": True,
+        "events": events[-24:],
+        "full_reply": full_reply,
+        "user_message": done_event.get("user_message", (req.message or "").strip()),
+        "new_wake_used": bool(done_event.get("new_wake_used")),
+        "orchestra": done_event.get("orchestra"),
+        "instant_gundelik": bool(done_event.get("instant_gundelik")),
+        "instant_clarify": bool(done_event.get("instant_clarify")),
+        "instant_memory": bool(done_event.get("instant_memory")),
+    }
 
 
 @app.websocket("/ws/chat")

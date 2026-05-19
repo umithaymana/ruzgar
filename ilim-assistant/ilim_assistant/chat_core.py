@@ -1194,7 +1194,17 @@ def prepare_turn(
         except Exception:
             op_ctx = ""
 
+    session_mem_ctx = ""
+    try:
+        from ilim_assistant.ruzgar_session_context import build_session_memory_context
+
+        session_mem_ctx = build_session_memory_context(msg, mode_norm=m, history=history)
+    except Exception:
+        session_mem_ctx = ""
+
     user_payload = build_user_prompt(msg, blocks)
+    if session_mem_ctx:
+        user_payload = session_mem_ctx.rstrip() + "\n\n---\n" + user_payload
     _agent_ctx = (agent_context or "").strip()
     if _agent_ctx:
         user_payload = _agent_ctx + "\n\n" + user_payload

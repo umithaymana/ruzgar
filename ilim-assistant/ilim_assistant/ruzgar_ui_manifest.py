@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from typing import Any
 
 
@@ -25,6 +26,7 @@ def build_ui_manifest(*, health: dict[str, Any] | None = None) -> dict[str, Any]
     return {
         "ok": True,
         "version": 2,
+        "generated_at": time.time(),
         "current_phase": CURRENT_PHASE,
         "current_phase_label": CURRENT_PHASE_LABEL,
         "dashboard": {

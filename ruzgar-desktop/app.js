@@ -50,6 +50,8 @@ function resolveRuzgarApiRoot() {
 
 const API = resolveRuzgarApiRoot();
 console.info("[RÜZGAR Connection Bridge] API kök:", API);
+const RUZGAR_CHAT_FULL_TIMEOUT_MS = 60000;
+const RUZGAR_DISABLE_STREAMING = true;
 
 /** Connection Bridge — istemci üst süre (ms); 0 = süresiz (RUZGAR_BRIDGE_TIMEOUT_MS varsayılan 0) */
 function bridgeTimeoutMsHardCap() {
@@ -187,6 +189,7 @@ function ruzgarLikelyLocalDesktopApi() {
 
 /** Sunucudaki prior_messages limitiyle uyumlu; gereksiz büyük JSON göndermez */
 const MAX_CLIENT_HISTORY_MSGS = 32;
+const UI_MANIFEST_POLL_MS = 3000;
 
 const MODE_QS = new URLSearchParams(window.location.search);
 let currentMode = (MODE_QS.get("mode") || "genel").trim().toLowerCase();
@@ -1130,6 +1133,15 @@ function applyUiManifest(manifest) {
   if (badge && dash.badge) badge.textContent = dash.badge;
   const promise = document.querySelector(".atelier-info-strip-ana .atelier-promise");
   if (promise && dash.promise) promise.textContent = dash.promise;
+  if (el.dashboardStatus && dash.badge) {
+    const phaseLabel = manifest.current_phase_label || dash.badge;
+    const ts = manifest.generated_at
+      ? new Date(Number(manifest.generated_at) * 1000).toLocaleTimeString("tr-TR")
+      : "";
+    el.dashboardStatus.textContent = ts
+      ? `Aktif motor: ANA MOTOR · ${phaseLabel} · manifest ${ts}`
+      : `Aktif motor: ANA MOTOR · ${phaseLabel}`;
+  }
 
   const grid = document.getElementById("motors-overview-grid");
   const phases = Array.isArray(manifest.phases) ? manifest.phases : [];
@@ -6371,6 +6383,74 @@ async function streamChat(userText) {
     /* Köprü yoksa normal akış */
   }
 
+  if (RUZGAR_DISABLE_STREAMING) {
+    const fullCtrl = new AbortController();
+    activeChatAbort = fullCtrl;
+    activeChatWs = null;
+    syncInterruptButton();
+    let fullTimedOut = false;
+    const fullDeadline = window.setTimeout(() => {
+      fullTimedOut = true;
+      fullCtrl.abort();
+    }, RUZGAR_CHAT_FULL_TIMEOUT_MS);
+    if (currentMode !== "hafiza") {
+      scheduleDeferThinkingOverlay();
+    }
+    try {
+      const res = await fetch(`${API}/api/chat/full`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          Accept: "application/json",
+          "Accept-Charset": "utf-8",
+          "Cache-Control": "no-cache",
+        },
+        body: JSON.stringify(body),
+        cache: "no-store",
+        signal: fullCtrl.signal,
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || j.ok === false) {
+        throw new Error(j.error || j.detail || `HTTP ${res.status}`);
+      }
+      (Array.isArray(j.events) ? j.events : []).forEach((ev) => {
+        if (ev && ev.type !== "token" && ev.type !== "done") processChatEvent(ev);
+      });
+      processChatEvent({
+        type: "done",
+        full_reply: j.full_reply || "",
+        user_message: j.user_message || userText,
+        new_wake_used: !!j.new_wake_used,
+        orchestra: j.orchestra,
+        instant_gundelik: !!j.instant_gundelik,
+        instant_clarify: !!j.instant_clarify,
+        instant_memory: !!j.instant_memory,
+      });
+      return;
+    } catch (e) {
+      hideThinkingCenter();
+      if (userRequestedChatStop) {
+        userRequestedChatStop = false;
+        return;
+      }
+      if (e && e.name === "AbortError") {
+        throw new Error(
+          fullTimedOut
+            ? "Yanıt zaman aşımı (60 sn) — full response bağlantısı yenilenerek tekrar deneyin."
+            : "Yanıt kesildi — istek iptal edildi."
+        );
+      }
+      throw e;
+    } finally {
+      window.clearTimeout(fullDeadline);
+      clearDeferThinking();
+      hideThinkingCenter();
+      activeChatAbort = null;
+      activeChatWs = null;
+      syncInterruptButton();
+    }
+  }
+
   const streamCtrl = new AbortController();
   activeChatAbort = streamCtrl;
   activeChatWs = null;
@@ -7237,6 +7317,10 @@ document.body.classList.add("faz7-complete");
 void refreshUiManifest().finally(() => showChatWelcomeIfEmpty());
 checkApi();
 setInterval(checkApi, 15000);
+setInterval(() => {
+  if (document.hidden) return;
+  void refreshUiManifest();
+}, UI_MANIFEST_POLL_MS);
 refreshPerformanceMetrics();
 scheduleMetricsPolling();
 loadFileTree();
