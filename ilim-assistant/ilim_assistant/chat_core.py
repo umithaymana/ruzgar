@@ -818,6 +818,9 @@ def prepare_turn(
     if not message or not message.strip():
         return None
     msg = message.strip()
+    from ilim_assistant.idrak_on_islem import pretreat_user_turn
+
+    msg = pretreat_user_turn(msg, history).text
     m = normalize_mode(mode)
     if coding_mode and m not in _NO_RAG_MODES:
         m = "programlama"
