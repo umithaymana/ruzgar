@@ -202,7 +202,7 @@ def _yield_encyclopedic_fast_merge(msg: str) -> Iterator[dict[str, Any]]:
     Eski `_yield_gemini_first` boş bundle döndürüyordu; yerel külliyat tamamen atlanıyordu.
     """
     from ilim_assistant.rag_store import search as rag_search
-    from ilim_assistant.rag_store import search_arsiv
+    from ilim_assistant.rag_store import search_arsiv, search_tarih_hafiza
 
     k_ar, k_ix = _encyclopedic_fast_k()
     yield {"kind": "status", "phase": "encyclopedic", "text": STATUS_ENCYCLOPEDIC_MERGE}
@@ -210,7 +210,22 @@ def _yield_encyclopedic_fast_merge(msg: str) -> Iterator[dict[str, Any]]:
 
     ar_hits = search_arsiv(msg, top_k=k_ar)
     ix_hits = rag_search(msg, top_k=k_ix)
-    hits = _merge_hits_dedupe(ar_hits, ix_hits)
+    tarih_hits: list[tuple[str, str, float]] = []
+    nebula_hits: list[tuple[str, str, float]] = []
+    try:
+        tarih_hits = search_tarih_hafiza(msg, top_k=max(2, k_ix))
+    except Exception:
+        tarih_hits = []
+    try:
+        pool = rag_search(msg, top_k=max(8, k_ix + 4))
+        nebula_hits = [
+            h
+            for h in pool
+            if "nebula" in (h[1] or "").replace("\\", "/").lower()
+        ][: max(2, k_ix)]
+    except Exception:
+        nebula_hits = []
+    hits = _merge_hits_dedupe(ar_hits, ix_hits, tarih_hits, nebula_hits)
     cap = max(k_ar + k_ix, 4)
     hits = hits[:cap]
 

@@ -13,8 +13,9 @@ Set-Location $Root
 
 $Log = Join-Path $env:TEMP "ruzgar-launch.log"
 $ApiErr = Join-Path $env:TEMP "ruzgar-api.err"
-$ApiPort = 8777
+$ApiPort = 8779
 if ($env:RUZGAR_API_PORT) { [int]$ApiPort = $env:RUZGAR_API_PORT }
+# 8777'de eski/zombi uvicorn kalabiliyor; varsayilan yeni motor 8779
 $GradioPort = 7861
 if ($env:RUZGAR_GRADIO_PORT) { [int]$GradioPort = $env:RUZGAR_GRADIO_PORT }
 
@@ -273,10 +274,49 @@ $env:RUZGAR_CORS_PERMISSIVE = "1"
 
 $portCheckRc = Invoke-RuzgarPortOps -Command "port-check" -IaRoot $ia -Port $ApiPort
 # 0=saglikli, 1=bos, 2=kilitli/zombi
+function Stop-RuzgarApiPort {
+    param([int]$Port)
+    $null = Invoke-RuzgarPortOps -Command "kill-process" -IaRoot $ia -Port $Port
+    try {
+        Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue |
+            ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }
+    } catch {}
+}
+
+function Write-RuzgarRemoteApiTxt {
+    param([int]$Port)
+    $rd = Join-Path $Root "ruzgar-desktop"
+    if (-not (Test-Path $rd)) { return }
+    $apiLine = "http://127.0.0.1:$Port"
+    $body = @(
+        "# UI -> yerel API (Ruzgar.ps1 yazar; elle degistirmeyin)"
+        $apiLine
+    ) -join "`n"
+    $out = Join-Path $rd "ruzgar_remote_api.txt"
+    Set-Content -Path $out -Value $body -Encoding UTF8
+    Log "ruzgar_remote_api.txt -> $apiLine"
+}
+
+function Test-ApiNebulaBuild {
+    param([string]$Url)
+    try {
+        $r = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 4
+        $j = $r.Content | ConvertFrom-Json
+        $rev = $j.build.rev
+        $neb = $j.build.nebula_kitap
+        Log "health build.rev=$rev nebula_kitap=$neb"
+        return [bool]$neb
+    } catch {
+        Log "health okunamadi: $($_.Exception.Message)"
+        return $false
+    }
+}
+
 if ($ForceRestart) {
-    Log "force-restart: 8777 portu bosaltiliyor"
-    $null = Invoke-RuzgarPortOps -Command "kill-process" -IaRoot $ia -Port $ApiPort
-    Start-Sleep -Seconds 1
+    Log "force-restart: portlar bosaltiliyor ($ApiPort + 8777 zombi)"
+    Stop-RuzgarApiPort -Port $ApiPort
+    if ($ApiPort -ne 8777) { Stop-RuzgarApiPort -Port 8777 }
+    Start-Sleep -Seconds 2
     $portCheckRc = 1
 } elseif ($portCheckRc -eq 2) {
     Log "port-check: kilitli/zombi — kill-process"
@@ -366,10 +406,14 @@ if ($WantGradio) {
     }
 }
 
+Write-RuzgarRemoteApiTxt -Port $ApiPort
 try {
     $finalRc = Invoke-RuzgarPortOps -Command "port-check" -IaRoot $ia -Port $ApiPort
     if ($finalRc -eq 0) {
         Log "Baglanti aktif — port $ApiPort dinleniyor (health OK)"
+        if (-not (Test-ApiNebulaBuild -Url $apiUrl)) {
+            Log "UYARI: build.nebula_kitap yok — eski desktop_server; -ForceRestart veya kod guncel mi kontrol edin"
+        }
     } else {
         Log "UYARI: Electron aciliyor ama port-check rc=$finalRc"
     }

@@ -76,6 +76,38 @@ def cmd_port_check(port: int) -> int:
     return 2
 
 
+def _kill_pids_on_port_win(port: int) -> list[int]:
+    """PowerShell Get-NetTCPConnection ile port sahibi PID'leri sonlandır."""
+    if sys.platform != "win32":
+        return []
+    killed: list[int] = []
+    try:
+        ps = subprocess.run(
+            [
+                "powershell",
+                "-NoProfile",
+                "-Command",
+                (
+                    f"Get-NetTCPConnection -LocalPort {port} -State Listen -ErrorAction SilentlyContinue "
+                    f"| Select-Object -ExpandProperty OwningProcess -Unique"
+                ),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=12,
+            shell=False,
+        )
+        for line in (ps.stdout or "").splitlines():
+            line = line.strip()
+            if line.isdigit():
+                pid = int(line)
+                if _kill_pid(pid):
+                    killed.append(pid)
+    except (subprocess.TimeoutExpired, OSError) as e:
+        print(f"kill-port-win: {e}", file=sys.stderr)
+    return killed
+
+
 def _kill_pid(pid: int) -> bool:
     if pid <= 0:
         return False
@@ -121,10 +153,16 @@ def cmd_kill_process(port: int) -> int:
         return 0
     for pid in pids:
         _kill_pid(pid)
+    if sys.platform == "win32":
+        _kill_pids_on_port_win(port)
     time.sleep(1.0)
     remaining = _pids_listening_on_port(port)
     if remaining:
-        print(f"kill-process: UYARI hala dinleyen PID={remaining}", file=sys.stderr)
+        print(
+            f"kill-process: UYARI hala dinleyen PID={remaining} "
+            "(Yonetici: .\\Ruzgar.ps1 -ForceRestart)",
+            file=sys.stderr,
+        )
         return 1
     print(f"kill-process: {port} bosaltildi")
     return 0

@@ -18,6 +18,13 @@ def try_consume_memory_command(message: str) -> str | None:
     raw = _clean(message)
     if not raw or len(raw) > 2000:
         return None
+    try:
+        from ilim_assistant.nebula_kitap_hafiza import is_nebula_kitap_intent
+
+        if is_nebula_kitap_intent(raw):
+            return None
+    except Exception:
+        pass
     low = raw.casefold()
 
     remember_match = re.search(
@@ -26,14 +33,20 @@ def try_consume_memory_command(message: str) -> str | None:
         r"(?:\s+ki)?\s*[:\-–]?\s*(?P<body>.+)$",
         raw,
     )
+    remember_end_match = re.search(
+        r"(?is)(?P<body>.+?)\s*(?:[,.\-–]?\s*)?"
+        r"(?:bunu\s+)?(?:hat[ıi]rla|haf[ıi]zaya\s+al|kaydet)\s*[.!?…]*\s*$",
+        raw,
+    )
     profile_match = re.search(
         r"(?is)^(?:profilime\s+ekle|beni\s+tan[ıi]|"
         r"benim\s+i[çc]in\s+hat[ıi]rla)"
         r"\s*[:\-–]?\s*(?P<body>.+)$",
         raw,
     )
-    if remember_match or profile_match:
-        body = _clean((remember_match or profile_match).group("body"))
+    active_remember = remember_match or remember_end_match
+    if active_remember or profile_match:
+        body = _clean((active_remember or profile_match).group("body"))
         if len(body) < 3:
             return "Mimar, neyi hatırlamamı istediğini biraz daha açık yazar mısın?"
         key = f"Kişisel not: {body[:80]}"

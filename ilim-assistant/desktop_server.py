@@ -627,6 +627,12 @@ def health():
             not in ("0", "false", "no"),
         },
         "super_brain": _super_brain_health_block(),
+        "build": {
+            "rev": "2026-05-20-tarih-fast-v1",
+            "nebula_kitap": True,
+            "fast_paths": os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
+            "memory_first": True,
+        },
         "hizir": {
             "mock_marketplace": _m,
             "amazon_paapi_credentials": bool(_ak and _sk and _tg),
@@ -1562,6 +1568,42 @@ def _iter_instant_chat_events(
 
 def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
     """SSE/WS: Ana motor durumları → prepare_turn (İdrak + orkestra) → LLM."""
+    orch_early: dict[str, Any] = {}
+    msg_early = (req.message or "").strip()
+    if msg_early:
+        try:
+            from ilim_assistant.nebula_kitap_hafiza import try_consume_nebula_kitap_command
+
+            kitap_reply = try_consume_nebula_kitap_command(msg_early)
+            if kitap_reply:
+                yield from _iter_instant_chat_events(
+                    kitap_reply,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=orch_early,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.kisisel_hafiza import try_consume_memory_command
+
+            mem_reply = try_consume_memory_command(msg_early)
+            if mem_reply:
+                yield from _iter_instant_chat_events(
+                    mem_reply,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=orch_early,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+
     from ilim_assistant.idrak_on_islem import pretreat_user_turn
 
     pt = pretreat_user_turn(req.message, req.history)
@@ -1588,6 +1630,7 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
     orch: dict[str, Any] = {}
     for _consumer in (
         "ilim_assistant.dinamit_hatirlatici:try_consume_hatirlatici_intent",
+        "ilim_assistant.nebula_kitap_hafiza:try_consume_nebula_kitap_command",
         "ilim_assistant.kisisel_hafiza:try_consume_memory_command",
         "ilim_assistant.gorev_yoneticisi:try_consume_task_command",
     ):
@@ -1647,6 +1690,81 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
                         return
                 except Exception:
                     pass
+                try:
+                    from ilim_assistant.tarih_fast import iter_tarih_hafiza_reply
+
+                    tarih_stream = iter_tarih_hafiza_reply(
+                        req.message,
+                        req.history,
+                        mode_norm=mode_norm,
+                    )
+                    if tarih_stream is not None:
+                        yield {
+                            "type": "status",
+                            "text": "Tarih hafızası — yerel pasaj + Ollama…",
+                        }
+                        reply_body = ""
+                        for piece in tarih_stream:
+                            reply_body += piece
+                            yield {"type": "token", "text": piece}
+                        if reply_body.strip():
+                            full_out = finalize_assistant_reply(reply_body)
+                            yield {
+                                "type": "done",
+                                "full_reply": full_out,
+                                "user_message": (req.message or "").strip(),
+                                "new_wake_used": req.session_wake_used
+                                or message_calls_wake_name(req.message),
+                                "orchestra": orch,
+                                "tarih_fast": True,
+                            }
+                            return
+                except Exception:
+                    pass
+                try:
+                    from ilim_assistant.ana_motor_fast import (
+                        iter_fast_direct_llm_reply,
+                        should_fast_direct_llm,
+                    )
+
+                    if should_fast_direct_llm(
+                        req.message, mode_norm, turn_plan
+                    ):
+                        try:
+                            from ilim_assistant.gemini_quota_guard import (
+                                gemini_cooldown_active,
+                            )
+
+                            st = (
+                                "Hızlı yanıt — Gemini kota soğumada; Ollama/Groq…"
+                                if gemini_cooldown_active()
+                                else "Hızlı yanıt — indeks atlandı (Ollama → Groq → Gemini)…"
+                            )
+                        except Exception:
+                            st = "Hızlı yanıt — indeks atlandı (Ollama/Groq/Gemini)…"
+                        yield {"type": "status", "text": st}
+                        reply_body = ""
+                        for piece in iter_fast_direct_llm_reply(
+                            req.message,
+                            req.history,
+                            mode_norm=mode_norm,
+                            question_plan=turn_plan,
+                        ):
+                            reply_body += piece
+                            yield {"type": "token", "text": piece}
+                        full_out = finalize_assistant_reply(reply_body)
+                        yield {
+                            "type": "done",
+                            "full_reply": full_out,
+                            "user_message": (req.message or "").strip(),
+                            "new_wake_used": req.session_wake_used
+                            or message_calls_wake_name(req.message),
+                            "orchestra": orch,
+                            "fast_direct_llm": True,
+                        }
+                        return
+                except Exception:
+                    pass
             except Exception:
                 turn_plan = None
 
@@ -1689,6 +1807,18 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
         from ilim_assistant.ana_motor_plan import is_casual_conversation_turn
 
         if is_casual_conversation_turn(req.message, mode_norm, turn_plan):
+            _skip_prefetch = True
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ana_motor_fast import (
+            fast_paths_enabled,
+            should_fast_direct_llm,
+        )
+
+        if fast_paths_enabled() and should_fast_direct_llm(
+            req.message, mode_norm, turn_plan
+        ):
             _skip_prefetch = True
     except Exception:
         pass

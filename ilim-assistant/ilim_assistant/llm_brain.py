@@ -156,6 +156,13 @@ def _profile_denge() -> BrainEndpoint | None:
 
 
 def _profile_gemini() -> BrainEndpoint | None:
+    try:
+        from ilim_assistant.gemini_quota_guard import gemini_cooldown_active
+
+        if gemini_cooldown_active():
+            return None
+    except Exception:
+        pass
     if not gemini_configured():
         return None
     model = (
@@ -578,11 +585,30 @@ def stream_chat_with_brain(
         except Exception as e:
             if ep.provider == "gemini":
                 last_err = format_gemini_user_error(e)
+                try:
+                    from ilim_assistant.llm_gemini import is_gemini_quota_or_rate_error
+                    from ilim_assistant.gemini_quota_guard import mark_gemini_quota_hit
+
+                    if is_gemini_quota_or_rate_error(last_err):
+                        mark_gemini_quota_hit()
+                except Exception:
+                    pass
             else:
                 last_err = format_llm_user_error(e)
             continue
 
     if last_err:
+        try:
+            from ilim_assistant.llm_gemini import is_gemini_quota_or_rate_error
+
+            if is_gemini_quota_or_rate_error(last_err):
+                yield (
+                    "Gemini kotası dolu — yerel Ollama ile yanıt denendi ama sonuç üretilemedi. "
+                    "Bir süre sonra tekrar deneyin veya `ollama serve` + `ollama pull llama3.2:3b` kontrol edin."
+                )
+                return
+        except Exception:
+            pass
         yield last_err
         return
     yield (
@@ -617,9 +643,17 @@ def brain_health_snapshot() -> dict[str, Any]:
     except Exception:
         pass
     groq_ep = _profile_groq()
+    gemini_cd = False
+    try:
+        from ilim_assistant.gemini_quota_guard import gemini_cooldown_active
+
+        gemini_cd = gemini_cooldown_active()
+    except Exception:
+        pass
     return {
         "super_brain_enabled": super_brain_enabled(),
         "free_brain_mode": free_brain_enabled(),
+        "gemini_cooldown_active": gemini_cd,
         "forced_profile": (os.environ.get("RUZGAR_BRAIN_PROFILE") or "auto").strip(),
         "cloud_provider": "google_gemini",
         "groq_configured": groq_ep is not None,
