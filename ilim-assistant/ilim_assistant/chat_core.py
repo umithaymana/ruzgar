@@ -901,6 +901,17 @@ def prepare_turn(
         pass
 
     if not skip_ogrenme_lookup:
+        try:
+            from ilim_assistant.ana_motor_plan import looks_like_casual_social_chat
+
+            if looks_like_casual_social_chat(msg):
+                skip_ogrenme_lookup = True
+        except Exception:
+            pass
+    if turn_plan is not None and getattr(turn_plan, "primary", "") == "gundelik":
+        if not bool(getattr(turn_plan, "use_ilim_rag", True)):
+            skip_ogrenme_lookup = True
+    if not skip_ogrenme_lookup:
         og_direct = try_genel_hafiza_reply(msg, m)
         if og_direct is not None:
             return msg, [], "", "", "", og_direct
@@ -1093,7 +1104,15 @@ def prepare_turn(
             for h in good_hits
             if _rag_source_is_archive(h[1])
         ][:rag_k_clamped]
-        blocks = [(t, s) for t, s, _ in hits]
+        try:
+            from ilim_assistant.ana_motor_kaynak import format_context_blocks
+
+            blocks = format_context_blocks(
+                hits,
+                archive_primary=archive_primary_flag,
+            )
+        except Exception:
+            blocks = [(t, s) for t, s, _ in hits]
 
     archive_direct = try_archive_rag_direct_reply(
         msg, ar_hits, coding_mode=coding_mode, mode_norm=m
@@ -1286,10 +1305,32 @@ def prepare_turn(
             "Kullanıcı bilgi veya iş istiyorsa doğrudan yerine getir.\n"
         )
 
+    try:
+        from ilim_assistant.ana_motor_kaynak import citation_directive_for_turn
+
+        user_payload += citation_directive_for_turn(
+            source_count=len(hits),
+            archive_primary=archive_primary_flag,
+            web_present=bool((web_extra or "").strip()),
+        )
+    except Exception:
+        pass
+
     if ilim_merge_tail:
         from ilim_assistant.main_engine import merge_ilim_tail
 
         user_payload = merge_ilim_tail(user_payload, ilim_merge_tail)
+
+    try:
+        from ilim_assistant.ana_motor_super import append_super_brain_directive
+
+        user_payload = append_super_brain_directive(
+            user_payload,
+            question_plan=turn_plan,
+            mode_norm=m,
+        )
+    except Exception:
+        pass
 
     if m == "programlama":
         try:

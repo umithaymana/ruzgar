@@ -36,7 +36,27 @@ _ERROR_PREFIXES = (
     "LLM isteği",
     "Model bulunamadı",
     "API anahtarı",
+    "kotası",
+    "kota",
 )
+
+
+def free_brain_enabled() -> bool:
+    """Ücretsiz öncelik: yerel Ollama (+ isteğe Groq), Gemini yedek."""
+    return os.environ.get("RUZGAR_FREE_BRAIN", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
+def _default_free_chain_ids() -> list[str]:
+    ids = ["denge", "hizli"]
+    if _profile_groq() is not None:
+        ids.append("groq")
+    if gemini_configured():
+        ids.append("gemini")
+    return ids
 
 
 @dataclass(frozen=True)
@@ -164,6 +184,27 @@ def _profile_gemini() -> BrainEndpoint | None:
     )
 
 
+def _profile_groq() -> BrainEndpoint | None:
+    key = os.environ.get("GROQ_API_KEY", "").strip()
+    if not key:
+        return None
+    base = os.environ.get("GROQ_API_BASE", "").strip() or "https://api.groq.com/openai/v1"
+    model = (
+        os.environ.get("GROQ_MODEL", "").strip()
+        or os.environ.get("OLLAMA_CHAT_MODEL", "llama-3.1-8b-instant")
+    ).strip()
+    if not model:
+        return None
+    return BrainEndpoint(
+        profile_id="groq",
+        label="Groq (ücretsiz bulut)",
+        model=model,
+        provider="ollama",
+        base_url=base.rstrip("/"),
+        api_key=key,
+    )
+
+
 def _profile_kod() -> BrainEndpoint | None:
     use_gemini = os.environ.get("RUZGAR_BRAIN_KOD_USE_GEMINI", "").strip().lower() in (
         "1",
@@ -203,7 +244,13 @@ def _profile_kod() -> BrainEndpoint | None:
 
 def all_profiles() -> dict[str, BrainEndpoint]:
     out: dict[str, BrainEndpoint] = {}
-    for fn in (_profile_hizli, _profile_denge, _profile_gemini, _profile_kod):
+    for fn in (
+        _profile_hizli,
+        _profile_denge,
+        _profile_groq,
+        _profile_gemini,
+        _profile_kod,
+    ):
         ep = fn()
         if ep is not None:
             out[ep.profile_id] = ep
@@ -255,6 +302,27 @@ def _message_needs_deep_brain(message: str) -> bool:
     return any(c in m for c in cues)
 
 
+def _ollama_reachable_safe() -> bool:
+    try:
+        from ilim_assistant.llm_ollama import ollama_reachable
+
+        return ollama_reachable()
+    except Exception:
+        return False
+
+
+def _gemini_only_when_configured() -> bool:
+    """GLOBAL_API_KEY varken yalnızca Gemini (RUZGAR_FREE_BRAIN=1 ise kapalı)."""
+    if free_brain_enabled():
+        return False
+    raw = (os.environ.get("RUZGAR_GEMINI_ONLY") or "auto").strip().lower()
+    if raw in ("0", "false", "no"):
+        return False
+    if raw in ("1", "true", "yes", "on"):
+        return gemini_configured()
+    return gemini_configured()
+
+
 def select_brain_chain(
     *,
     message: str,
@@ -265,6 +333,15 @@ def select_brain_chain(
 ) -> BrainSelection:
     profiles = all_profiles()
     forced = (os.environ.get("RUZGAR_BRAIN_PROFILE") or "auto").strip().lower()
+
+    if _gemini_only_when_configured() and not coding_mode and mode_norm != "programlama":
+        ep = profiles.get("gemini")
+        if ep is not None:
+            return BrainSelection(
+                primary=ep,
+                chain=[ep],
+                reason="gemini_only (GLOBAL_API_KEY)",
+            )
 
     if forced not in ("", "auto"):
         if forced in profiles:
@@ -284,14 +361,22 @@ def select_brain_chain(
     chain_ids: list[str] = []
     primary = _plan_primary(question_plan)
 
-    if coding_mode or mode_norm == "programlama":
+    if free_brain_enabled():
+        chain_ids = _default_free_chain_ids()
+    elif coding_mode or mode_norm == "programlama":
         chain_ids = ["kod", "gemini", "denge", "hizli"]
     elif mode_norm in ("hizli",):
         chain_ids = ["hizli", "denge", "gemini"]
     elif primary in ("bilgi", "bilim", "dilbilgisi") or _message_needs_deep_brain(message):
         chain_ids = ["gemini", "denge", "hizli"]
     elif primary in ("gundelik", "islem", "hava", "dosya"):
-        chain_ids = ["hizli", "denge", "gemini"]
+        chain_ids = (
+            ["gemini", "hizli", "denge"]
+            if gemini_configured()
+            else ["hizli", "denge", "gemini"]
+        )
+    elif mode_norm in ("genel", "uretim", "gelisim") and gemini_configured():
+        chain_ids = ["gemini", "denge", "hizli"]
     else:
         chain_ids = list(_PROFILE_ORDER_DEFAULT)
 
@@ -301,11 +386,21 @@ def select_brain_chain(
 
     chain: list[BrainEndpoint] = []
     seen: set[str] = set()
+    ollama_ok = True
+    try:
+        from ilim_assistant.llm_ollama import ollama_reachable
+
+        ollama_ok = ollama_reachable()
+    except Exception:
+        ollama_ok = True
+
     for pid in chain_ids:
         if pid in seen:
             continue
         ep = profiles.get(pid)
         if ep is None:
+            continue
+        if ep.provider == "ollama" and not ollama_ok and gemini_configured():
             continue
         seen.add(pid)
         chain.append(ep)
@@ -347,7 +442,16 @@ def _looks_like_error_chunk(piece: str) -> bool:
     p = (piece or "").strip()
     if not p:
         return False
-    return any(p.startswith(pref) for pref in _ERROR_PREFIXES)
+    if any(p.startswith(pref) for pref in _ERROR_PREFIXES):
+        return True
+    try:
+        from ilim_assistant.llm_gemini import is_gemini_quota_or_rate_error
+
+        if is_gemini_quota_or_rate_error(p):
+            return True
+    except Exception:
+        pass
+    return False
 
 
 def _stream_endpoint(
@@ -458,7 +562,9 @@ def stream_chat_with_brain(
         legacy_model=model,
     )
     last_err = ""
+    last_provider = ""
     for ep in sel.chain:
+        last_provider = ep.provider
         try:
             got_content = False
             for piece in _stream_endpoint(ep, system, user, prior_messages):
@@ -476,21 +582,55 @@ def stream_chat_with_brain(
                 last_err = format_llm_user_error(e)
             continue
 
-    yield last_err or (
-        "Hiçbir beyin profili yanıt üretemedi. Yerel için Ollama'yı başlatın; "
-        "bulut için GOOGLE_GEMINI_API_KEY tanımlayın (https://aistudio.google.com/apikey)."
+    if last_err:
+        yield last_err
+        return
+    yield (
+        "Hiçbir beyin profili yanıt üretemedi. "
+        "Ollama: `ollama serve` + `ollama pull llama3.2:3b` — veya `.env` içinde GROQ_API_KEY / GLOBAL_API_KEY."
     )
 
 
 def brain_health_snapshot() -> dict[str, Any]:
     profiles = all_profiles()
     sel = select_brain_chain(message="ping", mode_norm="genel")
+    gemini_ping: dict[str, Any] = {}
+    if gemini_configured():
+        try:
+            from ilim_assistant.llm_gemini import gemini_model_ping
+
+            gemini_ping = gemini_model_ping()
+        except Exception as exc:
+            gemini_ping = {"ok": False, "reason": str(exc)[:200]}
+    gemini_daemon: dict[str, Any] = {}
+    try:
+        from ilim_assistant.gemini_daemon import daemon_status
+
+        gemini_daemon = daemon_status()
+    except Exception:
+        pass
+    global_key_set = False
+    try:
+        from ilim_assistant.config import global_api_key
+
+        global_key_set = bool(global_api_key())
+    except Exception:
+        pass
+    groq_ep = _profile_groq()
     return {
         "super_brain_enabled": super_brain_enabled(),
+        "free_brain_mode": free_brain_enabled(),
         "forced_profile": (os.environ.get("RUZGAR_BRAIN_PROFILE") or "auto").strip(),
         "cloud_provider": "google_gemini",
+        "groq_configured": groq_ep is not None,
         "gemini_configured": gemini_configured(),
         "gemini_model_default": os.environ.get("RUZGAR_GEMINI_MODEL") or DEFAULT_GEMINI_MODEL,
+        "gemini_model_ping": gemini_ping,
+        "global_api_key_set": global_key_set,
+        "gemini_daemon": gemini_daemon,
+        "gemini_only": _gemini_only_when_configured(),
+        "ollama_reachable": _ollama_reachable_safe(),
+        "env_loaded_from": os.environ.get("RUZGAR_ENV_LOADED_FROM", ""),
         "profiles": {k: v.to_public_dict() for k, v in profiles.items()},
         "default_chain": [e.profile_id for e in sel.chain],
     }

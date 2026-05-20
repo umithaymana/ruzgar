@@ -2,6 +2,7 @@
 # Köprü (UI → Tünel → Colab API): AŞAĞIYA GERÇEK TÜNEL KÖKÜNÜ TEK SATIR yazın.
 # Yorum SATIRINDA olan URL bağlanmaz — satır başında # olmadan yazın köprüyü aktif edersiniz.
 # Yerel masaüstü API (8777): Bu dosyada böyle bir satır YOKSA yönlendirme localhost´tadır.
+# Geçici 8778: yalnızca yerel teşhis için — commit öncesi bu satırı yorumda bırakın.
 # ============================================================================
 #
 # Örnek (tırnak kullanmadan):

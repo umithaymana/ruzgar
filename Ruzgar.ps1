@@ -1,6 +1,8 @@
 # RUZGAR - API (8777) + Electron; istege bagli Gradio tarayici (7861): Ruzgar.ps1 -WithGradio veya Ruzgar_Hepsi.bat
+# Zorla yeniden baslatma: Ruzgar.ps1 -ForceRestart  (8777 portunu bosaltir, API+Electron)
 param(
-    [switch]$WithGradio
+    [switch]$WithGradio,
+    [switch]$ForceRestart
 )
 $WantGradio = $WithGradio.IsPresent -or ($env:RUZGAR_WITH_GRADIO -eq "1")
 
@@ -19,7 +21,65 @@ if ($env:RUZGAR_GRADIO_PORT) { [int]$GradioPort = $env:RUZGAR_GRADIO_PORT }
 function Log([string]$m) {
     "$(Get-Date -Format o) $m" | Out-File -FilePath $Log -Append -Encoding utf8
 }
-Log "Basladi Root=$Root port=$ApiPort WantGradio=$WantGradio"
+
+function Import-RuzgarEnvFile {
+    param([string]$IaRoot)
+    $envPath = Join-Path $IaRoot ".env"
+    if (-not (Test-Path $envPath)) {
+        return $false
+    }
+    foreach ($raw in Get-Content $envPath -Encoding UTF8) {
+        $line = $raw.Trim()
+        if (-not $line -or $line.StartsWith("#") -or $line -notmatch "=") { continue }
+        $key, $val = $line.Split("=", 2)
+        $key = $key.Trim()
+        $val = $val.Trim().Trim('"').Trim("'")
+        if (-not $key -or -not $val) { continue }
+        if ($key -in @("GLOBAL_API_KEY", "GOOGLE_GEMINI_API_KEY", "GEMINI_API_KEY", "RUZGAR_GEMINI_API_KEY")) {
+            $env:GLOBAL_API_KEY = $val
+            $env:GOOGLE_GEMINI_API_KEY = $val
+            $env:GEMINI_API_KEY = $val
+            $env:RUZGAR_GEMINI_API_KEY = $val
+            continue
+        }
+        if (-not (Get-Item -Path "Env:$key" -ErrorAction SilentlyContinue)) {
+            Set-Item -Path "Env:$key" -Value $val
+        }
+    }
+    return [bool]($env:GLOBAL_API_KEY -and $env:GLOBAL_API_KEY.Trim())
+}
+
+function Invoke-RuzgarPortOps {
+    param(
+        [string]$Command,
+        [string]$IaRoot,
+        [int]$Port = 8777
+    )
+    $ops = Join-Path $IaRoot "scripts\ruzgar_port_ops.py"
+    if (-not (Test-Path $ops)) {
+        Log "ruzgar_port_ops.py yok — $Command atlandi"
+        return -1
+    }
+    & $script:PyExe @($script:PyArgs) $ops $Command --port $Port 2>&1 | ForEach-Object { Log $_; $_ }
+    return $LASTEXITCODE
+}
+
+function Test-RuzgarGeminiKeyConfigured {
+    param([string]$IaRoot)
+    if (Import-RuzgarEnvFile -IaRoot $IaRoot) {
+        return $true
+    }
+    $probe = Join-Path $IaRoot "scripts\ruzgar_gemini_ready.py"
+    if (-not (Test-Path $probe)) { return $false }
+    try {
+        $out = & $script:PyExe @($script:PyArgs) $probe 2>$null
+        return ($out -match "^\s*1\s*$")
+    } catch {
+        return $false
+    }
+}
+
+Log "Basladi Root=$Root port=$ApiPort WantGradio=$WantGradio ForceRestart=$ForceRestart"
 
 function Find-Py {
     try {
@@ -60,6 +120,12 @@ function Test-ApiImport {
 function Start-ApiServer {
     param([string]$Ia)
     Remove-Item $ApiErr -ErrorAction SilentlyContinue
+    if ($env:GLOBAL_API_KEY -and $env:GLOBAL_API_KEY.Trim()) {
+        $len = $env:GLOBAL_API_KEY.Trim().Length
+        Log "GLOBAL_API_KEY aktarildi (uzunluk=$len) — Gemini arayuz+API"
+    } else {
+        Log "UYARI: GLOBAL_API_KEY bos — API Gemini kullanamaz"
+    }
     $uargs = @()
     foreach ($x in $script:PyArgs) { $uargs += $x }
     $uargs += "-m"
@@ -155,12 +221,78 @@ if (-not (Test-Path (Join-Path $iaJoin "desktop_server.py"))) {
 }
 $ia = (Resolve-Path $iaJoin).Path
 
+if (Test-RuzgarGeminiKeyConfigured -IaRoot $ia) {
+    Log "Gemini GLOBAL_API_KEY yuklu — anahtar sorulmadan Gemini-2.0-flash hazir"
+    if (-not $env:RUZGAR_GEMINI_MODEL) { $env:RUZGAR_GEMINI_MODEL = "gemini-2.0-flash" }
+    if (-not $env:RUZGAR_SUPER_BRAIN) { $env:RUZGAR_SUPER_BRAIN = "1" }
+} else {
+    Log "Gemini anahtar yok (.env GLOBAL_API_KEY) — yerel Ollama kullanilir"
+}
+
+function Test-PortListen {
+    param([int]$Port)
+    try {
+        $l = New-Object System.Net.Sockets.TcpListener([Net.IPAddress]::Loopback, $Port)
+        $l.Start()
+        $l.Stop()
+        return $false
+    } catch {
+        return $true
+    }
+}
+
+function Start-OllamaIfNeeded {
+    if (Test-PortListen 11434) {
+        Log "Ollama zaten dinliyor (11434)"
+        return
+    }
+    if (-not (Get-Command ollama -ErrorAction SilentlyContinue)) {
+        Log "Ollama PATH'te yok — https://ollama.com kurulumu gerekir (ucretsiz yerel beyin)"
+        return
+    }
+    Log "Ollama serve baslatiliyor..."
+    Start-Process -FilePath "ollama" -ArgumentList "serve" -WindowStyle Hidden -ErrorAction SilentlyContinue
+    $deadline = (Get-Date).AddSeconds(12)
+    while (-not (Test-PortListen 11434) -and (Get-Date) -lt $deadline) {
+        Start-Sleep -Milliseconds 400
+    }
+    if (Test-PortListen 11434) {
+        Log "Ollama hazir (11434)"
+        & ollama pull llama3.2:3b 2>$null | Out-Null
+    } else {
+        Log "Ollama acilmadi — yine de API/Electron baslatilacak"
+    }
+}
+
+if (-not $env:RUZGAR_FREE_BRAIN) { $env:RUZGAR_FREE_BRAIN = "1" }
+if ($env:RUZGAR_FREE_BRAIN -eq "1") {
+    Start-OllamaIfNeeded
+}
+
+$env:RUZGAR_CORS_PERMISSIVE = "1"
+
+$portCheckRc = Invoke-RuzgarPortOps -Command "port-check" -IaRoot $ia -Port $ApiPort
+# 0=saglikli, 1=bos, 2=kilitli/zombi
+if ($ForceRestart) {
+    Log "force-restart: 8777 portu bosaltiliyor"
+    $null = Invoke-RuzgarPortOps -Command "kill-process" -IaRoot $ia -Port $ApiPort
+    Start-Sleep -Seconds 1
+    $portCheckRc = 1
+} elseif ($portCheckRc -eq 2) {
+    Log "port-check: kilitli/zombi — kill-process"
+    $null = Invoke-RuzgarPortOps -Command "kill-process" -IaRoot $ia -Port $ApiPort
+    Start-Sleep -Seconds 1
+    $portCheckRc = 1
+}
+
 $apiUrl = "http://127.0.0.1:$ApiPort/api/health"
-$serverUp = $false
-try {
-    $r = Invoke-WebRequest -Uri $apiUrl -UseBasicParsing -TimeoutSec 2
-    if ($r.StatusCode -eq 200) { $serverUp = $true }
-} catch {}
+$serverUp = ($portCheckRc -eq 0)
+if (-not $serverUp) {
+    try {
+        $r = Invoke-WebRequest -Uri $apiUrl -UseBasicParsing -TimeoutSec 2
+        if ($r.StatusCode -eq 200) { $serverUp = $true }
+    } catch {}
+}
 
 if (-not $serverUp) {
     try {
@@ -235,8 +367,14 @@ if ($WantGradio) {
 }
 
 try {
+    $finalRc = Invoke-RuzgarPortOps -Command "port-check" -IaRoot $ia -Port $ApiPort
+    if ($finalRc -eq 0) {
+        Log "Baglanti aktif — port $ApiPort dinleniyor (health OK)"
+    } else {
+        Log "UYARI: Electron aciliyor ama port-check rc=$finalRc"
+    }
     Start-ElectronApp -AppsRoot $Root
-    Log "Electron OK"
+    Log "Electron OK — UI: Ruzgar Baslatildi - Baglanti Aktif"
 } catch {
     Log "Electron hata: $($_.Exception.Message)"
     [void][System.Windows.Forms.MessageBox]::Show("RUZGAR acilamadi: $($_.Exception.Message)`nLog: $Log", "RUZGAR")

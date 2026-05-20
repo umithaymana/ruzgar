@@ -317,14 +317,34 @@ def _score_categories(msg: str, mode_norm: str, motor_flags: dict[str, bool]) ->
             "muhabbet",
             "hal hatir",
             "hal-hatir",
+            "konusalim",
+            "konuşalım",
+            "edelim",
+            "yapalim",
+            "yapalım",
+            "ne dersin",
+            "sence",
+            "beraber",
+            "birlikte",
+            "can sıkıntı",
+            "can sikinti",
+            "bos vakt",
+            "boş vakt",
+            "ne yapalim",
+            "ne yapalım",
         )
     ):
-        s["gundelik"] += 2.0
+        s["gundelik"] += 2.5
     if "sadece sohbet" in blob or "yalnizca sohbet" in blob:
         s["gundelik"] += 4.0
 
     if "?" in raw or any(x in blob for x in (" mi", " mı", " mu", " mü")):
-        if s["gundelik"] < 1.0 and s["bilim"] < 1.5:
+        if (
+            s["gundelik"] < 1.2
+            and s["bilim"] < 1.5
+            and not looks_like_casual_social_chat(raw)
+            and not _explicit_research_intent(raw)
+        ):
             s["bilgi"] += 0.8
 
     if len(raw) < 14:
@@ -403,7 +423,7 @@ def plan_question(
         "okuma",
         "hafiza",
     )
-    if primary == "gundelik" and mode_norm == "genel":
+    if primary == "gundelik":
         use_ilim_rag = False
     if primary in ("islem", "dosya", "hava"):
         use_ilim_rag = False
@@ -543,19 +563,153 @@ def rewrite_web_search_query(message: str, primary: str, mode_norm: str) -> str:
     return base.strip()
 
 
+def looks_like_casual_social_chat(message: str) -> bool:
+    """Selam, sohbet daveti, kısa muhabbet — ağır RAG / dev hafıza taraması yok."""
+    raw = (message or "").strip().lower()
+    if not raw or len(raw) > 140:
+        return False
+    blob = _norm_ascii(raw) + " " + raw
+    cues = (
+        "selam",
+        "merhaba",
+        "gunaydin",
+        "günaydın",
+        "iyi aksam",
+        "iyi akşam",
+        "iyi geceler",
+        "nasilsin",
+        "nasılsın",
+        "naber",
+        "ne haber",
+        "tesekkur",
+        "teşekkür",
+        "sagol",
+        "sağol",
+        "eyvallah",
+        "sohbet edelim",
+        "sohbet eder",
+        "biraz sohbet",
+        "konusalim",
+        "konuşalım",
+        "muhabbet",
+        "hasbel kader",
+        "vakit var mi",
+        "vakit var mı",
+        "bos musun",
+        "boş musun",
+        "ne yapiyorsun",
+        "ne yapıyorsun",
+        "keyfin nasil",
+        "keyfin nasıl",
+    )
+    if any(c in blob for c in cues):
+        return True
+    if "sohbet" in blob and len(raw.split()) <= 14:
+        return True
+    if ("mi?" in raw or "mı?" in raw) and len(raw.split()) <= 10:
+        if any(x in blob for x in ("sohbet", "konus", "konuş", "muhabbet", "beraber")):
+            return True
+    return False
+
+
+def looks_like_greeting_or_smalltalk(message: str) -> bool:
+    """Geriye uyumluluk."""
+    return looks_like_casual_social_chat(message)
+
+
+def _explicit_research_intent(message: str) -> bool:
+    """Açık bilgi/ilim araştırması — sohbet yoluna düşmesin."""
+    raw = (message or "").strip()
+    if not raw:
+        return False
+    blob = _norm_ascii(raw.lower()) + " " + raw.lower()
+    cues = (
+        "nedir",
+        "ne demek",
+        "kimdir",
+        "kim kurdu",
+        "ne zaman",
+        "nerede",
+        "kaç",
+        "kac",
+        "açıkla",
+        "acikla",
+        "detaylı",
+        "detayli",
+        "araştır",
+        "arastir",
+        "kaynak",
+        "kanıt",
+        "kanit",
+        "osmanlı",
+        "osmanli",
+        "hadis",
+        "ayet",
+        "tefsir",
+        "fizik",
+        "kimya",
+        "tarih",
+        "güncel haber",
+        "guncel haber",
+    )
+    return any(c in blob for c in cues)
+
+
+def is_casual_conversation_turn(
+    message: str,
+    mode_norm: str,
+    question_plan: QuestionPlan | None = None,
+) -> bool:
+    """
+    Sohbet / gündelik tur — ağır RAG ve dev hafıza yok; Gemini hızlı yol.
+    Tek bir kalıba bağlı değil; plan + mesaj birlikte değerlendirilir.
+    """
+    if mode_norm not in ("genel", "uretim", "gelisim"):
+        return False
+    if _explicit_research_intent(message):
+        return False
+    if looks_like_casual_social_chat(message):
+        return True
+    if question_plan is None:
+        return False
+    if question_plan.primary == "gundelik" and not question_plan.use_ilim_rag:
+        return len((message or "").strip()) < 220
+    return False
+
+
+def apply_casual_plan_overrides(
+    message: str,
+    mode_norm: str,
+    plan: QuestionPlan,
+) -> QuestionPlan:
+    """Sohbet niyeti netse planı gündelik + hafif yola kilitle."""
+    if mode_norm not in ("genel", "uretim", "gelisim"):
+        return plan
+    if _explicit_research_intent(message):
+        return plan
+    if looks_like_casual_social_chat(message) or (
+        plan.primary == "gundelik" and len((message or "").strip()) < 180
+    ):
+        plan.primary = "gundelik"
+        plan.use_ilim_rag = False
+        plan.prefer_web = False
+        plan.prefer_archive = False
+        plan.ambiguous = False
+        plan.clarification = None
+        plan.web_query = ""
+        plan.rag_query = ""
+        plan.status_text = _status_for_plan("gundelik", "")
+    return plan
+
+
 def maybe_gundelik_instant_reply(
     message: str,
     mode_norm: str,
     motor_flags: dict[str, bool] | None = None,
     question_plan: QuestionPlan | None = None,
 ) -> str | None:
-    """B3b — net sohbet (nasılsın/selam) için Ollama beklemeden kısa yanıt."""
-    if not _plan_enabled():
-        return None
+    """B3b — net sohbet (nasılsın/selam) için Ollama/Gemini beklemeden kısa yanıt."""
     if mode_norm not in ("genel", "uretim", "gelisim"):
-        return None
-    plan = question_plan or plan_question(message, mode_norm, motor_flags)
-    if plan.primary != "gundelik" or plan.use_ilim_rag:
         return None
     raw = (message or "").strip().lower()
     blob = _norm_ascii(raw) + " " + raw
@@ -590,6 +744,13 @@ def maybe_gundelik_instant_reply(
         return "Merhaba — ben Rüzgar. Bugün sana nasıl yardımcı olabilirim?"
     if any(x in blob for x in ("tesekkur", "teşekkür", "sagol", "sağol", "eyvallah")):
         return "Rica ederim — başka bir konuda yazman yeterli."
+    # Sohbet davetleri: şablon yerine Gemini hızlı yol (çeşitli, doğal yanıtlar)
+
+    if not _plan_enabled():
+        return None
+    plan = question_plan or plan_question(message, mode_norm, motor_flags)
+    if plan.primary != "gundelik" or plan.use_ilim_rag:
+        return None
     return None
 
 

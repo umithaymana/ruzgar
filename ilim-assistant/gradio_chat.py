@@ -32,6 +32,13 @@ from __future__ import annotations
 
 import os
 
+try:
+    from ilim_assistant.env_bootstrap import ensure_ruzgar_env
+
+    ensure_ruzgar_env()
+except Exception:
+    pass
+
 import gradio as gr
 
 from ilim_assistant.approved_executor import (

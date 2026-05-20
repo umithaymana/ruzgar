@@ -42,3 +42,12 @@ ilim-assistant/arsiv/**/*.pdf
 # TDK ham JSON (~9 MB): Git’te tutulmaz; yerelde kalır, `tdk_kaynak_convert` ve yeniden ingest için kullanılır.
 ilim-assistant/knowledge/tdk/tdk_kaynak.json
 
+# Rüzgar yerel hafıza / indirilen medya (runtime; commit edilmez)
+ilim-assistant/merkezi_bellek.json
+ilim-assistant/ruzgar_genel_hafiza.json
+ilim-assistant/video_hafiza.json
+ilim-assistant/hafiza/*.db
+ilim-assistant/hafiza/video_indirilen/
+chat_stream_probe.txt
+ilim-assistant/hafiza/son_debug_raporu.txt
+

@@ -29,6 +29,7 @@
         </div>
         <div class="header-tech-strip" aria-label="Sistem göstergeleri">
           <span id="api-status" class="tech-chip">Sunucu…</span>
+          <span id="ruzgar-connection-banner" class="tech-chip connection-active" hidden>Rüzgar Başlatıldı - Bağlantı Aktif</span>
           <div class="file-toolbar header-nav-toolbar" role="toolbar" aria-label="Sayfa ve sohbet">
             <button type="button" id="nav-back" class="btn-nav" title="Geri (gezinme geçmişi)" aria-label="Geri">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
@@ -123,6 +124,7 @@
 
       <aside class="panel panel-chat">
         <div class="chat-scroll" id="chat-messages"></div>
+        <pre id="ruzgar-debug-log" class="ruzgar-debug-log" hidden aria-live="polite" title="Konuşma hattı — anlık olay günlüğü"></pre>
         <div id="orchestra-bridge" class="orchestra-bridge" hidden aria-live="polite"></div>
         <div class="composer">
           <div class="composer-actions">

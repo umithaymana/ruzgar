@@ -50,8 +50,80 @@ function resolveRuzgarApiRoot() {
 
 const API = resolveRuzgarApiRoot();
 console.info("[RÜZGAR Connection Bridge] API kök:", API);
-const RUZGAR_CHAT_FULL_TIMEOUT_MS = 60000;
+const RUZGAR_CHAT_FULL_TIMEOUT_MS = 120000;
 const RUZGAR_DISABLE_STREAMING = true;
+
+/** Konuşma hattı teşhisi: tüm SSE/JSON olaylarını ekranda göster (?debug=1 veya localStorage.ruzgarUiDebug=1) */
+function isRuzgarUiDebugEnabled() {
+  try {
+    if (new URLSearchParams(window.location.search).get("debug") === "1") return true;
+    if (localStorage.getItem("ruzgarUiDebug") === "1") return true;
+  } catch (_) {
+    /* yok say */
+  }
+  return true;
+}
+const RUZGAR_UI_DEBUG = isRuzgarUiDebugEnabled();
+const RUZGAR_DEBUG_LOG_MAX = 80;
+
+if (typeof document !== "undefined") {
+  const bootDebugPanel = () => {
+    if (RUZGAR_UI_DEBUG) ensureRuzgarDebugPanel();
+  };
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bootDebugPanel);
+  } else {
+    queueMicrotask(bootDebugPanel);
+  }
+}
+
+function ensureRuzgarDebugPanel() {
+  let panel = document.getElementById("ruzgar-debug-log");
+  if (!panel) {
+    panel = document.createElement("pre");
+    panel.id = "ruzgar-debug-log";
+    panel.className = "ruzgar-debug-log";
+    panel.setAttribute("aria-live", "polite");
+    const chatPanel = document.querySelector(".panel-chat");
+    const orch = document.getElementById("orchestra-bridge");
+    if (chatPanel && orch) {
+      chatPanel.insertBefore(panel, orch);
+    } else if (el.chat?.parentNode) {
+      el.chat.parentNode.insertBefore(panel, el.chat.nextSibling);
+    }
+  }
+  if (RUZGAR_UI_DEBUG) {
+    panel.hidden = false;
+    panel.textContent =
+      panel.textContent ||
+      `[DEBUG] API=${API} · streaming=${RUZGAR_DISABLE_STREAMING ? "kapalı (/api/chat/full)" : "açık"}\n`;
+  }
+  return panel;
+}
+
+function ruzgarDebugLog(label, detail) {
+  if (!RUZGAR_UI_DEBUG) return;
+  const panel = ensureRuzgarDebugPanel();
+  if (!panel) return;
+  const ts = new Date().toLocaleTimeString("tr-TR", { hour12: false });
+  let line = `[${ts}] ${label}`;
+  if (detail !== undefined && detail !== null) {
+    try {
+      const s =
+        typeof detail === "string" ? detail : JSON.stringify(detail, null, 0);
+      if (s) line += ` ${s.length > 600 ? `${s.slice(0, 597)}…` : s}`;
+    } catch (_) {
+      line += ` ${String(detail)}`;
+    }
+  }
+  const prev = String(panel.textContent || "");
+  const lines = prev ? prev.split("\n") : [];
+  lines.push(line);
+  while (lines.length > RUZGAR_DEBUG_LOG_MAX) lines.shift();
+  panel.textContent = lines.join("\n");
+  panel.scrollTop = panel.scrollHeight;
+  console.info("[RÜZGAR DEBUG]", label, detail);
+}
 
 /** Connection Bridge — istemci üst süre (ms); 0 = süresiz (RUZGAR_BRIDGE_TIMEOUT_MS varsayılan 0) */
 function bridgeTimeoutMsHardCap() {
@@ -913,8 +985,17 @@ function updateFaz7HealthStrip(j) {
       "⚠ Genel mod: yalnızca hafıza JSON — LLM/RAG/web kapalı (RUZGAR_MAIN_ONLY_GENEL_HAFIZA=0)";
     return;
   }
+  const sb = j.super_brain || {};
+  const bits = [];
+  if (sb.gemini_configured && sb.gemini_daemon?.ok) {
+    bits.push(`Gemini ✓ ${sb.gemini_model_default || "gemini-2.0-flash"} (daemon)`);
+  } else if (sb.gemini_configured) {
+    bits.push(`Gemini ✓ ${sb.gemini_model_default || "gemini-2.0-flash"}`);
+  } else if (sb.global_api_key_set === false) {
+    bits.push("Gemini: .env GLOBAL_API_KEY yok");
+  }
   const model = am.ollama_chat_model || "—";
-  const bits = [`Model: ${model}`];
+  bits.push(`Ollama: ${model}`);
   if (am.question_plan_enabled) bits.push("soru planı");
   if (am.ana_motor_agent_enabled) bits.push("mini ajan");
   if (am.clarify_enabled) bits.push("netleştirme");
@@ -1021,11 +1102,18 @@ function classifyChatError(errText) {
   let kind = "generic";
   let title = "Yanıt üretilemedi";
   const hints = [];
-  if (/zaman aşımı|timed out|timeout|yanıt vermedi/i.test(body)) {
+  if (/zaman aşımı|timed out|timeout/i.test(body) && !/ollama/i.test(body)) {
+    kind = "timeout";
+    title = "Yanıt zaman aşımı";
+    hints.push(
+      "Ana Motor RAG + Gemini bazen 60–120 sn sürebilir; tekrar deneyin veya soruyu kısaltın."
+    );
+    hints.push("Health şeridinde «Gemini ✓ … (daemon)» görünmeli; yoksa Ruzgar.ps1 ile yeniden başlatın.");
+  } else if (/ollama.*yanıt vermedi|ollama.*zaman aşımı/i.test(body)) {
     kind = "timeout";
     title = "Ollama yanıt vermedi";
-    hints.push("Ollama çalışıyor mu: `ollama list` · İlk token büyük modellerde uzun sürebilir.");
-    hints.push("Daha hafif model deneyin: `ollama pull llama3.2:3b`");
+    hints.push("GLOBAL_API_KEY (.env) varken Gemini kullanılmalı — API'yi yeniden başlatın.");
+    hints.push("Ollama isteğe bağlı: `ollama serve` veya `ollama pull llama3.2:3b`");
   } else if (/bağlanılamadı|connection|refused|10061|actively refused/i.test(body)) {
     kind = "connection";
     title = "Bağlantı kurulamadı";
@@ -1040,6 +1128,11 @@ function classifyChatError(errText) {
     kind = "main_only";
     title = "Genel mod — yalnızca hafıza";
     hints.push("RUZGAR_MAIN_ONLY_GENEL_HAFIZA=0 yapın ve API’yi yeniden başlatın.");
+  } else if (/gemini|global_api_key|google_gemini/i.test(body)) {
+    kind = "gemini";
+    title = "Gemini bağlantısı";
+    hints.push("Anahtar kalıcı: ilim-assistant/.env → GLOBAL_API_KEY (tekrar girmeniz gerekmez).");
+    hints.push("Ruzgar.ps1 ile başlatın; health’te «Gemini ✓ … (daemon)» görünmeli.");
   } else {
     hints.push("Sunucu ve Ollama günlüklerine bakın; ? ile yardım panelini açın.");
   }
@@ -5256,6 +5349,27 @@ function flashRuzgarDurum(mesaj, ms = 3200) {
   window.setTimeout(() => setStatus("Hazır", "Rüzgar"), ms);
 }
 
+const RUZGAR_CONNECTION_ACTIVE_MSG = "Rüzgar Başlatıldı - Bağlantı Aktif";
+
+function showRuzgarConnectionActiveBanner() {
+  const banner = document.getElementById("ruzgar-connection-banner");
+  if (banner) {
+    banner.hidden = false;
+    banner.textContent = RUZGAR_CONNECTION_ACTIVE_MSG;
+    banner.classList.add("is-live");
+  }
+  flashRuzgarDurum(RUZGAR_CONNECTION_ACTIVE_MSG, 6000);
+  ruzgarDebugLog("baglanti", { aktif: true, api: API });
+}
+
+function hideRuzgarConnectionActiveBanner() {
+  const banner = document.getElementById("ruzgar-connection-banner");
+  if (banner) {
+    banner.hidden = true;
+    banner.classList.remove("is-live");
+  }
+}
+
 /** Analiz tablosuna düşecek soru/cevap: metni ilk `=` işaretinden böler. */
 function hafizaAnalizSoruCevap(raw, motorYanit) {
   const t = String(raw || "").trim();
@@ -5397,10 +5511,18 @@ async function checkApi() {
   try {
     const r = await fetch(`${API}/api/health`, { method: "GET" });
     const j = await r.json();
+    ruzgarDebugLog("health", {
+      ok: j.ok,
+      gemini: j?.super_brain?.gemini_configured,
+      port: ruzgarLikelyLocalDesktopApi() ? 8777 : API,
+    });
     if (j.ok) {
       if (apiWasOffline) {
         apiWasOffline = false;
-        flashRuzgarDurum("Yerel sunucu yeniden bağlandı.");
+        showRuzgarConnectionActiveBanner();
+      } else if (!window.__ruzgarConnectionBannerShown) {
+        window.__ruzgarConnectionBannerShown = true;
+        showRuzgarConnectionActiveBanner();
       }
       lastHealthSnapshot = j;
       updateFaz7HealthStrip(j);
@@ -5434,11 +5556,19 @@ async function checkApi() {
       }
       el.api.title = apiTitle;
       el.api.className = "tech-chip ok";
-      if (am.ollama_chat_model && !am.main_only_genel_hafiza) {
+      const sb = j.super_brain || {};
+      if (sb.gemini_configured && currentMode === "genel" && el.statusR) {
+        el.statusR.textContent = sb.gemini_model_default || "Gemini";
+        el.statusR.title = "Süper beyin: GLOBAL_API_KEY (.env) — arka plan daemon aktif";
+      } else if (am.ollama_chat_model && !am.main_only_genel_hafiza) {
         const shortModel = String(am.ollama_chat_model).split(":")[0];
         if (currentMode === "genel" && el.statusR) {
           el.statusR.textContent = shortModel;
         }
+      }
+      if (sb.gemini_configured) {
+        apiTitle += ` | Gemini: ${sb.gemini_model_default || "gemini-2.0-flash"}`;
+        if (sb.gemini_daemon?.ok) apiTitle += " (daemon bağlı)";
       }
       setStatus("Hazır", "Rüzgar");
       if (currentMode === "hizir") syncHizirWorkbenchStripVisibility();
@@ -5447,9 +5577,14 @@ async function checkApi() {
     }
     apiWasOffline = true;
     if (faz7HealthStripEl) faz7HealthStripEl.hidden = true;
-  } catch {
+  } catch (healthErr) {
     apiWasOffline = true;
+    hideRuzgarConnectionActiveBanner();
     lastHealthSnapshot = null;
+    ruzgarDebugLog("health:hata", {
+      api: API,
+      err: String(healthErr?.message || healthErr),
+    });
     if (faz7HealthStripEl) faz7HealthStripEl.hidden = true;
     el.api.textContent = "Sunucu kapalı";
     el.api.className = "tech-chip err";
@@ -6137,6 +6272,7 @@ async function streamChat(userText) {
   }
 
   function processChatEvent(ev) {
+    ruzgarDebugLog(`chat:${ev.type || "?"}`, ev);
     if (ev.type === "meta" && ev.plan) {
       clearDeferThinking();
       renderPlanPreview(ev.plan);
@@ -6269,14 +6405,25 @@ async function streamChat(userText) {
       responseBubble.innerHTML = renderChatErrorHtml(errText);
       setStatus("Hata — ayrıntı sohbette", "Rüzgar");
       flashRuzgarDurum(errText.slice(0, 120));
+      appendBubble("assistant", `[DEBUG hata] ${errText}`, { error: true });
+    } else {
+      ruzgarDebugLog("chat:atlandi", { type: ev.type, keys: Object.keys(ev || {}) });
     }
   }
 
   function handleSseJson(jsonStr) {
     try {
       processChatEvent(JSON.parse(jsonStr));
-    } catch {
-      /* kesik JSON */
+    } catch (parseErr) {
+      ruzgarDebugLog("sse:json-parse-hata", {
+        raw: String(jsonStr || "").slice(0, 200),
+        err: String(parseErr),
+      });
+      if (RUZGAR_UI_DEBUG) {
+        appendBubble("assistant", `[DEBUG] SSE JSON ayrıştırılamadı: ${String(parseErr)}`, {
+          error: true,
+        });
+      }
     }
   }
 
@@ -6396,6 +6543,11 @@ async function streamChat(userText) {
     if (currentMode !== "hafiza") {
       scheduleDeferThinkingOverlay();
     }
+    ruzgarDebugLog("chat/full:istek", {
+      url: `${API}/api/chat/full`,
+      mode: chatMode,
+      msgLen: String(userText || "").length,
+    });
     try {
       const res = await fetch(`${API}/api/chat/full`, {
         method: "POST",
@@ -6409,26 +6561,63 @@ async function streamChat(userText) {
         cache: "no-store",
         signal: fullCtrl.signal,
       });
-      const j = await res.json().catch(() => ({}));
+      const j = await res.json().catch((jsonErr) => {
+        ruzgarDebugLog("chat/full:json-hata", String(jsonErr));
+        return {};
+      });
+      ruzgarDebugLog("chat/full:yanit", {
+        http: res.status,
+        ok: j.ok,
+        events: Array.isArray(j.events) ? j.events.length : 0,
+        replyLen: String(j.full_reply || "").length,
+        error: j.error || null,
+      });
       if (!res.ok || j.ok === false) {
-        throw new Error(j.error || j.detail || `HTTP ${res.status}`);
+        const errMsg = j.error || j.detail || `HTTP ${res.status}`;
+        ruzgarDebugLog("chat/full:sunucu-hata", errMsg);
+        throw new Error(errMsg);
       }
-      (Array.isArray(j.events) ? j.events : []).forEach((ev) => {
-        if (ev && ev.type !== "token" && ev.type !== "done") processChatEvent(ev);
-      });
-      processChatEvent({
-        type: "done",
-        full_reply: j.full_reply || "",
-        user_message: j.user_message || userText,
-        new_wake_used: !!j.new_wake_used,
-        orchestra: j.orchestra,
-        instant_gundelik: !!j.instant_gundelik,
-        instant_clarify: !!j.instant_clarify,
-        instant_memory: !!j.instant_memory,
-      });
+      const events = Array.isArray(j.events) ? j.events : [];
+      const replyPreview = String(j.full_reply || "").trim();
+      let gotDoneFromEvents = false;
+      if (RUZGAR_UI_DEBUG) {
+        events.forEach((ev) => {
+          if (!ev) return;
+          if (ev.type === "done") gotDoneFromEvents = true;
+          processChatEvent(ev);
+        });
+      } else {
+        events.forEach((ev) => {
+          if (ev && ev.type !== "token" && ev.type !== "done") processChatEvent(ev);
+        });
+      }
+      if (!gotDoneFromEvents) {
+        processChatEvent({
+          type: "done",
+          full_reply: j.full_reply || "",
+          user_message: j.user_message || userText,
+          new_wake_used: !!j.new_wake_used,
+          orchestra: j.orchestra,
+          instant_gundelik: !!j.instant_gundelik,
+          instant_clarify: !!j.instant_clarify,
+          instant_memory: !!j.instant_memory,
+        });
+      }
+      if (!replyPreview && !full.trim()) {
+        ruzgarDebugLog("chat/full:bos-yanit", j);
+        appendBubble(
+          "assistant",
+          "[DEBUG] Sunucu 200 döndü ama full_reply boş — olay günlüğüne bakın.",
+          { error: true },
+        );
+      }
       return;
     } catch (e) {
       hideThinkingCenter();
+      ruzgarDebugLog("chat/full:catch", {
+        name: e?.name,
+        message: e?.message || String(e),
+      });
       if (userRequestedChatStop) {
         userRequestedChatStop = false;
         return;
@@ -6436,7 +6625,7 @@ async function streamChat(userText) {
       if (e && e.name === "AbortError") {
         throw new Error(
           fullTimedOut
-            ? "Yanıt zaman aşımı (60 sn) — full response bağlantısı yenilenerek tekrar deneyin."
+            ? "Yanıt zaman aşımı (120 sn) — RAG+Gemini uzun sürdü; tekrar deneyin veya soruyu kısaltın."
             : "Yanıt kesildi — istek iptal edildi."
         );
       }
@@ -6569,9 +6758,10 @@ async function sendMessageWithText(t, opts = {}) {
   clearOrchestraBridge();
   const ok = await checkApi();
   if (!ok) {
+    ruzgarDebugLog("send:block", { api: API, reason: "health-fail" });
     appendBubble(
       "assistant",
-      "Yerel sunucu kapalı. Start-Ruzgar.ps1 veya ilim-assistant/desktop_server.py (port 8777) ile API’yi başlatın.",
+      `Yerel sunucu kapalı (${API}/api/health). Ruzgar.ps1 veya desktop_server.py (port 8777) ile API’yi başlatın.`,
       { error: true }
     );
     return;
@@ -7315,8 +7505,28 @@ wireNavToolbar();
 wireFaz7Cila();
 document.body.classList.add("faz7-complete");
 void refreshUiManifest().finally(() => showChatWelcomeIfEmpty());
-checkApi();
-setInterval(checkApi, 15000);
+void checkApi();
+setInterval(() => void checkApi(), 15000);
+
+/** ruzgar_remote_api.txt güncellendiğinde (ör. 8777→8778) sayfayı yenile — köprü otomatik */
+setInterval(() => {
+  try {
+    const remote = normalizeRuzgarApiRootTail(
+      window.ruzgarApi?.getRemoteBrainEndpoint?.() || "",
+    );
+    if (remote && remote !== API) {
+      try {
+        localStorage.setItem("ruzgarApi", remote);
+      } catch (_) {
+        /* yok say */
+      }
+      ruzgarDebugLog("kopru-yenile", { eski: API, yeni: remote });
+      globalThis.location.reload();
+    }
+  } catch (_) {
+    /* yok say */
+  }
+}, 4000);
 setInterval(() => {
   if (document.hidden) return;
   void refreshUiManifest();

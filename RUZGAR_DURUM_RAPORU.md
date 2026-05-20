@@ -1,6 +1,6 @@
 # RÜZGAR — Güncel Durum Raporu (Handoff)
 
-> **Tarih:** 2026-05-18  
+> **Tarih:** 2026-05-20 (güncellendi)  
 > **Hazırlayan:** Cursor ajan oturumu (Ümit & Gökçenur projesi)  
 > **Amaç:** Başka geliştirici asistanına teknik devir  
 > **Repo kökü:** `D:\CURSOR PROJELER\YAPAY ZEKA`
@@ -15,7 +15,9 @@ Rüzgar, **Electron masaüstü kabuğu** (`ruzgar-desktop/`) + **yerel FastAPI s
 
 **Son büyük iş paketi (commit dışı / working tree):** Merkezi Zihin Havuzu v2, Programlama motoru tam implementasyon, Video motoru (yt-dlp + görsel timeline kurgu), masaüstü v5 editör paneli.
 
-**Son commit (main):** `cd15a59` — *feat(programlama): güvenli dosya I/O, exec preset'leri ve tam programlama motoru*
+**Son commit (main):** `9a93a37` — *feat(ruzgar): kalıcı hafıza context, full chat ve UI polling* (push edildi)
+
+**Son oturum paketi (push edildi):** Oturum başına kalıcı hafıza özeti → `prepare_turn`; `POST /api/chat/full` (masaüstünde streaming kapalı, 60 sn timeout); manifest 3 sn polling; otonom debug raporu (`ruzgar_debug_report.py`); `GET /api/system-health-report`.
 
 ---
 
@@ -141,7 +143,10 @@ Manifest: `desktop_server.py` → `_boot_motorlar_anaonce()` (`.cursorrules` ile
 | Endpoint | İşlev |
 |----------|--------|
 | `GET /api/health` | ffprobe/ffmpeg durumu |
-| `POST /api/chat/stream`, `WS /ws/chat` | Ana sohbet |
+| `POST /api/chat/stream`, `WS /ws/chat` | Ana sohbet (SSE/WS) |
+| **`POST /api/chat/full`** | **Tek JSON cevap (masaüstü varsayılan)** |
+| **`GET /api/system-health-report`** | **Sağlık + hafıza kapasitesi + son debug** |
+| `GET /api/ui-manifest` | UI manifest (`generated_at`) |
 | `POST /api/video/probe` | Medya özeti |
 | `POST /api/video/trim` | Kesim |
 | `POST /api/video/transcode` | H.264 dönüşüm |
@@ -160,25 +165,20 @@ Manifest: `desktop_server.py` → `_boot_motorlar_anaonce()` (`.cursorrules` ile
 
 ## 7. Git durumu (rapor anı)
 
-**Branch:** `main` (origin ile senkron; son push `cd15a59`)
+**Branch:** `main` — son push `9a93a37` (kaynak kod paketi)
 
-**Commit edilmemiş değişiklikler (~702 satır):**
+**Yerel / runtime (commit edilmemeli):**
 
 ```
-M  ilim-assistant/desktop_server.py          (+/api/video/edit/mix)
-M  ilim-assistant/ilim_assistant/merkezi_zihin_havuzu.py  (shim → motorlar)
-M  ilim-assistant/ilim_assistant/motorlar/ruzgar_cekirdegi.py
-M  ilim-assistant/ilim_assistant/video_ffmpeg.py
-M  ilim-assistant/ilim_assistant/video_motoru.py  (shim)
+M  ilim-assistant/merkezi_bellek.json
+M  ilim-assistant/ruzgar_genel_hafiza.json
 M  ilim-assistant/video_hafiza.json
-M  ruzgar-desktop/app.js, index.html, styles.css
-?? ilim-assistant/ilim_assistant/motorlar/merkezi_zihin_havuzu.py
-?? ilim-assistant/ilim_assistant/motorlar/video_motoru.py
-?? ilim-assistant/hafiza/merkezi_zihin_havuzu.db
+?? ilim-assistant/hafiza/*.db
 ?? ilim-assistant/hafiza/video_indirilen/
 ```
 
-**Öneri:** Adım D + Merkezi Havuzu paketi tek commit ile `feat(video): timeline editor ve merkezi havuz entegrasyonu` benzeri mesajla kaydedilmeli; DB ve büyük indirilen videolar `.gitignore`’da tutulmalı.
+Kök `.gitignore`: `hafiza/*.db`, `video_indirilen/`, `son_debug_raporu.txt`, `chat_stream_probe.txt`.  
+Eski takip edilen JSON hafıza dosyaları hâlâ `git status`’ta `M` görünebilir; tamamen yerel tutmak için `git rm --cached` (isteğe bağlı).
 
 ---
 
@@ -187,7 +187,9 @@ M  ruzgar-desktop/app.js, index.html, styles.css
 | Konu | Durum |
 |------|--------|
 | Self-correction (bilgi/kod) | Faz 9.6 / 10.6 — **yok** |
-| Programlama otonom debug döngüsü | Faz 10.4 — **yok** |
+| Programlama otonom debug döngüsü | Faz 10.4 — **kısmi** (`ruzgar_debug_report`, pytest sonrası rapor; tam Cursor-döngüsü değil) |
+| Masaüstü full chat (streaming kapalı) | **var** — `POST /api/chat/full`, `app.js` 60 sn timeout |
+| Oturum kalıcı hafıza context | **var** — `ruzgar_session_context.py`, `RUZGAR_SESSION_*` |
 | Çoklu model / bulut API | Faz 8 — **planlı** |
 | Video Faz 5 resmi kapanış | v2–v5 UI var; plan dokümanı hâlâ “devam (v2)” |
 | Programlama → Merkezi Havuz yazma | **eksik** |

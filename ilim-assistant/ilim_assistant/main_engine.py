@@ -30,7 +30,8 @@ STATUS_WEB_SCAN = "İnternette hızlı tarama yapılıyor (DuckDuckGo)…"
 STATUS_FULL_INDEX = "Yerel indeks taranıyor (bilgi + arşiv birlikte)…"
 STATUS_BILGI_INDEX = "Genel bilgi — yerel ilim indeksi taranıyor…"
 STATUS_BILIM_FAST_INDEX = "Yerel indeks (hızlı tur) — ağır arşiv atlandı…"
-STATUS_GEMINI_FIRST = "Gemini hızlı yanıt hazırlanıyor — yerel indeks ve web atlandı…"
+STATUS_GEMINI_FIRST = "Gemini hızlı yanıt — önce yerel kaynak taraması…"
+STATUS_ENCYCLOPEDIC_MERGE = "Ansiklopedik soru — hızlı arşiv + indeks birleştiriliyor…"
 STATUS_DILBILGISI_INDEX = "Dilbilgisi notları taranıyor…"
 STATUS_SKIP_RETRIEVAL = "Kaynak taraması atlandı — doğrudan yanıt…"
 
@@ -165,17 +166,98 @@ def _yield_index_only(
     }
 
 
-def _yield_gemini_first() -> Iterator[dict[str, Any]]:
+def _encyclopedic_fast_k() -> tuple[int, int]:
+    """(arşiv top_k, indeks top_k) — hızlı tur."""
+    try:
+        k_ar = max(1, min(int(os.environ.get("RUZGAR_ENCYCLOPEDIC_AR_K", "2")), 4))
+    except ValueError:
+        k_ar = 2
+    try:
+        k_ix = max(1, min(int(os.environ.get("RUZGAR_ENCYCLOPEDIC_INDEX_K", "3")), 6))
+    except ValueError:
+        k_ix = 3
+    return k_ar, k_ix
+
+
+def _merge_hits_dedupe(
+    *hit_lists: list[tuple[str, str, float]],
+) -> list[tuple[str, str, float]]:
+    seen: set[tuple[str, str]] = set()
+    merged: list[tuple[str, str, float]] = []
+    for hits in hit_lists:
+        for text, src, score in hits:
+            key = (src, (text or "")[:160])
+            if key in seen:
+                continue
+            seen.add(key)
+            merged.append((text, src, float(score)))
+    merged.sort(key=lambda h: float(h[2]), reverse=True)
+    return merged
+
+
+def _yield_encyclopedic_fast_merge(msg: str) -> Iterator[dict[str, Any]]:
+    """
+    Faz 9 hız yolu — RAG atlama yok: kısa arşiv + indeks, sonra Süper Beyin (Gemini).
+
+    Eski `_yield_gemini_first` boş bundle döndürüyordu; yerel külliyat tamamen atlanıyordu.
+    """
+    from ilim_assistant.rag_store import search as rag_search
+    from ilim_assistant.rag_store import search_arsiv
+
+    k_ar, k_ix = _encyclopedic_fast_k()
+    yield {"kind": "status", "phase": "encyclopedic", "text": STATUS_ENCYCLOPEDIC_MERGE}
     yield {"kind": "status", "phase": "gemini_first", "text": STATUS_GEMINI_FIRST}
+
+    ar_hits = search_arsiv(msg, top_k=k_ar)
+    ix_hits = rag_search(msg, top_k=k_ix)
+    hits = _merge_hits_dedupe(ar_hits, ix_hits)
+    cap = max(k_ar + k_ix, 4)
+    hits = hits[:cap]
+
+    archive_primary = archive_match_is_strong(ar_hits)
+    suppress_web = archive_primary
+    tail = smart_filter_vision_directive()
+    if archive_primary:
+        tail = ilim_hazinesi_citation_directive() + tail
+        try:
+            from ilim_assistant.motorlar.arsiv_ileri_motoru import enrich_archive_turn
+
+            _ex = enrich_archive_turn(msg, ar_hits).strip()
+            if _ex:
+                tail = tail.rstrip() + "\n\n" + _ex
+        except Exception:
+            pass
+
     yield {
         "kind": "result",
         "bundle": RetrievalBundle(
-            hits=[],
-            suppress_main_web_search=True,
-            archive_was_primary=False,
-            ilim_citation_tail=smart_filter_vision_directive(),
+            hits=hits,
+            suppress_main_web_search=suppress_web,
+            archive_was_primary=archive_primary,
+            ilim_citation_tail=tail,
         ),
     }
+
+
+def _yield_gemini_first(msg: str) -> Iterator[dict[str, Any]]:
+    """Geriye uyumluluk: env açıksa hızlı birleşik retrieval."""
+    if os.environ.get("RUZGAR_FAZ9_GEMINI_SKIP_LOCAL", "0").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+    ):
+        yield {"kind": "status", "phase": "gemini_first", "text": STATUS_GEMINI_FIRST}
+        yield {
+            "kind": "result",
+            "bundle": RetrievalBundle(
+                hits=[],
+                suppress_main_web_search=True,
+                archive_was_primary=False,
+                ilim_citation_tail=smart_filter_vision_directive(),
+            ),
+        }
+        return
+    yield from _yield_encyclopedic_fast_merge(msg)
 
 
 def _yield_archive_first(
@@ -291,8 +373,8 @@ def iter_archive_first_decision(
             return
 
         if primary == "bilgi":
-            if _gemini_first_for_encyclopedic_enabled() and looks_like_encyclopedic_fact_question(q):
-                yield from _yield_gemini_first()
+            if looks_like_encyclopedic_fact_question(q):
+                yield from _yield_encyclopedic_fast_merge(q)
                 return
             yield from _yield_index_only(
                 q,
@@ -309,7 +391,7 @@ def iter_archive_first_decision(
                 and looks_like_encyclopedic_fact_question(q)
             ):
                 if _gemini_first_for_encyclopedic_enabled():
-                    yield from _yield_gemini_first()
+                    yield from _yield_gemini_first(q)
                 else:
                     yield from _yield_index_only(
                         q,

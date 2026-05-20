@@ -74,25 +74,68 @@ _SKIP_LIST_NAMES = frozenset({"node_modules", "__pycache__", ".venv", "venv", ".
 
 
 def _load_env_file() -> None:
-    """``ilim-assistant/.env`` — GOOGLE_GEMINI_API_KEY vb. (mevcut ortamı ezmez)."""
-    path = _ILIM_ASSISTANT_ROOT / ".env"
-    if not path.is_file():
-        return
+    """Mevcut .env / RUZGAR_BRAIN.env / google_api_key.txt — GOOGLE_GEMINI_API_KEY vb."""
     try:
-        for raw in path.read_text(encoding="utf-8").splitlines():
-            line = raw.strip()
-            if not line or line.startswith("#") or "=" not in line:
-                continue
-            key, _, val = line.partition("=")
-            key = key.strip()
-            val = val.strip().strip('"').strip("'")
-            if key and key not in os.environ:
-                os.environ[key] = val
-    except OSError:
-        pass
+        from ilim_assistant.env_bootstrap import ensure_ruzgar_env
+
+        ensure_ruzgar_env()
+    except Exception:
+        path = _ILIM_ASSISTANT_ROOT / ".env"
+        if not path.is_file():
+            return
+        try:
+            for raw in path.read_text(encoding="utf-8").splitlines():
+                line = raw.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, _, val = line.partition("=")
+                key = key.strip()
+                val = val.strip().strip('"').strip("'")
+                if key and key not in os.environ:
+                    os.environ[key] = val
+        except OSError:
+            pass
 
 
 _load_env_file()
+
+
+def _gemini_startup_warmup() -> None:
+    """GLOBAL_API_KEY + gemini-2.0-flash — açılışta bağlan, arka plan daemon başlat."""
+    try:
+        from ilim_assistant.config import apply_global_api_key_to_runtime, gemini_ready
+        from ilim_assistant.gemini_daemon import daemon_status, start_gemini_daemon
+        from ilim_assistant.llm_gemini import gemini_model_ping
+
+        apply_global_api_key_to_runtime()
+        if not gemini_ready():
+            print(
+                "[RÜZGAR] Gemini: GLOBAL_API_KEY yok (.env) — yerel Ollama kullanılır.",
+                file=sys.stderr,
+            )
+            return
+        ping = gemini_model_ping()
+        if ping.get("ok"):
+            print(
+                f"[RÜZGAR] Gemini hazır: {ping.get('model')} "
+                f"(GLOBAL_API_KEY yüklendi, daemon başlatılıyor)",
+                file=sys.stderr,
+            )
+        else:
+            print(
+                f"[RÜZGAR] Gemini uyarı: model={ping.get('model')} "
+                f"status={ping.get('status_code')} — {str(ping.get('reason', ''))[:120]}",
+                file=sys.stderr,
+            )
+        start_gemini_daemon()
+        st = daemon_status()
+        if st.get("ok"):
+            os.environ["RUZGAR_GEMINI_DAEMON_OK"] = "1"
+    except Exception:
+        pass
+
+
+_gemini_startup_warmup()
 
 
 def pdf_text_runtime_available() -> bool:
@@ -151,13 +194,36 @@ def _repo_list_children(rel_query: str) -> list[dict[str, Any]]:
         out.append({"name": name, "isDir": p.is_dir(), "rel": rel_full})
     return out
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+# Electron (file://) ↔ yerel API: geçici tam açık CORS — köprü/socket kapanmasın.
+# allow_credentials + "*" birlikte tarayıcıda CORS'u bozar; permissive modda credentials kapalı.
+_cors_permissive = os.environ.get("RUZGAR_CORS_PERMISSIVE", "1").strip().lower() in (
+    "1",
+    "true",
+    "yes",
+    "on",
 )
+if _cors_permissive:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["*"],
+    )
+else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "http://127.0.0.1:8777",
+            "http://localhost:8777",
+            "null",
+        ],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["*"],
+    )
 
 
 def _boot_motorlar_anaonce() -> None:
@@ -1619,6 +1685,13 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
         and hasattr(turn_plan, "use_ilim_rag")
         and not bool(turn_plan.use_ilim_rag)
     )
+    try:
+        from ilim_assistant.ana_motor_plan import is_casual_conversation_turn
+
+        if is_casual_conversation_turn(req.message, mode_norm, turn_plan):
+            _skip_prefetch = True
+    except Exception:
+        pass
     if mode_norm == "programlama":
         yield {
             "type": "status",
@@ -1660,6 +1733,55 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
             ]
         except Exception:
             pass
+
+    _casual_fast = False
+    try:
+        from ilim_assistant.ana_motor_casual import casual_fast_enabled
+        from ilim_assistant.ana_motor_plan import is_casual_conversation_turn
+
+        _casual_fast = (
+            casual_fast_enabled()
+            and not coding
+            and is_casual_conversation_turn(req.message, mode_norm, turn_plan)
+        )
+    except Exception:
+        _casual_fast = False
+
+    if _casual_fast:
+        try:
+            from ilim_assistant.ana_motor_casual import iter_casual_fast_reply
+            from ilim_assistant.llm_brain import free_brain_enabled
+
+            status_txt = (
+                "Kısa sohbet — Ollama/Groq/Gemini (ücretsiz zincir)…"
+                if free_brain_enabled()
+                else "Kısa sohbet — Gemini (hızlı yol)…"
+            )
+            yield {"type": "status", "text": status_txt}
+            reply_body = ""
+            for piece in iter_casual_fast_reply(
+                req.message,
+                req.history,
+                mode_norm=mode_norm,
+            ):
+                reply_body += piece
+                yield {"type": "token", "text": piece}
+            full_out = finalize_assistant_reply(reply_body)
+            yield {
+                "type": "done",
+                "full_reply": full_out,
+                "user_message": (req.message or "").strip(),
+                "new_wake_used": req.session_wake_used or message_calls_wake_name(req.message),
+                "orchestra": orch,
+                "instant_gundelik": True,
+                "casual_fast": True,
+            }
+            return
+        except Exception as exc:
+            yield {
+                "type": "status",
+                "text": f"Hızlı sohbet yolu atlandı: {str(exc)[:120]}",
+            }
 
     prep = prepare_turn(
         req.message,
@@ -1830,6 +1952,23 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
             ]
         footer = rag_footer(hits)
         body_fixed = finalize_assistant_reply(reply_body)
+        try:
+            from ilim_assistant.ana_motor_reflection import apply_answer_quality_pass
+
+            web_used = bool(
+                turn_plan is not None
+                and getattr(turn_plan, "prefer_web", False)
+                and os.environ.get("ENABLE_WEB_SEARCH", "1") == "1"
+            )
+            body_fixed = apply_answer_quality_pass(
+                body_fixed,
+                msg,
+                hits=hits,
+                question_plan=turn_plan,
+                web_was_used=web_used,
+            )
+        except Exception:
+            pass
         full_out = body_fixed + footer
         done_llm: dict[str, Any] = {
             "type": "done",

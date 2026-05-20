@@ -82,6 +82,22 @@ body {
   border-color: rgba(88, 194, 120, 0.6);
   color: #93d9a8;
 }
+.tech-chip.connection-active.is-live {
+  border-color: rgba(88, 194, 120, 0.85);
+  background: rgba(46, 160, 67, 0.22);
+  color: #b8f0c8;
+  font-weight: 600;
+  animation: ruzgar-connection-pulse 2s ease-in-out 3;
+}
+@keyframes ruzgar-connection-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(88, 194, 120, 0);
+  }
+  50% {
+    box-shadow: 0 0 8px 1px rgba(88, 194, 120, 0.45);
+  }
+}
 .tech-chip.err {
   border-color: rgba(255, 107, 107, 0.6);
   color: #ffb0b0;
@@ -468,6 +484,23 @@ body:not(.workbench-hizir-active) #workbench-hizir-tools,
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.ruzgar-debug-log {
+  flex: 0 0 auto;
+  max-height: 140px;
+  margin: 0 8px 6px;
+  padding: 6px 8px;
+  overflow: auto;
+  font-family: Consolas, "Cascadia Mono", monospace;
+  font-size: 10px;
+  line-height: 1.35;
+  color: #9cdcfe;
+  background: #252526;
+  border: 1px solid #3c3c3c;
+  border-radius: 4px;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .bubble {

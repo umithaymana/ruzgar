@@ -194,7 +194,43 @@ def run_offline() -> int:
         _fail("Faz9 retrieval osmanli", "ağır arşiv (Mektubat) beklenmiyordu")
         fails += 1
     else:
-        _ok("Faz9 retrieval: mektubat yok (indeks turu)")
+        _ok("Faz9 retrieval: mektubat yok (hizli encyclopedic turu)")
+
+    if "birleştir" not in texts_os.lower() and "ansiklopedik" not in texts_os.lower():
+        _fail("encyclopedic merge status", texts_os[:120])
+        fails += 1
+    else:
+        _ok("encyclopedic: hizli merge status")
+
+    print("\n=== Süper beyin modülleri ===")
+    from ilim_assistant.ana_motor_kaynak import citation_directive_for_turn, format_context_blocks
+    from ilim_assistant.ana_motor_reflection import apply_answer_quality_pass
+    from ilim_assistant.ana_motor_super import append_super_brain_directive
+
+    bl = format_context_blocks([("metin", "kaynak.md", 0.55)])
+    if not bl or "[K1]" not in bl[0][0]:
+        _fail("format_context_blocks", str(bl))
+        fails += 1
+    else:
+        _ok("numarali kaynak [K1]")
+    cit = citation_directive_for_turn(source_count=1, archive_primary=False, web_present=False)
+    if "Güven:" not in cit:
+        _fail("citation_directive", cit[:80])
+        fails += 1
+    else:
+        _ok("kaynak talimati + Guven")
+    sup = append_super_brain_directive("SORU:\ntest", question_plan=p_os, mode_norm="genel")
+    if "SÜPER BEYİN" not in sup:
+        _fail("super_brain_directive", sup[:80])
+        fails += 1
+    else:
+        _ok("super brain talimati")
+    ref = apply_answer_quality_pass("Kisa.", msg_os, hits=[], question_plan=p_os)
+    if "Güven:" not in ref:
+        _fail("reflection guven", ref)
+        fails += 1
+    else:
+        _ok("reflection: Guven satiri eklendi")
 
     msg_ilk = "İlk Osmanlı padişahı kimdir?"
     if not looks_like_encyclopedic_fact_question(msg_ilk):

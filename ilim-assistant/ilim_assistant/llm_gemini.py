@@ -19,6 +19,13 @@ from requests.adapters import HTTPAdapter
 from ilim_assistant.defaults import DEFAULT_GEMINI_MODEL
 from ilim_assistant.text_encoding import repair_utf8_mojibake
 
+try:
+    from ilim_assistant.env_bootstrap import ensure_ruzgar_env
+
+    ensure_ruzgar_env()
+except Exception:
+    pass
+
 _GEMINI_API_ROOT = "https://generativelanguage.googleapis.com/v1beta"
 _http_session: requests.Session | None = None
 
@@ -34,8 +41,17 @@ def _session() -> requests.Session:
 
 
 def gemini_api_key() -> str:
+    try:
+        from ilim_assistant.config import global_api_key
+
+        key = global_api_key()
+        if key:
+            return key
+    except Exception:
+        pass
     return (
-        os.environ.get("GOOGLE_GEMINI_API_KEY", "").strip()
+        os.environ.get("GLOBAL_API_KEY", "").strip()
+        or os.environ.get("GOOGLE_GEMINI_API_KEY", "").strip()
         or os.environ.get("GEMINI_API_KEY", "").strip()
         or os.environ.get("RUZGAR_GEMINI_API_KEY", "").strip()
     )
@@ -43,6 +59,46 @@ def gemini_api_key() -> str:
 
 def gemini_configured() -> bool:
     return bool(gemini_api_key())
+
+
+def gemini_active_model() -> str:
+    return _normalize_model_name(os.environ.get("RUZGAR_GEMINI_MODEL") or DEFAULT_GEMINI_MODEL)
+
+
+def gemini_model_ping() -> dict[str, Any]:
+    """Mevcut anahtar + model ile hafif API doğrulaması (başlatma / health)."""
+    key = gemini_api_key()
+    model_id = gemini_active_model()
+    if not key:
+        return {
+            "ok": False,
+            "model": model_id,
+            "reason": "api_key_missing",
+            "source": os.environ.get("RUZGAR_ENV_LOADED_FROM", ""),
+        }
+    url = f"{_GEMINI_API_ROOT}/models/{model_id}"
+    try:
+        conn_t, read_t = _gemini_timeout()
+        resp = _session().get(
+            url,
+            headers={"x-goog-api-key": key},
+            timeout=(conn_t, min(read_t, 12.0)),
+        )
+        ok = resp.status_code == 200
+        return {
+            "ok": ok,
+            "model": model_id,
+            "status_code": resp.status_code,
+            "source": os.environ.get("RUZGAR_ENV_LOADED_FROM", ""),
+            "reason": "" if ok else (resp.text or "")[:240],
+        }
+    except Exception as exc:
+        return {
+            "ok": False,
+            "model": model_id,
+            "reason": format_gemini_user_error(exc)[:240],
+            "source": os.environ.get("RUZGAR_ENV_LOADED_FROM", ""),
+        }
 
 
 def _normalize_model_name(model: str) -> str:
@@ -72,6 +128,20 @@ def _gemini_stream_wall_sec() -> float:
     return max(12.0, min(cap, 300.0))
 
 
+def is_gemini_quota_or_rate_error(text: str) -> bool:
+    """Kota / hız sınırı — yedek beyin zincirine geçiş için."""
+    raw = (text or "").strip()
+    low = raw.lower()
+    return (
+        "429" in raw
+        or "quota" in low
+        or "kotası" in low
+        or "kota" in low
+        or "rate limit" in low
+        or "hız sınırı" in low
+    )
+
+
 def format_gemini_user_error(exc: BaseException) -> str:
     raw = str(exc).strip()
     low = raw.lower()
@@ -84,13 +154,13 @@ def format_gemini_user_error(exc: BaseException) -> str:
     if "connection" in low or "refused" in low or "failed to establish" in low:
         return (
             "Gemini API'ye bağlanılamadı. İnternet bağlantısını kontrol edin; "
-            "GOOGLE_GEMINI_API_KEY tanımlı olmalı."
+            "GLOBAL_API_KEY (.env) tanımlı olmalı."
         )
     if "401" in raw or "403" in raw or "api key" in low or "permission" in low:
         return (
             "Gemini API anahtarı geçersiz veya yetkisiz. "
             "https://aistudio.google.com/apikey adresinden yeni anahtar alın ve "
-            "GOOGLE_GEMINI_API_KEY ortam değişkenine yazın."
+            "ilim-assistant/.env içinde GLOBAL_API_KEY tanımlı olmalı."
         )
     if "429" in raw or "quota" in low or "rate" in low:
         return (
@@ -179,8 +249,7 @@ def chat_completion_stream_gemini(
     key = (api_key or gemini_api_key()).strip()
     if not key:
         yield (
-            "Gemini API anahtarı yok. GOOGLE_GEMINI_API_KEY tanımlayın "
-            "(https://aistudio.google.com/apikey)."
+            "Gemini API anahtarı yok. ilim-assistant/.env dosyasında GLOBAL_API_KEY tanımlı olmalı."
         )
         return
 

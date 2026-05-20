@@ -75,6 +75,24 @@ def _ollama_http_timeout(*, streaming: bool) -> float | tuple[float, float]:
     return (conn, read_s)
 
 
+def ollama_reachable(timeout_sec: float = 2.5) -> bool:
+    """Yerel Ollama dinliyor mu? (Gemini varken gereksiz yedek beklemesini keser)."""
+    base = (
+        os.environ.get("OLLAMA_API_BASE")
+        or os.environ.get("OPENAI_COMPAT_BASE")
+        or "http://127.0.0.1:11434/v1"
+    ).rstrip("/")
+    root = base[:-3] if base.endswith("/v1") else base
+    try:
+        r = _http_session_singleton().get(
+            f"{root}/api/tags",
+            timeout=max(1.0, min(timeout_sec, 8.0)),
+        )
+        return r.status_code == 200
+    except Exception:
+        return False
+
+
 def _http_session_singleton() -> requests.Session:
     """Ollama’ya tekrarlayan isteklerde TCP bağlantısını yeniden kullan (keep-alive)."""
     global _http_session

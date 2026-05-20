@@ -77,3 +77,15 @@ Ollama varsayılan adres: `http://127.0.0.1:11434/v1` (OpenAI uyumlu). Sohbet mo
 - İlim Assistant sohbet (Gradio): **7861** (varsayılan)
 - Rüzgar masaüstü API (`desktop_server`): **8777**
 - `ilim-voice` TTS arayüzü: **7860**
+
+### Masaüstü sohbet API (8777)
+
+| Endpoint | Açıklama |
+|----------|----------|
+| `POST /api/chat/full` | Streaming kapalı yol: tüm cevap tek JSON (`full_reply`) |
+| `POST /api/chat/stream` | SSE token akışı |
+| `WS /ws/chat` | WebSocket (aynı orkestra) |
+| `GET /api/system-health-report` | Mod, faz, hafıza kapasitesi, son debug özeti |
+| `GET /api/ui-manifest` | Dashboard manifest (`generated_at` ile UI polling) |
+
+Ortam şablonu: `RUZGAR_BRAIN.env.example` (oturum hafıza limitleri, debug döngüsü).
