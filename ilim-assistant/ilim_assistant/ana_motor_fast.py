@@ -75,6 +75,8 @@ def should_fast_direct_llm(
         if fast_local_rag_first_enabled():
             return False
         return True
+    if primary in ("islem", "dosya") and len(msg) < 400:
+        return True
     if primary == "hafiza" and not use_rag:
         return True
     return False

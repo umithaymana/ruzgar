@@ -601,6 +601,12 @@ def looks_like_casual_social_chat(message: str) -> bool:
         "ne yapıyorsun",
         "keyfin nasil",
         "keyfin nasıl",
+        "ben geldim",
+        "geldim",
+        "buradayim",
+        "buradayım",
+        "hos geldin",
+        "hoş geldin",
     )
     if any(c in blob for c in cues):
         return True
@@ -742,6 +748,11 @@ def maybe_gundelik_instant_reply(
         )
     ):
         return "Merhaba — ben Rüzgar. Bugün sana nasıl yardımcı olabilirim?"
+    if any(x in blob for x in ("ben geldim", "geldim", "buradayim", "buradayım")):
+        return (
+            "Hoş geldin Ümit abi — Rüzgar burada, seni dinliyorum. "
+            "Ne üzerinde konuşmak istersin?"
+        )
     if any(x in blob for x in ("tesekkur", "teşekkür", "sagol", "sağol", "eyvallah")):
         return "Rica ederim — başka bir konuda yazman yeterli."
     # Sohbet davetleri: şablon yerine Gemini hızlı yol (çeşitli, doğal yanıtlar)

@@ -423,12 +423,22 @@ def try_genel_hafiza_reply(message: str, mode: str) -> str | None:
     Ana motor için `ruzgar_genel_hafiza.json` merkezi sözlüğü.
     Eşleşmede (tam / norm / fuzzy) RAG, web ve LLM çalışmaz.
 
+    `RUZGAR_HAFIZA_DOGAL_KONUS=1` (varsayılan) iken ham cevap döndürülmez;
+    doğal sentez için `hafiza_dogal_sentez` kullanılır.
+
     «Bilinmeyen» yer tutucu cevap JSON’da yanlışlıkla eşleşirse — LLM’e düşsün diye
     **anında cevap sayılmaz** (None döner).
 
     Anında JSON kısayolunu tamamen kapatmak: `ENABLE_RUZGAR_GENEL_HAFIZA=0`
     (veya `ENABLE_OGRENME_MERKEZI=0`).
     """
+    try:
+        from ilim_assistant.hafiza_dogal_sentez import dogal_konus_enabled
+
+        if dogal_konus_enabled():
+            return None
+    except Exception:
+        pass
     del mode  # öncelik tüm ana sohbet modlarında geçerlidir
     if os.environ.get("ENABLE_RUZGAR_GENEL_HAFIZA", "1").strip().lower() in (
         "0",
@@ -814,7 +824,8 @@ def prepare_turn(
     """Boş mesajda None; aksi halde (msg, hits, user_payload, system, model, ogrenme_direct).
 
     Öncelik:
-      - Önce `ruzgar_genel_hafiza.json` (eşleşirse anında cevap).
+      - `RUZGAR_HAFIZA_DOGAL_KONUS=1`: hafıza isabeti → LLM sentez (ham JSON yok).
+      - `RUZGAR_HAFIZA_DOGAL_KONUS=0`: eski davranış — eşleşirse anında ham cevap.
       - `genel` mod + `RUZGAR_MAIN_ONLY_GENEL_HAFIZA=1` ise ve eşleşme yoksa:
         yalnızca `_genel_only_unknown_reply` (RAG/web/LLM kapalı).
       - Varsayılan tam güç (`RUZGAR_MAIN_ONLY_GENEL_HAFIZA` yok veya `0`): eşleşme yoksa
@@ -918,11 +929,27 @@ def prepare_turn(
     if turn_plan is not None and getattr(turn_plan, "primary", "") == "gundelik":
         if not bool(getattr(turn_plan, "use_ilim_rag", True)):
             skip_ogrenme_lookup = True
+    hafiza_hint = None
     if not skip_ogrenme_lookup:
-        og_direct = try_genel_hafiza_reply(msg, m)
-        if og_direct is not None:
-            return msg, [], "", "", "", og_direct
-        if _main_chat_genel_only() and m == "genel":
+        try:
+            from ilim_assistant.hafiza_dogal_sentez import (
+                dogal_konus_enabled,
+                lookup_genel_hafiza_hint,
+            )
+
+            if dogal_konus_enabled():
+                hafiza_hint = lookup_genel_hafiza_hint(msg)
+                if orchestration_out is not None and hafiza_hint:
+                    orchestration_out["hafiza_hint"] = hafiza_hint
+            else:
+                og_direct = try_genel_hafiza_reply(msg, m)
+                if og_direct is not None:
+                    return msg, [], "", "", "", og_direct
+        except Exception:
+            og_direct = try_genel_hafiza_reply(msg, m)
+            if og_direct is not None:
+                return msg, [], "", "", "", og_direct
+        if _main_chat_genel_only() and m == "genel" and not hafiza_hint:
             return msg, [], "", "", "", _genel_only_unknown_reply()
 
     if maybe_clarification_reply is not None and _gundelik_fast:
@@ -1360,6 +1387,14 @@ def prepare_turn(
                     + "\n\n---\n"
                     + user_payload
                 )
+        except Exception:
+            pass
+
+    if hafiza_hint:
+        try:
+            from ilim_assistant.hafiza_dogal_sentez import append_hafiza_hint_directive
+
+            user_payload = append_hafiza_hint_directive(user_payload, hafiza_hint, msg)
         except Exception:
             pass
 

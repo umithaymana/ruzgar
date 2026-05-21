@@ -205,6 +205,8 @@ def chat_completion_stream(
     base_url: Optional[str] = None,
     api_key: Optional[str] = None,
     prior_messages: Optional[list] = None,
+    *,
+    max_tokens: Optional[int] = None,
 ) -> Iterator[str]:
     """
     OpenAI uyumlu streaming (SSE). Her parça assistant içeriğinden bir metin parçası.
@@ -224,6 +226,8 @@ def chat_completion_stream(
         "temperature": float(os.environ.get("CHAT_TEMPERATURE", "0.42")),
         "stream": True,
     }
+    if max_tokens is not None:
+        payload["max_tokens"] = max(64, min(int(max_tokens), 4096))
     _apply_chat_limits(payload)
     _apply_sampling_extras(payload)
     url = base.rstrip("/") + "/chat/completions"

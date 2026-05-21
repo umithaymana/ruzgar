@@ -138,6 +138,20 @@ def _gemini_startup_warmup() -> None:
 _gemini_startup_warmup()
 
 
+def _rag_sync_warmup() -> None:
+    """İlk sohbet turunda 60–120 sn RAG gecikmesini önler (async startup'tan önce)."""
+    try:
+        from ilim_assistant.rag_store import warmup_index
+
+        warmup_index()
+        print("[RÜZGAR] RAG indeks + gömme modeli önbelleğe alındı.", file=sys.stderr)
+    except Exception as exc:
+        print(f"[RÜZGAR] RAG warm-up atlandı: {exc}", file=sys.stderr)
+
+
+_rag_sync_warmup()
+
+
 def pdf_text_runtime_available() -> bool:
     try:
         import pypdf  # noqa: F401
@@ -439,10 +453,17 @@ def _resolve_workspace_run_dir(workspace_root: str, cwd_rel: str | None) -> str 
 
 @app.post("/api/hafiza/genel-bak")
 def api_genel_hafiza_bak(body: GenelHafizaBakBody):
-    """Ana sohbet ön kontrol: genel hafızada tam/benzer cevap (UI düşünme balonu atlatma)."""
+    """Ana sohbet ön kontrol: ham JSON cevabı (dogal sentez açıkken devre dışı)."""
     m = (body.message or "").strip()
     if not m:
         return {"ok": True, "hit": False, "answer": None}
+    try:
+        from ilim_assistant.hafiza_dogal_sentez import dogal_konus_enabled
+
+        if dogal_konus_enabled():
+            return {"ok": True, "hit": False, "answer": None, "dogal_sentez": True}
+    except Exception:
+        pass
     ans = genel_hafiza_lookup(m)
     if ans is None:
         return {"ok": True, "hit": False, "answer": None}
@@ -1628,6 +1649,77 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
     yield {"type": "status", "text": "Rüzgar hazırlanıyor…"}
 
     orch: dict[str, Any] = {}
+
+    # Selam / kısa sohbet — plan ve hafıza sentezinden ÖNCE (anında)
+    if mode_norm in ("genel", "uretim", "gelisim") and not coding:
+        try:
+            from ilim_assistant.ana_motor_plan import maybe_gundelik_instant_reply
+
+            instant_hi = maybe_gundelik_instant_reply(req.message, mode_norm, {})
+            if instant_hi:
+                yield from _iter_instant_chat_events(
+                    instant_hi,
+                    (req.message or "").strip(),
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=orch,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+
+    # Tarih hızlı yol — plan / prefetch / ağır RAG öncesi (120 sn UI zaman aşımı)
+    if mode_norm in ("genel", "uretim", "gelisim") and not coding:
+        try:
+            from ilim_assistant.tarih_fast import iter_tarih_hafiza_reply
+
+            tarih_early = iter_tarih_hafiza_reply(
+                req.message,
+                req.history,
+                mode_norm=mode_norm,
+            )
+            if tarih_early is not None:
+                yield {
+                    "type": "status",
+                    "text": "Tarih hafızası — yerel pasaj + Ollama…",
+                }
+                reply_body = ""
+                for piece in tarih_early:
+                    reply_body += piece
+                    yield {"type": "token", "text": piece}
+                if reply_body.strip():
+                    full_out = finalize_assistant_reply(reply_body)
+                    yield {
+                        "type": "done",
+                        "full_reply": full_out,
+                        "user_message": (req.message or "").strip(),
+                        "new_wake_used": req.session_wake_used
+                        or message_calls_wake_name(req.message),
+                        "orchestra": orch,
+                        "tarih_fast": True,
+                        "tarih_fast_early": True,
+                    }
+                    return
+                try:
+                    from ilim_assistant.chat_core import _tarih_intent
+
+                    if _tarih_intent(req.message):
+                        yield from _iter_instant_chat_events(
+                            (
+                                "Tarih hızlı yol yanıt üretemedi (Ollama zaman aşımı). "
+                                "`ollama serve` kontrol edin veya soruyu kısaltıp tekrar deneyin."
+                            ),
+                            (req.message or "").strip(),
+                            session_wake_used=req.session_wake_used,
+                            msg_for_wake=req.message,
+                            orch=orch,
+                        )
+                        return
+                except Exception:
+                    pass
+        except Exception:
+            pass
     for _consumer in (
         "ilim_assistant.dinamit_hatirlatici:try_consume_hatirlatici_intent",
         "ilim_assistant.nebula_kitap_hafiza:try_consume_nebula_kitap_command",
@@ -1691,34 +1783,45 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
                 except Exception:
                     pass
                 try:
-                    from ilim_assistant.tarih_fast import iter_tarih_hafiza_reply
-
-                    tarih_stream = iter_tarih_hafiza_reply(
-                        req.message,
-                        req.history,
-                        mode_norm=mode_norm,
+                    from ilim_assistant.hafiza_dogal_sentez import (
+                        dogal_konus_enabled,
+                        iter_hafiza_dogal_reply,
+                        lookup_genel_hafiza_hint,
+                        should_skip_hafiza_dogal,
                     )
-                    if tarih_stream is not None:
-                        yield {
-                            "type": "status",
-                            "text": "Tarih hafızası — yerel pasaj + Ollama…",
-                        }
-                        reply_body = ""
-                        for piece in tarih_stream:
-                            reply_body += piece
-                            yield {"type": "token", "text": piece}
-                        if reply_body.strip():
-                            full_out = finalize_assistant_reply(reply_body)
-                            yield {
-                                "type": "done",
-                                "full_reply": full_out,
-                                "user_message": (req.message or "").strip(),
-                                "new_wake_used": req.session_wake_used
-                                or message_calls_wake_name(req.message),
-                                "orchestra": orch,
-                                "tarih_fast": True,
-                            }
-                            return
+
+                    if dogal_konus_enabled() and not should_skip_hafiza_dogal(
+                        req.message
+                    ):
+                        hint = lookup_genel_hafiza_hint(req.message)
+                        if hint:
+                            hstream = iter_hafiza_dogal_reply(
+                                req.message,
+                                req.history,
+                                mode_norm=mode_norm,
+                                hint=hint,
+                            )
+                            if hstream is not None:
+                                yield {
+                                    "type": "status",
+                                    "text": "Hafıza — doğal sentez (yerel/bulut beyin)…",
+                                }
+                                reply_body = ""
+                                for piece in hstream:
+                                    reply_body += piece
+                                    yield {"type": "token", "text": piece}
+                                if reply_body.strip():
+                                    full_out = finalize_assistant_reply(reply_body)
+                                    yield {
+                                        "type": "done",
+                                        "full_reply": full_out,
+                                        "user_message": (req.message or "").strip(),
+                                        "new_wake_used": req.session_wake_used
+                                        or message_calls_wake_name(req.message),
+                                        "orchestra": orch,
+                                        "hafiza_dogal": True,
+                                    }
+                                    return
                 except Exception:
                     pass
                 try:
@@ -1772,14 +1875,29 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
     workspace_step = None
     retrieval_notes: list[str] = []
     if mode_norm in ("genel", "uretim", "gelisim"):
-        _run_agent = turn_plan is None or bool(
-            getattr(turn_plan, "use_ilim_rag", True)
-        ) or getattr(turn_plan, "primary", "") in (
-            "bilgi",
-            "bilim",
-            "dosya",
-            "islem",
-            "dilbilgisi",
+        _skip_agent = False
+        try:
+            from ilim_assistant.ana_motor_skip import should_skip_agent_workspace
+
+            _skip_agent = should_skip_agent_workspace(
+                req.message,
+                mode_norm,
+                coding=coding,
+                question_plan=turn_plan,
+            )
+        except Exception:
+            _skip_agent = False
+        _run_agent = not _skip_agent and (
+            turn_plan is None
+            or bool(getattr(turn_plan, "use_ilim_rag", True))
+            or getattr(turn_plan, "primary", "")
+            in (
+                "bilgi",
+                "bilim",
+                "dosya",
+                "islem",
+                "dilbilgisi",
+            )
         )
         if _run_agent:
             try:
@@ -1803,6 +1921,19 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
         and hasattr(turn_plan, "use_ilim_rag")
         and not bool(turn_plan.use_ilim_rag)
     )
+    try:
+        from ilim_assistant.ana_motor_skip import should_skip_stream_prefetch
+
+        if should_skip_stream_prefetch(
+            req.message,
+            req.history,
+            mode_norm,
+            coding=coding,
+            question_plan=turn_plan,
+        ):
+            _skip_prefetch = True
+    except Exception:
+        pass
     try:
         from ilim_assistant.ana_motor_plan import is_casual_conversation_turn
 

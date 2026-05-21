@@ -1,2 +1,2 @@
-# UI → yerel API (8777 eski/zombi süreç — 8779 güncel motor)
+# UI → yerel API (Ruzgar.ps1 / otomatik güncelleme)
 http://127.0.0.1:8779

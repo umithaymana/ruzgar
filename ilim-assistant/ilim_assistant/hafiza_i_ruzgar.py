@@ -291,26 +291,37 @@ class HafizaIRuzgar:
              Türkçe karakter farkı, fazladan kelime gibi hatalara dayanıklı.
              Eşik varsayılan %70 (RUZGAR_FUZZY_MIN ile değiştirilebilir).
         """
+        detay = self.ogrenme_cevabi_bak_detayli(metin, motor_tipi=motor_tipi)
+        return detay.get("cevap") if detay else None
+
+    def ogrenme_cevabi_bak_detayli(
+        self, metin: str, motor_tipi: str | None = None
+    ) -> Optional[dict]:
+        """Sözlük araması; eşleşme türü ve skor ile döner.
+
+        Dönüş: ``{"cevap", "soru", "eslesme": "tam"|"norm"|"fuzzy", "skor": float}``
+        """
         self._reload_if_disk_changed()
         t = (metin or "").strip()
-        if not t:
-            return None
-        if "=" in t:
+        if not t or "=" in t:
             return None
         mt = (motor_tipi or "").strip() or None
         adaylar = self._kayitlar
         if mt is not None:
             adaylar = [r for r in self._kayitlar if r.get("motor_tipi") == mt]
 
-        # 1) Birebir
         for row in reversed(adaylar):
             if row.get("soru", "") == t:
                 ans = row.get("cevap", "")
                 if self._cevap_yer_tutucu_mu(ans):
                     continue
-                return ans
+                return {
+                    "cevap": ans,
+                    "soru": row.get("soru", ""),
+                    "eslesme": "tam",
+                    "skor": 1.0,
+                }
 
-        # 2) Normalize eşleşme (lowercase + noktalama)
         nq = self._norm_eslesme(t)
         if nq:
             for row in reversed(adaylar):
@@ -319,12 +330,21 @@ class HafizaIRuzgar:
                     ans = row.get("cevap", "")
                     if self._cevap_yer_tutucu_mu(ans):
                         continue
-                    return ans
+                    return {
+                        "cevap": ans,
+                        "soru": k,
+                        "eslesme": "norm",
+                        "skor": 1.0,
+                    }
 
-        # 3) Fuzzy: en yüksek skoru veren satırı dön (eşik üstündeyse)
         en_iyi = self._fuzzy_en_iyi_eslesme(t, adaylar)
         if en_iyi is not None:
-            return en_iyi[0]
+            return {
+                "cevap": en_iyi[0],
+                "soru": en_iyi[1],
+                "eslesme": "fuzzy",
+                "skor": float(en_iyi[2]),
+            }
         return None
 
     def _fuzzy_en_iyi_eslesme(
@@ -611,6 +631,13 @@ def get_hafiza_motor() -> HafizaIRuzgar:
 def genel_hafiza_lookup(message: str, motor_tipi: str | None = None) -> Optional[str]:
     """Merkezi genel hafızadan yanıt bakar; `motor_tipi=None` ise tüm etiketler dahil."""
     return get_hafiza_motor().ogrenme_cevabi_bak(message, motor_tipi=motor_tipi)
+
+
+def genel_hafiza_lookup_detayli(
+    message: str, motor_tipi: str | None = None
+) -> Optional[dict]:
+    """Genel hafıza eşleşmesi + skor + eşleşme türü."""
+    return get_hafiza_motor().ogrenme_cevabi_bak_detayli(message, motor_tipi=motor_tipi)
 
 
 def etkileşimli_mod() -> None:

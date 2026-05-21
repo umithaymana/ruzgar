@@ -54,10 +54,11 @@ def _bilim_gemini_index_first_enabled() -> bool:
 
 def _gemini_first_for_encyclopedic_enabled() -> bool:
     """Tek cevaplı genel bilgi/tarih sorularında RAG'i tamamen atla (Faz 9 hız)."""
-    if os.environ.get("RUZGAR_FAZ9_GEMINI_FIRST_FOR_FACTS", "1").strip().lower() in (
-        "0",
-        "false",
-        "no",
+    # Varsayılan kapalı: kota + 120 sn UI zaman aşımı; yerel tarih_fast / Ollama önce.
+    if os.environ.get("RUZGAR_FAZ9_GEMINI_FIRST_FOR_FACTS", "0").strip().lower() not in (
+        "1",
+        "true",
+        "yes",
     ):
         return False
     try:

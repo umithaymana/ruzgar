@@ -50,7 +50,7 @@ function resolveRuzgarApiRoot() {
 
 const API = resolveRuzgarApiRoot();
 console.info("[RÜZGAR Connection Bridge] API kök:", API);
-const RUZGAR_CHAT_FULL_TIMEOUT_MS = 120000;
+const RUZGAR_CHAT_FULL_TIMEOUT_MS = 180000;
 const RUZGAR_DISABLE_STREAMING = true;
 
 /** Konuşma hattı teşhisi — varsayılan kapalı; yalnızca konsol (?debug=1). Sohbette mavi JSON paneli yok. */
@@ -6436,10 +6436,8 @@ async function streamChat(userText) {
       };
     });
 
-  const skipGenelBak =
-    /hat[ıi]rla|haf[ıi]za|kaydet|not\s+al|kim\s+kur|kurdu|kuruldu|nedir|ne\s+demek|osmanl|\.json\b|\.txt\b|\.md\b|haf[ıi]zana\s+kaydet|dosyas[ıi]n[ıi]\s+oku|nebula\s+durum/i.test(
-      String(userText || ""),
-    );
+  // Ham JSON anında cevap kapatıldı — sunucu hafızayı Ollama ile doğal sentezler (hafiza_dogal_sentez).
+  const skipGenelBak = true;
   const nebulaKitapCmd =
     /\.(?:json|txt|md)\b/i.test(String(userText || "")) &&
     /haf[ıi]zana\s+kaydet|dosyas[ıi]n[ıi]\s+oku/i.test(String(userText || ""));
@@ -6447,11 +6445,17 @@ async function streamChat(userText) {
     /osmanl|fatih|murat|selçuk|selcuk|istanbul|fethett|tarih|padişah|padisah|ttk|bizans|osman\s+bey/i.test(
       String(userText || ""),
     );
-  const chatFullTimeoutMs = nebulaKitapCmd
-    ? Math.max(RUZGAR_CHAT_FULL_TIMEOUT_MS, 45000)
-    : tarihSoruCmd
-      ? Math.max(RUZGAR_CHAT_FULL_TIMEOUT_MS, 90000)
-      : RUZGAR_CHAT_FULL_TIMEOUT_MS;
+  const casualShortCmd =
+    /^(selam|merhaba|naber|nas[ıi]ls[ıi]n|iyi\s+(akşam|aksam|geceler)|günayd[ıi]n|gunaydin|ben\s+geldim|geldim|teşekkür|tesekkur)\b/i.test(
+      String(userText || "").trim(),
+    ) && String(userText || "").trim().length < 48;
+  const chatFullTimeoutMs = casualShortCmd
+    ? 12000
+    : nebulaKitapCmd
+      ? Math.max(RUZGAR_CHAT_FULL_TIMEOUT_MS, 45000)
+      : tarihSoruCmd
+        ? Math.max(RUZGAR_CHAT_FULL_TIMEOUT_MS, 90000)
+        : RUZGAR_CHAT_FULL_TIMEOUT_MS;
   if (!skipGenelBak) {
   try {
     const genelBakCtrl = new AbortController();
@@ -6585,7 +6589,7 @@ async function streamChat(userText) {
       if (e && e.name === "AbortError") {
         throw new Error(
           fullTimedOut
-            ? "Yanıt zaman aşımı (120 sn) — RAG+Gemini uzun sürdü; tekrar deneyin veya soruyu kısaltın."
+            ? "Yanıt zaman aşımı (180 sn) — sunucu yavaş veya Ollama/Gemini bekliyor; Ruzgar.ps1 -ForceRestart deneyin."
             : "Yanıt kesildi — istek iptal edildi."
         );
       }
