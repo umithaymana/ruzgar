@@ -254,6 +254,7 @@ const el = {
   input: document.getElementById("msg-input"),
   send: document.getElementById("btn-send"),
   stop: document.getElementById("btn-stop"),
+  ttsPause: document.getElementById("btn-tts-pause"),
   mic: document.getElementById("btn-mic"),
   web: document.getElementById("opt-web"),
   linkRead: document.getElementById("opt-link-read"),
@@ -815,6 +816,13 @@ let ttsPumping = false;
 let ttsAbortController = null;
 let ttsPlayingEl = null;
 let ttsEdgeSpokeTurn = false;
+let ttsPaused = false;
+let ttsWebUtterance = null;
+/** Ses sentezi isteği giderken de duraklat düğmesi görünsün */
+let ttsArmed = false;
+
+const RUZGAR_TTS_MAX_SPEECH_CHARS = 420;
+const RUZGAR_TTS_MAX_SENTENCES = 3;
 
 /** TTS sentez — arka iş parçacığı (Web Worker); yoksa fetch ile düşme (Ümit & Gökçenur). */
 let _ttsWorker = null;
@@ -983,13 +991,13 @@ function updateDashboardLastSpeech() {
 
 function syncTtsStatusPill() {
   if (!el.ttsStatusPill) return;
-  const busy = !!(
-    ttsPlayingEl ||
-    ttsPumping ||
-    (ttsTextQueue && ttsTextQueue.length > 0)
-  );
+  const busy = isTtsActive();
   el.ttsStatusPill.hidden = !busy;
-  if (busy) el.ttsStatusPill.textContent = ttsPlayingEl ? "Sesli okuma…" : "Ses hazırlanıyor…";
+  if (busy) {
+    if (ttsPaused) el.ttsStatusPill.textContent = "Duraklatıldı";
+    else if (ttsPlayingEl) el.ttsStatusPill.textContent = "Sesli okuma…";
+    else el.ttsStatusPill.textContent = "Ses hazırlanıyor…";
+  }
 }
 
 function tickThinkingElapsed() {
@@ -1188,14 +1196,30 @@ function renderRecentVideoDownloads(items) {
   });
 }
 
+function setAnaMotorInfoStripState(state) {
+  const strip = document.getElementById("ana-motor-info-strip");
+  if (!strip) return;
+  strip.classList.remove(
+    "atelier-info-strip-ana--loading",
+    "atelier-info-strip-ana--ready",
+    "atelier-info-strip-ana--err"
+  );
+  if (state) strip.classList.add(`atelier-info-strip-ana--${state}`);
+}
+
 function applyUiManifest(manifest) {
   if (!manifest || manifest.ok === false) return;
   lastUiManifest = manifest;
+  setAnaMotorInfoStripState("ready");
 
   const dash = manifest.dashboard || {};
-  const badge = document.querySelector(".atelier-info-strip-ana .phase-badge-ana");
+  const badge =
+    document.getElementById("ana-motor-phase-badge") ||
+    document.querySelector(".atelier-info-strip-ana .phase-badge-ana");
   if (badge && dash.badge) badge.textContent = dash.badge;
-  const promise = document.querySelector(".atelier-info-strip-ana .atelier-promise");
+  const promise =
+    document.getElementById("ana-motor-promise") ||
+    document.querySelector(".atelier-info-strip-ana .atelier-promise");
   if (promise && dash.promise) promise.textContent = dash.promise;
   if (el.dashboardStatus && dash.badge) {
     const phaseLabel = manifest.current_phase_label || dash.badge;
@@ -1269,6 +1293,16 @@ async function refreshUiManifest() {
     return j;
   } catch (e) {
     console.warn("[RÜZGAR] UI manifest okunamadı:", e);
+    if (lastHealthSnapshot?.ok) {
+      setAnaMotorInfoStripState("ready");
+      const badge = document.getElementById("ana-motor-phase-badge");
+      const promise = document.getElementById("ana-motor-promise");
+      if (badge) badge.textContent = "Ana Motor · sunucu bağlı";
+      if (promise) {
+        promise.textContent =
+          "Manifest yüklenemedi ama yerel API çalışıyor — sohbet kullanılabilir.";
+      }
+    }
     return null;
   }
 }
@@ -4714,21 +4748,65 @@ function silenceVoiceOnUserEdit() {
   silenceVoiceOutputNow();
 }
 
-/** Durdur görünürlüğü: yanıt beklerken veya TTS kuyruğu/çalma aktifken */
+/** Durdur / duraklat görünürlüğü: yanıt beklerken veya ses aktifken */
 function syncInterruptButton() {
-  if (!el.stop) return;
-  const ttsBusy = !!(
-    ttsPlayingEl ||
-    ttsPumping ||
-    (ttsTextQueue && ttsTextQueue.length > 0) ||
-    (ttsPendingChunks && String(ttsPendingChunks).trim().length > 0)
-  );
-  el.stop.hidden = !perfBusy && !ttsBusy;
+  const ttsBusy = isTtsActive();
+  if (el.stop) el.stop.hidden = !perfBusy && !ttsBusy;
+  if (el.ttsPause) {
+    el.ttsPause.hidden = !ttsBusy;
+    updateTtsPauseButton();
+  }
   syncTtsStatusPill();
+}
+
+function pauseTtsPlayback() {
+  if (!isTtsActive()) return;
+  ttsPaused = true;
+  try {
+    if (ttsPlayingEl && !ttsPlayingEl.paused) ttsPlayingEl.pause();
+  } catch (_) {
+    /* yok say */
+  }
+  try {
+    if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+      window.speechSynthesis.pause();
+    }
+  } catch (_) {
+    /* yok say */
+  }
+  syncInterruptButton();
+  if (el.ttsStatusPill) {
+    el.ttsStatusPill.hidden = false;
+    el.ttsStatusPill.textContent = "Duraklatıldı";
+  }
+  setStatus("Ses duraklatıldı", "Rüzgar");
+}
+
+function resumeTtsPlayback() {
+  if (!ttsPaused) return;
+  ttsPaused = false;
+  try {
+    if (ttsPlayingEl && ttsPlayingEl.paused) void ttsPlayingEl.play();
+  } catch (_) {
+    /* yok say */
+  }
+  try {
+    if (window.speechSynthesis.paused) window.speechSynthesis.resume();
+  } catch (_) {
+    /* yok say */
+  }
+  syncInterruptButton();
+  setStatus("Sesli okuma…", "Rüzgar");
+}
+
+function toggleTtsPause() {
+  if (ttsPaused) resumeTtsPlayback();
+  else pauseTtsPlayback();
 }
 
 function interruptRuzgar() {
   if (activeChatAbort || activeChatWs) userRequestedChatStop = true;
+  ttsPaused = false;
   bumpTtsSession();
   try {
     window.speechSynthesis.cancel();
@@ -5518,6 +5596,7 @@ async function checkApi() {
       fast_paths: j?.build?.fast_paths,
     });
     if (j.ok) {
+      setAnaMotorInfoStripState("loading");
       if (apiWasOffline) {
         apiWasOffline = false;
         showRuzgarConnectionActiveBanner();
@@ -5527,6 +5606,15 @@ async function checkApi() {
       }
       lastHealthSnapshot = j;
       updateFaz7HealthStrip(j);
+      const badge = document.getElementById("ana-motor-phase-badge");
+      const promise = document.getElementById("ana-motor-promise");
+      if (badge) {
+        badge.textContent = `Ana Motor · ${j?.build?.rev || "API bağlı"}`;
+      }
+      if (promise) {
+        promise.textContent =
+          "Yerel sunucu aktif (127.0.0.1:8779). Gemini/Groq hazırsa sohbet çalışır.";
+      }
       void refreshUiManifest();
       el.api.textContent = j.stt ? "Sunucu ✓ metne döküm" : "Sunucu ✓";
       let apiTitle = j.stt
@@ -5589,6 +5677,14 @@ async function checkApi() {
   apiWasOffline = true;
   hideRuzgarConnectionActiveBanner();
   lastHealthSnapshot = null;
+  setAnaMotorInfoStripState("err");
+  const badge = document.getElementById("ana-motor-phase-badge");
+  const promise = document.getElementById("ana-motor-promise");
+  if (badge) badge.textContent = "Ana Motor · sunucu kapalı";
+  if (promise) {
+    promise.textContent =
+      "Yerel API yok. Ruzgar.ps1 veya Start-Ruzgar.ps1 ile başlatın (port 8779).";
+  }
   if (faz7HealthStripEl) faz7HealthStripEl.hidden = true;
   el.api.textContent = "Sunucu kapalı";
   el.api.className = "tech-chip err";
@@ -5932,6 +6028,69 @@ function ttsPlainForSpeech(t) {
     .trim();
 }
 
+/** Sesli okuma: ekranda tam metin kalır; TTS kısa ve net (Ümit abi). */
+function truncateForTtsSpeech(text) {
+  let t = ttsPlainForSpeech(text || "");
+  if (!t) return "";
+  t = t.replace(
+    /Ümit abi,\s*şu an model yanıt üretemedi[^.]*\.\s*/i,
+    ""
+  );
+  t = t.replace(/\(TARIH_VE_KULTUR[^)]+\)/gi, "");
+  t = t.replace(/https?:\/\/\S+/g, "");
+  t = t.replace(/\s+/g, " ").trim();
+  const sentences = [];
+  let rest = t;
+  const re = /([\s\S]+?)([.!?…])(\s+|$)/g;
+  let m;
+  while ((m = re.exec(rest)) && sentences.length < RUZGAR_TTS_MAX_SENTENCES) {
+    const s = (m[1] + m[2]).trim();
+    if (s.length >= 4) sentences.push(s);
+  }
+  if (sentences.length) {
+    t = sentences.join(" ");
+  }
+  if (t.length > RUZGAR_TTS_MAX_SPEECH_CHARS) {
+    const cut = t.lastIndexOf(" ", RUZGAR_TTS_MAX_SPEECH_CHARS - 1);
+    t = (cut > 40 ? t.slice(0, cut) : t.slice(0, RUZGAR_TTS_MAX_SPEECH_CHARS)).trim() + "…";
+  }
+  return t;
+}
+
+function isWebSpeechActive() {
+  try {
+    return !!(window.speechSynthesis.speaking || window.speechSynthesis.paused);
+  } catch (_) {
+    return false;
+  }
+}
+
+function isTtsActive() {
+  return !!(
+    ttsArmed ||
+    ttsPlayingEl ||
+    ttsPumping ||
+    (ttsTextQueue && ttsTextQueue.length > 0) ||
+    (ttsPendingChunks && String(ttsPendingChunks).trim().length > 0) ||
+    isWebSpeechActive()
+  );
+}
+
+function updateTtsPauseButton() {
+  if (!el.ttsPause) return;
+  const iconPause = el.ttsPause.querySelector(".icon-pause");
+  const iconPlay = el.ttsPause.querySelector(".icon-play");
+  if (iconPause) iconPause.hidden = ttsPaused;
+  if (iconPlay) iconPlay.hidden = !ttsPaused;
+  el.ttsPause.setAttribute(
+    "aria-label",
+    ttsPaused ? "Sesli okumayı sürdür" : "Sesli okumayı duraklat"
+  );
+  el.ttsPause.title = ttsPaused
+    ? "Sesli okumayı sürdür"
+    : "Sesli okumayı duraklat";
+}
+
 /**
  * İlk cümle / erken kesit — seslendirme metin tamamlanmadan başlasın (Ümit & Gökçenur).
  */
@@ -5966,6 +6125,9 @@ function bumpTtsSession() {
   ttsTextQueue.length = 0;
   ttsPumping = false;
   ttsEdgeSpokeTurn = false;
+  ttsPaused = false;
+  ttsArmed = false;
+  ttsWebUtterance = null;
   try {
     if (ttsAbortController) ttsAbortController.abort();
   } catch (_) {
@@ -6054,6 +6216,8 @@ function playTtsBlob(blob) {
 async function runTtsPump(ttsSess, karakter, signal) {
   if (ttsPumping) return;
   ttsPumping = true;
+  ttsArmed = true;
+  syncInterruptButton();
   try {
     /** @type {Promise<Blob | null> | null} */
     let prefetch = null;
@@ -6103,6 +6267,10 @@ async function runTtsPump(ttsSess, karakter, signal) {
 
     fillPrefetch();
     while (ttsSess === ttsSessionCounter && prefetch != null) {
+      while (ttsPaused && ttsSess === ttsSessionCounter) {
+        await new Promise((r) => setTimeout(r, 120));
+      }
+      if (ttsSess !== ttsSessionCounter) break;
       const blob = await prefetch;
       prefetch = null;
       fillPrefetch();
@@ -6117,6 +6285,9 @@ async function runTtsPump(ttsSess, karakter, signal) {
     /* iptal veya ağ */
   } finally {
     ttsPumping = false;
+    if (!ttsPlayingEl && ttsTextQueue.length === 0 && !isWebSpeechActive()) {
+      ttsArmed = false;
+    }
     syncInterruptButton();
   }
 }
@@ -7315,9 +7486,11 @@ async function menuOpenMic() {
 }
 
 async function speakLast() {
-  const text = ttsPlainForSpeech(lastAssistantReply || "");
+  const text = truncateForTtsSpeech(lastAssistantReply || "");
   if (!text) return;
   if (el.voiceOut != null && !el.voiceOut.checked) return;
+  ttsArmed = true;
+  syncInterruptButton();
   let kar = "asistan";
   try {
     const rs = await fetch(`${API}/api/ses/settings`);
@@ -7353,10 +7526,13 @@ async function speakLast() {
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = "tr-TR";
+  ttsWebUtterance = u;
   window.speechSynthesis.speak(u);
   setStatus("Sesli okuma…");
   syncInterruptButton();
   u.onend = () => {
+    ttsWebUtterance = null;
+    ttsArmed = false;
     setStatus("Hazır");
     syncInterruptButton();
   };
@@ -7405,8 +7581,10 @@ async function speakStudioTranscript(raw) {
 }
 
 function speakTextImmediate(text) {
-  const plain = ttsPlainForSpeech(text || "");
+  const plain = truncateForTtsSpeech(text || "");
   if (!plain) return;
+  ttsArmed = true;
+  syncInterruptButton();
   try {
     window.speechSynthesis.cancel();
   } catch (_) {
@@ -7415,15 +7593,19 @@ function speakTextImmediate(text) {
   try {
     const u = new SpeechSynthesisUtterance(plain);
     u.lang = "tr-TR";
+    ttsWebUtterance = u;
     window.speechSynthesis.speak(u);
     setStatus("Sesli okuma…");
     syncInterruptButton();
     u.onend = () => {
+      ttsWebUtterance = null;
+      ttsArmed = false;
       setStatus("Hazır");
       syncInterruptButton();
     };
   } catch (_) {
-    /* yok say */
+    ttsArmed = false;
+    syncInterruptButton();
   }
 }
 
@@ -7445,6 +7627,9 @@ async function loadFileTree() {
 if (el.send) el.send.addEventListener("click", sendMessage);
 if (el.stop) {
   el.stop.addEventListener("click", () => interruptRuzgar());
+}
+if (el.ttsPause) {
+  el.ttsPause.addEventListener("click", () => toggleTtsPause());
 }
 el.input.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {

@@ -361,6 +361,32 @@ def select_brain_chain(
     profiles = all_profiles()
     forced = (os.environ.get("RUZGAR_BRAIN_PROFILE") or "auto").strip().lower()
 
+    try:
+        from ilim_assistant.ruzgar_umed_cevap_emri import (
+            brain_chain_ids_for_emri,
+            umed_emri_applies,
+        )
+
+        if umed_emri_applies(mode_norm=mode_norm, coding_mode=coding_mode):
+            chain_ids = brain_chain_ids_for_emri()
+            chain: list[BrainEndpoint] = []
+            seen_u: set[str] = set()
+            for pid in chain_ids:
+                if pid in seen_u:
+                    continue
+                ep = profiles.get(pid)
+                if ep is not None:
+                    seen_u.add(pid)
+                    chain.append(ep)
+            if chain:
+                return BrainSelection(
+                    primary=chain[0],
+                    chain=chain,
+                    reason=f"umed_emri; zincir={[e.profile_id for e in chain]}",
+                )
+    except Exception:
+        pass
+
     if _gemini_only_when_configured() and not coding_mode and mode_norm != "programlama":
         ep = profiles.get("gemini")
         if ep is not None:
@@ -611,15 +637,38 @@ def stream_chat_with_brain(
     )
     last_err = ""
     last_provider = ""
+    any_content = False
+    try:
+        from ilim_assistant.ruzgar_umed_cevap_emri import (
+            remaining_sec,
+            umed_emri_applies,
+            umed_miss_reply,
+        )
+        from ilim_assistant.ruzgar_egitim import is_real_user_question
+
+        _umed = umed_emri_applies(mode_norm=mode_norm, coding_mode=coding_mode)
+    except Exception:
+        _umed = False
+        is_real_user_question = lambda _m: True  # type: ignore[assignment]
+        remaining_sec = lambda: 9999.0  # type: ignore[assignment]
+        umed_miss_reply = lambda: ""  # type: ignore[assignment]
+
     for ep in sel.chain:
+        if _umed and remaining_sec() < 0.8:
+            break
         last_provider = ep.provider
         try:
             got_content = False
             for piece in _stream_endpoint(ep, system, user, prior_messages):
+                if _umed and remaining_sec() <= 0:
+                    if got_content and piece:
+                        yield piece
+                    break
                 if not got_content and _looks_like_error_chunk(piece):
                     last_err = piece.strip()
                     break
                 got_content = True
+                any_content = True
                 yield piece
             if got_content:
                 return
@@ -638,11 +687,18 @@ def stream_chat_with_brain(
                 last_err = format_llm_user_error(e)
             continue
 
+    if _umed and not any_content and is_real_user_question(message or user):
+        yield umed_miss_reply()
+        return
+
     if last_err:
         try:
             from ilim_assistant.llm_gemini import is_gemini_quota_or_rate_error
 
             if is_gemini_quota_or_rate_error(last_err):
+                if _umed:
+                    yield umed_miss_reply()
+                    return
                 yield (
                     "Gemini kotası dolu — yerel Ollama ile yanıt denendi ama sonuç üretilemedi. "
                     "Bir süre sonra tekrar deneyin veya `ollama serve` + `ollama pull llama3.2:3b` kontrol edin."
@@ -650,7 +706,13 @@ def stream_chat_with_brain(
                 return
         except Exception:
             pass
+        if _umed and is_real_user_question(message or user):
+            yield umed_miss_reply()
+            return
         yield last_err
+        return
+    if _umed and is_real_user_question(message or user):
+        yield umed_miss_reply()
         return
     yield (
         "Hiçbir beyin profili yanıt üretemedi. "

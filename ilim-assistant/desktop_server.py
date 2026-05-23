@@ -728,7 +728,7 @@ def health():
         },
         "super_brain": _super_brain_health_block(),
         "build": {
-            "rev": "2026-05-23-ogretim-oncelik-v7",
+            "rev": "2026-05-20-net-ses-duraklat-v9",
             "nebula_kitap": True,
             "fast_paths": os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
             "memory_first": True,
@@ -1734,6 +1734,17 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
     mode_raw = _effective_chat_mode_raw(req)
     mode_norm = normalize_mode(mode_raw)
     coding = req.coding_mode or mode_norm == "programlama"
+    try:
+        from ilim_assistant.ruzgar_umed_cevap_emri import (
+            begin_turn_budget,
+            public_meta,
+            umed_emri_applies,
+        )
+
+        if umed_emri_applies(mode_norm=mode_norm, coding_mode=coding):
+            begin_turn_budget(req.message or "")
+    except Exception:
+        pass
     yield {
         "type": "meta",
         "chat_route": {
@@ -1750,6 +1761,15 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
     yield {"type": "status", "text": "Rüzgar hazırlanıyor…"}
 
     orch: dict[str, Any] = {}
+    try:
+        from ilim_assistant.ruzgar_umed_cevap_emri import public_meta, umed_emri_applies
+
+        if umed_emri_applies(mode_norm=mode_norm, coding_mode=coding):
+            umed_meta = public_meta(req.message or "")
+            orch["umed_cevap_emri"] = umed_meta
+            yield {"type": "meta", "umed_cevap_emri": umed_meta}
+    except Exception:
+        pass
 
     # Bilişsel / empati — hatalı hafızadan ÖNCE («beni anlıyor musun» ≈ «sen beni anlıyor musun»)
     if mode_norm in ("genel", "uretim", "gelisim") and not coding:
@@ -2105,6 +2125,17 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             _skip_prefetch = True
     except Exception:
         pass
+    try:
+        from ilim_assistant.ruzgar_umed_cevap_emri import should_skip_fast_bypass_paths
+
+        if (
+            should_skip_fast_bypass_paths()
+            and mode_norm in ("genel", "uretim", "gelisim")
+            and not coding
+        ):
+            _skip_prefetch = False
+    except Exception:
+        pass
     if mode_norm == "programlama":
         yield {
             "type": "status",
@@ -2159,6 +2190,13 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         )
     except Exception:
         _casual_fast = False
+    try:
+        from ilim_assistant.ruzgar_umed_cevap_emri import should_skip_fast_bypass_paths
+
+        if should_skip_fast_bypass_paths():
+            _casual_fast = False
+    except Exception:
+        pass
 
     if _casual_fast:
         try:
@@ -2195,6 +2233,35 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 "type": "status",
                 "text": f"Hızlı sohbet yolu atlandı: {str(exc)[:120]}",
             }
+
+    try:
+        from ilim_assistant.ruzgar_umed_cevap_emri import (
+            deadline_exceeded,
+            umed_emri_applies,
+            umed_miss_reply,
+        )
+
+        if umed_emri_applies(mode_norm=mode_norm, coding_mode=coding) and deadline_exceeded():
+            from ilim_assistant.ruzgar_egitim import (
+                maybe_egitim_learned_reply,
+                taught_reply_for_message,
+            )
+
+            _mdead = (req.message or "").strip()
+            _lated = taught_reply_for_message(_mdead) or maybe_egitim_learned_reply(
+                _mdead, history=req.history
+            )
+            yield from _iter_instant_chat_events(
+                _lated or umed_miss_reply(),
+                _mdead,
+                session_wake_used=req.session_wake_used,
+                msg_for_wake=req.message,
+                orch=orch,
+                egitim_instant=bool(_lated),
+            )
+            return
+    except Exception:
+        pass
 
     prep = prepare_turn(
         req.message,

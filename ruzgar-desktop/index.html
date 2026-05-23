@@ -167,7 +167,15 @@
                 <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5-3c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
               </svg>
             </button>
-            <button type="button" id="btn-stop" class="btn-stop" hidden title="Yanıt akışını veya sesli okumayı anında durdur" aria-label="Durdur — yanıt veya sesi kes">
+            <button type="button" id="btn-tts-pause" class="btn-tts-pause" hidden title="Sesli okumayı duraklat veya sürdür" aria-label="Sesli okumayı duraklat">
+              <svg class="icon-pause" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M6 5h4v14H6V5zm8 0h4v14h-4V5z"/>
+              </svg>
+              <svg class="icon-play" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" hidden>
+                <path d="M8 5v14l11-7L8 5z"/>
+              </svg>
+            </button>
+            <button type="button" id="btn-stop" class="btn-stop" hidden title="Yanıt akışını veya sesli okumayı tamamen durdur" aria-label="Tamamen durdur">
               Durdur
             </button>
             <span id="tts-status-pill" class="tts-status-pill" hidden aria-live="polite">Sesli okuma…</span>
@@ -251,10 +259,10 @@
         </div>
         <div id="dynamic-workbench" class="dynamic-workbench layout-full">
           <section class="motor-page" id="page-genel">
-            <div class="atelier-info-strip atelier-info-strip-ana">
-              <span class="phase-badge phase-badge-ana phase-badge-faz7">Ana Motor · Faz bilgisi yükleniyor…</span>
-              <span class="atelier-promise">
-                Rüzgar yetenek manifesti sunucudan okunuyor; yeni backend fazları otomatik bu panele yansır.
+            <div class="atelier-info-strip atelier-info-strip-ana atelier-info-strip-ana--loading" id="ana-motor-info-strip">
+              <span class="phase-badge phase-badge-ana phase-badge-faz7" id="ana-motor-phase-badge">Ana Motor · bağlanıyor…</span>
+              <span class="atelier-promise" id="ana-motor-promise">
+                Yerel API (127.0.0.1:8779) kontrol ediliyor…
               </span>
             </div>
             <h3>Ana Motor — Dashboard</h3>

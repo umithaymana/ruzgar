@@ -1155,6 +1155,21 @@ def prepare_turn(
         return msg, hits, "", "", "", archive_direct
 
     web_on = use_web and (m not in _NOWEB_MODES)
+    try:
+        from ilim_assistant.ruzgar_umed_cevap_emri import (
+            remaining_sec,
+            should_defer_web_to_rest,
+            umed_emri_applies,
+        )
+
+        if should_defer_web_to_rest() and umed_emri_applies(
+            mode_norm=m, coding_mode=coding_mode
+        ):
+            has_local = bool(ar_hits or hits)
+            if has_local or remaining_sec() <= 10.0:
+                web_on = False
+    except Exception:
+        pass
     if weather_q and (m not in _NOWEB_MODES):
         web_on = True
     if (

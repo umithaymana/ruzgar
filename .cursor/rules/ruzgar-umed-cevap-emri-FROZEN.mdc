@@ -1,0 +1,36 @@
+---
+description: Ümit abi kesin emri — Rüzgar cevap önceliği ve 15 sn bütçe (DOKUNMA)
+globs:
+  - ilim-assistant/**/*
+  - ruzgar-desktop/**/*
+  - Ruzgar.ps1
+alwaysApply: true
+---
+
+# Rüzgar — Ümit abi kesin cevap emri (DONDURULMUŞ)
+
+**Bu kural ve `ilim-assistant/ilim_assistant/ruzgar_umed_cevap_emri.py` dosyası,
+Ümit abi'nin açık yazılı onayı olmadan değiştirilmez.**
+
+## Cevap öncelik sırası (genel sohbet)
+
+1. Kendi hafızası (`ruzgar_egitim`, `ruzgar_genel_hafiza.json`, doğal sentez)
+2. Yerel hafıza (RAG, arşiv, indeks — `main_engine` / `rag_store`)
+3. Gemini
+4. Groq
+5. Web ikincil (süre kalırsa)
+6. Süre dolunca veya zincir boşsa: «Ümit abi, bu sorunun cevabını bulamadım. Bana öğretir misin?»
+
+## Süre
+
+- Varsayılan üst sınır: **15 saniye** (tüm sıra bu sürede denenir)
+- İlim/açıklama sorularında: **22 saniye** (`RUZGAR_UMED_ILIM_BUDGET_SEC`)
+
+## Beyin zinciri
+
+- `RUZGAR_BRAIN_FALLBACK_CHAIN=gemini,groq` (Ollama bu emirde birincil değil)
+- `RUZGAR_FREE_BRAIN=0` emir açıkken
+
+## Kapatma (yalnızca Ümit abi isterse)
+
+`RUZGAR_UMED_CEVAP_EMRI=0`

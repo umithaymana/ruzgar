@@ -189,6 +189,18 @@ def ensure_ruzgar_env() -> list[str]:
     if not os.environ.get("RUZGAR_GEMINI_MODEL", "").strip():
         os.environ["RUZGAR_GEMINI_MODEL"] = DEFAULT_GEMINI_MODEL
 
+    # Ümit abi kesin emri — cevap sırası: hafıza → yerel → gemini → groq (varsayılan açık)
+    if os.environ.get("RUZGAR_UMED_CEVAP_EMRI", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    ):
+        os.environ.setdefault("RUZGAR_FREE_BRAIN", "0")
+        os.environ.setdefault("RUZGAR_BRAIN_FALLBACK_CHAIN", "gemini,groq")
+        os.environ.setdefault("RUZGAR_EGITIM_MISS_SEC", "15")
+        os.environ.setdefault("RUZGAR_UMED_BUDGET_SEC", "15")
+        os.environ.setdefault("RUZGAR_UMED_ILIM_BUDGET_SEC", "22")
+
     sync_global_api_key_aliases()
     try:
         from ilim_assistant.config import (

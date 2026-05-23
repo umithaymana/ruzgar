@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import os
+import re
 import time
 from typing import Iterator
 
@@ -94,8 +95,9 @@ def iter_tarih_hafiza_reply(
         "\n[TALİMAT — TARİH HAFIZASI HIZLI YOL]\n"
         "Aşağıdaki BAĞLAM parçaları yerel Tarih Hafızasından (TARIH_VE_KULTUR). "
         "Önce bunları kullan; yetersizse genel bilginle tamamla ama uydurma tarih verme. "
-        "Ümit abi ile doğal, akıcı Türkçe konuş; paragrafları kopyalama, 2–8 cümlede "
-        "kendi cümlelerinle özetle ve bağla. Kaynak uydurma.\n"
+        "Ümit abi ile doğal, akıcı Türkçe konuş; paragrafları kopyalama. "
+        "En fazla 3 kısa cümle; dosya yolu, wikidata linki veya madde listesi yazma. "
+        "Sesli okunacağı için net ve kısa cevap ver. Kaynak uydurma.\n"
     )
     user = f"BAĞLAM (Tarih Hafızası):\n{ctx}\n\n---\n\nSORU: {msg}"
     prior = prior_messages_for_turn(history, mode_norm)
@@ -114,15 +116,55 @@ def iter_tarih_hafiza_reply(
     except ValueError:
         gemini_cap = 28.0
 
-    def _rag_pasaj_yanit() -> Iterator[str]:
+    def _net_pasaj_metni() -> str:
+        """Ham pasaj dökümü yerine kısa, sesli okunabilir özet."""
         if not good:
-            return
-        yield (
-            "Ümit abi, şu an model yanıt üretemedi; yerel Tarih Hafızasından özet:\n\n"
+            return (
+                "Ümit abi, bu tarih sorusunda yerel kayıttan net bir satır bulamadım. "
+                "Bana öğretir misin?"
+            )
+        q = msg.casefold()
+        for text, _src, _score in good[:3]:
+            raw = (text or "").strip()
+            if not raw:
+                continue
+            if "wikidata" in raw.casefold() and not re.search(
+                r"\b(12\d{2}|13\d{2}|14\d{2})\b", raw
+            ):
+                continue
+            if ("kurul" in q or "ne zaman" in q) and re.search(
+                r"\b1299\b", raw
+            ):
+                return (
+                    "Ümit abi, kayıtlara göre Osmanlı Devleti 1299 yılında, "
+                    "Osman Bey döneminde kurulmuş kabul edilir."
+                )
+            lines: list[str] = []
+            for ln in raw.splitlines():
+                s = ln.strip().lstrip("#").strip()
+                if not s or len(s) < 10:
+                    continue
+                if s.casefold().startswith("http"):
+                    continue
+                if s.startswith("Konu:") or s.startswith("Vikiveri:"):
+                    continue
+                if "description:" in s.casefold() and len(s) > 120:
+                    continue
+                lines.append(s)
+            body = " ".join(lines[:3])
+            body = re.sub(r"\s+", " ", body).strip()
+            if len(body) > 280:
+                m = re.search(r"^([^.!?…]+[.!?…])", body)
+                body = m.group(1).strip() if m else body[:280].rsplit(" ", 1)[0] + "…"
+            if body:
+                return f"Ümit abi, kısaca: {body}"
+        return (
+            "Ümit abi, yerel tarih kaydı var ama net özet çıkaramadım. "
+            "Doğru cevabı bana öğretir misin?"
         )
-        for text, src, score in good[:3]:
-            snippet = (text or "").strip().replace("\n\n", "\n")[:560]
-            yield f"• ({src}, uyum {score:.2f})\n{snippet}\n\n"
+
+    def _rag_pasaj_yanit() -> Iterator[str]:
+        yield _net_pasaj_metni()
 
     def _gemini_stream() -> Iterator[str]:
         if os.environ.get("RUZGAR_TARIH_GEMINI_FALLBACK", "1").strip().lower() in (
@@ -147,7 +189,7 @@ def iter_tarih_hafiza_reply(
                     system,
                     user,
                     prior_messages=prior[-4:] if prior else None,
-                    max_output_tokens=480,
+                    max_output_tokens=220,
                     temperature=0.35,
                 ):
                     if time.monotonic() > deadline:

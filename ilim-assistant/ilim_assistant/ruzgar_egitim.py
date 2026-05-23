@@ -1099,9 +1099,22 @@ def should_emit_miss_reply(
     if user_message and not is_real_user_question(user_message):
         return False
     try:
-        limit = float(os.environ.get("RUZGAR_EGITIM_MISS_SEC", "15"))
+        from ilim_assistant.ruzgar_umed_cevap_emri import (
+            turn_budget_sec,
+            umed_emri_enabled,
+        )
+
+        if umed_emri_enabled():
+            limit = turn_budget_sec(user_message)
+        else:
+            limit = float(os.environ.get("RUZGAR_EGITIM_MISS_SEC", "15"))
     except ValueError:
         limit = 15.0
+    except Exception:
+        try:
+            limit = float(os.environ.get("RUZGAR_EGITIM_MISS_SEC", "15"))
+        except ValueError:
+            limit = 15.0
     t = (reply or "").strip()
     if elapsed_sec >= limit:
         if len(t) < 280:

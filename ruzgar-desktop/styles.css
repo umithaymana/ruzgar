@@ -884,6 +884,28 @@ body:not(.workbench-hizir-active) #workbench-hizir-tools,
   justify-content: flex-end;
 }
 
+.btn-tts-pause {
+  padding: 8px 10px;
+  border: 1px solid rgba(78, 201, 176, 0.55);
+  border-radius: 6px;
+  background: linear-gradient(180deg, #2a4a42 0%, #1e3330 100%);
+  color: #9ee5d4;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+  box-shadow: 0 0 0 1px rgba(78, 201, 176, 0.2);
+}
+.btn-tts-pause:hover {
+  background: linear-gradient(180deg, #356b5f 0%, #264a44 100%);
+  color: #c8fff0;
+}
+.btn-tts-pause[hidden] {
+  display: none !important;
+}
+
 .btn-stop {
   padding: 8px 12px;
   border: 1px solid #ff5252;
@@ -3723,11 +3745,35 @@ body:has(.layout-v2) .title-row-motors { justify-content: flex-end; }
   letter-spacing: normal;
 }
 .atelier-info-strip-ana {
-  border-color: rgba(255, 45, 45, 0.30);
+  border-color: rgba(138, 180, 216, 0.28);
   background: linear-gradient(
     90deg,
-    rgba(255, 45, 45, 0.10) 0%,
-    rgba(255, 45, 45, 0.02) 100%
+    rgba(78, 120, 160, 0.12) 0%,
+    rgba(30, 40, 52, 0.2) 100%
+  );
+}
+.atelier-info-strip-ana--loading {
+  border-color: rgba(220, 180, 80, 0.35);
+  background: linear-gradient(
+    90deg,
+    rgba(220, 180, 80, 0.12) 0%,
+    rgba(40, 36, 24, 0.15) 100%
+  );
+}
+.atelier-info-strip-ana--ready {
+  border-color: rgba(78, 201, 176, 0.45);
+  background: linear-gradient(
+    90deg,
+    rgba(78, 201, 176, 0.14) 0%,
+    rgba(30, 52, 48, 0.12) 100%
+  );
+}
+.atelier-info-strip-ana--err {
+  border-color: rgba(255, 45, 45, 0.35);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 45, 45, 0.12) 0%,
+    rgba(255, 45, 45, 0.03) 100%
   );
 }
 .phase-badge {
@@ -3758,7 +3804,10 @@ body:has(.layout-v2) .title-row-motors { justify-content: flex-end; }
 .atelier-promise strong {
   color: #ffe4a8;
 }
-.atelier-info-strip-ana .atelier-promise strong {
+.atelier-info-strip-ana--ready .atelier-promise strong {
+  color: #b8f0e4;
+}
+.atelier-info-strip-ana--err .atelier-promise strong {
   color: #ffd6d6;
 }
 
