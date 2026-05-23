@@ -433,11 +433,20 @@ def select_brain_chain(
     except Exception:
         ollama_ok = True
 
+    try:
+        from ilim_assistant.config import local_ollama_disabled
+
+        _no_local_ollama = local_ollama_disabled()
+    except Exception:
+        _no_local_ollama = False
+
     for pid in chain_ids:
         if pid in seen:
             continue
         ep = profiles.get(pid)
         if ep is None:
+            continue
+        if _no_local_ollama and ep.provider == "ollama":
             continue
         if ep.provider == "ollama" and not ollama_ok and gemini_configured():
             continue

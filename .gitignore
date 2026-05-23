@@ -19,6 +19,7 @@ ilim-mobile/node_modules/
 .env.*
 *.local
 ruzgar-desktop/google_api_key.txt
+ilim-assistant/RUZGAR_BRAIN.env
 
 # IDE
 .idea/

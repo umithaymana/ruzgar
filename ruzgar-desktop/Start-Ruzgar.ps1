@@ -6,14 +6,23 @@ $Repo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $Assistant = Join-Path $Repo "ilim-assistant"
 $Desktop = $PSScriptRoot
 $ApiPort = 8779
-$ExpectedBuildRev = "2026-05-23-ollama-bilissel-v2"
+$ExpectedBuildRev = "2026-05-23-ogretim-oncelik-v7"
 if ($env:RUZGAR_API_PORT) { [int]$ApiPort = $env:RUZGAR_API_PORT }
 
-function Import-RuzgarEnvFile {
-  param([string]$IaRoot)
-  $envPath = Join-Path $IaRoot ".env"
-  if (-not (Test-Path $envPath)) { return $false }
-  foreach ($raw in Get-Content $envPath -Encoding UTF8) {
+function Set-RuzgarGeminiKeyFromValue {
+  param([string]$Val)
+  if ($Val) {
+    $env:GLOBAL_API_KEY = $Val
+    $env:GOOGLE_GEMINI_API_KEY = $Val
+    $env:GEMINI_API_KEY = $Val
+    $env:RUZGAR_GEMINI_API_KEY = $Val
+  }
+}
+
+function Import-RuzgarDotEnvFile {
+  param([string]$Path)
+  if (-not (Test-Path $Path)) { return }
+  foreach ($raw in Get-Content $Path -Encoding UTF8) {
     $line = $raw.Trim()
     if (-not $line -or $line.StartsWith("#") -or $line -notmatch "=") { continue }
     $key, $val = $line.Split("=", 2)
@@ -24,23 +33,43 @@ function Import-RuzgarEnvFile {
       $script:ApiPort = [int]$val
     }
     if ($key -in @("GLOBAL_API_KEY", "GOOGLE_GEMINI_API_KEY", "GEMINI_API_KEY", "RUZGAR_GEMINI_API_KEY")) {
-      if ($val) {
-        $env:GLOBAL_API_KEY = $val
-        $env:GOOGLE_GEMINI_API_KEY = $val
-      } else {
-        Remove-Item Env:GLOBAL_API_KEY, Env:GOOGLE_GEMINI_API_KEY, Env:GEMINI_API_KEY, Env:RUZGAR_GEMINI_API_KEY -ErrorAction SilentlyContinue
-      }
+      if ($val) { Set-RuzgarGeminiKeyFromValue -Val $val }
       continue
     }
-    if ($key -match '^(RUZGAR_|OLLAMA_|GROQ_)') {
+    if ($key -eq "GROQ_API_KEY") {
+      if ($val) { $env:GROQ_API_KEY = $val }
+      continue
+    }
+    if ($key -match '^(RUZGAR_|OLLAMA_|GROQ_|GLOBAL_|GOOGLE_GEMINI_|GEMINI_)') {
       if ($val) { Set-Item -Path "Env:$key" -Value $val -Force }
     } elseif (-not (Get-Item -Path "Env:$key" -ErrorAction SilentlyContinue)) {
       if ($val) { Set-Item -Path "Env:$key" -Value $val }
     }
   }
+}
+
+function Import-RuzgarEnvFile {
+  param([string]$IaRoot)
+  $envPath = Join-Path $IaRoot ".env"
+  if (-not (Test-Path $envPath)) { return $false }
+  Import-RuzgarDotEnvFile -Path $envPath
+  Import-RuzgarDotEnvFile -Path (Join-Path $IaRoot "RUZGAR_BRAIN.env")
+  $geminiTxt = Join-Path $Repo "ruzgar-desktop\google_api_key.txt"
+  if ((-not $env:GLOBAL_API_KEY) -and (Test-Path $geminiTxt)) {
+    foreach ($raw in Get-Content $geminiTxt -Encoding UTF8) {
+      $val = $raw.Trim()
+      if ($val -and -not $val.StartsWith("#")) {
+        Set-RuzgarGeminiKeyFromValue -Val $val
+        break
+      }
+    }
+  }
   if ($env:RUZGAR_OLLAMA_ONLY -eq "1" -or $env:RUZGAR_DISABLE_GEMINI -eq "1") {
     Remove-Item Env:GLOBAL_API_KEY, Env:GOOGLE_GEMINI_API_KEY, Env:GEMINI_API_KEY, Env:RUZGAR_GEMINI_API_KEY, Env:GROQ_API_KEY -ErrorAction SilentlyContinue
     $env:RUZGAR_GEMINI_DAEMON = "0"
+  }
+  if ($env:RUZGAR_DISABLE_GROQ -eq "1" -or $env:RUZGAR_OLLAMA_ONLY -eq "1") {
+    Remove-Item Env:GROQ_API_KEY -ErrorAction SilentlyContinue
   }
   return [bool]($env:GLOBAL_API_KEY -and $env:GLOBAL_API_KEY.Trim())
 }
@@ -95,8 +124,8 @@ function Start-ApiOnPort {
   $py = $null
   try { $py = (Get-Command py -ErrorAction Stop).Path } catch {}
   if (-not $py) { $py = (Get-Command python -ErrorAction Stop).Path }
-  $args = @("-3", "-m", "uvicorn", "desktop_server:app", "--host", "127.0.0.1", "--port", "$Port")
-  if ($py -match "python\.exe$") { $args = @("-m", "uvicorn", "desktop_server:app", "--host", "127.0.0.1", "--port", "$Port") }
+  $args = @("-3", "run_desktop_api.py")
+  if ($py -match "python\.exe$") { $args = @("run_desktop_api.py") }
   Start-Process -FilePath $py -ArgumentList $args -WorkingDirectory $Assistant -WindowStyle Hidden
   $deadline = (Get-Date).AddSeconds(90)
   while ((Get-Date) -lt $deadline) {

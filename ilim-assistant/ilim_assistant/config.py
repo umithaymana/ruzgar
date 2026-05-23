@@ -121,6 +121,39 @@ def gemini_ready() -> bool:
     return not gemini_disabled() and bool(global_api_key())
 
 
+def local_ollama_disabled() -> bool:
+    """Yerel Ollama zincirden çıkar — bulut/Colab motoru için."""
+    if ollama_only_mode():
+        return False
+    return os.environ.get("RUZGAR_DISABLE_LOCAL_OLLAMA", "0").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+
+
+def light_chat_mode() -> bool:
+    """Ağır RAG/prefetch atlanır; Gemini/Groq doğrudan yanıt."""
+    return os.environ.get("RUZGAR_LIGHT_CHAT", "0").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+
+
+def skip_rag_warmup() -> bool:
+    if light_chat_mode():
+        return True
+    return os.environ.get("RUZGAR_SKIP_RAG_WARMUP", "0").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+
+
 def config_snapshot() -> dict[str, str | bool]:
     key = global_api_key()
     return {

@@ -98,6 +98,19 @@ def _load_env_file() -> None:
 
 
 _load_env_file()
+try:
+    from ilim_assistant.config import apply_global_api_key_to_runtime, gemini_ready
+
+    apply_global_api_key_to_runtime()
+    if gemini_ready():
+        print("[RÜZGAR] Bulut: Gemini anahtarı yüklü.", file=sys.stderr)
+    else:
+        print(
+            "[RÜZGAR] UYARI: Gemini anahtarı yok — ilim-assistant/RUZGAR_BRAIN.env kontrol edin.",
+            file=sys.stderr,
+        )
+except Exception:
+    pass
 
 
 def _gemini_startup_warmup() -> None:
@@ -163,7 +176,15 @@ def _rag_sync_warmup() -> None:
         print(f"[RÜZGAR] RAG warm-up atlandı: {exc}", file=sys.stderr)
 
 
-_rag_sync_warmup()
+try:
+    from ilim_assistant.config import skip_rag_warmup
+
+    if not skip_rag_warmup():
+        _rag_sync_warmup()
+    else:
+        print("[RÜZGAR] RAG warm-up atlandı (RUZGAR_SKIP_RAG_WARMUP / hafif sohbet).", file=sys.stderr)
+except Exception:
+    _rag_sync_warmup()
 
 
 def pdf_text_runtime_available() -> bool:
@@ -290,9 +311,13 @@ async def _warmup_rag() -> None:
         from ilim_assistant.ruzgar_egitim import (
             ensure_canonical_egitim_pairs,
             sanitize_egitim_hafiza,
+            sync_greeting_egitim_aliases,
         )
 
         ensure_canonical_egitim_pairs()
+        ng = sync_greeting_egitim_aliases()
+        if ng:
+            print(f"[Rüzgar] Selam tetikleyicileri eşlendi: {ng} kayıt.", flush=True)
         n = sanitize_egitim_hafiza()
         try:
             from ilim_assistant.ruzgar_bilissel_analiz import sanitize_empati_hafiza
@@ -703,7 +728,7 @@ def health():
         },
         "super_brain": _super_brain_health_block(),
         "build": {
-            "rev": "2026-05-23-ollama-bilissel-v2",
+            "rev": "2026-05-23-ogretim-oncelik-v7",
             "nebula_kitap": True,
             "fast_paths": os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
             "memory_first": True,
@@ -1617,6 +1642,7 @@ def _iter_instant_chat_events(
     orch: dict[str, Any] | None = None,
     instant_gundelik: bool = False,
     instant_clarify: bool = False,
+    egitim_instant: bool = False,
 ) -> Iterator[dict]:
     """Ollama/RAG beklemeden tek tur bitir (SSE/WS)."""
     full_out = finalize_assistant_reply(reply)
@@ -1639,6 +1665,8 @@ def _iter_instant_chat_events(
         done["orchestra"] = orch
     if instant_gundelik:
         done["instant_gundelik"] = True
+    if egitim_instant:
+        done["egitim_instant"] = True
     if instant_clarify:
         done["instant_clarify"] = True
     yield done
@@ -1761,7 +1789,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     session_wake_used=req.session_wake_used,
                     msg_for_wake=req.message,
                     orch=orch,
-                    instant_gundelik=True,
+                    egitim_instant=True,
                 )
                 return
         except Exception:
@@ -2067,6 +2095,13 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         if fast_paths_enabled() and should_fast_direct_llm(
             req.message, mode_norm, turn_plan
         ):
+            _skip_prefetch = True
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.config import light_chat_mode
+
+        if light_chat_mode():
             _skip_prefetch = True
     except Exception:
         pass

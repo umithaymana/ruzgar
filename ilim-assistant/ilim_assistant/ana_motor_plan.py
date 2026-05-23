@@ -782,11 +782,16 @@ def maybe_gundelik_instant_reply(
             except Exception:
                 return None
         try:
+            from ilim_assistant.ruzgar_egitim import lookup_greeting_egitim_reply
             from ilim_assistant.ruzgar_umed_kurallari import SELAM_STANDART
 
-            return SELAM_STANDART
+            taught = lookup_greeting_egitim_reply(message)
+            return taught or SELAM_STANDART
         except Exception:
-            return "Selam! Ben Rüzgar — buyur, ne yapmak istersin?"
+            return (
+                "Ümit kardeşim, seninle sohbet etmek benim için bir onur. "
+                "Hangi konuda sohbet edelim?"
+            )
     if any(x in blob for x in ("ben geldim", "geldim", "buradayim", "buradayım")):
         return (
             "Hoş geldin Ümit abi — Rüzgar burada, seni dinliyorum. "

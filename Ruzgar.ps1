@@ -23,36 +23,58 @@ function Log([string]$m) {
     "$(Get-Date -Format o) $m" | Out-File -FilePath $Log -Append -Encoding utf8
 }
 
-function Import-RuzgarEnvFile {
-    param([string]$IaRoot)
-    $envPath = Join-Path $IaRoot ".env"
-    if (-not (Test-Path $envPath)) {
-        return $false
+function Set-RuzgarGeminiKeyFromValue {
+    param([string]$Val)
+    if ($Val) {
+        $env:GLOBAL_API_KEY = $Val
+        $env:GOOGLE_GEMINI_API_KEY = $Val
+        $env:GEMINI_API_KEY = $Val
+        $env:RUZGAR_GEMINI_API_KEY = $Val
     }
-    foreach ($raw in Get-Content $envPath -Encoding UTF8) {
+}
+
+function Import-RuzgarDotEnvFile {
+    param([string]$Path)
+    if (-not (Test-Path $Path)) { return }
+    foreach ($raw in Get-Content $Path -Encoding UTF8) {
         $line = $raw.Trim()
         if (-not $line -or $line.StartsWith("#") -or $line -notmatch "=") { continue }
         $key, $val = $line.Split("=", 2)
         $key = $key.Trim()
         $val = $val.Trim().Trim('"').Trim("'")
         if (-not $key) { continue }
-        $forceFromFile = $key -match '^(RUZGAR_|OLLAMA_|GROQ_)'
+        $forceFromFile = $key -match '^(RUZGAR_|OLLAMA_|GROQ_|GLOBAL_|GOOGLE_GEMINI_|GEMINI_)'
         if ($key -in @("GLOBAL_API_KEY", "GOOGLE_GEMINI_API_KEY", "GEMINI_API_KEY", "RUZGAR_GEMINI_API_KEY")) {
-            if ($val) {
-                $env:GLOBAL_API_KEY = $val
-                $env:GOOGLE_GEMINI_API_KEY = $val
-                $env:GEMINI_API_KEY = $val
-                $env:RUZGAR_GEMINI_API_KEY = $val
-            } else {
-                Remove-Item Env:GLOBAL_API_KEY -ErrorAction SilentlyContinue
-                Remove-Item Env:GOOGLE_GEMINI_API_KEY -ErrorAction SilentlyContinue
-                Remove-Item Env:GEMINI_API_KEY -ErrorAction SilentlyContinue
-                Remove-Item Env:RUZGAR_GEMINI_API_KEY -ErrorAction SilentlyContinue
-            }
+            if ($val) { Set-RuzgarGeminiKeyFromValue -Val $val }
+            continue
+        }
+        if ($key -eq "GROQ_API_KEY") {
+            if ($val) { $env:GROQ_API_KEY = $val }
             continue
         }
         if ($forceFromFile -or -not (Get-Item -Path "Env:$key" -ErrorAction SilentlyContinue)) {
             if ($val) { Set-Item -Path "Env:$key" -Value $val -Force }
+        }
+    }
+}
+
+function Import-RuzgarEnvFile {
+    param([string]$IaRoot)
+    $envPath = Join-Path $IaRoot ".env"
+    if (-not (Test-Path $envPath)) {
+        return $false
+    }
+    Import-RuzgarDotEnvFile -Path $envPath
+    $brainEnv = Join-Path $IaRoot "RUZGAR_BRAIN.env"
+    Import-RuzgarDotEnvFile -Path $brainEnv
+    $geminiTxt = Join-Path $Root "ruzgar-desktop\google_api_key.txt"
+    if ((-not $env:GLOBAL_API_KEY) -and (Test-Path $geminiTxt)) {
+        foreach ($raw in Get-Content $geminiTxt -Encoding UTF8) {
+            $val = $raw.Trim()
+            if ($val -and -not $val.StartsWith("#")) {
+                Set-RuzgarGeminiKeyFromValue -Val $val
+                break
+            }
         }
     }
     if ($env:RUZGAR_OLLAMA_ONLY -eq "1" -or $env:RUZGAR_DISABLE_GEMINI -eq "1") {
@@ -146,9 +168,7 @@ function Start-ApiServer {
     }
     $uargs = @()
     foreach ($x in $script:PyArgs) { $uargs += $x }
-    $uargs += "-m"
-    $uargs += "uvicorn"
-    $uargs += "desktop_server:app"
+    $uargs += "run_desktop_api.py"
     $uargs += "--host"
     $uargs += "127.0.0.1"
     $uargs += "--port"
@@ -248,7 +268,24 @@ if ($env:RUZGAR_OLLAMA_ONLY -eq "1") {
     Log "Bulut kapali - yerel Ollama"
 }
 
-$script:RuzgarExpectedBuildRev = "2026-05-23-ollama-bilissel-v2"
+$script:RuzgarExpectedBuildRev = "2026-05-23-ogretim-oncelik-v7"
+
+function Get-RuzgarRemoteApiLine {
+    $rd = Join-Path $Root "ruzgar-desktop"
+    $p = Join-Path $rd "ruzgar_remote_api.txt"
+    if (-not (Test-Path $p)) { return "" }
+    foreach ($raw in Get-Content $p -Encoding UTF8) {
+        $t = $raw.Trim()
+        if ($t -and -not $t.StartsWith("#")) { return $t }
+    }
+    return ""
+}
+
+function Test-RuzgarColabRemote {
+    param([string]$Line)
+    if (-not $Line) { return $false }
+    return ($Line -match '^https?://') -and ($Line -notmatch '(?i)(127\.0\.0\.1|localhost)')
+}
 
 function Test-PortListen {
     param([int]$Port)
@@ -300,8 +337,17 @@ function Start-OllamaIfNeeded {
     }
 }
 
-if (-not $env:RUZGAR_FREE_BRAIN) { $env:RUZGAR_FREE_BRAIN = "1" }
-if ($env:RUZGAR_FREE_BRAIN -eq "1") {
+$script:RuzgarRemoteApiLine = Get-RuzgarRemoteApiLine
+$script:RuzgarUseColab = Test-RuzgarColabRemote -Line $script:RuzgarRemoteApiLine
+
+if ($script:RuzgarUseColab) {
+    Log "Colab uzak API: $($script:RuzgarRemoteApiLine) — yerel Ollama/API atlanacak"
+} elseif ($env:RUZGAR_DISABLE_LOCAL_OLLAMA -eq "1") {
+    Log "RUZGAR_DISABLE_LOCAL_OLLAMA=1 — yerel Ollama baslatilmiyor (bulut beyin)"
+} elseif (-not $env:RUZGAR_FREE_BRAIN) {
+    $env:RUZGAR_FREE_BRAIN = "1"
+}
+if (-not $script:RuzgarUseColab -and $env:RUZGAR_DISABLE_LOCAL_OLLAMA -ne "1" -and $env:RUZGAR_FREE_BRAIN -eq "1") {
     Start-OllamaIfNeeded
 }
 
@@ -404,7 +450,34 @@ if ($serverUp -and (-not (Test-ApiBuildCurrent -Url $apiUrl))) {
     $serverUp = $false
 }
 
-if (-not $serverUp) {
+if ($script:RuzgarUseColab) {
+    $colabRoot = $script:RuzgarRemoteApiLine.Trim().TrimEnd("/")
+    $colabHealth = "$colabRoot/api/health"
+    Log "Colab health: $colabHealth"
+    $serverUp = $false
+    for ($i = 0; $i -lt 24; $i++) {
+        try {
+            $rc = Invoke-WebRequest -Uri $colabHealth -UseBasicParsing -TimeoutSec 8
+            if ($rc.StatusCode -eq 200) {
+                $serverUp = $true
+                Log "Colab API hazir"
+                break
+            }
+        } catch {
+            Log "Colab bekleniyor ($i)..."
+        }
+        Start-Sleep -Seconds 2
+    }
+    if (-not $serverUp) {
+        [void][System.Windows.Forms.MessageBox]::Show(
+            "Colab API yanit vermiyor:`n$colabHealth`n`nColab defterini ve ngrok hucresini calistirin; URL'yi scripts\Set-RuzgarColabUrl.ps1 ile guncelleyin.",
+            "RUZGAR"
+        )
+        exit 1
+    }
+}
+
+if (-not $serverUp -and -not $script:RuzgarUseColab) {
     try {
         Ensure-PythonDeps
         Test-ApiImport -Ia $ia
@@ -476,16 +549,33 @@ if ($WantGradio) {
     }
 }
 
-Write-RuzgarRemoteApiTxt -Port $ApiPort
+if (-not $script:RuzgarUseColab) {
+    Write-RuzgarRemoteApiTxt -Port $ApiPort
+} else {
+    Log "ruzgar_remote_api.txt Colab adresi korunuyor"
+}
+$healthUrl = if ($script:RuzgarUseColab) {
+    "$($script:RuzgarRemoteApiLine.Trim().TrimEnd('/'))/api/health"
+} else {
+    $apiUrl
+}
 try {
-    $finalRc = Invoke-RuzgarPortOps -Command "port-check" -IaRoot $ia -Port $ApiPort
-    if ($finalRc -eq 0) {
-        Log "Baglanti aktif — port $ApiPort dinleniyor (health OK)"
-        if (-not (Test-ApiNebulaBuild -Url $apiUrl)) {
-            Log "UYARI: build.nebula_kitap yok — eski desktop_server; -ForceRestart veya kod guncel mi kontrol edin"
+    if ($script:RuzgarUseColab) {
+        if (Test-ApiBuildCurrent -Url $healthUrl) {
+            Log "Colab baglantisi aktif (health OK)"
+        } else {
+            Log "UYARI: Colab health build uyumsuz - defteri yeniden calistirin"
         }
     } else {
-        Log "UYARI: Electron aciliyor ama port-check rc=$finalRc"
+        $finalRc = Invoke-RuzgarPortOps -Command "port-check" -IaRoot $ia -Port $ApiPort
+        if ($finalRc -eq 0) {
+            Log "Baglanti aktif - port $ApiPort dinleniyor (health OK)"
+            if (-not (Test-ApiNebulaBuild -Url $apiUrl)) {
+                Log "UYARI: build.nebula_kitap yok - eski desktop_server; -ForceRestart veya kod guncel mi kontrol edin"
+            }
+        } else {
+            Log "UYARI: Electron aciliyor ama port-check rc=$finalRc"
+        }
     }
     Start-ElectronApp -AppsRoot $Root
     Log "Electron OK — UI: Ruzgar Baslatildi - Baglanti Aktif"

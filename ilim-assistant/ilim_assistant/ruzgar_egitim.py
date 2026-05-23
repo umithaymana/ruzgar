@@ -137,6 +137,183 @@ def _trigger_matches(message: str, trigger: str) -> bool:
     return False
 
 
+_GREETING_WORDS = frozenset(
+    {
+        "selam",
+        "merhaba",
+        "hey",
+        "slm",
+        "gunaydin",
+        "günaydın",
+        "iyi",
+        "aksam",
+        "akşam",
+        "geceler",
+    }
+)
+_GREETING_ALIAS_TRIGGERS = (
+    "selam",
+    "merhaba",
+    "selam rüzgar",
+    "selam ruzgar",
+)
+
+
+def _is_robot_selam_cevap(cevap: str) -> bool:
+    low = (cevap or "").strip().casefold()
+    if not low:
+        return True
+    return (
+        "buyur, ne yapmak" in low
+        or "ne yapmak istersin" in low
+        or low.startswith("selam! ben rüzgar")
+        or low.startswith("selam! ben ruzgar")
+    )
+
+
+def _soru_is_greeting_trigger(soru: str) -> bool:
+    s = _norm_trigger(soru)
+    if not s or s.startswith("davranis:"):
+        return False
+    words = s.split()
+    if len(words) == 1:
+        return words[0] in _GREETING_WORDS
+    if len(words) <= 3 and words[0] in ("selam", "merhaba", "hey", "slm"):
+        rest = {w for w in words[1:] if w not in ("ruzgar", "rüzgar", "abi", "ümit", "umit")}
+        return not rest or rest <= _GREETING_WORDS
+    return False
+
+
+def _is_plain_greeting_message(message: str) -> bool:
+    m = _norm_trigger(message)
+    if not m:
+        return False
+    words = m.split()
+    if len(words) == 1:
+        return words[0] in ("selam", "merhaba", "hey", "slm")
+    if len(words) <= 3 and words[0] in ("selam", "merhaba"):
+        return _soru_is_greeting_trigger(m)
+    return False
+
+
+def _greeting_alias_triggers(soru: str) -> list[str]:
+    base = _norm_trigger(soru) or "selam"
+    if _soru_is_greeting_trigger(base) or _is_plain_greeting_message(base):
+        out: list[str] = []
+        for t in (base, *_GREETING_ALIAS_TRIGGERS):
+            nt = _norm_trigger(t)
+            if nt and nt not in out:
+                out.append(nt)
+        return out
+    return [base] if base else []
+
+
+def _score_greeting_cevap(cevap: str) -> int:
+    c = (cevap or "").strip()
+    if not c or cevap_is_davranis_talimati(c):
+        return -100
+    if _is_robot_selam_cevap(c):
+        return -50
+    low = c.casefold()
+    score = min(len(c), 220)
+    for word, pts in (
+        ("sohbet", 40),
+        ("onur", 35),
+        ("gurur", 30),
+        ("kardeşim", 25),
+        ("kardeş", 25),
+        ("ümit abi", 20),
+        ("ümit", 15),
+        ("hoş geldin", 15),
+    ):
+        if word in low:
+            score += pts
+    return score
+
+
+def lookup_greeting_egitim_reply(message: str) -> Optional[str]:
+    """
+    Düz «selam» / «merhaba» — hafızadaki «selam rüzgar» vb. öğretilmiş karşılamayı da kullan.
+    """
+    if not _egitim_enabled() or not _is_plain_greeting_message(message):
+        return None
+    try:
+        from ilim_assistant.hafiza_i_ruzgar import get_hafiza_motor
+
+        motor = get_hafiza_motor()
+    except Exception:
+        return None
+
+    best: tuple[int, str] | None = None
+    for row in reversed(motor._kayitlar):
+        if row.get("motor_tipi") != _MOTOR_TIPI:
+            continue
+        soru = str(row.get("soru") or "").strip()
+        cevap = str(row.get("cevap") or "").strip()
+        if not soru or not cevap or not _soru_is_greeting_trigger(soru):
+            continue
+        if cevap_kullaniciya_okunmamali(cevap, user_msg=message):
+            continue
+        try:
+            from ilim_assistant.ruzgar_bilissel_analiz import is_kotu_empati_cevabi
+
+            if is_kotu_empati_cevabi(cevap, soru=soru):
+                continue
+        except Exception:
+            pass
+        sc = _score_greeting_cevap(cevap)
+        if sc < 0:
+            continue
+        if best is None or sc > best[0]:
+            best = (sc, cevap)
+    return best[1] if best else None
+
+
+def _is_bilgi_sorusu(message: str) -> bool:
+    """«uzay nedir» gibi bilgi soruları — hatalı eğitim eşlemesine düşmesin."""
+    raw = (message or "").strip()
+    if len(raw) < 6 or len(raw) > 400:
+        return False
+    low = raw.casefold()
+    if "?" in raw:
+        return True
+    return bool(
+        re.search(
+            r"\b(?:nedir|nelerdir|kimdir|ne demek|ne dir|nasil|nasıl|kaç|kac|nerede|niçin|nicin|niye)\b",
+            low,
+        )
+    )
+
+
+def is_invalid_egitim_pair(soru: str, cevap: str) -> bool:
+    """Yanlış öğretim: cevap başka soru, meta mesaj veya boş."""
+    s = (soru or "").strip()
+    c = (cevap or "").strip()
+    if not s or not c:
+        return True
+    if s.casefold() == c.casefold():
+        return True
+    low = c.casefold()
+    if any(
+        x in low
+        for x in (
+            "öğrendim ve hafızama",
+            "ogrendim ve hafizama",
+            "yanlış cevap",
+            "doğrusunu bana öğret",
+            "empati sorularında",
+        )
+    ):
+        return True
+    if c.endswith("?") or re.search(r"\b(?:nedir|nasıl|nasil)\s*\??\s*$", c, re.I):
+        return True
+    if _is_bilgi_sorusu(s) and _is_bilgi_sorusu(c) and len(c) < 120:
+        return True
+    if len(c) < 25 and _is_bilgi_sorusu(c):
+        return True
+    return False
+
+
 def cevap_is_davranis_talimati(cevap: str) -> bool:
     """Kullanıcıya okunacak cevap değil — nasıl davranacağını anlatan talimat."""
     c = (cevap or "").strip()
@@ -255,7 +432,7 @@ def reply_hangi_konuda_from_history(history: list | None) -> str:
 
 
 def sanitize_egitim_hafiza() -> int:
-    """Davranış talimatı olarak yanlış kaydedilmiş soru→cevap çiftlerini temizler."""
+    """Davranış talimatı / hatalı soru→cevap çiftlerini temizler."""
     try:
         from ilim_assistant.hafiza_i_ruzgar import get_hafiza_motor
 
@@ -273,6 +450,9 @@ def sanitize_egitim_hafiza() -> int:
         cevap = str(row.get("cevap") or "").strip()
         if soru.startswith("Oturum özeti") or soru.startswith("davranis:"):
             kept.append(row)
+            continue
+        if is_invalid_egitim_pair(soru, cevap):
+            removed += 1
             continue
         if cevap_is_davranis_talimati(cevap):
             _save_davranis_teach(
@@ -483,6 +663,7 @@ def lookup_egitim_reply(message: str) -> Optional[str]:
     msg = (message or "").strip()
     if not msg or len(msg) > 500:
         return None
+    bilgi = _is_bilgi_sorusu(msg)
     try:
         from ilim_assistant.ruzgar_bilissel_analiz import (
             is_anlama_empati_sorusu,
@@ -510,6 +691,10 @@ def lookup_egitim_reply(message: str) -> Optional[str]:
             continue
         if cevap_kullaniciya_okunmamali(cevap, user_msg=msg):
             continue
+        if is_invalid_egitim_pair(soru, cevap):
+            continue
+        if bilgi and is_invalid_egitim_pair(msg, cevap):
+            continue
         if str(soru).startswith("davranis:"):
             continue
         if _trigger_matches(msg, soru):
@@ -527,6 +712,14 @@ def lookup_egitim_reply(message: str) -> Optional[str]:
     if matched:
         matched.sort(key=lambda x: (x[0], x[1]), reverse=True)
         return matched[0][3]
+    return lookup_greeting_egitim_reply(msg)
+
+
+def taught_reply_for_message(message: str) -> Optional[str]:
+    """Öğretilmiş soru→cevap (Egitim rafı) — hızlı, doğrudan."""
+    hit = lookup_egitim_reply(message)
+    if hit and not cevap_kullaniciya_okunmamali(hit, user_msg=message):
+        return hit
     return None
 
 
@@ -535,6 +728,9 @@ def maybe_egitim_learned_reply(
     history: list | None = None,
 ) -> Optional[str]:
     """Ümit abi'nin öğrettiği yanıt — talimatı okumaz; sohbet akışını kullanır."""
+    hit = taught_reply_for_message(message)
+    if hit:
+        return hit
     try:
         from ilim_assistant.ruzgar_bilissel_analiz import (
             is_anlama_empati_sorusu,
@@ -556,9 +752,6 @@ def maybe_egitim_learned_reply(
             return understood
     except Exception:
         pass
-    hit = lookup_egitim_reply(message)
-    if hit and not cevap_kullaniciya_okunmamali(hit, user_msg=message):
-        return hit
     if _message_is_casual_turn(message):
         return None
     return None
@@ -620,7 +813,14 @@ def save_teaching_pair(
             "Sonra istersen doğru cevabı öğretirsin."
         )
 
-    if _should_use_anlama(c):
+    greeting_ctx = _soru_is_greeting_trigger(s) or _soru_is_greeting_trigger(
+        baglam_soru
+    ) or _is_plain_greeting_message(s or baglam_soru)
+    skip_anlama = greeting_ctx and (
+        correction or len(c) < 220 or _score_greeting_cevap(c) > 30
+    )
+
+    if _should_use_anlama(c) and not skip_anlama:
         try:
             from ilim_assistant.ruzgar_egitim_anlama import save_teaching_with_understanding
 
@@ -638,6 +838,12 @@ def save_teaching_pair(
         rules = [(s, c)]
     elif s and c and not _looks_like_meta_rule_doc(c):
         rules = _dedupe_rules(rules + [(s, c)])
+    if greeting_ctx and rules:
+        expanded: list[tuple[str, str]] = []
+        for trig, resp in rules:
+            for alias in _greeting_alias_triggers(trig or s or "selam"):
+                expanded.append((alias, resp))
+        rules = _dedupe_rules(expanded)
     if not rules:
         if cevap_kullaniciya_okunmamali(c):
             _save_davranis_teach(c)
@@ -657,6 +863,7 @@ def save_teaching_pair(
                 and resp
                 and not cevap_kullaniciya_okunmamali(resp)
                 and not cevap_is_davranis_talimati(resp)
+                and not is_invalid_egitim_pair(trig, resp)
             ):
                 motor.ekle_bilgi(trig, resp, motor_tipi=_MOTOR_TIPI)
     except Exception as exc:
@@ -696,14 +903,53 @@ def is_teach_mode_trigger(message: str) -> bool:
     return bool(re.search(r"\b(?:bunu|şunu|sunu)\s+öğret\b|\b(?:bunu|şunu|sunu)\s+ogret\b", low))
 
 
-def ensure_canonical_egitim_pairs() -> None:
-    """Ümit abi çekirdek selam kuralını hafızada güncel tutar."""
+def _egitim_has_trigger(motor: Any, trigger: str) -> bool:
+    tr = _norm_trigger(trigger)
+    for row in motor._kayitlar:
+        if row.get("motor_tipi") != _MOTOR_TIPI:
+            continue
+        if _norm_trigger(str(row.get("soru") or "")) == tr:
+            return True
+    return False
+
+
+def sync_greeting_egitim_aliases() -> int:
+    """Öğretilmiş selam cevabını düz selam/merhaba tetikleyicilerine yayar."""
     try:
         from ilim_assistant.hafiza_i_ruzgar import get_hafiza_motor
+        from ilim_assistant.ruzgar_umed_kurallari import SELAM_STANDART
 
         motor = get_hafiza_motor()
-        motor.ekle_bilgi("selam rüzgar", SELAM_RUZGAR, motor_tipi=_MOTOR_TIPI)
-        motor.ekle_bilgi("selam ruzgar", SELAM_RUZGAR, motor_tipi=_MOTOR_TIPI)
+    except Exception:
+        return 0
+    best = lookup_greeting_egitim_reply("selam")
+    if not best or _is_robot_selam_cevap(best):
+        best = SELAM_STANDART
+    added = 0
+    for trig in ("selam", "merhaba"):
+        if _egitim_has_trigger(motor, trig):
+            continue
+        motor.ekle_bilgi(trig, best, motor_tipi=_MOTOR_TIPI)
+        added += 1
+    return added
+
+
+def ensure_canonical_egitim_pairs() -> None:
+    """Çekirdek selam — yalnızca tetikleyici yoksa eklenir (öğretilmiş cevabı ezmez)."""
+    try:
+        from ilim_assistant.hafiza_i_ruzgar import get_hafiza_motor
+        from ilim_assistant.ruzgar_umed_kurallari import SELAM_STANDART
+
+        motor = get_hafiza_motor()
+        for trig, cevap in (
+            ("selam", SELAM_STANDART),
+            ("merhaba", SELAM_STANDART),
+            ("selam rüzgar", SELAM_RUZGAR),
+            ("selam ruzgar", SELAM_RUZGAR),
+        ):
+            if not _egitim_has_trigger(motor, trig):
+                motor.ekle_bilgi(trig, cevap, motor_tipi=_MOTOR_TIPI)
+        sync_greeting_egitim_aliases()
     except Exception:
         pass
 
@@ -717,6 +963,13 @@ def try_consume_egitim_command(message: str, history: list | None = None) -> Opt
         return None
     raw = (message or "").strip()
     if not raw:
+        return None
+
+    pend = get_pending()
+    if _is_bilgi_sorusu(raw) and str(pend.get("mode") or "") not in (
+        "await_teaching",
+        "await_correction",
+    ):
         return None
 
     if is_wrong_answer_trigger(raw):
@@ -877,6 +1130,9 @@ def wrap_miss_if_needed(
     reply: str, user_message: str, elapsed_sec: float
 ) -> tuple[str, bool]:
     """Gerekirse miss metni döner ve öğretme bekler."""
+    taught = taught_reply_for_message(user_message)
+    if taught:
+        return taught, False
     if not should_emit_miss_reply(reply, elapsed_sec, user_message=user_message):
         return reply, False
     soru = (user_message or "").strip()

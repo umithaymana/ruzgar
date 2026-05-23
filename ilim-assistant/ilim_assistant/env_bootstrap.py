@@ -34,9 +34,9 @@ _GEMINI_DEFAULTS: dict[str, str] = {
 
 # Varsayılan: yalnızca yerel Ollama (tam bağımsız)
 _BRAIN_DEFAULTS: dict[str, str] = {
-    "RUZGAR_OLLAMA_ONLY": "1",
-    "RUZGAR_DISABLE_GEMINI": "1",
-    "RUZGAR_DISABLE_GROQ": "1",
+    "RUZGAR_OLLAMA_ONLY": "0",
+    "RUZGAR_DISABLE_GEMINI": "0",
+    "RUZGAR_DISABLE_GROQ": "0",
     "RUZGAR_FREE_BRAIN": "1",
     "RUZGAR_BRAIN_FALLBACK_CHAIN": "denge,hizli,kod",
     "RUZGAR_GEMINI_DAEMON": "0",
@@ -82,13 +82,27 @@ def sync_global_api_key_aliases() -> str:
     return key
 
 
-def _apply_kv(key: str, val: str, *, source: str, loaded: list[str]) -> None:
+def _apply_kv(
+    key: str,
+    val: str,
+    *,
+    source: str,
+    loaded: list[str],
+    force_secrets: bool = False,
+) -> None:
     if not val:
         return
     if key in _GEMINI_KEY_NAMES:
-        if not os.environ.get("GLOBAL_API_KEY", "").strip():
+        if force_secrets or not os.environ.get("GLOBAL_API_KEY", "").strip():
             os.environ["GLOBAL_API_KEY"] = val
             loaded.append(f"{source}:{key}")
+        return
+    if key == "GROQ_API_KEY" and force_secrets:
+        os.environ["GROQ_API_KEY"] = val
+        loaded.append(f"{source}:{key}")
+        return
+    if force_secrets and key.startswith(("RUZGAR_", "GROQ_", "OLLAMA_")):
+        os.environ[key] = val
         return
     if key not in os.environ:
         os.environ[key] = val
@@ -96,9 +110,10 @@ def _apply_kv(key: str, val: str, *, source: str, loaded: list[str]) -> None:
             loaded.append(f"{source}:{key}")
 
 
-def _load_dotenv_file(path: Path, loaded: list[str]) -> None:
+def _load_dotenv_file(path: Path, loaded: list[str], *, force_secrets: bool = False) -> None:
     if not path.is_file():
         return
+    force_project = path.name in (".env", "RUZGAR_BRAIN.env")
     try:
         text = path.read_text(encoding="utf-8")
     except OSError:
@@ -111,7 +126,22 @@ def _load_dotenv_file(path: Path, loaded: list[str]) -> None:
         if parsed is None:
             continue
         key, val = parsed
-        _apply_kv(key, val, source=path.name, loaded=loaded)
+        if force_project and val and (
+            key.startswith("RUZGAR_")
+            or key.startswith("OLLAMA_")
+            or key.startswith("GROQ_")
+            or key in _GEMINI_KEY_NAMES
+        ):
+            os.environ[key] = val
+            loaded.append(f"{path.name}:{key}")
+            continue
+        _apply_kv(
+            key,
+            val,
+            source=path.name,
+            loaded=loaded,
+            force_secrets=force_secrets,
+        )
 
 
 def _load_google_api_key_txt(path: Path, loaded: list[str]) -> None:
@@ -142,6 +172,9 @@ def ensure_ruzgar_env() -> list[str]:
     ]
     for p in candidates:
         _load_dotenv_file(p, loaded)
+    brain_env = _ILIM_ROOT / "RUZGAR_BRAIN.env"
+    if brain_env.is_file():
+        _load_dotenv_file(brain_env, loaded, force_secrets=True)
 
     _load_google_api_key_txt(_REPO_ROOT / "ruzgar-desktop" / "google_api_key.txt", loaded)
 
@@ -158,9 +191,18 @@ def ensure_ruzgar_env() -> list[str]:
 
     sync_global_api_key_aliases()
     try:
-        from ilim_assistant.config import suppress_cloud_runtime_keys
+        from ilim_assistant.config import (
+            gemini_disabled,
+            groq_disabled,
+            suppress_cloud_runtime_keys,
+        )
 
         suppress_cloud_runtime_keys()
+        if not gemini_disabled() and brain_env.is_file():
+            _load_dotenv_file(brain_env, loaded, force_secrets=True)
+            sync_global_api_key_aliases()
+        if not groq_disabled() and brain_env.is_file():
+            _load_dotenv_file(brain_env, loaded, force_secrets=True)
     except Exception:
         pass
     try:

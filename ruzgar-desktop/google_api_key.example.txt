@@ -1,0 +1,3 @@
+# Yalnızca Gemini anahtarı (tek satır, # olmadan):
+# https://aistudio.google.com/apikey
+# Bu dosyayı google_api_key.txt olarak kopyalayıp anahtarı yapıştırın.

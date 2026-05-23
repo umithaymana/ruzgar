@@ -1,0 +1,5 @@
+# Colab ngrok HTTPS adresi (örnek). Kopyala: ruzgar_remote_api.txt
+# Yerel kullanım için bu satırı silin veya:
+# http://127.0.0.1:8779
+
+# https://xxxx-xxxx.ngrok-free.app
