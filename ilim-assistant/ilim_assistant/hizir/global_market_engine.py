@@ -271,8 +271,10 @@ def normalize_pazar_kanallari(channels: list[str] | None) -> frozenset[str]:
     if channels is None:
         return frozenset(ALL_PAZAR_KANALLARI)
     got = frozenset(str(c).strip().lower() for c in channels if str(c).strip())
+    if not got:
+        return frozenset(ALL_PAZAR_KANALLARI)
     valid = frozenset(x for x in got if x in ALL_PAZAR_KANALLARI)
-    return valid
+    return valid if valid else frozenset(ALL_PAZAR_KANALLARI)
 
 
 def sorted_listings_price_asc(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:

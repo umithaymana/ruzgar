@@ -1982,12 +1982,15 @@ const HIZIR_PAZAR_CH_STORAGE = "ruzgar:hizir:pazar-kanallari";
 
 function hizirCollectPazarCheckboxIds() {
   const panel = el.hizirPazarlarPanel || document.getElementById("hizir-pazarlar-panel");
-  if (!panel) return [];
+  if (!panel) return null;
   const out = [];
   panel.querySelectorAll("input[data-hizir-ch]").forEach((inp) => {
-    if (inp.checked) out.push(String(inp.getAttribute("data-hizir-ch") || ""));
+    if (inp.checked) {
+      const id = String(inp.getAttribute("data-hizir-ch") || "").trim();
+      if (id) out.push(id);
+    }
   });
-  return out;
+  return out.length ? out : null;
 }
 
 function hizirPersistPazarChecks() {
@@ -2010,7 +2013,7 @@ function hizirLoadPazarChecksFromStorage() {
   } catch (_) {
     return;
   }
-  if (!Array.isArray(arr)) return;
+  if (!Array.isArray(arr) || !arr.length) return;
   const want = new Set(arr);
   panel.querySelectorAll("input[data-hizir-ch]").forEach((inp) => {
     const id = String(inp.getAttribute("data-hizir-ch") || "");
@@ -2537,6 +2540,14 @@ const HIZIR_MODU = {
     if (el.btnHizirTara) {
       el.btnHizirTara.addEventListener("click", () => {
         void this.pazarTara();
+      });
+    }
+    if (el.hizirTaraQuery) {
+      el.hizirTaraQuery.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
+          e.preventDefault();
+          void this.pazarTara();
+        }
       });
     }
     if (el.btnOpenHizirPanel) {
@@ -6469,6 +6480,9 @@ async function streamChat(userText) {
     mode: chatMode,
     workspace_root: workspaceRoot || undefined,
     autonom_research: !!(el.optAutonom && el.optAutonom.checked),
+    ...(chatMode === "hizir"
+      ? { hizir_channels: hizirCollectPazarCheckboxIds() }
+      : {}),
   };
 
   const dec = new TextDecoder("utf-8");
@@ -7055,9 +7069,26 @@ async function streamChat(userText) {
  * @param {{ skipUserBubble?: boolean }} opts Ses metni zaten gösterildiyse Yıldırım: çift balon yok.
  */
 function hizirChatImpliesProductScan(text) {
-  const low = String(text || "").toLowerCase();
+  const raw = String(text || "").trim();
+  if (!raw) return false;
+  const low = raw.toLowerCase();
   if (/ürün\w*\s+.{0,50}\s*tara/.test(low)) return true;
-  return /\btara\b/.test(low) && /ürün|urun|pazar|fiyat|stok|trendyol|amazon/.test(low);
+  if (/\btara\b/.test(low) && /ürün|urun|pazar|fiyat|stok|trendyol|amazon/.test(low)) {
+    return true;
+  }
+  if (/^pazar\s+(yerini|tara)/i.test(raw)) return true;
+  if (currentMode !== "hizir") return false;
+  if (
+    /^(merhaba|selam|nasılsın|nasilsin|teşekkür|tesekkur|yardım|yardim|evet|hayır|hayir)\b/i.test(
+      low,
+    )
+  ) {
+    return false;
+  }
+  if (/\?/.test(raw) && !/fiyat|ucuz|ne kadar|kaç tl|kac tl|trendyol|amazon/i.test(low)) {
+    return false;
+  }
+  return raw.length >= 2 && raw.length <= 120;
 }
 
 function hizirQueryFromChat(text) {

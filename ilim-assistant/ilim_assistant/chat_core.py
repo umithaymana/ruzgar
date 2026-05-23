@@ -820,6 +820,7 @@ def prepare_turn(
     orchestration_out: dict[str, Any] | None = None,
     question_plan: Any | None = None,
     agent_context: str | None = None,
+    pazar_kanallari: list[str] | None = None,
 ):
     """Boş mesajda None; aksi halde (msg, hits, user_payload, system, model, ogrenme_direct).
 
@@ -1281,6 +1282,7 @@ def prepare_turn(
                 weather_q=weather_q,
                 has_live_weather_block=bool((live_weather_ctx or "").strip()),
                 mode_norm=m,
+                pazar_kanallari=pazar_kanallari if m == "hizir" else None,
             )
         except Exception:
             op_ctx = ""

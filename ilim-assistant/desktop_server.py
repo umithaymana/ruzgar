@@ -377,6 +377,10 @@ class ChatRequest(BaseModel):
     workspace_root: str | None = None
     # Web ara kapalı olsa bile mesajdaki https URL’lerini oku
     read_message_links: bool = True
+    hizir_channels: list[str] | None = Field(
+        default=None,
+        description="HIZIR modunda seçili pazar kanalları; boş/atlanırsa tüm kanallar",
+    )
 
 
 def _effective_chat_mode_raw(req: ChatRequest) -> str:
@@ -939,7 +943,7 @@ def api_hizir_pazar_tara(body: HizirPazarTaraBody):
             msg,
             weather_q=False,
             has_live_weather_block=False,
-            mode_norm="genel",
+            mode_norm="hizir",
             pazar_kanallari=body.channels,
         )
         from ilim_assistant.hizir.ticaret_avci import reconcile_ticaret_avci_firsatlar
@@ -2421,6 +2425,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         orchestration_out=orch,
         question_plan=turn_plan,
         agent_context=agent_context or None,
+        pazar_kanallari=req.hizir_channels if mode_norm == "hizir" else None,
     )
     if prep is None:
         yield {"type": "error", "text": "Boş mesaj"}

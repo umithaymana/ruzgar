@@ -129,6 +129,44 @@ def _commercial_intent(message: str) -> bool:
     return False
 
 
+def _hizir_simple_product_query(message: str) -> bool:
+    """HIZIR modunda panel arama kutusu ile uyumlu kısa ürün sorgusu."""
+    raw = (message or "").strip()
+    if len(raw) < 2 or len(raw) > 120:
+        return False
+    low = raw.lower()
+    if any(
+        x in low
+        for x in (
+            "merhaba",
+            "selam",
+            "nasılsın",
+            "nasilsin",
+            "teşekkür",
+            "tesekkur",
+            "yardım",
+            "yardim",
+            "internette ara",
+            "duckduckgo",
+            "hava durumu",
+            "uçuş",
+            "ucus",
+            "açıkla",
+            "acikla",
+            "nedir",
+            "ne demek",
+        )
+    ):
+        return False
+    if _komuta_pazar_tara(message) or _urun_tara_intent(message):
+        return False
+    if "?" in raw and not any(
+        x in low for x in ("fiyat", "ucuz", "ne kadar", "kaç tl", "kac tl", "trendyol", "amazon")
+    ):
+        return False
+    return True
+
+
 def _flight_intent(message: str) -> bool:
     low = (message or "").lower()
     return any(
@@ -188,7 +226,7 @@ def build_dynamic_operasyon_context(
     scan_intent = (
         _commercial_intent(msg)
         or _komuta_pazar_tara(msg)
-        or (hizir_mod and _urun_tara_intent(msg))
+        or (hizir_mod and (_urun_tara_intent(msg) or _hizir_simple_product_query(msg)))
     )
     if scan_intent:
         cached = find_fresh_genel_girdi(

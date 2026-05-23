@@ -21,9 +21,10 @@ def get_pazar_kanallari() -> list[str] | None:
 
 
 def normalize_kanal_listesi(raw: Any) -> list[str] | None:
-    """None → bağlam yok (tüm kanallar). Boş liste → kullanıcı hiç kanal seçmedi."""
+    """None veya boş liste → tüm kanallar (hiç seçilmemiş / hepsi kaldırılmış güvenli varsayılan)."""
     if raw is None:
         return None
     if not isinstance(raw, list):
         return None
-    return [str(x).strip().lower() for x in raw if str(x).strip()]
+    got = [str(x).strip().lower() for x in raw if str(x).strip()]
+    return got if got else None
