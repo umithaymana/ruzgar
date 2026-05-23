@@ -32,6 +32,21 @@ _GEMINI_DEFAULTS: dict[str, str] = {
     "RUZGAR_BRAIN_PROFILE": "auto",
 }
 
+# Varsayılan: yalnızca yerel Ollama (tam bağımsız)
+_BRAIN_DEFAULTS: dict[str, str] = {
+    "RUZGAR_OLLAMA_ONLY": "1",
+    "RUZGAR_DISABLE_GEMINI": "1",
+    "RUZGAR_DISABLE_GROQ": "1",
+    "RUZGAR_FREE_BRAIN": "1",
+    "RUZGAR_BRAIN_FALLBACK_CHAIN": "denge,hizli,kod",
+    "RUZGAR_GEMINI_DAEMON": "0",
+    "RUZGAR_FAST_BILGI_GEMINI": "0",
+    "RUZGAR_CASUAL_FAST_GEMINI": "0",
+    "RUZGAR_GEMINI_ONLY": "0",
+    "RUZGAR_TARIH_GEMINI_FIRST": "0",
+    "RUZGAR_FAZ9_GEMINI_FIRST_FOR_FACTS": "0",
+}
+
 _loaded_once = False
 
 
@@ -134,10 +149,34 @@ def ensure_ruzgar_env() -> list[str]:
         if not os.environ.get(key, "").strip():
             os.environ[key] = val
 
+    for key, val in _BRAIN_DEFAULTS.items():
+        if not os.environ.get(key, "").strip():
+            os.environ[key] = val
+
     if not os.environ.get("RUZGAR_GEMINI_MODEL", "").strip():
         os.environ["RUZGAR_GEMINI_MODEL"] = DEFAULT_GEMINI_MODEL
 
     sync_global_api_key_aliases()
+    try:
+        from ilim_assistant.config import suppress_cloud_runtime_keys
+
+        suppress_cloud_runtime_keys()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.defaults import (
+            DEFAULT_OLLAMA_CHAT_MODEL,
+            DEFAULT_OLLAMA_FAST_MODEL,
+        )
+
+        if not os.environ.get("OLLAMA_CHAT_MODEL", "").strip():
+            os.environ["OLLAMA_CHAT_MODEL"] = DEFAULT_OLLAMA_CHAT_MODEL
+        if not os.environ.get("RUZGAR_BRAIN_DENGE_MODEL", "").strip():
+            os.environ["RUZGAR_BRAIN_DENGE_MODEL"] = DEFAULT_OLLAMA_CHAT_MODEL
+        if not os.environ.get("RUZGAR_BRAIN_HIZLI_MODEL", "").strip():
+            os.environ["RUZGAR_BRAIN_HIZLI_MODEL"] = DEFAULT_OLLAMA_FAST_MODEL
+    except Exception:
+        pass
 
     if loaded:
         os.environ["RUZGAR_ENV_LOADED_FROM"] = ",".join(loaded[:12])

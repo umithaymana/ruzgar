@@ -9,6 +9,8 @@ from typing import Any, Iterator, Optional
 
 _INGEST_SKIP = re.compile(
     r"hat[ıi]rla|haf[ıi]zana\s+kaydet|dosyas[ıi]n[ıi]\s+oku|nebula\s+durum|"
+    r"yanl[ıi]ş\s*cevap|yanlis\s*cevap|cevab[ıi]n\s+şu\s+olmalı|cevabin\s+su\s+olmalı|"
+    r"doğru\s+cevap|dogru\s+cevap|"
     r"\.json\b|\.txt\b|\.md\b",
     re.I,
 )
@@ -51,6 +53,13 @@ def should_skip_hafiza_dogal(message: str) -> bool:
         return True
     if bool(_INGEST_SKIP.search(m)):
         return True
+    try:
+        from ilim_assistant.ruzgar_egitim import lookup_egitim_reply
+
+        if lookup_egitim_reply(m):
+            return True
+    except Exception:
+        pass
     try:
         from ilim_assistant.ana_motor_plan import looks_like_casual_social_chat
 

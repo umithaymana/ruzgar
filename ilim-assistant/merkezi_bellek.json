@@ -9,7 +9,141 @@
         "ticaret_avci": "2",
         "pas_gecildi": []
       },
-      "firsatlar": [],
+      "firsatlar": [
+        {
+          "kart_id": "PFL|Hepsiburada|samsung galaxy a07 128 gb 4 gb ram samsung türkiye garantili siyah|35.0|TRY|HBCV00009",
+          "tarih": "2026-05-23T07:52:56.691192+00:00",
+          "otomatik": true,
+          "tur": "FIYAT_LISTESI",
+          "ozet_metin": "🔎 Fiyat Dedektifi | Hepsiburada · 35 TL — İlan fiyatı; kargo satıcı / kampanyaya göre dahil veya ayrı olabilir.",
+          "urun_adi": "Samsung Galaxy A07 128 GB 4 GB Ram (Samsung Türkiye Garantili) Siyah",
+          "platform": "Hepsiburada",
+          "pazar_yeri": "Hepsiburada",
+          "sorgu": "samsung s 25 telefon",
+          "kaynak_fiyat": 35.0,
+          "para_birimi": "TRY",
+          "bolge": "Yerel (TR)",
+          "gorsel_url": "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27120%27%20height%3D%27120%27%20viewBox%3D%270%200%20120%20120%27%3E%3Crect%20width%3D%27120%27%20height%3D%27120%27%20rx%3D%2712%27%20fill%3D%27%2523232a34%27/%3E%3Crect%20x%3D%2730%27%20y%3D%2734%27%20width%3D%2760%27%20height%3D%2744%27%20rx%3D%274%27%20fill%3D%27none%27%20stroke%3D%27%2523788a9c%27%20stroke-width%3D%272%27/%3E%3Ccircle%20cx%3D%2744%27%20cy%3D%2750%27%20r%3D%274%27%20fill%3D%27%2523788a9c%27/%3E%3Cpath%20d%3D%27M76%2070%20L50%2050%27%20stroke%3D%27%2523788a9c%27%20stroke-width%3D%272%27/%3E%3Ctext%20x%3D%2760%27%20y%3D%27104%27%20text-anchor%3D%27middle%27%20fill%3D%27%25235c6b7c%27%20font-size%3D%2711%27%20font-family%3D%27system-ui%2Csans-serif%27%3E552%3C/text%3E%3C/svg%3E",
+          "satinal_url": "https://www.hepsiburada.com/samsung-galaxy-a07-128-gb-4-gb-ram-samsung-turkiye-garantili-siyah-p-HBCV00009S6C62",
+          "kargo_notu": "İlan fiyatı; kargo satıcı / kampanyaya göre dahil veya ayrı olabilir.",
+          "lider_fiyat": true,
+          "grup_etiketi": "Samsung Galaxy A07 128",
+          "yeni_grup": true,
+          "vitrin_sira": 0,
+          "stok": true,
+          "potansiyel_kar": 0.945946
+        },
+        {
+          "kart_id": "PFL|Hepsiburada|samsung galaxy a56 5g 256 gb 8 gb ram samsung türkiye garantili siyah|250.0|TRY|HBCV000088",
+          "tarih": "2026-05-23T07:52:56.691192+00:00",
+          "otomatik": true,
+          "tur": "FIYAT_LISTESI",
+          "ozet_metin": "🔎 Fiyat Dedektifi | Hepsiburada · 250 TL — İlan fiyatı; kargo satıcı / kampanyaya göre dahil veya ayrı olabilir.",
+          "urun_adi": "Samsung Galaxy A56 5g 256 GB 8 GB Ram (Samsung Türkiye Garantili) Siyah",
+          "platform": "Hepsiburada",
+          "pazar_yeri": "Hepsiburada",
+          "sorgu": "samsung s 25 telefon",
+          "kaynak_fiyat": 250.0,
+          "para_birimi": "TRY",
+          "bolge": "Yerel (TR)",
+          "gorsel_url": "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27120%27%20height%3D%27120%27%20viewBox%3D%270%200%20120%20120%27%3E%3Crect%20width%3D%27120%27%20height%3D%27120%27%20rx%3D%2712%27%20fill%3D%27%2523232a34%27/%3E%3Crect%20x%3D%2730%27%20y%3D%2734%27%20width%3D%2760%27%20height%3D%2744%27%20rx%3D%274%27%20fill%3D%27none%27%20stroke%3D%27%2523788a9c%27%20stroke-width%3D%272%27/%3E%3Ccircle%20cx%3D%2744%27%20cy%3D%2750%27%20r%3D%274%27%20fill%3D%27%2523788a9c%27/%3E%3Cpath%20d%3D%27M76%2070%20L50%2050%27%20stroke%3D%27%2523788a9c%27%20stroke-width%3D%272%27/%3E%3Ctext%20x%3D%2760%27%20y%3D%27104%27%20text-anchor%3D%27middle%27%20fill%3D%27%25235c6b7c%27%20font-size%3D%2711%27%20font-family%3D%27system-ui%2Csans-serif%27%3E557%3C/text%3E%3C/svg%3E",
+          "satinal_url": "https://www.hepsiburada.com/samsung-galaxy-a56-5g-256-gb-8-gb-ram-samsung-turkiye-garantili-siyah-p-HBCV000088BXWW",
+          "kargo_notu": "İlan fiyatı; kargo satıcı / kampanyaya göre dahil veya ayrı olabilir.",
+          "lider_fiyat": false,
+          "grup_etiketi": "Samsung Galaxy A56 256",
+          "yeni_grup": true,
+          "vitrin_sira": 1,
+          "stok": true,
+          "potansiyel_kar": 6.756757
+        },
+        {
+          "kart_id": "PFL|Hepsiburada|samsung galaxy a57 5g 256 gb 8 gb ram samsung türkiye garantili lacivert|250.0|TRY|HBCV0000",
+          "tarih": "2026-05-23T07:52:56.691192+00:00",
+          "otomatik": true,
+          "tur": "FIYAT_LISTESI",
+          "ozet_metin": "🔎 Fiyat Dedektifi | Hepsiburada · 250 TL — İlan fiyatı; kargo satıcı / kampanyaya göre dahil veya ayrı olabilir.",
+          "urun_adi": "Samsung Galaxy A57 5g 256 GB 8 GB Ram (Samsung Türkiye Garantili) Lacivert",
+          "platform": "Hepsiburada",
+          "pazar_yeri": "Hepsiburada",
+          "sorgu": "samsung s 25 telefon",
+          "kaynak_fiyat": 250.0,
+          "para_birimi": "TRY",
+          "bolge": "Yerel (TR)",
+          "gorsel_url": "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27120%27%20height%3D%27120%27%20viewBox%3D%270%200%20120%20120%27%3E%3Crect%20width%3D%27120%27%20height%3D%27120%27%20rx%3D%2712%27%20fill%3D%27%2523232a34%27/%3E%3Crect%20x%3D%2730%27%20y%3D%2734%27%20width%3D%2760%27%20height%3D%2744%27%20rx%3D%274%27%20fill%3D%27none%27%20stroke%3D%27%2523788a9c%27%20stroke-width%3D%272%27/%3E%3Ccircle%20cx%3D%2744%27%20cy%3D%2750%27%20r%3D%274%27%20fill%3D%27%2523788a9c%27/%3E%3Cpath%20d%3D%27M76%2070%20L50%2050%27%20stroke%3D%27%2523788a9c%27%20stroke-width%3D%272%27/%3E%3Ctext%20x%3D%2760%27%20y%3D%27104%27%20text-anchor%3D%27middle%27%20fill%3D%27%25235c6b7c%27%20font-size%3D%2711%27%20font-family%3D%27system-ui%2Csans-serif%27%3E975%3C/text%3E%3C/svg%3E",
+          "satinal_url": "https://www.hepsiburada.com/samsung-galaxy-a57-5g-256-gb-8-gb-ram-samsung-turkiye-garantili-lacivert-p-HBCV0000DU666G",
+          "kargo_notu": "İlan fiyatı; kargo satıcı / kampanyaya göre dahil veya ayrı olabilir.",
+          "lider_fiyat": false,
+          "grup_etiketi": "Samsung Galaxy A57 256",
+          "yeni_grup": true,
+          "vitrin_sira": 2,
+          "stok": true,
+          "potansiyel_kar": 6.756757
+        },
+        {
+          "kart_id": "PFL|Hepsiburada|samsung galaxy s24 256 gb 8 gb ram samsung türkiye garantili siyah|250.0|TRY|HBCV00005",
+          "tarih": "2026-05-23T07:52:56.691192+00:00",
+          "otomatik": true,
+          "tur": "FIYAT_LISTESI",
+          "ozet_metin": "🔎 Fiyat Dedektifi | Hepsiburada · 250 TL — İlan fiyatı; kargo satıcı / kampanyaya göre dahil veya ayrı olabilir.",
+          "urun_adi": "Samsung Galaxy S24 256 GB 8 GB Ram (Samsung Türkiye Garantili) Siyah",
+          "platform": "Hepsiburada",
+          "pazar_yeri": "Hepsiburada",
+          "sorgu": "samsung s 25 telefon",
+          "kaynak_fiyat": 250.0,
+          "para_birimi": "TRY",
+          "bolge": "Yerel (TR)",
+          "gorsel_url": "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27120%27%20height%3D%27120%27%20viewBox%3D%270%200%20120%20120%27%3E%3Crect%20width%3D%27120%27%20height%3D%27120%27%20rx%3D%2712%27%20fill%3D%27%2523232a34%27/%3E%3Crect%20x%3D%2730%27%20y%3D%2734%27%20width%3D%2760%27%20height%3D%2744%27%20rx%3D%274%27%20fill%3D%27none%27%20stroke%3D%27%2523788a9c%27%20stroke-width%3D%272%27/%3E%3Ccircle%20cx%3D%2744%27%20cy%3D%2750%27%20r%3D%274%27%20fill%3D%27%2523788a9c%27/%3E%3Cpath%20d%3D%27M76%2070%20L50%2050%27%20stroke%3D%27%2523788a9c%27%20stroke-width%3D%272%27/%3E%3Ctext%20x%3D%2760%27%20y%3D%27104%27%20text-anchor%3D%27middle%27%20fill%3D%27%25235c6b7c%27%20font-size%3D%2711%27%20font-family%3D%27system-ui%2Csans-serif%27%3E319%3C/text%3E%3C/svg%3E",
+          "satinal_url": "https://www.hepsiburada.com/samsung-galaxy-s24-256-gb-8-gb-ram-samsung-turkiye-garantili-siyah-p-HBCV00005MLJA9",
+          "kargo_notu": "İlan fiyatı; kargo satıcı / kampanyaya göre dahil veya ayrı olabilir.",
+          "lider_fiyat": false,
+          "grup_etiketi": "Samsung Galaxy S24 256",
+          "yeni_grup": true,
+          "vitrin_sira": 3,
+          "stok": true,
+          "potansiyel_kar": 6.756757
+        },
+        {
+          "kart_id": "PFL|Hepsiburada|samsung galaxy s25 ultra 512 gb 12 gb ram samsung türkiye garantili gri titanyum|250.0|TRY|HBCV00007",
+          "tarih": "2026-05-23T07:52:56.691192+00:00",
+          "otomatik": true,
+          "tur": "FIYAT_LISTESI",
+          "ozet_metin": "🔎 Fiyat Dedektifi | Hepsiburada · 250 TL — İlan fiyatı; kargo satıcı / kampanyaya göre dahil veya ayrı olabilir.",
+          "urun_adi": "Samsung Galaxy S25 Ultra 512 GB 12 GB Ram (Samsung Türkiye Garantili) Gri Titanyum",
+          "platform": "Hepsiburada",
+          "pazar_yeri": "Hepsiburada",
+          "sorgu": "samsung s 25 telefon",
+          "kaynak_fiyat": 250.0,
+          "para_birimi": "TRY",
+          "bolge": "Yerel (TR)",
+          "gorsel_url": "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27120%27%20height%3D%27120%27%20viewBox%3D%270%200%20120%20120%27%3E%3Crect%20width%3D%27120%27%20height%3D%27120%27%20rx%3D%2712%27%20fill%3D%27%2523232a34%27/%3E%3Crect%20x%3D%2730%27%20y%3D%2734%27%20width%3D%2760%27%20height%3D%2744%27%20rx%3D%274%27%20fill%3D%27none%27%20stroke%3D%27%2523788a9c%27%20stroke-width%3D%272%27/%3E%3Ccircle%20cx%3D%2744%27%20cy%3D%2750%27%20r%3D%274%27%20fill%3D%27%2523788a9c%27/%3E%3Cpath%20d%3D%27M76%2070%20L50%2050%27%20stroke%3D%27%2523788a9c%27%20stroke-width%3D%272%27/%3E%3Ctext%20x%3D%2760%27%20y%3D%27104%27%20text-anchor%3D%27middle%27%20fill%3D%27%25235c6b7c%27%20font-size%3D%2711%27%20font-family%3D%27system-ui%2Csans-serif%27%3E481%3C/text%3E%3C/svg%3E",
+          "satinal_url": "https://www.hepsiburada.com/samsung-galaxy-s25-ultra-512-gb-12-gb-ram-samsung-turkiye-garantili-gri-titanyum-p-HBCV00007MIF54",
+          "kargo_notu": "İlan fiyatı; kargo satıcı / kampanyaya göre dahil veya ayrı olabilir.",
+          "lider_fiyat": false,
+          "grup_etiketi": "Samsung Galaxy S25 Ultra",
+          "yeni_grup": true,
+          "vitrin_sira": 4,
+          "stok": true,
+          "potansiyel_kar": 6.756757
+        },
+        {
+          "kart_id": "F|Yerel (TR)|Hepsiburada|samsung galaxy a07 128 gb 4 gb ram samsung türkiye garantili siyah|35.0",
+          "tarih": "2026-05-23T07:52:56.691192+00:00",
+          "otomatik": true,
+          "tur": "FIRSAT",
+          "ozet_metin": "🔥 FIRSAT | Bölge: Yerel (TR) | Samsung Galaxy A07 128 GB 4 GB Ram (Samsung Türkiye Garantili) Siyah — Hepsiburada: %83 civarı ortalama altı (35 TL; Canlı veri; mağaza teyidi.)",
+          "urun_adi": "Samsung Galaxy A07 128 GB 4 GB Ram (Samsung Türkiye Garantili) Siyah",
+          "platform": "Hepsiburada",
+          "sorgu": "samsung s 25 telefon",
+          "kaynak_fiyat": 35.0,
+          "hedef_fiyat": 207.0,
+          "potansiyel_kar": 172.0,
+          "indirim_ortalama_yuzde": 83.1,
+          "stok": true,
+          "bolge": "Yerel (TR)",
+          "para_birimi": "TRY",
+          "gorsel_url": "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27120%27%20height%3D%27120%27%20viewBox%3D%270%200%20120%20120%27%3E%3Crect%20width%3D%27120%27%20height%3D%27120%27%20rx%3D%2712%27%20fill%3D%27%2523232a34%27/%3E%3Crect%20x%3D%2730%27%20y%3D%2734%27%20width%3D%2760%27%20height%3D%2744%27%20rx%3D%274%27%20fill%3D%27none%27%20stroke%3D%27%2523788a9c%27%20stroke-width%3D%272%27/%3E%3Ccircle%20cx%3D%2744%27%20cy%3D%2750%27%20r%3D%274%27%20fill%3D%27%2523788a9c%27/%3E%3Cpath%20d%3D%27M76%2070%20L50%2050%27%20stroke%3D%27%2523788a9c%27%20stroke-width%3D%272%27/%3E%3Ctext%20x%3D%2760%27%20y%3D%27104%27%20text-anchor%3D%27middle%27%20fill%3D%27%25235c6b7c%27%20font-size%3D%2711%27%20font-family%3D%27system-ui%2Csans-serif%27%3E552%3C/text%3E%3C/svg%3E"
+        }
+      ],
       "stop_loss_log": [],
       "mizan_hareketleri": [],
       "kullanici_mizan": {}
@@ -264,9 +398,396 @@
             }
           },
           "tarih": "2026-05-17T11:19:12.068833+00:00"
+        },
+        {
+          "tip": "pazar_keşif",
+          "anahtar": "gereken bazı ürünleri tara",
+          "veri": {
+            "plugin_id": "marketplace_commercial",
+            "data": {
+              "ok": true,
+              "tool": "hizir_market_listings",
+              "result": {
+                "ok": true,
+                "query": "ürün",
+                "scan_mode": "otomatik_arbitraj",
+                "live": true,
+                "mock_marketplace": false,
+                "canli_pazar": true,
+                "data_mode": "live",
+                "errors": {
+                  "trendyol_tr": "Trendyol (tüm denemeler): apigw.trendyol.com/discovery-web-searchgw-servic → HTTP 403: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]>    <html class=\"no-js ie7 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 8]>    <html class=\"no-js ie8 oldie\" lang=\" | public.trendyol.com/discovery-web-searchgw-servi → ağ: HTTPSConnectionPool(host='public.trendyol.com', port=443): Max retries exceeded with url: /discovery-web-searchgw-service/v2/api/infinite-scroll/sr?q=%C3%BCr%C3%BCn&pi=1&culture=tr-TR (Caused by NameResolutionError(\"HTTPSConnection(host='public.trendyol.com', port=443): Failed to resolve 'public.trendyol.com' ([Errno 11001] getaddrinfo failed)\")) | HTML: Trendyol HTML HTTP 403",
+                  "amazon_tr": "Amazon PA-API anahtarları yok; HTML yedek de sonuç vermedi: Amazon HTML: arama kartı ayrıştırılamadı (sayfa yapısı değişmiş olabilir).",
+                  "hepsiburada_tr": "Hepsiburada HTML: ürün satırı çıkarılamadı.",
+                  "aliexpress": "AliExpress: HIZIR_ALIEXPRESS_APP_KEY ve HIZIR_ALIEXPRESS_APP_SECRET tanımlayın (Open Platform uygulaması).",
+                  "amazon_us": "Amazon PA-API anahtarları yok; HTML yedek de sonuç vermedi: Amazon HTML: arama kartı ayrıştırılamadı (sayfa yapısı değişmiş olabilir).",
+                  "ebay_ebay_us": "eBay Browse API: HIZIR_EBAY_CLIENT_ID ve HIZIR_EBAY_CLIENT_SECRET (production uygulama kimlikleri) tanımlayın.",
+                  "amazon_gb": "Amazon PA-API anahtarları yok; HTML yedek de sonuç vermedi: Amazon HTML HTTP 202",
+                  "ebay_ebay_gb": "eBay Browse API: HIZIR_EBAY_CLIENT_ID ve HIZIR_EBAY_CLIENT_SECRET (production uygulama kimlikleri) tanımlayın.",
+                  "amazon_de": "Amazon PA-API anahtarları yok; HTML yedek de sonuç vermedi: Amazon HTML: arama kartı ayrıştırılamadı (sayfa yapısı değişmiş olabilir).",
+                  "ebay_ebay_de": "eBay Browse API: HIZIR_EBAY_CLIENT_ID ve HIZIR_EBAY_CLIENT_SECRET (production uygulama kimlikleri) tanımlayın."
+                },
+                "loops": {
+                  "yerel_tr": {
+                    "trendyol": [],
+                    "amazon_tr": [],
+                    "hepsiburada": []
+                  },
+                  "global_us": {
+                    "amazon": [],
+                    "ebay": [],
+                    "aliexpress": []
+                  },
+                  "global_gb": {
+                    "amazon": [],
+                    "ebay": [],
+                    "aliexpress": []
+                  },
+                  "global_de": {
+                    "amazon": [],
+                    "ebay": [],
+                    "aliexpress": []
+                  }
+                },
+                "trendyol": [],
+                "amazon": [],
+                "search_compare": {
+                  "mode": "otomatik_arbitraj",
+                  "flat": [],
+                  "groups": []
+                },
+                "static_live_fill": [],
+                "aktif_kanallar": [
+                  {
+                    "id": "trendyol",
+                    "label": "Trendyol"
+                  },
+                  {
+                    "id": "amazon_tr",
+                    "label": "Amazon TR"
+                  },
+                  {
+                    "id": "hepsiburada",
+                    "label": "Hepsiburada"
+                  },
+                  {
+                    "id": "amazon_us",
+                    "label": "Amazon US"
+                  },
+                  {
+                    "id": "amazon_gb",
+                    "label": "Amazon UK"
+                  },
+                  {
+                    "id": "amazon_de",
+                    "label": "Amazon DE"
+                  },
+                  {
+                    "id": "ebay",
+                    "label": "eBay"
+                  },
+                  {
+                    "id": "aliexpress",
+                    "label": "AliExpress"
+                  }
+                ],
+                "kanal_secimi": [
+                  "aliexpress",
+                  "amazon_de",
+                  "amazon_gb",
+                  "amazon_tr",
+                  "amazon_us",
+                  "ebay",
+                  "hepsiburada",
+                  "trendyol"
+                ]
+              }
+            }
+          },
+          "tarih": "2026-05-23T07:43:46.196491+00:00"
+        },
+        {
+          "tip": "pazar_keşif",
+          "anahtar": "pazar yerini tara: samsung s 25 telefon|ch:aliexpress,amazon_de,amazon_gb,amazon_tr,amazon_us,ebay,hepsiburada,trendyol",
+          "veri": {
+            "plugin_id": "marketplace_commercial",
+            "data": {
+              "ok": true,
+              "tool": "hizir_market_listings",
+              "result": {
+                "ok": true,
+                "query": "samsung s 25 telefon",
+                "scan_mode": "fiyat_dedektifi",
+                "live": true,
+                "mock_marketplace": false,
+                "canli_pazar": true,
+                "data_mode": "live",
+                "errors": {
+                  "trendyol_tr": "Trendyol (tüm denemeler): apigw.trendyol.com/discovery-web-searchgw-servic → HTTP 403: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]>    <html class=\"no-js ie7 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 8]>    <html class=\"no-js ie8 oldie\" lang=\" | public.trendyol.com/discovery-web-searchgw-servi → ağ: HTTPSConnectionPool(host='public.trendyol.com', port=443): Max retries exceeded with url: /discovery-web-searchgw-service/v2/api/infinite-scroll/sr?q=samsung+s+25+telefon&pi=1&culture=tr-TR (Caused by NameResolutionError(\"HTTPSConnection(host='public.trendyol.com', port=443): Failed to resolve 'public.trendyol.com' ([Errno 11001] getaddrinfo failed)\")) | HTML: Trendyol HTML HTTP 403",
+                  "amazon_tr": "Amazon PA-API anahtarları yok; HTML yedek de sonuç vermedi: Amazon HTML: arama kartı ayrıştırılamadı (sayfa yapısı değişmiş olabilir).",
+                  "aliexpress": "AliExpress: HIZIR_ALIEXPRESS_APP_KEY ve HIZIR_ALIEXPRESS_APP_SECRET tanımlayın (Open Platform uygulaması).",
+                  "amazon_us": "Amazon PA-API anahtarları yok; HTML yedek de sonuç vermedi: Amazon HTML: arama kartı ayrıştırılamadı (sayfa yapısı değişmiş olabilir).",
+                  "ebay_ebay_us": "eBay Browse API: HIZIR_EBAY_CLIENT_ID ve HIZIR_EBAY_CLIENT_SECRET (production uygulama kimlikleri) tanımlayın.",
+                  "amazon_gb": "Amazon PA-API anahtarları yok; HTML yedek de sonuç vermedi: Amazon HTML HTTP 202",
+                  "ebay_ebay_gb": "eBay Browse API: HIZIR_EBAY_CLIENT_ID ve HIZIR_EBAY_CLIENT_SECRET (production uygulama kimlikleri) tanımlayın.",
+                  "amazon_de": "Amazon PA-API anahtarları yok; HTML yedek de sonuç vermedi: Amazon HTML: arama kartı ayrıştırılamadı (sayfa yapısı değişmiş olabilir).",
+                  "ebay_ebay_de": "eBay Browse API: HIZIR_EBAY_CLIENT_ID ve HIZIR_EBAY_CLIENT_SECRET (production uygulama kimlikleri) tanımlayın."
+                },
+                "loops": {
+                  "yerel_tr": {
+                    "trendyol": [],
+                    "amazon_tr": [],
+                    "hepsiburada": [
+                      {
+                        "name": "Samsung Galaxy A07 128 GB 4 GB Ram (Samsung Türkiye Garantili) Siyah",
+                        "price": 35.0,
+                        "in_stock": true,
+                        "id": "HBCV00009",
+                        "currency": "TRY",
+                        "url": "https://www.hepsiburada.com/samsung-galaxy-a07-128-gb-4-gb-ram-samsung-turkiye-garantili-siyah-p-HBCV00009S6C62",
+                        "extra": {
+                          "source": "html_scrape"
+                        }
+                      },
+                      {
+                        "name": "Samsung Galaxy A56 5g 256 GB 8 GB Ram (Samsung Türkiye Garantili) Siyah",
+                        "price": 250.0,
+                        "in_stock": true,
+                        "id": "HBCV000088",
+                        "currency": "TRY",
+                        "url": "https://www.hepsiburada.com/samsung-galaxy-a56-5g-256-gb-8-gb-ram-samsung-turkiye-garantili-siyah-p-HBCV000088BXWW",
+                        "extra": {
+                          "source": "html_scrape"
+                        }
+                      },
+                      {
+                        "name": "Samsung Galaxy A57 5g 256 GB 8 GB Ram (Samsung Türkiye Garantili) Lacivert",
+                        "price": 250.0,
+                        "in_stock": true,
+                        "id": "HBCV0000",
+                        "currency": "TRY",
+                        "url": "https://www.hepsiburada.com/samsung-galaxy-a57-5g-256-gb-8-gb-ram-samsung-turkiye-garantili-lacivert-p-HBCV0000DU666G",
+                        "extra": {
+                          "source": "html_scrape"
+                        }
+                      },
+                      {
+                        "name": "Samsung Galaxy S24 256 GB 8 GB Ram (Samsung Türkiye Garantili) Siyah",
+                        "price": 250.0,
+                        "in_stock": true,
+                        "id": "HBCV00005",
+                        "currency": "TRY",
+                        "url": "https://www.hepsiburada.com/samsung-galaxy-s24-256-gb-8-gb-ram-samsung-turkiye-garantili-siyah-p-HBCV00005MLJA9",
+                        "extra": {
+                          "source": "html_scrape"
+                        }
+                      },
+                      {
+                        "name": "Samsung Galaxy S25 Ultra 512 GB 12 GB Ram (Samsung Türkiye Garantili) Gri Titanyum",
+                        "price": 250.0,
+                        "in_stock": true,
+                        "id": "HBCV00007",
+                        "currency": "TRY",
+                        "url": "https://www.hepsiburada.com/samsung-galaxy-s25-ultra-512-gb-12-gb-ram-samsung-turkiye-garantili-gri-titanyum-p-HBCV00007MIF54",
+                        "extra": {
+                          "source": "html_scrape"
+                        }
+                      }
+                    ]
+                  },
+                  "global_us": {
+                    "amazon": [],
+                    "ebay": [],
+                    "aliexpress": []
+                  },
+                  "global_gb": {
+                    "amazon": [],
+                    "ebay": [],
+                    "aliexpress": []
+                  },
+                  "global_de": {
+                    "amazon": [],
+                    "ebay": [],
+                    "aliexpress": []
+                  }
+                },
+                "trendyol": [],
+                "amazon": [],
+                "search_compare": {
+                  "mode": "fiyat_dedektifi",
+                  "flat": [
+                    {
+                      "name": "Samsung Galaxy A07 128 GB 4 GB Ram (Samsung Türkiye Garantili) Siyah",
+                      "price": 35.0,
+                      "in_stock": true,
+                      "id": "HBCV00009",
+                      "currency": "TRY",
+                      "url": "https://www.hepsiburada.com/samsung-galaxy-a07-128-gb-4-gb-ram-samsung-turkiye-garantili-siyah-p-HBCV00009S6C62",
+                      "extra": {
+                        "source": "html_scrape"
+                      },
+                      "_loop_id": "yerel_tr",
+                      "_channel": "hepsiburada",
+                      "pazar_yeri": "Hepsiburada",
+                      "bolge": "Yerel (TR)",
+                      "price_sort_eur": 0.945946,
+                      "kargo_notu": "İlan fiyatı; kargo satıcı / kampanyaya göre dahil veya ayrı olabilir.",
+                      "grup_etiketi": "Samsung Galaxy A07 128",
+                      "lider_fiyat": true
+                    },
+                    {
+                      "name": "Samsung Galaxy A56 5g 256 GB 8 GB Ram (Samsung Türkiye Garantili) Siyah",
+                      "price": 250.0,
+                      "in_stock": true,
+                      "id": "HBCV000088",
+                      "currency": "TRY",
+                      "url": "https://www.hepsiburada.com/samsung-galaxy-a56-5g-256-gb-8-gb-ram-samsung-turkiye-garantili-siyah-p-HBCV000088BXWW",
+                      "extra": {
+                        "source": "html_scrape"
+                      },
+                      "_loop_id": "yerel_tr",
+                      "_channel": "hepsiburada",
+                      "pazar_yeri": "Hepsiburada",
+                      "bolge": "Yerel (TR)",
+                      "price_sort_eur": 6.756757,
+                      "kargo_notu": "İlan fiyatı; kargo satıcı / kampanyaya göre dahil veya ayrı olabilir.",
+                      "grup_etiketi": "Samsung Galaxy A56 256",
+                      "lider_fiyat": false
+                    },
+                    {
+                      "name": "Samsung Galaxy A57 5g 256 GB 8 GB Ram (Samsung Türkiye Garantili) Lacivert",
+                      "price": 250.0,
+                      "in_stock": true,
+                      "id": "HBCV0000",
+                      "currency": "TRY",
+                      "url": "https://www.hepsiburada.com/samsung-galaxy-a57-5g-256-gb-8-gb-ram-samsung-turkiye-garantili-lacivert-p-HBCV0000DU666G",
+                      "extra": {
+                        "source": "html_scrape"
+                      },
+                      "_loop_id": "yerel_tr",
+                      "_channel": "hepsiburada",
+                      "pazar_yeri": "Hepsiburada",
+                      "bolge": "Yerel (TR)",
+                      "price_sort_eur": 6.756757,
+                      "kargo_notu": "İlan fiyatı; kargo satıcı / kampanyaya göre dahil veya ayrı olabilir.",
+                      "grup_etiketi": "Samsung Galaxy A57 256",
+                      "lider_fiyat": false
+                    },
+                    {
+                      "name": "Samsung Galaxy S24 256 GB 8 GB Ram (Samsung Türkiye Garantili) Siyah",
+                      "price": 250.0,
+                      "in_stock": true,
+                      "id": "HBCV00005",
+                      "currency": "TRY",
+                      "url": "https://www.hepsiburada.com/samsung-galaxy-s24-256-gb-8-gb-ram-samsung-turkiye-garantili-siyah-p-HBCV00005MLJA9",
+                      "extra": {
+                        "source": "html_scrape"
+                      },
+                      "_loop_id": "yerel_tr",
+                      "_channel": "hepsiburada",
+                      "pazar_yeri": "Hepsiburada",
+                      "bolge": "Yerel (TR)",
+                      "price_sort_eur": 6.756757,
+                      "kargo_notu": "İlan fiyatı; kargo satıcı / kampanyaya göre dahil veya ayrı olabilir.",
+                      "grup_etiketi": "Samsung Galaxy S24 256",
+                      "lider_fiyat": false
+                    },
+                    {
+                      "name": "Samsung Galaxy S25 Ultra 512 GB 12 GB Ram (Samsung Türkiye Garantili) Gri Titanyum",
+                      "price": 250.0,
+                      "in_stock": true,
+                      "id": "HBCV00007",
+                      "currency": "TRY",
+                      "url": "https://www.hepsiburada.com/samsung-galaxy-s25-ultra-512-gb-12-gb-ram-samsung-turkiye-garantili-gri-titanyum-p-HBCV00007MIF54",
+                      "extra": {
+                        "source": "html_scrape"
+                      },
+                      "_loop_id": "yerel_tr",
+                      "_channel": "hepsiburada",
+                      "pazar_yeri": "Hepsiburada",
+                      "bolge": "Yerel (TR)",
+                      "price_sort_eur": 6.756757,
+                      "kargo_notu": "İlan fiyatı; kargo satıcı / kampanyaya göre dahil veya ayrı olabilir.",
+                      "grup_etiketi": "Samsung Galaxy S25 Ultra",
+                      "lider_fiyat": false
+                    }
+                  ],
+                  "groups": [
+                    {
+                      "grup_etiketi": "Samsung Galaxy A07 128",
+                      "adet": 1
+                    },
+                    {
+                      "grup_etiketi": "Samsung Galaxy A56 256",
+                      "adet": 1
+                    },
+                    {
+                      "grup_etiketi": "Samsung Galaxy A57 256",
+                      "adet": 1
+                    },
+                    {
+                      "grup_etiketi": "Samsung Galaxy S24 256",
+                      "adet": 1
+                    },
+                    {
+                      "grup_etiketi": "Samsung Galaxy S25 Ultra",
+                      "adet": 1
+                    }
+                  ],
+                  "sorgu": "samsung s 25 telefon"
+                },
+                "static_live_fill": [],
+                "aktif_kanallar": [
+                  {
+                    "id": "trendyol",
+                    "label": "Trendyol"
+                  },
+                  {
+                    "id": "amazon_tr",
+                    "label": "Amazon TR"
+                  },
+                  {
+                    "id": "hepsiburada",
+                    "label": "Hepsiburada"
+                  },
+                  {
+                    "id": "amazon_us",
+                    "label": "Amazon US"
+                  },
+                  {
+                    "id": "amazon_gb",
+                    "label": "Amazon UK"
+                  },
+                  {
+                    "id": "amazon_de",
+                    "label": "Amazon DE"
+                  },
+                  {
+                    "id": "ebay",
+                    "label": "eBay"
+                  },
+                  {
+                    "id": "aliexpress",
+                    "label": "AliExpress"
+                  }
+                ],
+                "kanal_secimi": [
+                  "aliexpress",
+                  "amazon_de",
+                  "amazon_gb",
+                  "amazon_tr",
+                  "amazon_us",
+                  "ebay",
+                  "hepsiburada",
+                  "trendyol"
+                ]
+              }
+            }
+          },
+          "tarih": "2026-05-23T07:52:56.510697+00:00"
         }
       ]
     }
   },
-  "updated_at": "2026-05-17T11:35:58.800522+00:00"
+  "updated_at": "2026-05-23T07:52:56.691192+00:00"
 }

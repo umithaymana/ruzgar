@@ -256,6 +256,13 @@ class HafizaIRuzgar:
         if c == unicodedata.normalize("NFKC", cls.BILINMEYEN_YANIT).strip().lower():
             return True
         if "öğrenmedim" not in c and "ogrenmedim" not in c:
+            try:
+                from ilim_assistant.ruzgar_egitim import cevap_kullaniciya_okunmamali
+
+                if cevap_kullaniciya_okunmamali(cevap):
+                    return True
+            except Exception:
+                pass
             return False
         return "mimar" in c or "öğretir" in c or "ogretir" in c
 

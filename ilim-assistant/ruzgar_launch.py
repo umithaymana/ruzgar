@@ -2,7 +2,7 @@
 RUZGAR tek tık başlatıcı (Python): yerel API (uvicorn) + Electron kabuğu.
 
 Mimar emri (Ümit & Gökçenur):
-  - Açılışta 8777 portundaki "ölü" uvicorn süreçleri (health 200 vermiyor) tespit edilip
+  - Açılışta yerel API portundaki (varsayılan 8779) "ölü" uvicorn süreçleri (health 200 vermiyor) tespit edilip
     sonlandırılır → siyah ekran zombisi yaşanmaz.
   - Electron pencere kapatıldığında launcher uvicorn'u nazikçe sonlandırır → arka planda
     artık kalmaz; bir sonraki açılışta port temiz olur.
@@ -29,7 +29,9 @@ from pathlib import Path
 ILIM_ASSISTANT = Path(__file__).resolve().parent
 PROJECT_ROOT = ILIM_ASSISTANT.parent
 ELECTRON_DIR = PROJECT_ROOT / "ruzgar-desktop"
-API_PORT = 8777
+from ilim_assistant.ruzgar_api_port import DEFAULT_API_PORT, LEGACY_API_PORT, resolve_api_port
+
+API_PORT = resolve_api_port()
 API_HEALTH = f"http://127.0.0.1:{API_PORT}/api/health"
 WAIT_SEC = 180.0
 ZOMBI_HEALTH_GRACE_SEC = 4.0  # Açık ama henüz hazır olmayan sağlıklı uvicorn'a tolerans
@@ -59,17 +61,19 @@ def _api_up(timeout: float = 2.0) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# 1) Port-zombi temizleme: 8777'i dinleyen ama health 200 vermeyen uvicorn'ları öldürür.
+# 1) Port-zombi temizleme: API portunu dinleyen ama health 200 vermeyen uvicorn'ları öldürür.
 # ---------------------------------------------------------------------------
 
-_NETSTAT_RE = re.compile(
-    r"^\s*TCP\s+\S+:" + str(API_PORT) + r"\s+\S+\s+LISTENING\s+(\d+)\s*$",
-    re.IGNORECASE,
-)
+def _netstat_re(port: int) -> re.Pattern[str]:
+    return re.compile(
+        rf"^\s*TCP\s+\S+:{port}\s+\S+\s+LISTENING\s+(\d+)\s*$",
+        re.IGNORECASE,
+    )
 
 
-def _pids_listening_on_port() -> list[int]:
-    """Windows: ``netstat -ano`` çıktısında 8777 LISTENING olanların PID listesi."""
+def _pids_listening_on_port(port: int) -> list[int]:
+    """Windows: ``netstat -ano`` çıktısında port LISTENING olanların PID listesi."""
+    pattern = _netstat_re(port)
     try:
         cp = subprocess.run(
             ["netstat", "-ano"],
@@ -83,7 +87,7 @@ def _pids_listening_on_port() -> list[int]:
         return []
     pids: set[int] = set()
     for line in (cp.stdout or "").splitlines():
-        m = _NETSTAT_RE.match(line)
+        m = pattern.match(line)
         if m:
             try:
                 pids.add(int(m.group(1)))
@@ -117,10 +121,7 @@ def _kill_pid(pid: int) -> bool:
 
 
 def _kill_port_zombies() -> None:
-    """8777'de LISTENING ama health 200 vermeyen 'ölü' uvicorn'ları sonlandırır.
-
-    Önce bir health 200 ihtimaline tolerans verilir (yeni açılan sağlıklı uvicorn boğulmasın).
-    """
+    """API portunda LISTENING ama health 200 vermeyen 'ölü' uvicorn'ları sonlandırır."""
     deadline = time.monotonic() + ZOMBI_HEALTH_GRACE_SEC
     while time.monotonic() < deadline:
         if _api_up(timeout=1.5):
@@ -128,18 +129,31 @@ def _kill_port_zombies() -> None:
             return
         time.sleep(0.4)
 
-    pids = _pids_listening_on_port()
-    if not pids:
-        _log("8777 bos — temizlik gerekmiyor")
+    ports = {API_PORT, LEGACY_API_PORT}
+    all_pids: set[int] = set()
+    for port in ports:
+        all_pids.update(_pids_listening_on_port(port))
+    if not all_pids:
+        _log(f"Port {API_PORT} bos — temizlik gerekmiyor")
         return
 
-    _log(f"Zombi tespit edildi PID(ler)={pids} → sonlandiriliyor")
-    for pid in pids:
+    _log(f"Zombi tespit edildi PID(ler)={sorted(all_pids)} → sonlandiriliyor")
+    for pid in sorted(all_pids):
         ok = _kill_pid(pid)
         if not ok:
             _log(f"UYARI: PID {pid} sonlandirilamadi (yetki/yonetici izni gerekebilir)")
-    # Soketin Windows tarafindan tam serbest birakilmasi icin kisa bekleme.
     time.sleep(1.0)
+
+
+def _write_remote_api_txt() -> None:
+    api_line = f"http://127.0.0.1:{API_PORT}"
+    body = "# UI -> yerel API (ruzgar_launch.py yazar)\n" + api_line + "\n"
+    out = ELECTRON_DIR / "ruzgar_remote_api.txt"
+    try:
+        out.write_text(body, encoding="utf-8")
+        _log(f"ruzgar_remote_api.txt -> {api_line}")
+    except OSError as e:
+        _log(f"ruzgar_remote_api.txt yazilamadi: {e}")
 
 
 # ---------------------------------------------------------------------------
@@ -299,6 +313,7 @@ def main() -> int:
         except Exception:
             pass
         _ensure_api()
+        _write_remote_api_txt()
         try:
             rc = _run_electron_blocking()
         finally:

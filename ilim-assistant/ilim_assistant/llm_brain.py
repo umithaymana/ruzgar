@@ -13,7 +13,11 @@ import os
 from dataclasses import dataclass, field
 from typing import Any, Iterator, Literal
 
-from ilim_assistant.defaults import DEFAULT_GEMINI_MODEL, DEFAULT_OLLAMA_CHAT_MODEL
+from ilim_assistant.defaults import (
+    DEFAULT_GEMINI_MODEL,
+    DEFAULT_OLLAMA_CHAT_MODEL,
+    DEFAULT_OLLAMA_FAST_MODEL,
+)
 from ilim_assistant.llm_gemini import (
     chat_completion_stream_gemini,
     format_gemini_user_error,
@@ -51,9 +55,18 @@ def free_brain_enabled() -> bool:
 
 
 def _default_free_chain_ids() -> list[str]:
-    ids = ["denge", "hizli"]
+    """Yerel Ollama birincil; bulut isteğe bağlı."""
+    try:
+        from ilim_assistant.config import ollama_only_mode
+
+        if ollama_only_mode():
+            return ["denge", "hizli", "kod"]
+    except Exception:
+        pass
+    ids: list[str] = []
     if _profile_groq() is not None:
         ids.append("groq")
+    ids.extend(["denge", "hizli"])
     if gemini_configured():
         ids.append("gemini")
     return ids
@@ -192,6 +205,13 @@ def _profile_gemini() -> BrainEndpoint | None:
 
 
 def _profile_groq() -> BrainEndpoint | None:
+    try:
+        from ilim_assistant.config import groq_disabled
+
+        if groq_disabled():
+            return None
+    except Exception:
+        pass
     key = os.environ.get("GROQ_API_KEY", "").strip()
     if not key:
         return None
@@ -375,7 +395,19 @@ def select_brain_chain(
     elif mode_norm in ("hizli",):
         chain_ids = ["hizli", "denge", "gemini"]
     elif primary in ("bilgi", "bilim", "dilbilgisi") or _message_needs_deep_brain(message):
-        chain_ids = ["gemini", "denge", "hizli"]
+        try:
+            from ilim_assistant.config import ollama_only_mode
+
+            if ollama_only_mode():
+                chain_ids = ["denge", "hizli", "kod"]
+            else:
+                chain_ids = (
+                    ["groq", "denge", "hizli", "gemini"]
+                    if _profile_groq() is not None
+                    else ["denge", "hizli", "gemini"]
+                )
+        except Exception:
+            chain_ids = ["denge", "hizli", "gemini"]
     elif primary in ("gundelik", "islem", "hava", "dosya"):
         chain_ids = (
             ["gemini", "hizli", "denge"]
@@ -643,6 +675,13 @@ def brain_health_snapshot() -> dict[str, Any]:
     except Exception:
         pass
     groq_ep = _profile_groq()
+    gemini_off = False
+    try:
+        from ilim_assistant.config import gemini_disabled
+
+        gemini_off = gemini_disabled()
+    except Exception:
+        pass
     gemini_cd = False
     try:
         from ilim_assistant.gemini_quota_guard import gemini_cooldown_active
@@ -655,8 +694,15 @@ def brain_health_snapshot() -> dict[str, Any]:
         "free_brain_mode": free_brain_enabled(),
         "gemini_cooldown_active": gemini_cd,
         "forced_profile": (os.environ.get("RUZGAR_BRAIN_PROFILE") or "auto").strip(),
-        "cloud_provider": "google_gemini",
+        "cloud_provider": (
+            "ollama_local"
+            if gemini_off and groq_ep is None
+            else ("groq" if groq_ep is not None else "google_gemini")
+        ),
+        "ollama_only": gemini_off and groq_ep is None,
+        "gemini_disabled": gemini_off,
         "groq_configured": groq_ep is not None,
+        "groq_model": groq_ep.model if groq_ep else "",
         "gemini_configured": gemini_configured(),
         "gemini_model_default": os.environ.get("RUZGAR_GEMINI_MODEL") or DEFAULT_GEMINI_MODEL,
         "gemini_model_ping": gemini_ping,
@@ -668,3 +714,25 @@ def brain_health_snapshot() -> dict[str, Any]:
         "profiles": {k: v.to_public_dict() for k, v in profiles.items()},
         "default_chain": [e.profile_id for e in sel.chain],
     }
+
+
+def chat_completion_groq(system: str, user: str) -> str:
+    """Groq bulut tamamlama (OpenAI uyumlu API)."""
+    ep = _profile_groq()
+    if ep is None:
+        return ""
+    try:
+        from ilim_assistant.llm_ollama import chat_completion
+
+        return (
+            chat_completion(
+                system,
+                user,
+                model=ep.model,
+                base_url=ep.base_url,
+                api_key=ep.api_key,
+            )
+            or ""
+        ).strip()
+    except Exception:
+        return ""

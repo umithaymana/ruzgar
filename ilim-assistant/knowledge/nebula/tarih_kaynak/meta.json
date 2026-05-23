@@ -1,0 +1,14 @@
+{
+  "collection": "tarih_kaynak",
+  "source_file": "D:\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\knowledge\\TARIH_VE_KULTUR\\tarih_kaynak.json",
+  "records_ingested": 318,
+  "batches": 1,
+  "last_ingest_utc": "2026-05-20T17:57:37+00:00",
+  "index": {
+    "status": "incremental",
+    "chunks": 10453,
+    "digest": "77d23bc9cc85f3a968a48b5d724587ff2fa1e50c18bdc820bd40f700eb1375ad",
+    "changed_files": 2,
+    "removed_files": 0
+  }
+}

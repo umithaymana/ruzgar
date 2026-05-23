@@ -1,5 +1,5 @@
-# RUZGAR - API (8777) + Electron; istege bagli Gradio tarayici (7861): Ruzgar.ps1 -WithGradio veya Ruzgar_Hepsi.bat
-# Zorla yeniden baslatma: Ruzgar.ps1 -ForceRestart  (8777 portunu bosaltir, API+Electron)
+# RUZGAR - API (8779) + Electron; istege bagli Gradio tarayici (7861): Ruzgar.ps1 -WithGradio veya Ruzgar_Hepsi.bat
+# Zorla yeniden baslatma: Ruzgar.ps1 -ForceRestart  (8779 + eski 8777 zombi portunu bosaltir)
 param(
     [switch]$WithGradio,
     [switch]$ForceRestart
@@ -35,17 +35,34 @@ function Import-RuzgarEnvFile {
         $key, $val = $line.Split("=", 2)
         $key = $key.Trim()
         $val = $val.Trim().Trim('"').Trim("'")
-        if (-not $key -or -not $val) { continue }
+        if (-not $key) { continue }
+        $forceFromFile = $key -match '^(RUZGAR_|OLLAMA_|GROQ_)'
         if ($key -in @("GLOBAL_API_KEY", "GOOGLE_GEMINI_API_KEY", "GEMINI_API_KEY", "RUZGAR_GEMINI_API_KEY")) {
-            $env:GLOBAL_API_KEY = $val
-            $env:GOOGLE_GEMINI_API_KEY = $val
-            $env:GEMINI_API_KEY = $val
-            $env:RUZGAR_GEMINI_API_KEY = $val
+            if ($val) {
+                $env:GLOBAL_API_KEY = $val
+                $env:GOOGLE_GEMINI_API_KEY = $val
+                $env:GEMINI_API_KEY = $val
+                $env:RUZGAR_GEMINI_API_KEY = $val
+            } else {
+                Remove-Item Env:GLOBAL_API_KEY -ErrorAction SilentlyContinue
+                Remove-Item Env:GOOGLE_GEMINI_API_KEY -ErrorAction SilentlyContinue
+                Remove-Item Env:GEMINI_API_KEY -ErrorAction SilentlyContinue
+                Remove-Item Env:RUZGAR_GEMINI_API_KEY -ErrorAction SilentlyContinue
+            }
             continue
         }
-        if (-not (Get-Item -Path "Env:$key" -ErrorAction SilentlyContinue)) {
-            Set-Item -Path "Env:$key" -Value $val
+        if ($forceFromFile -or -not (Get-Item -Path "Env:$key" -ErrorAction SilentlyContinue)) {
+            if ($val) { Set-Item -Path "Env:$key" -Value $val -Force }
         }
+    }
+    if ($env:RUZGAR_OLLAMA_ONLY -eq "1" -or $env:RUZGAR_DISABLE_GEMINI -eq "1") {
+        foreach ($k in @("GLOBAL_API_KEY", "GOOGLE_GEMINI_API_KEY", "GEMINI_API_KEY", "RUZGAR_GEMINI_API_KEY", "GROQ_API_KEY")) {
+            Remove-Item "Env:$k" -ErrorAction SilentlyContinue
+        }
+        $env:RUZGAR_GEMINI_DAEMON = "0"
+    }
+    if ($env:RUZGAR_DISABLE_GROQ -eq "1" -or $env:RUZGAR_OLLAMA_ONLY -eq "1") {
+        Remove-Item Env:GROQ_API_KEY -ErrorAction SilentlyContinue
     }
     return [bool]($env:GLOBAL_API_KEY -and $env:GLOBAL_API_KEY.Trim())
 }
@@ -54,7 +71,7 @@ function Invoke-RuzgarPortOps {
     param(
         [string]$Command,
         [string]$IaRoot,
-        [int]$Port = 8777
+        [int]$Port = 8779
     )
     $ops = Join-Path $IaRoot "scripts\ruzgar_port_ops.py"
     if (-not (Test-Path $ops)) {
@@ -222,13 +239,16 @@ if (-not (Test-Path (Join-Path $iaJoin "desktop_server.py"))) {
 }
 $ia = (Resolve-Path $iaJoin).Path
 
-if (Test-RuzgarGeminiKeyConfigured -IaRoot $ia) {
-    Log "Gemini GLOBAL_API_KEY yuklu — anahtar sorulmadan Gemini-2.0-flash hazir"
-    if (-not $env:RUZGAR_GEMINI_MODEL) { $env:RUZGAR_GEMINI_MODEL = "gemini-2.0-flash" }
-    if (-not $env:RUZGAR_SUPER_BRAIN) { $env:RUZGAR_SUPER_BRAIN = "1" }
+Import-RuzgarEnvFile -IaRoot $ia | Out-Null
+if ($env:RUZGAR_OLLAMA_ONLY -eq "1") {
+    Log "RUZGAR_OLLAMA_ONLY=1 - yalnizca yerel Ollama (Gemini/Groq kapali)"
+} elseif (Test-RuzgarGeminiKeyConfigured -IaRoot $ia) {
+    Log "Gemini GLOBAL_API_KEY yuklu"
 } else {
-    Log "Gemini anahtar yok (.env GLOBAL_API_KEY) — yerel Ollama kullanilir"
+    Log "Bulut kapali - yerel Ollama"
 }
+
+$script:RuzgarExpectedBuildRev = "2026-05-23-ollama-bilissel-v2"
 
 function Test-PortListen {
     param([int]$Port)
@@ -248,7 +268,7 @@ function Start-OllamaIfNeeded {
         return
     }
     if (-not (Get-Command ollama -ErrorAction SilentlyContinue)) {
-        Log "Ollama PATH'te yok — https://ollama.com kurulumu gerekir (ucretsiz yerel beyin)"
+        Log "Ollama PATH icinde yok - https://ollama.com kurulumu gerekir"
         return
     }
     Log "Ollama serve baslatiliyor..."
@@ -259,7 +279,22 @@ function Start-OllamaIfNeeded {
     }
     if (Test-PortListen 11434) {
         Log "Ollama hazir (11434)"
-        & ollama pull llama3.2:3b 2>$null | Out-Null
+        $ramGb = [math]::Round((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory / 1GB, 0)
+        $defaultMain = if ($ramGb -ge 24) { "llama3.1:70b" } elseif ($ramGb -ge 12) { "llama3.1:8b" } else { "llama3.2:3b" }
+        $mainModel = if ($env:OLLAMA_CHAT_MODEL) { $env:OLLAMA_CHAT_MODEL.Trim() } else { $defaultMain }
+        $fastModel = if ($env:RUZGAR_BRAIN_HIZLI_MODEL) { $env:RUZGAR_BRAIN_HIZLI_MODEL.Trim() } else { "llama3.2:3b" }
+        if ($ramGb -lt 16 -and $mainModel -match "70b") {
+            Log "RAM ~${ramGb} GB — 70b uygun degil, llama3.1:8b kullaniliyor"
+            $mainModel = "llama3.1:8b"
+            $env:OLLAMA_CHAT_MODEL = "llama3.1:8b"
+            $env:RUZGAR_BRAIN_DENGE_MODEL = "llama3.1:8b"
+        }
+        Log "Ollama model: $mainModel (RAM ~${ramGb} GB)"
+        & ollama pull $mainModel 2>&1 | ForEach-Object { Log $_ }
+        if ($fastModel -and $fastModel -ne $mainModel) {
+            Log "Hizli yedek model: $fastModel"
+            & ollama pull $fastModel 2>$null | Out-Null
+        }
     } else {
         Log "Ollama acilmadi — yine de API/Electron baslatilacak"
     }
@@ -312,6 +347,33 @@ function Test-ApiNebulaBuild {
     }
 }
 
+function Test-ApiBuildCurrent {
+    param([string]$Url)
+    try {
+        $r = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 4
+        $j = $r.Content | ConvertFrom-Json
+        $rev = [string]$j.build.rev
+        if ($rev -ne $script:RuzgarExpectedBuildRev) {
+            Log "health rev uyumsuz: '$rev' beklenen '$($script:RuzgarExpectedBuildRev)'"
+            return $false
+        }
+        if ($env:RUZGAR_OLLAMA_ONLY -eq "1") {
+            $sb = $j.super_brain
+            if ($sb.gemini_configured -eq $true) {
+                Log "health: Gemini hala acik — eski API sureci"
+                return $false
+            }
+            if ($sb.ollama_only -ne $true) {
+                Log "health: ollama_only bayragi yok — eski kod"
+                return $false
+            }
+        }
+        return $true
+    } catch {
+        return $false
+    }
+}
+
 if ($ForceRestart) {
     Log "force-restart: portlar bosaltiliyor ($ApiPort + 8777 zombi)"
     Stop-RuzgarApiPort -Port $ApiPort
@@ -332,6 +394,14 @@ if (-not $serverUp) {
         $r = Invoke-WebRequest -Uri $apiUrl -UseBasicParsing -TimeoutSec 2
         if ($r.StatusCode -eq 200) { $serverUp = $true }
     } catch {}
+}
+
+if ($serverUp -and (-not (Test-ApiBuildCurrent -Url $apiUrl))) {
+    Log "Eski Ruzgar API — kod/.env guncel degil; port yeniden baslatiliyor"
+    Stop-RuzgarApiPort -Port $ApiPort
+    if ($ApiPort -ne 8777) { Stop-RuzgarApiPort -Port 8777 }
+    Start-Sleep -Seconds 2
+    $serverUp = $false
 }
 
 if (-not $serverUp) {

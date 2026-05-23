@@ -7,6 +7,9 @@ _PAZAR_TARA_HEAD = re.compile(
     r"^\s*(?:pazar\s+yerini\s+tara|pazar\s+yerlerini\s+tara|pazarı\s+tara|pazari\s+tara|pazar\s+tara)\s*(?::\s*)?(.*)$",
     re.IGNORECASE | re.DOTALL,
 )
+_URUN_TARA_BODY = re.compile(
+    r"(?is)(?:gereken\s+)?(?:bazı\s+|bazi\s+)?(.+?)\s+ürün\w*\s+tara",
+)
 
 
 @runtime_checkable
@@ -24,13 +27,29 @@ class UniversalPlugin(Protocol):
 
 
 def extract_product_query(message: str) -> str:
-    t = (message or "").lower()
+    raw = (message or "").strip()
+    m = _URUN_TARA_BODY.search(raw)
+    if m:
+        inner = (m.group(1) or "").strip()
+        if inner and len(inner) >= 2:
+            raw = inner
+    t = raw.lower()
     for noise in (
         "pazar yerini tara",
         "pazar yerlerini tara",
         "pazarı tara",
         "pazari tara",
         "pazar tara",
+        "ürünleri tara",
+        "urunleri tara",
+        "ürünü tara",
+        "ürün tara",
+        "gereken",
+        "bazı",
+        "bazi",
+        "tara",
+        "tarayın",
+        "tarayin",
         "trendyol'da",
         "trendyolda",
         "trendyol da",
@@ -91,6 +110,14 @@ class CommercialMarketplacePlugin:
         return 80
 
     def supports(self, message: str) -> bool:
+        from ilim_assistant.hizir.tool_bridge import (
+            _commercial_intent,
+            _komuta_pazar_tara,
+            _urun_tara_intent,
+        )
+
+        if _komuta_pazar_tara(message) or _urun_tara_intent(message):
+            return True
         low = (message or "").lower()
         if any(
             x in low
@@ -102,6 +129,8 @@ class CommercialMarketplacePlugin:
                 "pazar tara",
             )
         ):
+            return True
+        if _commercial_intent(message):
             return True
         if "trendyol" in low or "amazon" in low or "ebay" in low or "aliexpress" in low or "pazaryeri" in low or "pazar yeri" in low:
             return any(

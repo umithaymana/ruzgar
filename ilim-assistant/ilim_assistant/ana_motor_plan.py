@@ -717,8 +717,35 @@ def maybe_gundelik_instant_reply(
     """B3b — net sohbet (nasılsın/selam) için Ollama/Gemini beklemeden kısa yanıt."""
     if mode_norm not in ("genel", "uretim", "gelisim"):
         return None
+    try:
+        from ilim_assistant.ruzgar_egitim import maybe_egitim_learned_reply
+
+        taught = maybe_egitim_learned_reply(message)
+        if taught:
+            return taught
+    except Exception:
+        pass
     raw = (message or "").strip().lower()
     blob = _norm_ascii(raw) + " " + raw
+    if any(
+        x in blob
+        for x in (
+            "sohbet edelim",
+            "sohbet eder",
+            "konuşalım",
+            "konusalim",
+            "muhabbet",
+        )
+    ) and len((message or "").split()) <= 12:
+        return (
+            "Olur Ümit abi — seninle sohbet etmeyi severim. "
+            "Bugün hangi konuda konuşmak istersin?"
+        )
+    if any(x in blob for x in ("enerjik", "çok enerjik", "cok enerjik", "harikasın", "harikasin")):
+        return (
+            "Teşekkür ederim Ümit abi — enerjimi seninle konuşurken topluyorum. "
+            "Sen nasılsın, keyfin nasıl?"
+        )
     if any(
         x in blob
         for x in (
@@ -747,7 +774,19 @@ def maybe_gundelik_instant_reply(
             "iyi geceler",
         )
     ):
-        return "Merhaba — ben Rüzgar. Bugün sana nasıl yardımcı olabilirim?"
+        if re.search(r"\b(?:ruzgar|rüzgar)\b", blob) and len((message or "").split()) >= 2:
+            try:
+                from ilim_assistant.ruzgar_umed_kurallari import SELAM_RUZGAR
+
+                return SELAM_RUZGAR
+            except Exception:
+                return None
+        try:
+            from ilim_assistant.ruzgar_umed_kurallari import SELAM_STANDART
+
+            return SELAM_STANDART
+        except Exception:
+            return "Selam! Ben Rüzgar — buyur, ne yapmak istersin?"
     if any(x in blob for x in ("ben geldim", "geldim", "buradayim", "buradayım")):
         return (
             "Hoş geldin Ümit abi — Rüzgar burada, seni dinliyorum. "

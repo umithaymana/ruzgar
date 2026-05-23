@@ -131,6 +131,10 @@ def motor_niyeti_heuristic(message: str) -> dict[str, bool]:
                 "stok takip",
                 "pazar yerini tara",
                 "pazar tara",
+                "ürünleri tara",
+                "urunleri tara",
+                "ürün tara",
+                "pazarları tara",
                 "hava durumuna bak",
             )
         ),

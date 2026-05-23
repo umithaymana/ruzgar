@@ -39,8 +39,93 @@ const {
   session,
 } = electronApi;
 const { pathToFileURL } = require("url");
+const http = require("http");
+const { spawn } = require("child_process");
 
 const WORKSPACE_ROOT = path.resolve(__dirname, "..");
+const DEFAULT_API_PORT = 8779;
+
+function readLocalApiPortFromDisk() {
+  try {
+    const p = path.join(__dirname, "ruzgar_remote_api.txt");
+    if (!fs.existsSync(p)) return DEFAULT_API_PORT;
+    const line = fs
+      .readFileSync(p, "utf8")
+      .split(/\r?\n/)
+      .find((l) => {
+        const t = String(l || "").trim();
+        return t.length > 0 && !t.startsWith("#");
+      });
+    if (!line) return DEFAULT_API_PORT;
+    const u = new URL(String(line).trim().replace(/127\.0\.0\.1:8777/i, "127.0.0.1:8779"));
+    const port = parseInt(u.port || String(DEFAULT_API_PORT), 10);
+    return Number.isFinite(port) && port > 0 ? port : DEFAULT_API_PORT;
+  } catch (_) {
+    return DEFAULT_API_PORT;
+  }
+}
+
+function probeApiHealth(port) {
+  return new Promise((resolve) => {
+    const req = http.get(
+      `http://127.0.0.1:${port}/api/health`,
+      { timeout: 2500 },
+      (res) => {
+        let body = "";
+        res.on("data", (c) => {
+          body += c;
+        });
+        res.on("end", () => {
+          try {
+            const j = JSON.parse(body);
+            resolve(res.statusCode === 200 && j && j.ok === true);
+          } catch (_) {
+            resolve(false);
+          }
+        });
+      }
+    );
+    req.on("error", () => resolve(false));
+    req.on("timeout", () => {
+      req.destroy();
+      resolve(false);
+    });
+  });
+}
+
+async function ensureLocalApiServer() {
+  const port = readLocalApiPortFromDisk();
+  if (await probeApiHealth(port)) return;
+  const ia = path.join(WORKSPACE_ROOT, "ilim-assistant");
+  if (!fs.existsSync(path.join(ia, "desktop_server.py"))) return;
+  const py = process.platform === "win32" ? "py" : "python";
+  const args =
+    process.platform === "win32"
+      ? ["-3", "-m", "uvicorn", "desktop_server:app", "--host", "127.0.0.1", "--port", String(port)]
+      : ["-m", "uvicorn", "desktop_server:app", "--host", "127.0.0.1", "--port", String(port)];
+  const env = { ...process.env, RUZGAR_API_PORT: String(port) };
+  try {
+    const child = spawn(py, args, {
+      cwd: ia,
+      detached: true,
+      stdio: "ignore",
+      windowsHide: true,
+      env,
+    });
+    child.unref();
+  } catch (e) {
+    console.warn("[RÜZGAR] API otomatik başlatılamadı:", e && e.message ? e.message : e);
+    return;
+  }
+  for (let i = 0; i < 80; i++) {
+    await new Promise((r) => setTimeout(r, 400));
+    if (await probeApiHealth(port)) {
+      console.info(`[RÜZGAR] Yerel API hazır (127.0.0.1:${port})`);
+      return;
+    }
+  }
+  console.warn(`[RÜZGAR] API ${port} portunda 32 sn içinde yanıt vermedi`);
+}
 
 function activeWindow(fallback) {
   return BrowserWindow.getFocusedWindow() || fallback;
@@ -236,7 +321,8 @@ function createWindow() {
   });
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  await ensureLocalApiServer();
   /** Mikrofon / ses yakalama — Windows izin diyaloğu ve Electron oturumu için */
   try {
     const defaultSession = session && session.defaultSession;

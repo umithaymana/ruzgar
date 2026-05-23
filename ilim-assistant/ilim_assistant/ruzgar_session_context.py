@@ -136,13 +136,39 @@ def build_session_memory_context(
     tasks = _active_tasks(int(os.environ.get("RUZGAR_SESSION_TASK_LIMIT", "6")))
     reminders = _pending_reminders(int(os.environ.get("RUZGAR_SESSION_REMINDER_LIMIT", "5")))
 
-    if not any((personal, shared, tasks, reminders)):
+    egitim_block = ""
+    try:
+        from ilim_assistant.ruzgar_egitim import build_egitim_context_block
+
+        egitim_block = build_egitim_context_block()
+    except Exception:
+        egitim_block = ""
+
+    bilissel_block = ""
+    try:
+        from ilim_assistant.ruzgar_bilissel_analiz import build_bilissel_turn_context
+
+        bilissel_block = build_bilissel_turn_context(
+            message, history=history
+        ).strip()
+    except Exception:
+        bilissel_block = ""
+
+    if (
+        not any((personal, shared, tasks, reminders))
+        and not egitim_block.strip()
+        and not bilissel_block
+    ):
         return ""
 
     sections: list[str] = [
         "[RÜZGAR KALICI HAFIZA — yeni oturumda otomatik yüklendi]",
         f"Mod: {mode_norm or 'genel'}",
     ]
+    if bilissel_block:
+        sections.append(bilissel_block)
+    if egitim_block.strip():
+        sections.append(egitim_block.strip())
     if personal:
         sections.append("Kişisel profil notları:")
         sections.extend(f"- {x}" for x in personal)

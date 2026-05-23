@@ -1255,7 +1255,17 @@ def prepare_turn(
     except Exception:
         session_mem_ctx = ""
 
+    bilissel_ctx = ""
+    try:
+        from ilim_assistant.ruzgar_bilissel_analiz import build_bilissel_turn_context
+
+        bilissel_ctx = build_bilissel_turn_context(msg, history=history).strip()
+    except Exception:
+        bilissel_ctx = ""
+
     user_payload = build_user_prompt(msg, blocks)
+    if bilissel_ctx and bilissel_ctx not in (session_mem_ctx or ""):
+        user_payload = bilissel_ctx + "\n\n---\n" + user_payload
     if session_mem_ctx:
         user_payload = session_mem_ctx.rstrip() + "\n\n---\n" + user_payload
     _agent_ctx = (agent_context or "").strip()

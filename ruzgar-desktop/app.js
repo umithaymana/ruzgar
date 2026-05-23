@@ -3,8 +3,19 @@
  * Beyin adresi önceliği: preload + ruzgar_remote_api.txt > ?api > localStorage > yalın yerel.
  * Kök sonda `/api` ise kırpılır — aksi halde fetch `.../api/api/merkezi-bellek` ile 404 verir.
  */
+const RUZGAR_LOCAL_API_PORT = 8779;
+const RUZGAR_LOCAL_API_FALLBACK = `http://127.0.0.1:${RUZGAR_LOCAL_API_PORT}`;
+
+function migrateLegacyApiUrl(raw) {
+  const s = String(raw || "").trim();
+  if (!s) return s;
+  return s
+    .replace(/127\.0\.0\.1:8777/gi, `127.0.0.1:${RUZGAR_LOCAL_API_PORT}`)
+    .replace(/localhost:8777/gi, `localhost:${RUZGAR_LOCAL_API_PORT}`);
+}
+
 function normalizeRuzgarApiRootTail(raw) {
-  let s = String(raw || "").trim().replace(/\/+$/, "");
+  let s = migrateLegacyApiUrl(String(raw || "").trim()).replace(/\/+$/, "");
   if (!s) return "";
   if (/\/api$/i.test(s)) {
     s = s.replace(/\/api$/i, "").replace(/\/+$/, "");
@@ -13,7 +24,7 @@ function normalizeRuzgarApiRootTail(raw) {
 }
 
 function resolveRuzgarApiRoot() {
-  const fallback = "http://127.0.0.1:8779";
+  const fallback = RUZGAR_LOCAL_API_FALLBACK;
   try {
     const remote =
       typeof window !== "undefined" &&
@@ -38,7 +49,15 @@ function resolveRuzgarApiRoot() {
     if (typeof localStorage !== "undefined") {
       const ls = localStorage.getItem("ruzgarApi");
       if (ls) {
-        const n = normalizeRuzgarApiRootTail(String(ls).trim());
+        const migrated = migrateLegacyApiUrl(ls);
+        if (migrated !== ls) {
+          try {
+            localStorage.setItem("ruzgarApi", migrated);
+          } catch (_) {
+            /* yok say */
+          }
+        }
+        const n = normalizeRuzgarApiRootTail(migrated);
         if (n) return n;
       }
     }
@@ -158,11 +177,11 @@ function apiToWsBase(api) {
     u.protocol = u.protocol === "https:" ? "wss:" : "ws:";
     return u.origin;
   } catch {
-    return "ws://127.0.0.1:8777";
+    return `ws://127.0.0.1:${RUZGAR_LOCAL_API_PORT}`;
   }
 }
 
-/** Yerel `desktop_server` (8777): WebSocket Köprüsü olmadan doğrudan SSE — öğrenme merkezi her turda garanti */
+/** Yerel `desktop_server` (8779): WebSocket Köprüsü olmadan doğrudan SSE — öğrenme merkezi her turda garanti */
 function ruzgarLikelyLocalDesktopApi() {
   try {
     const u = new URL(API);
@@ -171,7 +190,7 @@ function ruzgarLikelyLocalDesktopApi() {
     const rawPort =
       u.port ||
       (u.protocol === "https:" ? "443" : u.protocol === "http:" ? "80" : "");
-    return String(rawPort) === "8777" || String(rawPort) === "8779";
+    return String(rawPort) === String(RUZGAR_LOCAL_API_PORT);
   } catch {
     return false;
   }
@@ -903,7 +922,7 @@ function formatClientChatError(exc) {
     return "İstek iptal edildi (Durdur tuşu veya yeni soru).";
   }
   if (/failed to fetch|networkerror|load failed/i.test(raw)) {
-    return "Ağ hatası: yerel sunucu (8777) erişilemiyor. desktop_server.py çalışıyor mu?";
+    return `Ağ hatası: yerel sunucu (${RUZGAR_LOCAL_API_PORT}) erişilemiyor. Ruzgar.ps1 veya Start-Ruzgar.ps1 çalışıyor mu?`;
   }
   return raw || "Bilinmeyen istemci hatası";
 }
@@ -1069,7 +1088,7 @@ function classifyChatError(errText) {
   } else if (/bağlanılamadı|connection|refused|10061|actively refused/i.test(body)) {
     kind = "connection";
     title = "Bağlantı kurulamadı";
-    hints.push("Start-Ruzgar.ps1 ile API (8777) ve Ollama birlikte başlatılır.");
+    hints.push(`Start-Ruzgar.ps1 veya Ruzgar.ps1 ile API (${RUZGAR_LOCAL_API_PORT}) ve Ollama birlikte başlatılır.`);
     hints.push("Sunucu çipi kırmızıysa `desktop_server.py` penceresini kontrol edin.");
   } else if (/model bulunamadı|not found|does not exist/i.test(body)) {
     kind = "model";
@@ -5459,14 +5478,42 @@ async function loadIlimFileList() {
   await okumaAtolyeRefreshTree();
 }
 
-async function checkApi() {
+function localApiHealthCandidates() {
+  const out = [API];
   try {
-    const r = await fetch(`${API}/api/health`, { method: "GET" });
+    const u = new URL(API);
+    const h = String(u.hostname || "").toLowerCase();
+    if (h === "127.0.0.1" || h === "localhost") {
+      out.push(RUZGAR_LOCAL_API_FALLBACK);
+    }
+  } catch (_) {
+    out.push(RUZGAR_LOCAL_API_FALLBACK);
+  }
+  return [...new Set(out.map((x) => normalizeRuzgarApiRootTail(x)).filter(Boolean))];
+}
+
+async function checkApi() {
+  const bases = localApiHealthCandidates();
+  for (const base of bases) {
+  try {
+    const r = await fetch(`${base}/api/health`, { method: "GET" });
     const j = await r.json();
+    if (base !== API && j.ok) {
+      try {
+        localStorage.setItem("ruzgarApi", base);
+      } catch (_) {
+        /* yok say */
+      }
+      if (!window.__ruzgarApiPortMigrated) {
+        window.__ruzgarApiPortMigrated = true;
+        window.location.reload();
+        return true;
+      }
+    }
     ruzgarDebugLog("health", {
       ok: j.ok,
       gemini: j?.super_brain?.gemini_configured,
-      port: ruzgarLikelyLocalDesktopApi() ? 8777 : API,
+      port: base,
       build: j?.build?.rev,
       fast_paths: j?.build?.fast_paths,
     });
@@ -5532,20 +5579,22 @@ async function checkApi() {
     apiWasOffline = true;
     if (faz7HealthStripEl) faz7HealthStripEl.hidden = true;
   } catch (healthErr) {
-    apiWasOffline = true;
-    hideRuzgarConnectionActiveBanner();
-    lastHealthSnapshot = null;
     ruzgarDebugLog("health:hata", {
-      api: API,
+      api: base,
       err: String(healthErr?.message || healthErr),
     });
-    if (faz7HealthStripEl) faz7HealthStripEl.hidden = true;
-    el.api.textContent = "Sunucu kapalı";
-    el.api.className = "tech-chip err";
-    el.api.title = "";
-    if (currentMode === "hizir") setHizirWorkbenchServerPill(false, "");
-    setStatus("Önce yerel sunucuyu başlatın (ilim-assistant)", "Rüzgar");
+    continue;
   }
+  }
+  apiWasOffline = true;
+  hideRuzgarConnectionActiveBanner();
+  lastHealthSnapshot = null;
+  if (faz7HealthStripEl) faz7HealthStripEl.hidden = true;
+  el.api.textContent = "Sunucu kapalı";
+  el.api.className = "tech-chip err";
+  el.api.title = "";
+  if (currentMode === "hizir") setHizirWorkbenchServerPill(false, "");
+  setStatus("Önce yerel sunucuyu başlatın (Ruzgar.ps1)", "Rüzgar");
   return false;
 }
 
@@ -6449,8 +6498,14 @@ async function streamChat(userText) {
     /^(selam|merhaba|naber|nas[ıi]ls[ıi]n|iyi\s+(akşam|aksam|geceler)|günayd[ıi]n|gunaydin|ben\s+geldim|geldim|teşekkür|tesekkur)\b/i.test(
       String(userText || "").trim(),
     ) && String(userText || "").trim().length < 48;
+  const egitimCmd =
+    /yanl[ıi]ş\s*cevap|yanlis\s*cevap|cevab[ıi]n\s+şu\s+olmalı|cevabin\s+su\s+olmalı|doğru\s+cevap|dogru\s+cevap/i.test(
+      String(userText || ""),
+    );
   const chatFullTimeoutMs = casualShortCmd
     ? 12000
+    : egitimCmd
+      ? 15000
     : nebulaKitapCmd
       ? Math.max(RUZGAR_CHAT_FULL_TIMEOUT_MS, 45000)
       : tarihSoruCmd
@@ -6713,6 +6768,25 @@ async function streamChat(userText) {
 /**
  * @param {{ skipUserBubble?: boolean }} opts Ses metni zaten gösterildiyse Yıldırım: çift balon yok.
  */
+function hizirChatImpliesProductScan(text) {
+  const low = String(text || "").toLowerCase();
+  if (/ürün\w*\s+.{0,50}\s*tara/.test(low)) return true;
+  return /\btara\b/.test(low) && /ürün|urun|pazar|fiyat|stok|trendyol|amazon/.test(low);
+}
+
+function hizirQueryFromChat(text) {
+  const raw = String(text || "").trim();
+  const m = raw.match(/(?:gereken\s+)?(?:bazı\s+|bazi\s+)?(.+?)\s+ürün\w*\s+tara/i);
+  if (m && m[1] && m[1].trim().length >= 2) return m[1].trim();
+  const m2 = raw.match(/pazar\s+tara\s*:?\s*(.+)/i);
+  if (m2 && m2[1]) return m2[1].trim();
+  return raw
+    .replace(/\s*tara\w*/gi, " ")
+    .replace(/ürün\w*/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 async function sendMessageWithText(t, opts = {}) {
   const skipUser = !!opts.skipUserBubble;
   const text = (t || "").trim();
@@ -6725,7 +6799,7 @@ async function sendMessageWithText(t, opts = {}) {
     ruzgarDebugLog("send:block", { api: API, reason: "health-fail" });
     appendBubble(
       "assistant",
-      `Yerel sunucu kapalı (${API}/api/health). Ruzgar.ps1 veya desktop_server.py (port 8777) ile API’yi başlatın.`,
+      `Yerel sunucu kapalı (${API}/api/health). Ruzgar.ps1 veya Start-Ruzgar.ps1 ile API’yi başlatın (port ${RUZGAR_LOCAL_API_PORT}).`,
       { error: true }
     );
     return;
@@ -6734,6 +6808,13 @@ async function sendMessageWithText(t, opts = {}) {
   el.input.value = "";
   if (!skipUser) {
     appendBubble("user", text);
+  }
+  if (currentMode === "hizir" && hizirChatImpliesProductScan(text)) {
+    if (el.hizirTaraQuery) {
+      const hq = hizirQueryFromChat(text);
+      if (hq) el.hizirTaraQuery.value = hq;
+    }
+    void HIZIR_MODU.pazarTara();
   }
   if (el.send) el.send.disabled = true;
   setStatus("İstek…", "Rüzgar");

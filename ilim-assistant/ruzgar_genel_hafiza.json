@@ -14045,12 +14045,6 @@
   },
   {
     "motor_tipi": "Hafıza",
-    "soru": "ben geldim",
-    "cevap": "sen kim sin",
-    "ts": "2026-05-13T11:30:47.058207+00:00"
-  },
-  {
-    "motor_tipi": "Hafıza",
     "soru": "Cursor oturumu — Video atölyesi devam noktası (2026-05-13)",
     "cevap": "Rüzgar masaüstü Video motoru yenilendi: ruzgar-desktop/index.html içinde #page-video iki sütun (video-split-root), solda yapışkan oynatıcı paneli (video-player-sticky), sağda kaydırmalı operasyonlar (video-ops-scroll), üstte dört hızlı işlem (video-quick-create/trim/audio/export). ruzgar-desktop/app.js wireVideoQuickBar ile kısayollar bağlandı. ruzgar-desktop/styles.css ile oynatıcı baskın grid oranı (1.22fr / 0.78fr), önizleme boyutu min(480px, 65vh) ve clamp ile minimum yükseklik, genişlik ≤900px tek sütun. Diğer motor çalışma sayfalarına dokunulmadı. Yarın yapılacaklar: Video sekmesinde Electron veya tarayıcıda smoke test; gerekirse önizleme veya grid ince ayarı.",
     "ts": "2026-05-13T20:00:00+00:00"
@@ -14066,5 +14060,323 @@
     "soru": "ben emine",
     "cevap": "emine yenge hoşgeldin nasılsın iyimisin ? ümit abi ile aran nasıl",
     "ts": "2026-05-14T06:56:52.762913+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kişisel not: En iyi arkadasimin adi Yavuz",
+    "cevap": "En iyi arkadasimin adi Yavuz",
+    "ts": "2026-05-20T16:56:37.422967+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kişisel not: En iyi arkadaşımın adı Yavuz",
+    "cevap": "En iyi arkadaşımın adı Yavuz",
+    "ts": "2026-05-20T17:18:06.179115+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kişisel not: gökçenur benim en büyük kızımdır bilgisayar mühendisliği fakültesinde okuyor",
+    "cevap": "gökçenur benim en büyük kızımdır bilgisayar mühendisliği fakültesinde okuyor",
+    "ts": "2026-05-20T18:32:22.615059+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kişisel not: knowledge/TARIH_VE_KULTUR/tarih_kaynak_buyuk.json dosyasını oku ve hafızana",
+    "cevap": "knowledge/TARIH_VE_KULTUR/tarih_kaynak_buyuk.json dosyasını oku ve hafızana",
+    "ts": "2026-05-20T18:38:17.802138+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kişisel not: seni çok zeki bir yapay zeka yapa cağım",
+    "cevap": "seni çok zeki bir yapay zeka yapa cağım",
+    "ts": "2026-05-20T19:47:46.591272+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kişisel not: osmanlı devletini kuran osman bey dir",
+    "cevap": "osmanlı devletini kuran osman bey dir",
+    "ts": "2026-05-20T19:48:21.000112+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kişisel not: biri sana teşekkür ederse veya iltifat ederse sende ona rıca ederim çok nazik si",
+    "cevap": "biri sana teşekkür ederse veya iltifat ederse sende ona rıca ederim çok nazik siniz de",
+    "ts": "2026-05-20T19:51:09.746283+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kişisel not: ben uyumaya gidiyorum biraz dinleneyim sende beyin jimnastiği yap geliştirkendin",
+    "cevap": "ben uyumaya gidiyorum biraz dinleneyim sende beyin jimnastiği yap geliştirkendini",
+    "ts": "2026-05-20T19:54:03.645073+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "ben geldim",
+    "cevap": "sen kimsin",
+    "ts": "2026-05-21T21:03:30.341114+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kişisel not: bu konuştuklarımızı",
+    "cevap": "bu konuştuklarımızı",
+    "ts": "2026-05-21T21:40:48.410830+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T0716",
+    "cevap": "Oturum (2026-05-23 07:16 UTC): Ümit abi ile konuşulan başlıklar — selam rüzgar · yanlış cevap",
+    "ts": "2026-05-23T07:16:37.017818+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T0719",
+    "cevap": "Oturum (2026-05-23 07:19 UTC): Ümit abi ile konuşulan başlıklar — selam rüzgar · yanlış cevap · sana sadece selam dersem bana bu şekilde cevap ver . ama selamdan sonra sana isminle hitap ediyorsam yani ''selam rüzgar '' diyorsam sende bana ''aleyküm selam ümit abi hoş geldin nasılsın iyi misin ? bugün hangi konuda sohbet edelim senin le '' gibi cevap lar vermelisin · selam · selam rüzgar",
+    "ts": "2026-05-23T07:19:38.387048+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T0742",
+    "cevap": "Oturum (2026-05-23 07:42 UTC): Ümit abi ile konuşulan başlıklar — selam · selam rüzgar",
+    "ts": "2026-05-23T07:42:09.175095+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T0744",
+    "cevap": "Oturum (2026-05-23 07:44 UTC): Ümit abi ile konuşulan başlıklar — selam · selam rüzgar · çok enejiksin",
+    "ts": "2026-05-23T07:44:58.887950+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T0746",
+    "cevap": "Oturum (2026-05-23 07:46 UTC): Ümit abi ile konuşulan başlıklar — selam · selam rüzgar · bilmediğin soruda bu kadar uzun takılma 15 saniye sonra cevabı bulamazsan şayet ''ümit abi ben bu sorunun cevabını bulamadım de'' şayet bu yazdıklarımı anlaydıysan ''ümit abi anladım ve öğrendim birdahakine bu şekilde haret edeceğim'' de ve öyle yap",
+    "ts": "2026-05-23T07:46:45.637933+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T0747",
+    "cevap": "Oturum (2026-05-23 07:47 UTC): Ümit abi ile konuşulan başlıklar — selam · selam rüzgar · bilmediğin soruda bu kadar uzun takılma 15 saniye sonra cevabı bulamazsan şayet ''ümit abi ben bu sorunun cevabını bulamadım de'' şayet bu yazdıklarımı anlaydıysan ''ümit abi anladım ve öğrendim birdahakine bu şekilde haret edeceğim'' de ve öyle yap · çok enerjiksin",
+    "ts": "2026-05-23T07:47:04.690150+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T0754",
+    "cevap": "Oturum (2026-05-23 07:54 UTC): Ümit abi ile konuşulan başlıklar — selam · selam rüzgar · bilmediğin soruda bu kadar uzun takılma 15 saniye sonra cevabı bulamazsan şayet ''ümit abi ben bu sorunun cevabını bulamadım de'' şayet bu yazdıklarımı anlaydıysan ''ümit abi anladım ve öğrendim birdahakine bu şekilde haret edeceğim'' de ve öyle yap · çok enerjiksin · sana sorduğumu 15 saniye de hafızanda veya web de veya diğer baktığın yerlerde bulamazsan şayet bana bilgi ver",
+    "ts": "2026-05-23T07:54:01.121089+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "sana sorduğumu 15 saniye de hafızanda veya web de veya diğer baktığın yerlerde bulamazsan şayet bana bilgi ver",
+    "cevap": "selam rüzgar",
+    "ts": "2026-05-23T07:56:22.385354+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T0756",
+    "cevap": "Oturum (2026-05-23 07:56 UTC): Ümit abi ile konuşulan başlıklar — selam · selam rüzgar · bilmediğin soruda bu kadar uzun takılma 15 saniye sonra cevabı bulamazsan şayet ''ümit abi ben bu sorunun cevabını bulamadım de'' şayet bu yazdıklarımı anlaydıysan ''ümit abi anladım ve öğrendim birdahakine bu şekilde haret edeceğim'' de ve öyle yap · çok enerjiksin · selam · selam rüzgar",
+    "ts": "2026-05-23T07:56:22.406679+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T0758",
+    "cevap": "Oturum (2026-05-23 07:58 UTC): Ümit abi ile konuşulan başlıklar — selam · selam rüzgar",
+    "ts": "2026-05-23T07:58:34.259430+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T0810",
+    "cevap": "Oturum (2026-05-23 08:10 UTC): Ümit abi ile konuşulan başlıklar — selam · selam rüzgar · seninle biraz sohbet edelim mi?",
+    "ts": "2026-05-23T08:10:18.423206+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T0818",
+    "cevap": "Oturum (2026-05-23 08:18 UTC): Ümit abi ile konuşulan başlıklar — selam · selam rüzgar · rüzgar seninle bugün biraz sohbet edelim olur mu?",
+    "ts": "2026-05-23T08:18:49.769974+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T0819",
+    "cevap": "Oturum (2026-05-23 08:19 UTC): Ümit abi ile konuşulan başlıklar — selam · selam rüzgar · rüzgar seninle bugün biraz sohbet edelim olur mu? · yanlış cevap",
+    "ts": "2026-05-23T08:19:39.560529+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T0820",
+    "cevap": "Oturum (2026-05-23 08:20 UTC): Ümit abi ile konuşulan başlıklar — selam · selam rüzgar · rüzgar seninle bugün biraz sohbet edelim olur mu? · yanlış cevap · rüzgar seninle bugün biraz sohbet edelim olur mu? · yanlış cevap",
+    "ts": "2026-05-23T08:20:20.122324+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T0821",
+    "cevap": "Oturum (2026-05-23 08:21 UTC): Ümit abi ile konuşulan başlıklar — rüzgar seninle bugün biraz sohbet edelim olur mu? · yanlış cevap · rüzgar seninle bugün biraz sohbet edelim olur mu? · yanlış cevap · tamam abim seninle her konuda sohbet etmeye hazırım . demelisin · rüzgar seninle bugün biraz sohbet edelim olur mu?",
+    "ts": "2026-05-23T08:21:54.303995+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T0822",
+    "cevap": "Oturum (2026-05-23 08:22 UTC): Ümit abi ile konuşulan başlıklar — selam · selam rüzgar · rüzgar seninle bugün biraz sohbet edelim olur mu? · yanlış",
+    "ts": "2026-05-23T08:22:54.795611+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "rüzgar seninle bugün biraz sohbet edelim olur mu?",
+    "cevap": "sen hangi konuyu seçersen o konuda sohbet ederiz abi",
+    "ts": "2026-05-23T08:23:35.084231+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T0823",
+    "cevap": "Oturum (2026-05-23 08:23 UTC): Ümit abi ile konuşulan başlıklar — rüzgar seninle bugün biraz sohbet edelim olur mu? · yanlış cevap · tamam abim seninle her konuda sohbet etmeye hazırım . demelisin · rüzgar seninle bugün biraz sohbet edelim olur mu? · yanlış cevap · sen hangi konuyu seçersen o konuda sohbet ederiz abi",
+    "ts": "2026-05-23T08:23:35.133332+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T0824",
+    "cevap": "Oturum (2026-05-23 08:24 UTC): Ümit abi ile konuşulan başlıklar — selam rüzgar · seninle biraz sohbet edelim mi?",
+    "ts": "2026-05-23T08:24:52.771233+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "seninle biraz sohbet edelim mi?",
+    "cevap": "edelim abi",
+    "ts": "2026-05-23T08:25:30.300455+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T0825",
+    "cevap": "Oturum (2026-05-23 08:25 UTC): Ümit abi ile konuşulan başlıklar — selam rüzgar · seninle biraz sohbet edelim mi? · yanlış cevap · edelim abi · seninle biraz sohbet edelim mi? · hangi konuda",
+    "ts": "2026-05-23T08:25:56.239074+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T0826",
+    "cevap": "Oturum (2026-05-23 08:26 UTC): Ümit abi ile konuşulan başlıklar — seninle biraz sohbet edelim mi? · yanlış cevap · edelim abi · seninle biraz sohbet edelim mi? · hangi konuda · yanlış cevap",
+    "ts": "2026-05-23T08:26:08.667224+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T0827",
+    "cevap": "Oturum (2026-05-23 08:27 UTC): Ümit abi ile konuşulan başlıklar — seninle biraz sohbet edelim mi? · hangi konuda · yanlış cevap · hangi konuda sorusu geldiğin de sohbetin akışına göre cevap ver · seninle biraz sohbet edelim mi? · hangi konuda",
+    "ts": "2026-05-23T08:27:23.718945+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T0830",
+    "cevap": "Oturum (2026-05-23 08:30 UTC): Ümit abi ile konuşulan başlıklar — yanlış cevap · rüzgar seninle bugün biraz sohbet edelim olur mu? · yanlış cevap · tamam abim seninle her konuda sohbet etmeye hazırım . demelisin · rüzgar seninle bugün biraz sohbet edelim olur mu? · senin sohbet etmek istediğin özel bir konu var mı?",
+    "ts": "2026-05-23T08:30:29.628441+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T0847",
+    "cevap": "Oturum (2026-05-23 08:47 UTC): Ümit abi ile konuşulan başlıklar — yanlış cevap · tamam abim seninle her konuda sohbet etmeye hazırım . demelisin · rüzgar seninle bugün biraz sohbet edelim olur mu? · yanlış cevap · sen hangi konuyu seçersen o konuda sohbet ederiz abi · sen hangi konuyu seçersen o konuda sohbet ederiz abi",
+    "ts": "2026-05-23T08:47:56.192916+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T0849",
+    "cevap": "Oturum (2026-05-23 08:49 UTC): Ümit abi ile konuşulan başlıklar — selam rüzgar · beni hatırladın mı?",
+    "ts": "2026-05-23T08:49:40.024781+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "senin sohbet etmek istediğin özel bir konu var mı?",
+    "cevap": "istanbulu bilir misin",
+    "ts": "2026-05-23T09:59:39.322071+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T0959",
+    "cevap": "Oturum (2026-05-23 09:59 UTC): Ümit abi ile konuşulan başlıklar — hangi konuda · yanlış cevap · hangi konuda sorusu geldiğin de sohbetin akışına göre cevap ver · seninle biraz sohbet edelim mi? · hangi konuda · istanbulu bilir misin",
+    "ts": "2026-05-23T09:59:39.352371+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T1001",
+    "cevap": "Oturum (2026-05-23 10:01 UTC): Ümit abi ile konuşulan başlıklar — selam · selam rüzgar",
+    "ts": "2026-05-23T10:01:34.037730+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T1008",
+    "cevap": "Oturum (2026-05-23 10:08 UTC): Ümit abi ile konuşulan başlıklar — selam · selam rüzgar · sen beni anlıyor musun",
+    "ts": "2026-05-23T10:08:39.829149+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T1009",
+    "cevap": "Oturum (2026-05-23 10:09 UTC): Ümit abi ile konuşulan başlıklar — selam · selam rüzgar · sen beni anlıyor musun · bu sorunun cevabı :seni anlamaya çalışıyorum abi. · sen beni anlıyor musun",
+    "ts": "2026-05-23T10:09:49.494276+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T1010",
+    "cevap": "Oturum (2026-05-23 10:10 UTC): Ümit abi ile konuşulan başlıklar — sen beni anlıyor musun · bu sorunun cevabı :seni anlamaya çalışıyorum abi. · sen beni anlıyor musun · yanlış cevap · seni anlamaya çalışıyorum · sen beni anlıyor musun",
+    "ts": "2026-05-23T10:10:29.099060+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T1011",
+    "cevap": "Oturum (2026-05-23 10:11 UTC): Ümit abi ile konuşulan başlıklar — bu sorunun cevabı :seni anlamaya çalışıyorum abi. · sen beni anlıyor musun · yanlış cevap · seni anlamaya çalışıyorum · sen beni anlıyor musun · beni anlıyormusun",
+    "ts": "2026-05-23T10:11:30.361581+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T1013",
+    "cevap": "Oturum (2026-05-23 10:13 UTC): Ümit abi ile konuşulan başlıklar — selam · selam rüzgar",
+    "ts": "2026-05-23T10:13:51.407956+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T1014",
+    "cevap": "Oturum (2026-05-23 10:14 UTC): Ümit abi ile konuşulan başlıklar — selam · selam rüzgar · sen beni anlıyor musun",
+    "ts": "2026-05-23T10:14:58.086364+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T1015",
+    "cevap": "Oturum (2026-05-23 10:15 UTC): Ümit abi ile konuşulan başlıklar — selam · selam rüzgar · beni anlıyor musun",
+    "ts": "2026-05-23T10:15:02.206255+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T1022",
+    "cevap": "Oturum (2026-05-23 10:22 UTC): Ümit abi ile konuşulan başlıklar — selam · selam rüzgar · sen beni anlıyor musun · beni anlıyor musun · sen beni anlıyor musun",
+    "ts": "2026-05-23T10:22:55.086749+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T1133",
+    "cevap": "Oturum (2026-05-23 11:33 UTC): Ümit abi ile konuşulan başlıklar — selam",
+    "ts": "2026-05-23T11:33:35.712883+00:00"
+  },
+  {
+    "motor_tipi": "Hafıza",
+    "soru": "Kişisel not: Rüzgar, dinle: Sadece \"selam\" dersem kısa karşılama yeter. Ama \"selam rüzgar\" ve",
+    "cevap": "Rüzgar, dinle: Sadece \"selam\" dersem kısa karşılama yeter. Ama \"selam rüzgar\" veya benim adımla hitap edersem sen bana \"Selam Ümit abi, hoş geldin! Bugün sana nasıl yardımcı olabilirim?\" gibi samimi ve kişisel cevap ver. Bunu hafızana doğru bilgi olarak",
+    "ts": "2026-05-23T11:34:29.014203+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T1134",
+    "cevap": "Oturum (2026-05-23 11:34 UTC): Ümit abi ile konuşulan başlıklar — selam · selam rüzgar · Rüzgar, dinle: Sadece \"selam\" dersem kısa karşılama yeter. Ama \"selam rüzgar\" veya benim adımla hitap edersem sen bana \"Selam Ümit abi, hoş geldin! Bugün sana nasıl yardımcı olabilirim?\" gibi samimi ve kişisel cevap ver. Bunu hafızana doğru bilgi olarak kaydet.",
+    "ts": "2026-05-23T11:34:29.041790+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "Oturum özeti 2026-05-23T1139",
+    "cevap": "Oturum (2026-05-23 11:39 UTC): Ümit abi ile konuşulan başlıklar — selam · selam rüzgar · Rüzgar, dinle: Sadece \"selam\" dersem kısa karşılama yeter. Ama \"selam rüzgar\" veya benim adımla hitap edersem sen bana \"Selam Ümit abi, hoş geldin! Bugün sana nasıl yardımcı olabilirim?\" gibi samimi ve kişisel cevap ver. Bunu hafızana doğru bilgi olarak kaydet. · beni anlıyor musun?",
+    "ts": "2026-05-23T11:39:01.384553+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "selam rüzgar",
+    "cevap": "Selam Ümit abi, hoş geldin! Bugün sana nasıl yardımcı olabilirim?",
+    "ts": "2026-05-23T11:45:28.490667+00:00"
+  },
+  {
+    "motor_tipi": "Egitim",
+    "soru": "selam ruzgar",
+    "cevap": "Selam Ümit abi, hoş geldin! Bugün sana nasıl yardımcı olabilirim?",
+    "ts": "2026-05-23T11:45:28.511837+00:00"
   }
 ]

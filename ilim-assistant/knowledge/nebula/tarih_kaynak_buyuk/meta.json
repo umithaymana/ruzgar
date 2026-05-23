@@ -1,0 +1,14 @@
+{
+  "collection": "tarih_kaynak_buyuk",
+  "source_file": "D:\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\knowledge\\TARIH_VE_KULTUR\\tarih_kaynak_buyuk.json",
+  "records_ingested": 12190,
+  "batches": 62,
+  "last_ingest_utc": "2026-05-20T19:08:41+00:00",
+  "index": {
+    "status": "incremental",
+    "chunks": 15377,
+    "digest": "14aa9f7dd1f87d21a92279b9f4aabe12fb6cc9e20214de568d39c7af00e3f742",
+    "changed_files": 31,
+    "removed_files": 0
+  }
+}

@@ -12,9 +12,16 @@ function readRemoteBrainEndpointFromDisk() {
       const t = String(l || "").trim();
       return t.length > 0 && !t.startsWith("#");
     });
-    return line ? String(line).trim().replace(/\/+$/, "") : "";
+    if (line) {
+      return String(line)
+        .trim()
+        .replace(/\/+$/, "")
+        .replace(/127\.0\.0\.1:8777/gi, "127.0.0.1:8779")
+        .replace(/localhost:8777/gi, "localhost:8779");
+    }
+    return "http://127.0.0.1:8779";
   } catch (_) {
-    return "";
+    return "http://127.0.0.1:8779";
   }
 }
 

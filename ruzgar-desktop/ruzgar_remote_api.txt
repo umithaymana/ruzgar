@@ -1,2 +1,2 @@
-# UI → yerel API (Ruzgar.ps1 / otomatik güncelleme)
+# UI -> yerel API (ruzgar_launch.py yazar)
 http://127.0.0.1:8779

@@ -58,6 +58,13 @@ def gemini_api_key() -> str:
 
 
 def gemini_configured() -> bool:
+    try:
+        from ilim_assistant.config import gemini_disabled
+
+        if gemini_disabled():
+            return False
+    except Exception:
+        pass
     return bool(gemini_api_key())
 
 

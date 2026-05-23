@@ -4,7 +4,7 @@ RÜZGAR masaüstü kabuğu için yerel HTTP API (Electron).
 Çalıştırma (ilim-assistant klasöründe):
   python desktop_server.py
 
-Varsayılan: http://127.0.0.1:8777
+Varsayılan: http://127.0.0.1:8779 (RUZGAR_API_PORT / .env)
 """
 
 from __future__ import annotations
@@ -103,7 +103,21 @@ _load_env_file()
 def _gemini_startup_warmup() -> None:
     """GLOBAL_API_KEY + gemini-2.0-flash — açılışta bağlan, arka plan daemon başlat."""
     try:
-        from ilim_assistant.config import apply_global_api_key_to_runtime, gemini_ready
+        from ilim_assistant.config import (
+            apply_global_api_key_to_runtime,
+            gemini_disabled,
+            gemini_ready,
+            ollama_only_mode,
+            suppress_cloud_runtime_keys,
+        )
+
+        suppress_cloud_runtime_keys()
+        if ollama_only_mode() or gemini_disabled():
+            print(
+                "[RÜZGAR] Yerel Ollama modu — Gemini/Groq kapalı.",
+                file=sys.stderr,
+            )
+            return
         from ilim_assistant.gemini_daemon import daemon_status, start_gemini_daemon
         from ilim_assistant.llm_gemini import gemini_model_ping
 
@@ -229,6 +243,8 @@ else:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[
+            "http://127.0.0.1:8779",
+            "http://localhost:8779",
             "http://127.0.0.1:8777",
             "http://localhost:8777",
             "null",
@@ -271,6 +287,23 @@ async def _warmup_rag() -> None:
         pass
     try:
         _get_hafiza_motor()
+        from ilim_assistant.ruzgar_egitim import (
+            ensure_canonical_egitim_pairs,
+            sanitize_egitim_hafiza,
+        )
+
+        ensure_canonical_egitim_pairs()
+        n = sanitize_egitim_hafiza()
+        try:
+            from ilim_assistant.ruzgar_bilissel_analiz import sanitize_empati_hafiza
+
+            ne = sanitize_empati_hafiza()
+            if ne:
+                print(f"[Rüzgar] Empati hafızası temizlendi: {ne} kayıt.", flush=True)
+        except Exception:
+            pass
+        if n:
+            print(f"[Rüzgar] Eğitim hafızası temizlendi: {n} hatalı kayıt.", flush=True)
     except Exception:
         pass
     try:
@@ -544,6 +577,27 @@ def _super_brain_health_block() -> dict[str, Any]:
         return {"ok": False, "error": str(e)}
 
 
+def _ruzgar_mode_health_snapshot() -> dict[str, Any]:
+    """Çalışan API’nin gerçek modu — UI/eski süreç teşhisi."""
+    snap: dict[str, Any] = {
+        "ollama_only": False,
+        "gemini_disabled": False,
+        "groq_disabled": False,
+        "bilissel_enabled": False,
+    }
+    try:
+        from ilim_assistant.config import gemini_disabled, groq_disabled, ollama_only_mode
+        from ilim_assistant.ruzgar_bilissel_analiz import bilissel_enabled
+
+        snap["ollama_only"] = ollama_only_mode()
+        snap["gemini_disabled"] = gemini_disabled()
+        snap["groq_disabled"] = groq_disabled()
+        snap["bilissel_enabled"] = bilissel_enabled()
+    except Exception:
+        pass
+    return snap
+
+
 def _sample_cpu_percent() -> float | None:
     """İsteğe bağlı `psutil` — yoksa null (istemci yine 200 alır)."""
     try:
@@ -649,11 +703,14 @@ def health():
         },
         "super_brain": _super_brain_health_block(),
         "build": {
-            "rev": "2026-05-20-tarih-fast-v1",
+            "rev": "2026-05-23-ollama-bilissel-v2",
             "nebula_kitap": True,
             "fast_paths": os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
             "memory_first": True,
+            "bilissel_analiz": True,
+            "egitim_routing": "bilissel>egitim>gundelik",
         },
+        "ruzgar_mode": _ruzgar_mode_health_snapshot(),
         "hizir": {
             "mock_marketplace": _m,
             "amazon_paapi_credentials": bool(_ak and _sk and _tg),
@@ -1587,7 +1644,7 @@ def _iter_instant_chat_events(
     yield done
 
 
-def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
+def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
     """SSE/WS: Ana motor durumları → prepare_turn (İdrak + orkestra) → LLM."""
     orch_early: dict[str, Any] = {}
     msg_early = (req.message or "").strip()
@@ -1624,6 +1681,22 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
                 return
         except Exception:
             pass
+        try:
+            from ilim_assistant.ruzgar_egitim import try_consume_egitim_command
+
+            egitim_reply = try_consume_egitim_command(msg_early, req.history)
+            if egitim_reply:
+                yield from _iter_instant_chat_events(
+                    egitim_reply,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=orch_early,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
 
     from ilim_assistant.idrak_on_islem import pretreat_user_turn
 
@@ -1649,6 +1722,50 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
     yield {"type": "status", "text": "Rüzgar hazırlanıyor…"}
 
     orch: dict[str, Any] = {}
+
+    # Bilişsel / empati — hatalı hafızadan ÖNCE («beni anlıyor musun» ≈ «sen beni anlıyor musun»)
+    if mode_norm in ("genel", "uretim", "gelisim") and not coding:
+        try:
+            from ilim_assistant.ruzgar_bilissel_analiz import maybe_bilissel_instant_reply
+
+            bilissel_hi = maybe_bilissel_instant_reply(
+                req.message,
+                history=req.history,
+            )
+            if bilissel_hi:
+                yield from _iter_instant_chat_events(
+                    bilissel_hi,
+                    (req.message or "").strip(),
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=orch,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+
+    # Ümit abi eğitimi — selam rüzgar vb. (empati soruları yukarıda ayrıldı)
+    if mode_norm in ("genel", "uretim", "gelisim") and not coding:
+        try:
+            from ilim_assistant.ruzgar_egitim import maybe_egitim_learned_reply
+
+            egitim_hi = maybe_egitim_learned_reply(
+                req.message,
+                history=req.history,
+            )
+            if egitim_hi:
+                yield from _iter_instant_chat_events(
+                    egitim_hi,
+                    (req.message or "").strip(),
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=orch,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
 
     # Selam / kısa sohbet — plan ve hafıza sentezinden ÖNCE (anında)
     if mode_norm in ("genel", "uretim", "gelisim") and not coding:
@@ -2251,6 +2368,24 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
         yield {"type": "error", "text": format_llm_user_error(e)}
 
 
+def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
+    """Tur süresi + eğitim sonrası işlemler (oturum özeti, bulamadım)."""
+    import time
+
+    t0 = time.perf_counter()
+    for obj in _iter_chat_turn_events_impl(req):
+        if obj.get("type") == "done":
+            obj = dict(obj)
+            obj.setdefault("elapsed_sec", time.perf_counter() - t0)
+            try:
+                from ilim_assistant.ruzgar_egitim import on_chat_turn_done
+
+                obj = on_chat_turn_done(req, obj)
+            except Exception:
+                pass
+        yield obj
+
+
 @app.post("/api/chat/stream")
 def chat_stream(req: ChatRequest):
     def generate():
@@ -2345,9 +2480,9 @@ async def websocket_chat(ws: WebSocket) -> None:
 
 
 if __name__ == "__main__":
-    # Railway / Render vb.: PORT atanır (varsayılan 8777 yerine).
-    _port_raw = os.environ.get("PORT", os.environ.get("RUZGAR_API_PORT", "8777"))
-    port = int(_port_raw)
+    from ilim_assistant.ruzgar_api_port import resolve_api_port
+
+    port = resolve_api_port()
     _default_host = "0.0.0.0" if os.environ.get("PORT") else "127.0.0.1"
     host = os.environ.get("RUZGAR_API_HOST", _default_host)
     # Varsayılan: daha az log I/O (yüksek trafikli token akışı için)

@@ -7,7 +7,7 @@ ASSISTANT_NAME = "RÜZGAR"
 OWNER_ADDRESS = "Ümit abi"
 
 # "Rüzgar" diye seslenildiğinde veya her yeni oturumda ilk yanıt için sabit karşılama
-WAKE_GREETING = "Efendim Ümit abi, sana nasıl yardımcı olabilirim?"
+WAKE_GREETING = "Selam Ümit abi, hoş geldin! Bugün sana nasıl yardımcı olabilirim?"
 
 # Kod modunda daha kısa alternatif (isteğe bağlı)
 WAKE_GREETING_CODING = "Buyur Ümit abi, kod veya yazılım konusunda nasıl yardımcı olayım?"

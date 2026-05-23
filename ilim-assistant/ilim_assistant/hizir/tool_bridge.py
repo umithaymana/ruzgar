@@ -52,7 +52,7 @@ def _maybe_append_margin_tool(uni: dict[str, Any], parts: list[str]) -> None:
 
 def _komuta_pazar_tara(message: str) -> bool:
     low = (message or "").lower()
-    return any(
+    if any(
         x in low
         for x in (
             "pazar yerini tara",
@@ -60,8 +60,41 @@ def _komuta_pazar_tara(message: str) -> bool:
             "pazarı tara",
             "pazari tara",
             "pazar tara",
+            "pazarları tara",
+            "pazarlari tara",
         )
-    )
+    ):
+        return True
+    return bool(_urun_tara_intent(message))
+
+
+def _urun_tara_intent(message: str) -> bool:
+    """«gereken ürünleri tara», «şu ürünleri tara» vb. — pazar adı şart değil."""
+    raw = (message or "").strip()
+    if len(raw) < 6:
+        return False
+    low = raw.lower()
+    if re.search(r"ürün\w*\s+.{0,50}\s*tara", low):
+        return True
+    if re.search(r"tara\w*\s+.{0,40}\s*ürün", low):
+        return True
+    if re.search(r"\b(?:tara|tarayın|tarayalim|tarayalım|taramanı)\b", low) and any(
+        x in low
+        for x in (
+            "ürün",
+            "urun",
+            "pazar",
+            "fiyat",
+            "stok",
+            "trendyol",
+            "amazon",
+            "hepsiburada",
+            "arbitraj",
+            "dropship",
+        )
+    ):
+        return True
+    return False
 
 
 def _norm_cache_key(message: str, kanallar: list[str] | None = None) -> str:
@@ -73,6 +106,8 @@ def _norm_cache_key(message: str, kanallar: list[str] | None = None) -> str:
 
 
 def _commercial_intent(message: str) -> bool:
+    if _urun_tara_intent(message):
+        return True
     low = (message or "").lower()
     if "trendyol" in low or "amazon" in low or "ebay" in low or "aliexpress" in low or "pazaryeri" in low or "pazar yeri" in low:
         return any(
@@ -149,7 +184,13 @@ def build_dynamic_operasyon_context(
 
     skip_weather = bool(weather_q and has_live_weather_block)
 
-    if _commercial_intent(msg) or _komuta_pazar_tara(msg):
+    hizir_mod = mode_norm == "hizir"
+    scan_intent = (
+        _commercial_intent(msg)
+        or _komuta_pazar_tara(msg)
+        or (hizir_mod and _urun_tara_intent(msg))
+    )
+    if scan_intent:
         cached = find_fresh_genel_girdi(
             tip="pazar_keşif", anahtar=cache_key, max_age_sec=ttl
         )

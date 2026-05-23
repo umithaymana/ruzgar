@@ -2,8 +2,8 @@
 Rüzgar port işlemleri: port-check, kill-process.
 
 Kullanım:
-  python scripts/ruzgar_port_ops.py port-check [--port 8777]
-  python scripts/ruzgar_port_ops.py kill-process [--port 8777]
+  python scripts/ruzgar_port_ops.py port-check [--port 8779]
+  python scripts/ruzgar_port_ops.py kill-process [--port 8779]
 
 Çıkış kodları (port-check):
   0 — port dinleniyor ve /api/health 200 + ok:true
@@ -21,7 +21,10 @@ import time
 import urllib.error
 import urllib.request
 
-DEFAULT_PORT = 8777
+try:
+    from ilim_assistant.ruzgar_api_port import DEFAULT_API_PORT as DEFAULT_PORT
+except ImportError:
+    DEFAULT_PORT = 8779
 _NETSTAT_RE_TEMPLATE = r"^\s*TCP\s+\S+:{port}\s+\S+\s+LISTENING\s+(\d+)\s*$"
 
 
