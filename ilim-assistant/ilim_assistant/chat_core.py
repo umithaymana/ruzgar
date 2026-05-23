@@ -842,6 +842,29 @@ def prepare_turn(
     m = normalize_mode(mode)
     if coding_mode and m not in _NO_RAG_MODES:
         m = "programlama"
+
+    try:
+        from ilim_assistant.ruzgar_owner_lock import maybe_owner_instant_reply
+
+        owner_hi = maybe_owner_instant_reply(msg, m)
+        if owner_hi and m != "programlama":
+            return msg, [], "", "", "", owner_hi
+    except Exception:
+        pass
+
+    if m == "programlama":
+        try:
+            from ilim_assistant.motorlar.programlama_motoru import (
+                maybe_programlama_instant_reply,
+            )
+
+            prog_hi = maybe_programlama_instant_reply(
+                msg, m, workspace_root=workspace_root
+            )
+            if prog_hi:
+                return msg, [], "", "", "", prog_hi
+        except Exception:
+            pass
     from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
 
     motor_flags = motor_niyeti_heuristic(msg)

@@ -192,9 +192,10 @@ def _wants_full_verify(message: str) -> bool:
 
 def wants_autonomous_code_debug(message: str) -> bool:
     """
-    Faz 10.4 — kullanıcı açıkça otonom hata ayıklama isterse (tek turda çok adım).
+    Faz 10.4 / Programlama Faz 1 — otonom hata ayıklama (çok adımlı LLM + pytest).
 
     Kapatmak: RUZGAR_CODE_DEBUG_AUTO=0
+    Traceback metni: RUZGAR_CODE_DEBUG_ON_TRACEBACK=1 (varsayılan açık)
     """
     if os.environ.get("RUZGAR_CODE_DEBUG_AUTO", "1").strip().lower() in (
         "0",
@@ -214,8 +215,221 @@ def wants_autonomous_code_debug(message: str) -> bool:
         "kendin düzelt",
         "pytest döngüsü",
         "pytest dongusu",
+        "hata ayıkla",
+        "hata ayikla",
+        "hatayı düzelt",
+        "hatayi duzelt",
+        "kodu düzelt",
+        "kodu duzelt",
+        "testi geçir",
+        "testi gecir",
+        "pytest ile düzelt",
+        "patch yaz ve test",
     )
-    return any(k in low for k in keys)
+    if any(k in low for k in keys):
+        return True
+    if os.environ.get("RUZGAR_CODE_DEBUG_ON_TRACEBACK", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    ):
+        if "traceback" in low and (
+            "file \"" in low
+            or 'file "' in (message or "")
+            or "line " in low
+            or "modulenotfounderror" in low
+            or "assertionerror" in low
+        ):
+            return True
+    return False
+
+
+_SKIP_REPO_DIRS = frozenset(
+    {
+        ".git",
+        ".cursor",
+        ".venv",
+        "venv",
+        "__pycache__",
+        "node_modules",
+        "hafiza",
+        "knowledge",
+        "dist",
+        "build",
+        ".pytest_cache",
+        "video_indirilen",
+    }
+)
+
+_REPO_TOP_DIRS = ("ilim-assistant", "ruzgar-desktop", "scripts")
+
+
+def build_repo_map(
+    workspace_root: str | Path | None = None,
+    *,
+    max_lines: int = 58,
+) -> str:
+    """Programlama modu için kısa proje haritası (LLM halüsinasyonunu azaltır)."""
+    root = repo_root(workspace_root)
+    if root is None:
+        return ""
+    lines: list[str] = [f"Kök dizin: {root}"]
+    for top in _REPO_TOP_DIRS:
+        if len(lines) >= max_lines:
+            break
+        tp = root / top
+        if not tp.exists():
+            continue
+        if tp.is_file():
+            lines.append(f"- {top}")
+            continue
+        lines.append(f"- {top}/")
+        try:
+            kids = sorted(tp.iterdir(), key=lambda p: (not p.is_dir(), p.name.lower()))
+        except OSError:
+            continue
+        shown = 0
+        for child in kids:
+            if shown >= 14 or len(lines) >= max_lines:
+                lines.append("  …")
+                break
+            name = child.name
+            if name in _SKIP_REPO_DIRS or name.startswith("."):
+                continue
+            tag = "/" if child.is_dir() else ""
+            lines.append(f"  · {name}{tag}")
+            shown += 1
+    lines.append(
+        "Giriş: ilim-assistant/desktop_server.py, ilim-assistant/ilim_assistant/chat_core.py, "
+        "ruzgar-desktop/app.js"
+    )
+    return "\n".join(lines)
+
+
+def _bilge_programlama_directive() -> str:
+    return (
+        "[BİLGE PROGRAMLAMA — Ümit & Gökçenur]\n"
+        "Akış: (1) kısa plan (2–4 madde) → (2) ilgili dosyaları oku → "
+        "(3) `@@write yol` + kod bloğu ile patch → (4) pytest/ruff çıktısını yorumla.\n"
+        "Uydurma dosya yolu yazma; üstteki haritada olmayan yolu önce sor veya @@ ile oku.\n"
+        "Traceback varsa satır numarasına göre düzelt; başarısız testte assertion'ı hedefle.\n"
+        "Kullanıcı istemedikçe kapsamı büyütme; her turda yalnızca gerekli değişiklik.\n"
+    )
+
+
+def is_programlama_reserved_command(message: str) -> bool:
+    """Eğitim hafızası / genel sohbet bu komutları yutmasın."""
+    try:
+        from ilim_assistant.motorlar.programlama_faz4 import wants_security_scan
+
+        if wants_security_scan(message):
+            return True
+    except Exception:
+        pass
+    if wants_self_scan(message) or wants_briefing(message):
+        return True
+    try:
+        from ilim_assistant.motorlar.programlama_faz2 import wants_scan_fix_approval
+
+        if wants_scan_fix_approval(message):
+            return True
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_owner_lock import is_owner_phrase
+
+        if is_owner_phrase(message):
+            return True
+    except Exception:
+        pass
+    low = (message or "").lower()
+    return any(
+        k in low
+        for k in (
+            "otomatik debug",
+            "pytest döngüsü",
+            "pytest dongusu",
+            "kendin düzelt",
+        )
+    )
+
+
+def wants_self_scan(message: str) -> bool:
+    low = (message or "").lower()
+    return any(
+        k in low
+        for k in (
+            "kendini tara",
+            "kendini kontrol",
+            "öz kontrol",
+            "oz kontrol",
+            "self-test",
+            "self test",
+            "selftest",
+            "öz-denetim",
+            "oz-denetim",
+        )
+    )
+
+
+def format_self_scan_report(
+    workspace_root: str | Path | None = None,
+) -> str:
+    """Faz 2 — genişletilmiş öz-denetim; onay bekler."""
+    from ilim_assistant.motorlar.programlama_faz2 import format_self_scan_report as _faz2_report
+
+    return _faz2_report(workspace_root)
+
+
+def maybe_programlama_instant_reply(
+    message: str,
+    mode_norm: str,
+    *,
+    workspace_root: str | Path | None = None,
+) -> str | None:
+    """Programlama motoruna özel anında yanıtlar (LLM turu atlanır)."""
+    if mode_norm != "programlama":
+        return None
+    parts: list[str] = []
+    try:
+        from ilim_assistant.ruzgar_owner_lock import maybe_owner_instant_reply
+
+        owner = maybe_owner_instant_reply(message, mode_norm)
+        if owner:
+            parts.append(owner)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz2 import (
+            build_startup_briefing,
+            wants_briefing,
+        )
+
+        if wants_briefing(message):
+            parts.append(build_startup_briefing(workspace_root).get("text", ""))
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz4 import (
+            format_security_scan_report,
+            wants_security_scan,
+        )
+
+        if wants_security_scan(message):
+            parts.append(format_security_scan_report(workspace_root))
+    except Exception:
+        pass
+    if wants_self_scan(message):
+        try:
+            from ilim_assistant.ruzgar_egitim import clear_pending
+
+            clear_pending()
+        except Exception:
+            pass
+        parts.append(format_self_scan_report(workspace_root))
+    if parts:
+        return "\n\n".join(p for p in parts if p.strip())
+    return None
 
 
 def code_debug_max_retries() -> int:
@@ -275,6 +489,18 @@ class ProgramlamaAraclari:
                 ok=False,
                 detail="Proje kökü bulunamadı.",
             )
+        try:
+            from ilim_assistant.motorlar.programlama_faz3 import programlama_write_allowed
+            from ilim_assistant.motorlar.programlama_faz4 import validate_write_content
+
+            allowed, reason = programlama_write_allowed(self._root, rel_path)
+            if not allowed:
+                return WriteReport(path=rel_path, ok=False, detail=reason)
+            ok_content, creason = validate_write_content(content)
+            if not ok_content:
+                return WriteReport(path=rel_path, ok=False, detail=creason)
+        except Exception:
+            pass
         ok = safe_write_file_under_root(self._root, rel_path, content)
         if ok:
             return WriteReport(path=rel_path, ok=True, detail="Yazıldı (.bak yedek alındı).")
@@ -415,13 +641,40 @@ def build_motor_context(
         prompt, workspace_root, run_presets=run_presets
     )
 
-    base = dinamit_heartbeat() + (
-        f"[PROGRAMLAMA MOTORU — {MIMAR_IMZA}]\n"
+    base = dinamit_heartbeat() + _bilge_programlama_directive()
+    try:
+        from ilim_assistant.motorlar.programlama_faz2 import compact_self_knowledge
+
+        base += "\n" + compact_self_knowledge() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz4 import write_guard_directive
+
+        base += write_guard_directive() + "\n"
+    except Exception:
+        pass
+    if os.environ.get("RUZGAR_PROG_REPO_MAP", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    ):
+        rmap = build_repo_map(workspace_root).strip()
+        if rmap:
+            base += f"\n[PROJE HARİTASI]\n{rmap}\n"
+    base += (
+        f"\n[PROGRAMLAMA MOTORU — {MIMAR_IMZA}]\n"
         "Bu modda cevaplar teknik, doğru ve adım adım uygulanabilir olsun. "
         "Güvenli okuma/yazma (`local_tools`) ve onaylı test preset'leri "
         "(pytest_run, python_module_run, ruff_check) etkindir.\n"
         f"Kullanici mesaji: {prompt}\n"
     )
+    if wants_autonomous_code_debug(prompt):
+        base += (
+            "\n[OTONOM DEBUG]\n"
+            "Kullanıcı otonom düzeltme istedi; cevabında @@write ile patch ver, "
+            "sunucu pytest döngüsünü çalıştıracak.\n"
+        )
     if tools_block.strip():
         base = base.rstrip() + "\n\n" + tools_block.strip() + "\n"
     return base

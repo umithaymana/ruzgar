@@ -339,6 +339,12 @@ async def _warmup_rag() -> None:
         init_tasks_db()
     except Exception:
         pass
+    try:
+        from ilim_assistant.ruzgar_owner_lock import startup_owner_banner
+
+        print(startup_owner_banner(), flush=True)
+    except Exception:
+        pass
     if os.environ.get("RUZGAR_PRINT_READY_SEAL", "1").strip().lower() not in (
         "0",
         "false",
@@ -728,7 +734,7 @@ def health():
         },
         "super_brain": _super_brain_health_block(),
         "build": {
-            "rev": "2026-05-20-net-ses-duraklat-v9",
+            "rev": "2026-05-20-programlama-faz4-v15",
             "nebula_kitap": True,
             "fast_paths": os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
             "memory_first": True,
@@ -790,6 +796,44 @@ def api_self_test():
     from ilim_assistant.ruzgar_selftest import run_self_tests
 
     return run_self_tests()
+
+
+@app.get("/api/programlama/briefing")
+def api_programlama_briefing(workspace_root: str | None = None):
+    """Programlama atölyesi açılış brifingi + öz-bilgi manifesti (Faz 2)."""
+    from ilim_assistant.motorlar.programlama_faz2 import build_startup_briefing
+
+    root = (workspace_root or "").strip() or None
+    return build_startup_briefing(root)
+
+
+@app.get("/api/programlama/self-scan")
+def api_programlama_self_scan(workspace_root: str | None = None):
+    """Genişletilmiş programlama öz-denetimi (JSON)."""
+    from ilim_assistant.motorlar.programlama_faz2 import run_programlama_self_scan
+
+    root = (workspace_root or "").strip() or None
+    return run_programlama_self_scan(root)
+
+
+@app.get("/api/programlama/environment")
+def api_programlama_environment(workspace_root: str | None = None):
+    """Windows / yerel geliştirme ortamı taraması (Faz 3)."""
+    from ilim_assistant.motorlar.programlama_faz3 import FAZ3_VERSION, run_windows_env_scan
+
+    root = (workspace_root or "").strip() or None
+    tests = run_windows_env_scan(root)
+    ok = all(t.get("ok") for t in tests)
+    return {"ok": ok, "version": FAZ3_VERSION, "tests": tests}
+
+
+@app.get("/api/programlama/security-audit")
+def api_programlama_security_audit(workspace_root: str | None = None):
+    """Güvenlik denetimi (Faz 4)."""
+    from ilim_assistant.motorlar.programlama_faz4 import run_security_audit
+
+    root = (workspace_root or "").strip() or None
+    return run_security_audit(root)
 
 
 @app.get("/api/system-health-report")
@@ -1643,6 +1687,7 @@ def _iter_instant_chat_events(
     instant_gundelik: bool = False,
     instant_clarify: bool = False,
     egitim_instant: bool = False,
+    programlama_instant: bool = False,
 ) -> Iterator[dict]:
     """Ollama/RAG beklemeden tek tur bitir (SSE/WS)."""
     full_out = finalize_assistant_reply(reply)
@@ -1667,6 +1712,8 @@ def _iter_instant_chat_events(
         done["instant_gundelik"] = True
     if egitim_instant:
         done["egitim_instant"] = True
+    if programlama_instant:
+        done["programlama_instant"] = True
     if instant_clarify:
         done["instant_clarify"] = True
     yield done
@@ -1707,6 +1754,35 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     instant_gundelik=True,
                 )
                 return
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.chat_core import normalize_mode
+            from ilim_assistant.motorlar.programlama_motoru import (
+                is_programlama_reserved_command,
+                maybe_programlama_instant_reply,
+            )
+
+            _mode_early = normalize_mode(_effective_chat_mode_raw(req))
+            _coding_early = bool(req.coding_mode) or _mode_early == "programlama"
+            if _coding_early or _mode_early == "programlama":
+                if is_programlama_reserved_command(msg_early):
+                    _prog_early = maybe_programlama_instant_reply(
+                        msg_early,
+                        "programlama",
+                        workspace_root=req.workspace_root,
+                    )
+                    if _prog_early:
+                        yield from _iter_instant_chat_events(
+                            _prog_early,
+                            msg_early,
+                            session_wake_used=req.session_wake_used,
+                            msg_for_wake=req.message,
+                            orch=orch_early,
+                            instant_gundelik=True,
+                            programlama_instant=True,
+                        )
+                        return
         except Exception:
             pass
         try:
@@ -1759,6 +1835,74 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         },
     }
     yield {"type": "status", "text": "Rüzgar hazırlanıyor…"}
+
+    # Programlama Faz 2 — onaylı düzeltme (LLM+pytest; anında yalnızca «önce tara» uyarısı)
+    _scan_fix_approved = False
+    if mode_norm == "programlama":
+        try:
+            from ilim_assistant.motorlar.programlama_faz2 import prepare_scan_fix_turn
+
+            _fix_prep = prepare_scan_fix_turn(
+                req.message or "", req.workspace_root
+            )
+            if _fix_prep:
+                if _fix_prep.get("instant"):
+                    yield from _iter_instant_chat_events(
+                        str(_fix_prep["instant"]),
+                        (req.message or "").strip(),
+                        session_wake_used=req.session_wake_used,
+                        msg_for_wake=req.message,
+                        orch={},
+                        instant_gundelik=True,
+                    )
+                    return
+                if _fix_prep.get("augmented_message"):
+                    req = req.model_copy(
+                        update={"message": str(_fix_prep["augmented_message"])}
+                    )
+                    _scan_fix_approved = True
+        except Exception:
+            pass
+
+    # Sahip kilidi + Programlama anında yanıt — RAG/LLM/süre bütçesinden ÖNCE
+    try:
+        if mode_norm == "programlama":
+            from ilim_assistant.motorlar.programlama_motoru import (
+                maybe_programlama_instant_reply,
+            )
+
+            _prog_hi = maybe_programlama_instant_reply(
+                req.message or "",
+                mode_norm,
+                workspace_root=req.workspace_root,
+            )
+            if _prog_hi:
+                yield from _iter_instant_chat_events(
+                    _prog_hi,
+                    (req.message or "").strip(),
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch={},
+                    instant_gundelik=True,
+                    programlama_instant=True,
+                )
+                return
+        else:
+            from ilim_assistant.ruzgar_owner_lock import maybe_owner_instant_reply
+
+            _owner_hi = maybe_owner_instant_reply(req.message or "", mode_norm)
+            if _owner_hi:
+                yield from _iter_instant_chat_events(
+                    _owner_hi,
+                    (req.message or "").strip(),
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch={},
+                    instant_gundelik=True,
+                )
+                return
+    except Exception:
+        pass
 
     orch: dict[str, Any] = {}
     try:
@@ -2330,13 +2474,29 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         pass
     reply_body = ""
     try:
-        wants_dbg = mode_norm == "programlama" and wants_autonomous_code_debug(msg)
+        wants_dbg = mode_norm == "programlama" and (
+            _scan_fix_approved or wants_autonomous_code_debug(msg)
+        )
+        if mode_norm == "programlama" and not wants_dbg:
+            try:
+                from ilim_assistant.motorlar.programlama_faz2 import (
+                    should_force_autonomous_debug,
+                )
+
+                wants_dbg = should_force_autonomous_debug(msg)
+            except Exception:
+                pass
         retry_cap = code_debug_max_retries() if wants_dbg else 0
         extras_remaining = retry_cap
         active_prior: list = list(prior) if prior else []
 
         if wants_dbg:
-            yield {"type": "status", "text": "Otomatik kod hata ayıklama (Faz 10.4)…"}
+            _dbg_st = (
+                "Onaylı düzeltme — patch + pytest (Faz 2)…"
+                if _scan_fix_approved
+                else "Otomatik kod hata ayıklama (Faz 10.4)…"
+            )
+            yield {"type": "status", "text": _dbg_st}
 
         while True:
             round_body = ""
@@ -2430,6 +2590,13 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 {"role": "assistant", "content": round_body},
                 {"role": "user", "content": fail_msg},
             ]
+        if mode_norm == "programlama":
+            try:
+                from ilim_assistant.motorlar.programlama_faz2 import clear_force_debug_turn
+
+                clear_force_debug_turn()
+            except Exception:
+                pass
         footer = rag_footer(hits)
         body_fixed = finalize_assistant_reply(reply_body)
         try:

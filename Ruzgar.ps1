@@ -268,7 +268,7 @@ if ($env:RUZGAR_OLLAMA_ONLY -eq "1") {
     Log "Bulut kapali - yerel Ollama"
 }
 
-$script:RuzgarExpectedBuildRev = "2026-05-23-ogretim-oncelik-v7"
+$script:RuzgarExpectedBuildRev = "2026-05-20-programlama-faz4-v15"
 
 function Get-RuzgarRemoteApiLine {
     $rd = Join-Path $Root "ruzgar-desktop"
@@ -401,6 +401,10 @@ function Test-ApiBuildCurrent {
         $rev = [string]$j.build.rev
         if ($rev -ne $script:RuzgarExpectedBuildRev) {
             Log "health rev uyumsuz: '$rev' beklenen '$($script:RuzgarExpectedBuildRev)'"
+            return $false
+        }
+        if ($rev -match "^2024-" -or $rev -match "gemini-env-fix") {
+            Log "health rev cok eski: '$rev'"
             return $false
         }
         if ($env:RUZGAR_OLLAMA_ONLY -eq "1") {

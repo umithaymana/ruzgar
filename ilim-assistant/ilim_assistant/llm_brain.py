@@ -691,6 +691,13 @@ def stream_chat_with_brain(
         yield umed_miss_reply()
         return
 
+    if not any_content and (coding_mode or mode_norm == "programlama"):
+        yield (
+            "Ümit abi, Programlama motoru şu an yanıt üretemedi (Gemini/Ollama/Groq). "
+            "«kendini tara» veya «güvenlik tara» dene; kod sorusuysa kısalt veya traceback yapıştır."
+        )
+        return
+
     if last_err:
         try:
             from ilim_assistant.llm_gemini import is_gemini_quota_or_rate_error

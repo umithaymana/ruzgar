@@ -526,6 +526,13 @@ def is_real_user_question(msg: str) -> bool:
     raw = (msg or "").strip()
     if len(raw) < 8:
         return False
+    try:
+        from ilim_assistant.motorlar.programlama_motoru import is_programlama_reserved_command
+
+        if is_programlama_reserved_command(raw):
+            return False
+    except Exception:
+        pass
     if is_wrong_answer_trigger(raw):
         return False
     if _message_is_casual_turn(raw):
@@ -965,6 +972,14 @@ def try_consume_egitim_command(message: str, history: list | None = None) -> Opt
     if not raw:
         return None
 
+    try:
+        from ilim_assistant.motorlar.programlama_motoru import is_programlama_reserved_command
+
+        if is_programlama_reserved_command(raw):
+            return None
+    except Exception:
+        pass
+
     pend = get_pending()
     if _is_bilgi_sorusu(raw) and str(pend.get("mode") or "") not in (
         "await_teaching",
@@ -1082,6 +1097,13 @@ def note_last_user_question(message: str) -> None:
             "cevabin su",
             "doğru cevap",
             "dogru cevap",
+            "kendini tara",
+            "kendini kontrol",
+            "güvenlik tara",
+            "guvenlik tara",
+            "onaylıyorum düzelt",
+            "onayliyorum duzelt",
+            "onayla ",
         )
     ):
         return
@@ -1143,9 +1165,31 @@ def wrap_miss_if_needed(
     reply: str, user_message: str, elapsed_sec: float
 ) -> tuple[str, bool]:
     """Gerekirse miss metni döner ve öğretme bekler."""
+    try:
+        from ilim_assistant.motorlar.programlama_motoru import (
+            is_programlama_reserved_command,
+        )
+
+        if is_programlama_reserved_command(user_message):
+            return reply, False
+    except Exception:
+        pass
     taught = taught_reply_for_message(user_message)
     if taught:
         return taught, False
+    low_reply = (reply or "").lower()
+    if any(
+        x in low_reply
+        for x in (
+            "öz-denetim raporu",
+            "oz-denetim raporu",
+            "güvenlik denetimi",
+            "guvenlik denetimi",
+            "genel: geçti",
+            "genel: gecti",
+        )
+    ):
+        return reply, False
     if not should_emit_miss_reply(reply, elapsed_sec, user_message=user_message):
         return reply, False
     soru = (user_message or "").strip()
@@ -1225,7 +1269,27 @@ def on_chat_turn_done(req: Any, done: dict[str, Any]) -> dict[str, Any]:
     msg = str(done.get("user_message") or getattr(req, "message", "") or "").strip()
     reply = str(done.get("full_reply") or "").strip()
     elapsed = float(done.get("elapsed_sec") or 0.0)
-    if not done.get("instant_gundelik") and not done.get("egitim_instant"):
+    skip_miss_wrap = bool(
+        done.get("instant_gundelik")
+        or done.get("egitim_instant")
+        or done.get("programlama_instant")
+    )
+    if not skip_miss_wrap:
+        try:
+            from ilim_assistant.chat_core import normalize_mode
+
+            mode = normalize_mode(getattr(req, "mode", None) or "genel")
+            if getattr(req, "coding_mode", False) or mode == "programlama":
+                skip_miss_wrap = True
+            from ilim_assistant.motorlar.programlama_motoru import (
+                is_programlama_reserved_command,
+            )
+
+            if is_programlama_reserved_command(msg):
+                skip_miss_wrap = True
+        except Exception:
+            pass
+    if not skip_miss_wrap:
         reply2, miss = wrap_miss_if_needed(reply, msg, elapsed)
         if miss:
             done = dict(done)

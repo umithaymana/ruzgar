@@ -1262,6 +1262,10 @@ function applyUiManifest(manifest) {
         : String(mode).replace(/[^a-z0-9_-]/gi, "");
     const tag = document.querySelector(`#motor-side-${safeMode} .motor-tag`);
     if (tag && meta?.tag) tag.textContent = String(meta.tag);
+    if (mode === "programlama" && meta?.tag) {
+      const pb = document.getElementById("programlama-phase-badge");
+      if (pb) pb.textContent = String(meta.tag).split("·")[0].trim() || "Faz 3";
+    }
   });
 
   if (dash.help_title) {
@@ -1437,6 +1441,7 @@ function switchMode(mode) {
   }
   currentMode = next;
   applyModeToUI();
+  renderMotorChatFromSession(next);
   setStatus(`Mod: ${MODE_LABELS[currentMode] || currentMode}`, "Rüzgar");
   updatePerformanceIndicators(perfBusy);
   updateDynamicWorkbench();
@@ -1447,7 +1452,7 @@ function switchMode(mode) {
     video:
       "Video motoru — v4: kesim çizelgesi (başlangıç/bitiş), altyazı gömme, ses birleştirme, altyazıyı Tercüme atölyesine aktarma; çıktı .ruzgar-video-export.",
     programlama:
-      "Programlama motoru açıldı; Faz 1.3 — proje köküne göre çalıştırma, kod yardımcısı üretim modu.",
+      "Programlama motoru açıldı; Faz 4 — kendini tara, güvenlik tara, onaylı düzeltme.",
     hafiza:
       "Hafıza motoru açıldı; bu motorla gelişim ve hafıza teknikleri üzerinde çalışabilirsiniz.",
     ses:
@@ -2924,6 +2929,28 @@ async function openProgramlamaWorkspaceFile(rel) {
   }
 }
 
+let programlamaBriefingShown = false;
+
+async function programlamaAtolyeShowBriefing() {
+  if (programlamaBriefingShown || !el.codeOutput) return;
+  try {
+    const qs = workspaceRoot
+      ? `?workspace_root=${encodeURIComponent(workspaceRoot)}`
+      : "";
+    const r = await fetch(`${API}/api/programlama/briefing${qs}`, {
+      method: "GET",
+    });
+    if (!r.ok) return;
+    const j = await r.json();
+    const text = String(j.text || "").trim();
+    if (!text) return;
+    el.codeOutput.textContent = text;
+    programlamaBriefingShown = true;
+  } catch (_) {
+    /* sunucu yoksa sessiz */
+  }
+}
+
 async function programlamaAtolyeRefreshRoot() {
   if (!el.codeFileTree) return;
   el.codeFileTree.innerHTML = `<div class="code-tree-loading">${esc("Yükleniyor…")}</div>`;
@@ -2937,6 +2964,7 @@ async function programlamaAtolyeRefreshRoot() {
       el.codeFileTree.innerHTML =
         `<div class="code-file-placeholder">Kök klasör boş veya erişilemiyor.</div>`;
     }
+    void programlamaAtolyeShowBriefing();
   } catch (e) {
     el.codeFileTree.innerHTML =
       `<div class="code-file-placeholder">Kök liste okunamadı: ${esc(String(e && e.message ? e.message : e))}. Yerel sunucu (ilim-assistant) veya masaüstü köprüsü gerekir.</div>`;
@@ -4710,9 +4738,87 @@ const KEYS_VOICE_SILENCE_IGNORE = new Set([
   "CapsLock",
 ]);
 
-/** @type {{role:string, content:string}[]} */
-let chatHistory = [];
-let sessionWakeUsed = false;
+/** Ortak sohbet paneli — her motorun kendi geçmişi / uyanış bayrağı / son yanıtı */
+const motorChatSessions = Object.create(null);
+
+const MOTOR_CHAT_MODES = [
+  "genel",
+  "ses",
+  "okuma",
+  "video",
+  "tercume",
+  "programlama",
+  "hafiza",
+  "hizir",
+  "uretim",
+  "gelisim",
+];
+
+function normalizeMotorChatMode(mode) {
+  const m = String(mode || "genel").trim().toLowerCase();
+  if (m === "hizli") return "genel";
+  return MOTOR_CHAT_MODES.includes(m) ? m : "genel";
+}
+
+/** Aktif motorun sohbet anahtarı (programlama atölyesi açıkken programlama). */
+function activeMotorChatMode() {
+  const onProgramlamaPage =
+    el.pageProgramlama && !el.pageProgramlama.hidden;
+  if (currentMode === "programlama" || onProgramlamaPage) {
+    return "programlama";
+  }
+  return normalizeMotorChatMode(currentMode);
+}
+
+function getMotorChatSession(mode) {
+  const key = normalizeMotorChatMode(mode || activeMotorChatMode());
+  if (!motorChatSessions[key]) {
+    motorChatSessions[key] = {
+      history: [],
+      sessionWakeUsed: false,
+      lastAssistantReply: "",
+    };
+  }
+  return motorChatSessions[key];
+}
+
+function appendMotorAssistantBubble(text) {
+  if (!el.chat) return;
+  const div = document.createElement("div");
+  div.className = "bubble assistant";
+  const t = repairMojibake(String(text || ""));
+  if (t.includes("```")) {
+    div.innerHTML = renderAssistantRichHtml(t);
+    wireAssistantCodeButtons(div);
+  } else {
+    div.innerHTML = esc(t).replace(/\n/g, "<br>");
+  }
+  el.chat.appendChild(div);
+}
+
+/** Motor değişince sohbet panelini o motorun oturumuna bağla */
+function renderMotorChatFromSession(mode) {
+  if (!el.chat) return;
+  const key = normalizeMotorChatMode(mode || activeMotorChatMode());
+  const sess = getMotorChatSession(key);
+  el.chat.innerHTML = "";
+  clearOrchestraBridge();
+  for (const msg of sess.history) {
+    const role = String(msg?.role || "").toLowerCase();
+    const content = String(msg?.content || "");
+    if (!content) continue;
+    if (role === "user") {
+      appendBubble("user", content, { skipSessionSync: true });
+    } else {
+      appendMotorAssistantBubble(content);
+    }
+  }
+  lastAssistantReply = String(sess.lastAssistantReply || "").trim();
+  updateDashboardLastSpeech();
+  showChatWelcomeIfEmpty();
+  el.chat.scrollTop = el.chat.scrollHeight;
+}
+
 let lastAssistantReply = "";
 
 function setStatus(right, left) {
@@ -4831,8 +4937,10 @@ function interruptRuzgar() {
 
 /** Uygulamayı kapatmadan sohbet oturumunu sıfırla */
 function clearChatSession() {
-  chatHistory = [];
-  sessionWakeUsed = false;
+  const sess = getMotorChatSession(activeMotorChatMode());
+  sess.history = [];
+  sess.sessionWakeUsed = false;
+  sess.lastAssistantReply = "";
   lastAssistantReply = "";
   el.chat.innerHTML = "";
   el.input.value = "";
@@ -4992,8 +5100,10 @@ function appendBubble(role, text, opts = {}) {
   }
   el.chat.appendChild(div);
   el.chat.scrollTop = el.chat.scrollHeight;
-  if (role === "assistant" && !opts.error) {
+  if (role === "assistant" && !opts.error && !opts.skipSessionSync) {
     lastAssistantReply = String(text || "").trim();
+    const sess = getMotorChatSession(activeMotorChatMode());
+    sess.lastAssistantReply = lastAssistantReply;
     updateDashboardLastSpeech();
   }
 }
@@ -5614,6 +5724,10 @@ async function checkApi() {
       if (promise) {
         promise.textContent =
           "Yerel sunucu aktif (127.0.0.1:8779). Gemini/Groq hazırsa sohbet çalışır.";
+      }
+      const progRev = document.getElementById("programlama-build-rev");
+      if (progRev) {
+        progRev.textContent = j?.build?.rev || "rev bilinmiyor";
       }
       void refreshUiManifest();
       el.api.textContent = j.stt ? "Sunucu ✓ metne döküm" : "Sunucu ✓";
@@ -6335,17 +6449,13 @@ async function streamChat(userText) {
     }
   }
 
-  const onProgramlamaPage =
-    el.pageProgramlama && !el.pageProgramlama.hidden;
-  const chatMode =
-    currentMode === "programlama" || onProgramlamaPage
-      ? "programlama"
-      : currentMode;
+  const chatMode = activeMotorChatMode();
+  const chatSess = getMotorChatSession(chatMode);
   const codingMode =
     chatMode === "programlama" || !!(el.code && el.code.checked);
   const body = {
     message: userText,
-    history: chatHistory,
+    history: chatSess.history,
     use_web: el.web
       ? !!el.web.checked
       : !["ses", "okuma", "tercume", "hafiza", "hizli", "programlama"].includes(
@@ -6355,7 +6465,7 @@ async function streamChat(userText) {
       el.linkRead == null ? true : !!el.linkRead.checked,
     fetch_pages: Number.parseInt(String(el.fetchN?.value ?? "0"), 10) || 0,
     coding_mode: codingMode,
-    session_wake_used: sessionWakeUsed,
+    session_wake_used: chatSess.sessionWakeUsed,
     mode: chatMode,
     workspace_root: workspaceRoot || undefined,
     autonom_research: !!(el.optAutonom && el.optAutonom.checked),
@@ -6516,7 +6626,7 @@ async function streamChat(userText) {
         merged = streamed + extractYerelFooter(srv);
       }
       full = stripYerelFooter(merged);
-      sessionWakeUsed = !!ev.new_wake_used;
+      chatSess.sessionWakeUsed = !!ev.new_wake_used;
       hideThinkingCenter();
       if (!responseBubble) {
         responseBubble = document.createElement("div");
@@ -6541,8 +6651,13 @@ async function streamChat(userText) {
       if (HIZIR_MODU.shouldRefreshAfterChat(ut)) {
         void HIZIR_MODU.refreshPanel();
       }
-      chatHistory.push({ role: "user", content: ev.user_message || userText });
-      chatHistory.push({ role: "assistant", content: full });
+      chatSess.history.push({
+        role: "user",
+        content: ev.user_message || userText,
+      });
+      chatSess.history.push({ role: "assistant", content: full });
+      chatSess.lastAssistantReply = full;
+      lastAssistantReply = full;
       setStatus("Hazır");
       if (wantEdge && ttsSess === ttsSessionCounter && ttsAbortController) {
         const tail = ttsPlainForSpeech(ttsPendingChunks);
@@ -6566,8 +6681,8 @@ async function streamChat(userText) {
           window.setTimeout(() => void speakLast(), 80);
         }
       }
-      if (chatHistory.length > MAX_CLIENT_HISTORY_MSGS) {
-        chatHistory = chatHistory.slice(-MAX_CLIENT_HISTORY_MSGS);
+      if (chatSess.history.length > MAX_CLIENT_HISTORY_MSGS) {
+        chatSess.history = chatSess.history.slice(-MAX_CLIENT_HISTORY_MSGS);
       }
       window.setTimeout(() => {
         lastVoiceEmotion = null;
@@ -6703,7 +6818,7 @@ async function streamChat(userText) {
       if (gj && gj.hit === true && gj.answer) {
         const txt = repairMojibake(String(gj.answer));
         const nw =
-          sessionWakeUsed ||
+          chatSess.sessionWakeUsed ||
           /\br[uü]zgar\b/i.test(userText) ||
           /\bruzgar\b/i.test(userText);
         hideThinkingCenter();
@@ -7663,8 +7778,9 @@ if (window.ruzgarApi?.onMenu) {
     if (action === "menu:disa-aktar") {
       console.log("[RÜZGAR] Hazırlanıyor... (Dışa Aktar — içerik)");
       let body = (lastAssistantReply || "").trim();
-      if (!body && chatHistory.length) {
-        body = chatHistory
+      const exportSess = getMotorChatSession(activeMotorChatMode());
+      if (!body && exportSess.history.length) {
+        body = exportSess.history
           .map((m) => `${m.role}: ${m.content}`)
           .join("\n\n");
       }
@@ -7734,7 +7850,9 @@ if (window.ruzgarApi?.onMenu) {
 wireNavToolbar();
 wireFaz7Cila();
 document.body.classList.add("faz7-complete");
-void refreshUiManifest().finally(() => showChatWelcomeIfEmpty());
+void refreshUiManifest().finally(() =>
+  renderMotorChatFromSession(activeMotorChatMode()),
+);
 void checkApi();
 setInterval(() => void checkApi(), 15000);
 
