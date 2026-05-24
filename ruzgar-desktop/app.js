@@ -2762,12 +2762,6 @@ function deriveCodeRunCwdRelFromOpenFile(rel) {
 }
 
 async function runCodeFromWorkbench() {
-  const code = getCodeEditorText();
-  if (!code) {
-    setCodeOutput("Önce editöre kod yazın.");
-    return;
-  }
-  const language = String(el.codeLanguage?.value || "python").trim().toLowerCase();
   setCodeOutput("Çalıştırılıyor...");
   let workspaceRoot = null;
   try {
@@ -2777,6 +2771,33 @@ async function runCodeFromWorkbench() {
   } catch (_) {
     workspaceRoot = null;
   }
+  const relNorm = String(atolyeOpenRel || "").replace(/\\/g, "/");
+  if (workspaceRoot && relNorm.startsWith("projects/")) {
+    try {
+      const res = await fetch(`${API}/api/programlama/run`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          workspace_root: workspaceRoot,
+          rel: relNorm,
+          smoke_only: false,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.report) {
+        setCodeOutput(data.report);
+        return;
+      }
+    } catch (_) {
+      /* code/run yedek */
+    }
+  }
+  const code = getCodeEditorText();
+  if (!code) {
+    setCodeOutput("Önce editöre kod yazın veya projects/ altında kayıtlı dosya açın.");
+    return;
+  }
+  const language = String(el.codeLanguage?.value || "python").trim().toLowerCase();
   const payload = {
     code,
     language,

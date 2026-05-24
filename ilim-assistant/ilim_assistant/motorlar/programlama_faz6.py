@@ -345,7 +345,7 @@ def format_scaffold_report(result: dict[str, Any]) -> str:
     lines.extend(
         [
             "",
-            "Sonraki adım: atölyede dosyayı açın, `pytest` veya `uvicorn` ile deneyin.",
+            "Sonraki adım: atölyede dosyayı açın; «proje çalıştır» veya **Çalıştır** (Faz 7).",
             f"Faz 5 oturum bağlamı güncellendi. ({FAZ6_VERSION})",
         ]
     )

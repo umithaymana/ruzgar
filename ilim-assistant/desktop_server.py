@@ -499,6 +499,12 @@ class ProgramlamaScaffoldBody(BaseModel):
     force: bool = False
 
 
+class ProgramlamaRunBody(BaseModel):
+    workspace_root: str | None = None
+    rel: str | None = Field(default=None, description="Dosya veya proje göreli yolu (projects/...)")
+    smoke_only: bool = False
+
+
 class CodeRunBody(BaseModel):
     code: str = ""
     language: str = "python"
@@ -765,7 +771,7 @@ def health():
         },
         "super_brain": _super_brain_health_block(),
         "build": {
-            "rev": "2026-05-20-programlama-faz6-v17",
+            "rev": "2026-05-20-programlama-faz7-v18",
             "nebula_kitap": True,
             "fast_paths": os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
             "memory_first": True,
@@ -918,6 +924,50 @@ def api_programlama_scaffold(body: ProgramlamaScaffoldBody):
         force=bool(body.force),
     )
     result["report"] = format_scaffold_report(result)
+    return result
+
+
+@app.get("/api/programlama/run-guide")
+def api_programlama_run_guide(
+    workspace_root: str | None = None,
+    rel: str | None = None,
+    message: str | None = None,
+):
+    """Faz 7 — dosya/proje açıklama ve çalıştırma rehberi (LLM yok)."""
+    from ilim_assistant.motorlar.programlama_faz7 import FAZ7_VERSION, format_explain_run_report
+
+    root = (workspace_root or "").strip() or None
+    r = (rel or "").strip() or None
+    msg = (message or "").strip() or "nasıl çalıştırırım"
+    if r:
+        msg = f"{msg} {r}"
+    text = format_explain_run_report(msg, root, active_file=r)
+    return {
+        "ok": bool(text),
+        "version": FAZ7_VERSION,
+        "report": text or "Rehber üretilemedi.",
+    }
+
+
+@app.post("/api/programlama/run")
+def api_programlama_run(body: ProgramlamaRunBody):
+    """Faz 7 — şablon projeyi güvenli smoke/çalıştır (projects/ altı)."""
+    from ilim_assistant.motorlar.programlama_faz7 import (
+        FAZ7_VERSION,
+        format_run_report,
+        resolve_target_rel,
+        run_project_profile,
+    )
+
+    root = (body.workspace_root or "").strip() or None
+    rel = (body.rel or "").strip() or None
+    if not rel:
+        rel = resolve_target_rel("", workspace_root=root)
+    if not rel:
+        raise HTTPException(status_code=400, detail="rel veya açık oturum dosyası gerekli.")
+    result = run_project_profile(root, rel, smoke_only=bool(body.smoke_only))
+    result["report"] = format_run_report(result)
+    result["version"] = FAZ7_VERSION
     return result
 
 
@@ -1856,6 +1906,8 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                         msg_early,
                         "programlama",
                         workspace_root=req.workspace_root,
+                        active_file=req.programlama_active_file,
+                        editor_snippet=req.programlama_editor_snippet,
                     )
                     if _prog_early:
                         yield from _iter_instant_chat_events(
@@ -1972,6 +2024,8 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 req.message or "",
                 mode_norm,
                 workspace_root=req.workspace_root,
+                active_file=req.programlama_active_file,
+                editor_snippet=req.programlama_editor_snippet,
             )
             if _prog_hi:
                 yield from _iter_instant_chat_events(

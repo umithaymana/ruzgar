@@ -368,6 +368,13 @@ def is_programlama_reserved_command(message: str) -> bool:
     except Exception:
         pass
     try:
+        from ilim_assistant.motorlar.programlama_faz7 import wants_file_help, wants_project_run
+
+        if wants_file_help(message) or wants_project_run(message):
+            return True
+    except Exception:
+        pass
+    try:
         from ilim_assistant.ruzgar_owner_lock import is_owner_phrase
 
         if is_owner_phrase(message):
@@ -418,6 +425,8 @@ def maybe_programlama_instant_reply(
     mode_norm: str,
     *,
     workspace_root: str | Path | None = None,
+    active_file: str | None = None,
+    editor_snippet: str | None = None,
 ) -> str | None:
     """Programlama motoruna özel anında yanıtlar (LLM turu atlanır)."""
     if mode_norm != "programlama":
@@ -497,6 +506,43 @@ def maybe_programlama_instant_reply(
                 parts.append(format_scaffold_report(run_scaffold(tid, pname, workspace_root)))
     except Exception:
         pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz7 import (
+            format_explain_run_report,
+            format_run_report,
+            resolve_target_rel,
+            run_project_profile,
+            wants_project_run,
+        )
+
+        if wants_project_run(message):
+            rel = resolve_target_rel(
+                message,
+                active_file=active_file,
+                workspace_root=workspace_root,
+            )
+            if rel:
+                parts.append(
+                    format_run_report(
+                        run_project_profile(workspace_root, rel, smoke_only=False)
+                    )
+                )
+            else:
+                parts.append(
+                    "Ümit abi, `proje çalıştır` için atölyede bir dosya aç "
+                    "veya `projects/...` yolunu yaz."
+                )
+        else:
+            guide = format_explain_run_report(
+                message,
+                workspace_root,
+                active_file=active_file,
+            )
+            if guide:
+                parts.append(guide)
+    except Exception:
+        pass
+    _ = editor_snippet
     if parts:
         return "\n\n".join(p for p in parts if p.strip())
     return None
@@ -752,6 +798,12 @@ def build_motor_context(
         from ilim_assistant.motorlar.programlama_faz6 import scaffold_directive
 
         base += scaffold_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz7 import run_directive
+
+        base += run_directive() + "\n"
     except Exception:
         pass
     if os.environ.get("RUZGAR_PROG_REPO_MAP", "1").strip().lower() not in (
