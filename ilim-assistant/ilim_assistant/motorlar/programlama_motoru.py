@@ -375,6 +375,39 @@ def is_programlama_reserved_command(message: str) -> bool:
     except Exception:
         pass
     try:
+        from ilim_assistant.motorlar.programlama_faz8 import (
+            wants_api_serve,
+            wants_api_stop,
+            wants_project_tree_focus,
+        )
+
+        if wants_api_serve(message) or wants_api_stop(message) or wants_project_tree_focus(message):
+            return True
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz10 import (
+            wants_patch_apply,
+            wants_patch_cancel,
+            wants_patch_preview,
+            wants_project_verify_cmd,
+            wants_workspace_index,
+        )
+
+        if (
+            wants_patch_preview(message)
+            or wants_patch_apply(message)
+            or wants_patch_cancel(message)
+            or wants_workspace_index(message)
+            or wants_project_verify_cmd(message)
+        ):
+            return True
+    except Exception:
+        pass
+    low8 = (message or "").lower()
+    if "api durum" in low8 or "sunucu durum" in low8:
+        return True
+    try:
         from ilim_assistant.ruzgar_owner_lock import is_owner_phrase
 
         if is_owner_phrase(message):
@@ -420,6 +453,20 @@ def format_self_scan_report(
     return _faz2_report(workspace_root)
 
 
+def unpack_programlama_instant(
+    result: str | dict[str, Any] | None,
+) -> tuple[str | None, dict[str, Any]]:
+    """Anında yanıt: düz metin veya {text, focus_rel, ...} (Faz 8)."""
+    if result is None:
+        return None, {}
+    if isinstance(result, dict):
+        text = str(result.get("text") or "").strip() or None
+        meta = {k: v for k, v in result.items() if k != "text"}
+        return text, meta
+    s = str(result).strip()
+    return (s or None), {}
+
+
 def maybe_programlama_instant_reply(
     message: str,
     mode_norm: str,
@@ -427,11 +474,12 @@ def maybe_programlama_instant_reply(
     workspace_root: str | Path | None = None,
     active_file: str | None = None,
     editor_snippet: str | None = None,
-) -> str | None:
+) -> str | dict[str, Any] | None:
     """Programlama motoruna özel anında yanıtlar (LLM turu atlanır)."""
     if mode_norm != "programlama":
         return None
     parts: list[str] = []
+    focus_meta: dict[str, Any] = {}
     try:
         from ilim_assistant.ruzgar_owner_lock import maybe_owner_instant_reply
 
@@ -490,7 +538,6 @@ def maybe_programlama_instant_reply(
         pass
     try:
         from ilim_assistant.motorlar.programlama_faz6 import (
-            format_scaffold_report,
             format_template_list_report,
             parse_scaffold_command,
             run_scaffold,
@@ -503,7 +550,16 @@ def maybe_programlama_instant_reply(
             sc = parse_scaffold_command(message)
             if sc:
                 tid, pname = sc
-                parts.append(format_scaffold_report(run_scaffold(tid, pname, workspace_root)))
+                result = run_scaffold(tid, pname, workspace_root)
+                from ilim_assistant.motorlar.programlama_faz8 import (
+                    apply_scaffold_focus,
+                    enrich_scaffold_report,
+                )
+
+                fm = apply_scaffold_focus(workspace_root, result) if result.get("ok") else {}
+                parts.append(enrich_scaffold_report(result, fm))
+                if fm.get("focus_rel"):
+                    focus_meta = fm
     except Exception:
         pass
     try:
@@ -542,9 +598,41 @@ def maybe_programlama_instant_reply(
                 parts.append(guide)
     except Exception:
         pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz10 import maybe_instant_faz10
+
+        faz10_hit = maybe_instant_faz10(
+            message,
+            workspace_root,
+            active_file=active_file,
+        )
+        if faz10_hit:
+            parts.append(faz10_hit)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz8 import maybe_instant_api_command
+
+        api_hit = maybe_instant_api_command(
+            message,
+            workspace_root,
+            active_file=active_file,
+        )
+        if api_hit:
+            api_text = str(api_hit.get("text") or "").strip()
+            if api_text:
+                parts.append(api_text)
+            for key in ("focus_rel", "project_rel", "expand_tree"):
+                if api_hit.get(key):
+                    focus_meta[key] = api_hit[key]
+    except Exception:
+        pass
     _ = editor_snippet
     if parts:
-        return "\n\n".join(p for p in parts if p.strip())
+        text = "\n\n".join(p for p in parts if p.strip())
+        if focus_meta.get("focus_rel") or focus_meta.get("project_rel"):
+            return {"text": text, **focus_meta}
+        return text
     return None
 
 
@@ -677,7 +765,16 @@ def run_tools_for_message(
             "Electron workspace_root veya LOCAL_TOOLS_ROOT ayarlayın.\n"
         )
 
-    for rel in infer_rel_paths(message, tools.root):
+    read_paths: list[str] = list(infer_rel_paths(message, tools.root))
+    try:
+        from ilim_assistant.motorlar.programlama_faz10 import expand_message_paths
+
+        for rel in expand_message_paths(message, workspace_root):
+            if rel not in read_paths:
+                read_paths.append(rel)
+    except Exception:
+        pass
+    for rel in read_paths:
         rep = tools.read(rel)
         summary.reads.append(rep)
         if rep.ok:
@@ -806,14 +903,39 @@ def build_motor_context(
         base += run_directive() + "\n"
     except Exception:
         pass
-    if os.environ.get("RUZGAR_PROG_REPO_MAP", "1").strip().lower() not in (
-        "0",
-        "false",
-        "no",
-    ):
-        rmap = build_repo_map(workspace_root).strip()
-        if rmap:
-            base += f"\n[PROJE HARİTASI]\n{rmap}\n"
+    try:
+        from ilim_assistant.motorlar.programlama_faz8 import focus_directive
+
+        base += focus_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz11 import orchestra_directive
+
+        base += orchestra_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz10 import (
+            build_workspace_index,
+            faz10_directive,
+            resolve_scope_rel,
+        )
+
+        base += faz10_directive() + "\n"
+        scope = resolve_scope_rel(workspace_root)
+        idx = build_workspace_index(workspace_root, scope_rel=scope).strip()
+        if idx:
+            base += f"\n[WORKSPACE İNDEKS — Faz 10]\n{idx}\n"
+    except Exception:
+        if os.environ.get("RUZGAR_PROG_REPO_MAP", "1").strip().lower() not in (
+            "0",
+            "false",
+            "no",
+        ):
+            rmap = build_repo_map(workspace_root).strip()
+            if rmap:
+                base += f"\n[PROJE HARİTASI]\n{rmap}\n"
     base += (
         f"\n[PROGRAMLAMA MOTORU — {MIMAR_IMZA}]\n"
         "Bu modda cevaplar teknik, doğru ve adım adım uygulanabilir olsun. "

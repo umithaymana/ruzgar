@@ -863,12 +863,28 @@ def prepare_turn(
                 msg, m, workspace_root=workspace_root
             )
             if prog_hi:
-                return msg, [], "", "", "", prog_hi
+                from ilim_assistant.motorlar.programlama_motoru import (
+                    unpack_programlama_instant,
+                )
+
+                text, _meta = unpack_programlama_instant(prog_hi)
+                if text:
+                    return msg, [], "", "", "", text
         except Exception:
             pass
     from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
 
     motor_flags = motor_niyeti_heuristic(msg)
+    if m != "programlama" and not coding_mode:
+        try:
+            from ilim_assistant.motorlar.programlama_faz10 import should_delegate_to_programlama
+
+            if should_delegate_to_programlama(
+                msg, m, coding_mode=coding_mode, motor_flags=motor_flags
+            ):
+                m = "programlama"
+        except Exception:
+            pass
     turn_plan = question_plan
     try:
         from ilim_assistant.ana_motor_plan import (

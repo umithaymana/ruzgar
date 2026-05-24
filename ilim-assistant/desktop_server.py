@@ -399,8 +399,24 @@ def _effective_chat_mode_raw(req: ChatRequest) -> str:
     """Kod modu açıksa her zaman programlama (UI genel kalsa bile tam indeks prefetch kapalı)."""
     if req.coding_mode:
         return "programlama"
-    raw = (req.mode or "").strip()
-    return raw or "genel"
+    raw = (req.mode or "").strip() or "genel"
+    try:
+        from ilim_assistant.chat_core import normalize_mode
+        from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
+        from ilim_assistant.motorlar.programlama_faz10 import should_delegate_to_programlama
+
+        mode_norm = normalize_mode(raw)
+        flags = motor_niyeti_heuristic((req.message or "").strip())
+        if should_delegate_to_programlama(
+            req.message or "",
+            mode_norm,
+            coding_mode=False,
+            motor_flags=flags,
+        ):
+            return "programlama"
+    except Exception:
+        pass
+    return raw
 
 
 class ReminderAckBody(BaseModel):
@@ -503,6 +519,10 @@ class ProgramlamaRunBody(BaseModel):
     workspace_root: str | None = None
     rel: str | None = Field(default=None, description="Dosya veya proje göreli yolu (projects/...)")
     smoke_only: bool = False
+    action: str | None = Field(
+        default="start",
+        description="Faz 8 serve: start | stop | status",
+    )
 
 
 class CodeRunBody(BaseModel):
@@ -771,7 +791,7 @@ def health():
         },
         "super_brain": _super_brain_health_block(),
         "build": {
-            "rev": "2026-05-20-programlama-faz7-v18",
+            "rev": "2026-05-20-programlama-faz11-v22",
             "nebula_kitap": True,
             "fast_paths": os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
             "memory_first": True,
@@ -923,7 +943,16 @@ def api_programlama_scaffold(body: ProgramlamaScaffoldBody):
         root,
         force=bool(body.force),
     )
-    result["report"] = format_scaffold_report(result)
+    from ilim_assistant.motorlar.programlama_faz8 import (
+        FAZ8_VERSION,
+        apply_scaffold_focus,
+        enrich_scaffold_report,
+    )
+
+    focus = apply_scaffold_focus(root, result) if result.get("ok") else {}
+    result["report"] = enrich_scaffold_report(result, focus)
+    result["focus"] = focus
+    result["faz8_version"] = FAZ8_VERSION
     return result
 
 
@@ -968,6 +997,139 @@ def api_programlama_run(body: ProgramlamaRunBody):
     result = run_project_profile(root, rel, smoke_only=bool(body.smoke_only))
     result["report"] = format_run_report(result)
     result["version"] = FAZ7_VERSION
+    return result
+
+
+class ProgramlamaPatchBody(BaseModel):
+    workspace_root: str | None = None
+    text: str = ""
+    rel: str | None = None
+    run_verify: bool = True
+
+
+@app.get("/api/programlama/workspace-index")
+def api_programlama_workspace_index(
+    workspace_root: str | None = None,
+    scope_rel: str | None = None,
+    active_file: str | None = None,
+):
+    """Faz 10.1 — workspace / proje indeksi."""
+    from ilim_assistant.motorlar.programlama_faz10 import (
+        FAZ10_VERSION,
+        build_workspace_index,
+        resolve_scope_rel,
+    )
+
+    root = (workspace_root or "").strip() or None
+    scope = (scope_rel or "").strip() or resolve_scope_rel(root, active_file=active_file)
+    idx = build_workspace_index(root, scope_rel=scope)
+    return {
+        "ok": bool(idx),
+        "scope_rel": scope or "",
+        "index": idx,
+        "version": FAZ10_VERSION,
+    }
+
+
+@app.post("/api/programlama/patch/preview")
+def api_programlama_patch_preview(body: ProgramlamaPatchBody):
+    from ilim_assistant.motorlar.programlama_faz10 import (
+        FAZ10_VERSION,
+        format_patch_preview_report,
+        preview_writes,
+        stage_pending_from_text,
+    )
+
+    root = (body.workspace_root or "").strip() or None
+    prev = preview_writes(body.text or "", root)
+    stage_pending_from_text(body.text or "", root, source="api_preview")
+    return {
+        "ok": prev.get("ok"),
+        "preview": prev,
+        "report": format_patch_preview_report(prev),
+        "version": FAZ10_VERSION,
+    }
+
+
+@app.get("/api/programlama/patch/pending")
+def api_programlama_patch_pending(workspace_root: str | None = None):
+    """Faz 10/11 — bekleyen patch listesi."""
+    from ilim_assistant.motorlar.programlama_faz10 import FAZ10_VERSION, load_pending
+
+    root = (workspace_root or "").strip() or None
+    pending = load_pending(root)
+    jobs = pending.get("jobs") or []
+    return {
+        "ok": True,
+        "count": len(jobs),
+        "paths": [str(j.get("path") or "") for j in jobs if isinstance(j, dict)],
+        "pending": pending,
+        "version": FAZ10_VERSION,
+    }
+
+
+@app.post("/api/programlama/patch/apply")
+def api_programlama_patch_apply(body: ProgramlamaPatchBody):
+    from ilim_assistant.motorlar.programlama_faz10 import (
+        FAZ10_VERSION,
+        apply_pending,
+        format_apply_report,
+        resolve_scope_rel,
+    )
+
+    root = (body.workspace_root or "").strip() or None
+    scope = resolve_scope_rel(root, active_file=body.rel)
+    res = apply_pending(root, run_verify=bool(body.run_verify), scope_rel=scope)
+    res["report"] = format_apply_report(res)
+    return res
+
+
+@app.get("/api/programlama/project-tree")
+def api_programlama_project_tree(
+    workspace_root: str | None = None,
+    project_rel: str | None = None,
+):
+    """Faz 8 — projects/<ad>/ altı güvenli dosya listesi."""
+    from ilim_assistant.motorlar.programlama_faz8 import FAZ8_VERSION, list_project_tree
+
+    root = (workspace_root or "").strip() or None
+    proj = (project_rel or "").strip()
+    if not proj:
+        raise HTTPException(status_code=400, detail="project_rel gerekli")
+    out = list_project_tree(root, proj)
+    out["version"] = FAZ8_VERSION
+    return out
+
+
+@app.post("/api/programlama/serve")
+def api_programlama_serve(body: ProgramlamaRunBody):
+    """Faz 8 — FastAPI arka plan (başlat/durdur). action=start|stop|status."""
+    from ilim_assistant.motorlar.programlama_faz7 import resolve_target_rel
+    from ilim_assistant.motorlar.programlama_faz8 import (
+        FAZ8_VERSION,
+        format_serve_status_report,
+        serve_status,
+        start_background_api,
+        stop_background_api,
+    )
+
+    root = (body.workspace_root or "").strip() or None
+    action = (body.action or "start").strip().lower()
+    rel = (body.rel or "").strip() or None
+    if not rel:
+        rel = resolve_target_rel("", workspace_root=root)
+    if action == "status":
+        st = serve_status(root, rel or None)
+        st["report"] = format_serve_status_report(root) or ""
+        st["version"] = FAZ8_VERSION
+        return st
+    if not rel:
+        raise HTTPException(status_code=400, detail="rel veya açık oturum dosyası gerekli.")
+    if action in ("stop", "durdur"):
+        result = stop_background_api(root, rel)
+    else:
+        result = start_background_api(root, rel)
+    result["version"] = FAZ8_VERSION
     return result
 
 
@@ -1823,6 +1985,9 @@ def _iter_instant_chat_events(
     instant_clarify: bool = False,
     egitim_instant: bool = False,
     programlama_instant: bool = False,
+    programlama_focus_rel: str | None = None,
+    programlama_project_rel: str | None = None,
+    programlama_expand_tree: bool = False,
 ) -> Iterator[dict]:
     """Ollama/RAG beklemeden tek tur bitir (SSE/WS)."""
     full_out = finalize_assistant_reply(reply)
@@ -1849,9 +2014,42 @@ def _iter_instant_chat_events(
         done["egitim_instant"] = True
     if programlama_instant:
         done["programlama_instant"] = True
+    if programlama_focus_rel:
+        done["programlama_focus_rel"] = programlama_focus_rel
+    if programlama_project_rel:
+        done["programlama_project_rel"] = programlama_project_rel
+    if programlama_expand_tree:
+        done["programlama_expand_tree"] = True
     if instant_clarify:
         done["instant_clarify"] = True
     yield done
+
+
+def _yield_programlama_instant(
+    raw: str | dict[str, Any] | None,
+    user_message: str,
+    *,
+    session_wake_used: bool,
+    msg_for_wake: str,
+    orch: dict[str, Any] | None = None,
+) -> Iterator[dict]:
+    from ilim_assistant.motorlar.programlama_motoru import unpack_programlama_instant
+
+    text, meta = unpack_programlama_instant(raw)
+    if not text:
+        return
+    yield from _iter_instant_chat_events(
+        text,
+        user_message,
+        session_wake_used=session_wake_used,
+        msg_for_wake=msg_for_wake,
+        orch=orch or {},
+        instant_gundelik=True,
+        programlama_instant=True,
+        programlama_focus_rel=str(meta.get("focus_rel") or "") or None,
+        programlama_project_rel=str(meta.get("project_rel") or "") or None,
+        programlama_expand_tree=bool(meta.get("expand_tree")),
+    )
 
 
 def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
@@ -1910,14 +2108,12 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                         editor_snippet=req.programlama_editor_snippet,
                     )
                     if _prog_early:
-                        yield from _iter_instant_chat_events(
+                        yield from _yield_programlama_instant(
                             _prog_early,
                             msg_early,
                             session_wake_used=req.session_wake_used,
                             msg_for_wake=req.message,
                             orch=orch_early,
-                            instant_gundelik=True,
-                            programlama_instant=True,
                         )
                         return
         except Exception:
@@ -1947,6 +2143,11 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
     mode_raw = _effective_chat_mode_raw(req)
     mode_norm = normalize_mode(mode_raw)
     coding = req.coding_mode or mode_norm == "programlama"
+    _delegated_from_genel = bool(
+        (req.mode or "").strip().lower() in ("genel", "gelisim", "uretim", "")
+        and not req.coding_mode
+        and mode_norm == "programlama"
+    )
     if mode_norm == "programlama":
         try:
             from ilim_assistant.motorlar.programlama_faz5 import sync_client_editor_state
@@ -1970,19 +2171,19 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             begin_turn_budget(req.message or "")
     except Exception:
         pass
-    yield {
-        "type": "meta",
-        "chat_route": {
-            "mode_raw": (req.mode or "").strip() or None,
-            "mode_effective": mode_norm,
-            "coding_mode": coding,
-            "idrak_surface": {
-                "changed": pt.changed,
-                "continuation": pt.continuation,
-                "replacements": list(pt.replacements)[:8],
-            },
+    route_meta: dict[str, Any] = {
+        "mode_raw": (req.mode or "").strip() or None,
+        "mode_effective": mode_norm,
+        "coding_mode": coding,
+        "idrak_surface": {
+            "changed": pt.changed,
+            "continuation": pt.continuation,
+            "replacements": list(pt.replacements)[:8],
         },
     }
+    if _delegated_from_genel:
+        route_meta["programlama_delegated"] = True
+    yield {"type": "meta", "chat_route": route_meta}
     yield {"type": "status", "text": "Rüzgar hazırlanıyor…"}
 
     # Programlama Faz 2 — onaylı düzeltme (LLM+pytest; anında yalnızca «önce tara» uyarısı)
@@ -2028,14 +2229,12 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 editor_snippet=req.programlama_editor_snippet,
             )
             if _prog_hi:
-                yield from _iter_instant_chat_events(
+                yield from _yield_programlama_instant(
                     _prog_hi,
                     (req.message or "").strip(),
                     session_wake_used=req.session_wake_used,
                     msg_for_wake=req.message,
                     orch={},
-                    instant_gundelik=True,
-                    programlama_instant=True,
                 )
                 return
         else:
@@ -2460,7 +2659,20 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         if evs or bundle.hits or (bundle.ilim_citation_tail or "").strip():
             reuse_b = bundle
 
-    if mode_norm in ("genel", "uretim", "gelisim"):
+    if mode_norm == "programlama":
+        try:
+            from ilim_assistant.motorlar.programlama_faz11 import merge_orchestra_programlama
+
+            orch = merge_orchestra_programlama(
+                orch,
+                req.message or "",
+                req.workspace_root,
+                active_file=req.programlama_active_file,
+                phase="llm",
+            )
+        except Exception:
+            pass
+    elif mode_norm in ("genel", "uretim", "gelisim"):
         try:
             from ilim_assistant.ana_motor_agent import build_agent_steps
 
@@ -2751,6 +2963,29 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 pass
         footer = rag_footer(hits)
         body_fixed = finalize_assistant_reply(reply_body)
+        code_patch_meta: dict[str, Any] = {}
+        if mode_norm == "programlama":
+            try:
+                from ilim_assistant.motorlar.programlama_faz10 import (
+                    process_assistant_reply_patches,
+                    resolve_scope_rel,
+                )
+
+                scope = resolve_scope_rel(
+                    req.workspace_root,
+                    active_file=req.programlama_active_file,
+                )
+                code_patch_meta = process_assistant_reply_patches(
+                    reply_body,
+                    req.workspace_root,
+                    scope_rel=scope,
+                    skip_if_debug_loop=bool(wants_dbg),
+                )
+                patch_footer = str(code_patch_meta.get("footer") or "")
+                if patch_footer:
+                    body_fixed = body_fixed.rstrip() + patch_footer
+            except Exception:
+                pass
         try:
             from ilim_assistant.ana_motor_reflection import apply_answer_quality_pass
 
@@ -2784,6 +3019,29 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             except Exception:
                 pass
             done_llm["orchestra"] = orch
+        if code_patch_meta and code_patch_meta.get("action") not in ("skip", "none"):
+            done_llm["code_patch"] = {
+                "action": code_patch_meta.get("action"),
+                "applied": list(code_patch_meta.get("applied") or []),
+                "errors": list(code_patch_meta.get("errors") or []),
+            }
+        if mode_norm == "programlama":
+            try:
+                from ilim_assistant.motorlar.programlama_faz11 import merge_orchestra_programlama
+
+                orch = merge_orchestra_programlama(
+                    orch,
+                    msg,
+                    req.workspace_root,
+                    active_file=req.programlama_active_file,
+                    phase="done",
+                    patch_meta=code_patch_meta,
+                )
+                done_llm["orchestra"] = orch
+            except Exception:
+                pass
+        if _delegated_from_genel:
+            done_llm["programlama_delegated"] = True
         yield done_llm
     except Exception as e:
         yield {"type": "error", "text": format_llm_user_error(e)}

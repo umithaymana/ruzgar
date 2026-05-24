@@ -3082,6 +3082,43 @@ body:not(.workbench-hizir-active) #workbench-hizir-tools,
 .code-editor:focus {
   box-shadow: inset 0 0 0 1px rgba(0, 127, 212, 0.55);
 }
+.programlama-patch-strip {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #2a3d52;
+  background: #121a24;
+}
+.programlama-patch-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+.programlama-patch-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 12px;
+  color: #9ec9ff;
+}
+.programlama-patch-list li {
+  margin: 2px 0;
+}
+.programlama-patch-list button {
+  margin-left: 6px;
+  font-size: 11px;
+}
+.programlama-agent-steps {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+}
+.programlama-agent-title {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
 .code-output-panel {
   display: flex;
   flex-direction: column;

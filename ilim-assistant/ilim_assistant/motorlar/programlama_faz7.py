@@ -18,7 +18,7 @@ from typing import Any
 from ilim_assistant.approved_executor import run_argv
 from ilim_assistant.motorlar.programlama_motoru import ProgramlamaAraclari, repo_root
 
-FAZ7_VERSION = "programlama-faz7-v1-2026-05-20"
+FAZ7_VERSION = "programlama-faz7-v2-2026-05-24"
 
 _PATH_RE = re.compile(
     r"(projects/[\w.\-/\\]+(?:\.py|\.md|\.txt)?)",
@@ -108,6 +108,59 @@ def detect_run_profile(
     bot_py = proj_path / "bot.py"
     app_main = proj_path / "app" / "main.py"
     pyproject = proj_path / "pyproject.toml"
+    package_json = proj_path / "package.json"
+    index_html = proj_path / "index.html"
+    pj_text = ""
+    if package_json.is_file():
+        try:
+            pj_text = package_json.read_text(encoding="utf-8", errors="replace").lower()
+        except OSError:
+            pj_text = ""
+        if "vite" in pj_text and "react" in pj_text:
+            port = int(os.environ.get("RUZGAR_FAZ7_VITE_PORT", "5173"))
+            return {
+                "profile_id": "react_vite",
+                "project_rel": proj_rel.replace("\\", "/"),
+                "slug": slug,
+                "title": slug,
+                "install_argv": ["npm", "install"],
+                "run_argv": ["npm", "run", "dev"],
+                "smoke_argv": ["npm", "run", "build"],
+                "urls": [f"http://127.0.0.1:{port}/"],
+                "manual": (
+                    f"cd projects/{slug}\n"
+                    "npm install\n"
+                    "npm run dev"
+                ),
+            }
+
+    if index_html.is_file() and "vite" not in pj_text:
+        static_port = int(os.environ.get("RUZGAR_FAZ7_STATIC_PORT", "5500"))
+        return {
+            "profile_id": "static_site",
+            "project_rel": proj_rel.replace("\\", "/"),
+            "slug": slug,
+            "title": slug,
+            "install_argv": None,
+            "run_argv": [
+                sys.executable,
+                "-m",
+                "http.server",
+                str(static_port),
+                "--bind",
+                "127.0.0.1",
+            ],
+            "smoke_argv": [
+                sys.executable,
+                "-c",
+                "from pathlib import Path; p=Path('index.html'); assert p.is_file(); print('static_ok')",
+            ],
+            "urls": [f"http://127.0.0.1:{static_port}/"],
+            "manual": (
+                f"cd projects/{slug}\n"
+                f"python -m http.server {static_port}"
+            ),
+        }
 
     if app_main.is_file() and req.is_file():
         text = req.read_text(encoding="utf-8", errors="replace").lower()
@@ -318,6 +371,36 @@ def format_explain_run_report(
                 "```",
             ]
         )
+    elif pid == "static_site":
+        lines.extend(
+            [
+                "**Ne yapıyor:** Statik HTML/CSS/JS vitrin sitesi.",
+                "",
+                "```bash",
+                profile["manual"],
+                "```",
+                "",
+                "**Tarayıcı:**",
+            ]
+        )
+        for u in profile.get("urls") or []:
+            lines.append(f"- {u}")
+    elif pid == "react_vite":
+        lines.extend(
+            [
+                "**Ne yapıyor:** React + Vite tek sayfa uygulama (SPA).",
+                "",
+                "İlk kurulum: `npm install` (bir kez).",
+                "",
+                "```bash",
+                profile["manual"],
+                "```",
+                "",
+                "**Geliştirme sunucusu:**",
+            ]
+        )
+        for u in profile.get("urls") or []:
+            lines.append(f"- {u}")
 
     lines.extend(
         [
@@ -349,29 +432,44 @@ def run_project_profile(
 
     steps: list[dict[str, Any]] = []
     install = profile.get("install_argv")
+    pid = profile["profile_id"]
     if install and not smoke_only:
-        code, out, err = run_argv(install, timeout_sec=120, cwd=str(cwd))
+        inst_step = "npm_install" if pid == "react_vite" else "pip_install"
+        inst_timeout = 300 if pid == "react_vite" else 120
+        code, out, err = run_argv(install, timeout_sec=inst_timeout, cwd=str(cwd))
         steps.append(
             {
-                "step": "pip_install",
+                "step": inst_step,
                 "exit_code": code,
                 "output": (out or err or "")[:4000],
             }
         )
         if code != 0:
+            err_msg = (
+                "npm install başarısız (Node.js kurulu mu?)"
+                if pid == "react_vite"
+                else "pip install başarısız"
+            )
             return {
                 "ok": False,
-                "profile_id": profile["profile_id"],
+                "profile_id": pid,
                 "project_rel": proj_rel,
                 "steps": steps,
-                "error": "pip install başarısız",
+                "error": err_msg,
             }
 
-    pid = profile["profile_id"]
     if pid == "fastapi_api":
         argv = profile["smoke_argv"]
         label = "import_smoke"
         timeout = 30
+    elif pid == "react_vite":
+        argv = profile["smoke_argv"] if smoke_only else profile["run_argv"]
+        label = "npm_build" if smoke_only else "npm_dev"
+        timeout = 120 if smoke_only else 15
+    elif pid == "static_site":
+        argv = profile["smoke_argv"] if smoke_only else profile["run_argv"]
+        label = "static_smoke" if smoke_only else "http_server"
+        timeout = 20 if smoke_only else 8
     elif smoke_only:
         argv = profile.get("smoke_argv") or profile["run_argv"]
         label = "smoke"
@@ -395,6 +493,22 @@ def run_project_profile(
     ok = code == 0
     if pid == "fastapi_api" and not smoke_only:
         ok = code == 0 or "import_ok" in combined
+    if pid == "static_site" and not smoke_only:
+        ok = True
+        report_lines.extend(
+            [
+                "",
+                "Statik sunucu kısa süre çalıştı (önizleme için ayrı terminalde http.server bırakın):",
+            ]
+        )
+    if pid == "react_vite" and not smoke_only:
+        ok = code == 0 or code == -1
+        report_lines.extend(
+            [
+                "",
+                "Vite dev sunucusu arka planda kısa deneme — sürekli çalışsın dersen ayrı terminalde `npm run dev`:",
+            ]
+        )
     report_lines = [
         f"Ümit abi, **{proj_rel}** çalıştırma ({profile['profile_id']}):",
         "",

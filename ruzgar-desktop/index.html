@@ -936,6 +936,19 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
                   spellcheck="false"
                   placeholder="# Kodunu buraya yaz. Rüzgar'a kodu açıklatmak, hatayı buldurmak, yapıyı yeniden düzenletmek veya test yazdırmak için üstteki araçları kullan."
                 ></textarea>
+                <div id="programlama-patch-strip" class="programlama-patch-strip" hidden>
+                  <div class="programlama-patch-head">
+                    <strong>Patch (Faz 10)</strong>
+                    <button type="button" id="btn-patch-apply-pending" class="btn-secondary btn-compact">
+                      Bekleyeni uygula
+                    </button>
+                  </div>
+                  <ul id="programlama-patch-list" class="programlama-patch-list"></ul>
+                </div>
+                <div id="programlama-agent-steps" class="programlama-agent-steps mini-card" hidden>
+                  <strong class="programlama-agent-title">Orkestra adımları (Faz 11)</strong>
+                  <ol id="programlama-agent-list" class="dashboard-agent-list"></ol>
+                </div>
                 <div class="code-output-panel">
                   <div class="code-output-head">
                     <span>Çıktı / Terminal</span>

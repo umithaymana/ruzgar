@@ -1544,6 +1544,105 @@ function ensureDashboardAgentUi() {
   dashboardAgentListEl = ol;
 }
 
+function renderProgramlamaAgentSteps(steps) {
+  const wrap = document.getElementById("programlama-agent-steps");
+  const list = document.getElementById("programlama-agent-list");
+  if (!wrap || !list) return;
+  const rows = Array.isArray(steps) ? steps : [];
+  if (!rows.length) {
+    wrap.hidden = true;
+    list.innerHTML = "";
+    return;
+  }
+  wrap.hidden = false;
+  list.innerHTML = "";
+  const reduced = isFaz7ReducedMotion();
+  rows.forEach((s, idx) => {
+    const li = document.createElement("li");
+    const st = String(s.status || "skip");
+    li.className = `agent-step agent-step-${st}${reduced ? "" : " agent-step-enter"}`;
+    if (!reduced) li.style.animationDelay = `${Math.min(idx * 55, 330)}ms`;
+    const lab = esc(String(s.label || s.id || ""));
+    const det = esc(String(s.detail || ""));
+    const dot =
+      st === "active"
+        ? `<span class="agent-step-dot" aria-hidden="true"></span>`
+        : st === "done"
+          ? `<span class="agent-step-check" aria-hidden="true">✓</span>`
+          : "";
+    li.innerHTML =
+      `${dot}<span class="agent-step-label">${lab}</span><span class="agent-step-detail">${det}</span>`;
+    list.appendChild(li);
+  });
+}
+
+function showProgramlamaPatchStrip(codePatch) {
+  const strip = document.getElementById("programlama-patch-strip");
+  const list = document.getElementById("programlama-patch-list");
+  if (!strip || !list || !codePatch) return;
+  const applied = Array.isArray(codePatch.applied) ? codePatch.applied : [];
+  const errors = Array.isArray(codePatch.errors) ? codePatch.errors : [];
+  if (!applied.length && !errors.length) {
+    strip.hidden = true;
+    return;
+  }
+  strip.hidden = false;
+  list.innerHTML = "";
+  for (const p of applied) {
+    const li = document.createElement("li");
+    li.innerHTML = `✓ <code>${esc(p)}</code>`;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn-secondary btn-compact";
+    btn.textContent = "Aç";
+    btn.addEventListener("click", () => void openProgramlamaWorkspaceFile(p));
+    li.appendChild(btn);
+    list.appendChild(li);
+  }
+  for (const e of errors) {
+    const li = document.createElement("li");
+    li.textContent = `✗ ${e}`;
+    list.appendChild(li);
+  }
+  if (codePatch.action === "staged") {
+    const li = document.createElement("li");
+    li.textContent = "Bekleyen patch — «patch onayla» veya Bekleyeni uygula";
+    list.appendChild(li);
+  }
+}
+
+async function applyPendingPatchFromAtolye() {
+  let workspaceRoot = null;
+  try {
+    if (window.ruzgarApi?.getRoot) workspaceRoot = await window.ruzgarApi.getRoot();
+  } catch (_) {
+    workspaceRoot = null;
+  }
+  if (!workspaceRoot) {
+    setCodeOutput("Workspace kökü yok — Electron köprüsü gerekli.");
+    return;
+  }
+  try {
+    const res = await fetch(`${API}/api/programlama/patch/apply`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        workspace_root: workspaceRoot,
+        rel: atolyeOpenRel || undefined,
+        run_verify: true,
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setCodeOutput(data.report || data.error || "Patch uygulandı.");
+    if (data.applied?.length) {
+      showProgramlamaPatchStrip({ action: "applied", applied: data.applied, errors: data.errors || [] });
+      void openProgramlamaWorkspaceFile(data.applied[0]);
+    }
+  } catch (e) {
+    setCodeOutput(`Patch hatası: ${e && e.message ? e.message : e}`);
+  }
+}
+
 function renderDashboardAgentSteps(steps) {
   ensureDashboardAgentUi();
   if (!dashboardAgentListEl || !dashboardAgentWrapEl) return;
@@ -1584,6 +1683,9 @@ function renderOrchestraBridge(orch) {
   }
   if (Array.isArray(orch.agent_steps) && orch.agent_steps.length) {
     renderDashboardAgentSteps(orch.agent_steps);
+    if (currentMode === "programlama" || orch.programlama_faz11) {
+      renderProgramlamaAgentSteps(orch.agent_steps);
+    }
   }
   const motors = Array.isArray(orch.motors) ? orch.motors : [];
   const plan = orch.plan && typeof orch.plan === "object" ? orch.plan : null;
@@ -2958,6 +3060,74 @@ async function openProgramlamaWorkspaceFile(rel) {
     el.codeEditor?.focus();
   } catch (e) {
     setCodeOutput(`Dosya hatası: ${e && e.message ? e.message : e}`);
+  }
+}
+
+function findCodeTreeRowByRel(rel) {
+  const norm = String(rel || "").replace(/\\/g, "/").replace(/^\/+/, "");
+  if (!norm || !el.codeFileTree) return null;
+  const rows = el.codeFileTree.querySelectorAll(".code-tree-row");
+  for (const row of rows) {
+    const r = String(row.dataset.rel || "").replace(/\\/g, "/").replace(/^\/+/, "");
+    if (r === norm) return row;
+  }
+  return null;
+}
+
+async function expandCodeTreeFolderRow(row) {
+  if (!row?.classList.contains("folder")) return;
+  const branch = row.closest(".code-tree-branch");
+  const kids = branch?.querySelector(":scope > .code-tree-children");
+  if (!kids) return;
+  if (kids.dataset.loaded !== "1") {
+    const depth = Number.parseInt(row.dataset.depth || "0", 10);
+    kids.innerHTML = `<div class="code-tree-loading">${esc("Yükleniyor…")}</div>`;
+    kids.hidden = false;
+    try {
+      const items = await workspaceListDir(row.dataset.rel || "");
+      kids.innerHTML = "";
+      for (const x of items) {
+        kids.appendChild(createCodeTreeBranch(x, depth + 1));
+      }
+      kids.dataset.loaded = "1";
+    } catch {
+      kids.innerHTML = `<div class="code-tree-err">${esc("Liste okunamadı.")}</div>`;
+      return;
+    }
+  } else if (kids.hidden) {
+    kids.hidden = false;
+  }
+  row.classList.add("is-expanded");
+  const chev = row.querySelector(".code-tree-chev");
+  if (chev) chev.textContent = "▾";
+}
+
+async function expandCodeTreeToRel(targetRel) {
+  const norm = String(targetRel || "").replace(/\\/g, "/").replace(/^\/+/, "");
+  const parts = norm.split("/").filter(Boolean);
+  if (parts.length < 2) return;
+  for (let i = 1; i < parts.length; i++) {
+    const folderRel = parts.slice(0, i).join("/");
+    let row = findCodeTreeRowByRel(folderRel);
+    if (!row) {
+      await programlamaAtolyeRefreshRoot();
+      row = findCodeTreeRowByRel(folderRel);
+    }
+    if (row) await expandCodeTreeFolderRow(row);
+  }
+}
+
+async function applyProgramlamaFocusFromChat(ev) {
+  const focus = String(ev?.programlama_focus_rel || "").trim();
+  const project = String(ev?.programlama_project_rel || "").trim();
+  if (!focus && !project) return;
+  switchMode("programlama");
+  await programlamaAtolyeRefreshRoot();
+  if (ev?.programlama_expand_tree) {
+    await expandCodeTreeToRel(focus || project);
+  }
+  if (focus) {
+    await openProgramlamaWorkspaceFile(focus);
   }
 }
 
@@ -4558,6 +4728,10 @@ function wireProgrammingWorkbench() {
     el.btnCodeRun.addEventListener("click", () => {
       void runCodeFromWorkbench();
     });
+  }
+  const btnPatchApply = document.getElementById("btn-patch-apply-pending");
+  if (btnPatchApply) {
+    btnPatchApply.addEventListener("click", () => void applyPendingPatchFromAtolye());
   }
   if (el.btnCodeOutputClear) {
     el.btnCodeOutputClear.addEventListener("click", () => setCodeOutput(""));
@@ -6697,6 +6871,31 @@ async function streamChat(userText) {
       updateDashboardLastSpeech();
       updateDynamicWorkbench();
       renderOrchestraBridge(ev.orchestra);
+      if (ev.programlama_focus_rel || ev.programlama_project_rel) {
+        void applyProgramlamaFocusFromChat(ev);
+      }
+      if (ev.programlama_delegated) {
+        flashRuzgarDurum("Kod sorusu → Programlama motoru (Faz 10 delege).");
+        if (el.code && !el.code.checked) {
+          el.code.checked = true;
+          switchMode("programlama");
+        }
+      }
+      if (ev.code_patch) {
+        showProgramlamaPatchStrip(ev.code_patch);
+        if (Array.isArray(ev.code_patch.applied) && ev.code_patch.applied.length) {
+          flashRuzgarDurum(
+            `Faz 10 patch: ${ev.code_patch.applied.length} dosya yazıldı — ${ev.code_patch.applied[0]}`,
+          );
+          const first = ev.code_patch.applied[0];
+          if (first && String(first).startsWith("projects/")) {
+            void applyProgramlamaFocusFromChat({
+              programlama_focus_rel: first,
+              programlama_expand_tree: true,
+            });
+          }
+        }
+      }
       const ut = String(ev.user_message || userText || "");
       if (HIZIR_MODU.shouldRefreshAfterChat(ut)) {
         void HIZIR_MODU.refreshPanel();
@@ -7916,7 +8115,7 @@ if (window.ruzgarApi?.onMenu) {
 
 wireNavToolbar();
 wireFaz7Cila();
-document.body.classList.add("faz7-complete");
+document.body.classList.add("faz7-complete", "faz8-complete");
 void refreshUiManifest().finally(() =>
   renderMotorChatFromSession(activeMotorChatMode()),
 );

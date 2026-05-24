@@ -16,7 +16,7 @@ from typing import Any
 
 from ilim_assistant.motorlar.programlama_motoru import ProgramlamaAraclari, repo_root
 
-FAZ6_VERSION = "programlama-faz6-v1-2026-05-20"
+FAZ6_VERSION = "programlama-faz6-v2-2026-05-24"
 
 _TEMPLATE_ALIASES: dict[str, str] = {
     "cli": "cli_python",
@@ -34,6 +34,16 @@ _TEMPLATE_ALIASES: dict[str, str] = {
     "mini_ai_bot": "mini_ai_bot",
     "ai_bot": "mini_ai_bot",
     "asistan": "mini_ai_bot",
+    "site": "static_site",
+    "web": "static_site",
+    "static": "static_site",
+    "static_site": "static_site",
+    "vitrin": "static_site",
+    "react": "react_vite",
+    "vite": "react_vite",
+    "spa": "react_vite",
+    "react_vite": "react_vite",
+    "frontend": "react_vite",
 }
 
 
@@ -75,6 +85,18 @@ def list_templates() -> list[dict[str, Any]]:
             "label": "Mini AI asistan iskeleti",
             "stack": ["python"],
             "desc": "Basit sohbet döngüsü + genişletme noktaları (LLM bağlantısı için)",
+        },
+        {
+            "id": "static_site",
+            "label": "Statik web sitesi",
+            "stack": ["html", "css", "javascript"],
+            "desc": "Tek sayfa vitrin + form; python -m http.server ile önizleme",
+        },
+        {
+            "id": "react_vite",
+            "label": "React + Vite SPA",
+            "stack": ["javascript", "react", "vite"],
+            "desc": "Modern tek sayfa uygulama; npm run dev / build",
         },
     ]
 
@@ -200,6 +222,182 @@ if __name__ == "__main__":
 ''',
             f"{base}/README.md": f"# {title}\n\nMini AI bot iskeleti — `python bot.py` sonra `reply()` genişletin.\n",
         }
+    if t == "static_site":
+        return {
+            f"{base}/index.html": f'''<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{title}</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <h1>{title}</h1>
+    <p class="lead">Rüzgar Faz 6 — statik site şablonu (Ümit &amp; Gökçenur)</p>
+    <button type="button" id="btn-hello">Merhaba</button>
+    <p id="out" class="out" aria-live="polite"></p>
+  </header>
+  <main>
+    <section class="card">
+      <h2>İletişim</h2>
+      <form id="contact">
+        <label>Ad <input name="name" required /></label>
+        <label>E-posta <input name="email" type="email" required /></label>
+        <button type="submit">Gönder</button>
+      </form>
+    </section>
+  </main>
+  <script src="js/app.js"></script>
+</body>
+</html>
+''',
+            f"{base}/css/styles.css": '''/* Statik site — Rüzgar */
+:root {{
+  font-family: system-ui, Segoe UI, sans-serif;
+  --bg: #0f1419;
+  --fg: #e7ecf3;
+  --accent: #3d8bfd;
+}}
+* {{ box-sizing: border-box; }}
+body {{ margin: 0; background: var(--bg); color: var(--fg); }}
+.hero {{ padding: 2.5rem 1.5rem; text-align: center; }}
+.lead {{ opacity: 0.85; }}
+.card {{ max-width: 28rem; margin: 1rem auto; padding: 1.25rem; border-radius: 12px; background: #1a2332; }}
+label {{ display: block; margin: 0.5rem 0; }}
+input {{ width: 100%; padding: 0.5rem; margin-top: 0.25rem; }}
+button {{ cursor: pointer; padding: 0.5rem 1rem; border-radius: 8px; border: none; background: var(--accent); color: #fff; }}
+.out {{ margin-top: 1rem; min-height: 1.2em; }}
+''',
+            f"{base}/js/app.js": f'''/** {title} — statik site */
+document.getElementById("btn-hello")?.addEventListener("click", () => {{
+  const out = document.getElementById("out");
+  if (out) out.textContent = "Merhaba, Ümit abi! Site çalışıyor.";
+}});
+document.getElementById("contact")?.addEventListener("submit", (e) => {{
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  alert(`Teşekkürler, ${{fd.get("name") || "ziyaretçi"}}!`);
+}});
+''',
+            f"{base}/README.md": f"""# {title}
+
+Statik web sitesi (HTML/CSS/JS).
+
+```bash
+cd projects/{slug}
+python -m http.server 5500
+```
+
+Tarayıcı: http://127.0.0.1:5500
+""",
+        }
+    if t == "react_vite":
+        return {
+            f"{base}/package.json": f'''{{
+  "name": "{slug}",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {{
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  }},
+  "dependencies": {{
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }},
+  "devDependencies": {{
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.4.0"
+  }}
+}}
+''',
+            f"{base}/vite.config.js": '''import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+
+export default defineConfig({
+  plugins: [react()],
+  server: { host: "127.0.0.1", port: 5173 },
+});
+''',
+            f"{base}/index.html": f'''<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+''',
+            f"{base}/src/main.jsx": '''import React from "react";
+import { createRoot } from "react-dom/client";
+import App from "./App.jsx";
+import "./index.css";
+
+createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+''',
+            f"{base}/src/App.jsx": f'''import {{ useState }} from "react";
+
+export default function App() {{
+  const [n, setN] = useState(0);
+  return (
+    <div className="app">
+      <h1>{title}</h1>
+      <p>Rüzgar React+Vite şablonu — Ümit &amp; Gökçenur</p>
+      <button type="button" onClick={{() => setN((x) => x + 1)}}>
+        Tık: {{n}}
+      </button>
+    </div>
+  );
+}}
+''',
+            f"{base}/src/index.css": '''body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #0f1419;
+  color: #e7ecf3;
+}
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+button {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: none;
+  background: #3d8bfd;
+  color: #fff;
+  cursor: pointer;
+}
+''',
+            f"{base}/README.md": f"""# {title}
+
+React + Vite SPA.
+
+```bash
+cd projects/{slug}
+npm install
+npm run dev
+```
+
+Önizleme: http://127.0.0.1:5173
+""",
+        }
     return {}
 
 
@@ -252,7 +450,8 @@ def format_template_list_report() -> str:
             "",
             "Kullanım:",
             "  şablon oluştur: fastapi_api benim-api",
-            "  şablon oluştur: mini_ai_bot ruzgar-bot",
+            "  şablon oluştur: static_site vitrinim",
+            "  şablon oluştur: react_vite panelim",
             "",
             f"Dizin: `{_scaffold_base_dir()}/<proje-adı>/`",
             f"Sürüm: {FAZ6_VERSION}",
