@@ -66,7 +66,7 @@ def build_ui_manifest(*, health: dict[str, Any] | None = None) -> dict[str, Any]
             "video": {"tag": "YouTube indirme · kurgu v5"},
             "okuma": {"tag": "İlim · tabiat · tarih"},
             "tercume": {"tag": "Ofis · altyazı"},
-            "programlama": {"tag": "Faz 11 · orkestra & patch UI"},
+            "programlama": {"tag": "Faz 12 · diff & smoke"},
         },
         "capabilities": [
             "Ansiklopedik soruda Gemini-first, ağır indeks atlama",
@@ -81,6 +81,7 @@ def build_ui_manifest(*, health: dict[str, Any] | None = None) -> dict[str, Any]
             "Programlama Faz 10: workspace indeks, @@read/@@write, patch onayla, Ana Motor delege",
             "Web şablonları: static_site (HTML) · react_vite (SPA)",
             "Faz 11: programlama orkestra adımları + atölye patch şeridi",
+            "Faz 12: patch diff önizleme + programlama_smoke.py + hızlı şablon",
         ],
         "video": {
             "download_api": "/api/video/download",
