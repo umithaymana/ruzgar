@@ -791,7 +791,7 @@ def health():
         },
         "super_brain": _super_brain_health_block(),
         "build": {
-            "rev": "2026-05-20-programlama-faz11-v22",
+            "rev": "2026-05-20-programlama-faz12-v23",
             "nebula_kitap": True,
             "fast_paths": os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
             "memory_first": True,
@@ -3024,6 +3024,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 "action": code_patch_meta.get("action"),
                 "applied": list(code_patch_meta.get("applied") or []),
                 "errors": list(code_patch_meta.get("errors") or []),
+                "items": list(code_patch_meta.get("items") or []),
             }
         if mode_norm == "programlama":
             try:

@@ -11,6 +11,7 @@ Programlama motoru — Faz 10: workspace indeks, çok dosya patch, terminal, del
 
 from __future__ import annotations
 
+import difflib
 import json
 import os
 import re
@@ -270,6 +271,42 @@ def clear_pending(workspace_root: str | Path | None) -> None:
             pass
 
 
+def unified_diff_text(
+    old: str,
+    new: str,
+    rel: str,
+    *,
+    max_lines: int = 28,
+) -> str:
+    """Kısa unified diff (Faz 12 önizleme)."""
+    path = _norm_rel(rel) or "file"
+    if not (old or "").strip():
+        lines = (new or "").splitlines()[:max_lines]
+        return "\n".join(f"+{ln}" for ln in lines) + ("\n" if lines else "")
+    old_l = old.splitlines(keepends=True)
+    new_l = new.splitlines(keepends=True)
+    chunks = list(
+        difflib.unified_diff(
+            old_l,
+            new_l,
+            fromfile=f"eski/{path}",
+            tofile=f"yeni/{path}",
+            n=2,
+            lineterm="",
+        )
+    )
+    if not chunks:
+        return "(değişiklik yok)\n"
+    out: list[str] = []
+    for line in chunks:
+        if line.startswith(("---", "+++", "@@")) or line[:1] in ("+", "-", " "):
+            out.append(line)
+        if len(out) >= max_lines:
+            out.append("…")
+            break
+    return "\n".join(out) + "\n"
+
+
 def preview_writes(
     text: str,
     workspace_root: str | Path | None = None,
@@ -280,14 +317,17 @@ def preview_writes(
     for rel, body in jobs:
         old = ""
         if tools.root is not None:
-            rep = tools.read(rel, max_chars=4000)
+            rep = tools.read(rel, max_chars=12000)
             old = rep.content if rep.ok else ""
+        diff = unified_diff_text(old, body, rel)
         items.append(
             {
                 "path": rel,
                 "new_lines": len(body.splitlines()),
                 "old_lines": len(old.splitlines()) if old else 0,
                 "preview_chars": min(400, len(body)),
+                "diff": diff,
+                "is_new_file": not (old or "").strip(),
             }
         )
     return {
@@ -365,10 +405,13 @@ def format_patch_preview_report(preview: dict[str, Any]) -> str:
         "",
     ]
     for it in preview.get("items") or []:
+        tag = "yeni dosya" if it.get("is_new_file") else f"eski ~{it.get('old_lines')} satır"
         lines.append(
-            f"• `{it.get('path')}` — yeni ~{it.get('new_lines')} satır "
-            f"(eski ~{it.get('old_lines')})"
+            f"• `{it.get('path')}` — yeni ~{it.get('new_lines')} satır ({tag})"
         )
+        diff = str(it.get("diff") or "").strip()
+        if diff:
+            lines.extend(["", "```diff", diff[:2400], "```", ""])
     lines.extend(
         [
             "",
@@ -533,10 +576,22 @@ def process_assistant_reply_patches(
     tools = ProgramlamaAraclari(workspace_root)
     applied: list[str] = []
     errors: list[str] = []
+    diff_items: list[dict[str, Any]] = []
     for rel, body in jobs:
+        old = ""
+        if tools.root is not None:
+            rep = tools.read(rel, max_chars=12000)
+            old = rep.content if rep.ok else ""
         w = tools.write(rel, body)
         if w.ok:
             applied.append(rel)
+            diff_items.append(
+                {
+                    "path": rel,
+                    "diff": unified_diff_text(old, body, rel),
+                    "is_new_file": not (old or "").strip(),
+                }
+            )
         else:
             errors.append(f"{rel}: {w.detail}")
     verify: dict[str, Any] = {}
@@ -565,6 +620,7 @@ def process_assistant_reply_patches(
         "action": "applied",
         "applied": applied,
         "errors": errors,
+        "items": diff_items,
         "verify": verify,
         "footer": "".join(footer_parts) if applied or errors else "",
     }

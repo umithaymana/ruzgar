@@ -3104,7 +3104,26 @@ body:not(.workbench-hizir-active) #workbench-hizir-tools,
   color: #9ec9ff;
 }
 .programlama-patch-list li {
-  margin: 2px 0;
+  margin: 6px 0;
+  list-style: none;
+}
+.programlama-patch-item-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.programlama-patch-diff {
+  margin: 6px 0 0;
+  padding: 8px;
+  max-height: 160px;
+  overflow: auto;
+  font-size: 11px;
+  line-height: 1.35;
+  background: #0a0e12;
+  border-radius: 6px;
+  color: #a8d4a0;
+  white-space: pre;
 }
 .programlama-patch-list button {
   margin-left: 6px;

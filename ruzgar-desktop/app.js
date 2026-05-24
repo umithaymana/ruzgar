@@ -1582,7 +1582,11 @@ function showProgramlamaPatchStrip(codePatch) {
   if (!strip || !list || !codePatch) return;
   const applied = Array.isArray(codePatch.applied) ? codePatch.applied : [];
   const errors = Array.isArray(codePatch.errors) ? codePatch.errors : [];
-  if (!applied.length && !errors.length) {
+  const items = Array.isArray(codePatch.items) ? codePatch.items : [];
+  const diffByPath = new Map(
+    items.filter((x) => x && x.path).map((x) => [String(x.path), String(x.diff || "")]),
+  );
+  if (!applied.length && !errors.length && codePatch.action !== "staged") {
     strip.hidden = true;
     return;
   }
@@ -1590,13 +1594,24 @@ function showProgramlamaPatchStrip(codePatch) {
   list.innerHTML = "";
   for (const p of applied) {
     const li = document.createElement("li");
-    li.innerHTML = `✓ <code>${esc(p)}</code>`;
+    li.className = "programlama-patch-item";
+    const head = document.createElement("div");
+    head.className = "programlama-patch-item-head";
+    head.innerHTML = `✓ <code>${esc(p)}</code>`;
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "btn-secondary btn-compact";
     btn.textContent = "Aç";
     btn.addEventListener("click", () => void openProgramlamaWorkspaceFile(p));
-    li.appendChild(btn);
+    head.appendChild(btn);
+    li.appendChild(head);
+    const diff = diffByPath.get(p);
+    if (diff && diff.trim()) {
+      const pre = document.createElement("pre");
+      pre.className = "programlama-patch-diff";
+      pre.textContent = diff;
+      li.appendChild(pre);
+    }
     list.appendChild(li);
   }
   for (const e of errors) {
@@ -1608,6 +1623,52 @@ function showProgramlamaPatchStrip(codePatch) {
     const li = document.createElement("li");
     li.textContent = "Bekleyen patch — «patch onayla» veya Bekleyeni uygula";
     list.appendChild(li);
+  }
+}
+
+async function runQuickScaffold(templateId, defaultName) {
+  let workspaceRoot = null;
+  try {
+    if (window.ruzgarApi?.getRoot) workspaceRoot = await window.ruzgarApi.getRoot();
+  } catch (_) {
+    workspaceRoot = null;
+  }
+  if (!workspaceRoot) {
+    setCodeOutput("Şablon için workspace kökü gerekli (Electron).");
+    return;
+  }
+  const name =
+    window.prompt("Proje adı (projects/ altına yazılır):", defaultName) || defaultName;
+  if (!name.trim()) return;
+  setCodeOutput(`Şablon oluşturuluyor: ${templateId} / ${name}…`);
+  try {
+    const res = await fetch(`${API}/api/programlama/scaffold`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        workspace_root: workspaceRoot,
+        template_id: templateId,
+        project_name: name.trim(),
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) {
+      throw new Error(data.error || data.detail || `HTTP ${res.status}`);
+    }
+    setCodeOutput(data.report || "Şablon hazır.");
+    const focus = data.focus?.focus_rel;
+    if (focus) {
+      await applyProgramlamaFocusFromChat({
+        programlama_focus_rel: focus,
+        programlama_project_rel: data.focus?.project_rel,
+        programlama_expand_tree: true,
+      });
+    } else {
+      await programlamaAtolyeRefreshRoot();
+    }
+    flashRuzgarDurum(`Şablon: ${data.base_dir || name}`);
+  } catch (e) {
+    setCodeOutput(`Şablon hatası: ${e && e.message ? e.message : e}`);
   }
 }
 
@@ -4728,6 +4789,18 @@ function wireProgrammingWorkbench() {
     el.btnCodeRun.addEventListener("click", () => {
       void runCodeFromWorkbench();
     });
+  }
+  const btnScApi = document.getElementById("btn-scaffold-api");
+  const btnScSite = document.getElementById("btn-scaffold-site");
+  const btnScReact = document.getElementById("btn-scaffold-react");
+  if (btnScApi) {
+    btnScApi.addEventListener("click", () => void runQuickScaffold("fastapi_api", "benim-api"));
+  }
+  if (btnScSite) {
+    btnScSite.addEventListener("click", () => void runQuickScaffold("static_site", "vitrinim"));
+  }
+  if (btnScReact) {
+    btnScReact.addEventListener("click", () => void runQuickScaffold("react_vite", "panelim"));
   }
   const btnPatchApply = document.getElementById("btn-patch-apply-pending");
   if (btnPatchApply) {
