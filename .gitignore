@@ -28,6 +28,9 @@ ilim-assistant/RUZGAR_BRAIN.env
 
 # Video atölyesi FFmpeg çıktıları (yerel)
 **/.ruzgar-video-export/
+**/.ruzgar/programlama_oturum.json
+# Faz 6 scaffold çıktıları (yerel denemeler)
+projects/
 
 # Electron / derleme çıktıları
 out/

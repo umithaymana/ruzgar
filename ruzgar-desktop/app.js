@@ -1452,7 +1452,7 @@ function switchMode(mode) {
     video:
       "Video motoru — v4: kesim çizelgesi (başlangıç/bitiş), altyazı gömme, ses birleştirme, altyazıyı Tercüme atölyesine aktarma; çıktı .ruzgar-video-export.",
     programlama:
-      "Programlama motoru açıldı; Faz 4 — kendini tara, güvenlik tara, onaylı düzeltme.",
+      "Programlama motoru açıldı; Faz 6 — şablon projeler, oturum bağlamı, onaylı düzeltme.",
     hafiza:
       "Hafıza motoru açıldı; bu motorla gelişim ve hafıza teknikleri üzerinde çalışabilirsiniz.",
     ses:
@@ -2945,15 +2945,23 @@ let programlamaBriefingShown = false;
 async function programlamaAtolyeShowBriefing() {
   if (programlamaBriefingShown || !el.codeOutput) return;
   try {
-    const qs = workspaceRoot
-      ? `?workspace_root=${encodeURIComponent(workspaceRoot)}`
-      : "";
-    const r = await fetch(`${API}/api/programlama/briefing${qs}`, {
-      method: "GET",
-    });
-    if (!r.ok) return;
-    const j = await r.json();
-    const text = String(j.text || "").trim();
+    let root = workspaceRoot;
+    if (!root && window.ruzgarApi?.getRoot) {
+      root = await window.ruzgarApi.getRoot();
+    }
+    const qs = root ? `?workspace_root=${encodeURIComponent(root)}` : "";
+    const [br, sr] = await Promise.all([
+      fetch(`${API}/api/programlama/briefing${qs}`, { method: "GET" }),
+      fetch(`${API}/api/programlama/session${qs}`, { method: "GET" }),
+    ]);
+    if (!br.ok) return;
+    const j = await br.json();
+    let text = String(j.text || "").trim();
+    if (sr.ok) {
+      const sj = await sr.json().catch(() => ({}));
+      const ctx = String(sj.context_text || "").trim();
+      if (ctx) text += `\n\n---\n${ctx}`;
+    }
     if (!text) return;
     el.codeOutput.textContent = text;
     programlamaBriefingShown = true;
@@ -6482,6 +6490,13 @@ async function streamChat(userText) {
     autonom_research: !!(el.optAutonom && el.optAutonom.checked),
     ...(chatMode === "hizir"
       ? { hizir_channels: hizirCollectPazarCheckboxIds() }
+      : {}),
+    ...(chatMode === "programlama"
+      ? {
+          programlama_active_file: atolyeOpenRel || undefined,
+          programlama_editor_snippet: getCodeEditorText().slice(0, 4000) || undefined,
+          programlama_language: String(el.codeLanguage?.value || "python").trim() || undefined,
+        }
       : {}),
   };
 

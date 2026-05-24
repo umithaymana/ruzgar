@@ -381,6 +381,18 @@ class ChatRequest(BaseModel):
         default=None,
         description="HIZIR modunda seçili pazar kanalları; boş/atlanırsa tüm kanallar",
     )
+    programlama_active_file: str | None = Field(
+        default=None,
+        description="Programlama atölyesinde açık dosya (göreli yol)",
+    )
+    programlama_editor_snippet: str | None = Field(
+        default=None,
+        description="Editördeki kod özeti (Faz 5 oturum bağlamı)",
+    )
+    programlama_language: str | None = Field(
+        default=None,
+        description="Atölye dil seçici (python, javascript, …)",
+    )
 
 
 def _effective_chat_mode_raw(req: ChatRequest) -> str:
@@ -470,6 +482,21 @@ class HizirPazarTaraBody(BaseModel):
 
 class HizirFirsatKaldirBody(BaseModel):
     kart_id: str = Field(default="", description="ARBITRAJ kart_id (Ticaret Avcısı)")
+
+
+class ProgramlamaSessionPatchBody(BaseModel):
+    workspace_root: str | None = None
+    name: str | None = None
+    goal: str | None = None
+    stack: list[str] | str | None = None
+    notes: str | None = None
+
+
+class ProgramlamaScaffoldBody(BaseModel):
+    template_id: str = Field(..., description="cli_python | fastapi_api | python_package | mini_ai_bot")
+    project_name: str = Field(..., description="Proje adı (slug üretilir)")
+    workspace_root: str | None = None
+    force: bool = False
 
 
 class CodeRunBody(BaseModel):
@@ -738,7 +765,7 @@ def health():
         },
         "super_brain": _super_brain_health_block(),
         "build": {
-            "rev": "2026-05-20-programlama-faz4-v15",
+            "rev": "2026-05-20-programlama-faz6-v17",
             "nebula_kitap": True,
             "fast_paths": os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
             "memory_first": True,
@@ -838,6 +865,60 @@ def api_programlama_security_audit(workspace_root: str | None = None):
 
     root = (workspace_root or "").strip() or None
     return run_security_audit(root)
+
+
+@app.get("/api/programlama/session")
+def api_programlama_session(workspace_root: str | None = None):
+    """Faz 5 — oturum proje bağlamı (JSON + LLM metni)."""
+    from ilim_assistant.motorlar.programlama_faz5 import build_session_api_payload
+
+    root = (workspace_root or "").strip() or None
+    return build_session_api_payload(root)
+
+
+@app.post("/api/programlama/session")
+def api_programlama_session_patch(body: ProgramlamaSessionPatchBody):
+    """Faz 5 — proje adı/hedef/yığın güncelle."""
+    from ilim_assistant.motorlar.programlama_faz5 import apply_project_patch, build_session_api_payload
+
+    root = (body.workspace_root or "").strip() or None
+    patch = {k: v for k, v in body.model_dump().items() if k != "workspace_root" and v is not None}
+    apply_project_patch(root, patch)
+    return build_session_api_payload(root)
+
+
+@app.post("/api/programlama/session/clear")
+def api_programlama_session_clear(workspace_root: str | None = None):
+    """Faz 5 — oturum bağlamını sıfırla."""
+    from ilim_assistant.motorlar.programlama_faz5 import build_session_api_payload, clear_session
+
+    root = (workspace_root or "").strip() or None
+    clear_session(root)
+    return build_session_api_payload(root)
+
+
+@app.get("/api/programlama/templates")
+def api_programlama_templates():
+    """Faz 6 — kullanılabilir proje şablonları."""
+    from ilim_assistant.motorlar.programlama_faz6 import FAZ6_VERSION, list_templates
+
+    return {"ok": True, "version": FAZ6_VERSION, "templates": list_templates()}
+
+
+@app.post("/api/programlama/scaffold")
+def api_programlama_scaffold(body: ProgramlamaScaffoldBody):
+    """Faz 6 — şablon projeyi workspace/projects/ altına oluştur."""
+    from ilim_assistant.motorlar.programlama_faz6 import format_scaffold_report, run_scaffold
+
+    root = (body.workspace_root or "").strip() or None
+    result = run_scaffold(
+        body.template_id,
+        body.project_name,
+        root,
+        force=bool(body.force),
+    )
+    result["report"] = format_scaffold_report(result)
+    return result
 
 
 @app.get("/api/system-health-report")
@@ -1814,6 +1895,18 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
     mode_raw = _effective_chat_mode_raw(req)
     mode_norm = normalize_mode(mode_raw)
     coding = req.coding_mode or mode_norm == "programlama"
+    if mode_norm == "programlama":
+        try:
+            from ilim_assistant.motorlar.programlama_faz5 import sync_client_editor_state
+
+            sync_client_editor_state(
+                req.workspace_root,
+                active_file=req.programlama_active_file,
+                editor_snippet=req.programlama_editor_snippet,
+                language=req.programlama_language,
+            )
+        except Exception:
+            pass
     try:
         from ilim_assistant.ruzgar_umed_cevap_emri import (
             begin_turn_budget,
@@ -2655,6 +2748,42 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
                 from ilim_assistant.ruzgar_egitim import on_chat_turn_done
 
                 obj = on_chat_turn_done(req, obj)
+            except Exception:
+                pass
+            try:
+                _mode_done = normalize_mode(_effective_chat_mode_raw(req))
+                if _mode_done == "programlama":
+                    from ilim_assistant.motorlar.programlama_faz5 import record_chat_turn
+
+                    cd = obj.get("code_debug")
+                    pytest_ok = None
+                    pytest_exit = None
+                    if isinstance(cd, dict):
+                        if cd.get("phase") == "pytest_ok":
+                            pytest_ok = True
+                            pytest_exit = cd.get("exit")
+                        elif cd.get("phase") == "pytest_failed":
+                            pytest_ok = False
+                            pytest_exit = cd.get("exit")
+                    record_chat_turn(
+                        req.workspace_root,
+                        user_message=req.message or "",
+                        assistant_reply=str(obj.get("full_reply") or ""),
+                        pytest_ok=pytest_ok,
+                        pytest_exit=pytest_exit,
+                        active_file=req.programlama_active_file,
+                    )
+                    if _mode_done == "programlama":
+                        from ilim_assistant.motorlar.programlama_faz5 import (
+                            sync_client_editor_state,
+                        )
+
+                        sync_client_editor_state(
+                            req.workspace_root,
+                            active_file=req.programlama_active_file,
+                            editor_snippet=req.programlama_editor_snippet,
+                            language=req.programlama_language,
+                        )
             except Exception:
                 pass
         yield obj

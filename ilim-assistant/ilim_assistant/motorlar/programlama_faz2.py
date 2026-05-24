@@ -35,6 +35,8 @@ _STATIC_MANIFEST = """
 - Sahip: «rüzgar ben ümit» → yönetici oturumu (Ümit abi).
 - Komutlar: «kendini tara» → numaralı rapor; «onayla 1 2» / «hepsini onayla düzelt».
 - Güvenlik (Faz 4): .env/hafiza yasak; patch içinde os.system/eval yasak; «güvenlik tara».
+- Oturum (Faz 5): .ruzgar/programlama_oturum.json — açık dosya, hedef, son patch/test.
+- Şablon (Faz 6): «şablon listele» · «şablon oluştur: fastapi_api ad» → projects/<ad>/
 - Hafıza JSON/DB git'e gitmez; yalnızca bu makinede kalır.
 """.strip()
 
@@ -76,13 +78,15 @@ def build_startup_briefing(workspace_root: str | Path | None = None) -> dict[str
         owner_ver = "?"
 
     lines = [
-        "Ümit abi, Programlama atölyesi hazır (Faz 4).",
+        "Ümit abi, Programlama atölyesi hazır (Faz 6).",
         "",
         "Ne yapabilirim:",
         "• Proje dosyalarını okur/yazarım (@@write + pytest/ruff)",
         "• «kendini tara» → öz-denetim raporu",
         "• «kendini tara» → numaralı rapor; «onayla 1 2» veya «hepsini onayla düzelt»",
         "• «rüzgar ben ümit» → yönetici oturumu",
+        "• «proje özeti» / «proje kaydet: Ad | hedef: …» → oturum bağlamı (Faz 5)",
+        "• «şablon listele» / «şablon oluştur: fastapi_api ad» → proje iskeleti (Faz 6)",
         "• Traceback veya «otomatik debug» → otonom düzeltme döngüsü",
         "",
         f"Proje kökü: {root_s or 'ayarlı değil — workspace_root / LOCAL_TOOLS_ROOT'}",
@@ -107,6 +111,11 @@ def build_startup_briefing(workspace_root: str | Path | None = None) -> dict[str
             "onaylıyorum düzelt",
             "otomatik debug",
             "brifing",
+            "proje özeti",
+            "proje kaydet: …",
+            "proje temizle",
+            "şablon listele",
+            "şablon oluştur: fastapi_api …",
         ],
     }
 

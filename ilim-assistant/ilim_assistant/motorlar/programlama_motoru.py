@@ -326,12 +326,44 @@ def is_programlama_reserved_command(message: str) -> bool:
             return True
     except Exception:
         pass
-    if wants_self_scan(message) or wants_briefing(message):
+    if wants_self_scan(message):
         return True
+    try:
+        from ilim_assistant.motorlar.programlama_faz2 import wants_briefing
+
+        if wants_briefing(message):
+            return True
+    except Exception:
+        pass
     try:
         from ilim_assistant.motorlar.programlama_faz2 import wants_scan_fix_approval
 
         if wants_scan_fix_approval(message):
+            return True
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz5 import (
+            wants_project_clear,
+            wants_project_summary,
+            patch_project_from_message,
+        )
+
+        if (
+            wants_project_summary(message)
+            or wants_project_clear(message)
+            or patch_project_from_message(message)
+        ):
+            return True
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz6 import (
+            parse_scaffold_command,
+            wants_template_list,
+        )
+
+        if wants_template_list(message) or parse_scaffold_command(message):
             return True
     except Exception:
         pass
@@ -427,6 +459,44 @@ def maybe_programlama_instant_reply(
         except Exception:
             pass
         parts.append(format_self_scan_report(workspace_root))
+    try:
+        from ilim_assistant.motorlar.programlama_faz5 import (
+            format_project_summary_report,
+            wants_project_clear,
+            wants_project_summary,
+            clear_session,
+            maybe_apply_message_project_patch,
+        )
+
+        if wants_project_clear(message):
+            clear_session(workspace_root)
+            parts.append(
+                "Proje oturum bağlamı temizlendi (.ruzgar/programlama_oturum.json)."
+            )
+        elif wants_project_summary(message):
+            parts.append(format_project_summary_report(workspace_root))
+        elif maybe_apply_message_project_patch(message, workspace_root):
+            parts.append(format_project_summary_report(workspace_root))
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz6 import (
+            format_scaffold_report,
+            format_template_list_report,
+            parse_scaffold_command,
+            run_scaffold,
+            wants_template_list,
+        )
+
+        if wants_template_list(message):
+            parts.append(format_template_list_report())
+        else:
+            sc = parse_scaffold_command(message)
+            if sc:
+                tid, pname = sc
+                parts.append(format_scaffold_report(run_scaffold(tid, pname, workspace_root)))
+    except Exception:
+        pass
     if parts:
         return "\n\n".join(p for p in parts if p.strip())
     return None
@@ -458,6 +528,18 @@ def apply_assistant_reply_tools(
     if run_pytest and tools.root is not None:
         pytest_rep = tools.run_dev_preset("pytest_run")
         summary.execs.append(pytest_rep)
+    try:
+        from ilim_assistant.motorlar.programlama_faz5 import record_tool_summary
+
+        write_paths = [w.path for w in summary.writes if w.ok and w.path]
+        record_tool_summary(
+            workspace_root,
+            writes=write_paths,
+            pytest_ok=pytest_rep.ok if pytest_rep else None,
+            pytest_exit=pytest_rep.exit_code if pytest_rep else None,
+        )
+    except Exception:
+        pass
     return summary, pytest_rep
 
 
@@ -652,6 +734,24 @@ def build_motor_context(
         from ilim_assistant.motorlar.programlama_faz4 import write_guard_directive
 
         base += write_guard_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz5 import (
+            format_session_context_block,
+            usta_coding_directive,
+        )
+
+        base += usta_coding_directive() + "\n"
+        sess_block = format_session_context_block(workspace_root).strip()
+        if sess_block:
+            base += sess_block + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz6 import scaffold_directive
+
+        base += scaffold_directive() + "\n"
     except Exception:
         pass
     if os.environ.get("RUZGAR_PROG_REPO_MAP", "1").strip().lower() not in (
