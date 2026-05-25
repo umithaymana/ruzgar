@@ -791,7 +791,7 @@ def health():
         },
         "super_brain": _super_brain_health_block(),
         "build": {
-            "rev": "2026-05-25-programlama-faz22-v36",
+            "rev": "2026-05-25-programlama-faz28-v40",
             "nebula_kitap": True,
             "fast_paths": os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
             "memory_first": True,
@@ -1230,15 +1230,41 @@ def api_programlama_patch_pending(workspace_root: str | None = None):
 
     root = (workspace_root or "").strip() or None
     bundle = build_pending_bundle(root)
+    items = list(bundle.get("items") or [])
+    try:
+        from ilim_assistant.motorlar.programlama_faz27 import enrich_pending_with_inline
+
+        items = enrich_pending_with_inline(root, items)
+    except Exception:
+        pass
     return {
         "ok": True,
         "count": bundle.get("count", 0),
         "paths": bundle.get("paths") or [],
-        "items": bundle.get("items") or [],
+        "items": items,
         "counts": bundle.get("counts") or {},
         "pending": bundle.get("pending") or {},
         "version": FAZ16_VERSION,
     }
+
+
+@app.get("/api/programlama/patch/inline-diff")
+def api_programlama_patch_inline_diff(
+    workspace_root: str | None = None,
+    path: str | None = None,
+):
+    """Faz 27 — editör satır içi diff."""
+    from ilim_assistant.motorlar.programlama_faz27 import (
+        FAZ27_VERSION,
+        build_inline_diff_for_path,
+    )
+
+    root = (workspace_root or "").strip() or None
+    rel = (path or "").strip()
+    if not rel:
+        return {"ok": False, "error": "path gerekli", "version": FAZ27_VERSION}
+    payload = build_inline_diff_for_path(root, rel)
+    return payload
 
 
 @app.post("/api/programlama/patch/item")
@@ -1300,6 +1326,25 @@ def api_programlama_quality_report(workspace_root: str | None = None):
         "report": format_quality_report(report),
         "data": report.to_dict(),
         "version": FAZ18_VERSION,
+    }
+
+
+@app.get("/api/programlama/parity-report")
+def api_programlama_parity_report(workspace_root: str | None = None):
+    """Faz 25 — Cursor parity smoke raporu."""
+    from ilim_assistant.motorlar.programlama_faz25 import (
+        FAZ25_VERSION,
+        format_parity_report,
+        run_offline_parity_scenario,
+    )
+
+    root = (workspace_root or "").strip() or None
+    report = run_offline_parity_scenario(root)
+    return {
+        "ok": report.ok,
+        "report": format_parity_report(report),
+        "data": report.to_dict(),
+        "version": FAZ25_VERSION,
     }
 
 

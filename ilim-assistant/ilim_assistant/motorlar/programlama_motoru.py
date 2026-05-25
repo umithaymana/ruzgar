@@ -405,6 +405,16 @@ def is_programlama_reserved_command(message: str) -> bool:
     except Exception:
         pass
     try:
+        from ilim_assistant.motorlar.programlama_faz28 import (
+            wants_git_branch_create,
+            wants_git_branch_list,
+        )
+
+        if wants_git_branch_list(message) or wants_git_branch_create(message):
+            return True
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_faz22 import wants_symbol_command
 
         if wants_symbol_command(message):
@@ -739,6 +749,18 @@ def maybe_programlama_instant_reply(
         faz14_hit = maybe_instant_faz14(message, workspace_root)
         if faz14_hit:
             parts.append(faz14_hit)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz28 import maybe_instant_faz28
+
+        faz28_hit = maybe_instant_faz28(
+            message,
+            workspace_root,
+            active_file=active_file,
+        )
+        if faz28_hit:
+            parts.append(faz28_hit)
     except Exception:
         pass
     try:
@@ -1207,6 +1229,42 @@ def build_motor_context(
         from ilim_assistant.motorlar.programlama_faz22 import faz22_directive
 
         base += faz22_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz23 import faz23_directive
+
+        base += faz23_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz24 import faz24_directive
+
+        base += faz24_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz25 import faz25_directive
+
+        base += faz25_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz26 import faz26_directive
+
+        base += faz26_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz27 import faz27_directive
+
+        base += faz27_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz28 import faz28_directive
+
+        base += faz28_directive() + "\n"
     except Exception:
         pass
     try:

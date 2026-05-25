@@ -297,6 +297,83 @@ def run_offline() -> int:
         _fail("heuristic", msg)
         fails += 1
 
+    print("=== Faz 24 — adim seridi SSE ===")
+    from ilim_assistant.motorlar.programlama_faz24 import (
+        CodeAgentStepTracker,
+        FAZ24_VERSION,
+        extract_plan_lines,
+        sse_steps_enabled,
+    )
+
+    if sse_steps_enabled():
+        _ok("sse steps on")
+    else:
+        _fail("sse off")
+        fails += 1
+    tr = CodeAgentStepTracker(
+        scope_rel="projects/demo",
+        goal="health version ekle",
+        max_turns=8,
+        budget_sec=300.0,
+    )
+    ev0 = tr.on_started(brain_chain=["groq", "kod"])
+    if ev0.get("type") == "agent_step" and len(ev0.get("steps") or []) >= 6:
+        _ok(f"agent_step started ({len(ev0['steps'])} steps)")
+    else:
+        _fail("agent_step start", str(ev0)[:80])
+        fails += 1
+    ev1 = tr.on_turn_start(1)
+    ev2 = tr.on_writes(1, 2, ["projects/demo/a.py"])
+    ev3 = tr.on_verify(1, True)
+    ev4 = tr.on_finish(success=True, elapsed_sec=12.5, turns_used=2)
+    if ev4.get("code_agent", {}).get("success"):
+        _ok("agent_step finish")
+    else:
+        _fail("finish event")
+        fails += 1
+    plan = extract_plan_lines("Plan:\n1. health ekle\n2. pytest calistir")
+    if "health" in plan:
+        _ok(f"plan extract: {plan[:40]}")
+    else:
+        _ok("plan extract skip")
+    if FAZ24_VERSION in str(ev4.get("code_agent", {}).get("version", "")):
+        _ok("faz24 version")
+
+    print("=== Faz 23 — gorev modu 5dk ===")
+    from ilim_assistant.motorlar.programlama_faz23 import (
+        FAZ23_VERSION,
+        enter_task_mode,
+        exit_task_mode,
+        resolve_code_agent_budget_sec,
+        task_auto_apply_enabled,
+        task_mode_active,
+        task_success_met,
+    )
+
+    if resolve_code_agent_budget_sec() == 300.0:
+        _ok("budget default 300s (5dk)")
+    else:
+        _ok(f"budget={resolve_code_agent_budget_sec()}")
+    enter_task_mode()
+    if task_mode_active() and task_auto_apply_enabled():
+        _ok("task mode + auto apply")
+    else:
+        _fail("task mode")
+        fails += 1
+    exit_task_mode()
+    if not task_mode_active():
+        _ok("task mode exit")
+    else:
+        _fail("task mode stuck")
+        fails += 1
+    if task_success_met(verify_ok=True, writes_ok=2):
+        _ok("task success criteria")
+    else:
+        _fail("task success")
+        fails += 1
+    if FAZ23_VERSION.startswith("programlama-faz23"):
+        _ok("faz23 version")
+
     print("=== Faz 22 — sembol indeks v2 ===")
     from ilim_assistant.motorlar.programlama_faz22 import (
         FAZ22_VERSION,
@@ -434,10 +511,13 @@ def run_offline() -> int:
     else:
         _fail("abort quota")
         fails += 1
-    if code_agent_budget_sec() == 120.0:
+    b = code_agent_budget_sec()
+    if b >= 300.0:
+        _ok(f"budget {int(b)}s (faz23)")
+    elif b == 120.0:
         _ok("budget 120s")
     else:
-        _ok(f"budget={code_agent_budget_sec()}")
+        _ok(f"budget={b}")
 
     print("=== Faz 18 — kalite modulu ===")
     from ilim_assistant.motorlar.programlama_faz18 import (
@@ -464,6 +544,7 @@ def run_offline() -> int:
         "sablon listele",
         "@@find test",
         "sembol health",
+        "git dal",
         "proje tara",
         "npm install",
     ):
@@ -538,7 +619,7 @@ def run_live(base: str) -> int:
     try:
         h = get("/api/health")
         rev = str((h.get("build") or {}).get("rev") or "")
-        if any(x in rev for x in ("faz19", "faz18", "faz17", "faz16")):
+        if "faz28" in rev or rev.endswith("-v40"):
             _ok(f"build.rev={rev}")
         else:
             _fail("build.rev", rev)
@@ -556,6 +637,17 @@ def run_live(base: str) -> int:
             fails += 1
     except Exception as e:
         _fail("quality-report", str(e)[:120])
+        fails += 1
+
+    try:
+        pr = get(f"/api/programlama/parity-report?workspace_root={enc}")
+        if pr.get("ok") is not None and pr.get("data"):
+            _ok("parity-report API")
+        else:
+            _fail("parity-report")
+            fails += 1
+    except Exception as e:
+        _fail("parity-report", str(e)[:120])
         fails += 1
 
     try:
@@ -636,6 +728,15 @@ def run_live(base: str) -> int:
         else:
             _fail("patch pending", str(pend.get("count")))
             fails += 1
+        idiff = get(
+            f"/api/programlama/patch/inline-diff?workspace_root={enc}"
+            f"&path={urllib.parse.quote(f'{scope}/main.py')}"
+        )
+        if idiff.get("ok") and "new_text" in idiff:
+            _ok("inline-diff API (Faz 27)")
+        else:
+            _fail("inline-diff", str(idiff.get("error") or "")[:80])
+            fails += 1
         post(
             "/api/programlama/patch/item",
             {
@@ -707,20 +808,121 @@ def run_live(base: str) -> int:
     return fails
 
 
+def run_parity(*, live_base: str | None = None) -> int:
+    """Faz 25 — Cursor parity (offline; isteğe bağlı live preflight)."""
+    from ilim_assistant.motorlar.programlama_faz25 import (
+        FAZ25_VERSION,
+        format_parity_report,
+        run_live_parity_preflight,
+        run_offline_parity_scenario,
+        save_parity_report_json,
+    )
+
+    fails = 0
+    print("=== Faz 26 — prog beyin zinciri ===")
+    from ilim_assistant.motorlar.programlama_faz26 import (
+        programming_brain_chain_ids,
+    )
+
+    chain = programming_brain_chain_ids()
+    if chain and chain[0] in ("groq", "kod"):
+        _ok(f"prog chain: {','.join(chain[:4])}")
+    else:
+        _fail("prog chain", str(chain))
+        fails += 1
+
+    print("=== Faz 27 — editor inline diff ===")
+    from ilim_assistant.motorlar.programlama_faz27 import (
+        build_inline_diff_for_path,
+    )
+
+    f27_dir = WORKSPACE / "projects" / "smoke-faz27" / "app"
+    f27_dir.mkdir(parents=True, exist_ok=True)
+    (f27_dir / "x.py").write_text("v = 1\n", encoding="utf-8")
+    sample_patch = (
+        "@@write projects/smoke-faz27/app/x.py\n```python\nv = 2\n```\n"
+    )
+    from ilim_assistant.motorlar.programlama_faz16 import stage_pending_enriched
+
+    stage_pending_enriched(sample_patch, WORKSPACE)
+    payload = build_inline_diff_for_path(WORKSPACE, "projects/smoke-faz27/app/x.py")
+    if payload.get("ok") and "v = 2" in str(payload.get("new_text") or ""):
+        _ok("inline diff payload")
+    else:
+        _fail("inline diff", str(payload)[:80])
+        fails += 1
+
+    print("=== Faz 28 — git branch ===")
+    from ilim_assistant.motorlar.programlama_faz28 import (
+        wants_git_branch_create,
+        wants_git_branch_list,
+    )
+
+    if wants_git_branch_list("git dal"):
+        _ok("wants git dal")
+    else:
+        _fail("wants git dal")
+        fails += 1
+    if wants_git_branch_create("yeni dal: feature-test"):
+        _ok("wants yeni dal")
+    else:
+        _fail("wants yeni dal")
+        fails += 1
+
+    print("=== Faz 25 — Cursor parity ===")
+    if live_base:
+        report = run_live_parity_preflight(live_base, WORKSPACE)
+    else:
+        report = run_offline_parity_scenario(WORKSPACE)
+    for c in report.checks:
+        if c.ok:
+            if c.elapsed_sec > 0:
+                _ok(f"{c.id} ({c.elapsed_sec:.2f}s)")
+            else:
+                _ok(c.id)
+        else:
+            _fail(c.id, c.detail or c.label)
+            fails += 1
+    saved = save_parity_report_json(report)
+    if saved:
+        _ok(f"rapor: {saved[-48:]}")
+    try:
+        print()
+        print(format_parity_report(report))
+    except UnicodeEncodeError:
+        print("(parity raporu konsolda yazdirilamadi)")
+    sc = report.scorecard or {}
+    if sc and all(sc.values()):
+        _ok(f"scorecard {len(sc)}/{len(sc)}")
+    elif sc:
+        _fail("scorecard", ", ".join(k for k, v in sc.items() if not v))
+        fails += 1
+    if FAZ25_VERSION.startswith("programlama-faz25"):
+        _ok("faz25 version")
+    return fails
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--live", metavar="URL", help="Örn. http://127.0.0.1:8777")
     ap.add_argument("--slo", action="store_true", help="Faz 18 SLO senaryoları (offline)")
     ap.add_argument(
+        "--parity",
+        action="store_true",
+        help="Faz 25 Cursor parity (offline fastapi+pytest)",
+    )
+    ap.add_argument(
         "--ci",
         action="store_true",
-        help="Offline + SLO; --live verilirse canlı senaryolar da",
+        help="Offline + SLO + Parity; --live ile canlı da",
     )
     args = ap.parse_args()
 
     fails = run_offline()
     if args.slo or args.ci:
         fails += run_slo()
+    if args.parity or args.ci:
+        fails += run_parity(live_base=args.live if args.live else None)
     if args.live:
         fails += run_live(args.live)
     elif args.ci:

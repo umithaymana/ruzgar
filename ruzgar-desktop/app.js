@@ -4,7 +4,7 @@
  * Kök sonda `/api` ise kırpılır — aksi halde fetch `.../api/api/merkezi-bellek` ile 404 verir.
  */
 const RUZGAR_LOCAL_API_PORT = 8779;
-const RUZGAR_EXPECTED_BUILD_REV = "2026-05-25-programlama-faz22-v36";
+const RUZGAR_EXPECTED_BUILD_REV = "2026-05-25-programlama-faz28-v40";
 const RUZGAR_LOCAL_API_FALLBACK = `http://127.0.0.1:${RUZGAR_LOCAL_API_PORT}`;
 
 function migrateLegacyApiUrl(raw) {
@@ -1586,6 +1586,49 @@ function renderProgramlamaPatchCounts(counts) {
   elCounts.textContent = `bekleyen ${p} · kabul ${a} · red ${r}`;
 }
 
+function hideProgramlamaInlineDiff() {
+  const panel = document.getElementById("programlama-inline-diff");
+  if (panel) panel.hidden = true;
+}
+
+async function showProgramlamaInlineDiff(relPath) {
+  const rel = String(relPath || "").replace(/\\/g, "/");
+  if (!rel) return;
+  const workspaceRoot = await getProgramlamaWorkspaceRoot();
+  if (!workspaceRoot) {
+    setCodeOutput("Editör diff için workspace kökü gerekli.");
+    return;
+  }
+  const panel = document.getElementById("programlama-inline-diff");
+  const preOld = document.getElementById("inline-diff-old");
+  const preNew = document.getElementById("inline-diff-new");
+  const title = document.getElementById("programlama-inline-diff-title");
+  if (!panel || !preOld || !preNew) return;
+  try {
+    const qs = new URLSearchParams({
+      workspace_root: workspaceRoot,
+      path: rel,
+    });
+    const res = await fetch(`${API}/api/programlama/patch/inline-diff?${qs}`);
+    const data = await res.json().catch(() => ({}));
+    if (!data.ok) {
+      setCodeOutput(data.error || "Inline diff alınamadı.");
+      return;
+    }
+    if (title) title.textContent = `Editör diff — ${rel}`;
+    preOld.textContent = data.old_text || "(yeni dosya)";
+    preNew.textContent = data.new_text || "";
+    panel.hidden = false;
+    void openProgramlamaWorkspaceFile(rel);
+    if (data.new_text && el.codeEditor) {
+      el.codeEditor.value = data.new_text;
+    }
+    flashRuzgarDurum("Faz 27: eski/yeni yan yana");
+  } catch (e) {
+    setCodeOutput(`Inline diff: ${e && e.message ? e.message : e}`);
+  }
+}
+
 function showProgramlamaPatchStrip(codePatch) {
   const strip = document.getElementById("programlama-patch-strip");
   const list = document.getElementById("programlama-patch-list");
@@ -1620,7 +1663,13 @@ function showProgramlamaPatchStrip(codePatch) {
     btnOpen.className = "btn-secondary btn-compact";
     btnOpen.textContent = "Aç";
     btnOpen.addEventListener("click", () => void openProgramlamaWorkspaceFile(path));
+    const btnDiff = document.createElement("button");
+    btnDiff.type = "button";
+    btnDiff.className = "btn-secondary btn-compact";
+    btnDiff.textContent = "Editör diff";
+    btnDiff.addEventListener("click", () => void showProgramlamaInlineDiff(path));
     actions.appendChild(btnOpen);
+    actions.appendChild(btnDiff);
     if (action === "staged" && st !== "applied" && st !== "rejected") {
       const btnOk = document.createElement("button");
       btnOk.type = "button";
@@ -5041,6 +5090,10 @@ function wireProgrammingWorkbench() {
   if (btnPatchRollback) {
     btnPatchRollback.addEventListener("click", () => void rollbackPatchFromAtolye());
   }
+  const btnInlineDiffClose = document.getElementById("btn-inline-diff-close");
+  if (btnInlineDiffClose) {
+    btnInlineDiffClose.addEventListener("click", () => hideProgramlamaInlineDiff());
+  }
   const btnGitStatus = document.getElementById("btn-git-status");
   if (btnGitStatus) {
     btnGitStatus.addEventListener("click", () => void gitStatusFromAtolye());
@@ -7122,6 +7175,40 @@ async function streamChat(userText) {
     if (ev.type === "meta" && ev.instant_memory) {
       clearDeferThinking();
       hideThinkingCenter();
+      return;
+    }
+    if (
+      ev.type === "agent_step" &&
+      Array.isArray(ev.steps) &&
+      ev.steps.length
+    ) {
+      renderProgramlamaAgentSteps(ev.steps);
+      const ca = ev.code_agent || {};
+      const turn = Number(ca.turn || 0);
+      const maxT = Number(ca.max_turns || 0);
+      const phase = String(ca.phase || "");
+      if (turn > 0 && maxT > 0) {
+        const phaseTr =
+          phase === "llm_start" || phase === "llm_done"
+            ? " · LLM"
+            : phase === "write"
+              ? " · yazım"
+              : phase === "verify"
+                ? " · test"
+                : phase === "tools"
+                  ? " · araç"
+                  : "";
+        setStatus(`Görev tur ${turn}/${maxT}${phaseTr}`, "Rüzgar");
+        showThinkingCenter(`Görev tur ${turn}/${maxT}${phaseTr}`);
+      } else if (phase === "started") {
+        setStatus("Otonom görev başladı", "Rüzgar");
+      } else if (phase === "finish") {
+        hideThinkingCenter();
+      }
+      return;
+    }
+    if (ev.type === "meta" && Array.isArray(ev.agent_steps) && ev.agent_steps.length) {
+      renderProgramlamaAgentSteps(ev.agent_steps);
       return;
     }
     clearDeferThinking();

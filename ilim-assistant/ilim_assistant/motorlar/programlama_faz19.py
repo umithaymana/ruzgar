@@ -41,6 +41,12 @@ def _ascii_fold(text: str) -> str:
 
 def code_agent_budget_sec() -> float:
     try:
+        from ilim_assistant.motorlar.programlama_faz23 import resolve_code_agent_budget_sec
+
+        return resolve_code_agent_budget_sec()
+    except Exception:
+        pass
+    try:
         return float(os.environ.get("RUZGAR_CODE_AGENT_BUDGET_SEC", "120"))
     except ValueError:
         return 120.0
@@ -121,7 +127,12 @@ def should_abort_loop(state: AgentLoopState) -> tuple[bool, str]:
 
 
 def budget_exceeded(start_mono: float) -> bool:
-    return (time.perf_counter() - start_mono) >= code_agent_budget_sec()
+    try:
+        from ilim_assistant.motorlar.programlama_faz23 import budget_exceeded as _f23_budget
+
+        return _f23_budget(start_mono)
+    except Exception:
+        return (time.perf_counter() - start_mono) >= code_agent_budget_sec()
 
 
 def parse_task_aliases(message: str) -> str | None:

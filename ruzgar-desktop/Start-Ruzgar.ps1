@@ -6,7 +6,7 @@ $Repo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $Assistant = Join-Path $Repo "ilim-assistant"
 $Desktop = $PSScriptRoot
 $ApiPort = 8779
-$ExpectedBuildRev = "2026-05-25-programlama-faz22-v36"
+$ExpectedBuildRev = "2026-05-25-programlama-faz28-v40"
 if ($env:RUZGAR_API_PORT) { [int]$ApiPort = $env:RUZGAR_API_PORT }
 
 function Set-RuzgarGeminiKeyFromValue {

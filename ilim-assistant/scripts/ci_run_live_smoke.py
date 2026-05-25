@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import socket
 import subprocess
 import sys
 import time
@@ -11,7 +12,18 @@ import urllib.request
 from pathlib import Path
 
 _IA = Path(__file__).resolve().parents[1]
-_PORT = int(os.environ.get("RUZGAR_API_PORT", "8779") or "8779")
+
+
+def _pick_free_port() -> int:
+    """CI her zaman bos port — ortamda RUZGAR_API_PORT=8779 olsa bile eski sunucuya baglanmaz."""
+    if os.environ.get("RUZGAR_CI_USE_FIXED_PORT", "").strip().lower() in ("1", "true", "yes"):
+        return int(os.environ.get("RUZGAR_API_PORT", "8779") or "8779")
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(("127.0.0.1", 0))
+        return int(s.getsockname()[1])
+
+
+_PORT = _pick_free_port()
 _BASE = f"http://127.0.0.1:{_PORT}"
 _WAIT_SEC = int(os.environ.get("RUZGAR_CI_HEALTH_WAIT", "120") or "120")
 
@@ -34,6 +46,7 @@ def main() -> int:
     env.setdefault("RUZGAR_DISABLE_GROQ", "1")
     env.setdefault("RUZGAR_FAZ17_LLM_SUGGEST", "0")
     env["RUZGAR_API_PORT"] = str(_PORT)
+    env["RUZGAR_CI_FORCED_PORT"] = str(_PORT)
 
     proc = subprocess.Popen(
         [sys.executable, "run_desktop_api.py"],

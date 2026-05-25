@@ -792,6 +792,20 @@ def iter_code_agent_turn_events(
     except Exception:
         loop_state = None
 
+    _exit_task_mode = None
+    try:
+        from ilim_assistant.motorlar.programlama_faz23 import (
+            code_agent_budget_sec,
+            enter_task_mode,
+            exit_task_mode,
+            format_task_mode_status,
+        )
+
+        enter_task_mode()
+        _exit_task_mode = exit_task_mode
+    except Exception:
+        pass
+
     save_agent_state(
         workspace,
         {
@@ -806,10 +820,40 @@ def iter_code_agent_turn_events(
         },
     )
 
+    try:
+        budget_hint = int(code_agent_budget_sec())
+    except Exception:
+        budget_hint = 120
+
+    step_tracker = None
+    try:
+        from ilim_assistant.motorlar.programlama_faz24 import create_tracker
+
+        step_tracker = create_tracker(
+            scope_rel=task.scope_rel,
+            goal=task.goal,
+            max_turns=max_turns,
+            budget_sec=float(budget_hint),
+        )
+    except Exception:
+        step_tracker = None
+
     yield {
         "type": "status",
-        "text": f"Otonom görev başladı — `{task.scope_rel}` (max {max_turns} tur)…",
+        "text": (
+            f"Otonom görev başladı — `{task.scope_rel}` "
+            f"(max {max_turns} tur, {budget_hint} sn)…"
+        ),
     }
+    try:
+        from ilim_assistant.motorlar.programlama_faz23 import format_task_mode_status
+
+        yield {
+            "type": "status",
+            "text": format_task_mode_status(task.scope_rel, float(budget_hint)),
+        }
+    except Exception:
+        pass
     yield {
         "type": "meta",
         "code_agent": {
@@ -828,15 +872,18 @@ def iter_code_agent_turn_events(
         question_plan=turn_plan,
         legacy_model=model,
     )
+    brain_chain = [e.profile_id for e in brain_sel.chain]
     yield {
         "type": "meta",
         "brain": brain_sel.to_public_dict(),
         "code_agent": {
             "phase": "brain",
             "scope_rel": task.scope_rel,
-            "chain": [e.profile_id for e in brain_sel.chain],
+            "chain": brain_chain,
         },
     }
+    if step_tracker is not None:
+        yield step_tracker.on_started(brain_chain=brain_chain)
 
     for turn in range(1, max_turns + 1):
         if is_stop_requested(workspace):
@@ -873,6 +920,9 @@ def iter_code_agent_turn_events(
             "type": "status",
             "text": f"Görev tur {turn}/{max_turns} — plan / patch…",
         }
+        if step_tracker is not None:
+            yield step_tracker.on_turn_start(turn)
+            yield step_tracker.on_llm_start(turn)
 
         turn_user = build_agent_turn_user_message(
             task,
@@ -901,6 +951,9 @@ def iter_code_agent_turn_events(
                 ),
             }
         round_body = llm_body
+        if step_tracker is not None:
+            yield step_tracker.on_llm_done(turn, llm_body)
+        _tool_res: list = []
         try:
             from ilim_assistant.motorlar.programlama_faz20 import run_tools_from_reply
 
@@ -915,6 +968,8 @@ def iter_code_agent_turn_events(
                     "type": "status",
                     "text": f"Tur {turn}: {len(_tool_res)} ruzgar-tool çalıştırıldı.",
                 }
+            if step_tracker is not None and _tool_res:
+                yield step_tracker.on_tools(turn, len(_tool_res))
         except Exception:
             pass
         reply_body += round_body
@@ -935,6 +990,28 @@ def iter_code_agent_turn_events(
             workspace,
             run_pytest=False,
         )
+        try:
+            from ilim_assistant.motorlar.programlama_faz23 import apply_agent_turn_patches
+
+            scope_turn = resolve_scope_rel(
+                workspace,
+                active_file=getattr(req, "programlama_active_file", None),
+            ) or task.scope_rel
+            turn_patch = apply_agent_turn_patches(
+                round_body,
+                workspace,
+                scope_rel=scope_turn,
+            )
+            if turn_patch.get("action") == "applied" and turn_patch.get("applied"):
+                for rel in turn_patch.get("applied") or []:
+                    if rel and not any(w.path == rel and w.ok for w in summ.writes):
+                        from ilim_assistant.motorlar.programlama_motoru import WriteReport
+
+                        summ.writes.append(
+                            WriteReport(path=rel, ok=True, detail="Faz 23 otomatik patch")
+                        )
+        except Exception:
+            pass
         verify = run_project_verify(
             workspace,
             task.scope_rel,
@@ -944,6 +1021,14 @@ def iter_code_agent_turn_events(
         writes_ok = len([w for w in summ.writes if w.ok])
         ok = verify.ok if verify else bool(writes_ok)
         elapsed = time.perf_counter() - t_turn
+        if step_tracker is not None:
+            write_paths = [w.path for w in summ.writes if w.ok and w.path]
+            yield step_tracker.on_writes(turn, writes_ok, write_paths)
+            yield step_tracker.on_verify(
+                turn,
+                ok,
+                (verify.output if verify else "")[:80],
+            )
 
         if loop_state is not None:
             try:
@@ -994,9 +1079,26 @@ def iter_code_agent_turn_events(
         }
         yield {"type": "status", "text": tr[:1200]}
 
-        if ok:
-            success = True
-            break
+        try:
+            from ilim_assistant.motorlar.programlama_faz23 import (
+                task_mode_active,
+                task_success_met,
+            )
+
+            if task_mode_active():
+                if task_success_met(
+                    verify_ok=bool(verify.ok if verify else False),
+                    writes_ok=writes_ok,
+                ):
+                    success = True
+                    break
+            elif ok:
+                success = True
+                break
+        except Exception:
+            if ok:
+                success = True
+                break
 
         if writes_ok == 0:
             yield {
@@ -1021,6 +1123,12 @@ def iter_code_agent_turn_events(
         ]
 
     total_sec = time.perf_counter() - t0
+    if step_tracker is not None:
+        yield step_tracker.on_finish(
+            success=success,
+            elapsed_sec=total_sec,
+            turns_used=len(turn_reports),
+        )
     report = format_final_agent_report(
         task,
         turns_used=len(turn_reports),
@@ -1032,6 +1140,12 @@ def iter_code_agent_turn_events(
 
     clear_agent_state(workspace)
 
+    try:
+        if _exit_task_mode is not None:
+            _exit_task_mode()
+    except Exception:
+        pass
+
     footer = rag_footer(hits)
     body_fixed = finalize_assistant_reply(reply_body)
     code_patch_meta: dict[str, Any] = {}
@@ -1040,12 +1154,22 @@ def iter_code_agent_turn_events(
             workspace,
             active_file=getattr(req, "programlama_active_file", None),
         ) or task.scope_rel
-        code_patch_meta = process_assistant_reply_patches(
-            reply_body,
-            workspace,
-            scope_rel=scope,
-            skip_if_debug_loop=True,
-        )
+        try:
+            from ilim_assistant.motorlar.programlama_faz23 import finalize_agent_patches
+
+            code_patch_meta = finalize_agent_patches(
+                reply_body,
+                workspace,
+                scope_rel=scope,
+                skip_if_debug_loop=False,
+            )
+        except Exception:
+            code_patch_meta = process_assistant_reply_patches(
+                reply_body,
+                workspace,
+                scope_rel=scope,
+                skip_if_debug_loop=True,
+            )
         patch_footer = str(code_patch_meta.get("footer") or "")
         if patch_footer:
             body_fixed = body_fixed.rstrip() + patch_footer
@@ -1065,19 +1189,29 @@ def iter_code_agent_turn_events(
             "elapsed_sec": total_sec,
         },
     }
-    if orch is not None:
+    if orch is not None or step_tracker is not None:
         try:
-            orch = merge_orchestra_programlama(
-                orch,
-                message,
-                workspace,
-                active_file=getattr(req, "programlama_active_file", None),
-                phase="done",
-                patch_meta=code_patch_meta,
-            )
-            done["orchestra"] = orch
+            base_orch = dict(orch or {})
+            if orch is not None:
+                base_orch = merge_orchestra_programlama(
+                    base_orch,
+                    message,
+                    workspace,
+                    active_file=getattr(req, "programlama_active_file", None),
+                    phase="done",
+                    patch_meta=code_patch_meta,
+                )
+            if step_tracker is not None:
+                base_orch["agent_steps"] = step_tracker.snapshot()
+            done["orchestra"] = base_orch
         except Exception:
-            done["orchestra"] = orch
+            if step_tracker is not None:
+                done["orchestra"] = {
+                    **(orch or {}),
+                    "agent_steps": step_tracker.snapshot(),
+                }
+            elif orch is not None:
+                done["orchestra"] = orch
     if code_patch_meta and code_patch_meta.get("action") not in ("skip", "none"):
         done["code_patch"] = {
             "action": code_patch_meta.get("action"),

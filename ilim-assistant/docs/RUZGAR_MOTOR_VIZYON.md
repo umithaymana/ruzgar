@@ -36,9 +36,9 @@ Faz 19: max **120 sn** görev süresi; boş/kota turlarda **erken dur** (8 tur b
 
 ## Sıradaki geliştirme (motor sırası)
 
-1. Programlama: görev motoru sağlamlaştırma (kotada Groq, erken dur, 2 dk SLO)
+1. **Toplu canlı deneme** — Programlama modu + görev + Groq (`RUZGAR_PROG_BRAIN_CHAIN=groq,kod`)
 2. Ana Motor: tek «iş emri» ile doğru motora yönlendirme + aynı patch/onay modeli
-3. Diğer motorlar: ses/okuma/tercüme için «motor önce yükle» zaten var; ajan döngüsü kopyalanır
+3. Diğer motorlar: ses/okuma/tercüme için ajan döngüsü (programlama Faz 20–28 şablonu)
 
 ## CI
 

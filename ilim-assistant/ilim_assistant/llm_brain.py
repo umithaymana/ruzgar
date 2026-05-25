@@ -92,12 +92,23 @@ def _is_cloud_rate_limit_error(text: str) -> bool:
 
 
 def _programlama_chain_ids() -> list[str]:
-    """Programlama / kod: gemini→groq→kod; kota soğukken bulut atlanır."""
-    custom = (os.environ.get("RUZGAR_BRAIN_FALLBACK_CHAIN") or "").strip()
-    if custom:
-        ids = [x.strip() for x in custom.split(",") if x.strip()]
-    else:
-        ids = ["gemini", "groq", "kod", "denge"]
+    """Programlama / kod: Faz 26 groq öncelik; kota soğukken gemini atlanır."""
+    try:
+        from ilim_assistant.motorlar.programlama_faz26 import programming_brain_chain_ids
+
+        f26 = programming_brain_chain_ids()
+        if f26:
+            ids = list(f26)
+        else:
+            ids = []
+    except Exception:
+        ids = []
+    if not ids:
+        custom = (os.environ.get("RUZGAR_BRAIN_FALLBACK_CHAIN") or "").strip()
+        if custom:
+            ids = [x.strip() for x in custom.split(",") if x.strip()]
+        else:
+            ids = ["gemini", "groq", "kod", "denge"]
     try:
         from ilim_assistant.gemini_quota_guard import gemini_cooldown_active
 

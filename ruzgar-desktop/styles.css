@@ -3159,6 +3159,51 @@ body:not(.workbench-hizir-active) #workbench-hizir-tools,
   color: #a8d4a0;
   white-space: pre;
 }
+.programlama-inline-diff {
+  margin: 6px 0 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(120, 180, 255, 0.35);
+  border-radius: 8px;
+  background: rgba(8, 14, 22, 0.92);
+}
+.programlama-inline-diff[hidden] {
+  display: none !important;
+}
+.programlama-inline-diff-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+.programlama-inline-diff-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  min-height: 0;
+}
+.programlama-inline-diff-label {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+  margin-bottom: 4px;
+}
+.programlama-inline-diff-pre {
+  margin: 0;
+  padding: 8px;
+  max-height: 200px;
+  overflow: auto;
+  font-size: 11px;
+  line-height: 1.35;
+  background: #0a0e12;
+  border-radius: 6px;
+  color: #c8e6c9;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
 .programlama-patch-list button {
   margin-left: 6px;
   font-size: 11px;

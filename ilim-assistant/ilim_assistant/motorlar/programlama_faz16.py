@@ -39,6 +39,13 @@ def _ascii_fold(text: str) -> str:
 
 def effective_auto_patch_enabled() -> bool:
     """Faz 16 açıkken varsayılan False; env ile açıkça override edilebilir."""
+    try:
+        from ilim_assistant.motorlar.programlama_faz23 import effective_auto_patch_for_task
+
+        if effective_auto_patch_for_task():
+            return True
+    except Exception:
+        pass
     raw = os.environ.get("RUZGAR_FAZ10_AUTO_PATCH", "").strip().lower()
     if raw in ("1", "true", "yes", "on"):
         return True

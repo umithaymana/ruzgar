@@ -5,7 +5,7 @@
 
 **Referans (Cursor / bu sohbet):** Plan → araçlarla oku → çok dosya değiştir → terminal/test → hata oku → tekrarla → kullanıcıya özet.
 
-**Mevcut build:** `2026-05-25-programlama-faz19-v33` (Faz 8–19 üstayol tamamlandı)
+**Mevcut build:** `2026-05-25-programlama-faz25-v39` (Faz 8–25 / Cursor yol haritası tamam)
 
 ---
 
@@ -83,9 +83,12 @@ Kullanıcı (programlama modu)
 | **20** | Birleşik ajan + araç protokolü | «benim-api version ekle» → otomatik tur + tool | ✓ v34 |
 | **21** | Hafif bağlam (RAG kapalı) | Kod turu < 5 sn hazırlık | ✓ v35 |
 | **22** | Sembol indeks v2 | `sembol health` → tanım listesi | ✓ v36 |
-| **23** | Görev otomatik uygula + 5 dk bütçe | Patch onaysız görev; 3 dosya test geçer |
-| **24** | Plan SSE + UI adım şeridi | Kullanıcı tur tur görür |
-| **25** | Cursor parity smoke | Senaryo: sıfırdan API + test < 5 dk (Groq) |
+| **23** | Görev otomatik uygula + 5 dk bütçe | Patch onaysız görev; 3 dosya test geçer | ✓ v37 |
+| **24** | Plan SSE + UI adım şeridi | Kullanıcı tur tur görür | ✓ v38 |
+| **25** | Cursor parity smoke | Senaryo: sıfırdan API + test < 5 dk (Groq) | ✓ v39 |
+| **26** | Programlama beyin zinciri | Tüm kod turlarında groq,kod öncelik | ✓ v40 |
+| **27** | Editör inline diff | Patch → eski/yeni yan yana | ✓ v40 |
+| **28** | Git branch | `git dal` · `yeni dal: x` | ✓ v40 |
 
 ---
 

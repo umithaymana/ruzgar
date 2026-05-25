@@ -30,10 +30,14 @@ def _bootstrap() -> None:
 
 
 def main() -> None:
+    forced = (os.environ.get("RUZGAR_CI_FORCED_PORT") or "").strip()
     _bootstrap()
     import uvicorn
 
-    port = int(os.environ.get("RUZGAR_API_PORT", "8779") or "8779")
+    if forced:
+        port = int(forced)
+    else:
+        port = int(os.environ.get("RUZGAR_API_PORT", "8779") or "8779")
     uvicorn.run(
         "desktop_server:app",
         host="127.0.0.1",

@@ -347,6 +347,22 @@ def iter_unified_programming_agent_events(
         yield {"type": "error", "text": "Proje odakı yok — `projects/<ad>/` açın veya yol yazın."}
         return
 
+    try:
+        from ilim_assistant.motorlar.programlama_faz23 import (
+            code_agent_budget_sec,
+            enter_task_mode,
+            exit_task_mode,
+            format_task_mode_status,
+        )
+
+        enter_task_mode()
+        yield {
+            "type": "status",
+            "text": format_task_mode_status(task.scope_rel, code_agent_budget_sec()),
+        }
+    except Exception:
+        enter_task_mode = exit_task_mode = None  # type: ignore
+
     if agent_auto_apply_writes():
         os.environ["RUZGAR_FAZ10_AUTO_PATCH"] = "1"
 
@@ -377,41 +393,51 @@ def iter_unified_programming_agent_events(
 
     agent_system = augment_agent_system(build_compact_agent_system(req.workspace_root, task))
 
-    for ev in iter_code_agent_turn_events(
-        message=norm_msg,
-        req=req,
-        system=agent_system,
-        user_payload=user_payload,
-        model=model,
-        prior=prior,
-        mode_norm=mode_norm,
-        coding=coding,
-        turn_plan=turn_plan,
-        hits=hits,
-        new_wake=new_wake,
-        orch=orch,
-        delegated_from_genel=delegated_from_genel,
-    ):
-        if ev.get("type") == "token":
-            body = str(ev.get("text") or "")
-            if body:
+    try:
+        for ev in iter_code_agent_turn_events(
+            message=norm_msg,
+            req=req,
+            system=agent_system,
+            user_payload=user_payload,
+            model=model,
+            prior=prior,
+            mode_norm=mode_norm,
+            coding=coding,
+            turn_plan=turn_plan,
+            hits=hits,
+            new_wake=new_wake,
+            orch=orch,
+            delegated_from_genel=delegated_from_genel,
+        ):
+            if ev.get("type") == "token":
+                body = str(ev.get("text") or "")
+                if body:
+                    yield ev
+                continue
+            if ev.get("type") == "done":
+                full = str(ev.get("full_reply") or "")
+                tool_results, tool_block = run_tools_from_reply(
+                    full,
+                    req.workspace_root,
+                    scope_rel=task.scope_rel,
+                )
+                if tool_block and tool_results:
+                    extra_tools = sum(
+                        1 for r in tool_results if r.get("tool") == "write" and r.get("ok")
+                    )
+                    ev = dict(ev)
+                    ev["full_reply"] = full.rstrip() + "\n\n" + tool_block
+                    ev.setdefault("meta", {})["faz20_tools"] = len(tool_results)
+                    if extra_tools:
+                        ev["code_agent"] = dict(ev.get("code_agent") or {})
+                        ev["code_agent"]["faz20_tool_writes"] = extra_tools
                 yield ev
-            continue
-        if ev.get("type") == "done":
-            full = str(ev.get("full_reply") or "")
-            tool_results, tool_block = run_tools_from_reply(
-                full,
-                req.workspace_root,
-                scope_rel=task.scope_rel,
-            )
-            if tool_block and tool_results:
-                extra_tools = sum(1 for r in tool_results if r.get("tool") == "write" and r.get("ok"))
-                ev = dict(ev)
-                ev["full_reply"] = full.rstrip() + "\n\n" + tool_block
-                ev.setdefault("meta", {})["faz20_tools"] = len(tool_results)
-                if extra_tools:
-                    ev["code_agent"] = dict(ev.get("code_agent") or {})
-                    ev["code_agent"]["faz20_tool_writes"] = extra_tools
+                continue
             yield ev
-            continue
-        yield ev
+    finally:
+        try:
+            from ilim_assistant.motorlar.programlama_faz23 import exit_task_mode
+
+            exit_task_mode()
+        except Exception:
+            pass

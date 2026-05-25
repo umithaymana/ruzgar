@@ -14,7 +14,7 @@
 | `ddc57b7` | Faz 12: diff önizleme, `programlama_smoke.py`, hızlı şablon düğmeleri |
 | `98d554f` | Manifest Faz 12 etiketi |
 
-**Build:** `2026-05-25-programlama-faz22-v36`
+**Build:** `2026-05-25-programlama-faz28-v40`
 
 ### Bugün çalışan kabiliyetler
 
@@ -172,7 +172,30 @@ Kod kalitesi için **Faz 14–16 (araç + döngü)** API’den önce bile büyü
 - Komutlar: `sembol health` · `@@symbol health` · `sembol indeks yenile`
 - `ruzgar-tool` → `symbol` · hafif bağlamda sembol ipucu
 
-**Üstayol Faz 8–22 tamam** — sırada Faz 23 (5 dk görev + otomatik apply).  
-Build: `faz22-v36` · smoke: `python scripts/programlama_smoke.py --ci`
+### Faz 23 — Görev modu 5 dk ✓ (2026-05-25)
+
+- Varsayılan bütçe **300 sn** (`RUZGAR_CODE_AGENT_BUDGET_SEC` ile override)
+- Görev turunda patch **onaysız** (`RUZGAR_CODE_AGENT_TASK_MODE` + `RUZGAR_FAZ10_AUTO_PATCH=1`)
+- Başarı: doğrulama yeşil + en az 1 dosya yazımı
+
+### Faz 24 — Canlı adım şeridi ✓ (2026-05-25)
+
+- SSE `agent_step` — görev turunda Plan / Tur / Yazım / Doğrulama / Sonuç
+- Atölye: **Görev adımları (Faz 24 — canlı)** paneli anlık güncellenir
+
+### Faz 25 — Cursor parity smoke ✓ (2026-05-25)
+
+- `programlama_faz25.py` — offline: fastapi scaffold → version patch → pytest
+- `--parity` / `--ci` · rapor: `scripts/ruzgar_parity_smoke_sonuc.json`
+- API: `GET /api/programlama/parity-report`
+
+### Faz 26–28 — Cila ✓ (2026-05-25)
+
+- **26:** `RUZGAR_PROG_BRAIN_CHAIN=groq,kod,gemini` — tüm programlama LLM turları
+- **27:** Editör üstü eski/yeni diff · API `patch/inline-diff`
+- **28:** `git dal` · `yeni dal: feature-x`
+
+**Üstayol Faz 8–28 + Cursor plan (20–28) tamam** — toplu canlı deneme.  
+Build: `faz28-v40` · smoke: `python scripts/programlama_smoke.py --ci`
 
 *Ümit & Gökçenur — Rüzgar Programlama Üstayol*
