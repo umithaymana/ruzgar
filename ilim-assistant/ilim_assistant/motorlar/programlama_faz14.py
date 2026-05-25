@@ -1324,9 +1324,21 @@ def iter_code_agent_turn_events(
             )
 
         try:
-            from ilim_assistant.motorlar.programlama_faz37 import record_turn_metrics
+            try:
+                from ilim_assistant.motorlar.programlama_faz48 import (
+                    compliance_v2_enabled,
+                    record_turn_metrics_v2,
+                )
 
-            record_turn_metrics(
+                rec_fn = record_turn_metrics_v2 if compliance_v2_enabled() else None
+            except Exception:
+                rec_fn = None
+            if rec_fn is None:
+                from ilim_assistant.motorlar.programlama_faz37 import record_turn_metrics
+
+                rec_fn = record_turn_metrics  # type: ignore[assignment]
+
+            rec_fn(
                 workspace,
                 scope_rel=task.scope_rel,
                 turn=turn,
@@ -1522,6 +1534,30 @@ def iter_code_agent_turn_events(
             verify_ok=verify_ok,
             elapsed_sec=total_sec,
         )
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz48 import (
+            compliance_v2_enabled,
+            record_task_completion_compliance,
+            target_compliance_score,
+        )
+
+        if compliance_v2_enabled() and success:
+            st = load_agent_state(workspace)
+            writes_total = int(st.get("total_writes") or 0)
+            comp = record_task_completion_compliance(
+                workspace,
+                scope_rel=task.scope_rel,
+                turns_used=len(turn_reports),
+                verify_ok=verify_ok,
+                writes_ok=max(1, writes_total),
+            )
+            if comp.get("score") is not None:
+                reply_body += (
+                    f"\n\n**Ajan uyum (Faz 48):** {comp.get('score')}/100 "
+                    f"(hedef ≥{target_compliance_score()})"
+                )
     except Exception:
         pass
 

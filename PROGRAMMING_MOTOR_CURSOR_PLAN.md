@@ -107,7 +107,8 @@ Kullanıcı (programlama modu)
 | **44** | Bağlam v3 | repo harita · @dosya · ilgili dosyalar | ✓ v55 |
 | **45** | Editör cila | patch sekmeleri · diff v2 · birleşik uygula | ✓ v56 |
 | **46** | Cursor seviye kilidi | 3 senaryo · skor ≥85 · ruzgar_cursor_seviye_sonuc.json | ✓ v57 |
-| **47** | Bağımsız proje üret | `proje üret:` scaffold+pytest; Cursor gerekmez (minimal) | ✓ v58 |
+| **47** | Bağımsız proje üret | `proje üret:` tüm şablonlar; Cursor gerekmez (minimal) | ✓ v58 |
+| **48** | Ajan uyum v2 | Görev sonu skor ≥85; KPI kaydı | ✓ v59 |
 
 **Kapanış yolu (Faz 39–46):** [PROGRAMMING_MOTOR_CURSOR_SEVIYE_PLAN.md](PROGRAMMING_MOTOR_CURSOR_SEVIYE_PLAN.md)
 

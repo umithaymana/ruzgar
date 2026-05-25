@@ -623,7 +623,7 @@ def run_live(base: str) -> int:
     try:
         h = get("/api/health")
         rev = str((h.get("build") or {}).get("rev") or "")
-        if "faz47" in rev or "faz46" in rev or rev.endswith("-v58"):
+        if "faz48" in rev or "faz47" in rev or rev.endswith("-v59"):
             _ok(f"build.rev={rev}")
         else:
             _fail("build.rev", rev)
@@ -964,6 +964,7 @@ def run_parity(*, live_base: str | None = None) -> int:
         ProjeUretSpec,
         parse_proje_uret_command,
         proje_uret_enabled,
+        run_offline_bootstrap,
         run_proje_uret_prepare,
         should_run_proje_uret_pipeline,
         wants_proje_uret,
@@ -1019,6 +1020,41 @@ def run_parity(*, live_base: str | None = None) -> int:
         _fail("ready_without_agent", rep47.detail[:80])
         fails += 1
     _ok(f"faz47 {FAZ47_VERSION}")
+
+    for tid, pname_suffix in (
+        ("static_site", "site"),
+        ("react_vite", "react"),
+        ("cli_python", "cli"),
+    ):
+        pn = f"smoke-faz47-{pname_suffix}-{int(time.time()) % 100000}"
+        sp = ProjeUretSpec(tid, pn, "smoke test geçir")
+        rp = run_proje_uret_prepare(WORKSPACE, sp)
+        if rp.scaffold_ok and rp.verify_ok:
+            _ok(f"proje uret {tid}")
+        else:
+            _fail(f"proje uret {tid}", rp.detail[:60])
+            fails += 1
+
+    print("=== Faz 48 — ajan uyum v2 (hedef ≥85) ===")
+    from ilim_assistant.motorlar.programlama_faz48 import (
+        FAZ48_VERSION,
+        compliance_v2_enabled,
+        run_offline_compliance_smoke,
+        target_compliance_score,
+    )
+
+    if compliance_v2_enabled():
+        _ok("compliance v2 on")
+    else:
+        _fail("compliance v2")
+        fails += 1
+    csm = run_offline_compliance_smoke(WORKSPACE)
+    if csm.get("ok") and int(csm.get("score", 0)) >= target_compliance_score():
+        _ok(f"compliance smoke score={csm.get('score')} (>={target_compliance_score()})")
+    else:
+        _fail("compliance smoke", str(csm.get("score")))
+        fails += 1
+    _ok(f"faz48 {FAZ48_VERSION}")
 
     print("=== Faz 45 — editör v2 ===")
     from ilim_assistant.motorlar.programlama_faz45 import (

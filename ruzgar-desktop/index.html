@@ -883,7 +883,7 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
 
           <section class="motor-page" id="page-programlama" hidden>
             <div class="atelier-info-strip">
-              <span class="phase-badge" id="programlama-phase-badge">Faz 20</span>
+              <span class="phase-badge" id="programlama-phase-badge">Faz 48</span>
               <span class="atelier-promise" id="programlama-phase-promise">
                 <strong>Programlama Atölyesi (Faz 20)</strong> — Cursor yolu: birleşik ajan + ruzgar-tool, git, patch, terminal,
                 <strong>kendini tara</strong>, <strong>güvenlik tara</strong>, sahip kilidi «rüzgar ben ümit».
@@ -930,6 +930,14 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
                   <button type="button" id="btn-scaffold-site" class="btn-secondary btn-compact" title="Statik site">+ Site</button>
                   <button type="button" id="btn-scaffold-react" class="btn-secondary btn-compact" title="React+Vite">+ React</button>
                   <button type="button" id="btn-scaffold-mobile" class="btn-secondary btn-compact" title="Expo mobil (Faz 30)">+ Mobil</button>
+                  <button
+                    type="button"
+                    id="btn-proje-uret"
+                    class="btn-primary btn-compact"
+                    title="Faz 47 — şablon + test (Cursor gerekmez)"
+                  >
+                    Proje Üret
+                  </button>
                   <span class="spacer"></span>
                   <button
                     type="button"
@@ -942,6 +950,35 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
                 </div>
                 <div class="code-active-path" id="code-active-file">
                   Dosya: (yeni — Kaydet ile göreli yol verilir)
+                </div>
+                <div id="proje-uret-modal" class="proje-uret-modal" hidden role="dialog" aria-labelledby="proje-uret-title">
+                  <div class="proje-uret-panel">
+                    <h3 id="proje-uret-title">Bağımsız proje üret (Faz 47)</h3>
+                    <p class="proje-uret-hint">
+                      Şablon seç → isim ver → Rüzgar scaffold + test yapar. Özel özellik (login, CRUD) için otomatik ajan devreye girer.
+                    </p>
+                    <label class="proje-uret-field">
+                      Şablon
+                      <select id="proje-uret-template" class="select-mini"></select>
+                    </label>
+                    <label class="proje-uret-field">
+                      Proje adı
+                      <input id="proje-uret-name" type="text" placeholder="benim-api" autocomplete="off" />
+                    </label>
+                    <label class="proje-uret-field">
+                      Hedef (isteğe bağlı)
+                      <input
+                        id="proje-uret-goal"
+                        type="text"
+                        placeholder="health version pytest geçir"
+                        autocomplete="off"
+                      />
+                    </label>
+                    <div class="proje-uret-actions">
+                      <button type="button" id="btn-proje-uret-cancel" class="btn-secondary btn-compact">İptal</button>
+                      <button type="button" id="btn-proje-uret-run" class="btn-primary btn-compact">Üret</button>
+                    </div>
+                  </div>
                 </div>
                 <div id="programlama-patch-tabs" class="programlama-patch-tabs" hidden></div>
                 <div id="programlama-patch-ux-hint" class="programlama-patch-ux-hint" hidden></div>

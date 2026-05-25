@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterator
 
-FAZ47_VERSION = "programlama-faz47-v1-2026-05-25"
+FAZ47_VERSION = "programlama-faz47-v2-2026-05-25"
 
 _TEMPLATE_HINTS: list[tuple[str, str]] = [
     (r"\b(fastapi|fast\s*api|api\s+servis)\b", "fastapi_api"),
@@ -288,42 +288,294 @@ def _goal_is_minimal_post_scaffold(goal: str) -> bool:
         "pass",
         "gecer",
         "geçer",
+        "smoke",
+        "yapi",
+        "yapı",
+        "build",
+        "kur",
+        "hazir",
+        "hazır",
+        "calisir",
+        "çalışır",
+        "site",
+        "statik",
+        "react",
+        "vite",
+        "expo",
+        "mobil",
+        "cli",
     }
     return all(t in allowed or t.startswith("test") for t in tokens)
+
+
+def _goal_is_minimal_for_template(template_id: str, goal: str) -> bool:
+    if _CUSTOM_FEATURE_RE.search(goal or ""):
+        return False
+    if not _goal_is_minimal_post_scaffold(goal):
+        return False
+    tid = template_id.strip().lower()
+    low = _ascii_fold(goal or "")
+    if tid in ("react_vite", "mobile_expo") and "npm install" in low:
+        return False
+    return True
+
+
+def _write_project_file(
+    workspace_root: str | Path | None,
+    rel: str,
+    content: str,
+) -> bool:
+    from ilim_assistant.motorlar.programlama_motoru import ProgramlamaAraclari
+
+    w = ProgramlamaAraclari(workspace_root).write(rel.replace("\\", "/"), content)
+    return bool(w.ok)
+
+
+def _bootstrap_fastapi(
+    workspace_root: str | Path | None,
+    scope: str,
+    slug: str,
+    goal: str,
+) -> tuple[bool, str]:
+    from ilim_assistant.motorlar.programlama_faz25 import _health_patch_for_scope
+    from ilim_assistant.motorlar.programlama_motoru import apply_assistant_reply_tools
+    from ilim_assistant.motorlar.programlama_faz14 import ensure_pytest_bootstrap
+
+    patch = _health_patch_for_scope(scope, slug)
+    summ, _ = apply_assistant_reply_tools(patch, workspace_root, run_pytest=False)
+    writes = len([w for w in summ.writes if w.ok])
+    ensure_pytest_bootstrap(workspace_root, scope, goal=goal or "pytest")
+    return writes > 0, f"fastapi writes={writes}"
+
+
+def _bootstrap_static_site(
+    workspace_root: str | Path | None,
+    scope: str,
+    slug: str,
+) -> tuple[bool, str]:
+    rel = f"{scope}/tests/smoke_static.py"
+    body = f'''"""Statik site smoke — {slug}."""
+from pathlib import Path
+
+def test_index_exists() -> None:
+    assert (Path(__file__).resolve().parent.parent / "index.html").is_file()
+
+def test_app_js_exists() -> None:
+    assert (Path(__file__).resolve().parent.parent / "js" / "app.js").is_file()
+'''
+    ok = _write_project_file(workspace_root, rel, body)
+    return ok, "static tests/smoke_static.py"
+
+
+def _bootstrap_react_vite(
+    workspace_root: str | Path | None,
+    scope: str,
+    slug: str,
+) -> tuple[bool, str]:
+    rel = f"{scope}/scripts/smoke-check.mjs"
+    body = f'''import fs from "node:fs";
+const need = ["package.json", "src/App.jsx", "src/main.jsx", "vite.config.js"];
+for (const f of need) {{
+  if (!fs.existsSync(f)) {{
+    console.error("missing", f);
+    process.exit(1);
+  }}
+}}
+console.log("react_smoke_ok:{slug}");
+'''
+    ok1 = _write_project_file(workspace_root, rel, body)
+    pkg_rel = f"{scope}/package.json"
+    try:
+        from ilim_assistant.motorlar.programlama_motoru import ProgramlamaAraclari
+
+        rep = ProgramlamaAraclari(workspace_root).read(pkg_rel, max_chars=8000)
+        if rep.ok and rep.content:
+            import json
+
+            data = json.loads(rep.content)
+            scripts = data.setdefault("scripts", {})
+            if "smoke" not in scripts:
+                scripts["smoke"] = "node scripts/smoke-check.mjs"
+                _write_project_file(
+                    workspace_root,
+                    pkg_rel,
+                    json.dumps(data, ensure_ascii=False, indent=2) + "\n",
+                )
+    except Exception:
+        pass
+    return ok1, "react smoke-check.mjs"
+
+
+def _bootstrap_cli_python(
+    workspace_root: str | Path | None,
+    scope: str,
+) -> tuple[bool, str]:
+    rel = f"{scope}/tests/test_cli.py"
+    body = '''"""CLI smoke."""
+import subprocess
+import sys
+
+
+def test_main_runs() -> None:
+    r = subprocess.run(
+        [sys.executable, "main.py", "test"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert r.returncode == 0
+    assert "Merhaba" in (r.stdout or "")
+'''
+    return _write_project_file(workspace_root, rel, body), "cli tests/test_cli.py"
+
+
+def _bootstrap_python_package(
+    workspace_root: str | Path | None,
+    scope: str,
+) -> tuple[bool, str]:
+    """Şablonda test_core zaten var."""
+    from ilim_assistant.motorlar.programlama_motoru import repo_root
+
+    root = repo_root(workspace_root)
+    if root is None:
+        return False, "no root"
+    tests = root / scope.replace("/", os.sep) / "tests" / "test_core.py"
+    return tests.is_file(), "python_package test_core"
+
+
+def _bootstrap_mobile_expo(
+    workspace_root: str | Path | None,
+    scope: str,
+) -> tuple[bool, str]:
+    rel = f"{scope}/tests/smoke_app.js"
+    body = '''/** Expo smoke — App.js var mı */
+const fs = require("fs");
+const path = require("path");
+const app = path.join(__dirname, "..", "App.js");
+if (!fs.existsSync(app)) {
+  console.error("App.js missing");
+  process.exit(1);
+}
+console.log("expo_smoke_ok");
+'''
+    pkg_rel = f"{scope}/package.json"
+    try:
+        from ilim_assistant.motorlar.programlama_motoru import ProgramlamaAraclari
+        import json
+
+        rep = ProgramlamaAraclari(workspace_root).read(pkg_rel, max_chars=8000)
+        if rep.ok and rep.content:
+            data = json.loads(rep.content)
+            scripts = data.setdefault("scripts", {})
+            if "smoke" not in scripts:
+                scripts["smoke"] = "node tests/smoke_app.js"
+                _write_project_file(
+                    workspace_root,
+                    pkg_rel,
+                    json.dumps(data, ensure_ascii=False, indent=2) + "\n",
+                )
+    except Exception:
+        pass
+    return _write_project_file(workspace_root, rel, body), "expo smoke_app.js"
 
 
 def run_offline_bootstrap(
     workspace_root: str | Path | None,
     spec: ProjeUretSpec,
 ) -> tuple[bool, str]:
-    """LLM olmadan FastAPI health+version + pytest iskeleti."""
+    """LLM olmadan şablon bazlı patch + smoke iskeleti."""
     if not offline_bootstrap_enabled():
         return False, "offline kapalı"
-    if spec.template_id != "fastapi_api":
-        return False, f"offline yalnızca fastapi_api ({spec.template_id})"
 
     scope = f"{_projects_base()}/{spec.project_name}"
+    tid = spec.template_id.strip().lower()
     try:
-        from ilim_assistant.motorlar.programlama_faz25 import _health_patch_for_scope
-        from ilim_assistant.motorlar.programlama_motoru import apply_assistant_reply_tools
         from ilim_assistant.motorlar.programlama_faz23 import enter_task_mode, exit_task_mode
-        from ilim_assistant.motorlar.programlama_faz14 import ensure_pytest_bootstrap
 
         enter_task_mode()
         try:
-            patch = _health_patch_for_scope(scope, spec.project_name)
-            summ, _ = apply_assistant_reply_tools(
-                patch, workspace_root, run_pytest=False
-            )
-            writes = len([w for w in summ.writes if w.ok])
-            ensure_pytest_bootstrap(
-                workspace_root, scope, goal=spec.goal or "pytest"
-            )
-            return writes > 0, f"writes={writes}"
+            if tid == "fastapi_api":
+                return _bootstrap_fastapi(
+                    workspace_root, scope, spec.project_name, spec.goal
+                )
+            if tid == "static_site":
+                return _bootstrap_static_site(workspace_root, scope, spec.project_name)
+            if tid == "react_vite":
+                return _bootstrap_react_vite(workspace_root, scope, spec.project_name)
+            if tid == "cli_python":
+                return _bootstrap_cli_python(workspace_root, scope)
+            if tid == "python_package":
+                return _bootstrap_python_package(workspace_root, scope)
+            if tid == "mobile_expo":
+                return _bootstrap_mobile_expo(workspace_root, scope)
+            return True, f"offline atlandı ({tid})"
         finally:
             exit_task_mode()
     except Exception as exc:
         return False, str(exc)[:120]
+
+
+def run_proje_uret_verify(
+    workspace_root: str | Path | None,
+    scope_rel: str,
+    template_id: str,
+    *,
+    goal: str = "",
+) -> bool:
+    """Şablona göre doğrulama — npm gerektirmeyen smoke öncelikli."""
+    tid = template_id.strip().lower()
+    skip_npm = os.environ.get("RUZGAR_PROJE_URET_SKIP_NPM", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+    if tid in ("fastapi_api", "python_package", "cli_python"):
+        from ilim_assistant.motorlar.programlama_faz14 import run_project_verify
+
+        rep = run_project_verify(workspace_root, scope_rel, goal=goal or "pytest")
+        return bool(rep and rep.ok)
+
+    if tid == "static_site":
+        from ilim_assistant.motorlar.programlama_faz14 import _run_pytest_in_scope
+
+        rep = _run_pytest_in_scope(workspace_root, scope_rel)
+        if rep and rep.ok:
+            return True
+        from ilim_assistant.motorlar.programlama_faz7 import (
+            detect_run_profile,
+            run_project_profile,
+        )
+
+        prof = detect_run_profile(workspace_root, scope_rel)
+        if prof and prof.get("smoke_argv"):
+            result = run_project_profile(workspace_root, scope_rel, smoke_only=True)
+            return bool(result.get("ok"))
+        return False
+
+    if tid in ("react_vite", "mobile_expo") and skip_npm:
+        from ilim_assistant.motorlar.programlama_motoru import repo_root
+
+        root = repo_root(workspace_root)
+        if root is None:
+            return False
+        proj = root / scope_rel.replace("/", os.sep)
+        if tid == "react_vite":
+            need = ["package.json", "src/App.jsx", "vite.config.js", "scripts/smoke-check.mjs"]
+        else:
+            need = ["package.json", "App.js", "tests/smoke_app.js"]
+        return all((proj / p.replace("/", os.sep)).is_file() for p in need)
+
+    from ilim_assistant.motorlar.programlama_faz7 import (
+        detect_run_profile,
+        run_project_profile,
+    )
+
+    prof = detect_run_profile(workspace_root, scope_rel)
+    if not prof:
+        return False
+    result = run_project_profile(workspace_root, scope_rel, smoke_only=True)
+    return bool(result.get("ok"))
 
 
 def _set_active_project(workspace_root: str | Path | None, slug: str) -> None:
@@ -379,14 +631,14 @@ def run_proje_uret_prepare(
         if not ob_ok:
             rep.warnings.append(f"offline: {ob_detail}")
 
-        from ilim_assistant.motorlar.programlama_faz14 import run_project_verify
-
-        verify = run_project_verify(
-            workspace_root, rep.scope_rel, goal=spec.goal
+        rep.verify_ok = run_proje_uret_verify(
+            workspace_root,
+            rep.scope_rel,
+            spec.template_id,
+            goal=spec.goal,
         )
-        rep.verify_ok = bool(verify and verify.ok)
 
-        minimal = _goal_is_minimal_post_scaffold(spec.goal)
+        minimal = _goal_is_minimal_for_template(spec.template_id, spec.goal)
         rep.ready_without_agent = rep.verify_ok and minimal
         rep.agent_required = not rep.ready_without_agent
 

@@ -222,6 +222,16 @@ def wants_compliance_report(message: str) -> bool:
 def maybe_instant_faz37(message: str, workspace_root: str | Path | None) -> str | None:
     if not _enabled() or not wants_compliance_report(message):
         return None
+    try:
+        from ilim_assistant.motorlar.programlama_faz48 import (
+            compliance_v2_enabled,
+            format_compliance_report_v2,
+        )
+
+        if compliance_v2_enabled():
+            return format_compliance_report_v2(workspace_root)
+    except Exception:
+        pass
     return format_compliance_report(workspace_root)
 
 

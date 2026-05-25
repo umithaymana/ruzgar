@@ -2019,6 +2019,105 @@ async function patchAcceptAllFromAtolye() {
   }
 }
 
+function closeProjeUretModal() {
+  const modal = document.getElementById("proje-uret-modal");
+  if (modal) modal.hidden = true;
+}
+
+function openProjeUretModal() {
+  const modal = document.getElementById("proje-uret-modal");
+  if (!modal) return;
+  modal.hidden = false;
+  void loadProjeUretTemplates();
+}
+
+async function loadProjeUretTemplates() {
+  const sel = document.getElementById("proje-uret-template");
+  if (!sel || sel.dataset.loaded === "1") return;
+  try {
+    const res = await fetch(`${API}/api/programlama/proje-uret/templates`);
+    const data = await res.json().catch(() => ({}));
+    const rows = Array.isArray(data.templates) ? data.templates : [];
+    sel.innerHTML = "";
+    for (const t of rows) {
+      const opt = document.createElement("option");
+      opt.value = String(t.id || "");
+      opt.textContent = `${t.label || t.id} — ${t.desc || ""}`.slice(0, 72);
+      sel.appendChild(opt);
+    }
+    if (!rows.length) {
+      const opt = document.createElement("option");
+      opt.value = "fastapi_api";
+      opt.textContent = "FastAPI REST API";
+      sel.appendChild(opt);
+    }
+    sel.dataset.loaded = "1";
+  } catch (_) {
+    sel.innerHTML = '<option value="fastapi_api">FastAPI REST API</option>';
+  }
+}
+
+async function runProjeUretFromUi() {
+  const templateId = String(document.getElementById("proje-uret-template")?.value || "fastapi_api");
+  const name = String(document.getElementById("proje-uret-name")?.value || "").trim();
+  const goal = String(document.getElementById("proje-uret-goal")?.value || "").trim();
+  if (!name) {
+    setCodeOutput("Proje adı gerekli.");
+    return;
+  }
+  let workspaceRoot = null;
+  try {
+    if (window.ruzgarApi?.getRoot) workspaceRoot = await window.ruzgarApi.getRoot();
+  } catch (_) {
+    workspaceRoot = null;
+  }
+  if (!workspaceRoot) {
+    setCodeOutput("Proje üret için workspace kökü gerekli (Electron).");
+    return;
+  }
+  closeProjeUretModal();
+  setCodeOutput(`Proje üretiliyor: ${templateId} / ${name}…`);
+  const enc = encodeURIComponent(workspaceRoot);
+  const g = encodeURIComponent(goal || "health version pytest geçir");
+  try {
+    const res = await fetch(
+      `${API}/api/programlama/proje-uret?workspace_root=${enc}` +
+        `&template_id=${encodeURIComponent(templateId)}` +
+        `&project_name=${encodeURIComponent(name)}` +
+        `&goal=${g}`
+    );
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) {
+      throw new Error(data.detail || data.error || `HTTP ${res.status}`);
+    }
+    setCodeOutput(data.report || "Proje üret raporu.");
+    const scope = data.data?.scope_rel || `projects/${name}`;
+    let focusRel = `${scope}/index.html`;
+    if (templateId === "fastapi_api") focusRel = `${scope}/app/main.py`;
+    else if (templateId === "react_vite") focusRel = `${scope}/src/App.jsx`;
+    else if (templateId === "mobile_expo") focusRel = `${scope}/App.js`;
+    else if (templateId === "cli_python") focusRel = `${scope}/main.py`;
+    await applyProgramlamaFocusFromChat({
+      programlama_focus_rel: focusRel,
+      programlama_project_rel: scope,
+      programlama_expand_tree: true,
+    });
+    flashRuzgarDurum(
+      data.ready_without_agent
+        ? `Proje hazır (pytest OK): ${name}`
+        : `Scaffold OK — ajan başlatılıyor: ${name}`
+    );
+    if (data.agent_required && data.agent_message) {
+      switchMode("programlama");
+      if (el.code) el.code.checked = true;
+      setCodeOutput("Ajan görevi sohbet panelinde başlatıldı.");
+      void sendMessageWithText(String(data.agent_message), { skipUserBubble: false });
+    }
+  } catch (e) {
+    setCodeOutput(`Proje üret hatası: ${e && e.message ? e.message : e}`);
+  }
+}
+
 async function runQuickScaffold(templateId, defaultName) {
   let workspaceRoot = null;
   try {
@@ -5354,6 +5453,18 @@ function wireProgrammingWorkbench() {
   const btnScMobile = document.getElementById("btn-scaffold-mobile");
   if (btnScMobile) {
     btnScMobile.addEventListener("click", () => void runQuickScaffold("mobile_expo", "mobilim"));
+  }
+  const btnProjeUret = document.getElementById("btn-proje-uret");
+  const btnProjeUretRun = document.getElementById("btn-proje-uret-run");
+  const btnProjeUretCancel = document.getElementById("btn-proje-uret-cancel");
+  if (btnProjeUret) {
+    btnProjeUret.addEventListener("click", () => openProjeUretModal());
+  }
+  if (btnProjeUretRun) {
+    btnProjeUretRun.addEventListener("click", () => void runProjeUretFromUi());
+  }
+  if (btnProjeUretCancel) {
+    btnProjeUretCancel.addEventListener("click", () => closeProjeUretModal());
   }
   const btnPatchApply = document.getElementById("btn-patch-apply-pending");
   if (btnPatchApply) {

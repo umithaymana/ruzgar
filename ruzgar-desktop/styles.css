@@ -4519,3 +4519,60 @@ body.faz7-reduced-motion .agent-step-active .agent-step-label {
   font-size: 11px;
   color: #ce9178;
 }
+
+.proje-uret-modal {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 12, 18, 0.72);
+  backdrop-filter: blur(4px);
+}
+.proje-uret-modal[hidden] {
+  display: none !important;
+}
+.proje-uret-panel {
+  width: min(420px, 92vw);
+  padding: 1.25rem 1.35rem;
+  border-radius: 12px;
+  background: #1a2332;
+  border: 1px solid rgba(61, 139, 253, 0.35);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+.proje-uret-panel h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+}
+.proje-uret-hint {
+  margin: 0 0 1rem;
+  font-size: 0.82rem;
+  opacity: 0.85;
+  line-height: 1.4;
+}
+.proje-uret-field {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-size: 0.8rem;
+}
+.proje-uret-field input,
+.proje-uret-field select {
+  display: block;
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #0f1419;
+  color: inherit;
+}
+.proje-uret-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+.code-main {
+  position: relative;
+}

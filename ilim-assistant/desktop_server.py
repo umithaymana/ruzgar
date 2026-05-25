@@ -791,7 +791,7 @@ def health():
         },
         "super_brain": _super_brain_health_block(),
         "build": {
-            "rev": "2026-05-25-programlama-faz47-v58",
+            "rev": "2026-05-25-programlama-faz48-v59",
             "nebula_kitap": True,
             "fast_paths": os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
             "memory_first": True,
@@ -1451,14 +1451,36 @@ def api_programlama_quality_report(workspace_root: str | None = None):
 
 @app.get("/api/programlama/agent-compliance")
 def api_programlama_agent_compliance(workspace_root: str | None = None):
-    """Faz 37 — ajan uyum skoru (son görev oturumu)."""
+    """Faz 37/48 — ajan uyum skoru (son görev oturumu)."""
+    root = (workspace_root or "").strip() or None
+    try:
+        from ilim_assistant.motorlar.programlama_faz48 import (
+            FAZ48_VERSION,
+            build_compliance_report_v2,
+            compliance_v2_enabled,
+            format_compliance_report_v2,
+            target_compliance_score,
+        )
+
+        if compliance_v2_enabled():
+            data = build_compliance_report_v2(root)
+            rep = data.get("report") or {}
+            return {
+                "ok": bool(data.get("ok")),
+                "report": format_compliance_report_v2(root) if data.get("ok") else "",
+                "data": rep,
+                "target_score": target_compliance_score(),
+                "meets_target": bool(rep.get("meets_target")),
+                "version": FAZ48_VERSION,
+            }
+    except Exception:
+        pass
     from ilim_assistant.motorlar.programlama_faz37 import (
         FAZ37_VERSION,
         build_compliance_report,
         format_compliance_report,
     )
 
-    root = (workspace_root or "").strip() or None
     data = build_compliance_report(root)
     rep = data.get("report") or {}
     return {
@@ -1512,12 +1534,32 @@ def api_programlama_proje_uret(
     )
     root = (workspace_root or "").strip() or None
     rep = run_proje_uret_prepare(root, spec)
+    agent_message = None
+    if rep.agent_required and rep.scaffold_ok:
+        from ilim_assistant.motorlar.programlama_faz47 import build_agent_message_for_spec
+
+        agent_message = build_agent_message_for_spec(spec)
     return {
         "ok": rep.ok,
         "ready_without_agent": rep.ready_without_agent,
         "agent_required": rep.agent_required,
+        "agent_message": agent_message,
         "report": format_proje_uret_report(rep),
         "data": rep.to_dict(),
+        "version": FAZ47_VERSION,
+    }
+
+
+@app.get("/api/programlama/proje-uret/templates")
+def api_programlama_proje_uret_templates():
+    """Faz 47 UI — şablon listesi."""
+    from ilim_assistant.motorlar.programlama_faz6 import list_templates
+    from ilim_assistant.motorlar.programlama_faz47 import FAZ47_VERSION, proje_uret_enabled
+
+    return {
+        "ok": True,
+        "enabled": proje_uret_enabled(),
+        "templates": list_templates(),
         "version": FAZ47_VERSION,
     }
 
