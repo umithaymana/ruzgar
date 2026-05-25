@@ -1,0 +1,134 @@
+[
+  {
+    "soru": "selam",
+    "sure_sn": 0.21,
+    "cevap": "seninle sohbet etmek benim için gururdur. hangi konuda sohbet edelim abi",
+    "durumlar": [
+      "Rüzgar hazırlanıyor…"
+    ],
+    "bayraklar": {
+      "egitim_instant": true
+    },
+    "meta_ozet": {
+      "brain": null,
+      "umed": {
+        "version": "umed-cevap-emri-v1-2026-05-20",
+        "frozen": true,
+        "budget_sec": 15.0,
+        "priority": [
+          "kendi_hafiza",
+          "yerel_hafiza",
+          "gemini",
+          "groq",
+          "web_ikincil",
+          "ogret_bekle"
+        ],
+        "miss_phrase": "Ümit abi, bu sorunun cevabını bulamadım. Bana öğretir misin?"
+      },
+      "plan_primary": null
+    }
+  },
+  {
+    "soru": "osman bey kimdir",
+    "sure_sn": 0.06,
+    "cevap": "osmanlı devledinin kurucusudur.",
+    "durumlar": [
+      "Rüzgar hazırlanıyor…"
+    ],
+    "bayraklar": {
+      "egitim_instant": true
+    },
+    "meta_ozet": {
+      "brain": null,
+      "umed": {
+        "version": "umed-cevap-emri-v1-2026-05-20",
+        "frozen": true,
+        "budget_sec": 22.0,
+        "priority": [
+          "kendi_hafiza",
+          "yerel_hafiza",
+          "gemini",
+          "groq",
+          "web_ikincil",
+          "ogret_bekle"
+        ],
+        "miss_phrase": "Ümit abi, bu sorunun cevabını bulamadım. Bana öğretir misin?"
+      },
+      "plan_primary": null
+    }
+  },
+  {
+    "soru": "orhan bey kimdir",
+    "sure_sn": 0.06,
+    "cevap": "osman beyin oğludur",
+    "durumlar": [
+      "Rüzgar hazırlanıyor…"
+    ],
+    "bayraklar": {
+      "egitim_instant": true
+    },
+    "meta_ozet": {
+      "brain": null,
+      "umed": {
+        "version": "umed-cevap-emri-v1-2026-05-20",
+        "frozen": true,
+        "budget_sec": 22.0,
+        "priority": [
+          "kendi_hafiza",
+          "yerel_hafiza",
+          "gemini",
+          "groq",
+          "web_ikincil",
+          "ogret_bekle"
+        ],
+        "miss_phrase": "Ümit abi, bu sorunun cevabını bulamadım. Bana öğretir misin?"
+      },
+      "plan_primary": null
+    }
+  },
+  {
+    "soru": "Osmanlı İmparatorluğu ne zaman kuruldu",
+    "sure_sn": 106.85,
+    "cevap": "Ümit abi, bu sorunun cevabını bulamadım. Bana öğretir misin?",
+    "durumlar": [
+      "Rüzgar hazırlanıyor…",
+      "Tarih hafızası — yerel pasaj + Ollama…"
+    ],
+    "bayraklar": {
+      "egitim_miss": true,
+      "tarih_fast": true
+    },
+    "meta_ozet": {
+      "brain": null,
+      "umed": {
+        "version": "umed-cevap-emri-v1-2026-05-20",
+        "frozen": true,
+        "budget_sec": 15.0,
+        "priority": [
+          "kendi_hafiza",
+          "yerel_hafiza",
+          "gemini",
+          "groq",
+          "web_ikincil",
+          "ogret_bekle"
+        ],
+        "miss_phrase": "Ümit abi, bu sorunun cevabını bulamadım. Bana öğretir misin?"
+      },
+      "plan_primary": null
+    }
+  },
+  {
+    "soru": "uzay nedir",
+    "sure_sn": 0.08,
+    "cevap": "Tamam Ümit abi, bunu öğrendim ve hafızama kaydettim.",
+    "durumlar": [],
+    "bayraklar": {
+      "instant_gundelik": true
+    },
+    "meta_ozet": {
+      "brain": null,
+      "umed": null,
+      "plan_primary": null
+    }
+  }
+]

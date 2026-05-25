@@ -669,11 +669,22 @@ def _stream_agent_llm_turn(
             body += piece
 
     try:
-        from ilim_assistant.motorlar.programlama_faz19 import code_agent_brain_profiles
+        from ilim_assistant.motorlar.programlama_faz39 import (
+            programming_brain_chain_for_task,
+            task_brain_profile_override,
+        )
 
-        preferred = code_agent_brain_profiles()
+        override = task_brain_profile_override()
+        preferred = programming_brain_chain_for_task()
+        if override and override not in preferred:
+            preferred = [override] + preferred
     except Exception:
-        preferred = ["groq", "kod", "denge"]
+        try:
+            from ilim_assistant.motorlar.programlama_faz19 import code_agent_brain_profiles
+
+            preferred = code_agent_brain_profiles()
+        except Exception:
+            preferred = ["groq", "kod", "denge"]
 
     for profile in preferred:
         old = os.environ.get("RUZGAR_BRAIN_PROFILE")
@@ -830,8 +841,20 @@ def iter_code_agent_turn_events(
         return
 
     workspace = req.workspace_root
-    max_turns = code_agent_max_turns()
+    try:
+        from ilim_assistant.motorlar.programlama_faz39 import code_agent_max_turns_effective
+
+        max_turns = code_agent_max_turns_effective()
+    except Exception:
+        max_turns = code_agent_max_turns()
     t0 = time.perf_counter()
+    _budget_tracker = None
+    try:
+        from ilim_assistant.motorlar.programlama_faz41 import create_budget_tracker
+
+        _budget_tracker = create_budget_tracker(t0)
+    except Exception:
+        _budget_tracker = None
     turn_reports: list[str] = []
     last_fail_snippet = ""
     reply_body = ""
@@ -901,10 +924,24 @@ def iter_code_agent_turn_events(
     try:
         from ilim_assistant.motorlar.programlama_faz23 import format_task_mode_status
 
-        yield {
-            "type": "status",
-            "text": format_task_mode_status(task.scope_rel, float(budget_hint)),
-        }
+        try:
+            from ilim_assistant.motorlar.programlama_faz41 import (
+                format_long_task_status,
+                long_task_enabled,
+            )
+
+            if long_task_enabled():
+                yield {"type": "status", "text": format_long_task_status(task.scope_rel)}
+            else:
+                yield {
+                    "type": "status",
+                    "text": format_task_mode_status(task.scope_rel, float(budget_hint)),
+                }
+        except Exception:
+            yield {
+                "type": "status",
+                "text": format_task_mode_status(task.scope_rel, float(budget_hint)),
+            }
     except Exception:
         pass
     yield {
@@ -916,6 +953,41 @@ def iter_code_agent_turn_events(
             "max_turns": max_turns,
         },
     }
+    if delegated_from_genel:
+        try:
+            from ilim_assistant.motorlar.programlama_faz38 import delegation_status_text
+
+            yield {
+                "type": "status",
+                "text": delegation_status_text(
+                    scope_rel=task.scope_rel,
+                    goal=task.goal,
+                ),
+            }
+            yield {
+                "type": "meta",
+                "programlama_delegated": True,
+                "delegation_chain": "faz35-37-38",
+            }
+        except Exception:
+            pass
+
+    def _emit_agent_step(raw: dict[str, Any] | None) -> dict[str, Any] | None:
+        if raw is None:
+            return None
+        ev = raw
+        try:
+            from ilim_assistant.motorlar.programlama_faz38 import maybe_enrich_yield
+
+            ev = maybe_enrich_yield(ev, workspace, scope_rel=task.scope_rel) or ev
+        except Exception:
+            pass
+        try:
+            if _budget_tracker is not None:
+                ev = _budget_tracker.enrich_sse(ev) or ev
+        except Exception:
+            pass
+        return ev
 
     agent_system = build_compact_agent_system(workspace, task)
     try:
@@ -942,7 +1014,7 @@ def iter_code_agent_turn_events(
         },
     }
     if step_tracker is not None:
-        yield step_tracker.on_started(brain_chain=brain_chain)
+        yield _emit_agent_step(step_tracker.on_started(brain_chain=brain_chain))
 
     for turn in range(1, max_turns + 1):
         if is_stop_requested(workspace):
@@ -975,13 +1047,13 @@ def iter_code_agent_turn_events(
             },
         )
 
-        yield {
-            "type": "status",
-            "text": f"Görev tur {turn}/{max_turns} — plan / patch…",
-        }
+        _tur_status = f"Görev tur {turn}/{max_turns} — plan / patch…"
+        if _budget_tracker is not None:
+            _tur_status += _budget_tracker.status_suffix()
+        yield {"type": "status", "text": _tur_status}
         if step_tracker is not None:
-            yield step_tracker.on_turn_start(turn)
-            yield step_tracker.on_llm_start(turn)
+            yield _emit_agent_step(step_tracker.on_turn_start(turn))
+            yield _emit_agent_step(step_tracker.on_llm_start(turn))
 
         turn_user = build_agent_turn_user_message(
             task,
@@ -1019,25 +1091,64 @@ def iter_code_agent_turn_events(
             }
         round_body = llm_body
         if step_tracker is not None:
-            yield step_tracker.on_llm_done(turn, llm_body)
+            yield _emit_agent_step(step_tracker.on_llm_done(turn, llm_body))
         _tool_res: list = []
         _faz34_violations: list[str] = []
         try:
-            from ilim_assistant.motorlar.programlama_faz20 import run_tools_from_reply
-
-            _tool_res, _tool_block = run_tools_from_reply(
-                llm_body,
-                workspace,
-                scope_rel=task.scope_rel,
+            from ilim_assistant.motorlar.programlama_faz40 import (
+                augment_reply_tools,
+                structured_tools_enabled,
             )
-            if _tool_block:
-                round_body = llm_body.rstrip() + "\n\n" + _tool_block
+
+            if structured_tools_enabled():
+                round_body, _tool_res, _tool_block = augment_reply_tools(
+                    llm_body,
+                    workspace,
+                    scope_rel=task.scope_rel,
+                    goal=task.goal,
+                )
+                if not _tool_res:
+                    from ilim_assistant.motorlar.programlama_faz40 import (
+                        run_structured_tool_loop,
+                    )
+
+                    _st_text, _st_res, _st_block = run_structured_tool_loop(
+                        system=agent_system,
+                        user=f"Hedef: {task.goal}\nProje: {task.scope_rel}",
+                        workspace_root=workspace,
+                        scope_rel=task.scope_rel,
+                        goal=task.goal,
+                    )
+                    if _st_res:
+                        _tool_res = _st_res
+                        _tool_block = _st_block
+                        if _st_text:
+                            llm_body = (llm_body or "").rstrip() + "\n\n" + _st_text
+                            round_body = llm_body.rstrip() + "\n\n" + _tool_block
+                elif _tool_block:
+                    round_body = round_body if round_body != llm_body else (
+                        llm_body.rstrip() + "\n\n" + _tool_block
+                    )
+            else:
+                from ilim_assistant.motorlar.programlama_faz20 import run_tools_from_reply
+
+                _tool_res, _tool_block = run_tools_from_reply(
+                    llm_body,
+                    workspace,
+                    scope_rel=task.scope_rel,
+                )
+                if _tool_block:
+                    round_body = llm_body.rstrip() + "\n\n" + _tool_block
+            if _tool_block or _tool_res:
                 yield {
                     "type": "status",
-                    "text": f"Tur {turn}: {len(_tool_res)} ruzgar-tool çalıştırıldı.",
+                    "text": (
+                        f"Tur {turn}: {len(_tool_res)} araç "
+                        f"(Faz {'40' if structured_tools_enabled() else '20'})."
+                    ),
                 }
             if step_tracker is not None and _tool_res:
-                yield step_tracker.on_tools(turn, len(_tool_res))
+                yield _emit_agent_step(step_tracker.on_tools(turn, len(_tool_res)))
         except Exception:
             pass
         try:
@@ -1061,10 +1172,11 @@ def iter_code_agent_turn_events(
                     "text": f"Tur {turn}: Faz 34 araç-öncelik tamamlandı.",
                 }
             if step_tracker is not None and _tool_res:
-                yield step_tracker.on_tools(turn, len(_tool_res))
+                yield _emit_agent_step(step_tracker.on_tools(turn, len(_tool_res)))
         except Exception:
             _faz34_violations = []
         _faz35_followup = False
+        _faz38_nested = 0
         _tool_block_combined = ""
         try:
             from ilim_assistant.motorlar.programlama_faz20 import run_tools_from_reply as _rtfr
@@ -1081,10 +1193,10 @@ def iter_code_agent_turn_events(
             if idx2 >= 0 and idx2 < (idx if idx >= 0 else len(round_body)):
                 _tool_block_combined = round_body[idx2:]
         try:
-            from ilim_assistant.motorlar.programlama_faz35 import run_mid_turn_followup
+            from ilim_assistant.motorlar.programlama_faz38 import run_nested_tool_loop
 
-            llm_body, round_body, _tool_res, _f35_profiles, _faz35_followup = (
-                run_mid_turn_followup(
+            llm_body, round_body, _tool_res, _f35_profiles, _faz38_nested = (
+                run_nested_tool_loop(
                     llm_body=llm_body,
                     round_body=round_body,
                     tool_results=_tool_res,
@@ -1102,16 +1214,56 @@ def iter_code_agent_turn_events(
                     stream_fn=_stream_agent_llm_turn,
                 )
             )
+            _faz35_followup = _faz38_nested > 0
             if _faz35_followup:
                 yield {
                     "type": "status",
-                    "text": f"Tur {turn}: Faz 35 tur-içi takip LLM tamamlandı.",
+                    "text": (
+                        f"Tur {turn}: Faz 38 iç araç döngüsü "
+                        f"({_faz38_nested} takip LLM)."
+                    ),
                 }
                 if _f35_profiles:
                     profiles_used = list(profiles_used) + _f35_profiles
-                yield {"type": "token", "text": "\n\n[Faz 35 takip]\n"}
+                yield {"type": "token", "text": "\n\n[Faz 38 tur-içi takip]\n"}
+            try:
+                from ilim_assistant.motorlar.programlama_faz39 import (
+                    run_write_mandate_followup,
+                )
+
+                llm_body, round_body, _tool_res, _f39_prof, _faz39_mandate = (
+                    run_write_mandate_followup(
+                        llm_body=llm_body,
+                        round_body=round_body,
+                        tool_results=_tool_res,
+                        tool_block=_tool_block_combined,
+                        goal=task.goal,
+                        turn=turn,
+                        scope_rel=task.scope_rel,
+                        agent_system=agent_system,
+                        round_payload=round_payload,
+                        model=model,
+                        active_prior=active_prior,
+                        message=message,
+                        turn_plan=turn_plan,
+                        workspace_root=workspace,
+                        stream_fn=_stream_agent_llm_turn,
+                    )
+                )
+                if _faz39_mandate:
+                    _faz35_followup = True
+                    yield {
+                        "type": "status",
+                        "text": f"Tur {turn}: Faz 39 zorunlu yazım turu.",
+                    }
+                    if _f39_prof:
+                        profiles_used = list(profiles_used) + _f39_prof
+                    yield {"type": "token", "text": "\n\n[Faz 39 zorunlu yazım]\n"}
+            except Exception:
+                pass
         except Exception:
             _faz35_followup = False
+            _faz38_nested = 0
         reply_body += round_body
         if llm_body.strip():
             yield {"type": "token", "text": llm_body}
@@ -1125,7 +1277,6 @@ def iter_code_agent_turn_events(
         }
 
         summ, _ = apply_assistant_reply_tools(
-            round_body,
             round_body,
             workspace,
             run_pytest=False,
@@ -1163,11 +1314,13 @@ def iter_code_agent_turn_events(
         elapsed = time.perf_counter() - t_turn
         if step_tracker is not None:
             write_paths = [w.path for w in summ.writes if w.ok and w.path]
-            yield step_tracker.on_writes(turn, writes_ok, write_paths)
-            yield step_tracker.on_verify(
-                turn,
-                ok,
-                (verify.output if verify else "")[:80],
+            yield _emit_agent_step(step_tracker.on_writes(turn, writes_ok, write_paths))
+            yield _emit_agent_step(
+                step_tracker.on_verify(
+                    turn,
+                    ok,
+                    (verify.output if verify else "")[:80],
+                )
             )
 
         try:
@@ -1199,7 +1352,30 @@ def iter_code_agent_turn_events(
                     is_failure_fn=_is_llm_failure_reply,
                 )
                 loop_state.record_turn(wrote_files=writes_ok, llm_kind=kind)
-                abort, reason = should_abort_loop(loop_state)
+                try:
+                    from ilim_assistant.motorlar.programlama_faz39 import (
+                        should_abort_loop_relaxed,
+                    )
+
+                    abort, reason = should_abort_loop_relaxed(
+                        loop_state,
+                        last_tool_results=_tool_res,
+                        max_turns=max_turns,
+                    )
+                except Exception:
+                    abort, reason = should_abort_loop(loop_state)
+                if not abort:
+                    try:
+                        from ilim_assistant.motorlar.programlama_faz41 import (
+                            should_abort_empty_streak,
+                        )
+
+                        abort, reason = should_abort_empty_streak(
+                            loop_state,
+                            last_tool_results=_tool_res,
+                        )
+                    except Exception:
+                        pass
                 if abort and not ok:
                     yield {"type": "status", "text": reason}
                     break
@@ -1294,10 +1470,12 @@ def iter_code_agent_turn_events(
 
     total_sec = time.perf_counter() - t0
     if step_tracker is not None:
-        yield step_tracker.on_finish(
-            success=success,
-            elapsed_sec=total_sec,
-            turns_used=len(turn_reports),
+        yield _emit_agent_step(
+            step_tracker.on_finish(
+                success=success,
+                elapsed_sec=total_sec,
+                turns_used=len(turn_reports),
+            )
         )
     report = format_final_agent_report(
         task,
@@ -1307,6 +1485,18 @@ def iter_code_agent_turn_events(
         total_sec=total_sec,
     )
     reply_body = reply_body.rstrip() + "\n\n" + report
+    if delegated_from_genel:
+        try:
+            from ilim_assistant.motorlar.programlama_faz38 import delegation_footer
+
+            reply_body += delegation_footer(
+                workspace,
+                scope_rel=task.scope_rel,
+                success=success,
+                turns_used=len(turn_reports),
+            )
+        except Exception:
+            pass
     try:
         from ilim_assistant.motorlar.programlama_faz32 import append_post_task_to_reply
 

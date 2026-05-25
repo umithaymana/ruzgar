@@ -1,0 +1,56 @@
+{
+  "ok": true,
+  "score": 100,
+  "target_score": 85,
+  "meets_target": true,
+  "scenarios": [
+    {
+      "id": "cursor_api_add",
+      "label": "API ekle + pytest",
+      "ok": true,
+      "elapsed_sec": 3.734,
+      "budget_sec": 120.0,
+      "detail": "projects/smoke-cursor-api-41320"
+    },
+    {
+      "id": "cursor_bugfix_test",
+      "label": "Bugfix + test",
+      "ok": true,
+      "elapsed_sec": 5.406,
+      "budget_sec": 120.0,
+      "detail": "fail_before=True pass_after=True fix=True"
+    },
+    {
+      "id": "cursor_three_file_refactor",
+      "label": "3 dosya refactor",
+      "ok": true,
+      "elapsed_sec": 3.0,
+      "budget_sec": 180.0,
+      "detail": "writes=4 files=True pytest=True"
+    }
+  ],
+  "capabilities": {
+    "unified_agent": true,
+    "light_context": true,
+    "symbol_index": true,
+    "task_budget_5m": true,
+    "agent_steps_sse": true,
+    "nested_tool_loop": true,
+    "task_completion_gate": true,
+    "structured_tools": true,
+    "long_task_budget": true,
+    "lsp_v2": true,
+    "terminal_v3": true,
+    "context_v3": true,
+    "editor_v2": true
+  },
+  "capability_points": 35,
+  "scenario_points": 65,
+  "project_names": {
+    "api_add": "smoke-cursor-api-41320",
+    "bugfix_test": "smoke-cursor-bug-41324",
+    "three_file_refactor": "smoke-cursor-ref-41329"
+  },
+  "warnings": [],
+  "version": "programlama-cursor-parity-v1-2026-05-25"
+}

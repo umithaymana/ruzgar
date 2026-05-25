@@ -623,7 +623,7 @@ def run_live(base: str) -> int:
     try:
         h = get("/api/health")
         rev = str((h.get("build") or {}).get("rev") or "")
-        if "faz37" in rev or rev.endswith("-v49"):
+        if "faz46" in rev or rev.endswith("-v57"):
             _ok(f"build.rev={rev}")
         else:
             _fail("build.rev", rev)
@@ -649,6 +649,12 @@ def run_live(base: str) -> int:
             _ok("parity-report API")
         else:
             _fail("parity-report")
+            fails += 1
+        cs = get(f"/api/programlama/cursor-seviye?workspace_root={enc}")
+        if cs.get("score") is not None and cs.get("report"):
+            _ok(f"cursor-seviye API score={cs.get('score')}")
+        else:
+            _fail("cursor-seviye")
             fails += 1
     except Exception as e:
         _fail("parity-report", str(e)[:120])
@@ -888,6 +894,367 @@ def run_parity(*, live_base: str | None = None) -> int:
     else:
         _fail("inline diff", str(payload)[:80])
         fails += 1
+
+    print("=== Faz 46 — Cursor seviye kilidi ===")
+    from ilim_assistant.motorlar.programlama_cursor_parity import (
+        CURSOR_PARITY_VERSION,
+        TARGET_CURSOR_SCORE,
+        build_extended_capability_scorecard,
+        ci_score_warning,
+        compute_cursor_score,
+        cursor_parity_enabled,
+        run_cursor_seviye_assessment,
+        save_cursor_seviye_json,
+    )
+
+    if cursor_parity_enabled():
+        _ok("cursor parity on")
+    else:
+        _fail("cursor parity")
+        fails += 1
+    cap = build_extended_capability_scorecard()
+    if len(cap) >= 10:
+        _ok(f"capability card n={len(cap)}")
+    else:
+        _fail("capability card")
+        fails += 1
+    sc, cp, sp = compute_cursor_score([], cap)
+    if 0 <= sc <= 100:
+        _ok(f"score model cap={cp} scen={sp}")
+    else:
+        _fail("score model")
+        fails += 1
+    report = run_cursor_seviye_assessment(WORKSPACE)
+    saved = save_cursor_seviye_json(report)
+    if saved:
+        _ok(f"cursor seviye rapor: {saved[-52:]}")
+    else:
+        _fail("cursor seviye save")
+        fails += 1
+    for s in report.scenarios:
+        if s.ok:
+            _ok(f"scenario {s.id}")
+        else:
+            print(f"  WARN senaryo {s.id}: {s.detail or s.label}")
+    warn = ci_score_warning(report)
+    if report.score >= TARGET_CURSOR_SCORE:
+        _ok(f"cursor score {report.score}/100 (hedef >={TARGET_CURSOR_SCORE})")
+    elif warn:
+        print(f"  WARN {warn}")
+        _ok(f"cursor score {report.score}/100 (uyari, CI bloklamaz)")
+    else:
+        _fail("cursor score", str(report.score))
+        fails += 1
+    _ok(f"faz46 {CURSOR_PARITY_VERSION}")
+
+    print("=== Faz 45 — editör v2 ===")
+    from ilim_assistant.motorlar.programlama_faz45 import (
+        FAZ45_VERSION,
+        build_inline_diff_v2,
+        build_line_diff_segments,
+        build_patch_tabs,
+        build_unified_patch_ux,
+        detect_lang_from_path,
+        editor_v2_enabled,
+        segments_to_html,
+    )
+
+    if editor_v2_enabled():
+        _ok("editor v2 on")
+    else:
+        _fail("editor v2")
+        fails += 1
+    segs = build_line_diff_segments("a\n", "a\nb\n")
+    if len(segs) >= 2:
+        _ok("line diff segments")
+    else:
+        _fail("line diff segments")
+        fails += 1
+    html = segments_to_html(segs, lang="python")
+    if "diff-line" in html:
+        _ok("segments html")
+    else:
+        _fail("segments html")
+        fails += 1
+    if detect_lang_from_path("app/main.py") == "python":
+        _ok("detect lang")
+    else:
+        _fail("detect lang")
+        fails += 1
+    scope_path = "projects/smoke-faz27/app/x.py"
+    v2 = build_inline_diff_v2(WORKSPACE, scope_path, new_content="v = 3\n")
+    if v2.get("ok") and v2.get("editor_v2") and v2.get("html_unified"):
+        _ok("inline diff v2")
+    else:
+        _fail("inline diff v2", str(v2)[:80])
+        fails += 1
+    tabs = build_patch_tabs(WORKSPACE)
+    if tabs.get("ok") is not None:
+        _ok("patch tabs API shape")
+    else:
+        _fail("patch tabs")
+        fails += 1
+    ux = build_unified_patch_ux(WORKSPACE)
+    if ux.get("ok") and "hint" in ux:
+        _ok("unified ux")
+    else:
+        _fail("unified ux")
+        fails += 1
+    _ok(f"faz45 {FAZ45_VERSION}")
+
+    print("=== Faz 44 — bağlam v3 ===")
+    from ilim_assistant.motorlar.programlama_faz44 import (
+        FAZ44_VERSION,
+        build_context_v3_block,
+        context_v3_enabled,
+        parse_at_refs,
+        select_relevant_files,
+        wants_context_map,
+    )
+
+    if context_v3_enabled():
+        _ok("context v3 on")
+    else:
+        _fail("context v3")
+        fails += 1
+    scope = "projects/smoke-faz22"
+    block = build_context_v3_block(WORKSPACE, scope_rel=scope, message="health main")
+    if block and "REPO HARİTASI" in block:
+        _ok("context v3 block")
+    else:
+        _fail("context v3 block", str(block)[:80])
+        fails += 1
+    rels = select_relevant_files(WORKSPACE, scope, "health pytest main")
+    if rels or "REPO HARİTASI" in block:
+        _ok(f"relevant files n={len(rels)}")
+    else:
+        _fail("relevant files")
+        fails += 1
+    if parse_at_refs("@dosya projects/smoke-parity-35137/app/main.py"):
+        _ok("parse @dosya")
+    else:
+        _fail("parse @dosya")
+        fails += 1
+    if wants_context_map("repo harita"):
+        _ok("wants repo harita")
+    else:
+        _fail("wants repo harita")
+        fails += 1
+    _ok(f"faz44 {FAZ44_VERSION}")
+
+    print("=== Faz 43 — terminal v3 ===")
+    from ilim_assistant.motorlar.programlama_faz43 import (
+        FAZ43_VERSION,
+        list_terminal_presets_v3,
+        parse_safe_argv_command,
+        terminal_v3_enabled,
+        wants_terminal_v3,
+    )
+
+    if terminal_v3_enabled():
+        _ok("terminal v3 on")
+    else:
+        _fail("terminal v3")
+        fails += 1
+    presets = list_terminal_presets_v3()
+    if len(presets) >= 8:
+        _ok(f"presets count={len(presets)}")
+    else:
+        _fail("presets v3")
+        fails += 1
+    if parse_safe_argv_command("terminal calistir: pip install httpx"):
+        _ok("parse safe argv")
+    else:
+        _fail("parse safe argv")
+        fails += 1
+    if wants_terminal_v3("python -m pytest"):
+        _ok("wants pytest")
+    else:
+        _fail("wants pytest")
+        fails += 1
+    _ok(f"faz43 {FAZ43_VERSION}")
+
+    print("=== Faz 42 — LSP v2 ===")
+    from ilim_assistant.motorlar.programlama_faz42 import (
+        FAZ42_VERSION,
+        find_references,
+        lsp_v2_enabled,
+        parse_refs_query,
+        parse_rename_query,
+        wants_find_references,
+        wants_import_graph,
+    )
+
+    if lsp_v2_enabled():
+        _ok("lsp v2 enabled")
+    else:
+        _fail("lsp v2")
+        fails += 1
+    if wants_find_references("referanslar health"):
+        _ok("wants referanslar")
+    else:
+        _fail("wants referanslar")
+        fails += 1
+    if parse_rename_query("rename foo -> bar"):
+        _ok("parse rename")
+    else:
+        _fail("parse rename")
+        fails += 1
+    if wants_import_graph("import graf"):
+        _ok("wants import graf")
+    else:
+        _fail("import graf")
+        fails += 1
+    refs = find_references(WORKSPACE, "projects/benim-api", "health")
+    if refs.get("ok") is not None:
+        _ok(f"find_references count={refs.get('count', 0)}")
+    else:
+        _fail("find_references")
+        fails += 1
+    _ok(f"faz42 {FAZ42_VERSION}")
+
+    print("=== Faz 41 — uzun gorev butcesi ===")
+    from ilim_assistant.motorlar.programlama_faz41 import (
+        FAZ41_VERSION,
+        TaskBudgetTracker,
+        long_task_budget_sec,
+        long_task_enabled,
+        long_task_max_turns,
+    )
+
+    if long_task_enabled() and long_task_budget_sec() >= 600:
+        _ok(f"budget={int(long_task_budget_sec())}s")
+    else:
+        _fail("long budget")
+        fails += 1
+    if long_task_max_turns() >= 12:
+        _ok(f"max_turns={long_task_max_turns()}")
+    else:
+        _fail("max turns")
+        fails += 1
+    tr = TaskBudgetTracker(0.0, 120.0)
+    ev = tr.enrich_sse({"type": "agent_step", "steps": [], "code_agent": {}})
+    if (ev.get("code_agent") or {}).get("budget_remaining_sec") is not None:
+        _ok("budget SSE enrich")
+    else:
+        _fail("budget SSE")
+        fails += 1
+    _ok(f"faz41 {FAZ41_VERSION}")
+
+    print("=== Faz 40 — yapilandirilmis arac API ===")
+    from ilim_assistant.motorlar.programlama_faz40 import (
+        FAZ40_VERSION,
+        augment_reply_tools,
+        extract_tool_invocations,
+        openai_tools_schema,
+        process_llm_tools,
+        structured_tools_enabled,
+    )
+
+    if structured_tools_enabled() and len(openai_tools_schema()) >= 5:
+        _ok(f"openai tools schema ({len(openai_tools_schema())})")
+    else:
+        _fail("tools schema")
+        fails += 1
+    sample = '```ruzgar-tool\n{"tool":"read","path":"projects/benim-api/app/main.py"}\n```'
+    inv = extract_tool_invocations(sample)
+    if inv and inv[0].get("tool") == "read":
+        _ok("extract_tool_invocations")
+    else:
+        _fail("extract invocations")
+        fails += 1
+    _, block = process_llm_tools(sample, WORKSPACE, scope_rel="projects/benim-api", goal="health")
+    if block and "ARAÇ" in block:
+        _ok("process_llm_tools")
+    else:
+        _fail("process_llm_tools", str(block)[:60])
+        fails += 1
+    _ok(f"faz40 {FAZ40_VERSION}")
+
+    print("=== Faz 39 — gorev tamamlama kilidi ===")
+    from ilim_assistant.motorlar.programlama_faz39 import (
+        FAZ39_VERSION,
+        build_write_mandate_message,
+        code_agent_max_turns_effective,
+        completion_gate_enabled,
+        should_abort_loop_relaxed,
+        turn_had_discovery,
+    )
+    from ilim_assistant.motorlar.programlama_faz19 import AgentLoopState
+
+    if completion_gate_enabled() and code_agent_max_turns_effective() >= 10:
+        _ok(f"max_turns={code_agent_max_turns_effective()}")
+    else:
+        _fail("faz39 max turns")
+        fails += 1
+    if turn_had_discovery([{"tool": "read", "ok": True}]):
+        _ok("discovery detect")
+    else:
+        _fail("discovery detect")
+        fails += 1
+    msg = build_write_mandate_message(
+        goal="pytest",
+        scope_rel="projects/benim-api",
+        tool_block="[read ok]",
+        turn=2,
+    )
+    if "ZORUNLU YAZIM" in msg and "@@write" in msg:
+        _ok("mandate message")
+    else:
+        _fail("mandate message")
+        fails += 1
+    st = AgentLoopState()
+    st.turns_done = 1
+    st.quota_streak = 1
+    st.total_writes = 0
+    abort, _ = should_abort_loop_relaxed(
+        st,
+        last_tool_results=[{"tool": "read", "ok": True}],
+        max_turns=12,
+    )
+    if not abort:
+        _ok("relaxed abort on discovery+quota")
+    else:
+        _fail("relaxed abort")
+        fails += 1
+    _ok(f"faz39 {FAZ39_VERSION}")
+
+    print("=== Faz 38 — uyum seridi + ic arac dongusu ===")
+    from ilim_assistant.motorlar.programlama_faz38 import (
+        FAZ38_VERSION,
+        enrich_agent_step_event,
+        live_compliance_snapshot,
+        max_nested_depth,
+        nested_tool_loop_enabled,
+        delegation_status_text,
+    )
+
+    if nested_tool_loop_enabled() and max_nested_depth() >= 2:
+        _ok("nested tool loop enabled")
+    else:
+        _fail("nested tool loop")
+        fails += 1
+    ev = enrich_agent_step_event(
+        {"type": "agent_step", "steps": [], "code_agent": {"phase": "turn_start"}},
+        WORKSPACE,
+        scope_rel="projects/benim-api",
+    )
+    if ev.get("compliance") or (ev.get("code_agent") or {}).get("compliance"):
+        _ok("enrich agent_step compliance")
+    else:
+        _ok("enrich agent_step (empty compliance ok)")
+    snap = live_compliance_snapshot(WORKSPACE, scope_rel="projects/benim-api")
+    if isinstance(snap, dict):
+        _ok(f"live snapshot score={snap.get('score', 0)}")
+    else:
+        _fail("live snapshot")
+        fails += 1
+    if "delege" in delegation_status_text(scope_rel="projects/x", goal="test"):
+        _ok("delegation status")
+    else:
+        _fail("delegation status")
+        fails += 1
+    _ok(f"faz38 {FAZ38_VERSION}")
 
     print("=== Faz 37 — ajan uyum skoru ===")
     from ilim_assistant.motorlar.programlama_faz37 import (

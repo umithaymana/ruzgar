@@ -49,7 +49,17 @@ def task_auto_apply_enabled() -> bool:
 
 
 def resolve_code_agent_budget_sec() -> float:
-    """Env varsa onu kullan; Faz 23 açıkken varsayılan 300 sn (5 dk)."""
+    """Env varsa onu kullan; Faz 41 → 900 sn; Faz 23 açıkken 300 sn."""
+    try:
+        from ilim_assistant.motorlar.programlama_faz41 import (
+            long_task_budget_sec,
+            long_task_enabled,
+        )
+
+        if long_task_enabled():
+            return long_task_budget_sec()
+    except Exception:
+        pass
     raw = os.environ.get("RUZGAR_CODE_AGENT_BUDGET_SEC", "").strip()
     if raw:
         try:

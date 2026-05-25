@@ -54,6 +54,12 @@ def code_agent_budget_sec() -> float:
 
 def code_agent_empty_streak_max() -> int:
     try:
+        from ilim_assistant.motorlar.programlama_faz41 import long_task_empty_streak_max
+
+        return long_task_empty_streak_max()
+    except Exception:
+        pass
+    try:
         return max(1, min(int(os.environ.get("RUZGAR_CODE_AGENT_EMPTY_STREAK", "2")), 5))
     except ValueError:
         return 2

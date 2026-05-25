@@ -4,7 +4,7 @@
  * Kök sonda `/api` ise kırpılır — aksi halde fetch `.../api/api/merkezi-bellek` ile 404 verir.
  */
 const RUZGAR_LOCAL_API_PORT = 8779;
-const RUZGAR_EXPECTED_BUILD_REV = "2026-05-25-programlama-faz37-v49";
+const RUZGAR_EXPECTED_BUILD_REV = "2026-05-25-programlama-faz46-v57";
 const RUZGAR_LOCAL_API_FALLBACK = `http://127.0.0.1:${RUZGAR_LOCAL_API_PORT}`;
 
 function migrateLegacyApiUrl(raw) {
@@ -1546,6 +1546,30 @@ function ensureDashboardAgentUi() {
   dashboardAgentListEl = ol;
 }
 
+function renderProgramlamaCompliance(compliance) {
+  const wrap = document.getElementById("programlama-compliance-card");
+  const scoreEl = document.getElementById("programlama-compliance-score");
+  const gradeEl = document.getElementById("programlama-compliance-grade");
+  const detailEl = document.getElementById("programlama-compliance-detail");
+  if (!wrap || !scoreEl || !gradeEl) return;
+  const c = compliance && typeof compliance === "object" ? compliance : null;
+  if (!c || c.score === undefined) {
+    wrap.hidden = true;
+    return;
+  }
+  wrap.hidden = false;
+  const score = Number(c.score || 0);
+  const grade = String(c.grade || "—");
+  scoreEl.textContent = `${score}/100`;
+  gradeEl.textContent = `Not ${grade}`;
+  if (detailEl) {
+    const scope = String(c.last_scope || "").trim();
+    const turns = Number(c.turn_count || 0);
+    detailEl.textContent =
+      (scope ? `${scope} · ` : "") + (turns > 0 ? `${turns} tur kayıtlı` : "");
+  }
+}
+
 function renderProgramlamaAgentSteps(steps) {
   const wrap = document.getElementById("programlama-agent-steps");
   const list = document.getElementById("programlama-agent-list");
@@ -1587,9 +1611,139 @@ function renderProgramlamaPatchCounts(counts) {
   elCounts.textContent = `bekleyen ${p} · kabul ${a} · red ${r}`;
 }
 
+let programlamaPatchTabsCache = [];
+
 function hideProgramlamaInlineDiff() {
   const panel = document.getElementById("programlama-inline-diff");
   if (panel) panel.hidden = true;
+}
+
+function renderInlineDiffV2(data) {
+  const preOld = document.getElementById("inline-diff-old");
+  const preNew = document.getElementById("inline-diff-new");
+  const htmlOld = document.getElementById("inline-diff-old-html");
+  const htmlNew = document.getElementById("inline-diff-new-html");
+  const unified = document.getElementById("inline-diff-unified");
+  const cols = document.getElementById("inline-diff-cols");
+  const statsEl = document.getElementById("inline-diff-stats");
+  const v2 = Boolean(data.editor_v2);
+  if (!v2) {
+    if (unified) unified.hidden = true;
+    if (htmlOld) htmlOld.hidden = true;
+    if (htmlNew) htmlNew.hidden = true;
+    if (preOld) preOld.hidden = false;
+    if (preNew) preNew.hidden = false;
+    if (cols) cols.hidden = false;
+    if (preOld) preOld.textContent = data.old_text || "(yeni dosya)";
+    if (preNew) preNew.textContent = data.new_text || "";
+    if (statsEl) statsEl.textContent = "";
+    return;
+  }
+  if (preOld) preOld.hidden = true;
+  if (preNew) preNew.hidden = true;
+  if (htmlOld) {
+    htmlOld.hidden = false;
+    htmlOld.innerHTML = data.html_old || "";
+  }
+  if (htmlNew) {
+    htmlNew.hidden = false;
+    htmlNew.innerHTML = data.html_new || "";
+  }
+  if (unified && data.html_unified) {
+    unified.hidden = false;
+    unified.innerHTML = data.html_unified;
+  } else if (unified) {
+    unified.hidden = true;
+  }
+  if (cols) cols.hidden = Boolean(data.html_unified);
+  const st = data.stats || {};
+  if (statsEl) {
+    statsEl.textContent = `+${st.add || 0} −${st.del || 0} · ${data.lang || ""}`;
+  }
+}
+
+function renderProgramlamaPatchTabs(tabs, activePath) {
+  const bar = document.getElementById("programlama-patch-tabs");
+  if (!bar) return;
+  programlamaPatchTabsCache = Array.isArray(tabs) ? tabs : [];
+  if (!programlamaPatchTabsCache.length) {
+    bar.hidden = true;
+    bar.innerHTML = "";
+    return;
+  }
+  bar.hidden = false;
+  bar.innerHTML = "";
+  for (const tab of programlamaPatchTabsCache) {
+    const path = String(tab.path || "");
+    if (!path) continue;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = `programlama-patch-tab status-${escAttr(String(tab.status || "pending"))}${path === activePath ? " active" : ""}`;
+    btn.textContent = String(tab.basename || path);
+    btn.title = path;
+    btn.addEventListener("click", () => {
+      for (const b of bar.querySelectorAll(".programlama-patch-tab")) {
+        b.classList.toggle("active", b === btn);
+      }
+      void showProgramlamaInlineDiff(path);
+    });
+    bar.appendChild(btn);
+  }
+}
+
+async function refreshProgramlamaPatchUx() {
+  const workspaceRoot = await getProgramlamaWorkspaceRoot();
+  const hintEl = document.getElementById("programlama-patch-ux-hint");
+  if (!workspaceRoot || !hintEl) return;
+  try {
+    const qs = `?workspace_root=${encodeURIComponent(workspaceRoot)}`;
+    const res = await fetch(`${API}/api/programlama/patch/ux${qs}`);
+    const data = await res.json().catch(() => ({}));
+    if (!data.ok) {
+      hintEl.hidden = true;
+      return;
+    }
+    const tabs = data.tabs || [];
+    renderProgramlamaPatchTabs(tabs, tabs[0]?.path);
+    if (data.hint) {
+      hintEl.hidden = false;
+      hintEl.textContent = data.hint;
+    } else {
+      hintEl.hidden = true;
+    }
+  } catch (_) {
+    hintEl.hidden = true;
+  }
+}
+
+async function patchUnifiedApplyFromAtolye() {
+  const workspaceRoot = await getProgramlamaWorkspaceRoot();
+  if (!workspaceRoot) return;
+  try {
+    const res = await fetch(`${API}/api/programlama/patch/unified-apply`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ workspace_root: workspaceRoot, run_verify: true }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setCodeOutput(data.report || data.apply?.report || "Birleşik uygulama bitti.");
+    if (data.bundle) {
+      showProgramlamaPatchStrip({
+        action: "applied",
+        applied: data.apply?.applied || [],
+        errors: data.apply?.errors || [],
+        items: data.bundle.items || [],
+        counts: data.bundle.counts || {},
+      });
+    } else {
+      await refreshProgramlamaPatchFromServer();
+    }
+    hideProgramlamaInlineDiff();
+    const tabsBar = document.getElementById("programlama-patch-tabs");
+    if (tabsBar) tabsBar.hidden = true;
+  } catch (e) {
+    setCodeOutput(`Birleşik uygulama: ${e && e.message ? e.message : e}`);
+  }
 }
 
 async function showProgramlamaInlineDiff(relPath) {
@@ -1617,14 +1771,19 @@ async function showProgramlamaInlineDiff(relPath) {
       return;
     }
     if (title) title.textContent = `Editör diff — ${rel}`;
-    preOld.textContent = data.old_text || "(yeni dosya)";
-    preNew.textContent = data.new_text || "";
+    renderInlineDiffV2(data);
     panel.hidden = false;
     void openProgramlamaWorkspaceFile(rel);
     if (data.new_text && el.codeEditor) {
       el.codeEditor.value = data.new_text;
     }
-    flashRuzgarDurum("Faz 27: eski/yeni yan yana");
+    const bar = document.getElementById("programlama-patch-tabs");
+    if (bar && programlamaPatchTabsCache.length) {
+      for (const b of bar.querySelectorAll(".programlama-patch-tab")) {
+        b.classList.toggle("active", b.title === rel);
+      }
+    }
+    flashRuzgarDurum(data.editor_v2 ? "Faz 45: renkli diff" : "Faz 27: eski/yeni");
   } catch (e) {
     setCodeOutput(`Inline diff: ${e && e.message ? e.message : e}`);
   }
@@ -1809,6 +1968,13 @@ async function refreshProgramlamaPatchFromServer() {
       counts: data.counts || {},
       count: data.count,
     });
+    const tabs = (data.items || []).map((it) => ({
+      path: it.path,
+      status: it.status,
+      basename: String(it.path || "").split("/").pop(),
+    }));
+    renderProgramlamaPatchTabs(tabs, tabs[0]?.path);
+    void refreshProgramlamaPatchUx();
   } catch (_) {
     /* ignore */
   }
@@ -5197,6 +5363,10 @@ function wireProgrammingWorkbench() {
   if (btnPatchApplyAll) {
     btnPatchApplyAll.addEventListener("click", () => void applyPendingPatchFromAtolye("all"));
   }
+  const btnPatchUnified = document.getElementById("btn-patch-unified-apply");
+  if (btnPatchUnified) {
+    btnPatchUnified.addEventListener("click", () => void patchUnifiedApplyFromAtolye());
+  }
   const btnPatchAcceptAll = document.getElementById("btn-patch-accept-all");
   if (btnPatchAcceptAll) {
     btnPatchAcceptAll.addEventListener("click", () => void patchAcceptAllFromAtolye());
@@ -7300,6 +7470,15 @@ async function streamChat(userText) {
       hideThinkingCenter();
       return;
     }
+    if (ev.type === "terminal_output") {
+      const prev = String(ev.output_preview || "").trim();
+      if (prev) {
+        setCodeOutput(
+          `[Terminal v3] ${ev.label || ""} exit=${ev.exit_code}\n${prev}`
+        );
+      }
+      return;
+    }
     if (
       ev.type === "agent_step" &&
       Array.isArray(ev.steps) &&
@@ -7307,6 +7486,8 @@ async function streamChat(userText) {
     ) {
       renderProgramlamaAgentSteps(ev.steps);
       const ca = ev.code_agent || {};
+      const comp = ev.compliance || ca.compliance;
+      if (comp) renderProgramlamaCompliance(comp);
       const turn = Number(ca.turn || 0);
       const maxT = Number(ca.max_turns || 0);
       const phase = String(ca.phase || "");
@@ -7321,8 +7502,10 @@ async function streamChat(userText) {
                 : phase === "tools"
                   ? " · araç"
                   : "";
-        setStatus(`Görev tur ${turn}/${maxT}${phaseTr}`, "Rüzgar");
-        showThinkingCenter(`Görev tur ${turn}/${maxT}${phaseTr}`);
+        const rem = Number(ca.budget_remaining_sec || 0);
+        const remTxt = rem > 0 ? ` · kalan ${rem} sn` : "";
+        setStatus(`Görev tur ${turn}/${maxT}${phaseTr}${remTxt}`, "Rüzgar");
+        showThinkingCenter(`Görev tur ${turn}/${maxT}${phaseTr}${remTxt}`);
       } else if (phase === "started") {
         setStatus("Otonom görev başladı", "Rüzgar");
       } else if (phase === "finish") {

@@ -453,6 +453,21 @@ def is_programlama_reserved_command(message: str) -> bool:
     except Exception:
         pass
     try:
+        from ilim_assistant.motorlar.programlama_faz42 import (
+            wants_find_references,
+            wants_import_graph,
+            wants_rename_symbol,
+        )
+
+        if (
+            wants_find_references(message)
+            or wants_rename_symbol(message)
+            or wants_import_graph(message)
+        ):
+            return True
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_faz13 import (
             wants_find_command,
             wants_project_scan_instant,
@@ -480,12 +495,28 @@ def is_programlama_reserved_command(message: str) -> bool:
     except Exception:
         pass
     try:
-        from ilim_assistant.motorlar.programlama_faz15 import wants_terminal_command
+        from ilim_assistant.motorlar.programlama_faz44 import (
+            parse_at_refs,
+            wants_context_map,
+        )
 
-        if wants_terminal_command(message):
+        if wants_context_map(message) or parse_at_refs(message):
             return True
     except Exception:
         pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz43 import wants_terminal_v3
+
+        if wants_terminal_v3(message):
+            return True
+    except Exception:
+        try:
+            from ilim_assistant.motorlar.programlama_faz15 import wants_terminal_command
+
+            if wants_terminal_command(message):
+                return True
+        except Exception:
+            pass
     try:
         from ilim_assistant.motorlar.programlama_faz16 import (
             wants_patch_accept,
@@ -763,17 +794,40 @@ def maybe_programlama_instant_reply(
     except Exception:
         pass
     try:
-        from ilim_assistant.motorlar.programlama_faz15 import maybe_instant_faz15
+        from ilim_assistant.motorlar.programlama_faz44 import maybe_instant_faz44
 
-        faz15_hit = maybe_instant_faz15(
+        faz44_hit = maybe_instant_faz44(
             message,
             workspace_root,
             active_file=active_file,
         )
-        if faz15_hit:
-            parts.append(faz15_hit)
+        if faz44_hit:
+            parts.append(faz44_hit)
     except Exception:
         pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz43 import maybe_instant_faz43
+
+        faz43_hit = maybe_instant_faz43(
+            message,
+            workspace_root,
+            active_file=active_file,
+        )
+        if faz43_hit:
+            parts.append(faz43_hit)
+    except Exception:
+        try:
+            from ilim_assistant.motorlar.programlama_faz15 import maybe_instant_faz15
+
+            faz15_hit = maybe_instant_faz15(
+                message,
+                workspace_root,
+                active_file=active_file,
+            )
+            if faz15_hit:
+                parts.append(faz15_hit)
+        except Exception:
+            pass
     try:
         from ilim_assistant.motorlar.programlama_faz14 import maybe_instant_faz14
 
@@ -812,6 +866,18 @@ def maybe_programlama_instant_reply(
         )
         if faz36_hit:
             parts.append(faz36_hit)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz42 import maybe_instant_faz42
+
+        faz42_hit = maybe_instant_faz42(
+            message,
+            workspace_root,
+            active_file=active_file,
+        )
+        if faz42_hit:
+            parts.append(faz42_hit)
     except Exception:
         pass
     try:
@@ -940,17 +1006,25 @@ def code_debug_max_retries() -> int:
 def apply_assistant_reply_tools(
     reply_body: str,
     workspace_root: str | Path | None = None,
+    legacy_workspace: str | Path | None = None,
     *,
     run_pytest: bool = True,
 ) -> tuple[ToolRunSummary, ExecReport | None]:
     """
     Faz 10.4 / 10.6 — LLM cevabındaki @@write bloklarını uygular; istenirse pytest ile doğrular.
 
+    Geriye uyum: eski hatalı çağrı ``(round_body, round_body, workspace)`` — üçüncü argüman kök.
+
     Dönüş: (özet, pytest raporu veya None).
     """
-    summary, _ = run_tools_for_message((reply_body or "").strip(), workspace_root)
+    root = workspace_root
+    if legacy_workspace is not None:
+        root = legacy_workspace
+    elif root is not None and str(root) == str(reply_body or "").strip():
+        root = None
+    summary, _ = run_tools_for_message((reply_body or "").strip(), root)
     pytest_rep: ExecReport | None = None
-    tools = ProgramlamaAraclari(workspace_root)
+    tools = ProgramlamaAraclari(root)
     if run_pytest and tools.root is not None:
         pytest_rep = tools.run_dev_preset("pytest_run")
         summary.execs.append(pytest_rep)
@@ -959,7 +1033,7 @@ def apply_assistant_reply_tools(
 
         write_paths = [w.path for w in summary.writes if w.ok and w.path]
         record_tool_summary(
-            workspace_root,
+            root,
             writes=write_paths,
             pytest_ok=pytest_rep.ok if pytest_rep else None,
             pytest_exit=pytest_rep.exit_code if pytest_rep else None,
@@ -1422,6 +1496,60 @@ def build_motor_context(
         from ilim_assistant.motorlar.programlama_faz37 import faz37_directive
 
         base += faz37_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz38 import faz38_directive
+
+        base += faz38_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz39 import faz39_directive
+
+        base += faz39_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz40 import faz40_directive
+
+        base += faz40_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz41 import faz41_directive
+
+        base += faz41_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz42 import faz42_directive
+
+        base += faz42_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz43 import faz43_directive
+
+        base += faz43_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz44 import faz44_directive
+
+        base += faz44_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz45 import faz45_directive
+
+        base += faz45_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz46 import faz46_directive
+
+        base += faz46_directive() + "\n"
     except Exception:
         pass
     try:

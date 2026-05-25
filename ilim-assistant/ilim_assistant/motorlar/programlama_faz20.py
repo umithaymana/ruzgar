@@ -78,7 +78,7 @@ def faz20_tool_directive() -> str:
         '{"tool":"read","path":"projects/foo/app/main.py"}',
         "```",
         "",
-        "İzinli tool: read, write, grep, symbol, verify, run, goto",
+        "İzinli tool: read, write, grep, symbol, verify, run, goto, refs, rename",
         "write için content alanı zorunlu. grep: scope + pattern. run: preset.",
         "Plan 3 madde; sonra araçlar; gereksiz sohbet yok.",
     ]
@@ -287,11 +287,16 @@ def execute_tool(
             }
 
         if tool == "run":
-            from ilim_assistant.motorlar.programlama_faz15 import run_terminal_preset
-
             scope = str(spec.get("scope") or scope_rel or "")
-            preset = str(spec.get("preset") or "npm_test")
-            res = run_terminal_preset(workspace_root, preset, scope_rel=scope)
+            preset = str(spec.get("preset") or spec.get("cmd") or "npm_test")
+            try:
+                from ilim_assistant.motorlar.programlama_faz43 import run_terminal_v3
+
+                res = run_terminal_v3(workspace_root, preset, scope_rel=scope)
+            except Exception:
+                from ilim_assistant.motorlar.programlama_faz15 import run_terminal_preset
+
+                res = run_terminal_preset(workspace_root, preset, scope_rel=scope)
             return {
                 "ok": bool(res.get("ok")),
                 "tool": tool,
@@ -304,6 +309,39 @@ def execute_tool(
             scope = str(spec.get("scope") or scope_rel or "")
             name = str(spec.get("name") or spec.get("query") or spec.get("pattern") or "")
             return execute_goto_tool(workspace_root, scope, name)
+
+        if tool == "refs":
+            from ilim_assistant.motorlar.programlama_faz42 import execute_refs_tool
+
+            scope = str(spec.get("scope") or scope_rel or "")
+            name = str(spec.get("name") or spec.get("query") or "")
+            return execute_refs_tool(workspace_root, scope, name)
+
+        if tool == "rename":
+            from ilim_assistant.motorlar.programlama_faz42 import execute_rename_tool
+
+            scope = str(spec.get("scope") or scope_rel or "")
+            old = str(spec.get("old") or spec.get("name") or "")
+            new = str(spec.get("new") or spec.get("to") or "")
+            rel = str(spec.get("path") or spec.get("rel") or "") or None
+            return execute_rename_tool(
+                workspace_root, scope, old, new, rel_path=rel
+            )
+
+        if tool in ("import_graph", "importgraph"):
+            from ilim_assistant.motorlar.programlama_faz42 import (
+                build_import_graph,
+                format_import_graph_report,
+            )
+
+            scope = str(spec.get("scope") or scope_rel or "")
+            return {
+                "ok": True,
+                "tool": "import_graph",
+                "output": format_import_graph_report(
+                    build_import_graph(workspace_root, scope)
+                )[:8000],
+            }
 
         return {"ok": False, "tool": tool, "output": f"Bilinmeyen araç: {tool}"}
     except Exception as exc:
@@ -334,6 +372,12 @@ def run_tools_from_reply(
 
 def augment_agent_system(system: str) -> str:
     out = (system or "").rstrip() + "\n\n" + faz20_tool_directive() + "\n"
+    try:
+        from ilim_assistant.motorlar.programlama_faz40 import faz40_directive
+
+        out = out.rstrip() + "\n\n" + faz40_directive() + "\n"
+    except Exception:
+        pass
     try:
         from ilim_assistant.motorlar.programlama_faz34 import augment_agent_system as _f34
 

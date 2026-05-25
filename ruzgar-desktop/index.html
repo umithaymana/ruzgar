@@ -943,21 +943,27 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
                 <div class="code-active-path" id="code-active-file">
                   Dosya: (yeni — Kaydet ile göreli yol verilir)
                 </div>
+                <div id="programlama-patch-tabs" class="programlama-patch-tabs" hidden></div>
+                <div id="programlama-patch-ux-hint" class="programlama-patch-ux-hint" hidden></div>
                 <div id="programlama-inline-diff" class="programlama-inline-diff" hidden>
                   <div class="programlama-inline-diff-head">
-                    <strong id="programlama-inline-diff-title">Editör diff (Faz 27)</strong>
+                    <strong id="programlama-inline-diff-title">Editör diff (Faz 45)</strong>
+                    <span id="inline-diff-stats" class="programlama-inline-diff-stats"></span>
                     <button type="button" id="btn-inline-diff-close" class="btn-secondary btn-compact">
                       Kapat
                     </button>
                   </div>
-                  <div class="programlama-inline-diff-cols">
+                  <div id="inline-diff-unified" class="programlama-inline-diff-unified" hidden></div>
+                  <div class="programlama-inline-diff-cols" id="inline-diff-cols">
                     <div class="programlama-inline-diff-col">
                       <span class="programlama-inline-diff-label">Eski</span>
                       <pre id="inline-diff-old" class="programlama-inline-diff-pre"></pre>
+                      <div id="inline-diff-old-html" class="programlama-inline-diff-html" hidden></div>
                     </div>
                     <div class="programlama-inline-diff-col">
                       <span class="programlama-inline-diff-label">Yeni</span>
                       <pre id="inline-diff-new" class="programlama-inline-diff-pre"></pre>
+                      <div id="inline-diff-new-html" class="programlama-inline-diff-html" hidden></div>
                     </div>
                   </div>
                 </div>
@@ -969,8 +975,11 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
                 ></textarea>
                 <div id="programlama-patch-strip" class="programlama-patch-strip" hidden>
                   <div class="programlama-patch-head">
-                    <strong>Patch (Faz 16)</strong>
+                    <strong>Patch (Faz 45)</strong>
                     <span id="programlama-patch-counts" class="programlama-patch-counts"></span>
+                    <button type="button" id="btn-patch-unified-apply" class="btn-primary btn-compact" title="Faz 45">
+                      Birleşik uygula
+                    </button>
                     <button type="button" id="btn-patch-accept-all" class="btn-secondary btn-compact">
                       Tümünü kabul
                     </button>
@@ -1004,6 +1013,14 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
                 <div id="programlama-agent-steps" class="programlama-agent-steps mini-card" hidden>
                   <strong class="programlama-agent-title">Görev adımları (Faz 24 — canlı)</strong>
                   <ol id="programlama-agent-list" class="dashboard-agent-list"></ol>
+                </div>
+                <div id="programlama-compliance-card" class="programlama-compliance-card mini-card" hidden>
+                  <strong class="programlama-compliance-title">Ajan uyum (Faz 38 — canlı)</strong>
+                  <div class="programlama-compliance-body">
+                    <span id="programlama-compliance-score" class="programlama-compliance-score">—</span>
+                    <span id="programlama-compliance-grade" class="programlama-compliance-grade">—</span>
+                    <span id="programlama-compliance-detail" class="programlama-compliance-detail"></span>
+                  </div>
                 </div>
                 <div class="code-output-panel">
                   <div class="code-output-head">

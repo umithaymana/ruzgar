@@ -3208,6 +3208,116 @@ body:not(.workbench-hizir-active) #workbench-hizir-tools,
   white-space: pre-wrap;
   word-break: break-word;
 }
+.programlama-patch-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0 4px;
+}
+.programlama-patch-tabs[hidden] {
+  display: none !important;
+}
+.programlama-patch-tab {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(120, 180, 255, 0.35);
+  background: rgba(12, 20, 32, 0.85);
+  color: #b8d4ff;
+  cursor: pointer;
+}
+.programlama-patch-tab.active {
+  border-color: rgba(100, 220, 160, 0.65);
+  background: rgba(20, 48, 36, 0.9);
+  color: #c8f0d0;
+}
+.programlama-patch-tab.status-accepted {
+  border-color: rgba(120, 200, 140, 0.5);
+}
+.programlama-patch-tab.status-rejected {
+  opacity: 0.55;
+}
+.programlama-patch-ux-hint {
+  font-size: 11px;
+  opacity: 0.85;
+  margin: 0 0 6px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(30, 40, 55, 0.6);
+}
+.programlama-patch-ux-hint[hidden] {
+  display: none !important;
+}
+.programlama-inline-diff-stats {
+  font-size: 10px;
+  opacity: 0.8;
+  margin-left: auto;
+  margin-right: 8px;
+}
+.programlama-inline-diff-unified {
+  max-height: 220px;
+  overflow: auto;
+  font-size: 11px;
+  line-height: 1.4;
+  background: #0a0e12;
+  border-radius: 6px;
+  padding: 4px 0;
+  margin-bottom: 8px;
+}
+.programlama-inline-diff-unified[hidden] {
+  display: none !important;
+}
+.programlama-inline-diff-html {
+  max-height: 200px;
+  overflow: auto;
+  font-size: 11px;
+  line-height: 1.4;
+  background: #0a0e12;
+  border-radius: 6px;
+  padding: 2px 0;
+}
+.programlama-inline-diff-html[hidden] {
+  display: none !important;
+}
+.diff-line {
+  display: flex;
+  gap: 6px;
+  padding: 0 6px;
+  font-family: ui-monospace, Consolas, monospace;
+}
+.diff-line-add {
+  background: rgba(40, 120, 60, 0.22);
+}
+.diff-line-del {
+  background: rgba(160, 50, 50, 0.22);
+}
+.diff-line-ctx {
+  background: transparent;
+}
+.diff-ln {
+  flex: 0 0 2.2em;
+  text-align: right;
+  opacity: 0.45;
+  user-select: none;
+}
+.diff-sign {
+  flex: 0 0 0.8em;
+  opacity: 0.7;
+}
+.diff-code {
+  flex: 1;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.syn-kw {
+  color: #7eb8ff;
+}
+.syn-str {
+  color: #a8d4a0;
+}
+.syn-num {
+  color: #f0c878;
+}
 .programlama-patch-list button {
   margin-left: 6px;
   font-size: 11px;
@@ -3220,6 +3330,35 @@ body:not(.workbench-hizir-active) #workbench-hizir-tools,
   display: block;
   font-size: 12px;
   margin-bottom: 6px;
+}
+.programlama-compliance-card {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+}
+.programlama-compliance-title {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+.programlama-compliance-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+  font-size: 12px;
+}
+.programlama-compliance-score {
+  font-size: 18px;
+  font-weight: 700;
+  color: #8fd4ff;
+}
+.programlama-compliance-grade {
+  font-weight: 600;
+  color: #c9e6b0;
+}
+.programlama-compliance-detail {
+  color: #9aa8b5;
+  font-size: 11px;
 }
 .code-output-panel {
   display: flex;

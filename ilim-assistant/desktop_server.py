@@ -791,7 +791,7 @@ def health():
         },
         "super_brain": _super_brain_health_block(),
         "build": {
-            "rev": "2026-05-25-programlama-faz37-v49",
+            "rev": "2026-05-25-programlama-faz46-v57",
             "nebula_kitap": True,
             "fast_paths": os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
             "memory_first": True,
@@ -1182,46 +1182,75 @@ def api_programlama_agent_stop(workspace_root: str | None = None):
 @app.get("/api/programlama/terminal/presets")
 def api_programlama_terminal_presets():
     """Faz 15 — izinli terminal preset listesi."""
-    from ilim_assistant.motorlar.programlama_faz15 import (
-        FAZ15_VERSION,
-        list_terminal_presets,
-    )
+    try:
+        from ilim_assistant.motorlar.programlama_faz43 import (
+            FAZ43_VERSION,
+            list_terminal_presets_v3,
+        )
+
+        presets = list_terminal_presets_v3()
+        ver = FAZ43_VERSION
+    except Exception:
+        from ilim_assistant.motorlar.programlama_faz15 import (
+            FAZ15_VERSION,
+            list_terminal_presets,
+        )
+
+        presets = list_terminal_presets()
+        ver = FAZ15_VERSION
 
     return {
         "ok": True,
-        "presets": list_terminal_presets(),
-        "version": FAZ15_VERSION,
+        "presets": presets,
+        "version": ver,
     }
 
 
 @app.post("/api/programlama/terminal/run")
 def api_programlama_terminal_run(body: dict):
-    """Faz 15 — projects/ kapsamında onaylı npm/git komutu."""
-    from ilim_assistant.motorlar.programlama_faz15 import (
-        FAZ15_VERSION,
-        format_terminal_report,
-        is_dangerous_shell,
-        run_terminal_preset,
-    )
+    """Faz 43 — projects/ kapsamında onaylı terminal (npm/git/pip/pytest)."""
+    from ilim_assistant.motorlar.programlama_faz15 import is_dangerous_shell
+
+    try:
+        from ilim_assistant.motorlar.programlama_faz43 import (
+            FAZ43_VERSION,
+            format_terminal_report_v3,
+            run_terminal_v3,
+        )
+
+        fmt = format_terminal_report_v3
+        run_fn = run_terminal_v3
+        ver = FAZ43_VERSION
+    except Exception:
+        from ilim_assistant.motorlar.programlama_faz15 import (
+            FAZ15_VERSION,
+            format_terminal_report,
+            run_terminal_preset,
+        )
+
+        fmt = format_terminal_report
+        run_fn = run_terminal_preset
+        ver = FAZ15_VERSION
 
     preset = str(body.get("preset") or body.get("preset_id") or "").strip()
-    if not preset:
-        raise HTTPException(status_code=400, detail="preset gerekli")
     raw_cmd = str(body.get("command") or "").strip()
     if raw_cmd and is_dangerous_shell(raw_cmd):
         raise HTTPException(status_code=403, detail="Tehlikeli komut reddedildi")
+    if not preset and not raw_cmd:
+        raise HTTPException(status_code=400, detail="preset veya command gerekli")
     root = (body.get("workspace_root") or "").strip() or None
     scope = (body.get("scope_rel") or "").strip() or None
     active = (body.get("active_file") or "").strip() or None
-    result = run_terminal_preset(
+    cmd_input = raw_cmd or preset
+    result = run_fn(
         root,
-        preset,
+        cmd_input,
         scope_rel=scope or None,
         active_file=active or None,
         message=str(body.get("message") or ""),
     )
-    result["report"] = format_terminal_report(result)
-    result["version"] = FAZ15_VERSION
+    result["report"] = fmt(result)
+    result["version"] = ver
     return result
 
 
@@ -1269,6 +1298,12 @@ def api_programlama_patch_pending(workspace_root: str | None = None):
         items = enrich_pending_with_inline(root, items)
     except Exception:
         pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz45 import enrich_pending_items_v45
+
+        items = enrich_pending_items_v45(root, items)
+    except Exception:
+        pass
     return {
         "ok": True,
         "count": bundle.get("count", 0),
@@ -1285,18 +1320,71 @@ def api_programlama_patch_inline_diff(
     workspace_root: str | None = None,
     path: str | None = None,
 ):
-    """Faz 27 — editör satır içi diff."""
+    """Faz 27/45 — editör satır içi diff (v2 syntax renk)."""
+    root = (workspace_root or "").strip() or None
+    rel = (path or "").strip()
+    if not rel:
+        from ilim_assistant.motorlar.programlama_faz27 import FAZ27_VERSION
+
+        return {"ok": False, "error": "path gerekli", "version": FAZ27_VERSION}
+    try:
+        from ilim_assistant.motorlar.programlama_faz45 import (
+            FAZ45_VERSION,
+            build_inline_diff_v2,
+            editor_v2_enabled,
+        )
+
+        if editor_v2_enabled():
+            return build_inline_diff_v2(root, rel)
+    except Exception:
+        pass
     from ilim_assistant.motorlar.programlama_faz27 import (
         FAZ27_VERSION,
         build_inline_diff_for_path,
     )
 
+    return build_inline_diff_for_path(root, rel)
+
+
+@app.get("/api/programlama/patch/tabs")
+def api_programlama_patch_tabs(workspace_root: str | None = None):
+    """Faz 45 — çok dosya patch sekmeleri."""
+    from ilim_assistant.motorlar.programlama_faz45 import (
+        FAZ45_VERSION,
+        build_patch_tabs,
+    )
+
     root = (workspace_root or "").strip() or None
-    rel = (path or "").strip()
-    if not rel:
-        return {"ok": False, "error": "path gerekli", "version": FAZ27_VERSION}
-    payload = build_inline_diff_for_path(root, rel)
+    payload = build_patch_tabs(root)
+    payload["version"] = FAZ45_VERSION
     return payload
+
+
+@app.get("/api/programlama/patch/ux")
+def api_programlama_patch_ux(workspace_root: str | None = None):
+    """Faz 45 — patch + görev birleşik UX."""
+    from ilim_assistant.motorlar.programlama_faz45 import (
+        FAZ45_VERSION,
+        build_unified_patch_ux,
+    )
+
+    root = (workspace_root or "").strip() or None
+    payload = build_unified_patch_ux(root)
+    payload["version"] = FAZ45_VERSION
+    return payload
+
+
+@app.post("/api/programlama/patch/unified-apply")
+def api_programlama_patch_unified_apply(body: ProgramlamaPatchBody):
+    """Faz 45 — tümünü kabul + kabul edilenleri uygula."""
+    from ilim_assistant.motorlar.programlama_faz45 import (
+        FAZ45_VERSION,
+        run_unified_apply,
+    )
+
+    root = (body.workspace_root or "").strip() or None
+    res = run_unified_apply(root, run_verify=bool(body.run_verify))
+    return {**res, "version": FAZ45_VERSION}
 
 
 @app.post("/api/programlama/patch/item")
@@ -1397,6 +1485,29 @@ def api_programlama_parity_report(workspace_root: str | None = None):
         "report": format_parity_report(report),
         "data": report.to_dict(),
         "version": FAZ25_VERSION,
+    }
+
+
+@app.get("/api/programlama/cursor-seviye")
+def api_programlama_cursor_seviye(workspace_root: str | None = None):
+    """Faz 46 — Cursor seviye kilidi (3 senaryo + skor)."""
+    from ilim_assistant.motorlar.programlama_cursor_parity import (
+        CURSOR_PARITY_VERSION,
+        format_cursor_seviye_report,
+        run_cursor_seviye_assessment,
+    )
+
+    root = (workspace_root or "").strip() or None
+    report = run_cursor_seviye_assessment(root)
+    return {
+        "ok": report.ok,
+        "score": report.score,
+        "target_score": report.target_score,
+        "meets_target": report.score >= report.target_score,
+        "report": format_cursor_seviye_report(report),
+        "data": report.to_dict(),
+        "warnings": report.warnings,
+        "version": CURSOR_PARITY_VERSION,
     }
 
 

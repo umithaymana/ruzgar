@@ -81,6 +81,25 @@ def build_light_programming_context(
     except Exception:
         pass
 
+    if scope:
+        try:
+            from ilim_assistant.motorlar.programlama_faz44 import (
+                build_context_v3_block,
+                context_v3_enabled,
+            )
+
+            if context_v3_enabled():
+                v3 = build_context_v3_block(
+                    workspace_root,
+                    scope_rel=scope,
+                    message=message,
+                    active_file=active_file,
+                ).strip()
+                if v3:
+                    parts.append(v3[:5500])
+        except Exception:
+            pass
+
     if active_file:
         parts.append(f"[AKTİF DOSYA]\n`{active_file}`")
     snip = (editor_snippet or "").strip()
@@ -112,6 +131,15 @@ def build_light_programming_context(
             pass
 
     for directive_fn in (
+        "programlama_faz46.faz46_directive",
+        "programlama_faz45.faz45_directive",
+        "programlama_faz44.faz44_directive",
+        "programlama_faz43.faz43_directive",
+        "programlama_faz42.faz42_directive",
+        "programlama_faz41.faz41_directive",
+        "programlama_faz40.faz40_directive",
+        "programlama_faz39.faz39_directive",
+        "programlama_faz38.faz38_directive",
         "programlama_faz37.faz37_directive",
         "programlama_faz36.faz36_directive",
         "programlama_faz35.faz35_directive",

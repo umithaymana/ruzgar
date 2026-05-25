@@ -5,7 +5,7 @@
 
 **Referans (Cursor / bu sohbet):** Plan → araçlarla oku → çok dosya değiştir → terminal/test → hata oku → tekrarla → kullanıcıya özet.
 
-**Mevcut build:** `2026-05-25-programlama-faz37-v49` (Faz 8–37 / tur-içi araç + LSP + uyum)
+**Mevcut build:** `2026-05-25-programlama-faz46-v57` (Faz 8–46 / Cursor seviye kilidi)
 
 ---
 
@@ -98,6 +98,17 @@ Kullanıcı (programlama modu)
 | **35** | Tur-içi araç geri beslemesi | read sonrası aynı turda 2. LLM → write | ✓ v49 |
 | **36** | LSP hafif (goto) | `tanıma git health` · ruzgar-tool goto | ✓ v49 |
 | **37** | Ajan uyum skoru | `ajan uyum` · API agent-compliance | ✓ v49 |
+| **38** | Uyum şeridi + iç araç döngüsü | SSE skor kartı · tool→LLM×3 · delege | ✓ v50 |
+| **39** | Görev tamamlama kilidi | Zorunlu yazım · groq öncelik · 12 tur | ✓ v51 |
+| **40** | Yapılandırılmış araç API | Groq tools · keşif otomatik · ruzgar-tool yedek | ✓ v51 |
+| **41** | Uzun görev bütçesi | 15 tur · 900 sn · SSE kalan süre | ✓ v52 |
+| **42** | LSP v2 | referanslar · rename · import graf | ✓ v53 |
+| **43** | Terminal v3 | pip · pytest · npm ci · güvenli calistir | ✓ v54 |
+| **44** | Bağlam v3 | repo harita · @dosya · ilgili dosyalar | ✓ v55 |
+| **45** | Editör cila | patch sekmeleri · diff v2 · birleşik uygula | ✓ v56 |
+| **46** | Cursor seviye kilidi | 3 senaryo · skor ≥85 · ruzgar_cursor_seviye_sonuc.json | ✓ v57 |
+
+**Kapanış yolu (Faz 39–46):** [PROGRAMMING_MOTOR_CURSOR_SEVIYE_PLAN.md](PROGRAMMING_MOTOR_CURSOR_SEVIYE_PLAN.md)
 
 ---
 
