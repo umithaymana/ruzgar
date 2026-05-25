@@ -1064,6 +1064,54 @@ def iter_code_agent_turn_events(
                 yield step_tracker.on_tools(turn, len(_tool_res))
         except Exception:
             _faz34_violations = []
+        _faz35_followup = False
+        _tool_block_combined = ""
+        try:
+            from ilim_assistant.motorlar.programlama_faz20 import run_tools_from_reply as _rtfr
+
+            _, _tb0 = _rtfr(llm_body, workspace, scope_rel=task.scope_rel)
+            _tool_block_combined = _tb0 or ""
+        except Exception:
+            pass
+        if not _tool_block_combined and round_body:
+            idx = round_body.find("[ARAÇ SONUÇLARI]")
+            if idx >= 0:
+                _tool_block_combined = round_body[idx:]
+            idx2 = round_body.find("[Faz 34")
+            if idx2 >= 0 and idx2 < (idx if idx >= 0 else len(round_body)):
+                _tool_block_combined = round_body[idx2:]
+        try:
+            from ilim_assistant.motorlar.programlama_faz35 import run_mid_turn_followup
+
+            llm_body, round_body, _tool_res, _f35_profiles, _faz35_followup = (
+                run_mid_turn_followup(
+                    llm_body=llm_body,
+                    round_body=round_body,
+                    tool_results=_tool_res,
+                    tool_block=_tool_block_combined,
+                    goal=task.goal,
+                    turn=turn,
+                    agent_system=agent_system,
+                    round_payload=round_payload,
+                    model=model,
+                    active_prior=active_prior,
+                    message=message,
+                    turn_plan=turn_plan,
+                    workspace_root=workspace,
+                    scope_rel=task.scope_rel,
+                    stream_fn=_stream_agent_llm_turn,
+                )
+            )
+            if _faz35_followup:
+                yield {
+                    "type": "status",
+                    "text": f"Tur {turn}: Faz 35 tur-içi takip LLM tamamlandı.",
+                }
+                if _f35_profiles:
+                    profiles_used = list(profiles_used) + _f35_profiles
+                yield {"type": "token", "text": "\n\n[Faz 35 takip]\n"}
+        except Exception:
+            _faz35_followup = False
         reply_body += round_body
         if llm_body.strip():
             yield {"type": "token", "text": llm_body}
@@ -1121,6 +1169,22 @@ def iter_code_agent_turn_events(
                 ok,
                 (verify.output if verify else "")[:80],
             )
+
+        try:
+            from ilim_assistant.motorlar.programlama_faz37 import record_turn_metrics
+
+            record_turn_metrics(
+                workspace,
+                scope_rel=task.scope_rel,
+                turn=turn,
+                tool_results=_tool_res,
+                violations=_faz34_violations,
+                mid_turn_followup=_faz35_followup,
+                verify_ok=bool(verify.ok if verify else False),
+                writes_ok=writes_ok,
+            )
+        except Exception:
+            pass
 
         if loop_state is not None:
             try:

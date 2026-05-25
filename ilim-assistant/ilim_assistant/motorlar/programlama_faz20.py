@@ -65,6 +65,7 @@ def tool_catalog() -> list[dict[str, str]]:
         {"id": "grep", "desc": "Proje içi ara — scope, pattern"},
         {"id": "verify", "desc": "pytest/npm — scope (proje kökü)"},
         {"id": "run", "desc": "Terminal preset — scope, preset: npm_test|npm_build|git_status"},
+        {"id": "goto", "desc": "Tanıma git (LSP hafif) — scope, name"},
     ]
 
 
@@ -77,7 +78,7 @@ def faz20_tool_directive() -> str:
         '{"tool":"read","path":"projects/foo/app/main.py"}',
         "```",
         "",
-        "İzinli tool: read, write, grep, symbol, verify, run",
+        "İzinli tool: read, write, grep, symbol, verify, run, goto",
         "write için content alanı zorunlu. grep: scope + pattern. run: preset.",
         "Plan 3 madde; sonra araçlar; gereksiz sohbet yok.",
     ]
@@ -296,6 +297,13 @@ def execute_tool(
                 "tool": tool,
                 "output": str(res.get("output") or res.get("error") or "")[:8000],
             }
+
+        if tool == "goto":
+            from ilim_assistant.motorlar.programlama_faz36 import execute_goto_tool
+
+            scope = str(spec.get("scope") or scope_rel or "")
+            name = str(spec.get("name") or spec.get("query") or spec.get("pattern") or "")
+            return execute_goto_tool(workspace_root, scope, name)
 
         return {"ok": False, "tool": tool, "output": f"Bilinmeyen araç: {tool}"}
     except Exception as exc:

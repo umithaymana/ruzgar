@@ -66,7 +66,7 @@ def build_ui_manifest(*, health: dict[str, Any] | None = None) -> dict[str, Any]
             "video": {"tag": "YouTube indirme · kurgu v5"},
             "okuma": {"tag": "İlim · tabiat · tarih"},
             "tercume": {"tag": "Ofis · altyazı"},
-            "programlama": {"tag": "Faz 34 · araç sırası"},
+            "programlama": {"tag": "Faz 37 · ajan uyum"},
         },
         "capabilities": [
             "Ansiklopedik soruda Gemini-first, ağır indeks atlama",

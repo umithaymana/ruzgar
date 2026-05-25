@@ -5,7 +5,7 @@
 
 **Referans (Cursor / bu sohbet):** Plan → araçlarla oku → çok dosya değiştir → terminal/test → hata oku → tekrarla → kullanıcıya özet.
 
-**Mevcut build:** `2026-05-25-programlama-faz34-v46` (Faz 8–34 / araç-öncelik protokolü)
+**Mevcut build:** `2026-05-25-programlama-faz37-v49` (Faz 8–37 / tur-içi araç + LSP + uyum)
 
 ---
 
@@ -95,6 +95,9 @@ Kullanıcı (programlama modu)
 | **32** | Görev sonu Git akışı | Otomatik özet · `iş akışı` · `iş bitir pr` | ✓ v44 |
 | **33** | Doğal cümle = ajan | `görev:` şart değil · aktif proje + iş fiili | ✓ v45 |
 | **34** | Araç-öncelik protokolü | read→write→verify · otomatik keşif/doğrulama | ✓ v46 |
+| **35** | Tur-içi araç geri beslemesi | read sonrası aynı turda 2. LLM → write | ✓ v49 |
+| **36** | LSP hafif (goto) | `tanıma git health` · ruzgar-tool goto | ✓ v49 |
+| **37** | Ajan uyum skoru | `ajan uyum` · API agent-compliance | ✓ v49 |
 
 ---
 

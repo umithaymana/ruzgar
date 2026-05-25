@@ -791,7 +791,7 @@ def health():
         },
         "super_brain": _super_brain_health_block(),
         "build": {
-            "rev": "2026-05-25-programlama-faz34-v46",
+            "rev": "2026-05-25-programlama-faz37-v49",
             "nebula_kitap": True,
             "fast_paths": os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
             "memory_first": True,
@@ -1358,6 +1358,26 @@ def api_programlama_quality_report(workspace_root: str | None = None):
         "report": format_quality_report(report),
         "data": report.to_dict(),
         "version": FAZ18_VERSION,
+    }
+
+
+@app.get("/api/programlama/agent-compliance")
+def api_programlama_agent_compliance(workspace_root: str | None = None):
+    """Faz 37 — ajan uyum skoru (son görev oturumu)."""
+    from ilim_assistant.motorlar.programlama_faz37 import (
+        FAZ37_VERSION,
+        build_compliance_report,
+        format_compliance_report,
+    )
+
+    root = (workspace_root or "").strip() or None
+    data = build_compliance_report(root)
+    rep = data.get("report") or {}
+    return {
+        "ok": bool(data.get("ok")),
+        "report": format_compliance_report(root) if data.get("ok") else "",
+        "data": rep,
+        "version": FAZ37_VERSION,
     }
 
 

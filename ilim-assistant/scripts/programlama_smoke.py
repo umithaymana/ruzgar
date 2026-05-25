@@ -623,7 +623,7 @@ def run_live(base: str) -> int:
     try:
         h = get("/api/health")
         rev = str((h.get("build") or {}).get("rev") or "")
-        if "faz34" in rev or rev.endswith("-v46"):
+        if "faz37" in rev or rev.endswith("-v49"):
             _ok(f"build.rev={rev}")
         else:
             _fail("build.rev", rev)
@@ -813,6 +813,17 @@ def run_live(base: str) -> int:
         fails += 1
 
     try:
+        ac = get(f"/api/programlama/agent-compliance?workspace_root={enc}")
+        if ac.get("ok") is not None and ac.get("data") is not None:
+            _ok("agent-compliance API (Faz 37)")
+        else:
+            _fail("agent-compliance", str(ac)[:80])
+            fails += 1
+    except Exception as e:
+        _fail("agent-compliance API", str(e)[:120])
+        fails += 1
+
+    try:
         s = get(f"/api/programlama/project-scan?workspace_root={enc}&scope_rel={scope}")
         if s.get("ok"):
             _ok("project-scan API")
@@ -877,6 +888,113 @@ def run_parity(*, live_base: str | None = None) -> int:
     else:
         _fail("inline diff", str(payload)[:80])
         fails += 1
+
+    print("=== Faz 37 — ajan uyum skoru ===")
+    from ilim_assistant.motorlar.programlama_faz37 import (
+        FAZ37_VERSION,
+        build_compliance_report,
+        compute_compliance_score,
+        record_turn_metrics,
+        wants_compliance_report,
+    )
+
+    record_turn_metrics(
+        WORKSPACE,
+        scope_rel="projects/benim-api",
+        turn=1,
+        tool_results=[{"tool": "read", "ok": True, "output": "ok"}],
+        violations=["write_without_verify"],
+        mid_turn_followup=False,
+        verify_ok=False,
+        writes_ok=0,
+    )
+    rep = build_compliance_report(WORKSPACE)
+    if rep.get("ok") and rep.get("report"):
+        _ok(f"compliance score={rep['report'].get('score')}")
+    else:
+        _fail("compliance report", str(rep)[:80])
+        fails += 1
+    sc = compute_compliance_score(
+        [{"violations": ["x"], "writes_ok": 1, "verify_ok": True, "tools": ["read", "write"]}]
+    )
+    if sc.get("score", 0) > 0:
+        _ok(f"compute score grade={sc.get('grade')}")
+    else:
+        _fail("compute score")
+        fails += 1
+    if wants_compliance_report("ajan uyum rapor"):
+        _ok("wants ajan uyum")
+    else:
+        _fail("wants ajan uyum")
+        fails += 1
+    _ok(f"faz37 {FAZ37_VERSION}")
+
+    print("=== Faz 36 — LSP goto ===")
+    from ilim_assistant.motorlar.programlama_faz36 import (
+        FAZ36_VERSION,
+        execute_goto_tool,
+        goto_definition,
+        wants_goto_definition,
+    )
+
+    if wants_goto_definition("tanima git health"):
+        _ok("wants goto")
+    else:
+        _fail("wants goto")
+        fails += 1
+    g = goto_definition(WORKSPACE, "projects/benim-api", "health")
+    if g.get("ok") or g.get("error"):
+        _ok("goto_definition lookup")
+    else:
+        _fail("goto_definition")
+        fails += 1
+    gt = execute_goto_tool(WORKSPACE, "projects/benim-api", "health")
+    if gt.get("tool") == "goto":
+        _ok("goto tool")
+    else:
+        _fail("goto tool")
+        fails += 1
+    _ok(f"faz36 {FAZ36_VERSION}")
+
+    print("=== Faz 35 — tur ici arac geri besleme ===")
+    from ilim_assistant.motorlar.programlama_faz35 import (
+        FAZ35_VERSION,
+        build_mid_turn_user_message,
+        mid_turn_enabled,
+        should_mid_turn_followup,
+    )
+
+    if mid_turn_enabled():
+        _ok("mid_turn enabled")
+    else:
+        _fail("mid_turn")
+        fails += 1
+    block = "[ARAÇ SONUÇLARI]\n1. read [OK]\n```text\nline1\n```"
+    if should_mid_turn_followup(
+        [{"tool": "read", "ok": True, "output": "x"}],
+        "plan only",
+        tool_block=block,
+    ):
+        _ok("should_mid_turn_followup")
+    else:
+        _fail("should_mid_turn_followup")
+        fails += 1
+    if not should_mid_turn_followup(
+        [{"tool": "write", "ok": True, "output": "ok"}],
+        "done",
+        tool_block=block,
+    ):
+        _ok("skip followup when write ok")
+    else:
+        _fail("skip on write")
+        fails += 1
+    msg = build_mid_turn_user_message(block, goal="pytest", turn=2)
+    if "Faz 35" in msg and "@@write" in msg:
+        _ok("mid_turn user message")
+    else:
+        _fail("mid_turn message")
+        fails += 1
+    _ok(f"faz35 {FAZ35_VERSION}")
 
     print("=== Faz 34 — arac oncelik protokolu ===")
     from ilim_assistant.motorlar.programlama_faz34 import (
