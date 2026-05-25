@@ -4,7 +4,7 @@
  * Kök sonda `/api` ise kırpılır — aksi halde fetch `.../api/api/merkezi-bellek` ile 404 verir.
  */
 const RUZGAR_LOCAL_API_PORT = 8779;
-const RUZGAR_EXPECTED_BUILD_REV = "2026-05-25-programlama-faz28-v40";
+const RUZGAR_EXPECTED_BUILD_REV = "2026-05-25-programlama-faz29-v41";
 const RUZGAR_LOCAL_API_FALLBACK = `http://127.0.0.1:${RUZGAR_LOCAL_API_PORT}`;
 
 function migrateLegacyApiUrl(raw) {
@@ -462,6 +462,7 @@ const el = {
   btnCodeRun: document.getElementById("btn-code-run"),
   btnCodeOutputClear: document.getElementById("btn-code-output-clear"),
   codeFileTree: document.getElementById("code-file-tree"),
+  progProjectSelect: document.getElementById("prog-project-select"),
   btnCodeRefresh: document.getElementById("btn-code-refresh"),
   btnCodeSave: document.getElementById("btn-code-save"),
   codeActiveFile: document.getElementById("code-active-file"),
@@ -1728,6 +1729,66 @@ async function getProgramlamaWorkspaceRoot() {
     /* ignore */
   }
   return null;
+}
+
+async function refreshProgramlamaProjectSelect() {
+  const sel = el.progProjectSelect;
+  if (!sel) return;
+  const workspaceRoot = await getProgramlamaWorkspaceRoot();
+  if (!workspaceRoot) return;
+  try {
+    const qs = `?workspace_root=${encodeURIComponent(workspaceRoot)}`;
+    const res = await fetch(`${API}/api/programlama/workspace-projects${qs}`);
+    const data = await res.json().catch(() => ({}));
+    if (!data.ok) return;
+    const active = String(data.active_project || "").trim();
+    const projects = Array.isArray(data.projects) ? data.projects : [];
+    sel.innerHTML = "";
+    const ph = document.createElement("option");
+    ph.value = "";
+    ph.textContent = projects.length ? "Proje seç…" : "Proje yok";
+    sel.appendChild(ph);
+    for (const p of projects) {
+      const slug = String(p.slug || "").trim();
+      if (!slug) continue;
+      const opt = document.createElement("option");
+      opt.value = slug;
+      opt.textContent = slug + (p.has_git ? " · git" : "");
+      if (slug === active) opt.selected = true;
+      sel.appendChild(opt);
+    }
+  } catch (_) {
+    /* ignore */
+  }
+}
+
+async function switchProgramlamaProject(slug) {
+  const workspaceRoot = await getProgramlamaWorkspaceRoot();
+  if (!workspaceRoot || !slug) return;
+  try {
+    const res = await fetch(`${API}/api/programlama/workspace/switch`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ workspace_root: workspaceRoot, project_slug: slug }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!data.ok) {
+      setCodeOutput(data.detail || data.error || "Proje geçişi başarısız.");
+      return;
+    }
+    if (data.focus_rel) {
+      await applyProgramlamaFocusFromChat({
+        programlama_focus_rel: data.focus_rel,
+        programlama_project_rel: data.project_rel,
+        programlama_expand_tree: true,
+      });
+    } else {
+      await programlamaAtolyeRefreshRoot();
+    }
+    flashRuzgarDurum(`Aktif proje: ${slug}`);
+  } catch (e) {
+    setCodeOutput(`Proje geçişi: ${e && e.message ? e.message : e}`);
+  }
 }
 
 async function refreshProgramlamaPatchFromServer() {
@@ -3508,6 +3569,7 @@ async function programlamaAtolyeRefreshRoot() {
     }
     void programlamaAtolyeShowBriefing();
     void refreshProgramlamaPatchFromServer();
+    void refreshProgramlamaProjectSelect();
   } catch (e) {
     el.codeFileTree.innerHTML =
       `<div class="code-file-placeholder">Kök liste okunamadı: ${esc(String(e && e.message ? e.message : e))}. Yerel sunucu (ilim-assistant) veya masaüstü köprüsü gerekir.</div>`;
@@ -5065,6 +5127,13 @@ function wireProgrammingWorkbench() {
   const btnScApi = document.getElementById("btn-scaffold-api");
   const btnScSite = document.getElementById("btn-scaffold-site");
   const btnScReact = document.getElementById("btn-scaffold-react");
+  if (el.progProjectSelect && el.progProjectSelect.dataset.wired !== "1") {
+    el.progProjectSelect.dataset.wired = "1";
+    el.progProjectSelect.addEventListener("change", () => {
+      const slug = String(el.progProjectSelect.value || "").trim();
+      if (slug) void switchProgramlamaProject(slug);
+    });
+  }
   if (btnScApi) {
     btnScApi.addEventListener("click", () => void runQuickScaffold("fastapi_api", "benim-api"));
   }

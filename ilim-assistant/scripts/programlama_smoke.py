@@ -545,6 +545,8 @@ def run_offline() -> int:
         "@@find test",
         "sembol health",
         "git dal",
+        "proje listesi",
+        "proje sec: demo",
         "proje tara",
         "npm install",
     ):
@@ -619,7 +621,7 @@ def run_live(base: str) -> int:
     try:
         h = get("/api/health")
         rev = str((h.get("build") or {}).get("rev") or "")
-        if "faz28" in rev or rev.endswith("-v40"):
+        if "faz29" in rev or rev.endswith("-v41"):
             _ok(f"build.rev={rev}")
         else:
             _fail("build.rev", rev)
@@ -648,6 +650,17 @@ def run_live(base: str) -> int:
             fails += 1
     except Exception as e:
         _fail("parity-report", str(e)[:120])
+        fails += 1
+
+    try:
+        wp = get(f"/api/programlama/workspace-projects?workspace_root={enc}")
+        if wp.get("ok") and isinstance(wp.get("projects"), list):
+            _ok("workspace-projects API (Faz 29)")
+        else:
+            _fail("workspace-projects")
+            fails += 1
+    except Exception as e:
+        _fail("workspace-projects", str(e)[:120])
         fails += 1
 
     try:
@@ -851,6 +864,44 @@ def run_parity(*, live_base: str | None = None) -> int:
     else:
         _fail("inline diff", str(payload)[:80])
         fails += 1
+
+    print("=== Faz 29 — coklu proje workspace ===")
+    from ilim_assistant.motorlar.programlama_faz29 import (
+        FAZ29_VERSION,
+        discover_projects,
+        switch_to_project,
+        wants_project_list,
+        wants_project_switch,
+    )
+
+    (WORKSPACE / "projects" / "smoke-faz29-a").mkdir(parents=True, exist_ok=True)
+    (WORKSPACE / "projects" / "smoke-faz29-a" / "main.py").write_text("a=1\n", encoding="utf-8")
+    (WORKSPACE / "projects" / "smoke-faz29-b").mkdir(parents=True, exist_ok=True)
+    (WORKSPACE / "projects" / "smoke-faz29-b" / "main.py").write_text("b=1\n", encoding="utf-8")
+    projs = discover_projects(WORKSPACE)
+    slugs = {p["slug"] for p in projs}
+    if "smoke-faz29-a" in slugs and "smoke-faz29-b" in slugs:
+        _ok(f"discover projects ({len(projs)})")
+    else:
+        _fail("discover projects", str(slugs))
+        fails += 1
+    sw = switch_to_project(WORKSPACE, "smoke-faz29-b")
+    if sw.get("ok") and sw.get("focus_rel"):
+        _ok("switch project + focus")
+    else:
+        _fail("switch project", str(sw.get("error")))
+        fails += 1
+    if wants_project_list("proje listesi"):
+        _ok("wants proje listesi")
+    else:
+        _fail("wants proje listesi")
+        fails += 1
+    if wants_project_switch("proje sec: smoke-faz29-a"):
+        _ok("wants proje sec")
+    else:
+        _fail("wants proje sec")
+        fails += 1
+    _ok(f"faz29 {FAZ29_VERSION}")
 
     print("=== Faz 28 — git branch ===")
     from ilim_assistant.motorlar.programlama_faz28 import (

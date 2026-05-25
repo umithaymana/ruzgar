@@ -5,7 +5,7 @@
 
 **Referans (Cursor / bu sohbet):** Plan → araçlarla oku → çok dosya değiştir → terminal/test → hata oku → tekrarla → kullanıcıya özet.
 
-**Mevcut build:** `2026-05-25-programlama-faz25-v39` (Faz 8–25 / Cursor yol haritası tamam)
+**Mevcut build:** `2026-05-25-programlama-faz29-v41` (Faz 8–29 / Cursor P2 çoklu proje)
 
 ---
 
@@ -89,6 +89,7 @@ Kullanıcı (programlama modu)
 | **26** | Programlama beyin zinciri | Tüm kod turlarında groq,kod öncelik | ✓ v40 |
 | **27** | Editör inline diff | Patch → eski/yeni yan yana | ✓ v40 |
 | **28** | Git branch | `git dal` · `yeni dal: x` | ✓ v40 |
+| **29** | Çoklu proje workspace | `proje listesi` · `proje sec: x` · atölye seçici | ✓ v41 |
 
 ---
 

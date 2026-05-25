@@ -415,6 +415,16 @@ def is_programlama_reserved_command(message: str) -> bool:
     except Exception:
         pass
     try:
+        from ilim_assistant.motorlar.programlama_faz29 import (
+            wants_project_list,
+            wants_project_switch,
+        )
+
+        if wants_project_list(message) or wants_project_switch(message):
+            return True
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_faz22 import wants_symbol_command
 
         if wants_symbol_command(message):
@@ -761,6 +771,22 @@ def maybe_programlama_instant_reply(
         )
         if faz28_hit:
             parts.append(faz28_hit)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz29 import maybe_instant_faz29
+
+        faz29_hit = maybe_instant_faz29(message, workspace_root)
+        if faz29_hit:
+            if isinstance(faz29_hit, dict):
+                t29 = str(faz29_hit.get("text") or "").strip()
+                if t29:
+                    parts.append(t29)
+                for key in ("focus_rel", "project_rel", "expand_tree"):
+                    if faz29_hit.get(key):
+                        focus_meta[key] = faz29_hit[key]
+            else:
+                parts.append(str(faz29_hit))
     except Exception:
         pass
     try:
@@ -1265,6 +1291,12 @@ def build_motor_context(
         from ilim_assistant.motorlar.programlama_faz28 import faz28_directive
 
         base += faz28_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz29 import faz29_directive
+
+        base += faz29_directive() + "\n"
     except Exception:
         pass
     try:

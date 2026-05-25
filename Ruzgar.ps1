@@ -268,7 +268,7 @@ if ($env:RUZGAR_OLLAMA_ONLY -eq "1") {
     Log "Bulut kapali - yerel Ollama"
 }
 
-$script:RuzgarExpectedBuildRev = "2026-05-25-programlama-faz28-v40"
+$script:RuzgarExpectedBuildRev = "2026-05-25-programlama-faz29-v41"
 $env:RUZGAR_EXPECTED_BUILD_REV = $script:RuzgarExpectedBuildRev
 
 function Get-RuzgarRemoteApiLine {

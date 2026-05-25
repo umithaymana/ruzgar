@@ -791,7 +791,7 @@ def health():
         },
         "super_brain": _super_brain_health_block(),
         "build": {
-            "rev": "2026-05-25-programlama-faz28-v40",
+            "rev": "2026-05-25-programlama-faz29-v41",
             "nebula_kitap": True,
             "fast_paths": os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
             "memory_first": True,
@@ -1008,6 +1008,38 @@ class ProgramlamaPatchBody(BaseModel):
     status: str | None = None
     mode: str = "accepted"
     run_verify: bool = True
+
+
+@app.get("/api/programlama/workspace-projects")
+def api_programlama_workspace_projects(workspace_root: str | None = None):
+    """Faz 29 — çoklu proje listesi + aktif proje."""
+    from ilim_assistant.motorlar.programlama_faz29 import (
+        FAZ29_VERSION,
+        get_workspace_projects_state,
+    )
+
+    root = (workspace_root or "").strip() or None
+    return get_workspace_projects_state(root) | {"version": FAZ29_VERSION}
+
+
+class ProgramlamaWorkspaceSwitchBody(BaseModel):
+    workspace_root: str | None = None
+    project_slug: str = ""
+
+
+@app.post("/api/programlama/workspace/switch")
+def api_programlama_workspace_switch(body: ProgramlamaWorkspaceSwitchBody):
+    """Faz 29 — aktif projeyi değiştir."""
+    from ilim_assistant.motorlar.programlama_faz29 import (
+        FAZ29_VERSION,
+        switch_to_project,
+    )
+
+    root = (body.workspace_root or "").strip() or None
+    res = switch_to_project(root, body.project_slug)
+    if not res.get("ok"):
+        raise HTTPException(status_code=404, detail=res.get("error") or "geçiş başarısız")
+    return {**res, "version": FAZ29_VERSION}
 
 
 @app.get("/api/programlama/workspace-index")

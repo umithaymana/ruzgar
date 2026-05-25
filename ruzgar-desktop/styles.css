@@ -3060,6 +3060,10 @@ body:not(.workbench-hizir-active) #workbench-hizir-tools,
   background: #252526;
   flex-wrap: wrap;
 }
+.prog-project-select {
+  max-width: 11rem;
+}
+
 .code-language {
   min-width: 118px;
 }
