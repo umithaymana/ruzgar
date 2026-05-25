@@ -1418,12 +1418,24 @@ def iter_code_agent_turn_events(
             )
 
             if task_mode_active():
-                if task_success_met(
-                    verify_ok=bool(verify.ok if verify else False),
-                    writes_ok=writes_ok,
-                ):
-                    success = True
-                    break
+                v_ok = bool(verify.ok if verify else False)
+                if task_success_met(verify_ok=v_ok, writes_ok=writes_ok):
+                    st47 = load_agent_state(workspace)
+                    strict_verify = bool(
+                        st47.get("proje_uret")
+                        and st47.get("require_verify_pass")
+                    )
+                    if strict_verify and not v_ok:
+                        yield {
+                            "type": "status",
+                            "text": (
+                                "Faz 47: pytest yeşil olmadan proje üretimi "
+                                "bitmiyor — düzeltme turu…"
+                            ),
+                        }
+                    else:
+                        success = True
+                        break
             elif ok:
                 success = True
                 break

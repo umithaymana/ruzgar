@@ -623,7 +623,7 @@ def run_live(base: str) -> int:
     try:
         h = get("/api/health")
         rev = str((h.get("build") or {}).get("rev") or "")
-        if "faz46" in rev or rev.endswith("-v57"):
+        if "faz47" in rev or "faz46" in rev or rev.endswith("-v58"):
             _ok(f"build.rev={rev}")
         else:
             _fail("build.rev", rev)
@@ -655,6 +655,17 @@ def run_live(base: str) -> int:
             _ok(f"cursor-seviye API score={cs.get('score')}")
         else:
             _fail("cursor-seviye")
+            fails += 1
+        pu_name = f"smoke-live-pu-{int(time.time()) % 100000}"
+        pu = get(
+            f"/api/programlama/proje-uret?workspace_root={enc}"
+            f"&template_id=fastapi_api&project_name={pu_name}"
+            f"&goal=health+version+pytest"
+        )
+        if pu.get("ok") and pu.get("data", {}).get("scaffold_ok"):
+            _ok(f"proje-uret API ({pu_name})")
+        else:
+            _fail("proje-uret API", str(pu)[:80])
             fails += 1
     except Exception as e:
         _fail("parity-report", str(e)[:120])
@@ -946,6 +957,68 @@ def run_parity(*, live_base: str | None = None) -> int:
         _fail("cursor score", str(report.score))
         fails += 1
     _ok(f"faz46 {CURSOR_PARITY_VERSION}")
+
+    print("=== Faz 47 — bağımsız proje üret ===")
+    from ilim_assistant.motorlar.programlama_faz47 import (
+        FAZ47_VERSION,
+        ProjeUretSpec,
+        parse_proje_uret_command,
+        proje_uret_enabled,
+        run_proje_uret_prepare,
+        should_run_proje_uret_pipeline,
+        wants_proje_uret,
+    )
+
+    if proje_uret_enabled():
+        _ok("proje uret on")
+    else:
+        _fail("proje uret")
+        fails += 1
+    spec_parsed = parse_proje_uret_command(
+        "proje üret: fastapi_api smoke-faz47-api health version pytest"
+    )
+    if spec_parsed and spec_parsed.template_id == "fastapi_api":
+        _ok("parse proje uret")
+    else:
+        _fail("parse proje uret")
+        fails += 1
+    if wants_proje_uret("sıfırdan fastapi yap smoke-faz47-nat test geçir"):
+        _ok("wants proje uret natural")
+    else:
+        _fail("wants proje uret natural")
+        fails += 1
+    if should_run_proje_uret_pipeline(
+        "proje üret: fastapi_api smoke-faz47-run pytest",
+        "programlama",
+        workspace_root=WORKSPACE,
+    ):
+        _ok("should_run proje uret pipeline")
+    else:
+        _fail("should_run proje uret")
+        fails += 1
+    pname47 = f"smoke-faz47-{int(time.time()) % 100000}"
+    spec47 = ProjeUretSpec(
+        template_id="fastapi_api",
+        project_name=pname47,
+        goal="health version pytest geçir",
+    )
+    rep47 = run_proje_uret_prepare(WORKSPACE, spec47)
+    if rep47.scaffold_ok:
+        _ok(f"proje uret scaffold ({rep47.elapsed_sec:.1f}s)")
+    else:
+        _fail("proje uret scaffold", rep47.detail[:80])
+        fails += 1
+    if rep47.verify_ok:
+        _ok("proje uret verify pytest")
+    else:
+        _fail("proje uret verify", rep47.detail[:80])
+        fails += 1
+    if rep47.ready_without_agent:
+        _ok("proje uret cursor-free (ajan gerekmedi)")
+    else:
+        _fail("ready_without_agent", rep47.detail[:80])
+        fails += 1
+    _ok(f"faz47 {FAZ47_VERSION}")
 
     print("=== Faz 45 — editör v2 ===")
     from ilim_assistant.motorlar.programlama_faz45 import (

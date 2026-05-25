@@ -1,7 +1,7 @@
 # Rüzgar → Cursor seviyesi — Kapanış planı (Faz 39+)
 
 > **Hedef:** Programlama motorunda **~85/100** (Cursor referans 100).  
-> **Bugün:** ~**85/100** (build `faz46-v57`, offline kilidi).  
+> **Bugün:** ~**85/100** (build `faz47-v58`, offline kilidi + bağımsız proje üret).  
 > **İlke:** Her faz = ölçülebilir çıktı + smoke yeşil + gerçek görevde skor artışı.
 
 **Referans karşılaştırma:** [PROGRAMMING_MOTOR_CURSOR_PLAN.md](PROGRAMMING_MOTOR_CURSOR_PLAN.md) · Üstayol: [PROGRAMMING_MOTOR_USTAYOL.md](PROGRAMMING_MOTOR_USTAYOL.md)
@@ -185,7 +185,8 @@ $env:RUZGAR_FAZ39 = "1"
 | **Faz 44** bağlam v3 | ✓ v55 |
 | **Faz 45** editör cila | ✓ v56 |
 | **Faz 46** Cursor seviye kilidi | ✓ v57 |
+| **Faz 47** Bağımsız proje üret | ✓ v58 |
 
 ---
 
-*Ümit & Gökçenur — Cursor seviyesi kapanış yolu (Faz 39–46) — tamamlandı*
+*Ümit & Gökçenur — Cursor seviyesi + bağımsız üretim (Faz 39–47)*

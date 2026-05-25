@@ -368,6 +368,13 @@ def is_programlama_reserved_command(message: str) -> bool:
     except Exception:
         pass
     try:
+        from ilim_assistant.motorlar.programlama_faz47 import wants_proje_uret
+
+        if wants_proje_uret(message):
+            return True
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_faz7 import wants_file_help, wants_project_run
 
         if wants_file_help(message) or wants_project_run(message):
@@ -1550,6 +1557,12 @@ def build_motor_context(
         from ilim_assistant.motorlar.programlama_faz46 import faz46_directive
 
         base += faz46_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz47 import faz47_directive
+
+        base += faz47_directive() + "\n"
     except Exception:
         pass
     try:

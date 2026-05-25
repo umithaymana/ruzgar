@@ -791,7 +791,7 @@ def health():
         },
         "super_brain": _super_brain_health_block(),
         "build": {
-            "rev": "2026-05-25-programlama-faz46-v57",
+            "rev": "2026-05-25-programlama-faz47-v58",
             "nebula_kitap": True,
             "fast_paths": os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
             "memory_first": True,
@@ -1485,6 +1485,40 @@ def api_programlama_parity_report(workspace_root: str | None = None):
         "report": format_parity_report(report),
         "data": report.to_dict(),
         "version": FAZ25_VERSION,
+    }
+
+
+@app.get("/api/programlama/proje-uret")
+def api_programlama_proje_uret(
+    template_id: str = "fastapi_api",
+    project_name: str = "",
+    goal: str = "",
+    workspace_root: str | None = None,
+):
+    """Faz 47 — bağımsız proje üret (scaffold + offline bootstrap + verify)."""
+    from ilim_assistant.motorlar.programlama_faz47 import (
+        FAZ47_VERSION,
+        ProjeUretSpec,
+        format_proje_uret_report,
+        run_proje_uret_prepare,
+    )
+
+    name = (project_name or "").strip() or f"api-{int(__import__('time').time()) % 100000}"
+    spec = ProjeUretSpec(
+        template_id=(template_id or "fastapi_api").strip(),
+        project_name=name,
+        goal=(goal or "").strip()
+        or "health version pytest geçir",
+    )
+    root = (workspace_root or "").strip() or None
+    rep = run_proje_uret_prepare(root, spec)
+    return {
+        "ok": rep.ok,
+        "ready_without_agent": rep.ready_without_agent,
+        "agent_required": rep.agent_required,
+        "report": format_proje_uret_report(rep),
+        "data": rep.to_dict(),
+        "version": FAZ47_VERSION,
     }
 
 
@@ -3489,6 +3523,46 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
     except Exception:
         pass
     if mode_norm == "programlama":
+        try:
+            from ilim_assistant.motorlar.programlama_faz47 import (
+                iter_proje_uret_events,
+                should_run_proje_uret_pipeline,
+            )
+
+            if should_run_proje_uret_pipeline(
+                msg,
+                mode_norm,
+                workspace_root=req.workspace_root,
+                active_file=getattr(req, "programlama_active_file", None),
+            ):
+                yield from iter_proje_uret_events(
+                    message=msg,
+                    req=req,
+                    system=system,
+                    user_payload=user_payload,
+                    model=model,
+                    prior=prior,
+                    mode_norm=mode_norm,
+                    coding=coding,
+                    turn_plan=turn_plan,
+                    hits=hits,
+                    new_wake=new_wake,
+                    orch=orch,
+                    delegated_from_genel=_delegated_from_genel,
+                )
+                return
+        except Exception as p47_exc:
+            import traceback
+
+            tb = traceback.format_exc(limit=6)
+            yield {
+                "type": "error",
+                "text": (
+                    "Bağımsız proje üretimi (Faz 47) hata verdi.\n"
+                    f"{str(p47_exc)[:300]}\n{tb[-500:]}"
+                ),
+            }
+            return
         try:
             from ilim_assistant.motorlar.programlama_faz20 import (
                 iter_unified_programming_agent_events,

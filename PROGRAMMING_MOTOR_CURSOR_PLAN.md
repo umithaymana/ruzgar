@@ -5,7 +5,7 @@
 
 **Referans (Cursor / bu sohbet):** Plan → araçlarla oku → çok dosya değiştir → terminal/test → hata oku → tekrarla → kullanıcıya özet.
 
-**Mevcut build:** `2026-05-25-programlama-faz46-v57` (Faz 8–46 / Cursor seviye kilidi)
+**Mevcut build:** `2026-05-25-programlama-faz47-v58` (Faz 8–47 / bağımsız proje üret)
 
 ---
 
@@ -107,6 +107,7 @@ Kullanıcı (programlama modu)
 | **44** | Bağlam v3 | repo harita · @dosya · ilgili dosyalar | ✓ v55 |
 | **45** | Editör cila | patch sekmeleri · diff v2 · birleşik uygula | ✓ v56 |
 | **46** | Cursor seviye kilidi | 3 senaryo · skor ≥85 · ruzgar_cursor_seviye_sonuc.json | ✓ v57 |
+| **47** | Bağımsız proje üret | `proje üret:` scaffold+pytest; Cursor gerekmez (minimal) | ✓ v58 |
 
 **Kapanış yolu (Faz 39–46):** [PROGRAMMING_MOTOR_CURSOR_SEVIYE_PLAN.md](PROGRAMMING_MOTOR_CURSOR_SEVIYE_PLAN.md)
 

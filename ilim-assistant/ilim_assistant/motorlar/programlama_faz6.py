@@ -596,8 +596,14 @@ def format_scaffold_report(result: dict[str, Any]) -> str:
 
 
 def scaffold_directive() -> str:
-    return (
+    base = (
         "[ŞABLON PROJELER — Faz 6]\n"
         "Yeni proje: «şablon listele» · «şablon oluştur: fastapi_api ad»\n"
         f"Çıktı dizini: `{_scaffold_base_dir()}/<ad>/` — mevcut dolu dizine yazılmaz.\n"
     )
+    try:
+        from ilim_assistant.motorlar.programlama_faz47 import faz47_directive
+
+        return base + "\n" + faz47_directive()
+    except Exception:
+        return base
