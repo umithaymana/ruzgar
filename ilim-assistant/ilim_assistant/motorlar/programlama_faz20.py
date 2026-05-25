@@ -325,7 +325,14 @@ def run_tools_from_reply(
 
 
 def augment_agent_system(system: str) -> str:
-    return (system or "").rstrip() + "\n\n" + faz20_tool_directive() + "\n"
+    out = (system or "").rstrip() + "\n\n" + faz20_tool_directive() + "\n"
+    try:
+        from ilim_assistant.motorlar.programlama_faz34 import augment_agent_system as _f34
+
+        out = _f34(out)
+    except Exception:
+        pass
+    return out
 
 
 def iter_unified_programming_agent_events(
@@ -446,6 +453,21 @@ def iter_unified_programming_agent_events(
                     req.workspace_root,
                     scope_rel=task.scope_rel,
                 )
+                try:
+                    from ilim_assistant.motorlar.programlama_faz34 import apply_turn_tool_first
+
+                    tool_results, faz34_block, _ = apply_turn_tool_first(
+                        tool_results,
+                        full,
+                        req.workspace_root,
+                        task.scope_rel,
+                        task.goal,
+                        1,
+                    )
+                    if faz34_block:
+                        tool_block = (tool_block or "").rstrip() + "\n\n" + faz34_block
+                except Exception:
+                    pass
                 if tool_block and tool_results:
                     extra_tools = sum(
                         1 for r in tool_results if r.get("tool") == "write" and r.get("ok")

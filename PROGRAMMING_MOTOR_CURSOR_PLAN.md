@@ -5,7 +5,7 @@
 
 **Referans (Cursor / bu sohbet):** Plan → araçlarla oku → çok dosya değiştir → terminal/test → hata oku → tekrarla → kullanıcıya özet.
 
-**Mevcut build:** `2026-05-25-programlama-faz33-v45` (Faz 8–33 / doğal cümle = ajan)
+**Mevcut build:** `2026-05-25-programlama-faz34-v46` (Faz 8–34 / araç-öncelik protokolü)
 
 ---
 
@@ -94,6 +94,7 @@ Kullanıcı (programlama modu)
 | **31** | Git PR köprüsü | `pr durum` · `pr gönder` · `pr oluştur:` · `gh` | ✓ v43 |
 | **32** | Görev sonu Git akışı | Otomatik özet · `iş akışı` · `iş bitir pr` | ✓ v44 |
 | **33** | Doğal cümle = ajan | `görev:` şart değil · aktif proje + iş fiili | ✓ v45 |
+| **34** | Araç-öncelik protokolü | read→write→verify · otomatik keşif/doğrulama | ✓ v46 |
 
 ---
 

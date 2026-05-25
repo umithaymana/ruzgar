@@ -918,6 +918,12 @@ def iter_code_agent_turn_events(
     }
 
     agent_system = build_compact_agent_system(workspace, task)
+    try:
+        from ilim_assistant.motorlar.programlama_faz34 import augment_agent_system
+
+        agent_system = augment_agent_system(agent_system)
+    except Exception:
+        pass
     brain_sel = select_brain_chain(
         message=message,
         mode_norm=mode_norm,
@@ -983,6 +989,14 @@ def iter_code_agent_turn_events(
             max_turns=max_turns,
             failure_snippet=last_fail_snippet,
         )
+        try:
+            from ilim_assistant.motorlar.programlama_faz34 import augment_turn_user_message
+
+            turn_user = augment_turn_user_message(
+                turn_user, turn=turn, goal=task.goal
+            )
+        except Exception:
+            pass
         round_payload = turn_user
 
         round_body = ""
@@ -1007,6 +1021,7 @@ def iter_code_agent_turn_events(
         if step_tracker is not None:
             yield step_tracker.on_llm_done(turn, llm_body)
         _tool_res: list = []
+        _faz34_violations: list[str] = []
         try:
             from ilim_assistant.motorlar.programlama_faz20 import run_tools_from_reply
 
@@ -1025,6 +1040,30 @@ def iter_code_agent_turn_events(
                 yield step_tracker.on_tools(turn, len(_tool_res))
         except Exception:
             pass
+        try:
+            from ilim_assistant.motorlar.programlama_faz34 import (
+                apply_turn_tool_first,
+                build_tool_first_nudge,
+            )
+
+            _tool_res, _faz34_block, _faz34_violations = apply_turn_tool_first(
+                _tool_res,
+                llm_body,
+                workspace,
+                task.scope_rel,
+                task.goal,
+                turn,
+            )
+            if _faz34_block:
+                round_body = (round_body or llm_body).rstrip() + "\n\n" + _faz34_block
+                yield {
+                    "type": "status",
+                    "text": f"Tur {turn}: Faz 34 araç-öncelik tamamlandı.",
+                }
+            if step_tracker is not None and _tool_res:
+                yield step_tracker.on_tools(turn, len(_tool_res))
+        except Exception:
+            _faz34_violations = []
         reply_body += round_body
         if llm_body.strip():
             yield {"type": "token", "text": llm_body}
@@ -1170,6 +1209,20 @@ def iter_code_agent_turn_events(
             max_turns=max_turns,
             failure_snippet=snippet,
         )
+        try:
+            from ilim_assistant.motorlar.programlama_faz34 import (
+                augment_turn_user_message,
+                build_tool_first_nudge,
+            )
+
+            fail_msg = augment_turn_user_message(
+                fail_msg, turn=turn + 1, goal=task.goal
+            )
+            nudge = build_tool_first_nudge(_faz34_violations, turn + 1)
+            if nudge:
+                fail_msg = fail_msg.rstrip() + "\n\n" + nudge
+        except Exception:
+            pass
         active_prior = list(active_prior) + [
             {"role": "assistant", "content": round_body},
             {"role": "user", "content": fail_msg},

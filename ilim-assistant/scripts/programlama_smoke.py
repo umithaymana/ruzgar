@@ -623,7 +623,7 @@ def run_live(base: str) -> int:
     try:
         h = get("/api/health")
         rev = str((h.get("build") or {}).get("rev") or "")
-        if "faz33" in rev or rev.endswith("-v45"):
+        if "faz34" in rev or rev.endswith("-v46"):
             _ok(f"build.rev={rev}")
         else:
             _fail("build.rev", rev)
@@ -877,6 +877,57 @@ def run_parity(*, live_base: str | None = None) -> int:
     else:
         _fail("inline diff", str(payload)[:80])
         fails += 1
+
+    print("=== Faz 34 — arac oncelik protokolu ===")
+    from ilim_assistant.motorlar.programlama_faz34 import (
+        FAZ34_VERSION,
+        apply_turn_tool_first,
+        compliance_violations,
+        discovery_tool_specs,
+        tool_first_enabled,
+        wants_tool_protocol_status,
+    )
+
+    if tool_first_enabled():
+        _ok("tool_first enabled")
+    else:
+        _fail("tool_first enabled")
+        fails += 1
+    specs = discovery_tool_specs(
+        WORKSPACE, "projects/benim-api", goal="health version pytest"
+    )
+    if specs and any(s.get("tool") == "read" for s in specs):
+        _ok(f"discovery specs ({len(specs)})")
+    else:
+        _fail("discovery specs", str(specs))
+        fails += 1
+    viol = compliance_violations(
+        [{"tool": "write", "ok": True}], turn=1, goal="pytest gecir"
+    )
+    if "write_without_discovery" in viol and "write_without_verify" in viol:
+        _ok("compliance violations")
+    else:
+        _fail("compliance", str(viol))
+        fails += 1
+    if wants_tool_protocol_status("arac sira durum"):
+        _ok("wants arac sira")
+    else:
+        _fail("wants arac sira")
+        fails += 1
+    _res, _block, _v = apply_turn_tool_first(
+        [],
+        '```ruzgar-tool\n{"tool":"write","path":"projects/benim-api/x.py","content":"# t"}\n```',
+        WORKSPACE,
+        "projects/benim-api",
+        "pytest gecir",
+        1,
+    )
+    if _res and len(_res) >= 1:
+        _ok(f"apply_turn_tool_first ({len(_res)} arac)")
+    else:
+        _fail("apply_turn_tool_first", str(len(_res)))
+        fails += 1
+    _ok(f"faz34 {FAZ34_VERSION}")
 
     print("=== Faz 33 — dogal cumle = ajan ===")
     from ilim_assistant.motorlar.programlama_faz33 import (
