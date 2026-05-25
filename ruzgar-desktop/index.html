@@ -112,7 +112,7 @@
             <span class="motor-glyph">{}</span>
             <span class="motor-text">
               <span class="motor-name">PROGRAMLAMA MOTORU</span>
-              <span class="motor-tag">Faz 7 · çalıştır & rehber</span>
+              <span class="motor-tag">Faz 14 · otonom görev</span>
             </span>
           </button>
         </div>
@@ -883,9 +883,9 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
 
           <section class="motor-page" id="page-programlama" hidden>
             <div class="atelier-info-strip">
-              <span class="phase-badge" id="programlama-phase-badge">Faz 6</span>
+              <span class="phase-badge" id="programlama-phase-badge">Faz 20</span>
               <span class="atelier-promise" id="programlama-phase-promise">
-                <strong>Programlama Atölyesi (Faz 6)</strong> — şablon projeler, oturum bağlamı, proje ağacı, <strong>@@write</strong> + pytest,
+                <strong>Programlama Atölyesi (Faz 20)</strong> — Cursor yolu: birleşik ajan + ruzgar-tool, git, patch, terminal,
                 <strong>kendini tara</strong>, <strong>güvenlik tara</strong>, sahip kilidi «rüzgar ben ümit».
                 Sunucu sürümü: <span id="programlama-build-rev">bağlanıyor…</span>
               </span>
@@ -942,9 +942,28 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
                 ></textarea>
                 <div id="programlama-patch-strip" class="programlama-patch-strip" hidden>
                   <div class="programlama-patch-head">
-                    <strong>Patch (Faz 10)</strong>
+                    <strong>Patch (Faz 16)</strong>
+                    <span id="programlama-patch-counts" class="programlama-patch-counts"></span>
+                    <button type="button" id="btn-patch-accept-all" class="btn-secondary btn-compact">
+                      Tümünü kabul
+                    </button>
                     <button type="button" id="btn-patch-apply-pending" class="btn-secondary btn-compact">
-                      Bekleyeni uygula
+                      Kabul edilenleri uygula
+                    </button>
+                    <button type="button" id="btn-patch-apply-all" class="btn-secondary btn-compact">
+                      Bekleyenleri uygula
+                    </button>
+                    <button type="button" id="btn-patch-rollback" class="btn-secondary btn-compact">
+                      Geri al (.bak)
+                    </button>
+                    <button type="button" id="btn-git-status" class="btn-secondary btn-compact" title="Faz 17">
+                      Git durum
+                    </button>
+                    <button type="button" id="btn-git-commit-suggest" class="btn-secondary btn-compact" title="Faz 17">
+                      Commit öner
+                    </button>
+                    <button type="button" id="btn-git-commit-apply" class="btn-secondary btn-compact" title="Faz 17">
+                      Commit onayla
                     </button>
                   </div>
                   <ul id="programlama-patch-list" class="programlama-patch-list"></ul>

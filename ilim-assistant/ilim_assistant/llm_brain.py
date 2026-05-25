@@ -54,6 +54,70 @@ def free_brain_enabled() -> bool:
     )
 
 
+def _is_local_ollama_endpoint(ep: BrainEndpoint) -> bool:
+    """Groq OpenAI-uyumlu uç nokta — yerel Ollama sayılmaz."""
+    if ep.profile_id == "groq":
+        return False
+    if ep.provider != "ollama":
+        return False
+    base = (ep.base_url or "").lower()
+    if "groq.com" in base or "openai.azure" in base:
+        return False
+    return True
+
+
+def _is_cloud_rate_limit_error(text: str) -> bool:
+    low = (text or "").lower()
+    if any(
+        k in low
+        for k in (
+            "rate limit",
+            "rate_limit",
+            "quota",
+            "kota",
+            "429",
+            "too many requests",
+            "resource exhausted",
+        )
+    ):
+        return True
+    try:
+        from ilim_assistant.llm_gemini import is_gemini_quota_or_rate_error
+
+        if is_gemini_quota_or_rate_error(text):
+            return True
+    except Exception:
+        pass
+    return False
+
+
+def _programlama_chain_ids() -> list[str]:
+    """Programlama / kod: gemini→groq→kod; kota soğukken bulut atlanır."""
+    custom = (os.environ.get("RUZGAR_BRAIN_FALLBACK_CHAIN") or "").strip()
+    if custom:
+        ids = [x.strip() for x in custom.split(",") if x.strip()]
+    else:
+        ids = ["gemini", "groq", "kod", "denge"]
+    try:
+        from ilim_assistant.gemini_quota_guard import gemini_cooldown_active
+
+        if gemini_cooldown_active():
+            rest = [x for x in ids if x != "gemini"]
+            ids = ["groq", "kod", "denge"] + [x for x in rest if x not in ("groq", "kod", "denge")]
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.llm_ollama import ollama_reachable
+
+        if ollama_reachable():
+            for fallback in ("kod", "denge"):
+                if fallback not in ids:
+                    ids.append(fallback)
+    except Exception:
+        pass
+    return ids
+
+
 def _default_free_chain_ids() -> list[str]:
     """Yerel Ollama birincil; bulut isteğe bağlı."""
     try:
@@ -414,10 +478,10 @@ def select_brain_chain(
     chain_ids: list[str] = []
     primary = _plan_primary(question_plan)
 
-    if free_brain_enabled():
+    if coding_mode or mode_norm == "programlama":
+        chain_ids = _programlama_chain_ids()
+    elif free_brain_enabled():
         chain_ids = _default_free_chain_ids()
-    elif coding_mode or mode_norm == "programlama":
-        chain_ids = ["kod", "gemini", "denge", "hizli"]
     elif mode_norm in ("hizli",):
         chain_ids = ["hizli", "denge", "gemini"]
     elif primary in ("bilgi", "bilim", "dilbilgisi") or _message_needs_deep_brain(message):
@@ -472,9 +536,13 @@ def select_brain_chain(
         ep = profiles.get(pid)
         if ep is None:
             continue
-        if _no_local_ollama and ep.provider == "ollama":
+        if not _is_local_ollama_endpoint(ep):
+            seen.add(pid)
+            chain.append(ep)
             continue
-        if ep.provider == "ollama" and not ollama_ok and gemini_configured():
+        if _no_local_ollama:
+            continue
+        if not ollama_ok:
             continue
         seen.add(pid)
         chain.append(ep)
@@ -638,6 +706,7 @@ def stream_chat_with_brain(
     last_err = ""
     last_provider = ""
     any_content = False
+    attempted: list[str] = []
     try:
         from ilim_assistant.ruzgar_umed_cevap_emri import (
             remaining_sec,
@@ -656,7 +725,8 @@ def stream_chat_with_brain(
     for ep in sel.chain:
         if _umed and remaining_sec() < 0.8:
             break
-        last_provider = ep.provider
+        last_provider = ep.profile_id
+        attempted.append(ep.profile_id)
         try:
             got_content = False
             for piece in _stream_endpoint(ep, system, user, prior_messages):
@@ -666,6 +736,16 @@ def stream_chat_with_brain(
                     break
                 if not got_content and _looks_like_error_chunk(piece):
                     last_err = piece.strip()
+                    if _is_cloud_rate_limit_error(last_err):
+                        if ep.profile_id == "gemini":
+                            try:
+                                from ilim_assistant.gemini_quota_guard import (
+                                    mark_gemini_quota_hit,
+                                )
+
+                                mark_gemini_quota_hit()
+                            except Exception:
+                                pass
                     break
                 got_content = True
                 any_content = True
@@ -692,9 +772,16 @@ def stream_chat_with_brain(
         return
 
     if not any_content and (coding_mode or mode_norm == "programlama"):
+        chain_hint = ",".join(attempted) or ",".join(
+            e.profile_id for e in sel.chain[:6]
+        ) or "?"
+        err_hint = f" Son hata ({last_provider}): {last_err[:240]}" if last_err else ""
         yield (
-            "Ümit abi, Programlama motoru şu an yanıt üretemedi (Gemini/Ollama/Groq). "
-            "«kendini tara» veya «güvenlik tara» dene; kod sorusuysa kısalt veya traceback yapıştır."
+            "Ümit abi, Programlama motoru şu an yanıt üretemedi "
+            f"(denenen: {chain_hint}). "
+            "Sıra: Gemini → Groq → yerel Ollama (kod/denge). "
+            "Kontrol: `RUZGAR_BRAIN.env`, `ollama serve`, `Ruzgar.ps1 -ForceRestart`.\n"
+            f"{err_hint}"
         )
         return
 

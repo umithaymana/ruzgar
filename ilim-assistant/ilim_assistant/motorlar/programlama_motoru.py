@@ -404,6 +404,83 @@ def is_programlama_reserved_command(message: str) -> bool:
             return True
     except Exception:
         pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz22 import wants_symbol_command
+
+        if wants_symbol_command(message):
+            return True
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz13 import (
+            wants_find_command,
+            wants_project_scan_instant,
+        )
+
+        if wants_find_command(message) or wants_project_scan_instant(message):
+            return True
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz14 import (
+            wants_code_agent_status,
+            wants_code_agent_stop,
+        )
+
+        if wants_code_agent_stop(message) or wants_code_agent_status(message):
+            return True
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz19 import parse_task_aliases
+
+        if parse_task_aliases(message):
+            return True
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz15 import wants_terminal_command
+
+        if wants_terminal_command(message):
+            return True
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz16 import (
+            wants_patch_accept,
+            wants_patch_list,
+            wants_patch_reject,
+            wants_patch_rollback,
+        )
+
+        if (
+            wants_patch_accept(message)
+            or wants_patch_reject(message)
+            or wants_patch_rollback(message)
+            or wants_patch_list(message)
+        ):
+            return True
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz17 import (
+            wants_commit_apply,
+            wants_commit_cancel,
+            wants_commit_suggest,
+            wants_git_diff,
+            wants_git_status,
+        )
+
+        if (
+            wants_git_status(message)
+            or wants_git_diff(message)
+            or wants_commit_suggest(message)
+            or wants_commit_apply(message)
+            or wants_commit_cancel(message)
+        ):
+            return True
+    except Exception:
+        pass
     low8 = (message or "").lower()
     if "api durum" in low8 or "sunucu durum" in low8:
         return True
@@ -532,6 +609,28 @@ def maybe_programlama_instant_reply(
             )
         elif wants_project_summary(message):
             parts.append(format_project_summary_report(workspace_root))
+            try:
+                from ilim_assistant.motorlar.programlama_faz13 import (
+                    build_project_summary_block,
+                    format_scan_report,
+                    resolve_scope_rel,
+                    scan_project_files,
+                )
+
+                scope = resolve_scope_rel(
+                    workspace_root, active_file=active_file, message=message
+                )
+                if scope:
+                    scan = scan_project_files(workspace_root, scope)
+                    if scan.get("ok"):
+                        parts.append(format_scan_report(scan))
+                    block = build_project_summary_block(
+                        workspace_root, scope_rel=scope
+                    ).strip()
+                    if block:
+                        parts.append(f"```\n{block}\n```")
+            except Exception:
+                pass
         elif maybe_apply_message_project_patch(message, workspace_root):
             parts.append(format_project_summary_report(workspace_root))
     except Exception:
@@ -596,6 +695,74 @@ def maybe_programlama_instant_reply(
             )
             if guide:
                 parts.append(guide)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz17 import maybe_instant_faz17
+
+        faz17_hit = maybe_instant_faz17(
+            message,
+            workspace_root,
+            active_file=active_file,
+        )
+        if faz17_hit:
+            parts.append(faz17_hit)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz16 import maybe_instant_faz16
+
+        faz16_hit = maybe_instant_faz16(
+            message,
+            workspace_root,
+            active_file=active_file,
+        )
+        if faz16_hit:
+            parts.append(faz16_hit)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz15 import maybe_instant_faz15
+
+        faz15_hit = maybe_instant_faz15(
+            message,
+            workspace_root,
+            active_file=active_file,
+        )
+        if faz15_hit:
+            parts.append(faz15_hit)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz14 import maybe_instant_faz14
+
+        faz14_hit = maybe_instant_faz14(message, workspace_root)
+        if faz14_hit:
+            parts.append(faz14_hit)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz22 import maybe_instant_faz22
+
+        faz22_hit = maybe_instant_faz22(
+            message,
+            workspace_root,
+            active_file=active_file,
+        )
+        if faz22_hit:
+            parts.append(faz22_hit)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz13 import maybe_instant_faz13
+
+        faz13_hit = maybe_instant_faz13(
+            message,
+            workspace_root,
+            active_file=active_file,
+        )
+        if faz13_hit:
+            parts.append(faz13_hit)
     except Exception:
         pass
     try:
@@ -774,6 +941,14 @@ def run_tools_for_message(
                 read_paths.append(rel)
     except Exception:
         pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz13 import expand_find_paths
+
+        for rel in expand_find_paths(message, workspace_root):
+            if rel not in read_paths:
+                read_paths.append(rel)
+    except Exception:
+        pass
     for rel in read_paths:
         rep = tools.read(rel)
         summary.reads.append(rep)
@@ -804,6 +979,28 @@ def run_tools_for_message(
                 summary.execs.append(tools.run_dev_preset("pytest_run"))
             if _wants_smoke_module(message):
                 summary.execs.append(tools.run_dev_preset("python_module_run"))
+
+    try:
+        from ilim_assistant.motorlar.programlama_faz15 import (
+            parse_terminal_preset,
+            run_terminal_preset,
+        )
+
+        pid = parse_terminal_preset(message)
+        if pid:
+            tres = run_terminal_preset(workspace_root, pid, message=message)
+            if tres.get("error") and not tres.get("output"):
+                blocks.append(f"=== Terminal [{pid}] ===\n[HATA] {tres.get('error')}")
+            else:
+                code = int(tres.get("exit_code") or 1)
+                status = "OK" if code == 0 else "HATA"
+                scope = tres.get("scope_rel") or "?"
+                blocks.append(
+                    f"=== Terminal [{tres.get('label') or pid}] @ {scope} "
+                    f"[{status} exit={code}] ===\n{str(tres.get('output') or '')}"
+                )
+    except Exception:
+        pass
 
     for ex in summary.execs:
         status = "OK" if ex.ok else "HATA"
@@ -853,12 +1050,31 @@ def build_motor_context(
     *,
     workspace_root: str | Path | None = None,
     run_presets: bool = False,
+    active_file: str | None = None,
+    editor_snippet: str | None = None,
 ) -> str:
     """Programlama modu LLM bağlamı: talimat + araç çıktıları (okuma/yazma/test).
 
     `run_presets=False` (varsayılan): tur hazırlığında pytest/ruff çalıştırma — ağır süreç
     yalnızca otonom debug döngüsünde (`apply_assistant_reply_tools`) yapılır.
     """
+    try:
+        from ilim_assistant.motorlar.programlama_faz21 import (
+            build_light_programming_context,
+            light_context_enabled,
+        )
+
+        if light_context_enabled():
+            return build_light_programming_context(
+                message,
+                workspace_root=workspace_root,
+                active_file=active_file,
+                editor_snippet=editor_snippet,
+                include_tools=True,
+            )
+    except Exception:
+        pass
+
     from ilim_assistant.dinamit_gelisme import dinamit_heartbeat
 
     prompt = (message or "").strip()
@@ -928,6 +1144,72 @@ def build_motor_context(
         if idx:
             base += f"\n[WORKSPACE İNDEKS — Faz 10]\n{idx}\n"
     except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz13 import (
+            build_project_summary_block,
+            faz13_directive,
+            resolve_scope_rel as resolve_scope_faz13,
+        )
+
+        base += faz13_directive() + "\n"
+        scope13 = resolve_scope_faz13(workspace_root, message=prompt)
+        summary13 = build_project_summary_block(
+            workspace_root, scope_rel=scope13
+        ).strip()
+        if summary13:
+            base += f"\n{summary13}\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz14 import faz14_directive
+
+        base += faz14_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz15 import faz15_directive
+
+        base += faz15_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz16 import faz16_directive
+
+        base += faz16_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz17 import faz17_directive
+
+        base += faz17_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz18 import faz18_directive
+
+        base += faz18_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz19 import faz19_directive
+
+        base += faz19_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz20 import faz20_tool_directive
+
+        base += faz20_tool_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz22 import faz22_directive
+
+        base += faz22_directive() + "\n"
+    except Exception:
+        pass
+    try:
         if os.environ.get("RUZGAR_PROG_REPO_MAP", "1").strip().lower() not in (
             "0",
             "false",
@@ -936,6 +1218,8 @@ def build_motor_context(
             rmap = build_repo_map(workspace_root).strip()
             if rmap:
                 base += f"\n[PROJE HARİTASI]\n{rmap}\n"
+    except Exception:
+        pass
     base += (
         f"\n[PROGRAMLAMA MOTORU — {MIMAR_IMZA}]\n"
         "Bu modda cevaplar teknik, doğru ve adım adım uygulanabilir olsun. "

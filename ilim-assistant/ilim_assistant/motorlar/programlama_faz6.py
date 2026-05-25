@@ -129,7 +129,28 @@ if __name__ == "__main__":
     if t == "fastapi_api":
         mod = slug.replace("-", "_")
         return {
-            f"{base}/requirements.txt": "fastapi>=0.110\nuvicorn[standard]>=0.27\n",
+            f"{base}/requirements.txt": "fastapi>=0.110\nuvicorn[standard]>=0.27\nhttpx>=0.27\n",
+            f"{base}/tests/test_health.py": f'''"""pytest — {title} health uçları."""
+from fastapi.testclient import TestClient
+
+from app.main import app
+
+client = TestClient(app)
+
+
+def test_health_ok() -> None:
+    r = client.get("/health")
+    assert r.status_code == 200
+    data = r.json()
+    assert data.get("ok") == "true"
+    assert data.get("service") == "{mod}"
+
+
+def test_health_has_version() -> None:
+    r = client.get("/health")
+    data = r.json()
+    assert "version" in data and str(data.get("version", "")).strip()
+''',
             f"{base}/app/main.py": f'''"""FastAPI — {title}"""
 from __future__ import annotations
 

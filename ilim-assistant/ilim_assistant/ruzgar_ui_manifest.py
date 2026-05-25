@@ -66,7 +66,7 @@ def build_ui_manifest(*, health: dict[str, Any] | None = None) -> dict[str, Any]
             "video": {"tag": "YouTube indirme · kurgu v5"},
             "okuma": {"tag": "İlim · tabiat · tarih"},
             "tercume": {"tag": "Ofis · altyazı"},
-            "programlama": {"tag": "Faz 12 · diff & smoke"},
+            "programlama": {"tag": "Faz 20 · Cursor yolu"},
         },
         "capabilities": [
             "Ansiklopedik soruda Gemini-first, ağır indeks atlama",
@@ -82,6 +82,14 @@ def build_ui_manifest(*, health: dict[str, Any] | None = None) -> dict[str, Any]
             "Web şablonları: static_site (HTML) · react_vite (SPA)",
             "Faz 11: programlama orkestra adımları + atölye patch şeridi",
             "Faz 12: patch diff önizleme + programlama_smoke.py + hızlı şablon",
+            "Faz 13: proje tara / proje özeti dosya haritası · @@find · sembol özeti",
+            "Faz 14: görev: proje hedef — çok tur patch + doğrulama · görev durdur",
+            "Faz 15: npm install/build/test · git status/diff — yalnızca projects/",
+            "Faz 16: çok dosya patch — diff + Kabul/Red + toplu uygula + .bak geri al",
+            "Faz 17: git durum/diff · commit öner · onaylı git commit (no --no-verify)",
+            "Faz 18: programlama_smoke --ci · SLO scaffold<30s · birleşik üstayol raporu",
+            "Faz 19: görev v2 — iş:/yap: · doğal cümle · 120sn · Groq öncelik · erken dur",
+            "Faz 20: birleşik ajan · ruzgar-tool read/write/grep/verify",
         ],
         "video": {
             "download_api": "/api/video/download",

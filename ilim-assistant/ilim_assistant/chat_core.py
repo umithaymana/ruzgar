@@ -1279,14 +1279,24 @@ def prepare_turn(
                         pass
         web_extra = "\n\n".join(web_parts)
 
-    tools_ctx = ""
-    try:
-        from ilim_assistant.local_tools import build_local_tools_context
+    _prog_light = False
+    if m == "programlama":
+        try:
+            from ilim_assistant.motorlar.programlama_faz21 import light_context_enabled
 
-        wr = (workspace_root or os.environ.get("LOCAL_TOOLS_ROOT", "") or "").strip() or None
-        tools_ctx = build_local_tools_context(msg, wr)
-    except Exception:
-        tools_ctx = ""
+            _prog_light = light_context_enabled()
+        except Exception:
+            _prog_light = False
+
+    tools_ctx = ""
+    if not (m == "programlama" and _prog_light):
+        try:
+            from ilim_assistant.local_tools import build_local_tools_context
+
+            wr = (workspace_root or os.environ.get("LOCAL_TOOLS_ROOT", "") or "").strip() or None
+            tools_ctx = build_local_tools_context(msg, wr)
+        except Exception:
+            tools_ctx = ""
 
     op_ctx = ""
     if _hizir_op_context_for_turn(m, motor_flags):
@@ -1304,20 +1314,22 @@ def prepare_turn(
             op_ctx = ""
 
     session_mem_ctx = ""
-    try:
-        from ilim_assistant.ruzgar_session_context import build_session_memory_context
+    if not (m == "programlama" and _prog_light):
+        try:
+            from ilim_assistant.ruzgar_session_context import build_session_memory_context
 
-        session_mem_ctx = build_session_memory_context(msg, mode_norm=m, history=history)
-    except Exception:
-        session_mem_ctx = ""
+            session_mem_ctx = build_session_memory_context(msg, mode_norm=m, history=history)
+        except Exception:
+            session_mem_ctx = ""
 
     bilissel_ctx = ""
-    try:
-        from ilim_assistant.ruzgar_bilissel_analiz import build_bilissel_turn_context
+    if not _prog_light:
+        try:
+            from ilim_assistant.ruzgar_bilissel_analiz import build_bilissel_turn_context
 
-        bilissel_ctx = build_bilissel_turn_context(msg, history=history).strip()
-    except Exception:
-        bilissel_ctx = ""
+            bilissel_ctx = build_bilissel_turn_context(msg, history=history).strip()
+        except Exception:
+            bilissel_ctx = ""
 
     user_payload = build_user_prompt(msg, blocks)
     if bilissel_ctx and bilissel_ctx not in (session_mem_ctx or ""):
@@ -1327,7 +1339,7 @@ def prepare_turn(
     _agent_ctx = (agent_context or "").strip()
     if _agent_ctx:
         user_payload = _agent_ctx + "\n\n" + user_payload
-    if tools_ctx:
+    if tools_ctx and not (m == "programlama" and _prog_light):
         user_payload = tools_ctx + "\n\n" + user_payload
     if op_ctx:
         user_payload = op_ctx + "\n\n" + user_payload
@@ -1421,26 +1433,45 @@ def prepare_turn(
 
         user_payload = merge_ilim_tail(user_payload, ilim_merge_tail)
 
-    try:
-        from ilim_assistant.ana_motor_super import append_super_brain_directive
-
-        user_payload = append_super_brain_directive(
-            user_payload,
-            question_plan=turn_plan,
-            mode_norm=m,
-        )
-    except Exception:
-        pass
-
-    if m == "programlama":
+    if not (m == "programlama" and _prog_light):
         try:
-            from ilim_assistant.motorlar.programlama_motoru import build_motor_context as prog_ctx
+            from ilim_assistant.ana_motor_super import append_super_brain_directive
 
-            _pc = prog_ctx(msg, workspace_root=workspace_root).strip()
-            if _pc:
-                user_payload = _pc.rstrip() + "\n\n---\n" + user_payload
+            user_payload = append_super_brain_directive(
+                user_payload,
+                question_plan=turn_plan,
+                mode_norm=m,
+            )
         except Exception:
             pass
+
+    if m == "programlama":
+        if _prog_light:
+            try:
+                from ilim_assistant.motorlar.programlama_faz21 import (
+                    build_light_programming_context,
+                )
+
+                _pc = build_light_programming_context(
+                    msg,
+                    workspace_root=workspace_root,
+                    include_tools=True,
+                ).strip()
+                if _pc:
+                    user_payload = _pc
+            except Exception:
+                pass
+        else:
+            try:
+                from ilim_assistant.motorlar.programlama_motoru import (
+                    build_motor_context as prog_ctx,
+                )
+
+                _pc = prog_ctx(msg, workspace_root=workspace_root).strip()
+                if _pc:
+                    user_payload = _pc.rstrip() + "\n\n---\n" + user_payload
+            except Exception:
+                pass
     elif _orkestra_context_for_turn(m, motor_flags):
         try:
             from ilim_assistant.motorlar.ruzgar_cekirdegi import build_core_context
@@ -1471,18 +1502,19 @@ def prepare_turn(
     if turn_plan is not None and append_plan_directive is not None:
         user_payload = append_plan_directive(user_payload, turn_plan, m)
 
-    from ilim_assistant.idrak_entegrasyon import append_idrak_agent_layer
+    if not (m == "programlama" and _prog_light):
+        from ilim_assistant.idrak_entegrasyon import append_idrak_agent_layer
 
-    user_payload = append_idrak_agent_layer(
-        user_payload,
-        msg,
-        m,
-        hits,
-        web_on,
-        ilim_rag,
-        archive_primary=archive_primary_flag,
-        orchestration_out=orchestration_out,
-    )
+        user_payload = append_idrak_agent_layer(
+            user_payload,
+            msg,
+            m,
+            hits,
+            web_on,
+            ilim_rag,
+            archive_primary=archive_primary_flag,
+            orchestration_out=orchestration_out,
+        )
 
     user_payload = append_direct_answer_directive(user_payload, msg)
     user_payload = _append_anti_repeat_instruction(user_payload, history)

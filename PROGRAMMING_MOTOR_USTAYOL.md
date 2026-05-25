@@ -14,7 +14,7 @@
 | `ddc57b7` | Faz 12: diff önizleme, `programlama_smoke.py`, hızlı şablon düğmeleri |
 | `98d554f` | Manifest Faz 12 etiketi |
 
-**Build:** `2026-05-20-programlama-faz12-v23`
+**Build:** `2026-05-25-programlama-faz22-v36`
 
 ### Bugün çalışan kabiliyetler
 
@@ -50,7 +50,7 @@
 
 ## Uygulama planı (sıradaki fazlar)
 
-### Faz 13 — Proje zekâsı v2 (1. öncelik)
+### Faz 13 — Proje zekâsı v2 ✓ (2026-05-24)
 
 **Amaç:** Model proje içinde kaybolmasın.
 
@@ -63,7 +63,7 @@
 
 ---
 
-### Faz 14 — Otonom görev motoru (çekirdek sıçrama)
+### Faz 14 — Otonom görev motoru ✓ (2026-05-24)
 
 **Amaç:** Tek cümle → bitene kadar çalış.
 
@@ -81,7 +81,7 @@
 
 ---
 
-### Faz 15 — Terminal v2 (`projects/` kapsamı)
+### Faz 15 — Terminal v2 (`projects/` kapsamı) ✓ (2026-05-25)
 
 **Amaç:** Web ve Python projelerinde gerçek komutlar.
 
@@ -94,7 +94,7 @@
 
 ---
 
-### Faz 16 — Çok dosya patch + onay UI
+### Faz 16 — Çok dosya patch + onay UI ✓ (2026-05-25)
 
 **Amaç:** Cursor’daki gibi «şu dosyalar değişecek» ekranı.
 
@@ -106,7 +106,7 @@
 
 ---
 
-### Faz 17 — Git köprüsü
+### Faz 17 — Git köprüsü ✓ (2026-05-25)
 
 **Amaç:** Değişiklikleri kayda al.
 
@@ -118,7 +118,7 @@
 
 ---
 
-### Faz 18 — Kalite ve SLO (Faz 12 planı)
+### Faz 18 — Kalite ve SLO (Faz 12 planı) ✓ (2026-05-25)
 
 - `programlama_smoke.py --live` CI’da
 - Senaryolar: scaffold → patch → test → delege
@@ -149,7 +149,30 @@ Kod kalitesi için **Faz 14–16 (araç + döngü)** API’den önce bile büyü
 
 ## Sıradaki uygulama oturumu
 
-**Faz 13 + Faz 14 başlangıç** — proje indeksi v2 ve `görev:` otonom döngüsü.  
-Smoke her faz sonunda yeşil kalacak; build `faz13-v24` → `faz14-v25`.
+### Faz 19 — Otonom görev v2 ✓ (2026-05-25)
+
+- `iş:` / `yap:` / doğal cümle → görev
+- `RUZGAR_CODE_AGENT_BRAIN=groq,kod` öncelik
+- `RUZGAR_CODE_AGENT_BUDGET_SEC=120` · boş tur erken dur
+
+### Faz 20 — Cursor yolu ✓ (2026-05-25)
+
+- Birleşik ajan · `ruzgar-tool` · `RUZGAR_PROG_UNIFIED_AGENT=1`
+
+### Faz 21 — Hafif bağlam ✓ (2026-05-25)
+
+- `programlama_faz21.py` · `RUZGAR_PROG_LIGHT_CONTEXT=1` (varsayılan)
+- Programlama turunda: RAG/süper beyin/idrak katmanı atlanır; kompakt proje özeti + araçlar
+- `build_motor_context` ve otonom ajan Faz 21 yolunu kullanır
+
+### Faz 22 — Sembol indeks v2 ✓ (2026-05-25)
+
+- `programlama_faz22.py` · AST (Python) + satırlı JS tanımları
+- Önbellek: `.ruzgar/symbol_index.json` · `RUZGAR_SYMBOL_INDEX_TTL_SEC=300`
+- Komutlar: `sembol health` · `@@symbol health` · `sembol indeks yenile`
+- `ruzgar-tool` → `symbol` · hafif bağlamda sembol ipucu
+
+**Üstayol Faz 8–22 tamam** — sırada Faz 23 (5 dk görev + otomatik apply).  
+Build: `faz22-v36` · smoke: `python scripts/programlama_smoke.py --ci`
 
 *Ümit & Gökçenur — Rüzgar Programlama Üstayol*

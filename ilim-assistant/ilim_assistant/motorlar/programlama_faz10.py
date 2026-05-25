@@ -556,6 +556,21 @@ def process_assistant_reply_patches(
     Tur sonu: @@write varsa uygula veya beklet (Faz 10.2 / 10.6).
     debug döngüsü zaten yazdıysa skip_if_debug_loop=True.
     """
+    try:
+        from ilim_assistant.motorlar.programlama_faz16 import (
+            _enabled as faz16_on,
+            process_reply_patches_v16,
+        )
+
+        if faz16_on():
+            return process_reply_patches_v16(
+                reply_body,
+                workspace_root,
+                scope_rel=scope_rel,
+                skip_if_debug_loop=skip_if_debug_loop,
+            )
+    except Exception:
+        pass
     if not _faz10_enabled() or skip_if_debug_loop:
         return {"action": "skip"}
     jobs = extract_write_jobs(reply_body)
@@ -670,6 +685,10 @@ def should_delegate_to_programlama(
     if any(c in low for c in code_cues):
         return True
     if re.search(r"projects/[\w.\-]+", message or "", re.I):
+        return True
+    if low.startswith("gorev:") or low.startswith("görev:"):
+        return True
+    if "gorev:" in low or "görev:" in low:
         return True
     return False
 

@@ -791,7 +791,7 @@ def health():
         },
         "super_brain": _super_brain_health_block(),
         "build": {
-            "rev": "2026-05-20-programlama-faz12-v23",
+            "rev": "2026-05-25-programlama-faz22-v36",
             "nebula_kitap": True,
             "fast_paths": os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
             "memory_first": True,
@@ -1004,6 +1004,9 @@ class ProgramlamaPatchBody(BaseModel):
     workspace_root: str | None = None
     text: str = ""
     rel: str | None = None
+    path: str | None = None
+    status: str | None = None
+    mode: str = "accepted"
     run_verify: bool = True
 
 
@@ -1031,6 +1034,165 @@ def api_programlama_workspace_index(
     }
 
 
+@app.get("/api/programlama/project-scan")
+def api_programlama_project_scan(
+    workspace_root: str | None = None,
+    scope_rel: str | None = None,
+    active_file: str | None = None,
+):
+    """Faz 13 — projects/<ad>/ dosya envanteri."""
+    from ilim_assistant.motorlar.programlama_faz13 import (
+        FAZ13_VERSION,
+        resolve_scope_rel,
+        scan_project_files,
+    )
+
+    root = (workspace_root or "").strip() or None
+    scope = (scope_rel or "").strip() or resolve_scope_rel(root, active_file=active_file)
+    if not scope:
+        raise HTTPException(status_code=400, detail="scope_rel veya active_file gerekli")
+    out = scan_project_files(root, scope)
+    out["version"] = FAZ13_VERSION
+    return out
+
+
+@app.get("/api/programlama/project-summary")
+def api_programlama_project_summary(
+    workspace_root: str | None = None,
+    scope_rel: str | None = None,
+    active_file: str | None = None,
+):
+    """Faz 13 — LLM bağlam özeti (metin bloğu)."""
+    from ilim_assistant.motorlar.programlama_faz13 import (
+        FAZ13_VERSION,
+        build_project_summary_block,
+        resolve_scope_rel,
+    )
+
+    root = (workspace_root or "").strip() or None
+    scope = (scope_rel or "").strip() or resolve_scope_rel(root, active_file=active_file)
+    if not scope:
+        raise HTTPException(status_code=400, detail="scope_rel veya active_file gerekli")
+    block = build_project_summary_block(root, scope_rel=scope)
+    return {
+        "ok": bool(block),
+        "scope_rel": scope,
+        "summary": block,
+        "version": FAZ13_VERSION,
+    }
+
+
+@app.get("/api/programlama/project-find")
+def api_programlama_project_find(
+    workspace_root: str | None = None,
+    scope_rel: str | None = None,
+    active_file: str | None = None,
+    pattern: str = "",
+):
+    """Faz 13 — proje içi metin arama."""
+    from ilim_assistant.motorlar.programlama_faz13 import (
+        FAZ13_VERSION,
+        format_find_report,
+        resolve_scope_rel,
+        search_in_project,
+    )
+
+    root = (workspace_root or "").strip() or None
+    scope = (scope_rel or "").strip() or resolve_scope_rel(root, active_file=active_file)
+    if not scope:
+        raise HTTPException(status_code=400, detail="scope_rel veya active_file gerekli")
+    pat = (pattern or "").strip()
+    if not pat:
+        raise HTTPException(status_code=400, detail="pattern gerekli")
+    result = search_in_project(root, scope, pat)
+    result["report"] = format_find_report(result)
+    result["version"] = FAZ13_VERSION
+    return result
+
+
+@app.get("/api/programlama/agent/status")
+def api_programlama_agent_status(workspace_root: str | None = None):
+    """Faz 14 — otonom görev durumu."""
+    from ilim_assistant.motorlar.programlama_faz14 import (
+        FAZ14_VERSION,
+        format_agent_status_report,
+        load_agent_state,
+    )
+
+    root = (workspace_root or "").strip() or None
+    st = load_agent_state(root)
+    return {
+        "ok": True,
+        "state": st,
+        "report": format_agent_status_report(root),
+        "version": FAZ14_VERSION,
+    }
+
+
+@app.post("/api/programlama/agent/stop")
+def api_programlama_agent_stop(workspace_root: str | None = None):
+    """Faz 14 — görev döngüsünü durdur."""
+    from ilim_assistant.motorlar.programlama_faz14 import (
+        FAZ14_VERSION,
+        format_stop_report,
+        request_agent_stop,
+    )
+
+    root = (workspace_root or "").strip() or None
+    request_agent_stop(root)
+    return {
+        "ok": True,
+        "report": format_stop_report(),
+        "version": FAZ14_VERSION,
+    }
+
+
+@app.get("/api/programlama/terminal/presets")
+def api_programlama_terminal_presets():
+    """Faz 15 — izinli terminal preset listesi."""
+    from ilim_assistant.motorlar.programlama_faz15 import (
+        FAZ15_VERSION,
+        list_terminal_presets,
+    )
+
+    return {
+        "ok": True,
+        "presets": list_terminal_presets(),
+        "version": FAZ15_VERSION,
+    }
+
+
+@app.post("/api/programlama/terminal/run")
+def api_programlama_terminal_run(body: dict):
+    """Faz 15 — projects/ kapsamında onaylı npm/git komutu."""
+    from ilim_assistant.motorlar.programlama_faz15 import (
+        FAZ15_VERSION,
+        format_terminal_report,
+        is_dangerous_shell,
+        run_terminal_preset,
+    )
+
+    preset = str(body.get("preset") or body.get("preset_id") or "").strip()
+    if not preset:
+        raise HTTPException(status_code=400, detail="preset gerekli")
+    raw_cmd = str(body.get("command") or "").strip()
+    if raw_cmd and is_dangerous_shell(raw_cmd):
+        raise HTTPException(status_code=403, detail="Tehlikeli komut reddedildi")
+    root = (body.get("workspace_root") or "").strip() or None
+    scope = (body.get("scope_rel") or "").strip() or None
+    active = (body.get("active_file") or "").strip() or None
+    result = run_terminal_preset(
+        root,
+        preset,
+        scope_rel=scope or None,
+        active_file=active or None,
+        message=str(body.get("message") or ""),
+    )
+    result["report"] = format_terminal_report(result)
+    result["version"] = FAZ15_VERSION
+    return result
+
+
 @app.post("/api/programlama/patch/preview")
 def api_programlama_patch_preview(body: ProgramlamaPatchBody):
     from ilim_assistant.motorlar.programlama_faz10 import (
@@ -1042,7 +1204,14 @@ def api_programlama_patch_preview(body: ProgramlamaPatchBody):
 
     root = (body.workspace_root or "").strip() or None
     prev = preview_writes(body.text or "", root)
-    stage_pending_from_text(body.text or "", root, source="api_preview")
+    try:
+        from ilim_assistant.motorlar.programlama_faz16 import stage_pending_enriched
+
+        stage_pending_enriched(body.text or "", root, source="api_preview")
+    except Exception:
+        from ilim_assistant.motorlar.programlama_faz10 import stage_pending_from_text
+
+        stage_pending_from_text(body.text or "", root, source="api_preview")
     return {
         "ok": prev.get("ok"),
         "preview": prev,
@@ -1053,34 +1222,208 @@ def api_programlama_patch_preview(body: ProgramlamaPatchBody):
 
 @app.get("/api/programlama/patch/pending")
 def api_programlama_patch_pending(workspace_root: str | None = None):
-    """Faz 10/11 — bekleyen patch listesi."""
-    from ilim_assistant.motorlar.programlama_faz10 import FAZ10_VERSION, load_pending
+    """Faz 16 — bekleyen patch + diff + durum."""
+    from ilim_assistant.motorlar.programlama_faz16 import (
+        FAZ16_VERSION,
+        build_pending_bundle,
+    )
 
     root = (workspace_root or "").strip() or None
-    pending = load_pending(root)
-    jobs = pending.get("jobs") or []
+    bundle = build_pending_bundle(root)
     return {
         "ok": True,
-        "count": len(jobs),
-        "paths": [str(j.get("path") or "") for j in jobs if isinstance(j, dict)],
-        "pending": pending,
-        "version": FAZ10_VERSION,
+        "count": bundle.get("count", 0),
+        "paths": bundle.get("paths") or [],
+        "items": bundle.get("items") or [],
+        "counts": bundle.get("counts") or {},
+        "pending": bundle.get("pending") or {},
+        "version": FAZ16_VERSION,
     }
 
 
-@app.post("/api/programlama/patch/apply")
-def api_programlama_patch_apply(body: ProgramlamaPatchBody):
-    from ilim_assistant.motorlar.programlama_faz10 import (
-        FAZ10_VERSION,
-        apply_pending,
-        format_apply_report,
+@app.post("/api/programlama/patch/item")
+def api_programlama_patch_item(body: ProgramlamaPatchBody):
+    """Faz 16 — tek dosya kabul/red."""
+    from ilim_assistant.motorlar.programlama_faz16 import (
+        FAZ16_VERSION,
+        STATUS_ACCEPTED,
+        STATUS_REJECTED,
+        build_pending_bundle,
+        set_job_status,
+    )
+
+    root = (body.workspace_root or "").strip() or None
+    path = (body.path or body.rel or "").strip()
+    st = (body.status or "").strip().lower()
+    if not path:
+        raise HTTPException(status_code=400, detail="path gerekli")
+    if st in ("accept", "accepted", "kabul"):
+        st = STATUS_ACCEPTED
+    elif st in ("reject", "rejected", "red"):
+        st = STATUS_REJECTED
+    else:
+        raise HTTPException(status_code=400, detail="status: accepted veya rejected")
+    res = set_job_status(root, path, st)
+    if not res.get("ok"):
+        raise HTTPException(status_code=404, detail=res.get("error") or "bulunamadı")
+    bundle = build_pending_bundle(root)
+    return {"ok": True, "item": res, "bundle": bundle, "version": FAZ16_VERSION}
+
+
+@app.post("/api/programlama/patch/accept-all")
+def api_programlama_patch_accept_all(body: ProgramlamaPatchBody):
+    from ilim_assistant.motorlar.programlama_faz16 import (
+        FAZ16_VERSION,
+        accept_all_pending,
+        build_pending_bundle,
+    )
+
+    root = (body.workspace_root or "").strip() or None
+    res = accept_all_pending(root)
+    bundle = build_pending_bundle(root)
+    return {"ok": True, **res, "bundle": bundle, "version": FAZ16_VERSION}
+
+
+@app.get("/api/programlama/quality-report")
+def api_programlama_quality_report(workspace_root: str | None = None):
+    """Faz 18 — SLO + orkestra birleşik kalite raporu."""
+    from ilim_assistant.motorlar.programlama_faz18 import (
+        FAZ18_VERSION,
+        format_quality_report,
+        run_offline_slo_scenarios,
+    )
+
+    root = (workspace_root or "").strip() or None
+    report = run_offline_slo_scenarios(root)
+    return {
+        "ok": report.ok,
+        "report": format_quality_report(report),
+        "data": report.to_dict(),
+        "version": FAZ18_VERSION,
+    }
+
+
+@app.get("/api/programlama/git/status")
+def api_programlama_git_status(
+    workspace_root: str | None = None,
+    scope_rel: str | None = None,
+    active_file: str | None = None,
+):
+    """Faz 17 — git status -sb + diff --stat özeti."""
+    from ilim_assistant.motorlar.programlama_faz17 import (
+        FAZ17_VERSION,
+        format_git_status_report,
+        gather_git_snapshot,
         resolve_scope_rel,
+    )
+
+    root = (workspace_root or "").strip() or None
+    scope = (scope_rel or "").strip() or resolve_scope_rel(
+        root, active_file=active_file
+    )
+    snap = gather_git_snapshot(root, scope_rel=scope)
+    return {
+        "ok": bool(snap.get("ok")),
+        "snapshot": snap,
+        "report": format_git_status_report(snap),
+        "version": FAZ17_VERSION,
+    }
+
+
+@app.post("/api/programlama/git/suggest-commit")
+def api_programlama_git_suggest_commit(body: ProgramlamaPatchBody):
+    """Faz 17 — commit mesajı öner (heuristic + isteğe bağlı LLM)."""
+    from ilim_assistant.motorlar.programlama_faz17 import (
+        FAZ17_VERSION,
+        format_commit_suggest_report,
+        resolve_scope_rel,
+        suggest_commit_message,
     )
 
     root = (body.workspace_root or "").strip() or None
     scope = resolve_scope_rel(root, active_file=body.rel)
-    res = apply_pending(root, run_verify=bool(body.run_verify), scope_rel=scope)
-    res["report"] = format_apply_report(res)
+    res = suggest_commit_message(
+        root,
+        scope_rel=scope,
+        active_file=body.rel,
+        message=body.text or "",
+        user_hint=body.text or "",
+    )
+    res["report"] = format_commit_suggest_report(res)
+    res["version"] = FAZ17_VERSION
+    return res
+
+
+@app.get("/api/programlama/git/pending-commit")
+def api_programlama_git_pending_commit(workspace_root: str | None = None):
+    from ilim_assistant.motorlar.programlama_faz17 import FAZ17_VERSION, load_pending_commit
+
+    root = (workspace_root or "").strip() or None
+    pending = load_pending_commit(root)
+    return {
+        "ok": bool(pending.get("message")),
+        "pending": pending,
+        "version": FAZ17_VERSION,
+    }
+
+
+@app.post("/api/programlama/git/commit")
+def api_programlama_git_commit(body: ProgramlamaPatchBody):
+    """Faz 17 — onaylı git commit (git add -A + commit -m; --no-verify yasak)."""
+    from ilim_assistant.motorlar.programlama_faz17 import (
+        FAZ17_VERSION,
+        execute_pending_commit,
+        format_commit_done_report,
+        stage_commit_message,
+    )
+
+    root = (body.workspace_root or "").strip() or None
+    custom = (body.text or body.status or "").strip()
+    if custom and not body.run_verify:
+        stage_commit_message(
+            root,
+            custom,
+            active_file=body.rel,
+        )
+    res = execute_pending_commit(root, commit_message=custom or None)
+    res["report"] = format_commit_done_report(res)
+    res["version"] = FAZ17_VERSION
+    return res
+
+
+@app.post("/api/programlama/patch/rollback")
+def api_programlama_patch_rollback(body: ProgramlamaPatchBody):
+    from ilim_assistant.motorlar.programlama_faz16 import (
+        FAZ16_VERSION,
+        rollback_last_applied,
+    )
+
+    root = (body.workspace_root or "").strip() or None
+    res = rollback_last_applied(root)
+    res["version"] = FAZ16_VERSION
+    return res
+
+
+@app.post("/api/programlama/patch/apply")
+def api_programlama_patch_apply(body: ProgramlamaPatchBody):
+    from ilim_assistant.motorlar.programlama_faz10 import resolve_scope_rel
+    from ilim_assistant.motorlar.programlama_faz16 import (
+        FAZ16_VERSION,
+        apply_pending_selective,
+        format_apply_report_v16,
+    )
+
+    root = (body.workspace_root or "").strip() or None
+    scope = resolve_scope_rel(root, active_file=body.rel)
+    mode = (body.mode or "accepted").strip().lower() or "accepted"
+    res = apply_pending_selective(
+        root,
+        mode=mode,
+        run_verify=bool(body.run_verify),
+        scope_rel=scope,
+    )
+    res["report"] = format_apply_report_v16(res)
+    res["version"] = FAZ16_VERSION
     return res
 
 
@@ -2836,6 +3179,78 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         }
     except Exception:
         pass
+    if mode_norm == "programlama":
+        try:
+            from ilim_assistant.motorlar.programlama_faz20 import (
+                iter_unified_programming_agent_events,
+                should_run_unified_programming_agent,
+            )
+
+            if should_run_unified_programming_agent(msg, mode_norm):
+                yield from iter_unified_programming_agent_events(
+                    message=msg,
+                    req=req,
+                    system=system,
+                    user_payload=user_payload,
+                    model=model,
+                    prior=prior,
+                    mode_norm=mode_norm,
+                    coding=coding,
+                    turn_plan=turn_plan,
+                    hits=hits,
+                    new_wake=new_wake,
+                    orch=orch,
+                    delegated_from_genel=_delegated_from_genel,
+                )
+                return
+        except Exception as agent20_exc:
+            import traceback
+
+            tb = traceback.format_exc(limit=6)
+            yield {
+                "type": "error",
+                "text": (
+                    "Birleşik kod ajanı (Faz 20) hata verdi.\n"
+                    f"{str(agent20_exc)[:300]}\n{tb[-500:]}"
+                ),
+            }
+            return
+        try:
+            from ilim_assistant.motorlar.programlama_faz14 import (
+                iter_code_agent_turn_events,
+                should_run_code_agent_loop,
+            )
+
+            if should_run_code_agent_loop(msg, mode_norm):
+                yield from iter_code_agent_turn_events(
+                    message=msg,
+                    req=req,
+                    system=system,
+                    user_payload=user_payload,
+                    model=model,
+                    prior=prior,
+                    mode_norm=mode_norm,
+                    coding=coding,
+                    turn_plan=turn_plan,
+                    hits=hits,
+                    new_wake=new_wake,
+                    orch=orch,
+                    delegated_from_genel=_delegated_from_genel,
+                )
+                return
+        except Exception as agent_exc:
+            import traceback
+
+            tb = traceback.format_exc(limit=6)
+            yield {
+                "type": "error",
+                "text": (
+                    "Otonom görev (Faz 14) hata verdi — sunucu güncel mi? "
+                    "`Ruzgar.ps1 -ForceRestart` dene.\n"
+                    f"{str(agent_exc)[:300]}\n{tb[-500:]}"
+                ),
+            }
+            return
     reply_body = ""
     try:
         wants_dbg = mode_norm == "programlama" and (
@@ -3020,11 +3435,21 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 pass
             done_llm["orchestra"] = orch
         if code_patch_meta and code_patch_meta.get("action") not in ("skip", "none"):
+            try:
+                from ilim_assistant.motorlar.programlama_faz16 import enrich_code_patch_meta
+
+                code_patch_meta = enrich_code_patch_meta(
+                    code_patch_meta, req.workspace_root
+                )
+            except Exception:
+                pass
             done_llm["code_patch"] = {
                 "action": code_patch_meta.get("action"),
                 "applied": list(code_patch_meta.get("applied") or []),
                 "errors": list(code_patch_meta.get("errors") or []),
                 "items": list(code_patch_meta.get("items") or []),
+                "counts": code_patch_meta.get("counts") or {},
+                "count": code_patch_meta.get("count"),
             }
         if mode_norm == "programlama":
             try:

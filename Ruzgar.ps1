@@ -97,7 +97,7 @@ function Invoke-RuzgarPortOps {
     )
     $ops = Join-Path $IaRoot "scripts\ruzgar_port_ops.py"
     if (-not (Test-Path $ops)) {
-        Log "ruzgar_port_ops.py yok — $Command atlandi"
+        Log "ruzgar_port_ops.py yok - $Command atlandi"
         return -1
     }
     & $script:PyExe @($script:PyArgs) $ops $Command --port $Port 2>&1 | ForEach-Object { Log $_; $_ }
@@ -162,9 +162,9 @@ function Start-ApiServer {
     Remove-Item $ApiErr -ErrorAction SilentlyContinue
     if ($env:GLOBAL_API_KEY -and $env:GLOBAL_API_KEY.Trim()) {
         $len = $env:GLOBAL_API_KEY.Trim().Length
-        Log "GLOBAL_API_KEY aktarildi (uzunluk=$len) — Gemini arayuz+API"
+        Log "GLOBAL_API_KEY aktarildi (uzunluk=$len) - Gemini arayuz+API"
     } else {
-        Log "UYARI: GLOBAL_API_KEY bos — API Gemini kullanamaz"
+        Log "UYARI: GLOBAL_API_KEY bos - API Gemini kullanamaz"
     }
     $uargs = @()
     foreach ($x in $script:PyArgs) { $uargs += $x }
@@ -268,7 +268,8 @@ if ($env:RUZGAR_OLLAMA_ONLY -eq "1") {
     Log "Bulut kapali - yerel Ollama"
 }
 
-$script:RuzgarExpectedBuildRev = "2026-05-20-programlama-faz12-v23"
+$script:RuzgarExpectedBuildRev = "2026-05-25-programlama-faz22-v36"
+$env:RUZGAR_EXPECTED_BUILD_REV = $script:RuzgarExpectedBuildRev
 
 function Get-RuzgarRemoteApiLine {
     $rd = Join-Path $Root "ruzgar-desktop"
@@ -321,7 +322,7 @@ function Start-OllamaIfNeeded {
         $mainModel = if ($env:OLLAMA_CHAT_MODEL) { $env:OLLAMA_CHAT_MODEL.Trim() } else { $defaultMain }
         $fastModel = if ($env:RUZGAR_BRAIN_HIZLI_MODEL) { $env:RUZGAR_BRAIN_HIZLI_MODEL.Trim() } else { "llama3.2:3b" }
         if ($ramGb -lt 16 -and $mainModel -match "70b") {
-            Log "RAM ~${ramGb} GB — 70b uygun degil, llama3.1:8b kullaniliyor"
+            Log "RAM ~${ramGb} GB - 70b uygun degil, llama3.1:8b kullaniliyor"
             $mainModel = "llama3.1:8b"
             $env:OLLAMA_CHAT_MODEL = "llama3.1:8b"
             $env:RUZGAR_BRAIN_DENGE_MODEL = "llama3.1:8b"
@@ -333,7 +334,7 @@ function Start-OllamaIfNeeded {
             & ollama pull $fastModel 2>$null | Out-Null
         }
     } else {
-        Log "Ollama acilmadi — yine de API/Electron baslatilacak"
+        Log "Ollama acilmadi - yine de API/Electron baslatilacak"
     }
 }
 
@@ -341,9 +342,9 @@ $script:RuzgarRemoteApiLine = Get-RuzgarRemoteApiLine
 $script:RuzgarUseColab = Test-RuzgarColabRemote -Line $script:RuzgarRemoteApiLine
 
 if ($script:RuzgarUseColab) {
-    Log "Colab uzak API: $($script:RuzgarRemoteApiLine) — yerel Ollama/API atlanacak"
+    Log "Colab uzak API: $($script:RuzgarRemoteApiLine) - yerel Ollama/API atlanacak"
 } elseif ($env:RUZGAR_DISABLE_LOCAL_OLLAMA -eq "1") {
-    Log "RUZGAR_DISABLE_LOCAL_OLLAMA=1 — yerel Ollama baslatilmiyor (bulut beyin)"
+    Log "RUZGAR_DISABLE_LOCAL_OLLAMA=1 - yerel Ollama baslatilmiyor (bulut beyin)"
 } elseif (-not $env:RUZGAR_FREE_BRAIN) {
     $env:RUZGAR_FREE_BRAIN = "1"
 }
@@ -370,7 +371,7 @@ function Write-RuzgarRemoteApiTxt {
     if (-not (Test-Path $rd)) { return }
     $apiLine = "http://127.0.0.1:$Port"
     $body = @(
-        "# UI -> yerel API (Ruzgar.ps1 yazar; elle degistirmeyin)"
+        "# UI -> yerel API (Ruzgar.ps1 yazar, elle degistirmeyin)"
         $apiLine
     ) -join "`n"
     $out = Join-Path $rd "ruzgar_remote_api.txt"
@@ -410,11 +411,11 @@ function Test-ApiBuildCurrent {
         if ($env:RUZGAR_OLLAMA_ONLY -eq "1") {
             $sb = $j.super_brain
             if ($sb.gemini_configured -eq $true) {
-                Log "health: Gemini hala acik — eski API sureci"
+                Log "health: Gemini hala acik - eski API sureci"
                 return $false
             }
             if ($sb.ollama_only -ne $true) {
-                Log "health: ollama_only bayragi yok — eski kod"
+                Log "health: ollama_only bayragi yok - eski kod"
                 return $false
             }
         }
@@ -431,7 +432,7 @@ if ($ForceRestart) {
     Start-Sleep -Seconds 2
     $portCheckRc = 1
 } elseif ($portCheckRc -eq 2) {
-    Log "port-check: kilitli/zombi — kill-process"
+    Log "port-check: kilitli/zombi - kill-process"
     $null = Invoke-RuzgarPortOps -Command "kill-process" -IaRoot $ia -Port $ApiPort
     Start-Sleep -Seconds 1
     $portCheckRc = 1
@@ -447,7 +448,7 @@ if (-not $serverUp) {
 }
 
 if ($serverUp -and (-not (Test-ApiBuildCurrent -Url $apiUrl))) {
-    Log "Eski Ruzgar API — kod/.env guncel degil; port yeniden baslatiliyor"
+    Log "Eski Ruzgar API - kod/.env guncel degil, port yeniden baslatiliyor"
     Stop-RuzgarApiPort -Port $ApiPort
     if ($ApiPort -ne 8777) { Stop-RuzgarApiPort -Port 8777 }
     Start-Sleep -Seconds 2
@@ -575,14 +576,14 @@ try {
         if ($finalRc -eq 0) {
             Log "Baglanti aktif - port $ApiPort dinleniyor (health OK)"
             if (-not (Test-ApiNebulaBuild -Url $apiUrl)) {
-                Log "UYARI: build.nebula_kitap yok - eski desktop_server; -ForceRestart veya kod guncel mi kontrol edin"
+                Log "UYARI: build.nebula_kitap yok - eski desktop_server, -ForceRestart veya kod guncel mi kontrol edin"
             }
         } else {
             Log "UYARI: Electron aciliyor ama port-check rc=$finalRc"
         }
     }
     Start-ElectronApp -AppsRoot $Root
-    Log "Electron OK — UI: Ruzgar Baslatildi - Baglanti Aktif"
+    Log "Electron OK - UI: Ruzgar Baslatildi - Baglanti Aktif"
 } catch {
     Log "Electron hata: $($_.Exception.Message)"
     [void][System.Windows.Forms.MessageBox]::Show("RUZGAR acilamadi: $($_.Exception.Message)`nLog: $Log", "RUZGAR")

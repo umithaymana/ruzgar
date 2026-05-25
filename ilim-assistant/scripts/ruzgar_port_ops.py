@@ -14,6 +14,7 @@ Kullanım:
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import subprocess
 import sys
@@ -54,13 +55,24 @@ def _pids_listening_on_port(port: int) -> list[int]:
 
 def _health_ok(port: int, timeout: float = 2.5) -> bool:
     url = f"http://127.0.0.1:{port}/api/health"
+    expected_rev = (os.environ.get("RUZGAR_EXPECTED_BUILD_REV") or "").strip()
     try:
         with urllib.request.urlopen(url, timeout=timeout) as r:
             if r.status != 200:
                 return False
             raw = r.read().decode("utf-8", errors="replace")
             data = __import__("json").loads(raw)
-            return bool(data.get("ok"))
+            if not bool(data.get("ok")):
+                return False
+            if expected_rev:
+                rev = str((data.get("build") or {}).get("rev") or "")
+                if rev != expected_rev:
+                    print(
+                        f"port-check: build.rev uyumsuz '{rev}' != '{expected_rev}'",
+                        file=sys.stderr,
+                    )
+                    return False
+            return True
     except (urllib.error.URLError, TimeoutError, OSError, ValueError):
         return False
 

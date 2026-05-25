@@ -4,6 +4,7 @@
  * Kök sonda `/api` ise kırpılır — aksi halde fetch `.../api/api/merkezi-bellek` ile 404 verir.
  */
 const RUZGAR_LOCAL_API_PORT = 8779;
+const RUZGAR_EXPECTED_BUILD_REV = "2026-05-25-programlama-faz22-v36";
 const RUZGAR_LOCAL_API_FALLBACK = `http://127.0.0.1:${RUZGAR_LOCAL_API_PORT}`;
 
 function migrateLegacyApiUrl(raw) {
@@ -1576,6 +1577,15 @@ function renderProgramlamaAgentSteps(steps) {
   });
 }
 
+function renderProgramlamaPatchCounts(counts) {
+  const elCounts = document.getElementById("programlama-patch-counts");
+  if (!elCounts || !counts) return;
+  const p = Number(counts.pending || 0);
+  const a = Number(counts.accepted || 0);
+  const r = Number(counts.rejected || 0);
+  elCounts.textContent = `bekleyen ${p} · kabul ${a} · red ${r}`;
+}
+
 function showProgramlamaPatchStrip(codePatch) {
   const strip = document.getElementById("programlama-patch-strip");
   const list = document.getElementById("programlama-patch-list");
@@ -1583,46 +1593,153 @@ function showProgramlamaPatchStrip(codePatch) {
   const applied = Array.isArray(codePatch.applied) ? codePatch.applied : [];
   const errors = Array.isArray(codePatch.errors) ? codePatch.errors : [];
   const items = Array.isArray(codePatch.items) ? codePatch.items : [];
-  const diffByPath = new Map(
-    items.filter((x) => x && x.path).map((x) => [String(x.path), String(x.diff || "")]),
-  );
-  if (!applied.length && !errors.length && codePatch.action !== "staged") {
+  const counts = codePatch.counts || {};
+  const action = String(codePatch.action || "");
+  if (!applied.length && !errors.length && !items.length && action !== "staged") {
     strip.hidden = true;
     return;
   }
   strip.hidden = false;
+  renderProgramlamaPatchCounts(counts);
   list.innerHTML = "";
-  for (const p of applied) {
+
+  const renderItem = (it, opts = {}) => {
+    const path = String(it.path || "");
+    if (!path) return;
     const li = document.createElement("li");
     li.className = "programlama-patch-item";
     const head = document.createElement("div");
     head.className = "programlama-patch-item-head";
-    head.innerHTML = `✓ <code>${esc(p)}</code>`;
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "btn-secondary btn-compact";
-    btn.textContent = "Aç";
-    btn.addEventListener("click", () => void openProgramlamaWorkspaceFile(p));
-    head.appendChild(btn);
+    const st = String(it.status || opts.status || "pending");
+    const mark = opts.done ? "✓" : st === "rejected" ? "✗" : "○";
+    head.innerHTML = `${mark} <code>${esc(path)}</code> <span class="programlama-patch-status ${escAttr(st)}">${esc(st)}</span>`;
+    const actions = document.createElement("div");
+    actions.className = "programlama-patch-actions";
+    const btnOpen = document.createElement("button");
+    btnOpen.type = "button";
+    btnOpen.className = "btn-secondary btn-compact";
+    btnOpen.textContent = "Aç";
+    btnOpen.addEventListener("click", () => void openProgramlamaWorkspaceFile(path));
+    actions.appendChild(btnOpen);
+    if (action === "staged" && st !== "applied" && st !== "rejected") {
+      const btnOk = document.createElement("button");
+      btnOk.type = "button";
+      btnOk.className = "btn-secondary btn-compact";
+      btnOk.textContent = "Kabul";
+      btnOk.addEventListener("click", () =>
+        void patchItemStatus(path, "accepted"),
+      );
+      const btnNo = document.createElement("button");
+      btnNo.type = "button";
+      btnNo.className = "btn-secondary btn-compact";
+      btnNo.textContent = "Red";
+      btnNo.addEventListener("click", () =>
+        void patchItemStatus(path, "rejected"),
+      );
+      actions.appendChild(btnOk);
+      actions.appendChild(btnNo);
+    }
+    head.appendChild(actions);
     li.appendChild(head);
-    const diff = diffByPath.get(p);
-    if (diff && diff.trim()) {
+    const diff = String(it.diff || "");
+    if (diff.trim()) {
       const pre = document.createElement("pre");
       pre.className = "programlama-patch-diff";
       pre.textContent = diff;
       li.appendChild(pre);
     }
     list.appendChild(li);
+  };
+
+  if (action === "staged" && items.length) {
+    for (const it of items) renderItem(it);
+  } else {
+    const diffByPath = new Map(
+      items.filter((x) => x && x.path).map((x) => [String(x.path), x]),
+    );
+    for (const p of applied) {
+      const meta = diffByPath.get(p) || { path: p };
+      renderItem({ ...meta, path: p }, { done: true, status: "applied" });
+    }
+    for (const it of items) {
+      if (!applied.includes(it.path)) renderItem(it);
+    }
   }
   for (const e of errors) {
     const li = document.createElement("li");
     li.textContent = `✗ ${e}`;
     list.appendChild(li);
   }
-  if (codePatch.action === "staged") {
-    const li = document.createElement("li");
-    li.textContent = "Bekleyen patch — «patch onayla» veya Bekleyeni uygula";
-    list.appendChild(li);
+}
+
+async function getProgramlamaWorkspaceRoot() {
+  try {
+    if (window.ruzgarApi?.getRoot) return await window.ruzgarApi.getRoot();
+  } catch (_) {
+    /* ignore */
+  }
+  return null;
+}
+
+async function refreshProgramlamaPatchFromServer() {
+  const workspaceRoot = await getProgramlamaWorkspaceRoot();
+  if (!workspaceRoot) return;
+  try {
+    const qs = `?workspace_root=${encodeURIComponent(workspaceRoot)}`;
+    const res = await fetch(`${API}/api/programlama/patch/pending${qs}`);
+    const data = await res.json().catch(() => ({}));
+    if (!data.ok || !data.count) {
+      const strip = document.getElementById("programlama-patch-strip");
+      if (strip) strip.hidden = true;
+      return;
+    }
+    showProgramlamaPatchStrip({
+      action: "staged",
+      items: data.items || [],
+      counts: data.counts || {},
+      count: data.count,
+    });
+  } catch (_) {
+    /* ignore */
+  }
+}
+
+async function patchItemStatus(path, status) {
+  const workspaceRoot = await getProgramlamaWorkspaceRoot();
+  if (!workspaceRoot) return;
+  try {
+    const res = await fetch(`${API}/api/programlama/patch/item`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ workspace_root: workspaceRoot, path, status }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (data.bundle) {
+      showProgramlamaPatchStrip({
+        action: "staged",
+        items: data.bundle.items || [],
+        counts: data.bundle.counts || {},
+      });
+    } else {
+      await refreshProgramlamaPatchFromServer();
+    }
+  } catch (e) {
+    setCodeOutput(`Patch durum: ${e && e.message ? e.message : e}`);
+  }
+}
+
+async function patchAcceptAllFromAtolye() {
+  const workspaceRoot = await getProgramlamaWorkspaceRoot();
+  if (!workspaceRoot) return;
+  try {
+    await fetch(`${API}/api/programlama/patch/accept-all`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ workspace_root: workspaceRoot }),
+    });
+    await refreshProgramlamaPatchFromServer();
+  } catch (e) {
+    setCodeOutput(`Kabul hatası: ${e && e.message ? e.message : e}`);
   }
 }
 
@@ -1672,13 +1789,8 @@ async function runQuickScaffold(templateId, defaultName) {
   }
 }
 
-async function applyPendingPatchFromAtolye() {
-  let workspaceRoot = null;
-  try {
-    if (window.ruzgarApi?.getRoot) workspaceRoot = await window.ruzgarApi.getRoot();
-  } catch (_) {
-    workspaceRoot = null;
-  }
+async function applyPendingPatchFromAtolye(mode = "accepted") {
+  const workspaceRoot = await getProgramlamaWorkspaceRoot();
   if (!workspaceRoot) {
     setCodeOutput("Workspace kökü yok — Electron köprüsü gerekli.");
     return;
@@ -1691,16 +1803,100 @@ async function applyPendingPatchFromAtolye() {
         workspace_root: workspaceRoot,
         rel: atolyeOpenRel || undefined,
         run_verify: true,
+        mode,
       }),
     });
     const data = await res.json().catch(() => ({}));
     setCodeOutput(data.report || data.error || "Patch uygulandı.");
     if (data.applied?.length) {
-      showProgramlamaPatchStrip({ action: "applied", applied: data.applied, errors: data.errors || [] });
+      showProgramlamaPatchStrip({
+        action: "applied",
+        applied: data.applied,
+        errors: data.errors || [],
+        items: data.items || [],
+      });
       void openProgramlamaWorkspaceFile(data.applied[0]);
+    } else if (!data.ok) {
+      await refreshProgramlamaPatchFromServer();
+    } else {
+      const strip = document.getElementById("programlama-patch-strip");
+      if (strip) strip.hidden = true;
     }
   } catch (e) {
     setCodeOutput(`Patch hatası: ${e && e.message ? e.message : e}`);
+  }
+}
+
+async function gitStatusFromAtolye() {
+  const workspaceRoot = await getProgramlamaWorkspaceRoot();
+  if (!workspaceRoot) return;
+  try {
+    const qs = new URLSearchParams({
+      workspace_root: workspaceRoot,
+    });
+    if (atolyeOpenRel) qs.set("active_file", atolyeOpenRel);
+    const res = await fetch(`${API}/api/programlama/git/status?${qs}`);
+    const data = await res.json().catch(() => ({}));
+    setCodeOutput(data.report || data.snapshot?.error || "Git durum bitti.");
+  } catch (e) {
+    setCodeOutput(`Git: ${e && e.message ? e.message : e}`);
+  }
+}
+
+async function gitSuggestCommitFromAtolye() {
+  const workspaceRoot = await getProgramlamaWorkspaceRoot();
+  if (!workspaceRoot) return;
+  try {
+    const res = await fetch(`${API}/api/programlama/git/suggest-commit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        workspace_root: workspaceRoot,
+        rel: atolyeOpenRel || undefined,
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setCodeOutput(data.report || data.error || "Commit önerisi hazır.");
+  } catch (e) {
+    setCodeOutput(`Commit öner: ${e && e.message ? e.message : e}`);
+  }
+}
+
+async function gitCommitFromAtolye() {
+  const workspaceRoot = await getProgramlamaWorkspaceRoot();
+  if (!workspaceRoot) return;
+  try {
+    const res = await fetch(`${API}/api/programlama/git/commit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ workspace_root: workspaceRoot, rel: atolyeOpenRel || undefined }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setCodeOutput(data.report || data.error || "Commit tamam.");
+    if (data.ok) void programlamaAtolyeRefreshRoot();
+  } catch (e) {
+    setCodeOutput(`Commit: ${e && e.message ? e.message : e}`);
+  }
+}
+
+async function rollbackPatchFromAtolye() {
+  const workspaceRoot = await getProgramlamaWorkspaceRoot();
+  if (!workspaceRoot) return;
+  try {
+    const res = await fetch(`${API}/api/programlama/patch/rollback`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ workspace_root: workspaceRoot }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setCodeOutput(
+      data.restored?.length
+        ? `Geri alındı: ${data.restored.join(", ")}`
+        : data.error || data.errors?.join("; ") || "Geri alma bitti.",
+    );
+    await programlamaAtolyeRefreshRoot();
+  } catch (e) {
+    setCodeOutput(`Geri alma: ${e && e.message ? e.message : e}`);
   }
 }
 
@@ -1828,6 +2024,32 @@ function syncWorkbenchHizirToolbar() {
     hiz.style.display = "none";
   }
   document.body.classList.toggle("workbench-hizir-active", isH);
+}
+
+function showStaleBuildBanner(rev) {
+  const stale = Boolean(rev && rev !== RUZGAR_EXPECTED_BUILD_REV);
+  let box = document.getElementById("ruzgar-stale-build-banner");
+  if (!stale) {
+    if (box) box.remove();
+    return;
+  }
+  if (!box) {
+    box = document.createElement("div");
+    box.id = "ruzgar-stale-build-banner";
+    box.setAttribute("role", "alert");
+    box.style.cssText =
+      "margin:8px 12px;padding:10px 14px;background:#fef2f2;border:1px solid #f87171;" +
+      "color:#991b1b;border-radius:8px;font-size:13px;line-height:1.45;";
+    const host =
+      document.getElementById("page-programlama") ||
+      document.querySelector(".panel-chat") ||
+      document.body;
+    host.prepend(box);
+  }
+  box.innerHTML =
+    `<strong>Eski Rüzgar API çalışıyor</strong> (build: <code>${escAttr(rev)}</code>). ` +
+    `Güncel kod için proje kökünde: <code>Ruzgar_YenidenBaslat.bat</code> veya ` +
+    `<code>.\\Ruzgar.ps1 -ForceRestart</code> — beklenen: <code>${escAttr(RUZGAR_EXPECTED_BUILD_REV)}</code>.`;
 }
 
 function setHizirWorkbenchServerPill(connected, tooltipDetail) {
@@ -3236,6 +3458,7 @@ async function programlamaAtolyeRefreshRoot() {
         `<div class="code-file-placeholder">Kök klasör boş veya erişilemiyor.</div>`;
     }
     void programlamaAtolyeShowBriefing();
+    void refreshProgramlamaPatchFromServer();
   } catch (e) {
     el.codeFileTree.innerHTML =
       `<div class="code-file-placeholder">Kök liste okunamadı: ${esc(String(e && e.message ? e.message : e))}. Yerel sunucu (ilim-assistant) veya masaüstü köprüsü gerekir.</div>`;
@@ -4804,7 +5027,31 @@ function wireProgrammingWorkbench() {
   }
   const btnPatchApply = document.getElementById("btn-patch-apply-pending");
   if (btnPatchApply) {
-    btnPatchApply.addEventListener("click", () => void applyPendingPatchFromAtolye());
+    btnPatchApply.addEventListener("click", () => void applyPendingPatchFromAtolye("accepted"));
+  }
+  const btnPatchApplyAll = document.getElementById("btn-patch-apply-all");
+  if (btnPatchApplyAll) {
+    btnPatchApplyAll.addEventListener("click", () => void applyPendingPatchFromAtolye("all"));
+  }
+  const btnPatchAcceptAll = document.getElementById("btn-patch-accept-all");
+  if (btnPatchAcceptAll) {
+    btnPatchAcceptAll.addEventListener("click", () => void patchAcceptAllFromAtolye());
+  }
+  const btnPatchRollback = document.getElementById("btn-patch-rollback");
+  if (btnPatchRollback) {
+    btnPatchRollback.addEventListener("click", () => void rollbackPatchFromAtolye());
+  }
+  const btnGitStatus = document.getElementById("btn-git-status");
+  if (btnGitStatus) {
+    btnGitStatus.addEventListener("click", () => void gitStatusFromAtolye());
+  }
+  const btnGitSuggest = document.getElementById("btn-git-commit-suggest");
+  if (btnGitSuggest) {
+    btnGitSuggest.addEventListener("click", () => void gitSuggestCommitFromAtolye());
+  }
+  const btnGitCommit = document.getElementById("btn-git-commit-apply");
+  if (btnGitCommit) {
+    btnGitCommit.addEventListener("click", () => void gitCommitFromAtolye());
   }
   if (el.btnCodeOutputClear) {
     el.btnCodeOutputClear.addEventListener("click", () => setCodeOutput(""));
@@ -6013,9 +6260,18 @@ async function checkApi() {
           "Yerel sunucu aktif (127.0.0.1:8779). Gemini/Groq hazırsa sohbet çalışır.";
       }
       const progRev = document.getElementById("programlama-build-rev");
+      const rev = String(j?.build?.rev || "");
       if (progRev) {
-        progRev.textContent = j?.build?.rev || "rev bilinmiyor";
+        progRev.textContent = rev || "rev bilinmiyor";
+        if (rev && rev !== RUZGAR_EXPECTED_BUILD_REV) {
+          progRev.style.color = "#b91c1c";
+          progRev.title = `Eski sunucu! Beklenen: ${RUZGAR_EXPECTED_BUILD_REV}`;
+        } else {
+          progRev.style.color = "";
+          progRev.title = "";
+        }
       }
+      showStaleBuildBanner(rev);
       void refreshUiManifest();
       el.api.textContent = j.stt ? "Sunucu ✓ metne döküm" : "Sunucu ✓";
       let apiTitle = j.stt
