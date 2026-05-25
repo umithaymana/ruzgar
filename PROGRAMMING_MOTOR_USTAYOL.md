@@ -14,7 +14,7 @@
 | `ddc57b7` | Faz 12: diff önizleme, `programlama_smoke.py`, hızlı şablon düğmeleri |
 | `98d554f` | Manifest Faz 12 etiketi |
 
-**Build:** `2026-05-25-programlama-faz29-v41`
+**Build:** `2026-05-25-programlama-faz30-v42`
 
 ### Bugün çalışan kabiliyetler
 

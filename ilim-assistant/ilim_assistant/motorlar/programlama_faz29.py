@@ -23,6 +23,7 @@ _FOCUS_CANDIDATES = (
     "main.py",
     "app/main.py",
     "src/main.py",
+    "App.js",
     "src/App.jsx",
     "src/App.tsx",
     "index.html",

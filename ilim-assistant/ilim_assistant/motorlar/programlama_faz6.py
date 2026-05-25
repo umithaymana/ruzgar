@@ -44,6 +44,13 @@ _TEMPLATE_ALIASES: dict[str, str] = {
     "spa": "react_vite",
     "react_vite": "react_vite",
     "frontend": "react_vite",
+    "mobile": "mobile_expo",
+    "mobil": "mobile_expo",
+    "expo": "mobile_expo",
+    "react-native": "mobile_expo",
+    "react_native": "mobile_expo",
+    "mobile_expo": "mobile_expo",
+    "mobile_app": "mobile_expo",
 }
 
 
@@ -61,7 +68,7 @@ def _slug(name: str) -> str:
 
 
 def list_templates() -> list[dict[str, Any]]:
-    return [
+    rows: list[dict[str, Any]] = [
         {
             "id": "cli_python",
             "label": "Python CLI aracı",
@@ -99,6 +106,13 @@ def list_templates() -> list[dict[str, Any]]:
             "desc": "Modern tek sayfa uygulama; npm run dev / build",
         },
     ]
+    try:
+        from ilim_assistant.motorlar.programlama_faz30 import extra_template_catalog
+
+        rows.extend(extra_template_catalog())
+    except Exception:
+        pass
+    return rows
 
 
 def _template_files(template_id: str, slug: str, title: str) -> dict[str, str]:
@@ -419,6 +433,14 @@ npm run dev
 Önizleme: http://127.0.0.1:5173
 """,
         }
+    try:
+        from ilim_assistant.motorlar.programlama_faz30 import mobile_expo_files
+
+        mob = mobile_expo_files(t, slug, title, projects_base=_scaffold_base_dir())
+        if mob:
+            return mob
+    except Exception:
+        pass
     return {}
 
 
@@ -473,6 +495,7 @@ def format_template_list_report() -> str:
             "  şablon oluştur: fastapi_api benim-api",
             "  şablon oluştur: static_site vitrinim",
             "  şablon oluştur: react_vite panelim",
+            "  şablon oluştur: mobile_expo uygulamam",
             "",
             f"Dizin: `{_scaffold_base_dir()}/<proje-adı>/`",
             f"Sürüm: {FAZ6_VERSION}",

@@ -94,6 +94,12 @@ def pick_focus_rel(scaffold_result: dict[str, Any]) -> str | None:
             f"{base}/src/main.jsx",
             f"{base}/package.json",
         ]
+    elif tid == "mobile_expo":
+        candidates = [
+            f"{base}/App.js",
+            f"{base}/app.json",
+            f"{base}/package.json",
+        ]
     for c in candidates:
         if c in written:
             return c

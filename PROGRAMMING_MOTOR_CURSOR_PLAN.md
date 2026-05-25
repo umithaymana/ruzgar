@@ -5,7 +5,7 @@
 
 **Referans (Cursor / bu sohbet):** Plan → araçlarla oku → çok dosya değiştir → terminal/test → hata oku → tekrarla → kullanıcıya özet.
 
-**Mevcut build:** `2026-05-25-programlama-faz29-v41` (Faz 8–29 / Cursor P2 çoklu proje)
+**Mevcut build:** `2026-05-25-programlama-faz30-v42` (Faz 8–30 / Cursor P2 tamam)
 
 ---
 
@@ -90,6 +90,7 @@ Kullanıcı (programlama modu)
 | **27** | Editör inline diff | Patch → eski/yeni yan yana | ✓ v40 |
 | **28** | Git branch | `git dal` · `yeni dal: x` | ✓ v40 |
 | **29** | Çoklu proje workspace | `proje listesi` · `proje sec: x` · atölye seçici | ✓ v41 |
+| **30** | Mobil şablon (Expo) | `mobile_expo` · + Mobil · `npx expo start` | ✓ v42 |
 
 ---
 

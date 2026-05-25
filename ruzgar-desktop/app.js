@@ -4,7 +4,7 @@
  * Kök sonda `/api` ise kırpılır — aksi halde fetch `.../api/api/merkezi-bellek` ile 404 verir.
  */
 const RUZGAR_LOCAL_API_PORT = 8779;
-const RUZGAR_EXPECTED_BUILD_REV = "2026-05-25-programlama-faz29-v41";
+const RUZGAR_EXPECTED_BUILD_REV = "2026-05-25-programlama-faz30-v42";
 const RUZGAR_LOCAL_API_FALLBACK = `http://127.0.0.1:${RUZGAR_LOCAL_API_PORT}`;
 
 function migrateLegacyApiUrl(raw) {
@@ -5142,6 +5142,10 @@ function wireProgrammingWorkbench() {
   }
   if (btnScReact) {
     btnScReact.addEventListener("click", () => void runQuickScaffold("react_vite", "panelim"));
+  }
+  const btnScMobile = document.getElementById("btn-scaffold-mobile");
+  if (btnScMobile) {
+    btnScMobile.addEventListener("click", () => void runQuickScaffold("mobile_expo", "mobilim"));
   }
   const btnPatchApply = document.getElementById("btn-patch-apply-pending");
   if (btnPatchApply) {

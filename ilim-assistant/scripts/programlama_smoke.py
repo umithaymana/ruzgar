@@ -49,7 +49,7 @@ def run_offline() -> int:
     from ilim_assistant.motorlar.programlama_faz6 import list_templates
 
     ids = {t["id"] for t in list_templates()}
-    for tid in ("fastapi_api", "static_site", "react_vite", "cli_python"):
+    for tid in ("fastapi_api", "static_site", "react_vite", "cli_python", "mobile_expo"):
         if tid in ids:
             _ok(f"template {tid}")
         else:
@@ -621,7 +621,7 @@ def run_live(base: str) -> int:
     try:
         h = get("/api/health")
         rev = str((h.get("build") or {}).get("rev") or "")
-        if "faz29" in rev or rev.endswith("-v41"):
+        if "faz30" in rev or rev.endswith("-v42"):
             _ok(f"build.rev={rev}")
         else:
             _fail("build.rev", rev)
@@ -666,7 +666,7 @@ def run_live(base: str) -> int:
     try:
         t = get("/api/programlama/templates")
         ids = {x["id"] for x in (t.get("templates") or [])}
-        if "static_site" in ids and "react_vite" in ids:
+        if "static_site" in ids and "react_vite" in ids and "mobile_expo" in ids:
             _ok("templates API")
         else:
             _fail("templates API", str(ids))
@@ -864,6 +864,39 @@ def run_parity(*, live_base: str | None = None) -> int:
     else:
         _fail("inline diff", str(payload)[:80])
         fails += 1
+
+    print("=== Faz 30 — mobil sablon (Expo) ===")
+    from ilim_assistant.motorlar.programlama_faz6 import run_scaffold
+    from ilim_assistant.motorlar.programlama_faz8 import pick_focus_rel
+    from ilim_assistant.motorlar.programlama_faz30 import (
+        FAZ30_VERSION,
+        MOBILE_TEMPLATE_ID,
+        mobile_expo_files,
+    )
+
+    mob_files = mobile_expo_files(MOBILE_TEMPLATE_ID, "smoke-mobil", "Smoke Mobil")
+    if mob_files and f"projects/smoke-mobil/App.js" in mob_files:
+        _ok("mobile_expo file map")
+    else:
+        _fail("mobile_expo files")
+        fails += 1
+    mob_sc = run_scaffold(
+        "mobile_expo",
+        f"smoke-mobil-{int(time.time()) % 100000}",
+        WORKSPACE,
+        force=True,
+    )
+    if mob_sc.get("ok") and mob_sc.get("template_id") == "mobile_expo":
+        fr_m = pick_focus_rel(mob_sc)
+        if fr_m and fr_m.endswith("App.js"):
+            _ok(f"mobile scaffold focus {fr_m}")
+        else:
+            _fail("mobile focus", str(fr_m))
+            fails += 1
+    else:
+        _fail("mobile scaffold", str(mob_sc.get("error")))
+        fails += 1
+    _ok(f"faz30 {FAZ30_VERSION}")
 
     print("=== Faz 29 — coklu proje workspace ===")
     from ilim_assistant.motorlar.programlama_faz29 import (
