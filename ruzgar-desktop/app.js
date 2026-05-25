@@ -4,7 +4,7 @@
  * Kök sonda `/api` ise kırpılır — aksi halde fetch `.../api/api/merkezi-bellek` ile 404 verir.
  */
 const RUZGAR_LOCAL_API_PORT = 8779;
-const RUZGAR_EXPECTED_BUILD_REV = "2026-05-25-programlama-faz46-v57";
+const RUZGAR_EXPECTED_BUILD_REV = "2026-05-25-programlama-faz48-v59";
 const RUZGAR_LOCAL_API_FALLBACK = `http://127.0.0.1:${RUZGAR_LOCAL_API_PORT}`;
 
 function migrateLegacyApiUrl(raw) {
@@ -2466,7 +2466,21 @@ function showStaleBuildBanner(rev) {
   box.innerHTML =
     `<strong>Eski Rüzgar API çalışıyor</strong> (build: <code>${escAttr(rev)}</code>). ` +
     `Güncel kod için proje kökünde: <code>Ruzgar_YenidenBaslat.bat</code> veya ` +
-    `<code>.\\Ruzgar.ps1 -ForceRestart</code> — beklenen: <code>${escAttr(RUZGAR_EXPECTED_BUILD_REV)}</code>.`;
+    `<code>.\\Ruzgar.ps1 -ForceRestart</code> — beklenen: <code>${escAttr(RUZGAR_EXPECTED_BUILD_REV)}</code>. ` +
+    `<button type="button" id="ruzgar-stale-restart-btn" style="margin-left:8px;padding:4px 10px;cursor:pointer;">` +
+    `API yeniden başlat (talimat)</button>`;
+  const btn = document.getElementById("ruzgar-stale-restart-btn");
+  if (btn && !btn.dataset.wired) {
+    btn.dataset.wired = "1";
+    btn.addEventListener("click", () => {
+      const msg =
+        "1) Rüzgar penceresini kapatın\n" +
+        "2) Proje kökünde çift tık: Ruzgar_YenidenBaslat.bat\n" +
+        "3) Açılınca build satırında faz48-v59 görün\n\n" +
+        `Şu an: ${rev}\nBeklenen: ${RUZGAR_EXPECTED_BUILD_REV}`;
+      window.alert(msg);
+    });
+  }
 }
 
 function setHizirWorkbenchServerPill(connected, tooltipDetail) {

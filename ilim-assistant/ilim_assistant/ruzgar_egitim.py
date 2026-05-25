@@ -1120,6 +1120,24 @@ def should_emit_miss_reply(
         return False
     if user_message and not is_real_user_question(user_message):
         return False
+    t = (reply or "").strip()
+    if _MISS_PHRASE in t or t == _MISS_PHRASE:
+        return False
+    try:
+        from ilim_assistant.ana_motor_plan import (
+            is_casual_conversation_turn,
+            looks_like_casual_social_chat,
+        )
+        from ilim_assistant.ruzgar_bilissel_analiz import is_anlama_empati_sorusu
+
+        if looks_like_casual_social_chat(user_message) or is_anlama_empati_sorusu(
+            user_message
+        ):
+            return False
+        if is_casual_conversation_turn(user_message, "genel", None):
+            return False
+    except Exception:
+        pass
     try:
         from ilim_assistant.ruzgar_umed_cevap_emri import (
             turn_budget_sec,
@@ -1138,9 +1156,13 @@ def should_emit_miss_reply(
         except ValueError:
             limit = 15.0
     t = (reply or "").strip()
-    if elapsed_sec >= limit:
-        if len(t) < 280:
-            return True
+    if len(t) >= 72:
+        return False
+    if not t or len(t) < 8:
+        return True
+    if elapsed_sec >= limit and len(t) < 40:
+        return True
+    if elapsed_sec >= limit and len(t) < 120:
         low = t.lower()
         if any(
             x in low
@@ -1148,11 +1170,12 @@ def should_emit_miss_reply(
                 "nasıl yardımcı olabilirim",
                 "merhaba — ben rüzgar",
                 "bugün sana nasıl",
+                "bulamadım",
+                "öğrenmedim",
+                "ogrenmedim",
             )
         ):
             return True
-    if not t or len(t) < 12:
-        return True
     low = t.lower()
     if "bulamadım" in low or "öğrenmedim" in low or "ogrenmedim" in low:
         return True

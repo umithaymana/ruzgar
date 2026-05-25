@@ -272,6 +272,16 @@ def maybe_bilissel_instant_reply(
 
     if is_anlama_empati_sorusu(message):
         return empati_cevabi()
+    if re.search(
+        r"(?:kendini|kendin)\s+nasil\s+hissed|nasil\s+hissediyorsun|"
+        r"duygularini\s+anlat|duygularını\s+anlat",
+        low,
+    ):
+        return (
+            "Ümit abi, ben bir yapay zekâyım; insan gibi hissetmem ama seninle "
+            "konuşurken sana saygı ve sıcaklıkla yaklaşırım. Şu an buradayım, "
+            "dinliyorum — devam et, birlikte ilerleyelim."
+        )
     if re.search(r"beni\s+dinli", low) or "dinliyor musun" in low:
         return _REPLY_DINLIYOR
     if re.search(r"\b(?:hazır\s+m[ıi]sın|burada\s+m[ıi]sın|gerçekten\s+varsın)\b", low):

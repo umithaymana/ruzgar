@@ -12,5 +12,5 @@ if errorlevel 1 (
   exit /b 1
 )
 echo.
-echo Tamam. Atolyede build rev: programlama-faz46-v57 (veya uzeri) olmali.
+echo Tamam. Atolyede build rev: programlama-faz48-v59 olmali.
 pause

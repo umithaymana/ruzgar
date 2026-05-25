@@ -147,12 +147,18 @@ function Ensure-PythonDeps {
 function Test-ApiImport {
     param([string]$Ia)
     Push-Location $Ia
+    $prevEa = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
     try {
-        & $script:PyExe @($script:PyArgs) -c "import desktop_server; print('desktop_server ok')" 2>&1 | Out-File -FilePath $ApiErr -Encoding utf8
+        $importOut = & $script:PyExe @($script:PyArgs) -c "import desktop_server; print('desktop_server ok')" 2>&1
+        if ($importOut) {
+            ($importOut | ForEach-Object { "$_" }) | Out-File -FilePath $ApiErr -Encoding utf8
+        }
         if ($LASTEXITCODE -ne 0) {
             throw "Python import basarisiz (ruzgar-api.err)"
         }
     } finally {
+        $ErrorActionPreference = $prevEa
         Pop-Location
     }
 }
@@ -268,7 +274,7 @@ if ($env:RUZGAR_OLLAMA_ONLY -eq "1") {
     Log "Bulut kapali - yerel Ollama"
 }
 
-$script:RuzgarExpectedBuildRev = "2026-05-25-programlama-faz46-v57"
+$script:RuzgarExpectedBuildRev = "2026-05-25-programlama-faz48-v59"
 $env:RUZGAR_EXPECTED_BUILD_REV = $script:RuzgarExpectedBuildRev
 
 function Get-RuzgarRemoteApiLine {
@@ -402,6 +408,10 @@ function Test-ApiBuildCurrent {
         $rev = [string]$j.build.rev
         if ($rev -ne $script:RuzgarExpectedBuildRev) {
             Log "health rev uyumsuz: '$rev' beklenen '$($script:RuzgarExpectedBuildRev)'"
+            return $false
+        }
+        if ($rev -match "faz3[0-9]-v" -or $rev -match "faz4[0-6]-v") {
+            Log "health rev programlama eski surum: '$rev'"
             return $false
         }
         if ($rev -match "^2024-" -or $rev -match "gemini-env-fix") {

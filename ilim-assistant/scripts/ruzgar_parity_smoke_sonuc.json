@@ -5,15 +5,15 @@
       "id": "parity_scaffold",
       "label": "FastAPI scaffold",
       "ok": true,
-      "elapsed_sec": 0.078,
+      "elapsed_sec": 0.047,
       "budget_sec": 60.0,
-      "detail": "projects/smoke-parity-41338"
+      "detail": "projects/smoke-parity-43076"
     },
     {
       "id": "parity_agent_chain",
       "label": "Patch + pytest (görev modu)",
       "ok": true,
-      "elapsed_sec": 4.609,
+      "elapsed_sec": 1.281,
       "budget_sec": 300.0,
       "detail": "writes=1 verify=True"
     },
@@ -23,7 +23,7 @@
       "ok": true,
       "elapsed_sec": 0.0,
       "budget_sec": 0.0,
-      "detail": "projects/smoke-parity-41338"
+      "detail": "projects/smoke-parity-43076"
     },
     {
       "id": "parity_scorecard",
@@ -37,13 +37,13 @@
       "id": "parity_total",
       "label": "Parity paketi toplam",
       "ok": true,
-      "elapsed_sec": 4.687,
+      "elapsed_sec": 1.328,
       "budget_sec": 300.0,
-      "detail": "smoke-parity-41338"
+      "detail": "smoke-parity-43076"
     }
   ],
-  "project_name": "smoke-parity-41338",
-  "scope_rel": "projects/smoke-parity-41338",
+  "project_name": "smoke-parity-43076",
+  "scope_rel": "projects/smoke-parity-43076",
   "scorecard": {
     "unified_agent": true,
     "light_context": true,

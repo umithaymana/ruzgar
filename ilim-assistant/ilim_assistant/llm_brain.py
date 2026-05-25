@@ -720,6 +720,7 @@ def stream_chat_with_brain(
     attempted: list[str] = []
     try:
         from ilim_assistant.ruzgar_umed_cevap_emri import (
+            begin_turn_budget,
             remaining_sec,
             umed_emri_applies,
             umed_miss_reply,
@@ -727,6 +728,8 @@ def stream_chat_with_brain(
         from ilim_assistant.ruzgar_egitim import is_real_user_question
 
         _umed = umed_emri_applies(mode_norm=mode_norm, coding_mode=coding_mode)
+        if _umed:
+            begin_turn_budget(message or user)
     except Exception:
         _umed = False
         is_real_user_question = lambda _m: True  # type: ignore[assignment]

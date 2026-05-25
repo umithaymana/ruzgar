@@ -2888,17 +2888,6 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             )
         except Exception:
             pass
-    try:
-        from ilim_assistant.ruzgar_umed_cevap_emri import (
-            begin_turn_budget,
-            public_meta,
-            umed_emri_applies,
-        )
-
-        if umed_emri_applies(mode_norm=mode_norm, coding_mode=coding):
-            begin_turn_budget(req.message or "")
-    except Exception:
-        pass
     route_meta: dict[str, Any] = {
         "mode_raw": (req.mode or "").strip() or None,
         "mode_effective": mode_norm,
@@ -3426,9 +3415,9 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
     except Exception:
         _casual_fast = False
     try:
-        from ilim_assistant.ruzgar_umed_cevap_emri import should_skip_fast_bypass_paths
+        from ilim_assistant.ruzgar_umed_cevap_emri import should_disable_casual_fast_path
 
-        if should_skip_fast_bypass_paths():
+        if should_disable_casual_fast_path(req.message or ""):
             _casual_fast = False
     except Exception:
         pass
@@ -3471,11 +3460,14 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
 
     try:
         from ilim_assistant.ruzgar_umed_cevap_emri import (
+            begin_turn_budget,
             deadline_exceeded,
             umed_emri_applies,
             umed_miss_reply,
         )
 
+        if umed_emri_applies(mode_norm=mode_norm, coding_mode=coding):
+            begin_turn_budget(req.message or "")
         if umed_emri_applies(mode_norm=mode_norm, coding_mode=coding) and deadline_exceeded():
             from ilim_assistant.ruzgar_egitim import (
                 maybe_egitim_learned_reply,

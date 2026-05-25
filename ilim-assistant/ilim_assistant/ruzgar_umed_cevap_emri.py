@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import contextvars
 import os
+import re
 import time
 from typing import Any
 
@@ -129,12 +130,70 @@ def umed_miss_reply() -> str:
 
 
 def brain_chain_ids_for_emri() -> list[str]:
-    return ["gemini", "groq"]
+    """Birincil sıra gemini → groq; Ollama yalnızca ikisi de boşsa (birincil değil)."""
+    ids = ["gemini", "groq"]
+    try:
+        from ilim_assistant.llm_ollama import ollama_reachable
+
+        if ollama_reachable():
+            ids.append("denge")
+    except Exception:
+        pass
+    return ids
 
 
 def should_skip_fast_bypass_paths() -> bool:
     """Hızlı LLM / casual yolları emir sırasını bozar."""
     return umed_emri_enabled()
+
+
+def should_disable_casual_fast_path(message: str = "") -> bool:
+    """
+    Ümit emri açıkken bile sohbet/empati turunda hızlı yola izin ver.
+    Yalnızca açık bilgi araştırması (nedir/kimdir…) için hızlı yolu kapat.
+    """
+    if not umed_emri_enabled():
+        return False
+    raw = (message or "").strip()
+    if len(raw) < 6:
+        return False
+    try:
+        from ilim_assistant.ana_motor_plan import (
+            is_casual_conversation_turn,
+            looks_like_casual_social_chat,
+        )
+        from ilim_assistant.ruzgar_bilissel_analiz import is_anlama_empati_sorusu
+
+        if looks_like_casual_social_chat(raw):
+            return False
+        if is_anlama_empati_sorusu(raw):
+            return False
+        if re.search(
+            r"(?:kendini|kendin)\s+nasil\s+hissed|nasil\s+hissediyorsun|"
+            r"nasil\s+hissediyorsun|duygularini|duygularını)",
+            raw,
+            re.I,
+        ):
+            return False
+        if is_casual_conversation_turn(raw, "genel", None):
+            return False
+    except Exception:
+        pass
+    low = raw.lower()
+    if re.search(r"\b(?:bilir\s*misin|bilirmisin)\b", low):
+        return True
+    return any(
+        k in low
+        for k in (
+            " nedir",
+            "nedir ",
+            "kimdir",
+            "ne zaman",
+            "nerede",
+            " kaç ",
+            " kac ",
+        )
+    )
 
 
 def should_defer_web_to_rest() -> bool:
