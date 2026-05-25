@@ -436,6 +436,16 @@ def is_programlama_reserved_command(message: str) -> bool:
     except Exception:
         pass
     try:
+        from ilim_assistant.motorlar.programlama_faz32 import (
+            wants_task_save_pipeline,
+            wants_workflow_summary,
+        )
+
+        if wants_workflow_summary(message) or wants_task_save_pipeline(message):
+            return True
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_faz22 import wants_symbol_command
 
         if wants_symbol_command(message):
@@ -782,6 +792,18 @@ def maybe_programlama_instant_reply(
         )
         if faz28_hit:
             parts.append(faz28_hit)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz32 import maybe_instant_faz32
+
+        faz32_hit = maybe_instant_faz32(
+            message,
+            workspace_root,
+            active_file=active_file,
+        )
+        if faz32_hit:
+            parts.append(faz32_hit)
     except Exception:
         pass
     try:
@@ -1332,6 +1354,12 @@ def build_motor_context(
         from ilim_assistant.motorlar.programlama_faz31 import faz31_directive
 
         base += faz31_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz32 import faz32_directive
+
+        base += faz32_directive() + "\n"
     except Exception:
         pass
     try:

@@ -548,6 +548,7 @@ def run_offline() -> int:
         "proje listesi",
         "proje sec: demo",
         "pr durum",
+        "is akisi",
         "proje tara",
         "npm install",
     ):
@@ -622,7 +623,7 @@ def run_live(base: str) -> int:
     try:
         h = get("/api/health")
         rev = str((h.get("build") or {}).get("rev") or "")
-        if "faz31" in rev or rev.endswith("-v43"):
+        if "faz32" in rev or rev.endswith("-v44"):
             _ok(f"build.rev={rev}")
         else:
             _fail("build.rev", rev)
@@ -876,6 +877,38 @@ def run_parity(*, live_base: str | None = None) -> int:
     else:
         _fail("inline diff", str(payload)[:80])
         fails += 1
+
+    print("=== Faz 32 — gorev sonu git akisi ===")
+    from ilim_assistant.motorlar.programlama_faz32 import (
+        FAZ32_VERSION,
+        build_post_task_summary,
+        wants_task_save_pipeline,
+        wants_workflow_summary,
+    )
+
+    block = build_post_task_summary(
+        WORKSPACE,
+        "projects/benim-api",
+        success=True,
+        verify_ok=True,
+        elapsed_sec=12.5,
+    )
+    if block.get("ok") and "Faz 32" in str(block.get("markdown") or ""):
+        _ok("post-task summary")
+    else:
+        _fail("post-task summary")
+        fails += 1
+    if wants_workflow_summary("is akisi"):
+        _ok("wants is akisi")
+    else:
+        _fail("wants is akisi")
+        fails += 1
+    if wants_task_save_pipeline("is bitir pr"):
+        _ok("wants is bitir pr")
+    else:
+        _fail("wants is bitir pr")
+        fails += 1
+    _ok(f"faz32 {FAZ32_VERSION}")
 
     print("=== Faz 31 — git PR koprusu ===")
     from ilim_assistant.motorlar.programlama_faz31 import (

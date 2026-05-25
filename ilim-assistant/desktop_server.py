@@ -791,7 +791,7 @@ def health():
         },
         "super_brain": _super_brain_health_block(),
         "build": {
-            "rev": "2026-05-25-programlama-faz31-v43",
+            "rev": "2026-05-25-programlama-faz32-v44",
             "nebula_kitap": True,
             "fast_paths": os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
             "memory_first": True,
@@ -1494,6 +1494,30 @@ def api_programlama_git_push_branch(body: ProgramlamaPrBody):
     if not res.get("ok"):
         raise HTTPException(status_code=400, detail=res.get("error") or "push başarısız")
     return {**res, "version": FAZ31_VERSION}
+
+
+@app.post("/api/programlama/task/save-pipeline")
+def api_programlama_task_save_pipeline(body: ProgramlamaPrBody):
+    """Faz 32 — commit + push + PR (görev kaydet)."""
+    from ilim_assistant.motorlar.programlama_faz32 import (
+        FAZ32_VERSION,
+        format_pipeline_report,
+        run_task_save_pipeline,
+    )
+
+    root = (body.workspace_root or "").strip() or None
+    res = run_task_save_pipeline(
+        root,
+        scope_rel=body.scope_rel,
+        active_file=body.rel,
+        pr_title=body.title,
+        open_pr=True,
+    )
+    res["report"] = format_pipeline_report(res)
+    res["version"] = FAZ32_VERSION
+    if not res.get("ok"):
+        raise HTTPException(status_code=400, detail=res.get("error") or "pipeline başarısız")
+    return res
 
 
 @app.post("/api/programlama/git/pr-create")

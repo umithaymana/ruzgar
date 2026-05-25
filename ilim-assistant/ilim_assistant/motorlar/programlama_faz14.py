@@ -1137,6 +1137,21 @@ def iter_code_agent_turn_events(
         total_sec=total_sec,
     )
     reply_body = reply_body.rstrip() + "\n\n" + report
+    try:
+        from ilim_assistant.motorlar.programlama_faz32 import append_post_task_to_reply
+
+        st = load_agent_state(workspace)
+        verify_ok = bool(success and st.get("last_verify_ok"))
+        reply_body = append_post_task_to_reply(
+            reply_body,
+            workspace,
+            task.scope_rel,
+            success=success,
+            verify_ok=verify_ok,
+            elapsed_sec=total_sec,
+        )
+    except Exception:
+        pass
 
     clear_agent_state(workspace)
 
