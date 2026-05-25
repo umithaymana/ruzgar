@@ -791,7 +791,7 @@ def health():
         },
         "super_brain": _super_brain_health_block(),
         "build": {
-            "rev": "2026-05-25-programlama-faz30-v42",
+            "rev": "2026-05-25-programlama-faz31-v43",
             "nebula_kitap": True,
             "fast_paths": os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
             "memory_first": True,
@@ -1442,6 +1442,83 @@ def api_programlama_git_pending_commit(workspace_root: str | None = None):
         "pending": pending,
         "version": FAZ17_VERSION,
     }
+
+
+@app.get("/api/programlama/git/pr-status")
+def api_programlama_git_pr_status(
+    workspace_root: str | None = None,
+    scope_rel: str | None = None,
+    active_file: str | None = None,
+):
+    """Faz 31 — PR özeti (dal, ahead/behind, açık PR)."""
+    from ilim_assistant.motorlar.programlama_faz31 import (
+        FAZ31_VERSION,
+        format_pr_status_report,
+        gather_pr_snapshot,
+    )
+
+    root = (workspace_root or "").strip() or None
+    snap = gather_pr_snapshot(
+        root,
+        scope_rel=(scope_rel or "").strip() or None,
+        active_file=active_file,
+    )
+    return {
+        "ok": bool(snap.get("ok")),
+        "snapshot": snap,
+        "report": format_pr_status_report(snap),
+        "version": FAZ31_VERSION,
+    }
+
+
+class ProgramlamaPrBody(BaseModel):
+    workspace_root: str | None = None
+    scope_rel: str | None = None
+    rel: str | None = None
+    title: str = ""
+    body: str = ""
+    push_first: bool = True
+
+
+@app.post("/api/programlama/git/push-branch")
+def api_programlama_git_push_branch(body: ProgramlamaPrBody):
+    """Faz 31 — güvenli git push -u origin HEAD."""
+    from ilim_assistant.motorlar.programlama_faz31 import FAZ31_VERSION, push_current_branch
+
+    root = (body.workspace_root or "").strip() or None
+    res = push_current_branch(
+        root,
+        scope_rel=body.scope_rel,
+        active_file=body.rel,
+    )
+    if not res.get("ok"):
+        raise HTTPException(status_code=400, detail=res.get("error") or "push başarısız")
+    return {**res, "version": FAZ31_VERSION}
+
+
+@app.post("/api/programlama/git/pr-create")
+def api_programlama_git_pr_create(body: ProgramlamaPrBody):
+    """Faz 31 — gh pr create (önce push)."""
+    from ilim_assistant.motorlar.programlama_faz31 import (
+        FAZ31_VERSION,
+        create_pull_request,
+        format_pr_create_report,
+    )
+
+    root = (body.workspace_root or "").strip() or None
+    res = create_pull_request(
+        root,
+        title=body.title,
+        body=body.body,
+        push_first=body.push_first,
+        scope_rel=body.scope_rel,
+        active_file=body.rel,
+    )
+    res["report"] = format_pr_create_report(res)
+    res["version"] = FAZ31_VERSION
+    if not res.get("ok"):
+        raise HTTPException(status_code=400, detail=res.get("error") or "PR oluşturulamadı")
+    return res
 
 
 @app.post("/api/programlama/git/commit")

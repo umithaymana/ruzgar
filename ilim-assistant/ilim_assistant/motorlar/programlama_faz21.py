@@ -112,6 +112,7 @@ def build_light_programming_context(
             pass
 
     for directive_fn in (
+        "programlama_faz31.faz31_directive",
         "programlama_faz30.faz30_directive",
         "programlama_faz29.faz29_directive",
         "programlama_faz28.faz28_directive",

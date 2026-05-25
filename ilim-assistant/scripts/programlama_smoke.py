@@ -547,6 +547,7 @@ def run_offline() -> int:
         "git dal",
         "proje listesi",
         "proje sec: demo",
+        "pr durum",
         "proje tara",
         "npm install",
     ):
@@ -621,7 +622,7 @@ def run_live(base: str) -> int:
     try:
         h = get("/api/health")
         rev = str((h.get("build") or {}).get("rev") or "")
-        if "faz30" in rev or rev.endswith("-v42"):
+        if "faz31" in rev or rev.endswith("-v43"):
             _ok(f"build.rev={rev}")
         else:
             _fail("build.rev", rev)
@@ -800,6 +801,17 @@ def run_live(base: str) -> int:
         fails += 1
 
     try:
+        prs = get(f"/api/programlama/git/pr-status?workspace_root={enc}")
+        if prs.get("ok") and prs.get("snapshot"):
+            _ok("git pr-status API (Faz 31)")
+        else:
+            _fail("git pr-status", str(prs.get("snapshot", {}).get("error") or "")[:80])
+            fails += 1
+    except Exception as e:
+        _fail("git pr-status API", str(e)[:120])
+        fails += 1
+
+    try:
         s = get(f"/api/programlama/project-scan?workspace_root={enc}&scope_rel={scope}")
         if s.get("ok"):
             _ok("project-scan API")
@@ -864,6 +876,45 @@ def run_parity(*, live_base: str | None = None) -> int:
     else:
         _fail("inline diff", str(payload)[:80])
         fails += 1
+
+    print("=== Faz 31 — git PR koprusu ===")
+    from ilim_assistant.motorlar.programlama_faz31 import (
+        FAZ31_VERSION,
+        gather_pr_snapshot,
+        resolve_git_cwd,
+        wants_pr_create,
+        wants_pr_push,
+        wants_pr_status,
+    )
+
+    cwd, src = resolve_git_cwd(WORKSPACE)
+    if cwd and src == "workspace_root":
+        _ok(f"git cwd {src}")
+    else:
+        _fail("resolve_git_cwd", str(src))
+        fails += 1
+    snap = gather_pr_snapshot(WORKSPACE)
+    if snap.get("ok") and snap.get("branch"):
+        _ok(f"pr snapshot branch={snap.get('branch')[:24]}")
+    else:
+        _fail("pr snapshot", str(snap.get("error")))
+        fails += 1
+    if wants_pr_status("pr durum"):
+        _ok("wants pr durum")
+    else:
+        _fail("wants pr durum")
+        fails += 1
+    if wants_pr_push("pr gonder"):
+        _ok("wants pr gonder")
+    else:
+        _fail("wants pr gonder")
+        fails += 1
+    if wants_pr_create("pr olustur: test basligi"):
+        _ok("wants pr olustur")
+    else:
+        _fail("wants pr olustur")
+        fails += 1
+    _ok(f"faz31 {FAZ31_VERSION}")
 
     print("=== Faz 30 — mobil sablon (Expo) ===")
     from ilim_assistant.motorlar.programlama_faz6 import run_scaffold

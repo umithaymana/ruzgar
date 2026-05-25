@@ -4,7 +4,7 @@
  * Kök sonda `/api` ise kırpılır — aksi halde fetch `.../api/api/merkezi-bellek` ile 404 verir.
  */
 const RUZGAR_LOCAL_API_PORT = 8779;
-const RUZGAR_EXPECTED_BUILD_REV = "2026-05-25-programlama-faz30-v42";
+const RUZGAR_EXPECTED_BUILD_REV = "2026-05-25-programlama-faz31-v43";
 const RUZGAR_LOCAL_API_FALLBACK = `http://127.0.0.1:${RUZGAR_LOCAL_API_PORT}`;
 
 function migrateLegacyApiUrl(raw) {
@@ -1969,6 +1969,48 @@ async function gitSuggestCommitFromAtolye() {
     setCodeOutput(data.report || data.error || "Commit önerisi hazır.");
   } catch (e) {
     setCodeOutput(`Commit öner: ${e && e.message ? e.message : e}`);
+  }
+}
+
+async function gitPrStatusFromAtolye() {
+  const workspaceRoot = await getProgramlamaWorkspaceRoot();
+  if (!workspaceRoot) return;
+  try {
+    const qs = new URLSearchParams({ workspace_root: workspaceRoot });
+    if (atolyeOpenRel) qs.set("active_file", atolyeOpenRel);
+    const res = await fetch(`${API}/api/programlama/git/pr-status?${qs}`);
+    const data = await res.json().catch(() => ({}));
+    setCodeOutput(data.report || data.snapshot?.error || "PR durum bitti.");
+  } catch (e) {
+    setCodeOutput(`PR durum: ${e && e.message ? e.message : e}`);
+  }
+}
+
+async function gitPrCreateFromAtolye() {
+  const workspaceRoot = await getProgramlamaWorkspaceRoot();
+  if (!workspaceRoot) return;
+  const title =
+    window.prompt("PR başlığı (boş = son commit mesajı):", "") || "";
+  if (title === null) return;
+  try {
+    const res = await fetch(`${API}/api/programlama/git/pr-create`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        workspace_root: workspaceRoot,
+        rel: atolyeOpenRel || undefined,
+        title: title.trim(),
+        push_first: true,
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setCodeOutput(data.detail || data.error || data.report || "PR açılamadı.");
+      return;
+    }
+    setCodeOutput(data.report || data.url || "PR oluşturuldu.");
+  } catch (e) {
+    setCodeOutput(`PR: ${e && e.message ? e.message : e}`);
   }
 }
 
@@ -5178,6 +5220,14 @@ function wireProgrammingWorkbench() {
   const btnGitCommit = document.getElementById("btn-git-commit-apply");
   if (btnGitCommit) {
     btnGitCommit.addEventListener("click", () => void gitCommitFromAtolye());
+  }
+  const btnGitPrStatus = document.getElementById("btn-git-pr-status");
+  if (btnGitPrStatus) {
+    btnGitPrStatus.addEventListener("click", () => void gitPrStatusFromAtolye());
+  }
+  const btnGitPrCreate = document.getElementById("btn-git-pr-create");
+  if (btnGitPrCreate) {
+    btnGitPrCreate.addEventListener("click", () => void gitPrCreateFromAtolye());
   }
   if (el.btnCodeOutputClear) {
     el.btnCodeOutputClear.addEventListener("click", () => setCodeOutput(""));

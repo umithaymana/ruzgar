@@ -5,7 +5,7 @@
 
 **Referans (Cursor / bu sohbet):** Plan → araçlarla oku → çok dosya değiştir → terminal/test → hata oku → tekrarla → kullanıcıya özet.
 
-**Mevcut build:** `2026-05-25-programlama-faz30-v42` (Faz 8–30 / Cursor P2 tamam)
+**Mevcut build:** `2026-05-25-programlama-faz31-v43` (Faz 8–31 / Git PR köprüsü)
 
 ---
 
@@ -91,6 +91,7 @@ Kullanıcı (programlama modu)
 | **28** | Git branch | `git dal` · `yeni dal: x` | ✓ v40 |
 | **29** | Çoklu proje workspace | `proje listesi` · `proje sec: x` · atölye seçici | ✓ v41 |
 | **30** | Mobil şablon (Expo) | `mobile_expo` · + Mobil · `npx expo start` | ✓ v42 |
+| **31** | Git PR köprüsü | `pr durum` · `pr gönder` · `pr oluştur:` · `gh` | ✓ v43 |
 
 ---
 
