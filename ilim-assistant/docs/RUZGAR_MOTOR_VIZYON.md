@@ -19,13 +19,14 @@ Sohbete yaz → **işi Rüzgar yapsın**: plan, dosya okuma/yazma, test, düzelt
 | Genel sohbet (Gemini/Groq) | Var | Ümit cevap emri; kod işi için yeterli değil |
 | Tüm motorlarda tam otonom ürün | **Hayır** | Video/okuma/tercüme ayrı iş akışları |
 
-**Kısa cevap:** «Şu programı sıfırdan sen yap» — **kısmen evet** (programlama modu + `görev:` + şablonlar). **Tam Cursor seviyesi** (uzun oturum, her motor, sıfır müdahale) — **henüz hayır**; Faz 14 kotası ve çok dosyalı uzun işler sınırlı.
+**Kısa cevap:** «Şu programı sıfırdan sen yap» — **evet (Faz 47)** `proje üret:` ile scaffold + pytest Cursor olmadan biter (basit API). Özel özellik (login, CRUD…) için otomatik ajan devreye girer.
 
-## Önerilen kullanım (şimdi — Faz 19)
+## Önerilen kullanım (şimdi — Faz 47)
 
 1. **PROGRAMLAMA MOTORU** sekmesi
-2. `projects/` altında proje aç veya `şablon: fastapi_api benim-api`
-3. Hedef (üç yol):
+2. **Yeni proje (Cursor gerekmez):** `proje üret: fastapi_api benim-api health version pytest`
+3. Veya `projects/` altında proje aç / `şablon oluştur: fastapi_api benim-api`
+4. Mevcut projede hedef (üç yol):
    - `görev: benim-api health endpointine version ekle ve test geçir`
    - `iş: benim-api …` / `yap: benim-api …`
    - Doğal: `benim-api health endpointine version ekle ve test geçir`
