@@ -1363,6 +1363,12 @@ def build_motor_context(
     except Exception:
         pass
     try:
+        from ilim_assistant.motorlar.programlama_faz33 import faz33_directive
+
+        base += faz33_directive() + "\n"
+    except Exception:
+        pass
+    try:
         if os.environ.get("RUZGAR_PROG_REPO_MAP", "1").strip().lower() not in (
             "0",
             "false",

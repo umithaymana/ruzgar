@@ -5,7 +5,7 @@
 
 **Referans (Cursor / bu sohbet):** Plan → araçlarla oku → çok dosya değiştir → terminal/test → hata oku → tekrarla → kullanıcıya özet.
 
-**Mevcut build:** `2026-05-25-programlama-faz32-v44` (Faz 8–32 / görev sonu Git akışı)
+**Mevcut build:** `2026-05-25-programlama-faz33-v45` (Faz 8–33 / doğal cümle = ajan)
 
 ---
 
@@ -93,6 +93,7 @@ Kullanıcı (programlama modu)
 | **30** | Mobil şablon (Expo) | `mobile_expo` · + Mobil · `npx expo start` | ✓ v42 |
 | **31** | Git PR köprüsü | `pr durum` · `pr gönder` · `pr oluştur:` · `gh` | ✓ v43 |
 | **32** | Görev sonu Git akışı | Otomatik özet · `iş akışı` · `iş bitir pr` | ✓ v44 |
+| **33** | Doğal cümle = ajan | `görev:` şart değil · aktif proje + iş fiili | ✓ v45 |
 
 ---
 

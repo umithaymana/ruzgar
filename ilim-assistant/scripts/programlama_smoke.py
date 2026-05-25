@@ -623,7 +623,7 @@ def run_live(base: str) -> int:
     try:
         h = get("/api/health")
         rev = str((h.get("build") or {}).get("rev") or "")
-        if "faz32" in rev or rev.endswith("-v44"):
+        if "faz33" in rev or rev.endswith("-v45"):
             _ok(f"build.rev={rev}")
         else:
             _fail("build.rev", rev)
@@ -877,6 +877,47 @@ def run_parity(*, live_base: str | None = None) -> int:
     else:
         _fail("inline diff", str(payload)[:80])
         fails += 1
+
+    print("=== Faz 33 — dogal cumle = ajan ===")
+    from ilim_assistant.motorlar.programlama_faz33 import (
+        FAZ33_VERSION,
+        build_implicit_task_line,
+        should_auto_programming_agent,
+    )
+    from ilim_assistant.motorlar.programlama_faz20 import should_run_unified_programming_agent
+
+    implicit = build_implicit_task_line(
+        "health endpointine version ekle ve pytest gecir",
+        WORKSPACE,
+        active_file="projects/benim-api/app/main.py",
+        mode_norm="programlama",
+    )
+    imp_low = (implicit or "").lower().replace("ö", "o").replace("ü", "u")
+    if implicit and "gorev:" in imp_low and "benim-api" in implicit:
+        _ok(f"implicit task: {implicit[:48]}...")
+    else:
+        _fail("implicit task", str(implicit))
+        fails += 1
+    if should_auto_programming_agent(
+        "version ekle ve test gecir",
+        "programlama",
+        workspace_root=WORKSPACE,
+        active_file="projects/benim-api/main.py",
+    ):
+        _ok("should_auto_programming_agent (aktif dosya)")
+    else:
+        _fail("should_auto_programming_agent")
+        fails += 1
+    if should_run_unified_programming_agent(
+        "benim-api health endpointine version ekle",
+        "programlama",
+        workspace_root=WORKSPACE,
+    ):
+        _ok("should_run_unified (dogal cumle)")
+    else:
+        _fail("should_run_unified")
+        fails += 1
+    _ok(f"faz33 {FAZ33_VERSION}")
 
     print("=== Faz 32 — gorev sonu git akisi ===")
     from ilim_assistant.motorlar.programlama_faz32 import (

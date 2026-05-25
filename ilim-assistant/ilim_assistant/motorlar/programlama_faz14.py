@@ -215,13 +215,30 @@ def wants_code_agent_status(message: str) -> bool:
     )
 
 
-def should_run_code_agent_loop(message: str, mode_norm: str = "") -> bool:
+def should_run_code_agent_loop(
+    message: str,
+    mode_norm: str = "",
+    *,
+    workspace_root: str | Path | None = None,
+    active_file: str | None = None,
+) -> bool:
     if not _enabled():
         return False
     if mode_norm != "programlama":
         return False
     if wants_code_agent_stop(message) or wants_code_agent_status(message):
         return False
+    try:
+        from ilim_assistant.motorlar.programlama_faz33 import should_auto_programming_agent
+
+        return should_auto_programming_agent(
+            message,
+            mode_norm,
+            workspace_root=workspace_root,
+            active_file=active_file,
+        )
+    except Exception:
+        pass
     try:
         from ilim_assistant.motorlar.programlama_faz19 import normalize_agent_message
 
@@ -771,9 +788,45 @@ def iter_code_agent_turn_events(
     from ilim_assistant.text_encoding import finalize_assistant_reply
     from ilim_assistant.chat_core import rag_footer
 
-    task = parse_code_agent_task(message)
+    norm_msg = message
+    try:
+        from ilim_assistant.motorlar.programlama_faz33 import normalize_for_agent
+
+        norm_msg = normalize_for_agent(
+            message,
+            mode_norm,
+            workspace_root=req.workspace_root,
+            active_file=getattr(req, "programlama_active_file", None),
+        )
+    except Exception:
+        try:
+            from ilim_assistant.motorlar.programlama_faz19 import normalize_agent_message
+
+            norm_msg = normalize_agent_message(message, mode_norm=mode_norm)
+        except Exception:
+            pass
+
+    task = parse_code_agent_task(norm_msg)
     if task is None:
-        yield {"type": "error", "text": "Görev ayrıştırılamadı — `görev: proje hedef` yaz."}
+        try:
+            from ilim_assistant.motorlar.programlama_faz20 import resolve_agent_task
+
+            task = resolve_agent_task(
+                message,
+                req.workspace_root,
+                active_file=getattr(req, "programlama_active_file", None),
+                mode_norm=mode_norm,
+            )
+        except Exception:
+            task = None
+    if task is None:
+        yield {
+            "type": "error",
+            "text": (
+                "Görev ayrıştırılamadı — `projects/<proje>/` açın veya "
+                "«benim-api health'e version ekle» yazın."
+            ),
+        }
         return
 
     workspace = req.workspace_root

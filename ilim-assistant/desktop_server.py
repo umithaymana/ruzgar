@@ -791,7 +791,7 @@ def health():
         },
         "super_brain": _super_brain_health_block(),
         "build": {
-            "rev": "2026-05-25-programlama-faz32-v44",
+            "rev": "2026-05-25-programlama-faz33-v45",
             "nebula_kitap": True,
             "fast_paths": os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
             "memory_first": True,
@@ -3364,7 +3364,12 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 should_run_unified_programming_agent,
             )
 
-            if should_run_unified_programming_agent(msg, mode_norm):
+            if should_run_unified_programming_agent(
+                msg,
+                mode_norm,
+                workspace_root=req.workspace_root,
+                active_file=getattr(req, "programlama_active_file", None),
+            ):
                 yield from iter_unified_programming_agent_events(
                     message=msg,
                     req=req,
@@ -3399,7 +3404,12 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 should_run_code_agent_loop,
             )
 
-            if should_run_code_agent_loop(msg, mode_norm):
+            if should_run_code_agent_loop(
+                msg,
+                mode_norm,
+                workspace_root=req.workspace_root,
+                active_file=getattr(req, "programlama_active_file", None),
+            ):
                 yield from iter_code_agent_turn_events(
                     message=msg,
                     req=req,

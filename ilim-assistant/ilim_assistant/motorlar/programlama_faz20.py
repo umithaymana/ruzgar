@@ -139,17 +139,32 @@ def wants_implementation_agent(message: str, mode_norm: str = "") -> bool:
     return False
 
 
-def should_run_unified_programming_agent(message: str, mode_norm: str = "") -> bool:
-    if not wants_implementation_agent(message, mode_norm):
-        return False
+def should_run_unified_programming_agent(
+    message: str,
+    mode_norm: str = "",
+    *,
+    workspace_root: str | Path | None = None,
+    active_file: str | None = None,
+) -> bool:
+    """Faz 33 — görev: şart değil; aktif proje + resolve_agent_task."""
     try:
-        from ilim_assistant.motorlar.programlama_faz19 import normalize_agent_message
-        from ilim_assistant.motorlar.programlama_faz14 import parse_code_agent_task
+        from ilim_assistant.motorlar.programlama_faz33 import should_auto_programming_agent
 
-        msg = normalize_agent_message(message, mode_norm=mode_norm)
-        return parse_code_agent_task(msg) is not None
+        return should_auto_programming_agent(
+            message,
+            mode_norm,
+            workspace_root=workspace_root,
+            active_file=active_file,
+        )
     except Exception:
-        return wants_implementation_agent(message, mode_norm)
+        if not wants_implementation_agent(message, mode_norm):
+            return False
+        return resolve_agent_task(
+            message,
+            workspace_root,
+            active_file=active_file,
+            mode_norm=mode_norm,
+        ) is not None
 
 
 def resolve_agent_task(
@@ -368,11 +383,21 @@ def iter_unified_programming_agent_events(
 
     norm_msg = message
     try:
-        from ilim_assistant.motorlar.programlama_faz19 import normalize_agent_message
+        from ilim_assistant.motorlar.programlama_faz33 import normalize_for_agent
 
-        norm_msg = normalize_agent_message(message, mode_norm=mode_norm)
+        norm_msg = normalize_for_agent(
+            message,
+            mode_norm,
+            workspace_root=req.workspace_root,
+            active_file=getattr(req, "programlama_active_file", None),
+        )
     except Exception:
-        pass
+        try:
+            from ilim_assistant.motorlar.programlama_faz19 import normalize_agent_message
+
+            norm_msg = normalize_agent_message(message, mode_norm=mode_norm)
+        except Exception:
+            pass
 
     yield {
         "type": "status",
