@@ -624,7 +624,14 @@ def run_live(base: str) -> int:
         h = get("/api/health")
         rev = str((h.get("build") or {}).get("rev") or "")
         if (
-            "faz63" in rev
+            "faz68" in rev
+            or rev.endswith("-v78")
+            or "faz67" in rev
+            or rev.endswith("-v77")
+            or "faz66" in rev
+            or "faz65" in rev
+            or rev.endswith("-v76")
+            or "faz63" in rev
             or "faz62" in rev
             or "faz61" in rev
             or rev.endswith("-v74")
@@ -1597,7 +1604,17 @@ def run_parity(*, live_base: str | None = None) -> int:
         _fail("faz60")
         fails += 1
     exp = expected_build_rev()
-    if "faz65-v76" in exp or exp.endswith("-v76"):
+    if "faz76-v85" in exp or exp.endswith("-v85"):
+        _ok("faz60 expected rev v85")
+    elif "faz75-v84" in exp or exp.endswith("-v84"):
+        _ok("faz60 expected rev v84")
+    elif "faz74-v83" in exp or exp.endswith("-v83"):
+        _ok("faz60 expected rev v83")
+    elif "faz73-v82" in exp or exp.endswith("-v82"):
+        _ok("faz60 expected rev v82")
+    elif "faz72-v81" in exp or exp.endswith("-v81"):
+        _ok("faz60 expected rev v81")
+    elif "faz71-v80" in exp or exp.endswith("-v80"):
         _ok(f"faz60 expected rev={exp[:40]}")
     else:
         _fail("faz60 expected rev", exp)
@@ -1843,6 +1860,442 @@ def run_parity(*, live_base: str | None = None) -> int:
     else:
         _ok("faz65 plan skipped (no smoke-ref project)")
     _ok(f"faz65 {FAZ65_VERSION}")
+
+    print("=== Faz 66 — repo rename ===")
+    from ilim_assistant.motorlar.programlama_faz66 import (
+        FAZ66_VERSION,
+        enrich_health_build as enrich66,
+        faz66_enabled,
+        parse_repo_rename_command,
+        parse_scope_rename_command,
+    )
+
+    if faz66_enabled():
+        _ok("faz66 on")
+    else:
+        _fail("faz66")
+        fails += 1
+    h66 = enrich66({"rev": exp})
+    if h66.get("faz66"):
+        _ok("faz66 health enrich")
+    else:
+        _fail("faz66 health")
+        fails += 1
+    pr66 = parse_repo_rename_command(
+        "rename-repo: smoke-cursor-ref-40763 OldName -> NewName önizle"
+    )
+    if pr66 and pr66.get("dry_run") and pr66.get("old") == "OldName":
+        _ok("faz66 parse repo rename")
+    else:
+        _fail("faz66 parse repo", str(pr66))
+        fails += 1
+    ps66 = parse_scope_rename_command("rename-scope foo -> bar")
+    if ps66 == ("foo", "bar"):
+        _ok("faz66 parse scope rename")
+    else:
+        _fail("faz66 parse scope", str(ps66))
+        fails += 1
+    _ok(f"faz66 {FAZ66_VERSION}")
+
+    print("=== Faz 67 — özgür shell ===")
+    from ilim_assistant.motorlar.programlama_faz67 import (
+        FAZ67_VERSION,
+        enrich_health_build as enrich67,
+        faz67_enabled,
+        parse_shell_onay_command,
+        parse_shell_istek_command,
+        validate_shell_command,
+        wants_free_shell,
+    )
+
+    if faz67_enabled():
+        _ok("faz67 on")
+    else:
+        _fail("faz67")
+        fails += 1
+    h67 = enrich67({"rev": exp})
+    if h67.get("faz67"):
+        _ok("faz67 health enrich")
+    else:
+        _fail("faz67 health")
+        fails += 1
+    if wants_free_shell("shell onay: git status"):
+        _ok("faz67 wants shell")
+    else:
+        _fail("faz67 wants")
+        fails += 1
+    if parse_shell_onay_command("shell onay: dir") == "dir":
+        _ok("faz67 parse onay")
+    else:
+        _fail("faz67 parse onay")
+        fails += 1
+    if parse_shell_istek_command("shell istek: make test") == "make test":
+        _ok("faz67 parse istek")
+    else:
+        _fail("faz67 parse istek")
+        fails += 1
+    ok67, err67 = validate_shell_command("git status -sb")
+    if ok67:
+        _ok("faz67 validate ok cmd")
+    else:
+        _fail("faz67 validate", err67)
+        fails += 1
+    bad67, _ = validate_shell_command("rm -rf /")
+    if not bad67:
+        _ok("faz67 blocks dangerous")
+    else:
+        _fail("faz67 dangerous")
+        fails += 1
+    meta67, _ = validate_shell_command("echo a; echo b")
+    if not meta67:
+        _ok("faz67 blocks meta")
+    else:
+        _fail("faz67 meta")
+        fails += 1
+    _ok(f"faz67 {FAZ67_VERSION}")
+
+    print("=== Faz 68 — ROK konuşarak yap ===")
+    from ilim_assistant.ruzgar_motor_kernel import (
+        KERNEL_VERSION,
+        classify_motor_intent,
+        kernel_enabled,
+    )
+    from ilim_assistant.motorlar.programlama_faz68 import (
+        FAZ68_VERSION,
+        build_agent_task_line,
+        classify_programlama_intent,
+        enrich_health_build as enrich68,
+        faz68_enabled,
+        should_run_agent_via_kernel,
+    )
+
+    if kernel_enabled():
+        _ok("motor kernel on")
+    else:
+        _fail("motor kernel")
+        fails += 1
+    if faz68_enabled():
+        _ok("faz68 on")
+    else:
+        _fail("faz68")
+        fails += 1
+    h68 = enrich68({"rev": exp})
+    if h68.get("faz68") and h68.get("motor_kernel"):
+        _ok("faz68 health enrich")
+    else:
+        _fail("faz68 health", str(h68)[:80])
+        fails += 1
+    chat_i = classify_programlama_intent("pytest nedir acikla", mode_norm="programlama")
+    if chat_i.get("intent") == "chat":
+        _ok("faz68 chat intent")
+    else:
+        _fail("faz68 chat", str(chat_i))
+        fails += 1
+    do_i = classify_programlama_intent(
+        "health endpointine version ekle ve test gecir",
+        mode_norm="programlama",
+    )
+    if do_i.get("intent") == "do":
+        _ok("faz68 do intent")
+    else:
+        _fail("faz68 do", str(do_i))
+        fails += 1
+    scope_test = "projects/smoke-cursor-ref-40763"
+    src = WORKSPACE / scope_test.replace("/", os.sep)
+    if src.is_dir():
+        line = build_agent_task_line(
+            "version ekle pytest gecir",
+            WORKSPACE,
+            active_file=f"{scope_test}/app/main.py",
+        )
+        if line and "görev:" in line.lower():
+            _ok(f"faz68 task line: {line[:50]}")
+        else:
+            _fail("faz68 task line", str(line))
+            fails += 1
+        if should_run_agent_via_kernel(
+            "health servisine version ekle",
+            "programlama",
+            workspace_root=WORKSPACE,
+            active_file=f"{scope_test}/app/main.py",
+        ):
+            _ok("faz68 should run agent")
+        else:
+            _fail("faz68 should run")
+            fails += 1
+    else:
+        _ok("faz68 scope tests skipped")
+    mi = classify_motor_intent(
+        "selam",
+        "programlama",
+        mode_norm="programlama",
+    )
+    if mi.get("intent"):
+        _ok("kernel classify_motor_intent")
+    else:
+        _fail("kernel classify")
+        fails += 1
+    _ok(f"faz68 {FAZ68_VERSION} / {KERNEL_VERSION}")
+
+    print("=== Faz 69 — otomatik proje ===")
+    from ilim_assistant.motorlar.programlama_faz69 import (
+        FAZ69_VERSION,
+        ensure_scope_for_agent,
+        enrich_health_build as enrich69,
+        faz69_enabled,
+        infer_create_spec,
+    )
+
+    if faz69_enabled():
+        _ok("faz69 on")
+    else:
+        _fail("faz69")
+        fails += 1
+    h69 = enrich69({"rev": exp})
+    if h69.get("faz69"):
+        _ok("faz69 health")
+    else:
+        _fail("faz69 health")
+        fails += 1
+    spec69 = infer_create_spec("sıfırdan fastapi api yap smoke-faz69-test")
+    if spec69 and getattr(spec69, "project_name", None):
+        _ok("faz69 infer create spec")
+    else:
+        _fail("faz69 infer spec")
+        fails += 1
+    _ok(f"faz69 {FAZ69_VERSION}")
+
+    print("=== Faz 70 — otomatik patch ===")
+    from ilim_assistant.motorlar.programlama_faz70 import (
+        FAZ70_VERSION,
+        enrich_health_build as enrich70,
+        faz70_enabled,
+        finalize_agent_patches,
+    )
+
+    if faz70_enabled():
+        _ok("faz70 on")
+    else:
+        _fail("faz70")
+        fails += 1
+    h70 = enrich70({"rev": exp})
+    if h70.get("faz70"):
+        _ok("faz70 health")
+    else:
+        _fail("faz70 health")
+        fails += 1
+    fin70 = finalize_agent_patches(WORKSPACE)
+    if fin70.get("ok") is not None:
+        _ok("faz70 finalize callable")
+    else:
+        _fail("faz70 finalize")
+        fails += 1
+    _ok(f"faz70 {FAZ70_VERSION}")
+
+    print("=== Video Faz 71 — ROK ===")
+    from ilim_assistant.motorlar.video_faz71 import (
+        FAZ71_VERSION as VF71,
+        classify_video_intent,
+        extract_urls,
+        faz71_enabled,
+    )
+
+    if faz71_enabled():
+        _ok("video faz71 on")
+    else:
+        _fail("video faz71")
+        fails += 1
+    vi = classify_video_intent(
+        "bu videoyu indir https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        mode_norm="video",
+    )
+    if vi.get("intent") == "do" and vi.get("urls"):
+        _ok("video faz71 do intent")
+    else:
+        _fail("video faz71 intent", str(vi))
+        fails += 1
+    vq = classify_video_intent("ffmpeg nedir", mode_norm="video")
+    if vq.get("intent") == "chat":
+        _ok("video faz71 chat")
+    else:
+        _fail("video faz71 chat", str(vq))
+        fails += 1
+    if extract_urls("link https://example.com/x"):
+        _ok("video faz71 url extract")
+    else:
+        _fail("video faz71 url")
+        fails += 1
+    _ok(f"video {VF71}")
+
+    print("=== Ses Faz 72 — ROK ===")
+    from ilim_assistant.motorlar.ses_faz72 import (
+        FAZ72_VERSION as SF72,
+        classify_ses_intent,
+        extract_read_text,
+        faz72_enabled,
+        maybe_instant_faz72,
+    )
+
+    if faz72_enabled():
+        _ok("ses faz72 on")
+    else:
+        _fail("ses faz72")
+        fails += 1
+    si = classify_ses_intent("alim moduna geç", mode_norm="ses")
+    if si.get("intent") == "do" and si.get("profile") == "alim":
+        _ok("ses faz72 profile switch")
+    else:
+        _fail("ses faz72 profile", str(si))
+        fails += 1
+    sq = classify_ses_intent("edge tts nedir", mode_norm="ses")
+    if sq.get("intent") == "chat":
+        _ok("ses faz72 chat")
+    else:
+        _fail("ses faz72 chat", str(sq))
+        fails += 1
+    if extract_read_text('oku: Merhaba dünya'):
+        _ok("ses faz72 read extract")
+    else:
+        _fail("ses faz72 read extract")
+        fails += 1
+    inst = maybe_instant_faz72("ses ayarları")
+    if inst and "ses motoru ayarları" in inst.lower():
+        _ok("ses faz72 instant settings")
+    else:
+        _fail("ses faz72 instant", str(inst)[:80])
+        fails += 1
+    _ok(f"ses {SF72}")
+
+    print("=== Okuma Faz 73 — ROK ===")
+    from ilim_assistant.motorlar.okuma_faz73 import (
+        FAZ73_VERSION as OF73,
+        classify_okuma_intent,
+        faz73_enabled,
+        maybe_instant_faz73,
+    )
+
+    if faz73_enabled():
+        _ok("okuma faz73 on")
+    else:
+        _fail("okuma faz73")
+        fails += 1
+    oi = classify_okuma_intent("arsiv durumu", mode_norm="okuma")
+    if oi.get("intent") == "command" and oi.get("reason") == "arsiv_status":
+        _ok("okuma faz73 arsiv command")
+    else:
+        _fail("okuma faz73 arsiv", str(oi))
+        fails += 1
+    oc = classify_okuma_intent("arsiv nedir", mode_norm="okuma")
+    if oc.get("intent") == "chat":
+        _ok("okuma faz73 chat")
+    else:
+        _fail("okuma faz73 chat", str(oc))
+        fails += 1
+    inst_o = maybe_instant_faz73("index durumu")
+    if inst_o and "index.jsonl" in inst_o:
+        _ok("okuma faz73 instant index")
+    else:
+        _fail("okuma faz73 instant", str(inst_o)[:80])
+        fails += 1
+    _ok(f"okuma {OF73}")
+
+    print("=== Tercüme Faz 74 — ROK ===")
+    from ilim_assistant.motorlar.tercume_faz74 import (
+        FAZ74_VERSION as TF74,
+        classify_tercume_intent,
+        faz74_enabled,
+        maybe_instant_faz74,
+        parse_language_pair,
+    )
+
+    if faz74_enabled():
+        _ok("tercume faz74 on")
+    else:
+        _fail("tercume faz74")
+        fails += 1
+    ti = classify_tercume_intent(
+        "bunu ingilizceye çevir: Merhaba dünya",
+        mode_norm="tercume",
+    )
+    if ti.get("intent") == "do" and ti.get("tgt") == "en":
+        _ok("tercume faz74 translate intent")
+    else:
+        _fail("tercume faz74 intent", str(ti))
+        fails += 1
+    src_p, tgt_p = parse_language_pair("arapçadan türkçeye çevir")
+    if src_p == "ar" and tgt_p == "tr":
+        _ok("tercume faz74 lang pair")
+    else:
+        _fail("tercume faz74 pair", f"{src_p}->{tgt_p}")
+        fails += 1
+    inst_t = maybe_instant_faz74("dil listesi")
+    if inst_t and "tercüme motoru dilleri" in inst_t.lower():
+        _ok("tercume faz74 instant list")
+    else:
+        _fail("tercume faz74 instant", str(inst_t)[:80])
+        fails += 1
+    if maybe_instant_faz74("ingilizceye çevir: test") is None:
+        _ok("tercume faz74 defers short translate to LLM")
+    else:
+        _fail("tercume faz74 defer")
+        fails += 1
+    _ok(f"tercume {TF74}")
+
+    print("=== Hafıza Faz 75 — ROK ===")
+    from ilim_assistant.motorlar.hafiza_faz75 import (
+        FAZ75_VERSION as HF75,
+        classify_hafiza_intent,
+        faz75_enabled,
+        maybe_instant_faz75,
+    )
+
+    if faz75_enabled():
+        _ok("hafiza faz75 on")
+    else:
+        _fail("hafiza faz75")
+        fails += 1
+    hi = classify_hafiza_intent("hafıza durumu", mode_norm="hafiza")
+    if hi.get("intent") == "command" and hi.get("reason") == "status":
+        _ok("hafiza faz75 status intent")
+    else:
+        _fail("hafiza faz75 status", str(hi))
+        fails += 1
+    inst_h = maybe_instant_faz75("hafıza durumu", mode_norm="hafiza")
+    if inst_h and "hafıza motoru durumu" in inst_h.lower():
+        _ok("hafiza faz75 instant status")
+    else:
+        _fail("hafiza faz75 instant", str(inst_h)[:80])
+        fails += 1
+    _ok(f"hafiza {HF75}")
+
+    print("=== Ana Motor Hub Faz 76 ===")
+    from ilim_assistant.motorlar.ana_motor_hub_faz76 import (
+        FAZ76_VERSION as HF76,
+        faz76_enabled,
+        resolve_hub_target,
+    )
+
+    if faz76_enabled():
+        _ok("hub faz76 on")
+    else:
+        _fail("hub faz76")
+        fails += 1
+    t_vid, meta_v = resolve_hub_target(
+        "bu videoyu indir https://www.youtube.com/watch?v=abc",
+        {"video": True},
+    )
+    if t_vid == "video":
+        _ok("hub faz76 video route")
+    else:
+        _fail("hub faz76 video", f"{t_vid} {meta_v}")
+        fails += 1
+    t_code, _ = resolve_hub_target("pytest geçir main.py düzelt", {"programlama": True})
+    if t_code == "programlama":
+        _ok("hub faz76 code route")
+    else:
+        _fail("hub faz76 code", t_code)
+        fails += 1
+    _ok(f"hub {HF76}")
 
     if should_run_proje_uret_pipeline(
         "proje üret: fastapi_api smoke-faz47-run pytest",

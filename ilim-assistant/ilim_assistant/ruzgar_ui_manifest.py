@@ -4,8 +4,8 @@ import time
 from typing import Any
 
 
-CURRENT_PHASE = 16
-CURRENT_PHASE_LABEL = "Faz 16"
+CURRENT_PHASE = 77
+CURRENT_PHASE_LABEL = "Faz 68–77"
 
 
 def _phase(n: int, name: str, status: str = "tamam") -> dict[str, str]:
@@ -30,14 +30,13 @@ def build_ui_manifest(*, health: dict[str, Any] | None = None) -> dict[str, Any]
         "current_phase": CURRENT_PHASE,
         "current_phase_label": CURRENT_PHASE_LABEL,
         "dashboard": {
-            "badge": "Ana Motor · Faz 16 ✓",
+            "badge": "Ana Motor · Hub Faz 76",
             "promise": (
-                "Orkestra şefi: Hafıza + yardımcı motorlar. Faz 9-16 aktif: "
-                "Gemini-first hız, programlama indeks atlama, idrak ön-işlemi, "
-                "kişisel hafıza komutları, self-test, görevler ve hatırlatıcılar."
+                "Orkestra şefi: Ana Motor'dan doğal cümleyle yardımcı motora yönlendirme. "
+                "Tüm yardımcı motorlar ROK (Faz 68–75) + hub (Faz 76)."
             ),
-            "welcome_foot": "Faz 16 aktif · Ümit & Gökçenur",
-            "help_title": "Rüzgar — Faz 16 Akıl & Orkestra",
+            "welcome_foot": "Faz 68–77 · Ümit & Gökçenur",
+            "help_title": "Rüzgar — Konuşarak yap (ROK)",
         },
         "phases": [
             _phase(0, "UI iskeleti"),
@@ -59,14 +58,14 @@ def build_ui_manifest(*, health: dict[str, Any] | None = None) -> dict[str, Any]
             _phase(16, "Görevler + hatırlatıcı", "aktif"),
         ],
         "motors": {
-            "genel": {"tag": f"Faz 16 · Gemini {'✓' if gemini_ok else '?'}"},
-            "hafiza": {"tag": "Kişisel hafıza · görev · hatırlatıcı"},
+            "genel": {"tag": f"Hub Faz 76 · Gemini {'✓' if gemini_ok else '?'}"},
+            "hafiza": {"tag": "Faz 75 · Konuşarak yap (ROK)"},
             "hizir": {"tag": "Ekonomik avcı · operasyon"},
-            "ses": {"tag": "STT/TTS · dinleme"},
-            "video": {"tag": "YouTube indirme · kurgu v5"},
-            "okuma": {"tag": "İlim · tabiat · tarih"},
-            "tercume": {"tag": "Ofis · altyazı"},
-            "programlama": {"tag": "Faz 55 · Canlı görev KPI"},
+            "ses": {"tag": "Faz 72 · Konuşarak yap (ROK)"},
+            "video": {"tag": "Faz 71 · Konuşarak yap (ROK)"},
+            "okuma": {"tag": "Faz 73 · Konuşarak yap (ROK)"},
+            "tercume": {"tag": "Faz 74 · Konuşarak yap (ROK)"},
+            "programlama": {"tag": "Faz 68–70 · Konuşarak yap"},
         },
         "capabilities": [
             "Ansiklopedik soruda Gemini-first, ağır indeks atlama",
@@ -76,6 +75,13 @@ def build_ui_manifest(*, health: dict[str, Any] | None = None) -> dict[str, Any]
             "görev oluştur / görev listesi",
             "hatırlatıcı pending/ack API",
             "YouTube/web video indirme + son indirmeler",
+            "Ses Faz 72: konuşarak profil seçimi · ses ayarları · oku: yönergesi",
+            "Ses API: /api/tts · /api/ses/settings",
+            "Okuma Faz 73: arsiv durumu · metin türü · kaynak ipucu",
+            "Tercüme Faz 74: dil çifti · dil listesi · altyazı yönergesi",
+            "Hafıza Faz 75: hatırla · görev · hatırlatıcı · hafıza durumu",
+            "Ana Motor Faz 76: hub yönlendirme · /api/ana-motor/hub-route",
+            "Faz 77: video indirme doğrudan API · scripts/rok_smoke.py KPI",
             "self-test API",
             "Programlama Faz 8: şablon sonrası atölye odak + api başlat/durdur",
             "Programlama Faz 10: workspace indeks, @@read/@@write, patch onayla, Ana Motor delege",

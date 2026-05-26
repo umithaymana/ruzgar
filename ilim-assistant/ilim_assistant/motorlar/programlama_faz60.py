@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any
 
 FAZ60_VERSION = "programlama-faz60-v1-2026-05-26"
-_DEFAULT_EXPECTED_REV = "2026-05-26-programlama-faz65-v76"
+_DEFAULT_EXPECTED_REV = "2026-05-26-ruzgar-faz77-v86"
 _FAZ60_PATCH = "v71-hotfix1"
 _LAST_FULL_PARITY_FILE = "last_parity_full_run.json"
 _WEEKLY_KPI_PREFIX = "weekly_kpi_"
@@ -102,6 +102,78 @@ def enrich_health_build(build: dict[str, Any] | None) -> dict[str, Any]:
         from ilim_assistant.motorlar.programlama_faz65 import enrich_health_build as _e65
 
         out = _e65(out)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz66 import enrich_health_build as _e66
+
+        out = _e66(out)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz67 import enrich_health_build as _e67
+
+        out = _e67(out)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz68 import enrich_health_build as _e68
+
+        out = _e68(out)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz69 import enrich_health_build as _e69
+
+        out = _e69(out)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz70 import enrich_health_build as _e70
+
+        out = _e70(out)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.video_faz71 import enrich_health_build as _ev71
+
+        out = _ev71(out)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.ses_faz72 import enrich_health_build as _es72
+
+        out = _es72(out)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.okuma_faz73 import enrich_health_build as _eo73
+
+        out = _eo73(out)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.tercume_faz74 import enrich_health_build as _et74
+
+        out = _et74(out)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.hafiza_faz75 import enrich_health_build as _eh75
+
+        out = _eh75(out)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.ana_motor_hub_faz76 import enrich_health_build as _eh76
+
+        out = _eh76(out)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.ruzgar_cila_faz77 import enrich_health_build as _e77
+
+        out = _e77(out)
     except Exception:
         pass
     return out

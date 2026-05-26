@@ -22,7 +22,7 @@ from typing import Annotated, Any, Iterator
 import uvicorn
 from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
 
 from pydantic import BaseModel, Field
 from starlette.concurrency import iterate_in_threadpool, run_in_threadpool
@@ -288,6 +288,7 @@ def _boot_motorlar_anaonce() -> None:
         "ilim_assistant.video_motoru",
         "ilim_assistant.okuma_motoru",
         "ilim_assistant.tercume_motoru",
+        "ilim_assistant.motorlar.hafiza_motoru",
         "ilim_assistant.programlama_motoru",
     ):
         importlib.import_module(name)
@@ -486,6 +487,19 @@ class GenelHafizaBakBody(BaseModel):
 class IdrakPretreatBody(BaseModel):
     message: str = ""
     history: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class TtsBody(BaseModel):
+    text: str = ""
+    karakter: str = "asistan"
+    backend: str = "edge"
+    emotion: str | None = None
+
+
+class SesSettingsPatchBody(BaseModel):
+    karakter: str | None = None
+    hiz: float | None = None
+    huzur: float | None = None
 
 
 class HizirPazarTaraBody(BaseModel):
@@ -737,7 +751,7 @@ def _health_build_block() -> dict:
     import os as _os
 
     base = {
-        "rev": "2026-05-26-programlama-faz65-v76",
+        "rev": "2026-05-26-ruzgar-faz77-v86",
         "nebula_kitap": True,
         "fast_paths": _os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
         "memory_first": True,
@@ -1266,6 +1280,41 @@ def api_programlama_terminal_run(body: dict):
     return result
 
 
+@app.post("/api/programlama/shell/run")
+def api_programlama_shell_run(body: dict):
+    """Faz 67 — onaylı özgür shell (projects/ kapsamı)."""
+    from ilim_assistant.motorlar.programlama_faz67 import (
+        FAZ67_VERSION,
+        approve_and_run_shell,
+        format_shell_report,
+        run_free_shell,
+        stage_shell_request,
+        validate_shell_command,
+    )
+
+    root = (body.get("workspace_root") or "").strip() or None
+    scope = (body.get("scope_rel") or "").strip() or ""
+    if scope and not scope.startswith("projects/"):
+        scope = f"projects/{scope.lstrip('/')}"
+    cmd = str(body.get("command") or "").strip()
+    mode = str(body.get("mode") or body.get("action") or "onay").strip().lower()
+    if not scope or not cmd:
+        raise HTTPException(status_code=400, detail="scope_rel ve command gerekli")
+    ok_cmd, err = validate_shell_command(cmd)
+    if not ok_cmd:
+        raise HTTPException(status_code=403, detail=err)
+    if mode in ("istek", "request", "pending"):
+        result = stage_shell_request(root, scope_rel=scope, command=cmd)
+    elif mode in ("onayla", "approve"):
+        token = str(body.get("token") or "").strip().lower() or None
+        result = approve_and_run_shell(root, scope_rel=scope, token=token)
+    else:
+        result = run_free_shell(root, scope, cmd)
+    result["report"] = format_shell_report(result)
+    result["version"] = FAZ67_VERSION
+    return result
+
+
 @app.post("/api/programlama/patch/preview")
 def api_programlama_patch_preview(body: ProgramlamaPatchBody):
     from ilim_assistant.motorlar.programlama_faz10 import (
@@ -1605,6 +1654,36 @@ def api_programlama_ci_run(
     out = run_ci_automation(root, force_full_parity=bool(force_full_parity))
     out["version"] = FAZ60_VERSION
     return out
+
+
+@app.get("/api/rok/kpi")
+def api_rok_kpi():
+    """Faz 77 — ROK motor KPI özeti (offline bayraklar)."""
+    from ilim_assistant.motorlar.ruzgar_cila_faz77 import FAZ77_VERSION, collect_rok_kpi
+
+    return {"ok": True, "kpi": collect_rok_kpi(), "version": FAZ77_VERSION}
+
+
+@app.get("/api/ana-motor/hub-route")
+def api_ana_motor_hub_route(message: str = ""):
+    """Faz 76 — Ana Motor hub: mesaj için hedef motor önizlemesi."""
+    from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
+    from ilim_assistant.motorlar.ana_motor_hub_faz76 import (
+        FAZ76_VERSION,
+        motor_label,
+        resolve_hub_target,
+    )
+
+    msg = (message or "").strip()
+    flags = motor_niyeti_heuristic(msg) if msg else {}
+    target, meta = resolve_hub_target(msg, flags)
+    return {
+        "ok": True,
+        "target": target,
+        "target_label": motor_label(target),
+        "meta": meta,
+        "version": FAZ76_VERSION,
+    }
 
 
 @app.get("/api/ana-motor/delegation-summary")
@@ -3015,6 +3094,97 @@ async def api_stt(
                 pass
 
 
+@app.get("/api/ses/settings")
+def api_ses_settings_get():
+    """Aktif ses profili ve hız/huzur çarpanları (.ruzgar_ses_ayarlari.json)."""
+    from ilim_assistant.tts_service import read_ses_ayarlari
+
+    return read_ses_ayarlari()
+
+
+@app.post("/api/ses/settings")
+def api_ses_settings_patch(body: SesSettingsPatchBody):
+    from ilim_assistant.motorlar.ses_motoru import normalize_ses_karakteri
+    from ilim_assistant.tts_service import read_ses_ayarlari, write_ses_ayarlari
+
+    patch: dict[str, Any] = {}
+    if body.karakter is not None:
+        patch["karakter"] = normalize_ses_karakteri(body.karakter).value
+    if body.hiz is not None:
+        patch["hiz"] = max(0.45, min(1.0, float(body.hiz)))
+    if body.huzur is not None:
+        patch["huzur"] = max(0.45, min(1.0, float(body.huzur)))
+    if patch:
+        write_ses_ayarlari(patch)
+    return read_ses_ayarlari()
+
+
+@app.post("/api/tts")
+async def api_tts(body: TtsBody):
+    """Edge-TTS ile MP3 üretir (Ses atölyesi + sohbet sesli yanıt)."""
+    from ilim_assistant.motorlar.ses_motoru import (
+        EDGE_VOICES,
+        analiz_icerik_yolu,
+        edge_pitch_string,
+        edge_rate_yuzdesi,
+        normalize_ses_karakteri,
+        tts_metadata_kimlik,
+    )
+    from ilim_assistant.tts_service import (
+        edge_available,
+        read_ses_ayarlari,
+        synthesize_edge_mp3_in_process,
+    )
+
+    text = (body.text or "").strip()
+    if len(text) < 2:
+        raise HTTPException(status_code=400, detail="Metin çok kısa.")
+    if len(text) > 12_000:
+        text = text[:12_000]
+
+    if (body.backend or "edge").strip().lower() != "edge":
+        raise HTTPException(status_code=400, detail="Yalnızca edge backend destekleniyor.")
+    if not edge_available():
+        raise HTTPException(
+            status_code=503,
+            detail="Edge-TTS yok: pip install edge-tts",
+        )
+
+    ayar = read_ses_ayarlari()
+    kar = normalize_ses_karakteri(body.karakter or ayar.get("karakter"))
+    icerik = analiz_icerik_yolu(text)
+    voice = EDGE_VOICES[kar]
+    rate = edge_rate_yuzdesi(
+        karakter=kar,
+        icerik=icerik,
+        hiz_carpani=float(ayar.get("hiz", 0.92)),
+        huzur_carpani=float(ayar.get("huzur", 0.88)),
+    )
+    pitch = edge_pitch_string(kar, icerik)
+    meta = tts_metadata_kimlik(
+        karakter=kar.value,
+        icerik_yolu=icerik.value,
+        edge_voice=voice,
+        ek={"emotion": body.emotion} if body.emotion else None,
+    )
+    try:
+        out_path = await synthesize_edge_mp3_in_process(
+            text,
+            voice=voice,
+            rate=rate,
+            pitch=pitch,
+            meta=meta,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+    return FileResponse(
+        str(out_path),
+        media_type="audio/mpeg",
+        filename="ruzgar-tts.mp3",
+    )
+
+
 def _iter_instant_chat_events(
     reply: str,
     user_message: str,
@@ -3098,6 +3268,28 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
     orch_early: dict[str, Any] = {}
     msg_early = (req.message or "").strip()
     if msg_early:
+        try:
+            from ilim_assistant.chat_core import normalize_mode
+            from ilim_assistant.motorlar.ana_motor_hub_faz76 import maybe_hub_instant
+
+            if normalize_mode(_effective_chat_mode_raw(req)) == "genel":
+                from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
+
+                hub_early = maybe_hub_instant(
+                    msg_early, motor_flags=motor_niyeti_heuristic(msg_early)
+                )
+                if hub_early:
+                    yield from _iter_instant_chat_events(
+                        hub_early,
+                        msg_early,
+                        session_wake_used=req.session_wake_used,
+                        msg_for_wake=req.message,
+                        orch=orch_early,
+                        instant_gundelik=True,
+                    )
+                    return
+        except Exception:
+            pass
         try:
             from ilim_assistant.nebula_kitap_hafiza import try_consume_nebula_kitap_command
 
@@ -3462,6 +3654,22 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     pass
         except Exception:
             pass
+    try:
+        from ilim_assistant.motorlar.hafiza_faz75 import maybe_instant_faz75
+
+        _hf75 = maybe_instant_faz75(req.message, mode_norm=mode_norm)
+        if _hf75:
+            yield from _iter_instant_chat_events(
+                _hf75,
+                (req.message or "").strip(),
+                session_wake_used=req.session_wake_used,
+                msg_for_wake=req.message,
+                orch=orch,
+                instant_gundelik=True,
+            )
+            return
+    except Exception:
+        pass
     for _consumer in (
         "ilim_assistant.dinamit_hatirlatici:try_consume_hatirlatici_intent",
         "ilim_assistant.nebula_kitap_hafiza:try_consume_nebula_kitap_command",

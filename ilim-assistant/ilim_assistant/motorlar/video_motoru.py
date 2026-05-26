@@ -683,4 +683,9 @@ def build_motor_context(message: str) -> str:
     except Exception:
         pass
 
-    return base
+    try:
+        from ilim_assistant.motorlar.video_faz71 import augment_video_context
+
+        return augment_video_context(base)
+    except Exception:
+        return base

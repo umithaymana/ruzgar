@@ -853,6 +853,18 @@ def maybe_programlama_instant_reply(
     except Exception:
         pass
     try:
+        from ilim_assistant.motorlar.programlama_faz67 import maybe_instant_faz67
+
+        faz67_hit = maybe_instant_faz67(
+            message,
+            workspace_root,
+            active_file=active_file,
+        )
+        if faz67_hit:
+            parts.append(faz67_hit)
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_faz43 import maybe_instant_faz43
 
         faz43_hit = maybe_instant_faz43(
@@ -881,6 +893,18 @@ def maybe_programlama_instant_reply(
         faz63_hit = maybe_instant_faz63(message, workspace_root)
         if faz63_hit:
             parts.append(faz63_hit)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz66 import maybe_instant_faz66
+
+        faz66_hit = maybe_instant_faz66(
+            message,
+            workspace_root,
+            active_file=active_file,
+        )
+        if faz66_hit:
+            parts.append(faz66_hit)
     except Exception:
         pass
     try:
@@ -1717,6 +1741,36 @@ def build_motor_context(
         from ilim_assistant.motorlar.programlama_faz65 import faz65_directive
 
         base += faz65_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz66 import faz66_directive
+
+        base += faz66_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz67 import faz67_directive
+
+        base += faz67_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz68 import faz68_directive
+
+        base += faz68_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz69 import faz69_directive
+
+        base += faz69_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz70 import faz70_directive
+
+        base += faz70_directive() + "\n"
     except Exception:
         pass
     try:

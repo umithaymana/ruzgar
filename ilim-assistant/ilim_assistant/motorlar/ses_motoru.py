@@ -251,7 +251,7 @@ def build_motor_context(message: str) -> str:
     yol = analiz_icerik_yolu(prompt)
     oneri = varsayilan_karakter_icerige(yol)
     ton_ctx = ton_metni_icerik(yol)
-    return dinamit_heartbeat() + (
+    base = dinamit_heartbeat() + (
         f"[SES MOTORU — Created by {MIMAR_IMZA}]\n"
         f"Profiller — Alim: Kur'an/Hadis (yavaş, vakur, tane tane, derin); "
         f"Edip: edebiyat/gazel (lirik, yumuşak); Asistan: sohbet (net, nazik).\n"
@@ -260,3 +260,9 @@ def build_motor_context(message: str) -> str:
         "Telaffuz Edge-TTS ile; çıktı dosyalarında mimar metadata zorunlu.\n"
         f"Kullanıcı mesajı: {prompt}"
     )
+    try:
+        from ilim_assistant.motorlar.ses_faz72 import augment_ses_context
+
+        return augment_ses_context(base)
+    except Exception:
+        return base

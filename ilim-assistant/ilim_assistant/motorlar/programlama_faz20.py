@@ -147,7 +147,19 @@ def should_run_unified_programming_agent(
     workspace_root: str | Path | None = None,
     active_file: str | None = None,
 ) -> bool:
-    """Faz 33 — görev: şart değil; aktif proje + resolve_agent_task."""
+    """Faz 68 (ROK) — konuşarak yap; yoksa Faz 33."""
+    try:
+        from ilim_assistant.motorlar.programlama_faz68 import should_run_agent_via_kernel
+
+        if should_run_agent_via_kernel(
+            message,
+            mode_norm,
+            workspace_root=workspace_root,
+            active_file=active_file,
+        ):
+            return True
+    except Exception:
+        pass
     try:
         from ilim_assistant.motorlar.programlama_faz33 import should_auto_programming_agent
 
@@ -328,6 +340,27 @@ def execute_tool(
                 workspace_root, scope, old, new, rel_path=rel
             )
 
+        if tool in ("rename_repo", "repo_rename"):
+            from ilim_assistant.motorlar.programlama_faz66 import execute_rename_repo_tool
+
+            scope = str(spec.get("scope") or scope_rel or "")
+            old = str(spec.get("old") or spec.get("name") or "")
+            new = str(spec.get("new") or spec.get("to") or "")
+            dry = bool(spec.get("dry_run") or spec.get("preview"))
+            return execute_rename_repo_tool(
+                workspace_root, scope, old, new, dry_run=dry
+            )
+
+        if tool in ("free_shell", "shell"):
+            from ilim_assistant.motorlar.programlama_faz67 import execute_free_shell_tool
+
+            scope = str(spec.get("scope") or scope_rel or "")
+            cmd = str(spec.get("command") or spec.get("cmd") or "")
+            approved = bool(spec.get("approved") or spec.get("onay"))
+            return execute_free_shell_tool(
+                workspace_root, scope, cmd, approved=approved
+            )
+
         if tool in ("import_graph", "importgraph"):
             from ilim_assistant.motorlar.programlama_faz42 import (
                 build_import_graph,
@@ -411,8 +444,69 @@ def iter_unified_programming_agent_events(
         iter_code_agent_turn_events,
     )
 
+    norm_msg = message
+    try:
+        from ilim_assistant.motorlar.programlama_faz68 import normalize_message_for_agent
+
+        norm_msg = normalize_message_for_agent(
+            message,
+            mode_norm,
+            workspace_root=req.workspace_root,
+            active_file=getattr(req, "programlama_active_file", None),
+        )
+    except Exception:
+        try:
+            from ilim_assistant.motorlar.programlama_faz33 import normalize_for_agent
+
+            norm_msg = normalize_for_agent(
+                message,
+                mode_norm,
+                workspace_root=req.workspace_root,
+                active_file=getattr(req, "programlama_active_file", None),
+            )
+        except Exception:
+            pass
+    if norm_msg == message:
+        try:
+            from ilim_assistant.motorlar.programlama_faz19 import normalize_agent_message
+
+            norm_msg = normalize_agent_message(message, mode_norm=mode_norm)
+        except Exception:
+            pass
+
+    try:
+        from ilim_assistant.motorlar.programlama_faz69 import (
+            ensure_scope_for_agent,
+            format_scope_report,
+        )
+
+        ens = ensure_scope_for_agent(
+            message,
+            req.workspace_root,
+            active_file=getattr(req, "programlama_active_file", None),
+        )
+        note = format_scope_report(ens)
+        if note:
+            yield {"type": "status", "text": note}
+        if ens.get("ok") and ens.get("action") in ("created", "switched", "recent"):
+            try:
+                from ilim_assistant.motorlar.programlama_faz68 import (
+                    normalize_message_for_agent,
+                )
+
+                norm_msg = normalize_message_for_agent(
+                    message,
+                    mode_norm,
+                    workspace_root=req.workspace_root,
+                    active_file=getattr(req, "programlama_active_file", None),
+                )
+            except Exception:
+                pass
+    except Exception:
+        pass
+
     task = resolve_agent_task(
-        message,
+        norm_msg,
         req.workspace_root,
         active_file=getattr(req, "programlama_active_file", None),
         mode_norm=mode_norm,
@@ -420,6 +514,13 @@ def iter_unified_programming_agent_events(
     if task is None:
         yield {"type": "error", "text": "Proje odakı yok — `projects/<ad>/` açın veya yol yazın."}
         return
+
+    try:
+        from ilim_assistant.motorlar.programlama_faz68 import agent_plan_sse
+
+        yield agent_plan_sse(norm_msg, scope_rel=task.scope_rel)
+    except Exception:
+        pass
 
     try:
         from ilim_assistant.motorlar.programlama_faz23 import (
@@ -437,26 +538,13 @@ def iter_unified_programming_agent_events(
     except Exception:
         enter_task_mode = exit_task_mode = None  # type: ignore
 
-    if agent_auto_apply_writes():
-        os.environ["RUZGAR_FAZ10_AUTO_PATCH"] = "1"
-
-    norm_msg = message
     try:
-        from ilim_assistant.motorlar.programlama_faz33 import normalize_for_agent
+        from ilim_assistant.motorlar.programlama_faz70 import activate_agent_patch_mode
 
-        norm_msg = normalize_for_agent(
-            message,
-            mode_norm,
-            workspace_root=req.workspace_root,
-            active_file=getattr(req, "programlama_active_file", None),
-        )
+        activate_agent_patch_mode()
     except Exception:
-        try:
-            from ilim_assistant.motorlar.programlama_faz19 import normalize_agent_message
-
-            norm_msg = normalize_agent_message(message, mode_norm=mode_norm)
-        except Exception:
-            pass
+        if agent_auto_apply_writes():
+            os.environ["RUZGAR_FAZ10_AUTO_PATCH"] = "1"
 
     yield {
         "type": "status",
@@ -534,6 +622,21 @@ def iter_unified_programming_agent_events(
                 continue
             yield ev
     finally:
+        try:
+            from ilim_assistant.motorlar.programlama_faz70 import (
+                finalize_agent_patches,
+                format_finalize_report,
+            )
+
+            fin = finalize_agent_patches(
+                req.workspace_root,
+                scope_rel=task.scope_rel if task else None,
+            )
+            fin_txt = format_finalize_report(fin)
+            if fin_txt:
+                yield {"type": "status", "text": fin_txt}
+        except Exception:
+            pass
         try:
             from ilim_assistant.motorlar.programlama_faz23 import exit_task_mode
 

@@ -872,9 +872,77 @@ def prepare_turn(
                     return msg, [], "", "", "", text
         except Exception:
             pass
+    if m == "video":
+        try:
+            from ilim_assistant.motorlar.video_faz71 import maybe_instant_faz71
+
+            video_hit = maybe_instant_faz71(msg)
+            if video_hit:
+                return msg, [], "", "", "", video_hit
+        except Exception:
+            pass
+    if m == "ses":
+        try:
+            from ilim_assistant.motorlar.ses_faz72 import maybe_instant_faz72
+
+            ses_hit = maybe_instant_faz72(msg)
+            if ses_hit:
+                return msg, [], "", "", "", ses_hit
+        except Exception:
+            pass
+    if m == "okuma":
+        try:
+            from ilim_assistant.motorlar.okuma_faz73 import maybe_instant_faz73
+
+            okuma_hit = maybe_instant_faz73(msg)
+            if okuma_hit:
+                return msg, [], "", "", "", okuma_hit
+        except Exception:
+            pass
+    if m == "tercume":
+        try:
+            from ilim_assistant.motorlar.tercume_faz74 import maybe_instant_faz74
+
+            tercume_hit = maybe_instant_faz74(msg)
+            if tercume_hit:
+                return msg, [], "", "", "", tercume_hit
+        except Exception:
+            pass
+    if m == "hafiza":
+        try:
+            from ilim_assistant.motorlar.hafiza_faz75 import maybe_instant_faz75
+
+            hafiza_hit = maybe_instant_faz75(msg)
+            if hafiza_hit:
+                return msg, [], "", "", "", hafiza_hit
+        except Exception:
+            pass
+
     from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
 
     motor_flags = motor_niyeti_heuristic(msg)
+    _hub_directive = ""
+
+    if m == "genel" and not coding_mode:
+        try:
+            from ilim_assistant.motorlar.ana_motor_hub_faz76 import apply_genel_hub_routing
+
+            hub = apply_genel_hub_routing(
+                msg,
+                motor_flags=motor_flags,
+                workspace_root=workspace_root,
+            )
+            if hub.get("og_direct"):
+                return msg, [], "", "", "", str(hub["og_direct"])
+            if hub.get("mode") and str(hub["mode"]) != "genel":
+                m = str(hub["mode"])
+                _hub_directive = str(hub.get("hub_directive") or "")
+                if orchestration_out is not None:
+                    orchestration_out["hub_delegate"] = hub.get("hub_meta") or {}
+                    orchestration_out["hub_target"] = m
+        except Exception:
+            pass
+
     if m != "programlama" and not coding_mode:
         try:
             from ilim_assistant.motorlar.programlama_faz10 import should_delegate_to_programlama
@@ -1494,7 +1562,7 @@ def prepare_turn(
                     user_payload = _pc.rstrip() + "\n\n---\n" + user_payload
             except Exception:
                 pass
-    elif _orkestra_context_for_turn(m, motor_flags):
+    elif _orkestra_context_for_turn(m, motor_flags) and not _hub_directive:
         try:
             from ilim_assistant.motorlar.ruzgar_cekirdegi import build_core_context
 
@@ -1514,6 +1582,17 @@ def prepare_turn(
             from ilim_assistant.hafiza_dogal_sentez import append_hafiza_hint_directive
 
             user_payload = append_hafiza_hint_directive(user_payload, hafiza_hint, msg)
+        except Exception:
+            pass
+
+    if _hub_directive:
+        user_payload = _hub_directive.rstrip() + "\n\n---\n" + user_payload
+        try:
+            from ilim_assistant.motorlar.ana_motor_hub_faz76 import build_delegated_motor_context
+
+            _hc = build_delegated_motor_context(m, msg).strip()
+            if _hc:
+                user_payload = _hc.rstrip() + "\n\n---\n" + user_payload
         except Exception:
             pass
 

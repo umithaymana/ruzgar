@@ -101,10 +101,21 @@
 - [x] API: `POST /api/programlama/best-of-n/plan` · `GET .../runs`
 - [x] Faz 65: her adayda tam LLM ajan turu (`best-of-n+`, `best-of-n-agent:`) — v76
 
+### Faz 66 — Tam repo sembol rename ← **UYGULANDI (v76–v77)**
+
+- [x] `rename-repo: proje eski -> yeni` · `rename-scope eski -> yeni`
+- [x] Önizleme: komuta `önizle` ekle
+- [x] Kapat: `RUZGAR_FAZ66=0`
+
+### Faz 67 — Özgür shell (onaylı) ← **UYGULANDI (v77)**
+
+- [x] `shell onay: komut` · iki adım: `shell istek:` → `shell onayla`
+- [x] `projects/<ad>/` kapsamı · tehlikeli komut + meta karakter filtresi
+- [x] API: `POST /api/programlama/shell/run`
+- [x] Kapat: `RUZGAR_FAZ67=0`
+
 **Sırada (Dalga G devam):**
 
-- Tam repo sembol rename (LSP tam)
-- Özgür shell (güvenlik politikası onayı ile)
 - Mobil native (Expo dışı store build)
 
 ---

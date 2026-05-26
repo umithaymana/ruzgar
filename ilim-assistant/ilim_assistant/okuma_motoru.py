@@ -255,7 +255,7 @@ def build_motor_context(message: str) -> str:
     elif source == "mektubat":
         ref_hint = "Mektubat kaynagi gibi gorunuyor; Mektup no icin arsiv taramasi surdur."
 
-    return dinamit_heartbeat() + (
+    base = dinamit_heartbeat() + (
         "[OKUMA MOTORU — Kültür ve İlim Hazinesi]\n"
         f"{ARSIV_VIZYONU}\n"
         "Arşiv kökleri: Tasavvuf_Kulliyati, Hadis_Kulliyati, Klasik_Turk_Edebiyati, Tarih_ve_Kultur (RAG).\n"
@@ -268,3 +268,9 @@ def build_motor_context(message: str) -> str:
         f"{ref_hint}\n"
         f"Kullanici mesaji: {prompt}"
     )
+    try:
+        from ilim_assistant.motorlar.okuma_faz73 import augment_okuma_context
+
+        return augment_okuma_context(base)
+    except Exception:
+        return base

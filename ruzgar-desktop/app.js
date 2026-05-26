@@ -4,7 +4,7 @@
  * Kök sonda `/api` ise kırpılır — aksi halde fetch `.../api/api/merkezi-bellek` ile 404 verir.
  */
 const RUZGAR_LOCAL_API_PORT = 8779;
-const RUZGAR_EXPECTED_BUILD_REV = "2026-05-26-programlama-faz65-v76";
+const RUZGAR_EXPECTED_BUILD_REV = "2026-05-26-ruzgar-faz77-v86";
 const RUZGAR_LOCAL_API_FALLBACK = `http://127.0.0.1:${RUZGAR_LOCAL_API_PORT}`;
 
 function migrateLegacyApiUrl(raw) {
@@ -71,9 +71,15 @@ function resolveRuzgarApiRoot() {
 const API = resolveRuzgarApiRoot();
 console.info("[RÜZGAR Connection Bridge] API kök:", API);
 const RUZGAR_CHAT_FULL_TIMEOUT_MS = 180000;
+/** Video indirme — /api/video/download; sohbet 180sn sınırından bağımsız */
+const RUZGAR_VIDEO_DOWNLOAD_TIMEOUT_MS = 600000;
 /** Otonom görev (görev: / kod modu) — çok tur + verify; 180 sn yetmez */
 const RUZGAR_CHAT_PROGRAMMING_AGENT_TIMEOUT_MS = 900000;
 const RUZGAR_DISABLE_STREAMING = true;
+
+const RUZGAR_VIDEO_URL_RE = /https?:\/\/[^\s<>\"{}|\\^`\[\]]+/gi;
+const RUZGAR_VIDEO_DL_HINT_RE =
+  /(?:\bindir\b|download|youtube|youtu\.be)/i;
 
 /** Konuşma hattı teşhisi — varsayılan kapalı; yalnızca konsol (?debug=1). Sohbette mavi JSON paneli yok. */
 function isRuzgarUiDebugEnabled() {
@@ -773,10 +779,10 @@ function applyModeToUI() {
   syncWebFetchUi();
   if (currentMode === "okuma") {
     el.input.placeholder =
-      "Kültür ve İlim Hazinesi: metni yapıştırın; arsiv/ altındaki dört külliyata PDF/TXT ekleyip indeks: python -m ilim_assistant.arsiv_indexle";
+      "Okuma: arsiv durumu · index durumu · metin + hadis mi? · kaynak bul — PDF için arsiv_indexle";
   } else if (currentMode === "tercume") {
     el.input.placeholder =
-      "İsterseniz çeviriyi buradan da yazın; sol panel «Çevir» ile daha yapılandırılmış gönderir.";
+      "Tercüme: ingilizceye çevir: … · dil listesi · uzun metin için sağ panel Çevir";
   } else if (currentMode === "ses") {
     el.input.placeholder =
       "Ses motorunda transkripti panelden sohbete aktarabilir veya doğrudan soru yazabilirsiniz.";
@@ -1161,7 +1167,7 @@ function isChatVisuallyEmpty() {
 function showChatWelcomeIfEmpty() {
   if (!el.chat || !isChatVisuallyEmpty()) return;
   dismissChatWelcome();
-  const foot = lastUiManifest?.dashboard?.welcome_foot || "Faz 16 aktif · Ümit & Gökçenur";
+  const foot = lastUiManifest?.dashboard?.welcome_foot || "Faz 68–77 · Ümit & Gökçenur";
   const w = document.createElement("div");
   w.className = "bubble assistant chat-welcome";
   w.setAttribute("role", "note");
@@ -1454,7 +1460,7 @@ function switchMode(mode) {
     okuma:
       "Bilim motoru — İlim, tabiat ve tarih: arşiv + derin okuma; ana motorla köprülü çalışır.",
     video:
-      "Video motoru — v4: kesim çizelgesi (başlangıç/bitiş), altyazı gömme, ses birleştirme, altyazıyı Tercüme atölyesine aktarma; çıktı .ruzgar-video-export.",
+      "Video motoru — Faz 71: konuşarak indir (URL yapıştır); kurgu/kesim paneli; çıktı .ruzgar-video-export.",
     programlama:
       "Programlama motoru açıldı; Faz 6 — şablon projeler, oturum bağlamı, onaylı düzeltme.",
     hafiza:
@@ -5272,6 +5278,54 @@ async function runVideoMuxAudioJob() {
   }
 }
 
+function extractVideoDownloadUrl(text) {
+  const raw = String(text || "").trim();
+  if (!raw || !RUZGAR_VIDEO_DL_HINT_RE.test(raw)) return null;
+  const m = raw.match(RUZGAR_VIDEO_URL_RE);
+  if (!m || !m[0]) return null;
+  const url = m[0].replace(/[.,);]+$/, "");
+  const low = (raw + url).toLowerCase();
+  if (!low.includes("youtube") && !low.includes("youtu.be")) return null;
+  return url;
+}
+
+function isMostlyVideoDownloadCommand(text) {
+  const raw = String(text || "").trim();
+  const url = extractVideoDownloadUrl(raw);
+  if (!url) return false;
+  const rest = raw.replace(url, "").replace(RUZGAR_VIDEO_URL_RE, "").trim();
+  return rest.length < 120;
+}
+
+async function runVideoDownloadFromUrl(url, opts = {}) {
+  const u = String(url || "").trim();
+  if (!u) {
+    throw new Error("Video URL yok.");
+  }
+  const announceChat = opts.announceChat !== false;
+  const ctrl = new AbortController();
+  const to = window.setTimeout(() => ctrl.abort(), RUZGAR_VIDEO_DOWNLOAD_TIMEOUT_MS);
+  if (announceChat) {
+    flashRuzgarDurum("Video indiriliyor… (doğrudan API)");
+  }
+  try {
+    const res = await fetch(`${API}/api/video/download`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: u }),
+      signal: ctrl.signal,
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || j.ok === false) {
+      const detail = j.detail || j.result?.error || `HTTP ${res.status}`;
+      throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+    }
+    return j.result || {};
+  } finally {
+    window.clearTimeout(to);
+  }
+}
+
 async function runVideoDownloadJob() {
   const url = String(el.videoDownloadUrl?.value || "").trim();
   if (!url) {
@@ -5281,24 +5335,18 @@ async function runVideoDownloadJob() {
   }
   const btn = el.btnVideoDownload;
   if (btn) btn.disabled = true;
-  if (el.videoDownloadStatus) el.videoDownloadStatus.textContent = "İndiriliyor… Bu işlem video boyutuna göre sürebilir.";
-  flashRuzgarDurum("Video indiriliyor…");
+  if (el.videoDownloadStatus) {
+    el.videoDownloadStatus.textContent =
+      "İndiriliyor… Bu işlem video boyutuna göre sürebilir.";
+  }
   try {
-    const res = await fetch(`${API}/api/video/download`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url }),
-    });
-    const j = await res.json().catch(() => ({}));
-    if (!res.ok || j.ok === false) {
-      const detail = j.detail || j.result?.error || `HTTP ${res.status}`;
-      throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
-    }
-    const result = j.result || {};
+    const result = await runVideoDownloadFromUrl(url, { announceChat: true });
     const rel = String(result.file_path || "").trim();
     const title = String(result.title || "video").trim();
     if (el.videoDownloadStatus) {
-      el.videoDownloadStatus.textContent = rel ? `İndirildi: ${title} · ${rel}` : `İndirildi: ${title}`;
+      el.videoDownloadStatus.textContent = rel
+        ? `İndirildi: ${title} · ${rel}`
+        : `İndirildi: ${title}`;
     }
     if (rel) {
       if (el.videoRelWorkspace) el.videoRelWorkspace.value = rel;
@@ -5308,10 +5356,59 @@ async function runVideoDownloadJob() {
     await refreshUiManifest();
   } catch (e) {
     const msg = String(e && e.message ? e.message : e);
-    if (el.videoDownloadStatus) el.videoDownloadStatus.textContent = `İndirme başarısız: ${msg}`;
+    if (el.videoDownloadStatus) {
+      el.videoDownloadStatus.textContent = `İndirme başarısız: ${msg}`;
+    }
     flashRuzgarDurum("Video indirme başarısız.");
+    throw e;
   } finally {
     if (btn) btn.disabled = false;
+  }
+}
+
+async function tryChatVideoDownloadSideChannel(userText) {
+  const mode = activeMotorChatMode();
+  if (mode !== "genel" && mode !== "video") return false;
+  const url = extractVideoDownloadUrl(userText);
+  if (!url) return false;
+
+  appendBubble(
+    "assistant",
+    "Ümit abi, videoyu **doğrudan indirme API** ile alıyorum (sohbet 180 sn sınırı yok). Biraz sürebilir…",
+  );
+  setStatus("Video indiriliyor…", "Rüzgar");
+  try {
+    const result = await runVideoDownloadFromUrl(url, { announceChat: false });
+    const rel = String(result.file_path || "").trim();
+    const title = String(result.title || "video").trim();
+    const lines = [
+      `Ümit abi, video indirildi.`,
+      "",
+      `**${title}**`,
+      rel ? `Yol: \`${rel}\`` : "",
+      result.file_size_bytes
+        ? `Boyut: ${Number(result.file_size_bytes).toLocaleString("tr-TR")} bayt`
+        : "",
+      "",
+      "(Faz 77 — masaüstü doğrudan indirme)",
+    ].filter(Boolean);
+    appendBubble("assistant", lines.join("\n"));
+    if (mode === "video" && rel) {
+      if (el.videoRelWorkspace) el.videoRelWorkspace.value = rel;
+      if (el.videoDownloadUrl) el.videoDownloadUrl.value = url;
+    }
+    flashRuzgarDurum("Video indirildi.");
+    await refreshUiManifest();
+    setStatus("Hazır", "Rüzgar");
+    return true;
+  } catch (e) {
+    appendBubble(
+      "assistant",
+      `Video indirilemedi: ${formatClientChatError(e)}\n\nSağ panel **Videoyu indir** veya Video motorunu deneyin. yt-dlp kurulu olmalı.`,
+      { error: true },
+    );
+    setStatus("Hazır", "Rüzgar");
+    return true;
   }
 }
 
@@ -8444,6 +8541,12 @@ async function sendMessageWithText(t, opts = {}) {
   syncInterruptButton();
 
   try {
+    const vidUrl = extractVideoDownloadUrl(text);
+    const mode = activeMotorChatMode();
+    if (vidUrl && (mode === "genel" || mode === "video") && isMostlyVideoDownloadCommand(text)) {
+      const done = await tryChatVideoDownloadSideChannel(text);
+      if (done) return;
+    }
     await streamChat(text);
   } catch (e) {
     appendBubble("assistant", formatClientChatError(e), { error: true });
