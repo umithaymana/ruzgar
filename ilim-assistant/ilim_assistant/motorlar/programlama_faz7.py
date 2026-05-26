@@ -237,6 +237,14 @@ def detect_run_profile(
 
 
 def wants_file_help(message: str) -> bool:
+    try:
+        from ilim_assistant.motorlar.programlama_faz19 import normalize_agent_message
+        from ilim_assistant.motorlar.programlama_faz14 import parse_code_agent_task
+
+        if parse_code_agent_task(normalize_agent_message(message, mode_norm="programlama")):
+            return False
+    except Exception:
+        pass
     low = _ascii_fold(message)
     if wants_project_run(message):
         return True

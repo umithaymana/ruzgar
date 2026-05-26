@@ -1818,6 +1818,22 @@ def iter_code_agent_turn_events(
     except Exception:
         pass
     try:
+        from ilim_assistant.motorlar.programlama_faz62 import (
+            append_commit_footer_to_reply,
+            maybe_auto_suggest_commit_after_task,
+        )
+
+        _commit_sug = maybe_auto_suggest_commit_after_task(
+            workspace,
+            scope_rel=task.scope_rel,
+            goal=task.goal,
+            success=success,
+        )
+        if _commit_sug.get("ok"):
+            reply_body = append_commit_footer_to_reply(reply_body, _commit_sug)
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_faz48 import (
             compliance_v2_enabled,
             record_task_completion_compliance,

@@ -737,7 +737,7 @@ def _health_build_block() -> dict:
     import os as _os
 
     base = {
-        "rev": "2026-05-26-programlama-faz61-v72",
+        "rev": "2026-05-26-programlama-faz62-v73",
         "nebula_kitap": True,
         "fast_paths": _os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
         "memory_first": True,
@@ -1645,6 +1645,16 @@ def api_programlama_git_changes(
         active_file=(active_file or "").strip() or None,
     )
     payload["version"] = FAZ58_VERSION
+    try:
+        from ilim_assistant.motorlar.programlama_faz62 import enrich_git_changes_api_payload
+
+        payload = enrich_git_changes_api_payload(
+            payload,
+            root,
+            scope_rel=payload.get("scope_rel") or (scope_rel or "").strip() or None,
+        )
+    except Exception:
+        pass
     return payload
 
 

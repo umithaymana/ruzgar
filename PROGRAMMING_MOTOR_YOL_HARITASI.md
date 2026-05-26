@@ -1,6 +1,6 @@
 # Rüzgar — Yol haritası (Faz 55+)
 
-> **Temel:** Faz 49–61 · build `faz61-v72`  
+> **Temel:** Faz 49–62 · build `faz62-v73`  
 > **Hedef:** Offline KPI değil — **gerçek görevde** Cursor’a yaklaşmak  
 > **Ölçü:** Görev başarı oranı **≥80%** · parity **full 8/8** · kullanıcı memnuniyeti **≥4.5/5**
 
@@ -81,6 +81,12 @@
 - [x] `inject_faz55b_turn_prefix` + KPI kaydında `bonus_retry`
 - [x] Kapat: `RUZGAR_FAZ55B=0`
 
+### Faz 62 — Git commit önerisi v2 ← **UYGULANDI (v73)**
+
+- [x] Görev sonrası otomatik commit mesajı (değişiklik varsa)
+- [x] git-changes API: `pending_commit` / `commit_suggest`
+- [x] Atölye şeridi + `görev:` → Faz 7 rehberi çakışması giderildi
+
 **Sırada (Dalga G devam):**
 
 - Paralel alt ajan (Best-of-N worktree)
@@ -116,4 +122,4 @@ python ilim-assistant/scripts/programlama_smoke.py --ci
 
 ---
 
-*Build: `faz61-v72` · Dalga E–F + Faz 55b/61 tamam. Sonraki: Dalga G / canlı ölçüm.*
+*Build: `faz62-v73` · Faz 62 tamam. Sonraki: canlı KPI ölçümü / Dalga G.*

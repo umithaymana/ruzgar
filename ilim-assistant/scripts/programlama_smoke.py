@@ -624,9 +624,11 @@ def run_live(base: str) -> int:
         h = get("/api/health")
         rev = str((h.get("build") or {}).get("rev") or "")
         if (
-            "faz61" in rev
+            "faz62" in rev
+            or "faz61" in rev
             or "faz60" in rev
             or "faz59" in rev
+            or rev.endswith("-v73")
             or rev.endswith("-v72")
             or rev.endswith("-v71")
             or rev.endswith("-v70")
@@ -1593,7 +1595,7 @@ def run_parity(*, live_base: str | None = None) -> int:
         _fail("faz60")
         fails += 1
     exp = expected_build_rev()
-    if "faz61-v72" in exp or exp.endswith("-v72"):
+    if "faz62-v73" in exp or exp.endswith("-v73"):
         _ok(f"faz60 expected rev={exp[:40]}")
     else:
         _fail("faz60 expected rev", exp)
@@ -1642,6 +1644,47 @@ def run_parity(*, live_base: str | None = None) -> int:
         _fail("faz61 health")
         fails += 1
     _ok(f"faz61 {FAZ61_VERSION}")
+
+    print("=== Faz 62 — git commit onerisi v2 ===")
+    from ilim_assistant.motorlar.programlama_faz62 import (
+        FAZ62_VERSION,
+        append_commit_footer_to_reply,
+        enrich_git_changes_api_payload,
+        faz62_enabled,
+        format_commit_strip_line,
+    )
+    from ilim_assistant.motorlar.programlama_motoru import is_code_agent_task_message
+
+    if faz62_enabled():
+        _ok("faz62 on")
+    else:
+        _fail("faz62")
+        fails += 1
+    gorev = (
+        "gorev: smoke-cursor-ref-40763 health service ve version ekle testleri gecir"
+    )
+    if is_code_agent_task_message(gorev):
+        _ok("gorev: Faz7 aninda rehber atlanir")
+    else:
+        _fail("is_code_agent_task_message")
+        fails += 1
+    from ilim_assistant.motorlar.programlama_faz7 import wants_file_help
+
+    if not wants_file_help(gorev):
+        _ok("wants_file_help gorev atlandi")
+    else:
+        _fail("wants_file_help gorev")
+        fails += 1
+    foot = append_commit_footer_to_reply(
+        "tamam",
+        {"ok": True, "suggested": "fix(health): service alani", "source": "test"},
+    )
+    if "Faz 62" in foot:
+        _ok("faz62 footer")
+    else:
+        _fail("faz62 footer")
+        fails += 1
+    _ok(f"faz62 {FAZ62_VERSION}")
 
     if should_run_proje_uret_pipeline(
         "proje üret: fastapi_api smoke-faz47-run pytest",

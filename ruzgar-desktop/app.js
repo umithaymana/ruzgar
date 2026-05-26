@@ -4,7 +4,7 @@
  * Kök sonda `/api` ise kırpılır — aksi halde fetch `.../api/api/merkezi-bellek` ile 404 verir.
  */
 const RUZGAR_LOCAL_API_PORT = 8779;
-const RUZGAR_EXPECTED_BUILD_REV = "2026-05-26-programlama-faz61-v72";
+const RUZGAR_EXPECTED_BUILD_REV = "2026-05-26-programlama-faz62-v73";
 const RUZGAR_LOCAL_API_FALLBACK = `http://127.0.0.1:${RUZGAR_LOCAL_API_PORT}`;
 
 function migrateLegacyApiUrl(raw) {
@@ -1612,6 +1612,7 @@ function renderProgramlamaGitChanges(payload) {
   const branchEl = document.getElementById("programlama-git-branch");
   const summaryEl = document.getElementById("programlama-git-summary");
   const filesEl = document.getElementById("programlama-git-files");
+  const commitEl = document.getElementById("programlama-git-commit-suggest");
   if (!wrap || !branchEl || !summaryEl) return;
   const strip = payload && payload.strip ? payload.strip : null;
   if (!payload || !payload.ok || !strip) {
@@ -1624,6 +1625,18 @@ function renderProgramlamaGitChanges(payload) {
   if (filesEl) {
     const lines = Array.isArray(strip.file_lines) ? strip.file_lines : [];
     filesEl.textContent = lines.length ? lines.slice(0, 4).join(" · ") : "";
+  }
+  if (commitEl) {
+    const pending = payload.pending_commit || payload.commit_suggest;
+    const msg = pending && pending.message ? String(pending.message).trim() : "";
+    if (msg) {
+      const src = pending.source ? ` (${pending.source})` : "";
+      commitEl.textContent = `Commit önerisi${src}: ${msg.slice(0, 100)}`;
+      commitEl.title = msg;
+    } else {
+      commitEl.textContent = "";
+      commitEl.title = "";
+    }
   }
 }
 

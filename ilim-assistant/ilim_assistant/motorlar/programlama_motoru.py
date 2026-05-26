@@ -317,8 +317,25 @@ def _bilge_programlama_directive() -> str:
     )
 
 
+def is_code_agent_task_message(message: str, mode_norm: str = "programlama") -> bool:
+    """görev: / gorev: — otonom ajan; Faz 7 anında rehber atlansın."""
+    if mode_norm != "programlama":
+        return False
+    try:
+        from ilim_assistant.motorlar.programlama_faz19 import normalize_agent_message
+        from ilim_assistant.motorlar.programlama_faz14 import parse_code_agent_task
+
+        return parse_code_agent_task(
+            normalize_agent_message(message, mode_norm=mode_norm)
+        ) is not None
+    except Exception:
+        return False
+
+
 def is_programlama_reserved_command(message: str) -> bool:
     """Eğitim hafızası / genel sohbet bu komutları yutmasın."""
+    if is_code_agent_task_message(message):
+        return False
     try:
         from ilim_assistant.motorlar.programlama_faz4 import wants_security_scan
 
@@ -749,7 +766,9 @@ def maybe_programlama_instant_reply(
             wants_project_run,
         )
 
-        if wants_project_run(message):
+        if is_code_agent_task_message(message):
+            pass
+        elif wants_project_run(message):
             rel = resolve_target_rel(
                 message,
                 active_file=active_file,
@@ -1629,6 +1648,12 @@ def build_motor_context(
         from ilim_assistant.motorlar.programlama_faz61 import faz61_directive
 
         base += faz61_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz62 import faz62_directive
+
+        base += faz62_directive() + "\n"
     except Exception:
         pass
     try:
