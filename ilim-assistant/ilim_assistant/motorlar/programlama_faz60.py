@@ -18,6 +18,7 @@ from typing import Any
 
 FAZ60_VERSION = "programlama-faz60-v1-2026-05-26"
 _DEFAULT_EXPECTED_REV = "2026-05-26-programlama-faz60-v71"
+_FAZ60_PATCH = "v71-hotfix1"
 _LAST_FULL_PARITY_FILE = "last_parity_full_run.json"
 _WEEKLY_KPI_PREFIX = "weekly_kpi_"
 
@@ -70,8 +71,9 @@ def enrich_health_build(build: dict[str, Any] | None) -> dict[str, Any]:
     if out.get("build_mismatch"):
         out["restart_recommended"] = True
         out["restart_hint"] = (
-            "Ruzgar_YenidenBaslat.bat veya Ruzgar.ps1 -ForceRestart"
+            "Atölyede «API'yi yeniden başlat» veya Ruzgar_YenidenBaslat.bat"
         )
+        out["faz60_patch"] = _FAZ60_PATCH
     return out
 
 

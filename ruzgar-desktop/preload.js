@@ -41,6 +41,7 @@ contextBridge.exposeInMainWorld("ruzgarApi", {
   navGoBack: () => ipcRenderer.invoke("ruzgar:nav-go-back"),
   navGoForward: () => ipcRenderer.invoke("ruzgar:nav-go-forward"),
   navReload: () => ipcRenderer.invoke("ruzgar:nav-reload"),
+  restartApi: () => ipcRenderer.invoke("ruzgar:restart-api"),
   onMenu: (fn) => {
     ipcRenderer.on("ruzgar-menu", (_e, action) => fn(action));
   },

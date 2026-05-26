@@ -2549,6 +2549,14 @@ function syncWorkbenchHizirToolbar() {
   document.body.classList.toggle("workbench-hizir-active", isH);
 }
 
+async function triggerRuzgarApiRestart() {
+  if (window.ruzgarApi && typeof window.ruzgarApi.restartApi === "function") {
+    return window.ruzgarApi.restartApi();
+  }
+  flashRuzgarDurum("Ruzgar_YenidenBaslat.bat dosyasını proje kökünden çalıştırın.");
+  return { ok: false };
+}
+
 function showStaleBuildBanner(rev, healthPayload) {
   const hp = healthPayload && typeof healthPayload === "object" ? healthPayload : {};
   const expected =
@@ -2560,7 +2568,7 @@ function showStaleBuildBanner(rev, healthPayload) {
   let box = document.getElementById("ruzgar-stale-build-banner");
   if (!stale) {
     if (box) box.remove();
-    window.__ruzgarFaz60ModalShown = false;
+    window.__ruzgarApiRestartBusy = false;
     return;
   }
   if (!box) {
@@ -2576,40 +2584,37 @@ function showStaleBuildBanner(rev, healthPayload) {
       document.body;
     host.prepend(box);
   }
-  const hint =
-    String(hp?.build?.restart_hint || "").trim() ||
-    "Ruzgar_YenidenBaslat.bat veya .\\Ruzgar.ps1 -ForceRestart";
   box.innerHTML =
-    `<strong>Eski Rüzgar API (Faz 60)</strong> — <code>${escAttr(rev)}</code> · beklenen <code>${escAttr(expected)}</code>. ` +
-    `<strong>${escAttr(hint)}</strong> ` +
-    `<button type="button" id="ruzgar-stale-restart-btn" style="margin-left:8px;padding:4px 10px;cursor:pointer;">` +
-    `Yeniden başlat</button>`;
+    `<strong>Eski Rüzgar API</strong> — çalışan: <code>${escAttr(rev)}</code> · gerekli: <code>${escAttr(expected)}</code>. ` +
+    `<button type="button" id="ruzgar-stale-restart-btn" style="margin-left:8px;padding:6px 12px;cursor:pointer;font-weight:600;">` +
+    `API'yi yeniden başlat</button>` +
+    `<span id="ruzgar-stale-restart-status" style="margin-left:8px;font-size:12px;"></span>`;
   const btn = document.getElementById("ruzgar-stale-restart-btn");
+  const statusEl = document.getElementById("ruzgar-stale-restart-status");
   if (btn && !btn.dataset.wired) {
     btn.dataset.wired = "1";
-    btn.addEventListener("click", () => {
-      const msg =
-        "Faz 60 — build kilidi\n\n" +
-        "1) Rüzgar penceresini kapatın\n" +
-        "2) Proje kökünde: Ruzgar_YenidenBaslat.bat\n" +
-        "   veya PowerShell: .\\Ruzgar.ps1 -ForceRestart\n\n" +
-        `Şu an: ${rev}\nBeklenen: ${expected}`;
-      window.alert(msg);
-    });
-  }
-  if (!window.__ruzgarFaz60ModalShown) {
-    window.__ruzgarFaz60ModalShown = true;
-    setTimeout(() => {
+    btn.addEventListener("click", async () => {
+      if (window.__ruzgarApiRestartBusy) return;
+      window.__ruzgarApiRestartBusy = true;
+      btn.disabled = true;
+      if (statusEl) statusEl.textContent = "Yeniden başlatılıyor…";
       try {
-        const ok = window.confirm(
-          `Eski Rüzgar API çalışıyor (Faz 60).\n\nŞu an: ${rev}\nBeklenen: ${expected}\n\n` +
-            "Tamam = yeniden başlatma adımlarını göster",
-        );
-        if (ok && btn) btn.click();
-      } catch (_) {
-        /* yok say */
+        const res = await triggerRuzgarApiRestart();
+        if (res && res.ok) {
+          if (statusEl) statusEl.textContent = "15 sn bekleyin, sayfa yenilenecek…";
+          flashRuzgarDurum("API yeniden başlatılıyor…");
+          setTimeout(() => window.location.reload(), 15000);
+        } else {
+          if (statusEl) statusEl.textContent = "Başarısız — Ruzgar_YenidenBaslat.bat";
+          btn.disabled = false;
+          window.__ruzgarApiRestartBusy = false;
+        }
+      } catch (e) {
+        if (statusEl) statusEl.textContent = String(e?.message || e).slice(0, 80);
+        btn.disabled = false;
+        window.__ruzgarApiRestartBusy = false;
       }
-    }, 400);
+    });
   }
 }
 

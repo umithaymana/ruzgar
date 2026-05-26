@@ -456,6 +456,39 @@ app.whenReady().then(async () => {
     return false;
   });
 
+  ipcMain.handle("ruzgar:restart-api", async () => {
+    const ps1 = path.join(WORKSPACE_ROOT, "Ruzgar.ps1");
+    if (!fs.existsSync(ps1)) {
+      return { ok: false, error: "Ruzgar.ps1 bulunamadı" };
+    }
+    return new Promise((resolve) => {
+      try {
+        const child = spawn(
+          "powershell.exe",
+          [
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            ps1,
+            "-ForceRestart",
+            "-ApiOnly",
+          ],
+          {
+            cwd: WORKSPACE_ROOT,
+            detached: true,
+            stdio: "ignore",
+            windowsHide: true,
+          }
+        );
+        child.unref();
+        resolve({ ok: true, message: "API yeniden başlatılıyor" });
+      } catch (e) {
+        resolve({ ok: false, error: e && e.message ? e.message : String(e) });
+      }
+    });
+  });
+
   createWindow();
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

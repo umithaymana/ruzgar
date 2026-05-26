@@ -2,7 +2,8 @@
 # Zorla yeniden baslatma: Ruzgar.ps1 -ForceRestart  (8779 + eski 8777 zombi portunu bosaltir)
 param(
     [switch]$WithGradio,
-    [switch]$ForceRestart
+    [switch]$ForceRestart,
+    [switch]$ApiOnly
 )
 $WantGradio = $WithGradio.IsPresent -or ($env:RUZGAR_WITH_GRADIO -eq "1")
 
@@ -428,6 +429,20 @@ function Test-ApiNebulaBuild {
     }
 }
 
+function Wait-ApiBuildCurrent {
+    param(
+        [string]$Url,
+        [int]$MaxSec = 120
+    )
+    for ($i = 0; $i -lt $MaxSec; $i++) {
+        if (Test-ApiBuildCurrent -Url $Url) {
+            return $true
+        }
+        Start-Sleep -Milliseconds 500
+    }
+    return $false
+}
+
 function Test-ApiBuildCurrent {
     param([string]$Url)
     try {
@@ -436,10 +451,6 @@ function Test-ApiBuildCurrent {
         $rev = [string]$j.build.rev
         if ($rev -ne $script:RuzgarExpectedBuildRev) {
             Log "health rev uyumsuz: '$rev' beklenen '$($script:RuzgarExpectedBuildRev)'"
-            return $false
-        }
-        if ($rev -match "faz3[0-9]-v" -or $rev -match "faz4[0-6]-v") {
-            Log "health rev programlama eski surum: '$rev'"
             return $false
         }
         if ($rev -match "^2024-" -or $rev -match "gemini-env-fix") {
@@ -486,18 +497,28 @@ if (-not $serverUp) {
 }
 
 if ($serverUp -and (-not (Test-ApiBuildCurrent -Url $apiUrl))) {
+    $oldRev = "?"
     try {
         $r0 = Invoke-WebRequest -Uri $apiUrl -UseBasicParsing -TimeoutSec 3
         $j0 = $r0.Content | ConvertFrom-Json
-        Show-RuzgarFaz60BuildMismatchPrompt -CurrentRev ([string]$j0.build.rev) -ExpectedRev $script:RuzgarExpectedBuildRev
-    } catch {
-        Show-RuzgarFaz60BuildMismatchPrompt -CurrentRev "?" -ExpectedRev $script:RuzgarExpectedBuildRev
+        $oldRev = [string]$j0.build.rev
+    } catch {}
+    Log "Eski Ruzgar API ($oldRev) - otomatik port yeniden baslatiliyor (Faz 60)"
+    $mismatchFixed = $false
+    for ($killTry = 0; $killTry -lt 3; $killTry++) {
+        Stop-RuzgarApiPort -Port $ApiPort
+        if ($ApiPort -ne 8777) { Stop-RuzgarApiPort -Port 8777 }
+        Start-Sleep -Seconds 2
+        if (Test-ApiBuildCurrent -Url $apiUrl) {
+            $mismatchFixed = $true
+            $serverUp = $true
+            Log "Build uyumu saglandi: $($script:RuzgarExpectedBuildRev)"
+            break
+        }
     }
-    Log "Eski Ruzgar API - kod/.env guncel degil, port yeniden baslatiliyor"
-    Stop-RuzgarApiPort -Port $ApiPort
-    if ($ApiPort -ne 8777) { Stop-RuzgarApiPort -Port 8777 }
-    Start-Sleep -Seconds 2
-    $serverUp = $false
+    if (-not $mismatchFixed) {
+        $serverUp = $false
+    }
 }
 
 if ($script:RuzgarUseColab) {
@@ -532,14 +553,7 @@ if (-not $serverUp -and -not $script:RuzgarUseColab) {
         Ensure-PythonDeps
         Test-ApiImport -Ia $ia
         Start-ApiServer -Ia $ia
-        $ok = $false
-        for ($i = 0; $i -lt 180; $i++) {
-            try {
-                $r2 = Invoke-WebRequest -Uri $apiUrl -UseBasicParsing -TimeoutSec 2
-                if ($r2.StatusCode -eq 200) { $ok = $true; break }
-            } catch { }
-            Start-Sleep -Milliseconds 500
-        }
+        $ok = Wait-ApiBuildCurrent -Url $apiUrl -MaxSec 120
         if (-not $ok) {
             $tail = Read-ApiErrTail
             [void][System.Windows.Forms.MessageBox]::Show(
@@ -627,11 +641,24 @@ try {
             Log "UYARI: Electron aciliyor ama port-check rc=$finalRc"
         }
     }
-    Start-ElectronApp -AppsRoot $Root
-    Log "Electron OK - UI: Ruzgar Baslatildi - Baglanti Aktif"
+    if (-not $ApiOnly) {
+        Start-ElectronApp -AppsRoot $Root
+        Log "Electron OK - UI: Ruzgar Baslatildi - Baglanti Aktif"
+    } else {
+        Log "ApiOnly - Electron atlandi (API yeniden baslatildi)"
+        if (-not (Test-ApiBuildCurrent -Url $apiUrl)) {
+            [void][System.Windows.Forms.MessageBox]::Show(
+                "API yeniden baslatildi ama build hala uyumsuz.`nBeklenen: $($script:RuzgarExpectedBuildRev)`nLog: $Log",
+                "RUZGAR"
+            )
+            exit 1
+        }
+    }
 } catch {
     Log "Electron hata: $($_.Exception.Message)"
-    [void][System.Windows.Forms.MessageBox]::Show("RUZGAR acilamadi: $($_.Exception.Message)`nLog: $Log", "RUZGAR")
+    if (-not $ApiOnly) {
+        [void][System.Windows.Forms.MessageBox]::Show("RUZGAR acilamadi: $($_.Exception.Message)`nLog: $Log", "RUZGAR")
+    }
     exit 1
 }
 
