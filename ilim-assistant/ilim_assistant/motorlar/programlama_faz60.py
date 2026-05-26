@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any
 
 FAZ60_VERSION = "programlama-faz60-v1-2026-05-26"
-_DEFAULT_EXPECTED_REV = "2026-05-26-programlama-faz63-v74"
+_DEFAULT_EXPECTED_REV = "2026-05-26-programlama-faz64-v75"
 _FAZ60_PATCH = "v71-hotfix1"
 _LAST_FULL_PARITY_FILE = "last_parity_full_run.json"
 _WEEKLY_KPI_PREFIX = "weekly_kpi_"
@@ -90,6 +90,12 @@ def enrich_health_build(build: dict[str, Any] | None) -> dict[str, Any]:
         from ilim_assistant.motorlar.programlama_faz63 import enrich_health_build as _e63
 
         out = _e63(out)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz64 import enrich_health_build as _e64
+
+        out = _e64(out)
     except Exception:
         pass
     return out

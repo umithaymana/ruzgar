@@ -1,6 +1,6 @@
 # Rüzgar — Yol haritası (Faz 55+)
 
-> **Temel:** Faz 49–63 · build `faz63-v74`  
+> **Temel:** Faz 49–64 · build `faz64-v75`  
 > **Hedef:** Offline KPI değil — **gerçek görevde** Cursor’a yaklaşmak  
 > **Ölçü:** Görev başarı oranı **≥80%** · parity **full 8/8** · kullanıcı memnuniyeti **≥4.5/5**
 
@@ -94,9 +94,15 @@
 - [x] API: `GET /api/programlama/live-kpi` · kpi-dashboard `live_kpi`
 - [x] Atölye kartı + sohbet: `canlı kpi` / `görev kpi`
 
+### Faz 64 — Best-of-N worktree (v1) ← **UYGULANDI (v75)**
+
+- [x] `best-of-n: N proje-adi hedef` — N aday (kopya veya git worktree)
+- [x] Her adayda pytest skoru · kazanan seçimi
+- [x] API: `POST /api/programlama/best-of-n/plan` · `GET .../runs`
+- [ ] Faz 65: her adayda tam LLM ajan turu (paralel)
+
 **Sırada (Dalga G devam):**
 
-- Paralel alt ajan (Best-of-N worktree)
 - Tam repo sembol rename (LSP tam)
 - Özgür shell (güvenlik politikası onayı ile)
 - Mobil native (Expo dışı store build)
@@ -129,4 +135,4 @@ python ilim-assistant/scripts/programlama_smoke.py --ci
 
 ---
 
-*Build: `faz63-v74` · Canlı KPI tamam. Sonraki: Dalga G (Best-of-N / LSP).*
+*Build: `faz64-v75` · Best-of-N v1 tamam. Sonraki: Faz 65 LLM/aday veya LSP rename.*

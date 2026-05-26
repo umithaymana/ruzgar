@@ -1597,7 +1597,7 @@ def run_parity(*, live_base: str | None = None) -> int:
         _fail("faz60")
         fails += 1
     exp = expected_build_rev()
-    if "faz63-v74" in exp or exp.endswith("-v74"):
+    if "faz64-v75" in exp or exp.endswith("-v75"):
         _ok(f"faz60 expected rev={exp[:40]}")
     else:
         _fail("faz60 expected rev", exp)
@@ -1720,6 +1720,51 @@ def run_parity(*, live_base: str | None = None) -> int:
         _fail("faz63 dashboard")
         fails += 1
     _ok(f"faz63 {FAZ63_VERSION}")
+
+    print("=== Faz 64 — best-of-n ===")
+    from ilim_assistant.motorlar.programlama_faz64 import (
+        FAZ64_VERSION,
+        faz64_enabled,
+        list_best_of_n_runs,
+        parse_best_of_n_command,
+        plan_best_of_n_run,
+    )
+
+    if faz64_enabled():
+        _ok("faz64 on")
+    else:
+        _fail("faz64")
+        fails += 1
+    p = parse_best_of_n_command(
+        "best-of-n: 2 smoke-cursor-ref-40763 health service version pytest"
+    )
+    if p and p.get("n") == 2:
+        _ok("faz64 parse")
+    else:
+        _fail("faz64 parse", str(p))
+        fails += 1
+    scope_test = "projects/smoke-cursor-ref-40763"
+    src = WORKSPACE / scope_test.replace("/", os.sep)
+    if src.is_dir():
+        man = plan_best_of_n_run(
+            WORKSPACE,
+            scope_rel=scope_test,
+            goal="smoke bon",
+            n=2,
+        )
+        if man.get("ok") and man.get("winner_id"):
+            _ok(f"faz64 plan winner={man.get('winner_id')}")
+        else:
+            _fail("faz64 plan", str(man)[:80])
+            fails += 1
+    else:
+        _ok("faz64 plan skipped (no smoke-ref project)")
+    if list_best_of_n_runs(WORKSPACE).get("ok"):
+        _ok("faz64 list runs")
+    else:
+        _fail("faz64 list")
+        fails += 1
+    _ok(f"faz64 {FAZ64_VERSION}")
 
     if should_run_proje_uret_pipeline(
         "proje üret: fastapi_api smoke-faz47-run pytest",

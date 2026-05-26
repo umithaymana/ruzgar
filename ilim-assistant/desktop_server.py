@@ -737,7 +737,7 @@ def _health_build_block() -> dict:
     import os as _os
 
     base = {
-        "rev": "2026-05-26-programlama-faz63-v74",
+        "rev": "2026-05-26-programlama-faz64-v75",
         "nebula_kitap": True,
         "fast_paths": _os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
         "memory_first": True,
@@ -1688,6 +1688,53 @@ def api_programlama_kpi_dashboard(workspace_root: str | None = None):
     except Exception:
         pass
     return payload
+
+
+@app.post("/api/programlama/best-of-n/plan")
+def api_programlama_best_of_n_plan(body: ProgramlamaPatchBody):
+    """Faz 64 — Best-of-N aday planı + pytest skoru."""
+    from ilim_assistant.motorlar.programlama_faz64 import (
+        FAZ64_VERSION,
+        format_best_of_n_report,
+        plan_best_of_n_run,
+        parse_best_of_n_command,
+    )
+
+    root = (body.workspace_root or "").strip() or None
+    text = (body.text or "").strip()
+    parsed = parse_best_of_n_command(text) if text else None
+    n = 2
+    scope = (body.rel or "").strip()
+    goal = text
+    if parsed:
+        n = parsed["n"]
+        scope = parsed["scope_rel"]
+        goal = parsed["goal"]
+    if scope and not scope.startswith("projects/"):
+        scope = f"projects/{scope}"
+    manifest = plan_best_of_n_run(
+        root,
+        scope_rel=scope or "projects/unknown",
+        goal=goal or "best-of-n",
+        n=n,
+    )
+    manifest["version"] = FAZ64_VERSION
+    manifest["report"] = format_best_of_n_report(manifest)
+    return manifest
+
+
+@app.get("/api/programlama/best-of-n/runs")
+def api_programlama_best_of_n_runs(workspace_root: str | None = None):
+    """Faz 64 — son Best-of-N koşuları."""
+    from ilim_assistant.motorlar.programlama_faz64 import (
+        FAZ64_VERSION,
+        list_best_of_n_runs,
+    )
+
+    root = (workspace_root or "").strip() or None
+    out = list_best_of_n_runs(root)
+    out["version"] = FAZ64_VERSION
+    return out
 
 
 @app.get("/api/programlama/live-kpi")
