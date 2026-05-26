@@ -107,6 +107,13 @@ def looks_like_fast_llm_fact_question(msg: str) -> bool:
     if not raw or len(raw) > 220:
         return False
     if looks_like_encyclopedic_fact_question(msg):
+        try:
+            from ilim_assistant.ana_motor_fast import fast_local_rag_first_enabled
+
+            if fast_local_rag_first_enabled():
+                return False
+        except Exception:
+            pass
         return True
     asc = _norm_ascii(raw)
     low = raw.lower()
@@ -139,6 +146,10 @@ def looks_like_fast_llm_fact_question(msg: str) -> bool:
         "güneş",
         "gunes",
     )
+    if re.search(r"\b(en\s+uzak|en\s+yakin|en\s+yakın)\b", asc) and any(
+        k in asc for k in science + ("gezegen", "gezegeni")
+    ):
+        return True
     if "?" in raw and len(raw.split()) <= 20:
         if any(k in asc for k in science):
             return True
@@ -774,14 +785,6 @@ def maybe_gundelik_instant_reply(
     """B3b — net sohbet (nasılsın/selam) için Ollama/Gemini beklemeden kısa yanıt."""
     if mode_norm not in ("genel", "uretim", "gelisim"):
         return None
-    try:
-        from ilim_assistant.ruzgar_egitim import maybe_egitim_learned_reply
-
-        taught = maybe_egitim_learned_reply(message)
-        if taught:
-            return taught
-    except Exception:
-        pass
     raw = (message or "").strip().lower()
     blob = _norm_ascii(raw) + " " + raw
     if any(

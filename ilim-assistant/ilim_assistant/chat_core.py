@@ -1237,7 +1237,19 @@ def prepare_turn(
                 ar_hits,
                 archive_primary=archive_primary_flag,
             )
-        if m == "genel" and web_on and not archive_primary_flag and not allow_web:
+        try:
+            from ilim_assistant.ana_motor_plan import looks_like_fast_llm_fact_question
+
+            _fast_fact_no_web = looks_like_fast_llm_fact_question(msg)
+        except Exception:
+            _fast_fact_no_web = False
+        if (
+            m == "genel"
+            and web_on
+            and not archive_primary_flag
+            and not allow_web
+            and not _fast_fact_no_web
+        ):
             allow_web = True
 
         web_parts: list[str] = []
