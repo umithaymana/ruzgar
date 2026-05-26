@@ -1227,29 +1227,86 @@ def iter_code_agent_turn_events(
                     profiles_used = list(profiles_used) + _f35_profiles
                 yield {"type": "token", "text": "\n\n[Faz 38 tur-içi takip]\n"}
             try:
-                from ilim_assistant.motorlar.programlama_faz39 import (
-                    run_write_mandate_followup,
-                )
-
-                llm_body, round_body, _tool_res, _f39_prof, _faz39_mandate = (
-                    run_write_mandate_followup(
-                        llm_body=llm_body,
-                        round_body=round_body,
-                        tool_results=_tool_res,
-                        tool_block=_tool_block_combined,
-                        goal=task.goal,
-                        turn=turn,
-                        scope_rel=task.scope_rel,
-                        agent_system=agent_system,
-                        round_payload=round_payload,
-                        model=model,
-                        active_prior=active_prior,
-                        message=message,
-                        turn_plan=turn_plan,
-                        workspace_root=workspace,
-                        stream_fn=_stream_agent_llm_turn,
+                _faz39_mandate = False
+                _f39_prof: list[str] = []
+                try:
+                    from ilim_assistant.motorlar.programlama_faz52 import (
+                        faz52_enabled,
+                        run_write_mandate_followup_fc,
+                        should_force_structured_recovery,
+                        run_structured_recovery_turn,
                     )
-                )
+
+                    if should_force_structured_recovery(llm_body, _tool_res):
+                        _rec_text, _rec_res, _rec_block = run_structured_recovery_turn(
+                            agent_system=agent_system,
+                            goal=task.goal,
+                            scope_rel=task.scope_rel,
+                            workspace_root=workspace,
+                            turn_user=round_payload,
+                        )
+                        if _rec_res:
+                            _tool_res = list(_tool_res) + list(_rec_res)
+                            if _rec_text:
+                                llm_body = (llm_body or "").rstrip() + "\n\n" + _rec_text
+                            if _rec_block:
+                                round_body = (round_body or llm_body).rstrip() + "\n\n" + _rec_block
+                            yield {
+                                "type": "status",
+                                "text": f"Tur {turn}: Faz 52 metin-only → araç kurtarma.",
+                            }
+                    if faz52_enabled():
+                        (
+                            llm_body,
+                            round_body,
+                            _tool_res,
+                            _f39_prof,
+                            _faz39_mandate,
+                        ) = run_write_mandate_followup_fc(
+                            llm_body=llm_body,
+                            round_body=round_body,
+                            tool_results=_tool_res,
+                            tool_block=_tool_block_combined,
+                            goal=task.goal,
+                            turn=turn,
+                            scope_rel=task.scope_rel,
+                            agent_system=agent_system,
+                            workspace_root=workspace,
+                            stream_fn=_stream_agent_llm_turn,
+                            round_payload=round_payload,
+                            model=model,
+                            active_prior=active_prior,
+                            message=message,
+                            turn_plan=turn_plan,
+                        )
+                except Exception:
+                    _faz39_mandate = False
+                    _f39_prof = []
+
+                if not _faz39_mandate:
+                    from ilim_assistant.motorlar.programlama_faz39 import (
+                        run_write_mandate_followup,
+                    )
+
+                    llm_body, round_body, _tool_res, _f39_prof, _faz39_mandate = (
+                        run_write_mandate_followup(
+                            llm_body=llm_body,
+                            round_body=round_body,
+                            tool_results=_tool_res,
+                            tool_block=_tool_block_combined,
+                            goal=task.goal,
+                            turn=turn,
+                            scope_rel=task.scope_rel,
+                            agent_system=agent_system,
+                            round_payload=round_payload,
+                            model=model,
+                            active_prior=active_prior,
+                            message=message,
+                            turn_plan=turn_plan,
+                            workspace_root=workspace,
+                            stream_fn=_stream_agent_llm_turn,
+                        )
+                    )
                 if _faz39_mandate:
                     _faz35_followup = True
                     yield {

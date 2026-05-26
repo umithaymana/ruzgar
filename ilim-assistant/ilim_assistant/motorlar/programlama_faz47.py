@@ -23,6 +23,9 @@ from typing import Any, Iterator
 FAZ47_VERSION = "programlama-faz47-v2-2026-05-25"
 
 _TEMPLATE_HINTS: list[tuple[str, str]] = [
+    (r"\b(crud\s+api|crud\s+endpoint|items\s+crud)\b", "crud_api"),
+    (r"\b(jwt|auth\s+api|login\s+api|giris\s+api|token\s+api)\b", "auth_jwt"),
+    (r"\b(dashboard|yonetim\s+paneli|admin\s+panel)\b", "dashboard_static"),
     (r"\b(fastapi|fast\s*api|api\s+servis)\b", "fastapi_api"),
     (r"\b(react|vite|spa|frontend)\b", "react_vite"),
     (r"\b(expo|mobil|mobile|react\s*native)\b", "mobile_expo"),
@@ -517,6 +520,28 @@ def run_offline_bootstrap(
                 return _bootstrap_python_package(workspace_root, scope)
             if tid == "mobile_expo":
                 return _bootstrap_mobile_expo(workspace_root, scope)
+            try:
+                from ilim_assistant.motorlar.programlama_faz51 import (
+                    faz51_enabled,
+                    resolve_faz51_template,
+                    run_faz51_offline_bootstrap,
+                )
+
+                tid51 = resolve_faz51_template(tid)
+                if faz51_enabled() and tid51 in (
+                    "crud_api",
+                    "auth_jwt",
+                    "dashboard_static",
+                ):
+                    return run_faz51_offline_bootstrap(
+                        workspace_root,
+                        scope,
+                        tid51,
+                        spec.project_name,
+                        spec.goal,
+                    )
+            except Exception:
+                pass
             return True, f"offline atlandı ({tid})"
         finally:
             exit_task_mode()
@@ -538,6 +563,21 @@ def run_proje_uret_verify(
         "false",
         "no",
     )
+
+    try:
+        from ilim_assistant.motorlar.programlama_faz51 import (
+            faz51_enabled,
+            resolve_faz51_template,
+            verify_faz51_template,
+        )
+
+        tid51 = resolve_faz51_template(tid)
+        if faz51_enabled() and tid51 in ("crud_api", "auth_jwt", "dashboard_static"):
+            return verify_faz51_template(
+                workspace_root, scope_rel, tid51, goal=goal
+            )
+    except Exception:
+        pass
 
     if tid in ("fastapi_api", "python_package", "cli_python"):
         from ilim_assistant.motorlar.programlama_faz14 import run_project_verify

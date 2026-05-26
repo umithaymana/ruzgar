@@ -53,6 +53,13 @@ _TEMPLATE_ALIASES: dict[str, str] = {
     "mobile_app": "mobile_expo",
 }
 
+try:
+    from ilim_assistant.motorlar.programlama_faz51 import merge_template_aliases
+
+    _TEMPLATE_ALIASES.update(merge_template_aliases())
+except Exception:
+    pass
+
 
 def _scaffold_base_dir() -> str:
     return (
@@ -110,6 +117,12 @@ def list_templates() -> list[dict[str, Any]]:
         from ilim_assistant.motorlar.programlama_faz30 import extra_template_catalog
 
         rows.extend(extra_template_catalog())
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz51 import extra_template_catalog as faz51_catalog
+
+        rows.extend(faz51_catalog())
     except Exception:
         pass
     return rows
@@ -439,6 +452,16 @@ npm run dev
         mob = mobile_expo_files(t, slug, title, projects_base=_scaffold_base_dir())
         if mob:
             return mob
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz51 import faz51_template_files
+
+        f51 = faz51_template_files(
+            t, slug, title, projects_base=_scaffold_base_dir()
+        )
+        if f51:
+            return f51
     except Exception:
         pass
     return {}

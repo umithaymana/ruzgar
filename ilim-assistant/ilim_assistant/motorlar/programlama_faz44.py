@@ -328,6 +328,21 @@ def build_context_v3_block(
             batch_read_at_refs(workspace_root, rel_paths[:3], max_files=3)
         )
 
+    try:
+        from ilim_assistant.motorlar.programlama_faz53 import (
+            symbol_lite_enabled,
+            build_symbol_lite_block,
+        )
+
+        if symbol_lite_enabled():
+            sym_lite = build_symbol_lite_block(
+                workspace_root, scope, message
+            ).strip()
+            if sym_lite:
+                parts.append(sym_lite[:5000])
+    except Exception:
+        pass
+
     parts.append(f"({FAZ44_VERSION})")
     return "\n\n".join(p for p in parts if p.strip())
 

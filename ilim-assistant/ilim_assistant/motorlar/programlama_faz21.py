@@ -122,13 +122,33 @@ def build_light_programming_context(
 
     if scope:
         try:
-            from ilim_assistant.motorlar.programlama_faz22 import compact_symbol_context
+            from ilim_assistant.motorlar.programlama_faz53 import (
+                symbol_lite_enabled,
+                augment_agent_context_parts,
+            )
 
-            sym_hint = compact_symbol_context(workspace_root, scope, message).strip()
-            if sym_hint:
-                parts.append(sym_hint[:2000])
+            if symbol_lite_enabled():
+                parts = augment_agent_context_parts(
+                    parts,
+                    workspace_root,
+                    scope_rel=scope,
+                    message=message,
+                )
+            else:
+                from ilim_assistant.motorlar.programlama_faz22 import compact_symbol_context
+
+                sym_hint = compact_symbol_context(workspace_root, scope, message).strip()
+                if sym_hint:
+                    parts.append(sym_hint[:2000])
         except Exception:
-            pass
+            try:
+                from ilim_assistant.motorlar.programlama_faz22 import compact_symbol_context
+
+                sym_hint = compact_symbol_context(workspace_root, scope, message).strip()
+                if sym_hint:
+                    parts.append(sym_hint[:2000])
+            except Exception:
+                pass
 
     for directive_fn in (
         "programlama_faz46.faz46_directive",

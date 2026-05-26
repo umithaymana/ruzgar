@@ -14,7 +14,21 @@
 | `ddc57b7` | Faz 12: diff önizleme, `programlama_smoke.py`, hızlı şablon düğmeleri |
 | `98d554f` | Manifest Faz 12 etiketi |
 
-**Build:** `2026-05-25-programlama-faz46-v57`
+**Build:** `2026-05-26-programlama-faz54-v65`
+
+### Faz 49–54 (bağımsızlık dalgaları — 2026-05-26)
+
+| Faz | Özet |
+|-----|------|
+| 49 | Ana Motor stabilite, build kilidi |
+| 50 | Doğal dil → proje üret |
+| 51 | CRUD / JWT / dashboard şablonları |
+| 52 | Function calling birincil + mandate FC |
+| 53 | Sembol indeks lite + Atölye patch v2 varsayılan |
+| 54 | KPI 8/8 parity smoke + compliance v3 + dashboard |
+
+**Parity:** `python ilim-assistant/scripts/ruzgar_parity_smoke.py` (8/8)  
+**Plan:** [PROGRAMMING_MOTOR_BAGIMSIZLIK_PLANI.md](PROGRAMMING_MOTOR_BAGIMSIZLIK_PLANI.md)
 
 ### Bugün çalışan kabiliyetler
 

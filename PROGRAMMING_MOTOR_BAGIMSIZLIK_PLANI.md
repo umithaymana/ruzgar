@@ -2,7 +2,7 @@
 
 > **Kayıt tarihi:** 2026-05-26  
 > **Durum:** Yarın devam — Ümit & Gökçenur  
-> **Mevcut build:** `2026-05-25-programlama-faz50-v61`  
+> **Mevcut build:** `2026-05-26-programlama-faz54-v65`  
 > **Referans:** [PROGRAMMING_MOTOR_CURSOR_SEVIYE_PLAN.md](PROGRAMMING_MOTOR_CURSOR_SEVIYE_PLAN.md) · [PROGRAMMING_MOTOR_USTAYOL.md](PROGRAMMING_MOTOR_USTAYOL.md)
 
 ---
@@ -45,11 +45,11 @@ Cursor IDE olmadan, yalnızca Rüzgar Atölyesi ile:
 - [x] Ana Motor «site yap» deyince otomatik Programlama delege (Faz 10 genişletme)
 - [x] UI: Proje Üret modalında özellik listesi alanı
 
-**Faz 51 — Offline görev genişletme**
+**Faz 51 — Offline görev genişletme** ✓
 
-- [ ] Offline bootstrap: `crud_api`, `auth_jwt`, `dashboard_static` şablonları
-- [ ] Her şablonda: README + pytest + `requirements.txt` + tek komut çalıştır
-- [ ] Smoke: 4 şablon × offline verify
+- [x] Offline bootstrap: `crud_api`, `auth_jwt`, `dashboard_static` şablonları
+- [x] Her şablonda: README + pytest + `requirements.txt` (API) / statik smoke
+- [x] Smoke: faz51 şablonları × offline verify (`programlama_smoke.py`)
 
 **Başarı:** Cursor’sız 4 proje tipi tek komutla yeşil.
 
@@ -57,26 +57,26 @@ Cursor IDE olmadan, yalnızca Rüzgar Atölyesi ile:
 
 ### Dalga C — Otonom ajan (2 oturum) · Faz 52–53
 
-**Faz 52 — Function calling birincil (Faz 40 sertleştirme)**
+**Faz 52 — Function calling birincil (Faz 40 sertleştirme)** ✓
 
-- [ ] Görev modunda metin-only tur <%5
-- [ ] `write` + `verify` mandate (Faz 39) function-call ile zorunlu
-- [ ] Kota: keşif sonrası +1 tur toleransı
+- [x] Görev modunda metin-only tur → zorunlu araç kurtarma (`run_structured_recovery_turn`)
+- [x] `write` + `verify` mandate → function-call (`tool_choice=required`, Faz 52 FC)
+- [x] Kota: keşif sonrası +1 tur toleransı (`effective_max_turns` / `discovery_bonus_turns`)
 
-**Faz 53 — Bağlam + sembol**
+**Faz 53 — Bağlam + sembol** ✓
 
-- [ ] Workspace sembol indeksi (Faz 44 lite): sınıf/fonksiyon özeti LLM’e
-- [ ] Çok dosya patch önizleme (Faz 45) Atölye’de varsayılan
+- [x] Workspace sembol indeksi (Faz 22 + Faz 53 lite): sınıf/fonksiyon özeti LLM’e
+- [x] Çok dosya patch önizleme (Faz 45) Atölye’de varsayılan
 
 **Başarı:** `benim-api health + pytest` görevi 3 denemede %80 yeşil.
 
 ---
 
-### Dalga D — Ölçüm ve KPI (1 oturum) · Faz 54
+### Dalga D — Ölçüm ve KPI (1 oturum) · Faz 54 ✓
 
-- [ ] `ruzgar_parity_smoke.py` → 8/8 (Groq E2E opsiyonel bayrak)
-- [ ] `agent_compliance` v3: hedef ≥85, rapor JSON + UI kart
-- [ ] Üstayol dokümanı güncelle; build `faz54-v60`
+- [x] `ruzgar_parity_smoke.py` → 8/8 (`--quick` / `--groq-e2e` opsiyonel)
+- [x] `agent_compliance` v3: hedef ≥85, JSON + Atölye KPI kartı (`/api/programlama/kpi-dashboard`)
+- [x] Üstayol dokümanı güncelle; build `faz54-v65`
 
 ---
 

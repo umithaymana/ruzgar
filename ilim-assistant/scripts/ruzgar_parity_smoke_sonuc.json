@@ -1,59 +1,67 @@
 {
   "ok": true,
+  "passed": 8,
+  "total": 8,
   "checks": [
     {
-      "id": "parity_scaffold",
-      "label": "FastAPI scaffold",
+      "id": "kpi_capabilities",
+      "label": "Kabiliyet matrisi (Faz 20–54)",
       "ok": true,
       "elapsed_sec": 0.047,
-      "budget_sec": 60.0,
-      "detail": "projects/smoke-parity-43076"
+      "detail": "20/20 acik (hedef >=12)"
     },
     {
-      "id": "parity_agent_chain",
-      "label": "Patch + pytest (görev modu)",
-      "ok": true,
-      "elapsed_sec": 1.281,
-      "budget_sec": 300.0,
-      "detail": "writes=1 verify=True"
-    },
-    {
-      "id": "parity_health_version",
-      "label": "health endpoint version alanı",
+      "id": "structured_tools",
+      "label": "Function calling şeması",
       "ok": true,
       "elapsed_sec": 0.0,
-      "budget_sec": 0.0,
-      "detail": "projects/smoke-parity-43076"
+      "detail": "tools=8"
     },
     {
-      "id": "parity_scorecard",
-      "label": "Faz 20–24 scorecard",
+      "id": "compliance_v3_offline",
+      "label": "Uyum smoke ≥85",
+      "ok": true,
+      "elapsed_sec": 0.016,
+      "detail": "score=100 target=85"
+    },
+    {
+      "id": "templates_faz51",
+      "label": "Faz 51 şablonları",
       "ok": true,
       "elapsed_sec": 0.0,
-      "budget_sec": 0.0,
-      "detail": ""
+      "detail": "faz51 ok"
     },
     {
-      "id": "parity_total",
-      "label": "Parity paketi toplam",
+      "id": "faz52_53_wiring",
+      "label": "FC birincil + Atölye v2",
       "ok": true,
-      "elapsed_sec": 1.328,
-      "budget_sec": 300.0,
-      "detail": "smoke-parity-43076"
+      "elapsed_sec": 0.0,
+      "detail": "{'editor_v2_default': True, 'multi_file_preview_default': True, 'faz53_version':"
+    },
+    {
+      "id": "faz50_natural",
+      "label": "Doğal dil proje üret",
+      "ok": true,
+      "elapsed_sec": 0.0,
+      "detail": "static_site"
+    },
+    {
+      "id": "proje_uret_fastapi",
+      "label": "Proje üret FastAPI",
+      "ok": true,
+      "elapsed_sec": 1.437,
+      "detail": "scaffold=True verify=True"
+    },
+    {
+      "id": "proje_uret_crud",
+      "label": "Proje üret CRUD (Faz 51)",
+      "ok": true,
+      "elapsed_sec": 1.391,
+      "detail": "scaffold=True verify=True"
     }
   ],
-  "project_name": "smoke-parity-43076",
-  "scope_rel": "projects/smoke-parity-43076",
-  "scorecard": {
-    "unified_agent": true,
-    "light_context": true,
-    "symbol_index": true,
-    "task_5min": true,
-    "agent_steps_sse": true,
-    "implementation_intent": true
-  },
-  "parity_slo_sec": 300.0,
-  "version": "programlama-faz25-v1-2026-05-25",
-  "live_skipped": true,
-  "live_note": ""
+  "groq_e2e_ran": false,
+  "mode": "quick",
+  "elapsed_sec": 2.891,
+  "version": "programlama-faz54-v1-2026-05-26"
 }

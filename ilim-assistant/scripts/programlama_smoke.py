@@ -623,7 +623,7 @@ def run_live(base: str) -> int:
     try:
         h = get("/api/health")
         rev = str((h.get("build") or {}).get("rev") or "")
-        if "faz48" in rev or "faz47" in rev or rev.endswith("-v59"):
+        if "faz54" in rev or "faz53" in rev or "faz52" in rev or rev.endswith("-v65"):
             _ok(f"build.rev={rev}")
         else:
             _fail("build.rev", rev)
@@ -962,6 +962,7 @@ def run_parity(*, live_base: str | None = None) -> int:
     from ilim_assistant.motorlar.programlama_faz47 import (
         FAZ47_VERSION,
         ProjeUretSpec,
+        infer_template_from_text,
         parse_proje_uret_command,
         proje_uret_enabled,
         run_offline_bootstrap,
@@ -1031,6 +1032,207 @@ def run_parity(*, live_base: str | None = None) -> int:
         _fail("faz50 extract features", str(feats))
         fails += 1
     _ok(f"faz50 {FAZ50_VERSION}")
+
+    print("=== Faz 51 — CRUD/JWT/dashboard şablonları ===")
+    from ilim_assistant.motorlar.programlama_faz51 import (
+        FAZ51_VERSION,
+        faz51_enabled,
+        extra_template_catalog,
+        resolve_faz51_template,
+    )
+    from ilim_assistant.motorlar.programlama_faz6 import list_templates
+
+    if faz51_enabled():
+        _ok("faz51 on")
+    else:
+        _fail("faz51")
+        fails += 1
+    f51_ids = {r["id"] for r in extra_template_catalog()}
+    if f51_ids >= {"crud_api", "auth_jwt", "dashboard_static"}:
+        _ok("faz51 catalog")
+    else:
+        _fail("faz51 catalog", str(f51_ids))
+        fails += 1
+    listed = {t["id"] for t in list_templates()}
+    if f51_ids.issubset(listed):
+        _ok("faz51 list_templates merge")
+    else:
+        _fail("faz51 list_templates", str(f51_ids - listed))
+        fails += 1
+    if resolve_faz51_template("jwt") == "auth_jwt":
+        _ok("faz51 alias jwt")
+    else:
+        _fail("faz51 alias")
+        fails += 1
+    if infer_template_from_text("crud api yap magaza-api") == "crud_api":
+        _ok("faz51 infer crud")
+    else:
+        _fail("faz51 infer crud")
+        fails += 1
+    for tid, suffix in (
+        ("crud_api", "crud"),
+        ("auth_jwt", "jwt"),
+        ("dashboard_static", "dash"),
+    ):
+        pn = f"smoke-faz51-{suffix}-{int(time.time()) % 100000}"
+        sp = ProjeUretSpec(tid, pn, "pytest geçir")
+        rp = run_proje_uret_prepare(WORKSPACE, sp)
+        if rp.scaffold_ok and rp.verify_ok and rp.ready_without_agent:
+            _ok(f"faz51 proje uret {tid}")
+        else:
+            _fail(f"faz51 proje uret {tid}", rp.detail[:60])
+            fails += 1
+    _ok(f"faz51 {FAZ51_VERSION}")
+
+    print("=== Faz 52 — function calling birincil ===")
+    from ilim_assistant.motorlar.programlama_faz52 import (
+        FAZ52_VERSION,
+        build_mandate_fc_user,
+        discovery_bonus_turns,
+        effective_max_turns,
+        faz52_enabled,
+        mandate_fc_enabled,
+        should_force_structured_recovery,
+        structured_task_mode_enabled,
+        tool_choice_for_task,
+        turn_had_no_tools,
+    )
+
+    if faz52_enabled() and structured_task_mode_enabled():
+        _ok("faz52 structured task on")
+    else:
+        _fail("faz52 structured task")
+        fails += 1
+    if mandate_fc_enabled():
+        _ok("faz52 mandate fc on")
+    else:
+        _fail("faz52 mandate fc")
+        fails += 1
+    if tool_choice_for_task(mandate=True) == "required":
+        _ok("faz52 tool_choice mandate")
+    else:
+        _fail("faz52 tool_choice")
+        fails += 1
+    if should_force_structured_recovery("sadece plan yaziyorum", []):
+        _ok("faz52 text-only recovery cue")
+    else:
+        _fail("faz52 text-only recovery")
+        fails += 1
+    if not should_force_structured_recovery("", [{"tool": "write", "ok": True}]):
+        _ok("faz52 skip when write ok")
+    else:
+        _fail("faz52 skip write")
+        fails += 1
+    mfc = build_mandate_fc_user(
+        goal="pytest",
+        scope_rel="projects/benim-api",
+        tool_block="[read ok]",
+        turn=2,
+    )
+    if "ZORUNLU ARAÇ" in mfc and "verify" in mfc:
+        _ok("faz52 mandate fc message")
+    else:
+        _fail("faz52 mandate fc message")
+        fails += 1
+    eff = effective_max_turns(
+        base_max=12,
+        last_tool_results=[{"tool": "read", "ok": True}],
+        total_writes=0,
+    )
+    if eff >= 12 + discovery_bonus_turns():
+        _ok(f"faz52 discovery bonus turns eff={eff}")
+    else:
+        _fail("faz52 discovery bonus", str(eff))
+        fails += 1
+    if turn_had_no_tools("aciklama only", []):
+        _ok("faz52 text-only detect")
+    else:
+        _fail("faz52 text-only detect")
+        fails += 1
+    _ok(f"faz52 {FAZ52_VERSION}")
+
+    print("=== Faz 53 — sembol lite + atölye patch v2 ===")
+    from ilim_assistant.motorlar.programlama_faz53 import (
+        FAZ53_VERSION,
+        atolye_editor_v2_enabled,
+        build_symbol_lite_block,
+        faz53_enabled,
+        multi_file_preview_default,
+        patch_api_enrichments,
+        symbol_lite_enabled,
+    )
+    from ilim_assistant.motorlar.programlama_faz45 import editor_v2_enabled
+
+    if faz53_enabled():
+        _ok("faz53 on")
+    else:
+        _fail("faz53")
+        fails += 1
+    if symbol_lite_enabled() and atolye_editor_v2_enabled():
+        _ok("faz53 symbol + editor v2")
+    else:
+        _fail("faz53 features")
+        fails += 1
+    if editor_v2_enabled():
+        _ok("faz53 editor_v2 default path")
+    else:
+        _fail("faz53 editor_v2")
+        fails += 1
+    enrich = patch_api_enrichments()
+    if enrich.get("multi_file_preview_default") and enrich.get("editor_v2_default"):
+        _ok("faz53 patch api flags")
+    else:
+        _fail("faz53 patch api", str(enrich))
+        fails += 1
+    sym = build_symbol_lite_block(WORKSPACE, "projects/benim-api", "health main")
+    if sym and "SEMBOL" in sym:
+        _ok("faz53 symbol lite block")
+    else:
+        _fail("faz53 symbol lite", sym[:60] if sym else "empty")
+        fails += 1
+    if multi_file_preview_default():
+        _ok("faz53 multi file preview default")
+    else:
+        _fail("faz53 multi preview")
+        fails += 1
+    _ok(f"faz53 {FAZ53_VERSION}")
+
+    print("=== Faz 54 — KPI 8/8 parity smoke ===")
+    from ilim_assistant.motorlar.programlama_faz54 import (
+        FAZ54_VERSION,
+        build_compliance_report_v3,
+        build_kpi_dashboard,
+        faz54_enabled,
+        run_parity_smoke_suite,
+        target_kpi_score,
+    )
+
+    if faz54_enabled():
+        _ok("faz54 on")
+    else:
+        _fail("faz54")
+        fails += 1
+    pq = run_parity_smoke_suite(WORKSPACE, mode="quick")
+    if pq.passed >= 8 and pq.ok:
+        _ok(f"faz54 parity quick {pq.passed}/8")
+    else:
+        _fail("faz54 parity quick", f"{pq.passed}/8")
+        fails += 1
+    comp3 = build_compliance_report_v3(WORKSPACE)
+    rep3 = comp3.get("report") or {}
+    if rep3.get("kpi_version") == 3:
+        _ok("faz54 compliance v3")
+    else:
+        _fail("faz54 compliance v3")
+        fails += 1
+    dash = build_kpi_dashboard(WORKSPACE)
+    if dash.get("ok") and dash.get("target_score", 0) >= target_kpi_score():
+        _ok("faz54 kpi dashboard")
+    else:
+        _fail("faz54 dashboard")
+        fails += 1
+    _ok(f"faz54 {FAZ54_VERSION}")
+
     if should_run_proje_uret_pipeline(
         "proje üret: fastapi_api smoke-faz47-run pytest",
         "programlama",

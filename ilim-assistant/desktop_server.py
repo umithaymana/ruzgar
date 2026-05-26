@@ -791,7 +791,7 @@ def health():
         },
         "super_brain": _super_brain_health_block(),
         "build": {
-            "rev": "2026-05-25-programlama-faz50-v61",
+            "rev": "2026-05-26-programlama-faz54-v65",
             "nebula_kitap": True,
             "fast_paths": os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
             "memory_first": True,
@@ -1304,7 +1304,7 @@ def api_programlama_patch_pending(workspace_root: str | None = None):
         items = enrich_pending_items_v45(root, items)
     except Exception:
         pass
-    return {
+    payload = {
         "ok": True,
         "count": bundle.get("count", 0),
         "paths": bundle.get("paths") or [],
@@ -1313,6 +1313,13 @@ def api_programlama_patch_pending(workspace_root: str | None = None):
         "pending": bundle.get("pending") or {},
         "version": FAZ16_VERSION,
     }
+    try:
+        from ilim_assistant.motorlar.programlama_faz53 import patch_api_enrichments
+
+        payload.update(patch_api_enrichments())
+    except Exception:
+        pass
+    return payload
 
 
 @app.get("/api/programlama/patch/inline-diff")
@@ -1333,9 +1340,18 @@ def api_programlama_patch_inline_diff(
             build_inline_diff_v2,
             editor_v2_enabled,
         )
+        from ilim_assistant.motorlar.programlama_faz53 import resolve_editor_v2_for_api
 
-        if editor_v2_enabled():
-            return build_inline_diff_v2(root, rel)
+        if editor_v2_enabled() or resolve_editor_v2_for_api(root):
+            out = build_inline_diff_v2(root, rel)
+            try:
+                from ilim_assistant.motorlar.programlama_faz53 import patch_api_enrichments
+
+                out.update(patch_api_enrichments())
+            except Exception:
+                pass
+            out["editor_v2"] = True
+            return out
     except Exception:
         pass
     from ilim_assistant.motorlar.programlama_faz27 import (
@@ -1357,6 +1373,12 @@ def api_programlama_patch_tabs(workspace_root: str | None = None):
     root = (workspace_root or "").strip() or None
     payload = build_patch_tabs(root)
     payload["version"] = FAZ45_VERSION
+    try:
+        from ilim_assistant.motorlar.programlama_faz53 import patch_api_enrichments
+
+        payload.update(patch_api_enrichments())
+    except Exception:
+        pass
     return payload
 
 
@@ -1371,6 +1393,12 @@ def api_programlama_patch_ux(workspace_root: str | None = None):
     root = (workspace_root or "").strip() or None
     payload = build_unified_patch_ux(root)
     payload["version"] = FAZ45_VERSION
+    try:
+        from ilim_assistant.motorlar.programlama_faz53 import patch_api_enrichments
+
+        payload.update(patch_api_enrichments())
+    except Exception:
+        pass
     return payload
 
 
@@ -1454,6 +1482,30 @@ def api_programlama_agent_compliance(workspace_root: str | None = None):
     """Faz 37/48 — ajan uyum skoru (son görev oturumu)."""
     root = (workspace_root or "").strip() or None
     try:
+        from ilim_assistant.motorlar.programlama_faz54 import (
+            FAZ54_VERSION,
+            build_compliance_report_v3,
+            compliance_v3_enabled,
+            format_compliance_report_v3,
+        )
+
+        if compliance_v3_enabled():
+            data = build_compliance_report_v3(root)
+            rep = data.get("report") or {}
+            return {
+                "ok": bool(data.get("ok")),
+                "report": format_compliance_report_v3(root) if data.get("ok") else "",
+                "data": rep,
+                "target_score": rep.get("target_score", 85),
+                "meets_target": bool(rep.get("meets_target")),
+                "overall_kpi_ok": bool(rep.get("overall_kpi_ok")),
+                "parity_passed": rep.get("parity_passed"),
+                "parity_total": rep.get("parity_total"),
+                "version": FAZ54_VERSION,
+            }
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_faz48 import (
             FAZ48_VERSION,
             build_compliance_report_v2,
@@ -1489,6 +1541,20 @@ def api_programlama_agent_compliance(workspace_root: str | None = None):
         "data": rep,
         "version": FAZ37_VERSION,
     }
+
+
+@app.get("/api/programlama/kpi-dashboard")
+def api_programlama_kpi_dashboard(workspace_root: str | None = None):
+    """Faz 54 — KPI dashboard (compliance v3 + parity 8/8)."""
+    from ilim_assistant.motorlar.programlama_faz54 import (
+        FAZ54_VERSION,
+        build_kpi_dashboard,
+    )
+
+    root = (workspace_root or "").strip() or None
+    payload = build_kpi_dashboard(root)
+    payload["version"] = FAZ54_VERSION
+    return payload
 
 
 @app.get("/api/programlama/parity-report")

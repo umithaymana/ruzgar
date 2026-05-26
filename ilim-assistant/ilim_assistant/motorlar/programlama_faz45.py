@@ -44,7 +44,14 @@ def _enabled() -> bool:
 
 
 def editor_v2_enabled() -> bool:
-    return _enabled()
+    if _enabled():
+        return True
+    try:
+        from ilim_assistant.motorlar.programlama_faz53 import atolye_editor_v2_enabled
+
+        return atolye_editor_v2_enabled()
+    except Exception:
+        return False
 
 
 def _norm_rel(rel: str) -> str:

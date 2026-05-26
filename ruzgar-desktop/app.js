@@ -4,7 +4,7 @@
  * Kök sonda `/api` ise kırpılır — aksi halde fetch `.../api/api/merkezi-bellek` ile 404 verir.
  */
 const RUZGAR_LOCAL_API_PORT = 8779;
-const RUZGAR_EXPECTED_BUILD_REV = "2026-05-25-programlama-faz50-v61";
+const RUZGAR_EXPECTED_BUILD_REV = "2026-05-26-programlama-faz54-v65";
 const RUZGAR_LOCAL_API_FALLBACK = `http://127.0.0.1:${RUZGAR_LOCAL_API_PORT}`;
 
 function migrateLegacyApiUrl(raw) {
@@ -1560,13 +1560,42 @@ function renderProgramlamaCompliance(compliance) {
   wrap.hidden = false;
   const score = Number(c.score || 0);
   const grade = String(c.grade || "—");
+  const target = Number(c.target_score || 85);
+  const parityP = c.parity_passed;
+  const parityT = c.parity_total;
+  const parityBit =
+    parityP !== undefined && parityT !== undefined
+      ? ` · parity ${parityP}/${parityT}`
+      : "";
   scoreEl.textContent = `${score}/100`;
-  gradeEl.textContent = `Not ${grade}`;
+  gradeEl.textContent =
+    c.overall_kpi_ok === true
+      ? `KPI OK ≥${target}`
+      : c.meets_target
+        ? `Not ${grade}`
+        : `Hedef ≥${target}`;
   if (detailEl) {
     const scope = String(c.last_scope || "").trim();
     const turns = Number(c.turn_count || 0);
     detailEl.textContent =
-      (scope ? `${scope} · ` : "") + (turns > 0 ? `${turns} tur kayıtlı` : "");
+      (scope ? `${scope} · ` : "") +
+      (turns > 0 ? `${turns} tur` : "—") +
+      parityBit;
+  }
+}
+
+async function refreshProgramlamaKpiDashboard() {
+  const workspaceRoot = await getProgramlamaWorkspaceRoot();
+  if (!workspaceRoot) return;
+  try {
+    const qs = `?workspace_root=${encodeURIComponent(workspaceRoot)}`;
+    const res = await fetch(`${API}/api/programlama/kpi-dashboard${qs}`);
+    const data = await res.json().catch(() => ({}));
+    if (data.ok && data.compliance) {
+      renderProgramlamaCompliance(data.compliance);
+    }
+  } catch (_) {
+    /* ignore */
   }
 }
 
@@ -1626,7 +1655,7 @@ function renderInlineDiffV2(data) {
   const unified = document.getElementById("inline-diff-unified");
   const cols = document.getElementById("inline-diff-cols");
   const statsEl = document.getElementById("inline-diff-stats");
-  const v2 = Boolean(data.editor_v2);
+  const v2 = Boolean(data.editor_v2 || data.editor_v2_default);
   if (!v2) {
     if (unified) unified.hidden = true;
     if (htmlOld) htmlOld.hidden = true;
@@ -1783,7 +1812,11 @@ async function showProgramlamaInlineDiff(relPath) {
         b.classList.toggle("active", b.title === rel);
       }
     }
-    flashRuzgarDurum(data.editor_v2 ? "Faz 45: renkli diff" : "Faz 27: eski/yeni");
+    flashRuzgarDurum(
+      data.editor_v2 || data.editor_v2_default
+        ? "Faz 53: renkli çok dosya diff"
+        : "Faz 27: eski/yeni"
+    );
   } catch (e) {
     setCodeOutput(`Inline diff: ${e && e.message ? e.message : e}`);
   }
@@ -1973,8 +2006,12 @@ async function refreshProgramlamaPatchFromServer() {
       status: it.status,
       basename: String(it.path || "").split("/").pop(),
     }));
-    renderProgramlamaPatchTabs(tabs, tabs[0]?.path);
+    const firstPath = tabs[0]?.path;
+    renderProgramlamaPatchTabs(tabs, firstPath);
     void refreshProgramlamaPatchUx();
+    if (data.multi_file_preview_default && firstPath) {
+      await showProgramlamaInlineDiff(firstPath);
+    }
   } catch (_) {
     /* ignore */
   }
@@ -3894,6 +3931,7 @@ async function programlamaAtolyeRefreshRoot() {
     void programlamaAtolyeShowBriefing();
     void refreshProgramlamaPatchFromServer();
     void refreshProgramlamaProjectSelect();
+    void refreshProgramlamaKpiDashboard();
   } catch (e) {
     el.codeFileTree.innerHTML =
       `<div class="code-file-placeholder">Kök liste okunamadı: ${esc(String(e && e.message ? e.message : e))}. Yerel sunucu (ilim-assistant) veya masaüstü köprüsü gerekir.</div>`;

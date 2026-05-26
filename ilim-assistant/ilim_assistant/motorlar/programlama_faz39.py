@@ -114,6 +114,21 @@ def should_abort_loop_relaxed(
     if not _enabled() or not abort:
         return abort, reason
 
+    try:
+        from ilim_assistant.motorlar.programlama_faz52 import (
+            faz52_enabled,
+            effective_max_turns,
+        )
+
+        if faz52_enabled():
+            max_turns = effective_max_turns(
+                base_max=max_turns,
+                last_tool_results=last_tool_results,
+                total_writes=int(getattr(state, "total_writes", 0) or 0),
+            )
+    except Exception:
+        pass
+
     if turn_had_discovery(last_tool_results) and state.turns_done < max_turns - 1:
         if state.total_writes == 0 and "kota" in reason.lower():
             return (

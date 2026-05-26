@@ -293,6 +293,7 @@ def chat_completion_with_tools(
     *,
     prior_messages: list | None = None,
     scope_rel: str = "",
+    tool_choice: str = "auto",
 ) -> tuple[str, list[dict[str, Any]]]:
     """
     Groq OpenAI tools — tek tur completion + tool_calls parse.
@@ -307,11 +308,14 @@ def chat_completion_with_tools(
         from ilim_assistant.llm_ollama import _build_chat_messages
 
         messages = _build_chat_messages(system, user, prior_messages)
+        tc = (tool_choice or "auto").strip().lower()
+        if tc not in ("auto", "required", "none"):
+            tc = "auto"
         payload: dict[str, Any] = {
             "model": model,
             "messages": messages,
             "tools": openai_tools_schema(),
-            "tool_choice": "auto",
+            "tool_choice": tc,
             "temperature": 0.2,
             "stream": False,
         }
@@ -356,6 +360,7 @@ def run_structured_tool_loop(
     goal: str,
     prior_messages: list | None = None,
     has_write_fn: Callable[[str, list[dict[str, Any]]], bool] | None = None,
+    tool_choice: str = "auto",
 ) -> tuple[str, list[dict[str, Any]], str]:
     """
     LLM ↔ araç döngüsü (max RUZGAR_FAZ40_MAX_ROUNDS).
@@ -377,12 +382,29 @@ def run_structured_tool_loop(
     cur_user = user
     extra_prior = list(prior_messages or [])
 
+    tc = (tool_choice or "auto").strip().lower()
+    if tc not in ("auto", "required", "none"):
+        tc = "auto"
+
     for rnd in range(max_tool_api_rounds()):
+        round_tc = tc
+        if rnd > 0 and tc == "auto":
+            try:
+                from ilim_assistant.motorlar.programlama_faz52 import (
+                    faz52_enabled,
+                    tool_choice_for_task,
+                )
+
+                if faz52_enabled() and not _has_write("\n".join(texts), all_results):
+                    round_tc = tool_choice_for_task(recovery=True)
+            except Exception:
+                pass
         text, batch = chat_completion_with_tools(
             system,
             cur_user,
             prior_messages=extra_prior if rnd == 0 else extra_prior,
             scope_rel=scope_rel,
+            tool_choice=round_tc,
         )
         if text:
             texts.append(text)
