@@ -791,7 +791,7 @@ def health():
         },
         "super_brain": _super_brain_health_block(),
         "build": {
-            "rev": "2026-05-25-programlama-faz49-v60",
+            "rev": "2026-05-25-programlama-faz50-v61",
             "nebula_kitap": True,
             "fast_paths": os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
             "memory_first": True,
@@ -1515,22 +1515,33 @@ def api_programlama_proje_uret(
     template_id: str = "fastapi_api",
     project_name: str = "",
     goal: str = "",
+    features: str = "",
     workspace_root: str | None = None,
 ):
-    """Faz 47 — bağımsız proje üret (scaffold + offline bootstrap + verify)."""
+    """Faz 47–50 — bağımsız proje üret (scaffold + offline bootstrap + verify)."""
     from ilim_assistant.motorlar.programlama_faz47 import (
         FAZ47_VERSION,
         ProjeUretSpec,
         format_proje_uret_report,
         run_proje_uret_prepare,
     )
+    from ilim_assistant.motorlar.programlama_faz50 import (
+        extract_features_list,
+        merge_goal_with_features,
+    )
 
     name = (project_name or "").strip() or f"api-{int(__import__('time').time()) % 100000}"
+    feat_list = extract_features_list(features or goal or "")
+    goal_merged = merge_goal_with_features(
+        (goal or "").strip() or "health version pytest geçir",
+        feat_list,
+    )
     spec = ProjeUretSpec(
         template_id=(template_id or "fastapi_api").strip(),
         project_name=name,
-        goal=(goal or "").strip()
-        or "health version pytest geçir",
+        goal=goal_merged,
+        features=feat_list,
+        source="api",
     )
     root = (workspace_root or "").strip() or None
     rep = run_proje_uret_prepare(root, spec)

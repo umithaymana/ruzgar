@@ -988,6 +988,49 @@ def run_parity(*, live_base: str | None = None) -> int:
     else:
         _fail("wants proje uret natural")
         fails += 1
+    print("=== Faz 50 — doğal dil proje üret ===")
+    from ilim_assistant.motorlar.programlama_faz50 import (
+        FAZ50_VERSION,
+        extract_features_list,
+        parse_faz50_proje_uret,
+        should_delegate_proje_uret_from_genel,
+    )
+    from ilim_assistant.motorlar.programlama_faz10 import should_delegate_to_programlama
+
+    spec50 = parse_faz50_proje_uret(
+        "şu özelliklere sahip login ve iletişim formu bir html sitesi yap vitrin-abi"
+    )
+    if (
+        spec50
+        and spec50.template_id == "static_site"
+        and spec50.project_name == "vitrin-abi"
+        and "login" in spec50.goal.lower()
+    ):
+        _ok("faz50 parse site + features")
+    else:
+        _fail("faz50 parse site", str(spec50)[:80] if spec50 else "none")
+        fails += 1
+    if should_delegate_proje_uret_from_genel("bana bir web sitesi yap dükkan-vitrin"):
+        _ok("faz50 delegate cue")
+    else:
+        _fail("faz50 delegate cue")
+        fails += 1
+    if should_delegate_to_programlama(
+        "bana bir web sitesi yap dükkan-vitrin",
+        "genel",
+        motor_flags={},
+    ):
+        _ok("faz10 delegate site yap")
+    else:
+        _fail("faz10 delegate site yap")
+        fails += 1
+    feats = extract_features_list("özellikleri: login, crud, admin panel")
+    if len(feats) >= 2:
+        _ok("faz50 extract features")
+    else:
+        _fail("faz50 extract features", str(feats))
+        fails += 1
+    _ok(f"faz50 {FAZ50_VERSION}")
     if should_run_proje_uret_pipeline(
         "proje üret: fastapi_api smoke-faz47-run pytest",
         "programlama",

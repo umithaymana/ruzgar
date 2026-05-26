@@ -2,7 +2,7 @@
 
 > **Kayıt tarihi:** 2026-05-26  
 > **Durum:** Yarın devam — Ümit & Gökçenur  
-> **Mevcut build:** `2026-05-25-programlama-faz49-v60`  
+> **Mevcut build:** `2026-05-25-programlama-faz50-v61`  
 > **Referans:** [PROGRAMMING_MOTOR_CURSOR_SEVIYE_PLAN.md](PROGRAMMING_MOTOR_CURSOR_SEVIYE_PLAN.md) · [PROGRAMMING_MOTOR_USTAYOL.md](PROGRAMMING_MOTOR_USTAYOL.md)
 
 ---
@@ -39,11 +39,11 @@ Cursor IDE olmadan, yalnızca Rüzgar Atölyesi ile:
 
 ### Dalga B — «İş bitsin» (2 oturum) · Faz 50–51
 
-**Faz 50 — Doğal dil → proje üret köprüsü**
+**Faz 50 — Doğal dil → proje üret köprüsü** ✓
 
-- [ ] «Şu özelliklere sahip …» cümlesini `proje üret:` + şablon + `features[]` parse
-- [ ] Ana Motor «site yap» deyince otomatik Programlama delege (Faz 10 genişletme)
-- [ ] UI: Proje Üret modalında özellik listesi alanı
+- [x] «Şu özelliklere sahip …» cümlesini `proje üret:` + şablon + `features[]` parse
+- [x] Ana Motor «site yap» deyince otomatik Programlama delege (Faz 10 genişletme)
+- [x] UI: Proje Üret modalında özellik listesi alanı
 
 **Faz 51 — Offline görev genişletme**
 

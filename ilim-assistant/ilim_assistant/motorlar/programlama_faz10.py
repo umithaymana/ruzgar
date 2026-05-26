@@ -690,6 +690,15 @@ def should_delegate_to_programlama(
         return True
     if "gorev:" in low or "görev:" in low:
         return True
+    try:
+        from ilim_assistant.motorlar.programlama_faz50 import (
+            should_delegate_proje_uret_from_genel,
+        )
+
+        if should_delegate_proje_uret_from_genel(message, mode_norm):
+            return True
+    except Exception:
+        pass
     return False
 
 

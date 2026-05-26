@@ -4,7 +4,7 @@
  * Kök sonda `/api` ise kırpılır — aksi halde fetch `.../api/api/merkezi-bellek` ile 404 verir.
  */
 const RUZGAR_LOCAL_API_PORT = 8779;
-const RUZGAR_EXPECTED_BUILD_REV = "2026-05-25-programlama-faz49-v60";
+const RUZGAR_EXPECTED_BUILD_REV = "2026-05-25-programlama-faz50-v61";
 const RUZGAR_LOCAL_API_FALLBACK = `http://127.0.0.1:${RUZGAR_LOCAL_API_PORT}`;
 
 function migrateLegacyApiUrl(raw) {
@@ -2061,6 +2061,7 @@ async function runProjeUretFromUi() {
   const templateId = String(document.getElementById("proje-uret-template")?.value || "fastapi_api");
   const name = String(document.getElementById("proje-uret-name")?.value || "").trim();
   const goal = String(document.getElementById("proje-uret-goal")?.value || "").trim();
+  const features = String(document.getElementById("proje-uret-features")?.value || "").trim();
   if (!name) {
     setCodeOutput("Proje adı gerekli.");
     return;
@@ -2079,12 +2080,14 @@ async function runProjeUretFromUi() {
   setCodeOutput(`Proje üretiliyor: ${templateId} / ${name}…`);
   const enc = encodeURIComponent(workspaceRoot);
   const g = encodeURIComponent(goal || "health version pytest geçir");
+  const f = encodeURIComponent(features);
   try {
     const res = await fetch(
       `${API}/api/programlama/proje-uret?workspace_root=${enc}` +
         `&template_id=${encodeURIComponent(templateId)}` +
         `&project_name=${encodeURIComponent(name)}` +
-        `&goal=${g}`
+        `&goal=${g}` +
+        (features ? `&features=${f}` : "")
     );
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) {

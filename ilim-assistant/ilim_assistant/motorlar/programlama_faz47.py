@@ -44,6 +44,7 @@ class ProjeUretSpec:
     goal: str
     require_verify_pass: bool = True
     source: str = "faz47"
+    features: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -195,6 +196,14 @@ def parse_proje_uret_command(message: str) -> ProjeUretSpec | None:
     """`proje üret:` ve doğal «sıfırdan … yap» cümleleri."""
     if not _enabled():
         return None
+    try:
+        from ilim_assistant.motorlar.programlama_faz50 import parse_faz50_proje_uret
+
+        spec50 = parse_faz50_proje_uret(message)
+        if spec50 is not None:
+            return spec50
+    except Exception:
+        pass
     raw = (message or "").strip()
     if len(raw) < 10:
         return None
@@ -735,7 +744,7 @@ def iter_proje_uret_events(
     yield {
         "type": "status",
         "text": (
-            f"Bağımsız proje üretimi (Faz 47) — `{spec.template_id}` → "
+            f"Bağımsız proje üretimi (Faz 47–50) — `{spec.template_id}` → "
             f"`{spec.project_name}`"
         ),
     }
