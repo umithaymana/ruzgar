@@ -297,7 +297,7 @@ Beklenen: $ExpectedRev
 Otomatik yeniden baslatma deneniyor.
 Elle icin: Ruzgar_YenidenBaslat.bat veya .\Ruzgar.ps1 -ForceRestart
 "@.Trim(),
-            "Ruzgar — build uyumsuz",
+            "Ruzgar - build uyumsuz",
             [System.Windows.Forms.MessageBoxButtons]::OK,
             [System.Windows.Forms.MessageBoxIcon]::Warning
         )
@@ -474,12 +474,14 @@ function Test-ApiBuildCurrent {
     }
 }
 
+$script:ForceRestartFreshApi = $false
 if ($ForceRestart) {
-    Log "force-restart: portlar bosaltiliyor ($ApiPort + 8777 zombi)"
+    Log "force-restart: portlar bosaltiliyor (port $ApiPort ve 8777 zombi)"
     Stop-RuzgarApiPort -Port $ApiPort
     if ($ApiPort -ne 8777) { Stop-RuzgarApiPort -Port 8777 }
     Start-Sleep -Seconds 2
     $portCheckRc = 1
+    $script:ForceRestartFreshApi = $true
 } elseif ($portCheckRc -eq 2) {
     Log "port-check: kilitli/zombi - kill-process"
     $null = Invoke-RuzgarPortOps -Command "kill-process" -IaRoot $ia -Port $ApiPort
@@ -489,10 +491,14 @@ if ($ForceRestart) {
 
 $apiUrl = "http://127.0.0.1:$ApiPort/api/health"
 $serverUp = ($portCheckRc -eq 0)
-if (-not $serverUp) {
+if ($script:ForceRestartFreshApi) {
+    $serverUp = $false
+} elseif (-not $serverUp) {
     try {
         $r = Invoke-WebRequest -Uri $apiUrl -UseBasicParsing -TimeoutSec 2
-        if ($r.StatusCode -eq 200) { $serverUp = $true }
+        if ($r.StatusCode -eq 200 -and (Test-ApiBuildCurrent -Url $apiUrl)) {
+            $serverUp = $true
+        }
     } catch {}
 }
 

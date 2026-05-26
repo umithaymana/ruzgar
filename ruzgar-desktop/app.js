@@ -2557,6 +2557,26 @@ async function triggerRuzgarApiRestart() {
   return { ok: false };
 }
 
+async function waitForExpectedBuildRev(maxSec = 120) {
+  const deadline = Date.now() + maxSec * 1000;
+  while (Date.now() < deadline) {
+    try {
+      const r = await fetch(`${API}/api/health`, { method: "GET" });
+      if (r.ok) {
+        const j = await r.json();
+        const rev = String(j?.build?.rev || "").trim();
+        if (rev === RUZGAR_EXPECTED_BUILD_REV) {
+          return { ok: true, rev };
+        }
+      }
+    } catch (_) {
+      /* API henüz ayakta değil */
+    }
+    await new Promise((resolve) => setTimeout(resolve, 800));
+  }
+  return { ok: false };
+}
+
 function showStaleBuildBanner(rev, healthPayload) {
   const hp = healthPayload && typeof healthPayload === "object" ? healthPayload : {};
   const expected =
@@ -2601,9 +2621,20 @@ function showStaleBuildBanner(rev, healthPayload) {
       try {
         const res = await triggerRuzgarApiRestart();
         if (res && res.ok) {
-          if (statusEl) statusEl.textContent = "15 sn bekleyin, sayfa yenilenecek…";
+          if (statusEl) statusEl.textContent = "Güncel API bekleniyor…";
           flashRuzgarDurum("API yeniden başlatılıyor…");
-          setTimeout(() => window.location.reload(), 15000);
+          const ready = await waitForExpectedBuildRev(120);
+          if (ready.ok) {
+            if (statusEl) statusEl.textContent = "Güncel — sayfa yenileniyor…";
+            window.location.reload();
+          } else {
+            if (statusEl) {
+              statusEl.textContent =
+                "Hâlâ eski sürüm — proje kökünden Ruzgar_YenidenBaslat.bat çalıştırın";
+            }
+            btn.disabled = false;
+            window.__ruzgarApiRestartBusy = false;
+          }
         } else {
           if (statusEl) statusEl.textContent = "Başarısız — Ruzgar_YenidenBaslat.bat";
           btn.disabled = false;
