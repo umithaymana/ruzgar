@@ -7829,7 +7829,12 @@ async function streamChat(userText) {
         void applyProgramlamaFocusFromChat(ev);
       }
       if (ev.programlama_delegated) {
-        flashRuzgarDurum("Kod sorusu → Programlama motoru (Faz 10 delege).");
+        const sumTxt = String(ev.delegate_summary_text || "").trim();
+        flashRuzgarDurum(
+          sumTxt
+            ? sumTxt.replace(/\*\*/g, "").slice(0, 220)
+            : "Kod sorusu → Programlama motoru (Faz 59 delege).",
+        );
         if (el.code && !el.code.checked) {
           el.code.checked = true;
           switchMode("programlama");

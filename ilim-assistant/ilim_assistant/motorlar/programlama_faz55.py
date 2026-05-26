@@ -260,6 +260,12 @@ def build_handoff_packet(
             pass
 
     packet_text = "\n\n".join(parts)
+    try:
+        from ilim_assistant.ana_motor_faz59 import enrich_handoff_with_intent
+
+        packet_text = enrich_handoff_with_intent(packet_text, message)
+    except Exception:
+        pass
     return {
         "ok": True,
         "scope_rel": scope,

@@ -1697,16 +1697,35 @@ def iter_code_agent_turn_events(
     reply_body = reply_body.rstrip() + "\n\n" + report
     if delegated_from_genel:
         try:
-            from ilim_assistant.motorlar.programlama_faz38 import delegation_footer
-
-            reply_body += delegation_footer(
-                workspace,
-                scope_rel=task.scope_rel,
-                success=success,
-                turns_used=len(turn_reports),
+            from ilim_assistant.ana_motor_faz59 import (
+                append_delegation_footer_to_reply,
+                faz59_enabled,
             )
+
+            if faz59_enabled():
+                reply_body = append_delegation_footer_to_reply(
+                    reply_body,
+                    workspace,
+                    success=success,
+                    turns_used=len(turn_reports),
+                    elapsed_sec=total_sec,
+                    scope_rel=task.scope_rel,
+                    goal=task.goal,
+                )
+            else:
+                raise ImportError("faz59 off")
         except Exception:
-            pass
+            try:
+                from ilim_assistant.motorlar.programlama_faz38 import delegation_footer
+
+                reply_body += delegation_footer(
+                    workspace,
+                    scope_rel=task.scope_rel,
+                    success=success,
+                    turns_used=len(turn_reports),
+                )
+            except Exception:
+                pass
     try:
         from ilim_assistant.motorlar.programlama_faz32 import append_post_task_to_reply
 

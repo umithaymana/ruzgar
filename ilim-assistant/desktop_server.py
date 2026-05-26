@@ -791,7 +791,7 @@ def health():
         },
         "super_brain": _super_brain_health_block(),
         "build": {
-            "rev": "2026-05-26-programlama-faz58-v69",
+            "rev": "2026-05-26-programlama-faz59-v70",
             "nebula_kitap": True,
             "fast_paths": os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
             "memory_first": True,
@@ -1559,6 +1559,25 @@ def api_programlama_task_stats(workspace_root: str | None = None):
         "stats": stats,
         "report": format_task_stats_report(stats),
         "version": FAZ55_VERSION,
+    }
+
+
+@app.get("/api/ana-motor/delegation-summary")
+def api_ana_motor_delegation_summary(workspace_root: str | None = None):
+    """Faz 59 — son delege özeti."""
+    from ilim_assistant.ana_motor_faz59 import (
+        FAZ59_VERSION,
+        format_delegation_summary_text,
+        load_last_delegation_summary,
+    )
+
+    root = (workspace_root or "").strip() or None
+    summ = load_last_delegation_summary(root)
+    return {
+        "ok": summ is not None,
+        "summary": summ,
+        "report": format_delegation_summary_text(summ or {}),
+        "version": FAZ59_VERSION,
     }
 
 
@@ -3031,6 +3050,30 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
     if _delegated_from_genel:
         route_meta["programlama_delegated"] = True
         try:
+            from ilim_assistant.ana_motor_faz59 import (
+                classify_turn_intent,
+                enrich_handoff_with_intent,
+            )
+
+            _mf59: dict[str, bool] = {}
+            try:
+                from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
+
+                _mf59 = motor_niyeti_heuristic(req.message or "")
+            except Exception:
+                pass
+            _intent59 = classify_turn_intent(
+                req.message or "",
+                mode_norm=(req.mode or "").strip().lower() or "genel",
+                coding_mode=bool(req.coding_mode),
+                motor_flags=_mf59,
+            )
+            route_meta["intent_v59"] = _intent59
+            if _intent59.get("programming_budget_transferred"):
+                route_meta["programming_budget_transferred"] = True
+        except Exception:
+            _intent59 = {}
+        try:
             from ilim_assistant.motorlar.programlama_faz55 import build_handoff_packet
 
             _handoff = build_handoff_packet(
@@ -3043,10 +3086,22 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     "scope_rel": _handoff.get("scope_rel"),
                     "template": _handoff.get("parsed_template"),
                 }
+                try:
+                    from ilim_assistant.ana_motor_faz59 import enrich_handoff_with_intent
+
+                    pkt = enrich_handoff_with_intent(
+                        str(_handoff.get("packet_text") or ""),
+                        req.message or "",
+                        mode_norm=(req.mode or "").strip().lower() or "genel",
+                    )
+                    _handoff = {**_handoff, "packet_text": pkt}
+                except Exception:
+                    pass
         except Exception:
             _handoff = {}
     else:
         _handoff = {}
+        _intent59 = {}
     yield {"type": "meta", "chat_route": route_meta}
     yield {"type": "status", "text": "Rüzgar hazırlanıyor…"}
 
@@ -3614,7 +3669,24 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         )
 
         if umed_emri_applies(mode_norm=mode_norm, coding_mode=coding):
-            begin_turn_budget(req.message or "")
+            try:
+                from ilim_assistant.ana_motor_faz59 import begin_umed_turn_budget
+
+                _mf_budget: dict[str, bool] = {}
+                try:
+                    from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
+
+                    _mf_budget = motor_niyeti_heuristic(req.message or "")
+                except Exception:
+                    pass
+                begin_umed_turn_budget(
+                    req.message or "",
+                    mode_norm=mode_norm,
+                    coding_mode=coding,
+                    motor_flags=_mf_budget,
+                )
+            except Exception:
+                begin_turn_budget(req.message or "")
         if umed_emri_applies(mode_norm=mode_norm, coding_mode=coding) and deadline_exceeded():
             from ilim_assistant.ruzgar_egitim import (
                 maybe_egitim_learned_reply,
@@ -4059,6 +4131,37 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 pass
         if _delegated_from_genel:
             done_llm["programlama_delegated"] = True
+            try:
+                from ilim_assistant.ana_motor_faz59 import (
+                    append_delegation_footer_to_reply,
+                    format_delegation_summary_text,
+                    summary_from_agent_state,
+                )
+
+                _elapsed = float(done_llm.get("elapsed_sec") or 0)
+                _summ59 = summary_from_agent_state(
+                    req.workspace_root,
+                    success=bool(code_patch_meta.get("applied"))
+                    or "tamamlandı" in full_out.lower(),
+                    turns_used=0,
+                    elapsed_sec=_elapsed,
+                )
+                done_llm["delegate_summary"] = _summ59
+                done_llm["delegate_summary_text"] = format_delegation_summary_text(
+                    _summ59
+                )
+                full_out = append_delegation_footer_to_reply(
+                    full_out,
+                    req.workspace_root,
+                    success=bool(_summ59.get("success")),
+                    turns_used=int(_summ59.get("turns_used") or 0),
+                    elapsed_sec=_elapsed,
+                    scope_rel=str(_summ59.get("scope_rel") or ""),
+                    goal=str(_summ59.get("goal") or ""),
+                )
+                done_llm["full_reply"] = full_out
+            except Exception:
+                pass
         yield done_llm
     except Exception as e:
         yield {"type": "error", "text": format_llm_user_error(e)}

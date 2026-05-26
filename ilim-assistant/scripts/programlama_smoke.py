@@ -624,10 +624,10 @@ def run_live(base: str) -> int:
         h = get("/api/health")
         rev = str((h.get("build") or {}).get("rev") or "")
         if (
-            "faz58" in rev
-            or "faz57" in rev
+            "faz59" in rev
+            or "faz58" in rev
+            or rev.endswith("-v70")
             or rev.endswith("-v69")
-            or rev.endswith("-v68")
         ):
             _ok(f"build.rev={rev}")
         else:
@@ -1480,6 +1480,57 @@ def run_parity(*, live_base: str | None = None) -> int:
         _fail("faz58 augment")
         fails += 1
     _ok(f"faz58 {FAZ58_VERSION}")
+
+    print("=== Faz 59 — Ana Motor v2 ===")
+    from ilim_assistant.ana_motor_faz59 import (
+        FAZ59_VERSION,
+        classify_turn_intent,
+        format_delegation_summary_text,
+        persist_delegation_summary,
+        resolve_umed_budget_sec,
+        router_budget_sec,
+    )
+
+    intent = classify_turn_intent(
+        "pytest ile api yaz refactor main.py",
+        mode_norm="genel",
+    )
+    if intent.get("intent") in ("code", "mixed") and intent.get("elapsed_ms", 999) < 100:
+        _ok(f"faz59 code intent {intent.get('elapsed_ms')}ms")
+    else:
+        _fail("faz59 code intent", str(intent))
+        fails += 1
+    ilim = classify_turn_intent("hadis nedir acikla", mode_norm="genel")
+    if ilim.get("use_ilim_budget") or ilim.get("intent") == "ilim":
+        _ok("faz59 ilim budget cue")
+    else:
+        _fail("faz59 ilim", str(ilim))
+        fails += 1
+    b_delegate = resolve_umed_budget_sec(
+        "fastapi api yaz", mode_norm="genel", motor_flags={"programlama": True}
+    )
+    if b_delegate <= router_budget_sec() + 0.5:
+        _ok(f"faz59 delegate budget={b_delegate}")
+    else:
+        _fail("faz59 budget transfer", str(b_delegate))
+        fails += 1
+    summ = {
+        "ok": True,
+        "scope_rel": "projects/smoke-faz59",
+        "success": True,
+        "verify_ok": True,
+        "turns_used": 2,
+        "writes_count": 1,
+        "elapsed_sec": 8.0,
+    }
+    persist_delegation_summary(WORKSPACE, summ)
+    txt = format_delegation_summary_text(summ)
+    if "Faz 59" in txt and "pytest" in txt.lower():
+        _ok("faz59 summary text")
+    else:
+        _fail("faz59 summary", txt[:80])
+        fails += 1
+    _ok(f"faz59 {FAZ59_VERSION}")
 
     if should_run_proje_uret_pipeline(
         "proje üret: fastapi_api smoke-faz47-run pytest",

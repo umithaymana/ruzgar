@@ -1,6 +1,6 @@
 # Rüzgar — Yol haritası (Faz 55+)
 
-> **Temel:** Faz 49–58 · build `faz58-v69`  
+> **Temel:** Faz 49–59 · build `faz59-v70`  
 > **Hedef:** Offline KPI değil — **gerçek görevde** Cursor’a yaklaşmak  
 > **Ölçü:** Görev başarı oranı **≥80%** · parity **full 8/8** · kullanıcı memnuniyeti **≥4.5/5**
 
@@ -57,11 +57,12 @@
 - [x] Patch öncesi/sonrası diff özeti LLM’e (tur + patch sonrası)
 - [x] UI: «Son değişiklikler» şeridi + `/api/programlama/git-changes`
 
-### Faz 59 — Ana Motor v2 (kod niyeti)
+### Faz 59 — Ana Motor v2 (kod niyeti) ← **UYGULANDI (v70)**
 
-- [ ] Kod niyeti sınıflandırıcı (hafif, 50ms)
-- [ ] Delege sonrası Ana Motor’da **kısa özet** (ne yazıldı, test sonucu)
-- [ ] İlim sorularında 22 sn; kod delege **programlama bütçesine** aktarım
+- [x] Kod niyeti sınıflandırıcı (`classify_turn_intent`, ~50ms kural)
+- [x] Delege sonrası **kısa özet** (yazım + pytest) — chat `done` + agent footer
+- [x] İlim 22 sn; kod delege → `router_budget_sec` + programlama tam bütçe
+- [x] API: `/api/ana-motor/delegation-summary`
 
 ### Faz 60 — Otomasyon kilidi
 
@@ -106,4 +107,4 @@ python ilim-assistant/scripts/programlama_smoke.py --ci
 
 ---
 
-*Build: `faz58-v69` · Sonraki: Faz 59 Ana Motor v2.*
+*Build: `faz59-v70` · Sonraki: Faz 60 otomasyon kilidi.*
