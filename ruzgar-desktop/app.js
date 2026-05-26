@@ -4,7 +4,7 @@
  * Kök sonda `/api` ise kırpılır — aksi halde fetch `.../api/api/merkezi-bellek` ile 404 verir.
  */
 const RUZGAR_LOCAL_API_PORT = 8779;
-const RUZGAR_EXPECTED_BUILD_REV = "2026-05-26-programlama-faz55-v66";
+const RUZGAR_EXPECTED_BUILD_REV = "2026-05-26-programlama-faz60-v71";
 const RUZGAR_LOCAL_API_FALLBACK = `http://127.0.0.1:${RUZGAR_LOCAL_API_PORT}`;
 
 function migrateLegacyApiUrl(raw) {
@@ -2549,11 +2549,18 @@ function syncWorkbenchHizirToolbar() {
   document.body.classList.toggle("workbench-hizir-active", isH);
 }
 
-function showStaleBuildBanner(rev) {
-  const stale = Boolean(rev && rev !== RUZGAR_EXPECTED_BUILD_REV);
+function showStaleBuildBanner(rev, healthPayload) {
+  const hp = healthPayload && typeof healthPayload === "object" ? healthPayload : {};
+  const expected =
+    String(hp?.build?.expected_rev || RUZGAR_EXPECTED_BUILD_REV).trim() ||
+    RUZGAR_EXPECTED_BUILD_REV;
+  const stale = Boolean(
+    rev && (hp?.build?.build_mismatch === true || rev !== expected),
+  );
   let box = document.getElementById("ruzgar-stale-build-banner");
   if (!stale) {
     if (box) box.remove();
+    window.__ruzgarFaz60ModalShown = false;
     return;
   }
   if (!box) {
@@ -2569,23 +2576,40 @@ function showStaleBuildBanner(rev) {
       document.body;
     host.prepend(box);
   }
+  const hint =
+    String(hp?.build?.restart_hint || "").trim() ||
+    "Ruzgar_YenidenBaslat.bat veya .\\Ruzgar.ps1 -ForceRestart";
   box.innerHTML =
-    `<strong>Eski Rüzgar API çalışıyor</strong> (build: <code>${escAttr(rev)}</code>). ` +
-    `Güncel kod için proje kökünde: <code>Ruzgar_YenidenBaslat.bat</code> veya ` +
-    `<code>.\\Ruzgar.ps1 -ForceRestart</code> — beklenen: <code>${escAttr(RUZGAR_EXPECTED_BUILD_REV)}</code>. ` +
+    `<strong>Eski Rüzgar API (Faz 60)</strong> — <code>${escAttr(rev)}</code> · beklenen <code>${escAttr(expected)}</code>. ` +
+    `<strong>${escAttr(hint)}</strong> ` +
     `<button type="button" id="ruzgar-stale-restart-btn" style="margin-left:8px;padding:4px 10px;cursor:pointer;">` +
-    `API yeniden başlat (talimat)</button>`;
+    `Yeniden başlat</button>`;
   const btn = document.getElementById("ruzgar-stale-restart-btn");
   if (btn && !btn.dataset.wired) {
     btn.dataset.wired = "1";
     btn.addEventListener("click", () => {
       const msg =
+        "Faz 60 — build kilidi\n\n" +
         "1) Rüzgar penceresini kapatın\n" +
-        "2) Proje kökünde çift tık: Ruzgar_YenidenBaslat.bat\n" +
-        "3) Açılınca build satırında faz48-v59 görün\n\n" +
-        `Şu an: ${rev}\nBeklenen: ${RUZGAR_EXPECTED_BUILD_REV}`;
+        "2) Proje kökünde: Ruzgar_YenidenBaslat.bat\n" +
+        "   veya PowerShell: .\\Ruzgar.ps1 -ForceRestart\n\n" +
+        `Şu an: ${rev}\nBeklenen: ${expected}`;
       window.alert(msg);
     });
+  }
+  if (!window.__ruzgarFaz60ModalShown) {
+    window.__ruzgarFaz60ModalShown = true;
+    setTimeout(() => {
+      try {
+        const ok = window.confirm(
+          `Eski Rüzgar API çalışıyor (Faz 60).\n\nŞu an: ${rev}\nBeklenen: ${expected}\n\n` +
+            "Tamam = yeniden başlatma adımlarını göster",
+        );
+        if (ok && btn) btn.click();
+      } catch (_) {
+        /* yok say */
+      }
+    }, 400);
   }
 }
 
@@ -6849,7 +6873,7 @@ async function checkApi() {
           progRev.title = "";
         }
       }
-      showStaleBuildBanner(rev);
+      showStaleBuildBanner(rev, j);
       void refreshUiManifest();
       el.api.textContent = j.stt ? "Sunucu ✓ metne döküm" : "Sunucu ✓";
       let apiTitle = j.stt

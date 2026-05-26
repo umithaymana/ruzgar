@@ -1,6 +1,6 @@
 # Rüzgar — Yol haritası (Faz 55+)
 
-> **Temel:** Faz 49–59 · build `faz59-v70`  
+> **Temel:** Faz 49–60 · build `faz60-v71`  
 > **Hedef:** Offline KPI değil — **gerçek görevde** Cursor’a yaklaşmak  
 > **Ölçü:** Görev başarı oranı **≥80%** · parity **full 8/8** · kullanıcı memnuniyeti **≥4.5/5**
 
@@ -64,11 +64,12 @@
 - [x] İlim 22 sn; kod delege → `router_budget_sec` + programlama tam bütçe
 - [x] API: `/api/ana-motor/delegation-summary`
 
-### Faz 60 — Otomasyon kilidi
+### Faz 60 — Otomasyon kilidi ← **UYGULANDI (v71)**
 
-- [ ] `Ruzgar.ps1` build uyumsuzluğunda **otomatik restart önerisi** (modal)
-- [ ] Haftalık KPI e-posta/JSON raporu (opsiyonel)
-- [ ] `programlama_smoke --ci` + parity **full** haftada 1
+- [x] `Ruzgar.ps1` + UI: build uyumsuzluğunda **restart önerisi** (MessageBox + confirm)
+- [x] Haftalık KPI JSON — `.ruzgar/weekly_kpi_YYYY-WW.json` + `scripts/ruzgar_weekly_kpi.py`
+- [x] `programlama_smoke --ci` + `ruzgar_parity_smoke.py --ci` · parity **full** haftada 1
+- [x] API: `/api/programlama/weekly-kpi` · `/api/programlama/ci-run`
 
 ---
 
@@ -107,4 +108,4 @@ python ilim-assistant/scripts/programlama_smoke.py --ci
 
 ---
 
-*Build: `faz59-v70` · Sonraki: Faz 60 otomasyon kilidi.*
+*Build: `faz60-v71` · Dalga E–F (Faz 55–60) tamamlandı. Sonraki: Dalga G / canlı ölçüm.*

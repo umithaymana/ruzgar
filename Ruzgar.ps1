@@ -274,8 +274,36 @@ if ($env:RUZGAR_OLLAMA_ONLY -eq "1") {
     Log "Bulut kapali - yerel Ollama"
 }
 
-$script:RuzgarExpectedBuildRev = "2026-05-26-programlama-faz59-v70"
+$script:RuzgarExpectedBuildRev = "2026-05-26-programlama-faz60-v71"
 $env:RUZGAR_EXPECTED_BUILD_REV = $script:RuzgarExpectedBuildRev
+
+function Show-RuzgarFaz60BuildMismatchPrompt {
+    param(
+        [string]$CurrentRev,
+        [string]$ExpectedRev
+    )
+    if ($env:RUZGAR_FAZ60 -eq "0") { return }
+    if ($env:RUZGAR_FAZ60_RESTART_PROMPT -eq "0") { return }
+    try {
+        Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
+        [void][System.Windows.Forms.MessageBox]::Show(
+            @"
+Eski Ruzgar API calisiyor (Faz 60).
+
+Su an:  $CurrentRev
+Beklenen: $ExpectedRev
+
+Otomatik yeniden baslatma deneniyor.
+Elle icin: Ruzgar_YenidenBaslat.bat veya .\Ruzgar.ps1 -ForceRestart
+"@.Trim(),
+            "Ruzgar — build uyumsuz",
+            [System.Windows.Forms.MessageBoxButtons]::OK,
+            [System.Windows.Forms.MessageBoxIcon]::Warning
+        )
+    } catch {
+        Log "Faz60 uyari (modal atlandi): $CurrentRev != $ExpectedRev"
+    }
+}
 
 function Get-RuzgarRemoteApiLine {
     $rd = Join-Path $Root "ruzgar-desktop"
@@ -458,6 +486,13 @@ if (-not $serverUp) {
 }
 
 if ($serverUp -and (-not (Test-ApiBuildCurrent -Url $apiUrl))) {
+    try {
+        $r0 = Invoke-WebRequest -Uri $apiUrl -UseBasicParsing -TimeoutSec 3
+        $j0 = $r0.Content | ConvertFrom-Json
+        Show-RuzgarFaz60BuildMismatchPrompt -CurrentRev ([string]$j0.build.rev) -ExpectedRev $script:RuzgarExpectedBuildRev
+    } catch {
+        Show-RuzgarFaz60BuildMismatchPrompt -CurrentRev "?" -ExpectedRev $script:RuzgarExpectedBuildRev
+    }
     Log "Eski Ruzgar API - kod/.env guncel degil, port yeniden baslatiliyor"
     Stop-RuzgarApiPort -Port $ApiPort
     if ($ApiPort -ne 8777) { Stop-RuzgarApiPort -Port 8777 }

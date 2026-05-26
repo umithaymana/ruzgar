@@ -733,6 +733,25 @@ def _sample_gpu_percent() -> float | None:
         return None
 
 
+def _health_build_block() -> dict:
+    import os as _os
+
+    base = {
+        "rev": "2026-05-26-programlama-faz60-v71",
+        "nebula_kitap": True,
+        "fast_paths": _os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
+        "memory_first": True,
+        "bilissel_analiz": True,
+        "egitim_routing": "bilissel>gundelik>egitim",
+    }
+    try:
+        from ilim_assistant.motorlar.programlama_faz60 import enrich_health_build
+
+        return enrich_health_build(base)
+    except Exception:
+        return base
+
+
 @app.get("/api/health")
 def health():
     import os as _os
@@ -790,14 +809,7 @@ def health():
             not in ("0", "false", "no"),
         },
         "super_brain": _super_brain_health_block(),
-        "build": {
-            "rev": "2026-05-26-programlama-faz59-v70",
-            "nebula_kitap": True,
-            "fast_paths": os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
-            "memory_first": True,
-            "bilissel_analiz": True,
-            "egitim_routing": "bilissel>gundelik>egitim",
-        },
+        "build": _health_build_block(),
         "ruzgar_mode": _ruzgar_mode_health_snapshot(),
         "hizir": {
             "mock_marketplace": _m,
@@ -1560,6 +1572,39 @@ def api_programlama_task_stats(workspace_root: str | None = None):
         "report": format_task_stats_report(stats),
         "version": FAZ55_VERSION,
     }
+
+
+@app.get("/api/programlama/weekly-kpi")
+def api_programlama_weekly_kpi(workspace_root: str | None = None):
+    """Faz 60 — haftalık KPI raporu (JSON)."""
+    from ilim_assistant.motorlar.programlama_faz60 import (
+        FAZ60_VERSION,
+        format_weekly_kpi_report_text,
+        generate_weekly_kpi_report,
+    )
+
+    root = (workspace_root or "").strip() or None
+    report = generate_weekly_kpi_report(root)
+    report["version"] = FAZ60_VERSION
+    report["report_text"] = format_weekly_kpi_report_text(report)
+    return report
+
+
+@app.post("/api/programlama/ci-run")
+def api_programlama_ci_run(
+    workspace_root: str | None = None,
+    force_full_parity: bool = False,
+):
+    """Faz 60 — CI otomasyon (parity quick + haftalık full)."""
+    from ilim_assistant.motorlar.programlama_faz60 import (
+        FAZ60_VERSION,
+        run_ci_automation,
+    )
+
+    root = (workspace_root or "").strip() or None
+    out = run_ci_automation(root, force_full_parity=bool(force_full_parity))
+    out["version"] = FAZ60_VERSION
+    return out
 
 
 @app.get("/api/ana-motor/delegation-summary")

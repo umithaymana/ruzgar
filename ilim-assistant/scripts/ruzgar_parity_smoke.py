@@ -46,6 +46,11 @@ def main() -> int:
         action="store_true",
         help="Son kontrolde FC E2E ping (Groq veya Gemini yedek, Faz 57)",
     )
+    ap.add_argument(
+        "--ci",
+        action="store_true",
+        help="Faz 60: quick + haftalık full parity (due ise)",
+    )
     args = ap.parse_args()
 
     from ilim_assistant.motorlar.programlama_faz54 import (
@@ -53,6 +58,16 @@ def main() -> int:
         run_parity_smoke_and_persist,
         save_parity_smoke_json,
     )
+
+    if args.ci:
+        from ilim_assistant.motorlar.programlama_faz60 import run_ci_automation
+
+        ci = run_ci_automation(args.workspace, force_full_parity=False)
+        print(f"=== Faz 60 CI ({FAZ54_VERSION}) ===")
+        for step in ci.get("steps") or []:
+            mark = "OK" if step.get("ok") or step.get("skipped") else "FAIL"
+            print(f"  [{mark}] {step.get('name')} - {step}")
+        return 0 if ci.get("ok") else 1
 
     mode = "quick" if args.quick else "full"
     report = run_parity_smoke_and_persist(

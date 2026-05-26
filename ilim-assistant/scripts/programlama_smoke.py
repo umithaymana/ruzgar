@@ -624,10 +624,10 @@ def run_live(base: str) -> int:
         h = get("/api/health")
         rev = str((h.get("build") or {}).get("rev") or "")
         if (
-            "faz59" in rev
-            or "faz58" in rev
+            "faz60" in rev
+            or "faz59" in rev
+            or rev.endswith("-v71")
             or rev.endswith("-v70")
-            or rev.endswith("-v69")
         ):
             _ok(f"build.rev={rev}")
         else:
@@ -1532,6 +1532,53 @@ def run_parity(*, live_base: str | None = None) -> int:
         fails += 1
     _ok(f"faz59 {FAZ59_VERSION}")
 
+    print("=== Faz 60 — otomasyon kilidi ===")
+    from ilim_assistant.motorlar.programlama_faz60 import (
+        FAZ60_VERSION,
+        build_mismatch_info,
+        enrich_health_build,
+        expected_build_rev,
+        faz60_enabled,
+        generate_weekly_kpi_report,
+        should_run_weekly_full_parity,
+    )
+
+    if faz60_enabled():
+        _ok("faz60 on")
+    else:
+        _fail("faz60")
+        fails += 1
+    exp = expected_build_rev()
+    if "faz60-v71" in exp or exp.endswith("-v71"):
+        _ok(f"faz60 expected rev={exp[:40]}")
+    else:
+        _fail("faz60 expected rev", exp)
+        fails += 1
+    hb = enrich_health_build({"rev": exp})
+    if hb.get("expected_rev") == exp and not hb.get("build_mismatch"):
+        _ok("faz60 health enrich match")
+    else:
+        _fail("faz60 health enrich", str(hb)[:80])
+        fails += 1
+    mm = build_mismatch_info("2020-old-rev")
+    if mm.get("mismatch"):
+        _ok("faz60 mismatch detect")
+    else:
+        _fail("faz60 mismatch")
+        fails += 1
+    kpi = generate_weekly_kpi_report(WORKSPACE)
+    if kpi.get("ok") and kpi.get("week"):
+        _ok(f"faz60 weekly {kpi.get('week')}")
+    else:
+        _fail("faz60 weekly")
+        fails += 1
+    if isinstance(should_run_weekly_full_parity(WORKSPACE), bool):
+        _ok("faz60 full parity gate")
+    else:
+        _fail("faz60 parity gate")
+        fails += 1
+    _ok(f"faz60 {FAZ60_VERSION}")
+
     if should_run_proje_uret_pipeline(
         "proje üret: fastapi_api smoke-faz47-run pytest",
         "programlama",
@@ -2312,7 +2359,12 @@ def main() -> int:
     ap.add_argument(
         "--ci",
         action="store_true",
-        help="Offline + SLO + Parity; --live ile canlı da",
+        help="Offline + SLO + Parity + Faz60 CI (quick + haftalık full)",
+    )
+    ap.add_argument(
+        "--ci-full",
+        action="store_true",
+        help="Faz 60: parity full zorla (haftalık kilidi atla)",
     )
     args = ap.parse_args()
 
@@ -2321,6 +2373,33 @@ def main() -> int:
         fails += run_slo()
     if args.parity or args.ci:
         fails += run_parity(live_base=args.live if args.live else None)
+    if args.ci or args.ci_full:
+        print("=== Faz 60 — CI automation ===")
+        try:
+            from ilim_assistant.motorlar.programlama_faz60 import (
+                generate_weekly_kpi_report,
+                run_ci_automation,
+            )
+
+            ci = run_ci_automation(
+                WORKSPACE,
+                live_url=args.live,
+                force_full_parity=bool(args.ci_full),
+            )
+            if ci.get("ok"):
+                print("  [OK] faz60 ci automation")
+            else:
+                print(f"  [FAIL] faz60 ci — {str(ci.get('steps'))[:120]}")
+                fails += 1
+            kpi = generate_weekly_kpi_report(WORKSPACE)
+            if kpi.get("ok") and kpi.get("week"):
+                print(f"  [OK] faz60 weekly kpi {kpi.get('week')}")
+            else:
+                print("  [FAIL] faz60 weekly kpi")
+                fails += 1
+        except Exception as exc:
+            print(f"  [FAIL] faz60 ci — {str(exc)[:100]}")
+            fails += 1
     if args.live:
         fails += run_live(args.live)
     elif args.ci:
