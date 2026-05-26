@@ -2,7 +2,8 @@
 
 > **Kayıt tarihi:** 2026-05-26  
 > **Durum:** Yarın devam — Ümit & Gökçenur  
-> **Mevcut build:** `2026-05-26-programlama-faz54-v65`  
+> **Mevcut build:** `2026-05-26-programlama-faz57-v68`  
+> **Yol haritası:** [PROGRAMMING_MOTOR_YOL_HARITASI.md](PROGRAMMING_MOTOR_YOL_HARITASI.md)  
 > **Referans:** [PROGRAMMING_MOTOR_CURSOR_SEVIYE_PLAN.md](PROGRAMMING_MOTOR_CURSOR_SEVIYE_PLAN.md) · [PROGRAMMING_MOTOR_USTAYOL.md](PROGRAMMING_MOTOR_USTAYOL.md)
 
 ---
@@ -93,7 +94,20 @@ Cursor IDE olmadan, yalnızca Rüzgar Atölyesi ile:
 
 ---
 
-## 4. Bilinçli olarak sonraya
+## 4. Dalga E — Devam (Faz 55+) · [YOL HARİTASI](PROGRAMMING_MOTOR_YOL_HARITASI.md)
+
+**Faz 55 — Canlı görev KPI** (uygulanıyor)
+
+- [x] `task_outcomes.json` kayıt
+- [x] API `/api/programlama/task-stats` + KPI dashboard entegrasyonu
+- [x] Ana Motor handoff paketi (delege)
+- [ ] Otomatik retry turu (Faz 55b)
+
+**Sırada:** Faz 56 uzun görev · Faz 57 Groq yedek · Faz 58 git
+
+---
+
+## 5. Bilinçli olarak sonraya
 
 - Cloud alt ajan / paralel worktree (Cursor Best-of-N)
 - Tam LSP (rename symbol tüm repo)

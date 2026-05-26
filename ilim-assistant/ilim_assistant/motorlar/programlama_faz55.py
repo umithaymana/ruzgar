@@ -1,0 +1,308 @@
+# Created by Ümit & Gökçenur
+"""
+Programlama motoru — Faz 55: Canlı görev başarı KPI + Ana Motor handoff paketi.
+
+Offline parity 8/8 ile canlı görev sonucu arasındaki boşluğu ölçer ve kapatmaya yardım eder.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import time
+from pathlib import Path
+from typing import Any
+
+FAZ55_VERSION = "programlama-faz55-v1-2026-05-26"
+_OUTCOMES_FILE = "task_outcomes.json"
+_TARGET_SUCCESS_RATE = 0.70
+_MAX_HISTORY = 200
+
+
+def _enabled() -> bool:
+    return os.environ.get("RUZGAR_FAZ55", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
+def faz55_enabled() -> bool:
+    return _enabled()
+
+
+def target_success_rate() -> float:
+    try:
+        return max(0.4, min(0.95, float(os.environ.get("RUZGAR_TASK_SUCCESS_TARGET", "0.70"))))
+    except ValueError:
+        return _TARGET_SUCCESS_RATE
+
+
+def _outcomes_path(workspace_root: str | Path | None) -> Path | None:
+    try:
+        from ilim_assistant.motorlar.programlama_motoru import repo_root
+
+        root = repo_root(workspace_root)
+        if root is None:
+            return None
+        cache = root / ".ruzgar"
+        cache.mkdir(parents=True, exist_ok=True)
+        return cache / _OUTCOMES_FILE
+    except Exception:
+        return None
+
+
+def _load_store(path: Path) -> dict[str, Any]:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        return {"outcomes": [], "version": FAZ55_VERSION}
+
+
+def _save_store(path: Path, store: dict[str, Any]) -> None:
+    store["version"] = FAZ55_VERSION
+    store["saved_at"] = time.time()
+    path.write_text(json.dumps(store, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def record_task_outcome(
+    workspace_root: str | Path | None,
+    *,
+    scope_rel: str,
+    goal: str = "",
+    success: bool,
+    turns_used: int = 0,
+    verify_ok: bool = False,
+    writes_ok: int = 0,
+    elapsed_sec: float = 0.0,
+    source: str = "code_agent",
+    detail: str = "",
+) -> dict[str, Any]:
+    """Görev sonunu kaydet."""
+    if not _enabled():
+        return {"ok": False, "skipped": True}
+    path = _outcomes_path(workspace_root)
+    if path is None:
+        return {"ok": False, "error": "path"}
+    store = _load_store(path) if path.is_file() else {"outcomes": []}
+    outcomes = list(store.get("outcomes") or [])
+    entry = {
+        "ts": time.time(),
+        "scope_rel": (scope_rel or "").replace("\\", "/"),
+        "goal": (goal or "")[:500],
+        "success": bool(success),
+        "turns_used": int(turns_used),
+        "verify_ok": bool(verify_ok),
+        "writes_ok": int(writes_ok),
+        "elapsed_sec": round(float(elapsed_sec), 2),
+        "source": source,
+        "detail": (detail or "")[:300],
+    }
+    outcomes.append(entry)
+    store["outcomes"] = outcomes[-_MAX_HISTORY:]
+    try:
+        _save_store(path, store)
+        return {"ok": True, "entry": entry}
+    except OSError as exc:
+        return {"ok": False, "error": str(exc)[:120]}
+
+
+def compute_task_stats(
+    workspace_root: str | Path | None,
+    *,
+    window_days: int = 30,
+) -> dict[str, Any]:
+    path = _outcomes_path(workspace_root)
+    if path is None or not path.is_file():
+        return {
+            "ok": True,
+            "total": 0,
+            "success_count": 0,
+            "success_rate": 0.0,
+            "target_rate": target_success_rate(),
+            "meets_target": False,
+            "avg_turns": 0.0,
+            "avg_elapsed_sec": 0.0,
+            "recent": [],
+        }
+    store = _load_store(path)
+    cutoff = time.time() - window_days * 86400
+    rows = [
+        o
+        for o in (store.get("outcomes") or [])
+        if isinstance(o, dict) and float(o.get("ts") or 0) >= cutoff
+    ]
+    if not rows:
+        return {
+            "ok": True,
+            "total": 0,
+            "success_count": 0,
+            "success_rate": 0.0,
+            "target_rate": target_success_rate(),
+            "meets_target": False,
+            "avg_turns": 0.0,
+            "avg_elapsed_sec": 0.0,
+            "recent": [],
+        }
+    ok_n = sum(1 for r in rows if r.get("success"))
+    total = len(rows)
+    rate = ok_n / total if total else 0.0
+    target = target_success_rate()
+    return {
+        "ok": True,
+        "total": total,
+        "success_count": ok_n,
+        "success_rate": round(rate, 3),
+        "target_rate": target,
+        "meets_target": rate >= target,
+        "avg_turns": round(
+            sum(int(r.get("turns_used") or 0) for r in rows) / total, 1
+        ),
+        "avg_elapsed_sec": round(
+            sum(float(r.get("elapsed_sec") or 0) for r in rows) / total, 1
+        ),
+        "recent": rows[-8:],
+        "window_days": window_days,
+    }
+
+
+def build_retry_nudge(
+    workspace_root: str | Path | None,
+    *,
+    scope_rel: str,
+    goal: str,
+    last_detail: str = "",
+) -> str | None:
+    """Başarısız görev sonrası bir tur daha deneme mesajı."""
+    if not _enabled():
+        return None
+    stats = compute_task_stats(workspace_root, window_days=7)
+    recent_fail = [
+        r
+        for r in (stats.get("recent") or [])
+        if not r.get("success") and r.get("scope_rel") == scope_rel
+    ]
+    if len(recent_fail) > 2:
+        return None
+    return (
+        f"[FAZ 55 — TEKRAR DENE]\n"
+        f"Proje: `{scope_rel}`\n"
+        f"Önceki tur başarısız: {(last_detail or 'verify/yazım eksik')[:200]}\n"
+        "Bu turda mutlaka: read → write (en az 1 dosya) → verify (pytest).\n"
+        f"Hedef: {(goal or '').strip()}\n"
+    )
+
+
+def build_handoff_packet(
+    message: str,
+    workspace_root: str | Path | None,
+    *,
+    active_file: str | None = None,
+) -> dict[str, Any]:
+    """
+    Ana Motor → Programlama delege bağlamı.
+    desktop_server / faz10 delege öncesi zenginleştirme.
+    """
+    if not _enabled():
+        return {"ok": False}
+    scope = None
+    goal = (message or "").strip()[:2000]
+    try:
+        from ilim_assistant.motorlar.programlama_faz13 import resolve_scope_rel
+
+        scope = resolve_scope_rel(
+            workspace_root, active_file=active_file, message=message
+        )
+    except Exception:
+        pass
+
+    parts: list[str] = ["[HANDOFF — Faz 55 — Ana Motor → Programlama]"]
+    if scope:
+        parts.append(f"Kapsam: `{scope}`")
+    stats = compute_task_stats(workspace_root, window_days=30)
+    if stats.get("total", 0) > 0:
+        pct = int(float(stats.get("success_rate", 0)) * 100)
+        parts.append(
+            f"Son {stats.get('window_days', 30)} gün görev başarısı: "
+            f"**{pct}%** ({stats.get('success_count')}/{stats.get('total')})"
+        )
+
+    spec = None
+    try:
+        from ilim_assistant.motorlar.programlama_faz50 import parse_faz50_proje_uret
+
+        spec = parse_faz50_proje_uret(message)
+    except Exception:
+        pass
+    if spec is None:
+        try:
+            from ilim_assistant.motorlar.programlama_faz47 import parse_proje_uret_command
+
+            spec = parse_proje_uret_command(message)
+        except Exception:
+            pass
+    if spec is not None:
+        parts.append(
+            f"Önerilen şablon: **{spec.template_id}** · proje: `{spec.project_name}`"
+        )
+        if spec.features:
+            parts.append(f"Özellikler: {', '.join(spec.features[:8])}")
+
+    if scope:
+        try:
+            from ilim_assistant.motorlar.programlama_faz53 import build_symbol_lite_block
+
+            sym = build_symbol_lite_block(workspace_root, scope, message)
+            if sym:
+                parts.append(sym[:2500])
+        except Exception:
+            pass
+
+    packet_text = "\n\n".join(parts)
+    return {
+        "ok": True,
+        "scope_rel": scope,
+        "goal": goal,
+        "packet_text": packet_text,
+        "parsed_template": getattr(spec, "template_id", None) if spec else None,
+        "stats": stats,
+        "version": FAZ55_VERSION,
+    }
+
+
+def format_task_stats_report(stats: dict[str, Any]) -> str:
+    if not stats.get("ok"):
+        return "Görev istatistiği alınamadı."
+    total = int(stats.get("total") or 0)
+    if total == 0:
+        return "Ümit abi, henüz kayıtlı görev sonucu yok — bir görev çalıştırınca burada görünür."
+    pct = int(float(stats.get("success_rate", 0)) * 100)
+    tgt = int(float(stats.get("target_rate", 0.7)) * 100)
+    mark = "✓" if stats.get("meets_target") else "↓"
+    lines = [
+        f"Ümit abi, **görev başarı KPI** (Faz 55) {mark}",
+        "",
+        f"Son {stats.get('window_days', 30)} gün: **{pct}%** başarı "
+        f"({stats.get('success_count')}/{total}) · hedef ≥{tgt}%",
+        f"Ortalama: {stats.get('avg_turns')} tur · {stats.get('avg_elapsed_sec')} sn",
+        "",
+        "Son kayıtlar:",
+    ]
+    for r in stats.get("recent") or []:
+        ok = "✓" if r.get("success") else "✗"
+        lines.append(
+            f"  {ok} `{r.get('scope_rel', '?')}` — "
+            f"{r.get('turns_used')} tur, verify={r.get('verify_ok')}"
+        )
+    lines.append(f"\n({FAZ55_VERSION})")
+    return "\n".join(lines)
+
+
+def faz55_directive() -> str:
+    return (
+        "[GÖREV KPI — Faz 55]\n"
+        f"Canlı görev sonuçları kaydedilir; hedef başarı ≥{int(target_success_rate()*100)}%.\n"
+        "Ana Motor delege: handoff paketi (şablon + sembol özeti).\n"
+        "Kapat: RUZGAR_FAZ55=0\n"
+    )

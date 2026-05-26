@@ -44,7 +44,7 @@ def main() -> int:
     ap.add_argument(
         "--groq-e2e",
         action="store_true",
-        help="Son kontrolde Groq function-calling ping (opsiyonel)",
+        help="Son kontrolde FC E2E ping (Groq veya Gemini yedek, Faz 57)",
     )
     args = ap.parse_args()
 

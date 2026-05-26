@@ -4,7 +4,7 @@
  * Kök sonda `/api` ise kırpılır — aksi halde fetch `.../api/api/merkezi-bellek` ile 404 verir.
  */
 const RUZGAR_LOCAL_API_PORT = 8779;
-const RUZGAR_EXPECTED_BUILD_REV = "2026-05-26-programlama-faz54-v65";
+const RUZGAR_EXPECTED_BUILD_REV = "2026-05-26-programlama-faz55-v66";
 const RUZGAR_LOCAL_API_FALLBACK = `http://127.0.0.1:${RUZGAR_LOCAL_API_PORT}`;
 
 function migrateLegacyApiUrl(raw) {
@@ -1584,6 +1584,27 @@ function renderProgramlamaCompliance(compliance) {
   }
 }
 
+function renderProgramlamaTaskStats(stats) {
+  const wrap = document.getElementById("programlama-task-stats-card");
+  const rateEl = document.getElementById("programlama-task-stats-rate");
+  const countEl = document.getElementById("programlama-task-stats-count");
+  const detailEl = document.getElementById("programlama-task-stats-detail");
+  if (!wrap || !rateEl || !countEl) return;
+  const s = stats && typeof stats === "object" ? stats : null;
+  if (!s || !s.total) {
+    wrap.hidden = true;
+    return;
+  }
+  wrap.hidden = false;
+  const pct = Math.round(Number(s.success_rate || 0) * 100);
+  const tgt = Math.round(Number(s.target_rate || 0.7) * 100);
+  rateEl.textContent = `${pct}%`;
+  countEl.textContent = s.meets_target ? `Hedef OK ≥${tgt}%` : `Hedef ≥${tgt}%`;
+  if (detailEl) {
+    detailEl.textContent = `${s.success_count}/${s.total} görev · ort ${s.avg_turns} tur`;
+  }
+}
+
 async function refreshProgramlamaKpiDashboard() {
   const workspaceRoot = await getProgramlamaWorkspaceRoot();
   if (!workspaceRoot) return;
@@ -1593,6 +1614,9 @@ async function refreshProgramlamaKpiDashboard() {
     const data = await res.json().catch(() => ({}));
     if (data.ok && data.compliance) {
       renderProgramlamaCompliance(data.compliance);
+    }
+    if (data.task_stats) {
+      renderProgramlamaTaskStats(data.task_stats);
     }
   } catch (_) {
     /* ignore */

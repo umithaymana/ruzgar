@@ -623,7 +623,13 @@ def run_live(base: str) -> int:
     try:
         h = get("/api/health")
         rev = str((h.get("build") or {}).get("rev") or "")
-        if "faz54" in rev or "faz53" in rev or "faz52" in rev or rev.endswith("-v65"):
+        if (
+            "faz57" in rev
+            or "faz56" in rev
+            or "faz55" in rev
+            or rev.endswith("-v68")
+            or rev.endswith("-v67")
+        ):
             _ok(f"build.rev={rev}")
         else:
             _fail("build.rev", rev)
@@ -1232,6 +1238,205 @@ def run_parity(*, live_base: str | None = None) -> int:
         _fail("faz54 dashboard")
         fails += 1
     _ok(f"faz54 {FAZ54_VERSION}")
+
+    print("=== Faz 55 — canli gorev KPI ===")
+    from ilim_assistant.motorlar.programlama_faz55 import (
+        FAZ55_VERSION,
+        build_handoff_packet,
+        compute_task_stats,
+        faz55_enabled,
+        record_task_outcome,
+        target_success_rate,
+    )
+
+    if faz55_enabled():
+        _ok("faz55 on")
+    else:
+        _fail("faz55")
+        fails += 1
+    rec = record_task_outcome(
+        WORKSPACE,
+        scope_rel="projects/smoke-faz55",
+        goal="pytest",
+        success=True,
+        turns_used=3,
+        verify_ok=True,
+        writes_ok=2,
+        elapsed_sec=12.5,
+    )
+    if rec.get("ok"):
+        _ok("faz55 record outcome")
+    else:
+        _fail("faz55 record", str(rec))
+        fails += 1
+    stats = compute_task_stats(WORKSPACE, window_days=30)
+    if stats.get("total", 0) >= 1:
+        _ok(f"faz55 stats total={stats.get('total')}")
+    else:
+        _fail("faz55 stats")
+        fails += 1
+    ho = build_handoff_packet(
+        "bana bir web sitesi yap smoke-handoff", WORKSPACE
+    )
+    if ho.get("ok") and ho.get("packet_text"):
+        _ok("faz55 handoff packet")
+    else:
+        _fail("faz55 handoff")
+        fails += 1
+    if target_success_rate() >= 0.5:
+        _ok(f"faz55 target rate={target_success_rate()}")
+    else:
+        _fail("faz55 target")
+        fails += 1
+    _ok(f"faz55 {FAZ55_VERSION}")
+
+    print("=== Faz 56 — uzun gorev v2 ===")
+    from ilim_assistant.motorlar.programlama_faz56 import (
+        FAZ56_VERSION,
+        agent_budget_sec_v2,
+        agent_max_turns_v2,
+        augment_turn_user_message,
+        build_multi_file_plan_block,
+        count_turn_writes,
+        faz56_enabled,
+        infer_target_files,
+        looks_like_multi_file_task,
+        long_task_v2_enabled,
+        max_files_per_turn,
+        merge_touched_files,
+        multi_file_cap_nudge,
+        run_combined_verify,
+    )
+
+    if faz56_enabled() and long_task_v2_enabled():
+        _ok("faz56 on")
+    else:
+        _fail("faz56")
+        fails += 1
+    if agent_max_turns_v2() >= 20 and agent_budget_sec_v2() >= 900:
+        _ok(f"faz56 limits turns={agent_max_turns_v2()} budget={int(agent_budget_sec_v2())}")
+    else:
+        _fail("faz56 limits")
+        fails += 1
+    if looks_like_multi_file_task("refactor util service main.py"):
+        _ok("faz56 multi-file cue")
+    else:
+        _fail("faz56 cue")
+        fails += 1
+    plan = build_multi_file_plan_block(
+        WORKSPACE,
+        scope_rel="projects/smoke-faz56",
+        message="refactor util service",
+        goal="cok dosya",
+        turn=1,
+    )
+    if plan and ("Faz 56" in plan or "FAZ 56" in plan.upper()):
+        _ok("faz56 plan block")
+    else:
+        _fail("faz56 plan", plan[:80] if plan else "")
+        fails += 1
+    targets = infer_target_files(
+        WORKSPACE, "projects/smoke-faz56", "app/main.py util"
+    )
+    if isinstance(targets, list):
+        _ok(f"faz56 targets n={len(targets)}")
+    else:
+        _fail("faz56 targets")
+        fails += 1
+    aug = augment_turn_user_message(
+        "base",
+        WORKSPACE,
+        scope_rel="projects/smoke-faz56",
+        message="refactor",
+        goal="util",
+        turn=1,
+    )
+    if "base" in aug and len(aug) > len("base"):
+        _ok("faz56 augment turn")
+    else:
+        _fail("faz56 augment")
+        fails += 1
+    merged = merge_touched_files([], "@@write app/main.py\nx", [])
+    if merged:
+        _ok("faz56 merge touched")
+    else:
+        _fail("faz56 merge")
+        fails += 1
+    wc = count_turn_writes("@@write a.py\n@@write b.py", [])
+    if wc >= 2:
+        _ok(f"faz56 write count={wc}")
+    else:
+        _fail("faz56 write count")
+        fails += 1
+    nudge = multi_file_cap_nudge(max_files_per_turn() + 1)
+    if nudge and "FAZ 56" in nudge.upper():
+        _ok("faz56 cap nudge")
+    else:
+        _fail("faz56 nudge")
+        fails += 1
+    _ok(f"faz56 {FAZ56_VERSION}")
+
+    print("=== Faz 57 — model yedek FC ===")
+    from ilim_assistant.motorlar.programlama_faz57 import (
+        FAZ57_VERSION,
+        compute_text_only_stats,
+        faz57_enabled,
+        gemini_fc_available,
+        gemini_function_declarations,
+        groq_fc_available,
+        record_agent_turn_fc,
+        reorder_brain_chain_for_fc,
+        route_fc_completion,
+        select_fc_provider,
+        target_text_only_rate,
+    )
+
+    if faz57_enabled():
+        _ok("faz57 on")
+    else:
+        _fail("faz57")
+        fails += 1
+    decl_n = len(gemini_function_declarations())
+    if decl_n >= 5:
+        _ok(f"faz57 gemini decl={decl_n}")
+    else:
+        _fail("faz57 decl", str(decl_n))
+        fails += 1
+    prov = select_fc_provider()
+    if prov in ("groq", "gemini", "none"):
+        _ok(f"faz57 provider={prov} groq={groq_fc_available()} gemini={gemini_fc_available()}")
+    else:
+        _fail("faz57 provider", prov)
+        fails += 1
+    chain = reorder_brain_chain_for_fc(["groq", "kod", "gemini"])
+    if chain and chain[0] in ("groq", "gemini"):
+        _ok(f"faz57 chain={chain[0]}")
+    else:
+        _fail("faz57 chain", str(chain))
+        fails += 1
+    rec = record_agent_turn_fc(
+        WORKSPACE,
+        scope_rel="projects/smoke-faz57",
+        turn=1,
+        text_only=True,
+        provider=prov,
+        recovery_attempted=True,
+    )
+    if rec.get("ok"):
+        _ok("faz57 record turn")
+    else:
+        _fail("faz57 record", str(rec))
+        fails += 1
+    stats = compute_text_only_stats(WORKSPACE, window_days=7)
+    if stats.get("total_turns", 0) >= 1:
+        _ok(
+            f"faz57 text_only_rate={stats.get('text_only_rate')} "
+            f"target<{target_text_only_rate()}"
+        )
+    else:
+        _fail("faz57 stats")
+        fails += 1
+    _ok(f"faz57 {FAZ57_VERSION}")
 
     if should_run_proje_uret_pipeline(
         "proje üret: fastapi_api smoke-faz47-run pytest",

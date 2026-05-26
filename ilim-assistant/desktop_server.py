@@ -791,7 +791,7 @@ def health():
         },
         "super_brain": _super_brain_health_block(),
         "build": {
-            "rev": "2026-05-26-programlama-faz54-v65",
+            "rev": "2026-05-26-programlama-faz57-v68",
             "nebula_kitap": True,
             "fast_paths": os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
             "memory_first": True,
@@ -1543,6 +1543,25 @@ def api_programlama_agent_compliance(workspace_root: str | None = None):
     }
 
 
+@app.get("/api/programlama/task-stats")
+def api_programlama_task_stats(workspace_root: str | None = None):
+    """Faz 55 — canlı görev başarı istatistikleri."""
+    from ilim_assistant.motorlar.programlama_faz55 import (
+        FAZ55_VERSION,
+        compute_task_stats,
+        format_task_stats_report,
+    )
+
+    root = (workspace_root or "").strip() or None
+    stats = compute_task_stats(root, window_days=30)
+    return {
+        "ok": True,
+        "stats": stats,
+        "report": format_task_stats_report(stats),
+        "version": FAZ55_VERSION,
+    }
+
+
 @app.get("/api/programlama/kpi-dashboard")
 def api_programlama_kpi_dashboard(workspace_root: str | None = None):
     """Faz 54 — KPI dashboard (compliance v3 + parity 8/8)."""
@@ -1554,6 +1573,18 @@ def api_programlama_kpi_dashboard(workspace_root: str | None = None):
     root = (workspace_root or "").strip() or None
     payload = build_kpi_dashboard(root)
     payload["version"] = FAZ54_VERSION
+    try:
+        from ilim_assistant.motorlar.programlama_faz55 import compute_task_stats
+
+        payload["task_stats"] = compute_task_stats(root, window_days=30)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz57 import compute_text_only_stats
+
+        payload["text_only_stats"] = compute_text_only_stats(root, window_days=7)
+    except Exception:
+        pass
     return payload
 
 
@@ -2977,6 +3008,23 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
     }
     if _delegated_from_genel:
         route_meta["programlama_delegated"] = True
+        try:
+            from ilim_assistant.motorlar.programlama_faz55 import build_handoff_packet
+
+            _handoff = build_handoff_packet(
+                req.message or "",
+                req.workspace_root,
+                active_file=getattr(req, "programlama_active_file", None),
+            )
+            if _handoff.get("ok"):
+                route_meta["handoff"] = {
+                    "scope_rel": _handoff.get("scope_rel"),
+                    "template": _handoff.get("parsed_template"),
+                }
+        except Exception:
+            _handoff = {}
+    else:
+        _handoff = {}
     yield {"type": "meta", "chat_route": route_meta}
     yield {"type": "status", "text": "Rüzgar hazırlanıyor…"}
 
@@ -3588,6 +3636,23 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         return
 
     msg, hits, user_payload, system, model, og_direct = prep
+    if _delegated_from_genel and mode_norm == "programlama":
+        try:
+            from ilim_assistant.motorlar.programlama_faz55 import build_handoff_packet
+
+            ho = build_handoff_packet(
+                msg,
+                req.workspace_root,
+                active_file=getattr(req, "programlama_active_file", None),
+            )
+            if ho.get("ok") and ho.get("packet_text"):
+                msg = ho["packet_text"] + "\n\n[Kullanıcı isteği]\n" + msg
+                yield {
+                    "type": "status",
+                    "text": "Ana Motor → Programlama: handoff paketi eklendi (Faz 55).",
+                }
+        except Exception:
+            pass
     new_wake = req.session_wake_used or message_calls_wake_name(msg)
 
     if og_direct is not None:

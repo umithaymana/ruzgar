@@ -36,7 +36,17 @@ def mandate_followup_enabled() -> bool:
 
 
 def code_agent_max_turns_effective() -> int:
-    """Faz 41 → 15 tur; Faz 39 → 12 tur (env ile override)."""
+    """Faz 56 → 20 tur; Faz 41 → 15 tur; Faz 39 → 12 tur (env ile override)."""
+    try:
+        from ilim_assistant.motorlar.programlama_faz56 import (
+            long_task_v2_enabled,
+            agent_max_turns_v2,
+        )
+
+        if long_task_v2_enabled():
+            return agent_max_turns_v2()
+    except Exception:
+        pass
     try:
         from ilim_assistant.motorlar.programlama_faz41 import (
             long_task_enabled,
@@ -65,6 +75,14 @@ def task_brain_profile_override() -> str | None:
     """Görev turunda tek profil zorlaması (ilk deneme)."""
     if not _enabled():
         return None
+    try:
+        from ilim_assistant.motorlar.programlama_faz57 import task_brain_profile_when_no_groq
+
+        alt = task_brain_profile_when_no_groq()
+        if alt:
+            return alt
+    except Exception:
+        pass
     return os.environ.get("RUZGAR_FAZ39_TASK_BRAIN", "groq").strip() or "groq"
 
 
@@ -85,7 +103,13 @@ def programming_brain_chain_for_task() -> list[str]:
     for x in chain:
         if x not in out:
             out.append(x)
-    return out or ["groq", "kod", "gemini"]
+    merged = out or ["groq", "kod", "gemini"]
+    try:
+        from ilim_assistant.motorlar.programlama_faz57 import reorder_brain_chain_for_fc
+
+        return reorder_brain_chain_for_fc(merged)
+    except Exception:
+        return merged
 
 
 def turn_had_discovery(tool_results: list[dict[str, Any]] | None) -> bool:

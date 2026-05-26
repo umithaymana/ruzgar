@@ -892,6 +892,7 @@ def iter_code_agent_turn_events(
             "max_turns": max_turns,
             "stop_requested": False,
             "started_at": time.time(),
+            "touched_files": [],
             "version": FAZ14_VERSION,
         },
     )
@@ -925,18 +926,39 @@ def iter_code_agent_turn_events(
         from ilim_assistant.motorlar.programlama_faz23 import format_task_mode_status
 
         try:
-            from ilim_assistant.motorlar.programlama_faz41 import (
-                format_long_task_status,
-                long_task_enabled,
+            from ilim_assistant.motorlar.programlama_faz56 import (
+                format_long_task_v2_status,
+                long_task_v2_enabled,
             )
 
-            if long_task_enabled():
-                yield {"type": "status", "text": format_long_task_status(task.scope_rel)}
-            else:
+            if long_task_v2_enabled():
                 yield {
                     "type": "status",
-                    "text": format_task_mode_status(task.scope_rel, float(budget_hint)),
+                    "text": format_long_task_v2_status(task.scope_rel),
                 }
+            else:
+                raise ImportError("faz56 off")
+        except Exception:
+            try:
+                from ilim_assistant.motorlar.programlama_faz41 import (
+                    format_long_task_status,
+                    long_task_enabled,
+                )
+
+                if long_task_enabled():
+                    yield {
+                        "type": "status",
+                        "text": format_long_task_status(task.scope_rel),
+                    }
+                else:
+                    yield {
+                        "type": "status",
+                        "text": format_task_mode_status(
+                            task.scope_rel, float(budget_hint)
+                        ),
+                    }
+            except Exception:
+                pass
         except Exception:
             yield {
                 "type": "status",
@@ -1066,6 +1088,23 @@ def iter_code_agent_turn_events(
 
             turn_user = augment_turn_user_message(
                 turn_user, turn=turn, goal=task.goal
+            )
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.motorlar.programlama_faz56 import (
+                augment_turn_user_message as faz56_augment_turn,
+            )
+
+            _st56 = load_agent_state(workspace)
+            turn_user = faz56_augment_turn(
+                turn_user,
+                workspace,
+                scope_rel=task.scope_rel,
+                message=message,
+                goal=task.goal,
+                turn=turn,
+                touched_files=list(_st56.get("touched_files") or []),
             )
         except Exception:
             pass
@@ -1339,6 +1378,56 @@ def iter_code_agent_turn_events(
             run_pytest=False,
         )
         try:
+            from ilim_assistant.motorlar.programlama_faz56 import (
+                count_turn_writes,
+                merge_touched_files,
+                multi_file_cap_nudge,
+            )
+
+            _st_touch = load_agent_state(workspace)
+            _touched = merge_touched_files(
+                list(_st_touch.get("touched_files") or []),
+                round_body,
+                _tool_res,
+            )
+            save_agent_state(
+                workspace,
+                {**_st_touch, "touched_files": _touched},
+            )
+            _cap_nudge = multi_file_cap_nudge(count_turn_writes(round_body, _tool_res))
+            if _cap_nudge:
+                yield {"type": "status", "text": _cap_nudge[:500]}
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.motorlar.programlama_faz52 import turn_had_no_tools
+            from ilim_assistant.motorlar.programlama_faz57 import (
+                record_agent_turn_fc,
+                select_fc_provider,
+            )
+
+            _recovery_attempted = False
+            try:
+                from ilim_assistant.motorlar.programlama_faz52 import (
+                    should_force_structured_recovery,
+                )
+
+                _recovery_attempted = should_force_structured_recovery(
+                    round_body or llm_body, _tool_res
+                )
+            except Exception:
+                pass
+            record_agent_turn_fc(
+                workspace,
+                scope_rel=task.scope_rel,
+                turn=turn,
+                text_only=turn_had_no_tools(round_body or llm_body, _tool_res),
+                provider=select_fc_provider(),
+                recovery_attempted=_recovery_attempted,
+            )
+        except Exception:
+            pass
+        try:
             from ilim_assistant.motorlar.programlama_faz23 import apply_agent_turn_patches
 
             scope_turn = resolve_scope_rel(
@@ -1590,6 +1679,48 @@ def iter_code_agent_turn_events(
             success=success,
             verify_ok=verify_ok,
             elapsed_sec=total_sec,
+        )
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz56 import (
+            long_task_v2_enabled,
+            run_combined_verify,
+        )
+
+        if long_task_v2_enabled():
+            _cv = run_combined_verify(
+                workspace, task.scope_rel, goal=task.goal or ""
+            )
+            _st_cv = load_agent_state(workspace)
+            save_agent_state(
+                workspace,
+                {**_st_cv, "last_combined_verify": _cv},
+            )
+            if _cv.get("pending_count"):
+                reply_body += (
+                    f"\n\n**Birleşik verify (Faz 56):** pytest="
+                    f"{'OK' if _cv.get('pytest_ok') else 'kırmızı'} · "
+                    f"bekleyen patch: {_cv.get('pending_count')}"
+                )
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz55 import record_task_outcome
+
+        st = load_agent_state(workspace)
+        writes_total = int(st.get("total_writes") or 0)
+        record_task_outcome(
+            workspace,
+            scope_rel=task.scope_rel,
+            goal=task.goal,
+            success=success,
+            turns_used=len(turn_reports),
+            verify_ok=bool(success and st.get("last_verify_ok")),
+            writes_ok=writes_total,
+            elapsed_sec=total_sec,
+            source="code_agent",
+            detail=turn_reports[-1][:200] if turn_reports else "",
         )
     except Exception:
         pass

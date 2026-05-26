@@ -30,6 +30,16 @@ def long_task_enabled() -> bool:
 
 
 def long_task_budget_sec() -> float:
+    try:
+        from ilim_assistant.motorlar.programlama_faz56 import (
+            long_task_v2_enabled,
+            agent_budget_sec_v2,
+        )
+
+        if long_task_v2_enabled():
+            return agent_budget_sec_v2()
+    except Exception:
+        pass
     if not _enabled():
         try:
             from ilim_assistant.motorlar.programlama_faz23 import (
@@ -49,6 +59,16 @@ def long_task_budget_sec() -> float:
 
 
 def long_task_max_turns() -> int:
+    try:
+        from ilim_assistant.motorlar.programlama_faz56 import (
+            long_task_v2_enabled,
+            agent_max_turns_v2,
+        )
+
+        if long_task_v2_enabled():
+            return agent_max_turns_v2()
+    except Exception:
+        pass
     if not _enabled():
         try:
             from ilim_assistant.motorlar.programlama_faz39 import (
@@ -138,7 +158,7 @@ class TaskBudgetTracker:
         return max(0.0, self.budget_sec - self.elapsed_sec())
 
     def enrich_sse(self, event: dict[str, Any] | None) -> dict[str, Any] | None:
-        if not _enabled() or not event or event.get("type") != "agent_step":
+        if not (_enabled() or _faz56_budget_on()) or not event or event.get("type") != "agent_step":
             return event
         out = dict(event)
         ca = dict(out.get("code_agent") or {})
@@ -146,6 +166,13 @@ class TaskBudgetTracker:
         ca["budget_elapsed_sec"] = int(self.elapsed_sec())
         ca["budget_total_sec"] = int(self.budget_sec)
         ca["faz41"] = True
+        try:
+            from ilim_assistant.motorlar.programlama_faz56 import long_task_v2_enabled
+
+            if long_task_v2_enabled():
+                ca["faz56"] = True
+        except Exception:
+            pass
         out["code_agent"] = ca
         return out
 
@@ -155,9 +182,18 @@ class TaskBudgetTracker:
 
 
 def create_budget_tracker(start_mono: float) -> TaskBudgetTracker | None:
-    if not _enabled():
+    if not _enabled() and not _faz56_budget_on():
         return None
     return TaskBudgetTracker(start_mono, long_task_budget_sec())
+
+
+def _faz56_budget_on() -> bool:
+    try:
+        from ilim_assistant.motorlar.programlama_faz56 import long_task_v2_enabled
+
+        return long_task_v2_enabled()
+    except Exception:
+        return False
 
 
 def format_long_task_status(scope_rel: str) -> str:

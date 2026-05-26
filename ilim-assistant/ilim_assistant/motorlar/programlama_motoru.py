@@ -1596,6 +1596,24 @@ def build_motor_context(
     except Exception:
         pass
     try:
+        from ilim_assistant.motorlar.programlama_faz55 import faz55_directive
+
+        base += faz55_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz56 import faz56_directive
+
+        base += faz56_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz57 import faz57_directive
+
+        base += faz57_directive() + "\n"
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_faz48 import faz48_directive
 
         base += faz48_directive() + "\n"

@@ -204,20 +204,28 @@ def _check_faz52_53() -> ParitySmokeCheck:
             tool_choice_for_task,
         )
         from ilim_assistant.motorlar.programlama_faz53 import patch_api_enrichments
+        from ilim_assistant.motorlar.programlama_faz57 import (
+            faz57_enabled,
+            gemini_function_declarations,
+            select_fc_provider,
+        )
 
         flags = patch_api_enrichments()
+        decl_n = len(gemini_function_declarations())
         ok = (
             faz52_enabled()
+            and faz57_enabled()
             and tool_choice_for_task(mandate=True) == "required"
             and flags.get("multi_file_preview_default")
+            and decl_n >= 5
         )
-        detail = str(flags)[:80]
+        detail = f"{str(flags)[:50]} fc={select_fc_provider()} decl={decl_n}"
     except Exception as exc:
         ok = False
         detail = str(exc)[:80]
     return ParitySmokeCheck(
         "faz52_53_wiring",
-        "FC birincil + Atölye v2",
+        "FC birincil + Atölye v2 + Faz 57",
         ok,
         time.monotonic() - t0,
         detail,
@@ -333,30 +341,43 @@ def _check_proje_uret_crud(
 
 def _check_groq_e2e() -> ParitySmokeCheck:
     t0 = time.monotonic()
-    if not os.environ.get("GROQ_API_KEY", "").strip():
+    try:
+        from ilim_assistant.motorlar.programlama_faz57 import (
+            gemini_fc_available,
+            groq_fc_available,
+            route_fc_completion,
+            select_fc_provider,
+        )
+    except Exception as exc:
         return ParitySmokeCheck(
-            "groq_e2e_optional",
-            "Groq E2E (opsiyonel)",
+            "fc_e2e",
+            "FC E2E (Groq/Gemini)",
+            False,
+            time.monotonic() - t0,
+            str(exc)[:80],
+        )
+    if not groq_fc_available() and not gemini_fc_available():
+        return ParitySmokeCheck(
+            "fc_e2e",
+            "FC E2E (Groq/Gemini)",
             True,
             time.monotonic() - t0,
-            "GROQ_API_KEY yok — atlandı (OK)",
+            "GROQ/Gemini FC yok — atlandı (OK)",
         )
     try:
-        from ilim_assistant.motorlar.programlama_faz40 import chat_completion_with_tools
-
-        text, batch = chat_completion_with_tools(
+        text, batch = route_fc_completion(
             "Test.",
             "Ping: respond with OK only.",
             tool_choice="auto",
         )
-        ok = bool(text) or bool(batch)
-        detail = f"text={len(text)} tools={len(batch)}"
+        ok = bool(batch) or (bool(text) and not str(text).startswith("["))
+        detail = f"provider={select_fc_provider()} text={len(text)} tools={len(batch)}"
     except Exception as exc:
         ok = False
         detail = str(exc)[:80]
     return ParitySmokeCheck(
-        "groq_e2e_optional",
-        "Groq E2E (opsiyonel)",
+        "fc_e2e",
+        "FC E2E (Groq/Gemini)",
         ok,
         time.monotonic() - t0,
         detail,
@@ -565,7 +586,7 @@ def build_kpi_dashboard(workspace_root: str | Path | None) -> dict[str, Any]:
     cap = build_kpi_capability_scorecard()
     on = sum(1 for v in cap.values() if v)
     rep = comp.get("report") or {}
-    return {
+    out: dict[str, Any] = {
         "ok": True,
         "compliance": rep,
         "parity": parity,
@@ -577,6 +598,13 @@ def build_kpi_dashboard(workspace_root: str | Path | None) -> dict[str, Any]:
         "overall_kpi_ok": bool(rep.get("overall_kpi_ok")),
         "version": FAZ54_VERSION,
     }
+    try:
+        from ilim_assistant.motorlar.programlama_faz57 import compute_text_only_stats
+
+        out["text_only_stats"] = compute_text_only_stats(workspace_root, window_days=7)
+    except Exception:
+        pass
+    return out
 
 
 def run_parity_smoke_and_persist(

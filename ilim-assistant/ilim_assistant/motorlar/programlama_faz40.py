@@ -296,57 +296,37 @@ def chat_completion_with_tools(
     tool_choice: str = "auto",
 ) -> tuple[str, list[dict[str, Any]]]:
     """
-    Groq OpenAI tools — tek tur completion + tool_calls parse.
+    OpenAI tools — Groq birincil; Faz 57 ile Gemini yedek.
     Dönüş: (assistant_text, tool_results_executed)
     """
-    ep = _groq_endpoint()
-    if ep is None or tool_api_mode() != "openai":
+    if tool_api_mode() != "openai":
         return "", []
-    base, key, model = ep
     try:
-        import requests
-        from ilim_assistant.llm_ollama import _build_chat_messages
-
-        messages = _build_chat_messages(system, user, prior_messages)
-        tc = (tool_choice or "auto").strip().lower()
-        if tc not in ("auto", "required", "none"):
-            tc = "auto"
-        payload: dict[str, Any] = {
-            "model": model,
-            "messages": messages,
-            "tools": openai_tools_schema(),
-            "tool_choice": tc,
-            "temperature": 0.2,
-            "stream": False,
-        }
-        resp = requests.post(
-            f"{base}/chat/completions",
-            json=payload,
-            headers={
-                "Authorization": f"Bearer {key}",
-                "Content-Type": "application/json",
-            },
-            timeout=90,
+        from ilim_assistant.motorlar.programlama_faz57 import (
+            faz57_enabled,
+            route_fc_completion,
         )
-        if resp.status_code >= 400:
-            return f"[Groq tools HTTP {resp.status_code}]", []
-        data = resp.json()
-        msg = (data.get("choices") or [{}])[0].get("message") or {}
-        content = str(msg.get("content") or "").strip()
-        raw_calls = msg.get("tool_calls") or []
-        specs: list[dict[str, Any]] = []
-        for c in raw_calls:
-            if isinstance(c, dict):
-                spec = _spec_from_openai_call(c)
-                if spec:
-                    specs.append(spec)
-        results: list[dict[str, Any]] = []
-        if specs:
-            from ilim_assistant.motorlar.programlama_motoru import repo_root
 
-            root = repo_root(None)
-            results = run_tool_specs(specs, root, scope_rel=scope_rel or None)
-        return content, results
+        if faz57_enabled():
+            return route_fc_completion(
+                system,
+                user,
+                prior_messages=prior_messages,
+                scope_rel=scope_rel,
+                tool_choice=tool_choice,
+            )
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz57 import _groq_chat_completion_with_tools
+
+        return _groq_chat_completion_with_tools(
+            system,
+            user,
+            prior_messages=prior_messages,
+            scope_rel=scope_rel,
+            tool_choice=tool_choice,
+        )
     except Exception as exc:
         return f"[Faz 40 tools: {str(exc)[:200]}]", []
 
