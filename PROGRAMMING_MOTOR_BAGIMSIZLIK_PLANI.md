@@ -2,7 +2,7 @@
 
 > **Kayıt tarihi:** 2026-05-26  
 > **Durum:** Yarın devam — Ümit & Gökçenur  
-> **Mevcut build:** `2026-05-25-programlama-faz48-v59`  
+> **Mevcut build:** `2026-05-25-programlama-faz49-v60`  
 > **Referans:** [PROGRAMMING_MOTOR_CURSOR_SEVIYE_PLAN.md](PROGRAMMING_MOTOR_CURSOR_SEVIYE_PLAN.md) · [PROGRAMMING_MOTOR_USTAYOL.md](PROGRAMMING_MOTOR_USTAYOL.md)
 
 ---
@@ -26,12 +26,12 @@ Cursor IDE olmadan, yalnızca Rüzgar Atölyesi ile:
 
 ## 2. Dört dalga (yarın ve sonrası)
 
-### Dalga A — Stabilite (1 oturum) · Faz 49
+### Dalga A — Stabilite (1 oturum) · Faz 49 ✓
 
-- [ ] Restart sonrası build kilidi: UI + `Ruzgar.ps1` tek rev (`faz48-v59` → sonraki fazda artır)
-- [ ] Ana Motor: gündelik (`nasılsın`) **eğitim katmanından önce** hızlı yol
-- [ ] Karşılaştırma / ansiklopedik soruda gereksiz web atlama (hız)
-- [ ] `prepare_turn` web fetch async veya `fetch_pages=0` varsayılan (genel sohbet)
+- [x] Restart sonrası build kilidi: UI + `Ruzgar.ps1` → `faz49-v60`
+- [x] Ana Motor: gündelik (`nasılsın`) **eğitim katmanından önce** hızlı yol
+- [x] Karşılaştırma / ansiklopedik soruda gereksiz web atlama (`looks_like_fast_llm_fact_question`)
+- [x] UI varsayılan «Sayfa oku» = 0; `chat_core` hızlı bilgi turunda web kapalı
 
 **Çıktı:** Canlı sohbet tutarlı; Faz 38 uyarısı tekrarlamaz.
 

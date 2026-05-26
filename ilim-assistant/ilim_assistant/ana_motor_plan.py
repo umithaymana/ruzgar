@@ -92,6 +92,59 @@ def looks_like_encyclopedic_fact_question(msg: str) -> bool:
     return False
 
 
+def looks_like_fast_llm_fact_question(msg: str) -> bool:
+    """
+    Genel bilim / kısa «nedir» / gezegen karşılaştırma — DuckDuckGo + sayfa okuma
+  genelde gereksiz; doğrudan LLM hızlı yolu (Faz 49).
+    """
+    if os.environ.get("RUZGAR_FAZ49_FAST_FACT", "1").strip().lower() in (
+        "0",
+        "false",
+        "no",
+    ):
+        return False
+    raw = (msg or "").strip()
+    if not raw or len(raw) > 220:
+        return False
+    if looks_like_encyclopedic_fact_question(msg):
+        return True
+    asc = _norm_ascii(raw)
+    low = raw.lower()
+    if any(x in low for x in ("güncel", "guncel", "bugün", "bugun", "haber", "son dakika")):
+        return False
+    if re.search(r"\b(nedir|ne demek|tanımı|tanimi)\b", asc) and len(raw.split()) <= 16:
+        return True
+    if re.search(
+        r"\b(yoksa|hangisi|daha\s+(büyük|buyuk|küçük|kucuk|uzak|ağır|agir))\b", asc
+    ):
+        return True
+    if re.search(r"\b(mu|mı|mi)\s+(daha\s+)?(büyük|buyuk|küçük|kucuk)\b", asc):
+        return True
+    science = (
+        "neptün",
+        "neptun",
+        "dünya",
+        "dunya",
+        "mars",
+        "jüpiter",
+        "jupiter",
+        "venüs",
+        "venus",
+        "merkür",
+        "merkur",
+        "plüton",
+        "pluton",
+        "uzay",
+        "gezegen",
+        "güneş",
+        "gunes",
+    )
+    if "?" in raw and len(raw.split()) <= 20:
+        if any(k in asc for k in science):
+            return True
+    return False
+
+
 PRIMARY_LABELS_TR: dict[str, str] = {
     "bilgi": "Bilgi araştırması",
     "gundelik": "Sohbet",
@@ -459,6 +512,10 @@ def plan_question(
         prefer_web = False
     if primary == "hava":
         prefer_web = True
+    if looks_like_fast_llm_fact_question(message):
+        prefer_web = False
+        if primary == "bilgi":
+            use_ilim_rag = False
 
     prefer_archive = primary == "bilim" or flags.get("bilim")
 

@@ -1266,6 +1266,16 @@ def prepare_turn(
                     and os.environ.get("RUZGAR_WEATHER_WEB_SUPPLEMENT", "0").strip()
                     not in ("1", "true", "yes", "on")
                 )
+                try:
+                    from ilim_assistant.ana_motor_plan import (
+                        looks_like_fast_llm_fact_question,
+                    )
+
+                    if looks_like_fast_llm_fact_question(msg):
+                        skip_ddg = True
+                        n_fetch = 0
+                except Exception:
+                    pass
                 if text_q and not skip_ddg:
                     try:
                         search_ctx = build_web_context(

@@ -60,10 +60,13 @@ def should_fast_direct_llm(
         from ilim_assistant.ana_motor_plan import (
             is_casual_conversation_turn,
             looks_like_encyclopedic_fact_question,
+            looks_like_fast_llm_fact_question,
         )
 
         if is_casual_conversation_turn(msg, mode_norm, question_plan):
             return False
+        if looks_like_fast_llm_fact_question(msg):
+            return True
         if looks_like_encyclopedic_fact_question(msg):
             if fast_local_rag_first_enabled():
                 return False

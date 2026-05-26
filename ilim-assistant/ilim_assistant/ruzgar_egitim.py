@@ -735,6 +735,8 @@ def maybe_egitim_learned_reply(
     history: list | None = None,
 ) -> Optional[str]:
     """Ümit abi'nin öğrettiği yanıt — talimatı okumaz; sohbet akışını kullanır."""
+    if _message_is_casual_turn(message):
+        return None
     hit = taught_reply_for_message(message)
     if hit:
         return hit

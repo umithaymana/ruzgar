@@ -791,12 +791,12 @@ def health():
         },
         "super_brain": _super_brain_health_block(),
         "build": {
-            "rev": "2026-05-25-programlama-faz48-v59",
+            "rev": "2026-05-25-programlama-faz49-v60",
             "nebula_kitap": True,
             "fast_paths": os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
             "memory_first": True,
             "bilissel_analiz": True,
-            "egitim_routing": "bilissel>egitim>gundelik",
+            "egitim_routing": "bilissel>gundelik>egitim",
         },
         "ruzgar_mode": _ruzgar_mode_health_snapshot(),
         "hizir": {
@@ -3004,7 +3004,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         except Exception:
             pass
 
-    # Ümit abi eğitimi — selam rüzgar vb. (empati soruları yukarıda ayrıldı)
+    # Selam / kısa sohbet — eğitim hafızasından ÖNCE (nasılsın → öğretim şablonu yok)
+    if mode_norm in ("genel", "uretim", "gelisim") and not coding:
+        try:
+            from ilim_assistant.ana_motor_plan import maybe_gundelik_instant_reply
+
+            instant_hi = maybe_gundelik_instant_reply(req.message, mode_norm, {})
+            if instant_hi:
+                yield from _iter_instant_chat_events(
+                    instant_hi,
+                    (req.message or "").strip(),
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=orch,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+
+    # Ümit abi eğitimi — selam rüzgar vb. (empati + gündelik yukarıda ayrıldı)
     if mode_norm in ("genel", "uretim", "gelisim") and not coding:
         try:
             from ilim_assistant.ruzgar_egitim import maybe_egitim_learned_reply
@@ -3021,25 +3040,6 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     msg_for_wake=req.message,
                     orch=orch,
                     egitim_instant=True,
-                )
-                return
-        except Exception:
-            pass
-
-    # Selam / kısa sohbet — plan ve hafıza sentezinden ÖNCE (anında)
-    if mode_norm in ("genel", "uretim", "gelisim") and not coding:
-        try:
-            from ilim_assistant.ana_motor_plan import maybe_gundelik_instant_reply
-
-            instant_hi = maybe_gundelik_instant_reply(req.message, mode_norm, {})
-            if instant_hi:
-                yield from _iter_instant_chat_events(
-                    instant_hi,
-                    (req.message or "").strip(),
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=orch,
-                    instant_gundelik=True,
                 )
                 return
         except Exception:

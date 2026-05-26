@@ -30,9 +30,14 @@ def should_skip_stream_prefetch(
     except Exception:
         pass
     try:
-        from ilim_assistant.ana_motor_plan import is_casual_conversation_turn
+        from ilim_assistant.ana_motor_plan import (
+            is_casual_conversation_turn,
+            looks_like_fast_llm_fact_question,
+        )
 
         if is_casual_conversation_turn(msg, mode_norm, question_plan):
+            return True
+        if looks_like_fast_llm_fact_question(msg):
             return True
     except Exception:
         pass
