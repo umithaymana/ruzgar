@@ -2,7 +2,7 @@
 
 > **Kayıt tarihi:** 2026-05-26  
 > **Durum:** Yarın devam — Ümit & Gökçenur  
-> **Mevcut build:** `2026-05-26-programlama-faz57-v68`  
+> **Mevcut build:** `2026-05-26-programlama-faz58-v69`  
 > **Yol haritası:** [PROGRAMMING_MOTOR_YOL_HARITASI.md](PROGRAMMING_MOTOR_YOL_HARITASI.md)  
 > **Referans:** [PROGRAMMING_MOTOR_CURSOR_SEVIYE_PLAN.md](PROGRAMMING_MOTOR_CURSOR_SEVIYE_PLAN.md) · [PROGRAMMING_MOTOR_USTAYOL.md](PROGRAMMING_MOTOR_USTAYOL.md)
 

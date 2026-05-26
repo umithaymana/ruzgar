@@ -791,7 +791,7 @@ def health():
         },
         "super_brain": _super_brain_health_block(),
         "build": {
-            "rev": "2026-05-26-programlama-faz57-v68",
+            "rev": "2026-05-26-programlama-faz58-v69",
             "nebula_kitap": True,
             "fast_paths": os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
             "memory_first": True,
@@ -1560,6 +1560,28 @@ def api_programlama_task_stats(workspace_root: str | None = None):
         "report": format_task_stats_report(stats),
         "version": FAZ55_VERSION,
     }
+
+
+@app.get("/api/programlama/git-changes")
+def api_programlama_git_changes(
+    workspace_root: str | None = None,
+    scope_rel: str | None = None,
+    active_file: str | None = None,
+):
+    """Faz 58 — git status/diff özeti (read-only)."""
+    from ilim_assistant.motorlar.programlama_faz58 import (
+        FAZ58_VERSION,
+        build_git_changes_api_payload,
+    )
+
+    root = (workspace_root or "").strip() or None
+    payload = build_git_changes_api_payload(
+        root,
+        scope_rel=(scope_rel or "").strip() or None,
+        active_file=(active_file or "").strip() or None,
+    )
+    payload["version"] = FAZ58_VERSION
+    return payload
 
 
 @app.get("/api/programlama/kpi-dashboard")

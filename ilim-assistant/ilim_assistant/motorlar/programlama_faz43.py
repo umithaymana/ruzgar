@@ -59,6 +59,8 @@ _EXTRA_ALIASES: dict[str, str] = {
     "pytest": "pytest",
     "npm ci": "npm_ci",
     "uv sync": "uv_sync",
+    "git diff --stat": "git_diff",
+    "git diff stat": "git_diff",
 }
 
 _SAFE_FIRST_TOKEN = frozenset(

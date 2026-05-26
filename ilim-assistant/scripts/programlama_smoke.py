@@ -624,11 +624,10 @@ def run_live(base: str) -> int:
         h = get("/api/health")
         rev = str((h.get("build") or {}).get("rev") or "")
         if (
-            "faz57" in rev
-            or "faz56" in rev
-            or "faz55" in rev
+            "faz58" in rev
+            or "faz57" in rev
+            or rev.endswith("-v69")
             or rev.endswith("-v68")
-            or rev.endswith("-v67")
         ):
             _ok(f"build.rev={rev}")
         else:
@@ -1437,6 +1436,50 @@ def run_parity(*, live_base: str | None = None) -> int:
         _fail("faz57 stats")
         fails += 1
     _ok(f"faz57 {FAZ57_VERSION}")
+
+    print("=== Faz 58 — git entegrasyonu ===")
+    from ilim_assistant.motorlar.programlama_faz58 import (
+        FAZ58_VERSION,
+        augment_turn_with_git_context,
+        build_git_changes_api_payload,
+        build_git_strip_summary,
+        build_llm_git_context_block,
+        faz58_enabled,
+        gather_scope_git,
+        run_git_preset,
+    )
+
+    if faz58_enabled():
+        _ok("faz58 on")
+    else:
+        _fail("faz58")
+        fails += 1
+    api = build_git_changes_api_payload(WORKSPACE, scope_rel="projects")
+    if api.get("version") == FAZ58_VERSION:
+        _ok("faz58 api payload")
+    else:
+        _fail("faz58 api")
+        fails += 1
+    snap = gather_scope_git(WORKSPACE, scope_rel="projects")
+    strip = build_git_strip_summary(snap)
+    if strip.get("version") == FAZ58_VERSION:
+        _ok(f"faz58 strip ok={strip.get('ok')}")
+    else:
+        _fail("faz58 strip")
+        fails += 1
+    block = build_llm_git_context_block(snap, phase="before")
+    if not snap.get("ok") or "Faz 58" in block:
+        _ok("faz58 llm block")
+    else:
+        _fail("faz58 llm block")
+        fails += 1
+    aug = augment_turn_with_git_context("base", WORKSPACE, scope_rel="projects")
+    if "base" in aug:
+        _ok("faz58 augment")
+    else:
+        _fail("faz58 augment")
+        fails += 1
+    _ok(f"faz58 {FAZ58_VERSION}")
 
     if should_run_proje_uret_pipeline(
         "proje üret: fastapi_api smoke-faz47-run pytest",

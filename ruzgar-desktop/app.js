@@ -1605,6 +1605,43 @@ function renderProgramlamaTaskStats(stats) {
   }
 }
 
+function renderProgramlamaGitChanges(payload) {
+  const wrap = document.getElementById("programlama-git-changes-card");
+  const branchEl = document.getElementById("programlama-git-branch");
+  const summaryEl = document.getElementById("programlama-git-summary");
+  const filesEl = document.getElementById("programlama-git-files");
+  if (!wrap || !branchEl || !summaryEl) return;
+  const strip = payload && payload.strip ? payload.strip : null;
+  if (!payload || !payload.ok || !strip) {
+    wrap.hidden = true;
+    return;
+  }
+  wrap.hidden = false;
+  branchEl.textContent = strip.branch ? `dal: ${strip.branch}` : "git";
+  summaryEl.textContent = strip.summary || (strip.has_changes ? "değişiklik var" : "temiz");
+  if (filesEl) {
+    const lines = Array.isArray(strip.file_lines) ? strip.file_lines : [];
+    filesEl.textContent = lines.length ? lines.slice(0, 4).join(" · ") : "";
+  }
+}
+
+async function refreshProgramlamaGitChanges(scopeRel) {
+  const workspaceRoot = await getProgramlamaWorkspaceRoot();
+  if (!workspaceRoot) return;
+  const scope = String(scopeRel || "").trim();
+  if (!scope) return;
+  try {
+    const qs =
+      `?workspace_root=${encodeURIComponent(workspaceRoot)}` +
+      `&scope_rel=${encodeURIComponent(scope)}`;
+    const res = await fetch(`${API}/api/programlama/git-changes${qs}`);
+    const data = await res.json().catch(() => ({}));
+    renderProgramlamaGitChanges(data);
+  } catch (_) {
+    /* ignore */
+  }
+}
+
 async function refreshProgramlamaKpiDashboard() {
   const workspaceRoot = await getProgramlamaWorkspaceRoot();
   if (!workspaceRoot) return;
@@ -1617,6 +1654,11 @@ async function refreshProgramlamaKpiDashboard() {
     }
     if (data.task_stats) {
       renderProgramlamaTaskStats(data.task_stats);
+    }
+    const scopeEl = document.getElementById("programlama-scope");
+    const scope = scopeEl && scopeEl.value ? String(scopeEl.value).trim() : "";
+    if (scope) {
+      await refreshProgramlamaGitChanges(scope);
     }
   } catch (_) {
     /* ignore */

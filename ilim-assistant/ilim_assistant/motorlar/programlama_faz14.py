@@ -1108,6 +1108,14 @@ def iter_code_agent_turn_events(
             )
         except Exception:
             pass
+        try:
+            from ilim_assistant.motorlar.programlama_faz58 import augment_turn_with_git_context
+
+            turn_user = augment_turn_with_git_context(
+                turn_user, workspace, scope_rel=task.scope_rel
+            )
+        except Exception:
+            pass
         round_payload = turn_user
 
         round_body = ""
@@ -1427,6 +1435,18 @@ def iter_code_agent_turn_events(
             )
         except Exception:
             pass
+        _pre_git_snap = None
+        try:
+            from ilim_assistant.motorlar.programlama_faz58 import (
+                faz58_enabled,
+                gather_scope_git,
+                record_patch_git_delta,
+            )
+
+            if faz58_enabled():
+                _pre_git_snap = gather_scope_git(workspace, scope_rel=task.scope_rel)
+        except Exception:
+            _pre_git_snap = None
         try:
             from ilim_assistant.motorlar.programlama_faz23 import apply_agent_turn_patches
 
@@ -1447,6 +1467,26 @@ def iter_code_agent_turn_events(
                         summ.writes.append(
                             WriteReport(path=rel, ok=True, detail="Faz 23 otomatik patch")
                         )
+                try:
+                    from ilim_assistant.motorlar.programlama_faz58 import (
+                        record_patch_git_delta,
+                    )
+
+                    _git_delta = record_patch_git_delta(
+                        workspace,
+                        scope_rel=scope_turn,
+                        pre_snap=_pre_git_snap,
+                    )
+                    if _git_delta.get("strip", {}).get("has_changes"):
+                        yield {
+                            "type": "status",
+                            "text": (
+                                f"Tur {turn}: Git — "
+                                f"{_git_delta['strip'].get('summary', 'güncellendi')}"
+                            )[:400],
+                        }
+                except Exception:
+                    pass
         except Exception:
             pass
         verify = run_project_verify(

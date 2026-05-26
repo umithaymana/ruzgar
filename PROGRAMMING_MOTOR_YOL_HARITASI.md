@@ -1,6 +1,6 @@
 # Rüzgar — Yol haritası (Faz 55+)
 
-> **Temel:** Faz 49–57 · build `faz57-v68`  
+> **Temel:** Faz 49–58 · build `faz58-v69`  
 > **Hedef:** Offline KPI değil — **gerçek görevde** Cursor’a yaklaşmak  
 > **Ölçü:** Görev başarı oranı **≥80%** · parity **full 8/8** · kullanıcı memnuniyeti **≥4.5/5**
 
@@ -51,11 +51,11 @@
 
 ## Dalga F — «Profesyonel iş akışı» (Faz 58–60)
 
-### Faz 58 — Git entegrasyonu (read-only+)
+### Faz 58 — Git entegrasyonu (read-only+) ← **UYGULANDI (v69)**
 
-- [ ] `git status` / `git diff --stat` preset (Faz 43)
-- [ ] Patch öncesi/sonrası diff özeti LLM’e
-- [ ] UI: «Son değişiklikler» şeridi
+- [x] `git status` / `git diff --stat` preset (Faz 15/43 + alias)
+- [x] Patch öncesi/sonrası diff özeti LLM’e (tur + patch sonrası)
+- [x] UI: «Son değişiklikler» şeridi + `/api/programlama/git-changes`
 
 ### Faz 59 — Ana Motor v2 (kod niyeti)
 
@@ -106,4 +106,4 @@ python ilim-assistant/scripts/programlama_smoke.py --ci
 
 ---
 
-*Build: `faz57-v68` · Sonraki: Faz 58 Git entegrasyonu.*
+*Build: `faz58-v69` · Sonraki: Faz 59 Ana Motor v2.*
