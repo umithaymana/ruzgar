@@ -737,7 +737,7 @@ def _health_build_block() -> dict:
     import os as _os
 
     base = {
-        "rev": "2026-05-26-programlama-faz64-v75",
+        "rev": "2026-05-26-programlama-faz65-v76",
         "nebula_kitap": True,
         "fast_paths": _os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
         "memory_first": True,
@@ -1734,6 +1734,43 @@ def api_programlama_best_of_n_runs(workspace_root: str | None = None):
     root = (workspace_root or "").strip() or None
     out = list_best_of_n_runs(root)
     out["version"] = FAZ64_VERSION
+    return out
+
+
+@app.post("/api/programlama/best-of-n/agents")
+def api_programlama_best_of_n_agents(body: ProgramlamaPatchBody):
+    """Faz 65 — mevcut Best-of-N koşusunda her adayda kod ajanı + yeniden skor."""
+    from ilim_assistant.motorlar.programlama_faz65 import (
+        FAZ65_VERSION,
+        execute_best_of_n_agents,
+        parse_best_of_n_agent_command,
+        run_best_of_n_plus,
+        parse_best_of_n_plus_command,
+    )
+
+    root = (body.workspace_root or "").strip() or None
+    text = (body.text or "").strip()
+    merge = os.environ.get("RUZGAR_FAZ65_MERGE", "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+    )
+    plus = parse_best_of_n_plus_command(text) if text else None
+    if plus:
+        out = run_best_of_n_plus(
+            root,
+            scope_rel=plus["scope_rel"],
+            goal=plus["goal"],
+            n=plus["n"],
+            merge=merge,
+        )
+    else:
+        parsed = parse_best_of_n_agent_command(text) if text else None
+        run_id = (parsed or {}).get("run_id") or (body.rel or "").strip()
+        if not run_id:
+            return {"ok": False, "error": "run_id gerekli (best-of-n-agent: bon-...)"}
+        out = execute_best_of_n_agents(root, run_id, merge=merge)
+    out["version"] = FAZ65_VERSION
     return out
 
 

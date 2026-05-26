@@ -477,6 +477,13 @@ def is_programlama_reserved_command(message: str) -> bool:
     except Exception:
         pass
     try:
+        from ilim_assistant.motorlar.programlama_faz65 import wants_best_of_n_agent
+
+        if wants_best_of_n_agent(message):
+            return True
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_faz64 import wants_best_of_n
 
         if wants_best_of_n(message):
@@ -874,6 +881,14 @@ def maybe_programlama_instant_reply(
         faz63_hit = maybe_instant_faz63(message, workspace_root)
         if faz63_hit:
             parts.append(faz63_hit)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz65 import maybe_instant_faz65
+
+        faz65_hit = maybe_instant_faz65(message, workspace_root)
+        if faz65_hit:
+            parts.append(faz65_hit)
     except Exception:
         pass
     try:
@@ -1696,6 +1711,12 @@ def build_motor_context(
         from ilim_assistant.motorlar.programlama_faz64 import faz64_directive
 
         base += faz64_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz65 import faz65_directive
+
+        base += faz65_directive() + "\n"
     except Exception:
         pass
     try:

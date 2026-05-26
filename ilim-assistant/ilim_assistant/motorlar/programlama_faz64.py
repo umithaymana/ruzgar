@@ -328,7 +328,7 @@ def format_best_of_n_report(manifest: dict[str, Any]) -> str:
             f"**Kazanan (pytest):** `{manifest.get('winner_id')}` → "
             f"`{manifest.get('winner_scope_rel')}`",
             "",
-            "Sonraki: kazanan kopyada `görev:` ile düzeltme veya Faz 65 tam paralel LLM.",
+            "Sonraki: `best-of-n-agent: <run_id>` veya `best-of-n+: 2 proje hedef` (Faz 65 ajan).",
             f"({FAZ64_VERSION})",
         ]
     )

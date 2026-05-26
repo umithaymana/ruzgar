@@ -99,7 +99,7 @@
 - [x] `best-of-n: N proje-adi hedef` — N aday (kopya veya git worktree)
 - [x] Her adayda pytest skoru · kazanan seçimi
 - [x] API: `POST /api/programlama/best-of-n/plan` · `GET .../runs`
-- [ ] Faz 65: her adayda tam LLM ajan turu (paralel)
+- [x] Faz 65: her adayda tam LLM ajan turu (`best-of-n+`, `best-of-n-agent:`) — v76
 
 **Sırada (Dalga G devam):**
 
@@ -135,4 +135,4 @@ python ilim-assistant/scripts/programlama_smoke.py --ci
 
 ---
 
-*Build: `faz64-v75` · Best-of-N v1 tamam. Sonraki: Faz 65 LLM/aday veya LSP rename.*
+*Build: `faz65-v76` · Best-of-N ajan tamam. Sonraki: Faz 66 LSP rename veya serbest shell.*

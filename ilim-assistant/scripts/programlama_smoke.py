@@ -1597,7 +1597,7 @@ def run_parity(*, live_base: str | None = None) -> int:
         _fail("faz60")
         fails += 1
     exp = expected_build_rev()
-    if "faz64-v75" in exp or exp.endswith("-v75"):
+    if "faz65-v76" in exp or exp.endswith("-v76"):
         _ok(f"faz60 expected rev={exp[:40]}")
     else:
         _fail("faz60 expected rev", exp)
@@ -1765,6 +1765,84 @@ def run_parity(*, live_base: str | None = None) -> int:
         _fail("faz64 list")
         fails += 1
     _ok(f"faz64 {FAZ64_VERSION}")
+
+    print("=== Faz 65 — best-of-n ajan ===")
+    from ilim_assistant.motorlar.programlama_faz65 import (
+        FAZ65_VERSION,
+        candidate_workspace_root,
+        enrich_health_build as enrich65,
+        execute_best_of_n_agents,
+        faz65_enabled,
+        parse_best_of_n_agent_command,
+        parse_best_of_n_plus_command,
+    )
+
+    if faz65_enabled():
+        _ok("faz65 on")
+    else:
+        _fail("faz65")
+        fails += 1
+    h65 = enrich65({"rev": exp})
+    if h65.get("faz65"):
+        _ok("faz65 health enrich")
+    else:
+        _fail("faz65 health")
+        fails += 1
+    p65 = parse_best_of_n_plus_command(
+        "best-of-n+: 2 smoke-cursor-ref-40763 health service version pytest"
+    )
+    if p65 and p65.get("n") == 2:
+        _ok("faz65 parse plus")
+    else:
+        _fail("faz65 parse plus", str(p65))
+        fails += 1
+    pa = parse_best_of_n_agent_command("best-of-n-agent: bon-test")
+    if pa and pa.get("run_id") == "bon-test":
+        _ok("faz65 parse agent")
+    else:
+        _fail("faz65 parse agent")
+        fails += 1
+    if src.is_dir():
+        man2 = plan_best_of_n_run(
+            WORKSPACE,
+            scope_rel=scope_test,
+            goal="faz65 smoke",
+            n=2,
+        )
+        if man2.get("ok"):
+            try:
+                from ilim_assistant.motorlar.programlama_motoru import repo_root
+
+                rr = repo_root(WORKSPACE)
+                c0 = (man2.get("candidates") or [{}])[0]
+                if rr and c0:
+                    cw = candidate_workspace_root(rr, man2, c0)
+                    if cw and (cw / "projects").is_dir():
+                        _ok(f"faz65 cand workspace={cw.name}")
+                    else:
+                        _ok("faz65 cand workspace (fallback)")
+            except Exception as exc:
+                _fail("faz65 workspace", str(exc)[:60])
+                fails += 1
+            if os.environ.get("RUZGAR_FAZ65_SMOKE_AGENT", "").strip() in (
+                "1",
+                "true",
+                "yes",
+            ):
+                ag = execute_best_of_n_agents(WORKSPACE, str(man2.get("run_id")))
+                if ag.get("ok"):
+                    _ok("faz65 agent run")
+                else:
+                    _fail("faz65 agent", str(ag)[:80])
+                    fails += 1
+            else:
+                _ok("faz65 agent run skipped (RUZGAR_FAZ65_SMOKE_AGENT=1)")
+        else:
+            _fail("faz65 plan", str(man2)[:60])
+            fails += 1
+    else:
+        _ok("faz65 plan skipped (no smoke-ref project)")
+    _ok(f"faz65 {FAZ65_VERSION}")
 
     if should_run_proje_uret_pipeline(
         "proje üret: fastapi_api smoke-faz47-run pytest",
