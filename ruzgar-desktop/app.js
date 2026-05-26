@@ -71,6 +71,8 @@ function resolveRuzgarApiRoot() {
 const API = resolveRuzgarApiRoot();
 console.info("[RÜZGAR Connection Bridge] API kök:", API);
 const RUZGAR_CHAT_FULL_TIMEOUT_MS = 180000;
+/** Otonom görev (görev: / kod modu) — çok tur + verify; 180 sn yetmez */
+const RUZGAR_CHAT_PROGRAMMING_AGENT_TIMEOUT_MS = 900000;
 const RUZGAR_DISABLE_STREAMING = true;
 
 /** Konuşma hattı teşhisi — varsayılan kapalı; yalnızca konsol (?debug=1). Sohbette mavi JSON paneli yok. */
@@ -8056,10 +8058,17 @@ async function streamChat(userText) {
     /yanl[ıi]ş\s*cevap|yanlis\s*cevap|cevab[ıi]n\s+şu\s+olmalı|cevabin\s+su\s+olmalı|doğru\s+cevap|dogru\s+cevap/i.test(
       String(userText || ""),
     );
+  const isProgramlamaAgentTask =
+    chatMode === "programlama" &&
+    (codingMode ||
+      /^\s*(?:görev|gorev)\s*:/im.test(String(userText || "")) ||
+      /^\s*(?:görev|gorev)\s+[\w.\-]+\s+/im.test(String(userText || "")));
   const chatFullTimeoutMs = casualShortCmd
     ? 12000
     : egitimCmd
       ? 15000
+    : isProgramlamaAgentTask
+      ? RUZGAR_CHAT_PROGRAMMING_AGENT_TIMEOUT_MS
     : nebulaKitapCmd
       ? Math.max(RUZGAR_CHAT_FULL_TIMEOUT_MS, 45000)
       : tarihSoruCmd
@@ -8198,7 +8207,7 @@ async function streamChat(userText) {
       if (e && e.name === "AbortError") {
         throw new Error(
           fullTimedOut
-            ? "Yanıt zaman aşımı (180 sn) — sunucu yavaş veya Ollama/Gemini bekliyor; Ruzgar.ps1 -ForceRestart deneyin."
+            ? `Yanıt zaman aşımı (${Math.round(chatFullTimeoutMs / 1000)} sn) — otonom görevde sunucu hâlâ çalışıyor olabilir; Ruzgar_YenidenBaslat.bat veya biraz bekleyip tekrar deneyin.`
             : "Yanıt kesildi — istek iptal edildi."
         );
       }
