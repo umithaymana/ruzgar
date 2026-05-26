@@ -3062,6 +3062,88 @@ def run_parity(*, live_base: str | None = None) -> int:
         fails += 1
     if FAZ25_VERSION.startswith("programlama-faz25"):
         _ok("faz25 version")
+
+    print("=== Dalga H — Programlama Faz 78-83 ===")
+    from ilim_assistant.motorlar.programlama_faz78 import (
+        FAZ78_VERSION,
+        core_write_allowed,
+        faz78_enabled,
+        wants_core_scope,
+    )
+    from ilim_assistant.motorlar.programlama_faz79 import (
+        FAZ79_VERSION,
+        build_handoff_packet_v3,
+        faz79_enabled,
+    )
+    from ilim_assistant.motorlar.programlama_faz80 import (
+        FAZ80_VERSION,
+        effective_agent_limits,
+        faz80_enabled,
+        wants_mega_refactor,
+    )
+    from ilim_assistant.motorlar.programlama_faz81 import (
+        FAZ81_VERSION,
+        extract_deterministic_ops,
+        faz81_enabled,
+    )
+    from ilim_assistant.motorlar.programlama_faz82 import (
+        FAZ82_VERSION,
+        build_weakness_report,
+        faz82_enabled,
+    )
+    from ilim_assistant.motorlar.programlama_faz83 import (
+        FAZ83_VERSION,
+        build_pr_plan,
+        faz83_enabled,
+        wants_pr_prepare,
+    )
+
+    if faz78_enabled():
+        _ok("faz78 on")
+    else:
+        _fail("faz78")
+        fails += 1
+    if wants_core_scope("çekirdek: desktop_server düzelt"):
+        ok_c, _ = core_write_allowed("ilim-assistant/desktop_server.py")
+        if ok_c:
+            _ok("faz78 core path allowed")
+        else:
+            _fail("faz78 core path")
+            fails += 1
+    ho3 = build_handoff_packet_v3("site yap test", WORKSPACE)
+    if ho3.get("ok") and ho3.get("handoff_v3"):
+        _ok("faz79 handoff v3")
+    else:
+        _fail("faz79 handoff v3")
+        fails += 1
+    if wants_mega_refactor("mega refactor 10+ dosya"):
+        lim = effective_agent_limits("mega refactor")
+        if lim.get("mega") and lim.get("max_turns", 0) >= 30:
+            _ok("faz80 mega limits")
+        else:
+            _fail("faz80 mega", str(lim))
+            fails += 1
+    ops = extract_deterministic_ops("@@read projects/foo/main.py")
+    if faz81_enabled() and ops:
+        _ok("faz81 extract ops")
+    else:
+        _fail("faz81 ops")
+        fails += 1
+    wr = build_weakness_report(WORKSPACE)
+    if wr.get("ok") and "score" in wr:
+        _ok(f"faz82 weakness score={wr.get('score')}")
+    else:
+        _fail("faz82 weakness")
+        fails += 1
+    if wants_pr_prepare("pr hazırla: test"):
+        pr = build_pr_plan(WORKSPACE, title_hint="test")
+        if pr.get("ok") and pr.get("steps"):
+            _ok("faz83 pr plan")
+        else:
+            _fail("faz83 pr")
+            fails += 1
+    _ok(f"dalga-h {FAZ78_VERSION} … {FAZ83_VERSION}")
+
     return fails
 
 

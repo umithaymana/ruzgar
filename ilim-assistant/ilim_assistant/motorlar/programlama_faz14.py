@@ -842,6 +842,19 @@ def iter_code_agent_turn_events(
 
     workspace = req.workspace_root
     try:
+        from ilim_assistant.motorlar.programlama_faz80 import set_mega_context
+
+        if set_mega_context(message, task.goal):
+            yield {
+                "type": "status",
+                "text": (
+                    f"Mega refactor modu (Faz 80) — `{task.scope_rel}` "
+                    "(30 tur / 16 dosya-tur)…"
+                ),
+            }
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_faz39 import code_agent_max_turns_effective
 
         max_turns = code_agent_max_turns_effective()
@@ -1316,6 +1329,32 @@ def iter_code_agent_turn_events(
                         run_structured_recovery_turn,
                     )
 
+                    try:
+                        from ilim_assistant.motorlar.programlama_faz81 import (
+                            faz81_enabled,
+                            rescue_text_only_turn,
+                        )
+
+                        if faz81_enabled() and should_force_structured_recovery(
+                            llm_body, _tool_res
+                        ):
+                            _rb, _rr, _rblk = rescue_text_only_turn(
+                                llm_body,
+                                workspace,
+                                message=message,
+                                scope_rel=task.scope_rel,
+                            )
+                            if _rr:
+                                _tool_res = list(_tool_res) + list(_rr)
+                                llm_body = _rb
+                                if _rblk:
+                                    round_body = (round_body or llm_body).rstrip() + "\n\n" + _rblk
+                                yield {
+                                    "type": "status",
+                                    "text": f"Tur {turn}: Faz 81 @@ blok kurtarma.",
+                                }
+                    except Exception:
+                        pass
                     if should_force_structured_recovery(llm_body, _tool_res):
                         _rec_text, _rec_res, _rec_block = run_structured_recovery_turn(
                             agent_system=agent_system,

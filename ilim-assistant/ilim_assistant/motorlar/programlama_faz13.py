@@ -95,6 +95,16 @@ def resolve_scope_rel(
     scope = _r10(workspace_root, active_file=active_file)
     if scope:
         return scope
+    try:
+        from ilim_assistant.motorlar.programlama_faz78 import (
+            wants_core_scope,
+            resolve_core_scope_rel,
+        )
+
+        if wants_core_scope(message):
+            return resolve_core_scope_rel(message)
+    except Exception:
+        pass
     m = re.search(rf"{re.escape(_projects_base())}/[\w.\-]+", message or "", re.I)
     if m:
         return "/".join(_norm_rel(m.group(0)).split("/")[:2])

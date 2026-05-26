@@ -36,7 +36,17 @@ def mandate_followup_enabled() -> bool:
 
 
 def code_agent_max_turns_effective() -> int:
-    """Faz 56 → 20 tur; Faz 41 → 15 tur; Faz 39 → 12 tur (env ile override)."""
+    """Faz 80 mega → 30 tur; Faz 56 → 20 tur; Faz 41 → 15 tur; Faz 39 → 12 tur."""
+    try:
+        from ilim_assistant.motorlar.programlama_faz80 import (
+            agent_max_turns_mega,
+            mega_context_active,
+        )
+
+        if mega_context_active():
+            return agent_max_turns_mega()
+    except Exception:
+        pass
     try:
         from ilim_assistant.motorlar.programlama_faz56 import (
             long_task_v2_enabled,

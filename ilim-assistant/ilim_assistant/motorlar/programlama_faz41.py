@@ -31,6 +31,16 @@ def long_task_enabled() -> bool:
 
 def long_task_budget_sec() -> float:
     try:
+        from ilim_assistant.motorlar.programlama_faz80 import (
+            agent_budget_sec_mega,
+            mega_context_active,
+        )
+
+        if mega_context_active():
+            return agent_budget_sec_mega()
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_faz56 import (
             long_task_v2_enabled,
             agent_budget_sec_v2,

@@ -853,6 +853,34 @@ def maybe_programlama_instant_reply(
     except Exception:
         pass
     try:
+        os.environ["RUZGAR_LAST_PROG_MSG"] = (message or "")[:4000]
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz78 import maybe_instant_faz78
+
+        faz78_hit = maybe_instant_faz78(message)
+        if faz78_hit:
+            parts.append(faz78_hit)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz82 import maybe_instant_faz82
+
+        faz82_hit = maybe_instant_faz82(message, workspace_root)
+        if faz82_hit:
+            parts.append(faz82_hit)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz83 import maybe_instant_faz83
+
+        faz83_hit = maybe_instant_faz83(message, workspace_root)
+        if faz83_hit:
+            parts.append(faz83_hit)
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_faz67 import maybe_instant_faz67
 
         faz67_hit = maybe_instant_faz67(
@@ -1170,7 +1198,14 @@ class ProgramlamaAraclari:
             from ilim_assistant.motorlar.programlama_faz3 import programlama_write_allowed
             from ilim_assistant.motorlar.programlama_faz4 import validate_write_content
 
-            allowed, reason = programlama_write_allowed(self._root, rel_path)
+            try:
+                from ilim_assistant.motorlar.programlama_faz78 import augment_write_policy
+
+                allowed, reason = augment_write_policy(
+                    self._root, rel_path, os.environ.get("RUZGAR_LAST_PROG_MSG", "")
+                )
+            except Exception:
+                allowed, reason = programlama_write_allowed(self._root, rel_path)
             if not allowed:
                 return WriteReport(path=rel_path, ok=False, detail=reason)
             ok_content, creason = validate_write_content(content)
@@ -1771,6 +1806,36 @@ def build_motor_context(
         from ilim_assistant.motorlar.programlama_faz70 import faz70_directive
 
         base += faz70_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz78 import (
+            core_scope_directive,
+            faz78_directive,
+        )
+
+        base += faz78_directive() + "\n"
+        cs = core_scope_directive(prompt)
+        if cs:
+            base += cs + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz80 import (
+            faz80_directive,
+            mega_refactor_directive,
+        )
+
+        base += faz80_directive() + "\n"
+        mr = mega_refactor_directive(prompt)
+        if mr:
+            base += mr + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz81 import faz81_directive
+
+        base += faz81_directive() + "\n"
     except Exception:
         pass
     try:

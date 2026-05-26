@@ -114,6 +114,19 @@
 - [x] API: `POST /api/programlama/shell/run`
 - [x] Kapat: `RUZGAR_FAZ67=0`
 
+### Dalga H — Zayıf nokta kapatma (Faz 78–83) ← **UYGULANDI (v87)**
+
+| Faz | Konu |
+|-----|------|
+| 78 | Çekirdek kapsam — `çekirdek:` · ilim-assistant / ruzgar-desktop yazım |
+| 79 | Handoff v3 — git + hub + başarısız görevler |
+| 80 | Mega refactor — 30 tur · 16 dosya/tur · 40 dk |
+| 81 | Deterministik @@read/@@write kurtarma (Groq'suz) |
+| 82 | Zayıflık raporu · `/api/programlama/weakness-report` |
+| 83 | `pr hazırla:` — branch + commit + gh önerisi |
+
+Detay: `ilim-assistant/docs/PROGRAMMING_DALGA_H.md`
+
 **Sırada (Dalga G devam):**
 
 - Mobil native (Expo dışı store build)

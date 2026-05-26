@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any
 
 FAZ60_VERSION = "programlama-faz60-v1-2026-05-26"
-_DEFAULT_EXPECTED_REV = "2026-05-26-ruzgar-faz77-v86"
+_DEFAULT_EXPECTED_REV = "2026-05-26-ruzgar-faz78-v87"
 _FAZ60_PATCH = "v71-hotfix1"
 _LAST_FULL_PARITY_FILE = "last_parity_full_run.json"
 _WEEKLY_KPI_PREFIX = "weekly_kpi_"
@@ -134,6 +134,19 @@ def enrich_health_build(build: dict[str, Any] | None) -> dict[str, Any]:
         out = _e70(out)
     except Exception:
         pass
+    for _mod, _fn in (
+        ("programlama_faz78", "enrich_health_build"),
+        ("programlama_faz79", "enrich_health_build"),
+        ("programlama_faz80", "enrich_health_build"),
+        ("programlama_faz81", "enrich_health_build"),
+        ("programlama_faz82", "enrich_health_build"),
+        ("programlama_faz83", "enrich_health_build"),
+    ):
+        try:
+            m = __import__(f"ilim_assistant.motorlar.{_mod}", fromlist=[_fn])
+            out = getattr(m, _fn)(out)
+        except Exception:
+            pass
     try:
         from ilim_assistant.motorlar.video_faz71 import enrich_health_build as _ev71
 

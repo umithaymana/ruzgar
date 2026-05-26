@@ -751,7 +751,7 @@ def _health_build_block() -> dict:
     import os as _os
 
     base = {
-        "rev": "2026-05-26-ruzgar-faz77-v86",
+        "rev": "2026-05-26-ruzgar-faz78-v87",
         "nebula_kitap": True,
         "fast_paths": _os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
         "memory_first": True,
@@ -1601,6 +1601,25 @@ def api_programlama_agent_compliance(workspace_root: str | None = None):
         "report": format_compliance_report(root) if data.get("ok") else "",
         "data": rep,
         "version": FAZ37_VERSION,
+    }
+
+
+@app.get("/api/programlama/weakness-report")
+def api_programlama_weakness_report(workspace_root: str | None = None):
+    """Faz 82 — programlama zayıflık raporu (E1/E3/E6/E7)."""
+    from ilim_assistant.motorlar.programlama_faz82 import (
+        FAZ82_VERSION,
+        build_weakness_report,
+        format_weakness_report,
+    )
+
+    root = (workspace_root or "").strip() or None
+    report = build_weakness_report(root)
+    return {
+        "ok": True,
+        "report": report,
+        "text": format_weakness_report(report),
+        "version": FAZ82_VERSION,
     }
 
 
@@ -3430,12 +3449,14 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         except Exception:
             _intent59 = {}
         try:
-            from ilim_assistant.motorlar.programlama_faz55 import build_handoff_packet
+            from ilim_assistant.motorlar.programlama_faz79 import build_handoff_packet_v3
 
-            _handoff = build_handoff_packet(
+            _hub_meta = route_meta.get("hub_delegate") or {}
+            _handoff = build_handoff_packet_v3(
                 req.message or "",
                 req.workspace_root,
                 active_file=getattr(req, "programlama_active_file", None),
+                hub_meta=_hub_meta if isinstance(_hub_meta, dict) else None,
             )
             if _handoff.get("ok"):
                 route_meta["handoff"] = {
@@ -4104,9 +4125,9 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
     msg, hits, user_payload, system, model, og_direct = prep
     if _delegated_from_genel and mode_norm == "programlama":
         try:
-            from ilim_assistant.motorlar.programlama_faz55 import build_handoff_packet
+            from ilim_assistant.motorlar.programlama_faz79 import build_handoff_packet_v3
 
-            ho = build_handoff_packet(
+            ho = build_handoff_packet_v3(
                 msg,
                 req.workspace_root,
                 active_file=getattr(req, "programlama_active_file", None),
@@ -4115,7 +4136,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 msg = ho["packet_text"] + "\n\n[Kullanıcı isteği]\n" + msg
                 yield {
                     "type": "status",
-                    "text": "Ana Motor → Programlama: handoff paketi eklendi (Faz 55).",
+                    "text": "Ana Motor → Programlama: handoff v3 paketi (Faz 79).",
                 }
         except Exception:
             pass

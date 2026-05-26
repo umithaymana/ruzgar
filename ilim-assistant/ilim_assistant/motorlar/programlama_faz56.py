@@ -78,6 +78,16 @@ def agent_budget_sec_v2() -> float:
 
 def max_files_per_turn() -> int:
     try:
+        from ilim_assistant.motorlar.programlama_faz80 import (
+            max_files_per_turn_mega,
+            mega_context_active,
+        )
+
+        if mega_context_active():
+            return max_files_per_turn_mega()
+    except Exception:
+        pass
+    try:
         return max(1, min(int(os.environ.get("RUZGAR_FAZ56_MAX_FILES_PER_TURN", "8")), 16))
     except ValueError:
         return _MAX_FILES_PER_TURN_DEFAULT
