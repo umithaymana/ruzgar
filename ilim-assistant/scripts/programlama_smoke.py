@@ -624,8 +624,10 @@ def run_live(base: str) -> int:
         h = get("/api/health")
         rev = str((h.get("build") or {}).get("rev") or "")
         if (
-            "faz60" in rev
+            "faz61" in rev
+            or "faz60" in rev
             or "faz59" in rev
+            or rev.endswith("-v72")
             or rev.endswith("-v71")
             or rev.endswith("-v70")
         ):
@@ -1287,6 +1289,48 @@ def run_parity(*, live_base: str | None = None) -> int:
     else:
         _fail("faz55 target")
         fails += 1
+    from ilim_assistant.motorlar.programlama_faz55 import (
+        build_retry_nudge,
+        faz55b_bonus_turn_count,
+        faz55b_enabled,
+        inject_faz55b_turn_prefix,
+        is_faz55b_bonus_turn,
+    )
+
+    if faz55b_enabled() and faz55b_bonus_turn_count() == 1:
+        _ok("faz55b on (+1 bonus tur)")
+    else:
+        _fail("faz55b")
+        fails += 1
+    nudge = build_retry_nudge(
+        WORKSPACE,
+        scope_rel="projects/smoke-faz55",
+        goal="pytest",
+        last_detail="verify fail",
+        for_bonus_turn=True,
+    )
+    if nudge and "55b" in nudge:
+        _ok("faz55b retry nudge")
+    else:
+        _fail("faz55b nudge")
+        fails += 1
+    if is_faz55b_bonus_turn(6, 5):
+        _ok("faz55b bonus turn detect")
+    else:
+        _fail("faz55b bonus turn")
+        fails += 1
+    inj = inject_faz55b_turn_prefix(
+        WORKSPACE,
+        scope_rel="projects/smoke-faz55",
+        goal="pytest",
+        turn_user="[tur]",
+        last_fail_snippet="x",
+    )
+    if inj and "55b" in inj:
+        _ok("faz55b inject prefix")
+    else:
+        _fail("faz55b inject")
+        fails += 1
     _ok(f"faz55 {FAZ55_VERSION}")
 
     print("=== Faz 56 — uzun gorev v2 ===")
@@ -1549,7 +1593,7 @@ def run_parity(*, live_base: str | None = None) -> int:
         _fail("faz60")
         fails += 1
     exp = expected_build_rev()
-    if "faz60-v71" in exp or exp.endswith("-v71"):
+    if "faz61-v72" in exp or exp.endswith("-v72"):
         _ok(f"faz60 expected rev={exp[:40]}")
     else:
         _fail("faz60 expected rev", exp)
@@ -1578,6 +1622,26 @@ def run_parity(*, live_base: str | None = None) -> int:
         _fail("faz60 parity gate")
         fails += 1
     _ok(f"faz60 {FAZ60_VERSION}")
+
+    print("=== Faz 61 — otomatik retry (55b) ===")
+    from ilim_assistant.motorlar.programlama_faz61 import (
+        FAZ61_VERSION,
+        enrich_health_build as enrich61,
+        faz61_enabled,
+    )
+
+    if faz61_enabled():
+        _ok("faz61 on")
+    else:
+        _fail("faz61")
+        fails += 1
+    h61 = enrich61({"rev": exp})
+    if h61.get("faz55b_auto_retry"):
+        _ok("faz61 health enrich")
+    else:
+        _fail("faz61 health")
+        fails += 1
+    _ok(f"faz61 {FAZ61_VERSION}")
 
     if should_run_proje_uret_pipeline(
         "proje üret: fastapi_api smoke-faz47-run pytest",

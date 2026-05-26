@@ -847,6 +847,13 @@ def iter_code_agent_turn_events(
         max_turns = code_agent_max_turns_effective()
     except Exception:
         max_turns = code_agent_max_turns()
+    try:
+        from ilim_assistant.motorlar.programlama_faz55 import faz55b_bonus_turn_count
+
+        _faz55b_bonus = faz55b_bonus_turn_count()
+    except Exception:
+        _faz55b_bonus = 0
+    max_turns_total = int(max_turns) + int(_faz55b_bonus)
     t0 = time.perf_counter()
     _budget_tracker = None
     try:
@@ -889,7 +896,9 @@ def iter_code_agent_turn_events(
             "scope_rel": task.scope_rel,
             "goal": task.goal,
             "turn": 0,
-            "max_turns": max_turns,
+            "max_turns": max_turns_total,
+            "max_turns_base": max_turns,
+            "faz55b_bonus": _faz55b_bonus,
             "stop_requested": False,
             "started_at": time.time(),
             "touched_files": [],
@@ -909,17 +918,20 @@ def iter_code_agent_turn_events(
         step_tracker = create_tracker(
             scope_rel=task.scope_rel,
             goal=task.goal,
-            max_turns=max_turns,
+            max_turns=max_turns_total,
             budget_sec=float(budget_hint),
         )
     except Exception:
         step_tracker = None
 
+    _bonus_hint = (
+        f" (+{_faz55b_bonus} Faz 55b retry)" if _faz55b_bonus else ""
+    )
     yield {
         "type": "status",
         "text": (
             f"Otonom görev başladı — `{task.scope_rel}` "
-            f"(max {max_turns} tur, {budget_hint} sn)…"
+            f"(max {max_turns_total} tur{_bonus_hint}, {budget_hint} sn)…"
         ),
     }
     try:
@@ -972,7 +984,8 @@ def iter_code_agent_turn_events(
             "phase": "started",
             "scope_rel": task.scope_rel,
             "goal": task.goal,
-            "max_turns": max_turns,
+            "max_turns": max_turns_total,
+            "faz55b_bonus": _faz55b_bonus,
         },
     }
     if delegated_from_genel:
@@ -1038,7 +1051,7 @@ def iter_code_agent_turn_events(
     if step_tracker is not None:
         yield _emit_agent_step(step_tracker.on_started(brain_chain=brain_chain))
 
-    for turn in range(1, max_turns + 1):
+    for turn in range(1, max_turns_total + 1):
         if is_stop_requested(workspace):
             yield {"type": "status", "text": "Görev durduruldu (Ümit abi isteği)."}
             break
@@ -1069,7 +1082,13 @@ def iter_code_agent_turn_events(
             },
         )
 
-        _tur_status = f"Görev tur {turn}/{max_turns} — plan / patch…"
+        _is_faz55b = turn > max_turns
+        _tur_status = f"Görev tur {turn}/{max_turns_total} — plan / patch…"
+        if _is_faz55b:
+            _tur_status = (
+                f"Faz 55b — otomatik tekrar tur {turn}/{max_turns_total} "
+                "(önceki verify/yazım kırmızı)…"
+            )
         if _budget_tracker is not None:
             _tur_status += _budget_tracker.status_suffix()
         yield {"type": "status", "text": _tur_status}
@@ -1080,9 +1099,22 @@ def iter_code_agent_turn_events(
         turn_user = build_agent_turn_user_message(
             task,
             turn=turn,
-            max_turns=max_turns,
+            max_turns=max_turns_total,
             failure_snippet=last_fail_snippet,
         )
+        if _is_faz55b:
+            try:
+                from ilim_assistant.motorlar.programlama_faz55 import inject_faz55b_turn_prefix
+
+                turn_user = inject_faz55b_turn_prefix(
+                    workspace,
+                    scope_rel=task.scope_rel,
+                    goal=task.goal,
+                    turn_user=turn_user,
+                    last_fail_snippet=last_fail_snippet,
+                )
+            except Exception:
+                pass
         try:
             from ilim_assistant.motorlar.programlama_faz34 import augment_turn_user_message
 
@@ -1558,7 +1590,7 @@ def iter_code_agent_turn_events(
                     abort, reason = should_abort_loop_relaxed(
                         loop_state,
                         last_tool_results=_tool_res,
-                        max_turns=max_turns,
+                        max_turns=max_turns_total,
                     )
                 except Exception:
                     abort, reason = should_abort_loop(loop_state)
@@ -1582,7 +1614,7 @@ def iter_code_agent_turn_events(
 
         tr = format_turn_report(
             turn=turn,
-            max_turns=max_turns,
+            max_turns=max_turns_total,
             summary=summ,
             verify=verify,
             elapsed_sec=elapsed,
@@ -1648,7 +1680,7 @@ def iter_code_agent_turn_events(
                 "text": "Tur atlandı — model @@write yazmadı; tekrar deneniyor…",
             }
 
-        if turn >= max_turns:
+        if turn >= max_turns_total:
             break
 
         last_fail_snippet = (verify.output if verify else "") or "Doğrulama başarısız."
@@ -1656,7 +1688,7 @@ def iter_code_agent_turn_events(
         fail_msg = build_agent_turn_user_message(
             task,
             turn=turn + 1,
-            max_turns=max_turns,
+            max_turns=max_turns_total,
             failure_snippet=snippet,
         )
         try:
@@ -1769,6 +1801,7 @@ def iter_code_agent_turn_events(
 
         st = load_agent_state(workspace)
         writes_total = int(st.get("total_writes") or 0)
+        _used_faz55b = bool(_faz55b_bonus and len(turn_reports) > max_turns)
         record_task_outcome(
             workspace,
             scope_rel=task.scope_rel,
@@ -1780,6 +1813,7 @@ def iter_code_agent_turn_events(
             elapsed_sec=total_sec,
             source="code_agent",
             detail=turn_reports[-1][:200] if turn_reports else "",
+            bonus_retry=_used_faz55b,
         )
     except Exception:
         pass

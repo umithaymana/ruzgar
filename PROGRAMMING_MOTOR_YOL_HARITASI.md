@@ -1,6 +1,6 @@
 # Rüzgar — Yol haritası (Faz 55+)
 
-> **Temel:** Faz 49–60 · build `faz60-v71`  
+> **Temel:** Faz 49–61 · build `faz61-v72`  
 > **Hedef:** Offline KPI değil — **gerçek görevde** Cursor’a yaklaşmak  
 > **Ölçü:** Görev başarı oranı **≥80%** · parity **full 8/8** · kullanıcı memnuniyeti **≥4.5/5**
 
@@ -27,7 +27,7 @@
 - [x] `.ruzgar/task_outcomes.json` — her görev sonucu (başarı, tur, pytest, süre)
 - [x] Başarı oranı 30 gün · Atölye kartı + API (`/api/programlama/task-stats`)
 - [x] Ana Motor → Programlama **handoff paketi** (scope, hedef, sembol özeti)
-- [ ] Başarısız görevde **otomatik retry turu** (Faz 55b — sırada)
+- [x] Başarısız görevde **otomatik retry turu** (Faz 55b / Faz 61 — v72)
 
 **Başarı:** Son 20 görevde **≥70%** verify yeşil (ölçülür).
 
@@ -75,6 +75,14 @@
 
 ## Dalga G — İleri (sonraya)
 
+### Faz 61 — Otomatik retry (Faz 55b) ← **UYGULANDI (v72)**
+
+- [x] Normal turlar bittikten sonra verify/yazım kırmızıysa **+1 bonus tur**
+- [x] `inject_faz55b_turn_prefix` + KPI kaydında `bonus_retry`
+- [x] Kapat: `RUZGAR_FAZ55B=0`
+
+**Sırada (Dalga G devam):**
+
 - Paralel alt ajan (Best-of-N worktree)
 - Tam repo sembol rename (LSP tam)
 - Özgür shell (güvenlik politikası onayı ile)
@@ -108,4 +116,4 @@ python ilim-assistant/scripts/programlama_smoke.py --ci
 
 ---
 
-*Build: `faz60-v71` · Dalga E–F (Faz 55–60) tamamlandı. Sonraki: Dalga G / canlı ölçüm.*
+*Build: `faz61-v72` · Dalga E–F + Faz 55b/61 tamam. Sonraki: Dalga G / canlı ölçüm.*

@@ -13,7 +13,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-FAZ55_VERSION = "programlama-faz55-v1-2026-05-26"
+FAZ55_VERSION = "programlama-faz55-v2-2026-05-26-55b"
 _OUTCOMES_FILE = "task_outcomes.json"
 _TARGET_SUCCESS_RATE = 0.70
 _MAX_HISTORY = 200
@@ -29,6 +29,25 @@ def _enabled() -> bool:
 
 def faz55_enabled() -> bool:
     return _enabled()
+
+
+def faz55b_enabled() -> bool:
+    """Başarısız görev sonrası +1 otomatik bonus tur (Faz 55b / Faz 61)."""
+    if not _enabled():
+        return False
+    return os.environ.get("RUZGAR_FAZ55B", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
+def faz55b_bonus_turn_count() -> int:
+    return 1 if faz55b_enabled() else 0
+
+
+def is_faz55b_bonus_turn(turn: int, base_max_turns: int) -> bool:
+    return faz55b_enabled() and int(turn) > int(base_max_turns)
 
 
 def target_success_rate() -> float:
@@ -78,6 +97,7 @@ def record_task_outcome(
     elapsed_sec: float = 0.0,
     source: str = "code_agent",
     detail: str = "",
+    bonus_retry: bool = False,
 ) -> dict[str, Any]:
     """Görev sonunu kaydet."""
     if not _enabled():
@@ -98,6 +118,7 @@ def record_task_outcome(
         "elapsed_sec": round(float(elapsed_sec), 2),
         "source": source,
         "detail": (detail or "")[:300],
+        "bonus_retry": bool(bonus_retry),
     }
     outcomes.append(entry)
     store["outcomes"] = outcomes[-_MAX_HISTORY:]
@@ -173,24 +194,62 @@ def build_retry_nudge(
     scope_rel: str,
     goal: str,
     last_detail: str = "",
+    for_bonus_turn: bool = False,
 ) -> str | None:
     """Başarısız görev sonrası bir tur daha deneme mesajı."""
     if not _enabled():
         return None
-    stats = compute_task_stats(workspace_root, window_days=7)
-    recent_fail = [
-        r
-        for r in (stats.get("recent") or [])
-        if not r.get("success") and r.get("scope_rel") == scope_rel
-    ]
-    if len(recent_fail) > 2:
-        return None
+    if not for_bonus_turn:
+        stats = compute_task_stats(workspace_root, window_days=7)
+        recent_fail = [
+            r
+            for r in (stats.get("recent") or [])
+            if not r.get("success") and r.get("scope_rel") == scope_rel
+        ]
+        if len(recent_fail) > 2:
+            return None
+    label = "FAZ 55b — OTOMATİK TEKRAR" if for_bonus_turn else "FAZ 55 — TEKRAR DENE"
     return (
-        f"[FAZ 55 — TEKRAR DENE]\n"
+        f"[{label}]\n"
         f"Proje: `{scope_rel}`\n"
         f"Önceki tur başarısız: {(last_detail or 'verify/yazım eksik')[:200]}\n"
         "Bu turda mutlaka: read → write (en az 1 dosya) → verify (pytest).\n"
         f"Hedef: {(goal or '').strip()}\n"
+    )
+
+
+def inject_faz55b_turn_prefix(
+    workspace_root: str | Path | None,
+    *,
+    scope_rel: str,
+    goal: str,
+    turn_user: str,
+    last_fail_snippet: str = "",
+) -> str:
+    """Bonus tur kullanıcı mesajına Faz 55b nudge ekler."""
+    if not is_faz55b_bonus_turn_enabled():
+        return turn_user
+    nudge = build_retry_nudge(
+        workspace_root,
+        scope_rel=scope_rel,
+        goal=goal,
+        last_detail=last_fail_snippet,
+        for_bonus_turn=True,
+    )
+    if not nudge:
+        return turn_user
+    return nudge.rstrip() + "\n\n" + (turn_user or "").lstrip()
+
+
+def is_faz55b_bonus_turn_enabled() -> bool:
+    return faz55b_enabled()
+
+
+def faz55b_directive() -> str:
+    return (
+        "[FAZ 55b — Otomatik retry]\n"
+        "Normal turlar bittikten sonra verify/yazım başarısızsa +1 bonus tur (read→write→verify).\n"
+        "Kapat: RUZGAR_FAZ55B=0\n"
     )
 
 
@@ -306,9 +365,12 @@ def format_task_stats_report(stats: dict[str, Any]) -> str:
 
 
 def faz55_directive() -> str:
-    return (
+    parts = [
         "[GÖREV KPI — Faz 55]\n"
         f"Canlı görev sonuçları kaydedilir; hedef başarı ≥{int(target_success_rate()*100)}%.\n"
         "Ana Motor delege: handoff paketi (şablon + sembol özeti).\n"
-        "Kapat: RUZGAR_FAZ55=0\n"
-    )
+        "Kapat: RUZGAR_FAZ55=0\n",
+    ]
+    if faz55b_enabled():
+        parts.append(faz55b_directive())
+    return "\n".join(parts)

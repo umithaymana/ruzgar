@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any
 
 FAZ60_VERSION = "programlama-faz60-v1-2026-05-26"
-_DEFAULT_EXPECTED_REV = "2026-05-26-programlama-faz60-v71"
+_DEFAULT_EXPECTED_REV = "2026-05-26-programlama-faz61-v72"
 _FAZ60_PATCH = "v71-hotfix1"
 _LAST_FULL_PARITY_FILE = "last_parity_full_run.json"
 _WEEKLY_KPI_PREFIX = "weekly_kpi_"
@@ -74,6 +74,12 @@ def enrich_health_build(build: dict[str, Any] | None) -> dict[str, Any]:
             "Atölyede «API'yi yeniden başlat» veya Ruzgar_YenidenBaslat.bat"
         )
         out["faz60_patch"] = _FAZ60_PATCH
+    try:
+        from ilim_assistant.motorlar.programlama_faz61 import enrich_health_build as _e61
+
+        out = _e61(out)
+    except Exception:
+        pass
     return out
 
 
