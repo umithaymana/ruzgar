@@ -1,6 +1,6 @@
 # Rüzgar — Yol haritası (Faz 55+)
 
-> **Temel:** Faz 49–62 · build `faz62-v73`  
+> **Temel:** Faz 49–63 · build `faz63-v74`  
 > **Hedef:** Offline KPI değil — **gerçek görevde** Cursor’a yaklaşmak  
 > **Ölçü:** Görev başarı oranı **≥80%** · parity **full 8/8** · kullanıcı memnuniyeti **≥4.5/5**
 
@@ -87,6 +87,13 @@
 - [x] git-changes API: `pending_commit` / `commit_suggest`
 - [x] Atölye şeridi + `görev:` → Faz 7 rehberi çakışması giderildi
 
+### Faz 63 — Canlı KPI ölçümü ← **UYGULANDI (v74)**
+
+- [x] 7/30 gün başarı + önceki haftaya trend (↑↓→)
+- [x] Görev sonunda `.ruzgar/live_kpi_rollups.json` rollup
+- [x] API: `GET /api/programlama/live-kpi` · kpi-dashboard `live_kpi`
+- [x] Atölye kartı + sohbet: `canlı kpi` / `görev kpi`
+
 **Sırada (Dalga G devam):**
 
 - Paralel alt ajan (Best-of-N worktree)
@@ -122,4 +129,4 @@ python ilim-assistant/scripts/programlama_smoke.py --ci
 
 ---
 
-*Build: `faz62-v73` · Faz 62 tamam. Sonraki: canlı KPI ölçümü / Dalga G.*
+*Build: `faz63-v74` · Canlı KPI tamam. Sonraki: Dalga G (Best-of-N / LSP).*

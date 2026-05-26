@@ -124,6 +124,12 @@ def record_task_outcome(
     store["outcomes"] = outcomes[-_MAX_HISTORY:]
     try:
         _save_store(path, store)
+        try:
+            from ilim_assistant.motorlar.programlama_faz63 import record_live_kpi_rollup
+
+            record_live_kpi_rollup(workspace_root, task_entry=entry)
+        except Exception:
+            pass
         return {"ok": True, "entry": entry}
     except OSError as exc:
         return {"ok": False, "error": str(exc)[:120]}

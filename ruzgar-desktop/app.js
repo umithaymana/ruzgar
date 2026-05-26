@@ -4,7 +4,7 @@
  * Kök sonda `/api` ise kırpılır — aksi halde fetch `.../api/api/merkezi-bellek` ile 404 verir.
  */
 const RUZGAR_LOCAL_API_PORT = 8779;
-const RUZGAR_EXPECTED_BUILD_REV = "2026-05-26-programlama-faz62-v73";
+const RUZGAR_EXPECTED_BUILD_REV = "2026-05-26-programlama-faz63-v74";
 const RUZGAR_LOCAL_API_FALLBACK = `http://127.0.0.1:${RUZGAR_LOCAL_API_PORT}`;
 
 function migrateLegacyApiUrl(raw) {
@@ -1586,24 +1586,52 @@ function renderProgramlamaCompliance(compliance) {
   }
 }
 
-function renderProgramlamaTaskStats(stats) {
+function renderProgramlamaTaskStats(stats, liveKpi) {
   const wrap = document.getElementById("programlama-task-stats-card");
   const rateEl = document.getElementById("programlama-task-stats-rate");
   const countEl = document.getElementById("programlama-task-stats-count");
   const detailEl = document.getElementById("programlama-task-stats-detail");
   if (!wrap || !rateEl || !countEl) return;
-  const s = stats && typeof stats === "object" ? stats : null;
+  const live = liveKpi && typeof liveKpi === "object" ? liveKpi : null;
+  const w7 = live?.window_7d && live.window_7d.total ? live.window_7d : null;
+  const s =
+    w7 ||
+    (stats && typeof stats === "object" && stats.total ? stats : null);
   if (!s || !s.total) {
+    if (live && !live.sample_sufficient && live.window_7d) {
+      wrap.hidden = false;
+      rateEl.textContent = "—";
+      countEl.textContent = `Canlı · ${live.window_7d.total || 0} görev`;
+      if (detailEl) {
+        detailEl.textContent = live.headline || `≥${live.min_sample || 5} görev gerekli`;
+      }
+      return;
+    }
     wrap.hidden = true;
     return;
   }
   wrap.hidden = false;
   const pct = Math.round(Number(s.success_rate || 0) * 100);
-  const tgt = Math.round(Number(s.target_rate || 0.7) * 100);
-  rateEl.textContent = `${pct}%`;
-  countEl.textContent = s.meets_target ? `Hedef OK ≥${tgt}%` : `Hedef ≥${tgt}%`;
+  const tgt = Math.round(Number(s.target_rate || live?.target_rate || 0.7) * 100);
+  const trend = live?.trend;
+  const arrow =
+    trend === "up" ? " ↑" : trend === "down" ? " ↓" : trend === "flat" ? " →" : "";
+  rateEl.textContent = `${pct}%${arrow}`;
+  const meets = live?.meets_target_live ?? s.meets_target;
+  countEl.textContent = meets ? `Canlı OK ≥${tgt}%` : `Canlı ≥${tgt}%`;
   if (detailEl) {
-    detailEl.textContent = `${s.success_count}/${s.total} görev · ort ${s.avg_turns} tur`;
+    const w30 = live?.window_30d;
+    let line = `${s.success_count}/${s.total} görev (7g) · ort ${s.avg_turns || 0} tur`;
+    if (w30 && w30.total) {
+      line += ` · 30g: ${Math.round(Number(w30.success_rate || 0) * 100)}%`;
+    }
+    if (live?.headline) {
+      line = `${live.headline} · ${line}`;
+    }
+    detailEl.textContent = line;
+    detailEl.title = (live?.recent || [])
+      .map((r) => `${r.success ? "OK" : "X"} ${r.scope_rel || "?"}`)
+      .join("\n");
   }
 }
 
@@ -1667,8 +1695,8 @@ async function refreshProgramlamaKpiDashboard() {
     if (data.ok && data.compliance) {
       renderProgramlamaCompliance(data.compliance);
     }
-    if (data.task_stats) {
-      renderProgramlamaTaskStats(data.task_stats);
+    if (data.task_stats || data.live_kpi) {
+      renderProgramlamaTaskStats(data.task_stats, data.live_kpi);
     }
     const scopeEl = document.getElementById("programlama-scope");
     const scope = scopeEl && scopeEl.value ? String(scopeEl.value).trim() : "";

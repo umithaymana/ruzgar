@@ -624,8 +624,10 @@ def run_live(base: str) -> int:
         h = get("/api/health")
         rev = str((h.get("build") or {}).get("rev") or "")
         if (
-            "faz62" in rev
+            "faz63" in rev
+            or "faz62" in rev
             or "faz61" in rev
+            or rev.endswith("-v74")
             or "faz60" in rev
             or "faz59" in rev
             or rev.endswith("-v73")
@@ -1595,7 +1597,7 @@ def run_parity(*, live_base: str | None = None) -> int:
         _fail("faz60")
         fails += 1
     exp = expected_build_rev()
-    if "faz62-v73" in exp or exp.endswith("-v73"):
+    if "faz63-v74" in exp or exp.endswith("-v74"):
         _ok(f"faz60 expected rev={exp[:40]}")
     else:
         _fail("faz60 expected rev", exp)
@@ -1685,6 +1687,39 @@ def run_parity(*, live_base: str | None = None) -> int:
         _fail("faz62 footer")
         fails += 1
     _ok(f"faz62 {FAZ62_VERSION}")
+
+    print("=== Faz 63 — canli KPI ===")
+    from ilim_assistant.motorlar.programlama_faz63 import (
+        FAZ63_VERSION,
+        compute_live_kpi,
+        enrich_kpi_dashboard,
+        faz63_enabled,
+        wants_live_kpi,
+    )
+
+    if faz63_enabled():
+        _ok("faz63 on")
+    else:
+        _fail("faz63")
+        fails += 1
+    if wants_live_kpi("canli kpi goster"):
+        _ok("faz63 wants_live_kpi")
+    else:
+        _fail("wants_live_kpi")
+        fails += 1
+    live = compute_live_kpi(WORKSPACE)
+    if live.get("ok") is not None:
+        _ok(f"faz63 live headline={str(live.get('headline', ''))[:40]}")
+    else:
+        _fail("faz63 live")
+        fails += 1
+    dash = enrich_kpi_dashboard({"ok": True}, WORKSPACE)
+    if dash.get("live_kpi"):
+        _ok("faz63 enrich dashboard")
+    else:
+        _fail("faz63 dashboard")
+        fails += 1
+    _ok(f"faz63 {FAZ63_VERSION}")
 
     if should_run_proje_uret_pipeline(
         "proje üret: fastapi_api smoke-faz47-run pytest",

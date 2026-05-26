@@ -737,7 +737,7 @@ def _health_build_block() -> dict:
     import os as _os
 
     base = {
-        "rev": "2026-05-26-programlama-faz62-v73",
+        "rev": "2026-05-26-programlama-faz63-v74",
         "nebula_kitap": True,
         "fast_paths": _os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
         "memory_first": True,
@@ -1681,7 +1681,32 @@ def api_programlama_kpi_dashboard(workspace_root: str | None = None):
         payload["text_only_stats"] = compute_text_only_stats(root, window_days=7)
     except Exception:
         pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz63 import enrich_kpi_dashboard
+
+        payload = enrich_kpi_dashboard(payload, root)
+    except Exception:
+        pass
     return payload
+
+
+@app.get("/api/programlama/live-kpi")
+def api_programlama_live_kpi(workspace_root: str | None = None):
+    """Faz 63 — canlı görev KPI (7/30 gün trend)."""
+    from ilim_assistant.motorlar.programlama_faz63 import (
+        FAZ63_VERSION,
+        compute_live_kpi,
+        format_live_kpi_report,
+    )
+
+    root = (workspace_root or "").strip() or None
+    live = compute_live_kpi(root)
+    return {
+        "ok": bool(live.get("ok")),
+        "live_kpi": live,
+        "report": format_live_kpi_report(live),
+        "version": FAZ63_VERSION,
+    }
 
 
 @app.get("/api/programlama/parity-report")
