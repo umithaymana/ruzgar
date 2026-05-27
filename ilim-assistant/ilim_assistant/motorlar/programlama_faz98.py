@@ -43,7 +43,7 @@ _REJECT_RE = re.compile(
 _LIST_RE = re.compile(r"^\s*(?:işlem|islem)\s+liste\s*$", re.I)
 _CANCEL_RE = re.compile(r"^\s*(?:işlem|islem)\s+iptal\s*$", re.I)
 _EXPLICIT_ISTEK_RE = re.compile(
-    r"^\s*(?:işlem|islem)\s+iste[kğ]\s*:\s*(.+)$",
+    r"^\s*(?:işlem|islem)\s+iste(?:k|ğ)?\s*:\s*(.+)$",
     re.I | re.S,
 )
 
