@@ -751,7 +751,7 @@ def _health_build_block() -> dict:
     import os as _os
 
     base = {
-        "rev": "2026-05-26-ruzgar-faz84-v88",
+        "rev": "2026-05-26-ruzgar-faz85-v89",
         "nebula_kitap": True,
         "fast_paths": _os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
         "memory_first": True,
@@ -2417,6 +2417,7 @@ def api_hizir_firsat_kaldir(body: HizirFirsatKaldirBody):
 class VideoSearchBody(BaseModel):
     message: str = ""
     query: str = ""
+    workspace_root: str = ""
 
 
 @app.post("/api/video/search")
@@ -2425,6 +2426,7 @@ async def api_video_search(body: VideoSearchBody):
     msg = (body.message or body.query or "").strip()
     if not msg:
         raise HTTPException(status_code=400, detail="Arama metni boş.")
+    ws = (body.workspace_root or "").strip() or None
 
     def _run() -> dict[str, Any]:
         from ilim_assistant.motorlar.video_faz84 import (
@@ -2436,14 +2438,18 @@ async def api_video_search(body: VideoSearchBody):
             search_youtube,
         )
 
-        pick = maybe_search_and_pick(msg)
+        pick = maybe_search_and_pick(msg, ws)
         if pick:
             return {"ok": True, "mode": "download", "text": pick}
-        instant = maybe_instant_faz84(msg)
+        instant = maybe_instant_faz84(msg, ws)
         if instant:
             return {"ok": True, "mode": "instant", "text": instant}
         q = extract_search_query(msg)
         data = search_youtube(q)
+        if data.get("ok"):
+            from ilim_assistant.motorlar.video_faz84 import _save_last_search
+
+            _save_last_search(data, ws)
         return {
             "ok": bool(data.get("ok")),
             "mode": "search",
@@ -3342,7 +3348,9 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
 
                 hub_early = maybe_hub_instant(
-                    msg_early, motor_flags=motor_niyeti_heuristic(msg_early)
+                    msg_early,
+                    motor_flags=motor_niyeti_heuristic(msg_early),
+                    workspace_root=req.workspace_root,
                 )
                 if hub_early:
                     yield from _iter_instant_chat_events(

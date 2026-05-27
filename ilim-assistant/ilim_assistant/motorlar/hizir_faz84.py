@@ -112,10 +112,9 @@ def maybe_instant_faz84(message: str, *, mode_norm: str = "hizir") -> str | None
     if not raw:
         return None
     low = _ascii_fold(raw)
-    if _HIZIR_CMD_RE.search(low) and "durum" in low:
+    if _HIZIR_CMD_RE.search(low):
         return format_hizir_status()
-    if wants_hub_hizir_route(raw):
-        return format_hizir_status()
+    # «pazar tara» vb. → anlık yanıt verme; hub Hızır moduna delege eder (tool_bridge).
     return None
 
 

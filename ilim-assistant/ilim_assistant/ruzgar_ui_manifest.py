@@ -4,8 +4,8 @@ import time
 from typing import Any
 
 
-CURRENT_PHASE = 84
-CURRENT_PHASE_LABEL = "Faz 68–84"
+CURRENT_PHASE = 85
+CURRENT_PHASE_LABEL = "Faz 68–85"
 
 
 def _phase(n: int, name: str, status: str = "tamam") -> dict[str, str]:
@@ -53,7 +53,8 @@ def build_ui_manifest(*, health: dict[str, Any] | None = None) -> dict[str, Any]
             _phase(81, "Araç kurtarma"),
             _phase(82, "Zayıflık raporu"),
             _phase(83, "PR hazırla"),
-            _phase(84, "Hızır hub + video ara", "aktif"),
+            _phase(84, "Hızır hub + video ara"),
+            _phase(85, "Hub cila + arama önbellek", "aktif"),
         ],
         "motors": {
             "genel": {"tag": f"Hub Faz 76–84 · Gemini {'✓' if gemini_ok else '?'}"},

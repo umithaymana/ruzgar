@@ -7,12 +7,16 @@ Video motoru — Faz 84: YouTube isimle arama + sonuç listesi.
 
 from __future__ import annotations
 
+import json
 import os
 import re
+import time
 import unicodedata
+from pathlib import Path
 from typing import Any
 
-FAZ84_VERSION = "video-faz84-v1-2026-05-26"
+FAZ84_VERSION = "video-faz84-v2-2026-05-26"
+_SEARCH_CACHE_FILE = "video_search_last.json"
 
 _SEARCH_CUE_RE = re.compile(
     r"(?:şu\s+filmi\s+ara|filmi\s+ara|video\s+ara|youtube\s+ara|video\s+bul|"
@@ -153,14 +157,17 @@ def format_search_results(data: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def maybe_search_and_pick(message: str) -> str | None:
+def maybe_search_and_pick(
+    message: str,
+    workspace_root: str | Path | None = None,
+) -> str | None:
     """«3 numarayı indir» — son arama önbelleğinden."""
     if not _enabled():
         return None
     idx = parse_pick_index(message)
     if idx is None:
         return None
-    last = _load_last_search()
+    last = _load_last_search(workspace_root)
     rows = last.get("results") or []
     if not rows or idx > len(rows):
         return None
@@ -175,36 +182,73 @@ def maybe_search_and_pick(message: str) -> str | None:
 _LAST_SEARCH: dict[str, Any] = {}
 
 
-def _save_last_search(data: dict[str, Any]) -> None:
+def _cache_path(workspace_root: str | Path | None = None) -> Path | None:
+    try:
+        from ilim_assistant.motorlar.programlama_motoru import repo_root
+
+        root = repo_root(workspace_root)
+        if root is None:
+            return None
+        d = root / ".ruzgar"
+        d.mkdir(parents=True, exist_ok=True)
+        return d / _SEARCH_CACHE_FILE
+    except Exception:
+        return None
+
+
+def _save_last_search(data: dict[str, Any], workspace_root: str | Path | None = None) -> None:
     global _LAST_SEARCH
     _LAST_SEARCH = dict(data)
+    path = _cache_path(workspace_root)
+    if path is None:
+        return
+    try:
+        payload = {**data, "saved_at": time.time()}
+        path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    except OSError:
+        pass
 
 
-def _load_last_search() -> dict[str, Any]:
-    return dict(_LAST_SEARCH)
+def _load_last_search(workspace_root: str | Path | None = None) -> dict[str, Any]:
+    if _LAST_SEARCH.get("results"):
+        return dict(_LAST_SEARCH)
+    path = _cache_path(workspace_root)
+    if path is None or not path.is_file():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if isinstance(data, dict):
+            _LAST_SEARCH.update(data)
+            return dict(data)
+    except (OSError, json.JSONDecodeError):
+        pass
+    return {}
 
 
-def run_search(message: str) -> str:
+def run_search(message: str, workspace_root: str | Path | None = None) -> str:
     q = extract_search_query(message)
     if len(q) < 2:
         return f"Ümit abi, ne arayayım? Örnek: «şu filmi ara: dune fragman»\n({FAZ84_VERSION})"
     data = search_youtube(q)
     if data.get("ok"):
-        _save_last_search(data)
+        _save_last_search(data, workspace_root)
     return format_search_results(data)
 
 
-def maybe_instant_faz84(message: str) -> str | None:
+def maybe_instant_faz84(
+    message: str,
+    workspace_root: str | Path | None = None,
+) -> str | None:
     if not _enabled():
         return None
     raw = (message or "").strip()
     if not raw:
         return None
-    pick = maybe_search_and_pick(raw)
+    pick = maybe_search_and_pick(raw, workspace_root)
     if pick:
         return pick
     if wants_video_search(raw):
-        return run_search(raw)
+        return run_search(raw, workspace_root)
     return None
 
 

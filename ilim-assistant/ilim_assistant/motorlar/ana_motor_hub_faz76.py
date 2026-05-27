@@ -203,6 +203,7 @@ def resolve_hub_target(
 def maybe_hub_instant(
     message: str,
     motor_flags: dict[str, bool] | None = None,
+    workspace_root: str | None = None,
 ) -> str | None:
     """Genel modda anlık yardımcı motor yanıtı (varsa)."""
     if not _enabled():
@@ -217,7 +218,7 @@ def maybe_hub_instant(
     try:
         from ilim_assistant.motorlar.video_faz84 import maybe_instant_faz84
 
-        v84 = maybe_instant_faz84(raw)
+        v84 = maybe_instant_faz84(raw, workspace_root)
         if v84:
             return v84
     except Exception:
@@ -311,14 +312,26 @@ def format_hub_help() -> str:
     return "\n".join(lines)
 
 
-def hub_directive_for_mode(target: str, meta: dict[str, Any] | None = None) -> str:
+def hub_directive_for_mode(
+    target: str,
+    meta: dict[str, Any] | None = None,
+    message: str = "",
+) -> str:
     m = meta or {}
     reason = m.get("reason") or "rok"
+    extra = ""
+    try:
+        from ilim_assistant.motorlar.ruzgar_hub_faz85 import hub_delegate_directive_extra
+
+        extra = hub_delegate_directive_extra(target, message)
+    except Exception:
+        pass
     return (
         f"[ANA MOTOR HUB — Faz 76]\n"
         f"Bu tur **{motor_label(target)}** motoruna yönlendirildi ({reason}).\n"
         "Yanıtı o motorun araçları ve üslubuyla ver; kullanıcıya sekme değiştirmesi "
         "şart değil.\n"
+        f"{extra}"
     )
 
 
@@ -376,7 +389,7 @@ def apply_genel_hub_routing(
         except Exception:
             flags = {}
 
-    instant = maybe_hub_instant(message, motor_flags=flags)
+    instant = maybe_hub_instant(message, motor_flags=flags, workspace_root=workspace_root)
     if instant:
         out["og_direct"] = instant
         out["hub_meta"] = {"instant": True}
@@ -386,7 +399,7 @@ def apply_genel_hub_routing(
     out["hub_meta"] = meta
     if target != "genel":
         out["mode"] = target
-        out["hub_directive"] = hub_directive_for_mode(target, meta)
+        out["hub_directive"] = hub_directive_for_mode(target, meta, message)
     return out
 
 

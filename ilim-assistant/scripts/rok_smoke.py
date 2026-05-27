@@ -113,6 +113,12 @@ def main() -> int:
         ok("hizir intent do")
     else:
         fail("hizir intent", str(hi))
+    from ilim_assistant.motorlar.hizir_faz84 import maybe_instant_faz84 as hiz_inst
+
+    if hiz_inst("pazar tara", mode_norm="hizir") is None:
+        ok("hizir pazar tara defers to LLM delegate")
+    else:
+        fail("hizir instant should defer", str(hiz_inst("pazar tara")[:60]))
 
     print(f"\n{'PASS' if fails == 0 else 'FAIL'} ({fails} failed)")
     return 1 if fails else 0

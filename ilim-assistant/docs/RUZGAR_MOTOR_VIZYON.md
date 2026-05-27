@@ -117,4 +117,7 @@ Video indirme: sohbet 180sn yerine masaüstü `/api/video/download` · `scripts/
 **Dalga U9 — Faz 84** — **UYGULANDI (v88)**  
 Hızır hub · YouTube isimle arama · UI manifest Faz 68–84.
 
-*Son güncelleme: build `faz84-v88` · UI manifest Faz 68–84.*
+**Dalga U10 — Faz 85** — **UYGULANDI (v89)**  
+Hızır gerçek delege · video arama önbelleği kalıcı.
+
+*Son güncelleme: build `faz85-v89` · UI manifest Faz 68–85.*
