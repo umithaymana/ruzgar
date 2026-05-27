@@ -205,4 +205,16 @@ def format_numbered_scan_report(data: dict[str, Any]) -> str:
         lines.append("")
         lines.append("Kritik madde yok (Gemini anahtarı bilgi amaçlıdır).")
 
-    return "\n".join(lines)
+    technical = "\n".join(lines)
+    try:
+        from ilim_assistant.motorlar.programlama_faz97 import (
+            choose_report,
+            format_sade_self_scan,
+            sade_rapor_enabled,
+        )
+
+        if sade_rapor_enabled():
+            return choose_report(technical, format_sade_self_scan(data))
+    except Exception:
+        pass
+    return technical

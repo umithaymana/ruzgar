@@ -17,7 +17,8 @@ FAZ66_VERSION = "programlama-faz66-v1-2026-05-26"
 
 _REPO_RENAME_RE = re.compile(
     r"^\s*(?:rename-repo|repo-rename|tum\s+repo\s+rename|tam\s+rename)\s*:\s*"
-    r"(?:projects/)?([\w.\-]+)\s+([\w$]{1,80})\s*(?:->|→|,|to)\s*([\w$]{1,80})\s*$",
+    r"(?:projects/)?([\w.\-]+)\s+([\w$]{1,80})\s*(?:->|→|,|to)\s*([\w$]{1,80})"
+    r"(?:\s+(?:önizle|onizle|dry(?:-run)?))?\s*$",
     re.I,
 )
 _SCOPE_RENAME_RE = re.compile(

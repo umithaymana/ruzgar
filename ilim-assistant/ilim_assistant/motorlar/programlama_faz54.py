@@ -576,7 +576,19 @@ def format_compliance_report_v3(workspace_root: str | Path | None) -> str:
     for note in r.get("notes") or []:
         lines.append(f"· {note}")
     lines.append(f"\n({FAZ54_VERSION})")
-    return "\n".join(lines)
+    technical = "\n".join(lines)
+    try:
+        from ilim_assistant.motorlar.programlama_faz97 import (
+            choose_report,
+            format_sade_compliance,
+            sade_rapor_enabled,
+        )
+
+        if sade_rapor_enabled():
+            return choose_report(technical, format_sade_compliance(r))
+    except Exception:
+        pass
+    return technical
 
 
 def build_kpi_dashboard(workspace_root: str | Path | None) -> dict[str, Any]:

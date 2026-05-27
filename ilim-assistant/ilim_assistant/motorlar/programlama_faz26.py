@@ -10,7 +10,7 @@ from __future__ import annotations
 import os
 
 FAZ26_VERSION = "programlama-faz26-v1-2026-05-25"
-_DEFAULT_CHAIN = "kod,groq,gemini"
+_DEFAULT_CHAIN = "kod,denge,hizli,groq,gemini"
 
 
 def _enabled() -> bool:
@@ -62,7 +62,20 @@ def programming_brain_chain_ids() -> list[str]:
         out = local_first_brain_chain(out)
     except Exception:
         pass
+    if p9_strict_local_first():
+        local = [x for x in out if x in ("kod", "denge", "hizli")]
+        cloud = [x for x in out if x in ("groq", "gemini")]
+        rest = [x for x in out if x not in ("kod", "denge", "hizli", "groq", "gemini")]
+        out = local + cloud + rest
     return out
+
+
+def p9_strict_local_first() -> bool:
+    return os.environ.get("RUZGAR_P9_STRICT_LOCAL_FIRST", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
 
 
 def faz26_directive() -> str:
@@ -70,5 +83,5 @@ def faz26_directive() -> str:
     return (
         "[BEYİN — Faz 26]\n"
         f"Programlama modu zinciri: {chain}\n"
-        "Env: RUZGAR_PROG_BRAIN_CHAIN=groq,kod,gemini\n"
+        "Env: RUZGAR_PROG_BRAIN_CHAIN=kod,denge,hizli,groq,gemini · RUZGAR_P9_STRICT_LOCAL_FIRST=1\n"
     )

@@ -346,6 +346,23 @@ def is_programlama_reserved_command(message: str) -> bool:
     if wants_self_scan(message):
         return True
     try:
+        from ilim_assistant.motorlar.programlama_faz96 import (
+            wants_autonomous_repair_start,
+            wants_full_autonomous_cycle,
+            wants_p11_fix_approval,
+            wants_system_analysis,
+        )
+
+        if (
+            wants_system_analysis(message)
+            or wants_full_autonomous_cycle(message)
+            or wants_autonomous_repair_start(message)
+            or wants_p11_fix_approval(message)
+        ):
+            return True
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_faz2 import wants_briefing
 
         if wants_briefing(message):
@@ -709,7 +726,20 @@ def maybe_programlama_instant_reply(
             parts.append(format_security_scan_report(workspace_root))
     except Exception:
         pass
-    if wants_self_scan(message):
+    _skip_self_for_p11 = False
+    try:
+        from ilim_assistant.motorlar.programlama_faz96 import (
+            maybe_instant_faz96,
+            wants_system_analysis,
+        )
+
+        faz96_hit = maybe_instant_faz96(message, workspace_root)
+        if faz96_hit:
+            parts.append(faz96_hit)
+        _skip_self_for_p11 = wants_system_analysis(message)
+    except Exception:
+        pass
+    if wants_self_scan(message) and not _skip_self_for_p11:
         try:
             from ilim_assistant.ruzgar_egitim import clear_pending
 

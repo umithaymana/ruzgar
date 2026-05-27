@@ -4,7 +4,7 @@
  * Kök sonda `/api` ise kırpılır — aksi halde fetch `.../api/api/merkezi-bellek` ile 404 verir.
  */
 const RUZGAR_LOCAL_API_PORT = 8779;
-const RUZGAR_EXPECTED_BUILD_REV = "2026-05-27-ruzgar-faz92-v99";
+const RUZGAR_EXPECTED_BUILD_REV = "2026-05-27-ruzgar-faz96-v106";
 const RUZGAR_LOCAL_API_FALLBACK = `http://127.0.0.1:${RUZGAR_LOCAL_API_PORT}`;
 
 function migrateLegacyApiUrl(raw) {
@@ -1639,6 +1639,30 @@ function renderProgramlamaTaskStats(stats, liveKpi) {
       .map((r) => `${r.success ? "OK" : "X"} ${r.scope_rel || "?"}`)
       .join("\n");
   }
+}
+
+function renderProgramlamaP89Kpi(build) {
+  const wrap = document.getElementById("programlama-p89-kpi-card");
+  const cacheEl = document.getElementById("programlama-p89-cache");
+  const chainEl = document.getElementById("programlama-p89-chain");
+  const detailEl = document.getElementById("programlama-p89-detail");
+  if (!wrap || !cacheEl || !chainEl || !detailEl) return;
+  const b = build || {};
+  const c = b.prompt_cache_v98 || {};
+  const p9 = b.p9_v99 || {};
+  const winRate = Number(c.window_hit_rate || 0);
+  const pct = Number.isFinite(winRate) ? Math.round(winRate * 100) : 0;
+  const hits = Number(c.window_hits || 0);
+  const misses = Number(c.window_misses || 0);
+  const chain = Array.isArray(p9.programlama_chain) ? p9.programlama_chain : [];
+  const first = chain.length ? String(chain[0]) : "—";
+  const localFirst = Boolean(p9.local_first_active);
+  const strict = Boolean(p9.strict_local_first);
+  wrap.hidden = false;
+  cacheEl.textContent = `%${pct}`;
+  chainEl.textContent = `${first} · ${localFirst ? "yerel-öncelik ✓" : "yerel-öncelik ×"}`;
+  detailEl.textContent =
+    `Cache 5dk: ${hits}/${hits + misses} · strict=${strict ? "on" : "off"} · zincir: ${chain.slice(0, 5).join("→") || "—"}`;
 }
 
 function renderProgramlamaGitChanges(payload) {
@@ -7095,6 +7119,7 @@ async function checkApi() {
           "Yerel sunucu aktif (127.0.0.1:8779). Gemini/Groq hazırsa sohbet çalışır.";
       }
       const progRev = document.getElementById("programlama-build-rev");
+      const progCacheWin = document.getElementById("programlama-cache-window");
       const rev = String(j?.build?.rev || "");
       if (progRev) {
         progRev.textContent = rev || "rev bilinmiyor";
@@ -7106,6 +7131,17 @@ async function checkApi() {
           progRev.title = "";
         }
       }
+      if (progCacheWin) {
+        const c = j?.build?.prompt_cache_v98 || {};
+        const winRate = Number(c.window_hit_rate || 0);
+        const winHits = Number(c.window_hits || 0);
+        const winMisses = Number(c.window_misses || 0);
+        const winSec = Number(c.window_sec || 300);
+        const pct = Number.isFinite(winRate) ? Math.round(winRate * 100) : 0;
+        progCacheWin.textContent = `%${pct} (${winHits}/${winHits + winMisses})`;
+        progCacheWin.title = `Son ${winSec} sn: hit ${winHits}, miss ${winMisses}`;
+      }
+      renderProgramlamaP89Kpi(j?.build || {});
       showStaleBuildBanner(rev, j);
       void refreshUiManifest();
       el.api.textContent = j.stt ? "Sunucu ✓ metne döküm" : "Sunucu ✓";
@@ -7178,6 +7214,10 @@ async function checkApi() {
       "Yerel API yok. Ruzgar.ps1 veya Start-Ruzgar.ps1 ile başlatın (port 8779).";
   }
   if (faz7HealthStripEl) faz7HealthStripEl.hidden = true;
+  {
+    const wrap = document.getElementById("programlama-p89-kpi-card");
+    if (wrap) wrap.hidden = true;
+  }
   el.api.textContent = "Sunucu kapalı";
   el.api.className = "tech-chip err";
   el.api.title = "";

@@ -789,11 +789,12 @@ def stream_chat_with_brain(
         chain_hint = ",".join(attempted) or ",".join(
             e.profile_id for e in sel.chain[:6]
         ) or "?"
+        order_hint = " -> ".join(e.profile_id for e in sel.chain[:5]) or chain_hint
         err_hint = f" Son hata ({last_provider}): {last_err[:240]}" if last_err else ""
         yield (
             "Ümit abi, Programlama motoru şu an yanıt üretemedi "
             f"(denenen: {chain_hint}). "
-            "Sıra: Gemini → Groq → yerel Ollama (kod/denge). "
+            f"Sıra: {order_hint}. "
             "Kontrol: `RUZGAR_BRAIN.env`, `ollama serve`, `Ruzgar.ps1 -ForceRestart`.\n"
             f"{err_hint}"
         )

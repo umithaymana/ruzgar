@@ -83,7 +83,8 @@ def classify_video_intent(
         return {"intent": INTENT_CHAT, "reason": "empty"}
     if _LIST_RE.search(_ascii_fold(raw)):
         return {"intent": INTENT_COMMAND, "reason": "list_downloads"}
-    if _QUESTION_RE.search(raw) and not _ACTION_RE.search(raw):
+    # Soru niyeti, mode=video olsa da açıklama talebi ise sohbete düşmeli.
+    if _QUESTION_RE.search(raw):
         return {"intent": INTENT_CHAT, "reason": "question"}
     urls = extract_urls(raw)
     if urls and (_ACTION_RE.search(raw) or "youtube" in raw.lower() or "youtu.be" in raw.lower()):

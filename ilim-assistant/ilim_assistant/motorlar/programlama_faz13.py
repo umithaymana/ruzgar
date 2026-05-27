@@ -444,7 +444,19 @@ def format_scan_report(scan: dict[str, Any]) -> str:
         for ep in eps:
             lines.append(f"  · `{ep}`")
     lines.extend(["", f"({FAZ13_VERSION})"])
-    return "\n".join(lines)
+    technical = "\n".join(lines)
+    try:
+        from ilim_assistant.motorlar.programlama_faz97 import (
+            choose_report,
+            format_sade_scan,
+            sade_rapor_enabled,
+        )
+
+        if sade_rapor_enabled():
+            return choose_report(technical, format_sade_scan(scan))
+    except Exception:
+        pass
+    return technical
 
 
 def format_find_report(result: dict[str, Any]) -> str:

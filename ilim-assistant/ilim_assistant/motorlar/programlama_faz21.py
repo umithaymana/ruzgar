@@ -197,6 +197,7 @@ def build_light_programming_context(
         "programlama_faz84.faz84_directive",
         "programlama_faz85.faz85_directive",
         "programlama_faz86.faz86_directive",
+        "programlama_faz97.faz97_directive",
     ):
         try:
             mod, fn = directive_fn.rsplit(".", 1)

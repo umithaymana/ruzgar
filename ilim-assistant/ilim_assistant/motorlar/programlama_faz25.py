@@ -339,7 +339,19 @@ def format_parity_report(report: ParityRunReport) -> str:
     if report.live_note:
         lines.extend(["", report.live_note])
     lines.append(f"\n({FAZ25_VERSION})")
-    return "\n".join(lines)
+    technical = "\n".join(lines)
+    try:
+        from ilim_assistant.motorlar.programlama_faz97 import (
+            choose_report,
+            format_sade_parity_run,
+            sade_rapor_enabled,
+        )
+
+        if sade_rapor_enabled():
+            return choose_report(technical, format_sade_parity_run(report))
+    except Exception:
+        pass
+    return technical
 
 
 def save_parity_report_json(

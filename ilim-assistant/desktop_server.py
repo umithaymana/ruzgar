@@ -751,13 +751,33 @@ def _health_build_block() -> dict:
     import os as _os
 
     base = {
-        "rev": "2026-05-27-ruzgar-faz92-v99",
+        "rev": "2026-05-27-ruzgar-faz96-v106",
         "nebula_kitap": True,
         "fast_paths": _os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
         "memory_first": True,
         "bilissel_analiz": True,
         "egitim_routing": "bilissel>gundelik>egitim",
     }
+    try:
+        from ilim_assistant.motorlar.programlama_faz95 import prompt_cache_metrics
+
+        base["prompt_cache_v98"] = prompt_cache_metrics()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz26 import (
+            p9_strict_local_first,
+            programming_brain_chain_ids,
+        )
+
+        _p9_chain = programming_brain_chain_ids()[:6]
+        base["p9_v99"] = {
+            "strict_local_first": p9_strict_local_first(),
+            "programlama_chain": _p9_chain,
+            "local_first_active": bool(_p9_chain and _p9_chain[0] in ("kod", "denge", "hizli")),
+        }
+    except Exception:
+        pass
     try:
         from ilim_assistant.motorlar.programlama_faz60 import enrich_health_build
 
@@ -1724,6 +1744,31 @@ def api_programlama_weakness_report(workspace_root: str | None = None):
         "report": report,
         "text": format_weakness_report(report),
         "version": FAZ82_VERSION,
+    }
+
+
+@app.get("/api/programlama/system-analysis")
+def api_programlama_system_analysis(
+    workspace_root: str | None = None,
+    include_parity: int = 1,
+):
+    """Faz 96 (P11) — otonom sistem analizi."""
+    from ilim_assistant.motorlar.programlama_faz96 import (
+        FAZ96_VERSION,
+        format_system_analysis_report,
+        run_autonomous_system_analysis,
+    )
+
+    root = (workspace_root or "").strip() or None
+    report = run_autonomous_system_analysis(
+        root,
+        include_parity=bool(int(include_parity or 0)),
+    )
+    return {
+        "ok": True,
+        "report": report,
+        "text": format_system_analysis_report(report),
+        "version": FAZ96_VERSION,
     }
 
 
@@ -3595,6 +3640,108 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             "replacements": list(pt.replacements)[:8],
         },
     }
+    _p92_block_msg = ""
+    if mode_norm == "programlama":
+        try:
+            from ilim_assistant.motorlar.programlama_faz92 import (
+                assess_risk,
+                build_task_plan,
+                render_plan_directive,
+                risk_confirmation_text,
+            )
+            from ilim_assistant.motorlar.programlama_faz93 import (
+                build_decision_context,
+                build_refactor_pilot_plan,
+                looks_like_refactor_pilot,
+                render_refactor_pilot_directive,
+            )
+            from ilim_assistant.motorlar.programlama_faz94 import build_pre_turn_test_directive
+            from ilim_assistant.motorlar.programlama_faz95 import (
+                build_prompt_cache_key,
+                get_prompt_cache,
+                optimize_prompt_blocks,
+                prompt_cache_metrics,
+                set_prompt_cache,
+            )
+            from ilim_assistant.kullanici_baglami import build_programming_style_directive
+
+            p92 = build_task_plan(req.message or "")
+            r92 = assess_risk(req.message or "")
+            route_meta["task_plan_v92"] = p92
+            route_meta["task_risk_v92"] = r92
+            try:
+                _sel_prog = select_brain_chain(
+                    message=req.message or "",
+                    mode_norm="programlama",
+                    coding_mode=bool(req.coding_mode),
+                )
+                route_meta["p9_chain_v99"] = [
+                    e.profile_id for e in list(_sel_prog.chain or [])[:6]
+                ]
+                route_meta["p9_local_first_v99"] = bool(
+                    route_meta["p9_chain_v99"]
+                    and route_meta["p9_chain_v99"][0] in ("kod", "denge", "hizli")
+                )
+            except Exception:
+                pass
+            if bool(r92.get("requires_confirmation")):
+                _p92_block_msg = risk_confirmation_text(r92)
+            p92_dir = render_plan_directive(p92).strip()
+            p93_ctx = build_decision_context(req.workspace_root).strip()
+            p5_style = build_programming_style_directive().strip()
+            route_meta["style_pref_v95"] = bool(p5_style)
+            p6_dir = ""
+            p7_pre = ""
+            _p_scope = ""
+            try:
+                from ilim_assistant.motorlar.programlama_faz10 import resolve_scope_rel
+
+                _p_scope = resolve_scope_rel(
+                    req.workspace_root,
+                    active_file=req.programlama_active_file,
+                )
+                if looks_like_refactor_pilot(req.message or ""):
+                    _pilot = build_refactor_pilot_plan(
+                        req.message or "",
+                        req.workspace_root,
+                        _p_scope,
+                    )
+                    route_meta["refactor_pilot_v96"] = _pilot
+                    p6_dir = render_refactor_pilot_directive(_pilot).strip()
+                p7_pre = build_pre_turn_test_directive(
+                    req.message or "",
+                    req.workspace_root,
+                    _p_scope,
+                ).strip()
+                if p7_pre:
+                    route_meta["regression_shield_pre_v97"] = True
+            except Exception:
+                pass
+            if p92_dir or p93_ctx or p5_style or p6_dir or p7_pre:
+                _blocks = [p92_dir, p93_ctx, p5_style, p6_dir, p7_pre]
+                _cache_key = build_prompt_cache_key(
+                    workspace_root=str(req.workspace_root or ""),
+                    scope_rel=str(_p_scope or ""),
+                    user_message=req.message or "",
+                    blocks=_blocks,
+                )
+                pre = get_prompt_cache(_cache_key, ttl_sec=75).strip()
+                route_meta["prompt_cache_v98"] = "hit" if pre else "miss"
+                if not pre:
+                    pre = optimize_prompt_blocks(
+                        _blocks,
+                        per_block_limit=1700,
+                        total_limit=5200,
+                    ).strip()
+                    if pre:
+                        set_prompt_cache(_cache_key, pre)
+                route_meta["prompt_optimized_v98"] = bool(pre)
+                route_meta["prompt_cache_metrics_v98"] = prompt_cache_metrics()
+                req = req.model_copy(
+                    update={"message": f"{pre}\n\n[Kullanici istegi]\n{req.message or ''}"}
+                )
+        except Exception:
+            pass
     if _delegated_from_genel:
         route_meta["programlama_delegated"] = True
         try:
@@ -3654,10 +3801,74 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         _intent59 = {}
     yield {"type": "meta", "chat_route": route_meta}
     yield {"type": "status", "text": "Rüzgar hazırlanıyor…"}
+    if _p92_block_msg:
+        yield from _iter_instant_chat_events(
+            _p92_block_msg,
+            (req.message or "").strip(),
+            session_wake_used=req.session_wake_used,
+            msg_for_wake=req.message,
+            orch={},
+            instant_gundelik=True,
+        )
+        return
+
+    # Programlama Faz 96 (P11) — otonom analiz + onarım (Faz 2 onayından önce)
+    _p11_repair_approved = False
+    _p11_analysis_before: dict[str, Any] | None = None
+    if mode_norm == "programlama":
+        try:
+            from ilim_assistant.motorlar.programlama_faz96 import (
+                prepare_autonomous_repair_turn,
+            )
+
+            _p11_prep = prepare_autonomous_repair_turn(
+                req.message or "", req.workspace_root
+            )
+            if _p11_prep:
+                if _p11_prep.get("instant"):
+                    yield from _iter_instant_chat_events(
+                        str(_p11_prep["instant"]),
+                        (req.message or "").strip(),
+                        session_wake_used=req.session_wake_used,
+                        msg_for_wake=req.message,
+                        orch={},
+                        instant_gundelik=True,
+                    )
+                    return
+                if _p11_prep.get("augmented_message"):
+                    req = req.model_copy(
+                        update={"message": str(_p11_prep["augmented_message"])}
+                    )
+                    _p11_repair_approved = True
+                    _p11_analysis_before = (
+                        _p11_prep.get("analysis")
+                        if isinstance(_p11_prep.get("analysis"), dict)
+                        else None
+                    )
+        except Exception:
+            pass
 
     # Programlama Faz 2 — onaylı düzeltme (LLM+pytest; anında yalnızca «önce tara» uyarısı)
     _scan_fix_approved = False
-    if mode_norm == "programlama":
+    if mode_norm == "programlama" and not _p11_repair_approved:
+        try:
+            from ilim_assistant.motorlar.programlama_faz92 import (
+                needs_refactor_scope_clarification,
+                refactor_scope_question,
+            )
+
+            if needs_refactor_scope_clarification(req.message or ""):
+                yield from _iter_instant_chat_events(
+                    refactor_scope_question(),
+                    (req.message or "").strip(),
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch={},
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
         try:
             from ilim_assistant.motorlar.programlama_faz2 import prepare_scan_fix_turn
 
@@ -3685,7 +3896,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
 
     # Sahip kilidi + Programlama anında yanıt — RAG/LLM/süre bütçesinden ÖNCE
     try:
-        if mode_norm == "programlama":
+        if mode_norm == "programlama" and not (_p11_repair_approved or _scan_fix_approved):
             from ilim_assistant.motorlar.programlama_motoru import (
                 maybe_programlama_instant_reply,
             )
@@ -3706,6 +3917,8 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     orch={},
                 )
                 return
+        elif mode_norm == "programlama":
+            pass
         else:
             from ilim_assistant.ruzgar_owner_lock import maybe_owner_instant_reply
 
@@ -3724,6 +3937,8 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         pass
 
     orch: dict[str, Any] = {}
+    if isinstance(route_meta.get("task_plan_v92"), dict):
+        orch["task_plan_v92"] = dict(route_meta["task_plan_v92"])
     try:
         from ilim_assistant.ruzgar_umed_cevap_emri import public_meta, umed_emri_applies
 
@@ -4490,26 +4705,41 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
     reply_body = ""
     try:
         wants_dbg = mode_norm == "programlama" and (
-            _scan_fix_approved or wants_autonomous_code_debug(msg)
+            _scan_fix_approved or _p11_repair_approved or wants_autonomous_code_debug(msg)
         )
         if mode_norm == "programlama" and not wants_dbg:
             try:
                 from ilim_assistant.motorlar.programlama_faz2 import (
                     should_force_autonomous_debug,
                 )
+                from ilim_assistant.motorlar.programlama_faz96 import (
+                    should_force_p11_repair_turn,
+                )
 
-                wants_dbg = should_force_autonomous_debug(msg)
+                wants_dbg = should_force_autonomous_debug(msg) or should_force_p11_repair_turn(msg)
             except Exception:
                 pass
         retry_cap = code_debug_max_retries() if wants_dbg else 0
         extras_remaining = retry_cap
+        p3_self_heal_remaining = 0
+        if mode_norm == "programlama" and not wants_dbg:
+            try:
+                p3_self_heal_remaining = max(
+                    0, min(int(os.environ.get("RUZGAR_P3_SELF_HEAL_RETRIES", "1")), 2)
+                )
+            except Exception:
+                p3_self_heal_remaining = 1
         active_prior: list = list(prior) if prior else []
 
         if wants_dbg:
             _dbg_st = (
-                "Onaylı düzeltme — patch + pytest (Faz 2)…"
-                if _scan_fix_approved
-                else "Otomatik kod hata ayıklama (Faz 10.4)…"
+                "P11 otonom onarım — analiz + patch + pytest (Faz 96)…"
+                if _p11_repair_approved
+                else (
+                    "Onaylı düzeltme — patch + pytest (Faz 2)…"
+                    if _scan_fix_approved
+                    else "Otomatik kod hata ayıklama (Faz 10.4)…"
+                )
             )
             yield {"type": "status", "text": _dbg_st}
 
@@ -4528,6 +4758,28 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 round_body += piece
                 reply_body += piece
                 yield {"type": "token", "text": piece}
+
+            if mode_norm == "programlama" and not wants_dbg and p3_self_heal_remaining > 0:
+                try:
+                    from ilim_assistant.motorlar.programlama_faz92 import (
+                        self_heal_retry_prompt,
+                        should_self_heal_retry,
+                    )
+
+                    if should_self_heal_retry(round_body, mode_norm=mode_norm):
+                        p3_self_heal_remaining -= 1
+                        yield {
+                            "type": "status",
+                            "text": "P3 self-heal: ilk deneme toparlanıyor, yeniden üretiyorum…",
+                        }
+                        retry_user = self_heal_retry_prompt(msg, round_body)
+                        active_prior = list(active_prior) + [
+                            {"role": "assistant", "content": round_body},
+                            {"role": "user", "content": retry_user},
+                        ]
+                        continue
+                except Exception:
+                    pass
 
             if not wants_dbg:
                 break
@@ -4608,8 +4860,12 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         if mode_norm == "programlama":
             try:
                 from ilim_assistant.motorlar.programlama_faz2 import clear_force_debug_turn
+                from ilim_assistant.motorlar.programlama_faz96 import (
+                    clear_force_p11_repair_turn,
+                )
 
                 clear_force_debug_turn()
+                clear_force_p11_repair_turn()
             except Exception:
                 pass
         footer = rag_footer(hits)
@@ -4733,6 +4989,102 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     goal=str(_summ59.get("goal") or ""),
                 )
                 done_llm["full_reply"] = full_out
+            except Exception:
+                pass
+        if mode_norm == "programlama":
+            try:
+                from ilim_assistant.motorlar.programlama_faz93 import (
+                    large_change_status_text,
+                    record_refactor_checkpoint,
+                    render_rollback_directive,
+                    rollback_status_text,
+                    summarize_large_change,
+                )
+                from ilim_assistant.motorlar.programlama_faz94 import (
+                    build_regression_shield,
+                    regression_status_text,
+                    render_test_directive,
+                    run_regression_shield_check,
+                )
+                from ilim_assistant.motorlar.programlama_faz10 import resolve_scope_rel
+
+                _lc = summarize_large_change(
+                    code_patch_meta if isinstance(code_patch_meta, dict) else None
+                )
+                done_llm["large_change_v96"] = _lc
+                if bool(_lc.get("is_large")):
+                    yield {"type": "status", "text": large_change_status_text(_lc)}
+
+                _cp = record_refactor_checkpoint(
+                    req.workspace_root,
+                    user_message=msg,
+                    patch_meta=code_patch_meta if isinstance(code_patch_meta, dict) else None,
+                )
+                if _cp.get("recorded"):
+                    done_llm["refactor_checkpoint_v96"] = _cp
+                    _rb_txt = rollback_status_text(_cp.get("rollback") or {})
+                    if _rb_txt:
+                        yield {"type": "status", "text": _rb_txt}
+                    _rb_dir = render_rollback_directive(_cp.get("rollback") or {}).strip()
+                    if _rb_dir:
+                        done_llm["rollback_directive_v96"] = _rb_dir
+
+                _applied = list(
+                    (code_patch_meta or {}).get("applied") or []
+                    if isinstance(code_patch_meta, dict)
+                    else []
+                )
+                if _applied:
+                    _p_scope_done = resolve_scope_rel(
+                        req.workspace_root,
+                        active_file=req.programlama_active_file,
+                    )
+                    _shield = run_regression_shield_check(
+                        req.workspace_root,
+                        _p_scope_done,
+                        _applied,
+                    )
+                    done_llm["regression_shield_v97"] = _shield
+                    _p7_dir = render_test_directive(_shield).strip()
+                    if _p7_dir and not bool(_shield.get("verify_ok")):
+                        done_llm["regression_test_directive_v97"] = _p7_dir
+                    yield {"type": "status", "text": regression_status_text(_shield)}
+                elif isinstance(code_patch_meta, dict) and code_patch_meta.get("applied") is not None:
+                    _p_scope_done = resolve_scope_rel(
+                        req.workspace_root,
+                        active_file=req.programlama_active_file,
+                    )
+                    _shield = build_regression_shield([], req.workspace_root, _p_scope_done)
+                    done_llm["regression_shield_v97"] = _shield
+            except Exception:
+                pass
+            if _p11_repair_approved:
+                try:
+                    from ilim_assistant.motorlar.programlama_faz96 import (
+                        format_verification_report,
+                        run_post_repair_verification,
+                    )
+
+                    _p11_verify = run_post_repair_verification(
+                        req.workspace_root,
+                        before=_p11_analysis_before,
+                    )
+                    done_llm["p11_verify_v106"] = _p11_verify
+                    _vtxt = format_verification_report(_p11_verify)
+                    if _vtxt:
+                        yield {"type": "status", "text": _vtxt}
+                except Exception:
+                    pass
+        if mode_norm == "programlama":
+            try:
+                from ilim_assistant.motorlar.programlama_faz93 import record_decision
+
+                record_decision(
+                    req.workspace_root,
+                    user_message=msg,
+                    assistant_reply=full_out,
+                    patch_meta=code_patch_meta if isinstance(code_patch_meta, dict) else None,
+                )
             except Exception:
                 pass
         yield done_llm

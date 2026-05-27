@@ -141,6 +141,10 @@ def _extract_style_prefs(profile: dict[str, Any], message: str) -> None:
         _add_style_pref(profile, "Gereksiz teknik detaya girme.")
     if "örnek ver" in low or "ornek ver" in low:
         _add_style_pref(profile, "Uygun yerde kısa örnek ver.")
+    if "önce test" in low or "once test" in low:
+        _add_style_pref(profile, "Değişiklikten önce/sonra test doğrulaması yap.")
+    if "uzun yazma" in low or "kısa yaz" in low or "kisa yaz" in low:
+        _add_style_pref(profile, "Uzun anlatım yerine kısa çıktı ver.")
 
 
 def _add_relation(profile: dict[str, Any], subject: str, predicate: str, obj: str, source: str) -> None:
@@ -241,6 +245,28 @@ def active_user_display(default_name: str = "Ümit abi") -> str:
     prof = data.get("profiles", {}).get(active or "", {})
     name = _norm_name(str(prof.get("display_name") or ""))
     return name or default_name
+
+
+def active_style_prefs(limit: int = 6) -> list[str]:
+    data = _load()
+    active = str(data.get("active_user") or "")
+    prof = data.get("profiles", {}).get(active or "", {})
+    prefs = [str(x).strip() for x in (prof.get("style_prefs") or []) if str(x).strip()]
+    lim = max(1, min(int(limit), 12))
+    return prefs[-lim:]
+
+
+def build_programming_style_directive() -> str:
+    prefs = active_style_prefs(limit=6)
+    if not prefs:
+        return ""
+    lines = ["[PROGRAMLAMA KULLANICI TERCIHI]"]
+    lines.extend(f"- {p}" for p in prefs)
+    lines.append(
+        "Talimat: Programlama yanıtında bu tercihleri öncelikli uygula; çelişirse kullanıcıdan netleştirme iste."
+    )
+    lines.append("[/PROGRAMLAMA KULLANICI TERCIHI]")
+    return "\n".join(lines)
 
 
 def build_context_block() -> str:

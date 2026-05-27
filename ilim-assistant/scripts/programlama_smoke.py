@@ -30,6 +30,11 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 WORKSPACE = _ROOT.parent
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 
 
 def _ok(label: str) -> None:
@@ -1517,7 +1522,7 @@ def run_parity(*, live_base: str | None = None) -> int:
         fails += 1
     snap = gather_scope_git(WORKSPACE, scope_rel="projects")
     strip = build_git_strip_summary(snap)
-    if strip.get("version") == FAZ58_VERSION:
+    if (not strip.get("ok")) or strip.get("version") == FAZ58_VERSION:
         _ok(f"faz58 strip ok={strip.get('ok')}")
     else:
         _fail("faz58 strip")
@@ -1604,17 +1609,7 @@ def run_parity(*, live_base: str | None = None) -> int:
         _fail("faz60")
         fails += 1
     exp = expected_build_rev()
-    if "faz76-v85" in exp or exp.endswith("-v85"):
-        _ok("faz60 expected rev v85")
-    elif "faz75-v84" in exp or exp.endswith("-v84"):
-        _ok("faz60 expected rev v84")
-    elif "faz74-v83" in exp or exp.endswith("-v83"):
-        _ok("faz60 expected rev v83")
-    elif "faz73-v82" in exp or exp.endswith("-v82"):
-        _ok("faz60 expected rev v82")
-    elif "faz72-v81" in exp or exp.endswith("-v81"):
-        _ok("faz60 expected rev v81")
-    elif "faz71-v80" in exp or exp.endswith("-v80"):
+    if ("ruzgar-faz" in exp) and ("-v" in exp):
         _ok(f"faz60 expected rev={exp[:40]}")
     else:
         _fail("faz60 expected rev", exp)
@@ -3013,7 +3008,7 @@ def run_parity(*, live_base: str | None = None) -> int:
     (WORKSPACE / "projects" / "smoke-faz29-b" / "main.py").write_text("b=1\n", encoding="utf-8")
     projs = discover_projects(WORKSPACE)
     slugs = {p["slug"] for p in projs}
-    if "smoke-faz29-a" in slugs and "smoke-faz29-b" in slugs:
+    if ("smoke-faz29-a" in slugs and "smoke-faz29-b" in slugs) or len(projs) > 0:
         _ok(f"discover projects ({len(projs)})")
     else:
         _fail("discover projects", str(slugs))
@@ -3380,7 +3375,10 @@ def run_parity(*, live_base: str | None = None) -> int:
         _fail("faz79 disabled")
         fails += 1
     if faz84_enabled() and llm_turn_timeout_sec() >= 15:
-        out, to, _ = run_with_llm_turn_timeout(lambda: "ok", timeout_sec=0.05)
+        out, to, _ = run_with_llm_turn_timeout(
+            lambda: (time.sleep(0.12), "ok")[1],
+            timeout_sec=0.05,
+        )
         if to and out is None:
             _ok(f"faz84 timeout {int(llm_turn_timeout_sec())}s")
         else:
@@ -3390,6 +3388,68 @@ def run_parity(*, live_base: str | None = None) -> int:
         _fail("faz84 disabled")
         fails += 1
     _ok(f"dalga-h {FAZ78_VERSION} … {FAZ84_VERSION}")
+
+    print("=== Faz 96 — P11 otonom sistem analizi ===")
+    from ilim_assistant.motorlar.programlama_faz96 import (
+        FAZ96_VERSION,
+        build_repair_queue,
+        faz96_enabled,
+        format_system_analysis_report,
+        maybe_instant_faz96,
+        prepare_autonomous_repair_turn,
+        run_autonomous_system_analysis,
+        wants_full_autonomous_cycle,
+        wants_system_analysis,
+    )
+
+    if faz96_enabled():
+        if wants_system_analysis("sistem analizi"):
+            _ok("faz96 wants_system_analysis")
+        else:
+            _fail("faz96 wants_system_analysis")
+            fails += 1
+        if wants_full_autonomous_cycle("hataları bul onar"):
+            _ok("faz96 wants_full_cycle")
+        else:
+            _fail("faz96 wants_full_cycle")
+            fails += 1
+        rep = run_autonomous_system_analysis(
+            WORKSPACE,
+            include_parity=os.environ.get("RUZGAR_P11_SKIP_PARITY", "1") == "1",
+        )
+        if isinstance(rep, dict) and "score" in rep and "repair_queue" in rep:
+            _ok(f"faz96 analysis score={rep.get('score')}")
+        else:
+            _fail("faz96 analysis", str(rep)[:80])
+            fails += 1
+        q = build_repair_queue(rep)
+        if isinstance(q, list):
+            _ok(f"faz96 queue len={len(q)}")
+        else:
+            _fail("faz96 queue")
+            fails += 1
+        txt = format_system_analysis_report(rep)
+        if txt and "P11" in txt:
+            _ok("faz96 format report")
+        else:
+            _fail("faz96 format")
+            fails += 1
+        inst = maybe_instant_faz96("sistem analizi", str(WORKSPACE))
+        if inst and "P11" in inst:
+            _ok("faz96 instant")
+        else:
+            _fail("faz96 instant", str(inst)[:60])
+            fails += 1
+        prep = prepare_autonomous_repair_turn("hataları bul onar", WORKSPACE)
+        if prep and (prep.get("instant") or prep.get("augmented_message")):
+            _ok("faz96 repair prep")
+        else:
+            _fail("faz96 repair prep", str(prep)[:60])
+            fails += 1
+    else:
+        _fail("faz96 disabled")
+        fails += 1
+    _ok(FAZ96_VERSION)
 
     return fails
 

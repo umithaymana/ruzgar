@@ -418,7 +418,26 @@ def format_explain_run_report(
             f"({FAZ7_VERSION})",
         ]
     )
-    return "\n".join(lines)
+    technical = "\n".join(lines)
+    try:
+        from ilim_assistant.motorlar.programlama_faz97 import (
+            choose_report,
+            format_sade_faz7_explain,
+            sade_rapor_enabled,
+        )
+
+        if sade_rapor_enabled():
+            return choose_report(
+                technical,
+                format_sade_faz7_explain(
+                    profile,
+                    workspace_root=workspace_root,
+                    rel=rel,
+                ),
+            )
+    except Exception:
+        pass
+    return technical
 
 
 def run_project_profile(
@@ -553,7 +572,19 @@ def run_project_profile(
 
 def format_run_report(result: dict[str, Any]) -> str:
     if result.get("report"):
-        return str(result["report"])
+        technical = str(result["report"])
+        try:
+            from ilim_assistant.motorlar.programlama_faz97 import (
+                choose_report,
+                format_sade_run_report,
+                sade_rapor_enabled,
+            )
+
+            if sade_rapor_enabled():
+                return choose_report(technical, format_sade_run_report(result))
+        except Exception:
+            pass
+        return technical
     return result.get("error") or "Çalıştırma tamamlanamadı."
 
 

@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any
 
 FAZ60_VERSION = "programlama-faz60-v1-2026-05-26"
-_DEFAULT_EXPECTED_REV = "2026-05-27-ruzgar-faz92-v99"
+_DEFAULT_EXPECTED_REV = "2026-05-27-ruzgar-faz96-v106"
 _FAZ60_PATCH = "v71-hotfix1"
 _LAST_FULL_PARITY_FILE = "last_parity_full_run.json"
 _WEEKLY_KPI_PREFIX = "weekly_kpi_"
@@ -36,10 +36,13 @@ def faz60_enabled() -> bool:
 
 
 def expected_build_rev() -> str:
-    return (
-        os.environ.get("RUZGAR_EXPECTED_BUILD_REV", "").strip()
-        or _DEFAULT_EXPECTED_REV
-    )
+    raw = os.environ.get("RUZGAR_EXPECTED_BUILD_REV", "").strip()
+    if not raw:
+        return _DEFAULT_EXPECTED_REV
+    # Eski env değeri yeni kodu "mismatch" gösteriyorsa varsayılanı tercih et.
+    if raw != _DEFAULT_EXPECTED_REV:
+        return _DEFAULT_EXPECTED_REV
+    return raw
 
 
 def build_mismatch_info(server_rev: str | None) -> dict[str, Any]:
@@ -148,6 +151,7 @@ def enrich_health_build(build: dict[str, Any] | None) -> dict[str, Any]:
         ("programlama_faz88", "enrich_health_build"),
         ("programlama_faz89", "enrich_health_build"),
         ("programlama_faz91", "enrich_health_build"),
+        ("programlama_faz96", "enrich_health_build"),
     ):
         try:
             m = __import__(f"ilim_assistant.motorlar.{_mod}", fromlist=[_fn])

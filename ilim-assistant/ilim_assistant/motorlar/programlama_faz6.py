@@ -615,7 +615,21 @@ def format_scaffold_report(result: dict[str, Any]) -> str:
             f"Faz 5 oturum bağlamı güncellendi. ({FAZ6_VERSION})",
         ]
     )
-    return "\n".join(lines)
+    technical = "\n".join(lines)
+    try:
+        from ilim_assistant.motorlar.programlama_faz97 import (
+            choose_report,
+            format_sade_scaffold,
+            sade_rapor_enabled,
+        )
+
+        if sade_rapor_enabled():
+            payload = dict(result)
+            payload.setdefault("project_rel", result.get("base_dir"))
+            return choose_report(technical, format_sade_scaffold(payload))
+    except Exception:
+        pass
+    return technical
 
 
 def scaffold_directive() -> str:

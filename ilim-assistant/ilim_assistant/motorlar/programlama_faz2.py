@@ -84,6 +84,7 @@ def build_startup_briefing(workspace_root: str | Path | None = None) -> dict[str
         "Ne yapabilirim:",
         "• Proje dosyalarını okur/yazarım (@@write + pytest/ruff)",
         "• «kendini tara» → öz-denetim raporu",
+        "• «sistem analizi» / «hataları bul onar» → P11 otonom analiz + güvenli onarım (Faz 96)",
         "• «kendini tara» → numaralı rapor; «onayla 1 2» veya «hepsini onayla düzelt»",
         "• «rüzgar ben ümit» → yönetici oturumu",
         "• «proje özeti» / «proje kaydet: Ad | hedef: …» → oturum bağlamı (Faz 5)",
@@ -109,6 +110,8 @@ def build_startup_briefing(workspace_root: str | Path | None = None) -> dict[str
         "commands": [
             "rüzgar ben ümit",
             "kendini tara",
+            "sistem analizi",
+            "hataları bul onar",
             "güvenlik tara",
             "onaylıyorum düzelt",
             "otomatik debug",
