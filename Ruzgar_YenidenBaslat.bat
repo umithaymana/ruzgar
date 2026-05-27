@@ -12,5 +12,5 @@ if errorlevel 1 (
   exit /b 1
 )
 echo.
-echo Tamam. Saglik/build: faz78-v87 (Dalga H programlama Faz 78-83).
+echo Tamam. Saglik/build: faz84-v88 (Hizir hub + video ara + Dalga H).
 pause

@@ -28,6 +28,7 @@ _HUB_MOTORS = (
     "tercume",
     "ses",
     "okuma",
+    "hizir",
 )
 
 _MOTOR_LABEL = {
@@ -37,6 +38,7 @@ _MOTOR_LABEL = {
     "tercume": "Tercüme",
     "ses": "Ses",
     "okuma": "Okuma / İlim",
+    "hizir": "Hızır / Ticaret",
     "genel": "Ana Motor",
 }
 
@@ -119,6 +121,32 @@ def resolve_hub_target(
         return "video", meta
 
     try:
+        from ilim_assistant.motorlar.video_faz84 import wants_video_search
+
+        if wants_video_search(msg):
+            meta["candidates"].append(
+                {"motor": "video", "score": 9, "reason": "youtube_search"}
+            )
+            meta["winner"] = "video"
+            meta["reason"] = "youtube_search"
+            return "video", meta
+    except Exception:
+        pass
+
+    try:
+        from ilim_assistant.motorlar.hizir_faz84 import wants_hub_hizir_route
+
+        if wants_hub_hizir_route(msg):
+            meta["candidates"].append(
+                {"motor": "hizir", "score": 9, "reason": "hizir_trade"}
+            )
+            meta["winner"] = "hizir"
+            meta["reason"] = "hizir_trade"
+            return "hizir", meta
+    except Exception:
+        pass
+
+    try:
         from ilim_assistant.motorlar.programlama_faz10 import should_delegate_to_programlama
 
         if should_delegate_to_programlama(
@@ -186,6 +214,15 @@ def maybe_hub_instant(
     if _HELP_RE.search(_ascii_fold(raw)):
         return format_hub_help()
 
+    try:
+        from ilim_assistant.motorlar.video_faz84 import maybe_instant_faz84
+
+        v84 = maybe_instant_faz84(raw)
+        if v84:
+            return v84
+    except Exception:
+        pass
+
     if is_video_download_request(raw):
         try:
             from ilim_assistant.motorlar.video_faz71 import maybe_instant_faz71
@@ -195,6 +232,15 @@ def maybe_hub_instant(
                 return vhit
         except Exception:
             pass
+
+    try:
+        from ilim_assistant.motorlar.hizir_faz84 import maybe_instant_faz84 as hizir_hit
+
+        hh = hizir_hit(raw, mode_norm="hizir")
+        if hh:
+            return hh
+    except Exception:
+        pass
 
     try:
         from ilim_assistant.motorlar.hafiza_faz75 import maybe_instant_faz75
@@ -256,6 +302,8 @@ def format_hub_help() -> str:
         "· Çevir → **Tercüme**",
         "· Ses / TTS → **Ses**",
         "· Arşiv / ilim metni → **Okuma**",
+        "· Pazar / fırsat / ürün tara → **Hızır**",
+        "· Video ara (isim) → **Video** (liste; «2 numarayı indir»)",
         "",
         "İsterseniz ilgili sekmeye geçmeden Ana Motor'da yazmaya devam edebilirsiniz.",
         f"({FAZ76_VERSION})",
@@ -284,6 +332,7 @@ def build_delegated_motor_context(target: str, message: str) -> str:
         "okuma": ("ilim_assistant.okuma_motoru", "build_motor_context"),
         "tercume": ("ilim_assistant.tercume_motoru", "build_motor_context"),
         "hafiza": ("ilim_assistant.motorlar.hafiza_motoru", "build_motor_context"),
+        "hizir": ("ilim_assistant.hizir.tool_bridge", "build_dynamic_operasyon_context"),
         "programlama": (
             "ilim_assistant.motorlar.programlama_motoru",
             "build_motor_context",
@@ -297,6 +346,8 @@ def build_delegated_motor_context(target: str, message: str) -> str:
         fn = getattr(mod, spec[1])
         if mid == "programlama":
             return str(fn(msg, workspace_root=None) or "").strip()
+        if mid == "hizir":
+            return str(fn(msg, mode_norm="hizir") or "").strip()
         return str(fn(msg) or "").strip()
     except Exception:
         return ""

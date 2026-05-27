@@ -80,6 +80,40 @@ def main() -> int:
     else:
         fail("hub route prog", tgt2)
 
+    from ilim_assistant.motorlar.video_faz84 import wants_video_search, extract_search_query
+
+    if wants_video_search("şu filmi ara: test fragman"):
+        ok("video search detect")
+        if len(extract_search_query("şu filmi ara: test fragman")) >= 3:
+            ok("video search query extract")
+        else:
+            fail("video search query")
+    else:
+        fail("video search detect")
+
+    tgt3, _ = resolve_hub_target("şu filmi ara dune", {"video": True})
+    if tgt3 == "video":
+        ok("hub route video search")
+    else:
+        fail("hub route video search", tgt3)
+
+    from ilim_assistant.motorlar.hizir_faz84 import wants_hub_hizir_route, classify_hizir_intent
+
+    if wants_hub_hizir_route("pazar tara ürün"):
+        ok("hizir hub route detect")
+    else:
+        fail("hizir hub detect")
+    tgt4, _ = resolve_hub_target("pazar tara", {"hizir": True})
+    if tgt4 == "hizir":
+        ok("hub route hizir")
+    else:
+        fail("hub route hizir", tgt4)
+    hi = classify_hizir_intent("pazar tara", mode_norm="hizir")
+    if hi.get("intent") == "do":
+        ok("hizir intent do")
+    else:
+        fail("hizir intent", str(hi))
+
     print(f"\n{'PASS' if fails == 0 else 'FAIL'} ({fails} failed)")
     return 1 if fails else 0
 

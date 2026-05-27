@@ -4,8 +4,8 @@ import time
 from typing import Any
 
 
-CURRENT_PHASE = 77
-CURRENT_PHASE_LABEL = "Faz 68–77"
+CURRENT_PHASE = 84
+CURRENT_PHASE_LABEL = "Faz 68–84"
 
 
 def _phase(n: int, name: str, status: str = "tamam") -> dict[str, str]:
@@ -30,75 +30,53 @@ def build_ui_manifest(*, health: dict[str, Any] | None = None) -> dict[str, Any]
         "current_phase": CURRENT_PHASE,
         "current_phase_label": CURRENT_PHASE_LABEL,
         "dashboard": {
-            "badge": "Ana Motor · Hub Faz 76",
+            "badge": "Ana Motor · Hub + Faz 84",
             "promise": (
-                "Orkestra şefi: Ana Motor'dan doğal cümleyle yardımcı motora yönlendirme. "
-                "Tüm yardımcı motorlar ROK (Faz 68–75) + hub (Faz 76)."
+                "Orkestra: tüm yardımcı motorlar ROK + hub (Hızır dahil). "
+                "Video: isimle arama listesi · programlama Dalga H."
             ),
-            "welcome_foot": "Faz 68–77 · Ümit & Gökçenur",
-            "help_title": "Rüzgar — Konuşarak yap (ROK)",
+            "welcome_foot": "Faz 68–84 · Ümit & Gökçenur",
+            "help_title": "Rüzgar — Konuşarak yap (ROK + Hub)",
         },
         "phases": [
-            _phase(0, "UI iskeleti"),
-            _phase(1, "Programlama", "1.3 + debug"),
-            _phase(2, "Okuma"),
-            _phase(3, "Tercüme"),
-            _phase(4, "Ses"),
-            _phase(5, "Video", "v5 + indirme"),
-            _phase(6, "Ana Motor akıl"),
-            _phase(7, "Cila"),
-            _phase(8, "Merkezi hafıza"),
-            _phase(9, "Gemini-first hız"),
-            _phase(10, "Otonom debug"),
-            _phase(11, "İdrak ön-işlemi"),
-            _phase(12, "Cevap kalitesi"),
-            _phase(13, "Kişisel hafıza"),
-            _phase(14, "Self-test"),
-            _phase(15, "Debug v2"),
-            _phase(16, "Görevler + hatırlatıcı", "aktif"),
+            _phase(68, "Programlama ROK"),
+            _phase(71, "Video ROK"),
+            _phase(72, "Ses ROK"),
+            _phase(73, "Okuma ROK"),
+            _phase(74, "Tercüme ROK"),
+            _phase(75, "Hafıza ROK"),
+            _phase(76, "Ana Motor Hub"),
+            _phase(77, "Cila + KPI"),
+            _phase(78, "Prog. çekirdek kapsam"),
+            _phase(79, "Handoff v3"),
+            _phase(80, "Mega refactor"),
+            _phase(81, "Araç kurtarma"),
+            _phase(82, "Zayıflık raporu"),
+            _phase(83, "PR hazırla"),
+            _phase(84, "Hızır hub + video ara", "aktif"),
         ],
         "motors": {
-            "genel": {"tag": f"Hub Faz 76 · Gemini {'✓' if gemini_ok else '?'}"},
+            "genel": {"tag": f"Hub Faz 76–84 · Gemini {'✓' if gemini_ok else '?'}"},
             "hafiza": {"tag": "Faz 75 · Konuşarak yap (ROK)"},
-            "hizir": {"tag": "Ekonomik avcı · operasyon"},
+            "hizir": {"tag": "Faz 84 · Hub + ticaret (ROK)"},
             "ses": {"tag": "Faz 72 · Konuşarak yap (ROK)"},
-            "video": {"tag": "Faz 71 · Konuşarak yap (ROK)"},
+            "video": {"tag": "Faz 71/84 · İndir + ara (ROK)"},
             "okuma": {"tag": "Faz 73 · Konuşarak yap (ROK)"},
             "tercume": {"tag": "Faz 74 · Konuşarak yap (ROK)"},
-            "programlama": {"tag": "Faz 68–70 · Konuşarak yap"},
+            "programlama": {"tag": "Faz 68–83 · Konuşarak yap"},
         },
         "capabilities": [
-            "Ansiklopedik soruda Gemini-first, ağır indeks atlama",
-            "Kod modunda yerel ilim indeksi atlama",
-            "İdrak ön-işlemi ve devam cümlesi genişletme",
-            "hatırla / unut / profil komutları",
-            "görev oluştur / görev listesi",
-            "hatırlatıcı pending/ack API",
-            "YouTube/web video indirme + son indirmeler",
-            "Ses Faz 72: konuşarak profil seçimi · ses ayarları · oku: yönergesi",
-            "Ses API: /api/tts · /api/ses/settings",
-            "Okuma Faz 73: arsiv durumu · metin türü · kaynak ipucu",
-            "Tercüme Faz 74: dil çifti · dil listesi · altyazı yönergesi",
-            "Hafıza Faz 75: hatırla · görev · hatırlatıcı · hafıza durumu",
-            "Ana Motor Faz 76: hub yönlendirme · /api/ana-motor/hub-route",
-            "Faz 77: video indirme doğrudan API · scripts/rok_smoke.py KPI",
-            "self-test API",
-            "Programlama Faz 8: şablon sonrası atölye odak + api başlat/durdur",
-            "Programlama Faz 10: workspace indeks, @@read/@@write, patch onayla, Ana Motor delege",
-            "Web şablonları: static_site (HTML) · react_vite (SPA)",
-            "Faz 11: programlama orkestra adımları + atölye patch şeridi",
-            "Faz 12: patch diff önizleme + programlama_smoke.py + hızlı şablon",
-            "Faz 13: proje tara / proje özeti dosya haritası · @@find · sembol özeti",
-            "Faz 14: görev: proje hedef — çok tur patch + doğrulama · görev durdur",
-            "Faz 15: npm install/build/test · git status/diff — yalnızca projects/",
-            "Faz 16: çok dosya patch — diff + Kabul/Red + toplu uygula + .bak geri al",
-            "Faz 17: git durum/diff · commit öner · onaylı git commit (no --no-verify)",
-            "Faz 18: programlama_smoke --ci · SLO scaffold<30s · birleşik üstayol raporu",
-            "Faz 19: görev v2 — iş:/yap: · doğal cümle · 120sn · Groq öncelik · erken dur",
-            "Faz 20: birleşik ajan · ruzgar-tool read/write/grep/verify",
+            "Ana Motor hub: programlama, video, ses, okuma, tercüme, hafıza, hızır",
+            "Video: URL indir · isimle YouTube ara · «2 numarayı indir»",
+            "Video API: /api/video/download · /api/video/search",
+            "Hızır: pazar tara · fırsat · hub yönlendirme",
+            "Programlama Dalga H: çekirdek patch, mega refactor, zayıflık raporu, pr hazırla",
+            "ROK tüm yardımcı motorlar · Ümit cevap emri",
+            "scripts/rok_smoke.py · programlama_smoke.py",
         ],
         "video": {
             "download_api": "/api/video/download",
+            "search_api": "/api/video/search",
             "recent_downloads": recent_downloads,
         },
     }

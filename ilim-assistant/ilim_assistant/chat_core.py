@@ -917,6 +917,15 @@ def prepare_turn(
                 return msg, [], "", "", "", hafiza_hit
         except Exception:
             pass
+    if m == "hizir":
+        try:
+            from ilim_assistant.motorlar.hizir_faz84 import maybe_instant_faz84
+
+            hizir_hit = maybe_instant_faz84(msg, mode_norm="hizir")
+            if hizir_hit:
+                return msg, [], "", "", "", hizir_hit
+        except Exception:
+            pass
 
     from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
 

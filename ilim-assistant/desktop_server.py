@@ -751,7 +751,7 @@ def _health_build_block() -> dict:
     import os as _os
 
     base = {
-        "rev": "2026-05-26-ruzgar-faz78-v87",
+        "rev": "2026-05-26-ruzgar-faz84-v88",
         "nebula_kitap": True,
         "fast_paths": _os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
         "memory_first": True,
@@ -2410,6 +2410,53 @@ def api_hizir_firsat_kaldir(body: HizirFirsatKaldirBody):
 
         data = pas_gec_hizir_kart((body.kart_id or "").strip())
         return {"ok": True, "path": str(merkezi_bellek_path()), "data": data}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+class VideoSearchBody(BaseModel):
+    message: str = ""
+    query: str = ""
+
+
+@app.post("/api/video/search")
+async def api_video_search(body: VideoSearchBody):
+    """Faz 84 — YouTube isimle arama veya «N numarayı indir»."""
+    msg = (body.message or body.query or "").strip()
+    if not msg:
+        raise HTTPException(status_code=400, detail="Arama metni boş.")
+
+    def _run() -> dict[str, Any]:
+        from ilim_assistant.motorlar.video_faz84 import (
+            FAZ84_VERSION,
+            extract_search_query,
+            format_search_results,
+            maybe_instant_faz84,
+            maybe_search_and_pick,
+            search_youtube,
+        )
+
+        pick = maybe_search_and_pick(msg)
+        if pick:
+            return {"ok": True, "mode": "download", "text": pick}
+        instant = maybe_instant_faz84(msg)
+        if instant:
+            return {"ok": True, "mode": "instant", "text": instant}
+        q = extract_search_query(msg)
+        data = search_youtube(q)
+        return {
+            "ok": bool(data.get("ok")),
+            "mode": "search",
+            "data": data,
+            "text": format_search_results(data),
+            "version": FAZ84_VERSION,
+        }
+
+    try:
+        data = await run_in_threadpool(_run)
+        return data
+    except HTTPException:
+        raise
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 

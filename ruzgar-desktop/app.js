@@ -4,7 +4,7 @@
  * Kök sonda `/api` ise kırpılır — aksi halde fetch `.../api/api/merkezi-bellek` ile 404 verir.
  */
 const RUZGAR_LOCAL_API_PORT = 8779;
-const RUZGAR_EXPECTED_BUILD_REV = "2026-05-26-ruzgar-faz78-v87";
+const RUZGAR_EXPECTED_BUILD_REV = "2026-05-26-ruzgar-faz84-v88";
 const RUZGAR_LOCAL_API_FALLBACK = `http://127.0.0.1:${RUZGAR_LOCAL_API_PORT}`;
 
 function migrateLegacyApiUrl(raw) {
@@ -5297,6 +5297,63 @@ function isMostlyVideoDownloadCommand(text) {
   return rest.length < 120;
 }
 
+const RUZGAR_VIDEO_SEARCH_RE =
+  /(?:şu\s+filmi\s+ara|filmi\s+ara|video\s+ara|youtube\s+ara|video\s+bul|youtube\s+bul|klip\s+ara|\b(?:ara|bul)\b.*\b(?:film|video|youtube|klip)\b)/i;
+const RUZGAR_VIDEO_PICK_RE =
+  /(?:indir|download)\s*(?:#|no|numara)?\s*(\d{1,2})\b|(\d{1,2})\s*(?:numarayı|numarayi|nolu)\s*indir/i;
+
+function isVideoSearchOrPickCommand(text) {
+  const raw = String(text || "").trim();
+  if (!raw || extractVideoDownloadUrl(raw)) return false;
+  if (RUZGAR_VIDEO_PICK_RE.test(raw)) return true;
+  return RUZGAR_VIDEO_SEARCH_RE.test(raw);
+}
+
+async function tryChatVideoSearchSideChannel(userText) {
+  const mode = activeMotorChatMode();
+  if (mode !== "genel" && mode !== "video") return false;
+  if (!isVideoSearchOrPickCommand(userText)) return false;
+
+  const isPick = RUZGAR_VIDEO_PICK_RE.test(String(userText || "").trim());
+  appendBubble(
+    "assistant",
+    isPick
+      ? "Ümit abi, seçtiğiniz sıradaki videoyu **arama API** ile indiriyorum…"
+      : "Ümit abi, YouTube'da **arıyorum** (liste; indirmek için numara veya link)…",
+  );
+  setStatus(isPick ? "Video indiriliyor…" : "YouTube aranıyor…", "Rüzgar");
+  const ctrl = new AbortController();
+  const to = window.setTimeout(() => ctrl.abort(), isPick ? RUZGAR_VIDEO_DOWNLOAD_TIMEOUT_MS : 120000);
+  try {
+    const res = await fetch(`${API}/api/video/search`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: userText }),
+      signal: ctrl.signal,
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || j.ok === false) {
+      throw new Error(j.detail || `HTTP ${res.status}`);
+    }
+    appendBubble("assistant", String(j.text || j.detail || "Arama tamamlandı."));
+    if (j.mode === "download") {
+      await refreshUiManifest();
+    }
+    setStatus("Hazır", "Rüzgar");
+    return true;
+  } catch (e) {
+    appendBubble(
+      "assistant",
+      `Video arama/indirme başarısız: ${formatClientChatError(e)}\n\nyt-dlp kurulu olmalı.`,
+      { error: true },
+    );
+    setStatus("Hazır", "Rüzgar");
+    return true;
+  } finally {
+    window.clearTimeout(to);
+  }
+}
+
 async function runVideoDownloadFromUrl(url, opts = {}) {
   const u = String(url || "").trim();
   if (!u) {
@@ -8541,11 +8598,17 @@ async function sendMessageWithText(t, opts = {}) {
   syncInterruptButton();
 
   try {
-    const vidUrl = extractVideoDownloadUrl(text);
     const mode = activeMotorChatMode();
-    if (vidUrl && (mode === "genel" || mode === "video") && isMostlyVideoDownloadCommand(text)) {
-      const done = await tryChatVideoDownloadSideChannel(text);
-      if (done) return;
+    if (mode === "genel" || mode === "video") {
+      if (isVideoSearchOrPickCommand(text)) {
+        const searched = await tryChatVideoSearchSideChannel(text);
+        if (searched) return;
+      }
+      const vidUrl = extractVideoDownloadUrl(text);
+      if (vidUrl && isMostlyVideoDownloadCommand(text)) {
+        const done = await tryChatVideoDownloadSideChannel(text);
+        if (done) return;
+      }
     }
     await streamChat(text);
   } catch (e) {

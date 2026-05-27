@@ -114,4 +114,7 @@ Paylaşılan parçalar (motorlar arası):
 **Dalga U8 — Cila Faz 77** — **UYGULANDI (v86)**  
 Video indirme: sohbet 180sn yerine masaüstü `/api/video/download` · `scripts/rok_smoke.py` KPI.
 
-*Son güncelleme: build `faz77-v86` · UI manifest Faz 68–77.*
+**Dalga U9 — Faz 84** — **UYGULANDI (v88)**  
+Hızır hub · YouTube isimle arama · UI manifest Faz 68–84.
+
+*Son güncelleme: build `faz84-v88` · UI manifest Faz 68–84.*

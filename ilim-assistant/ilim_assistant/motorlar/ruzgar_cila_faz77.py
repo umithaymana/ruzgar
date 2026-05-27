@@ -20,6 +20,7 @@ _MOTOR_FNS: tuple[tuple[str, str, str], ...] = (
     ("okuma", "ilim_assistant.motorlar.okuma_faz73", "faz73_enabled"),
     ("tercume", "ilim_assistant.motorlar.tercume_faz74", "faz74_enabled"),
     ("hafiza", "ilim_assistant.motorlar.hafiza_faz75", "faz75_enabled"),
+    ("hizir", "ilim_assistant.motorlar.hizir_faz84", "faz84_enabled"),
 )
 
 

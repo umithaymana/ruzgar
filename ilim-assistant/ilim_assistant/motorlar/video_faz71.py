@@ -148,6 +148,15 @@ def maybe_instant_faz71(message: str) -> str | None:
     if _LIST_RE.search(_ascii_fold(raw)):
         return format_recent_list()
 
+    try:
+        from ilim_assistant.motorlar.video_faz84 import maybe_instant_faz84
+
+        v84 = maybe_instant_faz84(raw)
+        if v84:
+            return v84
+    except Exception:
+        pass
+
     intent = classify_video_intent(raw, mode_norm="video")
     if intent.get("intent") == INTENT_DO:
         urls = intent.get("urls") or extract_urls(raw)
