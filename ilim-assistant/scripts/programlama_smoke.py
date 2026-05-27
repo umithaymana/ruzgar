@@ -3451,6 +3451,41 @@ def run_parity(*, live_base: str | None = None) -> int:
         fails += 1
     _ok(FAZ96_VERSION)
 
+    print("=== Faz 98 — Ümit onay kapısı ===")
+    from ilim_assistant.motorlar.programlama_faz98 import (
+        FAZ98_VERSION,
+        build_operation,
+        clear_pending,
+        faz98_enabled,
+        maybe_instant_faz98,
+    )
+
+    if faz98_enabled():
+        b = build_operation("mkdir", WORKSPACE, dst="projects/_faz98_smoke_tmp")
+        if b.get("ok"):
+            _ok("faz98 build_operation")
+        else:
+            _fail("faz98 build", str(b)[:60])
+            fails += 1
+        prev = maybe_instant_faz98(
+            "işlem iste: mkdir projects/_faz98_smoke_tmp2", WORKSPACE
+        )
+        if prev and "henüz yapmadım" in (prev or "").lower():
+            _ok("faz98 preview")
+            clear_pending(WORKSPACE)
+        else:
+            _fail("faz98 preview", str(prev)[:60])
+            fails += 1
+        if maybe_instant_faz98("yapma", WORKSPACE):
+            _ok("faz98 reject")
+        else:
+            _fail("faz98 reject")
+            fails += 1
+    else:
+        _fail("faz98 disabled")
+        fails += 1
+    _ok(FAZ98_VERSION)
+
     return fails
 
 

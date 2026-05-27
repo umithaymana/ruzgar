@@ -950,6 +950,14 @@ def maybe_programlama_instant_reply(
     except Exception:
         pass
     try:
+        from ilim_assistant.motorlar.programlama_faz98 import maybe_instant_faz98
+
+        faz98_hit = maybe_instant_faz98(message, workspace_root)
+        if faz98_hit:
+            parts.append(faz98_hit)
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_faz67 import maybe_instant_faz67
 
         faz67_hit = maybe_instant_faz67(
@@ -1857,6 +1865,12 @@ def build_motor_context(
         from ilim_assistant.motorlar.programlama_faz67 import faz67_directive
 
         base += faz67_directive() + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz98 import faz98_directive
+
+        base += faz98_directive() + "\n"
     except Exception:
         pass
     try:
