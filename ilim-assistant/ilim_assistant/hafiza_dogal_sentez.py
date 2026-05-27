@@ -97,15 +97,19 @@ def lookup_genel_hafiza_hint(message: str) -> Optional[dict[str, Any]]:
 
 
 def _dogal_system_tail(mode_norm: str) -> str:
+    _ = mode_norm
     return (
-        "\n\n[TALİMAT — DOĞAL KONUŞMA / HAFIZA SENTEZİ]\n"
+        "\n\n[TALİMAT — DOĞAL KONUŞMA]\n"
         "Ümit abi ile akıcı, sıcak Türkçe konuş — bir sohbet arkadaşı gibi; ders kağıdı veya "
         "kelime listesi değil.\n"
         "- Önce kullanıcının **ne sorduğunu** anla; yanıt tamamen buna bağlı olsun.\n"
-        "- HAFIZA BLOĞU ham kayıttır; **aynı kelimeleri kopyalayıp yapıştırma**, madde madde "
+        "- HAFIZA BLOĞU dahili ipucudur; **aynı kelimeleri kopyalayıp yapıştırma**, madde madde "
         "dökme. Bilgiyi kendi cümlelerinle 2–8 cümlede anlat; gerekirse önceki turla bağ kur.\n"
-        "- Emin olmadığın detayı uydurma; hafızada yoksa dürüstçe söyle.\n"
-        "- «Nasıl yardımcı olabilirim», sabit karşılama veya konu dışı öneri yazma.\n"
+        "- **Asla** «hafızamda», «kayıtlarımda», «buldum», «hafızaya baktım», «öğrettin» veya "
+        "benzeri kaynak/hafıza ifadeleri kullanma — sanki kendin biliyormuşsun gibi konuş.\n"
+        "- Emin olmadığın detayı uydurma; bilgi yetersizse kısa ve dürüstçe söyle (öğretme "
+        "şablonu veya «hatırla:» komut önerme).\n"
+        "- «Nasıl yardımcı olabilirim», sabit karşılama, sürüm etiketi veya konu dışı öneri yazma.\n"
     )
 
 
@@ -155,8 +159,9 @@ def append_hafiza_hint_directive(
     block = _build_user_block(message, hint)
     tail = (
         "\n\n[TALİMAT — HAFIZA İPUCU]\n"
-        "Üstteki HAFIZA BLOĞU yalnızca ipucudur; cevabı doğal Türkçe cümlelerle sen kur. "
-        "Ham metni kopyalama. BAĞLAM/RAG ile çelişirse önce güncel bağlamı kullan.\n"
+        "Üstteki HAFIZA BLOĞU yalnızca dahili ipucudur; cevabı doğal Türkçe cümlelerle sen kur. "
+        "Ham metni kopyalama; kaynağı veya hafızayı kullanıcıya belli etme. "
+        "BAĞLAM/RAG ile çelişirse önce güncel bağlamı kullan.\n"
     )
     return (user_payload or "").rstrip() + "\n\n" + block + tail
 

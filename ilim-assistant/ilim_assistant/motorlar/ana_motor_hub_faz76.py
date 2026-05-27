@@ -112,6 +112,16 @@ def resolve_hub_target(
     if not msg or not _enabled():
         return "genel", meta
 
+    try:
+        from ilim_assistant.ana_motor_plan import looks_like_casual_social_chat
+
+        if looks_like_casual_social_chat(msg):
+            meta["winner"] = "genel"
+            meta["reason"] = "casual_social"
+            return "genel", meta
+    except Exception:
+        pass
+
     if is_video_download_request(msg):
         meta["candidates"].append(
             {"motor": "video", "score": 10, "reason": "youtube_download"}
@@ -216,6 +226,14 @@ def maybe_hub_instant(
         return format_hub_help()
 
     try:
+        from ilim_assistant.ana_motor_plan import looks_like_casual_social_chat
+
+        if looks_like_casual_social_chat(raw):
+            return None
+    except Exception:
+        pass
+
+    try:
         from ilim_assistant.motorlar.video_faz84 import maybe_instant_faz84
 
         v84 = maybe_instant_faz84(raw, workspace_root)
@@ -244,9 +262,9 @@ def maybe_hub_instant(
         pass
 
     try:
-        from ilim_assistant.motorlar.hafiza_faz75 import maybe_instant_faz75
+        from ilim_assistant.motorlar.hafiza_faz75 import maybe_instant_faz75_hub
 
-        hit = maybe_instant_faz75(raw, mode_norm="hafiza")
+        hit = maybe_instant_faz75_hub(raw)
         if hit:
             return hit
     except Exception:
@@ -411,6 +429,15 @@ def apply_genel_hub_routing(
             flags = motor_niyeti_heuristic(message)
         except Exception:
             flags = {}
+
+    try:
+        from ilim_assistant.ana_motor_plan import looks_like_casual_social_chat
+
+        if looks_like_casual_social_chat(message):
+            out["hub_meta"] = {"reason": "casual_social", "winner": "genel"}
+            return out
+    except Exception:
+        pass
 
     instant = maybe_hub_instant(message, motor_flags=flags, workspace_root=workspace_root)
     if instant:

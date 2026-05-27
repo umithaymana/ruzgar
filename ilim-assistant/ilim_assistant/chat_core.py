@@ -840,6 +840,12 @@ def prepare_turn(
     from ilim_assistant.idrak_on_islem import pretreat_user_turn
 
     msg = pretreat_user_turn(msg, history).text
+    try:
+        from ilim_assistant.kullanici_baglami import ingest_message
+
+        ingest_message(msg)
+    except Exception:
+        pass
     m = normalize_mode(mode)
     if coding_mode and m not in _NO_RAG_MODES:
         m = "programlama"
@@ -912,7 +918,7 @@ def prepare_turn(
         try:
             from ilim_assistant.motorlar.hafiza_faz75 import maybe_instant_faz75
 
-            hafiza_hit = maybe_instant_faz75(msg)
+            hafiza_hit = maybe_instant_faz75(msg, allow_lookup=False)
             if hafiza_hit:
                 return msg, [], "", "", "", hafiza_hit
         except Exception:
@@ -1415,13 +1421,12 @@ def prepare_turn(
             op_ctx = ""
 
     session_mem_ctx = ""
-    if not (m == "programlama" and _prog_light):
-        try:
-            from ilim_assistant.ruzgar_session_context import build_session_memory_context
+    try:
+        from ilim_assistant.ruzgar_session_context import build_session_memory_context
 
-            session_mem_ctx = build_session_memory_context(msg, mode_norm=m, history=history)
-        except Exception:
-            session_mem_ctx = ""
+        session_mem_ctx = build_session_memory_context(msg, mode_norm=m, history=history)
+    except Exception:
+        session_mem_ctx = ""
 
     bilissel_ctx = ""
     if not _prog_light:

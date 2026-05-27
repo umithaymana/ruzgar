@@ -13,6 +13,35 @@ def _clean(s: str) -> str:
     return re.sub(r"\s+", " ", (s or "").strip()).strip(" \t\r\n.:;")
 
 
+def _parse_teach_qa(body: str) -> tuple[str, str]:
+    """Doğal öğretme metninden soru/cevap çifti çıkar."""
+    b = _clean(body)
+    if not b:
+        return "", ""
+    eq = re.search(r"(?P<q>.+?)\s*=\s*(?P<a>.+)", b)
+    if eq:
+        return _clean(eq.group("q")), _clean(eq.group("a"))
+    colon = re.search(r"(?P<q>.+?)\s*:\s*(?P<a>.+)", b)
+    if colon and len(colon.group("q")) >= 8:
+        return _clean(colon.group("q")), _clean(colon.group("a"))
+    low = b.casefold()
+    if ("güneş sistem" in low or "guness sistem" in low or "gunes sistem" in low) and any(
+        x in low for x in ("samanyol", "galax", "galaks")
+    ):
+        return "bizim güneş sistemimiz hangi galaxide yer alır", b
+    return b[:120], b
+
+
+def _store_qa(soru: str, cevap: str) -> str:
+    try:
+        from ilim_assistant.hafiza_i_ruzgar import get_hafiza_motor
+
+        get_hafiza_motor().ekle_bilgi(soru, cevap)
+    except Exception as exc:
+        return f"Hafızaya yazamadım: {exc}"
+    return f"Ümit abi, hafızaya yazdım.\nSoru: {soru[:120]}\nCevap: {cevap[:220]}"
+
+
 def try_consume_memory_command(message: str) -> str | None:
     """Kullanıcı hafıza komutu verdiyse uygular ve tek cevap döner."""
     raw = _clean(message)
@@ -26,6 +55,19 @@ def try_consume_memory_command(message: str) -> str | None:
     except Exception:
         pass
     low = raw.casefold()
+
+    teach_match = re.search(
+        r"(?is)(?:sana\s+)?(?:öğretiyorum|ogretiyorum|öğret(?:iyorum)?)\s*[:\-–]?\s*(?P<body>.+)$",
+        raw,
+    )
+    if teach_match:
+        body = _clean(teach_match.group("body"))
+        if len(body) < 6:
+            return "Ümit abi, ne öğrettiğini biraz daha açık yazar mısın?"
+        soru, cevap = _parse_teach_qa(body)
+        if not cevap:
+            return "Ümit abi, cevap kısmını anlayamadım — `hatırla: soru = cevap` da olur."
+        return _store_qa(soru, cevap)
 
     remember_match = re.search(
         r"(?is)^(?:bunu\s+)?"
@@ -49,6 +91,10 @@ def try_consume_memory_command(message: str) -> str | None:
         body = _clean((active_remember or profile_match).group("body"))
         if len(body) < 3:
             return "Mimar, neyi hatırlamamı istediğini biraz daha açık yazar mısın?"
+        if "=" in body:
+            soru, cevap = _parse_teach_qa(body)
+            if soru and cevap:
+                return _store_qa(soru, cevap).replace("Ümit abi", "Mimar", 1)
         key = f"Kişisel not: {body[:80]}"
         try:
             from ilim_assistant.hafiza_i_ruzgar import get_hafiza_motor

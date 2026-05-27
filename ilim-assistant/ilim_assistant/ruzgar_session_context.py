@@ -159,6 +159,14 @@ def build_session_memory_context(
         and not egitim_block.strip()
         and not bilissel_block
     ):
+        try:
+            from ilim_assistant.kullanici_baglami import build_context_block
+
+            kb = (build_context_block() or "").strip()
+            if kb:
+                return kb + "\n"
+        except Exception:
+            pass
         return ""
 
     sections: list[str] = [
@@ -167,6 +175,14 @@ def build_session_memory_context(
     ]
     if bilissel_block:
         sections.append(bilissel_block)
+    try:
+        from ilim_assistant.kullanici_baglami import build_context_block
+
+        kb = (build_context_block() or "").strip()
+        if kb:
+            sections.append(kb)
+    except Exception:
+        pass
     if egitim_block.strip():
         sections.append(egitim_block.strip())
     if personal:

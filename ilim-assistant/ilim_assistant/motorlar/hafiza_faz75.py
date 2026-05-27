@@ -36,7 +36,8 @@ _HELP_RE = re.compile(
     re.I,
 )
 _REMEMBER_RE = re.compile(
-    r"(?:hat[ıi]rla|haf[ıi]zaya\s+al|kaydet|not\s+al|profil)",
+    r"(?:hat[ıi]rla|haf[ıi]zaya\s+al|kaydet|not\s+al|profil|"
+    r"(?:sana\s+)?(?:öğretiyorum|ogretiyorum|öğret(?:iyorum)?))",
     re.I,
 )
 _FORGET_RE = re.compile(r"(?:\bunut\b|haf[ıi]zadan\s+sil)", re.I)
@@ -105,6 +106,14 @@ def classify_hafiza_intent(
         return {"intent": INTENT_CHAT, "reason": "empty"}
     low = _ascii_fold(raw)
 
+    try:
+        from ilim_assistant.ana_motor_plan import looks_like_casual_social_chat
+
+        if looks_like_casual_social_chat(raw):
+            return {"intent": INTENT_CHAT, "reason": "casual_social"}
+    except Exception:
+        pass
+
     if _STATUS_RE.search(low):
         return {"intent": INTENT_COMMAND, "reason": "status"}
     if _HELP_RE.search(low):
@@ -125,9 +134,6 @@ def classify_hafiza_intent(
 
     if _QUESTION_RE.search(raw):
         return {"intent": INTENT_CHAT, "reason": "question"}
-
-    if len(raw) < 100 and not _TASK_RE.search(low):
-        return {"intent": INTENT_DO, "reason": "lookup"}
 
     return {"intent": INTENT_CHAT, "reason": "conversation"}
 
@@ -193,10 +199,22 @@ def format_help() -> str:
         "· `5 dakika sonra hatırlat: …`\n"
         "· `hafıza durumu` — özet\n"
         "· Kısa soru — genel sözlükte arama (ör. «X nedir?»)\n"
+        "· `sana öğretiyorum …` veya `hatırla: soru = cevap`\n"
     )
 
 
 def try_lookup(message: str) -> str | None:
+    """
+    Genel sözlük araması — kullanıcıya anında şablon döndürmez.
+    Isabet/kaçırma LLM + doğal sentez boru hattına bırakılır (hafiza_dogal_sentez).
+    Eski anında lookup: RUZGAR_HAFIZA_INSTANT_LOOKUP=1 (yalnızca hata ayıklama).
+    """
+    if os.environ.get("RUZGAR_HAFIZA_INSTANT_LOOKUP", "0").strip().lower() not in (
+        "1",
+        "true",
+        "yes",
+    ):
+        return None
     from ilim_assistant.hafiza_i_ruzgar import genel_hafiza_lookup
 
     q = (message or "").strip()
@@ -204,12 +222,8 @@ def try_lookup(message: str) -> str | None:
         return None
     ans = genel_hafiza_lookup(q)
     if not ans or _looks_like_miss(ans):
-        return (
-            "Ümit abi, genel hafızada bu soruya net kayıt bulamadım.\n"
-            "Öğretmek için: `hatırla: soru = cevap` veya Ana Motor sohbetinde öğretin.\n"
-            f"({FAZ75_VERSION})"
-        )
-    return _footer(f"Ümit abi, hafızamda buldum:\n\n{ans}")
+        return None
+    return _footer(str(ans).strip())
 
 
 def _delegate_commands(message: str) -> str | None:
@@ -229,7 +243,12 @@ def _delegate_commands(message: str) -> str | None:
     return None
 
 
-def maybe_instant_faz75(message: str, *, mode_norm: str = "hafiza") -> str | None:
+def maybe_instant_faz75(
+    message: str,
+    *,
+    mode_norm: str = "hafiza",
+    allow_lookup: bool = False,
+) -> str | None:
     if not _enabled():
         return None
     ensure_kernel_registered()
@@ -251,12 +270,12 @@ def maybe_instant_faz75(message: str, *, mode_norm: str = "hafiza") -> str | Non
     if delegated:
         return delegated
 
-    if mode == "hafiza" and intent.get("intent") == INTENT_DO and reason == "lookup":
-        if len(raw) > 280:
-            return None
-        return try_lookup(raw)
-
     return None
+
+
+def maybe_instant_faz75_hub(message: str) -> str | None:
+    """Ana Motor hub — komut/öğretme evet; genel soru lookup hayır (LLM'e bırak)."""
+    return maybe_instant_faz75(message, mode_norm="hafiza", allow_lookup=False)
 
 
 def augment_hafiza_context(base: str) -> str:

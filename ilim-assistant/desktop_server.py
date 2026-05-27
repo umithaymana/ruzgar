@@ -751,7 +751,7 @@ def _health_build_block() -> dict:
     import os as _os
 
     base = {
-        "rev": "2026-05-27-ruzgar-faz91-v98",
+        "rev": "2026-05-27-ruzgar-faz92-v99",
         "nebula_kitap": True,
         "fast_paths": _os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
         "memory_first": True,
@@ -3445,29 +3445,43 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
     msg_early = (req.message or "").strip()
     if msg_early:
         try:
-            from ilim_assistant.chat_core import normalize_mode
-            from ilim_assistant.motorlar.ana_motor_hub_faz76 import maybe_hub_instant
+            from ilim_assistant.kullanici_baglami import ingest_message
 
-            if normalize_mode(_effective_chat_mode_raw(req)) == "genel":
-                from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
-
-                hub_early = maybe_hub_instant(
-                    msg_early,
-                    motor_flags=motor_niyeti_heuristic(msg_early),
-                    workspace_root=req.workspace_root,
-                )
-                if hub_early:
-                    yield from _iter_instant_chat_events(
-                        hub_early,
-                        msg_early,
-                        session_wake_used=req.session_wake_used,
-                        msg_for_wake=req.message,
-                        orch=orch_early,
-                        instant_gundelik=True,
-                    )
-                    return
+            ingest_message(msg_early)
         except Exception:
             pass
+        _skip_early_hub = False
+        try:
+            from ilim_assistant.ana_motor_plan import looks_like_casual_social_chat
+
+            _skip_early_hub = looks_like_casual_social_chat(msg_early)
+        except Exception:
+            pass
+        if not _skip_early_hub:
+            try:
+                from ilim_assistant.chat_core import normalize_mode
+                from ilim_assistant.motorlar.ana_motor_hub_faz76 import maybe_hub_instant
+
+                if normalize_mode(_effective_chat_mode_raw(req)) == "genel":
+                    from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
+
+                    hub_early = maybe_hub_instant(
+                        msg_early,
+                        motor_flags=motor_niyeti_heuristic(msg_early),
+                        workspace_root=req.workspace_root,
+                    )
+                    if hub_early:
+                        yield from _iter_instant_chat_events(
+                            hub_early,
+                            msg_early,
+                            session_wake_used=req.session_wake_used,
+                            msg_for_wake=req.message,
+                            orch=orch_early,
+                            instant_gundelik=True,
+                        )
+                        return
+            except Exception:
+                pass
         try:
             from ilim_assistant.nebula_kitap_hafiza import try_consume_nebula_kitap_command
 
@@ -3835,9 +3849,16 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         except Exception:
             pass
     try:
-        from ilim_assistant.motorlar.hafiza_faz75 import maybe_instant_faz75
+        if mode_norm in ("genel", "uretim", "gelisim") and not coding:
+            from ilim_assistant.motorlar.hafiza_faz75 import maybe_instant_faz75_hub
 
-        _hf75 = maybe_instant_faz75(req.message, mode_norm=mode_norm)
+            _hf75 = maybe_instant_faz75_hub(req.message)
+        else:
+            from ilim_assistant.motorlar.hafiza_faz75 import maybe_instant_faz75
+
+            _hf75 = maybe_instant_faz75(
+                req.message, mode_norm=mode_norm, allow_lookup=False
+            )
         if _hf75:
             yield from _iter_instant_chat_events(
                 _hf75,
@@ -3934,7 +3955,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                             if hstream is not None:
                                 yield {
                                     "type": "status",
-                                    "text": "Hafıza — doğal sentez (yerel/bulut beyin)…",
+                                    "text": "Yanıtlıyorum…",
                                 }
                                 reply_body = ""
                                 for piece in hstream:

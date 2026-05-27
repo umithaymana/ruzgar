@@ -77,11 +77,39 @@ def strip_wake_greeting_echo(text: str) -> str:
     return "\n".join(lines[i:]).lstrip("\n")
 
 
+def strip_hafiza_robot_phrasing(text: str) -> str:
+    """Eski Faz 75 anında lookup kalıntılarını kullanıcıdan gizler."""
+    if not text:
+        return text
+    import re
+
+    t = str(text)
+    t = re.sub(
+        r"(?i)^(?:ümit\s+abi[,:\s]+)?haf[ıi]zamda\s+buldum\s*:\s*",
+        "",
+        t,
+    )
+    t = re.sub(
+        r"(?i)^(?:ümit\s+abi[,:\s]+)?genel\s+haf[ıi]zada\s+bu\s+soruya\s+net\s+kay[ıi]t\s+bulamad[ıi]m\.?\s*",
+        "",
+        t,
+    )
+    t = re.sub(
+        r"(?i)\n*öğretmek\s+için\s*:\s*`?hat[ıi]rla:\s*soru\s*=\s*cevap`?.*",
+        "",
+        t,
+        flags=re.DOTALL,
+    )
+    t = re.sub(r"\n*\(hafiza-faz75-v1[^\)]*\)\s*$", "", t, flags=re.I)
+    return t.strip()
+
+
 def finalize_assistant_reply(raw: str) -> str:
     """Mojibake onarımı, sızan talimat temizliği, sabit karşılama kırpma."""
     t = repair_utf8_mojibake(raw or "")
     t = scrub_leaked_instructions(t)
     t = strip_wake_greeting_echo(t)
+    t = strip_hafiza_robot_phrasing(t)
     return t.strip()
 
 

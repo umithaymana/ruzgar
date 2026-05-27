@@ -2247,6 +2247,7 @@ def run_parity(*, live_base: str | None = None) -> int:
         classify_hafiza_intent,
         faz75_enabled,
         maybe_instant_faz75,
+        maybe_instant_faz75_hub,
     )
 
     if faz75_enabled():
@@ -2265,6 +2266,22 @@ def run_parity(*, live_base: str | None = None) -> int:
         _ok("hafiza faz75 instant status")
     else:
         _fail("hafiza faz75 instant", str(inst_h)[:80])
+        fails += 1
+    hub_miss = maybe_instant_faz75_hub("bizim gunes sistemimiz hangi galaxide yer alir?")
+    if hub_miss is None:
+        _ok("hafiza faz75 hub skips general lookup")
+    else:
+        _fail("hafiza faz75 hub lookup leak", str(hub_miss)[:80])
+        fails += 1
+    teach = maybe_instant_faz75_hub(
+        "sana ogretiyorum bizim gunes sistemimiz samanyolu galaksi sisteminde yer alir"
+    )
+    if teach and "hafızaya yazdım" in teach.lower():
+        _ok("hafiza faz75 hub natural teach")
+    elif teach and "hatırladım" in teach.lower():
+        _ok("hafiza faz75 hub natural teach")
+    else:
+        _fail("hafiza faz75 teach", str(teach)[:80])
         fails += 1
     _ok(f"hafiza {HF75}")
 
