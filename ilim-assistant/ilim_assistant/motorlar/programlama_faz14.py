@@ -686,11 +686,30 @@ def _stream_agent_llm_turn(
         except Exception:
             preferred = ["groq", "kod", "denge"]
 
+    def _collect_timed(profile_label: str) -> tuple[str, bool]:
+        """LLM topla; Faz 84 süre aşımında boş döner."""
+        nonlocal body
+        body = ""
+        try:
+            from ilim_assistant.motorlar.programlama_faz84 import run_with_llm_turn_timeout
+
+            _, timed_out, _elapsed = run_with_llm_turn_timeout(_collect)
+            if timed_out:
+                profiles_tried.append(f"{profile_label}(timeout)")
+                return "", True
+            return body, False
+        except Exception:
+            _collect()
+            return body, False
+
     for profile in preferred:
         old = os.environ.get("RUZGAR_BRAIN_PROFILE")
         os.environ["RUZGAR_BRAIN_PROFILE"] = profile
         try:
-            _collect()
+            body, _to = _collect_timed(profile)
+            if _to:
+                body = ""
+                continue
             if body.strip() and not _is_llm_failure_reply(body):
                 if f"{profile}(oncelik)" not in profiles_tried:
                     profiles_tried.append(f"{profile}(oncelik)")
@@ -701,8 +720,8 @@ def _stream_agent_llm_turn(
             else:
                 os.environ["RUZGAR_BRAIN_PROFILE"] = old
 
-    _collect()
-    if body.strip() and not _is_llm_failure_reply(body):
+    body, _to = _collect_timed("chain")
+    if not _to and body.strip() and not _is_llm_failure_reply(body):
         return body, profiles_tried
 
     for fallback in ("groq", "kod", "denge"):
@@ -711,7 +730,10 @@ def _stream_agent_llm_turn(
         old = os.environ.get("RUZGAR_BRAIN_PROFILE")
         os.environ["RUZGAR_BRAIN_PROFILE"] = fallback
         try:
-            _collect()
+            body, _to = _collect_timed(fallback)
+            if _to:
+                body = ""
+                continue
             if body.strip() and not _is_llm_failure_reply(body):
                 profiles_tried.append(f"{fallback}(zorla)")
                 return body, profiles_tried
@@ -1020,6 +1042,40 @@ def iter_code_agent_turn_events(
         except Exception:
             pass
 
+    try:
+        from ilim_assistant.motorlar.programlama_faz85 import (
+            iter_fast_task_events,
+            try_fast_deterministic_task,
+        )
+
+        _fast = try_fast_deterministic_task(workspace, task.scope_rel, task.goal)
+        if _fast is None:
+            yield {
+                "type": "status",
+                "text": (
+                    "Hızlı yol uygun değil veya kırmızı — "
+                    "ajan döngüsü (yerel Ollama öncelikli) devam ediyor…"
+                ),
+            }
+        if _fast is not None:
+            for _ev in iter_fast_task_events(
+                message=message,
+                task=task,
+                fast=_fast,
+                new_wake=new_wake,
+                workspace_root=workspace,
+            ):
+                yield _ev
+            if _exit_task_mode is not None:
+                try:
+                    _exit_task_mode()
+                except Exception:
+                    pass
+            clear_agent_state(workspace)
+            return
+    except Exception:
+        pass
+
     def _emit_agent_step(raw: dict[str, Any] | None) -> dict[str, Any] | None:
         if raw is None:
             return None
@@ -1162,6 +1218,30 @@ def iter_code_agent_turn_events(
         except Exception:
             pass
         round_payload = turn_user
+        if turn == 1:
+            try:
+                from ilim_assistant.motorlar.programlama_faz86 import (
+                    inject_turn1_preflight_context,
+                )
+
+                round_payload = inject_turn1_preflight_context(
+                    round_payload,
+                    workspace,
+                    task.scope_rel,
+                    task.goal,
+                )
+            except Exception:
+                pass
+            try:
+                from ilim_assistant.motorlar.programlama_faz87 import (
+                    inject_health_contract_hint,
+                )
+
+                round_payload = inject_health_contract_hint(
+                    round_payload, task.scope_rel, task.goal
+                )
+            except Exception:
+                pass
 
         round_body = ""
         t_turn = time.perf_counter()
@@ -1565,6 +1645,51 @@ def iter_code_agent_turn_events(
             task.scope_rel,
             goal=task.goal,
         )
+        _faz87_heal = False
+        if verify and not verify.ok:
+            try:
+                from ilim_assistant.motorlar.programlama_faz87 import try_post_verify_heal
+
+                heal = try_post_verify_heal(
+                    workspace,
+                    task.scope_rel,
+                    task.goal,
+                    verify_output=(verify.output if verify else "") or "",
+                )
+                if heal and heal.get("verify_ok"):
+                    _faz87_heal = True
+                    verify = run_project_verify(
+                        workspace,
+                        task.scope_rel,
+                        goal=task.goal,
+                    )
+                    if heal.get("writes_ok"):
+                        from ilim_assistant.motorlar.programlama_motoru import WriteReport
+
+                        rel_heal = f"{task.scope_rel}/app/main.py"
+                        try:
+                            from ilim_assistant.motorlar.programlama_faz85 import (
+                                _find_main_py,
+                            )
+
+                            found = _find_main_py(workspace, task.scope_rel)
+                            if found:
+                                rel_heal = found[0]
+                        except Exception:
+                            pass
+                        summ.writes.append(
+                            WriteReport(
+                                path=rel_heal,
+                                ok=True,
+                                detail="Faz 87 post-verify heal",
+                            )
+                        )
+                    yield {
+                        "type": "status",
+                        "text": str(heal.get("detail") or "Faz 87 düzeltme OK.")[:600],
+                    }
+            except Exception:
+                pass
 
         writes_ok = len([w for w in summ.writes if w.ok])
         ok = verify.ok if verify else bool(writes_ok)

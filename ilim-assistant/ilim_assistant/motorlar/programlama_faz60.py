@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any
 
 FAZ60_VERSION = "programlama-faz60-v1-2026-05-26"
-_DEFAULT_EXPECTED_REV = "2026-05-26-ruzgar-faz85-v89"
+_DEFAULT_EXPECTED_REV = "2026-05-27-ruzgar-faz91-v98"
 _FAZ60_PATCH = "v71-hotfix1"
 _LAST_FULL_PARITY_FILE = "last_parity_full_run.json"
 _WEEKLY_KPI_PREFIX = "weekly_kpi_"
@@ -141,6 +141,13 @@ def enrich_health_build(build: dict[str, Any] | None) -> dict[str, Any]:
         ("programlama_faz81", "enrich_health_build"),
         ("programlama_faz82", "enrich_health_build"),
         ("programlama_faz83", "enrich_health_build"),
+        ("programlama_faz84", "enrich_health_build"),
+        ("programlama_faz85", "enrich_health_build"),
+        ("programlama_faz86", "enrich_health_build"),
+        ("programlama_faz87", "enrich_health_build"),
+        ("programlama_faz88", "enrich_health_build"),
+        ("programlama_faz89", "enrich_health_build"),
+        ("programlama_faz91", "enrich_health_build"),
     ):
         try:
             m = __import__(f"ilim_assistant.motorlar.{_mod}", fromlist=[_fn])

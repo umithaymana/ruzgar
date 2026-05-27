@@ -93,7 +93,15 @@ def task_brain_profile_override() -> str | None:
             return alt
     except Exception:
         pass
-    return os.environ.get("RUZGAR_FAZ39_TASK_BRAIN", "groq").strip() or "groq"
+    raw = os.environ.get("RUZGAR_FAZ39_TASK_BRAIN", "").strip()
+    if raw:
+        return raw
+    try:
+        from ilim_assistant.motorlar.programlama_faz85 import ollama_available
+
+        return "kod" if ollama_available() else "groq"
+    except Exception:
+        return "groq"
 
 
 def programming_brain_chain_for_task() -> list[str]:
@@ -105,7 +113,7 @@ def programming_brain_chain_for_task() -> list[str]:
         chain = ["groq", "kod", "gemini"]
     if not _enabled():
         return chain
-    preferred = ["groq", "kod"]
+    preferred = ["kod", "denge", "groq"]
     out: list[str] = []
     for p in preferred:
         if p in chain and p not in out:
@@ -113,7 +121,13 @@ def programming_brain_chain_for_task() -> list[str]:
     for x in chain:
         if x not in out:
             out.append(x)
-    merged = out or ["groq", "kod", "gemini"]
+    merged = out or ["kod", "groq", "gemini"]
+    try:
+        from ilim_assistant.motorlar.programlama_faz85 import local_first_brain_chain
+
+        merged = local_first_brain_chain(merged)
+    except Exception:
+        pass
     try:
         from ilim_assistant.motorlar.programlama_faz57 import reorder_brain_chain_for_fc
 

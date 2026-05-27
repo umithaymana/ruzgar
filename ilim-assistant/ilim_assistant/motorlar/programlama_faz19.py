@@ -66,9 +66,9 @@ def code_agent_empty_streak_max() -> int:
 
 
 def code_agent_brain_profiles() -> list[str]:
-    raw = os.environ.get("RUZGAR_CODE_AGENT_BRAIN", "groq,kod,denge").strip()
+    raw = os.environ.get("RUZGAR_CODE_AGENT_BRAIN", "kod,groq,gemini").strip()
     if not raw:
-        return ["groq", "kod", "denge"]
+        return ["kod", "groq", "gemini"]
     return [p.strip() for p in raw.split(",") if p.strip()]
 
 

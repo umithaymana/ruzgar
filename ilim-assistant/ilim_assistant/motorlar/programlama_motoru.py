@@ -477,6 +477,13 @@ def is_programlama_reserved_command(message: str) -> bool:
     except Exception:
         pass
     try:
+        from ilim_assistant.motorlar.programlama_faz86 import wants_live_task_battery
+
+        if wants_live_task_battery(message):
+            return True
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_faz65 import wants_best_of_n_agent
 
         if wants_best_of_n_agent(message):
@@ -870,6 +877,38 @@ def maybe_programlama_instant_reply(
         faz82_hit = maybe_instant_faz82(message, workspace_root)
         if faz82_hit:
             parts.append(faz82_hit)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz91 import maybe_instant_faz91
+
+        faz91_hit = maybe_instant_faz91(message, workspace_root)
+        if faz91_hit:
+            parts.append(faz91_hit)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz89 import maybe_instant_faz89
+
+        faz89_hit = maybe_instant_faz89(message, workspace_root)
+        if faz89_hit:
+            parts.append(faz89_hit)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz88 import maybe_instant_faz88
+
+        faz88_hit = maybe_instant_faz88(message, workspace_root)
+        if faz88_hit:
+            parts.append(faz88_hit)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz86 import maybe_instant_faz86
+
+        faz86_hit = maybe_instant_faz86(message, workspace_root)
+        if faz86_hit:
+            parts.append(faz86_hit)
     except Exception:
         pass
     try:
@@ -1818,6 +1857,26 @@ def build_motor_context(
         cs = core_scope_directive(prompt)
         if cs:
             base += cs + "\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz79 import (
+            faz79_directive,
+            format_handoff_context_block,
+        )
+
+        base += faz79_directive() + "\n"
+        h79 = format_handoff_context_block(
+            prompt, workspace_root, active_file=active_file
+        )
+        if h79:
+            base += f"\n[HANDOFF v3]\n{h79}\n"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz84 import faz84_directive
+
+        base += faz84_directive() + "\n"
     except Exception:
         pass
     try:

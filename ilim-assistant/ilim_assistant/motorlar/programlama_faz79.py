@@ -134,6 +134,40 @@ def build_handoff_packet_v3(
     )
 
 
+def format_handoff_context_block(
+    message: str,
+    workspace_root: str | None,
+    *,
+    active_file: str | None = None,
+    hub_meta: dict[str, Any] | None = None,
+    max_len: int = 4000,
+) -> str:
+    """LLM bağlamına eklenecek kompakt handoff v3 metni (E4)."""
+    if not _enabled():
+        return ""
+    pkt = build_handoff_packet_v3(
+        message,
+        workspace_root,
+        active_file=active_file,
+        hub_meta=hub_meta,
+    )
+    if not pkt.get("ok"):
+        return ""
+    text = str(pkt.get("packet_text") or "").strip()
+    if not text:
+        return ""
+    return text[:max_len]
+
+
+def faz79_directive() -> str:
+    return (
+        "[HANDOFF v3 — Faz 79]\n"
+        "Ana Motor veya hub delege sonrası kapsam, git özeti ve son başarısız "
+        "görevler bağlamda verilir; kaybetme.\n"
+        f"Kapat: RUZGAR_FAZ79=0 · {FAZ79_VERSION}\n"
+    )
+
+
 def enrich_health_build(build: dict[str, Any] | None) -> dict[str, Any]:
     out = dict(build or {})
     out["programlama_faz79"] = faz79_enabled()

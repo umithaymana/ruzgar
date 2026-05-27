@@ -335,7 +335,13 @@ def hub_directive_for_mode(
     )
 
 
-def build_delegated_motor_context(target: str, message: str) -> str:
+def build_delegated_motor_context(
+    target: str,
+    message: str,
+    *,
+    workspace_root: str | None = None,
+    hub_meta: dict[str, Any] | None = None,
+) -> str:
     """Hub delege modunda tek motor bağlamı (ağır çekirdek yerine)."""
     mid = (target or "").strip().lower()
     msg = (message or "").strip()
@@ -358,7 +364,24 @@ def build_delegated_motor_context(target: str, message: str) -> str:
         mod = __import__(spec[0], fromlist=[spec[1]])
         fn = getattr(mod, spec[1])
         if mid == "programlama":
-            return str(fn(msg, workspace_root=None) or "").strip()
+            ctx = str(fn(msg, workspace_root=workspace_root) or "").strip()
+            try:
+                from ilim_assistant.motorlar.programlama_faz79 import (
+                    format_handoff_context_block,
+                )
+
+                handoff = format_handoff_context_block(
+                    msg,
+                    workspace_root,
+                    hub_meta=hub_meta,
+                )
+                if handoff:
+                    ctx = (
+                        f"[HUB → PROGRAMLAMA — Handoff v3]\n{handoff}\n\n---\n{ctx}"
+                    ).strip()
+            except Exception:
+                pass
+            return ctx
         if mid == "hizir":
             return str(fn(msg, mode_norm="hizir") or "").strip()
         return str(fn(msg) or "").strip()
@@ -406,4 +429,10 @@ def apply_genel_hub_routing(
 def enrich_health_build(build: dict[str, Any] | None) -> dict[str, Any]:
     out = dict(build or {})
     out["ana_motor_hub_faz76"] = faz76_enabled()
+    try:
+        from ilim_assistant.ruzgar_genel_faz90 import enrich_health_build as _e90
+
+        out = _e90(out)
+    except Exception:
+        pass
     return out

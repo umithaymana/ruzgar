@@ -2683,17 +2683,21 @@ def run_parity(*, live_base: str | None = None) -> int:
         wants_compliance_report,
     )
 
-    record_turn_metrics(
-        WORKSPACE,
-        scope_rel="projects/benim-api",
-        turn=1,
-        tool_results=[{"tool": "read", "ok": True, "output": "ok"}],
-        violations=["write_without_verify"],
-        mid_turn_followup=False,
-        verify_ok=False,
-        writes_ok=0,
-    )
-    rep = build_compliance_report(WORKSPACE)
+    import tempfile
+
+    with tempfile.TemporaryDirectory(prefix="ruzgar-smoke-faz37-") as _td:
+        _iso_ws = Path(_td)
+        record_turn_metrics(
+            _iso_ws,
+            scope_rel="projects/benim-api",
+            turn=1,
+            tool_results=[{"tool": "read", "ok": True, "output": "ok"}],
+            violations=["write_without_verify"],
+            mid_turn_followup=False,
+            verify_ok=False,
+            writes_ok=0,
+        )
+        rep = build_compliance_report(_iso_ws)
     if rep.get("ok") and rep.get("report"):
         _ok(f"compliance score={rep['report'].get('score')}")
     else:
@@ -3142,7 +3146,233 @@ def run_parity(*, live_base: str | None = None) -> int:
         else:
             _fail("faz83 pr")
             fails += 1
-    _ok(f"dalga-h {FAZ78_VERSION} … {FAZ83_VERSION}")
+    print("=== Faz 85 — yerel öncelik + hızlı yol ===")
+    from ilim_assistant.motorlar.programlama_faz85 import (
+        FAZ85_VERSION,
+        fallback_to_agent_on_fail,
+        patch_main_py_content,
+        local_first_brain_chain,
+        local_first_enabled,
+        _finalize_result,
+    )
+
+    patched, ch = patch_main_py_content(
+        '@app.get("/health")\ndef health() -> dict[str, str]:\n    return {"ok": "true", "service": "demo"}\n',
+        service="demo",
+        version="1.0.0",
+    )
+    if ch and '"version"' in patched:
+        _ok("faz85 health patch")
+    else:
+        _fail("faz85 health patch")
+        fails += 1
+    if local_first_enabled():
+        chain = local_first_brain_chain(["groq", "kod", "gemini"])
+        if chain and chain[0] == "kod":
+            _ok(f"faz85 local chain={','.join(chain[:4])}")
+        else:
+            _fail("faz85 local chain", str(chain))
+            fails += 1
+    else:
+        _fail("faz85 disabled")
+        fails += 1
+    if fallback_to_agent_on_fail():
+        fin = _finalize_result({"ok": False, "verify_ok": False})
+        if fin is None:
+            _ok("faz85 fallback to agent on fail")
+        else:
+            _fail("faz85 fallback")
+            fails += 1
+    _ok(f"faz85 {FAZ85_VERSION}")
+
+    print("=== Faz 86 — canlı görev pili ===")
+    from ilim_assistant.motorlar.programlama_faz86 import (
+        FAZ86_VERSION,
+        inject_turn1_preflight_context,
+        wants_live_task_battery,
+    )
+
+    if wants_live_task_battery("canlı görev test"):
+        _ok("faz86 wants battery")
+    else:
+        _fail("faz86 wants")
+        fails += 1
+    pre = inject_turn1_preflight_context("base", WORKSPACE, "projects/t", "health version pytest")
+    if "[Tur 1 ön keşif" in pre or pre == "base":
+        _ok("faz86 preflight inject")
+    else:
+        _fail("faz86 preflight")
+        fails += 1
+    _ok(f"faz86 {FAZ86_VERSION} (tam pil: python scripts/programlama_live_tasks.py)")
+
+    print("=== Faz 87 — E1 post-verify heal ===")
+    from ilim_assistant.motorlar.programlama_faz87 import (
+        FAZ87_VERSION,
+        faz87_enabled,
+        inject_health_contract_hint,
+        goal_wants_tests,
+    )
+
+    if faz87_enabled():
+        _ok("faz87 enabled")
+    else:
+        _fail("faz87 disabled")
+        fails += 1
+    if goal_wants_tests("pytest gecir"):
+        _ok("faz87 goal_wants_tests")
+    else:
+        _fail("faz87 goal_wants_tests")
+        fails += 1
+    hint = inject_health_contract_hint("base", "projects/x-y", "pytest gecir")
+    if "Faz 87" in hint and "version" in hint:
+        _ok("faz87 health hint")
+    else:
+        _fail("faz87 health hint")
+        fails += 1
+    _ok(f"faz87 {FAZ87_VERSION} (tam: python scripts/programlama_post_verify_heal.py)")
+
+    print("=== Faz 88 — ajan görev pili ===")
+    from ilim_assistant.motorlar.programlama_faz88 import (
+        FAZ88_VERSION,
+        faz88_enabled,
+        format_agent_battery_report,
+        wants_agent_task_battery,
+    )
+
+    if faz88_enabled():
+        _ok("faz88 enabled")
+    else:
+        _fail("faz88 disabled")
+        fails += 1
+    if wants_agent_task_battery("ajan gorev test"):
+        _ok("faz88 wants battery")
+    else:
+        _fail("faz88 wants")
+        fails += 1
+    rep = format_agent_battery_report({"ok": False, "error": "test"})
+    if "calismadi" in rep.lower() or "çalışmadı" in rep.lower():
+        _ok("faz88 format error")
+    else:
+        _fail("faz88 format")
+        fails += 1
+    _ok(f"faz88 {FAZ88_VERSION} (tam: python scripts/programlama_agent_battery.py)")
+
+    print("=== Faz 89 — haftalık parity full (E6) ===")
+    from ilim_assistant.motorlar.programlama_faz89 import (
+        FAZ89_VERSION,
+        faz89_enabled,
+        format_weekly_parity_report,
+        parity_full_due,
+        wants_weekly_parity_full,
+    )
+
+    if faz89_enabled():
+        _ok("faz89 enabled")
+    else:
+        _fail("faz89 disabled")
+        fails += 1
+    if wants_weekly_parity_full("parity full"):
+        _ok("faz89 wants parity")
+    else:
+        _fail("faz89 wants")
+        fails += 1
+    _ok(f"faz89 due={parity_full_due(WORKSPACE)}")
+    _ok(f"faz89 {FAZ89_VERSION} (tam: python scripts/programlama_parity_full.py)")
+
+    print("=== Faz 90 — genel sohbet local-first ===")
+    from ilim_assistant.ruzgar_genel_faz90 import (
+        FAZ90_VERSION,
+        build_genel_brain_chain_ids,
+        genel_local_first_enabled,
+    )
+    from ilim_assistant.ruzgar_umed_cevap_emri import (
+        EMRI_VERSION,
+        brain_chain_ids_for_emri,
+    )
+
+    if genel_local_first_enabled():
+        _ok("faz90 enabled")
+    else:
+        _fail("faz90 disabled")
+        fails += 1
+    chain = build_genel_brain_chain_ids()
+    if chain and chain[0] in ("denge", "hizli", "gemini"):
+        _ok(f"faz90 chain={','.join(chain[:4])}")
+    else:
+        _fail("faz90 chain", str(chain))
+        fails += 1
+    emri_chain = brain_chain_ids_for_emri()
+    if emri_chain:
+        _ok(f"umed emri chain v2={','.join(emri_chain[:4])} ({EMRI_VERSION})")
+    else:
+        _fail("umed emri chain")
+        fails += 1
+    _ok(f"faz90 {FAZ90_VERSION}")
+
+    print("=== Faz 91 — E1 KPI bakım ===")
+    from ilim_assistant.motorlar.programlama_faz91 import (
+        FAZ91_VERSION,
+        compute_e1_stats,
+        faz91_enabled,
+        is_kpi_eligible_outcome,
+    )
+
+    if faz91_enabled():
+        _ok("faz91 enabled")
+    else:
+        _fail("faz91 disabled")
+        fails += 1
+    bad = {
+        "scope_rel": "projects/smoke-cursor-ref-1",
+        "success": False,
+        "writes_ok": 0,
+        "elapsed_sec": 2000,
+        "source": "code_agent",
+    }
+    if not is_kpi_eligible_outcome(bad):
+        _ok("faz91 filters parity pollution")
+    else:
+        _fail("faz91 filter")
+        fails += 1
+    st = compute_e1_stats(WORKSPACE)
+    _ok(f"faz91 e1={st.get('success_count')}/{st.get('total')} ({FAZ91_VERSION})")
+
+    print("=== Faz 79/84 — handoff + LLM tur süresi ===")
+    from ilim_assistant.motorlar.programlama_faz79 import (
+        FAZ79_VERSION,
+        build_handoff_packet_v3,
+        format_handoff_context_block,
+        faz79_enabled,
+    )
+    from ilim_assistant.motorlar.programlama_faz84 import (
+        FAZ84_VERSION,
+        faz84_enabled,
+        llm_turn_timeout_sec,
+        run_with_llm_turn_timeout,
+    )
+
+    if faz79_enabled():
+        pkt = build_handoff_packet_v3("pytest geçir projects/smoke", WORKSPACE)
+        blk = format_handoff_context_block("pytest geçir", WORKSPACE)
+        if pkt.get("ok") and pkt.get("handoff_v3") and blk:
+            _ok("faz79 handoff v3")
+        else:
+            _fail("faz79 handoff", str(pkt)[:80])
+            fails += 1
+    else:
+        _fail("faz79 disabled")
+        fails += 1
+    if faz84_enabled() and llm_turn_timeout_sec() >= 15:
+        out, to, _ = run_with_llm_turn_timeout(lambda: "ok", timeout_sec=0.05)
+        if to and out is None:
+            _ok(f"faz84 timeout {int(llm_turn_timeout_sec())}s")
+        else:
+            _fail("faz84 timeout", f"to={to} out={out}")
+            fails += 1
+    else:
+        _fail("faz84 disabled")
+        fails += 1
+    _ok(f"dalga-h {FAZ78_VERSION} … {FAZ84_VERSION}")
 
     return fails
 

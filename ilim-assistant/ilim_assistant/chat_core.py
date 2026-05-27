@@ -931,6 +931,7 @@ def prepare_turn(
 
     motor_flags = motor_niyeti_heuristic(msg)
     _hub_directive = ""
+    _hub_meta: dict[str, Any] = {}
 
     if m == "genel" and not coding_mode:
         try:
@@ -946,8 +947,9 @@ def prepare_turn(
             if hub.get("mode") and str(hub["mode"]) != "genel":
                 m = str(hub["mode"])
                 _hub_directive = str(hub.get("hub_directive") or "")
+                _hub_meta = dict(hub.get("hub_meta") or {})
                 if orchestration_out is not None:
-                    orchestration_out["hub_delegate"] = hub.get("hub_meta") or {}
+                    orchestration_out["hub_delegate"] = _hub_meta
                     orchestration_out["hub_target"] = m
         except Exception:
             pass
@@ -1599,7 +1601,12 @@ def prepare_turn(
         try:
             from ilim_assistant.motorlar.ana_motor_hub_faz76 import build_delegated_motor_context
 
-            _hc = build_delegated_motor_context(m, msg).strip()
+            _hc = build_delegated_motor_context(
+                m,
+                msg,
+                workspace_root=workspace_root,
+                hub_meta=_hub_meta or None,
+            ).strip()
             if _hc:
                 user_payload = _hc.rstrip() + "\n\n---\n" + user_payload
         except Exception:

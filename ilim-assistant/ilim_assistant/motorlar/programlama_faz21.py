@@ -81,6 +81,19 @@ def build_light_programming_context(
     except Exception:
         pass
 
+    try:
+        from ilim_assistant.motorlar.programlama_faz79 import format_handoff_context_block
+
+        h79 = format_handoff_context_block(
+            message,
+            workspace_root,
+            active_file=active_file,
+        )
+        if h79:
+            parts.append(h79[:4000])
+    except Exception:
+        pass
+
     if scope:
         try:
             from ilim_assistant.motorlar.programlama_faz44 import (
@@ -180,6 +193,10 @@ def build_light_programming_context(
         "programlama_faz14.faz14_directive",
         "programlama_faz16.faz16_directive",
         "programlama_faz17.faz17_directive",
+        "programlama_faz79.faz79_directive",
+        "programlama_faz84.faz84_directive",
+        "programlama_faz85.faz85_directive",
+        "programlama_faz86.faz86_directive",
     ):
         try:
             mod, fn = directive_fn.rsplit(".", 1)

@@ -70,6 +70,13 @@ def tool_ids_from_results(results: list[dict[str, Any]]) -> set[str]:
     return {str(r.get("tool") or "").lower() for r in results if r.get("tool")}
 
 
+def executed_write_in_results(results: list[dict[str, Any]]) -> bool:
+    """Yalnızca başarılı diske yazım — LLM metnindeki planlanmış write sayılmaz."""
+    return any(
+        str(r.get("tool") or "").lower() == "write" and r.get("ok") for r in results
+    )
+
+
 def compliance_violations(
     results: list[dict[str, Any]],
     *,
@@ -81,9 +88,7 @@ def compliance_violations(
         return []
     ids = tool_ids_from_results(results)
     violations: list[str] = []
-    wrote = bool(ids & _WRITE_TOOLS) or any(
-        r.get("tool") == "write" and r.get("ok") for r in results
-    )
+    wrote = executed_write_in_results(results)
     discovered = bool(ids & _DISCOVERY_TOOLS)
     verified = bool(ids & _VERIFY_TOOLS)
 
@@ -217,24 +222,25 @@ def apply_turn_tool_first(
     auto_specs: list[dict[str, Any]] = []
 
     ids = tool_ids_from_results(combined)
-    has_write = bool(ids & _WRITE_TOOLS)
+    executed_write = executed_write_in_results(combined)
+    llm_planned_write = False
     try:
         from ilim_assistant.motorlar.programlama_faz20 import extract_tool_calls
 
         if extract_tool_calls(llm_body or ""):
             for spec in extract_tool_calls(llm_body):
                 if str(spec.get("tool") or "").lower() == "write":
-                    has_write = True
+                    llm_planned_write = True
                     break
     except Exception:
         pass
 
-    if turn <= 2 and has_write and not (ids & _DISCOVERY_TOOLS):
+    if turn <= 2 and (executed_write or llm_planned_write) and not (ids & _DISCOVERY_TOOLS):
         auto_specs.extend(
             discovery_tool_specs(workspace_root, scope_rel, goal=goal)
         )
 
-    if has_write and goal_wants_verify(goal) and not (ids & _VERIFY_TOOLS):
+    if executed_write and goal_wants_verify(goal) and not (ids & _VERIFY_TOOLS):
         auto_specs.append(verify_tool_spec(scope_rel, goal=goal))
 
     if auto_specs:

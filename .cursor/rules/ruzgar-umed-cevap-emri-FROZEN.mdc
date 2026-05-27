@@ -1,5 +1,5 @@
 ---
-description: Ümit abi kesin emri — Rüzgar cevap önceliği ve 15 sn bütçe (DOKUNMA)
+description: Ümit abi kesin emri — Rüzgar cevap önceliği (v2 local-first, 2026-05-27)
 globs:
   - ilim-assistant/**/*
   - ruzgar-desktop/**/*
@@ -7,30 +7,32 @@ globs:
 alwaysApply: true
 ---
 
-# Rüzgar — Ümit abi kesin cevap emri (DONDURULMUŞ)
+# Rüzgar — Ümit abi kesin cevap emri (v2 — 2026-05-27)
 
-**Bu kural ve `ilim-assistant/ilim_assistant/ruzgar_umed_cevap_emri.py` dosyası,
-Ümit abi'nin açık yazılı onayı olmadan değiştirilmez.**
+**Güncelleme:** Ümit abi 2026-05-27 onayı ile genel sohbet **local-first** (Faz 90).
+Kaynak: `ruzgar_umed_cevap_emri.py` · `ruzgar_genel_faz90.py`
 
 ## Cevap öncelik sırası (genel sohbet)
 
 1. Kendi hafızası (`ruzgar_egitim`, `ruzgar_genel_hafiza.json`, doğal sentez)
 2. Yerel hafıza (RAG, arşiv, indeks — `main_engine` / `rag_store`)
-3. Gemini
-4. Groq
-5. Web ikincil (süre kalırsa)
-6. Süre dolunca veya zincir boşsa: «Ümit abi, bu sorunun cevabını bulamadım. Bana öğretir misin?»
+3. **Yerel Ollama** (denge / hizli) — Faz 90, erişilebilirse
+4. Gemini
+5. Groq
+6. Web ikincil (süre kalırsa)
+7. Süre dolunca veya zincir boşsa: «Ümit abi, bu sorunun cevabını bulamadım. Bana öğretir misin?»
 
 ## Süre
 
 - Varsayılan üst sınır: **15 saniye** (tüm sıra bu sürede denenir)
 - İlim/açıklama sorularında: **22 saniye** (`RUZGAR_UMED_ILIM_BUDGET_SEC`)
 
-## Beyin zinciri
+## Beyin zinciri (genel sohbet, emir açıkken)
 
-- `RUZGAR_BRAIN_FALLBACK_CHAIN=gemini,groq` (Ollama bu emirde birincil değil)
-- `RUZGAR_FREE_BRAIN=0` emir açıkken
+- `RUZGAR_GENEL_LOCAL_FIRST=1` (varsayılan) → Ollama denge/hizli önce
+- Özel zincir: `RUZGAR_GENEL_BRAIN_CHAIN=denge,hizli,gemini,groq`
+- Kapat: `RUZGAR_GENEL_LOCAL_FIRST=0` → eski sıra (Gemini → Groq → Ollama yedek)
 
-## Kapatma (yalnızca Ümit abi isterse)
+## Kapatma (tüm emir)
 
 `RUZGAR_UMED_CEVAP_EMRI=0`

@@ -2,15 +2,16 @@
 """
 Ümit abi kesin emri — cevap öncelik sırası ve süre bütçesi.
 
-DOKUNMA: Bu dosya ve .cursor/rules/ruzgar-umed-cevap-emri-FROZEN.mdc
-yalnızca Ümit abi'nin açık onayı ile değiştirilir.
+Güncelleme 2026-05-27: Ümit abi onayı ile genel sohbet local-first (Faz 90).
+Ollama (denge/hizli) hafıza/RAG sonrası birincil LLM; Gemini/Groq yedek.
 
 Sıra (genel sohbet):
   1) Kendi hafızası (eğitim rafı + ruzgar_genel_hafiza)
   2) Yerel hafıza (RAG / arşiv / indeks)
-  3) Gemini
-  4) Groq
-  5) Web (kısa, ikincil — süre kalırsa)
+  3) Yerel Ollama (denge / hizli) — Faz 90
+  4) Gemini
+  5) Groq
+  6) Web (kısa, ikincil — süre kalırsa)
   → Süre dolunca veya zincir boşsa: «bulamadım, öğret»
 """
 
@@ -24,7 +25,7 @@ from typing import Any
 
 from ilim_assistant.ruzgar_umed_kurallari import MISS_PHRASE
 
-EMRI_VERSION = "umed-cevap-emri-v1-2026-05-20"
+EMRI_VERSION = "umed-cevap-emri-v2-2026-05-27"
 EMRI_FROZEN = True
 
 _DEFAULT_BUDGET_SEC = 15.0
@@ -37,6 +38,7 @@ _turn_deadline: contextvars.ContextVar[float | None] = contextvars.ContextVar(
 PRIORITY_LABELS = (
     "kendi_hafiza",
     "yerel_hafiza",
+    "ollama_yerel",
     "gemini",
     "groq",
     "web_ikincil",
@@ -130,13 +132,19 @@ def umed_miss_reply() -> str:
 
 
 def brain_chain_ids_for_emri() -> list[str]:
-    """Birincil sıra gemini → groq; Ollama yalnızca ikisi de boşsa (birincil değil)."""
+    """Genel sohbet LLM zinciri — Faz 90 local-first (Ollama -> Gemini -> Groq)."""
+    try:
+        from ilim_assistant.ruzgar_genel_faz90 import build_genel_brain_chain_ids
+
+        return build_genel_brain_chain_ids()
+    except Exception:
+        pass
     ids = ["gemini", "groq"]
     try:
         from ilim_assistant.llm_ollama import ollama_reachable
 
         if ollama_reachable():
-            ids.append("denge")
+            ids = ["denge", "hizli"] + ids
     except Exception:
         pass
     return ids

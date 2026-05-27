@@ -188,7 +188,7 @@ app = FastAPI(title="{title}")
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    return {{"ok": "true", "service": "{mod}"}}
+    return {{"ok": "true", "service": "{mod}", "version": "0.1.0"}}
 
 
 @app.get("/items")

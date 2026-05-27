@@ -10,7 +10,7 @@ from __future__ import annotations
 import os
 
 FAZ26_VERSION = "programlama-faz26-v1-2026-05-25"
-_DEFAULT_CHAIN = "groq,kod,gemini"
+_DEFAULT_CHAIN = "kod,groq,gemini"
 
 
 def _enabled() -> bool:
@@ -56,6 +56,12 @@ def programming_brain_chain_ids() -> list[str]:
         if i not in seen:
             seen.add(i)
             out.append(i)
+    try:
+        from ilim_assistant.motorlar.programlama_faz85 import local_first_brain_chain
+
+        out = local_first_brain_chain(out)
+    except Exception:
+        pass
     return out
 
 

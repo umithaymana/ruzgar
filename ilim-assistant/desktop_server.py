@@ -751,7 +751,7 @@ def _health_build_block() -> dict:
     import os as _os
 
     base = {
-        "rev": "2026-05-26-ruzgar-faz85-v89",
+        "rev": "2026-05-27-ruzgar-faz91-v98",
         "nebula_kitap": True,
         "fast_paths": _os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
         "memory_first": True,
@@ -1601,6 +1601,110 @@ def api_programlama_agent_compliance(workspace_root: str | None = None):
         "report": format_compliance_report(root) if data.get("ok") else "",
         "data": rep,
         "version": FAZ37_VERSION,
+    }
+
+
+@app.get("/api/programlama/live-task-battery")
+def api_programlama_live_task_battery(workspace_root: str | None = None):
+    """Faz 86 — canlı görev pili (LLM'siz senaryo ölçümü)."""
+    from ilim_assistant.motorlar.programlama_faz86 import (
+        FAZ86_VERSION,
+        format_live_battery_report,
+        run_live_task_battery,
+    )
+
+    root = (workspace_root or "").strip() or None
+    report = run_live_task_battery(root)
+    return {
+        "ok": bool(report.get("ok")),
+        "report": report,
+        "text": format_live_battery_report(report),
+        "version": FAZ86_VERSION,
+    }
+
+
+@app.get("/api/programlama/agent-task-battery")
+def api_programlama_agent_task_battery(
+    workspace_root: str | None = None,
+    live: int = 0,
+):
+    """Faz 88 — ajan görev pili (E1 verify→heal + isteğe canlı LLM)."""
+    from ilim_assistant.motorlar.programlama_faz88 import (
+        FAZ88_VERSION,
+        format_agent_battery_report,
+        run_agent_task_battery,
+    )
+
+    root = (workspace_root or "").strip() or None
+    report = run_agent_task_battery(root, live_llm=bool(live))
+    return {
+        "ok": bool(report.get("ok")),
+        "report": report,
+        "text": format_agent_battery_report(report),
+        "version": FAZ88_VERSION,
+    }
+
+
+@app.get("/api/programlama/combined-e1-battery")
+def api_programlama_combined_e1_battery(
+    workspace_root: str | None = None,
+    live: int = 0,
+):
+    """Faz 86+88 — birleşik E1 pili."""
+    from ilim_assistant.motorlar.programlama_faz88 import (
+        FAZ88_VERSION,
+        format_combined_e1_report,
+        run_combined_e1_battery,
+    )
+
+    root = (workspace_root or "").strip() or None
+    bundle = run_combined_e1_battery(root, live_llm=bool(live))
+    return {
+        "ok": bool(bundle.get("ok")),
+        "report": bundle,
+        "text": format_combined_e1_report(bundle),
+        "version": FAZ88_VERSION,
+    }
+
+
+@app.post("/api/programlama/e1-maintenance")
+def api_programlama_e1_maintenance(workspace_root: str | None = None):
+    """Faz 91 — E1 bakım pili (birleşik pil + temiz KPI)."""
+    from ilim_assistant.motorlar.programlama_faz91 import (
+        FAZ91_VERSION,
+        format_e1_maintenance_report,
+        run_e1_maintenance,
+    )
+
+    root = (workspace_root or "").strip() or None
+    report = run_e1_maintenance(root)
+    return {
+        "ok": bool(report.get("ok")),
+        "report": report,
+        "text": format_e1_maintenance_report(report),
+        "version": FAZ91_VERSION,
+    }
+
+
+@app.post("/api/programlama/weekly-parity-full")
+def api_programlama_weekly_parity_full(
+    workspace_root: str | None = None,
+    force: int = 0,
+):
+    """Faz 89 — haftalık parity full (E6)."""
+    from ilim_assistant.motorlar.programlama_faz89 import (
+        FAZ89_VERSION,
+        format_weekly_parity_report,
+        run_weekly_parity_battery,
+    )
+
+    root = (workspace_root or "").strip() or None
+    report = run_weekly_parity_battery(root, force=bool(force))
+    return {
+        "ok": bool(report.get("ok")),
+        "report": report,
+        "text": format_weekly_parity_report(report),
+        "version": FAZ89_VERSION,
     }
 
 

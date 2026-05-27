@@ -58,9 +58,9 @@ def build_weakness_report(workspace_root: str | Path | None) -> dict[str, Any]:
     }
 
     try:
-        from ilim_assistant.motorlar.programlama_faz55 import compute_task_stats
+        from ilim_assistant.motorlar.programlama_faz91 import compute_e1_stats
 
-        stats = compute_task_stats(workspace_root, window_days=30)
+        stats = compute_e1_stats(workspace_root)
         rate = float(stats.get("success_rate") or 0)
         target = float(stats.get("target_rate") or 0.7)
         if stats.get("total", 0) >= 3 and rate < target:
@@ -68,12 +68,31 @@ def build_weakness_report(workspace_root: str | Path | None) -> dict[str, Any]:
                 {
                     "id": "E1",
                     "severity": "high",
-                    "msg": f"Canlı görev başarısı %{int(rate*100)} (hedef ≥%{int(target*100)})",
+                    "msg": (
+                        f"Canlı görev başarısı %{int(rate*100)} "
+                        f"({stats.get('window_days', 7)}g, hedef >=%{int(target*100)})"
+                    ),
                 }
             )
             report["score"] -= 25
     except Exception:
-        pass
+        try:
+            from ilim_assistant.motorlar.programlama_faz55 import compute_task_stats
+
+            stats = compute_task_stats(workspace_root, window_days=30)
+            rate = float(stats.get("success_rate") or 0)
+            target = float(stats.get("target_rate") or 0.7)
+            if stats.get("total", 0) >= 3 and rate < target:
+                report["items"].append(
+                    {
+                        "id": "E1",
+                        "severity": "high",
+                        "msg": f"Canlı görev başarısı %{int(rate*100)} (hedef ≥%{int(target*100)})",
+                    }
+                )
+                report["score"] -= 25
+        except Exception:
+            pass
 
     try:
         from ilim_assistant.motorlar.programlama_faz57 import compute_text_only_stats
@@ -156,7 +175,7 @@ def format_weakness_report(report: dict[str, Any]) -> str:
         for it in items:
             lines.append(f"· **{it.get('id')}** [{it.get('severity')}]: {it.get('msg')}")
     lines.append("")
-    lines.append("Öneri: `python scripts/programlama_smoke.py --ci` · parity full haftalık.")
+    lines.append("Öneri: `parity full` · `python scripts/programlama_parity_full.py`")
     lines.append(f"\n({FAZ82_VERSION})")
     return "\n".join(lines)
 
