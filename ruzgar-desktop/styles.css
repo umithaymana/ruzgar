@@ -2334,9 +2334,9 @@ body:not(.workbench-hizir-active) #workbench-hizir-tools,
 /* Tercüme Atölyesi — Faz 3 */
 .tercume-workbench {
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
+  grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
   gap: 10px;
-  height: calc(100% - 92px);
+  height: calc(100% - 76px);
   min-height: 0;
 }
 .tercume-main {
@@ -2405,11 +2405,26 @@ body:not(.workbench-hizir-active) #workbench-hizir-tools,
 }
 .tercume-textarea {
   flex: 1;
-  min-height: 180px;
+  min-height: 240px;
   margin: 0;
-  resize: none;
+  resize: both;
   border: 0;
   border-radius: 0;
+  line-height: 1.55;
+  font-size: 14px;
+  tab-size: 4;
+}
+.tercume-worklist-head {
+  padding: 8px 10px;
+  border-top: 1px solid #343434;
+  font-size: 11px;
+  color: #9cdcfe;
+  background: #232323;
+}
+.tercume-work-list {
+  max-height: 180px;
+  overflow: auto;
+  border-top: 1px solid #2f2f2f;
 }
 
 /* Ses Atölyesi — Faz 4 */
@@ -3359,6 +3374,12 @@ body:not(.workbench-hizir-active) #workbench-hizir-tools,
 .programlama-compliance-detail {
   color: #9aa8b5;
   font-size: 11px;
+}
+.programlama-inline-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+  width: 100%;
 }
 .code-output-panel {
   display: flex;

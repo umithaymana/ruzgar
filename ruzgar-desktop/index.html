@@ -497,9 +497,9 @@
             <div class="atelier-info-strip">
               <span class="phase-badge">Faz 3 ✓</span>
               <span class="atelier-promise">
-                <strong>Tercüme Atölyesi</strong> — İlim arşivinden <strong>TXT / PDF / DOCX</strong> kaynak yükleme,
+                <strong>Tercüme Atölyesi</strong> — İlim arşivinden <strong>TXT / PDF / DOCX / EPUB / FB2 / MOBI / AZW / DJVU / RTF / HTML / MD</strong> kaynak yükleme,
                 kaynak ↔ hedef paneller, dil seçimi, <strong>Rüzgar’a çevirt</strong>, son yanıtı hedefe al ve sohbete aktar.
-                Terim sözlüğü ve çevrim dışı motor ileride.
+                Görsellerde OCR destekli metin çıkarma ve URL’den kaynak indirme dahildir.
               </span>
             </div>
             <h3>Tercüme Motoru — Ofis Paneli</h3>
@@ -508,6 +508,12 @@
                 <div class="code-sidebar-head okuma-sidebar-head">
                   <span>Kaynak dosyalar</span>
                   <div class="okuma-sidebar-btns">
+                    <button type="button" class="btn-secondary btn-compact" id="btn-tercume-set-root" title="Kaynak klasörünü değiştir (repo içi)">
+                      Kök seç
+                    </button>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-tercume-import-url" title="URL'den dosya/kitap indir">
+                      URL indir
+                    </button>
                     <button type="button" class="btn-secondary btn-compact" id="btn-tercume-open-archive" title="ilim-assistant/arsiv klasörünü aç">
                       Klasör
                     </button>
@@ -517,6 +523,8 @@
                   </div>
                 </div>
                 <div id="tercume-file-list" class="code-file-tree okuma-file-tree"></div>
+                <div class="tercume-worklist-head">Çalışma listesi (son açılanlar)</div>
+                <div id="tercume-work-list" class="code-file-tree okuma-file-tree tercume-work-list"></div>
               </aside>
               <div class="tercume-main">
                 <div class="tercume-toolbar">
@@ -546,6 +554,26 @@
                       <option value="ru">Rusça</option>
                     </select>
                   </label>
+                  <label class="tercume-lang-label">
+                    Mod
+                    <select id="tercume-translate-mode" class="tercume-lang-select" aria-label="Çeviri modu">
+                      <option value="selection">Seçili/tek parça</option>
+                      <option value="paged">Sayfa sayfa (yavaş/doğru)</option>
+                      <option value="full">Tamamını çevir</option>
+                    </select>
+                  </label>
+                  <label class="tercume-lang-label">
+                    Çıktı
+                    <select id="tercume-output-ext" class="tercume-lang-select" aria-label="Çıktı uzantısı">
+                      <option value="txt">TXT</option>
+                      <option value="md">MD</option>
+                      <option value="html">HTML</option>
+                    </select>
+                  </label>
+                  <label class="tercume-lang-label">
+                    Sayfa başı karakter
+                    <input id="tercume-page-size" class="tercume-lang-select" type="number" min="1500" max="12000" step="500" value="3500" />
+                  </label>
                   <button type="button" class="btn-primary btn-compact" id="btn-tercume-translate" title="Kaynak metni Rüzgar’a çevirt">
                     Çevir
                   </button>
@@ -554,6 +582,9 @@
                   </button>
                   <button type="button" class="btn-secondary btn-compact" id="btn-tercume-source-to-chat">
                     Kaynağı sohbete
+                  </button>
+                  <button type="button" class="btn-secondary btn-compact" id="btn-tercume-save-target">
+                    Hedefi kaydet
                   </button>
                   <button type="button" class="btn-secondary btn-compact" id="btn-tercume-clear">Temizle</button>
                   <span class="code-active-path okuma-active-path" id="tercume-active-file">Kaynak: (sol listeden dosya seçin)</span>
@@ -1091,6 +1122,22 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
                     <span id="programlama-git-summary" class="programlama-compliance-grade">—</span>
                     <span id="programlama-git-files" class="programlama-compliance-detail"></span>
                     <span id="programlama-git-commit-suggest" class="programlama-compliance-detail" style="display:block;margin-top:4px;"></span>
+                  </div>
+                </div>
+                <div id="programlama-umit-onay-card" class="programlama-compliance-card mini-card" hidden>
+                  <strong class="programlama-compliance-title">Ümit Onay Kapısı (Faz 98)</strong>
+                  <div class="programlama-compliance-body">
+                    <span id="programlama-umit-onay-state" class="programlama-compliance-score">—</span>
+                    <span id="programlama-umit-onay-kind" class="programlama-compliance-grade">—</span>
+                    <span id="programlama-umit-onay-detail" class="programlama-compliance-detail"></span>
+                    <div class="programlama-inline-actions">
+                      <button type="button" id="btn-umit-onay-apply" class="btn-secondary btn-compact" disabled>
+                        Tamam yap
+                      </button>
+                      <button type="button" id="btn-umit-onay-cancel" class="btn-secondary btn-compact" disabled>
+                        Yapma
+                      </button>
+                    </div>
                   </div>
                 </div>
                 <div class="code-output-panel">

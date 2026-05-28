@@ -382,11 +382,18 @@ const el = {
   tercumeTarget: document.getElementById("tercume-target"),
   tercumeSrcLang: document.getElementById("tercume-src-lang"),
   tercumeTgtLang: document.getElementById("tercume-tgt-lang"),
+  tercumeTranslateMode: document.getElementById("tercume-translate-mode"),
+  tercumeOutputExt: document.getElementById("tercume-output-ext"),
+  tercumePageSize: document.getElementById("tercume-page-size"),
+  tercumeWorkList: document.getElementById("tercume-work-list"),
   btnTercumeRefresh: document.getElementById("btn-tercume-refresh"),
+  btnTercumeSetRoot: document.getElementById("btn-tercume-set-root"),
+  btnTercumeImportUrl: document.getElementById("btn-tercume-import-url"),
   btnTercumeOpenArchive: document.getElementById("btn-tercume-open-archive"),
   btnTercumeTranslate: document.getElementById("btn-tercume-translate"),
   btnTercumeLastToTarget: document.getElementById("btn-tercume-last-to-target"),
   btnTercumeSourceToChat: document.getElementById("btn-tercume-source-to-chat"),
+  btnTercumeSaveTarget: document.getElementById("btn-tercume-save-target"),
   btnTercumeClear: document.getElementById("btn-tercume-clear"),
   tercumeStats: document.getElementById("tercume-stats"),
   tercumeActiveFile: document.getElementById("tercume-active-file"),
@@ -469,6 +476,8 @@ const el = {
   btnCodeTest: document.getElementById("btn-code-test"),
   btnCodeRun: document.getElementById("btn-code-run"),
   btnCodeOutputClear: document.getElementById("btn-code-output-clear"),
+  btnUmitOnayApply: document.getElementById("btn-umit-onay-apply"),
+  btnUmitOnayCancel: document.getElementById("btn-umit-onay-cancel"),
   codeFileTree: document.getElementById("code-file-tree"),
   progProjectSelect: document.getElementById("prog-project-select"),
   btnCodeRefresh: document.getElementById("btn-code-refresh"),
@@ -490,6 +499,9 @@ let atolyeOpenRel = null;
 let ilimOpenRel = null;
 /** Tercüme Atölyesi — kaynak dosya */
 let tercumeOpenRel = null;
+let tercumeWorkItems = [];
+let tercumeLastTargetRel = null;
+let tercumeRootRel = OKUMA_ARSIV_ROOT;
 /** Ses önizleme blob URL — yeniden seçimde iptal */
 let sesPreviewObjectUrl = null;
 /** Video önizleme blob URL */
@@ -564,6 +576,58 @@ async function readArchiveFileForOkuma(rel) {
       out += "\n\n— DOCX: uzunluk sınırı nedeniyle kısaltılmış olabilir.";
     }
     return out;
+  }
+  return readWorkspaceText(rel);
+}
+
+async function readArchiveFileForTercume(rel) {
+  const low = String(rel || "").toLowerCase();
+  if (low.endsWith(".pdf")) {
+    const res = await fetch(`${API}/api/workspace/read-pdf?rel=${encodeURIComponent(rel)}`);
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : `HTTP ${res.status}`);
+    return String(j.text || "");
+  }
+  if (low.endsWith(".docx")) {
+    const res = await fetch(`${API}/api/workspace/read-docx?rel=${encodeURIComponent(rel)}`);
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : `HTTP ${res.status}`);
+    return String(j.text || "");
+  }
+  if (
+    low.endsWith(".epub") ||
+    low.endsWith(".fb2") ||
+    low.endsWith(".rtf") ||
+    low.endsWith(".html") ||
+    low.endsWith(".htm") ||
+    low.endsWith(".mobi") ||
+    low.endsWith(".azw") ||
+    low.endsWith(".azw3") ||
+    low.endsWith(".kfx") ||
+    low.endsWith(".djvu") ||
+    low.endsWith(".djv") ||
+    low.endsWith(".md") ||
+    low.endsWith(".markdown") ||
+    low.endsWith(".txt")
+  ) {
+    const res = await fetch(`${API}/api/workspace/read-ebook?rel=${encodeURIComponent(rel)}`);
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : `HTTP ${res.status}`);
+    return String(j.text || "");
+  }
+  if (
+    low.endsWith(".png") ||
+    low.endsWith(".jpg") ||
+    low.endsWith(".jpeg") ||
+    low.endsWith(".webp") ||
+    low.endsWith(".bmp") ||
+    low.endsWith(".tif") ||
+    low.endsWith(".tiff")
+  ) {
+    const res = await fetch(`${API}/api/workspace/read-image-ocr?rel=${encodeURIComponent(rel)}&lang=tur+eng`);
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : `HTTP ${res.status}`);
+    return String(j.text || "");
   }
   return readWorkspaceText(rel);
 }
@@ -1698,6 +1762,43 @@ function renderProgramlamaGitChanges(payload) {
   }
 }
 
+function renderProgramlamaUmitOnay(payload) {
+  const wrap = document.getElementById("programlama-umit-onay-card");
+  const stateEl = document.getElementById("programlama-umit-onay-state");
+  const kindEl = document.getElementById("programlama-umit-onay-kind");
+  const detailEl = document.getElementById("programlama-umit-onay-detail");
+  const applyBtn = el.btnUmitOnayApply || document.getElementById("btn-umit-onay-apply");
+  const cancelBtn = el.btnUmitOnayCancel || document.getElementById("btn-umit-onay-cancel");
+  if (!wrap || !stateEl || !kindEl || !detailEl) return;
+  if (!payload || !payload.ok) {
+    wrap.hidden = true;
+    return;
+  }
+  if (!payload.has_pending) {
+    wrap.hidden = false;
+    stateEl.textContent = "Bekleyen işlem yok";
+    kindEl.textContent = "Sistem sakin";
+    detailEl.textContent = "İşlem isteyince önce önizleme gelir, sonra tamam yap/yapma.";
+    if (applyBtn) applyBtn.disabled = true;
+    if (cancelBtn) cancelBtn.disabled = true;
+    return;
+  }
+  const op = payload.operation && typeof payload.operation === "object" ? payload.operation : {};
+  const label = String(op.label || op.kind || "işlem");
+  const riskCount = Number(op.risk_count || 0);
+  stateEl.textContent = "Onay bekliyor";
+  kindEl.textContent = label;
+  const src = op.src ? `Kaynak: ${op.src}` : "";
+  const dst = op.dst ? `Hedef: ${op.dst}` : "";
+  const cmd = op.command ? `Komut: ${op.command}` : "";
+  const pkg = op.package ? `Paket: ${op.package}` : "";
+  const risk =
+    riskCount > 0 ? `Risk(${riskCount}): ${String(op.risk_head || "").slice(0, 90)}` : "Risk: düşük";
+  detailEl.textContent = [src, dst, cmd, pkg, risk].filter(Boolean).join(" · ");
+  if (applyBtn) applyBtn.disabled = false;
+  if (cancelBtn) cancelBtn.disabled = false;
+}
+
 async function refreshProgramlamaGitChanges(scopeRel) {
   const workspaceRoot = await getProgramlamaWorkspaceRoot();
   if (!workspaceRoot) return;
@@ -1732,6 +1833,13 @@ async function refreshProgramlamaKpiDashboard() {
     const scope = scopeEl && scopeEl.value ? String(scopeEl.value).trim() : "";
     if (scope) {
       await refreshProgramlamaGitChanges(scope);
+    }
+    try {
+      const res2 = await fetch(`${API}/api/programlama/umit-onay${qs}`);
+      const onay = await res2.json().catch(() => ({}));
+      renderProgramlamaUmitOnay(onay);
+    } catch (_) {
+      renderProgramlamaUmitOnay(null);
     }
   } catch (_) {
     /* ignore */
@@ -4215,9 +4323,13 @@ async function openOkumaArsivFile(rel) {
 
 async function openTercumeArsivFile(rel) {
   try {
-    const text = await readArchiveFileForOkuma(rel);
+    const text = await readArchiveFileForTercume(rel);
     tercumeOpenRel = rel;
     if (el.tercumeSource) el.tercumeSource.value = text;
+    if (!tercumeWorkItems.includes(rel)) {
+      tercumeWorkItems = [rel, ...tercumeWorkItems].slice(0, 24);
+    }
+    renderTercumeWorkList();
     updateTercumeActiveFileLabel();
     updateTercumeTextStats();
     flashRuzgarDurum(`Kaynak yüklendi: ${rel}`);
@@ -4245,13 +4357,45 @@ function updateTercumeTextStats() {
   el.tercumeStats.textContent = `${chars.toLocaleString("tr-TR")} karakter · ${words.toLocaleString("tr-TR")} kelime (kaynak)`;
 }
 
+function renderTercumeWorkList() {
+  if (!el.tercumeWorkList) return;
+  if (!tercumeWorkItems.length) {
+    el.tercumeWorkList.innerHTML = `<div class="code-tree-empty">Henüz dosya açılmadı.</div>`;
+    return;
+  }
+  el.tercumeWorkList.innerHTML = tercumeWorkItems
+    .map((rel) => {
+      const label = String(rel).split("/").slice(-2).join("/");
+      return `<button type="button" class="code-tree-row file" data-rel="${esc(rel)}" style="width:100%;text-align:left;">${esc(label)}</button>`;
+    })
+    .join("");
+}
+
+function splitTextForPagedTranslation(text, pageSize) {
+  const src = String(text || "");
+  const size = Math.max(1500, Math.min(Number(pageSize || 3500), 12000));
+  const chunks = [];
+  let i = 0;
+  while (i < src.length) {
+    let end = Math.min(src.length, i + size);
+    if (end < src.length) {
+      const br = src.lastIndexOf("\n", end);
+      if (br > i + 800) end = br;
+    }
+    chunks.push(src.slice(i, end).trim());
+    i = end;
+  }
+  return chunks.filter(Boolean);
+}
+
 async function tercumeAtolyeRefreshTree() {
-  await refreshArsivTreeInto(el.tercumeFileList);
+  await refreshArsivTreeInto(el.tercumeFileList, tercumeRootRel);
 }
 
 async function loadTercumeFileList() {
   updateTercumeActiveFileLabel();
   updateTercumeTextStats();
+  renderTercumeWorkList();
   await tercumeAtolyeRefreshTree();
 }
 
@@ -4265,19 +4409,138 @@ async function sendTercumeTranslatePrompt() {
     raw.length > 28000 ? `${raw.slice(0, 28000)}\n\n… (mimar için kısaltıldı)` : raw;
   const srcLabel = el.tercumeSrcLang?.selectedOptions?.[0]?.textContent?.trim() || "Otomatik";
   const tgtLabel = el.tercumeTgtLang?.selectedOptions?.[0]?.textContent?.trim() || "İngilizce";
+  const mode = String(el.tercumeTranslateMode?.value || "selection");
+  const pageSize = Number(el.tercumePageSize?.value || 3500);
+  const outExt = String(el.tercumeOutputExt?.value || "txt");
   const fileNote = tercumeOpenRel ? `\n[Kaynak dosya: ${tercumeOpenRel}]\n` : "";
+  const rules =
+    "Çeviri yaparken hedef dilin imla, noktalama, yazım ve dil bilgisi kurallarına bire bir uy. " +
+    "Anlam sadakati korunmalı; uydurma ekleme yapma. Sadece çeviriyi ver.";
+  if (mode === "paged") {
+    const chunks = splitTextForPagedTranslation(chunk, pageSize);
+    if (!chunks.length) return;
+    if (el.tercumeTarget) el.tercumeTarget.value = "";
+    flashRuzgarDurum(`Sayfa sayfa çeviri başladı (${chunks.length} parça)…`);
+    const merged = [];
+    for (let i = 0; i < chunks.length; i += 1) {
+      const msg = `${fileNote}Ümit abi, tercüme atölyesi sayfa ${i + 1}/${chunks.length}.
+
+Kaynak dil: ${srcLabel}
+Hedef dil: ${tgtLabel}
+Çıktı uzantısı hedefi: .${outExt}
+${rules}
+
+---
+
+${chunks[i]}`;
+      await sendMessageWithText(msg, { skipUserBubble: false });
+      const latest = String(lastAssistantReply || "").trim();
+      if (latest) {
+        merged.push(`### Sayfa ${i + 1}\n\n${latest}`);
+      }
+    }
+    if (el.tercumeTarget && merged.length) {
+      el.tercumeTarget.value = merged.join("\n\n");
+    }
+    flashRuzgarDurum("Sayfa sayfa çeviri komutları gönderildi.");
+    return;
+  }
   const msg = `${fileNote}Ümit abi, tercüme atölyesinden iletiyorum.
 
 Kaynak dil: ${srcLabel}
 Hedef dil: ${tgtLabel}
-
-Yalnızca hedef dilde tam çeviriyi ver; uzun giriş veya genel özet yazma. Gerekirse hassas terimler için çok kısa dipnot kullan.
+Çeviri modu: ${mode === "full" ? "Tamamı" : "Tek parça"}
+Çıktı uzantısı hedefi: .${outExt}
+${rules}
 
 ---
 
 ${chunk}`;
   flashRuzgarDurum("Rüzgar’a iletiliyor…");
   await sendMessageWithText(msg, { skipUserBubble: false });
+  if (el.tercumeTarget) {
+    const latest = String(lastAssistantReply || "").trim();
+    if (latest) el.tercumeTarget.value = latest;
+  }
+}
+
+async function tercumeImportFromUrl() {
+  const u = window.prompt("İndirmek istediğin bağlantıyı yapıştır:", "https://");
+  if (!u || !/^https?:\/\//i.test(u.trim())) {
+    flashRuzgarDurum("Geçerli bir http/https bağlantısı girin.");
+    return;
+  }
+  const hint = window.prompt("Kayıt adı (opsiyonel, örn: eser.epub):", "") || "";
+  flashRuzgarDurum("Bağlantıdan indiriliyor…");
+  const fd = new FormData();
+  fd.append("url", u.trim());
+  fd.append("filename_hint", hint.trim());
+  const res = await fetch(`${API}/api/tercume/import-url`, { method: "POST", body: fd });
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok || j.ok === false) {
+    flashRuzgarDurum(j.detail || j.error || `HTTP ${res.status}`);
+    return;
+  }
+  flashRuzgarDurum(`İndirildi: ${j.rel}`);
+  await tercumeAtolyeRefreshTree();
+}
+
+async function saveTercumeTargetBuffer() {
+  const text = String(el.tercumeTarget?.value || "").trim();
+  if (!text) {
+    flashRuzgarDurum("Hedef panel boş.");
+    return;
+  }
+  const ext = String(el.tercumeOutputExt?.value || "txt");
+  const base = tercumeOpenRel
+    ? String(tercumeOpenRel).split("/").pop().replace(/\.[a-z0-9]+$/i, "")
+    : `tercume_${Date.now()}`;
+  const suggested = `ilim-assistant/arsiv/tercume-ciktilar/${base}.${ext}`;
+  const asked = window.prompt(
+    "Kaydetme yolu (repo içi göreli). Boş bırakırsan önerilen yol kullanılır:",
+    suggested
+  );
+  const rel = String((asked || suggested).trim() || suggested).replace(/\\/g, "/");
+  if (!rel || rel.startsWith("/") || rel.includes("..")) {
+    flashRuzgarDurum("Geçersiz kayıt yolu.");
+    return;
+  }
+  if (!window.ruzgarApi?.writeText) {
+    flashRuzgarDurum("Bu özellik masaüstü Rüzgar’da kullanılabilir.");
+    return;
+  }
+  const w = await window.ruzgarApi.writeText(rel, text);
+  if (w?.ok === false) {
+    flashRuzgarDurum(`Kaydetme hatası: ${w.error || "?"}`);
+    return;
+  }
+  tercumeLastTargetRel = rel;
+  flashRuzgarDurum(`Çıktı kaydedildi: ${rel}`);
+  if (!tercumeWorkItems.includes(rel)) {
+    tercumeWorkItems = [rel, ...tercumeWorkItems].slice(0, 24);
+    renderTercumeWorkList();
+  }
+  const copyTo = window.prompt(
+    "İstersen ikinci bir konuma kopyala (repo içi göreli yol). Atlamak için boş bırak:",
+    ""
+  );
+  const copyRel = String(copyTo || "").trim().replace(/\\/g, "/");
+  if (copyRel) {
+    if (copyRel.startsWith("/") || copyRel.includes("..")) {
+      flashRuzgarDurum("Ek kopya yolu geçersiz, ilk kayıt korundu.");
+      return;
+    }
+    const w2 = await window.ruzgarApi.writeText(copyRel, text);
+    if (w2?.ok === false) {
+      flashRuzgarDurum(`Ek kopya hatası: ${w2.error || "?"}`);
+      return;
+    }
+    flashRuzgarDurum(`Ek kopya da kaydedildi: ${copyRel}`);
+    if (!tercumeWorkItems.includes(copyRel)) {
+      tercumeWorkItems = [copyRel, ...tercumeWorkItems].slice(0, 24);
+      renderTercumeWorkList();
+    }
+  }
 }
 
 function wireTercumeAtolye() {
@@ -4291,6 +4554,28 @@ function wireTercumeAtolye() {
     el.btnTercumeRefresh.addEventListener("click", () => {
       void tercumeAtolyeRefreshTree();
       flashRuzgarDurum("Kaynak listesi yenilendi.");
+    });
+  }
+  if (el.btnTercumeSetRoot) {
+    el.btnTercumeSetRoot.addEventListener("click", () => {
+      const v = window.prompt(
+        "Tercüme kaynak kökü (repo içi göreli klasör):",
+        tercumeRootRel || OKUMA_ARSIV_ROOT
+      );
+      if (!v) return;
+      const rel = String(v).trim().replace(/\\/g, "/");
+      if (!rel || rel.startsWith("/") || rel.includes("..")) {
+        flashRuzgarDurum("Geçersiz kök klasör.");
+        return;
+      }
+      tercumeRootRel = rel;
+      void tercumeAtolyeRefreshTree();
+      flashRuzgarDurum(`Tercüme kökü değişti: ${tercumeRootRel}`);
+    });
+  }
+  if (el.btnTercumeImportUrl) {
+    el.btnTercumeImportUrl.addEventListener("click", () => {
+      void tercumeImportFromUrl();
     });
   }
   if (el.btnTercumeOpenArchive) {
@@ -4335,6 +4620,11 @@ function wireTercumeAtolye() {
       }
     });
   }
+  if (el.btnTercumeSaveTarget) {
+    el.btnTercumeSaveTarget.addEventListener("click", () => {
+      void saveTercumeTargetBuffer();
+    });
+  }
   if (el.btnTercumeClear) {
     el.btnTercumeClear.addEventListener("click", () => {
       if (el.tercumeSource) el.tercumeSource.value = "";
@@ -4343,6 +4633,15 @@ function wireTercumeAtolye() {
       updateTercumeActiveFileLabel();
       updateTercumeTextStats();
       flashRuzgarDurum("Paneller temizlendi.");
+    });
+  }
+  if (el.tercumeWorkList && el.tercumeWorkList.dataset.tercumeWired !== "1") {
+    el.tercumeWorkList.dataset.tercumeWired = "1";
+    el.tercumeWorkList.addEventListener("click", (ev) => {
+      const row = ev.target.closest("[data-rel]");
+      if (!row) return;
+      const rel = row.dataset.rel;
+      if (rel) void openTercumeArsivFile(rel);
     });
   }
   if (el.tercumeSource) {
@@ -5654,18 +5953,18 @@ function wireVideoQuickBar() {
   }
 }
 
-async function refreshArsivTreeInto(containerEl) {
+async function refreshArsivTreeInto(containerEl, rootRel = OKUMA_ARSIV_ROOT) {
   if (!containerEl) return;
   containerEl.innerHTML = `<div class="code-tree-loading">${esc("Yükleniyor…")}</div>`;
   try {
-    const items = await workspaceListDir(OKUMA_ARSIV_ROOT);
+    const items = await workspaceListDir(rootRel);
     containerEl.innerHTML = "";
     for (const it of items) {
       containerEl.appendChild(createCodeTreeBranch(it, 0));
     }
     if (!items.length) {
       containerEl.innerHTML =
-        `<div class="code-file-placeholder">Arşiv boş veya klasör yok. Klasörü oluşturun: <code>ilim-assistant/arsiv</code> — içine .md / .txt ekleyin.</div>`;
+        `<div class="code-file-placeholder">Arşiv boş veya klasör yok. Klasörü oluşturun: <code>${esc(rootRel)}</code>.</div>`;
     }
   } catch (e) {
     containerEl.innerHTML =
@@ -5914,6 +6213,18 @@ function wireProgrammingWorkbench() {
   }
   if (el.btnCodeOutputClear) {
     el.btnCodeOutputClear.addEventListener("click", () => setCodeOutput(""));
+  }
+  if (el.btnUmitOnayApply) {
+    el.btnUmitOnayApply.addEventListener("click", () => {
+      void sendMessageWithText("tamam yap");
+      void refreshProgramlamaKpiDashboard();
+    });
+  }
+  if (el.btnUmitOnayCancel) {
+    el.btnUmitOnayCancel.addEventListener("click", () => {
+      void sendMessageWithText("yapma");
+      void refreshProgramlamaKpiDashboard();
+    });
   }
 }
 
@@ -9420,6 +9731,13 @@ setInterval(() => {
   if (document.hidden) return;
   void refreshUiManifest();
 }, UI_MANIFEST_POLL_MS);
+setInterval(() => {
+  if (document.hidden) return;
+  const progPage = document.getElementById("page-programlama");
+  if (progPage && !progPage.hidden) {
+    void refreshProgramlamaKpiDashboard();
+  }
+}, 10000);
 refreshPerformanceMetrics();
 scheduleMetricsPolling();
 loadFileTree();

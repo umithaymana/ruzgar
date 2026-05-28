@@ -16,6 +16,12 @@ import subprocess
 import sys
 import tempfile
 import uuid
+import zipfile
+import re
+from html import unescape
+from urllib.parse import urlparse
+from urllib.request import urlopen, Request
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Annotated, Any, Iterator
 
@@ -242,6 +248,105 @@ def _repo_list_children(rel_query: str) -> list[dict[str, Any]]:
         rel_full = rel_full.replace("\\", "/")
         out.append({"name": name, "isDir": p.is_dir(), "rel": rel_full})
     return out
+
+
+def _simple_html_to_text(raw: str) -> str:
+    text = unescape(raw or "")
+    text = re.sub(r"(?is)<script[^>]*>.*?</script>", " ", text)
+    text = re.sub(r"(?is)<style[^>]*>.*?</style>", " ", text)
+    text = re.sub(r"(?i)<br\s*/?>", "\n", text)
+    text = re.sub(r"(?i)</p\s*>", "\n\n", text)
+    text = re.sub(r"(?i)</h[1-6]\s*>", "\n\n", text)
+    text = re.sub(r"(?s)<[^>]+>", " ", text)
+    text = re.sub(r"[ \t]+\n", "\n", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    text = re.sub(r"[ \t]{2,}", " ", text)
+    return text.strip()
+
+
+def _rtf_to_text(raw: str) -> str:
+    s = raw or ""
+    s = re.sub(r"\\'[0-9a-fA-F]{2}", " ", s)
+    s = re.sub(r"\\par[d]?", "\n", s)
+    s = re.sub(r"\\tab", "\t", s)
+    s = re.sub(r"\\[a-zA-Z]+\d* ?", "", s)
+    s = s.replace("{", "").replace("}", "")
+    s = re.sub(r"\n{3,}", "\n\n", s)
+    s = re.sub(r"[ \t]{2,}", " ", s)
+    return s.strip()
+
+
+def _read_epub_text(target: Path) -> tuple[str, dict[str, Any]]:
+    parts: list[str] = []
+    chapters = 0
+    with zipfile.ZipFile(target, "r") as zf:
+        names = [n for n in zf.namelist() if n.lower().endswith((".xhtml", ".html", ".htm"))]
+        for name in names:
+            try:
+                body = zf.read(name).decode("utf-8", errors="replace")
+            except Exception:
+                continue
+            txt = _simple_html_to_text(body)
+            if txt:
+                chapters += 1
+                parts.append(f"\n\n=== Bölüm {chapters}: {name} ===\n\n{txt}")
+    return "\n".join(parts).strip(), {"chapters_read": chapters}
+
+
+def _read_fb2_text(target: Path) -> tuple[str, dict[str, Any]]:
+    try:
+        root = ET.fromstring(target.read_text(encoding="utf-8", errors="replace"))
+    except Exception:
+        return "", {"sections_read": 0}
+    ns = {"fb": "http://www.gribuser.ru/xml/fictionbook/2.0"}
+    out: list[str] = []
+    sections = 0
+    for sec in root.findall(".//fb:body/fb:section", ns):
+        sections += 1
+        txt = " ".join((t or "").strip() for t in sec.itertext() if (t or "").strip())
+        if txt:
+            out.append(f"\n\n=== Bölüm {sections} ===\n\n{txt}")
+    return "\n".join(out).strip(), {"sections_read": sections}
+
+
+def _command_exists(name: str) -> bool:
+    return shutil.which(name) is not None
+
+
+def _convert_with_calibre_to_text(target: Path) -> str:
+    if not _command_exists("ebook-convert"):
+        raise RuntimeError("Calibre aracı yok (ebook-convert). Önce Calibre kurun.")
+    with tempfile.TemporaryDirectory(prefix="ruzgar_ebook_") as td:
+        out = Path(td) / "converted.txt"
+        proc = subprocess.run(
+            ["ebook-convert", str(target), str(out)],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=90,
+        )
+        if proc.returncode != 0 or (not out.is_file()):
+            msg = (proc.stderr or proc.stdout or "ebook-convert başarısız")[:240]
+            raise RuntimeError(msg)
+        return out.read_text(encoding="utf-8", errors="replace")
+
+
+def _convert_djvu_to_text(target: Path) -> str:
+    if not _command_exists("djvutxt"):
+        raise RuntimeError("djvutxt aracı yok. DjVuLibre kurun.")
+    proc = subprocess.run(
+        ["djvutxt", str(target)],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        timeout=60,
+    )
+    if proc.returncode != 0:
+        msg = (proc.stderr or proc.stdout or "djvutxt başarısız")[:240]
+        raise RuntimeError(msg)
+    return (proc.stdout or "").strip()
 
 # Electron (file://) ↔ yerel API: geçici tam açık CORS — köprü/socket kapanmasın.
 # allow_credentials + "*" birlikte tarayıcıda CORS'u bozar; permissive modda credentials kapalı.
@@ -1937,6 +2042,41 @@ def api_programlama_kpi_dashboard(workspace_root: str | None = None):
     return payload
 
 
+@app.get("/api/programlama/umit-onay")
+def api_programlama_umit_onay(workspace_root: str | None = None):
+    """Faz 98 — Ümit onay kapısı bekleyen işlem özeti."""
+    from ilim_assistant.motorlar.programlama_faz98 import FAZ98_VERSION, load_pending
+
+    root = (workspace_root or "").strip() or None
+    pending = load_pending(root)
+    if not pending:
+        return {"ok": True, "has_pending": False, "version": FAZ98_VERSION}
+
+    op = pending.get("operation") or pending
+    preview = op.get("preview") or {}
+    risks = list(preview.get("risks") or [])
+    return {
+        "ok": True,
+        "has_pending": True,
+        "token": pending.get("token"),
+        "created_at": pending.get("created_at"),
+        "expires_at": pending.get("expires_at"),
+        "operation": {
+            "kind": op.get("kind"),
+            "label": op.get("label"),
+            "src": op.get("src_abs") or op.get("src"),
+            "dst": op.get("dst_abs") or op.get("dst"),
+            "command": op.get("command"),
+            "package": op.get("package"),
+            "scope_rel": op.get("scope_rel"),
+            "success": preview.get("success"),
+            "risk_count": len(risks),
+            "risk_head": risks[0] if risks else "",
+        },
+        "version": FAZ98_VERSION,
+    }
+
+
 @app.post("/api/programlama/best-of-n/plan")
 def api_programlama_best_of_n_plan(body: ProgramlamaPatchBody):
     """Faz 64 — Best-of-N aday planı + pytest skoru."""
@@ -3157,6 +3297,149 @@ def api_workspace_read_docx(rel: str = Query("")) -> dict[str, Any]:
         full = full[:hard_cap] + "\n\n… [metin uzun olduğu için kesildi]"
         truncated = True
     return {"ok": True, "text": full, "truncated_length": truncated}
+
+
+@app.get("/api/workspace/read-ebook")
+def api_workspace_read_ebook(rel: str = Query("")) -> dict[str, Any]:
+    """
+    E-kitap/kitap metin çıkarımı:
+    epub, fb2, rtf, html/htm, md/markdown, txt.
+    """
+    raw = (rel or "").strip().replace("\\", "/").lstrip("/")
+    if not raw:
+        raise HTTPException(status_code=400, detail="rel gerekli.")
+    target = _repo_resolve_under_root(raw, must_be_dir=False)
+    ext = target.suffix.lower()
+    max_bytes = 25_000_000
+    if target.stat().st_size > max_bytes:
+        raise HTTPException(status_code=400, detail=f"Dosya çok büyük ({max_bytes // 1_000_000} MB sınır).")
+
+    meta: dict[str, Any] = {"ext": ext}
+    if ext == ".epub":
+        text, m = _read_epub_text(target)
+        meta.update(m)
+    elif ext == ".fb2":
+        text, m = _read_fb2_text(target)
+        meta.update(m)
+    elif ext in {".rtf"}:
+        text = _rtf_to_text(target.read_text(encoding="utf-8", errors="replace"))
+    elif ext in {".html", ".htm"}:
+        text = _simple_html_to_text(target.read_text(encoding="utf-8", errors="replace"))
+    elif ext in {".md", ".markdown", ".txt"}:
+        text = target.read_text(encoding="utf-8", errors="replace")
+    elif ext in {".mobi", ".azw", ".azw3", ".kfx"}:
+        try:
+            text = _convert_with_calibre_to_text(target)
+            meta["converter"] = "ebook-convert"
+        except RuntimeError as exc:
+            raise HTTPException(
+                status_code=400,
+                detail=f"{str(exc)} Bu uzantıyı okumak için Calibre gerekir.",
+            ) from exc
+    elif ext in {".djvu", ".djv"}:
+        try:
+            text = _convert_djvu_to_text(target)
+            meta["converter"] = "djvutxt"
+        except RuntimeError as exc:
+            raise HTTPException(
+                status_code=400,
+                detail=f"{str(exc)} Bu uzantıyı okumak için DjVuLibre gerekir.",
+            ) from exc
+    else:
+        raise HTTPException(status_code=400, detail="Bu uzantı read-ebook ile desteklenmiyor.")
+
+    hard_cap = 900_000
+    truncated = False
+    if len(text) > hard_cap:
+        text = text[:hard_cap] + "\n\n… [metin uzun olduğu için kesildi]"
+        truncated = True
+    return {"ok": True, "text": text, "truncated_length": truncated, "meta": meta}
+
+
+@app.get("/api/workspace/read-image-ocr")
+def api_workspace_read_image_ocr(rel: str = Query(""), lang: str = Query("tur+eng")) -> dict[str, Any]:
+    """
+    Görselden metin çıkarımı (opsiyonel):
+    - pytesseract + pillow kuruluysa OCR yapar.
+    - yoksa net kurulum mesajı döner.
+    """
+    raw = (rel or "").strip().replace("\\", "/").lstrip("/")
+    if not raw:
+        raise HTTPException(status_code=400, detail="rel gerekli.")
+    target = _repo_resolve_under_root(raw, must_be_dir=False)
+    ext = target.suffix.lower()
+    if ext not in {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tif", ".tiff"}:
+        raise HTTPException(status_code=400, detail="Dosya görsel değil.")
+    max_bytes = 25_000_000
+    if target.stat().st_size > max_bytes:
+        raise HTTPException(status_code=400, detail=f"Görsel çok büyük ({max_bytes // 1_000_000} MB sınır).")
+    try:
+        from PIL import Image
+        import pytesseract
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="OCR için: pip install pillow pytesseract ve sistemde tesseract kurulumu gerekli.",
+        ) from exc
+    try:
+        img = Image.open(target)
+        txt = pytesseract.image_to_string(img, lang=(lang or "tur+eng"))
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"OCR başarısız: {str(exc)[:220]}") from exc
+    text = (txt or "").strip()
+    if not text:
+        text = "[OCR boş sonuç verdi]"
+    hard_cap = 700_000
+    truncated = False
+    if len(text) > hard_cap:
+        text = text[:hard_cap] + "\n\n… [OCR metni uzun olduğu için kesildi]"
+        truncated = True
+    return {"ok": True, "text": text, "truncated_length": truncated, "lang": (lang or "tur+eng")}
+
+
+@app.post("/api/tercume/import-url")
+def api_tercume_import_url(
+    url: str = Form(""),
+    filename_hint: str = Form(""),
+) -> dict[str, Any]:
+    """
+    URL'den dosya/metin indirip tercüme çalışma alanına koyar.
+    Hedef: ilim-assistant/arsiv/tercume-imports
+    """
+    u = (url or "").strip()
+    if not u:
+        raise HTTPException(status_code=400, detail="url gerekli.")
+    p = urlparse(u)
+    if p.scheme not in {"http", "https"}:
+        raise HTTPException(status_code=400, detail="Yalnızca http/https desteklenir.")
+
+    out_dir = REPO_ROOT / "ilim-assistant" / "arsiv" / "tercume-imports"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    hint = (filename_hint or "").strip().replace("\\", "/").split("/")[-1]
+    if not hint:
+        base = (Path(p.path).name or f"import_{uuid.uuid4().hex[:8]}")
+        hint = base
+    safe_name = re.sub(r"[^a-zA-Z0-9._\-]+", "_", hint).strip("._") or f"import_{uuid.uuid4().hex[:8]}.txt"
+    target = out_dir / safe_name
+
+    req = Request(u, headers={"User-Agent": "RuzgarDesktop/1.0"})
+    max_bytes = 30_000_000
+    try:
+        with urlopen(req, timeout=25) as r:
+            data = r.read(max_bytes + 1)
+            ctype = str(r.headers.get("Content-Type") or "")
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"İndirme başarısız: {str(exc)[:200]}") from exc
+    if len(data) > max_bytes:
+        raise HTTPException(status_code=400, detail=f"Dosya çok büyük ({max_bytes // 1_000_000} MB sınır).")
+
+    try:
+        target.write_bytes(data)
+    except OSError as exc:
+        raise HTTPException(status_code=500, detail=f"Dosya yazılamadı: {str(exc)[:200]}") from exc
+
+    rel = target.relative_to(REPO_ROOT).as_posix()
+    return {"ok": True, "rel": rel, "bytes": len(data), "content_type": ctype}
 
 
 @app.post("/api/code/run")
