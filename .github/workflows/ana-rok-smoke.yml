@@ -1,0 +1,45 @@
+# Ana motor + ROK yardımcı motorlar için smoke kontrolü
+
+name: Ana-ROK Smoke
+
+on:
+  push:
+    paths:
+      - "ilim-assistant/**"
+      - ".github/workflows/ana-rok-smoke.yml"
+  pull_request:
+    paths:
+      - "ilim-assistant/**"
+      - ".github/workflows/ana-rok-smoke.yml"
+  workflow_dispatch:
+
+jobs:
+  ana-rok-offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: ilim-assistant/requirements.txt
+
+      - name: Install dependencies
+        working-directory: ilim-assistant
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Ana motor smoke
+        working-directory: ilim-assistant
+        env:
+          RUZGAR_SKIP_RAG_WARMUP: "1"
+          RUZGAR_DISABLE_GEMINI: "1"
+          RUZGAR_DISABLE_GROQ: "1"
+        run: python scripts/ana_motor_smoke.py
+
+      - name: ROK smoke
+        working-directory: ilim-assistant
+        run: python scripts/rok_smoke.py
