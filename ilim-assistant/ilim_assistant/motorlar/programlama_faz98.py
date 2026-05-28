@@ -30,26 +30,39 @@ from ilim_assistant.safety_policy import path_is_forbidden, validate_custom_wing
 
 FAZ98_VERSION = "programlama-faz98-v1-2026-05-27"
 _PENDING_FILE = "umit_onay_pending.json"
+_LOG_FILE = "umit_onay_log.jsonl"
 _PENDING_TTL_SEC = 900
 
 _APPROVE_RE = re.compile(
-    r"^\s*(?:tamam\s+yap|tamam|onayla|evet|yap|devam\s+et|onayliyorum|onaylıyorum)\s*$",
+    r"^\s*(?:tamam\s+yap|tamam|onayla|evet|yap|devam\s+et|onayliyorum|onaylıyorum|olur|tamamdir|tamamdır)\s*$",
     re.I,
 )
 _REJECT_RE = re.compile(
-    r"^\s*(?:yapma|iptal|vazge[cç]|hayir|hayır|dur|istemiyorum)\s*$",
+    r"^\s*(?:yapma|iptal|vazge[cç]|hayir|hayır|dur|istemiyorum|vazgectim|vazgeçtim)\s*$",
     re.I,
 )
 _LIST_RE = re.compile(r"^\s*(?:işlem|islem)\s+liste\s*$", re.I)
+_HISTORY_RE = re.compile(r"^\s*(?:işlem|islem)\s+geçmiş(?:i)?(?:\s+.+)?\s*$", re.I)
 _CANCEL_RE = re.compile(r"^\s*(?:işlem|islem)\s+iptal\s*$", re.I)
 _EXPLICIT_ISTEK_RE = re.compile(
     r"^\s*(?:işlem|islem)\s+iste(?:k|ğ)?\s*:\s*(.+)$",
     re.I | re.S,
 )
+_SHELL_ISTEK_RE = re.compile(
+    r"^\s*(?:shell|ozgur-shell|özgür\s*shell)\s+istek\s*:\s*(.+)$",
+    re.I | re.S,
+)
+_SHELL_ONAY_RE = re.compile(
+    r"^\s*(?:shell|ozgur-shell|özgür\s*shell)\s+onay\s*:\s*(.+)$",
+    re.I | re.S,
+)
+_SHELL_ONAYLA_RE = re.compile(r"^\s*shell\s+onayla(?:\s*:\s*[a-f0-9]{6,12})?\s*$", re.I)
+_SHELL_IPTAL_RE = re.compile(r"^\s*shell\s+iptal\s*$", re.I)
+_SHELL_LISTE_RE = re.compile(r"^\s*shell\s+liste\s*$", re.I)
 
 _MOVE_RE = re.compile(
     r"(?:"
-    r"(.+?)\s+(?:dosyasini|dosyayı|dosyayi|klasörünü|klasorunu)\s+(.+?)\s+(?:taşı|tasi|suraya\s+taşı|şuraya\s+taşı)|"
+    r"(.+?)\s+(?:dosyasini|dosyasını|dosyayı|dosyayi|logu|klasörünü|klasorunu)\s+(.+?)\s+(?:taşı|tasi|suraya\s+taşı|şuraya\s+taşı)|"
     r"(?:taşı|tasi|move)\s+(.+?)\s+(?:->|→|şuraya|suraya|içine|icine|to)\s+(.+)|"
     r"(.+?)\s+(?:yolunu|klasörüne|klasorune)\s+(.+?)\s+(?:taşı|tasi)"
     r")",
@@ -67,7 +80,7 @@ _PIP_RE = re.compile(
     re.I,
 )
 _SHELL_NATURAL_RE = re.compile(
-    r"(?:çalıştır|calistir|koş|kos)\s*[:：]?\s*(.+)$",
+    r"(?:çalıştır|calistir|çalistir|koş|kos)\s*[:：]?\s*(.+)$",
     re.I | re.S,
 )
 
@@ -89,6 +102,42 @@ def faz98_enabled() -> bool:
 def _ascii_fold(text: str) -> str:
     t = unicodedata.normalize("NFKD", text or "")
     return "".join(c for c in t if not unicodedata.combining(c)).lower()
+
+
+def _clean_path_phrase(raw: str) -> str:
+    s = (raw or "").strip().strip('"').strip("'")
+    if not s:
+        return ""
+    # Natural-language fillers around file paths.
+    s = re.sub(r"^\s*(?:dosya(?:s[ıi])?|klas[oö]r(?:[üu])?)\s+", "", s, flags=re.I)
+    s = re.sub(r"\s+(?:dosya(?:s[ıi])?|klas[oö]r(?:[üu])?)\s*$", "", s, flags=re.I)
+    s = re.sub(r"\s+(?:i[cç]ine|i[cç]eris?ine|alt[ıi]na|yoluna)\s*$", "", s, flags=re.I)
+    s = re.sub(r"\s+(?:şuraya|suraya)\s*$", "", s, flags=re.I)
+    s = re.sub(r"^(?:deki|daki)\s+", "", s, flags=re.I)
+    return s.strip()
+
+
+def _rewrite_natural_root(text: str) -> str:
+    s = (text or "").strip()
+    if not s:
+        return s
+    # Common Turkish location phrases -> canonical folder names under home.
+    root_patterns = (
+        (r"^\s*masa(?:üstü|ustu)(?:ndeki|deki)?\s+", "Desktop"),
+        (r"^\s*desktop(?:taki|teki|deki)?\s+", "Desktop"),
+        (r"^\s*indirilenler\s+klas[oö]r(?:ü|u)ndeki\s+", "Downloads"),
+        (r"^\s*indirilenler(?:deki)?\s+", "Downloads"),
+        (r"^\s*downloads(?:taki|teki|deki)?\s+", "Downloads"),
+        (r"^\s*belgeler(?:deki)?\s+", "Documents"),
+        (r"^\s*belgelerdeki\s+", "Documents"),
+        (r"^\s*documents(?:taki|teki|deki)?\s+", "Documents"),
+    )
+    for pat, target in root_patterns:
+        m = re.match(pat, s, flags=re.I)
+        if m:
+            rest = s[m.end():].lstrip("/\\ ")
+            return str((Path.home() / target / rest).resolve()) if rest else str((Path.home() / target).resolve())
+    return s
 
 
 def _pending_path(workspace_root: str | Path | None) -> Path | None:
@@ -167,6 +216,109 @@ def clear_pending(workspace_root: str | Path | None) -> bool:
         return False
 
 
+def _log_path(workspace_root: str | Path | None) -> Path | None:
+    root = repo_root(workspace_root)
+    if root is None:
+        return None
+    d = root / ".ruzgar"
+    try:
+        d.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        return None
+    return d / _LOG_FILE
+
+
+def append_audit_log(
+    workspace_root: str | Path | None,
+    *,
+    event: str,
+    op: dict[str, Any] | None = None,
+    result: dict[str, Any] | None = None,
+) -> None:
+    path = _log_path(workspace_root)
+    if path is None:
+        return
+    row = {
+        "ts": round(time.time(), 3),
+        "event": event,
+        "version": FAZ98_VERSION,
+    }
+    if op:
+        row["op"] = {
+            "kind": op.get("kind"),
+            "label": op.get("label"),
+            "src": op.get("src_abs") or op.get("src"),
+            "dst": op.get("dst_abs") or op.get("dst"),
+            "command": op.get("command"),
+            "package": op.get("package"),
+        }
+    if result:
+        row["result"] = {
+            "ok": result.get("ok"),
+            "summary": str(result.get("summary") or "")[:240],
+            "error": str(result.get("error") or "")[:240],
+        }
+    try:
+        with path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(row, ensure_ascii=False) + "\n")
+    except OSError:
+        return
+
+
+def _parse_history_query(raw: str) -> tuple[int, str]:
+    low = _ascii_fold(raw)
+    nums = re.findall(r"\b(\d{1,2})\b", raw)
+    limit = int(nums[0]) if nums else 8
+    limit = max(1, min(20, limit))
+    mode = "all"
+    if "sadece fail" in low or "yalniz fail" in low or "yalnız fail" in low:
+        mode = "fail"
+    elif "sadece ok" in low or "yalniz ok" in low or "yalnız ok" in low:
+        mode = "ok"
+    return limit, mode
+
+
+def format_history_report(
+    workspace_root: str | Path | None,
+    *,
+    limit: int = 8,
+    mode: str = "all",
+) -> str:
+    path = _log_path(workspace_root)
+    if path is None or not path.is_file():
+        return f"Ümit abi, henüz işlem geçmişi yok.\n({FAZ98_VERSION})"
+    try:
+        rows = [x for x in path.read_text(encoding="utf-8").splitlines() if x.strip()]
+    except OSError:
+        return f"Ümit abi, işlem geçmişi okunamadı.\n({FAZ98_VERSION})"
+    lines = ["Ümit abi, son onaylı işlem geçmişi:", ""]
+    shown = 0
+    for raw in reversed(rows):
+        if shown >= max(1, min(20, limit)):
+            break
+        try:
+            row = json.loads(raw)
+        except json.JSONDecodeError:
+            continue
+        op = row.get("op") or {}
+        res = row.get("result") or {}
+        kind = op.get("label") or op.get("kind") or "işlem"
+        evt = row.get("event") or "event"
+        is_ok = bool(res.get("ok"))
+        if mode == "fail" and is_ok:
+            continue
+        if mode == "ok" and not is_ok:
+            continue
+        mark = "OK" if res.get("ok") else ("PREVIEW" if evt == "preview_created" else "FAIL")
+        tail = str(res.get("summary") or res.get("error") or evt)[:100]
+        lines.append(f"- {mark} {kind}: {tail}")
+        shown += 1
+    if shown == 0:
+        return f"Ümit abi, geçmişte okunur kayıt yok.\n({FAZ98_VERSION})"
+    lines.append(f"\n({FAZ98_VERSION})")
+    return "\n".join(lines)
+
+
 def _extra_allow_roots() -> list[Path]:
     raw = os.environ.get("RUZGAR_FAZ98_EXTRA_PATHS", "").strip()
     out: list[Path] = []
@@ -207,7 +359,7 @@ def resolve_allowed_path(
     *,
     must_exist: bool = False,
 ) -> tuple[Path | None, str]:
-    text = (raw or "").strip().strip('"').strip("'")
+    text = _rewrite_natural_root(_clean_path_phrase(raw))
     if not text:
         return None, "boş yol"
     if ".." in Path(text.replace("\\", "/")).parts:
@@ -625,6 +777,18 @@ def _parse_explicit_istek(body: str, workspace_root: str | Path | None) -> dict[
     return None
 
 
+def _extract_shell_scope_and_command(raw_cmd: str) -> tuple[str, str]:
+    text = (raw_cmd or "").strip()
+    if not text:
+        return "projects/", ""
+    m = re.match(r"^\s*(projects/[^\s]+)\s+(.+)$", text, flags=re.I | re.S)
+    if m:
+        scope = m.group(1).rstrip("/") + "/"
+        cmd = m.group(2).strip()
+        return scope, cmd
+    return "projects/", text
+
+
 def parse_natural_operation(
     message: str,
     workspace_root: str | Path | None,
@@ -636,6 +800,15 @@ def parse_natural_operation(
     m = _EXPLICIT_ISTEK_RE.match(raw)
     if m:
         return _parse_explicit_istek(m.group(1), workspace_root)
+    m_shell_istek = _SHELL_ISTEK_RE.match(raw) or _SHELL_ONAY_RE.match(raw)
+    if m_shell_istek:
+        scope, cmd = _extract_shell_scope_and_command(m_shell_istek.group(1))
+        return build_operation(
+            "shell",
+            workspace_root,
+            command=cmd,
+            scope_rel=scope,
+        )
 
     low = _ascii_fold(raw)
     if any(x in low for x in ("sil ", " delete", "rm -rf", "format c:")):
@@ -665,7 +838,7 @@ def parse_natural_operation(
         return build_operation("winget", workspace_root, command=raw)
 
     sm = _SHELL_NATURAL_RE.search(raw)
-    if sm and "projects/" in low:
+    if sm:
         scope_m = re.search(r"(projects/[\w\-./]+)", raw, re.I)
         scope = scope_m.group(1) if scope_m else "projects/"
         return build_operation(
@@ -688,8 +861,14 @@ def wants_umit_gate(message: str) -> bool:
         _APPROVE_RE.match(raw)
         or _REJECT_RE.match(raw)
         or _LIST_RE.match(raw)
+        or _HISTORY_RE.match(raw)
         or _CANCEL_RE.match(raw)
         or _EXPLICIT_ISTEK_RE.match(raw)
+        or _SHELL_ISTEK_RE.match(raw)
+        or _SHELL_ONAY_RE.match(raw)
+        or _SHELL_ONAYLA_RE.match(raw)
+        or _SHELL_IPTAL_RE.match(raw)
+        or _SHELL_LISTE_RE.match(raw)
     ):
         return True
     low = _ascii_fold(raw)
@@ -713,6 +892,8 @@ def wants_umit_gate(message: str) -> bool:
         return True
     if low.startswith("winget install"):
         return True
+    if _SHELL_NATURAL_RE.search(raw):
+        return True
     return False
 
 
@@ -724,11 +905,19 @@ def maybe_instant_faz98(
         return None
 
     raw = (message or "").strip()
+    if _SHELL_ONAYLA_RE.match(raw):
+        raw = "tamam yap"
+    elif _SHELL_IPTAL_RE.match(raw):
+        raw = "yapma"
+    elif _SHELL_LISTE_RE.match(raw):
+        raw = "işlem liste"
     pending = load_pending(workspace_root)
 
     if _REJECT_RE.match(raw) or _CANCEL_RE.match(raw):
         if pending:
+            op = pending.get("operation") or pending
             clear_pending(workspace_root)
+            append_audit_log(workspace_root, event="cancelled", op=op, result={"ok": True, "summary": "cancelled"})
             return format_result_report({"ok": True, "cancelled": True})
         return "Ümit abi, bekleyen onaylı işlem yok.\n" + f"({FAZ98_VERSION})"
 
@@ -741,6 +930,10 @@ def maybe_instant_faz98(
             )
         return format_preview_report(pending)
 
+    if _HISTORY_RE.match(raw):
+        limit, mode = _parse_history_query(raw)
+        return format_history_report(workspace_root, limit=limit, mode=mode)
+
     if _APPROVE_RE.match(raw):
         if not pending:
             return (
@@ -750,6 +943,7 @@ def maybe_instant_faz98(
         op = pending.get("operation") or pending
         clear_pending(workspace_root)
         result = execute_operation(workspace_root, op)
+        append_audit_log(workspace_root, event="approved_executed", op=op, result=result)
         return format_result_report(result)
 
     built = parse_natural_operation(raw, workspace_root)
@@ -766,6 +960,7 @@ def maybe_instant_faz98(
     saved = save_pending(workspace_root, op)
     if not saved.get("ok"):
         return f"Ümit abi, işlem kuyruğa alınamadı: {saved.get('error')}\n({FAZ98_VERSION})"
+    append_audit_log(workspace_root, event="preview_created", op=op, result={"ok": True, "summary": "preview"})
     return format_preview_report(saved)
 
 
@@ -777,3 +972,174 @@ def faz98_directive() -> str:
         "İzinli: repo, Masaüstü, İndirilenler, Belgeler (+ RUZGAR_FAZ98_EXTRA_PATHS)\n"
         "Onaysız müdahale YOK. Kapat: RUZGAR_FAZ98=0\n"
     )
+
+
+def run_command_battery(
+    workspace_root: str | Path | None = None,
+) -> dict[str, Any]:
+    """
+    Faz 98 komut-anlama ölçümü (P12).
+    Skor, parse_natural_operation + wants_umit_gate üzerinden hesaplanır.
+    """
+    root = repo_root(workspace_root)
+    batt_rel = "projects/_faz98_battery"
+    if root is not None:
+        try:
+            batt_dir = (root / batt_rel).resolve()
+            batt_dir.mkdir(parents=True, exist_ok=True)
+            (batt_dir / "a.txt").write_text("a", encoding="utf-8")
+            (batt_dir / "m.txt").write_text("m", encoding="utf-8")
+        except OSError:
+            pass
+    try:
+        dls = Path.home() / "Downloads"
+        dls.mkdir(parents=True, exist_ok=True)
+        (dls / "data.csv").write_text("id,val\n1,2\n", encoding="utf-8")
+    except OSError:
+        pass
+
+    cases: list[dict[str, Any]] = [
+        {"text": "işlem iste: mkdir projects/demo-a", "kind": "mkdir", "gate": True},
+        {
+            "text": f"islem iste: copy {batt_rel}/a.txt -> {batt_rel}/b.txt",
+            "kind": "copy",
+            "gate": True,
+        },
+        {
+            "text": f"işlem iste: move {batt_rel}/m.txt -> {batt_rel}/moved.txt",
+            "kind": "move",
+            "gate": True,
+        },
+        {"text": "işlem iste: pip pytest", "kind": "pip_install", "gate": True},
+        {"text": f"shell istek: {batt_rel}/ dir", "kind": "shell", "gate": True},
+        {"text": f"shell onay: {batt_rel}/ dir", "kind": "shell", "gate": True},
+        {
+            "text": f"Masaüstündeki rapor.txt dosyasını {batt_rel}/rapor.txt şuraya taşı",
+            "kind": "move",
+            "gate": True,
+        },
+        {
+            "text": f"İndirilenler klasöründeki data.csv dosyasını {batt_rel}/data.csv şuraya taşı",
+            "kind": "move",
+            "gate": True,
+        },
+        {"text": f"{batt_rel}/a.txt dosyasını {batt_rel}/x.txt şuraya taşı", "kind": "move", "gate": True},
+        {"text": f"kopyala {batt_rel}/a.txt -> {batt_rel}/copy-a.txt", "kind": "copy", "gate": True},
+        {"text": "tamam yap", "kind": None, "gate": True},
+        {"text": "tamamdır", "kind": None, "gate": True},
+        {"text": "olur", "kind": None, "gate": True},
+        {"text": "yapma", "kind": None, "gate": True},
+        {"text": "vazgeçtim", "kind": None, "gate": True},
+        {"text": "işlem liste", "kind": None, "gate": True},
+        {"text": "işlem geçmişi 20", "kind": None, "gate": True},
+        {"text": "işlem geçmişi sadece fail", "kind": None, "gate": True},
+        {"text": "merhaba abi", "kind": None, "gate": False},
+        {"text": "hava nasıl bugün", "kind": None, "gate": False},
+        {"text": "kodu açıkla", "kind": None, "gate": False},
+        {"text": "şarkı açar mısın", "kind": None, "gate": False},
+    ]
+    checks: list[dict[str, Any]] = []
+    ok_count = 0
+
+    for c in cases:
+        text = str(c.get("text") or "")
+        expect_gate = bool(c.get("gate"))
+        expect_kind = c.get("kind")
+        got_gate = wants_umit_gate(text)
+        got = parse_natural_operation(text, workspace_root)
+        got_kind = (
+            str(((got or {}).get("operation") or {}).get("kind") or "")
+            if isinstance(got, dict) and got.get("ok")
+            else None
+        )
+        kind_ok = (expect_kind is None) or (got_kind == expect_kind)
+        gate_ok = got_gate == expect_gate
+        ok = gate_ok and kind_ok
+        if ok:
+            ok_count += 1
+        checks.append(
+            {
+                "text": text,
+                "ok": ok,
+                "gate_ok": gate_ok,
+                "kind_ok": kind_ok,
+                "expected_gate": expect_gate,
+                "got_gate": got_gate,
+                "expected_kind": expect_kind,
+                "got_kind": got_kind,
+            }
+        )
+
+    total = len(cases)
+    score = int(round((ok_count / max(1, total)) * 100))
+    return {
+        "ok": ok_count == total,
+        "score": score,
+        "passed": ok_count,
+        "total": total,
+        "checks": checks,
+        "version": FAZ98_VERSION,
+    }
+
+
+def evaluate_command_dataset(
+    dataset: list[dict[str, Any]],
+    workspace_root: str | Path | None = None,
+) -> dict[str, Any]:
+    """
+    Faz 98 için dış veri seti değerlendirici.
+    Girdi satırı örneği: {"text":"...", "gate":True, "kind":"move"}
+    """
+    checks: list[dict[str, Any]] = []
+    ok_count = 0
+    for row in dataset:
+        text = str(row.get("text") or "")
+        expect_gate = bool(row.get("gate"))
+        expect_kind = row.get("kind")
+        tags = row.get("tags") or []
+        got_gate = wants_umit_gate(text)
+        got = parse_natural_operation(text, workspace_root)
+        got_kind = (
+            str(((got or {}).get("operation") or {}).get("kind") or "")
+            if isinstance(got, dict) and got.get("ok")
+            else None
+        )
+        gate_ok = got_gate == expect_gate
+        kind_ok = (expect_kind is None) or (got_kind == expect_kind)
+        ok = gate_ok and kind_ok
+        if ok:
+            ok_count += 1
+        checks.append(
+            {
+                "text": text,
+                "ok": ok,
+                "tags": tags,
+                "gate_ok": gate_ok,
+                "kind_ok": kind_ok,
+                "expected_gate": expect_gate,
+                "got_gate": got_gate,
+                "expected_kind": expect_kind,
+                "got_kind": got_kind,
+            }
+        )
+    total = len(dataset)
+    score = int(round((ok_count / max(1, total)) * 100))
+    by_tag: dict[str, dict[str, int]] = {}
+    for c in checks:
+        tag_list = c.get("tags") or []
+        if not tag_list:
+            tag_list = ["genel"]
+        for tg in tag_list:
+            st = by_tag.setdefault(str(tg), {"total": 0, "passed": 0})
+            st["total"] += 1
+            if c.get("ok"):
+                st["passed"] += 1
+    return {
+        "ok": ok_count == total,
+        "score": score,
+        "passed": ok_count,
+        "total": total,
+        "checks": checks,
+        "by_tag": by_tag,
+        "version": FAZ98_VERSION,
+    }

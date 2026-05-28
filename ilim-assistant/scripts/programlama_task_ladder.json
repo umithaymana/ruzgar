@@ -1,0 +1,23 @@
+[
+  {
+    "id": "ladder-s1-fastapi-crud",
+    "level": "small",
+    "description": "FastAPI scaffold + endpoint + targeted pytest",
+    "min_score": 85,
+    "require_ok": true
+  },
+  {
+    "id": "ladder-s2-static-delivery",
+    "level": "medium",
+    "description": "Static site scaffold + banner change + smoke",
+    "min_score": 90,
+    "require_ok": true
+  },
+  {
+    "id": "ladder-s3-recovery-git-stability",
+    "level": "production",
+    "description": "Runtime+compile recovery, branch+commit proof, two-run stability",
+    "min_score": 95,
+    "require_ok": true
+  }
+]

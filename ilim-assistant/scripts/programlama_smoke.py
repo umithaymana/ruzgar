@@ -3458,6 +3458,7 @@ def run_parity(*, live_base: str | None = None) -> int:
         clear_pending,
         faz98_enabled,
         maybe_instant_faz98,
+        run_command_battery,
     )
 
     if faz98_enabled():
@@ -3481,10 +3482,32 @@ def run_parity(*, live_base: str | None = None) -> int:
         else:
             _fail("faz98 reject")
             fails += 1
+        bat = run_command_battery(WORKSPACE)
+        if int(bat.get("score") or 0) >= 95:
+            _ok(f"faz98 command battery {bat.get('passed')}/{bat.get('total')} score={bat.get('score')}")
+        else:
+            bad = [c for c in bat.get("checks") or [] if not c.get("ok")]
+            _fail("faz98 command battery", str(bad[:2])[:160])
+            fails += 1
     else:
         _fail("faz98 disabled")
         fails += 1
     _ok(FAZ98_VERSION)
+
+    print("=== Faz 99 — bağımsız tamamlama benchmark ===")
+    from ilim_assistant.motorlar.programlama_faz99 import (
+        FAZ99_VERSION,
+        format_autonomy_benchmark_report,
+        run_autonomy_benchmark,
+    )
+
+    b99 = run_autonomy_benchmark(WORKSPACE)
+    if int(b99.get("score") or 0) >= 85 and b99.get("ok"):
+        _ok(f"faz99 score={b99.get('score')} scope={b99.get('scope_rel')}")
+    else:
+        _fail("faz99 benchmark", format_autonomy_benchmark_report(b99)[:140])
+        fails += 1
+    _ok(FAZ99_VERSION)
 
     return fails
 
@@ -3507,6 +3530,11 @@ def main() -> int:
         "--ci-full",
         action="store_true",
         help="Faz 60: parity full zorla (haftalık kilidi atla)",
+    )
+    ap.add_argument(
+        "--upgrade",
+        action="store_true",
+        help="Programlama yükseltme gate'i (komut altın set + faz99 iki koşu)",
     )
     args = ap.parse_args()
 
@@ -3546,6 +3574,21 @@ def main() -> int:
         fails += run_live(args.live)
     elif args.ci:
         print("(CI: canlı API atlandı — sunucu için --ci --live http://127.0.0.1:8777)")
+    if args.upgrade:
+        print("=== Programlama Upgrade Gate ===")
+        from ilim_assistant.approved_executor import run_argv
+
+        code, out, err = run_argv(
+            [sys.executable, "scripts/programlama_upgrade_runner.py", "--strict"],
+            cwd=str(_ROOT),
+            timeout_sec=240,
+        )
+        txt = str(out or err or "")[:240]
+        if code == 0:
+            print(f"  [OK] upgrade gate — {txt}")
+        else:
+            print(f"  [FAIL] upgrade gate — {txt}")
+            fails += 1
 
     print()
     if fails:

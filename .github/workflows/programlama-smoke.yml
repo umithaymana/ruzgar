@@ -34,14 +34,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Programlama smoke (offline + SLO + Faz 25 parity)
+      - name: Programlama smoke (offline + SLO + Faz 25 parity + upgrade gate)
         working-directory: ilim-assistant
         env:
           RUZGAR_FAZ18: "1"
           RUZGAR_FAZ25: "1"
           RUZGAR_FAZ17_LLM_SUGGEST: "0"
           RUZGAR_SKIP_RAG_WARMUP: "1"
-        run: python scripts/programlama_smoke.py --ci
+        run: python scripts/programlama_smoke.py --ci --upgrade
 
   smoke-live-api:
     runs-on: ubuntu-latest
