@@ -1,7 +1,7 @@
 # Rüzgar masaüstü — onaylı çalışan durum (KESİN EMİR)
 
 **Tarih:** 2026-05-28  
-**Onay commit:** `f9eb786` — `fix(ruzgar): onayli masaustu taban cizgisi — aa39618 UI + Faz 98 API`  
+**Onay commit:** `e2cccb8` — `fix(ruzgar): onayli masaustu taban cizgisi — aa39618 UI + Faz 98 API`  
 **Build rev (API):** `2026-05-27-ruzgar-faz98-v107`  
 **Doğrulama:** Ümit — motorlar, Gönder, Sunucu ✓, manifest, Faz 98 şeridi çalışır.
 
@@ -10,7 +10,7 @@
 1. **`ruzgar-desktop/`** bu commit’teki hâli **onaylı taban çizgisidir**. Motor/sohbet/bağlantı bu kabuk üzerinde doğrulandı.
 2. **`078d2ef` tercüme masaüstü genişlemesi** (app.js/index.html/styles.css +400 satır) **geri getirilmez** — API’de tercüme backend kalabilir; UI ayrı, küçük adımlarla ve test sonrası eklenir.
 3. **Commit dışı patch yasağı:** `ruzgar-bootstrap.js`, çift script, `bootRuzgarShell`, toplu `app.js` denemeleri **yasak** — önce F12 ilk hata, sonra tek satırlık düzeltme.
-4. **Geri alma kuralı:** Masaüstü bozulursa `git checkout f9eb786 -- ruzgar-desktop/`; yeni sarmalayıcı yazılmaz.
+4. **Geri alma kuralı:** Masaüstü bozulursa `git checkout e2cccb8 -- ruzgar-desktop/`; yeni sarmalayıcı yazılmaz.
 5. **Başlatma:** `Ruzgar_TemizBaslat.bat` → API 8779 + Electron; Ctrl+Shift+R ile sert yenile.
 
 ## Mimari not (neden aa39618 UI + Faz 98 API)
