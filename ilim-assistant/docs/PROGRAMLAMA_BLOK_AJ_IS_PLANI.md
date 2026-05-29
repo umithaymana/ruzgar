@@ -207,10 +207,10 @@ git push -u origin HEAD
 
 | # | İş |
 |---|-----|
-| H71–H75 | handoff özeti, delege, pytest footer |
-| H76–H78 | çok motor sırası, dönüş, bağlam log |
-| H79 | E4 hedef doc |
-| H80 | manifest programlama tag doğrulama |
+| H71–H75 | handoff özeti, delege, pytest footer | ✓ handoff-workbench API + kart |
+| H76–H78 | çok motor sırası, dönüş, bağlam log | ✓ motor_chain + context_log |
+| H79 | E4 hedef doc | ✓ `PROGRAMLAMA_E4_HANDOFF.md` |
+| H80 | manifest programlama tag doğrulama | ✓ manifest + UI uyarı |
 
 **Commit:** `feat(ruzgar): blok H — Ana Motor handoff v4, delege özet`  
 **Push:** `git push -u origin plan/blok-h-handoff`
@@ -303,5 +303,5 @@ git push -u origin plan/blok-a-koruma
 - `PROGRAMMING_MOTOR_YOL_HARITASI.md` — Dalga E–H
 - `scripts/ruzgar_programlama_upgrade_report.json` — son bench kanıtı
 
-**Durum:** Blok G tamamlandı (2026-05-29) — mega workbench API/UI, E2 doc, stress script. Sırada **Blok H** (Ana Motor handoff).  
+**Durum:** Blok H tamamlandı (2026-05-29) — handoff v4 workbench, E4 doc, manifest tag. Sırada **Blok I** (yerel zincir).  
 Blok B: `programlama-umit-onay-card`, `renderProgramlamaUmitOnay`, 10 sn poll, `app.js?v=20260529-blok-b`.

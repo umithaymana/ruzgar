@@ -1955,6 +1955,28 @@ def api_programlama_system_analysis(
     }
 
 
+@app.get("/api/programlama/handoff-workbench")
+def api_programlama_handoff_workbench(
+    workspace_root: str | None = None,
+    message: str | None = None,
+    active_file: str | None = None,
+):
+    """Blok H — Ana Motor ↔ Programlama handoff v4 özeti."""
+    from ilim_assistant.motorlar.programlama_handoff_workbench import (
+        HANDOFF_WORKBENCH_VERSION,
+        build_handoff_workbench_payload,
+    )
+
+    root = (workspace_root or "").strip() or None
+    payload = build_handoff_workbench_payload(
+        root,
+        message=(message or "").strip(),
+        active_file=(active_file or "").strip() or None,
+    )
+    payload["version"] = HANDOFF_WORKBENCH_VERSION
+    return payload
+
+
 @app.get("/api/programlama/mega-workbench")
 def api_programlama_mega_workbench(workspace_root: str | None = None):
     """Blok G — mega görev özeti (tur, touched_files, patch, verify, E2)."""

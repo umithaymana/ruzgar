@@ -1276,7 +1276,12 @@ function applyUiManifest(manifest) {
     if (tag && meta?.tag) tag.textContent = String(meta.tag);
     if (mode === "programlama" && meta?.tag) {
       const pb = document.getElementById("programlama-phase-badge");
-      if (pb) pb.textContent = String(meta.tag).split("·")[0].trim() || "Faz 3";
+      const tagStr = String(meta.tag);
+      if (pb) pb.textContent = tagStr.split("·")[0].trim() || "Faz 3";
+      window.__ruzgarManifestProgTag = tagStr;
+      if (!/handoff|faz\s*79|programlama/i.test(tagStr)) {
+        console.warn("RUZGAR manifest programlama tag beklenmeyen biçim:", tagStr);
+      }
     }
   });
 
@@ -1460,6 +1465,9 @@ function switchMode(mode) {
   if (next === "programlama") {
     void refreshProgramlamaUmitOnay();
     void refreshProgramlamaKpiDashboard();
+  }
+  if (next === "genel") {
+    void refreshProgramlamaHandoffWorkbench();
   }
   const motorDeclarationByMode = {
     genel: "Şu anda ana motor tam güç ve tam kapasite çalışıyor.",
@@ -1962,6 +1970,54 @@ async function refreshProgramlamaMegaWorkbench() {
   }
 }
 
+function renderProgramlamaHandoff(payload) {
+  const wrap = document.getElementById("programlama-handoff-card");
+  const scopeEl = document.getElementById("programlama-handoff-scope");
+  const pytestEl = document.getElementById("programlama-handoff-pytest");
+  const chainEl = document.getElementById("programlama-handoff-chain");
+  const logEl = document.getElementById("programlama-handoff-log");
+  if (!wrap || !scopeEl) return;
+  if (!payload || !payload.ok) {
+    wrap.hidden = true;
+    return;
+  }
+  wrap.hidden = false;
+  const ho = payload.handoff || {};
+  const e4 = payload.e4 || {};
+  scopeEl.textContent = ho.scope_rel ? `kapsam: ${ho.scope_rel}` : "handoff hazır";
+  if (pytestEl) {
+    pytestEl.textContent = (payload.delegation || {}).pytest_footer || "pytest: —";
+  }
+  if (chainEl) {
+    const chain = (payload.motor_chain || []).map((m) => m.id).join(" → ");
+    const e4pct = Math.round(Number(e4.recent_success_rate || 0) * 100);
+    const e4tgt = Math.round(Number(e4.target_rate || 0.85) * 100);
+    chainEl.textContent = `${chain} · E4 delege %${e4pct} (≥${e4tgt}%)`;
+  }
+  if (logEl) {
+    const rows = (payload.context_log || []).map(
+      (r) =>
+        `${r.success ? "✓" : "×"} ${r.scope_rel || "?"} · ${r.goal || ""} · ${r.verify_ok === true ? "pytest ok" : r.verify_ok === false ? "pytest fail" : ""}`,
+    );
+    logEl.textContent = rows.slice(-4).join("\n") || "—";
+  }
+  window.__ruzgarHandoffWorkbench = payload;
+}
+
+async function refreshProgramlamaHandoffWorkbench() {
+  const workspaceRoot = await getProgramlamaWorkspaceRoot();
+  if (!workspaceRoot) return;
+  try {
+    const qs = new URLSearchParams({ workspace_root: workspaceRoot });
+    if (atolyeOpenRel) qs.set("active_file", atolyeOpenRel);
+    const res = await fetch(`${API}/api/programlama/handoff-workbench?${qs}`);
+    const data = await res.json().catch(() => ({}));
+    renderProgramlamaHandoff(data);
+  } catch (_) {
+    /* ignore */
+  }
+}
+
 async function refreshProgramlamaWeeklyKpi() {
   const workspaceRoot = await getProgramlamaWorkspaceRoot();
   if (!workspaceRoot) return;
@@ -1991,6 +2047,7 @@ async function refreshProgramlamaKpiDashboard() {
     await refreshProgramlamaGitChanges(programlamaScopeFromContext());
     await refreshProgramlamaWeeklyKpi();
     await refreshProgramlamaMegaWorkbench();
+    await refreshProgramlamaHandoffWorkbench();
   } catch (_) {
     /* ignore */
   }
@@ -2909,6 +2966,13 @@ function renderOrchestraBridge(orch) {
   title.className = "orchestra-bridge-title";
   title.textContent = "Ana motor — çalışma sayfası köprüleri";
   wrap.appendChild(title);
+  const hoWb = window.__ruzgarHandoffWorkbench;
+  if (hoWb && hoWb.delegation && hoWb.delegation.pytest_footer) {
+    const pf = document.createElement("div");
+    pf.className = "orchestra-plan-hint";
+    pf.textContent = `Son delege: ${hoWb.delegation.pytest_footer}`;
+    wrap.appendChild(pf);
+  }
   const row = document.createElement("div");
   row.className = "orchestra-bridge-actions";
   for (const m of motors) {

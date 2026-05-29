@@ -60,7 +60,7 @@ def build_ui_manifest(*, health: dict[str, Any] | None = None) -> dict[str, Any]
             "video": {"tag": "Faz 71/84 · İndir + ara (ROK)"},
             "okuma": {"tag": "Faz 73 · Konuşarak yap (ROK)"},
             "tercume": {"tag": "Faz 74 · Konuşarak yap (ROK)"},
-            "programlama": {"tag": "Faz 98 · Onaylı yerel işlem"},
+            "programlama": {"tag": "Faz 79–80 · Handoff v4 + onay"},
         },
         "capabilities": [
             "Faz 98: dosya kopyala/taşı, pip, shell — «tamam yap» onayı ile",
