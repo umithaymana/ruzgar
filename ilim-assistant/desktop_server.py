@@ -1981,6 +1981,30 @@ def api_programlama_task_stats(workspace_root: str | None = None):
     }
 
 
+@app.get("/api/programlama/pr-plan")
+def api_programlama_pr_plan(
+    workspace_root: str | None = None,
+    scope_rel: str | None = None,
+    title: str | None = None,
+):
+    """Faz 83 — PR hazırlık (onaylı öneri; otomatik PR açmaz)."""
+    from ilim_assistant.motorlar.programlama_faz83 import (
+        FAZ83_VERSION,
+        build_pr_plan,
+        format_pr_plan,
+    )
+
+    root = (workspace_root or "").strip() or None
+    scope = (scope_rel or "").strip() or None
+    plan = build_pr_plan(root, title_hint=(title or "").strip(), scope_rel=scope)
+    return {
+        "ok": bool(plan.get("ok")),
+        "plan": plan,
+        "report": format_pr_plan(plan),
+        "version": FAZ83_VERSION,
+    }
+
+
 @app.get("/api/programlama/weekly-kpi")
 def api_programlama_weekly_kpi(workspace_root: str | None = None):
     """Faz 60 — haftalık KPI raporu (JSON)."""

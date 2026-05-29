@@ -3369,6 +3369,17 @@ body:not(.workbench-hizir-active) #workbench-hizir-tools,
   color: #9aa8b5;
   font-size: 11px;
 }
+.programlama-git-diff-pre {
+  margin: 6px 0 0;
+  padding: 6px 8px;
+  max-height: 120px;
+  overflow: auto;
+  background: #0d1117;
+  border-radius: 4px;
+  font-size: 10px;
+  line-height: 1.35;
+  color: #8b9cb3;
+}
 .code-output-panel {
   display: flex;
   flex-direction: column;

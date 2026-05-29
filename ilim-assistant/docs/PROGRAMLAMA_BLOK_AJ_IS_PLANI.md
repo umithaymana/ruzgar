@@ -165,14 +165,14 @@ git push -u origin HEAD
 
 | # | İş |
 |---|-----|
-| F51 | `pr hazırla:` UI kısayol butonu (programlama atölye) |
-| F52 | gh PR önerisi metni (onaylı, otomatik PR yok) |
-| F53–F55 | branch / commit şablon / diff öncesi UI |
-| F56 | git strip otomatik yenile (poll) |
-| F57 | haftalık parity hatırlatıcı doc + script |
-| F58 | `zayıflık raporu` tek komut doc |
-| F59 | stale build banner sadeleştir (UI) |
-| F60 | weekly KPI JSON okuma kartı |
+| F51 | `pr hazırla:` UI kısayol butonu (programlama atölye) | ✓ `btn-pr-prepare` |
+| F52 | gh PR önerisi metni (onaylı, otomatik PR yok) | ✓ `/api/programlama/pr-plan` |
+| F53–F55 | branch / commit şablon / diff öncesi UI | ✓ git + PR kartları |
+| F56 | git strip otomatik yenile (poll) | ✓ 15s + dosya açılışında |
+| F57 | haftalık parity hatırlatıcı doc + script | ✓ bat + aylık takvim |
+| F58 | `zayıflık raporu` tek komut doc | ✓ `PROGRAMLAMA_ZAYIFLIK_KOMUT.md` |
+| F59 | stale build banner sadeleştir (UI) | ✓ |
+| F60 | weekly KPI JSON okuma kartı | ✓ `weekly-kpi` API |
 
 **Commit:** `feat(programlama): blok F — git/PR UX, parity hatırlatıcı`  
 **Push:** `git push -u origin plan/blok-f-git-pr`
@@ -303,5 +303,5 @@ git push -u origin plan/blok-a-koruma
 - `PROGRAMMING_MOTOR_YOL_HARITASI.md` — Dalga E–H
 - `scripts/ruzgar_programlama_upgrade_report.json` — son bench kanıtı
 
-**Durum:** Blok E tamamlandı (2026-05-29) — merdiven S4/S5, Faz99 çift koşu + parity 8/8 gate, `.ruzgar/autonomy_reports`. Sırada **Blok F** (git/PR UX).  
+**Durum:** Blok F tamamlandı (2026-05-29) — PR hazırla UI, git strip poll 15s, weekly KPI kartı. Sırada **Blok G** (mega görev).  
 Blok B: `programlama-umit-onay-card`, `renderProgramlamaUmitOnay`, 10 sn poll, `app.js?v=20260529-blok-b`.

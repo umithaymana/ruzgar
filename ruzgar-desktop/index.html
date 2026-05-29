@@ -1069,6 +1069,17 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
                     <button type="button" id="btn-git-pr-create" class="btn-secondary btn-compact" title="Faz 31 gh pr create">
                       PR aç
                     </button>
+                    <button
+                      type="button"
+                      id="btn-pr-prepare"
+                      class="btn-primary btn-compact"
+                      title="Faz 83 — branch, commit, gh pr önerisi (otomatik PR yok)"
+                    >
+                      PR hazırla
+                    </button>
+                    <button type="button" id="btn-git-diff-preview" class="btn-secondary btn-compact" title="Diff --stat önizleme">
+                      Diff önizle
+                    </button>
                   </div>
                   <ul id="programlama-patch-list" class="programlama-patch-list"></ul>
                 </div>
@@ -1100,13 +1111,31 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
                     <span id="programlama-p89-detail" class="programlama-compliance-detail"></span>
                   </div>
                 </div>
+                <div id="programlama-weekly-kpi-card" class="programlama-compliance-card mini-card" hidden>
+                  <strong class="programlama-compliance-title">Haftalık KPI (Faz 60)</strong>
+                  <div class="programlama-compliance-body">
+                    <span id="programlama-weekly-kpi-week" class="programlama-compliance-score">—</span>
+                    <span id="programlama-weekly-kpi-rate" class="programlama-compliance-grade">—</span>
+                    <span id="programlama-weekly-kpi-detail" class="programlama-compliance-detail"></span>
+                  </div>
+                </div>
+                <div id="programlama-pr-plan-card" class="programlama-compliance-card mini-card" hidden>
+                  <strong class="programlama-compliance-title">PR hazırlık (Faz 83 — öneri)</strong>
+                  <div class="programlama-compliance-body">
+                    <span id="programlama-pr-branch" class="programlama-compliance-score">—</span>
+                    <span id="programlama-pr-gh" class="programlama-compliance-grade">—</span>
+                    <span id="programlama-pr-steps" class="programlama-compliance-detail" style="display:block;margin-top:4px;white-space:pre-wrap;font-size:11px;"></span>
+                  </div>
+                </div>
                 <div id="programlama-git-changes-card" class="programlama-compliance-card mini-card" hidden>
                   <strong class="programlama-compliance-title">Son değişiklikler (Faz 58/62 — git)</strong>
                   <div class="programlama-compliance-body">
                     <span id="programlama-git-branch" class="programlama-compliance-score">—</span>
                     <span id="programlama-git-summary" class="programlama-compliance-grade">—</span>
+                    <span id="programlama-git-branch-suggest" class="programlama-compliance-detail"></span>
                     <span id="programlama-git-files" class="programlama-compliance-detail"></span>
                     <span id="programlama-git-commit-suggest" class="programlama-compliance-detail" style="display:block;margin-top:4px;"></span>
+                    <pre id="programlama-git-diff-preview" class="programlama-compliance-detail programlama-git-diff-pre" hidden></pre>
                   </div>
                 </div>
                 <div class="code-output-panel">
@@ -1367,6 +1396,6 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
       <button type="button" data-act="paste">Yapıştır</button>
     </div>
 
-    <script src="app.js?v=20260529-blok-c"></script>
+    <script src="app.js?v=20260529-blok-f"></script>
   </body>
 </html>

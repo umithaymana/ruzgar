@@ -1686,12 +1686,67 @@ function renderProgramlamaP89Kpi(build) {
     `Cache 5dk: ${hits}/${hits + misses} · strict=${strict ? "on" : "off"} · zincir: ${chain.slice(0, 5).join("→") || "—"}`;
 }
 
+function programlamaScopeFromContext() {
+  const rel = String(atolyeOpenRel || "").replace(/\\/g, "/");
+  if (rel.startsWith("projects/")) {
+    const parts = rel.split("/").filter(Boolean);
+    if (parts.length >= 2) return `${parts[0]}/${parts[1]}`;
+  }
+  const sel = document.getElementById("prog-project-select");
+  if (sel && sel.value) return String(sel.value).trim();
+  return "projects";
+}
+
+function renderProgramlamaWeeklyKpi(payload) {
+  const wrap = document.getElementById("programlama-weekly-kpi-card");
+  const weekEl = document.getElementById("programlama-weekly-kpi-week");
+  const rateEl = document.getElementById("programlama-weekly-kpi-rate");
+  const detailEl = document.getElementById("programlama-weekly-kpi-detail");
+  if (!wrap || !weekEl || !rateEl || !detailEl) return;
+  if (!payload || !payload.ok) {
+    wrap.hidden = true;
+    return;
+  }
+  wrap.hidden = false;
+  const ts = payload.task_stats || {};
+  const to = payload.text_only_stats || {};
+  const parity = payload.parity_last || {};
+  const rate = Math.round(Number(ts.success_rate || 0) * 100);
+  weekEl.textContent = String(payload.week || "hafta");
+  rateEl.textContent = `görev %${rate}`;
+  const pPass = parity.passed != null ? `${parity.passed}/${parity.total || 8}` : "—";
+  detailEl.textContent =
+    `metin-only %${Math.round(Number(to.text_only_rate || 0) * 100)} · parity ${pPass}` +
+    (payload.saved_path ? ` · ${String(payload.saved_path).split(/[/\\]/).pop()}` : "");
+}
+
+function renderProgramlamaPrPlan(payload) {
+  const wrap = document.getElementById("programlama-pr-plan-card");
+  const branchEl = document.getElementById("programlama-pr-branch");
+  const ghEl = document.getElementById("programlama-pr-gh");
+  const stepsEl = document.getElementById("programlama-pr-steps");
+  if (!wrap || !branchEl || !ghEl || !stepsEl) return;
+  const plan = payload && payload.plan ? payload.plan : null;
+  if (!payload || !payload.ok || !plan) {
+    wrap.hidden = true;
+    return;
+  }
+  wrap.hidden = false;
+  branchEl.textContent = `dal: ${plan.branch || "?"} → öneri: ${plan.branch_suggest || "?"}`;
+  ghEl.textContent = plan.gh_available ? "gh ✓ (komutu kopyala)" : "gh yok — web PR";
+  ghEl.title = String(plan.gh_command || "");
+  const steps = Array.isArray(plan.steps) ? plan.steps : [];
+  stepsEl.textContent = steps.slice(0, 5).join("\n");
+}
+
 function renderProgramlamaGitChanges(payload) {
   const wrap = document.getElementById("programlama-git-changes-card");
   const branchEl = document.getElementById("programlama-git-branch");
   const summaryEl = document.getElementById("programlama-git-summary");
+  const branchSuggestEl = document.getElementById("programlama-git-branch-suggest");
   const filesEl = document.getElementById("programlama-git-files");
   const commitEl = document.getElementById("programlama-git-commit-suggest");
+  const diffPre = document.getElementById("programlama-git-diff-preview");
   if (!wrap || !branchEl || !summaryEl) return;
   const strip = payload && payload.strip ? payload.strip : null;
   if (!payload || !payload.ok || !strip) {
@@ -1701,6 +1756,10 @@ function renderProgramlamaGitChanges(payload) {
   wrap.hidden = false;
   branchEl.textContent = strip.branch ? `dal: ${strip.branch}` : "git";
   summaryEl.textContent = strip.summary || (strip.has_changes ? "değişiklik var" : "temiz");
+  if (branchSuggestEl) {
+    const sug = payload.branch_suggest || payload.pr_branch_suggest;
+    branchSuggestEl.textContent = sug ? `dal önerisi: ${sug}` : "";
+  }
   if (filesEl) {
     const lines = Array.isArray(strip.file_lines) ? strip.file_lines : [];
     filesEl.textContent = lines.length ? lines.slice(0, 4).join(" · ") : "";
@@ -1715,6 +1774,17 @@ function renderProgramlamaGitChanges(payload) {
     } else {
       commitEl.textContent = "";
       commitEl.title = "";
+    }
+  }
+  const snap = payload.snapshot || {};
+  const diffTxt = String(snap.diff_stat_preview || "").trim();
+  if (diffPre) {
+    if (diffTxt && !diffPre.dataset.pinned) {
+      diffPre.hidden = false;
+      diffPre.textContent = diffTxt.slice(0, 600);
+    } else if (!diffPre.dataset.pinned) {
+      diffPre.hidden = true;
+      diffPre.textContent = "";
     }
   }
 }
@@ -1788,15 +1858,30 @@ async function refreshProgramlamaUmitOnay() {
 async function refreshProgramlamaGitChanges(scopeRel) {
   const workspaceRoot = await getProgramlamaWorkspaceRoot();
   if (!workspaceRoot) return;
-  const scope = String(scopeRel || "").trim();
+  const scope = String(scopeRel || programlamaScopeFromContext() || "").trim();
   if (!scope) return;
   try {
-    const qs =
-      `?workspace_root=${encodeURIComponent(workspaceRoot)}` +
-      `&scope_rel=${encodeURIComponent(scope)}`;
-    const res = await fetch(`${API}/api/programlama/git-changes${qs}`);
+    const qs = new URLSearchParams({
+      workspace_root: workspaceRoot,
+      scope_rel: scope,
+    });
+    if (atolyeOpenRel) qs.set("active_file", atolyeOpenRel);
+    const res = await fetch(`${API}/api/programlama/git-changes?${qs}`);
     const data = await res.json().catch(() => ({}));
     renderProgramlamaGitChanges(data);
+  } catch (_) {
+    /* ignore */
+  }
+}
+
+async function refreshProgramlamaWeeklyKpi() {
+  const workspaceRoot = await getProgramlamaWorkspaceRoot();
+  if (!workspaceRoot) return;
+  try {
+    const qs = `?workspace_root=${encodeURIComponent(workspaceRoot)}`;
+    const res = await fetch(`${API}/api/programlama/weekly-kpi${qs}`);
+    const data = await res.json().catch(() => ({}));
+    renderProgramlamaWeeklyKpi(data);
   } catch (_) {
     /* ignore */
   }
@@ -1815,11 +1900,8 @@ async function refreshProgramlamaKpiDashboard() {
     if (data.task_stats || data.live_kpi) {
       renderProgramlamaTaskStats(data.task_stats, data.live_kpi);
     }
-    const scopeEl = document.getElementById("programlama-scope");
-    const scope = scopeEl && scopeEl.value ? String(scopeEl.value).trim() : "";
-    if (scope) {
-      await refreshProgramlamaGitChanges(scope);
-    }
+    await refreshProgramlamaGitChanges(programlamaScopeFromContext());
+    await refreshProgramlamaWeeklyKpi();
   } catch (_) {
     /* ignore */
   }
@@ -2563,6 +2645,65 @@ async function gitCommitFromAtolye() {
   }
 }
 
+async function prPrepareFromAtolye() {
+  const workspaceRoot = await getProgramlamaWorkspaceRoot();
+  if (!workspaceRoot) return;
+  const title =
+    window.prompt("PR başlık ipucu (boş = otomatik):", "") ?? "";
+  if (title === null) return;
+  const scope = programlamaScopeFromContext();
+  try {
+    const qs = new URLSearchParams({
+      workspace_root: workspaceRoot,
+      scope_rel: scope,
+    });
+    if (title.trim()) qs.set("title", title.trim());
+    const res = await fetch(`${API}/api/programlama/pr-plan?${qs}`);
+    const data = await res.json().catch(() => ({}));
+    const plan = data.plan || {};
+    if (data.ok && plan.branch_suggest) {
+      const enriched = {
+        ok: true,
+        strip: { branch: plan.branch, summary: "PR planı", has_changes: true, file_lines: [] },
+        snapshot: { diff_stat_preview: plan.diff_stat || "" },
+        branch_suggest: plan.branch_suggest,
+        commit_suggest: { message: (plan.commit_message || "").split("\n")[0] },
+      };
+      renderProgramlamaGitChanges(enriched);
+    }
+    renderProgramlamaPrPlan(data);
+    setCodeOutput(data.report || "PR planı hazır — otomatik PR açılmadı.");
+  } catch (e) {
+    setCodeOutput(`PR hazırla: ${e && e.message ? e.message : e}`);
+  }
+}
+
+async function gitDiffPreviewFromAtolye() {
+  const workspaceRoot = await getProgramlamaWorkspaceRoot();
+  if (!workspaceRoot) return;
+  const scope = programlamaScopeFromContext();
+  try {
+    const qs = new URLSearchParams({
+      workspace_root: workspaceRoot,
+      scope_rel: scope,
+    });
+    if (atolyeOpenRel) qs.set("active_file", atolyeOpenRel);
+    const res = await fetch(`${API}/api/programlama/git-changes?${qs}`);
+    const data = await res.json().catch(() => ({}));
+    renderProgramlamaGitChanges(data);
+    const diffTxt = String((data.snapshot || {}).diff_stat_preview || "").trim();
+    const diffPre = document.getElementById("programlama-git-diff-preview");
+    if (diffPre) {
+      diffPre.dataset.pinned = "1";
+      diffPre.hidden = !diffTxt;
+      diffPre.textContent = diffTxt || "(diff boş — çalışma ağacı temiz)";
+    }
+    setCodeOutput(diffTxt || data.strip?.summary || "Diff önizleme — değişiklik yok.");
+  } catch (e) {
+    setCodeOutput(`Diff: ${e && e.message ? e.message : e}`);
+  }
+}
+
 async function rollbackPatchFromAtolye() {
   const workspaceRoot = await getProgramlamaWorkspaceRoot();
   if (!workspaceRoot) return;
@@ -2766,10 +2907,9 @@ function showStaleBuildBanner(rev, healthPayload) {
     host.prepend(box);
   }
   box.innerHTML =
-    `<strong>Eski Rüzgar API</strong> — çalışan: <code>${escAttr(rev)}</code> · gerekli: <code>${escAttr(expected)}</code>. ` +
-    `<button type="button" id="ruzgar-stale-restart-btn" style="margin-left:8px;padding:6px 12px;cursor:pointer;font-weight:600;">` +
-    `API'yi yeniden başlat</button>` +
-    `<span id="ruzgar-stale-restart-status" style="margin-left:8px;font-size:12px;"></span>`;
+    `<strong>Eski API</strong> <code>${escAttr(rev)}</code> → <code>${escAttr(expected)}</code> ` +
+    `<button type="button" id="ruzgar-stale-restart-btn" style="margin-left:6px;padding:4px 10px;cursor:pointer;">Yeniden başlat</button>` +
+    `<span id="ruzgar-stale-restart-status" style="margin-left:6px;font-size:11px;opacity:.9;"></span>`;
   const btn = document.getElementById("ruzgar-stale-restart-btn");
   const statusEl = document.getElementById("ruzgar-stale-restart-status");
   if (btn && !btn.dataset.wired) {
@@ -4096,6 +4236,7 @@ async function openProgramlamaWorkspaceFile(rel) {
     if (el.codeEditor) el.codeEditor.value = text;
     applyLanguageFromFilename(rel);
     updateProgramlamaActiveFileLabel();
+    void refreshProgramlamaGitChanges(programlamaScopeFromContext());
     setCodeOutput(`Açıldı: ${rel}`);
     flashRuzgarDurum(`Dosya açıldı: ${rel}`);
     el.codeEditor?.focus();
@@ -5999,6 +6140,14 @@ function wireProgrammingWorkbench() {
   const btnGitPrCreate = document.getElementById("btn-git-pr-create");
   if (btnGitPrCreate) {
     btnGitPrCreate.addEventListener("click", () => void gitPrCreateFromAtolye());
+  }
+  const btnPrPrepare = document.getElementById("btn-pr-prepare");
+  if (btnPrPrepare) {
+    btnPrPrepare.addEventListener("click", () => void prPrepareFromAtolye());
+  }
+  const btnGitDiffPreview = document.getElementById("btn-git-diff-preview");
+  if (btnGitDiffPreview) {
+    btnGitDiffPreview.addEventListener("click", () => void gitDiffPreviewFromAtolye());
   }
   if (el.btnCodeOutputClear) {
     el.btnCodeOutputClear.addEventListener("click", () => setCodeOutput(""));
@@ -9520,13 +9669,14 @@ setInterval(() => {
   if (document.hidden) return;
   void refreshUiManifest();
 }, UI_MANIFEST_POLL_MS);
+const PROGRAMLAMA_GIT_POLL_MS = 15000;
 setInterval(() => {
   if (document.hidden) return;
   const progPage = document.getElementById("page-programlama");
   if (progPage && !progPage.hidden) {
     void refreshProgramlamaKpiDashboard();
   }
-}, 10000);
+}, PROGRAMLAMA_GIT_POLL_MS);
 refreshPerformanceMetrics();
 scheduleMetricsPolling();
 loadFileTree();
