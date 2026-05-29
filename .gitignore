@@ -43,18 +43,25 @@ ruzgar-desktop/_e2.txt
 ruzgar-desktop/_electron_err.txt
 ruzgar-desktop/_electron_out.txt
 
-# Arşiv PDF'leri (yerelde tutulur; GitHub 100MB limitini aşar)
-ilim-assistant/arsiv/**/*.pdf
-
 # TDK ham JSON (~9 MB): Git’te tutulmaz; yerelde kalır, `tdk_kaynak_convert` ve yeniden ingest için kullanılır.
 ilim-assistant/knowledge/tdk/tdk_kaynak.json
 
-# Rüzgar yerel hafıza / indirilen medya (runtime; commit edilmez)
+# --- Rüzgar yerel runtime (commit edilmez; Source Control panelinde görünmesin) ---
 ilim-assistant/merkezi_bellek.json
 ilim-assistant/ruzgar_genel_hafiza.json
+ilim-assistant/ruzgar_egitim_durum.json
+ilim-assistant/ruzgar_kullanici_baglami.json
 ilim-assistant/video_hafiza.json
 ilim-assistant/hafiza/*.db
 ilim-assistant/hafiza/video_indirilen/
 chat_stream_probe.txt
 ilim-assistant/hafiza/son_debug_raporu.txt
+scripts/ruzgar_autonomy_benchmark_sonuc.json
+scripts/*_sonuc.json
+
+# Arşiv indirilen ham dosyalar (index.jsonl, manifest, ARSIV_*.md commit kalır)
+ilim-assistant/arsiv/**/*.pdf
+ilim-assistant/arsiv/**/*.txt
+ilim-assistant/arsiv/**/*.json.gz
+ilim-assistant/arsiv/**/*.gz
 
