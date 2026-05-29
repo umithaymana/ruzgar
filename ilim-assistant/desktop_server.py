@@ -381,6 +381,50 @@ else:
         expose_headers=["*"],
     )
 
+# Masaüstü kabuk — http://127.0.0.1:PORT/ui (file:// yok; sunucu health ile şerit yeşil)
+_DESKTOP_UI_DIR = REPO_ROOT / "ruzgar-desktop"
+if (_DESKTOP_UI_DIR / "index.html").is_file():
+    from fastapi.staticfiles import StaticFiles
+    from starlette.middleware.base import BaseHTTPMiddleware
+    from starlette.requests import Request
+    from starlette.responses import HTMLResponse, Response
+
+    _UI_INDEX_PATH = _DESKTOP_UI_DIR / "index.html"
+    _UI_NO_CACHE = {"Cache-Control": "no-store, no-cache, must-revalidate", "Pragma": "no-cache"}
+
+    class _NoCacheUiMiddleware(BaseHTTPMiddleware):
+        async def dispatch(self, request: Request, call_next) -> Response:
+            response = await call_next(request)
+            if request.url.path.startswith("/ui"):
+                for k, v in _UI_NO_CACHE.items():
+                    response.headers[k] = v
+            return response
+
+    def _ui_index_html() -> str:
+        from ilim_assistant.ruzgar_api_port import resolve_api_port
+
+        port = resolve_api_port()
+        raw = _UI_INDEX_PATH.read_text(encoding="utf-8")
+        ok_snip = (
+            f'<script>window.__RUZGAR_API_ROOT__="http://127.0.0.1:{port}";</script>'
+        )
+        if ok_snip not in raw:
+            raw = raw.replace("</head>", f"  {ok_snip}\n  </head>", 1)
+        return raw
+
+    @app.get("/ui", include_in_schema=False)
+    @app.get("/ui/", include_in_schema=False)
+    @app.get("/ui/index.html", include_in_schema=False)
+    def ruzgar_ui_index() -> HTMLResponse:
+        return HTMLResponse(_ui_index_html(), headers=_UI_NO_CACHE)
+
+    app.add_middleware(_NoCacheUiMiddleware)
+    app.mount(
+        "/ui",
+        StaticFiles(directory=str(_DESKTOP_UI_DIR), html=False),
+        name="ruzgar_desktop_ui",
+    )
+
 
 def _boot_motorlar_anaonce() -> None:
     """.cursorrules — Ana motor → çekirdek → 5 yardımcı (sıra kilitli)."""
@@ -784,6 +828,38 @@ def _super_brain_health_block() -> dict[str, Any]:
         return {"ok": False, "error": str(e)}
 
 
+def _connection_ui_block(super_brain: dict[str, Any] | None = None) -> dict[str, Any]:
+    try:
+        from ilim_assistant.ruzgar_connection_info import build_connection_info
+
+        sb = super_brain if super_brain is not None else _super_brain_health_block()
+        return build_connection_info(super_brain=sb)
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)[:200]}
+
+
+@app.get("/api/ui/connection")
+def api_ui_connection():
+    """Beyin zinciri + bellek dosya yolları (UI köprü paneli)."""
+    sb = _super_brain_health_for_api()
+    return _connection_ui_block(super_brain=sb)
+
+
+def _super_brain_health_for_api() -> dict[str, Any]:
+    """Health/manifest: Gemini daemon henüz kırmızıysa bir kez yeniden dene."""
+    sb = _super_brain_health_block()
+    try:
+        gd = sb.get("gemini_daemon") if isinstance(sb.get("gemini_daemon"), dict) else {}
+        if sb.get("gemini_configured") and not gd.get("ok"):
+            from ilim_assistant.gemini_daemon import start_gemini_daemon
+
+            start_gemini_daemon()
+            sb = _super_brain_health_block()
+    except Exception:
+        pass
+    return sb
+
+
 def _ruzgar_mode_health_snapshot() -> dict[str, Any]:
     """Çalışan API’nin gerçek modu — UI/eski süreç teşhisi."""
     snap: dict[str, Any] = {
@@ -856,7 +932,7 @@ def _health_build_block() -> dict:
     import os as _os
 
     base = {
-        "rev": "2026-05-27-ruzgar-faz96-v106",
+        "rev": "2026-05-27-ruzgar-faz98-v107",
         "nebula_kitap": True,
         "fast_paths": _os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
         "memory_first": True,
@@ -917,6 +993,7 @@ def health():
     from ilim_assistant.defaults import DEFAULT_OLLAMA_CHAT_MODEL
 
     _main_only = _main_chat_genel_only()
+    _sb = _super_brain_health_for_api()
     return {
         "ok": True,
         "service": "ruzgar-desktop-api",
@@ -947,7 +1024,8 @@ def health():
             "ana_motor_agent_enabled": os.environ.get("RUZGAR_ANA_MOTOR_AGENT", "1").strip().lower()
             not in ("0", "false", "no"),
         },
-        "super_brain": _super_brain_health_block(),
+        "super_brain": _sb,
+        "connection": _connection_ui_block(super_brain=_sb),
         "build": _health_build_block(),
         "ruzgar_mode": _ruzgar_mode_health_snapshot(),
         "hizir": {
@@ -3925,6 +4003,22 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
     }
     _p92_block_msg = ""
     if mode_norm == "programlama":
+        try:
+            from ilim_assistant.motorlar.programlama_faz101_report_read import (
+                maybe_instant_report_read,
+                wants_report_read,
+            )
+
+            if wants_report_read(req.message or ""):
+                _rep101 = maybe_instant_report_read(
+                    req.message or "",
+                    req.workspace_root,
+                )
+                if _rep101:
+                    _p92_block_msg = _rep101
+        except Exception:
+            pass
+    if mode_norm == "programlama" and not _p92_block_msg:
         try:
             from ilim_assistant.motorlar.programlama_faz92 import (
                 assess_risk,

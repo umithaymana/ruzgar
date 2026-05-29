@@ -29,6 +29,9 @@ ilim-assistant/RUZGAR_BRAIN.env
 # Video atölyesi FFmpeg çıktıları (yerel)
 **/.ruzgar-video-export/
 **/.ruzgar/programlama_oturum.json
+
+# Rüzgar runtime / geçici (Blok A — commit edilmez)
+**/.ruzgar/
 # Faz 6 scaffold çıktıları (yerel denemeler)
 projects/
 

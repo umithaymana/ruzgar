@@ -44,10 +44,10 @@ git push -u origin HEAD
 
 | # | İş | Dosya / komut |
 |---|-----|----------------|
-| A1 | Onay doc’a bu plan linki | `RUZGAR_MASAUSTU_ONAYLI_DURUM.md` |
-| A2 | `e2cccb8` geri alma notu README kök | `docs/RUZGAR_HIZLI_GERI_ALMA.md` (yeni, kısa) |
-| A3 | Haftalık bench komutu script | `scripts/Ruzgar_Programlama_Bench.bat` |
-| A4 | E1 izleme: task-stats curl örneği doc | plan içi veya `docs/` |
+| A1 | Onay doc’a bu plan linki | `RUZGAR_MASAUSTU_ONAYLI_DURUM.md` ✓ |
+| A2 | `e2cccb8` geri alma notu README kök | `docs/RUZGAR_HIZLI_GERI_ALMA.md` ✓ |
+| A3 | Haftalık bench komutu script | `scripts/Ruzgar_Programlama_Bench.bat` ✓ |
+| A4 | E1 izleme: task-stats curl örneği doc | `RUZGAR_PROGRAMLAMA_E1_IZLEME.md` ✓ |
 | A5 | `.gitignore` kontrol: `.ruzgar/` geçici | kök `.gitignore` |
 | A6 | Launcher tek giriş: `Ruzgar_TemizBaslat.bat` doc | `RUZGAR_MASAUSTU_ONAYLI_DURUM.md` |
 | A7 | CI notu: upgrade `--strict` ne zaman | `PROGRAMLAMA_100_ROADMAP.md` 1 satır |
@@ -303,4 +303,5 @@ git push -u origin plan/blok-a-koruma
 - `PROGRAMMING_MOTOR_YOL_HARITASI.md` — Dalga E–H
 - `scripts/ruzgar_programlama_upgrade_report.json` — son bench kanıtı
 
-**Durum:** PLAN KAYITLI — uygulama bekliyor (ara sonrası Blok A’dan başla).
+**Durum:** Blok A tamamlandı (2026-05-29) — sırada Blok B (Faz 98 UI paneli).  
+Blok A checklist: A1–A7, A9–A10 dosyaları hazır; bench: `scripts\Ruzgar_Programlama_Bench.bat`.

@@ -1,9 +1,15 @@
 # Rüzgar masaüstü — onaylı çalışan durum (KESİN EMİR)
 
-**Tarih:** 2026-05-28  
+**Tarih:** 2026-05-29 (Blok A güncelleme)  
 **Onay commit:** `e2cccb8` — `fix(ruzgar): onayli masaustu taban cizgisi — aa39618 UI + Faz 98 API`  
 **Build rev (API):** `2026-05-27-ruzgar-faz98-v107`  
 **Doğrulama:** Ümit — motorlar, Gönder, Sunucu ✓, manifest, Faz 98 şeridi çalışır.
+
+## İş planı (A→J)
+
+Uygulama sırası ve commit kuralları: [`PROGRAMLAMA_BLOK_AJ_IS_PLANI.md`](PROGRAMLAMA_BLOK_AJ_IS_PLANI.md)  
+Hızlı geri alma: [`../../docs/RUZGAR_HIZLI_GERI_ALMA.md`](../../docs/RUZGAR_HIZLI_GERI_ALMA.md)  
+E1 izleme (curl): [`RUZGAR_PROGRAMLAMA_E1_IZLEME.md`](RUZGAR_PROGRAMLAMA_E1_IZLEME.md)
 
 ## Kesin emir
 
@@ -11,7 +17,11 @@
 2. **`078d2ef` tercüme masaüstü genişlemesi** (app.js/index.html/styles.css +400 satır) **geri getirilmez** — API’de tercüme backend kalabilir; UI ayrı, küçük adımlarla ve test sonrası eklenir.
 3. **Commit dışı patch yasağı:** `ruzgar-bootstrap.js`, çift script, `bootRuzgarShell`, toplu `app.js` denemeleri **yasak** — önce F12 ilk hata, sonra tek satırlık düzeltme.
 4. **Geri alma kuralı:** Masaüstü bozulursa `git checkout e2cccb8 -- ruzgar-desktop/`; yeni sarmalayıcı yazılmaz.
-5. **Başlatma:** `Ruzgar_TemizBaslat.bat` → API 8779 + Electron; Ctrl+Shift+R ile sert yenile.
+5. **Başlatma (tek giriş):** kök `Ruzgar_TemizBaslat.bat` → API 8779 + Electron; Ctrl+Shift+R ile sert yenile.  
+   - Port takılıysa: `Ruzgar_Port_Temizle.bat` → ardından yine `Ruzgar_TemizBaslat.bat`  
+   - Sadece API: `Ruzgar_Sadece_Api.bat` · tam yeniden (yönetici): `Ruzgar_Tam_Yeniden.bat`  
+   - **Varsayılan masaüstü kısayolu bu bat’a bağlı olmalı** (`scripts/Masaustune_Kisayol.ps1`)
+6. **Etiket notu:** İsteğe bağlı tag `ruzgar-desktop-baseline-e2cccb8` — bkz. geri alma doc.
 
 ## Mimari not (neden aa39618 UI + Faz 98 API)
 

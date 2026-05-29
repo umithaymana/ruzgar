@@ -37,6 +37,23 @@ def build_task_plan(message: str) -> dict[str, Any]:
             "steps": [],
             "acceptance": [],
         }
+    try:
+        from ilim_assistant.motorlar.programlama_faz101_report_read import wants_report_read
+
+        if wants_report_read(msg):
+            return {
+                "version": FAZ92_VERSION,
+                "goal": "Bench/KPI raporunu oku ve Türkçe özetle (kod değişikliği yok)",
+                "steps": [
+                    "İlgili JSON rapor dosyasını bul ve oku.",
+                    "Skorları ve geçen/kalan maddeleri kısa özetle.",
+                ],
+                "acceptance": [
+                    "Kullanıcıya rapor özeti verilir; otomatik pytest/smoke tetiklenmez.",
+                ],
+            }
+    except Exception:
+        pass
     sents = _sentences(msg)
     goal = sents[0][:220] if sents else msg[:220]
     steps: list[str] = []

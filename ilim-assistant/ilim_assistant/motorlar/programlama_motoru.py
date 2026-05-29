@@ -487,6 +487,16 @@ def is_programlama_reserved_command(message: str) -> bool:
     except Exception:
         pass
     try:
+        from ilim_assistant.motorlar.programlama_faz101_report_read import (
+            wants_clarification,
+            wants_report_read,
+        )
+
+        if wants_report_read(message) or wants_clarification(message):
+            return True
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_faz63 import wants_live_kpi
 
         if wants_live_kpi(message):
@@ -704,6 +714,16 @@ def maybe_programlama_instant_reply(
         owner = maybe_owner_instant_reply(message, mode_norm)
         if owner:
             parts.append(owner)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz101_report_read import (
+            maybe_instant_report_read,
+        )
+
+        rep101 = maybe_instant_report_read(message, workspace_root)
+        if rep101:
+            parts.append(rep101)
     except Exception:
         pass
     try:
@@ -949,26 +969,32 @@ def maybe_programlama_instant_reply(
             parts.append(faz83_hit)
     except Exception:
         pass
+    _faz98_claimed = False
     try:
-        from ilim_assistant.motorlar.programlama_faz98 import maybe_instant_faz98
+        from ilim_assistant.motorlar.programlama_faz98 import (
+            maybe_instant_faz98,
+            wants_umit_gate,
+        )
 
+        _faz98_claimed = wants_umit_gate(message)
         faz98_hit = maybe_instant_faz98(message, workspace_root)
         if faz98_hit:
             parts.append(faz98_hit)
     except Exception:
         pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz67 import maybe_instant_faz67
+    if not _faz98_claimed:
+        try:
+            from ilim_assistant.motorlar.programlama_faz67 import maybe_instant_faz67
 
-        faz67_hit = maybe_instant_faz67(
-            message,
-            workspace_root,
-            active_file=active_file,
-        )
-        if faz67_hit:
-            parts.append(faz67_hit)
-    except Exception:
-        pass
+            faz67_hit = maybe_instant_faz67(
+                message,
+                workspace_root,
+                active_file=active_file,
+            )
+            if faz67_hit:
+                parts.append(faz67_hit)
+        except Exception:
+            pass
     try:
         from ilim_assistant.motorlar.programlama_faz43 import maybe_instant_faz43
 

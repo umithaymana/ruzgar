@@ -36,3 +36,8 @@ Bu plan iki ana hedefe odaklanir:
   - `python scripts/programlama_upgrade_runner.py --strict`
 - Smoke ile beraber:
   - `python scripts/programlama_smoke.py --upgrade`
+- Windows kisa yol (kök):
+  - `scripts\Ruzgar_Programlama_Bench.bat` — normal gate
+  - `scripts\Ruzgar_Programlama_Bench.bat strict` — **CI / release oncesi zorunlu** (`--strict`: sure + tutarlilik + esik)
+
+**CI notu:** PR veya Blok D/E merge oncesi `--strict` gecmeli; gunluk gelistirmede strictsiz bench yeterli.
