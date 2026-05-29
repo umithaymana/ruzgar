@@ -469,6 +469,8 @@ const el = {
   btnCodeTest: document.getElementById("btn-code-test"),
   btnCodeRun: document.getElementById("btn-code-run"),
   btnCodeOutputClear: document.getElementById("btn-code-output-clear"),
+  btnUmitOnayApply: document.getElementById("btn-umit-onay-apply"),
+  btnUmitOnayCancel: document.getElementById("btn-umit-onay-cancel"),
   codeFileTree: document.getElementById("code-file-tree"),
   progProjectSelect: document.getElementById("prog-project-select"),
   btnCodeRefresh: document.getElementById("btn-code-refresh"),
@@ -1455,6 +1457,10 @@ function switchMode(mode) {
   setStatus(`Mod: ${MODE_LABELS[currentMode] || currentMode}`, "Rüzgar");
   updatePerformanceIndicators(perfBusy);
   updateDynamicWorkbench();
+  if (next === "programlama") {
+    void refreshProgramlamaUmitOnay();
+    void refreshProgramlamaKpiDashboard();
+  }
   const motorDeclarationByMode = {
     genel: "Şu anda ana motor tam güç ve tam kapasite çalışıyor.",
     okuma:
@@ -1698,6 +1704,72 @@ function renderProgramlamaGitChanges(payload) {
   }
 }
 
+function renderProgramlamaUmitOnay(payload) {
+  const wrap = document.getElementById("programlama-umit-onay-card");
+  const stateEl = document.getElementById("programlama-umit-onay-state");
+  const kindEl = document.getElementById("programlama-umit-onay-kind");
+  const detailEl = document.getElementById("programlama-umit-onay-detail");
+  const applyBtn = el.btnUmitOnayApply || document.getElementById("btn-umit-onay-apply");
+  const cancelBtn = el.btnUmitOnayCancel || document.getElementById("btn-umit-onay-cancel");
+  if (!wrap || !stateEl || !kindEl || !detailEl) return;
+  wrap.hidden = false;
+  wrap.classList.remove("programlama-umit-onay-pending");
+  if (!payload || payload.ok === false) {
+    const http = payload && payload.http_status ? ` (HTTP ${payload.http_status})` : "";
+    stateEl.textContent = "API bağlantısı yok";
+    kindEl.textContent = "Faz 98 endpoint";
+    detailEl.textContent =
+      `Ruzgar_TemizBaslat.bat çalıştır, Electron'da Ctrl+Shift+R${http}.`;
+    if (applyBtn) applyBtn.disabled = true;
+    if (cancelBtn) cancelBtn.disabled = true;
+    return;
+  }
+  if (!payload.has_pending) {
+    stateEl.textContent = "Bekleyen işlem yok";
+    kindEl.textContent = "Sistem sakin";
+    detailEl.textContent =
+      "Sohbette: işlem iste: mkdir projects/onay-test → önizleme → Tamam yap.";
+    if (applyBtn) applyBtn.disabled = true;
+    if (cancelBtn) cancelBtn.disabled = true;
+    return;
+  }
+  const op = payload.operation && typeof payload.operation === "object" ? payload.operation : {};
+  const label = String(op.label || op.kind || "işlem");
+  const riskCount = Number(op.risk_count || 0);
+  wrap.classList.add("programlama-umit-onay-pending");
+  stateEl.textContent = "Onay bekliyor";
+  kindEl.textContent = label;
+  const src = op.src ? `Kaynak: ${op.src}` : "";
+  const dst = op.dst ? `Hedef: ${op.dst}` : "";
+  const cmd = op.command ? `Komut: ${op.command}` : "";
+  const pkg = op.package ? `Paket: ${op.package}` : "";
+  const risk =
+    riskCount > 0 ? `Risk(${riskCount}): ${String(op.risk_head || "").slice(0, 90)}` : "Risk: düşük";
+  detailEl.textContent = [src, dst, cmd, pkg, risk].filter(Boolean).join(" · ");
+  if (applyBtn) applyBtn.disabled = false;
+  if (cancelBtn) cancelBtn.disabled = false;
+}
+
+async function refreshProgramlamaUmitOnay() {
+  const workspaceRoot = await getProgramlamaWorkspaceRoot();
+  if (!workspaceRoot) {
+    renderProgramlamaUmitOnay({ ok: false });
+    return;
+  }
+  try {
+    const qs = `?workspace_root=${encodeURIComponent(workspaceRoot)}`;
+    const res = await fetch(`${API}/api/programlama/umit-onay${qs}`, { cache: "no-store" });
+    if (!res.ok) {
+      renderProgramlamaUmitOnay({ ok: false, http_status: res.status });
+      return;
+    }
+    const onay = await res.json().catch(() => ({}));
+    renderProgramlamaUmitOnay(onay);
+  } catch (_) {
+    renderProgramlamaUmitOnay({ ok: false });
+  }
+}
+
 async function refreshProgramlamaGitChanges(scopeRel) {
   const workspaceRoot = await getProgramlamaWorkspaceRoot();
   if (!workspaceRoot) return;
@@ -1736,6 +1808,7 @@ async function refreshProgramlamaKpiDashboard() {
   } catch (_) {
     /* ignore */
   }
+  await refreshProgramlamaUmitOnay();
 }
 
 function renderProgramlamaAgentSteps(steps) {
@@ -5915,6 +5988,18 @@ function wireProgrammingWorkbench() {
   if (el.btnCodeOutputClear) {
     el.btnCodeOutputClear.addEventListener("click", () => setCodeOutput(""));
   }
+  if (el.btnUmitOnayApply) {
+    el.btnUmitOnayApply.addEventListener("click", () => {
+      void sendMessageWithText("tamam yap");
+      void refreshProgramlamaUmitOnay();
+    });
+  }
+  if (el.btnUmitOnayCancel) {
+    el.btnUmitOnayCancel.addEventListener("click", () => {
+      void sendMessageWithText("yapma");
+      void refreshProgramlamaUmitOnay();
+    });
+  }
 }
 
 function wireDynamicWorkbench() {
@@ -9420,6 +9505,13 @@ setInterval(() => {
   if (document.hidden) return;
   void refreshUiManifest();
 }, UI_MANIFEST_POLL_MS);
+setInterval(() => {
+  if (document.hidden) return;
+  const progPage = document.getElementById("page-programlama");
+  if (progPage && !progPage.hidden) {
+    void refreshProgramlamaKpiDashboard();
+  }
+}, 10000);
 refreshPerformanceMetrics();
 scheduleMetricsPolling();
 loadFileTree();

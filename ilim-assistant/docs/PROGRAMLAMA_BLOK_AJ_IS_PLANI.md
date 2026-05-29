@@ -70,16 +70,16 @@ git push -u origin HEAD
 
 | # | İş | Not |
 |---|-----|-----|
-| B11 | HTML: `programlama-umit-onay-card` | `078d2ef` diff’ten **yalnızca** onay HTML |
-| B12 | `renderProgramlamaUmitOnay()` | `app.js` |
-| B13 | `GET /api/programlama/umit-onay` fetch | KPI dashboard içinde |
-| B14 | Onayla → `tamam yap` (sohbet veya API) | mevcut Faz 98 akışına bağla |
-| B15 | İptal → `yapma` | |
-| B16 | Bekleyen yok durumu | kart gizle / mesaj |
-| B17 | Programlama sekmesi 10 sn poll | `setInterval` + `document.hidden` |
-| B18 | `programlama-phase-badge` manifest sync | `applyUiManifest` zaten var — doğrula |
+| B11 | HTML: `programlama-umit-onay-card` | `index.html` ✓ |
+| B12 | `renderProgramlamaUmitOnay()` | `app.js` ✓ |
+| B13 | `GET /api/programlama/umit-onay` fetch | KPI dashboard içinde ✓ |
+| B14 | Onayla → `tamam yap` (sohbet veya API) | buton → sohbet ✓ |
+| B15 | İptal → `yapma` | ✓ |
+| B16 | Bekleyen yok durumu | kart + «Bekleyen işlem yok» ✓ |
+| B17 | Programlama sekmesi 10 sn poll | `setInterval` 10s ✓ |
+| B18 | `programlama-phase-badge` manifest sync | `applyUiManifest` (mevcut) ✓ |
 | B19 | Manuel test: kopyala iste → panel → tamam yap | kullanıcı |
-| B20 | `app.js?v=` cache buster artır | `index.html` |
+| B20 | `app.js?v=` cache buster artır | `20260529-blok-b` ✓ |
 
 **Blok B test:** Onay kartı görünür; `e2cccb8` checklist yeşil.
 
@@ -303,5 +303,5 @@ git push -u origin plan/blok-a-koruma
 - `PROGRAMMING_MOTOR_YOL_HARITASI.md` — Dalga E–H
 - `scripts/ruzgar_programlama_upgrade_report.json` — son bench kanıtı
 
-**Durum:** Blok A tamamlandı (2026-05-29) — sırada Blok B (Faz 98 UI paneli).  
-Blok A checklist: A1–A7, A9–A10 dosyaları hazır; bench: `scripts\Ruzgar_Programlama_Bench.bat`.
+**Durum:** Blok B tamamlandı (2026-05-29) — sırada Blok C (canlı E1).  
+Blok B: `programlama-umit-onay-card`, `renderProgramlamaUmitOnay`, 10 sn poll, `app.js?v=20260529-blok-b`.

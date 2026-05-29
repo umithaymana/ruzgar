@@ -3335,6 +3335,15 @@ body:not(.workbench-hizir-active) #workbench-hizir-tools,
   margin: 8px 0 0;
   padding: 8px 10px;
 }
+.programlama-umit-onay-top {
+  margin: 10px 0 12px;
+  border: 1px solid rgba(143, 212, 255, 0.35);
+  background: rgba(20, 40, 58, 0.55);
+}
+.programlama-umit-onay-top.programlama-umit-onay-pending {
+  border-color: rgba(251, 191, 36, 0.75);
+  background: rgba(58, 42, 12, 0.45);
+}
 .programlama-compliance-title {
   display: block;
   font-size: 12px;
