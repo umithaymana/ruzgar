@@ -312,6 +312,16 @@
     return t;
   }
 
+  function openGoogleScholar(query) {
+    const q = extractEserSearchQuery(query);
+    const url = q
+      ? `https://scholar.google.com/scholar?q=${encodeURIComponent(q)}&hl=tr`
+      : "https://scholar.google.com/?hl=tr";
+    if (global.ruzgarApi?.openExternalUrl) void global.ruzgarApi.openExternalUrl(url);
+    else window.open(url, "_blank", "noopener");
+    flash(q ? `Google Scholar: «${q}»` : "Google Scholar açıldı.");
+  }
+
   function renderEserSearchEmpty(message) {
     const ul = $("tercume-work-eser-sites");
     const hint = $("tercume-eser-hint");
@@ -328,8 +338,11 @@
     if (inp && q) inp.value = q;
     const items = Array.isArray(data?.items) ? data.items : [];
     if (hint) {
+      const scholarNote = data?.scholar_url
+        ? " · Scholar butonu = tam arayüz"
+        : "";
       hint.textContent = q
-        ? `«${q}» — ${items.length} sonuç (genel + Archive, Yazma Eserler, Şamile…). Satır: siteyi aç · İndir: URL’yi altta yapıştırın.`
+        ? `«${q}» — ${items.length} sonuç (Scholar, Archive, Yazma Eserler, Şamile…). Satır: siteyi aç · İndir: URL altta.${scholarNote}`
         : "Arama henüz yapılmadı.";
     }
     if (!items.length) {
@@ -726,6 +739,9 @@ ${chunk}`;
     );
     $("btn-tercume-eser-ara")?.addEventListener("click", () => {
       void runEserSearch(String($("tercume-eser-input")?.value || ""));
+    });
+    $("btn-tercume-scholar-open")?.addEventListener("click", () => {
+      openGoogleScholar(String($("tercume-eser-input")?.value || ""));
     });
     $("tercume-eser-input")?.addEventListener("keydown", (ev) => {
       if (ev.key === "Enter") {

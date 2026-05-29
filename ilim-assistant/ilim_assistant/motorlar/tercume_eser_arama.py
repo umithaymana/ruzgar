@@ -12,6 +12,7 @@ TERCUME_ESER_ARAMA_VERSION = "tercume-eser-arama-b-2026-05-30"
 
 # (etiket, ek sorgu parçası — site: DDG’de bazen boş döner; alan adı eklenir)
 _TRUSTED_SITE_QUERIES: list[tuple[str, str]] = [
+    ("Google Scholar", "scholar.google.com"),
     ("Internet Archive", "archive.org"),
     ("Genel", ""),
     ("Yazma Eserler", "yazmalar.gov.tr"),
@@ -97,8 +98,19 @@ def _core_terms(base: str) -> str:
     return t or base
 
 
+def scholar_search_url(query: str) -> str:
+    from urllib.parse import quote_plus
+
+    q = _refine_user_query(query)
+    if not q:
+        return "https://scholar.google.com/?hl=tr"
+    return f"https://scholar.google.com/scholar?q={quote_plus(q)}&hl=tr"
+
+
 def _build_query_for_source(base: str, site_hint: str) -> str:
     core = _core_terms(base)
+    if site_hint == "scholar.google.com":
+        return f"{core} site:scholar.google.com"
     if site_hint == "archive.org":
         return f"{core} archive.org pdf"
     if site_hint:
@@ -149,6 +161,13 @@ def search_eser_merged(
         if delay_sec > 0:
             time.sleep(delay_sec)
 
+    def _sort_key(row: dict[str, Any]) -> tuple[int, str]:
+        src = str(row.get("source") or "")
+        scholar_first = 0 if src == "Google Scholar" else 1
+        return (scholar_first, str(row.get("title") or ""))
+
+    items.sort(key=_sort_key)
+
     return {
         "ok": True,
         "version": TERCUME_ESER_ARAMA_VERSION,
@@ -156,4 +175,5 @@ def search_eser_merged(
         "items": items,
         "total": len(items),
         "queries_run": queries_run,
+        "scholar_url": scholar_search_url(base),
     }

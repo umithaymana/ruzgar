@@ -787,7 +787,7 @@ function applyModeToUI() {
       "Okuma: arsiv durumu · index durumu · metin + hadis mi? · kaynak bul — PDF için arsiv_indexle";
   } else if (currentMode === "tercume") {
     el.input.placeholder =
-      "«imam-ı rabbani eserlerini ara» → çalışma sayfasında 18 site listesi (Groq’a gitmez) · Çeviri için Çevir";
+      "«imam-ı rabbani eserlerini ara» → Eser ara sekmesi (Scholar + Archive…) · Scholar = tarayıcıda tam arayüz · Çeviri: Çevir";
   } else if (currentMode === "ses") {
     el.input.placeholder =
       "Ses motorunda transkripti panelden sohbete aktarabilir veya doğrudan soru yazabilirsiniz.";
