@@ -12,5 +12,5 @@ if errorlevel 1 (
   exit /b 1
 )
 echo.
-echo Tamam. Saglik/build: faz85-v89 (hub cila + video arama onbellek).
+echo Tamam. Saglik/build: 2026-05-27-ruzgar-faz98-v107 (Faz 98 onayli islem).
 pause

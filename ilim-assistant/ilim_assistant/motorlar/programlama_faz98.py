@@ -71,7 +71,8 @@ _MOVE_RE = re.compile(
 _COPY_RE = re.compile(
     r"(?:"
     r"(.+?)\s+(?:kopyala|copy)\s+(?:şuraya|suraya|to|->|→)\s+(.+)|"
-    r"(?:kopyala|copy)\s+(.+?)\s+(?:->|→|şuraya|suraya|to)\s+(.+)"
+    r"(?:kopyala|copy)\s+(.+?)\s+(?:->|→|şuraya|suraya|to)\s+(.+)|"
+    r"(.+?)\s+(?:dosyasini|dosyasını|dosyayı|dosyayi)\s+(.+?)\s+(?:şuraya|suraya)\s+(?:kopyala|copy)"
     r")",
     re.I | re.S,
 )
@@ -974,6 +975,35 @@ def faz98_directive() -> str:
     )
 
 
+def prepare_command_golden_fixtures(workspace_root: str | Path | None = None) -> None:
+    """Altın komut seti ve upgrade runner için test dosyaları."""
+    root = repo_root(workspace_root)
+    batt_rel = "projects/_faz98_battery"
+    if root is not None:
+        try:
+            batt_dir = (root / batt_rel).resolve()
+            batt_dir.mkdir(parents=True, exist_ok=True)
+            for name, body in (("a.txt", "a"), ("m.txt", "m")):
+                (batt_dir / name).write_text(body, encoding="utf-8")
+        except OSError:
+            pass
+    try:
+        desk = Path.home() / "Desktop"
+        docs = Path.home() / "Documents"
+        dl = Path.home() / "Downloads"
+        desk.mkdir(parents=True, exist_ok=True)
+        docs.mkdir(parents=True, exist_ok=True)
+        dl.mkdir(parents=True, exist_ok=True)
+        (desk / "log.txt").write_text("log", encoding="utf-8")
+        (desk / "demo.txt").write_text("demo", encoding="utf-8")
+        (desk / "rapor.txt").write_text("rapor", encoding="utf-8")
+        (docs / "notlar.txt").write_text("not", encoding="utf-8")
+        (dl / "data.csv").write_text("id,val\n1,2\n", encoding="utf-8")
+        (dl / "zip.zip").write_text("zip", encoding="utf-8")
+    except OSError:
+        pass
+
+
 def run_command_battery(
     workspace_root: str | Path | None = None,
 ) -> dict[str, Any]:
@@ -981,22 +1011,8 @@ def run_command_battery(
     Faz 98 komut-anlama ölçümü (P12).
     Skor, parse_natural_operation + wants_umit_gate üzerinden hesaplanır.
     """
-    root = repo_root(workspace_root)
+    prepare_command_golden_fixtures(workspace_root)
     batt_rel = "projects/_faz98_battery"
-    if root is not None:
-        try:
-            batt_dir = (root / batt_rel).resolve()
-            batt_dir.mkdir(parents=True, exist_ok=True)
-            (batt_dir / "a.txt").write_text("a", encoding="utf-8")
-            (batt_dir / "m.txt").write_text("m", encoding="utf-8")
-        except OSError:
-            pass
-    try:
-        dls = Path.home() / "Downloads"
-        dls.mkdir(parents=True, exist_ok=True)
-        (dls / "data.csv").write_text("id,val\n1,2\n", encoding="utf-8")
-    except OSError:
-        pass
 
     cases: list[dict[str, Any]] = [
         {"text": "işlem iste: mkdir projects/demo-a", "kind": "mkdir", "gate": True},

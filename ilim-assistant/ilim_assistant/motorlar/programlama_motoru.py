@@ -1310,7 +1310,17 @@ class ProgramlamaAraclari:
             except Exception:
                 allowed, reason = programlama_write_allowed(self._root, rel_path)
             if not allowed:
-                return WriteReport(path=rel_path, ok=False, detail=reason)
+                detail = reason
+                try:
+                    from ilim_assistant.motorlar.programlama_faz102_e1_live import (
+                        format_scope_early_rejection,
+                    )
+
+                    if "Faz 78" in (reason or "") or "kapsam" in (reason or "").lower():
+                        detail = format_scope_early_rejection(reason)[:800]
+                except Exception:
+                    pass
+                return WriteReport(path=rel_path, ok=False, detail=detail)
             ok_content, creason = validate_write_content(content)
             if not ok_content:
                 return WriteReport(path=rel_path, ok=False, detail=creason)

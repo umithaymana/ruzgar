@@ -107,6 +107,22 @@ def record_task_outcome(
         return {"ok": False, "error": "path"}
     store = _load_store(path) if path.is_file() else {"outcomes": []}
     outcomes = list(store.get("outcomes") or [])
+    root_cause = ""
+    try:
+        from ilim_assistant.motorlar.programlama_faz102_e1_live import (
+            classify_root_cause,
+            record_root_cause_hint,
+        )
+
+        root_cause = classify_root_cause(
+            success=bool(success),
+            verify_ok=bool(verify_ok),
+            writes_ok=int(writes_ok),
+            detail=detail or "",
+            bonus_retry=bool(bonus_retry),
+        )
+    except Exception:
+        root_cause = "unknown_fail" if not success else "ok"
     entry = {
         "ts": time.time(),
         "scope_rel": (scope_rel or "").replace("\\", "/"),
@@ -119,6 +135,7 @@ def record_task_outcome(
         "source": source,
         "detail": (detail or "")[:300],
         "bonus_retry": bool(bonus_retry),
+        "root_cause": root_cause,
     }
     outcomes.append(entry)
     store["outcomes"] = outcomes[-_MAX_HISTORY:]
@@ -130,7 +147,17 @@ def record_task_outcome(
             record_live_kpi_rollup(workspace_root, task_entry=entry)
         except Exception:
             pass
-        return {"ok": True, "entry": entry}
+        try:
+            from ilim_assistant.motorlar.programlama_faz102_e1_live import record_root_cause_hint
+
+            record_root_cause_hint(
+                workspace_root,
+                scope_rel=scope_rel,
+                root_cause=root_cause,
+            )
+        except Exception:
+            pass
+        return {"ok": True, "entry": entry, "root_cause": root_cause}
     except OSError as exc:
         return {"ok": False, "error": str(exc)[:120]}
 
@@ -176,7 +203,7 @@ def compute_task_stats(
     total = len(rows)
     rate = ok_n / total if total else 0.0
     target = target_success_rate()
-    return {
+    base = {
         "ok": True,
         "total": total,
         "success_count": ok_n,
@@ -192,6 +219,12 @@ def compute_task_stats(
         "recent": rows[-8:],
         "window_days": window_days,
     }
+    try:
+        from ilim_assistant.motorlar.programlama_faz102_e1_live import enrich_task_stats
+
+        return enrich_task_stats(base, workspace_root, all_rows=rows)
+    except Exception:
+        return base
 
 
 def build_retry_nudge(
@@ -362,9 +395,22 @@ def format_task_stats_report(stats: dict[str, Any]) -> str:
     ]
     for r in stats.get("recent") or []:
         ok = "✓" if r.get("success") else "✗"
+        rc = r.get("root_cause")
+        rc_bit = f", {rc}" if rc and not r.get("success") else ""
         lines.append(
             f"  {ok} `{r.get('scope_rel', '?')}` — "
-            f"{r.get('turns_used')} tur, verify={r.get('verify_ok')}"
+            f"{r.get('turns_used')} tur, verify={r.get('verify_ok')}{rc_bit}"
+        )
+    e1 = stats.get("e1") if isinstance(stats.get("e1"), dict) else {}
+    if e1.get("total"):
+        ep = int(float(e1.get("success_rate", 0)) * 100)
+        et = int(float(stats.get("e1_target_rate", 0.9)) * 100)
+        lines.append(f"\nE1 (7g, filtreli): **{ep}%** ({e1.get('success_count')}/{e1.get('total')}) · hedef ≥{et}%")
+    roll = stats.get("rolling_20") if isinstance(stats.get("rolling_20"), dict) else {}
+    if roll.get("total"):
+        rp = int(float(roll.get("success_rate", 0)) * 100)
+        lines.append(
+            f"Son {roll.get('window', 20)} görev: **{rp}%** ({roll.get('success_count')}/{roll.get('total')})"
         )
     lines.append(f"\n({FAZ55_VERSION})")
     return "\n".join(lines)

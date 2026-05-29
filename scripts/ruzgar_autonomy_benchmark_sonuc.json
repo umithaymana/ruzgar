@@ -1,0 +1,129 @@
+{
+  "ok": true,
+  "score": 100,
+  "checks": [
+    {
+      "name": "plan_build",
+      "ok": true,
+      "detail": "FastAPI projesi oluştur, benchmark-health endpointi ekle, testleri çalıştır.",
+      "points": 8
+    },
+    {
+      "name": "scaffold_fastapi",
+      "ok": true,
+      "detail": "projects/smoke-autonomy-53223",
+      "points": 10
+    },
+    {
+      "name": "scaffold_static_site",
+      "ok": true,
+      "detail": "projects/smoke-autonomy-53223-site",
+      "points": 5
+    },
+    {
+      "name": "implement_endpoint",
+      "ok": true,
+      "detail": "patched",
+      "points": 10
+    },
+    {
+      "name": "write_targeted_test",
+      "ok": true,
+      "detail": "written",
+      "points": 5
+    },
+    {
+      "name": "pytest_project",
+      "ok": true,
+      "detail": "...                                                                      [100%]\n3 passed in 0.90s",
+      "points": 5
+    },
+    {
+      "name": "multi_file_delivery",
+      "ok": true,
+      "detail": "main.py + targeted test",
+      "points": 0
+    },
+    {
+      "name": "implement_static_change",
+      "ok": true,
+      "detail": "patched",
+      "points": 8
+    },
+    {
+      "name": "static_smoke",
+      "ok": true,
+      "detail": "static_ok",
+      "points": 5
+    },
+    {
+      "name": "recovery_cycle",
+      "ok": true,
+      "detail": "recovery_ok",
+      "points": 7
+    },
+    {
+      "name": "runtime_recovery_cycle",
+      "ok": true,
+      "detail": ".                                                                        [100%]\n1 passed in 0.02s",
+      "points": 8
+    },
+    {
+      "name": "git_lifecycle_ready",
+      "ok": true,
+      "detail": "git_ready · Ruzgar.ps1                                         |  121 ++-",
+      "points": 5
+    },
+    {
+      "name": "git_branch_commit",
+      "ok": true,
+      "detail": "[faz99-bench (root-commit) 09b6502] feat: faz99 benchmark baseline\n 12 files changed, 66 insertions(+)\n create mode 1006",
+      "points": 7
+    },
+    {
+      "name": "system_analysis",
+      "ok": true,
+      "detail": "score=85",
+      "points": 10
+    },
+    {
+      "name": "time_budget",
+      "ok": true,
+      "detail": "5.39s / 45s",
+      "points": 5
+    },
+    {
+      "name": "stability_probe",
+      "ok": true,
+      "detail": ".                                                                        [100%]\n1 passed in 0.76s",
+      "points": 2
+    }
+  ],
+  "version": "programlama-faz99-v1-2026-05-28",
+  "scope_rel": "projects/smoke-autonomy-53223",
+  "static_scope_rel": "projects/smoke-autonomy-53223-site",
+  "elapsed_sec": 5.39,
+  "dimensions": {
+    "planning": 8,
+    "fastapi_delivery": 30,
+    "static_delivery": 18,
+    "recovery": 15,
+    "git_lifecycle": 12,
+    "analysis": 10,
+    "time_budget": 5,
+    "stability": 2
+  },
+  "budget_sec": 45,
+  "plan": {
+    "version": "programlama-faz92-v1-2026-05-27",
+    "goal": "FastAPI projesi oluştur, benchmark-health endpointi ekle, testleri çalıştır.",
+    "steps": [
+      "İlgili dosya ve akışı tespit et.",
+      "İsteğe uygun en küçük güvenli değişikliği uygula.",
+      "Test/lint ile doğrula ve sonucu özetle."
+    ],
+    "acceptance": [
+      "İlgili testler çalışmalı ve kritik test kırılmamalı."
+    ]
+  }
+}

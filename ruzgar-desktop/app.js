@@ -1633,9 +1633,24 @@ function renderProgramlamaTaskStats(stats, liveKpi) {
   countEl.textContent = meets ? `Canlı OK ≥${tgt}%` : `Canlı ≥${tgt}%`;
   if (detailEl) {
     const w30 = live?.window_30d;
+    const statsE1 = stats && typeof stats === "object" ? stats : {};
     let line = `${s.success_count}/${s.total} görev (7g) · ort ${s.avg_turns || 0} tur`;
     if (w30 && w30.total) {
       line += ` · 30g: ${Math.round(Number(w30.success_rate || 0) * 100)}%`;
+    }
+    const e1 = statsE1.e1 || s.e1;
+    if (e1 && e1.total) {
+      const ep = Math.round(Number(e1.success_rate || 0) * 100);
+      const et = Math.round(Number(statsE1.e1_target_rate || s.e1_target_rate || 0.9) * 100);
+      line += ` · E1: ${ep}% (hedef ≥${et}%)`;
+    }
+    const roll = statsE1.rolling_20 || s.rolling_20;
+    if (roll && roll.total) {
+      line += ` · son${roll.window || 20}: ${Math.round(Number(roll.success_rate || 0) * 100)}%`;
+    }
+    const tops = statsE1.root_cause_top || s.root_cause_top;
+    if (Array.isArray(tops) && tops[0]) {
+      line += ` · kök: ${tops[0].cause}×${tops[0].count}`;
     }
     if (live?.headline) {
       line = `${live.headline} · ${line}`;

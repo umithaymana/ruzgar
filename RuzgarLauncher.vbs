@@ -1,9 +1,8 @@
-' PowerShell bitene kadar bekle (yarim kalan baslatma olmasin); pencere stili 0 = gizli
+' RUZGAR — masaustu Electron (API 8779, Faz 98)
 Option Explicit
 Dim shell, fso, root, cmd
 Set fso = CreateObject("Scripting.FileSystemObject")
 root = fso.GetParentFolderName(WScript.ScriptFullName)
-cmd = "powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File """ & root & "\Ruzgar.ps1"""
+cmd = "powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -File """ & root & "\RuzgarMasaustuBaslat.ps1"""
 Set shell = CreateObject("WScript.Shell")
-' 0 = gizli; True = PowerShell bitene kadar bekle (Electron ayri process olarak acilir)
 shell.Run cmd, 0, True

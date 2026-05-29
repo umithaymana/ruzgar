@@ -1966,19 +1966,46 @@ def iter_code_agent_turn_events(
         st = load_agent_state(workspace)
         writes_total = int(st.get("total_writes") or 0)
         _used_faz55b = bool(_faz55b_bonus and len(turn_reports) > max_turns)
-        record_task_outcome(
+        _verify_ok_task = bool(success and st.get("last_verify_ok"))
+        _last_fail = turn_reports[-1][:200] if turn_reports else ""
+        try:
+            from ilim_assistant.motorlar.programlama_faz102_e1_live import (
+                format_duration_warning,
+                format_retry_footer,
+                format_verify_failure_line,
+            )
+
+            if not _verify_ok_task and not success:
+                reply_body += format_verify_failure_line(
+                    verify_ok=False,
+                    last_verify_snippet=_last_fail,
+                )
+            reply_body += format_duration_warning(float(total_sec))
+        except Exception:
+            pass
+        _out_rec = record_task_outcome(
             workspace,
             scope_rel=task.scope_rel,
             goal=task.goal,
             success=success,
             turns_used=len(turn_reports),
-            verify_ok=bool(success and st.get("last_verify_ok")),
+            verify_ok=_verify_ok_task,
             writes_ok=writes_total,
             elapsed_sec=total_sec,
             source="code_agent",
-            detail=turn_reports[-1][:200] if turn_reports else "",
+            detail=_last_fail,
             bonus_retry=_used_faz55b,
         )
+        try:
+            from ilim_assistant.motorlar.programlama_faz102_e1_live import format_retry_footer
+
+            reply_body += format_retry_footer(
+                used_bonus=_used_faz55b,
+                success=success,
+                root_cause=str((_out_rec or {}).get("root_cause") or ""),
+            )
+        except Exception:
+            pass
     except Exception:
         pass
     try:

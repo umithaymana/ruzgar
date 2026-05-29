@@ -4,8 +4,8 @@ RUZGAR tek tık başlatıcı (Python): yerel API (uvicorn) + Electron kabuğu.
 Mimar emri (Ümit & Gökçenur):
   - Açılışta yerel API portundaki (varsayılan 8779) "ölü" uvicorn süreçleri (health 200 vermiyor) tespit edilip
     sonlandırılır → siyah ekran zombisi yaşanmaz.
-  - Electron pencere kapatıldığında launcher uvicorn'u nazikçe sonlandırır → arka planda
-    artık kalmaz; bir sonraki açılışta port temiz olur.
+  - Electron kapanınca API varsayılan olarak **açık kalır** (tarayıcı http://127.0.0.1:8779/ui/).
+    Kapatmak için: RUZGAR_KILL_API_ON_EXIT=1
 
 NOT: Bu dosya .cursorrules / desktop_server.py içindeki KİLİTLİ motor başlatma sırasına
 dokunmaz; sadece API ile Electron'un yaşam döngüsünü orkestre eder.
@@ -188,9 +188,11 @@ def _ensure_api() -> None:
         return
 
     py = _resolve_python()
-    args = [py, "-m", "uvicorn", "desktop_server:app", "--host", "127.0.0.1", "--port", str(API_PORT)]
+    args = [py, "run_desktop_api.py", "--host", "127.0.0.1", "--port", str(API_PORT)]
     _log(f"API baslatiliyor: {' '.join(args)}")
-    _API_PROC = _win_popen_no_window(args, cwd=str(ILIM_ASSISTANT))
+    env = os.environ.copy()
+    env["RUZGAR_API_PORT"] = str(API_PORT)
+    _API_PROC = _win_popen_no_window(args, cwd=str(ILIM_ASSISTANT), env=env)
 
     deadline = time.monotonic() + WAIT_SEC
     while time.monotonic() < deadline:
@@ -317,8 +319,18 @@ def main() -> int:
         try:
             rc = _run_electron_blocking()
         finally:
-            # Electron kapandı (veya patladı) — yaşam döngüsü bitti, uvicorn'u kapat.
-            _terminate_api()
+            if os.environ.get("RUZGAR_KILL_API_ON_EXIT", "").strip().lower() in (
+                "1",
+                "true",
+                "yes",
+                "on",
+            ):
+                _terminate_api()
+            else:
+                _log(
+                    "Electron kapandi — API acik kaldi "
+                    f"(http://127.0.0.1:{API_PORT}/ui/). Kapatmak: Gorev Yoneticisi veya Ruzgar.ps1 -ForceRestart"
+                )
         return rc
     except Exception as e:
         _log(f"HATA: {e}")

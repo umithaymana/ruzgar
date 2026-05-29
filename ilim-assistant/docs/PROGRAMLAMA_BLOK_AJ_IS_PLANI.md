@@ -96,16 +96,16 @@ git push -u origin HEAD
 
 | # | İş | Backend / UI |
 |---|-----|--------------|
-| C21 | Kök neden etiketi: başarısız görev | `programlama_faz55` veya task_outcomes |
-| C22 | Tekrarlayan kök neden → kural önerisi | `.ruzgar/` log |
-| C23 | Retry turu footer sohbette net | agent footer |
-| C24 | `task_outcomes` haftalık özet API | `/api/programlama/task-stats` genişlet |
-| C25 | pytest fail → bonus tur tetik (varsa sertleştir) | Faz 61 |
-| C26 | verify kırmızı kullanıcı mesajı | programlama_motoru |
-| C27 | scope dışı erken red mesajı | Faz 78 |
-| C28 | Görev süresi uyarısı (1200 sn) | agent state |
-| C29 | E1 hedef çizgisi %90 UI | task-stats kartı |
-| C30 | 20 görev rolling rapor | API + isteğe bağlı mini graf |
+| C21 | Kök neden etiketi: başarısız görev | `programlama_faz102_e1_live` + faz55 ✓ |
+| C22 | Tekrarlayan kök neden → kural önerisi | `.ruzgar/root_cause_rule_hints.jsonl` ✓ |
+| C23 | Retry turu footer sohbette net | `format_retry_footer` faz14 ✓ |
+| C24 | `task_outcomes` haftalık özet API | `weekly_summary` task-stats ✓ |
+| C25 | pytest fail → bonus tur tetik (varsa sertleştir) | Faz 55b/61 (mevcut) ✓ |
+| C26 | verify kırmızı kullanıcı mesajı | `format_verify_failure_line` ✓ |
+| C27 | scope dışı erken red mesajı | faz78 + write red ✓ |
+| C28 | Görev süresi uyarısı (1200 sn) | `RUZGAR_TASK_DURATION_WARN_SEC` ✓ |
+| C29 | E1 hedef çizgisi %90 UI | task-stats detail · `RUZGAR_E1_TARGET_RATE` ✓ |
+| C30 | 20 görev rolling rapor | `rolling_20` API + UI satırı ✓ |
 
 **Blok C test:** `e1_success_rate` trend; en az 5 görev manuel.
 
@@ -121,12 +121,12 @@ git push -u origin HEAD
 
 | # | İş |
 |---|-----|
-| D31–D35 | `programlama_command_goldens.json` 30→50 ifade |
-| D36 | CI: `evaluate_command_dataset` |
-| D37 | Başarısız örnekleri altın sete ekle |
-| D38 | Upgrade gate komut ≥95 |
-| D39 | Türkçe fiil kalıpları genişletme |
-| D40 | Aylık revizyon notu doc |
+| D31–D35 | `programlama_command_goldens.json` 30→50 ifade | ✓ |
+| D36 | CI: `evaluate_command_dataset` + `--strict` runner | ✓ |
+| D37 | Başarısız örnekleri altın sete ekle (süreç — aylık) | ✓ not |
+| D38 | Upgrade gate komut ≥95 | ✓ 100/50 |
+| D39 | Türkçe fiil kalıpları (`şuraya kopyala`) | ✓ |
+| D40 | Aylık revizyon notu doc | ✓ `PROGRAMLAMA_100_ROADMAP.md` |
 
 **Blok D test:** `python scripts/programlama_upgrade_runner.py --strict` → command 100.
 
@@ -303,5 +303,5 @@ git push -u origin plan/blok-a-koruma
 - `PROGRAMMING_MOTOR_YOL_HARITASI.md` — Dalga E–H
 - `scripts/ruzgar_programlama_upgrade_report.json` — son bench kanıtı
 
-**Durum:** Blok B tamamlandı (2026-05-29) — sırada Blok C (canlı E1).  
+**Durum:** Blok D tamamlandı (2026-05-29) — altın set **50** ifade, `prepare_command_golden_fixtures`, `--strict` bench geçti. Sırada **Blok E** (otonomi 100).  
 Blok B: `programlama-umit-onay-card`, `renderProgramlamaUmitOnay`, 10 sn poll, `app.js?v=20260529-blok-b`.

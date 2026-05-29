@@ -1966,11 +1966,18 @@ def api_programlama_task_stats(workspace_root: str | None = None):
 
     root = (workspace_root or "").strip() or None
     stats = compute_task_stats(root, window_days=30)
+    ver = FAZ55_VERSION
+    try:
+        from ilim_assistant.motorlar.programlama_faz102_e1_live import FAZ102_VERSION
+
+        ver = f"{FAZ55_VERSION}+{FAZ102_VERSION}"
+    except Exception:
+        pass
     return {
         "ok": True,
         "stats": stats,
         "report": format_task_stats_report(stats),
-        "version": FAZ55_VERSION,
+        "version": ver,
     }
 
 

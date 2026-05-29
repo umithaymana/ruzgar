@@ -9,10 +9,11 @@ Bu plan iki ana hedefe odaklanir:
 - Faz 98 komut degerlendirmesi + Faz 99 iki ardisk kosu birlikte olculuyor.
 - `--strict` modunda sure ve tutarlilik sarti zorunlu.
 
-## Adim 2 - Komut Altin Veri Seti (tamamlandi, genisletilecek)
-- `scripts/programlama_command_goldens.json` eklendi.
-- Ilk paket 30 farkli ifade iceriyor (explicit, natural, shell, approval, noise).
-- Faz 98'e `evaluate_command_dataset()` eklendi.
+## Adim 2 - Komut Altin Veri Seti (Blok D — 2026-05-29)
+- `scripts/programlama_command_goldens.json` — **50** ifade (explicit, natural, shell, approval, winget, noise).
+- `prepare_command_golden_fixtures()` — bench öncesi test dosyaları (battery + masaüstü/indirilenler).
+- Faz 98: `şuraya kopyala` doğal dil kalıbı; `evaluate_command_dataset()` + `--strict` gate ≥95.
+- **Aylık revizyon (D40):** Her ay başı başarısız `checks` satırlarını altın sete ekle veya Faz 98 regex güncelle; `Ruzgar_Programlama_Bench.bat strict` ile doğrula.
 
 ## Adim 3 - Gorev Merdiveni (tamamlandi, senaryo artacak)
 - `scripts/programlama_task_ladder.json` eklendi.

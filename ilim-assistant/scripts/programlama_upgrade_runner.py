@@ -26,16 +26,10 @@ def _save_json(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def _prepare_natural_fixtures() -> None:
-    try:
-        desk = Path.home() / "Desktop"
-        docs = Path.home() / "Documents"
-        desk.mkdir(parents=True, exist_ok=True)
-        docs.mkdir(parents=True, exist_ok=True)
-        (desk / "log.txt").write_text("log", encoding="utf-8")
-        (docs / "notlar.txt").write_text("not", encoding="utf-8")
-    except OSError:
-        return
+def _prepare_natural_fixtures(ws: Path) -> None:
+    from ilim_assistant.motorlar.programlama_faz98 import prepare_command_golden_fixtures
+
+    prepare_command_golden_fixtures(ws)
 
 
 def _pass_ratio(by_tag: dict[str, dict[str, int]], tag: str) -> float:
@@ -69,7 +63,7 @@ def main() -> int:
 
     dataset = _load_json(dataset_fp)
     ladder = _load_json(ladder_fp)
-    _prepare_natural_fixtures()
+    _prepare_natural_fixtures(ws)
     c98 = evaluate_command_dataset(dataset, ws)
 
     b1 = run_autonomy_benchmark(ws)

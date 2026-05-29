@@ -41,7 +41,7 @@ function New-RuzgarShortcut {
     $Sc.Arguments = '//B //nologo "' + $vbs + '"'
     $Sc.WorkingDirectory = $Root
     $Sc.IconLocation = $ico
-    $Sc.Description = "RUZGAR - cmd acmaz; VBS ile baslatir"
+    $Sc.Description = "RUZGAR Faz 98 - masaustu Electron + API 8779"
     $Sc.Save()
     return $p
 }
@@ -65,10 +65,10 @@ try {
     Start-Process "explorer.exe" -ArgumentList "/select,`"$primary`""
 } catch {}
 
-$msg = "RUZGAR kisayolu guncellendi (artik siyah cmd penceresi olmamali).`n`n$primary"
+$msg = "RUZGAR kisayolu guncellendi.`n`n$primary"
 if ($secondaryPath) {
     $msg += "`n`nIkinci konum:`n$secondaryPath"
 }
-$msg += "`n`nEski kisayolu silip bunu kullanin; cift tiklayinca yalnizca RUZGAR penceresi gelmeli."
+$msg += "`n`nCift tik: masaustu Ruzgar (Electron) acilir.`nAPI: http://127.0.0.1:8779`nBuild: faz98-v107"
 
 [System.Windows.Forms.MessageBox]::Show($msg, "RUZGAR") | Out-Null

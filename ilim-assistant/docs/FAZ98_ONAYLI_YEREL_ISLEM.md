@@ -49,6 +49,7 @@ Rüzgar: Onayladığın işlemi yaptım. Sonuç: Kopyalandı → ...
 | Onay | `tamam yap`, `tamam` |
 | Red | `yapma`, `iptal` |
 | Liste | `işlem liste` |
+| Geçmiş | `işlem geçmişi`, `işlem geçmişi 20`, `işlem geçmişi sadece fail` |
 
 `işlem iste:` biçimleri: `copy`, `move`, `mkdir`, `shell projects/x/ …`, `pip paket`, `winget install Python.Python.3.12 …`
 
@@ -57,10 +58,8 @@ Rüzgar: Onayladığın işlemi yaptım. Sonuç: Kopyalandı → ...
 1. Sunucuyu yeniden başlat; Programlama motorunda dene.
 2. Küçük test: `işlem iste: mkdir projects/onay-test` → `tamam yap`.
 3. Sıradaki geliştirmeler (istersen):
-   - Masaüstü yolunu doğal dilden çözme («masaüstündeki X»)
-   - Faz 67 shell’i tek `tamam yap` altında birleştirme
    - Atölye UI’da «Onay bekliyor» kartı
-   - İşlem geçmişi logu (`.ruzgar/umit_onay_log.jsonl`)
+   - Geçmiş logunu mini panelde canlı göstermek
 
 ## Kapatma
 

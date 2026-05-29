@@ -127,18 +127,25 @@ def _kill_pid(pid: int) -> bool:
     if pid <= 0:
         return False
     ok = False
-    try:
-        cp = subprocess.run(
-            ["taskkill", "/F", "/PID", str(pid)],
-            capture_output=True,
-            text=True,
-            timeout=8,
-            shell=False,
-            creationflags=0x08000000 if sys.platform == "win32" else 0,
-        )
-        ok = cp.returncode == 0
-    except (subprocess.TimeoutExpired, OSError) as e:
-        print(f"kill-process: taskkill PID {pid} hata: {e}", file=sys.stderr)
+    _flags = 0x08000000 if sys.platform == "win32" else 0
+    for args in (
+        ["taskkill", "/F", "/T", "/PID", str(pid)],
+        ["taskkill", "/F", "/PID", str(pid)],
+    ):
+        try:
+            cp = subprocess.run(
+                args,
+                capture_output=True,
+                text=True,
+                timeout=12,
+                shell=False,
+                creationflags=_flags,
+            )
+            if cp.returncode == 0:
+                ok = True
+                break
+        except (subprocess.TimeoutExpired, OSError) as e:
+            print(f"kill-process: taskkill {' '.join(args)} hata: {e}", file=sys.stderr)
     if not ok and sys.platform == "win32":
         try:
             ps = subprocess.run(
@@ -161,16 +168,55 @@ def _kill_pid(pid: int) -> bool:
     return ok
 
 
+def _kill_ruzgar_api_processes() -> list[int]:
+    """run_desktop_api / desktop_server dinleyen tum Python sureclerini sonlandir."""
+    if sys.platform != "win32":
+        return []
+    killed: list[int] = []
+    try:
+        ps = subprocess.run(
+            [
+                "powershell",
+                "-NoProfile",
+                "-Command",
+                (
+                    "Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" -EA SilentlyContinue | "
+                    "Where-Object { $_.CommandLine -match 'run_desktop_api|desktop_server:app' } | "
+                    "Select-Object -ExpandProperty ProcessId"
+                ),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=15,
+            shell=False,
+        )
+        for line in (ps.stdout or "").splitlines():
+            line = line.strip()
+            if line.isdigit():
+                pid = int(line)
+                if _kill_pid(pid):
+                    killed.append(pid)
+    except (subprocess.TimeoutExpired, OSError) as e:
+        print(f"kill-ruzgar-api: {e}", file=sys.stderr)
+    return killed
+
+
 def cmd_kill_process(port: int) -> int:
+    _kill_ruzgar_api_processes()
     pids = _pids_listening_on_port(port)
     if not pids:
         print(f"kill-process: {port} zaten bos")
         return 0
-    for pid in pids:
-        _kill_pid(pid)
-    if sys.platform == "win32":
-        _kill_pids_on_port_win(port)
-    time.sleep(1.0)
+    for attempt in range(1, 5):
+        pids = _pids_listening_on_port(port)
+        if not pids:
+            break
+        for pid in pids:
+            _kill_pid(pid)
+        if sys.platform == "win32":
+            _kill_pids_on_port_win(port)
+        time.sleep(0.8)
+    time.sleep(0.5)
     remaining = _pids_listening_on_port(port)
     if remaining:
         print(
@@ -187,13 +233,19 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Rüzgar port-check / kill-process")
     ap.add_argument(
         "command",
-        choices=("port-check", "kill-process"),
-        help="port-check | kill-process",
+        choices=("port-check", "kill-process", "kill-all-api"),
+        help="port-check | kill-process | kill-all-api",
     )
     ap.add_argument("--port", type=int, default=DEFAULT_PORT)
     args = ap.parse_args()
     if args.command == "port-check":
         return cmd_port_check(args.port)
+    if args.command == "kill-all-api":
+        killed = _kill_ruzgar_api_processes()
+        for p in (8779, 8777, args.port):
+            cmd_kill_process(int(p))
+        print(f"kill-all-api: {len(killed)} python API sureci")
+        return 0 if not _pids_listening_on_port(args.port) else 1
     return cmd_kill_process(args.port)
 
 

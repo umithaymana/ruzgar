@@ -4,8 +4,8 @@ import time
 from typing import Any
 
 
-CURRENT_PHASE = 85
-CURRENT_PHASE_LABEL = "Faz 68–85"
+CURRENT_PHASE = 98
+CURRENT_PHASE_LABEL = "Faz 86–98"
 
 
 def _phase(n: int, name: str, status: str = "tamam") -> dict[str, str]:
@@ -17,8 +17,7 @@ def build_ui_manifest(*, health: dict[str, Any] | None = None) -> dict[str, Any]
     from ilim_assistant.motorlar.video_motoru import list_recent_downloads
 
     health = health or {}
-    super_brain = health.get("super_brain") if isinstance(health, dict) else {}
-    gemini_ok = bool((super_brain or {}).get("gemini_configured"))
+    genel_tag = "Faz 98 · Orkestra şefi"
     recent_downloads = [
         row for row in list_recent_downloads(8) if isinstance(row, dict) and row.get("ok")
     ]
@@ -30,50 +29,45 @@ def build_ui_manifest(*, health: dict[str, Any] | None = None) -> dict[str, Any]
         "current_phase": CURRENT_PHASE,
         "current_phase_label": CURRENT_PHASE_LABEL,
         "dashboard": {
-            "badge": "Ana Motor · Hub + Faz 84",
+            "badge": "Ana Motor · Faz 98 hazır",
             "promise": (
-                "Orkestra: tüm yardımcı motorlar ROK + hub (Hızır dahil). "
-                "Video: isimle arama listesi · programlama Dalga H."
+                "Orkestra + programlama: onaylı yerel işlem (Faz 98), "
+                "otonomi benchmark (Faz 99), hub ve video arama."
             ),
-            "welcome_foot": "Faz 68–84 · Ümit & Gökçenur",
-            "help_title": "Rüzgar — Konuşarak yap (ROK + Hub)",
+            "welcome_foot": "Faz 86–98 · Ümit & Gökçenur",
+            "help_title": "Rüzgar — Faz 98 onaylı işlem + ROK",
         },
         "phases": [
-            _phase(68, "Programlama ROK"),
-            _phase(71, "Video ROK"),
-            _phase(72, "Ses ROK"),
-            _phase(73, "Okuma ROK"),
-            _phase(74, "Tercüme ROK"),
-            _phase(75, "Hafıza ROK"),
-            _phase(76, "Ana Motor Hub"),
-            _phase(77, "Cila + KPI"),
-            _phase(78, "Prog. çekirdek kapsam"),
-            _phase(79, "Handoff v3"),
-            _phase(80, "Mega refactor"),
-            _phase(81, "Araç kurtarma"),
-            _phase(82, "Zayıflık raporu"),
-            _phase(83, "PR hazırla"),
-            _phase(84, "Hızır hub + video ara"),
-            _phase(85, "Hub cila + arama önbellek", "aktif"),
+            _phase(86, "Dalga I tamam"),
+            _phase(87, "Dalga J tamam"),
+            _phase(88, "Dalga K tamam"),
+            _phase(89, "Hub cila v2"),
+            _phase(90, "Prompt zinciri"),
+            _phase(91, "Araç plan v4"),
+            _phase(92, "Karar günlüğü"),
+            _phase(93, "Test direktifi"),
+            _phase(94, "Pre-turn test"),
+            _phase(95, "Prompt önbellek"),
+            _phase(96, "Anlık programlama"),
+            _phase(97, "Kapsam kilidi"),
+            _phase(98, "Onaylı yerel işlem", "aktif"),
         ],
         "motors": {
-            "genel": {"tag": f"Hub Faz 76–84 · Gemini {'✓' if gemini_ok else '?'}"},
+            "genel": {"tag": genel_tag},
             "hafiza": {"tag": "Faz 75 · Konuşarak yap (ROK)"},
             "hizir": {"tag": "Faz 84 · Hub + ticaret (ROK)"},
             "ses": {"tag": "Faz 72 · Konuşarak yap (ROK)"},
             "video": {"tag": "Faz 71/84 · İndir + ara (ROK)"},
             "okuma": {"tag": "Faz 73 · Konuşarak yap (ROK)"},
             "tercume": {"tag": "Faz 74 · Konuşarak yap (ROK)"},
-            "programlama": {"tag": "Faz 68–83 · Konuşarak yap"},
+            "programlama": {"tag": "Faz 98 · Onaylı yerel işlem"},
         },
         "capabilities": [
+            "Faz 98: dosya kopyala/taşı, pip, shell — «tamam yap» onayı ile",
             "Ana Motor hub: programlama, video, ses, okuma, tercüme, hafıza, hızır",
-            "Video: URL indir · isimle YouTube ara · «2 numarayı indir»",
-            "Video API: /api/video/download · /api/video/search",
-            "Hızır: pazar tara · fırsat · hub yönlendirme",
-            "Programlama Dalga H: çekirdek patch, mega refactor, zayıflık raporu, pr hazırla",
+            "Video: URL indir · isimle YouTube ara",
+            "Programlama: proje üret, ajan uyum, pytest",
             "ROK tüm yardımcı motorlar · Ümit cevap emri",
-            "scripts/rok_smoke.py · programlama_smoke.py",
         ],
         "video": {
             "download_api": "/api/video/download",

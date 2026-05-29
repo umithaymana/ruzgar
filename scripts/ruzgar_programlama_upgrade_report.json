@@ -1,0 +1,116 @@
+{
+  "ok": true,
+  "version": "programlama-upgrade-runner-v1-2026-05-28",
+  "elapsed_sec": 18.62,
+  "scores": {
+    "command_level": 100,
+    "autonomy_level": 100,
+    "approval_safety": 100,
+    "natural_language": 100,
+    "reliability": 100
+  },
+  "checks": {
+    "consistency_two_runs": true,
+    "faz99_run1_ok": true,
+    "faz99_run2_ok": true
+  },
+  "ladder": [
+    {
+      "id": "ladder-s1-fastapi-crud",
+      "level": "small",
+      "description": "FastAPI scaffold + endpoint + targeted pytest",
+      "score": 100,
+      "min_score": 85,
+      "pass": true
+    },
+    {
+      "id": "ladder-s2-static-delivery",
+      "level": "medium",
+      "description": "Static site scaffold + banner change + smoke",
+      "score": 100,
+      "min_score": 90,
+      "pass": true
+    },
+    {
+      "id": "ladder-s3-recovery-git-stability",
+      "level": "production",
+      "description": "Runtime+compile recovery, branch+commit proof, two-run stability",
+      "score": 100,
+      "min_score": 95,
+      "pass": true
+    }
+  ],
+  "command_eval": {
+    "passed": 50,
+    "total": 50,
+    "by_tag": {
+      "explicit": {
+        "total": 13,
+        "passed": 13
+      },
+      "mkdir": {
+        "total": 3,
+        "passed": 3
+      },
+      "copy": {
+        "total": 3,
+        "passed": 3
+      },
+      "move": {
+        "total": 8,
+        "passed": 8
+      },
+      "pip": {
+        "total": 4,
+        "passed": 4
+      },
+      "shell": {
+        "total": 10,
+        "passed": 10
+      },
+      "natural": {
+        "total": 14,
+        "passed": 14
+      },
+      "approval": {
+        "total": 5,
+        "passed": 5
+      },
+      "rejection": {
+        "total": 5,
+        "passed": 5
+      },
+      "list": {
+        "total": 1,
+        "passed": 1
+      },
+      "history": {
+        "total": 2,
+        "passed": 2
+      },
+      "noise": {
+        "total": 7,
+        "passed": 7
+      },
+      "cancel": {
+        "total": 1,
+        "passed": 1
+      },
+      "winget": {
+        "total": 1,
+        "passed": 1
+      }
+    },
+    "failed_examples": [],
+    "root_causes": {
+      "gate_detection_mismatch": 0,
+      "kind_parse_mismatch": 0
+    }
+  },
+  "artifacts": {
+    "dataset": "D:\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\scripts\\programlama_command_goldens.json",
+    "ladder": "D:\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\scripts\\programlama_task_ladder.json",
+    "faz99_scope_1": "projects/smoke-autonomy-53213",
+    "faz99_scope_2": "projects/smoke-autonomy-53223"
+  }
+}

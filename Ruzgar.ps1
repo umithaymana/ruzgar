@@ -101,8 +101,14 @@ function Invoke-RuzgarPortOps {
         Log "ruzgar_port_ops.py yok - $Command atlandi"
         return -1
     }
-    & $script:PyExe @($script:PyArgs) $ops $Command --port $Port 2>&1 | ForEach-Object { Log $_; $_ }
-    return $LASTEXITCODE
+    $prevEa = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        & $script:PyExe @($script:PyArgs) $ops $Command --port $Port 2>&1 | ForEach-Object { Log $_; $_ }
+        return $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $prevEa
+    }
 }
 
 function Test-RuzgarGeminiKeyConfigured {
@@ -190,11 +196,39 @@ function Start-ApiServer {
     }
 }
 
+function Stop-RuzgarElectron {
+    try {
+        Get-CimInstance Win32_Process -Filter "Name='electron.exe'" -ErrorAction SilentlyContinue |
+            Where-Object { $_.CommandLine -match 'ruzgar-desktop' } |
+            ForEach-Object {
+                Log "Electron kapatiliyor pid=$($_.ProcessId)"
+                Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
+            }
+    } catch {
+        Log "Stop-RuzgarElectron: $($_.Exception.Message)"
+    }
+    Start-Sleep -Milliseconds 800
+}
+
+function Test-RuzgarElectronRunning {
+    try {
+        $n = @(Get-CimInstance Win32_Process -Filter "Name='electron.exe'" -ErrorAction SilentlyContinue |
+            Where-Object { $_.CommandLine -match 'ruzgar-desktop' }).Count
+        return $n -gt 0
+    } catch {
+        return $false
+    }
+}
+
 function Start-ElectronApp {
     param([string]$AppsRoot)
     $rd = Join-Path $AppsRoot "ruzgar-desktop"
     if (-not (Test-Path (Join-Path $rd "package.json"))) {
         throw "ruzgar-desktop eksik"
+    }
+    if (Test-RuzgarElectronRunning) {
+        Log "Electron zaten acik - ikinci pencere acilmadi (tek ornek)"
+        return
     }
 
     $electronCmd = Join-Path $rd "node_modules\.bin\electron.cmd"
@@ -211,7 +245,8 @@ function Start-ElectronApp {
         throw "electron.cmd yok: $electronCmd"
     }
 
-    Log "Electron: $electronCmd ."
+    $env:RUZGAR_API_MANAGED = "1"
+    Log "Electron: $electronCmd . (RUZGAR_API_MANAGED=1)"
     Start-Process -FilePath $electronCmd -ArgumentList "." -WorkingDirectory $rd -ErrorAction Stop
 }
 
@@ -275,7 +310,7 @@ if ($env:RUZGAR_OLLAMA_ONLY -eq "1") {
     Log "Bulut kapali - yerel Ollama"
 }
 
-$script:RuzgarExpectedBuildRev = "2026-05-27-ruzgar-faz96-v106"
+$script:RuzgarExpectedBuildRev = "2026-05-27-ruzgar-faz98-v107"
 $env:RUZGAR_EXPECTED_BUILD_REV = $script:RuzgarExpectedBuildRev
 
 function Show-RuzgarFaz60BuildMismatchPrompt {
@@ -391,13 +426,33 @@ $env:RUZGAR_CORS_PERMISSIVE = "1"
 
 $portCheckRc = Invoke-RuzgarPortOps -Command "port-check" -IaRoot $ia -Port $ApiPort
 # 0=saglikli, 1=bos, 2=kilitli/zombi
+function Test-RuzgarPortFree {
+    param([int]$Port)
+    try {
+        $l = New-Object System.Net.Sockets.TcpListener([Net.IPAddress]::Loopback, $Port)
+        $l.Start()
+        $l.Stop()
+        return $true
+    } catch {
+        return $false
+    }
+}
+
 function Stop-RuzgarApiPort {
     param([int]$Port)
-    $null = Invoke-RuzgarPortOps -Command "kill-process" -IaRoot $ia -Port $Port
-    try {
-        Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue |
-            ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }
-    } catch {}
+    for ($try = 0; $try -lt 4; $try++) {
+        $null = Invoke-RuzgarPortOps -Command "kill-process" -IaRoot $ia -Port $Port
+        try {
+            Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue |
+                ForEach-Object {
+                    $pid = $_.OwningProcess
+                    Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
+                    & taskkill /F /T /PID $pid 2>$null | Out-Null
+                }
+        } catch {}
+        Start-Sleep -Milliseconds 600
+        if (Test-RuzgarPortFree -Port $Port) { return }
+    }
 }
 
 function Write-RuzgarRemoteApiTxt {
@@ -476,10 +531,20 @@ function Test-ApiBuildCurrent {
 
 $script:ForceRestartFreshApi = $false
 if ($ForceRestart) {
-    Log "force-restart: portlar bosaltiliyor (port $ApiPort ve 8777 zombi)"
+    Log "force-restart: Electron + tum Ruzgar API surecleri (port $ApiPort, 8777)"
+    Stop-RuzgarElectron
+    $null = Invoke-RuzgarPortOps -Command "kill-all-api" -IaRoot $ia -Port $ApiPort
     Stop-RuzgarApiPort -Port $ApiPort
     if ($ApiPort -ne 8777) { Stop-RuzgarApiPort -Port 8777 }
-    Start-Sleep -Seconds 2
+    Start-Sleep -Seconds 3
+    if (-not (Test-RuzgarPortFree -Port $ApiPort)) {
+        Log "HATA: port $ApiPort hala dolu - Ruzgar_Port_Temizle.bat (yonetici) calistirin"
+        [void][System.Windows.Forms.MessageBox]::Show(
+            "Port $ApiPort bosaltilamadi (eski API takili).`n`n1) Gorev Yoneticisi: python.exe (run_desktop_api) sonlandir`n2) Ruzgar_Port_Temizle.bat (sag tik -> Yonetici)`n3) Tekrar Ruzgar_TemizBaslat.bat",
+            "RUZGAR - port kilitli"
+        )
+        exit 1
+    }
     $portCheckRc = 1
     $script:ForceRestartFreshApi = $true
 } elseif ($portCheckRc -eq 2) {
@@ -556,6 +621,28 @@ if ($script:RuzgarUseColab) {
 
 if (-not $serverUp -and -not $script:RuzgarUseColab) {
     try {
+        if (-not (Test-RuzgarPortFree -Port $ApiPort)) {
+            Log "port $ApiPort hala dolu - ek kill denemesi"
+            Stop-RuzgarApiPort -Port $ApiPort
+            Start-Sleep -Seconds 2
+        }
+        if (-not (Test-RuzgarPortFree -Port $ApiPort)) {
+            $busyPids = @()
+            try {
+                $busyPids = @(
+                    Get-NetTCPConnection -LocalPort $ApiPort -State Listen -ErrorAction SilentlyContinue |
+                        Select-Object -ExpandProperty OwningProcess -Unique
+                )
+            } catch {}
+            $pidTxt = if ($busyPids.Count) { ($busyPids -join ",") } else { "?" }
+            throw @"
+Port $ApiPort bosaltilamadi (PID: $pidTxt).
+Cozum:
+  1) Ruzgar_Port_Temizle.bat (yonetici olarak sag tik)
+  2) Gorev Yoneticisi -> python.exe (run_desktop_api) sonlandir
+  3) Tekrar Ruzgar_TemizBaslat.bat
+"@
+        }
         Ensure-PythonDeps
         Test-ApiImport -Ia $ia
         Start-ApiServer -Ia $ia
@@ -638,11 +725,19 @@ try {
         }
     } else {
         $finalRc = Invoke-RuzgarPortOps -Command "port-check" -IaRoot $ia -Port $ApiPort
-        if ($finalRc -eq 0) {
-            Log "Baglanti aktif - port $ApiPort dinleniyor (health OK)"
+        $buildOk = Test-ApiBuildCurrent -Url $apiUrl
+        if ($finalRc -eq 0 -and $buildOk) {
+            Log "Baglanti aktif - port $ApiPort dinleniyor (health OK, build uyumlu)"
             if (-not (Test-ApiNebulaBuild -Url $apiUrl)) {
                 Log "UYARI: build.nebula_kitap yok - eski desktop_server, -ForceRestart veya kod guncel mi kontrol edin"
             }
+        } elseif (-not $buildOk) {
+            Log "HATA: API calisiyor ama build uyumsuz - Ruzgar_TemizBaslat.bat tekrar"
+            [void][System.Windows.Forms.MessageBox]::Show(
+                "Eski Ruzgar API surumu calisiyor.`nBeklenen: $($script:RuzgarExpectedBuildRev)`n`nRuzgar_Port_Temizle.bat sonra Ruzgar_TemizBaslat.bat",
+                "RUZGAR - eski surum"
+            )
+            exit 1
         } else {
             Log "UYARI: Electron aciliyor ama port-check rc=$finalRc"
         }

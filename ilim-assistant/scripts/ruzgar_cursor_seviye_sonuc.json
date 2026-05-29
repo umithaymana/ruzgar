@@ -8,15 +8,15 @@
       "id": "cursor_api_add",
       "label": "API ekle + pytest",
       "ok": true,
-      "elapsed_sec": 1.64,
+      "elapsed_sec": 2.125,
       "budget_sec": 120.0,
-      "detail": "projects/smoke-cursor-api-43067"
+      "detail": "projects/smoke-cursor-api-93757"
     },
     {
       "id": "cursor_bugfix_test",
       "label": "Bugfix + test",
       "ok": true,
-      "elapsed_sec": 2.266,
+      "elapsed_sec": 2.984,
       "budget_sec": 120.0,
       "detail": "fail_before=True pass_after=True fix=True"
     },
@@ -24,7 +24,7 @@
       "id": "cursor_three_file_refactor",
       "label": "3 dosya refactor",
       "ok": true,
-      "elapsed_sec": 1.328,
+      "elapsed_sec": 1.5,
       "budget_sec": 180.0,
       "detail": "writes=4 files=True pytest=True"
     }
@@ -47,9 +47,9 @@
   "capability_points": 35,
   "scenario_points": 65,
   "project_names": {
-    "api_add": "smoke-cursor-api-43067",
-    "bugfix_test": "smoke-cursor-bug-43068",
-    "three_file_refactor": "smoke-cursor-ref-43071"
+    "api_add": "smoke-cursor-api-93757",
+    "bugfix_test": "smoke-cursor-bug-93760",
+    "three_file_refactor": "smoke-cursor-ref-93763"
   },
   "warnings": [],
   "version": "programlama-cursor-parity-v1-2026-05-25"
