@@ -15,6 +15,7 @@ if str(_ROOT) not in sys.path:
 
 WORKSPACE = _ROOT.parent
 OUT_REL = "scripts/ruzgar_programlama_upgrade_report.json"
+RUNNER_VERSION = "programlama-upgrade-runner-v2-2026-05-29"
 
 
 def _load_json(path: Path) -> Any:
@@ -58,8 +59,12 @@ def main() -> int:
     ladder_fp = _ROOT / args.ladder
     t0 = time.perf_counter()
 
+    from ilim_assistant.motorlar.programlama_faz54 import run_parity_smoke_suite
     from ilim_assistant.motorlar.programlama_faz98 import evaluate_command_dataset
-    from ilim_assistant.motorlar.programlama_faz99 import run_autonomy_benchmark
+    from ilim_assistant.motorlar.programlama_faz99 import (
+        faz99_check_named,
+        run_autonomy_benchmark,
+    )
 
     dataset = _load_json(dataset_fp)
     ladder = _load_json(ladder_fp)
@@ -68,10 +73,21 @@ def main() -> int:
 
     b1 = run_autonomy_benchmark(ws)
     b2 = run_autonomy_benchmark(ws)
-    consistency_ok = bool(b1.get("ok")) and bool(b2.get("ok")) and abs(int(b1.get("score") or 0) - int(b2.get("score") or 0)) <= 5
+    faz99_dual_ok = bool(b1.get("ok")) and bool(b2.get("ok"))
+    consistency_ok = faz99_dual_ok and abs(int(b1.get("score") or 0) - int(b2.get("score") or 0)) <= 5
+    git_commit_ok = faz99_check_named(b1.get("checks"), "git_branch_commit") and faz99_check_named(
+        b2.get("checks"), "git_branch_commit"
+    )
+
+    parity_rep = run_parity_smoke_suite(ws, mode="quick")
+    parity_total = max(1, int(getattr(parity_rep, "total", 0) or 8))
+    parity_passed = int(getattr(parity_rep, "passed", 0) or 0)
+    parity_score = int(round((parity_passed / parity_total) * 100))
+    parity_ok = bool(getattr(parity_rep, "ok", False))
 
     cmd_score = int(c98.get("score") or 0)
     auto_score = min(int(b1.get("score") or 0), int(b2.get("score") or 0))
+    independence_score = min(cmd_score, auto_score, parity_score)
     elapsed = round(time.perf_counter() - t0, 2)
 
     approval_score = int(round((_pass_ratio(c98.get("by_tag") or {}, "approval") + _pass_ratio(c98.get("by_tag") or {}, "rejection")) / 2.0))
@@ -87,13 +103,14 @@ def main() -> int:
         )
     )
 
-    gate_ok = cmd_score >= 95 and auto_score >= 95 and consistency_ok
+    gate_ok = cmd_score >= 95 and auto_score >= 95 and independence_score >= 95 and consistency_ok
+    gate_ok = gate_ok and faz99_dual_ok and parity_ok and git_commit_ok
     if args.strict:
-        gate_ok = gate_ok and elapsed <= 120
+        gate_ok = gate_ok and elapsed <= 180
 
     ladder_out: list[dict[str, Any]] = []
     for row in ladder:
-        level = str(row.get("level") or "")
+        level = str(row.get("level") or "").lower()
         min_score = int(row.get("min_score") or 0)
         require_ok = bool(row.get("require_ok"))
         if level == "small":
@@ -102,9 +119,21 @@ def main() -> int:
         elif level == "medium":
             lv_score = int(b1.get("score") or 0)
             lv_ok = b1.get("ok")
+        elif level == "large":
+            lv_score = parity_score
+            lv_ok = parity_ok
+        elif level == "full":
+            lv_score = independence_score
+            lv_ok = (
+                bool(c98.get("ok"))
+                and faz99_dual_ok
+                and parity_ok
+                and git_commit_ok
+                and consistency_ok
+            )
         else:
             lv_score = auto_score
-            lv_ok = consistency_ok and b1.get("ok") and b2.get("ok")
+            lv_ok = consistency_ok
         pass_cond = lv_score >= min_score and ((not require_ok) or bool(lv_ok))
         ladder_out.append(
             {
@@ -120,11 +149,13 @@ def main() -> int:
     failed_examples = [c for c in (c98.get("checks") or []) if not c.get("ok")]
     report: dict[str, Any] = {
         "ok": gate_ok and all(bool(x.get("pass")) for x in ladder_out),
-        "version": "programlama-upgrade-runner-v1-2026-05-28",
+        "version": RUNNER_VERSION,
         "elapsed_sec": elapsed,
         "scores": {
             "command_level": cmd_score,
             "autonomy_level": auto_score,
+            "independence_level": independence_score,
+            "parity_level": parity_score,
             "approval_safety": approval_score,
             "natural_language": natural_score,
             "reliability": reliability_score,
@@ -133,6 +164,10 @@ def main() -> int:
             "consistency_two_runs": consistency_ok,
             "faz99_run1_ok": bool(b1.get("ok")),
             "faz99_run2_ok": bool(b2.get("ok")),
+            "faz99_dual_run_required": faz99_dual_ok,
+            "parity_8_8_ok": parity_ok,
+            "git_commit_proof": git_commit_ok,
+            "independence_min_95": independence_score >= 95,
         },
         "ladder": ladder_out,
         "command_eval": {
@@ -150,6 +185,9 @@ def main() -> int:
             "ladder": str(ladder_fp),
             "faz99_scope_1": b1.get("scope_rel"),
             "faz99_scope_2": b2.get("scope_rel"),
+            "parity_mode": "quick",
+            "parity_passed": parity_passed,
+            "parity_total": parity_total,
         },
     }
     out_fp = ws / OUT_REL
@@ -160,8 +198,12 @@ def main() -> int:
         "scores:",
         f"command={report['scores']['command_level']}",
         f"autonomy={report['scores']['autonomy_level']}",
+        f"independence={report['scores']['independence_level']}",
+        f"parity={report['scores']['parity_level']}",
         f"reliability={report['scores']['reliability']}",
     )
+    ladder_pass = sum(1 for x in ladder_out if x.get("pass"))
+    print(f"ladder: {ladder_pass}/{len(ladder_out)}")
     print(f"saved: {out_fp}")
     return 0 if report["ok"] else 1
 

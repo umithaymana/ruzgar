@@ -142,14 +142,14 @@ git push -u origin HEAD
 
 | # | İş |
 |---|-----|
-| E41–E43 | `programlama_task_ladder.json` S4/S5 senaryolar |
-| E44 | Faz 99 iki koşu CI zorunlu |
-| E45 | Üretim min %95 gate |
-| E46 | Otonomi rapor arşiv `.ruzgar/` |
-| E47 | smoke-autonomy klasör temizlik script |
-| E48 | Görev sonu git commit kanıtı |
-| E49 | Bağımsızlık ≥95 gate |
-| E50 | Parity full 8/8 aylık takvim doc |
+| E41–E43 | `programlama_task_ladder.json` S4/S5 senaryolar | ✓ |
+| E44 | Faz 99 iki koşu CI zorunlu (`--strict` + smoke `--upgrade`) | ✓ |
+| E45 | Üretim min %95 gate | ✓ |
+| E46 | Otonomi rapor arşiv `.ruzgar/autonomy_reports/` | ✓ |
+| E47 | smoke-autonomy temizlik | ✓ `cleanup_smoke_autonomy.py` + bat |
+| E48 | Görev sonu git commit kanıtı | ✓ `git_branch_commit` ×2 |
+| E49 | Bağımsızlık ≥95 gate | ✓ `independence_level` |
+| E50 | Parity full 8/8 aylık takvim doc | ✓ `PROGRAMLAMA_PARITY_AYLIK_TAKVIM.md` |
 
 **Blok E test:** upgrade runner ladder 5/5; Faz 99 x2 ok.
 
@@ -303,5 +303,5 @@ git push -u origin plan/blok-a-koruma
 - `PROGRAMMING_MOTOR_YOL_HARITASI.md` — Dalga E–H
 - `scripts/ruzgar_programlama_upgrade_report.json` — son bench kanıtı
 
-**Durum:** Blok D tamamlandı (2026-05-29) — altın set **50** ifade, `prepare_command_golden_fixtures`, `--strict` bench geçti. Sırada **Blok E** (otonomi 100).  
+**Durum:** Blok E tamamlandı (2026-05-29) — merdiven S4/S5, Faz99 çift koşu + parity 8/8 gate, `.ruzgar/autonomy_reports`. Sırada **Blok F** (git/PR UX).  
 Blok B: `programlama-umit-onay-card`, `renderProgramlamaUmitOnay`, 10 sn poll, `app.js?v=20260529-blok-b`.

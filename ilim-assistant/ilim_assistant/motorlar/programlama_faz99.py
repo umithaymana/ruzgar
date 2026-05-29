@@ -2,14 +2,16 @@ from __future__ import annotations
 
 import json
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from ilim_assistant.approved_executor import run_argv
 from ilim_assistant.motorlar.programlama_motoru import repo_root
 
-FAZ99_VERSION = "programlama-faz99-v1-2026-05-28"
+FAZ99_VERSION = "programlama-faz99-v2-2026-05-29"
 _OUT_JSON = "scripts/ruzgar_autonomy_benchmark_sonuc.json"
+_ARCHIVE_DIR = ".ruzgar/autonomy_reports"
 
 
 def _persist(workspace_root: str | Path | None, payload: dict[str, Any]) -> None:
@@ -22,6 +24,33 @@ def _persist(workspace_root: str | Path | None, payload: dict[str, Any]) -> None
         p.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     except OSError:
         return
+    archive_autonomy_report(workspace_root, payload)
+
+
+def archive_autonomy_report(
+    workspace_root: str | Path | None,
+    payload: dict[str, Any],
+) -> Path | None:
+    """E46 — `.ruzgar/autonomy_reports/autonomy_YYYYMMDD_HHMMSS.json`"""
+    root = repo_root(workspace_root)
+    if root is None:
+        return None
+    d = root / _ARCHIVE_DIR
+    try:
+        d.mkdir(parents=True, exist_ok=True)
+        ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        fp = d / f"autonomy_{ts}.json"
+        fp.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        return fp
+    except OSError:
+        return None
+
+
+def faz99_check_named(checks: list[dict[str, Any]] | None, name: str) -> bool:
+    for c in checks or []:
+        if str(c.get("name") or "") == name and c.get("ok"):
+            return True
+    return False
 
 
 def _append_health_endpoint(main_py: Path) -> tuple[bool, str]:

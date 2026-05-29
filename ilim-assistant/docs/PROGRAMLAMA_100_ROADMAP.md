@@ -15,10 +15,10 @@ Bu plan iki ana hedefe odaklanir:
 - Faz 98: `şuraya kopyala` doğal dil kalıbı; `evaluate_command_dataset()` + `--strict` gate ≥95.
 - **Aylık revizyon (D40):** Her ay başı başarısız `checks` satırlarını altın sete ekle veya Faz 98 regex güncelle; `Ruzgar_Programlama_Bench.bat strict` ile doğrula.
 
-## Adim 3 - Gorev Merdiveni (tamamlandi, senaryo artacak)
-- `scripts/programlama_task_ladder.json` eklendi.
-- Kucuk/orta/uretim seviyesi gecis kosullari tanimlandi.
-- Runner raporunda her seviye ayrica geciyor.
+## Adim 3 - Gorev Merdiveni (Blok E — 2026-05-29)
+- `scripts/programlama_task_ladder.json` — **S1–S5** (small → full).
+- S4: parity quick 8/8 · S5: komut + Faz99 x2 + parity + git commit.
+- `independence_level` = min(komut, otonomi, parity); strict gate ≥95.
 
 ## Adim 4 - Onay Guvenlik Standardi (isliyor, sertlestirme acik)
 - Faz 98 onay kapisi aktif.

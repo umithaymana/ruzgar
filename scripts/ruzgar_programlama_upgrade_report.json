@@ -1,10 +1,12 @@
 {
   "ok": true,
-  "version": "programlama-upgrade-runner-v1-2026-05-28",
-  "elapsed_sec": 18.62,
+  "version": "programlama-upgrade-runner-v2-2026-05-29",
+  "elapsed_sec": 68.26,
   "scores": {
     "command_level": 100,
     "autonomy_level": 100,
+    "independence_level": 100,
+    "parity_level": 100,
     "approval_safety": 100,
     "natural_language": 100,
     "reliability": 100
@@ -12,7 +14,11 @@
   "checks": {
     "consistency_two_runs": true,
     "faz99_run1_ok": true,
-    "faz99_run2_ok": true
+    "faz99_run2_ok": true,
+    "faz99_dual_run_required": true,
+    "parity_8_8_ok": true,
+    "git_commit_proof": true,
+    "independence_min_95": true
   },
   "ladder": [
     {
@@ -35,6 +41,22 @@
       "id": "ladder-s3-recovery-git-stability",
       "level": "production",
       "description": "Runtime+compile recovery, branch+commit proof, two-run stability",
+      "score": 100,
+      "min_score": 95,
+      "pass": true
+    },
+    {
+      "id": "ladder-s4-parity-8",
+      "level": "large",
+      "description": "Offline parity quick 8/8 + compliance KPI",
+      "score": 100,
+      "min_score": 95,
+      "pass": true
+    },
+    {
+      "id": "ladder-s5-full-gate",
+      "level": "full",
+      "description": "Komut 50 + Faz99 çift koşu + parity 8/8 + git commit kanıtı",
       "score": 100,
       "min_score": 95,
       "pass": true
@@ -110,7 +132,10 @@
   "artifacts": {
     "dataset": "D:\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\scripts\\programlama_command_goldens.json",
     "ladder": "D:\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\scripts\\programlama_task_ladder.json",
-    "faz99_scope_1": "projects/smoke-autonomy-53213",
-    "faz99_scope_2": "projects/smoke-autonomy-53223"
+    "faz99_scope_1": "projects/smoke-autonomy-54043",
+    "faz99_scope_2": "projects/smoke-autonomy-54072",
+    "parity_mode": "quick",
+    "parity_passed": 8,
+    "parity_total": 8
   }
 }

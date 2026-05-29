@@ -19,5 +19,19 @@
     "description": "Runtime+compile recovery, branch+commit proof, two-run stability",
     "min_score": 95,
     "require_ok": true
+  },
+  {
+    "id": "ladder-s4-parity-8",
+    "level": "large",
+    "description": "Offline parity quick 8/8 + compliance KPI",
+    "min_score": 95,
+    "require_ok": true
+  },
+  {
+    "id": "ladder-s5-full-gate",
+    "level": "full",
+    "description": "Komut 50 + Faz99 çift koşu + parity 8/8 + git commit kanıtı",
+    "min_score": 95,
+    "require_ok": true
   }
 ]
