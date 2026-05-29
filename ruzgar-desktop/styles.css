@@ -3380,6 +3380,15 @@ body:not(.workbench-hizir-active) #workbench-hizir-tools,
   line-height: 1.35;
   color: #8b9cb3;
 }
+.programlama-touched-list {
+  display: block;
+  margin-top: 4px;
+  max-height: 72px;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-size: 10px;
+  line-height: 1.35;
+}
 .code-output-panel {
   display: flex;
   flex-direction: column;

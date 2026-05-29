@@ -1955,6 +1955,20 @@ def api_programlama_system_analysis(
     }
 
 
+@app.get("/api/programlama/mega-workbench")
+def api_programlama_mega_workbench(workspace_root: str | None = None):
+    """Blok G — mega görev özeti (tur, touched_files, patch, verify, E2)."""
+    from ilim_assistant.motorlar.programlama_mega_workbench import (
+        MEGA_WORKBENCH_VERSION,
+        build_mega_workbench_payload,
+    )
+
+    root = (workspace_root or "").strip() or None
+    payload = build_mega_workbench_payload(root)
+    payload["version"] = MEGA_WORKBENCH_VERSION
+    return payload
+
+
 @app.get("/api/programlama/task-stats")
 def api_programlama_task_stats(workspace_root: str | None = None):
     """Faz 55 — canlı görev başarı istatistikleri."""

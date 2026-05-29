@@ -186,14 +186,14 @@ git push -u origin HEAD
 
 | # | İş |
 |---|-----|
-| G61–G63 | mega refactor stress; 16 dosya/tur test |
-| G64 | patch plan önizleme UI |
-| G65 | tur bütçe göstergesi |
-| G66 | çok dosyalı parity senaryo |
-| G67 | touched_files liste UI |
-| G68 | yarım görev devam |
-| G69 | birleşik verify rapor |
-| G70 | E2 hedef %90 ölçüm doc |
+| G61–G63 | mega refactor stress; 16 dosya/tur test | ✓ `programlama_mega_stress.py` |
+| G64 | patch plan önizleme UI | ✓ patch-plan kartı |
+| G65 | tur bütçe göstergesi | ✓ mega-workbench kartı |
+| G66 | çok dosyalı parity senaryo | ✓ E2 doc + aylık parity |
+| G67 | touched_files liste UI | ✓ |
+| G68 | yarım görev devam | ✓ Görev devam butonu |
+| G69 | birleşik verify rapor | ✓ verify kartı |
+| G70 | E2 hedef %90 ölçüm doc | ✓ `PROGRAMLAMA_E2_MEGA_GOREV.md` |
 
 **Commit:** `feat(programlama): blok G — mega görev UX, touched_files, verify`  
 **Push:** `git push -u origin plan/blok-g-mega-gorev`
@@ -303,5 +303,5 @@ git push -u origin plan/blok-a-koruma
 - `PROGRAMMING_MOTOR_YOL_HARITASI.md` — Dalga E–H
 - `scripts/ruzgar_programlama_upgrade_report.json` — son bench kanıtı
 
-**Durum:** Blok F tamamlandı (2026-05-29) — PR hazırla UI, git strip poll 15s, weekly KPI kartı. Sırada **Blok G** (mega görev).  
+**Durum:** Blok G tamamlandı (2026-05-29) — mega workbench API/UI, E2 doc, stress script. Sırada **Blok H** (Ana Motor handoff).  
 Blok B: `programlama-umit-onay-card`, `renderProgramlamaUmitOnay`, 10 sn poll, `app.js?v=20260529-blok-b`.

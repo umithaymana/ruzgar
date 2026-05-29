@@ -1069,14 +1069,22 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
                     <button type="button" id="btn-git-pr-create" class="btn-secondary btn-compact" title="Faz 31 gh pr create">
                       PR aç
                     </button>
-                    <button
-                      type="button"
-                      id="btn-pr-prepare"
-                      class="btn-primary btn-compact"
-                      title="Faz 83 — branch, commit, gh pr önerisi (otomatik PR yok)"
-                    >
-                      PR hazırla
-                    </button>
+                  <button
+                    type="button"
+                    id="btn-mega-refactor"
+                    class="btn-primary btn-compact"
+                    title="Faz 80 — mega refactor (30 tur, 16 dosya/tur)"
+                  >
+                    Mega refactor
+                  </button>
+                  <button
+                    type="button"
+                    id="btn-pr-prepare"
+                    class="btn-primary btn-compact"
+                    title="Faz 83 — branch, commit, gh pr önerisi (otomatik PR yok)"
+                  >
+                    PR hazırla
+                  </button>
                     <button type="button" id="btn-git-diff-preview" class="btn-secondary btn-compact" title="Diff --stat önizleme">
                       Diff önizle
                     </button>
@@ -1109,6 +1117,40 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
                     <span id="programlama-p89-cache" class="programlama-compliance-score">—</span>
                     <span id="programlama-p89-chain" class="programlama-compliance-grade">—</span>
                     <span id="programlama-p89-detail" class="programlama-compliance-detail"></span>
+                  </div>
+                </div>
+                <div id="programlama-mega-workbench-card" class="programlama-compliance-card mini-card" hidden>
+                  <strong class="programlama-compliance-title">Mega görev (Faz 80 · E2)</strong>
+                  <div class="programlama-compliance-body">
+                    <span id="programlama-mega-turn" class="programlama-compliance-score">—</span>
+                    <span id="programlama-mega-files" class="programlama-compliance-grade">—</span>
+                    <span id="programlama-mega-e2" class="programlama-compliance-detail"></span>
+                    <div class="programlama-inline-actions">
+                      <button type="button" id="btn-mega-resume" class="btn-secondary btn-compact" disabled>
+                        Görev devam
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div id="programlama-touched-files-card" class="programlama-compliance-card mini-card" hidden>
+                  <strong class="programlama-compliance-title">Dokunulan dosyalar</strong>
+                  <div class="programlama-compliance-body">
+                    <span id="programlama-touched-count" class="programlama-compliance-score">0</span>
+                    <span id="programlama-touched-list" class="programlama-compliance-detail programlama-touched-list"></span>
+                  </div>
+                </div>
+                <div id="programlama-patch-plan-card" class="programlama-compliance-card mini-card" hidden>
+                  <strong class="programlama-compliance-title">Patch planı önizleme</strong>
+                  <div class="programlama-compliance-body">
+                    <span id="programlama-patch-plan-count" class="programlama-compliance-score">—</span>
+                    <span id="programlama-patch-plan-list" class="programlama-compliance-detail programlama-touched-list"></span>
+                  </div>
+                </div>
+                <div id="programlama-verify-unified-card" class="programlama-compliance-card mini-card" hidden>
+                  <strong class="programlama-compliance-title">Birleşik verify</strong>
+                  <div class="programlama-compliance-body">
+                    <span id="programlama-verify-status" class="programlama-compliance-score">—</span>
+                    <span id="programlama-verify-detail" class="programlama-compliance-detail"></span>
                   </div>
                 </div>
                 <div id="programlama-weekly-kpi-card" class="programlama-compliance-card mini-card" hidden>
@@ -1396,6 +1438,6 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
       <button type="button" data-act="paste">Yapıştır</button>
     </div>
 
-    <script src="app.js?v=20260529-blok-f"></script>
+    <script src="app.js?v=20260529-blok-g"></script>
   </body>
 </html>

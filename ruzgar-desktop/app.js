@@ -1874,6 +1874,94 @@ async function refreshProgramlamaGitChanges(scopeRel) {
   }
 }
 
+function renderProgramlamaMegaWorkbench(payload) {
+  const megaCard = document.getElementById("programlama-mega-workbench-card");
+  const turnEl = document.getElementById("programlama-mega-turn");
+  const filesEl = document.getElementById("programlama-mega-files");
+  const e2El = document.getElementById("programlama-mega-e2");
+  const resumeBtn = document.getElementById("btn-mega-resume");
+  const touchCard = document.getElementById("programlama-touched-files-card");
+  const touchCount = document.getElementById("programlama-touched-count");
+  const touchList = document.getElementById("programlama-touched-list");
+  const planCard = document.getElementById("programlama-patch-plan-card");
+  const planCount = document.getElementById("programlama-patch-plan-count");
+  const planList = document.getElementById("programlama-patch-plan-list");
+  const verifyCard = document.getElementById("programlama-verify-unified-card");
+  const verifyStatus = document.getElementById("programlama-verify-status");
+  const verifyDetail = document.getElementById("programlama-verify-detail");
+  if (!payload || !payload.ok) {
+    if (megaCard) megaCard.hidden = true;
+    return;
+  }
+  const lim = payload.mega?.limits || {};
+  const ag = payload.agent || {};
+  const e2 = payload.e2 || {};
+  const maxT = intOr(lim.max_turns, ag.max_turns, 12);
+  const maxF = intOr(lim.max_files_per_turn, 16);
+  const budget = intOr(lim.budget_sec, 900);
+  if (megaCard && turnEl && filesEl) {
+    megaCard.hidden = false;
+    turnEl.textContent = `tur ${ag.turn || 0}/${maxT}`;
+    filesEl.textContent = payload.mega?.active
+      ? `mega · ${maxF} dosya/tur · ${budget}s`
+      : `standart · ${maxF} dosya/tur`;
+    if (e2El) {
+      const pct = Math.round(Number(e2.current_rate || 0) * 100);
+      const tgt = Math.round(Number(e2.target_rate || 0.9) * 100);
+      e2El.textContent = `E2: %${pct} (hedef ≥${tgt}%) · ${e2.sample_total || 0} örnek`;
+    }
+    if (resumeBtn) {
+      resumeBtn.disabled = !ag.can_resume;
+      resumeBtn.dataset.resumeHint = ag.resume_hint || "";
+    }
+  }
+  const touched = Array.isArray(payload.touched_files) ? payload.touched_files : [];
+  if (touchCard && touchCount && touchList) {
+    touchCard.hidden = touched.length === 0;
+    touchCount.textContent = String(payload.touched_count || touched.length);
+    touchList.textContent = touched.slice(0, 12).join("\n");
+  }
+  const plan = payload.patch_plan || {};
+  const ppaths = Array.isArray(plan.paths_preview) ? plan.paths_preview : [];
+  if (planCard && planCount && planList) {
+    planCard.hidden = !ppaths.length && !plan.count;
+    planCount.textContent = `bekleyen ${plan.pending || 0} / ${plan.count || 0}`;
+    planList.textContent = ppaths.join("\n") || "—";
+  }
+  const ver = payload.verify || {};
+  if (verifyCard && verifyStatus && verifyDetail) {
+    if (ver.ok === null || ver.ok === undefined) {
+      verifyCard.hidden = true;
+    } else {
+      verifyCard.hidden = false;
+      verifyStatus.textContent = ver.ok ? "verify OK" : "verify kırmızı";
+      verifyDetail.textContent = String(ver.detail || "").slice(0, 200);
+    }
+  }
+}
+
+function intOr(...vals) {
+  for (const v of vals) {
+    const n = Number(v);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return 0;
+}
+
+async function refreshProgramlamaMegaWorkbench() {
+  const workspaceRoot = await getProgramlamaWorkspaceRoot();
+  if (!workspaceRoot) return;
+  try {
+    const qs = `?workspace_root=${encodeURIComponent(workspaceRoot)}`;
+    const res = await fetch(`${API}/api/programlama/mega-workbench${qs}`);
+    const data = await res.json().catch(() => ({}));
+    renderProgramlamaMegaWorkbench(data);
+    window.__ruzgarMegaWorkbench = data;
+  } catch (_) {
+    /* ignore */
+  }
+}
+
 async function refreshProgramlamaWeeklyKpi() {
   const workspaceRoot = await getProgramlamaWorkspaceRoot();
   if (!workspaceRoot) return;
@@ -1902,6 +1990,7 @@ async function refreshProgramlamaKpiDashboard() {
     }
     await refreshProgramlamaGitChanges(programlamaScopeFromContext());
     await refreshProgramlamaWeeklyKpi();
+    await refreshProgramlamaMegaWorkbench();
   } catch (_) {
     /* ignore */
   }
@@ -2676,6 +2765,31 @@ async function prPrepareFromAtolye() {
   } catch (e) {
     setCodeOutput(`PR hazırla: ${e && e.message ? e.message : e}`);
   }
+}
+
+async function megaRefactorFromAtolye() {
+  const scope = programlamaScopeFromContext();
+  const hint =
+    window.prompt("Mega refactor hedefi (kısa):", "tüm modülleri pytest geçir") || "";
+  if (hint === null) return;
+  const msg = `mega refactor ${scope}: ${hint.trim() || "10+ dosya düzenle"}`;
+  void sendMessageWithText(msg);
+  setCodeOutput(`Mega görev başlatılıyor: ${msg.slice(0, 120)}…`);
+  void refreshProgramlamaMegaWorkbench();
+}
+
+async function megaResumeFromAtolye() {
+  const wb = window.__ruzgarMegaWorkbench;
+  const hint =
+    (wb && wb.agent && wb.agent.resume_hint) ||
+    document.getElementById("btn-mega-resume")?.dataset?.resumeHint ||
+    "";
+  if (!hint) {
+    setCodeOutput("Devam edilecek yarım görev yok.");
+    return;
+  }
+  void sendMessageWithText(hint);
+  setCodeOutput(`Görev devam: ${hint.slice(0, 120)}`);
 }
 
 async function gitDiffPreviewFromAtolye() {
@@ -6140,6 +6254,14 @@ function wireProgrammingWorkbench() {
   const btnGitPrCreate = document.getElementById("btn-git-pr-create");
   if (btnGitPrCreate) {
     btnGitPrCreate.addEventListener("click", () => void gitPrCreateFromAtolye());
+  }
+  const btnMegaRefactor = document.getElementById("btn-mega-refactor");
+  if (btnMegaRefactor) {
+    btnMegaRefactor.addEventListener("click", () => void megaRefactorFromAtolye());
+  }
+  const btnMegaResume = document.getElementById("btn-mega-resume");
+  if (btnMegaResume) {
+    btnMegaResume.addEventListener("click", () => void megaResumeFromAtolye());
   }
   const btnPrPrepare = document.getElementById("btn-pr-prepare");
   if (btnPrPrepare) {
