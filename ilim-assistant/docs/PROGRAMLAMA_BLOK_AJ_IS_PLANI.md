@@ -231,6 +231,12 @@ git push -u origin HEAD
 **Commit:** `feat(programlama): blok I — yerel öncelik zinciri, ollama-only smoke`  
 **Push:** `git push -u origin plan/blok-i-yerel-zincir`
 
+| # | İş | Durum |
+|---|-----|--------|
+| I81–I83 | ollama-only test; Gemini FC stress; text-only <%1 | ✓ local-workbench + smoke |
+| I84–I86 | prog_local_first; API'siz smoke; zincir dokümantasyon | ✓ `PROGRAMLAMA_E3_YEREL_ZINCIR.md` |
+| I87–I90 | kırsal senaryo; fallback mesaj; E3 hedef; rapor | ✓ UI kart + `e3` metrik |
+
 ---
 
 ## Blok J — Tercüme UI + kapanış (91–100)
@@ -303,5 +309,5 @@ git push -u origin plan/blok-a-koruma
 - `PROGRAMMING_MOTOR_YOL_HARITASI.md` — Dalga E–H
 - `scripts/ruzgar_programlama_upgrade_report.json` — son bench kanıtı
 
-**Durum:** Blok H tamamlandı (2026-05-29) — handoff v4 workbench, E4 doc, manifest tag. Sırada **Blok I** (yerel zincir).  
+**Durum:** Blok I tamamlandı (2026-05-29) — yerel zincir workbench, E3 doc, manifest tag. Sırada **Blok J** (tercüme UI, programlama dosyası yok).  
 Blok B: `programlama-umit-onay-card`, `renderProgramlamaUmitOnay`, 10 sn poll, `app.js?v=20260529-blok-b`.

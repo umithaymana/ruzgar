@@ -1955,6 +1955,20 @@ def api_programlama_system_analysis(
     }
 
 
+@app.get("/api/programlama/local-workbench")
+def api_programlama_local_workbench(workspace_root: str | None = None):
+    """Blok I — yerel öncelik zinciri (E3, ollama-only, metin-only)."""
+    from ilim_assistant.motorlar.programlama_local_workbench import (
+        LOCAL_WORKBENCH_VERSION,
+        build_local_workbench_payload,
+    )
+
+    root = (workspace_root or "").strip() or None
+    payload = build_local_workbench_payload(root)
+    payload["version"] = LOCAL_WORKBENCH_VERSION
+    return payload
+
+
 @app.get("/api/programlama/handoff-workbench")
 def api_programlama_handoff_workbench(
     workspace_root: str | None = None,

@@ -1970,6 +1970,59 @@ async function refreshProgramlamaMegaWorkbench() {
   }
 }
 
+function renderProgramlamaLocalWorkbench(payload) {
+  const wrap = document.getElementById("programlama-local-workbench-card");
+  const modeEl = document.getElementById("programlama-local-mode");
+  const chainEl = document.getElementById("programlama-local-chain");
+  const e3El = document.getElementById("programlama-local-e3");
+  const ruralEl = document.getElementById("programlama-local-rural");
+  if (!wrap || !modeEl) return;
+  if (!payload || !payload.ok) {
+    wrap.hidden = true;
+    return;
+  }
+  wrap.hidden = false;
+  const modes = payload.modes || {};
+  const parts = [];
+  if (modes.ollama_only) parts.push("ollama-only");
+  if (modes.prog_local_first) parts.push("yerel öncelik");
+  if (modes.groq_disabled) parts.push("groq kapalı");
+  if (modes.gemini_disabled) parts.push("gemini kapalı");
+  modeEl.textContent = parts.length
+    ? parts.join(" · ")
+    : modes.ollama_available
+      ? "Ollama ✓"
+      : "Ollama yok";
+  const chain = (payload.chain?.effective || []).join(" → ");
+  if (chainEl) {
+    chainEl.textContent = chain || "—";
+  }
+  const e3 = payload.e3 || {};
+  if (e3El) {
+    const pct = Math.round(Number(e3.current_rate || 0) * 1000) / 10;
+    const tgt = Math.round(Number(e3.target_text_only_rate || 0.01) * 1000) / 10;
+    const ok = e3.meets_target ? "✓" : "⚠";
+    e3El.textContent = `metin-only ${ok} %${pct} (hedef ≤%${tgt}) · ${e3.sample_total || 0} tur`;
+  }
+  if (ruralEl) {
+    ruralEl.textContent = (payload.rural || {}).fallback_message || "";
+  }
+  window.__ruzgarLocalWorkbench = payload;
+}
+
+async function refreshProgramlamaLocalWorkbench() {
+  const workspaceRoot = await getProgramlamaWorkspaceRoot();
+  if (!workspaceRoot) return;
+  try {
+    const qs = `?workspace_root=${encodeURIComponent(workspaceRoot)}`;
+    const res = await fetch(`${API}/api/programlama/local-workbench${qs}`);
+    const data = await res.json().catch(() => ({}));
+    renderProgramlamaLocalWorkbench(data);
+  } catch (_) {
+    /* ignore */
+  }
+}
+
 function renderProgramlamaHandoff(payload) {
   const wrap = document.getElementById("programlama-handoff-card");
   const scopeEl = document.getElementById("programlama-handoff-scope");
@@ -2048,6 +2101,7 @@ async function refreshProgramlamaKpiDashboard() {
     await refreshProgramlamaWeeklyKpi();
     await refreshProgramlamaMegaWorkbench();
     await refreshProgramlamaHandoffWorkbench();
+    await refreshProgramlamaLocalWorkbench();
   } catch (_) {
     /* ignore */
   }
