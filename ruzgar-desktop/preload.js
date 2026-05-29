@@ -35,6 +35,7 @@ contextBridge.exposeInMainWorld("ruzgarApi", {
     ipcRenderer.invoke("workspace:write-text", { rel, text }),
   openModeWindow: (mode) => ipcRenderer.invoke("ruzgar:open-mode", mode),
   openWorkspaceRel: (rel) => ipcRenderer.invoke("ruzgar:open-workspace", rel),
+  pickWorkspaceDirectory: () => ipcRenderer.invoke("ruzgar:pick-directory"),
   openLocalhostUrl: (url) => ipcRenderer.invoke("ruzgar:open-external", url),
   openExternalUrl: (url) => ipcRenderer.invoke("ruzgar:open-external", url),
   /** Pencere geçmişi (dosya yok — tam yeniden yüklemeden çıkmak için) */

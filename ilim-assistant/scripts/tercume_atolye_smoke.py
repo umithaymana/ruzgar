@@ -46,7 +46,13 @@ def main() -> int:
     from desktop_server import app
 
     paths = {getattr(r, "path", "") for r in app.routes}
-    needed = {"/api/tercume/save-target", "/api/tercume/import-url"}
+    needed = {
+        "/api/tercume/save-target",
+        "/api/tercume/import-url",
+        "/api/tercume/translate-chunk",
+        "/api/tercume/source-pages",
+        "/api/tercume/config",
+    }
     missing = [p for p in needed if p not in paths]
     if missing:
         print("FAIL routes", missing)

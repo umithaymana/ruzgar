@@ -495,21 +495,6 @@ let atolyeOpenRel = null;
 
 /** Okuma Atölyesi — İlim arşivinde seçili dosya */
 let ilimOpenRel = null;
-/** Tercüme Atölyesi — kaynak dosya */
-let tercumeOpenRel = null;
-let tercumeAwaitingReply = false;
-
-const TERCUME_EBOOK_EXTS = [
-  ".epub",
-  ".fb2",
-  ".mobi",
-  ".azw",
-  ".azw3",
-  ".kfx",
-  ".djvu",
-  ".djv",
-];
-const TERCUME_IMAGE_EXTS = [".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tif", ".tiff"];
 /** Ses önizleme blob URL — yeniden seçimde iptal */
 let sesPreviewObjectUrl = null;
 /** Video önizleme blob URL */
@@ -586,71 +571,6 @@ async function readArchiveFileForOkuma(rel) {
     return out;
   }
   return readWorkspaceText(rel);
-}
-
-/** Tercüme atölyesi: okuma + e-kitap + görsel OCR. */
-async function readArchiveFileForTercume(rel, opts = {}) {
-  const low = String(rel || "").toLowerCase();
-  const forceOcr = !!opts.forceOcr;
-  if (forceOcr || TERCUME_IMAGE_EXTS.some((e) => low.endsWith(e))) {
-    const lang = tercumeOcrLangFromUi();
-    const res = await fetch(
-      `${API}/api/workspace/read-image-ocr?rel=${encodeURIComponent(rel)}&lang=${encodeURIComponent(lang)}`,
-    );
-    const j = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      const d = j.detail;
-      throw new Error(typeof d === "string" ? d : JSON.stringify(d || {}) || `HTTP ${res.status}`);
-    }
-    let out = String(j.text ?? "");
-    if (j.truncated_length) out += "\n\n— OCR: uzunluk sınırı nedeniyle kısaltılmış olabilir.";
-    return out;
-  }
-  const ebookLike = TERCUME_EBOOK_EXTS.some((e) => low.endsWith(e)) || low.endsWith(".rtf");
-  if (ebookLike) {
-    const res = await fetch(`${API}/api/workspace/read-ebook?rel=${encodeURIComponent(rel)}`);
-    const j = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      const d = j.detail;
-      throw new Error(typeof d === "string" ? d : JSON.stringify(d || {}) || `HTTP ${res.status}`);
-    }
-    let out = String(j.text ?? "");
-    const meta = j.meta && typeof j.meta === "object" ? j.meta : {};
-    if (meta.converter) out += `\n\n— Dönüştürücü: ${meta.converter}`;
-    if (j.truncated_length) out += "\n\n— E-kitap: metin sınırı nedeniyle kısaltılmış olabilir.";
-    return out;
-  }
-  return readArchiveFileForOkuma(rel);
-}
-
-function tercumeOcrLangFromUi() {
-  const v = String(el.tercumeSrcLang?.value || "auto").trim();
-  const map = {
-    tr: "tur",
-    en: "eng",
-    ar: "ara",
-    de: "deu",
-    fr: "fra",
-    fa: "fas",
-    ru: "rus",
-  };
-  if (v === "auto") return "tur+eng";
-  return map[v] ? `${map[v]}+eng` : "tur+eng";
-}
-
-function defaultTercumeSaveRel() {
-  const tgt = String(el.tercumeTgtLang?.value || "tr").trim() || "tr";
-  if (tercumeOpenRel) {
-    const leaf = String(tercumeOpenRel).split("/").pop() || "kaynak";
-    const stem = leaf.replace(/\.[^.]+$/, "") || "kaynak";
-    return `ilim-assistant/arsiv/tercume-output/${stem}_${tgt}.txt`;
-  }
-  return `ilim-assistant/arsiv/tercume-output/ceviri_${tgt}_${Date.now()}.txt`;
-}
-
-function syncTercumeSaveRelPlaceholder() {
-  if (!el.tercumeSaveRel || el.tercumeSaveRel.value.trim()) return;
-  el.tercumeSaveRel.placeholder = defaultTercumeSaveRel();
 }
 
 const TOP_MODE_BUTTONS = [
@@ -1586,9 +1506,7 @@ function applyMotorHandoff(modeId, handoffText) {
   switch (mid) {
     case "tercume":
       switchMode("tercume");
-      if (el.tercumeSource) el.tercumeSource.value = t;
-      updateTercumeTextStats();
-      el.tercumeSource?.focus();
+      if (window.RuzgarTercumeAtolye) window.RuzgarTercumeAtolye.importText(t, null);
       break;
     case "video":
       switchMode("video");
@@ -4288,6 +4206,7 @@ function updateDynamicWorkbench() {
   if (currentMode === "hafiza") void loadHafizaJsonView();
   if (currentMode === "okuma") void loadIlimFileList();
   if (currentMode === "tercume") void loadTercumeFileList();
+  /* tercüme: tercume-atolye.js */
   if (currentMode === "ses") void refreshSesSttHint();
   if (currentMode === "video") void refreshVideoEngineHint();
   if (currentMode === "programlama") {
@@ -4757,236 +4676,29 @@ async function openOkumaArsivFile(rel) {
   }
 }
 
-async function openTercumeArsivFile(rel) {
-  try {
-    const text = await readArchiveFileForTercume(rel);
-    tercumeOpenRel = rel;
-    if (el.tercumeSource) el.tercumeSource.value = text;
-    updateTercumeActiveFileLabel();
-    updateTercumeTextStats();
-    syncTercumeSaveRelPlaceholder();
-    flashRuzgarDurum(`Kaynak yüklendi: ${rel}`);
-    el.tercumeSource?.focus();
-  } catch (e) {
-    if (el.tercumeSource) {
-      el.tercumeSource.value = `(okunamadı: ${e && e.message ? e.message : String(e)})`;
-    }
-    flashRuzgarDurum("Dosya okunamadı.");
-  }
-}
-
-function updateTercumeActiveFileLabel() {
-  if (!el.tercumeActiveFile) return;
-  el.tercumeActiveFile.textContent = tercumeOpenRel
-    ? `Kaynak: ${tercumeOpenRel}`
-    : "Kaynak: (sol listeden dosya seçin)";
-}
-
-function updateTercumeTextStats() {
-  if (!el.tercumeStats) return;
-  const t = String(el.tercumeSource?.value || "");
-  const chars = t.length;
-  const words = t.replace(/\s+/g, " ").trim() ? t.trim().split(/\s+/).length : 0;
-  el.tercumeStats.textContent = `${chars.toLocaleString("tr-TR")} karakter · ${words.toLocaleString("tr-TR")} kelime (kaynak)`;
-}
-
-async function tercumeAtolyeRefreshTree() {
-  await refreshArsivTreeInto(el.tercumeFileList);
-}
-
-async function loadTercumeFileList() {
-  updateTercumeActiveFileLabel();
-  updateTercumeTextStats();
-  syncTercumeSaveRelPlaceholder();
-  await tercumeAtolyeRefreshTree();
-}
-
-async function runTercumeOcrOnCurrentFile() {
-  if (!tercumeOpenRel) {
-    flashRuzgarDurum("Önce soldan bir görsel dosyası seçin.");
-    return;
-  }
-  const low = String(tercumeOpenRel).toLowerCase();
-  if (!TERCUME_IMAGE_EXTS.some((e) => low.endsWith(e))) {
-    flashRuzgarDurum("OCR yalnızca PNG/JPG/WebP/TIF görselleri için.");
-    return;
-  }
-  flashRuzgarDurum("OCR çalışıyor…");
-  try {
-    const text = await readArchiveFileForTercume(tercumeOpenRel, { forceOcr: true });
-    if (el.tercumeSource) el.tercumeSource.value = text;
-    updateTercumeTextStats();
-    flashRuzgarDurum("OCR tamam — kaynak panele yazıldı.");
-  } catch (e) {
-    flashRuzgarDurum(e && e.message ? e.message : "OCR başarısız.");
-  }
-}
-
-async function saveTercumeTargetToArchive() {
-  const body = String(el.tercumeTarget?.value || "").trim();
-  if (!body) {
-    flashRuzgarDurum("Hedef metin boş — önce Çevir veya «Son yanıt → hedef».");
-    return;
-  }
-  const rel = String(el.tercumeSaveRel?.value || "").trim() || defaultTercumeSaveRel();
-  const fd = new FormData();
-  fd.append("rel", rel);
-  fd.append("text", body);
-  flashRuzgarDurum("Kaydediliyor…");
-  try {
-    const res = await fetch(`${API}/api/tercume/save-target`, { method: "POST", body: fd });
-    const j = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      const d = j.detail;
-      throw new Error(typeof d === "string" ? d : JSON.stringify(d || {}) || `HTTP ${res.status}`);
-    }
-    if (el.tercumeSaveRel) el.tercumeSaveRel.value = String(j.rel || rel);
-    flashRuzgarDurum(`Kaydedildi: ${j.rel || rel}`);
-  } catch (e) {
-    flashRuzgarDurum(e && e.message ? e.message : "Kaydetme başarısız.");
-  }
-}
-
-async function importTercumeUrlToArchive() {
-  const url = String(el.tercumeImportUrl?.value || "").trim();
-  if (!url) {
-    flashRuzgarDurum("URL girin (https://…).");
-    return;
-  }
-  const fd = new FormData();
-  fd.append("url", url);
-  flashRuzgarDurum("İndiriliyor…");
-  try {
-    const res = await fetch(`${API}/api/tercume/import-url`, { method: "POST", body: fd });
-    const j = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      const d = j.detail;
-      throw new Error(typeof d === "string" ? d : JSON.stringify(d || {}) || `HTTP ${res.status}`);
-    }
-    const rel = String(j.rel || "");
-    if (el.tercumeImportUrl) el.tercumeImportUrl.value = "";
-    await tercumeAtolyeRefreshTree();
-    if (rel) await openTercumeArsivFile(rel);
-    else flashRuzgarDurum("İndirildi — listeden dosyayı açın.");
-  } catch (e) {
-    flashRuzgarDurum(e && e.message ? e.message : "URL indirme başarısız.");
-  }
-}
-
-async function sendTercumeTranslatePrompt() {
-  const raw = String(el.tercumeSource?.value || "").trim();
-  if (!raw) {
-    flashRuzgarDurum("Önce kaynak metin girin veya soldan dosya açın.");
-    return;
-  }
-  const chunk =
-    raw.length > 28000 ? `${raw.slice(0, 28000)}\n\n… (mimar için kısaltıldı)` : raw;
-  const srcLabel = el.tercumeSrcLang?.selectedOptions?.[0]?.textContent?.trim() || "Otomatik";
-  const tgtLabel = el.tercumeTgtLang?.selectedOptions?.[0]?.textContent?.trim() || "İngilizce";
-  const fileNote = tercumeOpenRel ? `\n[Kaynak dosya: ${tercumeOpenRel}]\n` : "";
-  const msg = `${fileNote}Ümit abi, tercüme atölyesinden iletiyorum.
-
-Kaynak dil: ${srcLabel}
-Hedef dil: ${tgtLabel}
-
-Yalnızca hedef dilde tam çeviriyi ver; uzun giriş veya genel özet yazma. Gerekirse hassas terimler için çok kısa dipnot kullan.
-
----
-
-${chunk}`;
-  tercumeAwaitingReply = true;
-  flashRuzgarDurum("Rüzgar’a iletiliyor… (yanıt gelince hedef panele yazılır)");
-  await sendMessageWithText(msg, { skipUserBubble: false });
+function loadTercumeFileList() {
+  if (window.RuzgarTercumeAtolye) window.RuzgarTercumeAtolye.load();
 }
 
 function wireTercumeAtolye() {
-  if (el.tercumeFileList && el.tercumeFileList.dataset.tercumeWired !== "1") {
-    el.tercumeFileList.dataset.tercumeWired = "1";
-    el.tercumeFileList.addEventListener("click", (ev) => {
-      void handleArsivTreeClick(ev, el.tercumeFileList, openTercumeArsivFile);
-    });
-  }
-  if (el.btnTercumeRefresh) {
-    el.btnTercumeRefresh.addEventListener("click", () => {
-      void tercumeAtolyeRefreshTree();
-      flashRuzgarDurum("Kaynak listesi yenilendi.");
-    });
-  }
-  if (el.btnTercumeOpenArchive) {
-    el.btnTercumeOpenArchive.addEventListener("click", () => {
-      if (window.ruzgarApi?.openWorkspaceRel) {
-        void window.ruzgarApi.openWorkspaceRel("ilim-assistant/arsiv");
-        flashRuzgarDurum("Arşiv klasörü açılıyor…");
-      } else {
-        flashRuzgarDurum("Klasörü açmak için masaüstü Rüzgar kullanın.");
+  if (!window.RuzgarTercumeAtolye) return;
+  window.RuzgarTercumeAtolye.init({
+    api: API,
+    esc,
+    flash: flashRuzgarDurum,
+    sendMessage: sendMessageWithText,
+    switchMode,
+    workspaceListDir,
+    createCodeTreeBranch,
+    lastAssistantReply: () => lastAssistantReply,
+    getWorkspaceRoot: async () => {
+      if (window.ruzgarApi?.getRoot) {
+        const r = await window.ruzgarApi.getRoot();
+        return r?.root || r?.path || "";
       }
-    });
-  }
-  if (el.btnTercumeTranslate) {
-    el.btnTercumeTranslate.addEventListener("click", () => {
-      void sendTercumeTranslatePrompt();
-    });
-  }
-  if (el.btnTercumeLastToTarget) {
-    el.btnTercumeLastToTarget.addEventListener("click", () => {
-      const t = String(lastAssistantReply || "").trim();
-      if (!t) {
-        flashRuzgarDurum("Henüz sohbette bir Rüzgar yanıtı yok.");
-        return;
-      }
-      if (el.tercumeTarget) el.tercumeTarget.value = t;
-      flashRuzgarDurum("Son yanıt hedef panele yazıldı.");
-      el.tercumeTarget?.focus();
-    });
-  }
-  if (el.btnTercumeSourceToChat) {
-    el.btnTercumeSourceToChat.addEventListener("click", () => {
-      const t = String(el.tercumeSource?.value || "").trim();
-      if (!t) {
-        flashRuzgarDurum("Kaynak metin boş.");
-        return;
-      }
-      const chunk = t.length > 12000 ? `${t.slice(0, 12000)}\n\n… (kısaltıldı)` : t;
-      if (el.input) {
-        el.input.value = chunk;
-        el.input.focus();
-        flashRuzgarDurum("Kaynak sohbet kutusuna aktarıldı.");
-      }
-    });
-  }
-  if (el.btnTercumeClear) {
-    el.btnTercumeClear.addEventListener("click", () => {
-      if (el.tercumeSource) el.tercumeSource.value = "";
-      if (el.tercumeTarget) el.tercumeTarget.value = "";
-      tercumeOpenRel = null;
-      tercumeAwaitingReply = false;
-      updateTercumeActiveFileLabel();
-      updateTercumeTextStats();
-      syncTercumeSaveRelPlaceholder();
-      flashRuzgarDurum("Paneller temizlendi.");
-    });
-  }
-  if (el.btnTercumeOcr) {
-    el.btnTercumeOcr.addEventListener("click", () => {
-      void runTercumeOcrOnCurrentFile();
-    });
-  }
-  if (el.btnTercumeSaveTarget) {
-    el.btnTercumeSaveTarget.addEventListener("click", () => {
-      void saveTercumeTargetToArchive();
-    });
-  }
-  if (el.btnTercumeImportUrl) {
-    el.btnTercumeImportUrl.addEventListener("click", () => {
-      void importTercumeUrlToArchive();
-    });
-  }
-  if (el.tercumeSource) {
-    el.tercumeSource.addEventListener("input", () => updateTercumeTextStats());
-  }
-  if (el.tercumeTgtLang) {
-    el.tercumeTgtLang.addEventListener("change", () => syncTercumeSaveRelPlaceholder());
-  }
+      return "";
+    },
+  });
 }
 
 async function refreshSesSttHint() {
@@ -5627,8 +5339,8 @@ async function sendSubtitleFileToTercumeAtolye() {
       setStatus("Hazır", "Rüzgar");
       return;
     }
-    if (el.tercumeSource) el.tercumeSource.value = text;
     switchMode("tercume");
+    if (window.RuzgarTercumeAtolye) window.RuzgarTercumeAtolye.importText(text, rel);
     flashRuzgarDurum("Kaynak metin Tercüme atölyesine aktarıldı.");
     setStatus("Hazır", "Rüzgar");
   } catch (e) {
@@ -8786,13 +8498,7 @@ async function streamChat(userText) {
         responseBubble.innerHTML = esc(full).replace(/\n/g, "<br>");
       }
       lastAssistantReply = full;
-      if (tercumeAwaitingReply && full.trim()) {
-        tercumeAwaitingReply = false;
-        if (el.tercumeTarget) el.tercumeTarget.value = full;
-        syncTercumeSaveRelPlaceholder();
-        flashRuzgarDurum("Çeviri hedef panele yazıldı — «Hedefi kaydet» ile arşive alın.");
-        if (currentMode !== "tercume") switchMode("tercume");
-      }
+      if (window.RuzgarTercumeAtolye) window.RuzgarTercumeAtolye.onAssistantReply(full);
       updateDashboardLastSpeech();
       updateDynamicWorkbench();
       renderOrchestraBridge(ev.orchestra);

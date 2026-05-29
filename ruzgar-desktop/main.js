@@ -408,6 +408,23 @@ app.whenReady().then(async () => {
     shell.openPath(target);
     return true;
   });
+  ipcMain.handle("ruzgar:pick-directory", async () => {
+    const win = BrowserWindow.getFocusedWindow();
+    const opts = { properties: ["openDirectory"] };
+    const r = win
+      ? await dialog.showOpenDialog(win, opts)
+      : await dialog.showOpenDialog(opts);
+    if (r.canceled || !r.filePaths?.length) {
+      return { ok: false };
+    }
+    const picked = path.resolve(r.filePaths[0]);
+    const root = path.resolve(WORKSPACE_ROOT);
+    if (!picked.startsWith(root)) {
+      return { ok: false, error: "Klasör proje kökü içinde olmalı." };
+    }
+    const rel = path.relative(root, picked).split(path.sep).join("/");
+    return { ok: true, rel };
+  });
   ipcMain.handle("ruzgar:open-external", (_e, url) => {
     try {
       const raw = String(url || "").trim();

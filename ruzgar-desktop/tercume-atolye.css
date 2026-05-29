@@ -1,0 +1,258 @@
+/* Yalnızca Tercüme motoru — diğer sayfalara dokunmaz (#page-tercume) */
+
+/* Tercüme modunda üst başlık alanını daralt, çalışma alanını büyüt */
+body:has(#page-tercume:not([hidden])) .workbench-head {
+  padding: 0 4px 2px;
+  min-height: 0;
+}
+body:has(#page-tercume:not([hidden])) .workbench-title {
+  display: none;
+}
+body:has(#page-tercume:not([hidden])) .dynamic-workbench {
+  padding: 2px 4px;
+  height: auto;
+  flex: 1 1 auto;
+  min-height: min(84vh, 980px);
+}
+
+#page-tercume.tercume-page-v2 {
+  display: flex;
+  flex-direction: column;
+  min-height: min(82vh, 960px);
+  height: 100%;
+  padding: 0 2px 2px;
+}
+
+#page-tercume .tercume-help-fold {
+  flex-shrink: 0;
+  margin: 0 0 4px;
+  font-size: 11px;
+  color: #858585;
+}
+#page-tercume .tercume-help-fold summary {
+  cursor: pointer;
+  color: #9cdcfe;
+}
+#page-tercume .tercume-help-fold[open] summary {
+  margin-bottom: 4px;
+}
+
+#page-tercume .tercume-workbench {
+  display: grid;
+  grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
+  gap: 6px;
+  flex: 1 1 auto;
+  min-height: min(78vh, 900px);
+  height: 100%;
+}
+
+#page-tercume .tercume-sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid #3c3c3c;
+  border-radius: 6px;
+  background: #252526;
+  overflow: hidden;
+}
+
+#page-tercume .tercume-root-row {
+  display: flex;
+  gap: 4px;
+  padding: 6px;
+  border-bottom: 1px solid #343434;
+}
+#page-tercume .tercume-work-root {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  padding: 4px 6px;
+  border: 1px solid #454545;
+  border-radius: 4px;
+  background: #1e1e1e;
+  color: #ccc;
+}
+
+#page-tercume #tercume-file-list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+#page-tercume .tercume-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  border: 1px solid #3c3c3c;
+  border-radius: 6px;
+  background: #1e1e1e;
+}
+
+#page-tercume .tercume-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 6px;
+  border-bottom: 1px solid #343434;
+  background: #252526;
+  flex-shrink: 0;
+}
+
+#page-tercume .tercume-toolbar-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+#page-tercume .tercume-lang-select {
+  max-width: 120px;
+  padding: 3px 6px;
+  font-size: 11px;
+}
+
+#page-tercume .tercume-progress-wrap {
+  padding: 4px 10px;
+  border-bottom: 1px solid #2a2a2a;
+}
+#page-tercume .tercume-progress-wrap[hidden] {
+  display: none !important;
+}
+#page-tercume .tercume-progress-bar {
+  height: 6px;
+  background: #333;
+  border-radius: 3px;
+  overflow: hidden;
+}
+#page-tercume .tercume-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #0e639c, #1177bb);
+  transition: width 0.2s ease;
+}
+#page-tercume .tercume-progress-label {
+  font-size: 10px;
+  color: #858585;
+  margin-top: 2px;
+}
+
+#page-tercume .tercume-panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  flex: 1 1 auto;
+  min-height: min(68vh, 780px);
+}
+
+#page-tercume .tercume-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid #343434;
+}
+#page-tercume .tercume-panel:last-child {
+  border-right: 0;
+}
+
+#page-tercume .tercume-panel-head {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #9cdcfe;
+  background: #252526;
+  border-bottom: 1px solid #343434;
+}
+
+#page-tercume .tercume-doc-editor {
+  flex: 1 1 auto;
+  min-height: min(36vh, 420px);
+  overflow: auto;
+  padding: 16px 20px;
+  font-family: "Segoe UI", Georgia, "Times New Roman", serif;
+  font-size: var(--tercume-font-size, 14px);
+  line-height: 1.65;
+  color: #e0e0e0;
+  background: #1a1a1a;
+  outline: none;
+  cursor: text;
+  user-select: text;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+#page-tercume .tercume-doc-editor:empty::before {
+  content: attr(data-placeholder);
+  color: #666;
+  pointer-events: none;
+}
+
+#page-tercume .tercume-footer-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 2px 6px 4px;
+  font-size: 10px;
+  color: #858585;
+  border-top: 1px solid #343434;
+  flex-shrink: 0;
+}
+
+#page-tercume .tercume-io-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px 6px;
+  border-top: 1px solid #2a2a2a;
+  background: #222;
+  flex-shrink: 0;
+}
+#page-tercume .tercume-save-path,
+#page-tercume .tercume-copy-path,
+#page-tercume .tercume-import-url {
+  flex: 1 1 160px;
+  min-width: 120px;
+  font-size: 11px;
+  padding: 4px 6px;
+  border: 1px solid #3c3c3c;
+  border-radius: 4px;
+  background: #1e1e1e;
+  color: #ccc;
+}
+
+#page-tercume .tercume-apprentice-fold {
+  font-size: 10px;
+  color: #6a9955;
+  max-width: 100%;
+}
+#page-tercume .tercume-apprentice-fold summary {
+  cursor: pointer;
+}
+#page-tercume .tercume-apprentice-list {
+  margin: 4px 0 0;
+  padding-left: 14px;
+  max-height: 48px;
+  overflow: auto;
+}
+
+/* Eski global kuralı geçersiz kıl (styles.css — yalnızca tercüme sayfasında) */
+#page-tercume .tercume-workbench.tercume-workbench {
+  height: 100% !important;
+  max-height: none;
+}
+
+#page-tercume h3 {
+  display: none;
+}
+#page-tercume > .atelier-info-strip {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  #page-tercume .tercume-workbench {
+    grid-template-columns: 1fr;
+  }
+  #page-tercume .tercume-panels {
+    grid-template-columns: 1fr;
+  }
+}

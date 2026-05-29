@@ -3662,6 +3662,138 @@ def api_tercume_save_target(
     return out
 
 
+@app.get("/api/tercume/config")
+def api_tercume_config():
+    from ilim_assistant.motorlar.tercume_atolye import workbench_config
+
+    return {"ok": True, **workbench_config()}
+
+
+@app.get("/api/tercume/apprentice-log")
+def api_tercume_apprentice_log(
+    workspace_root: str | None = None,
+    limit: int = Query(12, ge=1, le=40),
+):
+    from ilim_assistant.motorlar.tercume_atolye import read_apprentice_log
+
+    root = (workspace_root or "").strip() or None
+    return {"ok": True, "items": read_apprentice_log(root, limit=limit)}
+
+
+@app.get("/api/tercume/source-pages")
+def api_tercume_source_pages(rel: str = Query("")) -> dict[str, Any]:
+    """Kaynak metni sayfa/parça listesine böler (PDF gerçek sayfa)."""
+    from ilim_assistant.motorlar.tercume_atolye import split_text_into_pages
+
+    raw = (rel or "").strip().replace("\\", "/").lstrip("/")
+    if not raw:
+        raise HTTPException(status_code=400, detail="rel gerekli.")
+    target = _repo_resolve_under_root(raw, must_be_dir=False)
+    ext = target.suffix.lower()
+    pages: list[dict[str, Any]] = []
+    meta: dict[str, Any] = {"ext": ext}
+
+    if ext == ".pdf":
+        if not pdf_text_runtime_available():
+            raise HTTPException(status_code=503, detail="pip install pypdf")
+        from pypdf import PdfReader
+
+        reader = PdfReader(str(target))
+        n = len(reader.pages)
+        max_p = min(n, 120)
+        for i in range(max_p):
+            try:
+                t = (reader.pages[i].extract_text() or "").strip()
+            except Exception:
+                t = ""
+            pages.append({"index": i, "text": t, "label": f"Sayfa {i + 1}"})
+        meta["pages_total"] = n
+        meta["pages_read"] = max_p
+    else:
+        if ext == ".docx":
+            if not docx_text_runtime_available():
+                raise HTTPException(status_code=503, detail="pip install python-docx")
+            full = _docx_file_to_plain(target)
+        elif ext in {".epub", ".fb2", ".mobi", ".azw", ".azw3", ".kfx", ".djvu", ".djv", ".rtf"}:
+            hit = api_workspace_read_ebook(rel=raw)
+            full = str(hit.get("text") or "")
+        elif ext in {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tif", ".tiff"}:
+            hit = api_workspace_read_image_ocr(rel=raw)
+            full = str(hit.get("text") or "")
+        else:
+            hit = api_workspace_read_text(rel=raw)
+            full = str(hit.get("text") or "")
+        for p in split_text_into_pages(full):
+            pages.append(
+                {
+                    "index": p["index"],
+                    "text": p["text"],
+                    "label": f"Bölüm {int(p['index']) + 1}",
+                }
+            )
+        meta["pages_total"] = len(pages)
+
+    return {"ok": True, "rel": raw, "pages": pages, "meta": meta}
+
+
+@app.post("/api/tercume/translate-chunk")
+def api_tercume_translate_chunk(
+    text: str = Form(""),
+    src_lang: str = Form("auto"),
+    tgt_lang: str = Form("en"),
+    source_file: str = Form(""),
+    page_index: str = Form(""),
+    workspace_root: str = Form(""),
+):
+    from ilim_assistant.motorlar.tercume_atolye import append_apprentice_log, translate_chunk
+
+    pidx: int | None = None
+    if (page_index or "").strip().isdigit():
+        pidx = int(page_index.strip())
+    result = translate_chunk(
+        text,
+        src_lang=src_lang,
+        tgt_lang=tgt_lang,
+        source_file=source_file,
+        page_index=pidx,
+    )
+    root = (workspace_root or "").strip() or None
+    if result.get("ok"):
+        append_apprentice_log(
+            root,
+            {
+                "lesson": "translate_chunk",
+                "source_file": source_file,
+                "tgt_lang": tgt_lang,
+                "page_index": pidx,
+                "chars_in": len(text or ""),
+                "chars_out": len(result.get("text") or ""),
+                "note": "Tercüme: hedef dil imla kurallarina uygun parca cevirisi.",
+            },
+        )
+    return result
+
+
+@app.post("/api/tercume/import-file")
+async def api_tercume_import_file(
+    file: UploadFile = File(...),
+) -> dict[str, Any]:
+    """Dosya / ekran görüntüsü → arsiv/tercume-imports."""
+    import uuid
+
+    out_dir = REPO_ROOT / "ilim-assistant" / "arsiv" / "tercume-imports"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    name = (file.filename or "import.bin").replace("\\", "/").split("/")[-1]
+    safe = re.sub(r"[^a-zA-Z0-9._\-]+", "_", name).strip("._") or f"import_{uuid.uuid4().hex[:8]}"
+    target = out_dir / safe
+    data = await file.read()
+    if len(data) > 30_000_000:
+        raise HTTPException(status_code=400, detail="Dosya çok büyük (30 MB).")
+    target.write_bytes(data)
+    rel = target.relative_to(REPO_ROOT).as_posix()
+    return {"ok": True, "rel": rel, "bytes": len(data)}
+
+
 @app.post("/api/code/run")
 async def api_code_run(body: CodeRunBody):
     """Programlama Atölyesi: Python/JavaScript kodunu kontrollü çalıştırır.
