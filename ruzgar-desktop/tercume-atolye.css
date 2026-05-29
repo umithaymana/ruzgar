@@ -37,13 +37,247 @@ body:has(#page-tercume:not([hidden])) .dynamic-workbench {
   margin-bottom: 4px;
 }
 
+/* —— Tercüme: üst sekmeler (Sohbet | Çalışma | Eser ara) —— */
+body:not([data-motor="tercume"]) #tercume-view-tabs {
+  display: none !important;
+}
+body:not([data-motor="tercume"]) #tercume-center-row {
+  display: contents;
+}
+
+body[data-motor="tercume"] .layout.layout-v2 {
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  grid-template-rows: 38px minmax(0, 1fr);
+  align-content: stretch;
+}
+body[data-motor="tercume"] .panel-motors {
+  grid-column: 1;
+  grid-row: 1 / -1;
+  height: auto;
+  max-height: none;
+}
+body[data-motor="tercume"] #tercume-view-tabs {
+  display: flex;
+  grid-column: 2;
+  grid-row: 1;
+  align-items: stretch;
+  gap: 0;
+  padding: 0 8px;
+  background: #2d2d30;
+  border-bottom: 1px solid #3c3c3c;
+}
+body[data-motor="tercume"] #tercume-view-tabs[hidden] {
+  display: none !important;
+}
+.tercume-view-tab {
+  padding: 8px 16px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #9a9a9a;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tercume-view-tab:hover {
+  color: #ddd;
+  background: rgba(255, 255, 255, 0.04);
+}
+.tercume-view-tab.is-active {
+  color: #fff;
+  border-bottom-color: #3794ff;
+  background: #1e1e1e;
+}
+body[data-motor="tercume"] #tercume-center-row {
+  display: flex;
+  flex-direction: row;
+  grid-column: 2;
+  grid-row: 2;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+body[data-motor="tercume"][data-tercume-tab="sohbet"] .panel-chat {
+  display: flex !important;
+  flex: 1 1 auto;
+  width: auto;
+  max-width: none;
+}
+body[data-motor="tercume"][data-tercume-tab="sohbet"] .panel-main {
+  display: none !important;
+}
+body[data-motor="tercume"][data-tercume-tab="calisma"] .panel-chat,
+body[data-motor="tercume"][data-tercume-tab="ara"] .panel-chat {
+  display: none !important;
+}
+body[data-motor="tercume"][data-tercume-tab="calisma"] .panel-main,
+body[data-motor="tercume"][data-tercume-tab="ara"] .panel-main {
+  display: flex !important;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 6px;
+}
+
 #page-tercume .tercume-workbench {
   display: grid;
-  grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
+  grid-template-columns: minmax(150px, 190px) minmax(0, 1fr);
   gap: 6px;
   flex: 1 1 auto;
   min-height: min(78vh, 900px);
   height: 100%;
+}
+#page-tercume .tercume-workbench--ara {
+  grid-template-columns: minmax(130px, 170px) minmax(200px, 280px) minmax(0, 1fr);
+}
+#page-tercume .tercume-workbench--calisma #tercume-ara-panel {
+  display: none !important;
+}
+#page-tercume .tercume-workbench--ara #tercume-ara-panel {
+  display: flex !important;
+}
+
+#page-tercume .tercume-ara-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid #3c3c3c;
+  border-radius: 6px;
+  background: #252526;
+  padding: 8px;
+  overflow: hidden;
+}
+#page-tercume .tercume-ara-head {
+  font-size: 13px;
+  font-weight: 700;
+  color: #9cdcfe;
+  margin-bottom: 4px;
+}
+#page-tercume .tercume-ara-lead {
+  font-size: 11px;
+  color: #888;
+  line-height: 1.35;
+  margin: 0 0 8px;
+}
+#page-tercume .tercume-ara-search-row {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 6px;
+  flex-shrink: 0;
+}
+#page-tercume .tercume-eser-input {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  padding: 5px 8px;
+  border: 1px solid #454545;
+  border-radius: 4px;
+  background: #1e1e1e;
+  color: #eee;
+}
+#page-tercume .tercume-eser-hint {
+  font-size: 11px;
+  color: #aaa;
+  margin: 0 0 6px;
+  flex-shrink: 0;
+}
+#page-tercume .tercume-work-eser-sites {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 80px;
+}
+#page-tercume .tercume-work-eser-sites li {
+  margin-bottom: 4px;
+}
+#page-tercume .tercume-eser-result-btn,
+#page-tercume .tercume-eser-site-btn {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 9px;
+  border: 1px solid #3a3a3a;
+  border-radius: 4px;
+  background: #2a2a2a;
+  color: #ddd;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+}
+#page-tercume .tercume-eser-result-btn:hover,
+#page-tercume .tercume-eser-site-btn:hover {
+  background: #353535;
+  border-color: #569cd6;
+}
+#page-tercume .tercume-eser-result-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+#page-tercume .tercume-eser-result-title {
+  font-weight: 600;
+  color: #e8e8e8;
+  line-height: 1.3;
+}
+#page-tercume .tercume-eser-result-snippet {
+  font-size: 10px;
+  color: #999;
+  line-height: 1.35;
+}
+#page-tercume .tercume-eser-result-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+#page-tercume .tercume-eser-result-src {
+  font-size: 9px;
+  color: #7a9e7a;
+  max-width: 72px;
+  text-align: right;
+}
+#page-tercume .tercume-eser-site-go {
+  color: #569cd6;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+#page-tercume .tercume-ara-download {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #3a3a3a;
+  flex-shrink: 0;
+}
+#page-tercume .tercume-ara-download-head {
+  font-size: 11px;
+  font-weight: 600;
+  color: #ccc;
+  margin-bottom: 4px;
+}
+#page-tercume .tercume-import-url-full {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 11px;
+  padding: 5px 8px;
+  margin-bottom: 4px;
+  border: 1px solid #454545;
+  border-radius: 4px;
+  background: #1e1e1e;
+  color: #ccc;
+}
+#page-tercume .tercume-ara-download .btn-compact {
+  width: 100%;
+}
+
+#page-tercume .code-tree-row.file.is-active {
+  background: #094771;
+  outline: 1px solid #3794ff;
 }
 
 #page-tercume .tercume-sidebar {
@@ -71,6 +305,66 @@ body:has(#page-tercume:not([hidden])) .dynamic-workbench {
   border-radius: 4px;
   background: #1e1e1e;
   color: #ccc;
+}
+
+#page-tercume .tercume-arsiv-download-fold {
+  margin: 0 6px 6px;
+  padding: 4px 6px;
+  border: 1px solid #3a3a3a;
+  border-radius: 4px;
+  background: #232323;
+  font-size: 11px;
+  flex-shrink: 0;
+  max-height: 38%;
+  overflow: auto;
+}
+#page-tercume .tercume-arsiv-download-fold summary {
+  cursor: pointer;
+  color: #9cdcfe;
+  font-weight: 600;
+}
+#page-tercume .tercume-arsiv-download-hint {
+  margin: 4px 0 6px;
+  color: #888;
+  line-height: 1.35;
+}
+#page-tercume .tercume-arsiv-download-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+#page-tercume .tercume-arsiv-download-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  margin-bottom: 4px;
+  padding: 3px 0;
+  border-bottom: 1px solid #333;
+}
+#page-tercume .tercume-arsiv-download-list .arsiv-dl-title {
+  flex: 1;
+  min-width: 0;
+  color: #ccc;
+  line-height: 1.3;
+}
+#page-tercume .tercume-arsiv-download-list .arsiv-dl-badge {
+  font-size: 10px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+#page-tercume .tercume-arsiv-download-list .arsiv-dl-badge.ok {
+  background: #2d4a2d;
+  color: #b5e0b5;
+}
+#page-tercume .tercume-arsiv-download-list .arsiv-dl-badge.pending {
+  background: #4a3d2d;
+  color: #e0d0b5;
+}
+#page-tercume .tercume-arsiv-download-btns {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
 }
 
 #page-tercume #tercume-file-list {

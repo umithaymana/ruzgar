@@ -122,6 +122,25 @@
         </div>
       </aside>
 
+      <nav
+        id="tercume-view-tabs"
+        class="tercume-view-tabs"
+        role="tablist"
+        aria-label="Tercüme görünümü"
+        hidden
+      >
+        <button type="button" class="tercume-view-tab" data-tercume-tab="sohbet" role="tab">
+          Sohbet
+        </button>
+        <button type="button" class="tercume-view-tab is-active" data-tercume-tab="calisma" role="tab">
+          Çalışma
+        </button>
+        <button type="button" class="tercume-view-tab" data-tercume-tab="ara" role="tab">
+          Eser ara
+        </button>
+      </nav>
+
+      <div class="tercume-center-row" id="tercume-center-row">
       <aside class="panel panel-chat">
         <div class="chat-scroll" id="chat-messages"></div>
         <div id="orchestra-bridge" class="orchestra-bridge" hidden aria-live="polite"></div>
@@ -499,7 +518,7 @@
               Klasör yolu → liste · EPUB/PDF/DOCX/görsel aç · Çevir modu: tek parça / sayfa sayfa / tamam (yavaş) ·
               Ctrl+tekerlek yakınlaştır · Çırak günlüğü programlama motoru için okunur.
             </details>
-            <div class="tercume-workbench">
+            <div class="tercume-workbench tercume-workbench--calisma" id="tercume-workbench">
               <aside class="tercume-sidebar">
                 <div class="code-sidebar-head okuma-sidebar-head">
                   <span>Çalışma listesi</span>
@@ -512,7 +531,31 @@
                   <input type="text" id="tercume-work-root" class="tercume-work-root" value="ilim-assistant/arsiv" aria-label="Çalışma klasörü" />
                   <button type="button" class="btn-secondary btn-compact" id="btn-tercume-pick-folder" title="Klasör seç">…</button>
                 </div>
+                <details class="tercume-arsiv-download-fold" id="tercume-arsiv-download-fold">
+                  <summary>Arşiv indir (Internet Archive)</summary>
+                  <p class="tercume-arsiv-download-hint">Klasörler boşsa önce listeden indirin; sonra dosyayı açıp inceleyin.</p>
+                  <ul class="tercume-arsiv-download-list" id="tercume-arsiv-download-list"></ul>
+                  <div class="tercume-arsiv-download-btns">
+                    <button type="button" class="btn-secondary btn-compact" id="btn-arsiv-download-next">Sıradaki</button>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-arsiv-download-refresh">Liste</button>
+                  </div>
+                </details>
                 <div id="tercume-file-list" class="code-file-tree okuma-file-tree"></div>
+              </aside>
+              <aside class="tercume-ara-panel" id="tercume-ara-panel" aria-label="İnternet kaynak arama" hidden>
+                <div class="tercume-ara-head">İnternet kaynakları</div>
+                <p class="tercume-ara-lead">Eser veya yazar yazın; internette aranır (genel + Archive, Yazma Eserler, Şamile…). Sonuçlar burada listelenir.</p>
+                <div class="tercume-ara-search-row">
+                  <input type="text" id="tercume-eser-input" class="tercume-eser-input" placeholder="Örn: İmam-ı Rabbani Mektubat" aria-label="Eser veya yazar" />
+                  <button type="button" class="btn-primary btn-compact" id="btn-tercume-eser-ara">Ara</button>
+                </div>
+                <p id="tercume-eser-hint" class="tercume-eser-hint">Arama henüz yapılmadı.</p>
+                <ul id="tercume-work-eser-sites" class="tercume-work-eser-sites"></ul>
+                <div class="tercume-ara-download">
+                  <div class="tercume-ara-download-head">İndirme (inceleme sonrası)</div>
+                  <input type="url" id="tercume-import-url" class="tercume-import-url-full" placeholder="PDF veya dosya URL’si (https://…)" />
+                  <button type="button" class="btn-secondary btn-compact" id="btn-tercume-import-url" title="Klasör seçip indir — boyut sınırı yok">İndir (klasör seç)</button>
+                </div>
               </aside>
               <div class="tercume-main">
                 <div class="tercume-toolbar">
@@ -576,8 +619,6 @@
                 <div class="tercume-io-row">
                   <input type="text" id="tercume-save-rel" class="tercume-save-path" placeholder="Kayıt yolu" aria-label="Kayıt" />
                   <input type="text" id="tercume-copy-rel" class="tercume-copy-path" placeholder="İkinci kopya (isteğe bağlı)" aria-label="Kopya" />
-                  <input type="url" id="tercume-import-url" class="tercume-import-url" placeholder="https://…" />
-                  <button type="button" class="btn-secondary btn-compact" id="btn-tercume-import-url">URL</button>
                   <label class="btn-secondary btn-compact" style="cursor:pointer;margin:0">
                     Dosya
                     <input type="file" id="tercume-import-file" hidden accept=".pdf,.docx,.epub,.txt,.md,.png,.jpg,.jpeg,.webp,.html,.rtf,.fb2,.mobi" />
@@ -1271,6 +1312,7 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
           </section>
         </div>
       </main>
+      </div><!-- /tercume-center-row -->
 
       <aside class="panel panel-files">
         <div class="panel-head panel-head-files">
@@ -1467,8 +1509,8 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
       <button type="button" data-act="paste">Yapıştır</button>
     </div>
 
-    <link rel="stylesheet" href="tercume-atolye.css?v=20260529-tercume-v3" />
-    <script src="tercume-atolye.js?v=20260529-tercume-v2"></script>
+    <link rel="stylesheet" href="tercume-atolye.css?v=20260530-tercume-tabs" />
+    <script src="tercume-atolye.js?v=20260530-tercume-tabs"></script>
     <script src="app.js?v=20260529-tercume-v2"></script>
   </body>
 </html>

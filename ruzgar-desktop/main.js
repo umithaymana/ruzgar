@@ -410,7 +410,7 @@ app.whenReady().then(async () => {
   });
   ipcMain.handle("ruzgar:pick-directory", async () => {
     const win = BrowserWindow.getFocusedWindow();
-    const opts = { properties: ["openDirectory"] };
+    const opts = { properties: ["openDirectory", "createDirectory"], title: "Çalışma klasörü seçin" };
     const r = win
       ? await dialog.showOpenDialog(win, opts)
       : await dialog.showOpenDialog(opts);
@@ -424,6 +424,26 @@ app.whenReady().then(async () => {
     }
     const rel = path.relative(root, picked).split(path.sep).join("/");
     return { ok: true, rel };
+  });
+  ipcMain.handle("ruzgar:pick-save-directory", async () => {
+    const win = BrowserWindow.getFocusedWindow();
+    const opts = {
+      properties: ["openDirectory", "createDirectory"],
+      title: "İndirme klasörünü seçin (Farklı kaydet)",
+    };
+    const r = win
+      ? await dialog.showOpenDialog(win, opts)
+      : await dialog.showOpenDialog(opts);
+    if (r.canceled || !r.filePaths?.length) {
+      return { ok: false };
+    }
+    const picked = path.resolve(r.filePaths[0]);
+    const root = path.resolve(WORKSPACE_ROOT);
+    let rel = "";
+    if (picked.startsWith(root)) {
+      rel = path.relative(root, picked).split(path.sep).join("/");
+    }
+    return { ok: true, abs: picked, rel };
   });
   ipcMain.handle("ruzgar:open-external", (_e, url) => {
     try {

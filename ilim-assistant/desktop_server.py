@@ -3381,15 +3381,20 @@ def api_workspace_read_pdf(rel: str = Query("")) -> dict[str, Any]:
     target = _repo_resolve_under_root(raw, must_be_dir=False)
     if target.suffix.lower() != ".pdf":
         raise HTTPException(status_code=400, detail="Dosya PDF değil.")
-    max_bytes = 15_000_000
-    if target.stat().st_size > max_bytes:
-        raise HTTPException(status_code=400, detail=f"PDF çok büyük ({max_bytes // 1_000_000} MB sınır).")
+    file_size = target.stat().st_size
+    # Dosya boyutu sınırı yok; önizleme için sayfa sayısı kademeli
+    if file_size > 120_000_000:
+        page_cap = 25
+    elif file_size > 40_000_000:
+        page_cap = 50
+    else:
+        page_cap = 120
 
     from pypdf import PdfReader
 
     reader = PdfReader(str(target))
     n_pages = len(reader.pages)
-    max_pages = min(n_pages, 100)
+    max_pages = min(n_pages, page_cap)
     parts: list[str] = []
     for i in range(max_pages):
         try:
@@ -3398,18 +3403,24 @@ def api_workspace_read_pdf(rel: str = Query("")) -> dict[str, Any]:
             t = ""
         parts.append(t)
     full = "\n\n".join(parts).strip()
-    hard_cap = 450_000
+    hard_cap = 900_000
     truncated_len = False
     if len(full) > hard_cap:
         full = full[:hard_cap] + "\n\n… [metin uzun olduğu için kesildi]"
         truncated_len = True
     truncated_pages = max_pages < n_pages
+    if truncated_pages and full:
+        full = (
+            f"[PDF: {n_pages} sayfa — önizleme: ilk {max_pages} sayfa. "
+            f"Tam çeviri için «Sayfa sayfa» modunu kullanın.]\n\n{full}"
+        )
     return {
         "ok": True,
         "text": full,
         "pages_total": n_pages,
         "pages_read": max_pages,
         "truncated_pages": truncated_pages,
+        "file_size": file_size,
         "truncated_length": truncated_len,
     }
 
@@ -3556,49 +3567,78 @@ def api_workspace_read_image_ocr(rel: str = Query(""), lang: str = Query("tur+en
     return {"ok": True, "text": text, "truncated_length": truncated, "lang": (lang or "tur+eng")}
 
 
+def _tercume_download_target_dir(
+    target_dir_rel: str = "",
+    target_abs: str = "",
+) -> Path:
+    """Tercüme indirme hedefi: proje içi göreli yol veya Windows «farklı kaydet» mutlak klasör."""
+    abs_raw = (target_abs or "").strip()
+    if abs_raw:
+        p = Path(abs_raw).expanduser().resolve()
+        if not p.is_dir():
+            try:
+                p.mkdir(parents=True, exist_ok=True)
+            except OSError as exc:
+                raise HTTPException(status_code=400, detail=f"Klasör oluşturulamadı: {str(exc)[:120]}") from exc
+        return p
+    rel = (target_dir_rel or "").strip().replace("\\", "/").lstrip("/")
+    if not rel:
+        rel = "ilim-assistant/arsiv/tercume-imports"
+    from ilim_assistant.motorlar.arsiv_indirme import resolve_arsiv_dir
+
+    try:
+        return resolve_arsiv_dir(rel if rel.startswith("ilim-assistant/") else f"ilim-assistant/arsiv/{rel}")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
 @app.post("/api/tercume/import-url")
 def api_tercume_import_url(
     url: str = Form(""),
     filename_hint: str = Form(""),
+    target_dir_rel: str = Form(""),
+    target_abs: str = Form(""),
 ) -> dict[str, Any]:
-    """
-    URL'den dosya/metin indirip tercüme çalışma alanına koyar.
-    Hedef: ilim-assistant/arsiv/tercume-imports
-    """
+    """URL'den akışlı indirme — boyut üst sınırı yok; hedef klasör seçilebilir."""
+    from ilim_assistant.motorlar.arsiv_indirme import download_url_to_folder
+
     u = (url or "").strip()
     if not u:
         raise HTTPException(status_code=400, detail="url gerekli.")
-    p = urlparse(u)
-    if p.scheme not in {"http", "https"}:
-        raise HTTPException(status_code=400, detail="Yalnızca http/https desteklenir.")
+    out_dir = _tercume_download_target_dir(target_dir_rel, target_abs)
+    res = download_url_to_folder(u, out_dir, filename_hint=filename_hint, timeout_sec=7200.0)
+    if not res.get("ok"):
+        raise HTTPException(status_code=400, detail=str(res.get("error") or "İndirme başarısız"))
+    rel = str(res.get("rel") or "")
+    if rel and not rel.startswith("ilim-assistant/"):
+        try:
+            rel = Path(res["abs"]).resolve().relative_to(REPO_ROOT.resolve()).as_posix()
+        except Exception:
+            rel = str(res.get("abs") or rel)
+    return {
+        "ok": True,
+        "rel": rel,
+        "abs": res.get("abs"),
+        "bytes": res.get("bytes"),
+        "content_type": res.get("content_type"),
+        "skipped": res.get("skipped"),
+    }
 
-    out_dir = REPO_ROOT / "ilim-assistant" / "arsiv" / "tercume-imports"
-    out_dir.mkdir(parents=True, exist_ok=True)
-    hint = (filename_hint or "").strip().replace("\\", "/").split("/")[-1]
-    if not hint:
-        base = (Path(p.path).name or f"import_{uuid.uuid4().hex[:8]}")
-        hint = base
-    safe_name = re.sub(r"[^a-zA-Z0-9._\-]+", "_", hint).strip("._") or f"import_{uuid.uuid4().hex[:8]}.txt"
-    target = out_dir / safe_name
 
-    req = Request(u, headers={"User-Agent": "RuzgarDesktop/1.0"})
-    max_bytes = 30_000_000
-    try:
-        with urlopen(req, timeout=25) as r:
-            data = r.read(max_bytes + 1)
-            ctype = str(r.headers.get("Content-Type") or "")
-    except Exception as exc:
-        raise HTTPException(status_code=400, detail=f"İndirme başarısız: {str(exc)[:200]}") from exc
-    if len(data) > max_bytes:
-        raise HTTPException(status_code=400, detail=f"Dosya çok büyük ({max_bytes // 1_000_000} MB sınır).")
-
-    try:
-        target.write_bytes(data)
-    except OSError as exc:
-        raise HTTPException(status_code=500, detail=f"Dosya yazılamadı: {str(exc)[:200]}") from exc
-
-    rel = target.relative_to(REPO_ROOT).as_posix()
-    return {"ok": True, "rel": rel, "bytes": len(data), "content_type": ctype}
+@app.post("/api/tercume/download-url")
+def api_tercume_download_url(
+    url: str = Form(""),
+    filename_hint: str = Form(""),
+    target_dir_rel: str = Form(""),
+    target_abs: str = Form(""),
+) -> dict[str, Any]:
+    """Tercüme: seçilen klasöre büyük dosya indir (import-url ile aynı motor)."""
+    return api_tercume_import_url(
+        url=url,
+        filename_hint=filename_hint,
+        target_dir_rel=target_dir_rel,
+        target_abs=target_abs,
+    )
 
 
 def _tercume_save_rel_allowed(raw: str) -> Path:
@@ -3660,6 +3700,44 @@ def api_tercume_save_target(
         except HTTPException:
             pass
     return out
+
+
+@app.get("/api/arsiv/download-catalog")
+def api_arsiv_download_catalog() -> dict[str, Any]:
+    """Manifest + indirilmiş dosya durumu (tercüme atölyesi arşiv paneli)."""
+    from ilim_assistant.motorlar.arsiv_indirme import ARSIV_INDIRME_VERSION, catalog_with_status
+
+    return {**catalog_with_status(), "module": ARSIV_INDIRME_VERSION}
+
+
+@app.post("/api/arsiv/download-item")
+def api_arsiv_download_item(item_id: str = Form("")) -> dict[str, Any]:
+    from ilim_assistant.motorlar.arsiv_indirme import import_manifest_item
+
+    iid = (item_id or "").strip()
+    if not iid:
+        raise HTTPException(status_code=400, detail="item_id gerekli.")
+    return import_manifest_item(iid)
+
+
+@app.post("/api/arsiv/download-next")
+def api_arsiv_download_next(limit: int = Form(1)) -> dict[str, Any]:
+    from ilim_assistant.motorlar.arsiv_indirme import import_next_pending
+
+    return import_next_pending(limit=max(1, min(int(limit or 1), 5)))
+
+
+@app.get("/api/tercume/eser-search")
+def api_tercume_eser_search(q: str = Query("")) -> dict[str, Any]:
+    """B planı: DuckDuckGo genel + site: güvenilir alanlar → birleşik sonuç listesi."""
+    from ilim_assistant.motorlar.tercume_eser_arama import search_eser_merged
+
+    raw = (q or "").strip()
+    if not raw:
+        raise HTTPException(status_code=400, detail="q gerekli.")
+    if len(raw) > 300:
+        raise HTTPException(status_code=400, detail="Arama metni çok uzun (300 karakter).")
+    return search_eser_merged(raw)
 
 
 @app.get("/api/tercume/config")

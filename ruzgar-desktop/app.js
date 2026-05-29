@@ -4,7 +4,7 @@
  * Kök sonda `/api` ise kırpılır — aksi halde fetch `.../api/api/merkezi-bellek` ile 404 verir.
  */
 const RUZGAR_LOCAL_API_PORT = 8779;
-const RUZGAR_EXPECTED_BUILD_REV = "2026-05-27-ruzgar-faz96-v106";
+const RUZGAR_EXPECTED_BUILD_REV = "2026-05-27-ruzgar-faz98-v107";
 const RUZGAR_LOCAL_API_FALLBACK = `http://127.0.0.1:${RUZGAR_LOCAL_API_PORT}`;
 
 function migrateLegacyApiUrl(raw) {
@@ -787,7 +787,7 @@ function applyModeToUI() {
       "Okuma: arsiv durumu · index durumu · metin + hadis mi? · kaynak bul — PDF için arsiv_indexle";
   } else if (currentMode === "tercume") {
     el.input.placeholder =
-      "Tercüme: ingilizceye çevir: … · dil listesi · uzun metin için sağ panel Çevir";
+      "«imam-ı rabbani eserlerini ara» → çalışma sayfasında 18 site listesi (Groq’a gitmez) · Çeviri için Çevir";
   } else if (currentMode === "ses") {
     el.input.placeholder =
       "Ses motorunda transkripti panelden sohbete aktarabilir veya doğrudan soru yazabilirsiniz.";
@@ -804,6 +804,9 @@ function applyModeToUI() {
   syncTopModeButtons();
   syncHizirWorkbenchStripVisibility();
   syncWorkbenchHizirToolbar();
+  if (window.RuzgarTercumeAtolye?.syncTercumeLayout) {
+    window.RuzgarTercumeAtolye.syncTercumeLayout(currentMode === "tercume");
+  }
   if (el.navRefresh) {
     const tips = {
       genel: "Ana motor panelini yenile",
@@ -1309,8 +1312,14 @@ function applyUiManifest(manifest) {
 }
 
 async function refreshUiManifest() {
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), 8000);
   try {
-    const r = await fetch(`${API}/api/ui/manifest`, { method: "GET", cache: "no-store" });
+    const r = await fetch(`${API}/api/ui/manifest`, {
+      method: "GET",
+      cache: "no-store",
+      signal: ac.signal,
+    });
     const j = await r.json();
     if (!r.ok || j.ok === false) throw new Error(j.detail || `HTTP ${r.status}`);
     applyUiManifest(j);
@@ -1328,6 +1337,8 @@ async function refreshUiManifest() {
       }
     }
     return null;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -4688,6 +4699,7 @@ function wireTercumeAtolye() {
     flash: flashRuzgarDurum,
     sendMessage: sendMessageWithText,
     switchMode,
+    getCurrentMode: () => currentMode,
     workspaceListDir,
     createCodeTreeBranch,
     lastAssistantReply: () => lastAssistantReply,
@@ -7478,7 +7490,11 @@ async function checkApi() {
       fast_paths: j?.build?.fast_paths,
     });
     if (j.ok) {
-      setAnaMotorInfoStripState("loading");
+      if (!lastHealthSnapshot?.ok) {
+        setAnaMotorInfoStripState("loading");
+      } else {
+        setAnaMotorInfoStripState("ready");
+      }
       if (apiWasOffline) {
         apiWasOffline = false;
         showRuzgarConnectionActiveBanner();
@@ -7522,6 +7538,7 @@ async function checkApi() {
       }
       renderProgramlamaP89Kpi(j?.build || {});
       showStaleBuildBanner(rev, j);
+      setAnaMotorInfoStripState("ready");
       void refreshUiManifest();
       el.api.textContent = j.stt ? "Sunucu ✓ metne döküm" : "Sunucu ✓";
       let apiTitle = j.stt
@@ -9003,6 +9020,26 @@ async function sendMessageWithText(t, opts = {}) {
   el.input.value = "";
   if (!skipUser) {
     appendBubble("user", text);
+  }
+  if (
+    currentMode === "tercume" &&
+    window.RuzgarTercumeAtolye?.isSearchIntent?.(text) &&
+    window.RuzgarTercumeAtolye?.runSearch
+  ) {
+    if (window.RuzgarTercumeAtolye.setTercumeTab) window.RuzgarTercumeAtolye.setTercumeTab("ara");
+    void window.RuzgarTercumeAtolye.runSearch(text).then((ok) => {
+      if (!ok) return;
+      appendBubble(
+        "assistant",
+        "«Eser ara» sekmesinde sonuçlar listelendi. Siteye tıklayın; «İndir (klasör seç)» ile kaydedin. Çeviri için «Çalışma» sekmesine geçip dosyayı açın.",
+      );
+      setStatus("Tercüme: eser arama", "Rüzgar");
+    });
+    if (el.send) el.send.disabled = false;
+    perfBusy = false;
+    updatePerformanceIndicators(perfBusy);
+    syncInterruptButton();
+    return;
   }
   if (currentMode === "hizir" && hizirChatImpliesProductScan(text)) {
     if (el.hizirTaraQuery) {

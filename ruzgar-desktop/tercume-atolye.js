@@ -11,6 +11,7 @@
   let workRoot = "ilim-assistant/arsiv";
   let awaitingChatReply = false;
   let translateAbort = false;
+  let lastDownloadDir = { abs: "", rel: "" };
 
   function api() {
     return deps.api || global.API || "";
@@ -130,6 +131,76 @@
     el.textContent = `${t.length.toLocaleString("tr-TR")} karakter · ${words.toLocaleString("tr-TR")} kelime`;
   }
 
+  async function refreshArsivCatalog() {
+    const ul = $("tercume-arsiv-download-list");
+    if (!ul) return;
+    ul.innerHTML = `<li class="code-tree-loading">${esc("Yükleniyor…")}</li>`;
+    try {
+      const res = await fetch(`${api()}/api/arsiv/download-catalog`);
+      const j = await res.json().catch(() => ({}));
+      if (!j.ok) throw new Error(j.error || j.detail || `HTTP ${res.status}`);
+      ul.innerHTML = "";
+      const items = Array.isArray(j.items) ? j.items : [];
+      if (!items.length) {
+        ul.innerHTML = `<li class="code-file-placeholder">${esc("Manifest boş")}</li>`;
+        return;
+      }
+      for (const it of items) {
+        const li = document.createElement("li");
+        const done = !!it.downloaded;
+        const badge = done ? "✓ var" : "bekliyor";
+        const btn = done
+          ? ""
+          : `<button type="button" class="btn-secondary btn-compact arsiv-dl-btn" data-id="${esc(it.id)}">İndir</button>`;
+        li.innerHTML = `<span class="arsiv-dl-title" title="${esc(it.folder || "")}">${esc(it.title || it.id)}</span><span class="arsiv-dl-badge ${done ? "ok" : "pending"}">${badge}</span>${btn}`;
+        ul.appendChild(li);
+      }
+      ul.querySelectorAll(".arsiv-dl-btn").forEach((b) => {
+        b.addEventListener("click", () => void downloadArsivItem(b.dataset.id));
+      });
+      const pending = Number(j.pending_count) || 0;
+      flash(`Arşiv kataloğu: ${items.length - pending}/${items.length} indirildi`);
+    } catch (e) {
+      ul.innerHTML = `<li class="code-file-placeholder">${esc(e.message || e)}</li>`;
+    }
+  }
+
+  async function downloadArsivItem(itemId) {
+    if (!itemId) return;
+    flash(`İndiriliyor: ${itemId}…`);
+    const fd = new FormData();
+    fd.append("item_id", itemId);
+    const res = await fetch(`${api()}/api/arsiv/download-item`, { method: "POST", body: fd });
+    const j = await res.json().catch(() => ({}));
+    if (!j.ok) throw new Error(j.error || j.detail || `HTTP ${res.status}`);
+    if (j.skipped) flash(`Zaten var: ${j.rel || itemId}`);
+    else flash(`İndirildi: ${j.rel || itemId} (${Math.round((j.bytes || 0) / 1024)} KB)`);
+    await refreshArsivCatalog();
+    await refreshTree();
+    if (j.rel) await openFile(j.rel);
+  }
+
+  async function downloadArsivNext() {
+    flash("Sıradaki indiriliyor…");
+    const fd = new FormData();
+    fd.append("limit", "1");
+    const res = await fetch(`${api()}/api/arsiv/download-next`, { method: "POST", body: fd });
+    const j = await res.json().catch(() => ({}));
+    if (!j.ok) throw new Error(j.error || j.detail || `HTTP ${res.status}`);
+    const results = Array.isArray(j.results) ? j.results : [];
+    const last = results[results.length - 1];
+    if (!last) {
+      flash("Bekleyen kayıt yok.");
+      return;
+    }
+    if (!last.ok) throw new Error(last.error || "İndirme başarısız");
+    if (last.skipped) flash(`Zaten var: ${last.rel || ""}`);
+    else flash(`İndirildi: ${last.rel || ""}`);
+    await refreshArsivCatalog();
+    await refreshTree();
+    if (last.rel) await openFile(last.rel);
+  }
+
   async function refreshTree() {
     const list = $("tercume-file-list");
     if (!list) return;
@@ -152,27 +223,195 @@
     }
   }
 
+  function markTreeActive(rel) {
+    const list = $("tercume-file-list");
+    if (!list) return;
+    list.querySelectorAll(".code-tree-row.file.is-active").forEach((r) => r.classList.remove("is-active"));
+    if (!rel) return;
+    const norm = String(rel).replace(/\\/g, "/");
+    for (const row of list.querySelectorAll(".code-tree-row.file")) {
+      const r = String(row.dataset.rel || "").replace(/\\/g, "/");
+      if (r === norm) row.classList.add("is-active");
+    }
+  }
+
   async function openFile(rel) {
+    if (!rel) return;
+    markTreeActive(rel);
+    setSourceText("Dosya yükleniyor…");
+    updateActiveLabel();
     try {
       const text = await readFileForTercume(rel);
       openRel = rel;
       setSourceText(text);
       updateActiveLabel();
       syncSavePlaceholder();
-      flash(`Yüklendi: ${rel}`);
+      flash(`Kaynak panele yüklendi: ${rel.split("/").pop()}`);
       getSourceEl()?.focus();
       void refreshApprenticeLog();
     } catch (e) {
-      setSourceText(`(okunamadı: ${e.message || e})`);
-      flash("Dosya açılamadı.");
+      openRel = rel;
+      const msg = String(e.message || e);
+      setSourceText(`(Dosya: ${rel}\n\nÖnizleme alınamadı: ${msg}\n\nBüyük PDF için OCR veya sayfa sayfa modunu deneyin.)`);
+      updateActiveLabel();
+      flash("Tam metin yüklenemedi; dosya yolu kayıtlı.");
     }
   }
 
   async function onTreeClick(ev) {
-    const row = ev.target.closest(".code-tree-file");
-    if (!row || !row.dataset?.rel) return;
+    const list = $("tercume-file-list");
+    const row = ev.target.closest(".code-tree-row");
+    if (!row || !list?.contains(row)) return;
     ev.preventDefault();
-    await openFile(row.dataset.rel);
+    const rel = row.dataset.rel;
+    if (!rel) return;
+
+    if (row.classList.contains("folder")) {
+      const branch = row.closest(".code-tree-branch");
+      const kids = branch?.querySelector(":scope > .code-tree-children");
+      if (!kids) return;
+      const depth = Number.parseInt(row.dataset.depth || "0", 10);
+      if (kids.dataset.loaded !== "1") {
+        kids.innerHTML = `<div class="code-tree-loading">${esc("Yükleniyor…")}</div>`;
+        kids.hidden = false;
+        try {
+          const items = deps.workspaceListDir ? await deps.workspaceListDir(rel) : [];
+          kids.innerHTML = "";
+          for (const x of items) {
+            if (deps.createCodeTreeBranch) kids.appendChild(deps.createCodeTreeBranch(x, depth + 1));
+          }
+          kids.dataset.loaded = "1";
+        } catch {
+          kids.innerHTML = `<div class="code-tree-err">${esc("Liste okunamadı.")}</div>`;
+          return;
+        }
+        row.classList.add("is-expanded");
+        const chevOpen = row.querySelector(".code-tree-chev");
+        if (chevOpen) chevOpen.textContent = "▾";
+        return;
+      }
+      kids.hidden = !kids.hidden;
+      row.classList.toggle("is-expanded", !kids.hidden);
+      const chev = row.querySelector(".code-tree-chev");
+      if (chev) chev.textContent = kids.hidden ? "▸" : "▾";
+      return;
+    }
+
+    if (row.classList.contains("file")) {
+      await openFile(rel);
+    }
+  }
+
+  function extractEserSearchQuery(text) {
+    const t = String(text || "").trim();
+    if (!t) return "";
+    const m = t.match(/^(?:ara|arat|bul|eser|kitap|yazar)\s*[:：]\s*(.+)$/im);
+    if (m) return m[1].trim().slice(0, 200);
+    if (/^https?:\/\//i.test(t)) return "";
+    if (t.length > 220) return t.slice(0, 200);
+    return t;
+  }
+
+  function renderEserSearchEmpty(message) {
+    const ul = $("tercume-work-eser-sites");
+    const hint = $("tercume-eser-hint");
+    if (hint) hint.textContent = message || "Arama henüz yapılmadı.";
+    if (ul) ul.innerHTML = `<li class="code-file-placeholder">${esc(message || "Eser veya yazar yazıp Ara’ya basın.")}</li>`;
+  }
+
+  function renderEserSearchResults(data) {
+    const ul = $("tercume-work-eser-sites");
+    const hint = $("tercume-eser-hint");
+    const inp = $("tercume-eser-input");
+    if (!ul) return;
+    const q = String(data?.query || "").trim();
+    if (inp && q) inp.value = q;
+    const items = Array.isArray(data?.items) ? data.items : [];
+    if (hint) {
+      hint.textContent = q
+        ? `«${q}» — ${items.length} sonuç (genel + Archive, Yazma Eserler, Şamile…). Satır: siteyi aç · İndir: URL’yi altta yapıştırın.`
+        : "Arama henüz yapılmadı.";
+    }
+    if (!items.length) {
+      ul.innerHTML = `<li class="code-file-placeholder">${esc("Sonuç bulunamadı. Farklı yazım veya daha kısa ad deneyin.")}</li>`;
+      return;
+    }
+    ul.innerHTML = "";
+    items.forEach((it, idx) => {
+      const url = String(it.url || "");
+      const li = document.createElement("li");
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "tercume-eser-result-btn";
+      const src = esc(String(it.source || ""));
+      const title = esc(String(it.title || url).slice(0, 120));
+      const snip = esc(String(it.snippet || "").slice(0, 160));
+      btn.innerHTML =
+        `<span class="tercume-eser-result-main">` +
+        `<span class="tercume-eser-result-title">${idx + 1}. ${title}</span>` +
+        (snip ? `<span class="tercume-eser-result-snippet">${snip}</span>` : "") +
+        `</span>` +
+        `<span class="tercume-eser-result-meta"><span class="tercume-eser-result-src">${src}</span><span class="tercume-eser-site-go">Aç →</span></span>`;
+      btn.addEventListener("click", () => {
+        if (!url) return;
+        if (global.ruzgarApi?.openExternalUrl) void global.ruzgarApi.openExternalUrl(url);
+        else window.open(url, "_blank", "noopener");
+        const urlInp = $("tercume-import-url");
+        if (urlInp) urlInp.value = url;
+        flash("Site açıldı; URL indirme kutusuna yazıldı.");
+      });
+      li.appendChild(btn);
+      ul.appendChild(li);
+    });
+  }
+
+  async function runEserSearch(query) {
+    const q = extractEserSearchQuery(query);
+    if (!q) {
+      flash("Arama metni boş.");
+      return false;
+    }
+    const ul = $("tercume-work-eser-sites");
+    const inp = $("tercume-eser-input");
+    if (inp) inp.value = q;
+    if (ul) ul.innerHTML = `<li class="code-tree-loading">${esc("Aranıyor (birkaç kaynak taranıyor)…")}</li>`;
+    const hint = $("tercume-eser-hint");
+    if (hint) hint.textContent = `«${q}» aranıyor…`;
+    flash("İnternet araması başladı…");
+    try {
+      const res = await fetch(`${api()}/api/tercume/eser-search?q=${encodeURIComponent(q)}`);
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : j.error || `HTTP ${res.status}`);
+      if (!j.ok) throw new Error(j.error || "Arama başarısız");
+      renderEserSearchResults(j);
+      flash(`${j.total || 0} sonuç listelendi.`);
+      setTercumeTab("ara");
+      return true;
+    } catch (e) {
+      renderEserSearchEmpty(`Arama hatası: ${e.message || e}`);
+      flash(e.message || "Arama hatası");
+      return false;
+    }
+  }
+
+  async function pickDownloadFolder() {
+    if (global.ruzgarApi?.pickSaveDirectory) {
+      const r = await global.ruzgarApi.pickSaveDirectory();
+      if (r?.ok) {
+        lastDownloadDir = { abs: r.abs || "", rel: r.rel || "" };
+        return r;
+      }
+      return { ok: false };
+    }
+    if (global.ruzgarApi?.pickWorkspaceDirectory) {
+      const r = await global.ruzgarApi.pickWorkspaceDirectory();
+      if (r?.ok) {
+        lastDownloadDir = { abs: "", rel: r.rel || workRoot };
+        return { ok: true, rel: r.rel };
+      }
+    }
+    lastDownloadDir = { abs: "", rel: workRoot };
+    return { ok: true, rel: workRoot };
   }
 
   function showProgress(current, total, label) {
@@ -305,14 +544,36 @@ ${chunk}`;
       flash("URL girin.");
       return;
     }
+    flash("İndirilecek klasörü seçin (Farklı kaydet)…");
+    const dir = await pickDownloadFolder();
+    if (!dir?.ok) {
+      flash("İndirme iptal edildi.");
+      return;
+    }
     const fd = new FormData();
     fd.append("url", url);
+    if (dir.abs) fd.append("target_abs", dir.abs);
+    else if (dir.rel) fd.append("target_dir_rel", dir.rel.startsWith("ilim-assistant/") ? dir.rel : `ilim-assistant/arsiv/${dir.rel}`);
+    flash("İndiriliyor (büyük dosyalar uzun sürebilir)…");
     const res = await fetch(`${api()}/api/tercume/import-url`, { method: "POST", body: fd });
     const j = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : "İndirme hatası");
     $("tercume-import-url").value = "";
-    await refreshTree();
-    if (j.rel) await openFile(j.rel);
+    const rel = String(j.rel || "");
+    if (rel.startsWith("ilim-assistant/")) {
+      workRoot = rel.split("/").slice(0, -1).join("/") || workRoot;
+      const rootInp = $("tercume-work-root");
+      if (rootInp) rootInp.value = workRoot;
+      try {
+        localStorage.setItem(LS_WORK_ROOT, workRoot);
+      } catch (_) {
+        /* ignore */
+      }
+      await refreshTree();
+      await openFile(rel);
+    } else {
+      flash(`İndirildi: ${j.abs || rel} (${Math.round((j.bytes || 0) / 1024 / 1024)} MB)`);
+    }
   }
 
   async function importFile(file) {
@@ -393,9 +654,54 @@ ${chunk}`;
     );
   }
 
+  function setTercumeTab(tab) {
+    const t = String(tab || "calisma").trim() || "calisma";
+    document.body.dataset.tercumeTab = t;
+    document.querySelectorAll(".tercume-view-tab").forEach((btn) => {
+      btn.classList.toggle("is-active", btn.dataset.tercumeTab === t);
+    });
+    const wb = $("tercume-workbench");
+    if (wb) {
+      wb.classList.toggle("tercume-workbench--ara", t === "ara");
+      wb.classList.toggle("tercume-workbench--calisma", t === "calisma");
+    }
+    const ara = $("tercume-ara-panel");
+    if (ara) ara.hidden = t !== "ara";
+    if (t === "calisma" || t === "ara") {
+      void refreshTree();
+    }
+  }
+
+  function syncTercumeLayout(isTercume) {
+    const tabs = $("tercume-view-tabs");
+    if (tabs) tabs.hidden = !isTercume;
+    if (isTercume) {
+      document.body.dataset.motor = "tercume";
+      const cur = document.body.dataset.tercumeTab || "calisma";
+      setTercumeTab(cur);
+    } else {
+      delete document.body.dataset.motor;
+      delete document.body.dataset.tercumeTab;
+    }
+  }
+
+  function wireTercumeViewTabs() {
+    const bar = $("tercume-view-tabs");
+    if (!bar || bar.dataset.wired === "1") return;
+    bar.dataset.wired = "1";
+    bar.querySelectorAll(".tercume-view-tab").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        setTercumeTab(btn.dataset.tercumeTab || "calisma");
+        const labels = { sohbet: "Sohbet", calisma: "Çalışma", ara: "Eser ara" };
+        flash(`Görünüm: ${labels[btn.dataset.tercumeTab] || btn.dataset.tercumeTab}`);
+      });
+    });
+  }
+
   function wireAll() {
     if ($("page-tercume")?.dataset.tercumeV2Wired === "1") return;
     $("page-tercume").dataset.tercumeV2Wired = "1";
+    wireTercumeViewTabs();
 
     try {
       workRoot = localStorage.getItem(LS_WORK_ROOT) || workRoot;
@@ -411,6 +717,27 @@ ${chunk}`;
     $("tercume-work-root")?.addEventListener("change", () => void pickWorkFolder());
     $("btn-tercume-open-archive")?.addEventListener("click", () => {
       if (global.ruzgarApi?.openWorkspaceRel) void global.ruzgarApi.openWorkspaceRel(workRoot);
+    });
+    $("btn-arsiv-download-refresh")?.addEventListener("click", () =>
+      void refreshArsivCatalog().catch((e) => flash(e.message)),
+    );
+    $("btn-arsiv-download-next")?.addEventListener("click", () =>
+      void downloadArsivNext().catch((e) => flash(e.message)),
+    );
+    $("btn-tercume-eser-ara")?.addEventListener("click", () => {
+      void runEserSearch(String($("tercume-eser-input")?.value || ""));
+    });
+    $("tercume-eser-input")?.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter") {
+        ev.preventDefault();
+        void runEserSearch(String($("tercume-eser-input")?.value || ""));
+      }
+    });
+    $("tercume-arsiv-download-fold")?.addEventListener("toggle", (ev) => {
+      if (ev.target.open && !$("tercume-arsiv-download-list")?.dataset.loaded) {
+        $("tercume-arsiv-download-list").dataset.loaded = "1";
+        void refreshArsivCatalog();
+      }
     });
     $("btn-tercume-translate")?.addEventListener("click", () => {
       const mode = String($("tercume-translate-mode")?.value || "single");
@@ -471,13 +798,19 @@ ${chunk}`;
     init(d) {
       deps = d || {};
       wireAll();
+      renderEserSearchEmpty();
+      if (deps.getCurrentMode?.() === "tercume") syncTercumeLayout(true);
     },
+    setTercumeTab,
+    syncTercumeLayout,
     load() {
       updateActiveLabel();
       updateStats();
       syncSavePlaceholder();
       void refreshTree();
       void refreshApprenticeLog();
+      const fold = $("tercume-arsiv-download-fold");
+      if (fold?.open) void refreshArsivCatalog();
     },
     onAssistantReply(text) {
       if (!awaitingChatReply) return;
@@ -495,5 +828,16 @@ ${chunk}`;
       if (deps.switchMode) deps.switchMode("tercume");
     },
     getOpenRel: () => openRel,
+    runSearch: (text) => runEserSearch(text).then((ok) => ok),
+    isSearchIntent(text) {
+      const t = String(text || "").trim().toLowerCase();
+      if (!t || t.length > 280) return false;
+      if (/^https?:\/\//i.test(t)) return false;
+      if (/^(ara|arat|bul)\b/.test(t)) return true;
+      if (/\b(eser|kitap|yazar).{0,40}\bara\b/.test(t)) return true;
+      if (/\bara\b.{0,30}\b(eser|kitap|mektubat|kur'an|kuran|hadis|tefsir)\b/.test(t)) return true;
+      if (/\b(eserlerini|kitaplarını)\s+ara\b/.test(t)) return true;
+      return false;
+    },
   };
 })(window);

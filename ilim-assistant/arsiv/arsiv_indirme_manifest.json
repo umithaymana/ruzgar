@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "note": "Internet Archive açık erişim. Panel: Tercüme → Arşiv indir. Büyük PDF indirme birkaç dakika sürebilir.",
+  "items": [
+    {
+      "id": "mektubat_rabbani_tr_pdf",
+      "title": "Mektubat (TR)",
+      "folder": "ilim-assistant/arsiv/Tasavvuf_Kulliyati/Mektubat_i_Rabbani",
+      "filename": "Mektubat_Imam_Rabbani_TR.pdf",
+      "archive_id": "mektubat_202009",
+      "archive_file": "Mektubat.pdf",
+      "source": "archive.org",
+      "size_bytes": 0
+    },
+    {
+      "id": "mektubat_serife_c1",
+      "title": "Mektubat-i Serife (cilt 1)",
+      "folder": "ilim-assistant/arsiv/mektubat",
+      "filename": "Mektubat_i_Serife_C1.pdf",
+      "archive_id": "mektubatiserife",
+      "archive_file": "Mektûbât-ı Şerife C1.pdf",
+      "source": "archive.org",
+      "size_bytes": 25173161
+    },
+    {
+      "id": "mektuabat_rabbani_vol1_scan",
+      "title": "Maktoobat Vol.1 (tarama)",
+      "folder": "ilim-assistant/arsiv/Tasavvuf_Kulliyati/Mektubat_i_Rabbani",
+      "filename": "Maktoobat_Imam_Rabbani_Vol1.pdf",
+      "archive_id": "in.ernet.dli.2015.488362",
+      "archive_file": "2015.488362.Maktoobat-I-Imam-Rabbani.pdf",
+      "source": "archive.org",
+      "size_bytes": 100519422
+    },
+    {
+      "id": "hadis_buhari_ornek",
+      "title": "Sahih Bukhari (ornek EN)",
+      "folder": "ilim-assistant/arsiv/Hadis_Kulliyati",
+      "filename": "Sahih_Bukhari_ornek.pdf",
+      "archive_id": "SahihBukhari",
+      "archive_file": "SahihBukhari.pdf",
+      "source": "archive.org",
+      "size_bytes": 0
+    },
+    {
+      "id": "kuran_turkce_meal_ornek",
+      "title": "Kuran (TR meal - metin PDF)",
+      "folder": "ilim-assistant/arsiv/kuran",
+      "filename": "Kuran_Turkce_Meal_ornek.pdf",
+      "archive_id": "quran-turkish",
+      "archive_file": "quran-turkish_text.pdf",
+      "source": "archive.org",
+      "size_bytes": 39765329
+    },
+    {
+      "id": "osmanli_tarih_ornek",
+      "title": "Osmanli Imparatorlugu (ornek)",
+      "folder": "ilim-assistant/arsiv/Tarih_ve_Kultur",
+      "filename": "Osmanli_Imparatorlugu_ornek.pdf",
+      "archive_id": "OsmanliImparatorlugu",
+      "archive_file": "osmempr.pdf",
+      "source": "archive.org",
+      "size_bytes": 0
+    }
+  ]
+}
