@@ -388,6 +388,11 @@ const el = {
   btnTercumeLastToTarget: document.getElementById("btn-tercume-last-to-target"),
   btnTercumeSourceToChat: document.getElementById("btn-tercume-source-to-chat"),
   btnTercumeClear: document.getElementById("btn-tercume-clear"),
+  btnTercumeOcr: document.getElementById("btn-tercume-ocr"),
+  btnTercumeSaveTarget: document.getElementById("btn-tercume-save-target"),
+  btnTercumeImportUrl: document.getElementById("btn-tercume-import-url"),
+  tercumeSaveRel: document.getElementById("tercume-save-rel"),
+  tercumeImportUrl: document.getElementById("tercume-import-url"),
   tercumeStats: document.getElementById("tercume-stats"),
   tercumeActiveFile: document.getElementById("tercume-active-file"),
   sesSttLang: document.getElementById("ses-stt-lang"),
@@ -492,6 +497,19 @@ let atolyeOpenRel = null;
 let ilimOpenRel = null;
 /** Tercüme Atölyesi — kaynak dosya */
 let tercumeOpenRel = null;
+let tercumeAwaitingReply = false;
+
+const TERCUME_EBOOK_EXTS = [
+  ".epub",
+  ".fb2",
+  ".mobi",
+  ".azw",
+  ".azw3",
+  ".kfx",
+  ".djvu",
+  ".djv",
+];
+const TERCUME_IMAGE_EXTS = [".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tif", ".tiff"];
 /** Ses önizleme blob URL — yeniden seçimde iptal */
 let sesPreviewObjectUrl = null;
 /** Video önizleme blob URL */
@@ -568,6 +586,71 @@ async function readArchiveFileForOkuma(rel) {
     return out;
   }
   return readWorkspaceText(rel);
+}
+
+/** Tercüme atölyesi: okuma + e-kitap + görsel OCR. */
+async function readArchiveFileForTercume(rel, opts = {}) {
+  const low = String(rel || "").toLowerCase();
+  const forceOcr = !!opts.forceOcr;
+  if (forceOcr || TERCUME_IMAGE_EXTS.some((e) => low.endsWith(e))) {
+    const lang = tercumeOcrLangFromUi();
+    const res = await fetch(
+      `${API}/api/workspace/read-image-ocr?rel=${encodeURIComponent(rel)}&lang=${encodeURIComponent(lang)}`,
+    );
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const d = j.detail;
+      throw new Error(typeof d === "string" ? d : JSON.stringify(d || {}) || `HTTP ${res.status}`);
+    }
+    let out = String(j.text ?? "");
+    if (j.truncated_length) out += "\n\n— OCR: uzunluk sınırı nedeniyle kısaltılmış olabilir.";
+    return out;
+  }
+  const ebookLike = TERCUME_EBOOK_EXTS.some((e) => low.endsWith(e)) || low.endsWith(".rtf");
+  if (ebookLike) {
+    const res = await fetch(`${API}/api/workspace/read-ebook?rel=${encodeURIComponent(rel)}`);
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const d = j.detail;
+      throw new Error(typeof d === "string" ? d : JSON.stringify(d || {}) || `HTTP ${res.status}`);
+    }
+    let out = String(j.text ?? "");
+    const meta = j.meta && typeof j.meta === "object" ? j.meta : {};
+    if (meta.converter) out += `\n\n— Dönüştürücü: ${meta.converter}`;
+    if (j.truncated_length) out += "\n\n— E-kitap: metin sınırı nedeniyle kısaltılmış olabilir.";
+    return out;
+  }
+  return readArchiveFileForOkuma(rel);
+}
+
+function tercumeOcrLangFromUi() {
+  const v = String(el.tercumeSrcLang?.value || "auto").trim();
+  const map = {
+    tr: "tur",
+    en: "eng",
+    ar: "ara",
+    de: "deu",
+    fr: "fra",
+    fa: "fas",
+    ru: "rus",
+  };
+  if (v === "auto") return "tur+eng";
+  return map[v] ? `${map[v]}+eng` : "tur+eng";
+}
+
+function defaultTercumeSaveRel() {
+  const tgt = String(el.tercumeTgtLang?.value || "tr").trim() || "tr";
+  if (tercumeOpenRel) {
+    const leaf = String(tercumeOpenRel).split("/").pop() || "kaynak";
+    const stem = leaf.replace(/\.[^.]+$/, "") || "kaynak";
+    return `ilim-assistant/arsiv/tercume-output/${stem}_${tgt}.txt`;
+  }
+  return `ilim-assistant/arsiv/tercume-output/ceviri_${tgt}_${Date.now()}.txt`;
+}
+
+function syncTercumeSaveRelPlaceholder() {
+  if (!el.tercumeSaveRel || el.tercumeSaveRel.value.trim()) return;
+  el.tercumeSaveRel.placeholder = defaultTercumeSaveRel();
 }
 
 const TOP_MODE_BUTTONS = [
@@ -4676,11 +4759,12 @@ async function openOkumaArsivFile(rel) {
 
 async function openTercumeArsivFile(rel) {
   try {
-    const text = await readArchiveFileForOkuma(rel);
+    const text = await readArchiveFileForTercume(rel);
     tercumeOpenRel = rel;
     if (el.tercumeSource) el.tercumeSource.value = text;
     updateTercumeActiveFileLabel();
     updateTercumeTextStats();
+    syncTercumeSaveRelPlaceholder();
     flashRuzgarDurum(`Kaynak yüklendi: ${rel}`);
     el.tercumeSource?.focus();
   } catch (e) {
@@ -4713,7 +4797,80 @@ async function tercumeAtolyeRefreshTree() {
 async function loadTercumeFileList() {
   updateTercumeActiveFileLabel();
   updateTercumeTextStats();
+  syncTercumeSaveRelPlaceholder();
   await tercumeAtolyeRefreshTree();
+}
+
+async function runTercumeOcrOnCurrentFile() {
+  if (!tercumeOpenRel) {
+    flashRuzgarDurum("Önce soldan bir görsel dosyası seçin.");
+    return;
+  }
+  const low = String(tercumeOpenRel).toLowerCase();
+  if (!TERCUME_IMAGE_EXTS.some((e) => low.endsWith(e))) {
+    flashRuzgarDurum("OCR yalnızca PNG/JPG/WebP/TIF görselleri için.");
+    return;
+  }
+  flashRuzgarDurum("OCR çalışıyor…");
+  try {
+    const text = await readArchiveFileForTercume(tercumeOpenRel, { forceOcr: true });
+    if (el.tercumeSource) el.tercumeSource.value = text;
+    updateTercumeTextStats();
+    flashRuzgarDurum("OCR tamam — kaynak panele yazıldı.");
+  } catch (e) {
+    flashRuzgarDurum(e && e.message ? e.message : "OCR başarısız.");
+  }
+}
+
+async function saveTercumeTargetToArchive() {
+  const body = String(el.tercumeTarget?.value || "").trim();
+  if (!body) {
+    flashRuzgarDurum("Hedef metin boş — önce Çevir veya «Son yanıt → hedef».");
+    return;
+  }
+  const rel = String(el.tercumeSaveRel?.value || "").trim() || defaultTercumeSaveRel();
+  const fd = new FormData();
+  fd.append("rel", rel);
+  fd.append("text", body);
+  flashRuzgarDurum("Kaydediliyor…");
+  try {
+    const res = await fetch(`${API}/api/tercume/save-target`, { method: "POST", body: fd });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const d = j.detail;
+      throw new Error(typeof d === "string" ? d : JSON.stringify(d || {}) || `HTTP ${res.status}`);
+    }
+    if (el.tercumeSaveRel) el.tercumeSaveRel.value = String(j.rel || rel);
+    flashRuzgarDurum(`Kaydedildi: ${j.rel || rel}`);
+  } catch (e) {
+    flashRuzgarDurum(e && e.message ? e.message : "Kaydetme başarısız.");
+  }
+}
+
+async function importTercumeUrlToArchive() {
+  const url = String(el.tercumeImportUrl?.value || "").trim();
+  if (!url) {
+    flashRuzgarDurum("URL girin (https://…).");
+    return;
+  }
+  const fd = new FormData();
+  fd.append("url", url);
+  flashRuzgarDurum("İndiriliyor…");
+  try {
+    const res = await fetch(`${API}/api/tercume/import-url`, { method: "POST", body: fd });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const d = j.detail;
+      throw new Error(typeof d === "string" ? d : JSON.stringify(d || {}) || `HTTP ${res.status}`);
+    }
+    const rel = String(j.rel || "");
+    if (el.tercumeImportUrl) el.tercumeImportUrl.value = "";
+    await tercumeAtolyeRefreshTree();
+    if (rel) await openTercumeArsivFile(rel);
+    else flashRuzgarDurum("İndirildi — listeden dosyayı açın.");
+  } catch (e) {
+    flashRuzgarDurum(e && e.message ? e.message : "URL indirme başarısız.");
+  }
 }
 
 async function sendTercumeTranslatePrompt() {
@@ -4737,7 +4894,8 @@ Yalnızca hedef dilde tam çeviriyi ver; uzun giriş veya genel özet yazma. Ger
 ---
 
 ${chunk}`;
-  flashRuzgarDurum("Rüzgar’a iletiliyor…");
+  tercumeAwaitingReply = true;
+  flashRuzgarDurum("Rüzgar’a iletiliyor… (yanıt gelince hedef panele yazılır)");
   await sendMessageWithText(msg, { skipUserBubble: false });
 }
 
@@ -4801,13 +4959,33 @@ function wireTercumeAtolye() {
       if (el.tercumeSource) el.tercumeSource.value = "";
       if (el.tercumeTarget) el.tercumeTarget.value = "";
       tercumeOpenRel = null;
+      tercumeAwaitingReply = false;
       updateTercumeActiveFileLabel();
       updateTercumeTextStats();
+      syncTercumeSaveRelPlaceholder();
       flashRuzgarDurum("Paneller temizlendi.");
+    });
+  }
+  if (el.btnTercumeOcr) {
+    el.btnTercumeOcr.addEventListener("click", () => {
+      void runTercumeOcrOnCurrentFile();
+    });
+  }
+  if (el.btnTercumeSaveTarget) {
+    el.btnTercumeSaveTarget.addEventListener("click", () => {
+      void saveTercumeTargetToArchive();
+    });
+  }
+  if (el.btnTercumeImportUrl) {
+    el.btnTercumeImportUrl.addEventListener("click", () => {
+      void importTercumeUrlToArchive();
     });
   }
   if (el.tercumeSource) {
     el.tercumeSource.addEventListener("input", () => updateTercumeTextStats());
+  }
+  if (el.tercumeTgtLang) {
+    el.tercumeTgtLang.addEventListener("change", () => syncTercumeSaveRelPlaceholder());
   }
 }
 
@@ -8608,6 +8786,13 @@ async function streamChat(userText) {
         responseBubble.innerHTML = esc(full).replace(/\n/g, "<br>");
       }
       lastAssistantReply = full;
+      if (tercumeAwaitingReply && full.trim()) {
+        tercumeAwaitingReply = false;
+        if (el.tercumeTarget) el.tercumeTarget.value = full;
+        syncTercumeSaveRelPlaceholder();
+        flashRuzgarDurum("Çeviri hedef panele yazıldı — «Hedefi kaydet» ile arşive alın.");
+        if (currentMode !== "tercume") switchMode("tercume");
+      }
       updateDashboardLastSpeech();
       updateDynamicWorkbench();
       renderOrchestraBridge(ev.orchestra);

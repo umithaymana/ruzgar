@@ -3601,6 +3601,67 @@ def api_tercume_import_url(
     return {"ok": True, "rel": rel, "bytes": len(data), "content_type": ctype}
 
 
+def _tercume_save_rel_allowed(raw: str) -> Path:
+    rel = (raw or "").strip().replace("\\", "/").lstrip("/")
+    if not rel:
+        raise HTTPException(status_code=400, detail="rel gerekli.")
+    allowed_prefixes = (
+        "ilim-assistant/arsiv/",
+        "arsiv/",
+    )
+    if not any(rel.startswith(p) for p in allowed_prefixes):
+        raise HTTPException(
+            status_code=400,
+            detail="Kayıt yalnızca ilim-assistant/arsiv/ altına (örn. tercume-output/).",
+        )
+    if Path(rel).suffix.lower() not in {".txt", ".md", ".html", ".htm"}:
+        raise HTTPException(status_code=400, detail="Uzantı: txt, md veya html olmalı.")
+    root = REPO_ROOT.resolve()
+    target = (root / rel.replace("/", os.sep)).resolve()
+    try:
+        target.relative_to(root)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Geçersiz yol (proje dışı).") from None
+    return target
+
+
+@app.post("/api/tercume/save-target")
+def api_tercume_save_target(
+    rel: str = Form(""),
+    text: str = Form(""),
+    copy_rel: str = Form(""),
+) -> dict[str, Any]:
+    """Blok J94 — hedef çeviri metnini arşive kaydet (isteğe bağlı ikinci kopya)."""
+    body = (text or "")
+    if not body.strip():
+        raise HTTPException(status_code=400, detail="Kaydedilecek metin boş.")
+    if len(body) > 2_500_000:
+        raise HTTPException(status_code=400, detail="Metin çok büyük (2.5 MB sınır).")
+
+    target = _tercume_save_rel_allowed(rel)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        target.write_text(body, encoding="utf-8")
+    except OSError as exc:
+        raise HTTPException(status_code=500, detail=f"Yazılamadı: {str(exc)[:200]}") from exc
+
+    out: dict[str, Any] = {
+        "ok": True,
+        "rel": target.relative_to(REPO_ROOT).as_posix(),
+        "bytes": len(body.encode("utf-8")),
+    }
+    copy_raw = (copy_rel or "").strip()
+    if copy_raw:
+        try:
+            copy_path = _tercume_save_rel_allowed(copy_raw)
+            copy_path.parent.mkdir(parents=True, exist_ok=True)
+            copy_path.write_text(body, encoding="utf-8")
+            out["copy_rel"] = copy_path.relative_to(REPO_ROOT).as_posix()
+        except HTTPException:
+            pass
+    return out
+
+
 @app.post("/api/code/run")
 async def api_code_run(body: CodeRunBody):
     """Programlama Atölyesi: Python/JavaScript kodunu kontrollü çalıştırır.

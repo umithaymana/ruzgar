@@ -495,11 +495,10 @@
 
           <section class="motor-page" id="page-tercume" hidden>
             <div class="atelier-info-strip">
-              <span class="phase-badge">Faz 3 ✓</span>
+              <span class="phase-badge">Faz 91–100 ✓</span>
               <span class="atelier-promise">
-                <strong>Tercüme Atölyesi</strong> — İlim arşivinden <strong>TXT / PDF / DOCX</strong> kaynak yükleme,
-                kaynak ↔ hedef paneller, dil seçimi, <strong>Rüzgar’a çevirt</strong>, son yanıtı hedefe al ve sohbete aktar.
-                Terim sözlüğü ve çevrim dışı motor ileride.
+                <strong>Tercüme Atölyesi (Blok J)</strong> — Arşivden <strong>PDF / DOCX / EPUB / görsel OCR</strong>,
+                <strong>Çevir</strong> → sohbet → otomatik hedef panel, <strong>kaydet</strong>, URL içe aktar.
               </span>
             </div>
             <h3>Tercüme Motoru — Ofis Paneli</h3>
@@ -556,7 +555,30 @@
                     Kaynağı sohbete
                   </button>
                   <button type="button" class="btn-secondary btn-compact" id="btn-tercume-clear">Temizle</button>
+                  <button type="button" class="btn-secondary btn-compact" id="btn-tercume-ocr" title="Seçili görselden OCR (tesseract)">
+                    OCR
+                  </button>
+                  <button type="button" class="btn-secondary btn-compact" id="btn-tercume-save-target" title="Hedef metni arşive kaydet">
+                    Hedefi kaydet
+                  </button>
                   <span class="code-active-path okuma-active-path" id="tercume-active-file">Kaynak: (sol listeden dosya seçin)</span>
+                </div>
+                <div class="tercume-secondary-bar">
+                  <input
+                    type="text"
+                    id="tercume-save-rel"
+                    class="tercume-save-path"
+                    placeholder="ilim-assistant/arsiv/tercume-output/ceviri.txt"
+                    aria-label="Kayıt yolu"
+                  />
+                  <input
+                    type="url"
+                    id="tercume-import-url"
+                    class="tercume-import-url"
+                    placeholder="https://… kaynak indir"
+                    aria-label="URL içe aktar"
+                  />
+                  <button type="button" class="btn-secondary btn-compact" id="btn-tercume-import-url">URL indir</button>
                 </div>
                 <div class="tercume-panels">
                   <div class="tercume-panel">
@@ -1456,6 +1478,6 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
       <button type="button" data-act="paste">Yapıştır</button>
     </div>
 
-    <script src="app.js?v=20260529-blok-i"></script>
+    <script src="app.js?v=20260529-blok-j"></script>
   </body>
 </html>

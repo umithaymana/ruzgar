@@ -244,18 +244,18 @@ git push -u origin HEAD
 **Branch:** `plan/blok-j-tercume-kapanis`  
 **Süre:** 1–2 hafta · **programlama dosyalarına dokunma yok**
 
-| # | İş |
-|---|-----|
-| J91 | tercüme dosya listesi (mini PR 1) |
-| J92 | çevir butonu wiring |
-| J93 | OCR import |
-| J94 | kaydet hedef |
-| J95 | ebook akışı |
-| J96 | masaüstü checklist otomasyon (opsiyonel) |
-| J97 | `RUZGAR_MASAUSTU_ONAYLI_DURUM` rev 2 |
-| J98 | memnuniyet anketi taslağı |
-| J99 | programlama 100/100 onay doc |
-| J100 | Faz 100 hub notu (Ana Motor) |
+| # | İş | Durum |
+|---|-----|--------|
+| J91 | tercüme dosya listesi (mini PR 1) | ✓ arşiv ağacı + EPUB/görsel |
+| J92 | çevir butonu wiring | ✓ otomatik hedef panel |
+| J93 | OCR import | ✓ OCR butonu + API |
+| J94 | kaydet hedef | ✓ save-target + yol |
+| J95 | ebook akışı | ✓ read-ebook |
+| J96 | masaüstü checklist otomasyon (opsiyonel) | ✓ `scripts/ruzgar_masaustu_checklist.ps1` |
+| J97 | `RUZGAR_MASAUSTU_ONAYLI_DURUM` rev 2 | ✓ |
+| J98 | memnuniyet anketi taslağı | ✓ `MEMNUNIYET_ANKETI_TASLAK.md` |
+| J99 | programlama 100/100 onay doc | ✓ `PROGRAMLAMA_100_ONAY.md` |
+| J100 | Faz 100 hub notu (Ana Motor) | ✓ manifest |
 
 **Her J91–J95:** ayrı commit mümkün; blok sonunda **tek push** veya alt-commit + son push.
 
@@ -309,5 +309,5 @@ git push -u origin plan/blok-a-koruma
 - `PROGRAMMING_MOTOR_YOL_HARITASI.md` — Dalga E–H
 - `scripts/ruzgar_programlama_upgrade_report.json` — son bench kanıtı
 
-**Durum:** Blok I tamamlandı (2026-05-29) — yerel zincir workbench, E3 doc, manifest tag. Sırada **Blok J** (tercüme UI, programlama dosyası yok).  
+**Durum:** Blok A→J tamamlandı (2026-05-29). Tercüme atölye Blok J; programlama hatı A–I. Sonraki iş: bench/KPI sürdürme, memnuniyet anketi uygulaması (isteğe bağlı).  
 Blok B: `programlama-umit-onay-card`, `renderProgramlamaUmitOnay`, 10 sn poll, `app.js?v=20260529-blok-b`.

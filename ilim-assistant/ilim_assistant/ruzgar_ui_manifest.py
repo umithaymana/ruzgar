@@ -4,8 +4,8 @@ import time
 from typing import Any
 
 
-CURRENT_PHASE = 98
-CURRENT_PHASE_LABEL = "Faz 86–98"
+CURRENT_PHASE = 100
+CURRENT_PHASE_LABEL = "Faz 86–100 · A→J"
 
 
 def _phase(n: int, name: str, status: str = "tamam") -> dict[str, str]:
@@ -29,10 +29,10 @@ def build_ui_manifest(*, health: dict[str, Any] | None = None) -> dict[str, Any]
         "current_phase": CURRENT_PHASE,
         "current_phase_label": CURRENT_PHASE_LABEL,
         "dashboard": {
-            "badge": "Ana Motor · Faz 98 hazır",
+            "badge": "Ana Motor · Faz 100 hub (A→J)",
             "promise": (
-                "Orkestra + programlama: onaylı yerel işlem (Faz 98), "
-                "otonomi benchmark (Faz 99), hub ve video arama."
+                "Hub: programlama, video, ses, okuma, tercüme, hafıza, hızır. "
+                "A→J planı kapandı — programlama Faz 98, tercüme atölye Blok J."
             ),
             "welcome_foot": "Faz 86–98 · Ümit & Gökçenur",
             "help_title": "Rüzgar — Faz 98 onaylı işlem + ROK",
@@ -51,6 +51,7 @@ def build_ui_manifest(*, health: dict[str, Any] | None = None) -> dict[str, Any]
             _phase(96, "Anlık programlama"),
             _phase(97, "Kapsam kilidi"),
             _phase(98, "Onaylı yerel işlem", "aktif"),
+            _phase(100, "A→J kapanış · hub notu", "aktif"),
         ],
         "motors": {
             "genel": {"tag": genel_tag},
@@ -59,7 +60,7 @@ def build_ui_manifest(*, health: dict[str, Any] | None = None) -> dict[str, Any]
             "ses": {"tag": "Faz 72 · Konuşarak yap (ROK)"},
             "video": {"tag": "Faz 71/84 · İndir + ara (ROK)"},
             "okuma": {"tag": "Faz 73 · Konuşarak yap (ROK)"},
-            "tercume": {"tag": "Faz 74 · Konuşarak yap (ROK)"},
+            "tercume": {"tag": "Faz 91–100 · Atölye UI (Blok J)"},
             "programlama": {"tag": "Faz 85–90 · Yerel zincir E3 + onay"},
         },
         "capabilities": [
@@ -68,6 +69,8 @@ def build_ui_manifest(*, health: dict[str, Any] | None = None) -> dict[str, Any]
             "Video: URL indir · isimle YouTube ara",
             "Programlama: proje üret, ajan uyum, pytest",
             "ROK tüm yardımcı motorlar · Ümit cevap emri",
+            "Faz 100: Ana Motor hub — tercüme/programlama/video/ses/okuma/hafıza/hızır",
+            "Tercüme atölye: OCR, e-kitap, URL içe aktar, hedef kaydet",
         ],
         "video": {
             "download_api": "/api/video/download",

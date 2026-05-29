@@ -2411,6 +2411,24 @@ body:not(.workbench-hizir-active) #workbench-hizir-tools,
   border: 0;
   border-radius: 0;
 }
+.tercume-secondary-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 8px 0;
+}
+.tercume-save-path,
+.tercume-import-url {
+  flex: 1 1 200px;
+  min-width: 160px;
+  font-size: 12px;
+  padding: 6px 8px;
+  border: 1px solid #3c3c3c;
+  border-radius: 4px;
+  background: #1e1e1e;
+  color: #d4d4d4;
+}
 
 /* Ses Atölyesi — Faz 4 */
 .ses-workbench {

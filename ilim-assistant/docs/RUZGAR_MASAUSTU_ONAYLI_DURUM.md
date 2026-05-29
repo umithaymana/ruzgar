@@ -1,6 +1,6 @@
 # Rüzgar masaüstü — onaylı çalışan durum (KESİN EMİR)
 
-**Tarih:** 2026-05-29 (Blok A güncelleme)  
+**Tarih:** 2026-05-29 (rev 2 — Blok J tercüme atölye)  
 **Onay commit:** `e2cccb8` — `fix(ruzgar): onayli masaustu taban cizgisi — aa39618 UI + Faz 98 API`  
 **Build rev (API):** `2026-05-27-ruzgar-faz98-v107`  
 **Doğrulama:** Ümit — motorlar, Gönder, Sunucu ✓, manifest, Faz 98 şeridi çalışır.
@@ -33,6 +33,14 @@ E1 izleme (curl): [`RUZGAR_PROGRAMLAMA_E1_IZLEME.md`](RUZGAR_PROGRAMLAMA_E1_IZLE
 
 - [ ] Üst: **Sunucu ✓**
 - [ ] **Bağlantı Aktif** bandı
-- [ ] Ana Motor şeridi: **Faz 98 · hazır** (manifest)
+- [ ] Ana Motor şeridi: **Faz 100 hub** (manifest)
 - [ ] Sol menü: Hafıza / Tercüme / Programlama geçişi
 - [ ] Sohbet: `selam` + **Gönder** → balon
+- [ ] Tercüme: arşiv dosyası → **Çevir** → hedef panel dolu → **Hedefi kaydet**
+- [ ] Opsiyonel otomasyon: `scripts/ruzgar_masaustu_checklist.ps1`
+
+## Blok J (tercüme — onaylı kapsam)
+
+- `ruzgar-desktop`: OCR, e-kitap açılış, URL indir, hedef kaydet, çeviri → otomatik hedef
+- API: `POST /api/tercume/save-target` · bkz. [`TERCUME_ATOLYE_BLOK_J.md`](TERCUME_ATOLYE_BLOK_J.md)
+- Programlama motor dosyaları bu blokta **değiştirilmedi**
