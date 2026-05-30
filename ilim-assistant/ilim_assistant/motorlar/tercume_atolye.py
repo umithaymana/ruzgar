@@ -480,13 +480,19 @@ def workbench_config() -> dict[str, Any]:
     pdf_cap = tercume_pdf_max_pages()
     return {
         "version": ATOLYE_VERSION,
-        "analyst_version": "tercume-analyst-v1-2026-05-31b",
+        "analyst_version": "tercume-analyst-v2-faz2-2026-05-31",
         "analyst_routes": ["/api/tercume/analyze", "/api/tercume/pipeline"],
         "batch_routes": [
             "/api/tercume/batch-start",
             "/api/tercume/batch-status",
             "/api/tercume/batch-cancel",
         ],
+        "read_routes": [
+            "/api/tercume/read-start",
+            "/api/tercume/read-status",
+            "/api/tercume/read-cancel",
+        ],
+        "read_pipeline_version": "tercume-read-pipeline-v3-faz3-2026-05-31",
         "ocr_lang": ocr_config_for_api(),
         "translation_policy": {
             "local_first_search": local_first_search_enabled(),

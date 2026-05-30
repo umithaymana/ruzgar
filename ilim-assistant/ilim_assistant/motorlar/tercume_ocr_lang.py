@@ -3,18 +3,18 @@
 
 from __future__ import annotations
 
-OCR_LANG_VERSION = "tercume-ocr-lang-v1"
+OCR_LANG_VERSION = "tercume-ocr-lang-v2"
 
-# Tesseract lang kodları (kurulumda paket gerekir: ara, ota, tur, …)
+# Resmi Tesseract paketinde "ota" yok; Osmanlıca Perso-Arap harfler Arapça (ara) OCR ile okunur.
 PRESETS: dict[str, str] = {
     "auto": "tur+eng",
     "tur+eng": "tur+eng",
     "tur": "tur",
     "ara": "ara",
-    "ota": "ota",
-    "ara+ota": "ara+ota",
+    "ota": "ara+osd",
+    "ara+ota": "ara+osd",
     "tur+ara": "tur+ara",
-    "tur+ota": "tur+ota",
+    "tur+ota": "tur+ara",
     "eng": "eng",
 }
 
@@ -23,10 +23,10 @@ PRESET_LABELS: dict[str, str] = {
     "tur+eng": "Türkçe + İngilizce",
     "tur": "Türkçe",
     "ara": "Arapça",
-    "ota": "Osmanlıca (ota)",
-    "ara+ota": "Arapça + Osmanlıca",
+    "ota": "Osmanlıca (Arapça OCR)",
+    "ara+ota": "Arapça + Osmanlıca script",
     "tur+ara": "Türkçe + Arapça",
-    "tur+ota": "Türkçe + Osmanlıca",
+    "tur+ota": "Türkçe + Arapça (Osmanlıca)",
     "eng": "İngilizce",
 }
 
@@ -37,7 +37,7 @@ def resolve_ocr_lang(raw: str, *, src_lang: str = "auto") -> str:
         return PRESETS[key]
     sl = (src_lang or "auto").strip().lower()[:2]
     if sl == "ar":
-        return "ara+ota"
+        return "ara+osd"
     if sl == "fa":
         return "fas+ara"
     if sl == "tr":
@@ -51,5 +51,5 @@ def ocr_config_for_api() -> dict:
     return {
         "version": OCR_LANG_VERSION,
         "presets": [{"id": k, "label": PRESET_LABELS.get(k, k), "tesseract": v} for k, v in PRESETS.items()],
-        "hint": "Osmanlıca için Tesseract ota dil paketi kurulu olmalı.",
+        "hint": "Osmanlıca metinler Perso-Arap harfle yazılır; resmi Tesseract paketinde ota yok, ara+osd kullanılır.",
     }

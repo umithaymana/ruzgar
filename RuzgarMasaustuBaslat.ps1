@@ -13,6 +13,15 @@ function Log([string]$m) {
 }
 
 Log "=== Masaustu baslat ==="
+$TessData = Join-Path $Root ".ruzgar\tessdata"
+if (Test-Path $TessData) {
+    $env:TESSDATA_PREFIX = $TessData
+    Log "TESSDATA_PREFIX=$TessData"
+}
+$TessExe = "C:\Program Files\Tesseract-OCR"
+if (Test-Path (Join-Path $TessExe "tesseract.exe")) {
+    $env:Path = "$TessExe;" + $env:Path
+}
 $env:RUZGAR_EXPECTED_BUILD_REV = $ExpectedRev
 $env:RUZGAR_API_MANAGED = "1"
 

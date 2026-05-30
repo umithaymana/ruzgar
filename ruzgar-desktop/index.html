@@ -608,9 +608,14 @@
                   <button type="button" class="btn-secondary btn-compact" id="btn-tercume-save-target">Kaydet</button>
                   <button type="button" class="btn-secondary btn-compact" id="btn-tercume-ocr">OCR</button>
                   <button type="button" class="btn-secondary btn-compact" id="btn-tercume-batch-cilt" title="Çalışma klasöründeki kitapları sırayla arka planda çevir">Cilt sırası</button>
+                  <button type="button" class="btn-secondary btn-compact" id="btn-tercume-read-analyze" title="Dosyanın sayfa kalitesini arka planda analiz et (taranmış PDF uyarısı)">Okuma analizi</button>
                   <button type="button" class="btn-secondary btn-compact" id="btn-tercume-clear">Temizle</button>
                   <button type="button" class="btn-secondary btn-compact" id="btn-tercume-last-to-target">Sohbet → hedef</button>
                   <span class="code-active-path" id="tercume-active-file">—</span>
+                </div>
+                <div class="tercume-ocr-warn" id="tercume-ocr-warn" hidden role="status">
+                  <strong>OCR kurulumu gerekli:</strong>
+                  <span id="tercume-ocr-warn-text">Taranmış sayfa ve görseller için Tesseract (Arapça + Osmanlıca) kurulu olmalı.</span>
                 </div>
                 <div class="tercume-progress-wrap" id="tercume-progress-wrap" hidden>
                   <div class="tercume-progress-bar"><div class="tercume-progress-fill" id="tercume-progress-fill"></div></div>

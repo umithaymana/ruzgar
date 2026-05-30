@@ -14,6 +14,10 @@ Bu depo masaüstü (Electron `ruzgar-desktop`), yerel API (`ilim-assistant/deskt
 
 **Railway / Render / Fly.io:** `ilim-assistant/Dockerfile` ile HTTP API çalıştırılabilir.
 
+**OCR (Arapça / Osmanlıca):** Taranmış sayfa ve görsel okuma **sunucuda** çalışır; halka açıldığınızda kullanıcıların Tesseract kurmasına gerek kalmaz. Docker imajı şunları içerir: `tesseract-ocr`, Arapça/Türkçe/İngilizce paketleri ve **Osmanlıca (`ota`)** dil dosyası. Kontrol: dağıtım sonrası `GET /api/health` → `ocr.cloud_ready: true` olmalı.
+
+Yerel geliştirme PC için (bulut değil): kök dizinde **`Ruzgar_OCR_Kur.bat`** — Tesseract + `ara` / `ota` / `tur` / `eng` indirir.
+
 **LLM (Ollama):** Konteynerin içinde Ollama + büyük model çalıştırmak ikinci bir hizmet veya çok daha büyük makine gerektirir. Genelde **`OPENAI_COMPAT_BASE`** ile dışarıdaki bir Ollama/OpenAI uyumlu uç nokta (ör. kendi GPU sunucunuz, Groq/OpenAI uyumlu API) kullanılır.
 
 ---
@@ -95,7 +99,7 @@ docker run --rm -p 8777:8777 ^
 ## Dosya özeti
 
 - `ilim-assistant/requirements-api.txt` — Docker / bulutta API için bağımlılıklar (Gradio yok).
-- `ilim-assistant/Dockerfile` — API imgesi (`ffmpeg`, Whisper uyumu).
+- `ilim-assistant/Dockerfile` — API imgesi (`ffmpeg`, Whisper, **Tesseract + Arapça/Osmanlıca OCR**).
 - `ilim-assistant/.dockerignore` — imaj boyutunu ve gereksiz dosyayı azaltır.
 - `ilim-assistant/railway.json` — Railway’de Dockerfile build ipucu.
 - `requirements.txt` (ilim içinde tam geliştirme) için mevcut `ilim-assistant/requirements.txt` kullanılmaya devam eder.

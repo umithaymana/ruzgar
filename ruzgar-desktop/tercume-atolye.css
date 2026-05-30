@@ -408,6 +408,25 @@ body[data-motor="tercume"][data-tercume-tab="ara"] .panel-main {
 }
 
 #page-tercume .tercume-progress-wrap {
+  margin: 6px 0 4px;
+}
+#page-tercume .tercume-ocr-warn {
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border-radius: 4px;
+  border: 1px solid #8a6d3b;
+  background: #3d3420;
+  color: #f0e6c8;
+  font-size: 12px;
+  line-height: 1.45;
+}
+#page-tercume .tercume-ocr-warn[hidden] {
+  display: none !important;
+}
+#page-tercume .tercume-ocr-warn strong {
+  color: #ffd580;
+}
+#page-tercume .tercume-progress-wrap {
   padding: 4px 10px;
   border-bottom: 1px solid #2a2a2a;
 }

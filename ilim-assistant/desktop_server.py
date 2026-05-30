@@ -995,6 +995,12 @@ def health():
 
     _main_only = _main_chat_genel_only()
     _sb = _super_brain_health_for_api()
+    try:
+        from ilim_assistant.motorlar.tercume_ocr_runtime import ocr_runtime_status
+
+        _ocr = ocr_runtime_status()
+    except Exception:
+        _ocr = {"available": False, "cloud_ready": False, "hint": "OCR durumu okunamadi"}
     return {
         "ok": True,
         "service": "ruzgar-desktop-api",
@@ -1003,6 +1009,7 @@ def health():
         "docx_text": docx_text_runtime_available(),
         "ffmpeg": ffmpeg_available(),
         "ffprobe": ffprobe_available(),
+        "ocr": _ocr,
         "merkezi_bellek": True,
         "ana_motor": {
             "main_only_genel_hafiza": _main_only,
@@ -3882,64 +3889,105 @@ def api_tercume_apprentice_log(
 
 @app.get("/api/tercume/source-pages")
 def api_tercume_source_pages(rel: str = Query("")) -> dict[str, Any]:
-    """Kaynak metni sayfa/parça listesine böler (PDF gerçek sayfa)."""
-    from ilim_assistant.motorlar.tercume_atolye import split_text_into_pages
-
+    """Kaynak metni sayfa/parça listesine böler + Faz 3 kalite skoru."""
     raw = (rel or "").strip().replace("\\", "/").lstrip("/")
     if not raw:
         raise HTTPException(status_code=400, detail="rel gerekli.")
     target = _repo_resolve_under_root(raw, must_be_dir=False)
     ext = target.suffix.lower()
+
+    _pipeline_ext = {
+        ".pdf",
+        ".txt",
+        ".md",
+        ".markdown",
+        ".html",
+        ".htm",
+        ".docx",
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".webp",
+        ".bmp",
+        ".tif",
+        ".tiff",
+    }
+    if ext in _pipeline_ext:
+        from ilim_assistant.motorlar.tercume_read_pipeline import extract_source_pages
+
+        hit = extract_source_pages(raw)
+        if not hit.get("ok"):
+            raise HTTPException(status_code=400, detail=str(hit.get("error") or "Okuma hatası"))
+        return hit
+
+    from ilim_assistant.motorlar.tercume_atolye import split_text_into_pages
+    from ilim_assistant.motorlar.tercume_read_pipeline import (
+        enrich_pages,
+        summarize_page_quality_meta,
+        READ_PIPELINE_VERSION,
+    )
+
     pages: list[dict[str, Any]] = []
-    meta: dict[str, Any] = {"ext": ext}
+    meta: dict[str, Any] = {"ext": ext, "read_pipeline": READ_PIPELINE_VERSION}
 
-    if ext == ".pdf":
-        if not pdf_text_runtime_available():
-            raise HTTPException(status_code=503, detail="pip install pypdf")
-        from pypdf import PdfReader
-
-        reader = PdfReader(str(target))
-        n = len(reader.pages)
-        from ilim_assistant.motorlar.tercume_atolye import tercume_pdf_max_pages
-
-        cap = tercume_pdf_max_pages()
-        max_p = min(n, cap)
-        for i in range(max_p):
-            try:
-                t = (reader.pages[i].extract_text() or "").strip()
-            except Exception:
-                t = ""
-            pages.append({"index": i, "text": t, "label": f"Sayfa {i + 1}"})
-        meta["pages_total"] = n
-        meta["pages_read"] = max_p
-        if max_p < n:
-            meta["pages_capped"] = True
-            meta["pages_cap"] = max_p
+    if ext == ".docx":
+        if not docx_text_runtime_available():
+            raise HTTPException(status_code=503, detail="pip install python-docx")
+        full = _docx_file_to_plain(target)
+    elif ext in {".epub", ".fb2", ".mobi", ".azw", ".azw3", ".kfx", ".djvu", ".djv", ".rtf"}:
+        hit = api_workspace_read_ebook(rel=raw)
+        full = str(hit.get("text") or "")
     else:
-        if ext == ".docx":
-            if not docx_text_runtime_available():
-                raise HTTPException(status_code=503, detail="pip install python-docx")
-            full = _docx_file_to_plain(target)
-        elif ext in {".epub", ".fb2", ".mobi", ".azw", ".azw3", ".kfx", ".djvu", ".djv", ".rtf"}:
-            hit = api_workspace_read_ebook(rel=raw)
-            full = str(hit.get("text") or "")
-        elif ext in {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tif", ".tiff"}:
-            hit = api_workspace_read_image_ocr(rel=raw)
-            full = str(hit.get("text") or "")
-        else:
-            hit = api_workspace_read_text(rel=raw)
-            full = str(hit.get("text") or "")
-        for p in split_text_into_pages(full):
-            pages.append(
-                {
-                    "index": p["index"],
-                    "text": p["text"],
-                    "label": f"Bölüm {int(p['index']) + 1}",
-                }
-            )
-        meta["pages_total"] = len(pages)
-
+        hit = api_workspace_read_text(rel=raw)
+        full = str(hit.get("text") or "")
+    for p in split_text_into_pages(full):
+        pages.append(
+            {
+                "index": p["index"],
+                "text": p["text"],
+                "label": f"Bölüm {int(p['index']) + 1}",
+            }
+        )
+    meta["pages_total"] = len(pages)
+    pages = enrich_pages(pages, source_kind="text")
+    meta.update(summarize_page_quality_meta(pages))
     return {"ok": True, "rel": raw, "pages": pages, "meta": meta}
+
+
+@app.post("/api/tercume/read-start")
+async def api_tercume_read_start(request: Request) -> dict[str, Any]:
+    from ilim_assistant.motorlar.tercume_read_jobs import start_read_job
+
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    if not isinstance(body, dict):
+        body = {}
+    hit = start_read_job(str(body.get("rel") or ""))
+    if not hit.get("ok"):
+        raise HTTPException(status_code=400, detail=str(hit.get("error") or "read job başlatılamadı"))
+    return hit
+
+
+@app.get("/api/tercume/read-status")
+def api_tercume_read_status(job_id: str = Query("")) -> dict[str, Any]:
+    from ilim_assistant.motorlar.tercume_read_jobs import get_read_job
+
+    hit = get_read_job(job_id)
+    if not hit.get("ok"):
+        raise HTTPException(status_code=404, detail=str(hit.get("error") or "İş yok"))
+    return hit
+
+
+@app.post("/api/tercume/read-cancel")
+def api_tercume_read_cancel(job_id: str = Form("")) -> dict[str, Any]:
+    from ilim_assistant.motorlar.tercume_read_jobs import cancel_read_job
+
+    hit = cancel_read_job(job_id)
+    if not hit.get("ok"):
+        raise HTTPException(status_code=404, detail=str(hit.get("error") or "İş yok"))
+    return hit
 
 
 @app.post("/api/tercume/translate-chunk")

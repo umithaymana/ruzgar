@@ -10,7 +10,7 @@ import unicodedata
 from pathlib import Path
 from typing import Any
 
-TERCUME_ANALYST_VERSION = "tercume-analyst-v1-2026-05-31b"
+TERCUME_ANALYST_VERSION = "tercume-analyst-v2-faz2-2026-05-31"
 
 _ALIASES_PATH = Path(__file__).with_name("tercume_eser_aliases.json")
 
@@ -199,13 +199,29 @@ def score_search_item(item: dict[str, Any], query: str, aliases: dict[str, Any] 
         score += 12
         reasons.append("archive_api")
 
+    dl = str(item.get("download_url") or "")
+    if dl.lower().endswith(".pdf"):
+        score += 22
+        reasons.append("archive_pdf")
+
+    if "(doğrudan)" in str(item.get("source") or ""):
+        score += 8
+        reasons.append("site_direct")
+
     score = max(0.0, min(100.0, score))
-    downloadable = any(h in ul for h in _HOST_BOOST) or any(
+    if score >= 65:
+        confidence = "high"
+    elif score >= 35:
+        confidence = "medium"
+    else:
+        confidence = "low"
+    downloadable = bool(dl) or any(h in ul for h in _HOST_BOOST) or any(
         ext in ul for ext in _DOWNLOADABLE_EXT
     )
     return {
         **item,
         "score": round(score, 1),
+        "confidence": confidence,
         "why_ranked": reasons[:6],
         "downloadable_hint": downloadable,
     }
@@ -291,7 +307,7 @@ def analyze_tercume_query(
     if top and top.get("local_rel"):
         suggested_reason = "arsivde_var"
     elif top and float(top.get("score") or 0) >= 35 and top.get("downloadable_hint"):
-        suggested_url = str(top.get("url") or "")
+        suggested_url = str(top.get("download_url") or top.get("url") or "")
         suggested_reason = "; ".join(top.get("why_ranked") or [])
 
     summary_parts = []
@@ -323,6 +339,8 @@ def analyze_tercume_query(
         "ok": True,
         "version": TERCUME_ANALYST_VERSION,
         "query": search.get("query") or raw,
+        "expanded_query": search.get("expanded_query") or "",
+        "expand_notes": search.get("expand_notes") or [],
         "scholar_url": search.get("scholar_url") or scholar_search_url(raw),
         "items": scored,
         "total": len(scored),

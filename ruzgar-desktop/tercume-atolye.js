@@ -355,8 +355,12 @@
       const localFirst = data?.local_first
         ? " ✓ Arşivde var — internet aranmadı; soldan dosyayı açın."
         : "";
+      const expanded =
+        data?.expanded_query && String(data.expanded_query).trim() !== q
+          ? ` Alias: «${String(data.expanded_query).slice(0, 80)}».`
+          : "";
       hint.textContent = q
-        ? `«${q}» — ${items.length} sonuç.${localFirst}${weak}${local} Satır: siteyi aç · İndir: URL altta.`
+        ? `«${q}» — ${items.length} sonuç.${localFirst}${weak}${local}${expanded} Satır: siteyi aç · İndir: URL altta.`
         : "Arama henüz yapılmadı.";
     }
     if (!items.length) {
@@ -371,6 +375,8 @@
       btn.type = "button";
       btn.className = "tercume-eser-result-btn";
       const src = esc(String(it.source || ""));
+      const scoreTag =
+        it.score != null ? ` · ${esc(String(it.confidence || ""))} ${Number(it.score).toFixed(0)}` : "";
       const title = esc(String(it.title || url).slice(0, 120));
       const snip = esc(String(it.snippet || "").slice(0, 160));
       btn.innerHTML =
@@ -378,13 +384,14 @@
         `<span class="tercume-eser-result-title">${idx + 1}. ${title}</span>` +
         (snip ? `<span class="tercume-eser-result-snippet">${snip}</span>` : "") +
         `</span>` +
-        `<span class="tercume-eser-result-meta"><span class="tercume-eser-result-src">${src}</span><span class="tercume-eser-site-go">Aç →</span></span>`;
+        `<span class="tercume-eser-result-meta"><span class="tercume-eser-result-src">${src}${scoreTag}</span><span class="tercume-eser-site-go">Aç →</span></span>`;
       btn.addEventListener("click", () => {
-        if (!url) return;
-        if (global.ruzgarApi?.openExternalUrl) void global.ruzgarApi.openExternalUrl(url);
-        else window.open(url, "_blank", "noopener");
+        const dl = String(it.download_url || url || "");
+        if (!dl && !url) return;
+        if (url && global.ruzgarApi?.openExternalUrl) void global.ruzgarApi.openExternalUrl(url);
+        else if (url) window.open(url, "_blank", "noopener");
         const urlInp = $("tercume-import-url");
-        if (urlInp) urlInp.value = url;
+        if (urlInp) urlInp.value = dl || url;
         flash("Site açıldı; URL indirme kutusuna yazıldı.");
       });
       li.appendChild(btn);
@@ -439,6 +446,60 @@
     }
     lastDownloadDir = { abs: "", rel: workRoot };
     return { ok: true, rel: workRoot };
+  }
+
+  let readPollTimer = null;
+  let activeReadJobId = null;
+
+  async function startReadAnalyze() {
+    if (!openRel) {
+      flash("Önce listeden bir dosya seçin.");
+      return;
+    }
+    if (readPollTimer) {
+      flash("Okuma analizi zaten çalışıyor.");
+      return;
+    }
+    showProgress(0, 1, "Okuma analizi başlıyor…");
+    const res = await fetch(`${api()}/api/tercume/read-start`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rel: openRel }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : j.error || `HTTP ${res.status}`);
+    if (!j.job_id) throw new Error("İş başlatılamadı");
+    activeReadJobId = j.job_id;
+    pollReadJob(j.job_id);
+  }
+
+  function pollReadJob(jobId) {
+    if (readPollTimer) clearInterval(readPollTimer);
+    readPollTimer = setInterval(async () => {
+      try {
+        const res = await fetch(`${api()}/api/tercume/read-status?job_id=${encodeURIComponent(jobId)}`);
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok || !j.ok) return;
+        showProgress(1, 1, j.label || j.status || "Okunuyor…");
+        if (j.status === "done" || j.status === "failed" || j.status === "cancelled") {
+          clearInterval(readPollTimer);
+          readPollTimer = null;
+          activeReadJobId = null;
+          hideProgress();
+          if (j.status === "done") {
+            const msg =
+              j.read_hint ||
+              `Okuma: ${j.ok_pages || 0} iyi, ${j.low_pages || 0} zayıf, ${j.empty_pages || 0} boş sayfa.`;
+            flash(msg);
+            if (j.ocr_recommended) flash("⚠ Taranmış kitap olabilir — OCR dili seçip tekrar deneyin.");
+          } else {
+            flash(j.error || "Okuma analizi tamamlanamadı.");
+          }
+        }
+      } catch {
+        /* tekrar dene */
+      }
+    }, 1500);
   }
 
   let batchPollTimer = null;
@@ -515,6 +576,49 @@
     if (wrap) wrap.hidden = true;
   }
 
+  function isLocalApi() {
+    try {
+      const u = new URL(api() || "http://127.0.0.1:8779");
+      return u.hostname === "127.0.0.1" || u.hostname === "localhost";
+    } catch {
+      return true;
+    }
+  }
+
+  async function refreshOcrWarning() {
+    const box = $("tercume-ocr-warn");
+    const txt = $("tercume-ocr-warn-text");
+    if (!box || !txt) return;
+    try {
+      const res = await fetch(`${api()}/api/health`);
+      const j = await res.json().catch(() => ({}));
+      const ocr = j.ocr || {};
+      if (ocr.cloud_ready) {
+        box.hidden = true;
+        return;
+      }
+      const local = isLocalApi();
+      if (!ocr.available) {
+        box.hidden = false;
+        txt.textContent = local
+          ? "Taranmış sayfa, fotoğraf ve taranmış PDF için Tesseract kurulu olmalı. Proje kökündeki Ruzgar_OCR_Kur.bat dosyasını bir kez çalıştırın (Arapça OCR — Osmanlıca metinler için). Metinli PDF'lerde OCR gerekmez. Bulut sürümünde kurulum sunucuda otomatik yapılır; kullanıcı bir şey kurmaz."
+          : "Bu sunucuda OCR henüz hazır değil; taranmış kitap ve görseller okunmayabilir. Sunucu yöneticisinden Tesseract (Arapça paketi) kurulumunu isteyin.";
+        return;
+      }
+      const missing = Array.isArray(ocr.missing_langs) ? ocr.missing_langs.filter(Boolean) : [];
+      if (missing.length) {
+        box.hidden = false;
+        txt.textContent = local
+          ? `Eksik OCR dil paketi: ${missing.join(", ")}. Ruzgar_OCR_Kur.bat ile tamamlayın (Osmanlıca için Arapça ara paketi yeterli).`
+          : `Sunucuda eksik OCR dil paketi: ${missing.join(", ")}. Yöneticiye bildirin.`;
+        return;
+      }
+      box.hidden = true;
+    } catch {
+      box.hidden = true;
+    }
+  }
+
   async function translateChunkApi(text, pageIndex) {
     const fd = new FormData();
     fd.append("text", text);
@@ -546,7 +650,17 @@
       const res = await fetch(`${api()}/api/tercume/source-pages?rel=${encodeURIComponent(openRel)}`);
       const j = await res.json().catch(() => ({}));
       if (!j.ok || !Array.isArray(j.pages)) throw new Error("Sayfa listesi alınamadı");
-      pages = j.pages.filter((p) => String(p.text || "").trim());
+      const qs = j.meta?.quality_summary;
+      if (j.meta?.read_hint) flash(j.meta.read_hint);
+      else if (qs?.ocr_recommended) {
+        flash(
+          `${qs.low + qs.empty}/${qs.total} sayfa zayıf — taranmış PDF olabilir; OCR veya metinli PDF deneyin.`,
+        );
+      }
+      pages = j.pages.filter((p) => String(p.text || "").trim() && p.quality !== "empty");
+      if (!pages.length && Array.isArray(j.pages)) {
+        pages = j.pages.filter((p) => String(p.text || "").trim());
+      }
     } else {
       pages = [{ index: 0, text: raw, label: "Tam metin" }];
     }
@@ -560,7 +674,7 @@
     for (let i = 0; i < pages.length; i++) {
       if (translateAbort) break;
       const p = pages[i];
-      showProgress(i + 1, pages.length, `Çevriliyor: ${p.label || i + 1}`);
+      showProgress(i + 1, pages.length, `Çevriliyor: ${p.label || i + 1}${p.quality === "low" ? " (zayıf)" : ""}`);
       try {
         const tr = await translateChunkApi(String(p.text || ""), p.index);
         outParts.push(tr);
@@ -765,6 +879,7 @@ ${chunk}`;
       document.body.dataset.motor = "tercume";
       const cur = document.body.dataset.tercumeTab || "calisma";
       setTercumeTab(cur);
+      void refreshOcrWarning();
     } else {
       delete document.body.dataset.motor;
       delete document.body.dataset.tercumeTab;
@@ -852,9 +967,20 @@ ${chunk}`;
         flash(e.message || "Cilt sırası hatası");
       });
     });
+    $("btn-tercume-read-analyze")?.addEventListener("click", () => {
+      void startReadAnalyze().catch((e) => {
+        hideProgress();
+        flash(e.message || "Okuma analizi hatası");
+      });
+    });
     $("btn-tercume-ocr")?.addEventListener("click", async () => {
       if (!openRel) {
         flash("Önce görsel dosyası seçin.");
+        return;
+      }
+      await refreshOcrWarning();
+      if (!$("tercume-ocr-warn")?.hidden) {
+        flash("OCR kurulu değil — sarı uyarıdaki adımları uygulayın.");
         return;
       }
       try {
@@ -888,6 +1014,7 @@ ${chunk}`;
     syncSavePlaceholder();
     void refreshTree();
     void refreshApprenticeLog();
+    void refreshOcrWarning();
   }
 
   global.RuzgarTercumeAtolye = {

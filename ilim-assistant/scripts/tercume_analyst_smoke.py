@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Faz 1 — tercüme analist smoke (skor + route + pipeline iskelet)."""
+"""Faz 1–2 — tercüme analist smoke (skor, alias genişletme, arama v2)."""
 from __future__ import annotations
 
 import sys
@@ -32,6 +32,19 @@ def main() -> int:
         print("FAIL ocr clean", repr(ocr))
         return 1
 
+    from ilim_assistant.motorlar.tercume_eser_arama import (
+        TERCUME_ESER_ARAMA_VERSION,
+        expand_search_query,
+    )
+
+    expanded, notes = expand_search_query("imam rabbani mektubat")
+    if "mektubat" not in expanded.lower():
+        print("FAIL expand_search_query", expanded, notes)
+        return 1
+    if "v2" not in TERCUME_ESER_ARAMA_VERSION:
+        print("FAIL arama version", TERCUME_ESER_ARAMA_VERSION)
+        return 1
+
     from ilim_assistant.motorlar.tercume_analyst import (
         TERCUME_ANALYST_VERSION,
         analyze_tercume_query,
@@ -42,13 +55,17 @@ def main() -> int:
         {
             "title": "Mektubat-i Rabbani PDF archive.org",
             "snippet": "Imam Rabbani letters",
-            "url": "https://archive.org/download/mektubat/example.pdf",
-            "source": "Internet Archive",
+            "url": "https://archive.org/details/mektubat/example",
+            "download_url": "https://archive.org/download/mektubat/example.pdf",
+            "source": "Internet Archive (API)",
         },
         "imam-ı rabbani mektubat",
     )
     if float(row.get("score") or 0) < 40:
         print("FAIL score rabbani", row)
+        return 1
+    if row.get("confidence") not in ("high", "medium", "low"):
+        print("FAIL confidence", row)
         return 1
     if not row.get("downloadable_hint"):
         print("FAIL downloadable_hint", row)
@@ -67,12 +84,11 @@ def main() -> int:
         print("FAIL noise should rank lower", noise.get("score"), row.get("score"))
         return 1
 
-    # analyze may hit network — tolerate empty DDG in CI
     rep = analyze_tercume_query("imam rabbani mektubat pdf", max_results=8)
     if not rep.get("ok"):
         print("FAIL analyze", rep)
         return 1
-    if rep.get("version") != TERCUME_ANALYST_VERSION:
+    if "faz2" not in str(rep.get("version") or ""):
         print("FAIL version", rep.get("version"))
         return 1
     if not rep.get("scholar_url"):
@@ -85,12 +101,43 @@ def main() -> int:
     for need in (
         "/api/tercume/analyze",
         "/api/tercume/pipeline",
+        "/api/tercume/read-start",
+        "/api/tercume/read-status",
     ):
         if need not in paths:
             print("FAIL route", need)
             return 1
 
-    print("OK tercume analyst faz1 — score + routes + analyze")
+    print("OK tercume analyst faz2 — alias expand + score + routes")
+
+    from ilim_assistant.motorlar.tercume_read_pipeline import (
+        READ_PIPELINE_VERSION,
+        assess_page_quality,
+        enrich_pages,
+        summarize_page_quality_meta,
+    )
+
+    empty = assess_page_quality("   ")
+    if empty.get("quality") != "empty":
+        print("FAIL empty quality", empty)
+        return 1
+    ok = assess_page_quality("Bu sayfada yeterince uzun bir metin paragrafı var. " * 5)
+    if ok.get("quality") not in ("ok", "low"):
+        print("FAIL ok quality", ok)
+        return 1
+    pages = enrich_pages([{"index": 0, "text": "kısa", "label": "S1"}], source_kind="pdf")
+    if not pages[0].get("quality"):
+        print("FAIL enrich_pages", pages)
+        return 1
+    meta = summarize_page_quality_meta(pages)
+    if "quality_summary" not in meta:
+        print("FAIL summarize", meta)
+        return 1
+    if "faz3" not in READ_PIPELINE_VERSION:
+        print("FAIL read pipeline version", READ_PIPELINE_VERSION)
+        return 1
+
+    print("OK tercume faz3 — read pipeline quality + routes")
     return 0
 
 
