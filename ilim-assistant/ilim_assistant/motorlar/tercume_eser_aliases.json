@@ -1,0 +1,16 @@
+{
+  "version": "tercume-eser-aliases-v1",
+  "authors": {
+    "imam-ı rabbani": ["rabbani", "rabbanî", "mujaddid", "mecdidi", "imam rabbani"],
+    "ibn arabi": ["ibn arabi", "ibn al-arabi", "muhyiddin", "muhyi"],
+    "maturidi": ["maturidi", "maturidi", "moturidi"],
+    "ghazali": ["ghazali", "gazali", "imam gazali"]
+  },
+  "works": {
+    "mektubat": ["mektubat", "maktubat", "maktubat", "letters", "mektuplar"],
+    "fusus": ["fusus", "fusūs", "fususul", "hikem", "füsus"],
+    "mesnevi": ["mesnevi", "masnavi", "mevlan"],
+    "mektubat-i serife": ["mektubat-i", "serife", "şerif", "serif"]
+  },
+  "noise_phrases": ["12 imam", "on iki imam", "shia imam", "twelve imam"]
+}

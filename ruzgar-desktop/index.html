@@ -594,11 +594,20 @@
                       <option value="md">.md</option>
                       <option value="html">.html</option>
                     </select>
+                    <select id="tercume-ocr-lang" class="tercume-lang-select" title="OCR dili (Arapça / Osmanlıca)">
+                      <option value="auto">OCR: Otomatik</option>
+                      <option value="ara">OCR: Arapça</option>
+                      <option value="ara+ota">OCR: Arapça+Osmanlıca</option>
+                      <option value="ota">OCR: Osmanlıca</option>
+                      <option value="tur+ara">OCR: Türkçe+Arapça</option>
+                      <option value="tur+eng">OCR: Türkçe+İngilizce</option>
+                    </select>
                   </div>
                   <button type="button" class="btn-primary btn-compact" id="btn-tercume-translate">Çevir</button>
                   <button type="button" class="btn-secondary btn-compact" id="btn-tercume-stop">Durdur</button>
                   <button type="button" class="btn-secondary btn-compact" id="btn-tercume-save-target">Kaydet</button>
                   <button type="button" class="btn-secondary btn-compact" id="btn-tercume-ocr">OCR</button>
+                  <button type="button" class="btn-secondary btn-compact" id="btn-tercume-batch-cilt" title="Çalışma klasöründeki kitapları sırayla arka planda çevir">Cilt sırası</button>
                   <button type="button" class="btn-secondary btn-compact" id="btn-tercume-clear">Temizle</button>
                   <button type="button" class="btn-secondary btn-compact" id="btn-tercume-last-to-target">Sohbet → hedef</button>
                   <span class="code-active-path" id="tercume-active-file">—</span>

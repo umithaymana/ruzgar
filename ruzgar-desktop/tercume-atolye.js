@@ -51,10 +51,13 @@
   }
 
   function ocrLangFromUi() {
-    const v = String($("tercume-src-lang")?.value || "auto").trim();
-    const map = { tr: "tur", en: "eng", ar: "ara", de: "deu", fr: "fra", fa: "fas", ru: "rus" };
-    if (v === "auto") return "tur+eng";
-    return map[v] ? `${map[v]}+eng` : "tur+eng";
+    return String($("tercume-ocr-lang")?.value || "auto").trim() || "auto";
+  }
+
+  function ocrQueryParams() {
+    const preset = ocrLangFromUi();
+    const src = String($("tercume-src-lang")?.value || "auto").trim();
+    return `ocr_preset=${encodeURIComponent(preset)}&src_lang=${encodeURIComponent(src)}&tercume=1`;
   }
 
   async function readWorkspaceText(rel) {
@@ -73,7 +76,7 @@
     const low = String(rel || "").toLowerCase();
     if (opts.forceOcr || IMAGE_EXTS.some((e) => low.endsWith(e))) {
       const res = await fetch(
-        `${api()}/api/workspace/read-image-ocr?rel=${encodeURIComponent(rel)}&lang=${encodeURIComponent(ocrLangFromUi())}`,
+        `${api()}/api/workspace/read-image-ocr?rel=${encodeURIComponent(rel)}&${ocrQueryParams()}`,
       );
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : `HTTP ${res.status}`);
@@ -338,11 +341,22 @@
     if (inp && q) inp.value = q;
     const items = Array.isArray(data?.items) ? data.items : [];
     if (hint) {
-      const scholarNote = data?.scholar_url
-        ? " · Scholar butonu = tam arayüz"
+      const weak =
+        data?.quality === "weak"
+          ? " ⚠ Sonuçlar zayıf — soldaki yerel dosyalar veya Scholar."
+          : "";
+      const local =
+        Array.isArray(data?.local_archive_matches) && data.local_archive_matches.length
+          ? ` Yerel: ${data.local_archive_matches
+              .slice(0, 2)
+              .map((m) => m.name)
+              .join(", ")}.`
+          : "";
+      const localFirst = data?.local_first
+        ? " ✓ Arşivde var — internet aranmadı; soldan dosyayı açın."
         : "";
       hint.textContent = q
-        ? `«${q}» — ${items.length} sonuç (Scholar, Archive, Yazma Eserler, Şamile…). Satır: siteyi aç · İndir: URL altta.${scholarNote}`
+        ? `«${q}» — ${items.length} sonuç.${localFirst}${weak}${local} Satır: siteyi aç · İndir: URL altta.`
         : "Arama henüz yapılmadı.";
     }
     if (!items.length) {
@@ -425,6 +439,65 @@
     }
     lastDownloadDir = { abs: "", rel: workRoot };
     return { ok: true, rel: workRoot };
+  }
+
+  let batchPollTimer = null;
+  let activeBatchJobId = null;
+
+  async function startBatchCilt() {
+    if (batchPollTimer) {
+      flash("Zaten bir cilt sırası işi çalışıyor.");
+      return;
+    }
+    const folder = String(workRoot || "ilim-assistant/arsiv").trim();
+    showProgress(0, 1, "Sıra hazırlanıyor…");
+    const res = await fetch(`${api()}/api/tercume/batch-start`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        folder_rel: folder,
+        tgt_lang: String($("tercume-tgt-lang")?.value || "tr"),
+        src_lang: String($("tercume-src-lang")?.value || "auto"),
+      }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : j.error || `HTTP ${res.status}`);
+    if (!j.ok || !j.job_id) throw new Error(j.error || "İş başlatılamadı");
+    activeBatchJobId = j.job_id;
+    flash(`Cilt sırası: ${j.total} dosya — arka planda çevriliyor.`);
+    pollBatchJob(j.job_id);
+  }
+
+  function pollBatchJob(jobId) {
+    if (batchPollTimer) clearInterval(batchPollTimer);
+    batchPollTimer = setInterval(async () => {
+      try {
+        const res = await fetch(`${api()}/api/tercume/batch-status?job_id=${encodeURIComponent(jobId)}`);
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok || !j.ok) return;
+        const total = Number(j.total) || 0;
+        const done = Number(j.done) || 0;
+        const label = j.label || j.current_file || j.status || `${done}/${total}`;
+        showProgress(done, total || 1, `Cilt sırası: ${label}`);
+        if (j.status === "done" || j.status === "cancelled") {
+          clearInterval(batchPollTimer);
+          batchPollTimer = null;
+          activeBatchJobId = null;
+          const okN = Array.isArray(j.outputs) ? j.outputs.filter((o) => o.ok).length : done;
+          flash(j.status === "done" ? `Cilt sırası bitti: ${okN}/${total} kaydedildi.` : "Cilt sırası iptal edildi.");
+          setTimeout(hideProgress, 2500);
+        }
+      } catch {
+        /* sessiz tekrar */
+      }
+    }, 2000);
+  }
+
+  async function cancelBatchJob() {
+    if (!activeBatchJobId) return;
+    const fd = new FormData();
+    fd.append("job_id", activeBatchJobId);
+    await fetch(`${api()}/api/tercume/batch-cancel`, { method: "POST", body: fd });
   }
 
   function showProgress(current, total, label) {
@@ -763,6 +836,7 @@ ${chunk}`;
     });
     $("btn-tercume-stop")?.addEventListener("click", () => {
       translateAbort = true;
+      void cancelBatchJob();
       flash("Durdurma istendi…");
     });
     $("btn-tercume-save-target")?.addEventListener("click", () => void saveTarget().catch((e) => flash(e.message)));
@@ -771,6 +845,12 @@ ${chunk}`;
       const f = ev.target.files?.[0];
       void importFile(f).catch((e) => flash(e.message));
       ev.target.value = "";
+    });
+    $("btn-tercume-batch-cilt")?.addEventListener("click", () => {
+      void startBatchCilt().catch((e) => {
+        hideProgress();
+        flash(e.message || "Cilt sırası hatası");
+      });
     });
     $("btn-tercume-ocr")?.addEventListener("click", async () => {
       if (!openRel) {

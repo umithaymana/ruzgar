@@ -8,7 +8,7 @@ import time
 from typing import Any
 from urllib.parse import urlparse
 
-TERCUME_ESER_ARAMA_VERSION = "tercume-eser-arama-b-2026-05-30"
+TERCUME_ESER_ARAMA_VERSION = "tercume-eser-arama-b-2026-05-31"
 
 # (etiket, ek sorgu parçası — site: DDG’de bazen boş döner; alan adı eklenir)
 _TRUSTED_SITE_QUERIES: list[tuple[str, str]] = [
@@ -118,6 +118,54 @@ def _build_query_for_source(base: str, site_hint: str) -> str:
     return f"{core} pdf kitap türkçe"
 
 
+def _archive_org_rows(query: str, max_results: int = 6) -> list[dict[str, Any]]:
+    """Internet Archive advancedsearch — DDG gürültüsünden bağımsız PDF/eser adayları."""
+    from urllib.parse import quote_plus
+    import json
+    from urllib.request import Request, urlopen
+
+    core = _core_terms(_refine_user_query(query))
+    if not core or len(core) < 3:
+        return []
+    q = f"({core}) AND mediatype:texts"
+    url = (
+        "https://archive.org/advancedsearch.php?"
+        f"q={quote_plus(q)}&fl[]=identifier,title,description&"
+        f"rows={max_results}&output=json"
+    )
+    try:
+        req = Request(url, headers={"User-Agent": "RuzgarTercume/1.0"})
+        with urlopen(req, timeout=18) as resp:
+            data = json.loads(resp.read().decode("utf-8", errors="replace"))
+    except Exception:
+        return []
+    docs = (data.get("response") or {}).get("docs") or []
+    out: list[dict[str, Any]] = []
+    for d in docs:
+        if not isinstance(d, dict):
+            continue
+        ident = str(d.get("identifier") or "").strip()
+        if not ident:
+            continue
+        title = d.get("title")
+        if isinstance(title, list):
+            title = title[0] if title else ident
+        title_s = str(title or ident).strip()
+        desc = d.get("description")
+        if isinstance(desc, list):
+            desc = desc[0] if desc else ""
+        details_url = f"https://archive.org/details/{ident}"
+        out.append(
+            {
+                "title": title_s[:200],
+                "snippet": str(desc or "")[:320],
+                "url": details_url,
+                "source": "Internet Archive (API)",
+            }
+        )
+    return out
+
+
 def search_eser_merged(
     user_query: str,
     *,
@@ -135,7 +183,16 @@ def search_eser_merged(
 
     seen: set[str] = set()
     items: list[dict[str, Any]] = []
-    queries_run: list[dict[str, str]] = []
+    queries_run: list[dict[str, str]] = [{"label": "Archive API", "query": base}]
+
+    for row in _archive_org_rows(base, max_results=min(8, max_per_query + 2)):
+        key = _normalize_url(row["url"])
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        items.append(row)
+        if len(items) >= max_total:
+            break
 
     for label, site_hint in _TRUSTED_SITE_QUERIES:
         if len(items) >= max_total:

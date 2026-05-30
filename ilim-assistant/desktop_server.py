@@ -31,6 +31,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 
 from pydantic import BaseModel, Field
+from starlette.requests import Request
 from starlette.concurrency import iterate_in_threadpool, run_in_threadpool
 
 from ilim_assistant.chat_core import (
@@ -3527,7 +3528,13 @@ def api_workspace_read_ebook(rel: str = Query("")) -> dict[str, Any]:
 
 
 @app.get("/api/workspace/read-image-ocr")
-def api_workspace_read_image_ocr(rel: str = Query(""), lang: str = Query("tur+eng")) -> dict[str, Any]:
+def api_workspace_read_image_ocr(
+    rel: str = Query(""),
+    lang: str = Query("tur+eng"),
+    ocr_preset: str = Query(""),
+    src_lang: str = Query("auto"),
+    tercume: int = Query(0),
+) -> dict[str, Any]:
     """
     Görselden metin çıkarımı (opsiyonel):
     - pytesseract + pillow kuruluysa OCR yapar.
@@ -3551,12 +3558,21 @@ def api_workspace_read_image_ocr(rel: str = Query(""), lang: str = Query("tur+en
             status_code=503,
             detail="OCR için: pip install pillow pytesseract ve sistemde tesseract kurulumu gerekli.",
         ) from exc
+    tess_lang = (lang or "tur+eng").strip()
+    if int(tercume or 0) == 1 or (ocr_preset or "").strip():
+        from ilim_assistant.motorlar.tercume_ocr_lang import resolve_ocr_lang
+
+        tess_lang = resolve_ocr_lang((ocr_preset or lang or "auto").strip(), src_lang=(src_lang or "auto"))
     try:
         img = Image.open(target)
-        txt = pytesseract.image_to_string(img, lang=(lang or "tur+eng"))
+        txt = pytesseract.image_to_string(img, lang=tess_lang)
     except Exception as exc:
         raise HTTPException(status_code=400, detail=f"OCR başarısız: {str(exc)[:220]}") from exc
     text = (txt or "").strip()
+    if int(tercume or 0) == 1:
+        from ilim_assistant.motorlar.tercume_ocr_clean import clean_ocr_text
+
+        text = clean_ocr_text(text)
     if not text:
         text = "[OCR boş sonuç verdi]"
     hard_cap = 700_000
@@ -3564,7 +3580,7 @@ def api_workspace_read_image_ocr(rel: str = Query(""), lang: str = Query("tur+en
     if len(text) > hard_cap:
         text = text[:hard_cap] + "\n\n… [OCR metni uzun olduğu için kesildi]"
         truncated = True
-    return {"ok": True, "text": text, "truncated_length": truncated, "lang": (lang or "tur+eng")}
+    return {"ok": True, "text": text, "truncated_length": truncated, "lang": tess_lang}
 
 
 def _tercume_download_target_dir(
@@ -3728,16 +3744,80 @@ def api_arsiv_download_next(limit: int = Form(1)) -> dict[str, Any]:
 
 
 @app.get("/api/tercume/eser-search")
-def api_tercume_eser_search(q: str = Query("")) -> dict[str, Any]:
-    """B planı: DuckDuckGo genel + site: güvenilir alanlar → birleşik sonuç listesi."""
-    from ilim_assistant.motorlar.tercume_eser_arama import search_eser_merged
-
+def api_tercume_eser_search(
+    q: str = Query(""),
+    scored: int = Query(1),
+) -> dict[str, Any]:
+    """B planı arama; scored=1 (varsayılan) analist skorları + önerilen indirme."""
     raw = (q or "").strip()
     if not raw:
         raise HTTPException(status_code=400, detail="q gerekli.")
     if len(raw) > 300:
         raise HTTPException(status_code=400, detail="Arama metni çok uzun (300 karakter).")
-    return search_eser_merged(raw)
+    if int(scored or 0) == 0:
+        from ilim_assistant.motorlar.tercume_eser_arama import search_eser_merged
+
+        return search_eser_merged(raw)
+    from ilim_assistant.motorlar.tercume_analyst import analyze_tercume_query
+
+    return analyze_tercume_query(raw)
+
+
+@app.get("/api/tercume/analyze")
+def api_tercume_analyze_get(q: str = Query("")) -> dict[str, Any]:
+    """Faz 1 — tercüme analist raporu (skorlu kaynaklar, Scholar, önerilen URL)."""
+    raw = (q or "").strip()
+    if not raw:
+        raise HTTPException(status_code=400, detail="q gerekli.")
+    if len(raw) > 300:
+        raise HTTPException(status_code=400, detail="Sorgu çok uzun (300 karakter).")
+    from ilim_assistant.motorlar.tercume_analyst import analyze_tercume_query
+
+    return analyze_tercume_query(raw)
+
+
+@app.post("/api/tercume/analyze")
+def api_tercume_analyze_post(q: str = Form("")) -> dict[str, Any]:
+    return api_tercume_analyze_get(q=q)
+
+
+@app.post("/api/tercume/pipeline")
+def api_tercume_pipeline(
+    q: str = Form(""),
+    download: str = Form("0"),
+    download_url: str = Form(""),
+    target_dir_rel: str = Form("ilim-assistant/arsiv/tercume-imports"),
+    read_preview_pages: str = Form("0"),
+    translate: str = Form("0"),
+    src_lang: str = Form("auto"),
+    tgt_lang: str = Form("tr"),
+    workspace_root: str = Form(""),
+) -> dict[str, Any]:
+    """Faz 1 — analyze → isteğe indir → isteğe oku → isteğe çevir (UI değişmeden API)."""
+    raw = (q or "").strip()
+    if not raw:
+        raise HTTPException(status_code=400, detail="q gerekli.")
+    from ilim_assistant.motorlar.tercume_analyst import run_tercume_pipeline
+
+    def _flag(v: str) -> bool:
+        return str(v or "").strip().lower() in ("1", "true", "yes", "on")
+
+    try:
+        rpp = max(0, min(25, int((read_preview_pages or "0").strip() or 0)))
+    except ValueError:
+        rpp = 0
+
+    return run_tercume_pipeline(
+        raw,
+        download=_flag(download),
+        download_url=(download_url or "").strip(),
+        target_dir_rel=(target_dir_rel or "ilim-assistant/arsiv/tercume-imports").strip(),
+        read_preview_pages=rpp,
+        translate=_flag(translate),
+        src_lang=(src_lang or "auto").strip(),
+        tgt_lang=(tgt_lang or "tr").strip(),
+        workspace_root=(workspace_root or "").strip() or None,
+    )
 
 
 @app.get("/api/tercume/config")
@@ -3745,6 +3825,48 @@ def api_tercume_config():
     from ilim_assistant.motorlar.tercume_atolye import workbench_config
 
     return {"ok": True, **workbench_config()}
+
+
+@app.post("/api/tercume/batch-start")
+async def api_tercume_batch_start(request: Request) -> dict[str, Any]:
+    from ilim_assistant.motorlar.tercume_batch_jobs import start_batch_job
+
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    if not isinstance(body, dict):
+        body = {}
+    hit = start_batch_job(
+        str(body.get("folder_rel") or ""),
+        tgt_lang=str(body.get("tgt_lang") or "tr"),
+        src_lang=str(body.get("src_lang") or "auto"),
+        output_dir_rel=str(body.get("output_dir_rel") or "ilim-assistant/arsiv/tercume-output/batch"),
+        file_filter=str(body.get("file_filter") or ""),
+    )
+    if not hit.get("ok"):
+        raise HTTPException(status_code=400, detail=str(hit.get("error") or "batch başlatılamadı"))
+    return hit
+
+
+@app.get("/api/tercume/batch-status")
+def api_tercume_batch_status(job_id: str = Query("")) -> dict[str, Any]:
+    from ilim_assistant.motorlar.tercume_batch_jobs import get_batch_job
+
+    hit = get_batch_job(job_id)
+    if not hit.get("ok"):
+        raise HTTPException(status_code=404, detail=str(hit.get("error") or "İş yok"))
+    return hit
+
+
+@app.post("/api/tercume/batch-cancel")
+def api_tercume_batch_cancel(job_id: str = Form("")) -> dict[str, Any]:
+    from ilim_assistant.motorlar.tercume_batch_jobs import cancel_batch_job
+
+    hit = cancel_batch_job(job_id)
+    if not hit.get("ok"):
+        raise HTTPException(status_code=404, detail=str(hit.get("error") or "İş yok"))
+    return hit
 
 
 @app.get("/api/tercume/apprentice-log")
@@ -3778,7 +3900,10 @@ def api_tercume_source_pages(rel: str = Query("")) -> dict[str, Any]:
 
         reader = PdfReader(str(target))
         n = len(reader.pages)
-        max_p = min(n, 120)
+        from ilim_assistant.motorlar.tercume_atolye import tercume_pdf_max_pages
+
+        cap = tercume_pdf_max_pages()
+        max_p = min(n, cap)
         for i in range(max_p):
             try:
                 t = (reader.pages[i].extract_text() or "").strip()
@@ -3787,6 +3912,9 @@ def api_tercume_source_pages(rel: str = Query("")) -> dict[str, Any]:
             pages.append({"index": i, "text": t, "label": f"Sayfa {i + 1}"})
         meta["pages_total"] = n
         meta["pages_read"] = max_p
+        if max_p < n:
+            meta["pages_capped"] = True
+            meta["pages_cap"] = max_p
     else:
         if ext == ".docx":
             if not docx_text_runtime_available():

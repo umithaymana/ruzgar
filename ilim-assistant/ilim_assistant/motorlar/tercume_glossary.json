@@ -1,0 +1,36 @@
+{
+  "version": "tercume-glossary-v1",
+  "sets": {
+    "rabbani_mektubat": {
+      "match": ["rabbani", "rabbanî", "mujaddid", "mecdidi", "mektubat", "maktubat", "sirhindi", "serhendi"],
+      "rules": [
+        "İmam-ı Rabbani = Ahmad el-Farukî es-Serhendî (Mecdüddîn).",
+        "Mektubat = mektuplar; cilt/kitap numarasını koru.",
+        "Osmanlıca/Arapça özel adları hedef dilde yaygın yazımıyla ver; keyfi latinize etme."
+      ],
+      "terms": [
+        {"src": "Mecdüddîn", "tr": "Mecdüddîn", "en": "Mujaddid"},
+        {"src": "Müceddid", "tr": "Müceddid", "en": "Reviver"},
+        {"src": "Halvet", "tr": "Halvet", "en": "Khalwat (spiritual retreat)"},
+        {"src": "Sohbet", "tr": "Sohbet", "en": "Sohbet (spiritual companionship)"},
+        {"src": "Naksibend", "tr": "Nakşibendi", "en": "Naqshbandi"},
+        {"src": "Feyz", "tr": "Feyz", "en": "Fayd (spiritual emanation)"},
+        {"src": "Vahdet", "tr": "Vahdet", "en": "Wahdat (unity)"},
+        {"src": "Allah", "tr": "Allah", "en": "Allah"},
+        {"src": "Resulullah", "tr": "Resulullah", "en": "the Messenger of Allah"}
+      ]
+    },
+    "general_islamic": {
+      "match": ["kur'an", "kuran", "hadis", "hadith", "sünnet", "sunnet", "fıkıh", "fiqh", "tasavvuf", "sufi"],
+      "rules": [
+        "Dinî terimlerde anlam kaybı yapma; gereksiz modernleştirme yapma.",
+        "Ayet ve hadis metni uydurma; kaynak metinde ne varsa ona sadık kal."
+      ],
+      "terms": [
+        {"src": "Salat", "tr": "Namaz", "en": "Salah (ritual prayer)"},
+        {"src": "Zakat", "tr": "Zekat", "en": "Zakat"},
+        {"src": "Sahabe", "tr": "Sahabe", "en": "Companions (of the Prophet)"}
+      ]
+    }
+  }
+}
