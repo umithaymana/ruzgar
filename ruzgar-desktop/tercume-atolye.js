@@ -332,6 +332,62 @@
     if (ul) ul.innerHTML = `<li class="code-file-placeholder">${esc(message || "Eser veya yazar yazıp Ara’ya basın.")}</li>`;
   }
 
+  async function pollTercumeJob(jobId, onTick) {
+    const id = String(jobId || "").trim();
+    if (!id) throw new Error("job_id yok");
+    for (let i = 0; i < 480; i += 1) {
+      const res = await fetch(`${api()}/api/tercume/jobs/${encodeURIComponent(id)}`);
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : j.error || `HTTP ${res.status}`);
+      if (onTick) onTick(j);
+      const st = String(j.status || "");
+      if (st === "done") return j;
+      if (st === "failed" || st === "cancelled") {
+        throw new Error(String(j.error || j.label || st));
+      }
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+    throw new Error("İndirme zaman aşımı");
+  }
+
+  async function importFromSearch(item, query) {
+    const localRel = String(item?.local_rel || "").trim();
+    if (localRel) {
+      setTercumeTab("calisma");
+      await openFile(localRel);
+      flash("Arşivdeki dosya açıldı.");
+      return;
+    }
+    const fd = new FormData();
+    fd.append("q", String(query || "").trim());
+    fd.append("download_url", String(item?.download_url || item?.url || "").trim());
+    fd.append("title", String(item?.title || "").trim());
+    flash("Arşive alınıyor (arka planda)…");
+    const res = await fetch(`${api()}/api/tercume/import-from-search`, { method: "POST", body: fd });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : j.error || `HTTP ${res.status}`);
+    if (j.mode === "local" && j.rel) {
+      setTercumeTab("calisma");
+      await openFile(String(j.rel));
+      flash(String(j.message || "Yerel dosya açıldı."));
+      return;
+    }
+    const jobId = String(j.job_id || "").trim();
+    if (!jobId) throw new Error("İş kuyruğa alınamadı");
+    const final = await pollTercumeJob(jobId, (tick) => {
+      const msg = String(tick.label || tick.step || tick.status || "İndiriliyor…");
+      flash(msg);
+    });
+    const rel = String(final.rel || "").trim();
+    if (rel) {
+      setTercumeTab("calisma");
+      await openFile(rel);
+      flash("Arşive alındı — dosya açıldı.");
+      return;
+    }
+    flash("İş bitti; dosya yolu bulunamadı.");
+  }
+
   function renderEserSearchResults(data) {
     const ul = $("tercume-work-eser-sites");
     const hint = $("tercume-eser-hint");
@@ -360,7 +416,7 @@
           ? ` Alias: «${String(data.expanded_query).slice(0, 80)}».`
           : "";
       hint.textContent = q
-        ? `«${q}» — ${items.length} sonuç.${localFirst}${weak}${local}${expanded} Satır: siteyi aç · İndir: URL altta.`
+        ? `«${q}» — ${items.length} sonuç.${localFirst}${weak}${local}${expanded} Aç → site · Arşive al → indirme kuyruğu.`
         : "Arama henüz yapılmadı.";
     }
     if (!items.length) {
@@ -370,7 +426,9 @@
     ul.innerHTML = "";
     items.forEach((it, idx) => {
       const url = String(it.url || "");
+      const localRel = String(it.local_rel || "").trim();
       const li = document.createElement("li");
+      li.className = "tercume-eser-result-row";
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "tercume-eser-result-btn";
@@ -386,6 +444,11 @@
         `</span>` +
         `<span class="tercume-eser-result-meta"><span class="tercume-eser-result-src">${src}${scoreTag}</span><span class="tercume-eser-site-go">Aç →</span></span>`;
       btn.addEventListener("click", () => {
+        if (localRel) {
+          setTercumeTab("calisma");
+          void openFile(localRel).catch((e) => flash(e.message));
+          return;
+        }
         const dl = String(it.download_url || url || "");
         if (!dl && !url) return;
         if (url && global.ruzgarApi?.openExternalUrl) void global.ruzgarApi.openExternalUrl(url);
@@ -394,7 +457,20 @@
         if (urlInp) urlInp.value = dl || url;
         flash("Site açıldı; URL indirme kutusuna yazıldı.");
       });
+      const importBtn = document.createElement("button");
+      importBtn.type = "button";
+      importBtn.className = "btn-secondary btn-compact tercume-eser-import-btn";
+      importBtn.textContent = localRel ? "Aç" : "Arşive al";
+      importBtn.title = localRel
+        ? "Yerel arşivde — Çalışma sekmesinde aç"
+        : "Arka planda indir → tercume-imports";
+      importBtn.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        const q = String($("tercume-eser-input")?.value || data?.query || "").trim();
+        void importFromSearch(it, q).catch((e) => flash(e.message || String(e)));
+      });
       li.appendChild(btn);
+      li.appendChild(importBtn);
       ul.appendChild(li);
     });
   }
@@ -997,6 +1073,7 @@ ${chunk}`;
       awaitingChatReply = false;
       updateActiveLabel();
       syncSavePlaceholder();
+      fetch(`${api()}/api/tercume/memory-clear`, { method: "POST" }).catch(() => {});
     });
     $("btn-tercume-last-to-target")?.addEventListener("click", () => {
       const t = String(deps.lastAssistantReply?.() || "").trim();

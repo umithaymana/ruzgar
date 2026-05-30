@@ -330,6 +330,32 @@ def _llm_translate(system: str, user: str, *, max_tokens: int = 4000) -> str:
     return (_llm_complete(system, user, max_tokens=max_tokens) or "").strip()
 
 
+def _build_faz4_context(
+    unit: str,
+    *,
+    source_file: str,
+    tgt_lang: str,
+) -> tuple[str, dict[str, Any]]:
+    from ilim_assistant.motorlar.tercume_context_rag import archive_context_snippets
+    from ilim_assistant.motorlar.tercume_glossary import active_glossary_sets, glossary_directive
+    from ilim_assistant.motorlar.tercume_translate_memory import (
+        consistency_block,
+        seed_pairs_from_glossary,
+    )
+
+    seed_pairs_from_glossary(source_file, unit, tgt_lang=tgt_lang)
+    gloss = glossary_directive(unit, source_file=source_file, tgt_lang=tgt_lang, max_terms=16)
+    mem = consistency_block(source_file, tgt_lang=tgt_lang)
+    rag, rag_hits = archive_context_snippets(unit, source_file=source_file)
+    blocks = [b for b in (gloss, mem, rag) if b]
+    meta = {
+        "glossary_sets": active_glossary_sets(unit, source_file),
+        "rag_snippets": len(rag_hits),
+        "memory_active": bool(mem),
+    }
+    return "\n\n".join(blocks), meta
+
+
 def _translate_unit(
     unit: str,
     *,
@@ -339,14 +365,12 @@ def _translate_unit(
     page_index: int | None,
     line_note: str = "",
 ) -> str:
-    from ilim_assistant.motorlar.tercume_glossary import glossary_directive
-
-    gloss = glossary_directive(
+    context_block, _ctx = _build_faz4_context(
         unit,
         source_file=source_file,
         tgt_lang=tgt_lang,
     )
-    system = build_translation_system_prompt(tgt_lang, strict=True, glossary_block=gloss)
+    system = build_translation_system_prompt(tgt_lang, strict=True, glossary_block=context_block)
     user = build_translation_user_prompt(
         unit,
         src_lang=src_lang,
@@ -359,7 +383,7 @@ def _translate_unit(
     out = _llm_translate(system, user)
     if translation_leaked_source_language(out, tgt_lang):
         retry_sys = (
-            build_translation_system_prompt(tgt_lang, strict=True, glossary_block=gloss)
+            build_translation_system_prompt(tgt_lang, strict=True, glossary_block=context_block)
             + "\nÖnceki yanıt yetersizdi — kalan yabancı kelimeleri de çevir.\n"
         )
         retry_user = (
@@ -388,8 +412,14 @@ def translate_chunk(
     units = split_translation_units(chunk)
     if not units:
         return {"ok": False, "error": "Metin boş"}
+    _ctx_meta: dict[str, Any] = {}
     try:
         if len(units) == 1:
+            _pre_ctx, _ctx_meta = _build_faz4_context(
+                units[0],
+                source_file=source_file,
+                tgt_lang=tgt_lang,
+            )
             out = _translate_unit(
                 units[0],
                 src_lang=src_lang,
@@ -401,6 +431,12 @@ def translate_chunk(
         else:
             parts: list[str] = []
             for i, unit in enumerate(units):
+                if i == 0:
+                    _, _ctx_meta = _build_faz4_context(
+                        unit,
+                        source_file=source_file,
+                        tgt_lang=tgt_lang,
+                    )
                 parts.append(
                     _translate_unit(
                         unit,
@@ -417,7 +453,25 @@ def translate_chunk(
         return {"ok": False, "error": str(exc)[:200]}
     if not out:
         return {"ok": False, "error": "LLM yanıt vermedi (Ollama/bulut kontrol edin)."}
-    return {"ok": True, "text": out, "tgt_lang": tgt_lang, "mode": mode, "units": len(units)}
+    from ilim_assistant.motorlar.tercume_translate_memory import record_translation
+
+    record_translation(
+        source_file,
+        source_text=chunk,
+        translated=out,
+        tgt_lang=tgt_lang,
+    )
+    return {
+        "ok": True,
+        "text": out,
+        "tgt_lang": tgt_lang,
+        "mode": mode,
+        "units": len(units),
+        "glossary_sets": _ctx_meta.get("glossary_sets") or [],
+        "rag_snippets": _ctx_meta.get("rag_snippets") or 0,
+        "memory_active": _ctx_meta.get("memory_active", False),
+        "translate_faz4": True,
+    }
 
 
 def _apprentice_path(workspace_root: str | Path | None) -> Path | None:
@@ -480,8 +534,15 @@ def workbench_config() -> dict[str, Any]:
     pdf_cap = tercume_pdf_max_pages()
     return {
         "version": ATOLYE_VERSION,
-        "analyst_version": "tercume-analyst-v2-faz2-2026-05-31",
-        "analyst_routes": ["/api/tercume/analyze", "/api/tercume/pipeline"],
+        "analyst_version": "tercume-analyst-v5-faz5-2026-05-31",
+        "analyst_routes": [
+            "/api/tercume/analyze",
+            "/api/tercume/pipeline",
+            "/api/tercume/import-from-search",
+            "/api/tercume/pipeline-start",
+            "/api/tercume/jobs/{job_id}",
+            "/api/tercume/pipeline-cancel",
+        ],
         "batch_routes": [
             "/api/tercume/batch-start",
             "/api/tercume/batch-status",
@@ -493,6 +554,22 @@ def workbench_config() -> dict[str, Any]:
             "/api/tercume/read-cancel",
         ],
         "read_pipeline_version": "tercume-read-pipeline-v3-faz3-2026-05-31",
+        "translate_faz4": {
+            "version": "tercume-translate-faz4-2026-05-31",
+            "glossary": True,
+            "archive_rag": True,
+            "chunk_memory": True,
+            "env": {
+                "RUZGAR_TERCUME_RAG": "1",
+                "RUZGAR_TERCUME_MEMORY": "1",
+            },
+        },
+        "analyst_faz5": {
+            "version": "tercume-analyst-job-v5-faz5-2026-05-31",
+            "import_from_search": True,
+            "background_pipeline": True,
+            "job_resolver": "/api/tercume/jobs/{job_id}",
+        },
         "ocr_lang": ocr_config_for_api(),
         "translation_policy": {
             "local_first_search": local_first_search_enabled(),

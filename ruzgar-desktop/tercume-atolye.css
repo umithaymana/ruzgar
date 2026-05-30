@@ -189,6 +189,23 @@ body[data-motor="tercume"][data-tercume-tab="ara"] .panel-main {
   flex: 1;
   min-height: 80px;
 }
+#page-tercume .tercume-work-eser-sites li.tercume-eser-result-row {
+  display: flex;
+  gap: 0.35rem;
+  align-items: stretch;
+}
+#page-tercume .tercume-eser-import-btn {
+  flex: 0 0 auto;
+  align-self: center;
+  white-space: nowrap;
+  font-size: 0.78rem;
+  padding: 0.35rem 0.55rem;
+}
+#page-tercume .tercume-eser-result-row .tercume-eser-result-btn {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto;
+}
 #page-tercume .tercume-work-eser-sites li {
   margin-bottom: 4px;
 }

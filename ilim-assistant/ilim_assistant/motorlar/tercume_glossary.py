@@ -9,7 +9,7 @@ import unicodedata
 from pathlib import Path
 from typing import Any
 
-GLOSSARY_VERSION = "tercume-glossary-v1-2026-05-31"
+GLOSSARY_VERSION = "tercume-glossary-v2-faz4-2026-05-31"
 _GLOSSARY_PATH = Path(__file__).with_name("tercume_glossary.json")
 
 _LANG_COL = {
@@ -89,5 +89,39 @@ def glossary_directive(
 
     if len(lines) <= 1:
         return ""
-    lines.append(f"({GLOSSARY_VERSION} · {sets[0][0]})")
+    lines.append(f"({GLOSSARY_VERSION} · {', '.join(s[0] for s in sets[:3])})")
     return "\n".join(lines)
+
+
+def glossary_term_pairs(
+    text: str,
+    *,
+    source_file: str = "",
+    tgt_lang: str = "tr",
+    max_terms: int = 16,
+) -> list[tuple[str, str]]:
+    """Bellek/RAG için (kaynak → hedef ipucu) çiftleri."""
+    sets = _active_sets(text, source_file)
+    if not sets:
+        return []
+    code = (tgt_lang or "tr").strip().lower()[:2] or "tr"
+    col = _LANG_COL.get(code, "en")
+    blob = _norm(f"{text} {source_file}")
+    out: list[tuple[str, str]] = []
+    for _name, block in sets:
+        for term in block.get("terms") or []:
+            if len(out) >= max_terms:
+                break
+            if not isinstance(term, dict):
+                continue
+            src = str(term.get("src") or "").strip()
+            if not src or _norm(src) not in blob:
+                continue
+            hint = str(term.get(col) or term.get("tr") or term.get("en") or "").strip()
+            if hint:
+                out.append((src, hint))
+    return out
+
+
+def active_glossary_sets(text: str, source_file: str = "") -> list[str]:
+    return [name for name, _ in _active_sets(text, source_file)]

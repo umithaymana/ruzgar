@@ -3827,6 +3827,132 @@ def api_tercume_pipeline(
     )
 
 
+@app.post("/api/tercume/import-from-search")
+def api_tercume_import_from_search(
+    q: str = Form(""),
+    download_url: str = Form(""),
+    title: str = Form(""),
+    read_preview_pages: str = Form("0"),
+    translate: str = Form("0"),
+    src_lang: str = Form("auto"),
+    tgt_lang: str = Form("tr"),
+    workspace_root: str = Form(""),
+) -> dict[str, Any]:
+    """Faz 5 — eser aramasından arşive al (yerel veya arka plan indirme)."""
+    from ilim_assistant.motorlar.tercume_analyst import prepare_import_from_search
+    from ilim_assistant.motorlar.tercume_analyst_jobs import start_analyst_job
+
+    plan = prepare_import_from_search(
+        query=(q or "").strip(),
+        download_url=(download_url or "").strip(),
+        title=(title or "").strip(),
+    )
+    if not plan.get("ok"):
+        raise HTTPException(status_code=400, detail=str(plan.get("error") or "import planı başarısız"))
+
+    if plan.get("mode") == "local":
+        return {
+            "ok": True,
+            "mode": "local",
+            "rel": plan.get("rel"),
+            "title": plan.get("title"),
+            "message": plan.get("message"),
+        }
+
+    def _flag(v: str) -> bool:
+        return str(v or "").strip().lower() in ("1", "true", "yes", "on")
+
+    try:
+        rpp = max(0, min(25, int((read_preview_pages or "0").strip() or 0)))
+    except ValueError:
+        rpp = 0
+
+    hit = start_analyst_job(
+        query=str(plan.get("query") or q or title or "import"),
+        download=True,
+        download_url=str(plan.get("download_url") or ""),
+        read_preview_pages=rpp,
+        translate=_flag(translate),
+        src_lang=(src_lang or "auto").strip(),
+        tgt_lang=(tgt_lang or "tr").strip(),
+        workspace_root=(workspace_root or "").strip() or None,
+        title=(title or "").strip(),
+    )
+    if not hit.get("ok"):
+        raise HTTPException(status_code=400, detail=str(hit.get("error") or "iş başlatılamadı"))
+    return {
+        "ok": True,
+        "mode": "download",
+        "job_id": hit.get("job_id"),
+        "job_type": hit.get("job_type"),
+        "status": hit.get("status"),
+        "download_url": plan.get("download_url"),
+    }
+
+
+@app.post("/api/tercume/pipeline-start")
+def api_tercume_pipeline_start(
+    q: str = Form(""),
+    download: str = Form("1"),
+    download_url: str = Form(""),
+    target_dir_rel: str = Form("ilim-assistant/arsiv/tercume-imports"),
+    read_preview_pages: str = Form("0"),
+    translate: str = Form("0"),
+    src_lang: str = Form("auto"),
+    tgt_lang: str = Form("tr"),
+    workspace_root: str = Form(""),
+) -> dict[str, Any]:
+    """Faz 5 — analyze→indir pipeline arka planda."""
+    raw = (q or "").strip()
+    if not raw and not (download_url or "").strip():
+        raise HTTPException(status_code=400, detail="q veya download_url gerekli.")
+    from ilim_assistant.motorlar.tercume_analyst_jobs import start_analyst_job
+
+    def _flag(v: str) -> bool:
+        return str(v or "").strip().lower() in ("1", "true", "yes", "on")
+
+    try:
+        rpp = max(0, min(25, int((read_preview_pages or "0").strip() or 0)))
+    except ValueError:
+        rpp = 0
+
+    hit = start_analyst_job(
+        query=raw or "pipeline",
+        download=_flag(download),
+        download_url=(download_url or "").strip(),
+        target_dir_rel=(target_dir_rel or "ilim-assistant/arsiv/tercume-imports").strip(),
+        read_preview_pages=rpp,
+        translate=_flag(translate),
+        src_lang=(src_lang or "auto").strip(),
+        tgt_lang=(tgt_lang or "tr").strip(),
+        workspace_root=(workspace_root or "").strip() or None,
+    )
+    if not hit.get("ok"):
+        raise HTTPException(status_code=400, detail=str(hit.get("error") or "iş başlatılamadı"))
+    return hit
+
+
+@app.get("/api/tercume/jobs/{job_id}")
+def api_tercume_job_status(job_id: str) -> dict[str, Any]:
+    """Faz 5 — analyst / read / batch iş durumu."""
+    from ilim_assistant.motorlar.tercume_analyst_jobs import resolve_tercume_job
+
+    hit = resolve_tercume_job(job_id)
+    if not hit.get("ok"):
+        raise HTTPException(status_code=404, detail=str(hit.get("error") or "İş yok"))
+    return hit
+
+
+@app.post("/api/tercume/pipeline-cancel")
+def api_tercume_pipeline_cancel(job_id: str = Form("")) -> dict[str, Any]:
+    from ilim_assistant.motorlar.tercume_analyst_jobs import cancel_analyst_job
+
+    hit = cancel_analyst_job(job_id)
+    if not hit.get("ok"):
+        raise HTTPException(status_code=404, detail=str(hit.get("error") or "İş yok"))
+    return hit
+
+
 @app.get("/api/tercume/config")
 def api_tercume_config():
     from ilim_assistant.motorlar.tercume_atolye import workbench_config
@@ -3988,6 +4114,22 @@ def api_tercume_read_cancel(job_id: str = Form("")) -> dict[str, Any]:
     if not hit.get("ok"):
         raise HTTPException(status_code=404, detail=str(hit.get("error") or "İş yok"))
     return hit
+
+
+@app.post("/api/tercume/memory-clear")
+def api_tercume_memory_clear(source_file: str = Form("")) -> dict[str, Any]:
+    """Faz 4 — parça bellek temizle (tüm oturum veya tek dosya)."""
+    from ilim_assistant.motorlar.tercume_translate_memory import clear_session
+
+    sf = (source_file or "").strip()
+    if sf:
+        clear_session(sf)
+    else:
+        import ilim_assistant.motorlar.tercume_translate_memory as _tm
+
+        with _tm._lock:
+            _tm._sessions.clear()
+    return {"ok": True, "cleared": sf or "all"}
 
 
 @app.post("/api/tercume/translate-chunk")

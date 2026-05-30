@@ -10,7 +10,7 @@ import unicodedata
 from pathlib import Path
 from typing import Any
 
-TERCUME_ANALYST_VERSION = "tercume-analyst-v2-faz2-2026-05-31"
+TERCUME_ANALYST_VERSION = "tercume-analyst-v5-faz5-2026-05-31"
 
 _ALIASES_PATH = Path(__file__).with_name("tercume_eser_aliases.json")
 
@@ -532,3 +532,64 @@ def run_tercume_pipeline(
                     )
 
     return out
+
+
+def prepare_import_from_search(
+    *,
+    query: str = "",
+    download_url: str = "",
+    title: str = "",
+) -> dict[str, Any]:
+    """Faz 5 — arama satırından arşive alma planı (yerel veya indirme URL)."""
+    q = (query or "").strip()
+    url = (download_url or "").strip()
+    if not q and not url:
+        return {"ok": False, "error": "query veya download_url gerekli"}
+
+    analysis: dict[str, Any] | None = None
+    if q:
+        analysis = analyze_tercume_query(q)
+        if not analysis.get("ok"):
+            return analysis
+
+    if analysis and not url:
+        for it in analysis.get("items") or []:
+            if not isinstance(it, dict):
+                continue
+            local_rel = str(it.get("local_rel") or "").strip()
+            if local_rel:
+                return {
+                    "ok": True,
+                    "mode": "local",
+                    "rel": local_rel,
+                    "title": str(it.get("title") or title or Path(local_rel).name),
+                    "message": "Dosya zaten arşivde — Çalışma sekmesinden açın.",
+                    "analysis": analysis,
+                }
+
+    if not url and analysis:
+        url = str(analysis.get("suggested_download_url") or "").strip()
+    if not url and analysis:
+        for it in analysis.get("items") or []:
+            if not isinstance(it, dict):
+                continue
+            cand = str(it.get("download_url") or "").strip()
+            if cand:
+                url = cand
+                break
+
+    if not url:
+        return {
+            "ok": False,
+            "error": "İndirilecek URL yok — skor düşük veya yalnızca web sayfası.",
+            "analysis": analysis,
+        }
+
+    return {
+        "ok": True,
+        "mode": "download",
+        "download_url": url,
+        "query": q or title or "import",
+        "title": (title or "").strip(),
+        "analysis": analysis,
+    }

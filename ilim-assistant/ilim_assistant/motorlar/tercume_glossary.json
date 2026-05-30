@@ -1,6 +1,20 @@
 {
-  "version": "tercume-glossary-v1",
+  "version": "tercume-glossary-v2",
   "sets": {
+    "ibn_arabi_fusus": {
+      "match": ["ibn arabi", "ibn al-arabi", "muhyiddin", "muhyi", "fusus", "füsus", "hikem", "akbar"],
+      "rules": [
+        "İbn Arabi = Muhyiddin İbn Arabî; Fusus al-Hikem özel ad olarak korunur veya hedef dilde yaygın karşılığı.",
+        "Tasavvufi terimlerde (vahdet, vücud, ilim) anlam kaybı yapma."
+      ],
+      "terms": [
+        {"src": "Fusus", "tr": "Fusus", "en": "Fusus al-Hikam (Bezels of Wisdom)"},
+        {"src": "Vahdet-i Vücud", "tr": "Vahdet-i Vücud", "en": "Unity of Being"},
+        {"src": "Hikmet", "tr": "Hikmet", "en": "Wisdom (hikmah)"},
+        {"src": "Kelam", "tr": "Kelam", "en": "Theology / divine speech"},
+        {"src": "Feyz", "tr": "Feyz", "en": "Emanation (fayd)"}
+      ]
+    },
     "rabbani_mektubat": {
       "match": ["rabbani", "rabbanî", "mujaddid", "mecdidi", "mektubat", "maktubat", "sirhindi", "serhendi"],
       "rules": [

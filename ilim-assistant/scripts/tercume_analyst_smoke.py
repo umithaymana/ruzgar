@@ -88,7 +88,7 @@ def main() -> int:
     if not rep.get("ok"):
         print("FAIL analyze", rep)
         return 1
-    if "faz2" not in str(rep.get("version") or ""):
+    if "faz" not in str(rep.get("version") or ""):
         print("FAIL version", rep.get("version"))
         return 1
     if not rep.get("scholar_url"):
@@ -138,6 +138,98 @@ def main() -> int:
         return 1
 
     print("OK tercume faz3 — read pipeline quality + routes")
+
+    from ilim_assistant.motorlar.tercume_context_rag import (
+        TERCUME_RAG_VERSION,
+        archive_context_snippets,
+    )
+    from ilim_assistant.motorlar.tercume_glossary import active_glossary_sets, glossary_term_pairs
+    from ilim_assistant.motorlar.tercume_translate_memory import (
+        clear_session,
+        consistency_block,
+        record_translation,
+        seed_pairs_from_glossary,
+    )
+
+    pairs = glossary_term_pairs("imam rabbani mektubat halvet", source_file="mektubat.pdf", tgt_lang="tr")
+    if not pairs:
+        print("FAIL glossary pairs", pairs)
+        return 1
+    if "rabbani_mektubat" not in active_glossary_sets("mektubat rabbani", "x.pdf"):
+        print("FAIL active sets")
+        return 1
+    seed_pairs_from_glossary("mektubat.pdf", "Mecdüddîn halvet", tgt_lang="tr")
+    block = consistency_block("mektubat.pdf", tgt_lang="tr")
+    if "Mecdüddîn" not in block and "TERİM" not in block:
+        print("FAIL memory block", block[:120])
+        return 1
+    record_translation("mektubat.pdf", source_text="a", translated="b", tgt_lang="tr")
+    rag, hits = archive_context_snippets("mektubat tasavvuf ihlas", source_file="mektubat.pdf")
+    if "faz4" not in TERCUME_RAG_VERSION:
+        print("FAIL rag version")
+        return 1
+    clear_session("mektubat.pdf")
+
+    paths_f4 = {getattr(r, "path", "") for r in app.routes}
+    if "/api/tercume/memory-clear" not in paths_f4:
+        print("FAIL memory-clear route")
+        return 1
+
+    print("OK tercume faz4 — glossary memory rag")
+
+    from ilim_assistant.motorlar.tercume_analyst import prepare_import_from_search
+    from ilim_assistant.motorlar.tercume_analyst_jobs import (
+        ANALYST_JOB_VERSION,
+        get_analyst_job,
+        resolve_tercume_job,
+        start_analyst_job,
+    )
+
+    plan = prepare_import_from_search(
+        query="mektubat rabbani",
+        download_url="https://archive.org/download/example/mektubat.pdf",
+    )
+    if plan.get("mode") != "download" or not plan.get("download_url"):
+        print("FAIL import plan", plan)
+        return 1
+    local_plan = prepare_import_from_search(query="mektubat rabbani", download_url="")
+    if local_plan.get("mode") not in ("local", "download"):
+        print("FAIL local/download plan", local_plan)
+        return 1
+
+    started = start_analyst_job(
+        query="smoke",
+        download=False,
+        download_url="",
+    )
+    if not started.get("job_id"):
+        print("FAIL start job", started)
+        return 1
+    jid = str(started["job_id"])
+    st = get_analyst_job(jid)
+    if not st.get("ok"):
+        print("FAIL get job", st)
+        return 1
+    resolved = resolve_tercume_job(jid)
+    if resolved.get("job_type") != "analyst_pipeline":
+        print("FAIL resolve job", resolved)
+        return 1
+    if "faz5" not in ANALYST_JOB_VERSION:
+        print("FAIL analyst job version")
+        return 1
+
+    paths_f5 = {getattr(r, "path", "") for r in app.routes}
+    for need in (
+        "/api/tercume/import-from-search",
+        "/api/tercume/pipeline-start",
+        "/api/tercume/jobs/{job_id}",
+        "/api/tercume/pipeline-cancel",
+    ):
+        if need not in paths_f5:
+            print("FAIL route", need)
+            return 1
+
+    print("OK tercume faz5 — import queue jobs")
     return 0
 
 
