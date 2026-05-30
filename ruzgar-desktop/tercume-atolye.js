@@ -475,6 +475,40 @@
     });
   }
 
+  async function runAnalystReport() {
+    const q = String($("tercume-eser-input")?.value || "").trim();
+    const rel = String(openRel || "").trim();
+    if (!q && !rel) {
+      flash("Arama kutusuna eser yazın veya Çalışmada dosya açın.");
+      return;
+    }
+    flash("Analist raporu hazırlanıyor…");
+    const fd = new FormData();
+    fd.append("q", q);
+    fd.append("rel", rel);
+    fd.append("read_pages", "5");
+    fd.append("auto_import", rel ? "0" : "1");
+    const res = await fetch(`${api()}/api/tercume/report-start`, { method: "POST", body: fd });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : j.error || `HTTP ${res.status}`);
+    const jobId = String(j.job_id || "").trim();
+    if (!jobId) throw new Error("Rapor işi başlatılamadı");
+    const final = await pollTercumeJob(jobId, (tick) => {
+      flash(String(tick.label || tick.step || "Rapor…"));
+    });
+    const reportRel = String(final.report_rel || "").trim();
+    const steps = Array.isArray(final.next_steps) ? final.next_steps.join(" · ") : "";
+    if (reportRel) {
+      flash(`Rapor kaydedildi: ${reportRel}${steps ? ` — ${steps.slice(0, 120)}` : ""}`);
+    } else {
+      flash(steps || "Rapor tamamlandı.");
+    }
+    const hint = $("tercume-eser-hint");
+    if (hint && final.markdown_preview) {
+      hint.textContent = String(final.markdown_preview).replace(/\s+/g, " ").slice(0, 280);
+    }
+  }
+
   async function runEserSearch(query) {
     const q = extractEserSearchQuery(query);
     if (!q) {
@@ -814,6 +848,47 @@ ${chunk}`;
     void refreshApprenticeLog();
   }
 
+  async function saveBridgeToHafiza() {
+    const src = getSourceText();
+    const tr = getTargetText();
+    if (!tr || tr.length < 12) {
+      flash("Önce çeviri yapın (hedef en az 12 karakter).");
+      return;
+    }
+    const fdPreview = new FormData();
+    fdPreview.append("source_text", src);
+    fdPreview.append("translated_text", tr);
+    fdPreview.append("source_file", openRel || "");
+    fdPreview.append("tgt_lang", String($("tercume-tgt-lang")?.value || "tr"));
+    fdPreview.append("src_lang", String($("tercume-src-lang")?.value || "auto"));
+    const prevRes = await fetch(`${api()}/api/tercume/bridge-preview`, { method: "POST", body: fdPreview });
+    const prev = await prevRes.json().catch(() => ({}));
+    if (!prevRes.ok) {
+      throw new Error(typeof prev.detail === "string" ? prev.detail : prev.error || "Önizleme başarısız");
+    }
+    const soru = String(prev.soru || "").slice(0, 160);
+    const ok = global.confirm(
+      `Ana hafızaya kaydedilsin mi?\n\nAnahtar:\n${soru}\n\n(${prev.target_chars || tr.length} karakter çeviri)`
+    );
+    if (!ok) {
+      flash("Hafıza kaydı iptal.");
+      return;
+    }
+    const fd = new FormData();
+    fd.append("source_text", src);
+    fd.append("translated_text", tr);
+    fd.append("source_file", openRel || "");
+    fd.append("tgt_lang", String($("tercume-tgt-lang")?.value || "tr"));
+    fd.append("src_lang", String($("tercume-src-lang")?.value || "auto"));
+    fd.append("approved", "1");
+    fd.append("save_knowledge", "1");
+    const res = await fetch(`${api()}/api/tercume/bridge-save`, { method: "POST", body: fd });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : j.error || "Kayıt başarısız");
+    flash(j.message || "Ana hafızaya kaydedildi.");
+    void refreshApprenticeLog();
+  }
+
   async function importUrl() {
     const url = String($("tercume-import-url")?.value || "").trim();
     if (!url) {
@@ -1004,6 +1079,9 @@ ${chunk}`;
     $("btn-tercume-eser-ara")?.addEventListener("click", () => {
       void runEserSearch(String($("tercume-eser-input")?.value || ""));
     });
+    $("btn-tercume-eser-rapor")?.addEventListener("click", () => {
+      void runAnalystReport().catch((e) => flash(e.message || String(e)));
+    });
     $("btn-tercume-scholar-open")?.addEventListener("click", () => {
       openGoogleScholar(String($("tercume-eser-input")?.value || ""));
     });
@@ -1031,6 +1109,9 @@ ${chunk}`;
       flash("Durdurma istendi…");
     });
     $("btn-tercume-save-target")?.addEventListener("click", () => void saveTarget().catch((e) => flash(e.message)));
+    $("btn-tercume-bridge-save")?.addEventListener("click", () =>
+      void saveBridgeToHafiza().catch((e) => flash(e.message || String(e)))
+    );
     $("btn-tercume-import-url")?.addEventListener("click", () => void importUrl().catch((e) => flash(e.message)));
     $("tercume-import-file")?.addEventListener("change", (ev) => {
       const f = ev.target.files?.[0];

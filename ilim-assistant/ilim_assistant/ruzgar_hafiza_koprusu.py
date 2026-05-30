@@ -18,6 +18,7 @@ _MOTOR_ETIKET = {
     "programlama": "Programlama",
     "ilim": "İlim",
     "okuma": "İlim",
+    "tercume": "Tercüme",
 }
 
 

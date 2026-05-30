@@ -230,6 +230,87 @@ def main() -> int:
             return 1
 
     print("OK tercume faz5 — import queue jobs")
+
+    from ilim_assistant.motorlar.tercume_hafiza_bridge import (
+        TERCUME_BRIDGE_VERSION,
+        build_bridge_preview,
+        save_bridge_entry,
+        tercume_bridge_enabled,
+    )
+
+    if not tercume_bridge_enabled():
+        print("FAIL bridge disabled")
+        return 1
+    prev = build_bridge_preview(
+        "Bu parça tasavvuf ve ihlas hakkındadır.",
+        "This passage is about tasawwuf and sincerity in worship.",
+        source_file="mektubat.pdf",
+        page_index=2,
+        tgt_lang="en",
+    )
+    if not prev.get("ok") or not prev.get("soru"):
+        print("FAIL bridge preview", prev)
+        return 1
+    dry = save_bridge_entry(
+        "Bu parça tasavvuf ve ihlas hakkındadır.",
+        "This passage is about tasawwuf and sincerity in worship.",
+        source_file="smoke_test.pdf",
+        approved=True,
+        dry_run=True,
+    )
+    if not dry.get("ok") or not dry.get("dry_run"):
+        print("FAIL bridge dry save", dry)
+        return 1
+    if "faz6" not in TERCUME_BRIDGE_VERSION:
+        print("FAIL bridge version")
+        return 1
+
+    paths_f6 = {getattr(r, "path", "") for r in app.routes}
+    for need in (
+        "/api/tercume/bridge-preview",
+        "/api/tercume/bridge-save",
+        "/api/tercume/bridge-log",
+    ):
+        if need not in paths_f6:
+            print("FAIL route", need)
+            return 1
+
+    print("OK tercume faz6 — hafiza bridge")
+
+    from ilim_assistant.motorlar.tercume_analyst_report import (
+        ANALYST_REPORT_VERSION,
+        build_report_markdown,
+        generate_analyst_report,
+        report_enabled,
+        save_report_file,
+    )
+
+    if not report_enabled():
+        print("FAIL report disabled")
+        return 1
+    rep = generate_analyst_report("imam rabbani mektubat", read_pages=2)
+    if not rep.get("ok") or not rep.get("markdown"):
+        print("FAIL report generate", rep)
+        return 1
+    md = build_report_markdown(rep.get("analysis") or {})
+    if "# Tercüme analist raporu" not in md:
+        print("FAIL report markdown")
+        return 1
+    dry_save = save_report_file({**rep, "markdown": md})
+    if not dry_save.get("report_rel"):
+        print("FAIL report save", dry_save)
+        return 1
+    if "faz7" not in ANALYST_REPORT_VERSION:
+        print("FAIL report version")
+        return 1
+
+    paths_f7 = {getattr(r, "path", "") for r in app.routes}
+    for need in ("/api/tercume/report", "/api/tercume/report-start"):
+        if need not in paths_f7:
+            print("FAIL route", need)
+            return 1
+
+    print("OK tercume faz7 — analyst report")
     return 0
 
 

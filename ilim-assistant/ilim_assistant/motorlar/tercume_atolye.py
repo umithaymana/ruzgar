@@ -570,6 +570,31 @@ def workbench_config() -> dict[str, Any]:
             "background_pipeline": True,
             "job_resolver": "/api/tercume/jobs/{job_id}",
         },
+        "bridge_faz6": {
+            "version": "tercume-hafiza-bridge-v6-faz6-2026-05-31",
+            "genel_hafiza": True,
+            "knowledge_rag": True,
+            "routes": [
+                "/api/tercume/bridge-preview",
+                "/api/tercume/bridge-save",
+                "/api/tercume/bridge-log",
+            ],
+            "env": {
+                "RUZGAR_TERCUME_BRIDGE": "1",
+                "RUZGAR_TERCUME_BRIDGE_KNOWLEDGE": "1",
+            },
+        },
+        "report_faz7": {
+            "version": "tercume-analyst-report-v7-faz7-2026-05-31",
+            "markdown_report": True,
+            "auto_import": True,
+            "routes": [
+                "/api/tercume/report",
+                "/api/tercume/report-start",
+            ],
+            "output_dir": "ilim-assistant/arsiv/tercume-output/reports",
+            "env": {"RUZGAR_TERCUME_REPORT": "1"},
+        },
         "ocr_lang": ocr_config_for_api(),
         "translation_policy": {
             "local_first_search": local_first_search_enabled(),

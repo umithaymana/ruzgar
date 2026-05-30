@@ -117,6 +117,106 @@ def _run_pipeline(job_id: str, cfg: dict[str, Any]) -> None:
     )
 
 
+def _run_report(job_id: str, cfg: dict[str, Any]) -> None:
+    from ilim_assistant.motorlar.tercume_analyst import analyze_tercume_query, prepare_import_from_search
+    from ilim_assistant.motorlar.tercume_analyst_report import generate_analyst_report, save_report_file
+
+    query = str(cfg.get("query") or "").strip()
+    rel = str(cfg.get("rel") or "").strip()
+    read_pages = int(cfg.get("read_pages") or 5)
+
+    _update(job_id, status="running", step="analyze", label="Analiz raporu…")
+    if _cancelled(job_id):
+        _update(job_id, status="cancelled", label="İptal edildi")
+        return
+
+    if not rel and cfg.get("auto_import"):
+        plan = prepare_import_from_search(query=query, download_url=str(cfg.get("download_url") or ""))
+        if plan.get("mode") == "local":
+            rel = str(plan.get("rel") or "")
+        elif plan.get("mode") == "download" and plan.get("download_url"):
+            _update(job_id, step="download", label="Kaynak indiriliyor…")
+            from ilim_assistant.motorlar.tercume_analyst import run_tercume_pipeline
+
+            pipe = run_tercume_pipeline(
+                query,
+                download=True,
+                download_url=str(plan.get("download_url") or ""),
+                target_dir_rel=str(cfg.get("target_dir_rel") or "ilim-assistant/arsiv/tercume-imports"),
+            )
+            dl = pipe.get("download") or {}
+            if isinstance(dl, dict) and dl.get("ok"):
+                rel = str(dl.get("rel") or "")
+
+    if _cancelled(job_id):
+        _update(job_id, status="cancelled", label="İptal edildi")
+        return
+
+    _update(job_id, step="report", label="Rapor oluşturuluyor…")
+    report = generate_analyst_report(query, rel=rel, read_pages=read_pages)
+    if not report.get("ok"):
+        _update(job_id, status="failed", error=str(report.get("error") or "rapor hatası"), label="Başarısız")
+        return
+
+    saved = save_report_file(report)
+    _update(
+        job_id,
+        status="done",
+        step="done",
+        label="Rapor hazır",
+        rel=report.get("rel") or rel,
+        report_rel=saved.get("report_rel"),
+        report_json_rel=saved.get("report_json_rel"),
+        quality=report.get("quality"),
+        next_steps=report.get("next_steps"),
+        markdown_preview=str(report.get("markdown") or "")[:1200],
+        result={"report": report, "saved": saved},
+    )
+
+
+def start_report_job(
+    *,
+    query: str = "",
+    rel: str = "",
+    read_pages: int = 5,
+    auto_import: bool = False,
+    download_url: str = "",
+    target_dir_rel: str = "ilim-assistant/arsiv/tercume-imports",
+) -> dict[str, Any]:
+    q = (query or "").strip()
+    if not q and not (rel or "").strip():
+        return {"ok": False, "error": "query veya rel gerekli"}
+
+    job_id = uuid.uuid4().hex[:12]
+    cfg = {
+        "query": q or Path(rel).stem,
+        "rel": (rel or "").strip(),
+        "read_pages": max(1, min(25, int(read_pages or 5))),
+        "auto_import": bool(auto_import),
+        "download_url": (download_url or "").strip(),
+        "target_dir_rel": (target_dir_rel or "ilim-assistant/arsiv/tercume-imports").strip(),
+    }
+    state = {
+        "ok": True,
+        "job_id": job_id,
+        "job_type": "analyst_report",
+        "version": ANALYST_JOB_VERSION,
+        "status": "queued",
+        "step": "queued",
+        "label": "Rapor kuyruğunda…",
+        "query": cfg["query"],
+        "rel": cfg["rel"],
+        "created_at": time.time(),
+    }
+    with _lock:
+        _jobs[job_id] = state
+    _persist(job_id, state)
+
+    th = threading.Thread(target=_run_report, args=(job_id, cfg), daemon=True)
+    th.start()
+    return {"ok": True, "job_id": job_id, "job_type": "analyst_report", "status": "queued"}
+
+
 def start_analyst_job(
     *,
     query: str = "",
@@ -207,7 +307,7 @@ def resolve_tercume_job(job_id: str) -> dict[str, Any]:
 
     hit = get_analyst_job(jid)
     if hit.get("ok"):
-        hit.setdefault("job_type", "analyst_pipeline")
+        hit.setdefault("job_type", hit.get("job_type") or "analyst_pipeline")
         return hit
 
     from ilim_assistant.motorlar.tercume_read_jobs import get_read_job

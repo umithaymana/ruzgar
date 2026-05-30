@@ -3953,6 +3953,144 @@ def api_tercume_pipeline_cancel(job_id: str = Form("")) -> dict[str, Any]:
     return hit
 
 
+@app.post("/api/tercume/bridge-preview")
+def api_tercume_bridge_preview(
+    source_text: str = Form(""),
+    translated_text: str = Form(""),
+    source_file: str = Form(""),
+    page_index: str = Form(""),
+    tgt_lang: str = Form("tr"),
+    src_lang: str = Form("auto"),
+) -> dict[str, Any]:
+    """Faz 6 — onay öncesi ana hafıza önizlemesi."""
+    from ilim_assistant.motorlar.tercume_hafiza_bridge import build_bridge_preview
+
+    pi: int | None = None
+    raw_pi = (page_index or "").strip()
+    if raw_pi:
+        try:
+            pi = int(raw_pi)
+        except ValueError:
+            pi = None
+
+    hit = build_bridge_preview(
+        source_text,
+        translated_text,
+        source_file=(source_file or "").strip(),
+        page_index=pi,
+        tgt_lang=(tgt_lang or "tr").strip(),
+        src_lang=(src_lang or "auto").strip(),
+    )
+    if not hit.get("ok"):
+        raise HTTPException(status_code=400, detail=str(hit.get("error") or "önizleme başarısız"))
+    return hit
+
+
+@app.post("/api/tercume/bridge-save")
+def api_tercume_bridge_save(
+    source_text: str = Form(""),
+    translated_text: str = Form(""),
+    source_file: str = Form(""),
+    page_index: str = Form(""),
+    tgt_lang: str = Form("tr"),
+    src_lang: str = Form("auto"),
+    approved: str = Form("0"),
+    save_knowledge: str = Form("1"),
+) -> dict[str, Any]:
+    """Faz 6 — onaylı çeviri → genel hafıza + knowledge RAG."""
+    from ilim_assistant.motorlar.tercume_hafiza_bridge import save_bridge_entry
+
+    def _flag(v: str) -> bool:
+        return str(v or "").strip().lower() in ("1", "true", "yes", "on")
+
+    pi: int | None = None
+    raw_pi = (page_index or "").strip()
+    if raw_pi:
+        try:
+            pi = int(raw_pi)
+        except ValueError:
+            pi = None
+
+    hit = save_bridge_entry(
+        source_text,
+        translated_text,
+        source_file=(source_file or "").strip(),
+        page_index=pi,
+        tgt_lang=(tgt_lang or "tr").strip(),
+        src_lang=(src_lang or "auto").strip(),
+        approved=_flag(approved),
+        save_knowledge=_flag(save_knowledge),
+    )
+    if not hit.get("ok"):
+        raise HTTPException(status_code=400, detail=str(hit.get("error") or "kayıt başarısız"))
+    return hit
+
+
+@app.get("/api/tercume/bridge-log")
+def api_tercume_bridge_log(limit: int = Query(12, ge=1, le=40)) -> dict[str, Any]:
+    from ilim_assistant.motorlar.tercume_hafiza_bridge import read_bridge_log
+
+    return {"ok": True, "items": read_bridge_log(limit=limit)}
+
+
+@app.post("/api/tercume/report")
+def api_tercume_report(
+    q: str = Form(""),
+    rel: str = Form(""),
+    read_pages: str = Form("5"),
+    save: str = Form("1"),
+) -> dict[str, Any]:
+    """Faz 7 — analist araştırma raporu (senkron)."""
+    from ilim_assistant.motorlar.tercume_analyst_report import generate_analyst_report, save_report_file
+
+    def _flag(v: str) -> bool:
+        return str(v or "").strip().lower() in ("1", "true", "yes", "on")
+
+    try:
+        rp = max(1, min(25, int((read_pages or "5").strip() or 5)))
+    except ValueError:
+        rp = 5
+
+    hit = generate_analyst_report((q or "").strip(), rel=(rel or "").strip(), read_pages=rp)
+    if not hit.get("ok"):
+        raise HTTPException(status_code=400, detail=str(hit.get("error") or "rapor başarısız"))
+    if _flag(save):
+        saved = save_report_file(hit)
+        hit["saved"] = saved
+    return hit
+
+
+@app.post("/api/tercume/report-start")
+def api_tercume_report_start(
+    q: str = Form(""),
+    rel: str = Form(""),
+    read_pages: str = Form("5"),
+    auto_import: str = Form("0"),
+    download_url: str = Form(""),
+) -> dict[str, Any]:
+    """Faz 7 — analist raporu arka planda (isteğe indirme)."""
+    from ilim_assistant.motorlar.tercume_analyst_jobs import start_report_job
+
+    def _flag(v: str) -> bool:
+        return str(v or "").strip().lower() in ("1", "true", "yes", "on")
+
+    try:
+        rp = max(1, min(25, int((read_pages or "5").strip() or 5)))
+    except ValueError:
+        rp = 5
+
+    hit = start_report_job(
+        query=(q or "").strip(),
+        rel=(rel or "").strip(),
+        read_pages=rp,
+        auto_import=_flag(auto_import),
+        download_url=(download_url or "").strip(),
+    )
+    if not hit.get("ok"):
+        raise HTTPException(status_code=400, detail=str(hit.get("error") or "rapor işi başlatılamadı"))
+    return hit
+
+
 @app.get("/api/tercume/config")
 def api_tercume_config():
     from ilim_assistant.motorlar.tercume_atolye import workbench_config
