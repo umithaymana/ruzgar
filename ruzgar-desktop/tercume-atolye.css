@@ -118,6 +118,25 @@ body[data-motor="tercume"][data-tercume-tab="ara"] .panel-main {
   min-width: 0;
   padding: 6px;
 }
+body[data-motor="tercume"][data-tercume-tab="okuma"] .panel-chat {
+  display: flex !important;
+  flex-direction: column;
+  flex: 0 0 clamp(280px, 30vw, 380px);
+  width: auto;
+  min-width: 260px;
+  min-height: 0;
+  max-height: none;
+}
+body[data-motor="tercume"][data-tercume-tab="okuma"] .panel-main {
+  display: flex !important;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 6px;
+}
+body[data-motor="tercume"][data-tercume-tab="okuma"] #page-tercume .tercume-help-fold {
+  display: none !important;
+}
 
 #page-tercume .tercume-workbench {
   display: grid;
@@ -130,6 +149,20 @@ body[data-motor="tercume"][data-tercume-tab="ara"] .panel-main {
 #page-tercume .tercume-workbench--ara {
   grid-template-columns: minmax(130px, 170px) minmax(200px, 280px) minmax(0, 1fr);
 }
+#page-tercume .tercume-workbench--okuma {
+  grid-template-columns: minmax(0, 1fr);
+  min-height: min(78vh, 900px);
+}
+#page-tercume .tercume-workbench--calisma #tercume-ara-panel,
+#page-tercume .tercume-workbench--calisma #tercume-okuma-panel {
+  display: none !important;
+}
+#page-tercume .tercume-workbench--ara #tercume-okuma-panel {
+  display: none !important;
+}
+#page-tercume .tercume-workbench--okuma #tercume-ara-panel {
+  display: none !important;
+}
 #page-tercume .tercume-workbench--calisma #tercume-ara-panel {
   display: none !important;
 }
@@ -137,7 +170,12 @@ body[data-motor="tercume"][data-tercume-tab="ara"] .panel-main {
   display: flex !important;
   pointer-events: auto;
 }
-#page-tercume .tercume-ara-panel[hidden] {
+#page-tercume .tercume-workbench--okuma #tercume-okuma-panel {
+  display: flex !important;
+  pointer-events: auto;
+}
+#page-tercume .tercume-ara-panel[hidden],
+#page-tercume .tercume-okuma-panel[hidden] {
   display: none !important;
 }
 
@@ -323,6 +361,52 @@ body[data-motor="tercume"][data-tercume-tab="ara"] .panel-main {
 }
 #page-tercume .tercume-ara-download .btn-compact {
   width: 100%;
+}
+
+#page-tercume .tercume-okuma-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  border: 1px solid #3c3c3c;
+  border-radius: 6px;
+  background: #252526;
+  padding: 8px;
+  overflow: hidden;
+  grid-column: 1 / -1;
+}
+#page-tercume .tercume-workbench--okuma .tercume-main {
+  display: none !important;
+}
+#page-tercume .tercume-workbench--okuma .tercume-sidebar {
+  display: none !important;
+}
+#page-tercume .tercume-okuma-head {
+  font-size: 13px;
+  font-weight: 700;
+  color: #9cdcfe;
+  margin-bottom: 4px;
+}
+#page-tercume .tercume-okuma-lead {
+  font-size: 11px;
+  color: #888;
+  margin: 0 0 8px;
+}
+#page-tercume .tercume-okuma-work {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(120px, 160px) minmax(0, 1fr);
+  gap: 6px;
+}
+#page-tercume .tercume-okuma-main {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+#page-tercume .tercume-okuma-main .okuma-textarea {
+  flex: 1;
+  min-height: 120px;
 }
 
 #page-tercume .code-tree-row.file.is-active {

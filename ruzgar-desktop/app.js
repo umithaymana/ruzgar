@@ -253,6 +253,7 @@ const UI_MANIFEST_POLL_MS = 3000;
 
 const MODE_QS = new URLSearchParams(window.location.search);
 let currentMode = (MODE_QS.get("mode") || "genel").trim().toLowerCase();
+if (currentMode === "okuma") currentMode = "mimar";
 const WINDOW_TITLE_BASE =
   "RÜZGAR — Mimarlar: Ümit & Gökçenur";
 
@@ -261,7 +262,8 @@ const MODE_LABELS = {
   uretim: "RÜZGAR ÇEKİRDEĞİ",
   gelisim: "Gelişim",
   ses: "SES MOTORU",
-  okuma: "BİLİM MOTORU",
+  mimar: "MIMAR MOTORU",
+  okuma: "MIMAR MOTORU",
   video: "VİDEO MOTORU",
   programlama: "PROGRAMLAMA MOTORU",
   hafiza: "HAFIZA MOTORU",
@@ -343,14 +345,14 @@ const el = {
   modeBtnVideo: document.getElementById("mode-btn-video"),
   modeBtnProgramlama: document.getElementById("mode-btn-programlama"),
   modeBtnHafiza: document.getElementById("mode-btn-hafiza"),
-  modeBtnOkuma: document.getElementById("mode-btn-okuma"),
+  modeBtnMimar: document.getElementById("mode-btn-mimar"),
   modeBtnSes: document.getElementById("mode-btn-ses"),
   modeBtnHizir: document.getElementById("mode-btn-hizir"),
   motorDeclarationHeader: document.getElementById("motor-declaration-header"),
   dynamicWorkbench: document.getElementById("dynamic-workbench"),
   pageGenel: document.getElementById("page-genel"),
   pageHafiza: document.getElementById("page-hafiza"),
-  pageOkuma: document.getElementById("page-okuma"),
+  pageMimar: document.getElementById("page-mimar"),
   pageTercume: document.getElementById("page-tercume"),
   pageVideo: document.getElementById("page-video"),
   pageProgramlama: document.getElementById("page-programlama"),
@@ -593,7 +595,7 @@ const TOP_MODE_BUTTONS = [
   "modeBtnVideo",
   "modeBtnProgramlama",
   "modeBtnHafiza",
-  "modeBtnOkuma",
+  "modeBtnMimar",
   "modeBtnSes",
   "modeBtnHizir",
 ];
@@ -604,7 +606,8 @@ function syncTopModeButtons() {
   allModeButtons.forEach((btn) => {
     const mode = String(btn.getAttribute("data-mode") || "").trim().toLowerCase();
     if (!mode) return;
-    const isActive = mode === currentMode;
+    const isActive =
+      mode === currentMode || (mode === "mimar" && currentMode === "okuma");
     btn.classList.toggle("is-active", isActive);
     btn.setAttribute("aria-pressed", isActive ? "true" : "false");
   });
@@ -790,19 +793,19 @@ function applyModeToUI() {
     if (currentMode === "hafiza") el.code.checked = false;
   }
   if (el.web) {
-    if (["ses", "okuma", "tercume", "uretim", "hizli", "hafiza", "hizir"].includes(currentMode)) {
+    if (["ses", "mimar", "okuma", "tercume", "uretim", "hizli", "hafiza", "hizir"].includes(currentMode)) {
       el.web.checked = false;
     } else {
       el.web.checked = true;
     }
   }
   syncWebFetchUi();
-  if (currentMode === "okuma") {
+  if (currentMode === "mimar" || currentMode === "okuma") {
     el.input.placeholder =
-      "Okuma: arsiv durumu · index durumu · metin + hadis mi? · kaynak bul — PDF için arsiv_indexle";
+      "Mimar: fotoğraf, resim·sanat, tasarım — sohbet solda; her sekme ayrı sayfa.";
   } else if (currentMode === "tercume") {
     el.input.placeholder =
-      "«imam-ı rabbani eserlerini ara» → Eser ara sekmesi (Scholar + Archive…) · Scholar = tarayıcıda tam arayüz · Çeviri: Çevir";
+      "«imam-ı rabbani eserlerini ara» → Eser ara · Okuma sekmesi → arşiv · Çevir ile çeviri";
   } else if (currentMode === "ses") {
     el.input.placeholder =
       "Ses motorunda transkripti panelden sohbete aktarabilir veya doğrudan soru yazabilirsiniz.";
@@ -822,12 +825,16 @@ function applyModeToUI() {
   if (window.RuzgarTercumeAtolye?.syncTercumeLayout) {
     window.RuzgarTercumeAtolye.syncTercumeLayout(currentMode === "tercume");
   }
+  if (window.RuzgarMimarAtolye?.syncMimarLayout) {
+    window.RuzgarMimarAtolye.syncMimarLayout(currentMode === "mimar" || currentMode === "okuma");
+  }
   if (el.navRefresh) {
     const tips = {
       genel: "Ana motor panelini yenile",
       hafiza: "Hafıza JSON görünümünü yenile",
       hizir: "HIZIR: merkezi bellek + fırsat listesini yenile (Ana Motor değişmez)",
-      okuma: "İlim dosya listesini yenile",
+      mimar: "Mimar atölyesi",
+      okuma: "Mimar atölyesi (eski kısayol)",
       tercume: "Tercüme dosya listesini yenile",
       ses: "Ses motoru ipuçlarını yenile",
       video: "Video motoru özetini yenile",
@@ -1080,8 +1087,8 @@ function showThinkingCenter(titleText) {
   if (el.thinkingTitle) {
     el.thinkingTitle.textContent =
       titleText ||
-      (currentMode === "okuma"
-        ? "İlim Hazinesi taranıyor…"
+      (currentMode === "mimar" || currentMode === "okuma"
+        ? "Mimar atölyesi düşünülüyor…"
         : currentMode === "tercume"
           ? "Çeviri için düşünülüyor…"
           : "Rüzgar düşünüyor…");
@@ -1478,7 +1485,8 @@ function scheduleMetricsPolling() {
 }
 
 function switchMode(mode) {
-  const next = String(mode || "").trim().toLowerCase();
+  let next = String(mode || "").trim().toLowerCase();
+  if (next === "okuma") next = "mimar";
   if (!next) return;
   if (perfBusy) {
     interruptRuzgar();
@@ -1500,8 +1508,10 @@ function switchMode(mode) {
   }
   const motorDeclarationByMode = {
     genel: "Şu anda ana motor tam güç ve tam kapasite çalışıyor.",
+    mimar:
+      "Mimar motoru — Fotoğraf, sanat galerisi ve tasarım; üç bağımsız sayfa, yan sohbet.",
     okuma:
-      "Bilim motoru — İlim, tabiat ve tarih: arşiv + derin okuma; ana motorla köprülü çalışır.",
+      "Mimar motoru — Fotoğraf, sanat galerisi ve tasarım; üç bağımsız sayfa, yan sohbet.",
     video:
       "Video motoru — Faz 71: konuşarak indir (URL yapıştır); kurgu/kesim paneli; çıktı .ruzgar-video-export.",
     programlama:
@@ -1549,9 +1559,11 @@ function applyMotorHandoff(modeId, handoffText) {
       if (el.codeEditor) el.codeEditor.value = t;
       updateProgramlamaActiveFileLabel();
       break;
+    case "mimar":
     case "okuma":
-      switchMode("okuma");
+      switchMode("mimar");
       if (el.input) el.input.value = t;
+      window.RuzgarMimarAtolye?.setMimarTab?.("tasarim");
       el.input?.focus();
       break;
     case "hafiza":
@@ -4194,7 +4206,7 @@ function updateDynamicWorkbench() {
     el.pageGenel,
     el.pageHafiza,
     el.pageHizir,
-    el.pageOkuma,
+    el.pageMimar,
     el.pageTercume,
     el.pageVideo,
     el.pageProgramlama,
@@ -4210,7 +4222,8 @@ function updateDynamicWorkbench() {
     genel: el.pageGenel,
     hafiza: el.pageHafiza,
     hizir: el.pageHizir,
-    okuma: el.pageOkuma,
+    mimar: el.pageMimar,
+    okuma: el.pageMimar,
     tercume: el.pageTercume,
     video: el.pageVideo,
     programlama: el.pageProgramlama,
@@ -4230,7 +4243,9 @@ function updateDynamicWorkbench() {
     el.dashboardStatus.textContent = `Aktif motor: ${MODE_LABELS[currentMode] || currentMode}`;
   updateDashboardLastSpeech();
   if (currentMode === "hafiza") void loadHafizaJsonView();
-  if (currentMode === "okuma") void loadIlimFileList();
+  if (currentMode === "mimar" || currentMode === "okuma") {
+    if (window.RuzgarMimarAtolye) window.RuzgarMimarAtolye.load();
+  }
   if (currentMode === "tercume") void loadTercumeFileList();
   /* tercüme: tercume-atolye.js */
   if (currentMode === "ses") void refreshSesSttHint();
@@ -4706,6 +4721,14 @@ function loadTercumeFileList() {
   if (window.RuzgarTercumeAtolye) window.RuzgarTercumeAtolye.load();
 }
 
+function wireMimarAtolye() {
+  if (!window.RuzgarMimarAtolye) return;
+  window.RuzgarMimarAtolye.init({
+    flash: flashRuzgarDurum,
+    getCurrentMode: () => currentMode,
+  });
+}
+
 function wireTercumeAtolye() {
   if (!window.RuzgarTercumeAtolye) return;
   window.RuzgarTercumeAtolye.init({
@@ -4715,6 +4738,7 @@ function wireTercumeAtolye() {
     sendMessage: sendMessageWithText,
     switchMode,
     getCurrentMode: () => currentMode,
+    loadIlimFileList,
     workspaceListDir,
     createCodeTreeBranch,
     lastAssistantReply: () => lastAssistantReply,
@@ -6054,6 +6078,7 @@ async function refreshArsivTreeInto(containerEl) {
 async function okumaAtolyeRefreshTree() {
   await refreshArsivTreeInto(el.ilimFileList);
 }
+window.okumaAtolyeRefreshTree = okumaAtolyeRefreshTree;
 
 function wireOkumaAtolye() {
   if (el.ilimFileList && el.ilimFileList.dataset.okumaWired !== "1") {
@@ -6329,6 +6354,7 @@ function wireDynamicWorkbench() {
   if (el.btnLayoutSplit4) el.btnLayoutSplit4.addEventListener("click", () => setWorkbenchLayout("layout-split4"));
   wireProgrammingWorkbench();
   wireOkumaAtolye();
+  wireMimarAtolye();
   wireTercumeAtolye();
   wireSesAtolye();
   wireVideoAtolye();
@@ -6543,6 +6569,7 @@ const motorChatSessions = Object.create(null);
 const MOTOR_CHAT_MODES = [
   "genel",
   "ses",
+  "mimar",
   "okuma",
   "video",
   "tercume",
@@ -6556,6 +6583,7 @@ const MOTOR_CHAT_MODES = [
 function normalizeMotorChatMode(mode) {
   const m = String(mode || "genel").trim().toLowerCase();
   if (m === "hizli") return "genel";
+  if (m === "okuma") return "mimar";
   return MOTOR_CHAT_MODES.includes(m) ? m : "genel";
 }
 
@@ -6791,14 +6819,20 @@ function wireNavToolbar() {
           setStatus("Hafıza görünümü yenilendi", "Rüzgar");
           return;
         }
-        if (mode === "okuma") {
-          await loadIlimFileList();
-          setStatus("İlim dosya listesi yenilendi", "Rüzgar");
+        if (mode === "mimar" || mode === "okuma") {
+          if (window.RuzgarMimarAtolye) window.RuzgarMimarAtolye.load();
+          setStatus("Mimar atölyesi yenilendi", "Rüzgar");
           return;
         }
         if (mode === "tercume") {
-          await loadTercumeFileList();
-          setStatus("Tercüme dosya listesi yenilendi", "Rüzgar");
+          const tab = document.body.dataset.tercumeTab || "calisma";
+          if (tab === "okuma") {
+            await loadIlimFileList();
+            setStatus("Okuma arşivi yenilendi", "Rüzgar");
+          } else {
+            await loadTercumeFileList();
+            setStatus("Tercüme dosya listesi yenilendi", "Rüzgar");
+          }
           return;
         }
         if (mode === "ses") {
@@ -8287,7 +8321,7 @@ async function streamChat(userText) {
     history: chatSess.history,
     use_web: el.web
       ? !!el.web.checked
-      : !["ses", "okuma", "tercume", "hafiza", "hizli", "programlama"].includes(
+      : !["ses", "mimar", "okuma", "tercume", "hafiza", "hizli", "programlama"].includes(
           chatMode,
         ),
     read_message_links:

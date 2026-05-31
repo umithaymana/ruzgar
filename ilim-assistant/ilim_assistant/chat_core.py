@@ -90,10 +90,10 @@ def message_calls_wake_name(message: str) -> bool:
 # Yerel arama + web yok: daha az GPU/CPU (masaüstü modları)
 # hafiza: yalnızca ruzgar_genel_hafiza.json + LLM; tam arşiv/indeks taraması dakikalarca sürebilir.
 _NO_RAG_MODES = frozenset(
-    {"ses", "okuma", "tercume", "uretim", "video", "hizli", "hafiza", "programlama"}
+    {"ses", "mimar", "okuma", "tercume", "uretim", "video", "hizli", "hafiza", "programlama"}
 )
 _NOWEB_MODES = frozenset(
-    {"ses", "okuma", "tercume", "uretim", "hizli", "hafiza", "programlama"}
+    {"ses", "mimar", "okuma", "tercume", "uretim", "hizli", "hafiza", "programlama"}
 )
 
 # İstemciden Türkçe karakterli veya ASCII mod adı gelebilir
@@ -103,6 +103,8 @@ _MODE_ALIASES = {
     "düzen": "duzen",
     "hızlı": "hizli",
     "tercüme": "tercume",
+    "okuma": "mimar",
+    "bilim": "mimar",
 }
 
 

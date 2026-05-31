@@ -1120,17 +1120,25 @@ ${chunk}`;
     });
     const wb = $("tercume-workbench");
     if (wb) {
-      wb.classList.toggle("tercume-workbench--ara", t === "ara");
-      wb.classList.toggle("tercume-workbench--calisma", t === "calisma");
+      wb.classList.remove("tercume-workbench--ara", "tercume-workbench--calisma", "tercume-workbench--okuma");
+      if (t === "ara") wb.classList.add("tercume-workbench--ara");
+      else if (t === "okuma") wb.classList.add("tercume-workbench--okuma");
+      else if (t === "calisma") wb.classList.add("tercume-workbench--calisma");
     }
     const ara = $("tercume-ara-panel");
+    const okuma = $("tercume-okuma-panel");
     if (ara) ara.hidden = t !== "ara";
+    if (okuma) okuma.hidden = t !== "okuma";
     if (t === "ara") {
       setTimeout(() => {
         const inp = $("tercume-eser-input");
         inp?.focus();
         inp?.select?.();
       }, 60);
+    }
+    if (t === "okuma") {
+      if (global.okumaAtolyeRefreshTree) void global.okumaAtolyeRefreshTree();
+      else if (deps.loadIlimFileList) void deps.loadIlimFileList();
     }
     if (t === "calisma" || t === "ara") {
       void refreshTree();
@@ -1158,7 +1166,7 @@ ${chunk}`;
     bar.querySelectorAll(".tercume-view-tab").forEach((btn) => {
       btn.addEventListener("click", () => {
         setTercumeTab(btn.dataset.tercumeTab || "calisma");
-        const labels = { sohbet: "Sohbet", calisma: "Çalışma", ara: "Eser ara" };
+        const labels = { sohbet: "Sohbet", calisma: "Çalışma", ara: "Eser ara", okuma: "Okuma" };
         flash(`Görünüm: ${labels[btn.dataset.tercumeTab] || btn.dataset.tercumeTab}`);
       });
     });
@@ -1243,6 +1251,16 @@ ${chunk}`;
     });
     $("btn-tercume-preflight")?.addEventListener("click", () => {
       void runPreflight().catch((e) => flash(e.message || "Hazırlık kontrolü hatası"));
+    });
+    $("btn-tercume-okuma-to-source")?.addEventListener("click", () => {
+      const t = String($("ilim-file-content")?.value || "").trim();
+      if (!t) {
+        flash("Önce Okuma sekmesinde bir dosya açın.");
+        return;
+      }
+      setSourceText(t);
+      setTercumeTab("calisma");
+      flash("Metin kaynak panele aktarıldı — Çevir deyin.");
     });
     $("btn-tercume-read-analyze")?.addEventListener("click", () => {
       void startReadAnalyze().catch((e) => {

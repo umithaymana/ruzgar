@@ -17,7 +17,8 @@ _MOTOR_ETIKET = {
     "video": "Video",
     "programlama": "Programlama",
     "ilim": "İlim",
-    "okuma": "İlim",
+    "okuma": "Mimar",
+    "mimar": "Mimar",
     "tercume": "Tercüme",
 }
 

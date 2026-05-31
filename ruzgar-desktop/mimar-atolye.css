@@ -1,0 +1,425 @@
+/* Mimar motoru — 3 bağımsız sayfa; yan sohbet + tek aktif panel */
+
+body:not([data-motor="mimar"]) #mimar-view-tabs {
+  display: none !important;
+}
+
+body[data-motor="mimar"] .layout.layout-v2 {
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  grid-template-rows: 38px minmax(0, 1fr);
+  align-content: stretch;
+}
+body[data-motor="mimar"] .panel-motors {
+  grid-column: 1;
+  grid-row: 1 / -1;
+}
+body[data-motor="mimar"] #mimar-view-tabs {
+  display: flex;
+  grid-column: 2;
+  grid-row: 1;
+  align-items: stretch;
+  gap: 0;
+  padding: 0 8px;
+  background: #2d2d30;
+  border-bottom: 1px solid #3c3c3c;
+}
+body[data-motor="mimar"] #tercume-view-tabs {
+  display: none !important;
+}
+body[data-motor="mimar"] #tercume-center-row {
+  display: flex;
+  flex-direction: row;
+  grid-column: 2;
+  grid-row: 2;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+body[data-motor="mimar"] .panel-chat {
+  display: flex !important;
+  flex-direction: column;
+  flex: 0 0 clamp(280px, 30vw, 380px);
+  width: auto;
+  min-width: 260px;
+  min-height: 0;
+  max-height: none;
+}
+body[data-motor="mimar"] .panel-main {
+  display: flex !important;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 6px;
+  overflow: hidden;
+}
+
+body[data-motor="mimar"] .workbench-head,
+body[data-motor="mimar"] .dynamic-workbench {
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
+#page-mimar.mimar-page-v2 {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+#page-mimar .mimar-workbench {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Tek panel görünsün — display:flex [hidden]'ı ezer */
+#page-mimar .mimar-panel {
+  display: none !important;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  border: 1px solid #3c3c3c;
+  border-radius: 6px;
+  background: #1e1e1e;
+  padding: 10px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+body[data-motor="mimar"][data-mimar-tab="fotograf"] #mimar-panel-fotograf,
+body[data-motor="mimar"][data-mimar-tab="resim-sanat"] #mimar-panel-resim-sanat,
+body[data-motor="mimar"][data-mimar-tab="tasarim"] #mimar-panel-tasarim {
+  display: flex !important;
+}
+
+#page-mimar .mimar-panel-head {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ce9178;
+  margin-bottom: 4px;
+  flex-shrink: 0;
+}
+
+#page-mimar .mimar-panel-lead {
+  font-size: 11px;
+  color: #888;
+  margin: 0 0 8px;
+  flex-shrink: 0;
+  line-height: 1.35;
+}
+
+.mimar-file-btn {
+  cursor: pointer;
+  margin: 0;
+}
+
+/* —— Sayfa 1: Fotoğraf —— */
+.mimar-foto-layout {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(120px, 160px) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.mimar-foto-strip {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid #3c3c3c;
+  border-radius: 4px;
+  background: #252526;
+  overflow: hidden;
+}
+
+.mimar-strip-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 6px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #aaa;
+  border-bottom: 1px solid #3c3c3c;
+  flex-shrink: 0;
+}
+
+.mimar-foto-thumbs {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mimar-foto-thumb-empty,
+.mimar-layer-empty {
+  font-size: 11px;
+  color: #666;
+  padding: 8px;
+  line-height: 1.4;
+}
+
+.mimar-foto-thumb {
+  border: 2px solid transparent;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  background: #1a1a1a;
+}
+.mimar-foto-thumb.is-active {
+  border-color: #3794ff;
+}
+.mimar-foto-thumb img {
+  display: block;
+  width: 100%;
+  height: 72px;
+  object-fit: cover;
+}
+
+.mimar-foto-stage {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: 8px;
+}
+
+.mimar-foto-preview {
+  flex: 1;
+  min-height: min(52vh, 560px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #454545;
+  border-radius: 6px;
+  background: #141414;
+  overflow: hidden;
+  position: relative;
+}
+
+.mimar-foto-preview-hint,
+.mimar-sanat-preview-hint {
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+  padding: 12px;
+}
+
+.mimar-foto-preview img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.mimar-foto-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.mimar-foto-status {
+  font-size: 10px;
+  color: #858585;
+  margin-left: auto;
+}
+
+/* —— Sayfa 2: Sanat galerisi —— */
+.mimar-sanat-layout {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(220px, 320px);
+  gap: 8px;
+}
+
+.mimar-sanat-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 8px;
+  align-content: start;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 4px;
+  border: 1px solid #3c3c3c;
+  border-radius: 6px;
+  background: #181818;
+}
+
+.mimar-sanat-tile {
+  aspect-ratio: 1;
+  border: 1px solid #3c3c3c;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  background: #252526;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mimar-sanat-tile.is-active {
+  outline: 2px solid #3794ff;
+}
+.mimar-sanat-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.mimar-sanat-tile-add {
+  border-style: dashed;
+  color: #888;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.mimar-sanat-detail {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: 8px;
+}
+
+.mimar-sanat-preview {
+  flex: 1;
+  min-height: 160px;
+  max-height: 280px;
+  border: 1px solid #3c3c3c;
+  border-radius: 4px;
+  background: #141414;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.mimar-sanat-preview img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.mimar-sanat-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mimar-sanat-notes {
+  flex: 1;
+  min-height: 100px;
+  resize: vertical;
+  font-size: 13px;
+  padding: 8px 10px;
+  border: 1px solid #3c3c3c;
+  border-radius: 4px;
+  background: #1a1a1a;
+  color: #e0e0e0;
+  font-family: Georgia, "Segoe UI", serif;
+}
+
+/* —— Sayfa 3: Tasarım —— */
+.mimar-tasarim-layout {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 200px);
+  gap: 8px;
+}
+
+.mimar-tasarim-toolbar {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.mimar-tasarim-stage {
+  grid-column: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border: 1px solid #3c3c3c;
+  border-radius: 6px;
+  background: #0f0f0f;
+  overflow: hidden;
+}
+
+.mimar-tasarim-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: min(50vh, 520px);
+  background: repeating-conic-gradient(#1a1a1a 0% 25%, #222 0% 50%) 50% / 24px 24px;
+  cursor: crosshair;
+}
+
+.mimar-tasarim-canvas-hint {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  right: 8px;
+  margin: 0;
+  font-size: 10px;
+  color: #666;
+  pointer-events: none;
+}
+
+.mimar-tasarim-side {
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid #3c3c3c;
+  border-radius: 4px;
+  background: #252526;
+  padding: 8px;
+}
+
+.mimar-tasarim-side-head {
+  font-size: 11px;
+  font-weight: 600;
+  color: #aaa;
+  margin-bottom: 6px;
+}
+
+.mimar-tasarim-layers {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  flex: 1;
+  min-height: 60px;
+  overflow-y: auto;
+  font-size: 11px;
+  color: #888;
+}
+
+.mimar-tasarim-notes {
+  resize: vertical;
+  min-height: 80px;
+  font-size: 12px;
+  padding: 6px 8px;
+  border: 1px solid #3c3c3c;
+  border-radius: 4px;
+  background: #1a1a1a;
+  color: #e0e0e0;
+  font-family: Consolas, monospace;
+}
+
+#page-mimar h3 {
+  display: none;
+}

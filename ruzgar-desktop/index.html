@@ -20,7 +20,7 @@
       <div class="title-row title-row-motors">
         <div class="mode-topbar mode-topbar-main" role="tablist" aria-label="Rüzgar modül seçici">
           <button type="button" class="mode-tab is-active" id="mode-btn-genel" data-mode="genel">ANA MOTOR</button>
-          <button type="button" class="mode-tab" id="mode-btn-okuma" data-mode="okuma">BİLİM MOTORU</button>
+          <button type="button" class="mode-tab" id="mode-btn-mimar" data-mode="mimar">MİMAR MOTORU</button>
           <button type="button" class="mode-tab" id="mode-btn-video" data-mode="video">VİDEO MOTORU</button>
           <button type="button" class="mode-tab" id="mode-btn-programlama" data-mode="programlama">PROGRAMLAMA MOTORU</button>
           <button type="button" class="mode-tab mode-tab-hafiza" id="mode-btn-hafiza" data-mode="hafiza">HAFIZA MOTORU</button>
@@ -94,11 +94,11 @@
               <span class="motor-tag">Faz 71 · konuşarak yap</span>
             </span>
           </button>
-          <button type="button" class="motor-item" data-mode="okuma" id="motor-side-okuma">
-            <span class="motor-glyph">▤</span>
+          <button type="button" class="motor-item" data-mode="mimar" id="motor-side-mimar">
+            <span class="motor-glyph">◈</span>
             <span class="motor-text">
-              <span class="motor-name">BİLİM MOTORU</span>
-              <span class="motor-tag">İlim · tabiat · tarih</span>
+              <span class="motor-name">MİMAR MOTORU</span>
+              <span class="motor-tag">Fotoğraf · sanat · tasarım</span>
             </span>
           </button>
           <button type="button" class="motor-item" data-mode="tercume" id="motor-side-tercume">
@@ -137,6 +137,27 @@
         </button>
         <button type="button" class="tercume-view-tab" data-tercume-tab="ara" role="tab">
           Eser ara
+        </button>
+        <button type="button" class="tercume-view-tab" data-tercume-tab="okuma" role="tab">
+          Okuma
+        </button>
+      </nav>
+
+      <nav
+        id="mimar-view-tabs"
+        class="tercume-view-tabs mimar-view-tabs"
+        role="tablist"
+        aria-label="Mimar görünümü"
+        hidden
+      >
+        <button type="button" class="mimar-view-tab tercume-view-tab is-active" data-mimar-tab="fotograf" role="tab">
+          Fotoğraf
+        </button>
+        <button type="button" class="mimar-view-tab tercume-view-tab" data-mimar-tab="resim-sanat" role="tab">
+          Resim · Sanat
+        </button>
+        <button type="button" class="mimar-view-tab tercume-view-tab" data-mimar-tab="tasarim" role="tab">
+          Tasarım
         </button>
       </nav>
 
@@ -462,53 +483,95 @@
             </div>
           </section>
 
-          <section class="motor-page" id="page-okuma" hidden>
-            <div class="atelier-info-strip">
-              <span class="phase-badge">Faz 2 ✓</span>
-              <span class="atelier-promise">
-                <strong>Okuma Atölyesi (tamam)</strong> — <code>ilim-assistant/arsiv</code>: ağaç, düz metin,
-                <strong>PDF</strong> ve <strong>DOCX</strong> metin çıkarma, karakter/kelime sayacı,
-                <strong>Özet / Okuma notu / Sohbete aktar</strong>, arşivi dosya gezgininde aç.
-                EPUB ve OCR ileride genişletme.
-              </span>
-            </div>
-            <h3>Okuma Motoru — İlim Arşivi</h3>
-            <div class="okuma-workbench">
-              <aside class="okuma-sidebar">
-                <div class="code-sidebar-head okuma-sidebar-head">
-                  <span>İlim arşivi</span>
-                  <div class="okuma-sidebar-btns">
-                    <button type="button" class="btn-secondary btn-compact" id="btn-ilim-open-archive" title="ilim-assistant/arsiv klasörünü aç">
-                      Klasör
-                    </button>
-                    <button type="button" class="btn-secondary btn-compact" id="btn-ilim-refresh" title="Listeyi yenile">
-                      Yenile
-                    </button>
+          <section class="motor-page mimar-page-v2" id="page-mimar" hidden>
+            <div class="mimar-workbench mimar-workbench--fotograf" id="mimar-workbench">
+
+              <!-- Sayfa 1: Fotoğraf stüdyosu (bağımsız) -->
+              <div class="mimar-panel mimar-panel-fotograf" id="mimar-panel-fotograf" data-mimar-page="fotograf">
+                <div class="mimar-panel-head">Fotoğraf — moderasyon, restorasyon, yapay ses</div>
+                <p class="mimar-panel-lead">Profesyonel fotoğraf işleme; eski fotoğraf yenileme; metin okutma ve konuşturma (Faz 4).</p>
+                <div class="mimar-foto-layout">
+                  <aside class="mimar-foto-strip" aria-label="Fotoğraf listesi">
+                    <div class="mimar-strip-head">
+                      <span>Dosyalar</span>
+                      <label class="btn-secondary btn-compact mimar-file-btn">
+                        Ekle
+                        <input type="file" id="mimar-foto-file" hidden accept="image/*" multiple />
+                      </label>
+                    </div>
+                    <ul class="mimar-foto-thumbs" id="mimar-foto-thumbs">
+                      <li class="mimar-foto-thumb-empty">Henüz fotoğraf yok — «Ekle» ile yükleyin.</li>
+                    </ul>
+                  </aside>
+                  <div class="mimar-foto-stage">
+                    <div class="mimar-foto-preview" id="mimar-foto-preview">
+                      <span class="mimar-foto-preview-hint">Önizleme — listeden veya sürükleyip bırakın</span>
+                      <img id="mimar-foto-preview-img" alt="" hidden />
+                    </div>
+                    <div class="mimar-foto-tools" role="toolbar" aria-label="Fotoğraf araçları">
+                      <button type="button" class="btn-secondary btn-compact" id="btn-mimar-foto-moderasyon" disabled title="Faz 4a">Moderasyon</button>
+                      <button type="button" class="btn-secondary btn-compact" id="btn-mimar-foto-restore" disabled title="Faz 4b">Restorasyon</button>
+                      <button type="button" class="btn-secondary btn-compact" id="btn-mimar-foto-tts" disabled title="Faz 4c">Metin oku</button>
+                      <button type="button" class="btn-secondary btn-compact" id="btn-mimar-foto-speak" disabled title="Faz 4c">Konuştur</button>
+                      <span class="mimar-foto-status" id="mimar-foto-status">Faz 4 — araçlar bağlanacak</span>
+                    </div>
                   </div>
                 </div>
-                <div id="ilim-file-list" class="code-file-tree okuma-file-tree"></div>
-              </aside>
-              <div class="okuma-main">
-                <div class="okuma-toolbar">
-                  <button type="button" class="btn-secondary btn-compact" id="btn-ilim-to-chat">
-                    Metni sohbete aktar
-                  </button>
-                  <button type="button" class="btn-primary btn-compact" id="btn-ilim-summary" title="Seçili metni özetletmek için Rüzgar’a gönder">
-                    Özet iste
-                  </button>
-                  <button type="button" class="btn-secondary btn-compact" id="btn-ilim-comment" title="Okuma notu / değerlendirme için Rüzgar’a gönder">
-                    Okuma notu
-                  </button>
-                  <span class="code-active-path okuma-active-path" id="ilim-active-file">Metin: (sol listeden dosya seçin)</span>
-                </div>
-                <textarea
-                  id="ilim-file-content"
-                  class="hafiza-textarea okuma-textarea"
-                  rows="18"
-                  placeholder="Sol listeden bir dosya seçin; içerik burada görünür. İstersen düzenleyip sohbete aktarın."
-                ></textarea>
-                <div class="okuma-footer-stats" id="ilim-stats">0 karakter · 0 kelime</div>
               </div>
+
+              <!-- Sayfa 2: Sanat galerisi (bağımsız) -->
+              <div class="mimar-panel mimar-panel-resim-sanat" id="mimar-panel-resim-sanat" hidden data-mimar-page="resim-sanat">
+                <div class="mimar-panel-head">Resim · Sanat — galeri ve inceleme</div>
+                <p class="mimar-panel-lead">Eser tanıma, çizim ve kopya çıkarma; galeri genişletilecek (Faz 4).</p>
+                <div class="mimar-sanat-layout">
+                  <div class="mimar-sanat-gallery" id="mimar-sanat-gallery">
+                    <label class="mimar-sanat-tile mimar-sanat-tile-add">
+                      <span>+ Eser ekle</span>
+                      <input type="file" id="mimar-sanat-file" hidden accept="image/*,.pdf" />
+                    </label>
+                  </div>
+                  <aside class="mimar-sanat-detail">
+                    <div class="mimar-sanat-preview" id="mimar-sanat-preview">
+                      <span class="mimar-sanat-preview-hint">Galeriden eser seçin</span>
+                    </div>
+                    <div class="mimar-sanat-tools">
+                      <button type="button" class="btn-primary btn-compact" id="btn-mimar-sanat-tani" disabled title="Faz 4">Eseri tanı</button>
+                      <button type="button" class="btn-secondary btn-compact" id="btn-mimar-sanat-ciz" disabled title="Faz 4">Çiz / eskiz</button>
+                      <button type="button" class="btn-secondary btn-compact" id="btn-mimar-sanat-kopya" disabled title="Faz 4">Kopya çıkar</button>
+                    </div>
+                    <textarea id="mimar-sanat-notes" class="mimar-sanat-notes" rows="8" placeholder="Sanat notu, dönem, sanatçı, kompozisyon…"></textarea>
+                  </aside>
+                </div>
+              </div>
+
+              <!-- Sayfa 3: Tasarım / çizim (bağımsız) -->
+              <div class="mimar-panel mimar-panel-tasarim" id="mimar-panel-tasarim" hidden data-mimar-page="tasarim">
+                <div class="mimar-panel-head">Tasarım — çizim ve mimari</div>
+                <p class="mimar-panel-lead">Resimden çizim, sohbet/konuşma ile betimleme, kayıtlı mimari projeler (Faz 4).</p>
+                <div class="mimar-tasarim-layout">
+                  <div class="mimar-tasarim-toolbar">
+                    <button type="button" class="btn-secondary btn-compact" id="btn-mimar-tasarim-from-image" disabled title="Faz 4a">Resimden çiz</button>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-mimar-tasarim-from-chat" disabled title="Faz 4a">Sohbetten çiz</button>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-mimar-tasarim-archives" disabled title="Faz 4b">Kayıtlı mimari</button>
+                    <label class="btn-secondary btn-compact mimar-file-btn">
+                      Referans
+                      <input type="file" id="mimar-tasarim-ref-file" hidden accept="image/*" />
+                    </label>
+                  </div>
+                  <div class="mimar-tasarim-stage">
+                    <canvas id="mimar-tasarim-canvas" class="mimar-tasarim-canvas" width="960" height="540" aria-label="Tasarım tuvali"></canvas>
+                    <p class="mimar-tasarim-canvas-hint" id="mimar-tasarim-hint">Tuval hazır — Faz 4 ile çizim motoru bağlanacak.</p>
+                  </div>
+                  <aside class="mimar-tasarim-side">
+                    <div class="mimar-tasarim-side-head">Katmanlar / not</div>
+                    <ul class="mimar-tasarim-layers" id="mimar-tasarim-layers">
+                      <li class="mimar-layer-empty">Henüz katman yok</li>
+                    </ul>
+                    <textarea id="mimar-tasarim-notes" class="mimar-tasarim-notes" rows="6" placeholder="Plan notu, ölçü, malzeme…"></textarea>
+                  </aside>
+                </div>
+              </div>
+
             </div>
           </section>
 
@@ -569,6 +632,33 @@
                   <div class="tercume-ara-download-head">İndirme (inceleme sonrası)</div>
                   <input type="url" id="tercume-import-url" class="tercume-import-url-full" placeholder="PDF veya dosya URL’si (https://…)" />
                   <button type="button" class="btn-secondary btn-compact" id="btn-tercume-import-url" title="Klasör seçip indir — boyut sınırı yok">İndir (klasör seç)</button>
+                </div>
+              </aside>
+              <aside class="tercume-okuma-panel" id="tercume-okuma-panel" aria-label="Arşiv okuma" hidden>
+                <div class="tercume-okuma-head">Okuma — ilim arşivi</div>
+                <p class="tercume-okuma-lead">PDF / metin açın; «Kaynak panele» ile çeviri çalışmasına aktarın.</p>
+                <div class="tercume-okuma-work okuma-workbench">
+                  <aside class="okuma-sidebar tercume-okuma-sidebar">
+                    <div class="code-sidebar-head okuma-sidebar-head">
+                      <span>İlim arşivi</span>
+                      <div class="okuma-sidebar-btns">
+                        <button type="button" class="btn-secondary btn-compact" id="btn-ilim-open-archive" title="ilim-assistant/arsiv klasörünü aç">Klasör</button>
+                        <button type="button" class="btn-secondary btn-compact" id="btn-ilim-refresh" title="Listeyi yenile">Yenile</button>
+                      </div>
+                    </div>
+                    <div id="ilim-file-list" class="code-file-tree okuma-file-tree"></div>
+                  </aside>
+                  <div class="okuma-main tercume-okuma-main">
+                    <div class="okuma-toolbar">
+                      <button type="button" class="btn-secondary btn-compact" id="btn-ilim-to-chat">Sohbete aktar</button>
+                      <button type="button" class="btn-primary btn-compact" id="btn-tercume-okuma-to-source">Kaynak panele</button>
+                      <button type="button" class="btn-secondary btn-compact" id="btn-ilim-summary" title="Özet iste">Özet</button>
+                      <button type="button" class="btn-secondary btn-compact" id="btn-ilim-comment" title="Okuma notu">Not</button>
+                      <span class="code-active-path okuma-active-path" id="ilim-active-file">Metin: (listeden dosya seçin)</span>
+                    </div>
+                    <textarea id="ilim-file-content" class="hafiza-textarea okuma-textarea" rows="14" placeholder="Soldan dosya seçin; içerik burada."></textarea>
+                    <div class="okuma-footer-stats" id="ilim-stats">0 karakter · 0 kelime</div>
+                  </div>
                 </div>
               </aside>
               <div class="tercume-main">
@@ -1546,8 +1636,10 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
       <button type="button" data-act="paste">Yapıştır</button>
     </div>
 
-    <link rel="stylesheet" href="tercume-atolye.css?v=20260530-tercume-tabs" />
-    <script src="tercume-atolye.js?v=20260530-tercume-tabs"></script>
-    <script src="app.js?v=20260529-tercume-v2"></script>
+    <link rel="stylesheet" href="tercume-atolye.css?v=20260529-okuma-chat" />
+    <link rel="stylesheet" href="mimar-atolye.css?v=20260529-faz4-shell" />
+    <script src="tercume-atolye.js?v=20260531-atolye-shell"></script>
+    <script src="mimar-atolye.js?v=20260529-faz4-shell"></script>
+    <script src="app.js?v=20260529-faz4-shell"></script>
   </body>
 </html>
