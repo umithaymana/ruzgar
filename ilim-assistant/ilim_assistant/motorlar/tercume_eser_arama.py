@@ -41,13 +41,12 @@ def _normalize_url(url: str) -> str:
 
 
 def _ddgs_rows(query: str, max_results: int) -> list[dict[str, Any]]:
-    from duckduckgo_search import DDGS
-
     raw: list[dict[str, Any]] = []
-    try:
-        with DDGS() as ddgs:
-            raw = list(
-                ddgs.text(
+
+    def _run_ddgs(client: Any) -> list[dict[str, Any]]:
+        try:
+            rows = list(
+                client.text(
                     query,
                     max_results=max_results,
                     region="tr-tr",
@@ -55,9 +54,20 @@ def _ddgs_rows(query: str, max_results: int) -> list[dict[str, Any]]:
                     backend="auto",
                 )
             )
-        if not raw:
-            with DDGS() as ddgs:
-                raw = list(ddgs.text(query, max_results=max_results, region="tr-tr"))
+            if rows:
+                return rows
+            return list(client.text(query, max_results=max_results, region="tr-tr"))
+        except Exception:
+            return []
+
+    try:
+        try:
+            from ddgs import DDGS
+        except ImportError:
+            from duckduckgo_search import DDGS  # type: ignore[no-redef]
+
+        with DDGS() as ddgs:
+            raw = _run_ddgs(ddgs)
     except Exception:
         return []
     out: list[dict[str, Any]] = []

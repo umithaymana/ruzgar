@@ -153,16 +153,22 @@ function Ensure-PythonDeps {
 
 function Test-ApiImport {
     param([string]$Ia)
+    # Tam import desktop_server ~20–60 sn sürebilir (Gemini/RAG); syntax yeterli.
     Push-Location $Ia
     $prevEa = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
     try {
-        $importOut = & $script:PyExe @($script:PyArgs) -c "import desktop_server; print('desktop_server ok')" 2>&1
+        $importOut = & $script:PyExe @($script:PyArgs) -c @"
+import ast, pathlib
+p = pathlib.Path('desktop_server.py')
+ast.parse(p.read_text(encoding='utf-8'))
+print('desktop_server syntax ok')
+"@ 2>&1
         if ($importOut) {
             ($importOut | ForEach-Object { "$_" }) | Out-File -FilePath $ApiErr -Encoding utf8
         }
         if ($LASTEXITCODE -ne 0) {
-            throw "Python import basarisiz (ruzgar-api.err)"
+            throw "Python syntax kontrolu basarisiz (ruzgar-api.err)"
         }
     } finally {
         $ErrorActionPreference = $prevEa

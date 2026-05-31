@@ -2,6 +2,7 @@
 """Faz 1–2 — tercüme analist smoke (skor, alias genişletme, arama v2)."""
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -332,8 +333,8 @@ def main() -> int:
     if started.get("job_type") != "super_analyst" or not started.get("job_id"):
         print("FAIL super job start", started)
         return 1
-    if "faz8" not in SUPER_ANALYST_VERSION:
-        print("FAIL super version")
+    if "faz8" not in SUPER_ANALYST_VERSION and "faz12" not in SUPER_ANALYST_VERSION:
+        print("FAIL super version", SUPER_ANALYST_VERSION)
         return 1
     paths_f8 = {getattr(r, "path", "") for r in app.routes}
     if "/api/tercume/super-start" not in paths_f8:
@@ -341,6 +342,99 @@ def main() -> int:
         return 1
 
     print("OK tercume faz8 — super analyst chain")
+
+    from ilim_assistant.motorlar.tercume_preflight import PREFLIGHT_VERSION, run_tercume_preflight
+    from ilim_assistant.motorlar.tercume_ocr_cascade import OCR_CASCADE_VERSION, cascade_presets
+    from ilim_assistant.motorlar.tercume_translate_quality import QUALITY_VERSION, score_translation
+
+    pf = run_tercume_preflight()
+    if not isinstance(pf.get("checks"), list) or len(pf.get("checks") or []) < 2:
+        print("FAIL preflight", pf)
+        return 1
+    if "faz9" not in PREFLIGHT_VERSION:
+        print("FAIL preflight version")
+        return 1
+    if len(cascade_presets(src_lang="ar")) < 2:
+        print("FAIL ocr cascade presets")
+        return 1
+    q = score_translation("Bu uzun bir test paragrafidir.", "This is a long test paragraph.", tgt_lang="tr")
+    if not q.get("issues"):
+        print("FAIL quality should flag en leak to tr", q)
+        return 1
+    if "faz9" not in OCR_CASCADE_VERSION or "faz9" not in QUALITY_VERSION:
+        print("FAIL faz9 versions")
+        return 1
+    paths_f9 = {getattr(r, "path", "") for r in app.routes}
+    if "/api/tercume/preflight" not in paths_f9:
+        print("FAIL preflight route")
+        return 1
+
+    print("OK tercume faz9 — preflight ocr cascade translate quality")
+
+    from ilim_assistant.motorlar.tercume_batch_jobs import BATCH_VERSION, start_page_range_job
+
+    if "faz10" not in BATCH_VERSION:
+        print("FAIL batch version faz10")
+        return 1
+    bad_range = start_page_range_job("", page_from=0, page_to=2)
+    if bad_range.get("ok"):
+        print("FAIL page range empty rel")
+        return 1
+    bad_order = start_page_range_job("ilim-assistant/arsiv/x.pdf", page_from=5, page_to=2)
+    if bad_order.get("ok"):
+        print("FAIL page range order")
+        return 1
+
+    gloss_path = Path(__file__).resolve().parents[1] / "ilim_assistant" / "motorlar" / "tercume_glossary.json"
+    gloss = json.loads(gloss_path.read_text(encoding="utf-8"))
+    if "nakshibandi_makamat" not in (gloss.get("sets") or {}):
+        print("FAIL glossary nakshibandi set")
+        return 1
+
+    print("OK tercume faz10 — page range batch glossary")
+
+    from ilim_assistant.motorlar.tercume_analyst import find_local_archive_matches
+    from ilim_assistant.motorlar.tercume_download_v2 import (
+        DOWNLOAD_V2_VERSION,
+        format_download_error,
+        normalize_download_url,
+    )
+
+    norm = normalize_download_url("https://archive.org/details/testbook123")
+    if "faz11" not in DOWNLOAD_V2_VERSION:
+        print("FAIL download v2 version")
+        return 1
+    if not norm.get("ok"):
+        print("FAIL normalize", norm)
+        return 1
+    err403 = format_download_error("HTTP Error 403: Forbidden", url="https://example.com/x.pdf")
+    if "403" not in err403 and "Erişim" not in err403:
+        print("FAIL format 403", err403)
+        return 1
+    local = find_local_archive_matches("imam rabbani mektubat")
+    if local and "local_score" not in local[0]:
+        print("FAIL local fuzzy score", local[0])
+        return 1
+
+    print("OK tercume faz11 — download normalize local fuzzy")
+
+    from ilim_assistant.motorlar.tercume_super_analyst import checkpoint_enabled
+    from ilim_assistant.motorlar.tercume_analyst_jobs import resume_super_job
+
+    paths_f12 = {getattr(r, "path", "") for r in app.routes}
+    if "/api/tercume/super-resume" not in paths_f12:
+        print("FAIL super-resume route")
+        return 1
+    if "faz12" not in SUPER_ANALYST_VERSION:
+        print("FAIL super faz12 version", SUPER_ANALYST_VERSION)
+        return 1
+    noop = resume_super_job("nonexistent-job")
+    if noop.get("ok"):
+        print("FAIL resume should fail", noop)
+        return 1
+    _ = checkpoint_enabled()
+
+    print("OK tercume faz12 — super checkpoint resume")
     return 0
 
 

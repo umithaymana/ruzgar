@@ -461,6 +461,9 @@ def translate_chunk(
         translated=out,
         tgt_lang=tgt_lang,
     )
+    from ilim_assistant.motorlar.tercume_translate_quality import score_translation
+
+    quality = score_translation(chunk, out, tgt_lang=tgt_lang)
     return {
         "ok": True,
         "text": out,
@@ -471,6 +474,7 @@ def translate_chunk(
         "rag_snippets": _ctx_meta.get("rag_snippets") or 0,
         "memory_active": _ctx_meta.get("memory_active", False),
         "translate_faz4": True,
+        "quality": quality,
     }
 
 
@@ -600,6 +604,16 @@ def workbench_config() -> dict[str, Any]:
             "chain": ["analyze", "import", "read", "translate", "report"],
             "routes": ["/api/tercume/super-start"],
             "env": {"RUZGAR_TERCUME_SUPER": "1"},
+        },
+        "preflight_faz9": {
+            "version": "tercume-preflight-v9-faz9-2026-05-31",
+            "routes": ["/api/tercume/preflight"],
+            "ocr_cascade": True,
+            "translate_quality_score": True,
+            "env": {
+                "RUZGAR_TERCUME_PDF_OCR": "0",
+                "RUZGAR_TERCUME_OCR_FIX_PAGES": "5",
+            },
         },
         "ocr_lang": ocr_config_for_api(),
         "translation_policy": {

@@ -121,9 +121,17 @@
   }
 
   function updateActiveLabel() {
-    const el = $("tercume-active-file");
+    const el = $("btn-tercume-active-file") || $("tercume-active-file");
     if (!el) return;
-    el.textContent = openRel ? `Kaynak: ${openRel}` : "Kaynak: (listeden dosya seçin)";
+    if (openRel) {
+      el.textContent = `Kaynak: ${openRel}`;
+      el.classList.add("has-file");
+      el.title = openRel;
+    } else {
+      el.textContent = "Kaynak: sol listeden dosya seçin";
+      el.classList.remove("has-file");
+      el.title = "Sol listeden dosya seçin (tıklayınca listeye gider)";
+    }
   }
 
   function updateStats() {
@@ -328,8 +336,9 @@
   function renderEserSearchEmpty(message) {
     const ul = $("tercume-work-eser-sites");
     const hint = $("tercume-eser-hint");
-    if (hint) hint.textContent = message || "Arama henüz yapılmadı.";
-    if (ul) ul.innerHTML = `<li class="code-file-placeholder">${esc(message || "Eser veya yazar yazıp Ara’ya basın.")}</li>`;
+    if (hint) hint.textContent = message || "Arama henüz yapılmadı — yukarıdaki kutuya yazın.";
+    const fallback = "Sonuç yok. Yukarıdaki arama kutusuna yazıp Ara düğmesine basın.";
+    if (ul) ul.innerHTML = `<li class="code-file-placeholder">${esc(message || fallback)}</li>`;
   }
 
   async function pollTercumeJob(jobId, onTick) {
@@ -341,6 +350,18 @@
       if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : j.error || `HTTP ${res.status}`);
       if (onTick) onTick(j);
       const st = String(j.status || "");
+      if (st === "awaiting_approval") {
+        const msg = String(j.checkpoint_message || j.label || "Okuma bitti — çeviriye devam edilsin mi?");
+        const choice = window.confirm(`${msg}\n\nTamam = Çevir · İptal = menüden Atla/İptal`);
+        const fd = new FormData();
+        fd.append("job_id", id);
+        fd.append("action", choice ? "continue" : "skip");
+        const rr = await fetch(`${api()}/api/tercume/super-resume`, { method: "POST", body: fd });
+        const rj = await rr.json().catch(() => ({}));
+        if (!rr.ok) throw new Error(typeof rj.detail === "string" ? rj.detail : rj.error || "Devam hatası");
+        flash(choice ? "Çeviri devam ediyor…" : "Çeviri atlandı — rapor kaydediliyor…");
+        continue;
+      }
       if (st === "done") return j;
       if (st === "failed" || st === "cancelled") {
         throw new Error(String(j.error || j.label || st));
@@ -348,6 +369,18 @@
       await new Promise((r) => setTimeout(r, 1500));
     }
     throw new Error("İndirme zaman aşımı");
+  }
+
+  function pageRangeParams() {
+    const fromEl = $("tercume-page-from");
+    const toEl = $("tercume-page-to");
+    const pfRaw = String(fromEl?.value || "").trim();
+    const ptRaw = String(toEl?.value || "").trim();
+    const pf = pfRaw ? Math.max(1, parseInt(pfRaw, 10) || 1) : null;
+    const pt = ptRaw ? Math.max(1, parseInt(ptRaw, 10) || 1) : pf;
+    const page_from = pf != null ? pf - 1 : null;
+    const page_to = pt != null ? pt - 1 : null;
+    return { page_from, page_to, label_from: pf, label_to: pt };
   }
 
   async function importFromSearch(item, query) {
@@ -408,9 +441,11 @@
               .map((m) => m.name)
               .join(", ")}.`
           : "";
-      const localFirst = data?.local_first
+      const localFirst = data?.web_search_skipped
         ? " ✓ Arşivde var — internet aranmadı; soldan dosyayı açın."
-        : "";
+        : data?.local_archive_matches?.length
+          ? " Yerel + internet birleşik."
+          : "";
       const expanded =
         data?.expanded_query && String(data.expanded_query).trim() !== q
           ? ` Alias: «${String(data.expanded_query).slice(0, 80)}».`
@@ -473,6 +508,23 @@
       li.appendChild(importBtn);
       ul.appendChild(li);
     });
+  }
+
+  async function runPreflight() {
+    const qs = new URLSearchParams();
+    if (openRel) qs.set("rel", openRel);
+    const res = await fetch(`${api()}/api/tercume/preflight?${qs.toString()}`);
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : `HTTP ${res.status}`);
+    const checks = Array.isArray(j.checks) ? j.checks : [];
+    const lines = checks.map((c) => `${c.ok ? "✓" : "✗"} ${c.label}${c.detail ? `: ${c.detail}` : ""}`);
+    const hints = Array.isArray(j.hints) ? j.hints : [];
+    flash(
+      (j.ready ? "Hazırlık tamam — " : "Eksik var — ") +
+        lines.slice(0, 4).join(" · ") +
+        (hints[0] ? ` · ${hints[0]}` : ""),
+    );
+    return j;
   }
 
   async function runSuperAnalyst() {
@@ -559,7 +611,7 @@
     if (hint) hint.textContent = `«${q}» aranıyor…`;
     flash("İnternet araması başladı…");
     try {
-      const res = await fetch(`${api()}/api/tercume/eser-search?q=${encodeURIComponent(q)}`);
+      const res = await fetch(`${api()}/api/tercume/eser-search?q=${encodeURIComponent(q)}&web=1`);
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : j.error || `HTTP ${res.status}`);
       if (!j.ok) throw new Error(j.error || "Arama başarısız");
@@ -788,7 +840,26 @@
     }
     translateAbort = false;
     let pages = [];
-    if (mode === "page" || mode === "full") {
+    const range = pageRangeParams();
+    if (mode === "range") {
+      if (!openRel) {
+        flash("Sayfa aralığı için önce dosyayı listeden açın.");
+        return;
+      }
+      if (range.page_from == null) {
+        flash("Başlangıç sayfası girin (ör. 1).");
+        return;
+      }
+      const qs = new URLSearchParams({ rel: openRel });
+      qs.set("page_from", String(range.page_from));
+      if (range.page_to != null) qs.set("page_to", String(range.page_to));
+      const res = await fetch(`${api()}/api/tercume/source-pages?${qs.toString()}`);
+      const j = await res.json().catch(() => ({}));
+      if (!j.ok || !Array.isArray(j.pages)) throw new Error("Sayfa listesi alınamadı");
+      pages = j.pages.filter((p) => String(p.text || "").trim() && p.quality !== "empty");
+      if (!pages.length) pages = j.pages.filter((p) => String(p.text || "").trim());
+      flash(`Sayfa ${range.label_from || "?"}–${range.label_to || "?"}: ${pages.length} parça`);
+    } else if (mode === "page" || mode === "full") {
       if (!openRel) {
         flash("Sayfa sayfa için önce dosyayı listeden açın.");
         return;
@@ -1054,6 +1125,13 @@ ${chunk}`;
     }
     const ara = $("tercume-ara-panel");
     if (ara) ara.hidden = t !== "ara";
+    if (t === "ara") {
+      setTimeout(() => {
+        const inp = $("tercume-eser-input");
+        inp?.focus();
+        inp?.select?.();
+      }, 60);
+    }
     if (t === "calisma" || t === "ara") {
       void refreshTree();
     }
@@ -1139,7 +1217,7 @@ ${chunk}`;
     $("btn-tercume-translate")?.addEventListener("click", () => {
       const mode = String($("tercume-translate-mode")?.value || "single");
       if (mode === "chat") void translateViaChat();
-      else if (mode === "page" || mode === "full") void runPagedTranslation(mode);
+      else if (mode === "page" || mode === "full" || mode === "range") void runPagedTranslation(mode);
       else void runPagedTranslation("single");
     });
     $("btn-tercume-stop")?.addEventListener("click", () => {
@@ -1162,6 +1240,9 @@ ${chunk}`;
         hideProgress();
         flash(e.message || "Cilt sırası hatası");
       });
+    });
+    $("btn-tercume-preflight")?.addEventListener("click", () => {
+      void runPreflight().catch((e) => flash(e.message || "Hazırlık kontrolü hatası"));
     });
     $("btn-tercume-read-analyze")?.addEventListener("click", () => {
       void startReadAnalyze().catch((e) => {
@@ -1198,10 +1279,22 @@ ${chunk}`;
     $("btn-tercume-last-to-target")?.addEventListener("click", () => {
       const t = String(deps.lastAssistantReply?.() || "").trim();
       if (!t) {
-        flash("Sohbette yanıt yok.");
+        flash("Sohbette yanıt yok — önce Sohbet sekmesinde bir şey sorun veya Kaynak paneline yapıştırın.");
+        getSourceEl()?.focus();
         return;
       }
       setTargetText(t);
+      flash("Son sohbet yanıtı hedef panele yazıldı.");
+    });
+    $("btn-tercume-active-file")?.addEventListener("click", () => {
+      if (openRel) {
+        flash(`Açık dosya: ${openRel}`);
+        getSourceEl()?.focus();
+        return;
+      }
+      setTercumeTab("calisma");
+      flash("Sol listeden bir dosyaya tıklayın — veya Kaynak paneline metin yapıştırın.");
+      $("tercume-file-list")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     });
     $("tercume-tgt-lang")?.addEventListener("change", () => syncSavePlaceholder());
     $("tercume-output-format")?.addEventListener("change", () => syncSavePlaceholder());

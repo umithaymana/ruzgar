@@ -10,7 +10,7 @@ import unicodedata
 from pathlib import Path
 from typing import Any
 
-TERCUME_ANALYST_VERSION = "tercume-analyst-v5-faz5-2026-05-31"
+TERCUME_ANALYST_VERSION = "tercume-analyst-v6-faz11-2026-05-31"
 
 _ALIASES_PATH = Path(__file__).with_name("tercume_eser_aliases.json")
 
@@ -108,8 +108,38 @@ def _likely_irrelevant(item: dict[str, Any], query: str, terms: list[str]) -> bo
     return False
 
 
+def _local_match_score(name_n: str, path_n: str, terms: list[str], nq: str) -> tuple[float, list[str]]:
+    """Faz 11 — dosya adı + yol fuzzy skoru."""
+    score = 0.0
+    reasons: list[str] = []
+    matched = 0
+    for term in terms:
+        tn = _norm(term)
+        if not tn:
+            continue
+        if tn in name_n:
+            matched += 1
+            score += 18.0
+            if len(tn) >= 6:
+                score += 6.0
+        elif tn in path_n:
+            matched += 1
+            score += 10.0
+    if matched:
+        reasons.append(f"terim:{matched}")
+    if nq and len(nq) >= 8 and nq in name_n:
+        score += 24.0
+        reasons.append("tam_sorgu")
+    ratio = matched / max(1, len(terms))
+    score += ratio * 20.0
+    if "tercume-output" in path_n or "tercume-imports" in path_n:
+        score += 4.0
+        reasons.append("import_klasoru")
+    return score, reasons
+
+
 def find_local_archive_matches(query: str, *, limit: int = 8) -> list[dict[str, Any]]:
-    """Yerel ilim-assistant/arsiv içinde dosya adı eşleşmesi."""
+    """Yerel ilim-assistant/arsiv içinde fuzzy dosya adı eşleşmesi."""
     terms = _query_terms(query)
     if not terms:
         return []
@@ -117,28 +147,36 @@ def find_local_archive_matches(query: str, *, limit: int = 8) -> list[dict[str, 
     if not arsiv.is_dir():
         return []
     root = _repo_root()
-    out: list[dict[str, Any]] = []
+    nq = _norm(query)
+    candidates: list[dict[str, Any]] = []
     allowed = {".pdf", ".txt", ".jsonl", ".epub", ".djvu", ".md"}
     for path in arsiv.rglob("*"):
         if not path.is_file() or path.suffix.lower() not in allowed:
             continue
         name_n = _norm(path.name)
-        if not any(_norm(t) in name_n for t in terms):
+        path_n = _norm(str(path.relative_to(arsiv)))
+        if not any(_norm(t) in name_n or _norm(t) in path_n for t in terms):
             continue
         try:
             rel = path.resolve().relative_to(root.resolve()).as_posix()
         except ValueError:
             continue
-        out.append(
+        score, reasons = _local_match_score(name_n, path_n, terms, nq)
+        if score < 8.0:
+            continue
+        candidates.append(
             {
                 "rel": rel,
                 "name": path.name,
                 "size_kb": max(1, path.stat().st_size // 1024),
+                "local_score": round(score, 1),
+                "why_local": reasons[:4],
             }
         )
-        if len(out) >= limit:
-            break
-    return out
+    candidates.sort(
+        key=lambda x: (-float(x.get("local_score") or 0), -int(x.get("size_kb") or 0), str(x.get("name") or ""))
+    )
+    return candidates[:limit]
 
 
 def score_search_item(item: dict[str, Any], query: str, aliases: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -232,14 +270,18 @@ def _local_search_items(matches: list[dict[str, Any]]) -> list[dict[str, Any]]:
     for m in matches:
         rel = str(m.get("rel") or "")
         name = str(m.get("name") or rel)
+        local_score = float(m.get("local_score") or 88.0)
+        rank_score = min(100.0, 72.0 + local_score * 0.35)
+        why = ["arsivde_var", *(m.get("why_local") or [])]
         out.append(
             {
                 "title": name,
                 "snippet": f"Bu dosya zaten bilgisayarınızda: {rel}",
                 "url": "",
                 "source": "Yerel arşiv",
-                "score": 100.0,
-                "why_ranked": ["arsivde_var"],
+                "score": round(rank_score, 1),
+                "local_score": local_score,
+                "why_ranked": why[:5],
                 "downloadable_hint": False,
                 "local_rel": rel,
                 "open_hint": "Çalışma sekmesi → soldaki listeden dosyaya tıklayın",
@@ -252,6 +294,7 @@ def analyze_tercume_query(
     user_query: str,
     *,
     max_results: int = 22,
+    include_web: bool = True,
 ) -> dict[str, Any]:
     """Araştırma raporu: skorlu kaynaklar + önerilen indirme + Scholar."""
     from ilim_assistant.motorlar.tercume_atolye import local_first_search_enabled
@@ -268,7 +311,7 @@ def analyze_tercume_query(
     local_items = _local_search_items(local_matches)
     web_skipped = False
 
-    if local_first_search_enabled() and local_items:
+    if local_first_search_enabled() and local_items and not include_web:
         search = {
             "ok": True,
             "query": raw,
@@ -281,7 +324,18 @@ def analyze_tercume_query(
     else:
         search = search_eser_merged(raw, max_total=max_results)
         if not search.get("ok"):
-            return search
+            if local_items:
+                search = {
+                    "ok": True,
+                    "query": raw,
+                    "items": [],
+                    "total": 0,
+                    "scholar_url": scholar_search_url(raw),
+                    "version": "web-failed-local-fallback",
+                    "web_error": search.get("error"),
+                }
+            else:
+                return search
 
     aliases = _load_aliases()
     scored: list[dict[str, Any]] = list(local_items)
@@ -323,6 +377,12 @@ def analyze_tercume_query(
     if local_matches and not web_skipped:
         names = ", ".join(m["name"][:40] for m in local_matches[:3])
         summary_parts.append(f"Yerel arşivde de var: {names}.")
+    elif local_matches and web_skipped:
+        names = ", ".join(m["name"][:40] for m in local_matches[:3])
+        summary_parts.insert(
+            0,
+            f"Yerel arşiv: {names}. İnternet atlandı (RUZGAR_TERCUME_LOCAL_FIRST).",
+        )
     if top and top.get("local_rel"):
         summary_parts.append(
             f"Arşivde: «{str(top.get('title') or '')[:80]}» — listeden açıp çevirin."
@@ -493,8 +553,34 @@ def run_tercume_pipeline(
                 folder = None
 
             if folder is not None:
-                dl = download_url_to_folder(url, folder, timeout_sec=7200.0)
-                steps.append({"step": "download", "ok": bool(dl.get("ok")), **{k: dl.get(k) for k in ("rel", "bytes", "error", "skipped")}})
+                from ilim_assistant.motorlar.tercume_download_v2 import (
+                    format_download_error,
+                    normalize_download_url,
+                )
+
+                norm = normalize_download_url(url)
+                fetch_url = str(norm.get("url") or url)
+                if norm.get("normalized"):
+                    steps.append(
+                        {
+                            "step": "download_normalize",
+                            "ok": True,
+                            "from": url,
+                            "to": fetch_url,
+                            "reason": norm.get("reason"),
+                        }
+                    )
+                dl = download_url_to_folder(fetch_url, folder, timeout_sec=7200.0)
+                if not dl.get("ok"):
+                    friendly = format_download_error(str(dl.get("error") or ""), url=fetch_url)
+                    dl = {**dl, "error": friendly, "original_error": dl.get("error")}
+                steps.append(
+                    {
+                        "step": "download",
+                        "ok": bool(dl.get("ok")),
+                        **{k: dl.get(k) for k in ("rel", "bytes", "error", "skipped", "original_error")},
+                    }
+                )
                 out["download"] = dl
                 if dl.get("ok"):
                     rel = str(dl.get("rel") or "")

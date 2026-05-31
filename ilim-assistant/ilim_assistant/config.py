@@ -154,6 +154,18 @@ def skip_rag_warmup() -> bool:
     )
 
 
+def defer_motor_boot() -> bool:
+    """Açılışta tüm motorları import etme — ilk istekte yüklenir (hızlı UI)."""
+    if light_chat_mode():
+        return True
+    return os.environ.get("RUZGAR_DEFER_MOTOR_BOOT", "0").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+
+
 def config_snapshot() -> dict[str, str | bool]:
     key = global_api_key()
     return {

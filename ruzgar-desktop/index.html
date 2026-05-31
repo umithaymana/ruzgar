@@ -544,13 +544,24 @@
               </aside>
               <aside class="tercume-ara-panel" id="tercume-ara-panel" aria-label="İnternet kaynak arama" hidden>
                 <div class="tercume-ara-head">İnternet kaynakları</div>
-                <p class="tercume-ara-lead">Eser veya yazar yazın; internette aranır (Google Scholar, Archive, Yazma Eserler, Şamile…). Sonuçlar burada listelenir.</p>
-                <div class="tercume-ara-search-row">
-                  <input type="text" id="tercume-eser-input" class="tercume-eser-input" placeholder="Örn: İmam-ı Rabbani Mektubat" aria-label="Eser veya yazar" />
-                  <button type="button" class="btn-primary btn-compact" id="btn-tercume-eser-ara">Ara</button>
-                  <button type="button" class="btn-secondary btn-compact" id="btn-tercume-eser-rapor" title="Araştırma raporu (kaynak + okuma kalitesi)">Rapor</button>
-                  <button type="button" class="btn-secondary btn-compact" id="btn-tercume-super" title="Tam zincir: ara → al → oku → örnek çeviri → rapor">Tam analist</button>
-                  <button type="button" class="btn-secondary btn-compact" id="btn-tercume-scholar-open" title="Tarayıcıda Google Akademik (Scholar) aç">Scholar</button>
+                <p class="tercume-ara-lead">Üstteki kutuya eser veya yazar yazın; <strong>Ara</strong> ile internette taranır (Scholar, Archive, Yazma Eserler…).</p>
+                <div class="tercume-ara-search-block">
+                  <input
+                    type="search"
+                    id="tercume-eser-input"
+                    class="tercume-eser-input"
+                    placeholder="Örn: İmam-ı Rabbani Mektubat"
+                    aria-label="Eser veya yazar ara"
+                    autocomplete="off"
+                    spellcheck="false"
+                    enterkeyhint="search"
+                  />
+                  <div class="tercume-ara-search-actions">
+                    <button type="button" class="btn-primary btn-compact" id="btn-tercume-eser-ara">Ara</button>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-tercume-eser-rapor" title="Araştırma raporu (kaynak + okuma kalitesi)">Rapor</button>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-tercume-super" title="Tam zincir: ara → al → oku → örnek çeviri → rapor">Tam analist</button>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-tercume-scholar-open" title="Tarayıcıda Google Akademik (Scholar) aç">Scholar</button>
+                  </div>
                 </div>
                 <p id="tercume-eser-hint" class="tercume-eser-hint">Arama henüz yapılmadı.</p>
                 <ul id="tercume-work-eser-sites" class="tercume-work-eser-sites"></ul>
@@ -588,9 +599,16 @@
                     <select id="tercume-translate-mode" class="tercume-lang-select" title="Çeviri modu">
                       <option value="single">Tek parça</option>
                       <option value="page">Sayfa sayfa</option>
+                      <option value="range">Sayfa aralığı</option>
                       <option value="full">Tamamı (yavaş)</option>
                       <option value="chat">Sohbet</option>
                     </select>
+                    <label class="tercume-page-range" title="1 tabanlı sayfa numarası (PDF)">
+                      <span>Sayfa</span>
+                      <input type="number" id="tercume-page-from" min="1" placeholder="1" class="tercume-page-input" />
+                      <span>–</span>
+                      <input type="number" id="tercume-page-to" min="1" placeholder="5" class="tercume-page-input" />
+                    </label>
                     <select id="tercume-output-format" class="tercume-lang-select" title="Çıktı biçimi">
                       <option value="txt">.txt</option>
                       <option value="md">.md</option>
@@ -611,10 +629,11 @@
                   <button type="button" class="btn-secondary btn-compact" id="btn-tercume-bridge-save" title="Onaylı çeviriyi ana hafızaya kaydet (genel sohbet)">Hafızaya</button>
                   <button type="button" class="btn-secondary btn-compact" id="btn-tercume-ocr">OCR</button>
                   <button type="button" class="btn-secondary btn-compact" id="btn-tercume-batch-cilt" title="Çalışma klasöründeki kitapları sırayla arka planda çevir">Cilt sırası</button>
+                  <button type="button" class="btn-secondary btn-compact" id="btn-tercume-preflight" title="OCR, beyin ve arşiv hazır mı kontrol et">Hazırlık</button>
                   <button type="button" class="btn-secondary btn-compact" id="btn-tercume-read-analyze" title="Dosyanın sayfa kalitesini arka planda analiz et (taranmış PDF uyarısı)">Okuma analizi</button>
                   <button type="button" class="btn-secondary btn-compact" id="btn-tercume-clear">Temizle</button>
                   <button type="button" class="btn-secondary btn-compact" id="btn-tercume-last-to-target">Sohbet → hedef</button>
-                  <span class="code-active-path" id="tercume-active-file">—</span>
+                  <button type="button" class="btn-secondary btn-compact tercume-active-file-btn" id="btn-tercume-active-file" title="Sol listeden dosya seçin (tıklayınca listeye gider)">Kaynak: (listeden dosya seçin)</button>
                 </div>
                 <div class="tercume-ocr-warn" id="tercume-ocr-warn" hidden role="status">
                   <strong>OCR kurulumu gerekli:</strong>
@@ -627,11 +646,11 @@
                 <div class="tercume-panels">
                   <div class="tercume-panel">
                     <div class="tercume-panel-head">Kaynak</div>
-                    <div id="tercume-source-editor" class="tercume-doc-editor" contenteditable="true" data-placeholder="Dosya seçin veya metin yapıştırın (Word gibi düzenleyebilirsiniz)."></div>
+                    <div id="tercume-source-editor" class="tercume-doc-editor" contenteditable="true" tabindex="0" role="textbox" aria-multiline="true" data-placeholder="Dosya seçin veya metin yapıştırın (Word gibi düzenleyebilirsiniz)."></div>
                   </div>
                   <div class="tercume-panel">
                     <div class="tercume-panel-head">Hedef çeviri</div>
-                    <div id="tercume-target-editor" class="tercume-doc-editor" contenteditable="true" data-placeholder="Çeviri burada birikir."></div>
+                    <div id="tercume-target-editor" class="tercume-doc-editor" contenteditable="true" tabindex="0" role="textbox" aria-multiline="true" data-placeholder="Çeviri burada birikir."></div>
                   </div>
                 </div>
                 <div class="tercume-io-row">

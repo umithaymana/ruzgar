@@ -140,7 +140,13 @@ def resolve_book_path(rel: str) -> tuple[Path, str]:
     return target, raw
 
 
-def extract_pdf_pages(target: Path, *, max_pages: int | None = None) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+def extract_pdf_pages(
+    target: Path,
+    *,
+    max_pages: int | None = None,
+    page_from: int | None = None,
+    page_to: int | None = None,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     from ilim_assistant.motorlar.tercume_atolye import tercume_pdf_max_pages
 
     try:
@@ -150,22 +156,77 @@ def extract_pdf_pages(target: Path, *, max_pages: int | None = None) -> tuple[li
 
     reader = PdfReader(str(target))
     n = len(reader.pages)
-    cap = min(n, max_pages if max_pages is not None else tercume_pdf_max_pages())
+    start = max(0, int(page_from)) if page_from is not None else 0
+    end = min(n, int(page_to) + 1) if page_to is not None else n
+    if page_from is not None or page_to is not None:
+        cap = max(0, end - start)
+    else:
+        cap = min(n, max_pages if max_pages is not None else tercume_pdf_max_pages())
+        start = 0
+        end = cap
     pages: list[dict[str, Any]] = []
-    for i in range(cap):
+    for i in range(start, end):
         try:
             t = (reader.pages[i].extract_text() or "").strip()
         except Exception:
             t = ""
         pages.append({"index": i, "text": t, "label": f"Sayfa {i + 1}"})
-    meta: dict[str, Any] = {"ext": ".pdf", "pages_total": n, "pages_read": cap}
-    if cap < n:
+    meta: dict[str, Any] = {
+        "ext": ".pdf",
+        "pages_total": n,
+        "pages_read": len(pages),
+        "page_from": start,
+        "page_to": end - 1 if pages else start,
+    }
+    if page_from is None and page_to is None and end < n:
         meta["pages_capped"] = True
-        meta["pages_cap"] = cap
+        meta["pages_cap"] = end
     return pages, meta
 
 
-def extract_source_pages(rel: str) -> dict[str, Any]:
+def _maybe_ocr_weak_pdf_pages(
+    pages: list[dict[str, Any]],
+    target: Path,
+    *,
+    src_lang: str = "auto",
+) -> list[dict[str, Any]]:
+    import os
+
+    if os.environ.get("RUZGAR_TERCUME_PDF_OCR", "0").strip().lower() not in (
+        "1",
+        "true",
+        "yes",
+    ):
+        return pages
+    try:
+        max_fix = max(1, int(os.environ.get("RUZGAR_TERCUME_OCR_FIX_PAGES", "5")))
+    except ValueError:
+        max_fix = 5
+    from ilim_assistant.motorlar.tercume_ocr_cascade import ocr_pdf_page
+
+    fixed = 0
+    out: list[dict[str, Any]] = []
+    for p in pages:
+        row = dict(p)
+        if fixed < max_fix and row.get("quality") in ("empty", "low"):
+            hit = ocr_pdf_page(str(target), int(row.get("index") or 0), src_lang=src_lang)
+            if hit.get("ok") and str(hit.get("text") or "").strip():
+                row["text"] = str(hit.get("text") or "")
+                row["ocr_cascade"] = hit.get("preset")
+                row["quality"] = hit.get("quality")
+                row["quality_score"] = hit.get("quality_score")
+                row["quality_hint"] = hit.get("quality_hint") or "OCR cascade ile okundu"
+                fixed += 1
+        out.append(row)
+    return out
+
+
+def extract_source_pages(
+    rel: str,
+    *,
+    page_from: int | None = None,
+    page_to: int | None = None,
+) -> dict[str, Any]:
     """PDF/txt/docx/görsel — sayfa listesi + kalite (Faz 3)."""
     from ilim_assistant.motorlar.tercume_atolye import split_text_into_pages
 
@@ -183,7 +244,7 @@ def extract_source_pages(rel: str) -> dict[str, Any]:
 
     if ext == ".pdf":
         try:
-            pages, meta = extract_pdf_pages(target)
+            pages, meta = extract_pdf_pages(target, page_from=page_from, page_to=page_to)
         except RuntimeError as exc:
             return {"ok": False, "error": str(exc)}
         source_kind = "pdf"
@@ -229,13 +290,17 @@ def extract_source_pages(rel: str) -> dict[str, Any]:
             return {"ok": False, "error": "OCR için pillow + pytesseract + Tesseract gerekli."}
         try:
             img = Image.open(target)
-            from ilim_assistant.motorlar.tercume_ocr_lang import resolve_ocr_lang
+            from ilim_assistant.motorlar.tercume_ocr_cascade import ocr_pil_image_best
 
-            tess_lang = resolve_ocr_lang(
-                os.environ.get("RUZGAR_TERCUME_OCR_LANG", "auto"),
+            hit = ocr_pil_image_best(
+                img,
                 src_lang=os.environ.get("RUZGAR_TERCUME_SRC_LANG", "auto"),
             )
-            raw_text = pytesseract.image_to_string(img, lang=tess_lang)
+            if not hit.get("ok"):
+                return {"ok": False, "error": str(hit.get("error") or "OCR başarısız")}
+            raw_text = str(hit.get("text") or "")
+            meta["ocr_cascade"] = hit.get("preset")
+            meta["ocr_quality_score"] = hit.get("quality_score")
         except Exception as exc:
             return {"ok": False, "error": f"OCR başarısız: {str(exc)[:180]}"}
         for p in split_text_into_pages(raw_text):
@@ -254,5 +319,11 @@ def extract_source_pages(rel: str) -> dict[str, Any]:
         }
 
     pages = enrich_pages(pages, source_kind=source_kind)
+    if ext == ".pdf" and source_kind == "pdf":
+        pages = _maybe_ocr_weak_pdf_pages(
+            pages,
+            target,
+            src_lang=os.environ.get("RUZGAR_TERCUME_SRC_LANG", "auto"),
+        )
     meta.update(summarize_page_quality_meta(pages))
     return {"ok": True, "rel": raw, "pages": pages, "meta": meta}

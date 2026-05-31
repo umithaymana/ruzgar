@@ -1,5 +1,5 @@
 {
-  "version": "tercume-glossary-v2",
+  "version": "tercume-glossary-v3-faz10",
   "sets": {
     "ibn_arabi_fusus": {
       "match": ["ibn arabi", "ibn al-arabi", "muhyiddin", "muhyi", "fusus", "füsus", "hikem", "akbar"],
@@ -32,6 +32,50 @@
         {"src": "Vahdet", "tr": "Vahdet", "en": "Wahdat (unity)"},
         {"src": "Allah", "tr": "Allah", "en": "Allah"},
         {"src": "Resulullah", "tr": "Resulullah", "en": "the Messenger of Allah"}
+      ]
+    },
+    "nakshibandi_makamat": {
+      "match": ["nakshibandi", "nakşibendi", "naqshbandi", "bahaeddin", "bahauddin", "makamat", "makamât", "rufai", "rifai"],
+      "rules": [
+        "Nakşibendi silsilesinde isim ve makam terimlerini koru.",
+        "Makam = manevi mertebe; günlük «mekan» anlamına indirgeme."
+      ],
+      "terms": [
+        {"src": "Nakşibend", "tr": "Nakşibendi", "en": "Naqshbandi"},
+        {"src": "Rabıta", "tr": "Rabıta", "en": "Rabita (spiritual bond)"},
+        {"src": "Halvet", "tr": "Halvet", "en": "Khalwat (retreat)"},
+        {"src": "Urf", "tr": "Urf", "en": "Urf (custom / spiritual practice)"},
+        {"src": "Makam", "tr": "Makam", "en": "Maqam (spiritual station)"},
+        {"src": "Fana", "tr": "Fana", "en": "Fana (annihilation in God)"},
+        {"src": "Beka", "tr": "Beka", "en": "Baqa (subsistence in God)"}
+      ]
+    },
+    "ghazali_ihya": {
+      "match": ["gazzali", "ghazali", "gazali", "ihya", "ihyau", "ulumuddin", "ulumu'd-din"],
+      "rules": [
+        "İmam Gazzali = Abu Hamid al-Ghazali; İhyâ özel ad.",
+        "Tasavvufi ve ahlaki terimlerde anlam derinliğini koru."
+      ],
+      "terms": [
+        {"src": "İhya", "tr": "İhya", "en": "Ihya (Revival)"},
+        {"src": "Nefs", "tr": "Nefs", "en": "Self (nafs)"},
+        {"src": "Kalp", "tr": "Kalp", "en": "Heart (qalb)"},
+        {"src": "Ruh", "tr": "Ruh", "en": "Spirit (ruh)"},
+        {"src": "Zühd", "tr": "Zühd", "en": "Asceticism (zuhd)"}
+      ]
+    },
+    "osmanlica_yaygin": {
+      "match": ["osmanlica", "osmanlıca", "ottoman", "reşha", "hatt", "maktub", "ferman", "berat"],
+      "rules": [
+        "Osmanlıca metinde özel ad ve unvanları keyfi modernleştirme.",
+        "Hareke ekleme; kaynakta yoksa uydurma."
+      ],
+      "terms": [
+        {"src": "Devlet", "tr": "Devlet", "en": "State"},
+        {"src": "Padişah", "tr": "Padişah", "en": "Sultan"},
+        {"src": "Sadr-ı Azam", "tr": "Sadrazam", "en": "Grand Vizier"},
+        {"src": "Müftü", "tr": "Müftü", "en": "Mufti"},
+        {"src": "Medrese", "tr": "Medrese", "en": "Madrasa"}
       ]
     },
     "general_islamic": {

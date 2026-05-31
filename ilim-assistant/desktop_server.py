@@ -121,7 +121,7 @@ except Exception:
 
 
 def _gemini_startup_warmup() -> None:
-    """GLOBAL_API_KEY + gemini-2.0-flash — açılışta bağlan, arka plan daemon başlat."""
+    """GLOBAL_API_KEY — isteğe bağlı ping; daemon kapalıysa ağ çağrısı yapma (hızlı açılış)."""
     try:
         from ilim_assistant.config import (
             apply_global_api_key_to_runtime,
@@ -138,8 +138,7 @@ def _gemini_startup_warmup() -> None:
                 file=sys.stderr,
             )
             return
-        from ilim_assistant.gemini_daemon import daemon_status, start_gemini_daemon
-        from ilim_assistant.llm_gemini import gemini_model_ping
+        from ilim_assistant.gemini_daemon import _daemon_enabled, daemon_status, start_gemini_daemon
 
         apply_global_api_key_to_runtime()
         if not gemini_ready():
@@ -148,6 +147,14 @@ def _gemini_startup_warmup() -> None:
                 file=sys.stderr,
             )
             return
+        if not _daemon_enabled():
+            print(
+                "[RÜZGAR] Gemini anahtarı yüklü — açılış ping atlandı (RUZGAR_GEMINI_DAEMON=0).",
+                file=sys.stderr,
+            )
+            return
+        from ilim_assistant.llm_gemini import gemini_model_ping
+
         ping = gemini_model_ping()
         if ping.get("ok"):
             print(
@@ -473,13 +480,19 @@ def _boot_motorlar_anaonce() -> None:
 async def _warmup_rag() -> None:
     """İlk sohbet turunda RAG disk okumasını ve gömme modelini önceden yükle."""
     try:
-        _boot_motorlar_anaonce()
+        from ilim_assistant.config import defer_motor_boot, skip_rag_warmup
+
+        if not defer_motor_boot():
+            _boot_motorlar_anaonce()
     except Exception:
         pass
     try:
-        from ilim_assistant.rag_store import warmup_index
+        from ilim_assistant.config import skip_rag_warmup
 
-        warmup_index()
+        if not skip_rag_warmup():
+            from ilim_assistant.rag_store import warmup_index
+
+            warmup_index()
     except Exception:
         pass
     try:
@@ -3785,6 +3798,7 @@ def api_arsiv_download_next(limit: int = Form(1)) -> dict[str, Any]:
 def api_tercume_eser_search(
     q: str = Query(""),
     scored: int = Query(1),
+    web: int = Query(1),
 ) -> dict[str, Any]:
     """B planı arama; scored=1 (varsayılan) analist skorları + önerilen indirme."""
     raw = (q or "").strip()
@@ -3798,7 +3812,8 @@ def api_tercume_eser_search(
         return search_eser_merged(raw)
     from ilim_assistant.motorlar.tercume_analyst import analyze_tercume_query
 
-    return analyze_tercume_query(raw)
+    include_web = str(web or "1").strip().lower() not in ("0", "false", "no")
+    return analyze_tercume_query(raw, include_web=include_web)
 
 
 @app.get("/api/tercume/analyze")
@@ -4130,8 +4145,9 @@ def api_tercume_super_start(
     translate: str = Form("1"),
     tgt_lang: str = Form("tr"),
     src_lang: str = Form("auto"),
+    checkpoint: str = Form(""),
 ) -> dict[str, Any]:
-    """Faz 8 — tam analist zinciri arka planda."""
+    """Faz 8/12 — tam analist zinciri arka planda."""
     from ilim_assistant.motorlar.tercume_analyst_jobs import start_super_job
 
     def _flag(v: str) -> bool:
@@ -4142,6 +4158,10 @@ def api_tercume_super_start(
     except ValueError:
         rp = 5
 
+    ck: bool | None = None
+    if str(checkpoint or "").strip():
+        ck = _flag(checkpoint)
+
     hit = start_super_job(
         query=(q or "").strip(),
         rel=(rel or "").strip(),
@@ -4149,9 +4169,24 @@ def api_tercume_super_start(
         translate=_flag(translate),
         tgt_lang=(tgt_lang or "tr").strip(),
         src_lang=(src_lang or "auto").strip(),
+        checkpoint=ck,
     )
     if not hit.get("ok"):
         raise HTTPException(status_code=400, detail=str(hit.get("error") or "süper analist başlatılamadı"))
+    return hit
+
+
+@app.post("/api/tercume/super-resume")
+def api_tercume_super_resume(
+    job_id: str = Form(""),
+    action: str = Form("continue"),
+) -> dict[str, Any]:
+    """Faz 12 — checkpoint: devam / atla / iptal."""
+    from ilim_assistant.motorlar.tercume_analyst_jobs import resume_super_job
+
+    hit = resume_super_job((job_id or "").strip(), action=(action or "continue").strip())
+    if not hit.get("ok"):
+        raise HTTPException(status_code=400, detail=str(hit.get("error") or "devam edilemedi"))
     return hit
 
 
@@ -4164,7 +4199,7 @@ def api_tercume_config():
 
 @app.post("/api/tercume/batch-start")
 async def api_tercume_batch_start(request: Request) -> dict[str, Any]:
-    from ilim_assistant.motorlar.tercume_batch_jobs import start_batch_job
+    from ilim_assistant.motorlar.tercume_batch_jobs import start_batch_job, start_page_range_job
 
     try:
         body = await request.json()
@@ -4172,13 +4207,37 @@ async def api_tercume_batch_start(request: Request) -> dict[str, Any]:
         body = {}
     if not isinstance(body, dict):
         body = {}
-    hit = start_batch_job(
-        str(body.get("folder_rel") or ""),
-        tgt_lang=str(body.get("tgt_lang") or "tr"),
-        src_lang=str(body.get("src_lang") or "auto"),
-        output_dir_rel=str(body.get("output_dir_rel") or "ilim-assistant/arsiv/tercume-output/batch"),
-        file_filter=str(body.get("file_filter") or ""),
-    )
+
+    rel = str(body.get("rel") or "").strip()
+    if rel:
+        pf = body.get("page_from")
+        pt = body.get("page_to")
+        try:
+            page_from = int(pf) if pf is not None and str(pf).strip() != "" else None
+        except (TypeError, ValueError):
+            page_from = None
+        try:
+            page_to = int(pt) if pt is not None and str(pt).strip() != "" else None
+        except (TypeError, ValueError):
+            page_to = None
+        skip_empty = str(body.get("skip_empty", "1")).strip().lower() not in ("0", "false", "no")
+        hit = start_page_range_job(
+            rel,
+            page_from=page_from,
+            page_to=page_to,
+            skip_empty=skip_empty,
+            tgt_lang=str(body.get("tgt_lang") or "tr"),
+            src_lang=str(body.get("src_lang") or "auto"),
+            output_dir_rel=str(body.get("output_dir_rel") or "ilim-assistant/arsiv/tercume-output/page-range"),
+        )
+    else:
+        hit = start_batch_job(
+            str(body.get("folder_rel") or ""),
+            tgt_lang=str(body.get("tgt_lang") or "tr"),
+            src_lang=str(body.get("src_lang") or "auto"),
+            output_dir_rel=str(body.get("output_dir_rel") or "ilim-assistant/arsiv/tercume-output/batch"),
+            file_filter=str(body.get("file_filter") or ""),
+        )
     if not hit.get("ok"):
         raise HTTPException(status_code=400, detail=str(hit.get("error") or "batch başlatılamadı"))
     return hit
@@ -4215,8 +4274,26 @@ def api_tercume_apprentice_log(
     return {"ok": True, "items": read_apprentice_log(root, limit=limit)}
 
 
+@app.get("/api/tercume/preflight")
+def api_tercume_preflight(
+    rel: str = Query(""),
+    need_internet: int = Query(0),
+) -> dict[str, Any]:
+    """Faz 9 — OCR, beyin, arşiv kapı kontrolü."""
+    from ilim_assistant.motorlar.tercume_preflight import run_tercume_preflight
+
+    return run_tercume_preflight(
+        rel=(rel or "").strip(),
+        need_internet=bool(int(need_internet or 0)),
+    )
+
+
 @app.get("/api/tercume/source-pages")
-def api_tercume_source_pages(rel: str = Query("")) -> dict[str, Any]:
+def api_tercume_source_pages(
+    rel: str = Query(""),
+    page_from: int | None = Query(None, ge=0),
+    page_to: int | None = Query(None, ge=0),
+) -> dict[str, Any]:
     """Kaynak metni sayfa/parça listesine böler + Faz 3 kalite skoru."""
     raw = (rel or "").strip().replace("\\", "/").lstrip("/")
     if not raw:
@@ -4243,7 +4320,7 @@ def api_tercume_source_pages(rel: str = Query("")) -> dict[str, Any]:
     if ext in _pipeline_ext:
         from ilim_assistant.motorlar.tercume_read_pipeline import extract_source_pages
 
-        hit = extract_source_pages(raw)
+        hit = extract_source_pages(raw, page_from=page_from, page_to=page_to)
         if not hit.get("ok"):
             raise HTTPException(status_code=400, detail=str(hit.get("error") or "Okuma hatası"))
         return hit

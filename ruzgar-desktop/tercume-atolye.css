@@ -135,6 +135,10 @@ body[data-motor="tercume"][data-tercume-tab="ara"] .panel-main {
 }
 #page-tercume .tercume-workbench--ara #tercume-ara-panel {
   display: flex !important;
+  pointer-events: auto;
+}
+#page-tercume .tercume-ara-panel[hidden] {
+  display: none !important;
 }
 
 #page-tercume .tercume-ara-panel {
@@ -159,6 +163,20 @@ body[data-motor="tercume"][data-tercume-tab="ara"] .panel-main {
   line-height: 1.35;
   margin: 0 0 8px;
 }
+#page-tercume .tercume-ara-search-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 3;
+}
+#page-tercume .tercume-ara-search-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
 #page-tercume .tercume-ara-search-row {
   display: flex;
   gap: 4px;
@@ -166,14 +184,21 @@ body[data-motor="tercume"][data-tercume-tab="ara"] .panel-main {
   flex-shrink: 0;
 }
 #page-tercume .tercume-eser-input {
-  flex: 1;
+  width: 100%;
   min-width: 0;
-  font-size: 12px;
-  padding: 5px 8px;
-  border: 1px solid #454545;
+  min-height: 36px;
+  font-size: 13px;
+  padding: 7px 10px;
+  border: 1px solid #569cd6;
   border-radius: 4px;
   background: #1e1e1e;
   color: #eee;
+  pointer-events: auto;
+  box-sizing: border-box;
+}
+#page-tercume .tercume-eser-input:focus {
+  outline: 2px solid rgba(86, 156, 214, 0.45);
+  border-color: #3794ff;
 }
 #page-tercume .tercume-eser-hint {
   font-size: 11px;
@@ -186,8 +211,16 @@ body[data-motor="tercume"][data-tercume-tab="ara"] .panel-main {
   margin: 0;
   padding: 0;
   overflow-y: auto;
-  flex: 1;
-  min-height: 80px;
+  flex: 1 1 auto;
+  min-height: 60px;
+  max-height: 100%;
+  pointer-events: auto;
+}
+#page-tercume .tercume-work-eser-sites .code-file-placeholder {
+  color: #777;
+  font-size: 11px;
+  line-height: 1.45;
+  padding: 8px 4px;
 }
 #page-tercume .tercume-work-eser-sites li.tercume-eser-result-row {
   display: flex;
@@ -507,8 +540,21 @@ body[data-motor="tercume"][data-tercume-tab="ara"] .panel-main {
   outline: none;
   cursor: text;
   user-select: text;
+  pointer-events: auto;
   white-space: pre-wrap;
   word-wrap: break-word;
+}
+#page-tercume .tercume-active-file-btn {
+  max-width: min(42vw, 420px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: #9cdcfe;
+  border-color: #3a3a3a;
+}
+#page-tercume .tercume-active-file-btn:not(.has-file) {
+  color: #ce9178;
 }
 #page-tercume .tercume-doc-editor:empty::before {
   content: attr(data-placeholder);

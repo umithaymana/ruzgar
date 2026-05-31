@@ -12,7 +12,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-BATCH_VERSION = "tercume-batch-v1-2026-05-31"
+BATCH_VERSION = "tercume-batch-v2-faz10-2026-05-31"
 
 _jobs: dict[str, dict[str, Any]] = {}
 _lock = threading.Lock()
@@ -223,3 +223,166 @@ def cancel_batch_job(job_id: str) -> dict[str, Any]:
             _update(jid, cancel=True)
             return {"ok": True, "job_id": jid, "status": "cancelling"}
     return {"ok": False, "error": "İş bulunamadı"}
+
+
+def _filter_pages(
+    pages: list[dict[str, Any]],
+    *,
+    skip_empty: bool,
+) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for p in pages:
+        if not isinstance(p, dict):
+            continue
+        text = str(p.get("text") or "").strip()
+        quality = str(p.get("quality") or "")
+        if skip_empty and (not text or quality == "empty"):
+            continue
+        if not text and skip_empty:
+            continue
+        out.append(p)
+    return out
+
+
+def _run_page_range(job_id: str, cfg: dict[str, Any]) -> None:
+    from ilim_assistant.motorlar.tercume_atolye import translate_chunk
+    from ilim_assistant.motorlar.tercume_read_pipeline import extract_source_pages
+
+    rel = str(cfg.get("rel") or "").strip().replace("\\", "/").lstrip("/")
+    page_from = cfg.get("page_from")
+    page_to = cfg.get("page_to")
+    skip_empty = bool(cfg.get("skip_empty", True))
+    tgt = str(cfg.get("tgt_lang") or "tr")
+    src = str(cfg.get("src_lang") or "auto")
+    out_dir_rel = str(cfg.get("output_dir_rel") or "ilim-assistant/arsiv/tercume-output/page-range")
+    root = _repo_root()
+
+    _update(job_id, status="running", current_file=rel, done=0, total=0, label="Sayfalar okunuyor…")
+
+    hit = extract_source_pages(rel, page_from=page_from, page_to=page_to)
+    if not hit.get("ok"):
+        _update(job_id, status="failed", error=str(hit.get("error") or "Okuma hatası"))
+        return
+
+    pages = _filter_pages(list(hit.get("pages") or []), skip_empty=skip_empty)
+    if not pages:
+        _update(job_id, status="failed", error="Seçilen aralıkta çevrilecek sayfa yok.")
+        return
+
+    out_dir = (root / out_dir_rel.replace("/", os.sep)).resolve()
+    out_dir.mkdir(parents=True, exist_ok=True)
+    _update(job_id, status="running", total=len(pages), done=0, outputs=[])
+
+    parts: list[str] = []
+    outputs: list[dict[str, Any]] = []
+    for i, p in enumerate(pages):
+        with _lock:
+            if (_jobs.get(job_id) or {}).get("cancel"):
+                _update(job_id, status="cancelled", outputs=outputs)
+                return
+
+        label = str(p.get("label") or p.get("index") or i + 1)
+        _update(job_id, done=i, label=f"{i + 1}/{len(pages)}: sayfa {label}")
+
+        try:
+            tr = translate_chunk(
+                str(p.get("text") or ""),
+                src_lang=src,
+                tgt_lang=tgt,
+                source_file=rel,
+                page_index=int(p.get("index") if p.get("index") is not None else i),
+            )
+            if tr.get("ok"):
+                chunk = str(tr.get("text") or "")
+                parts.append(chunk)
+                outputs.append({"page": label, "ok": True, "quality": tr.get("quality")})
+            else:
+                err = str(tr.get("error") or "?")
+                parts.append(f"[HATA sayfa {label}: {err}]")
+                outputs.append({"page": label, "ok": False, "error": err})
+        except Exception as exc:
+            parts.append(f"[HATA sayfa {label}: {str(exc)[:120]}]")
+            outputs.append({"page": label, "ok": False, "error": str(exc)[:120]})
+
+        _update(job_id, done=i + 1, outputs=outputs)
+
+    stem = Path(rel).stem
+    safe = re.sub(r"[^a-zA-Z0-9._\-]+", "_", stem)[:72] or "sayfa"
+    pf = int(page_from) if page_from is not None else 0
+    pt = int(page_to) if page_to is not None else pf + len(pages) - 1
+    out_rel = f"{out_dir_rel.rstrip('/')}/{safe}_p{pf}-{pt}_{tgt}.txt"
+    out_path = (root / out_rel.replace("/", os.sep)).resolve()
+    body = "\n\n".join(parts)
+    out_path.write_text(body, encoding="utf-8")
+
+    _update(
+        job_id,
+        status="done",
+        current_file="",
+        output_rel=out_rel,
+        chars=len(body),
+        page_from=pf,
+        page_to=pt,
+        pages_translated=len(pages),
+        outputs=outputs,
+        label=f"{len(pages)} sayfa kaydedildi",
+    )
+
+
+def start_page_range_job(
+    rel: str,
+    *,
+    page_from: int | None = None,
+    page_to: int | None = None,
+    skip_empty: bool = True,
+    tgt_lang: str = "tr",
+    src_lang: str = "auto",
+    output_dir_rel: str = "ilim-assistant/arsiv/tercume-output/page-range",
+) -> dict[str, Any]:
+    raw = (rel or "").strip().replace("\\", "/").lstrip("/")
+    if not raw:
+        return {"ok": False, "error": "rel gerekli"}
+
+    pf = int(page_from) if page_from is not None else None
+    pt = int(page_to) if page_to is not None else None
+    if pf is not None and pt is not None and pt < pf:
+        return {"ok": False, "error": "page_to, page_from'dan küçük olamaz."}
+
+    job_id = uuid.uuid4().hex[:12]
+    cfg = {
+        "rel": raw,
+        "page_from": pf,
+        "page_to": pt,
+        "skip_empty": bool(skip_empty),
+        "tgt_lang": (tgt_lang or "tr").strip(),
+        "src_lang": (src_lang or "auto").strip(),
+        "output_dir_rel": (output_dir_rel or "ilim-assistant/arsiv/tercume-output/page-range").strip(),
+    }
+    state = {
+        "ok": True,
+        "job_id": job_id,
+        "job_type": "page_range",
+        "version": BATCH_VERSION,
+        "status": "queued",
+        "rel": raw,
+        "page_from": pf,
+        "page_to": pt,
+        "skip_empty": bool(skip_empty),
+        "total": 0,
+        "done": 0,
+        "created_at": time.time(),
+    }
+    with _lock:
+        _jobs[job_id] = state
+    _persist(job_id, state)
+
+    th = threading.Thread(target=_run_page_range, args=(job_id, cfg), daemon=True)
+    th.start()
+    return {
+        "ok": True,
+        "job_id": job_id,
+        "job_type": "page_range",
+        "rel": raw,
+        "page_from": pf,
+        "page_to": pt,
+    }

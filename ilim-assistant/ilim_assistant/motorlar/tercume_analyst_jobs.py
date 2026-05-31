@@ -218,7 +218,7 @@ def start_report_job(
 
 
 def _run_super(job_id: str, cfg: dict[str, Any]) -> None:
-    from ilim_assistant.motorlar.tercume_super_analyst import run_super_analyst
+    from ilim_assistant.motorlar.tercume_super_analyst import checkpoint_enabled, run_super_analyst
 
     def on_step(step: str, label: str) -> None:
         _update(job_id, status="running", step=step, label=label)
@@ -232,6 +232,7 @@ def _run_super(job_id: str, cfg: dict[str, Any]) -> None:
             tgt_lang=str(cfg.get("tgt_lang") or "tr"),
             src_lang=str(cfg.get("src_lang") or "auto"),
             on_step=on_step,
+            checkpoint=bool(cfg.get("checkpoint")) if cfg.get("checkpoint") is not None else checkpoint_enabled(),
         )
     except Exception as exc:
         _update(job_id, status="failed", error=str(exc)[:240], label="Hata")
@@ -248,6 +249,23 @@ def _run_super(job_id: str, cfg: dict[str, Any]) -> None:
             error=str(result.get("error") or "süper analist hatası"),
             label="Başarısız",
             steps=result.get("steps"),
+        )
+        return
+
+    if result.get("paused"):
+        _update(
+            job_id,
+            status="awaiting_approval",
+            step="checkpoint",
+            label=str(result.get("checkpoint_message") or "Onay bekleniyor…"),
+            rel=result.get("rel"),
+            report_rel=result.get("report_rel"),
+            checkpoint=result.get("checkpoint"),
+            checkpoint_message=result.get("checkpoint_message"),
+            resume_state=result.get("resume_state"),
+            markdown_preview=result.get("markdown_preview"),
+            steps=result.get("steps"),
+            cfg=cfg,
         )
         return
 
@@ -275,6 +293,7 @@ def start_super_job(
     translate: bool = True,
     tgt_lang: str = "tr",
     src_lang: str = "auto",
+    checkpoint: bool | None = None,
 ) -> dict[str, Any]:
     q = (query or "").strip()
     if not q and not (rel or "").strip():
@@ -288,6 +307,7 @@ def start_super_job(
         "translate": bool(translate),
         "tgt_lang": (tgt_lang or "tr").strip(),
         "src_lang": (src_lang or "auto").strip(),
+        "checkpoint": checkpoint,
     }
     state = {
         "ok": True,
@@ -307,6 +327,81 @@ def start_super_job(
     th = threading.Thread(target=_run_super, args=(job_id, cfg), daemon=True)
     th.start()
     return {"ok": True, "job_id": job_id, "job_type": "super_analyst", "status": "queued"}
+
+
+def resume_super_job(job_id: str, action: str = "continue") -> dict[str, Any]:
+    """Faz 12 — checkpoint sonrası devam / atla / iptal."""
+    jid = (job_id or "").strip()
+    act = (action or "continue").strip().lower()
+    if not jid:
+        return {"ok": False, "error": "job_id gerekli"}
+
+    with _lock:
+        st = _jobs.get(jid)
+    if not st:
+        loaded = get_analyst_job(jid)
+        if not loaded.get("ok"):
+            return {"ok": False, "error": "İş bulunamadı"}
+        st = loaded
+
+    if str(st.get("status") or "") != "awaiting_approval":
+        return {"ok": False, "error": "Bu iş onay beklemiyor.", "status": st.get("status")}
+
+    if act in ("cancel", "iptal"):
+        _update(jid, status="cancelled", label="Kullanıcı iptal etti", step="cancelled")
+        return {"ok": True, "job_id": jid, "status": "cancelled"}
+
+    resume_state = st.get("resume_state")
+    if not isinstance(resume_state, dict):
+        return {"ok": False, "error": "Devam durumu kayıp"}
+
+    skip_translate = act in ("skip", "skip_translate", "atla", "skip-translate")
+
+    def _resume_thread() -> None:
+        from ilim_assistant.motorlar.tercume_super_analyst import run_super_analyst
+
+        _update(jid, status="running", step="resume", label="Devam ediliyor…")
+
+        def on_step(step: str, label: str) -> None:
+            _update(jid, status="running", step=step, label=label)
+
+        try:
+            result = run_super_analyst(
+                str(resume_state.get("query") or ""),
+                resume_state=resume_state,
+                skip_translate=skip_translate,
+                on_step=on_step,
+            )
+        except Exception as exc:
+            _update(jid, status="failed", error=str(exc)[:240], label="Hata")
+            return
+
+        if not result.get("ok"):
+            _update(
+                jid,
+                status="failed",
+                error=str(result.get("error") or "devam hatası"),
+                label="Başarısız",
+            )
+            return
+
+        _update(
+            jid,
+            status="done",
+            step="done",
+            label="Tam analist bitti" if not skip_translate else "Rapor kaydedildi (çeviri atlandı)",
+            rel=result.get("rel"),
+            report_rel=result.get("report_rel"),
+            preview_rel=result.get("preview_rel"),
+            markdown_preview=result.get("markdown_preview"),
+            steps=result.get("steps"),
+            result=result,
+            skipped_translate=skip_translate,
+        )
+
+    th = threading.Thread(target=_resume_thread, daemon=True)
+    th.start()
+    return {"ok": True, "job_id": jid, "status": "running", "action": act}
 
 
 def start_analyst_job(

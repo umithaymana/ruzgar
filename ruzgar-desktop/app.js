@@ -409,7 +409,7 @@ const el = {
   tercumeSaveRel: document.getElementById("tercume-save-rel"),
   tercumeImportUrl: document.getElementById("tercume-import-url"),
   tercumeStats: document.getElementById("tercume-stats"),
-  tercumeActiveFile: document.getElementById("tercume-active-file"),
+  tercumeActiveFile: document.getElementById("btn-tercume-active-file"),
   sesSttLang: document.getElementById("ses-stt-lang"),
   btnSesStt: document.getElementById("btn-ses-stt"),
   sesSttHint: document.getElementById("ses-stt-hint"),
