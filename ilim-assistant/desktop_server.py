@@ -382,6 +382,25 @@ else:
         expose_headers=["*"],
     )
 
+from starlette.middleware.base import BaseHTTPMiddleware
+
+
+class _RuzgarUserContextMiddleware(BaseHTTPMiddleware):
+    """Halk modunda X-Ruzgar-User ile kişisel hafıza yolu seçilir."""
+
+    async def dispatch(self, request, call_next):
+        from ilim_assistant.ruzgar_public_mode import bind_request_user, clear_request_user
+
+        hdr = request.headers.get("X-Ruzgar-User") or request.headers.get("X-Ruzgar-Session")
+        bind_request_user(hdr)
+        try:
+            return await call_next(request)
+        finally:
+            clear_request_user()
+
+
+app.add_middleware(_RuzgarUserContextMiddleware)
+
 # Masaüstü kabuk — http://127.0.0.1:PORT/ui (file:// yok; sunucu health ile şerit yeşil)
 _DESKTOP_UI_DIR = REPO_ROOT / "ruzgar-desktop"
 if (_DESKTOP_UI_DIR / "index.html").is_file():
@@ -877,6 +896,12 @@ def _ruzgar_mode_health_snapshot() -> dict[str, Any]:
         snap["gemini_disabled"] = gemini_disabled()
         snap["groq_disabled"] = groq_disabled()
         snap["bilissel_enabled"] = bilissel_enabled()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_public_mode import public_mode_health
+
+        snap["public_pool"] = public_mode_health()
     except Exception:
         pass
     return snap
@@ -4088,6 +4113,39 @@ def api_tercume_report_start(
     )
     if not hit.get("ok"):
         raise HTTPException(status_code=400, detail=str(hit.get("error") or "rapor işi başlatılamadı"))
+    return hit
+
+
+@app.post("/api/tercume/super-start")
+def api_tercume_super_start(
+    q: str = Form(""),
+    rel: str = Form(""),
+    read_pages: str = Form("5"),
+    translate: str = Form("1"),
+    tgt_lang: str = Form("tr"),
+    src_lang: str = Form("auto"),
+) -> dict[str, Any]:
+    """Faz 8 — tam analist zinciri arka planda."""
+    from ilim_assistant.motorlar.tercume_analyst_jobs import start_super_job
+
+    def _flag(v: str) -> bool:
+        return str(v or "").strip().lower() in ("1", "true", "yes", "on")
+
+    try:
+        rp = max(1, min(25, int((read_pages or "5").strip() or 5)))
+    except ValueError:
+        rp = 5
+
+    hit = start_super_job(
+        query=(q or "").strip(),
+        rel=(rel or "").strip(),
+        read_pages=rp,
+        translate=_flag(translate),
+        tgt_lang=(tgt_lang or "tr").strip(),
+        src_lang=(src_lang or "auto").strip(),
+    )
+    if not hit.get("ok"):
+        raise HTTPException(status_code=400, detail=str(hit.get("error") or "süper analist başlatılamadı"))
     return hit
 
 

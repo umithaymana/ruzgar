@@ -27,7 +27,12 @@ def ilim_assistant_root() -> Path:
 
 
 def genel_path() -> Path:
-    return ilim_assistant_root() / "ruzgar_genel_hafiza.json"
+    try:
+        from ilim_assistant.ruzgar_public_mode import genel_hafiza_path, current_user_id
+
+        return genel_hafiza_path(current_user_id())
+    except Exception:
+        return ilim_assistant_root() / "ruzgar_genel_hafiza.json"
 
 
 def ensure_hafiza_bridge_ready() -> None:

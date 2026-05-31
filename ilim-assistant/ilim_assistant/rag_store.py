@@ -12,12 +12,31 @@ from typing import List, Tuple
 
 import numpy as np
 
-_KNOWLEDGE_ROOT = Path(__file__).resolve().parent.parent / "knowledge"
-_INDEX_DIR = Path(__file__).resolve().parent.parent / ".rag_index"
+_PKG_ROOT = Path(__file__).resolve().parent.parent
 _MODEL_NAME = os.environ.get(
     "RAG_EMBED_MODEL",
     "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
 )
+
+
+def _knowledge_root() -> Path:
+    try:
+        from ilim_assistant.ruzgar_public_mode import shared_knowledge_root
+
+        return shared_knowledge_root()
+    except Exception:
+        return _PKG_ROOT / "knowledge"
+
+
+def _index_dir() -> Path:
+    try:
+        from ilim_assistant.ruzgar_public_mode import shared_rag_index_dir
+
+        return shared_rag_index_dir()
+    except Exception:
+        p = _PKG_ROOT / ".rag_index"
+        p.mkdir(parents=True, exist_ok=True)
+        return p
 
 
 @dataclass
@@ -75,13 +94,13 @@ def build_index(
     force: bool = False,
     incremental: bool = False,
 ) -> dict:
-    root = knowledge_root or _KNOWLEDGE_ROOT
+    root = knowledge_root or _knowledge_root()
     root = Path(root)
-    manifest_path = _INDEX_DIR / "manifest.json"
-    chunks_path = _INDEX_DIR / "chunks.jsonl"
-    emb_path = _INDEX_DIR / "embeddings.npy"
+    manifest_path = _index_dir() / "manifest.json"
+    chunks_path = _index_dir() / "chunks.jsonl"
+    emb_path = _index_dir() / "embeddings.npy"
 
-    _INDEX_DIR.mkdir(parents=True, exist_ok=True)
+    _index_dir().mkdir(parents=True, exist_ok=True)
 
     files_payload = _load_markdown_files(root)
     payload_map = {rel: body for rel, body in files_payload}
@@ -234,7 +253,7 @@ def build_index(
 
 
 def _load_chunks() -> List[Chunk]:
-    chunks_path = _INDEX_DIR / "chunks.jsonl"
+    chunks_path = _index_dir() / "chunks.jsonl"
     if not chunks_path.is_file():
         return []
     rows: List[Chunk] = []
@@ -249,7 +268,7 @@ def _load_chunks() -> List[Chunk]:
 
 
 def _load_embeddings() -> np.ndarray | None:
-    emb_path = _INDEX_DIR / "embeddings.npy"
+    emb_path = _index_dir() / "embeddings.npy"
     if not emb_path.is_file():
         return None
     return np.load(str(emb_path))
@@ -269,8 +288,8 @@ def _rag_cache_enabled() -> bool:
 def _get_cached_index() -> tuple[List[Chunk], np.ndarray | None]:
     """İndeks dosyalarını her aramada diskten okumaz; embeddings.npy değişince yeniler."""
     global _index_mtime_ns, _cached_chunks_list, _cached_emb_arr, _tarih_chunk_row_indices
-    emb_path = _INDEX_DIR / "embeddings.npy"
-    chunks_path = _INDEX_DIR / "chunks.jsonl"
+    emb_path = _index_dir() / "embeddings.npy"
+    chunks_path = _index_dir() / "chunks.jsonl"
     if not emb_path.is_file() or not chunks_path.is_file():
         return [], None
 

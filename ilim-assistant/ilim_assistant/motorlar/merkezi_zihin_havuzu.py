@@ -403,6 +403,13 @@ class MerkeziZihinHavuzu:
         fname = _JSON_STORE_FILES.get(store_name)
         if not fname:
             raise KeyError(f"Bilinmeyen JSON havuzu: {store_name}")
+        try:
+            from ilim_assistant.ruzgar_public_mode import is_public_mode, personal_json_path, current_user_id
+
+            if is_public_mode():
+                return personal_json_path(fname, current_user_id())
+        except Exception:
+            pass
         return self._ilim_root / fname
 
     def json_load(self, store_name: str, default: Any | None = None) -> Any:

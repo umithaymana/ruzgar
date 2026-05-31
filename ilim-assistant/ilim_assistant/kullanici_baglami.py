@@ -8,8 +8,13 @@ from typing import Any
 
 
 def _path() -> Path:
-    root = Path(__file__).resolve().parents[1]
-    return root / "ruzgar_kullanici_baglami.json"
+    try:
+        from ilim_assistant.ruzgar_public_mode import current_user_id, kullanici_baglami_path
+
+        return kullanici_baglami_path(current_user_id())
+    except Exception:
+        root = Path(__file__).resolve().parents[1]
+        return root / "ruzgar_kullanici_baglami.json"
 
 
 def _now_iso() -> str:

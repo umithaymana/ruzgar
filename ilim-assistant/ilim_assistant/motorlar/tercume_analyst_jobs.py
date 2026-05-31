@@ -217,6 +217,98 @@ def start_report_job(
     return {"ok": True, "job_id": job_id, "job_type": "analyst_report", "status": "queued"}
 
 
+def _run_super(job_id: str, cfg: dict[str, Any]) -> None:
+    from ilim_assistant.motorlar.tercume_super_analyst import run_super_analyst
+
+    def on_step(step: str, label: str) -> None:
+        _update(job_id, status="running", step=step, label=label)
+
+    try:
+        result = run_super_analyst(
+            str(cfg.get("query") or ""),
+            rel=str(cfg.get("rel") or ""),
+            read_pages=int(cfg.get("read_pages") or 5),
+            translate=bool(cfg.get("translate")),
+            tgt_lang=str(cfg.get("tgt_lang") or "tr"),
+            src_lang=str(cfg.get("src_lang") or "auto"),
+            on_step=on_step,
+        )
+    except Exception as exc:
+        _update(job_id, status="failed", error=str(exc)[:240], label="Hata")
+        return
+
+    if _cancelled(job_id):
+        _update(job_id, status="cancelled", label="İptal edildi")
+        return
+
+    if not result.get("ok"):
+        _update(
+            job_id,
+            status="failed",
+            error=str(result.get("error") or "süper analist hatası"),
+            label="Başarısız",
+            steps=result.get("steps"),
+        )
+        return
+
+    _update(
+        job_id,
+        status="done",
+        step="done",
+        label="Tam analist bitti",
+        rel=result.get("rel"),
+        report_rel=result.get("report_rel"),
+        preview_rel=result.get("preview_rel"),
+        quality=(result.get("analysis") or {}).get("quality"),
+        next_steps=result.get("next_steps"),
+        markdown_preview=result.get("markdown_preview"),
+        steps=result.get("steps"),
+        result=result,
+    )
+
+
+def start_super_job(
+    *,
+    query: str = "",
+    rel: str = "",
+    read_pages: int = 5,
+    translate: bool = True,
+    tgt_lang: str = "tr",
+    src_lang: str = "auto",
+) -> dict[str, Any]:
+    q = (query or "").strip()
+    if not q and not (rel or "").strip():
+        return {"ok": False, "error": "query veya rel gerekli"}
+
+    job_id = uuid.uuid4().hex[:12]
+    cfg = {
+        "query": q or Path(rel).stem,
+        "rel": (rel or "").strip(),
+        "read_pages": max(1, min(25, int(read_pages or 5))),
+        "translate": bool(translate),
+        "tgt_lang": (tgt_lang or "tr").strip(),
+        "src_lang": (src_lang or "auto").strip(),
+    }
+    state = {
+        "ok": True,
+        "job_id": job_id,
+        "job_type": "super_analyst",
+        "version": ANALYST_JOB_VERSION,
+        "status": "queued",
+        "step": "queued",
+        "label": "Tam analist kuyruğunda…",
+        "query": cfg["query"],
+        "created_at": time.time(),
+    }
+    with _lock:
+        _jobs[job_id] = state
+    _persist(job_id, state)
+
+    th = threading.Thread(target=_run_super, args=(job_id, cfg), daemon=True)
+    th.start()
+    return {"ok": True, "job_id": job_id, "job_type": "super_analyst", "status": "queued"}
+
+
 def start_analyst_job(
     *,
     query: str = "",
@@ -307,7 +399,8 @@ def resolve_tercume_job(job_id: str) -> dict[str, Any]:
 
     hit = get_analyst_job(jid)
     if hit.get("ok"):
-        hit.setdefault("job_type", hit.get("job_type") or "analyst_pipeline")
+        jt = hit.get("job_type") or "analyst_pipeline"
+        hit.setdefault("job_type", jt)
         return hit
 
     from ilim_assistant.motorlar.tercume_read_jobs import get_read_job

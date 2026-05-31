@@ -475,6 +475,42 @@
     });
   }
 
+  async function runSuperAnalyst() {
+    const q = String($("tercume-eser-input")?.value || "").trim();
+    const rel = String(openRel || "").trim();
+    if (!q && !rel) {
+      flash("Arama kutusuna eser yazın veya Çalışmada dosya açın.");
+      return;
+    }
+    flash("Tam analist zinciri başladı (uzun sürebilir)…");
+    const fd = new FormData();
+    fd.append("q", q);
+    fd.append("rel", rel);
+    fd.append("read_pages", "5");
+    fd.append("translate", "1");
+    fd.append("tgt_lang", String($("tercume-tgt-lang")?.value || "tr"));
+    fd.append("src_lang", String($("tercume-src-lang")?.value || "auto"));
+    const res = await fetch(`${api()}/api/tercume/super-start`, { method: "POST", body: fd });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : j.error || `HTTP ${res.status}`);
+    const jobId = String(j.job_id || "").trim();
+    if (!jobId) throw new Error("İş başlatılamadı");
+    const final = await pollTercumeJob(jobId, (tick) => {
+      flash(String(tick.label || tick.step || "Tam analist…"));
+    });
+    const fileRel = String(final.rel || "").trim();
+    if (fileRel) {
+      setTercumeTab("calisma");
+      await openFile(fileRel);
+    }
+    const reportRel = String(final.report_rel || "").trim();
+    flash(
+      reportRel
+        ? `Tam analist bitti — rapor: ${reportRel}`
+        : String(final.label || "Tam analist bitti")
+    );
+  }
+
   async function runAnalystReport() {
     const q = String($("tercume-eser-input")?.value || "").trim();
     const rel = String(openRel || "").trim();
@@ -1081,6 +1117,9 @@ ${chunk}`;
     });
     $("btn-tercume-eser-rapor")?.addEventListener("click", () => {
       void runAnalystReport().catch((e) => flash(e.message || String(e)));
+    });
+    $("btn-tercume-super")?.addEventListener("click", () => {
+      void runSuperAnalyst().catch((e) => flash(e.message || String(e)));
     });
     $("btn-tercume-scholar-open")?.addEventListener("click", () => {
       openGoogleScholar(String($("tercume-eser-input")?.value || ""));

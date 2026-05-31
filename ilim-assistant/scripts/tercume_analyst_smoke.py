@@ -311,6 +311,36 @@ def main() -> int:
             return 1
 
     print("OK tercume faz7 — analyst report")
+
+    from ilim_assistant.motorlar.tercume_analyst_jobs import start_super_job
+    from ilim_assistant.motorlar.tercume_super_analyst import (
+        SUPER_ANALYST_VERSION,
+        _pick_translate_source,
+        super_analyst_enabled,
+    )
+
+    if not super_analyst_enabled():
+        print("FAIL super disabled")
+        return 1
+    src, pidx = _pick_translate_source(
+        [{"index": 0, "text": "Bu paragraf yeterince uzun bir örnek metindir. " * 4, "quality": "ok"}]
+    )
+    if not src or pidx is None:
+        print("FAIL pick translate source")
+        return 1
+    started = start_super_job(query="smoke super", translate=False)
+    if started.get("job_type") != "super_analyst" or not started.get("job_id"):
+        print("FAIL super job start", started)
+        return 1
+    if "faz8" not in SUPER_ANALYST_VERSION:
+        print("FAIL super version")
+        return 1
+    paths_f8 = {getattr(r, "path", "") for r in app.routes}
+    if "/api/tercume/super-start" not in paths_f8:
+        print("FAIL super-start route")
+        return 1
+
+    print("OK tercume faz8 — super analyst chain")
     return 0
 
 

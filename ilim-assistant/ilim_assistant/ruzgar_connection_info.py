@@ -42,11 +42,26 @@ def _file_row(label: str, path: Path, *, note: str = "") -> dict[str, Any]:
 def build_storage_paths() -> list[dict[str, Any]]:
     ia = _ilim_assistant_root()
     rows: list[dict[str, Any]] = []
+    try:
+        from ilim_assistant.ruzgar_public_mode import (
+            current_user_id,
+            genel_hafiza_path,
+            is_public_mode,
+            public_mode_health,
+        )
+
+        gh_path = genel_hafiza_path(current_user_id())
+        gh_note = "Ana sohbet öğrenme dosyası"
+        if is_public_mode():
+            gh_note = f"Kişisel hafıza (kullanıcı: {current_user_id()})"
+    except Exception:
+        gh_path = ia / "ruzgar_genel_hafiza.json"
+        gh_note = "Ana sohbet öğrenme dosyası"
     rows.append(
         _file_row(
             "Genel hafıza (soru=cevap)",
-            ia / "ruzgar_genel_hafiza.json",
-            note="Ana sohbet öğrenme dosyası",
+            gh_path,
+            note=gh_note,
         )
     )
     try:
@@ -132,9 +147,16 @@ def build_brain_status(super_brain: dict[str, Any] | None) -> dict[str, Any]:
 def build_connection_info(*, super_brain: dict[str, Any] | None = None) -> dict[str, Any]:
     brains = build_brain_status(super_brain)
     storage = build_storage_paths()
-    return {
+    payload: dict[str, Any] = {
         "ok": True,
         "api_base_hint": f"http://127.0.0.1:{os.environ.get('RUZGAR_API_PORT', '8779')}",
         "brains": brains,
         "storage": storage,
     }
+    try:
+        from ilim_assistant.ruzgar_public_mode import public_mode_health
+
+        payload["public_pool"] = public_mode_health()
+    except Exception:
+        pass
+    return payload

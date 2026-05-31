@@ -595,6 +595,12 @@ def workbench_config() -> dict[str, Any]:
             "output_dir": "ilim-assistant/arsiv/tercume-output/reports",
             "env": {"RUZGAR_TERCUME_REPORT": "1"},
         },
+        "super_faz8": {
+            "version": "tercume-super-analyst-v8-faz8-2026-05-31",
+            "chain": ["analyze", "import", "read", "translate", "report"],
+            "routes": ["/api/tercume/super-start"],
+            "env": {"RUZGAR_TERCUME_SUPER": "1"},
+        },
         "ocr_lang": ocr_config_for_api(),
         "translation_policy": {
             "local_first_search": local_first_search_enabled(),

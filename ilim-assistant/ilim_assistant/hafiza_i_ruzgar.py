@@ -149,12 +149,17 @@ class HafizaIRuzgar:
             v = v / 100.0
         return max(0.0, min(1.0, v))
 
-    def __init__(self) -> None:
-        # JSON dosyası proje ana dizininde tutulur.
+    def __init__(self, dosya_yolu: Path | str | None = None) -> None:
         proje_koku = Path(__file__).resolve().parents[1]
-        self._dosya_yolu = Path(
-            os.path.join(str(proje_koku), self.GENEL_HAFIZA_DOSYASI_ADI)
-        )
+        if dosya_yolu is not None:
+            self._dosya_yolu = Path(dosya_yolu)
+        else:
+            try:
+                from ilim_assistant.ruzgar_public_mode import genel_hafiza_path, current_user_id
+
+                self._dosya_yolu = genel_hafiza_path(current_user_id())
+            except Exception:
+                self._dosya_yolu = proje_koku / self.GENEL_HAFIZA_DOSYASI_ADI
         self._eski_dosya_yollari = [
             Path(os.path.join(str(proje_koku), ad)) for ad in self.ESKI_DOSYA_ADLARI
         ]
@@ -625,11 +630,24 @@ class HafizaIRuzgar:
 
 
 _hafiza_singleton: Optional[HafizaIRuzgar] = None
+_hafiza_by_user: dict[str, HafizaIRuzgar] = {}
 
 
 def get_hafiza_motor() -> HafizaIRuzgar:
-    """Öğrenme dosyası için süreç içi tek örnek — masaüstü API ve ana sohbet aynı RAM/disk görür."""
+    """Öğrenme dosyası için süreç içi örnek — halk modunda kullanıcı başına ayrı dosya."""
     global _hafiza_singleton
+    try:
+        from ilim_assistant.ruzgar_public_mode import current_user_id, is_public_mode
+
+        if is_public_mode():
+            uid = current_user_id()
+            motor = _hafiza_by_user.get(uid)
+            if motor is None:
+                motor = HafizaIRuzgar()
+                _hafiza_by_user[uid] = motor
+            return motor
+    except Exception:
+        pass
     if _hafiza_singleton is None:
         _hafiza_singleton = HafizaIRuzgar()
     return _hafiza_singleton
