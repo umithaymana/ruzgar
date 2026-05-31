@@ -1,6 +1,7 @@
 # RÜZGAR HTTP API — Railway / Fly.io / Render
-# Yerel bağlam: klasör bağlamını "ilim-assistant" seçin veya kök dizinde:
-#   docker build -f ilim-assistant/Dockerfile ilim-assistant
+# Repo kökünden derle:
+#   docker build -f ilim-assistant/Dockerfile .
+#   docker run --rm -p 8777:8777 -e PORT=8777 -e GEMINI_API_KEY=... ruzgar-halk
 
 FROM python:3.11-bookworm
 
@@ -18,26 +19,27 @@ RUN apt-get update \
 
 WORKDIR /app
 
-# API için hafifleştirilmiş bağımlılıklar (Gradio yok)
-COPY requirements-api.txt .
+COPY ilim-assistant/requirements-api.txt ./ilim-assistant/requirements-api.txt
 RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements-api.txt
+    && pip install --no-cache-dir -r ilim-assistant/requirements-api.txt
 
-COPY ilim_assistant ./ilim_assistant
-COPY desktop_server.py .
-COPY knowledge ./knowledge
+COPY ilim-assistant/ilim_assistant ./ilim-assistant/ilim_assistant
+COPY ilim-assistant/desktop_server.py ./ilim-assistant/desktop_server.py
+COPY ilim-assistant/knowledge ./ilim-assistant/knowledge
+COPY ruzgar-desktop ./ruzgar-desktop
 
 ENV PYTHONUNBUFFERED=1
 ENV RUZGAR_API_HOST=0.0.0.0
 ENV RUZGAR_PUBLIC_MODE=1
 ENV RUZGAR_DATA_ROOT=/app/data
-ENV RUZGAR_SHARED_ROOT=/app
-ENV RUZGAR_RAG_INDEX_DIR=/app/.rag_index
+ENV RUZGAR_SHARED_ROOT=/app/ilim-assistant
+ENV RUZGAR_RAG_INDEX_DIR=/app/ilim-assistant/.rag_index
 ENV RUZGAR_CORS_PERMISSIVE=1
+ENV RUZGAR_SKIP_RAG_WARMUP=1
 
 VOLUME ["/app/data"]
 
 EXPOSE 8777
 
-# Railway PORT’u ile uyumlu: desktop_server içinde PORT okunur
+WORKDIR /app/ilim-assistant
 CMD ["python", "desktop_server.py"]

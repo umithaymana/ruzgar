@@ -27,6 +27,21 @@ function normalizeRuzgarApiRootTail(raw) {
 function resolveRuzgarApiRoot() {
   const fallback = RUZGAR_LOCAL_API_FALLBACK;
   try {
+    if (typeof window !== "undefined") {
+      const injected = window.__RUZGAR_API_ROOT__;
+      if (injected) {
+        const n = normalizeRuzgarApiRootTail(String(injected).trim());
+        if (n) return n;
+      }
+      if (window.location?.pathname?.startsWith("/ui")) {
+        const origin = normalizeRuzgarApiRootTail(window.location.origin);
+        if (origin) return origin;
+      }
+    }
+  } catch (_) {
+    /* yok say */
+  }
+  try {
     const remote =
       typeof window !== "undefined" &&
       window.ruzgarApi?.getRemoteBrainEndpoint?.();

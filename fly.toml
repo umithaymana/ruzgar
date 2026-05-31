@@ -1,0 +1,32 @@
+# fly launch --dockerfile ilim-assistant/Dockerfile --name ruzgar-halk
+app = "ruzgar-halk"
+primary_region = "fra"
+
+[build]
+  dockerfile = "ilim-assistant/Dockerfile"
+
+[env]
+  RUZGAR_PUBLIC_MODE = "1"
+  RUZGAR_CORS_PERMISSIVE = "1"
+  RUZGAR_SKIP_RAG_WARMUP = "1"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    path = "/api/health"
+    interval = "30s"
+    timeout = "10s"
+
+[[vm]]
+  memory = "2gb"
+  cpu_kind = "shared"
+  cpus = 2
+
+[mounts]
+  source = "ruzgar_data"
+  destination = "/app/data"

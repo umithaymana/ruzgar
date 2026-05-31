@@ -420,15 +420,21 @@ if (_DESKTOP_UI_DIR / "index.html").is_file():
                     response.headers[k] = v
             return response
 
-    def _ui_index_html() -> str:
-        from ilim_assistant.ruzgar_api_port import resolve_api_port
-
+    def _ui_api_root_snippet() -> str:
+        if os.environ.get("PORT") or os.environ.get("RUZGAR_PUBLIC_MODE", "").strip().lower() in (
+            "1",
+            "true",
+            "yes",
+            "on",
+        ):
+            return '<script>window.__RUZGAR_API_ROOT__=window.location.origin;</script>'
         port = resolve_api_port()
+        return f'<script>window.__RUZGAR_API_ROOT__="http://127.0.0.1:{port}";</script>'
+
+    def _ui_index_html() -> str:
         raw = _UI_INDEX_PATH.read_text(encoding="utf-8")
-        ok_snip = (
-            f'<script>window.__RUZGAR_API_ROOT__="http://127.0.0.1:{port}";</script>'
-        )
-        if ok_snip not in raw:
+        ok_snip = _ui_api_root_snippet()
+        if ok_snip not in raw and "__RUZGAR_API_ROOT__" not in raw:
             raw = raw.replace("</head>", f"  {ok_snip}\n  </head>", 1)
         return raw
 
