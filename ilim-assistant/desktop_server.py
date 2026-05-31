@@ -690,6 +690,78 @@ class SesSettingsPatchBody(BaseModel):
     huzur: float | None = None
 
 
+class MimarFotoModerateBody(BaseModel):
+    rel: str = Field(..., description="ilim-assistant/arsiv/mimar-fotograf/…")
+    op: str = Field(..., description="rotate_left, preset_auto, crop_square, …")
+
+
+class MimarFotoRelBody(BaseModel):
+    rel: str = Field(..., description="ilim-assistant/arsiv/mimar-fotograf/…")
+
+
+class MimarFotoVoiceBody(BaseModel):
+    rel: str = Field(..., description="ilim-assistant/arsiv/mimar-fotograf/…")
+    mode: str = Field(default="read", description="read | speak")
+    lang: str = Field(default="tur+eng", description="OCR dili (ocr uç noktası)")
+
+
+class MimarSanatRelBody(BaseModel):
+    rel: str = Field(..., description="ilim-assistant/arsiv/mimar-sanat/…")
+
+
+class MimarSanatAnalyzeBody(BaseModel):
+    rel: str = Field(..., description="ilim-assistant/arsiv/mimar-sanat/…")
+    depth: str = Field(default="deep", description="quick | deep")
+
+
+class MimarSanatCopyBody(BaseModel):
+    rel: str = Field(..., description="ilim-assistant/arsiv/mimar-sanat/…")
+    mode: str = Field(default="trace", description="trace | poster | pencil")
+
+
+class MimarSanatMetaBody(BaseModel):
+    rel: str = Field(..., description="ilim-assistant/arsiv/mimar-sanat/…")
+    title: str | None = Field(default=None, max_length=240)
+    artist: str | None = Field(default=None, max_length=240)
+    period: str | None = Field(default=None, max_length=240)
+    technique: str | None = Field(default=None, max_length=240)
+    notes: str | None = Field(default=None, max_length=12000)
+
+
+class MimarTasarimSaveBody(BaseModel):
+    project: dict[str, Any] = Field(..., description="Tuval projesi JSON")
+
+
+class MimarTasarimLoadBody(BaseModel):
+    project_id: str = Field(..., description="Proje kimliği")
+
+
+class MimarTasarimSketchTextBody(BaseModel):
+    text: str = Field(..., description="Sohbet betimlemesi veya plan notu")
+    width: int = Field(default=960, ge=320, le=2400)
+    height: int = Field(default=540, ge=240, le=1600)
+
+
+class MimarTasarimSketchImageBody(BaseModel):
+    rel: str = Field(..., description="Referans görsel yolu (mimar-tasarim arşivi)")
+    width: int = Field(default=960, ge=320, le=2400)
+    height: int = Field(default=540, ge=240, le=1600)
+
+
+class MimarTasarimChatHandoffBody(BaseModel):
+    user: str = Field(default="", description="Son kullanıcı mesajı")
+    assistant: str = Field(default="", description="Son asistan yanıtı")
+    notes: str = Field(default="", description="Tuval notu")
+    width: int = Field(default=960, ge=320, le=2400)
+    height: int = Field(default=540, ge=240, le=1600)
+    project_id: str = Field(default="", description="Kayıtlı proje kimliği (opsiyonel)")
+
+
+class MimarTasarimDuplicateBody(BaseModel):
+    project_id: str = Field(..., description="Kaynak proje kimliği")
+    name: str | None = Field(default=None, max_length=120)
+
+
 class HizirPazarTaraBody(BaseModel):
     query: str = Field(default="", description="Ürün veya arama (boşsa genel tarama metni)")
     channels: list[str] | None = Field(
@@ -4467,6 +4539,422 @@ async def api_tercume_import_file(
     target.write_bytes(data)
     rel = target.relative_to(REPO_ROOT).as_posix()
     return {"ok": True, "rel": rel, "bytes": len(data)}
+
+
+# —— Mimar · Fotoğraf (Faz 4F-1) ——
+@app.get("/api/mimar/fotograf/capabilities")
+def api_mimar_fotograf_capabilities() -> dict[str, Any]:
+    from ilim_assistant.motorlar.mimar_fotograf import capabilities
+
+    return capabilities()
+
+
+@app.get("/api/mimar/fotograf/list")
+def api_mimar_fotograf_list() -> dict[str, Any]:
+    from ilim_assistant.motorlar.mimar_fotograf import list_photos
+
+    return list_photos(REPO_ROOT)
+
+
+@app.get("/api/mimar/fotograf/file")
+def api_mimar_fotograf_file(rel: str = Query("")):
+    from ilim_assistant.motorlar.mimar_fotograf import resolve_foto_rel
+
+    try:
+        target = resolve_foto_rel(rel, REPO_ROOT)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    media = "image/jpeg"
+    if target.suffix.lower() == ".png":
+        media = "image/png"
+    elif target.suffix.lower() == ".webp":
+        media = "image/webp"
+    return FileResponse(str(target), media_type=media, filename=target.name)
+
+
+@app.post("/api/mimar/fotograf/upload")
+async def api_mimar_fotograf_upload(file: UploadFile = File(...)) -> dict[str, Any]:
+    from ilim_assistant.motorlar.mimar_fotograf import upload_bytes
+
+    data = await file.read()
+    try:
+        return upload_bytes(data, file.filename or "foto.jpg", REPO_ROOT)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@app.post("/api/mimar/fotograf/moderate")
+async def api_mimar_fotograf_moderate(body: MimarFotoModerateBody) -> dict[str, Any]:
+    from ilim_assistant.motorlar.mimar_fotograf import apply_moderation
+
+    try:
+        return await run_in_threadpool(apply_moderation, body.rel, body.op, REPO_ROOT)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+
+@app.post("/api/mimar/fotograf/restore")
+async def api_mimar_fotograf_restore(body: MimarFotoRelBody) -> dict[str, Any]:
+    from ilim_assistant.motorlar.mimar_fotograf import restore_original
+
+    try:
+        return await run_in_threadpool(restore_original, body.rel, REPO_ROOT)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@app.post("/api/mimar/fotograf/restoration/preview")
+async def api_mimar_fotograf_restoration_preview(body: MimarFotoModerateBody) -> dict[str, Any]:
+    from ilim_assistant.motorlar.mimar_fotograf import preview_restoration
+
+    try:
+        return await run_in_threadpool(preview_restoration, body.rel, body.op, REPO_ROOT)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+
+@app.post("/api/mimar/fotograf/restoration/apply")
+async def api_mimar_fotograf_restoration_apply(body: MimarFotoModerateBody) -> dict[str, Any]:
+    from ilim_assistant.motorlar.mimar_fotograf import apply_restoration
+
+    try:
+        return await run_in_threadpool(apply_restoration, body.rel, body.op, REPO_ROOT)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+
+# —— Mimar · Sanat (Faz 4S-1) ——
+@app.get("/api/mimar/sanat/capabilities")
+def api_mimar_sanat_capabilities() -> dict[str, Any]:
+    from ilim_assistant.motorlar.mimar_sanat import capabilities
+
+    return capabilities()
+
+
+@app.get("/api/mimar/sanat/list")
+def api_mimar_sanat_list() -> dict[str, Any]:
+    from ilim_assistant.motorlar.mimar_sanat import list_works
+
+    return list_works(REPO_ROOT)
+
+
+@app.get("/api/mimar/sanat/file")
+def api_mimar_sanat_file(rel: str = Query("")):
+    from ilim_assistant.motorlar.mimar_sanat import resolve_sanat_rel
+
+    try:
+        target = resolve_sanat_rel(rel, REPO_ROOT)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    media = "image/jpeg"
+    if target.suffix.lower() == ".png":
+        media = "image/png"
+    elif target.suffix.lower() == ".webp":
+        media = "image/webp"
+    elif target.suffix.lower() == ".gif":
+        media = "image/gif"
+    elif target.suffix.lower() == ".svg":
+        media = "image/svg+xml"
+    return FileResponse(str(target), media_type=media, filename=target.name)
+
+
+@app.post("/api/mimar/sanat/upload")
+async def api_mimar_sanat_upload(file: UploadFile = File(...)) -> dict[str, Any]:
+    from ilim_assistant.motorlar.mimar_sanat import upload_bytes
+
+    data = await file.read()
+    try:
+        return upload_bytes(data, file.filename or "eser.jpg", REPO_ROOT)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@app.post("/api/mimar/sanat/meta")
+async def api_mimar_sanat_meta(body: MimarSanatMetaBody) -> dict[str, Any]:
+    from ilim_assistant.motorlar.mimar_sanat import update_metadata
+
+    try:
+        return await run_in_threadpool(
+            update_metadata,
+            body.rel,
+            title=body.title,
+            artist=body.artist,
+            period=body.period,
+            technique=body.technique,
+            notes=body.notes,
+            repo_root=REPO_ROOT,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+
+@app.post("/api/mimar/sanat/identify")
+async def api_mimar_sanat_identify(body: MimarSanatRelBody) -> dict[str, Any]:
+    from ilim_assistant.motorlar.mimar_sanat import identify_work
+
+    try:
+        return await run_in_threadpool(identify_work, body.rel, REPO_ROOT)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+
+@app.post("/api/mimar/sanat/analyze")
+async def api_mimar_sanat_analyze(body: MimarSanatAnalyzeBody) -> dict[str, Any]:
+    from ilim_assistant.motorlar.mimar_sanat import analyze_work
+
+    try:
+        return await run_in_threadpool(analyze_work, body.rel, body.depth, REPO_ROOT)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+
+@app.post("/api/mimar/sanat/sketch")
+async def api_mimar_sanat_sketch(body: MimarSanatRelBody) -> dict[str, Any]:
+    from ilim_assistant.motorlar.mimar_sanat import sketch_work
+
+    try:
+        return await run_in_threadpool(sketch_work, body.rel, REPO_ROOT)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+
+@app.post("/api/mimar/sanat/copy")
+async def api_mimar_sanat_copy(body: MimarSanatCopyBody) -> dict[str, Any]:
+    from ilim_assistant.motorlar.mimar_sanat import copy_work
+
+    try:
+        return await run_in_threadpool(copy_work, body.rel, body.mode, REPO_ROOT)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+
+# —— Mimar · Tasarım (Faz 4T-1) ——
+@app.get("/api/mimar/tasarim/capabilities")
+def api_mimar_tasarim_capabilities() -> dict[str, Any]:
+    from ilim_assistant.motorlar.mimar_tasarim import capabilities
+
+    return capabilities()
+
+
+@app.get("/api/mimar/tasarim/project/list")
+def api_mimar_tasarim_project_list() -> dict[str, Any]:
+    from ilim_assistant.motorlar.mimar_tasarim import list_projects
+
+    return list_projects(REPO_ROOT)
+
+
+@app.post("/api/mimar/tasarim/project/new")
+async def api_mimar_tasarim_project_new(name: str = Query("Yeni plan")) -> dict[str, Any]:
+    from ilim_assistant.motorlar.mimar_tasarim import new_project
+
+    return await run_in_threadpool(new_project, name, 960, 540, REPO_ROOT)
+
+
+@app.post("/api/mimar/tasarim/project/save")
+async def api_mimar_tasarim_project_save(body: MimarTasarimSaveBody) -> dict[str, Any]:
+    from ilim_assistant.motorlar.mimar_tasarim import save_project
+
+    try:
+        return await run_in_threadpool(save_project, body.project, REPO_ROOT)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@app.post("/api/mimar/tasarim/project/load")
+async def api_mimar_tasarim_project_load(body: MimarTasarimLoadBody) -> dict[str, Any]:
+    from ilim_assistant.motorlar.mimar_tasarim import load_project
+
+    try:
+        return await run_in_threadpool(load_project, body.project_id, REPO_ROOT)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+
+@app.post("/api/mimar/tasarim/reference/upload")
+async def api_mimar_tasarim_reference_upload(file: UploadFile = File(...)) -> dict[str, Any]:
+    from ilim_assistant.motorlar.mimar_tasarim import upload_reference
+
+    data = await file.read()
+    try:
+        return upload_reference(data, file.filename or "ref.jpg", REPO_ROOT)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@app.get("/api/mimar/tasarim/reference/file")
+def api_mimar_tasarim_reference_file(rel: str = Query("")):
+    from ilim_assistant.motorlar.mimar_tasarim import resolve_tasarim_rel
+
+    try:
+        target = resolve_tasarim_rel(rel, REPO_ROOT)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    media = "image/jpeg"
+    if target.suffix.lower() == ".png":
+        media = "image/png"
+    elif target.suffix.lower() == ".webp":
+        media = "image/webp"
+    return FileResponse(str(target), media_type=media, filename=target.name)
+
+
+@app.post("/api/mimar/tasarim/sketch/from-image")
+async def api_mimar_tasarim_sketch_from_image(body: MimarTasarimSketchImageBody) -> dict[str, Any]:
+    from ilim_assistant.motorlar.mimar_tasarim import sketch_from_image
+
+    try:
+        return await run_in_threadpool(
+            sketch_from_image, body.rel, body.width, body.height, REPO_ROOT
+        )
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+
+@app.post("/api/mimar/tasarim/sketch/from-text")
+async def api_mimar_tasarim_sketch_from_text(body: MimarTasarimSketchTextBody) -> dict[str, Any]:
+    from ilim_assistant.motorlar.mimar_tasarim import sketch_from_text
+
+    try:
+        return await run_in_threadpool(
+            sketch_from_text, body.text, body.width, body.height, REPO_ROOT
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@app.post("/api/mimar/tasarim/sketch/from-chat-handoff")
+async def api_mimar_tasarim_sketch_from_chat_handoff(
+    body: MimarTasarimChatHandoffBody,
+) -> dict[str, Any]:
+    from ilim_assistant.motorlar.mimar_tasarim import sketch_from_chat_handoff
+
+    try:
+        return await run_in_threadpool(
+            sketch_from_chat_handoff,
+            body.user,
+            body.assistant,
+            body.notes,
+            body.width,
+            body.height,
+            body.project_id,
+            REPO_ROOT,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+
+@app.post("/api/mimar/tasarim/project/duplicate")
+async def api_mimar_tasarim_project_duplicate(body: MimarTasarimDuplicateBody) -> dict[str, Any]:
+    from ilim_assistant.motorlar.mimar_tasarim import duplicate_project
+
+    try:
+        return await run_in_threadpool(duplicate_project, body.project_id, body.name, REPO_ROOT)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+
+@app.post("/api/mimar/tasarim/project/regenerate")
+async def api_mimar_tasarim_project_regenerate(body: MimarTasarimLoadBody) -> dict[str, Any]:
+    from ilim_assistant.motorlar.mimar_tasarim import regenerate_project
+
+    try:
+        return await run_in_threadpool(regenerate_project, body.project_id, REPO_ROOT)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+
+@app.get("/api/mimar/tasarim/project/export-png")
+def api_mimar_tasarim_project_export_png(project_id: str = Query("")):
+    from ilim_assistant.motorlar.mimar_tasarim import export_project_png, resolve_tasarim_rel
+
+    pid = (project_id or "").strip()
+    if not pid:
+        raise HTTPException(status_code=400, detail="project_id gerekli.")
+    try:
+        info = export_project_png(pid, REPO_ROOT)
+        target = resolve_tasarim_rel(info["rel"], REPO_ROOT)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    return FileResponse(str(target), media_type="image/png", filename=target.name)
+
+
+@app.post("/api/mimar/fotograf/ocr")
+async def api_mimar_fotograf_ocr(body: MimarFotoVoiceBody) -> dict[str, Any]:
+    from ilim_assistant.motorlar.mimar_fotograf import ocr_photo
+
+    try:
+        return await run_in_threadpool(ocr_photo, body.rel, REPO_ROOT, body.lang)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+
+@app.post("/api/mimar/fotograf/voice")
+async def api_mimar_fotograf_voice(body: MimarFotoVoiceBody) -> dict[str, Any]:
+    from ilim_assistant.motorlar.mimar_fotograf import prepare_voice_text
+
+    try:
+        return await run_in_threadpool(prepare_voice_text, body.rel, body.mode, REPO_ROOT)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
 
 
 @app.post("/api/code/run")

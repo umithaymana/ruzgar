@@ -4724,8 +4724,27 @@ function loadTercumeFileList() {
 function wireMimarAtolye() {
   if (!window.RuzgarMimarAtolye) return;
   window.RuzgarMimarAtolye.init({
+    api: API,
     flash: flashRuzgarDurum,
     getCurrentMode: () => currentMode,
+    speakText: speakStudioTranscript,
+    lastAssistantReply: () => lastAssistantReply,
+    getChatHandoff: () => {
+      const mode = currentMode === "okuma" ? "mimar" : currentMode;
+      const sess = getMotorChatSession(mode === "mimar" ? "mimar" : mode);
+      const h = sess?.history || [];
+      let user = "";
+      let assistant = String(lastAssistantReply || "").trim();
+      for (let i = h.length - 1; i >= 0; i--) {
+        const m = h[i];
+        if (!assistant && m.role === "assistant") assistant = String(m.content || "").trim();
+        if (m.role === "user") {
+          user = String(m.content || "").trim();
+          break;
+        }
+      }
+      return { user, assistant };
+    },
   });
 }
 

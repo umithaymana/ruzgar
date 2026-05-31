@@ -489,7 +489,7 @@
               <!-- Sayfa 1: Fotoğraf stüdyosu (bağımsız) -->
               <div class="mimar-panel mimar-panel-fotograf" id="mimar-panel-fotograf" data-mimar-page="fotograf">
                 <div class="mimar-panel-head">Fotoğraf — moderasyon, restorasyon, yapay ses</div>
-                <p class="mimar-panel-lead">Profesyonel fotoğraf işleme; eski fotoğraf yenileme; metin okutma ve konuşturma (Faz 4).</p>
+                <p class="mimar-panel-lead">Profesyonel moderasyon: döndür, renk, kırp — kayıt arşive yazılır (Faz 4F-1).</p>
                 <div class="mimar-foto-layout">
                   <aside class="mimar-foto-strip" aria-label="Fotoğraf listesi">
                     <div class="mimar-strip-head">
@@ -509,11 +509,64 @@
                       <img id="mimar-foto-preview-img" alt="" hidden />
                     </div>
                     <div class="mimar-foto-tools" role="toolbar" aria-label="Fotoğraf araçları">
-                      <button type="button" class="btn-secondary btn-compact" id="btn-mimar-foto-moderasyon" disabled title="Faz 4a">Moderasyon</button>
-                      <button type="button" class="btn-secondary btn-compact" id="btn-mimar-foto-restore" disabled title="Faz 4b">Restorasyon</button>
-                      <button type="button" class="btn-secondary btn-compact" id="btn-mimar-foto-tts" disabled title="Faz 4c">Metin oku</button>
-                      <button type="button" class="btn-secondary btn-compact" id="btn-mimar-foto-speak" disabled title="Faz 4c">Konuştur</button>
-                      <span class="mimar-foto-status" id="mimar-foto-status">Faz 4 — araçlar bağlanacak</span>
+                      <button type="button" class="btn-primary btn-compact" id="btn-mimar-foto-moderasyon">Moderasyon</button>
+                      <button type="button" class="btn-secondary btn-compact" id="btn-mimar-foto-restore">Restorasyon</button>
+                      <button type="button" class="btn-secondary btn-compact" id="btn-mimar-foto-tts" disabled title="OCR veya görsel betimlemesi okut">Metin oku</button>
+                      <button type="button" class="btn-secondary btn-compact" id="btn-mimar-foto-speak" disabled title="Fotoğraf hakkında konuştur">Konuştur</button>
+                      <span class="mimar-foto-status" id="mimar-foto-status">Fotoğraf seçin veya ekleyin</span>
+                    </div>
+                    <div class="mimar-foto-moderasyon" id="mimar-foto-moderasyon" hidden>
+                      <div class="mimar-foto-mod-head">Moderasyon — anında uygula, otomatik kaydedilir</div>
+                      <div class="mimar-foto-mod-row">
+                        <span class="mimar-foto-mod-label">Döndür</span>
+                        <button type="button" class="btn-secondary btn-compact" data-foto-op="rotate_left">↺ Sol</button>
+                        <button type="button" class="btn-secondary btn-compact" data-foto-op="rotate_right">↻ Sağ</button>
+                        <button type="button" class="btn-secondary btn-compact" data-foto-op="rotate_180">180°</button>
+                      </div>
+                      <div class="mimar-foto-mod-row">
+                        <span class="mimar-foto-mod-label">Renk</span>
+                        <button type="button" class="btn-secondary btn-compact" data-foto-op="preset_auto">Otomatik</button>
+                        <button type="button" class="btn-secondary btn-compact" data-foto-op="preset_bright">Parlak</button>
+                        <button type="button" class="btn-secondary btn-compact" data-foto-op="preset_contrast">Kontrast</button>
+                        <button type="button" class="btn-secondary btn-compact" data-foto-op="preset_sharp">Keskin</button>
+                        <button type="button" class="btn-secondary btn-compact" data-foto-op="preset_bw">S/B</button>
+                      </div>
+                      <div class="mimar-foto-mod-row">
+                        <span class="mimar-foto-mod-label">Kırp / poz</span>
+                        <button type="button" class="btn-secondary btn-compact" data-foto-op="crop_square">Kare kırp</button>
+                        <button type="button" class="btn-secondary btn-compact" data-foto-op="exposure_up">Açık</button>
+                        <button type="button" class="btn-secondary btn-compact" data-foto-op="exposure_down">Koyu</button>
+                        <button type="button" class="btn-secondary btn-compact" id="btn-mimar-foto-undo">Orijinal</button>
+                      </div>
+                    </div>
+                    <div class="mimar-foto-moderasyon mimar-foto-restoration" id="mimar-foto-restoration" hidden>
+                      <div class="mimar-foto-mod-head">Restorasyon — önce önizle, «Uygula» ile kaydet (Faz 4F-2)</div>
+                      <div class="mimar-foto-mod-row">
+                        <span class="mimar-foto-mod-label">Renk</span>
+                        <button type="button" class="btn-secondary btn-compact" data-restore-op="restore_fade">Soluk düzelt</button>
+                        <button type="button" class="btn-secondary btn-compact" data-restore-op="restore_vintage">Eski foto</button>
+                      </div>
+                      <div class="mimar-foto-mod-row">
+                        <span class="mimar-foto-mod-label">Onar</span>
+                        <button type="button" class="btn-secondary btn-compact" data-restore-op="restore_denoise">Gürültü</button>
+                        <button type="button" class="btn-secondary btn-compact" data-restore-op="restore_scratches">Çizik/leke</button>
+                        <button type="button" class="btn-secondary btn-compact" data-restore-op="restore_sharpen">Netlik</button>
+                      </div>
+                      <div class="mimar-foto-mod-row">
+                        <span class="mimar-foto-mod-label">Boyut</span>
+                        <button type="button" class="btn-secondary btn-compact" data-restore-op="restore_upscale">2× büyüt</button>
+                        <button type="button" class="btn-primary btn-compact" data-restore-op="restore_full">Tam restorasyon</button>
+                        <button type="button" class="btn-secondary btn-compact" id="btn-mimar-foto-restore-apply" disabled>Uygula</button>
+                        <button type="button" class="btn-secondary btn-compact" id="btn-mimar-foto-restore-cancel">İptal</button>
+                      </div>
+                    </div>
+                    <div class="mimar-foto-moderasyon mimar-foto-voice" id="mimar-foto-voice" hidden>
+                      <div class="mimar-foto-mod-head">Ses — OCR / görsel betimlemesi (Faz 4F-3)</div>
+                      <textarea class="mimar-foto-voice-text" id="mimar-foto-voice-text" rows="4" readonly placeholder="«Metin oku» veya «Konuştur» ile metin burada görünür…"></textarea>
+                      <div class="mimar-foto-mod-row">
+                        <button type="button" class="btn-secondary btn-compact" id="btn-mimar-foto-voice-speak">Tekrar oku</button>
+                        <button type="button" class="btn-secondary btn-compact" id="btn-mimar-foto-voice-hide">Kapat</button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -522,7 +575,7 @@
               <!-- Sayfa 2: Sanat galerisi (bağımsız) -->
               <div class="mimar-panel mimar-panel-resim-sanat" id="mimar-panel-resim-sanat" hidden data-mimar-page="resim-sanat">
                 <div class="mimar-panel-head">Resim · Sanat — galeri ve inceleme</div>
-                <p class="mimar-panel-lead">Eser tanıma, çizim ve kopya çıkarma; galeri genişletilecek (Faz 4).</p>
+                <p class="mimar-panel-lead">Galeri, metadata, hızlı tanıma ve detaylı eser raporu (Faz 4S-1/2).</p>
                 <div class="mimar-sanat-layout">
                   <div class="mimar-sanat-gallery" id="mimar-sanat-gallery">
                     <label class="mimar-sanat-tile mimar-sanat-tile-add">
@@ -535,10 +588,22 @@
                       <span class="mimar-sanat-preview-hint">Galeriden eser seçin</span>
                     </div>
                     <div class="mimar-sanat-tools">
-                      <button type="button" class="btn-primary btn-compact" id="btn-mimar-sanat-tani" disabled title="Faz 4">Eseri tanı</button>
-                      <button type="button" class="btn-secondary btn-compact" id="btn-mimar-sanat-ciz" disabled title="Faz 4">Çiz / eskiz</button>
-                      <button type="button" class="btn-secondary btn-compact" id="btn-mimar-sanat-kopya" disabled title="Faz 4">Kopya çıkar</button>
+                      <button type="button" class="btn-primary btn-compact" id="btn-mimar-sanat-tani" disabled title="Hızlı tanıma">Eseri tanı</button>
+                      <button type="button" class="btn-secondary btn-compact" id="btn-mimar-sanat-analyze" disabled title="Stil, kompozisyon, tarih — Gemini">Detaylı rapor</button>
+                      <button type="button" class="btn-secondary btn-compact" id="btn-mimar-sanat-save-meta" disabled>Kaydet</button>
+                      <button type="button" class="btn-secondary btn-compact" id="btn-mimar-sanat-ciz" disabled title="Eser üzerine eskiz katmanı">Çiz / eskiz</button>
+                      <button type="button" class="btn-secondary btn-compact" id="btn-mimar-sanat-sketch-dl" disabled title="SVG indir">SVG</button>
+                      <button type="button" class="btn-secondary btn-compact" id="btn-mimar-sanat-kopya" disabled title="Trace / poster / kalem kopya">Kopya çıkar</button>
+                      <button type="button" class="btn-secondary btn-compact" id="btn-mimar-sanat-copy-view" disabled title="Orijinal ↔ kopya">Kopya gör</button>
                     </div>
+                    <div class="mimar-sanat-meta" id="mimar-sanat-meta">
+                      <label class="mimar-sanat-meta-row"><span>Başlık</span><input type="text" id="mimar-sanat-title" maxlength="240" placeholder="Eser adı" /></label>
+                      <label class="mimar-sanat-meta-row"><span>Sanatçı</span><input type="text" id="mimar-sanat-artist" maxlength="240" placeholder="Sanatçı" /></label>
+                      <label class="mimar-sanat-meta-row"><span>Dönem</span><input type="text" id="mimar-sanat-period" maxlength="240" placeholder="Dönem / akım" /></label>
+                      <label class="mimar-sanat-meta-row"><span>Teknik</span><input type="text" id="mimar-sanat-technique" maxlength="240" placeholder="Tuval, suluboya…" /></label>
+                    </div>
+                    <div class="mimar-sanat-report" id="mimar-sanat-report" hidden></div>
+                    <span class="mimar-sanat-status" id="mimar-sanat-status"></span>
                     <textarea id="mimar-sanat-notes" class="mimar-sanat-notes" rows="8" placeholder="Sanat notu, dönem, sanatçı, kompozisyon…"></textarea>
                   </aside>
                 </div>
@@ -547,23 +612,35 @@
               <!-- Sayfa 3: Tasarım / çizim (bağımsız) -->
               <div class="mimar-panel mimar-panel-tasarim" id="mimar-panel-tasarim" hidden data-mimar-page="tasarim">
                 <div class="mimar-panel-head">Tasarım — çizim ve mimari</div>
-                <p class="mimar-panel-lead">Resimden çizim, sohbet/konuşma ile betimleme, kayıtlı mimari projeler (Faz 4).</p>
+                <p class="mimar-panel-lead">Referans, sohbet handoff, kayıtlı mimari arşiv (Faz 4T-1/2/3).</p>
                 <div class="mimar-tasarim-layout">
                   <div class="mimar-tasarim-toolbar">
-                    <button type="button" class="btn-secondary btn-compact" id="btn-mimar-tasarim-from-image" disabled title="Faz 4a">Resimden çiz</button>
-                    <button type="button" class="btn-secondary btn-compact" id="btn-mimar-tasarim-from-chat" disabled title="Faz 4a">Sohbetten çiz</button>
-                    <button type="button" class="btn-secondary btn-compact" id="btn-mimar-tasarim-archives" disabled title="Faz 4b">Kayıtlı mimari</button>
+                    <button type="button" class="btn-primary btn-compact" id="btn-mimar-tasarim-from-image" title="Referans görselden eskiz">Resimden çiz</button>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-mimar-tasarim-from-chat" title="Sohbet + not → tuval">Sohbetten çiz</button>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-mimar-tasarim-save">Kaydet</button>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-mimar-tasarim-regenerate" title="Kayıtlı projeyi yeniden üret">Yeniden üret</button>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-mimar-tasarim-duplicate" title="Proje kopyası">Kopyala</button>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-mimar-tasarim-export" title="PNG dışa aktar">PNG</button>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-mimar-tasarim-new">Yeni proje</button>
                     <label class="btn-secondary btn-compact mimar-file-btn">
                       Referans
                       <input type="file" id="mimar-tasarim-ref-file" hidden accept="image/*" />
                     </label>
+                    <span class="mimar-tasarim-status" id="mimar-tasarim-status">Tuval hazır</span>
                   </div>
                   <div class="mimar-tasarim-stage">
                     <canvas id="mimar-tasarim-canvas" class="mimar-tasarim-canvas" width="960" height="540" aria-label="Tasarım tuvali"></canvas>
-                    <p class="mimar-tasarim-canvas-hint" id="mimar-tasarim-hint">Tuval hazır — Faz 4 ile çizim motoru bağlanacak.</p>
+                    <p class="mimar-tasarim-canvas-hint" id="mimar-tasarim-hint">Sol tık sürükle: el çizimi · Katmanlar sağda</p>
                   </div>
                   <aside class="mimar-tasarim-side">
-                    <div class="mimar-tasarim-side-head">Katmanlar / not</div>
+                    <div class="mimar-tasarim-side-head">Kayıtlı projeler</div>
+                    <div class="mimar-tasarim-project-row">
+                      <select id="mimar-tasarim-project-select" class="mimar-tasarim-project-select" aria-label="Kayıtlı proje">
+                        <option value="">— Proje seç —</option>
+                      </select>
+                      <button type="button" class="btn-secondary btn-compact" id="btn-mimar-tasarim-load">Aç</button>
+                    </div>
+                    <div class="mimar-tasarim-side-head">Katmanlar</div>
                     <ul class="mimar-tasarim-layers" id="mimar-tasarim-layers">
                       <li class="mimar-layer-empty">Henüz katman yok</li>
                     </ul>
@@ -1637,9 +1714,9 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
     </div>
 
     <link rel="stylesheet" href="tercume-atolye.css?v=20260529-okuma-chat" />
-    <link rel="stylesheet" href="mimar-atolye.css?v=20260529-faz4-shell" />
+    <link rel="stylesheet" href="mimar-atolye.css?v=20260531-f4final" />
     <script src="tercume-atolye.js?v=20260531-atolye-shell"></script>
-    <script src="mimar-atolye.js?v=20260529-faz4-shell"></script>
-    <script src="app.js?v=20260529-faz4-shell"></script>
+    <script src="mimar-atolye.js?v=20260531-f4final"></script>
+    <script src="app.js?v=20260531-f4f1"></script>
   </body>
 </html>

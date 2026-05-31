@@ -91,12 +91,16 @@ Mimar Motoru (UI kabuğu + ortak sohbet)
 ## Uygulama sırası (öneri)
 
 1. **4.0** — Panel görünürlük düzeltmesi + 3 farklı UI iskeleti ✅ (bu commit)
-2. **4F-1** — Fotoğraf: yükleme + moderasyon (kırp/döndür/kaydet)
-3. **4F-2** — Restorasyon (basit filtre + upscale denemesi)
-4. **4F-3** — OCR + TTS köprüsü (ses motoru)
-5. **4S-1** — Galeri metadata + eser tanıma
-6. **4T-1** — Canvas çizim API + sohbetten betimleme
-7. **4S-2 / 4T-2 / 4T-3** — sırayla genişletme
+2. **4F-1** — Fotoğraf: yükleme + moderasyon (kırp/döndür/kaydet) ✅
+3. **4F-2** — Restorasyon (soluk/çizik/gürültü/2×/tam + önizleme) ✅
+4. **4F-3** — OCR + TTS köprüsü (ses motoru) ✅
+5. **4S-1** — Galeri metadata + eser tanıma ✅
+6. **4T-1** — Canvas çizim API + sohbetten betimleme ✅
+7. **4S-2** — Detaylı eser tanıma (Gemini rapor) ✅
+8. **4S-3** — Referans üzerine eskiz katmanı + SVG ✅
+9. **4S-4** — Stil kopya (trace / poster / pencil) ✅
+10. **4T-2** — Sohbet handoff → tuval ✅
+11. **4T-3** — Kayıtlı mimari yenileme, kopya, PNG ✅
 
 ---
 

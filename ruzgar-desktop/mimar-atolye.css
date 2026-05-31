@@ -236,6 +236,72 @@ body[data-motor="mimar"][data-mimar-tab="tasarim"] #mimar-panel-tasarim {
   margin-left: auto;
 }
 
+.mimar-foto-preview.is-drag {
+  border-color: #3794ff;
+  background: #1a2433;
+}
+
+.mimar-foto-moderasyon {
+  flex-shrink: 0;
+  border: 1px solid #3c3c3c;
+  border-radius: 6px;
+  background: #252526;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mimar-foto-moderasyon[hidden],
+.mimar-foto-restoration[hidden],
+.mimar-foto-voice[hidden] {
+  display: none !important;
+}
+
+.mimar-foto-restoration {
+  border-color: #4a4030;
+  background: #2a2520;
+}
+
+.mimar-foto-voice {
+  border-color: #304a40;
+  background: #202824;
+}
+
+.mimar-foto-voice-text {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 72px;
+  max-height: 180px;
+  font: 12px/1.45 Consolas, "Segoe UI", sans-serif;
+  color: #d4d4d4;
+  background: #1e1e1e;
+  border: 1px solid #3c3c3c;
+  border-radius: 4px;
+  padding: 6px 8px;
+}
+
+.mimar-foto-mod-head {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9cdcfe;
+}
+
+.mimar-foto-mod-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.mimar-foto-mod-label {
+  font-size: 10px;
+  color: #888;
+  min-width: 52px;
+  flex-shrink: 0;
+}
+
 /* —— Sayfa 2: Sanat galerisi —— */
 .mimar-sanat-layout {
   flex: 1;
@@ -297,22 +363,152 @@ body[data-motor="mimar"][data-mimar-tab="tasarim"] #mimar-panel-tasarim {
   max-height: 280px;
   border: 1px solid #3c3c3c;
   border-radius: 4px;
-  background: #141414;
+  background: #111;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  position: relative;
 }
-.mimar-sanat-preview img {
+
+.mimar-sanat-preview-img {
+  display: block;
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
+}
+
+.mimar-sanat-sketch-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.mimar-sanat-preview-hint {
+  color: #666;
+  font-size: 12px;
+  padding: 12px;
+  text-align: center;
 }
 
 .mimar-sanat-tools {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+}
+
+.mimar-sanat-gallery-empty {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  color: #888;
+  padding: 8px;
+}
+
+.mimar-sanat-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mimar-sanat-meta-row {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: #888;
+}
+
+.mimar-sanat-meta-row input {
+  font: 12px Segoe UI, sans-serif;
+  color: #d4d4d4;
+  background: #1e1e1e;
+  border: 1px solid #3c3c3c;
+  border-radius: 4px;
+  padding: 4px 6px;
+  min-width: 0;
+}
+
+.mimar-sanat-report {
+  border: 1px solid #3a4a3a;
+  border-radius: 6px;
+  background: #1a221a;
+  padding: 8px 10px;
+  max-height: 180px;
+  overflow-y: auto;
+  font-size: 11px;
+  color: #c8d8c8;
+}
+
+.mimar-sanat-report[hidden] {
+  display: none !important;
+}
+
+.mimar-sanat-report-head {
+  font-weight: 600;
+  color: #9cdcfe;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mimar-sanat-conf {
+  font-size: 9px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #333;
+  color: #aaa;
+  font-weight: 500;
+}
+.mimar-sanat-conf--yüksek,
+.mimar-sanat-conf--yuksek {
+  background: #1e3a1e;
+  color: #8fdc8f;
+}
+.mimar-sanat-conf--orta {
+  background: #3a3a1e;
+  color: #dcdc8f;
+}
+.mimar-sanat-conf--düşük,
+.mimar-sanat-conf--dusuk {
+  background: #3a1e1e;
+  color: #dc8f8f;
+}
+
+.mimar-sanat-report-sum {
+  margin: 0 0 6px;
+  line-height: 1.45;
+}
+
+.mimar-sanat-report-dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 2px 8px;
+}
+.mimar-sanat-report-dl dt {
+  color: #888;
+  margin: 0;
+}
+.mimar-sanat-report-dl dd {
+  margin: 0;
+}
+
+.mimar-sanat-report-sim,
+.mimar-sanat-report-tips {
+  margin: 6px 0 0;
+  color: #aaa;
+  font-size: 10px;
+}
+
+.mimar-sanat-status {
+  font-size: 10px;
+  color: #888;
+  min-height: 14px;
 }
 
 .mimar-sanat-notes {
@@ -388,6 +584,47 @@ body[data-motor="mimar"][data-mimar-tab="tasarim"] #mimar-panel-tasarim {
   border-radius: 4px;
   background: #252526;
   padding: 8px;
+}
+
+.mimar-tasarim-status {
+  font-size: 10px;
+  color: #888;
+  margin-left: auto;
+  align-self: center;
+}
+
+.mimar-tasarim-project-row {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.mimar-tasarim-project-select {
+  flex: 1;
+  min-width: 0;
+  font: 11px Segoe UI, sans-serif;
+  color: #d4d4d4;
+  background: #1e1e1e;
+  border: 1px solid #3c3c3c;
+  border-radius: 4px;
+  padding: 3px 4px;
+}
+
+.mimar-layer-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 11px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #ccc;
+}
+.mimar-layer-item.is-hidden {
+  opacity: 0.45;
+}
+.mimar-layer-item small {
+  color: #666;
 }
 
 .mimar-tasarim-side-head {
