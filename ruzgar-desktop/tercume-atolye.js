@@ -1152,14 +1152,23 @@ ${chunk}`;
     );
   }
 
-  function setTercumeTab(tab) {
+  function normalizeTercumeTab(tab) {
     const t = String(tab || "calisma").trim() || "calisma";
+    if (t === "sohbet") return "calisma";
+    return t;
+  }
+
+  function setTercumeTab(tab) {
+    const t = normalizeTercumeTab(tab);
     document.body.dataset.tercumeTab = t;
     document.querySelectorAll(".tercume-view-tab").forEach((btn) => {
       btn.classList.toggle("is-active", btn.dataset.tercumeTab === t);
     });
     const wb = $("tercume-workbench");
+    const pasifSlot = $("tercume-pasif-slot");
+    if (pasifSlot) pasifSlot.hidden = t !== "pasif";
     if (wb) {
+      wb.hidden = t === "pasif";
       wb.classList.remove("tercume-workbench--ara", "tercume-workbench--calisma", "tercume-workbench--okuma");
       if (t === "ara") wb.classList.add("tercume-workbench--ara");
       else if (t === "okuma") wb.classList.add("tercume-workbench--okuma");
@@ -1190,7 +1199,7 @@ ${chunk}`;
     if (tabs) tabs.hidden = !isTercume;
     if (isTercume) {
       document.body.dataset.motor = "tercume";
-      const cur = document.body.dataset.tercumeTab || "calisma";
+      const cur = normalizeTercumeTab(document.body.dataset.tercumeTab || "calisma");
       setTercumeTab(cur);
       void refreshOcrWarning();
       void refreshReadiness();
@@ -1206,9 +1215,10 @@ ${chunk}`;
     bar.dataset.wired = "1";
     bar.querySelectorAll(".tercume-view-tab").forEach((btn) => {
       btn.addEventListener("click", () => {
-        setTercumeTab(btn.dataset.tercumeTab || "calisma");
-        const labels = { sohbet: "Sohbet", calisma: "Çalışma", ara: "Eser ara", okuma: "Okuma" };
-        flash(`Görünüm: ${labels[btn.dataset.tercumeTab] || btn.dataset.tercumeTab}`);
+        const raw = btn.dataset.tercumeTab || "calisma";
+        setTercumeTab(raw);
+        const labels = { pasif: "Yakında (pasif)", calisma: "Çalışma", ara: "Eser ara", okuma: "Okuma" };
+        flash(`Görünüm: ${labels[raw] || raw}`);
       });
     });
   }

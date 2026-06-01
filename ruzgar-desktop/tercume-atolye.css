@@ -101,35 +101,21 @@ body[data-motor="tercume"] #tercume-center-row {
   min-width: 0;
   overflow: hidden;
 }
-body[data-motor="tercume"][data-tercume-tab="sohbet"] .panel-chat {
-  display: flex !important;
-  flex: 1 1 auto;
-  width: auto;
-  max-width: none;
-}
-body[data-motor="tercume"][data-tercume-tab="sohbet"] .panel-main {
-  display: none !important;
-}
+/* Yan sohbet — Çalışma, Eser ara, Okuma */
 body[data-motor="tercume"][data-tercume-tab="calisma"] .panel-chat,
-body[data-motor="tercume"][data-tercume-tab="ara"] .panel-chat {
-  display: none !important;
-}
-body[data-motor="tercume"][data-tercume-tab="calisma"] .panel-main,
-body[data-motor="tercume"][data-tercume-tab="ara"] .panel-main {
-  display: flex !important;
-  flex: 1 1 auto;
-  min-width: 0;
-  padding: 6px;
-}
+body[data-motor="tercume"][data-tercume-tab="ara"] .panel-chat,
 body[data-motor="tercume"][data-tercume-tab="okuma"] .panel-chat {
   display: flex !important;
   flex-direction: column;
-  flex: 0 0 clamp(280px, 30vw, 380px);
+  flex: 0 0 clamp(260px, 28vw, 360px);
   width: auto;
-  min-width: 260px;
+  min-width: 240px;
   min-height: 0;
   max-height: none;
+  border-right: 1px solid #3c3c3c;
 }
+body[data-motor="tercume"][data-tercume-tab="calisma"] .panel-main,
+body[data-motor="tercume"][data-tercume-tab="ara"] .panel-main,
 body[data-motor="tercume"][data-tercume-tab="okuma"] .panel-main {
   display: flex !important;
   flex: 1 1 auto;
@@ -137,8 +123,61 @@ body[data-motor="tercume"][data-tercume-tab="okuma"] .panel-main {
   min-height: 0;
   padding: 6px;
 }
-body[data-motor="tercume"][data-tercume-tab="okuma"] #page-tercume .tercume-help-fold {
+/* Pasif «Yakında» sekmesi — sohbet yok, ileride başka içerik */
+body[data-motor="tercume"][data-tercume-tab="pasif"] .panel-chat {
   display: none !important;
+}
+body[data-motor="tercume"][data-tercume-tab="pasif"] .panel-main {
+  display: flex !important;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 12px;
+  align-items: center;
+  justify-content: center;
+}
+body[data-motor="tercume"][data-tercume-tab="pasif"] #tercume-workbench {
+  display: none !important;
+}
+body[data-motor="tercume"][data-tercume-tab="pasif"] #tercume-pasif-slot {
+  display: flex !important;
+}
+body[data-motor="tercume"][data-tercume-tab="pasif"] #page-tercume .tercume-help-fold {
+  display: none !important;
+}
+#page-tercume .tercume-pasif-slot {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  max-width: 520px;
+  margin: auto;
+  padding: 24px;
+  text-align: center;
+  border: 1px dashed #4a4a4a;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+}
+#page-tercume .tercume-pasif-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #9cdcfe;
+}
+#page-tercume .tercume-pasif-lead {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #a0a0a0;
+}
+.tercume-view-tab--pasif {
+  opacity: 0.55;
+  font-style: italic;
+}
+.tercume-view-tab--pasif.is-active {
+  opacity: 0.85;
+  border-bottom-color: #666;
 }
 
 #page-tercume .tercume-workbench {

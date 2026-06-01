@@ -152,8 +152,14 @@
         aria-label="Tercüme görünümü"
         hidden
       >
-        <button type="button" class="tercume-view-tab" data-tercume-tab="sohbet" role="tab">
-          Sohbet
+        <button
+          type="button"
+          class="tercume-view-tab tercume-view-tab--pasif"
+          data-tercume-tab="pasif"
+          role="tab"
+          title="İleride yeni özellik — şimdilik pasif"
+        >
+          Yakında
         </button>
         <button type="button" class="tercume-view-tab is-active" data-tercume-tab="calisma" role="tab">
           Çalışma
@@ -687,8 +693,16 @@
             <details class="tercume-help-fold">
               <summary>Yardım (katla)</summary>
               Klasör yolu → liste · EPUB/PDF/DOCX/görsel aç · Çevir modu: tek parça / sayfa sayfa / tamam (yavaş) ·
-              Ctrl+tekerlek yakınlaştır · Çırak günlüğü programlama motoru için okunur.
+              Ctrl+tekerlek yakınlaştır · Çırak günlüğü programlama motoru için okunur · Sohbet: sağdaki panel (Çalışma / Eser ara / Okuma).
             </details>
+            <div id="tercume-pasif-slot" class="tercume-pasif-slot" hidden aria-label="Yakında">
+              <p class="tercume-pasif-title">Bu alan ayrıldı</p>
+              <p class="tercume-pasif-lead">
+                Eski «yalnız sohbet» sekmesi kapatıldı. Sohbet artık <strong>Çalışma</strong>,
+                <strong>Eser ara</strong> ve <strong>Okuma</strong> görünümlerinde soldaki paneldedir.
+                Buraya ileride başka bir özellik eklenecek.
+              </p>
+            </div>
             <div class="tercume-workbench tercume-workbench--calisma" id="tercume-workbench">
               <aside class="tercume-sidebar">
                 <div class="code-sidebar-head okuma-sidebar-head">
@@ -1748,9 +1762,9 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
       <button type="button" data-act="paste">Yapıştır</button>
     </div>
 
-    <link rel="stylesheet" href="tercume-atolye.css?v=20260529-okuma-chat" />
+    <link rel="stylesheet" href="tercume-atolye.css?v=20260601-tercume-chat-split" />
     <link rel="stylesheet" href="mimar-atolye.css?v=20260601-mimar-polish" />
-    <script src="tercume-atolye.js?v=20260531-atolye-shell"></script>
+    <script src="tercume-atolye.js?v=20260601-tercume-chat-split"></script>
     <script src="mimar-atolye.js?v=20260601-faz5"></script>
     <script src="app.js?v=20260601-motor-tip"></script>
   </body>
