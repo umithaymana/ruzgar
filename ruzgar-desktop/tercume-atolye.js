@@ -3,6 +3,11 @@
  */
 (function initTercumeAtolyeModule(global) {
   const LS_WORK_ROOT = "ruzgar_tercume_work_root";
+  const LS_PAGE_JOB = "ruzgar_tercume_page_job_id";
+  const QUALITY_PASS = 55;
+  const QUALITY_WARN = 75;
+
+  let lastTranslateContext = null;
   const EBOOK_EXTS = [".epub", ".fb2", ".mobi", ".azw", ".azw3", ".kfx", ".djvu", ".djv", ".rtf"];
   const IMAGE_EXTS = [".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tif", ".tiff"];
 
@@ -709,9 +714,381 @@
   let batchPollTimer = null;
   let activeBatchJobId = null;
 
+  function clearPageJobStorage() {
+    try {
+      localStorage.removeItem(LS_PAGE_JOB);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  function setPageJobStorage(jobId) {
+    try {
+      if (jobId) localStorage.setItem(LS_PAGE_JOB, String(jobId));
+    } catch {
+      /* ignore */
+    }
+  }
+
+  function showJobPanel(show) {
+    const panel = $("tercume-job-panel");
+    if (panel) panel.hidden = !show;
+  }
+
+  function qualityTier(score) {
+    if (score == null || !Number.isFinite(Number(score))) return "unknown";
+    const s = Number(score);
+    if (s >= QUALITY_WARN) return "good";
+    if (s >= QUALITY_PASS) return "warn";
+    return "bad";
+  }
+
+  function hideQualityStrip() {
+    const strip = $("tercume-quality-strip");
+    const retryBtn = $("btn-tercume-retry-quality");
+    if (strip) strip.hidden = true;
+    if (retryBtn) retryBtn.hidden = true;
+    lastTranslateContext = null;
+  }
+
+  function updateQualityStrip(quality, contextLabel) {
+    const strip = $("tercume-quality-strip");
+    const badge = $("tercume-quality-badge");
+    const detail = $("tercume-quality-detail");
+    const issuesEl = $("tercume-quality-issues");
+    const retryBtn = $("btn-tercume-retry-quality");
+    if (!strip || !badge) return;
+    if (!quality || quality.score == null || !Number.isFinite(Number(quality.score))) {
+      strip.hidden = true;
+      if (retryBtn) retryBtn.hidden = true;
+      return;
+    }
+    const score = Number(quality.score);
+    const tier = qualityTier(score);
+    strip.hidden = false;
+    badge.textContent = String(Math.round(score * 10) / 10);
+    badge.className = `tercume-quality-badge tercume-quality-${tier}`;
+    const label = String(contextLabel || "Son parça").trim();
+    const pass = quality.ok !== false && tier !== "bad";
+    if (detail) {
+      detail.textContent = pass
+        ? `${label} — kalite uygun`
+        : `${label} — düşük kalite, kontrol edin`;
+    }
+    const issues = Array.isArray(quality.issues) ? quality.issues.filter(Boolean) : [];
+    if (issuesEl) {
+      issuesEl.textContent = issues.length
+        ? issues.join(" · ")
+        : tier === "good"
+          ? "Belirgin sorun yok."
+          : "Skor düşük — metni gözden geçirin.";
+    }
+    if (retryBtn) {
+      retryBtn.hidden = !lastTranslateContext || tier === "good";
+    }
+  }
+
+  function updateQualityStripFromJob(j) {
+    const qs = j?.quality_summary;
+    if (qs && qs.avg_score != null && Number.isFinite(Number(qs.avg_score))) {
+      const low = Number(qs.low_count) || 0;
+      const issues = [];
+      if (low > 0) {
+        issues.push(`${low} sayfa skor < ${QUALITY_PASS}`);
+        const lp = Array.isArray(qs.low_pages) ? qs.low_pages : [];
+        if (lp.length) issues.push(lp.slice(0, 4).join(", "));
+      }
+      if (qs.min_score != null && Number(qs.min_score) < QUALITY_PASS) {
+        issues.push(`en düşük: ${qs.min_score}`);
+      }
+      updateQualityStrip(
+        {
+          score: Number(qs.avg_score),
+          ok: low === 0,
+          issues,
+        },
+        `Ortalama (${qs.pages_scored || "?"} sayfa)`,
+      );
+      if ($("btn-tercume-retry-quality")) $("btn-tercume-retry-quality").hidden = true;
+      return;
+    }
+    const outs = Array.isArray(j?.outputs) ? j.outputs : [];
+    const scored = outs.filter((o) => o.ok && o.quality_score != null);
+    if (!scored.length) {
+      hideQualityStrip();
+      return;
+    }
+    const scores = scored.map((o) => Number(o.quality_score));
+    const avg = Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10;
+    const low = scores.filter((s) => s < QUALITY_PASS).length;
+    updateQualityStrip(
+      {
+        score: avg,
+        ok: low === 0,
+        issues: low ? [`${low} düşük skorlu parça`] : [],
+      },
+      `Ortalama (${scores.length} parça)`,
+    );
+    if ($("btn-tercume-retry-quality")) $("btn-tercume-retry-quality").hidden = true;
+  }
+
+  async function retryLastChunkQuality() {
+    const ctx = lastTranslateContext;
+    if (!ctx?.sourceText) {
+      flash("Yeniden çevrilecek parça yok — önce Tek parça ile çevirin.");
+      return;
+    }
+    flash(`Yeniden çevriliyor: ${ctx.label || "parça"}…`);
+    try {
+      const hit = await translateChunkApi(String(ctx.sourceText), ctx.pageIndex);
+      if (ctx.mode === "single") {
+        setTargetText(hit.text);
+      }
+      updateQualityStrip(hit.quality, ctx.label || "Yeniden çeviri");
+      flash(
+        hit.quality?.ok === false
+          ? "Yeniden çevrildi — kalite hâlâ düşük, metni kontrol edin."
+          : "Yeniden çeviri tamamlandı.",
+      );
+      void refreshApprenticeLog();
+    } catch (e) {
+      flash(e.message || String(e));
+    }
+  }
+
+  function renderPageJobLog(outputs, summary) {
+    const ul = $("tercume-job-log");
+    const sum = $("tercume-job-summary");
+    if (!ul) return;
+    ul.innerHTML = "";
+    const rows = Array.isArray(outputs) ? outputs : [];
+    const tail = rows.length > 48 ? rows.slice(-48) : rows;
+    for (const o of tail) {
+      const li = document.createElement("li");
+      li.className = o.ok ? "tercume-job-log-ok" : "tercume-job-log-err";
+      const page = String(o.page || "?");
+      if (o.ok) {
+        const scNum = o.quality_score != null ? Number(o.quality_score) : null;
+        const sc = scNum != null ? ` · skor ${scNum}` : "";
+        if (scNum != null && scNum < QUALITY_PASS) {
+          li.className = "tercume-job-log-warn";
+          const iss = Array.isArray(o.quality_issues) ? o.quality_issues[0] : "";
+          li.textContent = `⚠ ${page}${sc}${iss ? ` — ${iss}` : ""}`;
+        } else {
+          li.textContent = `✓ ${page}${sc}`;
+        }
+      } else {
+        li.textContent = `✗ ${page}: ${String(o.error || "?").slice(0, 80)}`;
+      }
+      ul.appendChild(li);
+    }
+    if (sum && summary != null) sum.textContent = String(summary);
+    if (tail.length) ul.scrollTop = ul.scrollHeight;
+  }
+
+  function countJobOutputs(outputs) {
+    const rows = Array.isArray(outputs) ? outputs : [];
+    let okN = 0;
+    let errN = 0;
+    for (const o of rows) {
+      if (o.ok) okN += 1;
+      else errN += 1;
+    }
+    return { okN, errN };
+  }
+
+  async function finishPageRangeJob(j) {
+    hideProgress();
+    const outs = Array.isArray(j.outputs) ? j.outputs : [];
+    let okN = Number(j.ok_count);
+    let errN = Number(j.error_count);
+    if (!Number.isFinite(okN) || !Number.isFinite(errN)) {
+      const c = countJobOutputs(outs);
+      okN = c.okN;
+      errN = c.errN;
+    }
+    const partial = String(j.partial_text || "").trim();
+    if (partial) setTargetText(partial);
+    else if (j.output_rel) {
+      try {
+        setTargetText(await readWorkspaceText(String(j.output_rel)));
+      } catch (e) {
+        flash(`Dosyaya kaydedildi (${j.output_rel}); panel: ${e.message || e}`);
+      }
+    }
+    const saveInp = $("tercume-save-rel");
+    if (saveInp && j.output_rel) saveInp.value = String(j.output_rel);
+    syncSavePlaceholder();
+    clearPageJobStorage();
+    activeBatchJobId = null;
+    const qHint =
+      j.quality_summary?.low_count > 0
+        ? ` · ${j.quality_summary.low_count} düşük skor`
+        : j.quality_summary?.avg_score != null
+          ? ` · ort. ${j.quality_summary.avg_score}`
+          : "";
+    renderPageJobLog(outs, `${okN} başarılı · ${errN} hatalı${qHint}`);
+    updateQualityStripFromJob(j);
+    const lowN = Number(j.quality_summary?.low_count) || 0;
+    flash(
+      String(j.label || `Arka plan çevirisi bitti: ${okN}/${okN + errN}`) +
+        (lowN ? ` — ${lowN} sayfa düşük kalite.` : ""),
+    );
+    void refreshApprenticeLog();
+    void refreshBatchJobsList();
+  }
+
+  async function refreshBatchJobsList() {
+    const ul = $("tercume-job-recent-list");
+    if (!ul) return;
+    try {
+      const res = await fetch(`${api()}/api/tercume/batch-jobs?limit=10`);
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.ok || !Array.isArray(j.items)) return;
+      ul.innerHTML = "";
+      for (const it of j.items) {
+        const li = document.createElement("li");
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "tercume-job-recent-btn";
+        const relLeaf = String(it.rel || "").split("/").pop() || "dosya";
+        const st = String(it.status || "?");
+        const prog =
+          it.total != null && Number(it.total) > 0
+            ? `${it.done ?? 0}/${it.total}`
+            : String(it.label || "").slice(0, 40);
+        btn.textContent = `${st} · ${relLeaf} · ${prog}`;
+        btn.title = String(it.job_id || "");
+        btn.addEventListener("click", () => {
+          const jid = String(it.job_id || "").trim();
+          if (!jid) return;
+          if (st === "running" || st === "queued") {
+            if (batchPollTimer) {
+              flash("Zaten izlenen bir iş var.");
+              return;
+            }
+            activeBatchJobId = jid;
+            setPageJobStorage(jid);
+            showJobPanel(true);
+            flash("İşe yeniden bağlanıldı.");
+            pollBatchJob(jid, { pageRange: it.job_type === "page_range" });
+            return;
+          }
+          if (st === "done" && it.output_rel) {
+            void (async () => {
+              try {
+                const stRes = await fetch(
+                  `${api()}/api/tercume/batch-status?job_id=${encodeURIComponent(jid)}`,
+                );
+                const stJ = await stRes.json().catch(() => ({}));
+                if (stRes.ok && stJ.ok) await finishPageRangeJob(stJ);
+                else {
+                  setTargetText(await readWorkspaceText(String(it.output_rel)));
+                  const saveInp = $("tercume-save-rel");
+                  if (saveInp) saveInp.value = String(it.output_rel);
+                  flash(`Çıktı yüklendi: ${it.output_rel}`);
+                }
+              } catch (e) {
+                flash(e.message || String(e));
+              }
+            })();
+          }
+        });
+        li.appendChild(btn);
+        ul.appendChild(li);
+      }
+    } catch {
+      /* sessiz */
+    }
+  }
+
+  async function resumeActivePageJobIfAny() {
+    let jid = "";
+    try {
+      jid = localStorage.getItem(LS_PAGE_JOB) || "";
+    } catch {
+      return;
+    }
+    if (!jid || batchPollTimer) return;
+    try {
+      const res = await fetch(`${api()}/api/tercume/batch-status?job_id=${encodeURIComponent(jid)}`);
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.ok) {
+        clearPageJobStorage();
+        return;
+      }
+      if (j.job_type !== "page_range") {
+        clearPageJobStorage();
+        return;
+      }
+      if (j.status === "running" || j.status === "queued") {
+        activeBatchJobId = jid;
+        showJobPanel(true);
+        flash("Devam eden arka plan çevirisi bağlandı — sekme kapansa da sürer.");
+        pollBatchJob(jid, { pageRange: true });
+      } else if (j.status === "done") {
+        await finishPageRangeJob(j);
+      } else {
+        clearPageJobStorage();
+      }
+    } catch {
+      clearPageJobStorage();
+    }
+  }
+
+  async function startPageRangeJob(mode) {
+    if (!openRel) {
+      flash("Önce sol listeden dosya açın (PDF, TXT veya DOCX).");
+      return;
+    }
+    if (batchPollTimer) {
+      flash("Zaten bir arka plan işi çalışıyor — Durdur ile iptal edebilirsiniz.");
+      return;
+    }
+    const range = pageRangeParams();
+    const body = {
+      rel: openRel,
+      tgt_lang: String($("tercume-tgt-lang")?.value || "tr"),
+      src_lang: String($("tercume-src-lang")?.value || "auto"),
+      skip_empty: true,
+    };
+    if (mode === "range") {
+      if (range.page_from == null) {
+        flash("Başlangıç sayfası girin (ör. 1).");
+        return;
+      }
+      body.page_from = range.page_from;
+      body.page_to = range.page_to;
+    }
+    translateAbort = false;
+    setTargetText("");
+    showJobPanel(true);
+    renderPageJobLog([], "Kuyruğa alınıyor…");
+    showProgress(0, 1, "Arka plan çevirisi başlatılıyor…");
+    const res = await fetch(`${api()}/api/tercume/batch-start`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : j.error || `HTTP ${res.status}`);
+    if (!j.ok || !j.job_id) throw new Error(j.error || "İş başlatılamadı");
+    activeBatchJobId = j.job_id;
+    setPageJobStorage(j.job_id);
+    const modeHint =
+      mode === "range"
+        ? `sayfa ${range.label_from || "?"}–${range.label_to || "?"}`
+        : mode === "full"
+          ? "tamamı"
+          : "sayfa sayfa";
+    flash(`Arka planda çevriliyor (${modeHint}) — pencere kapansa da devam eder.`);
+    pollBatchJob(j.job_id, { pageRange: true });
+    void refreshBatchJobsList();
+  }
+
   async function startBatchCilt() {
     if (batchPollTimer) {
-      flash("Zaten bir cilt sırası işi çalışıyor.");
+      flash("Zaten bir arka plan işi çalışıyor (çeviri veya cilt sırası).");
       return;
     }
     const folder = String(workRoot || "ilim-assistant/arsiv").trim();
@@ -733,8 +1110,10 @@
     pollBatchJob(j.job_id);
   }
 
-  function pollBatchJob(jobId) {
+  function pollBatchJob(jobId, opts = {}) {
     if (batchPollTimer) clearInterval(batchPollTimer);
+    const pageRange = opts.pageRange === true;
+    const pollMs = pageRange ? 1200 : 2000;
     batchPollTimer = setInterval(async () => {
       try {
         const res = await fetch(`${api()}/api/tercume/batch-status?job_id=${encodeURIComponent(jobId)}`);
@@ -743,25 +1122,73 @@
         const total = Number(j.total) || 0;
         const done = Number(j.done) || 0;
         const label = j.label || j.current_file || j.status || `${done}/${total}`;
-        showProgress(done, total || 1, `Cilt sırası: ${label}`);
-        if (j.status === "done" || j.status === "cancelled") {
+        const isPage = pageRange || j.job_type === "page_range";
+
+        if (isPage) {
+          showJobPanel(true);
+          showProgress(done, total || 1, label);
+          if (j.partial_text) setTargetText(String(j.partial_text));
+          const outs = Array.isArray(j.outputs) ? j.outputs : [];
+          let okN = Number(j.ok_count);
+          let errN = Number(j.error_count);
+          if (!Number.isFinite(okN) || !Number.isFinite(errN)) {
+            const c = countJobOutputs(outs);
+            okN = c.okN;
+            errN = c.errN;
+          }
+          renderPageJobLog(outs, `${okN} ✓ · ${errN} ✗ · ${done}/${total || "?"}`);
+          if (j.quality_summary) updateQualityStripFromJob(j);
+        } else {
+          showProgress(done, total || 1, `Cilt sırası: ${label}`);
+        }
+
+        if (j.status === "done") {
           clearInterval(batchPollTimer);
           batchPollTimer = null;
           activeBatchJobId = null;
-          const okN = Array.isArray(j.outputs) ? j.outputs.filter((o) => o.ok).length : done;
-          flash(j.status === "done" ? `Cilt sırası bitti: ${okN}/${total} kaydedildi.` : "Cilt sırası iptal edildi.");
-          setTimeout(hideProgress, 2500);
+          if (isPage) {
+            await finishPageRangeJob(j);
+          } else {
+            const okN = Array.isArray(j.outputs) ? j.outputs.filter((o) => o.ok).length : done;
+            flash(`Cilt sırası bitti: ${okN}/${total} kaydedildi.`);
+            setTimeout(hideProgress, 2500);
+            void refreshBatchJobsList();
+          }
+          return;
+        }
+        if (j.status === "failed" || j.status === "cancelled") {
+          clearInterval(batchPollTimer);
+          batchPollTimer = null;
+          activeBatchJobId = null;
+          if (isPage) {
+            clearPageJobStorage();
+            if (j.partial_text) setTargetText(String(j.partial_text));
+            renderPageJobLog(j.outputs || [], String(j.error || j.label || j.status));
+            flash(String(j.error || j.label || (j.status === "cancelled" ? "İptal edildi." : "İş başarısız.")));
+          } else {
+            flash(j.status === "cancelled" ? "Cilt sırası iptal edildi." : String(j.error || "Cilt hatası"));
+            setTimeout(hideProgress, 2500);
+          }
+          void refreshBatchJobsList();
         }
       } catch {
         /* sessiz tekrar */
       }
-    }, 2000);
+    }, pollMs);
   }
 
   async function cancelBatchJob() {
-    if (!activeBatchJobId) return;
+    let jid = activeBatchJobId;
+    if (!jid) {
+      try {
+        jid = localStorage.getItem(LS_PAGE_JOB) || "";
+      } catch {
+        jid = "";
+      }
+    }
+    if (!jid) return;
     const fd = new FormData();
-    fd.append("job_id", activeBatchJobId);
+    fd.append("job_id", jid);
     await fetch(`${api()}/api/tercume/batch-cancel`, { method: "POST", body: fd });
   }
 
@@ -869,7 +1296,13 @@
       if (j.error_code) err.errorCode = j.error_code;
       throw err;
     }
-    return String(j.text || "");
+    const quality =
+      j.quality && typeof j.quality === "object"
+        ? j.quality
+        : j.quality_score != null
+          ? { score: j.quality_score, ok: true, issues: [] }
+          : null;
+    return { text: String(j.text || ""), quality };
   }
 
   async function runPagedTranslation(mode) {
@@ -919,7 +1352,7 @@
         pages = j.pages.filter((p) => String(p.text || "").trim());
       }
     } else {
-      pages = [{ index: 0, text: raw, label: "Tam metin" }];
+      pages = [{ index: 0, text: raw, label: "Tek parça" }];
     }
     if (!pages.length) {
       flash("Çevrilecek metin yok.");
@@ -928,14 +1361,26 @@
     setTargetText("");
     const delayMs = mode === "full" ? 400 : 120;
     const outParts = [];
+    const isSingle = mode !== "page" && mode !== "full" && mode !== "range";
     for (let i = 0; i < pages.length; i++) {
       if (translateAbort) break;
       const p = pages[i];
       showProgress(i + 1, pages.length, `Çevriliyor: ${p.label || i + 1}${p.quality === "low" ? " (zayıf)" : ""}`);
+      const srcText = String(p.text || "");
+      lastTranslateContext = {
+        sourceText: srcText,
+        pageIndex: p.index,
+        label: p.label || (isSingle ? "Tek parça" : `Parça ${i + 1}`),
+        mode: isSingle ? "single" : mode,
+      };
       try {
-        const tr = await translateChunkApi(String(p.text || ""), p.index);
-        outParts.push(tr);
+        const hit = await translateChunkApi(srcText, p.index);
+        outParts.push(hit.text);
         setTargetText(outParts.join("\n\n"));
+        updateQualityStrip(hit.quality, lastTranslateContext.label);
+        if (hit.quality && hit.quality.ok === false) {
+          flash(`Düşük kalite skoru (${hit.quality.score}) — «Yeniden çevir» veya metni düzeltin.`);
+        }
       } catch (e) {
         outParts.push(`[HATA ${p.label || i + 1}: ${e.message || e}]`);
         setTargetText(outParts.join("\n\n"));
@@ -1279,7 +1724,12 @@ ${chunk}`;
     $("btn-tercume-translate")?.addEventListener("click", () => {
       const mode = String($("tercume-translate-mode")?.value || "single");
       if (mode === "chat") void translateViaChat();
-      else if (mode === "page" || mode === "full" || mode === "range") void runPagedTranslation(mode);
+      else if (mode === "page" || mode === "full" || mode === "range")
+        void startPageRangeJob(mode).catch((e) => {
+          hideProgress();
+          showJobPanel(false);
+          flash(e.message || "Arka plan çevirisi başlatılamadı");
+        });
       else void runPagedTranslation("single");
     });
     $("btn-tercume-stop")?.addEventListener("click", () => {
@@ -1344,9 +1794,13 @@ ${chunk}`;
       setTargetText("");
       openRel = null;
       awaitingChatReply = false;
+      hideQualityStrip();
       updateActiveLabel();
       syncSavePlaceholder();
       fetch(`${api()}/api/tercume/memory-clear`, { method: "POST" }).catch(() => {});
+    });
+    $("btn-tercume-retry-quality")?.addEventListener("click", () => {
+      void retryLastChunkQuality().catch((e) => flash(e.message || String(e)));
     });
     $("btn-tercume-last-to-target")?.addEventListener("click", () => {
       const t = String(deps.lastAssistantReply?.() || "").trim();
@@ -1378,6 +1832,8 @@ ${chunk}`;
     void refreshApprenticeLog();
     void refreshOcrWarning();
     void refreshReadiness();
+    void resumeActivePageJobIfAny();
+    void refreshBatchJobsList();
   }
 
   global.RuzgarTercumeAtolye = {
@@ -1397,6 +1853,8 @@ ${chunk}`;
       void refreshApprenticeLog();
       const fold = $("tercume-arsiv-download-fold");
       if (fold?.open) void refreshArsivCatalog();
+      void resumeActivePageJobIfAny();
+      void refreshBatchJobsList();
     },
     onAssistantReply(text) {
       if (!awaitingChatReply) return;

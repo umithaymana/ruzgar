@@ -613,6 +613,70 @@ body[data-motor="tercume"][data-tercume-tab="pasif"] #page-tercume .tercume-help
 #page-tercume .tercume-readiness-warn strong {
   color: #c9b8ff;
 }
+#page-tercume .tercume-quality-strip {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 10px 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #3d4a5c;
+  background: #1e2430;
+  font-size: 11px;
+  color: #c5d0de;
+}
+#page-tercume .tercume-quality-strip[hidden] {
+  display: none !important;
+}
+#page-tercume .tercume-quality-badge {
+  flex-shrink: 0;
+  min-width: 40px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 13px;
+  text-align: center;
+  line-height: 1.2;
+}
+#page-tercume .tercume-quality-good {
+  background: #1e3a2a;
+  color: #7ec699;
+  border: 1px solid #3d6b52;
+}
+#page-tercume .tercume-quality-warn {
+  background: #3d3420;
+  color: #ffd580;
+  border: 1px solid #8a6d3b;
+}
+#page-tercume .tercume-quality-bad {
+  background: #3a2020;
+  color: #f48771;
+  border: 1px solid #8a4545;
+}
+#page-tercume .tercume-quality-unknown {
+  background: #2a2a2a;
+  color: #aaa;
+  border: 1px solid #444;
+}
+#page-tercume .tercume-quality-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+#page-tercume .tercume-quality-detail {
+  font-weight: 600;
+  color: #e0e6ee;
+}
+#page-tercume .tercume-quality-issues {
+  font-size: 10px;
+  color: #9aa8b8;
+  line-height: 1.35;
+}
+#page-tercume .tercume-job-log-warn {
+  color: #ffd580;
+}
 #page-tercume .tercume-progress-wrap {
   padding: 4px 10px;
   border-bottom: 1px solid #2a2a2a;
@@ -636,6 +700,91 @@ body[data-motor="tercume"][data-tercume-tab="pasif"] #page-tercume .tercume-help
   font-size: 10px;
   color: #858585;
   margin-top: 2px;
+}
+
+#page-tercume .tercume-job-panel {
+  margin: 0 10px 8px;
+  padding: 8px 10px;
+  border: 1px solid #3a3f4a;
+  border-radius: 6px;
+  background: #252830;
+  max-height: 140px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+#page-tercume .tercume-job-panel[hidden] {
+  display: none !important;
+}
+#page-tercume .tercume-job-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  color: #c8c8c8;
+}
+#page-tercume .tercume-job-summary {
+  font-size: 10px;
+  color: #8a9bb5;
+  text-align: right;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#page-tercume .tercume-job-log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 10px;
+  line-height: 1.35;
+  overflow-y: auto;
+  max-height: 72px;
+  font-family: ui-monospace, Consolas, monospace;
+}
+#page-tercume .tercume-job-log li {
+  padding: 1px 0;
+}
+#page-tercume .tercume-job-log-ok {
+  color: #7ec699;
+}
+#page-tercume .tercume-job-log-err {
+  color: #f48771;
+}
+#page-tercume .tercume-job-recent-fold {
+  font-size: 10px;
+  color: #858585;
+}
+#page-tercume .tercume-job-recent-fold summary {
+  cursor: pointer;
+  user-select: none;
+}
+#page-tercume .tercume-job-recent-list {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  max-height: 64px;
+  overflow-y: auto;
+}
+#page-tercume .tercume-job-recent-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 3px 6px;
+  margin: 2px 0;
+  border: 1px solid #3a3f4a;
+  border-radius: 4px;
+  background: #1e1e1e;
+  color: #b0b0b0;
+  font-size: 10px;
+  cursor: pointer;
+}
+#page-tercume .tercume-job-recent-btn:hover {
+  border-color: #0e639c;
+  color: #e0e0e0;
 }
 
 #page-tercume .tercume-panels {

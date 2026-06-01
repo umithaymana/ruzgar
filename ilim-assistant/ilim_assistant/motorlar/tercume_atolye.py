@@ -572,7 +572,22 @@ def workbench_config() -> dict[str, Any]:
             "/api/tercume/batch-start",
             "/api/tercume/batch-status",
             "/api/tercume/batch-cancel",
+            "/api/tercume/batch-jobs",
         ],
+        "batch_faz14a": {
+            "version": "tercume-batch-faz14a-2026-05-29",
+            "page_range_background": True,
+            "partial_text_live": True,
+            "resume_job_storage": ".ruzgar/tercume_jobs",
+        },
+        "quality_faz14b": {
+            "version": "tercume-quality-faz14b-2026-05-29",
+            "translate_chunk_score": True,
+            "pass_score": 55,
+            "warn_score": 75,
+            "ui_strip": True,
+            "job_quality_summary": True,
+        },
         "read_routes": [
             "/api/tercume/read-start",
             "/api/tercume/read-status",

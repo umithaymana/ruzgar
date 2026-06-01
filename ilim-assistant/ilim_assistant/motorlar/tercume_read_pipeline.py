@@ -318,6 +318,18 @@ def extract_source_pages(
             "error": f"Okuma pipeline: {ext} henüz desteklenmiyor (pdf/txt/docx/görsel).",
         }
 
+    if page_from is not None or page_to is not None:
+        start = max(0, int(page_from)) if page_from is not None else 0
+        end = (
+            min(len(pages), int(page_to) + 1)
+            if page_to is not None
+            else len(pages)
+        )
+        if start > 0 or end < len(pages):
+            pages = pages[start:end]
+            meta["page_from"] = start
+            meta["page_to"] = start + len(pages) - 1 if pages else start
+
     pages = enrich_pages(pages, source_kind=source_kind)
     if ext == ".pdf" and source_kind == "pdf":
         pages = _maybe_ocr_weak_pdf_pages(

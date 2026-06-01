@@ -4343,6 +4343,14 @@ def api_tercume_batch_status(job_id: str = Query("")) -> dict[str, Any]:
     return hit
 
 
+@app.get("/api/tercume/batch-jobs")
+def api_tercume_batch_jobs(limit: int = Query(15, ge=1, le=50)) -> dict[str, Any]:
+    """Faz 14A — son arka plan çeviri işleri (sayfa aralığı / cilt sırası)."""
+    from ilim_assistant.motorlar.tercume_batch_jobs import list_batch_jobs
+
+    return list_batch_jobs(limit=limit)
+
+
 @app.post("/api/tercume/batch-cancel")
 def api_tercume_batch_cancel(job_id: str = Form("")) -> dict[str, Any]:
     from ilim_assistant.motorlar.tercume_batch_jobs import cancel_batch_job

@@ -835,9 +835,9 @@
                   <div class="tercume-toolbar-group">
                     <select id="tercume-translate-mode" class="tercume-lang-select" title="Çeviri modu">
                       <option value="single">Tek parça</option>
-                      <option value="page">Sayfa sayfa</option>
-                      <option value="range">Sayfa aralığı</option>
-                      <option value="full">Tamamı (yavaş)</option>
+                      <option value="page">Sayfa sayfa (arka plan)</option>
+                      <option value="range">Sayfa aralığı (arka plan)</option>
+                      <option value="full">Tamamı (arka plan, yavaş)</option>
                       <option value="chat">Sohbet</option>
                     </select>
                     <label class="tercume-page-range" title="1 tabanlı sayfa numarası (PDF)">
@@ -880,9 +880,36 @@
                   <strong>OCR kurulumu gerekli:</strong>
                   <span id="tercume-ocr-warn-text">Taranmış sayfa ve görseller için Tesseract (Arapça + Osmanlıca) kurulu olmalı.</span>
                 </div>
+                <div class="tercume-quality-strip" id="tercume-quality-strip" hidden role="status" aria-live="polite">
+                  <span class="tercume-quality-badge" id="tercume-quality-badge" title="Çeviri kalite skoru (0–100)">—</span>
+                  <div class="tercume-quality-body">
+                    <span class="tercume-quality-detail" id="tercume-quality-detail">—</span>
+                    <span class="tercume-quality-issues" id="tercume-quality-issues"></span>
+                  </div>
+                  <button
+                    type="button"
+                    class="btn-secondary btn-compact"
+                    id="btn-tercume-retry-quality"
+                    hidden
+                    title="Son parçayı yeniden çevir"
+                  >
+                    Yeniden çevir
+                  </button>
+                </div>
                 <div class="tercume-progress-wrap" id="tercume-progress-wrap" hidden>
                   <div class="tercume-progress-bar"><div class="tercume-progress-fill" id="tercume-progress-fill"></div></div>
                   <div class="tercume-progress-label" id="tercume-progress-label">—</div>
+                </div>
+                <div class="tercume-job-panel" id="tercume-job-panel" hidden role="region" aria-label="Arka plan çeviri işi">
+                  <div class="tercume-job-head">
+                    <strong>Arka plan çeviri</strong>
+                    <span class="tercume-job-summary" id="tercume-job-summary">—</span>
+                  </div>
+                  <ul class="tercume-job-log" id="tercume-job-log" aria-live="polite"></ul>
+                  <details class="tercume-job-recent-fold">
+                    <summary>Son arka plan işleri</summary>
+                    <ul class="tercume-job-recent-list" id="tercume-job-recent-list"></ul>
+                  </details>
                 </div>
                 <div class="tercume-panels">
                   <div class="tercume-panel">

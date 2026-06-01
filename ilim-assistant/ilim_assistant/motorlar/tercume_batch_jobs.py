@@ -12,7 +12,8 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-BATCH_VERSION = "tercume-batch-v2-faz10-2026-05-31"
+BATCH_VERSION = "tercume-batch-v3-faz14a-2026-05-29"
+_PARTIAL_TEXT_MAX = 420_000
 
 _jobs: dict[str, dict[str, Any]] = {}
 _lock = threading.Lock()
@@ -197,6 +198,21 @@ def start_batch_job(
     return {"ok": True, "job_id": job_id, "total": len(files), "files": files}
 
 
+def _load_job_into_memory(jid: str) -> dict[str, Any] | None:
+    path = _jobs_dir() / f"{jid}.json"
+    if not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    if isinstance(data, dict):
+        with _lock:
+            _jobs[jid] = data
+        return data
+    return None
+
+
 def get_batch_job(job_id: str) -> dict[str, Any]:
     jid = (job_id or "").strip()
     if not jid:
@@ -205,24 +221,58 @@ def get_batch_job(job_id: str) -> dict[str, Any]:
         st = _jobs.get(jid)
     if st:
         return {"ok": True, **st}
-    path = _jobs_dir() / f"{jid}.json"
-    if path.is_file():
+    data = _load_job_into_memory(jid)
+    if data:
+        return {"ok": True, **data}
+    return {"ok": False, "error": "İş bulunamadı"}
+
+
+def list_batch_jobs(*, limit: int = 20) -> dict[str, Any]:
+    lim = max(1, min(50, int(limit)))
+    items: list[dict[str, Any]] = []
+    d = _jobs_dir()
+    paths = sorted(d.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
+    for path in paths[: lim * 2]:
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
-            return {"ok": True, **data}
         except Exception:
-            pass
-    return {"ok": False, "error": "İş bulunamadı"}
+            continue
+        if not isinstance(data, dict):
+            continue
+        jid = str(data.get("job_id") or path.stem)
+        items.append(
+            {
+                "job_id": jid,
+                "job_type": data.get("job_type") or "batch",
+                "status": data.get("status") or "unknown",
+                "rel": data.get("rel") or data.get("current_file") or "",
+                "done": data.get("done"),
+                "total": data.get("total"),
+                "label": data.get("label") or "",
+                "output_rel": data.get("output_rel") or "",
+                "updated_at": data.get("updated_at") or data.get("created_at"),
+                "created_at": data.get("created_at"),
+            }
+        )
+        if len(items) >= lim:
+            break
+    return {"ok": True, "items": items, "version": BATCH_VERSION, "limit": lim}
 
 
 def cancel_batch_job(job_id: str) -> dict[str, Any]:
     jid = (job_id or "").strip()
+    if not jid:
+        return {"ok": False, "error": "job_id gerekli"}
     with _lock:
-        if jid in _jobs:
-            _jobs[jid]["cancel"] = True
-            _update(jid, cancel=True)
-            return {"ok": True, "job_id": jid, "status": "cancelling"}
-    return {"ok": False, "error": "İş bulunamadı"}
+        st = _jobs.get(jid)
+    if not st:
+        st = _load_job_into_memory(jid)
+    if not st:
+        return {"ok": False, "error": "İş bulunamadı"}
+    if st.get("status") in ("done", "failed", "cancelled"):
+        return {"ok": True, "job_id": jid, "status": st.get("status"), "already_finished": True}
+    _update(jid, cancel=True, status="cancelling", label="İptal istendi…")
+    return {"ok": True, "job_id": jid, "status": "cancelling"}
 
 
 def _filter_pages(
@@ -271,18 +321,51 @@ def _run_page_range(job_id: str, cfg: dict[str, Any]) -> None:
 
     out_dir = (root / out_dir_rel.replace("/", os.sep)).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
-    _update(job_id, status="running", total=len(pages), done=0, outputs=[])
+    _update(
+        job_id,
+        status="running",
+        total=len(pages),
+        done=0,
+        outputs=[],
+        partial_text="",
+        ok_count=0,
+        error_count=0,
+    )
 
     parts: list[str] = []
     outputs: list[dict[str, Any]] = []
+    ok_count = 0
+    error_count = 0
+
+    def _push_partial() -> None:
+        from ilim_assistant.motorlar.tercume_translate_quality import summarize_chunk_qualities
+
+        body = "\n\n".join(parts)
+        if len(body) > _PARTIAL_TEXT_MAX:
+            body = "…\n\n" + body[-_PARTIAL_TEXT_MAX:]
+        qsum = summarize_chunk_qualities(outputs)
+        _update(
+            job_id,
+            partial_text=body,
+            ok_count=ok_count,
+            error_count=error_count,
+            quality_summary=qsum,
+        )
+
     for i, p in enumerate(pages):
         with _lock:
             if (_jobs.get(job_id) or {}).get("cancel"):
-                _update(job_id, status="cancelled", outputs=outputs)
+                _push_partial()
+                _update(
+                    job_id,
+                    status="cancelled",
+                    outputs=outputs,
+                    label="İptal edildi",
+                )
                 return
 
         label = str(p.get("label") or p.get("index") or i + 1)
-        _update(job_id, done=i, label=f"{i + 1}/{len(pages)}: sayfa {label}")
+        _update(job_id, done=i, label=f"{i + 1}/{len(pages)}: {label}")
 
         try:
             tr = translate_chunk(
@@ -295,16 +378,29 @@ def _run_page_range(job_id: str, cfg: dict[str, Any]) -> None:
             if tr.get("ok"):
                 chunk = str(tr.get("text") or "")
                 parts.append(chunk)
-                outputs.append({"page": label, "ok": True, "quality": tr.get("quality")})
+                q = tr.get("quality") if isinstance(tr.get("quality"), dict) else {}
+                outputs.append(
+                    {
+                        "page": label,
+                        "ok": True,
+                        "quality_score": q.get("score"),
+                        "quality_ok": q.get("ok"),
+                        "quality_issues": q.get("issues") if isinstance(q.get("issues"), list) else [],
+                    }
+                )
+                ok_count += 1
             else:
                 err = str(tr.get("error") or "?")
                 parts.append(f"[HATA sayfa {label}: {err}]")
                 outputs.append({"page": label, "ok": False, "error": err})
+                error_count += 1
         except Exception as exc:
             parts.append(f"[HATA sayfa {label}: {str(exc)[:120]}]")
             outputs.append({"page": label, "ok": False, "error": str(exc)[:120]})
+            error_count += 1
 
         _update(job_id, done=i + 1, outputs=outputs)
+        _push_partial()
 
     stem = Path(rel).stem
     safe = re.sub(r"[^a-zA-Z0-9._\-]+", "_", stem)[:72] or "sayfa"
@@ -320,12 +416,15 @@ def _run_page_range(job_id: str, cfg: dict[str, Any]) -> None:
         status="done",
         current_file="",
         output_rel=out_rel,
+        partial_text=body,
         chars=len(body),
         page_from=pf,
         page_to=pt,
         pages_translated=len(pages),
         outputs=outputs,
-        label=f"{len(pages)} sayfa kaydedildi",
+        ok_count=ok_count,
+        error_count=error_count,
+        label=f"{ok_count}/{len(pages)} sayfa — kaydedildi",
     )
 
 
