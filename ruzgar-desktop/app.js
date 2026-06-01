@@ -4258,6 +4258,106 @@ function updateDynamicWorkbench() {
   syncWorkbenchHizirToolbar();
 }
 
+const LS_MOTORS_COMPACT = "ruzgarMotorsCompact";
+
+function hideMotorHoverTip() {
+  const tip = document.getElementById("motor-hover-tip");
+  if (tip) tip.hidden = true;
+}
+
+function ensureMotorHoverTip() {
+  let tip = document.getElementById("motor-hover-tip");
+  if (!tip) {
+    tip = document.createElement("div");
+    tip.id = "motor-hover-tip";
+    tip.className = "motor-hover-tip";
+    tip.hidden = true;
+    tip.setAttribute("role", "tooltip");
+    document.body.appendChild(tip);
+  }
+  return tip;
+}
+
+function motorHoverLabel(btn) {
+  const name = btn.querySelector(".motor-name")?.textContent?.trim() || "";
+  const tag = btn.querySelector(".motor-tag")?.textContent?.trim() || "";
+  return { name, tag };
+}
+
+function positionMotorHoverTip(btn, tip) {
+  const r = btn.getBoundingClientRect();
+  tip.style.left = `${Math.round(r.right + 10)}px`;
+  tip.style.top = `${Math.round(r.top + r.height / 2)}px`;
+  tip.style.transform = "translateY(-50%)";
+}
+
+function showMotorHoverTip(btn) {
+  const { name, tag } = motorHoverLabel(btn);
+  if (!name) return;
+  const tip = ensureMotorHoverTip();
+  tip.innerHTML = tag
+    ? `${name}<span class="motor-hover-tip-sub">${tag}</span>`
+    : name;
+  positionMotorHoverTip(btn, tip);
+  tip.hidden = false;
+}
+
+function wireMotorHoverTips() {
+  document.querySelectorAll(".panel-motors .motor-item[data-mode]").forEach((btn) => {
+    if (btn.dataset.motorTipWired === "1") return;
+    btn.dataset.motorTipWired = "1";
+    btn.addEventListener("mouseenter", () => {
+      if (!document.body.classList.contains("ui-motors-compact")) return;
+      showMotorHoverTip(btn);
+    });
+    btn.addEventListener("mousemove", () => {
+      if (!document.body.classList.contains("ui-motors-compact")) return;
+      const tip = document.getElementById("motor-hover-tip");
+      if (tip && !tip.hidden) positionMotorHoverTip(btn, tip);
+    });
+    btn.addEventListener("mouseleave", hideMotorHoverTip);
+    btn.addEventListener("blur", hideMotorHoverTip);
+  });
+}
+
+function applyMotorsCompact(compact) {
+  const on = Boolean(compact);
+  document.body.classList.toggle("ui-motors-compact", on);
+  if (!on) hideMotorHoverTip();
+  const btn = document.getElementById("btn-motors-compact");
+  if (btn) {
+    btn.classList.toggle("is-active", on);
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+    btn.title = on ? "Motor adlarını göster" : "Motor adlarını gizle (yalnızca ikonlar)";
+    btn.setAttribute(
+      "aria-label",
+      on ? "Motor panelini genişlet" : "Motor panelini daralt (yalnızca ikonlar)",
+    );
+  }
+}
+
+function wireMotorsCompactToggle() {
+  const btn = document.getElementById("btn-motors-compact");
+  if (!btn || btn.dataset.wired === "1") return;
+  btn.dataset.wired = "1";
+  let compact = false;
+  try {
+    compact = localStorage.getItem(LS_MOTORS_COMPACT) === "1";
+  } catch (_) {
+    /* ignore */
+  }
+  applyMotorsCompact(compact);
+  btn.addEventListener("click", () => {
+    compact = !document.body.classList.contains("ui-motors-compact");
+    try {
+      localStorage.setItem(LS_MOTORS_COMPACT, compact ? "1" : "0");
+    } catch (_) {
+      /* ignore */
+    }
+    applyMotorsCompact(compact);
+  });
+}
+
 function wireTopModeButtons() {
   // Tek bir handler hem eski üst topbar hem yeni sol motor menüsü için çalışır.
   // Idempotent: aynı butona iki kez bağlamayalım diye işaretliyoruz.
@@ -7926,6 +8026,8 @@ function wireKuvveHafizaUi() {
 
 wireKuvveHafizaUi();
 wireTopModeButtons();
+wireMotorsCompactToggle();
+wireMotorHoverTips();
 wireDynamicWorkbench();
 wireContextMenu();
 updateDynamicWorkbench();

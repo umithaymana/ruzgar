@@ -9,6 +9,15 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <script>
+      try {
+        if (localStorage.getItem("ruzgarMotorsCompact") === "1") {
+          document.body.classList.add("ui-motors-compact");
+        }
+      } catch (_) {
+        /* ignore */
+      }
+    </script>
     <div class="title-strip">
       <div class="title-row title-row-info">
         <span class="title-sub title-main-text">
@@ -42,6 +51,20 @@
             </button>
             <button type="button" id="nav-clear-chat" class="btn-nav" title="Sohbeti temizle (uygulamayı kapatmadan)" aria-label="Sohbeti temizle">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </button>
+            <button
+              type="button"
+              id="btn-motors-compact"
+              class="btn-nav btn-motors-compact"
+              title="Motor adlarını gizle (yalnızca ikonlar)"
+              aria-label="Motor panelini daralt"
+              aria-pressed="false"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path
+                  d="M3 5h8v14H3V5zm10 0h8v3h-8V5zm0 5h8v4h-8v-4zm0 6h8v3h-8v-3z"
+                />
+              </svg>
             </button>
             <button type="button" id="btn-faz7-help" class="btn-nav btn-faz7-help" title="Kısayollar ve ipuçları (?)" aria-label="Yardım">?</button>
           </div>
@@ -1729,6 +1752,6 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
     <link rel="stylesheet" href="mimar-atolye.css?v=20260601-mimar-polish" />
     <script src="tercume-atolye.js?v=20260531-atolye-shell"></script>
     <script src="mimar-atolye.js?v=20260601-faz5"></script>
-    <script src="app.js?v=20260531-f4f1"></script>
+    <script src="app.js?v=20260601-motor-tip"></script>
   </body>
 </html>

@@ -4047,6 +4047,86 @@ body:has(.layout-v2) .title-row-motors { justify-content: flex-end; }
   font-weight: 600;
 }
 
+/* Motor paneli — yalnızca ikonlar (genel geçiş, tüm modlar) */
+body.ui-motors-compact .panel-motors {
+  width: 52px;
+  padding: 10px 6px 8px;
+  align-items: center;
+}
+body.ui-motors-compact .motors-head,
+body.ui-motors-compact .motors-foot,
+body.ui-motors-compact .motors-divider span,
+body.ui-motors-compact .motor-text {
+  display: none !important;
+}
+body.ui-motors-compact .motors-divider {
+  margin: 6px 0 2px;
+  padding: 0;
+  width: 100%;
+}
+body.ui-motors-compact .motors-divider::after {
+  display: block;
+}
+body.ui-motors-compact .motors-list {
+  width: 100%;
+  align-items: center;
+}
+body.ui-motors-compact .motor-item {
+  justify-content: center;
+  padding: 8px 6px;
+  width: 100%;
+  box-shadow: none;
+}
+body.ui-motors-compact .motor-item.is-active {
+  box-shadow: inset 0 0 0 2px rgba(255, 45, 45, 0.55);
+}
+body.ui-motors-compact .motor-item-hafiza.is-active {
+  box-shadow: inset 0 0 0 2px rgba(212, 175, 55, 0.55);
+}
+body.ui-motors-compact .motor-item-hizir.is-active {
+  box-shadow: inset 0 0 0 2px rgba(46, 204, 113, 0.55);
+}
+body.ui-motors-compact .motor-glyph {
+  width: 30px;
+  height: 30px;
+  font-size: 15px;
+}
+.btn-motors-compact.is-active {
+  color: #4ec9b0;
+  background: rgba(78, 201, 176, 0.12);
+}
+
+/* Kompakt motor paneli — fareyle gelince ad (fixed, kesilmez) */
+.motor-hover-tip {
+  position: fixed;
+  z-index: 25000;
+  max-width: min(280px, 90vw);
+  padding: 7px 11px;
+  border-radius: 6px;
+  background: #2a2a2e;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #f2f2f2;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.35;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+.motor-hover-tip-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+  font-weight: 400;
+  color: #9aa3ad;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.motor-hover-tip[hidden] {
+  display: none !important;
+}
+
 /* =====================================================================
    Atölye bilgi şeritleri (her motor sayfasının tepesinde)
    ===================================================================== */

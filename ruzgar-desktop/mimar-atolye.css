@@ -10,6 +10,9 @@ body[data-motor="mimar"] .layout.layout-v2 {
   grid-template-rows: 38px minmax(0, 1fr);
   align-content: stretch;
 }
+body.ui-motors-compact[data-motor="mimar"] .layout.layout-v2 {
+  grid-template-columns: 52px minmax(0, 1fr);
+}
 body[data-motor="mimar"] .panel-motors {
   grid-column: 1;
   grid-row: 1 / -1;
