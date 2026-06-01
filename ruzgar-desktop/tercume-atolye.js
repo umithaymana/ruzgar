@@ -4,6 +4,7 @@
 (function initTercumeAtolyeModule(global) {
   const LS_WORK_ROOT = "ruzgar_tercume_work_root";
   const LS_PAGE_JOB = "ruzgar_tercume_page_job_id";
+  const LS_LAST_SAVE_DIR = "ruzgar_tercume_last_save_dir";
   const QUALITY_PASS = 55;
   const QUALITY_WARN = 75;
 
@@ -17,6 +18,7 @@
   let awaitingChatReply = false;
   let translateAbort = false;
   let lastDownloadDir = { abs: "", rel: "" };
+  let lastSaveDir = "ilim-assistant/arsiv/tercume-output";
 
   function api() {
     return deps.api || global.API || "";
@@ -108,21 +110,68 @@
     return readWorkspaceText(rel);
   }
 
+  function defaultSaveDir() {
+    const d = String(lastSaveDir || "").trim().replace(/\\/g, "/").replace(/\/$/, "");
+    if (d && d.includes("arsiv")) return d;
+    try {
+      const ls = localStorage.getItem(LS_LAST_SAVE_DIR);
+      if (ls && String(ls).includes("arsiv")) return String(ls).replace(/\\/g, "/").replace(/\/$/, "");
+    } catch {
+      /* ignore */
+    }
+    return "ilim-assistant/arsiv/tercume-output";
+  }
+
+  function rememberSaveDirFromRel(rel) {
+    const raw = String(rel || "").trim().replace(/\\/g, "/");
+    if (!raw) return;
+    const idx = raw.lastIndexOf("/");
+    if (idx <= 0) return;
+    const dir = raw.slice(0, idx);
+    lastSaveDir = dir;
+    try {
+      localStorage.setItem(LS_LAST_SAVE_DIR, dir);
+    } catch {
+      /* ignore */
+    }
+  }
+
   function defaultSaveRel() {
     const tgt = String($("tercume-tgt-lang")?.value || "tr").trim() || "tr";
     const fmt = String($("tercume-output-format")?.value || "txt").trim() || "txt";
     const ext = fmt === "md" ? ".md" : fmt === "html" ? ".html" : ".txt";
+    const dir = defaultSaveDir();
     if (openRel) {
       const leaf = String(openRel).split("/").pop() || "kaynak";
       const stem = leaf.replace(/\.[^.]+$/, "") || "kaynak";
-      return `ilim-assistant/arsiv/tercume-output/${stem}_${tgt}${ext}`;
+      return `${dir}/${stem}_${tgt}${ext}`;
     }
-    return `ilim-assistant/arsiv/tercume-output/ceviri_${tgt}_${Date.now()}${ext}`;
+    return `${dir}/ceviri_${tgt}_${Date.now()}${ext}`;
   }
 
   function syncSavePlaceholder() {
     const inp = $("tercume-save-rel");
     if (inp && !inp.value.trim()) inp.placeholder = defaultSaveRel();
+  }
+
+  async function refreshSavePrefs() {
+    try {
+      const res = await fetch(`${api()}/api/tercume/save-prefs`);
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.ok) return;
+      const dir = String(j.last_save_dir || "").trim().replace(/\\/g, "/");
+      if (dir && dir.includes("arsiv")) {
+        lastSaveDir = dir;
+        try {
+          localStorage.setItem(LS_LAST_SAVE_DIR, dir);
+        } catch {
+          /* ignore */
+        }
+        syncSavePlaceholder();
+      }
+    } catch {
+      /* sessiz */
+    }
   }
 
   function updateActiveLabel() {
@@ -265,12 +314,41 @@
       flash(`Kaynak panele yüklendi: ${rel.split("/").pop()}`);
       getSourceEl()?.focus();
       void refreshApprenticeLog();
+      void refreshMemoryStatus();
     } catch (e) {
       openRel = rel;
       const msg = String(e.message || e);
       setSourceText(`(Dosya: ${rel}\n\nÖnizleme alınamadı: ${msg}\n\nBüyük PDF için OCR veya sayfa sayfa modunu deneyin.)`);
       updateActiveLabel();
       flash("Tam metin yüklenemedi; dosya yolu kayıtlı.");
+      void refreshMemoryStatus();
+    }
+  }
+
+  async function refreshMemoryStatus() {
+    const el = $("tercume-memory-status");
+    if (!el) return;
+    if (!openRel) {
+      el.hidden = true;
+      return;
+    }
+    const tgt = String($("tercume-tgt-lang")?.value || "tr").trim() || "tr";
+    try {
+      const res = await fetch(
+        `${api()}/api/tercume/memory-status?rel=${encodeURIComponent(openRel)}&tgt_lang=${encodeURIComponent(tgt)}`,
+      );
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.ok || j.enabled === false) {
+        el.hidden = true;
+        return;
+      }
+      const n = Number(j.pairs) || 0;
+      const disk = j.persisted_on_disk ? " · diskte" : "";
+      const tail = j.has_tail ? " · üslup" : "";
+      el.hidden = false;
+      el.textContent = n > 0 ? `TM: ${n} terim${disk}${tail}` : `TM: boş${disk}`;
+    } catch {
+      el.hidden = true;
     }
   }
 
@@ -851,6 +929,7 @@
           : "Yeniden çeviri tamamlandı.",
       );
       void refreshApprenticeLog();
+      void refreshMemoryStatus();
     } catch (e) {
       flash(e.message || String(e));
     }
@@ -917,7 +996,10 @@
       }
     }
     const saveInp = $("tercume-save-rel");
-    if (saveInp && j.output_rel) saveInp.value = String(j.output_rel);
+    if (saveInp && j.output_rel) {
+      saveInp.value = String(j.output_rel);
+      rememberSaveDirFromRel(j.output_rel);
+    }
     syncSavePlaceholder();
     clearPageJobStorage();
     activeBatchJobId = null;
@@ -936,6 +1018,7 @@
     );
     void refreshApprenticeLog();
     void refreshBatchJobsList();
+    void refreshMemoryStatus();
   }
 
   async function refreshBatchJobsList() {
@@ -1392,6 +1475,7 @@
     syncSavePlaceholder();
     flash(translateAbort ? "Çeviri durduruldu." : "Çeviri tamamlandı.");
     void refreshApprenticeLog();
+    void refreshMemoryStatus();
   }
 
   async function translateViaChat() {
@@ -1430,14 +1514,28 @@ ${chunk}`;
     const fd = new FormData();
     fd.append("rel", rel);
     fd.append("text", body);
+    fd.append("avoid_collision", "1");
+    fd.append("export_format", fmt);
+    if (openRel) fd.append("source_file", openRel);
+    fd.append("tgt_lang", String($("tercume-tgt-lang")?.value || "tr"));
     const copy = String($("tercume-copy-rel")?.value || "").trim();
     if (copy) fd.append("copy_rel", copy);
     const res = await fetch(`${api()}/api/tercume/save-target`, { method: "POST", body: fd });
     const j = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : "Kayıt başarısız");
-    $("tercume-save-rel").value = j.rel || rel;
-    flash(`Kaydedildi: ${j.rel}${j.copy_rel ? ` · kopya: ${j.copy_rel}` : ""}`);
+    if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : j.error || "Kayıt başarısız");
+    const savedRel = j.rel || rel;
+    $("tercume-save-rel").value = savedRel;
+    rememberSaveDirFromRel(savedRel);
+    syncSavePlaceholder();
+    let msg = `Kaydedildi: ${savedRel}`;
+    if (j.versioned) {
+      msg = String(j.hint_tr || `Dosya vardı — ${savedRel} olarak kaydedildi.`);
+    }
+    if (j.copy_rel) msg += ` · kopya: ${j.copy_rel}`;
+    if (j.copy_versioned) msg += " (kopya sürümlendi)";
+    flash(msg);
     void refreshApprenticeLog();
+    void refreshSavePrefs();
   }
 
   async function saveBridgeToHafiza() {
@@ -1797,7 +1895,10 @@ ${chunk}`;
       hideQualityStrip();
       updateActiveLabel();
       syncSavePlaceholder();
-      fetch(`${api()}/api/tercume/memory-clear`, { method: "POST" }).catch(() => {});
+      const fd = new FormData();
+      if (openRel) fd.append("source_file", openRel);
+      fetch(`${api()}/api/tercume/memory-clear`, { method: "POST", body: fd }).catch(() => {});
+      void refreshMemoryStatus();
     });
     $("btn-tercume-retry-quality")?.addEventListener("click", () => {
       void retryLastChunkQuality().catch((e) => flash(e.message || String(e)));
@@ -1822,7 +1923,6 @@ ${chunk}`;
       flash("Sol listeden bir dosyaya tıklayın — veya Kaynak paneline metin yapıştırın.");
       $("tercume-file-list")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     });
-    $("tercume-tgt-lang")?.addEventListener("change", () => syncSavePlaceholder());
     $("tercume-output-format")?.addEventListener("change", () => syncSavePlaceholder());
 
     getSourceEl()?.addEventListener("input", () => updateStats());
@@ -1834,6 +1934,12 @@ ${chunk}`;
     void refreshReadiness();
     void resumeActivePageJobIfAny();
     void refreshBatchJobsList();
+    void refreshMemoryStatus();
+    void refreshSavePrefs();
+    $("tercume-tgt-lang")?.addEventListener("change", () => {
+      syncSavePlaceholder();
+      void refreshMemoryStatus();
+    });
   }
 
   global.RuzgarTercumeAtolye = {
@@ -1855,6 +1961,8 @@ ${chunk}`;
       if (fold?.open) void refreshArsivCatalog();
       void resumeActivePageJobIfAny();
       void refreshBatchJobsList();
+      void refreshMemoryStatus();
+      void refreshSavePrefs();
     },
     onAssistantReply(text) {
       if (!awaitingChatReply) return;

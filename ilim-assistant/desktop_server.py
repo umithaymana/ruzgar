@@ -3809,38 +3809,110 @@ def _tercume_save_rel_allowed(raw: str) -> Path:
     return target
 
 
+@app.get("/api/tercume/save-prefs")
+def api_tercume_save_prefs() -> dict[str, Any]:
+    """Faz 14D — son kayıt klasörü ve varsayılan yol."""
+    from ilim_assistant.motorlar.tercume_save_prefs import get_save_prefs
+
+    return get_save_prefs()
+
+
 @app.post("/api/tercume/save-target")
 def api_tercume_save_target(
     rel: str = Form(""),
     text: str = Form(""),
     copy_rel: str = Form(""),
+    avoid_collision: str = Form("1"),
+    export_format: str = Form(""),
+    source_file: str = Form(""),
+    tgt_lang: str = Form("tr"),
 ) -> dict[str, Any]:
     """Blok J94 — hedef çeviri metnini arşive kaydet (isteğe bağlı ikinci kopya)."""
+    from ilim_assistant.motorlar.tercume_save_prefs import (
+        collision_versioning_enabled,
+        prepare_save_path,
+        remember_save_rel,
+    )
+
     body = (text or "")
     if not body.strip():
         raise HTTPException(status_code=400, detail="Kaydedilecek metin boş.")
     if len(body) > 2_500_000:
         raise HTTPException(status_code=400, detail="Metin çok büyük (2.5 MB sınır).")
 
-    target = _tercume_save_rel_allowed(rel)
+    fmt = (export_format or "").strip().lower()
+    if not fmt and (rel or "").strip():
+        ext = Path((rel or "").strip()).suffix.lower()
+        if ext == ".md":
+            fmt = "md"
+        elif ext in (".html", ".htm"):
+            fmt = "html"
+    if fmt in ("md", "html"):
+        from ilim_assistant.motorlar.tercume_export_format import format_export_body
+
+        body = format_export_body(
+            body,
+            fmt,
+            source_rel=(source_file or "").strip(),
+            tgt_lang=(tgt_lang or "tr").strip(),
+        )
+
+    raw_rel = (rel or "").strip()
+    _tercume_save_rel_allowed(raw_rel)
+    use_version = str(avoid_collision or "1").strip().lower() not in ("0", "false", "no")
+    root = REPO_ROOT.resolve()
+    try:
+        if use_version and collision_versioning_enabled():
+            prepared = prepare_save_path(raw_rel, root=root)
+            target = prepared["path"]
+            final_rel = prepared["rel"]
+            versioned = bool(prepared.get("versioned"))
+            requested_rel = prepared.get("requested_rel") or raw_rel
+        else:
+            target = _tercume_save_rel_allowed(raw_rel)
+            final_rel = target.relative_to(root).as_posix()
+            versioned = False
+            requested_rel = raw_rel
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except OSError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)[:200]) from exc
+
     target.parent.mkdir(parents=True, exist_ok=True)
     try:
         target.write_text(body, encoding="utf-8")
     except OSError as exc:
         raise HTTPException(status_code=500, detail=f"Yazılamadı: {str(exc)[:200]}") from exc
 
+    remember_save_rel(final_rel)
     out: dict[str, Any] = {
         "ok": True,
-        "rel": target.relative_to(REPO_ROOT).as_posix(),
+        "rel": final_rel,
         "bytes": len(body.encode("utf-8")),
+        "versioned": versioned,
     }
+    if versioned:
+        out["requested_rel"] = requested_rel
+        out["hint_tr"] = f"Dosya zaten vardı — {final_rel} olarak kaydedildi."
+
     copy_raw = (copy_rel or "").strip()
     if copy_raw:
         try:
-            copy_path = _tercume_save_rel_allowed(copy_raw)
+            _tercume_save_rel_allowed(copy_raw)
+            if use_version and collision_versioning_enabled():
+                cp = prepare_save_path(copy_raw, root=root)
+                copy_path = cp["path"]
+                copy_final = cp["rel"]
+                copy_versioned = bool(cp.get("versioned"))
+            else:
+                copy_path = _tercume_save_rel_allowed(copy_raw)
+                copy_final = copy_path.relative_to(root).as_posix()
+                copy_versioned = False
             copy_path.parent.mkdir(parents=True, exist_ok=True)
             copy_path.write_text(body, encoding="utf-8")
-            out["copy_rel"] = copy_path.relative_to(REPO_ROOT).as_posix()
+            out["copy_rel"] = copy_final
+            if copy_versioned:
+                out["copy_versioned"] = True
         except HTTPException as exc:
             out["copy_error"] = str(exc.detail)
         except OSError as exc:
@@ -4493,20 +4565,35 @@ def api_tercume_read_cancel(job_id: str = Form("")) -> dict[str, Any]:
     return hit
 
 
+@app.get("/api/tercume/memory-status")
+def api_tercume_memory_status(
+    rel: str = Query(""),
+    tgt_lang: str = Query("tr"),
+) -> dict[str, Any]:
+    """Faz 14C — kalıcı terim belleği (TM) özeti."""
+    from ilim_assistant.motorlar.tercume_translate_memory import memory_status
+
+    raw = (rel or "").strip().replace("\\", "/").lstrip("/")
+    if not raw:
+        raise HTTPException(status_code=400, detail="rel gerekli.")
+    return memory_status(raw, tgt_lang=tgt_lang)
+
+
 @app.post("/api/tercume/memory-clear")
-def api_tercume_memory_clear(source_file: str = Form("")) -> dict[str, Any]:
-    """Faz 4 — parça bellek temizle (tüm oturum veya tek dosya)."""
+def api_tercume_memory_clear(
+    source_file: str = Form(""),
+    tgt_lang: str = Form(""),
+) -> dict[str, Any]:
+    """Faz 4/14C — TM temizle (tek dosya+tüm diller veya tümü)."""
     from ilim_assistant.motorlar.tercume_translate_memory import clear_session
 
     sf = (source_file or "").strip()
+    tl = (tgt_lang or "").strip()
     if sf:
-        clear_session(sf)
+        clear_session(sf, tgt_lang=tl or None)
     else:
-        import ilim_assistant.motorlar.tercume_translate_memory as _tm
-
-        with _tm._lock:
-            _tm._sessions.clear()
-    return {"ok": True, "cleared": sf or "all"}
+        clear_session("")
+    return {"ok": True, "cleared": sf or "all", "tgt_lang": tl or None}
 
 
 @app.post("/api/tercume/translate-chunk")

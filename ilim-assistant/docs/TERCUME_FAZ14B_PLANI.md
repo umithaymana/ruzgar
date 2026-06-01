@@ -25,6 +25,7 @@ python scripts/tercume_faz14a_smoke.py
 node --check ..\ruzgar-desktop\tercume-atolye.js
 ```
 
-## Sonraki (14C)
+## Sonraki
 
-- Kalıcı terim belleği (TM) diske
+- **14C** — kalıcı TM → `TERCUME_FAZ14C_PLANI.md` ✅
+- **14D** — kayıt `_v2` versiyonlama

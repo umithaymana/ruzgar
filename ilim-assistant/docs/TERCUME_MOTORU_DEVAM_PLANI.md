@@ -16,22 +16,15 @@ Bu not, ara sonrasinda ayni yerden devam etmek icin birakildi.
 - Cikti uzantisi secimi (`txt`, `md`, `html`)
 - Ciktiyi istenen goreli yola kaydetme + ikinci konuma kopyalama
 
+## Faz 14 (2026-05) — tamamlandi
+
+Bkz. `TERCUME_FAZ14_OZET.md` (14A–14E).
+
 ## Sonraki adimlar (oncelik sirasiyla)
-1. OCR kalite paketi
-   - `lang` secimini UI'dan dinamiklestir (tur/eng/ara/deu/frk vb.)
-   - OCR temizleme katmani (satir birlestirme, tire sonu duzeltme)
-2. Sayfa sayfa ceviri takip paneli
-   - ilerleme cubugu
-   - hangi sayfa bitti/hata verdi gorunumu
-3. Cikti bicimi iyilestirme
-   - `md` icin bolum basliklarini koru
-   - `html` icin temel stilablon
-4. Book format kalite genisletme
-   - epub bolum basliklarini daha iyi cikarma
-   - fb2 metadata (yazar/baslik) alma
-5. Guvenli kaydetme UX
-   - "son kayit klasoru" hafizasi
-   - ad cakismasinda otomatik versiyonlama (`_v2`, `_v3`)
+1. OCR kalite paketi (kismen var: `tercume_ocr_clean`, UI dil secimi)
+2. Book format: EPUB bolum + FB2 metadata
+3. Kullanici terim tablosu (TM duzenleme UI)
+4. Canli Ollama `tercume_live_smoke.py`
 
 ## Teknik notlar
 - Sadece Tercume Motoru dosyalarina dokunuldu.

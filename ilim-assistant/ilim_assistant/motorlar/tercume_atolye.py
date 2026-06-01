@@ -588,6 +588,37 @@ def workbench_config() -> dict[str, Any]:
             "ui_strip": True,
             "job_quality_summary": True,
         },
+        "tm_faz14c": {
+            "version": "tercume-tm-faz14c-2026-05-29",
+            "persist_dir": ".ruzgar/tercume_tm",
+            "routes": [
+                "/api/tercume/memory-status",
+                "/api/tercume/memory-clear",
+            ],
+            "env": {
+                "RUZGAR_TERCUME_MEMORY": "1",
+                "RUZGAR_TERCUME_MEMORY_PERSIST": "1",
+            },
+        },
+        "save_faz14d": {
+            "version": "tercume-save-faz14d-2026-05-29",
+            "routes": [
+                "/api/tercume/save-prefs",
+                "/api/tercume/save-target",
+            ],
+            "collision_suffix": "_v2",
+            "prefs_file": ".ruzgar/tercume_save_prefs.json",
+            "env": {
+                "RUZGAR_TERCUME_SAVE_PREFS": "1",
+                "RUZGAR_TERCUME_SAVE_VERSION": "1",
+            },
+        },
+        "export_faz14e": {
+            "version": "tercume-export-faz14e-2026-05-29",
+            "formats": ["txt", "md", "html"],
+            "md_headings": True,
+            "html_template": True,
+        },
         "read_routes": [
             "/api/tercume/read-start",
             "/api/tercume/read-status",

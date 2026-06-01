@@ -922,7 +922,14 @@
                   </div>
                 </div>
                 <div class="tercume-io-row">
-                  <input type="text" id="tercume-save-rel" class="tercume-save-path" placeholder="Kayıt yolu" aria-label="Kayıt" />
+                  <input
+                    type="text"
+                    id="tercume-save-rel"
+                    class="tercume-save-path"
+                    placeholder="Kayıt yolu (çakışınca _v2, _v3…)"
+                    aria-label="Kayıt"
+                    title="Son kayıt klasörü hatırlanır; aynı ad varsa otomatik _v2 sürümü"
+                  />
                   <input type="text" id="tercume-copy-rel" class="tercume-copy-path" placeholder="İkinci kopya (isteğe bağlı)" aria-label="Kopya" />
                   <label class="btn-secondary btn-compact" style="cursor:pointer;margin:0">
                     Dosya
@@ -931,6 +938,12 @@
                 </div>
                 <div class="tercume-footer-row">
                   <span id="tercume-stats">0 karakter</span>
+                  <span
+                    id="tercume-memory-status"
+                    class="tercume-memory-status"
+                    hidden
+                    title="Kalıcı terim belleği (TM) — sunucu yeniden başlasa da sürer"
+                  ></span>
                   <details class="tercume-apprentice-fold">
                     <summary>Çırak günlüğü (programlama motoru okur)</summary>
                     <ul class="tercume-apprentice-list" id="tercume-apprentice-list"></ul>

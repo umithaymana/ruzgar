@@ -54,6 +54,8 @@ def main() -> int:
         "/api/tercume/config",
         "/api/tercume/readiness",
         "/api/tercume/batch-jobs",
+        "/api/tercume/memory-status",
+        "/api/tercume/save-prefs",
     }
     missing = [p for p in needed if p not in paths]
     if missing:
