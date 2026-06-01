@@ -314,39 +314,15 @@ def _command_exists(name: str) -> bool:
 
 
 def _convert_with_calibre_to_text(target: Path) -> str:
-    if not _command_exists("ebook-convert"):
-        raise RuntimeError("Calibre aracı yok (ebook-convert). Önce Calibre kurun.")
-    with tempfile.TemporaryDirectory(prefix="ruzgar_ebook_") as td:
-        out = Path(td) / "converted.txt"
-        proc = subprocess.run(
-            ["ebook-convert", str(target), str(out)],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=90,
-        )
-        if proc.returncode != 0 or (not out.is_file()):
-            msg = (proc.stderr or proc.stdout or "ebook-convert başarısız")[:240]
-            raise RuntimeError(msg)
-        return out.read_text(encoding="utf-8", errors="replace")
+    from ilim_assistant.motorlar.tercume_ebook_read import convert_calibre_to_text
+
+    return convert_calibre_to_text(target)
 
 
 def _convert_djvu_to_text(target: Path) -> str:
-    if not _command_exists("djvutxt"):
-        raise RuntimeError("djvutxt aracı yok. DjVuLibre kurun.")
-    proc = subprocess.run(
-        ["djvutxt", str(target)],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        timeout=60,
-    )
-    if proc.returncode != 0:
-        msg = (proc.stderr or proc.stdout or "djvutxt başarısız")[:240]
-        raise RuntimeError(msg)
-    return (proc.stdout or "").strip()
+    from ilim_assistant.motorlar.tercume_ebook_read import convert_djvu_to_text
+
+    return convert_djvu_to_text(target)
 
 # Electron (file://) ↔ yerel API: geçici tam açık CORS — köprü/socket kapanmasın.
 # allow_credentials + "*" birlikte tarayıcıda CORS'u bozar; permissive modda credentials kapalı.
@@ -3626,24 +3602,21 @@ def api_workspace_read_ebook(rel: str = Query("")) -> dict[str, Any]:
         text = _simple_html_to_text(target.read_text(encoding="utf-8", errors="replace"))
     elif ext in {".md", ".markdown", ".txt"}:
         text = target.read_text(encoding="utf-8", errors="replace")
-    elif ext in {".mobi", ".azw", ".azw3", ".kfx"}:
-        try:
-            text = _convert_with_calibre_to_text(target)
-            meta["converter"] = "ebook-convert"
-        except RuntimeError as exc:
+    elif ext in {".mobi", ".azw", ".azw3", ".kfx", ".djvu", ".djv"}:
+        from ilim_assistant.motorlar.tercume_ebook_read import read_ebook_auto
+
+        hit = read_ebook_auto(target)
+        if not hit.get("ok"):
             raise HTTPException(
                 status_code=400,
-                detail=f"{str(exc)} Bu uzantıyı okumak için Calibre gerekir.",
-            ) from exc
-    elif ext in {".djvu", ".djv"}:
-        try:
-            text = _convert_djvu_to_text(target)
-            meta["converter"] = "djvutxt"
-        except RuntimeError as exc:
-            raise HTTPException(
-                status_code=400,
-                detail=f"{str(exc)} Bu uzantıyı okumak için DjVuLibre gerekir.",
-            ) from exc
+                detail=str(hit.get("error") or "E-kitap okunamadı"),
+            )
+        text = str(hit.get("text") or "")
+        meta.update(hit.get("meta") or {})
+        if hit.get("title"):
+            meta["title"] = hit["title"]
+        if hit.get("chapters_read") is not None:
+            meta["chapters_read"] = hit["chapters_read"]
     else:
         raise HTTPException(status_code=400, detail="Bu uzantı read-ebook ile desteklenmiyor.")
 
@@ -3869,6 +3842,24 @@ def api_tercume_save_target(
             tgt_lang=(tgt_lang or "tr").strip(),
         )
 
+    docx_bytes: bytes | None = None
+    if fmt == "docx":
+        from ilim_assistant.motorlar.tercume_export_docx import build_docx_bytes, docx_available
+
+        if not docx_available():
+            raise HTTPException(
+                status_code=503,
+                detail="DOCX için python-docx gerekli: pip install python-docx",
+            )
+        try:
+            docx_bytes = build_docx_bytes(
+                body,
+                source_rel=(source_file or "").strip(),
+                tgt_lang=(tgt_lang or "tr").strip(),
+            )
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=str(exc)[:200]) from exc
+
     raw_rel = (rel or "").strip()
     _tercume_save_rel_allowed(raw_rel)
     use_version = str(avoid_collision or "1").strip().lower() not in ("0", "false", "no")
@@ -3892,7 +3883,12 @@ def api_tercume_save_target(
 
     target.parent.mkdir(parents=True, exist_ok=True)
     try:
-        target.write_text(body, encoding="utf-8")
+        if docx_bytes is not None:
+            target.write_bytes(docx_bytes)
+            nbytes = len(docx_bytes)
+        else:
+            target.write_text(body, encoding="utf-8")
+            nbytes = len(body.encode("utf-8"))
     except OSError as exc:
         raise HTTPException(status_code=500, detail=f"Yazılamadı: {str(exc)[:200]}") from exc
 
@@ -3900,7 +3896,8 @@ def api_tercume_save_target(
     out: dict[str, Any] = {
         "ok": True,
         "rel": final_rel,
-        "bytes": len(body.encode("utf-8")),
+        "bytes": nbytes,
+        "export_format": fmt or "txt",
         "versioned": versioned,
     }
     if versioned:
@@ -3921,7 +3918,10 @@ def api_tercume_save_target(
                 copy_final = copy_path.relative_to(root).as_posix()
                 copy_versioned = False
             copy_path.parent.mkdir(parents=True, exist_ok=True)
-            copy_path.write_text(body, encoding="utf-8")
+            if docx_bytes is not None:
+                copy_path.write_bytes(docx_bytes)
+            else:
+                copy_path.write_text(body, encoding="utf-8")
             out["copy_rel"] = copy_final
             if copy_versioned:
                 out["copy_versioned"] = True
@@ -4493,6 +4493,12 @@ def api_tercume_source_pages(
         ".docx",
         ".epub",
         ".fb2",
+        ".mobi",
+        ".azw",
+        ".azw3",
+        ".kfx",
+        ".djvu",
+        ".djv",
         ".png",
         ".jpg",
         ".jpeg",
@@ -4579,6 +4585,21 @@ def api_tercume_read_cancel(job_id: str = Form("")) -> dict[str, Any]:
     return hit
 
 
+@app.get("/api/tercume/review-queue")
+def api_tercume_review_queue(job_id: str = Query("")) -> dict[str, Any]:
+    """Faz 16B — iş çıktısından inceleme kuyruğu (düşük skor / hata)."""
+    from ilim_assistant.motorlar.tercume_batch_jobs import get_batch_job
+    from ilim_assistant.motorlar.tercume_review_queue import build_review_queue
+
+    jid = (job_id or "").strip()
+    if not jid:
+        raise HTTPException(status_code=400, detail="job_id gerekli")
+    job = get_batch_job(jid)
+    if not job.get("ok"):
+        raise HTTPException(status_code=404, detail=str(job.get("error") or "İş yok"))
+    return build_review_queue(job)
+
+
 @app.get("/api/tercume/user-glossary")
 def api_tercume_user_glossary_list(limit: int = Query(60, ge=1, le=200)) -> dict[str, Any]:
     from ilim_assistant.motorlar.tercume_user_glossary import list_entries
@@ -4611,6 +4632,99 @@ def api_tercume_user_glossary_delete(entry_id: str = Form("")) -> dict[str, Any]
     if not hit.get("ok"):
         raise HTTPException(status_code=404, detail=str(hit.get("error") or "Silinemedi"))
     return hit
+
+
+@app.post("/api/tercume/user-glossary/import")
+def api_tercume_user_glossary_import(
+    text: str = Form(""),
+    fmt: str = Form(""),
+    merge: str = Form("1"),
+) -> dict[str, Any]:
+    """Faz 14F — CSV/JSON terim içe aktarma."""
+    from ilim_assistant.motorlar.tercume_user_glossary import import_from_text
+
+    do_merge = str(merge or "1").strip().lower() not in ("0", "false", "no")
+    hit = import_from_text(text or "", fmt or "", merge=do_merge)
+    if not hit.get("ok"):
+        raise HTTPException(status_code=400, detail=str(hit.get("error") or "İçe aktarılamadı"))
+    return hit
+
+
+@app.post("/api/tercume/tmx/export")
+def api_tercume_tmx_export(
+    rel: str = Form(""),
+    src_lang: str = Form("auto"),
+    tgt_lang: str = Form("tr"),
+    include_glossary: str = Form("1"),
+    include_tm: str = Form("1"),
+) -> dict[str, Any]:
+    from ilim_assistant.motorlar.tercume_tmx import collect_tmx_units, build_tmx
+
+    raw = (rel or "").strip().replace("\\", "/").lstrip("/")
+    tl = (tgt_lang or "tr").strip().lower()[:8] or "tr"
+    sl = (src_lang or "auto").strip().lower()
+    if sl in ("", "auto"):
+        sl = "tr"
+    ig = str(include_glossary or "1").strip().lower() not in ("0", "false", "no")
+    itm = str(include_tm or "1").strip().lower() not in ("0", "false", "no")
+    units = collect_tmx_units(
+        source_file=raw,
+        tgt_lang=tl,
+        include_glossary=ig,
+        include_tm=itm and bool(raw),
+    )
+    if not units:
+        raise HTTPException(status_code=400, detail="Dışa aktarılacak terim çifti yok.")
+    tmx = build_tmx(units, src_lang=sl, tgt_lang=tl)
+    return {
+        "ok": True,
+        "tmx": tmx,
+        "units": len(units),
+        "rel": raw,
+        "src_lang": sl,
+        "tgt_lang": tl,
+    }
+
+
+@app.post("/api/tercume/tmx/import")
+def api_tercume_tmx_import(
+    text: str = Form(""),
+    tgt_lang: str = Form("tr"),
+    merge: str = Form("1"),
+) -> dict[str, Any]:
+    from ilim_assistant.motorlar.tercume_user_glossary import import_from_tmx
+
+    do_merge = str(merge or "1").strip().lower() not in ("0", "false", "no")
+    hit = import_from_tmx(text or "", tgt_lang=tgt_lang, merge=do_merge)
+    if not hit.get("ok"):
+        raise HTTPException(status_code=400, detail=str(hit.get("error") or "TMX içe aktarılamadı"))
+    return hit
+
+
+@app.post("/api/tercume/aligned-diff")
+def api_tercume_aligned_diff(
+    source_text: str = Form(""),
+    target_text: str = Form(""),
+    rel: str = Form(""),
+) -> dict[str, Any]:
+    """Faz 17 — kaynak/hedef hizalı segment tablosu."""
+    from ilim_assistant.motorlar.tercume_aligned_diff import (
+        build_aligned_diff,
+        build_aligned_from_pages,
+    )
+
+    tgt = (target_text or "").strip()
+    raw = (rel or "").strip().replace("\\", "/").lstrip("/")
+    if raw:
+        from ilim_assistant.motorlar.tercume_read_pipeline import extract_source_pages
+
+        hit = extract_source_pages(raw)
+        if hit.get("ok") and isinstance(hit.get("pages"), list):
+            return build_aligned_from_pages(hit["pages"], tgt)
+    src = (source_text or "").strip()
+    if not src and not tgt:
+        raise HTTPException(status_code=400, detail="Kaynak veya hedef metin gerekli.")
+    return build_aligned_diff(src, tgt)
 
 
 @app.get("/api/tercume/memory-status")

@@ -159,6 +159,41 @@ def run_tercume_preflight(
                 required=False,
             )
         )
+        if target is not None:
+            ext = target.suffix.lower()
+            if ext in {".mobi", ".azw", ".azw3", ".kfx"}:
+                try:
+                    from ilim_assistant.motorlar.tercume_ebook_read import calibre_available
+
+                    cal_ok = calibre_available()
+                    checks.append(
+                        _check(
+                            "Calibre (MOBI/AZW)",
+                            cal_ok,
+                            detail=(
+                                "ebook-convert hazır"
+                                if cal_ok
+                                else "Calibre kurun — MOBI/Kindle için gerekli"
+                            ),
+                            required=False,
+                        )
+                    )
+                except Exception:
+                    pass
+            elif ext in {".djvu", ".djv"}:
+                try:
+                    from ilim_assistant.motorlar.tercume_ebook_read import djvu_available
+
+                    checks.append(
+                        _check(
+                            "DjVu (djvutxt)",
+                            djvu_available(),
+                            detail="djvutxt hazır" if djvu_available() else "DjVuLibre kurun",
+                            required=False,
+                        )
+                    )
+                except Exception:
+                    pass
 
     required_fail = [c for c in checks if c.get("required") and not c.get("ok")]
     ready = len(required_fail) == 0

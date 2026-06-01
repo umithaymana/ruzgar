@@ -57,6 +57,13 @@ def main() -> int:
         "/api/tercume/memory-status",
         "/api/tercume/save-prefs",
         "/api/tercume/user-glossary",
+        "/api/tercume/review-queue",
+        "/api/tercume/batch-start",
+        "/api/workspace/read-ebook",
+        "/api/tercume/user-glossary/import",
+        "/api/tercume/tmx/export",
+        "/api/tercume/tmx/import",
+        "/api/tercume/aligned-diff",
     }
     missing = [p for p in needed if p not in paths]
     if missing:

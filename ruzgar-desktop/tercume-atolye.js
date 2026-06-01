@@ -425,6 +425,124 @@
     void refreshUserGlossary();
   }
 
+  async function importGlossaryFile(file) {
+    if (!file) return;
+    const text = await file.text();
+    const name = String(file.name || "").toLowerCase();
+    const fmt = name.endsWith(".json") ? "json" : "csv";
+    const fd = new FormData();
+    fd.append("text", text);
+    fd.append("fmt", fmt);
+    fd.append("merge", "1");
+    const res = await fetch(`${api()}/api/tercume/user-glossary/import`, { method: "POST", body: fd });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : j.error || "İçe aktarılamadı");
+    flash(`Terim içe aktarıldı: +${j.added || 0} (toplam ${j.total || "?"})`);
+    void refreshUserGlossary();
+  }
+
+  async function exportTmxFile() {
+    const fd = new FormData();
+    if (openRel) fd.append("rel", openRel);
+    fd.append("tgt_lang", String($("tercume-tgt-lang")?.value || "tr"));
+    fd.append("src_lang", String($("tercume-src-lang")?.value || "auto"));
+    const res = await fetch(`${api()}/api/tercume/tmx/export`, { method: "POST", body: fd });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : j.error || "TMX dışa aktarılamadı");
+    const blob = new Blob([String(j.tmx || "")], { type: "application/xml;charset=utf-8" });
+    const a = document.createElement("a");
+    const stem = openRel ? openRel.replace(/^.*[/\\]/, "").replace(/\.[^.]+$/, "") : "terimler";
+    a.href = URL.createObjectURL(blob);
+    a.download = `${stem || "terimler"}.tmx`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    flash(`TMX indirildi (${j.units || "?"} birim).`);
+  }
+
+  async function importTmxFile(file) {
+    if (!file) return;
+    const text = await file.text();
+    const fd = new FormData();
+    fd.append("text", text);
+    fd.append("tgt_lang", String($("tercume-tgt-lang")?.value || "tr"));
+    fd.append("merge", "1");
+    const res = await fetch(`${api()}/api/tercume/tmx/import`, { method: "POST", body: fd });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : j.error || "TMX içe aktarılamadı");
+    flash(`TMX içe aktarıldı: +${j.added || 0} terim`);
+    void refreshUserGlossary();
+  }
+
+  const ALIGNED_STATUS_TR = {
+    paired: "Eşleşti",
+    missing_target: "Hedef eksik",
+    extra_target: "Fazla hedef",
+    empty: "—",
+  };
+
+  function renderAlignedDiff(payload) {
+    const fold = $("tercume-aligned-fold");
+    const tbody = $("tercume-aligned-tbody");
+    const statsEl = $("tercume-aligned-stats");
+    if (!fold || !tbody) return;
+    const rows = Array.isArray(payload?.segments) ? payload.segments : [];
+    if (!rows.length) {
+      fold.hidden = true;
+      tbody.innerHTML = "";
+      return;
+    }
+    fold.hidden = false;
+    const st = payload.stats || {};
+    const warn = (st.missing_target || 0) + (st.extra_target || 0);
+    if (statsEl) {
+      statsEl.textContent = payload.aligned
+        ? `${rows.length} segment · hizalı`
+        : `${rows.length} segment · ${warn} uyarı`;
+    }
+    tbody.innerHTML = "";
+    for (const r of rows) {
+      const tr = document.createElement("tr");
+      const idx = document.createElement("td");
+      idx.textContent = String(r.page || r.index + 1);
+      const tdSrc = document.createElement("td");
+      tdSrc.className = "col-src";
+      tdSrc.textContent = (r.source || "").slice(0, 320) || "—";
+      const tdTgt = document.createElement("td");
+      tdTgt.className = "col-tgt";
+      tdTgt.textContent = (r.target || "").slice(0, 320) || "—";
+      const tdSt = document.createElement("td");
+      const code = String(r.status || "paired");
+      tdSt.className = `st-${code}`;
+      tdSt.textContent = ALIGNED_STATUS_TR[code] || code;
+      tr.appendChild(idx);
+      tr.appendChild(tdSrc);
+      tr.appendChild(tdTgt);
+      tr.appendChild(tdSt);
+      tbody.appendChild(tr);
+    }
+    fold.open = true;
+  }
+
+  async function runAlignedDiff() {
+    const tgt = getTargetText();
+    const src = getSourceText();
+    if (!tgt && !src) {
+      flash("Önce kaynak veya hedef metin olsun.");
+      return;
+    }
+    const fd = new FormData();
+    fd.append("source_text", src);
+    fd.append("target_text", tgt);
+    if (openRel) fd.append("rel", openRel);
+    flash("Hizalı karşılaştırma hazırlanıyor…");
+    const res = await fetch(`${api()}/api/tercume/aligned-diff`, { method: "POST", body: fd });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : j.error || "Diff başarısız");
+    renderAlignedDiff(j);
+    if (!j.aligned) flash("Segment sayıları tam hizalı değil — tabloya bakın.");
+    else flash("Kaynak ve hedef segmentler hizalı görünüyor.");
+  }
+
   async function refreshMemoryStatus() {
     const el = $("tercume-memory-status");
     if (!el) return;
@@ -891,6 +1009,7 @@
 
   let batchPollTimer = null;
   let activeBatchJobId = null;
+  let lastJobOutputs = [];
 
   function clearPageJobStorage() {
     try {
@@ -1035,6 +1154,138 @@
     }
   }
 
+  function renderReviewQueue(items) {
+    const fold = $("tercume-review-fold");
+    const ul = $("tercume-review-list");
+    const cnt = $("tercume-review-count");
+    if (!fold || !ul) return;
+    const rows = Array.isArray(items) ? items : [];
+    if (cnt) cnt.textContent = String(rows.length);
+    if (!rows.length) {
+      fold.hidden = true;
+      ul.innerHTML = "";
+      return;
+    }
+    fold.hidden = false;
+    ul.innerHTML = "";
+    for (const it of rows) {
+      const li = document.createElement("li");
+      const main = document.createElement("span");
+      main.className =
+        it.kind === "error" ? "review-main review-err" : "review-main review-warn";
+      const sc =
+        it.quality_score != null ? ` skor ${it.quality_score}` : it.error ? ` — ${it.error}` : "";
+      main.textContent = `${it.page}${sc}`;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "btn-secondary btn-compact";
+      btn.textContent = "Yeniden çevir";
+      btn.addEventListener("click", () => {
+        void retranslateReviewItem(it).catch((e) => flash(e.message || String(e)));
+      });
+      li.appendChild(main);
+      li.appendChild(btn);
+      ul.appendChild(li);
+    }
+  }
+
+  async function refreshReviewQueue(jobId) {
+    if (!jobId) {
+      renderReviewQueue([]);
+      return;
+    }
+    try {
+      const res = await fetch(
+        `${api()}/api/tercume/review-queue?job_id=${encodeURIComponent(jobId)}`,
+      );
+      const j = await res.json().catch(() => ({}));
+      if (res.ok && j.ok) {
+        renderReviewQueue(j.items || []);
+        return;
+      }
+    } catch {
+      /* fallback */
+    }
+    const items = [];
+    for (let i = 0; i < lastJobOutputs.length; i++) {
+      const o = lastJobOutputs[i];
+      if (!o || typeof o !== "object") continue;
+      if (o.ok === false) {
+        items.push({
+          kind: "error",
+          page: o.page,
+          page_index: o.page_index,
+          output_index: i,
+          error: o.error,
+        });
+      } else if (o.quality_score != null && Number(o.quality_score) < QUALITY_PASS) {
+        items.push({
+          kind: "low_quality",
+          page: o.page,
+          page_index: o.page_index,
+          output_index: i,
+          quality_score: o.quality_score,
+        });
+      }
+    }
+    renderReviewQueue(items);
+  }
+
+  function replaceTargetSegment(outputIndex, newText) {
+    const parts = getTargetText().split(/\n\n+/);
+    const idx = Number(outputIndex);
+    if (!Number.isFinite(idx) || idx < 0) return false;
+    if (idx < parts.length) {
+      parts[idx] = newText;
+      setTargetText(parts.join("\n\n"));
+      return true;
+    }
+    return false;
+  }
+
+  async function retranslateReviewItem(item) {
+    if (!openRel) {
+      flash("Önce kaynak dosyayı açın.");
+      return;
+    }
+    const res = await fetch(`${api()}/api/tercume/source-pages?rel=${encodeURIComponent(openRel)}`);
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok || !Array.isArray(j.pages)) {
+      throw new Error("Kaynak sayfa listesi alınamadı");
+    }
+    let page = null;
+    if (item.page_index != null) {
+      page = j.pages.find((p) => p.index === item.page_index);
+    }
+    if (!page && item.page) {
+      page = j.pages.find((p) => String(p.label) === String(item.page));
+    }
+    if (!page) {
+      throw new Error(`Sayfa bulunamadı: ${item.page}`);
+    }
+    flash(`Yeniden çevriliyor: ${item.page}…`);
+    const hit = await translateChunkApi(String(page.text || ""), page.index);
+    const escPage = String(item.page || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const errRe = new RegExp(`\\[HATA sayfa ${escPage}:[^\\]]*\\]`, "i");
+    let updated = false;
+    const tgt = getTargetText();
+    if (errRe.test(tgt)) {
+      setTargetText(tgt.replace(errRe, hit.text));
+      updated = true;
+    } else if (item.output_index != null) {
+      updated = replaceTargetSegment(item.output_index, hit.text);
+    }
+    if (!updated) {
+      setTargetText(`${tgt}\n\n${hit.text}`);
+      flash("Parça hedef sonuna eklendi (konum eşleşmedi).");
+    } else {
+      flash(`Güncellendi: ${item.page} (skor ${hit.quality?.score ?? "?"})`);
+    }
+    updateQualityStrip(hit.quality, item.page);
+    void refreshApprenticeLog();
+    if (activeBatchJobId) void refreshReviewQueue(activeBatchJobId);
+  }
+
   function renderPageJobLog(outputs, summary) {
     const ul = $("tercume-job-log");
     const sum = $("tercume-job-summary");
@@ -1063,6 +1314,8 @@
     }
     if (sum && summary != null) sum.textContent = String(summary);
     if (tail.length) ul.scrollTop = ul.scrollHeight;
+    lastJobOutputs = rows;
+    if (activeBatchJobId) void refreshReviewQueue(activeBatchJobId);
   }
 
   function countJobOutputs(outputs) {
@@ -1312,6 +1565,7 @@
           showProgress(done, total || 1, label);
           if (j.partial_text) setTargetText(String(j.partial_text));
           const outs = Array.isArray(j.outputs) ? j.outputs : [];
+          lastJobOutputs = outs;
           let okN = Number(j.ok_count);
           let errN = Number(j.error_count);
           if (!Number.isFinite(okN) || !Number.isFinite(errN)) {
@@ -1320,6 +1574,7 @@
             errN = c.errN;
           }
           renderPageJobLog(outs, `${okN} ✓ · ${errN} ✗ · ${done}/${total || "?"}`);
+          void refreshReviewQueue(jobId);
           if (j.quality_summary) updateQualityStripFromJob(j);
         } else {
           showProgress(done, total || 1, `Cilt sırası: ${label}`);
@@ -1986,6 +2241,22 @@ ${chunk}`;
       } catch (e) {
         flash(e.message || "OCR hatası");
       }
+    });
+    $("tercume-glossary-import-file")?.addEventListener("change", (ev) => {
+      const f = ev.target?.files?.[0];
+      if (f) void importGlossaryFile(f).catch((e) => flash(e.message || String(e)));
+      ev.target.value = "";
+    });
+    $("btn-tercume-tmx-export")?.addEventListener("click", () => {
+      void exportTmxFile().catch((e) => flash(e.message || String(e)));
+    });
+    $("tercume-tmx-import-file")?.addEventListener("change", (ev) => {
+      const f = ev.target?.files?.[0];
+      if (f) void importTmxFile(f).catch((e) => flash(e.message || String(e)));
+      ev.target.value = "";
+    });
+    $("btn-tercume-aligned-diff")?.addEventListener("click", () => {
+      void runAlignedDiff().catch((e) => flash(e.message || String(e)));
     });
     $("btn-tercume-term-add")?.addEventListener("click", () => {
       void addUserTerm().catch((e) => flash(e.message || String(e)));

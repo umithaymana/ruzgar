@@ -98,5 +98,5 @@ def export_meta(fmt: str) -> dict[str, Any]:
     return {
         "version": EXPORT_FORMAT_VERSION,
         "format": fmt,
-        "supports": ["txt", "md", "html"],
+        "supports": ["txt", "md", "html", "docx"],
     }

@@ -342,6 +342,23 @@ def memory_status(source_file: str, *, tgt_lang: str = "tr") -> dict[str, Any]:
     }
 
 
+def session_pair_list(source_file: str, *, tgt_lang: str = "tr") -> list[dict[str, str]]:
+    """TM oturumundaki src/tgt çiftleri (TMX dışa aktarma)."""
+    if not tercume_memory_enabled():
+        return []
+    st = _get_session(source_file, tgt_lang)
+    pairs = st.get("pairs") or []
+    out: list[dict[str, str]] = []
+    for p in pairs:
+        if not isinstance(p, dict):
+            continue
+        src = str(p.get("src") or "").strip()
+        tgt = str(p.get("tgt") or "").strip()
+        if src and tgt:
+            out.append({"src": src, "tgt": tgt})
+    return out
+
+
 def session_snapshot(source_file: str, *, tgt_lang: str = "tr") -> dict[str, Any]:
     hit = memory_status(source_file, tgt_lang=tgt_lang)
     if not hit.get("ok"):

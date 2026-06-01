@@ -41,7 +41,7 @@ def _mini_epub(path: Path) -> None:
 def main() -> int:
     from ilim_assistant.motorlar.tercume_ebook_read import EBOOK_READ_VERSION, read_epub
 
-    if "v15a" not in EBOOK_READ_VERSION:
+    if "v16a" not in EBOOK_READ_VERSION and "v15a" not in EBOOK_READ_VERSION:
         print("FAIL version", EBOOK_READ_VERSION)
         return 1
 

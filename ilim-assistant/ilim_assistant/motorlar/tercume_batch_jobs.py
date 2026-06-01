@@ -379,9 +379,11 @@ def _run_page_range(job_id: str, cfg: dict[str, Any]) -> None:
                 chunk = str(tr.get("text") or "")
                 parts.append(chunk)
                 q = tr.get("quality") if isinstance(tr.get("quality"), dict) else {}
+                pidx = int(p.get("index") if p.get("index") is not None else i)
                 outputs.append(
                     {
                         "page": label,
+                        "page_index": pidx,
                         "ok": True,
                         "quality_score": q.get("score"),
                         "quality_ok": q.get("ok"),
@@ -392,11 +394,22 @@ def _run_page_range(job_id: str, cfg: dict[str, Any]) -> None:
             else:
                 err = str(tr.get("error") or "?")
                 parts.append(f"[HATA sayfa {label}: {err}]")
-                outputs.append({"page": label, "ok": False, "error": err})
+                pidx = int(p.get("index") if p.get("index") is not None else i)
+                outputs.append(
+                    {"page": label, "page_index": pidx, "ok": False, "error": err}
+                )
                 error_count += 1
         except Exception as exc:
             parts.append(f"[HATA sayfa {label}: {str(exc)[:120]}]")
-            outputs.append({"page": label, "ok": False, "error": str(exc)[:120]})
+            pidx = int(p.get("index") if p.get("index") is not None else i)
+            outputs.append(
+                {
+                    "page": label,
+                    "page_index": pidx,
+                    "ok": False,
+                    "error": str(exc)[:120],
+                }
+            )
             error_count += 1
 
         _update(job_id, done=i + 1, outputs=outputs)

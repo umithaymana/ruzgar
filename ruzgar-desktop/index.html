@@ -850,7 +850,16 @@
                       <option value="txt">.txt</option>
                       <option value="md">.md</option>
                       <option value="html">.html</option>
+                      <option value="docx">.docx</option>
                     </select>
+                    <button
+                      type="button"
+                      class="btn-secondary btn-compact"
+                      id="btn-tercume-aligned-diff"
+                      title="Kaynak ve hedef segmentlerini yan yana karşılaştır"
+                    >
+                      Hizalı diff
+                    </button>
                     <select id="tercume-ocr-lang" class="tercume-lang-select" title="OCR dili (Arapça / Osmanlıca)">
                       <option value="auto">OCR: Otomatik</option>
                       <option value="ara">OCR: Arapça</option>
@@ -910,6 +919,10 @@
                     <span class="tercume-job-summary" id="tercume-job-summary">—</span>
                   </div>
                   <ul class="tercume-job-log" id="tercume-job-log" aria-live="polite"></ul>
+                  <details class="tercume-review-fold" id="tercume-review-fold" hidden>
+                    <summary>İnceleme kuyruğu (<span id="tercume-review-count">0</span>)</summary>
+                    <ul class="tercume-review-list" id="tercume-review-list"></ul>
+                  </details>
                   <details class="tercume-job-recent-fold">
                     <summary>Son arka plan işleri</summary>
                     <ul class="tercume-job-recent-list" id="tercume-job-recent-list"></ul>
@@ -940,6 +953,25 @@
                     <input type="file" id="tercume-import-file" hidden accept=".pdf,.docx,.epub,.txt,.md,.png,.jpg,.jpeg,.webp,.html,.rtf,.fb2,.mobi" />
                   </label>
                 </div>
+                <details class="tercume-aligned-fold" id="tercume-aligned-fold" hidden>
+                  <summary>
+                    Hizalı karşılaştırma
+                    <span class="tercume-aligned-stats" id="tercume-aligned-stats">—</span>
+                  </summary>
+                  <div class="tercume-aligned-scroll">
+                    <table class="tercume-aligned-table" id="tercume-aligned-table">
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>Kaynak</th>
+                          <th>Hedef</th>
+                          <th>Durum</th>
+                        </tr>
+                      </thead>
+                      <tbody id="tercume-aligned-tbody"></tbody>
+                    </table>
+                  </div>
+                </details>
                 <div class="tercume-footer-row">
                   <span id="tercume-stats">0 karakter</span>
                   <span
@@ -955,6 +987,22 @@
                       <input type="text" id="tercume-term-tgt" class="tercume-term-input" placeholder="Hedef çeviri" />
                       <input type="text" id="tercume-term-scope" class="tercume-term-input" placeholder="Kapsam (boş=tümü)" title="Örn. mektubat.pdf" />
                       <button type="button" class="btn-secondary btn-compact" id="btn-tercume-term-add">Ekle</button>
+                      <label class="btn-secondary btn-compact" style="cursor:pointer;margin:0">
+                        CSV/JSON
+                        <input
+                          type="file"
+                          id="tercume-glossary-import-file"
+                          hidden
+                          accept=".csv,.json,.txt,.tsv"
+                        />
+                      </label>
+                      <button type="button" class="btn-secondary btn-compact" id="btn-tercume-tmx-export">
+                        TMX indir
+                      </button>
+                      <label class="btn-secondary btn-compact" style="cursor:pointer;margin:0">
+                        TMX yükle
+                        <input type="file" id="tercume-tmx-import-file" hidden accept=".tmx,.xml,.txt" />
+                      </label>
                     </div>
                     <ul class="tercume-user-glossary-list" id="tercume-user-glossary-list"></ul>
                   </details>

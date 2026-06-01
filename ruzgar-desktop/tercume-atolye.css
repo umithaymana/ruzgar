@@ -754,6 +754,39 @@ body[data-motor="tercume"][data-tercume-tab="pasif"] #page-tercume .tercume-help
 #page-tercume .tercume-job-log-err {
   color: #f48771;
 }
+#page-tercume .tercume-review-fold {
+  font-size: 10px;
+  color: #c9b8ff;
+  margin-top: 4px;
+}
+#page-tercume .tercume-review-fold[hidden] {
+  display: none !important;
+}
+#page-tercume .tercume-review-list {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  max-height: 88px;
+  overflow-y: auto;
+}
+#page-tercume .tercume-review-list li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+  border-bottom: 1px solid #3a3545;
+  font-size: 10px;
+}
+#page-tercume .tercume-review-list .review-main {
+  flex: 1;
+  color: #ddd;
+}
+#page-tercume .tercume-review-list .review-err {
+  color: #f48771;
+}
+#page-tercume .tercume-review-list .review-warn {
+  color: #ffd580;
+}
 #page-tercume .tercume-job-recent-fold {
   font-size: 10px;
   color: #858585;
@@ -982,6 +1015,61 @@ body[data-motor="tercume"][data-tercume-tab="pasif"] #page-tercume .tercume-help
 }
 #page-tercume > .atelier-info-strip {
   display: none;
+}
+
+#page-tercume .tercume-aligned-fold {
+  font-size: 10px;
+  color: #b8b8b8;
+  margin: 4px 0;
+}
+#page-tercume .tercume-aligned-fold[hidden] {
+  display: none !important;
+}
+#page-tercume .tercume-aligned-stats {
+  color: #9cdcfe;
+  margin-left: 6px;
+}
+#page-tercume .tercume-aligned-scroll {
+  max-height: 140px;
+  overflow: auto;
+  border: 1px solid #3a3545;
+  border-radius: 4px;
+  margin-top: 4px;
+}
+#page-tercume .tercume-aligned-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+}
+#page-tercume .tercume-aligned-table th,
+#page-tercume .tercume-aligned-table td {
+  border-bottom: 1px solid #3a3545;
+  padding: 3px 5px;
+  vertical-align: top;
+  text-align: left;
+}
+#page-tercume .tercume-aligned-table .col-src {
+  width: 46%;
+  color: #ddd;
+}
+#page-tercume .tercume-aligned-table .col-tgt {
+  width: 46%;
+  color: #c9e8ff;
+}
+#page-tercume .tercume-aligned-table .st-paired {
+  color: #6a9955;
+}
+#page-tercume .tercume-aligned-table .st-missing_target {
+  color: #f48771;
+}
+#page-tercume .tercume-aligned-table .st-extra_target {
+  color: #ffd580;
+}
+#page-tercume .tercume-user-glossary-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
 }
 
 @media (max-width: 900px) {

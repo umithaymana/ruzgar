@@ -12,7 +12,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-USER_GLOSSARY_VERSION = "tercume-user-glossary-v15b-2026-05-29"
+USER_GLOSSARY_VERSION = "tercume-user-glossary-v17f-2026-05-29"
 _MAX_ENTRIES = 400
 
 _lock = threading.Lock()
@@ -134,6 +134,95 @@ def add_entry(
         data["entries"] = entries
         _save_raw(data)
     return {"ok": True, "entry": row, "total": len(entries)}
+
+
+def import_rows(
+    rows: list[dict[str, str]],
+    *,
+    merge: bool = True,
+) -> dict[str, Any]:
+    """Toplu terim içe aktarma (CSV/JSON/TMX sonrası)."""
+    if not user_glossary_enabled():
+        return {"ok": False, "error": "Kullanıcı sözlüğü kapalı."}
+    if not rows:
+        return {"ok": False, "error": "İçe aktarılacak satır yok."}
+    added = 0
+    skipped = 0
+    with _lock:
+        data = _load_raw()
+        entries = list(data.get("entries") or []) if merge else []
+        existing = {_norm(str(e.get("src"))) for e in entries if isinstance(e, dict)}
+        for raw in rows[:250]:
+            if not isinstance(raw, dict):
+                skipped += 1
+                continue
+            source = str(raw.get("src") or "").strip()
+            if len(source) < 2:
+                skipped += 1
+                continue
+            sl = _norm(source)
+            if sl in existing:
+                entries = [e for e in entries if not (isinstance(e, dict) and _norm(str(e.get("src"))) == sl)]
+                existing.discard(sl)
+            row = {
+                "id": uuid.uuid4().hex[:10],
+                "src": source,
+                "tr": str(raw.get("tr") or "").strip(),
+                "en": str(raw.get("en") or "").strip(),
+                "ar": str(raw.get("ar") or "").strip(),
+                "scope": str(raw.get("scope") or "").strip().replace("\\", "/"),
+                "note": str(raw.get("note") or "").strip()[:200],
+                "created_at": time.time(),
+            }
+            if not row["tr"] and not row["en"] and not row["ar"]:
+                skipped += 1
+                continue
+            entries.append(row)
+            existing.add(sl)
+            added += 1
+        if len(entries) > _MAX_ENTRIES:
+            entries = entries[-_MAX_ENTRIES:]
+        data["entries"] = entries
+        _save_raw(data)
+    return {
+        "ok": True,
+        "added": added,
+        "skipped": skipped,
+        "total": len(entries),
+        "version": USER_GLOSSARY_VERSION,
+    }
+
+
+def import_from_text(text: str, fmt: str = "", *, merge: bool = True) -> dict[str, Any]:
+    from ilim_assistant.motorlar.tercume_glossary_import import parse_glossary_import
+
+    parsed = parse_glossary_import(text, fmt)
+    if not parsed.get("ok"):
+        return parsed
+    hit = import_rows(list(parsed.get("rows") or []), merge=merge)
+    if hit.get("ok"):
+        hit["format"] = parsed.get("format")
+        hit["parsed"] = parsed.get("count")
+    return hit
+
+
+def import_from_tmx(text: str, *, tgt_lang: str = "tr", merge: bool = True) -> dict[str, Any]:
+    from ilim_assistant.motorlar.tercume_tmx import parse_tmx
+
+    code = (tgt_lang or "tr").strip().lower()[:2] or "tr"
+    col = {"tr": "tr", "en": "en", "ar": "ar"}.get(code, "tr")
+    pairs = parse_tmx(text)
+    if not pairs:
+        return {"ok": False, "error": "TMX içinde geçerli <tu> çifti yok."}
+    rows: list[dict[str, str]] = []
+    for src, tgt in pairs:
+        row = {"src": src, col: tgt}
+        rows.append(row)
+    hit = import_rows(rows, merge=merge)
+    if hit.get("ok"):
+        hit["format"] = "tmx"
+        hit["parsed"] = len(pairs)
+    return hit
 
 
 def delete_entry(entry_id: str) -> dict[str, Any]:

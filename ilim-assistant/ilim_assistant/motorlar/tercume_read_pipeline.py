@@ -344,10 +344,27 @@ def extract_source_pages(
             }
         )
         source_kind = "fb2"
+    elif ext in {".mobi", ".azw", ".azw3", ".kfx", ".djvu", ".djv"}:
+        from ilim_assistant.motorlar.tercume_ebook_read import read_ebook_auto
+
+        hit = read_ebook_auto(target)
+        if not hit.get("ok"):
+            return {"ok": False, "error": str(hit.get("error") or "E-kitap okunamadı")}
+        pages = chapters_to_pages(list(hit.get("chapters") or []))
+        meta.update(
+            {
+                "ebook_title": hit.get("title") or "",
+                "ebook_author": hit.get("author") or "",
+                "chapters_read": hit.get("chapters_read"),
+                "converter": (hit.get("meta") or {}).get("converter"),
+                "source_kind": ext.lstrip("."),
+            }
+        )
+        source_kind = "ebook"
     else:
         return {
             "ok": False,
-            "error": f"Okuma pipeline: {ext} henüz desteklenmiyor (pdf/txt/docx/epub/fb2/görsel).",
+            "error": f"Okuma pipeline: {ext} henüz desteklenmiyor (pdf/txt/docx/epub/fb2/mobi/görsel).",
         }
 
     if page_from is not None or page_to is not None:

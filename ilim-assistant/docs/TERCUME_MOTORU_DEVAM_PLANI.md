@@ -20,11 +20,14 @@ Bu not, ara sonrasinda ayni yerden devam etmek icin birakildi.
 
 Bkz. `TERCUME_FAZ14_OZET.md` (14A–14E).
 
+## Faz 17 (2026-05) — 14F/14G/P3 tamamlandi
+
+Bkz. `TERCUME_FAZ17_PLANI.md` (CSV/JSON import, DOCX, TMX, hizalı diff).
+
 ## Sonraki adimlar (oncelik sirasiyla)
 1. OCR kalite paketi (kismen var: `tercume_ocr_clean`, UI dil secimi)
-2. Book format: EPUB bolum + FB2 metadata
-3. Kullanici terim tablosu (TM duzenleme UI)
-4. Canli Ollama `tercume_live_smoke.py`
+2. Tam CAT: yan yana düzenleme + TMX segment birleştirme
+3. RTF okuma hattına tam entegrasyon
 
 ## Teknik notlar
 - Sadece Tercume Motoru dosyalarina dokunuldu.

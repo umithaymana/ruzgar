@@ -20,7 +20,7 @@ def main() -> int:
         user_glossary_directive,
     )
 
-    if "v15b" not in USER_GLOSSARY_VERSION:
+    if "v17f" not in USER_GLOSSARY_VERSION and "v15b" not in USER_GLOSSARY_VERSION:
         print("FAIL version", USER_GLOSSARY_VERSION)
         return 1
 

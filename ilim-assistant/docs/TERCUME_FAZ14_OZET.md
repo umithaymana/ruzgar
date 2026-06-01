@@ -19,6 +19,14 @@ python scripts/tercume_faz14d_smoke.py
 python scripts/tercume_faz14e_smoke.py
 ```
 
+## Faz 17 (eksik 14F/14G/P3 tamamlama)
+
+| Faz | Konu | Doküman |
+|-----|------|---------|
+| **14F** | CSV/JSON terim içe aktarma | `TERCUME_FAZ17_PLANI.md` |
+| **14G** | DOCX çıktı (`python-docx`) | aynı |
+| **P3** | TMX dışa/içe + hizalı diff UI | aynı |
+
 ## Faz 15
 
 Bkz. `TERCUME_FAZ15_PLANI.md` (15A–15C).

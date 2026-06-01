@@ -615,9 +615,26 @@ def workbench_config() -> dict[str, Any]:
         },
         "export_faz14e": {
             "version": "tercume-export-faz14e-2026-05-29",
-            "formats": ["txt", "md", "html"],
+            "formats": ["txt", "md", "html", "docx"],
             "md_headings": True,
             "html_template": True,
+        },
+        "glossary_import_faz14f": {
+            "version": "tercume-glossary-import-v17f-2026-05-29",
+            "route": "/api/tercume/user-glossary/import",
+            "formats": ["csv", "json"],
+        },
+        "export_docx_faz14g": {
+            "version": "tercume-export-docx-v17g-2026-05-29",
+            "requires": "python-docx",
+        },
+        "tmx_faz17": {
+            "version": "tercume-tmx-v17-2026-05-29",
+            "routes": ["/api/tercume/tmx/export", "/api/tercume/tmx/import"],
+        },
+        "aligned_diff_faz17": {
+            "version": "tercume-aligned-diff-v17-2026-05-29",
+            "route": "/api/tercume/aligned-diff",
         },
         "ebook_faz15a": {
             "version": "tercume-ebook-read-v15a-2026-05-29",
@@ -626,11 +643,12 @@ def workbench_config() -> dict[str, Any]:
             "chapter_labels": True,
         },
         "user_glossary_faz15b": {
-            "version": "tercume-user-glossary-v15b-2026-05-29",
+            "version": "tercume-user-glossary-v17f-2026-05-29",
             "routes": [
                 "/api/tercume/user-glossary",
                 "/api/tercume/user-glossary/add",
                 "/api/tercume/user-glossary/delete",
+                "/api/tercume/user-glossary/import",
             ],
             "storage": ".ruzgar/tercume_user_glossary.json",
         },
@@ -638,6 +656,16 @@ def workbench_config() -> dict[str, Any]:
             "version": "tercume-live-smoke-v15c-2026-05-29",
             "script": "scripts/tercume_live_smoke.py",
             "env_flag": "RUZGAR_TERCUME_LIVE_SMOKE",
+        },
+        "ebook_faz16a": {
+            "version": "tercume-ebook-read-v16a-2026-05-29",
+            "calibre_exts": [".mobi", ".azw", ".azw3", ".kfx"],
+            "djvu_exts": [".djvu", ".djv"],
+        },
+        "review_faz16b": {
+            "version": "tercume-review-queue-v16b-2026-05-29",
+            "route": "/api/tercume/review-queue",
+            "pass_score": 55,
         },
         "read_routes": [
             "/api/tercume/read-start",
