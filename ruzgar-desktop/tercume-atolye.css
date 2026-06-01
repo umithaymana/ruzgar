@@ -544,7 +544,8 @@ body[data-motor="tercume"][data-tercume-tab="okuma"] #page-tercume .tercume-help
 #page-tercume .tercume-progress-wrap {
   margin: 6px 0 4px;
 }
-#page-tercume .tercume-ocr-warn {
+#page-tercume .tercume-ocr-warn,
+#page-tercume .tercume-readiness-warn {
   margin: 0 0 8px;
   padding: 8px 10px;
   border-radius: 4px;
@@ -554,11 +555,21 @@ body[data-motor="tercume"][data-tercume-tab="okuma"] #page-tercume .tercume-help
   font-size: 12px;
   line-height: 1.45;
 }
-#page-tercume .tercume-ocr-warn[hidden] {
+#page-tercume .tercume-readiness-warn {
+  border-color: #5a4a8a;
+  background: #2a2438;
+  color: #e8e0f8;
+}
+#page-tercume .tercume-ocr-warn[hidden],
+#page-tercume .tercume-readiness-warn[hidden] {
   display: none !important;
 }
-#page-tercume .tercume-ocr-warn strong {
+#page-tercume .tercume-ocr-warn strong,
+#page-tercume .tercume-readiness-warn strong {
   color: #ffd580;
+}
+#page-tercume .tercume-readiness-warn strong {
+  color: #c9b8ff;
 }
 #page-tercume .tercume-progress-wrap {
   padding: 4px 10px;

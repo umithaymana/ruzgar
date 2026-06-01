@@ -3841,8 +3841,10 @@ def api_tercume_save_target(
             copy_path.parent.mkdir(parents=True, exist_ok=True)
             copy_path.write_text(body, encoding="utf-8")
             out["copy_rel"] = copy_path.relative_to(REPO_ROOT).as_posix()
-        except HTTPException:
-            pass
+        except HTTPException as exc:
+            out["copy_error"] = str(exc.detail)
+        except OSError as exc:
+            out["copy_error"] = f"İkinci kopya yazılamadı: {str(exc)[:200]}"
     return out
 
 
@@ -4272,6 +4274,17 @@ def api_tercume_config():
     from ilim_assistant.motorlar.tercume_atolye import workbench_config
 
     return {"ok": True, **workbench_config()}
+
+
+@app.get("/api/tercume/readiness")
+def api_tercume_readiness(
+    need_internet: int = Query(0),
+) -> dict[str, Any]:
+    """Faz 13 — çeviri + OCR + arama hazırlık özeti."""
+    from ilim_assistant.motorlar.tercume_readiness import collect_tercume_readiness
+
+    net = str(need_internet or "0").strip().lower() in ("1", "true", "yes")
+    return collect_tercume_readiness(need_internet=net)
 
 
 @app.post("/api/tercume/batch-start")

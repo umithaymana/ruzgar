@@ -52,6 +52,7 @@ def main() -> int:
         "/api/tercume/translate-chunk",
         "/api/tercume/source-pages",
         "/api/tercume/config",
+        "/api/tercume/readiness",
     }
     missing = [p for p in needed if p not in paths]
     if missing:

@@ -450,8 +450,13 @@
         data?.expanded_query && String(data.expanded_query).trim() !== q
           ? ` Alias: «${String(data.expanded_query).slice(0, 80)}».`
           : "";
+      const sb = data?.search_backend;
+      const ddgNote =
+        sb && sb.ok === false
+          ? ` ⚠ ${(Array.isArray(data.search_hints) && data.search_hints[0]) || sb.detail || "DDG kapalı"}.`
+          : "";
       hint.textContent = q
-        ? `«${q}» — ${items.length} sonuç.${localFirst}${weak}${local}${expanded} Aç → site · Arşive al → indirme kuyruğu.`
+        ? `«${q}» — ${items.length} sonuç.${localFirst}${weak}${local}${expanded}${ddgNote} Aç → site · Arşive al → indirme kuyruğu.`
         : "Arama henüz yapılmadı.";
     }
     if (!items.length) {
@@ -524,6 +529,7 @@
         lines.slice(0, 4).join(" · ") +
         (hints[0] ? ` · ${hints[0]}` : ""),
     );
+    void refreshReadiness();
     return j;
   }
 
@@ -783,6 +789,35 @@
     }
   }
 
+  async function refreshReadiness() {
+    const box = $("tercume-readiness-warn");
+    const txt = $("tercume-readiness-warn-text");
+    if (!box || !txt) return;
+    try {
+      const res = await fetch(`${api()}/api/tercume/readiness`);
+      const j = await res.json().catch(() => ({}));
+      if (!j.ok || j.ready) {
+        box.hidden = true;
+        return;
+      }
+      const blockers = Array.isArray(j.blockers) ? j.blockers.filter(Boolean) : [];
+      const hints = Array.isArray(j.hints) ? j.hints.filter(Boolean) : [];
+      const brain = j.brain || {};
+      const chain = Array.isArray(brain.chain) ? brain.chain.join(" + ") : "";
+      box.hidden = false;
+      txt.textContent =
+        blockers[0] ||
+        hints[0] ||
+        (brain.ollama_only
+          ? `Ollama-only — ${brain.ollama_model || "ollama serve gerekli"}`
+          : chain
+            ? `Çeviri beyni: ${chain}`
+            : "Hazırlık eksik — «Hazırlık» düğmesine basın.");
+    } catch {
+      box.hidden = true;
+    }
+  }
+
   async function refreshOcrWarning() {
     const box = $("tercume-ocr-warn");
     const txt = $("tercume-ocr-warn-text");
@@ -828,7 +863,12 @@
     if (wr) fd.append("workspace_root", wr);
     const res = await fetch(`${api()}/api/tercume/translate-chunk`, { method: "POST", body: fd });
     const j = await res.json().catch(() => ({}));
-    if (!j.ok) throw new Error(j.error || j.detail || `HTTP ${res.status}`);
+    if (!j.ok) {
+      const msg = String(j.hint_tr || j.error || j.detail || `HTTP ${res.status}`).trim();
+      const err = new Error(msg);
+      if (j.error_code) err.errorCode = j.error_code;
+      throw err;
+    }
     return String(j.text || "");
   }
 
@@ -1153,6 +1193,7 @@ ${chunk}`;
       const cur = document.body.dataset.tercumeTab || "calisma";
       setTercumeTab(cur);
       void refreshOcrWarning();
+      void refreshReadiness();
     } else {
       delete document.body.dataset.motor;
       delete document.body.dataset.tercumeTab;
@@ -1323,6 +1364,7 @@ ${chunk}`;
     void refreshTree();
     void refreshApprenticeLog();
     void refreshOcrWarning();
+    void refreshReadiness();
   }
 
   global.RuzgarTercumeAtolye = {

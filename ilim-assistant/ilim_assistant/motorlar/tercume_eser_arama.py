@@ -10,6 +10,24 @@ from urllib.parse import urlparse
 
 TERCUME_ESER_ARAMA_VERSION = "tercume-eser-arama-v2-2026-05-31"
 
+
+def duckduckgo_search_available() -> tuple[bool, str]:
+    """DDG web araması için ddgs / duckduckgo_search kurulu mu."""
+    try:
+        from ddgs import DDGS  # noqa: F401
+
+        return True, "ddgs"
+    except ImportError:
+        try:
+            from duckduckgo_search import DDGS  # noqa: F401
+
+            return True, "duckduckgo_search (ddgs önerilir)"
+        except ImportError:
+            return (
+                False,
+                "pip install ddgs — Archive API ve doğrudan site linkleri yine çalışır",
+            )
+
 # (etiket, ek sorgu parçası — site: DDG’de bazen boş döner; alan adı eklenir)
 _TRUSTED_SITE_QUERIES: list[tuple[str, str]] = [
     ("Google Scholar", "scholar.google.com"),
@@ -61,10 +79,18 @@ def _ddgs_rows(query: str, max_results: int) -> list[dict[str, Any]]:
             return []
 
     try:
+        import warnings
+
         try:
             from ddgs import DDGS
         except ImportError:
-            from duckduckgo_search import DDGS  # type: ignore[no-redef]
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore",
+                    message=r".*duckduckgo_search.*renamed to.*ddgs.*",
+                    category=RuntimeWarning,
+                )
+                from duckduckgo_search import DDGS  # type: ignore[no-redef]
 
         with DDGS() as ddgs:
             raw = _run_ddgs(ddgs)
@@ -368,6 +394,14 @@ def search_eser_merged(
 
     items.sort(key=_sort_key)
 
+    sb_ok, sb_detail = duckduckgo_search_available()
+    search_hints: list[str] = []
+    if not sb_ok:
+        search_hints.append(
+            f"DuckDuckGo arama kapalı ({sb_detail}). "
+            "Archive.org API ve doğrudan site girişleri kullanıldı."
+        )
+
     return {
         "ok": True,
         "version": TERCUME_ESER_ARAMA_VERSION,
@@ -378,4 +412,6 @@ def search_eser_merged(
         "total": len(items),
         "queries_run": queries_run,
         "scholar_url": scholar_search_url(base),
+        "search_backend": {"ok": sb_ok, "detail": sb_detail},
+        "search_hints": search_hints,
     }

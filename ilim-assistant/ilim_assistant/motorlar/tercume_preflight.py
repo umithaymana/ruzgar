@@ -22,6 +22,21 @@ def _check(label: str, ok: bool, *, detail: str = "", required: bool = True) -> 
 
 
 def _brain_ok() -> tuple[bool, str]:
+    try:
+        from ilim_assistant.motorlar.tercume_llm import translation_brain_status
+
+        st = translation_brain_status()
+        if st.get("ready"):
+            chain = st.get("chain") or []
+            detail = " + ".join(chain) if chain else "hazır"
+            if st.get("ollama_only"):
+                detail = f"Ollama-only · {st.get('ollama_model') or detail}"
+            return True, detail
+        if st.get("ollama_only"):
+            return False, "Ollama gerekli (RUZGAR_OLLAMA_ONLY=1) — ollama serve + model"
+        return False, "GEMINI_API_KEY, GROQ_API_KEY veya Ollama gerekli"
+    except Exception:
+        pass
     gem = bool((os.environ.get("GEMINI_API_KEY") or os.environ.get("GLOBAL_API_KEY") or "").strip())
     groq = bool((os.environ.get("GROQ_API_KEY") or "").strip())
     ollama = False
@@ -149,7 +164,15 @@ def run_tercume_preflight(
     ready = len(required_fail) == 0
     hints: list[str] = []
     if not brain_ok:
-        hints.append("Çeviri için Gemini/Groq anahtarı veya yerel Ollama açın.")
+        try:
+            from ilim_assistant.config import ollama_only_mode
+
+            if ollama_only_mode():
+                hints.append("RUZGAR_OLLAMA_ONLY=1: yalnız Ollama — `ollama serve` ve model pull.")
+            else:
+                hints.append("Çeviri için Gemini/Groq anahtarı veya yerel Ollama açın.")
+        except Exception:
+            hints.append("Çeviri için Gemini/Groq anahtarı veya yerel Ollama açın.")
     if need_internet and not any(c.get("id") == "internet_aramasi" and c.get("ok") for c in checks):
         hints.append("Arama/indirme için internet gerekli.")
     ocr_row = next((c for c in checks if c.get("id") == "ocr_(tesseract)"), None)

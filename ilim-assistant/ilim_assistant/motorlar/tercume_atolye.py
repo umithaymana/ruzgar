@@ -325,9 +325,14 @@ def translation_leaked_source_language(output: str, tgt_lang: str) -> bool:
 
 
 def _llm_translate(system: str, user: str, *, max_tokens: int = 4000) -> str:
-    from ilim_assistant.ruzgar_egitim_anlama import _llm_complete
+    from ilim_assistant.motorlar.tercume_llm import translate_completion
 
-    return (_llm_complete(system, user, max_tokens=max_tokens) or "").strip()
+    res = translate_completion(system, user, max_tokens=max_tokens)
+    if res.get("ok"):
+        return str(res.get("text") or "").strip()
+    code = str(res.get("error_code") or "translate_failed")
+    hint = str(res.get("hint_tr") or res.get("error") or "Çeviri başarısız.")
+    raise RuntimeError(f"{code}: {hint}")
 
 
 def _build_faz4_context(
@@ -406,12 +411,12 @@ def translate_chunk(
 ) -> dict[str, Any]:
     chunk = (text or "").strip()
     if not chunk:
-        return {"ok": False, "error": "Metin boş"}
+        return {"ok": False, "error": "Metin boş", "error_code": "empty_text"}
     if len(chunk) > tercume_chunk_max_chars():
         chunk = chunk[: tercume_chunk_max_chars()] + "\n\n… [parça kısaltıldı]"
     units = split_translation_units(chunk)
     if not units:
-        return {"ok": False, "error": "Metin boş"}
+        return {"ok": False, "error": "Metin boş", "error_code": "empty_text"}
     _ctx_meta: dict[str, Any] = {}
     try:
         if len(units) == 1:
@@ -449,10 +454,26 @@ def translate_chunk(
                 )
             out = "\n".join(parts)
             mode = "multiline"
+    except RuntimeError as exc:
+        msg = str(exc)
+        if ":" in msg:
+            code, _, hint = msg.partition(":")
+            return {
+                "ok": False,
+                "error": hint.strip() or msg,
+                "error_code": code.strip(),
+                "hint_tr": hint.strip(),
+            }
+        return {"ok": False, "error": msg[:200], "error_code": "translate_failed"}
     except Exception as exc:
-        return {"ok": False, "error": str(exc)[:200]}
+        return {"ok": False, "error": str(exc)[:200], "error_code": "translate_error"}
     if not out:
-        return {"ok": False, "error": "LLM yanıt vermedi (Ollama/bulut kontrol edin)."}
+        return {
+            "ok": False,
+            "error": "LLM yanıt vermedi.",
+            "error_code": "empty_response",
+            "hint_tr": "Ollama serve ve model pull kontrol edin (llama3.1:8b).",
+        }
     from ilim_assistant.motorlar.tercume_translate_memory import record_translation
 
     record_translation(
@@ -637,4 +658,8 @@ def workbench_config() -> dict[str, Any]:
             "ilim-assistant/arsiv",
         ),
         "langs": _LANG_LABEL,
+        "readiness_faz13": {
+            "version": "tercume-readiness-v13-2026-06-01",
+            "route": "/api/tercume/readiness",
+        },
     }
