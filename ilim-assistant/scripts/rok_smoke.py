@@ -33,7 +33,10 @@ def main() -> int:
     else:
         fail("ROK flags", str(kpi.get("motors")))
 
+    from ilim_assistant.motorlar import mimar_faz5
     from ilim_assistant.ruzgar_motor_kernel import classify_motor_intent, kernel_enabled
+
+    mimar_faz5.ensure_kernel_registered()
 
     if kernel_enabled():
         ok("motor kernel on")

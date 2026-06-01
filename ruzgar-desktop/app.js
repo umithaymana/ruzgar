@@ -9090,6 +9090,21 @@ async function sendMessageWithText(t, opts = {}) {
     appendBubble("user", text);
   }
   if (
+    (currentMode === "mimar" || currentMode === "okuma") &&
+    window.RuzgarMimarAtolye?.tryAtolyeFromMessage
+  ) {
+    const mimarHit = await window.RuzgarMimarAtolye.tryAtolyeFromMessage(text);
+    if (mimarHit?.handled && mimarHit.instant) {
+      appendBubble("assistant", mimarHit.reply || "Tamam.");
+      setStatus("Mimar atölye", "Rüzgar");
+      if (el.send) el.send.disabled = false;
+      perfBusy = false;
+      updatePerformanceIndicators(perfBusy);
+      syncInterruptButton();
+      return;
+    }
+  }
+  if (
     currentMode === "tercume" &&
     window.RuzgarTercumeAtolye?.isSearchIntent?.(text) &&
     window.RuzgarTercumeAtolye?.runSearch

@@ -20,8 +20,8 @@
 ## Uygulama sırası
 
 1. **5H** — `ana_motor_hub_faz76`: mimar etiket + yönlendirme ✅
-2. **5C** — `mimar_faz5.py` + smoke
-3. **5U** — `app.js` + `mimar-atolye.js`: niyet JSON → sekme/aksiyon
+2. **5C** — `mimar_faz5.py` + smoke ✅
+3. **5U** — `app.js` + `mimar-atolye.js`: niyet JSON → sekme/aksiyon ✅
 4. **5A** — okuma arşiv API’lerini tercüme/okuma’da tut; mimar yalnız `mimar-*` arşivi
 
 ---

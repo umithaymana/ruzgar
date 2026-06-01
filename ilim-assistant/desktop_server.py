@@ -714,6 +714,10 @@ class MimarSanatAnalyzeBody(BaseModel):
     depth: str = Field(default="deep", description="quick | deep")
 
 
+class MimarAtolyeParseBody(BaseModel):
+    message: str = ""
+
+
 class MimarSanatCopyBody(BaseModel):
     rel: str = Field(..., description="ilim-assistant/arsiv/mimar-sanat/…")
     mode: str = Field(default="trace", description="trace | poster | pencil")
@@ -4642,6 +4646,13 @@ async def api_mimar_fotograf_restoration_apply(body: MimarFotoModerateBody) -> d
 
 
 # —— Mimar · Sanat (Faz 4S-1) ——
+@app.post("/api/mimar/atolye/parse")
+def api_mimar_atolye_parse(body: MimarAtolyeParseBody) -> dict[str, Any]:
+    from ilim_assistant.motorlar import mimar_faz5  # noqa: F401 — ROK kaydı
+
+    return mimar_faz5.atolye_parse_payload(body.message)
+
+
 @app.get("/api/mimar/sanat/capabilities")
 def api_mimar_sanat_capabilities() -> dict[str, Any]:
     from ilim_assistant.motorlar.mimar_sanat import capabilities

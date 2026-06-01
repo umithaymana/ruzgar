@@ -281,7 +281,7 @@ def maybe_hub_instant(
     _instant_fns: dict[str, tuple[str, str]] = {
         "video": ("ilim_assistant.motorlar.video_faz71", "maybe_instant_faz71"),
         "ses": ("ilim_assistant.motorlar.ses_faz72", "maybe_instant_faz72"),
-        "mimar": ("ilim_assistant.motorlar.okuma_faz73", "maybe_instant_faz73"),
+        "mimar": ("ilim_assistant.motorlar.mimar_faz5", "maybe_instant_faz5"),
         "okuma": ("ilim_assistant.motorlar.okuma_faz73", "maybe_instant_faz73"),
         "tercume": ("ilim_assistant.motorlar.tercume_faz74", "maybe_instant_faz74"),
     }

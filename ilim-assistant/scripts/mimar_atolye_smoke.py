@@ -24,6 +24,7 @@ def main() -> int:
         "/api/mimar/fotograf/list",
         "/api/mimar/fotograf/upload",
         "/api/mimar/fotograf/ocr",
+        "/api/mimar/atolye/parse",
         "/api/mimar/sanat/list",
         "/api/mimar/sanat/copy",
         "/api/mimar/sanat/sketch",
@@ -88,13 +89,11 @@ def main() -> int:
                 if cp.get("mode") != mode:
                     return _fail(f"copy_work mode {mode}")
 
-    from ilim_assistant.motorlar.okuma_faz73 import (
-        classify_okuma_intent,
-        ensure_kernel_registered,
-    )
+    from ilim_assistant.motorlar import mimar_faz5
+    from ilim_assistant.motorlar.okuma_faz73 import classify_okuma_intent
     from ilim_assistant.ruzgar_motor_kernel import classify_motor_intent
 
-    ensure_kernel_registered()
+    mimar_faz5.ensure_kernel_registered()
     oi = classify_okuma_intent("arsiv durumu", mode_norm="okuma")
     mi = classify_okuma_intent("arsiv durumu", mode_norm="mimar")
     if oi.get("intent") != "command" or mi.get("intent") != "command":

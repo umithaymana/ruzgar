@@ -1238,15 +1238,54 @@
     }
   }
 
-  async function sketchFromChat() {
-    if (tasarimBusy) return;
-    const notes = $("mimar-tasarim-notes")?.value?.trim() || "";
+  async function sketchFromText(prompt) {
+    const text = String(prompt || "").trim();
+    if (!text) {
+      flash("Çizim için kısa bir betimleme yazın.");
+      return false;
+    }
+    if (tasarimBusy) return false;
+    tasarimBusy = true;
+    updateTasarimStatus("Betimlemeden çiziliyor…");
+    try {
+      await ensureTasarimProject();
+      const w = tasarimProject.width || 960;
+      const h = tasarimProject.height || 540;
+      const res = await fetch(`${api()}/api/mimar/tasarim/sketch/from-text`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, width: w, height: h, project_id: tasarimProject.id || "" }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : `HTTP ${res.status}`);
+      if (j.project) setTasarimProject(j.project);
+      else {
+        const layer = getTasarimLayer("eskiz");
+        if (layer) layer.commands = j.commands || [];
+      }
+      renderTasarimLayers();
+      renderTasarimCanvas();
+      flash(j.label_tr || "Eskiz hazır.");
+      updateTasarimStatus(j.label_tr || "Betimleme çizildi");
+      return true;
+    } catch (e) {
+      flash(String(e.message || e));
+      updateTasarimStatus(String(e.message || e));
+      return false;
+    } finally {
+      tasarimBusy = false;
+    }
+  }
+
+  async function sketchFromChat(overrides = {}) {
+    if (tasarimBusy) return false;
+    const notes = overrides.notes ?? ($("mimar-tasarim-notes")?.value?.trim() || "");
     const handoff = deps.getChatHandoff?.() || {};
-    const user = handoff.user || "";
-    const assistant = handoff.assistant || deps.lastAssistantReply?.()?.trim() || "";
+    const user = overrides.user ?? handoff.user ?? "";
+    const assistant = overrides.assistant ?? handoff.assistant ?? deps.lastAssistantReply?.()?.trim() ?? "";
     if (!notes && !user && !assistant) {
       flash("Not alanına betimleme yazın veya önce sohbet edin.");
-      return;
+      return false;
     }
     tasarimBusy = true;
     updateTasarimStatus("Sohbet handoff → tuval…");
@@ -1278,11 +1317,143 @@
       const src = j.source === "gemini" ? "Gemini" : "Temel şekil";
       flash(j.label_tr || "Sohbetten çizim hazır.");
       updateTasarimStatus(`${j.label_tr || "Handoff"} · ${src}`);
+      return true;
     } catch (e) {
       flash(String(e.message || e));
       updateTasarimStatus(String(e.message || e));
+      return false;
     } finally {
       tasarimBusy = false;
+    }
+  }
+
+  async function runAtolyeAction(spec) {
+    const act = spec || {};
+    const action = act.action || "";
+    if (action === "help") {
+      return { ok: true, skipChat: true, reply: null };
+    }
+    if (act.tab) setMimarTab(act.tab);
+
+    if (action === "open_tab") {
+      flash(act.label_tr || "Sekme açıldı.");
+      return { ok: true, skipChat: true, reply: act.label_tr };
+    }
+
+    switch (action) {
+      case "sketch_from_chat": {
+        const hint = act.user_hint || "";
+        if (hint && $("mimar-tasarim-notes")) $("mimar-tasarim-notes").value = hint;
+        const ok = await sketchFromChat(
+          hint ? { user: hint, assistant: "", notes: hint } : {},
+        );
+        return {
+          ok,
+          skipChat: true,
+          reply: ok ? "Ümit abi, tuval güncellendi." : "Çizim tamamlanamadı — not veya sohbet ekleyin.",
+        };
+      }
+      case "sketch_from_text": {
+        const ok = await sketchFromText(act.prompt || "");
+        return { ok, skipChat: true, reply: ok ? "Betimlemeden eskiz hazır." : null };
+      }
+      case "identify": {
+        if (!activeSanatItem()?.rel) {
+          return {
+            ok: false,
+            skipChat: true,
+            reply: "Ümit abi, önce galeriden bir eser seçin; sonra «eseri tanı» deyin.",
+          };
+        }
+        await runSanatAnalyze("quick");
+        return { ok: true, skipChat: true, reply: "Eser tanıma bitti — sağdaki alanlara bakın." };
+      }
+      case "analyze": {
+        if (!activeSanatItem()?.rel) {
+          return {
+            ok: false,
+            skipChat: true,
+            reply: "Ümit abi, önce bir eser seçin; sonra detaylı rapor isteyin.",
+          };
+        }
+        await runSanatAnalyze(act.depth === "deep" ? "deep" : "quick");
+        return { ok: true, skipChat: true, reply: "Detaylı rapor hazır." };
+      }
+      case "sketch": {
+        if (!activeSanatItem()?.rel) {
+          return { ok: false, skipChat: true, reply: "Önce galeriden eser seçin." };
+        }
+        await sketchSanatWork();
+        return { ok: true, skipChat: true, reply: "Eskiz katmanı üretildi." };
+      }
+      case "copy": {
+        if (!activeSanatItem()?.rel) {
+          return { ok: false, skipChat: true, reply: "Önce eser seçin; sonra kopya çıkarın." };
+        }
+        await copySanatWork(act.mode || "trace");
+        return { ok: true, skipChat: true, reply: "Kopya üretildi — «Kopya gör» ile bakın." };
+      }
+      case "restore": {
+        if (!activeFotoItem()?.rel) {
+          return { ok: false, skipChat: true, reply: "Önce fotoğraf ekleyin ve seçin." };
+        }
+        toggleRestorePanel(true);
+        return { ok: true, skipChat: true, reply: "Restorasyon paneli açık — önizleme seçip uygulayın." };
+      }
+      case "ocr":
+      case "voice_speak": {
+        if (!activeFotoItem()?.rel) {
+          return { ok: false, skipChat: true, reply: "Önce bir fotoğraf seçin." };
+        }
+        toggleVoicePanel(true);
+        void runFotoVoice(action === "voice_speak" ? "speak" : "read");
+        return { ok: true, skipChat: true, reply: "Fotoğraf ses/metin işlemi başlatıldı." };
+      }
+      case "regenerate": {
+        await regenerateTasarimProject();
+        return { ok: true, skipChat: true, reply: "Proje yenilendi." };
+      }
+      case "duplicate_project": {
+        await duplicateTasarimProject();
+        return { ok: true, skipChat: true, reply: "Proje kopyalandı." };
+      }
+      case "export_png": {
+        exportTasarimPng();
+        return { ok: true, skipChat: true, reply: "PNG indiriliyor." };
+      }
+      default:
+        return { ok: false, skipChat: false };
+    }
+  }
+
+  async function tryAtolyeFromMessage(text) {
+    const msg = String(text || "").trim();
+    if (!msg) return { handled: false };
+    try {
+      const res = await fetch(`${api()}/api/mimar/atolye/parse`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: msg }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.ok) return { handled: false };
+
+      if (j.instant_reply && !j.run) {
+        return { handled: true, instant: true, reply: j.instant_reply };
+      }
+      if (!j.run || !j.atolye) return { handled: false };
+
+      const r = await runAtolyeAction(j.atolye);
+      if (r?.skipChat) {
+        return {
+          handled: true,
+          instant: true,
+          reply: r.reply || j.atolye.label_tr || "Atölye işlemi tamam.",
+        };
+      }
+      return { handled: !!r?.ok };
+    } catch {
+      return { handled: false };
     }
   }
 
@@ -1443,6 +1614,8 @@
     },
     setMimarTab,
     syncMimarLayout,
+    tryAtolyeFromMessage,
+    runAtolyeAction,
     load() {
       void refreshFotoList();
       void refreshSanatList();
