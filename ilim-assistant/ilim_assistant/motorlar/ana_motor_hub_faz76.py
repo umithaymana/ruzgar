@@ -27,7 +27,7 @@ _HUB_MOTORS = (
     "hafiza",
     "tercume",
     "ses",
-    "okuma",
+    "mimar",
     "hizir",
 )
 
@@ -37,7 +37,8 @@ _MOTOR_LABEL = {
     "hafiza": "Hafıza",
     "tercume": "Tercüme",
     "ses": "Ses",
-    "okuma": "Okuma / İlim",
+    "mimar": "Mimar atölyesi",
+    "okuma": "Mimar (eski ad)",
     "hizir": "Hızır / Ticaret",
     "genel": "Ana Motor",
 }
@@ -188,7 +189,10 @@ def resolve_hub_target(
         except Exception:
             continue
         sc = _score_intent(spec)
-        if flags.get(mid) or flags.get("bilim") and mid == "okuma":
+        if flags.get(mid) or (
+            mid == "mimar"
+            and (flags.get("okuma") or flags.get("bilim") or flags.get("mimar"))
+        ):
             sc += 1
         if flags.get("bellek") and mid == "hafiza":
             sc += 1
@@ -277,6 +281,7 @@ def maybe_hub_instant(
     _instant_fns: dict[str, tuple[str, str]] = {
         "video": ("ilim_assistant.motorlar.video_faz71", "maybe_instant_faz71"),
         "ses": ("ilim_assistant.motorlar.ses_faz72", "maybe_instant_faz72"),
+        "mimar": ("ilim_assistant.motorlar.okuma_faz73", "maybe_instant_faz73"),
         "okuma": ("ilim_assistant.motorlar.okuma_faz73", "maybe_instant_faz73"),
         "tercume": ("ilim_assistant.motorlar.tercume_faz74", "maybe_instant_faz74"),
     }
@@ -320,7 +325,8 @@ def format_hub_help() -> str:
         "· Hatırla / görev → **Hafıza**",
         "· Çevir → **Tercüme**",
         "· Ses / TTS → **Ses**",
-        "· Arşiv / ilim metni → **Okuma**",
+        "· Fotoğraf / sanat / çizim → **Mimar**",
+        "· Arşiv / ilim metni → **Mimar** (eski Okuma)",
         "· Pazar / fırsat / ürün tara → **Hızır**",
         "· Video ara (isim) → **Video** (liste; «2 numarayı indir»)",
         "",
@@ -366,6 +372,7 @@ def build_delegated_motor_context(
     loaders: dict[str, tuple[str, str]] = {
         "video": ("ilim_assistant.motorlar.video_motoru", "build_motor_context"),
         "ses": ("ilim_assistant.ses_motoru", "build_motor_context"),
+        "mimar": ("ilim_assistant.okuma_motoru", "build_motor_context"),
         "okuma": ("ilim_assistant.okuma_motoru", "build_motor_context"),
         "tercume": ("ilim_assistant.tercume_motoru", "build_motor_context"),
         "hafiza": ("ilim_assistant.motorlar.hafiza_motoru", "build_motor_context"),
