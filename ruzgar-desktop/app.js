@@ -1499,6 +1499,9 @@ function switchMode(mode) {
   setStatus(`Mod: ${MODE_LABELS[currentMode] || currentMode}`, "Rüzgar");
   updatePerformanceIndicators(perfBusy);
   updateDynamicWorkbench();
+  if (window.RuzgarSplit?.refresh) {
+    requestAnimationFrame(() => window.RuzgarSplit.refresh());
+  }
   if (next === "programlama") {
     void refreshProgramlamaUmitOnay();
     void refreshProgramlamaKpiDashboard();
@@ -3087,6 +3090,9 @@ function setWorkbenchLayout(kind) {
   el.dynamicWorkbench.classList.add(kind);
   document.body.classList.toggle("workbench-full", kind === "layout-full");
   setStatus(`Çalışma sayfası düzeni: ${kind.replace("layout-", "")}`, "Rüzgar");
+  if (window.RuzgarSplit?.refresh) {
+    requestAnimationFrame(() => window.RuzgarSplit.refresh());
+  }
 }
 
 /**
@@ -4320,50 +4326,83 @@ function wireMotorHoverTips() {
   });
 }
 
-function applyMotorsCompact(compact) {
+function isMotorsCompact() {
+  return document.body.classList.contains("ui-motors-compact");
+}
+
+function applyMotorsCompact(compact, opts) {
   const on = Boolean(compact);
+  const persist = opts?.persist !== false;
   document.body.classList.toggle("ui-motors-compact", on);
   if (on) {
     document.documentElement.style.setProperty("--ruzgar-motors-w", "52px");
   } else {
     const st = window.RuzgarSplit?.loadState?.() || {};
-    const w = typeof st.motors === "number" ? st.motors : 232;
+    const w = typeof st.motors === "number" && st.motors > 80 ? st.motors : 232;
     document.documentElement.style.setProperty("--ruzgar-motors-w", `${w}px`);
   }
   window.RuzgarSplit?._splits?.forEach((s) => s._reposition?.());
   if (!on) hideMotorHoverTip();
-  const btn = document.getElementById("btn-motors-compact");
-  if (btn) {
+  if (persist) {
+    try {
+      localStorage.setItem(LS_MOTORS_COMPACT, on ? "1" : "0");
+    } catch (_) {
+      /* ignore */
+    }
+  }
+  const syncBtn = (btn, expanded) => {
+    if (!btn) return;
     btn.classList.toggle("is-active", on);
     btn.setAttribute("aria-pressed", on ? "true" : "false");
+    if (btn.id === "btn-motors-panel-collapse") {
+      btn.textContent = on ? "»" : "«";
+      btn.title = on ? "Motor adlarını göster (genişlet)" : "İkon modu — daralt";
+      btn.setAttribute("aria-label", on ? "Motor panelini genişlet" : "Motor panelini daralt");
+      btn.setAttribute("aria-expanded", expanded ? "true" : "false");
+      return;
+    }
     btn.title = on ? "Motor adlarını göster" : "Motor adlarını gizle (yalnızca ikonlar)";
     btn.setAttribute(
       "aria-label",
       on ? "Motor panelini genişlet" : "Motor panelini daralt (yalnızca ikonlar)",
     );
-  }
+  };
+  syncBtn(document.getElementById("btn-motors-compact"), !on);
+  syncBtn(document.getElementById("btn-motors-panel-collapse"), !on);
+}
+
+/** Sol motor ikonuna tıklanınca panel otomatik ikon şeridine küçülür. */
+function autoCompactMotorsOnMotorPick() {
+  if (isMotorsCompact()) return;
+  applyMotorsCompact(true, { persist: true });
+}
+
+function toggleMotorsCompact() {
+  applyMotorsCompact(!isMotorsCompact(), { persist: true });
 }
 
 function wireMotorsCompactToggle() {
-  const btn = document.getElementById("btn-motors-compact");
-  if (!btn || btn.dataset.wired === "1") return;
-  btn.dataset.wired = "1";
-  let compact = false;
+  const headerBtn = document.getElementById("btn-motors-compact");
+  const panelBtn = document.getElementById("btn-motors-panel-collapse");
+  let compact = true;
   try {
-    compact = localStorage.getItem(LS_MOTORS_COMPACT) === "1";
+    const stored = localStorage.getItem(LS_MOTORS_COMPACT);
+    compact = stored === null || stored === "1";
   } catch (_) {
-    /* ignore */
+    compact = true;
   }
-  applyMotorsCompact(compact);
-  btn.addEventListener("click", () => {
-    compact = !document.body.classList.contains("ui-motors-compact");
-    try {
-      localStorage.setItem(LS_MOTORS_COMPACT, compact ? "1" : "0");
-    } catch (_) {
-      /* ignore */
-    }
-    applyMotorsCompact(compact);
-  });
+  applyMotorsCompact(compact, { persist: false });
+
+  const wire = (btn) => {
+    if (!btn || btn.dataset.wired === "1") return;
+    btn.dataset.wired = "1";
+    btn.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      toggleMotorsCompact();
+    });
+  };
+  wire(headerBtn);
+  wire(panelBtn);
 }
 
 function wireTopModeButtons() {
@@ -4376,6 +4415,9 @@ function wireTopModeButtons() {
     btn.addEventListener("click", () => {
       const mode = String(btn.getAttribute("data-mode") || "").trim().toLowerCase();
       if (!mode) return;
+      if (btn.classList.contains("motor-item")) {
+        autoCompactMotorsOnMotorPick();
+      }
       switchMode(mode);
       if (el.input) el.input.focus();
     });

@@ -7,13 +7,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RÜZGAR — Mimarlar: Ümit & Gökçenur</title>
     <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="ruzgar-split.css?v=20260601-split" />
+    <link rel="stylesheet" href="ruzgar-split.css?v=20260602-workbench-split" />
   </head>
   <body>
     <script>
       try {
-        if (localStorage.getItem("ruzgarMotorsCompact") === "1") {
+        const motorsCompact = localStorage.getItem("ruzgarMotorsCompact");
+        if (motorsCompact === "1" || motorsCompact === null) {
           document.body.classList.add("ui-motors-compact");
+          document.documentElement.style.setProperty("--ruzgar-motors-w", "52px");
         }
         const splitRaw = localStorage.getItem("ruzgarSplit.v1");
         if (splitRaw) {
@@ -86,8 +88,20 @@
     <div class="layout layout-v2">
       <aside class="panel panel-motors" aria-label="Motor seçici">
         <div class="motors-head">
-          <span class="motors-title">RÜZGAR</span>
-          <span class="motors-sub">Atölye Konsolu</span>
+          <div class="motors-head-text">
+            <span class="motors-title">RÜZGAR</span>
+            <span class="motors-sub">Atölye Konsolu</span>
+          </div>
+          <button
+            type="button"
+            id="btn-motors-panel-collapse"
+            class="motors-collapse-btn"
+            title="İkon modu — tek tıkla daralt / genişlet"
+            aria-label="Motor panelini daralt"
+            aria-expanded="true"
+          >
+            «
+          </button>
         </div>
         <div class="motors-list" role="tablist" aria-label="Rüzgar motor seçici">
           <button type="button" class="motor-item is-active" data-mode="genel" data-motor-pos="ana" id="motor-side-genel">
@@ -1775,9 +1789,9 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
 
     <link rel="stylesheet" href="tercume-atolye.css?v=20260601-tercume-chat-split" />
     <link rel="stylesheet" href="mimar-atolye.css?v=20260601-mimar-polish" />
-    <script src="ruzgar-split.js?v=20260601-split"></script>
+    <script src="ruzgar-split.js?v=20260602-workbench-split"></script>
     <script src="tercume-atolye.js?v=20260601-tercume-chat-split"></script>
     <script src="mimar-atolye.js?v=20260601-faz5"></script>
-    <script src="app.js?v=20260601-motor-tip"></script>
+    <script src="app.js?v=20260602-motor-auto-compact"></script>
   </body>
 </html>

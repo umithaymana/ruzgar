@@ -20,6 +20,30 @@
   margin: 0;
   z-index: 20;
 }
+.ruzgar-split-handle--overlay-v {
+  position: absolute;
+  flex: none;
+  margin: 0;
+  z-index: 20;
+  width: auto;
+  min-width: 48px;
+  height: 5px;
+  min-height: 5px;
+  cursor: row-resize;
+}
+.ruzgar-split-handle--overlay-v::after {
+  top: 50%;
+  left: 0;
+  right: 0;
+  bottom: auto;
+  width: auto;
+  height: 1px;
+  transform: translateY(-50%);
+}
+body.ruzgar-split-dragging.ruzgar-split-dragging--v,
+body.ruzgar-split-dragging.ruzgar-split-dragging--v * {
+  cursor: row-resize !important;
+}
 .ruzgar-split-handle::after {
   content: "";
   position: absolute;
@@ -61,4 +85,19 @@ body.ui-motors-compact .ruzgar-split-handle[data-split-key="motors"] {
 }
 body[data-motor="tercume"][data-tercume-tab="ara"] .ruzgar-split-handle[data-split-key="tercume-ara"] {
   display: block;
+}
+
+/* Atölye grid kökleri — overlay tutamaç konumu */
+.code-workbench,
+.okuma-workbench,
+.ses-workbench,
+.mimar-foto-layout,
+.mimar-sanat-layout,
+.mimar-tasarim-layout,
+.hizir-split--vitrin,
+#tercume-workbench,
+#page-tercume .tercume-panels,
+.code-main,
+#page-hafiza .hafiza-split {
+  position: relative;
 }

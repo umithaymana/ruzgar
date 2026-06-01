@@ -86,6 +86,9 @@
     if (t === "fotograf") void refreshFotoList();
     if (t === "resim-sanat") void refreshSanatList();
     if (t === "tasarim") void refreshTasarimProjectSelect();
+    if (global.RuzgarSplit?.refresh) {
+      requestAnimationFrame(() => global.RuzgarSplit.refresh());
+    }
   }
 
   function syncMimarLayout(isMimar) {

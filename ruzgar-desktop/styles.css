@@ -3896,11 +3896,44 @@ body:has(.layout-v2) .title-row-motors { justify-content: flex-end; }
 
 .motors-head {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
   align-items: flex-start;
-  gap: 1px;
+  justify-content: space-between;
+  gap: 4px;
   padding: 0 4px 8px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.motors-head-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+body.ui-motors-compact .motors-head-text {
+  display: none;
+}
+.motors-collapse-btn {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #2a2a2e;
+  color: #ccc;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+.motors-collapse-btn:hover {
+  background: #3a3a40;
+  color: #fff;
+  border-color: #3794ff;
+}
+body.ui-motors-compact .motors-collapse-btn {
+  width: 100%;
+  margin-bottom: 4px;
 }
 .motors-title {
   font-size: 18px;
@@ -4053,8 +4086,13 @@ body:has(.layout-v2) .title-row-motors { justify-content: flex-end; }
 }
 
 /* Motor paneli — yalnızca ikonlar (genel geçiş, tüm modlar) */
+body.ui-motors-compact {
+  --ruzgar-motors-w: 52px !important;
+}
 body.ui-motors-compact .panel-motors {
-  width: var(--ruzgar-motors-w, 52px);
+  width: 52px !important;
+  min-width: 52px !important;
+  max-width: 52px !important;
   padding: 10px 6px 8px;
   align-items: center;
 }
