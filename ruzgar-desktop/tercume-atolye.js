@@ -105,6 +105,11 @@
       const res = await fetch(`${api()}/api/workspace/read-ebook?rel=${encodeURIComponent(rel)}`);
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : `HTTP ${res.status}`);
+      showEbookMeta({
+        title: j.title || j.meta?.title || j.meta?.ebook_title,
+        author: j.author || j.meta?.author || j.meta?.ebook_author,
+        chapters_read: j.chapters_read ?? j.meta?.chapters_read,
+      });
       return String(j.text ?? "");
     }
     return readWorkspaceText(rel);
@@ -323,6 +328,101 @@
       flash("Tam metin yüklenemedi; dosya yolu kayıtlı.");
       void refreshMemoryStatus();
     }
+  }
+
+  function showEbookMeta(meta) {
+    const wrap = $("tercume-ebook-meta");
+    const txt = $("tercume-ebook-meta-text");
+    if (!wrap || !txt) return;
+    const title = String(meta?.title || "").trim();
+    const author = String(meta?.author || "").trim();
+    const ch = meta?.chapters_read;
+    if (!title && !author && ch == null) {
+      wrap.hidden = true;
+      return;
+    }
+    const parts = [];
+    if (title) parts.push(title);
+    if (author) parts.push(author);
+    if (ch != null && Number(ch) > 0) parts.push(`${ch} bölüm`);
+    txt.textContent = parts.join(" · ") || "—";
+    wrap.hidden = false;
+  }
+
+  function hideEbookMeta() {
+    const wrap = $("tercume-ebook-meta");
+    if (wrap) wrap.hidden = true;
+  }
+
+  async function refreshUserGlossary() {
+    const ul = $("tercume-user-glossary-list");
+    if (!ul) return;
+    try {
+      const res = await fetch(`${api()}/api/tercume/user-glossary?limit=40`);
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.ok) return;
+      ul.innerHTML = "";
+      const rows = Array.isArray(j.entries) ? j.entries : [];
+      if (!rows.length) {
+        const li = document.createElement("li");
+        li.textContent = "Henüz terim yok — kaynak ve hedef yazıp Ekle deyin.";
+        ul.appendChild(li);
+        return;
+      }
+      for (const e of rows) {
+        const li = document.createElement("li");
+        const main = document.createElement("span");
+        main.className = "term-main";
+        const scope = e.scope ? ` [${e.scope}]` : "";
+        main.textContent = `«${e.src}» → ${e.tr || e.en || "?"}${scope}`;
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn-secondary btn-compact";
+        btn.textContent = "Sil";
+        btn.addEventListener("click", () => {
+          void deleteUserTerm(String(e.id || ""));
+        });
+        li.appendChild(main);
+        li.appendChild(btn);
+        ul.appendChild(li);
+      }
+    } catch {
+      /* sessiz */
+    }
+  }
+
+  async function addUserTerm() {
+    const src = String($("tercume-term-src")?.value || "").trim();
+    const tgt = String($("tercume-term-tgt")?.value || "").trim();
+    const scope = String($("tercume-term-scope")?.value || "").trim();
+    if (!src || !tgt) {
+      flash("Kaynak terim ve hedef çeviri gerekli.");
+      return;
+    }
+    const fd = new FormData();
+    const tgtLang = String($("tercume-tgt-lang")?.value || "tr");
+    fd.append("src", src);
+    if (tgtLang === "en") fd.append("en", tgt);
+    else if (tgtLang === "ar") fd.append("ar", tgt);
+    else fd.append("tr", tgt);
+    if (scope) fd.append("scope", scope);
+    else if (openRel) fd.append("scope", openRel);
+    const res = await fetch(`${api()}/api/tercume/user-glossary/add`, { method: "POST", body: fd });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : j.error || "Eklenemedi");
+    $("tercume-term-src").value = "";
+    $("tercume-term-tgt").value = "";
+    flash(`Terim eklendi: «${src}» → ${tgt}`);
+    void refreshUserGlossary();
+  }
+
+  async function deleteUserTerm(id) {
+    const fd = new FormData();
+    fd.append("entry_id", id);
+    const res = await fetch(`${api()}/api/tercume/user-glossary/delete`, { method: "POST", body: fd });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : "Silinemedi");
+    void refreshUserGlossary();
   }
 
   async function refreshMemoryStatus() {
@@ -1887,11 +1987,18 @@ ${chunk}`;
         flash(e.message || "OCR hatası");
       }
     });
+    $("btn-tercume-term-add")?.addEventListener("click", () => {
+      void addUserTerm().catch((e) => flash(e.message || String(e)));
+    });
+    $("tercume-user-glossary-fold")?.addEventListener("toggle", (ev) => {
+      if (ev.target.open) void refreshUserGlossary();
+    });
     $("btn-tercume-clear")?.addEventListener("click", () => {
       setSourceText("");
       setTargetText("");
       openRel = null;
       awaitingChatReply = false;
+      hideEbookMeta();
       hideQualityStrip();
       updateActiveLabel();
       syncSavePlaceholder();
@@ -1936,6 +2043,7 @@ ${chunk}`;
     void refreshBatchJobsList();
     void refreshMemoryStatus();
     void refreshSavePrefs();
+    void refreshUserGlossary();
     $("tercume-tgt-lang")?.addEventListener("change", () => {
       syncSavePlaceholder();
       void refreshMemoryStatus();

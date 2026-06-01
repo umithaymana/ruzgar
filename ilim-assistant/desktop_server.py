@@ -285,36 +285,28 @@ def _rtf_to_text(raw: str) -> str:
 
 
 def _read_epub_text(target: Path) -> tuple[str, dict[str, Any]]:
-    parts: list[str] = []
-    chapters = 0
-    with zipfile.ZipFile(target, "r") as zf:
-        names = [n for n in zf.namelist() if n.lower().endswith((".xhtml", ".html", ".htm"))]
-        for name in names:
-            try:
-                body = zf.read(name).decode("utf-8", errors="replace")
-            except Exception:
-                continue
-            txt = _simple_html_to_text(body)
-            if txt:
-                chapters += 1
-                parts.append(f"\n\n=== Bölüm {chapters}: {name} ===\n\n{txt}")
-    return "\n".join(parts).strip(), {"chapters_read": chapters}
+    from ilim_assistant.motorlar.tercume_ebook_read import read_epub
+
+    hit = read_epub(target)
+    meta = {
+        "chapters_read": hit.get("chapters_read") or 0,
+        "title": hit.get("title") or "",
+        "author": hit.get("author") or "",
+    }
+    return str(hit.get("text") or ""), meta
 
 
 def _read_fb2_text(target: Path) -> tuple[str, dict[str, Any]]:
-    try:
-        root = ET.fromstring(target.read_text(encoding="utf-8", errors="replace"))
-    except Exception:
-        return "", {"sections_read": 0}
-    ns = {"fb": "http://www.gribuser.ru/xml/fictionbook/2.0"}
-    out: list[str] = []
-    sections = 0
-    for sec in root.findall(".//fb:body/fb:section", ns):
-        sections += 1
-        txt = " ".join((t or "").strip() for t in sec.itertext() if (t or "").strip())
-        if txt:
-            out.append(f"\n\n=== Bölüm {sections} ===\n\n{txt}")
-    return "\n".join(out).strip(), {"sections_read": sections}
+    from ilim_assistant.motorlar.tercume_ebook_read import read_fb2
+
+    hit = read_fb2(target)
+    meta = {
+        "sections_read": hit.get("chapters_read") or 0,
+        "chapters_read": hit.get("chapters_read") or 0,
+        "title": hit.get("title") or "",
+        "author": hit.get("author") or "",
+    }
+    return str(hit.get("text") or ""), meta
 
 
 def _command_exists(name: str) -> bool:
@@ -3617,9 +3609,17 @@ def api_workspace_read_ebook(rel: str = Query("")) -> dict[str, Any]:
     if ext == ".epub":
         text, m = _read_epub_text(target)
         meta.update(m)
+        if m.get("title"):
+            meta["ebook_title"] = m["title"]
+        if m.get("author"):
+            meta["ebook_author"] = m["author"]
     elif ext == ".fb2":
         text, m = _read_fb2_text(target)
         meta.update(m)
+        if m.get("title"):
+            meta["ebook_title"] = m["title"]
+        if m.get("author"):
+            meta["ebook_author"] = m["author"]
     elif ext in {".rtf"}:
         text = _rtf_to_text(target.read_text(encoding="utf-8", errors="replace"))
     elif ext in {".html", ".htm"}:
@@ -3652,7 +3652,19 @@ def api_workspace_read_ebook(rel: str = Query("")) -> dict[str, Any]:
     if len(text) > hard_cap:
         text = text[:hard_cap] + "\n\n… [metin uzun olduğu için kesildi]"
         truncated = True
-    return {"ok": True, "text": text, "truncated_length": truncated, "meta": meta}
+    out: dict[str, Any] = {
+        "ok": True,
+        "text": text,
+        "truncated_length": truncated,
+        "meta": meta,
+    }
+    if meta.get("title") or meta.get("ebook_title"):
+        out["title"] = meta.get("title") or meta.get("ebook_title")
+    if meta.get("author") or meta.get("ebook_author"):
+        out["author"] = meta.get("author") or meta.get("ebook_author")
+    if meta.get("chapters_read") is not None:
+        out["chapters_read"] = meta.get("chapters_read")
+    return out
 
 
 @app.get("/api/workspace/read-image-ocr")
@@ -4479,6 +4491,8 @@ def api_tercume_source_pages(
         ".html",
         ".htm",
         ".docx",
+        ".epub",
+        ".fb2",
         ".png",
         ".jpg",
         ".jpeg",
@@ -4562,6 +4576,40 @@ def api_tercume_read_cancel(job_id: str = Form("")) -> dict[str, Any]:
     hit = cancel_read_job(job_id)
     if not hit.get("ok"):
         raise HTTPException(status_code=404, detail=str(hit.get("error") or "İş yok"))
+    return hit
+
+
+@app.get("/api/tercume/user-glossary")
+def api_tercume_user_glossary_list(limit: int = Query(60, ge=1, le=200)) -> dict[str, Any]:
+    from ilim_assistant.motorlar.tercume_user_glossary import list_entries
+
+    return list_entries(limit=limit)
+
+
+@app.post("/api/tercume/user-glossary/add")
+def api_tercume_user_glossary_add(
+    src: str = Form(""),
+    tr: str = Form(""),
+    en: str = Form(""),
+    ar: str = Form(""),
+    scope: str = Form(""),
+    note: str = Form(""),
+) -> dict[str, Any]:
+    from ilim_assistant.motorlar.tercume_user_glossary import add_entry
+
+    hit = add_entry(src=src, tr=tr, en=en, ar=ar, scope=scope, note=note)
+    if not hit.get("ok"):
+        raise HTTPException(status_code=400, detail=str(hit.get("error") or "Eklenemedi"))
+    return hit
+
+
+@app.post("/api/tercume/user-glossary/delete")
+def api_tercume_user_glossary_delete(entry_id: str = Form("")) -> dict[str, Any]:
+    from ilim_assistant.motorlar.tercume_user_glossary import delete_entry
+
+    hit = delete_entry(entry_id)
+    if not hit.get("ok"):
+        raise HTTPException(status_code=404, detail=str(hit.get("error") or "Silinemedi"))
     return hit
 
 

@@ -19,8 +19,6 @@ python scripts/tercume_faz14d_smoke.py
 python scripts/tercume_faz14e_smoke.py
 ```
 
-## Sonraki (15+)
+## Faz 15
 
-- EPUB bölüm/metadata okuma
-- Kullanıcı terim tablosu düzenleme
-- Canlı Ollama regresyon smoke
+Bkz. `TERCUME_FAZ15_PLANI.md` (15A–15C).

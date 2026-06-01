@@ -312,10 +312,42 @@ def extract_source_pages(
                 }
             )
         meta["pages_total"] = len(pages)
+    elif ext == ".epub":
+        from ilim_assistant.motorlar.tercume_ebook_read import chapters_to_pages, read_epub
+
+        hit = read_epub(target)
+        if not hit.get("ok"):
+            return {"ok": False, "error": str(hit.get("error") or "EPUB okunamadı")}
+        pages = chapters_to_pages(list(hit.get("chapters") or []))
+        meta.update(
+            {
+                "ebook_title": hit.get("title") or "",
+                "ebook_author": hit.get("author") or "",
+                "chapters_read": hit.get("chapters_read"),
+                "source_kind": "epub",
+            }
+        )
+        source_kind = "epub"
+    elif ext == ".fb2":
+        from ilim_assistant.motorlar.tercume_ebook_read import chapters_to_pages, read_fb2
+
+        hit = read_fb2(target)
+        if not hit.get("ok"):
+            return {"ok": False, "error": str(hit.get("error") or "FB2 okunamadı")}
+        pages = chapters_to_pages(list(hit.get("chapters") or []))
+        meta.update(
+            {
+                "ebook_title": hit.get("title") or "",
+                "ebook_author": hit.get("author") or "",
+                "chapters_read": hit.get("chapters_read"),
+                "source_kind": "fb2",
+            }
+        )
+        source_kind = "fb2"
     else:
         return {
             "ok": False,
-            "error": f"Okuma pipeline: {ext} henüz desteklenmiyor (pdf/txt/docx/görsel).",
+            "error": f"Okuma pipeline: {ext} henüz desteklenmiyor (pdf/txt/docx/epub/fb2/görsel).",
         }
 
     if page_from is not None or page_to is not None:

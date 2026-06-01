@@ -619,6 +619,26 @@ def workbench_config() -> dict[str, Any]:
             "md_headings": True,
             "html_template": True,
         },
+        "ebook_faz15a": {
+            "version": "tercume-ebook-read-v15a-2026-05-29",
+            "formats": ["epub", "fb2"],
+            "metadata": ["title", "author"],
+            "chapter_labels": True,
+        },
+        "user_glossary_faz15b": {
+            "version": "tercume-user-glossary-v15b-2026-05-29",
+            "routes": [
+                "/api/tercume/user-glossary",
+                "/api/tercume/user-glossary/add",
+                "/api/tercume/user-glossary/delete",
+            ],
+            "storage": ".ruzgar/tercume_user_glossary.json",
+        },
+        "live_smoke_faz15c": {
+            "version": "tercume-live-smoke-v15c-2026-05-29",
+            "script": "scripts/tercume_live_smoke.py",
+            "env_flag": "RUZGAR_TERCUME_LIVE_SMOKE",
+        },
         "read_routes": [
             "/api/tercume/read-start",
             "/api/tercume/read-status",

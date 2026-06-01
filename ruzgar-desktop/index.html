@@ -880,6 +880,10 @@
                   <strong>OCR kurulumu gerekli:</strong>
                   <span id="tercume-ocr-warn-text">Taranmış sayfa ve görseller için Tesseract (Arapça + Osmanlıca) kurulu olmalı.</span>
                 </div>
+                <div class="tercume-ebook-meta" id="tercume-ebook-meta" hidden role="status">
+                  <strong>E-kitap:</strong>
+                  <span id="tercume-ebook-meta-text">—</span>
+                </div>
                 <div class="tercume-quality-strip" id="tercume-quality-strip" hidden role="status" aria-live="polite">
                   <span class="tercume-quality-badge" id="tercume-quality-badge" title="Çeviri kalite skoru (0–100)">—</span>
                   <div class="tercume-quality-body">
@@ -944,6 +948,16 @@
                     hidden
                     title="Kalıcı terim belleği (TM) — sunucu yeniden başlasa da sürer"
                   ></span>
+                  <details class="tercume-user-glossary-fold" id="tercume-user-glossary-fold">
+                    <summary>Terimlerim (kullanıcı sözlüğü)</summary>
+                    <div class="tercume-user-glossary-form">
+                      <input type="text" id="tercume-term-src" class="tercume-term-input" placeholder="Kaynak terim" />
+                      <input type="text" id="tercume-term-tgt" class="tercume-term-input" placeholder="Hedef çeviri" />
+                      <input type="text" id="tercume-term-scope" class="tercume-term-input" placeholder="Kapsam (boş=tümü)" title="Örn. mektubat.pdf" />
+                      <button type="button" class="btn-secondary btn-compact" id="btn-tercume-term-add">Ekle</button>
+                    </div>
+                    <ul class="tercume-user-glossary-list" id="tercume-user-glossary-list"></ul>
+                  </details>
                   <details class="tercume-apprentice-fold">
                     <summary>Çırak günlüğü (programlama motoru okur)</summary>
                     <ul class="tercume-apprentice-list" id="tercume-apprentice-list"></ul>
