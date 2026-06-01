@@ -898,6 +898,20 @@ def prepare_turn(
                 return msg, [], "", "", "", ses_hit
         except Exception:
             pass
+    if m == "mimar":
+        try:
+            from ilim_assistant.motorlar.mimar_faz5 import maybe_instant_faz5
+
+            mimar_hit = maybe_instant_faz5(msg)
+            if mimar_hit:
+                return msg, [], "", "", "", mimar_hit
+            from ilim_assistant.motorlar.okuma_faz73 import maybe_instant_faz73
+
+            arsiv_hit = maybe_instant_faz73(msg)
+            if arsiv_hit:
+                return msg, [], "", "", "", arsiv_hit
+        except Exception:
+            pass
     if m == "okuma":
         try:
             from ilim_assistant.motorlar.okuma_faz73 import maybe_instant_faz73
@@ -1580,6 +1594,15 @@ def prepare_turn(
                     user_payload = _pc.rstrip() + "\n\n---\n" + user_payload
             except Exception:
                 pass
+    elif m == "mimar":
+        try:
+            from ilim_assistant.mimar_motoru import build_motor_context as mimar_ctx
+
+            _mc = mimar_ctx(msg).strip()
+            if _mc:
+                user_payload = _mc.rstrip() + "\n\n---\n" + user_payload
+        except Exception:
+            pass
     elif _orkestra_context_for_turn(m, motor_flags) and not _hub_directive:
         try:
             from ilim_assistant.motorlar.ruzgar_cekirdegi import build_core_context

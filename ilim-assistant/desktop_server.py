@@ -469,6 +469,7 @@ def _boot_motorlar_anaonce() -> None:
         "ilim_assistant.ses_motoru",
         "ilim_assistant.video_motoru",
         "ilim_assistant.okuma_motoru",
+        "ilim_assistant.mimar_motoru",
         "ilim_assistant.tercume_motoru",
         "ilim_assistant.motorlar.hafiza_motoru",
         "ilim_assistant.programlama_motoru",

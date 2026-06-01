@@ -47,7 +47,20 @@ def main() -> int:
         print("FAIL route /api/mimar/atolye/parse")
         return 1
 
-    print("OK mimar faz5 — niyet + route")
+    from ilim_assistant.mimar_motoru import build_motor_context
+
+    ctx = build_motor_context("ev çiz")
+    if "mimar-fotograf" not in ctx or "mimar-sanat" not in ctx:
+        print("FAIL mimar_motoru arsiv paths", ctx[:160])
+        return 1
+    if "MİMAR MOTORU" not in ctx and "MIMAR MOTORU" not in ctx:
+        print("FAIL mimar_motoru banner")
+        return 1
+    if "okuma_motoru" not in ctx:
+        print("FAIL mimar should reference tercume/okuma split")
+        return 1
+
+    print("OK mimar faz5 — niyet + route + mimar_motoru")
     return 0
 
 

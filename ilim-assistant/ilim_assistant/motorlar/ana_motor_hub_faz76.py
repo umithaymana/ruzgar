@@ -372,7 +372,7 @@ def build_delegated_motor_context(
     loaders: dict[str, tuple[str, str]] = {
         "video": ("ilim_assistant.motorlar.video_motoru", "build_motor_context"),
         "ses": ("ilim_assistant.ses_motoru", "build_motor_context"),
-        "mimar": ("ilim_assistant.okuma_motoru", "build_motor_context"),
+        "mimar": ("ilim_assistant.mimar_motoru", "build_motor_context"),
         "okuma": ("ilim_assistant.okuma_motoru", "build_motor_context"),
         "tercume": ("ilim_assistant.tercume_motoru", "build_motor_context"),
         "hafiza": ("ilim_assistant.motorlar.hafiza_motoru", "build_motor_context"),
