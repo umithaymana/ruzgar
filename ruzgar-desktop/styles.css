@@ -255,8 +255,13 @@ body:not(.workbench-hizir-active) #workbench-hizir-tools,
   flex-direction: column;
   min-width: 0;
 }
+:root {
+  --ruzgar-motors-w: 232px;
+  --ruzgar-chat-w: 380px;
+}
 .panel-chat {
-  width: 380px;
+  width: var(--ruzgar-chat-w, 380px);
+  flex: 0 0 var(--ruzgar-chat-w, 380px);
   flex-shrink: 0;
   border-right: 1px solid #3c3c3c;
   background: #252526;
@@ -3878,7 +3883,7 @@ body:has(.layout-v2) .title-row-motors { justify-content: flex-end; }
 
 /* Sol motor paneli */
 .panel-motors {
-  width: 232px;
+  width: var(--ruzgar-motors-w, 232px);
   flex-shrink: 0;
   background: linear-gradient(180deg, #1a1a1c 0%, #16161a 100%);
   border-right: 1px solid #3c3c3c;
@@ -4049,7 +4054,7 @@ body:has(.layout-v2) .title-row-motors { justify-content: flex-end; }
 
 /* Motor paneli — yalnızca ikonlar (genel geçiş, tüm modlar) */
 body.ui-motors-compact .panel-motors {
-  width: 52px;
+  width: var(--ruzgar-motors-w, 52px);
   padding: 10px 6px 8px;
   align-items: center;
 }

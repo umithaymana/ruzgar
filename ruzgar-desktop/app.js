@@ -4323,6 +4323,14 @@ function wireMotorHoverTips() {
 function applyMotorsCompact(compact) {
   const on = Boolean(compact);
   document.body.classList.toggle("ui-motors-compact", on);
+  if (on) {
+    document.documentElement.style.setProperty("--ruzgar-motors-w", "52px");
+  } else {
+    const st = window.RuzgarSplit?.loadState?.() || {};
+    const w = typeof st.motors === "number" ? st.motors : 232;
+    document.documentElement.style.setProperty("--ruzgar-motors-w", `${w}px`);
+  }
+  window.RuzgarSplit?._splits?.forEach((s) => s._reposition?.());
   if (!on) hideMotorHoverTip();
   const btn = document.getElementById("btn-motors-compact");
   if (btn) {

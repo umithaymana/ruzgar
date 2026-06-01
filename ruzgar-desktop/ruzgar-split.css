@@ -1,0 +1,64 @@
+/* Sürüklenebilir bölme ayırıcıları — tüm Rüzgar atölye düzeni */
+
+.ruzgar-split-handle {
+  flex: 0 0 5px;
+  width: 5px;
+  min-width: 5px;
+  align-self: stretch;
+  margin: 0 -2px;
+  cursor: col-resize;
+  touch-action: none;
+  user-select: none;
+  position: relative;
+  z-index: 12;
+  background: transparent;
+  transition: background 0.12s ease;
+}
+.ruzgar-split-handle--overlay {
+  position: absolute;
+  flex: none;
+  margin: 0;
+  z-index: 20;
+}
+.ruzgar-split-handle::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.08);
+  transition: background 0.12s ease, width 0.12s ease;
+}
+.ruzgar-split-handle:hover::after,
+.ruzgar-split-handle.is-active::after,
+.ruzgar-split-handle:focus-visible::after {
+  width: 3px;
+  background: rgba(55, 148, 255, 0.75);
+}
+.ruzgar-split-handle:focus-visible {
+  outline: none;
+}
+body.ruzgar-split-dragging {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+body.ruzgar-split-dragging * {
+  cursor: col-resize !important;
+}
+body.ruzgar-split-dragging iframe {
+  pointer-events: none;
+}
+
+body.ui-motors-compact .ruzgar-split-handle[data-split-key="motors"] {
+  display: none !important;
+}
+
+/* Tercüme — ara paneli yalnız «Eser ara» modunda */
+.ruzgar-split-handle[data-split-key="tercume-ara"] {
+  display: none;
+}
+body[data-motor="tercume"][data-tercume-tab="ara"] .ruzgar-split-handle[data-split-key="tercume-ara"] {
+  display: block;
+}

@@ -1192,6 +1192,9 @@ ${chunk}`;
     if (t === "calisma" || t === "ara") {
       void refreshTree();
     }
+    if (global.RuzgarSplit?.onTercumeTabChange) {
+      requestAnimationFrame(() => global.RuzgarSplit.onTercumeTabChange());
+    }
   }
 
   function syncTercumeLayout(isTercume) {

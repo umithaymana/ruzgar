@@ -6,12 +6,12 @@ body:not([data-motor="mimar"]) #mimar-view-tabs {
 
 body[data-motor="mimar"] .layout.layout-v2 {
   display: grid;
-  grid-template-columns: 232px minmax(0, 1fr);
+  grid-template-columns: var(--ruzgar-motors-w, 232px) minmax(0, 1fr);
   grid-template-rows: 38px minmax(0, 1fr);
   align-content: stretch;
 }
 body.ui-motors-compact[data-motor="mimar"] .layout.layout-v2 {
-  grid-template-columns: 52px minmax(0, 1fr);
+  grid-template-columns: var(--ruzgar-motors-w, 52px) minmax(0, 1fr);
 }
 body[data-motor="mimar"] .panel-motors {
   grid-column: 1;
@@ -42,9 +42,9 @@ body[data-motor="mimar"] #tercume-center-row {
 body[data-motor="mimar"] .panel-chat {
   display: flex !important;
   flex-direction: column;
-  flex: 0 0 clamp(280px, 30vw, 380px);
-  width: auto;
-  min-width: 260px;
+  flex: 0 0 var(--ruzgar-chat-w, 320px);
+  width: var(--ruzgar-chat-w, 320px);
+  min-width: 220px;
   min-height: 0;
   max-height: none;
 }

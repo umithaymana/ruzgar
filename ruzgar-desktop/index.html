@@ -7,12 +7,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RÜZGAR — Mimarlar: Ümit & Gökçenur</title>
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="ruzgar-split.css?v=20260601-split" />
   </head>
   <body>
     <script>
       try {
         if (localStorage.getItem("ruzgarMotorsCompact") === "1") {
           document.body.classList.add("ui-motors-compact");
+        }
+        const splitRaw = localStorage.getItem("ruzgarSplit.v1");
+        if (splitRaw) {
+          const split = JSON.parse(splitRaw);
+          if (typeof split.motors === "number") {
+            document.documentElement.style.setProperty("--ruzgar-motors-w", `${split.motors}px`);
+          }
+          if (typeof split.chat === "number") {
+            document.documentElement.style.setProperty("--ruzgar-chat-w", `${split.chat}px`);
+          }
         }
       } catch (_) {
         /* ignore */
@@ -1764,6 +1775,7 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
 
     <link rel="stylesheet" href="tercume-atolye.css?v=20260601-tercume-chat-split" />
     <link rel="stylesheet" href="mimar-atolye.css?v=20260601-mimar-polish" />
+    <script src="ruzgar-split.js?v=20260601-split"></script>
     <script src="tercume-atolye.js?v=20260601-tercume-chat-split"></script>
     <script src="mimar-atolye.js?v=20260601-faz5"></script>
     <script src="app.js?v=20260601-motor-tip"></script>
