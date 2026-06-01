@@ -398,6 +398,22 @@ body[data-motor="mimar"][data-mimar-tab="tasarim"] #mimar-panel-tasarim {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  align-items: center;
+}
+
+.mimar-sanat-copy-mode-label {
+  display: inline-flex;
+  align-items: center;
+}
+
+.mimar-sanat-copy-mode {
+  font-size: 11px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  border: 1px solid #555;
+  background: #2d2d30;
+  color: #e8e8e8;
+  max-width: 88px;
 }
 
 .mimar-sanat-gallery-empty {

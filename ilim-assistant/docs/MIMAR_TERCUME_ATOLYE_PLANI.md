@@ -28,9 +28,11 @@
 ## Tercüme Okuma — yan sohbet ✅
 - Okuma sekmesinde «Yardım (katla)» gizlenir; **sohbet solda**, arşiv okuma sağda
 
-## Faz 4 — Temizlik (sonra)
-- Eski `okuma` API smoke'ları `mimar` ile hizala
-- Mimar backend motoru (okuma_faz73'ten ayrı)
+## Faz 4 — Temizlik ✅ (kısmi, 2026-06-01)
+- `mimar_atolye_smoke.py` + `Ruzgar_Mimar_Smoke.bat` — Faz 4 API/modül smoke
+- ROK: `okuma_faz73` → `mimar` alias (`classify_mimar_intent`, `rok_smoke` + `programlama_smoke`)
+- 4S-4 UI: trace / poster / pencil seçici
+- Kalan: görsel atölye backend’ini `okuma_faz73` sohbet/arsiv katmanından tam ayırma (ileride)
 
 ---
 

@@ -76,7 +76,19 @@ def ensure_kernel_registered() -> None:
     if _REGISTERED:
         return
     register_classifier("okuma", classify_okuma_intent)
+    register_classifier("mimar", classify_mimar_intent)
     _REGISTERED = True
+
+
+def classify_mimar_intent(
+    message: str,
+    *,
+    mode_norm: str = "mimar",
+    **kwargs: Any,
+) -> dict[str, Any]:
+    """Mimar motoru — okuma Faz 73 arşiv/komut alias (UI: mimar, eski: okuma)."""
+    _ = mode_norm
+    return classify_okuma_intent(message, mode_norm="mimar", **kwargs)
 
 
 def extract_analysis_text(message: str) -> str:
@@ -96,7 +108,7 @@ def classify_okuma_intent(
     **kwargs: Any,
 ) -> dict[str, Any]:
     _ = kwargs
-    if mode_norm != "okuma":
+    if mode_norm not in ("okuma", "mimar"):
         return {"intent": INTENT_CHAT, "reason": "wrong_mode"}
     raw = (message or "").strip()
     if not raw:

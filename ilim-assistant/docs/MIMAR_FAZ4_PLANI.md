@@ -106,13 +106,16 @@ Mimar Motoru (UI kabuğu + ortak sohbet)
 
 ## Test checklist
 
-- [ ] Mimar → yalnız **bir** sekme görünür (üçü üst üste değil)
+- [x] Offline smoke: `ilim-assistant/scripts/mimar_atolye_smoke.py` (route + modül + ROK mimar alias)
+- [ ] Mimar → yalnız **bir** sekme görünür (üçü üst üste değil) — masaüstü Ctrl+F5
 - [ ] Fotoğraf / Sanat / Tasarım görsel olarak birbirinden farklı
 - [ ] Yan sohbet her sekmede açık
 - [ ] Fotoğraf: dosya ekle → önizleme
-- [ ] Sanat: galeri tile → sağda büyük görünüm
-- [ ] Tasarım: tuval yüklenir
+- [ ] Sanat: galeri tile → sağda büyük görünüm · kopya modu (trace/poster/pencil)
+- [ ] Tasarım: tuval yüklenir · sohbetten çiz / PNG
 - [ ] Motor değiştirince Tercüme/Programlama bozulmaz
+
+**Smoke komutu:** `scripts\Ruzgar_Mimar_Smoke.bat` veya `python ilim-assistant/scripts/mimar_atolye_smoke.py`
 
 ---
 

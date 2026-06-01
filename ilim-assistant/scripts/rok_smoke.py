@@ -44,6 +44,7 @@ def main() -> int:
         ("video", "bu videoyu indir https://www.youtube.com/watch?v=dQw4w9WgXcQ", "do"),
         ("ses", "alim moduna geç", "do"),
         ("okuma", "arsiv durumu", "command"),
+        ("mimar", "arsiv durumu", "command"),
         ("tercume", "dil listesi", "command"),
         ("hafiza", "hafıza durumu", "command"),
     ]

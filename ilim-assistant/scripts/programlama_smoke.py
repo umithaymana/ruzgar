@@ -2180,6 +2180,12 @@ def run_parity(*, live_base: str | None = None) -> int:
     else:
         _fail("okuma faz73 arsiv", str(oi))
         fails += 1
+    mi = classify_okuma_intent("arsiv durumu", mode_norm="mimar")
+    if mi.get("intent") == "command" and mi.get("reason") == "arsiv_status":
+        _ok("mimar faz73 arsiv alias")
+    else:
+        _fail("mimar faz73 arsiv", str(mi))
+        fails += 1
     oc = classify_okuma_intent("arsiv nedir", mode_norm="okuma")
     if oc.get("intent") == "chat":
         _ok("okuma faz73 chat")

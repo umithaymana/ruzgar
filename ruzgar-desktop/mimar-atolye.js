@@ -667,6 +667,8 @@
       if (item.sketch_svg_rel) $("btn-mimar-sanat-sketch-dl")?.removeAttribute("disabled");
       else $("btn-mimar-sanat-sketch-dl")?.setAttribute("disabled", "disabled");
       $("btn-mimar-sanat-kopya")?.removeAttribute("disabled");
+      const copySel = $("mimar-sanat-copy-mode");
+      if (copySel && item.copy_mode) copySel.value = item.copy_mode;
       if (item.copy_rel) $("btn-mimar-sanat-copy-view")?.removeAttribute("disabled");
       else $("btn-mimar-sanat-copy-view")?.setAttribute("disabled", "disabled");
     } else {
@@ -944,7 +946,10 @@
     $("btn-mimar-sanat-save-meta")?.addEventListener("click", () => void saveSanatMeta());
     $("btn-mimar-sanat-ciz")?.addEventListener("click", () => void sketchSanatWork());
     $("btn-mimar-sanat-sketch-dl")?.addEventListener("click", () => downloadSanatSketchSvg());
-    $("btn-mimar-sanat-kopya")?.addEventListener("click", () => void copySanatWork("trace"));
+    $("btn-mimar-sanat-kopya")?.addEventListener("click", () => {
+      const mode = ($("mimar-sanat-copy-mode")?.value || "trace").trim();
+      void copySanatWork(mode);
+    });
     $("btn-mimar-sanat-copy-view")?.addEventListener("click", () => toggleSanatCopyView());
   }
 
