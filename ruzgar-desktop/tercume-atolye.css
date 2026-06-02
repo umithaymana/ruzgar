@@ -613,6 +613,22 @@ body[data-motor="tercume"][data-tercume-tab="pasif"] #page-tercume .tercume-help
 #page-tercume .tercume-readiness-warn strong {
   color: #c9b8ff;
 }
+#page-tercume .tercume-capability-strip {
+  margin: 0 0 8px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid #3f3a47;
+  background: #211d28;
+  color: #d7d2e3;
+  font-size: 11px;
+  line-height: 1.4;
+}
+#page-tercume .tercume-capability-strip[hidden] {
+  display: none !important;
+}
+#page-tercume .tercume-capability-strip strong {
+  color: #9cdcfe;
+}
 #page-tercume .tercume-quality-strip {
   display: flex;
   align-items: flex-start;
@@ -1029,6 +1045,18 @@ body[data-motor="tercume"][data-tercume-tab="pasif"] #page-tercume .tercume-help
   color: #9cdcfe;
   margin-left: 6px;
 }
+#page-tercume .tercume-aligned-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 0;
+}
+#page-tercume .tercume-aligned-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #c8c8c8;
+}
 #page-tercume .tercume-aligned-scroll {
   max-height: 140px;
   overflow: auto;
@@ -1049,12 +1077,36 @@ body[data-motor="tercume"][data-tercume-tab="pasif"] #page-tercume .tercume-help
   text-align: left;
 }
 #page-tercume .tercume-aligned-table .col-src {
-  width: 46%;
+  width: 40%;
   color: #ddd;
 }
 #page-tercume .tercume-aligned-table .col-tgt {
-  width: 46%;
+  width: 34%;
   color: #c9e8ff;
+}
+#page-tercume .tercume-aligned-table .col-actions {
+  width: 16%;
+}
+#page-tercume .tercume-aligned-edit {
+  width: 100%;
+  min-height: 52px;
+  resize: vertical;
+  background: #1a1d22;
+  color: #d7e8ff;
+  border: 1px solid #3a4455;
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 10px;
+}
+#page-tercume .tercume-aligned-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+#page-tercume .tercume-aligned-q {
+  display: block;
+  margin-top: 4px;
+  color: #9cdcfe;
 }
 #page-tercume .tercume-aligned-table .st-paired {
   color: #6a9955;
@@ -1064,6 +1116,23 @@ body[data-motor="tercume"][data-tercume-tab="pasif"] #page-tercume .tercume-help
 }
 #page-tercume .tercume-aligned-table .st-extra_target {
   color: #ffd580;
+}
+#page-tercume .tercume-aligned-table tr.approved-row td {
+  background: rgba(64, 136, 84, 0.12);
+}
+#page-tercume .tercume-aligned-table tr.focused-row td {
+  outline: 1px solid #5aa9e6;
+  outline-offset: -1px;
+}
+#page-tercume .tercume-aligned-note {
+  width: 100%;
+  margin-top: 4px;
+  background: #191919;
+  color: #d8d8d8;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 3px 5px;
+  font-size: 10px;
 }
 #page-tercume .tercume-user-glossary-form {
   display: flex;

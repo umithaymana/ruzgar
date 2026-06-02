@@ -889,6 +889,10 @@
                   <strong>OCR kurulumu gerekli:</strong>
                   <span id="tercume-ocr-warn-text">Taranmış sayfa ve görseller için Tesseract (Arapça + Osmanlıca) kurulu olmalı.</span>
                 </div>
+                <div class="tercume-capability-strip" id="tercume-capability-strip" role="status" hidden>
+                  <strong>Yerel araçlar:</strong>
+                  <span id="tercume-capability-text">Kontrol ediliyor…</span>
+                </div>
                 <div class="tercume-ebook-meta" id="tercume-ebook-meta" hidden role="status">
                   <strong>E-kitap:</strong>
                   <span id="tercume-ebook-meta-text">—</span>
@@ -958,6 +962,18 @@
                     Hizalı karşılaştırma
                     <span class="tercume-aligned-stats" id="tercume-aligned-stats">—</span>
                   </summary>
+                  <div class="tercume-aligned-toolbar">
+                    <label class="tercume-aligned-filter">
+                      <input type="checkbox" id="tercume-aligned-only-issues" />
+                      Sadece sorunlu satırlar
+                    </label>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-tercume-aligned-retry-unapproved">
+                      Onaysızları yeniden çevir
+                    </button>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-tercume-aligned-export-approved">
+                      Onaylıları TMX indir
+                    </button>
+                  </div>
                   <div class="tercume-aligned-scroll">
                     <table class="tercume-aligned-table" id="tercume-aligned-table">
                       <thead>
@@ -966,6 +982,7 @@
                           <th>Kaynak</th>
                           <th>Hedef</th>
                           <th>Durum</th>
+                          <th>Aksiyon</th>
                         </tr>
                       </thead>
                       <tbody id="tercume-aligned-tbody"></tbody>

@@ -9,6 +9,11 @@
   const QUALITY_WARN = 75;
 
   let lastTranslateContext = null;
+  let lastAlignedPayload = null;
+  const approvedAlignedRows = new Set();
+  const alignedRowNotes = new Map();
+  let focusedAlignedRowKey = "";
+  let alignedNotesSaveTimer = null;
   const EBOOK_EXTS = [".epub", ".fb2", ".mobi", ".azw", ".azw3", ".kfx", ".djvu", ".djv", ".rtf"];
   const IMAGE_EXTS = [".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tif", ".tiff"];
 
@@ -19,6 +24,8 @@
   let translateAbort = false;
   let lastDownloadDir = { abs: "", rel: "" };
   let lastSaveDir = "ilim-assistant/arsiv/tercume-output";
+  let lastIntentUndo = null;
+  let lastIntentRawText = "";
 
   function api() {
     return deps.api || global.API || "";
@@ -320,6 +327,8 @@
       getSourceEl()?.focus();
       void refreshApprenticeLog();
       void refreshMemoryStatus();
+      void refreshCapabilities(rel);
+      await loadAlignedNotesForRel(rel);
     } catch (e) {
       openRel = rel;
       const msg = String(e.message || e);
@@ -327,6 +336,8 @@
       updateActiveLabel();
       flash("Tam metin yüklenemedi; dosya yolu kayıtlı.");
       void refreshMemoryStatus();
+      void refreshCapabilities(rel);
+      await loadAlignedNotesForRel(rel);
     }
   }
 
@@ -480,13 +491,166 @@
     empty: "—",
   };
 
+  function alignedRowKey(row) {
+    const idx = Number(row?.index);
+    const page = String(row?.page || "");
+    return `${page}#${Number.isFinite(idx) ? idx : "?"}`;
+  }
+
+  function alignedNotesToObject() {
+    const out = {};
+    for (const [k, v] of alignedRowNotes.entries()) {
+      const kk = String(k || "").trim();
+      const vv = String(v || "").trim();
+      if (kk && vv) out[kk] = vv;
+    }
+    return out;
+  }
+
+  async function loadAlignedNotesForRel(rel) {
+    alignedRowNotes.clear();
+    const raw = String(rel || "").trim();
+    if (!raw) return;
+    try {
+      const res = await fetch(`${api()}/api/tercume/aligned-notes?rel=${encodeURIComponent(raw)}`);
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.ok || typeof j.notes !== "object") return;
+      for (const [k, v] of Object.entries(j.notes || {})) {
+        const kk = String(k || "").trim();
+        const vv = String(v || "").trim();
+        if (kk && vv) alignedRowNotes.set(kk, vv);
+      }
+    } catch {
+      /* sessiz */
+    }
+  }
+
+  function scheduleSaveAlignedNotes() {
+    if (!openRel) return;
+    if (alignedNotesSaveTimer) clearTimeout(alignedNotesSaveTimer);
+    alignedNotesSaveTimer = setTimeout(() => {
+      alignedNotesSaveTimer = null;
+      const fd = new FormData();
+      fd.append("rel", String(openRel || ""));
+      fd.append("notes_json", JSON.stringify(alignedNotesToObject()));
+      void fetch(`${api()}/api/tercume/aligned-notes/save`, { method: "POST", body: fd }).catch(() => {});
+    }, 350);
+  }
+
+  async function scoreSegmentQuality(sourceText, targetText) {
+    const fd = new FormData();
+    fd.append("source_text", String(sourceText || ""));
+    fd.append("target_text", String(targetText || ""));
+    fd.append("tgt_lang", String($("tercume-tgt-lang")?.value || "tr"));
+    const res = await fetch(`${api()}/api/tercume/quality-score`, { method: "POST", body: fd });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) throw new Error(typeof j.detail === "string" ? j.detail : "Kalite ölçülemedi");
+    return j.quality || null;
+  }
+
+  function applyAlignedSegmentToTarget(row, text) {
+    const idx = Number(row?.index);
+    if (!Number.isFinite(idx) || idx < 0) return false;
+    return replaceTargetSegment(idx, String(text || ""));
+  }
+
+  async function retryAlignedSegment(row, textarea, qEl) {
+    const source = String(row?.source || "");
+    if (!source.trim()) {
+      flash("Kaynak segment boş; yeniden çeviri yapılamadı.");
+      return;
+    }
+    flash(`Segment yeniden çevriliyor: ${row.page || row.index + 1}`);
+    const hit = await translateChunkApi(source, Number(row?.index));
+    const out = String(hit.text || "").trim();
+    textarea.value = out;
+    applyAlignedSegmentToTarget(row, out);
+    if (qEl) {
+      const sc = hit?.quality?.score;
+      qEl.textContent = sc != null ? `Skor: ${sc}` : "Skor: ?";
+    }
+    if (lastAlignedPayload) {
+      const key = alignedRowKey(row);
+      approvedAlignedRows.delete(key);
+    }
+    void runAlignedDiff();
+  }
+
+  function isProblemRow(row) {
+    return String(row?.status || "") !== "paired";
+  }
+
+  async function retryUnapprovedAlignedRows() {
+    if (!lastAlignedPayload || !Array.isArray(lastAlignedPayload.segments)) {
+      flash("Önce hizalı diff çalıştırın.");
+      return;
+    }
+    const rows = lastAlignedPayload.segments.filter((r) => {
+      const key = alignedRowKey(r);
+      return !approvedAlignedRows.has(key) && String(r.source || "").trim();
+    });
+    if (!rows.length) {
+      flash("Yeniden çevrilecek onaysız satır yok.");
+      return;
+    }
+    const maxN = Math.min(rows.length, 8);
+    flash(`Onaysız satırlar yeniden çevriliyor (${maxN})…`);
+    for (let i = 0; i < maxN; i++) {
+      const r = rows[i];
+      try {
+        const hit = await translateChunkApi(String(r.source || ""), Number(r.index));
+        const out = String(hit.text || "").trim();
+        applyAlignedSegmentToTarget(r, out);
+      } catch {
+        /* bir satır hatası diğerlerini durdurmasın */
+      }
+    }
+    flash(`Toplu yeniden çeviri bitti: ${maxN} satır`);
+    void runAlignedDiff();
+  }
+
+  async function exportApprovedAlignedToTmx() {
+    if (!lastAlignedPayload || !Array.isArray(lastAlignedPayload.segments)) {
+      flash("Önce hizalı diff çalıştırın.");
+      return;
+    }
+    const rows = lastAlignedPayload.segments
+      .filter((r) => approvedAlignedRows.has(alignedRowKey(r)))
+      .map((r) => ({
+        source: String(r.source || "").trim(),
+        target: String(r.target || "").trim(),
+      }))
+      .filter((r) => r.source && r.target);
+    if (!rows.length) {
+      flash("TMX için en az bir onaylı satır gerekli.");
+      return;
+    }
+    const fd = new FormData();
+    fd.append("segments_json", JSON.stringify(rows));
+    fd.append("src_lang", String($("tercume-src-lang")?.value || "auto"));
+    fd.append("tgt_lang", String($("tercume-tgt-lang")?.value || "tr"));
+    const res = await fetch(`${api()}/api/tercume/tmx/export-segments`, { method: "POST", body: fd });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) throw new Error(typeof j.detail === "string" ? j.detail : "TMX üretilemedi");
+    const blob = new Blob([String(j.tmx || "")], { type: "application/xml;charset=utf-8" });
+    const a = document.createElement("a");
+    const stem = openRel ? openRel.replace(/^.*[/\\]/, "").replace(/\.[^.]+$/, "") : "cat-lite";
+    a.href = URL.createObjectURL(blob);
+    a.download = `${stem || "cat-lite"}_approved.tmx`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    flash(`Onaylı TMX indirildi (${j.units || rows.length} satır).`);
+  }
+
   function renderAlignedDiff(payload) {
     const fold = $("tercume-aligned-fold");
     const tbody = $("tercume-aligned-tbody");
     const statsEl = $("tercume-aligned-stats");
     if (!fold || !tbody) return;
-    const rows = Array.isArray(payload?.segments) ? payload.segments : [];
-    if (!rows.length) {
+    const allRows = Array.isArray(payload?.segments) ? payload.segments : [];
+    const onlyIssues = !!$("tercume-aligned-only-issues")?.checked;
+    const rows = onlyIssues ? allRows.filter((r) => isProblemRow(r)) : allRows;
+    if (!allRows.length) {
       fold.hidden = true;
       tbody.innerHTML = "";
       return;
@@ -494,14 +658,32 @@
     fold.hidden = false;
     const st = payload.stats || {};
     const warn = (st.missing_target || 0) + (st.extra_target || 0);
+    const approvedN = allRows.filter((r) => approvedAlignedRows.has(alignedRowKey(r))).length;
     if (statsEl) {
       statsEl.textContent = payload.aligned
-        ? `${rows.length} segment · hizalı`
-        : `${rows.length} segment · ${warn} uyarı`;
+        ? `${rows.length}/${allRows.length} segment · hizalı · onay ${approvedN}`
+        : `${rows.length}/${allRows.length} segment · ${warn} uyarı · onay ${approvedN}`;
     }
     tbody.innerHTML = "";
+    if (!rows.length) {
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 5;
+      td.textContent = "Filtrede gösterilecek sorunlu satır yok.";
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      fold.open = true;
+      return;
+    }
     for (const r of rows) {
       const tr = document.createElement("tr");
+      const rowKey = alignedRowKey(r);
+      if (approvedAlignedRows.has(rowKey)) tr.classList.add("approved-row");
+      if (focusedAlignedRowKey === rowKey) tr.classList.add("focused-row");
+      tr.addEventListener("click", () => {
+        focusedAlignedRowKey = rowKey;
+        renderAlignedDiff(lastAlignedPayload || payload);
+      });
       const idx = document.createElement("td");
       idx.textContent = String(r.page || r.index + 1);
       const tdSrc = document.createElement("td");
@@ -509,15 +691,89 @@
       tdSrc.textContent = (r.source || "").slice(0, 320) || "—";
       const tdTgt = document.createElement("td");
       tdTgt.className = "col-tgt";
-      tdTgt.textContent = (r.target || "").slice(0, 320) || "—";
+      const ta = document.createElement("textarea");
+      ta.className = "tercume-aligned-edit";
+      ta.value = String(r.target || "");
+      ta.placeholder = "Hedef segment";
+      tdTgt.appendChild(ta);
       const tdSt = document.createElement("td");
       const code = String(r.status || "paired");
       tdSt.className = `st-${code}`;
       tdSt.textContent = ALIGNED_STATUS_TR[code] || code;
+      const tdAct = document.createElement("td");
+      tdAct.className = "col-actions";
+      const actions = document.createElement("div");
+      actions.className = "tercume-aligned-actions";
+      const btnApply = document.createElement("button");
+      btnApply.type = "button";
+      btnApply.className = "btn-secondary btn-compact";
+      btnApply.textContent = "Hedefe uygula";
+      const btnRetry = document.createElement("button");
+      btnRetry.type = "button";
+      btnRetry.className = "btn-secondary btn-compact";
+      btnRetry.textContent = "Yeniden çevir";
+      const btnQ = document.createElement("button");
+      btnQ.type = "button";
+      btnQ.className = "btn-secondary btn-compact";
+      btnQ.textContent = "Skor";
+      const btnApprove = document.createElement("button");
+      btnApprove.type = "button";
+      btnApprove.className = "btn-secondary btn-compact";
+      btnApprove.textContent = approvedAlignedRows.has(rowKey) ? "Onayı kaldır" : "Onayla";
+      const note = document.createElement("input");
+      note.type = "text";
+      note.className = "tercume-aligned-note";
+      note.placeholder = "Satır notu (editoryal)";
+      note.value = alignedRowNotes.get(rowKey) || "";
+      const q = document.createElement("small");
+      q.className = "tercume-aligned-q";
+      q.textContent = note.value ? `Not: ${note.value.slice(0, 80)}` : "";
+      btnApply.addEventListener("click", () => {
+        const ok = applyAlignedSegmentToTarget(r, ta.value);
+        if (!ok) {
+          flash(`Segment uygulanamadı: #${r.index + 1}`);
+          return;
+        }
+        flash(`Segment hedefe uygulandı: #${r.index + 1}`);
+      });
+      btnRetry.addEventListener("click", () => {
+        void retryAlignedSegment(r, ta, q).catch((e) => flash(e.message || String(e)));
+      });
+      btnApprove.addEventListener("click", () => {
+        if (approvedAlignedRows.has(rowKey)) approvedAlignedRows.delete(rowKey);
+        else approvedAlignedRows.add(rowKey);
+        renderAlignedDiff(lastAlignedPayload || payload);
+      });
+      note.addEventListener("input", () => {
+        const v = String(note.value || "").trim();
+        if (v) alignedRowNotes.set(rowKey, v);
+        else alignedRowNotes.delete(rowKey);
+        q.textContent = v ? `Not: ${v.slice(0, 80)}` : "";
+        scheduleSaveAlignedNotes();
+      });
+      btnQ.addEventListener("click", () => {
+        void scoreSegmentQuality(r.source, ta.value)
+          .then((qual) => {
+            const sc = qual?.score;
+            const issues = Array.isArray(qual?.issues) ? qual.issues : [];
+            const noteTxt = alignedRowNotes.get(rowKey);
+            q.textContent = sc != null ? `Skor: ${sc}${issues[0] ? ` · ${issues[0]}` : ""}` : "Skor: ?";
+            if (noteTxt) q.textContent += ` · Not: ${String(noteTxt).slice(0, 60)}`;
+          })
+          .catch((e) => flash(e.message || String(e)));
+      });
+      actions.appendChild(btnApply);
+      actions.appendChild(btnRetry);
+      actions.appendChild(btnApprove);
+      actions.appendChild(btnQ);
+      tdAct.appendChild(actions);
+      tdAct.appendChild(note);
+      tdAct.appendChild(q);
       tr.appendChild(idx);
       tr.appendChild(tdSrc);
       tr.appendChild(tdTgt);
       tr.appendChild(tdSt);
+      tr.appendChild(tdAct);
       tbody.appendChild(tr);
     }
     fold.open = true;
@@ -538,6 +794,7 @@
     const res = await fetch(`${api()}/api/tercume/aligned-diff`, { method: "POST", body: fd });
     const j = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : j.error || "Diff başarısız");
+    lastAlignedPayload = j;
     renderAlignedDiff(j);
     if (!j.aligned) flash("Segment sayıları tam hizalı değil — tabloya bakın.");
     else flash("Kaynak ve hedef segmentler hizalı görünüyor.");
@@ -931,6 +1188,79 @@
       flash(e.message || "Arama hatası");
       return false;
     }
+  }
+
+  function guessTargetLangFromText(text) {
+    const t = String(text || "").toLowerCase();
+    const hits = [
+      { code: "tr", re: /\b(türkçe|turkce|turkish)\b/i },
+      { code: "en", re: /\b(ingilizce|english)\b/i },
+      { code: "ar", re: /\b(arapça|arapca|arabic)\b/i },
+      { code: "de", re: /\b(almanca|german|deutsch)\b/i },
+      { code: "fr", re: /\b(fransızca|fransizca|french)\b/i },
+      { code: "fa", re: /\b(farsça|farsca|persian)\b/i },
+      { code: "ru", re: /\b(rusça|rusca|russian)\b/i },
+    ];
+    for (const h of hits) {
+      if (h.re.test(t)) return h.code;
+    }
+    return "";
+  }
+
+  function parseSaveRelFromText(text) {
+    const t = String(text || "");
+    const quoted = t.match(/(?:kaydet|yaz)[^"'“”]*["“]([^"”]+)["”]/i);
+    if (quoted?.[1]) return quoted[1].trim();
+    const pathy = t.match(/(?:kaydet|yaz)[^\n]*\s((?:ilim-assistant|arsiv|output|outputs)[^\s]+)/i);
+    if (pathy?.[1]) return pathy[1].trim();
+    return "";
+  }
+
+  function parseUrlFromText(text) {
+    const m = String(text || "").match(/https?:\/\/[^\s<>"']+/i);
+    return m ? m[0] : "";
+  }
+
+  function parsePageRangeFromText(text) {
+    const t = String(text || "");
+    const m = t.match(/(?:sayfa|pages?)\s*(\d{1,5})\s*[-–—]\s*(\d{1,5})/i);
+    if (m) {
+      const a = Number(m[1]);
+      const b = Number(m[2]);
+      if (Number.isFinite(a) && Number.isFinite(b) && a > 0 && b > 0) {
+        return { from: Math.min(a, b), to: Math.max(a, b) };
+      }
+    }
+    const single = t.match(/(?:sayfa|page)\s*(\d{1,5})\b/i);
+    if (single) {
+      const n = Number(single[1]);
+      if (Number.isFinite(n) && n > 0) return { from: n, to: n };
+    }
+    return null;
+  }
+
+  function extractSearchQueryFromText(text) {
+    const raw = String(text || "").trim();
+    if (!raw) return "";
+    const cleaned = raw
+      .replace(/\b(lütfen|lutfen|rica etsem|abi|hocam)\b/gi, " ")
+      .replace(/\b(indir|download|çevir|cevir|tercüme et|translate|kaydet|yaz)\b/gi, " ")
+      .replace(/\b(bunu|şunu|sunu|şu|bu|dosyaya|dile|sayfaları|sayfalari|sayfa)\b/gi, " ")
+      .replace(/https?:\/\/[^\s<>"']+/gi, " ")
+      .replace(/\d+\s*[-–—]\s*\d+/g, " ")
+      .replace(/[^\p{L}\p{N}\s.'-]+/gu, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    return cleaned.length >= 3 ? cleaned : "";
+  }
+
+  function buildIntentReply(main, steps = [], confidence = 0.8) {
+    const safeMain = String(main || "Tamam.").trim();
+    const list = Array.isArray(steps) ? steps.filter(Boolean) : [];
+    const conf = Math.max(0, Math.min(1, Number(confidence) || 0));
+    const confTag = conf >= 0.86 ? "yüksek" : conf >= 0.65 ? "orta" : "düşük";
+    const stepTxt = list.length ? `\nAdımlar: ${list.join(" → ")}` : "";
+    return `${safeMain}${stepTxt}\nGüven: ${confTag} (${Math.round(conf * 100)}%)`;
   }
 
   async function pickDownloadFolder() {
@@ -1683,6 +2013,42 @@
     }
   }
 
+  async function refreshCapabilities(rel = "") {
+    const box = $("tercume-capability-strip");
+    const txt = $("tercume-capability-text");
+    if (!box || !txt) return;
+    try {
+      const res = await fetch(`${api()}/api/tercume/capabilities`);
+      const j = await res.json().catch(() => ({}));
+      const caps = j?.capabilities || {};
+      if (!j.ok || typeof caps !== "object") {
+        box.hidden = true;
+        return;
+      }
+      const hasCal = !!caps.calibre;
+      const hasDjvu = !!caps.djvu;
+      const hasDocx = !!caps.docx_export;
+      const hasOcr = !!caps.ocr;
+      const parts = [
+        `Kindle(MOBI): ${hasCal ? "hazır" : "yok"}`,
+        `DjVu: ${hasDjvu ? "hazır" : "yok"}`,
+        `DOCX çıktı: ${hasDocx ? "hazır" : "yok"}`,
+        `OCR: ${hasOcr ? "hazır" : "yok"}`,
+      ];
+      const ext = String(rel || "").toLowerCase();
+      let extra = "";
+      if (ext.endsWith(".mobi") || ext.endsWith(".azw") || ext.endsWith(".azw3") || ext.endsWith(".kfx")) {
+        if (!hasCal) extra = " · Bu dosya için Calibre (ebook-convert) gerekir.";
+      } else if (ext.endsWith(".djvu") || ext.endsWith(".djv")) {
+        if (!hasDjvu) extra = " · Bu dosya için DjVuLibre (djvutxt) gerekir.";
+      }
+      txt.textContent = `${parts.join(" · ")}${extra}`;
+      box.hidden = false;
+    } catch {
+      box.hidden = true;
+    }
+  }
+
   async function refreshOcrWarning() {
     const box = $("tercume-ocr-warn");
     const txt = $("tercume-ocr-warn-text");
@@ -1983,6 +2349,275 @@ ${chunk}`;
     if (j.rel) await openFile(j.rel);
   }
 
+  async function tryAtolyeFromMessage(text) {
+    const raw = String(text || "").trim();
+    const low = raw.toLowerCase();
+    if (!raw || raw.length > 420) return { handled: false };
+
+    const wantsResume = /\b(devam et|kald(ı|i)ğ(ı|i)m(ı|i)z yerden|resume|şuradan devam)\b/i.test(low);
+    const hasUrl = /https?:\/\//i.test(raw);
+    const wantsDownload = /\b(indir|download|url)\b/i.test(low);
+    const wantsTranslate = /\b(çevir|tercüme et|cevir|translate)\b/i.test(low);
+    const wantsSave = /\b(kaydet|yaz)\b/i.test(low) && /\b(dosya|file|çıktı|cikti)\b/i.test(low);
+    const wantsCancel = /\b(iptal|durdur|stop|vazgeç|vazgec)\b/i.test(low);
+    const wantsUndo = /\b(geri al|undo|son işlemi geri al|son islemi geri al)\b/i.test(low);
+    const intentCount = [wantsResume, wantsDownload, wantsTranslate, wantsSave].filter(Boolean).length;
+
+    if (wantsCancel) {
+      lastIntentRawText = raw;
+      if (batchPollTimer || activeBatchJobId) {
+        await cancelBatchJob();
+        return {
+          handled: true,
+          instant: true,
+          reply: buildIntentReply("Tamam, aktif çeviri işini iptal ettim.", ["iş durduruldu"], 0.96),
+        };
+      }
+      return {
+        handled: true,
+        instant: true,
+        reply: buildIntentReply("Şu an iptal edilecek aktif bir iş yok.", ["aktif iş kontrol edildi"], 0.95),
+      };
+    }
+
+    if (wantsUndo) {
+      lastIntentRawText = raw;
+      if (lastIntentUndo?.type === "target_replace") {
+        setTargetText(String(lastIntentUndo.prevTarget || ""));
+        lastIntentUndo = null;
+        return {
+          handled: true,
+          instant: true,
+          reply: buildIntentReply("Tamam, son hedef metin değişikliğini geri aldım.", ["hedef metin geri yüklendi"], 0.92),
+        };
+      }
+      return {
+        handled: true,
+        instant: true,
+        reply: buildIntentReply("Geri alınacak bir işlem bulamadım.", ["undo geçmişi kontrol edildi"], 0.93),
+      };
+    }
+
+    if (intentCount >= 2 && !hasUrl) {
+      return {
+        handled: true,
+        instant: true,
+        reply: buildIntentReply(
+          "İsteğinizde birden fazla adım var. Önce hangisini yapayım: indir, çevir, yoksa kaydet?",
+          ["niyetler ayrıştırıldı", "ek onay bekleniyor"],
+          0.61,
+        ),
+      };
+    }
+
+    if (wantsResume) {
+      lastIntentRawText = raw;
+      await resumeActivePageJobIfAny();
+      if (batchPollTimer || activeBatchJobId) {
+        return {
+          handled: true,
+          instant: true,
+          reply: buildIntentReply("Tamam, aktif çeviri işine yeniden bağlandım.", ["iş bulundu", "izleme başlatıldı"], 0.96),
+        };
+      }
+      return {
+        handled: true,
+        instant: true,
+        reply: buildIntentReply("Devam eden bir iş bulamadım. İsterseniz yeni çeviri başlatayım.", ["aktif iş kontrol edildi"], 0.92),
+      };
+    }
+
+    if (wantsDownload && hasUrl) {
+      lastIntentRawText = raw;
+      const url = parseUrlFromText(raw);
+      if (!url) return { handled: false };
+      const inp = $("tercume-import-url");
+      if (inp) inp.value = url;
+      await importUrl();
+      return {
+        handled: true,
+        instant: true,
+        reply: buildIntentReply(
+          "Tamam, bağlantıyı indirip çalışma paneline aldım. Dili söyleyin, çevireyim.",
+          ["URL alındı", "dosya indirildi", "çalışma paneli açıldı"],
+          0.95,
+        ),
+      };
+    }
+
+    if (wantsDownload && !hasUrl) {
+      lastIntentRawText = raw;
+      const q = extractSearchQueryFromText(raw);
+      if (q.length < 3) {
+        return {
+          handled: true,
+          instant: true,
+          reply: buildIntentReply("İndirebilmem için bağlantı (URL) verin ya da kitap adını daha net yazın.", ["indir niyeti bulundu"], 0.84),
+        };
+      }
+      const ok = await runEserSearch(q);
+      return {
+        handled: true,
+        instant: true,
+        reply: ok
+          ? buildIntentReply(
+              "Kaynağı aradım, sonuçları «Eser ara» sekmesine getirdim. Uygun sonucu seçip indiriyorum.",
+              ["arama sorgusu çıkarıldı", "eser arama çalıştırıldı"],
+              0.86,
+            )
+          : buildIntentReply("Bu isimle sonuç bulamadım; farklı yazımla tekrar deneyelim.", ["arama çalıştırıldı", "sonuç bulunamadı"], 0.83),
+      };
+    }
+
+    if (wantsTranslate) {
+      lastIntentRawText = raw;
+      const code = guessTargetLangFromText(raw);
+      if (code) {
+        const sel = $("tercume-tgt-lang");
+        if (sel) {
+          const has = Array.from(sel.options || []).some((o) => String(o.value) === code);
+          if (has) sel.value = code;
+        }
+      }
+      if (openRel) {
+        const range = parsePageRangeFromText(raw);
+        if (range) {
+          const fromEl = $("tercume-page-from");
+          const toEl = $("tercume-page-to");
+          if (fromEl) fromEl.value = String(range.from);
+          if (toEl) toEl.value = String(range.to);
+          lastIntentUndo = { type: "target_replace", prevTarget: getTargetText() };
+          await startPageRangeJob("range");
+          return {
+            handled: true,
+            instant: true,
+            reply: buildIntentReply(
+              `Tamam, ${range.from}-${range.to} sayfaları arka planda çevirmeye başladım.`,
+              ["sayfa aralığı çözüldü", "arka plan işi başlatıldı"],
+              0.95,
+            ),
+          };
+        }
+        if (/\b(sayfa sayfa|page by page)\b/i.test(low)) {
+          lastIntentUndo = { type: "target_replace", prevTarget: getTargetText() };
+          await startPageRangeJob("page");
+          return {
+            handled: true,
+            instant: true,
+            reply: buildIntentReply("Tamam, sayfa sayfa arka plan çevirisini başlattım.", ["mod seçildi: page", "arka plan işi başlatıldı"], 0.93),
+          };
+        }
+        lastIntentUndo = { type: "target_replace", prevTarget: getTargetText() };
+        await startPageRangeJob("full");
+        return {
+          handled: true,
+          instant: true,
+          reply: buildIntentReply("Tamam, dosyayı tam modda arka planda çevirmeye başladım.", ["mod seçildi: full", "arka plan işi başlatıldı"], 0.94),
+        };
+      }
+      if (getSourceText()) {
+        lastIntentUndo = { type: "target_replace", prevTarget: getTargetText() };
+        await runPagedTranslation("single");
+        return {
+          handled: true,
+          instant: true,
+          reply: buildIntentReply("Tamam, mevcut metni çevirdim ve hedef panele yazdım.", ["kaynak metin okundu", "tek parça çeviri tamamlandı"], 0.91),
+        };
+      }
+      const q = extractSearchQueryFromText(raw);
+      if (q.length >= 3 && /\b(kitap|eser|mektubat|tefsir|risale|hadis)\b/i.test(low)) {
+        const ok = await runEserSearch(q);
+        return {
+          handled: true,
+          instant: true,
+          reply: ok
+            ? buildIntentReply(
+                "Önce kitabı aradım. Sonuçtan dosyayı açınca çeviriyi otomatik başlatabilirim.",
+                ["kitap adı çıkarıldı", "eser arama yapıldı"],
+                0.82,
+              )
+            : buildIntentReply("Çevirecek dosya bulamadım. URL veya dosya verin, hemen başlatayım.", ["arama yapıldı", "dosya bulunamadı"], 0.8),
+        };
+      }
+      return {
+        handled: true,
+        instant: true,
+        reply: buildIntentReply("Çevirmem için önce dosya açın veya kaynak metin yapıştırın.", ["çeviri niyeti bulundu", "girdi eksik"], 0.86),
+      };
+    }
+
+    if (wantsSave) {
+      lastIntentRawText = raw;
+      if (!getTargetText()) {
+        return {
+          handled: true,
+          instant: true,
+          reply: buildIntentReply("Kaydedecek hedef metin yok. Önce çeviri yapalım, sonra kaydedeyim.", ["kaydet niyeti bulundu", "hedef metin kontrolü"], 0.95),
+        };
+      }
+      const rel = parseSaveRelFromText(raw);
+      if (rel) {
+        const saveInp = $("tercume-save-rel");
+        if (saveInp) saveInp.value = rel;
+        const ext = rel.toLowerCase().match(/\.(txt|md|html|docx)$/)?.[1] || "";
+        if (ext) {
+          const fmt = $("tercume-output-format");
+          if (fmt) fmt.value = ext;
+        }
+      } else if (!String($("tercume-save-rel")?.value || "").trim()) {
+        return {
+          handled: true,
+          instant: true,
+          reply: buildIntentReply(
+            "Nereye kaydedeyim? Örn: ilim-assistant/arsiv/tercume-output/kitap_tr.md",
+            ["kaydet yolu isteniyor"],
+            0.9,
+          ),
+        };
+      }
+      await saveTarget();
+      return {
+        handled: true,
+        instant: true,
+        reply: buildIntentReply("Tamam, çıktıyı dosyaya kaydettim.", ["kayıt yolu belirlendi", "dosya yazıldı"], 0.95),
+      };
+    }
+
+    return { handled: false };
+  }
+
+  async function runActionCardCommand(cmd) {
+    const c = String(cmd || "").trim().toLowerCase();
+    if (!c) return { ok: false, message: "Komut boş." };
+    if (c === "undo") {
+      const hit = await tryAtolyeFromMessage("geri al");
+      return { ok: !!hit?.handled, message: hit?.reply || "Geri alma çalıştırıldı." };
+    }
+    if (c === "repeat") {
+      if (!String(lastIntentRawText || "").trim()) {
+        return { ok: false, message: "Tekrarlanacak son işlem yok." };
+      }
+      const hit = await tryAtolyeFromMessage(lastIntentRawText);
+      return { ok: !!hit?.handled, message: hit?.reply || "Son işlem tekrarlandı." };
+    }
+    if (c === "details") {
+      const open = String(openRel || "(dosya yok)");
+      const job = String(activeBatchJobId || "");
+      const undo = lastIntentUndo?.type ? "var" : "yok";
+      const last = String(lastIntentRawText || "").trim() || "(yok)";
+      return {
+        ok: true,
+        message:
+          `Detay:\n` +
+          `- Açık dosya: ${open}\n` +
+          `- Aktif iş: ${job || "yok"}\n` +
+          `- Undo tamponu: ${undo}\n` +
+          `- Son niyet cümlesi: ${last}`,
+      };
+    }
+    return { ok: false, message: `Bilinmeyen komut: ${cmd}` };
+  }
+
   async function refreshApprenticeLog() {
     const list = $("tercume-apprentice-list");
     if (!list) return;
@@ -2104,6 +2739,7 @@ ${chunk}`;
       setTercumeTab(cur);
       void refreshOcrWarning();
       void refreshReadiness();
+      void refreshCapabilities(openRel || "");
     } else {
       delete document.body.dataset.motor;
       delete document.body.dataset.tercumeTab;
@@ -2258,6 +2894,15 @@ ${chunk}`;
     $("btn-tercume-aligned-diff")?.addEventListener("click", () => {
       void runAlignedDiff().catch((e) => flash(e.message || String(e)));
     });
+    $("tercume-aligned-only-issues")?.addEventListener("change", () => {
+      if (lastAlignedPayload) renderAlignedDiff(lastAlignedPayload);
+    });
+    $("btn-tercume-aligned-retry-unapproved")?.addEventListener("click", () => {
+      void retryUnapprovedAlignedRows().catch((e) => flash(e.message || String(e)));
+    });
+    $("btn-tercume-aligned-export-approved")?.addEventListener("click", () => {
+      void exportApprovedAlignedToTmx().catch((e) => flash(e.message || String(e)));
+    });
     $("btn-tercume-term-add")?.addEventListener("click", () => {
       void addUserTerm().catch((e) => flash(e.message || String(e)));
     });
@@ -2310,6 +2955,7 @@ ${chunk}`;
     void refreshApprenticeLog();
     void refreshOcrWarning();
     void refreshReadiness();
+    void refreshCapabilities(openRel || "");
     void resumeActivePageJobIfAny();
     void refreshBatchJobsList();
     void refreshMemoryStatus();
@@ -2338,6 +2984,7 @@ ${chunk}`;
       void refreshApprenticeLog();
       const fold = $("tercume-arsiv-download-fold");
       if (fold?.open) void refreshArsivCatalog();
+      void refreshCapabilities(openRel || "");
       void resumeActivePageJobIfAny();
       void refreshBatchJobsList();
       void refreshMemoryStatus();
@@ -2360,6 +3007,8 @@ ${chunk}`;
     },
     getOpenRel: () => openRel,
     runSearch: (text) => runEserSearch(text).then((ok) => ok),
+    tryAtolyeFromMessage,
+    runActionCardCommand,
     isSearchIntent(text) {
       const t = String(text || "").trim().toLowerCase();
       if (!t || t.length > 280) return false;

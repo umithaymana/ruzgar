@@ -4521,6 +4521,49 @@ body.faz7-reduced-motion .agent-step-active .agent-step-label {
   border-left: 3px solid #dcdcaa;
   background: linear-gradient(135deg, #2d2d30 0%, #2a2a24 100%);
 }
+.bubble.assistant.chat-action-card {
+  border-left: 3px solid #4ec9b0;
+  background: linear-gradient(135deg, #262a2d 0%, #202728 100%);
+}
+.bubble.assistant .chat-action-main {
+  font-weight: 700;
+  color: #d7f5ed;
+}
+.bubble.assistant .chat-action-mid {
+  margin-top: 6px;
+}
+.bubble.assistant .chat-action-steps {
+  margin: 0;
+  padding-left: 16px;
+  color: #d0d0d0;
+}
+.bubble.assistant .chat-action-steps li {
+  margin: 2px 0;
+}
+.bubble.assistant .chat-action-foot {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.bubble.assistant .chat-action-conf {
+  color: #9cdcfe;
+  text-transform: capitalize;
+}
+.bubble.assistant .chat-action-pct {
+  color: #b5cea8;
+}
+.bubble.assistant .chat-action-buttons {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.bubble.assistant .chat-action-buttons .chat-action-btn {
+  font-size: 11px;
+  padding: 4px 8px;
+}
 .bubble.assistant.chat-instant-memory {
   border-left: 3px solid #9cdcfe;
 }

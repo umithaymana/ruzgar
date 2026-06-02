@@ -4371,6 +4371,36 @@ def api_tercume_readiness(
     return collect_tercume_readiness(need_internet=net)
 
 
+@app.get("/api/tercume/capabilities")
+def api_tercume_capabilities() -> dict[str, Any]:
+    """Tercüme yetenek özeti: opsiyonel yerel araçlar + format desteği."""
+    from ilim_assistant.motorlar.tercume_ebook_read import calibre_available, djvu_available
+    from ilim_assistant.motorlar.tercume_export_docx import docx_available
+    from ilim_assistant.motorlar.tercume_preflight import run_tercume_preflight
+
+    pre = run_tercume_preflight()
+    ocr_ok = False
+    for c in pre.get("checks") or []:
+        if isinstance(c, dict) and str(c.get("id") or "") == "ocr_(tesseract)":
+            ocr_ok = bool(c.get("ok"))
+            break
+    return {
+        "ok": True,
+        "capabilities": {
+            "calibre": calibre_available(),
+            "djvu": djvu_available(),
+            "docx_export": docx_available(),
+            "ocr": ocr_ok,
+        },
+        "notes": {
+            "calibre": "MOBI/AZW okumak için Calibre (ebook-convert)",
+            "djvu": "DjVu okumak için DjVuLibre (djvutxt)",
+            "docx_export": "DOCX çıktı için python-docx",
+            "ocr": "Taranmış görsel/PDF için Tesseract",
+        },
+    }
+
+
 @app.post("/api/tercume/batch-start")
 async def api_tercume_batch_start(request: Request) -> dict[str, Any]:
     from ilim_assistant.motorlar.tercume_batch_jobs import start_batch_job, start_page_range_job
@@ -4686,6 +4716,44 @@ def api_tercume_tmx_export(
     }
 
 
+@app.post("/api/tercume/tmx/export-segments")
+def api_tercume_tmx_export_segments(
+    segments_json: str = Form(""),
+    src_lang: str = Form("auto"),
+    tgt_lang: str = Form("tr"),
+) -> dict[str, Any]:
+    """CAT-lite: seçili/onaylı segmentlerden TMX üret."""
+    import json
+
+    from ilim_assistant.motorlar.tercume_tmx import build_tmx
+
+    blob = (segments_json or "").strip()
+    if not blob:
+        raise HTTPException(status_code=400, detail="segments_json gerekli")
+    try:
+        data = json.loads(blob)
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=400, detail=f"Geçersiz JSON: {exc}") from exc
+    if not isinstance(data, list):
+        raise HTTPException(status_code=400, detail="segments_json liste olmalı")
+    units: list[tuple[str, str]] = []
+    for it in data[:500]:
+        if not isinstance(it, dict):
+            continue
+        src = str(it.get("source") or "").strip()
+        tgt = str(it.get("target") or "").strip()
+        if src and tgt:
+            units.append((src, tgt))
+    if not units:
+        raise HTTPException(status_code=400, detail="TMX için geçerli source/target segment yok")
+    sl = (src_lang or "auto").strip().lower()
+    if sl in ("", "auto"):
+        sl = "tr"
+    tl = (tgt_lang or "tr").strip().lower()[:8] or "tr"
+    tmx = build_tmx(units, src_lang=sl, tgt_lang=tl, creation_tool="ruzgar-tercume-cat-lite")
+    return {"ok": True, "tmx": tmx, "units": len(units), "src_lang": sl, "tgt_lang": tl}
+
+
 @app.post("/api/tercume/tmx/import")
 def api_tercume_tmx_import(
     text: str = Form(""),
@@ -4725,6 +4793,41 @@ def api_tercume_aligned_diff(
     if not src and not tgt:
         raise HTTPException(status_code=400, detail="Kaynak veya hedef metin gerekli.")
     return build_aligned_diff(src, tgt)
+
+
+@app.get("/api/tercume/aligned-notes")
+def api_tercume_aligned_notes(rel: str = Query("")) -> dict[str, Any]:
+    from ilim_assistant.motorlar.tercume_aligned_notes import load_notes
+
+    raw = (rel or "").strip().replace("\\", "/").lstrip("/")
+    if not raw:
+        raise HTTPException(status_code=400, detail="rel gerekli")
+    hit = load_notes(raw)
+    if not hit.get("ok"):
+        raise HTTPException(status_code=400, detail=str(hit.get("error") or "Notlar okunamadı"))
+    return hit
+
+
+@app.post("/api/tercume/aligned-notes/save")
+def api_tercume_aligned_notes_save(
+    rel: str = Form(""),
+    notes_json: str = Form(""),
+) -> dict[str, Any]:
+    import json
+
+    from ilim_assistant.motorlar.tercume_aligned_notes import save_notes
+
+    raw = (rel or "").strip().replace("\\", "/").lstrip("/")
+    if not raw:
+        raise HTTPException(status_code=400, detail="rel gerekli")
+    try:
+        notes = json.loads(notes_json or "{}")
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=400, detail=f"Geçersiz notes_json: {exc}") from exc
+    hit = save_notes(raw, notes if isinstance(notes, dict) else {})
+    if not hit.get("ok"):
+        raise HTTPException(status_code=400, detail=str(hit.get("error") or "Notlar kaydedilemedi"))
+    return hit
 
 
 @app.get("/api/tercume/memory-status")
@@ -4794,6 +4897,22 @@ def api_tercume_translate_chunk(
             },
         )
     return result
+
+
+@app.post("/api/tercume/quality-score")
+def api_tercume_quality_score(
+    source_text: str = Form(""),
+    target_text: str = Form(""),
+    tgt_lang: str = Form("tr"),
+) -> dict[str, Any]:
+    """CAT-lite: düzenlenen segment için hızlı kalite skoru."""
+    from ilim_assistant.motorlar.tercume_translate_quality import score_translation
+
+    src = (source_text or "").strip()
+    tgt = (target_text or "").strip()
+    if not src and not tgt:
+        raise HTTPException(status_code=400, detail="source_text veya target_text gerekli")
+    return {"ok": True, "quality": score_translation(src, tgt, tgt_lang=(tgt_lang or "tr").strip())}
 
 
 @app.post("/api/tercume/import-file")

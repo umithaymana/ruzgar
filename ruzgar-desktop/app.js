@@ -7094,9 +7094,69 @@ function appendBubble(role, text, opts = {}) {
   let cls = `bubble ${role}`;
   if (role === "assistant" && opts.error) cls += " chat-error-bubble";
   if (role === "assistant" && opts.clarify) cls += " chat-clarify";
+  if (role === "assistant" && opts.actionCard) cls += " chat-action-card";
   div.className = cls;
   if (role === "assistant" && opts.error) {
     div.innerHTML = renderChatErrorHtml(String(text || ""));
+  } else if (role === "assistant" && opts.actionCard) {
+    const raw = String(text || "").trim();
+    const lines = raw.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+    const main = lines[0] || "Tamam.";
+    const stepsLine = lines.find((ln) => /^Adımlar\s*:/i.test(ln));
+    const confLine = lines.find((ln) => /^Güven\s*:/i.test(ln));
+    const steps = stepsLine
+      ? stepsLine
+          .replace(/^Adımlar\s*:\s*/i, "")
+          .split("→")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
+    let confLabel = "";
+    let confPct = "";
+    if (confLine) {
+      const m = confLine.match(/^Güven\s*:\s*([^(]+)\(([^)]+)\)/i);
+      if (m) {
+        confLabel = String(m[1] || "").trim();
+        confPct = String(m[2] || "").trim();
+      } else {
+        confLabel = confLine.replace(/^Güven\s*:\s*/i, "").trim();
+      }
+    }
+    const stepsHtml = steps.length
+      ? `<ol class="chat-action-steps">${steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>`
+      : "";
+    const confHtml = confLabel
+      ? `<div class="chat-action-foot"><span class="chat-action-conf">${esc(confLabel)}</span>${
+          confPct ? `<span class="chat-action-pct">${esc(confPct)}</span>` : ""
+        }</div>`
+      : "";
+    div.innerHTML =
+      `<div class="chat-action-main">${esc(main)}</div>` +
+      (stepsHtml ? `<div class="chat-action-mid">${stepsHtml}</div>` : "") +
+      confHtml +
+      `<div class="chat-action-buttons">` +
+      `<button type="button" class="btn-secondary btn-compact chat-action-btn" data-action="undo">Geri al</button>` +
+      `<button type="button" class="btn-secondary btn-compact chat-action-btn" data-action="repeat">Aynısını tekrar et</button>` +
+      `<button type="button" class="btn-secondary btn-compact chat-action-btn" data-action="details">Detay</button>` +
+      `</div>`;
+    div.addEventListener("click", (ev) => {
+      const btn = ev.target.closest?.(".chat-action-btn");
+      if (!btn) return;
+      const action = String(btn.dataset.action || "").trim().toLowerCase();
+      if (!action) return;
+      if (currentMode !== "tercume" || !window.RuzgarTercumeAtolye?.runActionCardCommand) return;
+      btn.disabled = true;
+      Promise.resolve(window.RuzgarTercumeAtolye.runActionCardCommand(action))
+        .then((hit) => {
+          if (hit?.message) appendBubble("assistant", String(hit.message || ""), { actionCard: true });
+        })
+        .catch((e) => {
+          appendBubble("assistant", String(e?.message || e || "İşlem başarısız"), { error: true });
+        })
+        .finally(() => {
+          btn.disabled = false;
+        });
+    });
   } else {
     div.innerHTML = esc(text).replace(/\n/g, "<br>");
   }
@@ -9249,6 +9309,21 @@ async function sendMessageWithText(t, opts = {}) {
     if (mimarHit?.handled && mimarHit.instant) {
       appendBubble("assistant", mimarHit.reply || "Tamam.");
       setStatus("Mimar atölye", "Rüzgar");
+      if (el.send) el.send.disabled = false;
+      perfBusy = false;
+      updatePerformanceIndicators(perfBusy);
+      syncInterruptButton();
+      return;
+    }
+  }
+  if (
+    currentMode === "tercume" &&
+    window.RuzgarTercumeAtolye?.tryAtolyeFromMessage
+  ) {
+    const hit = await window.RuzgarTercumeAtolye.tryAtolyeFromMessage(text);
+    if (hit?.handled && hit.instant) {
+      appendBubble("assistant", hit.reply || "Tamam.", { actionCard: true });
+      setStatus("Tercüme atölye", "Rüzgar");
       if (el.send) el.send.disabled = false;
       perfBusy = false;
       updatePerformanceIndicators(perfBusy);
