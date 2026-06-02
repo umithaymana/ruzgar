@@ -33,9 +33,14 @@ body {
 }
 .title-row-info {
   -webkit-app-region: no-drag;
+  justify-content: flex-start;
 }
 .title-row-motors {
   -webkit-app-region: no-drag;
+}
+.title-row-tercume-controls {
+  -webkit-app-region: no-drag;
+  justify-content: flex-end;
 }
 .title-brand {
   font-weight: 600;
@@ -63,6 +68,69 @@ body {
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
+  -webkit-app-region: no-drag;
+}
+.header-tech-strip--top {
+  margin-left: 0;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+}
+.tercume-header-page-output {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  padding: 4px 8px;
+  border: 1px solid rgba(90, 98, 112, 0.65);
+  border-radius: 8px;
+  background: rgba(22, 26, 31, 0.72);
+}
+.tercume-header-page-output .tercume-toolbar-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #a8b4c8;
+}
+.tercume-header-page-output .tercume-page-range {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border: 1px solid #4b4f58;
+  border-radius: 6px;
+  background: #181b20;
+}
+.tercume-header-page-output .tercume-page-input {
+  width: 56px;
+  min-height: 22px;
+  border: 1px solid #4b4f58;
+  border-radius: 4px;
+  background: #0f1216;
+  color: #e4e8ef;
+  font-size: 11px;
+  padding: 1px 5px;
+}
+.tercume-header-page-output .tercume-lang-select {
+  max-width: 148px;
+  min-height: 24px;
+  border: 1px solid #4b4f58;
+  border-radius: 6px;
+  background: #181b20;
+  color: #e4e8ef;
+  font-size: 11px;
+  padding: 2px 7px;
+}
+body:not([data-motor="tercume"]) #title-row-tercume-controls {
+  display: none !important;
+}
+body[data-motor="tercume"] #title-row-tercume-controls {
+  display: flex !important;
+}
+.header-nav-strip {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
   -webkit-app-region: no-drag;
 }
 .tech-chip {

@@ -48,7 +48,7 @@ body:not([data-motor="tercume"]) #tercume-center-row {
 body[data-motor="tercume"] .layout.layout-v2 {
   display: grid;
   grid-template-columns: var(--ruzgar-motors-w, 232px) minmax(0, 1fr);
-  grid-template-rows: 38px minmax(0, 1fr);
+  grid-template-rows: 46px minmax(0, 1fr);
   align-content: stretch;
 }
 body.ui-motors-compact[data-motor="tercume"] .layout.layout-v2 {
@@ -64,8 +64,8 @@ body[data-motor="tercume"] #tercume-view-tabs {
   display: flex;
   grid-column: 2;
   grid-row: 1;
-  align-items: stretch;
-  gap: 0;
+  align-items: center;
+  gap: 2px;
   padding: 0 8px;
   background: #2d2d30;
   border-bottom: 1px solid #3c3c3c;
@@ -74,7 +74,7 @@ body[data-motor="tercume"] #tercume-view-tabs[hidden] {
   display: none !important;
 }
 .tercume-view-tab {
-  padding: 8px 16px;
+  padding: 9px 14px;
   border: none;
   border-bottom: 2px solid transparent;
   background: transparent;
@@ -91,6 +91,72 @@ body[data-motor="tercume"] #tercume-view-tabs[hidden] {
   color: #fff;
   border-bottom-color: #3794ff;
   background: #1e1e1e;
+}
+body:not([data-motor="tercume"]) .title-row-info .tercume-top-flow {
+  display: none !important;
+}
+body[data-motor="tercume"] .title-row-info .tercume-top-flow {
+  margin-left: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 1px solid #3a3f49;
+  border-radius: 7px;
+  background: rgba(20, 24, 30, 0.55);
+  max-width: min(1120px, calc(100vw - 520px));
+  overflow: hidden;
+}
+body[data-motor="tercume"] .title-row-info .tercume-top-flow-stack {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+}
+body[data-motor="tercume"] .title-row-info .tercume-top-flow-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+body[data-motor="tercume"] .title-row-info .tercume-top-flow-key {
+  min-width: 38px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #9fb1ca;
+}
+body[data-motor="tercume"] .title-row-info .tercume-top-flow-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #9fb1ca;
+  white-space: nowrap;
+}
+body[data-motor="tercume"] .title-row-info .tercume-top-flow .tercume-lang-select {
+  max-width: 132px;
+  min-height: 22px;
+  font-size: 11px;
+  padding: 2px 6px;
+}
+body[data-motor="tercume"] .title-row-info #tercume-translate-mode {
+  max-width: 122px;
+}
+body[data-motor="tercume"] .title-row-info #btn-tercume-translate {
+  min-height: 26px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  line-height: 1.1;
+}
+body[data-motor="tercume"] .title-row-info #btn-tercume-stop,
+body[data-motor="tercume"] .title-row-info #btn-tercume-save-target {
+  min-height: 26px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  line-height: 1.1;
+}
+@media (max-width: 1360px) {
+  body[data-motor="tercume"] .tercume-top-flow-label {
+    display: none;
+  }
 }
 body[data-motor="tercume"] #tercume-center-row {
   display: flex;
@@ -561,26 +627,130 @@ body[data-motor="tercume"][data-tercume-tab="pasif"] #page-tercume .tercume-help
 
 #page-tercume .tercume-toolbar {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 6px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
   border-bottom: 1px solid #343434;
-  background: #252526;
+  background: linear-gradient(180deg, #25272c 0%, #202226 100%);
   flex-shrink: 0;
 }
 
-#page-tercume .tercume-toolbar-group {
-  display: inline-flex;
+#page-tercume .tercume-toolbar-row {
+  display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: space-between;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
-#page-tercume .tercume-lang-select {
-  max-width: 120px;
-  padding: 3px 6px;
+#page-tercume .tercume-toolbar-row--secondary {
+  padding-top: 6px;
+  border-top: 1px solid #323336;
+}
+
+#page-tercume .tercume-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  padding: 6px 8px;
+  border: 1px solid #333740;
+  border-radius: 8px;
+  background: rgba(20, 23, 29, 0.6);
+}
+
+#page-tercume .tercume-toolbar-group--mode {
+  flex: 1 1 460px;
+}
+
+#page-tercume .tercume-toolbar-group--actions {
+  justify-content: flex-end;
+  margin-left: auto;
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+
+#page-tercume .tercume-toolbar-group--analysis,
+#page-tercume .tercume-toolbar-group--tools {
+  flex: 1 1 360px;
+}
+
+#page-tercume .tercume-toolbar-group--tools {
+  justify-content: flex-end;
+}
+
+#page-tercume .tercume-toolbar-label {
   font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #a8b4c8;
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+#page-tercume .tercume-flow-arrow {
+  color: #87a0bd;
+  font-size: 13px;
+}
+
+#page-tercume .tercume-lang-select {
+  max-width: 170px;
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 6px;
+  border: 1px solid #4b4f58;
+  background: #181b20;
+  color: #e4e8ef;
+  min-height: 28px;
+}
+
+#page-tercume .tercume-toolbar .btn-compact {
+  padding: 5px 10px;
+  border-radius: 6px;
+  min-height: 28px;
+}
+
+#page-tercume .tercume-toolbar #btn-tercume-translate {
+  min-width: 86px;
+  font-weight: 700;
+}
+
+#page-tercume #btn-tercume-active-file {
+  flex: 1 1 260px;
+  min-width: 260px;
+  text-align: left;
+}
+
+#page-tercume .tercume-page-range {
+  background: #181b20;
+  border: 1px solid #4b4f58;
+  border-radius: 6px;
+  padding: 2px 6px;
+}
+
+@media (max-width: 1480px) {
+  #page-tercume .tercume-toolbar-group {
+    padding: 5px 7px;
+  }
+  #page-tercume .tercume-toolbar-group--tools {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 1220px) {
+  #page-tercume .tercume-toolbar-row {
+    align-items: flex-start;
+  }
+  #page-tercume .tercume-toolbar-group--actions {
+    margin-left: 0;
+    justify-content: flex-start;
+  }
+  #page-tercume #btn-tercume-active-file {
+    min-width: 180px;
+    flex-basis: 100%;
+  }
 }
 
 #page-tercume .tercume-progress-wrap {
@@ -1123,6 +1293,27 @@ body[data-motor="tercume"][data-tercume-tab="pasif"] #page-tercume .tercume-help
 #page-tercume .tercume-aligned-table tr.focused-row td {
   outline: 1px solid #5aa9e6;
   outline-offset: -1px;
+}
+#page-tercume .tercume-academic-fold {
+  font-size: 10px;
+  color: #b8d8a8;
+  margin: 4px 0;
+}
+#page-tercume .tercume-academic-fold[hidden] {
+  display: none !important;
+}
+#page-tercume .tercume-academic-stats {
+  color: #9cdcfe;
+  margin-left: 6px;
+}
+#page-tercume .tercume-academic-list {
+  margin: 4px 0 0;
+  padding-left: 14px;
+  max-height: 110px;
+  overflow: auto;
+}
+#page-tercume .tercume-academic-list li {
+  margin: 3px 0;
 }
 #page-tercume .tercume-aligned-note {
   width: 100%;

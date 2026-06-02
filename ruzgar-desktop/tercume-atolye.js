@@ -800,6 +800,59 @@
     else flash("Kaynak ve hedef segmentler hizalı görünüyor.");
   }
 
+  function renderAcademicCheck(payload) {
+    const fold = $("tercume-academic-fold");
+    const ul = $("tercume-academic-list");
+    const stats = $("tercume-academic-stats");
+    if (!fold || !ul) return;
+    const rows = Array.isArray(payload?.claim_rows) ? payload.claim_rows : [];
+    const risk = String(payload?.risk || "unknown");
+    const uncited = Number(payload?.uncited_claims || 0);
+    const coverage = Number(payload?.citation_coverage || 0);
+    if (stats) stats.textContent = `risk:${risk} · atıf kapsama:${coverage}% · eksik:${uncited}`;
+    ul.innerHTML = "";
+    const hints = Array.isArray(payload?.hints) ? payload.hints : [];
+    if (hints.length) {
+      for (const h of hints.slice(0, 4)) {
+        const li = document.createElement("li");
+        li.textContent = `Öneri: ${String(h)}`;
+        ul.appendChild(li);
+      }
+    }
+    for (const r of rows.slice(0, 20)) {
+      if (!r.claim_like) continue;
+      const li = document.createElement("li");
+      const has = r.has_citation ? "✓" : "✗";
+      li.textContent = `${has} ${String(r.excerpt || "").slice(0, 170)}`;
+      ul.appendChild(li);
+    }
+    if (!ul.children.length) {
+      const li = document.createElement("li");
+      li.textContent = "İddia/atıf satırı bulunamadı.";
+      ul.appendChild(li);
+    }
+    fold.hidden = false;
+    fold.open = true;
+  }
+
+  async function runAcademicCheck() {
+    const src = getSourceText();
+    const tgt = getTargetText();
+    if (!src && !tgt) {
+      flash("Önce kaynak veya hedef metin olsun.");
+      return;
+    }
+    flash("Akademik kaynak izi kontrolü yapılıyor…");
+    const fd = new FormData();
+    fd.append("source_text", src);
+    fd.append("target_text", tgt);
+    const res = await fetch(`${api()}/api/tercume/academic-check`, { method: "POST", body: fd });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) throw new Error(typeof j.detail === "string" ? j.detail : "Akademik kontrol başarısız");
+    renderAcademicCheck(j);
+    flash(`Akademik kontrol: risk=${j.risk}, atıf kapsama=${j.citation_coverage}%`);
+  }
+
   async function refreshMemoryStatus() {
     const el = $("tercume-memory-status");
     if (!el) return;
@@ -2761,8 +2814,15 @@ ${chunk}`;
   }
 
   function wireAll() {
-    if ($("page-tercume")?.dataset.tercumeV2Wired === "1") return;
-    $("page-tercume").dataset.tercumeV2Wired = "1";
+    const page = $("page-tercume");
+    if (!page) {
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", () => wireAll(), { once: true });
+      }
+      return;
+    }
+    if (page.dataset.tercumeV2Wired === "1") return;
+    page.dataset.tercumeV2Wired = "1";
     wireTercumeViewTabs();
 
     try {
@@ -2805,8 +2865,9 @@ ${chunk}`;
       }
     });
     $("tercume-arsiv-download-fold")?.addEventListener("toggle", (ev) => {
-      if (ev.target.open && !$("tercume-arsiv-download-list")?.dataset.loaded) {
-        $("tercume-arsiv-download-list").dataset.loaded = "1";
+      const list = $("tercume-arsiv-download-list");
+      if (ev.target.open && list && !list.dataset.loaded) {
+        list.dataset.loaded = "1";
         void refreshArsivCatalog();
       }
     });
@@ -2894,6 +2955,9 @@ ${chunk}`;
     $("btn-tercume-aligned-diff")?.addEventListener("click", () => {
       void runAlignedDiff().catch((e) => flash(e.message || String(e)));
     });
+    $("btn-tercume-academic-check")?.addEventListener("click", () => {
+      void runAcademicCheck().catch((e) => flash(e.message || String(e)));
+    });
     $("tercume-aligned-only-issues")?.addEventListener("change", () => {
       if (lastAlignedPayload) renderAlignedDiff(lastAlignedPayload);
     });
@@ -2916,6 +2980,8 @@ ${chunk}`;
       awaitingChatReply = false;
       hideEbookMeta();
       hideQualityStrip();
+      const acad = $("tercume-academic-fold");
+      if (acad) acad.hidden = true;
       updateActiveLabel();
       syncSavePlaceholder();
       const fd = new FormData();

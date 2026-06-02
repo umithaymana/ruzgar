@@ -4915,6 +4915,21 @@ def api_tercume_quality_score(
     return {"ok": True, "quality": score_translation(src, tgt, tgt_lang=(tgt_lang or "tr").strip())}
 
 
+@app.post("/api/tercume/academic-check")
+def api_tercume_academic_check(
+    source_text: str = Form(""),
+    target_text: str = Form(""),
+) -> dict[str, Any]:
+    """Calsima paneli: tez/akademik kaynak izi hizli denetimi."""
+    from ilim_assistant.motorlar.tercume_academic_check import analyze_academic_support
+
+    src = (source_text or "").strip()
+    tgt = (target_text or "").strip()
+    if not src and not tgt:
+        raise HTTPException(status_code=400, detail="source_text veya target_text gerekli")
+    return analyze_academic_support(src, tgt)
+
+
 @app.post("/api/tercume/import-file")
 async def api_tercume_import_file(
     file: UploadFile = File(...),

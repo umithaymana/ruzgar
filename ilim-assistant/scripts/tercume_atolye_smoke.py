@@ -69,6 +69,7 @@ def main() -> int:
         "/api/tercume/aligned-notes/save",
         "/api/tercume/capabilities",
         "/api/tercume/quality-score",
+        "/api/tercume/academic-check",
     }
     missing = [p for p in needed if p not in paths]
     if missing:
