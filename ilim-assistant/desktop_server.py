@@ -3522,6 +3522,31 @@ def api_workspace_read_pdf(rel: str = Query("")) -> dict[str, Any]:
     }
 
 
+@app.get("/api/tercume/pdf-page-preview")
+def api_tercume_pdf_page_preview(
+    rel: str = Query(""),
+    page: int = Query(1, ge=1),
+    dpi: int = Query(110, ge=72, le=200),
+) -> dict[str, Any]:
+    """PDF tek sayfa PNG önizleme (base64). PyMuPDF yoksa 503."""
+    from ilim_assistant.motorlar.tercume_pdf_preview import pymupdf_available, render_pdf_page_png_b64
+
+    if not pymupdf_available():
+        raise HTTPException(
+            status_code=503,
+            detail="PDF önizleme için: pip install pymupdf",
+        )
+    raw = (rel or "").strip().replace("\\", "/").lstrip("/")
+    if not raw:
+        raise HTTPException(status_code=400, detail="rel gerekli.")
+    target = _repo_resolve_under_root(raw, must_be_dir=False)
+    hit = render_pdf_page_png_b64(target, page=page, dpi=dpi)
+    if not hit.get("ok"):
+        raise HTTPException(status_code=400, detail=str(hit.get("error") or "Önizleme hatası"))
+    hit["rel"] = raw
+    return hit
+
+
 def _docx_file_to_plain(target: Path) -> str:
     from docx import Document
 
@@ -4376,6 +4401,7 @@ def api_tercume_capabilities() -> dict[str, Any]:
     """Tercüme yetenek özeti: opsiyonel yerel araçlar + format desteği."""
     from ilim_assistant.motorlar.tercume_ebook_read import calibre_available, djvu_available
     from ilim_assistant.motorlar.tercume_export_docx import docx_available
+    from ilim_assistant.motorlar.tercume_pdf_preview import pymupdf_available
     from ilim_assistant.motorlar.tercume_preflight import run_tercume_preflight
 
     pre = run_tercume_preflight()
@@ -4391,12 +4417,14 @@ def api_tercume_capabilities() -> dict[str, Any]:
             "djvu": djvu_available(),
             "docx_export": docx_available(),
             "ocr": ocr_ok,
+            "pdf_preview": pymupdf_available(),
         },
         "notes": {
             "calibre": "MOBI/AZW okumak için Calibre (ebook-convert)",
             "djvu": "DjVu okumak için DjVuLibre (djvutxt)",
             "docx_export": "DOCX çıktı için python-docx",
             "ocr": "Taranmış görsel/PDF için Tesseract",
+            "pdf_preview": "PDF sayfa görüntüsü için PyMuPDF (pip install pymupdf)",
         },
     }
 

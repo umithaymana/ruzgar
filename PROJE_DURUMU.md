@@ -92,4 +92,11 @@ Geçmiş Cursor oturum özetleri (yerel): `agent-transcripts` altında; örn. pr
 
 ---
 
+## Bekleyen UI — Yardım (? ) motor rehberi (2026-06-03, ertelendi)
+
+Üst **?** penceresine motor başına madde madde rehber — **motorlar sağlam çalıştıktan sonra** (önce güçlendirme/test, sonra yazım).  
+**Plan:** `ruzgar-desktop/docs/RUZGAR_YARDIM_MOTOR_PLANI.md`
+
+---
+
 **Not:** Yeni oturumda önce bu dosyayı okuyarak devam et; özellikle **Kuzey yıldızı** bölümü proje kararları için bağlayıcı vizyondur.

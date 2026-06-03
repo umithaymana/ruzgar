@@ -18,6 +18,8 @@ uvicorn[standard]>=0.32.0
 python-multipart>=0.0.9
 pypdf>=4.0.0
 python-docx>=1.1.0
+# Opsiyonel: Tercüme PDF sayfa önizleme (/api/tercume/pdf-page-preview)
+# pymupdf>=1.24.0
 # Opsiyonel OCR (/api/workspace/read-image-ocr)
 pillow>=10.0.0
 pytesseract>=0.3.10

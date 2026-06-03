@@ -6,7 +6,7 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' blob: http: https: ws: wss: http://127.0.0.1:8779 ws://127.0.0.1:8779 wss://127.0.0.1:8779 http://localhost:8779 ws://localhost:8779 wss://localhost:8779 http://127.0.0.1:8777 ws://127.0.0.1:8777 http://localhost:8777 ws://localhost:8777 https://www.google.com https://*.google.com https://*.googleapis.com https://*.gstatic.com wss://*.google.com; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://upload.wikimedia.org https://*.wikimedia.org; media-src 'self' blob:; worker-src 'self' blob:;" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RÜZGAR — Mimarlar: Ümit & Gökçenur</title>
-    <link rel="stylesheet" href="styles.css?v=20260602-header-tercume-pageoutput-row1" />
+    <link rel="stylesheet" href="styles.css?v=20260603-header-wb-page-output" />
     <link rel="stylesheet" href="ruzgar-split.css?v=20260602-workbench-split" />
   </head>
   <body>
@@ -34,8 +34,39 @@
     <div class="title-strip">
       <div class="title-row title-row-info">
         <div class="header-tech-strip header-tech-strip--top" aria-label="Sistem göstergeleri">
-          <span id="api-status" class="tech-chip">Sunucu…</span>
-          <span id="ruzgar-connection-banner" class="tech-chip connection-active" hidden>Rüzgar Başlatıldı - Bağlantı Aktif</span>
+          <div class="header-tech-strip-left" aria-label="Durum ve gezinme">
+            <span id="api-status" class="tech-chip">Sunucu…</span>
+            <span id="ruzgar-connection-banner" class="tech-chip connection-active" hidden>Rüzgar Başlatıldı - Bağlantı Aktif</span>
+            <div class="file-toolbar header-nav-toolbar" role="toolbar" aria-label="Sayfa ve sohbet">
+              <button type="button" id="nav-back" class="btn-nav" title="Geri (gezinme geçmişi)" aria-label="Geri">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+              </button>
+              <button type="button" id="nav-forward" class="btn-nav" title="İleri (gezinme geçmişi)" aria-label="İleri">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+              </button>
+              <button type="button" id="nav-refresh" class="btn-nav" title="Sayfayı yenile (Ctrl+R)" aria-label="Yenile">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+              </button>
+              <button type="button" id="nav-clear-chat" class="btn-nav" title="Sohbeti temizle (uygulamayı kapatmadan)" aria-label="Sohbeti temizle">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+              </button>
+              <button
+                type="button"
+                id="btn-motors-compact"
+                class="btn-nav btn-motors-compact"
+                title="Motor adlarını gizle (yalnızca ikonlar)"
+                aria-label="Motor panelini daralt"
+                aria-pressed="false"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path
+                    d="M3 5h8v14H3V5zm10 0h8v3h-8V5zm0 5h8v4h-8v-4zm0 6h8v3h-8v-3z"
+                  />
+                </svg>
+              </button>
+              <button type="button" id="btn-faz7-help" class="btn-nav btn-faz7-help" title="Kısayollar ve ipuçları (?)" aria-label="Yardım">?</button>
+            </div>
+          </div>
           <div class="tercume-top-flow" aria-label="Dil akışı seçimleri">
             <span class="tercume-top-flow-label">Dil akışı</span>
             <div class="tercume-top-flow-stack">
@@ -77,38 +108,46 @@
             <button type="button" class="btn-secondary btn-compact" id="btn-tercume-stop">Durdur</button>
             <button type="button" class="btn-secondary btn-compact" id="btn-tercume-save-target">Kaydet</button>
           </div>
-          <div class="file-toolbar header-nav-toolbar" role="toolbar" aria-label="Sayfa ve sohbet">
-            <button type="button" id="nav-back" class="btn-nav" title="Geri (gezinme geçmişi)" aria-label="Geri">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
-            </button>
-            <button type="button" id="nav-forward" class="btn-nav" title="İleri (gezinme geçmişi)" aria-label="İleri">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
-            </button>
-            <button type="button" id="nav-refresh" class="btn-nav" title="Sayfayı yenile (Ctrl+R)" aria-label="Yenile">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-            </button>
-            <button type="button" id="nav-clear-chat" class="btn-nav" title="Sohbeti temizle (uygulamayı kapatmadan)" aria-label="Sohbeti temizle">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-            </button>
-            <button
-              type="button"
-              id="btn-motors-compact"
-              class="btn-nav btn-motors-compact"
-              title="Motor adlarını gizle (yalnızca ikonlar)"
-              aria-label="Motor panelini daralt"
-              aria-pressed="false"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path
-                  d="M3 5h8v14H3V5zm10 0h8v3h-8V5zm0 5h8v4h-8v-4zm0 6h8v3h-8v-3z"
-                />
-              </svg>
-            </button>
-            <button type="button" id="btn-faz7-help" class="btn-nav btn-faz7-help" title="Kısayollar ve ipuçları (?)" aria-label="Yardım">?</button>
-          </div>
         </div>
       </div>
       <div class="title-row title-row-tercume-controls" id="title-row-tercume-controls" hidden>
+        <div class="tercume-header-workbench" id="tercume-header-workbench">
+          <div class="tercume-workbench-head">
+            <div class="tercume-workbench-modes" role="tablist" aria-label="Çalışma görünümü">
+              <button
+                type="button"
+                class="tercume-wb-mode is-active"
+                id="btn-tercume-wb-edit"
+                data-tercume-wb-mode="edit"
+                role="tab"
+                aria-selected="true"
+              >
+                Çalışma
+              </button>
+              <button
+                type="button"
+                class="tercume-wb-mode"
+                id="btn-tercume-wb-review"
+                data-tercume-wb-mode="review"
+                role="tab"
+                aria-selected="false"
+              >
+                İnceleme
+              </button>
+            </div>
+            <div class="tercume-status-bar" id="tercume-status-bar" role="status" aria-live="polite">
+              <button type="button" class="tercume-status-chip" id="tercume-status-file" title="Açık dosya">Dosya: —</button>
+              <button type="button" class="tercume-status-chip" id="tercume-status-page" title="Sayfa aralığı">Sayfa: —</button>
+              <button type="button" class="tercume-status-chip" id="tercume-status-mode" title="Çeviri modu">Mod: tek parça</button>
+              <button type="button" class="tercume-status-chip" id="tercume-status-quality" title="Kalite skoru">Kalite: —</button>
+              <button type="button" class="tercume-status-chip" id="tercume-status-job" title="Arka plan işi">İş: —</button>
+              <button type="button" class="tercume-status-chip" id="tercume-status-tm" title="Terim belleği">TM: —</button>
+              <button type="button" class="tercume-status-chip tercume-status-chip--preflight" id="tercume-status-preflight" title="Hazırlık kontrolü">
+                Hazırlık: …
+              </button>
+            </div>
+          </div>
+        </div>
         <div class="tercume-header-page-output">
           <span class="tercume-toolbar-label">Sayfa ve çıktı</span>
           <label class="tercume-page-range" title="1 tabanlı sayfa numarası (PDF)">
@@ -779,7 +818,10 @@
             <details class="tercume-help-fold">
               <summary>Yardım (katla)</summary>
               Klasör yolu → liste · EPUB/PDF/DOCX/görsel aç · Çevir modu: tek parça / sayfa sayfa / tamam (yavaş) ·
-              Ctrl+tekerlek yakınlaştır · Çırak günlüğü programlama motoru için okunur · Sohbet: sağdaki panel (Çalışma / Eser ara / Okuma).
+              <strong>Çalışma / İnceleme</strong> modu · Durum çubuğu (dosya, sayfa, kalite, TM) ·
+              Kısayol: <kbd>Ctrl+Enter</kbd> segment çevir · <kbd>Alt+↑/↓</kbd> segment · <kbd>Ctrl+S</kbd> kaydet ·
+              PDF: sol önizleme paneli (‹ › sayfa) — <code>pip install pymupdf</code> · Segment düzenleme: kaynak/hedef kutuları ·
+              Sayfa aralığını yükle · Ctrl+tekerlek yakınlaştır · Sohbet: sağ panel.
             </details>
             <div id="tercume-pasif-slot" class="tercume-pasif-slot" hidden aria-label="Yakında">
               <p class="tercume-pasif-title">Bu alan ayrıldı</p>
@@ -802,6 +844,10 @@
                   <input type="text" id="tercume-work-root" class="tercume-work-root" value="ilim-assistant/arsiv" aria-label="Çalışma klasörü" />
                   <button type="button" class="btn-secondary btn-compact" id="btn-tercume-pick-folder" title="Klasör seç">…</button>
                 </div>
+                <details class="tercume-recent-fold" id="tercume-recent-fold">
+                  <summary>Son açılanlar</summary>
+                  <ul class="tercume-recent-list" id="tercume-recent-list" aria-label="Son açılan dosyalar"></ul>
+                </details>
                 <details class="tercume-arsiv-download-fold" id="tercume-arsiv-download-fold">
                   <summary>Arşiv indir (Internet Archive)</summary>
                   <p class="tercume-arsiv-download-hint">Klasörler boşsa önce listeden indirin; sonra dosyayı açıp inceleyin.</p>
@@ -870,8 +916,34 @@
                 </div>
               </aside>
               <div class="tercume-main">
+                <div class="tercume-panels-row" id="tercume-panels-row">
+                  <aside class="tercume-pdf-preview" id="tercume-pdf-preview" hidden aria-label="PDF sayfa önizlemesi">
+                    <div class="tercume-pdf-preview-head">
+                      <span>PDF önizleme</span>
+                      <div class="tercume-pdf-preview-nav">
+                        <button type="button" class="btn-secondary btn-compact" id="btn-tercume-pdf-prev-page" title="Önceki sayfa">‹</button>
+                        <span id="tercume-pdf-page-label">Sayfa 1</span>
+                        <button type="button" class="btn-secondary btn-compact" id="btn-tercume-pdf-next-page" title="Sonraki sayfa">›</button>
+                      </div>
+                    </div>
+                    <div class="tercume-pdf-preview-body">
+                      <img id="tercume-pdf-preview-img" alt="" hidden />
+                      <p class="tercume-pdf-preview-fallback" id="tercume-pdf-preview-fallback" hidden>—</p>
+                    </div>
+                  </aside>
+                  <div class="tercume-panels">
+                    <div class="tercume-panel">
+                      <div class="tercume-panel-head">Kaynak</div>
+                      <div id="tercume-source-editor" class="tercume-doc-editor" contenteditable="true" tabindex="0" role="textbox" aria-multiline="true" data-placeholder="Dosya seçin veya metin yapıştırın (Word gibi düzenleyebilirsiniz)."></div>
+                    </div>
+                    <div class="tercume-panel">
+                      <div class="tercume-panel-head">Hedef çeviri</div>
+                      <div id="tercume-target-editor" class="tercume-doc-editor" contenteditable="true" tabindex="0" role="textbox" aria-multiline="true" data-placeholder="Çeviri burada birikir."></div>
+                    </div>
+                  </div>
+                </div>
                 <div class="tercume-toolbar">
-                  <div class="tercume-toolbar-row tercume-toolbar-row--secondary">
+                  <div class="tercume-toolbar-row tercume-toolbar-row--secondary tercume-toolbar-row--review-only">
                     <div class="tercume-toolbar-group tercume-toolbar-group--analysis">
                       <span class="tercume-toolbar-label">Kalite ve analiz</span>
                       <button
@@ -912,9 +984,9 @@
                   <strong>OCR kurulumu gerekli:</strong>
                   <span id="tercume-ocr-warn-text">Taranmış sayfa ve görseller için Tesseract (Arapça + Osmanlıca) kurulu olmalı.</span>
                 </div>
-                <div class="tercume-capability-strip" id="tercume-capability-strip" role="status" hidden>
-                  <strong>Yerel araçlar:</strong>
-                  <span id="tercume-capability-text">Kontrol ediliyor…</span>
+                <div class="tercume-capability-strip tercume-capability-strip--warn" id="tercume-capability-strip" role="status" hidden>
+                  <strong>Kurulum:</strong>
+                  <span id="tercume-capability-text"></span>
                 </div>
                 <div class="tercume-ebook-meta" id="tercume-ebook-meta" hidden role="status">
                   <strong>E-kitap:</strong>
@@ -936,6 +1008,46 @@
                     Yeniden çevir
                   </button>
                 </div>
+                <div class="tercume-pdf-hint" id="tercume-pdf-hint" hidden role="status">
+                  <span id="tercume-pdf-hint-text">—</span>
+                  <button type="button" class="btn-secondary btn-compact" id="btn-tercume-pdf-apply-range" title="Üst şeritteki sayfa aralığını PDF önizlemesine uygula">
+                    Sayfa aralığını yükle
+                  </button>
+                  <button type="button" class="btn-secondary btn-compact" id="btn-tercume-pdf-open-folder" title="PDF klasörünü aç">
+                    Klasör
+                  </button>
+                </div>
+                <div class="tercume-segment-strip" id="tercume-segment-strip" hidden aria-label="Segment gezintisi">
+                  <button type="button" class="btn-secondary btn-compact" id="btn-tercume-seg-prev" title="Önceki segment (Alt+↑)">◀</button>
+                  <span class="tercume-segment-label" id="tercume-segment-label">Segment —</span>
+                  <button type="button" class="btn-secondary btn-compact" id="btn-tercume-seg-next" title="Sonraki segment (Alt+↓)">▶</button>
+                  <button type="button" class="btn-primary btn-compact" id="btn-tercume-seg-translate" title="Seçili segmenti çevir (Ctrl+Enter)">
+                    Bu segmenti çevir
+                  </button>
+                  <button type="button" class="btn-secondary btn-compact" id="btn-tercume-seg-to-aligned" title="Hizalı tabloda göster">
+                    Tabloda göster
+                  </button>
+                </div>
+                <div class="tercume-segment-edit" id="tercume-segment-edit" hidden aria-label="Segment satır içi düzenleme">
+                  <div class="tercume-segment-edit-head">
+                    <strong>Segment düzenleme</strong>
+                    <span class="tercume-seg-edit-label" id="tercume-seg-edit-label">—</span>
+                  </div>
+                  <div class="tercume-segment-edit-panels">
+                    <label class="tercume-segment-edit-col">
+                      <span>Kaynak segment</span>
+                      <textarea id="tercume-segment-src" class="tercume-segment-textarea" rows="5" dir="auto" spellcheck="false"></textarea>
+                    </label>
+                    <label class="tercume-segment-edit-col">
+                      <span>Hedef segment</span>
+                      <textarea id="tercume-segment-tgt" class="tercume-segment-textarea" rows="5" dir="auto" spellcheck="false"></textarea>
+                    </label>
+                  </div>
+                  <div class="tercume-segment-edit-actions">
+                    <button type="button" class="btn-secondary btn-compact" id="btn-tercume-seg-apply-both">Panele uygula</button>
+                    <button type="button" class="btn-primary btn-compact" id="btn-tercume-seg-translate-inline">Bu segmenti çevir</button>
+                  </div>
+                </div>
                 <div class="tercume-progress-wrap" id="tercume-progress-wrap" hidden>
                   <div class="tercume-progress-bar"><div class="tercume-progress-fill" id="tercume-progress-fill"></div></div>
                   <div class="tercume-progress-label" id="tercume-progress-label">—</div>
@@ -954,16 +1066,6 @@
                     <summary>Son arka plan işleri</summary>
                     <ul class="tercume-job-recent-list" id="tercume-job-recent-list"></ul>
                   </details>
-                </div>
-                <div class="tercume-panels">
-                  <div class="tercume-panel">
-                    <div class="tercume-panel-head">Kaynak</div>
-                    <div id="tercume-source-editor" class="tercume-doc-editor" contenteditable="true" tabindex="0" role="textbox" aria-multiline="true" data-placeholder="Dosya seçin veya metin yapıştırın (Word gibi düzenleyebilirsiniz)."></div>
-                  </div>
-                  <div class="tercume-panel">
-                    <div class="tercume-panel-head">Hedef çeviri</div>
-                    <div id="tercume-target-editor" class="tercume-doc-editor" contenteditable="true" tabindex="0" role="textbox" aria-multiline="true" data-placeholder="Çeviri burada birikir."></div>
-                  </div>
                 </div>
                 <div class="tercume-io-row">
                   <input
@@ -1881,6 +1983,7 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
           <button type="button" id="btn-faz7-help-close" class="btn-secondary btn-compact" aria-label="Kapat">Kapat</button>
         </header>
         <div class="faz7-help-body">
+          <!-- PLAN: Her motor için madde madde yardım → ruzgar-desktop/docs/RUZGAR_YARDIM_MOTOR_PLANI.md (Ümit abi 2026-06-03) -->
           <p class="faz7-help-lead">Kısayollar ve Ana Motor ipuçları (Ümit &amp; Gökçenur).</p>
           <dl class="faz7-help-dl">
             <dt>Enter</dt><dd>Soruyu gönder</dd>
@@ -1936,10 +2039,10 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
       <button type="button" data-act="paste">Yapıştır</button>
     </div>
 
-    <link rel="stylesheet" href="tercume-atolye.css?v=20260602-tercume-topflow-tabs-layout4" />
+    <link rel="stylesheet" href="tercume-atolye.css?v=20260603-panels-top" />
     <link rel="stylesheet" href="mimar-atolye.css?v=20260601-mimar-polish" />
     <script src="ruzgar-split.js?v=20260602-workbench-split"></script>
-    <script src="tercume-atolye.js?v=20260602-tercume-academic-check-fix1"></script>
+    <script src="tercume-atolye.js?v=20260603-hide-capability-strip"></script>
     <script src="mimar-atolye.js?v=20260601-faz5"></script>
     <script src="app.js?v=20260602-motor-auto-compact"></script>
   </body>

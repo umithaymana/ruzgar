@@ -5,8 +5,20 @@
   const LS_WORK_ROOT = "ruzgar_tercume_work_root";
   const LS_PAGE_JOB = "ruzgar_tercume_page_job_id";
   const LS_LAST_SAVE_DIR = "ruzgar_tercume_last_save_dir";
+  const LS_RECENT_FILES = "ruzgar_tercume_recent_files";
   const QUALITY_PASS = 55;
   const QUALITY_WARN = 75;
+
+  let reviewMode = false;
+  let currentSegmentIndex = 0;
+  let lastQualityScore = null;
+  let userGlossaryTerms = [];
+  let pdfMeta = null;
+  let pdfPreviewPage = 1;
+  let pdfPreviewAvailable = null;
+  let preflightStatus = { ok: null, label: "…" };
+  let jobStatusLabel = "—";
+  let tmHighlightTimer = null;
 
   let lastTranslateContext = null;
   let lastAlignedPayload = null;
@@ -54,6 +66,10 @@
     const el = getSourceEl();
     if (el) el.innerText = t || "";
     updateStats();
+    applyEditorDirection();
+    updateSegmentStrip();
+    scheduleTmHighlight();
+    updateStatusBar();
   }
   function getTargetText() {
     const el = getTargetEl();
@@ -62,6 +78,575 @@
   function setTargetText(t) {
     const el = getTargetEl();
     if (el) el.innerText = t || "";
+    updateSegmentStrip();
+    updateStatusBar();
+  }
+
+  function escRegex(s) {
+    return String(s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  function getSourceSegments() {
+    const t = getSourceText();
+    if (!t) return [];
+    return t.split(/\n\n+/).map((s) => s.trim()).filter(Boolean);
+  }
+
+  function getTargetSegments() {
+    const t = getTargetText();
+    if (!t) return [];
+    return t.split(/\n\n+/).map((s) => s.trim()).filter(Boolean);
+  }
+
+  function translateModeLabel() {
+    const m = String($("tercume-translate-mode")?.value || "single");
+    const map = {
+      single: "tek parça",
+      page: "sayfa sayfa",
+      range: "sayfa aralığı",
+      full: "tamamı",
+      chat: "sohbet",
+    };
+    return map[m] || m;
+  }
+
+  function setWorkbenchReviewMode(on) {
+    reviewMode = !!on;
+    const wb = $("tercume-workbench");
+    if (wb) wb.classList.toggle("tercume-workbench--review", reviewMode);
+    document.querySelectorAll(".tercume-wb-mode").forEach((btn) => {
+      const isRev = btn.dataset.tercumeWbMode === "review";
+      btn.classList.toggle("is-active", reviewMode ? isRev : !isRev);
+      btn.setAttribute("aria-selected", reviewMode ? (isRev ? "true" : "false") : isRev ? "false" : "true");
+    });
+    updateStatusBar();
+  }
+
+  function maybeEnterReviewMode(score) {
+    if (score == null || !Number.isFinite(Number(score))) return;
+    lastQualityScore = Number(score);
+    if (Number(score) >= QUALITY_PASS) return;
+    setWorkbenchReviewMode(true);
+    const onlyIssues = $("tercume-aligned-only-issues");
+    if (onlyIssues) onlyIssues.checked = true;
+    if (getSourceText() || getTargetText()) {
+      void runAlignedDiff().catch(() => {});
+    }
+  }
+
+  function applyEditorDirection() {
+    const srcEl = getSourceEl();
+    const tgtEl = getTargetEl();
+    if (!srcEl || !tgtEl) return;
+    const srcLang = String($("tercume-src-lang")?.value || "auto").toLowerCase();
+    const relLow = String(openRel || "").toLowerCase();
+    const rtlSrc =
+      srcLang === "ar" ||
+      srcLang === "fa" ||
+      /farsi|fars[iı]|_fa\.|arab|عرب|\.ar\./i.test(relLow) ||
+      /mantik|attar|mesnevi|divan/i.test(relLow) && srcLang === "auto";
+    const tgtLang = String($("tercume-tgt-lang")?.value || "tr").toLowerCase();
+    const rtlTgt = tgtLang === "ar" || tgtLang === "fa";
+    srcEl.classList.toggle("tercume-editor-rtl", rtlSrc);
+    srcEl.classList.toggle("tercume-editor-ltr", !rtlSrc);
+    tgtEl.classList.toggle("tercume-editor-rtl", rtlTgt);
+    tgtEl.classList.toggle("tercume-editor-ltr", !rtlTgt);
+  }
+
+  function suggestLangFromPath(rel) {
+    const low = String(rel || "").toLowerCase();
+    const srcSel = $("tercume-src-lang");
+    if (!srcSel) return;
+    if (/farsi|fars[iı]|_fa\.pdf|mantik.*tayr/i.test(low)) {
+      srcSel.value = "fa";
+      const ocr = $("tercume-ocr-lang");
+      if (ocr && ocr.value === "auto") ocr.value = "ara";
+    } else if (/arab|arabi|\.ar\.|quran|kur'an/i.test(low)) {
+      srcSel.value = "ar";
+    }
+    applyEditorDirection();
+  }
+
+  function scheduleTmHighlight() {
+    if (tmHighlightTimer) clearTimeout(tmHighlightTimer);
+    tmHighlightTimer = setTimeout(() => {
+      tmHighlightTimer = null;
+      void applyTmHighlight();
+    }, 450);
+  }
+
+  function stripTmMarks(el) {
+    if (!el) return;
+    const t = String(el.innerText || "");
+    el.innerText = t;
+  }
+
+  async function loadTmTermsForHighlight() {
+    const terms = [];
+    try {
+      const res = await fetch(`${api()}/api/tercume/user-glossary?limit=120`);
+      const j = await res.json().catch(() => ({}));
+      if (res.ok && j.ok && Array.isArray(j.entries)) {
+        for (const e of j.entries) {
+          const src = String(e.src || "").trim();
+          if (src.length >= 2) terms.push({ src });
+        }
+      }
+    } catch {
+      /* sessiz */
+    }
+    const seen = new Set();
+    userGlossaryTerms = terms.filter((t) => {
+      const k = t.src.toLowerCase();
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+  }
+
+  async function applyTmHighlight() {
+    const el = getSourceEl();
+    if (!el || document.activeElement === el) return;
+    await loadTmTermsForHighlight();
+    const raw = getSourceText();
+    if (!raw || !userGlossaryTerms.length) return;
+    let html = esc(raw);
+    const sorted = [...userGlossaryTerms].sort((a, b) => b.src.length - a.src.length);
+    for (const t of sorted) {
+      const src = String(t.src || "").trim();
+      if (src.length < 2) continue;
+      const re = new RegExp(escRegex(src), "gi");
+      html = html.replace(re, (m) => `<mark class="tercume-tm-hit" title="Terim belleği">${m}</mark>`);
+    }
+    if (html !== esc(raw)) el.innerHTML = html;
+    const stats = $("tercume-stats");
+    if (stats && userGlossaryTerms.length) {
+      const hint = stats.querySelector(".tercume-tm-hint");
+      if (hint) hint.textContent = ` · TM: ${userGlossaryTerms.length} terim vurgulu`;
+      else {
+        const span = document.createElement("span");
+        span.className = "tercume-tm-hint";
+        span.textContent = ` · TM: ${userGlossaryTerms.length} terim vurgulu`;
+        stats.appendChild(span);
+      }
+    }
+    updateStatusBar();
+  }
+
+  function pushRecentFile(rel) {
+    const r = String(rel || "").trim().replace(/\\/g, "/");
+    if (!r) return;
+    let list = [];
+    try {
+      list = JSON.parse(localStorage.getItem(LS_RECENT_FILES) || "[]");
+      if (!Array.isArray(list)) list = [];
+    } catch {
+      list = [];
+    }
+    list = [r, ...list.filter((x) => x !== r)].slice(0, 5);
+    try {
+      localStorage.setItem(LS_RECENT_FILES, JSON.stringify(list));
+    } catch {
+      /* ignore */
+    }
+    renderRecentFiles();
+  }
+
+  function renderRecentFiles() {
+    const ul = $("tercume-recent-list");
+    if (!ul) return;
+    let list = [];
+    try {
+      list = JSON.parse(localStorage.getItem(LS_RECENT_FILES) || "[]");
+      if (!Array.isArray(list)) list = [];
+    } catch {
+      list = [];
+    }
+    ul.innerHTML = "";
+    if (!list.length) {
+      const li = document.createElement("li");
+      li.textContent = "Henüz dosya açılmadı.";
+      ul.appendChild(li);
+      return;
+    }
+    for (const rel of list) {
+      const li = document.createElement("li");
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "tercume-recent-btn";
+      btn.textContent = rel.split("/").pop() || rel;
+      btn.title = rel;
+      btn.addEventListener("click", () => void openFile(rel));
+      li.appendChild(btn);
+      ul.appendChild(li);
+    }
+  }
+
+  function updatePdfHint() {
+    const wrap = $("tercume-pdf-hint");
+    const txt = $("tercume-pdf-hint-text");
+    if (!wrap || !txt) return;
+    if (!openRel || !String(openRel).toLowerCase().endsWith(".pdf") || !pdfMeta) {
+      wrap.hidden = true;
+      return;
+    }
+    const total = pdfMeta.pages_total ?? "?";
+    const read = pdfMeta.pages_read ?? "?";
+    const trunc = pdfMeta.truncated ? ` (önizleme: ilk ${read} sayfa)` : "";
+    const range = pageRangeParams();
+    const rangeHint =
+      range.label_from != null
+        ? `Seçili aralık: ${range.label_from}–${range.label_to || range.label_from}`
+        : "Üst şeritte sayfa aralığı girin (ör. 1–5)";
+    txt.textContent = `PDF · ${total} sayfa${trunc}. ${rangeHint}.`;
+    wrap.hidden = false;
+  }
+
+  async function loadPdfPageRange() {
+    if (!openRel || !String(openRel).toLowerCase().endsWith(".pdf")) {
+      flash("Sayfa aralığı yalnızca PDF için.");
+      return;
+    }
+    const range = pageRangeParams();
+    if (range.page_from == null) {
+      flash("Başlangıç sayfası girin (üst şerit, örn. 1).");
+      return;
+    }
+    const qs = new URLSearchParams({ rel: openRel });
+    qs.set("page_from", String(range.page_from));
+    if (range.page_to != null) qs.set("page_to", String(range.page_to));
+    flash(`PDF sayfaları yükleniyor: ${range.label_from}–${range.label_to || range.label_from}…`);
+    const res = await fetch(`${api()}/api/tercume/source-pages?${qs.toString()}`);
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) throw new Error(typeof j.detail === "string" ? j.detail : "Sayfalar alınamadı");
+    const pages = Array.isArray(j.pages) ? j.pages : [];
+    const text = pages.map((p) => String(p.text || "").trim()).filter(Boolean).join("\n\n");
+    if (!text) throw new Error("Seçilen aralıkta metin yok (taranmış sayfa olabilir — OCR deneyin).");
+    setSourceText(text);
+    flash(`${pages.length} sayfa kaynak panele yüklendi.`);
+    updatePdfHint();
+    currentSegmentIndex = 0;
+    updateSegmentStrip();
+    if (range.label_from != null) void loadPdfPreviewPage(range.label_from);
+  }
+
+  function segmentCount() {
+    const aligned = lastAlignedPayload?.segments;
+    if (aligned?.length) return aligned.length;
+    return getSourceSegments().length;
+  }
+
+  function parsePageNumFromHint(hint) {
+    const m = String(hint || "").match(/(\d+)/);
+    return m ? Math.max(1, parseInt(m[1], 10) || 1) : null;
+  }
+
+  function replaceSourceSegment(outputIndex, newText) {
+    const parts = getSourceText().split(/\n\n+/);
+    const idx = Number(outputIndex);
+    if (!Number.isFinite(idx) || idx < 0) return false;
+    if (idx < parts.length) {
+      parts[idx] = newText;
+      const el = getSourceEl();
+      if (el) {
+        el.innerText = parts.join("\n\n");
+        updateStats();
+        applyEditorDirection();
+        scheduleTmHighlight();
+        updateStatusBar();
+      }
+      return true;
+    }
+    return false;
+  }
+
+  function updateSegmentEditVisibility() {
+    const wrap = $("tercume-segment-edit");
+    if (!wrap) return;
+    wrap.hidden = segmentCount() <= 1;
+  }
+
+  function syncSegmentEditors() {
+    const srcTa = $("tercume-segment-src");
+    const tgtTa = $("tercume-segment-tgt");
+    const lbl = $("tercume-seg-edit-label");
+    if (!srcTa || !tgtTa) return;
+    const aligned = lastAlignedPayload?.segments;
+    const segs = getSourceSegments();
+    const tgts = getTargetSegments();
+    const total = aligned?.length || segs.length || 1;
+    const idx = Math.max(0, Math.min(total - 1, currentSegmentIndex));
+    currentSegmentIndex = idx;
+    let src = "";
+    let tgt = "";
+    let pageHint = "";
+    if (aligned?.[idx]) {
+      src = String(aligned[idx].source || "");
+      tgt = String(aligned[idx].target || "");
+      pageHint = aligned[idx].page ? ` · sayfa ${aligned[idx].page}` : "";
+    } else {
+      src = segs[idx] || "";
+      tgt = tgts[idx] || "";
+    }
+    srcTa.value = src;
+    tgtTa.value = tgt;
+    const rtl =
+      getSourceEl()?.classList.contains("tercume-editor-rtl") ||
+      String($("tercume-src-lang")?.value || "") === "fa" ||
+      String($("tercume-src-lang")?.value || "") === "ar";
+    srcTa.classList.toggle("tercume-editor-rtl", rtl);
+    tgtTa.classList.toggle(
+      "tercume-editor-rtl",
+      String($("tercume-tgt-lang")?.value || "") === "fa" ||
+        String($("tercume-tgt-lang")?.value || "") === "ar",
+    );
+    if (lbl) lbl.textContent = `Segment ${idx + 1} / ${total}${pageHint}`;
+    const wrap = $("tercume-segment-edit");
+    if (wrap) wrap.hidden = total <= 1;
+  }
+
+  function applySegmentEditorsToPanels(silent) {
+    const src = String($("tercume-segment-src")?.value || "");
+    const tgt = String($("tercume-segment-tgt")?.value || "");
+    const aligned = lastAlignedPayload?.segments;
+    const idx = currentSegmentIndex;
+    if (aligned?.[idx]) {
+      aligned[idx].source = src;
+      aligned[idx].target = tgt;
+      applyAlignedSegmentToTarget(aligned[idx], tgt);
+      const parts = getSourceText().split(/\n\n+/);
+      if (idx < parts.length) replaceSourceSegment(idx, src);
+      else if (src) setSourceText(getSourceText() ? `${getSourceText()}\n\n${src}` : src);
+      if (lastAlignedPayload) renderAlignedDiff(lastAlignedPayload);
+    } else {
+      replaceSourceSegment(idx, src);
+      if (getTargetSegments().length > idx) replaceTargetSegment(idx, tgt);
+      else if (tgt) {
+        const parts = getTargetText().split(/\n\n+/);
+        if (idx < parts.length) replaceTargetSegment(idx, tgt);
+        else setTargetText(getTargetText() ? `${getTargetText()}\n\n${tgt}` : tgt);
+      }
+    }
+    if (!silent) flash(`Segment ${idx + 1} panellere uygulandı.`);
+    updateSegmentStrip();
+  }
+
+  function setPdfPreviewPanelVisible(show) {
+    const panel = $("tercume-pdf-preview");
+    const row = $("tercume-panels-row");
+    const isPdf = openRel && String(openRel).toLowerCase().endsWith(".pdf");
+    const on = !!show && isPdf;
+    if (panel) panel.hidden = !on;
+    if (row) row.classList.toggle("tercume-panels-row--has-pdf", on);
+  }
+
+  async function refreshPdfPreviewCapability() {
+    try {
+      const res = await fetch(`${api()}/api/tercume/capabilities`);
+      const j = await res.json().catch(() => ({}));
+      pdfPreviewAvailable = !!(res.ok && j.capabilities?.pdf_preview);
+    } catch {
+      pdfPreviewAvailable = null;
+    }
+  }
+
+  async function loadPdfPreviewPage(pageNum) {
+    const panel = $("tercume-pdf-preview");
+    const img = $("tercume-pdf-preview-img");
+    const fallback = $("tercume-pdf-preview-fallback");
+    const label = $("tercume-pdf-page-label");
+    if (!openRel || !String(openRel).toLowerCase().endsWith(".pdf")) {
+      setPdfPreviewPanelVisible(false);
+      return;
+    }
+    setPdfPreviewPanelVisible(true);
+    const total = Number(pdfMeta?.pages_total) || 9999;
+    const page = Math.max(1, Math.min(total, Number(pageNum) || 1));
+    pdfPreviewPage = page;
+    if (label) label.textContent = `Sayfa ${page}${pdfMeta?.pages_total ? ` / ${pdfMeta.pages_total}` : ""}`;
+    if (img) img.hidden = true;
+    if (fallback) {
+      fallback.hidden = false;
+      fallback.textContent = "Sayfa yükleniyor…";
+    }
+    try {
+      const qs = new URLSearchParams({ rel: openRel, page: String(page), dpi: "110" });
+      const res = await fetch(`${api()}/api/tercume/pdf-page-preview?${qs.toString()}`);
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg =
+          typeof j.detail === "string"
+            ? j.detail
+            : res.status === 503
+              ? "PyMuPDF kurulu değil: pip install pymupdf"
+              : "Önizleme alınamadı";
+        if (fallback) fallback.textContent = msg;
+        return;
+      }
+      if (j.pages_total != null) {
+        pdfMeta = pdfMeta || {};
+        pdfMeta.pages_total = j.pages_total;
+      }
+      if (img && j.image_base64) {
+        img.src = `data:image/png;base64,${j.image_base64}`;
+        img.alt = `PDF sayfa ${page}`;
+        img.hidden = false;
+        if (fallback) fallback.hidden = true;
+      }
+      if (label) label.textContent = `Sayfa ${j.page || page} / ${j.pages_total || pdfMeta?.pages_total || "?"}`;
+      updatePdfHint();
+      updateStatusBar();
+    } catch (e) {
+      if (fallback) {
+        fallback.hidden = false;
+        fallback.textContent = e.message || String(e);
+      }
+    }
+  }
+
+  function syncPdfPreviewFromSegment() {
+    if (!openRel || !String(openRel).toLowerCase().endsWith(".pdf")) return;
+    const aligned = lastAlignedPayload?.segments?.[currentSegmentIndex];
+    let page = parsePageNumFromHint(aligned?.page);
+    if (page == null) {
+      const range = pageRangeParams();
+      if (range.label_from != null) page = range.label_from + currentSegmentIndex;
+      else page = pdfPreviewPage || 1;
+    }
+    void loadPdfPreviewPage(page);
+  }
+
+  function updateSegmentStrip() {
+    const strip = $("tercume-segment-strip");
+    const label = $("tercume-segment-label");
+    if (!strip || !label) return;
+    const segs = getSourceSegments();
+    const n = segs.length;
+    const total = lastAlignedPayload?.segments?.length || n;
+    if (total <= 1) {
+      strip.hidden = true;
+      updateSegmentEditVisibility();
+      return;
+    }
+    if (currentSegmentIndex >= total) currentSegmentIndex = Math.max(0, total - 1);
+    if (currentSegmentIndex < 0) currentSegmentIndex = 0;
+    strip.hidden = false;
+    const pageHint =
+      lastAlignedPayload?.segments?.[currentSegmentIndex]?.page ||
+      (n > 1 ? `${currentSegmentIndex + 1}/${n}` : "");
+    label.textContent = `Segment ${currentSegmentIndex + 1} / ${total}${pageHint ? ` · sayfa ${pageHint}` : ""}`;
+    updateSegmentEditVisibility();
+  }
+
+  function focusSegment(index, opts = {}) {
+    const segs = getSourceSegments();
+    const aligned = lastAlignedPayload?.segments;
+    const total = aligned?.length || segs.length || 1;
+    const idx = Math.max(0, Math.min(total - 1, Number(index) || 0));
+    currentSegmentIndex = idx;
+    if (aligned?.[idx]) {
+      focusedAlignedRowKey = alignedRowKey(aligned[idx]);
+      if (opts.renderTable !== false && lastAlignedPayload) renderAlignedDiff(lastAlignedPayload);
+    }
+    updateSegmentStrip();
+    const fold = $("tercume-aligned-fold");
+    if (opts.openTable && fold) {
+      fold.hidden = false;
+      fold.open = true;
+    }
+    const row = document.querySelector(`#tercume-aligned-tbody tr.focused-row`);
+    row?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    syncSegmentEditors();
+    if (opts.syncPdf !== false) syncPdfPreviewFromSegment();
+  }
+
+  async function translateCurrentSegment() {
+    const segs = getSourceSegments();
+    const aligned = lastAlignedPayload?.segments;
+    let source = "";
+    let pageIndex = currentSegmentIndex;
+    const segEditOpen = !$("tercume-segment-edit")?.hidden;
+    const inlineSrc = String($("tercume-segment-src")?.value || "").trim();
+    if (segEditOpen && inlineSrc) {
+      source = inlineSrc;
+      pageIndex = aligned?.[currentSegmentIndex]
+        ? Number(aligned[currentSegmentIndex].index)
+        : currentSegmentIndex;
+    } else if (aligned?.[currentSegmentIndex]) {
+      source = String(aligned[currentSegmentIndex].source || "");
+      pageIndex = Number(aligned[currentSegmentIndex].index);
+    } else if (segs[currentSegmentIndex]) {
+      source = segs[currentSegmentIndex];
+    } else {
+      source = getSourceText();
+      pageIndex = 0;
+    }
+    if (!source.trim()) {
+      flash("Segment boş.");
+      return;
+    }
+    flash(`Segment ${currentSegmentIndex + 1} çevriliyor…`);
+    const hit = await translateChunkApi(source, pageIndex);
+    const out = String(hit.text || "").trim();
+    if (aligned?.[currentSegmentIndex]) {
+      aligned[currentSegmentIndex].target = out;
+      applyAlignedSegmentToTarget(aligned[currentSegmentIndex], out);
+    } else if (getTargetSegments().length > currentSegmentIndex) {
+      replaceTargetSegment(currentSegmentIndex, out);
+    } else {
+      const tgt = getTargetText();
+      setTargetText(tgt ? `${tgt}\n\n${out}` : out);
+    }
+    const tgtTa = $("tercume-segment-tgt");
+    if (tgtTa) tgtTa.value = out;
+    updateQualityStrip(hit.quality, `Segment ${currentSegmentIndex + 1}`);
+    maybeEnterReviewMode(hit.quality?.score);
+    void runAlignedDiff().catch(() => {});
+  }
+
+  function updateStatusBar() {
+    const fileChip = $("tercume-status-file");
+    const pageChip = $("tercume-status-page");
+    const modeChip = $("tercume-status-mode");
+    const qualChip = $("tercume-status-quality");
+    const jobChip = $("tercume-status-job");
+    const tmChip = $("tercume-status-tm");
+    const pfChip = $("tercume-status-preflight");
+    if (!fileChip) return;
+    if (openRel) {
+      const leaf = openRel.split("/").pop() || openRel;
+      fileChip.textContent = `Dosya: ${leaf}`;
+      fileChip.title = openRel;
+    } else {
+      fileChip.textContent = "Dosya: —";
+      fileChip.title = "Sol listeden dosya seçin";
+    }
+    const range = pageRangeParams();
+    pageChip.textContent =
+      range.label_from != null
+        ? `Sayfa: ${range.label_from}–${range.label_to || range.label_from}`
+        : pdfMeta?.pages_total
+          ? `Sayfa: 1–${pdfMeta.pages_total}`
+          : "Sayfa: —";
+    modeChip.textContent = `Mod: ${translateModeLabel()}`;
+    if (lastQualityScore != null && Number.isFinite(lastQualityScore)) {
+      qualChip.textContent = `Kalite: ${Math.round(lastQualityScore * 10) / 10}`;
+      qualChip.classList.remove("is-warn", "is-bad", "is-ok");
+      const tier = qualityTier(lastQualityScore);
+      qualChip.classList.add(tier === "good" ? "is-ok" : tier === "bad" ? "is-bad" : "is-warn");
+    } else {
+      qualChip.textContent = "Kalite: —";
+      qualChip.classList.remove("is-warn", "is-bad", "is-ok");
+    }
+    jobChip.textContent = `İş: ${jobStatusLabel}`;
+    const memEl = $("tercume-memory-status");
+    tmChip.textContent = memEl && !memEl.hidden ? memEl.textContent.replace(/^TM:\s*/i, "TM: ") : "TM: —";
+    if (pfChip) {
+      pfChip.textContent = `Hazırlık: ${preflightStatus.label}`;
+      pfChip.classList.remove("is-ok", "is-bad");
+      if (preflightStatus.ok === true) pfChip.classList.add("is-ok");
+      else if (preflightStatus.ok === false) pfChip.classList.add("is-bad");
+    }
   }
 
   function ocrLangFromUi() {
@@ -100,6 +685,12 @@
       const res = await fetch(`${api()}/api/workspace/read-pdf?rel=${encodeURIComponent(rel)}`);
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : `HTTP ${res.status}`);
+      pdfMeta = {
+        pages_total: j.pages_total,
+        pages_read: j.pages_read,
+        truncated: !!j.truncated_pages,
+      };
+      updatePdfHint();
       return String(j.text ?? "");
     }
     if (low.endsWith(".docx")) {
@@ -315,12 +906,16 @@
   async function openFile(rel) {
     if (!rel) return;
     markTreeActive(rel);
+    pdfMeta = null;
+    updatePdfHint();
     setSourceText("Dosya yükleniyor…");
     updateActiveLabel();
+    suggestLangFromPath(rel);
     try {
       const text = await readFileForTercume(rel);
       openRel = rel;
       setSourceText(text);
+      pushRecentFile(rel);
       updateActiveLabel();
       syncSavePlaceholder();
       flash(`Kaynak panele yüklendi: ${rel.split("/").pop()}`);
@@ -328,9 +923,19 @@
       void refreshApprenticeLog();
       void refreshMemoryStatus();
       void refreshCapabilities(rel);
+      void loadTmTermsForHighlight().then(() => scheduleTmHighlight());
       await loadAlignedNotesForRel(rel);
+      currentSegmentIndex = 0;
+      updateSegmentStrip();
+      if (String(rel).toLowerCase().endsWith(".pdf")) {
+        pdfPreviewPage = pageRangeParams().label_from || 1;
+        void loadPdfPreviewPage(pdfPreviewPage);
+      } else {
+        setPdfPreviewPanelVisible(false);
+      }
     } catch (e) {
       openRel = rel;
+      pushRecentFile(rel);
       const msg = String(e.message || e);
       setSourceText(`(Dosya: ${rel}\n\nÖnizleme alınamadı: ${msg}\n\nBüyük PDF için OCR veya sayfa sayfa modunu deneyin.)`);
       updateActiveLabel();
@@ -338,6 +943,10 @@
       void refreshMemoryStatus();
       void refreshCapabilities(rel);
       await loadAlignedNotesForRel(rel);
+      if (String(rel).toLowerCase().endsWith(".pdf")) {
+        pdfPreviewPage = pageRangeParams().label_from || 1;
+        void loadPdfPreviewPage(pdfPreviewPage);
+      }
     }
   }
 
@@ -425,6 +1034,7 @@
     $("tercume-term-tgt").value = "";
     flash(`Terim eklendi: «${src}» → ${tgt}`);
     void refreshUserGlossary();
+    void loadTmTermsForHighlight().then(() => scheduleTmHighlight());
   }
 
   async function deleteUserTerm(id) {
@@ -682,7 +1292,9 @@
       if (focusedAlignedRowKey === rowKey) tr.classList.add("focused-row");
       tr.addEventListener("click", () => {
         focusedAlignedRowKey = rowKey;
-        renderAlignedDiff(lastAlignedPayload || payload);
+        const idx = Number(r.index);
+        if (Number.isFinite(idx)) focusSegment(idx, { renderTable: true, openTable: false });
+        else renderAlignedDiff(lastAlignedPayload || payload);
       });
       const idx = document.createElement("td");
       idx.textContent = String(r.page || r.index + 1);
@@ -796,6 +1408,8 @@
     if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : j.error || "Diff başarısız");
     lastAlignedPayload = j;
     renderAlignedDiff(j);
+    updateSegmentStrip();
+    syncSegmentEditors();
     if (!j.aligned) flash("Segment sayıları tam hizalı değil — tabloya bakın.");
     else flash("Kaynak ve hedef segmentler hizalı görünüyor.");
   }
@@ -875,8 +1489,10 @@
       const tail = j.has_tail ? " · üslup" : "";
       el.hidden = false;
       el.textContent = n > 0 ? `TM: ${n} terim${disk}${tail}` : `TM: boş${disk}`;
+      updateStatusBar();
     } catch {
       el.hidden = true;
+      updateStatusBar();
     }
   }
 
@@ -1135,6 +1751,8 @@
     const checks = Array.isArray(j.checks) ? j.checks : [];
     const lines = checks.map((c) => `${c.ok ? "✓" : "✗"} ${c.label}${c.detail ? `: ${c.detail}` : ""}`);
     const hints = Array.isArray(j.hints) ? j.hints : [];
+    preflightStatus = { ok: !!j.ready, label: j.ready ? "tamam" : "eksik" };
+    updateStatusBar();
     flash(
       (j.ready ? "Hazırlık tamam — " : "Eksik var — ") +
         lines.slice(0, 4).join(" · ") +
@@ -1142,6 +1760,20 @@
     );
     void refreshReadiness();
     return j;
+  }
+
+  async function refreshPreflightChip() {
+    try {
+      const qs = new URLSearchParams();
+      if (openRel) qs.set("rel", openRel);
+      const res = await fetch(`${api()}/api/tercume/preflight?${qs.toString()}`);
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) return;
+      preflightStatus = { ok: !!j.ready, label: j.ready ? "tamam" : "eksik" };
+      updateStatusBar();
+    } catch {
+      /* sessiz */
+    }
   }
 
   async function runSuperAnalyst() {
@@ -1429,6 +2061,8 @@
     if (strip) strip.hidden = true;
     if (retryBtn) retryBtn.hidden = true;
     lastTranslateContext = null;
+    lastQualityScore = null;
+    updateStatusBar();
   }
 
   function updateQualityStrip(quality, contextLabel) {
@@ -1444,8 +2078,11 @@
       return;
     }
     const score = Number(quality.score);
+    lastQualityScore = score;
     const tier = qualityTier(score);
     strip.hidden = false;
+    updateStatusBar();
+    if (tier === "bad") maybeEnterReviewMode(score);
     badge.textContent = String(Math.round(score * 10) / 10);
     badge.className = `tercume-quality-badge tercume-quality-${tier}`;
     const label = String(contextLabel || "Son parça").trim();
@@ -1748,10 +2385,18 @@
     renderPageJobLog(outs, `${okN} başarılı · ${errN} hatalı${qHint}`);
     updateQualityStripFromJob(j);
     const lowN = Number(j.quality_summary?.low_count) || 0;
+    if (lowN > 0) {
+      setWorkbenchReviewMode(true);
+      const onlyIssues = $("tercume-aligned-only-issues");
+      if (onlyIssues) onlyIssues.checked = true;
+      void runAlignedDiff().catch(() => {});
+    }
     flash(
       String(j.label || `Arka plan çevirisi bitti: ${okN}/${okN + errN}`) +
         (lowN ? ` — ${lowN} sayfa düşük kalite.` : ""),
     );
+    jobStatusLabel = "bitti";
+    updateStatusBar();
     void refreshApprenticeLog();
     void refreshBatchJobsList();
     void refreshMemoryStatus();
@@ -2021,11 +2666,18 @@
     wrap.hidden = false;
     const pct = total > 0 ? Math.round((current / total) * 100) : 0;
     if (fill) fill.style.width = `${pct}%`;
-    if (lab) lab.textContent = label || `${current}/${total}`;
+    const labTxt = label || `${current}/${total}`;
+    if (lab) lab.textContent = labTxt;
+    jobStatusLabel = total > 0 ? `${labTxt} (%${pct})` : labTxt;
+    updateStatusBar();
   }
   function hideProgress() {
     const wrap = $("tercume-progress-wrap");
     if (wrap) wrap.hidden = true;
+    if (!activeBatchJobId && !batchPollTimer) {
+      jobStatusLabel = "—";
+      updateStatusBar();
+    }
   }
 
   function isLocalApi() {
@@ -2082,21 +2734,34 @@
       const hasDjvu = !!caps.djvu;
       const hasDocx = !!caps.docx_export;
       const hasOcr = !!caps.ocr;
-      const parts = [
-        `Kindle(MOBI): ${hasCal ? "hazır" : "yok"}`,
-        `DjVu: ${hasDjvu ? "hazır" : "yok"}`,
-        `DOCX çıktı: ${hasDocx ? "hazır" : "yok"}`,
-        `OCR: ${hasOcr ? "hazır" : "yok"}`,
-      ];
+      const hasPdfPrev = !!caps.pdf_preview;
+      pdfPreviewAvailable = hasPdfPrev;
       const ext = String(rel || "").toLowerCase();
-      let extra = "";
+      let warn = "";
       if (ext.endsWith(".mobi") || ext.endsWith(".azw") || ext.endsWith(".azw3") || ext.endsWith(".kfx")) {
-        if (!hasCal) extra = " · Bu dosya için Calibre (ebook-convert) gerekir.";
+        if (!hasCal) warn = "Bu dosya için Calibre (ebook-convert) gerekir.";
       } else if (ext.endsWith(".djvu") || ext.endsWith(".djv")) {
-        if (!hasDjvu) extra = " · Bu dosya için DjVuLibre (djvutxt) gerekir.";
+        if (!hasDjvu) warn = "Bu dosya için DjVuLibre (djvutxt) gerekir.";
+      } else if (ext.endsWith(".pdf") && !hasPdfPrev) {
+        warn = "PDF sayfa önizlemesi için: pip install pymupdf (metin çeviri yine çalışır).";
+      } else if (
+        (ext.endsWith(".png") ||
+          ext.endsWith(".jpg") ||
+          ext.endsWith(".jpeg") ||
+          ext.endsWith(".webp") ||
+          ext.endsWith(".tif") ||
+          ext.endsWith(".tiff")) &&
+        !hasOcr
+      ) {
+        warn = "Görsel/OCR için Tesseract (Arapça/Osmanlıca paketi) kurulu olmalı.";
       }
-      txt.textContent = `${parts.join(" · ")}${extra}`;
-      box.hidden = false;
+      if (warn) {
+        txt.textContent = warn;
+        box.hidden = false;
+      } else {
+        txt.textContent = "";
+        box.hidden = true;
+      }
     } catch {
       box.hidden = true;
     }
@@ -2778,6 +3443,13 @@ ${chunk}`;
     if (t === "calisma" || t === "ara") {
       void refreshTree();
     }
+    if (t === "calisma") {
+      void refreshPreflightChip();
+      renderRecentFiles();
+      applyEditorDirection();
+      updateStatusBar();
+      updateSegmentStrip();
+    }
     if (global.RuzgarSplit?.onTercumeTabChange) {
       requestAnimationFrame(() => global.RuzgarSplit.onTercumeTabChange());
     }
@@ -2813,6 +3485,140 @@ ${chunk}`;
     });
   }
 
+  function onTercumeKeydown(ev) {
+    if (document.body.dataset.motor !== "tercume") return;
+    if (normalizeTercumeTab(document.body.dataset.tercumeTab || "calisma") !== "calisma") return;
+    const ae = document.activeElement;
+    const inField =
+      ae &&
+      (ae.tagName === "INPUT" || ae.tagName === "TEXTAREA" || ae.tagName === "SELECT") &&
+      !ae.classList?.contains("tercume-doc-editor");
+    if (inField && !(ev.ctrlKey && ev.key === "Enter") && !(ev.ctrlKey && ev.key === "s")) return;
+    if (ev.ctrlKey && ev.key === "Enter") {
+      ev.preventDefault();
+      const mode = String($("tercume-translate-mode")?.value || "single");
+      if (mode === "single" && (getSourceSegments().length > 1 || lastAlignedPayload?.segments?.length)) {
+        void translateCurrentSegment().catch((e) => flash(e.message || String(e)));
+      } else {
+        $("btn-tercume-translate")?.click();
+      }
+      return;
+    }
+    if (ev.ctrlKey && (ev.key === "s" || ev.key === "S")) {
+      ev.preventDefault();
+      void saveTarget().catch((e) => flash(e.message || String(e)));
+      return;
+    }
+    if (ev.altKey && ev.key === "ArrowDown") {
+      ev.preventDefault();
+      focusSegment(currentSegmentIndex + 1, { openTable: reviewMode });
+      return;
+    }
+    if (ev.altKey && ev.key === "ArrowUp") {
+      ev.preventDefault();
+      focusSegment(currentSegmentIndex - 1, { openTable: reviewMode });
+    }
+  }
+
+  function wireTercumeProfessional() {
+    const page = $("page-tercume");
+    if (!page || page.dataset.tercumeProWired === "1") return;
+    page.dataset.tercumeProWired = "1";
+
+    $("btn-tercume-wb-edit")?.addEventListener("click", () => setWorkbenchReviewMode(false));
+    $("btn-tercume-wb-review")?.addEventListener("click", () => {
+      setWorkbenchReviewMode(true);
+      if (getSourceText() || getTargetText()) {
+        void runAlignedDiff().catch((e) => flash(e.message || String(e)));
+      }
+    });
+    $("btn-tercume-seg-prev")?.addEventListener("click", () =>
+      focusSegment(currentSegmentIndex - 1, { openTable: reviewMode }),
+    );
+    $("btn-tercume-seg-next")?.addEventListener("click", () =>
+      focusSegment(currentSegmentIndex + 1, { openTable: reviewMode }),
+    );
+    $("btn-tercume-seg-translate")?.addEventListener("click", () => {
+      void translateCurrentSegment().catch((e) => flash(e.message || String(e)));
+    });
+    $("btn-tercume-seg-to-aligned")?.addEventListener("click", () => {
+      focusSegment(currentSegmentIndex, { openTable: true });
+      const fold = $("tercume-aligned-fold");
+      if (fold) {
+        fold.hidden = false;
+        fold.open = true;
+      }
+    });
+    $("btn-tercume-pdf-apply-range")?.addEventListener("click", () => {
+      void loadPdfPageRange().catch((e) => flash(e.message || String(e)));
+    });
+    $("btn-tercume-pdf-open-folder")?.addEventListener("click", () => {
+      if (openRel && global.ruzgarApi?.openWorkspaceRel) {
+        const dir = openRel.replace(/[/\\][^/\\]+$/, "");
+        void global.ruzgarApi.openWorkspaceRel(dir || workRoot);
+      }
+    });
+    $("btn-tercume-pdf-prev-page")?.addEventListener("click", () => {
+      void loadPdfPreviewPage(Math.max(1, pdfPreviewPage - 1));
+    });
+    $("btn-tercume-pdf-next-page")?.addEventListener("click", () => {
+      const max = Number(pdfMeta?.pages_total) || pdfPreviewPage + 1;
+      void loadPdfPreviewPage(Math.min(max, pdfPreviewPage + 1));
+    });
+    $("btn-tercume-seg-apply-both")?.addEventListener("click", () => applySegmentEditorsToPanels());
+    $("btn-tercume-seg-translate-inline")?.addEventListener("click", () => {
+      void translateCurrentSegment().catch((e) => flash(e.message || String(e)));
+    });
+    $("tercume-segment-src")?.addEventListener("blur", () => applySegmentEditorsToPanels(true));
+    $("tercume-segment-tgt")?.addEventListener("blur", () => applySegmentEditorsToPanels(true));
+    $("tercume-status-file")?.addEventListener("click", () => {
+      $("tercume-file-list")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+    $("tercume-status-page")?.addEventListener("click", () => {
+      $("tercume-page-from")?.focus();
+      flash("Sayfa aralığı üst şeritte (Sayfa ve çıktı).");
+    });
+    $("tercume-status-mode")?.addEventListener("click", () => {
+      $("tercume-translate-mode")?.focus();
+    });
+    $("tercume-status-quality")?.addEventListener("click", () => {
+      const strip = $("tercume-quality-strip");
+      if (strip) strip.hidden = false;
+    });
+    $("tercume-status-job")?.addEventListener("click", () => {
+      showJobPanel(true);
+      $("tercume-job-panel")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+    $("tercume-status-tm")?.addEventListener("click", () => {
+      const fold = $("tercume-user-glossary-fold");
+      if (fold) {
+        fold.open = true;
+        void refreshUserGlossary();
+      }
+    });
+    $("tercume-status-preflight")?.addEventListener("click", () => {
+      void runPreflight().catch((e) => flash(e.message || String(e)));
+    });
+    $("tercume-page-from")?.addEventListener("change", () => {
+      updatePdfHint();
+      updateStatusBar();
+    });
+    $("tercume-page-to")?.addEventListener("change", () => {
+      updatePdfHint();
+      updateStatusBar();
+    });
+    $("tercume-src-lang")?.addEventListener("change", () => applyEditorDirection());
+    $("tercume-tgt-lang")?.addEventListener("change", () => applyEditorDirection());
+    getSourceEl()?.addEventListener("focus", () => stripTmMarks(getSourceEl()));
+    getSourceEl()?.addEventListener("blur", () => scheduleTmHighlight());
+    document.addEventListener("keydown", onTercumeKeydown);
+    renderRecentFiles();
+    void refreshPreflightChip();
+    void refreshPdfPreviewCapability();
+    applyEditorDirection();
+    updateStatusBar();
+  }
+
   function wireAll() {
     const page = $("page-tercume");
     if (!page) {
@@ -2821,9 +3627,13 @@ ${chunk}`;
       }
       return;
     }
-    if (page.dataset.tercumeV2Wired === "1") return;
+    if (page.dataset.tercumeV2Wired === "1") {
+      wireTercumeProfessional();
+      return;
+    }
     page.dataset.tercumeV2Wired = "1";
     wireTercumeViewTabs();
+    wireTercumeProfessional();
 
     try {
       workRoot = localStorage.getItem(LS_WORK_ROOT) || workRoot;
@@ -2974,18 +3784,27 @@ ${chunk}`;
       if (ev.target.open) void refreshUserGlossary();
     });
     $("btn-tercume-clear")?.addEventListener("click", () => {
+      const prevRel = openRel;
       setSourceText("");
       setTargetText("");
       openRel = null;
+      pdfMeta = null;
+      lastAlignedPayload = null;
+      currentSegmentIndex = 0;
       awaitingChatReply = false;
       hideEbookMeta();
       hideQualityStrip();
+      updatePdfHint();
+      updateSegmentStrip();
       const acad = $("tercume-academic-fold");
       if (acad) acad.hidden = true;
+      const aligned = $("tercume-aligned-fold");
+      if (aligned) aligned.hidden = true;
+      setPdfPreviewPanelVisible(false);
       updateActiveLabel();
       syncSavePlaceholder();
       const fd = new FormData();
-      if (openRel) fd.append("source_file", openRel);
+      if (prevRel) fd.append("source_file", prevRel);
       fetch(`${api()}/api/tercume/memory-clear`, { method: "POST", body: fd }).catch(() => {});
       void refreshMemoryStatus();
     });
@@ -3027,9 +3846,11 @@ ${chunk}`;
     void refreshMemoryStatus();
     void refreshSavePrefs();
     void refreshUserGlossary();
+    void loadTmTermsForHighlight();
     $("tercume-tgt-lang")?.addEventListener("change", () => {
       syncSavePlaceholder();
       void refreshMemoryStatus();
+      applyEditorDirection();
     });
   }
 
@@ -3046,6 +3867,11 @@ ${chunk}`;
       updateActiveLabel();
       updateStats();
       syncSavePlaceholder();
+      renderRecentFiles();
+      applyEditorDirection();
+      updateSegmentStrip();
+      updateStatusBar();
+      void refreshPreflightChip();
       void refreshTree();
       void refreshApprenticeLog();
       const fold = $("tercume-arsiv-download-fold");
@@ -3065,7 +3891,11 @@ ${chunk}`;
       }
     },
     importText(text, rel) {
-      if (rel) openRel = rel;
+      if (rel) {
+        openRel = rel;
+        suggestLangFromPath(rel);
+        pushRecentFile(rel);
+      }
       setSourceText(text);
       updateActiveLabel();
       syncSavePlaceholder();
