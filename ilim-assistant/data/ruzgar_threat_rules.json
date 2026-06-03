@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "description": "Rüzgar Virüs Kalkanı — regex kuralları (metin taraması)",
+  "rules": [
+    {
+      "id": "eval-exec",
+      "name": "eval/exec çağrısı",
+      "pattern": "\\b(eval|exec)\\s*\\(",
+      "severity": "high"
+    },
+    {
+      "id": "base64-powershell",
+      "name": "Base64 PowerShell",
+      "pattern": "powershell.*-enc(odedcommand)?",
+      "severity": "critical"
+    },
+    {
+      "id": "mshta-remote",
+      "name": "mshta uzaktan",
+      "pattern": "mshta\\s+https?://",
+      "severity": "critical"
+    },
+    {
+      "id": "certutil-decode",
+      "name": "certutil decode",
+      "pattern": "certutil\\s+(-decode|-urlcache)",
+      "severity": "high"
+    },
+    {
+      "id": "regsvr32-scrobj",
+      "name": "regsvr32 scrobj",
+      "pattern": "regsvr32.*scrobj",
+      "severity": "high"
+    },
+    {
+      "id": "javascript-uri",
+      "name": "javascript: URI",
+      "pattern": "javascript\\s*:",
+      "severity": "medium"
+    },
+    {
+      "id": "vba-autoopen",
+      "name": "VBA AutoOpen",
+      "pattern": "auto_?open|document_open|workbook_open",
+      "severity": "medium"
+    },
+    {
+      "id": "iframe-remote",
+      "name": "Uzak iframe",
+      "pattern": "<iframe[^>]+src\\s*=\\s*[\"']https?://",
+      "severity": "low"
+    }
+  ]
+}

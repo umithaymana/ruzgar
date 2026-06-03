@@ -1,7 +1,8 @@
 """
 Rüzgar / onaylı işlemler için sınırlar.
 
-- Gerçek antivirüs: Windows Defender + güncel tanımlar; özel bir bot %100 “her virüsü” garanti edemez.
+- İnternet indirmeleri: Rüzgar Virüs Kalkanı (imza, özet, heuristik); Defender yalnızca isteğe bağlı yedek.
+- Hiçbir motor %100 “her virüsü” garanti edemez; kara liste genişletilebilir.
 - Sistem klasörlerine yazma / dosya silme bu modülde YOK; silme için kullanıcı Windows Güvenliği’ni kullanmalı.
 """
 
@@ -52,6 +53,6 @@ def validate_custom_winget_line(line: str) -> tuple[bool, str]:
 DISCLAIMER_TR = (
     "Bu araçlar bilgisayarı otomatik ‘tam yetkiyle’ yönetmez. "
     "Tüm çalıştırmalar önizleme + senin onayın ile yapılır. "
-    "Virüs için asıl koruma Windows Güvenliği ve güncel tanımlardır; "
+    "İnternet indirmelerinde Rüzgar Virüs Kalkanı birincil taramadır; "
     "şüpheli dosyayı silme kararı sende olmalıdır."
 )

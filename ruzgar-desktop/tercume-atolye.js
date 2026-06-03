@@ -3034,26 +3034,46 @@ ${chunk}`;
     fd.append("url", url);
     if (dir.abs) fd.append("target_abs", dir.abs);
     else if (dir.rel) fd.append("target_dir_rel", dir.rel.startsWith("ilim-assistant/") ? dir.rel : `ilim-assistant/arsiv/${dir.rel}`);
+    const targetRel = dir.rel?.startsWith("ilim-assistant/")
+      ? dir.rel
+      : dir.rel
+        ? `ilim-assistant/arsiv/${dir.rel}`
+        : "";
+    const finishImport = async (j) => {
+      $("tercume-import-url").value = "";
+      const rel = String(j.rel || "");
+      if (rel.startsWith("ilim-assistant/")) {
+        workRoot = rel.split("/").slice(0, -1).join("/") || workRoot;
+        const rootInp = $("tercume-work-root");
+        if (rootInp) rootInp.value = workRoot;
+        try {
+          localStorage.setItem(LS_WORK_ROOT, workRoot);
+        } catch (_) {
+          /* ignore */
+        }
+        await refreshTree();
+        await openFile(rel);
+      } else {
+        flash(`İndirildi: ${j.abs || rel} (${Math.round((j.bytes || 0) / 1024 / 1024)} MB)`);
+      }
+    };
+    if (window.RuzgarVirusGuard?.runUrlDownload) {
+      await window.RuzgarVirusGuard.runUrlDownload({
+        apiBase: api(),
+        url,
+        targetAbs: dir.abs || "",
+        targetDirRel: targetRel,
+        speak: window.ruzgarSpeak,
+        flash,
+        onSuccess: (j) => finishImport(j),
+      });
+      return;
+    }
     flash("İndiriliyor (büyük dosyalar uzun sürebilir)…");
     const res = await fetch(`${api()}/api/tercume/import-url`, { method: "POST", body: fd });
     const j = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : "İndirme hatası");
-    $("tercume-import-url").value = "";
-    const rel = String(j.rel || "");
-    if (rel.startsWith("ilim-assistant/")) {
-      workRoot = rel.split("/").slice(0, -1).join("/") || workRoot;
-      const rootInp = $("tercume-work-root");
-      if (rootInp) rootInp.value = workRoot;
-      try {
-        localStorage.setItem(LS_WORK_ROOT, workRoot);
-      } catch (_) {
-        /* ignore */
-      }
-      await refreshTree();
-      await openFile(rel);
-    } else {
-      flash(`İndirildi: ${j.abs || rel} (${Math.round((j.bytes || 0) / 1024 / 1024)} MB)`);
-    }
+    await finishImport(j);
   }
 
   async function importFile(file) {

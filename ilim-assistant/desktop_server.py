@@ -3014,10 +3014,20 @@ async def api_video_search(body: VideoSearchBody):
 
 @app.post("/api/video/download")
 async def api_video_download(body: VideoDownloadBody):
-    """YouTube/web video URL'sini yt-dlp ile indirir ve merkezi havuza kaydeder."""
+    """YouTube/web video — doğrudan indirme kapalı; virus-guard/preflight (kind=video) kullanın."""
+    from ilim_assistant.motorlar.ruzgar_virus_guard import guard_enabled
+
     url = (body.url or "").strip()
     if not url:
         raise HTTPException(status_code=400, detail="URL boş.")
+    if guard_enabled():
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                "Video indirme için Rüzgar virüs koruması zorunlu: "
+                "/api/ruzgar/virus-guard/preflight (kind=video) sonra commit."
+            ),
+        )
     from urllib.parse import urlparse
 
     parsed = urlparse(url)
@@ -3746,15 +3756,133 @@ def _tercume_download_target_dir(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
+@app.get("/api/ruzgar/virus-guard/capabilities")
+def api_virus_guard_capabilities() -> dict[str, Any]:
+    from ilim_assistant.motorlar.ruzgar_virus_guard import capabilities
+
+    return capabilities()
+
+
+@app.post("/api/ruzgar/virus-guard/preflight")
+async def api_virus_guard_preflight(
+    url: str = Form(""),
+    filename_hint: str = Form(""),
+    kind: str = Form("url"),
+    scan_mode: str = Form("deep"),
+) -> dict[str, Any]:
+    """Karantinaya indir + tara; kullanıcı sesli onayı beklenir."""
+    from ilim_assistant.motorlar.ruzgar_virus_guard import (
+        guard_enabled,
+        preflight_url_download,
+        preflight_video_download,
+    )
+
+    if not guard_enabled():
+        raise HTTPException(status_code=503, detail="Rüzgar virüs koruması kapalı.")
+    u = (url or "").strip()
+    if not u:
+        raise HTTPException(status_code=400, detail="url gerekli.")
+    k = (kind or "url").strip().lower()
+
+    mode = (scan_mode or "deep").strip().lower()
+
+    def _run():
+        if k == "video":
+            return preflight_video_download(u, scan_mode=mode)
+        return preflight_url_download(u, filename_hint=filename_hint, scan_mode=mode)
+
+    data = await run_in_threadpool(_run)
+    if not data.get("ok"):
+        raise HTTPException(
+            status_code=400,
+            detail=str(data.get("error") or "Virüs koruması: işlem reddedildi"),
+        )
+    return data
+
+
+@app.post("/api/ruzgar/virus-guard/commit")
+def api_virus_guard_commit(
+    pending_id: str = Form(""),
+    target_dir_rel: str = Form(""),
+    target_abs: str = Form(""),
+) -> dict[str, Any]:
+    """Kullanıcı onayı sonrası dosyayı hedefe taşı."""
+    from ilim_assistant.motorlar.ruzgar_virus_guard import commit_pending
+
+    pid = (pending_id or "").strip()
+    if not pid:
+        raise HTTPException(status_code=400, detail="pending_id gerekli.")
+    res = commit_pending(pid, target_dir_rel=target_dir_rel, target_abs=target_abs)
+    if not res.get("ok"):
+        raise HTTPException(status_code=400, detail=str(res.get("error") or "Onay tamamlanamadı"))
+    return res
+
+
+@app.post("/api/ruzgar/virus-guard/reject")
+def api_virus_guard_reject(pending_id: str = Form("")) -> dict[str, Any]:
+    from ilim_assistant.motorlar.ruzgar_virus_guard import reject_pending
+
+    pid = (pending_id or "").strip()
+    if not pid:
+        raise HTTPException(status_code=400, detail="pending_id gerekli.")
+    return reject_pending(pid)
+
+
+@app.post("/api/ruzgar/virus-guard/scan-file")
+async def api_virus_guard_scan_file(
+    file: UploadFile = File(...),
+    scan_mode: str = Form("deep"),
+) -> dict[str, Any]:
+    """Yerel dosyayı Rüzgar Virüs Kalkanı ile tara (indirme dışı)."""
+    import re as _re
+    import uuid as _uuid
+
+    from ilim_assistant.motorlar.ruzgar_antivirus import ruzgar_scan_file
+
+    staging = REPO_ROOT / "ilim-assistant" / "arsiv" / "_virus_guard_staging" / "scan_upload"
+    staging.mkdir(parents=True, exist_ok=True)
+    name = (file.filename or "upload.bin").replace("\\", "/").split("/")[-1]
+    safe = _re.sub(r"[^a-zA-Z0-9._\-]+", "_", name).strip("._") or f"up_{_uuid.uuid4().hex[:8]}"
+    target = staging / safe
+    data = await file.read()
+    if len(data) > 64 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Dosya çok büyük (64 MB).")
+    target.write_bytes(data)
+    mode = (scan_mode or "deep").strip().lower()
+
+    def _run():
+        return ruzgar_scan_file(target, mode=mode).to_dict()
+
+    return {"ok": True, "scan": await run_in_threadpool(_run)}
+
+
+@app.get("/api/ruzgar/virus-guard/threat-log")
+def api_virus_guard_threat_log(limit: int = Query(40, ge=1, le=200)) -> dict[str, Any]:
+    from ilim_assistant.motorlar.ruzgar_antivirus import list_threat_log
+
+    return list_threat_log(limit=limit)
+
+
 @app.post("/api/tercume/import-url")
 def api_tercume_import_url(
     url: str = Form(""),
     filename_hint: str = Form(""),
     target_dir_rel: str = Form(""),
     target_abs: str = Form(""),
+    guard_bypass: str = Form("0"),
 ) -> dict[str, Any]:
-    """URL'den akışlı indirme — boyut üst sınırı yok; hedef klasör seçilebilir."""
+    """URL'den akışlı indirme — Rüzgar virüs koruması zorunlu (önce /virus-guard/preflight)."""
     from ilim_assistant.motorlar.arsiv_indirme import download_url_to_folder
+    from ilim_assistant.motorlar.ruzgar_virus_guard import guard_enabled
+
+    if guard_enabled() and str(guard_bypass or "").strip() not in ("1", "true", "yes"):
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                "Doğrudan indirme kapalı. Rüzgar virüs koruması: önce tarama ve sesli onay "
+                "(/api/ruzgar/virus-guard/preflight → commit)."
+            ),
+        )
 
     u = (url or "").strip()
     if not u:
@@ -4410,6 +4538,9 @@ def api_tercume_capabilities() -> dict[str, Any]:
         if isinstance(c, dict) and str(c.get("id") or "") == "ocr_(tesseract)":
             ocr_ok = bool(c.get("ok"))
             break
+    from ilim_assistant.motorlar.ruzgar_virus_guard import capabilities as virus_guard_caps
+
+    vg = virus_guard_caps()
     return {
         "ok": True,
         "capabilities": {
@@ -4418,13 +4549,16 @@ def api_tercume_capabilities() -> dict[str, Any]:
             "docx_export": docx_available(),
             "ocr": ocr_ok,
             "pdf_preview": pymupdf_available(),
+            "virus_guard": vg.get("enabled"),
         },
+        "virus_guard": vg,
         "notes": {
             "calibre": "MOBI/AZW okumak için Calibre (ebook-convert)",
             "djvu": "DjVu okumak için DjVuLibre (djvutxt)",
             "docx_export": "DOCX çıktı için python-docx",
             "ocr": "Taranmış görsel/PDF için Tesseract",
             "pdf_preview": "PDF sayfa görüntüsü için PyMuPDF (pip install pymupdf)",
+            "virus_guard": "Rüzgar Virüs Kalkanı: çok katmanlı tarama + nötralize + sesli onay",
         },
     }
 

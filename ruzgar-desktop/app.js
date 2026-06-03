@@ -5954,6 +5954,21 @@ async function runVideoDownloadFromUrl(url, opts = {}) {
   if (!u) {
     throw new Error("Video URL yok.");
   }
+  if (window.RuzgarVirusGuard?.runVideoDownload) {
+    const announceChat = opts.announceChat !== false;
+    if (announceChat) {
+      flashRuzgarDurum("Rüzgar virüs koruması: video taranıyor…");
+    }
+    const out = await window.RuzgarVirusGuard.runVideoDownload({
+      apiBase: API,
+      url: u,
+      speak: speakTextImmediate,
+      flash: (msg) => {
+        if (announceChat) flashRuzgarDurum(msg);
+      },
+    });
+    return out.result || out;
+  }
   const announceChat = opts.announceChat !== false;
   const ctrl = new AbortController();
   const to = window.setTimeout(() => ctrl.abort(), RUZGAR_VIDEO_DOWNLOAD_TIMEOUT_MS);
@@ -9695,6 +9710,11 @@ async function finalizeRecording(state) {
     return;
   }
   text = (text || "").trim();
+  if (text && window.RuzgarVirusGuard?.consumeVoiceApproval?.(text)) {
+    pushSessionSend = false;
+    setStatus("İndirme onayı alındı.", "Rüzgar");
+    return;
+  }
   if (text) {
     const prev = el.input.value.trim();
     el.input.value = prev ? `${prev} ${text}`.trim() : text;
@@ -9991,6 +10011,7 @@ function speakTextImmediate(text) {
     syncInterruptButton();
   }
 }
+window.ruzgarSpeak = speakTextImmediate;
 
 async function loadFileTree() {
   try {

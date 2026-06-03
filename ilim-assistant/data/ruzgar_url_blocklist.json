@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "description": "Rüzgar — indirme öncesi engellenen alan adı parçaları (küçük harf)",
+  "host_substrings": [
+    "malware.",
+    "phishing.",
+    "crack-download.",
+    "keygen."
+  ],
+  "exact_hosts": []
+}

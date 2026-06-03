@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "description": "Rüzgar Virüs Kalkanı — bayt imza listesi",
+  "signatures": [
+    { "id": "eicar", "name": "EICAR test", "pattern": "EICAR-STANDARD-ANTIVIRUS-TEST-FILE", "severity": "critical" },
+    { "id": "ps-enc", "name": "PowerShell -enc", "pattern": "powershell -enc", "severity": "critical" },
+    { "id": "ps-iex", "name": "PowerShell IEX", "pattern": "iex(", "severity": "high" },
+    { "id": "cmd-c", "name": "cmd /c", "pattern": "cmd.exe /c", "severity": "high" },
+    { "id": "wscript", "name": "WScript.Shell", "pattern": "WScript.Shell", "severity": "high" },
+    { "id": "autoit", "name": "AutoIt", "pattern": "AutoIt v3", "severity": "medium" },
+    { "id": "vbs-create", "name": "VBScript CreateObject", "pattern": "CreateObject(", "severity": "medium" },
+    { "id": "mshtml", "name": "MSHTML exploit stub", "pattern": "MSHTML", "severity": "low" },
+    { "id": "pdf-js", "name": "PDF /JavaScript", "pattern": "/JavaScript", "severity": "high" },
+    { "id": "pdf-openaction", "name": "PDF OpenAction", "pattern": "/OpenAction", "severity": "medium" },
+    { "id": "hta-app", "name": "HTA APPLICATION", "pattern": "<HTA:APPLICATION", "severity": "critical" },
+    { "id": "iso-scsi", "name": "ISO mount script", "pattern": "diskpart", "severity": "medium" }
+  ]
+}

@@ -1,26 +1,41 @@
 /* Yalnızca Tercüme motoru — diğer sayfalara dokunmaz (#page-tercume) */
 
-/* Tercüme modunda üst başlık alanını daralt, çalışma alanını büyüt */
-body:has(#page-tercume:not([hidden])) .workbench-head {
-  padding: 0 4px 2px;
+/* Tercüme: «sayfa düzeni» (🗖 ◫ 田) ve ÇALIŞMA SAYFASI şeridi — alan editöre */
+body[data-motor="tercume"] .workbench-head {
+  display: none !important;
+}
+body[data-motor="tercume"] #workbench-layout-tools {
+  display: none !important;
+  pointer-events: none !important;
+}
+body[data-motor="tercume"] .workbench-head,
+body[data-motor="tercume"] .dynamic-workbench {
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+body[data-motor="tercume"] .dynamic-workbench {
+  height: 100%;
+  flex: 1 1 auto;
   min-height: 0;
 }
-body:has(#page-tercume:not([hidden])) .workbench-title {
-  display: none;
+body[data-motor="tercume"] #page-tercume > .tercume-help-fold {
+  display: none !important;
 }
-body:has(#page-tercume:not([hidden])) .dynamic-workbench {
-  padding: 2px 4px;
-  height: auto;
-  flex: 1 1 auto;
-  min-height: min(84vh, 980px);
+body[data-motor="tercume"][data-tercume-tab="calisma"] .panel-main,
+body[data-motor="tercume"][data-tercume-tab="ara"] .panel-main,
+body[data-motor="tercume"][data-tercume-tab="okuma"] .panel-main {
+  padding: 4px;
 }
 
 #page-tercume.tercume-page-v2 {
   display: flex;
   flex-direction: column;
-  min-height: min(82vh, 960px);
+  flex: 1 1 auto;
+  min-height: 0;
   height: 100%;
-  padding: 0 2px 2px;
+  padding: 0 2px 4px;
+  box-sizing: border-box;
 }
 
 #page-tercume .tercume-help-fold {
@@ -167,6 +182,22 @@ body[data-motor="tercume"] #tercume-center-row {
   min-width: 0;
   overflow: hidden;
 }
+/* Tercüme: üst şerit + grid — kalan yükseklik viewport’a sığsın */
+body[data-motor="tercume"] {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+body[data-motor="tercume"] > .title-strip {
+  flex: 0 0 auto;
+}
+body[data-motor="tercume"] > .layout.layout-v2 {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto !important;
+}
+
 /* Yan sohbet — Çalışma, Eser ara, Okuma */
 body[data-motor="tercume"][data-tercume-tab="calisma"] .panel-chat,
 body[data-motor="tercume"][data-tercume-tab="ara"] .panel-chat,
@@ -177,8 +208,55 @@ body[data-motor="tercume"][data-tercume-tab="okuma"] .panel-chat {
   width: var(--ruzgar-chat-w, 320px);
   min-width: 220px;
   min-height: 0;
-  max-height: none;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  align-self: stretch;
   border-right: 1px solid #3c3c3c;
+}
+body[data-motor="tercume"] #tercume-center-row .panel-chat .chat-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+body[data-motor="tercume"] #tercume-center-row .panel-chat .orchestra-bridge {
+  flex-shrink: 0;
+}
+body[data-motor="tercume"] #tercume-center-row .panel-chat .composer {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: min(40vh, 300px);
+  padding: 8px 8px 10px;
+  overflow: hidden;
+}
+body[data-motor="tercume"] #tercume-center-row .panel-chat .composer-actions {
+  flex: 0 1 auto;
+  min-height: 0;
+  max-height: 112px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin-top: 0;
+  margin-bottom: 6px;
+  padding-right: 2px;
+  gap: 4px 6px;
+}
+body[data-motor="tercume"] #tercume-center-row .panel-chat .composer-actions .chk {
+  font-size: 10px;
+}
+body[data-motor="tercume"] #tercume-center-row .panel-chat .composer textarea#msg-input {
+  flex: 0 0 auto;
+  min-height: 48px;
+  max-height: 100px;
+  resize: vertical;
+}
+body[data-motor="tercume"] .panel-chat .bubble.chat-welcome {
+  max-width: 100%;
+}
+body[data-motor="tercume"] .panel-chat .chat-welcome-list {
+  font-size: 11px;
+  line-height: 1.4;
 }
 body[data-motor="tercume"][data-tercume-tab="calisma"] .panel-main,
 body[data-motor="tercume"][data-tercume-tab="ara"] .panel-main,
@@ -251,7 +329,7 @@ body[data-motor="tercume"][data-tercume-tab="pasif"] #page-tercume .tercume-help
   grid-template-columns: minmax(150px, 190px) minmax(0, 1fr);
   gap: 6px;
   flex: 1 1 auto;
-  min-height: min(78vh, 900px);
+  min-height: 0;
   height: 100%;
 }
 #page-tercume .tercume-workbench--ara {
@@ -259,7 +337,7 @@ body[data-motor="tercume"][data-tercume-tab="pasif"] #page-tercume .tercume-help
 }
 #page-tercume .tercume-workbench--okuma {
   grid-template-columns: minmax(0, 1fr);
-  min-height: min(78vh, 900px);
+  min-height: 0;
 }
 #page-tercume .tercume-workbench--calisma #tercume-ara-panel,
 #page-tercume .tercume-workbench--calisma #tercume-okuma-panel {
@@ -620,6 +698,7 @@ body[data-motor="tercume"][data-tercume-tab="pasif"] #page-tercume .tercume-help
   flex-direction: column;
   flex: 1 1 auto;
   min-height: 0;
+  overflow: hidden;
   border: 1px solid #3c3c3c;
   border-radius: 6px;
   background: #1e1e1e;
@@ -627,6 +706,9 @@ body[data-motor="tercume"][data-tercume-tab="pasif"] #page-tercume .tercume-help
 
 #tercume-workbench:not(.tercume-workbench--review) .tercume-toolbar {
   display: none;
+}
+#page-tercume .tercume-main > :not(.tercume-panels-row) {
+  flex-shrink: 0;
 }
 #page-tercume .tercume-toolbar {
   display: flex;
@@ -1019,9 +1101,10 @@ body[data-motor="tercume"][data-tercume-tab="pasif"] #page-tercume .tercume-help
 #page-tercume .tercume-panels-row {
   display: flex;
   flex: 1 1 auto;
-  min-height: min(72vh, 820px);
+  min-height: 0;
   gap: 0;
   min-width: 0;
+  overflow: hidden;
 }
 #page-tercume .tercume-panels-row--has-pdf .tercume-pdf-preview {
   display: flex;
@@ -1176,7 +1259,7 @@ body[data-motor="tercume"][data-tercume-tab="pasif"] #page-tercume .tercume-help
 
 #page-tercume .tercume-doc-editor {
   flex: 1 1 auto;
-  min-height: min(36vh, 420px);
+  min-height: 120px;
   overflow: auto;
   padding: 16px 20px;
   font-family: "Segoe UI", Georgia, "Times New Roman", serif;
@@ -1298,7 +1381,7 @@ body[data-motor="tercume"][data-tercume-tab="pasif"] #page-tercume .tercume-help
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  padding: 4px 6px;
+  padding: 6px 8px 8px;
   border-top: 1px solid #2a2a2a;
   background: #222;
   flex-shrink: 0;
