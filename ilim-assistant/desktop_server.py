@@ -3557,6 +3557,54 @@ def api_tercume_pdf_page_preview(
     return hit
 
 
+@app.get("/api/tercume/pdf-page-ocr")
+async def api_tercume_pdf_page_ocr(
+    rel: str = Query(""),
+    page: int = Query(1, ge=1),
+    src_lang: str = Query("auto"),
+    ocr_preset: str = Query("auto"),
+) -> dict[str, Any]:
+    """PDF tek sayfa OCR (PyMuPDF + Tesseract) — taranmış PDF için."""
+    from ilim_assistant.motorlar.tercume_ocr_cascade import ocr_pdf_page_via_pymupdf
+    from ilim_assistant.motorlar.tercume_ocr_runtime import ocr_runtime_status
+
+    raw = (rel or "").strip().replace("\\", "/").lstrip("/")
+    if not raw:
+        raise HTTPException(status_code=400, detail="rel gerekli.")
+    target = _repo_resolve_under_root(raw, must_be_dir=False)
+    if target.suffix.lower() != ".pdf":
+        raise HTTPException(status_code=400, detail="Dosya PDF değil.")
+
+    st = ocr_runtime_status()
+    if not st.get("available"):
+        raise HTTPException(
+            status_code=503,
+            detail=st.get("hint") or "Tesseract kurulu değil — Ruzgar_OCR_Kur.bat",
+        )
+
+    def _run():
+        return ocr_pdf_page_via_pymupdf(
+            str(target),
+            max(0, int(page) - 1),
+            src_lang=(src_lang or "auto").strip(),
+        )
+
+    hit = await run_in_threadpool(_run)
+    if not hit.get("ok"):
+        msg = str(hit.get("error") or hit.get("reason") or "OCR başarısız")
+        raise HTTPException(status_code=400, detail=msg)
+    return {
+        "ok": True,
+        "rel": raw,
+        "page": hit.get("page") or page,
+        "text": str(hit.get("text") or ""),
+        "quality": hit.get("quality"),
+        "quality_score": hit.get("quality_score"),
+        "preset": hit.get("preset"),
+        "engine": hit.get("engine"),
+    }
+
+
 def _docx_file_to_plain(target: Path) -> str:
     from docx import Document
 
@@ -4108,6 +4156,24 @@ def api_arsiv_download_next(limit: int = Form(1)) -> dict[str, Any]:
     from ilim_assistant.motorlar.arsiv_indirme import import_next_pending
 
     return import_next_pending(limit=max(1, min(int(limit or 1), 5)))
+
+
+@app.get("/api/tercume/local-find")
+def api_tercume_local_find(
+    q: str = Query(""),
+    limit: int = Query(8),
+) -> dict[str, Any]:
+    """Yerel arşivde fuzzy dosya eşleşmesi (sohbet «kitap aç» için)."""
+    raw = (q or "").strip()
+    if not raw:
+        raise HTTPException(status_code=400, detail="q gerekli.")
+    if len(raw) > 200:
+        raise HTTPException(status_code=400, detail="Sorgu çok uzun (200 karakter).")
+    from ilim_assistant.motorlar.tercume_analyst import find_local_archive_matches
+
+    items = find_local_archive_matches(raw, limit=max(1, min(int(limit or 8), 20)))
+    best = items[0] if items else None
+    return {"ok": True, "query": raw, "items": items, "best": best}
 
 
 @app.get("/api/tercume/eser-search")

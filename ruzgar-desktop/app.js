@@ -1185,6 +1185,30 @@ function closeFaz7Help() {
   el.faz7HelpOverlay.setAttribute("aria-hidden", "true");
 }
 
+function showTercumeChatWelcome() {
+  if (!el.chat || currentMode !== "tercume") return;
+  if (!isChatVisuallyEmpty()) return;
+  dismissChatWelcome();
+  const foot = lastUiManifest?.dashboard?.welcome_foot || "Tercüme · Ümit & Gökçenur";
+  const w = document.createElement("div");
+  w.className = "bubble assistant chat-welcome chat-welcome-tercume";
+  w.setAttribute("role", "note");
+  w.innerHTML =
+    `<p class="chat-welcome-lead"><strong>Merhaba — birlikte okuyalım.</strong></p>` +
+    `<p class="chat-welcome-tercume-intro">Komut değil, sohbet: ne yapmak istediğinizi doğal yazın; kitap ortada açılır, çeviri altta birikir.</p>` +
+    `<ul class="chat-welcome-list">` +
+    `<li>«Sahih Bukhari'yi aç» — dosyayı bulup kitap gibi gösteririm</li>` +
+    `<li>«14. sayfaya git» — sayfayı önünüze getiririm</li>` +
+    `<li>«Bu sayfayı çevir» — yalnız o sayfayı çeviririm</li>` +
+    `<li>«Tamamını çevir» — arka planda (uzun sürer; «durdur» diyebilirsiniz)</li>` +
+    `<li>Üstte <strong>Çevir · Durdur · Kaydet</strong> — sık kullanılanlar</li>` +
+    `<li><strong>Düzen</strong> menüsü veya Dosyalar/Araçlar — nadir paneller</li>` +
+    `</ul>` +
+    `<p class="chat-welcome-foot">${esc(foot)}</p>`;
+  el.chat.appendChild(w);
+  el.chat.scrollTop = 0;
+}
+
 function dismissChatWelcome() {
   el.chat?.querySelectorAll(".chat-welcome").forEach((n) => n.remove());
 }
@@ -1196,6 +1220,10 @@ function isChatVisuallyEmpty() {
 
 function showChatWelcomeIfEmpty() {
   if (!el.chat || !isChatVisuallyEmpty()) return;
+  if (currentMode === "tercume") {
+    showTercumeChatWelcome();
+    return;
+  }
   dismissChatWelcome();
   const foot = lastUiManifest?.dashboard?.welcome_foot || "Faz 68–77 · Ümit & Gökçenur";
   const w = document.createElement("div");
@@ -1509,6 +1537,9 @@ function switchMode(mode) {
   if (next === "genel") {
     void refreshProgramlamaHandoffWorkbench();
   }
+  if (next === "tercume") {
+    showTercumeChatWelcome();
+  }
   const motorDeclarationByMode = {
     genel: "Şu anda ana motor tam güç ve tam kapasite çalışıyor.",
     mimar:
@@ -1524,7 +1555,7 @@ function switchMode(mode) {
     ses:
       "Ses motoru — Stüdyo: dosya + konuşmayı metne dökme, transkript; tarayıcıdan seslendirme.",
     tercume:
-      "Tercüme motoru — Ofis paneli: arşiv + iki kolon; Çevir ile Rüzgar’a yapılandırılmış istek.",
+      "Tercüme — Sohbetle kitap açın, sayfa sayfa çevirin; karmaşık paneller Düzen menüsünde.",
     hizir:
       "HIZIR — Merkezi Bellek v3: ticari fırsatlar ve genel keşif önbelleği; sunucu API ile canlı yenilenir.",
   };
@@ -4918,6 +4949,7 @@ function wireTercumeAtolye() {
       }
       return "";
     },
+    showTercumeChatWelcome,
   });
 }
 
@@ -9351,6 +9383,16 @@ async function sendMessageWithText(t, opts = {}) {
     window.RuzgarTercumeAtolye?.isSearchIntent?.(text) &&
     window.RuzgarTercumeAtolye?.runSearch
   ) {
+    const hit = await window.RuzgarTercumeAtolye.tryAtolyeFromMessage(text);
+    if (hit?.handled && hit.instant) {
+      appendBubble("assistant", hit.reply || "Tamam.", { actionCard: true });
+      setStatus("Tercüme atölye", "Rüzgar");
+      if (el.send) el.send.disabled = false;
+      perfBusy = false;
+      updatePerformanceIndicators(perfBusy);
+      syncInterruptButton();
+      return;
+    }
     if (window.RuzgarTercumeAtolye.setTercumeTab) window.RuzgarTercumeAtolye.setTercumeTab("ara");
     void window.RuzgarTercumeAtolye.runSearch(text).then((ok) => {
       if (!ok) return;
@@ -10062,6 +10104,24 @@ if (el.mic) {
 if (window.ruzgarApi?.onMenu) {
   window.ruzgarApi.onMenu((action) => {
     if (action === "focus-chat") el.input.focus();
+    if (action.startsWith("tercume-dock:")) {
+      if (currentMode !== "tercume") switchMode("tercume");
+      const dock = action.slice("tercume-dock:".length);
+      window.RuzgarTercumeAtolye?.toggleDuzenDock?.(dock);
+      return;
+    }
+    if (action === "tercume-ui:reader") {
+      if (currentMode !== "tercume") switchMode("tercume");
+      window.RuzgarTercumeAtolye?.setTercumeUiMode?.("reader");
+      flashRuzgarDurum("Kitap görünümü — sohbetle okuma.");
+      return;
+    }
+    if (action === "tercume-ui:classic") {
+      if (currentMode !== "tercume") switchMode("tercume");
+      window.RuzgarTercumeAtolye?.setTercumeUiMode?.("classic");
+      flashRuzgarDurum("Klasik ofis görünümü.");
+      return;
+    }
     if (action === "mic") void menuOpenMic();
     if (action === "speak") speakLast();
     if (action === "menu:disa-aktar") {

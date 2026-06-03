@@ -118,3 +118,47 @@ def ocr_pdf_page(
     hit = ocr_pil_image_best(images[0], src_lang=src_lang)
     hit["page_index"] = page_index
     return hit
+
+
+def ocr_pdf_page_via_pymupdf(
+    pdf_path: str,
+    page_index: int,
+    *,
+    src_lang: str = "auto",
+    dpi: int | None = None,
+) -> dict[str, Any]:
+    """PDF tek sayfa OCR — PyMuPDF ile rasterize (pdf2image gerekmez)."""
+    try:
+        import fitz
+        from PIL import Image
+    except ImportError:
+        return {
+            "ok": False,
+            "error": "OCR için: pip install pymupdf pillow pytesseract (+ Tesseract kurulumu)",
+        }
+
+    page_no = max(1, int(page_index) + 1)
+    dpi_n = dpi or int(os.environ.get("RUZGAR_TERCUME_OCR_DPI", "180"))
+    try:
+        doc = fitz.open(str(pdf_path))
+    except Exception as exc:
+        return {"ok": False, "error": f"PDF açılamadı: {str(exc)[:120]}"}
+
+    try:
+        if len(doc) < 1:
+            return {"ok": False, "error": "PDF boş"}
+        idx = min(page_no, len(doc)) - 1
+        pg = doc[idx]
+        zoom = max(72, dpi_n) / 72.0
+        pix = pg.get_pixmap(matrix=fitz.Matrix(zoom, zoom), alpha=False)
+        img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
+    except Exception as exc:
+        return {"ok": False, "error": f"Sayfa görüntüsü: {str(exc)[:120]}"}
+    finally:
+        doc.close()
+
+    hit = ocr_pil_image_best(img, src_lang=src_lang)
+    hit["page_index"] = idx
+    hit["page"] = idx + 1
+    hit["engine"] = "pymupdf+tesseract"
+    return hit

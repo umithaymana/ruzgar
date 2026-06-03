@@ -6,6 +6,7 @@
   const LS_PAGE_JOB = "ruzgar_tercume_page_job_id";
   const LS_LAST_SAVE_DIR = "ruzgar_tercume_last_save_dir";
   const LS_RECENT_FILES = "ruzgar_tercume_recent_files";
+  const LS_TERCUME_UI = "ruzgar_tercume_ui_mode";
   const QUALITY_PASS = 55;
   const QUALITY_WARN = 75;
 
@@ -19,6 +20,7 @@
   let preflightStatus = { ok: null, label: "…" };
   let jobStatusLabel = "—";
   let tmHighlightTimer = null;
+  let activeDuzenDock = "";
 
   let lastTranslateContext = null;
   let lastAlignedPayload = null;
@@ -28,9 +30,363 @@
   let alignedNotesSaveTimer = null;
   const EBOOK_EXTS = [".epub", ".fb2", ".mobi", ".azw", ".azw3", ".kfx", ".djvu", ".djv", ".rtf"];
   const IMAGE_EXTS = [".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tif", ".tiff"];
+  const TERCUME_OPEN_EXTS = [
+    ".pdf",
+    ".docx",
+    ".epub",
+    ".txt",
+    ".md",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".webp",
+    ".html",
+    ".rtf",
+    ".fb2",
+    ".mobi",
+    ".djvu",
+    ".djv",
+  ];
+
+  let fileFilterQuery = "";
+  let fileSearchTimer = null;
+  let fileSearchToken = 0;
+
+  function fileTypeBadge(name) {
+    const low = String(name || "").toLowerCase();
+    if (low.endsWith(".pdf")) return { label: "PDF", kind: "pdf" };
+    if (low.endsWith(".docx")) return { label: "DOC", kind: "doc" };
+    if (low.endsWith(".epub") || low.endsWith(".mobi") || low.endsWith(".fb2")) return { label: "EP", kind: "ebook" };
+    if (low.endsWith(".djvu") || low.endsWith(".djv")) return { label: "Dj", kind: "ebook" };
+    if (IMAGE_EXTS.some((e) => low.endsWith(e))) return { label: "IMG", kind: "img" };
+    if (low.endsWith(".html") || low.endsWith(".htm")) return { label: "HT", kind: "web" };
+    if (low.endsWith(".txt") || low.endsWith(".md")) return { label: "TXT", kind: "text" };
+    return { label: "·", kind: "other" };
+  }
+
+  function createTercumeTreeBranch(it, depth) {
+    const branch = document.createElement("div");
+    branch.className = "code-tree-branch";
+    const pad = 4 + depth * 12;
+    if (it.isDir) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "code-tree-row folder";
+      btn.dataset.rel = it.rel;
+      btn.dataset.depth = String(depth);
+      btn.style.paddingLeft = `${pad}px`;
+      btn.innerHTML =
+        `<span class="code-tree-chev" aria-hidden="true">▸</span>` +
+        `<span class="code-tree-file-ico tercume-tree-ico tercume-tree-ico--dir" aria-hidden="true">KL</span>` +
+        `<span class="code-tree-name">${esc(it.name)}</span>`;
+      const kids = document.createElement("div");
+      kids.className = "code-tree-children";
+      kids.hidden = true;
+      branch.appendChild(btn);
+      branch.appendChild(kids);
+    } else {
+      const badge = fileTypeBadge(it.name);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "code-tree-row file";
+      btn.dataset.rel = it.rel;
+      btn.dataset.depth = String(depth);
+      btn.dataset.extKind = badge.kind;
+      btn.style.paddingLeft = `${pad}px`;
+      btn.innerHTML =
+        `<span class="code-tree-file-ico tercume-tree-ico tercume-tree-ico--${esc(badge.kind)}" aria-hidden="true">${esc(badge.label)}</span>` +
+        `<span class="code-tree-name">${esc(it.name)}</span>`;
+      branch.appendChild(btn);
+    }
+    return branch;
+  }
+
+  function renderPathCrumb() {
+    const nav = $("tercume-path-crumb");
+    if (!nav) return;
+    const root = String(workRoot || "").replace(/\\/g, "/").replace(/\/$/, "");
+    const parts = root.split("/").filter(Boolean);
+    nav.innerHTML = "";
+    if (!parts.length) return;
+    let acc = "";
+    parts.forEach((seg, i) => {
+      acc = acc ? `${acc}/${seg}` : seg;
+      const path = acc;
+      if (i > 0) {
+        const sep = document.createElement("span");
+        sep.className = "tercume-crumb-sep";
+        sep.textContent = "/";
+        sep.setAttribute("aria-hidden", "true");
+        nav.appendChild(sep);
+      }
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "tercume-crumb-btn";
+      btn.textContent = seg;
+      btn.title = path;
+      btn.addEventListener("click", () => {
+        workRoot = path;
+        const inp = $("tercume-work-root");
+        if (inp) inp.value = workRoot;
+        try {
+          localStorage.setItem(LS_WORK_ROOT, workRoot);
+        } catch {
+          /* ignore */
+        }
+        fileFilterQuery = "";
+        const filterInp = $("tercume-file-filter");
+        if (filterInp) filterInp.value = "";
+        void refreshTree();
+      });
+      nav.appendChild(btn);
+    });
+  }
+
+  function updateFileCountLabel(n, mode) {
+    const el = $("tercume-file-count");
+    if (!el) return;
+    if (mode === "search") {
+      el.textContent = n === 1 ? "1 sonuç" : `${n} sonuç`;
+      return;
+    }
+    if (n === 0) el.textContent = "Boş";
+    else if (n === 1) el.textContent = "1 öğe";
+    else el.textContent = `${n} öğe`;
+  }
+
+  function updateSidebarActiveFile() {
+    const el = $("tercume-sidebar-active");
+    if (!el) return;
+    if (openRel) {
+      const name = openRel.split("/").pop() || openRel;
+      el.textContent = name;
+      el.title = openRel;
+      el.hidden = false;
+      el.classList.add("has-file");
+    } else {
+      el.textContent = "Dosya seçilmedi";
+      el.title = "Listedan dosya seçin veya Dosya aç";
+      el.hidden = false;
+      el.classList.remove("has-file");
+    }
+  }
+
+  function triggerOpenFileDialog() {
+    $("tercume-import-file")?.click();
+  }
+
+  async function searchFilesUnderRoot(root, query, max = 180) {
+    const q = String(query || "").trim().toLowerCase();
+    if (!q || q.length < 2) return [];
+    const out = [];
+    async function walk(rel, depth) {
+      if (out.length >= max || depth > 10) return;
+      const items = deps.workspaceListDir ? await deps.workspaceListDir(rel) : [];
+      for (const it of items) {
+        if (out.length >= max) break;
+        if (it.isDir) await walk(it.rel, depth + 1);
+        else if (String(it.name || "").toLowerCase().includes(q)) out.push(it);
+      }
+    }
+    await walk(root, 0);
+    return out;
+  }
+
+  function renderSearchResults(items) {
+    const list = $("tercume-file-list");
+    if (!list) return;
+    list.innerHTML = "";
+    list.classList.add("tercume-file-tree--search");
+    if (!items.length) {
+      list.innerHTML = `<div class="code-file-placeholder">«${esc(fileFilterQuery)}» için sonuç yok.</div>`;
+      updateFileCountLabel(0, "search");
+      return;
+    }
+    for (const it of items) {
+      const row = createTercumeTreeBranch(it, 0);
+      const btn = row.querySelector(".code-tree-row.file");
+      if (btn) {
+        const sub = document.createElement("span");
+        sub.className = "tercume-search-path";
+        const parent = String(it.rel || "").replace(/\\/g, "/").split("/").slice(0, -1).join("/");
+        sub.textContent = parent.length > 52 ? `…${parent.slice(-48)}` : parent;
+        btn.appendChild(sub);
+      }
+      list.appendChild(row);
+    }
+    updateFileCountLabel(items.length, "search");
+  }
+
+  async function expandFolderByRel(rel) {
+    const list = $("tercume-file-list");
+    if (!list) return false;
+    const norm = String(rel || "").replace(/\\/g, "/");
+    for (const row of list.querySelectorAll(".code-tree-row.folder")) {
+      if (String(row.dataset.rel || "").replace(/\\/g, "/") !== norm) continue;
+      const branch = row.closest(".code-tree-branch");
+      const kids = branch?.querySelector(":scope > .code-tree-children");
+      if (!kids) return false;
+      const depth = Number.parseInt(row.dataset.depth || "0", 10);
+      if (kids.dataset.loaded !== "1") {
+        kids.innerHTML = `<div class="code-tree-loading">${esc("Yükleniyor…")}</div>`;
+        kids.hidden = false;
+        try {
+          const items = deps.workspaceListDir ? await deps.workspaceListDir(norm) : [];
+          kids.innerHTML = "";
+          for (const x of items) {
+            kids.appendChild(createTercumeTreeBranch(x, depth + 1));
+          }
+          kids.dataset.loaded = "1";
+        } catch {
+          kids.innerHTML = `<div class="code-tree-err">${esc("Liste okunamadı.")}</div>`;
+          return false;
+        }
+      }
+      kids.hidden = false;
+      row.classList.add("is-expanded");
+      const chev = row.querySelector(".code-tree-chev");
+      if (chev) chev.textContent = "▾";
+      return true;
+    }
+    return false;
+  }
+
+  async function expandTreeToRel(rel) {
+    const norm = String(rel || "").replace(/\\/g, "/");
+    const root = String(workRoot || "").replace(/\\/g, "/").replace(/\/$/, "");
+    if (!norm.startsWith(root)) return;
+    let sub = norm.slice(root.length).replace(/^\//, "");
+    const parts = sub.split("/").filter(Boolean);
+    if (parts.length <= 1) {
+      markTreeActive(norm);
+      return;
+    }
+    let acc = root;
+    for (let i = 0; i < parts.length - 1; i += 1) {
+      acc = `${acc}/${parts[i]}`.replace(/\/+/g, "/");
+      await expandFolderByRel(acc);
+    }
+    markTreeActive(norm);
+    const active = listActiveTreeRow(norm);
+    active?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
+
+  function listActiveTreeRow(rel) {
+    const list = $("tercume-file-list");
+    if (!list) return null;
+    const norm = String(rel || "").replace(/\\/g, "/");
+    for (const row of list.querySelectorAll(".code-tree-row.file")) {
+      if (String(row.dataset.rel || "").replace(/\\/g, "/") === norm) return row;
+    }
+    return null;
+  }
+
+  async function applyWorkRootFromInput() {
+    const v = String($("tercume-work-root")?.value || "").trim();
+    if (!v) {
+      flash("Çalışma klasörü boş olamaz.");
+      return;
+    }
+    workRoot = v.replace(/\\/g, "/").replace(/^\/+/, "").replace(/\/$/, "");
+    try {
+      localStorage.setItem(LS_WORK_ROOT, workRoot);
+    } catch {
+      /* ignore */
+    }
+    $("tercume-work-root").value = workRoot;
+    fileFilterQuery = "";
+    const filterInp = $("tercume-file-filter");
+    if (filterInp) filterInp.value = "";
+    renderPathCrumb();
+    await refreshTree();
+    flash(`Çalışma klasörü: ${workRoot}`);
+  }
+
+  function scheduleFileSearch() {
+    if (fileSearchTimer) clearTimeout(fileSearchTimer);
+    fileSearchTimer = setTimeout(() => void runFileSearch(), 280);
+  }
+
+  async function runFileSearch() {
+    const q = String($("tercume-file-filter")?.value || "").trim();
+    fileFilterQuery = q;
+    const token = ++fileSearchToken;
+    if (q.length < 2) {
+      await refreshTree();
+      return;
+    }
+    const list = $("tercume-file-list");
+    if (list) {
+      list.innerHTML = `<div class="code-tree-loading">${esc("Aranıyor…")}</div>`;
+    }
+    try {
+      const items = await searchFilesUnderRoot(workRoot, q);
+      if (token !== fileSearchToken) return;
+      renderSearchResults(items);
+    } catch (e) {
+      if (token !== fileSearchToken) return;
+      if (list) list.innerHTML = `<div class="code-file-placeholder">Arama hatası: ${esc(e.message || e)}</div>`;
+    }
+  }
+
+  function wireFilePanelDnD() {
+    const wrap = $("tercume-file-tree-wrap");
+    const drop = $("tercume-file-dropzone");
+    if (!wrap || wrap.dataset.dndWired === "1") return;
+    wrap.dataset.dndWired = "1";
+    let dragDepth = 0;
+    const showDrop = () => {
+      if (drop) drop.hidden = false;
+      wrap.classList.add("is-dragover");
+    };
+    const hideDrop = () => {
+      dragDepth = 0;
+      if (drop) drop.hidden = true;
+      wrap.classList.remove("is-dragover");
+    };
+    wrap.addEventListener("dragenter", (ev) => {
+      if (!ev.dataTransfer?.types?.includes("Files")) return;
+      ev.preventDefault();
+      dragDepth += 1;
+      showDrop();
+    });
+    wrap.addEventListener("dragover", (ev) => {
+      if (!ev.dataTransfer?.types?.includes("Files")) return;
+      ev.preventDefault();
+      ev.dataTransfer.dropEffect = "copy";
+    });
+    wrap.addEventListener("dragleave", () => {
+      dragDepth = Math.max(0, dragDepth - 1);
+      if (dragDepth === 0) hideDrop();
+    });
+    wrap.addEventListener("drop", (ev) => {
+      ev.preventDefault();
+      hideDrop();
+      const f = ev.dataTransfer?.files?.[0];
+      if (f) void importFile(f).catch((e) => flash(e.message || String(e)));
+    });
+    const src = getSourceEl();
+    if (src && src.dataset.tercumeDropWired !== "1") {
+      src.dataset.tercumeDropWired = "1";
+      src.addEventListener("dragover", (ev) => {
+        if (!ev.dataTransfer?.types?.includes("Files")) return;
+        ev.preventDefault();
+      });
+      src.addEventListener("drop", (ev) => {
+        ev.preventDefault();
+        const f = ev.dataTransfer?.files?.[0];
+        if (f) void importFile(f).catch((e) => flash(e.message || String(e)));
+      });
+    }
+  }
 
   let deps = {};
   let openRel = null;
+  let fullSourceDoc = "";
+  let fullTargetDoc = "";
+  let sourcePageMeta = [];
+  let sourceUnreadable = false;
+  let ocrBusy = false;
   let workRoot = "ilim-assistant/arsiv";
   let awaitingChatReply = false;
   let translateAbort = false;
@@ -38,6 +394,7 @@
   let lastSaveDir = "ilim-assistant/arsiv/tercume-output";
   let lastIntentUndo = null;
   let lastIntentRawText = "";
+  let lastBookSearchQuery = "";
 
   function api() {
     return deps.api || global.API || "";
@@ -58,44 +415,786 @@
   function getTargetEl() {
     return $("tercume-target-editor");
   }
-  function getSourceText() {
-    const el = getSourceEl();
-    return el ? String(el.innerText || "").trim() : "";
+  function stripPdfBanner(text) {
+    return String(text || "")
+      .replace(/^\[PDF:[^\]]+\]\s*\n+/i, "")
+      .trim();
   }
-  function setSourceText(t) {
-    const el = getSourceEl();
-    if (el) el.innerText = t || "";
+
+  function isPdfExtractGarbage(text) {
+    const sample = String(text || "").slice(0, 12000);
+    if (!sample) return false;
+    const cid = sample.match(/\/G\d{2,}/g);
+    if (cid && cid.length >= 6) return true;
+    const chunks = sample.match(/\/[A-Z]\d{2,}\//g);
+    if (chunks && chunks.length >= 8) return true;
+    const words = sample.replace(/\s+/g, " ").trim().split(/\s+/).filter(Boolean);
+    const readable = words.filter((w) => /^[\w\u0600-\u06FF\u0400-\u04FF.,;:!?'"()-]+$/u.test(w)).length;
+    if (words.length > 40 && readable / words.length < 0.35) return true;
+    return false;
+  }
+
+  function splitDocSegments(text) {
+    const t = stripPdfBanner(text);
+    if (!t) return [];
+    return t.split(/\n\n+/).map((s) => s.trim()).filter(Boolean);
+  }
+
+  function showReadQualityWarn(msg) {
+    const wrap = $("tercume-read-quality-warn");
+    const txt = $("tercume-read-quality-warn-text");
+    if (!wrap || !txt) return;
+    if (!msg) {
+      wrap.hidden = true;
+      return;
+    }
+    txt.textContent = msg;
+    if (getTercumeUiMode() === "reader") {
+      wrap.hidden = true;
+      flash(String(msg).slice(0, 140));
+      return;
+    }
+    wrap.hidden = false;
+  }
+
+  function updatePanelHeadMeta(idx, total, pageLabel) {
+    const srcMeta = $("tercume-source-head-meta");
+    const tgtMeta = $("tercume-target-head-meta");
+    if (!srcMeta || !tgtMeta) return;
+    if (idx == null || total <= 1) {
+      srcMeta.textContent = "";
+      tgtMeta.textContent = "";
+      return;
+    }
+    const page = pageLabel || `segment ${idx + 1}`;
+    const label = `Sayfa/parça ${idx + 1} / ${total}${page ? ` · ${page}` : ""}`;
+    srcMeta.textContent = label;
+    tgtMeta.textContent = "↔ eşleşen hedef";
+  }
+
+  function shouldUseSegmentFocusView() {
+    if (reviewMode) return false;
+    const aligned = lastAlignedPayload?.segments;
+    if (aligned?.length > 1) return true;
+    return splitDocSegments(fullSourceDoc).length > 1;
+  }
+
+  function refreshSegmentPanelView() {
+    const srcEl = getSourceEl();
+    const tgtEl = getTargetEl();
+    if (!srcEl || !tgtEl) return;
+    const segs = splitDocSegments(fullSourceDoc);
+    const tgts = splitDocSegments(fullTargetDoc);
+    const aligned = lastAlignedPayload?.segments;
+    const total = aligned?.length || segs.length || 1;
+    if (shouldUseSegmentFocusView()) {
+      const idx = Math.max(0, Math.min(total - 1, currentSegmentIndex));
+      currentSegmentIndex = idx;
+      let src = "";
+      let tgt = "";
+      let pageLabel = "";
+      if (aligned?.[idx]) {
+        src = String(aligned[idx].source || "");
+        tgt = String(aligned[idx].target || "");
+        pageLabel = aligned[idx].page ? `sayfa ${aligned[idx].page}` : "";
+      } else {
+        src = segs[idx] || "";
+        tgt = tgts[idx] || "";
+        const pm = sourcePageMeta[idx];
+        pageLabel = pm?.label || (pm?.index != null ? `sayfa ${Number(pm.index) + 1}` : "");
+      }
+      srcEl.innerText = src;
+      tgtEl.innerText = tgt;
+      updatePanelHeadMeta(idx, total, pageLabel);
+    } else {
+      srcEl.innerText = fullSourceDoc;
+      tgtEl.innerText = fullTargetDoc;
+      updatePanelHeadMeta(null);
+    }
     updateStats();
     applyEditorDirection();
     updateSegmentStrip();
-    scheduleTmHighlight();
+    syncSegmentEditors();
     updateStatusBar();
+    syncBookReaderView();
+  }
+
+  function setTercumeUiMode(mode) {
+    const m = mode === "classic" ? "classic" : "reader";
+    document.body.dataset.tercumeUi = m;
+    try {
+      localStorage.setItem(LS_TERCUME_UI, m);
+    } catch {
+      /* ignore */
+    }
+    applyReaderWorkbenchGrid();
+    if (global.RuzgarSplit?.applyWorkbenchGridFromState) {
+      global.RuzgarSplit.applyWorkbenchGridFromState();
+    }
+    applyReaderWorkbenchGrid();
+    syncBookReaderView();
+  }
+
+  function applyReaderWorkbenchGrid() {
+    const wb = $("tercume-workbench");
+    if (!wb || getTercumeUiMode() !== "reader") return;
+    wb.style.setProperty("grid-template-columns", "minmax(0, 1fr)", "important");
+    const main = wb.querySelector(".tercume-main");
+    if (main) {
+      main.style.setProperty("grid-column", "1 / -1", "important");
+      main.style.width = "100%";
+    }
+    wb.querySelectorAll(".tercume-sidebar, .tercume-file-panel").forEach((el) => {
+      el.style.setProperty("display", "none", "important");
+    });
+  }
+
+  function getTercumeUiMode() {
+    try {
+      const s = localStorage.getItem(LS_TERCUME_UI);
+      if (s === "classic") return "classic";
+    } catch {
+      /* ignore */
+    }
+    return "reader";
+  }
+
+  function toggleDuzenDock(name) {
+    const n = String(name || "").trim();
+    if (activeDuzenDock === n) {
+      activeDuzenDock = "";
+      delete document.body.dataset.tercumeDock;
+    } else {
+      activeDuzenDock = n;
+      if (n) document.body.dataset.tercumeDock = n;
+      else delete document.body.dataset.tercumeDock;
+    }
+    const backdrop = $("tercume-duzen-backdrop");
+    if (backdrop) backdrop.hidden = !activeDuzenDock;
+    document.querySelectorAll(".tercume-duzen-btn").forEach((b) => {
+      b.classList.toggle("is-active", b.dataset.tercumeDock === activeDuzenDock);
+    });
+    if (activeDuzenDock === "review") {
+      setWorkbenchReviewMode(true);
+      const fold = $("tercume-aligned-fold");
+      if (fold) {
+        fold.hidden = false;
+        fold.open = true;
+      }
+    } else if (getTercumeUiMode() === "reader") {
+      setWorkbenchReviewMode(false);
+    }
+    if (activeDuzenDock === "ara") {
+      const ara = $("tercume-ara-panel");
+      if (ara) ara.hidden = false;
+    }
+  }
+
+  function closeDuzenDock() {
+    if (!activeDuzenDock) return;
+    toggleDuzenDock(activeDuzenDock);
+  }
+
+  function syncBookReaderView() {
+    if (document.body.dataset.tercumeUi !== "reader") return;
+    const empty = $("tercume-book-empty");
+    const spread = $("tercume-book-spread");
+    const title = $("tercume-reader-title");
+    const pageLab = $("tercume-reader-page-label");
+    const bookSrc = $("tercume-book-source");
+    const bookTgt = $("tercume-book-target");
+    const bookImg = $("tercume-book-page-img");
+    const bookText = $("tercume-book-page-text");
+    const bookLoad = $("tercume-book-page-loading");
+    const pageInput = $("tercume-book-page-input");
+    const pageTotal = $("tercume-book-page-total");
+    const hasFile = !!openRel || !!String(fullSourceDoc || "").trim();
+    if (empty) empty.hidden = hasFile;
+    if (spread) spread.hidden = !hasFile;
+    if (title) {
+      title.textContent = openRel ? openRel.split("/").pop() || "Kitap" : "Kitap";
+      title.title = openRel || "";
+    }
+    const isPdf = !!(openRel && String(openRel).toLowerCase().endsWith(".pdf"));
+    const total = Number(pdfMeta?.pages_total) || 0;
+    const page = pdfPreviewPage || 1;
+    if (pageLab) {
+      const jobHint =
+        batchPollTimer || activeBatchJobId ? jobStatusLabel : "";
+      pageLab.textContent =
+        jobHint && jobHint !== "—"
+          ? jobHint
+          : isPdf && total
+            ? `Sayfa ${page} / ${total}`
+            : hasFile
+              ? "Metin belgesi"
+              : "—";
+    }
+    if (pageInput) {
+      pageInput.value = isPdf ? String(page) : "";
+      pageInput.disabled = !isPdf;
+    }
+    if (pageTotal) pageTotal.textContent = isPdf && total ? `/ ${total}` : "/ ?";
+
+    const srcEl = getSourceEl();
+    const tgtEl = getTargetEl();
+    const srcTxt = srcEl ? String(srcEl.innerText || "").trim() : String(fullSourceDoc || "").trim();
+    const tgtTxt = tgtEl ? String(tgtEl.innerText || "").trim() : String(fullTargetDoc || "").trim();
+    if (bookSrc) bookSrc.textContent = srcTxt || "—";
+    if (bookTgt) {
+      bookTgt.textContent = tgtTxt;
+      bookTgt.classList.toggle("is-empty", !tgtTxt);
+    }
+
+    const prevImg = $("tercume-pdf-preview-img");
+    const prevFallback = $("tercume-pdf-preview-fallback");
+    if (isPdf && prevImg && !prevImg.hidden && prevImg.src) {
+      if (bookImg) {
+        bookImg.src = prevImg.src;
+        bookImg.alt = prevImg.alt || `Sayfa ${page}`;
+        bookImg.hidden = false;
+      }
+      if (bookText) bookText.hidden = true;
+      if (bookLoad) bookLoad.hidden = true;
+    } else if (isPdf && prevFallback && !prevFallback.hidden) {
+      if (bookImg) bookImg.hidden = true;
+      if (bookText) bookText.hidden = true;
+      if (bookLoad) {
+        bookLoad.hidden = false;
+        bookLoad.textContent = prevFallback.textContent || "Sayfa yükleniyor…";
+      }
+    } else if (hasFile && !isPdf) {
+      if (bookImg) bookImg.hidden = true;
+      if (bookLoad) bookLoad.hidden = true;
+      if (bookText) {
+        bookText.hidden = false;
+        bookText.textContent = srcTxt.slice(0, 12000) || "—";
+      }
+    } else if (isPdf) {
+      if (bookImg) bookImg.hidden = true;
+      if (bookText) bookText.hidden = true;
+      if (bookLoad) {
+        bookLoad.hidden = false;
+        bookLoad.textContent = "Sayfa yükleniyor…";
+      }
+    }
+    applyReaderWorkbenchGrid();
+  }
+
+  async function goToBookPage(pageNum) {
+    const page = Math.max(1, Number(pageNum) || 1);
+    const fromEl = $("tercume-page-from");
+    const toEl = $("tercume-page-to");
+    if (fromEl) fromEl.value = String(page);
+    if (toEl) toEl.value = String(page);
+    if (openRel && String(openRel).toLowerCase().endsWith(".pdf")) {
+      await loadPdfPagesIntoSource(openRel, { capWideRange: false });
+      currentSegmentIndex = 0;
+      refreshSegmentPanelView();
+      await loadPdfPreviewPage(page);
+      syncBookReaderView();
+      return page;
+    }
+    focusSegment(Math.max(0, page - 1), { syncPdf: false });
+    syncBookReaderView();
+    return page;
+  }
+
+  function extractFileHintFromText(text) {
+    const raw = String(text || "").trim();
+    const fileMatch = raw.match(/[\w\u0080-\uFFFF.-]+\.(pdf|epub|docx|txt|md|html|rtf)\b/i);
+    if (fileMatch) return fileMatch[0];
+    let t = raw
+      .replace(/\b(lütfen|lutfen|abi|hocam|ruzgar|bana|benim|için|icin|şu|su|bu|the|please)\b/gi, " ")
+      .replace(/\b(aç|ac|açar|misın|mısın|göster|goster|yükle|yukle|open|load|kitap|dosya|pdf|file|getir)\b/gi, " ")
+      .replace(/['"]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    return t.length >= 2 ? t : "";
+  }
+
+  function normalizeBookKey(s) {
+    return String(s || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/\p{M}/gu, "")
+      .replace(/ı/g, "i")
+      .replace(/[\s._\-–—]+/g, " ")
+      .replace(/[^a-z0-9\s]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function bookSearchTokens(hint) {
+    const stop = new Set([
+      "var",
+      "yok",
+      "evet",
+      "hayir",
+      "tamam",
+      "iste",
+      "the",
+      "and",
+      "pdf",
+      "dosya",
+      "kitap",
+      "ornek",
+      "sample",
+    ]);
+    const parts = normalizeBookKey(hint).split(" ").filter((w) => w.length >= 3 && !stop.has(w));
+    return parts.length ? parts : normalizeBookKey(hint).split(" ").filter((w) => w.length >= 2 && !stop.has(w));
+  }
+
+  function fileNameMatchesTokens(name, tokens) {
+    const hay = normalizeBookKey(name);
+    if (!tokens.length) return 0;
+    let score = 0;
+    for (const t of tokens) {
+      if (hay.includes(t)) {
+        score += 2;
+        continue;
+      }
+      const stem = t.length >= 5 ? t.slice(0, 5) : t;
+      if (hay.split(" ").some((w) => w.startsWith(stem) || stem.startsWith(w.slice(0, Math.min(w.length, stem.length))))) {
+        score += 1;
+      }
+    }
+    return score;
+  }
+
+  async function searchFilesUnderRootFuzzy(root, hint, max = 32) {
+    const tokens = bookSearchTokens(hint);
+    if (!tokens.length) return [];
+    const minScore = tokens.length >= 2 ? 2 : 1;
+    const out = [];
+    async function walk(rel, depth) {
+      if (out.length >= max * 3 || depth > 12) return;
+      const items = deps.workspaceListDir ? await deps.workspaceListDir(rel) : [];
+      for (const it of items) {
+        if (out.length >= max * 3) break;
+        if (it.isDir) await walk(it.rel, depth + 1);
+        else {
+          const score = fileNameMatchesTokens(String(it.name || it.rel || ""), tokens);
+          if (score >= minScore) out.push({ ...it, _score: score });
+        }
+      }
+    }
+    await walk(root, 0);
+    out.sort((a, b) => (b._score || 0) - (a._score || 0));
+    return out.slice(0, max);
+  }
+
+  async function resolveFileByHint(hint) {
+    const h = String(hint || "").trim();
+    if (!h || h.length < 2) return "";
+
+    let recent = [];
+    try {
+      recent = JSON.parse(localStorage.getItem(LS_RECENT_FILES) || "[]");
+      if (!Array.isArray(recent)) recent = [];
+    } catch {
+      recent = [];
+    }
+    const tokens = bookSearchTokens(h);
+    for (const rel of recent) {
+      const leaf = String(rel.split("/").pop() || "");
+      if (fileNameMatchesTokens(leaf, tokens) >= (tokens.length >= 2 ? 2 : 1)) return rel;
+    }
+
+    try {
+      const res = await fetch(`${api()}/api/tercume/local-find?q=${encodeURIComponent(h)}&limit=8`);
+      const j = await res.json().catch(() => ({}));
+      if (res.ok && j.ok) {
+        if (j.best?.rel) return String(j.best.rel);
+        const items = Array.isArray(j.items) ? j.items : [];
+        if (items[0]?.rel) return String(items[0].rel);
+      }
+    } catch {
+      /* sunucu fuzzy yoksa istemci yedek */
+    }
+
+    try {
+      const files = await searchFilesUnderRootFuzzy(workRoot, h, 12);
+      if (files.length) return String(files[0].rel);
+    } catch {
+      /* ignore */
+    }
+    return "";
+  }
+
+  function extractBookQueryFromText(text) {
+    const raw = String(text || "").trim();
+    const fileMatch = raw.match(/[\w\u0080-\uFFFF.-]+\.(pdf|epub|docx|txt|md)\b/i);
+    if (fileMatch) return fileMatch[0].replace(/\.[^.]+$/i, "");
+    let t = raw
+      .replace(/\?/g, " ")
+      .replace(/\b(lütfen|lutfen|abi|hocam|ruzgar|bana|benim|için|icin|şu|su|bu|the|please)\b/gi, " ")
+      .replace(
+        /\b(aç|ac|açar|göster|goster|yükle|yukle|open|load|getir|çevir|cevir|translate|kaydet|indir|ara)\b/gi,
+        " ",
+      )
+      .replace(/\b(arşivde|arsivde|arşiv|arsiv|var mı|var mi|mevcut mu|buluyor musun)\b/gi, " ")
+      .replace(/\b(var|yok|evet|hayır|hayir|tamam|işte|iste|zaten|orada|mevcut)\b/gi, " ")
+      .replace(/['"]/g, " ")
+      .replace(/\s*[-–—]\s*/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    return t.length >= 2 ? t : "";
+  }
+
+  function rememberBookSearchQuery(q) {
+    const s = String(q || "").trim();
+    if (s.length >= 3) lastBookSearchQuery = s;
+  }
+
+  function pickBookQueryFromContext(raw, low) {
+    const fromMsg = extractBookQueryFromText(raw);
+    if (fromMsg.length >= 3) return fromMsg;
+    if (lastBookSearchQuery.length >= 3) return lastBookSearchQuery;
+    if (lastIntentRawText) {
+      const prev = extractBookQueryFromText(lastIntentRawText);
+      if (prev.length >= 3) return prev;
+    }
+    return "";
+  }
+
+  function isArchiveAffirmation(low, raw) {
+    const t = String(raw || "").trim();
+    if (t.length > 80) return false;
+    if (/^(evet|tamam|aç|ac|aç artık|aç hadi|getir|göster|goster|orada|mevcut)\b/i.test(t)) return true;
+    return /\b(arşivde|arsivde)\s+var\b/i.test(low) || /\bvar\s+(işte|zaten|orada)\b/i.test(low);
+  }
+
+  async function buildTercumeLocalReply(raw, low) {
+    if (/^(selam|sa|slm|merhaba|hey|günaydın|gunaydin|iyi akşamlar|iyi aksamlar|naber|nasılsın|nasilsin)\b/i.test(low)) {
+      return {
+        reply: buildIntentReply(
+          "Aleyküm selam Ümit abi. Bir kitap açalım mı? «Sahih Bukhari aç» yazmanız yeterli — sayfalar ortada kitap gibi açılır.",
+          ["sohbet karşılama"],
+          0.97,
+        ),
+      };
+    }
+    if (/\b(yardım|help|nasıl kullan|nasil kullan|ne yapabilir)\b/i.test(low)) {
+      return {
+        reply: buildIntentReply(
+          "Dosya adı yazın («Sahih Bukhari»), sayfa gezin, «bu sayfayı çevir» deyin. Arka plan işi için «durdur» yeter. Gelişmiş paneller: üst menü → düzen.",
+          ["yardım"],
+          0.95,
+        ),
+      };
+    }
+
+    const wantsArchiveCheck = /\b(arşivde|arsivde|arşiv|arsiv|var mı|var mi|mevcut mu|buluyor musun)\b/i.test(low);
+    const wantsOpenImplicit = /\b(aç|ac|göster|goster|getir|yükle|yukle|open)\b/i.test(low);
+
+    if (isArchiveAffirmation(low, raw)) {
+      const query = pickBookQueryFromContext(raw, low);
+      if (query) {
+        rememberBookSearchQuery(query);
+        const rel = await resolveFileByHint(query);
+        if (rel) {
+          setTercumeTab("calisma");
+          await openFile(rel);
+          const leaf = rel.split("/").pop() || rel;
+          return {
+            reply: buildIntentReply(
+              `Haklısınız — «${leaf}» arşivdeydi, şimdi açtım.`,
+              ["önceki arama hatırlandi", "dosya açıldı"],
+              0.95,
+            ),
+          };
+        }
+      }
+      return {
+        reply: buildIntentReply(
+          "Hangi eseri kastettiniz? Tam adını yazın — örneğin «Sahih Bukhari aç».",
+          ["bağlam eksik"],
+          0.82,
+        ),
+      };
+    }
+
+    const query = pickBookQueryFromContext(raw, low);
+    if (query.length >= 3) {
+      rememberBookSearchQuery(query);
+      const rel = await resolveFileByHint(query);
+      if (rel) {
+        const leaf = rel.split("/").pop() || rel;
+        if (wantsArchiveCheck && !wantsOpenImplicit) {
+          return {
+            reply: buildIntentReply(
+              `Evet, arşivde var: «${leaf}». Açmamı isterseniz «aç» deyin — hemen önünüze getiririm.`,
+              ["arşiv taraması", "dosya bulundu"],
+              0.94,
+            ),
+          };
+        }
+        setTercumeTab("calisma");
+        await openFile(rel);
+        return {
+          reply: buildIntentReply(
+            `Tamam, «${leaf}» açıldı. Sayfa numarasıyla gezebilir veya «bu sayfayı çevir» diyebilirsiniz.`,
+            ["dosya bulundu", "kitap açıldı"],
+            0.95,
+          ),
+        };
+      }
+      if (wantsArchiveCheck || query.length >= 4) {
+        return {
+          reply: buildIntentReply(
+            `«${query}» için arşivde eşleşme bulamadım. Dosya farklı adla kayıtlı olabilir — «Dosyalar» panelinden bakın veya tam dosya adını yazın.`,
+            ["arşiv taraması", "sonuç yok"],
+            0.86,
+          ),
+        };
+      }
+    }
+
+    if (raw.length <= 160) {
+      return {
+        reply: buildIntentReply(
+          "Anladım. Bir eser adı yazarsanız arşivden açarım — örneğin «Sahih Bukhari» veya «Sahih Bukhari aç». Sayfa çevirisi için «bu sayfayı çevir» yeter.",
+          ["yerel yanıt", "LLM gerekmedi"],
+          0.72,
+        ),
+      };
+    }
+    return null;
+  }
+
+  function commitVisiblePanelsToFullDoc() {
+    const srcEl = getSourceEl();
+    const tgtEl = getTargetEl();
+    if (!srcEl || !tgtEl) return;
+    if (!shouldUseSegmentFocusView()) {
+      fullSourceDoc = stripPdfBanner(String(srcEl.innerText || ""));
+      fullTargetDoc = String(tgtEl.innerText || "");
+      return;
+    }
+    const segs = splitDocSegments(fullSourceDoc);
+    const tgts = splitDocSegments(fullTargetDoc);
+    const idx = currentSegmentIndex;
+    const src = String(srcEl.innerText || "").trim();
+    const tgt = String(tgtEl.innerText || "").trim();
+    if (idx < segs.length) segs[idx] = src;
+    else if (src) segs.push(src);
+    if (idx < tgts.length) tgts[idx] = tgt;
+    else if (tgt) tgts.push(tgt);
+    fullSourceDoc = segs.join("\n\n");
+    fullTargetDoc = tgts.join("\n\n");
+  }
+
+  function getSourceText() {
+    if (fullSourceDoc) return fullSourceDoc;
+    const el = getSourceEl();
+    return el ? stripPdfBanner(String(el.innerText || "").trim()) : "";
+  }
+  function setSourceText(t) {
+    fullSourceDoc = stripPdfBanner(t || "");
+    refreshSegmentPanelView();
+    scheduleTmHighlight();
   }
   function getTargetText() {
+    if (fullTargetDoc || fullSourceDoc) return fullTargetDoc;
     const el = getTargetEl();
     return el ? String(el.innerText || "").trim() : "";
   }
   function setTargetText(t) {
-    const el = getTargetEl();
-    if (el) el.innerText = t || "";
-    updateSegmentStrip();
-    updateStatusBar();
+    fullTargetDoc = t || "";
+    refreshSegmentPanelView();
+  }
+
+  function getSourceSegments() {
+    return splitDocSegments(getSourceText());
+  }
+
+  function getTargetSegments() {
+    return splitDocSegments(getTargetText());
   }
 
   function escRegex(s) {
     return String(s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
-  function getSourceSegments() {
-    const t = getSourceText();
-    if (!t) return [];
-    return t.split(/\n\n+/).map((s) => s.trim()).filter(Boolean);
+  function setSourceReadability(readable, message) {
+    sourceUnreadable = !readable;
+    const row = $("tercume-panels-row");
+    const simple = $("tercume-simple-state");
+    const txt = $("tercume-simple-state-text");
+    if (row) row.classList.toggle("tercume-panels-row--blocked", sourceUnreadable);
+    if (simple) simple.hidden = !sourceUnreadable;
+    if (txt) {
+      txt.textContent =
+        message ||
+        "Bu PDF'den okunabilir metin çıkmadı. Önce OCR ile okuyun; sonra üstteki «Çevir» düğmesine basın.";
+    }
+    if (sourceUnreadable) {
+      fullSourceDoc = "";
+      fullTargetDoc = "";
+      lastAlignedPayload = null;
+      currentSegmentIndex = 0;
+      setWorkbenchReviewMode(false);
+      const fold = $("tercume-aligned-fold");
+      if (fold) {
+        fold.hidden = true;
+        fold.open = false;
+      }
+      showReadQualityWarn("");
+      const strip = $("tercume-segment-strip");
+      if (strip) strip.hidden = true;
+      const segEdit = $("tercume-segment-edit");
+      if (segEdit) segEdit.hidden = true;
+    }
+    refreshSegmentPanelView();
   }
 
-  function getTargetSegments() {
-    const t = getTargetText();
-    if (!t) return [];
-    return t.split(/\n\n+/).map((s) => s.trim()).filter(Boolean);
+  function applySourcePagesPayload(j) {
+    const pages = Array.isArray(j.pages) ? j.pages : [];
+    sourcePageMeta = pages.map((p) => ({
+      index: p.index,
+      label: p.label || (p.index != null ? `Sayfa ${Number(p.index) + 1}` : ""),
+      quality: p.quality,
+      quality_hint: p.quality_hint,
+    }));
+    if (j.pages_total != null || j.meta?.pages_total != null) {
+      pdfMeta = pdfMeta || {};
+      pdfMeta.pages_total = j.pages_total ?? j.meta?.pages_total;
+      pdfMeta.pages_read = pages.length;
+      pdfMeta.truncated = false;
+    }
+    const texts = pages.map((p) => String(p.text || "").trim());
+    const firstText = texts.find(Boolean) || "";
+    lastAlignedPayload = null;
+    currentSegmentIndex = 0;
+
+    if (isPdfExtractGarbage(firstText)) {
+      setSourceReadability(
+        false,
+        "Bu PDF taranmış veya bozuk metin katmanlı — kaynak kutusunda anlamsız kodlar görünmez. «OCR ile oku» deyin; metin gelince «Çevir».",
+      );
+      updatePdfHint();
+      return;
+    }
+
+    setSourceReadability(true);
+    fullSourceDoc = texts.filter(Boolean).join("\n\n");
+    showReadQualityWarn("");
+
+    refreshSegmentPanelView();
+    updatePdfHint();
+  }
+
+  async function loadPdfPagesIntoSource(rel, opts = {}) {
+    const range = pageRangeParams();
+    let pf = range.label_from ?? 1;
+    let pt = range.label_to ?? pf;
+    if (opts.capWideRange && pt - pf > 8) {
+      pt = pf;
+      flash(`PDF: önce yalnızca sayfa ${pf} yüklendi. Tek sayfa çeviri için üst şeritte «1» – «1» girin.`);
+    }
+    const apiFrom = range.page_from != null ? range.page_from : pf - 1;
+    const apiTo = range.page_to != null ? range.page_to : pt - 1;
+    const qs = new URLSearchParams({ rel });
+    qs.set("page_from", String(apiFrom));
+    qs.set("page_to", String(apiTo));
+    const res = await fetch(`${api()}/api/tercume/source-pages?${qs.toString()}`);
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) throw new Error(typeof j.detail === "string" ? j.detail : "Sayfalar alınamadı");
+    const pages = Array.isArray(j.pages) ? j.pages : [];
+    if (!pages.length || !pages.some((p) => String(p.text || "").trim())) {
+      throw new Error("Seçilen aralıkta metin yok (taranmış sayfa — OCR deneyin).");
+    }
+    applySourcePagesPayload(j);
+    flash(`${pages.length} sayfa kaynak olarak yüklendi (${pf}–${pt}). Segment ${currentSegmentIndex + 1} panelde.`);
+    if (pf != null) void loadPdfPreviewPage(pf);
+    return j;
+  }
+
+  function setOcrBusy(on, label) {
+    ocrBusy = !!on;
+    const btns = [
+      $("btn-tercume-simple-ocr"),
+      $("btn-tercume-read-quality-ocr"),
+      $("btn-tercume-ocr"),
+    ];
+    for (const b of btns) {
+      if (!b) continue;
+      b.disabled = ocrBusy;
+      if (ocrBusy && b.id === "btn-tercume-simple-ocr") {
+        b.dataset.prevLabel = b.textContent || "OCR ile oku";
+        b.textContent = label || "OCR çalışıyor…";
+      } else if (!ocrBusy && b.dataset.prevLabel) {
+        b.textContent = b.dataset.prevLabel;
+        delete b.dataset.prevLabel;
+      }
+    }
+  }
+
+  async function ocrPdfPageText(rel, pageNum) {
+    const qs = new URLSearchParams({
+      rel,
+      page: String(pageNum),
+      src_lang: String($("tercume-src-lang")?.value || "auto"),
+      ocr_preset: ocrLangFromUi(),
+    });
+    const res = await fetch(`${api()}/api/tercume/pdf-page-ocr?${qs.toString()}`);
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) {
+      const d = j.detail;
+      throw new Error(typeof d === "string" ? d : j.error || `HTTP ${res.status}`);
+    }
+    return j;
+  }
+
+  async function runSimpleOcr() {
+    if (!openRel) {
+      flash("Önce dosya açın.");
+      return;
+    }
+    if (ocrBusy) return;
+    const low = String(openRel).toLowerCase();
+    try {
+      setOcrBusy(true, "OCR çalışıyor…");
+      flash("OCR çalışıyor — sayfa taranıyor, lütfen bekleyin…");
+      let text = "";
+      if (low.endsWith(".pdf")) {
+        const page = pageRangeParams().label_from ?? pdfPreviewPage ?? 1;
+        const j = await ocrPdfPageText(openRel, page);
+        text = String(j.text || "").trim();
+        if (!text || text === "[OCR boş sonuç verdi]") {
+          throw new Error("OCR boş sonuç verdi — sayfa görseli okunaksız olabilir.");
+        }
+      } else {
+        text = stripPdfBanner(await readFileForTercume(openRel, { forceOcr: true }));
+      }
+      if (isPdfExtractGarbage(text)) {
+        setSourceReadability(
+          false,
+          "OCR sonrası da metin zayıf. Başka sayfa veya daha net PDF deneyin.",
+        );
+        flash("OCR metni hâlâ okunaksız görünüyor.");
+        return;
+      }
+      setSourceReadability(true);
+      fullSourceDoc = text;
+      fullTargetDoc = "";
+      lastAlignedPayload = null;
+      currentSegmentIndex = 0;
+      refreshSegmentPanelView();
+      flash("Metin hazır — üstte «Çevir» düğmesine basın.");
+    } catch (e) {
+      const msg = e.message || String(e);
+      flash(msg);
+      if (/tesseract|pytesseract|503/i.test(msg)) {
+        setSourceReadability(
+          false,
+          "Tesseract kurulu değil veya Arapça dil paketi eksik. Ruzgar_OCR_Kur.bat çalıştırın, sonra tekrar «OCR ile oku».",
+        );
+      }
+    } finally {
+      setOcrBusy(false);
+    }
   }
 
   function translateModeLabel() {
@@ -119,10 +1218,19 @@
       btn.classList.toggle("is-active", reviewMode ? isRev : !isRev);
       btn.setAttribute("aria-selected", reviewMode ? (isRev ? "true" : "false") : isRev ? "false" : "true");
     });
+    if (!reviewMode) {
+      const fold = $("tercume-aligned-fold");
+      if (fold) {
+        fold.hidden = true;
+        fold.open = false;
+      }
+    }
+    refreshSegmentPanelView();
     updateStatusBar();
   }
 
   function maybeEnterReviewMode(score) {
+    if (sourceUnreadable) return;
     if (score == null || !Number.isFinite(Number(score))) return;
     lastQualityScore = Number(score);
     if (Number(score) >= QUALITY_PASS) return;
@@ -312,22 +1420,8 @@
       flash("Başlangıç sayfası girin (üst şerit, örn. 1).");
       return;
     }
-    const qs = new URLSearchParams({ rel: openRel });
-    qs.set("page_from", String(range.page_from));
-    if (range.page_to != null) qs.set("page_to", String(range.page_to));
     flash(`PDF sayfaları yükleniyor: ${range.label_from}–${range.label_to || range.label_from}…`);
-    const res = await fetch(`${api()}/api/tercume/source-pages?${qs.toString()}`);
-    const j = await res.json().catch(() => ({}));
-    if (!res.ok || !j.ok) throw new Error(typeof j.detail === "string" ? j.detail : "Sayfalar alınamadı");
-    const pages = Array.isArray(j.pages) ? j.pages : [];
-    const text = pages.map((p) => String(p.text || "").trim()).filter(Boolean).join("\n\n");
-    if (!text) throw new Error("Seçilen aralıkta metin yok (taranmış sayfa olabilir — OCR deneyin).");
-    setSourceText(text);
-    flash(`${pages.length} sayfa kaynak panele yüklendi.`);
-    updatePdfHint();
-    currentSegmentIndex = 0;
-    updateSegmentStrip();
-    if (range.label_from != null) void loadPdfPreviewPage(range.label_from);
+    await loadPdfPagesIntoSource(openRel, { capWideRange: false });
   }
 
   function segmentCount() {
@@ -342,19 +1436,14 @@
   }
 
   function replaceSourceSegment(outputIndex, newText) {
-    const parts = getSourceText().split(/\n\n+/);
+    const parts = splitDocSegments(fullSourceDoc || getSourceText());
     const idx = Number(outputIndex);
     if (!Number.isFinite(idx) || idx < 0) return false;
     if (idx < parts.length) {
       parts[idx] = newText;
-      const el = getSourceEl();
-      if (el) {
-        el.innerText = parts.join("\n\n");
-        updateStats();
-        applyEditorDirection();
-        scheduleTmHighlight();
-        updateStatusBar();
-      }
+      fullSourceDoc = parts.join("\n\n");
+      refreshSegmentPanelView();
+      scheduleTmHighlight();
       return true;
     }
     return false;
@@ -435,7 +1524,8 @@
     const panel = $("tercume-pdf-preview");
     const row = $("tercume-panels-row");
     const isPdf = openRel && String(openRel).toLowerCase().endsWith(".pdf");
-    const on = !!show && isPdf;
+    const reader = getTercumeUiMode() === "reader";
+    const on = !!show && isPdf && !reader;
     if (panel) panel.hidden = !on;
     if (row) row.classList.toggle("tercume-panels-row--has-pdf", on);
   }
@@ -496,6 +1586,7 @@
       if (label) label.textContent = `Sayfa ${j.page || page} / ${j.pages_total || pdfMeta?.pages_total || "?"}`;
       updatePdfHint();
       updateStatusBar();
+      syncBookReaderView();
     } catch (e) {
       if (fallback) {
         fallback.hidden = false;
@@ -533,12 +1624,14 @@
     strip.hidden = false;
     const pageHint =
       lastAlignedPayload?.segments?.[currentSegmentIndex]?.page ||
+      sourcePageMeta[currentSegmentIndex]?.label ||
       (n > 1 ? `${currentSegmentIndex + 1}/${n}` : "");
-    label.textContent = `Segment ${currentSegmentIndex + 1} / ${total}${pageHint ? ` · sayfa ${pageHint}` : ""}`;
+    label.textContent = `Segment ${currentSegmentIndex + 1} / ${total}${pageHint ? ` · ${pageHint}` : ""}`;
     updateSegmentEditVisibility();
   }
 
   function focusSegment(index, opts = {}) {
+    commitVisiblePanelsToFullDoc();
     const segs = getSourceSegments();
     const aligned = lastAlignedPayload?.segments;
     const total = aligned?.length || segs.length || 1;
@@ -556,11 +1649,15 @@
     }
     const row = document.querySelector(`#tercume-aligned-tbody tr.focused-row`);
     row?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    syncSegmentEditors();
+    refreshSegmentPanelView();
     if (opts.syncPdf !== false) syncPdfPreviewFromSegment();
   }
 
   async function translateCurrentSegment() {
+    if (sourceUnreadable) {
+      flash("Önce «OCR ile oku» — okunabilir metin olmadan çeviri yapılamaz.");
+      return;
+    }
     const segs = getSourceSegments();
     const aligned = lastAlignedPayload?.segments;
     let source = "";
@@ -590,18 +1687,14 @@
     const out = String(hit.text || "").trim();
     if (aligned?.[currentSegmentIndex]) {
       aligned[currentSegmentIndex].target = out;
-      applyAlignedSegmentToTarget(aligned[currentSegmentIndex], out);
-    } else if (getTargetSegments().length > currentSegmentIndex) {
-      replaceTargetSegment(currentSegmentIndex, out);
-    } else {
-      const tgt = getTargetText();
-      setTargetText(tgt ? `${tgt}\n\n${out}` : out);
     }
+    replaceTargetSegment(currentSegmentIndex, out);
     const tgtTa = $("tercume-segment-tgt");
     if (tgtTa) tgtTa.value = out;
+    refreshSegmentPanelView();
     updateQualityStrip(hit.quality, `Segment ${currentSegmentIndex + 1}`);
     maybeEnterReviewMode(hit.quality?.score);
-    void runAlignedDiff().catch(() => {});
+    if (reviewMode) void runAlignedDiff().catch(() => {});
   }
 
   function updateStatusBar() {
@@ -673,6 +1766,11 @@
 
   async function readFileForTercume(rel, opts = {}) {
     const low = String(rel || "").toLowerCase();
+    if (opts.forceOcr && low.endsWith(".pdf")) {
+      const page = pageRangeParams().label_from ?? 1;
+      const j = await ocrPdfPageText(rel, page);
+      return String(j.text || "");
+    }
     if (opts.forceOcr || IMAGE_EXTS.some((e) => low.endsWith(e))) {
       const res = await fetch(
         `${api()}/api/workspace/read-image-ocr?rel=${encodeURIComponent(rel)}&${ocrQueryParams()}`,
@@ -781,14 +1879,16 @@
     const el = $("btn-tercume-active-file") || $("tercume-active-file");
     if (!el) return;
     if (openRel) {
-      el.textContent = `Kaynak: ${openRel}`;
+      const name = openRel.split("/").pop() || openRel;
+      el.textContent = `Kaynak: ${name}`;
       el.classList.add("has-file");
       el.title = openRel;
     } else {
-      el.textContent = "Kaynak: sol listeden dosya seçin";
+      el.textContent = "Kaynak: dosya seçilmedi";
       el.classList.remove("has-file");
-      el.title = "Sol listeden dosya seçin (tıklayınca listeye gider)";
+      el.title = "Dosya panelinden seçin veya Dosya aç (Ctrl+O)";
     }
+    updateSidebarActiveFile();
   }
 
   function updateStats() {
@@ -872,22 +1972,29 @@
   async function refreshTree() {
     const list = $("tercume-file-list");
     if (!list) return;
+    if (fileFilterQuery.length >= 2) {
+      await runFileSearch();
+      return;
+    }
+    list.classList.remove("tercume-file-tree--search");
     list.innerHTML = `<div class="code-tree-loading">${esc("Yükleniyor…")}</div>`;
+    renderPathCrumb();
     try {
-      const items = deps.workspaceListDir
-        ? await deps.workspaceListDir(workRoot)
-        : [];
+      const items = deps.workspaceListDir ? await deps.workspaceListDir(workRoot) : [];
       list.innerHTML = "";
       for (const it of items) {
-        if (deps.createCodeTreeBranch) {
-          list.appendChild(deps.createCodeTreeBranch(it, 0));
-        }
+        list.appendChild(createTercumeTreeBranch(it, 0));
       }
       if (!items.length) {
-        list.innerHTML = `<div class="code-file-placeholder">Klasör boş: <code>${esc(workRoot)}</code></div>`;
+        list.innerHTML = `<div class="code-file-placeholder">Klasör boş: <code>${esc(workRoot)}</code><br/>«Dosya aç» ile yükleyin veya alt klasör seçin.</div>`;
+        updateFileCountLabel(0);
+      } else {
+        updateFileCountLabel(items.length);
       }
+      if (openRel) void expandTreeToRel(openRel);
     } catch (e) {
       list.innerHTML = `<div class="code-file-placeholder">Liste hatası: ${esc(e.message || e)}</div>`;
+      updateFileCountLabel(0);
     }
   }
 
@@ -906,19 +2013,37 @@
   async function openFile(rel) {
     if (!rel) return;
     markTreeActive(rel);
+    updateSidebarActiveFile();
     pdfMeta = null;
+    sourcePageMeta = [];
+    lastAlignedPayload = null;
+    fullSourceDoc = "";
+    fullTargetDoc = "";
+    showReadQualityWarn("");
     updatePdfHint();
     setSourceText("Dosya yükleniyor…");
     updateActiveLabel();
     suggestLangFromPath(rel);
     try {
-      const text = await readFileForTercume(rel);
       openRel = rel;
-      setSourceText(text);
+      const low = String(rel).toLowerCase();
+      setSourceReadability(true);
+      if (low.endsWith(".pdf")) {
+        await loadPdfPagesIntoSource(rel, { capWideRange: true });
+      } else {
+        const text = await readFileForTercume(rel);
+        if (isPdfExtractGarbage(text)) {
+          setSourceReadability(false);
+        } else {
+          fullSourceDoc = stripPdfBanner(text);
+          fullTargetDoc = "";
+          refreshSegmentPanelView();
+        }
+      }
       pushRecentFile(rel);
       updateActiveLabel();
       syncSavePlaceholder();
-      flash(`Kaynak panele yüklendi: ${rel.split("/").pop()}`);
+      flash(`Kaynak yüklendi: ${rel.split("/").pop()}`);
       getSourceEl()?.focus();
       void refreshApprenticeLog();
       void refreshMemoryStatus();
@@ -926,18 +2051,20 @@
       void loadTmTermsForHighlight().then(() => scheduleTmHighlight());
       await loadAlignedNotesForRel(rel);
       currentSegmentIndex = 0;
-      updateSegmentStrip();
-      if (String(rel).toLowerCase().endsWith(".pdf")) {
+      if (low.endsWith(".pdf")) {
         pdfPreviewPage = pageRangeParams().label_from || 1;
         void loadPdfPreviewPage(pdfPreviewPage);
       } else {
         setPdfPreviewPanelVisible(false);
       }
+      syncBookReaderView();
     } catch (e) {
       openRel = rel;
       pushRecentFile(rel);
       const msg = String(e.message || e);
-      setSourceText(`(Dosya: ${rel}\n\nÖnizleme alınamadı: ${msg}\n\nBüyük PDF için OCR veya sayfa sayfa modunu deneyin.)`);
+      fullSourceDoc = `(Dosya: ${rel}\n\nÖnizleme alınamadı: ${msg}\n\nBüyük PDF için OCR veya sayfa aralığı deneyin.)`;
+      fullTargetDoc = "";
+      refreshSegmentPanelView();
       updateActiveLabel();
       flash("Tam metin yüklenemedi; dosya yolu kayıtlı.");
       void refreshMemoryStatus();
@@ -1258,6 +2385,11 @@
     const statsEl = $("tercume-aligned-stats");
     if (!fold || !tbody) return;
     const allRows = Array.isArray(payload?.segments) ? payload.segments : [];
+    if (!reviewMode || sourceUnreadable) {
+      fold.hidden = true;
+      fold.open = false;
+      return;
+    }
     const onlyIssues = !!$("tercume-aligned-only-issues")?.checked;
     const rows = onlyIssues ? allRows.filter((r) => isProblemRow(r)) : allRows;
     if (!allRows.length) {
@@ -1408,6 +2540,7 @@
     if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : j.error || "Diff başarısız");
     lastAlignedPayload = j;
     renderAlignedDiff(j);
+    refreshSegmentPanelView();
     updateSegmentStrip();
     syncSegmentEditors();
     if (!j.aligned) flash("Segment sayıları tam hizalı değil — tabloya bakın.");
@@ -1516,7 +2649,7 @@
           const items = deps.workspaceListDir ? await deps.workspaceListDir(rel) : [];
           kids.innerHTML = "";
           for (const x of items) {
-            if (deps.createCodeTreeBranch) kids.appendChild(deps.createCodeTreeBranch(x, depth + 1));
+            kids.appendChild(createTercumeTreeBranch(x, depth + 1));
           }
           kids.dataset.loaded = "1";
         } catch {
@@ -2044,7 +3177,12 @@
 
   function showJobPanel(show) {
     const panel = $("tercume-job-panel");
-    if (panel) panel.hidden = !show;
+    if (!panel) return;
+    if (getTercumeUiMode() === "reader" && activeDuzenDock !== "status") {
+      panel.hidden = true;
+      return;
+    }
+    panel.hidden = !show;
   }
 
   function qualityTier(score) {
@@ -2075,6 +3213,13 @@
     if (!quality || quality.score == null || !Number.isFinite(Number(quality.score))) {
       strip.hidden = true;
       if (retryBtn) retryBtn.hidden = true;
+      return;
+    }
+    if (getTercumeUiMode() === "reader" && activeDuzenDock !== "status") {
+      strip.hidden = true;
+      if (retryBtn) retryBtn.hidden = true;
+      lastQualityScore = Number(quality.score);
+      updateStatusBar();
       return;
     }
     const score = Number(quality.score);
@@ -2487,13 +3632,14 @@
       }
       if (j.status === "running" || j.status === "queued") {
         activeBatchJobId = jid;
-        showJobPanel(true);
-        flash("Devam eden arka plan çevirisi bağlandı — sekme kapansa da sürer.");
+        if (getTercumeUiMode() !== "reader") showJobPanel(true);
+        flash("Devam eden arka plan çevirisi — «durdur» ile kesebilirsiniz.");
         pollBatchJob(jid, { pageRange: true });
       } else if (j.status === "done") {
         await finishPageRangeJob(j);
       } else {
         clearPageJobStorage();
+        if (j.status === "cancelled" || j.status === "failed") dismissBatchUi();
       }
     } catch {
       clearPageJobStorage();
@@ -2510,6 +3656,23 @@
       return;
     }
     const range = pageRangeParams();
+    if (mode === "range") {
+      if (range.page_from == null) {
+        flash("Başlangıç sayfası girin (ör. 1).");
+        return;
+      }
+      const span =
+        (range.label_to ?? range.label_from ?? 1) - (range.label_from ?? 1) + 1;
+      if (span > 30) {
+        flash(
+          `${span} sayfa arka planda çevrilecek — uzun sürer. Tek sayfa için aralığı 1–1 yapın; «Bu segmenti çevir» daha net.`,
+        );
+      }
+    }
+    if (isPdfExtractGarbage(getSourceText())) {
+      flash("Kaynak metin bozuk — önce «Sayfa aralığını yükle» veya OCR deneyin.");
+      return;
+    }
     const body = {
       rel: openRel,
       tgt_lang: String($("tercume-tgt-lang")?.value || "tr"),
@@ -2525,7 +3688,8 @@
       body.page_to = range.page_to;
     }
     translateAbort = false;
-    setTargetText("");
+    fullTargetDoc = "";
+    refreshSegmentPanelView();
     showJobPanel(true);
     renderPageJobLog([], "Kuyruğa alınıyor…");
     showProgress(0, 1, "Arka plan çevirisi başlatılıyor…");
@@ -2629,7 +3793,11 @@
           if (isPage) {
             clearPageJobStorage();
             if (j.partial_text) setTargetText(String(j.partial_text));
-            renderPageJobLog(j.outputs || [], String(j.error || j.label || j.status));
+            if (getTercumeUiMode() === "reader" && j.status === "cancelled") {
+              dismissBatchUi();
+            } else {
+              renderPageJobLog(j.outputs || [], String(j.error || j.label || j.status));
+            }
             flash(String(j.error || j.label || (j.status === "cancelled" ? "İptal edildi." : "İş başarısız.")));
           } else {
             flash(j.status === "cancelled" ? "Cilt sırası iptal edildi." : String(j.error || "Cilt hatası"));
@@ -2641,6 +3809,21 @@
         /* sessiz tekrar */
       }
     }, pollMs);
+  }
+
+  function dismissBatchUi() {
+    if (batchPollTimer) {
+      clearInterval(batchPollTimer);
+      batchPollTimer = null;
+    }
+    activeBatchJobId = null;
+    clearPageJobStorage();
+    hideProgress();
+    showJobPanel(false);
+    renderPageJobLog([], "");
+    jobStatusLabel = "—";
+    updateStatusBar();
+    syncBookReaderView();
   }
 
   async function cancelBatchJob() {
@@ -2662,14 +3845,19 @@
     const wrap = $("tercume-progress-wrap");
     const fill = $("tercume-progress-fill");
     const lab = $("tercume-progress-label");
-    if (!wrap) return;
-    wrap.hidden = false;
-    const pct = total > 0 ? Math.round((current / total) * 100) : 0;
-    if (fill) fill.style.width = `${pct}%`;
     const labTxt = label || `${current}/${total}`;
-    if (lab) lab.textContent = labTxt;
+    const pct = total > 0 ? Math.round((current / total) * 100) : 0;
     jobStatusLabel = total > 0 ? `${labTxt} (%${pct})` : labTxt;
     updateStatusBar();
+    syncBookReaderView();
+    if (getTercumeUiMode() === "reader" && activeDuzenDock !== "status") {
+      if (wrap) wrap.hidden = true;
+      return;
+    }
+    if (!wrap) return;
+    wrap.hidden = false;
+    if (fill) fill.style.width = `${pct}%`;
+    if (lab) lab.textContent = labTxt;
   }
   function hideProgress() {
     const wrap = $("tercume-progress-wrap");
@@ -2828,6 +4016,10 @@
   }
 
   async function runPagedTranslation(mode) {
+    if (sourceUnreadable) {
+      flash("Önce «OCR ile oku» — kaynak metin hazır değil.");
+      return;
+    }
     const raw = getSourceText();
     if (!raw && !openRel) {
       flash("Kaynak metin veya dosya gerekli.");
@@ -2901,11 +4093,10 @@
         setTargetText(outParts.join("\n\n"));
         updateQualityStrip(hit.quality, lastTranslateContext.label);
         if (hit.quality && hit.quality.ok === false) {
-          flash(`Düşük kalite skoru (${hit.quality.score}) — «Yeniden çevir» veya metni düzeltin.`);
+          flash(`Düşük kalite skoru (${hit.quality.score}) — metni kontrol edin.`);
         }
       } catch (e) {
-        outParts.push(`[HATA ${p.label || i + 1}: ${e.message || e}]`);
-        setTargetText(outParts.join("\n\n"));
+        flash(`Çeviri hatası (${p.label || i + 1}): ${e.message || e}`);
         if (mode === "full") break;
       }
       await new Promise((r) => setTimeout(r, delayMs));
@@ -3099,16 +4290,29 @@ ${chunk}`;
     const wantsSave = /\b(kaydet|yaz)\b/i.test(low) && /\b(dosya|file|çıktı|cikti)\b/i.test(low);
     const wantsCancel = /\b(iptal|durdur|stop|vazgeç|vazgec)\b/i.test(low);
     const wantsUndo = /\b(geri al|undo|son işlemi geri al|son islemi geri al)\b/i.test(low);
+    const wantsOpen =
+      /\b(aç|ac|açar|göster|goster|yükle|yukle|open|getir)\b/i.test(low) &&
+      !wantsTranslate &&
+      !hasUrl &&
+      !wantsCancel;
+    const wantsFullTranslate = /\b(tamamını|tamamini|hepsini|tümünü|tumunu|tüm kitap|full)\b/i.test(low);
+    const wantsPageByPage = /\b(sayfa sayfa|page by page)\b/i.test(low);
+    const wantsThisPage = /\b(bu sayfa|bu sayfayı|bu sayfayi|şu sayfa|su sayfa|mevcut sayfa)\b/i.test(low);
+    const wantsGotoPage =
+      /\b(sayfa|page)\b/i.test(low) &&
+      /\b(git|geç|gec|gidelim|aç|ac|göster|goster|getir)\b/i.test(low) &&
+      !wantsTranslate;
     const intentCount = [wantsResume, wantsDownload, wantsTranslate, wantsSave].filter(Boolean).length;
 
     if (wantsCancel) {
       lastIntentRawText = raw;
       if (batchPollTimer || activeBatchJobId) {
         await cancelBatchJob();
+        dismissBatchUi();
         return {
           handled: true,
           instant: true,
-          reply: buildIntentReply("Tamam, aktif çeviri işini iptal ettim.", ["iş durduruldu"], 0.96),
+          reply: buildIntentReply("Tamam, arka plan çevirisini durdurdum. Ekranı temizledim — tek sayfa için «bu sayfayı çevir» deyin.", ["iş durduruldu"], 0.96),
         };
       }
       return {
@@ -3136,13 +4340,68 @@ ${chunk}`;
       };
     }
 
-    if (intentCount >= 2 && !hasUrl) {
+    if (wantsOpen) {
+      lastIntentRawText = raw;
+      setTercumeTab("calisma");
+      const hint = extractBookQueryFromText(raw) || extractFileHintFromText(raw);
+      if (hint.length >= 2) {
+        rememberBookSearchQuery(hint);
+        const rel = await resolveFileByHint(hint);
+        if (rel) {
+          await openFile(rel);
+          const leaf = rel.split("/").pop() || rel;
+          return {
+            handled: true,
+            instant: true,
+            reply: buildIntentReply(
+              `Tamam, «${leaf}» önünüze açıldı. Sayfalar arasında gezinip «bu sayfayı çevir» diyebilirsiniz.`,
+              ["dosya bulundu", "kitap görünümü açıldı"],
+              0.94,
+            ),
+          };
+        }
+      }
+      toggleDuzenDock("files");
       return {
         handled: true,
         instant: true,
         reply: buildIntentReply(
-          "İsteğinizde birden fazla adım var. Önce hangisini yapayım: indir, çevir, yoksa kaydet?",
-          ["niyetler ayrıştırıldı", "ek onay bekleniyor"],
+          hint.length >= 2
+            ? `«${hint}» için arşivde net eşleşme bulamadım — «Dosyalar» panelini açtım. Sunucuyu yeniden başlattıysanız tekrar «${hint} aç» deneyin.`
+            : "Hangi eseri açalım? «Sahih Bukhari aç» yazmanız yeterli.",
+          ["dosya paneli açıldı"],
+          0.86,
+        ),
+      };
+    }
+
+    if (wantsGotoPage) {
+      lastIntentRawText = raw;
+      const range = parsePageRangeFromText(raw);
+      if (range && (openRel || getSourceText())) {
+        await goToBookPage(range.from);
+        return {
+          handled: true,
+          instant: true,
+          reply: buildIntentReply(`Tamam, sayfa ${range.from} açıldı.`, ["sayfa yüklendi"], 0.93),
+        };
+      }
+      if (!openRel) {
+        return {
+          handled: true,
+          instant: true,
+          reply: buildIntentReply("Önce bir kitap açalım — adını yazmanız yeterli.", ["dosya gerekli"], 0.86),
+        };
+      }
+    }
+
+    if (intentCount >= 2 && !hasUrl && !wantsThisPage) {
+      return {
+        handled: true,
+        instant: true,
+        reply: buildIntentReply(
+          "Birden fazla adım var gibi — önce hangisini yapalım: açayım mı, çevireyim mi, kaydedeyim mi?",
+          ["niyetler ayrıştırıldı"],
           0.61,
         ),
       };
@@ -3209,6 +4468,7 @@ ${chunk}`;
 
     if (wantsTranslate) {
       lastIntentRawText = raw;
+      setTercumeTab("calisma");
       const code = guessTargetLangFromText(raw);
       if (code) {
         const sel = $("tercume-tgt-lang");
@@ -3217,9 +4477,27 @@ ${chunk}`;
           if (has) sel.value = code;
         }
       }
-      if (openRel) {
-        const range = parsePageRangeFromText(raw);
-        if (range) {
+      const range = parsePageRangeFromText(raw);
+      const modeSel = $("tercume-translate-mode");
+
+      if (openRel || getSourceText()) {
+        if (wantsThisPage || (range && range.from === range.to && !wantsFullTranslate && !wantsPageByPage)) {
+          const pg = wantsThisPage ? pdfPreviewPage || 1 : range.from;
+          if (range || wantsThisPage) await goToBookPage(pg);
+          if (modeSel) modeSel.value = "single";
+          lastIntentUndo = { type: "target_replace", prevTarget: getTargetText() };
+          await translateCurrentSegment();
+          return {
+            handled: true,
+            instant: true,
+            reply: buildIntentReply(
+              `Tamam, sayfa ${pg} çevrildi — altta görebilirsiniz.`,
+              ["sayfa yüklendi", "tek sayfa çeviri tamamlandı"],
+              0.94,
+            ),
+          };
+        }
+        if (range && range.from !== range.to) {
           const fromEl = $("tercume-page-from");
           const toEl = $("tercume-page-to");
           if (fromEl) fromEl.value = String(range.from);
@@ -3230,36 +4508,53 @@ ${chunk}`;
             handled: true,
             instant: true,
             reply: buildIntentReply(
-              `Tamam, ${range.from}-${range.to} sayfaları arka planda çevirmeye başladım.`,
-              ["sayfa aralığı çözüldü", "arka plan işi başlatıldı"],
-              0.95,
+              `Tamam, ${range.from}–${range.to} arası arka planda çevriliyor — ilerlemeyi alttaki çubuktan izleyebilirsiniz.`,
+              ["sayfa aralığı", "arka plan işi"],
+              0.93,
             ),
           };
         }
-        if (/\b(sayfa sayfa|page by page)\b/i.test(low)) {
+        if (wantsPageByPage) {
           lastIntentUndo = { type: "target_replace", prevTarget: getTargetText() };
           await startPageRangeJob("page");
           return {
             handled: true,
             instant: true,
-            reply: buildIntentReply("Tamam, sayfa sayfa arka plan çevirisini başlattım.", ["mod seçildi: page", "arka plan işi başlatıldı"], 0.93),
+            reply: buildIntentReply(
+              "Sayfa sayfa arka planda çeviri başladı. Tek tek okumak isterseniz «bu sayfayı çevir» deyin.",
+              ["mod: sayfa sayfa"],
+              0.91,
+            ),
           };
         }
-        lastIntentUndo = { type: "target_replace", prevTarget: getTargetText() };
-        await startPageRangeJob("full");
-        return {
-          handled: true,
-          instant: true,
-          reply: buildIntentReply("Tamam, dosyayı tam modda arka planda çevirmeye başladım.", ["mod seçildi: full", "arka plan işi başlatıldı"], 0.94),
-        };
-      }
-      if (getSourceText()) {
+        if (wantsFullTranslate) {
+          lastIntentUndo = { type: "target_replace", prevTarget: getTargetText() };
+          await startPageRangeJob("full");
+          return {
+            handled: true,
+            instant: true,
+            reply: buildIntentReply(
+              "Tam kitap arka planda çevriliyor — bu uzun sürebilir. İsterseniz «durdur» diyebilirsiniz.",
+              ["mod: tamamı"],
+              0.9,
+            ),
+          };
+        }
+        if (modeSel && modeSel.value === "single" && (getSourceSegments().length > 1 || lastAlignedPayload?.segments?.length)) {
+          lastIntentUndo = { type: "target_replace", prevTarget: getTargetText() };
+          await translateCurrentSegment();
+          return {
+            handled: true,
+            instant: true,
+            reply: buildIntentReply("Bu sayfayı çevirdim — altta okuyabilirsiniz.", ["segment çeviri"], 0.92),
+          };
+        }
         lastIntentUndo = { type: "target_replace", prevTarget: getTargetText() };
         await runPagedTranslation("single");
         return {
           handled: true,
           instant: true,
-          reply: buildIntentReply("Tamam, mevcut metni çevirdim ve hedef panele yazdım.", ["kaynak metin okundu", "tek parça çeviri tamamlandı"], 0.91),
+          reply: buildIntentReply("Mevcut metni çevirdim.", ["tek parça çeviri"], 0.91),
         };
       }
       const q = extractSearchQueryFromText(raw);
@@ -3319,6 +4614,12 @@ ${chunk}`;
         instant: true,
         reply: buildIntentReply("Tamam, çıktıyı dosyaya kaydettim.", ["kayıt yolu belirlendi", "dosya yazıldı"], 0.95),
       };
+    }
+
+    const local = await buildTercumeLocalReply(raw, low);
+    if (local?.reply) {
+      lastIntentRawText = raw;
+      return { handled: true, instant: true, reply: local.reply };
     }
 
     return { handled: false };
@@ -3389,21 +4690,16 @@ ${chunk}`;
           /* ignore */
         }
         $("tercume-work-root").value = workRoot;
+        fileFilterQuery = "";
+        const filterInp = $("tercume-file-filter");
+        if (filterInp) filterInp.value = "";
+        renderPathCrumb();
         await refreshTree();
         flash(`Çalışma klasörü: ${workRoot}`);
       }
       return;
     }
-    const v = String($("tercume-work-root")?.value || "").trim();
-    if (v) {
-      workRoot = v.replace(/\\/g, "/").replace(/^\/+/, "");
-      try {
-        localStorage.setItem(LS_WORK_ROOT, workRoot);
-      } catch (_) {
-        /* ignore */
-      }
-      await refreshTree();
-    }
+    await applyWorkRootFromInput();
   }
 
   function wireZoom() {
@@ -3466,12 +4762,19 @@ ${chunk}`;
     if (t === "calisma") {
       void refreshPreflightChip();
       renderRecentFiles();
+      renderPathCrumb();
+      updateSidebarActiveFile();
       applyEditorDirection();
       updateStatusBar();
       updateSegmentStrip();
     }
     if (global.RuzgarSplit?.onTercumeTabChange) {
-      requestAnimationFrame(() => global.RuzgarSplit.onTercumeTabChange());
+      requestAnimationFrame(() => {
+        global.RuzgarSplit.onTercumeTabChange();
+        applyReaderWorkbenchGrid();
+      });
+    } else {
+      applyReaderWorkbenchGrid();
     }
   }
 
@@ -3480,14 +4783,19 @@ ${chunk}`;
     if (tabs) tabs.hidden = !isTercume;
     if (isTercume) {
       document.body.dataset.motor = "tercume";
+      setTercumeUiMode(getTercumeUiMode());
       const cur = normalizeTercumeTab(document.body.dataset.tercumeTab || "calisma");
       setTercumeTab(cur);
       void refreshOcrWarning();
       void refreshReadiness();
       void refreshCapabilities(openRel || "");
+      if (deps.showTercumeChatWelcome) deps.showTercumeChatWelcome();
     } else {
       delete document.body.dataset.motor;
       delete document.body.dataset.tercumeTab;
+      delete document.body.dataset.tercumeUi;
+      delete document.body.dataset.tercumeDock;
+      activeDuzenDock = "";
     }
   }
 
@@ -3527,6 +4835,11 @@ ${chunk}`;
     if (ev.ctrlKey && (ev.key === "s" || ev.key === "S")) {
       ev.preventDefault();
       void saveTarget().catch((e) => flash(e.message || String(e)));
+      return;
+    }
+    if (ev.ctrlKey && (ev.key === "o" || ev.key === "O")) {
+      ev.preventDefault();
+      triggerOpenFileDialog();
       return;
     }
     if (ev.altKey && ev.key === "ArrowDown") {
@@ -3572,6 +4885,20 @@ ${chunk}`;
     $("btn-tercume-pdf-apply-range")?.addEventListener("click", () => {
       void loadPdfPageRange().catch((e) => flash(e.message || String(e)));
     });
+    $("btn-tercume-read-quality-reload")?.addEventListener("click", () => {
+      void loadPdfPageRange().catch((e) => flash(e.message || String(e)));
+    });
+    $("btn-tercume-read-quality-ocr")?.addEventListener("click", () => {
+      void runSimpleOcr();
+    });
+    $("btn-tercume-simple-ocr")?.addEventListener("click", () => {
+      void runSimpleOcr();
+    });
+    $("btn-tercume-simple-reload")?.addEventListener("click", () => {
+      void loadPdfPageRange().catch((e) => flash(e.message || String(e)));
+    });
+    getSourceEl()?.addEventListener("blur", () => commitVisiblePanelsToFullDoc());
+    getTargetEl()?.addEventListener("blur", () => commitVisiblePanelsToFullDoc());
     $("btn-tercume-pdf-open-folder")?.addEventListener("click", () => {
       if (openRel && global.ruzgarApi?.openWorkspaceRel) {
         const dir = openRel.replace(/[/\\][^/\\]+$/, "");
@@ -3592,6 +4919,10 @@ ${chunk}`;
     $("tercume-segment-src")?.addEventListener("blur", () => applySegmentEditorsToPanels(true));
     $("tercume-segment-tgt")?.addEventListener("blur", () => applySegmentEditorsToPanels(true));
     $("tercume-status-file")?.addEventListener("click", () => {
+      if (getTercumeUiMode() === "reader") {
+        toggleDuzenDock("files");
+        return;
+      }
       $("tercume-file-list")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     });
     $("tercume-status-page")?.addEventListener("click", () => {
@@ -3637,6 +4968,42 @@ ${chunk}`;
     void refreshPdfPreviewCapability();
     applyEditorDirection();
     updateStatusBar();
+    wireReaderUi();
+  }
+
+  function wireReaderUi() {
+    const page = $("page-tercume");
+    if (!page || page.dataset.readerUiWired === "1") return;
+    page.dataset.readerUiWired = "1";
+
+    document.querySelectorAll(".tercume-duzen-btn").forEach((btn) => {
+      btn.addEventListener("click", () => toggleDuzenDock(btn.dataset.tercumeDock || ""));
+    });
+    $("tercume-duzen-backdrop")?.addEventListener("click", () => closeDuzenDock());
+
+    $("btn-tercume-book-prev")?.addEventListener("click", () => {
+      void goToBookPage(Math.max(1, pdfPreviewPage - 1));
+    });
+    $("btn-tercume-book-next")?.addEventListener("click", () => {
+      const max = Number(pdfMeta?.pages_total) || pdfPreviewPage + 1;
+      void goToBookPage(Math.min(max, pdfPreviewPage + 1));
+    });
+    $("btn-tercume-book-translate-page")?.addEventListener("click", () => {
+      const modeSel = $("tercume-translate-mode");
+      if (modeSel) modeSel.value = "single";
+      void translateCurrentSegment().catch((e) => flash(e.message || String(e)));
+    });
+    $("tercume-book-page-input")?.addEventListener("change", (ev) => {
+      const n = Number(ev.target?.value);
+      if (Number.isFinite(n) && n > 0) void goToBookPage(n);
+    });
+    $("tercume-book-page-input")?.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter") {
+        ev.preventDefault();
+        const n = Number(ev.target?.value);
+        if (Number.isFinite(n) && n > 0) void goToBookPage(n);
+      }
+    });
   }
 
   function wireAll() {
@@ -3662,11 +5029,31 @@ ${chunk}`;
     }
     const rootInp = $("tercume-work-root");
     if (rootInp) rootInp.value = workRoot;
+    renderPathCrumb();
+    updateSidebarActiveFile();
+    wireFilePanelDnD();
 
     $("tercume-file-list")?.addEventListener("click", (ev) => void onTreeClick(ev));
     $("btn-tercume-refresh")?.addEventListener("click", () => void refreshTree());
     $("btn-tercume-pick-folder")?.addEventListener("click", () => void pickWorkFolder());
-    $("tercume-work-root")?.addEventListener("change", () => void pickWorkFolder());
+    $("btn-tercume-path-apply")?.addEventListener("click", () => void applyWorkRootFromInput());
+    $("tercume-work-root")?.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter") {
+        ev.preventDefault();
+        void applyWorkRootFromInput();
+      }
+    });
+    $("btn-tercume-open-file")?.addEventListener("click", () => triggerOpenFileDialog());
+    $("btn-tercume-io-open-file")?.addEventListener("click", () => triggerOpenFileDialog());
+    $("tercume-file-filter")?.addEventListener("input", () => scheduleFileSearch());
+    $("tercume-file-filter")?.addEventListener("keydown", (ev) => {
+      if (ev.key === "Escape") {
+        ev.preventDefault();
+        fileFilterQuery = "";
+        ev.target.value = "";
+        void refreshTree();
+      }
+    });
     $("btn-tercume-open-archive")?.addEventListener("click", () => {
       if (global.ruzgarApi?.openWorkspaceRel) void global.ruzgarApi.openWorkspaceRel(workRoot);
     });
@@ -3752,22 +5139,8 @@ ${chunk}`;
         flash(e.message || "Okuma analizi hatası");
       });
     });
-    $("btn-tercume-ocr")?.addEventListener("click", async () => {
-      if (!openRel) {
-        flash("Önce görsel dosyası seçin.");
-        return;
-      }
-      await refreshOcrWarning();
-      if (!$("tercume-ocr-warn")?.hidden) {
-        flash("OCR kurulu değil — sarı uyarıdaki adımları uygulayın.");
-        return;
-      }
-      try {
-        setSourceText(await readFileForTercume(openRel, { forceOcr: true }));
-        flash("OCR tamam.");
-      } catch (e) {
-        flash(e.message || "OCR hatası");
-      }
+    $("btn-tercume-ocr")?.addEventListener("click", () => {
+      void runSimpleOcr();
     });
     $("tercume-glossary-import-file")?.addEventListener("change", (ev) => {
       const f = ev.target?.files?.[0];
@@ -3805,6 +5178,11 @@ ${chunk}`;
     });
     $("btn-tercume-clear")?.addEventListener("click", () => {
       const prevRel = openRel;
+      fullSourceDoc = "";
+      fullTargetDoc = "";
+      sourcePageMeta = [];
+      sourceUnreadable = false;
+      showReadQualityWarn("");
       setSourceText("");
       setTargetText("");
       openRel = null;
@@ -3925,6 +5303,17 @@ ${chunk}`;
     runSearch: (text) => runEserSearch(text).then((ok) => ok),
     tryAtolyeFromMessage,
     runActionCardCommand,
+    setTercumeUiMode,
+    getTercumeUiMode,
+    toggleDuzenDock,
+    closeDuzenDock,
+    goToBookPage,
+    openFileByHint: async (hint) => {
+      const rel = await resolveFileByHint(hint);
+      if (!rel) return { ok: false, message: "Dosya bulunamadı." };
+      await openFile(rel);
+      return { ok: true, rel, message: rel.split("/").pop() || rel };
+    },
     isSearchIntent(text) {
       const t = String(text || "").trim().toLowerCase();
       if (!t || t.length > 280) return false;

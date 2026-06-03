@@ -54,6 +54,14 @@ def assess_page_quality(text: str, *, source_kind: str = "text") -> dict[str, An
             "hint": "Metin okunaksız — OCR veya farklı kaynak PDF deneyin.",
         }
 
+    # PDF glyph/CID kodları (/G31/G44…)
+    if re.search(r"(?:/G\d{2,}){5,}", t):
+        return {
+            "quality": "low",
+            "score": 12,
+            "hint": "PDF metin çıkarımı bozuk (glyph kodları) — OCR önerilir.",
+        }
+
     score = 72.0
     if n_words >= 80:
         score += 12

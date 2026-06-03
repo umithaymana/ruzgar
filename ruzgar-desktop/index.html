@@ -98,7 +98,7 @@
             </div>
             <span class="tercume-top-flow-label">Mod</span>
             <select id="tercume-translate-mode" class="tercume-lang-select" title="Çeviri modu">
-              <option value="single">Tek parça</option>
+              <option value="single" selected>Tek parça / sayfa</option>
               <option value="page">Sayfa sayfa (arka plan)</option>
               <option value="range">Sayfa aralığı (arka plan)</option>
               <option value="full">Tamamı (arka plan, yavaş)</option>
@@ -832,17 +832,38 @@
               </p>
             </div>
             <div class="tercume-workbench tercume-workbench--calisma" id="tercume-workbench">
-              <aside class="tercume-sidebar">
-                <div class="code-sidebar-head okuma-sidebar-head">
-                  <span>Çalışma listesi</span>
-                  <div class="okuma-sidebar-btns">
-                    <button type="button" class="btn-secondary btn-compact" id="btn-tercume-open-archive" title="Klasörü Explorer'da aç">Aç</button>
-                    <button type="button" class="btn-secondary btn-compact" id="btn-tercume-refresh">Yenile</button>
+              <aside class="tercume-sidebar tercume-file-panel" aria-label="Dosya gezgini">
+                <header class="tercume-file-panel-head">
+                  <div class="tercume-file-panel-title-row">
+                    <span class="tercume-file-panel-title">Dosya</span>
+                    <span class="tercume-file-panel-active" id="tercume-sidebar-active" title="Aktif kaynak">—</span>
                   </div>
+                  <div class="tercume-file-toolbar" role="toolbar" aria-label="Dosya işlemleri">
+                    <button type="button" class="btn-primary btn-compact" id="btn-tercume-open-file" title="Bilgisayardan dosya aç (Ctrl+O)">Dosya aç</button>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-tercume-refresh" title="Listeyi yenile">Yenile</button>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-tercume-open-archive" title="Çalışma klasörünü Explorer'da aç">Klasör</button>
+                  </div>
+                </header>
+                <div class="tercume-file-path-bar">
+                  <label class="tercume-file-path-label" for="tercume-work-root">Çalışma kökü</label>
+                  <div class="tercume-root-row">
+                    <input type="text" id="tercume-work-root" class="tercume-work-root" value="ilim-assistant/arsiv" aria-label="Çalışma klasörü" spellcheck="false" />
+                    <button type="button" class="btn-secondary btn-compact" id="btn-tercume-pick-folder" title="Klasör seç">Seç</button>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-tercume-path-apply" title="Yolu uygula">Git</button>
+                  </div>
+                  <nav class="tercume-path-crumb" id="tercume-path-crumb" aria-label="Yol"></nav>
                 </div>
-                <div class="tercume-root-row">
-                  <input type="text" id="tercume-work-root" class="tercume-work-root" value="ilim-assistant/arsiv" aria-label="Çalışma klasörü" />
-                  <button type="button" class="btn-secondary btn-compact" id="btn-tercume-pick-folder" title="Klasör seç">…</button>
+                <div class="tercume-file-search-row">
+                  <input
+                    type="search"
+                    id="tercume-file-filter"
+                    class="tercume-file-filter"
+                    placeholder="Dosya ara…"
+                    aria-label="Dosya ara"
+                    autocomplete="off"
+                    spellcheck="false"
+                  />
+                  <span class="tercume-file-count" id="tercume-file-count" aria-live="polite">—</span>
                 </div>
                 <details class="tercume-recent-fold" id="tercume-recent-fold">
                   <summary>Son açılanlar</summary>
@@ -857,7 +878,15 @@
                     <button type="button" class="btn-secondary btn-compact" id="btn-arsiv-download-refresh">Liste</button>
                   </div>
                 </details>
-                <div id="tercume-file-list" class="code-file-tree okuma-file-tree"></div>
+                <div class="tercume-file-tree-wrap" id="tercume-file-tree-wrap">
+                  <div id="tercume-file-list" class="code-file-tree okuma-file-tree tercume-file-tree" role="tree" aria-label="Dosya ağacı"></div>
+                  <div class="tercume-file-dropzone" id="tercume-file-dropzone" hidden>
+                    <span class="tercume-file-dropzone-title">Bırakın — dosya yüklenecek</span>
+                    <span class="tercume-file-dropzone-hint">PDF · DOCX · EPUB · TXT · görsel</span>
+                  </div>
+                  <p class="tercume-file-tree-hint" id="tercume-file-tree-hint">Listeden dosyaya tıklayın veya «Dosya aç» ile bilgisayardan seçin.</p>
+                </div>
+                <input type="file" id="tercume-import-file" hidden accept=".pdf,.docx,.epub,.txt,.md,.png,.jpg,.jpeg,.webp,.html,.rtf,.fb2,.mobi,.djvu,.djv" />
               </aside>
               <aside class="tercume-ara-panel" id="tercume-ara-panel" aria-label="İnternet kaynak arama" hidden>
                 <div class="tercume-ara-head">İnternet kaynakları</div>
@@ -916,6 +945,57 @@
                 </div>
               </aside>
               <div class="tercume-main">
+                <header class="tercume-reader-chrome" id="tercume-reader-chrome" aria-label="Kitap görünümü">
+                  <div class="tercume-reader-chrome-left">
+                    <span class="tercume-reader-title" id="tercume-reader-title">Kitap</span>
+                    <span class="tercume-reader-page" id="tercume-reader-page-label">—</span>
+                  </div>
+                  <div class="tercume-reader-chrome-actions" role="toolbar" aria-label="Düzen panelleri">
+                    <button type="button" class="btn-secondary btn-compact tercume-duzen-btn" data-tercume-dock="files" title="Dosya gezgini">Dosyalar</button>
+                    <button type="button" class="btn-secondary btn-compact tercume-duzen-btn" data-tercume-dock="tools" title="Araçlar ve analiz">Araçlar</button>
+                    <button type="button" class="btn-secondary btn-compact tercume-duzen-btn" data-tercume-dock="status" title="Durum ve ayarlar">Durum</button>
+                    <button type="button" class="btn-secondary btn-compact tercume-duzen-btn" data-tercume-dock="ara" title="Eser ara">Eser ara</button>
+                    <button type="button" class="btn-secondary btn-compact tercume-duzen-btn" data-tercume-dock="review" title="İnceleme modu">İnceleme</button>
+                  </div>
+                </header>
+                <div class="tercume-book-stage" id="tercume-book-stage" aria-label="Okuma alanı">
+                  <div class="tercume-book-empty" id="tercume-book-empty">
+                    <div class="tercume-book-empty-inner">
+                      <h3 class="tercume-book-empty-title">Önünüzde bir kitap açalım</h3>
+                      <p class="tercume-book-empty-text">
+                        Sohbette eser adını yazın: «Sahih Bukhari aç» veya «Sahih Bukhari arşivde var mı?»
+                        Sayfa burada kitap gibi görünür; «bu sayfayı çevir» dediğinizde çeviri altta belirir.
+                      </p>
+                    </div>
+                  </div>
+                  <div class="tercume-book-spread" id="tercume-book-spread" hidden>
+                    <div class="tercume-book-page-wrap" id="tercume-book-page-wrap">
+                      <div class="tercume-book-page-frame">
+                        <img id="tercume-book-page-img" class="tercume-book-page-img" alt="" hidden />
+                        <div class="tercume-book-page-text" id="tercume-book-page-text" hidden></div>
+                        <p class="tercume-book-page-loading" id="tercume-book-page-loading" hidden>Sayfa yükleniyor…</p>
+                      </div>
+                    </div>
+                    <div class="tercume-book-nav" aria-label="Sayfa gezintisi">
+                      <button type="button" class="btn-secondary btn-compact" id="btn-tercume-book-prev" title="Önceki sayfa">‹</button>
+                      <label class="tercume-book-page-jump">
+                        <span class="sr-only">Sayfa</span>
+                        <input type="number" id="tercume-book-page-input" class="tercume-book-page-input" min="1" placeholder="1" aria-label="Sayfa numarası" />
+                        <span class="tercume-book-page-total" id="tercume-book-page-total">/ ?</span>
+                      </label>
+                      <button type="button" class="btn-secondary btn-compact" id="btn-tercume-book-next" title="Sonraki sayfa">›</button>
+                      <button type="button" class="btn-primary btn-compact" id="btn-tercume-book-translate-page" title="Bu sayfayı çevir">Bu sayfayı çevir</button>
+                    </div>
+                    <article class="tercume-book-column tercume-book-column--source">
+                      <h4 class="tercume-book-column-head">Kaynak metin</h4>
+                      <div class="tercume-book-column-body" id="tercume-book-source" dir="auto"></div>
+                    </article>
+                    <article class="tercume-book-column tercume-book-column--target">
+                      <h4 class="tercume-book-column-head">Çeviri</h4>
+                      <div class="tercume-book-column-body tercume-book-column-body--target" id="tercume-book-target" dir="auto" data-placeholder="Çeviri burada birikir — sohbette «bu sayfayı çevir» deyin."></div>
+                    </article>
+                  </div>
+                </div>
                 <div class="tercume-panels-row" id="tercume-panels-row">
                   <aside class="tercume-pdf-preview" id="tercume-pdf-preview" hidden aria-label="PDF sayfa önizlemesi">
                     <div class="tercume-pdf-preview-head">
@@ -931,13 +1011,31 @@
                       <p class="tercume-pdf-preview-fallback" id="tercume-pdf-preview-fallback" hidden>—</p>
                     </div>
                   </aside>
+                  <div class="tercume-simple-state" id="tercume-simple-state" hidden role="status">
+                    <div class="tercume-simple-state-inner">
+                      <h3 class="tercume-simple-state-title">Önce metni okuyalım</h3>
+                      <p class="tercume-simple-state-text" id="tercume-simple-state-text">
+                        Bu PDF'den okunabilir metin çıkmadı. OCR ile okuyun; sonra üstteki «Çevir» düğmesine basın.
+                      </p>
+                      <div class="tercume-simple-state-actions">
+                        <button type="button" class="btn-primary btn-compact" id="btn-tercume-simple-ocr">OCR ile oku</button>
+                        <button type="button" class="btn-secondary btn-compact" id="btn-tercume-simple-reload">Sayfayı yükle</button>
+                      </div>
+                    </div>
+                  </div>
                   <div class="tercume-panels">
                     <div class="tercume-panel">
-                      <div class="tercume-panel-head">Kaynak</div>
+                      <div class="tercume-panel-head">
+                        <span>Kaynak</span>
+                        <span class="tercume-panel-head-meta" id="tercume-source-head-meta"></span>
+                      </div>
                       <div id="tercume-source-editor" class="tercume-doc-editor" contenteditable="true" tabindex="0" role="textbox" aria-multiline="true" data-placeholder="Dosya seçin veya metin yapıştırın (Word gibi düzenleyebilirsiniz)."></div>
                     </div>
                     <div class="tercume-panel">
-                      <div class="tercume-panel-head">Hedef çeviri</div>
+                      <div class="tercume-panel-head">
+                        <span>Hedef çeviri</span>
+                        <span class="tercume-panel-head-meta" id="tercume-target-head-meta"></span>
+                      </div>
                       <div id="tercume-target-editor" class="tercume-doc-editor" contenteditable="true" tabindex="0" role="textbox" aria-multiline="true" data-placeholder="Çeviri burada birikir."></div>
                     </div>
                   </div>
@@ -979,6 +1077,12 @@
                 <div class="tercume-readiness-warn" id="tercume-readiness-warn" hidden role="status">
                   <strong>Çeviri hazırlığı:</strong>
                   <span id="tercume-readiness-warn-text">Ollama veya çeviri beyni kontrol ediliyor…</span>
+                </div>
+                <div class="tercume-read-quality-warn" id="tercume-read-quality-warn" hidden role="alert">
+                  <strong>Okuma uyarısı:</strong>
+                  <span id="tercume-read-quality-warn-text">—</span>
+                  <button type="button" class="btn-secondary btn-compact" id="btn-tercume-read-quality-ocr">OCR dene</button>
+                  <button type="button" class="btn-secondary btn-compact" id="btn-tercume-read-quality-reload">Sayfayı yeniden yükle</button>
                 </div>
                 <div class="tercume-ocr-warn" id="tercume-ocr-warn" hidden role="status">
                   <strong>OCR kurulumu gerekli:</strong>
@@ -1077,10 +1181,7 @@
                     title="Son kayıt klasörü hatırlanır; aynı ad varsa otomatik _v2 sürümü"
                   />
                   <input type="text" id="tercume-copy-rel" class="tercume-copy-path" placeholder="İkinci kopya (isteğe bağlı)" aria-label="Kopya" />
-                  <label class="btn-secondary btn-compact" style="cursor:pointer;margin:0">
-                    Dosya
-                    <input type="file" id="tercume-import-file" hidden accept=".pdf,.docx,.epub,.txt,.md,.png,.jpg,.jpeg,.webp,.html,.rtf,.fb2,.mobi" />
-                  </label>
+                  <button type="button" class="btn-secondary btn-compact" id="btn-tercume-io-open-file" title="Dosya aç (Ctrl+O)">Dosya aç</button>
                 </div>
                 <details class="tercume-aligned-fold" id="tercume-aligned-fold" hidden>
                   <summary>
@@ -1162,6 +1263,7 @@
                 </div>
               </div>
             </div>
+            <div class="tercume-duzen-backdrop" id="tercume-duzen-backdrop" hidden aria-hidden="true"></div>
           </section>
 
           <section class="motor-page motor-page-video" id="page-video" hidden>
@@ -2039,11 +2141,11 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
       <button type="button" data-act="paste">Yapıştır</button>
     </div>
 
-    <link rel="stylesheet" href="tercume-atolye.css?v=20260603-hide-layout-tools" />
+    <link rel="stylesheet" href="tercume-atolye.css?v=20260604-book-wide" />
     <link rel="stylesheet" href="mimar-atolye.css?v=20260601-mimar-polish" />
-    <script src="ruzgar-split.js?v=20260602-workbench-split"></script>
+    <script src="ruzgar-split.js?v=20260604-book-wide"></script>
     <script src="ruzgar-virus-guard.js?v=20260604-av-v2"></script>
-    <script src="tercume-atolye.js?v=20260603-hide-capability-strip"></script>
+    <script src="tercume-atolye.js?v=20260604-book-wide"></script>
     <script src="mimar-atolye.js?v=20260601-faz5"></script>
     <script src="app.js?v=20260602-motor-auto-compact"></script>
   </body>

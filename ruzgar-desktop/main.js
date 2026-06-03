@@ -267,6 +267,57 @@ function buildMenu(mainWin) {
         { label: "Kes", role: "cut" },
         { label: "Kopyala", role: "copy" },
         { label: "Yapıştır", role: "paste" },
+        { type: "separator" },
+        {
+          label: "Tercüme — Kitap görünümü",
+          click: () => {
+            const w = activeWindow(mainWin);
+            w?.webContents.send("ruzgar-menu", "tercume-ui:reader");
+          },
+        },
+        {
+          label: "Tercüme — Klasik ofis görünümü",
+          click: () => {
+            const w = activeWindow(mainWin);
+            w?.webContents.send("ruzgar-menu", "tercume-ui:classic");
+          },
+        },
+        { type: "separator" },
+        {
+          label: "Tercüme — Dosyalar paneli",
+          click: () => {
+            const w = activeWindow(mainWin);
+            w?.webContents.send("ruzgar-menu", "tercume-dock:files");
+          },
+        },
+        {
+          label: "Tercüme — Araçlar paneli",
+          click: () => {
+            const w = activeWindow(mainWin);
+            w?.webContents.send("ruzgar-menu", "tercume-dock:tools");
+          },
+        },
+        {
+          label: "Tercüme — Durum ve ayarlar",
+          click: () => {
+            const w = activeWindow(mainWin);
+            w?.webContents.send("ruzgar-menu", "tercume-dock:status");
+          },
+        },
+        {
+          label: "Tercüme — Eser ara",
+          click: () => {
+            const w = activeWindow(mainWin);
+            w?.webContents.send("ruzgar-menu", "tercume-dock:ara");
+          },
+        },
+        {
+          label: "Tercüme — İnceleme modu",
+          click: () => {
+            const w = activeWindow(mainWin);
+            w?.webContents.send("ruzgar-menu", "tercume-dock:review");
+          },
+        },
       ],
     },
     {

@@ -352,6 +352,12 @@
   function applyWorkbenchGridFromState() {
     const wb = document.getElementById("tercume-workbench");
     if (!wb) return;
+    if (document.body.dataset.tercumeUi === "reader") {
+      wb.style.setProperty("grid-template-columns", "minmax(0, 1fr)", "important");
+      const main = wb.querySelector(".tercume-main");
+      if (main) main.style.setProperty("grid-column", "1 / -1", "important");
+      return;
+    }
     const tab = document.body.dataset.tercumeTab || "calisma";
     const state = loadState();
     const c1 = state["tercume-sidebar"] || 190;
@@ -414,10 +420,12 @@
         min: 120,
         max: 340,
         visible: () => {
+          if (document.body.dataset.tercumeUi === "reader") return false;
           const tab = document.body.dataset.tercumeTab || "calisma";
           return tab === "calisma" || tab === "ara";
         },
         onResize: (size) => {
+          if (document.body.dataset.tercumeUi === "reader") return;
           const tab = document.body.dataset.tercumeTab || "calisma";
           const c2 = loadState()["tercume-ara"] || 240;
           if (tab === "ara") wb.style.gridTemplateColumns = `${size}px ${c2}px minmax(0, 1fr)`;
