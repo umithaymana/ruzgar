@@ -95,6 +95,7 @@ def _translate_full_text(
     rel: str,
     src_lang: str,
     tgt_lang: str,
+    read_level: str = "akademik",
 ) -> str:
     from ilim_assistant.motorlar.tercume_atolye import split_text_into_pages, translate_chunk
 
@@ -107,6 +108,7 @@ def _translate_full_text(
             tgt_lang=tgt_lang,
             source_file=rel,
             page_index=int(p.get("index") or 0),
+            read_level=read_level,
         )
         if tr.get("ok"):
             parts.append(str(tr.get("text") or ""))
@@ -119,6 +121,7 @@ def _run_batch(job_id: str, cfg: dict[str, Any]) -> None:
     files = list(cfg.get("files") or [])
     tgt = str(cfg.get("tgt_lang") or "tr")
     src = str(cfg.get("src_lang") or "auto")
+    read_level = str(cfg.get("read_level") or "akademik")
     out_dir_rel = str(cfg.get("output_dir_rel") or "ilim-assistant/arsiv/tercume-output/batch")
     root = _repo_root()
     out_dir = (root / out_dir_rel.replace("/", os.sep)).resolve()
@@ -140,7 +143,13 @@ def _run_batch(job_id: str, cfg: dict[str, Any]) -> None:
             if not text.strip():
                 outputs.append({"rel": rel, "ok": False, "error": "Metin okunamadı"})
                 continue
-            translated = _translate_full_text(text, rel=rel, src_lang=src, tgt_lang=tgt)
+            translated = _translate_full_text(
+                text,
+                rel=rel,
+                src_lang=src,
+                tgt_lang=tgt,
+                read_level=read_level,
+            )
             stem = Path(rel).stem
             safe = re.sub(r"[^a-zA-Z0-9._\-]+", "_", stem)[:80] or "cilt"
             out_rel = f"{out_dir_rel.rstrip('/')}/{safe}_{tgt}.txt"
@@ -160,6 +169,7 @@ def start_batch_job(
     *,
     tgt_lang: str = "tr",
     src_lang: str = "auto",
+    read_level: str = "akademik",
     output_dir_rel: str = "ilim-assistant/arsiv/tercume-output/batch",
     file_filter: str = "",
 ) -> dict[str, Any]:
@@ -176,6 +186,7 @@ def start_batch_job(
         "files": files,
         "tgt_lang": tgt_lang,
         "src_lang": src_lang,
+        "read_level": read_level,
         "output_dir_rel": output_dir_rel,
     }
     state = {
@@ -304,6 +315,7 @@ def _run_page_range(job_id: str, cfg: dict[str, Any]) -> None:
     skip_empty = bool(cfg.get("skip_empty", True))
     tgt = str(cfg.get("tgt_lang") or "tr")
     src = str(cfg.get("src_lang") or "auto")
+    read_level = str(cfg.get("read_level") or "akademik")
     out_dir_rel = str(cfg.get("output_dir_rel") or "ilim-assistant/arsiv/tercume-output/page-range")
     root = _repo_root()
 
@@ -374,6 +386,7 @@ def _run_page_range(job_id: str, cfg: dict[str, Any]) -> None:
                 tgt_lang=tgt,
                 source_file=rel,
                 page_index=int(p.get("index") if p.get("index") is not None else i),
+                read_level=read_level,
             )
             if tr.get("ok"):
                 chunk = str(tr.get("text") or "")
@@ -449,6 +462,7 @@ def start_page_range_job(
     skip_empty: bool = True,
     tgt_lang: str = "tr",
     src_lang: str = "auto",
+    read_level: str = "akademik",
     output_dir_rel: str = "ilim-assistant/arsiv/tercume-output/page-range",
 ) -> dict[str, Any]:
     raw = (rel or "").strip().replace("\\", "/").lstrip("/")
@@ -468,6 +482,7 @@ def start_page_range_job(
         "skip_empty": bool(skip_empty),
         "tgt_lang": (tgt_lang or "tr").strip(),
         "src_lang": (src_lang or "auto").strip(),
+        "read_level": (read_level or "akademik").strip(),
         "output_dir_rel": (output_dir_rel or "ilim-assistant/arsiv/tercume-output/page-range").strip(),
     }
     state = {

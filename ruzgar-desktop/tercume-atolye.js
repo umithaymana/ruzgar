@@ -7,6 +7,7 @@
   const LS_LAST_SAVE_DIR = "ruzgar_tercume_last_save_dir";
   const LS_RECENT_FILES = "ruzgar_tercume_recent_files";
   const LS_TERCUME_UI = "ruzgar_tercume_ui_mode";
+  const LS_TERCUME_READ_LEVEL = "ruzgar_tercume_read_level";
   const QUALITY_PASS = 55;
   const QUALITY_WARN = 75;
 
@@ -520,6 +521,7 @@
   }
 
   function setTercumeUiMode(mode) {
+    closeDuzenDock();
     const m = mode === "classic" ? "classic" : "reader";
     document.body.dataset.tercumeUi = m;
     try {
@@ -535,6 +537,271 @@
     syncBookReaderView();
   }
 
+  const DUZEN_ORIGINS = new Map();
+
+  const DUZEN_PANELS = {
+    flow: {
+      title: "Dil akışı",
+      placement: "left",
+      roots: () => [$("tercume-flow-panel")],
+    },
+    files: {
+      title: "Dosyalar",
+      placement: "left",
+      roots: () => [document.querySelector("#page-tercume .tercume-file-panel")],
+    },
+    ara: {
+      title: "Eser ara",
+      placement: "right",
+      roots: () => [$("tercume-ara-panel")],
+      onOpen: () => {
+        const ara = $("tercume-ara-panel");
+        if (ara) ara.hidden = false;
+        setTercumeTab("ara");
+        setTimeout(() => {
+          $("tercume-eser-input")?.focus();
+          $("tercume-eser-input")?.select?.();
+        }, 80);
+      },
+    },
+    tools: {
+      title: "Araçlar",
+      placement: "right",
+      host: true,
+      collect: () => {
+        const nodes = [];
+        const tb = document.querySelector("#page-tercume .tercume-toolbar");
+        if (tb) nodes.push(tb);
+        ["tercume-user-glossary-fold", "tercume-capability-strip", "tercume-ocr-warn", "tercume-pdf-hint"].forEach(
+          (id) => {
+            const el = $(id);
+            if (el) nodes.push(el);
+          },
+        );
+        return nodes;
+      },
+    },
+    status: {
+      title: "Durum",
+      placement: "right",
+      host: true,
+      collect: () => {
+        const nodes = [];
+        const hw = $("tercume-header-workbench");
+        if (hw) nodes.push(hw);
+        [
+          "tercume-readiness-warn",
+          "tercume-job-panel",
+          "tercume-progress-wrap",
+          "tercume-read-quality-warn",
+          "tercume-quality-strip",
+        ].forEach((id) => {
+          const el = $(id);
+          if (el) nodes.push(el);
+        });
+        return nodes;
+      },
+    },
+    review: {
+      title: "İnceleme",
+      placement: "center",
+      host: true,
+      onOpen: () => {
+        setWorkbenchReviewMode(true);
+        const fold = $("tercume-aligned-fold");
+        if (fold) {
+          fold.hidden = false;
+          fold.open = true;
+        }
+      },
+      collect: () =>
+        ["tercume-panels-row", "tercume-segment-strip", "tercume-segment-edit", "tercume-aligned-fold"]
+          .map((id) => $(id))
+          .filter(Boolean),
+    },
+    "page-output": {
+      title: "Sayfa ve çıktı",
+      placement: "right",
+      host: true,
+      collect: () => {
+        const el = document.querySelector(".tercume-header-page-output");
+        return el ? [el] : [];
+      },
+    },
+  };
+
+  function stashDuzenNode(node) {
+    if (!node || DUZEN_ORIGINS.has(node)) return;
+    DUZEN_ORIGINS.set(node, { parent: node.parentNode, next: node.nextSibling });
+  }
+
+  function restoreDuzenNode(node) {
+    const o = DUZEN_ORIGINS.get(node);
+    if (!o?.parent) return;
+    try {
+      o.parent.insertBefore(node, o.next);
+    } catch {
+      o.parent.appendChild(node);
+    }
+  }
+
+  function restoreAllDuzenNodes() {
+    [...DUZEN_ORIGINS.keys()].forEach(restoreDuzenNode);
+  }
+
+  function makeDuzenCloseBtn() {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "tercume-duzen-close";
+    btn.setAttribute("aria-label", "Paneli kapat");
+    btn.title = "Kapat";
+    btn.textContent = "×";
+    btn.addEventListener("click", (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      closeDuzenDock();
+    });
+    return btn;
+  }
+
+  function ensureDuzenCloseChrome(el, title) {
+    if (!el) return;
+    if (el.classList.contains("tercume-file-panel")) {
+      const row = el.querySelector(".tercume-file-panel-title-row");
+      if (row && !row.querySelector(".tercume-duzen-close")) row.appendChild(makeDuzenCloseBtn());
+      return;
+    }
+    let head = el.querySelector(":scope > .tercume-duzen-chrome, :scope > .tercume-duzen-float-head");
+    if (!head) {
+      head = document.createElement("header");
+      head.className = "tercume-duzen-chrome";
+      el.insertBefore(head, el.firstChild);
+    } else {
+      head.classList.add("tercume-duzen-chrome");
+    }
+    let tit = head.querySelector(".tercume-duzen-chrome-title");
+    if (!tit) {
+      tit = document.createElement("span");
+      tit.className = "tercume-duzen-chrome-title";
+      head.insertBefore(tit, head.firstChild);
+    }
+    tit.textContent = title;
+    head.querySelectorAll(".tercume-duzen-float-close").forEach((b) => b.remove());
+    if (!head.querySelector(".tercume-duzen-close")) head.appendChild(makeDuzenCloseBtn());
+  }
+
+  function ensureDuzenFloatHost() {
+    let host = $("tercume-duzen-float-host");
+    if (!host) {
+      host = document.createElement("div");
+      host.id = "tercume-duzen-float-host";
+      host.className = "tercume-duzen-float-host";
+      host.hidden = true;
+      $("page-tercume")?.appendChild(host);
+    }
+    return host;
+  }
+
+  function hideAllDuzenPanels() {
+    document.querySelectorAll(".tercume-duzen-open").forEach((el) => {
+      el.classList.remove("tercume-duzen-open");
+      el.removeAttribute("data-duzen-place");
+      el.style.removeProperty("display");
+      if (el.dataset.duzenWasHidden === "1") {
+        el.hidden = true;
+        delete el.dataset.duzenWasHidden;
+      }
+    });
+    const flow = $("tercume-flow-panel");
+    if (flow) flow.hidden = true;
+
+    const host = $("tercume-duzen-float-host");
+    if (host) {
+      host.hidden = true;
+      host.innerHTML = "";
+    }
+    restoreAllDuzenNodes();
+
+    const reader = getTercumeUiMode() === "reader";
+    const fp = document.querySelector("#page-tercume .tercume-file-panel");
+    document.querySelectorAll("#page-tercume .tercume-sidebar").forEach((el) => {
+      el.style.setProperty("display", "none", "important");
+    });
+    if (fp) fp.style.setProperty("display", "none", "important");
+    const ara = $("tercume-ara-panel");
+    if (ara) {
+      ara.classList.remove("tercume-duzen-open");
+      ara.hidden = true;
+      ara.style.setProperty("display", "none", "important");
+    }
+    const titleRow = $("title-row-tercume-controls");
+    if (titleRow && reader) titleRow.hidden = true;
+  }
+
+  function mountDuzenHostPanel(cfg) {
+    const nodes = cfg.collect?.() || [];
+    if (!nodes.length) return false;
+    const host = ensureDuzenFloatHost();
+    host.innerHTML = "";
+    const shell = document.createElement("aside");
+    shell.className = "tercume-duzen-panel tercume-duzen-open";
+    shell.dataset.duzenPlace = cfg.placement || "right";
+    ensureDuzenCloseChrome(shell, cfg.title);
+    const body = document.createElement("div");
+    body.className = "tercume-duzen-host-body";
+    nodes.forEach((node) => {
+      stashDuzenNode(node);
+      body.appendChild(node);
+    });
+    shell.appendChild(body);
+    host.appendChild(shell);
+    host.hidden = false;
+    const titleRow = $("title-row-tercume-controls");
+    if (titleRow) titleRow.hidden = false;
+    return true;
+  }
+
+  function showDuzenRoots(cfg) {
+    const roots = (cfg.roots?.() || []).filter(Boolean);
+    if (!roots.length) return false;
+    const disp = cfg.display || "flex";
+    roots.forEach((el) => {
+      if (el.hidden) {
+        el.dataset.duzenWasHidden = "1";
+        el.hidden = false;
+      }
+      ensureDuzenCloseChrome(el, cfg.title);
+      el.classList.add("tercume-duzen-open");
+      el.dataset.duzenPlace = cfg.placement || "left";
+      el.style.setProperty("display", disp, "important");
+    });
+    return true;
+  }
+
+  function syncDuzenDockDisplay() {
+    const dock = String(activeDuzenDock || "").trim();
+    hideAllDuzenPanels();
+    if (!dock) return;
+    const cfg = DUZEN_PANELS[dock];
+    if (!cfg) return;
+    cfg.onOpen?.();
+    let ok = false;
+    if (cfg.host) ok = mountDuzenHostPanel(cfg);
+    else ok = showDuzenRoots(cfg);
+    if (!ok) {
+      flash(`Panel açılamadı: ${cfg.title}`);
+      activeDuzenDock = "";
+      delete document.body.dataset.tercumeDock;
+      $("tercume-duzen-backdrop").hidden = true;
+      return;
+    }
+    if (dock === "files") {
+      document.querySelectorAll("#page-tercume .tercume-sidebar").forEach((el) => {
+        if (!el.classList.contains("tercume-file-panel")) el.style.setProperty("display", "none", "important");
+      });
+    }
+  }
+
   function applyReaderWorkbenchGrid() {
     const wb = $("tercume-workbench");
     if (!wb || getTercumeUiMode() !== "reader") return;
@@ -544,9 +811,7 @@
       main.style.setProperty("grid-column", "1 / -1", "important");
       main.style.width = "100%";
     }
-    wb.querySelectorAll(".tercume-sidebar, .tercume-file-panel").forEach((el) => {
-      el.style.setProperty("display", "none", "important");
-    });
+    syncDuzenDockDisplay();
   }
 
   function getTercumeUiMode() {
@@ -559,40 +824,89 @@
     return "reader";
   }
 
-  function toggleDuzenDock(name) {
-    const n = String(name || "").trim();
-    if (activeDuzenDock === n) {
-      activeDuzenDock = "";
-      delete document.body.dataset.tercumeDock;
-    } else {
-      activeDuzenDock = n;
-      if (n) document.body.dataset.tercumeDock = n;
-      else delete document.body.dataset.tercumeDock;
+  function getReadLevel() {
+    const ctx = global.RuzgarContext?.get?.("system_level");
+    if (ctx === "ilkokul" || ctx === "lise" || ctx === "akademik") return ctx;
+    const el = $("tercume-read-level");
+    const v = String(el?.value || "").trim().toLowerCase();
+    if (v === "ilkokul" || v === "lise" || v === "akademik") {
+      global.RuzgarContext?.setSystemLevel?.(v);
+      return v;
     }
+    try {
+      const saved = localStorage.getItem(LS_TERCUME_READ_LEVEL);
+      if (saved === "ilkokul" || saved === "lise" || saved === "akademik") {
+        global.RuzgarContext?.setSystemLevel?.(saved);
+        return saved;
+      }
+    } catch {
+      /* ignore */
+    }
+    return "akademik";
+  }
+
+  function wireReadLevelSelect() {
+    const el = $("tercume-read-level");
+    if (!el || el.dataset.wired === "1") return;
+    el.dataset.wired = "1";
+    try {
+      const saved = localStorage.getItem(LS_TERCUME_READ_LEVEL);
+      if (saved === "ilkokul" || saved === "lise" || saved === "akademik") el.value = saved;
+    } catch {
+      /* ignore */
+    }
+    el.addEventListener("change", () => {
+      const lvl = String(el.value || "akademik");
+      global.RuzgarContext?.setSystemLevel?.(lvl);
+      try {
+        localStorage.setItem(LS_TERCUME_READ_LEVEL, lvl);
+      } catch {
+        /* ignore */
+      }
+      document.querySelectorAll(".ruzgar-sidebar-level-select").forEach((s) => {
+        if (s.value !== lvl) s.value = lvl;
+      });
+      flash(`Çeviri seviyesi: ${el.options[el.selectedIndex]?.text || el.value}`);
+    });
+    global.RuzgarContext?.subscribe?.((snap) => {
+      if (snap.system_level && el.value !== snap.system_level) el.value = snap.system_level;
+    });
+  }
+
+  function openDuzenDock(name) {
+    const n = String(name || "").trim();
+    if (!n) return;
+    if (document.body.dataset.motor !== "tercume") {
+      document.body.dataset.motor = "tercume";
+    }
+    activeDuzenDock = n;
+    document.body.dataset.tercumeDock = n;
     const backdrop = $("tercume-duzen-backdrop");
-    if (backdrop) backdrop.hidden = !activeDuzenDock;
+    if (backdrop) backdrop.hidden = false;
     document.querySelectorAll(".tercume-duzen-btn").forEach((b) => {
       b.classList.toggle("is-active", b.dataset.tercumeDock === activeDuzenDock);
     });
-    if (activeDuzenDock === "review") {
-      setWorkbenchReviewMode(true);
-      const fold = $("tercume-aligned-fold");
-      if (fold) {
-        fold.hidden = false;
-        fold.open = true;
-      }
-    } else if (getTercumeUiMode() === "reader") {
+    if (activeDuzenDock !== "review" && getTercumeUiMode() === "reader") {
       setWorkbenchReviewMode(false);
     }
-    if (activeDuzenDock === "ara") {
-      const ara = $("tercume-ara-panel");
-      if (ara) ara.hidden = false;
-    }
+    syncDuzenDockDisplay();
+  }
+
+  function toggleDuzenDock(name) {
+    const n = String(name || "").trim();
+    if (activeDuzenDock === n) closeDuzenDock();
+    else openDuzenDock(n);
   }
 
   function closeDuzenDock() {
-    if (!activeDuzenDock) return;
-    toggleDuzenDock(activeDuzenDock);
+    const had = !!activeDuzenDock;
+    activeDuzenDock = "";
+    delete document.body.dataset.tercumeDock;
+    const backdrop = $("tercume-duzen-backdrop");
+    if (backdrop) backdrop.hidden = true;
+    document.querySelectorAll(".tercume-duzen-btn").forEach((b) => b.classList.remove("is-active"));
+    if (had && getTercumeUiMode() === "reader") setWorkbenchReviewMode(false);
+    hideAllDuzenPanels();
   }
 
   function syncBookReaderView() {
@@ -3673,12 +3987,21 @@
       flash("Kaynak metin bozuk — önce «Sayfa aralığını yükle» veya OCR deneyin.");
       return;
     }
-    const body = {
-      rel: openRel,
-      tgt_lang: String($("tercume-tgt-lang")?.value || "tr"),
-      src_lang: String($("tercume-src-lang")?.value || "auto"),
-      skip_empty: true,
-    };
+    const body = global.RuzgarContext?.appendToJsonBody
+      ? global.RuzgarContext.appendToJsonBody({
+          rel: openRel,
+          tgt_lang: String($("tercume-tgt-lang")?.value || "tr"),
+          src_lang: String($("tercume-src-lang")?.value || "auto"),
+          skip_empty: true,
+        })
+      : {
+          rel: openRel,
+          tgt_lang: String($("tercume-tgt-lang")?.value || "tr"),
+          src_lang: String($("tercume-src-lang")?.value || "auto"),
+          read_level: getReadLevel(),
+          system_level: getReadLevel(),
+          skip_empty: true,
+        };
     if (mode === "range") {
       if (range.page_from == null) {
         flash("Başlangıç sayfası girin (ör. 1).");
@@ -3724,11 +4047,21 @@
     const res = await fetch(`${api()}/api/tercume/batch-start`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        folder_rel: folder,
-        tgt_lang: String($("tercume-tgt-lang")?.value || "tr"),
-        src_lang: String($("tercume-src-lang")?.value || "auto"),
-      }),
+      body: JSON.stringify(
+        global.RuzgarContext?.appendToJsonBody
+          ? global.RuzgarContext.appendToJsonBody({
+              folder_rel: folder,
+              tgt_lang: String($("tercume-tgt-lang")?.value || "tr"),
+              src_lang: String($("tercume-src-lang")?.value || "auto"),
+            })
+          : {
+              folder_rel: folder,
+              tgt_lang: String($("tercume-tgt-lang")?.value || "tr"),
+              src_lang: String($("tercume-src-lang")?.value || "auto"),
+              read_level: getReadLevel(),
+              system_level: getReadLevel(),
+            },
+      ),
     });
     const j = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(typeof j.detail === "string" ? j.detail : j.error || `HTTP ${res.status}`);
@@ -3994,6 +4327,10 @@
     fd.append("text", text);
     fd.append("src_lang", String($("tercume-src-lang")?.value || "auto"));
     fd.append("tgt_lang", String($("tercume-tgt-lang")?.value || "en"));
+    const level = getReadLevel();
+    fd.append("read_level", level);
+    fd.append("system_level", level);
+    if (global.RuzgarContext?.appendToFormData) global.RuzgarContext.appendToFormData(fd);
     fd.append("source_file", openRel || "");
     if (pageIndex != null) fd.append("page_index", String(pageIndex));
     const wr = deps.getWorkspaceRoot ? await deps.getWorkspaceRoot() : "";
@@ -4791,11 +5128,10 @@ ${chunk}`;
       void refreshCapabilities(openRel || "");
       if (deps.showTercumeChatWelcome) deps.showTercumeChatWelcome();
     } else {
+      closeDuzenDock();
       delete document.body.dataset.motor;
       delete document.body.dataset.tercumeTab;
       delete document.body.dataset.tercumeUi;
-      delete document.body.dataset.tercumeDock;
-      activeDuzenDock = "";
     }
   }
 
@@ -4980,6 +5316,14 @@ ${chunk}`;
       btn.addEventListener("click", () => toggleDuzenDock(btn.dataset.tercumeDock || ""));
     });
     $("tercume-duzen-backdrop")?.addEventListener("click", () => closeDuzenDock());
+    document.addEventListener(
+      "keydown",
+      (ev) => {
+        if (ev.key !== "Escape" || !activeDuzenDock) return;
+        closeDuzenDock();
+      },
+      true,
+    );
 
     $("btn-tercume-book-prev")?.addEventListener("click", () => {
       void goToBookPage(Math.max(1, pdfPreviewPage - 1));
@@ -5016,11 +5360,13 @@ ${chunk}`;
     }
     if (page.dataset.tercumeV2Wired === "1") {
       wireTercumeProfessional();
+      wireReadLevelSelect();
       return;
     }
     page.dataset.tercumeV2Wired = "1";
     wireTercumeViewTabs();
     wireTercumeProfessional();
+    wireReadLevelSelect();
 
     try {
       workRoot = localStorage.getItem(LS_WORK_ROOT) || workRoot;
@@ -5306,6 +5652,7 @@ ${chunk}`;
     setTercumeUiMode,
     getTercumeUiMode,
     toggleDuzenDock,
+    openDuzenDock,
     closeDuzenDock,
     goToBookPage,
     openFileByHint: async (hint) => {

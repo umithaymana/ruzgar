@@ -1,0 +1,36 @@
+{
+  "id": "mimar",
+  "title": "Mimar",
+  "version": 2,
+  "sidebar": {
+    "default": [
+      {
+        "group": "Araçlar",
+        "items": [
+          { "id": "photo", "label": "Fotoğraf", "title": "Fotoğraf atölyesi", "action": "mimar:photo", "icon": "📷" },
+          { "id": "art", "label": "Sanat", "title": "Resim ve sanat galerisi", "action": "mimar:art", "icon": "🎨" },
+          { "id": "design", "label": "Tasarım", "title": "Tasarım şablonları", "action": "mimar:design", "icon": "◈" }
+        ]
+      }
+    ],
+    "duzen": [
+      {
+        "group": "Görünüm",
+        "items": [
+          { "id": "photo", "label": "Fotoğraf", "title": "Fotoğraf sekmesi", "action": "mimar:photo", "icon": "📷" },
+          { "id": "art", "label": "Resim · Sanat", "title": "Sanat sekmesi", "action": "mimar:art", "icon": "🖼" },
+          { "id": "design", "label": "Tasarım", "title": "Tasarım sekmesi", "action": "mimar:design", "icon": "📐" }
+        ]
+      }
+    ],
+    "gelisim": [
+      {
+        "group": "Gelişim",
+        "items": [
+          { "id": "archive", "label": "Arşiv klasörü", "title": "İlim arşivini aç", "action": "mimar:archive", "icon": "📁" },
+          { "id": "devtools", "label": "Geliştirici araçları", "title": "DevTools (F12)", "action": "genel:devtools", "icon": "🛠" }
+        ]
+      }
+    ]
+  }
+}

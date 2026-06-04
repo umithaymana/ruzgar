@@ -38,13 +38,13 @@
             <span id="api-status" class="tech-chip">Sunucu…</span>
             <span id="ruzgar-connection-banner" class="tech-chip connection-active" hidden>Rüzgar Başlatıldı - Bağlantı Aktif</span>
             <div class="file-toolbar header-nav-toolbar" role="toolbar" aria-label="Sayfa ve sohbet">
-              <button type="button" id="nav-back" class="btn-nav" title="Geri (gezinme geçmişi)" aria-label="Geri">
+              <button type="button" id="nav-back" class="btn-nav" title="Önceki motor (tüm geçmiş)" aria-label="Geri">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
               </button>
-              <button type="button" id="nav-forward" class="btn-nav" title="İleri (gezinme geçmişi)" aria-label="İleri">
+              <button type="button" id="nav-forward" class="btn-nav" title="Sonraki motor (tüm geçmiş)" aria-label="İleri">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
               </button>
-              <button type="button" id="nav-refresh" class="btn-nav" title="Sayfayı yenile (Ctrl+R)" aria-label="Yenile">
+              <button type="button" id="nav-refresh" class="btn-nav" title="Arayüzü yeniden yükle — kod değişiklikleri (Ctrl+R). Shift: yalnızca aktif motor verisi." aria-label="Yenile">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
               </button>
               <button type="button" id="nav-clear-chat" class="btn-nav" title="Sohbeti temizle (uygulamayı kapatmadan)" aria-label="Sohbeti temizle">
@@ -67,46 +67,12 @@
               <button type="button" id="btn-faz7-help" class="btn-nav btn-faz7-help" title="Kısayollar ve ipuçları (?)" aria-label="Yardım">?</button>
             </div>
           </div>
-          <div class="tercume-top-flow" aria-label="Dil akışı seçimleri">
-            <span class="tercume-top-flow-label">Dil akışı</span>
-            <div class="tercume-top-flow-stack">
-              <div class="tercume-top-flow-line">
-                <span class="tercume-top-flow-key">Kaynak</span>
-                <select id="tercume-src-lang" class="tercume-lang-select" aria-label="Kaynak dil">
-                  <option value="auto">Otomatik</option>
-                  <option value="tr">Türkçe</option>
-                  <option value="en">İngilizce</option>
-                  <option value="ar">Arapça</option>
-                  <option value="de">Almanca</option>
-                  <option value="fr">Fransızca</option>
-                  <option value="fa">Farsça</option>
-                  <option value="ru">Rusça</option>
-                </select>
-              </div>
-              <div class="tercume-top-flow-line">
-                <span class="tercume-top-flow-key">Hedef</span>
-                <select id="tercume-tgt-lang" class="tercume-lang-select" aria-label="Hedef dil">
-                  <option value="tr">Türkçe</option>
-                  <option value="en" selected>İngilizce</option>
-                  <option value="ar">Arapça</option>
-                  <option value="de">Almanca</option>
-                  <option value="fr">Fransızca</option>
-                  <option value="fa">Farsça</option>
-                  <option value="ru">Rusça</option>
-                </select>
-              </div>
+          <div class="tercume-top-flow" aria-label="Çeviri komutları">
+            <div class="tercume-top-flow-actions">
+              <button type="button" class="btn-primary btn-compact" id="btn-tercume-translate">Çevir</button>
+              <button type="button" class="btn-secondary btn-compact" id="btn-tercume-stop">Durdur</button>
+              <button type="button" class="btn-secondary btn-compact" id="btn-tercume-save-target">Kaydet</button>
             </div>
-            <span class="tercume-top-flow-label">Mod</span>
-            <select id="tercume-translate-mode" class="tercume-lang-select" title="Çeviri modu">
-              <option value="single" selected>Tek parça / sayfa</option>
-              <option value="page">Sayfa sayfa (arka plan)</option>
-              <option value="range">Sayfa aralığı (arka plan)</option>
-              <option value="full">Tamamı (arka plan, yavaş)</option>
-              <option value="chat">Sohbet</option>
-            </select>
-            <button type="button" class="btn-primary btn-compact" id="btn-tercume-translate">Çevir</button>
-            <button type="button" class="btn-secondary btn-compact" id="btn-tercume-stop">Durdur</button>
-            <button type="button" class="btn-secondary btn-compact" id="btn-tercume-save-target">Kaydet</button>
           </div>
         </div>
       </div>
@@ -264,6 +230,26 @@
             </span>
           </button>
         </div>
+        <aside
+          id="main-sidebar"
+          class="ruzgar-motor-sidebar"
+          aria-label="Motor araçları"
+          hidden
+        >
+          <header class="ruzgar-motor-sidebar-head">
+            <h3 class="ruzgar-motor-sidebar-title" id="main-sidebar-title">Araçlar</h3>
+            <button
+              type="button"
+              class="ruzgar-motor-sidebar-close"
+              id="btn-main-sidebar-close"
+              aria-label="Araç panelini kapat"
+              title="Kapat"
+            >
+              ×
+            </button>
+          </header>
+          <ul class="ruzgar-motor-sidebar-list" id="main-sidebar-list" role="list"></ul>
+        </aside>
         <div class="motors-foot">
           <span class="motors-foot-label">Mimar</span>
           <span class="motors-foot-name">Ümit &amp; Gökçenur</span>
@@ -951,6 +937,7 @@
                     <span class="tercume-reader-page" id="tercume-reader-page-label">—</span>
                   </div>
                   <div class="tercume-reader-chrome-actions" role="toolbar" aria-label="Düzen panelleri">
+                    <button type="button" class="btn-secondary btn-compact tercume-duzen-btn" data-tercume-dock="flow" title="Kaynak/hedef dil, seviye, mod">Dil akışı</button>
                     <button type="button" class="btn-secondary btn-compact tercume-duzen-btn" data-tercume-dock="files" title="Dosya gezgini">Dosyalar</button>
                     <button type="button" class="btn-secondary btn-compact tercume-duzen-btn" data-tercume-dock="tools" title="Araçlar ve analiz">Araçlar</button>
                     <button type="button" class="btn-secondary btn-compact tercume-duzen-btn" data-tercume-dock="status" title="Durum ve ayarlar">Durum</button>
@@ -1263,6 +1250,76 @@
                 </div>
               </div>
             </div>
+            <aside
+              id="tercume-flow-panel"
+              class="tercume-duzen-float-panel tercume-flow-panel"
+              hidden
+              aria-label="Dil akışı"
+            >
+              <header class="tercume-duzen-float-head">
+                <strong>Dil akışı</strong>
+                <button
+                  type="button"
+                  class="btn-secondary btn-compact tercume-duzen-float-close"
+                  data-tercume-close-dock
+                  aria-label="Paneli kapat"
+                >
+                  ×
+                </button>
+              </header>
+              <div class="tercume-flow-panel-body">
+                <div class="tercume-top-flow-stack">
+                  <div class="tercume-top-flow-line">
+                    <span class="tercume-top-flow-key">Kaynak</span>
+                    <select id="tercume-src-lang" class="tercume-lang-select" aria-label="Kaynak dil">
+                      <option value="auto">Otomatik</option>
+                      <option value="tr">Türkçe</option>
+                      <option value="en">İngilizce</option>
+                      <option value="ar">Arapça</option>
+                      <option value="de">Almanca</option>
+                      <option value="fr">Fransızca</option>
+                      <option value="fa">Farsça</option>
+                      <option value="ru">Rusça</option>
+                    </select>
+                  </div>
+                  <div class="tercume-top-flow-line">
+                    <span class="tercume-top-flow-key">Hedef</span>
+                    <select id="tercume-tgt-lang" class="tercume-lang-select" aria-label="Hedef dil">
+                      <option value="tr">Türkçe</option>
+                      <option value="en" selected>İngilizce</option>
+                      <option value="ar">Arapça</option>
+                      <option value="de">Almanca</option>
+                      <option value="fr">Fransızca</option>
+                      <option value="fa">Farsça</option>
+                      <option value="ru">Rusça</option>
+                    </select>
+                  </div>
+                  <div class="tercume-top-flow-line">
+                    <span class="tercume-top-flow-key">Seviye</span>
+                    <select
+                      id="tercume-read-level"
+                      class="tercume-lang-select"
+                      aria-label="Çeviri seviyesi"
+                      title="Metnin hedef kitleye göre üslubu"
+                    >
+                      <option value="akademik" selected>Akademik</option>
+                      <option value="lise">Lise</option>
+                      <option value="ilkokul">İlkokul</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="tercume-top-flow-line tercume-top-flow-line--mod">
+                  <span class="tercume-top-flow-key">Mod</span>
+                  <select id="tercume-translate-mode" class="tercume-lang-select" title="Çeviri modu">
+                    <option value="single" selected>Tek parça / sayfa</option>
+                    <option value="page">Sayfa sayfa (arka plan)</option>
+                    <option value="range">Sayfa aralığı (arka plan)</option>
+                    <option value="full">Tamamı (arka plan, yavaş)</option>
+                    <option value="chat">Sohbet</option>
+                  </select>
+                </div>
+              </div>
+            </aside>
             <div class="tercume-duzen-backdrop" id="tercume-duzen-backdrop" hidden aria-hidden="true"></div>
           </section>
 
@@ -2135,18 +2192,32 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
       </div>
     </div>
 
+    <div id="ruzgar-slide-host" class="ruzgar-slide-host" hidden aria-hidden="true">
+      <div class="ruzgar-slide-backdrop" id="ruzgar-slide-backdrop"></div>
+      <aside class="ruzgar-slide-panel" role="dialog" aria-modal="true" aria-labelledby="ruzgar-slide-title">
+        <header class="ruzgar-slide-head">
+          <h2 class="ruzgar-slide-title" id="ruzgar-slide-title">Panel</h2>
+          <button type="button" class="ruzgar-slide-close" id="btn-ruzgar-slide-close" aria-label="Paneli kapat">×</button>
+        </header>
+        <div class="ruzgar-slide-body" id="ruzgar-slide-body"></div>
+      </aside>
+    </div>
+
     <div id="ctx-menu" class="ctx-menu" hidden>
       <button type="button" data-act="cut">Kes</button>
       <button type="button" data-act="copy">Kopyala</button>
       <button type="button" data-act="paste">Yapıştır</button>
     </div>
 
-    <link rel="stylesheet" href="tercume-atolye.css?v=20260604-book-wide" />
+    <link rel="stylesheet" href="tercume-atolye.css?v=20260606-tools-panel" />
     <link rel="stylesheet" href="mimar-atolye.css?v=20260601-mimar-polish" />
+    <link rel="stylesheet" href="components/slide-panel.css?v=20260606-panels-drawer" />
+    <script src="ruzgar-context-state.js?v=20260605-components"></script>
+    <script src="components/sidebar-manager.js?v=20260606-duzen-unified"></script>
     <script src="ruzgar-split.js?v=20260604-book-wide"></script>
     <script src="ruzgar-virus-guard.js?v=20260604-av-v2"></script>
-    <script src="tercume-atolye.js?v=20260604-book-wide"></script>
+    <script src="tercume-atolye.js?v=20260606-tools-panel"></script>
     <script src="mimar-atolye.js?v=20260601-faz5"></script>
-    <script src="app.js?v=20260602-motor-auto-compact"></script>
+    <script src="app.js?v=20260606-nav-motor-persist"></script>
   </body>
 </html>

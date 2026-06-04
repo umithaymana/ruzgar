@@ -1,0 +1,34 @@
+{
+  "id": "ses",
+  "title": "Ses",
+  "version": 2,
+  "sidebar": {
+    "default": [
+      {
+        "group": "Araçlar",
+        "items": [
+          { "id": "open", "label": "Dosya aç", "title": "Ses dosyası seç", "action": "ses:open", "icon": "🎵" },
+          { "id": "stt", "label": "Metne dök", "title": "Konuşmayı metne çevir", "action": "ses:transcript", "icon": "📝" },
+          { "id": "chat", "label": "Sohbete aktar", "title": "Transkripti sohbete gönder", "action": "ses:to-chat", "icon": "💬" }
+        ]
+      }
+    ],
+    "duzen": [
+      {
+        "group": "Paneller",
+        "items": [
+          { "id": "speak", "label": "Seslendir", "title": "Metni sesli oku", "action": "ses:speak", "icon": "🔊" }
+        ]
+      }
+    ],
+    "gelisim": [
+      {
+        "group": "Gelişim",
+        "items": [
+          { "id": "clear", "label": "Transkript temizle", "title": "Metin alanını sıfırla", "action": "ses:clear", "icon": "🗑" },
+          { "id": "devtools", "label": "Geliştirici araçları", "title": "DevTools (F12)", "action": "genel:devtools", "icon": "🛠" }
+        ]
+      }
+    ]
+  }
+}

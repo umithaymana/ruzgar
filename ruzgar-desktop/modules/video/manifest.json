@@ -1,0 +1,47 @@
+{
+  "id": "video",
+  "title": "Video",
+  "version": 2,
+  "sidebar": {
+    "default": [
+      {
+        "group": "Araçlar",
+        "items": [
+          { "id": "mark", "label": "Kare yakala", "title": "Oynatıcı konumunu kesim başı yap", "action": "video:mark-in", "icon": "🎬" },
+          { "id": "sub", "label": "Altyazı", "title": "Altyazı dosyası ve gömme", "action": "video:subtitles", "icon": "💬" },
+          { "id": "audio", "label": "Ses dışa aktar", "title": "Ses parçası veya çıktı klasörü", "action": "video:export-audio", "icon": "🔊" }
+        ]
+      }
+    ],
+    "duzen": [
+      {
+        "group": "Görünüm",
+        "items": [
+          { "id": "preview", "label": "Önizleme", "title": "Oynatıcı ve zaman çizelgesi", "action": "video:timeline", "icon": "▶" }
+        ]
+      },
+      {
+        "group": "Paneller",
+        "items": [
+          { "id": "trim", "label": "Kesim", "title": "Başlangıç/bitiş ve kırpma", "action": "video:trim", "icon": "✂️" },
+          { "id": "export", "label": "Çıktı", "title": "Dışa aktarma klasörü", "action": "video:export-audio", "icon": "📤" }
+        ]
+      },
+      {
+        "group": "Çalışma",
+        "items": [
+          { "id": "youtube", "label": "URL indir", "title": "Web veya YouTube kaynağı", "action": "video:youtube", "icon": "⬇" }
+        ]
+      }
+    ],
+    "gelisim": [
+      {
+        "group": "Gelişim",
+        "items": [
+          { "id": "tercume", "label": "Altyazı → Tercüme", "title": "Altyazıyı tercüme atölyesine gönder", "action": "video:sub-tercume", "icon": "⇄" },
+          { "id": "devtools", "label": "Geliştirici araçları", "title": "DevTools (F12)", "action": "genel:devtools", "icon": "🛠" }
+        ]
+      }
+    ]
+  }
+}

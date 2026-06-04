@@ -252,8 +252,99 @@ const MAX_CLIENT_HISTORY_MSGS = 32;
 const UI_MANIFEST_POLL_MS = 3000;
 
 const MODE_QS = new URLSearchParams(window.location.search);
-let currentMode = (MODE_QS.get("mode") || "genel").trim().toLowerCase();
-if (currentMode === "okuma") currentMode = "mimar";
+
+function normalizeMotorMode(mode) {
+  let m = String(mode || "").trim().toLowerCase();
+  if (m === "okuma") m = "mimar";
+  return m || "genel";
+}
+
+function persistMotorSession() {
+  const mode = normalizeMotorMode(currentMode);
+  try {
+    sessionStorage.setItem("ruzgar_last_motor", mode);
+    sessionStorage.setItem("ruzgar_motor_nav_stack", JSON.stringify(motorNavStack));
+    sessionStorage.setItem("ruzgar_motor_nav_index", String(motorNavIndex));
+  } catch {
+    /* ignore */
+  }
+  return mode;
+}
+
+function restoreMotorNavStack() {
+  try {
+    const raw = sessionStorage.getItem("ruzgar_motor_nav_stack");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || !parsed.length) return null;
+    return parsed.map(normalizeMotorMode).filter(Boolean);
+  } catch {
+    return null;
+  }
+}
+
+let currentMode = normalizeMotorMode(MODE_QS.get("mode") || "");
+if (!MODE_QS.get("mode")) {
+  try {
+    const saved = sessionStorage.getItem("ruzgar_last_motor");
+    if (saved) currentMode = normalizeMotorMode(saved);
+  } catch {
+    /* ignore */
+  }
+}
+if (!currentMode) currentMode = "genel";
+
+/** Sol motor menüsü geçmişi — geri/ileri (tüm motorlar, sınırsız) */
+const motorNavStack = restoreMotorNavStack() || [currentMode];
+let motorNavIndex = 0;
+try {
+  const idx = parseInt(sessionStorage.getItem("ruzgar_motor_nav_index") || "", 10);
+  if (Number.isFinite(idx)) {
+    motorNavIndex = Math.max(0, Math.min(idx, motorNavStack.length - 1));
+  } else {
+    motorNavIndex = Math.max(0, motorNavStack.lastIndexOf(currentMode));
+  }
+} catch {
+  motorNavIndex = Math.max(0, motorNavStack.lastIndexOf(currentMode));
+}
+if (motorNavIndex < 0) motorNavIndex = motorNavStack.length - 1;
+if (!motorNavStack.includes(currentMode)) {
+  motorNavStack.push(currentMode);
+  motorNavIndex = motorNavStack.length - 1;
+} else if (MODE_QS.get("mode")) {
+  const at = motorNavStack.lastIndexOf(currentMode);
+  if (at >= 0) motorNavIndex = at;
+}
+let motorNavFromHistory = false;
+
+function updateMotorNavButtons() {
+  if (el.navBack) el.navBack.disabled = motorNavIndex <= 0;
+  if (el.navForward) el.navForward.disabled = motorNavIndex >= motorNavStack.length - 1;
+}
+
+function recordMotorNav(mode) {
+  const m = normalizeMotorMode(mode);
+  if (!m || motorNavFromHistory) return;
+  if (motorNavStack[motorNavIndex] === m) return;
+  motorNavStack.splice(motorNavIndex + 1);
+  motorNavStack.push(m);
+  motorNavIndex = motorNavStack.length - 1;
+  updateMotorNavButtons();
+  persistMotorSession();
+}
+
+function motorNavGo(delta) {
+  const next = motorNavIndex + (delta < 0 ? -1 : 1);
+  if (next < 0 || next >= motorNavStack.length) return false;
+  motorNavIndex = next;
+  motorNavFromHistory = true;
+  switchMode(motorNavStack[motorNavIndex]);
+  motorNavFromHistory = false;
+  updateMotorNavButtons();
+  persistMotorSession();
+  return true;
+}
+
 const WINDOW_TITLE_BASE =
   "RÜZGAR — Mimarlar: Ümit & Gökçenur";
 
@@ -830,19 +921,27 @@ function applyModeToUI() {
   }
   if (el.navRefresh) {
     const tips = {
-      genel: "Ana motor panelini yenile",
-      hafiza: "Hafıza JSON görünümünü yenile",
-      hizir: "HIZIR: merkezi bellek + fırsat listesini yenile (Ana Motor değişmez)",
-      mimar: "Mimar atölyesi",
-      okuma: "Mimar atölyesi (eski kısayol)",
-      tercume: "Tercüme dosya listesini yenile",
-      ses: "Ses motoru ipuçlarını yenile",
-      video: "Video motoru özetini yenile",
-      programlama: "Programlama atölyesi kökünü yenile",
+      genel: "Arayüzü yeniden yükle (Shift: yalnızca ana motor verisi)",
+      hafiza: "Arayüzü yeniden yükle (Shift: yalnızca hafıza JSON)",
+      hizir: "Arayüzü yeniden yükle (Shift: yalnızca HIZIR paneli)",
+      mimar: "Arayüzü yeniden yükle (Shift: yalnızca mimar atölyesi)",
+      okuma: "Arayüzü yeniden yükle (Shift: yalnızca mimar atölyesi)",
+      tercume: "Arayüzü yeniden yükle (Shift: yalnızca tercüme listesi)",
+      ses: "Arayüzü yeniden yükle (Shift: yalnızca ses motoru)",
+      video: "Arayüzü yeniden yükle (Shift: yalnızca video özeti)",
+      programlama: "Arayüzü yeniden yükle (Shift: yalnızca kod kökü)",
     };
-    el.navRefresh.title = tips[currentMode] || "Aktif modülü yenile";
+    el.navRefresh.title = tips[currentMode] || "Arayüzü yeniden yükle (kod değişiklikleri dahil)";
+  }
+  updateMotorNavButtons();
+  if (window.RuzgarSidebarManager?.setMotor) {
+    void window.RuzgarSidebarManager.setMotor(currentMode);
+  } else if (window.RuzgarPanelManager?.openPanel) {
+    window.RuzgarPanelManager.openPanel(currentMode);
   }
 }
+window.switchMode = switchMode;
+window.currentMode = currentMode;
 applyModeToUI();
 if (el.web) el.web.addEventListener("change", syncWebFetchUi);
 let perfBusy = false;
@@ -1361,6 +1460,7 @@ function applyUiManifest(manifest) {
   renderRecentVideoDownloads(manifest.video?.recent_downloads || []);
 }
 
+window.refreshUiManifest = refreshUiManifest;
 async function refreshUiManifest() {
   const ac = new AbortController();
   const timer = setTimeout(() => ac.abort(), 8000);
@@ -1522,7 +1622,13 @@ function switchMode(mode) {
     perfBusy = false;
   }
   currentMode = next;
+  window.currentMode = currentMode;
   applyModeToUI();
+  if (window.RuzgarSidebarManager?.setMotor) {
+    void window.RuzgarSidebarManager.setMotor(next);
+  } else if (window.RuzgarPanelManager?.openPanel) {
+    window.RuzgarPanelManager.openPanel(next);
+  }
   renderMotorChatFromSession(next);
   setStatus(`Mod: ${MODE_LABELS[currentMode] || currentMode}`, "Rüzgar");
   updatePerformanceIndicators(perfBusy);
@@ -1540,6 +1646,8 @@ function switchMode(mode) {
   if (next === "tercume") {
     showTercumeChatWelcome();
   }
+  recordMotorNav(next);
+  updateMotorNavButtons();
   const motorDeclarationByMode = {
     genel: "Şu anda ana motor tam güç ve tam kapasite çalışıyor.",
     mimar:
@@ -6868,6 +6976,7 @@ function setStatus(right, left) {
   if (right != null) el.statusR.textContent = right;
   if (left != null) el.statusL.textContent = left;
 }
+window.setStatus = setStatus;
 
 /** Ses motoru (Edge + Web Speech) — yazarken veya yeni turda anında sustur */
 function silenceVoiceOutputNow() {
@@ -6994,95 +7103,141 @@ function clearChatSession() {
   window.setTimeout(() => setStatus("Hazır", "Rüzgar"), 1600);
 }
 
+async function refreshCurrentMotorPanel() {
+  const mode = String(currentMode || "").trim().toLowerCase();
+  if (mode === "hizir") {
+    await refreshHizirOperasyonPanel();
+    setStatus("HIZIR: bellek ve fırsat listesi güncellendi", "Rüzgar");
+    return;
+  }
+  if (mode === "hafiza") {
+    await loadHafizaJsonView();
+    setStatus("Hafıza görünümü yenilendi", "Rüzgar");
+    return;
+  }
+  if (mode === "mimar" || mode === "okuma") {
+    if (window.RuzgarMimarAtolye) window.RuzgarMimarAtolye.load();
+    setStatus("Mimar atölyesi yenilendi", "Rüzgar");
+    return;
+  }
+  if (mode === "tercume") {
+    if (window.RuzgarTercumeAtolye?.load) window.RuzgarTercumeAtolye.load();
+    const tab = document.body.dataset.tercumeTab || "calisma";
+    if (tab === "okuma") {
+      await loadIlimFileList();
+      setStatus("Okuma arşivi yenilendi", "Rüzgar");
+    } else {
+      await loadTercumeFileList();
+      setStatus("Tercüme dosya listesi yenilendi", "Rüzgar");
+    }
+    return;
+  }
+  if (mode === "ses") {
+    await refreshSesSttHint();
+    setStatus("Ses motoru bilgisi yenilendi", "Rüzgar");
+    return;
+  }
+  if (mode === "video") {
+    await refreshVideoEngineHint();
+    setStatus("Video motoru özeti yenilendi", "Rüzgar");
+    return;
+  }
+  if (mode === "programlama") {
+    await programlamaAtolyeRefreshRoot();
+    setStatus("Programlama atölyesi kökü yenilendi", "Rüzgar");
+    return;
+  }
+  if (mode === "genel") {
+    updateDynamicWorkbench();
+    void refreshUiManifest();
+    setStatus("Ana motor paneli güncellendi", "Rüzgar");
+    return;
+  }
+  updateDynamicWorkbench();
+  setStatus("Çalışma paneli güncellendi", "Rüzgar");
+}
+
+async function hardReloadRuzgarUi() {
+  const mode = persistMotorSession();
+  setStatus("Arayüz yeniden yükleniyor (önbellek temiz)…", "Rüzgar");
+  let target = globalThis.location.href;
+  try {
+    const u = new URL(globalThis.location.href);
+    u.searchParams.set("mode", mode);
+    u.searchParams.set("_r", String(Date.now()));
+    target = u.toString();
+    globalThis.history.replaceState(null, "", target);
+  } catch {
+    /* ignore */
+  }
+  try {
+    if (window.ruzgarApi?.navReload) {
+      const ok = await window.ruzgarApi.navReload({ ignoreCache: true });
+      if (ok) return;
+    }
+  } catch {
+    /* tarayıcı yedek */
+  }
+  try {
+    globalThis.location.replace(target);
+  } catch {
+    globalThis.location.reload();
+  }
+}
+
 function wireNavToolbar() {
-  const api = window.ruzgarApi;
   if (el.navBack) {
-    el.navBack.addEventListener("click", async () => {
-      if (api?.navGoBack) {
-        const ok = await api.navGoBack();
-        if (!ok) setStatus("Geri gidilecek sayfa yok", null);
-        else setStatus("Hazır", "Rüzgar");
+    el.navBack.addEventListener("click", () => {
+      if (motorNavGo(-1)) {
+        setStatus(`Motor: ${MODE_LABELS[currentMode] || currentMode}`, "Rüzgar");
       } else {
-        try {
-          if (window.history.length > 1) window.history.back();
-        } catch {
-          setStatus("Geri kullanılamıyor", null);
-        }
+        setStatus("Geri: motor geçmişi başında", null);
       }
     });
   }
   if (el.navForward) {
-    el.navForward.addEventListener("click", async () => {
-      if (api?.navGoForward) {
-        const ok = await api.navGoForward();
-        if (!ok) setStatus("İleri gidilecek sayfa yok", null);
-        else setStatus("Hazır", "Rüzgar");
+    el.navForward.addEventListener("click", () => {
+      if (motorNavGo(1)) {
+        setStatus(`Motor: ${MODE_LABELS[currentMode] || currentMode}`, "Rüzgar");
+      } else {
+        setStatus("İleri: motor geçmişi sonunda", null);
       }
     });
   }
   if (el.navRefresh) {
-    el.navRefresh.addEventListener("click", async () => {
-      const mode = String(currentMode || "").trim().toLowerCase();
+    el.navRefresh.addEventListener("click", async (ev) => {
       try {
-        /* UI Fix — Üst «Yenile»: yalnızca aktif modül; tam uygulama/Electron reload yok */
-        if (mode === "hizir") {
-          await refreshHizirOperasyonPanel();
-          setStatus("HIZIR: bellek ve fırsat listesi güncellendi", "Rüzgar");
+        if (ev.shiftKey) {
+          await refreshCurrentMotorPanel();
           return;
         }
-        if (mode === "hafiza") {
-          await loadHafizaJsonView();
-          setStatus("Hafıza görünümü yenilendi", "Rüzgar");
-          return;
-        }
-        if (mode === "mimar" || mode === "okuma") {
-          if (window.RuzgarMimarAtolye) window.RuzgarMimarAtolye.load();
-          setStatus("Mimar atölyesi yenilendi", "Rüzgar");
-          return;
-        }
-        if (mode === "tercume") {
-          const tab = document.body.dataset.tercumeTab || "calisma";
-          if (tab === "okuma") {
-            await loadIlimFileList();
-            setStatus("Okuma arşivi yenilendi", "Rüzgar");
-          } else {
-            await loadTercumeFileList();
-            setStatus("Tercüme dosya listesi yenilendi", "Rüzgar");
-          }
-          return;
-        }
-        if (mode === "ses") {
-          await refreshSesSttHint();
-          setStatus("Ses motoru bilgisi yenilendi", "Rüzgar");
-          return;
-        }
-        if (mode === "video") {
-          await refreshVideoEngineHint();
-          setStatus("Video motoru özeti yenilendi", "Rüzgar");
-          return;
-        }
-        if (mode === "programlama") {
-          await programlamaAtolyeRefreshRoot();
-          setStatus("Programlama atölyesi kökü yenilendi", "Rüzgar");
-          return;
-        }
-        if (mode === "genel") {
-          updateDynamicWorkbench();
-          setStatus("Ana motor paneli güncellendi", "Rüzgar");
-          return;
-        }
+        await hardReloadRuzgarUi();
       } catch (e) {
         const msg = e && e.message ? String(e.message) : String(e);
         setStatus(`Yenileme: ${msg.slice(0, 120)}`, null);
-        return;
       }
-      updateDynamicWorkbench();
-      setStatus("Çalışma paneli güncellendi", "Rüzgar");
     });
   }
   if (el.navClearChat) {
     el.navClearChat.addEventListener("click", () => clearChatSession());
   }
+
+  document.addEventListener(
+    "keydown",
+    (ev) => {
+      if (!(ev.ctrlKey || ev.metaKey) || ev.key.toLowerCase() !== "r") return;
+      const tag = String(ev.target?.tagName || "").toLowerCase();
+      if (tag === "input" || tag === "textarea" || ev.target?.isContentEditable) return;
+      ev.preventDefault();
+      if (ev.shiftKey) void refreshCurrentMotorPanel();
+      else void hardReloadRuzgarUi();
+    },
+    true,
+  );
+
+  globalThis.addEventListener("beforeunload", () => {
+    persistMotorSession();
+  });
 }
 
 function esc(s) {
@@ -10104,21 +10259,23 @@ if (el.mic) {
 if (window.ruzgarApi?.onMenu) {
   window.ruzgarApi.onMenu((action) => {
     if (action === "focus-chat") el.input.focus();
+    if (action === "sidebar:duzen" || action === "sidebar:gelisim") {
+      const kind = action === "sidebar:gelisim" ? "gelisim" : "duzen";
+      void window.RuzgarSidebarManager?.renderFromMenu?.(kind);
+      return;
+    }
     if (action.startsWith("tercume-dock:")) {
-      if (currentMode !== "tercume") switchMode("tercume");
       const dock = action.slice("tercume-dock:".length);
-      window.RuzgarTercumeAtolye?.toggleDuzenDock?.(dock);
+      window.RuzgarPanelActions?.run?.(`tercume:${dock}`);
       return;
     }
     if (action === "tercume-ui:reader") {
-      if (currentMode !== "tercume") switchMode("tercume");
-      window.RuzgarTercumeAtolye?.setTercumeUiMode?.("reader");
+      window.RuzgarPanelActions?.run?.("tercume-ui:reader");
       flashRuzgarDurum("Kitap görünümü — sohbetle okuma.");
       return;
     }
     if (action === "tercume-ui:classic") {
-      if (currentMode !== "tercume") switchMode("tercume");
-      window.RuzgarTercumeAtolye?.setTercumeUiMode?.("classic");
+      window.RuzgarPanelActions?.run?.("tercume-ui:classic");
       flashRuzgarDurum("Klasik ofis görünümü.");
       return;
     }

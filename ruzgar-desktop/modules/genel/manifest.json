@@ -1,0 +1,40 @@
+{
+  "id": "genel",
+  "title": "Ana motor",
+  "version": 2,
+  "sidebar": {
+    "default": [
+      {
+        "group": "Araçlar",
+        "items": [
+          { "id": "help", "label": "Yardım", "title": "Kısayollar ve ipuçları", "action": "genel:help", "icon": "?" },
+          { "id": "clear", "label": "Sohbet temizle", "title": "Geçerli sohbeti sıfırla", "action": "genel:clear-chat", "icon": "🗑" }
+        ]
+      }
+    ],
+    "duzen": [
+      {
+        "group": "Görünüm",
+        "items": [
+          { "id": "chat", "label": "Sohbete odaklan", "title": "Mesaj kutusuna git", "action": "genel:focus-chat", "icon": "💬" }
+        ]
+      },
+      {
+        "group": "Çalışma",
+        "items": [
+          { "id": "clear", "label": "Sohbet temizle", "title": "Geçerli sohbeti sıfırla", "action": "genel:clear-chat", "icon": "🗑" },
+          { "id": "help", "label": "Yardım", "title": "Kısayollar ve ipuçları", "action": "genel:help", "icon": "?" }
+        ]
+      }
+    ],
+    "gelisim": [
+      {
+        "group": "Gelişim",
+        "items": [
+          { "id": "devtools", "label": "Geliştirici araçları", "title": "DevTools (F12)", "action": "genel:devtools", "icon": "🛠" },
+          { "id": "manifest", "label": "Manifest yenile", "title": "UI durumunu sunucudan güncelle", "action": "genel:refresh-manifest", "icon": "↻" }
+        ]
+      }
+    ]
+  }
+}

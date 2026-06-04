@@ -235,27 +235,106 @@ def split_text_into_pages(text: str, *, max_chars: int = 3200) -> list[dict[str,
     return pages or [{"index": 0, "text": raw.strip()}]
 
 
+_TRANSLATION_READ_LEVELS: dict[str, str] = {
+    "ilkokul": (
+        "Bu metni ilkokul seviyesindeki bir çocuğun anlayacağı en basit, "
+        "eğlenceli ve anlaşılır dille çevir. Zor kelimeleri sade Türkçe/hedef dil "
+        "karşılığıyla açıkla; cümleleri kısa tut."
+    ),
+    "lise": (
+        "Bu metni lise öğrencisinin anlayabileceği, akademik terimleri gerektiğinde "
+        "kısa parantezle açıklayan ancak akıcı ve anlaşılır bir dille çevir."
+    ),
+    "akademik": (
+        "Bu metni üniversite seviyesinde, akademik terminolojiye sadık kalarak, "
+        "profesyonel bir üslupla çevir."
+    ),
+}
+
+
+def normalize_translation_read_level(level: str | None) -> str:
+    key = (level or "akademik").strip().lower()
+    aliases = {
+        "primary": "ilkokul",
+        "cocuk": "ilkokul",
+        "çocuk": "ilkokul",
+        "child": "ilkokul",
+        "highschool": "lise",
+        "high_school": "lise",
+        "ortaokul": "lise",
+        "university": "akademik",
+        "universite": "akademik",
+        "üniversite": "akademik",
+        "profesyonel": "akademik",
+        "professional": "akademik",
+    }
+    key = aliases.get(key, key)
+    return key if key in _TRANSLATION_READ_LEVELS else "akademik"
+
+
+def build_translation_read_level_block(level: str) -> str:
+    key = normalize_translation_read_level(level)
+    directive = _TRANSLATION_READ_LEVELS[key]
+    return f"ÇEVİRİ SEVİYESİ ({key}):\n{directive}\n"
+
+
+def resolve_system_level(
+    *,
+    system_level: str | None = None,
+    read_level: str | None = None,
+) -> str:
+    """API: system_level öncelikli; read_level geriye uyumlu."""
+    raw = (system_level or read_level or "akademik").strip()
+    return normalize_translation_read_level(raw)
+
+
 def build_translation_system_prompt(
     tgt_lang: str,
     *,
     strict: bool = False,
     glossary_block: str = "",
+    read_level: str = "akademik",
+    system_level: str | None = None,
 ) -> str:
     label = _LANG_LABEL.get(tgt_lang, tgt_lang)
     gram = grammar_directive(tgt_lang)
+    level = resolve_system_level(system_level=system_level, read_level=read_level)
+    level_line = f"system_level: {level}\n"
     strict_block = ""
     if strict:
-        strict_block = (
-            "ZORUNLU: Kaynaktaki her cümle ve satırın TAMAMINI hedef dilde yaz.\n"
-            "Kaynak dilde kelime bırakma (özel ad / evrensel kısaltma hariç).\n"
-            "Eksik çeviri, özet veya karışık dil yasak.\n"
-        )
+        if level == "ilkokul":
+            strict_block = (
+                "ZORUNLU: Kaynaktaki anlamın tamamını hedef dilde yaz; "
+                "basit kelimeler kullan, kaynak dilde kelime bırakma "
+                "(özel ad / evrensel kısaltma hariç).\n"
+                "Özet veya karışık dil yasak.\n"
+            )
+        elif level == "lise":
+            strict_block = (
+                "ZORUNLU: Kaynaktaki her cümle ve satırın TAMAMINI hedef dilde yaz.\n"
+                "Akademik terimleri lise düzeyinde açıkla; kaynak dilde kelime bırakma "
+                "(özel ad / evrensel kısaltma hariç).\n"
+                "Eksik çeviri, özet veya karışık dil yasak.\n"
+            )
+        else:
+            strict_block = (
+                "ZORUNLU: Kaynaktaki her cümle ve satırın TAMAMINI hedef dilde yaz.\n"
+                "Kaynak dilde kelime bırakma (özel ad / evrensel kısaltma hariç).\n"
+                "Eksik çeviri, özet veya karışık dil yasak.\n"
+            )
+    role = (
+        "Sen eğitici bir çevirmensin."
+        if level in ("ilkokul", "lise")
+        else "Sen profesyonel bir çevirmensin."
+    )
     body = (
-        "Sen profesyonel bir çevirmensin. Yalnızca hedef dilde çeviri metnini ver.\n"
+        f"{role} Yalnızca hedef dilde çeviri metnini ver.\n"
+        f"{level_line}"
         f"Hedef dil: {label}.\n"
         f"Kural: {gram}\n"
         f"{strict_block}"
-        "Kaynak anlamı bire bir aktar; özetleme veya yorum ekleme.\n"
+        f"{build_translation_read_level_block(level)}"
+        "Kaynak anlamı bire bir aktar; bu seviyenin diline sadık kal.\n"
         "Satır sonlarını koru; her satır ayrı cümle ise ayrı çevir.\n"
         "Başlık ve paragraf yapısını koru.\n"
     )
@@ -369,13 +448,22 @@ def _translate_unit(
     source_file: str,
     page_index: int | None,
     line_note: str = "",
+    read_level: str = "akademik",
+    system_level: str | None = None,
 ) -> str:
+    level = resolve_system_level(system_level=system_level, read_level=read_level)
     context_block, _ctx = _build_faz4_context(
         unit,
         source_file=source_file,
         tgt_lang=tgt_lang,
     )
-    system = build_translation_system_prompt(tgt_lang, strict=True, glossary_block=context_block)
+    system = build_translation_system_prompt(
+        tgt_lang,
+        strict=True,
+        glossary_block=context_block,
+        read_level=level,
+        system_level=level,
+    )
     user = build_translation_user_prompt(
         unit,
         src_lang=src_lang,
@@ -388,7 +476,13 @@ def _translate_unit(
     out = _llm_translate(system, user)
     if translation_leaked_source_language(out, tgt_lang):
         retry_sys = (
-            build_translation_system_prompt(tgt_lang, strict=True, glossary_block=context_block)
+            build_translation_system_prompt(
+                tgt_lang,
+                strict=True,
+                glossary_block=context_block,
+                read_level=level,
+                system_level=level,
+            )
             + "\nÖnceki yanıt yetersizdi — kalan yabancı kelimeleri de çevir.\n"
         )
         retry_user = (
@@ -408,7 +502,10 @@ def translate_chunk(
     tgt_lang: str = "en",
     source_file: str = "",
     page_index: int | None = None,
+    read_level: str = "akademik",
+    system_level: str | None = None,
 ) -> dict[str, Any]:
+    level = resolve_system_level(system_level=system_level, read_level=read_level)
     chunk = (text or "").strip()
     if not chunk:
         return {"ok": False, "error": "Metin boş", "error_code": "empty_text"}
@@ -431,6 +528,8 @@ def translate_chunk(
                 tgt_lang=tgt_lang,
                 source_file=source_file,
                 page_index=page_index,
+                read_level=level,
+                system_level=level,
             )
             mode = "block"
         else:
@@ -450,6 +549,8 @@ def translate_chunk(
                         source_file=source_file,
                         page_index=page_index,
                         line_note=f"Satır {i + 1}/{len(units)} — yalnızca bu satırı çevir.",
+                        read_level=level,
+                        system_level=level,
                     )
                 )
             out = "\n".join(parts)
@@ -489,6 +590,8 @@ def translate_chunk(
         "ok": True,
         "text": out,
         "tgt_lang": tgt_lang,
+        "read_level": level,
+        "system_level": level,
         "mode": mode,
         "units": len(units),
         "glossary_sets": _ctx_meta.get("glossary_sets") or [],

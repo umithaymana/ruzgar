@@ -4660,6 +4660,7 @@ async def api_tercume_batch_start(request: Request) -> dict[str, Any]:
             skip_empty=skip_empty,
             tgt_lang=str(body.get("tgt_lang") or "tr"),
             src_lang=str(body.get("src_lang") or "auto"),
+            read_level=str(body.get("system_level") or body.get("read_level") or "akademik"),
             output_dir_rel=str(body.get("output_dir_rel") or "ilim-assistant/arsiv/tercume-output/page-range"),
         )
     else:
@@ -4667,6 +4668,7 @@ async def api_tercume_batch_start(request: Request) -> dict[str, Any]:
             str(body.get("folder_rel") or ""),
             tgt_lang=str(body.get("tgt_lang") or "tr"),
             src_lang=str(body.get("src_lang") or "auto"),
+            read_level=str(body.get("system_level") or body.get("read_level") or "akademik"),
             output_dir_rel=str(body.get("output_dir_rel") or "ilim-assistant/arsiv/tercume-output/batch"),
             file_filter=str(body.get("file_filter") or ""),
         )
@@ -5096,6 +5098,8 @@ def api_tercume_translate_chunk(
     tgt_lang: str = Form("en"),
     source_file: str = Form(""),
     page_index: str = Form(""),
+    read_level: str = Form("akademik"),
+    system_level: str = Form(""),
     workspace_root: str = Form(""),
 ):
     from ilim_assistant.motorlar.tercume_atolye import append_apprentice_log, translate_chunk
@@ -5103,12 +5107,15 @@ def api_tercume_translate_chunk(
     pidx: int | None = None
     if (page_index or "").strip().isdigit():
         pidx = int(page_index.strip())
+    sl = (system_level or read_level or "akademik").strip()
     result = translate_chunk(
         text,
         src_lang=src_lang,
         tgt_lang=tgt_lang,
         source_file=source_file,
         page_index=pidx,
+        read_level=read_level,
+        system_level=sl,
     )
     root = (workspace_root or "").strip() or None
     if result.get("ok"):

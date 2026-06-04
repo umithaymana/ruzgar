@@ -42,7 +42,7 @@ contextBridge.exposeInMainWorld("ruzgarApi", {
   /** Pencere geçmişi (dosya yok — tam yeniden yüklemeden çıkmak için) */
   navGoBack: () => ipcRenderer.invoke("ruzgar:nav-go-back"),
   navGoForward: () => ipcRenderer.invoke("ruzgar:nav-go-forward"),
-  navReload: () => ipcRenderer.invoke("ruzgar:nav-reload"),
+  navReload: (opts) => ipcRenderer.invoke("ruzgar:nav-reload", opts || {}),
   restartApi: () => ipcRenderer.invoke("ruzgar:restart-api"),
   onMenu: (fn) => {
     ipcRenderer.on("ruzgar-menu", (_e, action) => fn(action));

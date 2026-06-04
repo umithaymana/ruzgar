@@ -473,6 +473,11 @@ body:not(.workbench-hizir-active) #workbench-hizir-tools,
   outline: 2px solid #007fd4;
   outline-offset: 1px;
 }
+.btn-nav:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  pointer-events: none;
+}
 .panel-title {
   font-weight: 600;
 }
@@ -4057,6 +4062,110 @@ body.ui-motors-compact .motors-collapse-btn {
   flex-direction: column;
   gap: 4px;
   flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Motor araçları — panel-manager.js */
+.ruzgar-motor-sidebar {
+  flex: 0 0 auto;
+  margin-top: 6px;
+  padding: 8px 6px 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.22);
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition:
+    opacity 0.22s ease,
+    max-height 0.28s ease,
+    padding 0.22s ease;
+}
+.ruzgar-motor-sidebar.active {
+  opacity: 1;
+  max-height: 280px;
+  padding: 8px 6px 8px;
+}
+body.ui-motors-compact .ruzgar-motor-sidebar {
+  display: none !important;
+}
+.ruzgar-motor-sidebar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.ruzgar-motor-sidebar-title {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9fb1ca;
+}
+.ruzgar-motor-sidebar-close {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #2a2a2e;
+  color: #bbb;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+.ruzgar-motor-sidebar-close:hover {
+  color: #fff;
+  border-color: #3794ff;
+}
+.ruzgar-motor-sidebar-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ruzgar-motor-tool-btn {
+  display: block;
+  width: 100%;
+  padding: 7px 8px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.03);
+  color: #c8d0dc;
+  font-size: 11px;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+.ruzgar-motor-tool-btn:hover {
+  background: rgba(55, 148, 255, 0.12);
+  border-color: rgba(55, 148, 255, 0.35);
+  color: #e8f0ff;
+}
+.ruzgar-motor-tool-btn:focus-visible {
+  outline: 2px solid #007fd4;
+  outline-offset: 1px;
+}
+.ruzgar-sidebar-group-title {
+  margin: 10px 0 4px;
+  padding: 0 4px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #6a7380;
+  list-style: none;
+}
+.ruzgar-sidebar-group-title:first-child {
+  margin-top: 2px;
 }
 
 .motors-divider {

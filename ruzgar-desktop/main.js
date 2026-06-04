@@ -269,53 +269,11 @@ function buildMenu(mainWin) {
         { label: "Yapıştır", role: "paste" },
         { type: "separator" },
         {
-          label: "Tercüme — Kitap görünümü",
+          label: "Paneller…",
+          accelerator: "Ctrl+Shift+P",
           click: () => {
             const w = activeWindow(mainWin);
-            w?.webContents.send("ruzgar-menu", "tercume-ui:reader");
-          },
-        },
-        {
-          label: "Tercüme — Klasik ofis görünümü",
-          click: () => {
-            const w = activeWindow(mainWin);
-            w?.webContents.send("ruzgar-menu", "tercume-ui:classic");
-          },
-        },
-        { type: "separator" },
-        {
-          label: "Tercüme — Dosyalar paneli",
-          click: () => {
-            const w = activeWindow(mainWin);
-            w?.webContents.send("ruzgar-menu", "tercume-dock:files");
-          },
-        },
-        {
-          label: "Tercüme — Araçlar paneli",
-          click: () => {
-            const w = activeWindow(mainWin);
-            w?.webContents.send("ruzgar-menu", "tercume-dock:tools");
-          },
-        },
-        {
-          label: "Tercüme — Durum ve ayarlar",
-          click: () => {
-            const w = activeWindow(mainWin);
-            w?.webContents.send("ruzgar-menu", "tercume-dock:status");
-          },
-        },
-        {
-          label: "Tercüme — Eser ara",
-          click: () => {
-            const w = activeWindow(mainWin);
-            w?.webContents.send("ruzgar-menu", "tercume-dock:ara");
-          },
-        },
-        {
-          label: "Tercüme — İnceleme modu",
-          click: () => {
-            const w = activeWindow(mainWin);
-            w?.webContents.send("ruzgar-menu", "tercume-dock:review");
+            w?.webContents.send("ruzgar-menu", "sidebar:duzen");
           },
         },
       ],
@@ -324,7 +282,15 @@ function buildMenu(mainWin) {
       label: "gelişim",
       submenu: [
         {
-          label: "Geliştirici araçları (DevTools)",
+          label: "Gelişim panelleri…",
+          click: () => {
+            const w = activeWindow(mainWin);
+            w?.webContents.send("ruzgar-menu", "sidebar:gelisim");
+          },
+        },
+        { type: "separator" },
+        {
+          label: "Geliştirici araçları",
           accelerator: "F12",
           click: () => {
             const w = activeWindow(mainWin);
@@ -535,13 +501,13 @@ app.whenReady().then(async () => {
     }
     return false;
   });
-  ipcMain.handle("ruzgar:nav-reload", () => {
+  ipcMain.handle("ruzgar:nav-reload", (_evt, opts = {}) => {
     const wc = focusedWebContents();
-    if (wc) {
-      wc.reload();
-      return true;
-    }
-    return false;
+    if (!wc) return false;
+    const ignoreCache = !opts || opts.ignoreCache !== false;
+    if (ignoreCache) wc.reloadIgnoringCache();
+    else wc.reload();
+    return true;
   });
 
   ipcMain.handle("ruzgar:restart-api", async () => {

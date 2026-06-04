@@ -1,0 +1,46 @@
+{
+  "id": "programlama",
+  "title": "Programlama",
+  "version": 2,
+  "sidebar": {
+    "default": [
+      {
+        "group": "Araçlar",
+        "items": [
+          { "id": "root", "label": "Proje kökü", "title": "Çalışma klasörü", "action": "prog:root", "icon": "📂" },
+          { "id": "kpi", "label": "KPI", "title": "Metrik ve ilerleme paneli", "action": "prog:kpi", "icon": "📊" },
+          { "id": "onay", "label": "Onay kuyruğu", "title": "Ümit onay bekleyen işler", "action": "prog:onay", "icon": "✅" }
+        ]
+      }
+    ],
+    "duzen": [
+      {
+        "group": "Görünüm",
+        "items": [
+          { "id": "editor", "label": "Düzenleyici", "title": "Kod editörü", "action": "prog:editor", "icon": "{}" }
+        ]
+      },
+      {
+        "group": "Paneller",
+        "items": [
+          { "id": "tree", "label": "Dosya ağacı", "title": "Proje dosyaları", "action": "prog:tree", "icon": "🌲" }
+        ]
+      },
+      {
+        "group": "Çalışma",
+        "items": [
+          { "id": "refactor", "label": "Yeniden düzenle", "title": "Kod refaktör isteği", "action": "prog:refactor", "icon": "♻" }
+        ]
+      }
+    ],
+    "gelisim": [
+      {
+        "group": "Gelişim",
+        "items": [
+          { "id": "test", "label": "Test koş", "title": "Test komutunu çalıştır", "action": "prog:test", "icon": "🧪" },
+          { "id": "devtools", "label": "Geliştirici araçları", "title": "DevTools (F12)", "action": "genel:devtools", "icon": "🛠" }
+        ]
+      }
+    ]
+  }
+}

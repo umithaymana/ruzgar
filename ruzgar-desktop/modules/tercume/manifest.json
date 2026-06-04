@@ -1,0 +1,154 @@
+{
+  "id": "tercume",
+  "title": "Tercüme",
+  "version": 2,
+  "sidebar": {
+    "default": [
+      {
+        "group": "Araçlar",
+        "items": [
+          {
+            "id": "pdf",
+            "label": "PDF ayarları",
+            "title": "OCR, önizleme ve sayfa okuma",
+            "action": "tercume:tools",
+            "icon": "📄"
+          },
+          {
+            "id": "glossary",
+            "label": "Terminoloji",
+            "title": "Sözlük ve terim eşleştirme",
+            "action": "tercume:glossary",
+            "icon": "📖"
+          },
+          {
+            "id": "history",
+            "label": "Çeviri geçmişi",
+            "title": "Son çeviriler ve çırak notları",
+            "action": "tercume:history",
+            "icon": "🕐"
+          }
+        ]
+      }
+    ],
+    "duzen": [
+      {
+        "group": "Görünüm",
+        "items": [
+          {
+            "id": "reader",
+            "label": "Kitap görünümü",
+            "title": "Sohbet + büyük sayfa; okuma odaklı",
+            "action": "tercume-ui:reader",
+            "icon": "📕"
+          },
+          {
+            "id": "classic",
+            "label": "Klasik ofis",
+            "title": "Kaynak/hedef panelleri ve segmentler",
+            "action": "tercume-ui:classic",
+            "icon": "🗂️"
+          }
+        ]
+      },
+      {
+        "group": "Paneller",
+        "items": [
+          {
+            "id": "flow",
+            "label": "Dil akışı",
+            "title": "Kaynak/hedef dil, seviye ve çeviri modu",
+            "action": "tercume:flow",
+            "icon": "🌐"
+          },
+          {
+            "id": "files",
+            "label": "Dosyalar",
+            "title": "Arşiv gezgini ve dosya aç",
+            "action": "tercume:files",
+            "icon": "📁"
+          },
+          {
+            "id": "tools",
+            "label": "Araçlar",
+            "title": "Analiz, sözlük, OCR araçları",
+            "action": "tercume:tools",
+            "icon": "🔧"
+          },
+          {
+            "id": "status",
+            "label": "Durum",
+            "title": "İş kuyruğu, OCR uyarısı, kalite",
+            "action": "tercume:status",
+            "icon": "📊"
+          },
+          {
+            "id": "ara",
+            "label": "Eser ara",
+            "title": "Arşivde eser ve dosya arama",
+            "action": "tercume:ara",
+            "icon": "🔍"
+          },
+          {
+            "id": "review",
+            "label": "İnceleme",
+            "title": "Hizalı segment ve inceleme kuyruğu",
+            "action": "tercume:review",
+            "icon": "✓"
+          }
+        ]
+      },
+      {
+        "group": "Çalışma",
+        "items": [
+          {
+            "id": "page-output",
+            "label": "Sayfa ve çıktı",
+            "title": "Sayfa aralığı, format ve OCR ön ayarı",
+            "action": "tercume:page-output",
+            "icon": "📑"
+          }
+        ]
+      }
+    ],
+    "gelisim": [
+      {
+        "group": "Gelişim",
+        "items": [
+          {
+            "id": "level",
+            "label": "Çeviri seviyesi",
+            "title": "Akademik / Lise / İlkokul — tüm isteklere system_level",
+            "type": "control",
+            "control": "system_level",
+            "icon": "🎓"
+          },
+          {
+            "id": "apprentice",
+            "label": "Çırak günlüğü",
+            "title": "Öğrenme ve çeviri kayıtları",
+            "action": "tercume:history",
+            "icon": "📝"
+          },
+          {
+            "id": "batch",
+            "label": "Arka plan işleri",
+            "title": "Toplu ve sayfa aralığı çevirisi",
+            "action": "tercume:status",
+            "icon": "⏳"
+          },
+          {
+            "id": "devtools",
+            "label": "Geliştirici araçları",
+            "title": "DevTools (F12)",
+            "action": "genel:devtools",
+            "icon": "🛠"
+          }
+        ]
+      }
+    ]
+  },
+  "context": {
+    "keys": ["system_level"]
+  }
+}
