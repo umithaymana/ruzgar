@@ -168,15 +168,58 @@
     }
   }
 
+  async function handleYoutubeOpen(raw) {
+    if (!d().isVideoStreamOpenCommand?.(raw)) return false;
+    const url = d().extractVideoDownloadUrl?.(raw);
+    if (!url) return false;
+    ensureVideo();
+    const ok = await d().loadYoutubePreviewInPanel?.(url, { flash: false });
+    if (!ok) {
+      say("Ümit abi, YouTube linkini çözemedim — «Bağlantı adresini kopyala» ile watch?v=... kullan.", {
+        error: true,
+      });
+      return { ok: false };
+    }
+    if (el().videoDownloadUrl) el().videoDownloadUrl.value = url;
+    const electron = d().isRuzgarElectronShell?.();
+    say(
+      electron
+        ? [
+            "Ümit abi, YouTube **gömülü oynatıcı** bu uygulamada «oturum aç / bot» ekranı gösterir — normal.",
+            "",
+            "**Tarayıcıda açtım** (Chrome/Edge girişinle izle). Sol panelde kapak görseli var.",
+            "",
+            `\`${url}\``,
+            "",
+            "Sol panelde **kesim** istiyorsan: «**indir**» veya «indir ve oynat» de.",
+            "",
+            `(${VERSION})`,
+          ].join("\n")
+        : [
+            "Ümit abi, **YouTube sinema oynatıcıda** (gömülü — indirme yok).",
+            "",
+            `\`${url}\``,
+            "",
+            "Yerel dosya / kesim için: «**indir**» veya «indir ve oynat» de.",
+            "",
+            `(${VERSION})`,
+          ].join("\n"),
+    );
+    d().flash?.(electron ? "YouTube tarayıcıda açıldı." : "YouTube panelde açıldı.");
+    d().setStatus?.(electron ? "Tarayıcıda YouTube" : "YouTube oynatılıyor", "Rüzgar");
+    return { ok: true };
+  }
+
   async function handleDownload(raw) {
     const url = d().extractVideoDownloadUrl?.(raw);
     if (!url) return false;
-    if (!d().isMostlyVideoDownloadCommand?.(raw) && !/(?:oynat|aç|ac|burada)/i.test(raw)) {
+    if (!d().isVideoDownloadCommand?.(raw)) {
       return false;
     }
     ensureVideo();
+    d().clearYoutubeEmbedPreview?.();
     say(
-      "Ümit abi, linki **indirip sol sinema oynatıcısına** yüklüyorum (canlı YouTube akışı yok). Biraz sürebilir…",
+      "Ümit abi, linki **yerel dosya olarak indirip** sinema oynatıcısına yüklüyorum. Biraz sürebilir…",
     );
     d().setStatus?.("Video indiriliyor…", "Rüzgar");
     try {
@@ -205,14 +248,16 @@
       d().flash?.("Video indirildi.");
       await d().refreshUiManifest?.();
       d().setStatus?.("Hazır", "Rüzgar");
-      return true;
+      return { ok: true };
     } catch (e) {
       say(
         `Video indirilemedi: ${d().formatClientChatError?.(e) || e}\n\nyt-dlp ve sunucu bağlantısını kontrol edin.`,
         { error: true },
       );
       d().setStatus?.("Hazır", "Rüzgar");
-      return true;
+      return { ok: false };
+    } finally {
+      d().setVideoJobProgress?.(false);
     }
   }
 
@@ -234,7 +279,8 @@
   function helpText() {
     return (
       "Ümit abi, **sohbetten** video atölyesini yönetebilirsin — düğmelere dokunmana gerek yok:\n\n" +
-      "• Link + «indir / oynat / burada aç»\n" +
+      "• Link + «**panelde aç / oynat**» — YouTube gömülü (indirme yok)\n" +
+      "• Link + «**indir**» — yerel dosya + kesim\n" +
       "• «şu filmi ara …» · «3 numarayı indir»\n" +
       "• «son indirmeler» · «son indirilen» · «1 numarayı oynat»\n" +
       "• «medya bilgisi» · «kes 0:30-1:00» · «dönüştür»\n" +
@@ -317,7 +363,11 @@
       return { handled: true, instant: true };
     }
 
-    if (await handleDownload(raw)) return { handled: true, instant: true };
+    const ytOpen = await handleYoutubeOpen(raw);
+    if (ytOpen) return { handled: true, instant: true, ok: ytOpen.ok !== false };
+
+    const dl = await handleDownload(raw);
+    if (dl) return { handled: true, instant: true, ok: dl.ok !== false };
 
     if (await handleOpenRel(raw)) return { handled: true, instant: true };
 

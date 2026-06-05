@@ -403,6 +403,8 @@ if (_DESKTOP_UI_DIR / "index.html").is_file():
             "on",
         ):
             return '<script>window.__RUZGAR_API_ROOT__=window.location.origin;</script>'
+        from ilim_assistant.ruzgar_api_port import resolve_api_port
+
         port = resolve_api_port()
         return f'<script>window.__RUZGAR_API_ROOT__="http://127.0.0.1:{port}";</script>'
 
@@ -4033,7 +4035,13 @@ async def api_virus_guard_preflight(
             return preflight_video_download(u, scan_mode=mode)
         return preflight_url_download(u, filename_hint=filename_hint, scan_mode=mode)
 
-    data = await run_in_threadpool(_run)
+    try:
+        data = await run_in_threadpool(_run)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc)[:2000] or "Virüs koruması: işlem başarısız",
+        ) from exc
     if not data.get("ok"):
         raise HTTPException(
             status_code=400,

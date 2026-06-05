@@ -612,6 +612,8 @@ let ilimOpenRel = null;
 let sesPreviewObjectUrl = null;
 /** Video önizleme blob URL */
 let videoPreviewObjectUrl = null;
+/** @type {HTMLIFrameElement|null} */
+let videoYoutubeEmbedEl = null;
 /** Son ffprobe özeti (dosya seçili değilken süre için) */
 let lastVideoProbeDurationSec = 0;
 /** v4/v5 zaman çizelgesi In/Out (saniye; null = işaret yok) */
@@ -5446,9 +5448,13 @@ function setVideoJobProgress(active, label, pct) {
   if (!wrap) return;
   if (!active) {
     wrap.hidden = true;
+    wrap.setAttribute("aria-hidden", "true");
+    wrap.style.display = "none";
     return;
   }
   wrap.hidden = false;
+  wrap.removeAttribute("aria-hidden");
+  wrap.style.display = "";
   if (el.videoJobProgressLabel) {
     el.videoJobProgressLabel.textContent = label || "İşleniyor…";
   }
@@ -5470,6 +5476,7 @@ function setVideoJobProgress(active, label, pct) {
 async function loadVideoPreviewFromRel(rel, opts = {}) {
   const r = String(rel || "").trim();
   if (!r || !el.videoPreview) return false;
+  clearYoutubeEmbedPreview();
   try {
     if (videoPreviewObjectUrl) {
       URL.revokeObjectURL(videoPreviewObjectUrl);
@@ -6314,6 +6321,274 @@ async function runVideoMuxAudioJob() {
   }
 }
 
+function parseYoutubeVideoId(url) {
+  const raw = normalizeYoutubeWatchUrl(url);
+  if (!raw) return null;
+  try {
+    const parsed = new URL(raw);
+    const host = parsed.hostname.replace(/^www\./i, "").toLowerCase();
+    if (host === "youtu.be") {
+      const id = parsed.pathname.replace(/^\//, "").split("/")[0];
+      return id || null;
+    }
+    if (host.includes("youtube.com") || host.includes("youtube-nocookie.com")) {
+      if (parsed.pathname.startsWith("/shorts/")) {
+        return parsed.pathname.split("/")[2] || null;
+      }
+      if (parsed.pathname.startsWith("/embed/")) {
+        return parsed.pathname.split("/")[2] || null;
+      }
+      const v = parsed.searchParams.get("v");
+      if (v) return v;
+    }
+  } catch (_) {
+    /* ignore */
+  }
+  const m = raw.match(/(?:[?&]v=|youtu\.be\/|\/embed\/|\/shorts\/)([a-zA-Z0-9_-]{6,})/);
+  return m ? m[1] : null;
+}
+
+function normalizeYoutubeWatchUrl(url) {
+  let u = String(url || "").trim().replace(/[.,);]+$/, "");
+  u = u.replace(/([?&])v-([a-zA-Z0-9_-]{6,})/i, "$1v=$2");
+  return u;
+}
+
+function isRuzgarElectronShell() {
+  if (window.ruzgarApi?.openExternalUrl) return true;
+  return /\belectron\b/i.test(String(navigator.userAgent || ""));
+}
+
+async function openYoutubeWatchExternal(watchUrl) {
+  const u = normalizeYoutubeWatchUrl(watchUrl);
+  if (!u) return false;
+  try {
+    if (window.ruzgarApi?.openExternalUrl) {
+      return !!(await window.ruzgarApi.openExternalUrl(u));
+    }
+  } catch (_) {
+    /* ignore */
+  }
+  try {
+    window.open(u, "_blank", "noopener,noreferrer");
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+function isVideoDownloadCommand(text) {
+  const low = String(text || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("tr-TR");
+  return /\b(?:indir|download|indirme)\b/.test(low);
+}
+
+function isVideoStreamOpenCommand(text) {
+  const url = extractVideoDownloadUrl(text);
+  if (!url) return false;
+  if (isVideoDownloadCommand(text)) return false;
+  return true;
+}
+
+function getVideoYoutubeEmbedEl() {
+  const wrap = el.videoPreview?.parentElement;
+  if (!wrap) return null;
+  if (!videoYoutubeEmbedEl) {
+    const iframe = document.createElement("iframe");
+    iframe.id = "video-youtube-embed";
+    iframe.className = "video-youtube-embed";
+    iframe.title = "YouTube önizleme";
+    iframe.setAttribute("allowfullscreen", "");
+    iframe.setAttribute(
+      "allow",
+      "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
+    );
+    iframe.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
+    iframe.hidden = true;
+    wrap.appendChild(iframe);
+    videoYoutubeEmbedEl = iframe;
+  }
+  return videoYoutubeEmbedEl;
+}
+
+/** @type {HTMLDivElement|null} */
+let videoYoutubeCinemaEl = null;
+
+function getVideoYoutubeCinemaEl() {
+  const wrap = el.videoPreview?.parentElement;
+  if (!wrap) return null;
+  if (!videoYoutubeCinemaEl) {
+    const box = document.createElement("div");
+    box.id = "video-youtube-cinema";
+    box.className = "video-youtube-cinema";
+    box.hidden = true;
+    wrap.appendChild(box);
+    videoYoutubeCinemaEl = box;
+  }
+  return videoYoutubeCinemaEl;
+}
+
+function clearYoutubeEmbedPreview() {
+  const iframe =
+    videoYoutubeEmbedEl || document.getElementById("video-youtube-embed");
+  if (iframe) {
+    iframe.hidden = true;
+    iframe.removeAttribute("src");
+    iframe.style.display = "none";
+  }
+  const cinema = videoYoutubeCinemaEl || document.getElementById("video-youtube-cinema");
+  if (cinema) {
+    cinema.hidden = true;
+    cinema.style.display = "none";
+    cinema.replaceChildren();
+  }
+  if (el.videoPreview) {
+    el.videoPreview.hidden = false;
+    el.videoPreview.style.display = "";
+  }
+}
+
+function hideNativeVideoPreviewForYoutube() {
+  if (!el.videoPreview) return;
+  try {
+    if (videoPreviewObjectUrl) URL.revokeObjectURL(videoPreviewObjectUrl);
+  } catch (_) {
+    /* ignore */
+  }
+  videoPreviewObjectUrl = null;
+  el.videoPreview.pause?.();
+  el.videoPreview.removeAttribute("src");
+  el.videoPreview.load();
+  el.videoPreview.hidden = true;
+  el.videoPreview.style.display = "none";
+}
+
+function loadYoutubeEmbedInPanel(watchUrl, vid, opts = {}) {
+  const iframe = getVideoYoutubeEmbedEl();
+  if (!iframe) return false;
+  hideNativeVideoPreviewForYoutube();
+  const cinema = videoYoutubeCinemaEl || document.getElementById("video-youtube-cinema");
+  if (cinema) {
+    cinema.hidden = true;
+    cinema.style.display = "none";
+  }
+
+  const autoplay = opts.autoplay !== false ? "1" : "0";
+  const origin = youtubeEmbedPageOrigin();
+  const params = new URLSearchParams({
+    autoplay,
+    rel: "0",
+    modestbranding: "1",
+    playsinline: "1",
+    enablejsapi: "1",
+    origin,
+  });
+  iframe.src = `https://www.youtube.com/embed/${encodeURIComponent(vid)}?${params.toString()}`;
+  iframe.hidden = false;
+  iframe.style.display = "block";
+  iframe.classList.add("video-preview-flash");
+  window.setTimeout(() => iframe.classList.remove("video-preview-flash"), 1400);
+  return true;
+}
+
+async function loadYoutubeCinemaPanel(watchUrl, vid, opts = {}) {
+  const cinema = getVideoYoutubeCinemaEl();
+  if (!cinema) return false;
+  hideNativeVideoPreviewForYoutube();
+  const iframe =
+    videoYoutubeEmbedEl || document.getElementById("video-youtube-embed");
+  if (iframe) {
+    iframe.hidden = true;
+    iframe.removeAttribute("src");
+    iframe.style.display = "none";
+  }
+
+  const cleanUrl = normalizeYoutubeWatchUrl(watchUrl);
+  const thumb = `https://i.ytimg.com/vi/${encodeURIComponent(vid)}/hqdefault.jpg`;
+  cinema.replaceChildren();
+  cinema.innerHTML =
+    `<div class="video-youtube-cinema-inner">` +
+    `<img class="video-youtube-cinema-thumb" src="${thumb}" alt="" loading="lazy" />` +
+    `<div class="video-youtube-cinema-overlay">` +
+    `<p class="video-youtube-cinema-lead">YouTube sinema</p>` +
+    `<p class="video-youtube-cinema-hint">Rüzgar panelinde gömülü oynatıcı «bot / oturum aç» ister. ` +
+    `Videoyu <strong>Chrome/Edge</strong> (giriş yaptığın tarayıcı) ile açıyorum.</p>` +
+    `<div class="video-youtube-cinema-actions">` +
+    `<button type="button" class="btn-primary btn-compact" data-yt-open-browser>Tarayıcıda izle</button>` +
+    `<button type="button" class="btn-secondary btn-compact" data-yt-try-embed>Gömülü dene</button>` +
+    `</div>` +
+    `<p class="video-youtube-cinema-foot">Kesim / yerel dosya: sohbete «<strong>indir</strong>» ekle.</p>` +
+    `</div></div>`;
+  cinema.hidden = false;
+  cinema.style.display = "flex";
+  cinema.classList.add("video-preview-flash");
+  window.setTimeout(() => cinema.classList.remove("video-preview-flash"), 1400);
+
+  cinema.querySelector("[data-yt-open-browser]")?.addEventListener("click", () => {
+    void openYoutubeWatchExternal(cleanUrl);
+  });
+  cinema.querySelector("[data-yt-try-embed]")?.addEventListener("click", () => {
+    loadYoutubeEmbedInPanel(cleanUrl, vid, opts);
+    flashRuzgarDurum("Gömülü oynatıcı deneniyor… (bot ekranı çıkarsa Tarayıcıda izle kullan.)");
+  });
+
+  if (el.videoDownloadUrl) el.videoDownloadUrl.value = cleanUrl;
+  if (opts.openBrowser !== false) {
+    await openYoutubeWatchExternal(cleanUrl);
+  }
+  if (opts.flash !== false) {
+    flashRuzgarDurum(`YouTube tarayıcıda açıldı · panel: ${vid}`);
+  }
+  return true;
+}
+
+function youtubeEmbedPageOrigin() {
+  try {
+    const loc = window.location;
+    if (loc?.protocol && !/^file:$/i.test(loc.protocol) && loc.origin && loc.origin !== "null") {
+      return loc.origin;
+    }
+  } catch (_) {
+    /* ignore */
+  }
+  try {
+    const root = String(window.__RUZGAR_API_ROOT__ || API || "")
+      .trim()
+      .replace(/\/+$/, "");
+    if (root.startsWith("http")) return root;
+  } catch (_) {
+    /* ignore */
+  }
+  return "http://127.0.0.1:8779";
+}
+
+async function loadYoutubePreviewInPanel(watchUrl, opts = {}) {
+  const cleanUrl = normalizeYoutubeWatchUrl(watchUrl);
+  const vid = parseYoutubeVideoId(cleanUrl);
+  if (!vid || !el.videoPreview) return false;
+  if (/^file:/i.test(window.location.protocol)) {
+    flashRuzgarDurum(
+      "YouTube sinema oynatıcı file:// ile çalışmaz — Rüzgarı kapatıp yeniden açın (http://127.0.0.1:8779/ui).",
+    );
+    return false;
+  }
+
+  if (isRuzgarElectronShell() && opts.forceEmbed !== true) {
+    return loadYoutubeCinemaPanel(cleanUrl, vid, opts);
+  }
+
+  clearYoutubeEmbedPreview();
+  const ok = loadYoutubeEmbedInPanel(cleanUrl, vid, opts);
+  if (!ok) return false;
+  if (el.videoDownloadUrl) el.videoDownloadUrl.value = cleanUrl;
+  if (opts.flash !== false) {
+    flashRuzgarDurum(`YouTube sinema oynatıcıda açıldı (${vid}). Kesim için «indir» deyin.`);
+  }
+  return true;
+}
+
 function extractVideoDownloadUrl(text) {
   const raw = String(text || "").trim();
   if (!raw || !RUZGAR_VIDEO_DL_HINT_RE.test(raw)) return null;
@@ -6322,16 +6597,16 @@ function extractVideoDownloadUrl(text) {
   const url = m[0].replace(/[.,);]+$/, "");
   const low = (raw + url).toLowerCase();
   if (!low.includes("youtube") && !low.includes("youtu.be")) return null;
-  return url;
+  return normalizeYoutubeWatchUrl(url);
 }
 
 function isMostlyVideoDownloadCommand(text) {
   const raw = String(text || "").trim();
+  if (!isVideoDownloadCommand(raw)) return false;
   const url = extractVideoDownloadUrl(raw);
   if (!url) return false;
   const rest = raw.replace(url, "").replace(RUZGAR_VIDEO_URL_RE, "").trim();
-  if (/(?:\boynat\b|\baç\b|\bac\b|burada\s+oynat|oynatıcı|oynatici)/i.test(rest)) return true;
-  return rest.length < 120;
+  return rest.length < 160;
 }
 
 const RUZGAR_VIDEO_SEARCH_RE =
@@ -6351,43 +6626,52 @@ async function runVideoDownloadFromUrl(url, opts = {}) {
   if (!u) {
     throw new Error("Video URL yok.");
   }
-  if (window.RuzgarVirusGuard?.runVideoDownload) {
-    const announceChat = opts.announceChat !== false;
-    if (announceChat) {
-      flashRuzgarDurum("Rüzgar virüs koruması: video taranıyor…");
-    }
-    const out = await window.RuzgarVirusGuard.runVideoDownload({
-      apiBase: API,
-      url: u,
-      speak: speakTextImmediate,
-      flash: (msg) => {
-        if (announceChat) flashRuzgarDurum(msg);
-      },
-    });
-    return out.result || out;
-  }
   const announceChat = opts.announceChat !== false;
-  const ctrl = new AbortController();
-  const to = window.setTimeout(() => ctrl.abort(), RUZGAR_VIDEO_DOWNLOAD_TIMEOUT_MS);
-  if (announceChat) {
-    flashRuzgarDurum("Video indiriliyor… (doğrudan API)");
-  }
   setVideoJobProgress(true, "Video indiriliyor…");
   try {
-    const res = await fetch(`${API}/api/video/download`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: u }),
-      signal: ctrl.signal,
-    });
-    const j = await res.json().catch(() => ({}));
-    if (!res.ok || j.ok === false) {
-      const detail = j.detail || j.result?.error || `HTTP ${res.status}`;
-      throw new Error(formatVideoApiError(detail, res, "İndirme başarısız"));
+    if (window.RuzgarVirusGuard?.runVideoDownload) {
+      if (announceChat) {
+        flashRuzgarDurum("Rüzgar virüs koruması: video taranıyor…");
+      }
+      const out = await window.RuzgarVirusGuard.runVideoDownload({
+        apiBase: API,
+        url: u,
+        speak: speakTextImmediate,
+        flash: (msg) => {
+          if (announceChat) flashRuzgarDurum(msg);
+        },
+      });
+      const raw = out.result || out;
+      const rel = String(raw.file_path || out.rel || "").trim();
+      return {
+        ...raw,
+        file_path: rel,
+        title: raw.title || out.filename || "",
+        ok: raw.ok !== false && out.ok !== false,
+      };
     }
-    return j.result || {};
+    const ctrl = new AbortController();
+    const to = window.setTimeout(() => ctrl.abort(), RUZGAR_VIDEO_DOWNLOAD_TIMEOUT_MS);
+    if (announceChat) {
+      flashRuzgarDurum("Video indiriliyor… (doğrudan API)");
+    }
+    try {
+      const res = await fetch(`${API}/api/video/download`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: u }),
+        signal: ctrl.signal,
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || j.ok === false) {
+        const detail = j.detail || j.result?.error || `HTTP ${res.status}`;
+        throw new Error(formatVideoApiError(detail, res, "İndirme başarısız"));
+      }
+      return j.result || {};
+    } finally {
+      window.clearTimeout(to);
+    }
   } finally {
-    window.clearTimeout(to);
     setVideoJobProgress(false);
   }
 }
@@ -6434,6 +6718,7 @@ async function runVideoDownloadJob() {
 }
 
 function clearVideoPreview() {
+  clearYoutubeEmbedPreview();
   try {
     if (videoPreviewObjectUrl) URL.revokeObjectURL(videoPreviewObjectUrl);
   } catch (_) {
@@ -6482,7 +6767,13 @@ function initVideoChatBrain() {
     formatClientChatError,
     formatVideoApiError,
     extractVideoDownloadUrl,
+    isVideoDownloadCommand,
+    isVideoStreamOpenCommand,
     isMostlyVideoDownloadCommand,
+    loadYoutubePreviewInPanel,
+    openYoutubeWatchExternal,
+    isRuzgarElectronShell,
+    clearYoutubeEmbedPreview,
     isVideoSearchOrPickCommand,
     parseVideoTimeSec,
     loadVideoPreviewFromRel,
@@ -6494,6 +6785,7 @@ function initVideoChatBrain() {
     runVideoMuxAudioJob,
     runVideoEditMixJob,
     runVideoDownloadFromUrl,
+    setVideoJobProgress,
     refreshUiManifest,
     openVideoExportFolder,
     applyRecentVideoDownload,
@@ -6560,6 +6852,7 @@ function initMotorEylemPanel() {
 }
 
 function wireVideoAtolye() {
+  setVideoJobProgress(false);
   if (el.videoFileInput && el.videoPreview && el.videoFileInput.dataset.videoWired !== "1") {
     el.videoFileInput.dataset.videoWired = "1";
     el.videoFileInput.addEventListener("change", () => {
@@ -9851,6 +10144,14 @@ async function sendMessageWithText(t, opts = {}) {
     updatePerformanceIndicators(perfBusy);
     syncInterruptButton();
   };
+
+  if (window.RuzgarAnaMotorHub?.tryEylemCommand) {
+    const eylemHit = await window.RuzgarAnaMotorHub.tryEylemCommand(text);
+    if (eylemHit?.handled) {
+      finishMotorInstant(currentMode === "genel" ? "Ana Motor" : MODE_LABELS[currentMode] || currentMode);
+      return;
+    }
+  }
 
   if (currentMode === "genel" && window.RuzgarAnaMotorHub?.tryDispatchFromGenel) {
     const hubHit = await window.RuzgarAnaMotorHub.tryDispatchFromGenel(text);

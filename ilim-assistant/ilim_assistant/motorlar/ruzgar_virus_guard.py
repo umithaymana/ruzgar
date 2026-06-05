@@ -82,6 +82,28 @@ def guard_enabled() -> bool:
     )
 
 
+def video_auto_approve_enabled() -> bool:
+    """Temiz YouTube taramasından sonra sesli onayı atla (varsayılan: açık)."""
+    return os.environ.get("RUZGAR_VIRUS_GUARD_VIDEO_AUTO_APPROVE", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+        "off",
+    )
+
+
+def _is_trusted_video_host(url: str) -> bool:
+    try:
+        host = (urlparse(url).hostname or "").lower().strip(".")
+    except Exception:
+        return False
+    if host in ("youtube.com", "www.youtube.com", "m.youtube.com", "music.youtube.com"):
+        return True
+    if host in ("youtu.be", "www.youtu.be"):
+        return True
+    return host.endswith(".youtube.com")
+
+
 def _repo_root() -> Path:
     try:
         from ilim_assistant.motorlar.programlama_motoru import repo_root
@@ -398,14 +420,18 @@ def preflight_video_download(url: str, *, scan_mode: str = "deep") -> dict[str, 
     _save_pending(meta)
     msgs = _tts_messages(staged.name, verdict)
 
+    auto_approve = video_auto_approve_enabled() and _is_trusted_video_host(u)
+    phase = "auto_approved" if auto_approve else "awaiting_user_approval"
+
     return {
         "ok": True,
         "pending_id": pending_id,
-        "phase": "awaiting_user_approval",
+        "phase": phase,
+        "auto_approve": auto_approve,
         "scan": verdict.to_dict(),
         "bytes": meta["bytes"],
         "filename": staged.name,
-        "tts_message": msgs["tts_user"],
+        "tts_message": msgs["tts_user"] if not auto_approve else "",
         "tts_after_commit": msgs["tts_clean_ok"],
         "voice_prompt_hint": msgs["prompt_listen"],
         "guard_version": GUARD_VERSION,
@@ -528,8 +554,11 @@ def capabilities() -> dict[str, Any]:
             "onayla",
             "tamam",
         ],
+        "video_auto_approve": video_auto_approve_enabled(),
+        "video_auto_approve_hosts": ["youtube.com", "youtu.be"],
         "note": (
             "Çok katmanlı Rüzgar Virüs Kalkanı: URL itibar, karantina, derin tarama, "
-            "risk skoru, nötralizasyon, sesli onay, commit öncesi yeniden tarama."
+            "risk skoru, nötralizasyon, sesli onay (YouTube temiz taramada otomatik), "
+            "commit öncesi yeniden tarama."
         ),
     }

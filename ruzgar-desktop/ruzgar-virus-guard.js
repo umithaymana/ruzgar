@@ -109,6 +109,20 @@
     return true;
   }
 
+  function apiErrorDetail(j, status) {
+    const d = j && j.detail;
+    if (typeof d === "string" && d.trim()) return d.trim();
+    if (Array.isArray(d) && d.length) {
+      return d
+        .map((x) => (x && (x.msg || x.message)) || "")
+        .filter(Boolean)
+        .join(" · ");
+    }
+    if (j && typeof j.error === "string" && j.error.trim()) return j.error.trim();
+    if (j && typeof j.tts_message === "string" && j.tts_message.trim()) return j.tts_message.trim();
+    return `Tarama hatası (${status})`;
+  }
+
   async function preflight(apiBase, url, kind, filenameHint) {
     const fd = new FormData();
     fd.append("url", url);
@@ -120,11 +134,7 @@
     });
     const j = await res.json().catch(() => ({}));
     if (!res.ok) {
-      const msg =
-        typeof j.detail === "string"
-          ? j.detail
-          : j.error || j.tts_message || `Tarama hatası (${res.status})`;
-      throw new Error(msg);
+      throw new Error(apiErrorDetail(j, res.status));
     }
     return j;
   }
@@ -196,21 +206,37 @@
     if (opts.flash) opts.flash("Rüzgar Virüs Kalkanı: video karantinaya indiriliyor ve taranıyor…");
 
     const pre = await preflight(apiBase, url, "video");
-    if (opts.flash) opts.flash("Video tarandı. Sesli onay bekleniyor…");
-    speak(pre.tts_message || "Videoyu taradım. Onay verir misin?", opts.speak);
+    const autoApprove = !!pre.auto_approve || pre.phase === "auto_approved";
 
-    try {
-      await waitForUserApproval(pre.voice_prompt_hint || "tamam indirebilirsin", opts.approvalTimeoutMs);
-    } catch (err) {
-      await reject(apiBase, pre.pending_id);
-      throw err;
+    if (autoApprove) {
+      if (opts.flash) opts.flash("Video temiz — otomatik onay (YouTube). Teslim ediliyor…");
+    } else {
+      if (opts.flash) opts.flash("Video tarandı. Sesli onay bekleniyor…");
+      speak(pre.tts_message || "Videoyu taradım. Onay verir misin?", opts.speak);
+
+      try {
+        await waitForUserApproval(pre.voice_prompt_hint || "tamam indirebilirsin", opts.approvalTimeoutMs);
+      } catch (err) {
+        await reject(apiBase, pre.pending_id);
+        throw err;
+      }
     }
 
-    if (opts.flash) opts.flash("Onay alındı, video teslim ediliyor…");
+    if (opts.flash && !autoApprove) opts.flash("Onay alındı, video teslim ediliyor…");
     const out = await commit(apiBase, pre.pending_id, {});
-    if (pre.tts_after_commit) speak(pre.tts_after_commit, opts.speak);
+    if (pre.tts_after_commit && !autoApprove) speak(pre.tts_after_commit, opts.speak);
     if (typeof opts.onSuccess === "function") opts.onSuccess(out, pre);
-    return { ...out, result: pre.video_metadata || out };
+    const meta = pre.video_metadata || {};
+    const rel = String(out.rel || meta.file_path || "").trim();
+    return {
+      ...out,
+      result: {
+        ...meta,
+        file_path: rel || meta.file_path || "",
+        title: meta.title || out.filename || "",
+        ok: out.ok !== false,
+      },
+    };
   }
 
   global.RuzgarVirusGuard = {

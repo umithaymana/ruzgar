@@ -82,6 +82,44 @@ def _format_best() -> str:
     return os.environ.get("RUZGAR_YTDLP_FORMAT", "bestvideo+bestaudio/best").strip() or "best"
 
 
+def _ytdlp_cookie_opts() -> dict[str, Any]:
+    """
+    YouTube bot engeli için tarayıcı çerezleri.
+    RUZGAR_YTDLP_COOKIES_BROWSER=edge|chrome|firefox (Windows'ta varsayılan: edge)
+    Kapat: RUZGAR_YTDLP_COOKIES_BROWSER=0
+    Alternatif: RUZGAR_YTDLP_COOKIES_FILE=path/to/cookies.txt
+    """
+    raw = (os.environ.get("RUZGAR_YTDLP_COOKIES_BROWSER", "") or "").strip()
+    if raw.lower() in ("0", "false", "no", "off", "none"):
+        return {}
+    cookie_file = (os.environ.get("RUZGAR_YTDLP_COOKIES_FILE", "") or "").strip()
+    if cookie_file:
+        p = Path(cookie_file)
+        if p.is_file():
+            return {"cookiefile": str(p.resolve())}
+    browser = raw
+    if not browser and os.name == "nt":
+        browser = "edge"
+    if not browser:
+        return {}
+    if ":" in browser:
+        name, profile = browser.split(":", 1)
+        return {"cookiesfrombrowser": (name.strip(), profile.strip(), None, None)}
+    return {"cookiesfrombrowser": (browser,)}
+
+
+def _ytdlp_cookie_cli_args() -> list[str]:
+    opts = _ytdlp_cookie_opts()
+    if "cookiefile" in opts:
+        return ["--cookies", str(opts["cookiefile"])]
+    cfb = opts.get("cookiesfrombrowser")
+    if not cfb:
+        return []
+    if isinstance(cfb, tuple) and len(cfb) >= 2 and cfb[1]:
+        return [f"--cookies-from-browser", f"{cfb[0]}:{cfb[1]}"]
+    return ["--cookies-from-browser", str(cfb[0])]
+
+
 @dataclass
 class VideoDownloadResult:
     ok: bool
@@ -163,6 +201,83 @@ def save_to_central_pool(record: VideoDownloadResult | dict[str, Any]) -> bool:
         return False
 
 
+_VIDEO_FILE_SUFFIXES = frozenset({".mp4", ".mkv", ".webm", ".m4a", ".mov", ".m4v", ".avi"})
+_FRAGMENT_SUFFIX_RE = re.compile(r"\.f\d+\.[a-z0-9]+$", re.IGNORECASE)
+
+
+def _is_video_output_file(path: Path) -> bool:
+    if not path.is_file():
+        return False
+    name = path.name.lower()
+    if name.endswith((".part", ".ytdl", ".tmp")):
+        return False
+    if _FRAGMENT_SUFFIX_RE.search(name):
+        return False
+    return path.suffix.lower() in _VIDEO_FILE_SUFFIXES
+
+
+def _resolve_ytdlp_output_path(
+    info: dict[str, Any],
+    out_dir: Path,
+    *,
+    ydl: Any | None = None,
+    hook_path: Path | None = None,
+) -> Path | None:
+    """yt-dlp birleştirme sonrası nihai dosyayı bul (Windows/merge uyumlu)."""
+    candidates: list[Path] = []
+
+    if hook_path and _is_video_output_file(hook_path):
+        candidates.append(hook_path)
+
+    for rd in reversed(info.get("requested_downloads") or []):
+        if not isinstance(rd, dict):
+            continue
+        for key in ("filepath", "filename"):
+            raw = rd.get(key)
+            if raw:
+                candidates.append(Path(str(raw)))
+
+    if ydl is not None:
+        try:
+            candidates.append(Path(str(ydl.prepare_filename(info))))
+        except Exception:
+            pass
+        merge_ext = (os.environ.get("RUZGAR_YTDLP_MERGE_EXT", "mp4") or "mp4").strip().lstrip(".")
+        vid = str(info.get("id") or "").strip()
+        if vid:
+            for p in out_dir.glob(f"*{vid}*"):
+                if _is_video_output_file(p):
+                    candidates.append(p)
+        for cand in list(candidates):
+            if cand.suffix.lower().lstrip(".") != merge_ext:
+                alt = cand.with_suffix(f".{merge_ext}")
+                candidates.append(alt)
+
+    seen: set[str] = set()
+    for cand in candidates:
+        for p in (cand, cand.resolve()):
+            key = str(p).lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            if _is_video_output_file(p):
+                return p
+
+    best: Path | None = None
+    best_mtime = 0.0
+    for p in out_dir.rglob("*"):
+        if not _is_video_output_file(p):
+            continue
+        try:
+            mt = p.stat().st_mtime
+        except OSError:
+            continue
+        if mt >= best_mtime:
+            best_mtime = mt
+            best = p
+    return best
+
+
 def _probe_file(path: Path) -> tuple[int, float | None]:
     size = path.stat().st_size if path.is_file() else 0
     duration: float | None = None
@@ -176,6 +291,39 @@ def _probe_file(path: Path) -> tuple[int, float | None]:
     except Exception:
         pass
     return size, duration
+
+
+def _format_ytdlp_error(exc: Exception) -> str:
+    raw = str(exc or "").strip()
+    while raw.upper().startswith("ERROR:"):
+        raw = raw[6:].strip()
+    if not raw:
+        raw = exc.__class__.__name__
+    low = raw.lower()
+    if "could not copy" in low and "cookie" in low:
+        return (
+            "Tarayıcı çerezleri okunamadı (Edge/Chrome açık olabilir — tarayıcıyı kapatıp tekrar deneyin). "
+            "Alternatif: YouTube'a giriş yapıp cookies.txt dışa aktarın → "
+            "RUZGAR_YTDLP_COOKIES_FILE=... (RUZGAR_BRAIN.env)."
+        )
+    if "video unavailable" in low:
+        return (
+            "YouTube videosu erişilemiyor (kaldırılmış, gizli, bölge kısıtı veya yaş sınırı olabilir). "
+            "Başka bir link deneyin veya yt-dlp güncelleyin: pip install -U yt-dlp"
+        )
+    if "sign in" in low or "login" in low or "cookies" in low or "not a bot" in low:
+        browser = (os.environ.get("RUZGAR_YTDLP_COOKIES_BROWSER", "") or "").strip()
+        if not browser and os.name == "nt":
+            browser = "edge (varsayılan)"
+        hint = (
+            f" RUZGAR_BRAIN.env içine RUZGAR_YTDLP_COOKIES_BROWSER=edge ekleyin "
+            f"(Chrome kullanıyorsan chrome). Şu an: {browser or 'kapalı'}."
+        )
+        return (
+            "YouTube oturum/çerez istiyor (bot koruması)."
+            + hint
+        )
+    return raw[:4000]
 
 
 def _download_via_python_api(url: str, out_dir: Path) -> VideoDownloadResult:
@@ -201,21 +349,22 @@ def _download_via_python_api(url: str, out_dir: Path) -> VideoDownloadResult:
         "no_warnings": True,
         "progress_hooks": [_hook],
         "noplaylist": os.environ.get("RUZGAR_YTDLP_PLAYLIST", "0").strip() in ("1", "true", "yes"),
+        "restrictfilenames": True,
+        **_ytdlp_cookie_opts(),
     }
 
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=True) or {}
-
-    if final_path is None or not final_path.is_file():
-        candidates = sorted(
-            out_dir.glob("*"),
-            key=lambda p: p.stat().st_mtime if p.is_file() else 0,
-            reverse=True,
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True) or {}
+    except Exception as e:
+        return VideoDownloadResult(
+            ok=False,
+            url=url,
+            downloaded_at=downloaded_at,
+            error=_format_ytdlp_error(e),
         )
-        for c in candidates:
-            if c.is_file() and c.suffix.lower() in (".mp4", ".mkv", ".webm", ".m4a", ".mov"):
-                final_path = c
-                break
+
+    final_path = _resolve_ytdlp_output_path(info, out_dir, ydl=ydl, hook_path=final_path)
 
     if final_path is None or not final_path.is_file():
         return VideoDownloadResult(
@@ -262,6 +411,7 @@ def _download_via_cli(url: str, out_dir: Path, exe: str) -> VideoDownloadResult:
     ]
     if os.environ.get("RUZGAR_YTDLP_PLAYLIST", "0").strip() not in ("1", "true", "yes"):
         argv.append("--no-playlist")
+    argv.extend(_ytdlp_cookie_cli_args())
 
     try:
         r = subprocess.run(
@@ -297,16 +447,7 @@ def _download_via_cli(url: str, out_dir: Path, exe: str) -> VideoDownloadResult:
             error=err[:4000],
         )
 
-    candidates = sorted(
-        out_dir.glob("*"),
-        key=lambda p: p.stat().st_mtime if p.is_file() else 0,
-        reverse=True,
-    )
-    final_path: Path | None = None
-    for c in candidates:
-        if c.is_file() and c.suffix.lower() in (".mp4", ".mkv", ".webm", ".m4a", ".mov"):
-            final_path = c
-            break
+    final_path = _resolve_ytdlp_output_path({}, out_dir)
 
     if final_path is None:
         return VideoDownloadResult(

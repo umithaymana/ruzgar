@@ -140,9 +140,24 @@ function sharedWebPreferences() {
   };
 }
 
+async function loadUiIntoWindow(win, queryString) {
+  const port = readLocalApiPortFromDisk();
+  const htmlPath = path.join(__dirname, "index.html");
+  const qs = queryString ? `?${queryString}` : "";
+  if (await probeApiHealth(port)) {
+    return win.loadURL(`http://127.0.0.1:${port}/ui/index.html${qs}`);
+  }
+  console.warn(
+    "[RÜZGAR] Yerel API yok — file:// yedek (YouTube gömülü oynatıcı çalışmayabilir; Start-Ruzgar.ps1)"
+  );
+  if (qs) {
+    return win.loadURL(`${pathToFileURL(htmlPath).href}${qs}`);
+  }
+  return win.loadFile(htmlPath);
+}
+
 function openIndexMode(mode) {
   const m = String(mode || "genel");
-  const base = pathToFileURL(path.join(__dirname, "index.html")).href;
   const win = new BrowserWindow({
     width: 1280,
     height: 840,
@@ -154,17 +169,16 @@ function openIndexMode(mode) {
     webPreferences: sharedWebPreferences(),
   });
   const htmlPath = path.join(__dirname, "index.html");
-  win.webContents.on("did-fail-load", (_e, code, desc, url) => {
+  win.webContents.on("did-fail-load", (_e, code, desc, url, isMainFrame) => {
+    if (isMainFrame === false) return;
     dialog.showErrorBox(
       "RUZGAR",
       `Sayfa yuklenemedi: ${desc} (${code})\n${url}\n\nDosya: ${htmlPath}`
     );
   });
-  win
-    .loadURL(`${base}?mode=${encodeURIComponent(m)}`)
-    .catch((err) => {
-      dialog.showErrorBox("RUZGAR", `loadURL: ${err.message}\n${htmlPath}`);
-    });
+  loadUiIntoWindow(win, `mode=${encodeURIComponent(m)}`).catch((err) => {
+    dialog.showErrorBox("RUZGAR", `loadUI: ${err.message}\n${htmlPath}`);
+  });
   win.once("ready-to-show", () => {
     win.show();
     win.focus();
@@ -318,18 +332,16 @@ function createWindow() {
   Menu.setApplicationMenu(buildMenu(win));
 
   const htmlPath = path.join(__dirname, "index.html");
-  win.webContents.on("did-fail-load", (_e, code, desc, url) => {
+  win.webContents.on("did-fail-load", (_e, code, desc, url, isMainFrame) => {
+    if (isMainFrame === false) return;
     dialog.showErrorBox(
       "RUZGAR",
       `Sayfa yuklenemedi: ${desc} (${code})\n${url}\n\nDosya: ${htmlPath}`
     );
   });
 
-  win.loadFile(htmlPath).catch((err) => {
-    dialog.showErrorBox(
-      "RUZGAR",
-      `loadFile: ${err.message}\n${htmlPath}`
-    );
+  loadUiIntoWindow(win).catch((err) => {
+    dialog.showErrorBox("RUZGAR", `loadUI: ${err.message}\n${htmlPath}`);
   });
 
   win.once("ready-to-show", () => {

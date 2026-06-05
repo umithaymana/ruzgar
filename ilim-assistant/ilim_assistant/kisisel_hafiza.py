@@ -56,6 +56,11 @@ def try_consume_memory_command(message: str) -> str | None:
         pass
     low = raw.casefold()
 
+    if re.match(r"(?is)^(?:eylem|komut)\s+(?:öğret|ogret)\b", raw):
+        return None
+    if re.match(r"(?is)^eylem\s+(?:listesi|paneli|sil|unut|onayla)\b", raw):
+        return None
+
     teach_match = re.search(
         r"(?is)(?:sana\s+)?(?:öğretiyorum|ogretiyorum|öğret(?:iyorum)?)\s*[:\-–]?\s*(?P<body>.+)$",
         raw,

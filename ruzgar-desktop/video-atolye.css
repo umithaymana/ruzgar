@@ -508,6 +508,8 @@ body.video-cinema-mode #page-video .video-player-sticky {
 
 body.video-cinema-mode #page-video .video-preview-wrap {
 
+  position: relative;
+
   flex: 1 1 auto;
 
   min-height: var(--video-preview-min-h, 160px);
@@ -562,6 +564,100 @@ body.video-cinema-mode #page-video .video-preview-el {
 
 }
 
+.video-cinema-screen .video-youtube-embed {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100% !important;
+  border: 0;
+  border-radius: 4px;
+  background: #000;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 24px 80px rgba(0, 0, 0, 0.65),
+    0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+.video-youtube-embed[hidden] {
+  display: none !important;
+}
+
+.video-youtube-embed.video-preview-flash {
+  outline: 2px solid rgba(110, 168, 254, 0.85);
+  outline-offset: 3px;
+  transition: outline-color 0.5s ease;
+}
+
+.video-youtube-cinema {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  background: #000;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.video-youtube-cinema[hidden] {
+  display: none !important;
+}
+
+.video-youtube-cinema-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+}
+
+.video-youtube-cinema-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.55;
+}
+
+.video-youtube-cinema-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.82) 100%);
+}
+
+.video-youtube-cinema-lead {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.video-youtube-cinema-hint {
+  margin: 0;
+  max-width: 420px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.video-youtube-cinema-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.video-youtube-cinema-foot {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.65);
+}
+
 
 
 .video-cinema-deck {
@@ -585,6 +681,10 @@ body.video-cinema-mode #page-video .video-preview-el {
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.video-job-progress[hidden] {
+  display: none !important;
 }
 
 .video-job-progress-label {

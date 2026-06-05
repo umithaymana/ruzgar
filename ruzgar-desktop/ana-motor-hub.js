@@ -274,7 +274,8 @@
     const V = global.RuzgarVideoChatBrain;
     if (!V?.tryAtolyeFromMessage) return { handled: false };
     const hit = await V.tryAtolyeFromMessage(text);
-    return { handled: !!hit?.handled };
+    if (!hit?.handled) return { handled: false };
+    return { handled: true, ok: hit.ok !== false };
   }
 
   async function dispatchProgramlama(text) {
@@ -394,12 +395,16 @@
       learnedAction: learned,
       subIntent: learned?.sub_intent,
     });
-    if (out.handled) {
+    if (out.handled && out.ok !== false) {
       const sub = learned?.sub_intent ? `/${learned.sub_intent}` : "";
       const extra = learned?.trigger
         ? ` (öğrenilen: «${learned.trigger}»→${learned.motor}${sub})`
         : "";
       say(`Ümit abi, **${label}** — hallettim.${extra} (Sohbet Ana Motor'da.)`);
+      return { handled: true };
+    }
+    if (out.handled && out.ok === false) {
+      d().setStatus?.("Ana Motor", "Rüzgar");
       return { handled: true };
     }
     return { handled: false };
@@ -420,15 +425,56 @@
     w.className = "bubble assistant chat-welcome";
     w.setAttribute("role", "note");
     w.innerHTML =
-      `<p class="chat-welcome-lead"><strong>Ana Motor — merkez.</strong></p>` +
-      `<p>Tüm motor kabiliyetleri tek sohbetten; panel arka planda açılır.</p>` +
+      `<p class="chat-welcome-lead"><strong>Ana Motor — tek sohbet, tüm motorlar.</strong></p>` +
+      `<p>Buradan yaz; gerekirse panel arka planda açılır, sohbet <strong>genel</strong> kalır.</p>` +
       `<ul class="chat-welcome-list">` +
-      `<li>«YouTube indir» · «kes 0:30-1:00» · «altyazı göm»</li>` +
-      `<li>«pytest geçir» · «hatırla: …» · «eser ara»</li>` +
-      `<li><strong>hub yardım</strong> · <strong>eylem öğret</strong></li>` +
+      `<li><strong>Video:</strong> YouTube indir · kes 0:30-1:00 · altyazı göm · mux · kurgu</li>` +
+      `<li><strong>Kod:</strong> pytest geçir · git durumu · proje tara · briefing</li>` +
+      `<li><strong>Tercüme:</strong> eser ara · bu sayfayı çevir</li>` +
+      `<li><strong>Hafıza:</strong> hatırla: … · görev listesi · hafıza durumu</li>` +
+      `<li><strong>Ses:</strong> alim moduna geç · metne dök · ses profili</li>` +
+      `<li><strong>Öğren:</strong> <code>eylem öğret: «tetik» → video/kes</code></li>` +
+      `<li><strong>Yönet:</strong> hub yardım · eylem listesi · eylem paneli</li>` +
       `</ul>` +
       `<p class="chat-welcome-foot">${VERSION} · Ümit &amp; Gökçenur</p>`;
     container.appendChild(w);
+  }
+
+  function isEylemCommand(raw) {
+    const low = fold(raw);
+    if (/^eylem\s+paneli\s*$/.test(low)) return true;
+    if (/^(?:eylem|komut)\s+(?:öğret|ogret)\s*[:：]/i.test(raw)) return true;
+    if (/^eylem\s+(?:listesi|sil|unut|onayla)\s*[:：]?/i.test(raw)) return true;
+    return false;
+  }
+
+  /**
+   * Eylem öğret/liste/panel — tüm modlarda (Video dahil)
+   * @returns {Promise<{handled: boolean}>}
+   */
+  async function tryEylemCommand(text) {
+    const raw = String(text || "").trim();
+    if (!raw || !isEylemCommand(raw)) return { handled: false };
+
+    if (/^eylem\s+paneli\s*$/i.test(fold(raw))) {
+      d().openEylemPanel?.();
+      say("Ümit abi, **Eylem yönetim paneli** açıldı.");
+      d().setStatus?.("Ana Motor", "Rüzgar");
+      return { handled: true };
+    }
+
+    const learnedInstant = await fetchLearnedInstant(raw);
+    if (learnedInstant?.reply) {
+      if (learnedInstant.reply === "__OPEN_EYLEM_PANEL__") {
+        d().openEylemPanel?.();
+        say("Ümit abi, **Eylem yönetim paneli** açıldı.");
+      } else {
+        say(learnedInstant.reply, { actionCard: true });
+      }
+      d().setStatus?.("Ana Motor", "Rüzgar");
+      return { handled: true };
+    }
+    return { handled: false };
   }
 
   function init(options) {
@@ -441,6 +487,8 @@
     init,
     tryDispatchFromGenel,
     tryDispatchActiveMotor,
+    tryEylemCommand,
+    isEylemCommand,
     showChatWelcome,
     isHubHelpRequest,
     dispatchToMotor,
