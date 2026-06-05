@@ -149,6 +149,7 @@
     }
 
     if (a.startsWith("video:")) {
+      if (global.RuzgarVideoAtolye?.runPanelAction?.(a)) return;
       if (a === "video:mark-in") clickEl("btn-video-mark-in") || clickEl("video-quick-create");
       else if (a === "video:subtitles") scrollToEl("video-rel-burn-sub");
       else if (a === "video:export-audio" || a === "video:export")

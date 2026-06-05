@@ -111,6 +111,11 @@ body {
   flex-shrink: 1;
   min-width: 0;
 }
+.header-tech-strip--top .video-top-flow {
+  margin-left: auto;
+  flex-shrink: 1;
+  min-width: 0;
+}
 .tercume-header-page-output {
   display: inline-flex;
   align-items: center;
@@ -2635,16 +2640,6 @@ body:not(.workbench-hizir-active) #workbench-hizir-tools,
   min-height: 0;
   overflow: hidden;
 }
-.video-quick-bar {
-  flex: 0 0 auto;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #3c3c3c;
-}
 .video-split-root {
   display: grid;
   /* Oynatıcı sütunu baskın: ~%50+ genişlik, dar ekranda da anlamlı minimum */
@@ -4065,7 +4060,7 @@ body.ui-motors-compact .motors-collapse-btn {
   min-height: 0;
 }
 
-/* Motor araçları — panel-manager.js */
+/* Motor araçları — sidebar-manager.js */
 .ruzgar-motor-sidebar {
   flex: 0 0 auto;
   margin-top: 6px;

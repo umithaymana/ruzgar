@@ -13,18 +13,21 @@
     <script>
       try {
         const motorsCompact = localStorage.getItem("ruzgarMotorsCompact");
-        if (motorsCompact === "1" || motorsCompact === null) {
+        const compactOn = motorsCompact === "1" || motorsCompact === null;
+        if (compactOn) {
           document.body.classList.add("ui-motors-compact");
           document.documentElement.style.setProperty("--ruzgar-motors-w", "52px");
         }
-        const splitRaw = localStorage.getItem("ruzgarSplit.v1");
-        if (splitRaw) {
-          const split = JSON.parse(splitRaw);
-          if (typeof split.motors === "number") {
-            document.documentElement.style.setProperty("--ruzgar-motors-w", `${split.motors}px`);
-          }
-          if (typeof split.chat === "number") {
-            document.documentElement.style.setProperty("--ruzgar-chat-w", `${split.chat}px`);
+        if (!compactOn) {
+          const splitRaw = localStorage.getItem("ruzgarSplit.v1");
+          if (splitRaw) {
+            const split = JSON.parse(splitRaw);
+            if (typeof split.motors === "number" && split.motors > 80) {
+              document.documentElement.style.setProperty("--ruzgar-motors-w", `${split.motors}px`);
+            }
+            if (typeof split.chat === "number") {
+              document.documentElement.style.setProperty("--ruzgar-chat-w", `${split.chat}px`);
+            }
           }
         }
       } catch (_) {
@@ -72,6 +75,54 @@
               <button type="button" class="btn-primary btn-compact" id="btn-tercume-translate">Çevir</button>
               <button type="button" class="btn-secondary btn-compact" id="btn-tercume-stop">Durdur</button>
               <button type="button" class="btn-secondary btn-compact" id="btn-tercume-save-target">Kaydet</button>
+            </div>
+          </div>
+          <div class="video-top-flow" aria-label="Video hızlı işlemler">
+            <div class="video-top-flow-actions" role="toolbar">
+              <button
+                type="button"
+                class="btn-primary btn-compact video-quick-btn"
+                id="video-quick-create"
+                data-video-dock="preview"
+                title="Dosya seçin ve önizleyin"
+              >
+                🎥 Video Oluştur
+              </button>
+              <button
+                type="button"
+                class="btn-secondary btn-compact video-quick-btn"
+                id="video-quick-youtube"
+                data-video-dock="download"
+                title="YouTube veya web video URL indir"
+              >
+                ⬇ YouTube indir
+              </button>
+              <button
+                type="button"
+                class="btn-secondary btn-compact video-quick-btn"
+                id="video-quick-trim"
+                data-video-dock="trim"
+                title="Kesim ve dönüştürme paneli"
+              >
+                ✂️ Videoyu Dönüştür/Kes
+              </button>
+              <button
+                type="button"
+                class="btn-secondary btn-compact video-quick-btn"
+                id="video-quick-audio"
+                data-video-dock="mux"
+                title="Harici ses bağlama paneli"
+              >
+                🎙️ Videoya Ses Ver
+              </button>
+              <button
+                type="button"
+                class="btn-secondary btn-compact video-quick-btn"
+                id="video-quick-export"
+                title="Çıktı klasörünü aç (.ruzgar-video-export)"
+              >
+                💾 Kaydet ve Dışa Aktar
+              </button>
             </div>
           </div>
         </div>
@@ -1323,36 +1374,23 @@
             <div class="tercume-duzen-backdrop" id="tercume-duzen-backdrop" hidden aria-hidden="true"></div>
           </section>
 
-          <section class="motor-page motor-page-video" id="page-video" hidden>
-            <div class="video-quick-bar" role="toolbar" aria-label="Video hızlı işlemler">
-              <button type="button" class="btn-primary btn-compact video-quick-btn" id="video-quick-create" title="Dosya seçin ve önizleyin">
-                🎥 Video Oluştur
-              </button>
-              <button type="button" class="btn-secondary btn-compact video-quick-btn" id="video-quick-youtube" title="YouTube veya web video URL indir">
-                ⬇ YouTube indir
-              </button>
-              <button type="button" class="btn-secondary btn-compact video-quick-btn" id="video-quick-trim" title="Kesim ve dönüştürme alanına git">
-                ✂️ Videoyu Dönüştür/Kes
-              </button>
-              <button type="button" class="btn-secondary btn-compact video-quick-btn" id="video-quick-audio" title="Harici ses bağlama">
-                🎙️ Videoya Ses Ver
-              </button>
-              <button type="button" class="btn-secondary btn-compact video-quick-btn" id="video-quick-export" title="Çıktı klasörünü aç">
-                💾 Kaydet ve Dışa Aktar
-              </button>
-            </div>
-            <div class="video-split-root">
-              <aside class="video-split-player" aria-label="Önizleme ve oynatıcı">
-                <div class="video-player-sticky">
-                  <label class="video-file-label" for="video-file-input">Dosya seç (video veya ses)</label>
-                  <input
-                    id="video-file-input"
-                    type="file"
-                    accept="video/*,audio/*,.mp4,.mkv,.webm,.mov,.avi,.m4v,.mp3,.wav,.opus"
-                  />
-                  <div class="video-preview-wrap">
+          <section class="motor-page motor-page-video video-cinema" id="page-video" hidden>
+            <div class="video-split-root video-cinema-root">
+              <aside class="video-split-player video-cinema-stage" aria-label="Sinema önizleme">
+                <div class="video-player-sticky video-cinema-shell">
+                  <header class="video-cinema-top">
+                    <span class="video-cinema-brand">Video atölyesi</span>
+                    <label class="video-file-label" for="video-file-input">Kaynak dosya</label>
+                    <input
+                      id="video-file-input"
+                      type="file"
+                      accept="video/*,audio/*,.mp4,.mkv,.webm,.mov,.avi,.m4v,.mp3,.wav,.opus"
+                    />
+                  </header>
+                  <div class="video-preview-wrap video-cinema-screen">
                     <video id="video-preview" class="video-preview-el" controls preload="metadata"></video>
                   </div>
+                  <footer class="video-cinema-deck">
                   <div class="video-timeline-wrap" id="video-timeline-wrap" aria-label="Zaman çizelgesi">
                     <div class="video-timeline-row">
                       <span class="video-timeline-label" id="video-timeline-label">Süre: — · İmleç: — · Kesim: —</span>
@@ -1395,13 +1433,14 @@
                       </div>
                     </div>
                   </div>
-                  <div class="video-toolbar">
+                  <div class="video-toolbar video-cinema-toolbar">
                     <button type="button" class="btn-primary btn-compact" id="btn-video-probe">Medya bilgisi</button>
                     <button type="button" class="btn-secondary btn-compact" id="btn-video-clear" title="Önizleme ve özeti sıfırla">
                       Sıfırla
                     </button>
                   </div>
-                  <p id="video-engine-hint" class="video-hint"></p>
+                  <p id="video-engine-hint" class="video-hint video-cinema-hint"></p>
+                  </footer>
                 </div>
               </aside>
               <div class="video-split-ops" aria-label="İşlemler ve özet">
@@ -2209,15 +2248,17 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
       <button type="button" data-act="paste">Yapıştır</button>
     </div>
 
-    <link rel="stylesheet" href="tercume-atolye.css?v=20260606-tools-panel" />
+    <link rel="stylesheet" href="tercume-atolye.css?v=20260606-center-row-fix" />
+    <link rel="stylesheet" href="video-atolye.css?v=20260606-dock-fix" />
     <link rel="stylesheet" href="mimar-atolye.css?v=20260601-mimar-polish" />
     <link rel="stylesheet" href="components/slide-panel.css?v=20260606-panels-drawer" />
     <script src="ruzgar-context-state.js?v=20260605-components"></script>
-    <script src="components/sidebar-manager.js?v=20260606-duzen-unified"></script>
-    <script src="ruzgar-split.js?v=20260604-book-wide"></script>
+    <script src="components/sidebar-manager.js?v=20260606-video-duzen"></script>
+    <script src="ruzgar-split.js?v=20260606-compact-motors-fix"></script>
     <script src="ruzgar-virus-guard.js?v=20260604-av-v2"></script>
     <script src="tercume-atolye.js?v=20260606-tools-panel"></script>
+    <script src="video-atolye.js?v=20260606-dock-fix"></script>
     <script src="mimar-atolye.js?v=20260601-faz5"></script>
-    <script src="app.js?v=20260606-nav-motor-persist"></script>
+    <script src="app.js?v=20260606-cinema-layout"></script>
   </body>
 </html>

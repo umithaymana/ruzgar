@@ -60,7 +60,7 @@ body[data-motor="tercume"][data-tercume-tab="okuma"] .panel-main {
 body:not([data-motor="tercume"]) #tercume-view-tabs {
   display: none !important;
 }
-body:not([data-motor="tercume"]) #tercume-center-row {
+body:not([data-motor="tercume"]):not([data-motor="mimar"]):not([data-motor="video"]) #tercume-center-row {
   display: contents;
 }
 

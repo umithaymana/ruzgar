@@ -1,15 +1,15 @@
 {
   "id": "video",
   "title": "Video",
-  "version": 2,
+  "version": 3,
   "sidebar": {
     "default": [
       {
         "group": "Araçlar",
         "items": [
           { "id": "mark", "label": "Kare yakala", "title": "Oynatıcı konumunu kesim başı yap", "action": "video:mark-in", "icon": "🎬" },
-          { "id": "sub", "label": "Altyazı", "title": "Altyazı dosyası ve gömme", "action": "video:subtitles", "icon": "💬" },
-          { "id": "audio", "label": "Ses dışa aktar", "title": "Ses parçası veya çıktı klasörü", "action": "video:export-audio", "icon": "🔊" }
+          { "id": "preview", "label": "Önizleme", "title": "Oynatıcı ve zaman çizelgesi", "action": "video:preview", "icon": "▶" },
+          { "id": "meta", "label": "Teknik özet", "title": "Medya bilgisi ve kodek özeti", "action": "video:meta", "icon": "📋" }
         ]
       }
     ],
@@ -17,20 +17,25 @@
       {
         "group": "Görünüm",
         "items": [
-          { "id": "preview", "label": "Önizleme", "title": "Oynatıcı ve zaman çizelgesi", "action": "video:timeline", "icon": "▶" }
+          { "id": "preview", "label": "Önizleme", "title": "Dosya seç, oynatıcı ve zaman çizelgesi", "action": "video:preview", "icon": "▶" },
+          { "id": "meta", "label": "Teknik özet", "title": "Süre, kodek ve medya bilgisi", "action": "video:meta", "icon": "📋" }
         ]
       },
       {
         "group": "Paneller",
         "items": [
-          { "id": "trim", "label": "Kesim", "title": "Başlangıç/bitiş ve kırpma", "action": "video:trim", "icon": "✂️" },
-          { "id": "export", "label": "Çıktı", "title": "Dışa aktarma klasörü", "action": "video:export-audio", "icon": "📤" }
+          { "id": "download", "label": "URL indir", "title": "YouTube veya web video indir", "action": "video:download", "icon": "⬇" },
+          { "id": "trim", "label": "Kesim", "title": "Başlangıç/bitiş, dönüştürme, birleştirme", "action": "video:trim", "icon": "✂️" },
+          { "id": "subtitle", "label": "Altyazı", "title": "Altyazı dosyasını videoya göm", "action": "video:subtitle", "icon": "💬" },
+          { "id": "mux", "label": "Harici ses", "title": "Ses parçasını videoya bağla", "action": "video:mux", "icon": "🔊" },
+          { "id": "edit", "label": "Kurgu", "title": "Zaman çizelgesi ve parça listesi", "action": "video:edit", "icon": "🎞" }
         ]
       },
       {
         "group": "Çalışma",
         "items": [
-          { "id": "youtube", "label": "URL indir", "title": "Web veya YouTube kaynağı", "action": "video:youtube", "icon": "⬇" }
+          { "id": "tercume", "label": "Altyazı → Tercüme", "title": "Altyazıyı tercüme atölyesine gönder", "action": "video:tercume", "icon": "⇄" },
+          { "id": "export", "label": "Çıktı klasörü", "title": ".ruzgar-video-export klasörünü aç", "action": "video:export", "icon": "📤" }
         ]
       }
     ],
@@ -38,7 +43,7 @@
       {
         "group": "Gelişim",
         "items": [
-          { "id": "tercume", "label": "Altyazı → Tercüme", "title": "Altyazıyı tercüme atölyesine gönder", "action": "video:sub-tercume", "icon": "⇄" },
+          { "id": "mark", "label": "Kare yakala", "title": "Oynatıcıdaki konumu kesim başı yap", "action": "video:mark-in", "icon": "🎬" },
           { "id": "devtools", "label": "Geliştirici araçları", "title": "DevTools (F12)", "action": "genel:devtools", "icon": "🛠" }
         ]
       }

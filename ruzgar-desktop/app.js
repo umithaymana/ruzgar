@@ -913,12 +913,6 @@ function applyModeToUI() {
   syncTopModeButtons();
   syncHizirWorkbenchStripVisibility();
   syncWorkbenchHizirToolbar();
-  if (window.RuzgarTercumeAtolye?.syncTercumeLayout) {
-    window.RuzgarTercumeAtolye.syncTercumeLayout(currentMode === "tercume");
-  }
-  if (window.RuzgarMimarAtolye?.syncMimarLayout) {
-    window.RuzgarMimarAtolye.syncMimarLayout(currentMode === "mimar" || currentMode === "okuma");
-  }
   if (el.navRefresh) {
     const tips = {
       genel: "Arayüzü yeniden yükle (Shift: yalnızca ana motor verisi)",
@@ -1655,7 +1649,7 @@ function switchMode(mode) {
     okuma:
       "Mimar motoru — Fotoğraf, sanat galerisi ve tasarım; üç bağımsız sayfa, yan sohbet.",
     video:
-      "Video motoru — Faz 71: konuşarak indir (URL yapıştır); kurgu/kesim paneli; çıktı .ruzgar-video-export.",
+      "Video motoru — Önizleme solda; indir, kesim, altyazı, kurgu panelleri Düzen menüsünde.",
     programlama:
       "Programlama motoru açıldı; Faz 6 — şablon projeler, oturum bağlamı, onaylı düzeltme.",
     hafiza:
@@ -4346,6 +4340,20 @@ async function refreshHizirOperasyonPanel() {
   return HIZIR_MODU.refreshPanel();
 }
 
+/** Aktif motor sayfası görünür olduktan sonra kabuk + data-motor senkronu (video/tercüme/mimar). */
+function syncActiveMotorShell() {
+  const m = String(currentMode || window.currentMode || "genel").trim().toLowerCase();
+  if (window.RuzgarTercumeAtolye?.syncTercumeLayout) {
+    window.RuzgarTercumeAtolye.syncTercumeLayout(m === "tercume");
+  }
+  if (window.RuzgarMimarAtolye?.syncMimarLayout) {
+    window.RuzgarMimarAtolye.syncMimarLayout(m === "mimar" || m === "okuma");
+  }
+  if (window.RuzgarVideoAtolye?.syncVideoLayout) {
+    window.RuzgarVideoAtolye.syncVideoLayout(m === "video");
+  }
+}
+
 function updateDynamicWorkbench() {
   const pages = [
     el.pageGenel,
@@ -4381,6 +4389,12 @@ function updateDynamicWorkbench() {
   }
   if (currentMode === "hafiza") {
     setWorkbenchLayout("layout-split2");
+  } else if (currentMode === "video") {
+    if (el.dynamicWorkbench) {
+      el.dynamicWorkbench.classList.remove("layout-split2", "layout-split4");
+      el.dynamicWorkbench.classList.add("layout-full");
+      document.body.classList.add("workbench-full");
+    }
   } else if (el.dynamicWorkbench?.classList.contains("layout-split2")) {
     setWorkbenchLayout("layout-full");
   }
@@ -4401,6 +4415,15 @@ function updateDynamicWorkbench() {
   }
   if (currentMode === "hizir") void refreshHizirOperasyonPanel();
   syncWorkbenchHizirToolbar();
+  syncActiveMotorShell();
+  relayoutAppShell();
+  if (currentMode === "video") {
+    requestAnimationFrame(() => {
+      syncActiveMotorShell();
+      relayoutAppShell();
+      window.RuzgarVideoAtolye?.relayoutShell?.();
+    });
+  }
 }
 
 const LS_MOTORS_COMPACT = "ruzgarMotorsCompact";
@@ -4469,6 +4492,75 @@ function isMotorsCompact() {
   return document.body.classList.contains("ui-motors-compact");
 }
 
+function getMotorsShellWidthPx() {
+  if (isMotorsCompact()) return 52;
+  const st = window.RuzgarSplit?.loadState?.() || {};
+  if (typeof st.motors === "number" && st.motors > 80) return st.motors;
+  const raw = getComputedStyle(document.documentElement).getPropertyValue("--ruzgar-motors-w").trim();
+  const n = parseFloat(raw);
+  return Number.isFinite(n) && n > 80 ? n : 232;
+}
+
+/** Motor paneli daralt/genişlet ve mod değişiminde ızgarayı yeniden kur (display:contents kırılmasını önler). */
+function relayoutAppShell() {
+  const mode = String(currentMode || window.currentMode || "genel").trim().toLowerCase();
+  const layout = document.querySelector(".layout.layout-v2");
+  const center = document.getElementById("tercume-center-row");
+  const pageVideo = document.getElementById("page-video");
+  const videoOn = mode === "video" && pageVideo && !pageVideo.hidden;
+  const mimarOn = mode === "mimar" || mode === "okuma";
+  const tercumeOn = mode === "tercume";
+
+  window.RuzgarSplit?.refresh?.();
+  window.RuzgarSplit?._splits?.forEach((s) => s._reposition?.());
+
+  const mw = getMotorsShellWidthPx();
+  document.documentElement.style.setProperty("--ruzgar-motors-w", `${mw}px`);
+
+  if (layout && (videoOn || mimarOn || tercumeOn)) {
+    layout.style.display = "grid";
+    layout.style.gridTemplateColumns = `${mw}px minmax(0, 1fr)`;
+    if (tercumeOn) layout.style.gridTemplateRows = "46px minmax(0, 1fr)";
+    else if (mimarOn) layout.style.gridTemplateRows = "38px minmax(0, 1fr)";
+    else layout.style.gridTemplateRows = "minmax(0, 1fr)";
+  } else if (layout) {
+    layout.style.removeProperty("display");
+    layout.style.removeProperty("grid-template-columns");
+    layout.style.removeProperty("grid-template-rows");
+  }
+
+  if (center && (videoOn || mimarOn || tercumeOn)) {
+    center.style.setProperty("display", "flex", "important");
+    center.style.flexDirection = "row";
+    center.style.gridColumn = videoOn || mimarOn || tercumeOn ? "2" : "";
+    center.style.gridRow = tercumeOn || mimarOn ? "2" : videoOn ? "1" : "";
+    center.style.minWidth = "0";
+    center.style.minHeight = "0";
+    center.style.overflow = "hidden";
+  } else if (center) {
+    center.style.removeProperty("display");
+    center.style.removeProperty("flex-direction");
+    center.style.removeProperty("min-width");
+    center.style.removeProperty("min-height");
+    center.style.removeProperty("overflow");
+  }
+
+  const motorsSplit = window.RuzgarSplit?._splits?.find((s) => s.key === "motors");
+  if (motorsSplit && !isMotorsCompact()) {
+    motorsSplit.applySize(motorsSplit.getSize());
+  }
+
+  if (videoOn) {
+    document.body.dataset.motor = "video";
+    document.body.classList.add("video-cinema-mode");
+    center?.classList.add("video-cinema-center");
+    window.RuzgarVideoAtolye?.relayoutShell?.();
+  } else {
+    document.body.classList.remove("video-motor-active", "video-cinema-mode");
+    center?.classList.remove("video-cinema-center");
+  }
+}
+
 function applyMotorsCompact(compact, opts) {
   const on = Boolean(compact);
   const persist = opts?.persist !== false;
@@ -4476,11 +4568,15 @@ function applyMotorsCompact(compact, opts) {
   if (on) {
     document.documentElement.style.setProperty("--ruzgar-motors-w", "52px");
   } else {
-    const st = window.RuzgarSplit?.loadState?.() || {};
-    const w = typeof st.motors === "number" && st.motors > 80 ? st.motors : 232;
-    document.documentElement.style.setProperty("--ruzgar-motors-w", `${w}px`);
+    document.documentElement.style.setProperty("--ruzgar-motors-w", `${getMotorsShellWidthPx()}px`);
   }
-  window.RuzgarSplit?._splits?.forEach((s) => s._reposition?.());
+  relayoutAppShell();
+  requestAnimationFrame(() => {
+    relayoutAppShell();
+    if (String(currentMode || "").trim().toLowerCase() === "video") {
+      window.RuzgarVideoAtolye?.relayoutShell?.();
+    }
+  });
   if (!on) hideMotorHoverTip();
   if (persist) {
     try {
@@ -6320,12 +6416,32 @@ function wireVideoAtolye() {
   wireVideoTimeline();
   wireVideoEditPanel();
   wireVideoQuickBar();
+  if (window.RuzgarVideoAtolye?.init) {
+    window.RuzgarVideoAtolye.init({
+      flash: flashRuzgarDurum,
+      openVideoExportFolder,
+    });
+  }
 }
 
 function wireVideoQuickBar() {
   const root = el.pageVideo;
   if (!root || root.dataset.videoQuickBarWired === "1") return;
   root.dataset.videoQuickBarWired = "1";
+
+  const openDock = (name, after) => {
+    const v = window.RuzgarVideoAtolye;
+    if (v?.openDuzenDock) {
+      if (name && v.getActiveDock?.() === name) {
+        v.closeDuzenDock();
+        return true;
+      }
+      v.openDuzenDock(name);
+      if (typeof after === "function") window.setTimeout(after, 100);
+      return true;
+    }
+    return false;
+  };
 
   const scrollToEl = (target) => {
     if (!target) return;
@@ -6334,6 +6450,7 @@ function wireVideoQuickBar() {
 
   if (el.videoQuickCreate) {
     el.videoQuickCreate.addEventListener("click", () => {
+      if (openDock("preview", () => el.videoFileInput?.click?.())) return;
       const sticky = root.querySelector(".video-player-sticky");
       scrollToEl(sticky);
       try {
@@ -6346,8 +6463,8 @@ function wireVideoQuickBar() {
   }
   if (el.videoQuickYoutube) {
     el.videoQuickYoutube.addEventListener("click", () => {
-      const a = document.getElementById("video-anchor-download");
-      scrollToEl(a);
+      if (openDock("download", () => el.videoDownloadUrl?.focus?.({ preventScroll: true }))) return;
+      scrollToEl(document.getElementById("video-anchor-download"));
       window.setTimeout(() => {
         el.videoDownloadUrl?.focus?.({ preventScroll: true });
       }, 320);
@@ -6355,8 +6472,8 @@ function wireVideoQuickBar() {
   }
   if (el.videoQuickTrim) {
     el.videoQuickTrim.addEventListener("click", () => {
-      const a = document.getElementById("video-anchor-v2");
-      scrollToEl(a);
+      if (openDock("trim", () => el.videoStartSec?.focus?.({ preventScroll: true }))) return;
+      scrollToEl(document.getElementById("video-anchor-v2"));
       window.setTimeout(() => {
         el.videoStartSec?.focus?.({ preventScroll: true });
       }, 320);
@@ -6364,8 +6481,8 @@ function wireVideoQuickBar() {
   }
   if (el.videoQuickAudio) {
     el.videoQuickAudio.addEventListener("click", () => {
-      const a = document.getElementById("video-anchor-v3-mux");
-      scrollToEl(a);
+      if (openDock("mux", () => el.videoRelMuxVideo?.focus?.({ preventScroll: true }))) return;
+      scrollToEl(document.getElementById("video-anchor-v3-mux"));
       window.setTimeout(() => {
         el.videoRelMuxVideo?.focus?.({ preventScroll: true });
       }, 320);
@@ -6373,9 +6490,8 @@ function wireVideoQuickBar() {
   }
   if (el.videoQuickExport) {
     el.videoQuickExport.addEventListener("click", () => {
-      const a = document.getElementById("video-anchor-v2");
-      scrollToEl(a);
       openVideoExportFolder();
+      flashRuzgarDurum("Çıktı klasörü açıldı (.ruzgar-video-export).");
     });
   }
 }

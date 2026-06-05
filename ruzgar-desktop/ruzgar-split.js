@@ -36,7 +36,11 @@
   function applySavedCssVars() {
     const st = loadState();
     const root = document.documentElement;
-    if (typeof st.motors === "number") root.style.setProperty("--ruzgar-motors-w", `${st.motors}px`);
+    if (document.body.classList.contains("ui-motors-compact")) {
+      root.style.setProperty("--ruzgar-motors-w", "52px");
+    } else if (typeof st.motors === "number") {
+      root.style.setProperty("--ruzgar-motors-w", `${st.motors}px`);
+    }
     if (typeof st.chat === "number") root.style.setProperty("--ruzgar-chat-w", `${st.chat}px`);
   }
 
