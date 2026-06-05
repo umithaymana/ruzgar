@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "id": "cba01b955c",
+  "name": "_smoke kopya",
+  "width": 960,
+  "height": 540,
+  "notes": "",
+  "reference_rel": "",
+  "layers": [
+    {
+      "id": "eskiz",
+      "name": "Eskiz",
+      "visible": true,
+      "kind": "vector",
+      "commands": []
+    },
+    {
+      "id": "el",
+      "name": "El çizimi",
+      "visible": true,
+      "kind": "vector",
+      "commands": []
+    }
+  ],
+  "updated": "2026-06-01T17:22:24.706233+00:00"
+}

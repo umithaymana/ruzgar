@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "id": "fb1c94d8da",
+  "name": "_smoke",
+  "width": 960,
+  "height": 540,
+  "notes": "",
+  "reference_rel": "",
+  "layers": [
+    {
+      "id": "eskiz",
+      "name": "Eskiz",
+      "visible": true,
+      "kind": "vector",
+      "commands": []
+    },
+    {
+      "id": "el",
+      "name": "El çizimi",
+      "visible": true,
+      "kind": "vector",
+      "commands": []
+    }
+  ],
+  "updated": "2026-06-01T16:42:05.098503+00:00"
+}

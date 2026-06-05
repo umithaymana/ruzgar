@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "id": "2f84f90b61",
+  "name": "Yeni plan",
+  "width": 960,
+  "height": 540,
+  "notes": "güzel bir insan resmi çiz",
+  "reference_rel": "",
+  "layers": [
+    {
+      "id": "eskiz",
+      "name": "Eskiz",
+      "visible": true,
+      "kind": "vector",
+      "commands": [
+        {
+          "type": "rect",
+          "x": 312.0,
+          "y": 194.39999999999998,
+          "w": 336.0,
+          "h": 151.20000000000002,
+          "color": "#888888",
+          "fill": false
+        },
+        {
+          "type": "polyline",
+          "points": [
+            [
+              312.0,
+              194.39999999999998
+            ],
+            [
+              480.0,
+              141.47999999999996
+            ],
+            [
+              648.0,
+              194.39999999999998
+            ]
+          ],
+          "color": "#aaaaaa",
+          "width": 2
+        },
+        {
+          "type": "rect",
+          "x": 439.68,
+          "y": 277.56,
+          "w": 80.64,
+          "h": 68.04,
+          "color": "#666666",
+          "fill": false
+        }
+      ]
+    },
+    {
+      "id": "el",
+      "name": "El çizimi",
+      "visible": true,
+      "kind": "vector",
+      "commands": []
+    }
+  ],
+  "updated": "2026-06-01T19:12:05.086683+00:00"
+}

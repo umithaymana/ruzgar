@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "8aed7f908b",
+      "rel": "ilim-assistant/arsiv/mimar-fotograf/8aed7f908b_test_f4f1.jpg",
+      "name": "test_f4f1.jpg",
+      "width": 30,
+      "height": 40,
+      "updated": "2026-05-31T11:08:49.512525+00:00"
+    },
+    {
+      "id": "f467ae8fcd",
+      "rel": "ilim-assistant/arsiv/mimar-fotograf/f467ae8fcd_restore_test.jpg",
+      "name": "restore_test.jpg",
+      "width": 80,
+      "height": 60,
+      "updated": "2026-05-31T11:11:59.465042+00:00"
+    }
+  ]
+}

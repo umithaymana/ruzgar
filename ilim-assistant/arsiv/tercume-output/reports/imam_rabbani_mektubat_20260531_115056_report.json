@@ -1,0 +1,27 @@
+{
+  "ok": true,
+  "version": "tercume-analyst-report-v7-faz7-2026-05-31",
+  "query": "imam rabbani mektubat",
+  "quality": "ok",
+  "rel": "ilim-assistant/arsiv/mektubat/Imam-Rabbani-Mektubat-1_djvu.txt",
+  "next_steps": [
+    "Arşivde dosya var — Çalışma sekmesinden açıp Çevir deyin.",
+    "Yerel dosya: «Imam-Rabbani-Mektubat-1_djvu.txt» — listeden açın.",
+    "Okuma kalitesi kabul edilebilir — sayfa sayfa çeviriye geçebilirsiniz."
+  ],
+  "read_meta": {
+    "ext": ".txt",
+    "read_pipeline": "tercume-read-pipeline-v3-faz3-2026-05-31",
+    "pages_total": 302,
+    "quality_summary": {
+      "total": 302,
+      "empty": 0,
+      "low": 0,
+      "ok": 302,
+      "avg_score": 84.0,
+      "ocr_recommended": false
+    },
+    "read_hint": ""
+  },
+  "generated_at": 1780217456.3176458
+}

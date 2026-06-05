@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "id": "d23c1f9372",
+  "name": "Test",
+  "width": 960,
+  "height": 540,
+  "notes": "",
+  "reference_rel": "",
+  "layers": [
+    {
+      "id": "eskiz",
+      "name": "Eskiz",
+      "visible": true,
+      "kind": "vector",
+      "commands": []
+    },
+    {
+      "id": "el",
+      "name": "El çizimi",
+      "visible": true,
+      "kind": "vector",
+      "commands": []
+    }
+  ],
+  "updated": "2026-05-31T11:27:42.157224+00:00"
+}

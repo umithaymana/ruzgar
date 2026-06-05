@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "id": "55fc5bd611",
+  "name": "Yeni plan",
+  "width": 960,
+  "height": 540,
+  "notes": "",
+  "reference_rel": "",
+  "layers": [
+    {
+      "id": "eskiz",
+      "name": "Eskiz",
+      "visible": true,
+      "kind": "vector",
+      "commands": []
+    },
+    {
+      "id": "el",
+      "name": "El çizimi",
+      "visible": true,
+      "kind": "vector",
+      "commands": []
+    }
+  ],
+  "updated": "2026-06-01T18:10:34.243678+00:00"
+}

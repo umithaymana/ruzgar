@@ -1,0 +1,26 @@
+{
+  "ok": true,
+  "version": "tercume-analyst-report-v7-faz7-2026-05-31",
+  "query": "imam rabbani mektubat",
+  "quality": "ok",
+  "rel": "ilim-assistant/arsiv/tercume-output/reports/imam_rabbani_mektubat_20260530_152934_report.md",
+  "next_steps": [
+    "Arama sekmesinde «Arşive al» ile PDF indirin.",
+    "Okuma kalitesi kabul edilebilir — sayfa sayfa çeviriye geçebilirsiniz."
+  ],
+  "read_meta": {
+    "ext": ".md",
+    "read_pipeline": "tercume-read-pipeline-v3-faz3-2026-05-31",
+    "pages_total": 1,
+    "quality_summary": {
+      "total": 1,
+      "empty": 0,
+      "low": 0,
+      "ok": 1,
+      "avg_score": 84.0,
+      "ocr_recommended": false
+    },
+    "read_hint": ""
+  },
+  "generated_at": 1780337811.3423588
+}

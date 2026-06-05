@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" width="320" height="240">
+<rect width="320" height="240" fill="none"/>
+<text x="25.6" y="28.799999999999997" fill="#888888" font-size="14" font-family="Segoe UI,sans-serif">OpenCV yok — pip install opencv-python-headless</text>
+</svg>
