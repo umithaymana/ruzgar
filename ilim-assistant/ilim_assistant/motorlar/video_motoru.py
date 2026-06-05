@@ -68,6 +68,16 @@ def _yt_dlp_cli() -> str | None:
     return None
 
 
+def ytdlp_available() -> bool:
+    """Python yt_dlp modülü veya PATH'te yt-dlp CLI."""
+    try:
+        import yt_dlp  # type: ignore[import-untyped]  # noqa: F401
+
+        return True
+    except ImportError:
+        return bool(_yt_dlp_cli())
+
+
 def _format_best() -> str:
     return os.environ.get("RUZGAR_YTDLP_FORMAT", "bestvideo+bestaudio/best").strip() or "best"
 

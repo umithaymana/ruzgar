@@ -2955,6 +2955,27 @@ body:not(.workbench-hizir-active) #workbench-hizir-tools,
   font-size: 11px;
   cursor: grab;
 }
+.video-download-recent-item {
+  cursor: pointer;
+}
+.video-download-recent-item:hover,
+.video-download-recent-item:focus-visible {
+  border-color: rgba(55, 148, 255, 0.45);
+  background: rgba(55, 148, 255, 0.08);
+  outline: none;
+}
+.video-download-recent-path {
+  color: #8a939e;
+  font-size: 10px;
+}
+.video-download-recent-use {
+  flex: 0 0 auto;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #9cdcfe;
+}
 .video-edit-bin-item.is-dragging {
   opacity: 0.55;
   cursor: grabbing;

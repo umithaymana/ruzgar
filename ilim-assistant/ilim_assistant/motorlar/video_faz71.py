@@ -29,11 +29,28 @@ _QUESTION_RE = re.compile(
 )
 _ACTION_RE = re.compile(
     r"(?:indir|download|youtube|kes|kurgu|birleştir|birlestir|altyazı|altyazi|"
-    r"göm|gom|ffmpeg|video\s+yap|klip)",
+    r"göm|gom|ffmpeg|video\s+yap|klip|oynat|sinema|dönüştür|donustur|transcode|"
+    r"medya\s+bilgi|panel|montaj|mux)",
     re.I,
 )
 _LIST_RE = re.compile(
     r"(?:son\s+indir|indirilen\s+videolar|video\s+listesi|son\s+videolar)",
+    re.I,
+)
+_PROBE_RE = re.compile(
+    r"(?:medya\s+bilgi|teknik\s+özet|teknik\s+ozet|ffprobe\b|probe\b)",
+    re.I,
+)
+_EXPORT_RE = re.compile(
+    r"(?:çıktı\s+klasör|cikti\s+klasor|export\s+klasör|export\s+klasor|dışa\s+aktar\s+klasör)",
+    re.I,
+)
+_PANEL_RE = re.compile(
+    r"(?:panel(?:i|ini)?\s+aç|panel(?:i|ini)?\s+ac|aç\s+.*panel|ac\s+.*panel)",
+    re.I,
+)
+_TRIM_RANGE_RE = re.compile(
+    r"(?:kes|trim)\s+(\d+(?::\d+(?::\d+)?)?(?:[.,]\d+)?)\s*[-–]\s*(\d+(?::\d+(?::\d+)?)?(?:[.,]\d+)?)",
     re.I,
 )
 
@@ -69,6 +86,24 @@ def extract_urls(message: str) -> list[str]:
     return [u.rstrip(".,);]") for u in _URL_RE.findall(message or "")]
 
 
+def _parse_time_sec(raw: str) -> float | None:
+    s = (raw or "").strip().replace(",", ".")
+    if not s:
+        return None
+    if re.fullmatch(r"\d+(\.\d+)?", s):
+        return float(s)
+    parts = s.split(":")
+    try:
+        nums = [float(p) for p in parts]
+    except ValueError:
+        return None
+    if len(nums) == 2:
+        return nums[0] * 60 + nums[1]
+    if len(nums) == 3:
+        return nums[0] * 3600 + nums[1] * 60 + nums[2]
+    return None
+
+
 def classify_video_intent(
     message: str,
     *,
@@ -83,6 +118,25 @@ def classify_video_intent(
         return {"intent": INTENT_CHAT, "reason": "empty"}
     if _LIST_RE.search(_ascii_fold(raw)):
         return {"intent": INTENT_COMMAND, "reason": "list_downloads"}
+    fold = _ascii_fold(raw)
+    if _EXPORT_RE.search(fold):
+        return {"intent": INTENT_COMMAND, "reason": "export_folder"}
+    if _PROBE_RE.search(raw):
+        return {"intent": INTENT_COMMAND, "reason": "media_probe"}
+    if _PANEL_RE.search(fold):
+        return {"intent": INTENT_COMMAND, "reason": "open_panel"}
+    if _TRIM_RANGE_RE.search(raw):
+        m = _TRIM_RANGE_RE.search(raw)
+        if m:
+            a = _parse_time_sec(m.group(1))
+            b = _parse_time_sec(m.group(2))
+            if a is not None and b is not None and b > a:
+                return {
+                    "intent": INTENT_DO,
+                    "reason": "trim_range",
+                    "start_sec": a,
+                    "end_sec": b,
+                }
     # Soru niyeti, mode=video olsa da açıklama talebi ise sohbete düşmeli.
     if _QUESTION_RE.search(raw):
         return {"intent": INTENT_CHAT, "reason": "question"}
@@ -149,6 +203,41 @@ def maybe_instant_faz71(message: str) -> str | None:
     if _LIST_RE.search(_ascii_fold(raw)):
         return format_recent_list()
 
+    if _EXPORT_RE.search(_ascii_fold(raw)):
+        return (
+            "Ümit abi, video çıktıları `.ruzgar-video-export/` klasöründe.\n"
+            "Masaüstü Rüzgar'da «Çıktı klasörü» veya sohbette aynı komut klasörü açar.\n"
+            f"({FAZ71_VERSION})"
+        )
+
+    if _PROBE_RE.search(raw):
+        return (
+            "Ümit abi, **Medya bilgisi** için Kes panelinde göreli yol veya dosya seçin; "
+            "sinema araç çubuğundaki «Medya bilgisi» düğmesine basın.\n"
+            "Sohbette aynı ifade masaüstünde otomatik çalışır.\n"
+            f"({FAZ71_VERSION})"
+        )
+
+    if _PANEL_RE.search(_ascii_fold(raw)):
+        return (
+            "Ümit abi, panel açma masaüstü sohbetinde anında çalışır "
+            "(ör. «kesim panelini aç», «indirme paneli aç»).\n"
+            "Üst hızlı düğmeler veya Düzen menüsünden de açabilirsiniz.\n"
+            f"({FAZ71_VERSION})"
+        )
+
+    trim_m = _TRIM_RANGE_RE.search(raw)
+    if trim_m:
+        a = _parse_time_sec(trim_m.group(1))
+        b = _parse_time_sec(trim_m.group(2))
+        if a is not None and b is not None and b > a:
+            return (
+                f"Ümit abi, kesim aralığı **{a:.1f}–{b:.1f} sn** olarak anlaşıldı.\n"
+                "Masaüstü Video motorunda göreli yol doluysa sohbet kesimi otomatik başlatır; "
+                "yoksa Kes panelinde yolu yazın.\n"
+                f"({FAZ71_VERSION})"
+            )
+
     try:
         from ilim_assistant.motorlar.video_faz84 import maybe_instant_faz84
 
@@ -181,8 +270,9 @@ def augment_video_context(base: str) -> str:
         return base
     ensure_kernel_registered()
     extra = (
-        f"\n[VIDEO ROK — Faz 71]\n"
-        "Konuşarak: «şu videoyu indir» + URL · «son indirmeler»\n"
+        f"\n[VIDEO ROK — Faz 71 + Sohbet süper beyin]\n"
+        "Konuşarak sinema paneli: link indir/oynat · arama · kes · kurgu · medya bilgisi\n"
+        "«yardım» — tüm komutlar · Düğmeler yedek\n"
         "Kapat: RUZGAR_VIDEO_FAZ71=0\n"
     )
     return (base or "").rstrip() + extra
@@ -198,6 +288,8 @@ def faz71_directive() -> str:
     return (
         "[VİDEO — Konuşarak yap Faz 71]\n"
         "Örnek: `şu videoyu indir https://www.youtube.com/watch?v=...`\n"
+        "Örnek: `son indirmeler` · `medya bilgisi` · `çıktı klasörü` · `kes 0:30-1:00`\n"
+        "Örnek: `kesim panelini aç`\n"
         "Liste: `son indirmeler` · Kapat: RUZGAR_VIDEO_FAZ71=0\n"
     )
 

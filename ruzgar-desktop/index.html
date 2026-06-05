@@ -6,7 +6,7 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' blob: http: https: ws: wss: http://127.0.0.1:8779 ws://127.0.0.1:8779 wss://127.0.0.1:8779 http://localhost:8779 ws://localhost:8779 wss://localhost:8779 http://127.0.0.1:8777 ws://127.0.0.1:8777 http://localhost:8777 ws://localhost:8777 https://www.google.com https://*.google.com https://*.googleapis.com https://*.gstatic.com wss://*.google.com; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://upload.wikimedia.org https://*.wikimedia.org; media-src 'self' blob:; worker-src 'self' blob:;" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RÜZGAR — Mimarlar: Ümit & Gökçenur</title>
-    <link rel="stylesheet" href="styles.css?v=20260603-virus-guard" />
+    <link rel="stylesheet" href="styles.css?v=20260607-video-v1" />
     <link rel="stylesheet" href="ruzgar-split.css?v=20260602-workbench-split" />
   </head>
   <body>
@@ -1391,6 +1391,12 @@
                     <video id="video-preview" class="video-preview-el" controls preload="metadata"></video>
                   </div>
                   <footer class="video-cinema-deck">
+                  <div class="video-job-progress" id="video-job-progress" hidden aria-live="polite">
+                    <span class="video-job-progress-label" id="video-job-progress-label">İşleniyor…</span>
+                    <div class="video-job-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+                      <div class="video-job-progress-bar is-indeterminate" id="video-job-progress-bar"></div>
+                    </div>
+                  </div>
                   <div class="video-timeline-wrap" id="video-timeline-wrap" aria-label="Zaman çizelgesi">
                     <div class="video-timeline-row">
                       <span class="video-timeline-label" id="video-timeline-label">Süre: — · İmleç: — · Kesim: —</span>
@@ -2203,6 +2209,18 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
             <li><strong>Sayfayı Temizle</strong> — <code>POST /api/hizir/temizle</code> (vitrin + önbellek)</li>
             <li><strong>Hızlı Yenile</strong> — mevcut sorguyla pazar taraması</li>
           </ul>
+          <h3 class="faz7-help-h3">Video motoru</h3>
+          <ul class="faz7-help-ul">
+            <li><strong>Sinema sahnesi</strong> — ortada oynatıcı; timeline altta; «Çalışma sayfası» başlığı gizli</li>
+            <li><strong>Üst şerit</strong> — Video Oluştur, YouTube indir, Kes, Ses, Dışa aktar</li>
+            <li><strong>Düzen menüsü</strong> — Teknik özet, URL indir, Kes, Altyazı, Harici ses, Kurgu, Tercüme</li>
+            <li><strong>Son indirmeler</strong> — listede satıra tıklayın; göreli yol otomatik dolar</li>
+            <li><strong>Medya bilgisi</strong> — seçili dosya veya «Kes» panelindeki göreli yol ile ffprobe</li>
+            <li><strong>Timeline</strong> — Başlangıç / Bitiş işaretle → Kesime yaz → Kes panelinden kaydet</li>
+            <li><strong>Çıktı</strong> — <code>.ruzgar-video-export/</code> (Kaydet ve Dışa Aktar düğmesi)</li>
+            <li><strong>Sohbet</strong> — YouTube URL yapıştır; «video ara …»; «3 numarayı indir»</li>
+            <li><strong>Gereksinim</strong> — FFmpeg (PATH) + yt-dlp (<code>pip install yt-dlp</code>); sunucu 8779</li>
+          </ul>
           <h3 class="faz7-help-h3">Faz 9–16 — tamamlanan kabiliyetler</h3>
           <ul class="faz7-help-ul faz7-help-done">
             <li>Gemini-first hız ve ağır indeks atlama</li>
@@ -2249,7 +2267,7 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
     </div>
 
     <link rel="stylesheet" href="tercume-atolye.css?v=20260606-center-row-fix" />
-    <link rel="stylesheet" href="video-atolye.css?v=20260606-dock-fix" />
+    <link rel="stylesheet" href="video-atolye.css?v=20260607-video-v2" />
     <link rel="stylesheet" href="mimar-atolye.css?v=20260601-mimar-polish" />
     <link rel="stylesheet" href="components/slide-panel.css?v=20260606-panels-drawer" />
     <script src="ruzgar-context-state.js?v=20260605-components"></script>
@@ -2257,8 +2275,10 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
     <script src="ruzgar-split.js?v=20260606-compact-motors-fix"></script>
     <script src="ruzgar-virus-guard.js?v=20260604-av-v2"></script>
     <script src="tercume-atolye.js?v=20260606-tools-panel"></script>
-    <script src="video-atolye.js?v=20260606-dock-fix"></script>
+    <script src="video-atolye.js?v=20260607-video-v2"></script>
+    <script src="video-chat-brain.js?v=20260607-super-brain-b"></script>
+    <script src="ana-motor-hub.js?v=20260607-ana-hub"></script>
     <script src="mimar-atolye.js?v=20260601-faz5"></script>
-    <script src="app.js?v=20260606-cinema-layout"></script>
+    <script src="app.js?v=20260607-ana-hub"></script>
   </body>
 </html>

@@ -1098,6 +1098,9 @@ def health():
         "docx_text": docx_text_runtime_available(),
         "ffmpeg": ffmpeg_available(),
         "ffprobe": ffprobe_available(),
+        "ytdlp": __import__(
+            "ilim_assistant.motorlar.video_motoru", fromlist=["ytdlp_available"]
+        ).ytdlp_available(),
         "ocr": _ocr,
         "merkezi_bellek": True,
         "ana_motor": {
@@ -3053,13 +3056,37 @@ async def api_video_download(body: VideoDownloadBody):
 
 
 @app.post("/api/video/probe")
-async def api_video_probe(file: UploadFile = File(...)):
-    """Yüklenen video/ses dosyası için ffprobe ile süre, codec, çözünürlük özeti."""
+async def api_video_probe(
+    rel: Annotated[str | None, Form()] = None,
+    file: UploadFile | None = File(None),
+):
+    """ffprobe özeti — dosya yükleme veya proje içi göreli yol (rel)."""
     if not ffprobe_available():
         raise HTTPException(
             status_code=503,
             detail="ffprobe bulunamadı: FFmpeg kurun ve PATH'e ekleyin.",
         )
+    rel_s = (rel or "").strip()
+    if rel_s:
+        try:
+            input_path = _repo_resolve_under_root(rel_s)
+        except HTTPException:
+            raise
+        except Exception as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        if not input_path.is_file():
+            raise HTTPException(status_code=404, detail=f"Dosya bulunamadı: {rel_s}")
+
+        def _run_rel():
+            data = ffprobe_json(str(input_path))
+            return summarize_probe(data)
+
+        summary = await run_in_threadpool(_run_rel)
+        return {"ok": True, "summary": summary, "rel": rel_s}
+
+    if file is None:
+        raise HTTPException(status_code=400, detail="Dosya yükleyin veya rel yolu gönderin.")
+
     raw = await file.read()
     ln = len(raw)
     if ln < 32:
@@ -3126,7 +3153,7 @@ async def api_video_trim(
     if not ffmpeg_available():
         raise HTTPException(
             status_code=503,
-            detail="ffmpeg bulunamadı: FFmpeg kurun ve PATH'e ekleyin.",
+            detail="ffmpeg bulunamadı. https://ffmpeg.org/download.html — kurun ve PATH'e ekleyin; ardından sunucuyu yeniden başlatın.",
         )
     rel_s = (rel or "").strip()
     if rel_s and file is not None:
@@ -3223,7 +3250,7 @@ async def api_video_transcode(
     if not ffmpeg_available():
         raise HTTPException(
             status_code=503,
-            detail="ffmpeg bulunamadı: FFmpeg kurun ve PATH'e ekleyin.",
+            detail="ffmpeg bulunamadı. https://ffmpeg.org/download.html — kurun ve PATH'e ekleyin; ardından sunucuyu yeniden başlatın.",
         )
     rel_s = (rel or "").strip()
     if rel_s and file is not None:
@@ -3282,7 +3309,7 @@ async def api_video_concat(body: VideoConcatBody):
     if not ffmpeg_available():
         raise HTTPException(
             status_code=503,
-            detail="ffmpeg bulunamadı: FFmpeg kurun ve PATH'e ekleyin.",
+            detail="ffmpeg bulunamadı. https://ffmpeg.org/download.html — kurun ve PATH'e ekleyin; ardından sunucuyu yeniden başlatın.",
         )
     a = (body.rel_a or "").strip()
     b = (body.rel_b or "").strip()
@@ -3312,7 +3339,7 @@ async def api_video_edit_mix(body: VideoEditMixBody):
     if not ffmpeg_available():
         raise HTTPException(
             status_code=503,
-            detail="ffmpeg bulunamadı: FFmpeg kurun ve PATH'e ekleyin.",
+            detail="ffmpeg bulunamadı. https://ffmpeg.org/download.html — kurun ve PATH'e ekleyin; ardından sunucuyu yeniden başlatın.",
         )
     if not body.clips:
         raise HTTPException(status_code=400, detail="En az bir parça gerekli.")
@@ -3377,7 +3404,7 @@ async def api_video_burn_subtitles(
     if not ffmpeg_available():
         raise HTTPException(
             status_code=503,
-            detail="ffmpeg bulunamadı: FFmpeg kurun ve PATH'e ekleyin.",
+            detail="ffmpeg bulunamadı. https://ffmpeg.org/download.html — kurun ve PATH'e ekleyin; ardından sunucuyu yeniden başlatın.",
         )
     rv = (rel_video or "").strip()
     rs = (rel_sub or "").strip()
@@ -3421,7 +3448,7 @@ async def api_video_mux_audio(
     if not ffmpeg_available():
         raise HTTPException(
             status_code=503,
-            detail="ffmpeg bulunamadı: FFmpeg kurun ve PATH'e ekleyin.",
+            detail="ffmpeg bulunamadı. https://ffmpeg.org/download.html — kurun ve PATH'e ekleyin; ardından sunucuyu yeniden başlatın.",
         )
     rv = (rel_video or "").strip()
     ra = (rel_audio or "").strip()
@@ -3472,6 +3499,58 @@ def api_workspace_read_text(rel: str = Query("")) -> dict[str, Any]:
         raise HTTPException(status_code=400, detail="Dosya çok büyük (2 MB).")
     text = target.read_text(encoding="utf-8", errors="replace")
     return {"ok": True, "text": text}
+
+
+_WORKSPACE_MEDIA_EXT = {
+    ".mp4",
+    ".mkv",
+    ".webm",
+    ".mov",
+    ".avi",
+    ".m4v",
+    ".mp3",
+    ".wav",
+    ".opus",
+    ".aac",
+    ".flac",
+    ".ogg",
+    ".m4a",
+}
+_WORKSPACE_MEDIA_TYPES = {
+    ".mp4": "video/mp4",
+    ".mkv": "video/x-matroska",
+    ".webm": "video/webm",
+    ".mov": "video/quicktime",
+    ".avi": "video/x-msvideo",
+    ".m4v": "video/x-m4v",
+    ".mp3": "audio/mpeg",
+    ".wav": "audio/wav",
+    ".opus": "audio/opus",
+    ".aac": "audio/aac",
+    ".flac": "audio/flac",
+    ".ogg": "audio/ogg",
+    ".m4a": "audio/mp4",
+}
+
+
+@app.get("/api/workspace/media")
+def api_workspace_media(rel: str = Query("")):
+    """Video/ses önizleme akışı (sinema oynatıcısı)."""
+    raw = (rel or "").strip().replace("\\", "/").lstrip("/")
+    if not raw:
+        raise HTTPException(status_code=400, detail="rel gerekli.")
+    target = _repo_resolve_under_root(raw, must_be_dir=False)
+    ext = target.suffix.lower()
+    if ext not in _WORKSPACE_MEDIA_EXT:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Desteklenmeyen medya uzantısı: {ext or '(yok)'}",
+        )
+    size = target.stat().st_size
+    if size > 900_000_000:
+        raise HTTPException(status_code=400, detail="Dosya çok büyük (900 MB önizleme sınırı).")
+    media = _WORKSPACE_MEDIA_TYPES.get(ext, "application/octet-stream")
+    return FileResponse(str(target), media_type=media, filename=target.name)
 
 
 @app.get("/api/workspace/read-pdf")

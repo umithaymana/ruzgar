@@ -28,3 +28,6 @@ psutil>=5.9.0
 
 # Yerel konuşma tanıma (/api/stt) — ilk çalıştırmada model indirir
 faster-whisper>=1.0.3
+
+# Video motoru — YouTube/web indirme + arama (PATH'te yt-dlp CLI de yeterli)
+yt-dlp>=2024.1.0

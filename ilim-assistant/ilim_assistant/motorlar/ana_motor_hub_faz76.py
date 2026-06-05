@@ -49,7 +49,7 @@ _HELP_RE = re.compile(
     re.I,
 )
 _VIDEO_DL_HINT = re.compile(
-    r"(?:indir|download|youtube|youtu\.be)",
+    r"(?:indir|indirme|download|youtube|youtu\.be|oynat|burada\s+oynat|sinema|video\s+at)",
     re.I,
 )
 
@@ -85,7 +85,7 @@ def _score_intent(intent: dict[str, Any]) -> int:
 
 
 def is_video_download_request(message: str) -> bool:
-    """YouTube/web + indir — Ana Motor'dan doğrudan video motoru."""
+    """YouTube/web + indir/oynat — Ana Motor'dan doğrudan video motoru."""
     raw = (message or "").strip()
     if not raw or not _VIDEO_DL_HINT.search(raw):
         return False
@@ -99,6 +99,44 @@ def is_video_download_request(message: str) -> bool:
         return False
     blob = _ascii_fold(raw + " " + " ".join(urls))
     return "youtube" in blob or "youtu.be" in blob
+
+
+def is_video_workflow_request(message: str) -> bool:
+    """Kesim, kurgu, medya bilgisi vb. — genel moddan video motoruna."""
+    if is_video_download_request(message):
+        return True
+    raw = (message or "").strip()
+    if not raw:
+        return False
+    try:
+        from ilim_assistant.motorlar.video_faz84 import wants_video_search
+
+        if wants_video_search(raw):
+            return True
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.video_faz71 import classify_video_intent
+
+        intent = classify_video_intent(raw, mode_norm="video")
+        kind = str(intent.get("intent") or INTENT_CHAT)
+        reason = str(intent.get("reason") or "")
+        if kind in (INTENT_DO, INTENT_COMMAND) and reason not in (
+            "question",
+            "conversation",
+            "empty",
+        ):
+            return True
+    except Exception:
+        pass
+    low = _ascii_fold(raw)
+    return bool(
+        re.search(
+            r"video|ffmpeg|kesim|\bkes\b|kurgu|montaj|altyaz|sinema|medya\s+bilgi|"
+            r"transcode|donustur|dönüştür|panel.*ac|panel.*aç",
+            low,
+        )
+    )
 
 
 def resolve_hub_target(
@@ -143,6 +181,14 @@ def resolve_hub_target(
             return "video", meta
     except Exception:
         pass
+
+    if is_video_workflow_request(msg):
+        meta["candidates"].append(
+            {"motor": "video", "score": 8, "reason": "video_workflow"}
+        )
+        meta["winner"] = "video"
+        meta["reason"] = "video_workflow"
+        return "video", meta
 
     try:
         from ilim_assistant.motorlar.hizir_faz84 import wants_hub_hizir_route
