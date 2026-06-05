@@ -2197,7 +2197,7 @@ def api_rok_kpi():
 
 
 @app.get("/api/ana-motor/hub-route")
-def api_ana_motor_hub_route(message: str = ""):
+def api_ana_motor_hub_route(message: str = "", workspace_root: str | None = None):
     """Faz 76 — Ana Motor hub: mesaj için hedef motor önizlemesi."""
     from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
     from ilim_assistant.motorlar.ana_motor_hub_faz76 import (
@@ -2207,8 +2207,9 @@ def api_ana_motor_hub_route(message: str = ""):
     )
 
     msg = (message or "").strip()
+    root = (workspace_root or "").strip() or None
     flags = motor_niyeti_heuristic(msg) if msg else {}
-    target, meta = resolve_hub_target(msg, flags)
+    target, meta = resolve_hub_target(msg, flags, workspace_root=root)
     return {
         "ok": True,
         "target": target,
@@ -2216,6 +2217,120 @@ def api_ana_motor_hub_route(message: str = ""):
         "meta": meta,
         "version": FAZ76_VERSION,
     }
+
+
+@app.get("/api/ana-motor/learned-instant")
+def api_ana_motor_learned_instant(message: str = "", workspace_root: str | None = None):
+    """Faz C — eylem öğret / listele / sil anında yanıt."""
+    from ilim_assistant.motorlar.motor_ogrenilen_eylemler import (
+        FAZ_C_VERSION,
+        try_instant_learned_commands,
+    )
+
+    msg = (message or "").strip()
+    root = (workspace_root or "").strip() or None
+    reply = try_instant_learned_commands(msg, root) if msg else None
+    return {
+        "ok": True,
+        "handled": bool(reply),
+        "reply": reply,
+        "version": FAZ_C_VERSION,
+    }
+
+
+@app.get("/api/ana-motor/learned-actions")
+def api_ana_motor_learned_actions(workspace_root: str | None = None):
+    """Faz C — öğrenilen eylem listesi."""
+    from ilim_assistant.motorlar.motor_ogrenilen_eylemler import learned_actions_snapshot
+
+    root = (workspace_root or "").strip() or None
+    return learned_actions_snapshot(root)
+
+
+class LearnedActionBody(BaseModel):
+    trigger: str = ""
+    motor: str = ""
+    sub_intent: str | None = None
+    workspace_root: str | None = None
+    approved: bool | None = None
+    note: str = ""
+
+
+@app.post("/api/ana-motor/learned-action")
+def api_ana_motor_learned_action_post(body: LearnedActionBody):
+    """Faz C — eylem ekle (API / onaylı otomasyon)."""
+    from ilim_assistant.motorlar.motor_ogrenilen_eylemler import (
+        FAZ_C_VERSION,
+        get_learned_store,
+    )
+
+    root = (body.workspace_root or "").strip() or None
+    try:
+        row = get_learned_store(root).add_action(
+            body.trigger,
+            body.motor,
+            sub_intent=body.sub_intent,
+            approved=body.approved,
+            note=(body.note or "").strip(),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"ok": True, "action": row, "version": FAZ_C_VERSION}
+
+
+@app.delete("/api/ana-motor/learned-action/{action_id}")
+def api_ana_motor_learned_action_delete(
+    action_id: str,
+    workspace_root: str | None = None,
+):
+    """Faz C — eylem sil (panel / API)."""
+    from ilim_assistant.motorlar.motor_ogrenilen_eylemler import (
+        FAZ_C_VERSION,
+        get_learned_store,
+    )
+
+    root = (workspace_root or "").strip() or None
+    ok = get_learned_store(root).delete_by_id(action_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Eylem bulunamadı.")
+    return {"ok": True, "deleted": action_id, "version": FAZ_C_VERSION}
+
+
+@app.get("/api/ana-motor/sub-intents")
+def api_ana_motor_sub_intents():
+    """Faz C — geçerli motor/alt-intent kataloğu."""
+    from ilim_assistant.motorlar.motor_ogrenilen_eylemler import sub_intents_catalog
+
+    return sub_intents_catalog()
+
+
+@app.get("/api/ana-motor/motor-dispatch")
+def api_ana_motor_motor_dispatch(
+    message: str = "",
+    target: str = "",
+    workspace_root: str | None = None,
+):
+    """Faz A — hedef motorda anında komut/yanıt (Ana Motor delegasyon)."""
+    from ilim_assistant.motorlar.ana_motor_hub_faz76 import build_motor_dispatch_payload
+
+    msg = (message or "").strip()
+    tgt = (target or "").strip().lower()
+    if not msg or not tgt:
+        return {
+            "ok": False,
+            "handled": False,
+            "error": "message ve target gerekli.",
+        }
+    root = (workspace_root or "").strip() or None
+    return build_motor_dispatch_payload(msg, tgt, workspace_root=root)
+
+
+@app.get("/api/ana-motor/capabilities")
+def api_ana_motor_capabilities():
+    """Faz B — merkezi motor kabiliyet kaydı özeti."""
+    from ilim_assistant.motorlar.motor_kabiliyetleri import registry_snapshot
+
+    return registry_snapshot()
 
 
 @app.get("/api/ana-motor/delegation-summary")

@@ -517,6 +517,20 @@
                   HIZIR panelini aç — Uygula
                 </button>
               </div>
+              <div class="mini-card dashboard-eylem-card">
+                <strong>Öğrenilen eylemler</strong>
+                <p class="dashboard-eylem-blurb">
+                  Ana Motor hub — «eylem öğret: «tetik» → video/kes»
+                </p>
+                <button
+                  type="button"
+                  class="btn-secondary btn-compact"
+                  id="btn-eylem-yonet"
+                  title="Öğrenilen motor eylemlerini listele ve sil"
+                >
+                  Eylem paneli
+                </button>
+              </div>
             </div>
             <div class="motors-overview">
               <h4 class="motors-overview-title">Atölye Yol Haritası</h4>
@@ -2140,6 +2154,34 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
       </div>
     </div>
 
+    <div id="eylem-yonet-overlay" class="modal-overlay" hidden aria-hidden="true">
+      <div
+        class="modal hafiza-sohbet-modal eylem-yonet-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="eylem-yonet-title"
+      >
+        <header class="modal-head">
+          <h2 id="eylem-yonet-title">Öğrenilen motor eylemleri</h2>
+          <p class="modal-mimar">
+            Ana Motor hub — <span class="architect-names">Ümit &amp; Gökçenur</span> ·
+            <code class="hafiza-code" id="eylem-store-path">.ruzgar/motor_ogrenilen_eylemler.json</code>
+          </p>
+        </header>
+        <div class="modal-body">
+          <p class="hafiza-help" id="eylem-sub-intent-hint">
+            Örnek: eylem öğret: «tetik» → video/kes
+          </p>
+          <div id="eylem-list" class="eylem-list" aria-label="Öğrenilen eylemler"></div>
+          <p id="eylem-list-empty" class="hafiza-help" hidden>Henüz öğrenilmiş eylem yok.</p>
+        </div>
+        <footer class="modal-foot">
+          <button type="button" id="btn-eylem-yonet-refresh" class="btn-secondary">Listeyi yenile</button>
+          <button type="button" id="btn-eylem-yonet-kapat" class="btn-primary">Kapat</button>
+        </footer>
+      </div>
+    </div>
+
     <div id="kisisel-panel-overlay" class="modal-overlay" hidden aria-hidden="true">
       <div
         class="modal kisisel-modal"
@@ -2276,9 +2318,10 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
     <script src="ruzgar-virus-guard.js?v=20260604-av-v2"></script>
     <script src="tercume-atolye.js?v=20260606-tools-panel"></script>
     <script src="video-atolye.js?v=20260607-video-v2"></script>
-    <script src="video-chat-brain.js?v=20260607-super-brain-b"></script>
-    <script src="ana-motor-hub.js?v=20260607-ana-hub"></script>
+    <script src="video-chat-brain.js?v=20260607-faz-b"></script>
+    <script src="motor-eylem-panel.js?v=20260607-faz-c2"></script>
+    <script src="ana-motor-hub.js?v=20260607-faz-c2"></script>
     <script src="mimar-atolye.js?v=20260601-faz5"></script>
-    <script src="app.js?v=20260607-ana-hub"></script>
+    <script src="app.js?v=20260607-faz-c2"></script>
   </body>
 </html>

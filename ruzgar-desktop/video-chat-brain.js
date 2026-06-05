@@ -39,7 +39,12 @@
   }
 
   function ensureVideo() {
-    if (d().getCurrentMode?.() !== "video") d().switchMode?.("video");
+    const mode = d().getCurrentMode?.() || "genel";
+    if (mode === "genel" && d().openMotorWorkbenchQuiet) {
+      d().openMotorWorkbenchQuiet("video");
+      return;
+    }
+    if (mode !== "video") d().switchMode?.("video");
   }
 
   function openDock(name) {
@@ -233,6 +238,7 @@
       "• «şu filmi ara …» · «3 numarayı indir»\n" +
       "• «son indirmeler» · «son indirilen» · «1 numarayı oynat»\n" +
       "• «medya bilgisi» · «kes 0:30-1:00» · «dönüştür»\n" +
+      "• «altyazı göm» · «ses ekle / mux» · «klip birleştir / concat»\n" +
       "• «başlangıç işaretle» · «bitiş işaretle» · «listeye ekle» · «kurgu yap»\n" +
       "• «kesim paneli aç» · «çıktı klasörü» · «sıfırla»\n" +
       "• «video motoru» — sinema paneline geç\n\n" +
@@ -416,6 +422,40 @@
       openDock("trim");
       say("Dönüştürme başlıyor…");
       await d().runVideoTranscodeJob?.();
+      d().setStatus?.("Hazır", "Rüzgar");
+      return { handled: true, instant: true };
+    }
+
+    if (/(?:altyaz[ıi]\s+g[öo]m|subtitle\s+burn|g[öo]m\s+altyaz|altyaz[ıi]y[ıi]\s+yak)/i.test(low)) {
+      ensureVideo();
+      const rel = activeRelFromMessage(raw);
+      if (rel && el().videoRelWorkspace) el().videoRelWorkspace.value = rel;
+      openDock("subtitle");
+      say("Ümit abi, altyazı gömme başlıyor…");
+      d().setStatus?.("Altyazı…", "Rüzgar");
+      await d().runVideoBurnSubJob?.();
+      d().setStatus?.("Hazır", "Rüzgar");
+      return { handled: true, instant: true };
+    }
+
+    if (/(?:\bmux\b|ses\s+ekle|harici\s+ses|ses\s+videoya|ses\s+kanal)/i.test(low)) {
+      ensureVideo();
+      const rel = activeRelFromMessage(raw);
+      if (rel && el().videoRelWorkspace) el().videoRelWorkspace.value = rel;
+      openDock("mux");
+      say("Ümit abi, ses mux başlıyor…");
+      d().setStatus?.("Mux…", "Rüzgar");
+      await d().runVideoMuxAudioJob?.();
+      d().setStatus?.("Hazır", "Rüzgar");
+      return { handled: true, instant: true };
+    }
+
+    if (/(?:\bconcat\b|klip\s+birleştir|klip\s+birlestir|videoları\s+birleştir|videolari\s+birlestir|videoları\s+birle)/i.test(low)) {
+      ensureVideo();
+      openDock("edit");
+      say("Ümit abi, klip birleştirme (concat) başlıyor…");
+      d().setStatus?.("Concat…", "Rüzgar");
+      await d().runVideoConcatJob?.();
       d().setStatus?.("Hazır", "Rüzgar");
       return { handled: true, instant: true };
     }

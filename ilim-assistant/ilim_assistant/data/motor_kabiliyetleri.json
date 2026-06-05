@@ -1,0 +1,95 @@
+{
+  "version": "motor-kabiliyetleri-v1-2026-06-07",
+  "motors": {
+    "programlama": {
+      "label_tr": "Programlama",
+      "priority": 7,
+      "route_regex": [
+        "\\bpytest\\b",
+        "\\bgit\\s+(durum|status|diff|commit|push)\\b",
+        "\\b(proje|kod)\\s+(tara|scan|özet|ozet)\\b",
+        "\\b(briefing|brifing|self[- ]?scan)\\b",
+        "\\bprogramlama\\b",
+        "\\bkod\\s+(yaz|düzenle|duzenle|aç|ac)\\b"
+      ],
+      "examples": ["pytest geçir", "git durumu", "proje tara", "briefing"],
+      "dispatch": "backend:programlama_instant"
+    },
+    "video": {
+      "label_tr": "Video",
+      "priority": 9,
+      "route_regex": [
+        "youtube|youtu\\.be",
+        "\\b(indir|download|oynat|sinema)\\b.*\\b(video|link|url)?",
+        "\\bffmpeg\\b|\\bkes\\b|\\bkurgu\\b|\\bmontaj\\b",
+        "\\bmedya\\s+bilgi|\\bffprobe\\b",
+        "\\b(transcode|dönüştür|donustur)\\b",
+        "\\b(altyaz|subtitle|mux|concat|birleştir)\\b"
+      ],
+      "examples": [
+        "YouTube linki indir ve oynat",
+        "kes 0:30-1:00",
+        "altyazı göm",
+        "kurgu yap"
+      ],
+      "dispatch": "frontend:video-chat-brain"
+    },
+    "tercume": {
+      "label_tr": "Tercüme",
+      "priority": 8,
+      "route_regex": [
+        "\\b(çevir|cevir|tercüme|tercume|translate)\\b",
+        "\\b(eser|kitap|mektubat)\\s+(ara|bul|listele)\\b",
+        "\\b(imam[- ]?ı?\\s*rabbani|mektubat)\\b",
+        "\\bsayfa\\s+(çevir|cevir|git)\\b"
+      ],
+      "examples": ["imam-ı rabbani eserlerini ara", "bu sayfayı çevir"],
+      "dispatch": "frontend:tercume-atolye"
+    },
+    "mimar": {
+      "label_tr": "Mimar",
+      "priority": 6,
+      "route_regex": [
+        "\\b(fotoğraf|fotograf|resim|sanat|tasarım|tasarim|mimar)\\b",
+        "\\b(galeri|poster|kalem|çizim|cizim|svg)\\b",
+        "\\b(restaurasyon|restore|upscale)\\b"
+      ],
+      "examples": ["fotoğraf paneli aç", "sanat galerisi"],
+      "dispatch": "frontend:mimar-atolye"
+    },
+    "ses": {
+      "label_tr": "Ses",
+      "priority": 5,
+      "route_regex": [
+        "\\b(metne\\s+d[öo]k|transkript|whisper|stt)\\b",
+        "\\b(ses\\s+profil|alim\\s+mod|edip\\s+profil|asistan\\s+ses)\\b",
+        "\\b(oku|seslendir|okut)\\s*[:：]"
+      ],
+      "examples": ["alim moduna geç", "metne dök", "oku: Bismillah"],
+      "dispatch": "backend:ses_faz72"
+    },
+    "hafiza": {
+      "label_tr": "Hafıza",
+      "priority": 8,
+      "route_regex": [
+        "^hatırla\\s*[:：]",
+        "^hatirla\\s*[:：]",
+        "\\b(unut|görev|gorev|hatırlat|hatirlat)\\b",
+        "\\bhafıza\\s+(durum|yardım|yardim)\\b"
+      ],
+      "examples": ["hatırla: …", "görev listesi", "hafıza durumu"],
+      "dispatch": "backend:hafiza_faz75"
+    },
+    "hizir": {
+      "label_tr": "Hızır",
+      "priority": 7,
+      "route_regex": [
+        "\\b(pazar|trendyol|n11|hepsiburada|amazon)\\b.*\\b(tara|fiyat|ürün|urun)\\b",
+        "\\b(ürün|urun)\\s+tara\\b",
+        "\\bfırsat\\b|\\bfirsat\\b"
+      ],
+      "examples": ["pazar yerini tara", "trendyol fiyat"],
+      "dispatch": "frontend:hizir-scan"
+    }
+  }
+}

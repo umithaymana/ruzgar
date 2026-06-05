@@ -142,6 +142,7 @@ def is_video_workflow_request(message: str) -> bool:
 def resolve_hub_target(
     message: str,
     motor_flags: dict[str, bool] | None = None,
+    workspace_root: str | None = None,
 ) -> tuple[str, dict[str, Any]]:
     """En uygun yardımcı motor; genel = Ana Motor'da kal."""
     flags = motor_flags or {}
@@ -158,6 +159,27 @@ def resolve_hub_target(
             meta["winner"] = "genel"
             meta["reason"] = "casual_social"
             return "genel", meta
+    except Exception:
+        pass
+
+    try:
+        from ilim_assistant.motorlar.motor_ogrenilen_eylemler import match_learned_action
+
+        learned = match_learned_action(msg, workspace_root)
+        if learned and learned.get("motor"):
+            mid = str(learned["motor"]).strip().lower()
+            meta["learned_action"] = learned
+            meta["candidates"].append(
+                {
+                    "motor": mid,
+                    "score": 99,
+                    "reason": "learned_action",
+                    "action_id": learned.get("id"),
+                }
+            )
+            meta["winner"] = mid
+            meta["reason"] = "learned_action"
+            return mid, meta
     except Exception:
         pass
 
@@ -189,6 +211,27 @@ def resolve_hub_target(
         meta["winner"] = "video"
         meta["reason"] = "video_workflow"
         return "video", meta
+
+    try:
+        from ilim_assistant.motorlar.motor_kabiliyetleri import resolve_target_from_registry
+
+        reg_id, reg_meta = resolve_target_from_registry(msg)
+        if reg_id:
+            meta["registry"] = reg_meta
+            reg_score = int(reg_meta.get("score") or 0)
+            if reg_score >= 4:
+                meta["candidates"].append(
+                    {
+                        "motor": reg_id,
+                        "score": reg_score,
+                        "reason": "kabiliyet_registry",
+                    }
+                )
+                meta["winner"] = reg_id
+                meta["reason"] = "kabiliyet_registry"
+                return reg_id, meta
+    except Exception:
+        pass
 
     try:
         from ilim_assistant.motorlar.hizir_faz84 import wants_hub_hizir_route
@@ -260,6 +303,138 @@ def resolve_hub_target(
     return "genel", meta
 
 
+_MOTOR_INSTANT_FNS: dict[str, tuple[str, str]] = {
+    "video": ("ilim_assistant.motorlar.video_faz71", "maybe_instant_faz71"),
+    "ses": ("ilim_assistant.motorlar.ses_faz72", "maybe_instant_faz72"),
+    "mimar": ("ilim_assistant.motorlar.mimar_faz5", "maybe_instant_faz5"),
+    "okuma": ("ilim_assistant.motorlar.okuma_faz73", "maybe_instant_faz73"),
+    "tercume": ("ilim_assistant.motorlar.tercume_faz74", "maybe_instant_faz74"),
+}
+
+
+def _try_programlama_instant(
+    raw: str, workspace_root: str | None
+) -> tuple[str | None, dict[str, Any]]:
+    try:
+        from ilim_assistant.motorlar.programlama_motoru import (
+            maybe_programlama_instant_reply,
+            unpack_programlama_instant,
+        )
+
+        raw_prog = maybe_programlama_instant_reply(
+            raw, "programlama", workspace_root=workspace_root
+        )
+        if raw_prog:
+            return unpack_programlama_instant(raw_prog)
+    except Exception:
+        pass
+    return None, {}
+
+
+def maybe_motor_instant_for_target(
+    message: str,
+    target: str,
+    *,
+    workspace_root: str | None = None,
+) -> tuple[str | None, dict[str, Any]]:
+    """Tek hedef motorda anında metin yanıtı (Faz A — hub delegasyon)."""
+    mid = (target or "").strip().lower()
+    if mid == "okuma":
+        mid = "mimar"
+    raw = (message or "").strip()
+    extra: dict[str, Any] = {}
+    if not raw or not mid or mid == "genel":
+        return None, extra
+
+    if mid == "hafiza":
+        try:
+            from ilim_assistant.motorlar.hafiza_faz75 import maybe_instant_faz75
+
+            hit = maybe_instant_faz75(raw, mode_norm="hafiza", allow_lookup=False)
+            if hit:
+                return hit, extra
+        except Exception:
+            pass
+        return None, extra
+
+    if mid == "programlama":
+        text, prog_meta = _try_programlama_instant(raw, workspace_root)
+        if text:
+            extra.update(prog_meta)
+            return text, extra
+        return None, extra
+
+    if mid == "video":
+        if is_video_download_request(raw):
+            try:
+                from ilim_assistant.motorlar.video_faz71 import maybe_instant_faz71
+
+                vhit = maybe_instant_faz71(raw)
+                if vhit:
+                    return vhit, extra
+            except Exception:
+                pass
+        try:
+            from ilim_assistant.motorlar.video_faz84 import maybe_instant_faz84
+
+            v84 = maybe_instant_faz84(raw, workspace_root)
+            if v84:
+                return v84, extra
+        except Exception:
+            pass
+
+    if mid == "hizir":
+        try:
+            from ilim_assistant.motorlar.hizir_faz84 import maybe_instant_faz84 as hizir_hit
+
+            hh = hizir_hit(raw, mode_norm="hizir")
+            if hh:
+                return hh, extra
+        except Exception:
+            pass
+
+    spec = _MOTOR_INSTANT_FNS.get(mid)
+    if spec:
+        try:
+            mod = __import__(spec[0], fromlist=[spec[1]])
+            fn = getattr(mod, spec[1])
+            hit = fn(raw)
+            if hit:
+                return str(hit).strip() or None, extra
+        except Exception:
+            pass
+
+    return None, extra
+
+
+def build_motor_dispatch_payload(
+    message: str,
+    target: str,
+    *,
+    workspace_root: str | None = None,
+) -> dict[str, Any]:
+    """Masaüstü hub — hedef motorda anında iş / metin yanıtı."""
+    mid = (target or "").strip().lower()
+    if mid == "okuma":
+        mid = "mimar"
+    reply, meta = maybe_motor_instant_for_target(
+        message, mid, workspace_root=workspace_root
+    )
+    out: dict[str, Any] = {
+        "ok": True,
+        "handled": bool(reply),
+        "instant": bool(reply),
+        "target": mid,
+        "target_label": motor_label(mid),
+        "version": FAZ76_VERSION,
+    }
+    if reply:
+        out["reply"] = reply
+    if meta:
+        out["meta"] = meta
+    return out
+
+
 def maybe_hub_instant(
     message: str,
     motor_flags: dict[str, bool] | None = None,
@@ -271,6 +446,15 @@ def maybe_hub_instant(
     raw = (message or "").strip()
     if not raw:
         return None
+
+    try:
+        from ilim_assistant.motorlar.motor_ogrenilen_eylemler import try_instant_learned_commands
+
+        teach = try_instant_learned_commands(raw, workspace_root)
+        if teach:
+            return teach
+    except Exception:
+        pass
 
     if _HELP_RE.search(_ascii_fold(raw)):
         return format_hub_help()
@@ -320,46 +504,12 @@ def maybe_hub_instant(
     except Exception:
         pass
 
-    target, _meta = resolve_hub_target(raw, motor_flags)
+    target, _meta = resolve_hub_target(raw, motor_flags, workspace_root=workspace_root)
     if target == "genel":
         return None
 
-    _instant_fns: dict[str, tuple[str, str]] = {
-        "video": ("ilim_assistant.motorlar.video_faz71", "maybe_instant_faz71"),
-        "ses": ("ilim_assistant.motorlar.ses_faz72", "maybe_instant_faz72"),
-        "mimar": ("ilim_assistant.motorlar.mimar_faz5", "maybe_instant_faz5"),
-        "okuma": ("ilim_assistant.motorlar.okuma_faz73", "maybe_instant_faz73"),
-        "tercume": ("ilim_assistant.motorlar.tercume_faz74", "maybe_instant_faz74"),
-    }
-    spec = _instant_fns.get(target)
-    if spec:
-        try:
-            mod = __import__(spec[0], fromlist=[spec[1]])
-            fn = getattr(mod, spec[1])
-            hit = fn(raw)
-            if hit:
-                return hit
-        except Exception:
-            pass
-
-    if target == "programlama":
-        try:
-            from ilim_assistant.motorlar.programlama_motoru import (
-                maybe_programlama_instant_reply,
-                unpack_programlama_instant,
-            )
-
-            raw_prog = maybe_programlama_instant_reply(
-                raw, "programlama", workspace_root=None
-            )
-            if raw_prog:
-                text, _ = unpack_programlama_instant(raw_prog)
-                if text:
-                    return text
-        except Exception:
-            pass
-
-    return None
+    reply, _ = maybe_motor_instant_for_target(raw, target, workspace_root=workspace_root)
+    return reply
 
 
 def format_hub_help() -> str:
@@ -377,6 +527,10 @@ def format_hub_help() -> str:
         "· Video ara (isim) → **Video** (liste; «2 numarayı indir»)",
         "",
         "İsterseniz ilgili sekmeye geçmeden Ana Motor'da yazmaya devam edebilirsiniz.",
+        "",
+        "**Faz C — eylem öğretme:**",
+        "· `eylem öğret: «tetik cümle» → video/kes`",
+        "· `eylem listesi` · `eylem paneli` · `eylem sil: «tetik»`",
         f"({FAZ76_VERSION})",
     ]
     return "\n".join(lines)

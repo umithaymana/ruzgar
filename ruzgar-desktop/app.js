@@ -284,6 +284,8 @@ function restoreMotorNavStack() {
 }
 
 let currentMode = normalizeMotorMode(MODE_QS.get("mode") || "");
+/** Ana Motor hub: genel sohbet kalır, motor paneli arka planda (Faz B) */
+let hubQuietMotor = null;
 if (!MODE_QS.get("mode")) {
   try {
     const saved = sessionStorage.getItem("ruzgar_last_motor");
@@ -1662,10 +1664,33 @@ function scheduleMetricsPolling() {
   }, periodMs);
 }
 
+function getWorkbenchMode() {
+  if (currentMode === "genel" && hubQuietMotor) return hubQuietMotor;
+  return currentMode;
+}
+
+function openMotorWorkbenchQuiet(mode) {
+  let m = String(mode || "").trim().toLowerCase();
+  if (m === "okuma") m = "mimar";
+  if (!m || m === "genel") return;
+  hubQuietMotor = m;
+  if (window.RuzgarSidebarManager?.setMotor) {
+    void window.RuzgarSidebarManager.setMotor(m);
+  }
+  updateDynamicWorkbench();
+}
+
+function clearHubQuietMotor() {
+  if (!hubQuietMotor) return;
+  hubQuietMotor = null;
+  if (currentMode === "genel") updateDynamicWorkbench();
+}
+
 function switchMode(mode) {
   let next = String(mode || "").trim().toLowerCase();
   if (next === "okuma") next = "mimar";
   if (!next) return;
+  hubQuietMotor = null;
   if (perfBusy) {
     interruptRuzgar();
     if (el.send) el.send.disabled = false;
@@ -4411,6 +4436,7 @@ function syncActiveMotorShell() {
 }
 
 function updateDynamicWorkbench() {
+  const wb = getWorkbenchMode();
   const pages = [
     el.pageGenel,
     el.pageHafiza,
@@ -4438,14 +4464,14 @@ function updateDynamicWorkbench() {
     programlama: el.pageProgramlama,
     ses: el.pageSes,
   };
-  const active = map[currentMode] || el.pageGenel;
+  const active = map[wb] || el.pageGenel;
   if (active) {
     active.hidden = false;
     active.style.display = "";
   }
-  if (currentMode === "hafiza") {
+  if (wb === "hafiza") {
     setWorkbenchLayout("layout-split2");
-  } else if (currentMode === "video") {
+  } else if (wb === "video") {
     if (el.dynamicWorkbench) {
       el.dynamicWorkbench.classList.remove("layout-split2", "layout-split4");
       el.dynamicWorkbench.classList.add("layout-full");
@@ -4454,26 +4480,30 @@ function updateDynamicWorkbench() {
   } else if (el.dynamicWorkbench?.classList.contains("layout-split2")) {
     setWorkbenchLayout("layout-full");
   }
-  if (el.dashboardStatus)
-    el.dashboardStatus.textContent = `Aktif motor: ${MODE_LABELS[currentMode] || currentMode}`;
+  if (el.dashboardStatus) {
+    el.dashboardStatus.textContent =
+      hubQuietMotor && currentMode === "genel"
+        ? `Ana Motor · panel: ${MODE_LABELS[hubQuietMotor] || hubQuietMotor}`
+        : `Aktif motor: ${MODE_LABELS[currentMode] || currentMode}`;
+  }
   updateDashboardLastSpeech();
-  if (currentMode === "hafiza") void loadHafizaJsonView();
-  if (currentMode === "mimar" || currentMode === "okuma") {
+  if (wb === "hafiza") void loadHafizaJsonView();
+  if (wb === "mimar" || wb === "okuma") {
     if (window.RuzgarMimarAtolye) window.RuzgarMimarAtolye.load();
   }
-  if (currentMode === "tercume") void loadTercumeFileList();
+  if (wb === "tercume") void loadTercumeFileList();
   /* tercüme: tercume-atolye.js */
-  if (currentMode === "ses") void refreshSesSttHint();
-  if (currentMode === "video") void refreshVideoEngineHint();
-  if (currentMode === "programlama") {
+  if (wb === "ses") void refreshSesSttHint();
+  if (wb === "video") void refreshVideoEngineHint();
+  if (wb === "programlama") {
     updateProgramlamaActiveFileLabel();
     void programlamaAtolyeRefreshRoot();
   }
-  if (currentMode === "hizir") void refreshHizirOperasyonPanel();
+  if (wb === "hizir") void refreshHizirOperasyonPanel();
   syncWorkbenchHizirToolbar();
   syncActiveMotorShell();
   relayoutAppShell();
-  if (currentMode === "video") {
+  if (wb === "video") {
     requestAnimationFrame(() => {
       syncActiveMotorShell();
       relayoutAppShell();
@@ -6445,6 +6475,7 @@ function initVideoChatBrain() {
     getCurrentMode: () => currentMode,
     activeMotorChatMode,
     switchMode,
+    openMotorWorkbenchQuiet,
     appendBubble,
     setStatus,
     flash: flashRuzgarDurum,
@@ -6484,9 +6515,21 @@ function initAnaMotorHub() {
     getApi: () => API,
     getCurrentMode: () => currentMode,
     switchMode,
+    openMotorWorkbenchQuiet,
+    clearHubQuietMotor,
     appendBubble,
     setStatus,
     motorLabel: (id) => MODE_LABELS[id] || id,
+    getWorkspaceRoot: async () => {
+      try {
+        if (window.ruzgarApi?.getRoot) return await window.ruzgarApi.getRoot();
+      } catch (_) {
+        /* ignore */
+      }
+      return null;
+    },
+    hasSesFileSelected: () => !!(el.audioFileInput?.files?.[0]),
+    runSesSttFromFile: () => runSesSttFromFile(),
     runHizirFromChat: (text) => {
       if (!hizirChatImpliesProductScan(text)) return false;
       if (el.hizirTaraQuery) {
@@ -6496,6 +6539,23 @@ function initAnaMotorHub() {
       void HIZIR_MODU.pazarTara();
       return true;
     },
+    openEylemPanel: () => window.RuzgarMotorEylemPanel?.openPanel?.(),
+  });
+}
+
+function initMotorEylemPanel() {
+  if (!window.RuzgarMotorEylemPanel?.init) return;
+  window.RuzgarMotorEylemPanel.init({
+    getApi: () => API,
+    getWorkspaceRoot: async () => {
+      try {
+        if (window.ruzgarApi?.getRoot) return await window.ruzgarApi.getRoot();
+      } catch (_) {
+        /* ignore */
+      }
+      return null;
+    },
+    flash: flashRuzgarDurum,
   });
 }
 
@@ -6961,6 +7021,7 @@ function wireDynamicWorkbench() {
   wireSesAtolye();
   wireVideoAtolye();
   initAnaMotorHub();
+  initMotorEylemPanel();
   if (el.btnHafizaSave) {
     // Click event köprüsü: analiz satırlarını kalıcı hafızaya yazar.
     el.btnHafizaSave.addEventListener("click", (ev) => {

@@ -3926,6 +3926,42 @@ body.core-busy .perf-chip {
   overflow: auto;
   padding-right: 4px;
 }
+.eylem-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: min(48vh, 420px);
+  overflow: auto;
+}
+.eylem-list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid #3c3c3c;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.15);
+}
+.eylem-list-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.eylem-list-trig {
+  font-size: 0.92rem;
+  word-break: break-word;
+}
+.eylem-list-motor {
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+.dashboard-eylem-blurb {
+  font-size: 0.88rem;
+  margin: 0.35rem 0 0.6rem;
+  opacity: 0.9;
+}
 .hafiza-row {
   padding: 10px;
   border-radius: 8px;
