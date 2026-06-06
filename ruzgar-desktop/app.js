@@ -7456,6 +7456,15 @@ async function ensureLocalVideoSourceForEdit(opts = {}) {
   return rel || null;
 }
 
+function initSohbetAnlama() {
+  if (!window.RuzgarSohbetAnlama?.init) return;
+  window.RuzgarSohbetAnlama.init({
+    parseVideoTimeSec,
+    getCinemaNowPlaying,
+    hasActiveCinemaSession,
+  });
+}
+
 function initVideoChatBrain() {
   if (!window.RuzgarVideoChatBrain?.init) return;
   window.RuzgarVideoChatBrain.init({
@@ -7658,6 +7667,7 @@ function wireVideoAtolye() {
       openVideoExportFolder,
     });
   }
+  initSohbetAnlama();
   initVideoChatBrain();
 }
 
@@ -8646,6 +8656,23 @@ function repairMojibake(s) {
   return best;
 }
 
+function trimMotorChatHistory(sess) {
+  if (sess.history.length > MAX_CLIENT_HISTORY_MSGS) {
+    sess.history = sess.history.slice(-MAX_CLIENT_HISTORY_MSGS);
+  }
+}
+
+function pushMotorChatHistory(role, content, opts = {}) {
+  if (opts.skipSessionSync) return;
+  const text = String(content || "").trim();
+  if (!text) return;
+  const sess = getMotorChatSession(activeMotorChatMode());
+  const last = sess.history[sess.history.length - 1];
+  if (last && last.role === role && last.content === text) return;
+  sess.history.push({ role, content: text });
+  trimMotorChatHistory(sess);
+}
+
 function appendBubble(role, text, opts = {}) {
   const div = document.createElement("div");
   let cls = `bubble ${role}`;
@@ -8719,11 +8746,20 @@ function appendBubble(role, text, opts = {}) {
   }
   el.chat.appendChild(div);
   el.chat.scrollTop = el.chat.scrollHeight;
-  if (role === "assistant" && !opts.error && !opts.skipSessionSync) {
-    lastAssistantReply = String(text || "").trim();
-    const sess = getMotorChatSession(activeMotorChatMode());
-    sess.lastAssistantReply = lastAssistantReply;
-    updateDashboardLastSpeech();
+  if (role === "user") {
+    pushMotorChatHistory("user", text, opts);
+  }
+  if (role === "assistant" && !opts.skipSessionSync) {
+    const replyText = String(text || "").trim();
+    if (!opts.error) {
+      lastAssistantReply = replyText;
+      const sess = getMotorChatSession(activeMotorChatMode());
+      sess.lastAssistantReply = lastAssistantReply;
+      pushMotorChatHistory("assistant", replyText, opts);
+      updateDashboardLastSpeech();
+    } else if (opts.clarify) {
+      pushMotorChatHistory("assistant", replyText, opts);
+    }
   }
 }
 
@@ -9303,7 +9339,14 @@ async function checkApi() {
   const bases = localApiHealthCandidates();
   for (const base of bases) {
   try {
-    const r = await fetch(`${base}/api/health`, { method: "GET" });
+    const ctrl = new AbortController();
+    const tid = window.setTimeout(() => ctrl.abort(), 8000);
+    let r;
+    try {
+      r = await fetch(`${base}/api/health`, { method: "GET", signal: ctrl.signal });
+    } finally {
+      window.clearTimeout(tid);
+    }
     const j = await r.json();
     if (base !== API && j.ok) {
       try {
@@ -9325,11 +9368,7 @@ async function checkApi() {
       fast_paths: j?.build?.fast_paths,
     });
     if (j.ok) {
-      if (!lastHealthSnapshot?.ok) {
-        setAnaMotorInfoStripState("loading");
-      } else {
-        setAnaMotorInfoStripState("ready");
-      }
+      setAnaMotorInfoStripState("ready");
       if (apiWasOffline) {
         apiWasOffline = false;
         showRuzgarConnectionActiveBanner();
@@ -10390,10 +10429,10 @@ async function streamChat(userText) {
       if (HIZIR_MODU.shouldRefreshAfterChat(ut)) {
         void HIZIR_MODU.refreshPanel();
       }
-      chatSess.history.push({
-        role: "user",
-        content: ev.user_message || userText,
-      });
+      const lastH = chatSess.history[chatSess.history.length - 1];
+      if (!lastH || lastH.role !== "user" || lastH.content !== ut) {
+        chatSess.history.push({ role: "user", content: ut });
+      }
       chatSess.history.push({ role: "assistant", content: full });
       chatSess.lastAssistantReply = full;
       lastAssistantReply = full;
@@ -10855,6 +10894,30 @@ async function sendMessageWithText(t, opts = {}) {
   }
 
   el.input.value = "";
+  const chatSess = getMotorChatSession(activeMotorChatMode());
+  const priorHistory = chatSess.history.slice();
+  let dispatchText = text;
+  let understanding = null;
+  if (window.RuzgarSohbetAnlama?.understand) {
+    understanding = window.RuzgarSohbetAnlama.understand(text, {
+      mode: currentMode,
+      chatMode: activeMotorChatMode(),
+      history: priorHistory,
+      cinema: getCinemaNowPlaying?.(),
+      hasCinema: hasActiveCinemaSession?.(),
+    });
+    if (understanding?.text) dispatchText = understanding.text;
+    if (understanding?.fromHistory && dispatchText !== text) {
+      ruzgarDebugLog("sohbet-anlama", {
+        raw: text.slice(0, 120),
+        resolved: dispatchText.slice(0, 120),
+        intent: understanding.intent,
+        motor: understanding.motorHint,
+      });
+    }
+  }
+  const motorCtx = { understanding, history: chatSess.history };
+
   if (!skipUser) {
     appendBubble("user", text);
   }
@@ -10868,7 +10931,7 @@ async function sendMessageWithText(t, opts = {}) {
   };
 
   if (window.RuzgarAnaMotorHub?.tryEylemCommand) {
-    const eylemHit = await window.RuzgarAnaMotorHub.tryEylemCommand(text);
+    const eylemHit = await window.RuzgarAnaMotorHub.tryEylemCommand(dispatchText, motorCtx);
     if (eylemHit?.handled) {
       finishMotorInstant(currentMode === "genel" ? "Ana Motor" : MODE_LABELS[currentMode] || currentMode);
       return;
@@ -10876,7 +10939,7 @@ async function sendMessageWithText(t, opts = {}) {
   }
 
   if (currentMode === "genel" && window.RuzgarAnaMotorHub?.tryDispatchFromGenel) {
-    const hubHit = await window.RuzgarAnaMotorHub.tryDispatchFromGenel(text);
+    const hubHit = await window.RuzgarAnaMotorHub.tryDispatchFromGenel(dispatchText, motorCtx);
     if (hubHit?.handled) {
       finishMotorInstant("Ana Motor");
       return;
@@ -10884,7 +10947,7 @@ async function sendMessageWithText(t, opts = {}) {
   }
 
   if (currentMode !== "genel" && window.RuzgarAnaMotorHub?.tryDispatchActiveMotor) {
-    const motorHit = await window.RuzgarAnaMotorHub.tryDispatchActiveMotor(text);
+    const motorHit = await window.RuzgarAnaMotorHub.tryDispatchActiveMotor(dispatchText, motorCtx);
     if (motorHit?.handled) {
       finishMotorInstant(MODE_LABELS[currentMode] || currentMode);
       return;

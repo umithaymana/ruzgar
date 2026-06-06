@@ -280,9 +280,9 @@
     return false;
   }
 
-  async function tryVideoFromGenel(text) {
+  async function tryVideoFromGenel(text, motorCtx) {
     if (!shouldFastRouteVideo(text)) return { handled: false };
-    const out = await dispatchToMotor("video", text, { fromGenel: true });
+    const out = await dispatchToMotor("video", text, { fromGenel: true, motorCtx });
     if (!out.handled) return { handled: false };
     if (out.ok !== false && !global.RuzgarVideoChatBrain?.looksLikeMultiStepPlan?.(text)) {
       say("Ümit abi, **Video** talimatın sinemada uygulandı — sohbet Ana Motor'da.");
@@ -291,10 +291,10 @@
     return { handled: true };
   }
 
-  async function dispatchVideo(text) {
+  async function dispatchVideo(text, ctx) {
     const V = global.RuzgarVideoChatBrain;
     if (!V?.tryAtolyeFromMessage) return { handled: false };
-    const hit = await V.tryAtolyeFromMessage(text);
+    const hit = await V.tryAtolyeFromMessage(text, ctx);
     if (!hit?.handled) return { handled: false };
     return { handled: true, ok: hit.ok !== false };
   }
@@ -348,8 +348,9 @@
     let result = { handled: false };
     const subIntent = opts?.subIntent || opts?.learnedAction?.sub_intent;
     const dispatchText = subIntent ? resolveDispatchText(mode, subIntent, text) : text;
+    const motorCtx = opts?.motorCtx || null;
     if (fn) {
-      result = await fn(dispatchText);
+      result = await fn(dispatchText, motorCtx);
     } else {
       say(`**${label}** motoruna yönlendirdim.`);
       result = { handled: true };
@@ -363,7 +364,7 @@
     return { ...result, switched: !fromGenel, mode, label, fromGenel };
   }
 
-  async function tryDispatchFromGenel(text) {
+  async function tryDispatchFromGenel(text, motorCtx) {
     if (!deps) return { handled: false };
     if (d().getCurrentMode?.() !== "genel") return { handled: false };
 
@@ -404,11 +405,22 @@
       return { handled: true };
     }
 
-    const videoFast = await tryVideoFromGenel(raw);
+    const videoFast = await tryVideoFromGenel(raw, motorCtx);
     if (videoFast.handled) return videoFast;
 
     const route = await fetchHubRoute(raw);
     if (!route || !route.target || route.target === "genel") {
+      if (motorCtx?.understanding?.motorHint && motorCtx.understanding.motorHint !== "genel") {
+        const hintOut = await dispatchToMotor(motorCtx.understanding.motorHint, raw, {
+          fromGenel: true,
+          motorCtx,
+        });
+        if (hintOut.handled) {
+          const lbl = d().motorLabel?.(motorCtx.understanding.motorHint) || motorCtx.understanding.motorHint;
+          say(`Ümit abi, **${lbl}** — sohbet akışından anladım ve uyguladım.`);
+          return { handled: true };
+        }
+      }
       return { handled: false };
     }
 
@@ -418,6 +430,7 @@
       fromGenel: true,
       learnedAction: learned,
       subIntent: learned?.sub_intent,
+      motorCtx,
     });
     if (out.handled && out.ok !== false) {
       const sub = learned?.sub_intent ? `/${learned.sub_intent}` : "";
@@ -434,12 +447,12 @@
     return { handled: false };
   }
 
-  async function tryDispatchActiveMotor(text) {
+  async function tryDispatchActiveMotor(text, motorCtx) {
     const mode = normalizeMotorId(d().getCurrentMode?.() || "genel");
     if (mode === "genel") return { handled: false };
 
     const fn = DISPATCHERS[mode];
-    if (fn) return fn(text);
+    if (fn) return fn(text, motorCtx);
     return { handled: false };
   }
 
@@ -476,7 +489,7 @@
    * Eylem öğret/liste/panel — tüm modlarda (Video dahil)
    * @returns {Promise<{handled: boolean}>}
    */
-  async function tryEylemCommand(text) {
+  async function tryEylemCommand(text, _motorCtx) {
     const raw = String(text || "").trim();
     if (!raw || !isEylemCommand(raw)) return { handled: false };
 

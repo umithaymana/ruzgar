@@ -5,7 +5,7 @@
 (function videoChatBrain(global) {
   "use strict";
 
-  const VERSION = "video-super-brain-v4-2026-06-06";
+  const VERSION = "video-super-brain-v5-2026-06-06";
 
   /** Çok adımlı plan ayırıcı: ve · sonra · virgül */
   const STEP_SPLIT_RE =
@@ -145,9 +145,34 @@
     return { start, end };
   }
 
+  function parsePlainSecToken(token) {
+    const s = String(token || "").trim().replace(",", ".");
+    if (/^\d+:\d+/.test(s)) {
+      const v = d().parseVideoTimeSec?.(s);
+      return Number.isFinite(v) ? v : null;
+    }
+    const n = parseFloat(s.replace(/^0+(\d)/, "$1"));
+    return Number.isFinite(n) ? n : null;
+  }
+
   function parseNaturalTrimRange(raw) {
     const explicit = parseExplicitTrimRange(raw);
     if (explicit) return explicit;
+
+    const ilaRange =
+      raw.match(
+        /(\d+(?::\d+(?::\d+)?)?(?:[.,]\d+)?)\s*(?:sn|saniye|sec|dk|dakika|min(?:ute)?)?\s*(?:ila|ile|la|le|-)\s*(\d+(?::\d+(?::\d+)?)?(?:[.,]\d+)?)\s*(?:sn|saniye|sec|dk|dakika|min(?:ute)?)?(?:ler|leri)?(?:\s*(?:arasi|arası|arasinda|arasında|arasi))?/i,
+      ) ||
+      raw.match(
+        /(\d+(?::\d+(?::\d+)?)?(?:[.,]\d+)?)\s*(?:ila|ile|-)\s*(\d+(?::\d+(?::\d+)?)?(?:[.,]\d+)?)\s*(?:saniye|sn|sec|dk|dakika)/i,
+      );
+    if (ilaRange) {
+      const start = parsePlainSecToken(ilaRange[1]);
+      const end = parsePlainSecToken(ilaRange[2]);
+      if (Number.isFinite(start) && Number.isFinite(end) && end > start) {
+        return { start, end };
+      }
+    }
 
     const fromTo = raw.match(
       /(\d+(?::\d+(?::\d+)?)?(?:[.,]\d+)?)\s*(?:['']?(?:dan|den|ten))\s*(\d+(?::\d+(?::\d+)?)?(?:[.,]\d+)?)\s*(?:['']?(?:a|e|ya|ye))?\s*kes/i,
@@ -178,14 +203,14 @@
     if (fromHere && cur != null && d().canSeekVideoPlayer?.()) {
       say(
         "Kaç saniye/dakika keseyim? Örnek: «buradan 30 saniye kes» veya «kes 0:30-1:00»",
-        { error: true },
+        { clarify: true },
       );
       return { needClarify: true };
     }
     if (fromHere && cur == null) {
       say(
         "Web sinemada oynatıcı konumunu okuyamıyorum — saniye yaz: «kes 0:30-1:00» (tam indirme olmadan akıştan keserim).",
-        { error: true },
+        { clarify: true },
       );
       return { needClarify: true };
     }
@@ -783,10 +808,11 @@
   /**
    * @returns {Promise<{handled: boolean, instant?: boolean, reply?: string}>}
    */
-  async function tryAtolyeFromMessage(text) {
+  async function tryAtolyeFromMessage(text, opts) {
     if (!deps) return { handled: false };
     const raw = String(text || "").trim();
     if (!raw) return { handled: false };
+    const preTrim = opts?.understanding?.trimRange;
 
     const chatMode = d().activeMotorChatMode?.() || d().getCurrentMode?.() || "genel";
     if (chatMode !== "genel" && chatMode !== "video") return { handled: false };
@@ -1046,13 +1072,22 @@
       return { handled: true, instant: true };
     }
 
-    const trimRange = parseNaturalTrimRange(raw);
+    let trimRange = parseNaturalTrimRange(raw);
+    if (
+      preTrim &&
+      Number.isFinite(preTrim.start) &&
+      Number.isFinite(preTrim.end) &&
+      preTrim.end > preTrim.start
+    ) {
+      trimRange = { start: preTrim.start, end: preTrim.end };
+    }
     if (trimRange?.needClarify) return { handled: true, instant: true };
     if (trimRange && !trimRange.needClarify) {
       const isTrimMsg =
-        /\bkes\b|\btrim\b|kırp|kirp|kesim/i.test(raw) ||
+        /\bkes\b|\btrim\b|kırp|kirp|kesim|arasi|arası|arasinda|arasında/i.test(raw) ||
         !!parseExplicitTrimRange(raw) ||
-        (/['']?(?:dan|den|ten)/i.test(raw) && /kes/i.test(raw));
+        (/['']?(?:dan|den|ten)/i.test(raw) && /kes/i.test(raw)) ||
+        /(\d+)\s*(?:ila|ile|-)\s*(\d+)/i.test(raw);
       if (isTrimMsg) {
         await runTrimRange(trimRange, raw);
         return { handled: true, instant: true };
@@ -1066,9 +1101,9 @@
     ) {
       say(
         "Ümit abi, tam anlayamadım. Sinemada video açık — örnek:\n" +
-          "«**indir**» · «**kes 0:30-1:00**» · «**buradan 30 saniye kes**» · «**medya bilgisi**»\n" +
+          "«**indir**» · «**kes 0:30-1:00**» · «**5 ila 30 saniye kes**» · «**medya bilgisi**»\n" +
           "Tam liste: **yardım**",
-        { error: true },
+        { clarify: true },
       );
       d().setStatus?.("Hazır", "Rüzgar");
       return { handled: true, instant: true };
