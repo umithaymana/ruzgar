@@ -32,6 +32,7 @@ if (typeof electronApi === "string" || !electronApi.app) {
 const {
   app,
   BrowserWindow,
+  BrowserView,
   Menu,
   ipcMain,
   shell,
@@ -44,6 +45,33 @@ const { spawn } = require("child_process");
 
 const WORKSPACE_ROOT = path.resolve(__dirname, "..");
 const DEFAULT_API_PORT = 8779;
+
+/** @type {import("electron").BrowserView | null} */
+let youtubeCinemaView = null;
+/** @type {import("electron").BrowserWindow | null} */
+let youtubeCinemaHostWin = null;
+
+function hideYoutubeCinemaView() {
+  if (!youtubeCinemaView || !youtubeCinemaHostWin) return;
+  try {
+    youtubeCinemaHostWin.removeBrowserView(youtubeCinemaView);
+  } catch (_) {
+    /* ignore */
+  }
+  try {
+    youtubeCinemaView.webContents.close();
+  } catch (_) {
+    /* ignore */
+  }
+  youtubeCinemaView = null;
+  youtubeCinemaHostWin = null;
+}
+
+function normalizeYoutubeWatchUrlMain(url) {
+  let u = String(url || "").trim();
+  u = u.replace(/([?&])v-([a-zA-Z0-9_-]{6,})/i, "$1v=$2");
+  return u;
+}
 
 function readLocalApiPortFromDisk() {
   try {
@@ -474,6 +502,62 @@ app.whenReady().then(async () => {
     }
     return { ok: true, abs: picked, rel };
   });
+  ipcMain.handle("ruzgar:youtube-cinema-show", async (_e, payload) => {
+    const win = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
+    if (!win) return { ok: false, error: "Pencere yok" };
+    const rawUrl = normalizeYoutubeWatchUrlMain(payload?.url);
+    if (!rawUrl) return { ok: false, error: "URL yok" };
+    let watchUrl = rawUrl;
+    try {
+      const u = new URL(rawUrl);
+      const vid = u.searchParams.get("v");
+      if (vid && u.hostname.includes("youtube")) {
+        watchUrl = `https://www.youtube.com/watch?v=${encodeURIComponent(vid)}`;
+      }
+    } catch {
+      return { ok: false, error: "Geçersiz URL" };
+    }
+
+    hideYoutubeCinemaView();
+
+    const b = payload?.bounds || {};
+    const x = Math.max(0, Math.round(Number(b.x) || 0));
+    const y = Math.max(0, Math.round(Number(b.y) || 0));
+    const w = Math.max(320, Math.round(Number(b.width) || 640));
+    const h = Math.max(180, Math.round(Number(b.height) || 360));
+
+    const view = new BrowserView({
+      webPreferences: {
+        partition: "persist:ruzgar-youtube-cinema",
+        contextIsolation: true,
+        nodeIntegration: false,
+      },
+    });
+    win.addBrowserView(view);
+    view.setBounds({ x, y, width: w, height: h });
+    view.setAutoResize({ width: true, height: true });
+    youtubeCinemaView = view;
+    youtubeCinemaHostWin = win;
+
+    await view.webContents.loadURL(watchUrl);
+    return { ok: true };
+  });
+  ipcMain.handle("ruzgar:youtube-cinema-hide", () => {
+    hideYoutubeCinemaView();
+    return { ok: true };
+  });
+  ipcMain.handle("ruzgar:youtube-cinema-bounds", (_e, bounds) => {
+    if (!youtubeCinemaView) return { ok: false };
+    const b = bounds || {};
+    youtubeCinemaView.setBounds({
+      x: Math.max(0, Math.round(Number(b.x) || 0)),
+      y: Math.max(0, Math.round(Number(b.y) || 0)),
+      width: Math.max(320, Math.round(Number(b.width) || 640)),
+      height: Math.max(180, Math.round(Number(b.height) || 360)),
+    });
+    return { ok: true };
+  });
+
   ipcMain.handle("ruzgar:open-external", (_e, url) => {
     try {
       const raw = String(url || "").trim();

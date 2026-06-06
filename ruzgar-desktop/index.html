@@ -1401,9 +1401,25 @@
                       accept="video/*,audio/*,.mp4,.mkv,.webm,.mov,.avi,.m4v,.mp3,.wav,.opus"
                     />
                   </header>
+                  <div class="video-cinema-url-bar" id="video-cinema-url-bar">
+                    <input
+                      id="video-cinema-url"
+                      class="video-cinema-url-input"
+                      type="url"
+                      inputmode="url"
+                      placeholder="Video veya sayfa URL — sinemada aç"
+                      autocomplete="off"
+                    />
+                    <button type="button" class="btn-primary btn-compact" id="btn-cinema-open-url">Aç</button>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-cinema-open-web" title="Electron: sayfayı sinema alanında göster">
+                      Web
+                    </button>
+                  </div>
+                  <div id="video-cinema-now-playing" class="video-cinema-now-playing" hidden></div>
                   <div class="video-preview-wrap video-cinema-screen">
                     <video id="video-preview" class="video-preview-el" controls preload="metadata"></video>
                   </div>
+                  <div id="video-search-results" class="video-search-results" hidden aria-label="Arama sonuçları"></div>
                   <footer class="video-cinema-deck">
                   <div class="video-job-progress" id="video-job-progress" hidden aria-live="polite">
                     <span class="video-job-progress-label" id="video-job-progress-label">İşleniyor…</span>
@@ -1454,6 +1470,15 @@
                     </div>
                   </div>
                   <div class="video-toolbar video-cinema-toolbar">
+                    <button type="button" class="btn-primary btn-compact" id="btn-cinema-watch-download" title="Oynatılan kaynağı indir">
+                      İndir
+                    </button>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-cinema-trim-ready" title="Kesim alanına geç">
+                      Kesime al
+                    </button>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-cinema-edit-bin" title="Kurgu binine ekle">
+                      Kurguya ekle
+                    </button>
                     <button type="button" class="btn-primary btn-compact" id="btn-video-probe">Medya bilgisi</button>
                     <button type="button" class="btn-secondary btn-compact" id="btn-video-clear" title="Önizleme ve özeti sıfırla">
                       Sıfırla
@@ -2260,7 +2285,10 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
             <li><strong>Medya bilgisi</strong> — seçili dosya veya «Kes» panelindeki göreli yol ile ffprobe</li>
             <li><strong>Timeline</strong> — Başlangıç / Bitiş işaretle → Kesime yaz → Kes panelinden kaydet</li>
             <li><strong>Çıktı</strong> — <code>.ruzgar-video-export/</code> (Kaydet ve Dışa Aktar düğmesi)</li>
-            <li><strong>Sohbet</strong> — YouTube URL yapıştır; «video ara …»; «3 numarayı indir»</li>
+            <li><strong>Sinema URL</strong> — üstte adres çubuğu: «Aç» (akış) · «Web» (Electron gömülü sayfa)</li>
+            <li><strong>Sinema araçları</strong> — İndir · Kesime al · Kurguya ekle (oynatılan kaynak)</li>
+            <li><strong>Arama kartları</strong> — «video ara …» sonrası panelde İzle / İndir / Kes</li>
+            <li><strong>Sohbet</strong> — link + «panelde aç»; «3 numarayı oynat»; «2 numarayı indir»; Vimeo/mp4 linkleri</li>
             <li><strong>Gereksinim</strong> — FFmpeg (PATH) + yt-dlp (<code>pip install yt-dlp</code>); sunucu 8779</li>
           </ul>
           <h3 class="faz7-help-h3">Faz 9–16 — tamamlanan kabiliyetler</h3>
@@ -2309,7 +2337,7 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
     </div>
 
     <link rel="stylesheet" href="tercume-atolye.css?v=20260606-center-row-fix" />
-    <link rel="stylesheet" href="video-atolye.css?v=20260607-yt-cinema" />
+    <link rel="stylesheet" href="video-atolye.css?v=20260603-sw-hub" />
     <link rel="stylesheet" href="mimar-atolye.css?v=20260601-mimar-polish" />
     <link rel="stylesheet" href="components/slide-panel.css?v=20260606-panels-drawer" />
     <script src="ruzgar-context-state.js?v=20260605-components"></script>
@@ -2318,10 +2346,10 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
     <script src="ruzgar-virus-guard.js?v=20260607-preflight-err"></script>
     <script src="tercume-atolye.js?v=20260606-tools-panel"></script>
     <script src="video-atolye.js?v=20260607-video-v2"></script>
-    <script src="video-chat-brain.js?v=20260607-yt-cinema"></script>
+    <script src="video-chat-brain.js?v=20260603-sw-hub"></script>
     <script src="motor-eylem-panel.js?v=20260607-faz-c2"></script>
     <script src="ana-motor-hub.js?v=20260607-video-fix"></script>
     <script src="mimar-atolye.js?v=20260601-faz5"></script>
-    <script src="app.js?v=20260607-yt-cinema"></script>
+    <script src="app.js?v=20260603-sw-hub"></script>
   </body>
 </html>

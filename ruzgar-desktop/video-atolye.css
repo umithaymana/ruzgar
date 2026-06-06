@@ -658,6 +658,119 @@ body.video-cinema-mode #page-video .video-preview-el {
   color: rgba(255, 255, 255, 0.65);
 }
 
+.video-youtube-cinema-err {
+  color: #ffb4a8;
+  word-break: break-word;
+}
+
+.video-cinema-url-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 12px 0;
+  align-items: center;
+}
+
+.video-cinema-url-input {
+  flex: 1 1 180px;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.35);
+  color: #f2f2f2;
+  font-size: 13px;
+}
+
+.video-cinema-now-playing {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 12px;
+  font-size: 12px;
+  background: rgba(255, 200, 80, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.video-cinema-now-site {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  text-transform: lowercase;
+}
+
+.video-cinema-now-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.video-cinema-now-mode {
+  opacity: 0.75;
+}
+
+.video-search-results {
+  max-height: 220px;
+  overflow: auto;
+  padding: 8px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.video-search-results-lead {
+  margin: 0 0 8px;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.video-search-card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.video-search-card-main {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 0;
+}
+
+.video-search-card-num {
+  font-weight: 700;
+  opacity: 0.7;
+  min-width: 1.2em;
+}
+
+.video-search-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.video-search-card-meta {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.video-search-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 
 
 .video-cinema-deck {

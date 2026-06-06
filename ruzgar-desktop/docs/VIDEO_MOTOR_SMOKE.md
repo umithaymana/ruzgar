@@ -45,9 +45,14 @@ Manuel test (Electron veya tarayıcı + `127.0.0.1:8779`). Her madde: ☐ → �
 
 | # | Test | ✓ |
 |---|------|---|
-| 18 | YouTube URL yapıştır → indirme | ☐ |
-| 19 | «video ara …» → liste | ☐ |
+| 18 | YouTube URL + «panelde aç» → sinema `<video>` | ☐ |
+| 19 | «video ara …» → panelde tıklanabilir liste | ☐ |
+| 20 | «2 numarayı oynat» → indirmeden sinema | ☐ |
+| 21 | Sinema URL çubuğu + **Aç** | ☐ |
+| 22 | Sinema **İndir** → yerel dosya oynatıcıda | ☐ |
+| 23 | Doğrudan `.mp4` link + oynat | ☐ |
+| 24 | Electron **Web** düğmesi (BrowserView) | ☐ |
 
 ---
 
-*V1 smoke — `VIDEO_MOTOR_OLGUNLASMA_PLANI.md` ile eşleşir.*
+*SW-0…SW-5 smoke — `SINEMA_WEB_VIDEO_HUB_PLANI.md` ile eşleşir.*

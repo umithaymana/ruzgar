@@ -29,12 +29,13 @@
     const raw = String(text || "").trim();
     if (!raw) return false;
     if (d().extractVideoDownloadUrl?.(raw)) return true;
+    if (d().extractVideoPageUrl?.(raw)) return true;
     if (d().isVideoSearchOrPickCommand?.(raw)) return true;
     const low = fold(raw);
     return (
-      /\bvideo\b|youtube|youtu\.be|ffmpeg|sinema|atolye|atölye|kesim|\bkes\b|kurgu|montaj|altyaz|subtitle|mux|transcode|donustur|dönüştür|ffprobe|medya\s+bilgi|indirme|indir\b|klip\b|film\b|oynat|onizleme|önizleme|panel/.test(
+      /\bvideo\b|youtube|youtu\.be|vimeo|tiktok|dailymotion|twitter|x\.com|ffmpeg|sinema|atolye|atölye|kesim|\bkes\b|kurgu|montaj|altyaz|subtitle|mux|transcode|donustur|dönüştür|ffprobe|medya\s+bilgi|indirme|indir\b|klip\b|film\b|oynat|onizleme|önizleme|panel|m3u8/.test(
         low,
-      ) || /\.(mp4|mkv|webm|mov|avi|m4v|mp3|wav|srt|vtt)\b/i.test(raw)
+      ) || /\.(mp4|mkv|webm|mov|avi|m4v|mp3|wav|srt|vtt|m3u8)\b/i.test(raw)
     );
   }
 
@@ -124,17 +125,23 @@
 
   async function handleSearch(raw) {
     if (!d().isVideoSearchOrPickCommand?.(raw)) return false;
-    const isPick = d().RUZGAR_VIDEO_PICK_RE?.test?.(String(raw || "").trim());
+    const isPickDl = d().RUZGAR_VIDEO_PICK_RE?.test?.(String(raw || "").trim());
+    const isPickOpen = d().RUZGAR_VIDEO_PICK_OPEN_RE?.test?.(String(raw || "").trim());
     say(
-      isPick
+      isPickDl
         ? "Ümit abi, seçtiğin sıradaki videoyu indirip sinemada açıyorum…"
-        : "Ümit abi, YouTube'da arıyorum… İndirmek için numara veya link yaz.",
+        : isPickOpen
+          ? "Ümit abi, seçtiğin videoyu sinema panelinde açıyorum…"
+          : "Ümit abi, YouTube'da arıyorum… Panelde tıkla veya «N oynat» de.",
     );
-    d().setStatus?.(isPick ? "Video indiriliyor…" : "YouTube aranıyor…", "Rüzgar");
+    d().setStatus?.(
+      isPickDl ? "Video indiriliyor…" : isPickOpen ? "Sinema açılıyor…" : "YouTube aranıyor…",
+      "Rüzgar",
+    );
     const ctrl = new AbortController();
     const to = global.setTimeout(
       () => ctrl.abort(),
-      isPick ? d().RUZGAR_VIDEO_DOWNLOAD_TIMEOUT_MS : 120000,
+      isPickDl ? d().RUZGAR_VIDEO_DOWNLOAD_TIMEOUT_MS : 120000,
     );
     try {
       const res = await fetch(`${d().getApi?.()}/api/video/search`, {
@@ -145,9 +152,20 @@
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok || j.ok === false) throw new Error(j.detail || `HTTP ${res.status}`);
+      ensureVideo();
+      if (j.mode === "open" && j.open?.url) {
+        const url = String(j.open.url).trim();
+        if (el().videoDownloadUrl) el().videoDownloadUrl.value = url;
+        await d().loadPreviewInPanel?.(url, { flash: false });
+        say(String(j.text || "Sinema panelinde açıldı."));
+        d().setStatus?.("YouTube oynatılıyor", "Rüzgar");
+        return true;
+      }
       say(String(j.text || j.detail || "Arama tamamlandı."));
+      if (j.mode === "search" && j.data?.ok) {
+        d().renderVideoSearchResults?.(j.data);
+      }
       if (j.mode === "download" && j.result?.file_path) {
-        ensureVideo();
         const rel = String(j.result.file_path).trim();
         if (el().videoRelWorkspace) el().videoRelWorkspace.value = rel;
         await d().loadVideoPreviewFromRel?.(rel);
@@ -170,43 +188,30 @@
 
   async function handleYoutubeOpen(raw) {
     if (!d().isVideoStreamOpenCommand?.(raw)) return false;
-    const url = d().extractVideoDownloadUrl?.(raw);
+    const url = d().extractVideoDownloadUrl?.(raw) || d().extractVideoPageUrl?.(raw);
     if (!url) return false;
     ensureVideo();
-    const ok = await d().loadYoutubePreviewInPanel?.(url, { flash: false });
+    const ok = await d().loadPreviewInPanel?.(url, { flash: false });
     if (!ok) {
-      say("Ümit abi, YouTube linkini çözemedim — «Bağlantı adresini kopyala» ile watch?v=... kullan.", {
+      say("Ümit abi, linki sinemada açamadım — URL'yi kontrol edin veya «Web» yedek düğmesini deneyin.", {
         error: true,
       });
       return { ok: false };
     }
     if (el().videoDownloadUrl) el().videoDownloadUrl.value = url;
-    const electron = d().isRuzgarElectronShell?.();
     say(
-      electron
-        ? [
-            "Ümit abi, YouTube **gömülü oynatıcı** bu uygulamada «oturum aç / bot» ekranı gösterir — normal.",
-            "",
-            "**Tarayıcıda açtım** (Chrome/Edge girişinle izle). Sol panelde kapak görseli var.",
-            "",
-            `\`${url}\``,
-            "",
-            "Sol panelde **kesim** istiyorsan: «**indir**» veya «indir ve oynat» de.",
-            "",
-            `(${VERSION})`,
-          ].join("\n")
-        : [
-            "Ümit abi, **YouTube sinema oynatıcıda** (gömülü — indirme yok).",
-            "",
-            `\`${url}\``,
-            "",
-            "Yerel dosya / kesim için: «**indir**» veya «indir ve oynat» de.",
-            "",
-            `(${VERSION})`,
-          ].join("\n"),
+      [
+        "Ümit abi, video **sinema oynatıcıda** açıldı (canlı akış — indirme yok).",
+        "",
+        `\`${url}\``,
+        "",
+        "Sol panelde oynatılıyor. Yerel dosya / kesim: sinema **İndir** veya «indir» de.",
+        "",
+        `(${VERSION})`,
+      ].join("\n"),
     );
-    d().flash?.(electron ? "YouTube tarayıcıda açıldı." : "YouTube panelde açıldı.");
-    d().setStatus?.(electron ? "Tarayıcıda YouTube" : "YouTube oynatılıyor", "Rüzgar");
+    d().flash?.("Sinema oynatıcıda.");
+    d().setStatus?.("Video oynatılıyor", "Rüzgar");
     return { ok: true };
   }
 
@@ -279,9 +284,9 @@
   function helpText() {
     return (
       "Ümit abi, **sohbetten** video atölyesini yönetebilirsin — düğmelere dokunmana gerek yok:\n\n" +
-      "• Link + «**panelde aç / oynat**» — YouTube gömülü (indirme yok)\n" +
-      "• Link + «**indir**» — yerel dosya + kesim\n" +
-      "• «şu filmi ara …» · «3 numarayı indir»\n" +
+      "• Link + «**panelde aç / oynat**» — sinema akışı (YouTube, Vimeo, …)\n" +
+      "• Sinema **İndir · Kesime al · Kurguya ekle** veya «indir»\n" +
+      "• «şu filmi ara …» · «3 numarayı oynat» · «2 numarayı indir»\n" +
       "• «son indirmeler» · «son indirilen» · «1 numarayı oynat»\n" +
       "• «medya bilgisi» · «kes 0:30-1:00» · «dönüştür»\n" +
       "• «altyazı göm» · «ses ekle / mux» · «klip birleştir / concat»\n" +

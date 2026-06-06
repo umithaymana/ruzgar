@@ -28,7 +28,7 @@ from typing import Annotated, Any, Iterator
 import uvicorn
 from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, Response, StreamingResponse
 
 from pydantic import BaseModel, Field
 from starlette.requests import Request
@@ -598,6 +598,20 @@ class TaskUpdateBody(BaseModel):
 
 class VideoDownloadBody(BaseModel):
     url: str = ""
+
+
+class YoutubeStreamPrepareBody(BaseModel):
+    url: str = ""
+
+
+class VideoStreamPrepareBody(BaseModel):
+    url: str = ""
+
+
+class VideoStreamDownloadBody(BaseModel):
+    """Sinema oturumundan veya watch URL ile indir."""
+    url: str = ""
+    token: str = ""
 
 
 class VideoConcatBody(BaseModel):
@@ -3099,6 +3113,7 @@ async def api_video_search(body: VideoSearchBody):
             extract_search_query,
             format_search_results,
             maybe_instant_faz84,
+            maybe_search_and_open,
             maybe_search_and_pick,
             search_youtube,
         )
@@ -3106,6 +3121,18 @@ async def api_video_search(body: VideoSearchBody):
         pick = maybe_search_and_pick(msg, ws)
         if pick:
             return {"ok": True, "mode": "download", "text": pick}
+        open_pick = maybe_search_and_open(msg, ws)
+        if open_pick:
+            return {
+                "ok": True,
+                "mode": "open",
+                "open": open_pick,
+                "text": (
+                    f"Ümit abi, **{open_pick.get('index')}.** «{open_pick.get('title') or 'video'}» "
+                    f"sinema panelinde açılıyor.\n({FAZ84_VERSION})"
+                ),
+                "version": FAZ84_VERSION,
+            }
         instant = maybe_instant_faz84(msg, ws)
         if instant:
             return {"ok": True, "mode": "instant", "text": instant}
@@ -3170,6 +3197,217 @@ async def api_video_download(body: VideoDownloadBody):
         raise
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/video/youtube/prepare")
+async def api_youtube_stream_prepare(body: YoutubeStreamPrepareBody) -> dict[str, Any]:
+    """Geriye uyumluluk — generic stream prepare."""
+    return await api_video_stream_prepare(VideoStreamPrepareBody(url=body.url))
+
+
+def _stream_prepare_response(result) -> dict[str, Any]:
+    if not result.ok:
+        return {"ok": False, "error": result.error or "Akış hazırlanamadı"}
+    return {
+        "ok": True,
+        "token": result.token,
+        "title": result.title,
+        "video_id": result.video_id,
+        "duration_sec": result.duration_sec,
+        "ext": result.ext,
+        "stream_path": result.stream_path,
+        "stream_type": result.stream_type,
+        "site": result.site,
+        "watch_url": result.watch_url,
+    }
+
+
+@app.post("/api/video/stream/prepare")
+async def api_video_stream_prepare(body: VideoStreamPrepareBody) -> dict[str, Any]:
+    """Evrensel sinema akışı: yt-dlp · mp4 · HLS (indirme yok)."""
+    url = (body.url or "").strip()
+    if not url:
+        raise HTTPException(status_code=400, detail="URL boş.")
+
+    def _run():
+        from ilim_assistant.motorlar.video_stream import prepare_stream
+
+        return _stream_prepare_response(prepare_stream(url))
+
+    data = await run_in_threadpool(_run)
+    if not data.get("ok"):
+        raise HTTPException(status_code=400, detail=str(data.get("error") or "Akış hazırlanamadı"))
+    return data
+
+
+def _stream_upstream_headers(session: dict[str, Any], request: Request) -> dict[str, str]:
+    upstream_headers: dict[str, str] = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+        ),
+    }
+    extra = session.get("http_headers")
+    if isinstance(extra, dict):
+        for k, v in extra.items():
+            if k and v is not None:
+                upstream_headers[str(k)] = str(v)
+    range_h = request.headers.get("range")
+    if range_h:
+        upstream_headers["Range"] = range_h
+    return upstream_headers
+
+
+async def _proxy_binary_stream(direct_url: str, session: dict[str, Any], request: Request):
+    import requests
+
+    upstream_headers = _stream_upstream_headers(session, request)
+
+    def _fetch():
+        return requests.get(
+            direct_url,
+            headers=upstream_headers,
+            stream=True,
+            timeout=(15, 600),
+            allow_redirects=True,
+        )
+
+    try:
+        upstream = await run_in_threadpool(_fetch)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Akış sunucusuna bağlanılamadı: {exc}") from exc
+
+    if upstream.status_code >= 400:
+        body = (upstream.text or "")[:400]
+        upstream.close()
+        raise HTTPException(
+            status_code=502,
+            detail=f"Video akış hatası ({upstream.status_code}): {body}",
+        )
+
+    passthrough = {}
+    for key in ("Content-Type", "Content-Length", "Content-Range", "Accept-Ranges"):
+        val = upstream.headers.get(key)
+        if val:
+            passthrough[key] = val
+    if "Content-Type" not in passthrough:
+        passthrough["Content-Type"] = "video/mp4"
+    if "Accept-Ranges" not in passthrough:
+        passthrough["Accept-Ranges"] = "bytes"
+
+    def _iter():
+        try:
+            for chunk in upstream.iter_content(chunk_size=1024 * 256):
+                if chunk:
+                    yield chunk
+        finally:
+            upstream.close()
+
+    return StreamingResponse(
+        _iter(),
+        status_code=upstream.status_code,
+        headers=passthrough,
+        media_type=passthrough.get("Content-Type", "video/mp4"),
+    )
+
+
+@app.get("/api/video/stream/{token}")
+@app.get("/api/video/youtube/stream/{token}")
+async def api_video_stream_proxy(token: str, request: Request):
+    """Video akışını sinema oynatıcısına ilet (Range destekli)."""
+    from ilim_assistant.motorlar.video_stream import get_stream_session
+
+    session = get_stream_session(token)
+    if not session:
+        raise HTTPException(status_code=404, detail="Akış oturumu yok veya süresi doldu.")
+
+    direct_url = str(session.get("direct_url") or "")
+    if not direct_url:
+        raise HTTPException(status_code=404, detail="Akış URL yok.")
+
+    if str(session.get("stream_type") or "") == "hls":
+        raise HTTPException(status_code=400, detail="HLS için playlist.m3u8 uç noktasını kullanın.")
+
+    return await _proxy_binary_stream(direct_url, session, request)
+
+
+@app.get("/api/video/stream/{token}/playlist.m3u8")
+async def api_video_hls_playlist(token: str, request: Request, u: str | None = None):
+    import requests
+
+    from ilim_assistant.motorlar.video_stream import get_stream_session, rewrite_hls_playlist
+
+    session = get_stream_session(token)
+    if not session:
+        raise HTTPException(status_code=404, detail="Akış oturumu yok veya süresi doldu.")
+
+    playlist_url = (u or "").strip() or str(session.get("direct_url") or "")
+    if not playlist_url:
+        raise HTTPException(status_code=404, detail="HLS URL yok.")
+
+    headers = _stream_upstream_headers(session, request)
+
+    def _fetch():
+        return requests.get(playlist_url, headers=headers, timeout=(15, 120))
+
+    try:
+        upstream = await run_in_threadpool(_fetch)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"HLS listesi alınamadı: {exc}") from exc
+
+    if upstream.status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"HLS hatası ({upstream.status_code})")
+
+    text = rewrite_hls_playlist(upstream.text or "", token, playlist_url)
+    return Response(content=text, media_type="application/vnd.apple.mpegurl")
+
+
+@app.get("/api/video/stream/{token}/seg")
+async def api_video_hls_segment(token: str, request: Request, u: str = ""):
+    from ilim_assistant.motorlar.video_stream import get_stream_session
+
+    session = get_stream_session(token)
+    if not session:
+        raise HTTPException(status_code=404, detail="Akış oturumu yok veya süresi doldu.")
+
+    seg_url = (u or "").strip()
+    if not seg_url:
+        raise HTTPException(status_code=400, detail="Segment URL yok.")
+
+    return await _proxy_binary_stream(seg_url, session, request)
+
+
+@app.post("/api/video/stream/download")
+async def api_video_stream_download(body: VideoStreamDownloadBody) -> dict[str, Any]:
+    """Sinema watch URL veya token → yerel indirme."""
+    watch = (body.url or "").strip()
+    token = (body.token or "").strip()
+    if not watch and token:
+        from ilim_assistant.motorlar.video_stream import get_stream_session
+
+        sess = get_stream_session(token)
+        if sess:
+            watch = str(sess.get("watch_url") or "").strip()
+    if not watch:
+        raise HTTPException(status_code=400, detail="İndirilecek URL yok.")
+
+    def _run():
+        from ilim_assistant.motorlar.video_motoru import download_video_with_yt_dlp
+
+        result = download_video_with_yt_dlp(watch)
+        payload = {
+            "ok": result.ok,
+            "url": result.url,
+            "file_path": result.file_path,
+            "title": result.title,
+            "error": result.error,
+        }
+        return payload
+
+    data = await run_in_threadpool(_run)
+    if not data.get("ok"):
+        raise HTTPException(status_code=400, detail=str(data.get("error") or "İndirme başarısız"))
+    return {"ok": True, "result": data}
 
 
 @app.post("/api/video/probe")

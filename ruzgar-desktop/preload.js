@@ -39,6 +39,10 @@ contextBridge.exposeInMainWorld("ruzgarApi", {
   pickSaveDirectory: () => ipcRenderer.invoke("ruzgar:pick-save-directory"),
   openLocalhostUrl: (url) => ipcRenderer.invoke("ruzgar:open-external", url),
   openExternalUrl: (url) => ipcRenderer.invoke("ruzgar:open-external", url),
+  showYoutubeCinema: (payload) => ipcRenderer.invoke("ruzgar:youtube-cinema-show", payload),
+  showWebCinema: (payload) => ipcRenderer.invoke("ruzgar:youtube-cinema-show", payload),
+  hideYoutubeCinema: () => ipcRenderer.invoke("ruzgar:youtube-cinema-hide"),
+  setYoutubeCinemaBounds: (bounds) => ipcRenderer.invoke("ruzgar:youtube-cinema-bounds", bounds),
   /** Pencere geçmişi (dosya yok — tam yeniden yüklemeden çıkmak için) */
   navGoBack: () => ipcRenderer.invoke("ruzgar:nav-go-back"),
   navGoForward: () => ipcRenderer.invoke("ruzgar:nav-go-forward"),

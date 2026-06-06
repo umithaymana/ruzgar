@@ -1,5 +1,5 @@
 {
-  "version": "motor-kabiliyetleri-v1-2026-06-07",
+  "version": "motor-kabiliyetleri-v1-2026-06-03",
   "motors": {
     "programlama": {
       "label_tr": "Programlama",
@@ -19,8 +19,9 @@
       "label_tr": "Video",
       "priority": 9,
       "route_regex": [
-        "youtube|youtu\\.be",
-        "\\b(indir|download|oynat|sinema)\\b.*\\b(video|link|url)?",
+        "youtube|youtu\\.be|vimeo|tiktok|twitter\\.com|x\\.com|dailymotion",
+        "\\b(indir|download|oynat|sinema|panelde\\s+aç|izle)\\b.*\\b(video|link|url)?",
+        "\\.m3u8|\\.mp4|\\.webm",
         "\\bffmpeg\\b|\\bkes\\b|\\bkurgu\\b|\\bmontaj\\b",
         "\\bmedya\\s+bilgi|\\bffprobe\\b",
         "\\b(transcode|dönüştür|donustur)\\b",

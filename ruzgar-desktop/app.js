@@ -515,6 +515,14 @@ const el = {
   sesSttMeta: document.getElementById("ses-stt-meta"),
   videoFileInput: document.getElementById("video-file-input"),
   videoPreview: document.getElementById("video-preview"),
+  videoCinemaUrl: document.getElementById("video-cinema-url"),
+  btnCinemaOpenUrl: document.getElementById("btn-cinema-open-url"),
+  btnCinemaOpenWeb: document.getElementById("btn-cinema-open-web"),
+  videoCinemaNowPlaying: document.getElementById("video-cinema-now-playing"),
+  videoSearchResults: document.getElementById("video-search-results"),
+  btnCinemaWatchDownload: document.getElementById("btn-cinema-watch-download"),
+  btnCinemaTrimReady: document.getElementById("btn-cinema-trim-ready"),
+  btnCinemaEditBin: document.getElementById("btn-cinema-edit-bin"),
   videoJobProgress: document.getElementById("video-job-progress"),
   videoJobProgressLabel: document.getElementById("video-job-progress-label"),
   videoJobProgressBar: document.getElementById("video-job-progress-bar"),
@@ -612,6 +620,17 @@ let ilimOpenRel = null;
 let sesPreviewObjectUrl = null;
 /** Video önizleme blob URL */
 let videoPreviewObjectUrl = null;
+let youtubeBrowserViewResizeHandler = null;
+let videoHlsInstance = null;
+let cinemaNowPlaying = {
+  url: "",
+  title: "",
+  site: "",
+  token: "",
+  streamType: "",
+  localRel: "",
+};
+let lastVideoSearchResults = [];
 /** @type {HTMLIFrameElement|null} */
 let videoYoutubeEmbedEl = null;
 /** Son ffprobe özeti (dosya seçili değilken süre için) */
@@ -6386,10 +6405,9 @@ function isVideoDownloadCommand(text) {
 }
 
 function isVideoStreamOpenCommand(text) {
-  const url = extractVideoDownloadUrl(text);
-  if (!url) return false;
   if (isVideoDownloadCommand(text)) return false;
-  return true;
+  const url = extractVideoDownloadUrl(text) || extractVideoPageUrl(text);
+  return !!url;
 }
 
 function getVideoYoutubeEmbedEl() {
@@ -6431,6 +6449,13 @@ function getVideoYoutubeCinemaEl() {
 }
 
 function clearYoutubeEmbedPreview() {
+  if (window.ruzgarApi?.hideYoutubeCinema) {
+    void window.ruzgarApi.hideYoutubeCinema();
+  }
+  if (youtubeBrowserViewResizeHandler) {
+    window.removeEventListener("resize", youtubeBrowserViewResizeHandler);
+    youtubeBrowserViewResizeHandler = null;
+  }
   const iframe =
     videoYoutubeEmbedEl || document.getElementById("video-youtube-embed");
   if (iframe) {
@@ -6507,17 +6532,22 @@ async function loadYoutubeCinemaPanel(watchUrl, vid, opts = {}) {
 
   const cleanUrl = normalizeYoutubeWatchUrl(watchUrl);
   const thumb = `https://i.ytimg.com/vi/${encodeURIComponent(vid)}/hqdefault.jpg`;
+  const streamErr = String(opts.streamError || "").trim();
+  const errHint = streamErr
+    ? `<p class="video-youtube-cinema-hint video-youtube-cinema-err">Akış: ${streamErr.replace(/</g, "&lt;")}</p>`
+    : "";
   cinema.replaceChildren();
   cinema.innerHTML =
     `<div class="video-youtube-cinema-inner">` +
     `<img class="video-youtube-cinema-thumb" src="${thumb}" alt="" loading="lazy" />` +
     `<div class="video-youtube-cinema-overlay">` +
     `<p class="video-youtube-cinema-lead">YouTube sinema</p>` +
-    `<p class="video-youtube-cinema-hint">Rüzgar panelinde gömülü oynatıcı «bot / oturum aç» ister. ` +
-    `Videoyu <strong>Chrome/Edge</strong> (giriş yaptığın tarayıcı) ile açıyorum.</p>` +
+    `<p class="video-youtube-cinema-hint">Canlı akış açılamadı. Aşağıdaki yöntemlerden birini dene.</p>` +
+    errHint +
     `<div class="video-youtube-cinema-actions">` +
-    `<button type="button" class="btn-primary btn-compact" data-yt-open-browser>Tarayıcıda izle</button>` +
-    `<button type="button" class="btn-secondary btn-compact" data-yt-try-embed>Gömülü dene</button>` +
+    `<button type="button" class="btn-primary btn-compact" data-yt-retry-stream>Akışı tekrar dene</button>` +
+    `<button type="button" class="btn-secondary btn-compact" data-yt-open-browserview>Panelde gömülü aç</button>` +
+    `<button type="button" class="btn-secondary btn-compact" data-yt-open-browser>Tarayıcıda izle</button>` +
     `</div>` +
     `<p class="video-youtube-cinema-foot">Kesim / yerel dosya: sohbete «<strong>indir</strong>» ekle.</p>` +
     `</div></div>`;
@@ -6526,20 +6556,19 @@ async function loadYoutubeCinemaPanel(watchUrl, vid, opts = {}) {
   cinema.classList.add("video-preview-flash");
   window.setTimeout(() => cinema.classList.remove("video-preview-flash"), 1400);
 
+  cinema.querySelector("[data-yt-retry-stream]")?.addEventListener("click", () => {
+    void loadPreviewInPanel(cleanUrl, { ...opts, flash: true });
+  });
+  cinema.querySelector("[data-yt-open-browserview]")?.addEventListener("click", () => {
+    void loadWebCinemaInPanel(cleanUrl, opts);
+  });
   cinema.querySelector("[data-yt-open-browser]")?.addEventListener("click", () => {
     void openYoutubeWatchExternal(cleanUrl);
   });
-  cinema.querySelector("[data-yt-try-embed]")?.addEventListener("click", () => {
-    loadYoutubeEmbedInPanel(cleanUrl, vid, opts);
-    flashRuzgarDurum("Gömülü oynatıcı deneniyor… (bot ekranı çıkarsa Tarayıcıda izle kullan.)");
-  });
 
   if (el.videoDownloadUrl) el.videoDownloadUrl.value = cleanUrl;
-  if (opts.openBrowser !== false) {
-    await openYoutubeWatchExternal(cleanUrl);
-  }
   if (opts.flash !== false) {
-    flashRuzgarDurum(`YouTube tarayıcıda açıldı · panel: ${vid}`);
+    flashRuzgarDurum(`YouTube sinema: alternatif yöntemler (${vid})`);
   }
   return true;
 }
@@ -6564,40 +6593,514 @@ function youtubeEmbedPageOrigin() {
   return "http://127.0.0.1:8779";
 }
 
-async function loadYoutubePreviewInPanel(watchUrl, opts = {}) {
+function getVideoPreviewBoundsForCinema() {
+  const node =
+    el.videoPreview?.closest(".video-preview-wrap") ||
+    el.videoPreview?.parentElement ||
+    el.videoPreview;
+  if (!node) return null;
+  const r = node.getBoundingClientRect();
+  if (r.width < 40 || r.height < 40) return null;
+  return {
+    x: Math.round(r.left),
+    y: Math.round(r.top),
+    width: Math.round(r.width),
+    height: Math.round(r.height),
+  };
+}
+
+function destroyVideoHls() {
+  if (videoHlsInstance) {
+    try {
+      videoHlsInstance.destroy();
+    } catch (_) {
+      /* ignore */
+    }
+    videoHlsInstance = null;
+  }
+}
+
+async function ensureHlsJs() {
+  if (window.Hls) return window.Hls;
+  await new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js";
+    s.onload = resolve;
+    s.onerror = () => reject(new Error("hls.js yüklenemedi"));
+    document.head.appendChild(s);
+  });
+  return window.Hls;
+}
+
+function updateCinemaNowPlaying(meta = {}) {
+  cinemaNowPlaying = {
+    url: String(meta.url || meta.watch_url || "").trim(),
+    title: String(meta.title || "video").trim(),
+    site: String(meta.site || "").trim(),
+    token: String(meta.token || "").trim(),
+    streamType: String(meta.streamType || meta.stream_type || "video").trim(),
+    localRel: String(meta.localRel || meta.local_rel || "").trim(),
+  };
+  renderCinemaNowPlayingBar();
+}
+
+function renderCinemaNowPlayingBar() {
+  const bar = el.videoCinemaNowPlaying;
+  if (!bar) return;
+  const { url, title, site, streamType, localRel } = cinemaNowPlaying;
+  if (!url && !localRel) {
+    bar.hidden = true;
+    bar.replaceChildren();
+    return;
+  }
+  const siteLabel = site || (url.includes("youtube") ? "YouTube" : "web");
+  const modeLabel =
+    streamType === "hls" ? "HLS" : localRel ? "yerel dosya" : "canlı akış";
+  bar.hidden = false;
+  bar.innerHTML =
+    `<span class="video-cinema-now-site">${siteLabel.replace(/</g, "&lt;")}</span>` +
+    `<span class="video-cinema-now-title">${title.replace(/</g, "&lt;")}</span>` +
+    `<span class="video-cinema-now-mode">${modeLabel}</span>`;
+}
+
+function clearVideoSearchResults() {
+  lastVideoSearchResults = [];
+  const box = el.videoSearchResults;
+  if (!box) return;
+  box.hidden = true;
+  box.replaceChildren();
+}
+
+function renderVideoSearchResults(data) {
+  const box = el.videoSearchResults;
+  if (!box || !data?.ok) return;
+  const rows = Array.isArray(data.results) ? data.results : [];
+  lastVideoSearchResults = rows;
+  if (!rows.length) {
+    clearVideoSearchResults();
+    return;
+  }
+  box.hidden = false;
+  box.replaceChildren();
+  const lead = document.createElement("p");
+  lead.className = "video-search-results-lead";
+  lead.textContent = `«${data.query || "arama"}» — ${rows.length} sonuç · tıkla veya «N oynat» de`;
+  box.appendChild(lead);
+  rows.forEach((row, idx) => {
+    const n = idx + 1;
+    const card = document.createElement("article");
+    card.className = "video-search-card";
+    const dur =
+      row.duration_sec != null && Number.isFinite(Number(row.duration_sec))
+        ? `${Math.round(Number(row.duration_sec))} sn`
+        : "";
+    const ch = row.channel ? ` · ${row.channel}` : "";
+    card.innerHTML =
+      `<div class="video-search-card-main">` +
+      `<span class="video-search-card-num">${n}</span>` +
+      `<div class="video-search-card-text">` +
+      `<strong>${String(row.title || "?").replace(/</g, "&lt;")}</strong>` +
+      `<span class="video-search-card-meta">${dur}${ch.replace(/</g, "&lt;")}</span>` +
+      `</div></div>` +
+      `<div class="video-search-card-actions">` +
+      `<button type="button" class="btn-primary btn-compact" data-watch>İzle</button>` +
+      `<button type="button" class="btn-secondary btn-compact" data-dl>İndir</button>` +
+      `<button type="button" class="btn-secondary btn-compact" data-trim>Kes</button>` +
+      `</div>`;
+    const url = String(row.url || "").trim();
+    card.querySelector("[data-watch]")?.addEventListener("click", () => {
+      void loadPreviewInPanel(url, { flash: true });
+    });
+    card.querySelector("[data-dl]")?.addEventListener("click", () => {
+      if (el.videoDownloadUrl) el.videoDownloadUrl.value = url;
+      void runVideoDownloadFromUrl(url, { announceChat: true });
+    });
+    card.querySelector("[data-trim]")?.addEventListener("click", () => {
+      if (el.videoDownloadUrl) el.videoDownloadUrl.value = url;
+      flashRuzgarDurum("Kesim için önce indiriliyor…");
+      void runVideoDownloadFromUrl(url, { announceChat: true });
+    });
+    box.appendChild(card);
+  });
+}
+
+async function playStreamOnVideo(streamUrl, streamType, opts = {}) {
+  if (!el.videoPreview) return false;
+  destroyVideoHls();
+  try {
+    if (videoPreviewObjectUrl) URL.revokeObjectURL(videoPreviewObjectUrl);
+  } catch (_) {
+    /* ignore */
+  }
+  videoPreviewObjectUrl = null;
+
+  el.videoPreview.hidden = false;
+  el.videoPreview.style.display = "";
+
+  if (streamType === "hls") {
+    const Hls = await ensureHlsJs();
+    if (Hls.isSupported()) {
+      videoHlsInstance = new Hls({ enableWorker: true });
+      videoHlsInstance.loadSource(streamUrl);
+      videoHlsInstance.attachMedia(el.videoPreview);
+    } else if (el.videoPreview.canPlayType("application/vnd.apple.mpegurl")) {
+      el.videoPreview.src = streamUrl;
+      el.videoPreview.load();
+    } else {
+      return false;
+    }
+  } else {
+    el.videoPreview.removeAttribute("src");
+    el.videoPreview.src = streamUrl;
+    el.videoPreview.load();
+  }
+
+  if (opts.autoplay !== false) {
+    try {
+      await el.videoPreview.play();
+    } catch (_) {
+      /* autoplay */
+    }
+  }
+  el.videoPreview.classList.add("video-preview-flash");
+  window.setTimeout(() => el.videoPreview.classList.remove("video-preview-flash"), 1400);
+  return true;
+}
+
+async function loadStreamInPanel(watchUrl, opts = {}) {
   const cleanUrl = normalizeYoutubeWatchUrl(watchUrl);
-  const vid = parseYoutubeVideoId(cleanUrl);
-  if (!vid || !el.videoPreview) return false;
+  if (!cleanUrl || !el.videoPreview) {
+    return { ok: false, error: "Oynatıcı yok" };
+  }
+
+  if (window.ruzgarApi?.hideYoutubeCinema) {
+    void window.ruzgarApi.hideYoutubeCinema();
+  }
+  if (youtubeBrowserViewResizeHandler) {
+    window.removeEventListener("resize", youtubeBrowserViewResizeHandler);
+    youtubeBrowserViewResizeHandler = null;
+  }
+
+  const iframe =
+    videoYoutubeEmbedEl || document.getElementById("video-youtube-embed");
+  if (iframe) {
+    iframe.hidden = true;
+    iframe.removeAttribute("src");
+    iframe.style.display = "none";
+  }
+  const cinema = videoYoutubeCinemaEl || document.getElementById("video-youtube-cinema");
+  if (cinema) {
+    cinema.hidden = true;
+    cinema.style.display = "none";
+    cinema.replaceChildren();
+  }
+
+  if (opts.flash !== false) {
+    flashRuzgarDurum("Sinema akışı hazırlanıyor…");
+  }
+
+  const ctrl = new AbortController();
+  const to = window.setTimeout(() => ctrl.abort(), 90000);
+  try {
+    const res = await fetch(`${API}/api/video/stream/prepare`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: cleanUrl }),
+      signal: ctrl.signal,
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || j.ok === false) {
+      const detail = j.detail || j.error || `HTTP ${res.status}`;
+      return { ok: false, error: String(detail) };
+    }
+    const streamPath = String(j.stream_path || "").trim();
+    if (!streamPath) return { ok: false, error: "Akış yolu yok" };
+    const apiRoot = String(API || "").trim().replace(/\/+$/, "");
+    const streamUrl = streamPath.startsWith("http")
+      ? streamPath
+      : `${apiRoot}${streamPath.startsWith("/") ? streamPath : `/${streamPath}`}`;
+    const streamType = String(j.stream_type || "video").trim();
+
+    const played = await playStreamOnVideo(streamUrl, streamType, opts);
+    if (!played) {
+      return { ok: false, error: "Oynatıcı bu akış türünü desteklemiyor." };
+    }
+
+    if (el.videoDownloadUrl) el.videoDownloadUrl.value = cleanUrl;
+    if (el.videoCinemaUrl) el.videoCinemaUrl.value = cleanUrl;
+    const title = String(j.title || "video").trim();
+    const site = String(j.site || "").trim();
+    if (el.videoProbeJson) {
+      const dur =
+        j.duration_sec != null && Number.isFinite(Number(j.duration_sec))
+          ? ` · ${Math.round(Number(j.duration_sec))} sn`
+          : "";
+      el.videoProbeJson.textContent = `Sinema akışı · ${site || "web"} · ${title}${dur}`;
+    }
+    updateCinemaNowPlaying({
+      url: cleanUrl,
+      title,
+      site,
+      token: j.token,
+      streamType,
+    });
+    if (opts.flash !== false) {
+      flashRuzgarDurum(`Sinema oynatıcıda: ${title}`);
+    }
+    return { ok: true, title, video_id: j.video_id, streamUrl, site, streamType };
+  } catch (e) {
+    const msg =
+      e && e.name === "AbortError"
+        ? "Akış hazırlama zaman aşımı"
+        : String(e && e.message ? e.message : e);
+    return { ok: false, error: msg };
+  } finally {
+    window.clearTimeout(to);
+  }
+}
+
+async function loadYoutubeStreamInPanel(watchUrl, opts = {}) {
+  return loadStreamInPanel(watchUrl, opts);
+}
+
+async function loadWebCinemaInPanel(pageUrl, opts = {}) {
+  if (!window.ruzgarApi?.showYoutubeCinema) return false;
+  const bounds = getVideoPreviewBoundsForCinema();
+  if (!bounds) return false;
+  const cleanUrl = normalizeYoutubeWatchUrl(pageUrl);
+  if (!cleanUrl) return false;
+
+  clearYoutubeEmbedPreview();
+  hideNativeVideoPreviewForYoutube();
+  destroyVideoHls();
+
+  try {
+    const out = await window.ruzgarApi.showYoutubeCinema({ url: cleanUrl, bounds });
+    if (!out?.ok) return false;
+
+    const cinema = getVideoYoutubeCinemaEl();
+    if (cinema) {
+      cinema.hidden = false;
+      cinema.style.display = "flex";
+      cinema.replaceChildren();
+      cinema.innerHTML =
+        `<div class="video-youtube-cinema-inner video-youtube-cinema-browserview">` +
+        `<p class="video-youtube-cinema-lead">Web sinema</p>` +
+        `<p class="video-youtube-cinema-hint">${cleanUrl.replace(/</g, "&lt;")}</p>` +
+        `<button type="button" class="btn-secondary btn-compact" data-yt-hide-bv>Sinemayı kapat</button>` +
+        `</div>`;
+      cinema.querySelector("[data-yt-hide-bv]")?.addEventListener("click", () => {
+        clearYoutubeEmbedPreview();
+      });
+    }
+
+    if (youtubeBrowserViewResizeHandler) {
+      window.removeEventListener("resize", youtubeBrowserViewResizeHandler);
+    }
+    youtubeBrowserViewResizeHandler = () => {
+      const b = getVideoPreviewBoundsForCinema();
+      if (b && window.ruzgarApi?.setYoutubeCinemaBounds) {
+        void window.ruzgarApi.setYoutubeCinemaBounds(b);
+      }
+    };
+    window.addEventListener("resize", youtubeBrowserViewResizeHandler);
+
+    if (el.videoDownloadUrl) el.videoDownloadUrl.value = cleanUrl;
+    if (el.videoCinemaUrl) el.videoCinemaUrl.value = cleanUrl;
+    updateCinemaNowPlaying({ url: cleanUrl, title: cleanUrl, site: "web", streamType: "browserview" });
+    if (opts.flash !== false) {
+      flashRuzgarDurum("Web sayfası sinema alanında.");
+    }
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+async function loadYoutubeBrowserViewInPanel(watchUrl, vid, opts = {}) {
+  return loadWebCinemaInPanel(watchUrl, opts);
+}
+
+async function loadPreviewInPanel(watchUrl, opts = {}) {
+  const cleanUrl = normalizeYoutubeWatchUrl(watchUrl);
+  if (!cleanUrl || !el.videoPreview) return false;
   if (/^file:/i.test(window.location.protocol)) {
     flashRuzgarDurum(
-      "YouTube sinema oynatıcı file:// ile çalışmaz — Rüzgarı kapatıp yeniden açın (http://127.0.0.1:8779/ui).",
+      "Sinema oynatıcı file:// ile çalışmaz — Rüzgarı kapatıp yeniden açın (http://127.0.0.1:8779/ui).",
     );
     return false;
   }
 
-  if (isRuzgarElectronShell() && opts.forceEmbed !== true) {
-    return loadYoutubeCinemaPanel(cleanUrl, vid, opts);
+  clearVideoSearchResults();
+
+  const stream = await loadStreamInPanel(cleanUrl, { ...opts, flash: false });
+  if (stream.ok) {
+    if (opts.flash !== false) {
+      flashRuzgarDurum(`Sinema oynatıcıda: ${stream.title || cleanUrl}`);
+    }
+    return true;
   }
 
-  clearYoutubeEmbedPreview();
-  const ok = loadYoutubeEmbedInPanel(cleanUrl, vid, opts);
-  if (!ok) return false;
-  if (el.videoDownloadUrl) el.videoDownloadUrl.value = cleanUrl;
-  if (opts.flash !== false) {
-    flashRuzgarDurum(`YouTube sinema oynatıcıda açıldı (${vid}). Kesim için «indir» deyin.`);
+  if (isRuzgarElectronShell() && window.ruzgarApi?.showYoutubeCinema && opts.forceEmbed !== true) {
+    const bv = await loadWebCinemaInPanel(cleanUrl, { ...opts, flash: false });
+    if (bv) {
+      if (opts.flash !== false) {
+        flashRuzgarDurum("Sinema panelde (gömülü web).");
+      }
+      return true;
+    }
   }
-  return true;
+
+  const vid = parseYoutubeVideoId(cleanUrl);
+  if (vid && (!isRuzgarElectronShell() || opts.forceEmbed === true)) {
+    clearYoutubeEmbedPreview();
+    const ok = loadYoutubeEmbedInPanel(cleanUrl, vid, opts);
+    if (ok) {
+      if (el.videoDownloadUrl) el.videoDownloadUrl.value = cleanUrl;
+      if (opts.flash !== false) {
+        flashRuzgarDurum(`Gömülü oynatıcı (${vid}). Kesim için «indir» deyin.`);
+      }
+      return true;
+    }
+  }
+
+  if (isRuzgarElectronShell()) {
+    return loadYoutubeCinemaPanel(cleanUrl, vid || "web", {
+      ...opts,
+      streamError: stream.error,
+    });
+  }
+
+  if (opts.flash !== false && stream.error) {
+    flashRuzgarDurum(`Akış açılamadı: ${stream.error}`);
+  }
+  return false;
+}
+
+async function loadYoutubePreviewInPanel(watchUrl, opts = {}) {
+  return loadPreviewInPanel(watchUrl, opts);
+}
+
+function extractVideoPageUrl(text) {
+  const raw = String(text || "").trim();
+  if (!raw) return null;
+  const m = raw.match(RUZGAR_VIDEO_URL_RE);
+  if (!m || !m[0]) return null;
+  try {
+    const u = new URL(m[0].replace(/[.,);]+$/, ""));
+    if (u.protocol !== "http:" && u.protocol !== "https:") return null;
+    return normalizeYoutubeWatchUrl(u.href);
+  } catch (_) {
+    return null;
+  }
 }
 
 function extractVideoDownloadUrl(text) {
   const raw = String(text || "").trim();
   if (!raw || !RUZGAR_VIDEO_DL_HINT_RE.test(raw)) return null;
-  const m = raw.match(RUZGAR_VIDEO_URL_RE);
-  if (!m || !m[0]) return null;
-  const url = m[0].replace(/[.,);]+$/, "");
-  const low = (raw + url).toLowerCase();
-  if (!low.includes("youtube") && !low.includes("youtu.be")) return null;
-  return normalizeYoutubeWatchUrl(url);
+  return extractVideoPageUrl(raw);
+}
+
+async function runCinemaDownloadCurrent() {
+  const url = String(cinemaNowPlaying.url || el.videoDownloadUrl?.value || "").trim();
+  const token = String(cinemaNowPlaying.token || "").trim();
+  if (!url && !token) {
+    flashRuzgarDurum("İndirilecek kaynak yok — önce sinemada bir video açın.");
+    return null;
+  }
+  setVideoJobProgress(true, "Sinema kaynağı indiriliyor…");
+  try {
+    const res = await fetch(`${API}/api/video/stream/download`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url, token }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || j.ok === false) {
+      throw new Error(j.detail || j.result?.error || `HTTP ${res.status}`);
+    }
+    const result = j.result || j;
+    const rel = String(result.file_path || "").trim();
+    if (rel) {
+      if (el.videoRelWorkspace) el.videoRelWorkspace.value = rel;
+      await loadVideoPreviewFromRel(rel);
+      updateCinemaNowPlaying({
+        url,
+        title: result.title || cinemaNowPlaying.title,
+        localRel: rel,
+        streamType: "local",
+      });
+    }
+    flashRuzgarDurum(rel ? "Video indirildi — sinemada yerel dosya." : "İndirme tamamlandı.");
+    return result;
+  } finally {
+    setVideoJobProgress(false);
+  }
+}
+
+function wireCinemaHubControls() {
+  if (el.btnCinemaOpenUrl?.dataset.cinemaWired === "1") return;
+  if (el.btnCinemaOpenUrl) el.btnCinemaOpenUrl.dataset.cinemaWired = "1";
+  if (el.btnCinemaOpenUrl) {
+    el.btnCinemaOpenUrl.addEventListener("click", () => {
+      const u = String(el.videoCinemaUrl?.value || el.videoDownloadUrl?.value || "").trim();
+      if (!u) {
+        flashRuzgarDurum("Sinema URL alanına bir adres yazın.");
+        el.videoCinemaUrl?.focus();
+        return;
+      }
+      void loadPreviewInPanel(u, { flash: true });
+    });
+  }
+  if (el.videoCinemaUrl) {
+    el.videoCinemaUrl.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter") {
+        ev.preventDefault();
+        el.btnCinemaOpenUrl?.click();
+      }
+    });
+  }
+  if (el.btnCinemaOpenWeb) {
+    el.btnCinemaOpenWeb.addEventListener("click", () => {
+      const u = String(el.videoCinemaUrl?.value || el.videoDownloadUrl?.value || "").trim();
+      if (!u) {
+        flashRuzgarDurum("Web sinema için URL girin.");
+        return;
+      }
+      if (!isRuzgarElectronShell()) {
+        void loadPreviewInPanel(u, { flash: true });
+        return;
+      }
+      void loadWebCinemaInPanel(u, { flash: true });
+    });
+  }
+  if (el.btnCinemaWatchDownload) {
+    el.btnCinemaWatchDownload.addEventListener("click", () => {
+      void runCinemaDownloadCurrent();
+    });
+  }
+  if (el.btnCinemaTrimReady) {
+    el.btnCinemaTrimReady.addEventListener("click", () => {
+      if (typeof window.RuzgarVideoAtolye?.openDock === "function") {
+        window.RuzgarVideoAtolye.openDock("trim");
+      }
+      flashRuzgarDurum("Kesim paneli — timeline işaretlerini kullanın.");
+    });
+  }
+  if (el.btnCinemaEditBin) {
+    el.btnCinemaEditBin.addEventListener("click", () => {
+      const rel = String(el.videoRelWorkspace?.value || cinemaNowPlaying.localRel || "").trim();
+      if (!rel) {
+        flashRuzgarDurum("Kurgu binine eklemek için önce yerel dosya (indir veya seç).");
+        return;
+      }
+      if (el.videoEditInsertRel) el.videoEditInsertRel.value = rel;
+      if (typeof window.RuzgarVideoAtolye?.openDock === "function") {
+        window.RuzgarVideoAtolye.openDock("edit");
+      }
+      flashRuzgarDurum("Kurgu paneli — «listeye ekle» ile devam edin.");
+    });
+  }
 }
 
 function isMostlyVideoDownloadCommand(text) {
@@ -6613,11 +7116,14 @@ const RUZGAR_VIDEO_SEARCH_RE =
   /(?:şu\s+filmi\s+ara|filmi\s+ara|video\s+ara|youtube\s+ara|video\s+bul|youtube\s+bul|klip\s+ara|\b(?:ara|bul)\b.*\b(?:film|video|youtube|klip)\b)/i;
 const RUZGAR_VIDEO_PICK_RE =
   /(?:indir|download)\s*(?:#|no|numara)?\s*(\d{1,2})\b|(\d{1,2})\s*(?:numarayı|numarayi|nolu)\s*indir/i;
+const RUZGAR_VIDEO_PICK_OPEN_RE =
+  /(?:oynat|izle|aç|ac|panelde\s+aç|panelde\s+ac)\s*(?:#|no|numara)?\s*(\d{1,2})\b|(\d{1,2})\s*(?:numarayı|numarayi|nolu)\s*(?:oynat|izle|aç|ac|panelde\s+aç|panelde\s+ac)|(\d{1,2})\s*(?:numarayı|numarayi)\s*(?:panelde|sinemada)/i;
 
 function isVideoSearchOrPickCommand(text) {
   const raw = String(text || "").trim();
   if (!raw || extractVideoDownloadUrl(raw)) return false;
   if (RUZGAR_VIDEO_PICK_RE.test(raw)) return true;
+  if (RUZGAR_VIDEO_PICK_OPEN_RE.test(raw)) return true;
   return RUZGAR_VIDEO_SEARCH_RE.test(raw);
 }
 
@@ -6719,6 +7225,9 @@ async function runVideoDownloadJob() {
 
 function clearVideoPreview() {
   clearYoutubeEmbedPreview();
+  destroyVideoHls();
+  clearVideoSearchResults();
+  updateCinemaNowPlaying({});
   try {
     if (videoPreviewObjectUrl) URL.revokeObjectURL(videoPreviewObjectUrl);
   } catch (_) {
@@ -6771,6 +7280,13 @@ function initVideoChatBrain() {
     isVideoStreamOpenCommand,
     isMostlyVideoDownloadCommand,
     loadYoutubePreviewInPanel,
+    loadPreviewInPanel,
+    loadStreamInPanel,
+    loadWebCinemaInPanel,
+    renderVideoSearchResults,
+    runCinemaDownloadCurrent,
+    extractVideoPageUrl,
+    loadYoutubeStreamInPanel,
     openYoutubeWatchExternal,
     isRuzgarElectronShell,
     clearYoutubeEmbedPreview,
@@ -6798,6 +7314,7 @@ function initVideoChatBrain() {
     getLastUiManifest: () => lastUiManifest,
     RUZGAR_VIDEO_DOWNLOAD_TIMEOUT_MS,
     RUZGAR_VIDEO_PICK_RE,
+    RUZGAR_VIDEO_PICK_OPEN_RE,
   });
 }
 
@@ -6853,6 +7370,7 @@ function initMotorEylemPanel() {
 
 function wireVideoAtolye() {
   setVideoJobProgress(false);
+  wireCinemaHubControls();
   if (el.videoFileInput && el.videoPreview && el.videoFileInput.dataset.videoWired !== "1") {
     el.videoFileInput.dataset.videoWired = "1";
     el.videoFileInput.addEventListener("change", () => {

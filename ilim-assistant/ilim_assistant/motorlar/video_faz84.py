@@ -28,6 +28,12 @@ _PICK_RE = re.compile(
     r"(\d{1,2})\s*(?:numarayı|numarayi|nolu)\s*indir",
     re.I,
 )
+_PICK_OPEN_RE = re.compile(
+    r"(?:oynat|izle|aç|ac|panelde\s+aç|panelde\s+ac)\s*(?:#|no|numara)?\s*(\d{1,2})\b|"
+    r"(\d{1,2})\s*(?:numarayı|numarayi|nolu)\s*(?:oynat|izle|aç|ac|panelde\s+aç|panelde\s+ac)|"
+    r"(\d{1,2})\s*(?:numarayı|numarayi)\s*(?:panelde|sinemada)",
+    re.I,
+)
 _STRIP_PREFIX_RE = re.compile(
     r"^(?:şu\s+filmi\s+ara|filmi\s+ara|video\s+ara|youtube\s+ara|video\s+bul|"
     r"youtube\s+bul|klip\s+ara|ara|bul)\s*:?\s*",
@@ -84,6 +90,49 @@ def parse_pick_index(message: str) -> int | None:
         return n if 1 <= n <= 25 else None
     except ValueError:
         return None
+
+
+def parse_pick_open_index(message: str) -> int | None:
+    m = _PICK_OPEN_RE.search(message or "")
+    if not m:
+        return None
+    g = m.group(1) or m.group(2) or m.group(3)
+    if not g:
+        return None
+    try:
+        n = int(g)
+        return n if 1 <= n <= 25 else None
+    except ValueError:
+        return None
+
+
+def pick_from_last_search_by_index(
+    idx: int,
+    workspace_root: str | Path | None = None,
+) -> dict[str, Any] | None:
+    if idx < 1 or idx > 25:
+        return None
+    last = _load_last_search(workspace_root)
+    rows = last.get("results") or []
+    if not rows or idx > len(rows):
+        return None
+    row = rows[idx - 1]
+    url = row.get("url") or ""
+    if not url:
+        return None
+    return {"index": idx, "url": url, "title": row.get("title") or "", "row": row}
+
+
+def pick_from_last_search(
+    message: str,
+    workspace_root: str | Path | None = None,
+) -> dict[str, Any] | None:
+    idx = parse_pick_index(message)
+    if idx is None:
+        idx = parse_pick_open_index(message)
+    if idx is None:
+        return None
+    return pick_from_last_search_by_index(idx, workspace_root)
 
 
 def search_youtube(query: str, *, max_results: int = 8) -> dict[str, Any]:
@@ -150,8 +199,8 @@ def format_search_results(data: dict[str, Any]) -> str:
         lines.append(f"   {row.get('url', '')}")
     lines.append("")
     lines.append(
-        "İndirmek için: tam linki yapıştırın veya "
-        "«2 numarayı indir» yazın."
+        "Sinema: «2 numarayı oynat» veya «2 numarayı panelde aç» · "
+        "İndir: «2 numarayı indir» veya tam link."
     )
     lines.append(f"\n({FAZ84_VERSION})")
     return "\n".join(lines)
@@ -167,16 +216,28 @@ def maybe_search_and_pick(
     idx = parse_pick_index(message)
     if idx is None:
         return None
-    last = _load_last_search(workspace_root)
-    rows = last.get("results") or []
-    if not rows or idx > len(rows):
-        return None
-    url = rows[idx - 1].get("url") or ""
-    if not url:
+    picked = pick_from_last_search_by_index(idx, workspace_root)
+    if not picked:
         return None
     from ilim_assistant.motorlar.video_faz71 import run_download_url
 
-    return run_download_url(url)
+    return run_download_url(str(picked.get("url") or ""))
+
+
+def maybe_search_and_open(
+    message: str,
+    workspace_root: str | Path | None = None,
+) -> dict[str, Any] | None:
+    """«3 numarayı oynat / panelde aç» — indirme yok."""
+    if not _enabled():
+        return None
+    idx = parse_pick_open_index(message)
+    if idx is None:
+        return None
+    picked = pick_from_last_search_by_index(idx, workspace_root)
+    if not picked:
+        return None
+    return picked
 
 
 _LAST_SEARCH: dict[str, Any] = {}
