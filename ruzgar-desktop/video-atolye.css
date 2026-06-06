@@ -1013,4 +1013,30 @@ body.video-cinema-mode #page-video .video-preview-el {
   }
 }
 
+.video-create-textarea {
+  width: 100%;
+  min-height: 140px;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.45;
+}
+
+.video-create-plan-preview {
+  max-height: 220px;
+  overflow: auto;
+  margin-top: 8px;
+  font-size: 0.82rem;
+}
+
+.video-create-toolbar {
+  margin-top: 10px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.video-create-hint {
+  margin-top: 8px;
+  opacity: 0.85;
+  font-size: 0.85rem;
+}
 

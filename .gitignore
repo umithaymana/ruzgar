@@ -30,6 +30,10 @@ ilim-assistant/RUZGAR_BRAIN.env
 **/.ruzgar-video-export/
 **/.ruzgar/programlama_oturum.json
 
+# SadTalker (V7.2) — yerel kurulum, modeller büyük
+ilim-assistant/tools/SadTalker/
+ilim-assistant/tools/sadtalker-venv/
+
 # Rüzgar runtime / geçici (Blok A — commit edilmez)
 **/.ruzgar/
 # Faz 6 scaffold çıktıları (yerel denemeler)

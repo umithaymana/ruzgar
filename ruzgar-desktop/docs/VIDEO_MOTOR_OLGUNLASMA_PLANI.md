@@ -244,4 +244,22 @@ Her adım: küçük PR/commit, Ctrl+Shift+R test, smoke maddesini işaretle.
 
 ---
 
-*Son güncelleme: 2026-06-07 — rapor + olgunlaştırma planı birleşimi.*
+*Son güncelleme: 2026-06-08 — V6 storyboard yol haritası eklendi.*
+
+---
+
+## 9. V6–V9 — Hikâye canlandırma
+
+> **Hedef:** Sohbetten hikâye (+ isteğe fotoğraf) → Rüzgar kahramanları canlandırır, sinemada video oynatır.
+
+| Faz | Ne | Durum |
+|-----|-----|--------|
+| V5 | Ses + fotoğraf/zoom montajı | Aktif |
+| V6 | Storyboard: kahraman, mekân, asset eşlemesi | Aktif |
+| V7.1 | Yerel sinematik hareket (pan/zoom/drift) | Aktif |
+| V7.2 | Konuşan portre (SadTalker / RUZGAR_SADTALKER_ROOT) | Aktif (kurulum gerekir) |
+| V8 | AI sahne klibi (Runway API) | Aktif (API anahtarı gerekir) |
+| V9 | Dudak senkronu + tam pipeline | Plan |
+
+V5 «slayt»dır; V7.1 yerel hareket. V7.2/V8 harici model veya API ister — yoksa otomatik hareket yedeği.
+Kurulum notları: `ilim-assistant/env.video.example`

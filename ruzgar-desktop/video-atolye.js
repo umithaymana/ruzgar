@@ -97,6 +97,18 @@
         return el ? [el] : [];
       },
     },
+    create: {
+      title: "Video oluştur",
+      placement: "center",
+      host: true,
+      collect: () => {
+        const el = $("video-anchor-create");
+        return el ? [el] : [];
+      },
+      onOpen: () => {
+        window.setTimeout(() => $("video-create-text")?.focus?.({ preventScroll: true }), 80);
+      },
+    },
     tercume: {
       title: "Altyazı → Tercüme",
       placement: "right",
@@ -404,6 +416,7 @@
       "video:subtitles": "subtitle",
       "video:mux": "mux",
       "video:export-audio": "mux",
+      "video:create": "create",
       "video:edit": "edit",
       "video:tercume": "tercume",
       "video:sub-tercume": "tercume",

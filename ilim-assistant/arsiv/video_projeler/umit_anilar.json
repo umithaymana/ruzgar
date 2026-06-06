@@ -1,0 +1,52 @@
+{
+  "title": "Anılar — su, şehir, dostluk",
+  "theme": "Kişisel fotoğraflardan kısa belgesel; 5 sahne",
+  "rel_images_dir": "ilim-assistant/arsiv/video_gorseller",
+  "render_mode": "motion",
+  "preset": "16:9",
+  "quality": "high",
+  "karakter": "edip",
+  "max_scenes": 5,
+  "text": "Gün batarken su sakinleşir. Turuncu ışık ufka değer; dalgalar günün son cümlesini fısıldar. O an durmak, nefes almak ve geçen zamanı hatırlamak için yeter.\n\nSabah erken, şehir uyanır. Haliç'in üstünde köprü uzanır; ağaçların arasından eski ve yeni bir arada görünür. Her pencere ayrı bir hikâye taşır; aynı nehir her gün yeniden akar.\n\nOrmanda, yeşilin ortasında durup dinlenmek gerekir. Acele sustuğunda insan kendini duyar. Toprak, rüzgâr ve sessizlik bir araya gelince iç huzur bulunur.\n\nEvde küçük eller büyük bir dünyaya dokunur. Masum bakış, telefonun ışığında bile umut taşır. Annenin gülümsemesi, çocuğun merakı — hayatın en saf hali budur.\n\nAkşam sofrasında dostlar bir araya gelir. Sohbet, kahkaha ve sessiz anlaşma aynı masada yaşar. İnsan yalnız yürümez; hatıralar birlikte birikir.",
+  "plan": {
+    "title": "Anılar — su, şehir, dostluk",
+    "theme": "Kişisel fotoğraflardan kısa belgesel; 5 sahne",
+    "scenes": [
+      {
+        "scene_id": 1,
+        "narration": "Gün batarken su sakinleşir. Turuncu ışık ufka değer; dalgalar günün son cümlesini fısıldar. O an durmak, nefes almak ve geçen zamanı hatırlamak için yeter.",
+        "mood": "huzur",
+        "transition": "fade",
+        "motion_prompt": "slow zoom in on calm water at sunset"
+      },
+      {
+        "scene_id": 2,
+        "narration": "Sabah erken, şehir uyanır. Haliç'in üstünde köprü uzanır; ağaçların arasından eski ve yeni bir arada görünür. Her pencere ayrı bir hikâye taşır; aynı nehir her gün yeniden akar.",
+        "mood": "umut",
+        "transition": "fade",
+        "motion_prompt": "pan right across bridge and city skyline"
+      },
+      {
+        "scene_id": 3,
+        "narration": "Ormanda, yeşilin ortasında durup dinlenmek gerekir. Acele sustuğunda insan kendini duyar. Toprak, rüzgâr ve sessizlik bir araya gelince iç huzur bulunur.",
+        "mood": "huzur",
+        "transition": "fade",
+        "motion_prompt": "gentle drift through forest, rüzgar in trees"
+      },
+      {
+        "scene_id": 4,
+        "narration": "Evde küçük eller büyük bir dünyaya dokunur. Masum bakış, telefonun ışığında bile umut taşır. Annenin gülümsemesi, çocuğun merakı — hayatın en saf hali budur.",
+        "mood": "sevinç",
+        "transition": "fade",
+        "motion_prompt": "zoom in on child's curious face"
+      },
+      {
+        "scene_id": 5,
+        "narration": "Akşam sofrasında dostlar bir araya gelir. Sohbet, kahkaha ve sessiz anlaşma aynı masada yaşar. İnsan yalnız yürümez; hatıralar birlikte birikir.",
+        "mood": "saygı",
+        "transition": "fade",
+        "motion_prompt": "pan left across dinner table and friends"
+      }
+    ]
+  }
+}

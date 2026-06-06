@@ -25,6 +25,7 @@
         "group": "Paneller",
         "items": [
           { "id": "download", "label": "URL indir", "title": "YouTube veya web video indir", "action": "video:download", "icon": "⬇" },
+          { "id": "create", "label": "Video oluştur", "title": "Metinden sahne planı + TTS + montaj (V5)", "action": "video:create", "icon": "🎥" },
           { "id": "trim", "label": "Kesim", "title": "Başlangıç/bitiş, dönüştürme, birleştirme", "action": "video:trim", "icon": "✂️" },
           { "id": "subtitle", "label": "Altyazı", "title": "Altyazı dosyasını videoya göm", "action": "video:subtitle", "icon": "💬" },
           { "id": "mux", "label": "Harici ses", "title": "Ses parçasını videoya bağla", "action": "video:mux", "icon": "🔊" },

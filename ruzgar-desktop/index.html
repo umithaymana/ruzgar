@@ -83,8 +83,8 @@
                 type="button"
                 class="btn-primary btn-compact video-quick-btn"
                 id="video-quick-create"
-                data-video-dock="preview"
-                title="Dosya seçin ve önizleyin"
+                data-video-dock="create"
+                title="Metinden sinematik video oluştur (V5)"
               >
                 🎥 Video Oluştur
               </button>
@@ -1631,6 +1631,107 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
                     </div>
                   </div>
 
+                  <div class="video-v2-panel video-create-panel" id="video-anchor-create">
+                    <h4 class="video-v2-title">Metinden video oluştur (V5)</h4>
+                    <p class="video-v2-intro">
+                      <strong>Bugün (V5):</strong> seslendirme + fotoğraf/zoom montajı (slayt belgesel).<br />
+                      <strong>Yakında (V6–V8):</strong> hikâyeyi kahraman/mekân planına çevirme → fotoğrafı hareketlendirme → AI sahne videosu.
+                      Sohbetten «hikâyeyi canlandır» veya storyboard ile başlayın.
+                    </p>
+                    <label class="video-file-label" for="video-create-title">Proje başlığı</label>
+                    <input
+                      id="video-create-title"
+                      type="text"
+                      class="video-text-input"
+                      spellcheck="false"
+                      placeholder="örn. Kısa tefsir — Fatiha"
+                    />
+                    <label class="video-file-label" for="video-create-theme">Tema / bağlam</label>
+                    <input
+                      id="video-create-theme"
+                      type="text"
+                      class="video-text-input"
+                      spellcheck="false"
+                      placeholder="örn. Kuran tefsiri, sakin anlatım"
+                    />
+                    <label class="video-file-label" for="video-create-text">Anlatım metni</label>
+                    <textarea
+                      id="video-create-text"
+                      class="video-text-input video-create-textarea"
+                      rows="8"
+                      spellcheck="true"
+                      placeholder="Video seslendirmesinde kullanılacak metni yazın veya yapıştırın…"
+                    ></textarea>
+                    <div class="video-trim-grid">
+                      <label class="video-num-label">
+                        Format
+                        <select id="video-create-preset" class="video-text-input">
+                          <option value="16:9" selected>16:9 — YouTube / TV</option>
+                          <option value="9:16">9:16 — Reels / TikTok</option>
+                          <option value="1:1">1:1 — Kare sosyal</option>
+                        </select>
+                      </label>
+                      <label class="video-num-label">
+                        Kalite
+                        <select id="video-create-quality" class="video-text-input">
+                          <option value="high" selected>Yüksek (CRF 18)</option>
+                          <option value="balanced">Dengeli (CRF 20)</option>
+                        </select>
+                      </label>
+                      <label class="video-num-label">
+                        Görüntü modu
+                        <select id="video-create-render-mode" class="video-text-input">
+                          <option value="motion" selected>Sinematik hareket (V7.1)</option>
+                          <option value="portrait">Konuşan portre (V7.2 · SadTalker)</option>
+                          <option value="generative">AI sahne klibi (V8 · Runway)</option>
+                          <option value="slideshow">Sabit slayt</option>
+                        </select>
+                      </label>
+                      <label class="video-num-label">
+                        Ses profili
+                        <select id="video-create-karakter" class="video-text-input">
+                          <option value="asistan" selected>Asistan</option>
+                          <option value="alim">Alim (vakur)</option>
+                          <option value="edip">Edip (lirik)</option>
+                        </select>
+                      </label>
+                    </div>
+                    <label class="video-file-label" for="video-create-images-dir">Sahne görselleri klasörü (001.png, 002.png …)</label>
+                    <input
+                      id="video-create-images-dir"
+                      type="text"
+                      class="video-text-input"
+                      spellcheck="false"
+                      placeholder="örn. ilim-assistant/arsiv/video_gorseller"
+                    />
+                    <label class="video-file-label" for="video-create-bg">Yedek tek görsel (isteğe bağlı)</label>
+                    <input
+                      id="video-create-bg"
+                      type="text"
+                      class="video-text-input"
+                      spellcheck="false"
+                      placeholder="örn. ilim-assistant/arsiv/kapak.jpg"
+                    />
+                    <pre class="video-probe-json video-create-plan-preview" id="video-create-plan-preview" hidden></pre>
+                    <div class="video-toolbar video-create-toolbar">
+                      <button type="button" class="btn-secondary btn-compact" id="btn-video-create-storyboard">
+                        Hikâyeyi canlandır (storyboard)
+                      </button>
+                      <button type="button" class="btn-secondary btn-compact" id="btn-video-create-load-proje">
+                        Anılar projesini yükle
+                      </button>
+                      <button type="button" class="btn-secondary btn-compact" id="btn-video-create-plan">
+                        Sahne planı oluştur
+                      </button>
+                      <button type="button" class="btn-primary btn-compact" id="btn-video-create-render">
+                        Videoyu oluştur
+                      </button>
+                    </div>
+                    <p class="video-v2-intro video-create-hint">
+                      Uzun metinler birkaç dakika sürebilir (Ollama + TTS + FFmpeg). Edge-TTS ve Ollama açık olmalı.
+                    </p>
+                  </div>
+
                   <div class="video-v2-panel video-v5-panel" id="video-anchor-v5">
                     <h4 class="video-v2-title">Görsel kurgu — zaman çizelgesi</h4>
                     <p class="video-v2-intro">
@@ -2279,8 +2380,9 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
           <h3 class="faz7-help-h3">Video motoru</h3>
           <ul class="faz7-help-ul">
             <li><strong>Sinema sahnesi</strong> — ortada oynatıcı; timeline altta; «Çalışma sayfası» başlığı gizli</li>
-            <li><strong>Üst şerit</strong> — Video Oluştur, YouTube indir, Kes, Ses, Dışa aktar</li>
-            <li><strong>Düzen menüsü</strong> — Teknik özet, URL indir, Kes, Altyazı, Harici ses, Kurgu, Tercüme</li>
+            <li><strong>Üst şerit</strong> — Video Oluştur (V5 metinden film), YouTube indir, Kes, Ses, Dışa aktar</li>
+            <li><strong>Video oluştur (V5)</strong> — metin + tema → sahne planı (Ollama) → Edge-TTS → sinematik montaj (Ken Burns, geçişler)</li>
+            <li><strong>Düzen menüsü</strong> — Teknik özet, URL indir, Kes, Altyazı, Harici ses, Kurgu, Video oluştur, Tercüme</li>
             <li><strong>Son indirmeler</strong> — listede satıra tıklayın; göreli yol otomatik dolar</li>
             <li><strong>Medya bilgisi</strong> — seçili dosya veya «Kes» panelindeki göreli yol ile ffprobe</li>
             <li><strong>Timeline</strong> — Başlangıç / Bitiş işaretle → Kesime yaz → Kes panelinden kaydet</li>
@@ -2288,8 +2390,8 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
             <li><strong>Sinema URL</strong> — üstte adres çubuğu: «Aç» (akış) · «Web» (Electron gömülü sayfa)</li>
             <li><strong>Sinema araçları</strong> — İndir · Kesime al · Kurguya ekle (oynatılan kaynak)</li>
             <li><strong>Arama kartları</strong> — «video ara …» sonrası panelde İzle / İndir / Kes</li>
-            <li><strong>Sohbet</strong> — link + «panelde aç»; «3 numarayı oynat»; «2 numarayı indir»; Vimeo/mp4 linkleri</li>
-            <li><strong>Gereksinim</strong> — FFmpeg (PATH) + yt-dlp (<code>pip install yt-dlp</code>); sunucu 8779</li>
+            <li><strong>Sohbet</strong> — «video oluştur» · «sahne planı»; link + «panelde aç»; «3 numarayı oynat»</li>
+            <li><strong>Gereksinim</strong> — FFmpeg + yt-dlp + Ollama + edge-tts; sunucu 8779</li>
           </ul>
           <h3 class="faz7-help-h3">Faz 9–16 — tamamlanan kabiliyetler</h3>
           <ul class="faz7-help-ul faz7-help-done">
@@ -2345,12 +2447,12 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
     <script src="ruzgar-split.js?v=20260606-compact-motors-fix"></script>
     <script src="ruzgar-virus-guard.js?v=20260607-preflight-err"></script>
     <script src="tercume-atolye.js?v=20260606-tools-panel"></script>
-    <script src="ruzgar-sohbet-anlama.js?v=20260606-v1"></script>
-    <script src="video-atolye.js?v=20260607-video-v2"></script>
-    <script src="video-chat-brain.js?v=20260606-v5-anlama"></script>
+    <script src="ruzgar-sohbet-anlama.js?v=20260606-v3-dogal"></script>
+    <script src="video-atolye.js?v=20260607-v5-create"></script>
+    <script src="video-chat-brain.js?v=20260608-v72-v8"></script>
     <script src="motor-eylem-panel.js?v=20260607-faz-c2"></script>
     <script src="ana-motor-hub.js?v=20260606-v4-anlama"></script>
     <script src="mimar-atolye.js?v=20260601-faz5"></script>
-    <script src="app.js?v=20260606-sohbet-anlama-fix"></script>
+    <script src="app.js?v=20260608-v72-v8"></script>
   </body>
 </html>

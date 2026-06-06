@@ -88,6 +88,8 @@ console.info("[RÜZGAR Connection Bridge] API kök:", API);
 const RUZGAR_CHAT_FULL_TIMEOUT_MS = 180000;
 /** Video indirme — /api/video/download; sohbet 180sn sınırından bağımsız */
 const RUZGAR_VIDEO_DOWNLOAD_TIMEOUT_MS = 600000;
+/** Metinden video oluşturma — plan + TTS + FFmpeg (uzun sürebilir) */
+const RUZGAR_VIDEO_CREATE_TIMEOUT_MS = 900000;
 /** Otonom görev (görev: / kod modu) — çok tur + verify; 180 sn yetmez */
 const RUZGAR_CHAT_PROGRAMMING_AGENT_TIMEOUT_MS = 900000;
 const RUZGAR_DISABLE_STREAMING = true;
@@ -578,6 +580,20 @@ const el = {
   btnVideoEditMix: document.getElementById("btn-video-edit-mix"),
   videoRelSubTranslate: document.getElementById("video-rel-sub-translate"),
   btnVideoSubToTercume: document.getElementById("btn-video-sub-to-tercume"),
+  videoCreateTitle: document.getElementById("video-create-title"),
+  videoCreateTheme: document.getElementById("video-create-theme"),
+  videoCreateText: document.getElementById("video-create-text"),
+  videoCreatePreset: document.getElementById("video-create-preset"),
+  videoCreateQuality: document.getElementById("video-create-quality"),
+  videoCreateRenderMode: document.getElementById("video-create-render-mode"),
+  videoCreateKarakter: document.getElementById("video-create-karakter"),
+  videoCreateBg: document.getElementById("video-create-bg"),
+  videoCreateImagesDir: document.getElementById("video-create-images-dir"),
+  videoCreatePlanPreview: document.getElementById("video-create-plan-preview"),
+  btnVideoCreatePlan: document.getElementById("btn-video-create-plan"),
+  btnVideoCreateLoadProje: document.getElementById("btn-video-create-load-proje"),
+  btnVideoCreateStoryboard: document.getElementById("btn-video-create-storyboard"),
+  btnVideoCreateRender: document.getElementById("btn-video-create-render"),
   videoQuickCreate: document.getElementById("video-quick-create"),
   videoQuickYoutube: document.getElementById("video-quick-youtube"),
   videoQuickTrim: document.getElementById("video-quick-trim"),
@@ -5223,8 +5239,7 @@ function wireMimarAtolye() {
     lastAssistantReply: () => lastAssistantReply,
     getChatHandoff: () => {
       const mode = currentMode === "okuma" ? "mimar" : currentMode;
-      const sess = getMotorChatSession(mode === "mimar" ? "mimar" : mode);
-      const h = sess?.history || [];
+      const h = getSharedChatHistory();
       let user = "";
       let assistant = String(lastAssistantReply || "").trim();
       for (let i = h.length - 1; i >= 0; i--) {
@@ -5864,6 +5879,284 @@ function seekVideoFromTimelineClientX(clientX) {
   updateVideoTimelineUI();
 }
 
+/** Video oluştur (V5) — son plan JSON */
+let videoCreatePendingPlan = null;
+const VIDEO_CREATE_DEFAULT_IMAGES_DIR = "ilim-assistant/arsiv/video_gorseller";
+
+function readVideoCreateForm() {
+  return {
+    title: String(el.videoCreateTitle?.value || "").trim(),
+    theme: String(el.videoCreateTheme?.value || "genel anlatım").trim(),
+    text: String(el.videoCreateText?.value || "").trim(),
+    preset: String(el.videoCreatePreset?.value || "16:9").trim(),
+    quality: String(el.videoCreateQuality?.value || "high").trim(),
+    render_mode: String(el.videoCreateRenderMode?.value || "motion").trim(),
+    karakter: String(el.videoCreateKarakter?.value || "asistan").trim(),
+    rel_background: String(el.videoCreateBg?.value || "").trim(),
+    rel_images_dir: String(el.videoCreateImagesDir?.value || "").trim(),
+  };
+}
+
+const VIDEO_CREATE_PROJE_REL = "ilim-assistant/arsiv/video_projeler/umit_anilar.json";
+
+function applyVideoCreateProject(proje) {
+  if (!proje || typeof proje !== "object") return;
+  if (el.videoCreateTitle) el.videoCreateTitle.value = String(proje.title || "");
+  if (el.videoCreateTheme) el.videoCreateTheme.value = String(proje.theme || "");
+  if (el.videoCreateText) el.videoCreateText.value = String(proje.text || "");
+  if (el.videoCreatePreset && proje.preset) el.videoCreatePreset.value = String(proje.preset);
+  if (el.videoCreateQuality && proje.quality) el.videoCreateQuality.value = String(proje.quality);
+  if (el.videoCreateRenderMode && proje.render_mode) {
+    el.videoCreateRenderMode.value = String(proje.render_mode);
+  }
+  if (el.videoCreateKarakter && proje.karakter) el.videoCreateKarakter.value = String(proje.karakter);
+  if (el.videoCreateImagesDir) {
+    el.videoCreateImagesDir.value = String(proje.rel_images_dir || "ilim-assistant/arsiv/video_gorseller");
+  }
+  if (proje.plan?.scenes?.length) {
+    videoCreatePendingPlan = proje.plan;
+    if (proje.plan.rel_images_dir && el.videoCreateImagesDir) {
+      el.videoCreateImagesDir.value = String(proje.plan.rel_images_dir);
+    }
+    if (proje.plan.render_mode && el.videoCreateRenderMode) {
+      el.videoCreateRenderMode.value = String(proje.plan.render_mode);
+    }
+    showVideoCreatePlanPreview(proje.plan, "");
+  }
+}
+
+function applyStoryboardApiResult(j) {
+  if (!j || typeof j !== "object") return;
+  videoCreatePendingPlan = j.plan || null;
+  if (j.rel_images_dir && el.videoCreateImagesDir) {
+    el.videoCreateImagesDir.value = String(j.rel_images_dir);
+  }
+  if (j.render_mode && el.videoCreateRenderMode) {
+    el.videoCreateRenderMode.value = String(j.render_mode);
+  }
+  showVideoCreatePlanPreview(j.plan, j.plan_rel, j.storyboard, j.storyboard_rel);
+}
+
+async function loadVideoCreateProjeAnilar() {
+  flashRuzgarDurum("Anılar projesi yükleniyor…");
+  try {
+    const res = await fetch(
+      `${API}/api/workspace/read-text?rel=${encodeURIComponent(VIDEO_CREATE_PROJE_REL)}`,
+    );
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(j.detail || res.statusText);
+    const proje = JSON.parse(String(j.text || ""));
+    applyVideoCreateProject(proje);
+    flashRuzgarDurum("Proje yüklendi — «Videoyu oluştur» ile Rüzgar üretsin.");
+  } catch (e) {
+    flashRuzgarDurum(`Proje yüklenemedi: ${e.message || e}`);
+  }
+}
+
+function showVideoCreatePlanPreview(plan, planRel, board, storyboardRel) {
+  if (!el.videoCreatePlanPreview) return;
+  const scenes = plan?.scenes || [];
+  const chars = board?.characters || plan?.characters || [];
+  const lines = scenes.map(
+    (s, i) =>
+      `${i + 1}. [${s.mood || "?"}] ${String(s.narration || "").slice(0, 120)}${String(s.narration || "").length > 120 ? "…" : ""}`,
+  );
+  const metaParts = [`${scenes.length} sahne`];
+  if (planRel) metaParts.push(`plan: ${planRel}`);
+  if (storyboardRel) metaParts.push(`storyboard: ${storyboardRel}`);
+  el.videoCreatePlanPreview.hidden = false;
+  el.videoCreatePlanPreview.textContent = [
+    plan?.title ? `Başlık: ${plan.title}` : "",
+    board?.synopsis ? `Özet: ${board.synopsis}` : plan?.synopsis ? `Özet: ${plan.synopsis}` : "",
+    chars.length ? `Kahramanlar: ${chars.map((c) => c.name || c.id).join(", ")}` : "",
+    metaParts.join(" · "),
+    plan?.rel_images_dir ? `Görseller: ${plan.rel_images_dir}` : "",
+    plan?.render_mode ? `Mod: ${plan.render_mode}` : "",
+    board?.render_recommendation
+      ? `Önerilen mod: ${board.render_recommendation} (${board?.capability_note || ""})`
+      : "",
+    "",
+    ...lines,
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+async function runVideoCreateStoryboardJob() {
+  const form = readVideoCreateForm();
+  if (form.text.length < 20) {
+    flashRuzgarDurum("Hikâye metni en az 20 karakter olmalı.");
+    return;
+  }
+  const imagesDir = form.rel_images_dir || VIDEO_CREATE_DEFAULT_IMAGES_DIR;
+  if (!form.rel_images_dir && el.videoCreateImagesDir) {
+    el.videoCreateImagesDir.value = imagesDir;
+  }
+  flashRuzgarDurum("Hikâye canlandırılıyor — kahramanlar ve sahneler planlanıyor…");
+  setVideoJobProgress(true, "Storyboard (Ollama)…");
+  const ctrl = new AbortController();
+  const to = window.setTimeout(() => ctrl.abort(), RUZGAR_VIDEO_CREATE_TIMEOUT_MS);
+  try {
+    const res = await fetch(`${API}/api/video/storyboard`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: form.text,
+        theme: form.theme,
+        title: form.title,
+        max_scenes: 12,
+        rel_images_dir: imagesDir,
+      }),
+      signal: ctrl.signal,
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(j.detail || res.statusText);
+    applyStoryboardApiResult(j);
+    const assetNote =
+      Number(j.asset_count) > 0 ? ` · ${j.asset_count} görsel eşlendi` : " · görsel klasörü boş";
+    const saveNote = j.plan_rel ? ` Plan: ${j.plan_rel}` : "";
+    const rec = String(j.render_recommendation || "motion");
+    if (rec === "generative") {
+      flashRuzgarDurum(
+        `Storyboard hazır (${j.scene_count} sahne${assetNote}).${saveNote} V8 Runway modu API anahtarı ister; yoksa hareket yedeği kullanılır.`,
+      );
+    } else if ((j.render_mode || form.render_mode) === "portrait") {
+      flashRuzgarDurum(
+        `${j.scene_count} sahneli storyboard hazır${assetNote}.${saveNote} V7.2 portre için SadTalker gerekir; yoksa hareket yedeği.`,
+      );
+    } else if ((j.render_mode || form.render_mode) === "motion") {
+      flashRuzgarDurum(
+        `${j.scene_count} sahneli storyboard hazır${assetNote}.${saveNote} «Videoyu oluştur» — ses + fotoğraf + sinematik hareket (V7.1).`,
+      );
+    } else {
+      flashRuzgarDurum(`${j.scene_count} sahneli storyboard hazır${assetNote}.${saveNote} «Videoyu oluştur» de.`);
+    }
+  } catch (e) {
+    flashRuzgarDurum(`Storyboard hatası: ${e.message || e}`);
+  } finally {
+    window.clearTimeout(to);
+    setVideoJobProgress(false);
+    setStatus("Hazır", "Rüzgar");
+  }
+}
+
+async function runVideoCreatePlanJob() {
+  const form = readVideoCreateForm();
+  if (form.text.length < 20) {
+    flashRuzgarDurum("Anlatım metni en az 20 karakter olmalı.");
+    return;
+  }
+  flashRuzgarDurum("Sahne planı hazırlanıyor (Ollama)…");
+  setStatus("Sahne planı…", "Rüzgar");
+  setVideoJobProgress(true, "Sahne planı hazırlanıyor…");
+  const ctrl = new AbortController();
+  const to = window.setTimeout(() => ctrl.abort(), RUZGAR_VIDEO_CREATE_TIMEOUT_MS);
+  try {
+    const res = await fetch(`${API}/api/video/plan`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: form.text,
+        theme: form.theme,
+        title: form.title,
+        max_scenes: 24,
+      }),
+      signal: ctrl.signal,
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(j.detail || res.statusText || "Plan hatası");
+    videoCreatePendingPlan = j.plan || null;
+    showVideoCreatePlanPreview(j.plan, j.plan_rel);
+    flashRuzgarDurum(`${j.scene_count || 0} sahneli plan hazır. «Videoyu oluştur» ile devam edin.`);
+  } catch (e) {
+    flashRuzgarDurum(`Plan hatası: ${e.message || e}`);
+  } finally {
+    window.clearTimeout(to);
+    setVideoJobProgress(false);
+    setStatus("Hazır", "Rüzgar");
+  }
+}
+
+async function runVideoCreateRenderJob() {
+  const form = readVideoCreateForm();
+  if (form.text.length < 20 && !videoCreatePendingPlan) {
+    flashRuzgarDurum("Metin girin veya önce sahne planı oluşturun.");
+    return;
+  }
+  flashRuzgarDurum("Video oluşturuluyor — seslendirme ve kurgu birkaç dakika sürebilir…");
+  setStatus("Video oluşturuluyor…", "Rüzgar");
+  setVideoJobProgress(true, "Video oluşturuluyor (TTS + FFmpeg)…");
+  const ctrl = new AbortController();
+  const to = window.setTimeout(() => ctrl.abort(), RUZGAR_VIDEO_CREATE_TIMEOUT_MS);
+  try {
+    const body = {
+      ...form,
+      intro_title: form.title,
+      max_scenes: 24,
+    };
+    if (!body.rel_images_dir && videoCreatePendingPlan?.rel_images_dir) {
+      body.rel_images_dir = String(videoCreatePendingPlan.rel_images_dir);
+    }
+    if (videoCreatePendingPlan?.render_mode) {
+      body.render_mode = String(videoCreatePendingPlan.render_mode);
+    }
+    if (videoCreatePendingPlan) body.plan = videoCreatePendingPlan;
+    const res = await fetch(`${API}/api/video/create`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: ctrl.signal,
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(j.detail || res.statusText || "Oluşturma hatası");
+    if (j.plan) {
+      videoCreatePendingPlan = j.plan;
+      showVideoCreatePlanPreview(j.plan, j.plan_rel);
+    }
+    const out = String(j.output_rel || "").trim();
+    const dur = Number(j.total_duration_sec);
+    const durTxt = Number.isFinite(dur) && dur > 0 ? ` · ${Math.round(dur)} sn` : "";
+    const notes = Array.isArray(j.render_notes) ? j.render_notes.filter(Boolean) : [];
+    const noteTxt = notes.length ? ` · ${notes[0]}` : "";
+    if (out) appendVideoJobNote(out);
+    flashRuzgarDurum(
+      `Video hazır${durTxt}: ${j.scene_count || "?"} sahne → ${out || "çıktı klasörü"}${noteTxt}`,
+    );
+  } catch (e) {
+    flashRuzgarDurum(`Video oluşturma hatası: ${e.message || e}`);
+  } finally {
+    window.clearTimeout(to);
+    setVideoJobProgress(false);
+    setStatus("Hazır", "Rüzgar");
+  }
+}
+
+function wireVideoCreatePanel() {
+  const panel = document.getElementById("video-anchor-create");
+  if (!panel || panel.dataset.createWired === "1") return;
+  panel.dataset.createWired = "1";
+  if (el.btnVideoCreateStoryboard) {
+    el.btnVideoCreateStoryboard.addEventListener("click", () => {
+      void runVideoCreateStoryboardJob();
+    });
+  }
+  if (el.btnVideoCreateLoadProje) {
+    el.btnVideoCreateLoadProje.addEventListener("click", () => {
+      void loadVideoCreateProjeAnilar();
+    });
+  }
+  if (el.btnVideoCreatePlan) {
+    el.btnVideoCreatePlan.addEventListener("click", () => {
+      void runVideoCreatePlanJob();
+    });
+  }
+  if (el.btnVideoCreateRender) {
+    el.btnVideoCreateRender.addEventListener("click", () => {
+      void runVideoCreateRenderJob();
+    });
+  }
+}
+
 function wireVideoEditPanel() {
   const panel = document.getElementById("video-anchor-v5");
   if (!panel || panel.dataset.editWired === "1") return;
@@ -6050,6 +6343,13 @@ async function refreshVideoEngineHint() {
     } else {
       parts.push("yt-dlp yok — pip install yt-dlp veya PATH'e yt-dlp");
     }
+    const vc = j.video_create || {};
+    const createBits = ["motion ✓"];
+    if (vc.portrait) createBits.push("portre ✓");
+    else createBits.push("portre (SadTalker kur)");
+    if (vc.generative) createBits.push("Runway ✓");
+    else createBits.push("Runway (API anahtarı)");
+    parts.push(`Video oluştur: ${createBits.join(", ")}`);
     el.videoEngineHint.textContent = `${parts.join(" · ")} · Çıktı: .ruzgar-video-export/ · Paneller: üst düğmeler veya Düzen menüsü`;
   } catch {
     el.videoEngineHint.textContent =
@@ -7506,6 +7806,9 @@ function initVideoChatBrain() {
     runVideoBurnSubJob,
     runVideoMuxAudioJob,
     runVideoEditMixJob,
+    runVideoCreatePlanJob,
+    runVideoCreateStoryboardJob,
+    runVideoCreateRenderJob,
     runVideoDownloadFromUrl,
     setVideoJobProgress,
     refreshUiManifest,
@@ -7660,6 +7963,7 @@ function wireVideoAtolye() {
   }
   wireVideoTimeline();
   wireVideoEditPanel();
+  wireVideoCreatePanel();
   wireVideoQuickBar();
   if (window.RuzgarVideoAtolye?.init) {
     window.RuzgarVideoAtolye.init({
@@ -7697,15 +8001,12 @@ function wireVideoQuickBar() {
 
   if (el.videoQuickCreate) {
     el.videoQuickCreate.addEventListener("click", () => {
-      if (openDock("preview", () => el.videoFileInput?.click?.())) return;
-      const sticky = root.querySelector(".video-player-sticky");
-      scrollToEl(sticky);
-      try {
-        el.videoFileInput?.click();
-      } catch (_) {
-        el.videoFileInput?.focus();
-      }
-      flashRuzgarDurum("Kaynak dosya seçin; önizleme solda güncellenir.");
+      if (openDock("create", () => el.videoCreateText?.focus?.({ preventScroll: true }))) return;
+      scrollToEl(document.getElementById("video-anchor-create"));
+      window.setTimeout(() => {
+        el.videoCreateText?.focus?.({ preventScroll: true });
+      }, 320);
+      flashRuzgarDurum("Metin yazın; plan veya doğrudan video oluşturun.");
     });
   }
   if (el.videoQuickYoutube) {
@@ -8252,8 +8553,10 @@ const KEYS_VOICE_SILENCE_IGNORE = new Set([
   "CapsLock",
 ]);
 
-/** Ortak sohbet paneli — her motorun kendi geçmişi / uyanış bayrağı / son yanıtı */
+/** Ortak sohbet paneli — tek konuşma hattı + motor başına uyanış bayrağı */
 const motorChatSessions = Object.create(null);
+const RUZGAR_SHARED_CHAT_KEY = "__shared__";
+const RUZGAR_SHARED_CHAT_LS = "ruzgar_shared_chat_v1";
 
 const MOTOR_CHAT_MODES = [
   "genel",
@@ -8286,13 +8589,71 @@ function activeMotorChatMode() {
   return normalizeMotorChatMode(currentMode);
 }
 
+function ensureSharedChatStore() {
+  if (!motorChatSessions[RUZGAR_SHARED_CHAT_KEY]) {
+    motorChatSessions[RUZGAR_SHARED_CHAT_KEY] = {
+      history: [],
+      lastAssistantReply: "",
+    };
+    try {
+      const raw = sessionStorage.getItem(RUZGAR_SHARED_CHAT_LS);
+      if (raw) {
+        const j = JSON.parse(raw);
+        if (Array.isArray(j.history)) {
+          motorChatSessions[RUZGAR_SHARED_CHAT_KEY].history = j.history.slice(
+            -MAX_CLIENT_HISTORY_MSGS,
+          );
+        }
+        if (j.lastAssistantReply) {
+          motorChatSessions[RUZGAR_SHARED_CHAT_KEY].lastAssistantReply = String(
+            j.lastAssistantReply,
+          );
+          lastAssistantReply = motorChatSessions[RUZGAR_SHARED_CHAT_KEY].lastAssistantReply;
+        }
+      }
+    } catch (_) {
+      /* yok say */
+    }
+  }
+  return motorChatSessions[RUZGAR_SHARED_CHAT_KEY];
+}
+
+function getSharedChatHistory() {
+  return ensureSharedChatStore().history;
+}
+
+function persistSharedChatStore() {
+  const store = ensureSharedChatStore();
+  try {
+    sessionStorage.setItem(
+      RUZGAR_SHARED_CHAT_LS,
+      JSON.stringify({
+        history: store.history.slice(-MAX_CLIENT_HISTORY_MSGS),
+        lastAssistantReply: store.lastAssistantReply || lastAssistantReply || "",
+      }),
+    );
+  } catch (_) {
+    /* yok say */
+  }
+}
+
+/** API'ye giderken son tur kullanıcı mesajı history'de varsa çift göndermeyi önle. */
+function historyForApiTurn(history, currentUserText) {
+  const h = Array.isArray(history) ? history.slice() : [];
+  const ut = String(currentUserText || "").trim();
+  if (!ut || !h.length) return h;
+  const last = h[h.length - 1];
+  if (last?.role === "user" && String(last.content || "").trim() === ut) {
+    return h.slice(0, -1);
+  }
+  return h;
+}
+
 function getMotorChatSession(mode) {
   const key = normalizeMotorChatMode(mode || activeMotorChatMode());
   if (!motorChatSessions[key]) {
     motorChatSessions[key] = {
-      history: [],
       sessionWakeUsed: false,
-      lastAssistantReply: "",
     };
   }
   return motorChatSessions[key];
@@ -8315,11 +8676,10 @@ function appendMotorAssistantBubble(text) {
 /** Motor değişince sohbet panelini o motorun oturumuna bağla */
 function renderMotorChatFromSession(mode) {
   if (!el.chat) return;
-  const key = normalizeMotorChatMode(mode || activeMotorChatMode());
-  const sess = getMotorChatSession(key);
+  const store = ensureSharedChatStore();
   el.chat.innerHTML = "";
   clearOrchestraBridge();
-  for (const msg of sess.history) {
+  for (const msg of store.history) {
     const role = String(msg?.role || "").toLowerCase();
     const content = String(msg?.content || "");
     if (!content) continue;
@@ -8329,7 +8689,7 @@ function renderMotorChatFromSession(mode) {
       appendMotorAssistantBubble(content);
     }
   }
-  lastAssistantReply = String(sess.lastAssistantReply || "").trim();
+  lastAssistantReply = String(store.lastAssistantReply || "").trim();
   updateDashboardLastSpeech();
   showChatWelcomeIfEmpty();
   el.chat.scrollTop = el.chat.scrollHeight;
@@ -8454,11 +8814,19 @@ function interruptRuzgar() {
 
 /** Uygulamayı kapatmadan sohbet oturumunu sıfırla */
 function clearChatSession() {
-  const sess = getMotorChatSession(activeMotorChatMode());
-  sess.history = [];
-  sess.sessionWakeUsed = false;
-  sess.lastAssistantReply = "";
+  const store = ensureSharedChatStore();
+  store.history = [];
+  store.lastAssistantReply = "";
+  for (const key of Object.keys(motorChatSessions)) {
+    if (key === RUZGAR_SHARED_CHAT_KEY) continue;
+    if (motorChatSessions[key]) motorChatSessions[key].sessionWakeUsed = false;
+  }
   lastAssistantReply = "";
+  try {
+    sessionStorage.removeItem(RUZGAR_SHARED_CHAT_LS);
+  } catch (_) {
+    /* yok say */
+  }
   el.chat.innerHTML = "";
   el.input.value = "";
   clearOrchestraBridge();
@@ -8656,9 +9024,9 @@ function repairMojibake(s) {
   return best;
 }
 
-function trimMotorChatHistory(sess) {
-  if (sess.history.length > MAX_CLIENT_HISTORY_MSGS) {
-    sess.history = sess.history.slice(-MAX_CLIENT_HISTORY_MSGS);
+function trimMotorChatHistory(store) {
+  if (store.history.length > MAX_CLIENT_HISTORY_MSGS) {
+    store.history = store.history.slice(-MAX_CLIENT_HISTORY_MSGS);
   }
 }
 
@@ -8666,11 +9034,15 @@ function pushMotorChatHistory(role, content, opts = {}) {
   if (opts.skipSessionSync) return;
   const text = String(content || "").trim();
   if (!text) return;
-  const sess = getMotorChatSession(activeMotorChatMode());
-  const last = sess.history[sess.history.length - 1];
+  const store = ensureSharedChatStore();
+  const last = store.history[store.history.length - 1];
   if (last && last.role === role && last.content === text) return;
-  sess.history.push({ role, content: text });
-  trimMotorChatHistory(sess);
+  store.history.push({ role, content: text });
+  trimMotorChatHistory(store);
+  if (role === "assistant") {
+    store.lastAssistantReply = text;
+  }
+  persistSharedChatStore();
 }
 
 function appendBubble(role, text, opts = {}) {
@@ -8753,8 +9125,6 @@ function appendBubble(role, text, opts = {}) {
     const replyText = String(text || "").trim();
     if (!opts.error) {
       lastAssistantReply = replyText;
-      const sess = getMotorChatSession(activeMotorChatMode());
-      sess.lastAssistantReply = lastAssistantReply;
       pushMotorChatHistory("assistant", replyText, opts);
       updateDashboardLastSpeech();
     } else if (opts.clarify) {
@@ -10108,7 +10478,7 @@ async function waitTtsIdle(ttsSess) {
  * Ollama/OpenAI/LM Studio — Işık Hızı: önce WebSocket (/ws/chat), olmazsa SSE fallback.
  * Düşünme balonu + anlık token (Ümit & Gökçenur).
  */
-async function streamChat(userText) {
+async function streamChat(userText, streamOpts = {}) {
   bumpTtsSession();
   const ttsSess = ttsSessionCounter;
   ttsAbortController = new AbortController();
@@ -10143,9 +10513,10 @@ async function streamChat(userText) {
   const chatSess = getMotorChatSession(chatMode);
   const codingMode =
     chatMode === "programlama" || !!(el.code && el.code.checked);
+  const sharedHist = getSharedChatHistory();
   const body = {
     message: userText,
-    history: chatSess.history,
+    history: historyForApiTurn(sharedHist, userText),
     use_web: el.web
       ? !!el.web.checked
       : !["ses", "mimar", "okuma", "tercume", "hafiza", "hizli", "programlama"].includes(
@@ -10169,6 +10540,11 @@ async function streamChat(userText) {
           programlama_language: String(el.codeLanguage?.value || "python").trim() || undefined,
         }
       : {}),
+    ...(streamOpts.contextBrief
+      ? { conversation_context: String(streamOpts.contextBrief).slice(0, 8000) }
+      : {}),
+    ...(streamOpts.userRaw ? { user_message_raw: String(streamOpts.userRaw).slice(0, 4000) } : {}),
+    ...(streamOpts.cinema ? { cinema_context: streamOpts.cinema } : {}),
   };
 
   const dec = new TextDecoder("utf-8");
@@ -10429,12 +10805,12 @@ async function streamChat(userText) {
       if (HIZIR_MODU.shouldRefreshAfterChat(ut)) {
         void HIZIR_MODU.refreshPanel();
       }
-      const lastH = chatSess.history[chatSess.history.length - 1];
+      const store = ensureSharedChatStore();
+      const lastH = store.history[store.history.length - 1];
       if (!lastH || lastH.role !== "user" || lastH.content !== ut) {
-        chatSess.history.push({ role: "user", content: ut });
+        pushMotorChatHistory("user", ut, {});
       }
-      chatSess.history.push({ role: "assistant", content: full });
-      chatSess.lastAssistantReply = full;
+      pushMotorChatHistory("assistant", full, {});
       lastAssistantReply = full;
       setStatus("Hazır");
       if (wantEdge && ttsSess === ttsSessionCounter && ttsAbortController) {
@@ -10459,9 +10835,7 @@ async function streamChat(userText) {
           window.setTimeout(() => void speakLast(), 80);
         }
       }
-      if (chatSess.history.length > MAX_CLIENT_HISTORY_MSGS) {
-        chatSess.history = chatSess.history.slice(-MAX_CLIENT_HISTORY_MSGS);
-      }
+      trimMotorChatHistory(ensureSharedChatStore());
       window.setTimeout(() => {
         lastVoiceEmotion = null;
       }, 90000);
@@ -10895,7 +11269,7 @@ async function sendMessageWithText(t, opts = {}) {
 
   el.input.value = "";
   const chatSess = getMotorChatSession(activeMotorChatMode());
-  const priorHistory = chatSess.history.slice();
+  const priorHistory = getSharedChatHistory().slice();
   let dispatchText = text;
   let understanding = null;
   if (window.RuzgarSohbetAnlama?.understand) {
@@ -10916,7 +11290,11 @@ async function sendMessageWithText(t, opts = {}) {
       });
     }
   }
-  const motorCtx = { understanding, history: chatSess.history };
+  const motorCtx = {
+    understanding,
+    history: priorHistory,
+    contextBrief: understanding?.contextBrief || "",
+  };
 
   if (!skipUser) {
     appendBubble("user", text);
@@ -10930,7 +11308,12 @@ async function sendMessageWithText(t, opts = {}) {
     syncInterruptButton();
   };
 
-  if (window.RuzgarAnaMotorHub?.tryEylemCommand) {
+  const tryInstantMotors =
+    !window.RuzgarSohbetAnlama?.shouldTryInstantMotor
+      ? true
+      : understanding?.instantMotor === true;
+
+  if (tryInstantMotors && window.RuzgarAnaMotorHub?.tryEylemCommand) {
     const eylemHit = await window.RuzgarAnaMotorHub.tryEylemCommand(dispatchText, motorCtx);
     if (eylemHit?.handled) {
       finishMotorInstant(currentMode === "genel" ? "Ana Motor" : MODE_LABELS[currentMode] || currentMode);
@@ -10938,7 +11321,7 @@ async function sendMessageWithText(t, opts = {}) {
     }
   }
 
-  if (currentMode === "genel" && window.RuzgarAnaMotorHub?.tryDispatchFromGenel) {
+  if (tryInstantMotors && currentMode === "genel" && window.RuzgarAnaMotorHub?.tryDispatchFromGenel) {
     const hubHit = await window.RuzgarAnaMotorHub.tryDispatchFromGenel(dispatchText, motorCtx);
     if (hubHit?.handled) {
       finishMotorInstant("Ana Motor");
@@ -10946,12 +11329,19 @@ async function sendMessageWithText(t, opts = {}) {
     }
   }
 
-  if (currentMode !== "genel" && window.RuzgarAnaMotorHub?.tryDispatchActiveMotor) {
+  if (tryInstantMotors && currentMode !== "genel" && window.RuzgarAnaMotorHub?.tryDispatchActiveMotor) {
     const motorHit = await window.RuzgarAnaMotorHub.tryDispatchActiveMotor(dispatchText, motorCtx);
     if (motorHit?.handled) {
       finishMotorInstant(MODE_LABELS[currentMode] || currentMode);
       return;
     }
+  }
+
+  if (!tryInstantMotors) {
+    ruzgarDebugLog("sohbet-anlama:llm", {
+      reason: understanding?.instantReason || "prefer_chat",
+      intent: understanding?.intent,
+    });
   }
 
   if (currentMode === "hizir" && hizirChatImpliesProductScan(text)) {
@@ -10968,7 +11358,24 @@ async function sendMessageWithText(t, opts = {}) {
   syncInterruptButton();
 
   try {
-    await streamChat(text);
+    const chatPayload =
+      understanding?.fromHistory && dispatchText && dispatchText !== text
+        ? dispatchText
+        : text;
+    const cinemaCtx = getCinemaNowPlaying?.();
+    const cinemaPayload =
+      cinemaCtx && (cinemaCtx.url || cinemaCtx.localRel)
+        ? {
+            url: String(cinemaCtx.url || "").slice(0, 500),
+            localRel: String(cinemaCtx.localRel || "").slice(0, 200),
+            title: String(cinemaCtx.title || cinemaCtx.label || "").slice(0, 200),
+          }
+        : undefined;
+    await streamChat(chatPayload, {
+      userRaw: text,
+      contextBrief: understanding?.contextBrief || "",
+      cinema: cinemaPayload,
+    });
   } catch (e) {
     appendBubble("assistant", formatClientChatError(e), { error: true });
     setStatus("Hata — ayrıntı sohbette", "Rüzgar");
@@ -11663,9 +12070,9 @@ if (window.ruzgarApi?.onMenu) {
     if (action === "menu:disa-aktar") {
       console.log("[RÜZGAR] Hazırlanıyor... (Dışa Aktar — içerik)");
       let body = (lastAssistantReply || "").trim();
-      const exportSess = getMotorChatSession(activeMotorChatMode());
-      if (!body && exportSess.history.length) {
-        body = exportSess.history
+      const exportHist = getSharedChatHistory();
+      if (!body && exportHist.length) {
+        body = exportHist
           .map((m) => `${m.role}: ${m.content}`)
           .join("\n\n");
       }
@@ -11738,6 +12145,7 @@ document.body.classList.add("faz7-complete", "faz8-complete");
 void refreshUiManifest().finally(() =>
   renderMotorChatFromSession(activeMotorChatMode()),
 );
+ensureSharedChatStore();
 void checkApi();
 setInterval(() => void checkApi(), 15000);
 

@@ -41,7 +41,11 @@ function Import-RuzgarDotEnvFile {
       if ($val) { $env:GROQ_API_KEY = $val }
       continue
     }
-    if ($key -match '^(RUZGAR_|OLLAMA_|GROQ_|GLOBAL_|GOOGLE_GEMINI_|GEMINI_)') {
+    if ($key -in @("RUNWAY_API_KEY", "RUNWAYML_API_SECRET", "RUNWAYML_API_KEY")) {
+      if ($val) { Set-Item -Path "Env:$key" -Value $val -Force }
+      continue
+    }
+    if ($key -match '^(RUZGAR_|OLLAMA_|GROQ_|GLOBAL_|GOOGLE_GEMINI_|GEMINI_|RUNWAY_)') {
       if ($val) { Set-Item -Path "Env:$key" -Value $val -Force }
     } elseif (-not (Get-Item -Path "Env:$key" -ErrorAction SilentlyContinue)) {
       if ($val) { Set-Item -Path "Env:$key" -Value $val }

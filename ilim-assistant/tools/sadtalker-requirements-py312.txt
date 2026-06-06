@@ -1,0 +1,19 @@
+# SadTalker — Python 3.12 uyumlu (Ruzgar V7.2)
+numpy>=1.26.0
+scipy>=1.11.0
+scikit-image>=0.22.0
+opencv-python-headless>=4.8.0
+imageio>=2.31.0
+imageio-ffmpeg>=0.4.9
+librosa>=0.10.0
+numba
+resampy
+pydub
+kornia>=0.7.0
+tqdm
+yacs
+pyyaml
+joblib
+safetensors
+av
+face-alignment

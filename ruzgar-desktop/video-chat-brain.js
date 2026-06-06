@@ -5,7 +5,7 @@
 (function videoChatBrain(global) {
   "use strict";
 
-  const VERSION = "video-super-brain-v5-2026-06-06";
+  const VERSION = "video-super-brain-v7-create-2026-06-06";
 
   /** Çok adımlı plan ayırıcı: ve · sonra · virgül */
   const STEP_SPLIT_RE =
@@ -37,7 +37,7 @@
     if (d().isVideoSearchOrPickCommand?.(raw)) return true;
     const low = fold(raw);
     return (
-      /\bvideo\b|youtube|youtu\.be|vimeo|tiktok|dailymotion|twitter|x\.com|ffmpeg|sinema|atolye|atölye|kesim|\bkes\b|kurgu|montaj|altyaz|subtitle|mux|transcode|donustur|dönüştür|ffprobe|medya\s+bilgi|indirme|indir\b|klip\b|film\b|oynat|onizleme|önizleme|panel|m3u8/.test(
+      /\bvideo\b|youtube|youtu\.be|vimeo|tiktok|dailymotion|twitter|x\.com|ffmpeg|sinema|atolye|atölye|kesim|\bkes\b|kurgu|montaj|altyaz|subtitle|mux|transcode|donustur|dönüştür|ffprobe|medya\s+bilgi|indirme|indir\b|klip\b|film\b|oynat|onizleme|önizleme|panel|m3u8|video\s+olustur|video\s+oluştur|metinden\s+video|sahne\s+plan/.test(
         low,
       ) || /\.(mp4|mkv|webm|mov|avi|m4v|mp3|wav|srt|vtt|m3u8)\b/i.test(raw)
     );
@@ -772,6 +772,105 @@
     return true;
   }
 
+  function wantsStoryAnimate(raw) {
+    const low = fold(raw);
+    return (
+      /canlandir|canlandır|hayat ver|ete kemige|ete kemiğe|kahraman.*canlan|film yap|hikaye.*video/.test(
+        low,
+      ) || /hikayeyi canlandir|hikâyeyi canlandır/.test(low)
+    );
+  }
+
+  async function handleStoryAnimate(raw) {
+    ensureVideo();
+    openDock("create");
+    fillVideoCreateFromMessage(raw);
+    if (!el().videoCreateImagesDir?.value?.trim()) {
+      if (el().videoCreateImagesDir) {
+        el().videoCreateImagesDir.value = "ilim-assistant/arsiv/video_gorseller";
+      }
+    }
+    const text = String(el().videoCreateText?.value || "").trim();
+    if (text.length < 20) {
+      say(
+        "Ümit abi, hikâyeyi yaz veya «metin: …» ekle. İsteğe bağlı fotoğraflar: `ilim-assistant/arsiv/video_gorseller`. Sonra storyboard ve video.",
+      );
+      return true;
+    }
+    say(
+      "Ümit abi, hikâyeyi **kahraman ve sahnelere** bölüyorum; plan `.ruzgar-video-export/` altına kaydedilir. «Videoyu oluştur» — ses + fotoğraf + sinematik hareket (V7.1).",
+    );
+    await d().runVideoCreateStoryboardJob?.();
+    return true;
+  }
+
+  function wantsVideoCreate(raw) {
+    const low = fold(raw);
+    return (
+      /(?:metinden|yazidan|yazıdan)\s+video/.test(low) ||
+      /video\s+(?:olustur|oluştur|uret|üret|yap|uretim|üretim)/.test(low) ||
+      /sahne\s+plan(?:i|ı)?/.test(low) ||
+      /(?:film|klip)\s+(?:olustur|oluştur|yap)/.test(low)
+    );
+  }
+
+  function wantsVideoPlanOnly(raw) {
+    const low = fold(raw);
+    return (
+      /sahne\s+plan/.test(low) ||
+      (/plan\s+(?:olustur|oluştur|yap)/.test(low) && /video|film|sahne/.test(low))
+    ) && !/(?:videoyu|film(?:i)?\s+(?:olustur|oluştur|uret|üret|yap|render))/.test(low);
+  }
+
+  function fillVideoCreateFromMessage(raw) {
+    const textEl = el().videoCreateText;
+    const themeEl = el().videoCreateTheme;
+    const titleEl = el().videoCreateTitle;
+    const mText =
+      raw.match(/(?:metin|içerik|icerik|anlatim|anlatım)\s*[:：]\s*([\s\S]+)/i) ||
+      raw.match(/[«"']([^»"']{20,})[»"']/);
+    if (mText && textEl) textEl.value = mText[1].trim();
+    const mTheme = raw.match(/(?:tema|konu|baglam|bağlam)\s*[:：]\s*([^\n.]+)/i);
+    if (mTheme && themeEl) themeEl.value = mTheme[1].trim();
+    const mTitle = raw.match(/(?:baslik|başlık|proje)\s*[:：]\s*([^\n.]+)/i);
+    if (mTitle && titleEl) titleEl.value = mTitle[1].trim();
+  }
+
+  async function handleVideoCreate(raw) {
+    ensureVideo();
+    openDock("create");
+    fillVideoCreateFromMessage(raw);
+    const text = String(el().videoCreateText?.value || "").trim();
+    if (wantsVideoPlanOnly(raw)) {
+      if (text.length < 20) {
+        say("Ümit abi, panelde **anlatım metnini** yaz (en az 20 karakter) veya sohbette «metin: …» ekle.", {
+          error: true,
+        });
+        return true;
+      }
+      say("Sahne planı hazırlanıyor (Ollama)…");
+      d().setStatus?.("Sahne planı…", "Rüzgar");
+      await d().runVideoCreatePlanJob?.();
+      d().setStatus?.("Hazır", "Rüzgar");
+      return true;
+    }
+    if (/(?:olustur|oluştur|uret|üret|render|yap|baslat|başlat)/i.test(fold(raw))) {
+      if (text.length < 20) {
+        say("Ümit abi, önce metin gerekli — paneli doldur veya «metin: …» yaz.", { error: true });
+        return true;
+      }
+      say("Video oluşturuluyor — seslendirme ve kurgu birkaç dakika sürebilir…");
+      d().setStatus?.("Video oluşturuluyor…", "Rüzgar");
+      await d().runVideoCreateRenderJob?.();
+      d().setStatus?.("Hazır", "Rüzgar");
+      return true;
+    }
+    say(
+      "Ümit abi, **Video oluştur** paneli açık. Metni yaz; «**sahne planı**» veya «**video oluştur**» de — otomatik devam eder.",
+    );
+    return true;
+  }
+
   function helpText() {
     return (
       "Ümit abi, **sohbetten** sinemadaki videoyu yönet — komut ezberleme yok:\n\n" +
@@ -781,6 +880,8 @@
       "• «**buradan 30 saniye kes**» — HLS/yerel oynatıcıda konumdan\n" +
       "• «**medya bilgisi**» — akıştan ffprobe (indirme yok)\n" +
       "• «**dönüştür**» · «**altyazı göm**» · «**kurgu yap**» (kesim çıktısı veya «indir» sonrası)\n" +
+      "• **Hikâye canlandır (V6):** «**hikâyeyi canlandır**» — kahraman/sahne planı; tam AI video V7+\n" +
+      "• **Metinden video (V5):** «**video oluştur**» · «**sahne planı**» — panel açılır\n" +
       "• **Çok adım:** «**kes 0:30-1:00, medya bilgisi, listeye ekle**»\n" +
       "• Ana Motor'dan da aynı cümleler — sinema açıksa otomatik video'ya gider\n" +
       "• «**son indirmeler**» · «**1 numarayı oynat**»\n\n" +
@@ -812,6 +913,9 @@
     if (!deps) return { handled: false };
     const raw = String(text || "").trim();
     if (!raw) return { handled: false };
+    if (opts?.understanding?.preferChat && !opts?.understanding?.trimRange) {
+      return { handled: false };
+    }
     const preTrim = opts?.understanding?.trimRange;
 
     const chatMode = d().activeMotorChatMode?.() || d().getCurrentMode?.() || "genel";
@@ -872,6 +976,18 @@
     }
 
     if (await tryMultiStepVideoPlan(raw)) return { handled: true, instant: true };
+
+    if (wantsStoryAnimate(raw)) {
+      ensureVideo();
+      await handleStoryAnimate(raw);
+      return { handled: true, instant: true };
+    }
+
+    if (wantsVideoCreate(raw)) {
+      ensureVideo();
+      await handleVideoCreate(raw);
+      return { handled: true, instant: true };
+    }
 
     const ytOpen = await handleYoutubeOpen(raw);
     if (ytOpen) return { handled: true, instant: true, ok: ytOpen.ok !== false };
@@ -1094,21 +1210,6 @@
       }
     }
 
-    if (
-      (chatMode === "video" || chatMode === "genel") &&
-      hasActiveCinema() &&
-      isVideoActionIntent(raw)
-    ) {
-      say(
-        "Ümit abi, tam anlayamadım. Sinemada video açık — örnek:\n" +
-          "«**indir**» · «**kes 0:30-1:00**» · «**5 ila 30 saniye kes**» · «**medya bilgisi**»\n" +
-          "Tam liste: **yardım**",
-        { clarify: true },
-      );
-      d().setStatus?.("Hazır", "Rüzgar");
-      return { handled: true, instant: true };
-    }
-
     return { handled: false };
   }
 
@@ -1125,6 +1226,7 @@
       `<li>«indir, kes 0:30-1:00, kurgu yap» — çok adımlı plan</li>` +
       `<li>«kes 0:30-1:00» · «buradan 30 saniye kes»</li>` +
       `<li>«medya bilgisi» · «kurgu yap» · «dönüştür»</li>` +
+      `<li>«video oluştur» · «sahne planı» — metinden film (V5)</li>` +
       `<li>«yardım» — tüm talimatlar</li>` +
       `</ul>` +
       `<p class="chat-welcome-foot">${VERSION} · Ümit &amp; Gökçenur</p>`;

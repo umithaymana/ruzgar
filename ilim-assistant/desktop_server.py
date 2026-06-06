@@ -553,6 +553,18 @@ class ChatRequest(BaseModel):
         default=None,
         description="Atölye dil seçici (python, javascript, …)",
     )
+    conversation_context: str | None = Field(
+        default=None,
+        description="İstemci sohbet akışı özeti — LLM bağlamı",
+    )
+    user_message_raw: str | None = Field(
+        default=None,
+        description="Kullanıcının yazdığı ham metin (normalize edilmiş message ayrı olabilir)",
+    )
+    cinema_context: dict[str, Any] | None = Field(
+        default=None,
+        description="Video sinema paneli durumu (url, yerel dosya)",
+    )
 
 
 def _effective_chat_mode_raw(req: ChatRequest) -> str:
@@ -650,6 +662,59 @@ class VideoEditMixBody(BaseModel):
     clips: list[VideoEditClipItem] = Field(default_factory=list)
     copy_streams: bool = True
     project_name: str = ""
+
+
+class VideoPlanBody(BaseModel):
+    """Metinden sinematik sahne planı (Ollama)."""
+
+    text: str = ""
+    theme: str = ""
+    title: str = ""
+    max_scenes: int = 24
+
+
+class VideoStoryboardBody(BaseModel):
+    """Hikâye → kahraman/mekân/sahne storyboard (V6)."""
+
+    text: str = ""
+    theme: str = ""
+    title: str = ""
+    max_scenes: int = 12
+    user_assets: list[dict[str, Any]] = Field(default_factory=list)
+    rel_images_dir: str = ""
+
+
+class VideoCreateBody(BaseModel):
+    """Metinden video: plan + TTS + sinematik montaj (V5)."""
+
+    text: str = ""
+    theme: str = ""
+    title: str = ""
+    preset: str = "16:9"
+    quality: str = "high"
+    karakter: str = "asistan"
+    rel_background: str = ""
+    rel_images_dir: str = ""
+    render_mode: str = "motion"
+    intro_title: str = ""
+    outro_title: str = ""
+    max_scenes: int = 24
+    plan: dict[str, Any] | None = None
+    render_only: bool = False
+
+
+class VideoCreateRenderBody(BaseModel):
+    """Kayıtlı plan JSON ile yalnızca render."""
+
+    plan: dict[str, Any] = Field(default_factory=dict)
+    preset: str = "16:9"
+    quality: str = "high"
+    karakter: str = "asistan"
+    rel_background: str = ""
+    rel_images_dir: str = ""
+    render_mode: str = "motion"
+    intro_title: str = ""
+    outro_title: str = ""
 
 
 def _sse(obj: dict) -> str:
@@ -1165,6 +1230,9 @@ def health():
             "ebay_browse_credentials": bool(_eb),
             "aliexpress_open_credentials": bool(_ae),
         },
+        "video_create": __import__(
+            "ilim_assistant.video_create", fromlist=["video_render_capabilities"]
+        ).video_render_capabilities(),
     }
 
 
@@ -3931,6 +3999,277 @@ async def api_video_mux_audio(
         await run_in_threadpool(_run)
         rel_out = out_path.relative_to(REPO_ROOT.resolve()).as_posix()
         return {"ok": True, "output_rel": rel_out}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+def _video_create_voice_params(karakter_raw: str, sample_text: str) -> tuple[str, str, str]:
+    from ilim_assistant.motorlar.ses_motoru import (
+        EDGE_VOICES,
+        analiz_icerik_yolu,
+        edge_pitch_string,
+        edge_rate_yuzdesi,
+        normalize_ses_karakteri,
+    )
+    from ilim_assistant.tts_service import read_ses_ayarlari
+
+    ayar = read_ses_ayarlari()
+    kar = normalize_ses_karakteri(karakter_raw or ayar.get("karakter"))
+    icerik = analiz_icerik_yolu(sample_text)
+    voice = EDGE_VOICES[kar]
+    rate = edge_rate_yuzdesi(
+        karakter=kar,
+        icerik=icerik,
+        hiz_carpani=float(ayar.get("hiz", 0.92)),
+        huzur_carpani=float(ayar.get("huzur", 0.88)),
+    )
+    pitch = edge_pitch_string(kar, icerik)
+    return voice, rate, pitch
+
+
+@app.post("/api/video/plan")
+async def api_video_plan(body: VideoPlanBody):
+    """Metinden sinematik sahne planı JSON (Ollama)."""
+    from ilim_assistant.video_create import plan_video_scenes, save_plan_file
+    from ilim_assistant.video_ffmpeg import export_directory
+
+    text = (body.text or "").strip()
+    if len(text) < 20:
+        raise HTTPException(status_code=400, detail="Metin en az 20 karakter olmalı.")
+    theme = (body.theme or "genel anlatım").strip()
+    title = (body.title or "").strip()
+
+    def _run():
+        plan = plan_video_scenes(
+            text,
+            theme,
+            max_scenes=int(body.max_scenes or 24),
+            project_title=title,
+        )
+        slug = uuid.uuid4().hex[:10]
+        out_dir = export_directory(REPO_ROOT)
+        plan_path = out_dir / f"ruzgar_plan_{slug}.json"
+        save_plan_file(plan, plan_path)
+        rel = plan_path.relative_to(REPO_ROOT.resolve()).as_posix()
+        return plan, rel
+
+    try:
+        plan, plan_rel = await run_in_threadpool(_run)
+        scenes = plan.get("scenes") or []
+        return {
+            "ok": True,
+            "plan": plan,
+            "plan_rel": plan_rel,
+            "scene_count": len(scenes),
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@app.post("/api/video/storyboard")
+async def api_video_storyboard(body: VideoStoryboardBody):
+    """Hikâyeden kahraman + sahne storyboard (canlandırma planı)."""
+    from ilim_assistant.video_create import (
+        discover_user_assets,
+        resolve_images_dir_rel,
+        save_plan_file,
+        suggest_render_mode,
+    )
+    from ilim_assistant.video_storyboard import analyze_story_for_video, storyboard_to_video_plan
+    from ilim_assistant.video_ffmpeg import export_directory
+
+    text = (body.text or "").strip()
+    if len(text) < 20:
+        raise HTTPException(status_code=400, detail="Hikâye en az 20 karakter olmalı.")
+
+    def _run():
+        rel_dir = resolve_images_dir_rel(
+            (body.rel_images_dir or "").strip(),
+            body.user_assets or [],
+            workspace_root=REPO_ROOT,
+        )
+        assets = list(body.user_assets or [])
+        if not assets and rel_dir:
+            assets = discover_user_assets(
+                REPO_ROOT,
+                rel_dir,
+                max_count=int(body.max_scenes or 12),
+            )
+
+        board = analyze_story_for_video(
+            text,
+            theme=(body.theme or "").strip(),
+            title=(body.title or "").strip(),
+            user_assets=assets,
+            max_scenes=int(body.max_scenes or 12),
+        )
+        plan = storyboard_to_video_plan(board)
+        has_images = bool(assets) or any(
+            str(sc.get("asset_id") or "").strip() for sc in plan.get("scenes") or []
+        )
+        render_mode = suggest_render_mode(board, has_images=has_images)
+        plan_full = {
+            **plan,
+            "rel_images_dir": rel_dir,
+            "render_mode": render_mode,
+            "storyboard_meta": {
+                "synopsis": board.get("synopsis"),
+                "render_recommendation": board.get("render_recommendation"),
+                "capability_note": board.get("capability_note"),
+            },
+        }
+
+        slug = uuid.uuid4().hex[:10]
+        out_dir = export_directory(REPO_ROOT)
+        plan_path = out_dir / f"ruzgar_plan_{slug}.json"
+        board_path = out_dir / f"ruzgar_storyboard_{slug}.json"
+        save_plan_file(plan_full, plan_path)
+        save_plan_file(board, board_path)
+        plan_rel = plan_path.relative_to(REPO_ROOT.resolve()).as_posix()
+        storyboard_rel = board_path.relative_to(REPO_ROOT.resolve()).as_posix()
+        return board, plan_full, rel_dir, plan_rel, storyboard_rel, render_mode, len(assets)
+
+    try:
+        board, plan, rel_dir, plan_rel, storyboard_rel, render_mode, asset_count = await run_in_threadpool(
+            _run
+        )
+        return {
+            "ok": True,
+            "storyboard": board,
+            "plan": plan,
+            "plan_rel": plan_rel,
+            "storyboard_rel": storyboard_rel,
+            "rel_images_dir": rel_dir,
+            "render_mode": render_mode,
+            "asset_count": asset_count,
+            "scene_count": len(plan.get("scenes") or []),
+            "render_recommendation": board.get("render_recommendation"),
+            "render_modes_available": board.get("render_mode_available"),
+            "capability_note": board.get("capability_note"),
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@app.post("/api/video/create")
+async def api_video_create(body: VideoCreateBody):
+    """Metinden video: sahne planı + Edge-TTS + sinematik montaj (V5)."""
+    from ilim_assistant.tts_service import edge_available
+    from ilim_assistant.video_create import create_video_from_text
+    from ilim_assistant.video_ffmpeg import ffmpeg_available
+
+    if not ffmpeg_available():
+        raise HTTPException(
+            status_code=503,
+            detail="ffmpeg bulunamadı. https://ffmpeg.org/download.html",
+        )
+    if not edge_available():
+        raise HTTPException(status_code=503, detail="Edge-TTS yok: pip install edge-tts")
+
+    text = (body.text or "").strip()
+    theme = (body.theme or "genel anlatım").strip()
+    title = (body.title or "").strip()
+    existing = body.plan if isinstance(body.plan, dict) and body.plan.get("scenes") else None
+
+    if not existing and len(text) < 20:
+        raise HTTPException(status_code=400, detail="Metin en az 20 karakter olmalı.")
+
+    sample = text or str((existing or {}).get("scenes", [{}])[0].get("narration", ""))
+    voice, rate, pitch = _video_create_voice_params(body.karakter, sample)
+
+    def _run():
+        return create_video_from_text(
+            text,
+            theme,
+            workspace_root=REPO_ROOT,
+            preset_key=(body.preset or "16:9").strip(),
+            quality_key=(body.quality or "high").strip(),
+            voice=voice,
+            rate=rate,
+            pitch=pitch,
+            max_scenes=int(body.max_scenes or 24),
+            project_title=title,
+            background_rel=(body.rel_background or "").strip(),
+            images_dir_rel=(body.rel_images_dir or "").strip(),
+            render_mode=(body.render_mode or "motion").strip(),
+            intro_title=(body.intro_title or title).strip(),
+            outro_title=(body.outro_title or "").strip(),
+            existing_plan=existing,
+        )
+
+    try:
+        result = await run_in_threadpool(_run)
+        if not result.ok:
+            raise HTTPException(status_code=400, detail=result.error or "Video oluşturulamadı.")
+        return {
+            "ok": True,
+            "output_rel": result.output_rel,
+            "plan_rel": result.plan_rel,
+            "scene_count": result.scene_count,
+            "total_duration_sec": result.total_duration_sec,
+            "plan": result.plan,
+            "render_notes": result.render_notes,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@app.post("/api/video/create/render")
+async def api_video_create_render(body: VideoCreateRenderBody):
+    """Kayıtlı plan JSON ile render (plan adımı atlanır)."""
+    from ilim_assistant.tts_service import edge_available
+    from ilim_assistant.video_create import render_video_from_plan
+    from ilim_assistant.video_ffmpeg import ffmpeg_available
+
+    if not ffmpeg_available():
+        raise HTTPException(status_code=503, detail="ffmpeg bulunamadı.")
+    if not edge_available():
+        raise HTTPException(status_code=503, detail="Edge-TTS yok: pip install edge-tts")
+
+    plan = body.plan if isinstance(body.plan, dict) else {}
+    scenes = plan.get("scenes") or []
+    if not scenes:
+        raise HTTPException(status_code=400, detail="Plan içinde sahne yok.")
+
+    sample = str(scenes[0].get("narration") or "")
+    voice, rate, pitch = _video_create_voice_params(body.karakter, sample)
+
+    def _run():
+        return render_video_from_plan(
+            plan,
+            workspace_root=REPO_ROOT,
+            preset_key=(body.preset or "16:9").strip(),
+            quality_key=(body.quality or "high").strip(),
+            voice=voice,
+            rate=rate,
+            pitch=pitch,
+            background_rel=(body.rel_background or "").strip(),
+            images_dir_rel=(body.rel_images_dir or "").strip(),
+            render_mode=(body.render_mode or "motion").strip(),
+            intro_title=(body.intro_title or str(plan.get("title") or "")).strip(),
+            outro_title=(body.outro_title or "").strip(),
+        )
+
+    try:
+        result = await run_in_threadpool(_run)
+        if not result.ok:
+            raise HTTPException(status_code=400, detail=result.error or "Render başarısız.")
+        return {
+            "ok": True,
+            "output_rel": result.output_rel,
+            "plan_rel": result.plan_rel,
+            "scene_count": result.scene_count,
+            "total_duration_sec": result.total_duration_sec,
+            "render_notes": result.render_notes,
+        }
     except HTTPException:
         raise
     except Exception as e:
@@ -7518,6 +7857,9 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         question_plan=turn_plan,
         agent_context=agent_context or None,
         pazar_kanallari=req.hizir_channels if mode_norm == "hizir" else None,
+        conversation_context=getattr(req, "conversation_context", None),
+        user_message_raw=getattr(req, "user_message_raw", None),
+        cinema_context=getattr(req, "cinema_context", None),
     )
     if prep is None:
         yield {"type": "error", "text": "Boş mesaj"}
