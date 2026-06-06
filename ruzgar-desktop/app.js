@@ -6111,7 +6111,11 @@ async function runVideoProbeFromFile() {
     await runVideoProbeWithForm(fd);
     return;
   }
-  flashRuzgarDurum("Dosya seçin veya «Kes» panelinde göreli proje yolu yazın.");
+  if (canStreamEditCinema()) {
+    await runVideoProbeFromStream();
+    return;
+  }
+  flashRuzgarDurum("Dosya seçin, sinemada video açın veya göreli yol yazın.");
 }
 
 function appendVideoJobNote(rel) {
@@ -6133,11 +6137,25 @@ function openVideoExportFolder() {
 }
 
 async function runVideoTrimJob() {
-  const rel = String(el.videoRelWorkspace?.value || "").trim();
-  const fd = new FormData();
-  fd.append("start_sec", String(el.videoStartSec?.value ?? "0"));
+  const rel = String(el.videoRelWorkspace?.value || cinemaNowPlaying.localRel || "").trim();
+  const startRaw = String(el.videoStartSec?.value ?? "0");
   const du = String(el.videoDurationSec?.value || "").trim();
   const en = String(el.videoEndSec?.value || "").trim();
+  let start = parseFloat(startRaw);
+  let duration = du ? parseFloat(du) : en ? parseFloat(en) - start : NaN;
+  if (
+    !rel &&
+    canStreamEditCinema() &&
+    Number.isFinite(start) &&
+    Number.isFinite(duration) &&
+    duration > 0
+  ) {
+    await runVideoTrimFromCinema({ start, end: start + duration }, { forceLocal: false });
+    return;
+  }
+
+  const fd = new FormData();
+  fd.append("start_sec", startRaw);
   if (du) fd.append("duration_sec", du);
   else if (en) fd.append("end_sec", en);
   else {
@@ -6908,6 +6926,24 @@ async function loadWebCinemaInPanel(pageUrl, opts = {}) {
     if (el.videoDownloadUrl) el.videoDownloadUrl.value = cleanUrl;
     if (el.videoCinemaUrl) el.videoCinemaUrl.value = cleanUrl;
     updateCinemaNowPlaying({ url: cleanUrl, title: cleanUrl, site: "web", streamType: "browserview" });
+    void fetch(`${API}/api/video/stream/prepare`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: cleanUrl }),
+    })
+      .then((r) => r.json())
+      .then((j) => {
+        if (j && j.ok && j.token) {
+          updateCinemaNowPlaying({
+            url: cleanUrl,
+            title: String(j.title || cleanUrl),
+            site: String(j.site || "web"),
+            token: j.token,
+            streamType: "browserview",
+          });
+        }
+      })
+      .catch(() => {});
     if (opts.flash !== false) {
       flashRuzgarDurum("Web sayfası sinema alanında.");
     }
@@ -7262,6 +7298,164 @@ function markVideoTimelineOut() {
   el.btnVideoMarkOut?.click?.();
 }
 
+/** Sinema oturumu — sohbet süper beyin için (kopya). */
+function getCinemaNowPlaying() {
+  return { ...cinemaNowPlaying };
+}
+
+function hasActiveCinemaSession() {
+  const c = cinemaNowPlaying;
+  return !!(String(c.url || "").trim() || String(c.localRel || "").trim());
+}
+
+function getVideoPlayerCurrentTimeSec() {
+  const v = el.videoPreview;
+  if (!v?.src) return null;
+  const t = v.currentTime;
+  return Number.isFinite(t) && t >= 0 ? t : null;
+}
+
+/** HLS / yerel `<video>` — gömülü web sinemada konum okunamaz. */
+function canSeekVideoPlayer() {
+  if (cinemaNowPlaying.streamType === "browserview") return false;
+  return getVideoPlayerCurrentTimeSec() != null;
+}
+
+/** Kesim / probe için sinemada akış oturumu var mı? */
+function canStreamEditCinema() {
+  const c = cinemaNowPlaying;
+  return !!(String(c.token || "").trim() || String(c.url || "").trim());
+}
+
+/** Oynatılan akıştan yalnızca aralık kes — tam indirme yok. */
+async function runVideoTrimFromCinema(range, opts = {}) {
+  const start = Number(range?.start);
+  const end = Number(range?.end);
+  const duration =
+    Number.isFinite(start) && Number.isFinite(end) && end > start
+      ? end - start
+      : Number(range?.duration);
+  if (!Number.isFinite(start) || !Number.isFinite(duration) || duration <= 0) {
+    flashRuzgarDurum("Geçersiz kesim aralığı.");
+    return false;
+  }
+
+  const token = String(cinemaNowPlaying.token || "").trim();
+  const url = String(cinemaNowPlaying.url || el.videoDownloadUrl?.value || "").trim();
+  const localRel = String(el.videoRelWorkspace?.value || cinemaNowPlaying.localRel || "").trim();
+
+  if (canStreamEditCinema() && opts.forceLocal !== true) {
+    setVideoJobProgress(true, "Akıştan kesiliyor (yalnızca seçilen bölüm)…");
+    setStatus("Akış kesimi…", "Rüzgar");
+    try {
+      const res = await fetch(`${API}/api/video/stream/trim`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          token: token || undefined,
+          url: token ? undefined : url,
+          start_sec: start,
+          duration_sec: duration,
+          copy_streams: false,
+        }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || j.ok === false) {
+        throw new Error(formatVideoApiError(j.detail, res, "Akış kesimi başarısız"));
+      }
+      const out = String(j.output_rel || "").trim();
+      if (out) {
+        if (el.videoRelWorkspace) el.videoRelWorkspace.value = out;
+        if (el.videoEditInsertRel) el.videoEditInsertRel.value = out;
+        appendVideoJobNote(out);
+        updateCinemaNowPlaying({
+          ...cinemaNowPlaying,
+          localRel: out,
+        });
+      }
+      flashRuzgarDurum("Kesim hazır — tam video indirilmedi, yalnızca istenen bölüm alındı.");
+      setStatus("Hazır", "Rüzgar");
+      return true;
+    } catch (e) {
+      flashRuzgarDurum(e && e.message ? e.message : String(e));
+      setStatus("Hazır", "Rüzgar");
+      return false;
+    } finally {
+      setVideoJobProgress(false);
+    }
+  }
+
+  if (localRel) {
+    if (el.videoStartSec) el.videoStartSec.value = String(start.toFixed(2));
+    if (el.videoDurationSec) el.videoDurationSec.value = String(duration.toFixed(2));
+    if (el.videoEndSec) el.videoEndSec.value = "";
+    await runVideoTrimJob();
+    return true;
+  }
+
+  flashRuzgarDurum("Sinemada video yok — önce link aç.");
+  return false;
+}
+
+async function runVideoProbeFromStream() {
+  const token = String(cinemaNowPlaying.token || "").trim();
+  const url = String(cinemaNowPlaying.url || el.videoDownloadUrl?.value || "").trim();
+  if (!token && !url) {
+    flashRuzgarDurum("Sinemada akış yok.");
+    return false;
+  }
+  setVideoJobProgress(true, "Akış analiz ediliyor…");
+  try {
+    const res = await fetch(`${API}/api/video/stream/probe`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: token || undefined, url: token ? undefined : url }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || j.ok === false) {
+      throw new Error(formatVideoApiError(j.detail, res, "Akış analizi başarısız"));
+    }
+    const summary = j.summary || {};
+    if (el.videoProbeJson) {
+      el.videoProbeJson.textContent = JSON.stringify(summary, null, 2);
+    }
+    const dur = summary.duration_sec != null ? Number(summary.duration_sec) : 0;
+    if (dur > 0) lastVideoProbeDurationSec = dur;
+    flashRuzgarDurum("Medya bilgisi — akıştan (indirme yok).");
+    return true;
+  } catch (e) {
+    flashRuzgarDurum(e && e.message ? e.message : String(e));
+    return false;
+  } finally {
+    setVideoJobProgress(false);
+  }
+}
+
+/** Kesim / probe / mux için yerel dosya; isteğe bağlı sinemadan indirir. */
+async function ensureLocalVideoSourceForEdit(opts = {}) {
+  const announce = opts.announce !== false;
+  let rel = String(el.videoRelWorkspace?.value || cinemaNowPlaying.localRel || "").trim();
+  if (rel) {
+    if (el.videoRelWorkspace) el.videoRelWorkspace.value = rel;
+    return rel;
+  }
+  if (opts.allowDownload !== true) {
+    return null;
+  }
+  const url = String(cinemaNowPlaying.url || el.videoDownloadUrl?.value || "").trim();
+  const token = String(cinemaNowPlaying.token || "").trim();
+  if (!url && !token) return null;
+  if (announce) {
+    flashRuzgarDurum("Yerel dosya gerekli — sinema kaynağı indiriliyor…");
+  }
+  const result = await runCinemaDownloadCurrent();
+  rel = String(
+    result?.file_path || el.videoRelWorkspace?.value || cinemaNowPlaying.localRel || "",
+  ).trim();
+  if (rel && el.videoRelWorkspace) el.videoRelWorkspace.value = rel;
+  return rel || null;
+}
+
 function initVideoChatBrain() {
   if (!window.RuzgarVideoChatBrain?.init) return;
   window.RuzgarVideoChatBrain.init({
@@ -7295,6 +7489,9 @@ function initVideoChatBrain() {
     loadVideoPreviewFromRel,
     runVideoProbeFromFile,
     runVideoTrimJob,
+    runVideoTrimFromCinema,
+    runVideoProbeFromStream,
+    canStreamEditCinema,
     runVideoTranscodeJob,
     runVideoConcatJob,
     runVideoBurnSubJob,
@@ -7312,6 +7509,11 @@ function initVideoChatBrain() {
     addCurrentTimelineSelectionToBin,
     getEl: () => el,
     getLastUiManifest: () => lastUiManifest,
+    getCinemaNowPlaying,
+    hasActiveCinemaSession,
+    getVideoPlayerCurrentTimeSec,
+    canSeekVideoPlayer,
+    ensureLocalVideoSourceForEdit,
     RUZGAR_VIDEO_DOWNLOAD_TIMEOUT_MS,
     RUZGAR_VIDEO_PICK_RE,
     RUZGAR_VIDEO_PICK_OPEN_RE,
@@ -7337,6 +7539,8 @@ function initAnaMotorHub() {
       }
       return null;
     },
+    hasActiveCinemaSession,
+    getCinemaNowPlaying,
     hasSesFileSelected: () => !!(el.audioFileInput?.files?.[0]),
     runSesSttFromFile: () => runSesSttFromFile(),
     runHizirFromChat: (text) => {

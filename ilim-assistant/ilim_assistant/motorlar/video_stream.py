@@ -9,6 +9,7 @@ import threading
 import time
 import uuid
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 from urllib.parse import quote, urlparse
 
@@ -293,3 +294,89 @@ def rewrite_hls_playlist(content: str, token: str, base_upstream: str) -> str:
             enc = quote(abs_u, safe="")
             lines_out.append(f"/api/video/stream/{token}/seg?u={enc}")
     return "\n".join(lines_out) + "\n"
+
+
+def resolve_stream_session(
+    *,
+    token: str = "",
+    watch_url: str = "",
+) -> dict[str, Any]:
+    """Aktif oturum veya watch URL ile akış metadata döner."""
+    tok = (token or "").strip()
+    if tok:
+        sess = get_stream_session(tok)
+        if sess:
+            return sess
+
+    watch = (watch_url or "").strip()
+    if not watch:
+        raise ValueError("Akış oturumu yok — sinemada videoyu açın veya token/URL verin.")
+
+    with _lock:
+        _purge_expired()
+        for data in _sessions.values():
+            if str(data.get("watch_url") or "").strip() == watch:
+                return dict(data)
+
+    prep = prepare_stream(watch)
+    if not prep.ok or not prep.token:
+        raise ValueError(prep.error or "Akış hazırlanamadı.")
+    sess = get_stream_session(prep.token)
+    if not sess:
+        raise ValueError("Akış oturumu açılamadı.")
+    return sess
+
+
+def probe_stream_session(
+    *,
+    token: str = "",
+    watch_url: str = "",
+) -> dict[str, Any]:
+    from ilim_assistant.video_ffmpeg import ffprobe_remote_json, summarize_probe
+
+    sess = resolve_stream_session(token=token, watch_url=watch_url)
+    direct = str(sess.get("direct_url") or "").strip()
+    if not direct:
+        raise ValueError("Akış URL yok.")
+    headers = sess.get("http_headers") if isinstance(sess.get("http_headers"), dict) else {}
+    data = ffprobe_remote_json(direct, http_headers=headers)
+    summary = summarize_probe(data)
+    summary["stream_mode"] = True
+    summary["title"] = sess.get("title") or ""
+    summary["watch_url"] = sess.get("watch_url") or ""
+    return summary
+
+
+def trim_stream_segment(
+    *,
+    repo_root: Path,
+    token: str = "",
+    watch_url: str = "",
+    start_sec: float,
+    duration_sec: float,
+    copy_streams: bool = False,
+) -> str:
+    """Akıştan kesim — çıktı `.ruzgar-video-export/` altına; göreli yol döner."""
+    from ilim_assistant.video_ffmpeg import export_directory, trim_remote_media
+
+    sess = resolve_stream_session(token=token, watch_url=watch_url)
+    direct = str(sess.get("direct_url") or "").strip()
+    if not direct:
+        raise ValueError("Akış URL yok.")
+    headers = sess.get("http_headers") if isinstance(sess.get("http_headers"), dict) else {}
+
+    out_dir = export_directory(repo_root)
+    title = str(sess.get("title") or "stream")[:40]
+    safe_stem = re.sub(r"[^\w\-]+", "_", title).strip("_") or "stream"
+    out_name = f"ruzgar_stream_trim_{uuid.uuid4().hex[:10]}_{safe_stem}.mp4"
+    out_path = out_dir / out_name
+
+    trim_remote_media(
+        direct,
+        out_path,
+        start_sec=start_sec,
+        duration_sec=duration_sec,
+        copy_streams=copy_streams,
+        http_headers=headers,
+    )
+    return out_path.relative_to(Path(repo_root).resolve()).as_posix()

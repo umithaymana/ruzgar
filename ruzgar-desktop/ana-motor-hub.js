@@ -5,7 +5,7 @@
 (function anaMotorHub(global) {
   "use strict";
 
-  const VERSION = "ana-motor-hub-v5-faz-c2-2026-06-07";
+  const VERSION = "ana-motor-hub-v6-sinema-chat-2026-06-06";
 
   /** Alt-intent → sentetik sohbet (motor runner) */
   const SUB_INTENT_MSG = {
@@ -117,7 +117,8 @@
     return (
       "Ümit abi, **Ana Motor** doğal cümleyle işi yapar:\n\n" +
       "· Kod · pytest · git → **Programlama**\n" +
-      "· Video indir · kes · altyazı · mux → **Video**\n" +
+      "· Video indir · kes · altyazı · mux → **Video** (sinema açıksa «indir» yeter)\n" +
+      "· Çok adım: «indir, kes 0:30-1:00, kurgu yap» → **Video planı**\n" +
       "· Çevir · eser ara → **Tercüme**\n" +
       "· Fotoğraf · sanat → **Mimar**\n" +
       "· Ses · metne dök → **Ses**\n" +
@@ -270,6 +271,26 @@
     return dispatchBackendInstant(text, "mimar");
   }
 
+  function shouldFastRouteVideo(text) {
+    const V = global.RuzgarVideoChatBrain;
+    if (!V) return false;
+    if (V.looksLikeMultiStepPlan?.(text)) return true;
+    if (V.isVideoIntent?.(text)) return true;
+    if (d().hasActiveCinemaSession?.() && V.isVideoActionIntent?.(text)) return true;
+    return false;
+  }
+
+  async function tryVideoFromGenel(text) {
+    if (!shouldFastRouteVideo(text)) return { handled: false };
+    const out = await dispatchToMotor("video", text, { fromGenel: true });
+    if (!out.handled) return { handled: false };
+    if (out.ok !== false && !global.RuzgarVideoChatBrain?.looksLikeMultiStepPlan?.(text)) {
+      say("Ümit abi, **Video** talimatın sinemada uygulandı — sohbet Ana Motor'da.");
+    }
+    d().setStatus?.("Ana Motor", "Rüzgar");
+    return { handled: true };
+  }
+
   async function dispatchVideo(text) {
     const V = global.RuzgarVideoChatBrain;
     if (!V?.tryAtolyeFromMessage) return { handled: false };
@@ -383,6 +404,9 @@
       return { handled: true };
     }
 
+    const videoFast = await tryVideoFromGenel(raw);
+    if (videoFast.handled) return videoFast;
+
     const route = await fetchHubRoute(raw);
     if (!route || !route.target || route.target === "genel") {
       return { handled: false };
@@ -428,7 +452,7 @@
       `<p class="chat-welcome-lead"><strong>Ana Motor — tek sohbet, tüm motorlar.</strong></p>` +
       `<p>Buradan yaz; gerekirse panel arka planda açılır, sohbet <strong>genel</strong> kalır.</p>` +
       `<ul class="chat-welcome-list">` +
-      `<li><strong>Video:</strong> YouTube indir · kes 0:30-1:00 · altyazı göm · mux · kurgu</li>` +
+      `<li><strong>Video:</strong> «indir» · «kes 0:30-1:00» · «indir, kes, kurgu yap» (sinema açıkken)</li>` +
       `<li><strong>Kod:</strong> pytest geçir · git durumu · proje tara · briefing</li>` +
       `<li><strong>Tercüme:</strong> eser ara · bu sayfayı çevir</li>` +
       `<li><strong>Hafıza:</strong> hatırla: … · görev listesi · hafıza durumu</li>` +

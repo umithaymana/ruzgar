@@ -205,6 +205,115 @@ def trim_media(
     run_ffmpeg_args(argv, timeout_sec=timeout_sec)
 
 
+def trim_remote_media(
+    input_url: str,
+    output_path: Path,
+    *,
+    start_sec: float,
+    duration_sec: float,
+    copy_streams: bool = False,
+    http_headers: dict[str, str] | None = None,
+    timeout_sec: int | None = None,
+) -> None:
+    """
+    Uzak akıştan yalnızca istenen aralığı kes — tam dosya indirmez.
+    `-ss` girişten önce: HTTP/HLS üzerinde hızlı atlama.
+    """
+    url = (input_url or "").strip()
+    if not url:
+        raise ValueError("Akış URL boş.")
+    sp = float(start_sec)
+    dur = float(duration_sec)
+    if sp < 0 or dur <= 0:
+        raise ValueError("Geçersiz başlangıç veya süre.")
+    if dur > MAX_SEGMENT_SECONDS:
+        raise ValueError(f"Kesim süresi en fazla {MAX_SEGMENT_SECONDS // 3600} saat olabilir.")
+
+    out_path = Path(output_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+
+    if timeout_sec is None:
+        timeout_sec = min(DEFAULT_FFMPEG_TIMEOUT, max(300, int(dur * 4 + 180)))
+
+    argv: list[str] = ["-y"]
+    if http_headers:
+        header_lines = "".join(f"{k}: {v}\r\n" for k, v in http_headers.items() if k and v is not None)
+        if header_lines:
+            argv.extend(["-headers", header_lines])
+    argv.extend(
+        [
+            "-ss",
+            str(sp),
+            "-i",
+            url,
+            "-t",
+            str(dur),
+        ]
+    )
+    if copy_streams:
+        argv.extend(["-c", "copy", "-avoid_negative_ts", "make_zero"])
+    else:
+        argv.extend(
+            [
+                "-c:v",
+                "libx264",
+                "-preset",
+                "fast",
+                "-crf",
+                "23",
+                "-c:a",
+                "aac",
+                "-b:a",
+                "192k",
+                "-movflags",
+                "+faststart",
+            ]
+        )
+    argv.append(str(out_path.resolve()))
+    run_ffmpeg_args(argv, timeout_sec=timeout_sec)
+
+
+def ffprobe_remote_json(
+    input_url: str,
+    *,
+    http_headers: dict[str, str] | None = None,
+    timeout_sec: int = 120,
+) -> dict[str, Any]:
+    """Uzak akış/dosya URL üzerinde ffprobe."""
+    exe = ffprobe_bin()
+    if not exe:
+        raise RuntimeError("ffprobe bulunamadı; PATH'e ekleyin.")
+    url = (input_url or "").strip()
+    if not url:
+        raise ValueError("URL boş.")
+    cmd = [
+        exe,
+        "-v",
+        "quiet",
+        "-print_format",
+        "json",
+        "-show_format",
+        "-show_streams",
+    ]
+    if http_headers:
+        header_lines = "".join(f"{k}: {v}\r\n" for k, v in http_headers.items() if k and v is not None)
+        if header_lines:
+            cmd.extend(["-headers", header_lines])
+    cmd.append(url)
+    r = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        timeout=timeout_sec,
+        encoding="utf-8",
+        errors="replace",
+    )
+    if r.returncode != 0:
+        err = (r.stderr or r.stdout or "").strip()[:1200]
+        raise RuntimeError(err or f"ffprobe çıkış kodu {r.returncode}")
+    return json.loads(r.stdout or "{}")
+
+
 def transcode_to_mp4(
     input_path: Path,
     output_path: Path,

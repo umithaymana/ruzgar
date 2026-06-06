@@ -614,6 +614,21 @@ class VideoStreamDownloadBody(BaseModel):
     token: str = ""
 
 
+class VideoStreamTrimBody(BaseModel):
+    """Sinema akışından yalnızca istenen aralığı kes — tam indirme yok."""
+    url: str = ""
+    token: str = ""
+    start_sec: float = 0.0
+    duration_sec: float | None = None
+    end_sec: float | None = None
+    copy_streams: bool = False
+
+
+class VideoStreamProbeBody(BaseModel):
+    url: str = ""
+    token: str = ""
+
+
 class VideoConcatBody(BaseModel):
     """İki proje içi dosyayı concat ile birleştirir (codec uyumu şarta bağlı)."""
 
@@ -3408,6 +3423,92 @@ async def api_video_stream_download(body: VideoStreamDownloadBody) -> dict[str, 
     if not data.get("ok"):
         raise HTTPException(status_code=400, detail=str(data.get("error") or "İndirme başarısız"))
     return {"ok": True, "result": data}
+
+
+@app.post("/api/video/stream/trim")
+async def api_video_stream_trim(body: VideoStreamTrimBody) -> dict[str, Any]:
+    """Oynatılan akıştan yalnızca seçilen aralığı kes — tam dosya indirmez."""
+    if not ffmpeg_available():
+        raise HTTPException(
+            status_code=503,
+            detail="ffmpeg bulunamadı. https://ffmpeg.org/download.html — kurun ve PATH'e ekleyin.",
+        )
+    token = (body.token or "").strip()
+    watch = (body.url or "").strip()
+    if not token and not watch:
+        raise HTTPException(status_code=400, detail="token veya url gerekli.")
+
+    sp = max(0.0, float(body.start_sec))
+    dur: float | None = None
+    if body.duration_sec is not None and float(body.duration_sec) > 0:
+        dur = float(body.duration_sec)
+    elif body.end_sec is not None:
+        dur = float(body.end_sec) - sp
+    else:
+        raise HTTPException(status_code=400, detail="duration_sec veya end_sec gerekli.")
+    if dur is None or dur <= 0:
+        raise HTTPException(status_code=400, detail="Geçersiz süre.")
+    if dur > MAX_SEGMENT_SECONDS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Kesim süresi en fazla {MAX_SEGMENT_SECONDS // 3600} saat olabilir.",
+        )
+
+    copy_flag = bool(body.copy_streams)
+
+    def _run():
+        from ilim_assistant.motorlar.video_stream import trim_stream_segment
+
+        rel_out = trim_stream_segment(
+            repo_root=REPO_ROOT,
+            token=token,
+            watch_url=watch,
+            start_sec=sp,
+            duration_sec=dur,
+            copy_streams=copy_flag,
+        )
+        return rel_out
+
+    try:
+        rel_out = await run_in_threadpool(_run)
+        return {
+            "ok": True,
+            "output_rel": rel_out,
+            "stream_trim": True,
+            "start_sec": sp,
+            "duration_sec": dur,
+        }
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/api/video/stream/probe")
+async def api_video_stream_probe(body: VideoStreamProbeBody) -> dict[str, Any]:
+    """Oynatılan akış üzerinde ffprobe — tam indirme yok."""
+    if not ffprobe_available():
+        raise HTTPException(
+            status_code=503,
+            detail="ffprobe bulunamadı: FFmpeg kurun ve PATH'e ekleyin.",
+        )
+    token = (body.token or "").strip()
+    watch = (body.url or "").strip()
+    if not token and not watch:
+        raise HTTPException(status_code=400, detail="token veya url gerekli.")
+
+    def _run():
+        from ilim_assistant.motorlar.video_stream import probe_stream_session
+
+        return probe_stream_session(token=token, watch_url=watch)
+
+    try:
+        summary = await run_in_threadpool(_run)
+        return {"ok": True, "summary": summary, "stream_probe": True}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @app.post("/api/video/probe")

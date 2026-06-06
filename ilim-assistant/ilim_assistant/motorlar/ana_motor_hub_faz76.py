@@ -49,7 +49,12 @@ _HELP_RE = re.compile(
     re.I,
 )
 _VIDEO_DL_HINT = re.compile(
-    r"(?:indir|indirme|download|youtube|youtu\.be|oynat|burada\s+oynat|sinema|video\s+at)",
+    r"(?:indir|indirme|download|youtube|youtu\.be|oynat|burada\s+oynat|sinema|video\s+at|"
+    r"bunu|sunu|şunu|videoyu|filmi|oynayan|paneldeki)",
+    re.I,
+)
+_MULTI_STEP_RE = re.compile(
+    r"(?:\sve\s|\s+sonra\s+|,\s*|\s+ardından\s|\s+ardindan\s)",
     re.I,
 )
 
@@ -130,10 +135,15 @@ def is_video_workflow_request(message: str) -> bool:
     except Exception:
         pass
     low = _ascii_fold(raw)
+    if _MULTI_STEP_RE.search(low) and re.search(
+        r"indir|kes|kurgu|altyaz|mux|medya\s+bilgi|dönüştür|donustur|listeye\s+ekle",
+        low,
+    ):
+        return True
     return bool(
         re.search(
             r"video|ffmpeg|kesim|\bkes\b|kurgu|montaj|altyaz|sinema|medya\s+bilgi|"
-            r"transcode|donustur|dönüştür|panel.*ac|panel.*aç",
+            r"transcode|donustur|dönüştür|panel.*ac|panel.*aç|bunu|şunu|oynayan",
             low,
         )
     )

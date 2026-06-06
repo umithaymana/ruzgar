@@ -5,7 +5,11 @@
 (function videoChatBrain(global) {
   "use strict";
 
-  const VERSION = "video-super-brain-v1-2026-06-07";
+  const VERSION = "video-super-brain-v4-2026-06-06";
+
+  /** Çok adımlı plan ayırıcı: ve · sonra · virgül */
+  const STEP_SPLIT_RE =
+    /\s*(?:,\s*|\s+ve\s+|\s+sonra\s+|\s+ardından\s+|\s+ardindan\s+|\s*;\s*|\s*·\s*|\s+ayrıca\s+|\s+ayrica\s+)\s*/i;
 
   /** @type {Record<string, any>|null} */
   let deps = null;
@@ -57,6 +61,468 @@
     d().appendBubble?.("assistant", msg, opts);
   }
 
+  function getCinema() {
+    return d().getCinemaNowPlaying?.() || {};
+  }
+
+  function hasActiveCinema() {
+    if (d().hasActiveCinemaSession?.()) return true;
+    const c = getCinema();
+    return !!(String(c.url || "").trim() || String(c.localRel || "").trim());
+  }
+
+  function getPlayerTimeSec() {
+    const t = d().getVideoPlayerCurrentTimeSec?.();
+    return Number.isFinite(t) ? t : null;
+  }
+
+  function referencesCurrentVideo(raw) {
+    const low = fold(raw);
+    return (
+      /(?:^|\s)(?:bunu|buna|sunu|şunu|bunun|şunun|videoyu|filmi|klibi|kaydı|kaydi)(?:\s|$)/.test(
+        low,
+      ) ||
+      /(?:sinema(?:da|daki|yi)?|panelde(?:ki)?|oynat(?:ı|i)c(?:ı|i)(?:da|daki)?|açık\s+olan|acik\s+olan|şu\s+an(?:ki)?|su\s+an(?:ki)?)/.test(
+        low,
+      ) ||
+      /(?:oynayan|izlediğim|izledigim)\s+(?:video|film|klip)/.test(low)
+    );
+  }
+
+  function isVideoActionIntent(text) {
+    const low = fold(text);
+    return (
+      isVideoIntent(text) ||
+      /(?:indir|download|kes|trim|kurgu|montaj|mux|dönüştür|donustur|transcode|altyaz|subtitle|medya\s+bilgi|ffprobe|listeye\s+ekle|concat|birleştir|birlestir|kesime?\s+al|oynat|duraklat|durdur|panel)/.test(
+        low,
+      ) ||
+      referencesCurrentVideo(text)
+    );
+  }
+
+  function wantsCinemaDownload(raw) {
+    const low = fold(raw);
+    if (!/(?:indir|download|kesime?\s+al|yerel\s+dosya|duzenleme\s+icin|düzenleme\s+için)/.test(low)) {
+      return false;
+    }
+    if (d().extractVideoDownloadUrl?.(raw)) return false;
+    if (!hasActiveCinema()) return false;
+    return (
+      referencesCurrentVideo(raw) ||
+      /^(?:indir|download)\b/.test(low) ||
+      /sinema/.test(low) ||
+      /kesime?\s+al/.test(low) ||
+      /yerel/.test(low)
+    );
+  }
+
+  async function ensureLocalSource(announceChat) {
+    const relField = String(el().videoRelWorkspace?.value || "").trim();
+    if (relField) return relField;
+    const cinema = getCinema();
+    if (cinema.localRel) {
+      if (el().videoRelWorkspace) el().videoRelWorkspace.value = cinema.localRel;
+      return cinema.localRel;
+    }
+    if (announceChat) {
+      say("Ümit abi, sinemadaki videoyu düzenlemek için **yerel dosyaya** indiriyorum…");
+    }
+    const rel = await d().ensureLocalVideoSourceForEdit?.({
+      announce: !announceChat,
+      allowDownload: !!announceChat,
+    });
+    return rel || null;
+  }
+
+  function parseExplicitTrimRange(raw) {
+    const m = raw.match(
+      /(?:kes|trim)\s+(\d+(?::\d+(?::\d+)?)?(?:[.,]\d+)?)\s*[-–]\s*(\d+(?::\d+(?::\d+)?)?(?:[.,]\d+)?)/i,
+    );
+    if (!m) return null;
+    const start = d().parseVideoTimeSec?.(m[1]);
+    const end = d().parseVideoTimeSec?.(m[2]);
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return null;
+    return { start, end };
+  }
+
+  function parseNaturalTrimRange(raw) {
+    const explicit = parseExplicitTrimRange(raw);
+    if (explicit) return explicit;
+
+    const fromTo = raw.match(
+      /(\d+(?::\d+(?::\d+)?)?(?:[.,]\d+)?)\s*(?:['']?(?:dan|den|ten))\s*(\d+(?::\d+(?::\d+)?)?(?:[.,]\d+)?)\s*(?:['']?(?:a|e|ya|ye))?\s*kes/i,
+    );
+    if (fromTo) {
+      const start = d().parseVideoTimeSec?.(fromTo[1]);
+      const end = d().parseVideoTimeSec?.(fromTo[2]);
+      if (Number.isFinite(start) && Number.isFinite(end) && end > start) {
+        return { start, end };
+      }
+    }
+
+    const cur = getPlayerTimeSec();
+    const fromHere = raw.match(
+      /(?:buradan|su\s*andan|şu\s*andan|simdi(?:ki)?|şimdi(?:ki)?|oynat(?:ı|i)c(?:ı|i)(?:daki)?|konumdan)\s*(?:\d+(?:[.,]\d+)?\s*(?:saniye|sn|sec|dk|dakika|minute|min)\s*)?(?:kes|kırp|kirp|al)?/i,
+    );
+    const durMatch =
+      raw.match(
+        /(?:buradan|su\s*andan|şu\s*andan|simdi(?:ki)?|şimdi(?:ki)?|oynat(?:ı|i)c(?:ı|i)(?:daki)?|konumdan)\s*(\d+(?:[.,]\d+)?)\s*(saniye|sn|sec|dk|dakika|minute|min)/i,
+      ) ||
+      raw.match(/(\d+(?:[.,]\d+)?)\s*(saniye|sn|dk|dakika)\s*(?:lik\s*)?kes/i);
+    if (durMatch && cur != null && d().canSeekVideoPlayer?.()) {
+      let dur = parseFloat(String(durMatch[1]).replace(",", "."));
+      const unit = fold(durMatch[2] || "sn");
+      if (/dk|dakika|min/.test(unit)) dur *= 60;
+      if (dur > 0) return { start: cur, end: cur + dur };
+    }
+    if (fromHere && cur != null && d().canSeekVideoPlayer?.()) {
+      say(
+        "Kaç saniye/dakika keseyim? Örnek: «buradan 30 saniye kes» veya «kes 0:30-1:00»",
+        { error: true },
+      );
+      return { needClarify: true };
+    }
+    if (fromHere && cur == null) {
+      say(
+        "Web sinemada oynatıcı konumunu okuyamıyorum — saniye yaz: «kes 0:30-1:00» (tam indirme olmadan akıştan keserim).",
+        { error: true },
+      );
+      return { needClarify: true };
+    }
+    return null;
+  }
+
+  async function runTrimRange(range, raw) {
+    if (!range || range.needClarify) return true;
+    ensureVideo();
+    openDock("trim");
+    if (el().videoStartSec) el().videoStartSec.value = String(range.start.toFixed(2));
+    if (el().videoDurationSec) {
+      el().videoDurationSec.value = String((range.end - range.start).toFixed(2));
+    }
+    if (el().videoEndSec) el().videoEndSec.value = "";
+
+    const canStream = d().canStreamEditCinema?.();
+    if (canStream) {
+      say(
+        `Kesim **${range.start.toFixed(1)}–${range.end.toFixed(1)} sn** — oynatılan akıştan alınıyor (**tam indirme yok**)…`,
+      );
+    } else {
+      say(`Kesim **${range.start.toFixed(1)}–${range.end.toFixed(1)} sn** — FFmpeg çalışıyor…`);
+    }
+    d().setStatus?.("Kesim…", "Rüzgar");
+
+    if (d().runVideoTrimFromCinema) {
+      await d().runVideoTrimFromCinema(range);
+    } else {
+      let rel = await ensureLocalSource(true);
+      if (!rel) {
+        say("Önce sinemada video aç.", { error: true });
+        return true;
+      }
+      await d().runVideoTrimJob?.();
+    }
+    d().setStatus?.("Hazır", "Rüzgar");
+    return true;
+  }
+
+  async function handleCinemaDownload(raw) {
+    if (!wantsCinemaDownload(raw)) return false;
+    ensureVideo();
+    if (!hasActiveCinema()) {
+      say("Önce sinemada bir video aç — link ver veya arama yap.", { error: true });
+      return true;
+    }
+    say("Ümit abi, sinemadaki videoyu **yerel dosya** olarak indiriyorum…");
+    d().setStatus?.("Video indiriliyor…", "Rüzgar");
+    try {
+      const result = await d().runCinemaDownloadCurrent?.();
+      const rel = String(
+        result?.file_path || el().videoRelWorkspace?.value || getCinema().localRel || "",
+      ).trim();
+      if (rel) {
+        if (el().videoRelWorkspace) el().videoRelWorkspace.value = rel;
+        await d().loadVideoPreviewFromRel?.(rel);
+        say(`Ümit abi, hazır — yerel dosya sinemada.\n\`${rel}\`\n\nArtık «kes …», «medya bilgisi», «kurgu yap» diyebilirsin.`);
+      } else {
+        say("İndirme tamamlandı ama dosya yolu gelmedi — tekrar dene.", { error: true });
+      }
+      d().setStatus?.("Hazır", "Rüzgar");
+      return true;
+    } catch (e) {
+      say(`İndirme başarısız: ${d().formatClientChatError?.(e) || e}`, { error: true });
+      d().setStatus?.("Hazır", "Rüzgar");
+      return true;
+    }
+  }
+
+  async function tryCompoundVideoPlan(raw) {
+    return tryMultiStepVideoPlan(raw);
+  }
+
+  function normalizePlanMessage(raw) {
+    return String(raw || "")
+      .replace(
+        /^(?:şu|su|bu|aşağıdaki|asagidaki)\s+(?:işlem|islem|adım|adim|talimat)[^:]*[:：]\s*/i,
+        "",
+      )
+      .replace(/^(?:lütfen|lutfen|rica\s+etsem|rica)\s+/i, "")
+      .trim();
+  }
+
+  function splitVideoSteps(raw) {
+    const text = normalizePlanMessage(raw);
+    if (!text) return [];
+    const low = fold(text);
+    if (!STEP_SPLIT_RE.test(low)) return [text];
+    return text
+      .split(STEP_SPLIT_RE)
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+
+  function looksLikeMultiStepPlan(raw) {
+    return splitVideoSteps(raw).length >= 2;
+  }
+
+  function classifyVideoStep(stepRaw) {
+    const raw = String(stepRaw || "").trim();
+    if (!raw) return null;
+    const low = fold(raw);
+
+    if (wantsCinemaDownload(raw) || (/^(?:indir|download|kesime?\s+al)\b/.test(low) && hasActiveCinema())) {
+      return "download";
+    }
+    if (/(?:medya\s+bilgi|teknik\s+özet|teknik\s+ozet|ffprobe\b)/i.test(raw)) return "probe";
+    if (/(?:dönüştür|donustur|transcode|mp4\s+yap|format\s+değiştir)/i.test(low)) return "transcode";
+    if (/(?:altyaz[ıi]\s+g[öo]m|subtitle\s+burn|g[öo]m\s+altyaz)/i.test(low)) return "burn_sub";
+    if (/(?:\bmux\b|ses\s+ekle|harici\s+ses|ses\s+videoya)/i.test(low)) return "mux";
+    if (/(?:listeye\s+ekle|kurgu\s+listesine|kurguya\s+ekle|bin\s+e)/i.test(low)) return "add_bin";
+    if (/(?:kurgu\s+yap|montaj\s+yap|birleştir\s+kurgu|birlestir\s+kurgu)/i.test(low)) return "kurgu";
+    if (/(?:\bconcat\b|klip\s+birleştir|klip\s+birlestir|videoları\s+birleştir)/i.test(low)) {
+      return "concat";
+    }
+    if (/başlangıç\s+işaretle|baslangic\s+isaretle|mark\s+in|buraya\s+başlangıç/i.test(low)) {
+      return "mark_in";
+    }
+    if (/bitiş\s+işaretle|bitis\s+isaretle|mark\s+out|buraya\s+bitiş/i.test(low)) return "mark_out";
+    if (/kesime\s+yaz|trim\s+alan|alanları\s+doldur/i.test(low)) return "sync_trim";
+    if (/^(?:oynat|devam et|play)\b/i.test(low)) return "play";
+    if (/^(?:duraklat|dur|pause|durdur)\b/i.test(low)) return "pause";
+
+    const trimRange = parseNaturalTrimRange(raw);
+    if (trimRange?.needClarify) return "trim_clarify";
+    if (
+      trimRange &&
+      (/\bkes\b|\btrim\b|kırp|kirp|kesim/i.test(raw) ||
+        !!parseExplicitTrimRange(raw) ||
+        (/['']?(?:dan|den|ten)/i.test(raw) && /kes/i.test(raw)))
+    ) {
+      return { type: "trim", range: trimRange };
+    }
+    return null;
+  }
+
+  const STEP_LABELS = {
+    download: "İndir",
+    probe: "Medya bilgisi",
+    transcode: "Dönüştür",
+    burn_sub: "Altyazı göm",
+    mux: "Ses mux",
+    add_bin: "Kurgu listesine ekle",
+    kurgu: "Kurgu birleştir",
+    concat: "Klip birleştir",
+    mark_in: "Başlangıç işareti",
+    mark_out: "Bitiş işareti",
+    sync_trim: "Kes paneline yaz",
+    play: "Oynat",
+    pause: "Duraklat",
+    trim_clarify: "Kesim (netleştirme)",
+  };
+
+  function stepLabel(kind) {
+    if (kind && typeof kind === "object" && kind.type === "trim") return "Kesim";
+    return STEP_LABELS[kind] || String(kind || "?");
+  }
+
+  async function executeVideoStep(stepRaw) {
+    const raw = String(stepRaw || "").trim();
+    const kind = classifyVideoStep(raw);
+    if (!kind) return { ok: false, label: raw.slice(0, 40), error: "tanınmadı" };
+    if (kind === "trim_clarify") {
+      parseNaturalTrimRange(raw);
+      return { ok: false, label: stepLabel(kind), error: "netleştirme gerekli" };
+    }
+
+    ensureVideo();
+
+    try {
+      if (kind === "download") {
+        if (!hasActiveCinema()) {
+          return { ok: false, label: stepLabel(kind), error: "sinema boş" };
+        }
+        const result = await d().runCinemaDownloadCurrent?.();
+        const rel = String(
+          result?.file_path || el().videoRelWorkspace?.value || getCinema().localRel || "",
+        ).trim();
+        if (rel) {
+          if (el().videoRelWorkspace) el().videoRelWorkspace.value = rel;
+          await d().loadVideoPreviewFromRel?.(rel);
+          return { ok: true, label: stepLabel(kind), detail: rel };
+        }
+        return { ok: false, label: stepLabel(kind), error: "dosya yolu yok" };
+      }
+
+      if (kind === "probe") {
+        if (d().canStreamEditCinema?.()) {
+          await d().runVideoProbeFromStream?.();
+          return { ok: true, label: stepLabel(kind) };
+        }
+        if (!(await ensureLocalSource(false))) {
+          return { ok: false, label: stepLabel(kind), error: "yerel dosya yok" };
+        }
+        await d().runVideoProbeFromFile?.();
+        return { ok: true, label: stepLabel(kind) };
+      }
+
+      if (kind === "transcode") {
+        if (!(await ensureLocalSource(false))) {
+          return { ok: false, label: stepLabel(kind), error: "yerel dosya yok" };
+        }
+        openDock("trim");
+        await d().runVideoTranscodeJob?.();
+        return { ok: true, label: stepLabel(kind) };
+      }
+
+      if (kind === "burn_sub") {
+        if (!(await ensureLocalSource(false))) {
+          return { ok: false, label: stepLabel(kind), error: "yerel dosya yok" };
+        }
+        openDock("subtitle");
+        await d().runVideoBurnSubJob?.();
+        return { ok: true, label: stepLabel(kind) };
+      }
+
+      if (kind === "mux") {
+        if (!(await ensureLocalSource(false))) {
+          return { ok: false, label: stepLabel(kind), error: "yerel dosya yok" };
+        }
+        openDock("mux");
+        await d().runVideoMuxAudioJob?.();
+        return { ok: true, label: stepLabel(kind) };
+      }
+
+      if (kind === "add_bin") {
+        if (!(await ensureLocalSource(false))) {
+          return { ok: false, label: stepLabel(kind), error: "yerel dosya yok" };
+        }
+        d().addCurrentTimelineSelectionToBin?.();
+        openDock("edit");
+        return { ok: true, label: stepLabel(kind) };
+      }
+
+      if (kind === "kurgu") {
+        if (!(await ensureLocalSource(false))) {
+          return { ok: false, label: stepLabel(kind), error: "yerel dosya yok" };
+        }
+        openDock("edit");
+        await d().runVideoEditMixJob?.();
+        return { ok: true, label: stepLabel(kind) };
+      }
+
+      if (kind === "concat") {
+        openDock("edit");
+        await d().runVideoConcatJob?.();
+        return { ok: true, label: stepLabel(kind) };
+      }
+
+      if (kind === "mark_in") {
+        d().markVideoTimelineIn?.();
+        return { ok: true, label: stepLabel(kind) };
+      }
+      if (kind === "mark_out") {
+        d().markVideoTimelineOut?.();
+        return { ok: true, label: stepLabel(kind) };
+      }
+      if (kind === "sync_trim") {
+        d().syncVideoMarksToTrim?.();
+        openDock("trim");
+        return { ok: true, label: stepLabel(kind) };
+      }
+      if (kind === "play") {
+        const v = el().videoPreview;
+        if (v?.src) {
+          await v.play();
+          return { ok: true, label: stepLabel(kind) };
+        }
+        return { ok: false, label: stepLabel(kind), error: "oynatıcı boş" };
+      }
+      if (kind === "pause") {
+        el().videoPreview?.pause?.();
+        return { ok: true, label: stepLabel(kind) };
+      }
+
+      if (kind && kind.type === "trim") {
+        if (d().runVideoTrimFromCinema) {
+          await d().runVideoTrimFromCinema(kind.range);
+        } else {
+          await runTrimRange(kind.range, raw);
+        }
+        return { ok: true, label: stepLabel(kind) };
+      }
+    } catch (e) {
+      return {
+        ok: false,
+        label: stepLabel(kind),
+        error: d().formatClientChatError?.(e) || String(e),
+      };
+    }
+
+    return { ok: false, label: stepLabel(kind), error: "uygulanamadı" };
+  }
+
+  async function tryMultiStepVideoPlan(raw) {
+    const steps = splitVideoSteps(raw);
+    if (steps.length < 2) return false;
+
+    const kinds = steps.map((s) => classifyVideoStep(s));
+    const actionable = kinds.filter((k) => k && k !== "trim_clarify");
+    if (actionable.length < 2) return false;
+
+    ensureVideo();
+    say(
+      `Ümit abi, **${steps.length} adımlı** video planı:\n${steps
+        .map((s, i) => `${i + 1}. ${stepLabel(kinds[i]) || s}`)
+        .join("\n")}\n\nSırayla uyguluyorum…`,
+    );
+
+    const results = [];
+    for (let i = 0; i < steps.length; i++) {
+      const step = steps[i];
+      d().setStatus?.(`Video plan ${i + 1}/${steps.length}…`, "Rüzgar");
+      const out = await executeVideoStep(step);
+      results.push(out);
+      if (!out.ok) {
+        say(`Adım ${i + 1} durdu: **${out.label}** — ${out.error || "başarısız"}`, {
+          error: true,
+        });
+        break;
+      }
+    }
+
+    const lines = results.map(
+      (r, i) => `${i + 1}. ${r.label} — ${r.ok ? "✓" : "✗"}${r.error ? ` (${r.error})` : ""}`,
+    );
+    const allOk = results.every((r) => r.ok);
+    say(
+      (allOk ? "Ümit abi, plan **tamam**:\n" : "Ümit abi, plan **kısmen** tamam:\n") +
+        lines.join("\n") +
+        `\n\n(${VERSION})`,
+    );
+    d().setStatus?.("Hazır", "Rüzgar");
+    return true;
+  }
+
   function activeRelFromMessage(raw) {
     const bt = raw.match(/`([^`]+)`/);
     if (bt && bt[1]) return bt[1].trim();
@@ -68,7 +534,7 @@
       /(?:aç|ac|yükle|yukle|oynat|kullan)\s+(?:şu\s+|su\s+)?(?:dosyayı|dosyayi|videoyu|kaynağı|kaynagi)?\s*[:：]?\s*([\w.\-/]+)/i,
     );
     if (openM && openM[1]) return openM[1].trim();
-    return String(el().videoRelWorkspace?.value || "").trim();
+    return String(el().videoRelWorkspace?.value || getCinema().localRel || "").trim();
   }
 
   function recentRows() {
@@ -283,17 +749,18 @@
 
   function helpText() {
     return (
-      "Ümit abi, **sohbetten** video atölyesini yönetebilirsin — düğmelere dokunmana gerek yok:\n\n" +
-      "• Link + «**panelde aç / oynat**» — sinema akışı (YouTube, Vimeo, …)\n" +
-      "• Sinema **İndir · Kesime al · Kurguya ekle** veya «indir»\n" +
-      "• «şu filmi ara …» · «3 numarayı oynat» · «2 numarayı indir»\n" +
-      "• «son indirmeler» · «son indirilen» · «1 numarayı oynat»\n" +
-      "• «medya bilgisi» · «kes 0:30-1:00» · «dönüştür»\n" +
-      "• «altyazı göm» · «ses ekle / mux» · «klip birleştir / concat»\n" +
-      "• «başlangıç işaretle» · «bitiş işaretle» · «listeye ekle» · «kurgu yap»\n" +
-      "• «kesim paneli aç» · «çıktı klasörü» · «sıfırla»\n" +
-      "• «video motoru» — sinema paneline geç\n\n" +
-      "Ne istersen söyle; sinema paneline yansıtırım.\n" +
+      "Ümit abi, **sohbetten** sinemadaki videoyu yönet — komut ezberleme yok:\n\n" +
+      "• Link + «**panelde aç / oynat**» — canlı akış (YouTube, web…)\n" +
+      "• Oynarken: «**indir**» · «**bunu indir**» · «**kesime al**»\n" +
+      "• «**kes 0:30-1:00**» — **oynatırken** yalnızca o bölüm alınır (tam indirme yok)\n" +
+      "• «**buradan 30 saniye kes**» — HLS/yerel oynatıcıda konumdan\n" +
+      "• «**medya bilgisi**» — akıştan ffprobe (indirme yok)\n" +
+      "• «**dönüştür**» · «**altyazı göm**» · «**kurgu yap**» (kesim çıktısı veya «indir» sonrası)\n" +
+      "• **Çok adım:** «**kes 0:30-1:00, medya bilgisi, listeye ekle**»\n" +
+      "• Ana Motor'dan da aynı cümleler — sinema açıksa otomatik video'ya gider\n" +
+      "• «**son indirmeler**» · «**1 numarayı oynat**»\n\n" +
+      "Web sinemada «buradan kes» için saniye yaz; konum okunmaz.\n" +
+      "Altyazı/mux/kurgu için önce kesim çıktısı oluşur veya «indir» de.\n" +
       `(${VERSION})`
     );
   }
@@ -323,13 +790,23 @@
 
     const chatMode = d().activeMotorChatMode?.() || d().getCurrentMode?.() || "genel";
     if (chatMode !== "genel" && chatMode !== "video") return { handled: false };
-    if (chatMode === "genel" && !isVideoIntent(raw)) return { handled: false };
+    if (
+      chatMode === "genel" &&
+      !isVideoIntent(raw) &&
+      !(hasActiveCinema() && isVideoActionIntent(raw))
+    ) {
+      return { handled: false };
+    }
 
     if (chatMode === "video" && isCasualGreeting(raw)) {
       ensureVideo();
+      const cinemaHint = hasActiveCinema()
+        ? " Sinemada video **açık** — «indir», «kes …», «medya bilgisi» diyebilirsin."
+        : "";
       say(
-        "Aleyküm selam Ümit abi. **Video atölyesindeyiz** — sohbetle yönetirsin; düğmeler yedek.\n\n" +
-          "Örnek: link + «oynat», «kes 0:30-1:00», «medya bilgisi». Tam liste: **yardım**",
+        "Aleyküm selam Ümit abi. **Video atölyesindeyiz** — konuşarak veya yazarak yönetirsin." +
+          cinemaHint +
+          "\n\nTam liste: **yardım**",
       );
       d().setStatus?.("Hazır", "Rüzgar");
       return { handled: true, instant: true };
@@ -368,8 +845,12 @@
       return { handled: true, instant: true };
     }
 
+    if (await tryMultiStepVideoPlan(raw)) return { handled: true, instant: true };
+
     const ytOpen = await handleYoutubeOpen(raw);
     if (ytOpen) return { handled: true, instant: true, ok: ytOpen.ok !== false };
+
+    if (await handleCinemaDownload(raw)) return { handled: true, instant: true };
 
     const dl = await handleDownload(raw);
     if (dl) return { handled: true, instant: true, ok: dl.ok !== false };
@@ -390,7 +871,17 @@
       ensureVideo();
       say("Ümit abi, **Medya bilgisi** alınıyor…");
       d().setStatus?.("Medya özeti…", "Rüzgar");
-      await d().runVideoProbeFromFile?.();
+      if (d().canStreamEditCinema?.()) {
+        await d().runVideoProbeFromStream?.();
+      } else {
+        const rel = await ensureLocalSource(true);
+        if (!rel) {
+          say("Önce sinemada video aç.", { error: true });
+          d().setStatus?.("Hazır", "Rüzgar");
+          return { handled: true, instant: true };
+        }
+        await d().runVideoProbeFromFile?.();
+      }
       d().setStatus?.("Hazır", "Rüzgar");
       return { handled: true, instant: true };
     }
@@ -459,6 +950,11 @@
     if (/(?:kurgu\s+yap|montaj\s+yap|birleştir\s+kurgu|birlestir\s+kurgu)/i.test(low)) {
       ensureVideo();
       openDock("edit");
+      if (!(await ensureLocalSource(true))) {
+        say("Kurgu için yerel klip gerekir — önce «indir» veya listeye ekle.", { error: true });
+        d().setStatus?.("Hazır", "Rüzgar");
+        return { handled: true, instant: true };
+      }
       say("Ümit abi, kurgu birleştiriliyor…");
       await d().runVideoEditMixJob?.();
       d().setStatus?.("Hazır", "Rüzgar");
@@ -469,8 +965,9 @@
       ensureVideo();
       const rel = activeRelFromMessage(raw);
       if (rel && el().videoRelWorkspace) el().videoRelWorkspace.value = rel;
-      if (!String(el().videoRelWorkspace?.value || "").trim()) {
-        say("Önce kaynak yolu veya indirilmiş video olmalı.", { error: true });
+      let local = await ensureLocalSource(true);
+      if (!local) {
+        say("Önce kaynak video olmalı — sinemada aç veya «indir» de.", { error: true });
         openDock("trim");
         return { handled: true, instant: true };
       }
@@ -485,6 +982,10 @@
       ensureVideo();
       const rel = activeRelFromMessage(raw);
       if (rel && el().videoRelWorkspace) el().videoRelWorkspace.value = rel;
+      if (!(await ensureLocalSource(true))) {
+        say("Altyazı gömme için yerel video gerekir — «indir» de.", { error: true });
+        return { handled: true, instant: true };
+      }
       openDock("subtitle");
       say("Ümit abi, altyazı gömme başlıyor…");
       d().setStatus?.("Altyazı…", "Rüzgar");
@@ -497,6 +998,10 @@
       ensureVideo();
       const rel = activeRelFromMessage(raw);
       if (rel && el().videoRelWorkspace) el().videoRelWorkspace.value = rel;
+      if (!(await ensureLocalSource(true))) {
+        say("Ses mux için yerel video gerekir — «indir» de.", { error: true });
+        return { handled: true, instant: true };
+      }
       openDock("mux");
       say("Ümit abi, ses mux başlıyor…");
       d().setStatus?.("Mux…", "Rüzgar");
@@ -541,30 +1046,30 @@
       return { handled: true, instant: true };
     }
 
-    const trimMatch = raw.match(
-      /(?:kes|trim)\s+(\d+(?::\d+(?::\d+)?)?(?:[.,]\d+)?)\s*[-–]\s*(\d+(?::\d+(?::\d+)?)?(?:[.,]\d+)?)/i,
-    );
-    if (trimMatch) {
-      ensureVideo();
-      const start = d().parseVideoTimeSec?.(trimMatch[1]);
-      const end = d().parseVideoTimeSec?.(trimMatch[2]);
-      if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
-        say("Kesim aralığını anlayamadım. Örnek: `kes 0:30-1:00`", { error: true });
+    const trimRange = parseNaturalTrimRange(raw);
+    if (trimRange?.needClarify) return { handled: true, instant: true };
+    if (trimRange && !trimRange.needClarify) {
+      const isTrimMsg =
+        /\bkes\b|\btrim\b|kırp|kirp|kesim/i.test(raw) ||
+        !!parseExplicitTrimRange(raw) ||
+        (/['']?(?:dan|den|ten)/i.test(raw) && /kes/i.test(raw));
+      if (isTrimMsg) {
+        await runTrimRange(trimRange, raw);
         return { handled: true, instant: true };
       }
-      const rel = String(el().videoRelWorkspace?.value || "").trim();
-      if (!rel) {
-        say("Önce kaynak video olmalı — link ver veya «son indirilen» de.", { error: true });
-        openDock("trim");
-        return { handled: true, instant: true };
-      }
-      if (el().videoStartSec) el().videoStartSec.value = String(start.toFixed(2));
-      if (el().videoDurationSec) el().videoDurationSec.value = String((end - start).toFixed(2));
-      if (el().videoEndSec) el().videoEndSec.value = "";
-      openDock("trim");
-      say(`Kesim **${start.toFixed(1)}–${end.toFixed(1)} sn** — FFmpeg çalışıyor…`);
-      d().setStatus?.("Kesim…", "Rüzgar");
-      await d().runVideoTrimJob?.();
+    }
+
+    if (
+      (chatMode === "video" || chatMode === "genel") &&
+      hasActiveCinema() &&
+      isVideoActionIntent(raw)
+    ) {
+      say(
+        "Ümit abi, tam anlayamadım. Sinemada video açık — örnek:\n" +
+          "«**indir**» · «**kes 0:30-1:00**» · «**buradan 30 saniye kes**» · «**medya bilgisi**»\n" +
+          "Tam liste: **yardım**",
+        { error: true },
+      );
       d().setStatus?.("Hazır", "Rüzgar");
       return { handled: true, instant: true };
     }
@@ -578,13 +1083,14 @@
     w.className = "bubble assistant chat-welcome";
     w.setAttribute("role", "note");
     w.innerHTML =
-      `<p class="chat-welcome-lead"><strong>Video atölyesi — sohbetle yönet.</strong></p>` +
-      `<p>Düğmeler yedek; talimatları buraya yaz, sinema paneline yansıtırım.</p>` +
+      `<p class="chat-welcome-lead"><strong>Video atölyesi — konuşarak yönet.</strong></p>` +
+      `<p>Sinemada video açıkken «indir», «kes …», «medya bilgisi» de — komut ezberleme yok.</p>` +
       `<ul class="chat-welcome-list">` +
-      `<li>Link + «indir / oynat» → indirip sol oynatıcıda açarım</li>` +
-      `<li>«kes 0:30-1:00» · «medya bilgisi» · «kurgu yap»</li>` +
-      `<li>«son indirmeler» · «1 numarayı oynat»</li>` +
-      `<li>«yardım» — tüm komutlar</li>` +
+      `<li>«indir» / «bunu indir» — oynayan videoyu yerel dosyaya al</li>` +
+      `<li>«indir, kes 0:30-1:00, kurgu yap» — çok adımlı plan</li>` +
+      `<li>«kes 0:30-1:00» · «buradan 30 saniye kes»</li>` +
+      `<li>«medya bilgisi» · «kurgu yap» · «dönüştür»</li>` +
+      `<li>«yardım» — tüm talimatlar</li>` +
       `</ul>` +
       `<p class="chat-welcome-foot">${VERSION} · Ümit &amp; Gökçenur</p>`;
     container.appendChild(w);
@@ -598,7 +1104,10 @@
     VERSION,
     init,
     tryAtolyeFromMessage,
+    tryMultiStepFromMessage: tryMultiStepVideoPlan,
     isVideoIntent,
+    isVideoActionIntent,
+    looksLikeMultiStepPlan,
     showChatWelcome,
   };
 })(typeof window !== "undefined" ? window : globalThis);
