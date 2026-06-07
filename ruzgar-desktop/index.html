@@ -6,7 +6,7 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' blob: http: https: ws: wss: http://127.0.0.1:8779 ws://127.0.0.1:8779 wss://127.0.0.1:8779 http://localhost:8779 ws://localhost:8779 wss://localhost:8779 http://127.0.0.1:8777 ws://127.0.0.1:8777 http://localhost:8777 ws://localhost:8777 https://www.google.com https://*.google.com https://*.googleapis.com https://*.gstatic.com wss://*.google.com; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://upload.wikimedia.org https://*.wikimedia.org https://i.ytimg.com https://*.ytimg.com; media-src 'self' blob:; worker-src 'self' blob:; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://youtube.com https://*.youtube.com https://*.youtube-nocookie.com;" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RÜZGAR — Mimarlar: Ümit & Gökçenur</title>
-    <link rel="stylesheet" href="styles.css?v=20260607-video-v1" />
+    <link rel="stylesheet" href="styles.css?v=20260608-ses-voice-hub" />
     <link rel="stylesheet" href="ruzgar-split.css?v=20260602-workbench-split" />
   </head>
   <body>
@@ -2296,71 +2296,6 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
                   <button type="button" class="btn-primary btn-compact" id="btn-ses-stt">Metne dök</button>
                 </div>
                 <p id="ses-stt-hint" class="ses-hint"></p>
-                <div class="ses-clone-panel" id="ses-clone-panel">
-                  <h4 class="ses-section-title">Ses klonu (XTTS · Faz S4)</h4>
-                  <label class="ses-file-label" for="ses-clone-ref-input">Referans ses (30–120 sn, temiz konuşma)</label>
-                  <input id="ses-clone-ref-input" type="file" accept=".wav,.mp3,.m4a,.ogg,audio/*" />
-                  <div class="ses-stt-row">
-                    <label class="ses-lang-label">
-                      Profil
-                      <select id="ses-clone-karakter" class="ses-lang-select" aria-label="Klon profili">
-                        <option value="alim">Alim</option>
-                        <option value="edip">Edip</option>
-                        <option value="asistan" selected>Asistan</option>
-                      </select>
-                    </label>
-                    <button type="button" class="btn-secondary btn-compact" id="btn-ses-clone-upload">
-                      Referans kaydet
-                    </button>
-                  </div>
-                  <label class="ses-chk-label ses-chk-inline">
-                    <input type="checkbox" id="ses-use-clone" checked />
-                    Klon ses kullan (referans varsa · auto)
-                  </label>
-                  <p id="ses-clone-hint" class="ses-hint"></p>
-                </div>
-                <div class="ses-kolon-panel" id="ses-kolon-panel">
-                  <h4 class="ses-section-title">Ses kütüphanesi — kolonlanmış sesler</h4>
-                  <p class="ses-hint ses-kolon-intro">
-                    Klonladığınız sesleri burada tutun. Her satır için <strong>Sohbet</strong>,
-                    <strong>Tilavet</strong> veya <strong>Okuma</strong> motorunda hangisinin aktif olacağını
-                    işaretleyin; <strong>Uygula</strong> ile devreye alın.
-                  </p>
-                  <div class="ses-kolon-upload-row">
-                    <label class="ses-lang-label">
-                      Ses adı
-                      <input id="ses-kolon-ad" type="text" class="ses-kolon-ad-input" maxlength="120" placeholder="örn. Hoca tilavet" />
-                    </label>
-                    <label class="ses-file-label ses-kolon-file-label" for="ses-kolon-file-input">
-                      Referans (30–120 sn)
-                    </label>
-                    <input id="ses-kolon-file-input" type="file" accept=".wav,.mp3,.m4a,.ogg,audio/*" />
-                    <button type="button" class="btn-secondary btn-compact" id="btn-ses-kolon-ekle">Kütüphaneye ekle</button>
-                  </div>
-                  <div class="ses-kolon-table-wrap">
-                    <table class="ses-kolon-table" id="ses-kolon-table" aria-label="Ses kolon kütüphanesi">
-                      <thead>
-                        <tr>
-                          <th scope="col">Ses</th>
-                          <th scope="col" title="Genel sohbet TTS">Sohbet</th>
-                          <th scope="col" title="Kuran / tilavet okuma">Tilavet</th>
-                          <th scope="col" title="Okuma / ilim seslendirme">Okuma</th>
-                          <th scope="col"></th>
-                        </tr>
-                      </thead>
-                      <tbody id="ses-kolon-tbody">
-                        <tr class="ses-kolon-empty">
-                          <td colspan="5">Yükleniyor…</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                  <div class="ses-stt-row ses-kolon-actions">
-                    <button type="button" class="btn-primary btn-compact" id="btn-ses-kolon-uygula">Uygula</button>
-                    <button type="button" class="btn-secondary btn-compact" id="btn-ses-kolon-yenile">Yenile</button>
-                  </div>
-                  <p id="ses-kolon-hint" class="ses-hint"></p>
-                </div>
               </div>
               <div class="ses-col ses-col-transcript">
                 <h4 class="ses-section-title">Metin dökümü</h4>
@@ -2382,6 +2317,87 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
                 ></textarea>
               </div>
             </div>
+            <section class="ses-voice-hub" id="ses-voice-hub" aria-label="Ses klon ve kütüphane">
+              <header class="ses-voice-hub-head">
+                <h4 class="ses-section-title">Ses yönetimi — klon &amp; kütüphane</h4>
+                <p class="ses-hint ses-voice-hub-lead">
+                  Sol kart: alim/edip/asistan profil referansı. Sağ kart: kolonlanmış sesler — hangi motorda
+                  (sohbet / tilavet / okuma) kullanılacağını seçip <strong>Uygula</strong> deyin.
+                </p>
+              </header>
+              <div class="ses-voice-hub-grid">
+                <div class="ses-voice-card ses-clone-panel" id="ses-clone-panel">
+                  <h5 class="ses-card-title">Profil klonu (XTTS · S4)</h5>
+                  <label class="ses-file-label" for="ses-clone-ref-input">Referans ses (30–120 sn)</label>
+                  <input id="ses-clone-ref-input" type="file" accept=".wav,.mp3,.m4a,.ogg,audio/*" />
+                  <div class="ses-stt-row ses-clone-actions">
+                    <label class="ses-lang-label">
+                      Profil
+                      <select id="ses-clone-karakter" class="ses-lang-select" aria-label="Klon profili">
+                        <option value="alim">Alim</option>
+                        <option value="edip">Edip</option>
+                        <option value="asistan" selected>Asistan</option>
+                      </select>
+                    </label>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-ses-clone-upload">
+                      Kaydet
+                    </button>
+                  </div>
+                  <label class="ses-chk-label ses-chk-inline">
+                    <input type="checkbox" id="ses-use-clone" checked />
+                    Klon ses kullan (auto)
+                  </label>
+                  <p id="ses-clone-hint" class="ses-hint"></p>
+                </div>
+                <div class="ses-voice-card ses-kolon-panel" id="ses-kolon-panel">
+                  <h5 class="ses-card-title">Ses kütüphanesi</h5>
+                  <div class="ses-kolon-upload-row">
+                    <label class="ses-kolon-field">
+                      <span class="ses-file-label">Ses adı</span>
+                      <input
+                        id="ses-kolon-ad"
+                        type="text"
+                        class="ses-kolon-ad-input"
+                        maxlength="120"
+                        placeholder="örn. Hoca tilavet"
+                      />
+                    </label>
+                    <label class="ses-kolon-field ses-kolon-field-file">
+                      <span class="ses-file-label">Referans dosyası</span>
+                      <input id="ses-kolon-file-input" type="file" accept=".wav,.mp3,.m4a,.ogg,audio/*" />
+                    </label>
+                    <div class="ses-kolon-upload-actions">
+                      <button type="button" class="btn-secondary btn-compact" id="btn-ses-kolon-ekle">Ekle</button>
+                    </div>
+                  </div>
+                  <div class="ses-kolon-table-wrap">
+                    <table class="ses-kolon-table" id="ses-kolon-table" aria-label="Ses kolon kütüphanesi">
+                      <thead>
+                        <tr>
+                          <th scope="col">Ses</th>
+                          <th scope="col" title="Genel sohbet TTS">Sohbet</th>
+                          <th scope="col" title="Kuran / tilavet okuma">Tilavet</th>
+                          <th scope="col" title="Okuma / ilim seslendirme">Okuma</th>
+                          <th scope="col" aria-label="İşlem"></th>
+                        </tr>
+                      </thead>
+                      <tbody id="ses-kolon-tbody">
+                        <tr class="ses-kolon-empty">
+                          <td colspan="5">Yükleniyor…</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="ses-kolon-footer">
+                    <div class="ses-kolon-actions">
+                      <button type="button" class="btn-primary btn-compact" id="btn-ses-kolon-uygula">Uygula</button>
+                      <button type="button" class="btn-secondary btn-compact" id="btn-ses-kolon-yenile">Yenile</button>
+                    </div>
+                    <p id="ses-kolon-hint" class="ses-hint ses-kolon-hint"></p>
+                  </div>
+                </div>
+              </div>
+            </section>
             <div class="ses-dub-panel" id="ses-dub-panel">
               <h4 class="ses-section-title">Dublaj prototipi (Faz S6)</h4>
               <p class="ses-hint ses-dub-intro">
