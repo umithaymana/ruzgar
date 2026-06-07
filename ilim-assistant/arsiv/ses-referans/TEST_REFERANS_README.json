@@ -1,0 +1,23 @@
+{
+  "referanslar": [
+    {
+      "profil": "kuran",
+      "dosya": "D:/CURSOR PROJELER/YAPAY ZEKA/ilim-assistant/arsiv/ses-referans/kuran.wav",
+      "kaynak": "File:Sura Minshawi 96.ogg",
+      "not_tr": "Sure Al-Alak tilaveti — Muhammad Siddiq Al-Minshawi (Commons PD)"
+    },
+    {
+      "profil": "gazel",
+      "dosya": "D:/CURSOR PROJELER/YAPAY ZEKA/ilim-assistant/arsiv/ses-referans/gazel.wav",
+      "kaynak": "File:002 Misra-i Berceste 17.04.2013.OGG",
+      "not_tr": "Misra-i Berceste şiir okuma kesiti"
+    },
+    {
+      "profil": "ilahi",
+      "dosya": "D:/CURSOR PROJELER/YAPAY ZEKA/ilim-assistant/arsiv/ses-referans/ilahi.wav",
+      "kaynak": "File:002 Nur iklimi 20.05.2010 Prof.Dr M CESUR.ogg",
+      "not_tr": "Tasavvuf sohbet kesiti — yumuşak vokal ilahi profili testi (CC)"
+    }
+  ],
+  "kullanim": "Rüzgar tilavet/klon testi"
+}

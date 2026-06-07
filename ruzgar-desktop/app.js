@@ -1844,6 +1844,14 @@ function applyMotorHandoff(modeId, handoffText) {
       break;
     case "ses":
       switchMode("ses");
+      if (window.RuzgarAnaMotorHub?.parseTilavetReadCommand) {
+        const tr = window.RuzgarAnaMotorHub.parseTilavetReadCommand(t);
+        if (tr?.text) {
+          if (el.sesTranscript) el.sesTranscript.value = tr.text;
+          el.sesTranscript?.focus();
+          break;
+        }
+      }
       if (el.sesTranscript) el.sesTranscript.value = t;
       el.sesTranscript?.focus();
       break;
@@ -5343,11 +5351,12 @@ async function refreshSesCloneHint() {
     if (okRefs.length) parts.push(`referans: ${okRefs.join(", ")}`);
     else parts.push("referans bekleniyor");
     el.sesCloneHint.textContent = j.hint_tr || parts.join(" · ");
-  } catch {
+    } catch {
     el.sesCloneHint.textContent =
       "Klon durumu okunamadı — sunucu çalışıyor mu?";
   }
 }
+window.refreshSesCloneHint = refreshSesCloneHint;
 
 async function refreshSesDubHint() {
   if (!el.sesDubMeta) return;
@@ -5538,6 +5547,9 @@ function wireSesAtolye() {
     });
   }
   void refreshSesCloneHint();
+  if (window.ruzgarSesKolonlar?.refresh) {
+    void window.ruzgarSesKolonlar.refresh();
+  }
   if (el.btnSesToChat) {
     el.btnSesToChat.addEventListener("click", () => {
       const t = String(el.sesTranscript?.value || "").trim();
@@ -8492,6 +8504,16 @@ function initAnaMotorHub() {
     getCinemaNowPlaying,
     hasSesFileSelected: () => !!(el.audioFileInput?.files?.[0]),
     runSesSttFromFile: () => runSesSttFromFile(),
+    setSesTranscript: (txt) => {
+      if (el.sesTranscript) el.sesTranscript.value = String(txt || "");
+    },
+    speakStudioTilavetWithProfil: async (text, profil) => {
+      try {
+        return await speakStudioTilavet(text, { tilavetReferans: profil });
+      } catch {
+        return false;
+      }
+    },
     runHizirFromChat: (text) => {
       if (!hizirChatImpliesProductScan(text)) return false;
       if (el.hizirTaraQuery) {
@@ -12631,12 +12653,14 @@ async function speakStudioTranscript(raw) {
   speakTextImmediate(plain);
 }
 
-/** Tilavet modu — Kuran / hadis / Arapca vakur okuma (Faz S5). */
-async function speakStudioTilavet(raw) {
+/** Tilavet modu — Kuran / gazel / ilahi referans klonu (Faz S5). @returns {Promise<boolean>} */
+async function speakStudioTilavet(raw, opts) {
+  const options = opts && typeof opts === "object" ? opts : {};
+  const tilavetReferans = String(options.tilavetReferans || options.profil || "").trim().toLowerCase();
   const plain = ttsPlainForSpeech(raw || "");
   if (!plain) {
     flashRuzgarDurum("Tilavet icin metin yok.");
-    return;
+    return false;
   }
   let kar = "alim";
   try {
@@ -12648,24 +12672,35 @@ async function speakStudioTilavet(raw) {
   } catch (_) {
     /* ignore */
   }
-  flashRuzgarDurum("Tilavet okunuyor (vakur tempo)…");
+  const profLabel = tilavetReferans || "tilavet";
+  flashRuzgarDurum(`${profLabel} sesiyle sentezleniyor — XTTS ilk seferde uzun sürebilir…`);
   setStatus("Tilavet…", "Rüzgar");
+  const ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+  const abortTimer = ctrl
+    ? window.setTimeout(() => ctrl.abort(), 600000)
+    : null;
   try {
+    const payload = {
+      text: plain,
+      karakter: kar,
+      backend: "auto",
+    };
+    if (tilavetReferans) payload.tilavet_referans = tilavetReferans;
     const res = await fetch(`${API}/api/tts/tilavet`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        text: plain,
-        karakter: kar,
-        backend: "edge",
-      }),
+      body: JSON.stringify(payload),
+      signal: ctrl ? ctrl.signal : undefined,
     });
     if (res.ok) {
       const blob = await res.blob();
+      if (!blob || blob.size < 128) {
+        throw new Error("Ses dosyası boş döndü.");
+      }
       await playTtsBlob(blob);
       setStatus("Hazır");
-      flashRuzgarDurum("Tilavet okuma tamam.");
-      return;
+      flashRuzgarDurum("Tilavet okuma tamam — ses çalındı.");
+      return true;
     }
     let j = {};
     try {
@@ -12673,12 +12708,21 @@ async function speakStudioTilavet(raw) {
     } catch {
       j = {};
     }
-    flashRuzgarDurum(String(j.detail || res.statusText || "Tilavet basarisiz"));
+    const detail = String(j.detail || res.statusText || "Tilavet basarisiz");
+    flashRuzgarDurum(detail);
+    throw new Error(detail);
   } catch (e) {
-    flashRuzgarDurum(e && e.message ? e.message : String(e));
+    if (e && e.name === "AbortError") {
+      flashRuzgarDurum("Tilavet zaman aşımı (10 dk) — CPU'da model hâlâ yükleniyor olabilir.");
+    } else {
+      flashRuzgarDurum(e && e.message ? e.message : String(e));
+    }
+    throw e;
   } finally {
+    if (abortTimer) clearTimeout(abortTimer);
     setStatus("Hazır", "Rüzgar");
   }
+  return false;
 }
 
 function speakTextImmediate(text) {

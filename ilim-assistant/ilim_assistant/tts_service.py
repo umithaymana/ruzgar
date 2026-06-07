@@ -477,6 +477,7 @@ async def synthesize_clone_mp3(
     karakter: str,
     language: str = "tr",
     speaker_rel: str | None = None,
+    referans_wav: Path | None = None,
     meta: dict[str, Any],
     ayar: dict[str, Any] | None = None,
 ) -> Path:
@@ -487,7 +488,13 @@ async def synthesize_clone_mp3(
         wav_to_mp3,
     )
 
-    ref = coz_referans_yolu(karakter, ayar=ayar, speaker_rel=speaker_rel)
+    ref = None
+    if referans_wav is not None:
+        rw = Path(referans_wav).resolve()
+        if rw.is_file() and rw.stat().st_size > 4096:
+            ref = rw
+    if ref is None:
+        ref = coz_referans_yolu(karakter, ayar=ayar, speaker_rel=speaker_rel)
     if ref is None:
         raise FileNotFoundError(
             "Klon referans sesi yok. Ses atölyesinden 30–120 sn .wav yükleyin "
@@ -531,6 +538,7 @@ async def synthesize_tilavet_mp3(
     karakter: str = "alim",
     meta: dict[str, Any],
     ayar: dict[str, Any] | None = None,
+    tilavet_referans: str | None = None,
 ) -> Path:
     """Faz S5: tilavet parcalama + uzun durak; referans varsa XTTS klon (videodan ses)."""
     from ilim_assistant.motorlar.ses_klon_motoru import (
@@ -539,6 +547,7 @@ async def synthesize_tilavet_mp3(
         wav_to_mp3,
         xtts_runtime_available,
     )
+    from ilim_assistant.motorlar.ses_klon_motoru import _REPO_ROOT
     from ilim_assistant.motorlar.ses_prosody import DurakTuru, prosody_ozet
     from ilim_assistant.motorlar.ses_tilavet import (
         TilavetMod,
@@ -558,16 +567,26 @@ async def synthesize_tilavet_mp3(
 
     ay = ayar or read_ses_ayarlari()
     mod = tespit_tilavet_modu(text)
-    ref_profil = tilavet_referans_profili(mod, text)
+    ref_hint = (tilavet_referans or "").strip().lower()
+    if ref_hint in ("kuran", "gazel", "ilahi"):
+        ref_profil = ref_hint
+    else:
+        ref_profil = tilavet_referans_profili(mod, text)
     ref_wav = coz_tilavet_referans_yolu(ref_profil, ayar=ay)
+    if not ref_wav:
+        try:
+            from ilim_assistant.motorlar.ses_kolon_kutuphanesi import coz_aktif_kolon_wav
+
+            ref_wav = coz_aktif_kolon_wav("tilavet", ayar=ay)
+        except Exception:
+            pass
     refs_map = ay.get("referans") if isinstance(ay.get("referans"), dict) else {}
     speaker_rel = refs_map.get(ref_profil) if refs_map else None
     if not speaker_rel and ref_wav:
-        repo = Path(__file__).resolve().parents[2].parent
         try:
-            speaker_rel = ref_wav.relative_to(repo).as_posix()
+            speaker_rel = ref_wav.resolve().relative_to(_REPO_ROOT.resolve()).as_posix()
         except ValueError:
-            speaker_rel = ref_wav.as_posix()
+            speaker_rel = ref_wav.resolve().as_posix()
     use_clone = bool(
         ref_wav
         and xtts_runtime_available()
@@ -590,19 +609,37 @@ async def synthesize_tilavet_mp3(
     engine_tag = "xtts-tilavet-clone" if use_clone else "edge-tts-tilavet"
 
     if use_clone and len(parcalar) <= 1 and parcalar[0].sonraki_durak == DurakTuru.yok:
-        return await synthesize_clone_mp3(
-            text,
-            karakter=karakter,
-            language=clone_lang,
-            speaker_rel=speaker_rel,
-            meta={
-                **meta,
-                "engine": engine_tag,
-                "tilavet_mod": mod.value,
-                "tilavet_referans": ref_profil,
-            },
-            ayar=ay,
-        )
+        try:
+            return await synthesize_clone_mp3(
+                text,
+                karakter=karakter,
+                language=clone_lang,
+                speaker_rel=speaker_rel,
+                referans_wav=ref_wav,
+                meta={
+                    **meta,
+                    "engine": engine_tag,
+                    "tilavet_mod": mod.value,
+                    "tilavet_referans": ref_profil,
+                },
+                ayar=ay,
+            )
+        except Exception as exc:
+            if not edge_available():
+                raise
+            return await synthesize_edge_mp3_in_process(
+                text,
+                voice=voice,
+                rate=rate,
+                pitch=pitch,
+                meta={
+                    **meta,
+                    "engine": "edge-tts-tilavet",
+                    "tilavet_mod": mod.value,
+                    "tilavet_referans": ref_profil,
+                    "tilavet_clone_fallback": str(exc)[:120],
+                },
+            )
 
     if len(parcalar) <= 1 and parcalar[0].sonraki_durak == DurakTuru.yok:
         return await synthesize_edge_mp3_in_process(
@@ -621,6 +658,7 @@ async def synthesize_tilavet_mp3(
                 karakter=karakter,
                 language=clone_lang,
                 speaker_rel=speaker_rel,
+                referans_wav=ref_wav,
                 meta={**meta, "engine": engine_tag, "tilavet_fallback": "no_ffmpeg"},
                 ayar=ay,
             )

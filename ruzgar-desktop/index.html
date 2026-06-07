@@ -2319,6 +2319,48 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
                   </label>
                   <p id="ses-clone-hint" class="ses-hint"></p>
                 </div>
+                <div class="ses-kolon-panel" id="ses-kolon-panel">
+                  <h4 class="ses-section-title">Ses kütüphanesi — kolonlanmış sesler</h4>
+                  <p class="ses-hint ses-kolon-intro">
+                    Klonladığınız sesleri burada tutun. Her satır için <strong>Sohbet</strong>,
+                    <strong>Tilavet</strong> veya <strong>Okuma</strong> motorunda hangisinin aktif olacağını
+                    işaretleyin; <strong>Uygula</strong> ile devreye alın.
+                  </p>
+                  <div class="ses-kolon-upload-row">
+                    <label class="ses-lang-label">
+                      Ses adı
+                      <input id="ses-kolon-ad" type="text" class="ses-kolon-ad-input" maxlength="120" placeholder="örn. Hoca tilavet" />
+                    </label>
+                    <label class="ses-file-label ses-kolon-file-label" for="ses-kolon-file-input">
+                      Referans (30–120 sn)
+                    </label>
+                    <input id="ses-kolon-file-input" type="file" accept=".wav,.mp3,.m4a,.ogg,audio/*" />
+                    <button type="button" class="btn-secondary btn-compact" id="btn-ses-kolon-ekle">Kütüphaneye ekle</button>
+                  </div>
+                  <div class="ses-kolon-table-wrap">
+                    <table class="ses-kolon-table" id="ses-kolon-table" aria-label="Ses kolon kütüphanesi">
+                      <thead>
+                        <tr>
+                          <th scope="col">Ses</th>
+                          <th scope="col" title="Genel sohbet TTS">Sohbet</th>
+                          <th scope="col" title="Kuran / tilavet okuma">Tilavet</th>
+                          <th scope="col" title="Okuma / ilim seslendirme">Okuma</th>
+                          <th scope="col"></th>
+                        </tr>
+                      </thead>
+                      <tbody id="ses-kolon-tbody">
+                        <tr class="ses-kolon-empty">
+                          <td colspan="5">Yükleniyor…</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="ses-stt-row ses-kolon-actions">
+                    <button type="button" class="btn-primary btn-compact" id="btn-ses-kolon-uygula">Uygula</button>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-ses-kolon-yenile">Yenile</button>
+                  </div>
+                  <p id="ses-kolon-hint" class="ses-hint"></p>
+                </div>
               </div>
               <div class="ses-col ses-col-transcript">
                 <h4 class="ses-section-title">Metin dökümü</h4>
@@ -2658,6 +2700,7 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
     <script src="tercume-atolye.js?v=20260606-tools-panel"></script>
     <script src="ruzgar-sohbet-anlama.js?v=20260608-v4-sinema-url"></script>
     <script src="ruzgar-gorsel-niyet.js?v=20260608-v1"></script>
+    <script src="ruzgar-ses-kolonlar.js?v=20260608-v1"></script>
     <script src="video-atolye.js?v=20260607-v5-create"></script>
     <script src="video-chat-brain.js?v=20260608-v72-v8"></script>
     <script src="motor-eylem-panel.js?v=20260607-faz-c2"></script>

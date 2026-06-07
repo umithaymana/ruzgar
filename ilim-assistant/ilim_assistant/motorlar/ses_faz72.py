@@ -53,6 +53,16 @@ _READ_TEXT_RE = re.compile(
     r"(?:oku|seslendir|söyle|soyle|okut)\s*[:：]\s*(.+)$",
     re.I | re.DOTALL,
 )
+_TILAVET_READ_RE = re.compile(
+    r"(?:^|\b)(kuran|gazel|ilahi|tilavet)\s+ses(?:i(?:yle|ni)?)?"
+    r"(?:\s+(?:ile|le))?\s*(?:oku|seslendir|okut|dinlet)\s*[:：]\s*(.+)$",
+    re.I | re.DOTALL,
+)
+_TILAVET_READ_INLINE_RE = re.compile(
+    r"^(?:kuran|gazel|ilahi|tilavet)\s+ses(?:i(?:yle|ni)?)?"
+    r"(?:\s+(?:ile|le))?\s*(?:oku|seslendir|okut|dinlet)\s+(.+)$",
+    re.I | re.DOTALL,
+)
 _QUOTED_RE = re.compile(r"[«\"'](.+?)[»\"']", re.DOTALL)
 
 _REGISTERED = False
@@ -83,8 +93,29 @@ def ensure_kernel_registered() -> None:
     _REGISTERED = True
 
 
+def parse_tilavet_read_command(message: str) -> dict[str, str] | None:
+    """«kuran sesiyle oku: …» → {profil, text}."""
+    raw = (message or "").strip()
+    if not raw:
+        return None
+    for rx in (_TILAVET_READ_RE, _TILAVET_READ_INLINE_RE):
+        m = rx.search(raw) if rx is _TILAVET_READ_RE else rx.match(raw)
+        if not m:
+            continue
+        prof = m.group(1).strip().lower()
+        if prof == "tilavet":
+            prof = "kuran"
+        body = (m.group(2) or "").strip()
+        if len(body) >= 2:
+            return {"profil": prof, "text": body}
+    return None
+
+
 def extract_read_text(message: str) -> str:
     raw = (message or "").strip()
+    til = parse_tilavet_read_command(raw)
+    if til:
+        return til["text"]
     m = _READ_TEXT_RE.search(raw)
     if m:
         return m.group(1).strip()
@@ -129,6 +160,15 @@ def classify_ses_intent(
 
     if _CONTENT_HINT_RE.search(low):
         return {"intent": INTENT_COMMAND, "reason": "content_profile_hint"}
+
+    til = parse_tilavet_read_command(raw)
+    if til:
+        return {
+            "intent": INTENT_DO,
+            "reason": "tilavet_read",
+            "text": til["text"],
+            "tilavet_profil": til["profil"],
+        }
 
     read_txt = extract_read_text(raw)
     if read_txt or (_READ_RE.search(raw) and len(raw) > 12):
@@ -229,13 +269,32 @@ def format_content_profile_hint(message: str) -> str:
     )
 
 
-def format_read_guidance(text: str) -> str:
+def format_tilavet_read_guidance(profil: str, text: str) -> str:
+    body = (text or "").strip()
+    prof = (profil or "kuran").strip().lower()
+    if prof == "tilavet":
+        prof = "kuran"
+    n = len(body)
+    preview = body if n <= 220 else f"{body[:220]}…"
+    return (
+        f"Ümit abi, **{prof}** referans sesiyle okuma hazır ({n} karakter).\n\n"
+        f"Önizleme: {preview}\n\n"
+        "Seslendirme otomatik başlatılır (XTTS klon varsa referans WAV kullanılır).\n"
+        f"({FAZ72_VERSION})"
+    )
+
+
+def format_read_guidance(text: str, *, message: str = "") -> str:
     from ilim_assistant.motorlar.ses_motoru import (
         analiz_icerik_yolu,
         varsayilan_karakter_icerige,
     )
     from ilim_assistant.tts_service import read_ses_ayarlari
     from ilim_assistant.motorlar.ses_motoru import normalize_ses_karakteri
+
+    til = parse_tilavet_read_command(message or text)
+    if til:
+        return format_tilavet_read_guidance(til["profil"], til["text"])
 
     body = (text or "").strip()
     if not body:
@@ -292,9 +351,13 @@ def maybe_instant_faz72(message: str) -> str | None:
         if reason == "set_profile":
             prof = intent.get("profile") or "asistan"
             return run_set_profile(str(prof))
+        if reason == "tilavet_read":
+            prof = str(intent.get("tilavet_profil") or "kuran")
+            txt = intent.get("text") or extract_read_text(raw) or raw
+            return format_tilavet_read_guidance(prof, str(txt))
         if reason == "read_text":
             txt = intent.get("text") or extract_read_text(raw) or raw
-            return format_read_guidance(txt)
+            return format_read_guidance(txt, message=raw)
 
     low = _ascii_fold(raw)
     if low.startswith("ses profil:") or low.startswith("profil:"):
@@ -311,7 +374,7 @@ def augment_ses_context(base: str) -> str:
     ensure_kernel_registered()
     extra = (
         "\n[SES ROK — Faz 72]\n"
-        "Konuşarak: «alim moduna geç» · «ses ayarları» · «oku: …» · «stt durumu»\n"
+        "Konuşarak: «kuran sesiyle oku: …» · «gazel sesiyle oku» · «alim moduna geç» · «stt durumu»\n"
         "Kapat: RUZGAR_SES_FAZ72=0\n"
     )
     return (base or "").rstrip() + extra

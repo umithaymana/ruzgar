@@ -14,6 +14,9 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
+# XTTS model indirme/yükleme — interaktif CPML sorusunu atla (RUZGAR_BRAIN.env: COQUI_TOS_AGREED=1)
+os.environ.setdefault("COQUI_TOS_AGREED", "1")
+
 from ilim_assistant.motorlar.ses_motoru import SesKarakteri, normalize_ses_karakteri
 
 MIMAR = "Ümit & Gökçenur"
@@ -129,8 +132,18 @@ def coz_referans_yolu(
 
     if speaker_rel and str(speaker_rel).strip():
         rel = str(speaker_rel).strip().replace("\\", "/")
-        p = (_REPO_ROOT / rel).resolve()
+        rp = Path(rel)
+        p = rp.resolve() if rp.is_absolute() else (_REPO_ROOT / rel).resolve()
         adaylar.append(p)
+
+    try:
+        from ilim_assistant.motorlar.ses_kolon_kutuphanesi import coz_aktif_kolon_wav
+
+        aktif = coz_aktif_kolon_wav("sohbet", ayar=ayar)
+        if aktif:
+            adaylar.insert(0, aktif)
+    except Exception:
+        pass
 
     refs = (ayar or {}).get("referans") or {}
     if isinstance(refs, dict):
@@ -160,9 +173,23 @@ def coz_tilavet_referans_yolu(
             p = (_REPO_ROOT / str(rel).strip()).resolve()
             if p.is_file() and p.stat().st_size > 4096:
                 return p
+        for key in (f"kolon_tilavet", prof):
+            rel2 = refs.get(key)
+            if rel2:
+                p2 = (_REPO_ROOT / str(rel2).strip()).resolve()
+                if p2.is_file() and p2.stat().st_size > 4096:
+                    return p2
     p2 = referans_klasoru() / f"{prof}.wav"
     if p2.is_file() and p2.stat().st_size > 4096:
         return p2
+    try:
+        from ilim_assistant.motorlar.ses_kolon_kutuphanesi import coz_aktif_kolon_wav
+
+        aktif = coz_aktif_kolon_wav("tilavet", ayar=ayar)
+        if aktif:
+            return aktif
+    except Exception:
+        pass
     return None
 
 

@@ -752,6 +752,7 @@ class TtsBody(BaseModel):
     emotion: str | None = None
     lang: str | None = "tr"
     speaker_rel: str | None = None
+    tilavet_referans: str | None = None
 
 
 class SesSettingsPatchBody(BaseModel):
@@ -769,6 +770,20 @@ class SesReferansVideoBody(BaseModel):
     profil: str = "kuran"
     start_sec: float = 0.0
     duration_sec: float = 90.0
+
+
+class SesKolonUygulaBody(BaseModel):
+    sohbet: str | None = None
+    tilavet: str | None = None
+    okuma: str | None = None
+
+
+class SesKolonAddBody(BaseModel):
+    ad: str = ""
+    kolon_id: str | None = None
+    sohbet: bool = False
+    tilavet: bool = False
+    okuma: bool = False
 
 
 class MimarFotoModerateBody(BaseModel):
@@ -7205,6 +7220,7 @@ async def api_tts_tilavet(body: TtsBody):
             karakter=kar.value,
             meta=meta,
             ayar=ayar,
+            tilavet_referans=(body.tilavet_referans or "").strip() or None,
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
@@ -7356,6 +7372,93 @@ def api_ses_referans_durum() -> dict[str, Any]:
         "clone": clone_status_snapshot(),
         "tilavet_referans": referans_durum_snapshot(),
     }
+
+
+@app.get("/api/ses/kolonlar")
+def api_ses_kolonlar_liste() -> dict[str, Any]:
+    """Klon ses kütüphanesi — tüm kolonlar + aktif motor eşlemesi."""
+    from ilim_assistant.motorlar.ses_klon_kutuphanesi import list_kolonlar_snapshot
+    from ilim_assistant.motorlar.ses_klon_motoru import clone_status_snapshot
+
+    snap = list_kolonlar_snapshot()
+    snap["xtts"] = clone_status_snapshot().get("xtts")
+    return snap
+
+
+@app.post("/api/ses/kolonlar/uygula")
+def api_ses_kolonlar_uygula(body: SesKolonUygulaBody) -> dict[str, Any]:
+    from ilim_assistant.motorlar.ses_kolon_kutuphanesi import uygula_motor_eslemesi
+
+    try:
+        return uygula_motor_eslemesi(
+            {
+                "sohbet": body.sohbet,
+                "tilavet": body.tilavet,
+                "okuma": body.okuma,
+            }
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@app.post("/api/ses/kolonlar")
+async def api_ses_kolonlar_ekle(
+    file: UploadFile = File(...),
+    ad: Annotated[str, Form()] = "",
+    kolon_id: Annotated[str, Form()] = "",
+    sohbet: Annotated[str, Form()] = "0",
+    tilavet: Annotated[str, Form()] = "0",
+    okuma: Annotated[str, Form()] = "0",
+) -> dict[str, Any]:
+    """Yeni kolon sesi yükle (30–120 sn önerilir)."""
+    import tempfile
+
+    from ilim_assistant.motorlar.ses_kolon_kutuphanesi import add_kolon_from_upload, list_kolonlar_snapshot
+
+    raw = await file.read()
+    if not raw or len(raw) < 4096:
+        raise HTTPException(status_code=400, detail="Ses dosyası çok kısa.")
+    if len(raw) > MAX_CLONE_REF_BYTES:
+        raise HTTPException(status_code=400, detail="Referans dosyası çok büyük (max ~80 MB).")
+    fn = (file.filename or "referans.wav").lower()
+    sfx = ".wav"
+    for ext in (".wav", ".mp3", ".m4a", ".ogg", ".webm"):
+        if fn.endswith(ext):
+            sfx = ext
+            break
+    fd, tmp = tempfile.mkstemp(suffix=sfx)
+    import os
+
+    os.close(fd)
+    tmp_path = Path(tmp)
+    try:
+        tmp_path.write_bytes(raw)
+        motors = {
+            "sohbet": str(sohbet).strip() in ("1", "true", "yes", "on"),
+            "tilavet": str(tilavet).strip() in ("1", "true", "yes", "on"),
+            "okuma": str(okuma).strip() in ("1", "true", "yes", "on"),
+        }
+        entry = add_kolon_from_upload(
+            ad or (file.filename or "Yeni ses"),
+            tmp_path,
+            kolon_id=kolon_id or None,
+            motors=motors,
+        )
+        return {"ok": True, "kolon": entry, **list_kolonlar_snapshot()}
+    finally:
+        try:
+            tmp_path.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+
+@app.delete("/api/ses/kolonlar/{kolon_id}")
+def api_ses_kolonlar_sil(kolon_id: str) -> dict[str, Any]:
+    from ilim_assistant.motorlar.ses_kolon_kutuphanesi import delete_kolon, list_kolonlar_snapshot
+
+    if not delete_kolon(kolon_id):
+        raise HTTPException(status_code=404, detail="Kolon bulunamadı.")
+    return list_kolonlar_snapshot()
 
 
 def _iter_instant_chat_events(

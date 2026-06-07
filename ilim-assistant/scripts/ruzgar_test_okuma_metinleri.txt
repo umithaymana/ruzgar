@@ -1,0 +1,27 @@
+# Rüzgar ses klon testi — Ana Motor'a yapıştır
+
+## 1) Kuran profili (kuran.wav)
+Arapça Fatiha:
+بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ
+الرَّحْمَٰنِ الرَّحِيمِ
+مَالِكِ يَوْmِ الدِّينِ
+
+Türkçe meal (tilavet modu):
+Bismillahirrahmanirrahim. Hamd, alemlerin Rabbi Allah'a mahsustur.
+
+## 2) Gazel profili (gazel.wav)
+Gazel beyit okut:
+Gel ey âşık oldur bize gazel
+Dertli gönlümüze gel deva eyle
+
+## 3) Ilahi profili (ilahi.wav)
+Ilahi:
+Hu Hu Hu… Yâ Hû yâ Hû yâ Hû
+Gel gidelim Mevlâ'ya gidelim
+
+## Komut örnekleri
+- «kuran sesiyle oku: …»
+- «gazel sesiyle oku: …»
+- «ilahi sesiyle oku: …»
+- «videodaki sesi kuran sesi yap» (sinemadan referans almak için)

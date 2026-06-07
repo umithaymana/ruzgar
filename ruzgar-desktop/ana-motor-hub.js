@@ -72,6 +72,52 @@
       .toLocaleLowerCase("tr-TR");
   }
 
+  /** «kuran sesiyle oku: …» → { profil, text } */
+  function parseTilavetReadCommand(text) {
+    const raw = String(text || "").trim();
+    if (!raw) return null;
+    const colonRe =
+      /(?:^|\b)(kuran|gazel|ilahi|tilavet)\s+ses(?:i(?:yle|ni)?)?(?:\s+(?:ile|le))?\s*(?:oku|seslendir|okut|dinlet)\s*[:：]\s*(.+)$/isu;
+    let m = raw.match(colonRe);
+    if (m) {
+      let prof = String(m[1] || "kuran").toLowerCase();
+      if (prof === "tilavet") prof = "kuran";
+      const body = String(m[2] || "").trim();
+      return body.length >= 2 ? { profil: prof, text: body } : null;
+    }
+    const inlineRe =
+      /^(?:kuran|gazel|ilahi|tilavet)\s+ses(?:i(?:yle|ni)?)?(?:\s+(?:ile|le))?\s*(?:oku|seslendir|okut|dinlet)\s+(.+)$/isu;
+    m = raw.match(inlineRe);
+    if (!m) return null;
+    let prof = String(m[1] || "kuran").toLowerCase();
+    if (prof === "tilavet") prof = "kuran";
+    const body = String(m[2] || "").trim();
+    return body.length >= 2 ? { profil: prof, text: body } : null;
+  }
+
+  async function runTilavetReadFromChat(tr) {
+    if (!tr?.text) return false;
+    prepareMotorContext("ses", true);
+    d().setSesTranscript?.(tr.text);
+    say(
+      `Ümit abi, **${tr.profil}** referans sesiyle okuyorum — XTTS klon (ilk seferde model yüklenebilir, CPU'da birkaç dk sürebilir).`,
+    );
+    d().setStatus?.("Tilavet…", "Rüzgar");
+    try {
+      const ok = await d().speakStudioTilavetWithProfil?.(tr.text, tr.profil);
+      if (ok === false) {
+        say("Ümit abi, ses üretilemedi — durum çubuğundaki hataya bak.", { error: true });
+        return false;
+      }
+      return true;
+    } catch (e) {
+      say(String(e?.message || e || "Tilavet okuma başarısız."), { error: true });
+      return false;
+    } finally {
+      d().setStatus?.("Ses", "Rüzgar");
+    }
+  }
+
   function say(msg, opts) {
     d().appendBubble?.("assistant", msg, opts);
   }
@@ -305,6 +351,11 @@
   }
 
   async function dispatchSes(text) {
+    const tilavetRead = parseTilavetReadCommand(text);
+    if (tilavetRead) {
+      const ok = await runTilavetReadFromChat(tilavetRead);
+      return { handled: true, ok };
+    }
     const low = fold(text);
     if (
       /(?:videodaki|sinemadaki|videonun)\s+ses|ses(?:i|ini)?\s+(?:klonla|referans)|(?:kuran|gazel|ilahi)\s+ses(?:i|ini)?\s+(?:yap|al|klonla)/.test(
@@ -421,6 +472,16 @@
     const videoFast = await tryVideoFromGenel(raw, motorCtx);
     if (videoFast.handled) return videoFast;
 
+    const tilavetRead = parseTilavetReadCommand(raw);
+    if (tilavetRead) {
+      const out = await dispatchToMotor("ses", raw, { fromGenel: true, motorCtx });
+      if (out.handled && out.ok !== false) {
+        say(`Ümit abi, **${tilavetRead.profil}** sesiyle okuma tamamlandı (sohbet Ana Motor'da).`);
+        return { handled: true };
+      }
+      if (out.handled) return { handled: true, ok: false };
+    }
+
     const route = await fetchHubRoute(raw);
     if (!route || !route.target || route.target === "genel") {
       if (motorCtx?.understanding?.motorHint && motorCtx.understanding.motorHint !== "genel") {
@@ -482,7 +543,7 @@
       `<li><strong>Kod:</strong> pytest geçir · git durumu · proje tara · briefing</li>` +
       `<li><strong>Tercüme:</strong> eser ara · bu sayfayı çevir</li>` +
       `<li><strong>Hafıza:</strong> hatırla: … · görev listesi · hafıza durumu</li>` +
-      `<li><strong>Ses:</strong> alim moduna geç · metne dök · ses profili</li>` +
+      `<li><strong>Ses:</strong> «kuran sesiyle oku: …» · gazel · ilahi · metne dök</li>` +
       `<li><strong>Öğren:</strong> <code>eylem öğret: «tetik» → video/kes</code></li>` +
       `<li><strong>Yönet:</strong> hub yardım · eylem listesi · eylem paneli</li>` +
       `</ul>` +
@@ -543,5 +604,6 @@
     isHubHelpRequest,
     dispatchToMotor,
     fetchCapabilities,
+    parseTilavetReadCommand,
   };
 })(typeof window !== "undefined" ? window : globalThis);

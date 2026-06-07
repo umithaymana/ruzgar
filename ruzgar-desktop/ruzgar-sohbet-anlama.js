@@ -305,6 +305,9 @@
     if (/pytest|git\s+durum|kod\s+mod|programlama|proje\s+tara|briefing/i.test(text)) return "programlama";
     if (/haf[ıi]za|hat[ıi]rla:|g[öo]rev\s+listesi/i.test(text)) return "hafiza";
     if (/whisper|metne\s+d[öo]k|transkript|ses\s+profil/i.test(text)) return "ses";
+    if (/(?:kuran|gazel|ilahi|tilavet)\s+ses(?:i(?:yle|ni)?)?\s*(?:ile\s+|le\s+)?(?:oku|seslendir|okut)/i.test(text)) {
+      return "ses";
+    }
     if (/h[ıi]z[ıi]r|pazar\s+tara|trendyol|amazon/i.test(text)) return "hizir";
     if (/mimar|pdf|okuma|sayfa\s+\d/i.test(text)) return "mimar";
 
@@ -393,6 +396,13 @@
     if (/^https?:\/\//.test(raw)) return true;
     if (global.RuzgarVideoChatBrain?.looksLikeMultiStepPlan?.(raw)) return true;
     if (expandTrimRangePhrase(raw)) return true;
+    if (
+      /(?:kuran|gazel|ilahi|tilavet)\s+ses(?:i(?:yle|ni)?)?\s*(?:ile\s+|le\s+)?(?:oku|seslendir|okut)/.test(
+        low,
+      )
+    ) {
+      return true;
+    }
     if (
       /\b(?:indir|download|kes\b|trim\b|oynat\b|ffprobe|medya\s+bilgi|kurgu\s+yap|dönüştür|donustur)\b/.test(
         low,
