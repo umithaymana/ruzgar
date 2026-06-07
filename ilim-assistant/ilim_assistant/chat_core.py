@@ -624,8 +624,8 @@ def _history_msg_cap(mode: str) -> int:
     if m == "programlama":
         return max(2, int(os.environ.get("CHAT_HISTORY_MSGS_CODE", "24")))
     if m in _HISTORY_FAST_MODES:
-        return max(2, int(os.environ.get("CHAT_HISTORY_MSGS_FAST", "8")))
-    return max(2, int(os.environ.get("CHAT_HISTORY_MSGS", "14")))
+        return max(2, int(os.environ.get("CHAT_HISTORY_MSGS_FAST", "14")))
+    return max(2, int(os.environ.get("CHAT_HISTORY_MSGS", "22")))
 
 
 def _history_char_cap(mode: str) -> int:
@@ -823,6 +823,9 @@ def prepare_turn(
     question_plan: Any | None = None,
     agent_context: str | None = None,
     pazar_kanallari: list[str] | None = None,
+    conversation_context: str | None = None,
+    user_message_raw: str | None = None,
+    cinema_context: dict[str, Any] | None = None,
 ):
     """Boş mesajda None; aksi halde (msg, hits, user_payload, system, model, ogrenme_direct).
 
@@ -1454,6 +1457,31 @@ def prepare_turn(
             bilissel_ctx = ""
 
     user_payload = build_user_prompt(msg, blocks)
+    _conv_ctx = (conversation_context or "").strip()
+    _raw_note = (user_message_raw or "").strip()
+    if _conv_ctx or _raw_note or cinema_context:
+        conv_lines = [
+            "[SOHBET BAĞLAMI — kullanıcıya aynen yazdırma; yukarıdaki konuşmayı hatırla]",
+        ]
+        if _conv_ctx:
+            conv_lines.append(_conv_ctx[:7500])
+        if cinema_context and isinstance(cinema_context, dict):
+            cu = str(cinema_context.get("url") or "")[:240]
+            cr = str(cinema_context.get("localRel") or cinema_context.get("local_rel") or "")[:120]
+            ct = str(cinema_context.get("title") or "")[:120]
+            if cu or cr:
+                conv_lines.append(
+                    f"Sinemada açık video: {('«' + ct + '» · ') if ct else ''}"
+                    f"{('url=' + cu) if cu else ''}{(' · yerel=' + cr) if cr else ''}"
+                )
+        if _raw_note and _raw_note != msg.strip():
+            conv_lines.append(f"Kullanıcının ham cümlesi: {_raw_note[:500]}")
+        conv_lines.append(
+            "Talimat: Devrik cümle, yazım hatası veya kısa devam ifadelerini bağlamdan çöz; "
+            "robotik komut listesi verme; Ümit abi ile doğal konuş."
+        )
+        conv_lines.append("[/SOHBET BAĞLAMI]")
+        user_payload = "\n".join(conv_lines) + "\n\n---\n" + user_payload
     if bilissel_ctx and bilissel_ctx not in (session_mem_ctx or ""):
         user_payload = bilissel_ctx + "\n\n---\n" + user_payload
     if session_mem_ctx:

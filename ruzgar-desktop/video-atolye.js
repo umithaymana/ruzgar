@@ -121,6 +121,18 @@
         window.setTimeout(() => $("video-rel-sub-translate")?.focus?.({ preventScroll: true }), 80);
       },
     },
+    dub: {
+      title: "Dublaj (S6)",
+      placement: "right",
+      host: true,
+      collect: () => {
+        const el = $("video-anchor-dub");
+        return el ? [el] : [];
+      },
+      onOpen: () => {
+        window.setTimeout(() => $("video-rel-dub")?.focus?.({ preventScroll: true }), 80);
+      },
+    },
   };
 
   function stashDuzenNode(node) {
@@ -420,6 +432,7 @@
       "video:edit": "edit",
       "video:tercume": "tercume",
       "video:sub-tercume": "tercume",
+      "video:dub": "dub",
     };
     if (dockMap[a]) {
       openDuzenDock(dockMap[a]);

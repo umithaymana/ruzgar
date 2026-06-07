@@ -1575,6 +1575,49 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
                     </div>
                   </div>
 
+                  <div class="video-v2-panel video-stt-panel" id="video-anchor-stt">
+                    <h4 class="video-v2-title">Transkript · Konuşmayı metne dök (Faz S2)</h4>
+                    <p class="video-v2-intro">
+                      Yerel video/ses dosyasından Whisper ile transkript. Dil otomatik algılanır;
+                      SRT altyazı dosyası <code>.ruzgar-video-export/</code> altına kaydedilir.
+                    </p>
+                    <label class="video-file-label" for="video-rel-transcribe">Video veya ses (göreli yol)</label>
+                    <input
+                      id="video-rel-transcribe"
+                      type="text"
+                      class="video-text-input"
+                      spellcheck="false"
+                      placeholder="Çalışma alanı yolu — boş bırakırsanız üstteki dosya kullanılır"
+                    />
+                    <label class="video-file-label" for="video-stt-lang">Dil</label>
+                    <select id="video-stt-lang" class="ses-lang-select" aria-label="Transkript dili">
+                      <option value="auto" selected>Otomatik algıla</option>
+                      <option value="tr">Türkçe</option>
+                      <option value="en">İngilizce</option>
+                      <option value="ar">Arapça</option>
+                      <option value="de">Almanca</option>
+                      <option value="fr">Fransızca</option>
+                      <option value="fa">Farsça</option>
+                      <option value="ru">Rusça</option>
+                    </select>
+                    <div class="video-toolbar">
+                      <button type="button" class="btn-primary btn-compact" id="btn-video-transcribe">
+                        Konuşmayı metne dök
+                      </button>
+                      <button type="button" class="btn-secondary btn-compact" id="btn-video-transcript-to-ses">
+                        Ses atölyesine aktar
+                      </button>
+                    </div>
+                    <textarea
+                      id="video-transcript-out"
+                      class="hafiza-textarea video-transcript-area"
+                      rows="8"
+                      spellcheck="true"
+                      placeholder="Transkript burada görünür…"
+                    ></textarea>
+                    <p id="video-transcript-meta" class="ses-hint"></p>
+                  </div>
+
                   <div class="video-v2-panel video-v3-panel" id="video-anchor-v3">
                     <h4 class="video-v2-title">Altyazı · Harici ses</h4>
                     <div class="video-v3-block">
@@ -1788,18 +1831,101 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
                   </div>
 
                   <div class="video-v2-panel video-v4-panel" id="video-anchor-v4">
-                    <h4 class="video-v2-title">Altyazı → Tercüme</h4>
-                    <label class="video-file-label" for="video-rel-sub-translate">Altyazı dosyası (göreli yol)</label>
+                    <h4 class="video-v2-title">Altyazı fabrikası (Faz S3)</h4>
+                    <p class="video-v2-intro">
+                      SRT/VTT dosyasını hedef dile çevir, sinema / dini / minimal ASS şablonu uygula,
+                      tek tıkla videoya göm.
+                    </p>
+                    <label class="video-file-label" for="video-rel-sub-translate">Kaynak altyazı (.srt / .vtt)</label>
                     <input
                       id="video-rel-sub-translate"
                       type="text"
                       class="video-text-input"
                       spellcheck="false"
-                      placeholder="örn. ruzgar-desktop/subs/en.srt"
+                      placeholder="örn. .ruzgar-video-export/ruzgar_stt_….srt"
                     />
-                    <div class="video-toolbar">
-                      <button type="button" class="btn-primary btn-compact" id="btn-video-sub-to-tercume">Tercüme atölyesine gönder</button>
+                    <div class="video-sub-factory-row">
+                      <label class="video-file-label" for="video-sub-src-lang">Kaynak dil</label>
+                      <select id="video-sub-src-lang" class="ses-lang-select" aria-label="Kaynak dil">
+                        <option value="auto" selected>Otomatik</option>
+                        <option value="tr">Türkçe</option>
+                        <option value="en">İngilizce</option>
+                        <option value="ar">Arapça</option>
+                        <option value="de">Almanca</option>
+                        <option value="fr">Fransızca</option>
+                      </select>
+                      <label class="video-file-label" for="video-sub-tgt-lang">Hedef dil</label>
+                      <select id="video-sub-tgt-lang" class="ses-lang-select" aria-label="Hedef dil">
+                        <option value="tr" selected>Türkçe</option>
+                        <option value="en">İngilizce</option>
+                        <option value="ar">Arapça</option>
+                        <option value="de">Almanca</option>
+                        <option value="fr">Fransızca</option>
+                        <option value="fa">Farsça</option>
+                        <option value="ru">Rusça</option>
+                      </select>
+                      <label class="video-file-label" for="video-sub-template">Şablon</label>
+                      <select id="video-sub-template" class="ses-lang-select" aria-label="Altyazı şablonu">
+                        <option value="sinema" selected>Sinema</option>
+                        <option value="dini">Dini / vakur</option>
+                        <option value="minimal">Minimal</option>
+                      </select>
                     </div>
+                    <div class="video-toolbar">
+                      <button type="button" class="btn-primary btn-compact" id="btn-video-sub-process">
+                        Çevir ve ASS oluştur
+                      </button>
+                      <button type="button" class="btn-primary btn-compact" id="btn-video-sub-pipeline">
+                        Çevir + videoya göm
+                      </button>
+                      <button type="button" class="btn-secondary btn-compact" id="btn-video-sub-to-tercume">
+                        Tercüme atölyesine gönder
+                      </button>
+                    </div>
+                    <p id="video-sub-factory-meta" class="ses-hint"></p>
+                  </div>
+
+                  <div class="video-v2-panel video-v6-panel" id="video-anchor-dub">
+                    <h4 class="video-v2-title">Dublaj prototipi (Faz S6)</h4>
+                    <p class="video-v2-intro">
+                      Video → Whisper → çeviri → tek anlatıcı TTS → yeni ses izi.
+                      Kısa klip ile test edin (≈15 dk, 48 segment üst sınır). Dudak uyumu yok.
+                    </p>
+                    <label class="video-file-label" for="video-rel-dub">Video (göreli yol)</label>
+                    <input
+                      id="video-rel-dub"
+                      type="text"
+                      class="video-text-input"
+                      spellcheck="false"
+                      placeholder="Boş bırakırsanız çalışma alanı yolu kullanılır"
+                    />
+                    <div class="video-sub-factory-row">
+                      <label class="video-file-label" for="video-dub-src-lang">Kaynak dil</label>
+                      <select id="video-dub-src-lang" class="ses-lang-select">
+                        <option value="auto" selected>Otomatik</option>
+                        <option value="en">İngilizce</option>
+                        <option value="tr">Türkçe</option>
+                        <option value="ar">Arapça</option>
+                      </select>
+                      <label class="video-file-label" for="video-dub-tgt-lang">Hedef dil (dublaj)</label>
+                      <select id="video-dub-tgt-lang" class="ses-lang-select">
+                        <option value="tr" selected>Türkçe</option>
+                        <option value="en">İngilizce</option>
+                        <option value="ar">Arapça</option>
+                      </select>
+                      <label class="video-file-label" for="video-dub-voice">Ses</label>
+                      <select id="video-dub-voice" class="ses-lang-select">
+                        <option value="auto" selected>Otomatik (klon varsa)</option>
+                        <option value="edge">Edge TTS</option>
+                        <option value="clone">XTTS klon</option>
+                      </select>
+                    </div>
+                    <div class="video-toolbar">
+                      <button type="button" class="btn-primary btn-compact" id="btn-video-dub">
+                        Dublaj yap
+                      </button>
+                    </div>
+                    <p id="video-dub-meta" class="ses-hint"></p>
                   </div>
                 </div>
               </div>
@@ -2136,19 +2262,25 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
 
           <section class="motor-page" id="page-ses" hidden>
             <div class="atelier-info-strip">
-              <span class="phase-badge">Faz 4 ✓</span>
+              <span class="phase-badge">Faz S1–S6 ✓</span>
               <span class="atelier-promise">
-                <strong>Ses Atölyesi</strong> — yerel dosya önizleme, <strong>metne döküm</strong> (yerel sunucu),
-                transkript düzenleme, <strong>sohbete aktar</strong>, <strong>seslendirme</strong>.
-                Dalga şekli ve ek tonal düzenlemeler sonraki adım.
+                <strong>Ses Atölyesi</strong> — Whisper, prosody, XTTS klon,
+                <strong>tilavet modu</strong>, <strong>dublaj prototipi (S6)</strong>.
               </span>
             </div>
             <h3>Ses Motoru — Stüdyo</h3>
+            <div class="ses-studio-layout">
             <div class="ses-workbench">
               <div class="ses-col ses-col-file">
                 <h4 class="ses-section-title">Ses dosyası</h4>
-                <label class="ses-file-label" for="audio-file-input">Dosya seç (.mp3, .wav, .webm, …)</label>
-                <input id="audio-file-input" type="file" accept=".mp3,.wav,.webm,.ogg,.m4a,.mp4,audio/*" />
+                <label class="ses-file-label" for="audio-file-input">
+                  Dosya seç — ses (.mp3, .wav, …) veya video (.mp4, .mkv, .webm, …)
+                </label>
+                <input
+                  id="audio-file-input"
+                  type="file"
+                  accept=".mp3,.wav,.webm,.ogg,.m4a,.mp4,.mkv,.mov,.m4v,audio/*,video/*"
+                />
                 <audio id="audio-preview" class="ses-audio-preview" controls preload="metadata"></audio>
                 <div class="ses-stt-row">
                   <label class="ses-lang-label">
@@ -2164,12 +2296,38 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
                   <button type="button" class="btn-primary btn-compact" id="btn-ses-stt">Metne dök</button>
                 </div>
                 <p id="ses-stt-hint" class="ses-hint"></p>
+                <div class="ses-clone-panel" id="ses-clone-panel">
+                  <h4 class="ses-section-title">Ses klonu (XTTS · Faz S4)</h4>
+                  <label class="ses-file-label" for="ses-clone-ref-input">Referans ses (30–120 sn, temiz konuşma)</label>
+                  <input id="ses-clone-ref-input" type="file" accept=".wav,.mp3,.m4a,.ogg,audio/*" />
+                  <div class="ses-stt-row">
+                    <label class="ses-lang-label">
+                      Profil
+                      <select id="ses-clone-karakter" class="ses-lang-select" aria-label="Klon profili">
+                        <option value="alim">Alim</option>
+                        <option value="edip">Edip</option>
+                        <option value="asistan" selected>Asistan</option>
+                      </select>
+                    </label>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-ses-clone-upload">
+                      Referans kaydet
+                    </button>
+                  </div>
+                  <label class="ses-chk-label ses-chk-inline">
+                    <input type="checkbox" id="ses-use-clone" checked />
+                    Klon ses kullan (referans varsa · auto)
+                  </label>
+                  <p id="ses-clone-hint" class="ses-hint"></p>
+                </div>
               </div>
               <div class="ses-col ses-col-transcript">
                 <h4 class="ses-section-title">Metin dökümü</h4>
                 <div class="ses-toolbar">
                   <button type="button" class="btn-secondary btn-compact" id="btn-ses-to-chat">Sohbete aktar</button>
                   <button type="button" class="btn-primary btn-compact" id="btn-ses-speak">Metni seslendir</button>
+                  <button type="button" class="btn-primary btn-compact" id="btn-ses-tilavet" title="Kuran / hadis / Arapca vakur okuma">
+                    Tilavet oku
+                  </button>
                   <button type="button" class="btn-secondary btn-compact" id="btn-ses-clear">Temizle</button>
                   <span class="ses-meta" id="ses-stt-meta"></span>
                 </div>
@@ -2181,6 +2339,57 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
                   placeholder="«Metne dök» ile çıkan metin buraya gelir; düzenleyip sohbete veya seslendirmeye gönderebilirsiniz."
                 ></textarea>
               </div>
+            </div>
+            <div class="ses-dub-panel" id="ses-dub-panel">
+              <h4 class="ses-section-title">Dublaj prototipi (Faz S6)</h4>
+              <p class="ses-hint ses-dub-intro">
+                Video → Whisper → çeviri → TTS → yeni ses izi. Kısa klip ile test edin (≈15 dk, 48 segment).
+              </p>
+              <label class="ses-file-label" for="ses-dub-rel">Video (göreli yol veya dosya seç)</label>
+              <div class="ses-stt-row">
+                <input
+                  id="ses-dub-rel"
+                  type="text"
+                  class="video-text-input ses-dub-rel-input"
+                  spellcheck="false"
+                  placeholder="ornek: .ruzgar-video-export/klip.mp4"
+                />
+                <label class="btn-secondary btn-compact ses-dub-file-btn" for="ses-dub-file-input">Dosya seç</label>
+                <input id="ses-dub-file-input" type="file" accept=".mp4,.mkv,.webm,.mov,.m4v,video/*" hidden />
+              </div>
+              <div class="ses-stt-row">
+                <label class="ses-lang-label">
+                  Kaynak dil
+                  <select id="ses-dub-src-lang" class="ses-lang-select">
+                    <option value="auto" selected>Otomatik</option>
+                    <option value="en">İngilizce</option>
+                    <option value="tr">Türkçe</option>
+                    <option value="ar">Arapça</option>
+                  </select>
+                </label>
+                <label class="ses-lang-label">
+                  Hedef dil
+                  <select id="ses-dub-tgt-lang" class="ses-lang-select">
+                    <option value="tr" selected>Türkçe</option>
+                    <option value="en">İngilizce</option>
+                    <option value="ar">Arapça</option>
+                  </select>
+                </label>
+                <label class="ses-lang-label">
+                  Ses
+                  <select id="ses-dub-voice" class="ses-lang-select">
+                    <option value="auto" selected>Otomatik (klon varsa)</option>
+                    <option value="edge">Edge TTS</option>
+                    <option value="clone">XTTS klon</option>
+                  </select>
+                </label>
+                <button type="button" class="btn-primary btn-compact" id="btn-ses-dub">Dublaj yap</button>
+                <button type="button" class="btn-secondary btn-compact" id="btn-ses-dub-video-panel" title="Video motorunda aynı panel">
+                  Video motorunda aç
+                </button>
+              </div>
+              <p id="ses-dub-meta" class="ses-hint"></p>
+            </div>
             </div>
           </section>
         </div>

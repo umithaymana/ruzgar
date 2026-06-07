@@ -65,7 +65,7 @@ def _last_meaningful_history_text(history: list[Any] | None) -> str:
 
 def _expand_continuation(raw: str, history: list[Any] | None) -> tuple[str, bool]:
     low = raw.strip().casefold().strip(" .,!?\t\r\n")
-    cues = {
+    exact_cues = {
         "devam",
         "devam et",
         "aynen devam",
@@ -74,10 +74,42 @@ def _expand_continuation(raw: str, history: list[Any] | None) -> tuple[str, bool
         "öyle yap",
         "oyle yap",
         "bunu yap",
+        "onu yap",
+        "sunu yap",
+        "şunu yap",
         "tamam devam",
         "plana devam et",
+        "yukarıdaki",
+        "yukardaki",
+        "yukaridaki",
+        "az önce",
+        "az once",
+        "dediğim gibi",
+        "dedigim gibi",
+        "sen yap",
+        "hallet",
     }
-    if low not in cues:
+    prefix_cues = (
+        "yukarıdaki",
+        "yukardaki",
+        "yukaridaki",
+        "az önce",
+        "az once",
+        "dediğim",
+        "dedigim",
+        "söylediğim",
+        "soyledigim",
+        "bahsettiğim",
+        "bahsettigim",
+        "anlattığım",
+        "anlattigim",
+        "bunu ",
+        "onu ",
+        "şunu ",
+        "sunu ",
+    )
+    is_cont = low in exact_cues or any(low.startswith(p) for p in prefix_cues)
+    if not is_cont:
         return raw, False
     ctx = _last_meaningful_history_text(history)
     if not ctx:

@@ -54,7 +54,10 @@ from ilim_assistant.motorlar.programlama_motoru import (
     code_debug_max_retries,
     wants_autonomous_code_debug,
 )
-from ilim_assistant.stt_whisper import stt_runtime_available, transcribe_file
+from ilim_assistant.stt_whisper import (
+    stt_runtime_available,
+    whisper_model_name,
+)
 from ilim_assistant.video_ffmpeg import (
     MAX_SEGMENT_SECONDS,
     burn_subtitles_into_mp4,
@@ -745,14 +748,19 @@ class IdrakPretreatBody(BaseModel):
 class TtsBody(BaseModel):
     text: str = ""
     karakter: str = "asistan"
-    backend: str = "edge"
+    backend: str = "auto"
     emotion: str | None = None
+    lang: str | None = "tr"
+    speaker_rel: str | None = None
 
 
 class SesSettingsPatchBody(BaseModel):
     karakter: str | None = None
     hiz: float | None = None
     huzur: float | None = None
+    prosody: bool | None = None
+    durak: float | None = None
+    tilavet: bool | None = None
 
 
 class MimarFotoModerateBody(BaseModel):
@@ -1190,6 +1198,19 @@ def health():
         "ok": True,
         "service": "ruzgar-desktop-api",
         "stt": stt_runtime_available(),
+        "whisper_model": whisper_model_name() if stt_runtime_available() else None,
+        "tts_clone": __import__(
+            "ilim_assistant.motorlar.ses_klon_motoru",
+            fromlist=["clone_status_snapshot"],
+        ).clone_status_snapshot(),
+        "tts_tilavet": __import__(
+            "ilim_assistant.motorlar.ses_tilavet",
+            fromlist=["TILAVET_VERSION"],
+        ).TILAVET_VERSION,
+        "video_dub": __import__(
+            "ilim_assistant.motorlar.video_dublaj",
+            fromlist=["dubbing_status_snapshot"],
+        ).dubbing_status_snapshot(),
         "pdf_text": pdf_text_runtime_available(),
         "docx_text": docx_text_runtime_available(),
         "ffmpeg": ffmpeg_available(),
@@ -6599,6 +6620,7 @@ def _normalize_stt_lang(lang: str | None) -> str | None:
 async def api_stt(
     file: UploadFile = File(...),
     lang: Annotated[str | None, Query()] = "tr",
+    segments: Annotated[bool, Query()] = False,
 ):
     """Tarayıcıdan gelen ses dosyasını yerel Whisper ile metne çevirir (internet şart değil)."""
     if not stt_runtime_available():
@@ -6606,18 +6628,32 @@ async def api_stt(
             status_code=503,
             detail="Yerel STT kullanılamıyor: pip install faster-whisper veya RUZGAR_STT=0 kaldırın.",
         )
+    if not ffmpeg_available():
+        raise HTTPException(
+            status_code=503,
+            detail="ffmpeg bulunamadı — video/ses dönüşümü için gerekli.",
+        )
     raw = await file.read()
     if not raw or len(raw) < 64:
         raise HTTPException(status_code=400, detail="Ses verisi çok kısa veya boş.")
 
-    sfx = ".webm"
-    fn = (file.filename or "").lower()
-    if fn.endswith(".wav"):
-        sfx = ".wav"
-    elif fn.endswith(".ogg"):
-        sfx = ".ogg"
-    elif fn.endswith(".mp4") or fn.endswith(".m4a"):
-        sfx = ".m4a"
+    from ilim_assistant.motorlar.ses_stt_pipeline import (
+        guess_stt_upload_suffix,
+        stt_max_upload_bytes,
+    )
+
+    max_up = stt_max_upload_bytes()
+    if len(raw) > max_up:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Dosya çok büyük ({len(raw) // (1024 * 1024)} MB; üst sınır "
+                f"{max_up // (1024 * 1024)} MB). Kısa klip seçin veya Video atölyesinde "
+                "göreli yol ile «Konuşmayı metne dök» kullanın."
+            ),
+        )
+
+    sfx = guess_stt_upload_suffix(file.filename or "")
 
     wl = _normalize_stt_lang(lang)
 
@@ -6628,10 +6664,17 @@ async def api_stt(
         os.close(fd)
 
         def _run():
-            return transcribe_file(tmp_path, language=wl)
+            from ilim_assistant.motorlar.ses_stt_pipeline import transcribe_media_path
 
-        text, detected = await run_in_threadpool(_run)
-        return {"text": text, "language": detected}
+            return transcribe_media_path(tmp_path, language=wl)
+
+        result = await run_in_threadpool(_run)
+        payload = result.to_dict(include_segments=segments)
+        if segments:
+            from ilim_assistant.stt_whisper import segments_to_srt
+
+            payload["srt"] = segments_to_srt(result.segments)
+        return payload
     except HTTPException:
         raise
     except Exception as e:
@@ -6642,6 +6685,295 @@ async def api_stt(
                 os.unlink(tmp_path)
             except OSError:
                 pass
+
+
+@app.post("/api/video/transcribe")
+async def api_video_transcribe(
+    rel: Annotated[str, Form()],
+    lang: Annotated[str, Form()] = "auto",
+    save_srt: Annotated[str, Form()] = "true",
+):
+    """
+    Video veya ses dosyasından konuşmayı metne döker (Faz S2).
+    Whisper dil algılama; isteğe bağlı SRT `.ruzgar-video-export/` altına yazılır.
+    """
+    if not stt_runtime_available():
+        raise HTTPException(
+            status_code=503,
+            detail="Yerel STT kullanılamıyor: pip install faster-whisper",
+        )
+    if not ffmpeg_available():
+        raise HTTPException(
+            status_code=503,
+            detail="ffmpeg bulunamadı — video/ses transkript için gerekli.",
+        )
+    rel_s = (rel or "").strip()
+    if not rel_s:
+        raise HTTPException(status_code=400, detail="rel gerekli (göreli dosya yolu).")
+    media_path = _repo_resolve_under_root(rel_s)
+    wl = _normalize_stt_lang(lang)
+    want_srt = (save_srt or "true").strip().lower() not in ("0", "false", "no")
+
+    def _run():
+        from ilim_assistant.motorlar.ses_stt_pipeline import (
+            transcribe_media_path,
+            write_srt_for_result,
+        )
+
+        result = transcribe_media_path(media_path, language=wl)
+        srt_rel: str | None = None
+        if want_srt and result.segments:
+            out_dir = export_directory(REPO_ROOT)
+            stem = media_path.stem or "media"
+            srt_path = out_dir / f"ruzgar_stt_{uuid.uuid4().hex[:10]}_{stem}.srt"
+            write_srt_for_result(result, srt_path)
+            srt_rel = srt_path.relative_to(REPO_ROOT.resolve()).as_posix()
+        return result, srt_rel
+
+    try:
+        result, srt_rel = await run_in_threadpool(_run)
+        payload = result.to_dict(include_segments=True)
+        payload["ok"] = True
+        payload["source_rel"] = rel_s
+        if srt_rel:
+            payload["srt_rel"] = srt_rel
+        return payload
+    except HTTPException:
+        raise
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@app.get("/api/video/subtitles/templates")
+def api_video_subtitle_templates():
+    """Faz S3 — ASS altyazı şablon listesi."""
+    from ilim_assistant.motorlar.altyazi_fabrika import FABRIKA_VERSION, list_sablonlar
+
+    return {"ok": True, "version": FABRIKA_VERSION, "templates": list_sablonlar()}
+
+
+@app.post("/api/video/subtitles/process")
+async def api_video_subtitles_process(
+    rel_sub: Annotated[str, Form()],
+    src_lang: Annotated[str, Form()] = "auto",
+    tgt_lang: Annotated[str, Form()] = "",
+    template: Annotated[str, Form()] = "sinema",
+    output_format: Annotated[str, Form()] = "ass",
+):
+    """
+    SRT/VTT → isteğe bağlı çeviri → SRT veya stilli ASS.
+    Çıktı `.ruzgar-video-export/` altına yazılır.
+    """
+    rs = (rel_sub or "").strip()
+    if not rs:
+        raise HTTPException(status_code=400, detail="rel_sub gerekli.")
+    sub_path = _repo_resolve_under_root(rs)
+    if sub_path.stat().st_size > MAX_SUBTITLE_BYTES:
+        raise HTTPException(status_code=400, detail="Altyazı dosyası çok büyük.")
+    low = sub_path.suffix.lower()
+    if low not in (".srt", ".vtt"):
+        raise HTTPException(
+            status_code=400,
+            detail="Kaynak altyazı: .srt veya .vtt",
+        )
+
+    def _run():
+        from ilim_assistant.motorlar.altyazi_fabrika import (
+            process_subtitle_file,
+            write_subtitle_export,
+        )
+
+        tgt = (tgt_lang or "").strip().lower()
+        if tgt in ("", "same", "none", "kaynak"):
+            tgt = None
+        content, cues, fmt = process_subtitle_file(
+            sub_path,
+            tgt_lang=tgt,
+            src_lang=(src_lang or "auto").strip().lower()[:8],
+            sablon=(template or "sinema").strip().lower(),
+            output_format=(output_format or "ass").strip().lower(),
+        )
+        out_dir = export_directory(REPO_ROOT)
+        suffix = ".ass" if fmt == "ass" else ".srt"
+        out_path = write_subtitle_export(
+            content,
+            export_dir=out_dir,
+            stem=sub_path.stem,
+            suffix=suffix,
+        )
+        rel_out = out_path.relative_to(REPO_ROOT.resolve()).as_posix()
+        return {
+            "output_rel": rel_out,
+            "format": fmt,
+            "cue_count": len(cues),
+            "template": (template or "sinema").strip().lower(),
+            "target_lang": tgt,
+        }
+
+    try:
+        meta = await run_in_threadpool(_run)
+        return {"ok": True, **meta}
+    except HTTPException:
+        raise
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@app.post("/api/video/subtitles/pipeline")
+async def api_video_subtitles_pipeline(
+    rel_video: Annotated[str, Form()],
+    rel_sub: Annotated[str, Form()],
+    src_lang: Annotated[str, Form()] = "auto",
+    tgt_lang: Annotated[str, Form()] = "tr",
+    template: Annotated[str, Form()] = "sinema",
+    burn: Annotated[str, Form()] = "true",
+):
+    """
+    Faz S3 uçtan uca: altyazı çevir + ASS şablon + isteğe bağlı videoya gömme.
+    """
+    if not ffmpeg_available():
+        raise HTTPException(status_code=503, detail="ffmpeg gerekli.")
+    rv = (rel_video or "").strip()
+    rs = (rel_sub or "").strip()
+    if not rv or not rs:
+        raise HTTPException(status_code=400, detail="rel_video ve rel_sub gerekli.")
+    video_path = _repo_resolve_under_root(rv)
+    sub_path = _repo_resolve_under_root(rs)
+    do_burn = (burn or "true").strip().lower() not in ("0", "false", "no")
+
+    def _run():
+        from ilim_assistant.motorlar.altyazi_fabrika import (
+            process_subtitle_file,
+            write_subtitle_export,
+        )
+
+        tgt = (tgt_lang or "tr").strip().lower()[:2]
+        content, cues, fmt = process_subtitle_file(
+            sub_path,
+            tgt_lang=tgt,
+            src_lang=(src_lang or "auto").strip().lower()[:8],
+            sablon=(template or "sinema").strip().lower(),
+            output_format="ass",
+        )
+        out_dir = export_directory(REPO_ROOT)
+        ass_path = write_subtitle_export(
+            content,
+            export_dir=out_dir,
+            stem=f"{video_path.stem}_{tgt}",
+            suffix=".ass",
+        )
+        ass_rel = ass_path.relative_to(REPO_ROOT.resolve()).as_posix()
+        burned_rel: str | None = None
+        if do_burn:
+            stem = video_path.stem or "video"
+            out_mp4 = out_dir / f"ruzgar_subburn_{uuid.uuid4().hex[:10]}_{stem}.mp4"
+            burn_subtitles_into_mp4(video_path, ass_path, out_mp4)
+            burned_rel = out_mp4.relative_to(REPO_ROOT.resolve()).as_posix()
+        return {
+            "ass_rel": ass_rel,
+            "burned_rel": burned_rel,
+            "cue_count": len(cues),
+            "target_lang": tgt,
+            "template": (template or "sinema").strip().lower(),
+        }
+
+    try:
+        meta = await run_in_threadpool(_run)
+        return {"ok": True, **meta}
+    except HTTPException:
+        raise
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@app.get("/api/video/dub/status")
+def api_video_dub_status():
+    """Faz S6 — dublaj prototipi durumu."""
+    from ilim_assistant.motorlar.video_dublaj import dubbing_status_snapshot
+
+    return {"ok": True, **dubbing_status_snapshot()}
+
+
+@app.post("/api/video/dub")
+async def api_video_dub(
+    rel: Annotated[str, Form()],
+    tgt_lang: Annotated[str, Form()] = "tr",
+    src_lang: Annotated[str, Form()] = "auto",
+    voice: Annotated[str, Form()] = "auto",
+    karakter: Annotated[str, Form()] = "asistan",
+):
+    """
+    Faz S6: video → STT → çeviri → TTS → yeni ses izi → mux.
+    Kisa klipler icin (varsayilan max 15 dk, 48 segment).
+    """
+    if not stt_runtime_available():
+        raise HTTPException(status_code=503, detail="Whisper/STT gerekli.")
+    if not ffmpeg_available():
+        raise HTTPException(status_code=503, detail="ffmpeg gerekli.")
+    rel_s = (rel or "").strip()
+    if not rel_s:
+        raise HTTPException(status_code=400, detail="rel gerekli.")
+    media_path = _repo_resolve_under_root(rel_s)
+    is_video = media_path.suffix.lower() in {
+        ".mp4",
+        ".mkv",
+        ".webm",
+        ".mov",
+        ".m4v",
+    }
+
+    def _run():
+        from ilim_assistant.motorlar.video_dublaj import run_dubbing_pipeline
+        from ilim_assistant.tts_service import read_ses_ayarlari
+
+        out_dir = export_directory(REPO_ROOT)
+        result = run_dubbing_pipeline(
+            media_path,
+            target_lang=tgt_lang,
+            source_lang=src_lang,
+            voice_mode=voice,
+            karakter=karakter,
+            ayar=read_ses_ayarlari(),
+            export_dir=out_dir,
+            video_path=media_path if is_video else None,
+        )
+        if not result.ok:
+            raise RuntimeError(result.error or "Dublaj basarisiz")
+        payload = result.to_metadata()
+        if result.output_video:
+            payload["output_rel"] = result.output_video.relative_to(
+                REPO_ROOT.resolve()
+            ).as_posix()
+        elif result.output_audio:
+            payload["output_rel"] = result.output_audio.relative_to(
+                REPO_ROOT.resolve()
+            ).as_posix()
+        if result.output_audio:
+            payload["audio_rel"] = result.output_audio.relative_to(
+                REPO_ROOT.resolve()
+            ).as_posix()
+        if result.output_srt:
+            payload["srt_rel"] = result.output_srt.relative_to(
+                REPO_ROOT.resolve()
+            ).as_posix()
+        payload["segments"] = [s.to_dict() for s in result.segments[:20]]
+        return payload
+
+    try:
+        meta = await run_in_threadpool(_run)
+        return {"ok": True, **meta}
+    except HTTPException:
+        raise
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @app.get("/api/ses/settings")
@@ -6664,6 +6996,12 @@ def api_ses_settings_patch(body: SesSettingsPatchBody):
         patch["hiz"] = max(0.45, min(1.0, float(body.hiz)))
     if body.huzur is not None:
         patch["huzur"] = max(0.45, min(1.0, float(body.huzur)))
+    if body.prosody is not None:
+        patch["prosody"] = bool(body.prosody)
+    if body.durak is not None:
+        patch["durak"] = max(0.55, min(1.6, float(body.durak)))
+    if body.tilavet is not None:
+        patch["tilavet"] = bool(body.tilavet)
     if patch:
         write_ses_ayarlari(patch)
     return read_ses_ayarlari()
@@ -6671,7 +7009,8 @@ def api_ses_settings_patch(body: SesSettingsPatchBody):
 
 @app.post("/api/tts")
 async def api_tts(body: TtsBody):
-    """Edge-TTS ile MP3 üretir (Ses atölyesi + sohbet sesli yanıt)."""
+    """TTS: Edge (prosody) veya XTTS klon (Faz S4). backend: edge | clone | auto."""
+    from ilim_assistant.motorlar.ses_klon_motoru import should_use_clone, xtts_runtime_available
     from ilim_assistant.motorlar.ses_motoru import (
         EDGE_VOICES,
         analiz_icerik_yolu,
@@ -6683,8 +7022,11 @@ async def api_tts(body: TtsBody):
     from ilim_assistant.tts_service import (
         edge_available,
         read_ses_ayarlari,
+        synthesize_clone_mp3,
         synthesize_edge_mp3_in_process,
+        synthesize_edge_mp3_prosody,
     )
+    from ilim_assistant.motorlar.ses_prosody import prosody_etkin, prosody_gerekli
 
     text = (body.text or "").strip()
     if len(text) < 2:
@@ -6692,39 +7034,82 @@ async def api_tts(body: TtsBody):
     if len(text) > 12_000:
         text = text[:12_000]
 
-    if (body.backend or "edge").strip().lower() != "edge":
-        raise HTTPException(status_code=400, detail="Yalnızca edge backend destekleniyor.")
-    if not edge_available():
-        raise HTTPException(
-            status_code=503,
-            detail="Edge-TTS yok: pip install edge-tts",
-        )
-
     ayar = read_ses_ayarlari()
     kar = normalize_ses_karakteri(body.karakter or ayar.get("karakter"))
     icerik = analiz_icerik_yolu(text)
-    voice = EDGE_VOICES[kar]
-    rate = edge_rate_yuzdesi(
-        karakter=kar,
-        icerik=icerik,
-        hiz_carpani=float(ayar.get("hiz", 0.92)),
-        huzur_carpani=float(ayar.get("huzur", 0.88)),
-    )
-    pitch = edge_pitch_string(kar, icerik)
+    lang = (body.lang or "tr").strip().lower()[:2] or "tr"
     meta = tts_metadata_kimlik(
         karakter=kar.value,
         icerik_yolu=icerik.value,
-        edge_voice=voice,
+        edge_voice=EDGE_VOICES.get(kar),
         ek={"emotion": body.emotion} if body.emotion else None,
     )
+
+    use_clone = should_use_clone(
+        backend=body.backend or "auto",
+        karakter=kar.value,
+        ayar=ayar,
+        speaker_rel=body.speaker_rel,
+    )
+
+    if use_clone:
+        if not xtts_runtime_available():
+            if (body.backend or "auto").strip().lower() == "clone":
+                raise HTTPException(
+                    status_code=503,
+                    detail="XTTS yok: pip install TTS torch (ilim-voice/requirements-tts.txt)",
+                )
+            use_clone = False
+
     try:
-        out_path = await synthesize_edge_mp3_in_process(
-            text,
-            voice=voice,
-            rate=rate,
-            pitch=pitch,
-            meta=meta,
-        )
+        if use_clone:
+            out_path = await synthesize_clone_mp3(
+                text,
+                karakter=kar.value,
+                language=lang,
+                speaker_rel=body.speaker_rel,
+                meta=meta,
+                ayar=ayar,
+            )
+        else:
+            if not edge_available():
+                raise HTTPException(
+                    status_code=503,
+                    detail="Edge-TTS yok: pip install edge-tts",
+                )
+            voice = EDGE_VOICES[kar]
+            rate = edge_rate_yuzdesi(
+                karakter=kar,
+                icerik=icerik,
+                hiz_carpani=float(ayar.get("hiz", 0.92)),
+                huzur_carpani=float(ayar.get("huzur", 0.88)),
+            )
+            pitch = edge_pitch_string(kar, icerik)
+            use_prosody = prosody_etkin(ayar) and prosody_gerekli(text)
+            if use_prosody:
+                out_path = await synthesize_edge_mp3_prosody(
+                    text,
+                    voice=voice,
+                    rate=rate,
+                    pitch=pitch,
+                    meta=meta,
+                    icerik_yolu=icerik.value,
+                    hiz_carpani=float(ayar.get("hiz", 0.92)),
+                    huzur_carpani=float(ayar.get("huzur", 0.88)),
+                    durak_carpani=float(ayar.get("durak", 1.0)),
+                )
+            else:
+                out_path = await synthesize_edge_mp3_in_process(
+                    text,
+                    voice=voice,
+                    rate=rate,
+                    pitch=pitch,
+                    meta=meta,
+                )
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
@@ -6733,6 +7118,133 @@ async def api_tts(body: TtsBody):
         media_type="audio/mpeg",
         filename="ruzgar-tts.mp3",
     )
+
+
+@app.get("/api/tts/tilavet/info")
+def api_tts_tilavet_info(text: Annotated[str, Query()] = ""):
+    """Faz S5 — tilavet modu onizleme (metin verilirse)."""
+    from ilim_assistant.motorlar.ses_tilavet import TILAVET_VERSION, tilavet_etkin, tilavet_ozet
+
+    base = {"ok": True, "version": TILAVET_VERSION, "enabled": tilavet_etkin()}
+    sample = (text or "").strip()
+    if sample:
+        base["preview"] = tilavet_ozet(sample)
+    return base
+
+
+@app.post("/api/tts/tilavet")
+async def api_tts_tilavet(body: TtsBody):
+    """Kuran / hadis / Arapca metin — vakur tilavet okuma (Faz S5)."""
+    from ilim_assistant.motorlar.ses_motoru import (
+        analiz_icerik_yolu,
+        normalize_ses_karakteri,
+        tts_metadata_kimlik,
+    )
+    from ilim_assistant.motorlar.ses_tilavet import tilavet_etkin
+    from ilim_assistant.tts_service import edge_available, read_ses_ayarlari, synthesize_tilavet_mp3
+
+    text = (body.text or "").strip()
+    if len(text) < 2:
+        raise HTTPException(status_code=400, detail="Metin cok kisa.")
+    if len(text) > 12_000:
+        text = text[:12_000]
+    if not tilavet_etkin():
+        raise HTTPException(status_code=503, detail="Tilavet modu kapali (RUZGAR_TTS_TILAVET=0).")
+    if not edge_available():
+        raise HTTPException(status_code=503, detail="Edge-TTS yok: pip install edge-tts")
+
+    ayar = read_ses_ayarlari()
+    kar = normalize_ses_karakteri(body.karakter or ayar.get("karakter") or "alim")
+    icerik = analiz_icerik_yolu(text)
+    meta = tts_metadata_kimlik(
+        karakter=kar.value,
+        icerik_yolu=icerik.value,
+        ek={"tilavet": True, **({"emotion": body.emotion} if body.emotion else {})},
+    )
+    try:
+        out_path = await synthesize_tilavet_mp3(
+            text,
+            karakter=kar.value,
+            meta=meta,
+            ayar=ayar,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+    return FileResponse(
+        str(out_path),
+        media_type="audio/mpeg",
+        filename="ruzgar-tilavet.mp3",
+    )
+
+
+@app.get("/api/tts/clone/status")
+def api_tts_clone_status():
+    """Faz S4 — XTTS klon durumu ve referans profilleri."""
+    from ilim_assistant.motorlar.ses_klon_motoru import clone_status_snapshot
+
+    return {"ok": True, **clone_status_snapshot()}
+
+
+MAX_CLONE_REF_BYTES = 80 * 1024 * 1024
+
+
+@app.post("/api/tts/clone/referans")
+async def api_tts_clone_referans_upload(
+    file: UploadFile = File(...),
+    karakter: Annotated[str, Form()] = "asistan",
+):
+    """Profil için referans ses yükler (30–120 sn temiz konuşma önerilir)."""
+    from ilim_assistant.motorlar.ses_klon_motoru import kaydet_referans_upload
+    from ilim_assistant.motorlar.ses_motoru import normalize_ses_karakteri
+    from ilim_assistant.tts_service import read_ses_ayarlari, write_ses_ayarlari
+
+    raw = await file.read()
+    if not raw or len(raw) < 4096:
+        raise HTTPException(status_code=400, detail="Ses dosyası çok kısa.")
+    if len(raw) > MAX_CLONE_REF_BYTES:
+        raise HTTPException(status_code=400, detail="Referans dosyası çok büyük (max ~80 MB).")
+
+    sfx = ".wav"
+    fn = (file.filename or "").lower()
+    if fn.endswith(".mp3"):
+        sfx = ".mp3"
+    elif fn.endswith(".m4a"):
+        sfx = ".m4a"
+    elif fn.endswith(".ogg"):
+        sfx = ".ogg"
+
+    kar = normalize_ses_karakteri(karakter)
+    tmp_path = None
+    try:
+        fd, tmp_path = tempfile.mkstemp(suffix=sfx)
+        os.write(fd, raw)
+        os.close(fd)
+
+        def _run():
+            return kaydet_referans_upload(Path(tmp_path), kar.value)
+
+        abs_path, rel = await run_in_threadpool(_run)
+        ayar = read_ses_ayarlari()
+        refs = dict(ayar.get("referans") or {})
+        refs[kar.value] = rel
+        write_ses_ayarlari({"referans": refs})
+        return {
+            "ok": True,
+            "karakter": kar.value,
+            "referans_rel": rel,
+            "bytes": abs_path.stat().st_size,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    finally:
+        if tmp_path and os.path.isfile(tmp_path):
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
 
 
 def _iter_instant_chat_events(

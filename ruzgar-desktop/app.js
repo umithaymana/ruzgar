@@ -513,8 +513,22 @@ const el = {
   sesTranscript: document.getElementById("ses-transcript"),
   btnSesToChat: document.getElementById("btn-ses-to-chat"),
   btnSesSpeak: document.getElementById("btn-ses-speak"),
+  btnSesTilavet: document.getElementById("btn-ses-tilavet"),
   btnSesClear: document.getElementById("btn-ses-clear"),
   sesSttMeta: document.getElementById("ses-stt-meta"),
+  sesCloneRefInput: document.getElementById("ses-clone-ref-input"),
+  sesCloneKarakter: document.getElementById("ses-clone-karakter"),
+  btnSesCloneUpload: document.getElementById("btn-ses-clone-upload"),
+  sesUseClone: document.getElementById("ses-use-clone"),
+  sesCloneHint: document.getElementById("ses-clone-hint"),
+  sesDubRel: document.getElementById("ses-dub-rel"),
+  sesDubFileInput: document.getElementById("ses-dub-file-input"),
+  sesDubSrcLang: document.getElementById("ses-dub-src-lang"),
+  sesDubTgtLang: document.getElementById("ses-dub-tgt-lang"),
+  sesDubVoice: document.getElementById("ses-dub-voice"),
+  btnSesDub: document.getElementById("btn-ses-dub"),
+  btnSesDubVideoPanel: document.getElementById("btn-ses-dub-video-panel"),
+  sesDubMeta: document.getElementById("ses-dub-meta"),
   videoFileInput: document.getElementById("video-file-input"),
   videoPreview: document.getElementById("video-preview"),
   videoCinemaUrl: document.getElementById("video-cinema-url"),
@@ -579,6 +593,24 @@ const el = {
   btnVideoClearBin: document.getElementById("btn-video-clear-bin"),
   btnVideoEditMix: document.getElementById("btn-video-edit-mix"),
   videoRelSubTranslate: document.getElementById("video-rel-sub-translate"),
+  videoSubSrcLang: document.getElementById("video-sub-src-lang"),
+  videoSubTgtLang: document.getElementById("video-sub-tgt-lang"),
+  videoSubTemplate: document.getElementById("video-sub-template"),
+  btnVideoSubProcess: document.getElementById("btn-video-sub-process"),
+  btnVideoSubPipeline: document.getElementById("btn-video-sub-pipeline"),
+  videoSubFactoryMeta: document.getElementById("video-sub-factory-meta"),
+  videoRelDub: document.getElementById("video-rel-dub"),
+  videoDubSrcLang: document.getElementById("video-dub-src-lang"),
+  videoDubTgtLang: document.getElementById("video-dub-tgt-lang"),
+  videoDubVoice: document.getElementById("video-dub-voice"),
+  btnVideoDub: document.getElementById("btn-video-dub"),
+  videoDubMeta: document.getElementById("video-dub-meta"),
+  videoRelTranscribe: document.getElementById("video-rel-transcribe"),
+  videoSttLang: document.getElementById("video-stt-lang"),
+  btnVideoTranscribe: document.getElementById("btn-video-transcribe"),
+  btnVideoTranscriptToSes: document.getElementById("btn-video-transcript-to-ses"),
+  videoTranscriptOut: document.getElementById("video-transcript-out"),
+  videoTranscriptMeta: document.getElementById("video-transcript-meta"),
   btnVideoSubToTercume: document.getElementById("btn-video-sub-to-tercume"),
   videoCreateTitle: document.getElementById("video-create-title"),
   videoCreateTheme: document.getElementById("video-create-theme"),
@@ -1444,6 +1476,9 @@ function applyRecentVideoDownload(row) {
     if (el.videoRelWorkspace) el.videoRelWorkspace.value = rel;
     if (el.videoRelBurnVideo) el.videoRelBurnVideo.value = rel;
     if (el.videoRelMuxVideo) el.videoRelMuxVideo.value = rel;
+    if (el.videoRelTranscribe) el.videoRelTranscribe.value = rel;
+    if (el.videoRelDub) el.videoRelDub.value = rel;
+    if (el.sesDubRel) el.sesDubRel.value = rel;
     if (el.videoRelSubTranslate) el.videoRelSubTranslate.value = "";
   }
   if (url && el.videoDownloadUrl) el.videoDownloadUrl.value = url;
@@ -4460,15 +4495,19 @@ async function refreshHizirOperasyonPanel() {
 
 /** Aktif motor sayfası görünür olduktan sonra kabuk + data-motor senkronu (video/tercüme/mimar). */
 function syncActiveMotorShell() {
-  const m = String(currentMode || window.currentMode || "genel").trim().toLowerCase();
+  const wb = getWorkbenchMode();
   if (window.RuzgarTercumeAtolye?.syncTercumeLayout) {
-    window.RuzgarTercumeAtolye.syncTercumeLayout(m === "tercume");
+    window.RuzgarTercumeAtolye.syncTercumeLayout(wb === "tercume");
   }
   if (window.RuzgarMimarAtolye?.syncMimarLayout) {
-    window.RuzgarMimarAtolye.syncMimarLayout(m === "mimar" || m === "okuma");
+    window.RuzgarMimarAtolye.syncMimarLayout(wb === "mimar" || wb === "okuma");
   }
   if (window.RuzgarVideoAtolye?.syncVideoLayout) {
-    window.RuzgarVideoAtolye.syncVideoLayout(m === "video");
+    window.RuzgarVideoAtolye.syncVideoLayout(wb === "video");
+  }
+  /* Electron BrowserView sinema — video sayfası gizlense de pencerede kalır; motor değişince kapat */
+  if (wb !== "video") {
+    clearYoutubeEmbedPreview();
   }
 }
 
@@ -4530,7 +4569,10 @@ function updateDynamicWorkbench() {
   }
   if (wb === "tercume") void loadTercumeFileList();
   /* tercüme: tercume-atolye.js */
-  if (wb === "ses") void refreshSesSttHint();
+  if (wb === "ses") {
+    void refreshSesSttHint();
+    void refreshSesDubHint();
+  }
   if (wb === "video") void refreshVideoEngineHint();
   if (wb === "programlama") {
     updateProgramlamaActiveFileLabel();
@@ -5279,6 +5321,92 @@ function wireTercumeAtolye() {
   });
 }
 
+async function refreshSesCloneHint() {
+  if (!el.sesCloneHint) return;
+  try {
+    const r = await fetch(`${API}/api/tts/clone/status`, { method: "GET" });
+    if (!r.ok) throw new Error("no-clone-status");
+    const j = await r.json();
+    const parts = [];
+    if (j.xtts) parts.push("XTTS kurulu");
+    else parts.push("XTTS yok — pip install TTS torch");
+    if (j.cuda) parts.push("GPU");
+    else parts.push("CPU (yavaş)");
+    const refs = j.referans || {};
+    const okRefs = Object.entries(refs)
+      .filter(([, v]) => v)
+      .map(([k]) => k);
+    if (okRefs.length) parts.push(`referans: ${okRefs.join(", ")}`);
+    else parts.push("referans bekleniyor");
+    el.sesCloneHint.textContent = j.hint_tr || parts.join(" · ");
+  } catch {
+    el.sesCloneHint.textContent =
+      "Klon durumu okunamadı — sunucu çalışıyor mu?";
+  }
+}
+
+async function refreshSesDubHint() {
+  if (!el.sesDubMeta) return;
+  try {
+    const r = await fetch(`${API}/api/video/dub/status`, { method: "GET" });
+    if (!r.ok) throw new Error("no-dub-status");
+    const j = await r.json();
+    if (!j.enabled) {
+      el.sesDubMeta.textContent = "Dublaj kapalı — RUZGAR_VIDEO_DUB=1 ile açın.";
+      return;
+    }
+    el.sesDubMeta.textContent = [
+      "Dublaj hazır",
+      j.max_segments ? `max ${j.max_segments} segment` : "",
+      j.max_duration_sec ? `max ${Math.round(j.max_duration_sec / 60)} dk` : "",
+    ]
+      .filter(Boolean)
+      .join(" · ");
+  } catch {
+    el.sesDubMeta.textContent = "Dublaj durumu okunamadı — sunucu çalışıyor mu?";
+  }
+}
+
+async function uploadSesCloneReferans() {
+  const f = el.sesCloneRefInput?.files?.[0];
+  if (!f) {
+    flashRuzgarDurum("Referans ses dosyası seçin (30–120 sn).");
+    return;
+  }
+  const kar = String(el.sesCloneKarakter?.value || "asistan").trim();
+  const fd = new FormData();
+  fd.append("file", f, f.name || "referans.wav");
+  fd.append("karakter", kar);
+  flashRuzgarDurum("Referans ses kaydediliyor…");
+  setStatus("Klon referans…", "Rüzgar");
+  try {
+    const res = await fetch(`${API}/api/tts/clone/referans`, { method: "POST", body: fd });
+    let j = {};
+    try {
+      j = await res.json();
+    } catch {
+      j = {};
+    }
+    if (!res.ok) {
+      let detail = j.detail;
+      if (typeof detail !== "string") detail = res.statusText;
+      flashRuzgarDurum(String(detail || "Referans kaydedilemedi"));
+      return;
+    }
+    flashRuzgarDurum(`Referans kaydedildi (${kar}): ${j.referans_rel || ""}`);
+    void refreshSesCloneHint();
+  } catch (e) {
+    flashRuzgarDurum(e && e.message ? e.message : String(e));
+  } finally {
+    setStatus("Hazır", "Rüzgar");
+  }
+}
+
+function sesTtsBackendPreference() {
+  if (el.sesUseClone && !el.sesUseClone.checked) return "edge";
+  return "auto";
+}
+
 async function refreshSesSttHint() {
   if (!el.sesSttHint) return;
   try {
@@ -5286,8 +5414,9 @@ async function refreshSesSttHint() {
     if (!r.ok) throw new Error("no-health");
     const j = await r.json();
     if (j.stt) {
+      const model = j.whisper_model ? ` (${j.whisper_model})` : "";
       el.sesSttHint.textContent =
-        "Konuşmayı metne dökme hazır. Dosya seçip «Metne dök» deyin; gerekirse: pip install faster-whisper.";
+        `Konuşmayı metne dökme hazır${model}. Ses ve video (.mp4, .mkv…) desteklenir; video uzun sürer — ilerleme çubuğuna bakın.`;
     } else {
       el.sesSttHint.textContent =
         "Metne döküm kapalı. Kurulum: pip install faster-whisper — ardından yerel sunucuyu yeniden başlatın.";
@@ -5298,20 +5427,44 @@ async function refreshSesSttHint() {
   }
 }
 
+function sesFileIsVideo(name) {
+  return /\.(mp4|mkv|webm|mov|m4v|avi|ts|flv|wmv|mpeg|mpg)$/i.test(String(name || ""));
+}
+
+function sesFileKindHint(file) {
+  if (!file) return "";
+  const mb = (file.size / (1024 * 1024)).toFixed(1);
+  if (sesFileIsVideo(file.name)) {
+    return `${file.name} (${mb} MB) — video; «Metne dök» sesi çıkarıp Whisper ile yazar.`;
+  }
+  return `${file.name} (${mb} MB)`;
+}
+
 async function runSesSttFromFile() {
   const f = el.audioFileInput?.files?.[0];
   if (!f) {
-    flashRuzgarDurum("Önce bir ses dosyası seçin.");
+    flashRuzgarDurum("Önce bir ses veya video dosyası seçin.");
     return;
   }
+  const isVideo = sesFileIsVideo(f.name);
   const langRaw = String(el.sesSttLang?.value || "tr").trim();
   const fd = new FormData();
-  fd.append("file", f, f.name || "audio.webm");
-  flashRuzgarDurum("Metne dökülüyor…");
-  setStatus("STT…", "Rüzgar");
+  fd.append("file", f, f.name || (isVideo ? "media.mp4" : "audio.webm"));
+  flashRuzgarDurum(
+    isVideo
+      ? `Video STT: ${f.name} — ses çıkarılıyor + Whisper (uzun sürebilir)…`
+      : "Metne dökülüyor…",
+  );
+  setStatus(isVideo ? "Video → metin…" : "STT…", "Rüzgar");
+  setVideoJobProgress(true, isVideo ? "Video → metin (STT)…" : "Metne dökülüyor…");
+  if (el.sesSttMeta) {
+    el.sesSttMeta.textContent = isVideo
+      ? "Video STT çalışıyor — ffmpeg + Whisper (dakikalar sürebilir)…"
+      : "STT çalışıyor…";
+  }
   try {
     const q = langRaw === "auto" ? "auto" : encodeURIComponent(langRaw);
-    const res = await fetch(`${API}/api/stt?lang=${q}`, { method: "POST", body: fd });
+    const res = await fetch(`${API}/api/stt?lang=${q}&segments=1`, { method: "POST", body: fd });
     let j = {};
     try {
       j = await res.json();
@@ -5332,8 +5485,15 @@ async function runSesSttFromFile() {
     const text = String(j.text ?? "").trim();
     if (el.sesTranscript) el.sesTranscript.value = text;
     if (el.sesSttMeta) {
-      el.sesSttMeta.textContent =
-        j.language != null && String(j.language).length ? `Algılanan dil: ${j.language}` : "";
+      const parts = [];
+      if (j.language != null && String(j.language).length) {
+        parts.push(`Algılanan dil: ${j.language}`);
+      }
+      if (Array.isArray(j.segments) && j.segments.length) {
+        parts.push(`${j.segments.length} segment`);
+      }
+      if (j.srt) parts.push("SRT hazır");
+      el.sesSttMeta.textContent = parts.join(" · ");
     }
     flashRuzgarDurum(text ? "Metin dökümü hazır." : "Boş sonuç döndü.");
     setStatus("Hazır", "Rüzgar");
@@ -5341,6 +5501,8 @@ async function runSesSttFromFile() {
   } catch (e) {
     flashRuzgarDurum(e && e.message ? e.message : String(e));
     setStatus("Hazır", "Rüzgar");
+  } finally {
+    setVideoJobProgress(false);
   }
 }
 
@@ -5357,6 +5519,7 @@ function wireSesAtolye() {
       }
       sesPreviewObjectUrl = URL.createObjectURL(f);
       el.audioPreview.src = sesPreviewObjectUrl;
+      if (el.sesSttHint) el.sesSttHint.textContent = sesFileKindHint(f);
       if (el.sesSttMeta) el.sesSttMeta.textContent = "";
     });
   }
@@ -5365,6 +5528,12 @@ function wireSesAtolye() {
       void runSesSttFromFile();
     });
   }
+  if (el.btnSesCloneUpload) {
+    el.btnSesCloneUpload.addEventListener("click", () => {
+      void uploadSesCloneReferans();
+    });
+  }
+  void refreshSesCloneHint();
   if (el.btnSesToChat) {
     el.btnSesToChat.addEventListener("click", () => {
       const t = String(el.sesTranscript?.value || "").trim();
@@ -5385,6 +5554,11 @@ function wireSesAtolye() {
       void speakStudioTranscript(el.sesTranscript?.value || "");
     });
   }
+  if (el.btnSesTilavet) {
+    el.btnSesTilavet.addEventListener("click", () => {
+      void speakStudioTilavet(el.sesTranscript?.value || "");
+    });
+  }
   if (el.btnSesClear) {
     el.btnSesClear.addEventListener("click", () => {
       if (el.sesTranscript) el.sesTranscript.value = "";
@@ -5392,6 +5566,35 @@ function wireSesAtolye() {
       flashRuzgarDurum("Metin dökümü temizlendi.");
     });
   }
+  if (el.btnSesDub) {
+    el.btnSesDub.addEventListener("click", () => {
+      void runSesDubJob();
+    });
+  }
+  if (el.btnSesDubVideoPanel) {
+    el.btnSesDubVideoPanel.addEventListener("click", () => {
+      if (el.sesDubRel?.value && el.videoRelDub) {
+        el.videoRelDub.value = String(el.sesDubRel.value).trim();
+      }
+      switchMode("video");
+      window.setTimeout(() => {
+        window.RuzgarVideoAtolye?.openDuzenDock?.("dub");
+        el.videoRelDub?.focus?.({ preventScroll: true });
+      }, 120);
+    });
+  }
+  if (el.sesDubFileInput && el.sesDubFileInput.dataset.sesDubWired !== "1") {
+    el.sesDubFileInput.dataset.sesDubWired = "1";
+    el.sesDubFileInput.addEventListener("change", () => {
+      const f = el.sesDubFileInput.files && el.sesDubFileInput.files[0];
+      if (!f) return;
+      if (el.sesDubRel) el.sesDubRel.value = f.name;
+      if (el.sesDubMeta) {
+        el.sesDubMeta.textContent = `${f.name} — «Dublaj yap» ile yuklenir (max 30 MB).`;
+      }
+    });
+  }
+  void refreshSesDubHint();
 }
 
 function formatDurationSec(sec) {
@@ -5523,6 +5726,8 @@ async function loadVideoPreviewFromRel(rel, opts = {}) {
   el.videoPreview.src = url;
   el.videoPreview.load();
   if (el.videoRelWorkspace) el.videoRelWorkspace.value = r;
+  if (el.videoRelDub) el.videoRelDub.value = r;
+  if (el.sesDubRel) el.sesDubRel.value = r;
   videoTimelineIn = null;
   videoTimelineOut = null;
   lastVideoProbeDurationSec = 0;
@@ -6293,6 +6498,21 @@ function wireVideoTimeline() {
       void sendSubtitleFileToTercumeAtolye();
     });
   }
+  if (el.btnVideoSubProcess) {
+    el.btnVideoSubProcess.addEventListener("click", () => {
+      void runVideoSubProcessJob();
+    });
+  }
+  if (el.btnVideoSubPipeline) {
+    el.btnVideoSubPipeline.addEventListener("click", () => {
+      void runVideoSubPipelineJob();
+    });
+  }
+  if (el.btnVideoDub) {
+    el.btnVideoDub.addEventListener("click", () => {
+      void runVideoDubJob();
+    });
+  }
 }
 
 async function sendSubtitleFileToTercumeAtolye() {
@@ -6350,6 +6570,10 @@ async function refreshVideoEngineHint() {
     if (vc.generative) createBits.push("Runway ✓");
     else createBits.push("Runway (API anahtarı)");
     parts.push(`Video oluştur: ${createBits.join(", ")}`);
+    const vd = j.video_dub || {};
+    if (vd.enabled) {
+      parts.push(`Dublaj S6 ✓ (max ${vd.max_segments || "?"} seg)`);
+    }
     el.videoEngineHint.textContent = `${parts.join(" · ")} · Çıktı: .ruzgar-video-export/ · Paneller: üst düğmeler veya Düzen menüsü`;
   } catch {
     el.videoEngineHint.textContent =
@@ -6579,6 +6803,292 @@ async function runVideoConcatJob() {
     setStatus("Hazır", "Rüzgar");
   } finally {
     setVideoJobProgress(false);
+  }
+}
+
+async function runVideoTranscribeJob() {
+  const rel = String(
+    el.videoRelTranscribe?.value || el.videoRelWorkspace?.value || cinemaNowPlaying.localRel || ""
+  ).trim();
+  if (!rel) {
+    flashRuzgarDurum("Video/ses için göreli yol girin veya dosya açın.");
+    return;
+  }
+  const langRaw = String(el.videoSttLang?.value || "auto").trim();
+  const fd = new FormData();
+  fd.append("rel", rel);
+  fd.append("lang", langRaw);
+  fd.append("save_srt", "true");
+  flashRuzgarDurum("Konuşma metne dökülüyor… (Whisper, CPU'da uzun sürebilir)");
+  setStatus("Transkript…", "Rüzgar");
+  setVideoJobProgress(true, "Whisper transkript…");
+  try {
+    const res = await fetch(`${API}/api/video/transcribe`, { method: "POST", body: fd });
+    let j = {};
+    try {
+      j = await res.json();
+    } catch {
+      j = {};
+    }
+    if (!res.ok) {
+      flashRuzgarDurum(formatVideoApiError(j.detail, res, "Transkript başarısız"));
+      setStatus("Hazır", "Rüzgar");
+      return;
+    }
+    const text = String(j.text ?? "").trim();
+    if (el.videoTranscriptOut) el.videoTranscriptOut.value = text;
+    if (el.videoTranscriptMeta) {
+      const meta = [];
+      if (j.language) meta.push(`Dil: ${j.language}`);
+      if (Array.isArray(j.segments)) meta.push(`${j.segments.length} segment`);
+      if (j.duration_sec != null) meta.push(`~${Math.round(j.duration_sec)} sn`);
+      if (j.srt_rel) {
+        meta.push(`SRT: ${j.srt_rel}`);
+        if (el.videoRelBurnSub) el.videoRelBurnSub.value = j.srt_rel;
+        if (el.videoRelSubTranslate) el.videoRelSubTranslate.value = j.srt_rel;
+        if (el.videoRelBurnVideo && !el.videoRelBurnVideo.value) {
+          el.videoRelBurnVideo.value = rel;
+        }
+      }
+      el.videoTranscriptMeta.textContent = meta.join(" · ");
+    }
+    if (j.srt_rel) appendVideoJobNote(j.srt_rel);
+    flashRuzgarDurum(text ? "Transkript hazır." : "Boş transkript döndü.");
+    setStatus("Hazır", "Rüzgar");
+  } catch (e) {
+    flashRuzgarDurum(e && e.message ? e.message : String(e));
+    setStatus("Hazır", "Rüzgar");
+  } finally {
+    setVideoJobProgress(false);
+  }
+}
+
+function copyVideoTranscriptToSes() {
+  const text = String(el.videoTranscriptOut?.value || "").trim();
+  if (!text) {
+    flashRuzgarDurum("Önce transkript alın.");
+    return;
+  }
+  if (el.sesTranscript) el.sesTranscript.value = text;
+  switchMode("ses");
+  flashRuzgarDurum("Transkript ses atölyesine aktarıldı.");
+}
+
+async function runVideoSubProcessJob() {
+  const rel = String(el.videoRelSubTranslate?.value || el.videoRelBurnSub?.value || "").trim();
+  if (!rel) {
+    flashRuzgarDurum("Kaynak altyazı yolu girin (SRT/VTT).");
+    return;
+  }
+  const fd = new FormData();
+  fd.append("rel_sub", rel);
+  fd.append("src_lang", String(el.videoSubSrcLang?.value || "auto"));
+  fd.append("tgt_lang", String(el.videoSubTgtLang?.value || "tr"));
+  fd.append("template", String(el.videoSubTemplate?.value || "sinema"));
+  fd.append("output_format", "ass");
+  flashRuzgarDurum("Altyazı çevriliyor ve ASS oluşturuluyor…");
+  setStatus("Altyazı fabrikası…", "Rüzgar");
+  setVideoJobProgress(true, "Altyazı S3…");
+  try {
+    const res = await fetch(`${API}/api/video/subtitles/process`, { method: "POST", body: fd });
+    let j = {};
+    try {
+      j = await res.json();
+    } catch {
+      j = {};
+    }
+    if (!res.ok) {
+      flashRuzgarDurum(formatVideoApiError(j.detail, res, "Altyazı işlemi başarısız"));
+      return;
+    }
+    const out = String(j.output_rel || "").trim();
+    if (out) {
+      if (el.videoRelBurnSub) el.videoRelBurnSub.value = out;
+      appendVideoJobNote(out);
+    }
+    if (el.videoSubFactoryMeta) {
+      el.videoSubFactoryMeta.textContent = [
+        j.cue_count != null ? `${j.cue_count} satır` : "",
+        j.template ? `şablon: ${j.template}` : "",
+        j.target_lang ? `hedef: ${j.target_lang}` : "",
+        out ? `çıktı: ${out}` : "",
+      ]
+        .filter(Boolean)
+        .join(" · ");
+    }
+    flashRuzgarDurum(out ? `ASS hazır: ${out}` : "Altyazı işlendi.");
+  } catch (e) {
+    flashRuzgarDurum(e && e.message ? e.message : String(e));
+  } finally {
+    setVideoJobProgress(false);
+    setStatus("Hazır", "Rüzgar");
+  }
+}
+
+async function stageMediaRelFromLocalFile(file) {
+  if (!file) return "";
+  const fd = new FormData();
+  fd.append("file", file, file.name || "media.bin");
+  const res = await fetch(`${API}/api/tercume/import-file`, { method: "POST", body: fd });
+  let j = {};
+  try {
+    j = await res.json();
+  } catch {
+    j = {};
+  }
+  if (!res.ok) {
+    throw new Error(formatVideoApiError(j.detail, res, "Dosya yuklenemedi"));
+  }
+  return String(j.rel || "").trim();
+}
+
+async function runDubbingJob(options = {}) {
+  const relInput = options.relInput || el.videoRelDub;
+  const srcSelect = options.srcSelect || el.videoDubSrcLang;
+  const tgtSelect = options.tgtSelect || el.videoDubTgtLang;
+  const voiceSelect = options.voiceSelect || el.videoDubVoice;
+  const metaEl = options.metaEl || el.videoDubMeta;
+  const fileInput = options.fileInput || null;
+  let rel = String(
+    relInput?.value || el.videoRelWorkspace?.value || cinemaNowPlaying.localRel || ""
+  ).trim();
+  if (!rel && fileInput?.files?.[0]) {
+    try {
+      flashRuzgarDurum("Video yukleniyor…");
+      rel = await stageMediaRelFromLocalFile(fileInput.files[0]);
+      if (relInput) relInput.value = rel;
+    } catch (e) {
+      flashRuzgarDurum(e && e.message ? e.message : String(e));
+      return;
+    }
+  }
+  if (!rel) {
+    flashRuzgarDurum("Dublaj icin video goreli yolu girin veya dosya secin.");
+    return;
+  }
+  const fd = new FormData();
+  fd.append("rel", rel);
+  fd.append("src_lang", String(srcSelect?.value || "auto"));
+  fd.append("tgt_lang", String(tgtSelect?.value || "tr"));
+  fd.append("voice", String(voiceSelect?.value || "auto"));
+  fd.append("karakter", "asistan");
+  flashRuzgarDurum("Dublaj basladi — STT + ceviri + TTS (uzun surebilir)…");
+  setStatus("Dublaj S6…", "Rüzgar");
+  setVideoJobProgress(true, "Dublaj pipeline…");
+  try {
+    const res = await fetch(`${API}/api/video/dub`, { method: "POST", body: fd });
+    let j = {};
+    try {
+      j = await res.json();
+    } catch {
+      j = {};
+    }
+    if (!res.ok) {
+      flashRuzgarDurum(formatVideoApiError(j.detail, res, "Dublaj basarisiz"));
+      return;
+    }
+    const metaLine = [
+      j.segment_count != null ? `${j.segment_count} segment` : "",
+      j.voice_mode ? `ses: ${j.voice_mode}` : "",
+      j.detected_language ? `kaynak: ${j.detected_language}` : "",
+      j.target_language ? `hedef: ${j.target_language}` : "",
+      j.srt_rel ? `SRT: ${j.srt_rel}` : "",
+    ]
+      .filter(Boolean)
+      .join(" · ");
+    if (metaEl) metaEl.textContent = metaLine;
+    if (el.videoDubMeta && metaEl !== el.videoDubMeta) el.videoDubMeta.textContent = metaLine;
+    if (el.sesDubMeta && metaEl !== el.sesDubMeta) el.sesDubMeta.textContent = metaLine;
+    if (j.srt_rel && el.videoRelSubTranslate) el.videoRelSubTranslate.value = j.srt_rel;
+    const out = String(j.output_rel || "").trim();
+    if (out) {
+      appendVideoJobNote(out);
+      flashRuzgarDurum(`Dublaj hazir: ${out}`);
+    } else {
+      flashRuzgarDurum("Dublaj tamamlandi.");
+    }
+  } catch (e) {
+    flashRuzgarDurum(e && e.message ? e.message : String(e));
+  } finally {
+    setVideoJobProgress(false);
+    setStatus("Hazır", "Rüzgar");
+  }
+}
+
+async function runVideoDubJob() {
+  await runDubbingJob({
+    relInput: el.videoRelDub,
+    srcSelect: el.videoDubSrcLang,
+    tgtSelect: el.videoDubTgtLang,
+    voiceSelect: el.videoDubVoice,
+    metaEl: el.videoDubMeta,
+  });
+}
+
+async function runSesDubJob() {
+  await runDubbingJob({
+    relInput: el.sesDubRel,
+    srcSelect: el.sesDubSrcLang,
+    tgtSelect: el.sesDubTgtLang,
+    voiceSelect: el.sesDubVoice,
+    metaEl: el.sesDubMeta,
+    fileInput: el.sesDubFileInput,
+  });
+}
+
+async function runVideoSubPipelineJob() {
+  const sub = String(el.videoRelSubTranslate?.value || el.videoRelBurnSub?.value || "").trim();
+  const video = String(
+    el.videoRelBurnVideo?.value || el.videoRelWorkspace?.value || cinemaNowPlaying.localRel || ""
+  ).trim();
+  if (!sub || !video) {
+    flashRuzgarDurum("Video ve kaynak altyazı yolu gerekli.");
+    return;
+  }
+  const fd = new FormData();
+  fd.append("rel_video", video);
+  fd.append("rel_sub", sub);
+  fd.append("src_lang", String(el.videoSubSrcLang?.value || "auto"));
+  fd.append("tgt_lang", String(el.videoSubTgtLang?.value || "tr"));
+  fd.append("template", String(el.videoSubTemplate?.value || "sinema"));
+  fd.append("burn", "true");
+  flashRuzgarDurum("Çeviri + ASS + videoya gömme… (uzun sürebilir)");
+  setStatus("Altyazı pipeline…", "Rüzgar");
+  setVideoJobProgress(true, "S3 pipeline…");
+  try {
+    const res = await fetch(`${API}/api/video/subtitles/pipeline`, { method: "POST", body: fd });
+    let j = {};
+    try {
+      j = await res.json();
+    } catch {
+      j = {};
+    }
+    if (!res.ok) {
+      flashRuzgarDurum(formatVideoApiError(j.detail, res, "Pipeline başarısız"));
+      return;
+    }
+    if (j.ass_rel && el.videoRelBurnSub) el.videoRelBurnSub.value = j.ass_rel;
+    if (el.videoSubFactoryMeta) {
+      el.videoSubFactoryMeta.textContent = [
+        j.cue_count != null ? `${j.cue_count} satır` : "",
+        j.ass_rel ? `ASS: ${j.ass_rel}` : "",
+        j.burned_rel ? `video: ${j.burned_rel}` : "",
+      ]
+        .filter(Boolean)
+        .join(" · ");
+    }
+    if (j.burned_rel) {
+      appendVideoJobNote(j.burned_rel);
+      flashRuzgarDurum(`Altyazılı video hazır: ${j.burned_rel}`);
+    } else if (j.ass_rel) {
+      appendVideoJobNote(j.ass_rel);
+      flashRuzgarDurum(`ASS hazır: ${j.ass_rel}`);
+    }
+  } catch (e) {
+    flashRuzgarDurum(e && e.message ? e.message : String(e));
+  } finally {
+    setVideoJobProgress(false);
+    setStatus("Hazır", "Rüzgar");
   }
 }
 
@@ -7585,6 +8095,12 @@ function clearVideoPreview() {
   if (el.videoRelMuxVideo) el.videoRelMuxVideo.value = "";
   if (el.videoRelMuxAudio) el.videoRelMuxAudio.value = "";
   if (el.videoRelSubTranslate) el.videoRelSubTranslate.value = "";
+  if (el.videoRelTranscribe) el.videoRelTranscribe.value = "";
+  if (el.videoRelDub) el.videoRelDub.value = "";
+  if (el.videoTranscriptOut) el.videoTranscriptOut.value = "";
+  if (el.videoTranscriptMeta) el.videoTranscriptMeta.textContent = "";
+  if (el.videoSubFactoryMeta) el.videoSubFactoryMeta.textContent = "";
+  if (el.videoDubMeta) el.videoDubMeta.textContent = "";
   resetVideoTimelineMarks();
   resetVideoTimelineProbeDuration();
   flashRuzgarDurum("Video paneli sıfırlandı.");
@@ -7941,6 +8457,16 @@ function wireVideoAtolye() {
   if (el.btnVideoBurnSub) {
     el.btnVideoBurnSub.addEventListener("click", () => {
       void runVideoBurnSubJob();
+    });
+  }
+  if (el.btnVideoTranscribe) {
+    el.btnVideoTranscribe.addEventListener("click", () => {
+      void runVideoTranscribeJob();
+    });
+  }
+  if (el.btnVideoTranscriptToSes) {
+    el.btnVideoTranscriptToSes.addEventListener("click", () => {
+      copyVideoTranscriptToSes();
     });
   }
   if (el.btnVideoMuxAudio) {
@@ -8867,6 +9393,7 @@ async function refreshCurrentMotorPanel() {
   }
   if (mode === "ses") {
     await refreshSesSttHint();
+    await refreshSesDubHint();
     setStatus("Ses motoru bilgisi yenilendi", "Rüzgar");
     return;
   }
@@ -11948,7 +12475,8 @@ async function speakStudioTranscript(raw) {
       body: JSON.stringify({
         text: plain,
         karakter: kar,
-        backend: "edge",
+        backend: sesTtsBackendPreference(),
+        lang: "tr",
         ...(lastVoiceEmotion && lastVoiceEmotion !== "notr"
           ? { emotion: lastVoiceEmotion }
           : {}),
@@ -11964,6 +12492,56 @@ async function speakStudioTranscript(raw) {
     /* Edge yok */
   }
   speakTextImmediate(plain);
+}
+
+/** Tilavet modu — Kuran / hadis / Arapca vakur okuma (Faz S5). */
+async function speakStudioTilavet(raw) {
+  const plain = ttsPlainForSpeech(raw || "");
+  if (!plain) {
+    flashRuzgarDurum("Tilavet icin metin yok.");
+    return;
+  }
+  let kar = "alim";
+  try {
+    const rs = await fetch(`${API}/api/ses/settings`);
+    if (rs.ok) {
+      const j = await rs.json();
+      kar = normalizeKarakterForTts(j.karakter || "alim");
+    }
+  } catch (_) {
+    /* ignore */
+  }
+  flashRuzgarDurum("Tilavet okunuyor (vakur tempo)…");
+  setStatus("Tilavet…", "Rüzgar");
+  try {
+    const res = await fetch(`${API}/api/tts/tilavet`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: plain,
+        karakter: kar,
+        backend: "edge",
+      }),
+    });
+    if (res.ok) {
+      const blob = await res.blob();
+      await playTtsBlob(blob);
+      setStatus("Hazır");
+      flashRuzgarDurum("Tilavet okuma tamam.");
+      return;
+    }
+    let j = {};
+    try {
+      j = await res.json();
+    } catch {
+      j = {};
+    }
+    flashRuzgarDurum(String(j.detail || res.statusText || "Tilavet basarisiz"));
+  } catch (e) {
+    flashRuzgarDurum(e && e.message ? e.message : String(e));
+  } finally {
+    setStatus("Hazır", "Rüzgar");
+  }
 }
 
 function speakTextImmediate(text) {
@@ -12101,6 +12679,7 @@ if (window.ruzgarApi?.onMenu) {
       console.log("[RÜZGAR] Hazırlanıyor... (Okuma hızı ve huzur)");
       const defH = "0.92";
       const defZ = "0.88";
+      const defD = "1.0";
       const hRaw = window.prompt(
         "Okuma hızı çarpanı (0.45–1.0, yüksek = daha akıcı)",
         defH
@@ -12111,23 +12690,37 @@ if (window.ruzgarApi?.onMenu) {
         defZ
       );
       if (zRaw == null) return;
+      const dRaw = window.prompt(
+        "Durak çarpanı (0.55–1.6, yüksek = cümle arası daha uzun nefes/durak)",
+        defD
+      );
+      if (dRaw == null) return;
       let hiz = Number.parseFloat(hRaw.replace(",", "."));
       let huzur = Number.parseFloat(zRaw.replace(",", "."));
+      let durak = Number.parseFloat(dRaw.replace(",", "."));
       if (!Number.isFinite(hiz)) hiz = 0.92;
       if (!Number.isFinite(huzur)) huzur = 0.88;
+      if (!Number.isFinite(durak)) durak = 1.0;
       hiz = Math.min(1, Math.max(0.45, hiz));
       huzur = Math.min(1, Math.max(0.45, huzur));
+      durak = Math.min(1.6, Math.max(0.55, durak));
       void fetch(`${API}/api/ses/settings`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           hiz,
           huzur,
+          durak,
+          prosody: true,
           mimarlar: "Ümit & Gökçenur",
         }),
       })
         .then((r) => {
-          if (r.ok) setStatus(`Ses ayarı: hız ${hiz} · huzur ${huzur}`, "Rüzgar");
+          if (r.ok)
+            setStatus(
+              `Ses ayarı: hız ${hiz} · huzur ${huzur} · durak ${durak} (S1 prosody)`,
+              "Rüzgar"
+            );
           else setStatus("Ses ayarı kaydedilemedi", "Rüzgar");
         })
         .catch(() => setStatus("Sunucu yok — ses ayarı yazılamadı", "Rüzgar"));

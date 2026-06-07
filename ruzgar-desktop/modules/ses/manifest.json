@@ -17,7 +17,8 @@
       {
         "group": "Paneller",
         "items": [
-          { "id": "speak", "label": "Seslendir", "title": "Metni sesli oku", "action": "ses:speak", "icon": "🔊" }
+          { "id": "speak", "label": "Seslendir", "title": "Metni sesli oku", "action": "ses:speak", "icon": "🔊" },
+          { "id": "dub", "label": "Dublaj (S6)", "title": "Video dublaj prototipi", "action": "ses:dub", "icon": "🎙" }
         ]
       }
     ],

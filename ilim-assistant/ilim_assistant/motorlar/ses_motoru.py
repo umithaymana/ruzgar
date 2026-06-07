@@ -13,6 +13,12 @@ Paralel TTS: desktop_server RUZGAR_TTS_MP + ruzgar_perf hattı.
 Masaüstü oynatıcı tamponu (CPU yükünde yankıyı azaltmak): ruzgar-desktop/app.js —
 ``RUZGAR_TTS_PLAY_PREROLL_MS``, ``RUZGAR_TTS_CHUNK_GAP_MS``.
 
+Faz S1 prosody (doğal durak): ``motorlar/ses_prosody.py`` + ``tts_service.synthesize_edge_mp3_prosody``.
+Faz S4 klon (XTTS): ``motorlar/ses_klon_motoru.py`` + ``/api/tts/clone`` — referans ``arsiv/ses-referans/``.
+Faz S5 tilavet: ``motorlar/ses_tilavet.py`` + ``/api/tts/tilavet`` — ayet/vakif durak, Arapca Edge ses.
+Uzun metinlerde cümle/paragraf arası sessizlik; Kur'an/hadis hattında daha uzun durak.
+Kapat: ``RUZGAR_TTS_PROSODY=0`` veya ``.ruzgar_ses_ayarlari.json`` → ``"prosody": false``.
+
 İlim ve İdrak (Aktif Okuyucu): uzun metin özeti talimatı chat_core → ilim_ve_idrak ile gelir.
 """
 

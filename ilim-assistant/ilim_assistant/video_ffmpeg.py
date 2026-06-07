@@ -451,6 +451,142 @@ def concat_many_files(
             pass
 
 
+def generate_silence_mp3(
+    output_path: Path,
+    duration_ms: int,
+    *,
+    sample_rate: int = 24000,
+    timeout_sec: int = 120,
+) -> None:
+    """Belirtilen sürede sessiz MP3 üretir (TTS parça birleştirme — Faz S1)."""
+    ms = max(40, int(duration_ms))
+    sec = ms / 1000.0
+    out_path = Path(output_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    argv = [
+        "-y",
+        "-f",
+        "lavfi",
+        "-i",
+        f"anullsrc=r={sample_rate}:cl=mono",
+        "-t",
+        f"{sec:.3f}",
+        "-c:a",
+        "libmp3lame",
+        "-q:a",
+        "4",
+        str(out_path.resolve()),
+    ]
+    run_ffmpeg_args(argv, timeout_sec=timeout_sec)
+
+
+def generate_silence_wav(
+    output_path: Path,
+    duration_ms: int,
+    *,
+    sample_rate: int = 22050,
+    timeout_sec: int = 120,
+) -> None:
+    """Belirtilen sürede sessiz WAV üretir (dublaj zaman çizelgesi — Faz S6)."""
+    ms = max(40, int(duration_ms))
+    sec = ms / 1000.0
+    out_path = Path(output_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    argv = [
+        "-y",
+        "-f",
+        "lavfi",
+        "-i",
+        f"anullsrc=r={sample_rate}:cl=mono",
+        "-t",
+        f"{sec:.3f}",
+        "-c:a",
+        "pcm_s16le",
+        str(out_path.resolve()),
+    ]
+    run_ffmpeg_args(argv, timeout_sec=timeout_sec)
+
+
+def audio_duration_sec(path: str | Path) -> float:
+    """Ses/video dosyası süresi (saniye)."""
+    data = ffprobe_json(path)
+    try:
+        return max(0.0, float(data.get("format", {}).get("duration") or 0.0))
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def extract_audio_for_stt(
+    input_path: Path,
+    output_wav: Path,
+    *,
+    sample_rate: int = 16000,
+    max_duration_sec: float | None = None,
+    timeout_sec: int = DEFAULT_FFMPEG_TIMEOUT,
+) -> None:
+    """Video veya ses dosyasından Whisper için 16 kHz mono WAV çıkarır (Faz S2)."""
+    src = Path(input_path).resolve()
+    if not src.is_file():
+        raise FileNotFoundError(src)
+    out_path = Path(output_wav)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    argv = ["-y", "-i", str(src), "-vn"]
+    if max_duration_sec is not None and max_duration_sec > 0:
+        argv.extend(["-t", f"{float(max_duration_sec):.3f}"])
+    argv.extend(
+        [
+            "-acodec",
+            "pcm_s16le",
+            "-ar",
+            str(int(sample_rate)),
+            "-ac",
+            "1",
+            str(out_path.resolve()),
+        ]
+    )
+    run_ffmpeg_args(argv, timeout_sec=timeout_sec)
+
+
+def concat_audio_files(
+    paths: list[Path],
+    output_path: Path,
+    *,
+    copy_streams: bool = True,
+    timeout_sec: int = DEFAULT_FFMPEG_TIMEOUT,
+) -> None:
+    """Ses dosyalarını sırayla birleştirir (MP3/WAV — prosody TTS hattı)."""
+    resolved = [Path(p).resolve() for p in paths if str(p).strip()]
+    if len(resolved) < 1:
+        raise ValueError("En az bir ses dosyası gerekli.")
+    out_path = Path(output_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    if len(resolved) == 1:
+        import shutil
+
+        shutil.copy2(resolved[0], out_path)
+        return
+
+    list_body = "".join(
+        f"file '{_concat_escape_path(p)}'\n" for p in resolved
+    )
+    tmp_list = out_path.parent / f"_concat_audio_{uuid.uuid4().hex}.txt"
+    try:
+        tmp_list.write_text(list_body, encoding="utf-8")
+        argv = ["-y", "-f", "concat", "-safe", "0", "-i", str(tmp_list.resolve())]
+        if copy_streams:
+            argv.extend(["-c", "copy"])
+        else:
+            argv.extend(["-c:a", "libmp3lame", "-q:a", "2"])
+        argv.append(str(out_path.resolve()))
+        run_ffmpeg_args(argv, timeout_sec=timeout_sec)
+    finally:
+        try:
+            if tmp_list.is_file():
+                tmp_list.unlink()
+        except OSError:
+            pass
+
+
 # Altyazı gömme (burn-in): .srt / .ass / .ssa / .vtt (ffmpeg + libass)
 _ALLOWED_SUBTITLE_SUFFIXES = frozenset({".srt", ".ass", ".ssa", ".vtt"})
 

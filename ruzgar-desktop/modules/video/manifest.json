@@ -36,6 +36,7 @@
         "group": "Çalışma",
         "items": [
           { "id": "tercume", "label": "Altyazı → Tercüme", "title": "Altyazıyı tercüme atölyesine gönder", "action": "video:tercume", "icon": "⇄" },
+          { "id": "dub", "label": "Dublaj (S6)", "title": "STT + çeviri + TTS dublaj prototipi", "action": "video:dub", "icon": "🎙" },
           { "id": "export", "label": "Çıktı klasörü", "title": ".ruzgar-video-export klasörünü aç", "action": "video:export", "icon": "📤" }
         ]
       }

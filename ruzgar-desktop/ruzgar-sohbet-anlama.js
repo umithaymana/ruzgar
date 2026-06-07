@@ -5,7 +5,7 @@
 (function ruzgarSohbetAnlama(global) {
   "use strict";
 
-  const VERSION = "ruzgar-sohbet-anlama-v1-2026-06-06";
+  const VERSION = "ruzgar-sohbet-anlama-v3-2026-06-06";
 
   /** @type {Record<string, any>|null} */
   let deps = null;
@@ -23,7 +23,7 @@
 
   function trimHistory(history, max) {
     const list = Array.isArray(history) ? history : [];
-    const n = Number.isFinite(max) ? max : 24;
+    const n = Number.isFinite(max) ? max : 32;
     return list.slice(-n);
   }
 
@@ -108,9 +108,123 @@
     return "";
   }
 
+  function isShortAck(text) {
+    const w = fold(text).replace(/[!?.…]+/g, "").trim();
+    return /^(?:evet|hayir|hayır|tamam|ok|peki|olur|oldu|guzel|güzel|super|süper|selam|merhaba|tesekkur|teşekkür)$/.test(
+      w,
+    );
+  }
+
+  function lastSubstantiveUserTurn(history) {
+    for (let i = history.length - 1; i >= 0; i--) {
+      const m = history[i];
+      if (String(m?.role || "").toLowerCase() !== "user") continue;
+      const c = String(m?.content || "").trim();
+      if (!c || c.length < 2 || isShortAck(c)) continue;
+      return c;
+    }
+    return "";
+  }
+
+  function lastAssistantTurn(history) {
+    for (let i = history.length - 1; i >= 0; i--) {
+      const m = history[i];
+      if (String(m?.role || "").toLowerCase() !== "assistant") continue;
+      const c = String(m?.content || "").trim();
+      if (c) return c;
+    }
+    return "";
+  }
+
+  function isEllipticalFollowUp(text) {
+    const raw = String(text || "").trim();
+    if (!raw || raw.length > 220) return false;
+    const low = fold(raw);
+    if (
+      /(?:yukaridaki|yukarıdaki|yukardaki|az\s+once|az\s+önce|demin|dedigim|dediğim|soyledigim|söylediğim|bahsettigim|bahsettiğim|anlattigim|anlattığım|yazdigim|yazdığım|sohbetteki|sohbet\s+teki)/.test(
+        low,
+      )
+    ) {
+      return true;
+    }
+    if (/^(?:onu|bunu|sunu|şunu|o\s+is|bu\s+is|o\s+video|bu\s+video)\b/.test(low)) return true;
+    if (
+      /^(?:ayni|aynı|öyle|oyle|böyle|boyle|devam|peki\s+o|simdi\s+o|şimdi\s+o|hadi\s+o|yap\s+o|yap\s+bunu)\b/.test(
+        low,
+      )
+    ) {
+      return true;
+    }
+    if (/^sen\s+(?:yap|hallet|anla|algila|algıla|devam)/.test(low)) return true;
+    if (
+      raw.length < 64 &&
+      !extractUrls(raw).length &&
+      /^(?:kes|indir|oynat|cevir|çevir|ac|aç|medya|kurgu|panel)\b/.test(low)
+    ) {
+      return true;
+    }
+    return false;
+  }
+
+  function resolveEllipticalFollowUp(text, history) {
+    if (!isEllipticalFollowUp(text)) return text;
+    const prevUser = lastSubstantiveUserTurn(history);
+    const prevAssist = lastAssistantTurn(history);
+    const anchor = prevUser || prevAssist;
+    if (!anchor) return text;
+
+    const low = fold(text);
+    const stripLead = text
+      .replace(
+        /^(?:onu|bunu|sunu|şunu|yukarıdaki|yukardaki|yukaridaki|az\s+once|az\s+önce|demin|dediğim|dedigim|söylediğim|soyledigim|bahsettiğim|bahsettigim|anlattığım|anlattigim|yazdığım|yazdigim|sohbetteki)[,\s:]*/i,
+        "",
+      )
+      .trim();
+
+    if (/^(?:ayni|aynı|öyle|oyle|böyle|boyle|devam|sen\s+yap|hallet|anla)/i.test(low)) {
+      return prevUser || anchor;
+    }
+
+    if (stripLead && stripLead !== text && stripLead.length >= 2) {
+      return `${prevUser || anchor} — ${stripLead}`;
+    }
+
+    if (
+      /(?:yukaridaki|yukarıdaki|dedigim|dediğim|soyledigim|bahsettigim|anlattigim|yazdigim|sohbetteki)/.test(
+        low,
+      )
+    ) {
+      const rest = text
+        .replace(
+          /.*?(?:yukarıdaki|yukardaki|yukaridaki|dediğim|dedigim|söylediğim|soyledigim|bahsettiğim|bahsettigim|anlattığım|anlattigim|yazdığım|yazdigim|sohbetteki)[,\s:]*/i,
+          "",
+        )
+        .trim();
+      if (rest.length >= 2) return `${prevUser || anchor} — ${rest}`;
+      return prevUser || anchor;
+    }
+
+    if (prevUser && text.length < 80) {
+      return `${prevUser} — ${text}`;
+    }
+    return text;
+  }
+
+  function buildContextBrief(history, maxLines) {
+    const tail = trimHistory(history, maxLines || 14);
+    const lines = [];
+    for (const m of tail) {
+      const role = String(m?.role || "").toLowerCase() === "user" ? "Ümit abi" : "Rüzgar";
+      const c = String(m?.content || "").trim();
+      if (!c) continue;
+      lines.push(`${role}: ${c.slice(0, 320)}`);
+    }
+    return lines.join("\n");
+  }
+
   function recentTopicFromHistory(history) {
     const joined = history
-      .slice(-8)
+      .slice(-10)
       .map((m) => String(m?.content || ""))
       .join(" ");
     const low = fold(joined);
@@ -170,20 +284,23 @@
     if (/mimar|pdf|okuma|sayfa\s+\d/i.test(text)) return "mimar";
 
     const topic = recentTopicFromHistory(ctx?.history || []);
-    if (topic && isActionFragment(text)) return topic;
+    if (topic && (isActionFragment(text) || isEllipticalFollowUp(text))) return topic;
     return "";
   }
 
   function resolveFromHistory(text, ctx) {
     let out = String(text || "").trim();
-    const history = trimHistory(ctx?.history || [], ctx?.maxHistory || 24);
-    if (!out || !history.length) return out;
+    const history = trimHistory(ctx?.history || [], ctx?.maxHistory || 32);
+    if (!out) return out;
+
+    out = resolveEllipticalFollowUp(out, history);
+    if (!history.length) return out;
 
     const cinema = ctx?.cinema || {};
     const hasCinema =
       !!ctx?.hasCinema ||
       !!(String(cinema.url || "").trim() || String(cinema.localRel || "").trim());
-    const lastUsers = lastMessages(history, "user", 3);
+    const lastUsers = lastMessages(history, "user", 4);
     const lastAssist = lastMessages(history, "assistant", 2).join(" ");
     const videoContext =
       hasCinema ||
@@ -213,19 +330,14 @@
     }
 
     if (/^(?:simdi|şimdi|peki|tamam|devam)\b/i.test(out) && out.length < 80) {
-      const prevUser = lastMessages(history, "user", 1)[0] || "";
+      const prevUser = lastSubstantiveUserTurn(history);
       if (prevUser && fold(prevUser) !== fold(out)) {
         const prevLow = fold(prevUser);
-        if (/oynat|indir|kes|panel|sinema/.test(prevLow)) {
+        if (/oynat|indir|kes|panel|sinema|video|cevir|çevir|kurgu/.test(prevLow)) {
           const rest = out.replace(/^(?:simdi|şimdi|peki|tamam|devam)[,.\s!]*/i, "").trim();
           out = rest ? `${prevUser} — ${rest}` : prevUser;
         }
       }
-    }
-
-    if (/^sen\s+(?:yap|hallet|devam)/i.test(out) || /^şunu\s+yap$/i.test(fold(out))) {
-      const prev = lastUsers[lastUsers.length - 1] || "";
-      if (prev) out = prev;
     }
 
     const urlFromHist = lastVideoUrlFromHistory(history);
@@ -236,14 +348,122 @@
     return out.trim();
   }
 
+  function hasExplicitMotorSignal(text, understanding, ctx) {
+    const raw = String(text || "").trim();
+    if (!raw) return false;
+    if (extractUrls(raw).length) return true;
+    if (understanding?.trimRange) return true;
+    const intent = String(understanding?.intent || "");
+    if (
+      intent &&
+      intent !== "sohbet" &&
+      (intent.startsWith("video_") || intent.endsWith("_action"))
+    ) {
+      return true;
+    }
+    const low = fold(raw);
+    if (/^(?:yardim|yardım|help|hub\s+yardim|eylem\s)/.test(low)) return true;
+    if (/^https?:\/\//.test(raw)) return true;
+    if (global.RuzgarVideoChatBrain?.looksLikeMultiStepPlan?.(raw)) return true;
+    if (expandTrimRangePhrase(raw)) return true;
+    if (
+      /\b(?:indir|download|kes\b|trim\b|oynat\b|ffprobe|medya\s+bilgi|kurgu\s+yap|dönüştür|donustur)\b/.test(
+        low,
+      )
+    ) {
+      if (
+        ctx?.hasCinema ||
+        understanding?.motorHint === "video" ||
+        /\b(?:video|youtube|sinema|film|klip|shorts)\b/.test(low)
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function looksLikeNaturalConversation(text) {
+    const raw = String(text || "").trim();
+    if (!raw) return true;
+    const low = fold(raw);
+
+    if (
+      /(?:anlamad|anlamiyor|anlamıyor|anlamadin|anlamadın|anlamiyormusun|anlıyor\s+musun|duymuyor|duymadin|duymadın|yazdiklarim|yazdıklarım|yukaridaki|yukarıdaki|az\s+once|az\s+önce|acikla|açıkla|neden\s+|nas[ıi]l\s+|ne\s+demek|ne\s+ister|sence|dusun|düşün|merak|sohbet|konusalim|konuşalım|hakkinda|hakkında|lutfen|lütfen\s+anla)/.test(
+        low,
+      )
+    ) {
+      if (!hasExplicitMotorSignal(raw, null, null)) return true;
+    }
+
+    if (/\?/.test(raw) && !/^(?:kes|indir|oynat|yardim|yardım)\s/i.test(raw)) {
+      if (!hasExplicitMotorSignal(raw, null, null)) return true;
+    }
+
+    if (raw.length > 90 && !extractUrls(raw).length && !expandTrimRangePhrase(raw)) {
+      if (!/^(?:kes|indir|oynat|download|trim)\b/.test(low)) return true;
+    }
+
+    if (/^(?:selam|merhaba|naber|nas[ıi]ls[ıi]n|iyi\s+(?:akşam|aksam|gün|gun))/.test(low)) {
+      if (raw.length > 18 && !hasExplicitMotorSignal(raw, null, null)) return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Net motor komutu mu, yoksa doğal sohbet mi?
+   * @returns {{ try: boolean, reason: string, preferChat?: boolean }}
+   */
+  function shouldTryInstantMotor(understanding, text, ctx) {
+    const raw = String(text || "").trim();
+    if (!raw) return { try: false, reason: "empty", preferChat: true };
+
+    if (/^eylem\s/i.test(fold(raw))) return { try: true, reason: "eylem" };
+
+    const resolved = String(understanding?.text || raw).trim();
+    const explicit =
+      hasExplicitMotorSignal(raw, understanding, ctx) ||
+      hasExplicitMotorSignal(resolved, understanding, ctx);
+
+    if (looksLikeNaturalConversation(raw) && !explicit) {
+      return { try: false, reason: "natural_chat", preferChat: true };
+    }
+
+    if (explicit) {
+      return { try: true, reason: "explicit_action" };
+    }
+
+    if (understanding?.intent === "continuation" && understanding?.fromHistory) {
+      return { try: true, reason: "continuation_action" };
+    }
+
+    if (ctx?.hasCinema && understanding?.trimRange) {
+      return { try: true, reason: "cinema_trim" };
+    }
+
+    return { try: false, reason: "default_llm", preferChat: true };
+  }
+
+  function buildCinemaContextBrief(cinema) {
+    const c = cinema || {};
+    const url = String(c.url || "").trim();
+    const rel = String(c.localRel || "").trim();
+    const title = String(c.title || c.label || "").trim();
+    if (!url && !rel) return "";
+    const parts = [];
+    if (title) parts.push(`Başlık: ${title.slice(0, 120)}`);
+    if (url) parts.push(`URL: ${url.slice(0, 240)}`);
+    if (rel) parts.push(`Yerel: ${rel.slice(0, 120)}`);
+    return parts.join(" · ");
+  }
+
   /**
    * @param {string} raw
    * @param {object} [ctx]
-   * @returns {{ raw: string, text: string, motorHint: string, trimRange: {start:number,end:number}|null, fromHistory: boolean, intent: string }}
    */
   function understand(raw, ctx) {
     const original = String(raw || "").trim();
-    const history = trimHistory(ctx?.history || [], ctx?.maxHistory || 24);
+    const history = trimHistory(ctx?.history || [], ctx?.maxHistory || 32);
     let text = normalizeSurface(original);
     text = resolveFromHistory(text, { ...ctx, history });
 
@@ -255,6 +475,7 @@
     const motorHint = inferMotorHint(text, { ...ctx, history });
     const fromHistory = text !== original;
     const low = fold(text);
+    const contextBrief = buildContextBrief(history, 12);
 
     let intent = "sohbet";
     if (trimRange) intent = "video_trim";
@@ -263,14 +484,32 @@
     else if (/\b(?:kes|trim|kirp|kırp)\b/.test(low)) intent = "video_trim";
     else if (/medya\s+bilgi|ffprobe/.test(low)) intent = "video_probe";
     else if (motorHint && motorHint !== "genel") intent = `${motorHint}_action`;
+    else if (isEllipticalFollowUp(original)) intent = "continuation";
 
-    return {
+    const cinemaBrief = buildCinemaContextBrief(ctx?.cinema);
+    let fullContextBrief = contextBrief;
+    if (cinemaBrief) {
+      fullContextBrief = fullContextBrief
+        ? `${fullContextBrief}\n[Sinemada açık] ${cinemaBrief}`
+        : `[Sinemada açık] ${cinemaBrief}`;
+    }
+
+    const partial = {
       raw: original,
       text,
       motorHint,
       trimRange: trimRange ? { start: trimRange.start, end: trimRange.end } : null,
       fromHistory,
       intent,
+      contextBrief: fullContextBrief,
+    };
+    const gate = shouldTryInstantMotor(partial, original, ctx);
+
+    return {
+      ...partial,
+      preferChat: !!gate.preferChat,
+      instantMotor: gate.try,
+      instantReason: gate.reason,
     };
   }
 
@@ -286,6 +525,12 @@
     normalizeSurface,
     expandTrimRangePhrase,
     resolveFromHistory,
+    resolveEllipticalFollowUp,
+    buildContextBrief,
+    buildCinemaContextBrief,
     inferMotorHint,
+    looksLikeNaturalConversation,
+    hasExplicitMotorSignal,
+    shouldTryInstantMotor,
   };
 })(typeof window !== "undefined" ? window : globalThis);

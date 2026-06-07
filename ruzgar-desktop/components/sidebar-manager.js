@@ -174,6 +174,10 @@
       else if (a === "ses:transcript") clickEl("btn-ses-stt");
       else if (a === "ses:to-chat") clickEl("btn-ses-to-chat");
       else if (a === "ses:speak") clickEl("btn-ses-speak");
+      else if (a === "ses:dub") {
+        scrollToEl("ses-dub-panel");
+        window.setTimeout(() => $("ses-dub-rel")?.focus?.({ preventScroll: true }), 120);
+      }
       else if (a === "ses:clear") clickEl("btn-ses-clear");
       return;
     }

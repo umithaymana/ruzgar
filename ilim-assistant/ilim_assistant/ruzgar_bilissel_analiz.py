@@ -228,13 +228,17 @@ def build_bilissel_turn_context(
         )
     if history:
         son = []
-        for row in history[-4:]:
-            if isinstance(row, dict) and row.get("role") == "user":
-                t = str(row.get("content") or "").strip()
-                if t:
-                    son.append(t[:80])
+        for row in history[-10:]:
+            if not isinstance(row, dict):
+                continue
+            role = str(row.get("role") or "").strip().lower()
+            t = str(row.get("content") or "").strip()
+            if not t:
+                continue
+            label = "Ümit abi" if role == "user" else "Rüzgar"
+            son.append(f"{label}: {t[:120]}")
         if son:
-            lines.append(f"Son kullanıcı başlıkları: {' · '.join(son)}")
+            lines.append("Son sohbet:\n" + "\n".join(son[-8:]))
     lines.append("[/BİLİŞSEL ANALİZ]")
     return "\n".join(lines) + "\n"
 
