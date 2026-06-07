@@ -245,11 +245,27 @@ def tilavet_durak_ms(
     return ms
 
 
+def tilavet_referans_profili(mod: TilavetMod | None, metin: str = "") -> str:
+    """Tilavet modu → referans dosya adı (kuran/gazel/ilahi)."""
+    m = mod or tespit_tilavet_modu(metin)
+    if m == TilavetMod.kuran_ar or m == TilavetMod.kuran_meal:
+        return "kuran"
+    if m == TilavetMod.hadis_risale:
+        return "ilahi"
+    low = (metin or "").lower()
+    if re.search(r"\bilahi\b|naat", low):
+        return "ilahi"
+    if re.search(r"\bgazel\b|kaside|beyit", low):
+        return "gazel"
+    return "gazel"
+
+
 def tilavet_ozet(metin: str) -> dict[str, str | float | int]:
     mod = tespit_tilavet_modu(metin)
     parcalar = tilavet_parcala(metin, mod)
     return {
         "mod": mod.value,
+        "referans_profil": tilavet_referans_profili(mod, metin),
         "arabice_oran": round(arabice_oran(metin), 3),
         "edge_voice": edge_ses_tilavet(metin, mod=mod),
         "parcalar": len(parcalar),

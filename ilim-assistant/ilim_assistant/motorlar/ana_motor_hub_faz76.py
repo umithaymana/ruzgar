@@ -49,8 +49,14 @@ _HELP_RE = re.compile(
     re.I,
 )
 _VIDEO_DL_HINT = re.compile(
-    r"(?:indir|indirme|download|youtube|youtu\.be|oynat|burada\s+oynat|sinema|video\s+at|"
-    r"bunu|sunu|şunu|videoyu|filmi|oynayan|paneldeki)",
+    r"(?:indir|indirme|download|youtube|youtu\.be|dailymotion|dai\.ly|vimeo|tiktok|twitch|"
+    r"oynat|izle|aç|ac|burada\s+oynat|sinema|video\s+at|"
+    r"bunu|sunu|şunu|videoyu|filmi|oynayan|paneldeki|link)",
+    re.I,
+)
+_VIDEO_HOST_HINT = re.compile(
+    r"youtube|youtu\.be|dailymotion|dai\.ly|vimeo|tiktok|twitch|twitter|x\.com|"
+    r"facebook|fb\.watch|instagram|\.mp4|\.mkv|\.webm|\.m3u8",
     re.I,
 )
 _MULTI_STEP_RE = re.compile(
@@ -89,10 +95,10 @@ def _score_intent(intent: dict[str, Any]) -> int:
     return 0
 
 
-def is_video_download_request(message: str) -> bool:
-    """YouTube/web + indir/oynat — Ana Motor'dan doğrudan video motoru."""
+def is_video_url_message(message: str) -> bool:
+    """Mesajda tanınan video sayfası veya dosya URL'si var mı."""
     raw = (message or "").strip()
-    if not raw or not _VIDEO_DL_HINT.search(raw):
+    if not raw:
         return False
     try:
         from ilim_assistant.motorlar.video_faz71 import extract_urls
@@ -103,7 +109,29 @@ def is_video_download_request(message: str) -> bool:
     if not urls:
         return False
     blob = _ascii_fold(raw + " " + " ".join(urls))
-    return "youtube" in blob or "youtu.be" in blob
+    return bool(_VIDEO_HOST_HINT.search(blob))
+
+
+def is_video_download_request(message: str) -> bool:
+    """Video URL + indir/oynat/aç — veya yalnızca link yapıştırma → sinema."""
+    raw = (message or "").strip()
+    if not raw or not is_video_url_message(raw):
+        return False
+    if _VIDEO_DL_HINT.search(raw):
+        return True
+    try:
+        from ilim_assistant.motorlar.video_faz71 import extract_urls
+
+        urls = extract_urls(raw)
+    except Exception:
+        urls = []
+    if not urls:
+        return False
+    rest = raw
+    for u in urls:
+        rest = rest.replace(u, "")
+    rest = re.sub(r"https?://[^\s]+", "", rest).strip()
+    return len(rest) < 48 and len(raw) < 220
 
 
 def is_video_workflow_request(message: str) -> bool:
@@ -195,10 +223,10 @@ def resolve_hub_target(
 
     if is_video_download_request(msg):
         meta["candidates"].append(
-            {"motor": "video", "score": 10, "reason": "youtube_download"}
+            {"motor": "video", "score": 10, "reason": "video_url_open"}
         )
         meta["winner"] = "video"
-        meta["reason"] = "youtube_download"
+        meta["reason"] = "video_url_open"
         return "video", meta
 
     try:

@@ -14,6 +14,7 @@ import os
 import re
 import shutil
 import subprocess
+import tempfile
 import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
@@ -537,6 +538,194 @@ def download_video_with_yt_dlp(
             "yt-dlp bulunamadı. Kurulum: pip install yt-dlp "
             "veya sistem PATH'ine yt-dlp ekleyin."
         ),
+    )
+    save_to_central_pool(result)
+    return result
+
+
+def download_audio_with_yt_dlp(
+    url: str,
+    *,
+    max_duration_sec: int = 90,
+    out_dir: str | Path | None = None,
+) -> VideoDownloadResult:
+    """URL'den yalnızca ses (referans klon için) — tam video indirmez."""
+    err = _validate_url(url)
+    downloaded_at = _utc_now_iso()
+    if err:
+        return VideoDownloadResult(
+            ok=False,
+            url=(url or "").strip(),
+            downloaded_at=downloaded_at,
+            error=err,
+        )
+
+    target = Path(out_dir).resolve() if out_dir else _default_download_dir()
+    target.mkdir(parents=True, exist_ok=True)
+    max_d = max(15, min(120, int(max_duration_sec or 90)))
+    info: dict[str, Any] = {}
+
+    try:
+        import yt_dlp  # type: ignore[import-untyped]
+    except ImportError:
+        exe = _yt_dlp_cli()
+        if not exe:
+            return VideoDownloadResult(
+                ok=False,
+                url=url.strip(),
+                downloaded_at=downloaded_at,
+                error="yt-dlp bulunamadı.",
+            )
+        outtmpl = str(target / "ref-audio-%(id)s.%(ext)s")
+        argv = [
+            exe,
+            url.strip(),
+            "-f",
+            "bestaudio/best",
+            "-x",
+            "--audio-format",
+            "wav",
+            "-o",
+            outtmpl,
+            "--no-playlist",
+            "--no-warnings",
+        ]
+        argv.extend(_ytdlp_cookie_cli_args())
+        try:
+            r = subprocess.run(
+                argv,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=int(os.environ.get("RUZGAR_YTDLP_TIMEOUT", "7200")),
+                cwd=str(target),
+            )
+        except subprocess.TimeoutExpired:
+            return VideoDownloadResult(
+                ok=False,
+                url=url.strip(),
+                downloaded_at=downloaded_at,
+                error="yt-dlp ses indirme zaman aşımı.",
+            )
+        if r.returncode != 0:
+            return VideoDownloadResult(
+                ok=False,
+                url=url.strip(),
+                downloaded_at=downloaded_at,
+                error=(r.stderr or r.stdout or "yt-dlp ses hatası")[:4000],
+            )
+        wavs = sorted(target.glob("ref-audio-*.wav"), key=lambda p: p.stat().st_mtime, reverse=True)
+        if not wavs:
+            return VideoDownloadResult(
+                ok=False,
+                url=url.strip(),
+                downloaded_at=downloaded_at,
+                error="Ses dosyası oluşmadı.",
+            )
+        final_path = wavs[0]
+    else:
+        outtmpl = str(target / "ref-audio-%(id)s.%(ext)s")
+        final_path: Path | None = None
+
+        def _hook(d: dict[str, Any]) -> None:
+            nonlocal final_path
+            if d.get("status") == "finished":
+                fp = d.get("filename") or d.get("info_dict", {}).get("_filename")
+                if fp:
+                    final_path = Path(str(fp))
+
+        ydl_opts: dict[str, Any] = {
+            "format": "bestaudio/best",
+            "outtmpl": outtmpl,
+            "quiet": os.environ.get("RUZGAR_YTDLP_QUIET", "1").strip() in ("1", "true", "yes"),
+            "no_warnings": True,
+            "noplaylist": True,
+            "postprocessors": [
+                {
+                    "key": "FFmpegExtractAudio",
+                    "preferredcodec": "wav",
+                    "preferredquality": "192",
+                }
+            ],
+            "progress_hooks": [_hook],
+            **_ytdlp_cookie_opts(),
+        }
+        info: dict[str, Any] = {}
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url.strip(), download=True) or {}
+        except Exception as e:
+            return VideoDownloadResult(
+                ok=False,
+                url=url.strip(),
+                downloaded_at=downloaded_at,
+                error=_format_ytdlp_error(e),
+            )
+        final_path = _resolve_ytdlp_output_path(info, target, ydl=ydl, hook_path=final_path)
+        if final_path and final_path.suffix.lower() != ".wav":
+            alt = final_path.with_suffix(".wav")
+            if alt.is_file():
+                final_path = alt
+
+    if final_path is None or not final_path.is_file():
+        return VideoDownloadResult(
+            ok=False,
+            url=url.strip(),
+            downloaded_at=downloaded_at,
+            error="Ses indirme tamamlandı ancak dosya bulunamadı.",
+        )
+
+    trimmed = final_path
+    try:
+        from ilim_assistant.video_ffmpeg import ffmpeg_available, run_ffmpeg_args
+
+        if ffmpeg_available() and max_d > 0:
+            fd, tmp = tempfile.mkstemp(suffix=".wav")
+            os.close(fd)
+            tmp_path = Path(tmp)
+            run_ffmpeg_args(
+                [
+                    "-y",
+                    "-t",
+                    str(max_d),
+                    "-i",
+                    str(final_path.resolve()),
+                    "-ar",
+                    "22050",
+                    "-ac",
+                    "1",
+                    "-c:a",
+                    "pcm_s16le",
+                    str(tmp_path.resolve()),
+                ],
+                timeout_sec=300,
+            )
+            trimmed = tmp_path
+            if final_path.name.startswith("ref-audio-"):
+                try:
+                    final_path.unlink(missing_ok=True)
+                except OSError:
+                    pass
+            dest = target / f"ref-audio-trim-{uuid.uuid4().hex[:8]}.wav"
+            shutil.move(str(trimmed), str(dest))
+            final_path = dest
+    except Exception:
+        pass
+
+    size, duration = _probe_file(final_path)
+    rel = _relative_path(final_path)
+    result = VideoDownloadResult(
+        ok=True,
+        url=url.strip(),
+        title=str(info.get("title") or final_path.stem),
+        file_path=rel,
+        file_size_bytes=size,
+        downloaded_at=downloaded_at,
+        duration_sec=min(duration, float(max_d)) if duration else float(max_d),
+        ext="wav",
+        download_id=uuid.uuid4().hex[:12],
+        extra={"audio_only": True, "max_duration_sec": max_d},
     )
     save_to_central_pool(result)
     return result

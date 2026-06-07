@@ -5,7 +5,7 @@
 (function anaMotorHub(global) {
   "use strict";
 
-  const VERSION = "ana-motor-hub-v6-sinema-chat-2026-06-06";
+  const VERSION = "ana-motor-hub-v7-sinema-url-2026-06-06";
 
   /** Alt-intent → sentetik sohbet (motor runner) */
   const SUB_INTENT_MSG = {
@@ -118,6 +118,7 @@
       "Ümit abi, **Ana Motor** doğal cümleyle işi yapar:\n\n" +
       "· Kod · pytest · git → **Programlama**\n" +
       "· Video indir · kes · altyazı · mux → **Video** (sinema açıksa «indir» yeter)\n" +
+      "· Link yapıştır veya **ekran görüntüsü** bırak → OCR ile video/ses/görsel algılanır\n" +
       "· Çok adım: «indir, kes 0:30-1:00, kurgu yap» → **Video planı**\n" +
       "· Çevir · eser ara → **Tercüme**\n" +
       "· Fotoğraf · sanat → **Mimar**\n" +
@@ -305,6 +306,18 @@
 
   async function dispatchSes(text) {
     const low = fold(text);
+    if (
+      /(?:videodaki|sinemadaki|videonun)\s+ses|ses(?:i|ini)?\s+(?:klonla|referans)|(?:kuran|gazel|ilahi)\s+ses(?:i|ini)?\s+(?:yap|al|klonla)/.test(
+        low,
+      )
+    ) {
+      const V = global.RuzgarVideoChatBrain;
+      if (V?.tryAtolyeFromMessage) {
+        prepareMotorContext("video", true);
+        const hit = await V.tryAtolyeFromMessage(text);
+        if (hit?.handled) return { handled: true };
+      }
+    }
     if (/(?:metne\s+d[öo]k|transkript|whisper|stt\b)/.test(low)) {
       if (d().hasSesFileSelected?.()) {
         await d().runSesSttFromFile?.();
@@ -465,7 +478,7 @@
       `<p class="chat-welcome-lead"><strong>Ana Motor — tek sohbet, tüm motorlar.</strong></p>` +
       `<p>Buradan yaz; gerekirse panel arka planda açılır, sohbet <strong>genel</strong> kalır.</p>` +
       `<ul class="chat-welcome-list">` +
-      `<li><strong>Video:</strong> «indir» · «kes 0:30-1:00» · «indir, kes, kurgu yap» (sinema açıkken)</li>` +
+      `<li><strong>Video:</strong> «indir» · «kes 0:30-1:00» · link yapıştır (YouTube/Dailymotion)</li>` +
       `<li><strong>Kod:</strong> pytest geçir · git durumu · proje tara · briefing</li>` +
       `<li><strong>Tercüme:</strong> eser ara · bu sayfayı çevir</li>` +
       `<li><strong>Hafıza:</strong> hatırla: … · görev listesi · hafıza durumu</li>` +

@@ -532,23 +532,50 @@ async def synthesize_tilavet_mp3(
     meta: dict[str, Any],
     ayar: dict[str, Any] | None = None,
 ) -> Path:
-    """Faz S5: tilavet parcalama + uzun durak + Arapca/TR vakur Edge ses."""
+    """Faz S5: tilavet parcalama + uzun durak; referans varsa XTTS klon (videodan ses)."""
+    from ilim_assistant.motorlar.ses_klon_motoru import (
+        coz_tilavet_referans_yolu,
+        synthesize_clone_wav,
+        wav_to_mp3,
+        xtts_runtime_available,
+    )
     from ilim_assistant.motorlar.ses_prosody import DurakTuru, prosody_ozet
     from ilim_assistant.motorlar.ses_tilavet import (
+        TilavetMod,
         edge_ses_tilavet,
         tespit_tilavet_modu,
         tilavet_durak_ms,
         tilavet_parcala,
         tilavet_rate_pitch,
+        tilavet_referans_profili,
     )
     from ilim_assistant.video_ffmpeg import (
         concat_audio_files,
         ffmpeg_available,
         generate_silence_mp3,
     )
+    from starlette.concurrency import run_in_threadpool
 
     ay = ayar or read_ses_ayarlari()
     mod = tespit_tilavet_modu(text)
+    ref_profil = tilavet_referans_profili(mod, text)
+    ref_wav = coz_tilavet_referans_yolu(ref_profil, ayar=ay)
+    refs_map = ay.get("referans") if isinstance(ay.get("referans"), dict) else {}
+    speaker_rel = refs_map.get(ref_profil) if refs_map else None
+    if not speaker_rel and ref_wav:
+        repo = Path(__file__).resolve().parents[2].parent
+        try:
+            speaker_rel = ref_wav.relative_to(repo).as_posix()
+        except ValueError:
+            speaker_rel = ref_wav.as_posix()
+    use_clone = bool(
+        ref_wav
+        and xtts_runtime_available()
+        and os.environ.get("RUZGAR_TTS_TILAVET_CLONE", "1").strip().lower()
+        not in ("0", "false", "no", "off")
+    )
+    clone_lang = "ar" if mod == TilavetMod.kuran_ar else "tr"
+
     voice = edge_ses_tilavet(text, karakter=karakter, mod=mod)
     rate, pitch = tilavet_rate_pitch(
         text,
@@ -560,23 +587,79 @@ async def synthesize_tilavet_mp3(
     if not parcalar:
         raise ValueError("Tilavet metni bos.")
 
+    engine_tag = "xtts-tilavet-clone" if use_clone else "edge-tts-tilavet"
+
+    if use_clone and len(parcalar) <= 1 and parcalar[0].sonraki_durak == DurakTuru.yok:
+        return await synthesize_clone_mp3(
+            text,
+            karakter=karakter,
+            language=clone_lang,
+            speaker_rel=speaker_rel,
+            meta={
+                **meta,
+                "engine": engine_tag,
+                "tilavet_mod": mod.value,
+                "tilavet_referans": ref_profil,
+            },
+            ayar=ay,
+        )
+
     if len(parcalar) <= 1 and parcalar[0].sonraki_durak == DurakTuru.yok:
         return await synthesize_edge_mp3_in_process(
             text,
             voice=voice,
             rate=rate,
             pitch=pitch,
-            meta={**meta, "engine": "edge-tts-tilavet", "tilavet_mod": mod.value},
+            meta={**meta, "engine": engine_tag, "tilavet_mod": mod.value},
         )
 
     if not ffmpeg_available():
         birlesik = " ".join(p.metin for p in parcalar)
+        if use_clone and ref_wav:
+            return await synthesize_clone_mp3(
+                birlesik,
+                karakter=karakter,
+                language=clone_lang,
+                speaker_rel=speaker_rel,
+                meta={**meta, "engine": engine_tag, "tilavet_fallback": "no_ffmpeg"},
+                ayar=ay,
+            )
         return await synthesize_edge_mp3_in_process(
             birlesik,
             voice=voice,
             rate=rate,
             pitch=pitch,
-            meta={**meta, "engine": "edge-tts-tilavet", "tilavet_fallback": "no_ffmpeg"},
+            meta={**meta, "engine": engine_tag, "tilavet_fallback": "no_ffmpeg"},
+        )
+
+    async def _chunk_mp3(parca_metin: str) -> bytes:
+        if use_clone and ref_wav:
+
+            def _clone_run() -> bytes:
+                wav = synthesize_clone_wav(
+                    parca_metin,
+                    ref_wav,
+                    language=clone_lang,
+                )
+                fd, mp3_path = tempfile.mkstemp(suffix=".mp3")
+                os.close(fd)
+                mp3_out = Path(mp3_path)
+                try:
+                    wav_to_mp3(wav, mp3_out)
+                    return mp3_out.read_bytes()
+                finally:
+                    try:
+                        wav.unlink(missing_ok=True)
+                        mp3_out.unlink(missing_ok=True)
+                    except OSError:
+                        pass
+
+            return await run_in_threadpool(_clone_run)
+        return await _synth_chunk_mp3_bytes(
+            parca_metin,
+            voice=voice,
+            rate=rate,
+            pitch=pitch,
         )
 
     gecici: list[Path] = []
@@ -585,12 +668,7 @@ async def synthesize_tilavet_mp3(
     huzur = float(ay.get("huzur", 0.82))
     try:
         for parca in parcalar:
-            chunk_bytes = await _synth_chunk_mp3_bytes(
-                parca.metin,
-                voice=voice,
-                rate=rate,
-                pitch=pitch,
-            )
+            chunk_bytes = await _chunk_mp3(parca.metin)
             fd, tmp_chunk = tempfile.mkstemp(suffix=".mp3")
             os.close(fd)
             chunk_path = Path(tmp_chunk)
@@ -626,13 +704,14 @@ async def synthesize_tilavet_mp3(
         ozet = prosody_ozet(parcalar)
         meta_full = {
             **meta,
-            "engine": "edge-tts-tilavet",
+            "engine": engine_tag,
             "mimarlar": _MIMAR,
             "tts_process": True,
             "tilavet": True,
             "tilavet_mod": mod.value,
+            "tilavet_referans": ref_profil if use_clone else None,
             "tilavet_parcalar": ozet.get("parcalar"),
-            "edge_voice": voice,
+            "edge_voice": voice if not use_clone else None,
         }
         apply_mp3_metadata(final, meta_full)
         return final

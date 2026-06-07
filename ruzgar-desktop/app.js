@@ -96,7 +96,11 @@ const RUZGAR_DISABLE_STREAMING = true;
 
 const RUZGAR_VIDEO_URL_RE = /https?:\/\/[^\s<>\"{}|\\^`\[\]]+/gi;
 const RUZGAR_VIDEO_DL_HINT_RE =
-  /(?:\bindir\b|\bindirme\b|download|youtube|youtu\.be|\boynat\b|\baç\b|\bac\b|burada\s+oynat)/i;
+  /(?:\bindir\b|\bindirme\b|download|youtube|youtu\.be|dailymotion|dai\.ly|vimeo|tiktok|twitch|\boynat\b|\baç\b|\bac\b|\bizle\b|videoyu|filmi|sinema|burada\s+oynat|linki?\b)/i;
+const RUZGAR_VIDEO_HOST_RE =
+  /(?:youtube\.com|youtu\.be|youtube-nocookie\.com|vimeo\.com|dailymotion\.com|dai\.ly|tiktok\.com|twitch\.tv|twitter\.com|x\.com|facebook\.com|fb\.watch|instagram\.com|bilibili\.com)/i;
+const RUZGAR_WEB_CINEMA_HOST_RE =
+  /(?:^|\.)dailymotion\.com$|^dai\.ly$|(?:^|\.)facebook\.com$|(?:^|\.)fb\.watch$|(?:^|\.)instagram\.com$/i;
 
 /** Konuşma hattı teşhisi — varsayılan kapalı; yalnızca konsol (?debug=1). Sohbette mavi JSON paneli yok. */
 function isRuzgarUiDebugEnabled() {
@@ -7201,6 +7205,30 @@ function normalizeYoutubeWatchUrl(url) {
   return u;
 }
 
+function videoPageHost(url) {
+  try {
+    return new URL(normalizeYoutubeWatchUrl(url)).hostname.replace(/^www\./i, "").toLowerCase();
+  } catch (_) {
+    return "";
+  }
+}
+
+function isKnownVideoPageUrl(url) {
+  const host = videoPageHost(url);
+  if (host && RUZGAR_VIDEO_HOST_RE.test(host)) return true;
+  try {
+    const path = new URL(normalizeYoutubeWatchUrl(url)).pathname || "";
+    return /\.(mp4|mkv|webm|mov|m4v|m3u8)(\?|$)/i.test(path);
+  } catch (_) {
+    return false;
+  }
+}
+
+function prefersWebCinemaForUrl(url) {
+  const host = videoPageHost(url);
+  return !!(host && RUZGAR_WEB_CINEMA_HOST_RE.test(host));
+}
+
 function isRuzgarElectronShell() {
   if (window.ruzgarApi?.openExternalUrl) return true;
   return /\belectron\b/i.test(String(navigator.userAgent || ""));
@@ -7779,6 +7807,22 @@ async function loadPreviewInPanel(watchUrl, opts = {}) {
 
   clearVideoSearchResults();
 
+  if (
+    isRuzgarElectronShell() &&
+    window.ruzgarApi?.showYoutubeCinema &&
+    prefersWebCinemaForUrl(cleanUrl) &&
+    opts.forceEmbed !== true &&
+    opts.preferStream !== true
+  ) {
+    const webFirst = await loadWebCinemaInPanel(cleanUrl, { ...opts, flash: false });
+    if (webFirst) {
+      if (opts.flash !== false) {
+        flashRuzgarDurum("Web sinema — site panelde açıldı.");
+      }
+      return true;
+    }
+  }
+
   const stream = await loadStreamInPanel(cleanUrl, { ...opts, flash: false });
   if (stream.ok) {
     if (opts.flash !== false) {
@@ -7847,14 +7891,23 @@ function extractVideoDownloadUrl(text) {
   return extractVideoPageUrl(raw);
 }
 
-async function runCinemaDownloadCurrent() {
+async function runCinemaDownloadCurrent(opts = {}) {
+  const announceChat = opts.announceChat !== false;
   const url = String(cinemaNowPlaying.url || el.videoDownloadUrl?.value || "").trim();
   const token = String(cinemaNowPlaying.token || "").trim();
   if (!url && !token) {
-    flashRuzgarDurum("İndirilecek kaynak yok — önce sinemada bir video açın.");
+    const msg = "İndirilecek kaynak yok — önce sinemada bir video açın.";
+    flashRuzgarDurum(msg);
+    if (announceChat) appendBubble("assistant", msg, { error: true });
     return null;
   }
-  setVideoJobProgress(true, "Sinema kaynağı indiriliyor…");
+  setVideoJobProgress(true, "Sinema kaynağı indiriliyor… (yt-dlp)");
+  if (announceChat) {
+    appendBubble(
+      "assistant",
+      `Ümit abi, indirme başladı — **${url || "sinema kaynağı"}**\n\nBu birkaç dakika sürebilir; alttaki ilerleme çubuğunu izle.`,
+    );
+  }
   try {
     const res = await fetch(`${API}/api/video/stream/download`, {
       method: "POST",
@@ -7877,8 +7930,57 @@ async function runCinemaDownloadCurrent() {
         streamType: "local",
       });
     }
+    const okMsg = rel
+      ? `Video indirildi — sinemada yerel dosya.\n\`${rel}\``
+      : "İndirme tamamlandı.";
     flashRuzgarDurum(rel ? "Video indirildi — sinemada yerel dosya." : "İndirme tamamlandı.");
+    if (announceChat) appendBubble("assistant", okMsg, { actionCard: true });
     return result;
+  } catch (e) {
+    const errText = formatClientChatError(e);
+    if (url && opts.fallbackUrl !== false) {
+      if (announceChat) {
+        appendBubble(
+          "assistant",
+          `Sinema indirme başarısız (${errText}). **Doğrudan URL** ile tekrar deniyorum…`,
+        );
+      }
+      setVideoJobProgress(true, "URL ile video indiriliyor…");
+      try {
+        const result = await runVideoDownloadFromUrl(url, { announceChat: false });
+        const rel = String(result?.file_path || "").trim();
+        if (rel) {
+          if (el.videoRelWorkspace) el.videoRelWorkspace.value = rel;
+          await loadVideoPreviewFromRel(rel);
+          updateCinemaNowPlaying({
+            url,
+            title: result.title || cinemaNowPlaying.title,
+            localRel: rel,
+            streamType: "local",
+          });
+        }
+        if (announceChat) {
+          appendBubble(
+            "assistant",
+            rel
+              ? `Ümit abi, ikinci yöntemle indirildi.\n\`${rel}\``
+              : "İndirme tamamlandı (yedek yol).",
+            { actionCard: true },
+          );
+        }
+        flashRuzgarDurum("Video indirildi (yedek yol).");
+        return result;
+      } catch (e2) {
+        const msg =
+          `Video indirilemedi: ${formatClientChatError(e2)}\n\n` +
+          "Dailymotion bazen yt-dlp ile zor — **Web sinemada izle** veya «videodaki sesi kuran sesi yap» de (yalnızca ses referansı).";
+        if (announceChat) appendBubble("assistant", msg, { error: true });
+        flashRuzgarDurum("İndirme başarısız.");
+        throw e2;
+      }
+    }
+    if (announceChat) appendBubble("assistant", `İndirme başarısız: ${errText}`, { error: true });
+    throw e;
   } finally {
     setVideoJobProgress(false);
   }
@@ -8278,6 +8380,23 @@ function initSohbetAnlama() {
     parseVideoTimeSec,
     getCinemaNowPlaying,
     hasActiveCinemaSession,
+    extractVideoPageUrl,
+    isKnownVideoPageUrl,
+  });
+}
+
+function initGorselNiyet() {
+  if (!window.RuzgarGorselNiyet?.init) return;
+  window.RuzgarGorselNiyet.init({
+    getApi: () => API,
+    getCurrentMode: () => currentMode,
+    appendBubble,
+    setStatus,
+    flash: flashRuzgarDurum,
+    formatError: formatClientChatError,
+    openMotorWorkbenchQuiet,
+    getSharedChatHistory,
+    getInputEl: () => el.input,
   });
 }
 
@@ -8302,6 +8421,8 @@ function initVideoChatBrain() {
     loadPreviewInPanel,
     loadStreamInPanel,
     loadWebCinemaInPanel,
+    prefersWebCinemaForUrl,
+    isKnownVideoPageUrl,
     renderVideoSearchResults,
     runCinemaDownloadCurrent,
     extractVideoPageUrl,
@@ -8498,6 +8619,7 @@ function wireVideoAtolye() {
     });
   }
   initSohbetAnlama();
+  initGorselNiyet();
   initVideoChatBrain();
 }
 
@@ -10636,11 +10758,24 @@ wireContextMenu();
 updateDynamicWorkbench();
 void initialLoadHafiza();
 
-/** Dinamit — görsel sürükle-bırak + hatırlatıcı poll (Ümit & Gökçenur) */
+/** Dinamit — görsel sürükle-bırak + yapıştır + hatırlatıcı poll (Ümit & Gökçenur) */
 function wireDinamitFeatures() {
-  const panel = document.querySelector(".panel-chat");
-  if (panel) {
-    panel.addEventListener("dragover", (e) => {
+  async function onChatImageFile(file, hint) {
+    if (window.RuzgarGorselNiyet?.handleChatImageFile) {
+      await window.RuzgarGorselNiyet.handleChatImageFile(file, hint);
+      return;
+    }
+    setStatus("Görsel niyet modülü yüklenemedi.", "Rüzgar");
+  }
+
+  const chatDropTargets = [
+    document.querySelector(".panel-chat"),
+    el.input?.closest(".chat-input-row"),
+    el.input,
+  ].filter(Boolean);
+
+  for (const target of chatDropTargets) {
+    target.addEventListener("dragover", (e) => {
       e.preventDefault();
       try {
         e.dataTransfer.dropEffect = "copy";
@@ -10648,33 +10783,35 @@ function wireDinamitFeatures() {
         /* ignore */
       }
     });
-    panel.addEventListener("drop", async (e) => {
+    target.addEventListener("drop", async (e) => {
       e.preventDefault();
-      const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      const f = e.dataTransfer?.files?.[0];
       if (!f || !String(f.type || "").startsWith("image/")) {
-        setStatus("Yalnızca görüntü dosyası (Dinamit)", "Rüzgar");
+        setStatus("Sohbete görüntü bırak — video/ses/görsel algılanır", "Rüzgar");
         return;
       }
-      const fd = new FormData();
-      fd.append("file", f, f.name || "ruzgar.png");
-      setStatus("Görsel analiz (PIL/OpenCV)…", "Rüzgar");
-      try {
-        const r = await fetch(`${API}/api/vision/analyze`, {
-          method: "POST",
-          body: fd,
-        });
-        const j = await r.json();
-        const s =
-          (j && (j.summary || j.text)) ||
-          (typeof j === "string" ? j : "");
-        if (s) {
-          appendBubble("assistant", s);
-          const cur = el.input.value.trim();
-          el.input.value = cur ? `${cur}\n\n${s}` : s;
+      const hint = el.input?.value?.trim() || "";
+      if (el.input) el.input.value = "";
+      await onChatImageFile(f, hint);
+    });
+  }
+
+  if (el.input) {
+    el.input.addEventListener("paste", (e) => {
+      silenceVoiceOutputNow();
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of items) {
+        if (item.type && item.type.startsWith("image/")) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (file) {
+            const hint = el.input.value.trim();
+            el.input.value = "";
+            void onChatImageFile(file, hint);
+          }
+          return;
         }
-        setStatus("Hazır", "Rüzgar");
-      } catch {
-        setStatus("Görsel üretim hatası", "Rüzgar");
       }
     });
   }
@@ -12607,9 +12744,8 @@ el.input.addEventListener("keydown", (e) => {
   if (KEYS_VOICE_SILENCE_IGNORE.has(e.key)) return;
   silenceVoiceOnUserEdit();
 });
-/** IME commit, dokunmatik klavye, sürükleyip bırakma metin — ses varsayılanı kes */
+/** IME commit, dokunmatik klavye, sürükleyip bırakma metin — ses varsayılanı kes (görsel yapıştırma wireDinamitFeatures) */
 el.input.addEventListener("input", () => silenceVoiceOnUserEdit());
-el.input.addEventListener("paste", () => silenceVoiceOutputNow());
 if (el.mic) {
   el.mic.addEventListener("pointerdown", (e) => {
     void micPointerDown(e);

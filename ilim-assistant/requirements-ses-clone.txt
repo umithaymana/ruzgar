@@ -1,0 +1,8 @@
+# Rüzgar ses klonlama (XTTS) — Python 3.12 Windows CPU
+# Kurulum: pip install -r requirements-ses-clone.txt
+# Not: torch/torchaudio ayrı kurulu olmalı (CPU veya CUDA)
+
+coqui-tts[codec]>=0.27.5
+soundfile>=0.14.0
+torchaudio>=2.11.0
+transformers>=4.57,<5.0

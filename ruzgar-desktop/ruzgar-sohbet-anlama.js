@@ -5,7 +5,7 @@
 (function ruzgarSohbetAnlama(global) {
   "use strict";
 
-  const VERSION = "ruzgar-sohbet-anlama-v3-2026-06-06";
+  const VERSION = "ruzgar-sohbet-anlama-v4-sinema-url-2026-06-06";
 
   /** @type {Record<string, any>|null} */
   let deps = null;
@@ -91,13 +91,31 @@
   function extractUrls(text) {
     const urls = [];
     const re =
-      /https?:\/\/[^\s<>"']+|(?:www\.)?(?:youtube\.com|youtu\.be|vimeo\.com|tiktok\.com)[^\s]*/gi;
+      /https?:\/\/[^\s<>"']+|(?:www\.)?(?:youtube\.com|youtu\.be|vimeo\.com|dailymotion\.com|dai\.ly|tiktok\.com|twitch\.tv)[^\s]*/gi;
     let m;
     const s = String(text || "");
     while ((m = re.exec(s))) {
       urls.push(m[0].replace(/[),.]+$/, ""));
     }
     return urls;
+  }
+
+  function isVideoPlatformUrl(url) {
+    if (d().isKnownVideoPageUrl) return !!d().isKnownVideoPageUrl(url);
+    const u = String(url || "").trim();
+    if (!u) return false;
+    return /(?:youtube\.com|youtu\.be|vimeo\.com|dailymotion\.com|dai\.ly|tiktok\.com|twitch\.tv|\.mp4|\.mkv|\.webm|\.m3u8)/i.test(
+      u,
+    );
+  }
+
+  function firstVideoUrlInText(text) {
+    const fromDeps = d().extractVideoPageUrl?.(text);
+    if (fromDeps && isVideoPlatformUrl(fromDeps)) return fromDeps;
+    for (const u of extractUrls(text)) {
+      if (isVideoPlatformUrl(u)) return u;
+    }
+    return "";
   }
 
   function lastVideoUrlFromHistory(history) {
@@ -267,6 +285,13 @@
     const mode = String(ctx?.mode || ctx?.chatMode || "genel").toLowerCase();
     if (mode !== "genel") return mode;
 
+    if (ctx?.vision?.motor) {
+      const vm = String(ctx.vision.motor || "").trim().toLowerCase();
+      return vm === "okuma" ? "mimar" : vm;
+    }
+
+    if (firstVideoUrlInText(text)) return "video";
+
     const low = fold(text);
     const cinema = ctx?.cinema || {};
     const hasCinema =
@@ -317,7 +342,7 @@
     const lacksSubject =
       !referencesPlayingVideo(out) &&
       !extractUrls(out).length &&
-      !/(?:youtube|youtu\.be|\.mp4|\.mkv)/i.test(out);
+      !/(?:youtube|youtu\.be|dailymotion|dai\.ly|vimeo|\.mp4|\.mkv)/i.test(out);
 
     if (videoContext && lacksSubject && isActionFragment(out)) {
       if (/^\d+\s*(?:ila|ile|-)/.test(low) || /(?:arasi|arası|arasinda|arasında)/.test(low)) {
@@ -351,7 +376,9 @@
   function hasExplicitMotorSignal(text, understanding, ctx) {
     const raw = String(text || "").trim();
     if (!raw) return false;
-    if (extractUrls(raw).length) return true;
+    if (firstVideoUrlInText(raw)) return true;
+    if (ctx?.vision?.urls?.length) return true;
+    if (extractUrls(raw).some(isVideoPlatformUrl)) return true;
     if (understanding?.trimRange) return true;
     const intent = String(understanding?.intent || "");
     if (
@@ -433,6 +460,10 @@
       return { try: true, reason: "explicit_action" };
     }
 
+    if (firstVideoUrlInText(raw) || ctx?.vision?.urls?.length) {
+      return { try: true, reason: "video_url" };
+    }
+
     if (understanding?.intent === "continuation" && understanding?.fromHistory) {
       return { try: true, reason: "continuation_action" };
     }
@@ -478,7 +509,9 @@
     const contextBrief = buildContextBrief(history, 12);
 
     let intent = "sohbet";
+    const videoUrl = firstVideoUrlInText(text) || ctx?.vision?.urls?.[0] || "";
     if (trimRange) intent = "video_trim";
+    else if (videoUrl && !/\b(?:indir|download)\b/.test(low)) intent = "video_play";
     else if (/\b(?:indir|download)\b/.test(low)) intent = "video_download";
     else if (/\b(?:oynat|play)\b/.test(low)) intent = "video_play";
     else if (/\b(?:kes|trim|kirp|kırp)\b/.test(low)) intent = "video_trim";

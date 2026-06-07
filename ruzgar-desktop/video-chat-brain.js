@@ -5,7 +5,7 @@
 (function videoChatBrain(global) {
   "use strict";
 
-  const VERSION = "video-super-brain-v7-create-2026-06-06";
+  const VERSION = "video-super-brain-v9-download-voice-ref-2026-06-06";
 
   /** Çok adımlı plan ayırıcı: ve · sonra · virgül */
   const STEP_SPLIT_RE =
@@ -258,26 +258,102 @@
       say("Önce sinemada bir video aç — link ver veya arama yap.", { error: true });
       return true;
     }
-    say("Ümit abi, sinemadaki videoyu **yerel dosya** olarak indiriyorum…");
     d().setStatus?.("Video indiriliyor…", "Rüzgar");
     try {
-      const result = await d().runCinemaDownloadCurrent?.();
+      const result = await d().runCinemaDownloadCurrent?.({ announceChat: true });
       const rel = String(
         result?.file_path || el().videoRelWorkspace?.value || getCinema().localRel || "",
       ).trim();
-      if (rel) {
+      if (rel && !String(result?.file_path || "").trim()) {
         if (el().videoRelWorkspace) el().videoRelWorkspace.value = rel;
         await d().loadVideoPreviewFromRel?.(rel);
-        say(`Ümit abi, hazır — yerel dosya sinemada.\n\`${rel}\`\n\nArtık «kes …», «medya bilgisi», «kurgu yap» diyebilirsin.`);
-      } else {
-        say("İndirme tamamlandı ama dosya yolu gelmedi — tekrar dene.", { error: true });
       }
       d().setStatus?.("Hazır", "Rüzgar");
       return true;
     } catch (e) {
-      say(`İndirme başarısız: ${d().formatClientChatError?.(e) || e}`, { error: true });
       d().setStatus?.("Hazır", "Rüzgar");
       return true;
+    }
+  }
+
+  function wantsVoiceReference(raw) {
+    const low = fold(raw);
+    return (
+      /(?:videodaki|videonun|sinemadaki|sinema)\s+ses/.test(low) ||
+      /ses(?:i|ini)?\s+(?:klonla|referans|model|profil)/.test(low) ||
+      /(?:kuran|gazel|ilahi|tilavet)\s+ses(?:i|ini)?\s+(?:yap|al|kaydet|klonla)/.test(low) ||
+      /referans\s+ses\s+(?:videodan|sinemadan)/.test(low)
+    );
+  }
+
+  function voiceProfilFromMessage(raw) {
+    const low = fold(raw);
+    if (/ilahi|naat/.test(low)) return "ilahi";
+    if (/gazel|kaside|beyit|divan/.test(low)) return "gazel";
+    if (/kuran|tilavet|mevlid|ayet|sure/.test(low)) return "kuran";
+    if (/edip|sair/.test(low)) return "edip";
+    if (/alim|bilge/.test(low)) return "alim";
+    return "kuran";
+  }
+
+  async function handleVoiceReferenceFromCinema(raw) {
+    if (!wantsVoiceReference(raw)) return false;
+    ensureVideo();
+    const cinema = getCinema();
+    const url = String(cinema.url || el().videoDownloadUrl?.value || "").trim();
+    const localRel = String(cinema.localRel || el().videoRelWorkspace?.value || "").trim();
+    const profil = voiceProfilFromMessage(raw);
+    if (!url && !localRel) {
+      say("Önce sinemada video aç — sonra «videodaki sesi kuran sesi yap» de.", { error: true });
+      return true;
+    }
+    say(
+      `Ümit abi, **${profil}** referans sesi çıkarılıyor — videodan 30–90 sn temiz konuşma/tilavet segmenti…`,
+    );
+    d().setStatus?.("Ses referansı…", "Rüzgar");
+    d().setVideoJobProgress?.(true, "Videodan ses referansı…");
+    try {
+      const body = localRel
+        ? { video_rel: localRel, profil, duration_sec: 90 }
+        : { url, profil, duration_sec: 90 };
+      const res = await fetch(`${d().getApi?.()}/api/ses/referans/videodan`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || j.ok === false) {
+        throw new Error(j.detail || j.error || `HTTP ${res.status}`);
+      }
+      say(
+        [
+          j.hint_tr || `Referans **${profil}** kaydedildi.`,
+          "",
+          j.referans_rel ? `Dosya: \`${j.referans_rel}\`` : "",
+          j.xtts_ready
+            ? "Tilavet / gazel / ilahi okumada bu ses **klon** olarak kullanılır."
+            : "Referans hazır; klon sentez için TTS+torch kurulumu gerekir (Edge yedek kalır).",
+          "",
+          `(${VERSION})`,
+        ]
+          .filter(Boolean)
+          .join("\n"),
+        { actionCard: true },
+      );
+      d().openMotorWorkbenchQuiet?.("ses");
+      d().flash?.(`${profil} ses referansı hazır.`);
+      d().setStatus?.("Hazır", "Rüzgar");
+      return { handled: true, ok: true };
+    } catch (e) {
+      say(
+        `Ses referansı alınamadı: ${d().formatClientChatError?.(e) || e}\n\n` +
+          "Önce «indir» ile yerel video dene veya URL'nin yt-dlp ile erişilebilir olduğundan emin ol.",
+        { error: true },
+      );
+      d().setStatus?.("Hazır", "Rüzgar");
+      return { handled: true, ok: false };
+    } finally {
+      d().setVideoJobProgress?.(false);
     }
   }
 
@@ -677,31 +753,54 @@
     }
   }
 
-  async function handleYoutubeOpen(raw) {
+  async function handleVideoPageOpen(raw) {
     if (!d().isVideoStreamOpenCommand?.(raw)) return false;
     const url = d().extractVideoDownloadUrl?.(raw) || d().extractVideoPageUrl?.(raw);
     if (!url) return false;
     ensureVideo();
-    const ok = await d().loadPreviewInPanel?.(url, { flash: false });
+
+    let ok = false;
+    let openMode = "stream";
+    if (d().prefersWebCinemaForUrl?.(url) && d().loadWebCinemaInPanel) {
+      ok = !!(await d().loadWebCinemaInPanel(url, { flash: false }));
+      if (ok) openMode = "web";
+    }
     if (!ok) {
-      say("Ümit abi, linki sinemada açamadım — URL'yi kontrol edin veya «Web» yedek düğmesini deneyin.", {
-        error: true,
-      });
+      ok = !!(await d().loadPreviewInPanel?.(url, { flash: false }));
+    }
+    if (!ok) {
+      say(
+        "Ümit abi, linki sinemada açamadım — tam URL'yi yapıştır (ör. Dailymotion `https://…`) veya Video panelinde **Web sinema** dene.",
+        { error: true },
+      );
       return { ok: false };
     }
     if (el().videoDownloadUrl) el().videoDownloadUrl.value = url;
+    const host = (() => {
+      try {
+        return new URL(url).hostname.replace(/^www\./i, "");
+      } catch (_) {
+        return "video";
+      }
+    })();
+    const lead =
+      openMode === "web"
+        ? `Ümit abi, **${host}** Web sinemada açıldı — site panelde oynatılıyor.`
+        : "Ümit abi, video **sinema oynatıcıda** açıldı (canlı akış — indirme yok).";
     say(
       [
-        "Ümit abi, video **sinema oynatıcıda** açıldı (canlı akış — indirme yok).",
+        lead,
         "",
         `\`${url}\``,
         "",
-        "Sol panelde oynatılıyor. Yerel dosya / kesim: sinema **İndir** veya «indir» de.",
+        openMode === "web"
+          ? "Kesim / yerel dosya: sinema **İndir** veya sohbete «indir» ekle."
+          : "Sol panelde oynatılıyor. Yerel dosya / kesim: sinema **İndir** veya «indir» de.",
         "",
         `(${VERSION})`,
       ].join("\n"),
     );
-    d().flash?.("Sinema oynatıcıda.");
+    d().flash?.(openMode === "web" ? "Web sinema açıldı." : "Sinema oynatıcıda.");
     d().setStatus?.("Video oynatılıyor", "Rüzgar");
     return { ok: true };
   }
@@ -989,8 +1088,11 @@
       return { handled: true, instant: true };
     }
 
-    const ytOpen = await handleYoutubeOpen(raw);
+    const ytOpen = await handleVideoPageOpen(raw);
     if (ytOpen) return { handled: true, instant: true, ok: ytOpen.ok !== false };
+
+    const voiceRef = await handleVoiceReferenceFromCinema(raw);
+    if (voiceRef) return { handled: true, instant: true, ok: voiceRef.ok !== false };
 
     if (await handleCinemaDownload(raw)) return { handled: true, instant: true };
 

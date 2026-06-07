@@ -763,6 +763,14 @@ class SesSettingsPatchBody(BaseModel):
     tilavet: bool | None = None
 
 
+class SesReferansVideoBody(BaseModel):
+    video_rel: str = ""
+    url: str = ""
+    profil: str = "kuran"
+    start_sec: float = 0.0
+    duration_sec: float = 90.0
+
+
 class MimarFotoModerateBody(BaseModel):
     rel: str = Field(..., description="ilim-assistant/arsiv/mimar-fotograf/…")
     op: str = Field(..., description="rotate_left, preset_auto, crop_square, …")
@@ -1255,6 +1263,36 @@ def health():
             "ilim_assistant.video_create", fromlist=["video_render_capabilities"]
         ).video_render_capabilities(),
     }
+
+
+@app.post("/api/vision/analyze")
+async def api_vision_analyze(
+    file: UploadFile = File(...),
+    hint: str = Form(""),
+    lang: str = Form("tur+eng"),
+) -> dict[str, Any]:
+    """Ekran görüntüsü / yapıştırılan görsel → OCR + motor niyeti + URL çıkarımı."""
+    from ilim_assistant.motorlar.ruzgar_gorsel_niyet import analyze_screenshot_bytes
+
+    raw = await file.read()
+    if not raw or len(raw) < 16:
+        raise HTTPException(status_code=400, detail="Görsel verisi boş veya çok kısa.")
+    if len(raw) > 25_000_000:
+        raise HTTPException(status_code=400, detail="Görsel 25 MB sınırını aşıyor.")
+    ct = (file.content_type or "").lower()
+    if ct and not ct.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Yalnızca görüntü dosyası kabul edilir.")
+    try:
+        return await run_in_threadpool(
+            analyze_screenshot_bytes,
+            raw,
+            user_hint=(hint or "").strip(),
+            lang=(lang or "tur+eng").strip(),
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Görsel analiz: {str(exc)[:220]}") from exc
 
 
 @app.get("/api/ui/manifest")
@@ -7245,6 +7283,79 @@ async def api_tts_clone_referans_upload(
                 os.unlink(tmp_path)
             except OSError:
                 pass
+
+
+@app.post("/api/ses/referans/videodan")
+async def api_ses_referans_videodan(body: SesReferansVideoBody) -> dict[str, Any]:
+    """Sinema/yerel videodan veya URL'den klon referans sesi (kuran/gazel/ilahi)."""
+    from ilim_assistant.motorlar.ses_klon_motoru import xtts_runtime_available
+    from ilim_assistant.motorlar.ses_videodan_referans import (
+        extract_reference_from_url,
+        extract_reference_from_video_file,
+        normalize_profil,
+    )
+    from ilim_assistant.tts_service import read_ses_ayarlari, write_ses_ayarlari
+
+    prof = normalize_profil(body.profil or "kuran")
+    url = (body.url or "").strip()
+    video_rel = (body.video_rel or "").strip()
+
+    def _run() -> dict[str, Any]:
+        if video_rel:
+            return extract_reference_from_video_file(
+                video_rel,
+                prof,
+                start_sec=float(body.start_sec or 0),
+                duration_sec=float(body.duration_sec or 90),
+            )
+        if url:
+            return extract_reference_from_url(
+                url,
+                prof,
+                duration_sec=float(body.duration_sec or 90),
+            )
+        raise ValueError("video_rel veya url gerekli.")
+
+    try:
+        out = await run_in_threadpool(_run)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)[:400]) from exc
+
+    ayar = read_ses_ayarlari()
+    refs = dict(ayar.get("referans") or {})
+    refs[prof] = out.get("referans_rel")
+    write_ses_ayarlari({"referans": refs})
+
+    xtts = xtts_runtime_available()
+    out["xtts_ready"] = xtts
+    out["tilavet_clone"] = bool(
+        os.environ.get("RUZGAR_TTS_TILAVET_CLONE", "1").strip().lower()
+        not in ("0", "false", "no", "off")
+    )
+    if xtts:
+        out["hint_tr"] = (
+            f"Ümit abi, **{prof}** referans sesi hazır — tilavet/ilahi/gazel okumada "
+            "bu ses klonlanır (CPU yavaş olabilir)."
+        )
+    else:
+        out["hint_tr"] = (
+            f"Referans **{prof}** kaydedildi. Klon sentez için: "
+            "`pip install TTS torch` veya ilim-voice klasörü (RUZGAR_ILIM_VOICE_ROOT). "
+            "Şimdilik tilavet Edge ses ile devam eder."
+        )
+    return {"ok": True, **out}
+
+
+@app.get("/api/ses/referans/durum")
+def api_ses_referans_durum() -> dict[str, Any]:
+    from ilim_assistant.motorlar.ses_klon_motoru import clone_status_snapshot
+    from ilim_assistant.motorlar.ses_videodan_referans import referans_durum_snapshot
+
+    return {
+        "ok": True,
+        "clone": clone_status_snapshot(),
+        "tilavet_referans": referans_durum_snapshot(),
+    }
 
 
 def _iter_instant_chat_events(

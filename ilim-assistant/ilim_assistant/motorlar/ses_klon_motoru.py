@@ -146,6 +146,26 @@ def coz_referans_yolu(
     return None
 
 
+def coz_tilavet_referans_yolu(
+    tilavet_profil: str,
+    *,
+    ayar: dict[str, Any] | None = None,
+) -> Path | None:
+    """kuran / gazel / ilahi tilavet referans sesi."""
+    prof = (tilavet_profil or "kuran").strip().lower()
+    refs = (ayar or {}).get("referans") or {}
+    if isinstance(refs, dict):
+        rel = refs.get(prof)
+        if rel:
+            p = (_REPO_ROOT / str(rel).strip()).resolve()
+            if p.is_file() and p.stat().st_size > 4096:
+                return p
+    p2 = referans_klasoru() / f"{prof}.wav"
+    if p2.is_file() and p2.stat().st_size > 4096:
+        return p2
+    return None
+
+
 def normalize_reference_to_wav(src: Path, dest: Path) -> Path:
     """Referans sesi XTTS için mono PCM WAV'a dönüştürür."""
     from ilim_assistant.video_ffmpeg import ffmpeg_available, run_ffmpeg_args
@@ -334,6 +354,8 @@ def clone_status_snapshot() -> dict[str, Any]:
     refs: dict[str, bool] = {}
     for k in SesKarakteri:
         refs[k.value] = varsayilan_referans_dosyasi(k).is_file()
+    for prof in ("kuran", "gazel", "ilahi"):
+        refs[prof] = (referans_klasoru() / f"{prof}.wav").is_file()
     return {
         "enabled": clone_enabled(),
         "xtts": xtts_runtime_available(),
