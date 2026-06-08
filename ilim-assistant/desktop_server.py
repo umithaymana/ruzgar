@@ -7377,7 +7377,7 @@ def api_ses_referans_durum() -> dict[str, Any]:
 @app.get("/api/ses/kolonlar")
 def api_ses_kolonlar_liste() -> dict[str, Any]:
     """Klon ses kütüphanesi — tüm kolonlar + aktif motor eşlemesi."""
-    from ilim_assistant.motorlar.ses_klon_kutuphanesi import list_kolonlar_snapshot
+    from ilim_assistant.motorlar.ses_kolon_kutuphanesi import list_kolonlar_snapshot
     from ilim_assistant.motorlar.ses_klon_motoru import clone_status_snapshot
 
     snap = list_kolonlar_snapshot()
