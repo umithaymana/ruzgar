@@ -2153,6 +2153,16 @@ def run_parity(*, live_base: str | None = None) -> int:
     else:
         _fail("ses faz72 read extract")
         fails += 1
+    til = __import__(
+        "ilim_assistant.motorlar.ses_faz72", fromlist=["parse_tilavet_read_command"]
+    ).parse_tilavet_read_command(
+        "kuran sesiyle oku: Bismillahirrahmanirrahim"
+    )
+    if til and til.get("profil") == "kuran" and "Bismillah" in til.get("text", ""):
+        _ok("ses faz72 tilavet read parse")
+    else:
+        _fail("ses faz72 tilavet read", str(til))
+        fails += 1
     inst = maybe_instant_faz72("ses ayarları")
     if inst and "ses motoru ayarları" in inst.lower():
         _ok("ses faz72 instant settings")

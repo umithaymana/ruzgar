@@ -10,7 +10,6 @@
 
   const el = {
     panel: document.getElementById("ses-klon-studio"),
-    toggle: document.getElementById("btn-ses-klon-studio"),
     tbody: document.getElementById("ses-klon-studio-tbody"),
     hint: document.getElementById("ses-klon-studio-hint"),
     tabs: document.querySelectorAll(".ses-klon-tab"),
@@ -333,16 +332,6 @@
     }
   }
 
-  if (el.toggle) {
-    el.toggle.addEventListener("click", () => {
-      const open = el.panel.hidden;
-      el.panel.hidden = !open;
-      el.toggle.setAttribute("aria-expanded", open ? "true" : "false");
-      el.toggle.classList.toggle("active", open);
-      if (open) void loadSnapshot();
-    });
-  }
-
   el.tabs.forEach((tab) => {
     tab.addEventListener("click", () => {
       el.tabs.forEach((t) => t.classList.remove("active"));
@@ -366,12 +355,8 @@
   if (el.btnMotorUygula) el.btnMotorUygula.addEventListener("click", () => void applyMotors());
   if (el.file) el.file.addEventListener("change", () => void uploadVoice());
 
-  window.ruzgarKlonSesStudio = { refresh: loadSnapshot, open: () => {
-    el.panel.hidden = false;
-    el.toggle?.setAttribute("aria-expanded", "true");
-    el.toggle?.classList.add("active");
-    void loadSnapshot();
-  }};
+  window.ruzgarKlonSesStudio = { refresh: loadSnapshot };
 
   syncSliderLabels();
+  void loadSnapshot();
 })();

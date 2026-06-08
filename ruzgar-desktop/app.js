@@ -5550,6 +5550,9 @@ function wireSesAtolye() {
   if (window.ruzgarSesKolonlar?.refresh) {
     void window.ruzgarSesKolonlar.refresh();
   }
+  if (window.ruzgarKlonSesStudio?.refresh) {
+    void window.ruzgarKlonSesStudio.refresh();
+  }
   if (el.btnSesToChat) {
     el.btnSesToChat.addEventListener("click", () => {
       const t = String(el.sesTranscript?.value || "").trim();
