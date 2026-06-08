@@ -1,5 +1,5 @@
 # Created by Ümit & Gökçenur
-"""Ses klon kütüphanesi — kolonlanmış referans sesler + motor eşlemesi (sohbet/tilavet/okuma)."""
+"""Ses klon kütüphanesi — halka açık + Ümit özel depolar, motor eşlemesi, ince ayar."""
 
 from __future__ import annotations
 
@@ -8,18 +8,32 @@ import re
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from ilim_assistant.motorlar.ses_klon_motoru import (
     _REPO_ROOT,
-    kaydet_referans_upload,
     referans_klasoru,
 )
 
 MIMAR = "Ümit & Gökçenur"
-KOLON_VERSION = "ses-kolon-v1-2026-06-07"
+KOLON_VERSION = "ses-kolon-v2-2026-06-08"
 _MOTORLAR = ("sohbet", "tilavet", "okuma")
-_STORE = Path(__file__).resolve().parents[2] / ".ruzgar_ses_kolonlari.json"
+Scope = Literal["halka", "ozel"]
+
+_ILIM_ROOT = Path(__file__).resolve().parents[2]
+HALKA_DIR = _ILIM_ROOT / "arsiv" / "klon-sesler"
+OZEL_DIR = _ILIM_ROOT / "arsiv" / "klon-sesler-umit-ozel"
+_STORE_HALKA = _ILIM_ROOT / ".ruzgar_ses_kolonlari.json"
+_STORE_OZEL = _ILIM_ROOT / ".ruzgar_ses_kolonlari_ozel.json"
+
+_DEFAULT_TUNING: dict[str, Any] = {
+    "hiz": 0.92,
+    "huzur": 0.88,
+    "durak": 1.0,
+    "lang": "tr",
+    "tilavet_mod": False,
+    "prosody": True,
+}
 
 _DEFAULT_SEED = (
     ("kuran", "Kuran tilavet", "kuran.wav"),
@@ -39,23 +53,43 @@ def _slugify(raw: str) -> str:
     return s[:48] or f"ses-{uuid.uuid4().hex[:8]}"
 
 
+def _normalize_scope(scope: str | None) -> Scope:
+    s = (scope or "halka").strip().lower()
+    return "ozel" if s in ("ozel", "özel", "private", "umit") else "halka"
+
+
+def _store_path(scope: Scope) -> Path:
+    return _STORE_OZEL if scope == "ozel" else _STORE_HALKA
+
+
+def _wav_dir(scope: Scope) -> Path:
+    d = OZEL_DIR if scope == "ozel" else HALKA_DIR
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
 def _empty_store() -> dict[str, Any]:
     return {
         "version": KOLON_VERSION,
         "mimarlar": MIMAR,
+        "scope": "halka",
         "kolonlar": [],
         "aktif": {m: None for m in _MOTORLAR},
     }
 
 
-def load_kutuphane() -> dict[str, Any]:
-    if not _STORE.is_file():
+def load_kutuphane(scope: Scope | None = None) -> dict[str, Any]:
+    sc = _normalize_scope(scope)
+    store_file = _store_path(sc)
+    if not store_file.is_file():
         data = _empty_store()
-        seed_from_referans_klasoru(data)
-        save_kutuphane(data)
+        data["scope"] = sc
+        if sc == "halka":
+            seed_from_referans_klasoru(data)
+        save_kutuphane(data, scope=sc)
         return data
     try:
-        data = json.loads(_STORE.read_text(encoding="utf-8"))
+        data = json.loads(store_file.read_text(encoding="utf-8"))
     except Exception:
         data = _empty_store()
     if not isinstance(data.get("kolonlar"), list):
@@ -63,26 +97,33 @@ def load_kutuphane() -> dict[str, Any]:
     aktif = data.get("aktif") if isinstance(data.get("aktif"), dict) else {}
     data["aktif"] = {m: aktif.get(m) for m in _MOTORLAR}
     data["version"] = KOLON_VERSION
+    data["scope"] = sc
     return data
 
 
-def save_kutuphane(data: dict[str, Any]) -> Path:
+def save_kutuphane(data: dict[str, Any], *, scope: Scope | None = None) -> Path:
+    sc = _normalize_scope(scope or data.get("scope"))
     out = dict(data)
     out["version"] = KOLON_VERSION
     out["mimarlar"] = MIMAR
+    out["scope"] = sc
     kolonlar = out.get("kolonlar")
     if not isinstance(kolonlar, list):
         kolonlar = []
     out["kolonlar"] = kolonlar
-    aktif = out.get("aktif") if isinstance(out.get("aktif"), dict) else {}
-    out["aktif"] = {m: aktif.get(m) for m in _MOTORLAR}
-    _STORE.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
-    return _STORE
+    if sc == "halka":
+        aktif = out.get("aktif") if isinstance(out.get("aktif"), dict) else {}
+        out["aktif"] = {m: aktif.get(m) for m in _MOTORLAR}
+    else:
+        out.pop("aktif", None)
+    path = _store_path(sc)
+    path.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
+    return path
 
 
 def seed_from_referans_klasoru(data: dict[str, Any] | None = None) -> list[str]:
-    """arsiv/ses-referans/*.wav → kütüphane (eksikse)."""
-    store = data if data is not None else load_kutuphane()
+    """arsiv/ses-referans/*.wav → halka kütüphane (eksikse)."""
+    store = data if data is not None else load_kutuphane("halka")
     kolonlar: list[dict[str, Any]] = list(store.get("kolonlar") or [])
     ids = {str(k.get("id")) for k in kolonlar}
     added: list[str] = []
@@ -107,7 +148,9 @@ def seed_from_referans_klasoru(data: dict[str, Any] | None = None) -> list[str]:
                 "id": slug,
                 "ad": ad,
                 "wav_rel": rel,
+                "scope": "halka",
                 "motors": motors,
+                "tuning": dict(_DEFAULT_TUNING),
                 "created_at": _now_iso(),
             }
         )
@@ -119,17 +162,53 @@ def seed_from_referans_klasoru(data: dict[str, Any] | None = None) -> list[str]:
         aktif["tilavet"] = "kuran"
     store["aktif"] = {m: aktif.get(m) for m in _MOTORLAR}
     if data is None:
-        save_kutuphane(store)
+        save_kutuphane(store, scope="halka")
     return added
 
 
-def find_kolon(kolon_id: str, store: dict[str, Any] | None = None) -> dict[str, Any] | None:
+def _kolon_row(k: dict[str, Any], scope: Scope) -> dict[str, Any]:
+    wav = kolon_wav_path(k)
+    tuning = dict(_DEFAULT_TUNING)
+    if isinstance(k.get("tuning"), dict):
+        tuning.update(k["tuning"])
+    return {
+        "id": k.get("id"),
+        "ad": k.get("ad"),
+        "scope": scope,
+        "wav_rel": k.get("wav_rel"),
+        "wav_ok": bool(wav),
+        "size_kb": (wav.stat().st_size // 1024) if wav else 0,
+        "motors": dict(k.get("motors") or {}),
+        "tuning": tuning,
+        "created_at": k.get("created_at"),
+    }
+
+
+def find_kolon(
+    kolon_id: str,
+    store: dict[str, Any] | None = None,
+    *,
+    scope: Scope | None = None,
+) -> dict[str, Any] | None:
     kid = (kolon_id or "").strip()
     if not kid:
         return None
-    for k in store.get("kolonlar") or [] if store else load_kutuphane().get("kolonlar") or []:
-        if str(k.get("id")) == kid:
-            return k
+    if store is not None:
+        for k in store.get("kolonlar") or []:
+            if str(k.get("id")) == kid:
+                return {**k, "scope": _normalize_scope(store.get("scope") or scope)}
+    if scope:
+        sc = _normalize_scope(scope)
+        st = load_kutuphane(sc)
+        for k in st.get("kolonlar") or []:
+            if str(k.get("id")) == kid:
+                return {**k, "scope": sc}
+        return None
+    for sc in ("halka", "ozel"):
+        st = load_kutuphane(sc)
+        for k in st.get("kolonlar") or []:
+            if str(k.get("id")) == kid:
+                return {**k, "scope": sc}
     return None
 
 
@@ -138,24 +217,55 @@ def kolon_wav_path(kolon: dict[str, Any]) -> Path | None:
     if not rel:
         return None
     p = Path(rel)
-    if p.is_absolute():
-        target = p
-    else:
-        target = (_REPO_ROOT / rel).resolve()
+    target = p.resolve() if p.is_absolute() else (_REPO_ROOT / rel).resolve()
     if target.is_file() and target.stat().st_size > 4096:
         return target
     return None
 
 
+def kolon_tuning(kolon: dict[str, Any] | None) -> dict[str, Any]:
+    out = dict(_DEFAULT_TUNING)
+    if kolon and isinstance(kolon.get("tuning"), dict):
+        out.update(kolon["tuning"])
+    return out
+
+
+def save_kolon_tuning(kolon_id: str, tuning: dict[str, Any], *, scope: Scope) -> dict[str, Any]:
+    sc = _normalize_scope(scope)
+    store = load_kutuphane(sc)
+    kid = (kolon_id or "").strip()
+    found = False
+    for k in store.get("kolonlar") or []:
+        if str(k.get("id")) != kid:
+            continue
+        cur = kolon_tuning(k)
+        for key in ("hiz", "huzur", "durak", "lang", "tilavet_mod", "prosody"):
+            if key in tuning and tuning[key] is not None:
+                if key in ("hiz", "huzur"):
+                    cur[key] = max(0.45, min(1.0, float(tuning[key])))
+                elif key == "durak":
+                    cur[key] = max(0.55, min(1.6, float(tuning[key])))
+                elif key == "lang":
+                    cur[key] = str(tuning[key]).strip().lower()[:2] or "tr"
+                else:
+                    cur[key] = bool(tuning[key])
+        k["tuning"] = cur
+        found = True
+        break
+    if not found:
+        raise ValueError(f"Kolon bulunamadı: {kid} ({sc})")
+    save_kutuphane(store, scope=sc)
+    return kolon_tuning(find_kolon(kid, store, scope=sc))
+
+
 def coz_aktif_kolon_wav(motor: str, ayar: dict[str, Any] | None = None) -> Path | None:
-    """Aktif kolon → wav (sohbet / tilavet / okuma)."""
     from ilim_assistant.tts_service import read_ses_ayarlari
 
     m = (motor or "").strip().lower()
     if m not in _MOTORLAR:
         return None
     ay = ayar or read_ses_ayarlari()
-    kid = (ay.get("kolon_aktif") or {}).get(m) or (load_kutuphane().get("aktif") or {}).get(m)
+    kid = (ay.get("kolon_aktif") or {}).get(m) or (load_kutuphane("halka").get("aktif") or {}).get(m)
     if not kid:
         return None
     kolon = find_kolon(str(kid))
@@ -174,30 +284,35 @@ def coz_aktif_kolon_rel(motor: str, ayar: dict[str, Any] | None = None) -> str |
         return p.as_posix()
 
 
-def list_kolonlar_snapshot() -> dict[str, Any]:
-    store = load_kutuphane()
-    seed_from_referans_klasoru(store)
-    save_kutuphane(store)
+def list_kolonlar_snapshot(*, include_ozel: bool = True) -> dict[str, Any]:
+    store_h = load_kutuphane("halka")
+    seed_from_referans_klasoru(store_h)
+    save_kutuphane(store_h, scope="halka")
     rows: list[dict[str, Any]] = []
-    for k in store.get("kolonlar") or []:
-        wav = kolon_wav_path(k)
-        rows.append(
-            {
-                "id": k.get("id"),
-                "ad": k.get("ad"),
-                "wav_rel": k.get("wav_rel"),
-                "wav_ok": bool(wav),
-                "size_kb": (wav.stat().st_size // 1024) if wav else 0,
-                "motors": dict(k.get("motors") or {}),
-                "created_at": k.get("created_at"),
-            }
-        )
+    for k in store_h.get("kolonlar") or []:
+        rows.append(_kolon_row(k, "halka"))
+    if include_ozel:
+        store_o = load_kutuphane("ozel")
+        for k in store_o.get("kolonlar") or []:
+            rows.append(_kolon_row(k, "ozel"))
     return {
         "ok": True,
         "version": KOLON_VERSION,
         "kolonlar": rows,
-        "aktif": dict(store.get("aktif") or {}),
+        "aktif": dict(store_h.get("aktif") or {}),
         "motors": list(_MOTORLAR),
+        "depolar": {
+            "halka": {
+                "label": "Klon sesler (halka açık)",
+                "dir": HALKA_DIR.relative_to(_ILIM_ROOT).as_posix(),
+                "commit": True,
+            },
+            "ozel": {
+                "label": "Klon sesler — Ümit özel",
+                "dir": OZEL_DIR.relative_to(_ILIM_ROOT).as_posix(),
+                "commit": False,
+            },
+        },
     }
 
 
@@ -207,9 +322,10 @@ def add_kolon_from_upload(
     *,
     kolon_id: str | None = None,
     motors: dict[str, bool] | None = None,
+    scope: Scope | str = "halka",
 ) -> dict[str, Any]:
-    """Yeni kolon — wav arsiv/ses-referans/kolon-{id}.wav."""
-    store = load_kutuphane()
+    sc = _normalize_scope(str(scope))
+    store = load_kutuphane(sc)
     kid = _slugify(kolon_id or ad)
     existing = {str(k.get("id")) for k in store.get("kolonlar") or []}
     base = kid
@@ -217,9 +333,8 @@ def add_kolon_from_upload(
     while kid in existing:
         kid = f"{base}-{n}"
         n += 1
-    ref_dir = referans_klasoru()
-    ref_dir.mkdir(parents=True, exist_ok=True)
-    out = ref_dir / f"kolon-{kid}.wav"
+    out_dir = _wav_dir(sc)
+    out = out_dir / f"{kid}.wav"
     from ilim_assistant.motorlar.ses_klon_motoru import normalize_reference_to_wav
 
     normalize_reference_to_wav(src_path.resolve(), out)
@@ -235,47 +350,54 @@ def add_kolon_from_upload(
         "id": kid,
         "ad": (ad or kid).strip()[:120],
         "wav_rel": rel,
+        "scope": sc,
         "motors": mot,
+        "tuning": dict(_DEFAULT_TUNING),
         "created_at": _now_iso(),
     }
     store.setdefault("kolonlar", []).append(entry)
-    save_kutuphane(store)
+    save_kutuphane(store, scope=sc)
     return entry
 
 
-def delete_kolon(kolon_id: str) -> bool:
-    store = load_kutuphane()
+def delete_kolon(kolon_id: str, *, scope: Scope | None = None) -> bool:
     kid = (kolon_id or "").strip()
-    before = len(store.get("kolonlar") or [])
-    store["kolonlar"] = [k for k in store.get("kolonlar") or [] if str(k.get("id")) != kid]
-    if len(store["kolonlar"]) == before:
-        return False
-    aktif = store.get("aktif") or {}
-    for m in _MOTORLAR:
-        if aktif.get(m) == kid:
-            aktif[m] = None
-    store["aktif"] = aktif
-    save_kutuphane(store)
-    return True
+    if scope:
+        sc = _normalize_scope(scope)
+        store = load_kutuphane(sc)
+        before = len(store.get("kolonlar") or [])
+        store["kolonlar"] = [k for k in store.get("kolonlar") or [] if str(k.get("id")) != kid]
+        if len(store["kolonlar"]) == before:
+            return False
+        if sc == "halka":
+            aktif = store.get("aktif") or {}
+            for m in _MOTORLAR:
+                if aktif.get(m) == kid:
+                    aktif[m] = None
+            store["aktif"] = aktif
+        save_kutuphane(store, scope=sc)
+        return True
+    deleted = delete_kolon(kid, scope="halka") or delete_kolon(kid, scope="ozel")
+    return deleted
 
 
 def uygula_motor_eslemesi(aktif: dict[str, str | None]) -> dict[str, Any]:
-    """Seçilen kolonları kaydet + ses ayarlarına referans yollarını yaz."""
     from ilim_assistant.tts_service import read_ses_ayarlari, write_ses_ayarlari
 
-    store = load_kutuphane()
+    store = load_kutuphane("halka")
     clean: dict[str, str | None] = {}
     for m in _MOTORLAR:
         v = aktif.get(m)
         clean[m] = str(v).strip() if v else None
         if clean[m]:
-            if not find_kolon(clean[m], store):
+            kolon = find_kolon(clean[m])
+            if not kolon:
                 raise ValueError(f"Kolon bulunamadı: {clean[m]} ({m})")
-            if not kolon_wav_path(find_kolon(clean[m], store) or {}):
+            if not kolon_wav_path(kolon):
                 raise ValueError(f"Kolon ses dosyası yok: {clean[m]}")
 
     store["aktif"] = clean
-    save_kutuphane(store)
+    save_kutuphane(store, scope="halka")
 
     ayar = read_ses_ayarlari()
     refs = dict(ayar.get("referans") or {})
@@ -283,7 +405,7 @@ def uygula_motor_eslemesi(aktif: dict[str, str | None]) -> dict[str, Any]:
         kid = clean.get(m)
         if not kid:
             continue
-        kolon = find_kolon(kid, store)
+        kolon = find_kolon(kid)
         if kolon and kolon_wav_path(kolon):
             refs[f"kolon_{m}"] = kolon.get("wav_rel")
             if m == "tilavet" and kid in ("kuran", "gazel", "ilahi"):

@@ -786,6 +786,24 @@ class SesKolonAddBody(BaseModel):
     okuma: bool = False
 
 
+class SesKolonOnizleBody(BaseModel):
+    text: str = ""
+    kolon_id: str = ""
+    scope: str = "halka"
+    lang: str | None = "tr"
+    tilavet_mod: bool = False
+    hiz: float | None = None
+    huzur: float | None = None
+    durak: float | None = None
+    prosody: bool | None = None
+
+
+class SesKolonTuningBody(BaseModel):
+    kolon_id: str = ""
+    scope: str = "halka"
+    tuning: dict[str, Any] = Field(default_factory=dict)
+
+
 class MimarFotoModerateBody(BaseModel):
     rel: str = Field(..., description="ilim-assistant/arsiv/mimar-fotograf/…")
     op: str = Field(..., description="rotate_left, preset_auto, crop_square, …")
@@ -7401,6 +7419,111 @@ def api_ses_kolonlar_uygula(body: SesKolonUygulaBody) -> dict[str, Any]:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
+@app.post("/api/ses/kolonlar/tuning")
+def api_ses_kolonlar_tuning(body: SesKolonTuningBody) -> dict[str, Any]:
+    from ilim_assistant.motorlar.ses_kolon_kutuphanesi import list_kolonlar_snapshot, save_kolon_tuning
+
+    try:
+        saved = save_kolon_tuning(body.kolon_id, body.tuning or {}, scope=body.scope)
+        return {"ok": True, "tuning": saved, **list_kolonlar_snapshot()}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@app.post("/api/ses/kolonlar/onizle")
+async def api_ses_kolonlar_onizle(body: SesKolonOnizleBody):
+    """Seçili klon + ince ayar ile önizleme MP3."""
+    from ilim_assistant.motorlar.ses_kolon_kutuphanesi import (
+        find_kolon,
+        kolon_tuning,
+        kolon_wav_path,
+    )
+    from ilim_assistant.motorlar.ses_klon_motoru import xtts_runtime_available
+    from ilim_assistant.motorlar.ses_motoru import analiz_icerik_yolu, normalize_ses_karakteri, tts_metadata_kimlik
+    from ilim_assistant.tts_service import read_ses_ayarlari, synthesize_clone_mp3
+
+    text = (body.text or "").strip()
+    if len(text) < 2:
+        raise HTTPException(status_code=400, detail="Önizleme metni çok kısa.")
+    if len(text) > 4000:
+        text = text[:4000]
+    kolon = find_kolon(body.kolon_id, scope=body.scope)
+    if not kolon:
+        raise HTTPException(status_code=404, detail="Kolon bulunamadı.")
+    ref = kolon_wav_path(kolon)
+    if not ref:
+        raise HTTPException(status_code=404, detail="Kolon referans dosyası yok.")
+    if not xtts_runtime_available():
+        raise HTTPException(status_code=503, detail="XTTS kurulu değil.")
+
+    tune = kolon_tuning(kolon)
+    if body.hiz is not None:
+        tune["hiz"] = body.hiz
+    if body.huzur is not None:
+        tune["huzur"] = body.huzur
+    if body.durak is not None:
+        tune["durak"] = body.durak
+    if body.prosody is not None:
+        tune["prosody"] = body.prosody
+    if body.lang:
+        tune["lang"] = body.lang
+    tilavet = bool(body.tilavet_mod or tune.get("tilavet_mod"))
+
+    ayar = read_ses_ayarlari()
+    ayar = {
+        **ayar,
+        "hiz": float(tune.get("hiz", 0.92)),
+        "huzur": float(tune.get("huzur", 0.88)),
+        "durak": float(tune.get("durak", 1.0)),
+        "prosody": bool(tune.get("prosody", True)),
+        "tilavet": tilavet,
+    }
+    lang = str(tune.get("lang") or body.lang or "tr").strip().lower()[:2] or "tr"
+    kar = normalize_ses_karakteri(ayar.get("karakter") or "alim")
+    try:
+        rel = ref.resolve().relative_to(
+            __import__(
+                "ilim_assistant.motorlar.ses_klon_motoru",
+                fromlist=["_REPO_ROOT"],
+            )._REPO_ROOT.resolve()
+        ).as_posix()
+    except ValueError:
+        rel = ref.as_posix()
+
+    if tilavet:
+        ayar = {
+            **ayar,
+            "hiz": min(float(ayar.get("hiz", 0.92)), 0.82),
+            "huzur": min(float(ayar.get("huzur", 0.88)), 0.78),
+        }
+
+    meta = tts_metadata_kimlik(
+        karakter=kar.value,
+        icerik_yolu=analiz_icerik_yolu(text).value,
+        ek={"kolon_id": body.kolon_id, "onizleme": True, "tilavet_mod": tilavet},
+    )
+    try:
+        out_path = await synthesize_clone_mp3(
+            text,
+            karakter=kar.value,
+            language="ar" if tilavet and lang == "ar" else lang,
+            speaker_rel=rel,
+            referans_wav=ref,
+            meta={**meta, "engine": "xtts-kolon-onizle"},
+            ayar=ayar,
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    from fastapi.responses import FileResponse
+
+    return FileResponse(
+        str(out_path),
+        media_type="audio/mpeg",
+        filename=f"ruzgar_klon_onizle_{body.kolon_id}.mp3",
+    )
+
+
 @app.post("/api/ses/kolonlar")
 async def api_ses_kolonlar_ekle(
     file: UploadFile = File(...),
@@ -7409,6 +7532,7 @@ async def api_ses_kolonlar_ekle(
     sohbet: Annotated[str, Form()] = "0",
     tilavet: Annotated[str, Form()] = "0",
     okuma: Annotated[str, Form()] = "0",
+    scope: Annotated[str, Form()] = "halka",
 ) -> dict[str, Any]:
     """Yeni kolon sesi yükle (30–120 sn önerilir)."""
     import tempfile
@@ -7443,6 +7567,7 @@ async def api_ses_kolonlar_ekle(
             tmp_path,
             kolon_id=kolon_id or None,
             motors=motors,
+            scope=scope,
         )
         return {"ok": True, "kolon": entry, **list_kolonlar_snapshot()}
     finally:
@@ -7453,10 +7578,13 @@ async def api_ses_kolonlar_ekle(
 
 
 @app.delete("/api/ses/kolonlar/{kolon_id}")
-def api_ses_kolonlar_sil(kolon_id: str) -> dict[str, Any]:
+def api_ses_kolonlar_sil(
+    kolon_id: str,
+    scope: Annotated[str | None, Query()] = None,
+) -> dict[str, Any]:
     from ilim_assistant.motorlar.ses_kolon_kutuphanesi import delete_kolon, list_kolonlar_snapshot
 
-    if not delete_kolon(kolon_id):
+    if not delete_kolon(kolon_id, scope=scope):
         raise HTTPException(status_code=404, detail="Kolon bulunamadı.")
     return list_kolonlar_snapshot()
 

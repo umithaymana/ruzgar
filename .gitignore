@@ -69,3 +69,9 @@ ilim-assistant/arsiv/**/*.txt
 ilim-assistant/arsiv/**/*.json.gz
 ilim-assistant/arsiv/**/*.gz
 
+# Klon sesler — Ümit özel (asla commit / push edilmez)
+ilim-assistant/arsiv/klon-sesler-umit-ozel/**
+!ilim-assistant/arsiv/klon-sesler-umit-ozel/.gitkeep
+!ilim-assistant/arsiv/klon-sesler-umit-ozel/README.md
+ilim-assistant/.ruzgar_ses_kolonlari_ozel.json
+

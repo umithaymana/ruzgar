@@ -6,7 +6,7 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' blob: http: https: ws: wss: http://127.0.0.1:8779 ws://127.0.0.1:8779 wss://127.0.0.1:8779 http://localhost:8779 ws://localhost:8779 wss://localhost:8779 http://127.0.0.1:8777 ws://127.0.0.1:8777 http://localhost:8777 ws://localhost:8777 https://www.google.com https://*.google.com https://*.googleapis.com https://*.gstatic.com wss://*.google.com; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://upload.wikimedia.org https://*.wikimedia.org https://i.ytimg.com https://*.ytimg.com; media-src 'self' blob:; worker-src 'self' blob:; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://youtube.com https://*.youtube.com https://*.youtube-nocookie.com;" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RÜZGAR — Mimarlar: Ümit & Gökçenur</title>
-    <link rel="stylesheet" href="styles.css?v=20260608-ses-voice-hub" />
+    <link rel="stylesheet" href="styles.css?v=20260608-klon-studio" />
     <link rel="stylesheet" href="ruzgar-split.css?v=20260602-workbench-split" />
   </head>
   <body>
@@ -2305,8 +2305,90 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
                   <button type="button" class="btn-primary btn-compact" id="btn-ses-tilavet" title="Kuran / hadis / Arapca vakur okuma">
                     Tilavet oku
                   </button>
+                  <button
+                    type="button"
+                    class="btn-secondary btn-compact ses-klon-studio-toggle"
+                    id="btn-ses-klon-studio"
+                    aria-expanded="false"
+                    aria-controls="ses-klon-studio"
+                    title="Klon ses stüdyosu — önizleme ve ince ayar"
+                  >
+                    Klon ses
+                  </button>
                   <button type="button" class="btn-secondary btn-compact" id="btn-ses-clear">Temizle</button>
                   <span class="ses-meta" id="ses-stt-meta"></span>
+                </div>
+                <div class="ses-klon-studio" id="ses-klon-studio" hidden>
+                  <div class="ses-klon-studio-head">
+                    <h5 class="ses-card-title">Klon ses stüdyosu</h5>
+                    <p class="ses-hint ses-klon-studio-lead">
+                      Metni yukarıdaki alana yazın; ses seçip <strong>Dinle</strong> ile deneyin.
+                      Motor tikleri (Sohbet / Tilavet / Okuma) canlı motora <strong>Uygula</strong> ile bağlanır.
+                    </p>
+                  </div>
+                  <div class="ses-klon-studio-tabs" role="tablist">
+                    <button type="button" class="ses-klon-tab active" data-scope="halka" role="tab">Halka açık</button>
+                    <button type="button" class="ses-klon-tab" data-scope="ozel" role="tab">Ümit özel</button>
+                  </div>
+                  <div class="ses-klon-studio-list-wrap">
+                    <table class="ses-klon-studio-table" aria-label="Klon ses modelleri">
+                      <thead>
+                        <tr>
+                          <th scope="col" title="Önizleme için seç">Dinle</th>
+                          <th scope="col">Ses</th>
+                          <th scope="col" title="Sohbet motoru">S</th>
+                          <th scope="col" title="Tilavet motoru">T</th>
+                          <th scope="col" title="Okuma motoru">O</th>
+                        </tr>
+                      </thead>
+                      <tbody id="ses-klon-studio-tbody">
+                        <tr><td colspan="5" class="ses-kolon-empty">Yükleniyor…</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="ses-klon-studio-tune">
+                    <label class="ses-lang-label">
+                      Hız
+                      <input type="range" id="ses-klon-hiz" min="45" max="100" value="92" />
+                      <span id="ses-klon-hiz-val" class="ses-tune-val">0.92</span>
+                    </label>
+                    <label class="ses-lang-label">
+                      Huzur
+                      <input type="range" id="ses-klon-huzur" min="45" max="100" value="88" />
+                      <span id="ses-klon-huzur-val" class="ses-tune-val">0.88</span>
+                    </label>
+                    <label class="ses-lang-label">
+                      Durak
+                      <input type="range" id="ses-klon-durak" min="55" max="160" value="100" />
+                      <span id="ses-klon-durak-val" class="ses-tune-val">1.0</span>
+                    </label>
+                    <label class="ses-lang-label">
+                      Dil
+                      <select id="ses-klon-lang" class="ses-lang-select">
+                        <option value="tr" selected>Türkçe</option>
+                        <option value="ar">Arapça</option>
+                        <option value="en">İngilizce</option>
+                      </select>
+                    </label>
+                    <label class="ses-chk-label ses-chk-inline">
+                      <input type="checkbox" id="ses-klon-tilavet-mod" />
+                      Tilavet tonu (yavaş/vakur)
+                    </label>
+                    <label class="ses-chk-label ses-chk-inline">
+                      <input type="checkbox" id="ses-klon-prosody" checked />
+                      Prosody
+                    </label>
+                  </div>
+                  <div class="ses-klon-studio-actions">
+                    <button type="button" class="btn-primary btn-compact" id="btn-ses-klon-dinle">Dinle</button>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-ses-klon-tune-kaydet">Ayarı kaydet</button>
+                    <button type="button" class="btn-primary btn-compact" id="btn-ses-klon-motor-uygula">Motorları uygula</button>
+                    <label class="btn-secondary btn-compact ses-klon-upload-btn" for="ses-klon-studio-file">+ Ses ekle</label>
+                    <input id="ses-klon-studio-file" type="file" accept=".wav,.mp3,.m4a,.ogg,audio/*" hidden />
+                    <input id="ses-klon-studio-ad" type="text" class="ses-kolon-ad-input ses-klon-studio-ad" placeholder="Yeni ses adı" maxlength="120" />
+                  </div>
+                  <audio id="ses-klon-preview-audio" class="ses-klon-preview-audio" controls preload="none"></audio>
+                  <p id="ses-klon-studio-hint" class="ses-hint"></p>
                 </div>
                 <textarea
                   id="ses-transcript"
@@ -2717,6 +2799,7 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
     <script src="ruzgar-sohbet-anlama.js?v=20260608-v4-sinema-url"></script>
     <script src="ruzgar-gorsel-niyet.js?v=20260608-v1"></script>
     <script src="ruzgar-ses-kolonlar.js?v=20260608-v1"></script>
+    <script src="ruzgar-klon-ses-studio.js?v=20260608-v1"></script>
     <script src="video-atolye.js?v=20260607-v5-create"></script>
     <script src="video-chat-brain.js?v=20260608-v72-v8"></script>
     <script src="motor-eylem-panel.js?v=20260607-faz-c2"></script>
