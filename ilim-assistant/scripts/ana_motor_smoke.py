@@ -1183,6 +1183,80 @@ def run_offline() -> int:
     else:
         _ok(f"paket CSV rows={csv_out.get('row_count')}")
 
+    print("\n=== Faz N — CSV toplu restore / bildirim tercih / paket grafik ===")
+    from ilim_assistant.ana_motor_bildirim_tercih import (
+        filter_reminders_by_prefs,
+        load_notify_prefs,
+        notify_prefs_enabled,
+        save_notify_prefs,
+    )
+    from ilim_assistant.ana_motor_csv_restore import (
+        bulk_restore_from_csv,
+        csv_bulk_restore_enabled,
+        parse_session_ids_from_csv,
+    )
+    from ilim_assistant.ana_motor_paket_grafik import (
+        build_paket_history_summary,
+        paket_grafik_enabled,
+    )
+
+    if not csv_bulk_restore_enabled():
+        _fail("csv_bulk_restore", "kapali")
+        fails += 1
+    else:
+        _ok("CSV toplu restore acik")
+    csv_sample = str(csv_out.get("csv") or "")
+    if not csv_sample:
+        csv_sample = "session_id,olay\n" + sid + ",archived\n"
+    ids = parse_session_ids_from_csv(csv_sample)
+    if not ids:
+        _fail("csv_parse_ids", "session_id yok")
+        fails += 1
+    else:
+        _ok(f"CSV parse ids={len(ids)}")
+    br = bulk_restore_from_csv(csv_sample, max_sessions=1)
+    if not br.get("ok"):
+        _fail("csv_bulk_restore_run", str(br)[:100])
+        fails += 1
+    else:
+        _ok(f"CSV bulk restore={br.get('restored_count')}")
+
+    if not notify_prefs_enabled():
+        _fail("notify_prefs", "kapali")
+        fails += 1
+    else:
+        _ok("bildirim tercih acik")
+    np_load = load_notify_prefs()
+    if not np_load.get("ok") or not isinstance(np_load.get("prefs"), dict):
+        _fail("notify_prefs_load", str(np_load)[:80])
+        fails += 1
+    else:
+        _ok("notify prefs yuklendi")
+    np_save = save_notify_prefs({"poll_sec": 120, "warn_only": True})
+    if not np_save.get("ok"):
+        _fail("notify_prefs_save", str(np_save)[:80])
+        fails += 1
+    else:
+        _ok("notify prefs kaydedildi")
+    filt = filter_reminders_by_prefs(rem.get("reminders") or [])
+    if not isinstance(filt, list):
+        _fail("notify_prefs_filter", type(filt).__name__)
+        fails += 1
+    else:
+        _ok(f"notify filter list={len(filt)}")
+
+    if not paket_grafik_enabled():
+        _fail("paket_grafik", "kapali")
+        fails += 1
+    else:
+        _ok("paket grafik acik")
+    pg = build_paket_history_summary(limit=50)
+    if not pg.get("ok"):
+        _fail("paket_grafik_build", str(pg)[:80])
+        fails += 1
+    else:
+        _ok(f"paket grafik total={pg.get('summary', {}).get('total', 0)}")
+
     print("\n=== Faz D — bilim derin / denge70 / otonom debug ===")
     from ilim_assistant.ana_motor_bilim_derin import (
         apply_bilim_derin_rag_top_k,
@@ -1586,6 +1660,21 @@ def run_live(base: str) -> int:
         fails += 1
     else:
         _ok("Faz M3 paket CSV acik")
+    if not am.get("csv_bulk_restore"):
+        _fail("faz_n1 csv_restore", "kapali")
+        fails += 1
+    else:
+        _ok("Faz N1 CSV bulk restore acik")
+    if not am.get("notify_prefs"):
+        _fail("faz_n2 notify_prefs", "kapali")
+        fails += 1
+    else:
+        _ok("Faz N2 notify prefs acik")
+    if not am.get("paket_grafik"):
+        _fail("faz_n3 paket_grafik", "kapali")
+        fails += 1
+    else:
+        _ok("Faz N3 paket grafik acik")
 
     print("\n=== Canli — upload + matris SLO ===")
     chat_url = base.rstrip("/") + "/api/chat/full"

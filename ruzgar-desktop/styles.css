@@ -5500,3 +5500,52 @@ body.faz7-reduced-motion .agent-step-active .agent-step-label {
 .code-main {
   position: relative;
 }
+
+/* Ana Motor Faz N — bildirim tercih + paket grafik */
+.ana-motor-notify-prefs {
+  margin: 8px 0;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+}
+.ana-motor-pref-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  margin: 4px 0;
+  color: #c8c8c8;
+}
+.ana-motor-paket-grafik {
+  margin: 6px 0 10px;
+}
+.ana-grafik-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 48px;
+  margin: 6px 0;
+}
+.ana-grafik-bar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+  font-size: 9px;
+  color: #8a9aaa;
+}
+.ana-grafik-bar span {
+  display: block;
+  width: 100%;
+  max-width: 28px;
+  background: linear-gradient(180deg, #58c278 0%, #2d6a4f 100%);
+  border-radius: 3px 3px 0 0;
+  min-height: 4px;
+}
+.ana-grafik-bar em {
+  font-style: normal;
+  margin-top: 2px;
+}

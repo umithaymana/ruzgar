@@ -1396,6 +1396,12 @@ def health():
             in ("1", "true", "yes"),
             "paket_csv_export": os.environ.get("RUZGAR_ANA_PAKET_CSV_EXPORT", "1").strip().lower()
             not in ("0", "false", "no"),
+            "csv_bulk_restore": os.environ.get("RUZGAR_ANA_CSV_BULK_RESTORE", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "notify_prefs": os.environ.get("RUZGAR_ANA_NOTIFY_PREFS", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "paket_grafik": os.environ.get("RUZGAR_ANA_PAKET_GRAFIK", "1").strip().lower()
+            not in ("0", "false", "no"),
         },
         "super_brain": _sb,
         "connection": _connection_ui_block(super_brain=_sb),
@@ -2886,6 +2892,64 @@ async def api_ana_motor_timeline_apply(body: TimelineActionBody) -> dict[str, An
         except Exception:
             pass
     return result
+
+
+class CsvBulkRestoreBody(BaseModel):
+    csv_text: str
+
+
+@app.post("/api/ana-motor/paket-history/import-restore")
+async def api_ana_motor_csv_bulk_restore(body: CsvBulkRestoreBody) -> dict[str, Any]:
+    """Faz N1 — CSV'den toplu arşiv geri yükleme."""
+    from ilim_assistant.ana_motor_csv_restore import (
+        bulk_restore_from_csv,
+        csv_bulk_restore_enabled,
+    )
+
+    if not csv_bulk_restore_enabled():
+        raise HTTPException(status_code=403, detail="CSV toplu geri yükleme kapalı.")
+    result = await run_in_threadpool(bulk_restore_from_csv, body.csv_text or "")
+    if not result.get("ok"):
+        raise HTTPException(
+            status_code=400,
+            detail=str(result.get("error") or "Toplu geri yükleme başarısız."),
+        )
+    return result
+
+
+@app.get("/api/ana-motor/notify-prefs")
+def api_ana_motor_notify_prefs_get() -> dict[str, Any]:
+    """Faz N2 — bildirim tercihlerini oku."""
+    from ilim_assistant.ana_motor_bildirim_tercih import load_notify_prefs
+
+    return load_notify_prefs()
+
+
+class NotifyPrefsBody(BaseModel):
+    desktop_enabled: bool | None = None
+    email_enabled: bool | None = None
+    warn_only: bool | None = None
+    poll_sec: int | None = None
+
+
+@app.post("/api/ana-motor/notify-prefs")
+async def api_ana_motor_notify_prefs_save(body: NotifyPrefsBody) -> dict[str, Any]:
+    """Faz N2 — bildirim tercihlerini kaydet."""
+    from ilim_assistant.ana_motor_bildirim_tercih import save_notify_prefs
+
+    payload = body.model_dump(exclude_none=True)
+    result = await run_in_threadpool(save_notify_prefs, payload)
+    if not result.get("ok"):
+        raise HTTPException(status_code=400, detail=str(result.get("error") or "Kayıt başarısız."))
+    return result
+
+
+@app.get("/api/ana-motor/paket-history/summary")
+def api_ana_motor_paket_history_summary(limit: int = 200) -> dict[str, Any]:
+    """Faz N3 — paket geçmişi grafik özeti."""
+    from ilim_assistant.ana_motor_paket_grafik import build_paket_history_summary
+
+    return build_paket_history_summary(limit=max(1, min(limit, 500)))
 
 
 @app.get("/api/ana-motor/paket-history/export")

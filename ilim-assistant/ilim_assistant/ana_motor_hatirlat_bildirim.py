@@ -37,8 +37,18 @@ def _email_cooldown_sec() -> int:
 
 def build_desktop_notifications(reminders: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Renderer Notification API için kısa bildirim listesi."""
-    if not desktop_notify_enabled():
-        return []
+    try:
+        from ilim_assistant.ana_motor_bildirim_tercih import (
+            effective_desktop_notify,
+            filter_reminders_by_prefs,
+        )
+
+        if not effective_desktop_notify():
+            return []
+        reminders = filter_reminders_by_prefs(reminders)
+    except Exception:
+        if not desktop_notify_enabled():
+            return []
     out: list[dict[str, Any]] = []
     for row in reminders:
         hint = str(row.get("hint") or "").strip()
@@ -60,7 +70,19 @@ def build_desktop_notifications(reminders: list[dict[str, Any]]) -> list[dict[st
 def maybe_send_email_reminders(reminders: list[dict[str, Any]]) -> dict[str, Any]:
     """İsteğe bağlı SMTP e-posta (env ile)."""
     global _last_email_sent
-    if not email_notify_enabled() or not reminders:
+    try:
+        from ilim_assistant.ana_motor_bildirim_tercih import (
+            effective_email_notify,
+            filter_reminders_by_prefs,
+        )
+
+        if not effective_email_notify():
+            return {"ok": True, "sent": False, "reason": "email_prefs_disabled"}
+        reminders = filter_reminders_by_prefs(reminders)
+    except Exception:
+        if not email_notify_enabled():
+            return {"ok": True, "sent": False, "reason": "email_disabled_or_empty"}
+    if not reminders:
         return {"ok": True, "sent": False, "reason": "email_disabled_or_empty"}
     now = time.time()
     if now - _last_email_sent < _email_cooldown_sec():

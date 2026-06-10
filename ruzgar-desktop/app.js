@@ -11262,14 +11262,140 @@ function showAnaMotorDesktopNotifications(notifications) {
   }
 }
 
-function startAnaMotorReminderNotifyPoll() {
-  if (anaMotorRemindNotifyPoll != null) return;
+function stopAnaMotorReminderNotifyPoll() {
+  if (anaMotorRemindNotifyPoll != null) {
+    window.clearInterval(anaMotorRemindNotifyPoll);
+    anaMotorRemindNotifyPoll = null;
+  }
+}
+
+function startAnaMotorReminderNotifyPoll(pollSec) {
+  stopAnaMotorReminderNotifyPoll();
   if (typeof Notification !== "undefined" && Notification.permission === "default") {
     void Notification.requestPermission().catch(() => {});
   }
+  const ms = Math.max(60000, Math.min(600000, Number(pollSec || 120) * 1000));
   anaMotorRemindNotifyPoll = window.setInterval(() => {
     void refreshAnaMotorArchiveReminders();
-  }, 120000);
+  }, ms);
+}
+
+async function loadAnaMotorNotifyPrefs() {
+  try {
+    const res = await fetch(`${API}/api/ana-motor/notify-prefs`);
+    const j = await res.json().catch(() => ({}));
+    const p = j.prefs || {};
+    const d = document.getElementById("ana-pref-desktop");
+    const e = document.getElementById("ana-pref-email");
+    const w = document.getElementById("ana-pref-warn-only");
+    const poll = document.getElementById("ana-pref-poll");
+    if (d) d.checked = p.desktop_enabled !== false;
+    if (e) e.checked = !!p.email_enabled;
+    if (w) w.checked = p.warn_only !== false;
+    if (poll) poll.value = String(p.poll_sec || 120);
+    startAnaMotorReminderNotifyPoll(p.poll_sec || 120);
+  } catch (_) {
+    startAnaMotorReminderNotifyPoll(120);
+  }
+}
+
+async function saveAnaMotorNotifyPrefs() {
+  const body = {
+    desktop_enabled: !!document.getElementById("ana-pref-desktop")?.checked,
+    email_enabled: !!document.getElementById("ana-pref-email")?.checked,
+    warn_only: !!document.getElementById("ana-pref-warn-only")?.checked,
+    poll_sec: parseInt(document.getElementById("ana-pref-poll")?.value || "120", 10),
+  };
+  try {
+    const res = await fetch(`${API}/api/ana-motor/notify-prefs`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) {
+      setStatus(j.detail || j.error || "Tercihler kaydedilemedi", "Rüzgar");
+      return;
+    }
+    setStatus(j.hint || "Bildirim tercihleri kaydedildi.", "Rüzgar");
+    startAnaMotorReminderNotifyPoll(j.prefs?.poll_sec || body.poll_sec);
+    void refreshAnaMotorArchiveReminders();
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+  }
+}
+
+function renderAnaMotorPaketGrafik(data) {
+  const wrap = document.getElementById("ana-motor-paket-grafik");
+  if (!wrap || !data || !data.summary) return;
+  const s = data.summary;
+  const bars = Array.isArray(data.bars) ? data.bars : [];
+  if (!s.total) {
+    wrap.hidden = true;
+    return;
+  }
+  wrap.hidden = false;
+  const barHtml = bars
+    .map(
+      (b) =>
+        `<div class="ana-grafik-bar" title="${b.label}: ${b.count}"><span style="height:${Math.max(4, b.pct || 0)}%"></span><em>${b.count}</em></div>`,
+    )
+    .join("");
+  wrap.innerHTML =
+    `<p class="ana-motor-card-sub">Özet: ${s.total} olay · ${s.unique_sessions || "?"} oturum · ${s.file_total || 0} dosya</p>` +
+    `<div class="ana-grafik-bars">${barHtml}</div>` +
+    `<p class="ana-motor-card-sub">7 gün — ${Object.entries(s.by_olay || {}).map(([k, v]) => `${k}:${v}`).join(" · ")}</p>`;
+}
+
+async function refreshAnaMotorPaketGrafik() {
+  try {
+    const res = await fetch(`${API}/api/ana-motor/paket-history/summary?limit=120`);
+    const j = await res.json().catch(() => ({}));
+    if (j.ok) renderAnaMotorPaketGrafik(j);
+  } catch (_) {
+    /* ignore */
+  }
+}
+
+async function importAnaMotorPaketCsv(file) {
+  if (!file) return;
+  const progEl = document.getElementById("ana-motor-archive-progress");
+  if (progEl) {
+    progEl.hidden = false;
+    progEl.textContent = "CSV toplu geri yükleme…";
+  }
+  try {
+    const text = await file.text();
+    const res = await fetch(`${API}/api/ana-motor/paket-history/import-restore`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ csv_text: text }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) {
+      setStatus(j.detail || j.error || "CSV toplu yükleme başarısız", "Rüzgar");
+      if (progEl) progEl.textContent = j.detail || j.error || "Hata";
+      return;
+    }
+    if (j.upload_ids && j.upload_ids.length) {
+      anaMotorUploadQueue.length = 0;
+      for (const uid of j.upload_ids) {
+        anaMotorUploadQueue.push({ id: uid, name: String(uid).slice(0, 8) });
+      }
+      if (j.sessions && j.sessions[0]) {
+        anaMotorUploadSessionId = j.sessions[0].session_id || anaMotorUploadSessionId;
+      }
+      updateAnaMotorSessionCard();
+    }
+    setStatus(j.hint || "CSV toplu geri yükleme tamam.", "Rüzgar");
+    flashRuzgarDurum(`CSV restore — ${j.restored_count || "?"}/${j.attempted || "?"}`);
+    if (progEl) progEl.textContent = j.hint || "Tamam";
+    void refreshAnaMotorArchiveList();
+    void refreshAnaMotorPaketGrafik();
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+    if (progEl) progEl.textContent = formatClientChatError(e);
+  }
 }
 
 async function applyTimelineAction(ev, action) {
@@ -11414,6 +11540,7 @@ async function refreshAnaMotorArchiveList() {
   if (!sel) return;
   void refreshAnaMotorArchiveReminders();
   void refreshAnaMotorSessionTimeline();
+  void refreshAnaMotorPaketGrafik();
   try {
     const res = await fetch(`${API}/api/ana-motor/archive/sessions?limit=12`);
     const j = await res.json().catch(() => ({}));
@@ -11562,8 +11689,22 @@ async function mergeAnaMotorArchiveSessions() {
     csvBtn.dataset.wired = "1";
     csvBtn.addEventListener("click", () => void downloadAnaMotorPaketCsv());
   }
+  const csvIn = document.getElementById("ana-csv-import-input");
+  if (csvIn && !csvIn.dataset.wired) {
+    csvIn.dataset.wired = "1";
+    csvIn.addEventListener("change", () => {
+      const f = csvIn.files && csvIn.files[0];
+      void importAnaMotorPaketCsv(f);
+      csvIn.value = "";
+    });
+  }
+  const prefBtn = document.getElementById("btn-ana-notify-prefs-save");
+  if (prefBtn && !prefBtn.dataset.wired) {
+    prefBtn.dataset.wired = "1";
+    prefBtn.addEventListener("click", () => void saveAnaMotorNotifyPrefs());
+  }
   void refreshAnaMotorArchiveList();
-  startAnaMotorReminderNotifyPoll();
+  void loadAnaMotorNotifyPrefs();
 })();
 
 /** Dinamit — görsel sürükle-bırak + yapıştır + hatırlatıcı poll (Ümit & Gökçenur) */

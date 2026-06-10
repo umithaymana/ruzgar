@@ -137,7 +137,19 @@ def collect_archive_ttl_reminders(*, limit: int = 20) -> dict[str, Any]:
         payload["desktop_notifications"] = build_desktop_notifications(trimmed)
         payload["desktop_notify_enabled"] = desktop_notify_enabled()
         payload["email_notify_enabled"] = email_notify_enabled()
-        if email_notify_enabled() and any(r.get("severity") == "warn" for r in trimmed):
+        try:
+            from ilim_assistant.ana_motor_bildirim_tercih import load_notify_prefs
+
+            payload["notify_prefs"] = load_notify_prefs().get("prefs")
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ana_motor_bildirim_tercih import effective_email_notify
+
+            email_on = effective_email_notify()
+        except Exception:
+            email_on = email_notify_enabled()
+        if email_on and any(r.get("severity") == "warn" for r in trimmed):
             payload["email_status"] = maybe_send_email_reminders(
                 [r for r in trimmed if r.get("severity") == "warn"]
             )

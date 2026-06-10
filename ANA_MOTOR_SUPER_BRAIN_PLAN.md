@@ -112,11 +112,19 @@
 | M2 | Hatırlatıcı masaüstü/e-posta bildirimi | `ana_motor_hatirlat_bildirim.py` | `desktop_notifications` + opsiyonel SMTP |
 | M3 | Paket geçmişi CSV | `ana_motor_paket_csv.py` | `GET /api/ana-motor/paket-history/export` |
 
-## Sıradaki (Faz N — öneri)
+## Faz N — uygulandı (2026-06-10)
 
-- CSV'den toplu arşiv geri yükleme
-- Bildirim tercih paneli (UI)
-- Paket geçmişi grafik özeti
+| # | Görev | Dosya | Durum |
+|---|--------|-------|--------|
+| N1 | CSV'den toplu arşiv geri yükleme | `ana_motor_csv_restore.py` | `POST /api/ana-motor/paket-history/import-restore` |
+| N2 | Bildirim tercih paneli (UI + JSON) | `ana_motor_bildirim_tercih.py`, `app.js` | `GET/POST /api/ana-motor/notify-prefs` |
+| N3 | Paket geçmişi grafik özeti | `ana_motor_paket_grafik.py` | `GET /api/ana-motor/paket-history/summary` |
+
+## Sıradaki (Faz O — öneri)
+
+- CSV'den toplu paket sihirbaz tetikleme
+- Bildirim geçmişi paneli (son 20 masaüstü/e-posta)
+- Timeline filtre (olay türü / oturum / tarih aralığı)
 
 ## Ortam (özet)
 
