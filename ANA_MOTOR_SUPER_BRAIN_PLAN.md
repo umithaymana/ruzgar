@@ -224,10 +224,19 @@ Detay: `ANA_MOTOR_FAZ_Y_PLAN.md`
 
 Detay: `ANA_MOTOR_FAZ_Z_PLAN.md`
 
-## Sıradaki (Faz AA — öneri)
+## Faz AA — uygulandı (2026-06-10)
 
-- Sohbet geçmişi arama
-- Nebula panel birleştirme
+| # | Görev | Dosya | Durum |
+|---|--------|-------|--------|
+| AA1 | Sohbet geçmişi arama | `ana_motor_sohbet_gecmis.py` | jsonl + API + UI |
+| AA2 | Kaynak & Nebula panel | `ana_motor_kaynak_panel.py` | Birleşik katlanır kart |
+
+Detay: `ANA_MOTOR_FAZ_AA_PLAN.md`
+
+## Sıradaki (Faz AB — öneri)
+
+- Sohbet oturumu dışa aktarma
+- Nebula apply birleşik akış
 
 ## Ortam (özet)
 

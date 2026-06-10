@@ -5315,6 +5315,73 @@ body.faz-z-chat-simple .composer-advanced-fold {
   opacity: 0.88;
   font-size: 0.95em;
 }
+/* Faz AA — sohbet arama + birleşik kaynak panel */
+.chat-history-search-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  padding: 6px 8px 4px;
+  border-bottom: 1px solid #2a2a2a;
+  background: #1a1d21;
+}
+.chat-history-search-input {
+  flex: 1 1 140px;
+  min-width: 120px;
+}
+.chat-history-search-hint {
+  font-size: 11px;
+  color: #8a939c;
+  flex: 1 1 100%;
+}
+.bubble.chat-search-hit {
+  outline: 2px solid #4ec9b0;
+  outline-offset: 2px;
+}
+.bubble.chat-search-dim {
+  opacity: 0.38;
+}
+.ana-motor-kaynak-panel-fold {
+  margin-bottom: 10px;
+}
+.ana-motor-kaynak-panel-fold > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+  padding: 4px 0 8px;
+}
+.ana-motor-kaynak-panel-fold > summary::-webkit-details-marker {
+  display: none;
+}
+.ana-motor-kaynak-panel-fold > summary::before {
+  content: "▸";
+  color: #4ec9b0;
+  margin-right: 4px;
+}
+.ana-motor-kaynak-panel-fold[open] > summary::before {
+  transform: rotate(90deg);
+  display: inline-block;
+}
+.ana-motor-kaynak-panel-body {
+  border-top: 1px solid #333;
+  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ana-motor-kaynak-panel-fold:not(.has-kaynak-content) .ana-motor-kaynak-panel-hint {
+  opacity: 0.75;
+}
+.ana-motor-research-card,
+.ana-motor-nebula-oneri-card {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #1e2329;
+  border: 1px solid #333;
+}
 .bubble.assistant .chat-action-main {
   font-weight: 700;
   color: #d7f5ed;

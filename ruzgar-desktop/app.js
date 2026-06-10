@@ -1379,6 +1379,118 @@ function scrollFaz7HelpToMotor(mode) {
   window.setTimeout(() => node.classList.remove("faz7-help-motor-active"), 2400);
 }
 
+let anaMotorLastResearchCard = null;
+
+function syncAnaMotorKaynakPanel() {
+  const fold = document.getElementById("ana-motor-kaynak-panel-fold");
+  const hintEl = document.getElementById("ana-motor-kaynak-panel-hint");
+  const research = document.getElementById("ana-motor-research-card");
+  const nebula = document.getElementById("ana-motor-nebula-oneri-card");
+  const hasR = research && !research.hidden;
+  const hasN = nebula && !nebula.hidden;
+  if (!fold) return;
+  fold.classList.toggle("has-kaynak-content", !!(hasR || hasN));
+  if (hasR || hasN) {
+    const parts = [];
+    if (hasR && anaMotorLastResearchCard?.primary) {
+      parts.push(String(anaMotorLastResearchCard.primary));
+    }
+    if (hasN && anaMotorLastNebulaCard?.collection_title) {
+      parts.push(`Nebula: ${anaMotorLastNebulaCard.collection_title}`);
+    } else if (hasN) {
+      parts.push("Nebula öneri");
+    }
+    if (hintEl) hintEl.textContent = parts.join(" · ") || "Kaynak verisi";
+  } else if (hintEl) {
+    hintEl.textContent = "Henüz veri yok — genişlet";
+  }
+}
+
+function clearChatHistorySearch() {
+  const input = document.getElementById("chat-history-search");
+  const hint = document.getElementById("chat-history-search-hint");
+  if (input) input.value = "";
+  if (hint) hint.textContent = "";
+  el.chat?.querySelectorAll(".bubble").forEach((b) => {
+    b.classList.remove("chat-search-hit", "chat-search-dim");
+  });
+}
+
+function highlightChatBubbles(query) {
+  const q = String(query || "").trim().toLowerCase();
+  if (!el.chat) return 0;
+  let hits = 0;
+  el.chat.querySelectorAll(".bubble:not(.chat-welcome)").forEach((bubble) => {
+    const text = (bubble.textContent || "").toLowerCase();
+    const match = q.length >= 2 && text.includes(q);
+    bubble.classList.toggle("chat-search-hit", match);
+    bubble.classList.toggle("chat-search-dim", q.length >= 2 && !match);
+    if (match) hits += 1;
+  });
+  if (hits) {
+    const first = el.chat.querySelector(".bubble.chat-search-hit");
+    first?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  return hits;
+}
+
+async function runChatHistorySearch(query) {
+  const hint = document.getElementById("chat-history-search-hint");
+  const q = String(query || "").trim();
+  const localHits = highlightChatBubbles(q);
+  if (q.length < 2) {
+    clearChatHistorySearch();
+    return;
+  }
+  if (hint) hint.textContent = localHits ? `${localHits} eşleşme (ekran)` : "Ekranda yok…";
+  try {
+    const mode = currentMode === "genel" ? "" : currentMode;
+    const url =
+      `${API}/api/ana-motor/chat-history/search?q=${encodeURIComponent(q)}&limit=12` +
+      (mode ? `&mode=${encodeURIComponent(mode)}` : "");
+    const res = await fetch(url, { cache: "no-store" });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) return;
+    const remote = Number(j.count || 0);
+    if (hint) {
+      const bits = [];
+      if (localHits) bits.push(`${localHits} ekran`);
+      if (remote) bits.push(`${remote} arşiv`);
+      hint.textContent = bits.length ? bits.join(" · ") : "Sonuç yok";
+    }
+  } catch {
+    /* yok say */
+  }
+}
+
+function wireFazAaChatSearch() {
+  const input = document.getElementById("chat-history-search");
+  const clearBtn = document.getElementById("btn-chat-history-clear");
+  let debounce = null;
+  if (input) {
+    input.addEventListener("input", () => {
+      clearTimeout(debounce);
+      debounce = setTimeout(() => runChatHistorySearch(input.value), 220);
+    });
+    input.addEventListener("keydown", (ev) => {
+      if (ev.key === "Escape") {
+        ev.preventDefault();
+        clearChatHistorySearch();
+        input.blur();
+      }
+    });
+  }
+  if (clearBtn) clearBtn.addEventListener("click", () => clearChatHistorySearch());
+  const kaynakFold = document.getElementById("ana-motor-kaynak-panel-fold");
+  if (kaynakFold) {
+    const saved = localStorage.getItem("ruzgar_kaynak_panel_open");
+    if (saved === "1") kaynakFold.open = true;
+    kaynakFold.addEventListener("toggle", () => {
+      localStorage.setItem("ruzgar_kaynak_panel_open", kaynakFold.open ? "1" : "0");
+    });
+  }
+}
+
 function initFazZUx() {
   const lsKeyArchive = "ruzgar_archive_fold_open";
   const lsKeyComposer = "ruzgar_composer_advanced_open";
@@ -1716,6 +1828,7 @@ function wireFaz7PrefsUi() {
 function wireFaz7Cila() {
   wireFaz7PrefsUi();
   initFazZUx();
+  wireFazAaChatSearch();
   if (el.faz7HelpBtn) el.faz7HelpBtn.addEventListener("click", () => openFaz7Help());
   if (el.faz7HelpClose) el.faz7HelpClose.addEventListener("click", () => closeFaz7Help());
   el.faz7HelpOverlay?.querySelectorAll("[data-faz7-close]").forEach((node) => {
@@ -11004,6 +11117,7 @@ function renderAnaMotorNebulaOneriCard(card) {
   if (!card || !card.ok) {
     wrap.hidden = true;
     anaMotorLastNebulaCard = null;
+    syncAnaMotorKaynakPanel();
     return;
   }
   anaMotorLastNebulaCard = card;
@@ -11012,6 +11126,9 @@ function renderAnaMotorNebulaOneriCard(card) {
     `Güven: ${card.guven || "düşük"} — önerilen koleksiyon: ${card.collection_title || card.collection || "—"}. ${card.hint || ""}`;
   cmdEl.textContent = card.suggested_command || "";
   if (applyBtn) applyBtn.disabled = false;
+  syncAnaMotorKaynakPanel();
+  const kFold = document.getElementById("ana-motor-kaynak-panel-fold");
+  if (kFold && !kFold.open) kFold.open = true;
 }
 
 function updateAnaMotorSessionCard() {
@@ -13014,8 +13131,11 @@ async function streamChat(userText, streamOpts = {}) {
     if (!wrap || !sumEl || !listEl) return;
     if (!card || !card.ok) {
       wrap.hidden = true;
+      anaMotorLastResearchCard = null;
+      syncAnaMotorKaynakPanel();
       return;
     }
+    anaMotorLastResearchCard = card;
     const totals = card.totals || {};
     const parts = [];
     if (totals.nebula) parts.push(`Nebula ${totals.nebula}`);
@@ -13044,6 +13164,11 @@ async function streamChat(userText, streamOpts = {}) {
       }
     }
     wrap.hidden = listEl.children.length === 0 && !parts.length;
+    syncAnaMotorKaynakPanel();
+    const kFold = document.getElementById("ana-motor-kaynak-panel-fold");
+    if (kFold && !kFold.open && !wrap.hidden) {
+      kFold.open = true;
+    }
   }
 
   function renderAnaMotorPatchCard(card) {
@@ -14774,7 +14899,7 @@ if (window.ruzgarApi?.onMenu) {
 wireNavToolbar();
 wireFaz7Cila();
 wireChatAutoScroll();
-document.body.classList.add("faz7-complete", "faz8-complete", "faz-z-complete");
+document.body.classList.add("faz7-complete", "faz8-complete", "faz-z-complete", "faz-aa-complete");
 void refreshUiManifest().finally(() =>
   renderMotorChatFromSession(activeMotorChatMode()),
 );

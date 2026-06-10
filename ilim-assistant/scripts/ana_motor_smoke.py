@@ -1989,6 +1989,64 @@ def run_offline() -> int:
     else:
         _ok(f"motor rehberi {len(reh['sections'])} bolum")
 
+    print("\n=== Faz AA — sohbet geçmişi / kaynak panel ===")
+    from ilim_assistant.ana_motor_kaynak_panel import (
+        build_kaynak_panel_hint,
+        kaynak_panel_enabled,
+        merge_kaynak_panel_payload,
+    )
+    from ilim_assistant.ana_motor_sohbet_gecmis import (
+        append_chat_turn,
+        chat_history_enabled,
+        search_chat_history,
+    )
+
+    if not chat_history_enabled():
+        _fail("chat_history", "kapali")
+        fails += 1
+    else:
+        _ok("sohbet gecmisi acik")
+    if not kaynak_panel_enabled():
+        _fail("kaynak_panel", "kapali")
+        fails += 1
+    else:
+        _ok("kaynak panel acik")
+    st = append_chat_turn(
+        user_message="Osmanli ne zaman kuruldu?",
+        assistant_message="1299 yilinda kurulmustur.",
+        mode_norm="genel",
+        plan_primary="bilgi",
+    )
+    if not st.get("stored") and st.get("reason") != "disabled":
+        _fail("chat_append", str(st)[:80])
+        fails += 1
+    else:
+        _ok("sohbet turu kaydedildi")
+    sr = search_chat_history("Osmanli", limit=5)
+    if not sr.get("ok") or not sr.get("count"):
+        _fail("chat_search", str(sr)[:80])
+        fails += 1
+    else:
+        _ok(f"sohbet arama {sr['count']} hit")
+    hint = build_kaynak_panel_hint(
+        {"ok": True, "primary": "bilgi", "totals": {"indeks": 2}},
+        {"ok": True, "collection_title": "tarih_kaynak"},
+    )
+    if "kaynak" not in hint.lower() and "tarih" not in hint.lower():
+        _fail("kaynak_hint", hint)
+        fails += 1
+    else:
+        _ok(f"kaynak panel ipucu: {hint[:40]}")
+    mp = merge_kaynak_panel_payload(
+        research_card={"ok": True, "primary": "bilgi"},
+        nebula_card={"ok": True, "collection": "tarih_kaynak"},
+    )
+    if not mp.get("ok") or not mp.get("has_nebula"):
+        _fail("kaynak_merge", str(mp)[:80])
+        fails += 1
+    else:
+        _ok("kaynak panel birlestirme")
+
     print("\n=== Faz D — bilim derin / denge70 / otonom debug ===")
     from ilim_assistant.ana_motor_bilim_derin import (
         apply_bilim_derin_rag_top_k,
@@ -2582,6 +2640,16 @@ def run_live(base: str) -> int:
         fails += 1
     else:
         _ok("Faz Z2 motor rehberi acik")
+    if not am.get("chat_history"):
+        _fail("faz_aa1 chat_history", "kapali")
+        fails += 1
+    else:
+        _ok("Faz AA1 sohbet gecmisi acik")
+    if not am.get("kaynak_panel"):
+        _fail("faz_aa2 kaynak_panel", "kapali")
+        fails += 1
+    else:
+        _ok("Faz AA2 kaynak panel acik")
 
     print("\n=== Canli — motor rehberi API ===")
     reh_url = base.rstrip("/") + "/api/ana-motor/motor-rehberi"
@@ -2595,6 +2663,20 @@ def run_live(base: str) -> int:
             _ok(f"canli motor rehberi {len(reh_j['sections'])} bolum")
     except Exception as e:
         _fail("live motor_rehberi", str(e)[:120])
+        fails += 1
+
+    print("\n=== Canli — sohbet geçmişi API ===")
+    ch_url = base.rstrip("/") + "/api/ana-motor/chat-history/search?q=Osmanli&limit=5"
+    try:
+        with urllib.request.urlopen(ch_url, timeout=15) as r:
+            ch_j = json.loads(r.read().decode("utf-8", errors="replace"))
+        if not ch_j.get("ok"):
+            _fail("live chat_search", str(ch_j)[:80])
+            fails += 1
+        else:
+            _ok(f"canli sohbet arama count={ch_j.get('count')}")
+    except Exception as e:
+        _fail("live chat_search", str(e)[:120])
         fails += 1
 
     print("\n=== Canli — upload + matris SLO ===")

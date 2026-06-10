@@ -1480,6 +1480,10 @@ def health():
             not in ("0", "false", "no"),
             "motor_rehberi": os.environ.get("RUZGAR_ANA_MOTOR_REHBERI", "1").strip().lower()
             not in ("0", "false", "no"),
+            "chat_history": os.environ.get("RUZGAR_ANA_CHAT_HISTORY", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "kaynak_panel": os.environ.get("RUZGAR_ANA_KAYNAK_PANEL", "1").strip().lower()
+            not in ("0", "false", "no"),
         },
         "super_brain": _sb,
         "connection": _connection_ui_block(super_brain=_sb),
@@ -2708,6 +2712,34 @@ def api_ana_motor_motor_rehberi() -> dict[str, Any]:
     from ilim_assistant.ana_motor_motor_rehberi import get_motor_rehberi_status
 
     return get_motor_rehberi_status()
+
+
+@app.get("/api/ana-motor/chat-history/recent")
+def api_ana_motor_chat_history_recent(limit: int = 30) -> dict[str, Any]:
+    """Faz AA1 — son sohbet turları."""
+    from ilim_assistant.ana_motor_sohbet_gecmis import recent_chat_history
+
+    return recent_chat_history(limit=limit)
+
+
+@app.get("/api/ana-motor/chat-history/search")
+def api_ana_motor_chat_history_search(
+    q: str = "",
+    limit: int = 20,
+    mode: str | None = None,
+) -> dict[str, Any]:
+    """Faz AA1 — sohbet geçmişinde metin arama."""
+    from ilim_assistant.ana_motor_sohbet_gecmis import search_chat_history
+
+    return search_chat_history(q, limit=limit, mode=mode)
+
+
+@app.get("/api/ana-motor/kaynak-panel/status")
+def api_ana_motor_kaynak_panel_status() -> dict[str, Any]:
+    """Faz AA2 — birleşik Kaynak & Nebula panel durumu."""
+    from ilim_assistant.ana_motor_kaynak_panel import get_kaynak_panel_status
+
+    return get_kaynak_panel_status()
 
 
 @app.get("/api/ana-motor/backend-yurut")
@@ -10949,6 +10981,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 )
             except Exception:
                 pass
+        try:
+            from ilim_assistant.ana_motor_sohbet_gecmis import append_chat_turn
+
+            _plan_prim = ""
+            if turn_plan is not None:
+                _plan_prim = str(
+                    getattr(turn_plan, "primary", "")
+                    if hasattr(turn_plan, "primary")
+                    else (turn_plan.get("primary") if isinstance(turn_plan, dict) else "")
+                    or ""
+                )
+            append_chat_turn(
+                user_message=msg,
+                assistant_message=body_fixed,
+                mode_norm=mode_norm,
+                session_id=getattr(req, "ana_motor_session_id", None),
+                plan_primary=_plan_prim,
+            )
+        except Exception:
+            pass
         yield done_llm
     except Exception as e:
         yield {"type": "error", "text": format_llm_user_error(e)}

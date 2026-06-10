@@ -32,9 +32,8 @@ RUZGAR_ANA_MULTIHOP_EXTRA_K=2
 3. `?` açılınca aktif motor bölümüne kayar
 4. Smoke Faz Z yeşil
 
-## Sıradaki (Faz AA — öneri)
+## Sıradaki
 
-- Sohbet geçmişi arama
-- Nebula panel birleştirme
+Faz AA tamamlandı — bkz. `ANA_MOTOR_FAZ_AA_PLAN.md`
 
 *Bismillah — Ümit & Gökçenur*

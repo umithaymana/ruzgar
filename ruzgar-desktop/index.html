@@ -354,6 +354,18 @@
 
       <div class="tercume-center-row" id="tercume-center-row">
       <aside class="panel panel-chat">
+        <div class="chat-history-search-bar faz-aa-chat-search" id="chat-history-search-bar">
+          <input
+            type="search"
+            id="chat-history-search"
+            class="input-compact chat-history-search-input"
+            placeholder="Sohbette ara… (Ctrl+F)"
+            aria-label="Sohbet geçmişinde ara"
+            autocomplete="off"
+          />
+          <button type="button" id="btn-chat-history-clear" class="btn-secondary btn-compact" title="Aramayı temizle">Temizle</button>
+          <span id="chat-history-search-hint" class="chat-history-search-hint" aria-live="polite"></span>
+        </div>
         <div class="chat-scroll" id="chat-messages"></div>
         <div id="orchestra-bridge" class="orchestra-bridge" hidden aria-live="polite"></div>
         <div class="composer faz-z-composer">
@@ -501,7 +513,13 @@
                 Yerel API (127.0.0.1:8779) kontrol ediliyor…
               </span>
             </div>
-            <div id="ana-motor-research-card" class="mini-card ana-motor-research-card" hidden>
+            <details id="ana-motor-kaynak-panel-fold" class="ana-motor-kaynak-panel-fold mini-card faz-aa-kaynak-panel">
+              <summary class="ana-motor-kaynak-panel-summary">
+                <strong>Kaynak &amp; Nebula (Faz AA)</strong>
+                <span id="ana-motor-kaynak-panel-hint" class="ana-motor-card-sub ana-motor-kaynak-panel-hint">Henüz veri yok</span>
+              </summary>
+              <div class="ana-motor-kaynak-panel-body">
+            <div id="ana-motor-research-card" class="ana-motor-research-card" hidden>
               <strong>Araştırma envanteri</strong>
               <p id="ana-motor-research-summary" class="ana-motor-card-sub"></p>
               <ul id="ana-motor-research-list" class="ana-motor-research-list"></ul>
@@ -515,7 +533,7 @@
                 <button type="button" class="btn-primary btn-compact" id="btn-ana-patch-apply">Uygula</button>
               </div>
             </div>
-            <div id="ana-motor-nebula-oneri-card" class="mini-card ana-motor-nebula-oneri-card" hidden>
+            <div id="ana-motor-nebula-oneri-card" class="ana-motor-nebula-oneri-card" hidden>
               <strong>Nebula öneri (Faz G2/H1)</strong>
               <p id="ana-motor-nebula-oneri-summary" class="ana-motor-card-sub"></p>
               <p id="ana-motor-nebula-oneri-cmd" class="ana-motor-nebula-oneri-cmd"></p>
@@ -524,6 +542,8 @@
                 <button type="button" class="btn-primary btn-compact" id="btn-ana-nebula-oneri-apply">Kaynağı ekle</button>
               </div>
             </div>
+              </div>
+            </details>
             <div id="ana-motor-session-card" class="mini-card ana-motor-session-card" hidden>
               <strong>Paket sihirbazı (Faz I)</strong>
               <p id="ana-motor-session-summary" class="ana-motor-card-sub"></p>
