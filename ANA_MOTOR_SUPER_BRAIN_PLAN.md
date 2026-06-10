@@ -176,11 +176,17 @@
 | U2 | Birleşik tercih JSON dışa/içe aktar | `ana_motor_birlesik_tercih.py` | `GET/POST /unified-prefs/export` + `/import` |
 | U3 | Ana Motor dashboard HTML özeti | `ana_motor_dashboard_html.py` | `GET /api/ana-motor/dashboard/summary-html` |
 
-## Sıradaki (Faz V — öneri)
+## Faz V — uygulandı (2026-06-10)
 
-- Süper özet + dashboard otomatik e-posta birleşik
-- Dashboard HTML PDF dışa aktarım
-- Tüm tercihler tek JSON yedek/geri yükle (tam arşiv)
+| # | Görev | Dosya | Durum |
+|---|--------|-------|--------|
+| V1 | Süper özet + dashboard birleşik e-posta | `ana_motor_birlesik_email.py` | `POST /api/ana-motor/birlesik-email` |
+| V2 | Dashboard HTML → PDF dışa aktarım | `ana_motor_dashboard_pdf.py` | `GET /api/ana-motor/dashboard/export-pdf` |
+| V3 | Tüm tercihler tam JSON yedek/geri yükle | `ana_motor_tam_tercih_yedek.py` | `GET/POST /tam-prefs/export` + `/import` |
+
+## Ana Motor Süper Beyin — tamamlandı
+
+Çekirdek beyin (A–D) + arşiv/operasyon paneli (F–V) plan kapsamında uygulandı. Yeni işler ayrı başlık altında (Programlama motoru, Ses, vb.) planlanabilir.
 
 ## Ortam (özet)
 

@@ -1701,6 +1701,63 @@ def run_offline() -> int:
     else:
         _ok(f"dashboard HTML bytes={len(dh.get('html') or '')}")
 
+    print("\n=== Faz V — birlesik email / dashboard PDF / tam tercih yedek ===")
+    from ilim_assistant.ana_motor_birlesik_email import (
+        birlesik_email_enabled,
+        maybe_send_birlesik_email,
+    )
+    from ilim_assistant.ana_motor_dashboard_pdf import (
+        dashboard_pdf_enabled,
+        export_dashboard_pdf,
+    )
+    from ilim_assistant.ana_motor_tam_tercih_yedek import (
+        export_tam_prefs_archive,
+        import_tam_prefs_archive,
+        tam_prefs_yedek_enabled,
+    )
+
+    if not birlesik_email_enabled():
+        _fail("birlesik_email", "kapali")
+        fails += 1
+    else:
+        _ok("birlesik email acik")
+    be = maybe_send_birlesik_email(period_days=7, force=False)
+    if not be.get("ok") and be.get("error"):
+        _fail("birlesik_email_run", str(be)[:80])
+        fails += 1
+    else:
+        _ok(f"birlesik email sent={be.get('sent')}")
+
+    if not dashboard_pdf_enabled():
+        _fail("dashboard_pdf", "kapali")
+        fails += 1
+    else:
+        _ok("dashboard PDF acik")
+    dp = export_dashboard_pdf(period_days=7)
+    if not dp.get("ok") or not dp.get("pdf"):
+        _fail("dashboard_pdf_run", str(dp)[:80])
+        fails += 1
+    else:
+        _ok(f"dashboard PDF bytes={len(dp.get('pdf') or b'')}")
+
+    if not tam_prefs_yedek_enabled():
+        _fail("tam_prefs_yedek", "kapali")
+        fails += 1
+    else:
+        _ok("tam tercih yedek acik")
+    tpe = export_tam_prefs_archive()
+    if not tpe.get("ok") or not tpe.get("json"):
+        _fail("tam_prefs_export_run", str(tpe)[:80])
+        fails += 1
+    else:
+        _ok(f"tam yedek bytes={len(tpe.get('json') or '')}")
+    tpi = import_tam_prefs_archive(tpe.get("json") or "{}")
+    if not tpi.get("ok"):
+        _fail("tam_prefs_import_run", str(tpi)[:80])
+        fails += 1
+    else:
+        _ok(f"tam yedek restore={tpi.get('restored')}")
+
     print("\n=== Faz D — bilim derin / denge70 / otonom debug ===")
     from ilim_assistant.ana_motor_bilim_derin import (
         apply_bilim_derin_rag_top_k,
@@ -2229,6 +2286,21 @@ def run_live(base: str) -> int:
         fails += 1
     else:
         _ok("Faz U3 dashboard HTML acik")
+    if not am.get("birlesik_email"):
+        _fail("faz_v1 birlesik_email", "kapali")
+        fails += 1
+    else:
+        _ok("Faz V1 birlesik email acik")
+    if not am.get("dashboard_pdf"):
+        _fail("faz_v2 dashboard_pdf", "kapali")
+        fails += 1
+    else:
+        _ok("Faz V2 dashboard PDF acik")
+    if not am.get("tam_prefs_yedek"):
+        _fail("faz_v3 tam_yedek", "kapali")
+        fails += 1
+    else:
+        _ok("Faz V3 tam tercih yedek acik")
 
     print("\n=== Canli — upload + matris SLO ===")
     chat_url = base.rstrip("/") + "/api/chat/full"

@@ -17,6 +17,7 @@ _DEFAULTS: dict[str, Any] = {
     "period_days": 7,
     "compare_email_enabled": False,
     "super_ozet_email_enabled": False,
+    "birlesik_email_enabled": False,
 }
 
 
@@ -51,6 +52,7 @@ def load_schedule_prefs() -> dict[str, Any]:
         merged["schedule_enabled"] = bool(merged.get("schedule_enabled", True))
         merged["compare_email_enabled"] = bool(merged.get("compare_email_enabled", False))
         merged["super_ozet_email_enabled"] = bool(merged.get("super_ozet_email_enabled", False))
+        merged["birlesik_email_enabled"] = bool(merged.get("birlesik_email_enabled", False))
         return {"ok": True, "prefs": merged, "source": "file"}
     except Exception as exc:
         return {"ok": True, "prefs": dict(_DEFAULTS), "source": "default", "warn": str(exc)}
@@ -71,6 +73,8 @@ def save_schedule_prefs(prefs: dict[str, Any]) -> dict[str, Any]:
             clean["compare_email_enabled"] = bool(prefs["compare_email_enabled"])
         if "super_ozet_email_enabled" in prefs:
             clean["super_ozet_email_enabled"] = bool(prefs["super_ozet_email_enabled"])
+        if "birlesik_email_enabled" in prefs:
+            clean["birlesik_email_enabled"] = bool(prefs["birlesik_email_enabled"])
     _PREFS_PATH.parent.mkdir(parents=True, exist_ok=True)
     _PREFS_PATH.write_text(json.dumps(clean, ensure_ascii=False, indent=2), encoding="utf-8")
     return {"ok": True, "prefs": clean, "hint": "Zamanlayıcı tercihleri kaydedildi."}

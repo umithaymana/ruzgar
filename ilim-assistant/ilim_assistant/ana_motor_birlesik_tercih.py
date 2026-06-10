@@ -42,6 +42,7 @@ def load_unified_prefs() -> dict[str, Any]:
         "period_days": int(schedule.get("period_days") or 7),
         "compare_email_enabled": bool(schedule.get("compare_email_enabled", False)),
         "super_ozet_email_enabled": bool(schedule.get("super_ozet_email_enabled", False)),
+        "birlesik_email_enabled": bool(schedule.get("birlesik_email_enabled", False)),
     }
     return {"ok": True, "prefs": merged}
 
@@ -124,6 +125,8 @@ def save_unified_prefs(prefs: dict[str, Any]) -> dict[str, Any]:
         schedule_payload["compare_email_enabled"] = prefs["compare_email_enabled"]
     if "super_ozet_email_enabled" in prefs:
         schedule_payload["super_ozet_email_enabled"] = prefs["super_ozet_email_enabled"]
+    if "birlesik_email_enabled" in prefs:
+        schedule_payload["birlesik_email_enabled"] = prefs["birlesik_email_enabled"]
     if schedule_payload:
         try:
             from ilim_assistant.ana_motor_schedule_tercih import save_schedule_prefs

@@ -150,7 +150,7 @@ footer{{margin-top:24px;font-size:11px;color:#6b7480}}
 <h1>Rüzgar Ana Motor — Dashboard Özeti</h1>
 <p>Üretim: {_esc(generated)} · Dönem: {period} gün</p>
 {''.join(sections)}
-<footer>Ümit &amp; Gökçenur — Rüzgar Ana Motor Faz U</footer>
+<footer>Ümit &amp; Gökçenur — Rüzgar Ana Motor Faz V</footer>
 </body>
 </html>"""
 

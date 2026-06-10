@@ -537,7 +537,7 @@
               </div>
             </div>
             <div id="ana-motor-archive-card" class="mini-card ana-motor-archive-card">
-              <strong>Arşiv &amp; birleştir (Faz U)</strong>
+              <strong>Arşiv &amp; birleştir (Faz V)</strong>
               <p id="ana-motor-archive-summary" class="ana-motor-card-sub">Kalıcı arşiv oturumları</p>
               <div id="ana-motor-weekly-summary" class="mini-card ana-motor-weekly-summary" hidden>
                 <strong id="ana-motor-weekly-title">Haftalık özet</strong>
@@ -567,6 +567,8 @@
                   <button type="button" class="btn-secondary btn-compact" id="btn-ana-super-ozet-email">Süper özet e-posta</button>
                   <button type="button" class="btn-secondary btn-compact" id="btn-ana-compare-email">Karş. e-posta</button>
                   <button type="button" class="btn-secondary btn-compact" id="btn-ana-dashboard-html">Dashboard HTML</button>
+                  <button type="button" class="btn-secondary btn-compact" id="btn-ana-dashboard-pdf">Dashboard PDF</button>
+                  <button type="button" class="btn-secondary btn-compact" id="btn-ana-birlesik-email">Birleşik e-posta</button>
                 </div>
               </div>
               <div id="ana-motor-paket-grafik" class="ana-motor-paket-grafik" hidden></div>
@@ -581,11 +583,15 @@
                 <label class="ana-motor-pref-row">Dönem (gün): <input type="number" id="ana-uni-period-days" class="input-compact" min="1" max="30" value="7" /></label>
                 <label class="ana-motor-pref-row"><input type="checkbox" id="ana-uni-compare-email" /> Karşılaştırma e-posta</label>
                 <label class="ana-motor-pref-row"><input type="checkbox" id="ana-uni-super-email" /> Süper özet e-posta</label>
+                <label class="ana-motor-pref-row"><input type="checkbox" id="ana-uni-birlesik-email" /> Birleşik e-posta (özet+HTML)</label>
                 <div class="ana-motor-patch-actions">
                   <button type="button" class="btn-secondary btn-compact" id="btn-ana-unified-prefs-save">Birleşik kaydet</button>
                   <button type="button" class="btn-secondary btn-compact" id="btn-ana-unified-prefs-export">Tercih dışa aktar</button>
                   <label class="btn-secondary btn-compact" for="ana-unified-prefs-import">Tercih içe aktar</label>
                   <input type="file" id="ana-unified-prefs-import" accept=".json,application/json" hidden />
+                  <button type="button" class="btn-secondary btn-compact" id="btn-ana-tam-prefs-export">Tam yedek</button>
+                  <label class="btn-secondary btn-compact" for="ana-tam-prefs-import">Tam geri yükle</label>
+                  <input type="file" id="ana-tam-prefs-import" accept=".json,application/json" hidden />
                 </div>
               </div>
               <div id="ana-motor-notify-history" class="ana-motor-notify-history" hidden>

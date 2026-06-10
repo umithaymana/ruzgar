@@ -1452,6 +1452,12 @@ def health():
             not in ("0", "false", "no"),
             "dashboard_html": os.environ.get("RUZGAR_ANA_DASHBOARD_HTML", "1").strip().lower()
             not in ("0", "false", "no"),
+            "birlesik_email": os.environ.get("RUZGAR_ANA_BIRLESIK_EMAIL", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "dashboard_pdf": os.environ.get("RUZGAR_ANA_DASHBOARD_PDF", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "tam_prefs_yedek": os.environ.get("RUZGAR_ANA_TAM_PREFS_YEDEK", "1").strip().lower()
+            not in ("0", "false", "no"),
         },
         "super_brain": _sb,
         "connection": _connection_ui_block(super_brain=_sb),
@@ -3367,6 +3373,7 @@ class SchedulePrefsBody(BaseModel):
     period_days: int | None = None
     compare_email_enabled: bool | None = None
     super_ozet_email_enabled: bool | None = None
+    birlesik_email_enabled: bool | None = None
 
 
 class UnifiedPrefsBody(BaseModel):
@@ -3379,6 +3386,7 @@ class UnifiedPrefsBody(BaseModel):
     period_days: int | None = None
     compare_email_enabled: bool | None = None
     super_ozet_email_enabled: bool | None = None
+    birlesik_email_enabled: bool | None = None
 
 
 class UnifiedPrefsImportBody(BaseModel):
@@ -3509,6 +3517,94 @@ def api_ana_motor_super_ozet_export_pdf(days: int = 7):
             ),
         },
     )
+
+
+@app.get("/api/ana-motor/dashboard/export-pdf")
+def api_ana_motor_dashboard_export_pdf(days: int = 7):
+    """Faz V2 — dashboard PDF dışa aktarım."""
+    from fastapi.responses import Response
+
+    from ilim_assistant.ana_motor_dashboard_pdf import dashboard_pdf_enabled, export_dashboard_pdf
+
+    if not dashboard_pdf_enabled():
+        raise HTTPException(status_code=403, detail="Dashboard PDF kapalı.")
+    out = export_dashboard_pdf(period_days=max(1, min(days, 30)))
+    if not out.get("ok"):
+        raise HTTPException(status_code=404, detail=str(out.get("error") or "PDF boş."))
+    return Response(
+        content=bytes(out.get("pdf") or b""),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="{out.get("filename") or "dashboard.pdf"}"'
+            ),
+        },
+    )
+
+
+@app.get("/api/ana-motor/tam-prefs/export")
+def api_ana_motor_tam_prefs_export():
+    """Faz V3 — tüm tercihler tam JSON yedek."""
+    from fastapi.responses import Response
+
+    from ilim_assistant.ana_motor_tam_tercih_yedek import (
+        export_tam_prefs_archive,
+        tam_prefs_yedek_enabled,
+    )
+
+    if not tam_prefs_yedek_enabled():
+        raise HTTPException(status_code=403, detail="Tam tercih yedekleme kapalı.")
+    out = export_tam_prefs_archive()
+    if not out.get("ok"):
+        raise HTTPException(status_code=404, detail=str(out.get("error") or "JSON boş."))
+    return Response(
+        content=str(out.get("json") or "{}").encode("utf-8"),
+        media_type="application/json; charset=utf-8",
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="{out.get("filename") or "tam_tercih_yedek.json"}"'
+            ),
+        },
+    )
+
+
+@app.post("/api/ana-motor/tam-prefs/import")
+async def api_ana_motor_tam_prefs_import(body: UnifiedPrefsImportBody) -> dict[str, Any]:
+    """Faz V3 — tüm tercihler tam JSON geri yükle."""
+    from ilim_assistant.ana_motor_tam_tercih_yedek import (
+        import_tam_prefs_archive,
+        tam_prefs_yedek_enabled,
+    )
+
+    if not tam_prefs_yedek_enabled():
+        raise HTTPException(status_code=403, detail="Tam tercih geri yükleme kapalı.")
+    result = await run_in_threadpool(import_tam_prefs_archive, body.json_text or "")
+    if not result.get("ok"):
+        raise HTTPException(
+            status_code=400,
+            detail=str(result.get("error") or "Geri yükleme başarısız."),
+        )
+    return result
+
+
+@app.post("/api/ana-motor/birlesik-email")
+async def api_ana_motor_birlesik_email(days: int = 7, force: int = 0) -> dict[str, Any]:
+    """Faz V1 — süper özet + dashboard birleşik e-posta."""
+    from ilim_assistant.ana_motor_birlesik_email import (
+        birlesik_email_enabled,
+        maybe_send_birlesik_email,
+    )
+
+    if not birlesik_email_enabled():
+        raise HTTPException(status_code=403, detail="Birleşik e-posta kapalı.")
+    result = await run_in_threadpool(
+        maybe_send_birlesik_email,
+        period_days=max(1, min(days, 30)),
+        force=bool(force),
+    )
+    if not result.get("ok") and result.get("error"):
+        raise HTTPException(status_code=400, detail=str(result.get("error")))
+    return result
 
 
 @app.post("/api/ana-motor/super-ozet/email")

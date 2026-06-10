@@ -11300,6 +11300,7 @@ async function loadAnaMotorUnifiedPrefs() {
     set("ana-uni-period-days", p.period_days || 7);
     set("ana-uni-compare-email", !!p.compare_email_enabled);
     set("ana-uni-super-email", !!p.super_ozet_email_enabled);
+    set("ana-uni-birlesik-email", !!p.birlesik_email_enabled);
     startAnaMotorReminderNotifyPoll(p.remind_poll_sec || 120);
   } catch (_) {
     startAnaMotorReminderNotifyPoll(120);
@@ -11317,6 +11318,7 @@ async function saveAnaMotorUnifiedPrefs() {
     period_days: parseInt(document.getElementById("ana-uni-period-days")?.value || "7", 10),
     compare_email_enabled: !!document.getElementById("ana-uni-compare-email")?.checked,
     super_ozet_email_enabled: !!document.getElementById("ana-uni-super-email")?.checked,
+    birlesik_email_enabled: !!document.getElementById("ana-uni-birlesik-email")?.checked,
   };
   try {
     const res = await fetch(`${API}/api/ana-motor/unified-prefs`, {
@@ -11446,6 +11448,90 @@ async function importAnaMotorUnifiedPrefs(file) {
       return;
     }
     setStatus(j.hint || "Birleşik tercihler içe aktarıldı.", "Rüzgar");
+    void loadAnaMotorUnifiedPrefs();
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+  }
+}
+
+async function sendAnaMotorBirlesikEmail() {
+  try {
+    const res = await fetch(`${API}/api/ana-motor/birlesik-email?days=7&force=1`, {
+      method: "POST",
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setStatus(j.detail || j.error || "Birleşik e-posta gönderilemedi", "Rüzgar");
+      return;
+    }
+    if (j.sent) {
+      setStatus(`Birleşik rapor gönderildi: ${j.to || "e-posta"}`, "Rüzgar");
+      void refreshAnaMotorNotifyHistory();
+    } else {
+      setStatus(j.reason || "E-posta gönderilmedi (SMTP/tercih kontrol edin).", "Rüzgar");
+    }
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+  }
+}
+
+async function downloadAnaMotorDashboardPdf() {
+  try {
+    const res = await fetch(`${API}/api/ana-motor/dashboard/export-pdf?days=7`);
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      setStatus(j.detail || "Dashboard PDF indirilemedi", "Rüzgar");
+      return;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "ruzgar_ana_motor_dashboard_7g.pdf";
+    a.click();
+    URL.revokeObjectURL(url);
+    flashRuzgarDurum("Dashboard PDF indirildi");
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+  }
+}
+
+async function exportAnaMotorTamPrefs() {
+  try {
+    const res = await fetch(`${API}/api/ana-motor/tam-prefs/export`);
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      setStatus(j.detail || "Tam yedek dışa aktarılamadı", "Rüzgar");
+      return;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "ruzgar_ana_motor_tam_tercih_yedek.json";
+    a.click();
+    URL.revokeObjectURL(url);
+    flashRuzgarDurum("Tam tercih yedeği indirildi");
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+  }
+}
+
+async function importAnaMotorTamPrefs(file) {
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const res = await fetch(`${API}/api/ana-motor/tam-prefs/import`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ json_text: text }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) {
+      setStatus(j.detail || j.error || "Tam geri yükleme başarısız", "Rüzgar");
+      return;
+    }
+    setStatus(j.hint || "Tam tercih yedeği geri yüklendi.", "Rüzgar");
     void loadAnaMotorUnifiedPrefs();
   } catch (e) {
     setStatus(formatClientChatError(e), "Rüzgar");
@@ -12267,6 +12353,30 @@ async function mergeAnaMotorArchiveSessions() {
       const f = unifiedImportIn.files && unifiedImportIn.files[0];
       void importAnaMotorUnifiedPrefs(f);
       unifiedImportIn.value = "";
+    });
+  }
+  const birlesikEmailBtn = document.getElementById("btn-ana-birlesik-email");
+  if (birlesikEmailBtn && !birlesikEmailBtn.dataset.wired) {
+    birlesikEmailBtn.dataset.wired = "1";
+    birlesikEmailBtn.addEventListener("click", () => void sendAnaMotorBirlesikEmail());
+  }
+  const dashPdfBtn = document.getElementById("btn-ana-dashboard-pdf");
+  if (dashPdfBtn && !dashPdfBtn.dataset.wired) {
+    dashPdfBtn.dataset.wired = "1";
+    dashPdfBtn.addEventListener("click", () => void downloadAnaMotorDashboardPdf());
+  }
+  const tamExportBtn = document.getElementById("btn-ana-tam-prefs-export");
+  if (tamExportBtn && !tamExportBtn.dataset.wired) {
+    tamExportBtn.dataset.wired = "1";
+    tamExportBtn.addEventListener("click", () => void exportAnaMotorTamPrefs());
+  }
+  const tamImportIn = document.getElementById("ana-tam-prefs-import");
+  if (tamImportIn && !tamImportIn.dataset.wired) {
+    tamImportIn.dataset.wired = "1";
+    tamImportIn.addEventListener("change", () => {
+      const f = tamImportIn.files && tamImportIn.files[0];
+      void importAnaMotorTamPrefs(f);
+      tamImportIn.value = "";
     });
   }
   const csvIn = document.getElementById("ana-csv-import-input");

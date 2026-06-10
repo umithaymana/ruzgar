@@ -129,9 +129,19 @@ def tick_weekly_schedule(*, days: int | None = None) -> dict[str, Any]:
         except Exception:
             pass
         try:
-            from ilim_assistant.ana_motor_super_ozet_email import maybe_send_super_ozet_email
+            from ilim_assistant.ana_motor_birlesik_email import (
+                effective_birlesik_email,
+                maybe_send_birlesik_email,
+            )
 
-            result["super_ozet_email_status"] = maybe_send_super_ozet_email(period_days=period)
+            if effective_birlesik_email():
+                result["birlesik_email_status"] = maybe_send_birlesik_email(period_days=period)
+            else:
+                from ilim_assistant.ana_motor_super_ozet_email import maybe_send_super_ozet_email
+
+                result["super_ozet_email_status"] = maybe_send_super_ozet_email(
+                    period_days=period
+                )
         except Exception:
             pass
         if result.get("desktop_notifications"):
