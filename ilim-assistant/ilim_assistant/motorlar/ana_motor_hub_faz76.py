@@ -455,6 +455,29 @@ def build_motor_dispatch_payload(
     mid = (target or "").strip().lower()
     if mid == "okuma":
         mid = "mimar"
+    try:
+        from ilim_assistant.ana_motor_backend_yurut import execute_backend_motor
+
+        be = execute_backend_motor(message, mid, workspace_root=workspace_root)
+        if be.get("handled") or be.get("error"):
+            out = {
+                "ok": bool(be.get("ok", True)),
+                "handled": bool(be.get("handled")),
+                "instant": bool(be.get("handled")),
+                "target": mid,
+                "target_label": motor_label(mid),
+                "version": FAZ76_VERSION,
+                "backend_yurut": True,
+            }
+            if be.get("reply"):
+                out["reply"] = be["reply"]
+            if be.get("error"):
+                out["error"] = be["error"]
+            if be.get("meta"):
+                out["meta"] = be["meta"]
+            return out
+    except Exception:
+        pass
     reply, meta = maybe_motor_instant_for_target(
         message, mid, workspace_root=workspace_root
     )
@@ -693,6 +716,22 @@ def apply_genel_hub_routing(
     target, meta = resolve_hub_target(message, flags)
     out["hub_meta"] = meta
     if target != "genel":
+        try:
+            from ilim_assistant.ana_motor_backend_yurut import try_backend_before_delegate
+
+            be = try_backend_before_delegate(
+                message, target, workspace_root=workspace_root
+            )
+            if be.get("handled") and be.get("reply"):
+                out["og_direct"] = str(be["reply"])
+                out["hub_meta"] = {
+                    **meta,
+                    "backend_yurut": True,
+                    "channel": (be.get("meta") or {}).get("channel"),
+                }
+                return out
+        except Exception:
+            pass
         out["mode"] = target
         out["hub_directive"] = hub_directive_for_mode(target, meta, message)
     return out

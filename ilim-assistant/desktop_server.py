@@ -1458,6 +1458,12 @@ def health():
             not in ("0", "false", "no"),
             "tam_prefs_yedek": os.environ.get("RUZGAR_ANA_TAM_PREFS_YEDEK", "1").strip().lower()
             not in ("0", "false", "no"),
+            "backend_yurut": os.environ.get("RUZGAR_ANA_BACKEND_YURUT", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "tercume_instant": os.environ.get("RUZGAR_ANA_TERCUME_INSTANT", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "video_url_info": os.environ.get("RUZGAR_ANA_VIDEO_URL_INFO", "1").strip().lower()
+            not in ("0", "false", "no"),
         },
         "super_brain": _sb,
         "connection": _connection_ui_block(super_brain=_sb),
@@ -2670,6 +2676,29 @@ def api_ana_motor_sub_intents():
     from ilim_assistant.motorlar.motor_ogrenilen_eylemler import sub_intents_catalog
 
     return sub_intents_catalog()
+
+
+@app.get("/api/ana-motor/backend-yurut")
+def api_ana_motor_backend_yurut(
+    message: str = "",
+    target: str = "genel",
+    workspace_root: str | None = None,
+) -> dict[str, Any]:
+    """Faz W — tek sohbetten backend motor yürütme."""
+    from ilim_assistant.ana_motor_backend_yurut import (
+        backend_yurut_enabled,
+        execute_backend_motor,
+    )
+
+    if not backend_yurut_enabled():
+        raise HTTPException(status_code=403, detail="Backend yürütme kapalı.")
+    msg = (message or "").strip()
+    tgt = (target or "").strip().lower()
+    root = (workspace_root or "").strip() or None
+    result = execute_backend_motor(msg, tgt, workspace_root=root)
+    if not result.get("ok") and result.get("error"):
+        raise HTTPException(status_code=400, detail=str(result.get("error")))
+    return result
 
 
 @app.get("/api/ana-motor/motor-dispatch")

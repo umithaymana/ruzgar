@@ -184,9 +184,20 @@
 | V2 | Dashboard HTML → PDF dışa aktarım | `ana_motor_dashboard_pdf.py` | `GET /api/ana-motor/dashboard/export-pdf` |
 | V3 | Tüm tercihler tam JSON yedek/geri yükle | `ana_motor_tam_tercih_yedek.py` | `GET/POST /tam-prefs/export` + `/import` |
 
-## Ana Motor Süper Beyin — tamamlandı
+## Faz W — uygulanıyor (2026-06-10)
 
-Çekirdek beyin (A–D) + arşiv/operasyon paneli (F–V) plan kapsamında uygulandı. Yeni işler ayrı başlık altında (Programlama motoru, Ses, vb.) planlanabilir.
+| # | Görev | Dosya | Durum |
+|---|--------|-------|--------|
+| W1 | Backend motor yürütme köprüsü | `ana_motor_backend_yurut.py` | `GET /api/ana-motor/backend-yurut` |
+| W2 | Kısa çeviri sohbet içi | `ana_motor_tercume_yurut.py` | Hub + dispatch |
+| W3 | Video URL bilgi (metadata) | `ana_motor_video_bilgi.py` | Hub `og_direct` |
+
+Detay: `ANA_MOTOR_FAZ_W_PLAN.md`
+
+## Sıradaki (Faz X — öneri)
+
+- Ajan 2.0: patch + test doğrulama döngüsü
+- Bilgi kalite 2.0 (opsiyonel LLM reflection)
 
 ## Ortam (özet)
 

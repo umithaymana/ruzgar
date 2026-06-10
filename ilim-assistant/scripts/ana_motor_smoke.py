@@ -1758,6 +1758,63 @@ def run_offline() -> int:
     else:
         _ok(f"tam yedek restore={tpi.get('restored')}")
 
+    print("\n=== Faz W — backend yurut / tercume instant / video url bilgi ===")
+    from ilim_assistant.ana_motor_backend_yurut import (
+        backend_yurut_enabled,
+        execute_backend_motor,
+        resolve_motor_dispatch_kind,
+    )
+    from ilim_assistant.ana_motor_tercume_yurut import (
+        maybe_run_instant_translate,
+        tercume_instant_enabled,
+    )
+    from ilim_assistant.ana_motor_video_bilgi import (
+        maybe_video_url_info,
+        video_url_info_enabled,
+    )
+
+    if not backend_yurut_enabled():
+        _fail("backend_yurut", "kapali")
+        fails += 1
+    else:
+        _ok("backend yurut acik")
+    disp = resolve_motor_dispatch_kind("tercume")
+    if disp != "backend:tercume_translate":
+        _fail("dispatch_tercume", str(disp))
+        fails += 1
+    else:
+        _ok("tercume dispatch backend")
+    hf = execute_backend_motor("hafiza durumu", "hafiza")
+    if not hf.get("handled") or not hf.get("reply"):
+        _fail("backend_hafiza", str(hf)[:80])
+        fails += 1
+    else:
+        _ok("backend hafiza durumu")
+
+    if not tercume_instant_enabled():
+        _fail("tercume_instant", "kapali")
+        fails += 1
+    else:
+        _ok("tercume instant acik")
+    ti = maybe_run_instant_translate("dil listesi")
+    if ti.get("handled"):
+        _fail("tercume_skip_list", "should not translate")
+        fails += 1
+    else:
+        _ok("tercume non-translate skip")
+
+    if not video_url_info_enabled():
+        _fail("video_url_info", "kapali")
+        fails += 1
+    else:
+        _ok("video url bilgi acik")
+    vi = maybe_video_url_info("merhaba dunya")
+    if vi.get("handled"):
+        _fail("video_info_skip", "should skip")
+        fails += 1
+    else:
+        _ok("video bilgi skip (no url)")
+
     print("\n=== Faz D — bilim derin / denge70 / otonom debug ===")
     from ilim_assistant.ana_motor_bilim_derin import (
         apply_bilim_derin_rag_top_k,
@@ -2301,6 +2358,21 @@ def run_live(base: str) -> int:
         fails += 1
     else:
         _ok("Faz V3 tam tercih yedek acik")
+    if not am.get("backend_yurut"):
+        _fail("faz_w1 backend_yurut", "kapali")
+        fails += 1
+    else:
+        _ok("Faz W1 backend yurut acik")
+    if not am.get("tercume_instant"):
+        _fail("faz_w2 tercume_inst", "kapali")
+        fails += 1
+    else:
+        _ok("Faz W2 tercume instant acik")
+    if not am.get("video_url_info"):
+        _fail("faz_w3 video_info", "kapali")
+        fails += 1
+    else:
+        _ok("Faz W3 video url bilgi acik")
 
     print("\n=== Canli — upload + matris SLO ===")
     chat_url = base.rstrip("/") + "/api/chat/full"

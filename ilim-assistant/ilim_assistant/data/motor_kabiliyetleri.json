@@ -33,7 +33,7 @@
         "altyazı göm",
         "kurgu yap"
       ],
-      "dispatch": "frontend:video-chat-brain"
+      "dispatch": "backend:video_instant"
     },
     "tercume": {
       "label_tr": "Tercüme",
@@ -45,7 +45,7 @@
         "\\bsayfa\\s+(çevir|cevir|git)\\b"
       ],
       "examples": ["imam-ı rabbani eserlerini ara", "bu sayfayı çevir"],
-      "dispatch": "frontend:tercume-atolye"
+      "dispatch": "backend:tercume_translate"
     },
     "mimar": {
       "label_tr": "Mimar",
