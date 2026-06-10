@@ -64,11 +64,19 @@
 | G2 | Nebula tek tık kaynak ekle | `ana_motor_nebula_apply.py`, `app.js` | `POST /api/ana-motor/nebula-oneri/apply` |
 | G3 | Çoklu dosya oturum paketi | `ana_motor_dosya_ingest.py` | `session_id` + `ana_motor_session_id` |
 
-## Sıradaki (Faz H — öneri)
+## Faz H — uygulandı (2026-06-10)
 
-- Nebula apply → arka plan indeks + UI ilerleme
-- Oturum paketi kalıcı «hatırla» köprüsü
-- Upload virüs taraması (isteğe bağlı)
+| # | Görev | Dosya | Durum |
+|---|--------|-------|--------|
+| H1 | Nebula apply arka plan indeks | `ana_motor_nebula_apply.py`, `app.js` | `GET /api/ana-motor/nebula-apply/status` |
+| H2 | Oturum → hafıza köprüsü | `ana_motor_session_hafiza.py` | `POST /api/ana-motor/session/remember` |
+| H3 | Upload virüs taraması | `ana_motor_dosya_ingest.py` | `RUZGAR_ANA_UPLOAD_VIRUS_SCAN` |
+
+## Sıradaki (Faz I — öneri)
+
+- Nebula/hatırla birleşik «tek paket» sihirbazı
+- Oturum TTL uzatma + kalıcı arşiv klasörü
+- Canlı H1 indeks SLO
 
 ## Ortam (özet)
 

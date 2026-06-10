@@ -800,18 +800,75 @@ def run_offline() -> int:
         "tarih_kaynak",
         "Test konu G2",
         upload_ids=[up_a["upload_id"]],
+        background=False,
     )
     if not nap.get("ok") or not nap.get("batch_path"):
         _fail("nebula_apply_upload", str(nap)[:120])
         fails += 1
     else:
         _ok(f"nebula apply upload -> {nap.get('batch_path')}")
-    nap2 = apply_nebula_oneri("tarih_kaynak", "Stub konu G2")
+    nap2 = apply_nebula_oneri("tarih_kaynak", "Stub konu G2", background=False)
     if not nap2.get("ok"):
         _fail("nebula_apply_stub", str(nap2)[:120])
         fails += 1
     else:
         _ok("nebula apply stub")
+
+    print("\n=== Faz H — nebula bg / session remember / virus scan ===")
+    from ilim_assistant.ana_motor_dosya_ingest import upload_virus_scan_enabled
+    from ilim_assistant.ana_motor_nebula_apply import (
+        get_nebula_apply_job_status,
+        nebula_apply_bg_enabled,
+        start_nebula_apply_background,
+        write_nebula_batch,
+    )
+    from ilim_assistant.ana_motor_session_hafiza import (
+        remember_upload_session,
+        session_remember_enabled,
+    )
+
+    if not nebula_apply_bg_enabled():
+        _fail("nebula_apply_bg", "kapali")
+        fails += 1
+    else:
+        _ok("nebula arka plan indeks acik")
+    wb = write_nebula_batch("tarih_kaynak", "H1 yaz test", upload_ids=None)
+    if not wb.get("ok"):
+        _fail("write_nebula_batch", str(wb)[:80])
+        fails += 1
+    else:
+        _ok("nebula batch yazildi")
+    bg = start_nebula_apply_background(
+        "tarih_kaynak", "H1 bg test", upload_ids=[up_a["upload_id"]]
+    )
+    if not bg.get("ok") or not bg.get("async"):
+        _fail("nebula_bg_start", str(bg)[:100])
+        fails += 1
+    else:
+        _ok("nebula bg kuyruk")
+    st = get_nebula_apply_job_status()
+    if not isinstance(st, dict):
+        _fail("nebula_job_status", type(st).__name__)
+        fails += 1
+    else:
+        _ok(f"nebula job running={st.get('running')}")
+
+    if not session_remember_enabled():
+        _fail("session_remember", "kapali")
+        fails += 1
+    else:
+        _ok("oturum hatirla acik")
+    mem = remember_upload_session(sid, topic="Faz H test")
+    if not mem.get("ok") or not mem.get("remembered"):
+        _fail("session_remember_write", str(mem)[:100])
+        fails += 1
+    else:
+        _ok(f"hafiza yazildi files={mem.get('file_count')}")
+
+    if not upload_virus_scan_enabled():
+        _ok("upload virus scan kapali (env)")
+    else:
+        _ok("upload virus scan acik")
 
     print("\n=== Faz D — bilim derin / denge70 / otonom debug ===")
     from ilim_assistant.ana_motor_bilim_derin import (
@@ -1121,6 +1178,21 @@ def run_live(base: str) -> int:
         fails += 1
     else:
         _ok("Faz G2 nebula apply acik")
+    if not am.get("nebula_apply_bg"):
+        _fail("faz_h1 bg", "kapali")
+        fails += 1
+    else:
+        _ok("Faz H1 nebula bg acik")
+    if not am.get("session_remember"):
+        _fail("faz_h2 remember", "kapali")
+        fails += 1
+    else:
+        _ok("Faz H2 session remember acik")
+    if "upload_virus_scan" not in am:
+        _fail("faz_h3 virus", "health alani yok")
+        fails += 1
+    else:
+        _ok(f"Faz H3 upload virus scan={am.get('upload_virus_scan')}")
 
     print("\n=== Canli — upload + matris SLO ===")
     chat_url = base.rstrip("/") + "/api/chat/full"

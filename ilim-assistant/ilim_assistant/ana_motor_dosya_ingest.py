@@ -34,6 +34,14 @@ def ingest_enabled() -> bool:
     )
 
 
+def upload_virus_scan_enabled() -> bool:
+    return os.environ.get("RUZGAR_ANA_UPLOAD_VIRUS_SCAN", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
 @dataclass
 class UploadRecord:
     upload_id: str
@@ -237,6 +245,25 @@ def save_upload_bytes(
     staging.mkdir(parents=True, exist_ok=True)
     target = staging / f"{upload_id}_{safe}"
     target.write_bytes(data)
+
+    if upload_virus_scan_enabled():
+        try:
+            from ilim_assistant.motorlar.ruzgar_antivirus import ruzgar_scan_file
+
+            verdict = ruzgar_scan_file(target, mode="quick")
+            if not verdict.clean:
+                try:
+                    target.unlink(missing_ok=True)
+                except OSError:
+                    pass
+                threats = ", ".join(verdict.threats[:3]) or verdict.detail or "risk"
+                return {
+                    "ok": False,
+                    "error": f"Virüs kalkanı: dosya reddedildi ({threats}).",
+                    "scan": verdict.to_dict(),
+                }
+        except Exception:
+            pass
 
     text, err = _extract_text(target)
     try:

@@ -1353,6 +1353,12 @@ def health():
             "live_upload_matris_slo_sec": os.environ.get(
                 "RUZGAR_LIVE_UPLOAD_MATRIS_SLO_SEC", "90"
             ),
+            "nebula_apply_bg": os.environ.get("RUZGAR_NEBULA_APPLY_BG", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "session_remember": os.environ.get("RUZGAR_ANA_SESSION_REMEMBER", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "upload_virus_scan": os.environ.get("RUZGAR_ANA_UPLOAD_VIRUS_SCAN", "1").strip().lower()
+            not in ("0", "false", "no"),
         },
         "super_brain": _sb,
         "connection": _connection_ui_block(super_brain=_sb),
@@ -2649,6 +2655,45 @@ async def api_ana_motor_nebula_oneri_apply(
         raise HTTPException(
             status_code=400,
             detail=str(result.get("error") or "Nebula ekleme başarısız."),
+        )
+    return result
+
+
+@app.get("/api/ana-motor/nebula-apply/status")
+def api_ana_motor_nebula_apply_status() -> dict[str, Any]:
+    """Faz H1 — arka plan Nebula indeks işi durumu."""
+    from ilim_assistant.ana_motor_nebula_apply import get_nebula_apply_job_status
+
+    job = get_nebula_apply_job_status()
+    return {"ok": True, "job": job}
+
+
+class SessionRememberBody(BaseModel):
+    session_id: str | None = None
+    upload_ids: list[str] | None = None
+    topic: str = ""
+
+
+@app.post("/api/ana-motor/session/remember")
+async def api_ana_motor_session_remember(body: SessionRememberBody) -> dict[str, Any]:
+    """Faz H2 — oturum dosya paketini kalıcı hafızaya yaz."""
+    from ilim_assistant.ana_motor_session_hafiza import (
+        remember_upload_session,
+        session_remember_enabled,
+    )
+
+    if not session_remember_enabled():
+        raise HTTPException(status_code=403, detail="Oturum hatırla köprüsü kapalı.")
+    result = await run_in_threadpool(
+        remember_upload_session,
+        body.session_id,
+        upload_ids=body.upload_ids,
+        topic=(body.topic or "").strip(),
+    )
+    if not result.get("ok"):
+        raise HTTPException(
+            status_code=400,
+            detail=str(result.get("error") or "Hafızaya yazılamadı."),
         )
     return result
 

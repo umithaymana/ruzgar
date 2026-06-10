@@ -1,13 +1,17 @@
 # Created by Ümit & Gökçenur
-"""Ana Motor Faz G2 — Nebula öneri kartından tek tık kaynak ekleme."""
+"""Ana Motor Faz G2/H1 — Nebula öneri kartından tek tık kaynak ekleme (+ arka plan indeks)."""
 
 from __future__ import annotations
 
 import os
 import re
+import threading
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+_job_lock = threading.Lock()
+_bg_job: dict[str, Any] = {"running": False}
 
 
 def nebula_apply_enabled() -> bool:
@@ -16,6 +20,19 @@ def nebula_apply_enabled() -> bool:
         "false",
         "no",
     )
+
+
+def nebula_apply_bg_enabled() -> bool:
+    return os.environ.get("RUZGAR_NEBULA_APPLY_BG", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
+def get_nebula_apply_job_status() -> dict[str, Any]:
+    with _job_lock:
+        return dict(_bg_job)
 
 
 def _batch_markdown(
@@ -65,18 +82,13 @@ def _collect_upload_texts(upload_ids: list[str] | None) -> list[tuple[str, str]]
     return rows
 
 
-def apply_nebula_oneri(
+def write_nebula_batch(
     collection: str,
     topic: str,
     *,
     upload_ids: list[str] | None = None,
 ) -> dict[str, Any]:
-    """
-    Önerilen koleksiyona konu paketi yazar ve indeksi günceller.
-    upload_ids varsa dosya içeriği; yoksa konu stub'ı.
-    """
-    if not nebula_apply_enabled():
-        return {"ok": False, "error": "Nebula tek tık ekleme kapalı."}
+    """Paketi diske yazar; indeks güncellemez (H1 arka plan için)."""
     slug = _slug(collection)
     if not slug:
         return {"ok": False, "error": "Geçersiz koleksiyon."}
@@ -84,7 +96,7 @@ def apply_nebula_oneri(
     uploads = _collect_upload_texts(upload_ids)
 
     try:
-        from ilim_assistant.rag_store import _knowledge_root, build_index
+        from ilim_assistant.rag_store import _knowledge_root
     except Exception as exc:
         return {"ok": False, "error": str(exc)}
 
@@ -135,19 +147,6 @@ def apply_nebula_oneri(
             encoding="utf-8",
         )
 
-    idx_info: dict[str, Any] = {"status": "skipped"}
-    try:
-        idx_info = build_index(force=False, incremental=True)
-    except Exception as exc:
-        return {
-            "ok": True,
-            "warning": f"Paket yazıldı; indeks güncellenemedi: {exc}",
-            "collection": slug,
-            "batch_path": f"nebula/{slug}/incremental/{path.name}",
-            "entries": len(entries),
-            "from_uploads": bool(uploads),
-        }
-
     rel = f"nebula/{slug}/incremental/{path.name}"
     return {
         "ok": True,
@@ -155,9 +154,125 @@ def apply_nebula_oneri(
         "batch_path": rel,
         "entries": len(entries),
         "from_uploads": bool(uploads),
+    }
+
+
+def _run_index_worker(batch_meta: dict[str, Any]) -> None:
+    global _bg_job
+    try:
+        with _job_lock:
+            _bg_job["progress"] = "Vektör indeksi güncelleniyor…"
+        from ilim_assistant.rag_store import build_index
+
+        idx_info = build_index(force=False, incremental=True)
+        with _job_lock:
+            _bg_job.update(
+                running=False,
+                progress="Tamamlandı",
+                index=idx_info.get("status") or "ok",
+                chunks=idx_info.get("chunks"),
+                finished_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            )
+    except Exception as exc:
+        with _job_lock:
+            _bg_job.update(
+                running=False,
+                progress="Hata",
+                error=str(exc),
+            )
+
+
+def start_nebula_apply_background(
+    collection: str,
+    topic: str,
+    *,
+    upload_ids: list[str] | None = None,
+) -> dict[str, Any]:
+    """Paketi yaz, indeksi arka planda güncelle (Faz H1)."""
+    if not nebula_apply_enabled():
+        return {"ok": False, "error": "Nebula tek tık ekleme kapalı."}
+    with _job_lock:
+        if _bg_job.get("running"):
+            return {
+                "ok": False,
+                "error": "Arka plan indeksleme sürüyor.",
+                "job": dict(_bg_job),
+            }
+    batch = write_nebula_batch(collection, topic, upload_ids=upload_ids)
+    if not batch.get("ok"):
+        return batch
+
+    with _job_lock:
+        _bg_job.clear()
+        _bg_job.update(
+            running=True,
+            collection=batch.get("collection"),
+            batch_path=batch.get("batch_path"),
+            entries=batch.get("entries"),
+            progress="Paket yazıldı — indeks kuyruğa alındı…",
+            started_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            error=None,
+        )
+
+    threading.Thread(
+        target=_run_index_worker,
+        args=(batch,),
+        daemon=True,
+        name="nebula-apply-index",
+    ).start()
+
+    return {
+        "ok": True,
+        "async": True,
+        "collection": batch["collection"],
+        "batch_path": batch["batch_path"],
+        "entries": batch["entries"],
+        "from_uploads": batch.get("from_uploads"),
+        "hint": (
+            f"`knowledge/{batch['batch_path']}` yazıldı. "
+            "İndeks arka planda güncelleniyor — dashboard ilerlemesini izleyebilirsin."
+        ),
+        "job": get_nebula_apply_job_status(),
+    }
+
+
+def apply_nebula_oneri(
+    collection: str,
+    topic: str,
+    *,
+    upload_ids: list[str] | None = None,
+    background: bool | None = None,
+) -> dict[str, Any]:
+    """
+    Önerilen koleksiyona konu paketi yazar.
+    Varsayılan: arka plan indeks (API); smoke/test için senkron yol.
+    """
+    use_bg = nebula_apply_bg_enabled() if background is None else bool(background)
+    if use_bg:
+        return start_nebula_apply_background(collection, topic, upload_ids=upload_ids)
+
+    if not nebula_apply_enabled():
+        return {"ok": False, "error": "Nebula tek tık ekleme kapalı."}
+    batch = write_nebula_batch(collection, topic, upload_ids=upload_ids)
+    if not batch.get("ok"):
+        return batch
+    try:
+        from ilim_assistant.rag_store import build_index
+
+        idx_info = build_index(force=False, incremental=True)
+    except Exception as exc:
+        return {
+            "ok": True,
+            "warning": f"Paket yazıldı; indeks güncellenemedi: {exc}",
+            **batch,
+        }
+    rel = batch["batch_path"]
+    return {
+        **batch,
         "index": idx_info.get("status") or "ok",
         "hint": (
             f"`knowledge/{rel}` yazıldı. "
-            f"{'Yüklenen dosya içeriği' if uploads else 'Konu stub'} Nebula koleksiyonuna eklendi."
+            f"{'Yüklenen dosya içeriği' if batch.get('from_uploads') else 'Konu stub'} "
+            "Nebula koleksiyonuna eklendi."
         ),
     }
