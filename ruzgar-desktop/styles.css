@@ -5204,6 +5204,49 @@ body.faz7-reduced-motion .agent-step-active .agent-step-label {
   border-left: 3px solid #4ec9b0;
   background: linear-gradient(135deg, #262a2d 0%, #202728 100%);
 }
+.chat-source-trust-wrap {
+  margin: 4px 0 10px 8px;
+  max-width: 96%;
+}
+.chat-source-trust-badge {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  background: #1e2329;
+  border: 1px solid #333;
+  color: #c8d0d8;
+}
+.chat-source-trust-badge.trust-high {
+  border-color: #3d8f5a;
+  background: #1a2a22;
+}
+.chat-source-trust-badge.trust-mid {
+  border-color: #b8953a;
+  background: #2a2618;
+}
+.chat-source-trust-badge.trust-low {
+  border-color: #a64b4b;
+  background: #2a1a1a;
+}
+.chat-source-trust-badge .trust-pill {
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+.chat-source-trust-badge .trust-sources {
+  color: #9cdc9c;
+  font-size: 11px;
+}
+.chat-source-trust-badge .trust-hint {
+  color: #8a939c;
+  font-size: 11px;
+  width: 100%;
+}
 .bubble.assistant .chat-action-main {
   font-weight: 700;
   color: #d7f5ed;

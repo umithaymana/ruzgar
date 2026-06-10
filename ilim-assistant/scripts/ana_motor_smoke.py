@@ -1858,6 +1858,78 @@ def run_offline() -> int:
     else:
         _ok(f"agent status v2={st.get('agent_v2')}")
 
+    print("\n=== Faz Y — LLM reflection / kaynak rozet ===")
+    from ilim_assistant.ana_motor_kaynak_rozet import (
+        build_source_trust_card,
+        kaynak_rozet_enabled,
+        parse_guven_level,
+    )
+    from ilim_assistant.ana_motor_reflection_llm import (
+        apply_bilgi_kalite_pass,
+        llm_reflection_enabled,
+        should_run_llm_reflection,
+    )
+
+    if not kaynak_rozet_enabled():
+        _fail("kaynak_rozet", "kapali")
+        fails += 1
+    else:
+        _ok("kaynak rozet acik")
+    if not llm_reflection_enabled():
+        _fail("llm_reflection", "kapali")
+        fails += 1
+    else:
+        _ok("llm reflection acik")
+    gl = parse_guven_level("Cevap metni.\n\n**Güven: orta** — test")
+    if gl != "orta":
+        _fail("parse_guven", gl)
+        fails += 1
+    else:
+        _ok("guven parse orta")
+    card = build_source_trust_card(
+        "Test cevabi.\n\n**Güven: dusuk** — kaynak yok.",
+        "Osmanli kim kurdu?",
+        hits=[("1299", "tarih.md", 0.5)],
+        web_was_used=False,
+        reflection_meta={"mismatch": False},
+    )
+    if not card.get("ok") or card.get("source_count") != 1:
+        _fail("trust_card", str(card)[:80])
+        fails += 1
+    else:
+        _ok(f"trust card guven={card.get('guven_level')}")
+    _refl_body = (
+        "Osmanli devleti genel olarak 1299 yilinda Sogut civarinda kurulmus kabul edilir."
+    )
+    if not should_run_llm_reflection(
+        _refl_body,
+        "Osmanli kim kurdu?",
+        hits=[],
+        question_plan=_plan_q("Osmanli kim kurdu", "genel", {}),
+        web_was_used=False,
+    ):
+        _fail("llm_reflect_should", "True bekleniyordu")
+        fails += 1
+    else:
+        _ok("llm reflection tetik kosulu")
+    body_y, meta_y, card_y = apply_bilgi_kalite_pass(
+        _refl_body,
+        msg_os,
+        hits=[],
+        question_plan=p_os,
+        web_was_used=False,
+    )
+    if "Güven:" not in body_y:
+        _fail("bilgi_kalite_guven", body_y[:80])
+        fails += 1
+    else:
+        _ok("bilgi kalite pass Guven")
+    if not card_y or not card_y.get("ok"):
+        _fail("bilgi_kalite_card", str(card_y)[:80])
+        fails += 1
+    else:
+        _ok("bilgi kalite rozet karti")
+
     print("\n=== Faz D — bilim derin / denge70 / otonom debug ===")
     from ilim_assistant.ana_motor_bilim_derin import (
         apply_bilim_derin_rag_top_k,
@@ -2426,6 +2498,16 @@ def run_live(base: str) -> int:
         fails += 1
     else:
         _ok("Faz X2 agent verify acik")
+    if not am.get("llm_reflection"):
+        _fail("faz_y1 llm_reflect", "kapali")
+        fails += 1
+    else:
+        _ok("Faz Y1 LLM reflection acik")
+    if not am.get("kaynak_rozet"):
+        _fail("faz_y2 kaynak_rozet", "kapali")
+        fails += 1
+    else:
+        _ok("Faz Y2 kaynak rozet acik")
 
     print("\n=== Canli — upload + matris SLO ===")
     chat_url = base.rstrip("/") + "/api/chat/full"

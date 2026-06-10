@@ -204,10 +204,19 @@ Detay: `ANA_MOTOR_FAZ_W_PLAN.md`
 
 Detay: `ANA_MOTOR_FAZ_X_PLAN.md`
 
-## Sıradaki (Faz Y — öneri)
+## Faz Y — uygulandı (2026-06-10)
 
-- Bilgi kalite 2.0 (opsiyonel LLM reflection)
-- Sohbet içi kaynak + güven rozeti
+| # | Görev | Dosya | Durum |
+|---|--------|-------|--------|
+| Y1 | LLM reflection (factual) | `ana_motor_reflection_llm.py` | `apply_bilgi_kalite_pass` |
+| Y2 | Kaynak + güven rozeti | `ana_motor_kaynak_rozet.py` | `source_trust_card` UI |
+
+Detay: `ANA_MOTOR_FAZ_Y_PLAN.md`
+
+## Sıradaki (Faz Z — öneri)
+
+- Sohbet paneli sadeleştirme
+- Multi-hop RAG
 
 ## Ortam (özet)
 

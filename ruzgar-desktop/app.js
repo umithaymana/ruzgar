@@ -9801,6 +9801,43 @@ function pushMotorChatHistory(role, content, opts = {}) {
   persistSharedChatStore();
 }
 
+function attachSourceTrustBadge(bubbleEl, card) {
+  if (!bubbleEl || !card || !card.ok) return;
+  const wrap = document.createElement("div");
+  wrap.className = "chat-source-trust-wrap";
+  const badge = document.createElement("div");
+  const cls = String(card.guven_class || "trust-unknown");
+  badge.className = `chat-source-trust-badge ${cls}`;
+  const pill = document.createElement("span");
+  pill.className = "trust-pill";
+  pill.textContent = String(card.guven_label || "Güven");
+  badge.appendChild(pill);
+  const srcCount = Number(card.source_count || 0);
+  if (srcCount > 0) {
+    const src = document.createElement("span");
+    src.className = "trust-sources";
+    const previews = Array.isArray(card.sources_preview) ? card.sources_preview : [];
+    const names = previews.map((p) => p.id || "K?").join(", ");
+    src.textContent = `${srcCount} kaynak${names ? ` (${names})` : ""}`;
+    badge.appendChild(src);
+  } else if (card.web_used) {
+    const src = document.createElement("span");
+    src.className = "trust-sources";
+    src.textContent = "Web kaynağı";
+    badge.appendChild(src);
+  }
+  if (card.hint) {
+    const hint = document.createElement("span");
+    hint.className = "trust-hint";
+    hint.textContent = String(card.hint);
+    badge.appendChild(hint);
+  }
+  wrap.appendChild(badge);
+  if (bubbleEl.parentNode) {
+    bubbleEl.parentNode.insertBefore(wrap, bubbleEl.nextSibling);
+  }
+}
+
 function appendBubble(role, text, opts = {}) {
   const div = document.createElement("div");
   let cls = `bubble ${role}`;
@@ -13202,6 +13239,9 @@ async function streamChat(userText, streamOpts = {}) {
       }
       if (ev.nebula_oneri_card) {
         renderAnaMotorNebulaOneriCard(ev.nebula_oneri_card);
+      }
+      if (ev.source_trust_card && responseBubble) {
+        attachSourceTrustBadge(responseBubble, ev.source_trust_card);
       }
       if (ev.paket_auto && ev.paket_auto.queued) {
         flashRuzgarDurum(

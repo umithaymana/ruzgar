@@ -1468,6 +1468,10 @@ def health():
             not in ("0", "false", "no"),
             "agent_verify": os.environ.get("RUZGAR_ANA_AGENT_VERIFY", "1").strip().lower()
             not in ("0", "false", "no"),
+            "llm_reflection": os.environ.get("RUZGAR_ANA_LLM_REFLECTION", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "kaynak_rozet": os.environ.get("RUZGAR_ANA_KAYNAK_ROZET", "1").strip().lower()
+            not in ("0", "false", "no"),
         },
         "super_brain": _sb,
         "connection": _connection_ui_block(super_brain=_sb),
@@ -10695,15 +10699,16 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 pass
         web_used = False
         _noc = None
+        _source_trust_card: dict[str, Any] | None = None
         try:
-            from ilim_assistant.ana_motor_reflection import apply_answer_quality_pass
+            from ilim_assistant.ana_motor_reflection_llm import apply_bilgi_kalite_pass
 
             web_used = bool(
                 turn_plan is not None
                 and getattr(turn_plan, "prefer_web", False)
                 and os.environ.get("ENABLE_WEB_SEARCH", "1") == "1"
             )
-            body_fixed = apply_answer_quality_pass(
+            body_fixed, _refl_meta, _source_trust_card = apply_bilgi_kalite_pass(
                 body_fixed,
                 msg,
                 hits=hits,
@@ -10711,7 +10716,23 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 web_was_used=web_used,
             )
         except Exception:
-            pass
+            try:
+                from ilim_assistant.ana_motor_reflection import apply_answer_quality_pass
+
+                web_used = bool(
+                    turn_plan is not None
+                    and getattr(turn_plan, "prefer_web", False)
+                    and os.environ.get("ENABLE_WEB_SEARCH", "1") == "1"
+                )
+                body_fixed = apply_answer_quality_pass(
+                    body_fixed,
+                    msg,
+                    hits=hits,
+                    question_plan=turn_plan,
+                    web_was_used=web_used,
+                )
+            except Exception:
+                pass
         try:
             from ilim_assistant.ana_motor_nebula_oneri import build_nebula_oneri_card
 
@@ -10766,6 +10787,8 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 pass
         if _noc and _noc.get("ok"):
             done_llm["nebula_oneri_card"] = _noc
+        if _source_trust_card and _source_trust_card.get("ok"):
+            done_llm["source_trust_card"] = _source_trust_card
         if mode_norm == "programlama":
             try:
                 from ilim_assistant.motorlar.programlama_faz11 import merge_orchestra_programlama
