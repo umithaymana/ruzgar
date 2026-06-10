@@ -537,8 +537,12 @@
               </div>
             </div>
             <div id="ana-motor-archive-card" class="mini-card ana-motor-archive-card">
-              <strong>Arşiv &amp; birleştir (Faz O)</strong>
+              <strong>Arşiv &amp; birleştir (Faz P)</strong>
               <p id="ana-motor-archive-summary" class="ana-motor-card-sub">Kalıcı arşiv oturumları</p>
+              <div id="ana-motor-weekly-summary" class="mini-card ana-motor-weekly-summary" hidden>
+                <strong id="ana-motor-weekly-title">Haftalık özet</strong>
+                <p id="ana-motor-weekly-body" class="ana-motor-card-sub"></p>
+              </div>
               <div id="ana-motor-paket-grafik" class="ana-motor-paket-grafik" hidden></div>
               <div id="ana-motor-notify-prefs" class="ana-motor-notify-prefs mini-card">
                 <strong>Bildirim tercihleri</strong>
@@ -550,6 +554,10 @@
               </div>
               <div id="ana-motor-notify-history" class="ana-motor-notify-history" hidden>
                 <strong>Son bildirimler</strong>
+                <div class="ana-motor-patch-actions">
+                  <button type="button" class="btn-secondary btn-compact" id="btn-ana-notify-export">Dışa aktar</button>
+                  <button type="button" class="btn-secondary btn-compact" id="btn-ana-notify-clear">Temizle</button>
+                </div>
                 <ul id="ana-motor-notify-history-list" class="ana-motor-notify-history-list"></ul>
               </div>
               <div id="ana-motor-archive-reminders" class="ana-motor-remind-list" hidden></div>
@@ -577,7 +585,9 @@
               <div class="ana-motor-patch-actions">
                 <button type="button" class="btn-secondary btn-compact" id="btn-ana-archive-restore">Arşivden yükle</button>
                 <button type="button" class="btn-secondary btn-compact" id="btn-ana-archive-merge">İki oturumu birleştir</button>
-                <button type="button" class="btn-secondary btn-compact" id="btn-ana-paket-csv">CSV indir</button>
+                <button type="button" class="btn-secondary btn-compact" id="btn-ana-paket-csv">CSV</button>
+                <button type="button" class="btn-secondary btn-compact" id="btn-ana-paket-json">JSON</button>
+                <button type="button" class="btn-secondary btn-compact" id="btn-ana-paket-pdf">PDF</button>
                 <label class="btn-secondary btn-compact" for="ana-csv-import-input">CSV toplu yükle</label>
                 <input type="file" id="ana-csv-import-input" accept=".csv,text/csv" hidden />
                 <label class="btn-secondary btn-compact" for="ana-csv-paket-input">CSV toplu paket</label>

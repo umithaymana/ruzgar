@@ -113,6 +113,92 @@ def log_desktop_notifications(notifications: list[dict[str, Any]]) -> None:
         )
 
 
+def notify_history_export_enabled() -> bool:
+    return os.environ.get("RUZGAR_ANA_NOTIFY_HISTORY_EXPORT", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
+def _read_all_history_items(*, limit: int = 200) -> list[dict[str, Any]]:
+    items: list[dict[str, Any]] = []
+    if not _HISTORY_PATH.is_file():
+        return items
+    try:
+        lines = _HISTORY_PATH.read_text(encoding="utf-8").splitlines()
+        for line in reversed(lines):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                row = json.loads(line)
+            except Exception:
+                continue
+            if isinstance(row, dict):
+                items.append(row)
+            if len(items) >= limit:
+                break
+    except Exception:
+        pass
+    return items
+
+
+def clear_notify_history() -> dict[str, Any]:
+    if not notify_history_enabled():
+        return {"ok": False, "error": "Bildirim geçmişi kapalı."}
+    try:
+        if _HISTORY_PATH.is_file():
+            _HISTORY_PATH.unlink()
+        return {"ok": True, "hint": "Bildirim geçmişi temizlendi."}
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)[:200]}
+
+
+def export_notify_history_json(*, limit: int = 200) -> dict[str, Any]:
+    if not notify_history_export_enabled():
+        return {"ok": False, "error": "Bildirim geçmişi dışa aktarım kapalı."}
+    items = _read_all_history_items(limit=limit)
+    payload = {
+        "generated_at": time.time(),
+        "count": len(items),
+        "items": items,
+    }
+    return {
+        "ok": True,
+        "json": json.dumps(payload, ensure_ascii=False, indent=2),
+        "count": len(items),
+        "filename": "ruzgar_ana_motor_bildirim_gecmisi.json",
+    }
+
+
+def export_notify_history_csv(*, limit: int = 200) -> dict[str, Any]:
+    if not notify_history_export_enabled():
+        return {"ok": False, "error": "Bildirim geçmişi dışa aktarım kapalı."}
+    import csv
+    import io
+
+    items = _read_all_history_items(limit=limit)
+    if not items:
+        return {"ok": False, "error": "Dışa aktarılacak bildirim geçmişi yok."}
+    buf = io.StringIO()
+    buf.write("\ufeff")
+    writer = csv.DictWriter(
+        buf,
+        fieldnames=["ts", "channel", "title", "body", "severity", "session_id", "upload_id"],
+        extrasaction="ignore",
+    )
+    writer.writeheader()
+    for row in items:
+        writer.writerow(row)
+    return {
+        "ok": True,
+        "csv": buf.getvalue(),
+        "count": len(items),
+        "filename": "ruzgar_ana_motor_bildirim_gecmisi.csv",
+    }
+
+
 def log_email_notification(status: dict[str, Any], reminders: list[dict[str, Any]]) -> None:
     if not status.get("sent"):
         return

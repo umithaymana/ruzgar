@@ -1408,6 +1408,16 @@ def health():
             not in ("0", "false", "no"),
             "timeline_filter": os.environ.get("RUZGAR_ANA_TIMELINE_FILTER", "1").strip().lower()
             not in ("0", "false", "no"),
+            "paket_json_export": os.environ.get("RUZGAR_ANA_PAKET_JSON_EXPORT", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "paket_pdf_export": os.environ.get("RUZGAR_ANA_PAKET_PDF_EXPORT", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "notify_history_export": os.environ.get(
+                "RUZGAR_ANA_NOTIFY_HISTORY_EXPORT", "1"
+            ).strip().lower()
+            not in ("0", "false", "no"),
+            "weekly_summary": os.environ.get("RUZGAR_ANA_WEEKLY_SUMMARY", "1").strip().lower()
+            not in ("0", "false", "no"),
         },
         "super_brain": _sb,
         "connection": _connection_ui_block(super_brain=_sb),
@@ -3006,6 +3016,122 @@ def api_ana_motor_notify_history(limit: int = 20) -> dict[str, Any]:
     from ilim_assistant.ana_motor_bildirim_gecmis import list_notify_history
 
     return list_notify_history(limit=max(1, min(limit, 50)))
+
+
+@app.post("/api/ana-motor/notify-history/clear")
+async def api_ana_motor_notify_history_clear() -> dict[str, Any]:
+    """Faz P2 — bildirim geçmişini temizle."""
+    from ilim_assistant.ana_motor_bildirim_gecmis import clear_notify_history
+
+    result = await run_in_threadpool(clear_notify_history)
+    if not result.get("ok"):
+        raise HTTPException(status_code=400, detail=str(result.get("error") or "Temizleme başarısız."))
+    return result
+
+
+@app.get("/api/ana-motor/notify-history/export")
+def api_ana_motor_notify_history_export(format: str = "json", limit: int = 200):
+    """Faz P2 — bildirim geçmişi JSON/CSV dışa aktarım."""
+    from fastapi.responses import PlainTextResponse, Response
+
+    from ilim_assistant.ana_motor_bildirim_gecmis import (
+        export_notify_history_csv,
+        export_notify_history_json,
+        notify_history_export_enabled,
+    )
+
+    if not notify_history_export_enabled():
+        raise HTTPException(status_code=403, detail="Bildirim geçmişi dışa aktarım kapalı.")
+    cap = max(1, min(limit, 500))
+    fmt = (format or "json").strip().lower()
+    if fmt == "csv":
+        out = export_notify_history_csv(limit=cap)
+        if not out.get("ok"):
+            raise HTTPException(status_code=404, detail=str(out.get("error") or "CSV boş."))
+        return PlainTextResponse(
+            content=str(out.get("csv") or ""),
+            media_type="text/csv; charset=utf-8",
+            headers={
+                "Content-Disposition": (
+                    f'attachment; filename="{out.get("filename") or "bildirim_gecmisi.csv"}"'
+                ),
+            },
+        )
+    out = export_notify_history_json(limit=cap)
+    if not out.get("ok"):
+        raise HTTPException(status_code=404, detail=str(out.get("error") or "JSON boş."))
+    return Response(
+        content=str(out.get("json") or "{}").encode("utf-8"),
+        media_type="application/json; charset=utf-8",
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="{out.get("filename") or "bildirim_gecmisi.json"}"'
+            ),
+        },
+    )
+
+
+@app.get("/api/ana-motor/sessions/weekly-summary")
+def api_ana_motor_weekly_summary(days: int = 7, limit: int = 80) -> dict[str, Any]:
+    """Faz P3 — timeline haftalık özet kartı."""
+    from ilim_assistant.ana_motor_haftalik_ozet import build_weekly_timeline_summary
+
+    return build_weekly_timeline_summary(
+        days=max(1, min(days, 30)),
+        limit=max(1, min(limit, 120)),
+    )
+
+
+@app.get("/api/ana-motor/paket-history/export-json")
+def api_ana_motor_paket_history_export_json(limit: int = 200):
+    """Faz P1 — paket geçmişi JSON."""
+    from fastapi.responses import Response
+
+    from ilim_assistant.ana_motor_paket_export import (
+        export_paket_history_json,
+        paket_json_export_enabled,
+    )
+
+    if not paket_json_export_enabled():
+        raise HTTPException(status_code=403, detail="Paket JSON dışa aktarım kapalı.")
+    out = export_paket_history_json(limit=max(1, min(limit, 500)))
+    if not out.get("ok"):
+        raise HTTPException(status_code=404, detail=str(out.get("error") or "JSON boş."))
+    return Response(
+        content=str(out.get("json") or "{}").encode("utf-8"),
+        media_type="application/json; charset=utf-8",
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="{out.get("filename") or "paket_gecmisi.json"}"'
+            ),
+        },
+    )
+
+
+@app.get("/api/ana-motor/paket-history/export-pdf")
+def api_ana_motor_paket_history_export_pdf(limit: int = 200):
+    """Faz P1 — paket geçmişi PDF."""
+    from fastapi.responses import Response
+
+    from ilim_assistant.ana_motor_paket_export import (
+        export_paket_history_pdf,
+        paket_pdf_export_enabled,
+    )
+
+    if not paket_pdf_export_enabled():
+        raise HTTPException(status_code=403, detail="Paket PDF dışa aktarım kapalı.")
+    out = export_paket_history_pdf(limit=max(1, min(limit, 500)))
+    if not out.get("ok"):
+        raise HTTPException(status_code=404, detail=str(out.get("error") or "PDF boş."))
+    return Response(
+        content=bytes(out.get("pdf") or b""),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="{out.get("filename") or "paket_gecmisi.pdf"}"'
+            ),
+        },
+    )
 
 
 @app.get("/api/ana-motor/paket-history/export")

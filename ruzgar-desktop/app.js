@@ -11467,24 +11467,96 @@ async function applyTimelineAction(ev, action) {
   }
 }
 
-async function downloadAnaMotorPaketCsv() {
+async function downloadAnaMotorPaketExport(kind) {
+  const paths = {
+    csv: "/api/ana-motor/paket-history/export?limit=200",
+    json: "/api/ana-motor/paket-history/export-json?limit=200",
+    pdf: "/api/ana-motor/paket-history/export-pdf?limit=200",
+  };
+  const names = {
+    csv: "ruzgar_ana_motor_paket_gecmisi.csv",
+    json: "ruzgar_ana_motor_paket_gecmisi.json",
+    pdf: "ruzgar_ana_motor_paket_gecmisi.pdf",
+  };
+  const path = paths[kind] || paths.csv;
   try {
-    const res = await fetch(`${API}/api/ana-motor/paket-history/export?limit=200`);
+    const res = await fetch(`${API}${path}`);
     if (!res.ok) {
       const j = await res.json().catch(() => ({}));
-      setStatus(j.detail || "CSV indirilemedi", "Rüzgar");
+      setStatus(j.detail || `${kind.toUpperCase()} indirilemedi`, "Rüzgar");
       return;
     }
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "ruzgar_ana_motor_paket_gecmisi.csv";
+    a.download = names[kind] || names.csv;
     a.click();
     URL.revokeObjectURL(url);
-    flashRuzgarDurum("Paket geçmişi CSV indirildi");
+    flashRuzgarDurum(`Paket geçmişi ${kind.toUpperCase()} indirildi`);
   } catch (e) {
     setStatus(formatClientChatError(e), "Rüzgar");
+  }
+}
+
+async function downloadAnaMotorPaketCsv() {
+  return downloadAnaMotorPaketExport("csv");
+}
+
+async function exportAnaMotorNotifyHistory() {
+  try {
+    const res = await fetch(`${API}/api/ana-motor/notify-history/export?format=json&limit=200`);
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      setStatus(j.detail || "Bildirim geçmişi indirilemedi", "Rüzgar");
+      return;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "ruzgar_ana_motor_bildirim_gecmisi.json";
+    a.click();
+    URL.revokeObjectURL(url);
+    flashRuzgarDurum("Bildirim geçmişi dışa aktarıldı");
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+  }
+}
+
+async function clearAnaMotorNotifyHistory() {
+  try {
+    const res = await fetch(`${API}/api/ana-motor/notify-history/clear`, { method: "POST" });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) {
+      setStatus(j.detail || j.error || "Geçmiş temizlenemedi", "Rüzgar");
+      return;
+    }
+    setStatus(j.hint || "Bildirim geçmişi temizlendi.", "Rüzgar");
+    void refreshAnaMotorNotifyHistory();
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+  }
+}
+
+async function refreshAnaMotorWeeklySummary() {
+  const wrap = document.getElementById("ana-motor-weekly-summary");
+  const titleEl = document.getElementById("ana-motor-weekly-title");
+  const bodyEl = document.getElementById("ana-motor-weekly-body");
+  if (!wrap || !bodyEl) return;
+  try {
+    const res = await fetch(`${API}/api/ana-motor/sessions/weekly-summary?days=7`);
+    const j = await res.json().catch(() => ({}));
+    const card = j.summary_card;
+    if (!j.ok || !card) {
+      wrap.hidden = true;
+      return;
+    }
+    wrap.hidden = false;
+    if (titleEl) titleEl.textContent = card.title || "Haftalık özet";
+    bodyEl.textContent = card.body || "";
+  } catch (_) {
+    wrap.hidden = true;
   }
 }
 
@@ -11614,6 +11686,7 @@ async function refreshAnaMotorArchiveList() {
   void refreshAnaMotorArchiveReminders();
   void refreshAnaMotorSessionTimeline();
   void refreshAnaMotorPaketGrafik();
+  void refreshAnaMotorWeeklySummary();
   try {
     const res = await fetch(`${API}/api/ana-motor/archive/sessions?limit=12`);
     const j = await res.json().catch(() => ({}));
@@ -11762,6 +11835,26 @@ async function mergeAnaMotorArchiveSessions() {
     csvBtn.dataset.wired = "1";
     csvBtn.addEventListener("click", () => void downloadAnaMotorPaketCsv());
   }
+  const jsonBtn = document.getElementById("btn-ana-paket-json");
+  if (jsonBtn && !jsonBtn.dataset.wired) {
+    jsonBtn.dataset.wired = "1";
+    jsonBtn.addEventListener("click", () => void downloadAnaMotorPaketExport("json"));
+  }
+  const pdfBtn = document.getElementById("btn-ana-paket-pdf");
+  if (pdfBtn && !pdfBtn.dataset.wired) {
+    pdfBtn.dataset.wired = "1";
+    pdfBtn.addEventListener("click", () => void downloadAnaMotorPaketExport("pdf"));
+  }
+  const notifyExpBtn = document.getElementById("btn-ana-notify-export");
+  if (notifyExpBtn && !notifyExpBtn.dataset.wired) {
+    notifyExpBtn.dataset.wired = "1";
+    notifyExpBtn.addEventListener("click", () => void exportAnaMotorNotifyHistory());
+  }
+  const notifyClrBtn = document.getElementById("btn-ana-notify-clear");
+  if (notifyClrBtn && !notifyClrBtn.dataset.wired) {
+    notifyClrBtn.dataset.wired = "1";
+    notifyClrBtn.addEventListener("click", () => void clearAnaMotorNotifyHistory());
+  }
   const csvIn = document.getElementById("ana-csv-import-input");
   if (csvIn && !csvIn.dataset.wired) {
     csvIn.dataset.wired = "1";
@@ -11793,6 +11886,7 @@ async function mergeAnaMotorArchiveSessions() {
   void refreshAnaMotorArchiveList();
   void loadAnaMotorNotifyPrefs();
   void refreshAnaMotorNotifyHistory();
+  void refreshAnaMotorWeeklySummary();
 })();
 
 /** Dinamit — görsel sürükle-bırak + yapıştır + hatırlatıcı poll (Ümit & Gökçenur) */

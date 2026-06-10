@@ -1324,6 +1324,77 @@ def run_offline() -> int:
     else:
         _ok(f"timeline archived filter={len(archived_only)}")
 
+    print("\n=== Faz P — JSON/PDF export / notify export / haftalik ozet ===")
+    from ilim_assistant.ana_motor_bildirim_gecmis import (
+        clear_notify_history,
+        export_notify_history_json,
+        notify_history_export_enabled,
+    )
+    from ilim_assistant.ana_motor_haftalik_ozet import (
+        build_weekly_timeline_summary,
+        weekly_summary_enabled,
+    )
+    from ilim_assistant.ana_motor_paket_export import (
+        export_paket_history_json,
+        export_paket_history_pdf,
+        paket_json_export_enabled,
+        paket_pdf_export_enabled,
+    )
+
+    if not paket_json_export_enabled():
+        _fail("paket_json_export", "kapali")
+        fails += 1
+    else:
+        _ok("paket JSON export acik")
+    pj = export_paket_history_json(limit=30)
+    if not pj.get("ok") or not pj.get("json"):
+        _fail("paket_json_run", str(pj)[:80])
+        fails += 1
+    else:
+        _ok(f"paket JSON rows={pj.get('row_count')}")
+
+    if not paket_pdf_export_enabled():
+        _fail("paket_pdf_export", "kapali")
+        fails += 1
+    else:
+        _ok("paket PDF export acik")
+    pp = export_paket_history_pdf(limit=30)
+    if not pp.get("ok") or not pp.get("pdf"):
+        _fail("paket_pdf_run", str(pp)[:80])
+        fails += 1
+    else:
+        _ok(f"paket PDF bytes={len(pp.get('pdf') or b'')}")
+
+    if not notify_history_export_enabled():
+        _fail("notify_history_export", "kapali")
+        fails += 1
+    else:
+        _ok("notify history export acik")
+    ne = export_notify_history_json(limit=20)
+    if not ne.get("ok"):
+        _fail("notify_export_json", str(ne)[:80])
+        fails += 1
+    else:
+        _ok(f"notify export count={ne.get('count')}")
+    clr = clear_notify_history()
+    if not clr.get("ok"):
+        _fail("notify_clear", str(clr)[:80])
+        fails += 1
+    else:
+        _ok("notify history temizlendi")
+
+    if not weekly_summary_enabled():
+        _fail("weekly_summary", "kapali")
+        fails += 1
+    else:
+        _ok("haftalik ozet acik")
+    ws = build_weekly_timeline_summary(days=7, limit=20)
+    if not ws.get("ok") or not ws.get("summary_card"):
+        _fail("weekly_summary_build", str(ws)[:80])
+        fails += 1
+    else:
+        _ok(f"haftalik ozet events={ws.get('event_count')}")
+
     print("\n=== Faz D — bilim derin / denge70 / otonom debug ===")
     from ilim_assistant.ana_motor_bilim_derin import (
         apply_bilim_derin_rag_top_k,
@@ -1757,6 +1828,26 @@ def run_live(base: str) -> int:
         fails += 1
     else:
         _ok("Faz O3 timeline filter acik")
+    if not am.get("paket_json_export"):
+        _fail("faz_p1 json", "kapali")
+        fails += 1
+    else:
+        _ok("Faz P1 paket JSON acik")
+    if not am.get("paket_pdf_export"):
+        _fail("faz_p2 pdf", "kapali")
+        fails += 1
+    else:
+        _ok("Faz P2 paket PDF acik")
+    if not am.get("notify_history_export"):
+        _fail("faz_p2 notify_exp", "kapali")
+        fails += 1
+    else:
+        _ok("Faz P2 notify export acik")
+    if not am.get("weekly_summary"):
+        _fail("faz_p3 weekly", "kapali")
+        fails += 1
+    else:
+        _ok("Faz P3 weekly summary acik")
 
     print("\n=== Canli — upload + matris SLO ===")
     chat_url = base.rstrip("/") + "/api/chat/full"

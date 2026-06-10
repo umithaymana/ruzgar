@@ -128,11 +128,19 @@
 | O2 | Bildirim geçmişi paneli | `ana_motor_bildirim_gecmis.py` | `GET /api/ana-motor/notify-history` |
 | O3 | Timeline filtre | `ana_motor_timeline_filtre.py` | `GET /api/ana-motor/sessions/timeline?event_type&session_id&since_days` |
 
-## Sıradaki (Faz P — öneri)
+## Faz P — uygulandı (2026-06-10)
 
-- Paket geçmişi PDF/JSON dışa aktarım
-- Bildirim geçmişi temizle / dışa aktar
-- Timeline olaylarından otomatik haftalık özet kartı
+| # | Görev | Dosya | Durum |
+|---|--------|-------|--------|
+| P1 | Paket geçmişi JSON/PDF | `ana_motor_paket_export.py` | `GET /api/ana-motor/paket-history/export-json` · `export-pdf` |
+| P2 | Bildirim geçmişi temizle/dışa aktar | `ana_motor_bildirim_gecmis.py` | `POST /notify-history/clear` · `GET /notify-history/export` |
+| P3 | Haftalık timeline özet kartı | `ana_motor_haftalik_ozet.py` | `GET /api/ana-motor/sessions/weekly-summary` |
+
+## Sıradaki (Faz Q — öneri)
+
+- Haftalık özet e-posta / masaüstü bildirimi
+- Paket geçmişi karşılaştırma (bu hafta vs geçen hafta)
+- Timeline olaylarından otomatik «hatırla» tetikleme
 
 ## Ortam (özet)
 
