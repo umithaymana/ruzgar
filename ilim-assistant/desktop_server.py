@@ -1430,6 +1430,14 @@ def health():
             not in ("0", "false", "no"),
             "weekly_schedule": os.environ.get("RUZGAR_ANA_WEEKLY_SCHEDULE", "1").strip().lower()
             not in ("0", "false", "no"),
+            "compare_export": os.environ.get("RUZGAR_ANA_COMPARE_EXPORT", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "remember_history_export": os.environ.get(
+                "RUZGAR_ANA_REMEMBER_HISTORY_EXPORT", "1"
+            ).strip().lower()
+            not in ("0", "false", "no"),
+            "schedule_prefs": os.environ.get("RUZGAR_ANA_SCHEDULE_PREFS", "1").strip().lower()
+            not in ("0", "false", "no"),
         },
         "super_brain": _sb,
         "connection": _connection_ui_block(super_brain=_sb),
@@ -3218,6 +3226,48 @@ async def api_ana_motor_remember_history_clear() -> dict[str, Any]:
     return result
 
 
+@app.get("/api/ana-motor/timeline/remember/history/export")
+def api_ana_motor_remember_history_export(format: str = "json", limit: int = 200):
+    """Faz S2 — hatırla geçmişi JSON/CSV dışa aktarım."""
+    from fastapi.responses import PlainTextResponse, Response
+
+    from ilim_assistant.ana_motor_hatirla_gecmis import (
+        export_remember_history_csv,
+        export_remember_history_json,
+        remember_history_export_enabled,
+    )
+
+    if not remember_history_export_enabled():
+        raise HTTPException(status_code=403, detail="Hatırla geçmişi dışa aktarım kapalı.")
+    cap = max(1, min(limit, 500))
+    fmt = (format or "json").strip().lower()
+    if fmt == "csv":
+        out = export_remember_history_csv(limit=cap)
+        if not out.get("ok"):
+            raise HTTPException(status_code=404, detail=str(out.get("error") or "CSV boş."))
+        return PlainTextResponse(
+            content=str(out.get("csv") or ""),
+            media_type="text/csv; charset=utf-8",
+            headers={
+                "Content-Disposition": (
+                    f'attachment; filename="{out.get("filename") or "hatirla_gecmisi.csv"}"'
+                ),
+            },
+        )
+    out = export_remember_history_json(limit=cap)
+    if not out.get("ok"):
+        raise HTTPException(status_code=404, detail=str(out.get("error") or "JSON boş."))
+    return Response(
+        content=str(out.get("json") or "{}").encode("utf-8"),
+        media_type="application/json; charset=utf-8",
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="{out.get("filename") or "hatirla_gecmisi.json"}"'
+            ),
+        },
+    )
+
+
 @app.get("/api/ana-motor/paket-history/compare/chart")
 def api_ana_motor_compare_chart(days: int = 7, limit: int = 120) -> dict[str, Any]:
     """Faz R1 — karşılaştırma çift çubuk grafiği."""
@@ -3227,6 +3277,100 @@ def api_ana_motor_compare_chart(days: int = 7, limit: int = 120) -> dict[str, An
         period_days=max(1, min(days, 30)),
         limit=max(1, min(limit, 200)),
     )
+
+
+@app.get("/api/ana-motor/paket-history/compare/export")
+def api_ana_motor_compare_export(format: str = "csv", days: int = 7):
+    """Faz S1 — karşılaştırma CSV/JSON raporu."""
+    from fastapi.responses import PlainTextResponse, Response
+
+    from ilim_assistant.ana_motor_compare_export import (
+        compare_export_enabled,
+        export_compare_csv,
+        export_compare_json,
+    )
+
+    if not compare_export_enabled():
+        raise HTTPException(status_code=403, detail="Karşılaştırma dışa aktarım kapalı.")
+    period = max(1, min(days, 30))
+    fmt = (format or "csv").strip().lower()
+    if fmt == "json":
+        out = export_compare_json(period_days=period)
+        if not out.get("ok"):
+            raise HTTPException(status_code=404, detail=str(out.get("error") or "JSON boş."))
+        return Response(
+            content=str(out.get("json") or "{}").encode("utf-8"),
+            media_type="application/json; charset=utf-8",
+            headers={
+                "Content-Disposition": (
+                    f'attachment; filename="{out.get("filename") or "karsilastirma.json"}"'
+                ),
+            },
+        )
+    out = export_compare_csv(period_days=period)
+    if not out.get("ok"):
+        raise HTTPException(status_code=404, detail=str(out.get("error") or "CSV boş."))
+    return PlainTextResponse(
+        content=str(out.get("csv") or ""),
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="{out.get("filename") or "karsilastirma.csv"}"'
+            ),
+        },
+    )
+
+
+@app.get("/api/ana-motor/paket-history/compare/export-pdf")
+def api_ana_motor_compare_export_pdf(days: int = 7):
+    """Faz S1 — karşılaştırma PDF raporu."""
+    from fastapi.responses import Response
+
+    from ilim_assistant.ana_motor_compare_export import (
+        compare_export_enabled,
+        export_compare_pdf,
+    )
+
+    if not compare_export_enabled():
+        raise HTTPException(status_code=403, detail="Karşılaştırma dışa aktarım kapalı.")
+    out = export_compare_pdf(period_days=max(1, min(days, 30)))
+    if not out.get("ok"):
+        raise HTTPException(status_code=404, detail=str(out.get("error") or "PDF boş."))
+    return Response(
+        content=bytes(out.get("pdf") or b""),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="{out.get("filename") or "karsilastirma.pdf"}"'
+            ),
+        },
+    )
+
+
+class SchedulePrefsBody(BaseModel):
+    schedule_enabled: bool | None = None
+    poll_sec: int | None = None
+    period_days: int | None = None
+
+
+@app.get("/api/ana-motor/schedule-prefs")
+def api_ana_motor_schedule_prefs_get() -> dict[str, Any]:
+    """Faz S3 — zamanlayıcı tercihlerini oku."""
+    from ilim_assistant.ana_motor_schedule_tercih import load_schedule_prefs
+
+    return load_schedule_prefs()
+
+
+@app.post("/api/ana-motor/schedule-prefs")
+async def api_ana_motor_schedule_prefs_save(body: SchedulePrefsBody) -> dict[str, Any]:
+    """Faz S3 — zamanlayıcı tercihlerini kaydet."""
+    from ilim_assistant.ana_motor_schedule_tercih import save_schedule_prefs
+
+    payload = body.model_dump(exclude_none=True)
+    result = await run_in_threadpool(save_schedule_prefs, payload)
+    if not result.get("ok"):
+        raise HTTPException(status_code=400, detail=str(result.get("error") or "Kayıt başarısız."))
+    return result
 
 
 @app.get("/api/ana-motor/sessions/weekly-summary/schedule")

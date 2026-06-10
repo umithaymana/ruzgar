@@ -11600,6 +11600,95 @@ async function refreshAnaMotorRememberHistory() {
   }
 }
 
+async function downloadAnaMotorCompareExport(kind) {
+  const paths = {
+    csv: "/api/ana-motor/paket-history/compare/export?format=csv&days=7",
+    pdf: "/api/ana-motor/paket-history/compare/export-pdf?days=7",
+  };
+  const names = {
+    csv: "ruzgar_ana_motor_karsilastirma_7g.csv",
+    pdf: "ruzgar_ana_motor_karsilastirma_7g.pdf",
+  };
+  try {
+    const res = await fetch(`${API}${paths[kind] || paths.csv}`);
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      setStatus(j.detail || "Karşılaştırma indirilemedi", "Rüzgar");
+      return;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = names[kind] || names.csv;
+    a.click();
+    URL.revokeObjectURL(url);
+    flashRuzgarDurum(`Karşılaştırma ${kind.toUpperCase()} indirildi`);
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+  }
+}
+
+async function exportAnaMotorRememberHistory() {
+  try {
+    const res = await fetch(`${API}/api/ana-motor/timeline/remember/history/export?format=json&limit=200`);
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      setStatus(j.detail || "Hatırla geçmişi indirilemedi", "Rüzgar");
+      return;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "ruzgar_ana_motor_hatirla_gecmisi.json";
+    a.click();
+    URL.revokeObjectURL(url);
+    flashRuzgarDurum("Hatırla geçmişi dışa aktarıldı");
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+  }
+}
+
+async function loadAnaMotorSchedulePrefs() {
+  try {
+    const res = await fetch(`${API}/api/ana-motor/schedule-prefs`);
+    const j = await res.json().catch(() => ({}));
+    const p = j.prefs || {};
+    const en = document.getElementById("ana-sched-enabled");
+    const poll = document.getElementById("ana-sched-poll");
+    const days = document.getElementById("ana-sched-days");
+    if (en) en.checked = p.schedule_enabled !== false;
+    if (poll) poll.value = String(p.poll_sec || 3600);
+    if (days) days.value = String(p.period_days || 7);
+  } catch (_) {
+    /* ignore */
+  }
+}
+
+async function saveAnaMotorSchedulePrefs() {
+  const body = {
+    schedule_enabled: !!document.getElementById("ana-sched-enabled")?.checked,
+    poll_sec: parseInt(document.getElementById("ana-sched-poll")?.value || "3600", 10),
+    period_days: parseInt(document.getElementById("ana-sched-days")?.value || "7", 10),
+  };
+  try {
+    const res = await fetch(`${API}/api/ana-motor/schedule-prefs`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) {
+      setStatus(j.detail || j.error || "Zamanlayıcı tercihleri kaydedilemedi", "Rüzgar");
+      return;
+    }
+    setStatus(j.hint || "Zamanlayıcı tercihleri kaydedildi.", "Rüzgar");
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+  }
+}
+
 async function clearAnaMotorRememberHistory() {
   try {
     const res = await fetch(`${API}/api/ana-motor/timeline/remember/history/clear`, { method: "POST" });
@@ -12038,6 +12127,26 @@ async function mergeAnaMotorArchiveSessions() {
     rememberClrBtn.dataset.wired = "1";
     rememberClrBtn.addEventListener("click", () => void clearAnaMotorRememberHistory());
   }
+  const rememberExpBtn = document.getElementById("btn-ana-remember-export");
+  if (rememberExpBtn && !rememberExpBtn.dataset.wired) {
+    rememberExpBtn.dataset.wired = "1";
+    rememberExpBtn.addEventListener("click", () => void exportAnaMotorRememberHistory());
+  }
+  const cmpCsvBtn = document.getElementById("btn-ana-compare-csv");
+  if (cmpCsvBtn && !cmpCsvBtn.dataset.wired) {
+    cmpCsvBtn.dataset.wired = "1";
+    cmpCsvBtn.addEventListener("click", () => void downloadAnaMotorCompareExport("csv"));
+  }
+  const cmpPdfBtn = document.getElementById("btn-ana-compare-pdf");
+  if (cmpPdfBtn && !cmpPdfBtn.dataset.wired) {
+    cmpPdfBtn.dataset.wired = "1";
+    cmpPdfBtn.addEventListener("click", () => void downloadAnaMotorCompareExport("pdf"));
+  }
+  const schedPrefBtn = document.getElementById("btn-ana-schedule-prefs-save");
+  if (schedPrefBtn && !schedPrefBtn.dataset.wired) {
+    schedPrefBtn.dataset.wired = "1";
+    schedPrefBtn.addEventListener("click", () => void saveAnaMotorSchedulePrefs());
+  }
   const csvIn = document.getElementById("ana-csv-import-input");
   if (csvIn && !csvIn.dataset.wired) {
     csvIn.dataset.wired = "1";
@@ -12068,6 +12177,7 @@ async function mergeAnaMotorArchiveSessions() {
   }
   void refreshAnaMotorArchiveList();
   void loadAnaMotorNotifyPrefs();
+  void loadAnaMotorSchedulePrefs();
   void refreshAnaMotorNotifyHistory();
   void refreshAnaMotorWeeklySummary();
 })();

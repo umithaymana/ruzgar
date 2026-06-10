@@ -1516,6 +1516,70 @@ def run_offline() -> int:
     else:
         _ok(f"schedule tick skipped={tk.get('skipped')}")
 
+    print("\n=== Faz S — compare export / hatirla export / schedule prefs ===")
+    from ilim_assistant.ana_motor_compare_export import (
+        compare_export_enabled,
+        export_compare_csv,
+        export_compare_pdf,
+    )
+    from ilim_assistant.ana_motor_hatirla_gecmis import (
+        export_remember_history_json,
+        remember_history_export_enabled,
+    )
+    from ilim_assistant.ana_motor_schedule_tercih import (
+        load_schedule_prefs,
+        save_schedule_prefs,
+        schedule_prefs_enabled,
+    )
+
+    if not compare_export_enabled():
+        _fail("compare_export", "kapali")
+        fails += 1
+    else:
+        _ok("compare export acik")
+    ce = export_compare_csv(period_days=7)
+    if not ce.get("ok") or not ce.get("csv"):
+        _fail("compare_csv", str(ce)[:80])
+        fails += 1
+    else:
+        _ok(f"compare CSV rows={ce.get('row_count')}")
+    cp = export_compare_pdf(period_days=7)
+    if not cp.get("ok") or not cp.get("pdf"):
+        _fail("compare_pdf", str(cp)[:80])
+        fails += 1
+    else:
+        _ok(f"compare PDF bytes={len(cp.get('pdf') or b'')}")
+
+    if not remember_history_export_enabled():
+        _fail("remember_export", "kapali")
+        fails += 1
+    else:
+        _ok("hatirla export acik")
+    re = export_remember_history_json(limit=20)
+    if not re.get("ok"):
+        _fail("remember_export_json", str(re)[:80])
+        fails += 1
+    else:
+        _ok(f"remember export count={re.get('count')}")
+
+    if not schedule_prefs_enabled():
+        _fail("schedule_prefs", "kapali")
+        fails += 1
+    else:
+        _ok("schedule prefs acik")
+    sp = save_schedule_prefs({"poll_sec": 3600, "period_days": 7})
+    if not sp.get("ok"):
+        _fail("schedule_prefs_save", str(sp)[:80])
+        fails += 1
+    else:
+        _ok("schedule prefs kaydedildi")
+    spl = load_schedule_prefs()
+    if not spl.get("ok"):
+        _fail("schedule_prefs_load", str(spl)[:80])
+        fails += 1
+    else:
+        _ok(f"schedule poll={spl.get('prefs', {}).get('poll_sec')}")
+
     print("\n=== Faz D — bilim derin / denge70 / otonom debug ===")
     from ilim_assistant.ana_motor_bilim_derin import (
         apply_bilim_derin_rag_top_k,
@@ -1999,6 +2063,21 @@ def run_live(base: str) -> int:
         fails += 1
     else:
         _ok("Faz R3 weekly schedule acik")
+    if not am.get("compare_export"):
+        _fail("faz_s1 compare_exp", "kapali")
+        fails += 1
+    else:
+        _ok("Faz S1 compare export acik")
+    if not am.get("remember_history_export"):
+        _fail("faz_s2 remember_exp", "kapali")
+        fails += 1
+    else:
+        _ok("Faz S2 remember export acik")
+    if not am.get("schedule_prefs"):
+        _fail("faz_s3 schedule_prefs", "kapali")
+        fails += 1
+    else:
+        _ok("Faz S3 schedule prefs acik")
 
     print("\n=== Canli — upload + matris SLO ===")
     chat_url = base.rstrip("/") + "/api/chat/full"

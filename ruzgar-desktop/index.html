@@ -537,7 +537,7 @@
               </div>
             </div>
             <div id="ana-motor-archive-card" class="mini-card ana-motor-archive-card">
-              <strong>Arşiv &amp; birleştir (Faz R)</strong>
+              <strong>Arşiv &amp; birleştir (Faz S)</strong>
               <p id="ana-motor-archive-summary" class="ana-motor-card-sub">Kalıcı arşiv oturumları</p>
               <div id="ana-motor-weekly-summary" class="mini-card ana-motor-weekly-summary" hidden>
                 <strong id="ana-motor-weekly-title">Haftalık özet</strong>
@@ -546,10 +546,15 @@
                   <strong id="ana-motor-compare-title">Karşılaştırma</strong>
                   <p id="ana-motor-compare-body" class="ana-motor-card-sub"></p>
                   <div id="ana-motor-compare-chart" class="ana-motor-compare-chart" hidden></div>
+                  <div class="ana-motor-patch-actions">
+                    <button type="button" class="btn-secondary btn-compact" id="btn-ana-compare-csv">Karş. CSV</button>
+                    <button type="button" class="btn-secondary btn-compact" id="btn-ana-compare-pdf">Karş. PDF</button>
+                  </div>
                 </div>
                 <div id="ana-motor-remember-history" class="ana-motor-remember-history" hidden>
                   <strong>Son hatırla işlemleri</strong>
                   <div class="ana-motor-patch-actions">
+                    <button type="button" class="btn-secondary btn-compact" id="btn-ana-remember-export">Dışa aktar</button>
                     <button type="button" class="btn-secondary btn-compact" id="btn-ana-remember-clear">Temizle</button>
                   </div>
                   <ul id="ana-motor-remember-history-list" class="ana-motor-remember-history-list"></ul>
@@ -561,6 +566,13 @@
                 </div>
               </div>
               <div id="ana-motor-paket-grafik" class="ana-motor-paket-grafik" hidden></div>
+              <div id="ana-motor-schedule-prefs" class="ana-motor-notify-prefs mini-card">
+                <strong>Zamanlayıcı tercihleri</strong>
+                <label class="ana-motor-pref-row"><input type="checkbox" id="ana-sched-enabled" checked /> Zamanlayıcı açık</label>
+                <label class="ana-motor-pref-row">Poll (sn): <input type="number" id="ana-sched-poll" class="input-compact" min="300" max="86400" value="3600" /></label>
+                <label class="ana-motor-pref-row">Dönem (gün): <input type="number" id="ana-sched-days" class="input-compact" min="1" max="30" value="7" /></label>
+                <button type="button" class="btn-secondary btn-compact" id="btn-ana-schedule-prefs-save">Kaydet</button>
+              </div>
               <div id="ana-motor-notify-prefs" class="ana-motor-notify-prefs mini-card">
                 <strong>Bildirim tercihleri</strong>
                 <label class="ana-motor-pref-row"><input type="checkbox" id="ana-pref-desktop" checked /> Masaüstü</label>

@@ -152,11 +152,19 @@
 | R2 | Hatırla geçmişi paneli | `ana_motor_hatirla_gecmis.py` | `GET /timeline/remember/history` |
 | R3 | Haftalık özet zamanlayıcı | `ana_motor_haftalik_zamanlayici.py` | `POST /weekly-summary/schedule/tick` |
 
-## Sıradaki (Faz S — öneri)
+## Faz S — uygulandı (2026-06-10)
 
-- Karşılaştırma CSV/PDF raporu
-- Hatırla geçmişi dışa aktar
-- Zamanlayıcı tercih paneli (poll aralığı UI)
+| # | Görev | Dosya | Durum |
+|---|--------|-------|--------|
+| S1 | Karşılaştırma CSV/PDF raporu | `ana_motor_compare_export.py` | `GET /compare/export` · `export-pdf` |
+| S2 | Hatırla geçmişi dışa aktar | `ana_motor_hatirla_gecmis.py` | `GET /timeline/remember/history/export` |
+| S3 | Zamanlayıcı tercih paneli | `ana_motor_schedule_tercih.py` | `GET/POST /api/ana-motor/schedule-prefs` |
+
+## Sıradaki (Faz T — öneri)
+
+- Tüm Ana Motor panelleri tek «süper özet» PDF
+- Zamanlayıcı + bildirim birleşik tercih kartı
+- Karşılaştırma e-posta raporu (haftalık SMTP)
 
 ## Ortam (özet)
 

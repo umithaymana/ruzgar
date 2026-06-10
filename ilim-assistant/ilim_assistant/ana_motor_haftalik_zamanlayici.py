@@ -23,9 +23,14 @@ def weekly_schedule_enabled() -> bool:
 
 def _poll_sec() -> int:
     try:
-        return max(300, int(os.environ.get("RUZGAR_ANA_WEEKLY_SCHEDULE_POLL_SEC", "3600")))
-    except ValueError:
-        return 3600
+        from ilim_assistant.ana_motor_schedule_tercih import effective_schedule_poll_sec
+
+        return effective_schedule_poll_sec()
+    except Exception:
+        try:
+            return max(300, int(os.environ.get("RUZGAR_ANA_WEEKLY_SCHEDULE_POLL_SEC", "3600")))
+        except ValueError:
+            return 3600
 
 
 def _load_state() -> dict[str, Any]:
@@ -72,10 +77,22 @@ def get_weekly_schedule_status() -> dict[str, Any]:
     }
 
 
-def tick_weekly_schedule(*, days: int = 7) -> dict[str, Any]:
+def tick_weekly_schedule(*, days: int | None = None) -> dict[str, Any]:
     """Poll tick — cooldown uygunsa haftalık özet bildirimi gönder."""
     if not weekly_schedule_enabled():
         return {"ok": True, "skipped": True, "reason": "schedule_disabled"}
+    try:
+        from ilim_assistant.ana_motor_schedule_tercih import (
+            effective_schedule_period_days,
+            load_schedule_prefs,
+        )
+
+        prefs = load_schedule_prefs().get("prefs") or {}
+        if not prefs.get("schedule_enabled", True):
+            return {"ok": True, "skipped": True, "reason": "schedule_prefs_disabled"}
+    except Exception:
+        prefs = {}
+    period = int(days if days is not None else effective_schedule_period_days())
     state = _load_state()
     now = time.time()
     poll = _poll_sec()
@@ -103,7 +120,7 @@ def tick_weekly_schedule(*, days: int = 7) -> dict[str, Any]:
         if _cooldown_active():
             return {"ok": True, "skipped": True, "reason": "notify_cooldown"}
 
-        summary = build_weekly_timeline_summary(days=max(1, min(days, 30)))
+        summary = build_weekly_timeline_summary(days=max(1, min(period, 30)))
         result = attach_weekly_notifications(summary, send_desktop=True, send_email=False)
         if result.get("desktop_notifications"):
             state = _load_state()
