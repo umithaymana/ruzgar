@@ -1644,6 +1644,63 @@ def run_offline() -> int:
     else:
         _ok(f"compare email sent={ce.get('sent')}")
 
+    print("\n=== Faz U — super ozet email / unified export / dashboard HTML ===")
+    from ilim_assistant.ana_motor_birlesik_tercih import (
+        export_unified_prefs_json,
+        import_unified_prefs_json,
+        unified_prefs_export_enabled,
+    )
+    from ilim_assistant.ana_motor_dashboard_html import (
+        build_dashboard_html_summary,
+        dashboard_html_enabled,
+    )
+    from ilim_assistant.ana_motor_super_ozet_email import (
+        maybe_send_super_ozet_email,
+        super_ozet_email_enabled,
+    )
+
+    if not super_ozet_email_enabled():
+        _fail("super_ozet_email", "kapali")
+        fails += 1
+    else:
+        _ok("super ozet email acik")
+    se = maybe_send_super_ozet_email(period_days=7, force=False)
+    if not se.get("ok") and se.get("error"):
+        _fail("super_ozet_email_run", str(se)[:80])
+        fails += 1
+    else:
+        _ok(f"super ozet email sent={se.get('sent')}")
+
+    if not unified_prefs_export_enabled():
+        _fail("unified_prefs_export", "kapali")
+        fails += 1
+    else:
+        _ok("unified prefs export acik")
+    upe = export_unified_prefs_json()
+    if not upe.get("ok") or not upe.get("json"):
+        _fail("unified_prefs_export_run", str(upe)[:80])
+        fails += 1
+    else:
+        _ok(f"unified export bytes={len(upe.get('json') or '')}")
+    upi = import_unified_prefs_json(upe.get("json") or "{}")
+    if not upi.get("ok"):
+        _fail("unified_prefs_import_run", str(upi)[:80])
+        fails += 1
+    else:
+        _ok("unified prefs import roundtrip")
+
+    if not dashboard_html_enabled():
+        _fail("dashboard_html", "kapali")
+        fails += 1
+    else:
+        _ok("dashboard HTML acik")
+    dh = build_dashboard_html_summary(period_days=7)
+    if not dh.get("ok") or not dh.get("html"):
+        _fail("dashboard_html_run", str(dh)[:80])
+        fails += 1
+    else:
+        _ok(f"dashboard HTML bytes={len(dh.get('html') or '')}")
+
     print("\n=== Faz D — bilim derin / denge70 / otonom debug ===")
     from ilim_assistant.ana_motor_bilim_derin import (
         apply_bilim_derin_rag_top_k,
@@ -2157,6 +2214,21 @@ def run_live(base: str) -> int:
         fails += 1
     else:
         _ok("Faz T3 compare email acik")
+    if not am.get("super_ozet_email"):
+        _fail("faz_u1 super_email", "kapali")
+        fails += 1
+    else:
+        _ok("Faz U1 super ozet email acik")
+    if not am.get("unified_prefs_export"):
+        _fail("faz_u2 unified_export", "kapali")
+        fails += 1
+    else:
+        _ok("Faz U2 unified prefs export acik")
+    if not am.get("dashboard_html"):
+        _fail("faz_u3 dashboard_html", "kapali")
+        fails += 1
+    else:
+        _ok("Faz U3 dashboard HTML acik")
 
     print("\n=== Canli — upload + matris SLO ===")
     chat_url = base.rstrip("/") + "/api/chat/full"

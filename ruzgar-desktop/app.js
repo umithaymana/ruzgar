@@ -11299,6 +11299,7 @@ async function loadAnaMotorUnifiedPrefs() {
     set("ana-uni-sched-poll", p.schedule_poll_sec || 3600);
     set("ana-uni-period-days", p.period_days || 7);
     set("ana-uni-compare-email", !!p.compare_email_enabled);
+    set("ana-uni-super-email", !!p.super_ozet_email_enabled);
     startAnaMotorReminderNotifyPoll(p.remind_poll_sec || 120);
   } catch (_) {
     startAnaMotorReminderNotifyPoll(120);
@@ -11315,6 +11316,7 @@ async function saveAnaMotorUnifiedPrefs() {
     schedule_poll_sec: parseInt(document.getElementById("ana-uni-sched-poll")?.value || "3600", 10),
     period_days: parseInt(document.getElementById("ana-uni-period-days")?.value || "7", 10),
     compare_email_enabled: !!document.getElementById("ana-uni-compare-email")?.checked,
+    super_ozet_email_enabled: !!document.getElementById("ana-uni-super-email")?.checked,
   };
   try {
     const res = await fetch(`${API}/api/ana-motor/unified-prefs`, {
@@ -11372,6 +11374,79 @@ async function sendAnaMotorCompareEmail() {
     } else {
       setStatus(j.reason || "E-posta gönderilmedi (SMTP/tercih kontrol edin).", "Rüzgar");
     }
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+  }
+}
+
+async function sendAnaMotorSuperOzetEmail() {
+  try {
+    const res = await fetch(`${API}/api/ana-motor/super-ozet/email?days=7&force=1`, {
+      method: "POST",
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setStatus(j.detail || j.error || "Süper özet e-postası gönderilemedi", "Rüzgar");
+      return;
+    }
+    if (j.sent) {
+      setStatus(`Süper özet gönderildi: ${j.to || "e-posta"}`, "Rüzgar");
+      void refreshAnaMotorNotifyHistory();
+    } else {
+      setStatus(j.reason || "E-posta gönderilmedi (SMTP/tercih kontrol edin).", "Rüzgar");
+    }
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+  }
+}
+
+async function openAnaMotorDashboardHtml() {
+  try {
+    const url = `${API}/api/ana-motor/dashboard/summary-html?days=7`;
+    window.open(url, "_blank", "noopener,noreferrer");
+    flashRuzgarDurum("Dashboard HTML açıldı");
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+  }
+}
+
+async function exportAnaMotorUnifiedPrefs() {
+  try {
+    const res = await fetch(`${API}/api/ana-motor/unified-prefs/export`);
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      setStatus(j.detail || "Tercih dışa aktarılamadı", "Rüzgar");
+      return;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "ruzgar_ana_motor_unified_prefs.json";
+    a.click();
+    URL.revokeObjectURL(url);
+    flashRuzgarDurum("Birleşik tercihler dışa aktarıldı");
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+  }
+}
+
+async function importAnaMotorUnifiedPrefs(file) {
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const res = await fetch(`${API}/api/ana-motor/unified-prefs/import`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ json_text: text }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) {
+      setStatus(j.detail || j.error || "Tercih içe aktarılamadı", "Rüzgar");
+      return;
+    }
+    setStatus(j.hint || "Birleşik tercihler içe aktarıldı.", "Rüzgar");
+    void loadAnaMotorUnifiedPrefs();
   } catch (e) {
     setStatus(formatClientChatError(e), "Rüzgar");
   }
@@ -12169,6 +12244,30 @@ async function mergeAnaMotorArchiveSessions() {
   if (cmpEmailBtn && !cmpEmailBtn.dataset.wired) {
     cmpEmailBtn.dataset.wired = "1";
     cmpEmailBtn.addEventListener("click", () => void sendAnaMotorCompareEmail());
+  }
+  const superEmailBtn = document.getElementById("btn-ana-super-ozet-email");
+  if (superEmailBtn && !superEmailBtn.dataset.wired) {
+    superEmailBtn.dataset.wired = "1";
+    superEmailBtn.addEventListener("click", () => void sendAnaMotorSuperOzetEmail());
+  }
+  const dashHtmlBtn = document.getElementById("btn-ana-dashboard-html");
+  if (dashHtmlBtn && !dashHtmlBtn.dataset.wired) {
+    dashHtmlBtn.dataset.wired = "1";
+    dashHtmlBtn.addEventListener("click", () => void openAnaMotorDashboardHtml());
+  }
+  const unifiedExportBtn = document.getElementById("btn-ana-unified-prefs-export");
+  if (unifiedExportBtn && !unifiedExportBtn.dataset.wired) {
+    unifiedExportBtn.dataset.wired = "1";
+    unifiedExportBtn.addEventListener("click", () => void exportAnaMotorUnifiedPrefs());
+  }
+  const unifiedImportIn = document.getElementById("ana-unified-prefs-import");
+  if (unifiedImportIn && !unifiedImportIn.dataset.wired) {
+    unifiedImportIn.dataset.wired = "1";
+    unifiedImportIn.addEventListener("change", () => {
+      const f = unifiedImportIn.files && unifiedImportIn.files[0];
+      void importAnaMotorUnifiedPrefs(f);
+      unifiedImportIn.value = "";
+    });
   }
   const csvIn = document.getElementById("ana-csv-import-input");
   if (csvIn && !csvIn.dataset.wired) {

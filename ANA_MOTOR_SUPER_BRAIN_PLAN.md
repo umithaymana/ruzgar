@@ -168,11 +168,19 @@
 | T2 | Birleşik tercih kartı | `ana_motor_birlesik_tercih.py` | `GET/POST /api/ana-motor/unified-prefs` |
 | T3 | Karşılaştırma e-posta raporu | `ana_motor_compare_email.py` | `POST /paket-history/compare/email` |
 
-## Sıradaki (Faz U — öneri)
+## Faz U — uygulandı (2026-06-10)
 
-- Süper özet otomatik e-posta (haftalık)
-- Birleşik tercih JSON dışa aktar / içe aktar
-- Ana Motor dashboard tek sayfa özet HTML
+| # | Görev | Dosya | Durum |
+|---|--------|-------|--------|
+| U1 | Süper özet otomatik e-posta (haftalık) | `ana_motor_super_ozet_email.py` | `POST /api/ana-motor/super-ozet/email` |
+| U2 | Birleşik tercih JSON dışa/içe aktar | `ana_motor_birlesik_tercih.py` | `GET/POST /unified-prefs/export` + `/import` |
+| U3 | Ana Motor dashboard HTML özeti | `ana_motor_dashboard_html.py` | `GET /api/ana-motor/dashboard/summary-html` |
+
+## Sıradaki (Faz V — öneri)
+
+- Süper özet + dashboard otomatik e-posta birleşik
+- Dashboard HTML PDF dışa aktarım
+- Tüm tercihler tek JSON yedek/geri yükle (tam arşiv)
 
 ## Ortam (özet)
 

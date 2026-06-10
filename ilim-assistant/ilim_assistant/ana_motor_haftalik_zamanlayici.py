@@ -128,6 +128,12 @@ def tick_weekly_schedule(*, days: int | None = None) -> dict[str, Any]:
             result["compare_email_status"] = maybe_send_compare_email(period_days=period)
         except Exception:
             pass
+        try:
+            from ilim_assistant.ana_motor_super_ozet_email import maybe_send_super_ozet_email
+
+            result["super_ozet_email_status"] = maybe_send_super_ozet_email(period_days=period)
+        except Exception:
+            pass
         if result.get("desktop_notifications"):
             state = _load_state()
             state["last_notify_at"] = now

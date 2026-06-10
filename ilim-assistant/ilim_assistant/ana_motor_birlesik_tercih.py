@@ -41,8 +41,53 @@ def load_unified_prefs() -> dict[str, Any]:
         "schedule_poll_sec": int(schedule.get("poll_sec") or 3600),
         "period_days": int(schedule.get("period_days") or 7),
         "compare_email_enabled": bool(schedule.get("compare_email_enabled", False)),
+        "super_ozet_email_enabled": bool(schedule.get("super_ozet_email_enabled", False)),
     }
     return {"ok": True, "prefs": merged}
+
+
+def unified_prefs_export_enabled() -> bool:
+    return os.environ.get("RUZGAR_ANA_UNIFIED_PREFS_EXPORT", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
+def export_unified_prefs_json() -> dict[str, Any]:
+    if not unified_prefs_export_enabled():
+        return {"ok": False, "error": "Birleşik tercih dışa aktarım kapalı."}
+    import json
+    import time
+
+    loaded = load_unified_prefs()
+    payload = {
+        "generated_at": time.time(),
+        "prefs": loaded.get("prefs") or {},
+    }
+    return {
+        "ok": True,
+        "json": json.dumps(payload, ensure_ascii=False, indent=2),
+        "filename": "ruzgar_ana_motor_unified_prefs.json",
+    }
+
+
+def import_unified_prefs_json(json_text: str) -> dict[str, Any]:
+    if not unified_prefs_export_enabled():
+        return {"ok": False, "error": "Birleşik tercih içe aktarım kapalı."}
+    import json
+
+    text = (json_text or "").strip()
+    if not text:
+        return {"ok": False, "error": "JSON boş."}
+    try:
+        data = json.loads(text)
+    except Exception as exc:
+        return {"ok": False, "error": f"JSON parse: {exc}"}
+    prefs = data.get("prefs") if isinstance(data, dict) else data
+    if not isinstance(prefs, dict):
+        return {"ok": False, "error": "prefs alanı bulunamadı."}
+    return save_unified_prefs(prefs)
 
 
 def save_unified_prefs(prefs: dict[str, Any]) -> dict[str, Any]:
@@ -77,6 +122,8 @@ def save_unified_prefs(prefs: dict[str, Any]) -> dict[str, Any]:
         schedule_payload["period_days"] = prefs["period_days"]
     if "compare_email_enabled" in prefs:
         schedule_payload["compare_email_enabled"] = prefs["compare_email_enabled"]
+    if "super_ozet_email_enabled" in prefs:
+        schedule_payload["super_ozet_email_enabled"] = prefs["super_ozet_email_enabled"]
     if schedule_payload:
         try:
             from ilim_assistant.ana_motor_schedule_tercih import save_schedule_prefs
