@@ -30,7 +30,8 @@ def gemini_cooldown_active() -> bool:
 
 def mark_gemini_quota_hit() -> None:
     global _COOLDOWN_UNTIL
-    _COOLDOWN_UNTIL = time.monotonic() + float(_cooldown_sec())
+    # Aynı oturumda tekrar API çağrısı yapılmasın — anında soğuma
+    _COOLDOWN_UNTIL = max(_COOLDOWN_UNTIL, time.monotonic() + float(_cooldown_sec()))
     try:
         stamp = Path(os.environ.get("TEMP", ".")) / "ruzgar-gemini-cooldown.txt"
         stamp.write_text(str(_COOLDOWN_UNTIL), encoding="utf-8")

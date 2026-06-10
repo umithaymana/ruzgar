@@ -130,7 +130,19 @@ def run_offline() -> int:
     gund = maybe_gundelik_instant_reply(
         "Sadece sohbet — nasılsın diye sormak istedim", "genel", {}
     )
-    if not gund or "İyiyim" not in gund:
+    try:
+        from ilim_assistant.ruzgar_dogal_sohbet_faz91 import dogal_sohbet_enabled
+
+        _dogal_on = dogal_sohbet_enabled()
+    except Exception:
+        _dogal_on = False
+    if _dogal_on:
+        if gund is not None:
+            _fail("gundelik instant (Faz 91)", "şablon kapalı olmalıydı")
+            fails += 1
+        else:
+            _ok("gundelik: Faz 91 — şablon yok, LLM yolu")
+    elif not gund or "İyiyim" not in gund:
         _fail("gundelik instant", gund or "boş")
         fails += 1
     else:
@@ -282,6 +294,75 @@ def run_offline() -> int:
         fails += 1
     else:
         _ok(f"ajan adımları ({len(steps)})")
+
+    print("\n=== Faz 92 — Ana Motor ajan döngüsü ===")
+    from ilim_assistant.ana_motor_agent_loop import (
+        agent_loop_enabled,
+        should_run_ana_motor_agent_loop,
+    )
+
+    if not agent_loop_enabled():
+        _fail("agent_loop enabled", "kapalı")
+        fails += 1
+    else:
+        _ok("agent_loop açık")
+    p_patch = plan_question("README dosyasına not ekle", "genel", {"programlama": True})
+    if should_run_ana_motor_agent_loop(
+        "ilim-assistant/README.md dosyasına kısa not ekle",
+        "genel",
+        p_patch,
+        workspace_root=str(repo),
+    ):
+        _ok("agent_loop: dosya işlemi algılandı")
+    else:
+        _fail("agent_loop dosya", "True bekleniyordu")
+        fails += 1
+    if not should_run_ana_motor_agent_loop(
+        "Osmanlı padişahı kimdir",
+        "genel",
+        plan_question("Osmanlı padişahı kimdir", "genel", {}),
+    ):
+        _ok("agent_loop: bilgi sorusu atlandı")
+    else:
+        _fail("agent_loop bilgi", "False bekleniyordu")
+        fails += 1
+
+    print("\n=== Faz 93 — checkpoint ===")
+    from ilim_assistant.ana_motor_checkpoint import (
+        clear_checkpoint,
+        is_resume_message,
+        load_checkpoint,
+        save_checkpoint,
+    )
+
+    cp = save_checkpoint(
+        str(repo),
+        turn_index=1,
+        last_user="test görev",
+        last_reply="@@write test",
+        plan_primary="islem",
+        agent_phase="planning",
+    )
+    if cp and load_checkpoint(str(repo)) and is_resume_message("devam et"):
+        _ok("checkpoint kaydet/yükle")
+    else:
+        _fail("checkpoint", "kayıt okunamadı")
+        fails += 1
+    clear_checkpoint(str(repo))
+
+    print("\n=== Faz 94 — routing KPI ===")
+    from ilim_assistant.ana_motor_routing_kpi import collect_routing_kpi
+
+    kpi = collect_routing_kpi()
+    rate = kpi.pass_rate_pct
+    print(f"  Routing: {kpi.passed}/{kpi.total} ({rate:.1f}%) hedef >=90%")
+    for line in kpi.failed[:6]:
+        print(f"    · {line}")
+    if kpi.meets_target:
+        _ok(f"routing KPI >= {kpi.pass_rate_pct:.0f}%")
+    else:
+        _fail("routing KPI", f"{rate:.1f}% < 90%")
+        fails += 1
 
     print("\n=== prepare_turn (LLM çağrısı yok) ===")
     prep = prepare_turn(

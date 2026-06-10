@@ -770,6 +770,18 @@ def local_rag_strong_enough_to_skip_web(
 
 
 def _genel_no_context_directive() -> str:
+    try:
+        from ilim_assistant.ruzgar_dogal_sohbet_faz91 import dogal_sohbet_enabled
+
+        if dogal_sohbet_enabled():
+            return (
+                "\n\n[TALİMAT — GENEL SOHBET]\n"
+                "Bu turda yerel arşiv/indeks veya web özeti taşınmadı. "
+                "Ümit abi ile **doğal sohbet** et: akıcı paragraf, şablon karşılama yok. "
+                "Soruya göre uzunluk esnek; bilmediğin özel güncel olayı uydurma.\n"
+            )
+    except Exception:
+        pass
     return (
         "\n\n[TALİMAT — GENEL SOHBET]\n"
         "Bu turda yerel arşiv/indeks veya web özeti taşınmadı veya yetersiz kaldı. "
@@ -1702,6 +1714,20 @@ def prepare_turn(
     )
 
     system = pick_system(coding_mode, m)
+    if m in ("genel", "uretim", "gelisim") and not coding_mode:
+        try:
+            from ilim_assistant.ruzgar_dogal_sohbet_faz91 import (
+                build_natural_sohbet_system_addon,
+                dogal_sohbet_enabled,
+                is_natural_conversation_turn,
+            )
+
+            if dogal_sohbet_enabled() and is_natural_conversation_turn(
+                msg, m, turn_plan, history=history
+            ):
+                system = system + "\n\n" + build_natural_sohbet_system_addon()
+        except Exception:
+            pass
     model = resolve_model(
         coding_mode,
         message=msg,

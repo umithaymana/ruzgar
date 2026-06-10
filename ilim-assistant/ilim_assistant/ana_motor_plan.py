@@ -733,11 +733,26 @@ def is_casual_conversation_turn(
     message: str,
     mode_norm: str,
     question_plan: QuestionPlan | None = None,
+    *,
+    history: list | None = None,
 ) -> bool:
     """
     Sohbet / gündelik tur — ağır RAG ve dev hafıza yok; Gemini hızlı yol.
     Tek bir kalıba bağlı değil; plan + mesaj birlikte değerlendirilir.
+    Faz 91: doğal sohbet algısı genişletilir (şablon yerine LLM).
     """
+    try:
+        from ilim_assistant.ruzgar_dogal_sohbet_faz91 import (
+            dogal_sohbet_enabled,
+            is_natural_conversation_turn,
+        )
+
+        if dogal_sohbet_enabled():
+            return is_natural_conversation_turn(
+                message, mode_norm, question_plan, history=history
+            )
+    except Exception:
+        pass
     if mode_norm not in ("genel", "uretim", "gelisim"):
         return False
     if _explicit_research_intent(message):
@@ -785,6 +800,13 @@ def maybe_gundelik_instant_reply(
     """B3b — net sohbet (nasılsın/selam) için Ollama/Gemini beklemeden kısa yanıt."""
     if mode_norm not in ("genel", "uretim", "gelisim"):
         return None
+    try:
+        from ilim_assistant.ruzgar_dogal_sohbet_faz91 import should_skip_instant_shortcuts
+
+        if should_skip_instant_shortcuts(message, mode_norm, question_plan=question_plan):
+            return None
+    except Exception:
+        pass
     raw = (message or "").strip().lower()
     blob = _norm_ascii(raw) + " " + raw
     if any(

@@ -200,6 +200,13 @@ def ensure_ruzgar_env() -> list[str]:
         os.environ.setdefault("RUZGAR_EGITIM_MISS_SEC", "15")
         os.environ.setdefault("RUZGAR_UMED_BUDGET_SEC", "15")
         os.environ.setdefault("RUZGAR_UMED_ILIM_BUDGET_SEC", "22")
+        os.environ.setdefault("RUZGAR_DOGAL_SOHBET", "1")
+        os.environ.setdefault("RUZGAR_DOGAL_BUDGET_SEC", "32")
+        os.environ.setdefault("RUZGAR_DOGAL_MAX_TOKENS", "720")
+        os.environ.setdefault("RUZGAR_ANA_AGENT_LOOP", "1")
+        os.environ.setdefault("RUZGAR_ANA_AGENT_MAX_TURNS", "3")
+        os.environ.setdefault("RUZGAR_ANA_CHECKPOINT", "1")
+        os.environ.setdefault("RUZGAR_ANA_PROGRESS_ETA", "1")
 
     sync_global_api_key_aliases()
     try:

@@ -129,6 +129,26 @@ def _programlama_chain_ids() -> list[str]:
     return ids
 
 
+def _filter_chain_ids_for_quota(chain_ids: list[str]) -> list[str]:
+    """Kota soğukken Gemini'yi zincirden çıkar; Groq öne."""
+    try:
+        from ilim_assistant.gemini_quota_guard import gemini_cooldown_active
+
+        if not gemini_cooldown_active():
+            return list(chain_ids)
+    except Exception:
+        return list(chain_ids)
+    out = [x for x in chain_ids if x != "gemini"]
+    if "groq" in out:
+        out = ["groq"] + [x for x in out if x != "groq"]
+    elif _profile_groq() is not None:
+        out = ["groq"] + out
+    for fb in ("denge", "hizli", "kod"):
+        if fb not in out:
+            out.append(fb)
+    return out
+
+
 def _default_free_chain_ids() -> list[str]:
     """Yerel Ollama birincil; bulut isteğe bağlı."""
     try:
@@ -144,7 +164,7 @@ def _default_free_chain_ids() -> list[str]:
     ids.extend(["denge", "hizli"])
     if gemini_configured():
         ids.append("gemini")
-    return ids
+    return _filter_chain_ids_for_quota(ids)
 
 
 @dataclass(frozen=True)
@@ -415,6 +435,13 @@ def _ollama_reachable_safe() -> bool:
 
 def _gemini_only_when_configured() -> bool:
     """GLOBAL_API_KEY varken yalnızca Gemini (RUZGAR_FREE_BRAIN=1 ise kapalı)."""
+    try:
+        from ilim_assistant.gemini_quota_guard import gemini_cooldown_active
+
+        if gemini_cooldown_active():
+            return False
+    except Exception:
+        pass
     if free_brain_enabled():
         return False
     raw = (os.environ.get("RUZGAR_GEMINI_ONLY") or "auto").strip().lower()
@@ -443,7 +470,7 @@ def select_brain_chain(
         )
 
         if umed_emri_applies(mode_norm=mode_norm, coding_mode=coding_mode):
-            chain_ids = brain_chain_ids_for_emri()
+            chain_ids = _filter_chain_ids_for_quota(brain_chain_ids_for_emri())
             chain: list[BrainEndpoint] = []
             seen_u: set[str] = set()
             for pid in chain_ids:
@@ -523,6 +550,8 @@ def select_brain_chain(
     custom = (os.environ.get("RUZGAR_BRAIN_FALLBACK_CHAIN") or "").strip()
     if custom:
         chain_ids = [x.strip() for x in custom.split(",") if x.strip()]
+
+    chain_ids = _filter_chain_ids_for_quota(chain_ids)
 
     chain: list[BrainEndpoint] = []
     seen: set[str] = set()
@@ -614,6 +643,13 @@ def _stream_endpoint(
     prior_messages: list | None,
 ) -> Iterator[str]:
     if ep.provider == "gemini":
+        try:
+            from ilim_assistant.gemini_quota_guard import gemini_cooldown_active
+
+            if gemini_cooldown_active():
+                return
+        except Exception:
+            pass
         yield from chat_completion_stream_gemini(
             system,
             user,
@@ -805,12 +841,23 @@ def stream_chat_with_brain(
             from ilim_assistant.llm_gemini import is_gemini_quota_or_rate_error
 
             if is_gemini_quota_or_rate_error(last_err):
+                try:
+                    from ilim_assistant.gemini_quota_guard import (
+                        gemini_cooldown_active,
+                        mark_gemini_quota_hit,
+                    )
+
+                    mark_gemini_quota_hit()
+                    if not gemini_cooldown_active():
+                        pass
+                except Exception:
+                    pass
                 if _umed:
                     yield umed_miss_reply()
                     return
                 yield (
-                    "Gemini kotası dolu — yerel Ollama ile yanıt denendi ama sonuç üretilemedi. "
-                    "Bir süre sonra tekrar deneyin veya `ollama serve` + `ollama pull llama3.2:3b` kontrol edin."
+                    "Gemini kotası dolu — Ollama/Groq denendi ama yanıt üretilemedi. "
+                    "Bir süre bekleyin, `GROQ_API_KEY` ekleyin veya `ollama serve` + daha güçlü model deneyin."
                 )
                 return
         except Exception:

@@ -267,9 +267,19 @@ def maybe_bilissel_instant_reply(
     """
     Bağ/empati sorularında robotik kısa yanıt yerine sıcak, hazır cevap.
     Hatalı hafıza kaydı olsa bile empati sorularında öncelik burada.
+    Faz 91: doğal sohbet açıkken şablon yerine LLM üretir.
     """
     if not bilissel_enabled():
         return None
+    try:
+        from ilim_assistant.ruzgar_dogal_sohbet_faz91 import should_skip_instant_shortcuts
+
+        if should_skip_instant_shortcuts(
+            message, "genel", history=history
+        ):
+            return None
+    except Exception:
+        pass
     low = _norm(message)
     if not low:
         return None

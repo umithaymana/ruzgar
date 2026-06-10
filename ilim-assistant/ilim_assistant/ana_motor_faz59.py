@@ -182,12 +182,20 @@ def resolve_umed_budget_sec(
     coding_mode: bool = False,
     motor_flags: dict[str, bool] | None = None,
 ) -> float:
-    """Delege varsa kısa yönlendirme; ilimde 22sn; yoksa 15sn."""
+    """Delege varsa kısa yönlendirme; ilimde 22sn; doğal sohbet 32sn; yoksa 15sn."""
+    try:
+        from ilim_assistant.ruzgar_dogal_sohbet_faz91 import turn_budget_for_message
+
+        ext = turn_budget_for_message(message, mode_norm)
+        if ext is not None:
+            return ext
+    except Exception:
+        pass
     if not _enabled():
         try:
             from ilim_assistant.ruzgar_umed_cevap_emri import turn_budget_sec
 
-            return turn_budget_sec(message)
+            return turn_budget_sec(message, mode_norm=mode_norm)
         except Exception:
             return 15.0
     intent = classify_turn_intent(

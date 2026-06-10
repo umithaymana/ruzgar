@@ -486,7 +486,19 @@ def has_egitim_trigger_match(message: str) -> bool:
 def _message_is_casual_turn(msg: str) -> bool:
     """İltifat / kısa sohbet — hafızadan uzun talimat dökülmemeli."""
     raw = (msg or "").strip()
-    if not raw or len(raw.split()) > 14:
+    if not raw:
+        return False
+    try:
+        from ilim_assistant.ruzgar_dogal_sohbet_faz91 import (
+            dogal_sohbet_enabled,
+            is_natural_conversation_turn,
+        )
+
+        if dogal_sohbet_enabled() and is_natural_conversation_turn(raw, "genel", None):
+            return True
+    except Exception:
+        pass
+    if len(raw.split()) > 14:
         return False
     low = raw.casefold()
     if re.search(r"\b(?:ruzgar|rüzgar)\b", low) and has_egitim_trigger_match(raw):

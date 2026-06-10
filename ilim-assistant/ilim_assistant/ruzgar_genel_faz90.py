@@ -35,20 +35,40 @@ def ollama_available() -> bool:
         return False
 
 
+def _gemini_on_cooldown() -> bool:
+    try:
+        from ilim_assistant.gemini_quota_guard import gemini_cooldown_active
+
+        return gemini_cooldown_active()
+    except Exception:
+        return False
+
+
 def build_genel_brain_chain_ids() -> list[str]:
-    """Genel sohbet LLM zinciri — yerel öncelik."""
+    """Genel sohbet LLM zinciri — yerel öncelik; kota soğukken Gemini atlanır."""
     custom = (os.environ.get("RUZGAR_GENEL_BRAIN_CHAIN") or "").strip()
     if custom:
-        return [x.strip() for x in custom.split(",") if x.strip()]
-    out: list[str] = []
-    if _enabled() and ollama_available():
-        for p in ("denge", "hizli"):
-            if p not in out:
-                out.append(p)
-    for p in ("gemini", "groq"):
-        if p not in out:
-            out.append(p)
-    return out or ["gemini", "groq"]
+        ids = [x.strip() for x in custom.split(",") if x.strip()]
+    else:
+        out: list[str] = []
+        if _enabled() and ollama_available():
+            for p in ("denge", "hizli"):
+                if p not in out:
+                    out.append(p)
+        if _gemini_on_cooldown():
+            for p in ("groq", "kod"):
+                if p not in out:
+                    out.append(p)
+        else:
+            for p in ("groq", "gemini"):
+                if p not in out:
+                    out.append(p)
+        ids = out or ["groq", "gemini"]
+    if _gemini_on_cooldown():
+        ids = [x for x in ids if x != "gemini"]
+        if "groq" not in ids:
+            ids.insert(0, "groq")
+    return ids
 
 
 def enrich_health_build(build: dict[str, Any] | None) -> dict[str, Any]:

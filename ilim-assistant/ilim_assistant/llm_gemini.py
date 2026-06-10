@@ -253,6 +253,13 @@ def chat_completion_stream_gemini(
     temperature: Optional[float] = None,
 ) -> Iterator[str]:
     """Gemini streamGenerateContent (SSE)."""
+    try:
+        from ilim_assistant.gemini_quota_guard import gemini_cooldown_active
+
+        if gemini_cooldown_active():
+            return
+    except Exception:
+        pass
     key = (api_key or gemini_api_key()).strip()
     if not key:
         yield (
@@ -306,9 +313,15 @@ def chat_completion_stream_gemini(
         ) as resp:
             if resp.status_code >= 400:
                 err_body = resp.text[:800]
-                yield format_gemini_user_error(
-                    RuntimeError(f"HTTP {resp.status_code}: {err_body}")
-                )
+                err = RuntimeError(f"HTTP {resp.status_code}: {err_body}")
+                try:
+                    from ilim_assistant.gemini_quota_guard import mark_gemini_quota_hit
+
+                    if resp.status_code == 429 or is_gemini_quota_or_rate_error(err_body):
+                        mark_gemini_quota_hit()
+                except Exception:
+                    pass
+                yield format_gemini_user_error(err)
                 return
             resp.encoding = "utf-8"
             accumulated = ""

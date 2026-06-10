@@ -86,6 +86,8 @@ function resolveRuzgarApiRoot() {
 const API = resolveRuzgarApiRoot();
 console.info("[RÜZGAR Connection Bridge] API kök:", API);
 const RUZGAR_CHAT_FULL_TIMEOUT_MS = 180000;
+/** Kısa selam / nasılsın — Ollama yavaşken 12 sn yetmiyordu */
+const RUZGAR_CHAT_CASUAL_TIMEOUT_MS = 25000;
 /** Video indirme — /api/video/download; sohbet 180sn sınırından bağımsız */
 const RUZGAR_VIDEO_DOWNLOAD_TIMEOUT_MS = 600000;
 /** Metinden video oluşturma — plan + TTS + FFmpeg (uzun sürebilir) */
@@ -11635,7 +11637,7 @@ async function streamChat(userText, streamOpts = {}) {
       /^\s*(?:görev|gorev)\s*:/im.test(String(userText || "")) ||
       /^\s*(?:görev|gorev)\s+[\w.\-]+\s+/im.test(String(userText || "")));
   const chatFullTimeoutMs = casualShortCmd
-    ? 12000
+    ? RUZGAR_CHAT_CASUAL_TIMEOUT_MS
     : egitimCmd
       ? 15000
     : isProgramlamaAgentTask

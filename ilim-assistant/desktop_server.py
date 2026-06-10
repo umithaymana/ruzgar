@@ -8437,6 +8437,23 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 turn_plan = None
 
     agent_context = ""
+    _checkpoint_resume_ctx = ""
+    try:
+        from ilim_assistant.ana_motor_checkpoint import maybe_resume_agent_context
+
+        _checkpoint_resume_ctx, _cp_hit = maybe_resume_agent_context(
+            req.message or "",
+            req.workspace_root,
+        )
+        if _checkpoint_resume_ctx:
+            yield {
+                "type": "status",
+                "text": "Checkpoint — kaldığın yerden devam (Faz 93)…",
+            }
+            orch.setdefault("checkpoint", {"session_id": getattr(_cp_hit, "session_id", "")})
+    except Exception:
+        _checkpoint_resume_ctx = ""
+
     workspace_step = None
     retrieval_notes: list[str] = []
     if mode_norm in ("genel", "uretim", "gelisim"):
@@ -8468,13 +8485,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             try:
                 from ilim_assistant.ana_motor_agent import run_agent_workspace_phase
 
+                import time as _time_ws
+
+                _ws_t0 = _time_ws.monotonic()
                 agent_context, workspace_step, ws_events = run_agent_workspace_phase(
                     req.message,
                     mode_norm,
                     turn_plan,
                     workspace_root=req.workspace_root,
                 )
-                for ev in ws_events:
+                try:
+                    from ilim_assistant.ana_motor_progress import (
+                        iter_enriched_status_events,
+                    )
+
+                    ws_iter = iter_enriched_status_events(
+                        ws_events, started_monotonic=_ws_t0
+                    )
+                except Exception:
+                    ws_iter = iter(ws_events)
+                for ev in ws_iter:
                     yield ev
             except Exception:
                 agent_context = ""
@@ -8502,7 +8532,9 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
     try:
         from ilim_assistant.ana_motor_plan import is_casual_conversation_turn
 
-        if is_casual_conversation_turn(req.message, mode_norm, turn_plan):
+        if is_casual_conversation_turn(
+            req.message, mode_norm, turn_plan, history=req.history
+        ):
             _skip_prefetch = True
     except Exception:
         pass
@@ -8551,13 +8583,24 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         )
         and not _skip_prefetch
     ):
+        import time as _time_prog
+
+        _prefetch_t0 = _time_prog.monotonic()
         bundle, evs = prefetch_main_engine_bundle_for_stream(
             req.message,
             req.history,
             mode_raw,
             question_plan=turn_plan,
         )
-        for ev in evs:
+        try:
+            from ilim_assistant.ana_motor_progress import iter_enriched_status_events
+
+            ev_iter = iter_enriched_status_events(
+                evs, started_monotonic=_prefetch_t0
+            )
+        except Exception:
+            ev_iter = iter(evs)
+        for ev in ev_iter:
             txt = str(ev.get("text") or "").strip()
             if txt:
                 retrieval_notes.append(txt[:72])
@@ -8599,7 +8642,9 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         _casual_fast = (
             casual_fast_enabled()
             and not coding
-            and is_casual_conversation_turn(req.message, mode_norm, turn_plan)
+            and is_casual_conversation_turn(
+                req.message, mode_norm, turn_plan, history=req.history
+            )
         )
     except Exception:
         _casual_fast = False
@@ -8616,10 +8661,20 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             from ilim_assistant.ana_motor_casual import iter_casual_fast_reply
             from ilim_assistant.llm_brain import free_brain_enabled
 
+            try:
+                from ilim_assistant.ruzgar_dogal_sohbet_faz91 import dogal_sohbet_enabled
+
+                _dogal = dogal_sohbet_enabled()
+            except Exception:
+                _dogal = False
             status_txt = (
-                "Kısa sohbet — Ollama/Groq/Gemini (ücretsiz zincir)…"
-                if free_brain_enabled()
-                else "Kısa sohbet — Gemini (hızlı yol)…"
+                "Doğal sohbet — yerel/bulut beyin (Faz 91)…"
+                if _dogal
+                else (
+                    "Kısa sohbet — Ollama/Groq/Gemini (ücretsiz zincir)…"
+                    if free_brain_enabled()
+                    else "Kısa sohbet — Gemini (hızlı yol)…"
+                )
             )
             yield {"type": "status", "text": status_txt}
             reply_body = ""
@@ -8673,7 +8728,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     motor_flags=_mf_budget,
                 )
             except Exception:
-                begin_turn_budget(req.message or "")
+                begin_turn_budget(req.message or "", mode_norm=mode_norm)
         if umed_emri_applies(mode_norm=mode_norm, coding_mode=coding) and deadline_exceeded():
             from ilim_assistant.ruzgar_egitim import (
                 maybe_egitim_learned_reply,
@@ -8709,7 +8764,11 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         reuse_main_engine_bundle=reuse_b,
         orchestration_out=orch,
         question_plan=turn_plan,
-        agent_context=agent_context or None,
+        agent_context=(
+            (_checkpoint_resume_ctx + "\n\n" + agent_context).strip()
+            if (_checkpoint_resume_ctx or agent_context)
+            else None
+        ),
         pazar_kanallari=req.hizir_channels if mode_norm == "hizir" else None,
         conversation_context=getattr(req, "conversation_context", None),
         user_message_raw=getattr(req, "user_message_raw", None),
@@ -8782,6 +8841,39 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         }
     except Exception:
         pass
+    if mode_norm in ("genel", "uretim", "gelisim") and not coding:
+        try:
+            from ilim_assistant.ana_motor_agent_loop import (
+                iter_ana_motor_agent_events,
+                should_run_ana_motor_agent_loop,
+            )
+
+            if should_run_ana_motor_agent_loop(
+                msg,
+                mode_norm,
+                turn_plan,
+                workspace_root=req.workspace_root,
+                coding_mode=coding,
+            ):
+                yield from iter_ana_motor_agent_events(
+                    message=msg,
+                    req=req,
+                    system=system,
+                    user_payload=user_payload,
+                    model=model,
+                    prior=prior,
+                    mode_norm=mode_norm,
+                    turn_plan=turn_plan,
+                    hits=hits,
+                    new_wake=new_wake,
+                    orch=orch,
+                )
+                return
+        except Exception as agent92_exc:
+            yield {
+                "type": "status",
+                "text": f"Ana Motor ajan (Faz 92) atlandı: {str(agent92_exc)[:100]}",
+            }
     if mode_norm == "programlama":
         try:
             from ilim_assistant.motorlar.programlama_faz47 import (

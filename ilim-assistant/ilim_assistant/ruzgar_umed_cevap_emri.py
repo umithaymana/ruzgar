@@ -89,7 +89,15 @@ def is_ilim_heavy_question(message: str) -> bool:
     return any(m in low for m in markers)
 
 
-def turn_budget_sec(message: str = "") -> float:
+def turn_budget_sec(message: str = "", *, mode_norm: str = "genel") -> float:
+    try:
+        from ilim_assistant.ruzgar_dogal_sohbet_faz91 import turn_budget_for_message
+
+        ext = turn_budget_for_message(message, mode_norm)
+        if ext is not None:
+            return ext
+    except Exception:
+        pass
     if is_ilim_heavy_question(message):
         try:
             return float(os.environ.get("RUZGAR_UMED_ILIM_BUDGET_SEC", str(_ILIM_BUDGET_SEC)))
@@ -109,8 +117,8 @@ def get_turn_deadline() -> float | None:
     return _turn_deadline.get()
 
 
-def begin_turn_budget(message: str) -> float:
-    budget = turn_budget_sec(message)
+def begin_turn_budget(message: str, *, mode_norm: str = "genel") -> float:
+    budget = turn_budget_sec(message, mode_norm=mode_norm)
     deadline = time.monotonic() + budget
     set_turn_deadline(deadline)
     return budget
