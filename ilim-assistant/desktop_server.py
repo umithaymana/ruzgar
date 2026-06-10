@@ -1359,6 +1359,15 @@ def health():
             not in ("0", "false", "no"),
             "upload_virus_scan": os.environ.get("RUZGAR_ANA_UPLOAD_VIRUS_SCAN", "1").strip().lower()
             not in ("0", "false", "no"),
+            "paket_sihirbaz": os.environ.get("RUZGAR_ANA_PAKET_SIHIRBAZ", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "upload_archive": os.environ.get("RUZGAR_ANA_UPLOAD_ARCHIVE", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "upload_ttl_extend": os.environ.get("RUZGAR_ANA_UPLOAD_TTL_EXTEND", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "live_nebula_index_slo_sec": os.environ.get(
+                "RUZGAR_LIVE_NEBULA_INDEX_SLO_SEC", "300"
+            ),
         },
         "super_brain": _sb,
         "connection": _connection_ui_block(super_brain=_sb),
@@ -2694,6 +2703,43 @@ async def api_ana_motor_session_remember(body: SessionRememberBody) -> dict[str,
         raise HTTPException(
             status_code=400,
             detail=str(result.get("error") or "Hafızaya yazılamadı."),
+        )
+    return result
+
+
+class PaketSihirbazBody(BaseModel):
+    session_id: str | None = None
+    upload_ids: list[str] | None = None
+    topic: str = ""
+    collection: str = "tarih_kaynak"
+    do_archive: bool = True
+    do_remember: bool = True
+    do_nebula: bool = True
+    do_ttl_extend: bool = True
+
+
+@app.post("/api/ana-motor/paket-sihirbaz")
+async def api_ana_motor_paket_sihirbaz(body: PaketSihirbazBody) -> dict[str, Any]:
+    """Faz I1 — arşiv + TTL + hafıza + Nebula tek paket."""
+    from ilim_assistant.ana_motor_paket_sihirbaz import run_paket_sihirbaz, wizard_enabled
+
+    if not wizard_enabled():
+        raise HTTPException(status_code=403, detail="Paket sihirbazı kapalı.")
+    result = await run_in_threadpool(
+        run_paket_sihirbaz,
+        session_id=body.session_id,
+        upload_ids=body.upload_ids,
+        topic=(body.topic or "").strip(),
+        collection=(body.collection or "tarih_kaynak").strip(),
+        do_archive=bool(body.do_archive),
+        do_remember=bool(body.do_remember),
+        do_nebula=bool(body.do_nebula),
+        do_ttl_extend=bool(body.do_ttl_extend),
+    )
+    if not result.get("ok"):
+        raise HTTPException(
+            status_code=400,
+            detail=str(result.get("error") or "Paket sihirbazı başarısız."),
         )
     return result
 

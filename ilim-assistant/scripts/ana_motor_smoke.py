@@ -870,6 +870,56 @@ def run_offline() -> int:
     else:
         _ok("upload virus scan acik")
 
+    print("\n=== Faz I — paket sihirbaz / arşiv / TTL ===")
+    from ilim_assistant.ana_motor_dosya_ingest import (
+        archive_enabled,
+        archive_session_package,
+        extend_session_ttl,
+        ttl_extend_enabled,
+    )
+    from ilim_assistant.ana_motor_paket_sihirbaz import run_paket_sihirbaz, wizard_enabled
+
+    if not wizard_enabled():
+        _fail("paket_sihirbaz", "kapali")
+        fails += 1
+    else:
+        _ok("paket sihirbaz acik")
+    if not archive_enabled():
+        _fail("upload_archive", "kapali")
+        fails += 1
+    else:
+        _ok("oturum arsivi acik")
+    ar = archive_session_package(sid, topic="Faz I arsiv test")
+    if not ar.get("ok") or not ar.get("archive_path"):
+        _fail("archive_session", str(ar)[:100])
+        fails += 1
+    else:
+        _ok(f"arsiv -> {ar.get('archive_path')}")
+    if not ttl_extend_enabled():
+        _fail("upload_ttl_extend", "kapali")
+        fails += 1
+    else:
+        _ok("TTL uzatma acik")
+    ttl = extend_session_ttl(sid)
+    if not ttl.get("ok") or not ttl.get("extended_until"):
+        _fail("extend_ttl", str(ttl)[:100])
+        fails += 1
+    else:
+        _ok(f"TTL uzatildi files={ttl.get('files')}")
+    wiz = run_paket_sihirbaz(
+        session_id=sid,
+        topic="Faz I wizard test",
+        do_archive=False,
+        do_ttl_extend=False,
+        do_remember=True,
+        do_nebula=True,
+    )
+    if not wiz.get("ok") or not wiz.get("steps"):
+        _fail("paket_sihirbaz_run", str(wiz)[:120])
+        fails += 1
+    else:
+        _ok(f"paket sihirbaz {len(wiz.get('steps') or [])} adim")
+
     print("\n=== Faz D — bilim derin / denge70 / otonom debug ===")
     from ilim_assistant.ana_motor_bilim_derin import (
         apply_bilim_derin_rag_top_k,
@@ -1193,6 +1243,26 @@ def run_live(base: str) -> int:
         fails += 1
     else:
         _ok(f"Faz H3 upload virus scan={am.get('upload_virus_scan')}")
+    if not am.get("paket_sihirbaz"):
+        _fail("faz_i1 wizard", "kapali")
+        fails += 1
+    else:
+        _ok("Faz I1 paket sihirbaz acik")
+    if not am.get("upload_archive"):
+        _fail("faz_i2 archive", "kapali")
+        fails += 1
+    else:
+        _ok("Faz I2 upload archive acik")
+    if not am.get("upload_ttl_extend"):
+        _fail("faz_i2 ttl", "kapali")
+        fails += 1
+    else:
+        _ok("Faz I2 upload TTL extend acik")
+    if "live_nebula_index_slo_sec" not in am:
+        _fail("faz_i3 slo", "health alani yok")
+        fails += 1
+    else:
+        _ok(f"Faz I3 nebula index SLO={am.get('live_nebula_index_slo_sec')}s")
 
     print("\n=== Canli — upload + matris SLO ===")
     chat_url = base.rstrip("/") + "/api/chat/full"
@@ -1358,6 +1428,71 @@ def run_live(base: str) -> int:
                 _ok(f"bilim derin SLO <= {slo2:.0f}s")
     except Exception as e:
         _fail("live bilim derin", str(e)[:120])
+        fails += 1
+
+    print("\n=== Canli — nebula indeks SLO (Faz I3) ===")
+    if upload_id:
+        wiz_url = base.rstrip("/") + "/api/ana-motor/paket-sihirbaz"
+        status_url = base.rstrip("/") + "/api/ana-motor/nebula-apply/status"
+        wiz_payload = json.dumps(
+            {
+                "upload_ids": [upload_id],
+                "topic": "Canli I3 nebula indeks",
+                "collection": "tarih_kaynak",
+                "do_archive": False,
+                "do_remember": False,
+                "do_ttl_extend": False,
+                "do_nebula": True,
+            },
+            ensure_ascii=False,
+        ).encode("utf-8")
+        t_idx = time.monotonic()
+        try:
+            wiz_req = urllib.request.Request(
+                wiz_url,
+                data=wiz_payload,
+                headers={"Content-Type": "application/json; charset=utf-8"},
+                method="POST",
+            )
+            with urllib.request.urlopen(wiz_req, timeout=60) as r:
+                wiz_j = json.loads(r.read().decode("utf-8", errors="replace"))
+            if not wiz_j.get("ok"):
+                _fail("live paket nebula", str(wiz_j)[:120])
+                fails += 1
+            else:
+                _ok("canli paket nebula kuyrugu")
+                try:
+                    slo_i = float(
+                        am.get("live_nebula_index_slo_sec")
+                        or os.environ.get("RUZGAR_LIVE_NEBULA_INDEX_SLO_SEC", "300")
+                    )
+                except ValueError:
+                    slo_i = 300.0
+                deadline = t_idx + slo_i + 15.0
+                done = False
+                while time.monotonic() < deadline:
+                    st_req = urllib.request.Request(status_url, method="GET")
+                    with urllib.request.urlopen(st_req, timeout=15) as sr:
+                        st_j = json.loads(sr.read().decode("utf-8", errors="replace"))
+                    job = st_j.get("job") or {}
+                    if not job.get("running"):
+                        done = True
+                        break
+                    time.sleep(2.0)
+                elapsed_idx = time.monotonic() - t_idx
+                if not done:
+                    _fail("nebula index SLO", f"timeout {elapsed_idx:.1f}s")
+                    fails += 1
+                elif elapsed_idx > slo_i:
+                    _fail("nebula index SLO", f"{elapsed_idx:.1f}s > {slo_i}s")
+                    fails += 1
+                else:
+                    _ok(f"nebula indeks SLO <= {slo_i:.0f}s ({elapsed_idx:.1f}s)")
+        except Exception as e:
+            _fail("live nebula index SLO", str(e)[:120])
+            fails += 1
+    else:
+        _fail("live nebula index SLO", "upload_id yok")
         fails += 1
 
     return fails

@@ -72,11 +72,19 @@
 | H2 | Oturum → hafıza köprüsü | `ana_motor_session_hafiza.py` | `POST /api/ana-motor/session/remember` |
 | H3 | Upload virüs taraması | `ana_motor_dosya_ingest.py` | `RUZGAR_ANA_UPLOAD_VIRUS_SCAN` |
 
-## Sıradaki (Faz I — öneri)
+## Faz I — uygulandı (2026-06-10)
 
-- Nebula/hatırla birleşik «tek paket» sihirbazı
-- Oturum TTL uzatma + kalıcı arşiv klasörü
-- Canlı H1 indeks SLO
+| # | Görev | Dosya | Durum |
+|---|--------|-------|--------|
+| I1 | Tek paket sihirbazı (arşiv+TTL+hafıza+Nebula) | `ana_motor_paket_sihirbaz.py`, `app.js` | `POST /api/ana-motor/paket-sihirbaz` |
+| I2 | Oturum TTL uzatma + kalıcı arşiv | `ana_motor_dosya_ingest.py` | `arsiv/ana_motor_uploads/{session_id}/` |
+| I3 | Canlı Nebula indeks SLO | `ana_motor_smoke.py --live` | `RUZGAR_LIVE_NEBULA_INDEX_SLO_SEC` |
+
+## Sıradaki (Faz J — öneri)
+
+- Paket sihirbazı otomatik tetik (sohbet bitişinde)
+- Arşiv klasöründen RAG geri yükleme
+- Çoklu oturum birleştirme
 
 ## Ortam (özet)
 

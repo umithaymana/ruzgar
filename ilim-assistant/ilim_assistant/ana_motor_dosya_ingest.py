@@ -18,7 +18,9 @@ _UPLOAD_ROOT = _PKG_ROOT / ".ruzgar" / "ana_motor_uploads"
 _ALLOWED = {".txt", ".md", ".pdf"}
 _MAX_BYTES = int(os.environ.get("RUZGAR_ANA_UPLOAD_MAX_BYTES", str(8 * 1024 * 1024)))
 _TTL_SEC = int(os.environ.get("RUZGAR_ANA_UPLOAD_TTL_SEC", "7200"))
+_TTL_EXTEND_SEC = int(os.environ.get("RUZGAR_ANA_UPLOAD_TTL_EXTEND_SEC", "86400"))
 _MAX_SESSION_FILES = int(os.environ.get("RUZGAR_ANA_UPLOAD_SESSION_MAX", "6"))
+_ARCHIVE_ROOT = _PKG_ROOT / "arsiv" / "ana_motor_uploads"
 _CHUNK = 900
 _OVERLAP = 80
 
@@ -97,9 +99,23 @@ def _extract_text(path: Path) -> tuple[str, str | None]:
     return "", "Desteklenmeyen uzantı."
 
 
+def _record_expired(rec: dict[str, Any], now: float) -> bool:
+    exp = rec.get("expires_at")
+    if exp is not None:
+        try:
+            return now > float(exp)
+        except (TypeError, ValueError):
+            pass
+    try:
+        created = float(rec.get("created_at", 0))
+    except (TypeError, ValueError):
+        created = 0.0
+    return now - created > _TTL_SEC
+
+
 def _purge_expired() -> None:
     now = time.time()
-    dead = [k for k, v in _store.items() if now - float(v.get("created_at", 0)) > _TTL_SEC]
+    dead = [k for k, v in _store.items() if _record_expired(v, now)]
     for k in dead:
         _store.pop(k, None)
         meta = _UPLOAD_ROOT / f"{k}.json"
@@ -218,6 +234,135 @@ def resolve_upload_ids(
     if explicit:
         return explicit
     return list_session_upload_ids(session_id)
+
+
+def archive_enabled() -> bool:
+    return os.environ.get("RUZGAR_ANA_UPLOAD_ARCHIVE", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
+def ttl_extend_enabled() -> bool:
+    return os.environ.get("RUZGAR_ANA_UPLOAD_TTL_EXTEND", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
+def extend_session_ttl(
+    session_id: str | None = None,
+    *,
+    upload_ids: list[str] | None = None,
+    extra_sec: int | None = None,
+) -> dict[str, Any]:
+    """Faz I2 — oturum dosyalarının silinme süresini uzat."""
+    if not ttl_extend_enabled():
+        return {"ok": False, "error": "TTL uzatma kapalı."}
+    sid = (session_id or "").strip()
+    ids = resolve_upload_ids(upload_ids, sid or None)
+    if not ids:
+        return {"ok": False, "error": "Uzatılacak dosya yok."}
+    add = int(extra_sec if extra_sec is not None else _TTL_EXTEND_SEC)
+    until = time.time() + max(300, add)
+    with _lock:
+        _purge_expired()
+        if not _store:
+            _load_disk_records()
+        touched = 0
+        for uid in ids:
+            rec = _store.get(uid)
+            if not rec:
+                continue
+            rec["expires_at"] = until
+            _store[uid] = rec
+            _persist_record(uid, rec)
+            touched += 1
+        if sid:
+            data = _load_session(sid)
+            data["expires_at"] = until
+            data["ttl_extended_at"] = time.time()
+            _save_session(sid, data)
+    if touched == 0:
+        return {"ok": False, "error": "Kayıtlar bulunamadı (süre dolmuş olabilir)."}
+    return {
+        "ok": True,
+        "extended_until": until,
+        "files": touched,
+        "extra_sec": add,
+    }
+
+
+def archive_session_package(
+    session_id: str | None = None,
+    *,
+    upload_ids: list[str] | None = None,
+    topic: str = "",
+) -> dict[str, Any]:
+    """Faz I2 — oturumu `arsiv/ana_motor_uploads/` altına kalıcı kopyala."""
+    if not archive_enabled():
+        return {"ok": False, "error": "Oturum arşivi kapalı."}
+    ids = resolve_upload_ids(upload_ids, session_id)
+    sid = (session_id or "").strip() or uuid.uuid4().hex[:12]
+    records = get_upload_records(ids)
+    if not records:
+        return {"ok": False, "error": "Arşivlenecek dosya yok."}
+
+    dest = _ARCHIVE_ROOT / sid
+    dest.mkdir(parents=True, exist_ok=True)
+    files_dir = dest / "uploads"
+    files_dir.mkdir(parents=True, exist_ok=True)
+
+    manifest_files: list[dict[str, Any]] = []
+    combined_parts: list[str] = [
+        f"# Ana Motor oturum arşivi — {sid}\n",
+        f"- Konu: {(topic or '').strip()[:200] or '—'}\n",
+        f"- Dosya: {len(records)}\n\n",
+    ]
+    for rec in records:
+        uid = str(rec.get("upload_id") or "")
+        fname = str(rec.get("filename") or "dosya")
+        src_json = _UPLOAD_ROOT / f"{uid}.json"
+        if src_json.is_file():
+            import shutil
+
+            shutil.copy2(src_json, files_dir / f"{uid}.json")
+        manifest_files.append(
+            {
+                "upload_id": uid,
+                "filename": fname,
+                "chars": rec.get("chars"),
+                "chunks": rec.get("chunks"),
+            }
+        )
+        body = "\n\n".join(rec.get("chunk_texts") or []).strip()
+        combined_parts.append(f"## {fname}\n\n{body}\n\n")
+
+    manifest = {
+        "session_id": sid,
+        "topic": (topic or "").strip()[:200],
+        "archived_at": time.time(),
+        "files": manifest_files,
+    }
+    (dest / "manifest.json").write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    combined = "".join(combined_parts)
+    if len(combined) > 500_000:
+        combined = combined[:499_000].rstrip() + "\n\n…\n"
+    (dest / "oturum_birlesik.md").write_text(combined, encoding="utf-8")
+
+    rel = f"arsiv/ana_motor_uploads/{sid}"
+    return {
+        "ok": True,
+        "session_id": sid,
+        "archive_path": rel,
+        "file_count": len(records),
+        "hint": f"Kalıcı kopya: `ilim-assistant/{rel}/`",
+    }
 
 
 def save_upload_bytes(

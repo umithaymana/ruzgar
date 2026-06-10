@@ -10931,7 +10931,74 @@ function updateAnaMotorSessionCard() {
   }
   wrap.hidden = false;
   sumEl.textContent =
-    `${n || "?"} dosya · oturum ${anaMotorUploadSessionId ? anaMotorUploadSessionId.slice(0, 8) : "—"} — sohbetten önce hafızaya alınabilir`;
+    `${n || "?"} dosya · oturum ${anaMotorUploadSessionId ? anaMotorUploadSessionId.slice(0, 8) : "—"} — tek paket: arşiv + TTL + hafıza + Nebula`;
+}
+
+async function runAnaMotorPaketSihirbaz() {
+  if (!anaMotorUploadSessionId && !anaMotorUploadQueue.length) {
+    setStatus("Paket sihirbazı için dosya oturumu yok.", "Rüzgar");
+    return;
+  }
+  const wizBtn = document.getElementById("btn-ana-paket-sihirbaz");
+  const progEl = document.getElementById("ana-motor-wizard-progress");
+  const card = anaMotorLastNebulaCard;
+  const uploadIds = anaMotorUploadQueue.map((x) => x.id).filter(Boolean);
+  const body = {
+    session_id: anaMotorUploadSessionId || undefined,
+    upload_ids: uploadIds.length ? uploadIds : undefined,
+    topic: (card && card.topic) || anaMotorLastUserTopic || "",
+    collection: (card && card.collection) || "tarih_kaynak",
+    do_archive: true,
+    do_remember: true,
+    do_nebula: true,
+    do_ttl_extend: true,
+  };
+  if (wizBtn) wizBtn.disabled = true;
+  if (progEl) {
+    progEl.hidden = false;
+    progEl.textContent = "Paket sihirbazı çalışıyor…";
+  }
+  try {
+    const res = await fetch(`${API}/api/ana-motor/paket-sihirbaz`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) {
+      setStatus(j.detail || j.error || "Paket sihirbazı başarısız", "Rüzgar");
+      if (progEl) progEl.textContent = j.detail || j.error || "Hata";
+      return;
+    }
+    const steps = Array.isArray(j.steps) ? j.steps : [];
+    const labels = {
+      archive: "Arşiv",
+      ttl_extend: "TTL",
+      remember: "Hafıza",
+      nebula: "Nebula",
+    };
+    const stepTxt = steps
+      .map((s) => {
+        const name = labels[s.step] || s.step || "?";
+        return `${name}: ${s.ok ? "✓" : "✗"}`;
+      })
+      .join(" · ");
+    if (progEl) progEl.textContent = stepTxt || j.hint || "Tamam";
+    setStatus(j.hint || "Paket sihirbazı tamamlandı.", "Rüzgar");
+    flashRuzgarDurum(`Paket — ${steps.filter((s) => s.ok).length}/${steps.length} adım`);
+    if (j.nebula_async) {
+      stopAnaMotorNebulaApplyPoll();
+      void pollAnaMotorNebulaApplyStatus();
+      anaMotorNebulaApplyPoll = window.setInterval(() => {
+        void pollAnaMotorNebulaApplyStatus();
+      }, 2200);
+    }
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+    if (progEl) progEl.textContent = formatClientChatError(e);
+  } finally {
+    if (wizBtn) wizBtn.disabled = false;
+  }
 }
 
 async function rememberAnaMotorUploadSession() {
@@ -11037,6 +11104,11 @@ async function applyAnaMotorNebulaOneri() {
   if (btn && !btn.dataset.wired) {
     btn.dataset.wired = "1";
     btn.addEventListener("click", () => void applyAnaMotorNebulaOneri());
+  }
+  const wizBtn = document.getElementById("btn-ana-paket-sihirbaz");
+  if (wizBtn && !wizBtn.dataset.wired) {
+    wizBtn.dataset.wired = "1";
+    wizBtn.addEventListener("click", () => void runAnaMotorPaketSihirbaz());
   }
   const remBtn = document.getElementById("btn-ana-session-remember");
   if (remBtn && !remBtn.dataset.wired) {
