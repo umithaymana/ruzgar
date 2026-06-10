@@ -11280,46 +11280,98 @@ function startAnaMotorReminderNotifyPoll(pollSec) {
   }, ms);
 }
 
-async function loadAnaMotorNotifyPrefs() {
+async function loadAnaMotorUnifiedPrefs() {
   try {
-    const res = await fetch(`${API}/api/ana-motor/notify-prefs`);
+    const res = await fetch(`${API}/api/ana-motor/unified-prefs`);
     const j = await res.json().catch(() => ({}));
     const p = j.prefs || {};
-    const d = document.getElementById("ana-pref-desktop");
-    const e = document.getElementById("ana-pref-email");
-    const w = document.getElementById("ana-pref-warn-only");
-    const poll = document.getElementById("ana-pref-poll");
-    if (d) d.checked = p.desktop_enabled !== false;
-    if (e) e.checked = !!p.email_enabled;
-    if (w) w.checked = p.warn_only !== false;
-    if (poll) poll.value = String(p.poll_sec || 120);
-    startAnaMotorReminderNotifyPoll(p.poll_sec || 120);
+    const set = (id, val) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (el.type === "checkbox") el.checked = !!val;
+      else el.value = String(val);
+    };
+    set("ana-uni-desktop", p.desktop_enabled !== false);
+    set("ana-uni-email", !!p.email_enabled);
+    set("ana-uni-warn-only", p.warn_only !== false);
+    set("ana-uni-remind-poll", p.remind_poll_sec || 120);
+    set("ana-uni-sched-enabled", p.schedule_enabled !== false);
+    set("ana-uni-sched-poll", p.schedule_poll_sec || 3600);
+    set("ana-uni-period-days", p.period_days || 7);
+    set("ana-uni-compare-email", !!p.compare_email_enabled);
+    startAnaMotorReminderNotifyPoll(p.remind_poll_sec || 120);
   } catch (_) {
     startAnaMotorReminderNotifyPoll(120);
   }
 }
 
-async function saveAnaMotorNotifyPrefs() {
+async function saveAnaMotorUnifiedPrefs() {
   const body = {
-    desktop_enabled: !!document.getElementById("ana-pref-desktop")?.checked,
-    email_enabled: !!document.getElementById("ana-pref-email")?.checked,
-    warn_only: !!document.getElementById("ana-pref-warn-only")?.checked,
-    poll_sec: parseInt(document.getElementById("ana-pref-poll")?.value || "120", 10),
+    desktop_enabled: !!document.getElementById("ana-uni-desktop")?.checked,
+    email_enabled: !!document.getElementById("ana-uni-email")?.checked,
+    warn_only: !!document.getElementById("ana-uni-warn-only")?.checked,
+    remind_poll_sec: parseInt(document.getElementById("ana-uni-remind-poll")?.value || "120", 10),
+    schedule_enabled: !!document.getElementById("ana-uni-sched-enabled")?.checked,
+    schedule_poll_sec: parseInt(document.getElementById("ana-uni-sched-poll")?.value || "3600", 10),
+    period_days: parseInt(document.getElementById("ana-uni-period-days")?.value || "7", 10),
+    compare_email_enabled: !!document.getElementById("ana-uni-compare-email")?.checked,
   };
   try {
-    const res = await fetch(`${API}/api/ana-motor/notify-prefs`, {
+    const res = await fetch(`${API}/api/ana-motor/unified-prefs`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
     const j = await res.json().catch(() => ({}));
     if (!res.ok || !j.ok) {
-      setStatus(j.detail || j.error || "Tercihler kaydedilemedi", "Rüzgar");
+      setStatus(j.detail || j.error || "Birleşik tercihler kaydedilemedi", "Rüzgar");
       return;
     }
-    setStatus(j.hint || "Bildirim tercihleri kaydedildi.", "Rüzgar");
-    startAnaMotorReminderNotifyPoll(j.prefs?.poll_sec || body.poll_sec);
+    setStatus(j.hint || "Birleşik tercihler kaydedildi.", "Rüzgar");
+    startAnaMotorReminderNotifyPoll(j.prefs?.remind_poll_sec || body.remind_poll_sec);
     void refreshAnaMotorArchiveReminders();
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+  }
+}
+
+async function downloadAnaMotorSuperOzetPdf() {
+  try {
+    const res = await fetch(`${API}/api/ana-motor/super-ozet/export-pdf?days=7`);
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      setStatus(j.detail || "Süper özet PDF indirilemedi", "Rüzgar");
+      return;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "ruzgar_ana_motor_super_ozet_7g.pdf";
+    a.click();
+    URL.revokeObjectURL(url);
+    flashRuzgarDurum("Süper özet PDF indirildi");
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+  }
+}
+
+async function sendAnaMotorCompareEmail() {
+  try {
+    const res = await fetch(`${API}/api/ana-motor/paket-history/compare/email?days=7&force=1`, {
+      method: "POST",
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setStatus(j.detail || j.error || "Karşılaştırma e-postası gönderilemedi", "Rüzgar");
+      return;
+    }
+    if (j.sent) {
+      setStatus(`Karşılaştırma raporu gönderildi: ${j.to || "e-posta"}`, "Rüzgar");
+      void refreshAnaMotorNotifyHistory();
+    } else {
+      setStatus(j.reason || "E-posta gönderilmedi (SMTP/tercih kontrol edin).", "Rüzgar");
+    }
   } catch (e) {
     setStatus(formatClientChatError(e), "Rüzgar");
   }
@@ -11645,45 +11697,6 @@ async function exportAnaMotorRememberHistory() {
     a.click();
     URL.revokeObjectURL(url);
     flashRuzgarDurum("Hatırla geçmişi dışa aktarıldı");
-  } catch (e) {
-    setStatus(formatClientChatError(e), "Rüzgar");
-  }
-}
-
-async function loadAnaMotorSchedulePrefs() {
-  try {
-    const res = await fetch(`${API}/api/ana-motor/schedule-prefs`);
-    const j = await res.json().catch(() => ({}));
-    const p = j.prefs || {};
-    const en = document.getElementById("ana-sched-enabled");
-    const poll = document.getElementById("ana-sched-poll");
-    const days = document.getElementById("ana-sched-days");
-    if (en) en.checked = p.schedule_enabled !== false;
-    if (poll) poll.value = String(p.poll_sec || 3600);
-    if (days) days.value = String(p.period_days || 7);
-  } catch (_) {
-    /* ignore */
-  }
-}
-
-async function saveAnaMotorSchedulePrefs() {
-  const body = {
-    schedule_enabled: !!document.getElementById("ana-sched-enabled")?.checked,
-    poll_sec: parseInt(document.getElementById("ana-sched-poll")?.value || "3600", 10),
-    period_days: parseInt(document.getElementById("ana-sched-days")?.value || "7", 10),
-  };
-  try {
-    const res = await fetch(`${API}/api/ana-motor/schedule-prefs`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const j = await res.json().catch(() => ({}));
-    if (!res.ok || !j.ok) {
-      setStatus(j.detail || j.error || "Zamanlayıcı tercihleri kaydedilemedi", "Rüzgar");
-      return;
-    }
-    setStatus(j.hint || "Zamanlayıcı tercihleri kaydedildi.", "Rüzgar");
   } catch (e) {
     setStatus(formatClientChatError(e), "Rüzgar");
   }
@@ -12142,10 +12155,20 @@ async function mergeAnaMotorArchiveSessions() {
     cmpPdfBtn.dataset.wired = "1";
     cmpPdfBtn.addEventListener("click", () => void downloadAnaMotorCompareExport("pdf"));
   }
-  const schedPrefBtn = document.getElementById("btn-ana-schedule-prefs-save");
-  if (schedPrefBtn && !schedPrefBtn.dataset.wired) {
-    schedPrefBtn.dataset.wired = "1";
-    schedPrefBtn.addEventListener("click", () => void saveAnaMotorSchedulePrefs());
+  const unifiedPrefBtn = document.getElementById("btn-ana-unified-prefs-save");
+  if (unifiedPrefBtn && !unifiedPrefBtn.dataset.wired) {
+    unifiedPrefBtn.dataset.wired = "1";
+    unifiedPrefBtn.addEventListener("click", () => void saveAnaMotorUnifiedPrefs());
+  }
+  const superPdfBtn = document.getElementById("btn-ana-super-ozet-pdf");
+  if (superPdfBtn && !superPdfBtn.dataset.wired) {
+    superPdfBtn.dataset.wired = "1";
+    superPdfBtn.addEventListener("click", () => void downloadAnaMotorSuperOzetPdf());
+  }
+  const cmpEmailBtn = document.getElementById("btn-ana-compare-email");
+  if (cmpEmailBtn && !cmpEmailBtn.dataset.wired) {
+    cmpEmailBtn.dataset.wired = "1";
+    cmpEmailBtn.addEventListener("click", () => void sendAnaMotorCompareEmail());
   }
   const csvIn = document.getElementById("ana-csv-import-input");
   if (csvIn && !csvIn.dataset.wired) {
@@ -12170,14 +12193,8 @@ async function mergeAnaMotorArchiveSessions() {
     tlFilterBtn.dataset.wired = "1";
     tlFilterBtn.addEventListener("click", () => void refreshAnaMotorSessionTimeline());
   }
-  const prefBtn = document.getElementById("btn-ana-notify-prefs-save");
-  if (prefBtn && !prefBtn.dataset.wired) {
-    prefBtn.dataset.wired = "1";
-    prefBtn.addEventListener("click", () => void saveAnaMotorNotifyPrefs());
-  }
   void refreshAnaMotorArchiveList();
-  void loadAnaMotorNotifyPrefs();
-  void loadAnaMotorSchedulePrefs();
+  void loadAnaMotorUnifiedPrefs();
   void refreshAnaMotorNotifyHistory();
   void refreshAnaMotorWeeklySummary();
 })();

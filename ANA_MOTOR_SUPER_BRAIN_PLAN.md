@@ -160,11 +160,19 @@
 | S2 | Hatırla geçmişi dışa aktar | `ana_motor_hatirla_gecmis.py` | `GET /timeline/remember/history/export` |
 | S3 | Zamanlayıcı tercih paneli | `ana_motor_schedule_tercih.py` | `GET/POST /api/ana-motor/schedule-prefs` |
 
-## Sıradaki (Faz T — öneri)
+## Faz T — uygulandı (2026-06-10)
 
-- Tüm Ana Motor panelleri tek «süper özet» PDF
-- Zamanlayıcı + bildirim birleşik tercih kartı
-- Karşılaştırma e-posta raporu (haftalık SMTP)
+| # | Görev | Dosya | Durum |
+|---|--------|-------|--------|
+| T1 | Süper özet PDF (tüm paneller) | `ana_motor_super_ozet_pdf.py` | `GET /api/ana-motor/super-ozet/export-pdf` |
+| T2 | Birleşik tercih kartı | `ana_motor_birlesik_tercih.py` | `GET/POST /api/ana-motor/unified-prefs` |
+| T3 | Karşılaştırma e-posta raporu | `ana_motor_compare_email.py` | `POST /paket-history/compare/email` |
+
+## Sıradaki (Faz U — öneri)
+
+- Süper özet otomatik e-posta (haftalık)
+- Birleşik tercih JSON dışa aktar / içe aktar
+- Ana Motor dashboard tek sayfa özet HTML
 
 ## Ortam (özet)
 

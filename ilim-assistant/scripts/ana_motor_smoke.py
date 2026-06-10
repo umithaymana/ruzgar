@@ -1580,6 +1580,70 @@ def run_offline() -> int:
     else:
         _ok(f"schedule poll={spl.get('prefs', {}).get('poll_sec')}")
 
+    print("\n=== Faz T — super ozet PDF / birlesik tercih / compare email ===")
+    from ilim_assistant.ana_motor_birlesik_tercih import (
+        load_unified_prefs,
+        save_unified_prefs,
+        unified_prefs_enabled,
+    )
+    from ilim_assistant.ana_motor_compare_email import (
+        compare_email_enabled,
+        maybe_send_compare_email,
+    )
+    from ilim_assistant.ana_motor_super_ozet_pdf import (
+        export_super_ozet_pdf,
+        super_ozet_pdf_enabled,
+    )
+
+    if not super_ozet_pdf_enabled():
+        _fail("super_ozet_pdf", "kapali")
+        fails += 1
+    else:
+        _ok("super ozet PDF acik")
+    sp = export_super_ozet_pdf(period_days=7)
+    if not sp.get("ok") or not sp.get("pdf"):
+        _fail("super_ozet_pdf_run", str(sp)[:80])
+        fails += 1
+    else:
+        _ok(f"super PDF bytes={len(sp.get('pdf') or b'')}")
+
+    if not unified_prefs_enabled():
+        _fail("unified_prefs", "kapali")
+        fails += 1
+    else:
+        _ok("birlesik tercih acik")
+    up = save_unified_prefs(
+        {
+            "remind_poll_sec": 120,
+            "schedule_poll_sec": 3600,
+            "period_days": 7,
+            "compare_email_enabled": False,
+        }
+    )
+    if not up.get("ok"):
+        _fail("unified_prefs_save", str(up)[:80])
+        fails += 1
+    else:
+        _ok("birlesik tercih kaydedildi")
+    upl = load_unified_prefs()
+    if not upl.get("ok") or not upl.get("prefs"):
+        _fail("unified_prefs_load", str(upl)[:80])
+        fails += 1
+    else:
+        _ok("birlesik tercih yuklendi")
+
+    if not compare_email_enabled():
+        _fail("compare_email", "kapali")
+        fails += 1
+    else:
+        _ok("compare email acik")
+    ce = maybe_send_compare_email(period_days=7, force=False)
+    if not ce.get("ok") and ce.get("error"):
+        _fail("compare_email_run", str(ce)[:80])
+        fails += 1
+    else:
+        _ok(f"compare email sent={ce.get('sent')}")
+
     print("\n=== Faz D — bilim derin / denge70 / otonom debug ===")
     from ilim_assistant.ana_motor_bilim_derin import (
         apply_bilim_derin_rag_top_k,
@@ -2078,6 +2142,21 @@ def run_live(base: str) -> int:
         fails += 1
     else:
         _ok("Faz S3 schedule prefs acik")
+    if not am.get("super_ozet_pdf"):
+        _fail("faz_t1 super_pdf", "kapali")
+        fails += 1
+    else:
+        _ok("Faz T1 super ozet PDF acik")
+    if not am.get("unified_prefs"):
+        _fail("faz_t2 unified", "kapali")
+        fails += 1
+    else:
+        _ok("Faz T2 unified prefs acik")
+    if not am.get("compare_email"):
+        _fail("faz_t3 compare_email", "kapali")
+        fails += 1
+    else:
+        _ok("Faz T3 compare email acik")
 
     print("\n=== Canli — upload + matris SLO ===")
     chat_url = base.rstrip("/") + "/api/chat/full"

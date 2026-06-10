@@ -537,7 +537,7 @@
               </div>
             </div>
             <div id="ana-motor-archive-card" class="mini-card ana-motor-archive-card">
-              <strong>Arşiv &amp; birleştir (Faz S)</strong>
+              <strong>Arşiv &amp; birleştir (Faz T)</strong>
               <p id="ana-motor-archive-summary" class="ana-motor-card-sub">Kalıcı arşiv oturumları</p>
               <div id="ana-motor-weekly-summary" class="mini-card ana-motor-weekly-summary" hidden>
                 <strong id="ana-motor-weekly-title">Haftalık özet</strong>
@@ -563,23 +563,22 @@
                 <div class="ana-motor-patch-actions">
                   <button type="button" class="btn-secondary btn-compact" id="btn-ana-weekly-notify">Özet bildir</button>
                   <button type="button" class="btn-secondary btn-compact" id="btn-ana-timeline-remember">Timeline hatırla</button>
+                  <button type="button" class="btn-secondary btn-compact" id="btn-ana-super-ozet-pdf">Süper özet PDF</button>
+                  <button type="button" class="btn-secondary btn-compact" id="btn-ana-compare-email">Karş. e-posta</button>
                 </div>
               </div>
               <div id="ana-motor-paket-grafik" class="ana-motor-paket-grafik" hidden></div>
-              <div id="ana-motor-schedule-prefs" class="ana-motor-notify-prefs mini-card">
-                <strong>Zamanlayıcı tercihleri</strong>
-                <label class="ana-motor-pref-row"><input type="checkbox" id="ana-sched-enabled" checked /> Zamanlayıcı açık</label>
-                <label class="ana-motor-pref-row">Poll (sn): <input type="number" id="ana-sched-poll" class="input-compact" min="300" max="86400" value="3600" /></label>
-                <label class="ana-motor-pref-row">Dönem (gün): <input type="number" id="ana-sched-days" class="input-compact" min="1" max="30" value="7" /></label>
-                <button type="button" class="btn-secondary btn-compact" id="btn-ana-schedule-prefs-save">Kaydet</button>
-              </div>
-              <div id="ana-motor-notify-prefs" class="ana-motor-notify-prefs mini-card">
-                <strong>Bildirim tercihleri</strong>
-                <label class="ana-motor-pref-row"><input type="checkbox" id="ana-pref-desktop" checked /> Masaüstü</label>
-                <label class="ana-motor-pref-row"><input type="checkbox" id="ana-pref-email" /> E-posta</label>
-                <label class="ana-motor-pref-row"><input type="checkbox" id="ana-pref-warn-only" checked /> Yalnız uyarı</label>
-                <label class="ana-motor-pref-row">Poll (sn): <input type="number" id="ana-pref-poll" class="input-compact" min="60" max="600" value="120" /></label>
-                <button type="button" class="btn-secondary btn-compact" id="btn-ana-notify-prefs-save">Kaydet</button>
+              <div id="ana-motor-unified-prefs" class="ana-motor-notify-prefs mini-card">
+                <strong>Birleşik tercihler (bildirim + zamanlayıcı)</strong>
+                <label class="ana-motor-pref-row"><input type="checkbox" id="ana-uni-desktop" checked /> Masaüstü bildirim</label>
+                <label class="ana-motor-pref-row"><input type="checkbox" id="ana-uni-email" /> E-posta (SMTP)</label>
+                <label class="ana-motor-pref-row"><input type="checkbox" id="ana-uni-warn-only" checked /> Yalnız uyarı</label>
+                <label class="ana-motor-pref-row">Hatırlat poll (sn): <input type="number" id="ana-uni-remind-poll" class="input-compact" min="60" max="600" value="120" /></label>
+                <label class="ana-motor-pref-row"><input type="checkbox" id="ana-uni-sched-enabled" checked /> Zamanlayıcı açık</label>
+                <label class="ana-motor-pref-row">Zamanlayıcı poll (sn): <input type="number" id="ana-uni-sched-poll" class="input-compact" min="300" max="86400" value="3600" /></label>
+                <label class="ana-motor-pref-row">Dönem (gün): <input type="number" id="ana-uni-period-days" class="input-compact" min="1" max="30" value="7" /></label>
+                <label class="ana-motor-pref-row"><input type="checkbox" id="ana-uni-compare-email" /> Karşılaştırma e-posta</label>
+                <button type="button" class="btn-secondary btn-compact" id="btn-ana-unified-prefs-save">Birleşik kaydet</button>
               </div>
               <div id="ana-motor-notify-history" class="ana-motor-notify-history" hidden>
                 <strong>Son bildirimler</strong>

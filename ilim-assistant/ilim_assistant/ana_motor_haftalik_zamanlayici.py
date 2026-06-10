@@ -122,6 +122,12 @@ def tick_weekly_schedule(*, days: int | None = None) -> dict[str, Any]:
 
         summary = build_weekly_timeline_summary(days=max(1, min(period, 30)))
         result = attach_weekly_notifications(summary, send_desktop=True, send_email=False)
+        try:
+            from ilim_assistant.ana_motor_compare_email import maybe_send_compare_email
+
+            result["compare_email_status"] = maybe_send_compare_email(period_days=period)
+        except Exception:
+            pass
         if result.get("desktop_notifications"):
             state = _load_state()
             state["last_notify_at"] = now

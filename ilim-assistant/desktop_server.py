@@ -1438,6 +1438,12 @@ def health():
             not in ("0", "false", "no"),
             "schedule_prefs": os.environ.get("RUZGAR_ANA_SCHEDULE_PREFS", "1").strip().lower()
             not in ("0", "false", "no"),
+            "super_ozet_pdf": os.environ.get("RUZGAR_ANA_SUPER_OZET_PDF", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "unified_prefs": os.environ.get("RUZGAR_ANA_UNIFIED_PREFS", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "compare_email": os.environ.get("RUZGAR_ANA_COMPARE_EMAIL", "1").strip().lower()
+            not in ("0", "false", "no"),
         },
         "super_brain": _sb,
         "connection": _connection_ui_block(super_brain=_sb),
@@ -3351,6 +3357,18 @@ class SchedulePrefsBody(BaseModel):
     schedule_enabled: bool | None = None
     poll_sec: int | None = None
     period_days: int | None = None
+    compare_email_enabled: bool | None = None
+
+
+class UnifiedPrefsBody(BaseModel):
+    desktop_enabled: bool | None = None
+    email_enabled: bool | None = None
+    warn_only: bool | None = None
+    remind_poll_sec: int | None = None
+    schedule_enabled: bool | None = None
+    schedule_poll_sec: int | None = None
+    period_days: int | None = None
+    compare_email_enabled: bool | None = None
 
 
 @app.get("/api/ana-motor/schedule-prefs")
@@ -3370,6 +3388,66 @@ async def api_ana_motor_schedule_prefs_save(body: SchedulePrefsBody) -> dict[str
     result = await run_in_threadpool(save_schedule_prefs, payload)
     if not result.get("ok"):
         raise HTTPException(status_code=400, detail=str(result.get("error") or "Kayıt başarısız."))
+    return result
+
+
+@app.get("/api/ana-motor/unified-prefs")
+def api_ana_motor_unified_prefs_get() -> dict[str, Any]:
+    """Faz T2 — bildirim + zamanlayıcı birleşik tercihler."""
+    from ilim_assistant.ana_motor_birlesik_tercih import load_unified_prefs
+
+    return load_unified_prefs()
+
+
+@app.post("/api/ana-motor/unified-prefs")
+async def api_ana_motor_unified_prefs_save(body: UnifiedPrefsBody) -> dict[str, Any]:
+    """Faz T2 — birleşik tercihleri kaydet."""
+    from ilim_assistant.ana_motor_birlesik_tercih import save_unified_prefs
+
+    payload = body.model_dump(exclude_none=True)
+    result = await run_in_threadpool(save_unified_prefs, payload)
+    if not result.get("ok"):
+        raise HTTPException(status_code=400, detail=str(result.get("error") or "Kayıt başarısız."))
+    return result
+
+
+@app.get("/api/ana-motor/super-ozet/export-pdf")
+def api_ana_motor_super_ozet_export_pdf(days: int = 7):
+    """Faz T1 — süper özet PDF (tüm paneller)."""
+    from fastapi.responses import Response
+
+    from ilim_assistant.ana_motor_super_ozet_pdf import export_super_ozet_pdf, super_ozet_pdf_enabled
+
+    if not super_ozet_pdf_enabled():
+        raise HTTPException(status_code=403, detail="Süper özet PDF kapalı.")
+    out = export_super_ozet_pdf(period_days=max(1, min(days, 30)))
+    if not out.get("ok"):
+        raise HTTPException(status_code=404, detail=str(out.get("error") or "PDF boş."))
+    return Response(
+        content=bytes(out.get("pdf") or b""),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="{out.get("filename") or "super_ozet.pdf"}"'
+            ),
+        },
+    )
+
+
+@app.post("/api/ana-motor/paket-history/compare/email")
+async def api_ana_motor_compare_email(days: int = 7, force: int = 0) -> dict[str, Any]:
+    """Faz T3 — karşılaştırma e-posta raporu."""
+    from ilim_assistant.ana_motor_compare_email import compare_email_enabled, maybe_send_compare_email
+
+    if not compare_email_enabled():
+        raise HTTPException(status_code=403, detail="Karşılaştırma e-posta raporu kapalı.")
+    result = await run_in_threadpool(
+        maybe_send_compare_email,
+        period_days=max(1, min(days, 30)),
+        force=bool(force),
+    )
+    if not result.get("ok") and result.get("error"):
+        raise HTTPException(status_code=400, detail=str(result.get("error")))
     return result
 
 
