@@ -706,6 +706,13 @@ def should_delegate_to_programlama(
     )
     if any(c in low for c in code_cues):
         return True
+    try:
+        from ilim_assistant.ana_motor_otonom_debug import should_delegate_genel_debug
+
+        if should_delegate_genel_debug(message, mode_norm):
+            return True
+    except Exception:
+        pass
     if re.search(r"projects/[\w.\-]+", message or "", re.I):
         return True
     if low.startswith("gorev:") or low.startswith("görev:"):

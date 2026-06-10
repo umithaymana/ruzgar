@@ -1288,6 +1288,16 @@ def health():
             "web_suppress_rag_min": os.environ.get("RUZGAR_WEB_SUPPRESS_RAG_MIN", "0.38"),
             "ana_motor_agent_enabled": os.environ.get("RUZGAR_ANA_MOTOR_AGENT", "1").strip().lower()
             not in ("0", "false", "no"),
+            "ana_motor_arastirma": os.environ.get("RUZGAR_ANA_MOTOR_ARASTIRMA", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "web_freshness_stamp": os.environ.get("RUZGAR_WEB_FRESHNESS_STAMP", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "bilgi_brain_chain": os.environ.get("RUZGAR_BILGI_BRAIN_CHAIN", "").strip() or None,
+            "bilim_derin": os.environ.get("RUZGAR_BILIM_DERIN", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "brain_denge70_model": os.environ.get("RUZGAR_BRAIN_DENGE70_MODEL", "llama3.1:70b"),
+            "otonom_debug_bridge": os.environ.get("RUZGAR_ANA_MOTOR_OTONOM_DEBUG", "1").strip().lower()
+            not in ("0", "false", "no"),
         },
         "super_brain": _sb,
         "connection": _connection_ui_block(super_brain=_sb),
@@ -8273,10 +8283,13 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         except Exception:
             pass
 
-    # Tarih hızlı yol — plan / prefetch / ağır RAG öncesi (120 sn UI zaman aşımı)
+    # Tarih hızlı yol — yalnızca kısa ilim turu; bilgi/liste → Ana Motor (aşağıda)
     if mode_norm in ("genel", "uretim", "gelisim") and not coding:
         try:
-            from ilim_assistant.tarih_fast import iter_tarih_hafiza_reply
+            from ilim_assistant.tarih_fast import (
+                is_tarih_fast_teach_fallback,
+                iter_tarih_hafiza_reply,
+            )
 
             tarih_early = iter_tarih_hafiza_reply(
                 req.message,
@@ -8292,7 +8305,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 for piece in tarih_early:
                     reply_body += piece
                     yield {"type": "token", "text": piece}
-                if reply_body.strip():
+                if reply_body.strip() and not is_tarih_fast_teach_fallback(reply_body):
                     full_out = finalize_assistant_reply(reply_body)
                     yield {
                         "type": "done",
@@ -8305,23 +8318,6 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                         "tarih_fast_early": True,
                     }
                     return
-                try:
-                    from ilim_assistant.chat_core import _tarih_intent
-
-                    if _tarih_intent(req.message):
-                        yield from _iter_instant_chat_events(
-                            (
-                                "Tarih hızlı yol yanıt üretemedi (Ollama zaman aşımı). "
-                                "`ollama serve` kontrol edin veya soruyu kısaltıp tekrar deneyin."
-                            ),
-                            (req.message or "").strip(),
-                            session_wake_used=req.session_wake_used,
-                            msg_for_wake=req.message,
-                            orch=orch,
-                        )
-                        return
-                except Exception:
-                    pass
         except Exception:
             pass
     try:
@@ -8858,6 +8854,24 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 }
         except Exception:
             pass
+        try:
+            from ilim_assistant.ana_motor_otonom_debug import (
+                build_otonom_debug_directive,
+                detect_otonom_debug_intent,
+            )
+
+            if detect_otonom_debug_intent(msg):
+                user_payload = (
+                    build_otonom_debug_directive(msg).rstrip()
+                    + "\n\n---\n"
+                    + user_payload
+                )
+                yield {
+                    "type": "status",
+                    "text": "Faz D — otonom debug köprüsü (pytest + çok dosya patch).",
+                }
+        except Exception:
+            pass
     new_wake = req.session_wake_used or message_calls_wake_name(msg)
 
     if og_direct is not None:
@@ -9061,8 +9075,19 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
     reply_body = ""
     try:
         wants_dbg = mode_norm == "programlama" and (
-            _scan_fix_approved or _p11_repair_approved or wants_autonomous_code_debug(msg)
+            _scan_fix_approved
+            or _p11_repair_approved
+            or wants_autonomous_code_debug(msg)
         )
+        if mode_norm == "programlama" and not wants_dbg:
+            try:
+                from ilim_assistant.ana_motor_otonom_debug import should_enable_code_debug_loop
+
+                wants_dbg = should_enable_code_debug_loop(
+                    msg, mode_norm, coding_mode=coding
+                )
+            except Exception:
+                pass
         if mode_norm == "programlama" and not wants_dbg:
             try:
                 from ilim_assistant.motorlar.programlama_faz2 import (
@@ -9247,6 +9272,20 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 patch_footer = str(code_patch_meta.get("footer") or "")
                 if patch_footer:
                     body_fixed = body_fixed.rstrip() + patch_footer
+                try:
+                    from ilim_assistant.ana_motor_programlama_havuz import (
+                        persist_programlama_turn,
+                    )
+
+                    persist_programlama_turn(
+                        msg,
+                        body_fixed,
+                        workspace_root=req.workspace_root,
+                        active_file=req.programlama_active_file,
+                        patch_meta=code_patch_meta,
+                    )
+                except Exception:
+                    pass
             except Exception:
                 pass
         try:

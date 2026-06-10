@@ -427,6 +427,22 @@ def _score_categories(msg: str, mode_norm: str, motor_flags: dict[str, bool]) ->
     if looks_like_encyclopedic_fact_question(raw):
         s["bilgi"] += 2.6
 
+    # Faz B3 — genel modda kısa sorular bilgi + web önceliği (sohbet selamı hariç)
+    if (
+        mode_norm in ("genel", "uretim", "gelisim")
+        and len(raw) < 80
+        and not looks_like_casual_social_chat(raw)
+    ):
+        if _explicit_research_intent(raw) or "?" in raw:
+            s["bilgi"] += 2.4
+            s["gundelik"] = max(0.0, s["gundelik"] - 1.8)
+        elif re.search(
+            r"\b(nedir|kimdir|ne zaman|nerede|kac|kaç)\b",
+            asc,
+        ):
+            s["bilgi"] += 1.6
+            s["gundelik"] = max(0.0, s["gundelik"] - 1.0)
+
     return s
 
 
@@ -521,6 +537,13 @@ def plan_question(
             )
         )
     )
+    # Faz B3 — genel mod + bilgi: web varsayılan (kısa sorular dahil)
+    if (
+        mode_norm in ("genel", "uretim", "gelisim")
+        and primary == "bilgi"
+        and len((message or "").strip()) < 120
+    ):
+        prefer_web = True
     if primary == "bilim" and any(x in low_msg for x in ("güncel", "guncel", "bugün", "bugun")):
         prefer_web = True
     if primary == "gundelik" and any(
@@ -536,6 +559,17 @@ def plan_question(
         prefer_web = False
         if primary == "bilgi":
             use_ilim_rag = False
+
+    # Faz B3 — genel kısa bilgi sorusunda web varsayılan (Faz 49 hız yolunun üstüne)
+    if (
+        mode_norm in ("genel", "uretim", "gelisim")
+        and primary == "bilgi"
+        and len((message or "").strip()) < 120
+        and os.environ.get("RUZGAR_FAZ_B3_WEB_DEFAULT", "1").strip().lower()
+        not in ("0", "false", "no")
+        and not looks_like_casual_social_chat(message)
+    ):
+        prefer_web = True
 
     prefer_archive = primary == "bilim" or flags.get("bilim")
 
@@ -920,7 +954,11 @@ def maybe_clarification_reply(
     return plan.clarification
 
 
-def rag_top_k_for_turn(mode_norm: str, plan: QuestionPlan | None) -> int:
+def rag_top_k_for_turn(
+    mode_norm: str,
+    plan: QuestionPlan | None,
+    message: str | None = None,
+) -> int:
     """C3 — mod ve plana göre RAG parça sayısı (varsayılan genel: 4)."""
     try:
         base = int(os.environ.get("RAG_TOP_K", "2"))
@@ -947,6 +985,12 @@ def rag_top_k_for_turn(mode_norm: str, plan: QuestionPlan | None) -> int:
                 base = max(base, int(os.environ.get("RUZGAR_DILBILGISI_RAG_TOP_K", "3")))
             except ValueError:
                 base = max(base, 3)
+    try:
+        from ilim_assistant.ana_motor_bilim_derin import apply_bilim_derin_rag_top_k
+
+        base = apply_bilim_derin_rag_top_k(base, plan, message, mode_norm)
+    except Exception:
+        pass
     return max(1, min(base, 12))
 
 

@@ -1172,13 +1172,23 @@ def prepare_turn(
         try:
             from ilim_assistant.ana_motor_plan import rag_top_k_for_turn
 
-            rag_k_clamped = rag_top_k_for_turn(m, turn_plan)
+            rag_k_clamped = rag_top_k_for_turn(m, turn_plan, message=msg)
         except Exception:
             rag_k = int(os.environ.get("RAG_TOP_K", "2"))
             rag_k_clamped = max(1, min(rag_k, 12))
         pool_k = min(max(rag_k_clamped * 3, 10), 28)
         rag_score_min = float(os.environ.get("RAG_SCORE_MIN", "0.20"))
         tarih_on = _tarih_intent(msg)
+        use_tarih_rag_branch = tarih_on
+        try:
+            from ilim_assistant.tarih_fast import should_defer_tarih_fast_to_ana_motor
+
+            if use_tarih_rag_branch and should_defer_tarih_fast_to_ana_motor(
+                msg, question_plan=turn_plan, mode_norm=m
+            ):
+                use_tarih_rag_branch = False
+        except Exception:
+            pass
         try:
             from ilim_assistant.ana_motor_plan import looks_like_encyclopedic_fact_question
 
@@ -1202,7 +1212,7 @@ def prepare_turn(
         # Tarih niyeti: prefetch bundle'ı yok sayıp ikinci ağır tarama yapılıyordu (Faz 9 gecikme).
         # Ansiklopedik «kim kurdu» vb. soruda Ana Motor önbelleğini koru.
         if _bundle_in is not None and (
-            (tdk_exact_on and tdk_lem) or (tarih_on and not tarih_light)
+            (tdk_exact_on and tdk_lem) or (use_tarih_rag_branch and not tarih_light)
         ):
             _bundle_in = None
 
@@ -1219,7 +1229,7 @@ def prepare_turn(
         elif tdk_exact_on and tdk_lem:
             # TDK: yalnızca `##` başlığı tam eşleşmesi — semantik yakınlıkla başka maddeye sıçrama yok.
             good_hits = search_tdk_exact_lemma(tdk_lem, top_k=rag_k_clamped)
-        elif tarih_on:
+        elif use_tarih_rag_branch:
             pool_k_use = pool_k
             tarih_scan = max(32, int(os.environ.get("RUZGAR_TARIH_SCAN_CAP", "96")))
             tarih_top = max(rag_k_clamped, int(os.environ.get("RUZGAR_TARIH_TOP_K", "4")))
@@ -1528,6 +1538,36 @@ def prepare_turn(
                 "Önemli bilgiler için kısaca kaynak (site adı veya URL) belirt. "
                 "Sayfa metni çekilemediyse dürüstçe yaz; arama snippet’lerine güvenebilirsin.\n"
             )
+        try:
+            from ilim_assistant.ana_motor_arastirma import (
+                maybe_build_unified_research_report,
+            )
+
+            _rapor = maybe_build_unified_research_report(
+                msg,
+                hits=hits,
+                web_extra=web_extra,
+                question_plan=turn_plan,
+                mode_norm=m,
+            )
+            if _rapor:
+                user_payload += _rapor
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ana_motor_sentez import maybe_build_research_summary
+
+            _sentez = maybe_build_research_summary(
+                msg,
+                hits=hits,
+                web_extra=web_extra,
+                question_plan=turn_plan,
+                mode_norm=m,
+            )
+            if _sentez:
+                user_payload += _sentez
+        except Exception:
+            pass
     elif (
         m == "genel"
         and not archive_primary_flag
@@ -1609,6 +1649,17 @@ def prepare_turn(
             user_payload = append_super_brain_directive(
                 user_payload,
                 question_plan=turn_plan,
+                mode_norm=m,
+            )
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ana_motor_bilim_derin import append_bilim_deep_directive
+
+            user_payload = append_bilim_deep_directive(
+                user_payload,
+                turn_plan,
+                msg,
                 mode_norm=m,
             )
         except Exception:

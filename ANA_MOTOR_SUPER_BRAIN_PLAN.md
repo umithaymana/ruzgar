@@ -12,22 +12,37 @@
 | A4 | **Cevap kalite geçidi** | `ana_motor_reflection.py` | Kaynak yoksa dürüst uyarı; kısa cevap uyarısı |
 | A5 | Smoke + env | `ana_motor_smoke.py`, `RUZGAR_BRAIN.env.example` | Regresyon koruması |
 
-## Bu hafta (Faz B)
+## Faz B — uygulandı (2026-06-10)
 
-| # | Görev | Açıklama |
-|---|--------|----------|
-| B1 | Çok kaynaklı sentez turu | Arşiv + indeks + web → tek «araştırma özeti» (hızlı model, 1 tur) |
-| B2 | Self-reflection (9.6) | Cevap ↔ kaynak uyumu; çelişkide «emin değilim» |
-| B3 | `genel` modda bilgi planı güçlendirme | Kısa sorularda bile `bilgi` + web varsayılan |
-| B4 | Programlama → merkezi havuz yazma | Kod turu sonrası `motor_kv` |
+| # | Görev | Dosya | Durum |
+|---|--------|-------|--------|
+| B1 | Çok kaynaklı sentez turu | `ana_motor_sentez.py`, `chat_core.py` | Yerel+web → hızlı model özeti |
+| B2 | Self-reflection (9.6) | `ana_motor_reflection.py` | Kaynak ↔ cevap uyumu; «emin değilim» |
+| B3 | `genel` modda bilgi planı | `ana_motor_plan.py` | Kısa sorularda `bilgi` + web varsayılan |
+| B4 | Programlama → merkezi havuz | `ana_motor_programlama_havuz.py`, `desktop_server.py` | `motor_kv` + `publish_shared` |
 
-## Orta vade (Faz C — Faz 8–12 planı)
+## Faz C — uygulandı (2026-06-10)
 
-- **Faz 8:** 70B yerel veya her zaman Gemini (`RUZGAR_BRAIN_PROFILE=gemini`)
-- **Faz 9.1:** Birleşik araştırma raporu
-- **Faz 9.4:** «Bugün» / güncellik damgası her web cevabında
-- **Faz 10:** Tam otonom debug + çok dosya patch
-- **Faz 12:** Latency SLO + `ana_motor_smoke --live` CI
+| # | Görev | Dosya | Durum |
+|---|--------|-------|--------|
+| C1 / 9.1 | Birleşik araştırma raporu | `ana_motor_arastirma.py`, `chat_core.py` | [Y#] + web envanter kartı |
+| C2 / 9.4 | Güncellik damgası | `ana_motor_guncellik.py`, `web_tools.py`, `reflection` | Web bağlam + cevap sonu |
+| C3 / 8 | Bilgi beyin zinciri | `llm_brain.py` | Süper beyin açıkken Gemini önce |
+| C4 / 12 | Canlı smoke + SLO | `ana_motor_smoke.py --live` | Health + bilgi turu süresi |
+
+## Faz D — uygulandı (2026-06-10)
+
+| # | Görev | Dosya | Durum |
+|---|--------|-------|--------|
+| D1 / 9.3 | Bilim/tarih derin mod | `ana_motor_bilim_derin.py`, `main_engine.py`, `chat_core.py` | Arşiv öncelik + yüksek RAG |
+| D2 / 8 | 70B yerel profil | `llm_brain.py` | `denge70` / `RUZGAR_BRAIN_PROFILE=denge-70b` |
+| D3 / 10 | Otonom debug köprüsü | `ana_motor_otonom_debug.py`, `desktop_server.py`, `programlama_faz10.py` | Genel→prog + pytest döngüsü |
+
+## Sıradaki (Faz E — öneri)
+
+- Canlı bilim derin SLO + 70B model çekme kontrolü
+- Çok dosya patch onay kartı (UI)
+- Tarih derin mod + nebula külliyat birleşik kart
 
 ## Ortam (özet)
 

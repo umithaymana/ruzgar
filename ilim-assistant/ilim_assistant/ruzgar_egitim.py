@@ -764,6 +764,15 @@ def taught_reply_for_message(message: str) -> Optional[str]:
     return None
 
 
+def _skip_bilgi_egitim_instant() -> bool:
+    """kimdir/nedir — Ana Motor tam boru hattı (RAG + kaynak); öğretilmiş tek cümle atlansın."""
+    return os.environ.get("RUZGAR_EGITIM_SKIP_BILGI_INSTANT", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
 def maybe_egitim_learned_reply(
     message: str,
     history: list | None = None,
@@ -777,6 +786,8 @@ def maybe_egitim_learned_reply(
     except Exception:
         pass
     if _message_is_casual_turn(message):
+        return None
+    if _skip_bilgi_egitim_instant() and _is_bilgi_sorusu(message):
         return None
     hit = taught_reply_for_message(message)
     if hit:

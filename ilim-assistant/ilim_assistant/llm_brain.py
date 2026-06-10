@@ -263,6 +263,25 @@ def _profile_denge() -> BrainEndpoint | None:
     )
 
 
+def _profile_denge70() -> BrainEndpoint | None:
+    """Faz D / 8 — yerel 70B denge profili (llama3.1:70b vb.)."""
+    model = (
+        os.environ.get("RUZGAR_BRAIN_DENGE70_MODEL")
+        or os.environ.get("OLLAMA_CHAT_MODEL_70B")
+        or "llama3.1:70b"
+    ).strip()
+    if not model:
+        return None
+    return BrainEndpoint(
+        profile_id="denge70",
+        label="Denge 70B (yerel Ollama)",
+        model=model,
+        provider="ollama",
+        base_url=_ollama_base(),
+        api_key=_ollama_key(),
+    )
+
+
 def _profile_gemini() -> BrainEndpoint | None:
     try:
         from ilim_assistant.gemini_quota_guard import gemini_cooldown_active
@@ -364,11 +383,21 @@ def _profile_kod() -> BrainEndpoint | None:
     )
 
 
+def _normalize_forced_profile(forced: str) -> str:
+    alias = {
+        "denge-70b": "denge70",
+        "denge_70b": "denge70",
+        "70b": "denge70",
+    }
+    return alias.get(forced, forced)
+
+
 def all_profiles() -> dict[str, BrainEndpoint]:
     out: dict[str, BrainEndpoint] = {}
     for fn in (
         _profile_hizli,
         _profile_denge,
+        _profile_denge70,
         _profile_groq,
         _profile_gemini,
         _profile_kod,
@@ -376,6 +405,40 @@ def all_profiles() -> dict[str, BrainEndpoint]:
         ep = fn()
         if ep is not None:
             out[ep.profile_id] = ep
+    return out
+
+
+def _inject_denge70_chain(
+    chain_ids: list[str],
+    *,
+    question_plan: Any | None,
+    message: str,
+    mode_norm: str,
+    profiles: dict[str, BrainEndpoint],
+) -> list[str]:
+    """Bilim derin turda 70B profilini zincire ekle."""
+    out = list(chain_ids)
+    try:
+        from ilim_assistant.ana_motor_bilim_derin import (
+            bilim_derin_use_70b,
+            is_bilim_derin_turn,
+        )
+
+        if not (
+            bilim_derin_use_70b()
+            and is_bilim_derin_turn(question_plan, message, mode_norm)
+            and profiles.get("denge70") is not None
+            and "denge70" not in out
+        ):
+            return out
+        if "gemini" in out:
+            out.insert(out.index("gemini") + 1, "denge70")
+        elif "groq" in out:
+            out.insert(out.index("groq") + 1, "denge70")
+        else:
+            out.insert(0, "denge70")
+    except Exception:
+        pass
     return out
 
 
@@ -461,7 +524,9 @@ def select_brain_chain(
     legacy_model: str | None = None,
 ) -> BrainSelection:
     profiles = all_profiles()
-    forced = (os.environ.get("RUZGAR_BRAIN_PROFILE") or "auto").strip().lower()
+    forced = _normalize_forced_profile(
+        (os.environ.get("RUZGAR_BRAIN_PROFILE") or "auto").strip().lower()
+    )
 
     try:
         from ilim_assistant.ruzgar_umed_cevap_emri import (
@@ -470,7 +535,14 @@ def select_brain_chain(
         )
 
         if umed_emri_applies(mode_norm=mode_norm, coding_mode=coding_mode):
-            chain_ids = _filter_chain_ids_for_quota(brain_chain_ids_for_emri())
+            chain_ids = _inject_denge70_chain(
+                brain_chain_ids_for_emri(),
+                question_plan=question_plan,
+                message=message,
+                mode_norm=mode_norm,
+                profiles=profiles,
+            )
+            chain_ids = _filter_chain_ids_for_quota(chain_ids)
             chain: list[BrainEndpoint] = []
             seen_u: set[str] = set()
             for pid in chain_ids:
@@ -523,19 +595,34 @@ def select_brain_chain(
     elif mode_norm in ("hizli",):
         chain_ids = ["hizli", "denge", "gemini"]
     elif primary in ("bilgi", "bilim", "dilbilgisi") or _message_needs_deep_brain(message):
-        try:
-            from ilim_assistant.config import ollama_only_mode
+        custom_bilgi = (os.environ.get("RUZGAR_BILGI_BRAIN_CHAIN") or "").strip()
+        if custom_bilgi:
+            chain_ids = [x.strip() for x in custom_bilgi.split(",") if x.strip()]
+        else:
+            try:
+                from ilim_assistant.config import ollama_only_mode
 
-            if ollama_only_mode():
-                chain_ids = ["denge", "hizli", "kod"]
-            else:
-                chain_ids = (
-                    ["groq", "denge", "hizli", "gemini"]
-                    if _profile_groq() is not None
-                    else ["denge", "hizli", "gemini"]
-                )
-        except Exception:
-            chain_ids = ["denge", "hizli", "gemini"]
+                if ollama_only_mode():
+                    chain_ids = ["denge", "hizli", "kod"]
+                elif (
+                    os.environ.get("RUZGAR_SUPER_BRAIN", "1").strip().lower()
+                    not in ("0", "false", "no")
+                    and gemini_configured()
+                    and primary in ("bilgi", "bilim")
+                ):
+                    chain_ids = (
+                        ["gemini", "groq", "denge", "hizli"]
+                        if _profile_groq() is not None
+                        else ["gemini", "denge", "hizli"]
+                    )
+                else:
+                    chain_ids = (
+                        ["groq", "denge", "hizli", "gemini"]
+                        if _profile_groq() is not None
+                        else ["denge", "hizli", "gemini"]
+                    )
+            except Exception:
+                chain_ids = ["denge", "hizli", "gemini"]
     elif primary in ("gundelik", "islem", "hava", "dosya"):
         chain_ids = (
             ["gemini", "hizli", "denge"]
@@ -551,6 +638,13 @@ def select_brain_chain(
     if custom:
         chain_ids = [x.strip() for x in custom.split(",") if x.strip()]
 
+    chain_ids = _inject_denge70_chain(
+        chain_ids,
+        question_plan=question_plan,
+        message=message,
+        mode_norm=mode_norm,
+        profiles=profiles,
+    )
     chain_ids = _filter_chain_ids_for_quota(chain_ids)
 
     chain: list[BrainEndpoint] = []

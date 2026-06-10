@@ -6,11 +6,20 @@ from __future__ import annotations
 import os
 import re
 import time
-from typing import Iterator
+import unicodedata
+from typing import Any, Iterator
 
 from ilim_assistant.chat_core import _tarih_intent, prior_messages_for_turn
 from ilim_assistant.persona import ASSISTANT_NAME, OWNER_ADDRESS
 from ilim_assistant.rag_store import search_tarih_hafiza
+
+_TEACH_FALLBACK_MARKERS = (
+    "öğretir misin",
+    "ogretir misin",
+    "net özet çıkaramadım",
+    "net ozet cikaramadi",
+    "net bir satır bulamadım",
+)
 
 
 def tarih_fast_enabled() -> bool:
@@ -48,6 +57,97 @@ def _llm_body_usable(text: str) -> bool:
     return True
 
 
+def is_tarih_fast_teach_fallback(text: str) -> bool:
+    """tarih_fast başarısızlık metni — Ana Motor'a düşülmeli."""
+    low = (text or "").strip().casefold()
+    return any(m in low for m in _TEACH_FALLBACK_MARKERS)
+
+
+def _norm_ascii_blob(msg: str) -> str:
+    raw = (msg or "").strip()
+    asc = unicodedata.normalize("NFKD", raw).encode("ascii", "ignore").decode("ascii").lower()
+    return raw.lower() + " " + asc
+
+
+def looks_like_list_bilgi_question(msg: str) -> bool:
+    """Liste / çoklu isim isteği — kısa tarih_fast yetersiz."""
+    blob = _norm_ascii_blob(msg)
+    if len((msg or "").strip()) > 220:
+        return False
+    list_cues = (
+        "kimlerdir",
+        "kimler",
+        "isimlerini",
+        "ismlerini",
+        "listele",
+        "sırala",
+        "sirala",
+        "hepsini",
+        "tamamını",
+        "tamamini",
+        "sayar mısın",
+        "sayar misin",
+        "kaç tane",
+        "kac tane",
+        "madde madde",
+    )
+    return any(c in blob for c in list_cues)
+
+
+def skip_tarih_fast_for_bilgi_plan() -> bool:
+    return os.environ.get("RUZGAR_TARIH_FAST_SKIP_BILGI", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
+def _plan_primary(question_plan: Any | None) -> str:
+    if question_plan is None:
+        return ""
+    if hasattr(question_plan, "primary"):
+        return str(getattr(question_plan, "primary", "") or "").strip().lower()
+    if isinstance(question_plan, dict):
+        return str(question_plan.get("primary") or "").strip().lower()
+    return ""
+
+
+def should_defer_tarih_fast_to_ana_motor(
+    message: str,
+    *,
+    question_plan: Any | None = None,
+    mode_norm: str = "genel",
+) -> bool:
+    """
+    Bilgi / liste soruları Ana Motor tam boru hattına (RAG + web + Faz B).
+    """
+    if mode_norm not in ("genel", "uretim", "gelisim"):
+        return False
+    if looks_like_list_bilgi_question(message):
+        return True
+    if not skip_tarih_fast_for_bilgi_plan():
+        return False
+    plan = question_plan
+    if plan is None:
+        try:
+            from ilim_assistant.ana_motor_plan import plan_question
+            from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
+
+            plan = plan_question(message, mode_norm, motor_niyeti_heuristic(message))
+        except Exception:
+            plan = None
+    if _plan_primary(plan) == "bilgi":
+        return True
+    try:
+        from ilim_assistant.ruzgar_egitim import _is_bilgi_sorusu
+
+        if _is_bilgi_sorusu(message):
+            return True
+    except Exception:
+        pass
+    return False
+
+
 def _format_hits(hits: list[tuple[str, str, float]], max_chars: int = 4500) -> str:
     parts: list[str] = []
     used = 0
@@ -65,6 +165,7 @@ def iter_tarih_hafiza_reply(
     history: list,
     *,
     mode_norm: str = "genel",
+    question_plan: Any | None = None,
 ) -> Iterator[str] | None:
     """
     Tarih niyeti + yerel pasaj varsa Ollama ile kısa yanıt üretir.
@@ -74,6 +175,10 @@ def iter_tarih_hafiza_reply(
         return None
     msg = (message or "").strip()
     if not msg:
+        return None
+    if should_defer_tarih_fast_to_ana_motor(
+        msg, question_plan=question_plan, mode_norm=mode_norm
+    ):
         return None
     try:
         from ilim_assistant.chat_core import _is_live_weather_query
@@ -292,6 +397,9 @@ def iter_tarih_hafiza_reply(
                 body = chunk
                 yield chunk
                 return
-        yield from _rag_pasaj_yanit()
+        fallback = _net_pasaj_metni()
+        if is_tarih_fast_teach_fallback(fallback):
+            return
+        yield fallback
 
     return _gen()

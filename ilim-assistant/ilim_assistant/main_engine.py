@@ -401,8 +401,16 @@ def iter_archive_first_decision(
             return
 
         if primary == "bilim" or _plan_prefer_archive(question_plan):
+            _skip_fast = False
+            try:
+                from ilim_assistant.ana_motor_bilim_derin import should_skip_bilim_fast_index
+
+                _skip_fast = should_skip_bilim_fast_index(question_plan, q, mode_norm)
+            except Exception:
+                _skip_fast = False
             if (
                 primary == "bilim"
+                and not _skip_fast
                 and (_gemini_first_for_encyclopedic_enabled() or _bilim_gemini_index_first_enabled())
                 and looks_like_encyclopedic_fact_question(q)
             ):

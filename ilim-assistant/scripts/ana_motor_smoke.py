@@ -215,9 +215,90 @@ def run_offline() -> int:
     else:
         _ok("encyclopedic: hizli merge status")
 
-    print("\n=== Süper beyin modülleri ===")
+    print("\n=== Faz B — sentez / reflection / plan / havuz ===")
+    from ilim_assistant.ana_motor_plan import plan_question as _plan_q
+    from ilim_assistant.ana_motor_programlama_havuz import (
+        persist_programlama_turn,
+        programlama_havuz_enabled,
+    )
+    from ilim_assistant.ana_motor_reflection import (
+        apply_answer_quality_pass,
+        detect_source_answer_mismatch,
+    )
+    from ilim_assistant.ana_motor_sentez import (
+        build_research_summary,
+        sentez_enabled,
+        should_synthesize_turn,
+    )
+
+    if not sentez_enabled():
+        _fail("sentez enabled", "kapali")
+        fails += 1
+    else:
+        _ok("sentez modulu acik")
+    _hits_mix = [("osmanli kurulus", "tarih_ve_kultur/x.md", 0.55), ("1299", "indeks/y.md", 0.48)]
+    _web = "Web aramasi: Osmanli devleti 1299"
+    if not should_synthesize_turn(
+        question_plan=_plan_q("Osmanli kim kurdu", "genel", {}),
+        hits=_hits_mix,
+        web_extra=_web,
+        mode_norm="genel",
+    ):
+        _fail("sentez should_run", "True bekleniyordu")
+        fails += 1
+    else:
+        _ok("sentez: yerel+web tetik")
+    if should_synthesize_turn(
+        question_plan=_plan_q("selam", "genel", {}),
+        hits=[],
+        web_extra="",
+        mode_norm="genel",
+    ):
+        _fail("sentez gundelik", "False bekleniyordu")
+        fails += 1
+    else:
+        _ok("sentez: gundelik atlanir")
+    _sentez_off = build_research_summary(
+        "test",
+        hits=[],
+        web_extra="",
+        mode_norm="genel",
+    )
+    if _sentez_off:
+        _fail("sentez bos kaynak", "bos olmali")
+        fails += 1
+    else:
+        _ok("sentez: kaynak yoksa bos")
+
+    _mis, _note = detect_source_answer_mismatch(
+        "Osmanli 1453 yilinda kuruldu kesinlikle.",
+        hits=[("1299", "tarih.md", 0.6)],
+        web_was_used=False,
+    )
+    if not _mis or "emin" not in _note.lower():
+        _fail("reflection mismatch", _note or "bos")
+        fails += 1
+    else:
+        _ok("reflection B2: kaynak uyumsuzlugu")
+
+    p_kisa = _plan_q("Python nedir?", "genel", {})
+    if p_kisa.primary != "bilgi":
+        _fail("B3 kisa bilgi plan", p_kisa.primary)
+        fails += 1
+    elif not p_kisa.prefer_web:
+        _fail("B3 prefer_web", "False")
+        fails += 1
+    else:
+        _ok(f"B3: kisa soru -> {p_kisa.primary} + web")
+
+    if programlama_havuz_enabled():
+        _ok("programlama havuz acik")
+    else:
+        _fail("programlama havuz", "kapali")
+        fails += 1
+
+    print("\n=== Super beyin modulleri ===")
     from ilim_assistant.ana_motor_kaynak import citation_directive_for_turn, format_context_blocks
-    from ilim_assistant.ana_motor_reflection import apply_answer_quality_pass
     from ilim_assistant.ana_motor_super import append_super_brain_directive
 
     bl = format_context_blocks([("metin", "kaynak.md", 0.55)])
@@ -389,6 +470,155 @@ def run_offline() -> int:
     else:
         _ok("tarih_fast hava sorusunu atlıyor")
 
+    print("\n=== Tarih bilgi — Ana Motor yolu (padisah listesi) ===")
+    from ilim_assistant.tarih_fast import (
+        is_tarih_fast_teach_fallback,
+        should_defer_tarih_fast_to_ana_motor,
+    )
+
+    pad_msg = "Osmanli padisahlari kimlerdir"
+    if not should_defer_tarih_fast_to_ana_motor(pad_msg, mode_norm="genel"):
+        _fail("tarih_defer_padisah", "True bekleniyordu")
+        fails += 1
+    else:
+        _ok("padisah listesi: tarih_fast atlanir")
+    if iter_tarih_hafiza_reply(pad_msg, [], mode_norm="genel") is not None:
+        _fail("tarih_fast_padisah", "None bekleniyordu")
+        fails += 1
+    else:
+        _ok("padisah: iter_tarih None (Ana Motor)")
+    if not is_tarih_fast_teach_fallback(
+        "Umit abi, yerel tarih kaydi var ama net ozet cikaramadim. Ogretir misin?"
+    ):
+        _fail("teach_fallback_detect", "algilanmadi")
+        fails += 1
+    else:
+        _ok("teach fallback algisi")
+
+    print("\n=== Faz C — arastirma raporu / guncellik / bilgi zinciri ===")
+    from ilim_assistant.ana_motor_plan import plan_question as _plan_q
+    from ilim_assistant.ana_motor_arastirma import (
+        arastirma_report_enabled,
+        build_unified_research_report,
+    )
+    from ilim_assistant.ana_motor_guncellik import (
+        append_reply_freshness_stamp,
+        freshness_stamp_enabled,
+        web_scan_stamp_line,
+    )
+    from ilim_assistant.llm_brain import select_brain_chain
+
+    if not arastirma_report_enabled():
+        _fail("arastirma enabled", "kapali")
+        fails += 1
+    else:
+        _ok("arastirma raporu acik")
+    _hits = [("osmanli kurulus", "tarih/x.md", 0.55)]
+    _web = "**Guncellik:** test\n=== Web aramasi ===\n1. test"
+    rap = build_unified_research_report(
+        "Osmanli padisahlari kimlerdir",
+        hits=_hits,
+        web_extra=_web,
+        question_plan=_plan_q("Osmanli padisahlari kimlerdir", "genel", {}),
+        mode_norm="genel",
+    )
+    if not rap or "[Y1]" not in rap or "BİRLEŞİK ARAŞTIRMA" not in rap:
+        _fail("arastirma rapor", rap[:80] if rap else "bos")
+        fails += 1
+    else:
+        _ok("birlesik arastirma raporu [Y1]")
+    if not freshness_stamp_enabled() or "Güncellik:" not in web_scan_stamp_line():
+        _fail("web stamp", web_scan_stamp_line())
+        fails += 1
+    else:
+        _ok("web guncellik damgasi")
+    ref_g = append_reply_freshness_stamp("Cevap.", web_was_used=True, user_message="bugun haber")
+    if "Güncellik:" not in ref_g:
+        _fail("reply freshness", ref_g)
+        fails += 1
+    else:
+        _ok("cevap guncellik damgasi")
+    sel = select_brain_chain(
+        message="Python nedir",
+        mode_norm="genel",
+        question_plan=_plan_q("Python nedir", "genel", {}),
+    )
+    if not sel.chain or sel.chain[0].profile_id not in ("gemini", "groq", "denge", "hizli"):
+        _fail("bilgi brain", [e.profile_id for e in sel.chain])
+        fails += 1
+    else:
+        _ok(f"bilgi zinciri: {sel.chain[0].profile_id}")
+
+    print("\n=== Faz D — bilim derin / denge70 / otonom debug ===")
+    from ilim_assistant.ana_motor_bilim_derin import (
+        apply_bilim_derin_rag_top_k,
+        bilim_derin_enabled,
+        is_bilim_derin_turn,
+    )
+    from ilim_assistant.ana_motor_otonom_debug import (
+        detect_otonom_debug_intent,
+        should_delegate_genel_debug,
+        should_enable_code_debug_loop,
+    )
+    from ilim_assistant.llm_brain import _normalize_forced_profile, all_profiles
+
+    p_bilim = _plan_q("Osmanli Fatih donemi detayli acikla", "genel", {"bilim": True})
+    if not bilim_derin_enabled():
+        _fail("bilim_derin enabled", "kapali")
+        fails += 1
+    else:
+        _ok("bilim derin acik")
+    bilim_msg = "Osmanli Fatih donemi detayli acikla"
+    if not is_bilim_derin_turn(p_bilim, bilim_msg, "genel"):
+        _fail("bilim_derin_turn", p_bilim.primary)
+        fails += 1
+    else:
+        _ok("bilim derin tur algilandi")
+    k_deep = apply_bilim_derin_rag_top_k(4, p_bilim, bilim_msg, "genel")
+    if k_deep < 8:
+        _fail("bilim_derin_rag_k", str(k_deep))
+        fails += 1
+    else:
+        _ok(f"bilim derin rag_top_k={k_deep}")
+    profs = all_profiles()
+    if "denge70" not in profs:
+        _fail("denge70 profile", list(profs.keys()))
+        fails += 1
+    else:
+        _ok(f"denge70 profil: {profs['denge70'].model}")
+    if _normalize_forced_profile("denge-70b") != "denge70":
+        _fail("denge70 alias", "denge-70b")
+        fails += 1
+    else:
+        _ok("denge-70b alias -> denge70")
+    sel70 = select_brain_chain(
+        message=bilim_msg,
+        mode_norm="genel",
+        question_plan=p_bilim,
+    )
+    chain_ids = [e.profile_id for e in sel70.chain]
+    if "denge70" not in chain_ids:
+        _fail("bilim derin 70b zincir", chain_ids)
+        fails += 1
+    else:
+        _ok(f"bilim derin zincirde denge70: {chain_ids[:5]}")
+    tb_msg = 'Traceback (most recent call last):\n  File "app.py", line 42'
+    if not detect_otonom_debug_intent(tb_msg):
+        _fail("otonom_debug traceback", "")
+        fails += 1
+    else:
+        _ok("traceback -> otonom debug")
+    if not should_delegate_genel_debug("pytest kirmizi duzelt", "genel"):
+        _fail("delegate debug", "")
+        fails += 1
+    else:
+        _ok("genel -> programlama debug delege")
+    if not should_enable_code_debug_loop(tb_msg, "programlama"):
+        _fail("debug loop", "")
+        fails += 1
+    else:
+        _ok("programlama debug dongusu")
+
     print("\n=== Selam — pytest / kod modu sızıntısı ===")
     from ilim_assistant.motorlar.programlama_faz10 import (
         extract_user_intent_message,
@@ -433,16 +663,30 @@ def run_offline() -> int:
             _fail("coding_merhaba_pytest", out[:120])
             fails += 1
         else:
-            _ok("Kod modu + merhaba → pytest yok")
+            _ok("Kod modu + merhaba: pytest yok")
     except Exception as exc:
         _fail("coding_merhaba_turn", str(exc)[:120])
         fails += 1
+
+    print("\n=== Egitim — bilgi sorusu anlik atlama (Faz B) ===")
+    from ilim_assistant.ruzgar_egitim import (
+        maybe_egitim_learned_reply,
+        taught_reply_for_message,
+    )
+
+    if taught_reply_for_message("osman bey kimdir"):
+        if maybe_egitim_learned_reply("osman bey kimdir") is not None:
+            _fail("egitim_bilgi_instant", "kimdir sorusu anlik donmemeli")
+            fails += 1
+        else:
+            _ok("kimdir: egitim instant atlandi (Ana Motor yolu)")
+    else:
+        _ok("kimdir: ogretilmis kayit yok (atlanacak test)")
 
     print("\n=== Eğitim — kimlik sorusu / öğretim onayı sızıntısı ===")
     from ilim_assistant.ruzgar_egitim import (
         clear_pending,
         set_pending,
-        taught_reply_for_message,
         try_consume_egitim_command,
     )
     from ilim_assistant.ruzgar_owner_lock import (
@@ -503,8 +747,11 @@ def run_offline() -> int:
 
 
 def run_live(base: str) -> int:
+    import json
+    import time
     import urllib.request
 
+    fails = 0
     url = base.rstrip("/") + "/api/health"
     try:
         with urllib.request.urlopen(url, timeout=8) as r:
@@ -512,7 +759,6 @@ def run_live(base: str) -> int:
     except Exception as e:
         _fail("health", str(e))
         return 1
-    import json
 
     j = json.loads(raw)
     if not j.get("ok"):
@@ -522,17 +768,85 @@ def run_live(base: str) -> int:
     _ok(f"API ayakta — model={am.get('ollama_chat_model')}")
     if am.get("main_only_genel_hafiza"):
         _fail("RUZGAR_MAIN_ONLY_GENEL_HAFIZA", "Genel mod LLM kapalı!")
-        return 1
-    _ok("main_only_genel_hafiza kapalı")
+        fails += 1
+    else:
+        _ok("main_only_genel_hafiza kapalı")
     if not am.get("question_plan_enabled"):
         _fail("question_plan", "kapalı")
-        return 1
-    _ok("soru planı açık")
+        fails += 1
+    else:
+        _ok("soru planı açık")
     if not am.get("ana_motor_agent_enabled"):
         _fail("agent", "kapalı")
-        return 1
-    _ok("mini ajan açık")
-    return 0
+        fails += 1
+    else:
+        _ok("mini ajan açık")
+    if not am.get("ana_motor_arastirma"):
+        _fail("faz_c arastirma", "kapalı")
+        fails += 1
+    else:
+        _ok("Faz C arastirma raporu acik")
+    if not am.get("web_freshness_stamp"):
+        _fail("faz_c freshness", "kapalı")
+        fails += 1
+    else:
+        _ok("Faz C web guncellik damgasi acik")
+    if not am.get("bilim_derin"):
+        _fail("faz_d bilim_derin", "kapalı")
+        fails += 1
+    else:
+        _ok("Faz D bilim derin acik")
+    if not am.get("otonom_debug_bridge"):
+        _fail("faz_d otonom_debug", "kapalı")
+        fails += 1
+    else:
+        _ok("Faz D otonom debug koprusu acik")
+    if not am.get("brain_denge70_model"):
+        _fail("faz_d denge70", "model yok")
+        fails += 1
+    else:
+        _ok(f"denge70 model: {am.get('brain_denge70_model')}")
+
+    t0 = time.monotonic()
+    chat_url = base.rstrip("/") + "/api/chat/full"
+    body = json.dumps(
+        {
+            "message": "Python nedir?",
+            "mode": "genel",
+            "coding_mode": False,
+            "use_web": False,
+        },
+        ensure_ascii=False,
+    ).encode("utf-8")
+    try:
+        req = urllib.request.Request(
+            chat_url,
+            data=body,
+            headers={"Content-Type": "application/json; charset=utf-8"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=90) as r:
+            cj = json.loads(r.read().decode("utf-8", errors="replace"))
+        elapsed = time.monotonic() - t0
+        if not cj.get("ok"):
+            _fail("live bilgi tur", str(cj.get("error") or "")[:120])
+            fails += 1
+        else:
+            _ok(f"canli bilgi turu {elapsed:.1f}s")
+            try:
+                slo = float(os.environ.get("RUZGAR_LIVE_BILGI_SLO_SEC", "75"))
+            except ValueError:
+                slo = 75.0
+            if elapsed > slo:
+                _fail("latency SLO", f"{elapsed:.1f}s > {slo}s")
+                fails += 1
+            else:
+                _ok(f"latency SLO <= {slo:.0f}s")
+    except Exception as e:
+        _fail("live bilgi tur", str(e)[:120])
+        fails += 1
+
+    return fails
 
 
 def main() -> int:

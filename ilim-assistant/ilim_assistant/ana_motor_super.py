@@ -43,4 +43,19 @@ def append_super_brain_directive(
         "- Bilmediğin detayı **uydurma**; «emin değilim» demek, yanlış bilgi vermekten iyidir.\n"
         "- Yanıtın sonunda **Güven:** satırı zorunlu (yüksek / orta / düşük + bir cümle gerekçe).\n"
     )
+    try:
+        from ilim_assistant.tarih_fast import looks_like_list_bilgi_question
+
+        _q_probe = ""
+        if question_plan is not None and hasattr(question_plan, "rag_query"):
+            _q_probe = str(getattr(question_plan, "rag_query", "") or "")
+        if looks_like_list_bilgi_question(_q_probe) or looks_like_list_bilgi_question(
+            user_payload[-400:]
+        ):
+            block += (
+                "- Soru **liste / kimler / isimler** istiyorsa: mümkün olduğunca **tam ve sıralı** "
+                "ver; tek cümleyle geçiştirme.\n"
+            )
+    except Exception:
+        pass
     return user_payload.rstrip() + block

@@ -154,7 +154,6 @@ def build_web_context(
     if not q:
         return ""
 
-    lines: List[str] = []
     try:
         results = _ddgs_search(q, max_results=max_results)
     except Exception as e:
@@ -162,6 +161,16 @@ def build_web_context(
 
     if not results:
         return "[Web: sonuç bulunamadı.]"
+
+    lines: List[str] = []
+    try:
+        from ilim_assistant.ana_motor_guncellik import web_scan_stamp_line
+
+        stamp = web_scan_stamp_line()
+        if stamp:
+            lines.append(stamp.rstrip())
+    except Exception:
+        pass
 
     lines.append(
         "=== Web araması (DuckDuckGo — doğrulanmamış; mümkünse resmi dokümantasyon / GitHub / açık kaynak URL’lerine öncelik ver) ==="
