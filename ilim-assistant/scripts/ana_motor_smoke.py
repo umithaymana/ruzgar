@@ -1395,6 +1395,70 @@ def run_offline() -> int:
     else:
         _ok(f"haftalik ozet events={ws.get('event_count')}")
 
+    print("\n=== Faz Q — haftalik bildirim / karsilastirma / timeline hatirla ===")
+    from ilim_assistant.ana_motor_haftalik_bildirim import (
+        attach_weekly_notifications,
+        build_weekly_desktop_notifications,
+        weekly_notify_enabled,
+    )
+    from ilim_assistant.ana_motor_paket_karsilastir import (
+        build_paket_history_compare,
+        paket_compare_enabled,
+    )
+    from ilim_assistant.ana_motor_timeline_hatirla import (
+        auto_remember_from_timeline,
+        run_timeline_remember,
+        timeline_remember_enabled,
+    )
+
+    if not weekly_notify_enabled():
+        _fail("weekly_notify", "kapali")
+        fails += 1
+    else:
+        _ok("haftalik bildirim acik")
+    wn = build_weekly_desktop_notifications(ws)
+    if not isinstance(wn, list):
+        _fail("weekly_desktop", type(wn).__name__)
+        fails += 1
+    else:
+        _ok(f"weekly desktop list={len(wn)}")
+    wna = attach_weekly_notifications(ws, send_desktop=True, force=True)
+    if not wna.get("ok"):
+        _fail("weekly_attach", str(wna)[:80])
+        fails += 1
+    else:
+        _ok("weekly notify attach")
+
+    if not paket_compare_enabled():
+        _fail("paket_compare", "kapali")
+        fails += 1
+    else:
+        _ok("paket karsilastirma acik")
+    pc = build_paket_history_compare(period_days=7)
+    if not pc.get("ok") or not pc.get("compare_card"):
+        _fail("paket_compare_build", str(pc)[:80])
+        fails += 1
+    else:
+        _ok(f"paket compare delta={pc.get('delta', {}).get('events')}")
+
+    if not timeline_remember_enabled():
+        _fail("timeline_remember", "kapali")
+        fails += 1
+    else:
+        _ok("timeline hatirla acik")
+    tr = run_timeline_remember(sid, topic="Faz Q smoke")
+    if not tr.get("ok"):
+        _fail("timeline_remember_run", str(tr)[:100])
+        fails += 1
+    else:
+        _ok("timeline remember tek oturum")
+    tb = auto_remember_from_timeline(limit=2)
+    if not tb.get("ok"):
+        _fail("timeline_remember_batch", str(tb)[:100])
+        fails += 1
+    else:
+        _ok(f"timeline batch remember={tb.get('remembered_count')}")
+
     print("\n=== Faz D — bilim derin / denge70 / otonom debug ===")
     from ilim_assistant.ana_motor_bilim_derin import (
         apply_bilim_derin_rag_top_k,
@@ -1848,6 +1912,21 @@ def run_live(base: str) -> int:
         fails += 1
     else:
         _ok("Faz P3 weekly summary acik")
+    if not am.get("weekly_notify"):
+        _fail("faz_q1 weekly_notify", "kapali")
+        fails += 1
+    else:
+        _ok("Faz Q1 weekly notify acik")
+    if not am.get("paket_compare"):
+        _fail("faz_q2 compare", "kapali")
+        fails += 1
+    else:
+        _ok("Faz Q2 paket compare acik")
+    if not am.get("timeline_remember"):
+        _fail("faz_q3 timeline_remember", "kapali")
+        fails += 1
+    else:
+        _ok("Faz Q3 timeline remember acik")
 
     print("\n=== Canli — upload + matris SLO ===")
     chat_url = base.rstrip("/") + "/api/chat/full"

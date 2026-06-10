@@ -136,11 +136,19 @@
 | P2 | Bildirim geçmişi temizle/dışa aktar | `ana_motor_bildirim_gecmis.py` | `POST /notify-history/clear` · `GET /notify-history/export` |
 | P3 | Haftalık timeline özet kartı | `ana_motor_haftalik_ozet.py` | `GET /api/ana-motor/sessions/weekly-summary` |
 
-## Sıradaki (Faz Q — öneri)
+## Faz Q — uygulandı (2026-06-10)
 
-- Haftalık özet e-posta / masaüstü bildirimi
-- Paket geçmişi karşılaştırma (bu hafta vs geçen hafta)
-- Timeline olaylarından otomatik «hatırla» tetikleme
+| # | Görev | Dosya | Durum |
+|---|--------|-------|--------|
+| Q1 | Haftalık özet bildirimi | `ana_motor_haftalik_bildirim.py` | `POST /sessions/weekly-summary/notify` |
+| Q2 | Paket geçmişi karşılaştırma | `ana_motor_paket_karsilastir.py` | `GET /paket-history/compare` |
+| Q3 | Timeline otomatik hatırla | `ana_motor_timeline_hatirla.py` | `POST /timeline/remember` · `/remember/batch` |
+
+## Sıradaki (Faz R — öneri)
+
+- Karşılaştırma grafiği (çift çubuk bu hafta/geçen hafta)
+- Hatırla geçmişi paneli (son 20 timeline→hafıza)
+- Haftalık özet otomatik zamanlayıcı (cron/poll)
 
 ## Ortam (özet)
 

@@ -5585,3 +5585,14 @@ body.faz7-reduced-motion .agent-step-active .agent-step-label {
   white-space: pre-line;
   margin: 4px 0 0;
 }
+.ana-motor-compare-card {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+}
+.ana-motor-compare-card p {
+  white-space: pre-line;
+  margin: 4px 0 0;
+  color: #a8c4e0;
+}

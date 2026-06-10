@@ -11543,9 +11543,12 @@ async function refreshAnaMotorWeeklySummary() {
   const wrap = document.getElementById("ana-motor-weekly-summary");
   const titleEl = document.getElementById("ana-motor-weekly-title");
   const bodyEl = document.getElementById("ana-motor-weekly-body");
+  const cmpWrap = document.getElementById("ana-motor-compare-card");
+  const cmpTitle = document.getElementById("ana-motor-compare-title");
+  const cmpBody = document.getElementById("ana-motor-compare-body");
   if (!wrap || !bodyEl) return;
   try {
-    const res = await fetch(`${API}/api/ana-motor/sessions/weekly-summary?days=7`);
+    const res = await fetch(`${API}/api/ana-motor/sessions/weekly-summary?days=7&notify=1`);
     const j = await res.json().catch(() => ({}));
     const card = j.summary_card;
     if (!j.ok || !card) {
@@ -11555,8 +11558,71 @@ async function refreshAnaMotorWeeklySummary() {
     wrap.hidden = false;
     if (titleEl) titleEl.textContent = card.title || "Haftalık özet";
     bodyEl.textContent = card.body || "";
+    if (j.desktop_notifications && j.desktop_notifications.length) {
+      showAnaMotorDesktopNotifications(j.desktop_notifications);
+    }
+    const cmp = j.compare_card;
+    if (cmpWrap && cmp && cmp.body) {
+      cmpWrap.hidden = false;
+      if (cmpTitle) cmpTitle.textContent = cmp.title || "Karşılaştırma";
+      if (cmpBody) cmpBody.textContent = cmp.body || "";
+    } else if (cmpWrap) {
+      cmpWrap.hidden = true;
+    }
   } catch (_) {
     wrap.hidden = true;
+  }
+}
+
+async function notifyAnaMotorWeeklySummary() {
+  try {
+    const res = await fetch(`${API}/api/ana-motor/sessions/weekly-summary/notify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ desktop: true, email: false, force: true, days: 7 }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setStatus(j.detail || "Haftalık özet bildirimi başarısız", "Rüzgar");
+      return;
+    }
+    if (j.desktop_notifications && j.desktop_notifications.length) {
+      showAnaMotorDesktopNotifications(j.desktop_notifications);
+    }
+    setStatus(
+      j.email_status?.sent
+        ? "Haftalık özet e-posta ile gönderildi."
+        : "Haftalık özet masaüstü bildirimi gönderildi.",
+      "Rüzgar",
+    );
+    void refreshAnaMotorNotifyHistory();
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+  }
+}
+
+async function batchRememberFromTimeline() {
+  const progEl = document.getElementById("ana-motor-archive-progress");
+  if (progEl) {
+    progEl.hidden = false;
+    progEl.textContent = "Timeline'dan hatırlanıyor…";
+  }
+  try {
+    const res = await fetch(`${API}/api/ana-motor/timeline/remember/batch?limit=5`, {
+      method: "POST",
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) {
+      setStatus(j.detail || j.error || "Timeline hatırla başarısız", "Rüzgar");
+      if (progEl) progEl.textContent = j.detail || j.error || "Hata";
+      return;
+    }
+    setStatus(j.hint || "Timeline oturumları hafızaya yazıldı.", "Rüzgar");
+    flashRuzgarDurum(`Hatırla — ${j.remembered_count || "?"}/${j.attempted || "?"}`);
+    if (progEl) progEl.textContent = j.hint || "Tamam";
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+    if (progEl) progEl.textContent = formatClientChatError(e);
   }
 }
 
@@ -11854,6 +11920,16 @@ async function mergeAnaMotorArchiveSessions() {
   if (notifyClrBtn && !notifyClrBtn.dataset.wired) {
     notifyClrBtn.dataset.wired = "1";
     notifyClrBtn.addEventListener("click", () => void clearAnaMotorNotifyHistory());
+  }
+  const weeklyNotifyBtn = document.getElementById("btn-ana-weekly-notify");
+  if (weeklyNotifyBtn && !weeklyNotifyBtn.dataset.wired) {
+    weeklyNotifyBtn.dataset.wired = "1";
+    weeklyNotifyBtn.addEventListener("click", () => void notifyAnaMotorWeeklySummary());
+  }
+  const tlRememberBtn = document.getElementById("btn-ana-timeline-remember");
+  if (tlRememberBtn && !tlRememberBtn.dataset.wired) {
+    tlRememberBtn.dataset.wired = "1";
+    tlRememberBtn.addEventListener("click", () => void batchRememberFromTimeline());
   }
   const csvIn = document.getElementById("ana-csv-import-input");
   if (csvIn && !csvIn.dataset.wired) {

@@ -1418,6 +1418,12 @@ def health():
             not in ("0", "false", "no"),
             "weekly_summary": os.environ.get("RUZGAR_ANA_WEEKLY_SUMMARY", "1").strip().lower()
             not in ("0", "false", "no"),
+            "weekly_notify": os.environ.get("RUZGAR_ANA_WEEKLY_NOTIFY", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "paket_compare": os.environ.get("RUZGAR_ANA_PAKET_COMPARE", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "timeline_remember": os.environ.get("RUZGAR_ANA_TIMELINE_REMEMBER", "1").strip().lower()
+            not in ("0", "false", "no"),
         },
         "super_brain": _sb,
         "connection": _connection_ui_block(super_brain=_sb),
@@ -3072,14 +3078,119 @@ def api_ana_motor_notify_history_export(format: str = "json", limit: int = 200):
 
 
 @app.get("/api/ana-motor/sessions/weekly-summary")
-def api_ana_motor_weekly_summary(days: int = 7, limit: int = 80) -> dict[str, Any]:
-    """Faz P3 — timeline haftalık özet kartı."""
+def api_ana_motor_weekly_summary(
+    days: int = 7,
+    limit: int = 80,
+    notify: int = 0,
+) -> dict[str, Any]:
+    """Faz P3/Q — timeline haftalık özet + karşılaştırma (+ isteğe bağlı bildirim)."""
+    from ilim_assistant.ana_motor_haftalik_ozet import build_weekly_timeline_summary
+    from ilim_assistant.ana_motor_paket_karsilastir import build_paket_history_compare
+
+    period = max(1, min(days, 30))
+    result = build_weekly_timeline_summary(days=period, limit=max(1, min(limit, 120)))
+    cmp = build_paket_history_compare(period_days=period, limit=limit)
+    if cmp.get("compare_card"):
+        result["compare_card"] = cmp.get("compare_card")
+        result["compare"] = {
+            "current": cmp.get("current"),
+            "previous": cmp.get("previous"),
+            "delta": cmp.get("delta"),
+        }
+    if notify:
+        from ilim_assistant.ana_motor_haftalik_bildirim import attach_weekly_notifications
+
+        result = attach_weekly_notifications(result, send_desktop=True, send_email=False)
+    return result
+
+
+class WeeklyNotifyBody(BaseModel):
+    desktop: bool = True
+    email: bool = False
+    force: bool = False
+    days: int = 7
+
+
+@app.post("/api/ana-motor/sessions/weekly-summary/notify")
+async def api_ana_motor_weekly_summary_notify(body: WeeklyNotifyBody) -> dict[str, Any]:
+    """Faz Q1 — haftalık özet bildirimi (masaüstü/e-posta)."""
+    from ilim_assistant.ana_motor_haftalik_bildirim import (
+        attach_weekly_notifications,
+        weekly_notify_enabled,
+    )
     from ilim_assistant.ana_motor_haftalik_ozet import build_weekly_timeline_summary
 
-    return build_weekly_timeline_summary(
-        days=max(1, min(days, 30)),
-        limit=max(1, min(limit, 120)),
+    if not weekly_notify_enabled():
+        raise HTTPException(status_code=403, detail="Haftalık özet bildirimi kapalı.")
+    summary = await run_in_threadpool(
+        build_weekly_timeline_summary,
+        days=max(1, min(body.days, 30)),
     )
+    return await run_in_threadpool(
+        attach_weekly_notifications,
+        summary,
+        send_desktop=bool(body.desktop),
+        send_email=bool(body.email),
+        force=bool(body.force),
+    )
+
+
+@app.get("/api/ana-motor/paket-history/compare")
+def api_ana_motor_paket_history_compare(days: int = 7, limit: int = 120) -> dict[str, Any]:
+    """Faz Q2 — bu dönem vs önceki dönem karşılaştırma."""
+    from ilim_assistant.ana_motor_paket_karsilastir import build_paket_history_compare
+
+    return build_paket_history_compare(
+        period_days=max(1, min(days, 30)),
+        limit=max(1, min(limit, 200)),
+    )
+
+
+class TimelineRememberBody(BaseModel):
+    session_id: str
+    topic: str = ""
+
+
+@app.post("/api/ana-motor/timeline/remember")
+async def api_ana_motor_timeline_remember(body: TimelineRememberBody) -> dict[str, Any]:
+    """Faz Q3 — timeline oturumunu hafızaya yaz."""
+    from ilim_assistant.ana_motor_timeline_hatirla import (
+        run_timeline_remember,
+        timeline_remember_enabled,
+    )
+
+    if not timeline_remember_enabled():
+        raise HTTPException(status_code=403, detail="Timeline hatırla kapalı.")
+    result = await run_in_threadpool(
+        run_timeline_remember,
+        body.session_id,
+        topic=body.topic or "",
+    )
+    if not result.get("ok"):
+        raise HTTPException(status_code=400, detail=str(result.get("error") or "Hatırla başarısız."))
+    return result
+
+
+@app.post("/api/ana-motor/timeline/remember/batch")
+async def api_ana_motor_timeline_remember_batch(limit: int = 5) -> dict[str, Any]:
+    """Faz Q3 — son timeline olaylarından toplu hatırla."""
+    from ilim_assistant.ana_motor_timeline_hatirla import (
+        auto_remember_from_timeline,
+        timeline_remember_enabled,
+    )
+
+    if not timeline_remember_enabled():
+        raise HTTPException(status_code=403, detail="Timeline hatırla kapalı.")
+    result = await run_in_threadpool(
+        auto_remember_from_timeline,
+        limit=max(1, min(limit, 10)),
+    )
+    if not result.get("ok"):
+        raise HTTPException(
+            status_code=400,
+            detail=str(result.get("error") or "Toplu hatırla başarısız."),
+        )
+    return result
 
 
 @app.get("/api/ana-motor/paket-history/export-json")
