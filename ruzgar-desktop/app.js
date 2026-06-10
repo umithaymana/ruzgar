@@ -11099,6 +11099,119 @@ async function applyAnaMotorNebulaOneri() {
   }
 }
 
+async function refreshAnaMotorArchiveList() {
+  const sel = document.getElementById("ana-motor-archive-select");
+  const sumEl = document.getElementById("ana-motor-archive-summary");
+  if (!sel) return;
+  try {
+    const res = await fetch(`${API}/api/ana-motor/archive/sessions?limit=12`);
+    const j = await res.json().catch(() => ({}));
+    const rows = Array.isArray(j.sessions) ? j.sessions : [];
+    sel.innerHTML = "";
+    if (!rows.length) {
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "Arşiv oturumu yok";
+      sel.appendChild(opt);
+      if (sumEl) sumEl.textContent = "Henüz kalıcı arşiv yok.";
+      return;
+    }
+    for (const row of rows) {
+      const opt = document.createElement("option");
+      opt.value = row.session_id || "";
+      const topic = (row.topic || "—").slice(0, 40);
+      opt.textContent = `${(row.session_id || "").slice(0, 8)} · ${row.file_count || 0} dosya · ${topic}`;
+      sel.appendChild(opt);
+    }
+    if (sumEl) sumEl.textContent = `${rows.length} arşiv oturumu`;
+  } catch (_) {
+    if (sumEl) sumEl.textContent = "Arşiv listesi alınamadı.";
+  }
+}
+
+async function restoreAnaMotorArchiveSession() {
+  const sel = document.getElementById("ana-motor-archive-select");
+  const progEl = document.getElementById("ana-motor-archive-progress");
+  const sid = (sel && sel.value) || "";
+  if (!sid) {
+    setStatus("Arşiv oturumu seçin.", "Rüzgar");
+    return;
+  }
+  if (progEl) {
+    progEl.hidden = false;
+    progEl.textContent = "Arşiv geri yükleniyor…";
+  }
+  try {
+    const res = await fetch(`${API}/api/ana-motor/archive/restore`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_id: sid }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) {
+      setStatus(j.detail || j.error || "Arşiv yüklenemedi", "Rüzgar");
+      if (progEl) progEl.textContent = j.detail || j.error || "Hata";
+      return;
+    }
+    anaMotorUploadSessionId = j.session_id || sid;
+    anaMotorUploadQueue.length = 0;
+    for (const uid of j.upload_ids || []) {
+      anaMotorUploadQueue.push({ id: uid, name: uid.slice(0, 8) });
+    }
+    updateAnaMotorSessionCard();
+    if (progEl) progEl.textContent = j.hint || "Arşiv yüklendi.";
+    setStatus(j.hint || "Arşiv RAG bağlamına geri yüklendi.", "Rüzgar");
+    flashRuzgarDurum(`Arşiv — ${j.file_count || "?"} dosya`);
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+    if (progEl) progEl.textContent = formatClientChatError(e);
+  }
+}
+
+async function mergeAnaMotorArchiveSessions() {
+  const sel = document.getElementById("ana-motor-archive-select");
+  const progEl = document.getElementById("ana-motor-archive-progress");
+  const sidB = (sel && sel.value) || "";
+  const sidA = (anaMotorUploadSessionId || "").trim();
+  if (!sidA || !sidB) {
+    setStatus("Birleştirme için aktif oturum + arşiv seçimi gerekli.", "Rüzgar");
+    return;
+  }
+  if (sidA === sidB) {
+    setStatus("Aynı oturum iki kez seçilemez.", "Rüzgar");
+    return;
+  }
+  if (progEl) {
+    progEl.hidden = false;
+    progEl.textContent = "Oturumlar birleştiriliyor…";
+  }
+  try {
+    const res = await fetch(`${API}/api/ana-motor/sessions/merge`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_ids: [sidA, sidB] }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) {
+      setStatus(j.detail || j.error || "Birleştirme başarısız", "Rüzgar");
+      if (progEl) progEl.textContent = j.detail || j.error || "Hata";
+      return;
+    }
+    anaMotorUploadSessionId = j.session_id || sidA;
+    anaMotorUploadQueue.length = 0;
+    for (const uid of j.upload_ids || []) {
+      anaMotorUploadQueue.push({ id: uid, name: uid.slice(0, 8) });
+    }
+    updateAnaMotorSessionCard();
+    if (progEl) progEl.textContent = j.hint || "Birleştirildi.";
+    setStatus(j.hint || "Oturumlar birleştirildi.", "Rüzgar");
+    flashRuzgarDurum(`Birleşik oturum — ${j.file_count || "?"} dosya`);
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+    if (progEl) progEl.textContent = formatClientChatError(e);
+  }
+}
+
 (function wireAnaMotorNebulaOneriButton() {
   const btn = document.getElementById("btn-ana-nebula-oneri-apply");
   if (btn && !btn.dataset.wired) {
@@ -11115,6 +11228,17 @@ async function applyAnaMotorNebulaOneri() {
     remBtn.dataset.wired = "1";
     remBtn.addEventListener("click", () => void rememberAnaMotorUploadSession());
   }
+  const arBtn = document.getElementById("btn-ana-archive-restore");
+  if (arBtn && !arBtn.dataset.wired) {
+    arBtn.dataset.wired = "1";
+    arBtn.addEventListener("click", () => void restoreAnaMotorArchiveSession());
+  }
+  const mgBtn = document.getElementById("btn-ana-archive-merge");
+  if (mgBtn && !mgBtn.dataset.wired) {
+    mgBtn.dataset.wired = "1";
+    mgBtn.addEventListener("click", () => void mergeAnaMotorArchiveSessions());
+  }
+  void refreshAnaMotorArchiveList();
 })();
 
 /** Dinamit — görsel sürükle-bırak + yapıştır + hatırlatıcı poll (Ümit & Gökçenur) */
@@ -11911,6 +12035,18 @@ async function streamChat(userText, streamOpts = {}) {
       }
       if (ev.nebula_oneri_card) {
         renderAnaMotorNebulaOneriCard(ev.nebula_oneri_card);
+      }
+      if (ev.paket_auto && ev.paket_auto.queued) {
+        flashRuzgarDurum(
+          ev.paket_auto.hint || `Otomatik paket — ${ev.paket_auto.file_count || "?"} dosya`,
+        );
+        if (ev.paket_auto.nebula_async !== false) {
+          stopAnaMotorNebulaApplyPoll();
+          void pollAnaMotorNebulaApplyStatus();
+          anaMotorNebulaApplyPoll = window.setInterval(() => {
+            void pollAnaMotorNebulaApplyStatus();
+          }, 2200);
+        }
       }
       if (ev.code_patch) {
         showProgramlamaPatchStrip(ev.code_patch);

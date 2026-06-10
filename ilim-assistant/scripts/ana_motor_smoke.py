@@ -920,6 +920,93 @@ def run_offline() -> int:
     else:
         _ok(f"paket sihirbaz {len(wiz.get('steps') or [])} adim")
 
+    print("\n=== Faz J — otomatik paket / arşiv restore / oturum merge ===")
+    import json
+    import uuid
+
+    from ilim_assistant.ana_motor_dosya_ingest import (
+        archive_restore_enabled,
+        list_archived_sessions,
+        merge_upload_sessions,
+        restore_archive_session,
+        session_merge_enabled,
+    )
+    from ilim_assistant.ana_motor_paket_auto import (
+        get_paket_auto_job_status,
+        maybe_queue_auto_paket,
+        paket_auto_enabled,
+    )
+
+    if not paket_auto_enabled():
+        _fail("paket_auto", "kapali")
+        fails += 1
+    else:
+        _ok("otomatik paket acik")
+
+    class _ReqStub:
+        ana_motor_upload_ids = [up_a["upload_id"]]
+        ana_motor_session_id = sid
+        coding_mode = False
+        mode = "genel"
+        message = "Faz J auto test"
+
+    done_stub = {"user_message": "Faz J auto test", "full_reply": "test"}
+    auto_done = maybe_queue_auto_paket(_ReqStub(), done_stub)
+    if not auto_done.get("paket_auto", {}).get("queued"):
+        _fail("paket_auto_queue", str(auto_done.get("paket_auto"))[:100])
+        fails += 1
+    else:
+        _ok("otomatik paket kuyrugu")
+    st_auto = get_paket_auto_job_status()
+    if not isinstance(st_auto, dict):
+        _fail("paket_auto_status", type(st_auto).__name__)
+        fails += 1
+    else:
+        _ok(f"paket auto job running={st_auto.get('running')}")
+
+    if not archive_restore_enabled():
+        _fail("archive_restore", "kapali")
+        fails += 1
+    else:
+        _ok("arsiv restore acik")
+    archives = list_archived_sessions(limit=5)
+    if not archives:
+        _fail("archive_list", "bos")
+        fails += 1
+    else:
+        _ok(f"arsiv listesi {len(archives)}")
+    rr = restore_archive_session(sid)
+    if not rr.get("ok") or not rr.get("upload_ids"):
+        _fail("archive_restore_run", str(rr)[:100])
+        fails += 1
+    else:
+        _ok(f"arsiv restore files={rr.get('file_count')}")
+    rh = search_upload_context("Osmanli kurulus", None, session_id=sid, top_k=2)
+    if not rh:
+        _fail("archive_restore_rag", "hit yok")
+        fails += 1
+    else:
+        _ok("arsiv restore RAG aramasi")
+
+    sid2 = uuid.uuid4().hex[:12]
+    sess_path = _ROOT / ".ruzgar" / "ana_motor_uploads" / "sessions" / f"{sid2}.json"
+    sess_path.parent.mkdir(parents=True, exist_ok=True)
+    sess_path.write_text(
+        json.dumps({"session_id": sid2, "upload_ids": [up_a["upload_id"]]}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    if not session_merge_enabled():
+        _fail("session_merge", "kapali")
+        fails += 1
+    else:
+        _ok("oturum merge acik")
+    mg = merge_upload_sessions([sid, sid2])
+    if not mg.get("ok") or len(mg.get("upload_ids") or []) < 1:
+        _fail("session_merge_run", str(mg)[:100])
+        fails += 1
+    else:
+        _ok(f"oturum merge files={mg.get('file_count')}")
+
     print("\n=== Faz D — bilim derin / denge70 / otonom debug ===")
     from ilim_assistant.ana_motor_bilim_derin import (
         apply_bilim_derin_rag_top_k,
@@ -1263,6 +1350,21 @@ def run_live(base: str) -> int:
         fails += 1
     else:
         _ok(f"Faz I3 nebula index SLO={am.get('live_nebula_index_slo_sec')}s")
+    if not am.get("paket_auto"):
+        _fail("faz_j1 auto", "kapali")
+        fails += 1
+    else:
+        _ok("Faz J1 paket auto acik")
+    if not am.get("archive_restore"):
+        _fail("faz_j2 restore", "kapali")
+        fails += 1
+    else:
+        _ok("Faz J2 archive restore acik")
+    if not am.get("session_merge"):
+        _fail("faz_j3 merge", "kapali")
+        fails += 1
+    else:
+        _ok("Faz J3 session merge acik")
 
     print("\n=== Canli — upload + matris SLO ===")
     chat_url = base.rstrip("/") + "/api/chat/full"

@@ -1368,6 +1368,12 @@ def health():
             "live_nebula_index_slo_sec": os.environ.get(
                 "RUZGAR_LIVE_NEBULA_INDEX_SLO_SEC", "300"
             ),
+            "paket_auto": os.environ.get("RUZGAR_ANA_PAKET_AUTO", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "archive_restore": os.environ.get("RUZGAR_ANA_ARCHIVE_RESTORE", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "session_merge": os.environ.get("RUZGAR_ANA_SESSION_MERGE", "1").strip().lower()
+            not in ("0", "false", "no"),
         },
         "super_brain": _sb,
         "connection": _connection_ui_block(super_brain=_sb),
@@ -2740,6 +2746,74 @@ async def api_ana_motor_paket_sihirbaz(body: PaketSihirbazBody) -> dict[str, Any
         raise HTTPException(
             status_code=400,
             detail=str(result.get("error") or "Paket sihirbazı başarısız."),
+        )
+    return result
+
+
+@app.get("/api/ana-motor/paket-auto/status")
+def api_ana_motor_paket_auto_status() -> dict[str, Any]:
+    """Faz J1 — otomatik paket sihirbazı iş durumu."""
+    from ilim_assistant.ana_motor_paket_auto import get_paket_auto_job_status
+
+    return {"ok": True, "job": get_paket_auto_job_status()}
+
+
+@app.get("/api/ana-motor/archive/sessions")
+def api_ana_motor_archive_sessions(limit: int = 20) -> dict[str, Any]:
+    """Faz J2 — kalıcı arşiv oturum listesi."""
+    from ilim_assistant.ana_motor_dosya_ingest import list_archived_sessions
+
+    rows = list_archived_sessions(limit=max(1, min(limit, 50)))
+    return {"ok": True, "sessions": rows, "count": len(rows)}
+
+
+class ArchiveRestoreBody(BaseModel):
+    session_id: str
+
+
+@app.post("/api/ana-motor/archive/restore")
+async def api_ana_motor_archive_restore(body: ArchiveRestoreBody) -> dict[str, Any]:
+    """Faz J2 — arşivden geçici RAG bağlamına geri yükle."""
+    from ilim_assistant.ana_motor_dosya_ingest import (
+        archive_restore_enabled,
+        restore_archive_session,
+    )
+
+    if not archive_restore_enabled():
+        raise HTTPException(status_code=403, detail="Arşiv geri yükleme kapalı.")
+    result = await run_in_threadpool(restore_archive_session, (body.session_id or "").strip())
+    if not result.get("ok"):
+        raise HTTPException(
+            status_code=400,
+            detail=str(result.get("error") or "Arşiv geri yüklenemedi."),
+        )
+    return result
+
+
+class SessionMergeBody(BaseModel):
+    session_ids: list[str]
+    target_session_id: str | None = None
+
+
+@app.post("/api/ana-motor/sessions/merge")
+async def api_ana_motor_sessions_merge(body: SessionMergeBody) -> dict[str, Any]:
+    """Faz J3 — çoklu oturum dosyalarını tek pakette birleştir."""
+    from ilim_assistant.ana_motor_dosya_ingest import (
+        merge_upload_sessions,
+        session_merge_enabled,
+    )
+
+    if not session_merge_enabled():
+        raise HTTPException(status_code=403, detail="Oturum birleştirme kapalı.")
+    result = await run_in_threadpool(
+        merge_upload_sessions,
+        list(body.session_ids or []),
+        target_session_id=body.target_session_id,
+    )
+    if not result.get("ok"):
+        raise HTTPException(
+            status_code=400,
+            detail=str(result.get("error") or "Oturumlar birleştirilemedi."),
         )
     return result
 
@@ -9765,6 +9839,12 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
             except Exception:
                 pass
             try:
+                from ilim_assistant.ana_motor_paket_auto import maybe_queue_auto_paket
+
+                obj = maybe_queue_auto_paket(req, obj)
+            except Exception:
+                pass
+            try:
                 _mode_done = normalize_mode(_effective_chat_mode_raw(req))
                 if _mode_done == "programlama":
                     from ilim_assistant.motorlar.programlama_faz5 import record_chat_turn
@@ -9860,6 +9940,7 @@ def chat_full(req: ChatRequest):
         "instant_gundelik": bool(done_event.get("instant_gundelik")),
         "instant_clarify": bool(done_event.get("instant_clarify")),
         "instant_memory": bool(done_event.get("instant_memory")),
+        "paket_auto": done_event.get("paket_auto"),
     }
 
 

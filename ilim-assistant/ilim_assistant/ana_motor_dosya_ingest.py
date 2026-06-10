@@ -542,3 +542,182 @@ def merge_upload_hits(
         merged.append((h[0], h[1], float(h[2])))
     merged.sort(key=lambda h: float(h[2]), reverse=True)
     return merged
+
+
+def archive_restore_enabled() -> bool:
+    return os.environ.get("RUZGAR_ANA_ARCHIVE_RESTORE", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
+def session_merge_enabled() -> bool:
+    return os.environ.get("RUZGAR_ANA_SESSION_MERGE", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
+def list_archived_sessions(*, limit: int = 30) -> list[dict[str, Any]]:
+    """Faz J2 — kalıcı arşivdeki oturumları listele."""
+    if not _ARCHIVE_ROOT.is_dir():
+        return []
+    rows: list[tuple[float, dict[str, Any]]] = []
+    for d in _ARCHIVE_ROOT.iterdir():
+        if not d.is_dir():
+            continue
+        mf = d / "manifest.json"
+        if not mf.is_file():
+            continue
+        try:
+            m = json.loads(mf.read_text(encoding="utf-8"))
+            archived_at = float(m.get("archived_at") or d.stat().st_mtime)
+            rows.append(
+                (
+                    archived_at,
+                    {
+                        "session_id": d.name,
+                        "topic": (m.get("topic") or "").strip()[:200],
+                        "file_count": len(m.get("files") or []),
+                        "archived_at": archived_at,
+                        "archive_path": f"arsiv/ana_motor_uploads/{d.name}",
+                    },
+                )
+            )
+        except Exception:
+            continue
+    rows.sort(key=lambda x: x[0], reverse=True)
+    return [r[1] for r in rows[: max(1, limit)]]
+
+
+def restore_archive_session(session_id: str) -> dict[str, Any]:
+    """Faz J2 — arşivden geçici upload RAG kayıtlarını geri yükle."""
+    if not archive_restore_enabled():
+        return {"ok": False, "error": "Arşiv geri yükleme kapalı."}
+    sid = (session_id or "").strip()
+    if not sid:
+        return {"ok": False, "error": "session_id gerekli."}
+    dest = _ARCHIVE_ROOT / sid
+    manifest_path = dest / "manifest.json"
+    if not manifest_path.is_file():
+        return {"ok": False, "error": f"Arşiv bulunamadı: {sid}"}
+
+    uploads_dir = dest / "uploads"
+    restored: list[str] = []
+    until = time.time() + max(300, _TTL_EXTEND_SEC)
+    with _lock:
+        _purge_expired()
+        if not _store:
+            _load_disk_records()
+        if uploads_dir.is_dir():
+            for p in sorted(uploads_dir.glob("*.json")):
+                try:
+                    rec = json.loads(p.read_text(encoding="utf-8"))
+                except Exception:
+                    continue
+                uid = str(rec.get("upload_id") or p.stem).strip()
+                if not uid:
+                    continue
+                rec["expires_at"] = until
+                rec["restored_from_archive"] = sid
+                _store[uid] = rec
+                _persist_record(uid, rec)
+                restored.append(uid)
+        if not restored:
+            combined = dest / "oturum_birlesik.md"
+            if combined.is_file():
+                text = combined.read_text(encoding="utf-8", errors="replace").strip()
+                chunks = _chunk_text(text)
+                if chunks:
+                    uid = uuid.uuid4().hex[:16]
+                    rec = {
+                        "upload_id": uid,
+                        "filename": "oturum_birlesik.md",
+                        "chars": len(text),
+                        "chunks": len(chunks),
+                        "created_at": time.time(),
+                        "expires_at": until,
+                        "chunk_texts": chunks,
+                        "embeddings": [],
+                        "source": f"archive:{sid}",
+                        "restored_from_archive": sid,
+                    }
+                    _store[uid] = rec
+                    _persist_record(uid, rec)
+                    restored.append(uid)
+        if not restored:
+            return {"ok": False, "error": "Arşivde geri yüklenecek içerik yok."}
+        data = _load_session(sid)
+        data["upload_ids"] = restored
+        data["restored_at"] = time.time()
+        data["expires_at"] = until
+        _save_session(sid, data)
+
+    return {
+        "ok": True,
+        "session_id": sid,
+        "upload_ids": restored,
+        "file_count": len(restored),
+        "hint": f"Arşivden {len(restored)} dosya RAG bağlamına geri yüklendi.",
+    }
+
+
+def merge_upload_sessions(
+    session_ids: list[str],
+    *,
+    target_session_id: str | None = None,
+    restore_missing: bool = True,
+) -> dict[str, Any]:
+    """Faz J3 — birden fazla oturumdaki dosyaları tek pakette birleştir."""
+    if not session_merge_enabled():
+        return {"ok": False, "error": "Oturum birleştirme kapalı."}
+    if not session_enabled():
+        return {"ok": False, "error": "Upload oturumu kapalı."}
+    sids = [str(s).strip() for s in (session_ids or []) if str(s).strip()]
+    if len(sids) < 2:
+        return {"ok": False, "error": "En az 2 oturum kimliği gerekli."}
+
+    all_ids: list[str] = []
+    for sid in sids:
+        ids = list_session_upload_ids(sid)
+        if not ids and restore_missing and archive_restore_enabled():
+            rr = restore_archive_session(sid)
+            if rr.get("ok"):
+                ids = list(rr.get("upload_ids") or [])
+        all_ids.extend(ids)
+
+    seen: set[str] = set()
+    unique: list[str] = []
+    for uid in all_ids:
+        if uid in seen:
+            continue
+        seen.add(uid)
+        unique.append(uid)
+    if not unique:
+        return {"ok": False, "error": "Birleştirilecek dosya bulunamadı."}
+    if len(unique) > _MAX_SESSION_FILES:
+        return {
+            "ok": False,
+            "error": f"Birleşik oturum en fazla {_MAX_SESSION_FILES} dosya (şu an {len(unique)}).",
+        }
+
+    target = (target_session_id or "").strip() or uuid.uuid4().hex[:12]
+    with _lock:
+        payload = {
+            "session_id": target,
+            "upload_ids": unique,
+            "merged_from": sids,
+            "created_at": time.time(),
+            "updated_at": time.time(),
+        }
+        _save_session(target, payload)
+    return {
+        "ok": True,
+        "session_id": target,
+        "upload_ids": unique,
+        "merged_from": sids,
+        "file_count": len(unique),
+        "hint": f"{len(sids)} oturum → {len(unique)} dosya birleştirildi.",
+    }

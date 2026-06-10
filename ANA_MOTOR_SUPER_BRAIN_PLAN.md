@@ -80,11 +80,19 @@
 | I2 | Oturum TTL uzatma + kalıcı arşiv | `ana_motor_dosya_ingest.py` | `arsiv/ana_motor_uploads/{session_id}/` |
 | I3 | Canlı Nebula indeks SLO | `ana_motor_smoke.py --live` | `RUZGAR_LIVE_NEBULA_INDEX_SLO_SEC` |
 
-## Sıradaki (Faz J — öneri)
+## Faz J — uygulandı (2026-06-10)
 
-- Paket sihirbazı otomatik tetik (sohbet bitişinde)
-- Arşiv klasöründen RAG geri yükleme
-- Çoklu oturum birleştirme
+| # | Görev | Dosya | Durum |
+|---|--------|-------|--------|
+| J1 | Paket sihirbazı otomatik tetik | `ana_motor_paket_auto.py`, `app.js` | `RUZGAR_ANA_PAKET_AUTO` + `done.paket_auto` |
+| J2 | Arşivden RAG geri yükleme | `ana_motor_dosya_ingest.py` | `POST /api/ana-motor/archive/restore` |
+| J3 | Çoklu oturum birleştirme | `ana_motor_dosya_ingest.py` | `POST /api/ana-motor/sessions/merge` |
+
+## Sıradaki (Faz K — öneri)
+
+- Otomatik paket sonrası UI özet kartı
+- Birleşik oturumdan tek Nebula koleksiyonu önerisi
+- Arşiv TTL hatırlatıcısı
 
 ## Ortam (özet)
 
