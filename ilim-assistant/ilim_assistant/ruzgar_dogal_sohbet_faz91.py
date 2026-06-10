@@ -175,6 +175,38 @@ def is_natural_conversation_turn(
     return False
 
 
+def is_pure_short_greeting(message: str) -> bool:
+    """Tek kelimelik selam — anında yanıt; uzun sohbet turu LLM'de kalsın."""
+    raw = (message or "").strip()
+    if not raw or len(raw) > 56:
+        return False
+    if len(raw.split()) > 5:
+        return False
+    low = raw.lower()
+    if any(
+        x in low
+        for x in (
+            "test",
+            "pytest",
+            "proje",
+            "kod",
+            "yaz",
+            "düzelt",
+            "duzelt",
+            "fix",
+            "dogrula",
+            "doğrula",
+        )
+    ):
+        return False
+    try:
+        from ilim_assistant.ana_motor_plan import looks_like_casual_social_chat
+
+        return looks_like_casual_social_chat(raw)
+    except Exception:
+        return False
+
+
 def should_skip_instant_shortcuts(
     message: str,
     mode_norm: str,
@@ -186,6 +218,8 @@ def should_skip_instant_shortcuts(
     if not dogal_sohbet_enabled():
         return False
     if mode_norm not in ("genel", "uretim", "gelisim"):
+        return False
+    if is_pure_short_greeting(message):
         return False
     return is_natural_conversation_turn(
         message, mode_norm, question_plan, history=history

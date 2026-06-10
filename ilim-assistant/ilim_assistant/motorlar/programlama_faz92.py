@@ -38,6 +38,19 @@ def build_task_plan(message: str) -> dict[str, Any]:
             "acceptance": [],
         }
     try:
+        from ilim_assistant.motorlar.programlama_faz10 import extract_user_intent_message
+        from ilim_assistant.ana_motor_plan import looks_like_casual_social_chat
+
+        if looks_like_casual_social_chat(extract_user_intent_message(msg) or msg):
+            return {
+                "version": FAZ92_VERSION,
+                "goal": "",
+                "steps": [],
+                "acceptance": [],
+            }
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_faz101_report_read import wants_report_read
 
         if wants_report_read(msg):

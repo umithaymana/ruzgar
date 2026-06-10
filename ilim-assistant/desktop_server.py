@@ -572,6 +572,13 @@ class ChatRequest(BaseModel):
 
 def _effective_chat_mode_raw(req: ChatRequest) -> str:
     """Kod modu açıksa her zaman programlama (UI genel kalsa bile tam indeks prefetch kapalı)."""
+    try:
+        from ilim_assistant.ana_motor_plan import looks_like_casual_social_chat
+
+        if looks_like_casual_social_chat((req.message or "").strip()):
+            return (req.mode or "").strip() or "genel"
+    except Exception:
+        pass
     if req.coding_mode:
         return "programlama"
     raw = (req.mode or "").strip() or "genel"
@@ -7772,6 +7779,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         except Exception:
             pass
         try:
+            from ilim_assistant.chat_core import normalize_mode
+            from ilim_assistant.ruzgar_owner_lock import maybe_owner_instant_reply
+
+            _owner_early = maybe_owner_instant_reply(
+                msg_early,
+                normalize_mode(_effective_chat_mode_raw(req)),
+            )
+            if _owner_early:
+                yield from _iter_instant_chat_events(
+                    _owner_early,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=orch_early,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
             from ilim_assistant.ruzgar_egitim import try_consume_egitim_command
 
             egitim_reply = try_consume_egitim_command(msg_early, req.history)
@@ -7824,6 +7851,14 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         },
     }
     _p92_block_msg = ""
+    _user_msg_raw = (req.message or "").strip()
+    _casual_social_turn = False
+    try:
+        from ilim_assistant.ana_motor_plan import looks_like_casual_social_chat
+
+        _casual_social_turn = looks_like_casual_social_chat(_user_msg_raw)
+    except Exception:
+        pass
     if mode_norm == "programlama":
         try:
             from ilim_assistant.motorlar.programlama_faz101_report_read import (
@@ -7840,7 +7875,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     _p92_block_msg = _rep101
         except Exception:
             pass
-    if mode_norm == "programlama" and not _p92_block_msg:
+    if mode_norm == "programlama" and not _p92_block_msg and not _casual_social_turn:
         try:
             from ilim_assistant.motorlar.programlama_faz92 import (
                 assess_risk,
@@ -8206,6 +8241,33 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     msg_for_wake=req.message,
                     orch=orch,
                     egitim_instant=True,
+                )
+                return
+        except Exception:
+            pass
+
+    # Canlı hava — tarih hafızasından ÖNCE (İstanbul + hava → arşiv metadata hatası önlenir)
+    if mode_norm in ("genel", "uretim", "gelisim") and not coding:
+        try:
+            from ilim_assistant.weather_live import maybe_weather_instant_reply
+
+            weather_hi = maybe_weather_instant_reply(
+                req.message,
+                req.history,
+                coding_mode=False,
+            )
+            if weather_hi:
+                orch_w = dict(orch)
+                orch_w["weather_live"] = True
+                orch_w.setdefault("plan", {})["primary"] = "hava"
+                orch_w["plan"]["label_tr"] = "Güncel hava"
+                yield from _iter_instant_chat_events(
+                    weather_hi,
+                    (req.message or "").strip(),
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=orch_w,
+                    instant_gundelik=True,
                 )
                 return
         except Exception:
@@ -8668,10 +8730,10 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             except Exception:
                 _dogal = False
             status_txt = (
-                "Doğal sohbet — yerel/bulut beyin (Faz 91)…"
+                "Doğal sohbet — Groq/Ollama (Faz 91, hızlı zincir)…"
                 if _dogal
                 else (
-                    "Kısa sohbet — Ollama/Groq/Gemini (ücretsiz zincir)…"
+                    "Kısa sohbet — Groq/Ollama/Gemini…"
                     if free_brain_enabled()
                     else "Kısa sohbet — Gemini (hızlı yol)…"
                 )

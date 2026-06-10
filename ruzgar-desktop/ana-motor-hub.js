@@ -126,7 +126,7 @@
     const w = fold(raw).replace(/[!?.…]+/g, "").trim();
     if (!w || w.length > 100) return false;
     if (
-      /^(selam|merhaba|hey|slm|günaydın|gunaydin|iyi akşamlar|iyi aksamlar|sa)(\s+(ruzgar|ümit|umi|abi))?$/.test(
+      /^(selam(?:ünaleyküm|unaleykum)?|aleykumselam|merhaba|hey|slm|günaydın|gunaydin|iyi akşamlar|iyi aksamlar|sa)(\s+(ruzgar|ümit|umi|abi))?$/.test(
         w,
       )
     ) {

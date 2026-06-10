@@ -61,6 +61,28 @@ def _ascii_fold(text: str) -> str:
     return "".join(c for c in t if not unicodedata.combining(c)).lower()
 
 
+_USER_INTENT_RE = re.compile(
+    r"\[Kullanici istegi\]\s*\n?(.*)",
+    re.IGNORECASE | re.DOTALL,
+)
+_DIRECTIVE_BLOCK_RE = re.compile(
+    r"\[(?:PROGRAMLAMA|ANA MOTOR)[^\]]*\][\s\S]*?\[/[^\]]+\]",
+    re.IGNORECASE,
+)
+
+
+def extract_user_intent_message(message: str) -> str:
+    """Sistem plan bloklarından arındırılmış kullanıcı metni (Faz 92 sızıntısı önleme)."""
+    raw = (message or "").strip()
+    if not raw:
+        return ""
+    m = _USER_INTENT_RE.search(raw)
+    if m:
+        return m.group(1).strip()
+    stripped = _DIRECTIVE_BLOCK_RE.sub("", raw).strip()
+    return stripped or raw
+
+
 def _projects_base() -> str:
     return (
         os.environ.get("RUZGAR_SCAFFOLD_BASE", "projects").strip().replace("\\", "/").strip("/")
@@ -760,7 +782,7 @@ def wants_workspace_index(message: str) -> bool:
 
 
 def wants_project_verify_cmd(message: str) -> bool:
-    low = _ascii_fold(message)
+    low = _ascii_fold(extract_user_intent_message(message))
     return any(
         k in low
         for k in (

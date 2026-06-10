@@ -636,6 +636,30 @@ def _looks_like_error_chunk(piece: str) -> bool:
     return False
 
 
+def build_casual_fast_chain_ids() -> list[str]:
+    """Kısa sohbet — Groq önce; Ollama yavaşsa hızlı düş."""
+    custom = (os.environ.get("RUZGAR_CASUAL_BRAIN_CHAIN") or "").strip()
+    if custom:
+        ids = [x.strip() for x in custom.split(",") if x.strip()]
+    else:
+        ids = ["groq", "hizli", "denge", "gemini"]
+    return _filter_chain_ids_for_quota(ids)
+
+
+def _chain_from_ids(chain_ids: list[str]) -> list[BrainEndpoint]:
+    profiles = all_profiles()
+    chain: list[BrainEndpoint] = []
+    seen: set[str] = set()
+    for pid in chain_ids:
+        if pid in seen:
+            continue
+        ep = profiles.get(pid)
+        if ep is not None:
+            seen.add(pid)
+            chain.append(ep)
+    return chain
+
+
 def _stream_endpoint(
     ep: BrainEndpoint,
     system: str,
@@ -725,6 +749,145 @@ def resolve_brain_model(
     return sel.primary.model
 
 
+def stream_chat_casual_fast(
+    system: str,
+    user: str,
+    *,
+    prior_messages: list | None = None,
+    mode_norm: str = "genel",
+    message: str = "",
+) -> Iterator[str]:
+    """
+    Gündelik sohbet — Ümit emri zincirini atla; Groq önce, Ollama kısa timeout.
+    «nasılsın» gibi turlarda dakikalarca Ollama ilk token beklemesini keser.
+    """
+    chain = _chain_from_ids(build_casual_fast_chain_ids())
+    if not chain:
+        chain = _chain_from_ids(_filter_chain_ids_for_quota(["hizli", "denge", "gemini"]))
+    try:
+        ollama_cap = os.environ.get("RUZGAR_CASUAL_OLLAMA_READ_TIMEOUT_SEC", "22")
+    except Exception:
+        ollama_cap = "22"
+    old_read = os.environ.get("RUZGAR_OLLAMA_READ_TIMEOUT_SEC")
+    os.environ["RUZGAR_OLLAMA_READ_TIMEOUT_SEC"] = str(ollama_cap)
+    try:
+        yield from _stream_brain_chain_loop(
+            chain,
+            system,
+            user,
+            prior_messages=prior_messages,
+            mode_norm=mode_norm,
+            coding_mode=False,
+            message=message,
+            use_turn_budget=False,
+        )
+    finally:
+        if old_read is None:
+            os.environ.pop("RUZGAR_OLLAMA_READ_TIMEOUT_SEC", None)
+        else:
+            os.environ["RUZGAR_OLLAMA_READ_TIMEOUT_SEC"] = old_read
+
+
+def _stream_brain_chain_loop(
+    chain: list[BrainEndpoint],
+    system: str,
+    user: str,
+    *,
+    prior_messages: list | None,
+    mode_norm: str,
+    coding_mode: bool,
+    message: str,
+    use_turn_budget: bool,
+) -> Iterator[str]:
+    last_err = ""
+    last_provider = ""
+    any_content = False
+    attempted: list[str] = []
+    _umed = False
+    is_real_user_question = lambda _m: True  # type: ignore[assignment, misc]
+    remaining_sec = lambda: 9999.0  # type: ignore[assignment, misc]
+    umed_miss_reply = lambda: ""  # type: ignore[assignment, misc]
+    if use_turn_budget:
+        try:
+            from ilim_assistant.ruzgar_umed_cevap_emri import (
+                begin_turn_budget,
+                remaining_sec as _rem,
+                umed_emri_applies,
+                umed_miss_reply as _miss,
+            )
+            from ilim_assistant.ruzgar_egitim import is_real_user_question as _irq
+
+            _umed = umed_emri_applies(mode_norm=mode_norm, coding_mode=coding_mode)
+            if _umed:
+                begin_turn_budget(message or user, mode_norm=mode_norm)
+            is_real_user_question = _irq
+            remaining_sec = _rem
+            umed_miss_reply = _miss
+        except Exception:
+            pass
+
+    for ep in chain:
+        if _umed and remaining_sec() < 0.8:
+            break
+        last_provider = ep.profile_id
+        attempted.append(ep.profile_id)
+        try:
+            got_content = False
+            for piece in _stream_endpoint(ep, system, user, prior_messages):
+                if _umed and remaining_sec() <= 0:
+                    if got_content and piece:
+                        yield piece
+                    break
+                if not got_content and _looks_like_error_chunk(piece):
+                    last_err = piece.strip()
+                    if _is_cloud_rate_limit_error(last_err) and ep.profile_id == "gemini":
+                        try:
+                            from ilim_assistant.gemini_quota_guard import mark_gemini_quota_hit
+
+                            mark_gemini_quota_hit()
+                        except Exception:
+                            pass
+                    break
+                got_content = True
+                any_content = True
+                yield piece
+            if got_content:
+                return
+        except Exception as e:
+            if ep.provider == "gemini":
+                last_err = format_gemini_user_error(e)
+                try:
+                    from ilim_assistant.llm_gemini import is_gemini_quota_or_rate_error
+                    from ilim_assistant.gemini_quota_guard import mark_gemini_quota_hit
+
+                    if is_gemini_quota_or_rate_error(last_err):
+                        mark_gemini_quota_hit()
+                except Exception:
+                    pass
+            else:
+                last_err = format_llm_user_error(e)
+            continue
+
+    if _umed and not any_content and is_real_user_question(message or user):
+        yield umed_miss_reply()
+        return
+    if not any_content and (coding_mode or mode_norm == "programlama"):
+        chain_hint = ",".join(attempted) or "?"
+        yield (
+            "Ümit abi, Programlama motoru şu an yanıt üretemedi "
+            f"(denenen: {chain_hint}).\n"
+        )
+        return
+    if last_err and not any_content:
+        yield last_err
+        return
+    if not any_content:
+        yield (
+            "Ümit abi, şu an yanıt üretemedim — `ollama serve` veya GROQ_API_KEY kontrol et; "
+            "biraz sonra tekrar dene."
+        )
+
+
 def stream_chat_with_brain(
     system: str,
     user: str,
@@ -754,23 +917,27 @@ def stream_chat_with_brain(
     last_provider = ""
     any_content = False
     attempted: list[str] = []
+    _umed = False
+    is_real_user_question = lambda _m: True  # type: ignore[assignment, misc]
+    remaining_sec = lambda: 9999.0  # type: ignore[assignment, misc]
+    umed_miss_reply = lambda: ""  # type: ignore[assignment, misc]
     try:
         from ilim_assistant.ruzgar_umed_cevap_emri import (
             begin_turn_budget,
-            remaining_sec,
+            remaining_sec as _rem,
             umed_emri_applies,
-            umed_miss_reply,
+            umed_miss_reply as _miss,
         )
-        from ilim_assistant.ruzgar_egitim import is_real_user_question
+        from ilim_assistant.ruzgar_egitim import is_real_user_question as _irq
 
         _umed = umed_emri_applies(mode_norm=mode_norm, coding_mode=coding_mode)
         if _umed:
-            begin_turn_budget(message or user)
+            begin_turn_budget(message or user, mode_norm=mode_norm)
+        is_real_user_question = _irq
+        remaining_sec = _rem
+        umed_miss_reply = _miss
     except Exception:
-        _umed = False
-        is_real_user_question = lambda _m: True  # type: ignore[assignment]
-        remaining_sec = lambda: 9999.0  # type: ignore[assignment]
-        umed_miss_reply = lambda: ""  # type: ignore[assignment]
+        pass
 
     for ep in sel.chain:
         if _umed and remaining_sec() < 0.8:

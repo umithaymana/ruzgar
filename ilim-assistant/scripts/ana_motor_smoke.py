@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -363,6 +364,117 @@ def run_offline() -> int:
     else:
         _fail("routing KPI", f"{rate:.1f}% < 90%")
         fails += 1
+
+    print("\n=== Hava vs tarih yönlendirme ===")
+    from ilim_assistant.ana_motor_plan import plan_question
+    from ilim_assistant.chat_core import _tarih_intent
+    from ilim_assistant.tarih_fast import iter_tarih_hafiza_reply
+    from ilim_assistant.weather_live import maybe_weather_instant_reply
+
+    wx_msg = "istanbulda bugün hava nasıl olacak"
+    wx_plan = plan_question(wx_msg, "genel", {})
+    if wx_plan.primary != "hava":
+        _fail("weather_plan", f"primary={wx_plan.primary}")
+        fails += 1
+    else:
+        _ok(f"hava planı: {wx_plan.primary}")
+    if _tarih_intent(wx_msg):
+        _fail("weather_tarih_intent", "istanbul+hava tarih sayılmamalı")
+        fails += 1
+    else:
+        _ok("hava sorusu tarih niyetine düşmüyor")
+    if iter_tarih_hafiza_reply(wx_msg, [], mode_norm="genel") is not None:
+        _fail("weather_tarih_fast", "tarih_fast atlanmalıydı")
+        fails += 1
+    else:
+        _ok("tarih_fast hava sorusunu atlıyor")
+
+    print("\n=== Selam — pytest / kod modu sızıntısı ===")
+    from ilim_assistant.motorlar.programlama_faz10 import (
+        extract_user_intent_message,
+        wants_project_verify_cmd,
+    )
+    from ilim_assistant.motorlar.programlama_faz92 import build_task_plan, render_plan_directive
+    from ilim_assistant.ruzgar_dogal_sohbet_faz91 import is_pure_short_greeting
+
+    for greet in ("merhaba", "selam", "selamünaleyküm"):
+        if not is_pure_short_greeting(greet):
+            _fail("pure_greeting", greet)
+            fails += 1
+        else:
+            _ok(f"kısa selam: {greet}")
+        plan = render_plan_directive(build_task_plan(greet))
+        aug = f"{plan}\n\n[Kullanici istegi]\n{greet}"
+        if wants_project_verify_cmd(aug):
+            _fail("verify_augmented", greet)
+            fails += 1
+        else:
+            _ok(f"Faz92 doğrula sızıntısı yok: {greet}")
+        if extract_user_intent_message(aug) != greet:
+            _fail("extract_user_intent", greet)
+            fails += 1
+    try:
+        from desktop_server import ChatRequest, iter_chat_turn_events
+
+        req = ChatRequest(
+            message="merhaba",
+            mode="genel",
+            coding_mode=True,
+            workspace_root=os.environ.get("LOCAL_TOOLS_ROOT") or str(_ROOT.parent),
+            programlama_active_file="projects/smoke-parity-crud-54104/app/__init__.py",
+        )
+        out = ""
+        for ev in iter_chat_turn_events(req):
+            if ev.get("type") == "token":
+                out += ev.get("text", "")
+            elif ev.get("type") == "done":
+                out = ev.get("full_reply") or out
+        if "doğrulama" in out.lower() and "pytest" in out.lower():
+            _fail("coding_merhaba_pytest", out[:120])
+            fails += 1
+        else:
+            _ok("Kod modu + merhaba → pytest yok")
+    except Exception as exc:
+        _fail("coding_merhaba_turn", str(exc)[:120])
+        fails += 1
+
+    print("\n=== Eğitim — kimlik sorusu / öğretim onayı sızıntısı ===")
+    from ilim_assistant.ruzgar_egitim import (
+        clear_pending,
+        set_pending,
+        taught_reply_for_message,
+        try_consume_egitim_command,
+    )
+    from ilim_assistant.ruzgar_owner_lock import (
+        is_owner_identity_question,
+        maybe_owner_instant_reply,
+    )
+    from ilim_assistant.ruzgar_umed_kurallari import SAVED_TEACH
+
+    if not is_owner_identity_question("ben kimim?"):
+        _fail("owner_identity", "ben kimim? tanınmadı")
+        fails += 1
+    else:
+        _ok("ben kimim? kimlik sorusu")
+    id_reply = maybe_owner_instant_reply("ben kimim?", "genel")
+    if not id_reply or "Ümit" not in id_reply:
+        _fail("owner_identity_reply", id_reply or "")
+        fails += 1
+    else:
+        _ok("kimlik anında yanıt")
+    set_pending("await_teaching", "selam")
+    steal = try_consume_egitim_command("ben kimim?", [])
+    if steal == SAVED_TEACH:
+        _fail("egitim_pending_steal", "ben kimim? öğretim cevabı sanıldı")
+        fails += 1
+    else:
+        _ok("bekleyen öğretimde bilgi sorusu çalınmıyor")
+    clear_pending()
+    if taught_reply_for_message("ben kimim?") == SAVED_TEACH:
+        _fail("egitim_lookup_saved", SAVED_TEACH)
+        fails += 1
+    else:
+        _ok("hafızadan öğretim onayı dönmüyor")
 
     print("\n=== prepare_turn (LLM çağrısı yok) ===")
     prep = prepare_turn(

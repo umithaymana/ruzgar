@@ -706,6 +706,15 @@ def maybe_programlama_instant_reply(
     """Programlama motoruna özel anında yanıtlar (LLM turu atlanır)."""
     if mode_norm != "programlama":
         return None
+    try:
+        from ilim_assistant.motorlar.programlama_faz10 import extract_user_intent_message
+        from ilim_assistant.ana_motor_plan import looks_like_casual_social_chat
+
+        user_only = extract_user_intent_message(message)
+        if looks_like_casual_social_chat(user_only or message):
+            return None
+    except Exception:
+        pass
     parts: list[str] = []
     focus_meta: dict[str, Any] = {}
     try:

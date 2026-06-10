@@ -248,6 +248,15 @@ def _score_categories(msg: str, mode_norm: str, motor_flags: dict[str, bool]) ->
         )
     ):
         s["hava"] += 3.0
+    try:
+        from ilim_assistant.chat_core import _is_live_weather_query, _weather_intent
+
+        if _weather_intent(raw) or _is_live_weather_query(raw):
+            s["hava"] += 5.0
+            s["gundelik"] = max(0.0, s["gundelik"] - 2.0)
+            s["bilim"] = max(0.0, s["bilim"] - 2.0)
+    except Exception:
+        pass
 
     if any(
         x in blob
@@ -639,6 +648,10 @@ def looks_like_casual_social_chat(message: str) -> bool:
     blob = _norm_ascii(raw) + " " + raw
     cues = (
         "selam",
+        "selamunaleykum",
+        "selamünaleyküm",
+        "aleykumselam",
+        "aleykümselam",
         "merhaba",
         "gunaydin",
         "günaydın",

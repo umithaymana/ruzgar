@@ -30,6 +30,36 @@ def _norm(text: str) -> str:
     return re.sub(r"\s+", " ", t).strip()
 
 
+_IDENTITY_PATTERNS = (
+    r"^ben\s+kimim$",
+    r"^kimim\s+ben$",
+    r"^ben\s+kim$",
+    r"^ben\s+kimdir$",
+    r"^kimdir\s+ben$",
+    r"^sen\s+beni\s+taniyor",
+    r"^beni\s+taniyor",
+    r"^benim\s+adim\s+ne",
+    r"^adim\s+ne$",
+    r"^ismim\s+ne$",
+    r"^ben\s+kimim\s+ben$",
+)
+
+
+def is_owner_identity_question(message: str) -> bool:
+    """«ben kimim?» — öğretim onayı değil; sahip kimliği sorusu."""
+    n = _norm(message)
+    if not n or len(n) > 80:
+        return False
+    return any(re.search(p, n) for p in _IDENTITY_PATTERNS)
+
+
+def owner_identity_reply() -> str:
+    return (
+        "Sen Ümit'sin — Rüzgar'ın mimarı ve sahibisin. "
+        "Sana «Ümit abi» diye hitap ediyorum; kişisel asistanın ve geliştirme arkadaşın benim."
+    )
+
+
 def is_owner_phrase(message: str) -> bool:
     """Kullanıcı açıkça «rüzgar ben ümit» (veya yakın varyant) dedi mi?"""
     n = _norm(message)
@@ -67,6 +97,14 @@ def startup_owner_banner() -> str:
 
 
 def maybe_owner_instant_reply(message: str, mode_norm: str) -> str | None:
+    if is_owner_identity_question(message):
+        try:
+            from ilim_assistant.ruzgar_egitim import clear_pending
+
+            clear_pending()
+        except Exception:
+            pass
+        return owner_identity_reply()
     if not is_owner_phrase(message):
         return None
     ctx: Literal["genel", "programlama"] = (

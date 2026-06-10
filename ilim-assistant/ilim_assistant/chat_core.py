@@ -128,6 +128,8 @@ def _tarih_intent(msg: str) -> bool:
     raw = (msg or "").strip()
     if len(raw) < 6:
         return False
+    if _is_live_weather_query(raw):
+        return False
     low = unicodedata.normalize("NFKD", raw).encode("ascii", "ignore").decode("ascii").lower()
     low_tr = raw.lower()
     blob = low_tr + " " + low
@@ -509,6 +511,11 @@ def _is_live_weather_query(msg: str) -> bool:
     low = (msg or "").lower()
     needles = (
         "hava nasıl",
+        "hava nasil",
+        "hava ne olacak",
+        "hava olacak",
+        "bugün hava",
+        "bugun hava",
         "hava durumu",
         "hava bugün",
         "hava yarın",

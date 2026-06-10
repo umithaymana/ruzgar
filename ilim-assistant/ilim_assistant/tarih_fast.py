@@ -21,6 +21,21 @@ def tarih_fast_enabled() -> bool:
     )
 
 
+def _is_archive_metadata_text(text: str) -> bool:
+    """Arşiv indeks satırı — kullanıcıya okunmaz (subject/location/source)."""
+    t = (text or "").strip()
+    if not t:
+        return True
+    low = t.casefold()
+    if low.startswith(("subject:", "location:", "source:")):
+        return True
+    if sum(1 for k in ("subject:", "location:", "source:") if k in low) >= 2:
+        return True
+    if re.match(r"^subject:\s*.+;\s*location:\s*.+;\s*source:", low):
+        return True
+    return False
+
+
 def _llm_body_usable(text: str) -> bool:
     t = (text or "").strip()
     if len(t) < 36:
@@ -58,7 +73,16 @@ def iter_tarih_hafiza_reply(
     if not tarih_fast_enabled():
         return None
     msg = (message or "").strip()
-    if not msg or not _tarih_intent(msg):
+    if not msg:
+        return None
+    try:
+        from ilim_assistant.chat_core import _is_live_weather_query
+
+        if _is_live_weather_query(msg):
+            return None
+    except Exception:
+        pass
+    if not _tarih_intent(msg):
         return None
 
     try:
@@ -140,6 +164,8 @@ def iter_tarih_hafiza_reply(
                     "Osman Bey döneminde kurulmuş kabul edilir."
                 )
             lines: list[str] = []
+            if _is_archive_metadata_text(raw):
+                continue
             for ln in raw.splitlines():
                 s = ln.strip().lstrip("#").strip()
                 if not s or len(s) < 10:
@@ -148,10 +174,14 @@ def iter_tarih_hafiza_reply(
                     continue
                 if s.startswith("Konu:") or s.startswith("Vikiveri:"):
                     continue
+                if _is_archive_metadata_text(s):
+                    continue
                 if "description:" in s.casefold() and len(s) > 120:
                     continue
                 lines.append(s)
             body = " ".join(lines[:3])
+            if _is_archive_metadata_text(body):
+                continue
             body = re.sub(r"\s+", " ", body).strip()
             if len(body) > 280:
                 m = re.search(r"^([^.!?…]+[.!?…])", body)

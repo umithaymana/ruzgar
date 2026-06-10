@@ -110,6 +110,14 @@ def _extract_teaching_body(message: str) -> Optional[str]:
         ):
             pend = get_pending()
             if pend.get("mode") in ("await_teaching", "await_correction"):
+                try:
+                    from ilim_assistant.ruzgar_owner_lock import is_owner_identity_question
+
+                    if _is_bilgi_sorusu(raw) or is_owner_identity_question(raw):
+                        return None
+                except Exception:
+                    if _is_bilgi_sorusu(raw):
+                        return None
                 return raw
     return None
 
@@ -279,9 +287,10 @@ def _is_bilgi_sorusu(message: str) -> bool:
         return True
     return bool(
         re.search(
-            r"\b(?:nedir|nelerdir|kimdir|ne demek|ne dir|nasil|nasıl|kaç|kac|nerede|niçin|nicin|niye)\b",
+            r"\b(?:nedir|nelerdir|kimdir|kimim|ne demek|ne dir|nasil|nasıl|kaç|kac|nerede|niçin|nicin|niye)\b",
             low,
         )
+        or re.search(r"\bben\s+kim\b", low)
     )
 
 
@@ -358,10 +367,23 @@ def cevap_is_davranis_talimati(cevap: str) -> bool:
     return any(x in low for x in talimat)
 
 
+def _is_teaching_acknowledgement(cevap: str) -> bool:
+    """«öğrendim ve hafızama kaydettim» — kullanıcı sorusunun cevabı değil."""
+    t = (cevap or "").strip()
+    if not t:
+        return False
+    if t == _SAVED_TEACH or t == _SAVED_CORRECT:
+        return True
+    low = t.casefold()
+    return "öğrendim ve hafızama" in low or "ogrendim ve hafizama" in low
+
+
 def cevap_kullaniciya_okunmamali(cevap: str, *, user_msg: str = "") -> bool:
     """Öğretim talimatı veya kullanıcı metninin kopyası — sohbette birebir okunmaz."""
     c = (cevap or "").strip()
     if not c:
+        return True
+    if _is_teaching_acknowledgement(c):
         return True
     if cevap_is_davranis_talimati(c):
         return True
@@ -747,6 +769,13 @@ def maybe_egitim_learned_reply(
     history: list | None = None,
 ) -> Optional[str]:
     """Ümit abi'nin öğrettiği yanıt — talimatı okumaz; sohbet akışını kullanır."""
+    try:
+        from ilim_assistant.ruzgar_owner_lock import is_owner_identity_question
+
+        if is_owner_identity_question(message):
+            return None
+    except Exception:
+        pass
     if _message_is_casual_turn(message):
         return None
     hit = taught_reply_for_message(message)
@@ -995,10 +1024,18 @@ def try_consume_egitim_command(message: str, history: list | None = None) -> Opt
         pass
 
     pend = get_pending()
-    if _is_bilgi_sorusu(raw) and str(pend.get("mode") or "") not in (
-        "await_teaching",
-        "await_correction",
-    ):
+    try:
+        from ilim_assistant.ruzgar_owner_lock import is_owner_identity_question
+
+        if is_owner_identity_question(raw):
+            if str(pend.get("mode") or "") in ("await_teaching", "await_correction"):
+                clear_pending()
+            return None
+    except Exception:
+        pass
+    if _is_bilgi_sorusu(raw):
+        if str(pend.get("mode") or "") in ("await_teaching", "await_correction"):
+            clear_pending()
         return None
 
     if is_wrong_answer_trigger(raw):

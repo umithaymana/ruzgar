@@ -9334,6 +9334,58 @@ function getMotorChatSession(mode) {
   return motorChatSessions[key];
 }
 
+/** Sohbet — son mesaj her zaman görünür (composer altında kalmaz). */
+let chatScrollRaf = null;
+let chatStickToBottom = true;
+let chatResizeObserver = null;
+
+function isChatNearBottom(threshold = 88) {
+  if (!el.chat) return true;
+  const gap = el.chat.scrollHeight - el.chat.scrollTop - el.chat.clientHeight;
+  return gap <= threshold;
+}
+
+function scrollChatToBottom(opts = {}) {
+  const { force = true, smooth = false } = opts;
+  if (!el.chat) return;
+  if (!force && !chatStickToBottom && !isChatNearBottom()) return;
+  if (force) chatStickToBottom = true;
+  const run = () => {
+    if (!el.chat) return;
+    const box = el.chat;
+    box.scrollTop = box.scrollHeight;
+    const last = box.querySelector(".bubble:last-of-type");
+    if (last) {
+      try {
+        last.scrollIntoView({ block: "end", behavior: smooth ? "smooth" : "auto" });
+      } catch (_) {
+        /* yok say */
+      }
+    }
+  };
+  if (chatScrollRaf != null) cancelAnimationFrame(chatScrollRaf);
+  chatScrollRaf = requestAnimationFrame(() => {
+    chatScrollRaf = null;
+    run();
+    requestAnimationFrame(run);
+  });
+}
+
+function wireChatAutoScroll() {
+  if (!el.chat || chatResizeObserver) return;
+  el.chat.addEventListener(
+    "scroll",
+    () => {
+      chatStickToBottom = isChatNearBottom();
+    },
+    { passive: true },
+  );
+  chatResizeObserver = new ResizeObserver(() => {
+    if (chatStickToBottom) scrollChatToBottom({ smooth: false });
+  });
+  chatResizeObserver.observe(el.chat);
+}
+
 function appendMotorAssistantBubble(text) {
   if (!el.chat) return;
   const div = document.createElement("div");
@@ -9346,6 +9398,7 @@ function appendMotorAssistantBubble(text) {
     div.innerHTML = esc(t).replace(/\n/g, "<br>");
   }
   el.chat.appendChild(div);
+  scrollChatToBottom();
 }
 
 /** Motor değişince sohbet panelini o motorun oturumuna bağla */
@@ -9367,7 +9420,7 @@ function renderMotorChatFromSession(mode) {
   lastAssistantReply = String(store.lastAssistantReply || "").trim();
   updateDashboardLastSpeech();
   showChatWelcomeIfEmpty();
-  el.chat.scrollTop = el.chat.scrollHeight;
+  scrollChatToBottom();
 }
 
 let lastAssistantReply = "";
@@ -9793,7 +9846,7 @@ function appendBubble(role, text, opts = {}) {
     div.innerHTML = esc(text).replace(/\n/g, "<br>");
   }
   el.chat.appendChild(div);
-  el.chat.scrollTop = el.chat.scrollHeight;
+  scrollChatToBottom({ smooth: role === "user" });
   if (role === "user") {
     pushMotorChatHistory("user", text, opts);
   }
@@ -10018,7 +10071,7 @@ function appendMotorDeclaration(text) {
   div.className = "bubble assistant motor-declaration";
   div.innerHTML = esc(text);
   el.chat.appendChild(div);
-  el.chat.scrollTop = el.chat.scrollHeight;
+  scrollChatToBottom();
 }
 
 function setHeaderMotorDeclaration(text) {
@@ -11255,7 +11308,7 @@ async function streamChat(userText, streamOpts = {}) {
     } else {
       responseBubble.innerHTML = esc(repaired).replace(/\n/g, "<br>");
     }
-    el.chat.scrollTop = el.chat.scrollHeight;
+    scrollChatToBottom({ smooth: false });
   }
 
   function ensureReplyBubble() {
@@ -11264,6 +11317,7 @@ async function streamChat(userText, streamOpts = {}) {
     responseBubble = document.createElement("div");
     responseBubble.className = "bubble assistant";
     el.chat.appendChild(responseBubble);
+    scrollChatToBottom({ smooth: false });
   }
 
   /** Genel hafıza anında cevaplarda gereksiz "düşünüyor"; SSE gelene kadar ertelenir. */
@@ -11504,6 +11558,7 @@ async function streamChat(userText, streamOpts = {}) {
       pushMotorChatHistory("assistant", full, {});
       lastAssistantReply = full;
       setStatus("Hazır");
+      scrollChatToBottom();
       if (wantEdge && ttsSess === ttsSessionCounter && ttsAbortController) {
         const tail = ttsPlainForSpeech(ttsPendingChunks);
         ttsPendingChunks = "";
@@ -11691,7 +11746,9 @@ async function streamChat(userText, streamOpts = {}) {
   }
   }
 
-  if (RUZGAR_DISABLE_STREAMING) {
+  // Kısa sohbet (nasılsın/selam): tam yanıt beklemeden WS ile token göster — boş balon takılması olmasın
+  const useChatFullBatch = RUZGAR_DISABLE_STREAMING && !casualShortCmd;
+  if (useChatFullBatch) {
     const fullCtrl = new AbortController();
     activeChatAbort = fullCtrl;
     activeChatWs = null;
@@ -11792,6 +11849,7 @@ async function streamChat(userText, streamOpts = {}) {
       activeChatAbort = null;
       activeChatWs = null;
       syncInterruptButton();
+      scrollChatToBottom();
     }
   }
 
@@ -11898,6 +11956,7 @@ async function streamChat(userText, streamOpts = {}) {
     activeChatAbort = null;
     activeChatWs = null;
     syncInterruptButton();
+    scrollChatToBottom();
   }
 }
 
@@ -11944,6 +12003,7 @@ async function sendMessageWithText(t, opts = {}) {
   const skipUser = !!opts.skipUserBubble;
   const text = (t || "").trim();
   if (!text) return;
+  chatStickToBottom = true;
   dismissChatWelcome();
   silenceVoiceOutputNow();
   clearOrchestraBridge();
@@ -12919,6 +12979,7 @@ if (window.ruzgarApi?.onMenu) {
 
 wireNavToolbar();
 wireFaz7Cila();
+wireChatAutoScroll();
 document.body.classList.add("faz7-complete", "faz8-complete");
 void refreshUiManifest().finally(() =>
   renderMotorChatFromSession(activeMotorChatMode()),

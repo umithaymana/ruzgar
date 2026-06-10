@@ -108,7 +108,10 @@ def iter_casual_fast_reply(
     aksi halde yalnızca Gemini (eski davranış).
     """
     from ilim_assistant.chat_core import prior_messages_for_turn
-    from ilim_assistant.llm_brain import free_brain_enabled, stream_chat_with_brain
+    from ilim_assistant.llm_brain import (
+        free_brain_enabled,
+        stream_chat_casual_fast,
+    )
 
     use_gemini_only = casual_fast_enabled() and not free_brain_enabled()
     if use_gemini_only:
@@ -117,7 +120,7 @@ def iter_casual_fast_reply(
 
     system, user, _temp, _max_tok, prior_n = _casual_system_and_user(message, mode_norm)
     prior = prior_messages_for_turn(history, mode_norm)
-    for piece in stream_chat_with_brain(
+    for piece in stream_chat_casual_fast(
         system,
         user,
         prior_messages=prior[-prior_n:] if prior else None,

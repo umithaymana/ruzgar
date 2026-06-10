@@ -449,6 +449,41 @@ def _compose_instant_weather_reply(
     return " ".join(parts).strip()
 
 
+def maybe_weather_instant_reply(
+    message: str,
+    history: list | None = None,
+    *,
+    coding_mode: bool = False,
+) -> str | None:
+    """
+    Masaüstü / Ana Motor erken yolu — chat_core ile aynı canlı hava anında yanıtı.
+    None → normal boru hattına devam.
+    """
+    if os.environ.get("ENABLE_LIVE_WEATHER", "1").strip() in ("0", "false", "no"):
+        return None
+    if os.environ.get("RUZGAR_WEATHER_INSTANT_REPLY", "1").strip() in ("0", "false", "no"):
+        return None
+    try:
+        from ilim_assistant.chat_core import (
+            _weather_follow_up,
+            _weather_instant_allowed,
+            _weather_intent,
+        )
+    except Exception:
+        return None
+    msg = (message or "").strip()
+    if not msg:
+        return None
+    weather_q = _weather_intent(msg) or _weather_follow_up(msg, history)
+    if not weather_q or not _weather_instant_allowed(msg, coding_mode=coding_mode):
+        return None
+    try:
+        _ctx, instant = compute_live_weather_outcome(msg)
+    except Exception:
+        return None
+    return (instant or "").strip() or None
+
+
 def compute_live_weather_outcome(message: str) -> tuple[str, str | None]:
     """
     (LLM bağlam bloğu, anında Türkçe yanıt veya None).

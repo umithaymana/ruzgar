@@ -207,6 +207,8 @@ def ensure_ruzgar_env() -> list[str]:
         os.environ.setdefault("RUZGAR_ANA_AGENT_MAX_TURNS", "3")
         os.environ.setdefault("RUZGAR_ANA_CHECKPOINT", "1")
         os.environ.setdefault("RUZGAR_ANA_PROGRESS_ETA", "1")
+        os.environ.setdefault("RUZGAR_CASUAL_OLLAMA_READ_TIMEOUT_SEC", "22")
+        os.environ.setdefault("RUZGAR_CASUAL_BRAIN_CHAIN", "groq,hizli,denge,gemini")
 
     sync_global_api_key_aliases()
     try:
