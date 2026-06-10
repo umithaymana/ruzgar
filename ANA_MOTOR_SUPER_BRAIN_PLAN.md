@@ -194,10 +194,20 @@
 
 Detay: `ANA_MOTOR_FAZ_W_PLAN.md`
 
-## Sıradaki (Faz X — öneri)
+## Faz X — uygulandı (2026-06-10)
 
-- Ajan 2.0: patch + test doğrulama döngüsü
+| # | Görev | Dosya | Durum |
+|---|--------|-------|--------|
+| X1 | Ajan 2.0 (5 tur, üst 8) | `ana_motor_ajan20.py` | `GET /api/ana-motor/agent-loop/status` |
+| X2 | Patch py_compile doğrulama | `ana_motor_ajan20.py` | Agent loop entegre |
+| X3 | Çok dosya onay staging | `ana_motor_agent_loop.py` | 2+ dosya → kart |
+
+Detay: `ANA_MOTOR_FAZ_X_PLAN.md`
+
+## Sıradaki (Faz Y — öneri)
+
 - Bilgi kalite 2.0 (opsiyonel LLM reflection)
+- Sohbet içi kaynak + güven rozeti
 
 ## Ortam (özet)
 

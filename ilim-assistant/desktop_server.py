@@ -1464,6 +1464,10 @@ def health():
             not in ("0", "false", "no"),
             "video_url_info": os.environ.get("RUZGAR_ANA_VIDEO_URL_INFO", "1").strip().lower()
             not in ("0", "false", "no"),
+            "agent_v2": os.environ.get("RUZGAR_ANA_AGENT_V2", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "agent_verify": os.environ.get("RUZGAR_ANA_AGENT_VERIFY", "1").strip().lower()
+            not in ("0", "false", "no"),
         },
         "super_brain": _sb,
         "connection": _connection_ui_block(super_brain=_sb),
@@ -2676,6 +2680,14 @@ def api_ana_motor_sub_intents():
     from ilim_assistant.motorlar.motor_ogrenilen_eylemler import sub_intents_catalog
 
     return sub_intents_catalog()
+
+
+@app.get("/api/ana-motor/agent-loop/status")
+def api_ana_motor_agent_loop_status() -> dict[str, Any]:
+    """Faz X — Ajan 2.0 yapılandırma durumu."""
+    from ilim_assistant.ana_motor_ajan20 import get_agent_loop_status
+
+    return get_agent_loop_status()
 
 
 @app.get("/api/ana-motor/backend-yurut")

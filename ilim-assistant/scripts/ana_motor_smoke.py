@@ -1815,6 +1815,49 @@ def run_offline() -> int:
     else:
         _ok("video bilgi skip (no url)")
 
+    print("\n=== Faz X — ajan 2.0 / verify / stage multi ===")
+    from ilim_assistant.ana_motor_ajan20 import (
+        agent_stage_multi_enabled,
+        agent_v2_enabled,
+        agent_verify_enabled,
+        effective_max_agent_turns,
+        get_agent_loop_status,
+        should_stage_agent_patches,
+    )
+
+    if not agent_v2_enabled():
+        _fail("agent_v2", "kapali")
+        fails += 1
+    else:
+        _ok("agent v2 acik")
+    mt = effective_max_agent_turns()
+    if mt < 5:
+        _fail("agent_max_turns", str(mt))
+        fails += 1
+    else:
+        _ok(f"agent max turns={mt}")
+    if not agent_verify_enabled():
+        _fail("agent_verify", "kapali")
+        fails += 1
+    else:
+        _ok("agent verify acik")
+    if not should_stage_agent_patches(["a.py", "b.py"]):
+        _fail("agent_stage_multi", "2 dosya staging yok")
+        fails += 1
+    else:
+        _ok("agent 2+ dosya staging")
+    if should_stage_agent_patches(["only.py"]):
+        _fail("agent_stage_single", "tek dosya staging olmamali")
+        fails += 1
+    else:
+        _ok("agent tek dosya auto")
+    st = get_agent_loop_status()
+    if not st.get("ok"):
+        _fail("agent_loop_status", str(st)[:80])
+        fails += 1
+    else:
+        _ok(f"agent status v2={st.get('agent_v2')}")
+
     print("\n=== Faz D — bilim derin / denge70 / otonom debug ===")
     from ilim_assistant.ana_motor_bilim_derin import (
         apply_bilim_derin_rag_top_k,
@@ -2373,6 +2416,16 @@ def run_live(base: str) -> int:
         fails += 1
     else:
         _ok("Faz W3 video url bilgi acik")
+    if not am.get("agent_v2"):
+        _fail("faz_x1 agent_v2", "kapali")
+        fails += 1
+    else:
+        _ok("Faz X1 agent v2 acik")
+    if not am.get("agent_verify"):
+        _fail("faz_x2 agent_verify", "kapali")
+        fails += 1
+    else:
+        _ok("Faz X2 agent verify acik")
 
     print("\n=== Canli — upload + matris SLO ===")
     chat_url = base.rstrip("/") + "/api/chat/full"

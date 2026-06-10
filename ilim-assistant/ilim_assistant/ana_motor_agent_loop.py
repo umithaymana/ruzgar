@@ -32,6 +32,12 @@ def agent_loop_enabled() -> bool:
 
 def max_agent_turns() -> int:
     try:
+        from ilim_assistant.ana_motor_ajan20 import effective_max_agent_turns
+
+        return effective_max_agent_turns()
+    except Exception:
+        pass
+    try:
         return max(1, min(int(os.environ.get("RUZGAR_ANA_AGENT_MAX_TURNS", "3")), 6))
     except ValueError:
         return 3
@@ -129,8 +135,15 @@ def should_run_ana_motor_agent_loop(
 
 
 def faz92_agent_directive() -> str:
-    return (
-        "[ANA MOTOR AJAN — Faz 92]\n"
+    extra = ""
+    try:
+        from ilim_assistant.ana_motor_ajan20 import faz_x_agent_directive_extra
+
+        extra = faz_x_agent_directive_extra()
+    except Exception:
+        pass
+    base = (
+        "[ANA MOTOR AJAN — Faz 92/X]\n"
         "Görev: Ümit abi'nin istediği dosya değişikliğini uygula.\n"
         "Sıra: (1) kısa plan 2-3 madde → (2) gerekirse @@read → (3) @@write + kod bloğu → (4) özet.\n"
         "Patch biçimi:\n"
@@ -140,6 +153,7 @@ def faz92_agent_directive() -> str:
         "```\n"
         "Hassas dosyalara (.env, hafiza, *.db, sağlık) yazma. Gereksiz refaktör yok.\n"
     )
+    return base + ("\n" + extra if extra else "")
 
 
 def _build_turn_user(
@@ -206,7 +220,6 @@ def iter_ana_motor_agent_events(
     from ilim_assistant.llm_brain import stream_chat_with_brain
     from ilim_assistant.motorlar.programlama_faz10 import (
         extract_write_jobs,
-        process_assistant_reply_patches,
         resolve_scope_rel,
     )
 
@@ -279,11 +292,25 @@ def iter_ana_motor_agent_events(
             reply_body += piece
             yield {"type": "token", "text": piece}
 
-        patch_meta = process_assistant_reply_patches(
-            round_body,
-            getattr(req, "workspace_root", None),
-            scope_rel=scope,
-        )
+        try:
+            from ilim_assistant.ana_motor_ajan20 import process_agent_loop_patches
+
+            patch_meta = process_agent_loop_patches(
+                round_body,
+                getattr(req, "workspace_root", None),
+                scope_rel=scope,
+                message=user_msg,
+            )
+        except Exception:
+            from ilim_assistant.motorlar.programlama_faz10 import (
+                process_assistant_reply_patches,
+            )
+
+            patch_meta = process_assistant_reply_patches(
+                round_body,
+                getattr(req, "workspace_root", None),
+                scope_rel=scope,
+            )
         _append_patch_step(orch, patch_meta)
 
         try:
@@ -306,7 +333,13 @@ def iter_ana_motor_agent_events(
             pass
 
         action = str(patch_meta.get("action") or "")
-        if action in ("applied", "staged"):
+        if action == "staged":
+            pf = str(patch_meta.get("footer") or "")
+            if pf and pf not in reply_body:
+                reply_body += pf
+                yield {"type": "token", "text": pf}
+            break
+        if action == "applied":
             pf = str(patch_meta.get("footer") or "")
             if pf and pf not in reply_body:
                 reply_body += pf
