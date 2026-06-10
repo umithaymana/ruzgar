@@ -169,6 +169,101 @@ def build_nebula_oneri_card(
     return sug
 
 
+def session_nebula_oneri_enabled() -> bool:
+    return os.environ.get("RUZGAR_ANA_SESSION_NEBULA_ONERI", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
+def build_session_nebula_card(
+    *,
+    session_id: str | None = None,
+    upload_ids: list[str] | None = None,
+    topic: str = "",
+) -> dict[str, Any] | None:
+    """Faz K2 — birleşik/çoklu dosya oturumundan tek Nebula koleksiyon önerisi."""
+    if not oneri_enabled() or not session_nebula_oneri_enabled():
+        return None
+    try:
+        from ilim_assistant.ana_motor_dosya_ingest import (
+            get_upload_records,
+            resolve_upload_ids,
+        )
+    except Exception:
+        return None
+
+    ids = resolve_upload_ids(upload_ids, session_id)
+    if not ids:
+        return None
+    records = get_upload_records(ids)
+    if not records:
+        return None
+
+    msg = (topic or "").strip()
+    tokens: set[str] = set()
+    for w in re.split(r"\W+", msg.lower()):
+        n = _norm_token(w)
+        if len(n) >= 4:
+            tokens.add(n)
+    for rec in records:
+        fname = str(rec.get("filename") or "")
+        for w in re.split(r"[\W_.]+", fname.lower()):
+            n = _norm_token(w)
+            if len(n) >= 4:
+                tokens.add(n)
+        chunks = list(rec.get("chunk_texts") or [])
+        if chunks:
+            for w in re.split(r"\W+", str(chunks[0])[:500].lower()):
+                n = _norm_token(w)
+                if len(n) >= 5:
+                    tokens.add(n)
+
+    cols = _list_nebula_collections()
+    if not cols:
+        return None
+
+    ranked = sorted(
+        (
+            {
+                "slug": c["slug"],
+                "title": c["title"],
+                "score": _score_collection(c["slug"], c["title"], tokens),
+            }
+            for c in cols
+        ),
+        key=lambda x: float(x["score"]),
+        reverse=True,
+    )
+    best = ranked[0] if ranked else None
+    if not best or float(best["score"]) < 0.08:
+        best = {"slug": cols[0]["slug"], "title": cols[0]["title"], "score": 0.1}
+
+    label = msg[:120] or f"{len(records)} dosyalık oturum"
+    cmd = (
+        f"knowledge/nebula/{best['slug']}/ — oturum paketi "
+        f"({len(records)} dosya) Nebula'ya ekle: «{label}»"
+    )
+    merged = len(ids) >= 2 or bool((session_id or "").strip())
+    return {
+        "ok": True,
+        "guven": "orta",
+        "merged_session": merged,
+        "file_count": len(records),
+        "session_id": session_id,
+        "upload_ids": ids,
+        "collection": best["slug"],
+        "collection_title": best["title"],
+        "topic": (msg or label)[:240],
+        "hint": (
+            f"{len(records)} dosyalı oturum için önerilen Nebula koleksiyonu: "
+            f"«{best['title']}». Tek tıkla kaynak ekle."
+        ),
+        "suggested_command": cmd,
+    }
+
+
 def maybe_append_nebula_oneri_note(
     reply: str,
     user_message: str,

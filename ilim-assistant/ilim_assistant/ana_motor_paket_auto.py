@@ -21,9 +21,36 @@ def paket_auto_enabled() -> bool:
     )
 
 
+def _enrich_job_status(job: dict[str, Any]) -> dict[str, Any]:
+    out = dict(job)
+    result = out.get("result")
+    if isinstance(result, dict) and result.get("ok"):
+        try:
+            from ilim_assistant.ana_motor_paket_ozet import build_paket_ozet_card
+
+            card = build_paket_ozet_card(result, source="auto")
+            if card:
+                out["summary_card"] = card
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ana_motor_nebula_oneri import build_session_nebula_card
+
+            nb = build_session_nebula_card(
+                session_id=result.get("session_id"),
+                upload_ids=list(result.get("upload_ids") or []),
+                topic=str(result.get("topic") or ""),
+            )
+            if nb:
+                out["nebula_card"] = nb
+        except Exception:
+            pass
+    return out
+
+
 def get_paket_auto_job_status() -> dict[str, Any]:
     with _auto_lock:
-        return dict(_auto_job)
+        return _enrich_job_status(_auto_job)
 
 
 def _auto_worker(

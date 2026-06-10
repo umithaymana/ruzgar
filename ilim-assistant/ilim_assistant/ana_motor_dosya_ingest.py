@@ -713,7 +713,7 @@ def merge_upload_sessions(
             "updated_at": time.time(),
         }
         _save_session(target, payload)
-    return {
+    out: dict[str, Any] = {
         "ok": True,
         "session_id": target,
         "upload_ids": unique,
@@ -721,3 +721,12 @@ def merge_upload_sessions(
         "file_count": len(unique),
         "hint": f"{len(sids)} oturum → {len(unique)} dosya birleştirildi.",
     }
+    try:
+        from ilim_assistant.ana_motor_nebula_oneri import build_session_nebula_card
+
+        nb = build_session_nebula_card(session_id=target, upload_ids=unique)
+        if nb:
+            out["nebula_card"] = nb
+    except Exception:
+        pass
+    return out

@@ -88,11 +88,19 @@
 | J2 | Arşivden RAG geri yükleme | `ana_motor_dosya_ingest.py` | `POST /api/ana-motor/archive/restore` |
 | J3 | Çoklu oturum birleştirme | `ana_motor_dosya_ingest.py` | `POST /api/ana-motor/sessions/merge` |
 
-## Sıradaki (Faz K — öneri)
+## Faz K — uygulandı (2026-06-10)
 
-- Otomatik paket sonrası UI özet kartı
-- Birleşik oturumdan tek Nebula koleksiyonu önerisi
-- Arşiv TTL hatırlatıcısı
+| # | Görev | Dosya | Durum |
+|---|--------|-------|--------|
+| K1 | Otomatik paket UI özet kartı | `ana_motor_paket_ozet.py`, `app.js` | `GET /api/ana-motor/paket-auto/status` → `summary_card` |
+| K2 | Birleşik oturum Nebula önerisi | `ana_motor_nebula_oneri.py` | `POST /api/ana-motor/sessions/nebula-oneri` |
+| K3 | Arşiv/upload TTL hatırlatıcısı | `ana_motor_arsiv_hatirlat.py` | `GET /api/ana-motor/archive/reminders` |
+
+## Sıradaki (Faz L — öneri)
+
+- Hatırlatıcı → tek tık paket sihirbazı köprüsü
+- Özet kartından doğrudan Nebula apply
+- Oturum geçmişi zaman çizelgesi
 
 ## Ortam (özet)
 

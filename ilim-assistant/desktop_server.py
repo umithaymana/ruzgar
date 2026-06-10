@@ -1374,6 +1374,14 @@ def health():
             not in ("0", "false", "no"),
             "session_merge": os.environ.get("RUZGAR_ANA_SESSION_MERGE", "1").strip().lower()
             not in ("0", "false", "no"),
+            "paket_ozet": os.environ.get("RUZGAR_ANA_PAKET_OZET", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "archive_ttl_remind": os.environ.get("RUZGAR_ANA_ARCHIVE_TTL_REMIND", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "session_nebula_oneri": os.environ.get(
+                "RUZGAR_ANA_SESSION_NEBULA_ONERI", "1"
+            ).strip().lower()
+            not in ("0", "false", "no"),
         },
         "super_brain": _sb,
         "connection": _connection_ui_block(super_brain=_sb),
@@ -2747,15 +2755,66 @@ async def api_ana_motor_paket_sihirbaz(body: PaketSihirbazBody) -> dict[str, Any
             status_code=400,
             detail=str(result.get("error") or "Paket sihirbazı başarısız."),
         )
+    try:
+        from ilim_assistant.ana_motor_paket_ozet import build_paket_ozet_card
+
+        card = build_paket_ozet_card(result, source="manual")
+        if card:
+            result["summary_card"] = card
+    except Exception:
+        pass
     return result
 
 
 @app.get("/api/ana-motor/paket-auto/status")
 def api_ana_motor_paket_auto_status() -> dict[str, Any]:
-    """Faz J1 — otomatik paket sihirbazı iş durumu."""
+    """Faz J1/K1 — otomatik paket sihirbazı iş durumu + özet kartı."""
     from ilim_assistant.ana_motor_paket_auto import get_paket_auto_job_status
 
-    return {"ok": True, "job": get_paket_auto_job_status()}
+    job = get_paket_auto_job_status()
+    return {
+        "ok": True,
+        "job": job,
+        "summary_card": job.get("summary_card"),
+        "nebula_card": job.get("nebula_card"),
+    }
+
+
+@app.get("/api/ana-motor/archive/reminders")
+def api_ana_motor_archive_reminders(limit: int = 12) -> dict[str, Any]:
+    """Faz K3 — upload/arşiv TTL hatırlatıcıları."""
+    from ilim_assistant.ana_motor_arsiv_hatirlat import collect_archive_ttl_reminders
+
+    return collect_archive_ttl_reminders(limit=max(1, min(limit, 30)))
+
+
+class SessionNebulaOneriBody(BaseModel):
+    session_id: str | None = None
+    upload_ids: list[str] | None = None
+    topic: str = ""
+
+
+@app.post("/api/ana-motor/sessions/nebula-oneri")
+async def api_ana_motor_sessions_nebula_oneri(
+    body: SessionNebulaOneriBody,
+) -> dict[str, Any]:
+    """Faz K2 — birleşik oturumdan Nebula koleksiyon önerisi."""
+    from ilim_assistant.ana_motor_nebula_oneri import (
+        build_session_nebula_card,
+        session_nebula_oneri_enabled,
+    )
+
+    if not session_nebula_oneri_enabled():
+        raise HTTPException(status_code=403, detail="Oturum Nebula önerisi kapalı.")
+    card = await run_in_threadpool(
+        build_session_nebula_card,
+        session_id=body.session_id,
+        upload_ids=body.upload_ids,
+        topic=(body.topic or "").strip(),
+    )
+    if not card:
+        raise HTTPException(status_code=404, detail="Öneri üretilemedi (oturum/dosya yok).")
+    return {"ok": True, "card": card}
 
 
 @app.get("/api/ana-motor/archive/sessions")

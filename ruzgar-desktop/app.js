@@ -90,6 +90,7 @@ let anaMotorUploadSessionId = null;
 let anaMotorLastUserTopic = "";
 let anaMotorLastNebulaCard = null;
 let anaMotorNebulaApplyPoll = null;
+let anaMotorPaketAutoPoll = null;
 console.info("[RÜZGAR Connection Bridge] API kök:", API);
 const RUZGAR_CHAT_FULL_TIMEOUT_MS = 180000;
 /** Kısa selam / nasılsın — Ollama yavaşken 12 sn yetmiyordu */
@@ -10986,6 +10987,9 @@ async function runAnaMotorPaketSihirbaz() {
     if (progEl) progEl.textContent = stepTxt || j.hint || "Tamam";
     setStatus(j.hint || "Paket sihirbazı tamamlandı.", "Rüzgar");
     flashRuzgarDurum(`Paket — ${steps.filter((s) => s.ok).length}/${steps.length} adım`);
+    if (j.summary_card) {
+      renderAnaMotorPaketOzetCard(j.summary_card);
+    }
     if (j.nebula_async) {
       stopAnaMotorNebulaApplyPoll();
       void pollAnaMotorNebulaApplyStatus();
@@ -11034,6 +11038,67 @@ function stopAnaMotorNebulaApplyPoll() {
     window.clearInterval(anaMotorNebulaApplyPoll);
     anaMotorNebulaApplyPoll = null;
   }
+}
+
+function renderAnaMotorPaketOzetCard(card) {
+  const wrap = document.getElementById("ana-motor-paket-ozet-card");
+  const sumEl = document.getElementById("ana-motor-paket-ozet-summary");
+  const stepsEl = document.getElementById("ana-motor-paket-ozet-steps");
+  if (!wrap || !sumEl || !stepsEl || !card || !card.ok) return;
+  wrap.hidden = false;
+  const src = card.source === "auto" ? "Otomatik" : "Manuel";
+  sumEl.textContent =
+    `${src} paket — ${card.file_count || "?"} dosya · oturum ${(card.session_id || "—").slice(0, 8)} — ${card.hint || ""}`;
+  stepsEl.textContent = card.steps_summary || "—";
+  if (card.collection) {
+    anaMotorLastNebulaCard = {
+      ok: true,
+      collection: card.collection,
+      topic: card.topic || anaMotorLastUserTopic || "",
+      hint: card.hint,
+    };
+  }
+}
+
+function stopAnaMotorPaketAutoPoll() {
+  if (anaMotorPaketAutoPoll != null) {
+    window.clearInterval(anaMotorPaketAutoPoll);
+    anaMotorPaketAutoPoll = null;
+  }
+}
+
+async function pollAnaMotorPaketAutoStatus() {
+  try {
+    const res = await fetch(`${API}/api/ana-motor/paket-auto/status`);
+    const j = await res.json().catch(() => ({}));
+    const job = j.job || {};
+    if (job.summary_card) {
+      renderAnaMotorPaketOzetCard(job.summary_card);
+    }
+    if (j.nebula_card || job.nebula_card) {
+      renderAnaMotorNebulaOneriCard(j.nebula_card || job.nebula_card);
+    }
+    if (!job.running) {
+      stopAnaMotorPaketAutoPoll();
+      if (job.summary_card) {
+        flashRuzgarDurum(
+          `Paket özeti — ${job.summary_card.ok_steps || "?"}/${job.summary_card.total_steps || "?"} adım`,
+        );
+      } else if (job.error) {
+        setStatus(`Otomatik paket hatası: ${job.error}`, "Rüzgar");
+      }
+    }
+  } catch (_) {
+    /* ignore poll errors */
+  }
+}
+
+function startAnaMotorPaketAutoPoll() {
+  stopAnaMotorPaketAutoPoll();
+  void pollAnaMotorPaketAutoStatus();
+  anaMotorPaketAutoPoll = window.setInterval(() => {
+    void pollAnaMotorPaketAutoStatus();
+  }, 2400);
 }
 
 async function pollAnaMotorNebulaApplyStatus() {
@@ -11099,10 +11164,30 @@ async function applyAnaMotorNebulaOneri() {
   }
 }
 
+async function refreshAnaMotorArchiveReminders() {
+  const remEl = document.getElementById("ana-motor-archive-reminders");
+  if (!remEl) return;
+  try {
+    const res = await fetch(`${API}/api/ana-motor/archive/reminders?limit=6`);
+    const j = await res.json().catch(() => ({}));
+    const rows = Array.isArray(j.reminders) ? j.reminders : [];
+    if (!rows.length) {
+      remEl.hidden = true;
+      remEl.textContent = "";
+      return;
+    }
+    remEl.hidden = false;
+    remEl.textContent = rows.map((r) => r.hint || "").filter(Boolean).join(" · ");
+  } catch (_) {
+    remEl.hidden = true;
+  }
+}
+
 async function refreshAnaMotorArchiveList() {
   const sel = document.getElementById("ana-motor-archive-select");
   const sumEl = document.getElementById("ana-motor-archive-summary");
   if (!sel) return;
+  void refreshAnaMotorArchiveReminders();
   try {
     const res = await fetch(`${API}/api/ana-motor/archive/sessions?limit=12`);
     const j = await res.json().catch(() => ({}));
@@ -11206,6 +11291,9 @@ async function mergeAnaMotorArchiveSessions() {
     if (progEl) progEl.textContent = j.hint || "Birleştirildi.";
     setStatus(j.hint || "Oturumlar birleştirildi.", "Rüzgar");
     flashRuzgarDurum(`Birleşik oturum — ${j.file_count || "?"} dosya`);
+    if (j.nebula_card) {
+      renderAnaMotorNebulaOneriCard(j.nebula_card);
+    }
   } catch (e) {
     setStatus(formatClientChatError(e), "Rüzgar");
     if (progEl) progEl.textContent = formatClientChatError(e);
@@ -12040,13 +12128,12 @@ async function streamChat(userText, streamOpts = {}) {
         flashRuzgarDurum(
           ev.paket_auto.hint || `Otomatik paket — ${ev.paket_auto.file_count || "?"} dosya`,
         );
-        if (ev.paket_auto.nebula_async !== false) {
-          stopAnaMotorNebulaApplyPoll();
+        startAnaMotorPaketAutoPoll();
+        stopAnaMotorNebulaApplyPoll();
+        void pollAnaMotorNebulaApplyStatus();
+        anaMotorNebulaApplyPoll = window.setInterval(() => {
           void pollAnaMotorNebulaApplyStatus();
-          anaMotorNebulaApplyPoll = window.setInterval(() => {
-            void pollAnaMotorNebulaApplyStatus();
-          }, 2200);
-        }
+        }, 2200);
       }
       if (ev.code_patch) {
         showProgramlamaPatchStrip(ev.code_patch);

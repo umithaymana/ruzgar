@@ -1007,6 +1007,58 @@ def run_offline() -> int:
     else:
         _ok(f"oturum merge files={mg.get('file_count')}")
 
+    print("\n=== Faz K — paket ozet / oturum nebula / TTL hatirlat ===")
+    from ilim_assistant.ana_motor_arsiv_hatirlat import (
+        archive_ttl_remind_enabled,
+        collect_archive_ttl_reminders,
+    )
+    from ilim_assistant.ana_motor_nebula_oneri import (
+        build_session_nebula_card,
+        session_nebula_oneri_enabled,
+    )
+    from ilim_assistant.ana_motor_paket_ozet import build_paket_ozet_card, paket_ozet_enabled
+
+    if not paket_ozet_enabled():
+        _fail("paket_ozet", "kapali")
+        fails += 1
+    else:
+        _ok("paket ozet acik")
+    oz = build_paket_ozet_card(wiz, source="manual")
+    if not oz or not oz.get("steps_summary"):
+        _fail("paket_ozet_card", str(oz)[:100])
+        fails += 1
+    else:
+        _ok(f"paket ozet {oz.get('ok_steps')}/{oz.get('total_steps')}")
+
+    if not session_nebula_oneri_enabled():
+        _fail("session_nebula_oneri", "kapali")
+        fails += 1
+    else:
+        _ok("oturum nebula oneri acik")
+    snb = build_session_nebula_card(session_id=mg.get("session_id"), topic="Faz K test")
+    if not snb or not snb.get("collection"):
+        _fail("session_nebula_card", str(snb)[:100])
+        fails += 1
+    else:
+        _ok(f"oturum nebula -> {snb.get('collection')}")
+    if not mg.get("nebula_card"):
+        _fail("merge_nebula_card", "yok")
+        fails += 1
+    else:
+        _ok("merge nebula karti")
+
+    if not archive_ttl_remind_enabled():
+        _fail("archive_ttl_remind", "kapali")
+        fails += 1
+    else:
+        _ok("arsiv TTL hatirlat acik")
+    rem = collect_archive_ttl_reminders(limit=8)
+    if not rem.get("ok"):
+        _fail("archive_reminders", str(rem)[:80])
+        fails += 1
+    else:
+        _ok(f"TTL hatirlat count={rem.get('count')}")
+
     print("\n=== Faz D — bilim derin / denge70 / otonom debug ===")
     from ilim_assistant.ana_motor_bilim_derin import (
         apply_bilim_derin_rag_top_k,
@@ -1365,6 +1417,21 @@ def run_live(base: str) -> int:
         fails += 1
     else:
         _ok("Faz J3 session merge acik")
+    if not am.get("paket_ozet"):
+        _fail("faz_k1 ozet", "kapali")
+        fails += 1
+    else:
+        _ok("Faz K1 paket ozet acik")
+    if not am.get("archive_ttl_remind"):
+        _fail("faz_k3 remind", "kapali")
+        fails += 1
+    else:
+        _ok("Faz K3 archive TTL remind acik")
+    if not am.get("session_nebula_oneri"):
+        _fail("faz_k2 nebula", "kapali")
+        fails += 1
+    else:
+        _ok("Faz K2 session nebula oneri acik")
 
     print("\n=== Canli — upload + matris SLO ===")
     chat_url = base.rstrip("/") + "/api/chat/full"
