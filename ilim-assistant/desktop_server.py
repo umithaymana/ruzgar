@@ -575,6 +575,10 @@ class ChatRequest(BaseModel):
         default=None,
         description="Faz F1 — tek tur dosya bağlamı upload_id listesi",
     )
+    ana_motor_session_id: str | None = Field(
+        default=None,
+        description="Faz G3 — çoklu dosya oturum paketi",
+    )
 
 
 def _effective_chat_mode_raw(req: ChatRequest) -> str:
@@ -1338,6 +1342,17 @@ def health():
                 "RUZGAR_ANA_MOTOR_KAYNAK_MATRIS", "1"
             ).strip().lower()
             not in ("0", "false", "no"),
+            "upload_session": os.environ.get(
+                "RUZGAR_ANA_UPLOAD_SESSION", "1"
+            ).strip().lower()
+            not in ("0", "false", "no"),
+            "nebula_apply": os.environ.get(
+                "RUZGAR_ANA_MOTOR_NEBULA_APPLY", "1"
+            ).strip().lower()
+            not in ("0", "false", "no"),
+            "live_upload_matris_slo_sec": os.environ.get(
+                "RUZGAR_LIVE_UPLOAD_MATRIS_SLO_SEC", "90"
+            ),
         },
         "super_brain": _sb,
         "connection": _connection_ui_block(super_brain=_sb),
@@ -2582,18 +2597,59 @@ def api_ana_motor_capabilities():
 
 
 @app.post("/api/ana-motor/upload-context")
-async def api_ana_motor_upload_context(file: UploadFile = File(...)) -> dict[str, Any]:
-    """Faz F1 — tek tur dosya bağlamı (txt/md/pdf)."""
+async def api_ana_motor_upload_context(
+    file: UploadFile = File(...),
+    session_id: str = Form(""),
+) -> dict[str, Any]:
+    """Faz F1/G3 — tek tur veya oturum paketi dosya bağlamı (txt/md/pdf)."""
     from ilim_assistant.ana_motor_dosya_ingest import ingest_enabled, save_upload_bytes
 
     if not ingest_enabled():
         raise HTTPException(status_code=403, detail="Dosya ingest kapalı.")
     data = await file.read()
+    sid = (session_id or "").strip() or None
     result = await run_in_threadpool(
-        save_upload_bytes, data, file.filename or "dosya.txt"
+        lambda: save_upload_bytes(
+            data, file.filename or "dosya.txt", session_id=sid
+        )
     )
     if not result.get("ok"):
         raise HTTPException(status_code=400, detail=str(result.get("error") or "Yükleme başarısız."))
+    return result
+
+
+class NebulaOneriApplyBody(BaseModel):
+    collection: str = ""
+    topic: str = ""
+    upload_ids: list[str] | None = None
+    session_id: str | None = None
+
+
+@app.post("/api/ana-motor/nebula-oneri/apply")
+async def api_ana_motor_nebula_oneri_apply(
+    body: NebulaOneriApplyBody,
+) -> dict[str, Any]:
+    """Faz G2 — öneri kartından tek tık Nebula kaynak ekleme."""
+    from ilim_assistant.ana_motor_dosya_ingest import resolve_upload_ids
+    from ilim_assistant.ana_motor_nebula_apply import apply_nebula_oneri, nebula_apply_enabled
+
+    if not nebula_apply_enabled():
+        raise HTTPException(status_code=403, detail="Nebula tek tık ekleme kapalı.")
+    coll = (body.collection or "").strip()
+    topic = (body.topic or "").strip()
+    if not coll:
+        raise HTTPException(status_code=400, detail="collection gerekli.")
+    if not topic:
+        raise HTTPException(status_code=400, detail="topic gerekli.")
+    uids = resolve_upload_ids(body.upload_ids, body.session_id)
+    result = await run_in_threadpool(
+        apply_nebula_oneri, coll, topic, upload_ids=uids or None
+    )
+    if not result.get("ok"):
+        raise HTTPException(
+            status_code=400,
+            detail=str(result.get("error") or "Nebula ekleme başarısız."),
+        )
     return result
 
 
@@ -8703,12 +8759,14 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         bundle = None
         _had_status = False
         _upload_ids = list(getattr(req, "ana_motor_upload_ids", None) or [])
+        _session_id = (getattr(req, "ana_motor_session_id", None) or "").strip() or None
         for item in iter_main_engine_retrieval_stream(
             req.message,
             req.history,
             mode_raw,
             question_plan=turn_plan,
             upload_ids=_upload_ids or None,
+            session_id=_session_id,
         ):
             if item.get("type") == "retrieval_bundle":
                 bundle = item.get("bundle")
@@ -8896,6 +8954,8 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         user_message_raw=getattr(req, "user_message_raw", None),
         cinema_context=getattr(req, "cinema_context", None),
         ana_motor_upload_ids=list(getattr(req, "ana_motor_upload_ids", None) or []) or None,
+        ana_motor_session_id=(getattr(req, "ana_motor_session_id", None) or "").strip()
+        or None,
     )
     if prep is None:
         yield {"type": "error", "text": "Boş mesaj"}

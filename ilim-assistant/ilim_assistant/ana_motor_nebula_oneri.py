@@ -141,6 +141,7 @@ def suggest_nebula_collection(
         "guven": "düşük",
         "collection": best["slug"],
         "collection_title": best["title"],
+        "topic": msg[:240],
         "hint": (
             "Yerel külliyatta güçlü eşleşme bulunamadı. "
             "İlgili kaynağı Nebula koleksiyonuna ekleyerek kaliteyi artırabilirsin."

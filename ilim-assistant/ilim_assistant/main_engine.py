@@ -153,15 +153,16 @@ def _yield_index_only(
     status_text: str,
     suppress_web: bool,
     upload_ids: list[str] | None = None,
+    session_id: str | None = None,
 ) -> Iterator[dict[str, Any]]:
     from ilim_assistant.rag_store import search as rag_search
 
     yield {"kind": "status", "phase": "full_index", "text": status_text}
     k = max(1, min(rag_top_k, 12))
     hits = rag_search(msg, top_k=k)
-    if upload_ids:
+    if upload_ids or session_id:
         yield {"kind": "status", "phase": "upload_context", "text": STATUS_UPLOAD_CONTEXT}
-        hits = _apply_upload_context(hits, msg, upload_ids)
+        hits = _apply_upload_context(hits, msg, upload_ids, session_id=session_id)
     tail = smart_filter_vision_directive()
     yield {
         "kind": "result",
@@ -207,13 +208,16 @@ def _apply_upload_context(
     hits: list[tuple[str, str, float]],
     msg: str,
     upload_ids: list[str] | None,
+    session_id: str | None = None,
 ) -> list[tuple[str, str, float]]:
-    if not upload_ids:
+    if not upload_ids and not session_id:
         return hits
     try:
         from ilim_assistant.ana_motor_dosya_ingest import merge_upload_hits
 
-        return merge_upload_hits(hits, msg, upload_ids, top_k=4)
+        return merge_upload_hits(
+            hits, msg, upload_ids, session_id=session_id, top_k=4
+        )
     except Exception:
         return hits
 
@@ -223,6 +227,7 @@ def _yield_encyclopedic_fast_merge(
     *,
     primary: str = "",
     upload_ids: list[str] | None = None,
+    session_id: str | None = None,
 ) -> Iterator[dict[str, Any]]:
     """
     Faz 9 hız yolu — RAG atlama yok: kısa arşiv + indeks, sonra Süper Beyin (Gemini).
@@ -276,9 +281,9 @@ def _yield_encyclopedic_fast_merge(
         cap = max(k_ar + k_ix, 4)
         hits = hits[:cap]
 
-    if upload_ids:
+    if upload_ids or session_id:
         yield {"kind": "status", "phase": "upload_context", "text": STATUS_UPLOAD_CONTEXT}
-        hits = _apply_upload_context(hits, msg, upload_ids)
+        hits = _apply_upload_context(hits, msg, upload_ids, session_id=session_id)
 
     archive_primary = archive_match_is_strong(ar_hits)
     suppress_web = archive_primary
@@ -392,6 +397,7 @@ def iter_archive_first_decision(
     question_plan: Any | None = None,
     search_text: str | None = None,
     upload_ids: list[str] | None = None,
+    session_id: str | None = None,
 ) -> Iterator[dict[str, Any]]:
     """
     Karar ağacını uygular; her adımda durum sözlüğü yield eder, sonunda sonuç.
@@ -450,13 +456,15 @@ def iter_archive_first_decision(
                 hits, _prof = retrieve_encyclopedic_matrix(
                     q, primary="dilbilgisi", k_ar=1, k_ix=max(2, rag_top_k)
                 )
-                if upload_ids:
+                if upload_ids or session_id:
                     yield {
                         "kind": "status",
                         "phase": "upload_context",
                         "text": STATUS_UPLOAD_CONTEXT,
                     }
-                    hits = _apply_upload_context(hits, q, upload_ids)
+                    hits = _apply_upload_context(
+                        hits, q, upload_ids, session_id=session_id
+                    )
                 yield {
                     "kind": "result",
                     "bundle": RetrievalBundle(
@@ -473,13 +481,17 @@ def iter_archive_first_decision(
                 status_text=STATUS_DILBILGISI_INDEX,
                 suppress_web=False,
                 upload_ids=upload_ids,
+                session_id=session_id,
             )
             return
 
         if primary == "bilgi":
             if looks_like_encyclopedic_fact_question(q):
                 yield from _yield_encyclopedic_fast_merge(
-                    q, primary=primary, upload_ids=upload_ids
+                    q,
+                    primary=primary,
+                    upload_ids=upload_ids,
+                    session_id=session_id,
                 )
                 return
             yield from _yield_index_only(
@@ -488,6 +500,7 @@ def iter_archive_first_decision(
                 status_text=STATUS_BILGI_INDEX,
                 suppress_web=False,
                 upload_ids=upload_ids,
+                session_id=session_id,
             )
             return
 
@@ -548,6 +561,7 @@ def run_retrieval_with_status_events(
     question_plan: Any | None = None,
     search_text: str | None = None,
     upload_ids: list[str] | None = None,
+    session_id: str | None = None,
 ) -> tuple[RetrievalBundle, list[dict[str, Any]]]:
     """
     Masaüstü akışı: durum çerçeveleri + nihai RetrievalBundle (Ümit & Gökçenur).
@@ -563,6 +577,7 @@ def run_retrieval_with_status_events(
         question_plan=question_plan,
         search_text=search_text,
         upload_ids=upload_ids,
+        session_id=session_id,
     ):
         if ev.get("kind") == "status":
             out_events.append(

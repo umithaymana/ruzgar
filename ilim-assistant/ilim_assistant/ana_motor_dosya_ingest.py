@@ -18,6 +18,7 @@ _UPLOAD_ROOT = _PKG_ROOT / ".ruzgar" / "ana_motor_uploads"
 _ALLOWED = {".txt", ".md", ".pdf"}
 _MAX_BYTES = int(os.environ.get("RUZGAR_ANA_UPLOAD_MAX_BYTES", str(8 * 1024 * 1024)))
 _TTL_SEC = int(os.environ.get("RUZGAR_ANA_UPLOAD_TTL_SEC", "7200"))
+_MAX_SESSION_FILES = int(os.environ.get("RUZGAR_ANA_UPLOAD_SESSION_MAX", "6"))
 _CHUNK = 900
 _OVERLAP = 80
 
@@ -122,7 +123,101 @@ def _load_disk_records() -> None:
             continue
 
 
-def save_upload_bytes(data: bytes, filename: str) -> dict[str, Any]:
+def session_enabled() -> bool:
+    return os.environ.get("RUZGAR_ANA_UPLOAD_SESSION", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
+def _session_path(session_id: str) -> Path:
+    return _UPLOAD_ROOT / "sessions" / f"{session_id}.json"
+
+
+def _load_session(session_id: str) -> dict[str, Any]:
+    p = _session_path(session_id)
+    if not p.is_file():
+        return {"session_id": session_id, "upload_ids": [], "created_at": time.time()}
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return {"session_id": session_id, "upload_ids": [], "created_at": time.time()}
+
+
+def _save_session(session_id: str, payload: dict[str, Any]) -> None:
+    (_UPLOAD_ROOT / "sessions").mkdir(parents=True, exist_ok=True)
+    _session_path(session_id).write_text(
+        json.dumps(payload, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+
+def _register_upload_session_unlocked(
+    session_id: str | None,
+    upload_id: str,
+) -> str | None:
+    if not session_enabled():
+        return session_id
+    sid = (session_id or "").strip() or uuid.uuid4().hex[:12]
+    data = _load_session(sid)
+    ids = [str(x) for x in data.get("upload_ids") or []]
+    if upload_id not in ids:
+        if len(ids) >= _MAX_SESSION_FILES:
+            raise ValueError(f"Oturumda en fazla {_MAX_SESSION_FILES} dosya.")
+        ids.append(upload_id)
+    data["upload_ids"] = ids
+    data["updated_at"] = time.time()
+    _save_session(sid, data)
+    return sid
+
+
+def register_upload_session(session_id: str | None, upload_id: str) -> str | None:
+    """Yüklemeyi oturum paketine ekle; yeni session_id döndürür."""
+    with _lock:
+        return _register_upload_session_unlocked(session_id, upload_id)
+
+
+def list_session_upload_ids(session_id: str | None) -> list[str]:
+    sid = (session_id or "").strip()
+    if not sid:
+        return []
+    with _lock:
+        data = _load_session(sid)
+    return [str(x) for x in data.get("upload_ids") or [] if str(x).strip()]
+
+
+def get_upload_records(upload_ids: list[str] | None) -> list[dict[str, Any]]:
+    if not upload_ids:
+        return []
+    with _lock:
+        _purge_expired()
+        if not _store:
+            _load_disk_records()
+        out: list[dict[str, Any]] = []
+        for uid in upload_ids:
+            rec = _store.get(str(uid).strip())
+            if rec:
+                out.append(rec)
+        return out
+
+
+def resolve_upload_ids(
+    upload_ids: list[str] | None = None,
+    session_id: str | None = None,
+) -> list[str]:
+    explicit = [str(x).strip() for x in (upload_ids or []) if str(x).strip()]
+    if explicit:
+        return explicit
+    return list_session_upload_ids(session_id)
+
+
+def save_upload_bytes(
+    data: bytes,
+    filename: str,
+    *,
+    session_id: str | None = None,
+) -> dict[str, Any]:
     """Ham dosyayı kaydet, metin çıkar, göm ve upload_id döndür."""
     if not ingest_enabled():
         return {"ok": False, "error": "Dosya ingest kapalı (RUZGAR_ANA_MOTOR_UPLOAD_INGEST=0)."}
@@ -175,29 +270,39 @@ def save_upload_bytes(data: bytes, filename: str) -> dict[str, Any]:
         "embeddings": embeddings,
         "source": f"upload:{safe}",
     }
+    sid: str | None = None
     with _lock:
         _purge_expired()
         _store[upload_id] = record
         _persist_record(upload_id, record)
+        try:
+            sid = _register_upload_session_unlocked(session_id, upload_id)
+        except ValueError as exc:
+            return {"ok": False, "error": str(exc)}
 
-    return UploadRecord(
+    out = UploadRecord(
         upload_id=upload_id,
         filename=safe,
         chars=len(text),
         chunks=len(chunks),
     ).to_dict()
+    if sid:
+        out["session_id"] = sid
+        out["session_count"] = len(list_session_upload_ids(sid))
+    return out
 
 
 def search_upload_context(
     query: str,
     upload_ids: list[str] | None,
     *,
+    session_id: str | None = None,
     top_k: int = 4,
 ) -> list[tuple[str, str, float]]:
     """Geçici yüklenen dosyalarda kosinüs araması."""
-    if not ingest_enabled() or not upload_ids:
+    if not ingest_enabled():
         return []
-    ids = [str(x).strip() for x in upload_ids if str(x).strip()]
+    ids = resolve_upload_ids(upload_ids, session_id)
     if not ids:
         return []
 
@@ -248,9 +353,10 @@ def merge_upload_hits(
     query: str,
     upload_ids: list[str] | None,
     *,
+    session_id: str | None = None,
     top_k: int = 4,
 ) -> list[tuple[str, str, float]]:
-    up = search_upload_context(query, upload_ids, top_k=top_k)
+    up = search_upload_context(query, upload_ids, session_id=session_id, top_k=top_k)
     if not up:
         return hits
     boosted = [(t, s, min(1.0, float(sc) + 0.08)) for t, s, sc in up]

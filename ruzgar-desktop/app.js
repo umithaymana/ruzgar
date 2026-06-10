@@ -84,8 +84,11 @@ function resolveRuzgarApiRoot() {
 }
 
 const API = resolveRuzgarApiRoot();
-/** Faz F1 — tek tur dosya bağlamı (sürükle-bırak) */
+/** Faz F1/G3 — dosya bağlamı + oturum paketi */
 const anaMotorUploadQueue = [];
+let anaMotorUploadSessionId = null;
+let anaMotorLastUserTopic = "";
+let anaMotorLastNebulaCard = null;
 console.info("[RÜZGAR Connection Bridge] API kök:", API);
 const RUZGAR_CHAT_FULL_TIMEOUT_MS = 180000;
 /** Kısa selam / nasılsın — Ollama yavaşken 12 sn yetmiyordu */
@@ -10866,6 +10869,7 @@ async function uploadAnaMotorContextFile(file) {
   }
   const fd = new FormData();
   fd.append("file", file, name);
+  if (anaMotorUploadSessionId) fd.append("session_id", anaMotorUploadSessionId);
   try {
     const res = await fetch(`${API}/api/ana-motor/upload-context`, { method: "POST", body: fd });
     const j = await res.json().catch(() => ({}));
@@ -10873,9 +10877,11 @@ async function uploadAnaMotorContextFile(file) {
       setStatus(j.detail || j.error || "Dosya yüklenemedi", "Rüzgar");
       return null;
     }
+    if (j.session_id) anaMotorUploadSessionId = j.session_id;
     anaMotorUploadQueue.push({ id: j.upload_id, name: j.filename || name, chars: j.chars || 0 });
+    const sessTxt = j.session_count ? ` · oturum ${j.session_count} dosya` : "";
     setStatus(
-      `Dosya bağlamı hazır: ${j.filename || name} (${j.chars || 0} karakter) — sorunu yazıp gönder`,
+      `Dosya bağlamı hazır: ${j.filename || name} (${j.chars || 0} karakter)${sessTxt} — sorunu yazıp gönder`,
       "Rüzgar",
     );
     if (el.input && !el.input.value.trim()) {
@@ -10892,6 +10898,64 @@ function isAnaMotorDocFile(file) {
   const name = String(file?.name || "").toLowerCase();
   return /\.(txt|md|pdf)$/.test(name);
 }
+
+function renderAnaMotorNebulaOneriCard(card) {
+  const wrap = document.getElementById("ana-motor-nebula-oneri-card");
+  const sumEl = document.getElementById("ana-motor-nebula-oneri-summary");
+  const cmdEl = document.getElementById("ana-motor-nebula-oneri-cmd");
+  const applyBtn = document.getElementById("btn-ana-nebula-oneri-apply");
+  if (!wrap || !sumEl || !cmdEl) return;
+  if (!card || !card.ok) {
+    wrap.hidden = true;
+    anaMotorLastNebulaCard = null;
+    return;
+  }
+  anaMotorLastNebulaCard = card;
+  wrap.hidden = false;
+  sumEl.textContent =
+    `Güven: ${card.guven || "düşük"} — önerilen koleksiyon: ${card.collection_title || card.collection || "—"}. ${card.hint || ""}`;
+  cmdEl.textContent = card.suggested_command || "";
+  if (applyBtn) applyBtn.disabled = false;
+}
+
+async function applyAnaMotorNebulaOneri() {
+  const card = anaMotorLastNebulaCard;
+  if (!card || !card.ok) {
+    setStatus("Nebula öneri kartı yok.", "Rüzgar");
+    return;
+  }
+  const uploadIds = anaMotorUploadQueue.map((x) => x.id).filter(Boolean);
+  const body = {
+    collection: card.collection || "",
+    topic: card.topic || anaMotorLastUserTopic || "",
+    upload_ids: uploadIds.length ? uploadIds : undefined,
+    session_id: anaMotorUploadSessionId || undefined,
+  };
+  try {
+    const res = await fetch(`${API}/api/ana-motor/nebula-oneri/apply`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) {
+      setStatus(j.detail || j.error || "Nebula ekleme başarısız", "Rüzgar");
+      return;
+    }
+    setStatus(j.hint || `Nebula paketi eklendi: ${j.collection}`, "Rüzgar");
+    flashRuzgarDurum(`Nebula — ${j.collection} (${j.entries || 1} kayıt)`);
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+  }
+}
+
+(function wireAnaMotorNebulaOneriButton() {
+  const btn = document.getElementById("btn-ana-nebula-oneri-apply");
+  if (btn && !btn.dataset.wired) {
+    btn.dataset.wired = "1";
+    btn.addEventListener("click", () => void applyAnaMotorNebulaOneri());
+  }
+})();
 
 /** Dinamit — görsel sürükle-bırak + yapıştır + hatırlatıcı poll (Ümit & Gökçenur) */
 function wireDinamitFeatures() {
@@ -11353,6 +11417,7 @@ async function streamChat(userText, streamOpts = {}) {
     ...(Array.isArray(streamOpts.uploadIds) && streamOpts.uploadIds.length
       ? { ana_motor_upload_ids: streamOpts.uploadIds }
       : {}),
+    ...(streamOpts.sessionId ? { ana_motor_session_id: String(streamOpts.sessionId) } : {}),
   };
 
   const dec = new TextDecoder("utf-8");
@@ -11439,21 +11504,6 @@ async function streamChat(userText, streamOpts = {}) {
       }
     }
     wrap.hidden = listEl.children.length === 0 && !parts.length;
-  }
-
-  function renderAnaMotorNebulaOneriCard(card) {
-    const wrap = document.getElementById("ana-motor-nebula-oneri-card");
-    const sumEl = document.getElementById("ana-motor-nebula-oneri-summary");
-    const cmdEl = document.getElementById("ana-motor-nebula-oneri-cmd");
-    if (!wrap || !sumEl || !cmdEl) return;
-    if (!card || !card.ok) {
-      wrap.hidden = true;
-      return;
-    }
-    wrap.hidden = false;
-    sumEl.textContent =
-      `Güven: ${card.guven || "düşük"} — önerilen koleksiyon: ${card.collection_title || card.collection || "—"}. ${card.hint || ""}`;
-    cmdEl.textContent = card.suggested_command || "";
   }
 
   function renderAnaMotorPatchCard(card) {
@@ -12303,15 +12353,18 @@ async function sendMessageWithText(t, opts = {}) {
             title: String(cinemaCtx.title || cinemaCtx.label || "").slice(0, 200),
           }
         : undefined;
+    anaMotorLastUserTopic = text;
     const uploadIds = anaMotorUploadQueue.map((x) => x.id).filter(Boolean);
     await streamChat(chatPayload, {
       userRaw: text,
       contextBrief: understanding?.contextBrief || "",
       cinema: cinemaPayload,
       uploadIds,
+      sessionId: anaMotorUploadSessionId || undefined,
     });
-    if (uploadIds.length) {
+    if (uploadIds.length || anaMotorUploadSessionId) {
       anaMotorUploadQueue.length = 0;
+      anaMotorUploadSessionId = null;
     }
   } catch (e) {
     appendBubble("assistant", formatClientChatError(e), { error: true });

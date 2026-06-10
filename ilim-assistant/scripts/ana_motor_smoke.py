@@ -751,6 +751,68 @@ def run_offline() -> int:
     else:
         _ok("nebula oneri karti")
 
+    print("\n=== Faz G — oturum paketi / nebula apply ===")
+    from ilim_assistant.ana_motor_dosya_ingest import (
+        resolve_upload_ids,
+        session_enabled,
+    )
+    from ilim_assistant.ana_motor_nebula_apply import (
+        apply_nebula_oneri,
+        nebula_apply_enabled,
+    )
+
+    if not session_enabled():
+        _fail("upload_session", "kapali")
+        fails += 1
+    else:
+        _ok("upload oturum paketi acik")
+    up_a = save_upload_bytes(b"# A\n\nOsmanli 1299.\n", "a.md")
+    up_b = save_upload_bytes(
+        b"# B\n\nFatih Istanbul.\n",
+        "b.md",
+        session_id=up_a.get("session_id"),
+    )
+    if not up_a.get("session_id") or up_a.get("session_id") != up_b.get("session_id"):
+        _fail("session_id", f"{up_a.get('session_id')} vs {up_b.get('session_id')}")
+        fails += 1
+    else:
+        _ok(f"oturum 2 dosya sid={up_a['session_id']}")
+    sid = up_a["session_id"]
+    resolved = resolve_upload_ids(None, sid)
+    if len(resolved) < 2:
+        _fail("resolve_session", str(resolved))
+        fails += 1
+    else:
+        _ok(f"resolve_upload_ids -> {len(resolved)}")
+    pack_hits = search_upload_context("Fatih Istanbul", None, session_id=sid, top_k=3)
+    if not pack_hits:
+        _fail("session_search", "hit yok")
+        fails += 1
+    else:
+        _ok("oturum paketi aramasi")
+
+    if not nebula_apply_enabled():
+        _fail("nebula_apply", "kapali")
+        fails += 1
+    else:
+        _ok("nebula tek tik apply acik")
+    nap = apply_nebula_oneri(
+        "tarih_kaynak",
+        "Test konu G2",
+        upload_ids=[up_a["upload_id"]],
+    )
+    if not nap.get("ok") or not nap.get("batch_path"):
+        _fail("nebula_apply_upload", str(nap)[:120])
+        fails += 1
+    else:
+        _ok(f"nebula apply upload -> {nap.get('batch_path')}")
+    nap2 = apply_nebula_oneri("tarih_kaynak", "Stub konu G2")
+    if not nap2.get("ok"):
+        _fail("nebula_apply_stub", str(nap2)[:120])
+        fails += 1
+    else:
+        _ok("nebula apply stub")
+
     print("\n=== Faz D — bilim derin / denge70 / otonom debug ===")
     from ilim_assistant.ana_motor_bilim_derin import (
         apply_bilim_derin_rag_top_k,
@@ -1049,6 +1111,101 @@ def run_live(base: str) -> int:
         fails += 1
     else:
         _ok("Faz F3 kaynak matrisi acik")
+    if not am.get("upload_session"):
+        _fail("faz_g3 session", "kapali")
+        fails += 1
+    else:
+        _ok("Faz G3 upload session acik")
+    if not am.get("nebula_apply"):
+        _fail("faz_g2 apply", "kapali")
+        fails += 1
+    else:
+        _ok("Faz G2 nebula apply acik")
+
+    print("\n=== Canli — upload + matris SLO ===")
+    chat_url = base.rstrip("/") + "/api/chat/full"
+    upload_url = base.rstrip("/") + "/api/ana-motor/upload-context"
+    boundary = "----RuzgarSmokeG1"
+    file_body = (
+        "# Canli test\n\nOsmanli devleti kurulus yili 1299.\n"
+    ).encode("utf-8")
+    multipart = (
+        f"--{boundary}\r\n"
+        f'Content-Disposition: form-data; name="file"; filename="g1_live.md"\r\n'
+        f"Content-Type: text/plain\r\n\r\n"
+    ).encode("utf-8") + file_body + f"\r\n--{boundary}--\r\n".encode("utf-8")
+    upload_id = None
+    t_up = time.monotonic()
+    try:
+        up_req = urllib.request.Request(
+            upload_url,
+            data=multipart,
+            headers={"Content-Type": f"multipart/form-data; boundary={boundary}"},
+            method="POST",
+        )
+        with urllib.request.urlopen(up_req, timeout=30) as r:
+            up_j = json.loads(r.read().decode("utf-8", errors="replace"))
+        if not up_j.get("ok") or not up_j.get("upload_id"):
+            _fail("live upload", str(up_j)[:120])
+            fails += 1
+        else:
+            upload_id = up_j["upload_id"]
+            _ok(f"canli upload {time.monotonic() - t_up:.1f}s id={upload_id[:8]}")
+    except Exception as e:
+        _fail("live upload", str(e)[:120])
+        fails += 1
+
+    if upload_id:
+        t_mat = time.monotonic()
+        mat_body = json.dumps(
+            {
+                "message": "Osmanli devleti ne zaman kuruldu?",
+                "mode": "genel",
+                "coding_mode": False,
+                "use_web": False,
+                "ana_motor_upload_ids": [upload_id],
+            },
+            ensure_ascii=False,
+        ).encode("utf-8")
+        try:
+            mat_req = urllib.request.Request(
+                chat_url,
+                data=mat_body,
+                headers={"Content-Type": "application/json; charset=utf-8"},
+                method="POST",
+            )
+            with urllib.request.urlopen(mat_req, timeout=120) as r:
+                mat_j = json.loads(r.read().decode("utf-8", errors="replace"))
+            elapsed_mat = time.monotonic() - t_mat
+            if not mat_j.get("ok"):
+                _fail("live upload+matris", str(mat_j.get("error") or "")[:120])
+                fails += 1
+            else:
+                _ok(f"canli upload+matris turu {elapsed_mat:.1f}s")
+                try:
+                    slo_g = float(
+                        am.get("live_upload_matris_slo_sec")
+                        or os.environ.get("RUZGAR_LIVE_UPLOAD_MATRIS_SLO_SEC", "90")
+                    )
+                except ValueError:
+                    slo_g = 90.0
+                if elapsed_mat > slo_g:
+                    _fail("upload+matris SLO", f"{elapsed_mat:.1f}s > {slo_g}s")
+                    fails += 1
+                else:
+                    _ok(f"upload+matris SLO <= {slo_g:.0f}s")
+                evs = mat_j.get("events") or []
+                status_txt = " ".join(
+                    str(e.get("text") or "") for e in evs if e.get("type") == "status"
+                ).lower()
+                if "matris" not in status_txt and "upload" not in status_txt:
+                    _fail("live status phases", status_txt[:100])
+                    fails += 1
+                else:
+                    _ok("canli status: matris/upload")
+        except Exception as e:
+            _fail("live upload+matris", str(e)[:120])
+            fails += 1
 
     t0 = time.monotonic()
     chat_url = base.rstrip("/") + "/api/chat/full"

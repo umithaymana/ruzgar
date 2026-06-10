@@ -846,6 +846,7 @@ def prepare_turn(
     user_message_raw: str | None = None,
     cinema_context: dict[str, Any] | None = None,
     ana_motor_upload_ids: list[str] | None = None,
+    ana_motor_session_id: str | None = None,
 ):
     """Boş mesajda None; aksi halde (msg, hits, user_payload, system, model, ogrenme_direct).
 
@@ -1296,6 +1297,7 @@ def prepare_turn(
                 question_plan=turn_plan,
                 search_text=search_msg,
                 upload_ids=ana_motor_upload_ids,
+                session_id=ana_motor_session_id,
             )
             bh = list(me_bundle.hits)
             good_hits = [h for h in bh if float(h[2]) >= rag_score_min]

@@ -79,6 +79,7 @@ def iter_main_engine_retrieval_stream(
     mode: str,
     question_plan: Any | None = None,
     upload_ids: list[str] | None = None,
+    session_id: str | None = None,
 ) -> Iterator[dict[str, Any]]:
     """
     Faz E5 — retrieval sırasında canlı status yield; son olay bundle döner.
@@ -108,6 +109,7 @@ def iter_main_engine_retrieval_stream(
         question_plan=question_plan,
         search_text=search_msg,
         upload_ids=upload_ids,
+        session_id=session_id,
     ):
         if ev.get("kind") == "status":
             yield {
@@ -128,6 +130,7 @@ def prefetch_main_engine_bundle_for_stream(
     mode: str,
     question_plan: Any | None = None,
     upload_ids: list[str] | None = None,
+    session_id: str | None = None,
 ) -> tuple[RetrievalBundle, list[dict[str, Any]]]:
     """
     Ana motor (main_engine) retrieval + durum satırları.
@@ -142,7 +145,12 @@ def prefetch_main_engine_bundle_for_stream(
     events: list[dict[str, Any]] = []
     bundle = empty
     for item in iter_main_engine_retrieval_stream(
-        message, history, mode, question_plan=question_plan, upload_ids=upload_ids
+        message,
+        history,
+        mode,
+        question_plan=question_plan,
+        upload_ids=upload_ids,
+        session_id=session_id,
     ):
         if item.get("type") == "retrieval_bundle":
             bundle = item.get("bundle") or empty

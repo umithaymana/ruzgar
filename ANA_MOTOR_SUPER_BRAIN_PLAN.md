@@ -56,11 +56,19 @@
 | F2 | Nebula otomatik öneri | `ana_motor_nebula_oneri.py`, dashboard kart | düşük Güven → koleksiyon |
 | F3 | TDK + tarih + nebula matris | `ana_motor_kaynak_matrisi.py`, `rag_store.py` | `search_tdk_hafiza` / `search_nebula_hafiza` |
 
-## Sıradaki (Faz G — öneri)
+## Faz G — uygulandı (2026-06-10)
 
-- Canlı upload + matris birleşik SLO
-- Nebula öneri → tek tık «kaynağı ekle» akışı
-- Çoklu dosya oturum paketi
+| # | Görev | Dosya | Durum |
+|---|--------|-------|--------|
+| G1 | Canlı upload + matris SLO | `ana_motor_smoke.py --live` | `RUZGAR_LIVE_UPLOAD_MATRIS_SLO_SEC` |
+| G2 | Nebula tek tık kaynak ekle | `ana_motor_nebula_apply.py`, `app.js` | `POST /api/ana-motor/nebula-oneri/apply` |
+| G3 | Çoklu dosya oturum paketi | `ana_motor_dosya_ingest.py` | `session_id` + `ana_motor_session_id` |
+
+## Sıradaki (Faz H — öneri)
+
+- Nebula apply → arka plan indeks + UI ilerleme
+- Oturum paketi kalıcı «hatırla» köprüsü
+- Upload virüs taraması (isteğe bağlı)
 
 ## Ortam (özet)
 
