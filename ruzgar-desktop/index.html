@@ -537,7 +537,7 @@
               </div>
             </div>
             <div id="ana-motor-archive-card" class="mini-card ana-motor-archive-card">
-              <strong>Arşiv &amp; birleştir (Faz N)</strong>
+              <strong>Arşiv &amp; birleştir (Faz O)</strong>
               <p id="ana-motor-archive-summary" class="ana-motor-card-sub">Kalıcı arşiv oturumları</p>
               <div id="ana-motor-paket-grafik" class="ana-motor-paket-grafik" hidden></div>
               <div id="ana-motor-notify-prefs" class="ana-motor-notify-prefs mini-card">
@@ -548,7 +548,30 @@
                 <label class="ana-motor-pref-row">Poll (sn): <input type="number" id="ana-pref-poll" class="input-compact" min="60" max="600" value="120" /></label>
                 <button type="button" class="btn-secondary btn-compact" id="btn-ana-notify-prefs-save">Kaydet</button>
               </div>
+              <div id="ana-motor-notify-history" class="ana-motor-notify-history" hidden>
+                <strong>Son bildirimler</strong>
+                <ul id="ana-motor-notify-history-list" class="ana-motor-notify-history-list"></ul>
+              </div>
               <div id="ana-motor-archive-reminders" class="ana-motor-remind-list" hidden></div>
+              <div id="ana-motor-timeline-filters" class="ana-motor-timeline-filters">
+                <label class="ana-motor-pref-row">Olay:
+                  <select id="ana-tl-filter-type" class="input-compact">
+                    <option value="">Tümü</option>
+                    <option value="archived">Arşiv</option>
+                    <option value="restored">Geri yükleme</option>
+                    <option value="merged">Birleştirme</option>
+                    <option value="auto_paket">Otomatik paket</option>
+                    <option value="active_session">Aktif oturum</option>
+                  </select>
+                </label>
+                <label class="ana-motor-pref-row">Oturum:
+                  <input type="text" id="ana-tl-filter-session" class="input-compact" placeholder="session_id" />
+                </label>
+                <label class="ana-motor-pref-row">Son (gün):
+                  <input type="number" id="ana-tl-filter-days" class="input-compact" min="0" max="365" placeholder="30" />
+                </label>
+                <button type="button" class="btn-secondary btn-compact" id="btn-ana-tl-filter-apply">Filtrele</button>
+              </div>
               <ul id="ana-motor-session-timeline" class="ana-motor-timeline" hidden></ul>
               <select id="ana-motor-archive-select" class="input-compact" aria-label="Arşiv oturumu"></select>
               <div class="ana-motor-patch-actions">
@@ -557,6 +580,8 @@
                 <button type="button" class="btn-secondary btn-compact" id="btn-ana-paket-csv">CSV indir</button>
                 <label class="btn-secondary btn-compact" for="ana-csv-import-input">CSV toplu yükle</label>
                 <input type="file" id="ana-csv-import-input" accept=".csv,text/csv" hidden />
+                <label class="btn-secondary btn-compact" for="ana-csv-paket-input">CSV toplu paket</label>
+                <input type="file" id="ana-csv-paket-input" accept=".csv,text/csv" hidden />
               </div>
               <p id="ana-motor-archive-progress" class="ana-motor-card-sub" hidden></p>
             </div>

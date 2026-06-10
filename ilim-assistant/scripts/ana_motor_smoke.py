@@ -1257,6 +1257,73 @@ def run_offline() -> int:
     else:
         _ok(f"paket grafik total={pg.get('summary', {}).get('total', 0)}")
 
+    print("\n=== Faz O — CSV toplu paket / bildirim geçmişi / timeline filtre ===")
+    from ilim_assistant.ana_motor_bildirim_gecmis import (
+        append_notify_history,
+        list_notify_history,
+        notify_history_enabled,
+    )
+    from ilim_assistant.ana_motor_csv_paket import (
+        bulk_paket_from_csv,
+        csv_bulk_paket_enabled,
+        parse_paket_rows_from_csv,
+    )
+    from ilim_assistant.ana_motor_timeline_filtre import (
+        apply_timeline_filters,
+        build_filtered_session_timeline,
+        timeline_filter_enabled,
+    )
+
+    if not csv_bulk_paket_enabled():
+        _fail("csv_bulk_paket", "kapali")
+        fails += 1
+    else:
+        _ok("CSV toplu paket acik")
+    pak_rows = parse_paket_rows_from_csv(csv_sample)
+    if not pak_rows:
+        _fail("csv_paket_parse", "satir yok")
+        fails += 1
+    else:
+        _ok(f"CSV paket rows={len(pak_rows)}")
+    bp = bulk_paket_from_csv(csv_sample, max_sessions=1)
+    if not bp.get("ok"):
+        _fail("csv_bulk_paket_run", str(bp)[:100])
+        fails += 1
+    else:
+        _ok(f"CSV bulk paket={bp.get('paket_count')}")
+
+    if not notify_history_enabled():
+        _fail("notify_history", "kapali")
+        fails += 1
+    else:
+        _ok("bildirim gecmisi acik")
+    append_notify_history(channel="desktop", title="smoke", body="Faz O test", severity="info")
+    nh = list_notify_history(limit=5)
+    if not nh.get("ok") or not nh.get("items"):
+        _fail("notify_history_list", str(nh)[:80])
+        fails += 1
+    else:
+        _ok(f"notify history items={nh.get('count')}")
+
+    if not timeline_filter_enabled():
+        _fail("timeline_filter", "kapali")
+        fails += 1
+    else:
+        _ok("timeline filtre acik")
+    ft = build_filtered_session_timeline(limit=8, since_days=30)
+    if not ft.get("ok"):
+        _fail("timeline_filter_build", str(ft)[:80])
+        fails += 1
+    else:
+        _ok(f"timeline filter count={ft.get('count')}")
+    evs = tl.get("events") or []
+    archived_only = apply_timeline_filters(evs, event_type="archived")
+    if not isinstance(archived_only, list):
+        _fail("timeline_filter_apply", type(archived_only).__name__)
+        fails += 1
+    else:
+        _ok(f"timeline archived filter={len(archived_only)}")
+
     print("\n=== Faz D — bilim derin / denge70 / otonom debug ===")
     from ilim_assistant.ana_motor_bilim_derin import (
         apply_bilim_derin_rag_top_k,
@@ -1675,6 +1742,21 @@ def run_live(base: str) -> int:
         fails += 1
     else:
         _ok("Faz N3 paket grafik acik")
+    if not am.get("csv_bulk_paket"):
+        _fail("faz_o1 csv_paket", "kapali")
+        fails += 1
+    else:
+        _ok("Faz O1 CSV bulk paket acik")
+    if not am.get("notify_history"):
+        _fail("faz_o2 notify_hist", "kapali")
+        fails += 1
+    else:
+        _ok("Faz O2 notify history acik")
+    if not am.get("timeline_filter"):
+        _fail("faz_o3 timeline_filt", "kapali")
+        fails += 1
+    else:
+        _ok("Faz O3 timeline filter acik")
 
     print("\n=== Canli — upload + matris SLO ===")
     chat_url = base.rstrip("/") + "/api/chat/full"

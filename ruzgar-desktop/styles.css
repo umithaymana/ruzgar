@@ -5549,3 +5549,27 @@ body.faz7-reduced-motion .agent-step-active .agent-step-label {
   font-style: normal;
   margin-top: 2px;
 }
+.ana-motor-notify-history {
+  margin: 8px 0;
+  font-size: 11px;
+}
+.ana-motor-notify-history-list {
+  margin: 4px 0 0;
+  padding-left: 16px;
+  max-height: 120px;
+  overflow-y: auto;
+  color: #a8b4c0;
+}
+.ana-motor-notify-history-list li {
+  margin: 2px 0;
+}
+.ana-notify-hist-warn {
+  color: #e8b86d;
+}
+.ana-motor-timeline-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin: 6px 0;
+}

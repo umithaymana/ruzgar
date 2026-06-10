@@ -64,6 +64,13 @@ def build_desktop_notifications(reminders: list[dict[str, Any]]) -> list[dict[st
                 "upload_id": row.get("upload_id"),
             }
         )
+    try:
+        from ilim_assistant.ana_motor_bildirim_gecmis import log_desktop_notifications
+
+        if out:
+            log_desktop_notifications(out)
+    except Exception:
+        pass
     return out
 
 
@@ -113,6 +120,13 @@ def maybe_send_email_reminders(reminders: list[dict[str, Any]]) -> dict[str, Any
                 srv.login(user, password)
             srv.sendmail(from_addr, [to_addr], msg.as_string())
         _last_email_sent = now
-        return {"ok": True, "sent": True, "to": to_addr, "count": len(lines)}
+        result = {"ok": True, "sent": True, "to": to_addr, "count": len(lines)}
+        try:
+            from ilim_assistant.ana_motor_bildirim_gecmis import log_email_notification
+
+            log_email_notification(result, reminders)
+        except Exception:
+            pass
+        return result
     except Exception as exc:
         return {"ok": False, "sent": False, "error": str(exc)[:200]}

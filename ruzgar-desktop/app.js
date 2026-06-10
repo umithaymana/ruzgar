@@ -11357,6 +11357,38 @@ async function refreshAnaMotorPaketGrafik() {
   }
 }
 
+async function importAnaMotorBulkPaketCsv(file) {
+  if (!file) return;
+  const progEl = document.getElementById("ana-motor-archive-progress");
+  if (progEl) {
+    progEl.hidden = false;
+    progEl.textContent = "CSV toplu paket sihirbazı…";
+  }
+  try {
+    const text = await file.text();
+    const res = await fetch(`${API}/api/ana-motor/paket-history/import-paket`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ csv_text: text, do_restore_first: true }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) {
+      setStatus(j.detail || j.error || "CSV toplu paket başarısız", "Rüzgar");
+      if (progEl) progEl.textContent = j.detail || j.error || "Hata";
+      return;
+    }
+    setStatus(j.hint || "CSV toplu paket tamam.", "Rüzgar");
+    flashRuzgarDurum(`CSV paket — ${j.paket_count || "?"}/${j.attempted || "?"}`);
+    if (progEl) progEl.textContent = j.hint || "Tamam";
+    void refreshAnaMotorArchiveList();
+    void refreshAnaMotorPaketGrafik();
+    void refreshAnaMotorPaketAutoStatus();
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+    if (progEl) progEl.textContent = formatClientChatError(e);
+  }
+}
+
 async function importAnaMotorPaketCsv(file) {
   if (!file) return;
   const progEl = document.getElementById("ana-motor-archive-progress");
@@ -11467,6 +11499,7 @@ async function refreshAnaMotorArchiveReminders() {
     if (j.desktop_notifications && j.desktop_notifications.length) {
       showAnaMotorDesktopNotifications(j.desktop_notifications);
     }
+    void refreshAnaMotorNotifyHistory();
     remEl.innerHTML = "";
     if (!rows.length) {
       remEl.hidden = true;
@@ -11494,11 +11527,51 @@ async function refreshAnaMotorArchiveReminders() {
   }
 }
 
+function anaMotorTimelineFilterQuery() {
+  const typeEl = document.getElementById("ana-tl-filter-type");
+  const sidEl = document.getElementById("ana-tl-filter-session");
+  const daysEl = document.getElementById("ana-tl-filter-days");
+  const qs = new URLSearchParams({ limit: "12" });
+  const et = (typeEl && typeEl.value) || "";
+  const sid = (sidEl && sidEl.value) || "";
+  const days = daysEl && daysEl.value ? parseInt(daysEl.value, 10) : NaN;
+  if (et) qs.set("event_type", et);
+  if (sid.trim()) qs.set("session_id", sid.trim());
+  if (!Number.isNaN(days) && days > 0) qs.set("since_days", String(days));
+  return qs.toString();
+}
+
+async function refreshAnaMotorNotifyHistory() {
+  const wrap = document.getElementById("ana-motor-notify-history");
+  const listEl = document.getElementById("ana-motor-notify-history-list");
+  if (!wrap || !listEl) return;
+  try {
+    const res = await fetch(`${API}/api/ana-motor/notify-history?limit=20`);
+    const j = await res.json().catch(() => ({}));
+    const rows = Array.isArray(j.items) ? j.items : [];
+    listEl.innerHTML = "";
+    if (!rows.length) {
+      wrap.hidden = true;
+      return;
+    }
+    wrap.hidden = false;
+    for (const row of rows) {
+      const li = document.createElement("li");
+      const when = row.ts ? new Date(row.ts * 1000).toLocaleString("tr-TR") : "";
+      li.textContent = `${when} · ${row.channel || "?"} — ${row.body || row.title || ""}`;
+      li.className = `ana-notify-hist-${row.severity || "info"}`;
+      listEl.appendChild(li);
+    }
+  } catch (_) {
+    wrap.hidden = true;
+  }
+}
+
 async function refreshAnaMotorSessionTimeline() {
   const listEl = document.getElementById("ana-motor-session-timeline");
   if (!listEl) return;
   try {
-    const res = await fetch(`${API}/api/ana-motor/sessions/timeline?limit=10`);
+    const res = await fetch(`${API}/api/ana-motor/sessions/timeline?${anaMotorTimelineFilterQuery()}`);
     const j = await res.json().catch(() => ({}));
     const rows = Array.isArray(j.events) ? j.events : [];
     listEl.innerHTML = "";
@@ -11698,6 +11771,20 @@ async function mergeAnaMotorArchiveSessions() {
       csvIn.value = "";
     });
   }
+  const csvPaketIn = document.getElementById("ana-csv-paket-input");
+  if (csvPaketIn && !csvPaketIn.dataset.wired) {
+    csvPaketIn.dataset.wired = "1";
+    csvPaketIn.addEventListener("change", () => {
+      const f = csvPaketIn.files && csvPaketIn.files[0];
+      void importAnaMotorBulkPaketCsv(f);
+      csvPaketIn.value = "";
+    });
+  }
+  const tlFilterBtn = document.getElementById("btn-ana-tl-filter-apply");
+  if (tlFilterBtn && !tlFilterBtn.dataset.wired) {
+    tlFilterBtn.dataset.wired = "1";
+    tlFilterBtn.addEventListener("click", () => void refreshAnaMotorSessionTimeline());
+  }
   const prefBtn = document.getElementById("btn-ana-notify-prefs-save");
   if (prefBtn && !prefBtn.dataset.wired) {
     prefBtn.dataset.wired = "1";
@@ -11705,6 +11792,7 @@ async function mergeAnaMotorArchiveSessions() {
   }
   void refreshAnaMotorArchiveList();
   void loadAnaMotorNotifyPrefs();
+  void refreshAnaMotorNotifyHistory();
 })();
 
 /** Dinamit — görsel sürükle-bırak + yapıştır + hatırlatıcı poll (Ümit & Gökçenur) */

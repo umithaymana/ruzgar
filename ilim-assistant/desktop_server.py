@@ -1402,6 +1402,12 @@ def health():
             not in ("0", "false", "no"),
             "paket_grafik": os.environ.get("RUZGAR_ANA_PAKET_GRAFIK", "1").strip().lower()
             not in ("0", "false", "no"),
+            "csv_bulk_paket": os.environ.get("RUZGAR_ANA_CSV_BULK_PAKET", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "notify_history": os.environ.get("RUZGAR_ANA_NOTIFY_HISTORY", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "timeline_filter": os.environ.get("RUZGAR_ANA_TIMELINE_FILTER", "1").strip().lower()
+            not in ("0", "false", "no"),
         },
         "super_brain": _sb,
         "connection": _connection_ui_block(super_brain=_sb),
@@ -2843,11 +2849,28 @@ async def api_ana_motor_reminder_paket(body: ReminderPaketBody) -> dict[str, Any
 
 
 @app.get("/api/ana-motor/sessions/timeline")
-def api_ana_motor_sessions_timeline(limit: int = 20) -> dict[str, Any]:
-    """Faz L3/M1 — oturum geçmişi zaman çizelgesi (+ aksiyonlar)."""
+def api_ana_motor_sessions_timeline(
+    limit: int = 20,
+    event_type: str | None = None,
+    session_id: str | None = None,
+    since_days: int | None = None,
+    until_days: int | None = None,
+) -> dict[str, Any]:
+    """Faz L3/M1/O3 — oturum geçmişi zaman çizelgesi (+ filtre + aksiyonlar)."""
+    cap = max(1, min(limit, 40))
+    if any(x is not None for x in (event_type, session_id, since_days, until_days)):
+        from ilim_assistant.ana_motor_timeline_filtre import build_filtered_session_timeline
+
+        return build_filtered_session_timeline(
+            limit=cap,
+            event_type=event_type,
+            session_id=session_id,
+            since_days=since_days,
+            until_days=until_days,
+        )
     from ilim_assistant.ana_motor_oturum_timeline import build_session_timeline
 
-    return build_session_timeline(limit=max(1, min(limit, 40)))
+    return build_session_timeline(limit=cap)
 
 
 class TimelineActionBody(BaseModel):
@@ -2950,6 +2973,39 @@ def api_ana_motor_paket_history_summary(limit: int = 200) -> dict[str, Any]:
     from ilim_assistant.ana_motor_paket_grafik import build_paket_history_summary
 
     return build_paket_history_summary(limit=max(1, min(limit, 500)))
+
+
+class CsvBulkPaketBody(BaseModel):
+    csv_text: str
+    do_restore_first: bool = True
+
+
+@app.post("/api/ana-motor/paket-history/import-paket")
+async def api_ana_motor_csv_bulk_paket(body: CsvBulkPaketBody) -> dict[str, Any]:
+    """Faz O1 — CSV'den toplu paket sihirbazı."""
+    from ilim_assistant.ana_motor_csv_paket import bulk_paket_from_csv, csv_bulk_paket_enabled
+
+    if not csv_bulk_paket_enabled():
+        raise HTTPException(status_code=403, detail="CSV toplu paket sihirbazı kapalı.")
+    result = await run_in_threadpool(
+        bulk_paket_from_csv,
+        body.csv_text or "",
+        do_restore_first=bool(body.do_restore_first),
+    )
+    if not result.get("ok"):
+        raise HTTPException(
+            status_code=400,
+            detail=str(result.get("error") or "Toplu paket başarısız."),
+        )
+    return result
+
+
+@app.get("/api/ana-motor/notify-history")
+def api_ana_motor_notify_history(limit: int = 20) -> dict[str, Any]:
+    """Faz O2 — son bildirim geçmişi."""
+    from ilim_assistant.ana_motor_bildirim_gecmis import list_notify_history
+
+    return list_notify_history(limit=max(1, min(limit, 50)))
 
 
 @app.get("/api/ana-motor/paket-history/export")

@@ -120,11 +120,19 @@
 | N2 | Bildirim tercih paneli (UI + JSON) | `ana_motor_bildirim_tercih.py`, `app.js` | `GET/POST /api/ana-motor/notify-prefs` |
 | N3 | Paket geçmişi grafik özeti | `ana_motor_paket_grafik.py` | `GET /api/ana-motor/paket-history/summary` |
 
-## Sıradaki (Faz O — öneri)
+## Faz O — uygulandı (2026-06-10)
 
-- CSV'den toplu paket sihirbaz tetikleme
-- Bildirim geçmişi paneli (son 20 masaüstü/e-posta)
-- Timeline filtre (olay türü / oturum / tarih aralığı)
+| # | Görev | Dosya | Durum |
+|---|--------|-------|--------|
+| O1 | CSV'den toplu paket sihirbaz | `ana_motor_csv_paket.py` | `POST /api/ana-motor/paket-history/import-paket` |
+| O2 | Bildirim geçmişi paneli | `ana_motor_bildirim_gecmis.py` | `GET /api/ana-motor/notify-history` |
+| O3 | Timeline filtre | `ana_motor_timeline_filtre.py` | `GET /api/ana-motor/sessions/timeline?event_type&session_id&since_days` |
+
+## Sıradaki (Faz P — öneri)
+
+- Paket geçmişi PDF/JSON dışa aktarım
+- Bildirim geçmişi temizle / dışa aktar
+- Timeline olaylarından otomatik haftalık özet kartı
 
 ## Ortam (özet)
 
