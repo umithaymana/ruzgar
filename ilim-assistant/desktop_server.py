@@ -1424,6 +1424,12 @@ def health():
             not in ("0", "false", "no"),
             "timeline_remember": os.environ.get("RUZGAR_ANA_TIMELINE_REMEMBER", "1").strip().lower()
             not in ("0", "false", "no"),
+            "compare_chart": os.environ.get("RUZGAR_ANA_COMPARE_CHART", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "remember_history": os.environ.get("RUZGAR_ANA_REMEMBER_HISTORY", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "weekly_schedule": os.environ.get("RUZGAR_ANA_WEEKLY_SCHEDULE", "1").strip().lower()
+            not in ("0", "false", "no"),
         },
         "super_brain": _sb,
         "connection": _connection_ui_block(super_brain=_sb),
@@ -3191,6 +3197,52 @@ async def api_ana_motor_timeline_remember_batch(limit: int = 5) -> dict[str, Any
             detail=str(result.get("error") or "Toplu hatırla başarısız."),
         )
     return result
+
+
+@app.get("/api/ana-motor/timeline/remember/history")
+def api_ana_motor_remember_history(limit: int = 20) -> dict[str, Any]:
+    """Faz R2 — timeline hatırla geçmişi."""
+    from ilim_assistant.ana_motor_hatirla_gecmis import list_remember_history
+
+    return list_remember_history(limit=max(1, min(limit, 50)))
+
+
+@app.post("/api/ana-motor/timeline/remember/history/clear")
+async def api_ana_motor_remember_history_clear() -> dict[str, Any]:
+    """Faz R2 — hatırla geçmişini temizle."""
+    from ilim_assistant.ana_motor_hatirla_gecmis import clear_remember_history
+
+    result = await run_in_threadpool(clear_remember_history)
+    if not result.get("ok"):
+        raise HTTPException(status_code=400, detail=str(result.get("error") or "Temizleme başarısız."))
+    return result
+
+
+@app.get("/api/ana-motor/paket-history/compare/chart")
+def api_ana_motor_compare_chart(days: int = 7, limit: int = 120) -> dict[str, Any]:
+    """Faz R1 — karşılaştırma çift çubuk grafiği."""
+    from ilim_assistant.ana_motor_compare_grafik import build_compare_dual_chart
+
+    return build_compare_dual_chart(
+        period_days=max(1, min(days, 30)),
+        limit=max(1, min(limit, 200)),
+    )
+
+
+@app.get("/api/ana-motor/sessions/weekly-summary/schedule")
+def api_ana_motor_weekly_schedule_status() -> dict[str, Any]:
+    """Faz R3 — haftalık özet zamanlayıcı durumu."""
+    from ilim_assistant.ana_motor_haftalik_zamanlayici import get_weekly_schedule_status
+
+    return get_weekly_schedule_status()
+
+
+@app.post("/api/ana-motor/sessions/weekly-summary/schedule/tick")
+async def api_ana_motor_weekly_schedule_tick(days: int = 7) -> dict[str, Any]:
+    """Faz R3 — zamanlayıcı poll tick (cooldown uygunsa bildirim)."""
+    from ilim_assistant.ana_motor_haftalik_zamanlayici import tick_weekly_schedule
+
+    return await run_in_threadpool(tick_weekly_schedule, days=max(1, min(days, 30)))
 
 
 @app.get("/api/ana-motor/paket-history/export-json")

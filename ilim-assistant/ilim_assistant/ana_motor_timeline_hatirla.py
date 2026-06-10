@@ -41,7 +41,20 @@ def run_timeline_remember(
     from ilim_assistant.ana_motor_session_hafiza import remember_upload_session
 
     label = (topic or f"Timeline hatırla — {sid[:8]}").strip()[:200]
-    return remember_upload_session(sid, upload_ids=upload_ids, topic=label)
+    result = remember_upload_session(sid, upload_ids=upload_ids, topic=label)
+    try:
+        from ilim_assistant.ana_motor_hatirla_gecmis import append_remember_history
+
+        append_remember_history(
+            session_id=sid,
+            topic=label,
+            file_count=result.get("file_count"),
+            ok=bool(result.get("ok")),
+            source="timeline_single",
+        )
+    except Exception:
+        pass
+    return result
 
 
 def auto_remember_from_timeline(*, limit: int | None = None) -> dict[str, Any]:

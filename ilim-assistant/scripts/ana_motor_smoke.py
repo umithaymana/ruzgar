@@ -1459,6 +1459,63 @@ def run_offline() -> int:
     else:
         _ok(f"timeline batch remember={tb.get('remembered_count')}")
 
+    print("\n=== Faz R — compare chart / hatirla gecmisi / haftalik zamanlayici ===")
+    from ilim_assistant.ana_motor_compare_grafik import (
+        build_compare_dual_chart,
+        compare_chart_enabled,
+    )
+    from ilim_assistant.ana_motor_hatirla_gecmis import (
+        list_remember_history,
+        remember_history_enabled,
+    )
+    from ilim_assistant.ana_motor_haftalik_zamanlayici import (
+        get_weekly_schedule_status,
+        tick_weekly_schedule,
+        weekly_schedule_enabled,
+    )
+
+    if not compare_chart_enabled():
+        _fail("compare_chart", "kapali")
+        fails += 1
+    else:
+        _ok("compare chart acik")
+    cc = build_compare_dual_chart(period_days=7)
+    if not cc.get("ok") or not cc.get("groups"):
+        _fail("compare_chart_build", str(cc)[:80])
+        fails += 1
+    else:
+        _ok(f"compare chart groups={len(cc.get('groups'))}")
+
+    if not remember_history_enabled():
+        _fail("remember_history", "kapali")
+        fails += 1
+    else:
+        _ok("hatirla gecmisi acik")
+    rh = list_remember_history(limit=10)
+    if not rh.get("ok"):
+        _fail("remember_history_list", str(rh)[:80])
+        fails += 1
+    else:
+        _ok(f"remember history items={rh.get('count')}")
+
+    if not weekly_schedule_enabled():
+        _fail("weekly_schedule", "kapali")
+        fails += 1
+    else:
+        _ok("haftalik zamanlayici acik")
+    st = get_weekly_schedule_status()
+    if not st.get("ok"):
+        _fail("weekly_schedule_status", str(st)[:80])
+        fails += 1
+    else:
+        _ok(f"schedule poll={st.get('poll_sec')}")
+    tk = tick_weekly_schedule(days=7)
+    if not tk.get("ok"):
+        _fail("weekly_schedule_tick", str(tk)[:80])
+        fails += 1
+    else:
+        _ok(f"schedule tick skipped={tk.get('skipped')}")
+
     print("\n=== Faz D — bilim derin / denge70 / otonom debug ===")
     from ilim_assistant.ana_motor_bilim_derin import (
         apply_bilim_derin_rag_top_k,
@@ -1927,6 +1984,21 @@ def run_live(base: str) -> int:
         fails += 1
     else:
         _ok("Faz Q3 timeline remember acik")
+    if not am.get("compare_chart"):
+        _fail("faz_r1 compare_chart", "kapali")
+        fails += 1
+    else:
+        _ok("Faz R1 compare chart acik")
+    if not am.get("remember_history"):
+        _fail("faz_r2 remember_hist", "kapali")
+        fails += 1
+    else:
+        _ok("Faz R2 remember history acik")
+    if not am.get("weekly_schedule"):
+        _fail("faz_r3 schedule", "kapali")
+        fails += 1
+    else:
+        _ok("Faz R3 weekly schedule acik")
 
     print("\n=== Canli — upload + matris SLO ===")
     chat_url = base.rstrip("/") + "/api/chat/full"

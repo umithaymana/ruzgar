@@ -11539,6 +11539,107 @@ async function clearAnaMotorNotifyHistory() {
   }
 }
 
+function renderAnaMotorCompareChart(data) {
+  const wrap = document.getElementById("ana-motor-compare-chart");
+  if (!wrap || !data || !data.groups || !data.groups.length) {
+    if (wrap) wrap.hidden = true;
+    return;
+  }
+  wrap.hidden = false;
+  const groups = data.groups
+    .map(
+      (g) =>
+        `<div class="ana-compare-group" title="${g.label}: bu ${g.current} / önceki ${g.previous}">` +
+        `<em>${g.label}</em>` +
+        `<div class="ana-compare-pair">` +
+        `<span class="ana-compare-bar ana-compare-bar--prev" style="height:${Math.max(4, g.previous_pct || 0)}%"></span>` +
+        `<span class="ana-compare-bar ana-compare-bar--cur" style="height:${Math.max(4, g.current_pct || 0)}%"></span>` +
+        `</div>` +
+        `<small>${g.current}/${g.previous}</small>` +
+        `</div>`,
+    )
+    .join("");
+  wrap.innerHTML =
+    `<p class="ana-motor-card-sub">Mavi=bu dönem · Gri=önceki (${data.period_days || 7}g)</p>` +
+    `<div class="ana-compare-chart-row">${groups}</div>`;
+}
+
+async function refreshAnaMotorCompareChart() {
+  try {
+    const res = await fetch(`${API}/api/ana-motor/paket-history/compare/chart?days=7`);
+    const j = await res.json().catch(() => ({}));
+    if (j.ok) renderAnaMotorCompareChart(j);
+  } catch (_) {
+    /* ignore */
+  }
+}
+
+async function refreshAnaMotorRememberHistory() {
+  const wrap = document.getElementById("ana-motor-remember-history");
+  const listEl = document.getElementById("ana-motor-remember-history-list");
+  if (!wrap || !listEl) return;
+  try {
+    const res = await fetch(`${API}/api/ana-motor/timeline/remember/history?limit=20`);
+    const j = await res.json().catch(() => ({}));
+    const rows = Array.isArray(j.items) ? j.items : [];
+    listEl.innerHTML = "";
+    if (!rows.length) {
+      wrap.hidden = true;
+      return;
+    }
+    wrap.hidden = false;
+    for (const row of rows) {
+      const li = document.createElement("li");
+      const when = row.ts ? new Date(row.ts * 1000).toLocaleString("tr-TR") : "";
+      const mark = row.ok ? "✓" : "✗";
+      li.textContent = `${when} ${mark} ${(row.session_id || "").slice(0, 8)} — ${row.topic || row.event_type || ""}`;
+      listEl.appendChild(li);
+    }
+  } catch (_) {
+    wrap.hidden = true;
+  }
+}
+
+async function clearAnaMotorRememberHistory() {
+  try {
+    const res = await fetch(`${API}/api/ana-motor/timeline/remember/history/clear`, { method: "POST" });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) {
+      setStatus(j.detail || j.error || "Hatırla geçmişi temizlenemedi", "Rüzgar");
+      return;
+    }
+    setStatus(j.hint || "Hatırla geçmişi temizlendi.", "Rüzgar");
+    void refreshAnaMotorRememberHistory();
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+  }
+}
+
+async function tickAnaMotorWeeklySchedule() {
+  const hintEl = document.getElementById("ana-motor-schedule-hint");
+  try {
+    const res = await fetch(`${API}/api/ana-motor/sessions/weekly-summary/schedule/tick?days=7`, {
+      method: "POST",
+    });
+    const j = await res.json().catch(() => ({}));
+    if (j.desktop_notifications && j.desktop_notifications.length) {
+      showAnaMotorDesktopNotifications(j.desktop_notifications);
+      void refreshAnaMotorNotifyHistory();
+    }
+    if (hintEl && !j.skipped && j.schedule_tick) {
+      hintEl.hidden = false;
+      hintEl.textContent = "Zamanlayıcı: haftalık özet bildirimi gönderildi.";
+    } else if (hintEl && j.skipped && j.reason === "poll_wait") {
+      hintEl.hidden = false;
+      hintEl.textContent = `Zamanlayıcı: sonraki kontrol ~${j.next_poll_in_sec || "?"} sn`;
+    } else if (hintEl) {
+      hintEl.hidden = true;
+    }
+  } catch (_) {
+    if (hintEl) hintEl.hidden = true;
+  }
+}
+
 async function refreshAnaMotorWeeklySummary() {
   const wrap = document.getElementById("ana-motor-weekly-summary");
   const titleEl = document.getElementById("ana-motor-weekly-title");
@@ -11547,8 +11648,9 @@ async function refreshAnaMotorWeeklySummary() {
   const cmpTitle = document.getElementById("ana-motor-compare-title");
   const cmpBody = document.getElementById("ana-motor-compare-body");
   if (!wrap || !bodyEl) return;
+  void tickAnaMotorWeeklySchedule();
   try {
-    const res = await fetch(`${API}/api/ana-motor/sessions/weekly-summary?days=7&notify=1`);
+    const res = await fetch(`${API}/api/ana-motor/sessions/weekly-summary?days=7&notify=0`);
     const j = await res.json().catch(() => ({}));
     const card = j.summary_card;
     if (!j.ok || !card) {
@@ -11558,17 +11660,16 @@ async function refreshAnaMotorWeeklySummary() {
     wrap.hidden = false;
     if (titleEl) titleEl.textContent = card.title || "Haftalık özet";
     bodyEl.textContent = card.body || "";
-    if (j.desktop_notifications && j.desktop_notifications.length) {
-      showAnaMotorDesktopNotifications(j.desktop_notifications);
-    }
     const cmp = j.compare_card;
     if (cmpWrap && cmp && cmp.body) {
       cmpWrap.hidden = false;
       if (cmpTitle) cmpTitle.textContent = cmp.title || "Karşılaştırma";
       if (cmpBody) cmpBody.textContent = cmp.body || "";
+      void refreshAnaMotorCompareChart();
     } else if (cmpWrap) {
       cmpWrap.hidden = true;
     }
+    void refreshAnaMotorRememberHistory();
   } catch (_) {
     wrap.hidden = true;
   }
@@ -11620,6 +11721,7 @@ async function batchRememberFromTimeline() {
     setStatus(j.hint || "Timeline oturumları hafızaya yazıldı.", "Rüzgar");
     flashRuzgarDurum(`Hatırla — ${j.remembered_count || "?"}/${j.attempted || "?"}`);
     if (progEl) progEl.textContent = j.hint || "Tamam";
+    void refreshAnaMotorRememberHistory();
   } catch (e) {
     setStatus(formatClientChatError(e), "Rüzgar");
     if (progEl) progEl.textContent = formatClientChatError(e);
@@ -11930,6 +12032,11 @@ async function mergeAnaMotorArchiveSessions() {
   if (tlRememberBtn && !tlRememberBtn.dataset.wired) {
     tlRememberBtn.dataset.wired = "1";
     tlRememberBtn.addEventListener("click", () => void batchRememberFromTimeline());
+  }
+  const rememberClrBtn = document.getElementById("btn-ana-remember-clear");
+  if (rememberClrBtn && !rememberClrBtn.dataset.wired) {
+    rememberClrBtn.dataset.wired = "1";
+    rememberClrBtn.addEventListener("click", () => void clearAnaMotorRememberHistory());
   }
   const csvIn = document.getElementById("ana-csv-import-input");
   if (csvIn && !csvIn.dataset.wired) {

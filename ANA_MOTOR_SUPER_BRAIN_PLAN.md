@@ -144,11 +144,19 @@
 | Q2 | Paket geçmişi karşılaştırma | `ana_motor_paket_karsilastir.py` | `GET /paket-history/compare` |
 | Q3 | Timeline otomatik hatırla | `ana_motor_timeline_hatirla.py` | `POST /timeline/remember` · `/remember/batch` |
 
-## Sıradaki (Faz R — öneri)
+## Faz R — uygulandı (2026-06-10)
 
-- Karşılaştırma grafiği (çift çubuk bu hafta/geçen hafta)
-- Hatırla geçmişi paneli (son 20 timeline→hafıza)
-- Haftalık özet otomatik zamanlayıcı (cron/poll)
+| # | Görev | Dosya | Durum |
+|---|--------|-------|--------|
+| R1 | Karşılaştırma çift çubuk grafiği | `ana_motor_compare_grafik.py` | `GET /paket-history/compare/chart` |
+| R2 | Hatırla geçmişi paneli | `ana_motor_hatirla_gecmis.py` | `GET /timeline/remember/history` |
+| R3 | Haftalık özet zamanlayıcı | `ana_motor_haftalik_zamanlayici.py` | `POST /weekly-summary/schedule/tick` |
+
+## Sıradaki (Faz S — öneri)
+
+- Karşılaştırma CSV/PDF raporu
+- Hatırla geçmişi dışa aktar
+- Zamanlayıcı tercih paneli (poll aralığı UI)
 
 ## Ortam (özet)
 

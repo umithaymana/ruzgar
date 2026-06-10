@@ -5596,3 +5596,59 @@ body.faz7-reduced-motion .agent-step-active .agent-step-label {
   margin: 4px 0 0;
   color: #a8c4e0;
 }
+.ana-motor-compare-chart {
+  margin-top: 6px;
+}
+.ana-compare-chart-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  height: 52px;
+  margin: 4px 0;
+}
+.ana-compare-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 9px;
+  color: #8a9aaa;
+}
+.ana-compare-group em {
+  font-style: normal;
+  margin-bottom: 2px;
+}
+.ana-compare-pair {
+  display: flex;
+  gap: 3px;
+  align-items: flex-end;
+  height: 40px;
+  width: 100%;
+  justify-content: center;
+}
+.ana-compare-bar {
+  display: block;
+  width: 12px;
+  border-radius: 3px 3px 0 0;
+  min-height: 4px;
+}
+.ana-compare-bar--cur {
+  background: linear-gradient(180deg, #58a6ff 0%, #2d5a8a 100%);
+}
+.ana-compare-bar--prev {
+  background: linear-gradient(180deg, #8a9aaa 0%, #4a5560 100%);
+}
+.ana-motor-remember-history {
+  margin: 8px 0;
+  font-size: 11px;
+}
+.ana-motor-remember-history-list {
+  margin: 4px 0 0;
+  padding-left: 16px;
+  max-height: 100px;
+  overflow-y: auto;
+  color: #a8b4c0;
+}
+.ana-motor-remember-history-list li {
+  margin: 2px 0;
+}
