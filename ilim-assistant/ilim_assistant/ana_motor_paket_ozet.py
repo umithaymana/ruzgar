@@ -65,4 +65,32 @@ def build_paket_ozet_card(
             result.get("hint")
             or f"Paket özeti: {ok_count}/{len(steps) or 1} adım tamam."
         ),
+        "nebula_ready": bool(result.get("collection")),
+    }
+
+
+def ozet_nebula_apply_enabled() -> bool:
+    return os.environ.get("RUZGAR_ANA_OZET_NEBULA_APPLY", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
+def build_ozet_nebula_apply_payload(card: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Faz L2 — özet kartından Nebula apply isteği gövdesi."""
+    if not ozet_nebula_apply_enabled() or not card or not card.get("ok"):
+        return None
+    coll = (card.get("collection") or "").strip()
+    if not coll:
+        coll = "tarih_kaynak"
+    ids = list(card.get("upload_ids") or [])
+    sid = (card.get("session_id") or "").strip() or None
+    if not ids and not sid:
+        return None
+    return {
+        "collection": coll,
+        "topic": (card.get("topic") or "Oturum paketi")[:240],
+        "upload_ids": ids or None,
+        "session_id": sid,
     }

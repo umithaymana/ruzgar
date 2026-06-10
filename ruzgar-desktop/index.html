@@ -529,14 +529,18 @@
               </div>
             </div>
             <div id="ana-motor-paket-ozet-card" class="mini-card ana-motor-paket-ozet-card" hidden>
-              <strong>Paket özeti (Faz K)</strong>
+              <strong>Paket özeti (Faz K/L)</strong>
               <p id="ana-motor-paket-ozet-summary" class="ana-motor-card-sub"></p>
               <p id="ana-motor-paket-ozet-steps" class="ana-motor-card-sub"></p>
+              <div class="ana-motor-patch-actions">
+                <button type="button" class="btn-primary btn-compact" id="btn-ana-ozet-nebula-apply" hidden>Nebula'ya ekle</button>
+              </div>
             </div>
             <div id="ana-motor-archive-card" class="mini-card ana-motor-archive-card">
-              <strong>Arşiv &amp; birleştir (Faz J/K)</strong>
+              <strong>Arşiv &amp; birleştir (Faz J/L)</strong>
               <p id="ana-motor-archive-summary" class="ana-motor-card-sub">Kalıcı arşiv oturumları</p>
-              <p id="ana-motor-archive-reminders" class="ana-motor-card-sub ana-motor-remind" hidden></p>
+              <div id="ana-motor-archive-reminders" class="ana-motor-remind-list" hidden></div>
+              <ul id="ana-motor-session-timeline" class="ana-motor-timeline" hidden></ul>
               <select id="ana-motor-archive-select" class="input-compact" aria-label="Arşiv oturumu"></select>
               <div class="ana-motor-patch-actions">
                 <button type="button" class="btn-secondary btn-compact" id="btn-ana-archive-restore">Arşivden yükle</button>

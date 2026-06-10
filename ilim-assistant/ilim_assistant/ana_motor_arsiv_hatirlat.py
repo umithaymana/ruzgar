@@ -113,6 +113,12 @@ def collect_archive_ttl_reminders(*, limit: int = 20) -> dict[str, Any]:
         )
     )
     trimmed = reminders[: max(1, limit)]
+    try:
+        from ilim_assistant.ana_motor_reminder_wizard import enrich_reminder_actions
+
+        trimmed = enrich_reminder_actions(trimmed)
+    except Exception:
+        pass
     return {
         "ok": True,
         "reminders": trimmed,

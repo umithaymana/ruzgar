@@ -1059,6 +1059,68 @@ def run_offline() -> int:
     else:
         _ok(f"TTL hatirlat count={rem.get('count')}")
 
+    print("\n=== Faz L — hatirlat paket / ozet nebula / timeline ===")
+    from ilim_assistant.ana_motor_oturum_timeline import (
+        build_session_timeline,
+        timeline_enabled,
+    )
+    from ilim_assistant.ana_motor_paket_ozet import (
+        build_ozet_nebula_apply_payload,
+        ozet_nebula_apply_enabled,
+    )
+    from ilim_assistant.ana_motor_reminder_wizard import (
+        enrich_reminder_actions,
+        reminder_wizard_enabled,
+        run_reminder_paket_sihirbaz,
+    )
+
+    if not reminder_wizard_enabled():
+        _fail("reminder_wizard", "kapali")
+        fails += 1
+    else:
+        _ok("hatirlat paket koprusu acik")
+    enriched = enrich_reminder_actions(rem.get("reminders") or [])
+    if enriched and not any(r.get("action") for r in enriched):
+        _fail("reminder_action", "aksiyon yok")
+        fails += 1
+    else:
+        _ok("hatirlat aksiyon alanlari")
+    rw = run_reminder_paket_sihirbaz(
+        kind="smoke",
+        session_id=mg.get("session_id"),
+        upload_ids=mg.get("upload_ids"),
+        topic="Faz L reminder test",
+    )
+    if not rw.get("ok"):
+        _fail("reminder_paket_run", str(rw)[:100])
+        fails += 1
+    else:
+        _ok("hatirlat paket sihirbaz")
+
+    if not ozet_nebula_apply_enabled():
+        _fail("ozet_nebula_apply", "kapali")
+        fails += 1
+    else:
+        _ok("ozet nebula apply acik")
+    onb = build_ozet_nebula_apply_payload(oz)
+    if not onb or not onb.get("collection"):
+        _fail("ozet_nebula_payload", str(onb)[:80])
+        fails += 1
+    else:
+        _ok(f"ozet nebula payload -> {onb.get('collection')}")
+
+    if not timeline_enabled():
+        _fail("session_timeline", "kapali")
+        fails += 1
+    else:
+        _ok("oturum timeline acik")
+    tl = build_session_timeline(limit=12)
+    if not tl.get("ok"):
+        _fail("session_timeline_build", str(tl)[:80])
+        fails += 1
+    else:
+        _ok(f"timeline events={tl.get('count')}")
+
     print("\n=== Faz D — bilim derin / denge70 / otonom debug ===")
     from ilim_assistant.ana_motor_bilim_derin import (
         apply_bilim_derin_rag_top_k,
@@ -1432,6 +1494,21 @@ def run_live(base: str) -> int:
         fails += 1
     else:
         _ok("Faz K2 session nebula oneri acik")
+    if not am.get("reminder_wizard"):
+        _fail("faz_l1 remind", "kapali")
+        fails += 1
+    else:
+        _ok("Faz L1 reminder wizard acik")
+    if not am.get("ozet_nebula_apply"):
+        _fail("faz_l2 ozet", "kapali")
+        fails += 1
+    else:
+        _ok("Faz L2 ozet nebula apply acik")
+    if not am.get("session_timeline"):
+        _fail("faz_l3 timeline", "kapali")
+        fails += 1
+    else:
+        _ok("Faz L3 session timeline acik")
 
     print("\n=== Canli — upload + matris SLO ===")
     chat_url = base.rstrip("/") + "/api/chat/full"

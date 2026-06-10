@@ -91,6 +91,8 @@ let anaMotorLastUserTopic = "";
 let anaMotorLastNebulaCard = null;
 let anaMotorNebulaApplyPoll = null;
 let anaMotorPaketAutoPoll = null;
+let anaMotorLastPaketOzetCard = null;
+let anaMotorLastReminders = [];
 console.info("[RÜZGAR Connection Bridge] API kök:", API);
 const RUZGAR_CHAT_FULL_TIMEOUT_MS = 180000;
 /** Kısa selam / nasılsın — Ollama yavaşken 12 sn yetmiyordu */
@@ -11044,19 +11046,61 @@ function renderAnaMotorPaketOzetCard(card) {
   const wrap = document.getElementById("ana-motor-paket-ozet-card");
   const sumEl = document.getElementById("ana-motor-paket-ozet-summary");
   const stepsEl = document.getElementById("ana-motor-paket-ozet-steps");
+  const nbBtn = document.getElementById("btn-ana-ozet-nebula-apply");
   if (!wrap || !sumEl || !stepsEl || !card || !card.ok) return;
+  anaMotorLastPaketOzetCard = card;
   wrap.hidden = false;
-  const src = card.source === "auto" ? "Otomatik" : "Manuel";
+  const src =
+    card.source === "auto"
+      ? "Otomatik"
+      : card.source === "reminder"
+        ? "Hatırlatıcı"
+        : "Manuel";
   sumEl.textContent =
     `${src} paket — ${card.file_count || "?"} dosya · oturum ${(card.session_id || "—").slice(0, 8)} — ${card.hint || ""}`;
   stepsEl.textContent = card.steps_summary || "—";
+  if (nbBtn) {
+    const ready = !!(card.nebula_ready || card.collection || (card.upload_ids || []).length);
+    nbBtn.hidden = !ready;
+  }
   if (card.collection) {
     anaMotorLastNebulaCard = {
       ok: true,
       collection: card.collection,
       topic: card.topic || anaMotorLastUserTopic || "",
       hint: card.hint,
+      upload_ids: card.upload_ids,
+      session_id: card.session_id,
     };
+  }
+}
+
+async function applyNebulaFromPaketOzet() {
+  const card = anaMotorLastPaketOzetCard;
+  if (!card || !card.ok) {
+    setStatus("Paket özeti kartı yok.", "Rüzgar");
+    return;
+  }
+  try {
+    const res = await fetch(`${API}/api/ana-motor/paket-ozet/nebula-apply`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ summary_card: card }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) {
+      setStatus(j.detail || j.error || "Özet Nebula apply başarısız", "Rüzgar");
+      return;
+    }
+    setStatus(j.hint || "Nebula kuyruğa alındı.", "Rüzgar");
+    flashRuzgarDurum(`Özet → Nebula ${j.collection || ""}`);
+    stopAnaMotorNebulaApplyPoll();
+    void pollAnaMotorNebulaApplyStatus();
+    anaMotorNebulaApplyPoll = window.setInterval(() => {
+      void pollAnaMotorNebulaApplyStatus();
+    }, 2200);
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
   }
 }
 
@@ -11164,6 +11208,40 @@ async function applyAnaMotorNebulaOneri() {
   }
 }
 
+async function runReminderPaketSihirbaz(reminder) {
+  const action = reminder && reminder.action;
+  if (!action || action.type !== "paket_sihirbaz") {
+    setStatus("Hatırlatıcı aksiyonu yok.", "Rüzgar");
+    return;
+  }
+  try {
+    const res = await fetch(`${API}/api/ana-motor/reminders/paket-sihirbaz`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        kind: reminder.kind || "",
+        session_id: action.session_id || undefined,
+        upload_ids: action.upload_ids || undefined,
+        topic: action.topic || reminder.hint || "",
+        do_restore_first: !!action.do_restore_first,
+      }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) {
+      setStatus(j.detail || j.error || "Hatırlatıcı paketi başarısız", "Rüzgar");
+      return;
+    }
+    if (j.summary_card) renderAnaMotorPaketOzetCard(j.summary_card);
+    if (j.nebula_card) renderAnaMotorNebulaOneriCard(j.nebula_card);
+    setStatus(j.hint || "Hatırlatıcıdan paket uygulandı.", "Rüzgar");
+    flashRuzgarDurum("Hatırlatıcı → tek paket");
+    void refreshAnaMotorArchiveList();
+    void refreshAnaMotorSessionTimeline();
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+  }
+}
+
 async function refreshAnaMotorArchiveReminders() {
   const remEl = document.getElementById("ana-motor-archive-reminders");
   if (!remEl) return;
@@ -11171,15 +11249,54 @@ async function refreshAnaMotorArchiveReminders() {
     const res = await fetch(`${API}/api/ana-motor/archive/reminders?limit=6`);
     const j = await res.json().catch(() => ({}));
     const rows = Array.isArray(j.reminders) ? j.reminders : [];
+    anaMotorLastReminders = rows;
+    remEl.innerHTML = "";
     if (!rows.length) {
       remEl.hidden = true;
-      remEl.textContent = "";
       return;
     }
     remEl.hidden = false;
-    remEl.textContent = rows.map((r) => r.hint || "").filter(Boolean).join(" · ");
+    for (const row of rows) {
+      const item = document.createElement("div");
+      item.className = "ana-motor-remind-item";
+      const txt = document.createElement("span");
+      txt.textContent = row.hint || "";
+      item.appendChild(txt);
+      if (row.action && row.action.type === "paket_sihirbaz") {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn-secondary btn-compact";
+        btn.textContent = "Tek paket";
+        btn.addEventListener("click", () => void runReminderPaketSihirbaz(row));
+        item.appendChild(btn);
+      }
+      remEl.appendChild(item);
+    }
   } catch (_) {
     remEl.hidden = true;
+  }
+}
+
+async function refreshAnaMotorSessionTimeline() {
+  const listEl = document.getElementById("ana-motor-session-timeline");
+  if (!listEl) return;
+  try {
+    const res = await fetch(`${API}/api/ana-motor/sessions/timeline?limit=10`);
+    const j = await res.json().catch(() => ({}));
+    const rows = Array.isArray(j.events) ? j.events : [];
+    listEl.innerHTML = "";
+    if (!rows.length) {
+      listEl.hidden = true;
+      return;
+    }
+    listEl.hidden = false;
+    for (const ev of rows) {
+      const li = document.createElement("li");
+      li.textContent = `${ev.ts_label || ""} — ${ev.label || ev.type || "olay"}`;
+      listEl.appendChild(li);
+    }
+  } catch (_) {
+    listEl.hidden = true;
   }
 }
 
@@ -11188,6 +11305,7 @@ async function refreshAnaMotorArchiveList() {
   const sumEl = document.getElementById("ana-motor-archive-summary");
   if (!sel) return;
   void refreshAnaMotorArchiveReminders();
+  void refreshAnaMotorSessionTimeline();
   try {
     const res = await fetch(`${API}/api/ana-motor/archive/sessions?limit=12`);
     const j = await res.json().catch(() => ({}));
@@ -11325,6 +11443,11 @@ async function mergeAnaMotorArchiveSessions() {
   if (mgBtn && !mgBtn.dataset.wired) {
     mgBtn.dataset.wired = "1";
     mgBtn.addEventListener("click", () => void mergeAnaMotorArchiveSessions());
+  }
+  const ozNbBtn = document.getElementById("btn-ana-ozet-nebula-apply");
+  if (ozNbBtn && !ozNbBtn.dataset.wired) {
+    ozNbBtn.dataset.wired = "1";
+    ozNbBtn.addEventListener("click", () => void applyNebulaFromPaketOzet());
   }
   void refreshAnaMotorArchiveList();
 })();

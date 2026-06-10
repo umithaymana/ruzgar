@@ -96,11 +96,19 @@
 | K2 | Birleşik oturum Nebula önerisi | `ana_motor_nebula_oneri.py` | `POST /api/ana-motor/sessions/nebula-oneri` |
 | K3 | Arşiv/upload TTL hatırlatıcısı | `ana_motor_arsiv_hatirlat.py` | `GET /api/ana-motor/archive/reminders` |
 
-## Sıradaki (Faz L — öneri)
+## Faz L — uygulandı (2026-06-10)
 
-- Hatırlatıcı → tek tık paket sihirbazı köprüsü
-- Özet kartından doğrudan Nebula apply
-- Oturum geçmişi zaman çizelgesi
+| # | Görev | Dosya | Durum |
+|---|--------|-------|--------|
+| L1 | Hatırlatıcı → tek tık paket | `ana_motor_reminder_wizard.py` | `POST /api/ana-motor/reminders/paket-sihirbaz` |
+| L2 | Özet kartından Nebula apply | `ana_motor_paket_ozet.py` | `POST /api/ana-motor/paket-ozet/nebula-apply` |
+| L3 | Oturum zaman çizelgesi | `ana_motor_oturum_timeline.py` | `GET /api/ana-motor/sessions/timeline` |
+
+## Sıradaki (Faz M — öneri)
+
+- Timeline'dan tek tık restore/merge
+- Hatırlatıcı e-posta/masaüstü bildirimi
+- Paket geçmişi CSV dışa aktarım
 
 ## Ortam (özet)
 

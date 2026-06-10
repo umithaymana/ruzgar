@@ -1382,6 +1382,12 @@ def health():
                 "RUZGAR_ANA_SESSION_NEBULA_ONERI", "1"
             ).strip().lower()
             not in ("0", "false", "no"),
+            "reminder_wizard": os.environ.get("RUZGAR_ANA_REMINDER_WIZARD", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "ozet_nebula_apply": os.environ.get("RUZGAR_ANA_OZET_NEBULA_APPLY", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "session_timeline": os.environ.get("RUZGAR_ANA_SESSION_TIMELINE", "1").strip().lower()
+            not in ("0", "false", "no"),
         },
         "super_brain": _sb,
         "connection": _connection_ui_block(super_brain=_sb),
@@ -2782,10 +2788,97 @@ def api_ana_motor_paket_auto_status() -> dict[str, Any]:
 
 @app.get("/api/ana-motor/archive/reminders")
 def api_ana_motor_archive_reminders(limit: int = 12) -> dict[str, Any]:
-    """Faz K3 — upload/arşiv TTL hatırlatıcıları."""
+    """Faz K3/L1 — upload/arşiv TTL hatırlatıcıları (+ paket aksiyonu)."""
     from ilim_assistant.ana_motor_arsiv_hatirlat import collect_archive_ttl_reminders
 
     return collect_archive_ttl_reminders(limit=max(1, min(limit, 30)))
+
+
+class ReminderPaketBody(BaseModel):
+    kind: str = ""
+    session_id: str | None = None
+    upload_ids: list[str] | None = None
+    topic: str = ""
+    do_restore_first: bool = False
+
+
+@app.post("/api/ana-motor/reminders/paket-sihirbaz")
+async def api_ana_motor_reminder_paket(body: ReminderPaketBody) -> dict[str, Any]:
+    """Faz L1 — hatırlatıcıdan tek tık paket sihirbazı."""
+    from ilim_assistant.ana_motor_reminder_wizard import (
+        reminder_wizard_enabled,
+        run_reminder_paket_sihirbaz,
+    )
+
+    if not reminder_wizard_enabled():
+        raise HTTPException(status_code=403, detail="Hatırlatıcı paket köprüsü kapalı.")
+    result = await run_in_threadpool(
+        run_reminder_paket_sihirbaz,
+        kind=(body.kind or "").strip(),
+        session_id=body.session_id,
+        upload_ids=body.upload_ids,
+        topic=(body.topic or "").strip(),
+        do_restore_first=bool(body.do_restore_first),
+    )
+    if not result.get("ok"):
+        raise HTTPException(
+            status_code=400,
+            detail=str(result.get("error") or "Hatırlatıcı paketi başarısız."),
+        )
+    return result
+
+
+@app.get("/api/ana-motor/sessions/timeline")
+def api_ana_motor_sessions_timeline(limit: int = 20) -> dict[str, Any]:
+    """Faz L3 — oturum geçmişi zaman çizelgesi."""
+    from ilim_assistant.ana_motor_oturum_timeline import build_session_timeline
+
+    return build_session_timeline(limit=max(1, min(limit, 40)))
+
+
+class OzetNebulaApplyBody(BaseModel):
+    summary_card: dict[str, Any]
+
+
+@app.post("/api/ana-motor/paket-ozet/nebula-apply")
+async def api_ana_motor_ozet_nebula_apply(body: OzetNebulaApplyBody) -> dict[str, Any]:
+    """Faz L2 — özet kartından doğrudan Nebula apply."""
+    from ilim_assistant.ana_motor_nebula_apply import start_nebula_apply_background
+    from ilim_assistant.ana_motor_paket_ozet import (
+        build_ozet_nebula_apply_payload,
+        ozet_nebula_apply_enabled,
+    )
+
+    if not ozet_nebula_apply_enabled():
+        raise HTTPException(status_code=403, detail="Özet Nebula apply kapalı.")
+    payload = build_ozet_nebula_apply_payload(body.summary_card)
+    if not payload:
+        raise HTTPException(status_code=400, detail="Özet kartından Nebula apply üretilemedi.")
+    from ilim_assistant.ana_motor_dosya_ingest import resolve_upload_ids
+
+    resolved_ids = resolve_upload_ids(
+        payload.get("upload_ids"),
+        payload.get("session_id"),
+    )
+    if not resolved_ids:
+        raise HTTPException(status_code=400, detail="Özet kartında uygulanacak dosya yok.")
+    result = await run_in_threadpool(
+        start_nebula_apply_background,
+        str(payload["collection"]),
+        str(payload["topic"]),
+        upload_ids=resolved_ids,
+    )
+    if not result.get("ok"):
+        raise HTTPException(
+            status_code=400,
+            detail=str(result.get("error") or "Nebula apply başarısız."),
+        )
+    return {
+        "ok": True,
+        **result,
+        "collection": payload["collection"],
+        "hint": f"Özet kartından Nebula kuyruğa alındı: {payload['collection']}",
+    }
 
 
 class SessionNebulaOneriBody(BaseModel):
