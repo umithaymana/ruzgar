@@ -277,8 +277,10 @@ def _load_embeddings() -> np.ndarray | None:
 _index_mtime_ns: int | None = None
 _cached_chunks_list: List[Chunk] | None = None
 _cached_emb_arr: np.ndarray | None = None
-# `search_tarih_hafiza` için: tam indeks üzerinde argsort yerine yalnız tarih satırları.
+# `search_tarih_hafiza` / `search_tdk_hafiza` / `search_nebula_hafiza` için alt küme indeksleri.
 _tarih_chunk_row_indices: np.ndarray | None = None
+_tdk_chunk_row_indices: np.ndarray | None = None
+_nebula_chunk_row_indices: np.ndarray | None = None
 
 
 def _rag_cache_enabled() -> bool:
@@ -287,7 +289,8 @@ def _rag_cache_enabled() -> bool:
 
 def _get_cached_index() -> tuple[List[Chunk], np.ndarray | None]:
     """İndeks dosyalarını her aramada diskten okumaz; embeddings.npy değişince yeniler."""
-    global _index_mtime_ns, _cached_chunks_list, _cached_emb_arr, _tarih_chunk_row_indices
+    global _index_mtime_ns, _cached_chunks_list, _cached_emb_arr
+    global _tarih_chunk_row_indices, _tdk_chunk_row_indices, _nebula_chunk_row_indices
     emb_path = _index_dir() / "embeddings.npy"
     chunks_path = _index_dir() / "chunks.jsonl"
     if not emb_path.is_file() or not chunks_path.is_file():
@@ -322,11 +325,21 @@ def _get_cached_index() -> tuple[List[Chunk], np.ndarray | None]:
             [i for i, c in enumerate(chunks) if _source_is_tarih_hafiza(c.source)],
             dtype=np.int64,
         )
+        _tdk_chunk_row_indices = np.array(
+            [i for i, c in enumerate(chunks) if source_is_tdk(c.source)],
+            dtype=np.int64,
+        )
+        _nebula_chunk_row_indices = np.array(
+            [i for i, c in enumerate(chunks) if _source_is_nebula(c.source)],
+            dtype=np.int64,
+        )
     else:
         _cached_chunks_list = None
         _cached_emb_arr = None
         _index_mtime_ns = None
         _tarih_chunk_row_indices = None
+        _tdk_chunk_row_indices = None
+        _nebula_chunk_row_indices = None
     return chunks, emb
 
 
@@ -359,6 +372,15 @@ def source_is_tdk(rel: str) -> bool:
     """TDK sözlük / kademeli paket kaynakları (`knowledge/tdk/...`)."""
     p = (rel or "").replace("\\", "/").lower()
     return "/tdk/" in p or p.startswith("tdk/")
+
+
+def _source_is_nebula(rel: str) -> bool:
+    p = (rel or "").replace("\\", "/").lower()
+    return "/nebula/" in p or p.startswith("nebula/")
+
+
+def source_is_nebula(rel: str) -> bool:
+    return _source_is_nebula(rel)
 
 
 def _lemma_norm(s: str) -> str:
@@ -481,3 +503,93 @@ def search_tarih_hafiza(
         if len(out) >= tk:
             break
     return out
+
+
+def _subset_row_indices(
+    chunks: List[Chunk],
+    predicate,
+    *,
+    cache_attr: str,
+) -> np.ndarray:
+    global _cached_chunks_list, _tarih_chunk_row_indices, _tdk_chunk_row_indices, _nebula_chunk_row_indices
+    cached = {
+        "tarih": _tarih_chunk_row_indices,
+        "tdk": _tdk_chunk_row_indices,
+        "nebula": _nebula_chunk_row_indices,
+    }.get(cache_attr)
+    if (
+        _rag_cache_enabled()
+        and _cached_chunks_list is not None
+        and cached is not None
+        and chunks is _cached_chunks_list
+    ):
+        return cached
+    return np.array([i for i, c in enumerate(chunks) if predicate(c.source)], dtype=np.int64)
+
+
+def _search_source_subset(
+    query: str,
+    *,
+    row_idx: np.ndarray,
+    top_k: int,
+    scan_cap: int,
+    chunks: List[Chunk],
+    emb: np.ndarray,
+) -> List[Tuple[str, str, float]]:
+    if row_idx.size == 0:
+        return []
+    tk = max(1, top_k)
+    try:
+        cap = int(scan_cap)
+    except ValueError:
+        cap = 96
+    cap = max(tk, min(cap, int(row_idx.size)))
+    model = _get_embedder()
+    q = model.encode([query], normalize_embeddings=True, show_progress_bar=False)[0]
+    sub = emb[row_idx]
+    sim = sub @ q
+    order = np.argsort(-sim)[:cap]
+    out: List[Tuple[str, str, float]] = []
+    for j in order:
+        ji = int(j)
+        gi = int(row_idx[ji])
+        out.append((chunks[gi].text, chunks[gi].source, float(sim[ji])))
+        if len(out) >= tk:
+            break
+    return out
+
+
+def search_tdk_hafiza(
+    query: str, top_k: int = 5, scan_cap: int = 96
+) -> List[Tuple[str, str, float]]:
+    """Yalnızca `knowledge/tdk/...` kaynakları."""
+    chunks, emb = _get_cached_index()
+    if not chunks or emb is None or len(chunks) != len(emb):
+        return []
+    row_idx = _subset_row_indices(chunks, source_is_tdk, cache_attr="tdk")
+    return _search_source_subset(
+        query,
+        row_idx=row_idx,
+        top_k=top_k,
+        scan_cap=scan_cap,
+        chunks=chunks,
+        emb=emb,
+    )
+
+
+def search_nebula_hafiza(
+    query: str, top_k: int = 5, scan_cap: int = 96
+) -> List[Tuple[str, str, float]]:
+    """Yalnızca `knowledge/nebula/...` kaynakları."""
+    chunks, emb = _get_cached_index()
+    if not chunks or emb is None or len(chunks) != len(emb):
+        return []
+    row_idx = _subset_row_indices(chunks, source_is_nebula, cache_attr="nebula")
+    return _search_source_subset(
+        query,
+        row_idx=row_idx,
+        top_k=top_k,
+        scan_cap=scan_cap,
+        chunks=chunks,
+        emb=emb,
+    )

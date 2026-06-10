@@ -34,6 +34,9 @@ STATUS_GEMINI_FIRST = "Gemini hızlı yanıt — önce yerel kaynak taraması…
 STATUS_ENCYCLOPEDIC_MERGE = "Ansiklopedik soru — hızlı arşiv + indeks birleştiriliyor…"
 STATUS_DILBILGISI_INDEX = "Dilbilgisi notları taranıyor…"
 STATUS_SKIP_RETRIEVAL = "Kaynak taraması atlandı — doğrudan yanıt…"
+STATUS_BILIM_DERIN = "Bilim/tarih derin mod — külliyat ve arşiv derinlemesine taranıyor…"
+STATUS_KAYNAK_MATRIS = "Kaynak matrisi — TDK / tarih / Nebula önceliği uygulanıyor…"
+STATUS_UPLOAD_CONTEXT = "Yüklenen dosya bağlamı taranıyor…"
 
 
 def _bilim_gemini_index_first_enabled() -> bool:
@@ -149,12 +152,16 @@ def _yield_index_only(
     *,
     status_text: str,
     suppress_web: bool,
+    upload_ids: list[str] | None = None,
 ) -> Iterator[dict[str, Any]]:
     from ilim_assistant.rag_store import search as rag_search
 
     yield {"kind": "status", "phase": "full_index", "text": status_text}
     k = max(1, min(rag_top_k, 12))
     hits = rag_search(msg, top_k=k)
+    if upload_ids:
+        yield {"kind": "status", "phase": "upload_context", "text": STATUS_UPLOAD_CONTEXT}
+        hits = _apply_upload_context(hits, msg, upload_ids)
     tail = smart_filter_vision_directive()
     yield {
         "kind": "result",
@@ -196,7 +203,27 @@ def _merge_hits_dedupe(
     return merged
 
 
-def _yield_encyclopedic_fast_merge(msg: str) -> Iterator[dict[str, Any]]:
+def _apply_upload_context(
+    hits: list[tuple[str, str, float]],
+    msg: str,
+    upload_ids: list[str] | None,
+) -> list[tuple[str, str, float]]:
+    if not upload_ids:
+        return hits
+    try:
+        from ilim_assistant.ana_motor_dosya_ingest import merge_upload_hits
+
+        return merge_upload_hits(hits, msg, upload_ids, top_k=4)
+    except Exception:
+        return hits
+
+
+def _yield_encyclopedic_fast_merge(
+    msg: str,
+    *,
+    primary: str = "",
+    upload_ids: list[str] | None = None,
+) -> Iterator[dict[str, Any]]:
     """
     Faz 9 hız yolu — RAG atlama yok: kısa arşiv + indeks, sonra Süper Beyin (Gemini).
 
@@ -210,25 +237,48 @@ def _yield_encyclopedic_fast_merge(msg: str) -> Iterator[dict[str, Any]]:
     yield {"kind": "status", "phase": "gemini_first", "text": STATUS_GEMINI_FIRST}
 
     ar_hits = search_arsiv(msg, top_k=k_ar)
-    ix_hits = rag_search(msg, top_k=k_ix)
-    tarih_hits: list[tuple[str, str, float]] = []
-    nebula_hits: list[tuple[str, str, float]] = []
+    profile = "genel"
     try:
-        tarih_hits = search_tarih_hafiza(msg, top_k=max(2, k_ix))
+        from ilim_assistant.ana_motor_kaynak_matrisi import (
+            matrix_enabled,
+            retrieve_encyclopedic_matrix,
+        )
+
+        if matrix_enabled():
+            yield {
+                "kind": "status",
+                "phase": "kaynak_matris",
+                "text": STATUS_KAYNAK_MATRIS,
+            }
+            hits, profile = retrieve_encyclopedic_matrix(
+                msg, primary=primary, k_ar=k_ar, k_ix=k_ix
+            )
+        else:
+            raise ImportError
     except Exception:
-        tarih_hits = []
-    try:
-        pool = rag_search(msg, top_k=max(8, k_ix + 4))
-        nebula_hits = [
-            h
-            for h in pool
-            if "nebula" in (h[1] or "").replace("\\", "/").lower()
-        ][: max(2, k_ix)]
-    except Exception:
-        nebula_hits = []
-    hits = _merge_hits_dedupe(ar_hits, ix_hits, tarih_hits, nebula_hits)
-    cap = max(k_ar + k_ix, 4)
-    hits = hits[:cap]
+        ix_hits = rag_search(msg, top_k=k_ix)
+        tarih_hits: list[tuple[str, str, float]] = []
+        nebula_hits: list[tuple[str, str, float]] = []
+        try:
+            tarih_hits = search_tarih_hafiza(msg, top_k=max(2, k_ix))
+        except Exception:
+            tarih_hits = []
+        try:
+            pool = rag_search(msg, top_k=max(8, k_ix + 4))
+            nebula_hits = [
+                h
+                for h in pool
+                if "nebula" in (h[1] or "").replace("\\", "/").lower()
+            ][: max(2, k_ix)]
+        except Exception:
+            nebula_hits = []
+        hits = _merge_hits_dedupe(ar_hits, ix_hits, tarih_hits, nebula_hits)
+        cap = max(k_ar + k_ix, 4)
+        hits = hits[:cap]
+
+    if upload_ids:
+        yield {"kind": "status", "phase": "upload_context", "text": STATUS_UPLOAD_CONTEXT}
+        hits = _apply_upload_context(hits, msg, upload_ids)
 
     archive_primary = archive_match_is_strong(ar_hits)
     suppress_web = archive_primary
@@ -341,6 +391,7 @@ def iter_archive_first_decision(
     rag_top_k: int,
     question_plan: Any | None = None,
     search_text: str | None = None,
+    upload_ids: list[str] | None = None,
 ) -> Iterator[dict[str, Any]]:
     """
     Karar ağacını uygular; her adımda durum sözlüğü yield eder, sonunda sonuç.
@@ -380,34 +431,86 @@ def iter_archive_first_decision(
             return
 
         if primary == "dilbilgisi":
+            _mat_on = False
+            try:
+                from ilim_assistant.ana_motor_kaynak_matrisi import (
+                    matrix_enabled,
+                    retrieve_encyclopedic_matrix,
+                )
+
+                _mat_on = matrix_enabled()
+            except Exception:
+                _mat_on = False
+            if _mat_on:
+                yield {
+                    "kind": "status",
+                    "phase": "kaynak_matris",
+                    "text": STATUS_KAYNAK_MATRIS,
+                }
+                hits, _prof = retrieve_encyclopedic_matrix(
+                    q, primary="dilbilgisi", k_ar=1, k_ix=max(2, rag_top_k)
+                )
+                if upload_ids:
+                    yield {
+                        "kind": "status",
+                        "phase": "upload_context",
+                        "text": STATUS_UPLOAD_CONTEXT,
+                    }
+                    hits = _apply_upload_context(hits, q, upload_ids)
+                yield {
+                    "kind": "result",
+                    "bundle": RetrievalBundle(
+                        hits=hits,
+                        suppress_main_web_search=False,
+                        archive_was_primary=False,
+                        ilim_citation_tail=smart_filter_vision_directive(),
+                    ),
+                }
+                return
             yield from _yield_index_only(
                 q,
                 rag_top_k,
                 status_text=STATUS_DILBILGISI_INDEX,
                 suppress_web=False,
+                upload_ids=upload_ids,
             )
             return
 
         if primary == "bilgi":
             if looks_like_encyclopedic_fact_question(q):
-                yield from _yield_encyclopedic_fast_merge(q)
+                yield from _yield_encyclopedic_fast_merge(
+                    q, primary=primary, upload_ids=upload_ids
+                )
                 return
             yield from _yield_index_only(
                 q,
                 rag_top_k,
                 status_text=STATUS_BILGI_INDEX,
                 suppress_web=False,
+                upload_ids=upload_ids,
             )
             return
 
         if primary == "bilim" or _plan_prefer_archive(question_plan):
             _skip_fast = False
+            _bilim_derin = False
             try:
-                from ilim_assistant.ana_motor_bilim_derin import should_skip_bilim_fast_index
+                from ilim_assistant.ana_motor_bilim_derin import (
+                    is_bilim_derin_turn,
+                    should_skip_bilim_fast_index,
+                )
 
                 _skip_fast = should_skip_bilim_fast_index(question_plan, q, mode_norm)
+                _bilim_derin = is_bilim_derin_turn(question_plan, q, mode_norm)
             except Exception:
                 _skip_fast = False
+                _bilim_derin = False
+            if _bilim_derin:
+                yield {
+                    "kind": "status",
+                    "phase": "bilim_derin",
+                    "text": STATUS_BILIM_DERIN,
+                }
             if (
                 primary == "bilim"
                 and not _skip_fast
@@ -444,6 +547,7 @@ def run_retrieval_with_status_events(
     rag_top_k: int,
     question_plan: Any | None = None,
     search_text: str | None = None,
+    upload_ids: list[str] | None = None,
 ) -> tuple[RetrievalBundle, list[dict[str, Any]]]:
     """
     Masaüstü akışı: durum çerçeveleri + nihai RetrievalBundle (Ümit & Gökçenur).
@@ -458,6 +562,7 @@ def run_retrieval_with_status_events(
         rag_top_k=rag_top_k,
         question_plan=question_plan,
         search_text=search_text,
+        upload_ids=upload_ids,
     ):
         if ev.get("kind") == "status":
             out_events.append(

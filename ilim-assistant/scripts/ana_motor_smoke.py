@@ -549,6 +549,208 @@ def run_offline() -> int:
     else:
         _ok(f"bilgi zinciri: {sel.chain[0].profile_id}")
 
+    print("\n=== Faz E2 — patch onay + nebula kart ===")
+    from ilim_assistant.ana_motor_arastirma import (
+        build_research_card_payload,
+        classify_hit_bucket,
+    )
+    from ilim_assistant.ana_motor_patch_bridge import (
+        build_patch_approval_card,
+        patch_approval_bridge_enabled,
+        should_force_patch_staging,
+    )
+
+    if not patch_approval_bridge_enabled():
+        _fail("patch_bridge", "kapali")
+        fails += 1
+    else:
+        _ok("patch onay koprusu acik")
+    if not should_force_patch_staging(delegated_from_genel=True):
+        _fail("force_stage", "delege")
+        fails += 1
+    else:
+        _ok("delege -> zorunlu staging")
+    card = build_patch_approval_card(
+        {
+            "action": "staged",
+            "count": 2,
+            "items": [{"path": "a.py"}, {"path": "b.py"}],
+            "counts": {"pending": 2},
+            "approval_required": True,
+        }
+    )
+    if not card.get("has_pending") or card.get("count") != 2:
+        _fail("patch_card", str(card))
+        fails += 1
+    else:
+        _ok("patch onay karti")
+    if classify_hit_bucket("knowledge/nebula/tarih/x.md") != "nebula":
+        _fail("bucket_nebula", "")
+        fails += 1
+    else:
+        _ok("nebula bucket")
+    if classify_hit_bucket("knowledge/TARIH_VE_KULTUR/x.md") != "tarih":
+        _fail("bucket_tarih", "")
+        fails += 1
+    else:
+        _ok("tarih bucket")
+    rc = build_research_card_payload(
+        "Osmanli padisahlari",
+        hits=[("osman bey kurucu", "knowledge/nebula/t/x.md", 0.6), ("padisah", "knowledge/TARIH_VE_KULTUR/y.md", 0.5)],
+        web_extra="",
+        question_plan=plan_question("Osmanli padisahlari", "genel", {}),
+        mode_norm="genel",
+    )
+    if not rc.get("ok") or rc.get("totals", {}).get("nebula", 0) < 1:
+        _fail("research_card", str(rc.get("totals")))
+        fails += 1
+    else:
+        _ok(f"arastirma karti nebula={rc['totals'].get('nebula')}")
+
+    print("\n=== Faz E — denge70 hazirlik / canli retrieval / progress ===")
+    from ilim_assistant.llm_brain import denge70_readiness, denge70_ready_for_chain
+    from ilim_assistant.ana_motor_progress import enrich_status_text, progress_enabled
+    from ilim_assistant.stream_orchestra import iter_main_engine_retrieval_stream
+
+    p_bilim_e = plan_question(
+        "Osmanli Fatih donemi detayli acikla", "genel", {"bilim": True}
+    )
+    d70 = denge70_readiness()
+    if not d70.get("model"):
+        _fail("denge70_readiness model", str(d70))
+        fails += 1
+    else:
+        _ok(f"denge70 readiness model={d70.get('model')} ready={d70.get('ready')}")
+    if d70.get("ready") and not denge70_ready_for_chain():
+        _fail("denge70_ready_for_chain", "True bekleniyordu")
+        fails += 1
+    else:
+        _ok("denge70 zincir kapisi tutarli")
+    if progress_enabled():
+        enriched = enrich_status_text("Indeks taranıyor", phase="bilim_derin")
+        if "sn geçti" not in enriched and "sn / ~" not in enriched:
+            _fail("progress_eta", enriched)
+            fails += 1
+        else:
+            _ok("progress ETA metni")
+    else:
+        _ok("progress ETA kapali (env)")
+    stream_evs = []
+    for item in iter_main_engine_retrieval_stream(
+        "Osmanli Fatih donemi detayli acikla",
+        [],
+        "genel",
+        question_plan=p_bilim_e,
+    ):
+        if item.get("type") == "status":
+            stream_evs.append(item)
+    if not any(e.get("phase") == "bilim_derin" for e in stream_evs):
+        _fail("bilim_derin stream status", [e.get("phase") for e in stream_evs])
+        fails += 1
+    else:
+        _ok("canli retrieval bilim_derin status")
+
+    print("\n=== Faz F — dosya ingest / nebula oneri / kaynak matrisi ===")
+    from ilim_assistant.ana_motor_dosya_ingest import (
+        ingest_enabled,
+        save_upload_bytes,
+        search_upload_context,
+    )
+    from ilim_assistant.ana_motor_kaynak_matrisi import (
+        classify_retrieval_profile,
+        matrix_enabled,
+        retrieve_encyclopedic_matrix,
+    )
+    from ilim_assistant.ana_motor_nebula_oneri import (
+        build_nebula_oneri_card,
+        oneri_enabled,
+        suggest_nebula_collection,
+    )
+    from ilim_assistant.rag_store import search_nebula_hafiza, search_tdk_hafiza
+
+    if not ingest_enabled():
+        _fail("upload_ingest", "kapali")
+        fails += 1
+    else:
+        _ok("dosya ingest acik")
+    up = save_upload_bytes(
+        b"# Test\n\nOsmanli devleti 1299 yilinda kuruldu.\n",
+        "test_faz_f.md",
+    )
+    if not up.get("ok") or not up.get("upload_id"):
+        _fail("upload_save", str(up))
+        fails += 1
+    else:
+        _ok(f"upload kayit id={up['upload_id']}")
+        uh = search_upload_context("Osmanli kurulus", [up["upload_id"]], top_k=2)
+        if not uh:
+            _fail("upload_search", "hit yok")
+            fails += 1
+        else:
+            _ok("upload baglam aramasi")
+
+    if not matrix_enabled():
+        _fail("kaynak_matris", "kapali")
+        fails += 1
+    else:
+        _ok("kaynak matrisi acik")
+    prof = classify_retrieval_profile("hayalet kelimesinin anlami nedir", "dilbilgisi")
+    if prof != "tdk":
+        _fail("matris profil tdk", prof)
+        fails += 1
+    else:
+        _ok("matris: dilbilgisi -> tdk")
+    prof_t = classify_retrieval_profile("Osmanli padisahlari kimlerdir", "bilgi")
+    if prof_t != "tarih":
+        _fail("matris profil tarih", prof_t)
+        fails += 1
+    else:
+        _ok("matris: tarih profili")
+    try:
+        _ = search_tdk_hafiza("test", top_k=1)
+        _ = search_nebula_hafiza("test", top_k=1)
+        _ok("tdk/nebula alt arama fonksiyonlari")
+    except Exception as e:
+        _fail("tdk/nebula search", str(e)[:80])
+        fails += 1
+    _mh, _mp = retrieve_encyclopedic_matrix(
+        "Osmanli padisahlari kimlerdir", primary="bilgi", k_ar=2, k_ix=3
+    )
+    if not isinstance(_mh, list):
+        _fail("matris retrieve", type(_mh).__name__)
+        fails += 1
+    else:
+        _ok(f"matris retrieve profil={_mp} hit={len(_mh)}")
+
+    if not oneri_enabled():
+        _fail("nebula_oneri", "kapali")
+        fails += 1
+    else:
+        _ok("nebula oneri acik")
+    sug = suggest_nebula_collection(
+        "cok nadir bir konu hakkinda bilgi",
+        hits=[],
+        guven="düşük",
+        web_was_used=False,
+    )
+    if not sug or not sug.get("collection"):
+        _fail("nebula_oneri_sug", str(sug))
+        fails += 1
+    else:
+        _ok(f"nebula oneri koleksiyon={sug.get('collection')}")
+    _low_reply = "Kisa cevap.\n\n**Güven: düşük** — otomatik kalite geçidi (kaynak sayısı: 0)."
+    noc = build_nebula_oneri_card(
+        _low_reply,
+        "cok nadir konu nedir",
+        hits=[],
+        web_was_used=False,
+    )
+    if not noc or not noc.get("ok"):
+        _fail("nebula_oneri_card", str(noc))
+        fails += 1
+    else:
+        _ok("nebula oneri karti")
+
     print("\n=== Faz D — bilim derin / denge70 / otonom debug ===")
     from ilim_assistant.ana_motor_bilim_derin import (
         apply_bilim_derin_rag_top_k,
@@ -597,11 +799,14 @@ def run_offline() -> int:
         question_plan=p_bilim,
     )
     chain_ids = [e.profile_id for e in sel70.chain]
-    if "denge70" not in chain_ids:
-        _fail("bilim derin 70b zincir", chain_ids)
-        fails += 1
+    if denge70_ready_for_chain():
+        if "denge70" not in chain_ids:
+            _fail("bilim derin 70b zincir", chain_ids)
+            fails += 1
+        else:
+            _ok(f"bilim derin zincirde denge70: {chain_ids[:5]}")
     else:
-        _ok(f"bilim derin zincirde denge70: {chain_ids[:5]}")
+        _ok(f"denge70 cekilmemis — zincirden atlandi: {chain_ids[:5]}")
     tb_msg = 'Traceback (most recent call last):\n  File "app.py", line 42'
     if not detect_otonom_debug_intent(tb_msg):
         _fail("otonom_debug traceback", "")
@@ -806,6 +1011,44 @@ def run_live(base: str) -> int:
         fails += 1
     else:
         _ok(f"denge70 model: {am.get('brain_denge70_model')}")
+    if "denge70_ready" not in am:
+        _fail("faz_e denge70_ready", "health alani yok")
+        fails += 1
+    else:
+        _ok(
+            f"denge70_ready={am.get('denge70_ready')} "
+            f"hint={str(am.get('denge70_hint') or '')[:48]}"
+        )
+    if not am.get("ana_progress_eta"):
+        _fail("faz_e progress", "kapali")
+        fails += 1
+    else:
+        _ok("progress ETA acik")
+    if not am.get("patch_approval_bridge"):
+        _fail("faz_e3 patch", "kapali")
+        fails += 1
+    else:
+        _ok("Faz E3 patch onay koprusu acik")
+    if not am.get("arastirma_nebula_card"):
+        _fail("faz_e4 nebula", "kapali")
+        fails += 1
+    else:
+        _ok("Faz E4 nebula kart acik")
+    if not am.get("upload_ingest"):
+        _fail("faz_f1 upload", "kapali")
+        fails += 1
+    else:
+        _ok("Faz F1 upload ingest acik")
+    if not am.get("nebula_oneri"):
+        _fail("faz_f2 oneri", "kapali")
+        fails += 1
+    else:
+        _ok("Faz F2 nebula oneri acik")
+    if not am.get("kaynak_matris"):
+        _fail("faz_f3 matris", "kapali")
+        fails += 1
+    else:
+        _ok("Faz F3 kaynak matrisi acik")
 
     t0 = time.monotonic()
     chat_url = base.rstrip("/") + "/api/chat/full"
@@ -844,6 +1087,48 @@ def run_live(base: str) -> int:
                 _ok(f"latency SLO <= {slo:.0f}s")
     except Exception as e:
         _fail("live bilgi tur", str(e)[:120])
+        fails += 1
+
+    print("\n=== Canli — bilim derin SLO ===")
+    bilim_body = json.dumps(
+        {
+            "message": "Osmanli Fatih donemini detayli acikla",
+            "mode": "genel",
+            "coding_mode": False,
+            "use_web": False,
+        },
+        ensure_ascii=False,
+    ).encode("utf-8")
+    t1 = time.monotonic()
+    try:
+        req2 = urllib.request.Request(
+            chat_url,
+            data=bilim_body,
+            headers={"Content-Type": "application/json; charset=utf-8"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req2, timeout=180) as r:
+            cj2 = json.loads(r.read().decode("utf-8", errors="replace"))
+        elapsed2 = time.monotonic() - t1
+        if not cj2.get("ok"):
+            _fail("live bilim derin", str(cj2.get("error") or "")[:120])
+            fails += 1
+        else:
+            _ok(f"canli bilim derin turu {elapsed2:.1f}s")
+            try:
+                slo2 = float(
+                    am.get("bilim_derin_slo_sec")
+                    or os.environ.get("RUZGAR_LIVE_BILIM_DERIN_SLO_SEC", "120")
+                )
+            except ValueError:
+                slo2 = 120.0
+            if elapsed2 > slo2:
+                _fail("bilim derin SLO", f"{elapsed2:.1f}s > {slo2}s")
+                fails += 1
+            else:
+                _ok(f"bilim derin SLO <= {slo2:.0f}s")
+    except Exception as e:
+        _fail("live bilim derin", str(e)[:120])
         fails += 1
 
     return fails

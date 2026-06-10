@@ -84,6 +84,8 @@ function resolveRuzgarApiRoot() {
 }
 
 const API = resolveRuzgarApiRoot();
+/** Faz F1 — tek tur dosya bağlamı (sürükle-bırak) */
+const anaMotorUploadQueue = [];
 console.info("[RÜZGAR Connection Bridge] API kök:", API);
 const RUZGAR_CHAT_FULL_TIMEOUT_MS = 180000;
 /** Kısa selam / nasılsın — Ollama yavaşken 12 sn yetmiyordu */
@@ -2595,6 +2597,22 @@ async function refreshProgramlamaPatchUx() {
     hintEl.hidden = true;
   }
 }
+
+(function wireAnaMotorPatchButtons() {
+  const refreshBtn = document.getElementById("btn-ana-patch-refresh");
+  const applyBtn = document.getElementById("btn-ana-patch-apply");
+  if (refreshBtn && !refreshBtn.dataset.wired) {
+    refreshBtn.dataset.wired = "1";
+    refreshBtn.addEventListener("click", () => {
+      void refreshProgramlamaPatchFromServer();
+      flashRuzgarDurum("Patch listesi yenilendi.");
+    });
+  }
+  if (applyBtn && !applyBtn.dataset.wired) {
+    applyBtn.dataset.wired = "1";
+    applyBtn.addEventListener("click", () => void patchUnifiedApplyFromAtolye());
+  }
+})();
 
 async function patchUnifiedApplyFromAtolye() {
   const workspaceRoot = await getProgramlamaWorkspaceRoot();
@@ -10838,6 +10856,43 @@ wireContextMenu();
 updateDynamicWorkbench();
 void initialLoadHafiza();
 
+/** Faz F1 — txt/md/pdf tek tur bağlam yükleme */
+async function uploadAnaMotorContextFile(file) {
+  const name = String(file?.name || "dosya.txt");
+  const ext = name.split(".").pop()?.toLowerCase() || "";
+  if (!["txt", "md", "pdf"].includes(ext)) {
+    setStatus("Desteklenen: .txt .md .pdf", "Rüzgar");
+    return null;
+  }
+  const fd = new FormData();
+  fd.append("file", file, name);
+  try {
+    const res = await fetch(`${API}/api/ana-motor/upload-context`, { method: "POST", body: fd });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) {
+      setStatus(j.detail || j.error || "Dosya yüklenemedi", "Rüzgar");
+      return null;
+    }
+    anaMotorUploadQueue.push({ id: j.upload_id, name: j.filename || name, chars: j.chars || 0 });
+    setStatus(
+      `Dosya bağlamı hazır: ${j.filename || name} (${j.chars || 0} karakter) — sorunu yazıp gönder`,
+      "Rüzgar",
+    );
+    if (el.input && !el.input.value.trim()) {
+      el.input.value = `Bu dosyaya göre özetle: ${j.filename || name}`;
+    }
+    return j;
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+    return null;
+  }
+}
+
+function isAnaMotorDocFile(file) {
+  const name = String(file?.name || "").toLowerCase();
+  return /\.(txt|md|pdf)$/.test(name);
+}
+
 /** Dinamit — görsel sürükle-bırak + yapıştır + hatırlatıcı poll (Ümit & Gökçenur) */
 function wireDinamitFeatures() {
   async function onChatImageFile(file, hint) {
@@ -10866,8 +10921,14 @@ function wireDinamitFeatures() {
     target.addEventListener("drop", async (e) => {
       e.preventDefault();
       const f = e.dataTransfer?.files?.[0];
-      if (!f || !String(f.type || "").startsWith("image/")) {
-        setStatus("Sohbete görüntü bırak — video/ses/görsel algılanır", "Rüzgar");
+      if (!f) return;
+      const mode = activeMotorChatMode();
+      if (isAnaMotorDocFile(f) && ["genel", "uretim", "gelisim"].includes(mode)) {
+        await uploadAnaMotorContextFile(f);
+        return;
+      }
+      if (!String(f.type || "").startsWith("image/")) {
+        setStatus("Sohbete görüntü veya txt/md/pdf bırak", "Rüzgar");
         return;
       }
       const hint = el.input?.value?.trim() || "";
@@ -11289,6 +11350,9 @@ async function streamChat(userText, streamOpts = {}) {
       : {}),
     ...(streamOpts.userRaw ? { user_message_raw: String(streamOpts.userRaw).slice(0, 4000) } : {}),
     ...(streamOpts.cinema ? { cinema_context: streamOpts.cinema } : {}),
+    ...(Array.isArray(streamOpts.uploadIds) && streamOpts.uploadIds.length
+      ? { ana_motor_upload_ids: streamOpts.uploadIds }
+      : {}),
   };
 
   const dec = new TextDecoder("utf-8");
@@ -11338,6 +11402,84 @@ async function streamChat(userText, streamOpts = {}) {
   }
 
   /** Token/done/error/status — zorunlu akış + hazırlık durumu (Ümit & Gökçenur Işık Hızı). */
+  function renderAnaMotorResearchCard(card) {
+    const wrap = document.getElementById("ana-motor-research-card");
+    const sumEl = document.getElementById("ana-motor-research-summary");
+    const listEl = document.getElementById("ana-motor-research-list");
+    if (!wrap || !sumEl || !listEl) return;
+    if (!card || !card.ok) {
+      wrap.hidden = true;
+      return;
+    }
+    const totals = card.totals || {};
+    const parts = [];
+    if (totals.nebula) parts.push(`Nebula ${totals.nebula}`);
+    if (totals.tarih) parts.push(`Tarih ${totals.tarih}`);
+    if (totals.arsiv) parts.push(`Arşiv ${totals.arsiv}`);
+    if (totals.tdk) parts.push(`TDK ${totals.tdk}`);
+    if (totals.indeks) parts.push(`İndeks ${totals.indeks}`);
+    const webTxt = card.web_used ? " · Web" : "";
+    sumEl.textContent = `${card.primary || "bilgi"} — ${parts.join(" · ") || "yerel"}${webTxt} · ${card.stamp || ""}`;
+    listEl.innerHTML = "";
+    const titles = {
+      nebula: "Nebula",
+      tarih: "Tarih",
+      arsiv: "Arşiv",
+      tdk: "TDK",
+      indeks: "İndeks",
+    };
+    const buckets = card.buckets || {};
+    for (const key of ["nebula", "tarih", "arsiv", "tdk", "indeks"]) {
+      const rows = Array.isArray(buckets[key]) ? buckets[key] : [];
+      for (const row of rows.slice(0, 3)) {
+        const li = document.createElement("li");
+        li.textContent = `[${row.id || "?"}] ${titles[key]} · ${row.label || ""} (${row.score || 0})`;
+        li.title = row.excerpt || "";
+        listEl.appendChild(li);
+      }
+    }
+    wrap.hidden = listEl.children.length === 0 && !parts.length;
+  }
+
+  function renderAnaMotorNebulaOneriCard(card) {
+    const wrap = document.getElementById("ana-motor-nebula-oneri-card");
+    const sumEl = document.getElementById("ana-motor-nebula-oneri-summary");
+    const cmdEl = document.getElementById("ana-motor-nebula-oneri-cmd");
+    if (!wrap || !sumEl || !cmdEl) return;
+    if (!card || !card.ok) {
+      wrap.hidden = true;
+      return;
+    }
+    wrap.hidden = false;
+    sumEl.textContent =
+      `Güven: ${card.guven || "düşük"} — önerilen koleksiyon: ${card.collection_title || card.collection || "—"}. ${card.hint || ""}`;
+    cmdEl.textContent = card.suggested_command || "";
+  }
+
+  function renderAnaMotorPatchCard(card) {
+    const wrap = document.getElementById("ana-motor-patch-card");
+    const sumEl = document.getElementById("ana-motor-patch-summary");
+    const listEl = document.getElementById("ana-motor-patch-paths");
+    if (!wrap || !sumEl || !listEl) return;
+    if (!card || !card.ok || !card.has_pending) {
+      wrap.hidden = true;
+      return;
+    }
+    wrap.hidden = false;
+    const c = card.count || 0;
+    const counts = card.counts || {};
+    sumEl.textContent =
+      `${c} dosya bekliyor — kabul: ${counts.accepted || 0} · red: ${counts.rejected || 0} · ${card.hint || ""}`;
+    listEl.innerHTML = "";
+    for (const p of card.paths_preview || []) {
+      const li = document.createElement("li");
+      const code = document.createElement("code");
+      code.textContent = p;
+      li.appendChild(code);
+      listEl.appendChild(li);
+    }
+  }
+
   function renderPlanPreview(plan) {
     if (!plan || !plan.primary) return;
     ensureDashboardAgentUi();
@@ -11378,6 +11520,14 @@ async function streamChat(userText, streamOpts = {}) {
 
   function processChatEvent(ev) {
     ruzgarDebugLog(`chat:${ev.type || "?"}`, ev);
+    if (ev.type === "meta" && ev.research_card) {
+      renderAnaMotorResearchCard(ev.research_card);
+      return;
+    }
+    if (ev.type === "meta" && ev.nebula_oneri_card) {
+      renderAnaMotorNebulaOneriCard(ev.nebula_oneri_card);
+      return;
+    }
     if (ev.type === "meta" && ev.plan) {
       clearDeferThinking();
       renderPlanPreview(ev.plan);
@@ -11442,9 +11592,24 @@ async function streamChat(userText, streamOpts = {}) {
     clearDeferThinking();
     if (ev.type === "status") {
       const t = (ev.text || "").trim();
+      const phase = String(ev.phase || "").toLowerCase();
       if (t) {
-        showThinkingCenter(t);
-        setStatus(t, "Rüzgar");
+        let label = t;
+        if (phase === "bilim_derin" || phase === "bilim_derin_llm") {
+          label = `🔬 ${t}`;
+        } else if (
+          phase === "archive" ||
+          phase === "archive_detail" ||
+          phase === "archive_hit"
+        ) {
+          label = `📚 ${t}`;
+        } else if (phase === "full_index" || phase === "encyclopedic") {
+          label = `📇 ${t}`;
+        } else if (phase === "web" || phase === "web_engine") {
+          label = `🌐 ${t}`;
+        }
+        showThinkingCenter(label);
+        setStatus(label, "Rüzgar");
       } else {
         showThinkingCenter(null);
       }
@@ -11531,8 +11696,24 @@ async function streamChat(userText, streamOpts = {}) {
           switchMode("programlama");
         }
       }
+      if (ev.patch_approval_card) {
+        renderAnaMotorPatchCard(ev.patch_approval_card);
+      }
+      if (ev.nebula_oneri_card) {
+        renderAnaMotorNebulaOneriCard(ev.nebula_oneri_card);
+      }
       if (ev.code_patch) {
         showProgramlamaPatchStrip(ev.code_patch);
+        if (ev.code_patch.action === "staged") {
+          renderAnaMotorPatchCard({
+            ok: true,
+            has_pending: true,
+            count: ev.code_patch.count,
+            paths_preview: (ev.code_patch.items || []).map((x) => x.path).filter(Boolean),
+            counts: ev.code_patch.counts || {},
+            hint: "Programlama atölyesi veya Uygula",
+          });
+        }
         if (Array.isArray(ev.code_patch.applied) && ev.code_patch.applied.length) {
           flashRuzgarDurum(
             `Faz 10 patch: ${ev.code_patch.applied.length} dosya yazıldı — ${ev.code_patch.applied[0]}`,
@@ -12122,11 +12303,16 @@ async function sendMessageWithText(t, opts = {}) {
             title: String(cinemaCtx.title || cinemaCtx.label || "").slice(0, 200),
           }
         : undefined;
+    const uploadIds = anaMotorUploadQueue.map((x) => x.id).filter(Boolean);
     await streamChat(chatPayload, {
       userRaw: text,
       contextBrief: understanding?.contextBrief || "",
       cinema: cinemaPayload,
+      uploadIds,
     });
+    if (uploadIds.length) {
+      anaMotorUploadQueue.length = 0;
+    }
   } catch (e) {
     appendBubble("assistant", formatClientChatError(e), { error: true });
     setStatus("Hata — ayrıntı sohbette", "Rüzgar");

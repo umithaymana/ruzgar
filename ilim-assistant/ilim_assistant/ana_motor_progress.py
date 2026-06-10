@@ -23,6 +23,8 @@ _PHASE_ESTIMATE_SEC: dict[str, int] = {
     "dilbilgisi": 14,
     "prefetch": 25,
     "ana_agent": 45,
+    "bilim_derin": 75,
+    "bilim_derin_llm": 90,
 }
 
 

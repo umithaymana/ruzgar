@@ -845,6 +845,7 @@ def prepare_turn(
     conversation_context: str | None = None,
     user_message_raw: str | None = None,
     cinema_context: dict[str, Any] | None = None,
+    ana_motor_upload_ids: list[str] | None = None,
 ):
     """Boş mesajda None; aksi halde (msg, hits, user_payload, system, model, ogrenme_direct).
 
@@ -1294,6 +1295,7 @@ def prepare_turn(
                 rag_top_k=rag_k_clamped,
                 question_plan=turn_plan,
                 search_text=search_msg,
+                upload_ids=ana_motor_upload_ids,
             )
             bh = list(me_bundle.hits)
             good_hits = [h for h in bh if float(h[2]) >= rag_score_min]
@@ -1552,6 +1554,21 @@ def prepare_turn(
             )
             if _rapor:
                 user_payload += _rapor
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ana_motor_arastirma import build_research_card_payload
+
+            if orchestration_out is not None:
+                _card = build_research_card_payload(
+                    msg,
+                    hits=hits,
+                    web_extra=web_extra,
+                    question_plan=turn_plan,
+                    mode_norm=m,
+                )
+                if _card:
+                    orchestration_out["research_card"] = _card
         except Exception:
             pass
         try:

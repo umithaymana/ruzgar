@@ -38,11 +38,29 @@
 | D2 / 8 | 70B yerel profil | `llm_brain.py` | `denge70` / `RUZGAR_BRAIN_PROFILE=denge-70b` |
 | D3 / 10 | Otonom debug köprüsü | `ana_motor_otonom_debug.py`, `desktop_server.py`, `programlama_faz10.py` | Genel→prog + pytest döngüsü |
 
-## Sıradaki (Faz E — öneri)
+## Faz E — uygulandı (2026-06-10)
 
-- Canlı bilim derin SLO + 70B model çekme kontrolü
-- Çok dosya patch onay kartı (UI)
-- Tarih derin mod + nebula külliyat birleşik kart
+| # | Görev | Dosya | Durum |
+|---|--------|-------|--------|
+| E1 | Bilim derin canlı SLO | `ana_motor_smoke.py --live` | `RUZGAR_LIVE_BILIM_DERIN_SLO_SEC` |
+| E2 | 70B hazırlık kontrolü | `llm_ollama.py`, `llm_brain.py`, health | `denge70_ready` + pull uyarısı |
+| E3 | Patch onay köprüsü + UI kart | `ana_motor_patch_bridge.py`, `app.js` | Delege/debug → staging |
+| E4 | Nebula/tarih araştırma kartı | `ana_motor_arastirma.py`, dashboard | Külliyat envanteri |
+| E5 | Canlı retrieval + progress | `stream_orchestra.py`, `app.js` | ETA + faz ikonları |
+
+## Faz F — uygulandı (2026-06-10)
+
+| # | Görev | Dosya | Durum |
+|---|--------|-------|--------|
+| F1 | Sürük-bırak dosya ingest | `ana_motor_dosya_ingest.py`, `app.js` | `POST /api/ana-motor/upload-context` |
+| F2 | Nebula otomatik öneri | `ana_motor_nebula_oneri.py`, dashboard kart | düşük Güven → koleksiyon |
+| F3 | TDK + tarih + nebula matris | `ana_motor_kaynak_matrisi.py`, `rag_store.py` | `search_tdk_hafiza` / `search_nebula_hafiza` |
+
+## Sıradaki (Faz G — öneri)
+
+- Canlı upload + matris birleşik SLO
+- Nebula öneri → tek tık «kaynağı ekle» akışı
+- Çoklu dosya oturum paketi
 
 ## Ortam (özet)
 

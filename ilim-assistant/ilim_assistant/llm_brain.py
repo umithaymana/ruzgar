@@ -408,6 +408,50 @@ def all_profiles() -> dict[str, BrainEndpoint]:
     return out
 
 
+def denge70_readiness() -> dict[str, Any]:
+    """Faz E2 — 70B model Ollama'da hazır mı?"""
+    ep = _profile_denge70()
+    if ep is None:
+        return {
+            "ready": False,
+            "model": "",
+            "hint": "denge70 profili tanımlı değil",
+        }
+    model = ep.model
+    try:
+        from ilim_assistant.llm_ollama import ollama_model_available, ollama_reachable
+
+        if not ollama_reachable():
+            return {
+                "ready": False,
+                "model": model,
+                "hint": "Ollama çalışmıyor — ollama serve",
+            }
+        if not ollama_model_available(model):
+            return {
+                "ready": False,
+                "model": model,
+                "hint": f"Model indirilmedi — ollama pull {model}",
+            }
+        return {"ready": True, "model": model, "hint": None}
+    except Exception as exc:
+        return {
+            "ready": False,
+            "model": model,
+            "hint": str(exc)[:120],
+        }
+
+
+def denge70_ready_for_chain() -> bool:
+    if os.environ.get("RUZGAR_DENGE70_REQUIRE_PULLED", "1").strip().lower() in (
+        "0",
+        "false",
+        "no",
+    ):
+        return True
+    return bool(denge70_readiness().get("ready"))
+
+
 def _inject_denge70_chain(
     chain_ids: list[str],
     *,
@@ -428,6 +472,7 @@ def _inject_denge70_chain(
             bilim_derin_use_70b()
             and is_bilim_derin_turn(question_plan, message, mode_norm)
             and profiles.get("denge70") is not None
+            and denge70_ready_for_chain()
             and "denge70" not in out
         ):
             return out

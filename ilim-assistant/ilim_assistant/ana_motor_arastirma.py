@@ -30,6 +30,102 @@ def _utc_stamp() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
 
+def nebula_card_enabled() -> bool:
+    return os.environ.get("RUZGAR_ARASTIRMA_NEBULA_CARD", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
+def classify_hit_bucket(src: str) -> str:
+    """Kaynak yolunu külliyat kovasına ayır (Faz E4)."""
+    p = (src or "").replace("\\", "/").lower()
+    if "nebula" in p:
+        return "nebula"
+    try:
+        from ilim_assistant.rag_store import source_is_tarih_hafiza, source_is_tdk
+
+        if source_is_tarih_hafiza(src):
+            return "tarih"
+        if source_is_tdk(src):
+            return "tdk"
+    except Exception:
+        if "tarih_ve_kultur" in p or "tarh_ve_kultur" in p:
+            return "tarih"
+        if "/tdk/" in p or p.startswith("tdk/"):
+            return "tdk"
+    if p.startswith("arsiv/") or "/arsiv/" in p or p.startswith("archive/"):
+        return "arsiv"
+    return "indeks"
+
+
+def _bucket_rows(
+    hits: list[tuple[str, str, float]] | None,
+    *,
+    excerpt_cap: int = 220,
+) -> dict[str, list[dict[str, Any]]]:
+    buckets: dict[str, list[dict[str, Any]]] = {
+        "nebula": [],
+        "tarih": [],
+        "arsiv": [],
+        "tdk": [],
+        "indeks": [],
+    }
+    for text, src, score in hits or []:
+        bucket = classify_hit_bucket(src)
+        label = (src or "kaynak").replace("\\", "/")
+        if len(label) > 72:
+            label = "…" + label[-69:]
+        buckets[bucket].append(
+            {
+                "label": label,
+                "score": round(float(score), 3),
+                "excerpt": _excerpt(text, excerpt_cap).replace("\n", " "),
+            }
+        )
+    return buckets
+
+
+def build_research_card_payload(
+    user_message: str,
+    *,
+    hits: list[tuple[str, str, float]] | None,
+    web_extra: str,
+    question_plan: Any | None = None,
+    mode_norm: str = "genel",
+) -> dict[str, Any]:
+    """Faz E4 — UI araştırma envanter kartı (nebula + tarih + arşiv)."""
+    if not nebula_card_enabled():
+        return {}
+    if not should_build_research_report(
+        question_plan=question_plan,
+        hits=hits,
+        web_extra=web_extra,
+        mode_norm=mode_norm,
+    ):
+        return {}
+    buckets = _bucket_rows(hits)
+    totals = {k: len(v) for k, v in buckets.items()}
+    if sum(totals.values()) == 0 and not (web_extra or "").strip():
+        return {}
+    idx = 0
+    for key in ("nebula", "tarih", "arsiv", "tdk", "indeks"):
+        for row in buckets.get(key) or []:
+            idx += 1
+            row["id"] = f"Y{idx}"
+    return {
+        "ok": True,
+        "query": (user_message or "").strip()[:300],
+        "stamp": _utc_stamp(),
+        "primary": _plan_primary(question_plan) or "bilgi",
+        "buckets": buckets,
+        "totals": totals,
+        "web_used": bool((web_extra or "").strip()),
+        "local_total": sum(totals.values()),
+    }
+
+
 def _excerpt(text: str, cap: int) -> str:
     body = (text or "").strip().replace("\r\n", "\n")
     if len(body) <= cap:
@@ -89,7 +185,31 @@ def build_unified_research_report(
         "",
     ]
     n_local = len(hits or [])
-    if n_local:
+    if n_local and nebula_card_enabled():
+        buckets = _bucket_rows(hits, excerpt_cap=y_cap // 4)
+        bucket_titles = {
+            "nebula": "Nebula külliyat",
+            "tarih": "Tarih hafızası",
+            "arsiv": "İlim arşivi",
+            "tdk": "TDK / dilbilgisi",
+            "indeks": "Genel indeks",
+        }
+        lines.append(f"## Yerel kaynaklar ({n_local} parça — külliyat kartı)")
+        idx = 0
+        for bkey in ("nebula", "tarih", "arsiv", "tdk", "indeks"):
+            rows = buckets.get(bkey) or []
+            if not rows:
+                continue
+            lines.append(f"### {bucket_titles[bkey]} ({len(rows)})")
+            for row in rows[:4]:
+                idx += 1
+                lines.append(
+                    f"- **[Y{idx}]** `{row['label']}` · skor {row['score']:.2f}"
+                )
+                if row.get("excerpt"):
+                    lines.append(f"  {row['excerpt']}")
+        lines.append("")
+    elif n_local:
         lines.append(f"## Yerel kaynaklar ({n_local} parça)")
         for i, (text, src, score) in enumerate((hits or [])[:8], 1):
             label = (src or "kaynak").replace("\\", "/")

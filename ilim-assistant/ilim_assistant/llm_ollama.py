@@ -75,17 +75,63 @@ def _ollama_http_timeout(*, streaming: bool) -> float | tuple[float, float]:
     return (conn, read_s)
 
 
-def ollama_reachable(timeout_sec: float = 2.5) -> bool:
-    """Yerel Ollama dinliyor mu? (Gemini varken gereksiz yedek beklemesini keser)."""
+def _ollama_api_root() -> str:
     base = (
         os.environ.get("OLLAMA_API_BASE")
         or os.environ.get("OPENAI_COMPAT_BASE")
         or "http://127.0.0.1:11434/v1"
     ).rstrip("/")
-    root = base[:-3] if base.endswith("/v1") else base
+    return base[:-3] if base.endswith("/v1") else base
+
+
+def ollama_list_model_names(timeout_sec: float = 3.0) -> list[str]:
+    """Ollama /api/tags model adları (boş liste = erişilemedi)."""
     try:
         r = _http_session_singleton().get(
-            f"{root}/api/tags",
+            f"{_ollama_api_root()}/api/tags",
+            timeout=max(1.0, min(timeout_sec, 10.0)),
+        )
+        if r.status_code != 200:
+            return []
+        data = r.json()
+        out: list[str] = []
+        for entry in data.get("models") or []:
+            if isinstance(entry, dict):
+                name = str(entry.get("name") or "").strip()
+                if name:
+                    out.append(name)
+        return out
+    except Exception:
+        return []
+
+
+def ollama_model_available(model: str, *, timeout_sec: float = 3.0) -> bool:
+    """Model Ollama'da indirilmiş mi? (llama3.1:70b / llama3.1:70b-instruct vb.)"""
+    want = (model or "").strip()
+    if not want:
+        return False
+    names = ollama_list_model_names(timeout_sec=timeout_sec)
+    if not names:
+        return False
+    want_low = want.lower()
+    want_base = want_low.split(":")[0]
+    for raw in names:
+        n = raw.lower()
+        if n == want_low:
+            return True
+        if n.split(":")[0] == want_base:
+            if ":" not in want_low:
+                return True
+            if want_low in n or n.endswith(want_low.split(":")[-1]):
+                return True
+    return False
+
+
+def ollama_reachable(timeout_sec: float = 2.5) -> bool:
+    """Yerel Ollama dinliyor mu? (Gemini varken gereksiz yedek beklemesini keser)."""
+    try:
+        r = _http_session_singleton().get(
+            f"{_ollama_api_root()}/api/tags",
             timeout=max(1.0, min(timeout_sec, 8.0)),
         )
         return r.status_code == 200

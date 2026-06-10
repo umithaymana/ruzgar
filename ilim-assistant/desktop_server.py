@@ -41,7 +41,10 @@ from ilim_assistant.chat_core import (
     prepare_turn,
     rag_footer,
 )
-from ilim_assistant.stream_orchestra import prefetch_main_engine_bundle_for_stream
+from ilim_assistant.stream_orchestra import (
+    iter_main_engine_retrieval_stream,
+    prefetch_main_engine_bundle_for_stream,
+)
 from ilim_assistant.hafiza_i_ruzgar import (
     genel_hafiza_lookup,
     get_hafiza_motor as _get_hafiza_motor,
@@ -567,6 +570,10 @@ class ChatRequest(BaseModel):
     cinema_context: dict[str, Any] | None = Field(
         default=None,
         description="Video sinema paneli durumu (url, yerel dosya)",
+    )
+    ana_motor_upload_ids: list[str] | None = Field(
+        default=None,
+        description="Faz F1 — tek tur dosya bağlamı upload_id listesi",
     )
 
 
@@ -1237,6 +1244,12 @@ def health():
     _main_only = _main_chat_genel_only()
     _sb = _super_brain_health_for_api()
     try:
+        from ilim_assistant.llm_brain import denge70_readiness
+
+        _d70_health = denge70_readiness()
+    except Exception:
+        _d70_health = {"ready": False, "model": "", "hint": "denge70 kontrol edilemedi"}
+    try:
         from ilim_assistant.motorlar.tercume_ocr_runtime import ocr_runtime_status
 
         _ocr = ocr_runtime_status()
@@ -1297,6 +1310,33 @@ def health():
             not in ("0", "false", "no"),
             "brain_denge70_model": os.environ.get("RUZGAR_BRAIN_DENGE70_MODEL", "llama3.1:70b"),
             "otonom_debug_bridge": os.environ.get("RUZGAR_ANA_MOTOR_OTONOM_DEBUG", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "denge70_ready": bool(_d70_health.get("ready")),
+            "denge70_hint": _d70_health.get("hint"),
+            "bilim_derin_slo_sec": os.environ.get(
+                "RUZGAR_LIVE_BILIM_DERIN_SLO_SEC", "120"
+            ),
+            "ana_progress_eta": os.environ.get("RUZGAR_ANA_PROGRESS_ETA", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "patch_approval_bridge": os.environ.get(
+                "RUZGAR_ANA_MOTOR_PATCH_APPROVAL", "1"
+            ).strip().lower()
+            not in ("0", "false", "no"),
+            "arastirma_nebula_card": os.environ.get(
+                "RUZGAR_ARASTIRMA_NEBULA_CARD", "1"
+            ).strip().lower()
+            not in ("0", "false", "no"),
+            "upload_ingest": os.environ.get(
+                "RUZGAR_ANA_MOTOR_UPLOAD_INGEST", "1"
+            ).strip().lower()
+            not in ("0", "false", "no"),
+            "nebula_oneri": os.environ.get(
+                "RUZGAR_ANA_MOTOR_NEBULA_ONERI", "1"
+            ).strip().lower()
+            not in ("0", "false", "no"),
+            "kaynak_matris": os.environ.get(
+                "RUZGAR_ANA_MOTOR_KAYNAK_MATRIS", "1"
+            ).strip().lower()
             not in ("0", "false", "no"),
         },
         "super_brain": _sb,
@@ -2539,6 +2579,22 @@ def api_ana_motor_capabilities():
     from ilim_assistant.motorlar.motor_kabiliyetleri import registry_snapshot
 
     return registry_snapshot()
+
+
+@app.post("/api/ana-motor/upload-context")
+async def api_ana_motor_upload_context(file: UploadFile = File(...)) -> dict[str, Any]:
+    """Faz F1 — tek tur dosya bağlamı (txt/md/pdf)."""
+    from ilim_assistant.ana_motor_dosya_ingest import ingest_enabled, save_upload_bytes
+
+    if not ingest_enabled():
+        raise HTTPException(status_code=403, detail="Dosya ingest kapalı.")
+    data = await file.read()
+    result = await run_in_threadpool(
+        save_upload_bytes, data, file.filename or "dosya.txt"
+    )
+    if not result.get("ok"):
+        raise HTTPException(status_code=400, detail=str(result.get("error") or "Yükleme başarısız."))
+    return result
 
 
 @app.get("/api/ana-motor/delegation-summary")
@@ -8644,26 +8700,34 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         import time as _time_prog
 
         _prefetch_t0 = _time_prog.monotonic()
-        bundle, evs = prefetch_main_engine_bundle_for_stream(
+        bundle = None
+        _had_status = False
+        _upload_ids = list(getattr(req, "ana_motor_upload_ids", None) or [])
+        for item in iter_main_engine_retrieval_stream(
             req.message,
             req.history,
             mode_raw,
             question_plan=turn_plan,
-        )
-        try:
-            from ilim_assistant.ana_motor_progress import iter_enriched_status_events
+            upload_ids=_upload_ids or None,
+        ):
+            if item.get("type") == "retrieval_bundle":
+                bundle = item.get("bundle")
+                continue
+            ev = item
+            try:
+                from ilim_assistant.ana_motor_progress import enrich_status_event
 
-            ev_iter = iter_enriched_status_events(
-                evs, started_monotonic=_prefetch_t0
-            )
-        except Exception:
-            ev_iter = iter(evs)
-        for ev in ev_iter:
+                ev = enrich_status_event(ev, started_monotonic=_prefetch_t0)
+            except Exception:
+                pass
             txt = str(ev.get("text") or "").strip()
             if txt:
                 retrieval_notes.append(txt[:72])
+                _had_status = True
             yield ev
-        if evs or bundle.hits or (bundle.ilim_citation_tail or "").strip():
+        if bundle is not None and (
+            _had_status or bundle.hits or (bundle.ilim_citation_tail or "").strip()
+        ):
             reuse_b = bundle
 
     if mode_norm == "programlama":
@@ -8831,12 +8895,15 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         conversation_context=getattr(req, "conversation_context", None),
         user_message_raw=getattr(req, "user_message_raw", None),
         cinema_context=getattr(req, "cinema_context", None),
+        ana_motor_upload_ids=list(getattr(req, "ana_motor_upload_ids", None) or []) or None,
     )
     if prep is None:
         yield {"type": "error", "text": "Boş mesaj"}
         return
 
     msg, hits, user_payload, system, model, og_direct = prep
+    if orch.get("research_card"):
+        yield {"type": "meta", "research_card": orch["research_card"]}
     if _delegated_from_genel and mode_norm == "programlama":
         try:
             from ilim_assistant.motorlar.programlama_faz79 import build_handoff_packet_v3
@@ -9124,6 +9191,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             )
             yield {"type": "status", "text": _dbg_st}
 
+        if mode_norm in ("genel", "uretim", "gelisim") and not coding:
+            try:
+                from ilim_assistant.ana_motor_bilim_derin import is_bilim_derin_turn
+                from ilim_assistant.llm_brain import denge70_readiness
+
+                if is_bilim_derin_turn(turn_plan, msg, mode_norm):
+                    _d70 = denge70_readiness()
+                    _brain_hint = (
+                        "yerel 70B hazır"
+                        if _d70.get("ready")
+                        else "bulut + yerel zincir"
+                    )
+                    yield {
+                        "type": "status",
+                        "phase": "bilim_derin_llm",
+                        "text": f"Süper Beyin derin sentez — {_brain_hint}…",
+                    }
+            except Exception:
+                pass
+
         while True:
             round_body = ""
             for piece in stream_chat_with_brain(
@@ -9252,22 +9339,23 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         footer = rag_footer(hits)
         body_fixed = finalize_assistant_reply(reply_body)
         code_patch_meta: dict[str, Any] = {}
-        if mode_norm == "programlama":
+        if mode_norm == "programlama" or _delegated_from_genel:
             try:
-                from ilim_assistant.motorlar.programlama_faz10 import (
-                    process_assistant_reply_patches,
-                    resolve_scope_rel,
-                )
+                from ilim_assistant.ana_motor_patch_bridge import process_turn_patches
+                from ilim_assistant.motorlar.programlama_faz10 import resolve_scope_rel
 
                 scope = resolve_scope_rel(
                     req.workspace_root,
                     active_file=req.programlama_active_file,
                 )
-                code_patch_meta = process_assistant_reply_patches(
+                code_patch_meta = process_turn_patches(
                     reply_body,
                     req.workspace_root,
                     scope_rel=scope,
                     skip_if_debug_loop=bool(wants_dbg),
+                    delegated_from_genel=_delegated_from_genel,
+                    wants_debug=bool(wants_dbg),
+                    message=msg,
                 )
                 patch_footer = str(code_patch_meta.get("footer") or "")
                 if patch_footer:
@@ -9288,6 +9376,8 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     pass
             except Exception:
                 pass
+        web_used = False
+        _noc = None
         try:
             from ilim_assistant.ana_motor_reflection import apply_answer_quality_pass
 
@@ -9305,6 +9395,17 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             )
         except Exception:
             pass
+        try:
+            from ilim_assistant.ana_motor_nebula_oneri import build_nebula_oneri_card
+
+            _noc = build_nebula_oneri_card(
+                body_fixed,
+                msg,
+                hits=hits,
+                web_was_used=web_used,
+            )
+        except Exception:
+            _noc = None
         full_out = body_fixed + footer
         done_llm: dict[str, Any] = {
             "type": "done",
@@ -9338,6 +9439,16 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 "counts": code_patch_meta.get("counts") or {},
                 "count": code_patch_meta.get("count"),
             }
+            try:
+                from ilim_assistant.ana_motor_patch_bridge import build_patch_approval_card
+
+                _pac = build_patch_approval_card(code_patch_meta)
+                if _pac.get("ok"):
+                    done_llm["patch_approval_card"] = _pac
+            except Exception:
+                pass
+        if _noc and _noc.get("ok"):
+            done_llm["nebula_oneri_card"] = _noc
         if mode_norm == "programlama":
             try:
                 from ilim_assistant.motorlar.programlama_faz11 import merge_orchestra_programlama
