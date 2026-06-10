@@ -27,9 +27,8 @@ RUZGAR_ANA_KAYNAK_ROZET=1
 2. Kaynak uyumsuzluğu → LLM reflection notu (Ollama açıksa)
 3. Smoke Faz Y yeşil
 
-## Sıradaki (Faz Z — öneri)
+## Sıradaki
 
-- Sohbet paneli sadeleştirme (arşiv kartı katlanır)
-- Multi-hop RAG
+Faz Z tamamlandı — bkz. `ANA_MOTOR_FAZ_Z_PLAN.md`
 
 *Bismillah — Ümit & Gökçenur*

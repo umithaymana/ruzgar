@@ -356,34 +356,13 @@
       <aside class="panel panel-chat">
         <div class="chat-scroll" id="chat-messages"></div>
         <div id="orchestra-bridge" class="orchestra-bridge" hidden aria-live="polite"></div>
-        <div class="composer">
-          <div class="composer-actions">
+        <div class="composer faz-z-composer">
+          <div class="composer-actions composer-actions-primary">
             <label class="chk"
               ><input type="checkbox" id="opt-web" checked /> Web ara</label
             >
-            <label class="chk" title="Web kapalıyken bile mesajdaki https bağlantılarını oku"
-              ><input type="checkbox" id="opt-link-read" checked /> Bağlantı oku</label
-            >
-            <label class="chk fetch-row" title="Arama sonrası kaç siteden tam metin okunacak (bilgi için)"
-              ><span>Sayfa oku</span>
-              <select id="opt-fetch" class="select-mini">
-                <option value="0" selected>0</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-              </select>
-            </label>
-            <label class="chk"
-              ><input type="checkbox" id="opt-code" /> Kod modu</label
-            >
             <label class="chk" title="Asistan yanıtını sesli okur"
               ><input type="checkbox" id="opt-voice-out" checked /> Sesli yanıt</label
-            >
-            <label class="chk" title="Mikrofon metni yazınca otomatik gönderir"
-              ><input type="checkbox" id="opt-voice-send" checked /> Konuşunca gönder</label
-            >
-            <label class="chk fetch-row" title="5 kaynak paralel web+arşiv taraması (Dinamit — Ümit &amp; Gökçenur)"
-              ><input type="checkbox" id="opt-autonom" /> Otonom araştırma</label
             >
             <span class="spacer"></span>
             <div id="mic-level-wrap" class="mic-level-wrap" hidden aria-hidden="true" title="Ümit &amp; Gökçenur — giriş sinyali">
@@ -412,10 +391,36 @@
             <span id="tts-status-pill" class="tts-status-pill" hidden aria-live="polite">Sesli okuma…</span>
             <button type="button" id="btn-send" class="btn-primary">Gönder</button>
           </div>
+          <details id="composer-advanced-fold" class="composer-advanced-fold">
+            <summary>Gelişmiş seçenekler</summary>
+            <div class="composer-actions composer-actions-advanced">
+              <label class="chk" title="Web kapalıyken bile mesajdaki https bağlantılarını oku"
+                ><input type="checkbox" id="opt-link-read" checked /> Bağlantı oku</label
+              >
+              <label class="chk fetch-row" title="Arama sonrası kaç siteden tam metin okunacak (bilgi için)"
+                ><span>Sayfa oku</span>
+                <select id="opt-fetch" class="select-mini">
+                  <option value="0" selected>0</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                </select>
+              </label>
+              <label class="chk"
+                ><input type="checkbox" id="opt-code" /> Kod modu</label
+              >
+              <label class="chk" title="Mikrofon metni yazınca otomatik gönderir"
+                ><input type="checkbox" id="opt-voice-send" checked /> Konuşunca gönder</label
+              >
+              <label class="chk fetch-row" title="5 kaynak paralel web+arşiv taraması (Dinamit — Ümit &amp; Gökçenur)"
+                ><input type="checkbox" id="opt-autonom" /> Otonom araştırma</label
+              >
+            </div>
+          </details>
           <textarea
             id="msg-input"
             rows="3"
-            placeholder="Soru yazın veya yapıştırın — Web açıkken arama + okuma; doğrudan https:// bağlantısı da okunur."
+            placeholder="Soru yazın — Web açıkken arama yapılır. Gelişmiş: bağlantı oku, sayfa oku, kod modu."
           ></textarea>
         </div>
       </aside>
@@ -536,9 +541,13 @@
                 <button type="button" class="btn-primary btn-compact" id="btn-ana-ozet-nebula-apply" hidden>Nebula'ya ekle</button>
               </div>
             </div>
-            <div id="ana-motor-archive-card" class="mini-card ana-motor-archive-card">
-              <strong>Arşiv &amp; birleştir (Faz V)</strong>
-              <p id="ana-motor-archive-summary" class="ana-motor-card-sub">Kalıcı arşiv oturumları</p>
+            <div id="ana-motor-archive-card" class="mini-card ana-motor-archive-card faz-z-archive-card">
+              <details id="ana-motor-archive-fold" class="ana-motor-archive-fold">
+                <summary class="ana-motor-archive-fold-summary">
+                  <strong>Arşiv &amp; birleştir (Faz V)</strong>
+                  <span id="ana-motor-archive-summary" class="ana-motor-card-sub ana-motor-archive-summary-hint">Kalıcı arşiv oturumları — genişlet</span>
+                </summary>
+                <div class="ana-motor-archive-body">
               <div id="ana-motor-weekly-summary" class="mini-card ana-motor-weekly-summary" hidden>
                 <strong id="ana-motor-weekly-title">Haftalık özet</strong>
                 <p id="ana-motor-weekly-body" class="ana-motor-card-sub"></p>
@@ -636,6 +645,8 @@
                 <input type="file" id="ana-csv-paket-input" accept=".csv,text/csv" hidden />
               </div>
               <p id="ana-motor-archive-progress" class="ana-motor-card-sub" hidden></p>
+                </div>
+              </details>
             </div>
             <h3>Ana Motor — Dashboard</h3>
             <p>Motor durumları ve aktif konuşma özeti bu panelde.</p>
@@ -2848,19 +2859,40 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
             <dt>Escape</dt><dd>Yardım / modalları kapat; Durdur ile akışı kes</dd>
             <dt>Durdur</dt><dd>Yanıt veya sesli okumayı anında kes</dd>
           </dl>
-          <h3 class="faz7-help-h3">Ana Motor (genel)</h3>
+          <h3 class="faz7-help-h3" id="faz7-help-motor-genel" data-motor="genel">Ana Motor (genel)</h3>
           <ul class="faz7-help-ul">
-            <li><strong>Web ara</strong> — DuckDuckGo + sayfa okuma (Sayfa oku: 0–3)</li>
+            <li><strong>Web ara</strong> — DuckDuckGo + sayfa okuma (Gelişmiş → Sayfa oku: 0–3)</li>
             <li><strong>@@dosya/yol</strong> — workspace’ten dosya okuma (ör. <code>@@ruzgar-desktop/app.js</code>)</li>
-            <li>Dashboard’da soru planı ve kaynaklar (indeks / web) görünür</li>
-            <li>Kısa belirsiz sorularda netleştirme sorusu gelir (“bu?” gibi)</li>
+            <li>Dashboard’da soru planı, kaynaklar ve <strong>güven rozeti</strong> (Faz Y)</li>
+            <li><strong>Faz W</strong> — tek sohbetten video/tercüme backend yürütme</li>
+            <li><strong>Faz X</strong> — ajan 2.0: çok tur patch + py_compile doğrulama</li>
+            <li><strong>Faz Z</strong> — sade composer, katlanır arşiv, multi-hop RAG</li>
+            <li>Kısa belirsiz sorularda netleştirme sorusu gelir</li>
           </ul>
-          <h3 class="faz7-help-h3">HIZIR</h3>
+          <h3 class="faz7-help-h3" id="faz7-help-motor-tercume" data-motor="tercume">Tercüme motoru</h3>
+          <ul class="faz7-help-ul">
+            <li>Kitap/PDF — sayfa çevir, tamamını çevir, segment düzenleme</li>
+            <li>Sohbet: «Sahih Bukhari'yi aç», «14. sayfaya git», «bu sayfayı çevir»</li>
+            <li>Çıktı: <code>ilim-assistant/arsiv/tercume-output</code></li>
+          </ul>
+          <h3 class="faz7-help-h3" id="faz7-help-motor-programlama" data-motor="programlama">Programlama motoru</h3>
+          <ul class="faz7-help-ul">
+            <li>Kod modu — Gelişmiş seçeneklerden veya programlama motorundan</li>
+            <li>Patch onay kartı — dashboard’da staging ve uygula</li>
+            <li>Ajan döngüsü — çok dosya staging + doğrulama (Faz X)</li>
+          </ul>
+          <h3 class="faz7-help-h3" id="faz7-help-motor-hafiza" data-motor="hafiza">Hafıza motoru</h3>
+          <ul class="faz7-help-ul">
+            <li><code>hatırla …</code> · <code>unut …</code> · profil komutları</li>
+            <li>Arşiv oturumu — dashboard’da katlanır panel (Faz Z)</li>
+            <li>Timeline, CSV/JSON dışa aktarma, oturum birleştirme</li>
+          </ul>
+          <h3 class="faz7-help-h3" id="faz7-help-motor-hizir" data-motor="hizir">HIZIR</h3>
           <ul class="faz7-help-ul">
             <li><strong>Sayfayı Temizle</strong> — <code>POST /api/hizir/temizle</code> (vitrin + önbellek)</li>
             <li><strong>Hızlı Yenile</strong> — mevcut sorguyla pazar taraması</li>
           </ul>
-          <h3 class="faz7-help-h3">Video motoru</h3>
+          <h3 class="faz7-help-h3" id="faz7-help-motor-video" data-motor="video">Video motoru</h3>
           <ul class="faz7-help-ul">
             <li><strong>Sinema sahnesi</strong> — ortada oynatıcı; timeline altta; «Çalışma sayfası» başlığı gizli</li>
             <li><strong>Üst şerit</strong> — Video Oluştur (V5 metinden film), YouTube indir, Kes, Ses, Dışa aktar</li>
@@ -2876,7 +2908,17 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
             <li><strong>Sohbet</strong> — «video oluştur» · «sahne planı»; link + «panelde aç»; «3 numarayı oynat»</li>
             <li><strong>Gereksinim</strong> — FFmpeg + yt-dlp + Ollama + edge-tts; sunucu 8779</li>
           </ul>
-          <h3 class="faz7-help-h3">Faz 9–16 — tamamlanan kabiliyetler</h3>
+          <h3 class="faz7-help-h3" id="faz7-help-motor-ses" data-motor="ses">Ses motoru</h3>
+          <ul class="faz7-help-ul">
+            <li>Sesli yanıt — composer üst şeridinden aç/kapa</li>
+            <li>Tilavet profilleri — ses referans arşivi</li>
+          </ul>
+          <h3 class="faz7-help-h3" id="faz7-help-motor-mimar" data-motor="mimar">Mimar motoru</h3>
+          <ul class="faz7-help-ul">
+            <li>Fotoğraf · Resim/Sanat · Tasarım — 3 sayfa, yan sohbet</li>
+            <li>Ana Motor köprüsü — panel arka planda açılır</li>
+          </ul>
+          <h3 class="faz7-help-h3 faz7-help-dev">Geliştirici — Faz 9–16</h3>
           <ul class="faz7-help-ul faz7-help-done">
             <li>Gemini-first hız ve ağır indeks atlama</li>
             <li>Kod modunda yerel ilim indeksini atlama</li>

@@ -213,10 +213,21 @@ Detay: `ANA_MOTOR_FAZ_X_PLAN.md`
 
 Detay: `ANA_MOTOR_FAZ_Y_PLAN.md`
 
-## Sıradaki (Faz Z — öneri)
+## Faz Z — uygulandı (2026-06-10)
 
-- Sohbet paneli sadeleştirme
-- Multi-hop RAG
+| # | Görev | Dosya | Durum |
+|---|--------|-------|--------|
+| Z1 | Sade composer | `index.html`, `app.js` | Gelişmiş katlanır |
+| Z2 | Motor rehberi | `ana_motor_motor_rehberi.py` | `?` + API |
+| Z3 | Multi-hop RAG | `ana_motor_multihop.py` | `main_engine` |
+| Z4 | Katlanır arşiv | dashboard kartı | localStorage |
+
+Detay: `ANA_MOTOR_FAZ_Z_PLAN.md`
+
+## Sıradaki (Faz AA — öneri)
+
+- Sohbet geçmişi arama
+- Nebula panel birleştirme
 
 ## Ortam (özet)
 

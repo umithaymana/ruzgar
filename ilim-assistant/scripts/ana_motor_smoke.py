@@ -1930,6 +1930,65 @@ def run_offline() -> int:
     else:
         _ok("bilgi kalite rozet karti")
 
+    print("\n=== Faz Z — UX / multi-hop / motor rehberi ===")
+    from ilim_assistant.ana_motor_motor_rehberi import (
+        archive_fold_default,
+        build_motor_rehberi,
+        chat_simple_default,
+        motor_rehberi_enabled,
+    )
+    from ilim_assistant.ana_motor_multihop import (
+        apply_multihop_rag,
+        expand_query_from_hits,
+        multihop_enabled,
+    )
+
+    if not chat_simple_default():
+        _fail("chat_simple", "kapali")
+        fails += 1
+    else:
+        _ok("chat simple varsayilan acik")
+    if not archive_fold_default():
+        _fail("archive_fold", "kapali")
+        fails += 1
+    else:
+        _ok("archive fold varsayilan acik")
+    if not motor_rehberi_enabled():
+        _fail("motor_rehberi", "kapali")
+        fails += 1
+    else:
+        _ok("motor rehberi acik")
+    if not multihop_enabled():
+        _fail("multihop", "kapali")
+        fails += 1
+    else:
+        _ok("multihop RAG acik")
+    exp = expand_query_from_hits(
+        "Osmanli kim kurdu?",
+        [("Ertugrul Gazi Sogut 1299", "tarih.md", 0.6)],
+    )
+    if "Ertugrul" not in exp and "Sogut" not in exp:
+        _fail("multihop_expand", exp[:80])
+        fails += 1
+    else:
+        _ok("multihop sorgu genisletme")
+    merged, mh_meta = apply_multihop_rag(
+        "Osmanli kim kurdu?",
+        [("1299 kurulus", "tarih.md", 0.55)],
+        primary="bilgi",
+    )
+    if not isinstance(merged, list) or not mh_meta.get("version"):
+        _fail("multihop_apply", str(mh_meta)[:80])
+        fails += 1
+    else:
+        _ok(f"multihop pass reason={mh_meta.get('reason') or 'ok'}")
+    reh = build_motor_rehberi()
+    if not reh.get("ok") or len(reh.get("sections") or []) < 5:
+        _fail("motor_rehberi_sections", str(len(reh.get("sections") or [])))
+        fails += 1
+    else:
+        _ok(f"motor rehberi {len(reh['sections'])} bolum")
+
     print("\n=== Faz D — bilim derin / denge70 / otonom debug ===")
     from ilim_assistant.ana_motor_bilim_derin import (
         apply_bilim_derin_rag_top_k,
@@ -2508,6 +2567,35 @@ def run_live(base: str) -> int:
         fails += 1
     else:
         _ok("Faz Y2 kaynak rozet acik")
+    if not am.get("multihop_rag"):
+        _fail("faz_z3 multihop", "kapali")
+        fails += 1
+    else:
+        _ok("Faz Z3 multi-hop acik")
+    if not am.get("chat_simple"):
+        _fail("faz_z1 chat_simple", "kapali")
+        fails += 1
+    else:
+        _ok("Faz Z1 chat simple acik")
+    if not am.get("motor_rehberi"):
+        _fail("faz_z2 motor_rehberi", "kapali")
+        fails += 1
+    else:
+        _ok("Faz Z2 motor rehberi acik")
+
+    print("\n=== Canli — motor rehberi API ===")
+    reh_url = base.rstrip("/") + "/api/ana-motor/motor-rehberi"
+    try:
+        with urllib.request.urlopen(reh_url, timeout=15) as r:
+            reh_j = json.loads(r.read().decode("utf-8", errors="replace"))
+        if not reh_j.get("ok") or not reh_j.get("sections"):
+            _fail("live motor_rehberi", str(reh_j)[:80])
+            fails += 1
+        else:
+            _ok(f"canli motor rehberi {len(reh_j['sections'])} bolum")
+    except Exception as e:
+        _fail("live motor_rehberi", str(e)[:120])
+        fails += 1
 
     print("\n=== Canli — upload + matris SLO ===")
     chat_url = base.rstrip("/") + "/api/chat/full"

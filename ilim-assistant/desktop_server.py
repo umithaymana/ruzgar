@@ -1472,6 +1472,14 @@ def health():
             not in ("0", "false", "no"),
             "kaynak_rozet": os.environ.get("RUZGAR_ANA_KAYNAK_ROZET", "1").strip().lower()
             not in ("0", "false", "no"),
+            "multihop_rag": os.environ.get("RUZGAR_ANA_MULTIHOP_RAG", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "chat_simple": os.environ.get("RUZGAR_ANA_CHAT_SIMPLE", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "archive_fold": os.environ.get("RUZGAR_ANA_ARCHIVE_FOLD", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "motor_rehberi": os.environ.get("RUZGAR_ANA_MOTOR_REHBERI", "1").strip().lower()
+            not in ("0", "false", "no"),
         },
         "super_brain": _sb,
         "connection": _connection_ui_block(super_brain=_sb),
@@ -2692,6 +2700,14 @@ def api_ana_motor_agent_loop_status() -> dict[str, Any]:
     from ilim_assistant.ana_motor_ajan20 import get_agent_loop_status
 
     return get_agent_loop_status()
+
+
+@app.get("/api/ana-motor/motor-rehberi")
+def api_ana_motor_motor_rehberi() -> dict[str, Any]:
+    """Faz Z — motor rehberi (? yardım penceresi içeriği)."""
+    from ilim_assistant.ana_motor_motor_rehberi import get_motor_rehberi_status
+
+    return get_motor_rehberi_status()
 
 
 @app.get("/api/ana-motor/backend-yurut")

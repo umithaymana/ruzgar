@@ -5247,6 +5247,74 @@ body.faz7-reduced-motion .agent-step-active .agent-step-label {
   font-size: 11px;
   width: 100%;
 }
+/* Faz Z — sade sohbet + katlanır arşiv */
+body.faz-z-chat-simple .composer-advanced-fold {
+  margin-top: 4px;
+}
+.composer-advanced-fold {
+  margin: 0 0 6px;
+  font-size: 12px;
+}
+.composer-advanced-fold > summary {
+  cursor: pointer;
+  color: #9cdcfe;
+  padding: 4px 2px;
+  list-style: disclosure-closed;
+}
+.composer-advanced-fold[open] > summary {
+  margin-bottom: 4px;
+}
+.composer-actions-advanced {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  padding: 4px 0 2px;
+  border-top: 1px dashed #333;
+}
+.ana-motor-archive-fold {
+  border: none;
+}
+.ana-motor-archive-fold > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+  padding: 2px 0 8px;
+}
+.ana-motor-archive-fold > summary::-webkit-details-marker {
+  display: none;
+}
+.ana-motor-archive-fold > summary::before {
+  content: "▸";
+  color: #4ec9b0;
+  margin-right: 4px;
+  transition: transform 0.15s ease;
+}
+.ana-motor-archive-fold[open] > summary::before {
+  transform: rotate(90deg);
+  display: inline-block;
+}
+.ana-motor-archive-summary-hint {
+  font-weight: 400;
+  opacity: 0.85;
+}
+.ana-motor-archive-body {
+  padding-top: 4px;
+  border-top: 1px solid #333;
+}
+.faz-z-archive-card:not(:has(.ana-motor-archive-fold[open])) {
+  padding-bottom: 8px;
+}
+.faz7-help-h3.faz7-help-motor-active {
+  color: #4ec9b0;
+  scroll-margin-top: 12px;
+}
+.faz7-help-h3.faz7-help-dev {
+  opacity: 0.88;
+  font-size: 0.95em;
+}
 .bubble.assistant .chat-action-main {
   font-weight: 700;
   color: #d7f5ed;

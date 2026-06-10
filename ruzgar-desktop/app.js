@@ -1362,11 +1362,61 @@ function renderChatErrorHtml(errText) {
   );
 }
 
+function scrollFaz7HelpToMotor(mode) {
+  const norm = String(mode || currentMode || "genel").trim().toLowerCase();
+  const map = { okuma: "mimar" };
+  const target = map[norm] || norm;
+  const node =
+    document.getElementById(`faz7-help-motor-${target}`) ||
+    document.querySelector(`[data-motor="${target}"]`);
+  if (!node) return;
+  node.classList.add("faz7-help-motor-active");
+  const body = el.faz7HelpOverlay?.querySelector(".faz7-help-body");
+  if (body) {
+    const top = node.offsetTop - 12;
+    body.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+  }
+  window.setTimeout(() => node.classList.remove("faz7-help-motor-active"), 2400);
+}
+
+function initFazZUx() {
+  const lsKeyArchive = "ruzgar_archive_fold_open";
+  const lsKeyComposer = "ruzgar_composer_advanced_open";
+  const archiveFold = document.getElementById("ana-motor-archive-fold");
+  if (archiveFold) {
+    const saved = localStorage.getItem(lsKeyArchive);
+    const defaultOpen = saved === "1";
+    archiveFold.open = defaultOpen;
+    archiveFold.addEventListener("toggle", () => {
+      localStorage.setItem(lsKeyArchive, archiveFold.open ? "1" : "0");
+      const hint = document.getElementById("ana-motor-archive-summary");
+      if (hint && !archiveFold.open) {
+        const n = document.getElementById("ana-motor-archive-select")?.options?.length || 0;
+        hint.textContent =
+          n > 1 ? `${n - 1} arşiv oturumu — genişlet` : "Kalıcı arşiv oturumları — genişlet";
+      }
+    });
+  }
+  const composerFold = document.getElementById("composer-advanced-fold");
+  if (composerFold) {
+    const savedC = localStorage.getItem(lsKeyComposer);
+    if (savedC === "1") composerFold.open = true;
+    composerFold.addEventListener("toggle", () => {
+      localStorage.setItem(lsKeyComposer, composerFold.open ? "1" : "0");
+    });
+  }
+  const chatSimple =
+    localStorage.getItem("ruzgar_chat_simple") !== "0" &&
+    (lastHealthSnapshot?.ana_motor?.chat_simple !== false);
+  document.body.classList.toggle("faz-z-chat-simple", !!chatSimple);
+}
+
 function openFaz7Help() {
   if (!el.faz7HelpOverlay) return;
   el.faz7HelpOverlay.hidden = false;
   el.faz7HelpOverlay.removeAttribute("aria-hidden");
   el.faz7HelpClose?.focus();
+  window.requestAnimationFrame(() => scrollFaz7HelpToMotor(currentMode));
 }
 
 function closeFaz7Help() {
@@ -1665,6 +1715,7 @@ function wireFaz7PrefsUi() {
 
 function wireFaz7Cila() {
   wireFaz7PrefsUi();
+  initFazZUx();
   if (el.faz7HelpBtn) el.faz7HelpBtn.addEventListener("click", () => openFaz7Help());
   if (el.faz7HelpClose) el.faz7HelpClose.addEventListener("click", () => closeFaz7Help());
   el.faz7HelpOverlay?.querySelectorAll("[data-faz7-close]").forEach((node) => {
@@ -10540,6 +10591,7 @@ async function checkApi() {
         showRuzgarConnectionActiveBanner();
       }
       lastHealthSnapshot = j;
+      initFazZUx();
       updateFaz7HealthStrip(j);
       const badge = document.getElementById("ana-motor-phase-badge");
       const promise = document.getElementById("ana-motor-promise");
@@ -14722,7 +14774,7 @@ if (window.ruzgarApi?.onMenu) {
 wireNavToolbar();
 wireFaz7Cila();
 wireChatAutoScroll();
-document.body.classList.add("faz7-complete", "faz8-complete");
+document.body.classList.add("faz7-complete", "faz8-complete", "faz-z-complete");
 void refreshUiManifest().finally(() =>
   renderMotorChatFromSession(activeMotorChatMode()),
 );

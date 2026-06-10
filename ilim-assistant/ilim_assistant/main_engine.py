@@ -37,6 +37,7 @@ STATUS_SKIP_RETRIEVAL = "Kaynak taraması atlandı — doğrudan yanıt…"
 STATUS_BILIM_DERIN = "Bilim/tarih derin mod — külliyat ve arşiv derinlemesine taranıyor…"
 STATUS_KAYNAK_MATRIS = "Kaynak matrisi — TDK / tarih / Nebula önceliği uygulanıyor…"
 STATUS_UPLOAD_CONTEXT = "Yüklenen dosya bağlamı taranıyor…"
+STATUS_MULTIHOP = "Multi-hop RAG — ikinci tur genişletilmiş sorgu…"
 
 
 def _bilim_gemini_index_first_enabled() -> bool:
@@ -160,6 +161,10 @@ def _yield_index_only(
     yield {"kind": "status", "phase": "full_index", "text": status_text}
     k = max(1, min(rag_top_k, 12))
     hits = rag_search(msg, top_k=k)
+    hop_hits, hop_meta = _apply_multihop_if_needed(msg, hits)
+    if hop_meta.get("applied"):
+        yield {"kind": "status", "phase": "multihop", "text": STATUS_MULTIHOP}
+        hits = hop_hits
     if upload_ids or session_id:
         yield {"kind": "status", "phase": "upload_context", "text": STATUS_UPLOAD_CONTEXT}
         hits = _apply_upload_context(hits, msg, upload_ids, session_id=session_id)
@@ -186,6 +191,20 @@ def _encyclopedic_fast_k() -> tuple[int, int]:
     except ValueError:
         k_ix = 3
     return k_ar, k_ix
+
+
+def _apply_multihop_if_needed(
+    msg: str,
+    hits: list[tuple[str, str, float]],
+    *,
+    primary: str = "",
+) -> tuple[list[tuple[str, str, float]], dict[str, Any]]:
+    try:
+        from ilim_assistant.ana_motor_multihop import apply_multihop_rag
+
+        return apply_multihop_rag(msg, hits, primary=primary)
+    except Exception:
+        return hits, {}
 
 
 def _merge_hits_dedupe(
@@ -280,6 +299,11 @@ def _yield_encyclopedic_fast_merge(
         hits = _merge_hits_dedupe(ar_hits, ix_hits, tarih_hits, nebula_hits)
         cap = max(k_ar + k_ix, 4)
         hits = hits[:cap]
+
+    hop_hits, hop_meta = _apply_multihop_if_needed(msg, hits, primary=primary)
+    if hop_meta.get("applied"):
+        yield {"kind": "status", "phase": "multihop", "text": STATUS_MULTIHOP}
+        hits = hop_hits[: max(k_ar + k_ix + int(hop_meta.get("added_hits") or 0), 4)]
 
     if upload_ids or session_id:
         yield {"kind": "status", "phase": "upload_context", "text": STATUS_UPLOAD_CONTEXT}
