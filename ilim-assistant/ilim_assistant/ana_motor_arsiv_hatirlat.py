@@ -119,10 +119,28 @@ def collect_archive_ttl_reminders(*, limit: int = 20) -> dict[str, Any]:
         trimmed = enrich_reminder_actions(trimmed)
     except Exception:
         pass
-    return {
+    payload: dict[str, Any] = {
         "ok": True,
         "reminders": trimmed,
         "count": len(trimmed),
         "upload_remind_sec": remind_before,
         "archive_age_days": age_days_limit,
     }
+    try:
+        from ilim_assistant.ana_motor_hatirlat_bildirim import (
+            build_desktop_notifications,
+            desktop_notify_enabled,
+            email_notify_enabled,
+            maybe_send_email_reminders,
+        )
+
+        payload["desktop_notifications"] = build_desktop_notifications(trimmed)
+        payload["desktop_notify_enabled"] = desktop_notify_enabled()
+        payload["email_notify_enabled"] = email_notify_enabled()
+        if email_notify_enabled() and any(r.get("severity") == "warn" for r in trimmed):
+            payload["email_status"] = maybe_send_email_reminders(
+                [r for r in trimmed if r.get("severity") == "warn"]
+            )
+    except Exception:
+        pass
+    return payload

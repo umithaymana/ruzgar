@@ -104,11 +104,19 @@
 | L2 | Özet kartından Nebula apply | `ana_motor_paket_ozet.py` | `POST /api/ana-motor/paket-ozet/nebula-apply` |
 | L3 | Oturum zaman çizelgesi | `ana_motor_oturum_timeline.py` | `GET /api/ana-motor/sessions/timeline` |
 
-## Sıradaki (Faz M — öneri)
+## Faz M — uygulandı (2026-06-10)
 
-- Timeline'dan tek tık restore/merge
-- Hatırlatıcı e-posta/masaüstü bildirimi
-- Paket geçmişi CSV dışa aktarım
+| # | Görev | Dosya | Durum |
+|---|--------|-------|--------|
+| M1 | Timeline tek tık restore/merge/paket | `ana_motor_timeline_actions.py` | `POST /api/ana-motor/timeline/apply` |
+| M2 | Hatırlatıcı masaüstü/e-posta bildirimi | `ana_motor_hatirlat_bildirim.py` | `desktop_notifications` + opsiyonel SMTP |
+| M3 | Paket geçmişi CSV | `ana_motor_paket_csv.py` | `GET /api/ana-motor/paket-history/export` |
+
+## Sıradaki (Faz N — öneri)
+
+- CSV'den toplu arşiv geri yükleme
+- Bildirim tercih paneli (UI)
+- Paket geçmişi grafik özeti
 
 ## Ortam (özet)
 

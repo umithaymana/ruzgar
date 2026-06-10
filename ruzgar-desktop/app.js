@@ -93,6 +93,8 @@ let anaMotorNebulaApplyPoll = null;
 let anaMotorPaketAutoPoll = null;
 let anaMotorLastPaketOzetCard = null;
 let anaMotorLastReminders = [];
+let anaMotorRemindNotifyPoll = null;
+const anaMotorNotifiedHintKeys = new Set();
 console.info("[RÜZGAR Connection Bridge] API kök:", API);
 const RUZGAR_CHAT_FULL_TIMEOUT_MS = 180000;
 /** Kısa selam / nasılsın — Ollama yavaşken 12 sn yetmiyordu */
@@ -11242,6 +11244,92 @@ async function runReminderPaketSihirbaz(reminder) {
   }
 }
 
+function showAnaMotorDesktopNotifications(notifications) {
+  const rows = Array.isArray(notifications) ? notifications : [];
+  for (const n of rows) {
+    const key = `${n.kind || ""}:${n.body || ""}`;
+    if (anaMotorNotifiedHintKeys.has(key)) continue;
+    anaMotorNotifiedHintKeys.add(key);
+    if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+      try {
+        new Notification(n.title || "Rüzgar", { body: n.body || "" });
+      } catch (_) {
+        flashRuzgarDurum((n.body || "").slice(0, 180));
+      }
+    } else if (n.severity === "warn") {
+      flashRuzgarDurum((n.body || "").slice(0, 180));
+    }
+  }
+}
+
+function startAnaMotorReminderNotifyPoll() {
+  if (anaMotorRemindNotifyPoll != null) return;
+  if (typeof Notification !== "undefined" && Notification.permission === "default") {
+    void Notification.requestPermission().catch(() => {});
+  }
+  anaMotorRemindNotifyPoll = window.setInterval(() => {
+    void refreshAnaMotorArchiveReminders();
+  }, 120000);
+}
+
+async function applyTimelineAction(ev, action) {
+  const sid = (ev && ev.session_id) || "";
+  if (!sid || !action || !action.id) return;
+  try {
+    const res = await fetch(`${API}/api/ana-motor/timeline/apply`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: action.id,
+        session_id: sid,
+        merge_with_session_id: action.merge_with_session_id || undefined,
+        topic: ev.label || "",
+      }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) {
+      setStatus(j.detail || j.error || "Timeline aksiyonu başarısız", "Rüzgar");
+      return;
+    }
+    if (j.session_id) anaMotorUploadSessionId = j.session_id;
+    if (Array.isArray(j.upload_ids)) {
+      anaMotorUploadQueue.length = 0;
+      for (const uid of j.upload_ids) {
+        anaMotorUploadQueue.push({ id: uid, name: String(uid).slice(0, 8) });
+      }
+    }
+    updateAnaMotorSessionCard();
+    if (j.summary_card) renderAnaMotorPaketOzetCard(j.summary_card);
+    if (j.nebula_card) renderAnaMotorNebulaOneriCard(j.nebula_card);
+    setStatus(j.hint || "Timeline aksiyonu tamam.", "Rüzgar");
+    flashRuzgarDurum(`Timeline — ${action.label || action.id}`);
+    void refreshAnaMotorArchiveList();
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+  }
+}
+
+async function downloadAnaMotorPaketCsv() {
+  try {
+    const res = await fetch(`${API}/api/ana-motor/paket-history/export?limit=200`);
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      setStatus(j.detail || "CSV indirilemedi", "Rüzgar");
+      return;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "ruzgar_ana_motor_paket_gecmisi.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+    flashRuzgarDurum("Paket geçmişi CSV indirildi");
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+  }
+}
+
 async function refreshAnaMotorArchiveReminders() {
   const remEl = document.getElementById("ana-motor-archive-reminders");
   if (!remEl) return;
@@ -11250,6 +11338,9 @@ async function refreshAnaMotorArchiveReminders() {
     const j = await res.json().catch(() => ({}));
     const rows = Array.isArray(j.reminders) ? j.reminders : [];
     anaMotorLastReminders = rows;
+    if (j.desktop_notifications && j.desktop_notifications.length) {
+      showAnaMotorDesktopNotifications(j.desktop_notifications);
+    }
     remEl.innerHTML = "";
     if (!rows.length) {
       remEl.hidden = true;
@@ -11292,7 +11383,24 @@ async function refreshAnaMotorSessionTimeline() {
     listEl.hidden = false;
     for (const ev of rows) {
       const li = document.createElement("li");
-      li.textContent = `${ev.ts_label || ""} — ${ev.label || ev.type || "olay"}`;
+      li.className = "ana-motor-timeline-item";
+      const txt = document.createElement("span");
+      txt.textContent = `${ev.ts_label || ""} — ${ev.label || ev.type || "olay"}`;
+      li.appendChild(txt);
+      const actions = Array.isArray(ev.actions) ? ev.actions : [];
+      if (actions.length) {
+        const actWrap = document.createElement("span");
+        actWrap.className = "ana-motor-timeline-actions";
+        for (const act of actions) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "btn-secondary btn-compact";
+          btn.textContent = act.label || act.id || "?";
+          btn.addEventListener("click", () => void applyTimelineAction(ev, act));
+          actWrap.appendChild(btn);
+        }
+        li.appendChild(actWrap);
+      }
       listEl.appendChild(li);
     }
   } catch (_) {
@@ -11449,7 +11557,13 @@ async function mergeAnaMotorArchiveSessions() {
     ozNbBtn.dataset.wired = "1";
     ozNbBtn.addEventListener("click", () => void applyNebulaFromPaketOzet());
   }
+  const csvBtn = document.getElementById("btn-ana-paket-csv");
+  if (csvBtn && !csvBtn.dataset.wired) {
+    csvBtn.dataset.wired = "1";
+    csvBtn.addEventListener("click", () => void downloadAnaMotorPaketCsv());
+  }
   void refreshAnaMotorArchiveList();
+  startAnaMotorReminderNotifyPoll();
 })();
 
 /** Dinamit — görsel sürükle-bırak + yapıştır + hatırlatıcı poll (Ümit & Gökçenur) */

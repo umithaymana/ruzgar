@@ -1121,6 +1121,68 @@ def run_offline() -> int:
     else:
         _ok(f"timeline events={tl.get('count')}")
 
+    print("\n=== Faz M — timeline aksiyon / bildirim / CSV ===")
+    from ilim_assistant.ana_motor_hatirlat_bildirim import (
+        build_desktop_notifications,
+        desktop_notify_enabled,
+        email_notify_enabled,
+    )
+    from ilim_assistant.ana_motor_paket_csv import (
+        export_paket_history_csv,
+        paket_csv_export_enabled,
+    )
+    from ilim_assistant.ana_motor_timeline_actions import (
+        attach_timeline_actions,
+        run_timeline_action,
+        timeline_actions_enabled,
+    )
+
+    if not timeline_actions_enabled():
+        _fail("timeline_actions", "kapali")
+        fails += 1
+    else:
+        _ok("timeline aksiyon acik")
+    with_actions = attach_timeline_actions(tl.get("events") or [])
+    if with_actions and not any(e.get("actions") for e in with_actions):
+        _fail("timeline_action_fields", "aksiyon yok")
+        fails += 1
+    else:
+        _ok("timeline aksiyon alanlari")
+    ta = run_timeline_action("restore", sid)
+    if not ta.get("ok"):
+        _fail("timeline_restore", str(ta)[:100])
+        fails += 1
+    else:
+        _ok("timeline restore")
+
+    if not desktop_notify_enabled():
+        _fail("remind_desktop", "kapali")
+        fails += 1
+    else:
+        _ok("masaustu bildirim acik")
+    dn = build_desktop_notifications(rem.get("reminders") or [])
+    if not isinstance(dn, list):
+        _fail("desktop_notifications", type(dn).__name__)
+        fails += 1
+    else:
+        _ok(f"desktop notify list={len(dn)}")
+    if email_notify_enabled():
+        _ok("email bildirim env acik")
+    else:
+        _ok("email bildirim varsayilan kapali")
+
+    if not paket_csv_export_enabled():
+        _fail("paket_csv", "kapali")
+        fails += 1
+    else:
+        _ok("paket CSV export acik")
+    csv_out = export_paket_history_csv(limit=50)
+    if not csv_out.get("ok") or not csv_out.get("csv"):
+        _fail("paket_csv_run", str(csv_out)[:80])
+        fails += 1
+    else:
+        _ok(f"paket CSV rows={csv_out.get('row_count')}")
+
     print("\n=== Faz D — bilim derin / denge70 / otonom debug ===")
     from ilim_assistant.ana_motor_bilim_derin import (
         apply_bilim_derin_rag_top_k,
@@ -1509,6 +1571,21 @@ def run_live(base: str) -> int:
         fails += 1
     else:
         _ok("Faz L3 session timeline acik")
+    if not am.get("timeline_actions"):
+        _fail("faz_m1 timeline_act", "kapali")
+        fails += 1
+    else:
+        _ok("Faz M1 timeline actions acik")
+    if not am.get("remind_desktop"):
+        _fail("faz_m2 desktop", "kapali")
+        fails += 1
+    else:
+        _ok("Faz M2 remind desktop acik")
+    if not am.get("paket_csv_export"):
+        _fail("faz_m3 csv", "kapali")
+        fails += 1
+    else:
+        _ok("Faz M3 paket CSV acik")
 
     print("\n=== Canli — upload + matris SLO ===")
     chat_url = base.rstrip("/") + "/api/chat/full"

@@ -1388,6 +1388,14 @@ def health():
             not in ("0", "false", "no"),
             "session_timeline": os.environ.get("RUZGAR_ANA_SESSION_TIMELINE", "1").strip().lower()
             not in ("0", "false", "no"),
+            "timeline_actions": os.environ.get("RUZGAR_ANA_TIMELINE_ACTIONS", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "remind_desktop": os.environ.get("RUZGAR_ANA_REMIND_DESKTOP", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "remind_email": os.environ.get("RUZGAR_ANA_REMIND_EMAIL", "0").strip().lower()
+            in ("1", "true", "yes"),
+            "paket_csv_export": os.environ.get("RUZGAR_ANA_PAKET_CSV_EXPORT", "1").strip().lower()
+            not in ("0", "false", "no"),
         },
         "super_brain": _sb,
         "connection": _connection_ui_block(super_brain=_sb),
@@ -2830,10 +2838,77 @@ async def api_ana_motor_reminder_paket(body: ReminderPaketBody) -> dict[str, Any
 
 @app.get("/api/ana-motor/sessions/timeline")
 def api_ana_motor_sessions_timeline(limit: int = 20) -> dict[str, Any]:
-    """Faz L3 — oturum geçmişi zaman çizelgesi."""
+    """Faz L3/M1 — oturum geçmişi zaman çizelgesi (+ aksiyonlar)."""
     from ilim_assistant.ana_motor_oturum_timeline import build_session_timeline
 
     return build_session_timeline(limit=max(1, min(limit, 40)))
+
+
+class TimelineActionBody(BaseModel):
+    action: str
+    session_id: str
+    merge_with_session_id: str | None = None
+    topic: str = ""
+
+
+@app.post("/api/ana-motor/timeline/apply")
+async def api_ana_motor_timeline_apply(body: TimelineActionBody) -> dict[str, Any]:
+    """Faz M1 — timeline'dan restore / merge / paket."""
+    from ilim_assistant.ana_motor_timeline_actions import (
+        run_timeline_action,
+        timeline_actions_enabled,
+    )
+
+    if not timeline_actions_enabled():
+        raise HTTPException(status_code=403, detail="Timeline aksiyonları kapalı.")
+    result = await run_in_threadpool(
+        run_timeline_action,
+        (body.action or "").strip(),
+        (body.session_id or "").strip(),
+        merge_with_session_id=body.merge_with_session_id,
+        topic=(body.topic or "").strip(),
+    )
+    if not result.get("ok"):
+        raise HTTPException(
+            status_code=400,
+            detail=str(result.get("error") or "Timeline aksiyonu başarısız."),
+        )
+    if result.get("nebula_card") is None:
+        try:
+            from ilim_assistant.ana_motor_nebula_oneri import build_session_nebula_card
+
+            nb = build_session_nebula_card(
+                session_id=result.get("session_id"),
+                upload_ids=list(result.get("upload_ids") or []),
+            )
+            if nb:
+                result["nebula_card"] = nb
+        except Exception:
+            pass
+    return result
+
+
+@app.get("/api/ana-motor/paket-history/export")
+def api_ana_motor_paket_history_export(limit: int = 200):
+    """Faz M3 — paket geçmişi CSV."""
+    from fastapi.responses import PlainTextResponse
+
+    from ilim_assistant.ana_motor_paket_csv import export_paket_history_csv, paket_csv_export_enabled
+
+    if not paket_csv_export_enabled():
+        raise HTTPException(status_code=403, detail="Paket CSV dışa aktarım kapalı.")
+    out = export_paket_history_csv(limit=max(1, min(limit, 500)))
+    if not out.get("ok"):
+        raise HTTPException(status_code=404, detail=str(out.get("error") or "CSV boş."))
+    return PlainTextResponse(
+        content=str(out.get("csv") or ""),
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="{out.get("filename") or "paket_gecmisi.csv"}"'
+            ),
+        },
+    )
 
 
 class OzetNebulaApplyBody(BaseModel):

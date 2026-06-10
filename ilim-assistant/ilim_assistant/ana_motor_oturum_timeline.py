@@ -163,4 +163,10 @@ def build_session_timeline(*, limit: int = 24) -> dict[str, Any]:
 
     events.sort(key=lambda e: float(e.get("ts") or 0), reverse=True)
     trimmed = events[: max(1, limit)]
+    try:
+        from ilim_assistant.ana_motor_timeline_actions import attach_timeline_actions
+
+        trimmed = attach_timeline_actions(trimmed)
+    except Exception:
+        pass
     return {"ok": True, "events": trimmed, "count": len(trimmed)}
