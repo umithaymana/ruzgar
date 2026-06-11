@@ -403,10 +403,16 @@ def translation_leaked_source_language(output: str, tgt_lang: str) -> bool:
     return False
 
 
-def _llm_translate(system: str, user: str, *, max_tokens: int = 4000) -> str:
+def _llm_translate(
+    system: str,
+    user: str,
+    *,
+    max_tokens: int = 4000,
+    cloud_first: bool = False,
+) -> str:
     from ilim_assistant.motorlar.tercume_llm import translate_completion
 
-    res = translate_completion(system, user, max_tokens=max_tokens)
+    res = translate_completion(system, user, max_tokens=max_tokens, cloud_first=cloud_first)
     if res.get("ok"):
         return str(res.get("text") or "").strip()
     code = str(res.get("error_code") or "translate_failed")
@@ -450,13 +456,17 @@ def _translate_unit(
     line_note: str = "",
     read_level: str = "akademik",
     system_level: str | None = None,
+    cloud_first: bool = False,
 ) -> str:
     level = resolve_system_level(system_level=system_level, read_level=read_level)
-    context_block, _ctx = _build_faz4_context(
-        unit,
-        source_file=source_file,
-        tgt_lang=tgt_lang,
-    )
+    if cloud_first and not source_file:
+        context_block, _ctx = "", {}
+    else:
+        context_block, _ctx = _build_faz4_context(
+            unit,
+            source_file=source_file,
+            tgt_lang=tgt_lang,
+        )
     system = build_translation_system_prompt(
         tgt_lang,
         strict=True,
@@ -473,7 +483,7 @@ def _translate_unit(
     )
     if line_note:
         user = f"{line_note}\n\n{user}"
-    out = _llm_translate(system, user)
+    out = _llm_translate(system, user, cloud_first=cloud_first)
     if translation_leaked_source_language(out, tgt_lang):
         retry_sys = (
             build_translation_system_prompt(
@@ -489,7 +499,7 @@ def _translate_unit(
             f"Hedef dil: {_LANG_LABEL.get(tgt_lang, tgt_lang)}\n"
             f"Yalnızca hedef dilde, eksiksiz çevir:\n\n{unit}"
         )
-        out2 = _llm_translate(retry_sys, retry_user)
+        out2 = _llm_translate(retry_sys, retry_user, cloud_first=cloud_first)
         if out2:
             out = out2
     return out
@@ -504,6 +514,7 @@ def translate_chunk(
     page_index: int | None = None,
     read_level: str = "akademik",
     system_level: str | None = None,
+    cloud_first: bool = False,
 ) -> dict[str, Any]:
     level = resolve_system_level(system_level=system_level, read_level=read_level)
     chunk = (text or "").strip()
@@ -517,11 +528,12 @@ def translate_chunk(
     _ctx_meta: dict[str, Any] = {}
     try:
         if len(units) == 1:
-            _pre_ctx, _ctx_meta = _build_faz4_context(
-                units[0],
-                source_file=source_file,
-                tgt_lang=tgt_lang,
-            )
+            if not (cloud_first and not source_file):
+                _pre_ctx, _ctx_meta = _build_faz4_context(
+                    units[0],
+                    source_file=source_file,
+                    tgt_lang=tgt_lang,
+                )
             out = _translate_unit(
                 units[0],
                 src_lang=src_lang,
@@ -530,6 +542,7 @@ def translate_chunk(
                 page_index=page_index,
                 read_level=level,
                 system_level=level,
+                cloud_first=cloud_first,
             )
             mode = "block"
         else:

@@ -273,6 +273,24 @@ def _score_categories(msg: str, mode_norm: str, motor_flags: dict[str, bool]) ->
     ):
         s["hafiza"] += 2.5
 
+    if any(
+        x in blob
+        for x in (
+            "cevir",
+            "çevir",
+            "tercume",
+            "tercüme",
+            "translate",
+            "ingilizceye",
+            "turkceye",
+            "türkçeye",
+            "arapcaya",
+            "arapçaya",
+        )
+    ):
+        s["islem"] += 4.0
+        s["bilgi"] = max(0.0, s["bilgi"] - 2.0)
+
     if re.search(r"\.(py|js|ts|html|css|json|md|txt|pdf)\b", low) or re.search(
         r"[a-z]:\\|/[\w.-]+/", raw
     ):
@@ -503,6 +521,24 @@ def plan_question(
     motor_flags: dict[str, bool] | None = None,
 ) -> QuestionPlan:
     flags = motor_flags or {}
+    try:
+        from ilim_assistant.ana_motor_tercume_yurut import is_instant_translate_message
+
+        if is_instant_translate_message(message):
+            return QuestionPlan(
+                primary="islem",
+                secondary=[],
+                use_ilim_rag=False,
+                prefer_web=False,
+                prefer_archive=False,
+                ambiguous=False,
+                clarification=None,
+                web_query="",
+                rag_query="",
+                status_text="Soru analizi: çeviri — sohbet içi backend…",
+            )
+    except Exception:
+        pass
     scores = _score_categories(message, mode_norm, flags)
     primary, secondary = _pick_primary_secondary(scores)
     top = scores[primary]
@@ -674,10 +710,112 @@ def rewrite_web_search_query(message: str, primary: str, mode_norm: str) -> str:
     return base.strip()
 
 
+def _info_query_blocks_casual(message: str) -> bool:
+    """Selam + bilgi sorusu (TDK, anlamı, nedir…) — gündelik/sohbet sayılmasın."""
+    raw = (message or "").strip()
+    if not raw:
+        return False
+    if _explicit_research_intent(raw):
+        return True
+    blob = _norm_ascii(raw.lower()) + " " + raw.lower()
+    markers = (
+        "tdk",
+        "anlami",
+        "anlamı",
+        "kelime",
+        "kelimesi",
+        "sozluk",
+        "sözlük",
+        "sozlukte",
+        "sözlükte",
+        "ingilizceye",
+        "ingilizceye çevir",
+        "cevir:",
+        "çevir:",
+    )
+    return any(m in blob for m in markers)
+
+
+def looks_like_past_conversation_query(message: str) -> bool:
+    """«Dün ne konuştuk» — oturumlar arası jsonl geçmişi."""
+    raw = (message or "").strip()
+    if len(raw) < 10:
+        return False
+    blob = _norm_ascii(raw.lower()) + " " + raw.lower()
+    cues = (
+        "dun ",
+        "dün ",
+        "gecen ",
+        "geçen ",
+        "daha once",
+        "daha önce",
+        "konusmustuk",
+        "konuşmuştuk",
+        "konusmistik",
+        "konuşmuştık",
+        "ne konus",
+        "ne konuş",
+        "hangi konulari",
+        "hangi konuları",
+        "hatirliyor musun",
+        "hatırlıyor musun",
+    )
+    return any(c in blob for c in cues)
+
+
+def looks_like_educational_code_question(message: str) -> bool:
+    """«Python'da liste nasıl ters çevrilir» — atölye delege etme, genel LLM cevaplasın."""
+    raw = (message or "").strip()
+    if not raw or len(raw) > 320:
+        return False
+    low = _norm_ascii(raw.lower())
+    lang = ("python", "javascript", "typescript", "java", "sql", "html", "css")
+    if not any(x in low for x in lang):
+        return False
+    edu = (
+        "nedir",
+        "nasil",
+        "nasıl",
+        "ornek",
+        "örnek",
+        "acikla",
+        "açıkla",
+        "anlat",
+        "farki",
+        "farkı",
+        "ters cevr",
+        "listeyi",
+        "liste ",
+    )
+    if not any(x in low for x in edu):
+        return False
+    if any(
+        x in low
+        for x in (
+            "@@write",
+            "@@read",
+            "projects/",
+            "traceback",
+            "pytest",
+            "main.py",
+            "app.py",
+            "dosyas",
+            "refactor",
+            "patch",
+            "gorev:",
+            "görev:",
+        )
+    ):
+        return False
+    return True
+
+
 def looks_like_casual_social_chat(message: str) -> bool:
     """Selam, sohbet daveti, kısa muhabbet — ağır RAG / dev hafıza taraması yok."""
     raw = (message or "").strip().lower()
     if not raw or len(raw) > 140:
+        return False
+    if _info_query_blocks_casual(message):
         return False
     blob = _norm_ascii(raw) + " " + raw
     cues = (
@@ -903,6 +1041,8 @@ def maybe_gundelik_instant_reply(
             "iyi geceler",
         )
     ):
+        if _info_query_blocks_casual(message):
+            return None
         if re.search(r"\b(?:ruzgar|rüzgar)\b", blob) and len((message or "").split()) >= 2:
             try:
                 from ilim_assistant.ruzgar_umed_kurallari import SELAM_RUZGAR

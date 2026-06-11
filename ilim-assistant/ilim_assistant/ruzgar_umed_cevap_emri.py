@@ -29,7 +29,7 @@ EMRI_VERSION = "umed-cevap-emri-v2-2026-05-27"
 EMRI_FROZEN = True
 
 _DEFAULT_BUDGET_SEC = 15.0
-_ILIM_BUDGET_SEC = 22.0
+_ILIM_BUDGET_SEC = 38.0
 
 _turn_deadline: contextvars.ContextVar[float | None] = contextvars.ContextVar(
     "umed_turn_deadline", default=None
@@ -82,18 +82,49 @@ def is_ilim_heavy_question(message: str) -> bool:
         "tasavvuf",
         "felsefe",
         "bilim",
+        "ilim",
+        "medeniyet",
+        "gelene",
+        "geleneği",
+        "gelenegi",
+        "lale devri",
+        "hakkında",
+        "hakkinda",
         "açıkla",
         "acikla",
         "anlat",
+        "söylersin",
+        "soylersin",
     )
     return any(m in low for m in markers)
 
 
-def turn_budget_sec(message: str = "", *, mode_norm: str = "genel") -> float:
+def _plan_primary(question_plan: Any | None) -> str:
+    if question_plan is None:
+        return ""
+    if hasattr(question_plan, "primary"):
+        return str(getattr(question_plan, "primary", "") or "").strip().lower()
+    if isinstance(question_plan, dict):
+        return str(question_plan.get("primary") or "").strip().lower()
+    return ""
+
+
+def turn_budget_sec(
+    message: str = "",
+    *,
+    mode_norm: str = "genel",
+    question_plan: Any | None = None,
+) -> float:
+    primary = _plan_primary(question_plan)
+    if primary in ("bilgi", "bilim", "dilbilgisi"):
+        try:
+            return float(os.environ.get("RUZGAR_UMED_ILIM_BUDGET_SEC", str(_ILIM_BUDGET_SEC)))
+        except ValueError:
+            return _ILIM_BUDGET_SEC
     try:
         from ilim_assistant.ruzgar_dogal_sohbet_faz91 import turn_budget_for_message
 
-        ext = turn_budget_for_message(message, mode_norm)
+        ext = turn_budget_for_message(message, mode_norm, question_plan)
         if ext is not None:
             return ext
     except Exception:
@@ -117,8 +148,13 @@ def get_turn_deadline() -> float | None:
     return _turn_deadline.get()
 
 
-def begin_turn_budget(message: str, *, mode_norm: str = "genel") -> float:
-    budget = turn_budget_sec(message, mode_norm=mode_norm)
+def begin_turn_budget(
+    message: str,
+    *,
+    mode_norm: str = "genel",
+    question_plan: Any | None = None,
+) -> float:
+    budget = turn_budget_sec(message, mode_norm=mode_norm, question_plan=question_plan)
     deadline = time.monotonic() + budget
     set_turn_deadline(deadline)
     return budget

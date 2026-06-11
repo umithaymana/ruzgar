@@ -30,6 +30,20 @@ def should_skip_stream_prefetch(
     except Exception:
         pass
     try:
+        from ilim_assistant.ana_motor_tercume_yurut import is_instant_translate_message
+
+        if is_instant_translate_message(msg):
+            return True
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ana_motor_fast import should_bilgi_cloud_fast
+
+        if should_bilgi_cloud_fast(msg, mode_norm, question_plan):
+            return True
+    except Exception:
+        pass
+    try:
         from ilim_assistant.ana_motor_plan import (
             is_casual_conversation_turn,
             looks_like_fast_llm_fact_question,

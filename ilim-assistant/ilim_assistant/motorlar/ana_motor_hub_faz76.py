@@ -284,6 +284,22 @@ def resolve_hub_target(
     except Exception:
         pass
 
+    if flags.get("tercume"):
+        try:
+            from ilim_assistant.motorlar.tercume_faz74 import classify_tercume_intent
+            from ilim_assistant.ruzgar_motor_kernel import INTENT_DO
+
+            tint = classify_tercume_intent(msg, mode_norm="tercume")
+            if tint.get("intent") == INTENT_DO:
+                meta["candidates"].append(
+                    {"motor": "tercume", "score": 10, "reason": "translate_do"}
+                )
+                meta["winner"] = "tercume"
+                meta["reason"] = "translate_do"
+                return "tercume", meta
+        except Exception:
+            pass
+
     try:
         from ilim_assistant.motorlar.programlama_faz10 import should_delegate_to_programlama
 

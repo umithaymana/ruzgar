@@ -1185,13 +1185,20 @@ def _health_build_block() -> dict:
     import os as _os
 
     base = {
-        "rev": "2026-05-27-ruzgar-faz98-v107",
+        "rev": "2026-06-11-ruzgar-tek-ses-faz-b",
         "nebula_kitap": True,
+        "tek_ses_faz_b": True,
         "fast_paths": _os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
         "memory_first": True,
         "bilissel_analiz": True,
         "egitim_routing": "bilissel>gundelik>egitim",
     }
+    try:
+        from ilim_assistant.ruzgar_tek_ses_faz_b import tek_ses_status
+
+        base["tek_ses"] = tek_ses_status()
+    except Exception:
+        pass
     try:
         from ilim_assistant.motorlar.programlama_faz95 import prompt_cache_metrics
 
@@ -9787,6 +9794,27 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         except Exception:
             pass
 
+    if mode_norm in ("genel", "uretim", "gelisim") and not coding:
+        try:
+            from ilim_assistant.ana_motor_tercume_yurut import maybe_run_instant_translate
+
+            _tr_pre = maybe_run_instant_translate(req.message or "")
+            if _tr_pre.get("handled") and _tr_pre.get("reply"):
+                orch_tr = dict(orch)
+                orch_tr.setdefault("plan", {})["primary"] = "islem"
+                orch_tr["plan"]["label_tr"] = "Çeviri"
+                yield from _iter_instant_chat_events(
+                    str(_tr_pre["reply"]),
+                    (req.message or "").strip(),
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=orch_tr,
+                    instant_gundelik=False,
+                )
+                return
+        except Exception:
+            pass
+
     turn_plan = None
     motor_flags: dict[str, bool] = {}
     if os.environ.get("RUZGAR_ANA_MOTOR_PLAN", "1").strip().lower() not in (
@@ -9824,6 +9852,60 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                             instant_gundelik=True,
                         )
                         return
+                except Exception:
+                    pass
+                try:
+                    from ilim_assistant.ana_motor_tercume_yurut import maybe_run_instant_translate
+
+                    _tr_early = maybe_run_instant_translate(req.message or "")
+                    if _tr_early.get("handled") and _tr_early.get("reply"):
+                        yield from _iter_instant_chat_events(
+                            str(_tr_early["reply"]),
+                            (req.message or "").strip(),
+                            session_wake_used=req.session_wake_used,
+                            msg_for_wake=req.message,
+                            orch=orch,
+                            instant_gundelik=False,
+                        )
+                        return
+                except Exception:
+                    pass
+                try:
+                    from ilim_assistant.ana_motor_fast import (
+                        iter_bilgi_cloud_fast_reply,
+                        should_bilgi_cloud_fast,
+                    )
+
+                    if should_bilgi_cloud_fast(
+                        req.message, mode_norm, turn_plan
+                    ):
+                        yield {
+                            "type": "status",
+                            "text": "Bilgi — bulut yanıt (Groq/Gemini, indeks atlandı)…",
+                        }
+                        reply_body = ""
+                        for piece in iter_bilgi_cloud_fast_reply(
+                            req.message,
+                            req.history,
+                            mode_norm=mode_norm,
+                            question_plan=turn_plan,
+                        ):
+                            reply_body += piece
+                            yield {"type": "token", "text": piece}
+                        if (reply_body or "").strip():
+                            full_out = finalize_assistant_reply(reply_body)
+                            orch_bc = dict(orch)
+                            orch_bc["bilgi_cloud_fast"] = True
+                            yield {
+                                "type": "done",
+                                "full_reply": full_out,
+                                "user_message": (req.message or "").strip(),
+                                "new_wake_used": req.session_wake_used
+                                or message_calls_wake_name(req.message),
+                                "orchestra": orch_bc,
+                                "bilgi_cloud_fast": True,
+                            }
+                            return
                 except Exception:
                     pass
                 try:
@@ -10047,6 +10129,15 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             _skip_prefetch = False
     except Exception:
         pass
+    try:
+        from ilim_assistant.ana_motor_fast import should_bilgi_cloud_fast
+
+        if should_bilgi_cloud_fast(
+            req.message, mode_norm, turn_plan
+        ):
+            _skip_prefetch = True
+    except Exception:
+        pass
     if mode_norm == "programlama":
         yield {
             "type": "status",
@@ -10123,14 +10214,35 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         except Exception:
             pass
 
+    try:
+        from ilim_assistant.ana_motor_sohbet_gecmis import try_past_conversation_reply
+
+        _past_reply = try_past_conversation_reply(req.message or "")
+        if _past_reply:
+            yield from _iter_instant_chat_events(
+                _past_reply,
+                (req.message or "").strip(),
+                session_wake_used=req.session_wake_used,
+                msg_for_wake=req.message,
+                orch=orch,
+                instant_gundelik=True,
+            )
+            return
+    except Exception:
+        pass
+
     _casual_fast = False
     try:
         from ilim_assistant.ana_motor_casual import casual_fast_enabled
-        from ilim_assistant.ana_motor_plan import is_casual_conversation_turn
+        from ilim_assistant.ana_motor_plan import (
+            is_casual_conversation_turn,
+            looks_like_past_conversation_query,
+        )
 
         _casual_fast = (
             casual_fast_enabled()
             and not coding
+            and not looks_like_past_conversation_query(req.message or "")
             and is_casual_conversation_turn(
                 req.message, mode_norm, turn_plan, history=req.history
             )
@@ -10174,6 +10286,11 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             ):
                 reply_body += piece
                 yield {"type": "token", "text": piece}
+            if not (reply_body or "").strip():
+                from ilim_assistant.chat_core import empty_reply_fallback
+
+                reply_body = empty_reply_fallback(req.message or "")
+                yield {"type": "token", "text": reply_body}
             full_out = finalize_assistant_reply(reply_body)
             yield {
                 "type": "done",
@@ -10215,9 +10332,14 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     mode_norm=mode_norm,
                     coding_mode=coding,
                     motor_flags=_mf_budget,
+                    question_plan=turn_plan,
                 )
             except Exception:
-                begin_turn_budget(req.message or "", mode_norm=mode_norm)
+                begin_turn_budget(
+                    req.message or "",
+                    mode_norm=mode_norm,
+                    question_plan=turn_plan,
+                )
         if umed_emri_applies(mode_norm=mode_norm, coding_mode=coding) and deadline_exceeded():
             from ilim_assistant.ruzgar_egitim import (
                 maybe_egitim_learned_reply,
@@ -10793,6 +10915,30 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         except Exception:
             _noc = None
         full_out = body_fixed + footer
+        if not (full_out or "").strip():
+            try:
+                from ilim_assistant.ana_motor_fast import (
+                    iter_bilgi_cloud_fast_reply,
+                    should_bilgi_cloud_fast,
+                )
+
+                if should_bilgi_cloud_fast(msg, mode_norm, turn_plan):
+                    _fb_body = ""
+                    for piece in iter_bilgi_cloud_fast_reply(
+                        msg,
+                        req.history,
+                        mode_norm=mode_norm,
+                        question_plan=turn_plan,
+                    ):
+                        _fb_body += piece
+                    if (_fb_body or "").strip():
+                        full_out = finalize_assistant_reply(_fb_body) + footer
+            except Exception:
+                pass
+        if not (full_out or "").strip():
+            from ilim_assistant.chat_core import empty_reply_fallback
+
+            full_out = empty_reply_fallback(msg)
         done_llm: dict[str, Any] = {
             "type": "done",
             "full_reply": full_out,

@@ -120,6 +120,43 @@ def recent_chat_history(*, limit: int | None = None) -> dict[str, Any]:
     }
 
 
+def try_past_conversation_reply(message: str, *, limit: int = 8) -> str | None:
+    """«Dün ne konuştuk» — kayıtlı jsonl geçmişinden özet (LLM beklemeden)."""
+    if not chat_history_enabled():
+        return None
+    try:
+        from ilim_assistant.ana_motor_plan import looks_like_past_conversation_query
+
+        if not looks_like_past_conversation_query(message):
+            return None
+    except Exception:
+        return None
+    data = recent_chat_history(limit=limit)
+    items = list(data.get("items") or [])
+    if not items:
+        return (
+            "Ümit abi, kayıtlı önceki oturum sohbeti bulamadım — "
+            "bugünkü penceredeki konuşmalara bakabiliriz; istersen önemli bir şeyi «hatırla» ile yazdır."
+        )
+    lines = [
+        "Ümit abi, kayıtlı son sohbetlerden hatırladıklarım:",
+        "",
+    ]
+    for row in items[: min(5, len(items))]:
+        u = str(row.get("user") or "").strip()
+        a = str(row.get("assistant") or "").strip()
+        if not u:
+            continue
+        lines.append(f"· **Sen:** {u[:120]}")
+        if a:
+            lines.append(f"  **Rüzgar:** {a[:200]}")
+        lines.append("")
+    lines.append(
+        "(Bunlar diske kayıtlı son turlar; bilgisayar kapandıysa yalnızca «hatırla» ile yazdıkların kalıcıdır.)"
+    )
+    return "\n".join(lines).strip()
+
+
 def search_chat_history(
     query: str,
     *,

@@ -678,9 +678,48 @@ def should_delegate_to_programlama(
     if mode_norm not in ("genel", "gelisim", "uretim", ""):
         return False
     flags = motor_flags or {}
-    if flags.get("programlama"):
-        return True
     low = _ascii_fold(message)
+    try:
+        from ilim_assistant.ana_motor_plan import looks_like_educational_code_question
+
+        if looks_like_educational_code_question(message):
+            return False
+    except Exception:
+        pass
+    if flags.get("tercume"):
+        return False
+    if flags.get("programlama"):
+        code_cues_weak_block = (
+            "traceback",
+            "pytest",
+            "dosyasinda",
+            "dosyasında",
+            "projede",
+            "github",
+            "refactor",
+            "patch",
+            "main.py",
+            "app.py",
+            ".py ",
+            ".js ",
+            ".ts ",
+            "fastapi",
+            "uvicorn",
+            "npm test",
+            "@@write",
+            "@@read",
+            "projects/",
+            "gorev:",
+            "görev:",
+            "kod ",
+            "debug",
+            "fonksiyon yaz",
+            "class ",
+            "def ",
+        )
+        if not any(c in low for c in code_cues_weak_block):
+            return False
+        return True
     if "@@write" in low or "@@read" in low:
         return True
     code_cues = (

@@ -104,12 +104,18 @@ def strip_hafiza_robot_phrasing(text: str) -> str:
     return t.strip()
 
 
-def finalize_assistant_reply(raw: str) -> str:
-    """Mojibake onarımı, sızan talimat temizliği, sabit karşılama kırpma."""
+def finalize_assistant_reply(raw: str, *, channel: str = "") -> str:
+    """Mojibake onarımı, sızan talimat temizliği, sabit karşılama kırpma, Tek Ses (Faz B)."""
     t = repair_utf8_mojibake(raw or "")
     t = scrub_leaked_instructions(t)
     t = strip_wake_greeting_echo(t)
     t = strip_hafiza_robot_phrasing(t)
+    try:
+        from ilim_assistant.ruzgar_tek_ses_faz_b import polish_tek_ses
+
+        t = polish_tek_ses(t, channel=channel)
+    except Exception:
+        pass
     return t.strip()
 
 

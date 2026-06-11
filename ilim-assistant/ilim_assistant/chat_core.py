@@ -825,6 +825,19 @@ def _hizir_op_context_for_turn(mode_norm: str, motor_flags: dict[str, bool]) -> 
     return bool(motor_flags.get("hizir"))
 
 
+def empty_reply_fallback(message: str = "") -> str:
+    """LLM/stream boş döndüğünde kullanıcıya görünür yedek."""
+    q = (message or "").strip()
+    if len(q) > 80:
+        q = q[:77].rstrip() + "…"
+    hint = f" («{q}»)" if q else ""
+    return (
+        "Ümit abi, yanıt üretilirken kesinti oldu"
+        f"{hint} — lütfen bir kez daha yaz veya DURDUR sonrası tekrar dene. "
+        "(Ollama/Gemini bağlantısı veya süre sınırı olabilir.)"
+    )
+
+
 def prepare_turn(
     message: str,
     history: list,
@@ -978,6 +991,16 @@ def prepare_turn(
     motor_flags = motor_niyeti_heuristic(msg)
     _hub_directive = ""
     _hub_meta: dict[str, Any] = {}
+
+    if m in ("genel", "uretim", "gelisim") and not coding_mode:
+        try:
+            from ilim_assistant.ana_motor_sohbet_gecmis import try_past_conversation_reply
+
+            past_reply = try_past_conversation_reply(msg)
+            if past_reply:
+                return msg, [], "", "", "", past_reply
+        except Exception:
+            pass
 
     if m == "genel" and not coding_mode:
         try:

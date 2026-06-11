@@ -24,6 +24,75 @@ def fast_local_rag_first_enabled() -> bool:
     )
 
 
+def bilgi_cloud_fast_enabled() -> bool:
+    """Bilgi/bilim — RAG beklemeden Groq/Gemini (varsayılan açık)."""
+    return os.environ.get("RUZGAR_BILGI_CLOUD_FAST", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
+def should_bilgi_cloud_fast(
+    message: str,
+    mode_norm: str,
+    question_plan: Any | None = None,
+) -> bool:
+    if not bilgi_cloud_fast_enabled() or not fast_paths_enabled():
+        return False
+    if mode_norm not in ("genel", "uretim", "gelisim"):
+        return False
+    msg = (message or "").strip()
+    if len(msg) < 8 or len(msg) > 600:
+        return False
+    primary = ""
+    if question_plan is not None:
+        primary = str(getattr(question_plan, "primary", "") or "").strip().lower()
+    if primary not in ("bilgi", "bilim", "dilbilgisi"):
+        return False
+    try:
+        from ilim_assistant.ana_motor_plan import is_casual_conversation_turn
+
+        if is_casual_conversation_turn(msg, mode_norm, question_plan):
+            return False
+        from ilim_assistant.ana_motor_tercume_yurut import is_instant_translate_message
+
+        if is_instant_translate_message(msg):
+            return False
+    except Exception:
+        pass
+    return True
+
+
+def iter_bilgi_cloud_fast_reply(
+    message: str,
+    history: list,
+    *,
+    mode_norm: str = "genel",
+    question_plan: Any | None = None,
+) -> Iterator[str]:
+    from ilim_assistant.chat_core import pick_system, prior_messages_for_turn
+    from ilim_assistant.llm_brain import stream_ilim_cloud_reply
+
+    primary = ""
+    if question_plan is not None:
+        primary = str(getattr(question_plan, "primary", "") or "").strip().lower()
+    topic = "bilim/tarih" if primary == "bilim" else "bilgi"
+    extra = (
+        f"\n\n[TALİMAT — {topic.upper()} — BULUT HIZLI]\n"
+        "Türkçe, yapılandırılmış yanıt (2–5 madde veya kısa paragraflar). "
+        "Kaynak uydurma; emin değilsen kısaca belirt. Ümit abi'ye hitap et.\n"
+    )
+    system = pick_system(False, mode_norm) + extra
+    user = (message or "").strip()
+    prior = prior_messages_for_turn(history, mode_norm)
+    yield from stream_ilim_cloud_reply(
+        system,
+        user,
+        prior[-6:] if prior else None,
+    )
+
+
 def bilgi_gemini_first_enabled() -> bool:
     """Kota dolunca kapalı tutun: Ollama/Groq önce (RUZGAR_FAST_BILGI_GEMINI=0)."""
     return os.environ.get("RUZGAR_FAST_BILGI_GEMINI", "0").strip().lower() in (

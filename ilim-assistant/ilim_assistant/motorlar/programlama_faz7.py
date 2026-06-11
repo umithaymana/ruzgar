@@ -238,6 +238,13 @@ def detect_run_profile(
 
 def wants_file_help(message: str) -> bool:
     try:
+        from ilim_assistant.ana_motor_plan import looks_like_educational_code_question
+
+        if looks_like_educational_code_question(message):
+            return False
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_faz19 import normalize_agent_message
         from ilim_assistant.motorlar.programlama_faz14 import parse_code_agent_task
 

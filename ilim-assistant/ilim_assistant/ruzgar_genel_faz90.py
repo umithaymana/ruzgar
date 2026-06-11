@@ -44,6 +44,35 @@ def _gemini_on_cooldown() -> bool:
         return False
 
 
+def ilim_rag_cloud_first_enabled() -> bool:
+    """RAG bağlamlı bilgi/bilim — yavaş yerel 3B yerine bulut önce (varsayılan açık)."""
+    return os.environ.get("RUZGAR_ILIM_RAG_CLOUD_FIRST", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
+def build_ilim_rag_brain_chain_ids() -> list[str]:
+    """İlim/tarih/bilim turları — Gemini/Groq önce; Ollama yedek."""
+    custom = (os.environ.get("RUZGAR_ILIM_BRAIN_CHAIN") or "").strip()
+    if custom:
+        ids = [x.strip() for x in custom.split(",") if x.strip()]
+    else:
+        ids = []
+        if not _gemini_on_cooldown():
+            ids.append("gemini")
+        if "groq" not in ids:
+            ids.append("groq")
+        if not ids:
+            ids = ["groq", "gemini"]
+    if _gemini_on_cooldown():
+        ids = [x for x in ids if x != "gemini"]
+        if "groq" not in ids:
+            ids.insert(0, "groq")
+    return ids
+
+
 def build_genel_brain_chain_ids() -> list[str]:
     """Genel sohbet LLM zinciri — yerel öncelik; kota soğukken Gemini atlanır."""
     custom = (os.environ.get("RUZGAR_GENEL_BRAIN_CHAIN") or "").strip()

@@ -63,7 +63,43 @@ def translation_brain_status() -> dict[str, Any]:
     }
 
 
-def translate_completion(system: str, user: str, *, max_tokens: int = 4000) -> dict[str, Any]:
+def _cloud_translate_attempt(system: str, user: str) -> dict[str, Any] | None:
+    try:
+        from ilim_assistant.config import groq_disabled
+
+        if not groq_disabled():
+            from ilim_assistant.llm_brain import chat_completion_groq
+
+            out = chat_completion_groq(system, user)
+            if out and not out.strip().startswith("["):
+                return {"ok": True, "text": out.strip(), "provider": "groq"}
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.config import gemini_disabled
+        from ilim_assistant.gemini_quota_guard import gemini_cooldown_active
+        from ilim_assistant.llm_gemini import chat_completion_gemini, gemini_configured
+
+        if (
+            not gemini_disabled()
+            and gemini_configured()
+            and not gemini_cooldown_active()
+        ):
+            out = chat_completion_gemini(system, user)
+            if out and not out.strip().startswith("["):
+                return {"ok": True, "text": out.strip(), "provider": "gemini"}
+    except Exception:
+        pass
+    return None
+
+
+def translate_completion(
+    system: str,
+    user: str,
+    *,
+    max_tokens: int = 4000,
+    cloud_first: bool = False,
+) -> dict[str, Any]:
     """
     Çeviri LLM çağrısı.
     Dönüş: { ok, text?, error?, error_code?, hint_tr?, provider? }
@@ -91,6 +127,11 @@ def translate_completion(system: str, user: str, *, max_tokens: int = 4000) -> d
     sys_txt = (system or "").strip()
     usr_txt = (user or "").strip()
 
+    if cloud_first and not st.get("ollama_only"):
+        hit = _cloud_translate_attempt(sys_txt, usr_txt)
+        if hit:
+            return hit
+
     if st.get("ollama") or st.get("ollama_only"):
         try:
             from ilim_assistant.llm_ollama import chat_completion
@@ -108,32 +149,9 @@ def translate_completion(system: str, user: str, *, max_tokens: int = 4000) -> d
                 }
 
     if not st.get("ollama_only"):
-        try:
-            from ilim_assistant.config import groq_disabled
-
-            if not groq_disabled():
-                from ilim_assistant.llm_brain import chat_completion_groq
-
-                out = chat_completion_groq(sys_txt, usr_txt)
-                if out and not out.strip().startswith("["):
-                    return {"ok": True, "text": out.strip(), "provider": "groq"}
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.config import gemini_disabled
-            from ilim_assistant.gemini_quota_guard import gemini_cooldown_active
-            from ilim_assistant.llm_gemini import chat_completion_gemini, gemini_configured
-
-            if (
-                not gemini_disabled()
-                and gemini_configured()
-                and not gemini_cooldown_active()
-            ):
-                out = chat_completion_gemini(sys_txt, usr_txt)
-                if out and not out.strip().startswith("["):
-                    return {"ok": True, "text": out.strip(), "provider": "gemini"}
-        except Exception:
-            pass
+        hit = _cloud_translate_attempt(sys_txt, usr_txt)
+        if hit:
+            return hit
 
     return {
         "ok": False,

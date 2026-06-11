@@ -181,40 +181,28 @@ def resolve_umed_budget_sec(
     mode_norm: str = "genel",
     coding_mode: bool = False,
     motor_flags: dict[str, bool] | None = None,
+    question_plan: Any | None = None,
 ) -> float:
-    """Delege varsa kısa yönlendirme; ilimde 22sn; doğal sohbet 32sn; yoksa 15sn."""
+    """Delege → kısa yönlendirme; aksi halde ruzgar_umed_cevap_emri.turn_budget_sec."""
+    if _enabled():
+        intent = classify_turn_intent(
+            message,
+            mode_norm=mode_norm,
+            coding_mode=coding_mode,
+            motor_flags=motor_flags,
+        )
+        if intent.get("delegate_programming"):
+            return router_budget_sec()
     try:
-        from ilim_assistant.ruzgar_dogal_sohbet_faz91 import turn_budget_for_message
+        from ilim_assistant.ruzgar_umed_cevap_emri import turn_budget_sec
 
-        ext = turn_budget_for_message(message, mode_norm)
-        if ext is not None:
-            return ext
+        return turn_budget_sec(
+            message,
+            mode_norm=mode_norm,
+            question_plan=question_plan,
+        )
     except Exception:
-        pass
-    if not _enabled():
-        try:
-            from ilim_assistant.ruzgar_umed_cevap_emri import turn_budget_sec
-
-            return turn_budget_sec(message, mode_norm=mode_norm)
-        except Exception:
-            return 15.0
-    intent = classify_turn_intent(
-        message,
-        mode_norm=mode_norm,
-        coding_mode=coding_mode,
-        motor_flags=motor_flags,
-    )
-    if intent.get("delegate_programming"):
-        return router_budget_sec()
-    if intent.get("use_ilim_budget"):
-        try:
-            return float(os.environ.get("RUZGAR_UMED_ILIM_BUDGET_SEC", "22"))
-        except ValueError:
-            return 22.0
-    try:
-        return float(os.environ.get("RUZGAR_UMED_BUDGET_SEC", "15"))
-    except ValueError:
-        return 15.0
+        return 38.0
 
 
 def begin_umed_turn_budget(
@@ -223,6 +211,7 @@ def begin_umed_turn_budget(
     mode_norm: str = "genel",
     coding_mode: bool = False,
     motor_flags: dict[str, bool] | None = None,
+    question_plan: Any | None = None,
 ) -> float:
     """Ümit emri deadline — Faz 59 bütçe çözümü."""
     budget = resolve_umed_budget_sec(
@@ -230,6 +219,7 @@ def begin_umed_turn_budget(
         mode_norm=mode_norm,
         coding_mode=coding_mode,
         motor_flags=motor_flags,
+        question_plan=question_plan,
     )
     try:
         from ilim_assistant.ruzgar_umed_cevap_emri import set_turn_deadline

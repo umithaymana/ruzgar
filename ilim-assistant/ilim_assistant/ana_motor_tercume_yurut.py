@@ -22,6 +22,17 @@ def _max_chars() -> int:
         return 500
 
 
+def is_instant_translate_message(message: str) -> bool:
+    """Kısa sohbet içi çeviri — RAG/LLM turu atlanabilir."""
+    if not tercume_instant_enabled():
+        return False
+    from ilim_assistant.motorlar.tercume_faz74 import classify_tercume_intent
+    from ilim_assistant.ruzgar_motor_kernel import INTENT_DO
+
+    intent = classify_tercume_intent((message or "").strip(), mode_norm="tercume")
+    return intent.get("intent") == INTENT_DO and intent.get("reason") == "translate_text"
+
+
 def maybe_run_instant_translate(message: str) -> dict[str, Any]:
     """Kısa çeviri metnini LLM ile üret; panel açmadan sohbete döner."""
     if not tercume_instant_enabled():
@@ -34,6 +45,7 @@ def maybe_run_instant_translate(message: str) -> dict[str, Any]:
         lang_label,
         parse_language_pair,
     )
+    from ilim_assistant.ruzgar_motor_kernel import INTENT_DO
 
     ensure_kernel_registered()
     raw = (message or "").strip()
@@ -41,7 +53,7 @@ def maybe_run_instant_translate(message: str) -> dict[str, Any]:
         return {"ok": True, "handled": False, "reason": "empty"}
 
     intent = classify_tercume_intent(raw, mode_norm="tercume")
-    if intent.get("intent") != "do" or intent.get("reason") != "translate_text":
+    if intent.get("intent") != INTENT_DO or intent.get("reason") != "translate_text":
         return {"ok": True, "handled": False, "reason": "not_translate"}
 
     body = str(intent.get("text") or extract_translate_text(raw) or "").strip()
@@ -64,7 +76,7 @@ def maybe_run_instant_translate(message: str) -> dict[str, Any]:
     try:
         from ilim_assistant.motorlar.tercume_atolye import translate_chunk
 
-        tr = translate_chunk(body, src_lang=src, tgt_lang=tgt)
+        tr = translate_chunk(body, src_lang=src, tgt_lang=tgt, cloud_first=True)
     except Exception as exc:
         return {"ok": False, "handled": False, "error": str(exc)[:200]}
 
@@ -76,11 +88,7 @@ def maybe_run_instant_translate(message: str) -> dict[str, Any]:
         }
 
     translated = str(tr.get("text") or "").strip()
-    reply = (
-        f"Ümit abi, **{lang_label(src)} → {lang_label(tgt)}** çeviri:\n\n"
-        f"{translated}\n\n"
-        f"_(Sohbet içi backend — {len(body)} karakter)_"
-    )
+    reply = f"Ümit abi, **{lang_label(src)} → {lang_label(tgt)}** çeviri:\n\n{translated}"
     return {
         "ok": True,
         "handled": True,

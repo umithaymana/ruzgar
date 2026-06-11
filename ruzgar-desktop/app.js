@@ -12724,6 +12724,8 @@ function ttsPlainForSpeech(t) {
     .replace(/\*\*([^*]+)\*\*/g, "$1")
     .replace(/\*([^*]+)\*/g, "$1")
     .replace(/^#+\s*/gm, "")
+    .replace(/_\([^)]*(?:backend|sohbet\s+içi|karakter)[^)]*\)_/gi, "")
+    .replace(/\[HTTP\s+\d+\][\s\S]*/gi, "")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -13487,7 +13489,7 @@ async function streamChat(userText, streamOpts = {}) {
       if (el.voiceOut == null || el.voiceOut.checked) {
         if (currentMode === "hafiza") {
           speakTextImmediate(full);
-        } else if (!wantEdge || !ttsEdgeSpokeTurn) {
+        } else if (!wantEdge && !ttsEdgeSpokeTurn) {
           window.setTimeout(() => void speakLast(), 80);
         }
       }
@@ -13913,6 +13915,10 @@ async function sendMessageWithText(t, opts = {}) {
   const skipUser = !!opts.skipUserBubble;
   const text = (t || "").trim();
   if (!text) return;
+  if (perfBusy) {
+    flashRuzgarDurum("Önceki yanıt bitene kadar bekleyin veya DURDUR'a basın.");
+    return;
+  }
   chatStickToBottom = true;
   dismissChatWelcome();
   silenceVoiceOutputNow();

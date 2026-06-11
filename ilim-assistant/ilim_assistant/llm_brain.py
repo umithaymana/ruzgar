@@ -129,23 +129,57 @@ def _programlama_chain_ids() -> list[str]:
     return ids
 
 
-def _filter_chain_ids_for_quota(chain_ids: list[str]) -> list[str]:
-    """Kota soğukken Gemini'yi zincirden çıkar; Groq öne."""
+def _mark_cloud_rate_limit(profile_id: str, err: str = "") -> None:
+    if not _is_cloud_rate_limit_error(err):
+        return
+    try:
+        if profile_id == "gemini":
+            from ilim_assistant.gemini_quota_guard import mark_gemini_quota_hit
+
+            mark_gemini_quota_hit()
+        elif profile_id == "groq":
+            from ilim_assistant.groq_quota_guard import mark_groq_quota_hit
+
+            mark_groq_quota_hit()
+    except Exception:
+        pass
+
+
+def _filter_chain_ids_for_quota(
+    chain_ids: list[str],
+    *,
+    cloud_only: bool = False,
+) -> list[str]:
+    """Kota soğukken Gemini/Groq'u zincirden çıkar."""
+    out = list(chain_ids)
     try:
         from ilim_assistant.gemini_quota_guard import gemini_cooldown_active
 
-        if not gemini_cooldown_active():
-            return list(chain_ids)
+        if gemini_cooldown_active():
+            out = [x for x in out if x != "gemini"]
     except Exception:
-        return list(chain_ids)
-    out = [x for x in chain_ids if x != "gemini"]
+        pass
+    try:
+        from ilim_assistant.groq_quota_guard import groq_cooldown_active
+
+        if groq_cooldown_active():
+            out = [x for x in out if x != "groq"]
+    except Exception:
+        pass
     if "groq" in out:
         out = ["groq"] + [x for x in out if x != "groq"]
     elif _profile_groq() is not None:
-        out = ["groq"] + out
-    for fb in ("denge", "hizli", "kod"):
-        if fb not in out:
-            out.append(fb)
+        try:
+            from ilim_assistant.groq_quota_guard import groq_cooldown_active
+
+            if not groq_cooldown_active():
+                out = ["groq"] + out
+        except Exception:
+            out = ["groq"] + out
+    if not cloud_only:
+        for fb in ("denge", "hizli", "kod"):
+            if fb not in out:
+                out.append(fb)
     return out
 
 
@@ -315,6 +349,29 @@ def _profile_gemini() -> BrainEndpoint | None:
         api_key=gemini_api_key(),
         max_tokens=mt,
         temperature=temp,
+    )
+
+
+def _profile_groq_light() -> BrainEndpoint | None:
+    """Bilgi/bilim — düşük token (varsayılan 8B instant)."""
+    ep = _profile_groq()
+    if ep is None:
+        return None
+    model = (
+        os.environ.get("GROQ_BILGI_MODEL", "").strip()
+        or "llama-3.1-8b-instant"
+    )
+    if model == ep.model:
+        return ep
+    return BrainEndpoint(
+        profile_id=ep.profile_id,
+        label=ep.label,
+        model=model,
+        provider=ep.provider,
+        base_url=ep.base_url,
+        api_key=ep.api_key,
+        max_tokens=ep.max_tokens,
+        temperature=ep.temperature,
     )
 
 
@@ -580,14 +637,36 @@ def select_brain_chain(
         )
 
         if umed_emri_applies(mode_norm=mode_norm, coding_mode=coding_mode):
+            primary = _plan_primary(question_plan)
+            use_ilim_cloud = False
+            try:
+                from ilim_assistant.ruzgar_genel_faz90 import (
+                    build_ilim_rag_brain_chain_ids,
+                    ilim_rag_cloud_first_enabled,
+                )
+                from ilim_assistant.ruzgar_umed_cevap_emri import is_ilim_heavy_question
+
+                use_ilim_cloud = ilim_rag_cloud_first_enabled() and (
+                    primary in ("bilgi", "bilim", "dilbilgisi")
+                    or is_ilim_heavy_question(message)
+                )
+            except Exception:
+                use_ilim_cloud = False
+            if use_ilim_cloud:
+                chain_ids = build_ilim_rag_brain_chain_ids()
+            else:
+                chain_ids = brain_chain_ids_for_emri()
             chain_ids = _inject_denge70_chain(
-                brain_chain_ids_for_emri(),
+                chain_ids,
                 question_plan=question_plan,
                 message=message,
                 mode_norm=mode_norm,
                 profiles=profiles,
             )
-            chain_ids = _filter_chain_ids_for_quota(chain_ids)
+            chain_ids = _filter_chain_ids_for_quota(
+                chain_ids,
+                cloud_only=use_ilim_cloud,
+            )
             chain: list[BrainEndpoint] = []
             seen_u: set[str] = set()
             for pid in chain_ids:
@@ -799,12 +878,71 @@ def _chain_from_ids(chain_ids: list[str]) -> list[BrainEndpoint]:
     return chain
 
 
+def stream_ilim_cloud_reply(
+    system: str,
+    user: str,
+    prior_messages: list | None = None,
+    *,
+    allow_ollama_fallback: bool = True,
+) -> Iterator[str]:
+    """Bilgi/bilim — Groq (hafif) → Gemini → Ollama; ham API hatası sızmaz."""
+    try:
+        from ilim_assistant.ruzgar_genel_faz90 import build_ilim_rag_brain_chain_ids
+
+        chain_ids = _filter_chain_ids_for_quota(
+            build_ilim_rag_brain_chain_ids(),
+            cloud_only=True,
+        )
+    except Exception:
+        chain_ids = ["groq", "gemini"]
+    chain: list[BrainEndpoint] = []
+    seen_ids: set[str] = set()
+    profiles = all_profiles()
+    for pid in chain_ids:
+        if pid == "groq":
+            ep = _profile_groq_light()
+        else:
+            ep = profiles.get(pid)
+        if ep is not None and ep.profile_id not in seen_ids:
+            chain.append(ep)
+            seen_ids.add(ep.profile_id)
+    if allow_ollama_fallback:
+        for fb in ("hizli", "denge"):
+            ep = profiles.get(fb)
+            if ep is not None and ep.profile_id not in seen_ids:
+                chain.append(ep)
+                seen_ids.add(ep.profile_id)
+    for ep in chain:
+        got_content = False
+        try:
+            for piece in _stream_endpoint(ep, system, user, prior_messages):
+                if not got_content and _looks_like_error_chunk(piece):
+                    _mark_cloud_rate_limit(ep.profile_id, piece)
+                    break
+                if piece:
+                    got_content = True
+                    yield piece
+        except Exception as exc:
+            _mark_cloud_rate_limit(ep.profile_id, str(exc))
+            continue
+        if got_content:
+            return
+
+
 def _stream_endpoint(
     ep: BrainEndpoint,
     system: str,
     user: str,
     prior_messages: list | None,
 ) -> Iterator[str]:
+    if ep.profile_id == "groq":
+        try:
+            from ilim_assistant.groq_quota_guard import groq_cooldown_active
+
+            if groq_cooldown_active():
+                return
+        except Exception:
+            pass
     if ep.provider == "gemini":
         try:
             from ilim_assistant.gemini_quota_guard import gemini_cooldown_active
@@ -979,13 +1117,7 @@ def _stream_brain_chain_loop(
                     break
                 if not got_content and _looks_like_error_chunk(piece):
                     last_err = piece.strip()
-                    if _is_cloud_rate_limit_error(last_err) and ep.profile_id == "gemini":
-                        try:
-                            from ilim_assistant.gemini_quota_guard import mark_gemini_quota_hit
-
-                            mark_gemini_quota_hit()
-                        except Exception:
-                            pass
+                    _mark_cloud_rate_limit(ep.profile_id, last_err)
                     break
                 got_content = True
                 any_content = True
@@ -995,16 +1127,9 @@ def _stream_brain_chain_loop(
         except Exception as e:
             if ep.provider == "gemini":
                 last_err = format_gemini_user_error(e)
-                try:
-                    from ilim_assistant.llm_gemini import is_gemini_quota_or_rate_error
-                    from ilim_assistant.gemini_quota_guard import mark_gemini_quota_hit
-
-                    if is_gemini_quota_or_rate_error(last_err):
-                        mark_gemini_quota_hit()
-                except Exception:
-                    pass
             else:
                 last_err = format_llm_user_error(e)
+            _mark_cloud_rate_limit(ep.profile_id, last_err)
             continue
 
     if _umed and not any_content and is_real_user_question(message or user):
@@ -1017,7 +1142,7 @@ def _stream_brain_chain_loop(
             f"(denenen: {chain_hint}).\n"
         )
         return
-    if last_err and not any_content:
+    if last_err and not any_content and not _looks_like_error_chunk(last_err):
         yield last_err
         return
     if not any_content:
@@ -1071,7 +1196,11 @@ def stream_chat_with_brain(
 
         _umed = umed_emri_applies(mode_norm=mode_norm, coding_mode=coding_mode)
         if _umed:
-            begin_turn_budget(message or user, mode_norm=mode_norm)
+            begin_turn_budget(
+                message or user,
+                mode_norm=mode_norm,
+                question_plan=question_plan,
+            )
         is_real_user_question = _irq
         remaining_sec = _rem
         umed_miss_reply = _miss
@@ -1092,16 +1221,7 @@ def stream_chat_with_brain(
                     break
                 if not got_content and _looks_like_error_chunk(piece):
                     last_err = piece.strip()
-                    if _is_cloud_rate_limit_error(last_err):
-                        if ep.profile_id == "gemini":
-                            try:
-                                from ilim_assistant.gemini_quota_guard import (
-                                    mark_gemini_quota_hit,
-                                )
-
-                                mark_gemini_quota_hit()
-                            except Exception:
-                                pass
+                    _mark_cloud_rate_limit(ep.profile_id, last_err)
                     break
                 got_content = True
                 any_content = True
@@ -1111,16 +1231,9 @@ def stream_chat_with_brain(
         except Exception as e:
             if ep.provider == "gemini":
                 last_err = format_gemini_user_error(e)
-                try:
-                    from ilim_assistant.llm_gemini import is_gemini_quota_or_rate_error
-                    from ilim_assistant.gemini_quota_guard import mark_gemini_quota_hit
-
-                    if is_gemini_quota_or_rate_error(last_err):
-                        mark_gemini_quota_hit()
-                except Exception:
-                    pass
             else:
                 last_err = format_llm_user_error(e)
+            _mark_cloud_rate_limit(ep.profile_id, last_err)
             continue
 
     if _umed and not any_content and is_real_user_question(message or user):
@@ -1171,7 +1284,15 @@ def stream_chat_with_brain(
         if _umed and is_real_user_question(message or user):
             yield umed_miss_reply()
             return
-        yield last_err
+        if last_err and not _looks_like_error_chunk(last_err):
+            yield last_err
+            return
+        if _is_cloud_rate_limit_error(last_err):
+            yield (
+                "Ümit abi, bulut kotası dolmuş görünüyor — bir süre sonra tekrar dene; "
+                "yerel Ollama açıksa otomatik ona düşer."
+            )
+            return
         return
     if _umed and is_real_user_question(message or user):
         yield umed_miss_reply()
