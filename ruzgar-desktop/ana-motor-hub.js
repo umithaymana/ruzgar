@@ -5,7 +5,7 @@
 (function anaMotorHub(global) {
   "use strict";
 
-  const VERSION = "ana-motor-hub-v7-sinema-url-2026-06-06";
+  const VERSION = "ana-motor-hub-v8-orkestrasyon-faz-c-2026-06-11";
 
   /** Alt-intent → sentetik sohbet (motor runner) */
   const SUB_INTENT_MSG = {
@@ -278,7 +278,7 @@
     const j = await fetchMotorDispatch(text, target);
     if (j?.handled && j.reply) {
       say(j.reply, { actionCard: true });
-      return { handled: true };
+      return { handled: true, replyShown: true, mode: normalizeMotorId(target) };
     }
     return { handled: false };
   }
@@ -289,7 +289,10 @@
     if (T.tryAtolyeFromMessage) {
       const hit = await T.tryAtolyeFromMessage(text);
       if (hit?.handled) {
-        if (hit.instant && hit.reply) say(hit.reply, { actionCard: true });
+        if (hit.instant && hit.reply) {
+          say(hit.reply, { actionCard: true });
+          return { handled: true, replyShown: true, mode: "tercume" };
+        }
         return { handled: true };
       }
     }
@@ -331,8 +334,12 @@
     if (!shouldFastRouteVideo(text)) return { handled: false };
     const out = await dispatchToMotor("video", text, { fromGenel: true, motorCtx });
     if (!out.handled) return { handled: false };
-    if (out.ok !== false && !global.RuzgarVideoChatBrain?.looksLikeMultiStepPlan?.(text)) {
-      say("Ümit abi, **Video** talimatın sinemada uygulandı — sohbet Ana Motor'da.");
+    if (
+      out.ok !== false &&
+      !out.replyShown &&
+      !global.RuzgarVideoChatBrain?.looksLikeMultiStepPlan?.(text)
+    ) {
+      say("Ümit abi, **Video** talimatın sinemada uygulandı.");
     }
     d().setStatus?.("Ana Motor", "Rüzgar");
     return { handled: true };
@@ -490,8 +497,10 @@
           motorCtx,
         });
         if (hintOut.handled) {
-          const lbl = d().motorLabel?.(motorCtx.understanding.motorHint) || motorCtx.understanding.motorHint;
-          say(`Ümit abi, **${lbl}** — sohbet akışından anladım ve uyguladım.`);
+          if (!hintOut.replyShown) {
+            const lbl = d().motorLabel?.(motorCtx.understanding.motorHint) || motorCtx.understanding.motorHint;
+            say(`Ümit abi, **${lbl}** — sohbet akışından anladım ve uyguladım.`);
+          }
           return { handled: true };
         }
       }
@@ -507,11 +516,13 @@
       motorCtx,
     });
     if (out.handled && out.ok !== false) {
-      const sub = learned?.sub_intent ? `/${learned.sub_intent}` : "";
-      const extra = learned?.trigger
-        ? ` (öğrenilen: «${learned.trigger}»→${learned.motor}${sub})`
-        : "";
-      say(`Ümit abi, **${label}** — hallettim.${extra} (Sohbet Ana Motor'da.)`);
+      if (!out.replyShown) {
+        const sub = learned?.sub_intent ? `/${learned.sub_intent}` : "";
+        const extra = learned?.trigger
+          ? ` (öğrenilen: «${learned.trigger}»→${learned.motor}${sub})`
+          : "";
+        say(`Ümit abi, **${label}** — hallettim.${extra}`);
+      }
       return { handled: true };
     }
     if (out.handled && out.ok === false) {

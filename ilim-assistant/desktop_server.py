@@ -1185,9 +1185,10 @@ def _health_build_block() -> dict:
     import os as _os
 
     base = {
-        "rev": "2026-06-11-ruzgar-tek-ses-faz-b",
+        "rev": "2026-06-11-ruzgar-orkestrasyon-faz-c",
         "nebula_kitap": True,
         "tek_ses_faz_b": True,
+        "orkestrasyon_faz_c": True,
         "fast_paths": _os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
         "memory_first": True,
         "bilissel_analiz": True,
@@ -1197,6 +1198,12 @@ def _health_build_block() -> dict:
         from ilim_assistant.ruzgar_tek_ses_faz_b import tek_ses_status
 
         base["tek_ses"] = tek_ses_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_orkestrasyon_faz_c import orkestrasyon_status
+
+        base["orkestrasyon"] = orkestrasyon_status()
     except Exception:
         pass
     try:
@@ -9050,7 +9057,10 @@ def _iter_instant_chat_events(
     programlama_expand_tree: bool = False,
 ) -> Iterator[dict]:
     """Ollama/RAG beklemeden tek tur bitir (SSE/WS)."""
-    full_out = finalize_assistant_reply(reply)
+    channel = ""
+    if orch and isinstance(orch, dict):
+        channel = str((orch.get("hub") or {}).get("channel") or "")
+    full_out = finalize_assistant_reply(reply, channel=channel)
     yield {"type": "token", "text": full_out}
     new_wake = session_wake_used or message_calls_wake_name(msg_for_wake)
     done: dict[str, Any] = {
@@ -10393,6 +10403,33 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         return
 
     msg, hits, user_payload, system, model, og_direct = prep
+    _hub_d = route_meta.get("hub_delegate")
+    if isinstance(_hub_d, dict) and _hub_d:
+        orch.setdefault("hub_delegate", _hub_d)
+    if og_direct is not None:
+        try:
+            from ilim_assistant.ruzgar_orkestrasyon_faz_c import (
+                enrich_orchestra_motor,
+                polish_motor_reply,
+            )
+
+            _hub = orch.get("hub_delegate") if isinstance(orch.get("hub_delegate"), dict) else {}
+            _tgt = str(orch.get("hub_target") or _hub.get("target") or "").strip()
+            _ch = str(_hub.get("channel") or "").strip()
+            og_direct = polish_motor_reply(
+                str(og_direct),
+                target=_tgt or "genel",
+                channel=_ch,
+            )
+            if _tgt:
+                orch = enrich_orchestra_motor(
+                    orch,
+                    target=_tgt,
+                    channel=_ch,
+                    plan=turn_plan,
+                )
+        except Exception:
+            pass
     if orch.get("research_card"):
         yield {"type": "meta", "research_card": orch["research_card"]}
     if _delegated_from_genel and mode_norm == "programlama":

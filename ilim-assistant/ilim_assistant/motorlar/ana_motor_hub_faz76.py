@@ -739,11 +739,23 @@ def apply_genel_hub_routing(
                 message, target, workspace_root=workspace_root
             )
             if be.get("handled") and be.get("reply"):
-                out["og_direct"] = str(be["reply"])
+                reply = str(be["reply"])
+                try:
+                    from ilim_assistant.ruzgar_orkestrasyon_faz_c import polish_motor_reply
+
+                    reply = polish_motor_reply(
+                        reply,
+                        target=target,
+                        channel=str((be.get("meta") or {}).get("channel") or ""),
+                    )
+                except Exception:
+                    pass
+                out["og_direct"] = reply
                 out["hub_meta"] = {
                     **meta,
                     "backend_yurut": True,
                     "channel": (be.get("meta") or {}).get("channel"),
+                    "target": target,
                 }
                 return out
         except Exception:

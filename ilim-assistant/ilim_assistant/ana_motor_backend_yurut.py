@@ -109,11 +109,22 @@ def execute_backend_motor(
     ext = _run_w_extensions(raw, mid, workspace_root=workspace_root)
     if ext and ext.get("handled") and ext.get("reply"):
         meta["channel"] = ext.get("channel")
+        reply = str(ext.get("reply"))
+        try:
+            from ilim_assistant.ruzgar_orkestrasyon_faz_c import polish_motor_reply
+
+            reply = polish_motor_reply(
+                reply,
+                target=mid,
+                channel=str(ext.get("channel") or ""),
+            )
+        except Exception:
+            pass
         return {
             "ok": True,
             "handled": True,
             "instant": True,
-            "reply": str(ext.get("reply")),
+            "reply": reply,
             "target": mid,
             "meta": meta,
         }
@@ -139,6 +150,16 @@ def execute_backend_motor(
             meta.update(hub_meta)
         if reply:
             meta["channel"] = meta.get("channel") or "hub_instant"
+            try:
+                from ilim_assistant.ruzgar_orkestrasyon_faz_c import polish_motor_reply
+
+                reply = polish_motor_reply(
+                    reply,
+                    target=mid,
+                    channel=str(meta.get("channel") or ""),
+                )
+            except Exception:
+                pass
             return {
                 "ok": True,
                 "handled": True,

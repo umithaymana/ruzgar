@@ -1012,6 +1012,12 @@ def prepare_turn(
                 workspace_root=workspace_root,
             )
             if hub.get("og_direct"):
+                if orchestration_out is not None:
+                    _hm = dict(hub.get("hub_meta") or {})
+                    orchestration_out["hub_delegate"] = _hm
+                    _ht = str(_hm.get("target") or "").strip()
+                    if _ht:
+                        orchestration_out["hub_target"] = _ht
                 return msg, [], "", "", "", str(hub["og_direct"])
             if hub.get("mode") and str(hub["mode"]) != "genel":
                 m = str(hub["mode"])
