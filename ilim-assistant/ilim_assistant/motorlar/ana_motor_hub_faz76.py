@@ -725,8 +725,13 @@ def apply_genel_hub_routing(
 
     instant = maybe_hub_instant(message, motor_flags=flags, workspace_root=workspace_root)
     if instant:
+        target, meta = resolve_hub_target(message, flags, workspace_root=workspace_root)
+        hm = dict(meta or {})
+        hm["instant"] = True
+        if target and target != "genel":
+            hm["target"] = target
         out["og_direct"] = instant
-        out["hub_meta"] = {"instant": True}
+        out["hub_meta"] = hm
         return out
 
     target, meta = resolve_hub_target(message, flags)

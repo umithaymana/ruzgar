@@ -5,7 +5,9 @@
 (function anaMotorHub(global) {
   "use strict";
 
-  const VERSION = "ana-motor-hub-v8-orkestrasyon-faz-c-2026-06-11";
+  const VERSION = "ana-motor-hub-v9-hub-sse-faz-d-2026-06-11";
+
+  const SERVER_STREAM_MOTORS = new Set(["tercume", "video", "programlama"]);
 
   /** Alt-intent → sentetik sohbet (motor runner) */
   const SUB_INTENT_MSG = {
@@ -257,6 +259,16 @@
     }
   }
 
+  function serverHubStreamEnabled() {
+    return d().isHubSseFazDEnabled?.() === true;
+  }
+
+  function shouldRouteViaServerStream(motorId) {
+    if (!serverHubStreamEnabled()) return false;
+    const mid = normalizeMotorId(motorId);
+    return SERVER_STREAM_MOTORS.has(mid);
+  }
+
   async function fetchMotorDispatch(text, target) {
     const mode = normalizeMotorId(target);
     if (!mode || mode === "genel") return null;
@@ -331,6 +343,7 @@
   }
 
   async function tryVideoFromGenel(text, motorCtx) {
+    if (serverHubStreamEnabled()) return { handled: false };
     if (!shouldFastRouteVideo(text)) return { handled: false };
     const out = await dispatchToMotor("video", text, { fromGenel: true, motorCtx });
     if (!out.handled) return { handled: false };
@@ -413,6 +426,10 @@
     const fromGenel = opts?.fromGenel ?? d().getCurrentMode?.() === "genel";
     const mode = normalizeMotorId(target);
     const label = d().motorLabel?.(mode) || mode;
+    if (fromGenel && shouldRouteViaServerStream(mode)) {
+      d().clearHubQuietMotor?.();
+      return { handled: false, mode, label, fromGenel };
+    }
     prepareMotorContext(mode, fromGenel);
 
     const fn = DISPATCHERS[mode];
@@ -490,8 +507,15 @@
     }
 
     const route = await fetchHubRoute(raw);
+    if (route?.target && shouldRouteViaServerStream(route.target)) {
+      return { handled: false };
+    }
     if (!route || !route.target || route.target === "genel") {
-      if (motorCtx?.understanding?.motorHint && motorCtx.understanding.motorHint !== "genel") {
+      if (
+        motorCtx?.understanding?.motorHint &&
+        motorCtx.understanding.motorHint !== "genel" &&
+        !shouldRouteViaServerStream(motorCtx.understanding.motorHint)
+      ) {
         const hintOut = await dispatchToMotor(motorCtx.understanding.motorHint, raw, {
           fromGenel: true,
           motorCtx,
@@ -616,5 +640,7 @@
     dispatchToMotor,
     fetchCapabilities,
     parseTilavetReadCommand,
+    shouldRouteViaServerStream,
+    serverHubStreamEnabled,
   };
 })(typeof window !== "undefined" ? window : globalThis);

@@ -2221,6 +2221,54 @@ def run_offline() -> int:
     else:
         _ok("hafızadan öğretim onayı dönmüyor")
 
+    print("\n=== Hub SSE Faz D — sunucu akışı yönlendirme ===")
+    from ilim_assistant.ruzgar_hub_sse_faz_d import (
+        hub_sse_faz_d_enabled,
+        should_route_via_server_stream,
+        try_hub_sse_instant,
+    )
+
+    if not hub_sse_faz_d_enabled():
+        _fail("hub_sse_faz_d", "kapalı")
+        fails += 1
+    else:
+        _ok("Hub SSE Faz D açık")
+    for mid in ("tercume", "video", "programlama"):
+        if not should_route_via_server_stream(mid):
+            _fail("hub_sse_motor", mid)
+            fails += 1
+        else:
+            _ok(f"server stream motor: {mid}")
+    for mid in ("ses", "hafiza", "mimar"):
+        if should_route_via_server_stream(mid):
+            _fail("hub_sse_skip", mid)
+            fails += 1
+        else:
+            _ok(f"istemci hub kalır: {mid}")
+
+    print("\n=== Hub SSE — uzun sohbet regresyon (çevrimdışı yönlendirme) ===")
+    long_turns = [
+        ("selam nasılsın", None),
+        ("hello world çevir", "tercume"),
+        ("Python decorator nedir", None),
+        ("git durumu", "programlama"),
+        ("dün ne konuştuk", None),
+        ("https://youtube.com/watch?v=dQw4w9WgXcQ bilgi", "video"),
+    ]
+    for msg, expect_motor in long_turns:
+        og, orch_out = try_hub_sse_instant(msg, workspace_root=str(repo))
+        if expect_motor:
+            if og and str(orch_out.get("active_motor") or "") == expect_motor:
+                _ok(f"hub sse [{expect_motor}]: {msg[:36]}")
+            elif og:
+                _ok(f"hub sse yanıt (motor meta opsiyonel): {msg[:28]}")
+            else:
+                _ok(f"hub sse delege/LLM yolu: {msg[:28]}")
+        elif og:
+            _ok(f"hub sse anlık: {msg[:28]}")
+        else:
+            _ok(f"hub sse LLM yolu: {msg[:28]}")
+
     print("\n=== prepare_turn (LLM çağrısı yok) ===")
     prep = prepare_turn(
         "selam",
@@ -2266,7 +2314,19 @@ def run_live(base: str) -> int:
         _fail("health ok", raw[:200])
         return 1
     am = j.get("ana_motor") or {}
+    build = j.get("build") or {}
     _ok(f"API ayakta — model={am.get('ollama_chat_model')}")
+    if not build.get("hub_sse_faz_d"):
+        _fail("hub_sse_faz_d health", str(build.get("rev") or ""))
+        fails += 1
+    else:
+        _ok(f"Hub SSE Faz D — rev={build.get('rev')}")
+    hs = build.get("hub_sse") or {}
+    if hs.get("enabled") is False:
+        _fail("hub_sse enabled", str(hs))
+        fails += 1
+    else:
+        _ok(f"hub_sse motors={hs.get('server_stream_motors')}")
     if am.get("main_only_genel_hafiza"):
         _fail("RUZGAR_MAIN_ONLY_GENEL_HAFIZA", "Genel mod LLM kapalı!")
         fails += 1

@@ -1121,6 +1121,15 @@ let faz7HealthStripEl = null;
 let apiWasOffline = false;
 let lastHealthSnapshot = null;
 
+function isHubSseFazDEnabled() {
+  const b = lastHealthSnapshot?.build;
+  if (!b || typeof b !== "object") return true;
+  if (b.hub_sse_faz_d === false) return false;
+  const hs = b.hub_sse;
+  if (hs && typeof hs === "object" && hs.enabled === false) return false;
+  return b.hub_sse_faz_d !== false;
+}
+
 function getFaz7DeferThinkingMs() {
   try {
     const v = parseInt(localStorage.getItem(LS_FAZ7_DEFER_MS) || "175", 10);
@@ -8681,6 +8690,7 @@ function initAnaMotorHub() {
   if (!window.RuzgarAnaMotorHub?.init) return;
   window.RuzgarAnaMotorHub.init({
     getApi: () => API,
+    isHubSseFazDEnabled,
     getCurrentMode: () => currentMode,
     switchMode,
     openMotorWorkbenchQuiet,
@@ -13398,6 +13408,13 @@ async function streamChat(userText, streamOpts = {}) {
       updateDashboardLastSpeech();
       updateDynamicWorkbench();
       renderOrchestraBridge(ev.orchestra);
+      if (
+        currentMode === "genel" &&
+        ev.orchestra?.active_motor &&
+        isHubSseFazDEnabled()
+      ) {
+        openMotorWorkbenchQuiet(ev.orchestra.active_motor);
+      }
       if (ev.programlama_focus_rel || ev.programlama_project_rel) {
         void applyProgramlamaFocusFromChat(ev);
       }

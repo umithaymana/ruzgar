@@ -1185,10 +1185,11 @@ def _health_build_block() -> dict:
     import os as _os
 
     base = {
-        "rev": "2026-06-11-ruzgar-orkestrasyon-faz-c",
+        "rev": "2026-06-11-ruzgar-hub-sse-faz-d",
         "nebula_kitap": True,
         "tek_ses_faz_b": True,
         "orkestrasyon_faz_c": True,
+        "hub_sse_faz_d": True,
         "fast_paths": _os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
         "memory_first": True,
         "bilissel_analiz": True,
@@ -1204,6 +1205,12 @@ def _health_build_block() -> dict:
         from ilim_assistant.ruzgar_orkestrasyon_faz_c import orkestrasyon_status
 
         base["orkestrasyon"] = orkestrasyon_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_hub_sse_faz_d import hub_sse_status
+
+        base["hub_sse"] = hub_sse_status()
     except Exception:
         pass
     try:
@@ -9143,23 +9150,45 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         if not _skip_early_hub:
             try:
                 from ilim_assistant.chat_core import normalize_mode
-                from ilim_assistant.motorlar.ana_motor_hub_faz76 import maybe_hub_instant
 
                 if normalize_mode(_effective_chat_mode_raw(req)) == "genel":
                     from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
 
-                    hub_early = maybe_hub_instant(
-                        msg_early,
-                        motor_flags=motor_niyeti_heuristic(msg_early),
-                        workspace_root=req.workspace_root,
-                    )
+                    _mf_early = motor_niyeti_heuristic(msg_early)
+                    hub_early: str | None = None
+                    _orch_early = dict(orch_early)
+                    try:
+                        from ilim_assistant.ruzgar_hub_sse_faz_d import (
+                            hub_sse_faz_d_enabled,
+                            try_hub_sse_instant,
+                        )
+
+                        if hub_sse_faz_d_enabled():
+                            hub_early, _orch_early = try_hub_sse_instant(
+                                msg_early,
+                                motor_flags=_mf_early,
+                                workspace_root=req.workspace_root,
+                                orchestration_out=orch_early,
+                            )
+                    except Exception:
+                        hub_early = None
+                    if hub_early is None:
+                        from ilim_assistant.motorlar.ana_motor_hub_faz76 import (
+                            maybe_hub_instant,
+                        )
+
+                        hub_early = maybe_hub_instant(
+                            msg_early,
+                            motor_flags=_mf_early,
+                            workspace_root=req.workspace_root,
+                        )
                     if hub_early:
                         yield from _iter_instant_chat_events(
                             hub_early,
                             msg_early,
                             session_wake_used=req.session_wake_used,
                             msg_for_wake=req.message,
-                            orch=orch_early,
+                            orch=_orch_early,
                             instant_gundelik=True,
                         )
                         return
@@ -9813,6 +9842,27 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 orch_tr = dict(orch)
                 orch_tr.setdefault("plan", {})["primary"] = "islem"
                 orch_tr["plan"]["label_tr"] = "Çeviri"
+                try:
+                    from ilim_assistant.ruzgar_hub_sse_faz_d import hub_sse_faz_d_enabled
+                    from ilim_assistant.ruzgar_orkestrasyon_faz_c import (
+                        enrich_orchestra_motor,
+                        polish_motor_reply,
+                    )
+
+                    if hub_sse_faz_d_enabled():
+                        _tr_reply = polish_motor_reply(
+                            str(_tr_pre["reply"]),
+                            target="tercume",
+                            channel="instant_translate",
+                        )
+                        orch_tr = enrich_orchestra_motor(
+                            orch_tr,
+                            target="tercume",
+                            channel="instant_translate",
+                        )
+                        _tr_pre = {**_tr_pre, "reply": _tr_reply}
+                except Exception:
+                    pass
                 yield from _iter_instant_chat_events(
                     str(_tr_pre["reply"]),
                     (req.message or "").strip(),
