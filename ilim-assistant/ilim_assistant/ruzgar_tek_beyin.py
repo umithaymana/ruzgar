@@ -8,7 +8,7 @@ import re
 import unicodedata
 from typing import Any, Iterator, Optional
 
-TEK_BEYIN_VERSION = "tek-beyin-v7-2026-06-12-faz-g"
+TEK_BEYIN_VERSION = "tek-beyin-v8-2026-06-12-faz-h"
 
 _KIM_SORUSU = re.compile(
     r"\b(kimdir|kimdi|kim\b|kimi|kimler|kimesne)\b",

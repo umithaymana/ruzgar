@@ -2527,6 +2527,34 @@ def run_offline() -> int:
     else:
         _ok("anında özet yanıtı")
 
+    print("\n=== Tek beyin Faz H — oturum hatırla birleşik ===")
+    from ilim_assistant.ruzgar_tek_beyin_hatirla import (
+        looks_like_remember_session_query,
+        tek_beyin_hatirla_enabled,
+        tek_beyin_hatirla_status,
+        try_remember_session_command,
+    )
+
+    if not tek_beyin_hatirla_enabled():
+        _fail("tek_beyin_hatirla", "kapalı")
+        fails += 1
+    else:
+        _ok(f"tek beyin hatırla — {tek_beyin_hatirla_status().get('version')}")
+    if not looks_like_remember_session_query("bugünkü sohbeti hatırla"):
+        _fail("remember_session_query", "algı")
+        fails += 1
+    else:
+        _ok("oturum hatırla algısı")
+    _rh = try_remember_session_command(
+        "bugünkü sohbeti hatırla",
+        history=_long_hist,
+    )
+    if not _rh or "hafızama yazdım" not in _rh.lower():
+        _fail("remember_session_reply", (_rh or "")[:80])
+        fails += 1
+    else:
+        _ok("oturum hatırla birleşik yanıt")
+
     d70 = denge70_faz_k_status()
     _ok(
         f"denge70 — ready={d70.get('ready')} ram={d70.get('ram_sufficient')} "

@@ -1279,6 +1279,12 @@ def _health_build_block() -> dict:
     except Exception:
         pass
     try:
+        from ilim_assistant.ruzgar_tek_beyin_hatirla import tek_beyin_hatirla_status
+
+        base["tek_beyin_hatirla"] = tek_beyin_hatirla_status()
+    except Exception:
+        pass
+    try:
         from ilim_assistant.ruzgar_denge70_faz_k import denge70_faz_k_status
 
         base["denge70_faz_k"] = denge70_faz_k_status()
@@ -9517,6 +9523,39 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     orch=orch_early,
                     instant_gundelik=True,
                 )
+                return
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ruzgar_tek_beyin_hatirla import try_remember_session_command
+
+            _hatirla_sess = try_remember_session_command(
+                msg_early,
+                history=req.history,
+                session_id=getattr(req, "ana_motor_session_id", None),
+            )
+            if _hatirla_sess:
+                yield from _iter_instant_chat_events(
+                    _hatirla_sess,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=orch_early,
+                    instant_gundelik=True,
+                )
+                try:
+                    from ilim_assistant.ruzgar_tek_beyin_ozet import persist_tek_beyin_turn
+
+                    persist_tek_beyin_turn(
+                        user_message=msg_early,
+                        assistant_message=_hatirla_sess,
+                        history=req.history,
+                        mode_norm="genel",
+                        session_id=getattr(req, "ana_motor_session_id", None),
+                        plan_primary="hafiza",
+                    )
+                except Exception:
+                    pass
                 return
         except Exception:
             pass
