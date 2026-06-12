@@ -8,7 +8,7 @@ import re
 import unicodedata
 from typing import Any, Iterator, Optional
 
-TEK_BEYIN_VERSION = "tek-beyin-v1-2026-06-12"
+TEK_BEYIN_VERSION = "tek-beyin-v3-2026-06-12-faz-c"
 
 _KIM_SORUSU = re.compile(
     r"\b(kimdir|kimdi|kim\b|kimi|kimler|kimesne)\b",
@@ -176,7 +176,17 @@ def personal_hafiza_blocks_bilgi_path(message: str) -> bool:
     if not tek_beyin_enabled():
         return False
     target = resolve_memory_query_message(message)
-    return lookup_personal_hafiza_hint(target) is not None
+    hint = lookup_personal_hafiza_hint(target)
+    if not hint:
+        return False
+    try:
+        from ilim_assistant.ruzgar_tek_beyin_dogrulama import should_skip_bilgi_for_weak_hafiza
+
+        if should_skip_bilgi_for_weak_hafiza(message, hint):
+            return False
+    except Exception:
+        pass
+    return True
 
 
 def should_use_personal_hafiza_first(
@@ -231,6 +241,13 @@ def tek_beyin_plan_override(message: str) -> dict[str, Any] | None:
         return None
     if not hint:
         return None
+    try:
+        from ilim_assistant.ruzgar_tek_beyin_dogrulama import should_skip_bilgi_for_weak_hafiza
+
+        if should_skip_bilgi_for_weak_hafiza(message, hint):
+            return None
+    except Exception:
+        pass
     return {
         "primary": "hafiza",
         "use_ilim_rag": False,
@@ -238,4 +255,158 @@ def tek_beyin_plan_override(message: str) -> dict[str, Any] | None:
         "prefer_archive": False,
         "tek_beyin": True,
         "hafiza_hint": hint,
+    }
+
+
+# --- Faz B: dost sohbet ---
+
+_FRIEND_MOOD = re.compile(
+    r"(?:can[ıi]m\s+s[ıi]k[ıi]ld[ıi]|s[ıi]k[ıi]ld[ıi]m|"
+    r"moralim\s+bozuk|keyfim\s+yok|"
+    r"üzgünüm|uzgunum|mutsuzum|"
+    r"yaln[ıi]z[ıi]m|"
+    r"dertle[şs]|"
+    r"konu[şs]mak\s+istiyorum|"
+    r"sohbet\s+etmek\s+istiyorum|"
+    r"arkada[şs]\s+gibi|dost\s+gibi|"
+    r"can\s+s[ıi]k[ıi]nt[ıi]s[ıi]|"
+    r"s[ıi]k[ıi]c[ıi]\s+bir\s+gün)",
+    re.I,
+)
+
+
+def dost_sohbet_enabled() -> bool:
+    if not tek_beyin_enabled():
+        return False
+    return os.environ.get("RUZGAR_TEK_BEYIN_DOST", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
+def looks_like_friend_mood_chat(message: str) -> bool:
+    """Can sıkıntısı, dertleşme, yakın muhabbet — bilgi/RAG değil."""
+    raw = (message or "").strip()
+    if not raw or len(raw) > 600:
+        return False
+    blob = _norm_blob(raw)
+    if _FRIEND_MOOD.search(blob):
+        return True
+    cues = (
+        "canım sıkıldı",
+        "canim sikildi",
+        "sıkıldım",
+        "sikildim",
+        "moralim bozuk",
+        "keyfim yok",
+        "dertleşelim",
+        "dertleşmek",
+        "konuşalım mı",
+        "konusalim mi",
+        "sohbet edelim mi",
+        "yanımda ol",
+        "yanimda ol",
+        "dinler misin",
+        "biraz konuş",
+        "biraz konus",
+        "seninle sohbet",
+        "seninle konus",
+    )
+    return any(c in blob for c in cues)
+
+
+def should_use_dost_sohbet_first(
+    message: str,
+    client_history: list | None = None,
+    *,
+    mode_norm: str = "genel",
+) -> bool:
+    """Kişisel hafıza değil — dost/sohbet modu (Faz B)."""
+    if not dost_sohbet_enabled():
+        return False
+    if should_use_personal_hafiza_first(message, client_history):
+        return False
+    raw = (message or "").strip()
+    if not raw:
+        return False
+    if mode_norm not in ("genel", "uretim", "gelisim"):
+        return False
+    if personal_hafiza_blocks_bilgi_path(raw):
+        return False
+    if looks_like_friend_mood_chat(raw):
+        return True
+    try:
+        from ilim_assistant.ana_motor_plan import looks_like_casual_social_chat
+
+        if looks_like_casual_social_chat(raw):
+            return True
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_dogal_sohbet_faz91 import (
+            dogal_sohbet_enabled,
+            is_natural_conversation_turn,
+        )
+
+        if dogal_sohbet_enabled():
+            return is_natural_conversation_turn(
+                raw,
+                mode_norm,
+                None,
+                history=client_history,
+            )
+    except Exception:
+        pass
+    return False
+
+
+def iter_tek_beyin_dost_reply(
+    message: str,
+    history: list | None,
+    *,
+    mode_norm: str = "genel",
+) -> Iterator[str] | None:
+    """Dost sohbet — Groq/Ollama doğal yanıt (web/RAG yok)."""
+    if not should_use_dost_sohbet_first(message, history, mode_norm=mode_norm):
+        return None
+    try:
+        from ilim_assistant.ana_motor_casual import iter_casual_fast_reply
+
+        gen = iter_casual_fast_reply(
+            message or "",
+            history or [],
+            mode_norm=mode_norm,
+        )
+        return gen
+    except Exception:
+        return None
+
+
+def classify_tek_beyin_turn(
+    message: str,
+    client_history: list | None = None,
+    *,
+    mode_norm: str = "genel",
+) -> str:
+    """dost | hafiza | default"""
+    if should_use_personal_hafiza_first(message, client_history):
+        return "hafiza"
+    if should_use_dost_sohbet_first(message, client_history, mode_norm=mode_norm):
+        return "dost"
+    return "default"
+
+
+def tek_beyin_dost_plan_override(message: str) -> dict[str, Any] | None:
+    if not dost_sohbet_enabled():
+        return None
+    if not should_use_dost_sohbet_first(message, None, mode_norm="genel"):
+        return None
+    return {
+        "primary": "gundelik",
+        "use_ilim_rag": False,
+        "prefer_web": False,
+        "prefer_archive": False,
+        "tek_beyin": True,
+        "tek_beyin_dost": True,
     }

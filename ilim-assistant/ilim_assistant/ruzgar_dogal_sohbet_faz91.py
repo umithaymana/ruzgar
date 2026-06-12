@@ -139,6 +139,18 @@ def is_natural_conversation_turn(
         "dinliyor musun",
         "burada mısın",
         "burada misin",
+        "canım sıkıldı",
+        "canim sikildi",
+        "sıkıldım",
+        "moralim bozuk",
+        "keyfim yok",
+        "dertleş",
+        "dertles",
+        "yalnızım",
+        "yalnizim",
+        "arkadaş gibi",
+        "arkadas gibi",
+        "dost gibi",
     )
     if any(c in blob for c in conv_cues) and len(raw) < 700:
         return True

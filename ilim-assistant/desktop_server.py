@@ -9308,6 +9308,10 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             if tek_beyin_enabled() and should_use_personal_hafiza_first(
                 msg_early, req.history
             ):
+                from ilim_assistant.ruzgar_tek_beyin import lookup_personal_hafiza_hint, resolve_memory_query_message
+
+                _tb_target = resolve_memory_query_message(msg_early, req.history)
+                _tb_hint = lookup_personal_hafiza_hint(_tb_target)
                 _tb_stream = iter_tek_beyin_hafiza_reply(
                     msg_early,
                     req.history,
@@ -9327,6 +9331,19 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                         reply_body += piece
                         yield {"type": "token", "text": piece}
                     if (reply_body or "").strip():
+                        try:
+                            from ilim_assistant.ruzgar_tek_beyin_dogrulama import (
+                                apply_personal_hafiza_guard,
+                            )
+
+                            if _tb_hint:
+                                reply_body = apply_personal_hafiza_guard(
+                                    _tb_target,
+                                    reply_body,
+                                    _tb_hint,
+                                )
+                        except Exception:
+                            pass
                         full_out = finalize_assistant_reply(reply_body)
                         new_wake = req.session_wake_used or message_calls_wake_name(
                             req.message
@@ -9340,6 +9357,54 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                             "instant_gundelik": True,
                             "tek_beyin": True,
                             "hafiza_dogal": True,
+                        }
+                        return
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ruzgar_tek_beyin import (
+                dost_sohbet_enabled,
+                iter_tek_beyin_dost_reply,
+                should_use_dost_sohbet_first,
+            )
+
+            if dost_sohbet_enabled() and should_use_dost_sohbet_first(
+                msg_early, req.history, mode_norm="genel"
+            ):
+                _dost_stream = iter_tek_beyin_dost_reply(
+                    msg_early,
+                    req.history,
+                    mode_norm="genel",
+                )
+                if _dost_stream is not None:
+                    _orch_d = dict(orch_early)
+                    _orch_d.setdefault("plan", {})["primary"] = "gundelik"
+                    _orch_d["plan"]["label_tr"] = "Sohbet"
+                    _orch_d["tek_beyin"] = True
+                    _orch_d["tek_beyin_dost"] = True
+                    yield {
+                        "type": "status",
+                        "text": "Dost sohbet — doğal yanıt hazırlanıyor…",
+                    }
+                    reply_body = ""
+                    for piece in _dost_stream:
+                        reply_body += piece
+                        yield {"type": "token", "text": piece}
+                    if (reply_body or "").strip():
+                        full_out = finalize_assistant_reply(reply_body)
+                        new_wake = req.session_wake_used or message_calls_wake_name(
+                            req.message
+                        )
+                        yield {
+                            "type": "done",
+                            "full_reply": full_out,
+                            "user_message": msg_early,
+                            "new_wake_used": new_wake,
+                            "orchestra": _orch_d,
+                            "instant_gundelik": True,
+                            "tek_beyin": True,
+                            "tek_beyin_dost": True,
+                            "casual_fast": True,
                         }
                         return
         except Exception:
@@ -11193,6 +11258,16 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             )
         except Exception:
             _noc = None
+        try:
+            from ilim_assistant.ruzgar_tek_beyin_dogrulama import guard_or_lookup_reply
+
+            body_fixed = guard_or_lookup_reply(
+                msg,
+                body_fixed,
+                client_history=req.history,
+            )
+        except Exception:
+            pass
         full_out = body_fixed + footer
         if not (full_out or "").strip():
             try:

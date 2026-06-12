@@ -293,6 +293,15 @@ def _score_categories(msg: str, mode_norm: str, motor_flags: dict[str, bool]) ->
         s["bilim"] = max(0.0, s["bilim"] - 2.0)
         s["gundelik"] = max(0.0, s["gundelik"] - 1.0)
 
+    try:
+        from ilim_assistant.ruzgar_tek_beyin import looks_like_friend_mood_chat
+
+        if looks_like_friend_mood_chat(raw):
+            s["gundelik"] += 6.0
+            s["bilgi"] = max(0.0, s["bilgi"] - 3.0)
+    except Exception:
+        pass
+
     if any(
         x in blob
         for x in (
@@ -681,6 +690,24 @@ def plan_question(
     except Exception:
         pass
 
+    try:
+        from ilim_assistant.ruzgar_tek_beyin import tek_beyin_dost_plan_override
+
+        _td = tek_beyin_dost_plan_override(message)
+        if _td and primary != "hafiza":
+            primary = str(_td.get("primary") or "gundelik")
+            secondary = [x for x in secondary if x != primary][:2]
+            use_ilim_rag = False
+            prefer_web = False
+            prefer_archive = False
+            ambiguous = False
+            clarification = None
+            web_q = ""
+            rag_q = ""
+            status = _status_for_plan("gundelik", "")
+    except Exception:
+        pass
+
     return QuestionPlan(
         primary=primary,
         secondary=secondary,
@@ -902,7 +929,15 @@ def looks_like_educational_code_question(message: str) -> bool:
 def looks_like_casual_social_chat(message: str) -> bool:
     """Selam, sohbet daveti, kısa muhabbet — ağır RAG / dev hafıza taraması yok."""
     raw = (message or "").strip().lower()
-    if not raw or len(raw) > 140:
+    if not raw:
+        return False
+    try:
+        from ilim_assistant.ruzgar_tek_beyin import looks_like_friend_mood_chat
+
+        max_len = 280 if looks_like_friend_mood_chat(message) else 140
+    except Exception:
+        max_len = 140
+    if len(raw) > max_len:
         return False
     if _info_query_blocks_casual(message):
         return False
@@ -949,6 +984,18 @@ def looks_like_casual_social_chat(message: str) -> bool:
         "buradayım",
         "hos geldin",
         "hoş geldin",
+        "canım sıkıldı",
+        "canim sikildi",
+        "sıkıldım",
+        "sikildim",
+        "moralim bozuk",
+        "keyfim yok",
+        "dertleşelim",
+        "dertleşmek",
+        "konuşalım mı",
+        "sohbet edelim mi",
+        "yanımda ol",
+        "yanimda ol",
     )
     if any(c in blob for c in cues):
         return True
