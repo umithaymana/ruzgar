@@ -39,10 +39,31 @@ python scripts/ana_motor_smoke.py
 .\Ruzgar.ps1 -ForceRestart
 ```
 
-## Sıradaki (ince ayar)
+## Faz K — uygulandı (2026-06-11)
 
-- Canlı 10 soruluk SLO paketi (Faz F genişletme)
-- `denge70` yerel profil çekimi
-- Sesli tur (STT→TTS sürekli mod)
+| # | Modül | Özet |
+|---|--------|------|
+| K1 | `ruzgar_canli_slo_faz_k.py` | S1–S10 SLO paketi (offline + `--live --slo-pack`) |
+| K2 | `ruzgar_denge70_faz_k.py` | denge70 health + `Pull-RuzgarDenge70.ps1` |
+| K3 | `ruzgar_sesli_tur_faz_k.py` | TTS bitince mikrofon yeniden dinler |
+
+**Build:** `2026-06-11-ruzgar-canli-slo-faz-k`
+
+```bash
+python scripts/ana_motor_smoke.py --slo-pack
+python scripts/ana_motor_smoke.py --live http://127.0.0.1:8779 --slo-pack
+```
+
+```env
+RUZGAR_CANLI_SLO_FAZ_K=1
+RUZGAR_SLO_PACK_MIN_PASS=8
+RUZGAR_SESLI_TUR_FAZ_K=1
+```
+
+## Sıradaki
+
+- SLO paketini CI’da gece koşusu
+- Sürekli sesli tur VAD ince ayarı
+- `denge70` otomatik zincir önceliği (RAM yeterliyse)
 
 *Bismillah*

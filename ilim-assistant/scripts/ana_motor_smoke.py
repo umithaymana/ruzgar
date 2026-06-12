@@ -2347,6 +2347,39 @@ def run_offline() -> int:
         else:
             _ok(f"hub sse LLM yolu: {msg[:28]}")
 
+    print("\n=== Faz K — ChatGPT SLO paketi (birim) ===")
+    from ilim_assistant.ruzgar_canli_slo_faz_k import (
+        CHATGPT_SLO_PACK,
+        evaluate_reply,
+        slo_pack_enabled,
+        slo_pack_status,
+    )
+    from ilim_assistant.ruzgar_denge70_faz_k import denge70_faz_k_status
+    from ilim_assistant.ruzgar_sesli_tur_faz_k import sesli_tur_enabled
+
+    if not slo_pack_enabled():
+        _fail("canli_slo_faz_k", "kapalı")
+        fails += 1
+    else:
+        _ok(f"SLO paket — {slo_pack_status()}")
+    ev_ok = evaluate_reply(
+        CHATGPT_SLO_PACK[2],
+        "Osmanlı Devleti 1299'da Osman Bey tarafından kuruldu.",
+        3.5,
+    )
+    if not ev_ok.get("ok"):
+        _fail("slo_eval_unit", str(ev_ok.get("issues")))
+        fails += 1
+    else:
+        _ok("SLO değerlendirici S3")
+    if not sesli_tur_enabled():
+        _fail("sesli_tur_faz_k", "kapalı")
+        fails += 1
+    else:
+        _ok("sesli tur Faz K açık")
+    d70 = denge70_faz_k_status()
+    _ok(f"denge70 — ready={d70.get('ready')} cmd={d70.get('pull_cmd')}")
+
     print("\n=== prepare_turn (LLM çağrısı yok) ===")
     prep = prepare_turn(
         "selam",
@@ -2399,6 +2432,13 @@ def run_live(base: str) -> int:
         fails += 1
     else:
         _ok(f"Hub SSE Faz D — rev={build.get('rev')}")
+    slo_meta = build.get("canli_slo_faz_k")
+    if slo_meta is False or (isinstance(slo_meta, dict) and slo_meta.get("enabled") is False):
+        _fail("canli_slo_faz_k", str(slo_meta))
+        fails += 1
+    elif build.get("canli_slo_faz_k") or "slo-faz-k" in str(build.get("rev") or ""):
+        turns = slo_meta.get("turns", 10) if isinstance(slo_meta, dict) else 10
+        _ok(f"Faz K SLO — rev={build.get('rev')} turns={turns}")
     hs = build.get("hub_sse") or {}
     if hs.get("enabled") is False:
         _fail("hub_sse enabled", str(hs))
@@ -3051,6 +3091,58 @@ def run_live(base: str) -> int:
     return fails
 
 
+def run_slo_pack_offline() -> int:
+    """Tam S1–S10 yerel tur (yavaş)."""
+    from ilim_assistant.ruzgar_canli_slo_faz_k import run_slo_pack
+
+    fails = 0
+    print("\n=== Faz K — tam SLO paketi (yerel, yavaş) ===")
+
+    def _on(ev: dict) -> None:
+        tag = "OK" if ev.get("ok") else "FAIL"
+        print(
+            f"  {tag}  {ev.get('id')} — {ev.get('elapsed_sec')}s "
+            f"len={ev.get('reply_len')} {ev.get('issues') or ''}"
+        )
+
+    repo = str(_ROOT.parent)
+    out = run_slo_pack(workspace_root=repo, on_result=_on)
+    if not out.get("ok"):
+        _fail(
+            "slo_pack_offline",
+            f"{out.get('passed')}/{out.get('total')} (min {out.get('min_pass')})",
+        )
+        fails += 1
+    else:
+        _ok(f"SLO paket geçti {out.get('passed')}/{out.get('total')}")
+    return fails
+
+
+def run_slo_pack_live(base: str) -> int:
+    from ilim_assistant.ruzgar_canli_slo_faz_k import run_slo_pack
+
+    fails = 0
+    print("\n=== Faz K — canlı SLO paketi (S1–S10) ===")
+
+    def _on(ev: dict) -> None:
+        tag = "OK" if ev.get("ok") else "FAIL"
+        print(
+            f"  {tag}  {ev.get('id')} — {ev.get('elapsed_sec')}s "
+            f"len={ev.get('reply_len')} {ev.get('issues') or ''}"
+        )
+
+    out = run_slo_pack(live_base=base, on_result=_on)
+    if not out.get("ok"):
+        _fail(
+            "slo_pack_live",
+            f"{out.get('passed')}/{out.get('total')} (min {out.get('min_pass')})",
+        )
+        fails += 1
+    else:
+        _ok(f"canlı SLO {out.get('passed')}/{out.get('total')}")
+    return fails
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Ana Motor smoke test")
     ap.add_argument(
@@ -3058,12 +3150,21 @@ def main() -> int:
         metavar="URL",
         help="Canlı health kontrolü (ör. http://127.0.0.1:8777)",
     )
+    ap.add_argument(
+        "--slo-pack",
+        action="store_true",
+        help="S1–S10 ChatGPT SLO paketi (yavaş; yerel veya --live ile)",
+    )
     args = ap.parse_args()
     print("Rüzgar Ana Motor — smoke test\n")
     fails = run_offline()
+    if args.slo_pack and not args.live:
+        fails += run_slo_pack_offline()
     if args.live:
         print("\n=== Canlı API ===")
         fails += run_live(args.live)
+        if args.slo_pack:
+            fails += run_slo_pack_live(args.live)
     print()
     if fails:
         print(f"SONUÇ: {fails} hata")

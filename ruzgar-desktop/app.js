@@ -1145,6 +1145,37 @@ function isUnifiedFaceEnabled() {
   return b.unified_face !== false;
 }
 
+function isSesliTurFazKEnabled() {
+  const b = lastHealthSnapshot?.build;
+  if (!b || typeof b !== "object") return true;
+  const st = b.sesli_tur_faz_k;
+  if (st && typeof st === "object" && st.enabled === false) return false;
+  return true;
+}
+
+let sesliTurResumePending = false;
+
+async function maybeResumeVoiceListenAfterReply() {
+  if (!isSesliTurFazKEnabled()) return;
+  if (currentMode !== "genel") return;
+  if (perfBusy) return;
+  if (!el.voiceSend?.checked) return;
+  if (!el.voiceOut?.checked) return;
+  if (!navigator.mediaDevices?.getUserMedia) return;
+  if (recState || micBootPromise) return;
+  sesliTurResumePending = true;
+  await new Promise((r) => window.setTimeout(r, 450));
+  if (!sesliTurResumePending || perfBusy || recState) return;
+  sesliTurResumePending = false;
+  try {
+    pushSessionSend = true;
+    await startBtnRecording();
+    setStatus("Dinliyorum…", "Rüzgar");
+  } catch {
+    sesliTurResumePending = false;
+  }
+}
+
 function getFaz7DeferThinkingMs() {
   try {
     const v = parseInt(localStorage.getItem(LS_FAZ7_DEFER_MS) || "175", 10);
@@ -13530,14 +13561,20 @@ async function streamChat(userText, streamOpts = {}) {
             );
           });
         }
-        void waitTtsIdle(ttsSess);
+        await waitTtsIdle(ttsSess);
+        void maybeResumeVoiceListenAfterReply();
       }
       if (el.voiceOut == null || el.voiceOut.checked) {
         if (currentMode === "hafiza") {
           speakTextImmediate(full);
         } else if (!wantEdge && !ttsEdgeSpokeTurn) {
-          window.setTimeout(() => void speakLast(), 80);
+          window.setTimeout(async () => {
+            await speakLast();
+            void maybeResumeVoiceListenAfterReply();
+          }, 80);
         }
+      } else if (isSesliTurFazKEnabled() && el.voiceSend?.checked) {
+        void maybeResumeVoiceListenAfterReply();
       }
       trimMotorChatHistory(ensureSharedChatStore());
       window.setTimeout(() => {

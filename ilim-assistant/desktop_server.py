@@ -1185,7 +1185,7 @@ def _health_build_block() -> dict:
     import os as _os
 
     base = {
-        "rev": "2026-06-11-ruzgar-chatgpt-yol-ej",
+        "rev": "2026-06-11-ruzgar-canli-slo-faz-k",
         "nebula_kitap": True,
         "tek_ses_faz_b": True,
         "orkestrasyon_faz_c": True,
@@ -1195,6 +1195,8 @@ def _health_build_block() -> dict:
         "oturum_ozet": True,
         "gorsel_sohbet": True,
         "unified_face": True,
+        "canli_slo_faz_k": True,
+        "sesli_tur_faz_k": True,
         "fast_paths": _os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
         "memory_first": True,
         "bilissel_analiz": True,
@@ -1240,6 +1242,24 @@ def _health_build_block() -> dict:
         from ilim_assistant.ruzgar_akil_faz_j import akil_faz_j_status
 
         base["akil_faz_j"] = akil_faz_j_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_canli_slo_faz_k import slo_pack_status
+
+        base["canli_slo_faz_k"] = slo_pack_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_sesli_tur_faz_k import sesli_tur_status
+
+        base["sesli_tur_faz_k"] = sesli_tur_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_denge70_faz_k import denge70_faz_k_status
+
+        base["denge70_faz_k"] = denge70_faz_k_status()
     except Exception:
         pass
     try:
@@ -2790,6 +2810,32 @@ def api_ana_motor_chat_history_export(limit: int = 100) -> dict[str, Any]:
     from ilim_assistant.ana_motor_oturum_ozet import export_chat_history_json
 
     return export_chat_history_json(limit=limit)
+
+
+@app.get("/api/ana-motor/slo-pack/status")
+def api_ana_motor_slo_pack_status() -> dict[str, Any]:
+    """Faz K — ChatGPT SLO paketi durumu."""
+    from ilim_assistant.ruzgar_canli_slo_faz_k import slo_pack_status
+
+    return slo_pack_status()
+
+
+@app.post("/api/ana-motor/slo-pack/run")
+def api_ana_motor_slo_pack_run(
+    workspace_root: str | None = None,
+) -> dict[str, Any]:
+    """Faz K — yerel SLO paketi (S1–S10, uzun sürebilir)."""
+    from ilim_assistant.ruzgar_canli_slo_faz_k import run_slo_pack
+
+    return run_slo_pack(workspace_root=workspace_root)
+
+
+@app.get("/api/ana-motor/denge70/status")
+def api_ana_motor_denge70_status() -> dict[str, Any]:
+    """Faz K — denge70 hazırlık."""
+    from ilim_assistant.ruzgar_denge70_faz_k import denge70_faz_k_status
+
+    return denge70_faz_k_status()
 
 
 @app.get("/api/ana-motor/kaynak-panel/status")
