@@ -2377,6 +2377,46 @@ def run_offline() -> int:
         fails += 1
     else:
         _ok("sesli tur Faz K açık")
+
+    print("\n=== Tek beyin Faz D — oturum / mood devam ===")
+    from ilim_assistant.ruzgar_tek_beyin import should_use_dost_sohbet_first
+    from ilim_assistant.ruzgar_tek_beyin_oturum import (
+        analyze_mood_thread,
+        looks_like_mood_continuation,
+        tek_beyin_oturum_enabled,
+        tek_beyin_oturum_status,
+    )
+
+    if not tek_beyin_oturum_enabled():
+        _fail("tek_beyin_oturum", "kapalı")
+        fails += 1
+    else:
+        _ok(f"tek beyin oturum — {tek_beyin_oturum_status().get('version')}")
+    _hist_mood = [
+        {"role": "user", "content": "canım sıkıldı biraz sohbet edelim"},
+        {"role": "assistant", "content": "Olur Ümit abi, buradayım. Bugün nasıl geçti?"},
+    ]
+    if not analyze_mood_thread(_hist_mood).active:
+        _fail("mood_thread", "aktif olmalı")
+        fails += 1
+    else:
+        _ok("mood thread aktif")
+    if not looks_like_mood_continuation("evet biraz yorgunum", _hist_mood):
+        _fail("mood_continuation", "devam tanınmalı")
+        fails += 1
+    else:
+        _ok("mood devam cümlesi")
+    if should_use_dost_sohbet_first("peki ne önerirsin", _hist_mood, mode_norm="genel"):
+        _ok("dost yol — mood devam")
+    else:
+        _fail("dost_mood_path", "peki ne önerirsin")
+        fails += 1
+    if looks_like_mood_continuation("Osmanlı ne zaman kuruldu", _hist_mood):
+        _fail("mood_break", "ansiklopedi soru dost devam olmamalı")
+        fails += 1
+    else:
+        _ok("mood thread ansiklopedi kırılması")
+
     d70 = denge70_faz_k_status()
     _ok(
         f"denge70 — ready={d70.get('ready')} ram={d70.get('ram_sufficient')} "

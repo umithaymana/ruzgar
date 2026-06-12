@@ -39,6 +39,10 @@ def _casual_max_tokens() -> int:
 def _casual_system_and_user(
     message: str,
     mode_norm: str,
+    *,
+    system_addon: str | None = None,
+    max_tokens_override: int | None = None,
+    prior_depth_override: int | None = None,
 ) -> tuple[str, str, float, int, int]:
     from ilim_assistant.chat_core import pick_system
 
@@ -54,13 +58,19 @@ def _casual_system_and_user(
 
         if dogal_sohbet_enabled():
             system = pick_system(False, mode_norm) + "\n\n" + build_natural_sohbet_system_addon()
+            if system_addon:
+                system += system_addon
             user = build_natural_user_tail(message).strip()
+            max_tok = max_tokens_override if max_tokens_override is not None else natural_max_tokens()
+            prior_n = (
+                prior_depth_override if prior_depth_override is not None else natural_prior_depth()
+            )
             return (
                 system,
                 user,
                 natural_temperature(),
-                natural_max_tokens(),
-                natural_prior_depth(),
+                max_tok,
+                prior_n,
             )
     except Exception:
         pass
@@ -71,12 +81,16 @@ def _casual_system_and_user(
         "Ümit abi ile doğal, sıcak sohbet. 2–4 cümle, Türkçe. "
         "Liste veya uzun ders anlatımı yok; soruya doğrudan yanıt ver.\n"
     )
+    if system_addon:
+        system += system_addon
     user = (
         f"Kullanıcı mesajı:\n{(message or '').strip()}\n\n"
         "Bu bir sohbet veya günlük konuşma turudur; soruya **doğrudan**, samimi ve "
         "kısa yanıt ver. Konu dışına çıkma; ders anlatımı veya kaynak listesi verme."
     )
-    return system, user, 0.55, _casual_max_tokens(), 6
+    max_tok = max_tokens_override if max_tokens_override is not None else _casual_max_tokens()
+    prior_n = prior_depth_override if prior_depth_override is not None else 6
+    return system, user, 0.55, max_tok, prior_n
 
 
 def iter_casual_gemini_reply(
@@ -84,6 +98,9 @@ def iter_casual_gemini_reply(
     history: list,
     *,
     mode_norm: str = "genel",
+    system_addon: str | None = None,
+    prior_depth_override: int | None = None,
+    max_tokens_override: int | None = None,
 ) -> Iterator[str]:
     """Kısa sohbet: yalnızca Gemini, minimal istem."""
     from ilim_assistant.chat_core import prior_messages_for_turn
@@ -98,7 +115,13 @@ def iter_casual_gemini_reply(
         )
         return
 
-    system, user, temp, max_tok, prior_n = _casual_system_and_user(message, mode_norm)
+    system, user, temp, max_tok, prior_n = _casual_system_and_user(
+        message,
+        mode_norm,
+        system_addon=system_addon,
+        max_tokens_override=max_tokens_override,
+        prior_depth_override=prior_depth_override,
+    )
     prior = prior_messages_for_turn(history, mode_norm)
     for piece in chat_completion_stream_gemini(
         system,
@@ -116,6 +139,9 @@ def iter_casual_fast_reply(
     history: list,
     *,
     mode_norm: str = "genel",
+    system_addon: str | None = None,
+    prior_depth_override: int | None = None,
+    max_tokens_override: int | None = None,
 ) -> Iterator[str]:
     """
     Kısa sohbet: RUZGAR_FREE_BRAIN=1 ise Ollama → Groq → Gemini zinciri;
@@ -126,10 +152,23 @@ def iter_casual_fast_reply(
 
     use_gemini_only = casual_gemini_only_mode()
     if use_gemini_only:
-        yield from iter_casual_gemini_reply(message, history, mode_norm=mode_norm)
+        yield from iter_casual_gemini_reply(
+            message,
+            history,
+            mode_norm=mode_norm,
+            system_addon=system_addon,
+            prior_depth_override=prior_depth_override,
+            max_tokens_override=max_tokens_override,
+        )
         return
 
-    system, user, _temp, _max_tok, prior_n = _casual_system_and_user(message, mode_norm)
+    system, user, _temp, _max_tok, prior_n = _casual_system_and_user(
+        message,
+        mode_norm,
+        system_addon=system_addon,
+        max_tokens_override=max_tokens_override,
+        prior_depth_override=prior_depth_override,
+    )
     prior = prior_messages_for_turn(history, mode_norm)
     for piece in stream_chat_casual_fast(
         system,

@@ -579,6 +579,10 @@ class ChatRequest(BaseModel):
         default=None,
         description="Faz G3 — çoklu dosya oturum paketi",
     )
+    voice_turn: bool = Field(
+        default=False,
+        description="Faz D — sesli tur (STT→TTS); dost yanıt kısa tutulur",
+    )
 
 
 def _effective_chat_mode_raw(req: ChatRequest) -> str:
@@ -1254,6 +1258,12 @@ def _health_build_block() -> dict:
         from ilim_assistant.ruzgar_sesli_tur_faz_k import sesli_tur_status
 
         base["sesli_tur_faz_k"] = sesli_tur_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_tek_beyin_oturum import tek_beyin_oturum_status
+
+        base["tek_beyin_oturum"] = tek_beyin_oturum_status()
     except Exception:
         pass
     try:
@@ -9375,6 +9385,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     msg_early,
                     req.history,
                     mode_norm="genel",
+                    voice_turn=bool(getattr(req, "voice_turn", False)),
                 )
                 if _dost_stream is not None:
                     _orch_d = dict(orch_early)
@@ -9382,6 +9393,20 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     _orch_d["plan"]["label_tr"] = "Sohbet"
                     _orch_d["tek_beyin"] = True
                     _orch_d["tek_beyin_dost"] = True
+                    try:
+                        from ilim_assistant.ruzgar_tek_beyin_oturum import (
+                            analyze_mood_thread,
+                            is_mood_thread_active,
+                        )
+
+                        if is_mood_thread_active(req.history):
+                            _mt = analyze_mood_thread(req.history)
+                            _orch_d["tek_beyin_mood"] = _mt.mood_label or True
+                            _orch_d["tek_beyin_mood_turns"] = _mt.turn_count
+                    except Exception:
+                        pass
+                    if getattr(req, "voice_turn", False):
+                        _orch_d["voice_turn"] = True
                     yield {
                         "type": "status",
                         "text": "Dost sohbet — doğal yanıt hazırlanıyor…",

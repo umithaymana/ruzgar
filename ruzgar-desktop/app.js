@@ -13219,6 +13219,7 @@ async function streamChat(userText, streamOpts = {}) {
       ? { ana_motor_upload_ids: streamOpts.uploadIds }
       : {}),
     ...(streamOpts.sessionId ? { ana_motor_session_id: String(streamOpts.sessionId) } : {}),
+    ...(streamOpts.voiceTurn ? { voice_turn: true } : {}),
   };
 
   const dec = new TextDecoder("utf-8");
@@ -14208,6 +14209,12 @@ async function sendMessageWithText(t, opts = {}) {
       cinema: cinemaPayload,
       uploadIds,
       sessionId: anaMotorUploadSessionId || undefined,
+      voiceTurn: !!(
+        opts.fromVoice &&
+        el.voiceSend?.checked &&
+        el.voiceOut?.checked &&
+        activeMotorChatMode() === "genel"
+      ),
     });
     if (uploadIds.length || anaMotorUploadSessionId) {
       anaMotorUploadQueue.length = 0;
@@ -14568,7 +14575,7 @@ async function finalizeRecording(state) {
   const full = el.input.value.trim();
   if (pushSessionSend && chain && full) {
     appendBubble("user", full);
-    void sendMessageWithText(full, { skipUserBubble: true });
+    void sendMessageWithText(full, { skipUserBubble: true, fromVoice: true });
   }
   pushSessionSend = false;
   setStatus("Hazır", "Rüzgar");

@@ -8,7 +8,7 @@ import re
 import unicodedata
 from typing import Any, Iterator, Optional
 
-TEK_BEYIN_VERSION = "tek-beyin-v3-2026-06-12-faz-c"
+TEK_BEYIN_VERSION = "tek-beyin-v4-2026-06-12-faz-d"
 
 _KIM_SORUSU = re.compile(
     r"\b(kimdir|kimdi|kim\b|kimi|kimler|kimesne)\b",
@@ -322,7 +322,7 @@ def should_use_dost_sohbet_first(
     *,
     mode_norm: str = "genel",
 ) -> bool:
-    """Kişisel hafıza değil — dost/sohbet modu (Faz B)."""
+    """Kişisel hafıza değil — dost/sohbet modu (Faz B + D devam)."""
     if not dost_sohbet_enabled():
         return False
     if should_use_personal_hafiza_first(message, client_history):
@@ -334,6 +334,13 @@ def should_use_dost_sohbet_first(
         return False
     if personal_hafiza_blocks_bilgi_path(raw):
         return False
+    try:
+        from ilim_assistant.ruzgar_tek_beyin_oturum import looks_like_mood_continuation
+
+        if looks_like_mood_continuation(raw, client_history):
+            return True
+    except Exception:
+        pass
     if looks_like_friend_mood_chat(raw):
         return True
     try:
@@ -366,17 +373,46 @@ def iter_tek_beyin_dost_reply(
     history: list | None,
     *,
     mode_norm: str = "genel",
+    voice_turn: bool = False,
 ) -> Iterator[str] | None:
     """Dost sohbet — Groq/Ollama doğal yanıt (web/RAG yok)."""
     if not should_use_dost_sohbet_first(message, history, mode_norm=mode_norm):
         return None
     try:
         from ilim_assistant.ana_motor_casual import iter_casual_fast_reply
+        from ilim_assistant.ruzgar_tek_beyin_oturum import (
+            analyze_mood_thread,
+            build_mood_thread_system_addon,
+            build_voice_turn_addon,
+            dost_max_tokens,
+            dost_prior_depth,
+            enrich_dost_history,
+            tek_beyin_oturum_enabled,
+        )
 
+        hist = history or []
+        mood_thread = None
+        mood_active = False
+        if tek_beyin_oturum_enabled():
+            hist = enrich_dost_history(hist)
+            mood_thread = analyze_mood_thread(hist)
+            mood_active = bool(mood_thread.active)
+        addon = build_mood_thread_system_addon(mood_thread)
+        if voice_turn:
+            addon += build_voice_turn_addon()
         gen = iter_casual_fast_reply(
             message or "",
-            history or [],
+            hist,
             mode_norm=mode_norm,
+            system_addon=addon or None,
+            prior_depth_override=dost_prior_depth(
+                mood_active=mood_active,
+                voice_turn=voice_turn,
+            ),
+            max_tokens_override=dost_max_tokens(
+                mood_active=mood_active,
+                voice_turn=voice_turn,
+            ),
         )
         return gen
     except Exception:
