@@ -8,7 +8,7 @@ import re
 import unicodedata
 from typing import Any, Iterator, Optional
 
-TEK_BEYIN_VERSION = "tek-beyin-v4-2026-06-12-faz-d"
+TEK_BEYIN_VERSION = "tek-beyin-v5-2026-06-12-faz-e"
 
 _KIM_SORUSU = re.compile(
     r"\b(kimdir|kimdi|kim\b|kimi|kimler|kimesne)\b",
@@ -387,17 +387,22 @@ def iter_tek_beyin_dost_reply(
             dost_max_tokens,
             dost_prior_depth,
             enrich_dost_history,
+            looks_like_mood_resume,
             tek_beyin_oturum_enabled,
         )
 
         hist = history or []
         mood_thread = None
         mood_active = False
+        resuming = False
         if tek_beyin_oturum_enabled():
             hist = enrich_dost_history(hist)
             mood_thread = analyze_mood_thread(hist)
-            mood_active = bool(mood_thread.active)
-        addon = build_mood_thread_system_addon(mood_thread)
+            resuming = looks_like_mood_resume(message or "", hist)
+            mood_active = bool(mood_thread.active) or (
+                resuming and bool(mood_thread.paused)
+            )
+        addon = build_mood_thread_system_addon(mood_thread, resuming=resuming)
         if voice_turn:
             addon += build_voice_turn_addon()
         gen = iter_casual_fast_reply(

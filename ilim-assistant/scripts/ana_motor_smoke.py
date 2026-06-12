@@ -2417,6 +2417,42 @@ def run_offline() -> int:
     else:
         _ok("mood thread ansiklopedi kırılması")
 
+    print("\n=== Tek beyin Faz E — bilgi sonrası mood resume ===")
+    from ilim_assistant.ruzgar_tek_beyin_oturum import (
+        is_mood_thread_paused,
+        looks_like_mood_resume,
+        mood_resume_enabled,
+    )
+
+    if not mood_resume_enabled():
+        _fail("mood_resume", "kapalı")
+        fails += 1
+    else:
+        _ok("mood resume açık")
+    _hist_pause = _hist_mood + [
+        {"role": "user", "content": "Osmanlı ne zaman kuruldu"},
+        {"role": "assistant", "content": "1299'da kuruldu."},
+    ]
+    if not is_mood_thread_paused(_hist_pause):
+        _fail("mood_paused", "bilgi sonrası paused olmalı")
+        fails += 1
+    else:
+        _ok("mood thread paused (bilgi arası)")
+    if not looks_like_mood_resume("peki sohbete devam edelim", _hist_pause):
+        _fail("mood_resume_cue", "devam cümlesi tanınmalı")
+        fails += 1
+    else:
+        _ok("mood resume — sohbete devam")
+    if should_use_dost_sohbet_first(
+        "az önce konuştuğumuz gibi yorgunum hala",
+        _hist_pause,
+        mode_norm="genel",
+    ):
+        _ok("dost yol — mood resume")
+    else:
+        _fail("dost_resume_path", "az önce konuştuğumuz")
+        fails += 1
+
     d70 = denge70_faz_k_status()
     _ok(
         f"denge70 — ready={d70.get('ready')} ram={d70.get('ram_sufficient')} "

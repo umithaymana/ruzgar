@@ -1,5 +1,5 @@
 # Created by Ümit & Gökçenur
-"""Tek beyin Faz D — oturum derinliği, mood devamı, sesli tur uyumu."""
+"""Tek beyin Faz D/E — oturum derinliği, mood devamı, bilgi sonrası yeniden açılma."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ import unicodedata
 from dataclasses import dataclass
 from typing import Any
 
-TEK_BEYIN_OTURUM_VERSION = "tek-beyin-oturum-v1-2026-06-12-faz-d"
+TEK_BEYIN_OTURUM_VERSION = "tek-beyin-oturum-v2-2026-06-12-faz-e"
 
 _TOPIC_BREAK = re.compile(
     r"\b(?:"
@@ -32,6 +32,20 @@ _CONTINUATION = re.compile(
     r"sen\s+de|bana\s+da|"
     r"öyle\s+mi|oyle\s+mi|"
     r"neden\b|niye\b|nas[ıi]l\s+ge[çc]"
+    r")",
+    re.I,
+)
+_MOOD_RESUME = re.compile(
+    r"(?:"
+    r"sohbet(?:e)?\s+devam|konu[şs](?:maya|alim)?\s+devam|"
+    r"az\s+önce|az\s+once|biraz\s+önce|biraz\s+once|"
+    r"dertle[şs](?:meye)?\s+devam|"
+    r"yine\s+s[ıi]k[ıi]ld|"
+    r"peki\s+devam|"
+    r"seninle\s+konu[şs]|seninle\s+konus|"
+    r"hala\s+.*(?:yorgun|üzgün|uzgun|mutsuz)|"
+    r"konu[şs]tu[ğg]umuz|konus(?:tug|tuk)|"
+    r"o\s+konuda|bahsetti[ğg]imiz|bahsettigimiz"
     r")",
     re.I,
 )
@@ -63,6 +77,7 @@ class MoodThread:
     opening_snippet: str
     turn_count: int
     anchor_index: int
+    paused: bool = False
 
 
 def _turns_from_history(history: list | None, *, limit: int = 14) -> list[dict[str, str]]:
@@ -159,9 +174,21 @@ def analyze_mood_thread(history: list | None, *, lookback: int = 12) -> MoodThre
     if len(turns) - anchor > max_span:
         return MoodThread(False, "", "", 0, -1)
 
+    paused = False
     for t in turns[anchor:]:
         if _breaks_mood_thread(t.get("user") or ""):
-            return MoodThread(False, "", "", 0, -1)
+            paused = True
+            break
+
+    if paused:
+        return MoodThread(
+            active=False,
+            mood_label=label,
+            opening_snippet=_clip(opening, 120),
+            turn_count=len(turns) - anchor,
+            anchor_index=anchor,
+            paused=True,
+        )
 
     return MoodThread(
         active=True,
@@ -169,6 +196,17 @@ def analyze_mood_thread(history: list | None, *, lookback: int = 12) -> MoodThre
         opening_snippet=_clip(opening, 120),
         turn_count=len(turns) - anchor,
         anchor_index=anchor,
+        paused=False,
+    )
+
+
+def mood_resume_enabled() -> bool:
+    if not tek_beyin_oturum_enabled():
+        return False
+    return os.environ.get("RUZGAR_TEK_BEYIN_MOOD_RESUME", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
     )
 
 
@@ -178,13 +216,48 @@ def is_mood_thread_active(history: list | None) -> bool:
     return analyze_mood_thread(history).active
 
 
+def is_mood_thread_paused(history: list | None) -> bool:
+    if not tek_beyin_oturum_enabled():
+        return False
+    return analyze_mood_thread(history).paused
+
+
+def looks_like_mood_resume(message: str, history: list | None) -> bool:
+    """Bilgi/ansiklopedi ara verdikten sonra dost sohbete dönüş (Faz E)."""
+    if not mood_resume_enabled():
+        return False
+    raw = (message or "").strip()
+    if not raw or len(raw) > 500:
+        return False
+    thread = analyze_mood_thread(history)
+    if not thread.paused:
+        return False
+    if _breaks_mood_thread(raw):
+        return False
+    try:
+        from ilim_assistant.ruzgar_tek_beyin import looks_like_friend_mood_chat
+
+        if looks_like_friend_mood_chat(raw):
+            return True
+    except Exception:
+        pass
+    blob = _norm(raw)
+    if _MOOD_RESUME.search(blob):
+        return True
+    if len(raw) < 200 and _CONTINUATION.search(blob):
+        return True
+    return False
+
+
 def looks_like_mood_continuation(message: str, history: list | None) -> bool:
-    """Açık mood işareti olmadan dost sohbet devamı (Faz D)."""
+    """Açık mood işareti olmadan dost sohbet devamı (Faz D + E)."""
     if not tek_beyin_oturum_enabled():
         return False
     raw = (message or "").strip()
     if not raw or len(raw) > 500:
         return False
+    if looks_like_mood_resume(raw, history):
+        return True
     if not is_mood_thread_active(history):
         return False
     if _breaks_mood_thread(raw):
@@ -206,8 +279,14 @@ def looks_like_mood_continuation(message: str, history: list | None) -> bool:
     return False
 
 
-def build_mood_thread_system_addon(thread: MoodThread | None) -> str:
-    if not thread or not thread.active:
+def build_mood_thread_system_addon(
+    thread: MoodThread | None,
+    *,
+    resuming: bool = False,
+) -> str:
+    if not thread:
+        return ""
+    if not thread.active and not (resuming and thread.paused):
         return ""
     labels = {
         "can_sikintisi": "can sıkıntısı / sıkılma",
@@ -217,12 +296,15 @@ def build_mood_thread_system_addon(thread: MoodThread | None) -> str:
         "dost_sohbet": "yakın dost sohbeti",
     }
     mood_tr = labels.get(thread.mood_label, "yakın sohbet")
+    head = "[DOST OTURUM — devam]"
+    if resuming and thread.paused:
+        head = "[DOST OTURUM — yeniden açıldı]"
     return (
-        f"\n\n[DOST OTURUM — devam]\n"
-        f"Bu, kesintisiz bir dost sohbeti ({mood_tr}). "
+        f"\n\n{head}\n"
+        f"Bu, yakın dost sohbeti ({mood_tr}). "
         f"İlk mesaj: «{thread.opening_snippet}». "
         f"Tur: {thread.turn_count}.\n"
-        "Önceki duygusal tonu sürdür; konuyu ansiklopedi/RAG yoluna çekme. "
+        "Önceki duygusal tonu sürdür; ara bilgi sorusundan sonra sohbete geri dön. "
         "Kısa devam cümlelerini («evet», «yorgunum», «ne önerirsin») bağlamdan çöz.\n"
         "[/DOST OTURUM]\n"
     )
@@ -330,6 +412,7 @@ def tek_beyin_oturum_status() -> dict[str, Any]:
     return {
         "enabled": tek_beyin_oturum_enabled(),
         "version": TEK_BEYIN_OTURUM_VERSION,
+        "mood_resume": mood_resume_enabled(),
         "mood_max_turns": _int_env("RUZGAR_TEK_BEYIN_MOOD_MAX_TURNS", 14, lo=4, hi=24),
         "mood_prior_msgs": _int_env("RUZGAR_TEK_BEYIN_MOOD_PRIOR", 18, lo=8, hi=28),
         "voice_max_tokens": _int_env("RUZGAR_TEK_BEYIN_VOICE_MAX_TOKENS", 320, lo=120, hi=600),

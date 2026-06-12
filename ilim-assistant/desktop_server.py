@@ -9397,11 +9397,19 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                         from ilim_assistant.ruzgar_tek_beyin_oturum import (
                             analyze_mood_thread,
                             is_mood_thread_active,
+                            is_mood_thread_paused,
+                            looks_like_mood_resume,
                         )
 
+                        _mt = analyze_mood_thread(req.history)
                         if is_mood_thread_active(req.history):
-                            _mt = analyze_mood_thread(req.history)
                             _orch_d["tek_beyin_mood"] = _mt.mood_label or True
+                            _orch_d["tek_beyin_mood_turns"] = _mt.turn_count
+                        elif is_mood_thread_paused(req.history) and looks_like_mood_resume(
+                            msg_early, req.history
+                        ):
+                            _orch_d["tek_beyin_mood"] = _mt.mood_label or True
+                            _orch_d["tek_beyin_mood_resume"] = True
                             _orch_d["tek_beyin_mood_turns"] = _mt.turn_count
                     except Exception:
                         pass
