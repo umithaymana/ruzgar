@@ -7,7 +7,7 @@ import os
 import re
 from typing import Any
 
-TEK_BEYIN_BAGLAM_VERSION = "tek-beyin-baglam-v1-2026-06-12-faz-f"
+TEK_BEYIN_BAGLAM_VERSION = "tek-beyin-baglam-v2-2026-06-12-faz-g"
 
 
 def tek_beyin_baglam_enabled() -> bool:
@@ -111,11 +111,20 @@ def build_tek_beyin_baglam_addon(
     history: list | None,
     *,
     conversation_context: str | None = None,
+    session_id: str | None = None,
 ) -> str:
     """Dost/hafıza erken yollarına eklenecek bağlam bloğu."""
     if not tek_beyin_baglam_enabled():
         return ""
     sections: list[str] = []
+    try:
+        from ilim_assistant.ruzgar_tek_beyin_ozet import load_summary_addon
+
+        long_sum = load_summary_addon(history, session_id=session_id)
+        if long_sum:
+            sections.append(long_sum.strip())
+    except Exception:
+        pass
     brief = build_rolling_session_brief(history)
     if brief:
         sections.append(

@@ -2487,6 +2487,46 @@ def run_offline() -> int:
     else:
         _ok("tek beyin bağlam addon")
 
+    print("\n=== Tek beyin Faz G — uzun oturum özeti ===")
+    from ilim_assistant.ruzgar_tek_beyin_ozet import (
+        looks_like_session_summary_query,
+        rebuild_session_summary,
+        tek_beyin_ozet_enabled,
+        tek_beyin_ozet_status,
+        try_tek_beyin_summary_reply,
+    )
+
+    if not tek_beyin_ozet_enabled():
+        _fail("tek_beyin_ozet", "kapalı")
+        fails += 1
+    else:
+        _ok(f"tek beyin özet — {tek_beyin_ozet_status().get('version')}")
+    if not looks_like_session_summary_query("bugün ne konuştuk özetle"):
+        _fail("summary_query", "algı")
+        fails += 1
+    else:
+        _ok("özet sorusu algısı")
+    _long_hist = []
+    for i in range(9):
+        _long_hist.extend(
+            [
+                {"role": "user", "content": f"mesaj {i} canim sikildi mi"},
+                {"role": "assistant", "content": f"yanit {i} buradayim"},
+            ]
+        )
+    summ = rebuild_session_summary(history=_long_hist)
+    if not summ or not summ.get("summary_text"):
+        _fail("rebuild_summary", str(summ))
+        fails += 1
+    else:
+        _ok("uzun oturum özeti üretimi")
+    inst = try_tek_beyin_summary_reply("bugün ne konuştuk özetle", history=_long_hist)
+    if not inst or "zeti" not in inst.lower():
+        _fail("instant_summary", (inst or "")[:60])
+        fails += 1
+    else:
+        _ok("anında özet yanıtı")
+
     d70 = denge70_faz_k_status()
     _ok(
         f"denge70 — ready={d70.get('ready')} ram={d70.get('ram_sufficient')} "

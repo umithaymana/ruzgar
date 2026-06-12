@@ -1273,6 +1273,12 @@ def _health_build_block() -> dict:
     except Exception:
         pass
     try:
+        from ilim_assistant.ruzgar_tek_beyin_ozet import tek_beyin_ozet_status
+
+        base["tek_beyin_ozet"] = tek_beyin_ozet_status()
+    except Exception:
+        pass
+    try:
         from ilim_assistant.ruzgar_denge70_faz_k import denge70_faz_k_status
 
         base["denge70_faz_k"] = denge70_faz_k_status()
@@ -9296,6 +9302,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             except Exception:
                 pass
         try:
+            from ilim_assistant.ruzgar_tek_beyin_ozet import try_tek_beyin_summary_reply
+
+            _ozet_early = try_tek_beyin_summary_reply(
+                msg_early,
+                history=req.history,
+                session_id=getattr(req, "ana_motor_session_id", None),
+            )
+            if _ozet_early:
+                yield from _iter_instant_chat_events(
+                    _ozet_early,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=orch_early,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
             from ilim_assistant.ana_motor_sohbet_gecmis import try_past_conversation_reply
 
             _past_early = try_past_conversation_reply(
@@ -9333,6 +9359,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     req.history,
                     mode_norm="genel",
                     conversation_context=getattr(req, "conversation_context", None),
+                    session_id=getattr(req, "ana_motor_session_id", None),
                 )
                 if _tb_stream is not None:
                     _orch_tb = dict(orch_early)
@@ -9365,6 +9392,19 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                         new_wake = req.session_wake_used or message_calls_wake_name(
                             req.message
                         )
+                        try:
+                            from ilim_assistant.ruzgar_tek_beyin_ozet import persist_tek_beyin_turn
+
+                            persist_tek_beyin_turn(
+                                user_message=msg_early,
+                                assistant_message=full_out,
+                                history=req.history,
+                                mode_norm="genel",
+                                session_id=getattr(req, "ana_motor_session_id", None),
+                                plan_primary="hafiza",
+                            )
+                        except Exception:
+                            pass
                         yield {
                             "type": "done",
                             "full_reply": full_out,
@@ -9394,6 +9434,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     mode_norm="genel",
                     voice_turn=bool(getattr(req, "voice_turn", False)),
                     conversation_context=getattr(req, "conversation_context", None),
+                    session_id=getattr(req, "ana_motor_session_id", None),
                 )
                 if _dost_stream is not None:
                     _orch_d = dict(orch_early)
@@ -9436,6 +9477,19 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                         new_wake = req.session_wake_used or message_calls_wake_name(
                             req.message
                         )
+                        try:
+                            from ilim_assistant.ruzgar_tek_beyin_ozet import persist_tek_beyin_turn
+
+                            persist_tek_beyin_turn(
+                                user_message=msg_early,
+                                assistant_message=full_out,
+                                history=req.history,
+                                mode_norm="genel",
+                                session_id=getattr(req, "ana_motor_session_id", None),
+                                plan_primary="gundelik",
+                            )
+                        except Exception:
+                            pass
                         yield {
                             "type": "done",
                             "full_reply": full_out,
@@ -11572,6 +11626,18 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 maybe_remember_session_summary(
                     user_message=msg,
                     assistant_message=body_fixed,
+                    mode_norm=mode_norm,
+                )
+            except Exception:
+                pass
+            try:
+                from ilim_assistant.ruzgar_tek_beyin_ozet import maybe_refresh_tek_beyin_ozet
+
+                maybe_refresh_tek_beyin_ozet(
+                    user_message=msg,
+                    assistant_message=body_fixed,
+                    history=req.history,
+                    session_id=getattr(req, "ana_motor_session_id", None),
                     mode_norm=mode_norm,
                 )
             except Exception:

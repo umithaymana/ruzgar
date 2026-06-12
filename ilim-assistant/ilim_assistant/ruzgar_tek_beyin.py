@@ -8,7 +8,7 @@ import re
 import unicodedata
 from typing import Any, Iterator, Optional
 
-TEK_BEYIN_VERSION = "tek-beyin-v6-2026-06-12-faz-f"
+TEK_BEYIN_VERSION = "tek-beyin-v7-2026-06-12-faz-g"
 
 _KIM_SORUSU = re.compile(
     r"\b(kimdir|kimdi|kim\b|kimi|kimler|kimesne)\b",
@@ -209,6 +209,7 @@ def iter_tek_beyin_hafiza_reply(
     *,
     mode_norm: str = "genel",
     conversation_context: str | None = None,
+    session_id: str | None = None,
 ) -> Iterator[str] | None:
     """Kişisel hafıza → doğal sentez (LLM yalnızca anlatım; bilgi kaynaktan)."""
     if not tek_beyin_enabled():
@@ -227,6 +228,7 @@ def iter_tek_beyin_hafiza_reply(
             target,
             history,
             conversation_context=conversation_context,
+            session_id=session_id,
         )
 
         return iter_hafiza_dogal_reply(
@@ -384,6 +386,7 @@ def iter_tek_beyin_dost_reply(
     mode_norm: str = "genel",
     voice_turn: bool = False,
     conversation_context: str | None = None,
+    session_id: str | None = None,
 ) -> Iterator[str] | None:
     """Dost sohbet — Groq/Ollama doğal yanıt (web/RAG yok)."""
     if not should_use_dost_sohbet_first(message, history, mode_norm=mode_norm):
@@ -418,6 +421,7 @@ def iter_tek_beyin_dost_reply(
             message or "",
             hist,
             conversation_context=conversation_context,
+            session_id=session_id,
         )
         if voice_turn:
             addon += build_voice_turn_addon()
