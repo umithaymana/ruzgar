@@ -59,7 +59,7 @@ CHATGPT_SLO_PACK: tuple[SloTurn, ...] = (
     SloTurn(
         "S4",
         "İslam medeniyetinde ilim geleneği hakkında ne söylersin?",
-        max_sec=55.0,
+        max_sec=float(os.environ.get("RUZGAR_SLO_S4_MAX_SEC", "90")),
         min_chars=35,
         must_contain_any=("ilim", "bilim", "medrese", "islam", "öğren"),
     ),

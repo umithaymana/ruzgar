@@ -38,7 +38,16 @@ jobs:
           RUZGAR_SKIP_RAG_WARMUP: "1"
           RUZGAR_DISABLE_GEMINI: "1"
           RUZGAR_DISABLE_GROQ: "1"
+          RUZGAR_CANLI_SLO_FAZ_K: "1"
         run: python scripts/ana_motor_smoke.py
+
+      - name: Ana motor SLO birim (hızlı)
+        working-directory: ilim-assistant
+        env:
+          RUZGAR_SKIP_RAG_WARMUP: "1"
+          RUZGAR_DISABLE_GEMINI: "1"
+          RUZGAR_DISABLE_GROQ: "1"
+        run: python -c "from ilim_assistant.ruzgar_canli_slo_faz_k import slo_pack_status, evaluate_reply, CHATGPT_SLO_PACK; assert slo_pack_status()['enabled']; assert evaluate_reply(CHATGPT_SLO_PACK[2], 'Osman 1299', 2)['ok']; print('slo-unit-ok')"
 
       - name: ROK smoke
         working-directory: ilim-assistant

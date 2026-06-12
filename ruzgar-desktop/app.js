@@ -1164,7 +1164,8 @@ async function maybeResumeVoiceListenAfterReply() {
   if (!navigator.mediaDevices?.getUserMedia) return;
   if (recState || micBootPromise) return;
   sesliTurResumePending = true;
-  await new Promise((r) => window.setTimeout(r, 450));
+  const vadResume = getSesliTurVadParams().resumeDelay;
+  await new Promise((r) => window.setTimeout(r, vadResume));
   if (!sesliTurResumePending || perfBusy || recState) return;
   sesliTurResumePending = false;
   try {
@@ -14172,6 +14173,28 @@ let micLevelAnalyser = null;
 /** Yıldırım: sessizlikte kaydı kapat (ms) — Ümit & Gökçenur VAD */
 const RUZGAR_SILENCE_END_MS = 800;
 const RUZGAR_SILENCE_MIN_REC_MS = 1200;
+
+function getSesliTurVadParams() {
+  const st = lastHealthSnapshot?.build?.sesli_tur_faz_k;
+  const vad = st && typeof st === "object" ? st.vad : null;
+  const loop =
+    sesliTurResumePending ||
+    (el.voiceSend?.checked && el.voiceOut?.checked && currentMode === "genel");
+  if (loop && vad && typeof vad === "object") {
+    return {
+      silenceEnd: Number(vad.silence_end_ms) || 620,
+      minRec: Number(vad.min_rec_ms) || 850,
+      quietAvg: Number(vad.quiet_avg) || 9,
+      resumeDelay: Number(vad.resume_delay_ms) || 380,
+    };
+  }
+  return {
+    silenceEnd: RUZGAR_SILENCE_END_MS,
+    minRec: RUZGAR_SILENCE_MIN_REC_MS,
+    quietAvg: 8,
+    resumeDelay: 450,
+  };
+}
 let vadSilentMs = 0;
 let silenceAutoStopBusy = false;
 
@@ -14218,7 +14241,8 @@ async function maybeEndRecordingOnSilence() {
   if (silenceAutoStopBusy) return;
   const s = recState;
   if (!s || (s.kind !== "btn" && s.kind !== "menu")) return;
-  if (!s.startedAt || Date.now() - s.startedAt < RUZGAR_SILENCE_MIN_REC_MS) {
+  const vadMinRec = getSesliTurVadParams().minRec;
+  if (!s.startedAt || Date.now() - s.startedAt < vadMinRec) {
     return;
   }
   silenceAutoStopBusy = true;
@@ -14270,13 +14294,14 @@ function startMicLevelMeter(stream) {
     lastMicEnergy01 = Math.min(1, Math.max(0, pct / 100));
     bar.style.width = `${pct}%`;
     if (recState && (recState.kind === "btn" || recState.kind === "menu")) {
-      const quiet = avg < 8;
+      const vadP = getSesliTurVadParams();
+      const quiet = avg < vadP.quietAvg;
       if (quiet) vadSilentMs += 1000 / 58;
       else vadSilentMs = 0;
       if (
-        vadSilentMs >= RUZGAR_SILENCE_END_MS &&
+        vadSilentMs >= vadP.silenceEnd &&
         recState.startedAt &&
-        Date.now() - recState.startedAt >= RUZGAR_SILENCE_MIN_REC_MS
+        Date.now() - recState.startedAt >= vadP.minRec
       ) {
         vadSilentMs = 0;
         void maybeEndRecordingOnSilence();

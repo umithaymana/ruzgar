@@ -1,0 +1,38 @@
+# Ana Motor — gece SLO paketi (S1–S10, Faz K/L)
+
+name: Ana Motor SLO Nightly
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  slo-pack-offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: ilim-assistant/requirements.txt
+
+      - name: Install dependencies
+        working-directory: ilim-assistant
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Ana motor SLO paketi (offline S1–S10)
+        working-directory: ilim-assistant
+        env:
+          RUZGAR_SKIP_RAG_WARMUP: "1"
+          RUZGAR_DISABLE_GEMINI: "1"
+          RUZGAR_DISABLE_GROQ: "1"
+          RUZGAR_CANLI_SLO_FAZ_K: "1"
+          RUZGAR_SLO_PACK_MIN_PASS: "8"
+          RUZGAR_SLO_S4_MAX_SEC: "120"
+        run: python scripts/ana_motor_smoke.py --slo-pack

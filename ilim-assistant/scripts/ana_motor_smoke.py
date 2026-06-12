@@ -2378,7 +2378,10 @@ def run_offline() -> int:
     else:
         _ok("sesli tur Faz K açık")
     d70 = denge70_faz_k_status()
-    _ok(f"denge70 — ready={d70.get('ready')} cmd={d70.get('pull_cmd')}")
+    _ok(
+        f"denge70 — ready={d70.get('ready')} ram={d70.get('ram_sufficient')} "
+        f"auto={d70.get('auto_chain_ready')} cmd={d70.get('pull_cmd')}"
+    )
 
     print("\n=== prepare_turn (LLM çağrısı yok) ===")
     prep = prepare_turn(
@@ -2436,7 +2439,9 @@ def run_live(base: str) -> int:
     if slo_meta is False or (isinstance(slo_meta, dict) and slo_meta.get("enabled") is False):
         _fail("canli_slo_faz_k", str(slo_meta))
         fails += 1
-    elif build.get("canli_slo_faz_k") or "slo-faz-k" in str(build.get("rev") or ""):
+    elif build.get("canli_slo_faz_k") or any(
+        x in str(build.get("rev") or "") for x in ("slo-faz-k", "sesli-vad-faz-l")
+    ):
         turns = slo_meta.get("turns", 10) if isinstance(slo_meta, dict) else 10
         _ok(f"Faz K SLO — rev={build.get('rev')} turns={turns}")
     hs = build.get("hub_sse") or {}

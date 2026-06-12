@@ -517,23 +517,33 @@ def _inject_denge70_chain(
     mode_norm: str,
     profiles: dict[str, BrainEndpoint],
 ) -> list[str]:
-    """Bilim derin turda 70B profilini zincire ekle."""
+    """Bilim derin / bilgi-bilim turda 70B profilini zincire ekle (Faz L: RAM kapısı)."""
     out = list(chain_ids)
+    if profiles.get("denge70") is None or "denge70" in out:
+        return out
     try:
         from ilim_assistant.ana_motor_bilim_derin import (
             bilim_derin_use_70b,
             is_bilim_derin_turn,
         )
+        from ilim_assistant.ruzgar_denge70_faz_k import denge70_auto_chain_ready
 
-        if not (
+        primary = _plan_primary(question_plan)
+        bilim_derin = bool(
             bilim_derin_use_70b()
             and is_bilim_derin_turn(question_plan, message, mode_norm)
-            and profiles.get("denge70") is not None
             and denge70_ready_for_chain()
-            and "denge70" not in out
-        ):
+        )
+        auto_boost = bool(
+            denge70_auto_chain_ready()
+            and primary in ("bilgi", "bilim")
+            and mode_norm in ("", "genel", "bilgi", "bilim")
+        )
+        if not (bilim_derin or auto_boost):
             return out
-        if "gemini" in out:
+        if "denge" in out:
+            out.insert(out.index("denge") + 1, "denge70")
+        elif "gemini" in out:
             out.insert(out.index("gemini") + 1, "denge70")
         elif "groq" in out:
             out.insert(out.index("groq") + 1, "denge70")

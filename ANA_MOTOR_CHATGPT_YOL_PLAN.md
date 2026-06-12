@@ -60,10 +60,28 @@ RUZGAR_SLO_PACK_MIN_PASS=8
 RUZGAR_SESLI_TUR_FAZ_K=1
 ```
 
+## Faz L — uygulandı (2026-06-11)
+
+| # | Modül | Özet |
+|---|--------|------|
+| L1 | `ruzgar_sesli_tur_faz_k.py` | VAD eşikleri (health → istemci) |
+| L2 | `ruzgar_denge70_faz_k.py` | RAM kapısı + `denge70_auto_chain_ready` |
+| L3 | `llm_brain.py` | bilgi/bilim turda denge70 zincir önceliği |
+| L4 | `.github/workflows/ana-motor-slo-nightly.yml` | Gece S1–S10 SLO |
+
+**Build:** `2026-06-11-ruzgar-sesli-vad-faz-l`
+
+```env
+RUZGAR_SESLI_VAD_SILENCE_MS=620
+RUZGAR_SESLI_VAD_MIN_REC_MS=850
+RUZGAR_DENGE70_AUTO_CHAIN=1
+RUZGAR_DENGE70_MIN_RAM_GB=14
+```
+
 ## Sıradaki
 
-- SLO paketini CI’da gece koşusu
-- Sürekli sesli tur VAD ince ayarı
-- `denge70` otomatik zincir önceliği (RAM yeterliyse)
+- Canlı SLO gece koşusu (sunucu açıkken)
+- Sesli tur VAD kullanıcı ayar paneli
+- denge70 pull otomasyonu (RAM yeterliyse)
 
 *Bismillah*

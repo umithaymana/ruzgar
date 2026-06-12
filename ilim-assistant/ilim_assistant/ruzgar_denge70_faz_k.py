@@ -6,7 +6,7 @@ from __future__ import annotations
 import os
 import subprocess
 
-DENGE70_FAZ_K_VERSION = "denge70-faz-k-v1-2026-06-11"
+DENGE70_FAZ_K_VERSION = "denge70-faz-l-v1-2026-06-11"
 
 
 def denge70_model_name() -> str:
@@ -71,14 +71,61 @@ def try_ollama_pull_denge70(*, timeout_sec: int = 30) -> dict[str, object]:
         }
 
 
+def denge70_min_ram_gb() -> float:
+    try:
+        return max(8.0, float(os.environ.get("RUZGAR_DENGE70_MIN_RAM_GB", "14")))
+    except ValueError:
+        return 14.0
+
+
+def denge70_ram_sufficient() -> bool:
+    """70B için yeterli boş RAM (varsayılan ≥14 GB)."""
+    if os.environ.get("RUZGAR_DENGE70_SKIP_RAM_CHECK", "0").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+    ):
+        return True
+    min_gb = denge70_min_ram_gb()
+    try:
+        import psutil  # type: ignore[import-not-found]
+
+        avail = float(psutil.virtual_memory().available) / (1024**3)
+        return avail >= min_gb
+    except Exception:
+        return False
+
+
+def denge70_auto_chain_enabled() -> bool:
+    return os.environ.get("RUZGAR_DENGE70_AUTO_CHAIN", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
+def denge70_auto_chain_ready() -> bool:
+    """Model çekilmiş + RAM yeterli → zincire otomatik ekle."""
+    if not denge70_auto_chain_enabled():
+        return False
+    from ilim_assistant.llm_brain import denge70_ready_for_chain
+
+    return bool(denge70_ready_for_chain()) and denge70_ram_sufficient()
+
+
 def denge70_faz_k_status() -> dict[str, object]:
     from ilim_assistant.llm_brain import denge70_readiness
 
     d = denge70_readiness()
+    ram_ok = denge70_ram_sufficient()
     return {
         "version": DENGE70_FAZ_K_VERSION,
         "model": denge70_model_name(),
         "ready": bool(d.get("ready")),
+        "ram_sufficient": ram_ok,
+        "min_ram_gb": denge70_min_ram_gb(),
+        "auto_chain": denge70_auto_chain_enabled(),
+        "auto_chain_ready": denge70_auto_chain_ready(),
         "hint": d.get("hint") or denge70_pull_hint(),
         "pull_cmd": denge70_pull_hint(),
     }

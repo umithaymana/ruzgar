@@ -1185,7 +1185,7 @@ def _health_build_block() -> dict:
     import os as _os
 
     base = {
-        "rev": "2026-06-11-ruzgar-canli-slo-faz-k",
+        "rev": "2026-06-11-ruzgar-sesli-vad-faz-l",
         "nebula_kitap": True,
         "tek_ses_faz_b": True,
         "orkestrasyon_faz_c": True,
