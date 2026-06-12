@@ -2453,6 +2453,40 @@ def run_offline() -> int:
         _fail("dost_resume_path", "az önce konuştuğumuz")
         fails += 1
 
+    print("\n=== Tek beyin Faz F — oturum özeti / bağlam ===")
+    from ilim_assistant.ruzgar_tek_beyin_baglam import (
+        build_rolling_session_brief,
+        build_tek_beyin_baglam_addon,
+        tek_beyin_baglam_enabled,
+        tek_beyin_baglam_status,
+    )
+
+    if not tek_beyin_baglam_enabled():
+        _fail("tek_beyin_baglam", "kapalı")
+        fails += 1
+    else:
+        _ok(f"tek beyin bağlam — {tek_beyin_baglam_status().get('version')}")
+    _hist_brief = _hist_mood + [
+        {"role": "user", "content": "bugün işten yorgun geldim"},
+        {"role": "assistant", "content": "Anlıyorum Ümit abi, dinlen biraz."},
+    ]
+    brief = build_rolling_session_brief(_hist_brief)
+    if not brief or "yorgun" not in brief.lower():
+        _fail("rolling_brief", brief[:80] if brief else "boş")
+        fails += 1
+    else:
+        _ok("rolling session brief")
+    addon = build_tek_beyin_baglam_addon(
+        "az önce konuştuğumuz gibi",
+        _hist_brief,
+        conversation_context="Kullanıcı moral bozuk, kısa cevap tercih ediyor.",
+    )
+    if "OTURUM ÖZETİ" not in addon or "İSTEMCİ" not in addon:
+        _fail("baglam_addon", "eksik blok")
+        fails += 1
+    else:
+        _ok("tek beyin bağlam addon")
+
     d70 = denge70_faz_k_status()
     _ok(
         f"denge70 — ready={d70.get('ready')} ram={d70.get('ram_sufficient')} "

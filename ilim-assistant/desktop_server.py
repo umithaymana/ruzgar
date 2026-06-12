@@ -1267,6 +1267,12 @@ def _health_build_block() -> dict:
     except Exception:
         pass
     try:
+        from ilim_assistant.ruzgar_tek_beyin_baglam import tek_beyin_baglam_status
+
+        base["tek_beyin_baglam"] = tek_beyin_baglam_status()
+    except Exception:
+        pass
+    try:
         from ilim_assistant.ruzgar_denge70_faz_k import denge70_faz_k_status
 
         base["denge70_faz_k"] = denge70_faz_k_status()
@@ -9326,6 +9332,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     msg_early,
                     req.history,
                     mode_norm="genel",
+                    conversation_context=getattr(req, "conversation_context", None),
                 )
                 if _tb_stream is not None:
                     _orch_tb = dict(orch_early)
@@ -9386,6 +9393,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     req.history,
                     mode_norm="genel",
                     voice_turn=bool(getattr(req, "voice_turn", False)),
+                    conversation_context=getattr(req, "conversation_context", None),
                 )
                 if _dost_stream is not None:
                     _orch_d = dict(orch_early)

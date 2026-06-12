@@ -8,7 +8,7 @@ import re
 import unicodedata
 from typing import Any, Iterator, Optional
 
-TEK_BEYIN_VERSION = "tek-beyin-v5-2026-06-12-faz-e"
+TEK_BEYIN_VERSION = "tek-beyin-v6-2026-06-12-faz-f"
 
 _KIM_SORUSU = re.compile(
     r"\b(kimdir|kimdi|kim\b|kimi|kimler|kimesne)\b",
@@ -208,6 +208,7 @@ def iter_tek_beyin_hafiza_reply(
     history: list | None,
     *,
     mode_norm: str = "genel",
+    conversation_context: str | None = None,
 ) -> Iterator[str] | None:
     """Kişisel hafıza → doğal sentez (LLM yalnızca anlatım; bilgi kaynaktan)."""
     if not tek_beyin_enabled():
@@ -220,12 +221,20 @@ def iter_tek_beyin_hafiza_reply(
         return None
     try:
         from ilim_assistant.hafiza_dogal_sentez import iter_hafiza_dogal_reply
+        from ilim_assistant.ruzgar_tek_beyin_baglam import build_tek_beyin_baglam_addon
+
+        baglam = build_tek_beyin_baglam_addon(
+            target,
+            history,
+            conversation_context=conversation_context,
+        )
 
         return iter_hafiza_dogal_reply(
             target,
             history or [],
             mode_norm=mode_norm,
             hint=hint,
+            context_addon=baglam or None,
         )
     except Exception:
         return None
@@ -374,12 +383,14 @@ def iter_tek_beyin_dost_reply(
     *,
     mode_norm: str = "genel",
     voice_turn: bool = False,
+    conversation_context: str | None = None,
 ) -> Iterator[str] | None:
     """Dost sohbet — Groq/Ollama doğal yanıt (web/RAG yok)."""
     if not should_use_dost_sohbet_first(message, history, mode_norm=mode_norm):
         return None
     try:
         from ilim_assistant.ana_motor_casual import iter_casual_fast_reply
+        from ilim_assistant.ruzgar_tek_beyin_baglam import build_tek_beyin_baglam_addon
         from ilim_assistant.ruzgar_tek_beyin_oturum import (
             analyze_mood_thread,
             build_mood_thread_system_addon,
@@ -403,6 +414,11 @@ def iter_tek_beyin_dost_reply(
                 resuming and bool(mood_thread.paused)
             )
         addon = build_mood_thread_system_addon(mood_thread, resuming=resuming)
+        addon += build_tek_beyin_baglam_addon(
+            message or "",
+            hist,
+            conversation_context=conversation_context,
+        )
         if voice_turn:
             addon += build_voice_turn_addon()
         gen = iter_casual_fast_reply(

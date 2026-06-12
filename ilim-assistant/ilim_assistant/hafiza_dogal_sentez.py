@@ -172,6 +172,7 @@ def iter_hafiza_dogal_reply(
     *,
     mode_norm: str = "genel",
     hint: dict[str, Any] | None = None,
+    context_addon: str | None = None,
 ) -> Iterator[str] | None:
     """
     Hafıza isabeti varsa Ollama/Groq/Gemini zinciri ile doğal yanıt üretir.
@@ -197,6 +198,8 @@ def iter_hafiza_dogal_reply(
         extra = _optional_rag_context(msg, mode_norm)
 
     system = pick_system(False, mode_norm) + _dogal_system_tail(mode_norm)
+    if (context_addon or "").strip():
+        system += (context_addon or "").strip() + "\n"
     user = _build_user_block(msg, h, extra)
     prior = prior_messages_for_turn(history, mode_norm)
 
