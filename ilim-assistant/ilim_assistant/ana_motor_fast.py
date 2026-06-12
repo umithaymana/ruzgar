@@ -59,6 +59,10 @@ def should_bilgi_cloud_fast(
 
         if is_instant_translate_message(msg):
             return False
+        from ilim_assistant.ruzgar_tek_beyin import personal_hafiza_blocks_bilgi_path
+
+        if personal_hafiza_blocks_bilgi_path(msg):
+            return False
     except Exception:
         pass
     return True
@@ -130,8 +134,15 @@ def should_fast_direct_llm(
             is_casual_conversation_turn,
             looks_like_encyclopedic_fact_question,
             looks_like_fast_llm_fact_question,
+            looks_like_past_conversation_query,
         )
 
+        if looks_like_past_conversation_query(msg):
+            return False
+        from ilim_assistant.ruzgar_tek_beyin import personal_hafiza_blocks_bilgi_path
+
+        if personal_hafiza_blocks_bilgi_path(msg):
+            return False
         if is_casual_conversation_turn(msg, mode_norm, question_plan):
             return False
         if looks_like_fast_llm_fact_question(msg):
@@ -150,7 +161,7 @@ def should_fast_direct_llm(
     if primary in ("islem", "dosya") and len(msg) < 400:
         return True
     if primary == "hafiza" and not use_rag:
-        return True
+        return False
     return False
 
 

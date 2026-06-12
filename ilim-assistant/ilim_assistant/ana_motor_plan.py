@@ -49,6 +49,13 @@ def looks_like_encyclopedic_fact_question(msg: str) -> bool:
     raw = (msg or "").strip()
     if len(raw) < 8:
         return False
+    try:
+        from ilim_assistant.ruzgar_tek_beyin import personal_hafiza_blocks_bilgi_path
+
+        if personal_hafiza_blocks_bilgi_path(raw):
+            return False
+    except Exception:
+        pass
     asc = _norm_ascii(raw)
     low = raw.lower()
     blob = low + " " + asc
@@ -107,6 +114,13 @@ def looks_like_fast_llm_fact_question(msg: str) -> bool:
     if not raw or len(raw) > 220:
         return False
     if looks_like_encyclopedic_fact_question(msg):
+        try:
+            from ilim_assistant.ruzgar_tek_beyin import personal_hafiza_blocks_bilgi_path
+
+            if personal_hafiza_blocks_bilgi_path(msg):
+                return False
+        except Exception:
+            pass
         try:
             from ilim_assistant.ana_motor_fast import fast_local_rag_first_enabled
 
@@ -272,6 +286,12 @@ def _score_categories(msg: str, mode_norm: str, motor_flags: dict[str, bool]) ->
         )
     ):
         s["hafiza"] += 2.5
+
+    if looks_like_past_conversation_query(raw):
+        s["hafiza"] += 7.0
+        s["bilgi"] = max(0.0, s["bilgi"] - 4.0)
+        s["bilim"] = max(0.0, s["bilim"] - 2.0)
+        s["gundelik"] = max(0.0, s["gundelik"] - 1.0)
 
     if any(
         x in blob
@@ -631,6 +651,36 @@ def plan_question(
 
     status = _status_for_plan(primary, web_q if prefer_web else "")
 
+    if looks_like_past_conversation_query(message):
+        primary = "hafiza"
+        secondary = [x for x in secondary if x != "hafiza"][:2]
+        use_ilim_rag = False
+        prefer_web = False
+        prefer_archive = False
+        ambiguous = False
+        clarification = None
+        web_q = ""
+        rag_q = ""
+        status = _status_for_plan("hafiza", "")
+
+    try:
+        from ilim_assistant.ruzgar_tek_beyin import tek_beyin_plan_override
+
+        _tb = tek_beyin_plan_override(message)
+        if _tb:
+            primary = str(_tb.get("primary") or "hafiza")
+            secondary = [x for x in secondary if x != primary][:2]
+            use_ilim_rag = False
+            prefer_web = False
+            prefer_archive = False
+            ambiguous = False
+            clarification = None
+            web_q = ""
+            rag_q = ""
+            status = _status_for_plan("hafiza", "")
+    except Exception:
+        pass
+
     return QuestionPlan(
         primary=primary,
         secondary=secondary,
@@ -737,9 +787,9 @@ def _info_query_blocks_casual(message: str) -> bool:
 
 
 def looks_like_past_conversation_query(message: str) -> bool:
-    """«Dün ne konuştuk» — oturumlar arası jsonl geçmişi."""
+    """Geçmiş sohbet / hafıza geri çağırma — jsonl + oturum geçmişi."""
     raw = (message or "").strip()
-    if len(raw) < 10:
+    if len(raw) < 8:
         return False
     blob = _norm_ascii(raw.lower()) + " " + raw.lower()
     cues = (
@@ -757,10 +807,49 @@ def looks_like_past_conversation_query(message: str) -> bool:
         "ne konuş",
         "hangi konulari",
         "hangi konuları",
+        "hangi soru",
+        "hangi sorular",
+        "ne sormu",
+        "sormustum",
+        "sormuştum",
+        "sordum ",
+        " sordum",
+        "sormus",
+        "sormuş",
         "hatirliyor musun",
         "hatırlıyor musun",
+        "konuşmuş olabilir",
+        "konusmus olabilir",
+        "bahsetmiş",
+        "bahsettik",
+        "hakkında konuş",
+        "hakkinda konus",
+        "hakkında konus",
+        "demiş miydim",
+        "demistim",
+        "demiştim",
+        "kayitli sohbet",
+        "kayıtlı sohbet",
+        "onceki sohbet",
+        "önceki sohbet",
+        "gecmis sohbet",
+        "geçmiş sohbet",
     )
-    return any(c in blob for c in cues)
+    if any(c in blob for c in cues):
+        return True
+    if re.search(
+        r"(?:baska|başka)\s+hangi\s+(?:soru|konu|mesaj)",
+        blob,
+        re.I,
+    ):
+        return True
+    if re.search(
+        r"(?:konus|konuş)(?:mus|muş|mustuk|muştuk|mistik|miştik|tuk|tık)?\s*(?:olabilir|miyiz|mu|mı)",
+        blob,
+        re.I,
+    ):
+        return True
+    return False
 
 
 def looks_like_educational_code_question(message: str) -> bool:

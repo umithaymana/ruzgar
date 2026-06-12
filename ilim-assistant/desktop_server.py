@@ -9280,6 +9280,71 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             except Exception:
                 pass
         try:
+            from ilim_assistant.ana_motor_sohbet_gecmis import try_past_conversation_reply
+
+            _past_early = try_past_conversation_reply(
+                msg_early,
+                client_history=req.history,
+            )
+            if _past_early:
+                yield from _iter_instant_chat_events(
+                    _past_early,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=orch_early,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ruzgar_tek_beyin import (
+                iter_tek_beyin_hafiza_reply,
+                should_use_personal_hafiza_first,
+                tek_beyin_enabled,
+            )
+
+            if tek_beyin_enabled() and should_use_personal_hafiza_first(
+                msg_early, req.history
+            ):
+                _tb_stream = iter_tek_beyin_hafiza_reply(
+                    msg_early,
+                    req.history,
+                    mode_norm="genel",
+                )
+                if _tb_stream is not None:
+                    _orch_tb = dict(orch_early)
+                    _orch_tb.setdefault("plan", {})["primary"] = "hafiza"
+                    _orch_tb["plan"]["label_tr"] = "Hafıza / kayıt"
+                    _orch_tb["tek_beyin"] = True
+                    yield {
+                        "type": "status",
+                        "text": "Kişisel hafıza — doğal yanıt hazırlanıyor…",
+                    }
+                    reply_body = ""
+                    for piece in _tb_stream:
+                        reply_body += piece
+                        yield {"type": "token", "text": piece}
+                    if (reply_body or "").strip():
+                        full_out = finalize_assistant_reply(reply_body)
+                        new_wake = req.session_wake_used or message_calls_wake_name(
+                            req.message
+                        )
+                        yield {
+                            "type": "done",
+                            "full_reply": full_out,
+                            "user_message": msg_early,
+                            "new_wake_used": new_wake,
+                            "orchestra": _orch_tb,
+                            "instant_gundelik": True,
+                            "tek_beyin": True,
+                            "hafiza_dogal": True,
+                        }
+                        return
+        except Exception:
+            pass
+        try:
             from ilim_assistant.nebula_kitap_hafiza import try_consume_nebula_kitap_command
 
             kitap_reply = try_consume_nebula_kitap_command(msg_early)
@@ -10401,7 +10466,10 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
     try:
         from ilim_assistant.ana_motor_sohbet_gecmis import try_past_conversation_reply
 
-        _past_reply = try_past_conversation_reply(req.message or "")
+        _past_reply = try_past_conversation_reply(
+            req.message or "",
+            client_history=req.history,
+        )
         if _past_reply:
             yield from _iter_instant_chat_events(
                 _past_reply,
@@ -11140,6 +11208,32 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                         req.history,
                         mode_norm=mode_norm,
                         question_plan=turn_plan,
+                    ):
+                        _fb_body += piece
+                    if (_fb_body or "").strip():
+                        full_out = finalize_assistant_reply(_fb_body) + footer
+            except Exception:
+                pass
+        if not (full_out or "").strip():
+            try:
+                from ilim_assistant.ana_motor_casual import (
+                    casual_fast_enabled,
+                    iter_casual_fast_reply,
+                )
+                from ilim_assistant.ana_motor_plan import is_casual_conversation_turn
+
+                _primary = ""
+                if turn_plan is not None:
+                    _primary = str(getattr(turn_plan, "primary", "") or "").strip().lower()
+                if casual_fast_enabled() and (
+                    _primary in ("gundelik", "islem", "hava", "dosya")
+                    or is_casual_conversation_turn(msg, mode_norm, turn_plan, history=req.history)
+                ):
+                    _fb_body = ""
+                    for piece in iter_casual_fast_reply(
+                        msg,
+                        req.history,
+                        mode_norm=mode_norm,
                     ):
                         _fb_body += piece
                     if (_fb_body or "").strip():

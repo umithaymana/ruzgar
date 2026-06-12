@@ -8,6 +8,20 @@ from typing import Any, Iterator
 
 
 def casual_fast_enabled() -> bool:
+    """Kısa sohbet hızlı yolu (SSE) — tamamen kapatmak için RUZGAR_DISABLE_CASUAL_FAST=1."""
+    return os.environ.get("RUZGAR_DISABLE_CASUAL_FAST", "0").strip().lower() not in (
+        "1",
+        "true",
+        "yes",
+    )
+
+
+def casual_gemini_only_mode() -> bool:
+    """True: yalnızca Gemini; False: Groq/Ollama zinciri (RUZGAR_FREE_BRAIN=1)."""
+    from ilim_assistant.llm_brain import free_brain_enabled
+
+    if free_brain_enabled():
+        return False
     return os.environ.get("RUZGAR_CASUAL_FAST_GEMINI", "1").strip().lower() not in (
         "0",
         "false",
@@ -108,12 +122,9 @@ def iter_casual_fast_reply(
     aksi halde yalnızca Gemini (eski davranış).
     """
     from ilim_assistant.chat_core import prior_messages_for_turn
-    from ilim_assistant.llm_brain import (
-        free_brain_enabled,
-        stream_chat_casual_fast,
-    )
+    from ilim_assistant.llm_brain import stream_chat_casual_fast
 
-    use_gemini_only = casual_fast_enabled() and not free_brain_enabled()
+    use_gemini_only = casual_gemini_only_mode()
     if use_gemini_only:
         yield from iter_casual_gemini_reply(message, history, mode_norm=mode_norm)
         return

@@ -7,7 +7,11 @@ import os
 import time
 from pathlib import Path
 
+# Mutlak bitiş zamanı (time.time() — disk ve bellek aynı birim)
 _COOLDOWN_UNTIL: float = 0.0
+
+# Eski sürüm monotonic() yazıyordu; yeniden başlatınca saatler/günler süren sahte soğuma
+_LEGACY_MONOTONIC_STAMP_MAX = 10_000_000.0
 
 
 def _cooldown_sec() -> int:
@@ -25,13 +29,13 @@ def gemini_cooldown_active() -> bool:
         "no",
     ):
         return False
-    return time.monotonic() < _COOLDOWN_UNTIL
+    return time.time() < _COOLDOWN_UNTIL
 
 
 def mark_gemini_quota_hit() -> None:
     global _COOLDOWN_UNTIL
     # Aynı oturumda tekrar API çağrısı yapılmasın — anında soğuma
-    _COOLDOWN_UNTIL = max(_COOLDOWN_UNTIL, time.monotonic() + float(_cooldown_sec()))
+    _COOLDOWN_UNTIL = max(_COOLDOWN_UNTIL, time.time() + float(_cooldown_sec()))
     try:
         stamp = Path(os.environ.get("TEMP", ".")) / "ruzgar-gemini-cooldown.txt"
         stamp.write_text(str(_COOLDOWN_UNTIL), encoding="utf-8")
@@ -43,8 +47,19 @@ def _restore_cooldown_from_disk() -> None:
     global _COOLDOWN_UNTIL
     try:
         stamp = Path(os.environ.get("TEMP", ".")) / "ruzgar-gemini-cooldown.txt"
-        if stamp.is_file():
-            _COOLDOWN_UNTIL = max(_COOLDOWN_UNTIL, float(stamp.read_text(encoding="utf-8").strip()))
+        if not stamp.is_file():
+            return
+        raw = stamp.read_text(encoding="utf-8").strip()
+        val = float(raw)
+        now = time.time()
+        if val < _LEGACY_MONOTONIC_STAMP_MAX:
+            # Eski monotonic damgası — süresiz sahte soğuma; temizle
+            stamp.unlink(missing_ok=True)
+            return
+        if val > now:
+            _COOLDOWN_UNTIL = max(_COOLDOWN_UNTIL, val)
+        else:
+            stamp.unlink(missing_ok=True)
     except (OSError, ValueError):
         pass
 

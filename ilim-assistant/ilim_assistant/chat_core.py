@@ -996,7 +996,7 @@ def prepare_turn(
         try:
             from ilim_assistant.ana_motor_sohbet_gecmis import try_past_conversation_reply
 
-            past_reply = try_past_conversation_reply(msg)
+            past_reply = try_past_conversation_reply(msg, client_history=history)
             if past_reply:
                 return msg, [], "", "", "", past_reply
         except Exception:

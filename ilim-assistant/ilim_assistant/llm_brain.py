@@ -758,11 +758,12 @@ def select_brain_chain(
             except Exception:
                 chain_ids = ["denge", "hizli", "gemini"]
     elif primary in ("gundelik", "islem", "hava", "dosya"):
-        chain_ids = (
-            ["gemini", "hizli", "denge"]
-            if gemini_configured()
-            else ["hizli", "denge", "gemini"]
-        )
+        if free_brain_enabled():
+            chain_ids = build_casual_fast_chain_ids()
+        elif gemini_configured():
+            chain_ids = ["gemini", "hizli", "denge"]
+        else:
+            chain_ids = ["hizli", "denge", "gemini"]
     elif mode_norm in ("genel", "uretim", "gelisim") and gemini_configured():
         chain_ids = ["gemini", "denge", "hizli"]
     else:

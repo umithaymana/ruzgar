@@ -120,8 +120,259 @@ def recent_chat_history(*, limit: int | None = None) -> dict[str, Any]:
     }
 
 
-def try_past_conversation_reply(message: str, *, limit: int = 8) -> str | None:
-    """«Dün ne konuştuk» — kayıtlı jsonl geçmişinden özet (LLM beklemeden)."""
+_RECALL_STOP = frozenset(
+    {
+        "olabilir",
+        "miyiz",
+        "musun",
+        "mısın",
+        "hakkında",
+        "hakkinda",
+        "konuş",
+        "konus",
+        "konuşmuş",
+        "konusmus",
+        "bahset",
+        "hatırla",
+        "hatirla",
+        "sana",
+        "bana",
+        "biz",
+        "ben",
+        "sen",
+        "için",
+        "icin",
+        "olan",
+        "olarak",
+        "daha",
+        "başka",
+        "baska",
+        "hangi",
+        "sorular",
+        "sorulari",
+        "soruları",
+        "sormuştum",
+        "sormustum",
+        "sordum",
+        "lütfen",
+        "lutfen",
+        "konustuk",
+        "konuştuk",
+        "konusmustuk",
+        "konuşmuştuk",
+    }
+)
+
+
+def _looks_like_generic_past_summary(message: str) -> bool:
+    blob = _normalize_query(message)
+    if any(x in blob for x in ("dun ne", "dün ne", "gecen ne", "geçen ne", "daha once ne", "daha önce ne")):
+        return True
+    return bool(re.search(r"ne\s+(?:konus|konuş)(?:tuk|tik|mus|muş|mustuk|muştuk)?", blob, re.I))
+
+
+def _looks_like_question_list_request(message: str) -> bool:
+    blob = _normalize_query(message)
+    if any(
+        x in blob
+        for x in (
+            "hangi soru",
+            "ne sormu",
+            "sormustum",
+            "sormuştum",
+            "sordum",
+            "baska hangi",
+            "başka hangi",
+        )
+    ):
+        return True
+    return bool(re.search(r"(?:baska|başka)\s+hangi\s+(?:soru|konu|mesaj)", blob, re.I))
+
+
+def _extract_recall_terms(message: str) -> list[str]:
+    raw = _normalize_query(message)
+    for phrase in (
+        "hakkında konuşmuş olabilir miyiz",
+        "hakkinda konusmus olabilir miyiz",
+        "hakkında konuş",
+        "hakkinda konus",
+        "konuşmuş olabilir",
+        "konusmus olabilir",
+        "hatırlıyor musun",
+        "hatirliyor musun",
+    ):
+        raw = raw.replace(phrase, " ")
+    terms: list[str] = []
+    for word in re.split(r"[^\wçğıöşü]+", raw, flags=re.I):
+        w = (word or "").strip().lower()
+        if len(w) < 4 or w in _RECALL_STOP:
+            continue
+        terms.append(w)
+        if w.endswith(("larım", "larim", "lerim", "miz", "mız")) and len(w) > 5:
+            terms.append(w[:-3])
+        elif w.endswith(("ım", "im", "um", "üm")) and len(w) > 4:
+            terms.append(w[:-2])
+    out: list[str] = []
+    seen: set[str] = set()
+    for t in terms:
+        if t not in seen:
+            seen.add(t)
+            out.append(t)
+    return out[:5]
+
+
+def _history_from_client(client_history: list | None) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    if not client_history:
+        return rows
+    pending_user = ""
+    for item in client_history:
+        if isinstance(item, dict):
+            role = str(item.get("role") or "").strip().lower()
+            content = str(item.get("content") or "").strip()
+            if not content:
+                continue
+            if role == "user":
+                pending_user = content
+            elif role == "assistant" and pending_user:
+                rows.append(
+                    {
+                        "user": pending_user,
+                        "assistant": content,
+                        "mode": "genel",
+                        "ts": 0.0,
+                    }
+                )
+                pending_user = ""
+            continue
+        if isinstance(item, (list, tuple)) and len(item) >= 2:
+            user = str(item[0] or "").strip()
+            assistant = str(item[1] or "").strip()
+            if user and assistant:
+                rows.append({"user": user, "assistant": assistant, "mode": "genel", "ts": 0.0})
+    return rows
+
+
+def _merge_history_items(
+    *,
+    disk_items: list[dict[str, Any]],
+    client_history: list | None,
+    limit: int,
+) -> list[dict[str, Any]]:
+    client_rows = _history_from_client(client_history)
+    merged: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for row in client_rows + list(disk_items or []):
+        u = str(row.get("user") or "").strip()
+        a = str(row.get("assistant") or "").strip()
+        key = f"{u}\0{a}"
+        if not u or key in seen:
+            continue
+        seen.add(key)
+        merged.append(row)
+        if len(merged) >= limit:
+            break
+    return merged
+
+
+def _reply_question_list(items: list[dict[str, Any]]) -> str:
+    if not items:
+        return (
+            "Ümit abi, kayıtlı önceki oturum sohbeti bulamadım — "
+            "bugünkü penceredeki konuşmalara bakabiliriz; istersen önemli bir şeyi «hatırla» ile yazdır."
+        )
+    seen: set[str] = set()
+    questions: list[str] = []
+    for row in items:
+        u = str(row.get("user") or "").strip()
+        if not u or u in seen:
+            continue
+        seen.add(u)
+        questions.append(u)
+    if not questions:
+        return (
+            "Ümit abi, kayıtlı soru bulamadım. "
+            "Kalıcı not için «hatırla: …» yazabilirsin."
+        )
+    lines = ["Ümit abi, kayıtlı son sorularından bazıları:", ""]
+    for i, q in enumerate(questions[:12], 1):
+        lines.append(f"{i}. {q[:160]}")
+    lines.append("")
+    lines.append(
+        "(Bunlar diske kayıtlı son turlar + bu oturumdaki mesajların; "
+        "«hatırla» ile yazdıkların kalıcı hafızada da tutulur.)"
+    )
+    return "\n".join(lines).strip()
+
+
+def _reply_topic_recall(message: str, items: list[dict[str, Any]]) -> str:
+    terms = _extract_recall_terms(message)
+    topic_label = ", ".join(terms[:2]) if terms else "bu konu"
+    hits: list[dict[str, Any]] = []
+    for term in terms or [topic_label]:
+        data = search_chat_history(term, limit=6)
+        for row in data.get("items") or []:
+            hits.append(row)
+    hafiza_snip = ""
+    try:
+        from ilim_assistant.hafiza_i_ruzgar import genel_hafiza_lookup
+
+        for term in terms or [message]:
+            ans = genel_hafiza_lookup(term)
+            if ans:
+                hafiza_snip = str(ans).strip()[:420]
+                break
+        if not hafiza_snip:
+            ans = genel_hafiza_lookup(message)
+            if ans:
+                hafiza_snip = str(ans).strip()[:420]
+    except Exception:
+        pass
+
+    if not hits and not hafiza_snip:
+        return (
+            f"Ümit abi, «{topic_label}» hakkında kayıtlı bir sohbet veya «hatırla» notu bulamadım. "
+            "İstersen şimdi anlat — «hatırla: …» ile kalıcı yazabilirim."
+        )
+
+    lines = [f"Ümit abi, «{topic_label}» ile ilgili kayıtlarım:", ""]
+    if hafiza_snip:
+        lines.append(f"· **Kalıcı hafıza:** {hafiza_snip}")
+        lines.append("")
+    shown = 0
+    seen_u: set[str] = set()
+    for row in hits:
+        u = str(row.get("user_snippet") or row.get("user") or "").strip()
+        a = str(row.get("assistant_snippet") or row.get("assistant") or "").strip()
+        if not u or u in seen_u:
+            continue
+        seen_u.add(u)
+        lines.append(f"· **Sen:** {u[:140]}")
+        if a:
+            lines.append(f"  **Rüzgar:** {a[:220]}")
+        lines.append("")
+        shown += 1
+        if shown >= 4:
+            break
+    if shown == 0 and not hafiza_snip:
+        return (
+            f"Ümit abi, «{topic_label}» hakkında kayıtlı bir sohbet bulamadım. "
+            "İstersen şimdi anlat — «hatırla: …» ile kalıcı yazabilirim."
+        )
+    lines.append(
+        "(Kayıtlar diske yazılan son sohbetler ve «hatırla» notlarından gelir; "
+        "bilgisayar kapandıysa yalnızca «hatırla» kalıcıdır.)"
+    )
+    return "\n".join(lines).strip()
+
+
+def try_past_conversation_reply(
+    message: str,
+    *,
+    limit: int = 8,
+    client_history: list | None = None,
+) -> str | None:
+    """Geçmiş sohbet / hafıza sorusu — kayıtlı jsonl + oturum geçmişi (LLM beklemeden)."""
     if not chat_history_enabled():
         return None
     try:
@@ -131,8 +382,24 @@ def try_past_conversation_reply(message: str, *, limit: int = 8) -> str | None:
             return None
     except Exception:
         return None
-    data = recent_chat_history(limit=limit)
-    items = list(data.get("items") or [])
+
+    disk = recent_chat_history(limit=max(limit, 30))
+    items = _merge_history_items(
+        disk_items=list(disk.get("items") or []),
+        client_history=client_history,
+        limit=max(limit, 30),
+    )
+
+    if _looks_like_question_list_request(message):
+        return _reply_question_list(items)
+
+    terms = _extract_recall_terms(message)
+    if (
+        not _looks_like_generic_past_summary(message)
+        and (terms or re.search(r"(?:hakkında|hakkinda)\s+konu", _normalize_query(message), re.I))
+    ):
+        return _reply_topic_recall(message, items)
+
     if not items:
         return (
             "Ümit abi, kayıtlı önceki oturum sohbeti bulamadım — "
