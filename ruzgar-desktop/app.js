@@ -4,7 +4,7 @@
  * Kök sonda `/api` ise kırpılır — aksi halde fetch `.../api/api/merkezi-bellek` ile 404 verir.
  */
 const RUZGAR_LOCAL_API_PORT = 8779;
-const RUZGAR_EXPECTED_BUILD_REV = "2026-05-27-ruzgar-faz98-v107";
+const RUZGAR_EXPECTED_BUILD_REV = "2026-06-11-ruzgar-sesli-vad-faz-l";
 const RUZGAR_LOCAL_API_FALLBACK = `http://127.0.0.1:${RUZGAR_LOCAL_API_PORT}`;
 
 function migrateLegacyApiUrl(raw) {
@@ -22,6 +22,23 @@ function normalizeRuzgarApiRootTail(raw) {
     s = s.replace(/\/api$/i, "").replace(/\/+$/, "");
   }
   return s;
+}
+
+/** localhost ↔ 127.0.0.1 aynı yerel API sayılır (sonsuz reload önlenir). */
+function apiRootsEquivalent(a, b) {
+  const na = normalizeRuzgarApiRootTail(a);
+  const nb = normalizeRuzgarApiRootTail(b);
+  if (!na || !nb) return na === nb;
+  if (na === nb) return true;
+  try {
+    const ua = new URL(na);
+    const ub = new URL(nb);
+    if (ua.protocol !== ub.protocol || ua.port !== ub.port) return false;
+    const local = new Set(["127.0.0.1", "localhost", "::1"]);
+    return local.has(ua.hostname.toLowerCase()) && local.has(ub.hostname.toLowerCase());
+  } catch (_) {
+    return false;
+  }
 }
 
 function resolveRuzgarApiRoot() {
@@ -66,15 +83,24 @@ function resolveRuzgarApiRoot() {
       const ls = localStorage.getItem("ruzgarApi");
       if (ls) {
         const migrated = migrateLegacyApiUrl(ls);
-        if (migrated !== ls) {
-          try {
-            localStorage.setItem("ruzgarApi", migrated);
-          } catch (_) {
-            /* yok say */
-          }
-        }
         const n = normalizeRuzgarApiRootTail(migrated);
-        if (n) return n;
+        const host = (() => {
+          try {
+            return new URL(n).hostname.toLowerCase();
+          } catch {
+            return "";
+          }
+        })();
+        if (n && (host === "127.0.0.1" || host === "localhost")) {
+          if (migrated !== ls) {
+            try {
+              localStorage.setItem("ruzgarApi", migrated);
+            } catch (_) {
+              /* yok say */
+            }
+          }
+          return n;
+        }
       }
     }
   } catch (_) {
@@ -1726,7 +1752,7 @@ function applyRecentVideoDownload(row) {
   window.RuzgarVideoAtolye?.openDuzenDock?.("trim");
 }
 
-function setAnaMotorInfoStripState(state) {
+function setAnaMotorInfoStripState(state, healthPayload) {
   const strip = document.getElementById("ana-motor-info-strip");
   if (!strip) return;
   strip.classList.remove(
@@ -1735,12 +1761,37 @@ function setAnaMotorInfoStripState(state) {
     "atelier-info-strip-ana--err"
   );
   if (state) strip.classList.add(`atelier-info-strip-ana--${state}`);
+  const badge = document.getElementById("ana-motor-phase-badge");
+  const promise = document.getElementById("ana-motor-promise");
+  const hp =
+    healthPayload && typeof healthPayload === "object"
+      ? healthPayload
+      : lastHealthSnapshot;
+  if (state === "ready") {
+    const rev = String(hp?.build?.rev || "").trim();
+    if (badge) badge.textContent = rev ? `Ana Motor · ${rev}` : "Ana Motor · bağlı";
+    if (promise) {
+      promise.textContent =
+        "Yerel sunucu aktif (127.0.0.1:8779). Sol menüden yardımcı motorlara geçebilirsiniz.";
+    }
+  } else if (state === "err") {
+    if (badge) badge.textContent = "Ana Motor · sunucu kapalı";
+    if (promise) {
+      promise.textContent =
+        "Yerel API yok. Ruzgar_TemizBaslat.bat veya Ruzgar.ps1 -ForceRestart çalıştırın.";
+    }
+  } else if (state === "loading") {
+    if (badge) badge.textContent = "Ana Motor · bağlanıyor…";
+    if (promise) {
+      promise.textContent = "Yerel API (127.0.0.1:8779) kontrol ediliyor…";
+    }
+  }
 }
 
 function applyUiManifest(manifest) {
   if (!manifest || manifest.ok === false) return;
   lastUiManifest = manifest;
-  setAnaMotorInfoStripState("ready");
+  setAnaMotorInfoStripState("ready", lastHealthSnapshot);
 
   const dash = manifest.dashboard || {};
   const badge =
@@ -10729,11 +10780,26 @@ function localApiHealthCandidates() {
 }
 
 async function checkApi() {
+  if (window.__RUZGAR_BOOT_HEALTH__?.ok && !lastHealthSnapshot?.ok) {
+    const bootBase = normalizeRuzgarApiRootTail(
+      window.__RUZGAR_BOOT_API__ || window.__RUZGAR_API_ROOT__ || API,
+    );
+    lastHealthSnapshot = window.__RUZGAR_BOOT_HEALTH__;
+    setAnaMotorInfoStripState("ready", lastHealthSnapshot);
+    if (el.api) {
+      el.api.textContent = "Sunucu ✓";
+      el.api.className = "tech-chip ok";
+    }
+    showRuzgarConnectionActiveBanner();
+    setStatus("Hazır", "Rüzgar");
+    void refreshUiManifest();
+    return true;
+  }
   const bases = localApiHealthCandidates();
   for (const base of bases) {
   try {
     const ctrl = new AbortController();
-    const tid = window.setTimeout(() => ctrl.abort(), 8000);
+    const tid = window.setTimeout(() => ctrl.abort(), 15000);
     let r;
     try {
       r = await fetch(`${base}/api/health`, { method: "GET", signal: ctrl.signal });
@@ -10741,7 +10807,7 @@ async function checkApi() {
       window.clearTimeout(tid);
     }
     const j = await r.json();
-    if (base !== API && j.ok) {
+    if (!apiRootsEquivalent(base, API) && j.ok) {
       try {
         localStorage.setItem("ruzgarApi", base);
       } catch (_) {
@@ -10761,7 +10827,18 @@ async function checkApi() {
       fast_paths: j?.build?.fast_paths,
     });
     if (j.ok) {
-      setAnaMotorInfoStripState("ready");
+      lastHealthSnapshot = j;
+      if (
+        typeof window !== "undefined" &&
+        window.location?.protocol === "file:" &&
+        !window.__ruzgarFileToHttpMigrating
+      ) {
+        window.__ruzgarFileToHttpMigrating = true;
+        const qs = window.location.search || "";
+        window.location.replace(`http://127.0.0.1:${RUZGAR_LOCAL_API_PORT}/ui/index.html${qs}`);
+        return true;
+      }
+      setAnaMotorInfoStripState("ready", j);
       if (apiWasOffline) {
         apiWasOffline = false;
         showRuzgarConnectionActiveBanner();
@@ -10769,7 +10846,6 @@ async function checkApi() {
         window.__ruzgarConnectionBannerShown = true;
         showRuzgarConnectionActiveBanner();
       }
-      lastHealthSnapshot = j;
       initFazZUx();
       updateFaz7HealthStrip(j);
       const badge = document.getElementById("ana-motor-phase-badge");
@@ -10806,7 +10882,7 @@ async function checkApi() {
       }
       renderProgramlamaP89Kpi(j?.build || {});
       showStaleBuildBanner(rev, j);
-      setAnaMotorInfoStripState("ready");
+      setAnaMotorInfoStripState("ready", j);
       void refreshUiManifest();
       el.api.textContent = j.stt ? "Sunucu ✓ metne döküm" : "Sunucu ✓";
       let apiTitle = j.stt
@@ -13562,8 +13638,10 @@ async function streamChat(userText, streamOpts = {}) {
             );
           });
         }
-        await waitTtsIdle(ttsSess);
-        void maybeResumeVoiceListenAfterReply();
+        void (async () => {
+          await waitTtsIdle(ttsSess);
+          void maybeResumeVoiceListenAfterReply();
+        })();
       }
       if (el.voiceOut == null || el.voiceOut.checked) {
         if (currentMode === "hafiza") {
@@ -15014,12 +15092,25 @@ wireNavToolbar();
 wireFaz7Cila();
 wireChatAutoScroll();
 document.body.classList.add("faz7-complete", "faz8-complete", "faz-z-complete", "faz-aa-complete");
-void refreshUiManifest().finally(() =>
-  renderMotorChatFromSession(activeMotorChatMode()),
-);
+setAnaMotorInfoStripState("loading");
+void checkApi().then((ok) => {
+  if (ok) void refreshUiManifest();
+  renderMotorChatFromSession(activeMotorChatMode());
+});
 ensureSharedChatStore();
-void checkApi();
 setInterval(() => void checkApi(), 15000);
+/** Sunucu kapalıyken daha sık dene (ilk 2 dk) */
+(function ruzgarFastHealthPoll() {
+  let n = 0;
+  const id = window.setInterval(() => {
+    n += 1;
+    if (n > 24 || lastHealthSnapshot?.ok) {
+      window.clearInterval(id);
+      return;
+    }
+    void checkApi();
+  }, 5000);
+})();
 
 /** ruzgar_remote_api.txt güncellendiğinde (ör. 8777→8778) sayfayı yenile — köprü otomatik */
 setInterval(() => {
@@ -15027,7 +15118,7 @@ setInterval(() => {
     const remote = normalizeRuzgarApiRootTail(
       window.ruzgarApi?.getRemoteBrainEndpoint?.() || "",
     );
-    if (remote && remote !== API) {
+    if (remote && !apiRootsEquivalent(remote, API)) {
       try {
         localStorage.setItem("ruzgarApi", remote);
       } catch (_) {

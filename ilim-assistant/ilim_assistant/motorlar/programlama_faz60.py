@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any
 
 FAZ60_VERSION = "programlama-faz60-v1-2026-05-26"
-_DEFAULT_EXPECTED_REV = "2026-05-27-ruzgar-faz98-v107"
+_DEFAULT_EXPECTED_REV = "2026-06-11-ruzgar-sesli-vad-faz-l"
 _FAZ60_PATCH = "v71-hotfix1"
 _LAST_FULL_PARITY_FILE = "last_parity_full_run.json"
 _WEEKLY_KPI_PREFIX = "weekly_kpi_"
@@ -37,12 +37,9 @@ def faz60_enabled() -> bool:
 
 def expected_build_rev() -> str:
     raw = os.environ.get("RUZGAR_EXPECTED_BUILD_REV", "").strip()
-    if not raw:
-        return _DEFAULT_EXPECTED_REV
-    # Eski env değeri yeni kodu "mismatch" gösteriyorsa varsayılanı tercih et.
-    if raw != _DEFAULT_EXPECTED_REV:
-        return _DEFAULT_EXPECTED_REV
-    return raw
+    if raw:
+        return raw
+    return _DEFAULT_EXPECTED_REV
 
 
 def build_mismatch_info(server_rev: str | None) -> dict[str, Any]:

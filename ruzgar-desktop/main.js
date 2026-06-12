@@ -46,6 +46,12 @@ const { spawn } = require("child_process");
 const WORKSPACE_ROOT = path.resolve(__dirname, "..");
 const DEFAULT_API_PORT = 8779;
 
+/** Tek Electron örneği — ikinci kısayol/tıklama mevcut pencereyi öne getirir. */
+const gotSingleInstanceLock = app.requestSingleInstanceLock();
+if (!gotSingleInstanceLock) {
+  app.quit();
+}
+
 /** @type {import("electron").BrowserView | null} */
 let youtubeCinemaView = null;
 /** @type {import("electron").BrowserWindow | null} */
@@ -97,7 +103,7 @@ function probeApiHealth(port) {
   return new Promise((resolve) => {
     const req = http.get(
       `http://127.0.0.1:${port}/api/health`,
-      { timeout: 2500 },
+      { timeout: 6000 },
       (res) => {
         let body = "";
         res.on("data", (c) => {
@@ -125,13 +131,17 @@ async function ensureLocalApiServer() {
   const port = readLocalApiPortFromDisk();
   if (await probeApiHealth(port)) return;
   const ia = path.join(WORKSPACE_ROOT, "ilim-assistant");
-  if (!fs.existsSync(path.join(ia, "desktop_server.py"))) return;
+  if (!fs.existsSync(path.join(ia, "run_desktop_api.py"))) return;
   const py = process.platform === "win32" ? "py" : "python";
   const args =
     process.platform === "win32"
-      ? ["-3", "-m", "uvicorn", "desktop_server:app", "--host", "127.0.0.1", "--port", String(port)]
-      : ["-m", "uvicorn", "desktop_server:app", "--host", "127.0.0.1", "--port", String(port)];
-  const env = { ...process.env, RUZGAR_API_PORT: String(port) };
+      ? ["-3", "run_desktop_api.py", "--host", "127.0.0.1", "--port", String(port)]
+      : ["run_desktop_api.py", "--host", "127.0.0.1", "--port", String(port)];
+  const env = {
+    ...process.env,
+    RUZGAR_API_PORT: String(port),
+    RUZGAR_SKIP_RAG_WARMUP: process.env.RUZGAR_SKIP_RAG_WARMUP || "1",
+  };
   try {
     const child = spawn(py, args, {
       cwd: ia,
@@ -145,14 +155,14 @@ async function ensureLocalApiServer() {
     console.warn("[RÜZGAR] API otomatik başlatılamadı:", e && e.message ? e.message : e);
     return;
   }
-  for (let i = 0; i < 80; i++) {
-    await new Promise((r) => setTimeout(r, 400));
+  for (let i = 0; i < 180; i++) {
+    await new Promise((r) => setTimeout(r, 500));
     if (await probeApiHealth(port)) {
       console.info(`[RÜZGAR] Yerel API hazır (127.0.0.1:${port})`);
       return;
     }
   }
-  console.warn(`[RÜZGAR] API ${port} portunda 32 sn içinde yanıt vermedi`);
+  console.warn(`[RÜZGAR] API ${port} portunda 90 sn içinde yanıt vermedi`);
 }
 
 function activeWindow(fallback) {
@@ -172,16 +182,24 @@ async function loadUiIntoWindow(win, queryString) {
   const port = readLocalApiPortFromDisk();
   const htmlPath = path.join(__dirname, "index.html");
   const qs = queryString ? `?${queryString}` : "";
-  if (await probeApiHealth(port)) {
-    return win.loadURL(`http://127.0.0.1:${port}/ui/index.html${qs}`);
+  const uiUrl = `http://127.0.0.1:${port}/ui/index.html${qs}`;
+  for (let i = 0; i < 180; i++) {
+    if (await probeApiHealth(port)) {
+      console.info(`[RÜZGAR] UI: ${uiUrl}`);
+      return win.loadURL(uiUrl);
+    }
+    await new Promise((r) => setTimeout(r, 500));
   }
-  console.warn(
-    "[RÜZGAR] Yerel API yok — file:// yedek (YouTube gömülü oynatıcı çalışmayabilir; Start-Ruzgar.ps1)"
+  console.warn("[RÜZGAR] Yerel API yok — file:// yedek devre dışı (API şart)");
+  dialog.showErrorBox(
+    "RUZGAR",
+    `Yerel API (127.0.0.1:${port}) hazır değil.\n\n` +
+      "1) Ruzgar_Port_Temizle.bat (yönetici)\n" +
+      "2) Ruzgar_TemizBaslat.bat\n\n" +
+      "API gelene kadar arayüz açılmaz (bağlantı hatası önlenir)."
   );
-  if (qs) {
-    return win.loadURL(`${pathToFileURL(htmlPath).href}${qs}`);
-  }
-  return win.loadFile(htmlPath);
+  app.quit();
+  return Promise.resolve();
 }
 
 function openIndexMode(mode) {
@@ -378,7 +396,43 @@ function createWindow() {
   });
 }
 
+app.on("second-instance", async () => {
+  const wins = BrowserWindow.getAllWindows();
+  if (!wins.length) return;
+  const port = readLocalApiPortFromDisk();
+  const apiReady = await probeApiHealth(port);
+  for (const win of wins) {
+    if (win.isMinimized()) win.restore();
+    win.focus();
+    if (!apiReady) continue;
+    const wc = win.webContents;
+    let current = "";
+    try {
+      current = wc.getURL();
+    } catch (_) {
+      /* ignore */
+    }
+    const onLocalUi =
+      current.includes(`127.0.0.1:${port}/ui`) ||
+      current.includes(`localhost:${port}/ui`);
+    if (current.startsWith("file:") || !onLocalUi) {
+      let qs = "";
+      try {
+        qs = new URL(current).search || "";
+      } catch (_) {
+        /* ignore */
+      }
+      const uiUrl = `http://127.0.0.1:${port}/ui/index.html${qs}`;
+      console.info(`[RÜZGAR] second-instance → UI yenile: ${uiUrl}`);
+      wc.loadURL(uiUrl);
+    } else {
+      wc.reloadIgnoringCache();
+    }
+  }
+});
+
 app.whenReady().then(async () => {
+  if (!gotSingleInstanceLock) return;
   await ensureLocalApiServer();
   /** Mikrofon / ses yakalama — Windows izin diyaloğu ve Electron oturumu için */
   try {
