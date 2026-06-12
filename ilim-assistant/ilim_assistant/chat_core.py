@@ -664,10 +664,37 @@ def trim_chat_tail(
     return h
 
 
-def prior_messages_for_turn(history: list, mode: str) -> list:
+def prior_messages_for_turn(
+    history: list,
+    mode: str,
+    *,
+    message: str = "",
+    question_plan: Any | None = None,
+) -> list:
     """Sohbet geçmişini moda göre kırpar (masaüstü API + Gradio)."""
+    try:
+        from ilim_assistant.ruzgar_tek_beyin_izolasyon import (
+            prior_messages_for_turn_isolated,
+            tek_beyin_izolasyon_enabled,
+        )
+
+        if tek_beyin_izolasyon_enabled():
+            return prior_messages_for_turn_isolated(
+                history,
+                mode,
+                message=message,
+                question_plan=question_plan,
+            )
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_tek_beyin_izolasyon import sanitize_paired_messages
+
+        cleaned = sanitize_paired_messages(history)
+    except Exception:
+        cleaned = ensure_messages(history)
     return trim_chat_tail(
-        ensure_messages(history),
+        cleaned,
         max_messages=_history_msg_cap(mode),
         max_total_chars=_history_char_cap(mode),
     )
@@ -1056,6 +1083,19 @@ def prepare_turn(
         turn_plan = question_plan
         append_plan_directive = None  # type: ignore[misc, assignment]
         maybe_clarification_reply = None  # type: ignore[misc, assignment]
+
+    _bilgi_isolated = False
+    try:
+        from ilim_assistant.ruzgar_tek_beyin_izolasyon import (
+            looks_like_bilgi_isolation_turn,
+            tek_beyin_izolasyon_enabled,
+        )
+
+        _bilgi_isolated = tek_beyin_izolasyon_enabled() and looks_like_bilgi_isolation_turn(
+            msg, turn_plan
+        )
+    except Exception:
+        _bilgi_isolated = False
 
     ilim_merge_tail = ""
     me_suppress_web = False
@@ -1505,7 +1545,12 @@ def prepare_turn(
     try:
         from ilim_assistant.ruzgar_session_context import build_session_memory_context
 
-        session_mem_ctx = build_session_memory_context(msg, mode_norm=m, history=history)
+        session_mem_ctx = build_session_memory_context(
+            msg,
+            mode_norm=m,
+            history=history,
+            include_chat_history=not _bilgi_isolated,
+        )
     except Exception:
         session_mem_ctx = ""
 
@@ -1514,14 +1559,26 @@ def prepare_turn(
         try:
             from ilim_assistant.ruzgar_bilissel_analiz import build_bilissel_turn_context
 
-            bilissel_ctx = build_bilissel_turn_context(msg, history=history).strip()
+            bilissel_ctx = build_bilissel_turn_context(
+                msg,
+                history=history if not _bilgi_isolated else None,
+            ).strip()
         except Exception:
             bilissel_ctx = ""
 
     user_payload = build_user_prompt(msg, blocks)
     _conv_ctx = (conversation_context or "").strip()
     _raw_note = (user_message_raw or "").strip()
-    if _conv_ctx or _raw_note or cinema_context:
+    _conv_continuation = bool(
+        re.search(
+            r"\b(?:az\s+önce|biraz\s+önce|o\s+konuda|devam|peki\s+o|onun\s+hakkında)\b",
+            msg,
+            re.I,
+        )
+    )
+    if (_conv_ctx or _raw_note or cinema_context) and not (
+        _bilgi_isolated and not _conv_continuation
+    ):
         conv_lines = [
             "[SOHBET BAĞLAMI — kullanıcıya aynen yazdırma; yukarıdaki konuşmayı hatırla]",
         ]
@@ -1664,7 +1721,8 @@ def prepare_turn(
     if (
         os.environ.get("SESSION_CONTINUITY_HINT", "1").strip()
         not in ("0", "false", "no")
-        and len(prior_messages_for_turn(history, m)) >= 2
+        and not _bilgi_isolated
+        and len(prior_messages_for_turn(history, m, message=msg, question_plan=turn_plan)) >= 2
     ):
         user_payload += (
             "\n\n[TALİMAT — OTURUM BAĞLAMI]\n"
@@ -1689,6 +1747,14 @@ def prepare_turn(
         from ilim_assistant.main_engine import merge_ilim_tail
 
         user_payload = merge_ilim_tail(user_payload, ilim_merge_tail)
+
+    if _bilgi_isolated:
+        try:
+            from ilim_assistant.ruzgar_tek_beyin_izolasyon import bilgi_isolation_user_addon
+
+            user_payload += bilgi_isolation_user_addon(msg)
+        except Exception:
+            pass
 
     if not (m == "programlama" and _prog_light):
         try:
@@ -1900,7 +1966,7 @@ def respond(
             yield messages, "", msg, reply, "Hazır.", new_wake_used
         return
 
-    prior = prior_messages_for_turn(history, mode)
+    prior = prior_messages_for_turn(history, mode, message=msg)
 
     if stream_reply:
         messages = ensure_messages(history)

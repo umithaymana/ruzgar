@@ -10938,7 +10938,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         )
         return
 
-    prior = prior_messages_for_turn(req.history, mode_norm)
+    prior = prior_messages_for_turn(req.history, mode_norm, message=(req.message or "").strip())
     try:
         brain_sel = select_brain_chain(
             message=msg,

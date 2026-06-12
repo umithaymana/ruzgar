@@ -211,6 +211,7 @@ def build_bilissel_turn_context(
     message: str,
     *,
     history: list | None = None,
+    include_history: bool = True,
 ) -> str:
     """LLM turuna eklenecek iç talimat (kullanıcıya gösterilmez)."""
     if not bilissel_enabled():
@@ -226,7 +227,7 @@ def build_bilissel_turn_context(
         lines.append(
             "Uyarı: Soru kısa — «Evet seni anlıyorum» gibi tek satırlık yanıt verme."
         )
-    if history:
+    if include_history and history:
         son = []
         for row in history[-10:]:
             if not isinstance(row, dict):

@@ -356,48 +356,81 @@ def build_voice_turn_addon() -> str:
     )
 
 
-def enrich_dost_history(history: list | None) -> list:
-    """Mood oturumunda jsonl + istemci geçmişini kronolojik birleştir."""
+def enrich_dost_history(
+    history: list | None,
+    *,
+    session_id: str | None = None,
+) -> list:
+    """Mood oturumunda istemci geçmişini önceliklendir; disk yalnızca tamamlayıcı."""
     if not tek_beyin_oturum_enabled():
         return list(history or [])
     try:
-        from ilim_assistant.chat_core import ensure_messages
+        from ilim_assistant.ruzgar_tek_beyin_izolasyon import (
+            merge_turn_rows_client_first,
+            sanitize_paired_messages,
+        )
 
-        client = ensure_messages(history or [])
+        client_msgs = sanitize_paired_messages(history or [])
     except Exception:
-        client = list(history or [])
+        try:
+            from ilim_assistant.chat_core import ensure_messages
+
+            client_msgs = ensure_messages(history or [])
+        except Exception:
+            client_msgs = list(history or [])
     cap = dost_prior_depth(mood_active=True, voice_turn=False) * 2
-    if len(client) >= cap:
-        return client[-cap:]
-    try:
-        from ilim_assistant.ana_motor_sohbet_gecmis import recent_chat_history
+    if len(client_msgs) >= cap:
+        return client_msgs[-cap:]
 
-        disk = recent_chat_history(limit=cap).get("items") or []
-    except Exception:
-        return client[-cap:] if client else []
-    disk_msgs: list[dict[str, str]] = []
-    for row in reversed(disk):
+    client_rows: list[dict[str, str]] = []
+    pending_user = ""
+    for msg in client_msgs:
+        role = str(msg.get("role") or "").strip().lower()
+        content = str(msg.get("content") or "").strip()
+        if role == "user":
+            pending_user = content
+        elif role == "assistant" and pending_user:
+            client_rows.append({"user": pending_user, "assistant": content})
+            pending_user = ""
+
+    if len(client_rows) >= 2:
+        merged_rows = client_rows[-(cap // 2 or 1) :]
+    else:
+        disk_rows: list[dict[str, str]] = []
+        try:
+            from ilim_assistant.ana_motor_sohbet_gecmis import recent_chat_history
+
+            disk = recent_chat_history(limit=cap).get("items") or []
+            for row in reversed(disk):
+                user = str(row.get("user") or "").strip()
+                assistant = str(row.get("assistant") or "").strip()
+                if user:
+                    disk_rows.append(
+                        {
+                            "user": user,
+                            "assistant": assistant,
+                            "session_id": str(row.get("session_id") or ""),
+                        }
+                    )
+        except Exception:
+            disk_rows = []
+        merged_rows = merge_turn_rows_client_first(
+            client_rows,
+            disk_rows,
+            limit=cap // 2 or 1,
+            session_id=session_id,
+            min_client_turns=2,
+        )
+
+    out: list[dict[str, str]] = []
+    for row in merged_rows:
         user = str(row.get("user") or "").strip()
         assistant = str(row.get("assistant") or "").strip()
         if user:
-            disk_msgs.append({"role": "user", "content": user})
+            out.append({"role": "user", "content": user})
         if assistant:
-            disk_msgs.append({"role": "assistant", "content": assistant})
-    if not disk_msgs:
-        return client[-cap:] if client else []
-    seen: set[str] = set()
-    merged: list[dict[str, str]] = []
-    for msg in disk_msgs + client:
-        role = str(msg.get("role") or "")
-        content = str(msg.get("content") or "").strip()
-        if not content:
-            continue
-        key = f"{role}\0{content}"
-        if key in seen:
-            continue
-        seen.add(key)
-        merged.append({"role": role, "content": content})
-    return merged[-cap:]
+            out.append({"role": "assistant", "content": assistant})
+    return out[-cap:] if out else client_msgs[-cap:]
 
 
 def _int_env(name: str, default: int, *, lo: int, hi: int) -> int:

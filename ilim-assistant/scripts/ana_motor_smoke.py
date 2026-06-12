@@ -2555,6 +2555,70 @@ def run_offline() -> int:
     else:
         _ok("oturum hatırla birleşik yanıt")
 
+    print("\n=== Tek beyin Faz I — soru/cevap izolasyonu ===")
+    from ilim_assistant.ruzgar_tek_beyin_izolasyon import (
+        looks_like_bilgi_isolation_turn,
+        merge_turn_rows_client_first,
+        prior_messages_for_turn_isolated,
+        sanitize_paired_messages,
+        tek_beyin_izolasyon_enabled,
+        tek_beyin_izolasyon_status,
+    )
+
+    if not tek_beyin_izolasyon_enabled():
+        _fail("tek_beyin_izolasyon", "kapalı")
+        fails += 1
+    else:
+        _ok(f"tek beyin izolasyon — {tek_beyin_izolasyon_status().get('version')}")
+    _dirty = [
+        {"role": "user", "content": "ilk soru"},
+        {"role": "user", "content": "ikinci soru cevapsiz"},
+        {"role": "assistant", "content": "yanlış eşleşme"},
+    ]
+    _clean = sanitize_paired_messages(_dirty)
+    if len(_clean) != 2 or _clean[0].get("content") != "ikinci soru cevapsiz":
+        _fail("sanitize_pairs", str(_clean))
+        fails += 1
+    else:
+        _ok("yetim user temizleme")
+    if not looks_like_bilgi_isolation_turn("yavuz kara kimdir"):
+        _fail("bilgi_isolation_detect", "kimdir")
+        fails += 1
+    else:
+        _ok("bilgi izolasyon algısı")
+    _hist_bilgi = []
+    for i in range(12):
+        _hist_bilgi.extend(
+            [
+                {"role": "user", "content": f"eski soru {i}"},
+                {"role": "assistant", "content": f"eski cevap {i}"},
+            ]
+        )
+    _prior_bilgi = prior_messages_for_turn_isolated(
+        _hist_bilgi,
+        "genel",
+        message="yavuz kara kimdir",
+    )
+    if len(_prior_bilgi) > 4:
+        _fail("bilgi_prior_cap", str(len(_prior_bilgi)))
+        fails += 1
+    else:
+        _ok("bilgi yolu kısa öncül")
+    _merged = merge_turn_rows_client_first(
+        [{"user": "bugün yorgunum", "assistant": "dinlen"}],
+        [
+            {"user": "osmanlı ne zaman", "assistant": "1299"},
+            {"user": "bugün yorgunum", "assistant": "dinlen"},
+        ],
+        limit=6,
+        min_client_turns=2,
+    )
+    if any("osmanlı" in str(r.get("user") or "").lower() for r in _merged):
+        _fail("client_first_merge", str(_merged))
+        fails += 1
+    else:
+        _ok("istemci öncelikli disk birleşimi")
+
     d70 = denge70_faz_k_status()
     _ok(
         f"denge70 — ready={d70.get('ready')} ram={d70.get('ram_sufficient')} "

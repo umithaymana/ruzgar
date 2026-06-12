@@ -13618,11 +13618,24 @@ async function streamChat(userText, streamOpts = {}) {
         void HIZIR_MODU.refreshPanel();
       }
       const store = ensureSharedChatStore();
+      while (store.history.length >= 2) {
+        const tail = store.history[store.history.length - 1];
+        const prev = store.history[store.history.length - 2];
+        if (tail?.role === "user" && prev?.role === "user") {
+          store.history.pop();
+          persistSharedChatStore();
+        } else {
+          break;
+        }
+      }
       const lastH = store.history[store.history.length - 1];
       if (!lastH || lastH.role !== "user" || lastH.content !== ut) {
         pushMotorChatHistory("user", ut, {});
       }
-      pushMotorChatHistory("assistant", full, {});
+      const lastAfterUser = store.history[store.history.length - 1];
+      if (!(lastAfterUser?.role === "assistant" && lastAfterUser.content === full)) {
+        pushMotorChatHistory("assistant", full, {});
+      }
       lastAssistantReply = full;
       setStatus("Hazır");
       scrollChatToBottom();

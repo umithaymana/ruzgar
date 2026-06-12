@@ -89,7 +89,7 @@ def iter_bilgi_cloud_fast_reply(
     )
     system = pick_system(False, mode_norm) + extra
     user = (message or "").strip()
-    prior = prior_messages_for_turn(history, mode_norm)
+    prior = prior_messages_for_turn(history, mode_norm, message=message or "")
     yield from stream_ilim_cloud_reply(
         system,
         user,
@@ -193,7 +193,7 @@ def _try_gemini_fast_bilgi(
         "Tek paragraf, Türkçe, net; kaynak uydurma.\n"
     )
     user = (message or "").strip()
-    prior = prior_messages_for_turn(history, mode_norm)
+    prior = prior_messages_for_turn(history, mode_norm, message=message or "")
     buf = ""
     try:
         for piece in chat_completion_stream_gemini(
@@ -280,7 +280,7 @@ def iter_fast_direct_llm_reply(
 
     system = pick_system(False, mode_norm) + extra
     user = (message or "").strip()
-    prior = prior_messages_for_turn(history, mode_norm)
+    prior = prior_messages_for_turn(history, mode_norm, message=message or "")
     for piece in stream_chat_with_brain(
         system,
         user,

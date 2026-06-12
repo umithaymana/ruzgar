@@ -69,7 +69,12 @@ def looks_like_session_summary_query(message: str) -> bool:
     return bool(_SUMMARY_QUERY.search(_norm(raw)))
 
 
-def _turns_merged(*, history: list | None, disk_limit: int = 24) -> list[dict[str, str]]:
+def _turns_merged(
+    *,
+    history: list | None,
+    disk_limit: int = 24,
+    session_id: str | None = None,
+) -> list[dict[str, str]]:
     try:
         from ilim_assistant.ruzgar_tek_beyin_baglam import _turns_from_history
     except Exception:
@@ -91,24 +96,31 @@ def _turns_merged(*, history: list | None, disk_limit: int = 24) -> list[dict[st
             u = str(row.get("user") or "").strip()
             a = str(row.get("assistant") or "").strip()
             if u:
-                disk_rows.append({"user": u, "assistant": a})
+                disk_rows.append(
+                    {
+                        "user": u,
+                        "assistant": a,
+                        "session_id": str(row.get("session_id") or ""),
+                    }
+                )
     except Exception:
         pass
-    if not disk_rows and not client_rows:
-        return []
-    if not client_rows:
-        return disk_rows[-disk_limit:]
-    seen: set[str] = set()
-    merged: list[dict[str, str]] = []
-    for row in disk_rows + client_rows:
-        u = row.get("user") or ""
-        a = row.get("assistant") or ""
-        key = f"{u}\0{a}"
-        if not u or key in seen:
-            continue
-        seen.add(key)
-        merged.append({"user": u, "assistant": a})
-    return merged[-disk_limit:]
+    try:
+        from ilim_assistant.ruzgar_tek_beyin_izolasyon import merge_turn_rows_client_first
+
+        return merge_turn_rows_client_first(
+            client_rows,
+            disk_rows,
+            limit=disk_limit,
+            session_id=session_id,
+            min_client_turns=_min_turns(),
+        )
+    except Exception:
+        if not disk_rows and not client_rows:
+            return []
+        if not client_rows:
+            return disk_rows[-disk_limit:]
+        return client_rows[-disk_limit:]
 
 
 def _classify_turn(user_msg: str) -> str:
@@ -137,7 +149,7 @@ def rebuild_session_summary(
     """LLM yok — son turlardan yapılandırılmış özet."""
     if not tek_beyin_ozet_enabled():
         return None
-    turns = _turns_merged(history=history)
+    turns = _turns_merged(history=history, session_id=session_id)
     if len(turns) < _min_turns():
         return None
 
@@ -235,7 +247,7 @@ def load_summary_addon(
         if not fresh:
             return ""
         cached = fresh
-    turns = _turns_merged(history=history)
+    turns = _turns_merged(history=history, session_id=session_id)
     if len(turns) < _min_turns():
         return ""
     text = str(cached.get("summary_text") or "").strip()

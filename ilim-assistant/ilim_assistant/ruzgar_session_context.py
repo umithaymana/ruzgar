@@ -127,6 +127,7 @@ def build_session_memory_context(
     *,
     mode_norm: str = "genel",
     history: list | None = None,
+    include_chat_history: bool = True,
 ) -> str:
     """Her sohbet turuna kısa kalıcı hafıza bloğu ekler; yeni oturumda da disk/SQLite'tan yüklenir."""
     if not _enabled():
@@ -149,7 +150,9 @@ def build_session_memory_context(
         from ilim_assistant.ruzgar_bilissel_analiz import build_bilissel_turn_context
 
         bilissel_block = build_bilissel_turn_context(
-            message, history=history
+            message,
+            history=history if include_chat_history else None,
+            include_history=include_chat_history,
         ).strip()
     except Exception:
         bilissel_block = ""
