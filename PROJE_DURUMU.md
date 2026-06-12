@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-05-20 (Nebula kitap hafızası, mimar protokolü, API 8779 + `-ForceRestart`.)
+**Son güncelleme:** 2026-06-11 (ChatGPT yol E→J: Hub SSE tam orkestrasyon, bilgi hibrit, oturum özeti, görsel sohbet, tek yüz UX.)
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 

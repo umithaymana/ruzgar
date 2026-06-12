@@ -2221,6 +2221,73 @@ def run_offline() -> int:
     else:
         _ok("hafızadan öğretim onayı dönmüyor")
 
+    print("\n=== Hub SSE Faz E — tüm motorlar sunucu akışı ===")
+    from ilim_assistant.ruzgar_hub_sse_faz_e import (
+        hub_sse_faz_e_enabled,
+        get_server_stream_motors,
+        should_route_via_server_stream,
+    )
+
+    if not hub_sse_faz_e_enabled():
+        _fail("hub_sse_faz_e", "kapalı")
+        fails += 1
+    else:
+        _ok("Hub SSE Faz E açık")
+    for mid in ("ses", "hafiza", "mimar", "hizir"):
+        if not should_route_via_server_stream(mid):
+            _fail("hub_sse_e_motor", mid)
+            fails += 1
+        else:
+            _ok(f"server stream: {mid}")
+    if len(get_server_stream_motors()) < 7:
+        _fail("hub_sse_e_count", str(len(get_server_stream_motors())))
+        fails += 1
+    else:
+        _ok(f"motor sayısı: {len(get_server_stream_motors())}")
+
+    print("\n=== Faz F — bilgi hibrit ===")
+    from ilim_assistant.ruzgar_bilgi_hybrid import bilgi_hybrid_enabled, bilgi_hybrid_status
+
+    if not bilgi_hybrid_enabled():
+        _fail("bilgi_hybrid", "kapalı")
+        fails += 1
+    else:
+        _ok(f"bilgi hibrit — {bilgi_hybrid_status()}")
+
+    print("\n=== Faz G — oturum export ===")
+    from ilim_assistant.ana_motor_oturum_ozet import export_chat_history_json, oturum_ozet_enabled
+
+    if not oturum_ozet_enabled():
+        _fail("oturum_ozet", "kapalı")
+        fails += 1
+    else:
+        _ok("oturum özeti açık")
+    ex = export_chat_history_json(limit=5)
+    if not ex.get("ok"):
+        _fail("chat_export", str(ex))
+        fails += 1
+    else:
+        _ok("sohbet export JSON")
+
+    print("\n=== Faz H — görsel sohbet ===")
+    from ilim_assistant.ana_motor_gorsel_sohbet import gorsel_sohbet_enabled, FAZ_H_GORSEL_VERSION
+
+    if not gorsel_sohbet_enabled():
+        _fail("gorsel_sohbet", "kapalı")
+        fails += 1
+    else:
+        _ok(f"görsel sohbet — {FAZ_H_GORSEL_VERSION}")
+
+    print("\n=== Faz J — akıl profili ===")
+    from ilim_assistant.ruzgar_akil_faz_j import akil_faz_j_enabled, akil_faz_j_status
+
+    if not akil_faz_j_enabled():
+        _fail("akil_faz_j", "kapalı")
+        fails += 1
+    else:
+        st = akil_faz_j_status()
+        _ok(f"akıl Faz J — {st.get('version')}")
+
     print("\n=== Hub SSE Faz D — sunucu akışı yönlendirme ===")
     from ilim_assistant.ruzgar_hub_sse_faz_d import (
         hub_sse_faz_d_enabled,
@@ -2239,8 +2306,19 @@ def run_offline() -> int:
             fails += 1
         else:
             _ok(f"server stream motor: {mid}")
+    try:
+        from ilim_assistant.ruzgar_hub_sse_faz_e import hub_sse_faz_e_enabled as _e_on
+    except Exception:
+        _e_on = lambda: False  # noqa: E731
     for mid in ("ses", "hafiza", "mimar"):
-        if should_route_via_server_stream(mid):
+        routed = should_route_via_server_stream(mid)
+        if _e_on():
+            if not routed:
+                _fail("hub_sse_e_motor", mid)
+                fails += 1
+            else:
+                _ok(f"Faz E server stream: {mid}")
+        elif routed:
             _fail("hub_sse_skip", mid)
             fails += 1
         else:

@@ -1130,6 +1130,21 @@ function isHubSseFazDEnabled() {
   return b.hub_sse_faz_d !== false;
 }
 
+function isHubSseFazEEnabled() {
+  const b = lastHealthSnapshot?.build;
+  if (!b || typeof b !== "object") return true;
+  if (b.hub_sse_faz_e === false) return false;
+  const hse = b.hub_sse_e;
+  if (hse && typeof hse === "object" && hse.enabled === false) return false;
+  return b.hub_sse_faz_e !== false;
+}
+
+function isUnifiedFaceEnabled() {
+  const b = lastHealthSnapshot?.build;
+  if (!b || typeof b !== "object") return true;
+  return b.unified_face !== false;
+}
+
 function getFaz7DeferThinkingMs() {
   try {
     const v = parseInt(localStorage.getItem(LS_FAZ7_DEFER_MS) || "175", 10);
@@ -1530,6 +1545,10 @@ function initFazZUx() {
     localStorage.getItem("ruzgar_chat_simple") !== "0" &&
     (lastHealthSnapshot?.ana_motor?.chat_simple !== false);
   document.body.classList.toggle("faz-z-chat-simple", !!chatSimple);
+  document.body.classList.toggle(
+    "ruzgar-unified-face",
+    isUnifiedFaceEnabled() && currentMode === "genel",
+  );
 }
 
 function openFaz7Help() {
@@ -2006,6 +2025,10 @@ function switchMode(mode) {
   };
   setHeaderMotorDeclaration(motorDeclarationByMode[currentMode] || "");
   clearMotorDeclarations();
+  document.body.classList.toggle(
+    "ruzgar-unified-face",
+    isUnifiedFaceEnabled() && currentMode === "genel",
+  );
 }
 
 function clearOrchestraBridge() {
@@ -8691,6 +8714,7 @@ function initAnaMotorHub() {
   window.RuzgarAnaMotorHub.init({
     getApi: () => API,
     isHubSseFazDEnabled,
+    isHubSseFazEEnabled,
     getCurrentMode: () => currentMode,
     switchMode,
     openMotorWorkbenchQuiet,
@@ -13414,6 +13438,11 @@ async function streamChat(userText, streamOpts = {}) {
         isHubSseFazDEnabled()
       ) {
         openMotorWorkbenchQuiet(ev.orchestra.active_motor);
+      }
+      if (ev.motor_action?.motor === "video" && window.RuzgarVideoChatBrain?.tryAtolyeFromMessage) {
+        void window.RuzgarVideoChatBrain.tryAtolyeFromMessage(
+          ev.motor_action.message || ev.user_message || "",
+        );
       }
       if (ev.programlama_focus_rel || ev.programlama_project_rel) {
         void applyProgramlamaFocusFromChat(ev);

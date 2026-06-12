@@ -26,6 +26,12 @@ def hub_sse_faz_d_enabled() -> bool:
 
 
 def should_route_via_server_stream(target: str) -> bool:
+    try:
+        from ilim_assistant.ruzgar_hub_sse_faz_e import should_route_via_server_stream as _e
+
+        return _e(target)
+    except Exception:
+        pass
     if not hub_sse_faz_d_enabled():
         return False
     return (target or "").strip().lower() in SERVER_STREAM_MOTORS
@@ -79,14 +85,31 @@ def try_hub_sse_instant(
                 channel=_ch,
                 plan=question_plan,
             )
+        try:
+            from ilim_assistant.ruzgar_hub_sse_faz_e import enrich_hub_orchestra
+
+            orch = enrich_hub_orchestra(orch, message=raw, hub=hub)
+        except Exception:
+            pass
         return og_out, orch
     except Exception:
         return None, orch
 
 
 def hub_sse_status() -> dict[str, object]:
-    return {
+    motors = sorted(SERVER_STREAM_MOTORS)
+    out: dict[str, object] = {
         "enabled": hub_sse_faz_d_enabled(),
         "version": HUB_SSE_FAZ_D_VERSION,
-        "server_stream_motors": sorted(SERVER_STREAM_MOTORS),
+        "server_stream_motors": motors,
     }
+    try:
+        from ilim_assistant.ruzgar_hub_sse_faz_e import hub_sse_faz_e_status
+
+        out["faz_e"] = hub_sse_faz_e_status()
+        fe = hub_sse_faz_e_status()
+        if fe.get("enabled"):
+            out["server_stream_motors"] = fe.get("server_stream_motors")
+    except Exception:
+        pass
+    return out

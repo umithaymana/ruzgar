@@ -1185,11 +1185,16 @@ def _health_build_block() -> dict:
     import os as _os
 
     base = {
-        "rev": "2026-06-11-ruzgar-hub-sse-faz-d",
+        "rev": "2026-06-11-ruzgar-chatgpt-yol-ej",
         "nebula_kitap": True,
         "tek_ses_faz_b": True,
         "orkestrasyon_faz_c": True,
         "hub_sse_faz_d": True,
+        "hub_sse_faz_e": True,
+        "bilgi_hybrid": True,
+        "oturum_ozet": True,
+        "gorsel_sohbet": True,
+        "unified_face": True,
         "fast_paths": _os.environ.get("RUZGAR_FAST_PATHS", "1").strip(),
         "memory_first": True,
         "bilissel_analiz": True,
@@ -1211,6 +1216,30 @@ def _health_build_block() -> dict:
         from ilim_assistant.ruzgar_hub_sse_faz_d import hub_sse_status
 
         base["hub_sse"] = hub_sse_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_hub_sse_faz_e import hub_sse_faz_e_status
+
+        base["hub_sse_e"] = hub_sse_faz_e_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_bilgi_hybrid import bilgi_hybrid_status
+
+        base["bilgi_hybrid_meta"] = bilgi_hybrid_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ana_motor_gorsel_sohbet import gorsel_sohbet_enabled
+
+        base["gorsel_sohbet"] = gorsel_sohbet_enabled()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_akil_faz_j import akil_faz_j_status
+
+        base["akil_faz_j"] = akil_faz_j_status()
     except Exception:
         pass
     try:
@@ -2753,6 +2782,14 @@ def api_ana_motor_chat_history_search(
     from ilim_assistant.ana_motor_sohbet_gecmis import search_chat_history
 
     return search_chat_history(q, limit=limit, mode=mode)
+
+
+@app.get("/api/ana-motor/chat-history/export")
+def api_ana_motor_chat_history_export(limit: int = 100) -> dict[str, Any]:
+    """Faz G — sohbet geçmişi JSON dışa aktarma."""
+    from ilim_assistant.ana_motor_oturum_ozet import export_chat_history_json
+
+    return export_chat_history_json(limit=limit)
 
 
 @app.get("/api/ana-motor/kaynak-panel/status")
@@ -9099,6 +9136,8 @@ def _iter_instant_chat_events(
         done["programlama_expand_tree"] = True
     if instant_clarify:
         done["instant_clarify"] = True
+    if orch and isinstance(orch, dict) and orch.get("motor_action"):
+        done["motor_action"] = dict(orch["motor_action"])
     yield done
 
 
@@ -9834,6 +9873,31 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             pass
 
     if mode_norm in ("genel", "uretim", "gelisim") and not coding:
+        _upload_ids_early = list(getattr(req, "ana_motor_upload_ids", None) or []) or None
+        _session_early = (getattr(req, "ana_motor_session_id", None) or "").strip() or None
+        if _upload_ids_early or _session_early:
+            try:
+                from ilim_assistant.ana_motor_gorsel_sohbet import try_gorsel_sohbet_reply
+
+                _gv = try_gorsel_sohbet_reply(
+                    req.message or "",
+                    upload_ids=_upload_ids_early,
+                    session_id=_session_early,
+                )
+                if _gv.get("handled") and _gv.get("reply"):
+                    orch_gv = dict(orch)
+                    orch_gv.setdefault("plan", {})["primary"] = "gorsel"
+                    orch_gv["plan"]["label_tr"] = "Görsel"
+                    yield from _iter_instant_chat_events(
+                        str(_gv["reply"]),
+                        (req.message or "").strip(),
+                        session_wake_used=req.session_wake_used,
+                        msg_for_wake=req.message,
+                        orch=orch_gv,
+                    )
+                    return
+            except Exception:
+                pass
         try:
             from ilim_assistant.ana_motor_tercume_yurut import maybe_run_instant_translate
 
@@ -9931,20 +9995,32 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 except Exception:
                     pass
                 try:
-                    from ilim_assistant.ana_motor_fast import (
-                        iter_bilgi_cloud_fast_reply,
-                        should_bilgi_cloud_fast,
+                    from ilim_assistant.ana_motor_fast import should_bilgi_cloud_fast
+                    from ilim_assistant.ruzgar_bilgi_hybrid import (
+                        bilgi_hybrid_enabled,
+                        iter_bilgi_hybrid_reply,
                     )
+                    from ilim_assistant.ana_motor_fast import iter_bilgi_cloud_fast_reply
 
                     if should_bilgi_cloud_fast(
                         req.message, mode_norm, turn_plan
                     ):
+                        _hybrid = bilgi_hybrid_enabled()
                         yield {
                             "type": "status",
-                            "text": "Bilgi — bulut yanıt (Groq/Gemini, indeks atlandı)…",
+                            "text": (
+                                "Bilgi — hibrit yanıt (bulut + kısa yerel kaynak)…"
+                                if _hybrid
+                                else "Bilgi — bulut yanıt (Groq/Gemini)…"
+                            ),
                         }
                         reply_body = ""
-                        for piece in iter_bilgi_cloud_fast_reply(
+                        _iter_fn = (
+                            iter_bilgi_hybrid_reply
+                            if _hybrid
+                            else iter_bilgi_cloud_fast_reply
+                        )
+                        for piece in _iter_fn(
                             req.message,
                             req.history,
                             mode_norm=mode_norm,
@@ -9956,6 +10032,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                             full_out = finalize_assistant_reply(reply_body)
                             orch_bc = dict(orch)
                             orch_bc["bilgi_cloud_fast"] = True
+                            orch_bc["bilgi_hybrid"] = _hybrid
                             yield {
                                 "type": "done",
                                 "full_reply": full_out,
@@ -9964,6 +10041,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                                 or message_calls_wake_name(req.message),
                                 "orchestra": orch_bc,
                                 "bilgi_cloud_fast": True,
+                                "bilgi_hybrid": _hybrid,
                             }
                             return
                 except Exception:
@@ -11232,6 +11310,16 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 session_id=getattr(req, "ana_motor_session_id", None),
                 plan_primary=_plan_prim,
             )
+            try:
+                from ilim_assistant.ana_motor_oturum_ozet import maybe_remember_session_summary
+
+                maybe_remember_session_summary(
+                    user_message=msg,
+                    assistant_message=body_fixed,
+                    mode_norm=mode_norm,
+                )
+            except Exception:
+                pass
         except Exception:
             pass
         yield done_llm

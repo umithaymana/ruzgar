@@ -5,9 +5,19 @@
 (function anaMotorHub(global) {
   "use strict";
 
-  const VERSION = "ana-motor-hub-v9-hub-sse-faz-d-2026-06-11";
+  const VERSION = "ana-motor-hub-v10-hub-sse-faz-e-2026-06-11";
 
-  const SERVER_STREAM_MOTORS = new Set(["tercume", "video", "programlama"]);
+  const SERVER_STREAM_MOTORS_D = new Set(["tercume", "video", "programlama"]);
+  const SERVER_STREAM_MOTORS_E = new Set([
+    "tercume",
+    "video",
+    "programlama",
+    "ses",
+    "hafiza",
+    "mimar",
+    "hizir",
+    "okuma",
+  ]);
 
   /** Alt-intent → sentetik sohbet (motor runner) */
   const SUB_INTENT_MSG = {
@@ -260,13 +270,18 @@
   }
 
   function serverHubStreamEnabled() {
-    return d().isHubSseFazDEnabled?.() === true;
+    return d().isHubSseFazDEnabled?.() !== false;
+  }
+
+  function serverStreamMotorSet() {
+    if (d().isHubSseFazEEnabled?.() !== false) return SERVER_STREAM_MOTORS_E;
+    return SERVER_STREAM_MOTORS_D;
   }
 
   function shouldRouteViaServerStream(motorId) {
     if (!serverHubStreamEnabled()) return false;
     const mid = normalizeMotorId(motorId);
-    return SERVER_STREAM_MOTORS.has(mid);
+    return serverStreamMotorSet().has(mid);
   }
 
   async function fetchMotorDispatch(text, target) {

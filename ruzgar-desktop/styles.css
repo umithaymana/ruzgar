@@ -5247,6 +5247,15 @@ body.faz7-reduced-motion .agent-step-active .agent-step-label {
   font-size: 11px;
   width: 100%;
 }
+/* Faz I — tek yüz (genel modda sekme gürültüsünü azalt) */
+body.ruzgar-unified-face .mode-tab:not([data-mode="genel"]) {
+  opacity: 0.45;
+  transform: scale(0.92);
+}
+body.ruzgar-unified-face .orchestra-bridge-title {
+  font-size: 11px;
+  opacity: 0.85;
+}
 /* Faz Z — sade sohbet + katlanır arşiv */
 body.faz-z-chat-simple .composer-advanced-fold {
   margin-top: 4px;

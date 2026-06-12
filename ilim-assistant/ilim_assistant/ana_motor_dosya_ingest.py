@@ -16,6 +16,17 @@ from typing import Any
 _PKG_ROOT = Path(__file__).resolve().parent.parent
 _UPLOAD_ROOT = _PKG_ROOT / ".ruzgar" / "ana_motor_uploads"
 _ALLOWED = {".txt", ".md", ".pdf"}
+
+
+def _allowed_extensions() -> set[str]:
+    ext = set(_ALLOWED)
+    try:
+        from ilim_assistant.ana_motor_gorsel_sohbet import image_extensions_enabled
+
+        ext |= set(image_extensions_enabled())
+    except Exception:
+        pass
+    return ext
 _MAX_BYTES = int(os.environ.get("RUZGAR_ANA_UPLOAD_MAX_BYTES", str(8 * 1024 * 1024)))
 _TTL_SEC = int(os.environ.get("RUZGAR_ANA_UPLOAD_TTL_SEC", "7200"))
 _TTL_EXTEND_SEC = int(os.environ.get("RUZGAR_ANA_UPLOAD_TTL_EXTEND_SEC", "86400"))
@@ -382,8 +393,9 @@ def save_upload_bytes(
     name = (filename or "dosya.txt").replace("\\", "/").split("/")[-1]
     safe = re.sub(r"[^a-zA-Z0-9._\-ğüşıöçĞÜŞİÖÇ]+", "_", name).strip("._") or "dosya.txt"
     ext = Path(safe).suffix.lower()
-    if ext not in _ALLOWED:
-        return {"ok": False, "error": f"Desteklenen: {', '.join(sorted(_ALLOWED))}"}
+    allowed = _allowed_extensions()
+    if ext not in allowed:
+        return {"ok": False, "error": f"Desteklenen: {', '.join(sorted(allowed))}"}
 
     upload_id = uuid.uuid4().hex[:16]
     staging = _UPLOAD_ROOT / "staging"
@@ -409,6 +421,45 @@ def save_upload_bytes(
                 }
         except Exception:
             pass
+
+    try:
+        from ilim_assistant.ana_motor_gorsel_sohbet import image_extensions_enabled
+
+        if ext in image_extensions_enabled():
+            img_dir = _UPLOAD_ROOT / "images"
+            img_dir.mkdir(parents=True, exist_ok=True)
+            final = img_dir / f"{upload_id}_{safe}"
+            try:
+                target.replace(final)
+            except OSError:
+                final.write_bytes(data)
+                target.unlink(missing_ok=True)
+            rel = final.relative_to(_PKG_ROOT).as_posix()
+            record = {
+                "upload_id": upload_id,
+                "filename": safe,
+                "chars": 0,
+                "chunks": 0,
+                "chunk_texts": [],
+                "stored_rel": rel,
+                "is_image": True,
+                "expires_at": time.time() + _TTL_SEC,
+            }
+            with _lock:
+                _store[upload_id] = record
+                _persist_record(upload_id, record)
+            if session_id:
+                _register_upload_session_unlocked(session_id, upload_id)
+            return {
+                "ok": True,
+                "upload_id": upload_id,
+                "filename": safe,
+                "chars": 0,
+                "is_image": True,
+                "session_id": session_id,
+            }
+    except Exception:
+        pass
 
     text, err = _extract_text(target)
     try:
