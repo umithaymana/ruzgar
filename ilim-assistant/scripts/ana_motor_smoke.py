@@ -2185,6 +2185,39 @@ def run_offline() -> int:
     else:
         _ok("SLO arka plan API hazir (tam kosu: --live --slo-pack)")
 
+    print("\n=== Faz AC3 — sesli tur VAD paneli ===")
+    from ilim_assistant.ruzgar_sesli_tur_faz_k import (
+        read_vad_user_settings,
+        sesli_tur_vad_effective,
+        sesli_tur_vad_panel_payload,
+        write_vad_user_settings,
+    )
+
+    panel = sesli_tur_vad_panel_payload()
+    if not panel.get("vad_bounds") or not panel.get("labels_tr"):
+        _fail("vad_panel_payload", str(panel.keys()))
+        fails += 1
+    else:
+        _ok("VAD panel payload hazir")
+    eff = sesli_tur_vad_effective()
+    if eff.get("silence_end_ms", 0) < 350:
+        _fail("vad_effective", str(eff))
+        fails += 1
+    else:
+        _ok(f"VAD eff silence={eff.get('silence_end_ms')}ms")
+    write_vad_user_settings({"quiet_avg": 10})
+    if read_vad_user_settings().get("quiet_avg") != 10:
+        _fail("vad_write", str(read_vad_user_settings()))
+        fails += 1
+    else:
+        _ok("VAD kullanici kaydi yazildi")
+    write_vad_user_settings(reset=True)
+    if read_vad_user_settings():
+        _fail("vad_reset", str(read_vad_user_settings()))
+        fails += 1
+    else:
+        _ok("VAD sifirlama")
+
     print("\n=== Faz AB — oturum export / birlesik nebula apply ===")
     from ilim_assistant.ana_motor_faz_ab import (
         birlesik_apply_enabled,

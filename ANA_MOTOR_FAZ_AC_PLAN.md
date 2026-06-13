@@ -4,28 +4,23 @@
 
 ## AC1 — denge70 otomasyon ✅
 
-RAM kapılı otomatik `ollama pull`, UI panel, `POST /api/ana-motor/denge70/pull`.
+## AC2 — Canlı SLO + zayıf nokta raporu ✅
 
-## AC2 — Canlı SLO + zayıf nokta raporu ✅ (2026-06-13)
+## AC3 — Sesli tur VAD paneli ✅ (2026-06-13)
 
 | # | Görev | Dosya | Davranış |
 |---|--------|-------|----------|
-| AC2a | Zayıf nokta raporu | `ruzgar_canli_slo_faz_k.py` | `build_weak_point_report` + öneriler |
-| AC2b | Arka plan SLO | aynı | `POST /api/ana-motor/slo-pack/run-background` |
-| AC2c | Job durumu | aynı | `GET /api/ana-motor/slo-pack/job` |
-| AC2d | UI panel | `index.html`, `app.js` | SLO koş + rapor listesi |
-| AC2e | Smoke | `ana_motor_smoke.py` | Rapor birimi + `--slo-pack` rapor çıktısı |
+| AC3a | Kullanıcı VAD dosyası | `ruzgar_sesli_tur_faz_k.py` | `.ruzgar_vad_ayarlari.json` |
+| AC3b | API | `desktop_server.py` | `GET/POST /api/ana-motor/sesli-tur/vad` |
+| AC3c | UI kaydırıcılar | `index.html`, `app.js` | 4 eşik + kaydet/sıfırla |
+| AC3d | Health birleşik VAD | aynı | `sesli_tur_vad_effective()` |
 
-### Kullanım
+### Alanlar
 
-```bash
-# Tam canlı koşu + terminal raporu (~10 dk, API açık)
-python scripts/ana_motor_smoke.py --live http://127.0.0.1:8779 --slo-pack
-
-# UI: Ana Motor → «Canlı SLO testi» → SLO koş
-```
-
-## AC3 — Sesli tur VAD paneli (sıradaki)
+- **Sessizlik eşiği (ms)** — konuşma bitince gönder
+- **Minimum kayıt (ms)** — kısa gürültüyü yoksay
+- **Sessizlik hassasiyeti** — mikrofon ortalaması eşiği
+- **TTS sonrası gecikme (ms)** — sesli tur döngüsü
 
 ## AC4 — Otomatik öğrenme → Nebula (sıradaki)
 

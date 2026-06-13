@@ -5474,6 +5474,62 @@ body.faz-z-chat-simple .composer-advanced-fold {
 .ana-motor-slo-fold.slo-fail > summary strong {
   color: #f97316;
 }
+.ana-motor-vad-fold {
+  margin-bottom: 10px;
+}
+.ana-motor-vad-fold > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+  padding: 4px 0 8px;
+}
+.ana-motor-vad-fold > summary::-webkit-details-marker {
+  display: none;
+}
+.ana-motor-vad-fold > summary::before {
+  content: "▸";
+  color: #4ec9b0;
+  margin-right: 4px;
+}
+.ana-motor-vad-fold[open] > summary::before {
+  transform: rotate(90deg);
+  display: inline-block;
+}
+.ana-motor-vad-body {
+  border-top: 1px solid #333;
+  padding-top: 8px;
+}
+.ana-motor-vad-sliders {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 8px 0;
+}
+.ana-motor-vad-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  font-size: 0.92rem;
+}
+.ana-motor-vad-row-label {
+  opacity: 0.92;
+}
+.ana-motor-vad-row input[type="range"] {
+  width: 100%;
+}
+.ana-motor-vad-row-val {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+.ana-motor-vad-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 4px;
+}
 .ana-motor-research-card,
 .ana-motor-nebula-oneri-card {
   padding: 8px 10px;

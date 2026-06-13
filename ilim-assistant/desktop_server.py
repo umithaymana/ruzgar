@@ -2984,6 +2984,38 @@ def api_ana_motor_denge70_pull() -> dict[str, Any]:
     return start_denge70_pull_background(reason="api_manual")
 
 
+@app.get("/api/ana-motor/sesli-tur/vad")
+def api_ana_motor_sesli_tur_vad_get() -> dict[str, Any]:
+    """Faz AC3 — sesli tur VAD ayarları (health + kullanıcı dosyası)."""
+    from ilim_assistant.ruzgar_sesli_tur_faz_k import sesli_tur_vad_panel_payload
+
+    return sesli_tur_vad_panel_payload()
+
+
+class SesliTurVadBody(BaseModel):
+    silence_end_ms: int | None = None
+    min_rec_ms: int | None = None
+    quiet_avg: int | None = None
+    resume_delay_ms: int | None = None
+    reset: bool = False
+
+
+@app.post("/api/ana-motor/sesli-tur/vad")
+def api_ana_motor_sesli_tur_vad_post(body: SesliTurVadBody) -> dict[str, Any]:
+    """Faz AC3 — VAD kullanıcı ayarlarını kaydet veya sıfırla."""
+    from ilim_assistant.ruzgar_sesli_tur_faz_k import (
+        sesli_tur_vad_panel_payload,
+        write_vad_user_settings,
+    )
+
+    patch = body.model_dump(exclude={"reset"}, exclude_none=True)
+    write_vad_user_settings(patch if not body.reset else None, reset=body.reset)
+    out = sesli_tur_vad_panel_payload()
+    out["saved"] = True
+    out["reset"] = bool(body.reset)
+    return out
+
+
 @app.get("/api/ana-motor/kaynak-panel/status")
 def api_ana_motor_kaynak_panel_status() -> dict[str, Any]:
     """Faz AA2 — birleşik Kaynak & Nebula panel durumu."""

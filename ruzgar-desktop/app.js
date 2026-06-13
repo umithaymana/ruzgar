@@ -5,6 +5,7 @@
  */
 const RUZGAR_LOCAL_API_PORT = 8779;
 const RUZGAR_EXPECTED_BUILD_REV = "2026-06-11-ruzgar-sesli-vad-faz-l";
+const LS_VAD_USER = "ruzgar_vad_user_v1";
 const RUZGAR_LOCAL_API_FALLBACK = `http://127.0.0.1:${RUZGAR_LOCAL_API_PORT}`;
 
 function migrateLegacyApiUrl(raw) {
@@ -1172,14 +1173,58 @@ function isUnifiedFaceEnabled() {
 }
 
 function isSesliTurFazKEnabled() {
-  const b = lastHealthSnapshot?.build;
-  if (!b || typeof b !== "object") return true;
-  const st = b.sesli_tur_faz_k;
+  const hp = lastHealthSnapshot || {};
+  const b = hp.build;
+  const st =
+    (b && typeof b === "object" && b.sesli_tur_faz_k) ||
+    hp.sesli_tur_faz_k ||
+    null;
   if (st && typeof st === "object" && st.enabled === false) return false;
   return true;
 }
 
+let vadUserOverrides = null;
+let vadPanelBounds = null;
+let vadPanelLabels = null;
 let sesliTurResumePending = false;
+
+function loadVadUserFromStorage() {
+  try {
+    const raw = localStorage.getItem(LS_VAD_USER);
+    vadUserOverrides = raw ? JSON.parse(raw) : null;
+  } catch {
+    vadUserOverrides = null;
+  }
+}
+
+function applyVadUserPayload(payload) {
+  if (!payload || typeof payload !== "object") return;
+  const eff = payload.vad;
+  if (eff && typeof eff === "object") {
+    vadUserOverrides = { ...eff };
+    try {
+      localStorage.setItem(LS_VAD_USER, JSON.stringify(vadUserOverrides));
+    } catch {
+      /* yok say */
+    }
+  }
+  if (payload.vad_bounds) vadPanelBounds = payload.vad_bounds;
+  if (payload.labels_tr) vadPanelLabels = payload.labels_tr;
+  updateVadPanel(payload);
+}
+
+function getSesliTurVadFromHealth() {
+  const hp = lastHealthSnapshot || {};
+  const st =
+    (hp.build && hp.build.sesli_tur_faz_k) ||
+    hp.sesli_tur_faz_k ||
+    null;
+  if (vadUserOverrides && typeof vadUserOverrides === "object") {
+    return vadUserOverrides;
+  }
+  if (st && typeof st === "object" && st.vad) return st.vad;
+  return null;
+}
 
 async function maybeResumeVoiceListenAfterReply() {
   if (!isSesliTurFazKEnabled()) return;
@@ -1300,6 +1345,7 @@ function updateFaz7HealthStrip(j) {
   faz7HealthStripEl.textContent = bits.join(" · ");
   updateDenge70Panel(j);
   if (sloSt.job) updateSloPanel(sloSt.job);
+  syncVadPanelFromHealth(j);
 }
 
 function updateDenge70Panel(healthPayload) {
@@ -1471,6 +1517,160 @@ async function runSloPackBackground() {
     window.setTimeout(() => void refreshSloStatus(), 3000);
   } catch {
     if (hint) hint.textContent = "API bağlantı hatası";
+  }
+}
+
+const VAD_SLIDER_FIELDS = [
+  "silence_end_ms",
+  "min_rec_ms",
+  "quiet_avg",
+  "resume_delay_ms",
+];
+
+function ensureVadSliderUi(bounds, labels) {
+  const wrap = document.getElementById("ana-motor-vad-sliders");
+  if (!wrap || wrap.dataset.wired === "1") return;
+  wrap.dataset.wired = "1";
+  wrap.innerHTML = "";
+  VAD_SLIDER_FIELDS.forEach((key) => {
+    const b = (bounds && bounds[key]) || { min: 0, max: 100, default: 50 };
+    const row = document.createElement("label");
+    row.className = "ana-motor-vad-row";
+    row.htmlFor = `vad-input-${key}`;
+    const title = document.createElement("span");
+    title.className = "ana-motor-vad-row-label";
+    title.textContent = (labels && labels[key]) || key;
+    const input = document.createElement("input");
+    input.type = "range";
+    input.id = `vad-input-${key}`;
+    input.dataset.vadKey = key;
+    input.min = String(b.min);
+    input.max = String(b.max);
+    input.step = key === "quiet_avg" ? "1" : key.includes("ms") ? "10" : "1";
+    input.value = String(b.default);
+    const val = document.createElement("span");
+    val.className = "ana-motor-vad-row-val";
+    val.id = `vad-val-${key}`;
+    val.textContent = input.value;
+    input.addEventListener("input", () => {
+      val.textContent = input.value;
+    });
+    row.appendChild(title);
+    row.appendChild(input);
+    row.appendChild(val);
+    wrap.appendChild(row);
+  });
+}
+
+function readVadSliderValues() {
+  const out = {};
+  VAD_SLIDER_FIELDS.forEach((key) => {
+    const input = document.getElementById(`vad-input-${key}`);
+    if (input) out[key] = Number(input.value);
+  });
+  return out;
+}
+
+function setVadSliderValues(vad) {
+  if (!vad || typeof vad !== "object") return;
+  VAD_SLIDER_FIELDS.forEach((key) => {
+    const input = document.getElementById(`vad-input-${key}`);
+    const val = document.getElementById(`vad-val-${key}`);
+    if (input && vad[key] != null) {
+      input.value = String(vad[key]);
+      if (val) val.textContent = String(vad[key]);
+    }
+  });
+}
+
+function updateVadPanel(payload) {
+  const hint = document.getElementById("ana-motor-vad-hint");
+  const saveHint = document.getElementById("ana-motor-vad-save-hint");
+  const p = payload && typeof payload === "object" ? payload : {};
+  const bounds = p.vad_bounds || vadPanelBounds;
+  const labels = p.labels_tr || vadPanelLabels;
+  if (bounds) vadPanelBounds = bounds;
+  if (labels) vadPanelLabels = labels;
+  ensureVadSliderUi(bounds, labels);
+  const eff = p.vad || vadUserOverrides || getSesliTurVadFromHealth();
+  if (eff) setVadSliderValues(eff);
+  if (hint && eff) {
+    hint.textContent = `sessizlik ${eff.silence_end_ms}ms · min ${eff.min_rec_ms}ms`;
+  }
+  if (saveHint && !saveHint.textContent) {
+    saveHint.textContent = "Kayıt sunucuda .ruzgar_vad_ayarlari.json dosyasına yazılır.";
+  }
+}
+
+function syncVadPanelFromHealth(j) {
+  const st = (j && j.build && j.build.sesli_tur_faz_k) || (j && j.sesli_tur_faz_k);
+  if (!st) return;
+  updateVadPanel({
+    vad: vadUserOverrides || st.vad,
+    vad_bounds: vadPanelBounds,
+    labels_tr: vadPanelLabels,
+  });
+}
+
+async function fetchVadPanel() {
+  try {
+    const res = await fetch(`${API}/api/ana-motor/sesli-tur/vad`, { cache: "no-store" });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) return;
+    applyVadUserPayload(j);
+  } catch {
+    /* yok say */
+  }
+}
+
+async function saveVadSettings() {
+  const saveHint = document.getElementById("ana-motor-vad-save-hint");
+  const patch = readVadSliderValues();
+  if (saveHint) saveHint.textContent = "Kaydediliyor…";
+  try {
+    const res = await fetch(`${API}/api/ana-motor/sesli-tur/vad`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || j.ok === false) {
+      if (saveHint) saveHint.textContent = "Kayıt başarısız";
+      return;
+    }
+    applyVadUserPayload(j);
+    if (saveHint) saveHint.textContent = "Kaydedildi — bir sonraki dinlemede geçerli.";
+  } catch {
+    vadUserOverrides = patch;
+    try {
+      localStorage.setItem(LS_VAD_USER, JSON.stringify(patch));
+    } catch {
+      /* yok say */
+    }
+    if (saveHint) saveHint.textContent = "Yalnız yerel kayıt (API kapalı).";
+  }
+}
+
+async function resetVadSettings() {
+  const saveHint = document.getElementById("ana-motor-vad-save-hint");
+  if (saveHint) saveHint.textContent = "Sıfırlanıyor…";
+  try {
+    const res = await fetch(`${API}/api/ana-motor/sesli-tur/vad`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reset: true }),
+    });
+    const j = await res.json().catch(() => ({}));
+    vadUserOverrides = null;
+    try {
+      localStorage.removeItem(LS_VAD_USER);
+    } catch {
+      /* yok say */
+    }
+    if (j.ok) applyVadUserPayload(j);
+    if (saveHint) saveHint.textContent = "Varsayılan VAD değerleri yüklendi.";
+  } catch {
+    if (saveHint) saveHint.textContent = "Sıfırlama başarısız";
   }
 }
 
@@ -1835,6 +2035,12 @@ function wireFazAaChatSearch() {
   if (sloRun) sloRun.addEventListener("click", () => void runSloPackBackground());
   const sloRefresh = document.getElementById("btn-ana-slo-refresh");
   if (sloRefresh) sloRefresh.addEventListener("click", () => void refreshSloStatus());
+  const vadSave = document.getElementById("btn-ana-vad-save");
+  if (vadSave) vadSave.addEventListener("click", () => void saveVadSettings());
+  const vadReset = document.getElementById("btn-ana-vad-reset");
+  if (vadReset) vadReset.addEventListener("click", () => void resetVadSettings());
+  loadVadUserFromStorage();
+  void fetchVadPanel();
   const d70Fold = document.getElementById("ana-motor-denge70-fold");
   if (d70Fold) {
     const savedD70 = localStorage.getItem("ruzgar_denge70_panel_open");
@@ -14607,8 +14813,7 @@ const RUZGAR_SILENCE_END_MS = 800;
 const RUZGAR_SILENCE_MIN_REC_MS = 1200;
 
 function getSesliTurVadParams() {
-  const st = lastHealthSnapshot?.build?.sesli_tur_faz_k;
-  const vad = st && typeof st === "object" ? st.vad : null;
+  const vad = getSesliTurVadFromHealth();
   const loop =
     sesliTurResumePending ||
     (el.voiceSend?.checked && el.voiceOut?.checked && currentMode === "genel");
