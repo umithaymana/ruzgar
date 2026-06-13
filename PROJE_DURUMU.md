@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-06-11 (ChatGPT yol E→J: Hub SSE tam orkestrasyon, bilgi hibrit, oturum özeti, görsel sohbet, tek yüz UX.)
+**Son güncelleme:** 2026-06-13 (Faz AB: oturum JSON export + Kaynak panel birleşik Nebula apply)
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 

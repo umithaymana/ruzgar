@@ -233,10 +233,20 @@ Detay: `ANA_MOTOR_FAZ_Z_PLAN.md`
 
 Detay: `ANA_MOTOR_FAZ_AA_PLAN.md`
 
-## Sıradaki (Faz AB — öneri)
+## Faz AB — uygulandı (2026-06-13)
 
-- Sohbet oturumu dışa aktarma
-- Nebula apply birleşik akış
+| # | Görev | Dosya | Durum |
+|---|--------|-------|--------|
+| AB1 | Oturum JSON export | `ana_motor_faz_ab.py` | `GET /api/ana-motor/chat-history/export` |
+| AB2 | Birleşik Nebula apply | `ana_motor_faz_ab.py`, UI | `POST /api/ana-motor/kaynak-panel/birlesik-apply` |
+
+Detay: `ANA_MOTOR_FAZ_AB_PLAN.md`
+
+## Sıradaki (Faz AC — öneri)
+
+- Canlı SLO gece koşusu (sunucu açıkken)
+- Sesli tur VAD kullanıcı ayar paneli
+- denge70 pull otomasyonu (RAM yeterliyse)
 
 ## Ortam (özet)
 

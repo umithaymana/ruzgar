@@ -108,6 +108,22 @@ def _extract_teaching_body(message: str) -> Optional[str]:
             r"yanlış\s*cevap|yanlis\s*cevap|hatırla|hatirla|unut|nebula|\.json",
             low,
         ):
+            try:
+                from ilim_assistant.ruzgar_tek_beyin_konusma_akisi import (
+                    looks_like_meta_feedback,
+                    looks_like_refuse_to_teach,
+                    looks_like_web_research_command,
+                )
+
+                if (
+                    looks_like_meta_feedback(raw)
+                    or looks_like_refuse_to_teach(raw)
+                    or looks_like_web_research_command(raw)
+                ):
+                    clear_pending()
+                    return None
+            except Exception:
+                pass
             pend = get_pending()
             if pend.get("mode") in ("await_teaching", "await_correction"):
                 try:
@@ -1027,6 +1043,29 @@ def try_consume_egitim_command(message: str, history: list | None = None) -> Opt
         return None
 
     try:
+        from ilim_assistant.ruzgar_tek_beyin_konusma_akisi import (
+            looks_like_flow_teaching,
+            looks_like_meta_feedback,
+            looks_like_refuse_to_teach,
+            looks_like_web_research_command,
+            try_flow_teaching_reply,
+        )
+
+        if looks_like_refuse_to_teach(raw) or looks_like_web_research_command(raw):
+            clear_pending()
+            return None
+        if looks_like_meta_feedback(raw):
+            clear_pending()
+            return None
+        flow = try_flow_teaching_reply(raw, history)
+        if flow:
+            return flow
+        if looks_like_flow_teaching(raw):
+            return None
+    except Exception:
+        pass
+
+    try:
         from ilim_assistant.motorlar.programlama_motoru import is_programlama_reserved_command
 
         if is_programlama_reserved_command(raw):
@@ -1140,6 +1179,21 @@ def note_last_user_question(message: str) -> None:
         return
     if is_wrong_answer_trigger(m) or is_teach_mode_trigger(m):
         return
+    try:
+        from ilim_assistant.ruzgar_tek_beyin_konusma_akisi import (
+            looks_like_meta_feedback,
+            looks_like_refuse_to_teach,
+            looks_like_web_research_command,
+        )
+
+        if (
+            looks_like_meta_feedback(m)
+            or looks_like_refuse_to_teach(m)
+            or looks_like_web_research_command(m)
+        ):
+            return
+    except Exception:
+        pass
     try:
         from ilim_assistant.ruzgar_bilissel_analiz import is_anlama_empati_sorusu
 

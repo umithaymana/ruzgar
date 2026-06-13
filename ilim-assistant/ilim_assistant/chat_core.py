@@ -26,6 +26,8 @@ from ilim_assistant.rag_store import (
 from ilim_assistant.web_tools import (
     build_message_link_context,
     build_web_context,
+    build_web_context_fast,
+    web_fast_mode_enabled,
     refined_search_query,
 )
 
@@ -762,7 +764,15 @@ def _append_anti_repeat_instruction(user_payload: str, history: list | None) -> 
 
 
 def _web_secondary_policy_enabled() -> bool:
-    return os.environ.get("RUZGAR_WEB_SECONDARY_ONLY_ON_EMPTY", "1").strip().lower() in (
+    default = "1"
+    try:
+        from ilim_assistant.ruzgar_web_arastirma_pro import web_arastirma_pro_enabled
+
+        if web_arastirma_pro_enabled():
+            default = "0"
+    except Exception:
+        pass
+    return os.environ.get("RUZGAR_WEB_SECONDARY_ONLY_ON_EMPTY", default).strip().lower() in (
         "1",
         "true",
         "yes",
@@ -852,8 +862,21 @@ def _hizir_op_context_for_turn(mode_norm: str, motor_flags: dict[str, bool]) -> 
     return bool(motor_flags.get("hizir"))
 
 
-def empty_reply_fallback(message: str = "") -> str:
+def empty_reply_fallback(message: str = "", history: list | None = None) -> str:
     """LLM/stream boş döndüğünde kullanıcıya görünür yedek."""
+    try:
+        from ilim_assistant.ruzgar_tek_beyin_karsilama import (
+            looks_like_greeting_complaint,
+            looks_like_session_greeting,
+            try_session_resume_greeting,
+        )
+
+        if looks_like_session_greeting(message) or looks_like_greeting_complaint(message):
+            alt = try_session_resume_greeting(message, client_history=history)
+            if alt:
+                return alt
+    except Exception:
+        pass
     q = (message or "").strip()
     if len(q) > 80:
         q = q[:77].rstrip() + "…"
@@ -1401,21 +1424,44 @@ def prepare_turn(
         return msg, hits, "", "", "", archive_direct
 
     web_on = use_web and (m not in _NOWEB_MODES)
+    _web_pro = False
+    try:
+        from ilim_assistant.ruzgar_web_arastirma_pro import should_prioritize_web_research
+
+        _web_pro = should_prioritize_web_research(msg, turn_plan, m)
+        if _web_pro:
+            web_on = True
+    except Exception:
+        pass
     try:
         from ilim_assistant.ruzgar_umed_cevap_emri import (
             remaining_sec,
-            should_defer_web_to_rest,
             umed_emri_applies,
         )
+        from ilim_assistant.ruzgar_web_arastirma_pro import should_defer_web_for_pro
 
-        if should_defer_web_to_rest() and umed_emri_applies(
+        if should_defer_web_for_pro(msg, turn_plan, m) and umed_emri_applies(
             mode_norm=m, coding_mode=coding_mode
         ):
             has_local = bool(ar_hits or hits)
             if has_local or remaining_sec() <= 10.0:
                 web_on = False
     except Exception:
-        pass
+        try:
+            from ilim_assistant.ruzgar_umed_cevap_emri import (
+                remaining_sec,
+                should_defer_web_to_rest,
+                umed_emri_applies,
+            )
+
+            if should_defer_web_to_rest() and umed_emri_applies(
+                mode_norm=m, coding_mode=coding_mode
+            ):
+                has_local = bool(ar_hits or hits)
+                if has_local or remaining_sec() <= 10.0:
+                    web_on = False
+        except Exception:
+            pass
     if weather_q and (m not in _NOWEB_MODES):
         web_on = True
     if (
@@ -1423,6 +1469,7 @@ def prepare_turn(
         and m in ("genel", "uretim", "gelisim")
         and not turn_plan.prefer_web
         and not weather_q
+        and not _web_pro
     ):
         web_on = False
     if me_suppress_web:
@@ -1434,7 +1481,7 @@ def prepare_turn(
     if not _is_wake_only_message(msg):
         # Web'i ikinci plana al: lokal hafıza / vektör araması bir bağlam üretmişse
         # (hits/blocks boş değilse) DuckDuckGo + link okuma gecikmeli devreye girer.
-        web_secondary_only_on_empty = _web_secondary_policy_enabled()
+        web_secondary_only_on_empty = _web_secondary_policy_enabled() and not _web_pro
         local_rag_present = bool(blocks or hits or ar_hits) or bool(live_weather_ctx)
         allow_web = True
         if web_secondary_only_on_empty and local_rag_present:
@@ -1443,10 +1490,15 @@ def prepare_turn(
                 ar_hits,
                 archive_primary=archive_primary_flag,
             )
+        if _web_pro:
+            allow_web = True
         try:
             from ilim_assistant.ana_motor_plan import looks_like_fast_llm_fact_question
+            from ilim_assistant.ruzgar_web_arastirma_pro import should_prioritize_web_research
 
-            _fast_fact_no_web = looks_like_fast_llm_fact_question(msg)
+            _fast_fact_no_web = looks_like_fast_llm_fact_question(msg) and not should_prioritize_web_research(
+                msg, turn_plan, m
+            )
         except Exception:
             _fast_fact_no_web = False
         if (
@@ -1477,6 +1529,18 @@ def prepare_turn(
                 else:
                     text_q = refined_search_query(msg).strip()
                 n_fetch = int(min(max(fetch_pages, 0), 5))
+                try:
+                    from ilim_assistant.ruzgar_web_arastirma_pro import (
+                        pick_web_context_builder,
+                        resolve_pro_fetch_pages,
+                        resolve_pro_max_results,
+                        should_prioritize_web_research,
+                    )
+
+                    if should_prioritize_web_research(msg, turn_plan, m):
+                        n_fetch = resolve_pro_fetch_pages(fetch_pages)
+                except Exception:
+                    pass
                 skip_ddg = (
                     weather_q
                     and live_weather_ctx
@@ -1488,17 +1552,55 @@ def prepare_turn(
                     from ilim_assistant.ana_motor_plan import (
                         looks_like_fast_llm_fact_question,
                     )
+                    from ilim_assistant.ruzgar_web_arastirma_pro import (
+                        should_prioritize_web_research,
+                    )
 
-                    if looks_like_fast_llm_fact_question(msg):
+                    if looks_like_fast_llm_fact_question(msg) and not should_prioritize_web_research(
+                        msg, turn_plan, m
+                    ):
                         skip_ddg = True
                         n_fetch = 0
                 except Exception:
                     pass
                 if text_q and not skip_ddg:
                     try:
-                        search_ctx = build_web_context(
+                        try:
+                            from ilim_assistant.ruzgar_web_arastirma_pro import (
+                                pick_web_context_builder,
+                                resolve_pro_max_results,
+                            )
+
+                            _web_builder = pick_web_context_builder(msg, turn_plan, m)
+                        except Exception:
+                            from ilim_assistant.web_tools import (
+                                build_web_context,
+                                build_web_context_fast,
+                                web_fast_mode_enabled,
+                            )
+
+                            _web_builder = (
+                                build_web_context_fast
+                                if web_fast_mode_enabled()
+                                else build_web_context
+                            )
+                        _max_res = int(
+                            os.environ.get(
+                                "WEB_FAST_MAX_RESULTS" if web_fast_mode_enabled() else "WEB_MAX_RESULTS",
+                                "8" if web_fast_mode_enabled() else "10",
+                            )
+                        )
+                        try:
+                            from ilim_assistant.ruzgar_web_arastirma_pro import (
+                                resolve_pro_max_results,
+                            )
+
+                            _max_res = resolve_pro_max_results(_max_res)
+                        except Exception:
+                            pass
+                        search_ctx = _web_builder(
                             text_q,
-                            max_results=int(os.environ.get("WEB_MAX_RESULTS", "10")),
+                            max_results=_max_res,
                             fetch_first_n_urls=n_fetch,
                         )
                         if search_ctx:
@@ -1616,18 +1718,31 @@ def prepare_turn(
         user_payload = live_weather_ctx + "\n\n" + user_payload
     if web_extra:
         user_payload += "\n\n" + web_extra
+        _web_pro_addon = False
+        try:
+            from ilim_assistant.ruzgar_web_arastirma_pro import (
+                build_web_pro_system_addon,
+                should_prioritize_web_research,
+            )
+
+            _web_pro_addon = should_prioritize_web_research(msg, turn_plan, m)
+        except Exception:
+            pass
         if os.environ.get("WEB_ANSWER_FROM_SOURCES", "1").strip() not in (
             "0",
             "false",
             "no",
         ):
-            user_payload += (
-                "\n\n[TALİMAT — WEB BİLGİSİ]\n"
-                "Yukarıdaki **Web araması** ve/veya **bağlantı** metinlerinden yararlan; "
-                "kullanıcıya anlaşılır Türkçe özet veya cevap ver. "
-                "Önemli bilgiler için kısaca kaynak (site adı veya URL) belirt. "
-                "Sayfa metni çekilemediyse dürüstçe yaz; arama snippet’lerine güvenebilirsin.\n"
-            )
+            if _web_pro_addon:
+                user_payload += build_web_pro_system_addon(msg)
+            else:
+                user_payload += (
+                    "\n\n[TALİMAT — WEB BİLGİSİ]\n"
+                    "Yukarıdaki **Web araması** ve/veya **bağlantı** metinlerinden yararlan; "
+                    "kullanıcıya anlaşılır Türkçe özet veya cevap ver. "
+                    "Önemli bilgiler için kısaca kaynak (site adı veya URL) belirt. "
+                    "Sayfa metni çekilemediyse dürüstçe yaz; arama snippet’lerine güvenebilirsin.\n"
+                )
         try:
             from ilim_assistant.ana_motor_arastirma import (
                 maybe_build_unified_research_report,
@@ -1917,6 +2032,38 @@ def prepare_turn(
                     elif _prim == "hafiza":
                         _voice_path = "hafiza"
                 system = append_voice_addon_to_system(system, _voice_path)
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ruzgar_tek_beyin_analiz import (
+                build_analiz_system_addon,
+                tek_beyin_analiz_enabled,
+            )
+
+            if tek_beyin_analiz_enabled():
+                system = system + build_analiz_system_addon(msg)
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ruzgar_tek_beyin_web_arastirma import (
+                build_web_research_system_addon,
+                is_force_web_research,
+                tek_beyin_web_arastirma_enabled,
+            )
+
+            _orch = orchestration_out if isinstance(orchestration_out, dict) else {}
+            if tek_beyin_web_arastirma_enabled() and is_force_web_research(_orch):
+                system = system + build_web_research_system_addon(msg)
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ruzgar_web_arastirma_pro import (
+                build_web_pro_system_addon,
+                should_prioritize_web_research,
+            )
+
+            if should_prioritize_web_research(msg, turn_plan, m) and (web_extra or "").strip():
+                system = system + build_web_pro_system_addon(msg)
         except Exception:
             pass
     model = resolve_model(

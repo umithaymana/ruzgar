@@ -20,16 +20,37 @@ def oturum_ozet_enabled() -> bool:
     )
 
 
-def export_chat_history_json(*, limit: int | None = None) -> dict[str, Any]:
-    from ilim_assistant.ana_motor_sohbet_gecmis import recent_chat_history
+def export_chat_history_json(
+    *,
+    limit: int | None = None,
+    session_id: str | None = None,
+    mode: str | None = None,
+) -> dict[str, Any]:
+    try:
+        from ilim_assistant.ana_motor_faz_ab import export_session_json, session_export_enabled
 
-    data = recent_chat_history(limit=limit or 100)
+        if session_export_enabled():
+            out = export_session_json(
+                limit=limit,
+                session_id=session_id,
+                mode=mode,
+            )
+            if out.get("ok"):
+                out["oturum_version"] = FAZ_G_OTURUM_VERSION
+                return out
+    except Exception:
+        pass
+
+    from ilim_assistant.ana_motor_sohbet_gecmis import export_session_chat_history
+
+    data = export_session_chat_history(
+        limit=limit or 100,
+        session_id=session_id,
+        mode=mode,
+    )
     return {
-        "ok": True,
+        **data,
         "version": FAZ_G_OTURUM_VERSION,
-        "exported_at": time.time(),
-        "items": data.get("items") or [],
-        "count": data.get("count") or 0,
     }
 
 

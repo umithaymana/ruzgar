@@ -364,6 +364,7 @@
             autocomplete="off"
           />
           <button type="button" id="btn-chat-history-clear" class="btn-secondary btn-compact" title="Aramayı temizle">Temizle</button>
+          <button type="button" id="btn-chat-history-export" class="btn-secondary btn-compact" title="Sohbet geçmişini JSON indir">Dışa aktar</button>
           <span id="chat-history-search-hint" class="chat-history-search-hint" aria-live="polite"></span>
         </div>
         <div class="chat-scroll" id="chat-messages"></div>
@@ -519,6 +520,12 @@
                 <span id="ana-motor-kaynak-panel-hint" class="ana-motor-card-sub ana-motor-kaynak-panel-hint">Henüz veri yok</span>
               </summary>
               <div class="ana-motor-kaynak-panel-body">
+            <div class="ana-motor-kaynak-birlesik-actions faz-ab-kaynak-actions">
+              <button type="button" class="btn-primary btn-compact" id="btn-ana-kaynak-birlesik-apply" title="Nebula öneri / paket / yükleme — tek tık">
+                Nebula'ya uygula
+              </button>
+              <span id="ana-motor-kaynak-birlesik-hint" class="ana-motor-card-sub"></span>
+            </div>
             <div id="ana-motor-research-card" class="ana-motor-research-card" hidden>
               <strong>Araştırma envanteri</strong>
               <p id="ana-motor-research-summary" class="ana-motor-card-sub"></p>

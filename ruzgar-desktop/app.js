@@ -1488,6 +1488,85 @@ function syncAnaMotorKaynakPanel() {
   }
 }
 
+async function exportChatHistoryJson() {
+  const hint = document.getElementById("chat-history-search-hint");
+  const mode = currentMode === "genel" ? "" : currentMode;
+  const qs = new URLSearchParams({ limit: "200" });
+  if (mode) qs.set("mode", mode);
+  if (anaMotorUploadSessionId) qs.set("session_id", anaMotorUploadSessionId);
+  try {
+    const res = await fetch(`${API}/api/ana-motor/chat-history/export?${qs.toString()}`, {
+      cache: "no-store",
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) {
+      setStatus(j.detail || j.error || "Sohbet dışa aktarılamadı", "Rüzgar");
+      return;
+    }
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+    const blob = new Blob([JSON.stringify(j, null, 2)], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ruzgar-sohbet-${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    if (hint) hint.textContent = `${j.count || 0} tur dışa aktarıldı`;
+    flashRuzgarDurum(`Sohbet JSON — ${j.count || 0} tur`);
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+  }
+}
+
+async function runKaynakBirlesikApply() {
+  const btn = document.getElementById("btn-ana-kaynak-birlesik-apply");
+  const hint = document.getElementById("ana-motor-kaynak-birlesik-hint");
+  const uploadIds = anaMotorUploadQueue.map((x) => x.id).filter(Boolean);
+  const ozetWrap = document.getElementById("ana-motor-paket-ozet-card");
+  const ozetCard =
+    ozetWrap && !ozetWrap.hidden && anaMotorLastPaketOzetCard ? anaMotorLastPaketOzetCard : null;
+  const body = {
+    nebula_card: anaMotorLastNebulaCard || undefined,
+    ozet_card: ozetCard || undefined,
+    upload_ids: uploadIds.length ? uploadIds : undefined,
+    session_id: anaMotorUploadSessionId || undefined,
+    topic: (anaMotorLastNebulaCard && anaMotorLastNebulaCard.topic) || anaMotorLastUserTopic || "",
+  };
+  if (btn) btn.disabled = true;
+  if (hint) hint.textContent = "Nebula uygulanıyor…";
+  try {
+    const res = await fetch(`${API}/api/ana-motor/kaynak-panel/birlesik-apply`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) {
+      setStatus(j.detail || j.error || "Birleşik Nebula apply başarısız", "Rüzgar");
+      if (hint) hint.textContent = j.detail || j.error || "Hata";
+      return;
+    }
+    const src = j.birlesik_source || "kaynak";
+    setStatus(j.hint || `Nebula uygulandı (${src})`, "Rüzgar");
+    flashRuzgarDurum(`Nebula — ${j.collection || src}`);
+    if (hint) hint.textContent = `${src} · ${j.collection || ""}`;
+    if (j.async) {
+      stopAnaMotorNebulaApplyPoll();
+      void pollAnaMotorNebulaApplyStatus();
+      anaMotorNebulaApplyPoll = window.setInterval(() => {
+        void pollAnaMotorNebulaApplyStatus();
+      }, 2200);
+    }
+  } catch (e) {
+    setStatus(formatClientChatError(e), "Rüzgar");
+    if (hint) hint.textContent = "Bağlantı hatası";
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
 function clearChatHistorySearch() {
   const input = document.getElementById("chat-history-search");
   const hint = document.getElementById("chat-history-search-hint");
@@ -1563,6 +1642,10 @@ function wireFazAaChatSearch() {
     });
   }
   if (clearBtn) clearBtn.addEventListener("click", () => clearChatHistorySearch());
+  const exportBtn = document.getElementById("btn-chat-history-export");
+  if (exportBtn) exportBtn.addEventListener("click", () => void exportChatHistoryJson());
+  const birlesikBtn = document.getElementById("btn-ana-kaynak-birlesik-apply");
+  if (birlesikBtn) birlesikBtn.addEventListener("click", () => void runKaynakBirlesikApply());
   const kaynakFold = document.getElementById("ana-motor-kaynak-panel-fold");
   if (kaynakFold) {
     const saved = localStorage.getItem("ruzgar_kaynak_panel_open");
@@ -9579,7 +9662,10 @@ function ensureSharedChatStore() {
       lastAssistantReply: "",
     };
     try {
-      const raw = sessionStorage.getItem(RUZGAR_SHARED_CHAT_LS);
+      let raw = localStorage.getItem(RUZGAR_SHARED_CHAT_LS);
+      if (!raw) {
+        raw = sessionStorage.getItem(RUZGAR_SHARED_CHAT_LS);
+      }
       if (raw) {
         const j = JSON.parse(raw);
         if (Array.isArray(j.history)) {
@@ -9601,20 +9687,70 @@ function ensureSharedChatStore() {
   return motorChatSessions[RUZGAR_SHARED_CHAT_KEY];
 }
 
+/** Uygulama yeniden açıldığında disk sohbet geçmişini API'den yükle. */
+async function hydrateSharedChatFromServer() {
+  const store = ensureSharedChatStore();
+  if (Array.isArray(store.history) && store.history.length >= 4) {
+    return;
+  }
+  try {
+    const res = await fetch(`${API}/api/ana-motor/chat-history/recent?limit=24`);
+    if (!res.ok) return;
+    const data = await res.json();
+    const items = Array.isArray(data?.items) ? data.items : [];
+    if (!items.length) return;
+    const rebuilt = [];
+    for (const row of items.slice().reverse()) {
+      const user = String(row.user || "").trim();
+      const assistant = String(row.assistant || "").trim();
+      if (!user || !assistant) continue;
+      rebuilt.push({ role: "user", content: user });
+      rebuilt.push({ role: "assistant", content: assistant });
+    }
+    if (!rebuilt.length) return;
+    if (!store.history.length) {
+      store.history = rebuilt.slice(-MAX_CLIENT_HISTORY_MSGS);
+    } else {
+      const seen = new Set(
+        store.history.map((m) => `${m.role}\0${String(m.content || "").trim()}`),
+      );
+      for (const msg of rebuilt) {
+        const key = `${msg.role}\0${String(msg.content || "").trim()}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        store.history.push(msg);
+      }
+      store.history = store.history.slice(-MAX_CLIENT_HISTORY_MSGS);
+    }
+    const lastAsst = [...store.history].reverse().find((m) => m.role === "assistant");
+    if (lastAsst?.content) {
+      store.lastAssistantReply = String(lastAsst.content);
+      lastAssistantReply = store.lastAssistantReply;
+    }
+    persistSharedChatStore();
+    renderMotorChatFromSession(activeMotorChatMode());
+  } catch (_) {
+    /* yok say */
+  }
+}
+
 function getSharedChatHistory() {
   return ensureSharedChatStore().history;
 }
 
 function persistSharedChatStore() {
   const store = ensureSharedChatStore();
+  const payload = JSON.stringify({
+    history: store.history.slice(-MAX_CLIENT_HISTORY_MSGS),
+    lastAssistantReply: store.lastAssistantReply || lastAssistantReply || "",
+  });
   try {
-    sessionStorage.setItem(
-      RUZGAR_SHARED_CHAT_LS,
-      JSON.stringify({
-        history: store.history.slice(-MAX_CLIENT_HISTORY_MSGS),
-        lastAssistantReply: store.lastAssistantReply || lastAssistantReply || "",
-      }),
-    );
+    localStorage.setItem(RUZGAR_SHARED_CHAT_LS, payload);
+  } catch (_) {
+    /* yok say */
+  }
+  try {
+    sessionStorage.setItem(RUZGAR_SHARED_CHAT_LS, payload);
   } catch (_) {
     /* yok say */
   }
@@ -9859,6 +9995,7 @@ function clearChatSession() {
   }
   lastAssistantReply = "";
   try {
+    localStorage.removeItem(RUZGAR_SHARED_CHAT_LS);
     sessionStorage.removeItem(RUZGAR_SHARED_CHAT_LS);
   } catch (_) {
     /* yok say */
@@ -15114,7 +15251,10 @@ wireChatAutoScroll();
 document.body.classList.add("faz7-complete", "faz8-complete", "faz-z-complete", "faz-aa-complete");
 setAnaMotorInfoStripState("loading");
 void checkApi().then((ok) => {
-  if (ok) void refreshUiManifest();
+  if (ok) {
+    void refreshUiManifest();
+    void hydrateSharedChatFromServer();
+  }
   renderMotorChatFromSession(activeMotorChatMode());
 });
 ensureSharedChatStore();

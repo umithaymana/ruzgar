@@ -2,7 +2,7 @@
 
 > **Hedef:** Tek sohbetten gerçek iş yürütme — panel/sekme değiştirmeden backend sonuç dönsün.
 
-## Faz W — uygulanıyor
+## Faz W — uygulandı (2026-06-10)
 
 | # | Görev | Dosya | API / davranış |
 |---|--------|-------|----------------|

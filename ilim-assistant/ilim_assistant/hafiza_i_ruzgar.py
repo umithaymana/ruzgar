@@ -39,6 +39,7 @@ class HafizaIRuzgar:
         "ve", "veya", "ama", "fakat", "icin",
         "de", "da", "ki", "ya", "ile",
         "den", "dan", "yi", "yu", "i", "u",
+        "kimdir", "kimdi", "kimesne", "nedir",
     })
 
     # Baş/sondaki ayırıcı ve noktalama (Türkçe dahil)
@@ -71,6 +72,20 @@ class HafizaIRuzgar:
         "ğ": "g", "Ğ": "g", "ü": "u", "Ü": "u",
         "ö": "o", "Ö": "o", "ç": "c", "Ç": "c",
     })
+    _KIM_IDENTITY_SUFFIX = re.compile(
+        r"\s+(?:kimdir|kimdi|kim|kimi|kimesne|nedir)\s*[\?.!…]*\s*$",
+        re.I,
+    )
+
+    @classmethod
+    def _strip_identity_question_suffix(cls, metin: str) -> str:
+        t = (metin or "").strip()
+        for _ in range(3):
+            nt = cls._KIM_IDENTITY_SUFFIX.sub("", t).strip()
+            if nt == t:
+                break
+            t = nt
+        return re.sub(r"\s+", " ", t).strip()
 
     @classmethod
     def _fuzzy_anahtar(cls, metin: str) -> str:
@@ -338,6 +353,8 @@ class HafizaIRuzgar:
         if nq:
             for row in reversed(adaylar):
                 k = row.get("soru", "")
+                if self._fuzzy_aday_elenmeli_mi(t, k):
+                    continue
                 if self._norm_eslesme(k) == nq:
                     ans = row.get("cevap", "")
                     if self._cevap_yer_tutucu_mu(ans):
@@ -357,7 +374,49 @@ class HafizaIRuzgar:
                 "eslesme": "fuzzy",
                 "skor": float(en_iyi[2]),
             }
+        stripped = self._strip_identity_question_suffix(t)
+        if stripped and stripped != t:
+            nq2 = self._norm_eslesme(stripped)
+            if nq2:
+                for row in reversed(adaylar):
+                    k = row.get("soru", "")
+                    if self._fuzzy_aday_elenmeli_mi(t, k):
+                        continue
+                    if self._norm_eslesme(k) == nq2:
+                        ans = row.get("cevap", "")
+                        if self._cevap_yer_tutucu_mu(ans):
+                            continue
+                        return {
+                            "cevap": ans,
+                            "soru": k,
+                            "eslesme": "norm",
+                            "skor": 1.0,
+                        }
+            en_iyi = self._fuzzy_en_iyi_eslesme(stripped, adaylar)
+            if en_iyi is not None:
+                return {
+                    "cevap": en_iyi[0],
+                    "soru": en_iyi[1],
+                    "eslesme": "fuzzy",
+                    "skor": float(en_iyi[2]),
+                }
         return None
+
+    @classmethod
+    def _fuzzy_aday_elenmeli_mi(cls, sorgu: str, aday_soru: str) -> bool:
+        """Oturum özeti / ham öğretim satırı — «kimdir» sorusunda aday olmasın."""
+        aq = cls._norm_eslesme(aday_soru)
+        if not aq:
+            return True
+        if aq.startswith("kisisel not") or aq.startswith("oturum ozeti"):
+            return True
+        if "oturum ozeti" in aq or aq.startswith("dosya oturumu"):
+            return True
+        sq = cls._norm_eslesme(sorgu)
+        if re.search(r"\b(kimdir|kimdi|kim)\b", sq) and len(aq) > len(sq) + 24:
+            if "oturum" in aq or "konuşulan başlık" in aday_soru.lower():
+                return True
+        return False
 
     def _fuzzy_en_iyi_eslesme(
         self, sorgu: str, adaylar: List[Dict[str, str]]
@@ -387,6 +446,8 @@ class HafizaIRuzgar:
             k = row.get("soru", "")
             cv = row.get("cevap", "")
             if not k or not cv:
+                continue
+            if self._fuzzy_aday_elenmeli_mi(sorgu, k):
                 continue
             if self._cevap_yer_tutucu_mu(cv):
                 continue

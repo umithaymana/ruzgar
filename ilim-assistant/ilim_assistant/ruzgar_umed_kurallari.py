@@ -12,8 +12,9 @@ SAVED_TEACH = "Tamam Ümit abi, bunu öğrendim ve hafızama kaydettim."
 SAVED_CORRECT = "Tamam Ümit abi, bunu öğrendim ve hafızama kaydettim."
 
 SELAM_STANDART = (
-    "Ümit kardeşim, seninle sohbet etmek benim için bir onur. "
-    "Hangi konuda sohbet edelim?"
+    "Günaydın Ümit abi! Seni yine burada görmek güzel — "
+    "kaldığımız yerden devam edelim; dün konuştuklarımızı hatırlıyorum. "
+    "Bugün neye odaklanalım?"
 )
 SELAM_RUZGAR = (
     "Selam Ümit abi — seninle sohbet etmek benim için bir onur. "

@@ -8,7 +8,7 @@ import re
 import unicodedata
 from typing import Any, Iterator, Optional
 
-TEK_BEYIN_VERSION = "tek-beyin-v11-2026-06-12-faz-k"
+TEK_BEYIN_VERSION = "tek-beyin-v16-2026-06-13-otomatik-ogrenme"
 
 _KIM_SORUSU = re.compile(
     r"\b(kimdir|kimdi|kim\b|kimi|kimler|kimesne)\b",
@@ -36,7 +36,22 @@ _ENCYCLOPEDIC_MARKERS = (
     "uygarlık",
     "uygarlik",
     "cumhuriyet",
+    "ataturk",
+    "atatürk",
+    "mustafa kemal",
 )
+_KIM_STRIP_RE = re.compile(
+    r"\b(?:kimdir|kimdi|kim|kimi|kimesne|nedir)\b",
+    re.I,
+)
+_KNOWN_CIRCLE_ALIASES: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"g[oö]k[cç]e\s*nur\s*haymana", re.I), "gökçenur"),
+    (re.compile(r"g[oö]k[cç]enur(?:\s*haymana)?", re.I), "gökçenur"),
+    (re.compile(r"\b[uü]mit(?:\s*abi|\s*bey)?\b", re.I), "ümit"),
+    (re.compile(r"\br[uü]zgar\b", re.I), "rüzgar"),
+    (re.compile(r"\byavuz\s*kara\b", re.I), "yavuz kara"),
+)
+_LEGACY_HAFIZA_FILES = ("ogrenme_merkezi.json", "hafiza_arsivi.json")
 
 
 def tek_beyin_enabled() -> bool:
@@ -90,7 +105,17 @@ def looks_like_personal_memory_query(message: str) -> bool:
             return False
         if re.search(r"\b(?:ne zaman|kaç yıl|kuruldu|nedir)\b", blob):
             return False
-        return True
+        if matches_known_circle_name(raw):
+            return True
+        try:
+            from ilim_assistant.ruzgar_otomatik_ogrenme import lookup_bilgi_kutuphane_hint
+
+            ku = lookup_bilgi_kutuphane_hint(raw)
+            if ku and not matches_known_circle_name(raw):
+                return False
+        except Exception:
+            pass
+        return False
     return False
 
 
@@ -125,6 +150,189 @@ def resolve_memory_query_message(
         if len(u) >= 5:
             return u
     return raw
+
+
+def _strip_kim_question_suffix(message: str) -> str:
+    raw = (message or "").strip()
+    if not raw:
+        return raw
+    stripped = _KIM_STRIP_RE.sub(" ", raw)
+    return re.sub(r"\s+", " ", stripped).strip(" ?!.…")
+
+
+def memory_lookup_variants(message: str) -> list[str]:
+    """Hafıza araması için sorgu varyantları (kimdir soneki, yakın çevre takma adları)."""
+    raw = (message or "").strip()
+    out: list[str] = []
+    seen: set[str] = set()
+
+    def _add(v: str) -> None:
+        v = (v or "").strip()
+        if not v or v in seen:
+            return
+        seen.add(v)
+        out.append(v)
+
+    _add(raw)
+    stripped = _strip_kim_question_suffix(raw)
+    if stripped:
+        _add(stripped)
+    blob = _norm_blob(raw)
+    for pat, alias in _KNOWN_CIRCLE_ALIASES:
+        if pat.search(blob) or (stripped and pat.search(_norm_blob(stripped))):
+            _add(alias)
+            _add(f"{alias} kimdir")
+    return out
+
+
+def matches_known_circle_name(message: str) -> bool:
+    blob = _norm_blob(message)
+    return any(pat.search(blob) for pat, _ in _KNOWN_CIRCLE_ALIASES)
+
+
+def _lookup_legacy_hafiza_hint(message: str) -> Optional[dict[str, Any]]:
+    """Eski ogrenme_merkezi / hafiza_arsivi dosyalarında arama."""
+    try:
+        from ilim_assistant.ruzgar_tek_beyin_karsilama import looks_like_session_greeting
+
+        if looks_like_session_greeting(message):
+            return None
+    except Exception:
+        pass
+    from pathlib import Path
+
+    try:
+        from ilim_assistant.hafiza_dogal_sentez import _is_miss_answer
+        from ilim_assistant.hafiza_i_ruzgar import HafizaIRuzgar
+    except Exception:
+        return None
+    pkg = Path(__file__).resolve().parent.parent
+    for fname in _LEGACY_HAFIZA_FILES:
+        path = pkg / fname
+        if not path.is_file():
+            continue
+        try:
+            motor = HafizaIRuzgar(dosya_yolu=path)
+            detay = motor.ogrenme_cevabi_bak_detayli(message)
+        except Exception:
+            continue
+        if not detay:
+            continue
+        cevap = str(detay.get("cevap") or "").strip()
+        if _is_miss_answer(cevap):
+            continue
+        skor = float(detay.get("skor") or 0.0)
+        if skor < 0.68:
+            continue
+        return {
+            "cevap": cevap,
+            "soru": str(detay.get("soru") or "").strip(),
+            "eslesme": str(detay.get("eslesme") or "legacy"),
+            "skor": skor,
+        }
+    return None
+
+
+def lookup_chat_history_person_hint(
+    message: str,
+    client_history: list | None = None,
+) -> Optional[dict[str, Any]]:
+    """Disk/oturum sohbet geçmişinden aynı konuya yakın yanıt."""
+    try:
+        from ilim_assistant.ana_motor_sohbet_gecmis import search_chat_history
+    except Exception:
+        return None
+    best: Optional[dict[str, Any]] = None
+    for variant in memory_lookup_variants(message):
+        try:
+            data = search_chat_history(variant, limit=4)
+        except Exception:
+            continue
+        for row in data.get("items") or []:
+            assistant = str(
+                row.get("assistant_snippet") or row.get("assistant") or ""
+            ).strip()
+            user = str(row.get("user_snippet") or row.get("user") or "").strip()
+            if not assistant or len(assistant) < 16:
+                continue
+            if assistant.startswith("["):
+                continue
+            skor = 0.74 if variant == (message or "").strip() else 0.7
+            if best is None or skor > float(best.get("skor") or 0.0):
+                best = {
+                    "cevap": assistant[:2400],
+                    "soru": user,
+                    "eslesme": "chat_history",
+                    "skor": skor,
+                }
+    if best:
+        return best
+    if not client_history:
+        return None
+    pending_user = ""
+    for item in client_history:
+        if isinstance(item, dict):
+            role = str(item.get("role") or "").strip().lower()
+            content = str(item.get("content") or "").strip()
+            if role == "user":
+                pending_user = content
+            elif role == "assistant" and pending_user:
+                user_norm = _norm_blob(_strip_kim_question_suffix(pending_user))
+                for variant in memory_lookup_variants(message):
+                    var_norm = _norm_blob(variant)
+                    if not var_norm or len(var_norm) < 4:
+                        continue
+                    if var_norm in user_norm or user_norm in var_norm:
+                        if content and len(content) >= 16:
+                            return {
+                                "cevap": content[:2400],
+                                "soru": pending_user,
+                                "eslesme": "client_history",
+                                "skor": 0.72,
+                            }
+                pending_user = ""
+    return None
+
+
+def _resolve_personal_hafiza_hint(
+    message: str,
+    client_history: list | None = None,
+) -> Optional[dict[str, Any]]:
+    try:
+        from ilim_assistant.ruzgar_tek_beyin_hafiza_seed import ensure_core_hafiza_profiles
+
+        ensure_core_hafiza_profiles()
+    except Exception:
+        pass
+    for variant in memory_lookup_variants(message):
+        hint = lookup_personal_hafiza_hint(variant)
+        if hint:
+            return hint
+        hint = _lookup_legacy_hafiza_hint(variant)
+        if hint:
+            return hint
+    return lookup_chat_history_person_hint(message, client_history)
+
+
+def _iter_personal_hafiza_miss_reply(
+    message: str,
+    history: list | None,
+) -> Iterator[str]:
+    """Kişisel «kimdir» sorusu ama kayıt yok — bilgi/web uydurmasını kes."""
+
+    def _gen() -> Iterator[str]:
+        q = " ".join((message or "").split())[:100]
+        hist = lookup_chat_history_person_hint(message, history)
+        if hist and (hist.get("cevap") or "").strip():
+            yield str(hist["cevap"]).strip()
+            return
+        yield (
+            f"Ümit abi, «{q}» için hafızamda net bir kişisel kayıt bulamadım. "
+            "Bana «hatırla: …» ile yazarsan bir daha unutmam. "
+            "Ansiklopedik bir isimse web aramasını açık tutup tekrar sorabilirsin."
+        )
+
+    return _gen()
 
 
 def lookup_personal_hafiza_hint(message: str) -> Optional[dict[str, Any]]:
@@ -176,7 +384,9 @@ def personal_hafiza_blocks_bilgi_path(message: str) -> bool:
     if not tek_beyin_enabled():
         return False
     target = resolve_memory_query_message(message)
-    hint = lookup_personal_hafiza_hint(target)
+    if matches_known_circle_name(target):
+        return True
+    hint = _resolve_personal_hafiza_hint(target)
     if not hint:
         return False
     try:
@@ -196,11 +406,83 @@ def should_use_personal_hafiza_first(
     if not tek_beyin_enabled():
         return False
     target = resolve_memory_query_message(message, client_history)
-    if lookup_personal_hafiza_hint(target):
+    try:
+        from ilim_assistant.ruzgar_tek_beyin_karsilama import looks_like_session_greeting
+
+        if looks_like_session_greeting(target):
+            return False
+    except Exception:
+        pass
+    if looks_like_personal_memory_query(target) or matches_known_circle_name(target):
+        if _resolve_personal_hafiza_hint(target, client_history):
+            return True
+    if matches_known_circle_name(target):
         return True
-    if looks_like_personal_memory_query(target):
-        return lookup_personal_hafiza_hint(target) is not None
+    if looks_like_memory_recheck_query(target):
+        return True
     return False
+
+
+def _hafiza_instant_enabled() -> bool:
+    return os.environ.get("RUZGAR_HAFIZA_INSTANT", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
+def _clean_hafiza_fact(text: str) -> str:
+    raw = (text or "").strip()
+    if not raw:
+        return raw
+    raw = re.sub(r"^Kişisel\s+not:\s*", "", raw, flags=re.I).strip()
+    raw = re.sub(r"^kisisel\s+not:\s*", "", raw, flags=re.I).strip()
+    return raw
+
+
+def synthesize_hafiza_instant_reply(message: str, hint: dict[str, Any]) -> str:
+    """LLM beklemeden kişisel hafıza yanıtı — kota/bağlantı sorunlarında güvenilir."""
+    ham = _clean_hafiza_fact(str(hint.get("cevap") or ""))
+    if not ham:
+        return ""
+    blob = _norm_blob(message)
+    asc = blob.replace("ö", "o").replace("ü", "u").replace("ğ", "g").replace("ç", "c")
+    if "gokcenur" in asc or "gokce nur" in asc:
+        if "mimar" not in ham.lower() and "eş" not in ham.lower() and "es" not in ham.lower():
+            ham = (
+                "Gökçenur Haymana, senin eşin ve Rüzgar projesinin mimarı. "
+                + ham
+            )
+        return f"Ümit abi, Gökçenur'u tanıyorum — {ham}"
+    if "yavuz" in blob and "kara" in blob:
+        return f"Ümit abi, Yavuz Kara senin yakın çevrenden; hafızama göre: {ham}"
+    if "umit" in asc and "kim" in blob:
+        return f"Ümit abi, sen Rüzgar'ın mimarısın — {ham}"
+    name = _strip_kim_question_suffix(message).strip("?").strip()
+    if name and len(name) >= 3:
+        return f"Ümit abi, {name} hakkında bildiğim: {ham}"
+    return f"Ümit abi, bildiğim kadarıyla: {ham}"
+
+
+def try_instant_hafiza_reply(
+    message: str,
+    client_history: list | None = None,
+) -> str | None:
+    """Anında kişisel yanıt — Gemini/Ollama yok."""
+    if not tek_beyin_enabled() or not _hafiza_instant_enabled():
+        return None
+    if not should_use_personal_hafiza_first(message, client_history):
+        return None
+    target = resolve_memory_query_message(message, client_history)
+    hint = _resolve_personal_hafiza_hint(target, client_history)
+    if hint:
+        body = synthesize_hafiza_instant_reply(target, hint)
+        return body.strip() or None
+    if matches_known_circle_name(target):
+        miss = list(_iter_personal_hafiza_miss_reply(target, client_history))
+        if miss:
+            return str(miss[0]).strip()
+    return None
 
 
 def iter_tek_beyin_hafiza_reply(
@@ -211,15 +493,28 @@ def iter_tek_beyin_hafiza_reply(
     conversation_context: str | None = None,
     session_id: str | None = None,
 ) -> Iterator[str] | None:
-    """Kişisel hafıza → doğal sentez (LLM yalnızca anlatım; bilgi kaynaktan)."""
+    """Kişisel hafıza → önce anında yanıt; isteğe bağlı LLM cilası."""
     if not tek_beyin_enabled():
         return None
     target = resolve_memory_query_message(message or "", history)
-    hint = lookup_personal_hafiza_hint(target)
+    hint = _resolve_personal_hafiza_hint(target, history)
     if not hint:
-        if not looks_like_personal_memory_query(target):
-            return None
+        if matches_known_circle_name(target) or looks_like_memory_recheck_query(target):
+            return _iter_personal_hafiza_miss_reply(target, history)
         return None
+
+    instant_body = synthesize_hafiza_instant_reply(target, hint)
+    use_llm_polish = os.environ.get("RUZGAR_HAFIZA_INSTANT_LLM_POLISH", "0").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+    )
+    if _hafiza_instant_enabled() and instant_body and not use_llm_polish:
+        def _instant_gen() -> Iterator[str]:
+            yield instant_body
+
+        return _instant_gen()
+
     try:
         from ilim_assistant.hafiza_dogal_sentez import iter_hafiza_dogal_reply
         from ilim_assistant.ruzgar_tek_beyin_baglam import build_tek_beyin_baglam_addon
@@ -246,6 +541,11 @@ def iter_tek_beyin_hafiza_reply(
             context_addon=ctx,
         )
     except Exception:
+        if instant_body:
+            def _fallback_gen() -> Iterator[str]:
+                yield instant_body
+
+            return _fallback_gen()
         return None
 
 
@@ -254,11 +554,13 @@ def tek_beyin_plan_override(message: str) -> dict[str, Any] | None:
     if not tek_beyin_enabled():
         return None
     target = resolve_memory_query_message(message)
-    hint = lookup_personal_hafiza_hint(target)
-    if not hint and not looks_like_personal_memory_query(target):
+    if not (
+        should_use_personal_hafiza_first(target)
+        or matches_known_circle_name(target)
+        or personal_hafiza_blocks_bilgi_path(target)
+    ):
         return None
-    if not hint:
-        return None
+    hint = _resolve_personal_hafiza_hint(target)
     try:
         from ilim_assistant.ruzgar_tek_beyin_dogrulama import should_skip_bilgi_for_weak_hafiza
 
@@ -268,6 +570,7 @@ def tek_beyin_plan_override(message: str) -> dict[str, Any] | None:
         pass
     return {
         "primary": "hafiza",
+        "label_tr": "Hafıza / kayıt",
         "use_ilim_rag": False,
         "prefer_web": False,
         "prefer_archive": False,

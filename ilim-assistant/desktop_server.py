@@ -1303,6 +1303,42 @@ def _health_build_block() -> dict:
     except Exception:
         pass
     try:
+        from ilim_assistant.ruzgar_tek_beyin_analiz import tek_beyin_analiz_status
+
+        base["tek_beyin_analiz"] = tek_beyin_analiz_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_tek_beyin_konusma_akisi import tek_beyin_konusma_status
+
+        base["tek_beyin_konusma"] = tek_beyin_konusma_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_tek_beyin_karsilama import tek_beyin_karsilama_status
+
+        base["tek_beyin_karsilama"] = tek_beyin_karsilama_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_tek_beyin_web_arastirma import tek_beyin_web_arastirma_status
+
+        base["tek_beyin_web"] = tek_beyin_web_arastirma_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_web_arastirma_pro import web_arastirma_pro_status
+
+        base["web_arastirma_pro"] = web_arastirma_pro_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_otomatik_ogrenme import otomatik_ogrenme_status
+
+        base["otomatik_ogrenme"] = otomatik_ogrenme_status()
+    except Exception:
+        pass
+    try:
         from ilim_assistant.ruzgar_denge70_faz_k import denge70_faz_k_status
 
         base["denge70_faz_k"] = denge70_faz_k_status()
@@ -1599,6 +1635,12 @@ def health():
             "chat_history": os.environ.get("RUZGAR_ANA_CHAT_HISTORY", "1").strip().lower()
             not in ("0", "false", "no"),
             "kaynak_panel": os.environ.get("RUZGAR_ANA_KAYNAK_PANEL", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "session_export": os.environ.get("RUZGAR_ANA_SESSION_EXPORT", "1").strip().lower()
+            not in ("0", "false", "no"),
+            "kaynak_birlesik_apply": os.environ.get(
+                "RUZGAR_ANA_KAYNAK_BIRLESIK_APPLY", "1"
+            ).strip().lower()
             not in ("0", "false", "no"),
         },
         "super_brain": _sb,
@@ -2851,11 +2893,19 @@ def api_ana_motor_chat_history_search(
 
 
 @app.get("/api/ana-motor/chat-history/export")
-def api_ana_motor_chat_history_export(limit: int = 100) -> dict[str, Any]:
-    """Faz G — sohbet geçmişi JSON dışa aktarma."""
+def api_ana_motor_chat_history_export(
+    limit: int = 100,
+    session_id: str | None = None,
+    mode: str | None = None,
+) -> dict[str, Any]:
+    """Faz G / AB1 — sohbet geçmişi JSON dışa aktarma."""
     from ilim_assistant.ana_motor_oturum_ozet import export_chat_history_json
 
-    return export_chat_history_json(limit=limit)
+    return export_chat_history_json(
+        limit=limit,
+        session_id=session_id,
+        mode=mode,
+    )
 
 
 @app.get("/api/ana-motor/slo-pack/status")
@@ -2889,7 +2939,47 @@ def api_ana_motor_kaynak_panel_status() -> dict[str, Any]:
     """Faz AA2 — birleşik Kaynak & Nebula panel durumu."""
     from ilim_assistant.ana_motor_kaynak_panel import get_kaynak_panel_status
 
-    return get_kaynak_panel_status()
+    base = get_kaynak_panel_status()
+    try:
+        from ilim_assistant.ana_motor_faz_ab import faz_ab_status
+
+        base["faz_ab"] = faz_ab_status()
+    except Exception:
+        pass
+    return base
+
+
+class KaynakBirlesikApplyBody(BaseModel):
+    nebula_card: dict[str, Any] | None = None
+    ozet_card: dict[str, Any] | None = None
+    upload_ids: list[str] | None = None
+    session_id: str | None = None
+    topic: str = ""
+
+
+@app.post("/api/ana-motor/kaynak-panel/birlesik-apply")
+async def api_ana_motor_kaynak_birlesik_apply(
+    body: KaynakBirlesikApplyBody,
+) -> dict[str, Any]:
+    """Faz AB2 — Kaynak panel tek tık birleşik Nebula apply."""
+    from ilim_assistant.ana_motor_faz_ab import birlesik_apply_enabled, run_birlesik_nebula_apply
+
+    if not birlesik_apply_enabled():
+        raise HTTPException(status_code=403, detail="Birleşik Nebula apply kapalı.")
+    result = await run_in_threadpool(
+        run_birlesik_nebula_apply,
+        nebula_card=body.nebula_card,
+        ozet_card=body.ozet_card,
+        upload_ids=body.upload_ids,
+        session_id=body.session_id,
+        topic=(body.topic or "").strip(),
+    )
+    if not result.get("ok"):
+        raise HTTPException(
+            status_code=400,
+            detail=str(result.get("error") or "Birleşik Nebula apply başarısız."),
+        )
+    return result
 
 
 @app.get("/api/ana-motor/backend-yurut")
@@ -9326,6 +9416,161 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             except Exception:
                 pass
         try:
+            from ilim_assistant.ruzgar_tek_beyin_analiz import (
+                classify_question_intent,
+                try_simple_factual_reply,
+                try_temporal_now_reply,
+            )
+
+            _temp = try_temporal_now_reply(msg_early)
+            if _temp:
+                _orch_t = dict(orch_early)
+                _orch_t.setdefault("plan", {})["primary"] = "gundelik"
+                _orch_t["plan"]["label_tr"] = "Güncel tarih (Faz N)"
+                _orch_t["tek_beyin_analiz"] = classify_question_intent(msg_early)
+                yield from _iter_instant_chat_events(
+                    _temp,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_t,
+                    instant_gundelik=True,
+                )
+                return
+
+            _fact = try_simple_factual_reply(msg_early)
+            if _fact:
+                _orch_f = dict(orch_early)
+                _orch_f.setdefault("plan", {})["primary"] = "bilgi"
+                _orch_f["plan"]["label_tr"] = "Basit gerçek (Faz N)"
+                _orch_f["tek_beyin_analiz"] = classify_question_intent(msg_early)
+                yield from _iter_instant_chat_events(
+                    _fact,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_f,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ruzgar_otomatik_ogrenme import try_bilgi_kutuphane_instant_reply
+
+            _kut = try_bilgi_kutuphane_instant_reply(msg_early)
+            if _kut:
+                _orch_ku = dict(orch_early)
+                _orch_ku.setdefault("plan", {})["primary"] = "bilgi"
+                _orch_ku["plan"]["label_tr"] = "Bilgi kütüphanesi"
+                _orch_ku["kutuphane_hit"] = True
+                yield from _iter_instant_chat_events(
+                    _kut,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_ku,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ruzgar_tek_beyin_konusma_akisi import (
+                looks_like_flow_teaching,
+                looks_like_meta_feedback,
+                looks_like_refuse_to_teach,
+                looks_like_web_research_command,
+                resolve_bilgi_target_from_history,
+                try_flow_teaching_reply,
+                try_meta_feedback_reply,
+                try_web_research_ack,
+            )
+
+            _flow_reply = try_flow_teaching_reply(msg_early, req.history)
+            if _flow_reply:
+                _orch_f = dict(orch_early)
+                _orch_f.setdefault("plan", {})["primary"] = "hafiza"
+                _orch_f["plan"]["label_tr"] = "Akıştan öğrenme"
+                yield from _iter_instant_chat_events(
+                    _flow_reply,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_f,
+                    instant_gundelik=True,
+                )
+                return
+
+            if looks_like_meta_feedback(msg_early):
+                _meta_fb = try_meta_feedback_reply(msg_early, req.history)
+                if _meta_fb:
+                    _orch_m = dict(orch_early)
+                    _orch_m.setdefault("plan", {})["primary"] = "gundelik"
+                    _orch_m["plan"]["label_tr"] = "Geri bildirim"
+                    yield from _iter_instant_chat_events(
+                        _meta_fb,
+                        msg_early,
+                        session_wake_used=req.session_wake_used,
+                        msg_for_wake=req.message,
+                        orch=_orch_m,
+                        instant_gundelik=True,
+                    )
+                    return
+
+            if looks_like_web_research_command(msg_early):
+                try:
+                    from ilim_assistant.ruzgar_egitim import clear_pending
+
+                    clear_pending()
+                except Exception:
+                    pass
+                _web_target = resolve_bilgi_target_from_history(msg_early, req.history)
+                if _web_target:
+                    req = req.model_copy(update={"message": _web_target, "use_web": True})
+                    msg_early = _web_target
+                    orch_early["force_web_research"] = True
+                    orch_early.setdefault("plan", {})["primary"] = "bilgi"
+                    orch_early["plan"]["label_tr"] = "Web araştırması"
+                else:
+                    _web_ack = try_web_research_ack(msg_early, req.history)
+                    if _web_ack:
+                        yield from _iter_instant_chat_events(
+                            _web_ack,
+                            msg_early,
+                            session_wake_used=req.session_wake_used,
+                            msg_for_wake=req.message,
+                            orch=orch_early,
+                            instant_gundelik=True,
+                        )
+                        return
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ruzgar_tek_beyin_karsilama import try_session_resume_greeting
+
+            _karsilama = try_session_resume_greeting(
+                msg_early,
+                client_history=req.history,
+                conversation_context=getattr(req, "conversation_context", None),
+            )
+            if _karsilama:
+                _orch_k = dict(orch_early)
+                _orch_k.setdefault("plan", {})["primary"] = "gundelik"
+                _orch_k["plan"]["label_tr"] = "Oturum karşılama"
+                _orch_k["tek_beyin"] = True
+                yield from _iter_instant_chat_events(
+                    _karsilama,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_k,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
             from ilim_assistant.ruzgar_tek_beyin_ozet import try_tek_beyin_summary_reply
 
             _ozet_early = try_tek_beyin_summary_reply(
@@ -9374,10 +9619,13 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             if tek_beyin_enabled() and should_use_personal_hafiza_first(
                 msg_early, req.history
             ):
-                from ilim_assistant.ruzgar_tek_beyin import lookup_personal_hafiza_hint, resolve_memory_query_message
+                from ilim_assistant.ruzgar_tek_beyin import (
+                    resolve_memory_query_message,
+                    _resolve_personal_hafiza_hint,
+                )
 
                 _tb_target = resolve_memory_query_message(msg_early, req.history)
-                _tb_hint = lookup_personal_hafiza_hint(_tb_target)
+                _tb_hint = _resolve_personal_hafiza_hint(_tb_target, req.history)
                 _tb_stream = iter_tek_beyin_hafiza_reply(
                     msg_early,
                     req.history,
@@ -9385,6 +9633,24 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     conversation_context=getattr(req, "conversation_context", None),
                     session_id=getattr(req, "ana_motor_session_id", None),
                 )
+                if _tb_stream is None:
+                    from ilim_assistant.ruzgar_tek_beyin import try_instant_hafiza_reply
+
+                    _tb_instant = try_instant_hafiza_reply(msg_early, req.history)
+                    if _tb_instant:
+                        _orch_tb = dict(orch_early)
+                        _orch_tb.setdefault("plan", {})["primary"] = "hafiza"
+                        _orch_tb["plan"]["label_tr"] = "Hafıza / kayıt"
+                        _orch_tb["tek_beyin"] = True
+                        yield from _iter_instant_chat_events(
+                            _tb_instant,
+                            msg_early,
+                            session_wake_used=req.session_wake_used,
+                            msg_for_wake=req.message,
+                            orch=_orch_tb,
+                            instant_gundelik=True,
+                        )
+                        return
                 if _tb_stream is not None:
                     _orch_tb = dict(orch_early)
                     _orch_tb.setdefault("plan", {})["primary"] = "hafiza"
@@ -9398,6 +9664,13 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     for piece in _tb_stream:
                         reply_body += piece
                         yield {"type": "token", "text": piece}
+                    if not (reply_body or "").strip():
+                        from ilim_assistant.ruzgar_tek_beyin import try_instant_hafiza_reply
+
+                        _tb_fb = try_instant_hafiza_reply(msg_early, req.history)
+                        if _tb_fb:
+                            reply_body = _tb_fb
+                            yield {"type": "token", "text": _tb_fb}
                     if (reply_body or "").strip():
                         try:
                             from ilim_assistant.ruzgar_tek_beyin_dogrulama import (
@@ -9452,6 +9725,32 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             if dost_sohbet_enabled() and should_use_dost_sohbet_first(
                 msg_early, req.history, mode_norm="genel"
             ):
+                from ilim_assistant.ruzgar_tek_beyin_karsilama import (
+                    looks_like_greeting_complaint,
+                    looks_like_session_greeting,
+                    try_session_resume_greeting,
+                )
+
+                if looks_like_session_greeting(msg_early) or looks_like_greeting_complaint(
+                    msg_early
+                ):
+                    _kars_dost = try_session_resume_greeting(
+                        msg_early,
+                        client_history=req.history,
+                    )
+                    if _kars_dost:
+                        _orch_kd = dict(orch_early)
+                        _orch_kd.setdefault("plan", {})["primary"] = "gundelik"
+                        _orch_kd["plan"]["label_tr"] = "Oturum karşılama"
+                        yield from _iter_instant_chat_events(
+                            _kars_dost,
+                            msg_early,
+                            session_wake_used=req.session_wake_used,
+                            msg_for_wake=req.message,
+                            orch=_orch_kd,
+                            instant_gundelik=True,
+                        )
+                        return
                 _dost_stream = iter_tek_beyin_dost_reply(
                     msg_early,
                     req.history,
@@ -9496,6 +9795,14 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     for piece in _dost_stream:
                         reply_body += piece
                         yield {"type": "token", "text": piece}
+                    if not (reply_body or "").strip():
+                        _kars_fb = try_session_resume_greeting(
+                            msg_early,
+                            client_history=req.history,
+                        )
+                        if _kars_fb:
+                            reply_body = _kars_fb
+                            yield {"type": "token", "text": _kars_fb}
                     if (reply_body or "").strip():
                         full_out = finalize_assistant_reply(reply_body)
                         new_wake = req.session_wake_used or message_calls_wake_name(
@@ -10014,7 +10321,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
     except Exception:
         pass
 
-    orch: dict[str, Any] = {}
+    orch: dict[str, Any] = dict(orch_early) if orch_early else {}
     if isinstance(route_meta.get("task_plan_v92"), dict):
         orch["task_plan_v92"] = dict(route_meta["task_plan_v92"])
     try:
@@ -10281,6 +10588,27 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
 
                 motor_flags = motor_niyeti_heuristic(req.message)
                 turn_plan = plan_question(req.message, mode_norm, motor_flags)
+                try:
+                    from ilim_assistant.ruzgar_tek_beyin_web_arastirma import (
+                        apply_force_web_to_plan,
+                        is_force_web_research,
+                        tek_beyin_web_arastirma_enabled,
+                    )
+
+                    if tek_beyin_web_arastirma_enabled() and is_force_web_research(orch):
+                        turn_plan = apply_force_web_to_plan(turn_plan, req.message)
+                        orch["force_web_research"] = True
+                except Exception:
+                    pass
+                try:
+                    from ilim_assistant.ruzgar_otomatik_ogrenme import kutuphane_blocks_web_path
+
+                    if kutuphane_blocks_web_path(req.message):
+                        turn_plan.prefer_web = False
+                        turn_plan.use_ilim_rag = False
+                        turn_plan.status_text = "Bilgi kütüphanesi — kayıtlı yanıt mevcut"
+                except Exception:
+                    pass
                 yield {"type": "status", "text": turn_plan.status_text}
                 plan_dict = turn_plan.to_dict()
                 orch["plan"] = plan_dict
@@ -10758,7 +11086,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             if not (reply_body or "").strip():
                 from ilim_assistant.chat_core import empty_reply_fallback
 
-                reply_body = empty_reply_fallback(req.message or "")
+                reply_body = empty_reply_fallback(req.message or "", req.history)
                 yield {"type": "token", "text": reply_body}
             full_out = finalize_assistant_reply(reply_body)
             yield {
@@ -11749,6 +12077,24 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     session_id=getattr(req, "ana_motor_session_id", None),
                     mode_norm=mode_norm,
                 )
+            except Exception:
+                pass
+            try:
+                from ilim_assistant.ruzgar_otomatik_ogrenme import auto_learn_from_turn
+
+                _learn_meta = auto_learn_from_turn(
+                    msg,
+                    body_fixed,
+                    plan_primary=_plan_prim,
+                    instant=bool(orch.get("instant_gundelik")),
+                    web_used=bool(
+                        turn_plan is not None
+                        and getattr(turn_plan, "prefer_web", False)
+                    ),
+                    force_web=bool(orch.get("force_web_research")),
+                )
+                if _learn_meta.get("saved"):
+                    orch["otomatik_ogrenme"] = _learn_meta
             except Exception:
                 pass
         except Exception:

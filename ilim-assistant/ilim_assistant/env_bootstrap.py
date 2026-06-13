@@ -189,14 +189,20 @@ def ensure_ruzgar_env() -> list[str]:
     if not os.environ.get("RUZGAR_GEMINI_MODEL", "").strip():
         os.environ["RUZGAR_GEMINI_MODEL"] = DEFAULT_GEMINI_MODEL
 
-    # Ümit abi kesin emri — cevap sırası: hafıza → yerel → gemini → groq (varsayılan açık)
+    # Ümit abi kesin emri v2 — hafıza → yerel Ollama → Groq → Gemini (varsayılan açık)
     if os.environ.get("RUZGAR_UMED_CEVAP_EMRI", "1").strip().lower() not in (
         "0",
         "false",
         "no",
     ):
-        os.environ.setdefault("RUZGAR_FREE_BRAIN", "0")
-        os.environ.setdefault("RUZGAR_BRAIN_FALLBACK_CHAIN", "gemini,groq")
+        os.environ.setdefault("RUZGAR_FREE_BRAIN", "1")
+        os.environ.setdefault("RUZGAR_DISABLE_LOCAL_OLLAMA", "0")
+        os.environ.setdefault("RUZGAR_GENEL_LOCAL_FIRST", "1")
+        os.environ.setdefault("RUZGAR_BRAIN_FALLBACK_CHAIN", "denge,hizli,groq,gemini")
+        os.environ.setdefault("RUZGAR_FAST_BILGI_GEMINI", "0")
+        os.environ.setdefault("RUZGAR_CASUAL_FAST_GEMINI", "0")
+        os.environ.setdefault("RUZGAR_TARIH_GEMINI_FIRST", "0")
+        os.environ.setdefault("RUZGAR_FAZ9_GEMINI_FIRST_FOR_FACTS", "0")
         os.environ.setdefault("RUZGAR_EGITIM_MISS_SEC", "15")
         os.environ.setdefault("RUZGAR_UMED_BUDGET_SEC", "15")
         os.environ.setdefault("RUZGAR_UMED_ILIM_BUDGET_SEC", "22")
@@ -217,6 +223,14 @@ def ensure_ruzgar_env() -> list[str]:
         os.environ.setdefault("RUZGAR_ANA_PROGRESS_ETA", "1")
         os.environ.setdefault("RUZGAR_CASUAL_OLLAMA_READ_TIMEOUT_SEC", "22")
         os.environ.setdefault("RUZGAR_CASUAL_BRAIN_CHAIN", "groq,hizli,denge,gemini")
+        os.environ.setdefault("RUZGAR_WEB_ARASTIRMA_PRO", "1")
+        os.environ.setdefault("RUZGAR_WEB_SECONDARY_ONLY_ON_EMPTY", "0")
+        os.environ.setdefault("RUZGAR_WEB_PRO_MAX_RESULTS", "14")
+        os.environ.setdefault("RUZGAR_WEB_PRO_FETCH_URLS", "6")
+        os.environ.setdefault("RUZGAR_WEB_PRO_MULTI_QUERY", "1")
+        os.environ.setdefault("RUZGAR_WEB_PRO_PER_QUERY", "8")
+        os.environ.setdefault("ENABLE_WEB_SEARCH", "1")
+        os.environ.setdefault("WEB_MAX_RESULTS", "12")
 
     sync_global_api_key_aliases()
     try:

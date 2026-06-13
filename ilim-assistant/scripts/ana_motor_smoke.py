@@ -2047,6 +2047,85 @@ def run_offline() -> int:
     else:
         _ok("kaynak panel birlestirme")
 
+    print("\n=== Faz AC — web araştırma PRO ===")
+    from ilim_assistant.ruzgar_web_arastirma_pro import (
+        should_prioritize_web_research,
+        web_arastirma_pro_enabled,
+        web_arastirma_pro_status,
+    )
+    from ilim_assistant.web_tools import expand_web_queries
+
+    st = web_arastirma_pro_status()
+    if not web_arastirma_pro_enabled():
+        _fail("web_arastirma_pro", "kapali")
+        fails += 1
+    else:
+        _ok(f"Web PRO acik ({st.get('version', '')[:28]})")
+    qs = expand_web_queries("Fatih Sultan Mehmet ne zaman padişah oldu", primary="bilgi")
+    if len(qs) < 1:
+        _fail("web_pro_expand", str(qs))
+        fails += 1
+    else:
+        _ok(f"web coklu sorgu n={len(qs)}")
+    if not should_prioritize_web_research(
+        "Osmanlı tarihinde Fatih ne zaman tahta çıktı",
+        {"primary": "bilgi"},
+        "genel",
+    ):
+        _fail("web_pro_prioritize", "bilgi sorusu web oncelik degil")
+        fails += 1
+    else:
+        _ok("bilgi sorusu web oncelikli")
+
+    print("\n=== Faz AB — oturum export / birlesik nebula apply ===")
+    from ilim_assistant.ana_motor_faz_ab import (
+        birlesik_apply_enabled,
+        export_session_json,
+        faz_ab_enabled,
+        resolve_birlesik_nebula_plan,
+        session_export_enabled,
+    )
+
+    if not faz_ab_enabled():
+        _fail("faz_ab", "kapali")
+        fails += 1
+    else:
+        _ok("Faz AB acik")
+    if not session_export_enabled():
+        _fail("session_export", "kapali")
+        fails += 1
+    else:
+        _ok("oturum export acik")
+    ex_ab = export_session_json(limit=5)
+    if not ex_ab.get("ok"):
+        _fail("session_export_run", str(ex_ab)[:80])
+        fails += 1
+    else:
+        _ok(f"oturum export count={ex_ab.get('count')}")
+    if not birlesik_apply_enabled():
+        _fail("birlesik_apply", "kapali")
+        fails += 1
+    else:
+        _ok("birlesik nebula apply acik")
+    plan = resolve_birlesik_nebula_plan(
+        nebula_card={
+            "ok": True,
+            "collection": "tarih_kaynak",
+            "topic": "Faz AB test",
+        }
+    )
+    if not plan.get("ok") or plan.get("source") != "nebula_oneri":
+        _fail("birlesik_plan", str(plan)[:80])
+        fails += 1
+    else:
+        _ok(f"birlesik plan source={plan.get('source')}")
+    empty = resolve_birlesik_nebula_plan()
+    if empty.get("ok"):
+        _fail("birlesik_plan_empty", "should fail")
+        fails += 1
+    else:
+        _ok("birlesik plan bos reddi")
+
     print("\n=== Faz D — bilim derin / denge70 / otonom debug ===")
     from ilim_assistant.ana_motor_bilim_derin import (
         apply_bilim_derin_rag_top_k,
@@ -3161,6 +3240,16 @@ def run_live(base: str) -> int:
         fails += 1
     else:
         _ok("Faz AA2 kaynak panel acik")
+    if not am.get("session_export"):
+        _fail("faz_ab1 session_export", "kapali")
+        fails += 1
+    else:
+        _ok("Faz AB1 oturum export acik")
+    if not am.get("kaynak_birlesik_apply"):
+        _fail("faz_ab2 birlesik_apply", "kapali")
+        fails += 1
+    else:
+        _ok("Faz AB2 birlesik apply acik")
 
     print("\n=== Canli — motor rehberi API ===")
     reh_url = base.rstrip("/") + "/api/ana-motor/motor-rehberi"

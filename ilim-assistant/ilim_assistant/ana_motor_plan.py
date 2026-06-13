@@ -551,6 +551,47 @@ def plan_question(
 ) -> QuestionPlan:
     flags = motor_flags or {}
     try:
+        from ilim_assistant.ruzgar_tek_beyin_analiz import (
+            classify_question_intent,
+            tek_beyin_analiz_enabled,
+        )
+
+        if tek_beyin_analiz_enabled():
+            intent = classify_question_intent(message)
+            if intent.get("intent") == "simple_fact" and intent.get("direct_answer"):
+                return QuestionPlan(
+                    primary="bilgi",
+                    secondary=[],
+                    use_ilim_rag=False,
+                    prefer_web=False,
+                    prefer_archive=False,
+                    ambiguous=False,
+                    clarification=None,
+                    web_query="",
+                    rag_query="",
+                    status_text="Soru analizi: basit gerçek — doğrudan yanıt",
+                )
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_tek_beyin_konusma_akisi import looks_like_meta_feedback
+
+        if looks_like_meta_feedback(message):
+            return QuestionPlan(
+                primary="gundelik",
+                secondary=[],
+                use_ilim_rag=False,
+                prefer_web=False,
+                prefer_archive=False,
+                ambiguous=False,
+                clarification=None,
+                web_query="",
+                rag_query="",
+                status_text="Soru analizi: geri bildirim — sohbet",
+            )
+    except Exception:
+        pass
+    try:
         from ilim_assistant.ana_motor_tercume_yurut import is_instant_translate_message
 
         if is_instant_translate_message(message):
@@ -621,9 +662,28 @@ def plan_question(
     if primary == "hava":
         prefer_web = True
     if looks_like_fast_llm_fact_question(message):
-        prefer_web = False
-        if primary == "bilgi":
-            use_ilim_rag = False
+        try:
+            from ilim_assistant.ruzgar_web_arastirma_pro import web_arastirma_pro_enabled
+
+            if not web_arastirma_pro_enabled():
+                prefer_web = False
+                if primary == "bilgi":
+                    use_ilim_rag = False
+        except Exception:
+            prefer_web = False
+            if primary == "bilgi":
+                use_ilim_rag = False
+    elif (
+        mode_norm in ("genel", "uretim", "gelisim")
+        and primary in ("bilgi", "bilim", "dilbilgisi")
+    ):
+        try:
+            from ilim_assistant.ruzgar_web_arastirma_pro import web_arastirma_pro_enabled
+
+            if web_arastirma_pro_enabled():
+                prefer_web = True
+        except Exception:
+            pass
 
     # Faz B3 — genel kısa bilgi sorusunda web varsayılan (Faz 49 hız yolunun üstüne)
     if (
@@ -686,7 +746,10 @@ def plan_question(
             clarification = None
             web_q = ""
             rag_q = ""
-            status = _status_for_plan("hafiza", "")
+            label = str(_tb.get("label_tr") or "").strip()
+            status = _status_for_plan(primary, "")
+            if label:
+                status = f"{label} — {status}" if status else label
     except Exception:
         pass
 
@@ -708,7 +771,7 @@ def plan_question(
     except Exception:
         pass
 
-    return QuestionPlan(
+    plan = QuestionPlan(
         primary=primary,
         secondary=secondary,
         use_ilim_rag=use_ilim_rag,
@@ -720,6 +783,13 @@ def plan_question(
         rag_query=rag_q,
         status_text=status,
     )
+    try:
+        from ilim_assistant.ruzgar_web_arastirma_pro import apply_web_pro_plan_overrides
+
+        plan = apply_web_pro_plan_overrides(plan, message)
+    except Exception:
+        pass
+    return plan
 
 
 def rewrite_rag_search_query(message: str, primary: str) -> str:
@@ -1121,6 +1191,14 @@ def maybe_gundelik_instant_reply(
     """B3b — net sohbet (nasılsın/selam) için Ollama/Gemini beklemeden kısa yanıt."""
     if mode_norm not in ("genel", "uretim", "gelisim"):
         return None
+    try:
+        from ilim_assistant.ruzgar_tek_beyin_karsilama import try_session_resume_greeting
+
+        karsilama = try_session_resume_greeting(message)
+        if karsilama:
+            return karsilama
+    except Exception:
+        pass
     try:
         from ilim_assistant.ruzgar_dogal_sohbet_faz91 import should_skip_instant_shortcuts
 

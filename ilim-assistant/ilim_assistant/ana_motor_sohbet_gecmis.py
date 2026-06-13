@@ -120,6 +120,39 @@ def recent_chat_history(*, limit: int | None = None) -> dict[str, Any]:
     }
 
 
+def export_session_chat_history(
+    *,
+    session_id: str | None = None,
+    mode: str | None = None,
+    limit: int | None = None,
+) -> dict[str, Any]:
+    """Faz AB1 — jsonl kayıtlarını isteğe bağlı oturum/mod filtresiyle dışa aktar."""
+    if not chat_history_enabled():
+        return {"ok": False, "error": "Sohbet geçmişi kapalı.", "items": [], "count": 0}
+    try:
+        cap = max(5, min(int(limit or 100), 500))
+    except (TypeError, ValueError):
+        cap = 100
+    sid = (session_id or "").strip()
+    mode_norm = (mode or "").strip().lower()
+    scan_cap = 500 if sid or mode_norm else cap
+    items = _load_entries(limit=scan_cap)
+    if sid:
+        items = [row for row in items if str(row.get("session_id") or "") == sid]
+    if mode_norm:
+        items = [row for row in items if str(row.get("mode") or "genel").lower() == mode_norm]
+    items = items[:cap]
+    return {
+        "ok": True,
+        "version": FAZ_AA_CHAT_VERSION,
+        "exported_at": time.time(),
+        "session_id": sid or None,
+        "mode": mode_norm or None,
+        "items": items,
+        "count": len(items),
+    }
+
+
 _RECALL_STOP = frozenset(
     {
         "olabilir",

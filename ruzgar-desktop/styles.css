@@ -5381,6 +5381,14 @@ body.faz-z-chat-simple .composer-advanced-fold {
   flex-direction: column;
   gap: 10px;
 }
+.faz-ab-kaynak-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
 .ana-motor-kaynak-panel-fold:not(.has-kaynak-content) .ana-motor-kaynak-panel-hint {
   opacity: 0.75;
 }

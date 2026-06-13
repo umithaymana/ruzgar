@@ -46,6 +46,10 @@ _GUVEN_RE = re.compile(
     r"\*\*Güven:\s*(yüksek|orta|düşük|dusuk)\*\*",
     re.I,
 )
+_KIMDIR_PROF_HALLUCINATION = re.compile(
+    r"(?:türk\s+)?(?:şair|sair|yazar|poet|writer|oyuncu|aktris|actress|sanatçı|sanatci)",
+    re.I,
+)
 
 
 def tek_beyin_bilgi_guard_enabled() -> bool:
@@ -139,6 +143,16 @@ def _clip_question(message: str, limit: int = 100) -> str:
     return q if len(q) <= limit else q[: max(0, limit - 1)].rstrip() + "…"
 
 
+def looks_like_kimdir_profession_hallucination(message: str, reply: str) -> bool:
+    """«kimdir» sorusuna kaynak yokken şablon meslek uydurması."""
+    mq = _norm(message)
+    if not re.search(r"\bkimdir\b|\bkimdi\b", mq):
+        return False
+    if any(p in mq for p in ("şair", "sair", "yazar", "oyuncu", "poet", "writer")):
+        return False
+    return bool(_KIMDIR_PROF_HALLUCINATION.search(reply or ""))
+
+
 def honest_bilgi_fallback(message: str, *, reason: str = "") -> str:
     q = _clip_question(message)
     why = ""
@@ -148,6 +162,8 @@ def honest_bilgi_fallback(message: str, *, reason: str = "") -> str:
         why = " Kaynaklarla cevap arasında uyumsuzluk var."
     elif reason == "weak_alignment":
         why = " Konu hizalaması zayıf."
+    elif reason == "hallucinated_profile":
+        why = " Model kaynak olmadan genel bir meslek/kişilik şablonu üretmiş olabilir."
     return (
         f"Ümit abi, «{q}» sorusuna net ve güvenilir bir yanıt veremedim.{why} "
         "Web araması açıksa tekrar deneyebilir veya soruyu biraz daha netleştirebilirsin.\n\n"
@@ -207,6 +223,20 @@ def apply_tek_beyin_bilgi_guard(
     meta["applied"] = True
     mismatch = bool((reflection_meta or {}).get("mismatch"))
     mismatch_note = str((reflection_meta or {}).get("mismatch_note") or "").strip()
+
+    if looks_like_kimdir_profession_hallucination(message, body):
+        good_hits = []
+        for h in hits or []:
+            try:
+                score = float(h[2] if isinstance(h, (list, tuple)) and len(h) > 2 else h.get("score", 0))
+            except Exception:
+                score = 0.0
+            if score >= 0.22:
+                good_hits.append(h)
+        if not good_hits:
+            meta["replaced"] = True
+            meta["hallucinated_profile"] = True
+            return honest_bilgi_fallback(message, reason="hallucinated_profile"), meta
 
     try:
         from ilim_assistant.ana_motor_reflection import detect_source_answer_mismatch

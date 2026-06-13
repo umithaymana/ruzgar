@@ -194,28 +194,21 @@ Log: $Log
 
         Log "HATA API hazir degil"
 
+        $errTail = ""
         if (Test-Path $ApiErr) {
-
+            $errTail = (Get-Content $ApiErr -Tail 8 -ErrorAction SilentlyContinue) -join "`n"
             Get-Content $ApiErr -Tail 12 -ErrorAction SilentlyContinue | ForEach-Object { Log "api-err: $_" }
-
         }
 
         $msg = @"
-
 API acilamadi (port $Port).
 
-
-
 1) Ruzgar_Port_Temizle.bat (yonetici)
-
 2) Ruzgar_TemizBaslat.bat tekrar
 
-
-
 Log: $Log
-
 API hata: $ApiErr
-
+$(if ($errTail) { "`nSon hata:`n$errTail" })
 "@
 
         [System.Windows.Forms.MessageBox]::Show($msg, "RUZGAR") | Out-Null

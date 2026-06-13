@@ -78,10 +78,12 @@ RUZGAR_DENGE70_AUTO_CHAIN=1
 RUZGAR_DENGE70_MIN_RAM_GB=14
 ```
 
-## Sıradaki
+## Sıradaki (Faz AC — öneri)
 
 - Canlı SLO gece koşusu (sunucu açıkken)
 - Sesli tur VAD kullanıcı ayar paneli
 - denge70 pull otomasyonu (RAM yeterliyse)
+
+Detay: `ANA_MOTOR_FAZ_AB_PLAN.md` (Faz AB uygulandı — 2026-06-13)
 
 *Bismillah*

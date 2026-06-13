@@ -34,4 +34,8 @@ RUZGAR_ANA_KAYNAK_PANEL_FOLD=1
 - Sohbet oturumu dışa aktarma (JSON)
 - Nebula apply tek tık birleşik akış
 
+Detay: `ANA_MOTOR_FAZ_AB_PLAN.md` (uygulandı — 2026-06-13)
+
+## Sıradaki (Faz AC — öneri)
+
 *Bismillah — Ümit & Gökçenur*
