@@ -2671,6 +2671,40 @@ def run_offline() -> int:
     else:
         _ok("kayıp konu → dürüst fallback")
 
+    print("\n=== Tek beyin Faz K — tek ses / doğal anlatım ===")
+    from ilim_assistant.ruzgar_tek_beyin_tek_ses import (
+        build_bilgi_voice_instruction,
+        build_tek_beyin_voice_system_addon,
+        polish_tek_beyin_voice,
+        tek_beyin_tek_ses_enabled,
+        tek_beyin_tek_ses_status,
+    )
+
+    if not tek_beyin_tek_ses_enabled():
+        _fail("tek_beyin_tek_ses", "kapalı")
+        fails += 1
+    else:
+        _ok(f"tek beyin tek ses — {tek_beyin_tek_ses_status().get('version')}")
+    _addon = build_tek_beyin_voice_system_addon("bilgi")
+    if "TEK SES" not in _addon or "Ümit abi" not in _addon:
+        _fail("voice_addon", _addon[:80])
+        fails += 1
+    else:
+        _ok("bilgi ses addon")
+    _bilgi_inst = build_bilgi_voice_instruction()
+    if "madde listesi" not in _bilgi_inst.lower() and "liste" not in _bilgi_inst.lower():
+        _fail("bilgi_instruction", _bilgi_inst[:80])
+        fails += 1
+    else:
+        _ok("bilgi tek ses talimatı")
+    _bullets = "- madde bir uzun\n- madde iki uzun\n- madde üç uzun\n- madde dört uzun\n- madde beş uzun\n"
+    _pol = polish_tek_beyin_voice(_bullets + "son cümle burada.")
+    if _pol.count("-") >= 4 or "\n-" in _pol:
+        _fail("bullet_polish", _pol)
+        fails += 1
+    else:
+        _ok("madde listesi yumuşatma")
+
     d70 = denge70_faz_k_status()
     _ok(
         f"denge70 — ready={d70.get('ready')} ram={d70.get('ram_sufficient')} "

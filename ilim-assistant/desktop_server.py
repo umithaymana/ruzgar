@@ -1297,6 +1297,12 @@ def _health_build_block() -> dict:
     except Exception:
         pass
     try:
+        from ilim_assistant.ruzgar_tek_beyin_tek_ses import tek_beyin_tek_ses_status
+
+        base["tek_beyin_tek_ses"] = tek_beyin_tek_ses_status()
+    except Exception:
+        pass
+    try:
         from ilim_assistant.ruzgar_denge70_faz_k import denge70_faz_k_status
 
         base["denge70_faz_k"] = denge70_faz_k_status()

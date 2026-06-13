@@ -8,7 +8,7 @@ import re
 import unicodedata
 from typing import Any, Iterator, Optional
 
-TEK_BEYIN_VERSION = "tek-beyin-v10-2026-06-12-faz-j"
+TEK_BEYIN_VERSION = "tek-beyin-v11-2026-06-12-faz-k"
 
 _KIM_SORUSU = re.compile(
     r"\b(kimdir|kimdi|kim\b|kimi|kimler|kimesne)\b",
@@ -230,13 +230,20 @@ def iter_tek_beyin_hafiza_reply(
             conversation_context=conversation_context,
             session_id=session_id,
         )
+        try:
+            from ilim_assistant.ruzgar_tek_beyin_tek_ses import build_tek_beyin_voice_system_addon
+
+            voice = build_tek_beyin_voice_system_addon("hafiza")
+        except Exception:
+            voice = ""
+        ctx = ((baglam or "") + (voice or "")).strip() or None
 
         return iter_hafiza_dogal_reply(
             target,
             history or [],
             mode_norm=mode_norm,
             hint=hint,
-            context_addon=baglam or None,
+            context_addon=ctx,
         )
     except Exception:
         return None
@@ -425,6 +432,12 @@ def iter_tek_beyin_dost_reply(
         )
         if voice_turn:
             addon += build_voice_turn_addon()
+        try:
+            from ilim_assistant.ruzgar_tek_beyin_tek_ses import build_tek_beyin_voice_system_addon
+
+            addon += build_tek_beyin_voice_system_addon("dost")
+        except Exception:
+            pass
         gen = iter_casual_fast_reply(
             message or "",
             hist,

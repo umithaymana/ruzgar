@@ -1900,6 +1900,25 @@ def prepare_turn(
                 system = system + "\n\n" + build_natural_sohbet_system_addon()
         except Exception:
             pass
+        try:
+            from ilim_assistant.ruzgar_tek_beyin_tek_ses import (
+                append_voice_addon_to_system,
+                tek_beyin_tek_ses_enabled,
+            )
+
+            if tek_beyin_tek_ses_enabled():
+                _voice_path = "genel"
+                if _bilgi_isolated:
+                    _voice_path = "bilgi"
+                elif turn_plan is not None:
+                    _prim = str(getattr(turn_plan, "primary", "") or "").strip().lower()
+                    if _prim in ("bilgi", "bilim", "dilbilgisi"):
+                        _voice_path = "bilgi"
+                    elif _prim == "hafiza":
+                        _voice_path = "hafiza"
+                system = append_voice_addon_to_system(system, _voice_path)
+        except Exception:
+            pass
     model = resolve_model(
         coding_mode,
         message=msg,

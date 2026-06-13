@@ -116,6 +116,12 @@ def finalize_assistant_reply(raw: str, *, channel: str = "") -> str:
         t = polish_tek_ses(t, channel=channel)
     except Exception:
         pass
+    try:
+        from ilim_assistant.ruzgar_tek_beyin_tek_ses import polish_tek_beyin_voice
+
+        t = polish_tek_beyin_voice(t)
+    except Exception:
+        pass
     return t.strip()
 
 

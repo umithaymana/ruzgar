@@ -82,11 +82,16 @@ def iter_bilgi_cloud_fast_reply(
     if question_plan is not None:
         primary = str(getattr(question_plan, "primary", "") or "").strip().lower()
     topic = "bilim/tarih" if primary == "bilim" else "bilgi"
-    extra = (
-        f"\n\n[TALİMAT — {topic.upper()} — BULUT HIZLI]\n"
-        "Türkçe, yapılandırılmış yanıt (2–5 madde veya kısa paragraflar). "
-        "Kaynak uydurma; emin değilsen kısaca belirt. Ümit abi'ye hitap et.\n"
-    )
+    try:
+        from ilim_assistant.ruzgar_tek_beyin_tek_ses import build_bilgi_cloud_voice_instruction
+
+        extra = build_bilgi_cloud_voice_instruction(topic=topic)
+    except Exception:
+        extra = (
+            f"\n\n[TALİMAT — {topic.upper()} — BULUT HIZLI]\n"
+            "Türkçe, yapılandırılmış yanıt (2–5 madde veya kısa paragraflar). "
+            "Kaynak uydurma; emin değilsen kısaca belirt. Ümit abi'ye hitap et.\n"
+        )
     system = pick_system(False, mode_norm) + extra
     user = (message or "").strip()
     prior = prior_messages_for_turn(history, mode_norm, message=message or "")
@@ -262,11 +267,16 @@ def iter_fast_direct_llm_reply(
 
     extra = ""
     if primary == "bilgi" or is_bilgi:
-        extra = (
-            "\n\n[TALİMAT — HIZLI BILGI]\n"
-            "Tek paragraf veya 2–4 madde; Türkçe, net, kaynak uydurma. "
-            "Emin değilsen kısaca belirt.\n"
-        )
+        try:
+            from ilim_assistant.ruzgar_tek_beyin_tek_ses import build_bilgi_voice_instruction
+
+            extra = build_bilgi_voice_instruction()
+        except Exception:
+            extra = (
+                "\n\n[TALİMAT — HIZLI BILGI]\n"
+                "Tek paragraf veya 2–4 madde; Türkçe, net, kaynak uydurma. "
+                "Emin değilsen kısaca belirt.\n"
+            )
     elif primary == "hafiza":
         extra = (
             "\n\n[TALİMAT — HAFIZA SOHBET]\n"
