@@ -236,6 +236,10 @@ def ensure_ruzgar_env() -> list[str]:
         os.environ.setdefault("RUZGAR_DENGE70_MIN_RAM_GB", "14")
         os.environ.setdefault("RUZGAR_DENGE70_PULL_TIMEOUT_SEC", "7200")
         os.environ.setdefault("RUZGAR_BRAIN_DENGE70_MODEL", "llama3.1:70b")
+        os.environ.setdefault("RUZGAR_OTOMATIK_OGRENME", "1")
+        os.environ.setdefault("RUZGAR_KUTUPHANE_ONCE", "1")
+        os.environ.setdefault("RUZGAR_OGRENME_NEBULA_BRIDGE", "1")
+        os.environ.setdefault("RUZGAR_OGRENME_NEBULA_COLLECTION", "tarih_kaynak")
 
     sync_global_api_key_aliases()
     try:

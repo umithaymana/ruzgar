@@ -5530,6 +5530,30 @@ body.faz-z-chat-simple .composer-advanced-fold {
   gap: 0.5rem;
   margin-top: 4px;
 }
+.ana-motor-ogrenme-fold {
+  margin-bottom: 10px;
+}
+.ana-motor-ogrenme-fold > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+  padding: 4px 0 8px;
+}
+.ana-motor-ogrenme-fold > summary::-webkit-details-marker {
+  display: none;
+}
+.ana-motor-ogrenme-fold > summary::before {
+  content: "▸";
+  color: #4ec9b0;
+  margin-right: 4px;
+}
+.ana-motor-ogrenme-body {
+  border-top: 1px solid #333;
+  padding-top: 8px;
+}
 .ana-motor-research-card,
 .ana-motor-nebula-oneri-card {
   padding: 8px 10px;

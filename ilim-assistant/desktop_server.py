@@ -2984,6 +2984,14 @@ def api_ana_motor_denge70_pull() -> dict[str, Any]:
     return start_denge70_pull_background(reason="api_manual")
 
 
+@app.get("/api/ana-motor/otomatik-ogrenme/status")
+def api_ana_motor_otomatik_ogrenme_status() -> dict[str, Any]:
+    """Faz AC4 — otomatik öğrenme + Nebula köprüsü durumu."""
+    from ilim_assistant.ruzgar_otomatik_ogrenme import otomatik_ogrenme_panel_payload
+
+    return otomatik_ogrenme_panel_payload()
+
+
 @app.get("/api/ana-motor/sesli-tur/vad")
 def api_ana_motor_sesli_tur_vad_get() -> dict[str, Any]:
     """Faz AC3 — sesli tur VAD ayarları (health + kullanıcı dosyası)."""
@@ -12169,11 +12177,9 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     body_fixed,
                     plan_primary=_plan_prim,
                     instant=bool(orch.get("instant_gundelik")),
-                    web_used=bool(
-                        turn_plan is not None
-                        and getattr(turn_plan, "prefer_web", False)
-                    ),
+                    web_used=web_used,
                     force_web=bool(orch.get("force_web_research")),
+                    hits=hits,
                 )
                 if _learn_meta.get("saved"):
                     orch["otomatik_ogrenme"] = _learn_meta

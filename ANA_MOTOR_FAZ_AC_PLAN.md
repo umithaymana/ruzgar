@@ -1,27 +1,35 @@
 # Ana Motor — Faz AC Planı (2026-06-13)
 
-> **Hedef:** Ana Motor güç turları — adım adım.
+> **Hedef:** Ana Motor güç turları — tamamlandı.
 
 ## AC1 — denge70 otomasyon ✅
 
 ## AC2 — Canlı SLO + zayıf nokta raporu ✅
 
-## AC3 — Sesli tur VAD paneli ✅ (2026-06-13)
+## AC3 — Sesli tur VAD paneli ✅
+
+## AC4 — Otomatik öğrenme → Nebula ✅ (2026-06-13)
 
 | # | Görev | Dosya | Davranış |
 |---|--------|-------|----------|
-| AC3a | Kullanıcı VAD dosyası | `ruzgar_sesli_tur_faz_k.py` | `.ruzgar_vad_ayarlari.json` |
-| AC3b | API | `desktop_server.py` | `GET/POST /api/ana-motor/sesli-tur/vad` |
-| AC3c | UI kaydırıcılar | `index.html`, `app.js` | 4 eşik + kaydet/sıfırla |
-| AC3d | Health birleşik VAD | aynı | `sesli_tur_vad_effective()` |
+| AC4a | QA Nebula paketi | `ana_motor_nebula_apply.py` | `write_nebula_qa_batch` |
+| AC4b | Köprü | `ruzgar_otomatik_ogrenme.py` | Öğrenme sonrası incremental + indeks |
+| AC4c | API | `desktop_server.py` | `GET /api/ana-motor/otomatik-ogrenme/status` |
+| AC4d | UI | `index.html`, `app.js` | Durum paneli |
 
-### Alanlar
+### Ortam
 
-- **Sessizlik eşiği (ms)** — konuşma bitince gönder
-- **Minimum kayıt (ms)** — kısa gürültüyü yoksay
-- **Sessizlik hassasiyeti** — mikrofon ortalaması eşiği
-- **TTS sonrası gecikme (ms)** — sesli tur döngüsü
+```env
+RUZGAR_OTOMATIK_OGRENME=1
+RUZGAR_KUTUPHANE_ONCE=1
+RUZGAR_OGRENME_NEBULA_BRIDGE=1
+RUZGAR_OGRENME_NEBULA_COLLECTION=tarih_kaynak
+```
 
-## AC4 — Otomatik öğrenme → Nebula (sıradaki)
+### Akış
 
-*Bismillah — Ümit & Gökçenur*
+1. Bilgi/bilim sorusu → web/hafıza → yanıt
+2. `auto_learn_from_turn` → `ruzgar_genel_hafiza.json` + `knowledge/learned/`
+3. Uygun turda → `knowledge/nebula/<koleksiyon>/incremental/nebula_batch_*.md` + arka plan indeks
+
+*Bismillah — Ümit & Gökçenur — Faz AC tamam*

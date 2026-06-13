@@ -1346,6 +1346,7 @@ function updateFaz7HealthStrip(j) {
   updateDenge70Panel(j);
   if (sloSt.job) updateSloPanel(sloSt.job);
   syncVadPanelFromHealth(j);
+  updateOgrenmePanel((j && j.otomatik_ogrenme) || null);
 }
 
 function updateDenge70Panel(healthPayload) {
@@ -1671,6 +1672,44 @@ async function resetVadSettings() {
     if (saveHint) saveHint.textContent = "Varsayılan VAD değerleri yüklendi.";
   } catch {
     if (saveHint) saveHint.textContent = "Sıfırlama başarısız";
+  }
+}
+
+function updateOgrenmePanel(payload) {
+  const hint = document.getElementById("ana-motor-ogrenme-hint");
+  const detail = document.getElementById("ana-motor-ogrenme-detail");
+  const p = payload && typeof payload === "object" ? payload : {};
+  if (!hint || !detail) return;
+  if (!p.enabled) {
+    hint.textContent = "Kapalı";
+    detail.textContent = "RUZGAR_OTOMATIK_OGRENME=1 ile açılır.";
+    return;
+  }
+  const nb = p.nebula_bridge ? "Nebula köprüsü açık" : "Yalnız hafıza";
+  hint.textContent = nb;
+  const job = p.nebula_job || {};
+  const jobLine = job.running
+    ? `Nebula indeks: ${job.progress || "çalışıyor"}`
+    : job.batch_path
+      ? `Son paket: ${job.batch_path}`
+      : "";
+  detail.textContent =
+    `${p.hint || "Bilgi soruları otomatik kaydedilir."} ` +
+    `Varsayılan koleksiyon: ${p.nebula_collection_default || "tarih_kaynak"}. ` +
+    jobLine;
+}
+
+async function refreshOgrenmeStatus() {
+  try {
+    const res = await fetch(`${API}/api/ana-motor/otomatik-ogrenme/status`, { cache: "no-store" });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) return;
+    if (lastHealthSnapshot) {
+      lastHealthSnapshot = { ...lastHealthSnapshot, otomatik_ogrenme: j };
+    }
+    updateOgrenmePanel(j);
+  } catch {
+    /* yok say */
   }
 }
 
@@ -2041,6 +2080,9 @@ function wireFazAaChatSearch() {
   if (vadReset) vadReset.addEventListener("click", () => void resetVadSettings());
   loadVadUserFromStorage();
   void fetchVadPanel();
+  const ogrenmeRefresh = document.getElementById("btn-ana-ogrenme-refresh");
+  if (ogrenmeRefresh) ogrenmeRefresh.addEventListener("click", () => void refreshOgrenmeStatus());
+  void refreshOgrenmeStatus();
   const d70Fold = document.getElementById("ana-motor-denge70-fold");
   if (d70Fold) {
     const savedD70 = localStorage.getItem("ruzgar_denge70_panel_open");

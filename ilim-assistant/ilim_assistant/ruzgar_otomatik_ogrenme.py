@@ -10,7 +10,7 @@ import unicodedata
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-OTOMATIK_OGRENME_VERSION = "otomatik-ogrenme-v1-2026-06-13"
+OTOMATIK_OGRENME_VERSION = "otomatik-ogrenme-ac4-v1-2026-06-13"
 MOTOR_TIPI_BILGI = "BilgiKutuphane"
 
 _SKIP_USER = re.compile(
@@ -48,6 +48,23 @@ def kutuphane_once_enabled() -> bool:
         "0",
         "false",
         "no",
+    )
+
+
+def nebula_bridge_enabled() -> bool:
+    if not otomatik_ogrenme_enabled():
+        return False
+    return os.environ.get("RUZGAR_OGRENME_NEBULA_BRIDGE", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
+def _default_nebula_collection() -> str:
+    return (
+        os.environ.get("RUZGAR_OGRENME_NEBULA_COLLECTION", "").strip()
+        or "tarih_kaynak"
     )
 
 
@@ -262,6 +279,7 @@ def auto_learn_from_turn(
     instant: bool = False,
     web_used: bool = False,
     force_web: bool = False,
+    hits: list | None = None,
 ) -> dict[str, Any]:
     """
     Bilgi turunu kalıcı kütüphaneye yazar:
@@ -308,13 +326,156 @@ def auto_learn_from_turn(
     _save_to_learned_md(u, cevap_kayit)
     meta["learned_md"] = True
     meta["ts"] = datetime.now(timezone.utc).isoformat()
+
+    nb = maybe_nebula_bridge_from_learn(
+        u,
+        cevap_kayit,
+        plan_primary=plan_primary,
+        web_used=web_used,
+        force_web=force_web,
+        hits=hits,
+    )
+    if nb.get("ok"):
+        meta["nebula_bridge"] = nb
+    elif nb.get("skipped"):
+        meta["nebula_skipped"] = nb.get("reason")
     return meta
 
 
+def should_nebula_bridge_for_learn(
+    user_message: str,
+    assistant_message: str,
+    *,
+    plan_primary: str = "",
+    web_used: bool = False,
+    force_web: bool = False,
+) -> bool:
+    if not nebula_bridge_enabled():
+        return False
+    prim = (plan_primary or "").strip().lower()
+    if prim in ("gundelik", "hafiza", "islem", "dosya", "hava") and not (web_used or force_web):
+        return False
+    if web_used or force_web:
+        return True
+    if prim in ("bilgi", "bilim", "dilbilgisi"):
+        return True
+    if re.search(r"\*\*Güven:\s*(düşük|dusuk|orta)", assistant_message or "", re.I):
+        return True
+    return False
+
+
+def resolve_nebula_collection(
+    message: str,
+    *,
+    plan_primary: str = "",
+    hits: list | None = None,
+) -> str:
+    msg = (message or "").strip()
+    try:
+        from ilim_assistant.ana_motor_nebula_oneri import suggest_nebula_collection
+
+        sug = suggest_nebula_collection(
+            msg,
+            hits=hits,
+            guven="orta",
+            web_was_used=True,
+        )
+        if sug and sug.get("collection"):
+            return str(sug["collection"])
+    except Exception:
+        pass
+    low = _norm(msg)
+    if prim := (plan_primary or "").strip().lower():
+        if prim == "bilim" and "tarih" not in low:
+            if any(x in low for x in ("osman", "islam", "medeniyet", "padişah", "padisah")):
+                return "tarih_kaynak"
+    if any(
+        x in low
+        for x in (
+            "osman",
+            "tarih",
+            "padişah",
+            "padisah",
+            "medeniyet",
+            "islam",
+            "fatih",
+            "kanuni",
+        )
+    ):
+        return "tarih_kaynak"
+    return _default_nebula_collection()
+
+
+def maybe_nebula_bridge_from_learn(
+    user_message: str,
+    assistant_message: str,
+    *,
+    plan_primary: str = "",
+    web_used: bool = False,
+    force_web: bool = False,
+    hits: list | None = None,
+) -> dict[str, Any]:
+    """Kalıcı öğrenme sonrası Nebula incremental paket + indeks."""
+    meta: dict[str, Any] = {"ok": False, "version": OTOMATIK_OGRENME_VERSION}
+    if not should_nebula_bridge_for_learn(
+        user_message,
+        assistant_message,
+        plan_primary=plan_primary,
+        web_used=web_used,
+        force_web=force_web,
+    ):
+        return {**meta, "skipped": True, "reason": "bridge_kapali_veya_uygunsuz_tur"}
+    collection = resolve_nebula_collection(
+        user_message,
+        plan_primary=plan_primary,
+        hits=hits,
+    )
+    try:
+        from ilim_assistant.ana_motor_nebula_apply import start_nebula_qa_apply_background
+
+        out = start_nebula_qa_apply_background(
+            collection,
+            user_message,
+            assistant_message,
+            source="otomatik_ogrenme",
+        )
+        if out.get("ok"):
+            meta.update(out)
+            meta["ok"] = True
+            meta["collection"] = collection
+            return meta
+        if out.get("error") == "Arka plan indeksleme sürüyor.":
+            return {**meta, "skipped": True, "reason": "nebula_indeks_meşgul"}
+        meta["error"] = out.get("error")
+        return meta
+    except Exception as exc:
+        meta["error"] = str(exc)[:200]
+        return meta
+
+
 def otomatik_ogrenme_status() -> dict[str, Any]:
+    job: dict[str, Any] = {}
+    try:
+        from ilim_assistant.ana_motor_nebula_apply import get_nebula_apply_job_status
+
+        job = get_nebula_apply_job_status()
+    except Exception:
+        pass
     return {
         "enabled": otomatik_ogrenme_enabled(),
         "kutuphane_once": kutuphane_once_enabled(),
+        "nebula_bridge": nebula_bridge_enabled(),
+        "nebula_collection_default": _default_nebula_collection(),
         "version": OTOMATIK_OGRENME_VERSION,
         "motor_tipi": MOTOR_TIPI_BILGI,
+        "nebula_job": job,
     }
+
+
+def otomatik_ogrenme_panel_payload() -> dict[str, Any]:
+    st = otomatik_ogrenme_status()
+    st["ok"] = True
+    st["hint"] = (
+        "Bilgi/bilim yanıtları hafızaya yazılır; uygun turlarda Nebula incremental paket oluşturulur."
+    )
+    return st

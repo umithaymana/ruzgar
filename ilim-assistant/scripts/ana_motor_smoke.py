@@ -2218,6 +2218,55 @@ def run_offline() -> int:
     else:
         _ok("VAD sifirlama")
 
+    print("\n=== Faz AC4 — otomatik ogrenme Nebula koprusu ===")
+    from ilim_assistant.ana_motor_nebula_apply import write_nebula_qa_batch
+    from ilim_assistant.ruzgar_otomatik_ogrenme import (
+        auto_learn_from_turn,
+        nebula_bridge_enabled,
+        otomatik_ogrenme_panel_payload,
+        resolve_nebula_collection,
+        should_nebula_bridge_for_learn,
+    )
+
+    if not nebula_bridge_enabled():
+        _fail("nebula_bridge", "kapali")
+        fails += 1
+    else:
+        _ok("Nebula koprusu acik")
+    coll = resolve_nebula_collection("Osmanlı devletini kim kurdu", plan_primary="bilgi")
+    if not coll:
+        _fail("nebula_collection", "bos")
+        fails += 1
+    else:
+        _ok(f"Nebula koleksiyon: {coll}")
+    if not should_nebula_bridge_for_learn(
+        "Osmanlı kim kurdu",
+        "Osman Bey tarafından kuruldu. **Güven:** orta",
+        plan_primary="bilgi",
+        web_used=True,
+    ):
+        _fail("nebula_bridge_should", "bekleniyordu True")
+        fails += 1
+    else:
+        _ok("Nebula koprusu tur filtresi")
+    qa = write_nebula_qa_batch(
+        coll,
+        "Smoke test sorusu?",
+        "Smoke test cevabi en az yirmi karakter olmali.",
+        source="smoke_test",
+    )
+    if not qa.get("ok"):
+        _fail("nebula_qa_batch", str(qa)[:80])
+        fails += 1
+    else:
+        _ok(f"Nebula QA batch: {qa.get('batch_path')}")
+    panel = otomatik_ogrenme_panel_payload()
+    if not panel.get("nebula_bridge"):
+        _fail("ogrenme_panel", str(panel.keys()))
+        fails += 1
+    else:
+        _ok("ogrenme panel payload")
+
     print("\n=== Faz AB — oturum export / birlesik nebula apply ===")
     from ilim_assistant.ana_motor_faz_ab import (
         birlesik_apply_enabled,
