@@ -511,6 +511,12 @@ async def _warmup_rag() -> None:
         print(startup_owner_banner(), flush=True)
     except Exception:
         pass
+    try:
+        from ilim_assistant.ruzgar_denge70_faz_k import maybe_auto_pull_on_startup
+
+        maybe_auto_pull_on_startup()
+    except Exception:
+        pass
     if os.environ.get("RUZGAR_PRINT_READY_SEAL", "1").strip().lower() not in (
         "0",
         "false",
@@ -2928,10 +2934,18 @@ def api_ana_motor_slo_pack_run(
 
 @app.get("/api/ana-motor/denge70/status")
 def api_ana_motor_denge70_status() -> dict[str, Any]:
-    """Faz K — denge70 hazırlık."""
+    """Faz K / AC — denge70 hazırlık + pull işi."""
     from ilim_assistant.ruzgar_denge70_faz_k import denge70_faz_k_status
 
     return denge70_faz_k_status()
+
+
+@app.post("/api/ana-motor/denge70/pull")
+def api_ana_motor_denge70_pull() -> dict[str, Any]:
+    """Faz AC — denge70 arka plan ollama pull (RAM kapılı)."""
+    from ilim_assistant.ruzgar_denge70_faz_k import start_denge70_pull_background
+
+    return start_denge70_pull_background(reason="api_manual")
 
 
 @app.get("/api/ana-motor/kaynak-panel/status")

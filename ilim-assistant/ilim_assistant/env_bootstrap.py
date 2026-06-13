@@ -231,6 +231,11 @@ def ensure_ruzgar_env() -> list[str]:
         os.environ.setdefault("RUZGAR_WEB_PRO_PER_QUERY", "8")
         os.environ.setdefault("ENABLE_WEB_SEARCH", "1")
         os.environ.setdefault("WEB_MAX_RESULTS", "12")
+        os.environ.setdefault("RUZGAR_DENGE70_AUTO_PULL", "1")
+        os.environ.setdefault("RUZGAR_DENGE70_AUTO_CHAIN", "1")
+        os.environ.setdefault("RUZGAR_DENGE70_MIN_RAM_GB", "14")
+        os.environ.setdefault("RUZGAR_DENGE70_PULL_TIMEOUT_SEC", "7200")
+        os.environ.setdefault("RUZGAR_BRAIN_DENGE70_MODEL", "llama3.1:70b")
 
     sync_global_api_key_aliases()
     try:

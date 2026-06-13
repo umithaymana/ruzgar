@@ -2077,6 +2077,56 @@ def run_offline() -> int:
     else:
         _ok("bilgi sorusu web oncelikli")
 
+    print("\n=== Faz AC1 — denge70 otomasyon ===")
+    from ilim_assistant.ruzgar_denge70_faz_k import (
+        denge70_auto_pull_enabled,
+        denge70_faz_k_status,
+        get_denge70_pull_job_status,
+        should_auto_pull_on_startup,
+        start_denge70_pull_background,
+    )
+
+    if not denge70_auto_pull_enabled():
+        _fail("denge70_auto_pull", "kapali")
+        fails += 1
+    else:
+        _ok("denge70 otomatik pull acik")
+    d70ac = denge70_faz_k_status()
+    missing = [
+        k
+        for k in ("auto_pull", "pull_job", "ram_available_gb", "auto_chain_ready")
+        if k not in d70ac
+    ]
+    if missing:
+        _fail("denge70_status_keys", str(missing))
+        fails += 1
+    else:
+        _ok(
+            f"denge70 durum ready={d70ac.get('ready')} ram={d70ac.get('ram_sufficient')} "
+            f"auto_chain={d70ac.get('auto_chain_ready')}"
+        )
+    job = get_denge70_pull_job_status()
+    if "phase" not in job:
+        _fail("denge70_pull_job", str(job))
+        fails += 1
+    else:
+        _ok(f"denge70 pull job phase={job.get('phase')}")
+    skip = should_auto_pull_on_startup()
+    _ok(f"denge70 startup auto pull skip={not skip} (ready veya ram/onay)")
+    dry = start_denge70_pull_background(reason="smoke_dry")
+    if dry.get("already_ready"):
+        _ok("denge70 zaten hazir")
+    elif dry.get("already_running"):
+        _ok("denge70 pull zaten calisiyor")
+    elif dry.get("error") == "ram_yetersiz":
+        _ok("denge70 pull ram kapisi calisiyor")
+    elif dry.get("started"):
+        _ok("denge70 pull baslatildi (smoke)")
+    elif dry.get("error") == "ollama_kapali":
+        _ok("denge70 pull ollama kapali — beklenen offline")
+    else:
+        _ok(f"denge70 pull dry: {str(dry)[:72]}")
+
     print("\n=== Faz AB — oturum export / birlesik nebula apply ===")
     from ilim_assistant.ana_motor_faz_ab import (
         birlesik_apply_enabled,

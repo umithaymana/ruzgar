@@ -5392,6 +5392,43 @@ body.faz-z-chat-simple .composer-advanced-fold {
 .ana-motor-kaynak-panel-fold:not(.has-kaynak-content) .ana-motor-kaynak-panel-hint {
   opacity: 0.75;
 }
+.ana-motor-denge70-fold {
+  margin-bottom: 10px;
+}
+.ana-motor-denge70-fold.denge70-ready > summary strong {
+  color: #4ec9b0;
+}
+.ana-motor-denge70-fold > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+  padding: 4px 0 8px;
+}
+.ana-motor-denge70-fold > summary::-webkit-details-marker {
+  display: none;
+}
+.ana-motor-denge70-fold > summary::before {
+  content: "▸";
+  color: #4ec9b0;
+  margin-right: 4px;
+}
+.ana-motor-denge70-fold[open] > summary::before {
+  transform: rotate(90deg);
+  display: inline-block;
+}
+.ana-motor-denge70-body {
+  border-top: 1px solid #333;
+  padding-top: 8px;
+}
+.ana-motor-denge70-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 8px;
+}
 .ana-motor-research-card,
 .ana-motor-nebula-oneri-card {
   padding: 8px 10px;

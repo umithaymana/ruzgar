@@ -1290,7 +1290,98 @@ function updateFaz7HealthStrip(j) {
     bits.push("Nebula yok — API eski");
   }
   if (String(build.rev || "").includes("tarih-fast")) bits.push("Tarih hızlı ✓");
+  const d70 = j.denge70_faz_k || {};
+  if (d70.ready) bits.push(`70B ✓ ${d70.model || "denge70"}`);
+  else if (d70.pull_job?.running) bits.push("70B indiriliyor…");
+  else if (d70.auto_chain_ready) bits.push("70B zincir hazır");
   faz7HealthStripEl.textContent = bits.join(" · ");
+  updateDenge70Panel(j);
+}
+
+function updateDenge70Panel(healthPayload) {
+  const hint = document.getElementById("ana-motor-denge70-hint");
+  const detail = document.getElementById("ana-motor-denge70-detail");
+  const fold = document.getElementById("ana-motor-denge70-fold");
+  const pullBtn = document.getElementById("btn-ana-denge70-pull");
+  if (!hint || !detail) return;
+  const hp = healthPayload && typeof healthPayload === "object" ? healthPayload : lastHealthSnapshot;
+  const d = (hp && hp.denge70_faz_k) || {};
+  const ready = !!d.ready;
+  const ramOk = d.ram_sufficient !== false;
+  const job = d.pull_job || {};
+  const running = !!job.running;
+  const model = String(d.model || "llama3.1:70b");
+  const avail = d.ram_available_gb != null ? `${d.ram_available_gb} GB boş` : "RAM ?";
+  const minRam = d.min_ram_gb != null ? d.min_ram_gb : 14;
+
+  if (ready) {
+    hint.textContent = `${model} hazır · bilgi/bilim turunda otomatik`;
+    detail.textContent =
+      `Model Ollama'da yüklü. Bilgi ve bilim sorularında denge70 zincire eklenir. ` +
+      `RAM: ${avail} (eşik ≥${minRam} GB).`;
+    if (fold) fold.classList.add("denge70-ready");
+  } else if (running) {
+    hint.textContent = "İndiriliyor… (arka plan)";
+    detail.textContent =
+      `${model} indiriliyor — bu işlem onlarca GB olabilir; pencereyi kapatmayın. ` +
+      `Komut: ${d.pull_cmd || `ollama pull ${model}`}`;
+    if (fold) fold.open = true;
+  } else if (!ramOk) {
+    hint.textContent = "RAM yetersiz — 70B bekletiliyor";
+    detail.textContent =
+      `${model} için en az ${minRam} GB boş RAM gerekli (şu an ${avail}). ` +
+      "Diğer uygulamaları kapatarak tekrar deneyin veya llama3.2:3b ile devam edin.";
+  } else {
+    hint.textContent = d.hint || "Model henüz indirilmedi";
+    detail.textContent =
+      `Otomatik indirme açıksa API açılışında arka planda başlar. ` +
+      `Manuel: ${d.pull_cmd || `ollama pull ${model}`}. RAM: ${avail}.`;
+    if (fold) fold.classList.remove("denge70-ready");
+  }
+  if (pullBtn) {
+    pullBtn.disabled = ready || running || !ramOk;
+    pullBtn.textContent = running ? "İndiriliyor…" : ready ? "70B hazır" : "70B indir (ollama pull)";
+  }
+}
+
+async function refreshDenge70Status() {
+  try {
+    const res = await fetch(`${API}/api/ana-motor/denge70/status`, { cache: "no-store" });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) return;
+    if (lastHealthSnapshot) {
+      lastHealthSnapshot = { ...lastHealthSnapshot, denge70_faz_k: j };
+    }
+    updateDenge70Panel(lastHealthSnapshot || { denge70_faz_k: j });
+    updateFaz7HealthStrip(lastHealthSnapshot || { ok: true, denge70_faz_k: j });
+  } catch {
+    /* yok say */
+  }
+}
+
+async function runDenge70Pull() {
+  const hint = document.getElementById("ana-motor-denge70-hint");
+  if (hint) hint.textContent = "Pull başlatılıyor…";
+  try {
+    const res = await fetch(`${API}/api/ana-motor/denge70/pull`, { method: "POST" });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || j.ok === false) {
+      if (hint) hint.textContent = j.error || j.hint || "Pull başlatılamadı";
+      return;
+    }
+    if (j.already_ready) {
+      await refreshDenge70Status();
+      return;
+    }
+    if (j.already_running || j.started) {
+      if (hint) hint.textContent = "Arka planda indiriliyor…";
+      const fold = document.getElementById("ana-motor-denge70-fold");
+      if (fold) fold.open = true;
+      window.setTimeout(() => void refreshDenge70Status(), 4000);
+    }
+  } catch {
+    if (hint) hint.textContent = "API bağlantı hatası";
+  }
 }
 
 function updateDashboardLastSpeech() {
@@ -1646,6 +1737,18 @@ function wireFazAaChatSearch() {
   if (exportBtn) exportBtn.addEventListener("click", () => void exportChatHistoryJson());
   const birlesikBtn = document.getElementById("btn-ana-kaynak-birlesik-apply");
   if (birlesikBtn) birlesikBtn.addEventListener("click", () => void runKaynakBirlesikApply());
+  const d70Pull = document.getElementById("btn-ana-denge70-pull");
+  if (d70Pull) d70Pull.addEventListener("click", () => void runDenge70Pull());
+  const d70Refresh = document.getElementById("btn-ana-denge70-refresh");
+  if (d70Refresh) d70Refresh.addEventListener("click", () => void refreshDenge70Status());
+  const d70Fold = document.getElementById("ana-motor-denge70-fold");
+  if (d70Fold) {
+    const savedD70 = localStorage.getItem("ruzgar_denge70_panel_open");
+    if (savedD70 === "1") d70Fold.open = true;
+    d70Fold.addEventListener("toggle", () => {
+      localStorage.setItem("ruzgar_denge70_panel_open", d70Fold.open ? "1" : "0");
+    });
+  }
   const kaynakFold = document.getElementById("ana-motor-kaynak-panel-fold");
   if (kaynakFold) {
     const saved = localStorage.getItem("ruzgar_kaynak_panel_open");
