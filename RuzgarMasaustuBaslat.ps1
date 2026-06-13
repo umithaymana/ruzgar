@@ -128,29 +128,28 @@ function Test-PortFree {
 
 $ops = Join-Path $Ia "scripts\ruzgar_port_ops.py"
 
-if (-not (Test-HealthOk)) {
+# Temiz baslat: API her zaman taze baslatilir (yalnizca Electron yenilemek eski Python'u birakir)
+if (Test-Path $ops) {
 
-    if (Test-Path $ops) {
+    Log "Eski API surecleri durduruluyor (port $Port)"
 
-        Log "API hazir degil - eski surecler temizleniyor"
+    & py -3 $ops kill-all-api --port $Port 2>&1 | ForEach-Object { Log $_ }
 
-        & py -3 $ops kill-all-api --port $Port 2>&1 | ForEach-Object { Log $_ }
-
-        Start-Sleep -Seconds 2
-
-        if (-not (Test-PortFree)) {
-
-            Log "UYARI port $Port hala dolu - Ruzgar_Port_Temizle.bat (yonetici) gerekebilir"
-
-        }
-
-    }
+    Start-Sleep -Seconds 2
 
     if (-not (Test-PortFree)) {
 
-        Log "HATA port $Port bosaltılamadi (zombi surec)"
+        Log "UYARI port $Port hala dolu - Ruzgar_Port_Temizle.bat (yonetici) gerekebilir"
 
-        $msg = @"
+    }
+
+}
+
+if (-not (Test-PortFree)) {
+
+    Log "HATA port $Port bosaltılamadi (zombi surec)"
+
+    $msg = @"
 
 Port $Port hala kilitli — yeni API baslatilamaz.
 
@@ -166,41 +165,39 @@ Log: $Log
 
 "@
 
-        [System.Windows.Forms.MessageBox]::Show($msg, "RUZGAR") | Out-Null
+    [System.Windows.Forms.MessageBox]::Show($msg, "RUZGAR") | Out-Null
 
-        exit 1
+    exit 1
 
+}
+
+Remove-Item $ApiErr -ErrorAction SilentlyContinue
+
+Log "API baslatiliyor..."
+
+Start-Process -FilePath "py" -ArgumentList @("-3", "run_desktop_api.py", "--host", "127.0.0.1", "--port", "$Port") -WorkingDirectory $Ia -WindowStyle Hidden -RedirectStandardError $ApiErr
+
+$ok = $false
+
+for ($i = 0; $i -lt 180; $i++) {
+
+    if (Test-HealthOk) { $ok = $true; break }
+
+    Start-Sleep -Milliseconds 500
+
+}
+
+if (-not $ok) {
+
+    Log "HATA API hazir degil"
+
+    $errTail = ""
+    if (Test-Path $ApiErr) {
+        $errTail = (Get-Content $ApiErr -Tail 8 -ErrorAction SilentlyContinue) -join "`n"
+        Get-Content $ApiErr -Tail 12 -ErrorAction SilentlyContinue | ForEach-Object { Log "api-err: $_" }
     }
 
-    Remove-Item $ApiErr -ErrorAction SilentlyContinue
-
-    Log "API baslatiliyor..."
-
-    Start-Process -FilePath "py" -ArgumentList @("-3", "run_desktop_api.py", "--host", "127.0.0.1", "--port", "$Port") `
-
-        -WorkingDirectory $Ia -WindowStyle Hidden -RedirectStandardError $ApiErr
-
-    $ok = $false
-
-    for ($i = 0; $i -lt 180; $i++) {
-
-        if (Test-HealthOk) { $ok = $true; break }
-
-        Start-Sleep -Milliseconds 500
-
-    }
-
-    if (-not $ok) {
-
-        Log "HATA API hazir degil"
-
-        $errTail = ""
-        if (Test-Path $ApiErr) {
-            $errTail = (Get-Content $ApiErr -Tail 8 -ErrorAction SilentlyContinue) -join "`n"
-            Get-Content $ApiErr -Tail 12 -ErrorAction SilentlyContinue | ForEach-Object { Log "api-err: $_" }
-        }
-
-        $msg = @"
+    $msg = @"
 API acilamadi (port $Port).
 
 1) Ruzgar_Port_Temizle.bat (yonetici)
@@ -211,11 +208,9 @@ API hata: $ApiErr
 $(if ($errTail) { "`nSon hata:`n$errTail" })
 "@
 
-        [System.Windows.Forms.MessageBox]::Show($msg, "RUZGAR") | Out-Null
+    [System.Windows.Forms.MessageBox]::Show($msg, "RUZGAR") | Out-Null
 
-        exit 1
-
-    }
+    exit 1
 
 }
 

@@ -1775,17 +1775,37 @@ def prepare_turn(
         except Exception:
             pass
         try:
-            from ilim_assistant.ana_motor_sentez import maybe_build_research_summary
+            from ilim_assistant.ana_motor_faz_ad_sentez_pro import maybe_build_pro_research_summary
+            from ilim_assistant.ruzgar_otomatik_ogrenme import lookup_bilgi_kutuphane_hint
 
-            _sentez = maybe_build_research_summary(
+            _sentez = ""
+            _kh = None
+            try:
+                _kh = lookup_bilgi_kutuphane_hint(msg)
+            except Exception:
+                pass
+            _sentez = maybe_build_pro_research_summary(
                 msg,
                 hits=hits,
                 web_extra=web_extra,
                 question_plan=turn_plan,
                 mode_norm=m,
+                kutuphane_hint=_kh,
             )
+            if not _sentez:
+                from ilim_assistant.ana_motor_sentez import maybe_build_research_summary
+
+                _sentez = maybe_build_research_summary(
+                    msg,
+                    hits=hits,
+                    web_extra=web_extra,
+                    question_plan=turn_plan,
+                    mode_norm=m,
+                )
             if _sentez:
                 user_payload += _sentez
+                if orchestration_out is not None:
+                    orchestration_out["sentez_pro"] = "pro" in _sentez.lower()
         except Exception:
             pass
     elif (

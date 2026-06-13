@@ -512,6 +512,12 @@ async def _warmup_rag() -> None:
     except Exception:
         pass
     try:
+        from ilim_assistant.ana_motor_faz_ad_slo_gece import maybe_schedule_gece_slo_on_startup
+
+        maybe_schedule_gece_slo_on_startup()
+    except Exception:
+        pass
+    try:
         from ilim_assistant.ruzgar_denge70_faz_k import maybe_auto_pull_on_startup
 
         maybe_auto_pull_on_startup()
@@ -1259,6 +1265,13 @@ def _health_build_block() -> dict:
 
         st = slo_pack_status()
         st["job"] = get_slo_job_status()
+        try:
+            from ilim_assistant.ana_motor_faz_ad_slo_gece import load_last_slo_report, slo_gece_status
+
+            st["gece"] = slo_gece_status()
+            st["last_persisted"] = load_last_slo_report().get("saved_at")
+        except Exception:
+            pass
         base["canli_slo_faz_k"] = st
     except Exception:
         pass
@@ -1338,6 +1351,30 @@ def _health_build_block() -> dict:
         from ilim_assistant.ruzgar_web_arastirma_pro import web_arastirma_pro_status
 
         base["web_arastirma_pro"] = web_arastirma_pro_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ana_motor_faz_ad_sentez_pro import sentez_pro_status
+
+        base["sentez_pro_faz_ad"] = sentez_pro_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ana_motor_faz_ad_slo_gece import slo_gece_status
+
+        base["slo_gece_faz_ad"] = slo_gece_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ana_motor_faz_ae_slo_trend import slo_trend_status
+
+        base["slo_trend_faz_ae"] = slo_trend_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ana_motor_faz_ae_pro_ogrenme import pro_ogrenme_status
+
+        base["pro_ogrenme_faz_ae"] = pro_ogrenme_status()
     except Exception:
         pass
     try:
@@ -2966,6 +3003,52 @@ def api_ana_motor_slo_pack_run_background(
         live_base=live_base,
         workspace_root=b.workspace_root,
     )
+
+
+@app.get("/api/ana-motor/slo-pack/last-report")
+def api_ana_motor_slo_last_report() -> dict[str, Any]:
+    """Faz AD1 — son kalıcı SLO raporu."""
+    from ilim_assistant.ana_motor_faz_ad_slo_gece import (
+        load_last_slo_report,
+        slo_gece_status,
+    )
+
+    last = load_last_slo_report()
+    return {
+        "ok": bool(last),
+        "report": last,
+        "gece": slo_gece_status(),
+    }
+
+
+@app.get("/api/ana-motor/slo-pack/report-file")
+def api_ana_motor_slo_report_file(name: str) -> dict[str, Any]:
+    from ilim_assistant.ana_motor_faz_ad_slo_gece import read_slo_report_markdown
+
+    body = read_slo_report_markdown(name)
+    return {"ok": bool(body), "name": name, "body": body}
+
+
+@app.get("/api/ana-motor/slo-pack/trend")
+def api_ana_motor_slo_trend(limit: int = 12) -> dict[str, Any]:
+    """Faz AE1 — kalıcı SLO rapor trendi."""
+    from ilim_assistant.ana_motor_faz_ae_slo_trend import build_slo_trend_report
+
+    return build_slo_trend_report(limit=limit)
+
+
+@app.get("/api/ana-motor/pro-ogrenme/status")
+def api_ana_motor_pro_ogrenme_status() -> dict[str, Any]:
+    from ilim_assistant.ana_motor_faz_ae_pro_ogrenme import pro_ogrenme_status
+
+    return pro_ogrenme_status()
+
+
+@app.get("/api/ana-motor/sentez-pro/status")
+def api_ana_motor_sentez_pro_status() -> dict[str, Any]:
+    from ilim_assistant.ana_motor_faz_ad_sentez_pro import sentez_pro_status
+
+    return sentez_pro_status()
 
 
 @app.get("/api/ana-motor/denge70/status")
@@ -12181,6 +12264,23 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     force_web=bool(orch.get("force_web_research")),
                     hits=hits,
                 )
+                if orch.get("sentez_pro"):
+                    try:
+                        from ilim_assistant.ana_motor_faz_ae_pro_ogrenme import (
+                            maybe_boost_learn_after_pro_turn,
+                        )
+
+                        _learn_meta = maybe_boost_learn_after_pro_turn(
+                            msg,
+                            body_fixed,
+                            _learn_meta,
+                            sentez_pro=True,
+                            plan_primary=_plan_prim,
+                            web_used=web_used,
+                            hits=hits,
+                        )
+                    except Exception:
+                        pass
                 if _learn_meta.get("saved"):
                     orch["otomatik_ogrenme"] = _learn_meta
             except Exception:

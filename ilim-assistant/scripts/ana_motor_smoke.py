@@ -2267,6 +2267,145 @@ def run_offline() -> int:
     else:
         _ok("ogrenme panel payload")
 
+    print("\n=== Faz AD1 — SLO gece kaliciligi ===")
+    from ilim_assistant.ana_motor_faz_ad_slo_gece import (
+        load_last_slo_report,
+        persist_slo_report,
+        should_run_gece_slo,
+        slo_gece_enabled,
+        slo_gece_status,
+    )
+
+    if not slo_gece_enabled():
+        _fail("slo_gece_enabled", "kapali")
+        fails += 1
+    else:
+        _ok("SLO gece kosusu acik")
+    fake_pack = {
+        "ok": True,
+        "passed": 8,
+        "total": 10,
+        "live": False,
+        "results": mock_results,
+        "weak_point_report": rep,
+    }
+    saved = persist_slo_report(fake_pack, rep)
+    if not saved.get("ok"):
+        _fail("slo_persist", str(saved)[:80])
+        fails += 1
+    else:
+        _ok(f"SLO rapor kaydedildi: {saved.get('markdown_path')}")
+    last = load_last_slo_report()
+    if not last.get("saved_at") or not last.get("weak_point_report"):
+        _fail("slo_last_load", str(last.keys()))
+        fails += 1
+    else:
+        _ok(f"SLO son rapor yuklendi score={last.get('weak_point_report', {}).get('score_pct')}")
+    gece_st = slo_gece_status()
+    if not gece_st.get("gece_enabled"):
+        _fail("slo_gece_status", str(gece_st))
+        fails += 1
+    else:
+        _ok(f"SLO gece interval={gece_st.get('interval_hours')}h")
+    if not callable(should_run_gece_slo):
+        _fail("should_run_gece_slo", "yok")
+        fails += 1
+    else:
+        _ok(f"SLO gece gerekli mi: {should_run_gece_slo()}")
+
+    print("\n=== Faz AD2 — sentez PRO ===")
+    from ilim_assistant.ana_motor_faz_ad_sentez_pro import (
+        sentez_pro_enabled,
+        sentez_pro_status,
+        should_synthesize_pro_turn,
+    )
+
+    if not sentez_pro_enabled():
+        _fail("sentez_pro_enabled", "kapali")
+        fails += 1
+    else:
+        _ok("Sentez PRO acik")
+    st_pro = sentez_pro_status()
+    if not st_pro.get("enabled"):
+        _fail("sentez_pro_status", str(st_pro))
+        fails += 1
+    else:
+        _ok(f"Sentez PRO version={st_pro.get('version')}")
+    pro_ok = should_synthesize_pro_turn(
+        question_plan=type("P", (), {"primary": "bilgi"})(),
+        hits=[("k1", "yerel parca", 0.9)],
+        web_extra="WEB ARAŞTIRMA PRO\n" + ("x" * 420),
+        mode_norm="genel",
+        kutuphane_hint={"soru": "test", "cevap": "kutuphane cevabi en az yirmi karakter"},
+    )
+    if not pro_ok:
+        _fail("sentez_pro_gate", "bekleniyordu True")
+        fails += 1
+    else:
+        _ok(f"Sentez PRO kapisi (web+yerel+kutuphane)")
+
+    print("\n=== Faz AE1 — SLO trend ===")
+    from ilim_assistant.ana_motor_faz_ae_slo_trend import (
+        build_slo_trend_report,
+        slo_trend_enabled,
+        slo_trend_status,
+    )
+
+    if not slo_trend_enabled():
+        _fail("slo_trend_enabled", "kapali")
+        fails += 1
+    else:
+        _ok("SLO trend acik")
+    trend = build_slo_trend_report(limit=5)
+    if not trend.get("enabled"):
+        _fail("slo_trend_build", str(trend)[:80])
+        fails += 1
+    else:
+        _ok(f"SLO trend: {trend.get('summary_tr', '')[:56]}")
+    if trend.get("count", 0) >= 1 and not trend.get("points"):
+        _fail("slo_trend_points", str(trend))
+        fails += 1
+    elif trend.get("count", 0) >= 1:
+        _ok(f"SLO trend n={trend.get('count')}")
+    st_tr = slo_trend_status()
+    if not st_tr.get("version"):
+        _fail("slo_trend_status", str(st_tr))
+        fails += 1
+    else:
+        _ok("SLO trend status hazir")
+
+    print("\n=== Faz AE2 — PRO ogrenme koprusu ===")
+    from ilim_assistant.ana_motor_faz_ae_pro_ogrenme import (
+        maybe_boost_learn_after_pro_turn,
+        pro_ogrenme_enabled,
+        pro_ogrenme_status,
+    )
+
+    if not pro_ogrenme_enabled():
+        _fail("pro_ogrenme_enabled", "kapali")
+        fails += 1
+    else:
+        _ok("PRO ogrenme koprusu acik")
+    boosted = maybe_boost_learn_after_pro_turn(
+        "Osmanli devletini kim kurdu?",
+        "Osman Bey tarafindan kuruldu. **Guven:** orta",
+        {"saved": True},
+        sentez_pro=True,
+        plan_primary="bilgi",
+        web_used=True,
+    )
+    if not boosted.get("sentez_pro_learn"):
+        _fail("pro_ogrenme_boost", str(boosted)[:80])
+        fails += 1
+    else:
+        _ok("PRO ogrenme boost meta")
+    st_po = pro_ogrenme_status()
+    if not st_po.get("enabled"):
+        _fail("pro_ogrenme_status", str(st_po))
+        fails += 1
+    else:
+        _ok(f"PRO ogrenme version={st_po.get('version')}")
+
     print("\n=== Faz AB — oturum export / birlesik nebula apply ===")
     from ilim_assistant.ana_motor_faz_ab import (
         birlesik_apply_enabled,
@@ -3041,6 +3180,33 @@ def run_live(base: str) -> int:
     ):
         turns = slo_meta.get("turns", 10) if isinstance(slo_meta, dict) else 10
         _ok(f"Faz K SLO — rev={build.get('rev')} turns={turns}")
+    gece_ad = build.get("slo_gece_faz_ad") or {}
+    if gece_ad.get("gece_enabled") is False:
+        _fail("slo_gece_faz_ad", str(gece_ad))
+        fails += 1
+    elif gece_ad:
+        _ok(
+            f"Faz AD SLO gece — interval={gece_ad.get('interval_hours')}h "
+            f"last={str(gece_ad.get('last_saved_at') or '—')[:19]}"
+        )
+    sentez_ad = build.get("sentez_pro_faz_ad") or {}
+    if sentez_ad.get("enabled") is False:
+        _fail("sentez_pro_faz_ad", str(sentez_ad))
+        fails += 1
+    elif sentez_ad:
+        _ok(f"Faz AD sentez PRO — version={sentez_ad.get('version')}")
+    trend_ae = build.get("slo_trend_faz_ae") or {}
+    if trend_ae.get("enabled") is False:
+        _fail("slo_trend_faz_ae", str(trend_ae))
+        fails += 1
+    elif trend_ae:
+        _ok(f"Faz AE SLO trend — {str(trend_ae.get('summary_tr') or '')[:48]}")
+    pro_ae = build.get("pro_ogrenme_faz_ae") or {}
+    if pro_ae.get("enabled") is False:
+        _fail("pro_ogrenme_faz_ae", str(pro_ae))
+        fails += 1
+    elif pro_ae:
+        _ok(f"Faz AE PRO ogrenme — version={pro_ae.get('version')}")
     hs = build.get("hub_sse") or {}
     if hs.get("enabled") is False:
         _fail("hub_sse enabled", str(hs))

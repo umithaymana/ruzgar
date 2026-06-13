@@ -240,6 +240,11 @@ def ensure_ruzgar_env() -> list[str]:
         os.environ.setdefault("RUZGAR_KUTUPHANE_ONCE", "1")
         os.environ.setdefault("RUZGAR_OGRENME_NEBULA_BRIDGE", "1")
         os.environ.setdefault("RUZGAR_OGRENME_NEBULA_COLLECTION", "tarih_kaynak")
+        os.environ.setdefault("RUZGAR_SLO_GECE_KOSUSU", "1")
+        os.environ.setdefault("RUZGAR_SLO_GECE_INTERVAL_HOURS", "24")
+        os.environ.setdefault("RUZGAR_SENTEZ_PRO", "1")
+        os.environ.setdefault("RUZGAR_SLO_TREND", "1")
+        os.environ.setdefault("RUZGAR_PRO_OGRENME_BRIDGE", "1")
 
     sync_global_api_key_aliases()
     try:

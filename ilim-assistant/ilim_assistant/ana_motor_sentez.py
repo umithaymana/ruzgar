@@ -139,12 +139,13 @@ def build_research_summary(
     web_extra: str,
     question_plan: Any | None = None,
     mode_norm: str = "genel",
+    skip_gate: bool = False,
 ) -> str:
     """
     Arşiv/indeks + web → tek araştırma özeti bloğu (model bağlamına eklenir).
     Başarısızsa boş string.
     """
-    if not should_synthesize_turn(
+    if not skip_gate and not should_synthesize_turn(
         question_plan=question_plan,
         hits=hits,
         web_extra=web_extra,

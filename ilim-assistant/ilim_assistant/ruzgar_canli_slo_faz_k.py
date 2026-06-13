@@ -490,6 +490,12 @@ def _slo_worker(*, live_base: str | None, workspace_root: str | None) -> None:
             f"[Rüzgar] SLO paketi bitti — {report.get('summary_tr', '')}",
             flush=True,
         )
+        try:
+            from ilim_assistant.ana_motor_faz_ad_slo_gece import persist_slo_report
+
+            persist_slo_report(out, report)
+        except Exception:
+            pass
     except Exception as exc:
         _set_slo_job(
             running=False,

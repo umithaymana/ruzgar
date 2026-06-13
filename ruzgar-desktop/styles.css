@@ -5474,6 +5474,35 @@ body.faz-z-chat-simple .composer-advanced-fold {
 .ana-motor-slo-fold.slo-fail > summary strong {
   color: #f97316;
 }
+.ana-motor-slo-gece {
+  margin-top: 0.35rem;
+  opacity: 0.92;
+}
+.ana-motor-slo-trend {
+  margin-top: 0.25rem;
+  color: #93c5fd;
+  font-size: 0.92em;
+}
+.ana-motor-sentez-pro-fold {
+  margin-bottom: 10px;
+}
+.ana-motor-sentez-pro-fold > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.75rem;
+}
+.ana-motor-sentez-pro-fold > summary::-webkit-details-marker {
+  display: none;
+}
+.ana-motor-sentez-pro-body {
+  padding: 0.5rem 0 0.25rem;
+}
+.ana-motor-sentez-pro-fold.sentez-off > summary strong {
+  opacity: 0.72;
+}
 .ana-motor-vad-fold {
   margin-bottom: 10px;
 }

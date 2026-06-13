@@ -1,3 +1,5 @@
 __pycache__/
 *.pyc
 .venv/
+.ruzgar_slo_last_report.json
+.ruzgar_slo_reports/

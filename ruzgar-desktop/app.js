@@ -1339,14 +1339,28 @@ function updateFaz7HealthStrip(j) {
   if (d70.ready) bits.push(`70B ✓ ${d70.model || "denge70"}`);
   else if (d70.pull_job?.running) bits.push("70B indiriliyor…");
   else if (d70.auto_chain_ready) bits.push("70B zincir hazır");
-  const sloSt = j.canli_slo_faz_k || {};
+  const sloSt =
+    j.canli_slo_faz_k || (j.build && j.build.canli_slo_faz_k) || {};
   if (sloSt.job_running) bits.push("SLO koşuluyor…");
   else if (sloSt.last_score_pct != null) bits.push(`SLO ${sloSt.last_score_pct}%`);
   faz7HealthStripEl.textContent = bits.join(" · ");
   updateDenge70Panel(j);
-  if (sloSt.job) updateSloPanel(sloSt.job);
+  if (sloSt.job || sloSt.gece) {
+    updateSloPanel({
+      job: sloSt.job,
+      gece: sloSt.gece,
+      last_persisted: sloSt.last_persisted,
+    });
+  }
   syncVadPanelFromHealth(j);
-  updateOgrenmePanel((j && j.otomatik_ogrenme) || null);
+  updateOgrenmePanel(
+    (j && j.otomatik_ogrenme) ||
+      (j && j.build && j.build.otomatik_ogrenme) ||
+      null,
+  );
+  const sentezSt =
+    (j && j.build && j.build.sentez_pro_faz_ad) || (j && j.sentez_pro_faz_ad);
+  if (sentezSt) updateSentezProPanel(sentezSt);
 }
 
 function updateDenge70Panel(healthPayload) {
@@ -1438,13 +1452,35 @@ async function runDenge70Pull() {
 function updateSloPanel(payload) {
   const hint = document.getElementById("ana-motor-slo-hint");
   const detail = document.getElementById("ana-motor-slo-detail");
+  const geceEl = document.getElementById("ana-motor-slo-gece");
+  const trendEl = document.getElementById("ana-motor-slo-trend");
   const recsEl = document.getElementById("ana-motor-slo-recs");
   const fold = document.getElementById("ana-motor-slo-fold");
   const runBtn = document.getElementById("btn-ana-slo-run");
   if (!hint || !detail) return;
   const job = (payload && payload.job) || payload || {};
-  const report = job.last_report || null;
+  const gece = (payload && payload.gece) || job.gece || null;
+  const persisted = (payload && payload.last_persisted) || job.last_persisted || null;
+  const report = job.last_report || (payload && payload.report && payload.report.weak_point_report) || null;
   const running = !!job.running;
+  if (geceEl) {
+    const geceOn = gece && gece.gece_enabled !== false;
+    const interval = gece && gece.interval_hours != null ? gece.interval_hours : 24;
+    const saved = persisted || (gece && gece.last_saved_at) || "";
+    geceEl.textContent = geceOn
+      ? `Gece koşusu: ${interval} saatte bir · Son kayıt: ${saved ? String(saved).slice(0, 19) : "henüz yok"}`
+      : "Gece koşusu kapalı (RUZGAR_SLO_GECE_KOSUSU=0)";
+  }
+  const trend = (payload && payload.trend) || null;
+  if (trendEl) {
+    if (trend && trend.summary_tr) {
+      trendEl.textContent = `Trend (AE1): ${trend.summary_tr}`;
+    } else if (trend && trend.enabled === false) {
+      trendEl.textContent = "SLO trend kapalı";
+    } else {
+      trendEl.textContent = "";
+    }
+  }
   if (running) {
     hint.textContent = job.progress || "Koşuluyor…";
     detail.textContent =
@@ -1487,13 +1523,57 @@ function updateSloPanel(payload) {
 
 async function refreshSloStatus() {
   try {
-    const res = await fetch(`${API}/api/ana-motor/slo-pack/job`, { cache: "no-store" });
-    const j = await res.json().catch(() => ({}));
-    if (!res.ok) return;
-    updateSloPanel(j);
-    if (j.running) {
+    const [jobRes, lastRes, trendRes] = await Promise.all([
+      fetch(`${API}/api/ana-motor/slo-pack/job`, { cache: "no-store" }),
+      fetch(`${API}/api/ana-motor/slo-pack/last-report`, { cache: "no-store" }),
+      fetch(`${API}/api/ana-motor/slo-pack/trend?limit=8`, { cache: "no-store" }),
+    ]);
+    const job = await jobRes.json().catch(() => ({}));
+    const last = await lastRes.json().catch(() => ({}));
+    const trend = await trendRes.json().catch(() => ({}));
+    if (!jobRes.ok) return;
+    const merged = {
+      job,
+      gece: last.gece || job.gece,
+      last_persisted: last.report && last.report.saved_at,
+      report: last.report,
+      trend,
+    };
+    updateSloPanel(merged);
+    if (job.running) {
       window.setTimeout(() => void refreshSloStatus(), 8000);
     }
+  } catch {
+    /* yok say */
+  }
+}
+
+function updateSentezProPanel(payload) {
+  const hint = document.getElementById("ana-motor-sentez-pro-hint");
+  const detail = document.getElementById("ana-motor-sentez-pro-detail");
+  const fold = document.getElementById("ana-motor-sentez-pro-fold");
+  if (!hint || !detail) return;
+  const st = payload || {};
+  if (st.enabled === false) {
+    hint.textContent = "Kapalı";
+    detail.textContent =
+      "RUZGAR_SENTEZ_PRO=0 veya Web PRO kapalı. Bilgi sorularında web+yerel+kütüphane birleşik özet üretilmez.";
+    if (fold) fold.classList.add("sentez-off");
+    return;
+  }
+  if (fold) fold.classList.remove("sentez-off");
+  hint.textContent = "Açık";
+  detail.textContent =
+    `Web PRO + yerel RAG + BilgiKutuphane birleşince model bağlamına PRO özet eklenir. ` +
+    `Sürüm: ${st.version || "—"}`;
+}
+
+async function refreshSentezProStatus() {
+  try {
+    const res = await fetch(`${API}/api/ana-motor/sentez-pro/status`, { cache: "no-store" });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) return;
+    updateSentezProPanel(j);
   } catch {
     /* yok say */
   }
@@ -1686,7 +1766,9 @@ function updateOgrenmePanel(payload) {
     return;
   }
   const nb = p.nebula_bridge ? "Nebula köprüsü açık" : "Yalnız hafıza";
-  hint.textContent = nb;
+  const proOg = p.pro_ogrenme || {};
+  hint.textContent =
+    proOg.enabled !== false ? `${nb} · PRO öğrenme ✓` : nb;
   const job = p.nebula_job || {};
   const jobLine = job.running
     ? `Nebula indeks: ${job.progress || "çalışıyor"}`
@@ -2083,6 +2165,10 @@ function wireFazAaChatSearch() {
   const ogrenmeRefresh = document.getElementById("btn-ana-ogrenme-refresh");
   if (ogrenmeRefresh) ogrenmeRefresh.addEventListener("click", () => void refreshOgrenmeStatus());
   void refreshOgrenmeStatus();
+  const sentezProRefresh = document.getElementById("btn-ana-sentez-pro-refresh");
+  if (sentezProRefresh) sentezProRefresh.addEventListener("click", () => void refreshSentezProStatus());
+  void refreshSentezProStatus();
+  void refreshSloStatus();
   const d70Fold = document.getElementById("ana-motor-denge70-fold");
   if (d70Fold) {
     const savedD70 = localStorage.getItem("ruzgar_denge70_panel_open");

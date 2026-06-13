@@ -478,4 +478,10 @@ def otomatik_ogrenme_panel_payload() -> dict[str, Any]:
     st["hint"] = (
         "Bilgi/bilim yanıtları hafızaya yazılır; uygun turlarda Nebula incremental paket oluşturulur."
     )
+    try:
+        from ilim_assistant.ana_motor_faz_ae_pro_ogrenme import pro_ogrenme_status
+
+        st["pro_ogrenme"] = pro_ogrenme_status()
+    except Exception:
+        pass
     return st
