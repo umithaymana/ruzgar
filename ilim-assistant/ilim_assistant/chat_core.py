@@ -1806,6 +1806,20 @@ def prepare_turn(
                 user_payload += _sentez
                 if orchestration_out is not None:
                     orchestration_out["sentez_pro"] = "pro" in _sentez.lower()
+            if (
+                orchestration_out is not None
+                and orchestration_out.get("sentez_pro")
+                and orchestration_out.get("research_card")
+            ):
+                from ilim_assistant.ana_motor_faz_af_arastirma_pro import enrich_research_card_pro
+
+                orchestration_out["research_card"] = enrich_research_card_pro(
+                    orchestration_out["research_card"],
+                    sentez_pro=True,
+                    kutuphane_hint=_kh,
+                    web_extra=web_extra,
+                    hits=hits,
+                )
         except Exception:
             pass
     elif (

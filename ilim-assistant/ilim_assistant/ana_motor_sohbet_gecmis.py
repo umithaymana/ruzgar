@@ -153,6 +153,60 @@ def export_session_chat_history(
     }
 
 
+def clear_chat_history(
+    *,
+    mode: str | None = None,
+    session_id: str | None = None,
+) -> dict[str, Any]:
+    """Sohbet jsonl kaydını temizle — isteğe bağlı mod/oturum filtresi."""
+    if not chat_history_enabled():
+        return {"ok": True, "cleared": 0, "disabled": True, "version": FAZ_AA_CHAT_VERSION}
+    mode_norm = (mode or "").strip().lower()
+    sid = (session_id or "").strip()
+    if not _HISTORY_PATH.is_file():
+        return {"ok": True, "cleared": 0, "version": FAZ_AA_CHAT_VERSION}
+    if not mode_norm and not sid:
+        try:
+            count = len(_HISTORY_PATH.read_text(encoding="utf-8").splitlines())
+            _HISTORY_PATH.unlink(missing_ok=True)
+            return {"ok": True, "cleared": count, "all": True, "version": FAZ_AA_CHAT_VERSION}
+        except Exception as exc:
+            return {"ok": False, "error": str(exc)[:200], "version": FAZ_AA_CHAT_VERSION}
+    try:
+        kept: list[str] = []
+        removed = 0
+        for line in _HISTORY_PATH.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            try:
+                row = json.loads(line)
+            except Exception:
+                kept.append(line)
+                continue
+            drop = False
+            if mode_norm and str(row.get("mode") or "genel").lower() == mode_norm:
+                drop = True
+            if sid and str(row.get("session_id") or "") == sid:
+                drop = True
+            if drop:
+                removed += 1
+            else:
+                kept.append(line)
+        if kept:
+            _HISTORY_PATH.write_text("\n".join(kept) + "\n", encoding="utf-8")
+        else:
+            _HISTORY_PATH.unlink(missing_ok=True)
+        return {
+            "ok": True,
+            "cleared": removed,
+            "mode": mode_norm or None,
+            "session_id": sid or None,
+            "version": FAZ_AA_CHAT_VERSION,
+        }
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)[:200], "version": FAZ_AA_CHAT_VERSION}
+
+
 _RECALL_STOP = frozenset(
     {
         "olabilir",

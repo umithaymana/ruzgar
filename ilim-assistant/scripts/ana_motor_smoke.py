@@ -2406,6 +2406,113 @@ def run_offline() -> int:
     else:
         _ok(f"PRO ogrenme version={st_po.get('version')}")
 
+    print("\n=== Faz AF1 — SLO aksiyon plani ===")
+    from ilim_assistant.ana_motor_faz_af_slo_aksiyon import (
+        build_slo_action_plan,
+        slo_aksiyon_enabled,
+        slo_aksiyon_status,
+    )
+
+    if not slo_aksiyon_enabled():
+        _fail("slo_aksiyon_enabled", "kapali")
+        fails += 1
+    else:
+        _ok("SLO aksiyon plani acik")
+    plan = build_slo_action_plan(limit=5)
+    if not plan.get("enabled"):
+        _fail("slo_action_plan", str(plan)[:80])
+        fails += 1
+    else:
+        _ok(f"SLO aksiyon: {plan.get('summary_tr', '')[:56]}")
+    st_af = slo_aksiyon_status()
+    if not st_af.get("version"):
+        _fail("slo_aksiyon_status", str(st_af))
+        fails += 1
+    else:
+        _ok("SLO aksiyon status hazir")
+
+    print("\n=== Faz AF2 — arastirma karti PRO ===")
+    from ilim_assistant.ana_motor_faz_af_arastirma_pro import (
+        arastirma_pro_card_enabled,
+        arastirma_pro_card_status,
+        enrich_research_card_pro,
+    )
+
+    if not arastirma_pro_card_enabled():
+        _fail("arastirma_pro_card", "kapali")
+        fails += 1
+    else:
+        _ok("Arastirma PRO kart acik")
+    base_card = {"ok": True, "primary": "bilgi", "totals": {"nebula": 1}, "web_used": True}
+    enriched = enrich_research_card_pro(
+        base_card,
+        sentez_pro=True,
+        kutuphane_hint={"cevap": "kutuphane cevabi yeterince uzun"},
+        web_extra="WEB ARASTIRMA PRO\n" + ("x" * 420),
+        hits=[("a", "b", 0.9)],
+    )
+    if not enriched.get("pro_mode"):
+        _fail("enrich_research_card", str(enriched))
+        fails += 1
+    else:
+        _ok(f"PRO kart: {enriched.get('pro_badge')}")
+    st_ap = arastirma_pro_card_status()
+    if not st_ap.get("enabled"):
+        _fail("arastirma_pro_status", str(st_ap))
+        fails += 1
+    else:
+        _ok(f"Arastirma PRO version={st_ap.get('version')}")
+
+    print("\n=== Faz AG1 — sohbet temizle ===")
+    from ilim_assistant.ana_motor_faz_ag_sohbet_temiz import (
+        clear_ana_motor_chat_history,
+        sohbet_temiz_enabled,
+        sohbet_temiz_status,
+    )
+
+    if not sohbet_temiz_enabled():
+        _fail("sohbet_temiz", "kapali")
+        fails += 1
+    else:
+        _ok("Sohbet temiz acik")
+    st_ag1 = sohbet_temiz_status()
+    if not st_ag1.get("version"):
+        _fail("sohbet_temiz_status", str(st_ag1))
+        fails += 1
+    else:
+        _ok(f"Sohbet temiz version={st_ag1.get('version')}")
+    clr = clear_ana_motor_chat_history(all_modes=True)
+    if clr.get("enabled") and clr.get("ok") is False and clr.get("error"):
+        _fail("clear_chat_history", str(clr)[:80])
+        fails += 1
+    else:
+        _ok(f"Sohbet temiz API: cleared={clr.get('cleared', 0)}")
+
+    print("\n=== Faz AG2 — SLO birlesik ozet ===")
+    from ilim_assistant.ana_motor_faz_ag_slo_ozet import (
+        build_slo_ozet_panel,
+        slo_ozet_enabled,
+        slo_ozet_status,
+    )
+
+    if not slo_ozet_enabled():
+        _fail("slo_ozet", "kapali")
+        fails += 1
+    else:
+        _ok("SLO ozet acik")
+    panel = build_slo_ozet_panel()
+    if not panel.get("enabled"):
+        _fail("slo_ozet_panel", str(panel)[:80])
+        fails += 1
+    else:
+        _ok(f"SLO ozet: {panel.get('summary_tr', '')[:56]}")
+    st_ag2 = slo_ozet_status()
+    if not st_ag2.get("version"):
+        _fail("slo_ozet_status", str(st_ag2))
+        fails += 1
+    else:
+        _ok(f"SLO ozet version={st_ag2.get('version')}")
+
     print("\n=== Faz AB — oturum export / birlesik nebula apply ===")
     from ilim_assistant.ana_motor_faz_ab import (
         birlesik_apply_enabled,
@@ -3207,6 +3314,30 @@ def run_live(base: str) -> int:
         fails += 1
     elif pro_ae:
         _ok(f"Faz AE PRO ogrenme — version={pro_ae.get('version')}")
+    aksiyon_af = build.get("slo_aksiyon_faz_af") or {}
+    if aksiyon_af.get("enabled") is False:
+        _fail("slo_aksiyon_faz_af", str(aksiyon_af))
+        fails += 1
+    elif aksiyon_af:
+        _ok(f"Faz AF SLO aksiyon — {str(aksiyon_af.get('summary_tr') or '')[:48]}")
+    arastirma_af = build.get("arastirma_pro_faz_af") or {}
+    if arastirma_af.get("enabled") is False:
+        _fail("arastirma_pro_faz_af", str(arastirma_af))
+        fails += 1
+    elif arastirma_af:
+        _ok(f"Faz AF arastirma PRO — version={arastirma_af.get('version')}")
+    sohbet_ag = build.get("sohbet_temiz_faz_ag") or {}
+    if sohbet_ag.get("enabled") is False:
+        _fail("sohbet_temiz_faz_ag", str(sohbet_ag))
+        fails += 1
+    elif sohbet_ag:
+        _ok(f"Faz AG sohbet temiz — version={sohbet_ag.get('version')}")
+    slo_ozet_ag = build.get("slo_ozet_faz_ag") or {}
+    if slo_ozet_ag.get("enabled") is False:
+        _fail("slo_ozet_faz_ag", str(slo_ozet_ag))
+        fails += 1
+    elif slo_ozet_ag:
+        _ok(f"Faz AG SLO ozet — {str(slo_ozet_ag.get('summary_tr') or '')[:48]}")
     hs = build.get("hub_sse") or {}
     if hs.get("enabled") is False:
         _fail("hub_sse enabled", str(hs))

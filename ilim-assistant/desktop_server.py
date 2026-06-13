@@ -1378,6 +1378,30 @@ def _health_build_block() -> dict:
     except Exception:
         pass
     try:
+        from ilim_assistant.ana_motor_faz_af_slo_aksiyon import slo_aksiyon_status
+
+        base["slo_aksiyon_faz_af"] = slo_aksiyon_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ana_motor_faz_af_arastirma_pro import arastirma_pro_card_status
+
+        base["arastirma_pro_faz_af"] = arastirma_pro_card_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ana_motor_faz_ag_sohbet_temiz import sohbet_temiz_status
+
+        base["sohbet_temiz_faz_ag"] = sohbet_temiz_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ana_motor_faz_ag_slo_ozet import slo_ozet_status
+
+        base["slo_ozet_faz_ag"] = slo_ozet_status()
+    except Exception:
+        pass
+    try:
         from ilim_assistant.ruzgar_otomatik_ogrenme import otomatik_ogrenme_status
 
         base["otomatik_ogrenme"] = otomatik_ogrenme_status()
@@ -2953,6 +2977,27 @@ def api_ana_motor_chat_history_export(
     )
 
 
+class ChatHistoryClearBody(BaseModel):
+    mode: str | None = None
+    session_id: str | None = None
+    all_modes: bool = True
+
+
+@app.post("/api/ana-motor/chat-history/clear")
+def api_ana_motor_chat_history_clear(
+    body: ChatHistoryClearBody | None = None,
+) -> dict[str, Any]:
+    """Faz AG1 — sohbet jsonl arşivini temizle."""
+    from ilim_assistant.ana_motor_faz_ag_sohbet_temiz import clear_ana_motor_chat_history
+
+    b = body or ChatHistoryClearBody()
+    return clear_ana_motor_chat_history(
+        mode=b.mode,
+        session_id=b.session_id,
+        all_modes=b.all_modes,
+    )
+
+
 @app.get("/api/ana-motor/slo-pack/status")
 def api_ana_motor_slo_pack_status() -> dict[str, Any]:
     """Faz K / AC2 — ChatGPT SLO paketi durumu."""
@@ -3035,6 +3080,29 @@ def api_ana_motor_slo_trend(limit: int = 12) -> dict[str, Any]:
     from ilim_assistant.ana_motor_faz_ae_slo_trend import build_slo_trend_report
 
     return build_slo_trend_report(limit=limit)
+
+
+@app.get("/api/ana-motor/slo-pack/action-plan")
+def api_ana_motor_slo_action_plan(limit: int = 8) -> dict[str, Any]:
+    """Faz AF1 — SLO trend aksiyon planı."""
+    from ilim_assistant.ana_motor_faz_af_slo_aksiyon import build_slo_action_plan
+
+    return build_slo_action_plan(limit=limit)
+
+
+@app.get("/api/ana-motor/slo-pack/ozet")
+def api_ana_motor_slo_ozet() -> dict[str, Any]:
+    """Faz AG2 — SLO birleşik özet (trend + aksiyon + son skor)."""
+    from ilim_assistant.ana_motor_faz_ag_slo_ozet import build_slo_ozet_panel
+
+    return build_slo_ozet_panel()
+
+
+@app.get("/api/ana-motor/arastirma-pro/status")
+def api_ana_motor_arastirma_pro_status() -> dict[str, Any]:
+    from ilim_assistant.ana_motor_faz_af_arastirma_pro import arastirma_pro_card_status
+
+    return arastirma_pro_card_status()
 
 
 @app.get("/api/ana-motor/pro-ogrenme/status")

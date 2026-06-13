@@ -245,6 +245,10 @@ def ensure_ruzgar_env() -> list[str]:
         os.environ.setdefault("RUZGAR_SENTEZ_PRO", "1")
         os.environ.setdefault("RUZGAR_SLO_TREND", "1")
         os.environ.setdefault("RUZGAR_PRO_OGRENME_BRIDGE", "1")
+        os.environ.setdefault("RUZGAR_SLO_AKSIYON", "1")
+        os.environ.setdefault("RUZGAR_ARASTIRMA_PRO_CARD", "1")
+        os.environ.setdefault("RUZGAR_SOHBET_TEMIZ", "1")
+        os.environ.setdefault("RUZGAR_SLO_OZET", "1")
 
     sync_global_api_key_aliases()
     try:

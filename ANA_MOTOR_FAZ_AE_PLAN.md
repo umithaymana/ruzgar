@@ -38,4 +38,8 @@ RUZGAR_OTOMATIK_OGRENME=1
 1. Kalıcı SLO raporları → skor eğilimi + «S3 tekrar kırıldı» uyarısı
 2. PRO sentezli bilgi turu → hafıza + learned MD + Nebula (PRO güçlendirme)
 
+## Sıradaki (Faz AF — uygulandı)
+
+Detay: `ANA_MOTOR_FAZ_AF_PLAN.md`
+
 *Bismillah — Ümit & Gökçenur — Faz AE tamam*

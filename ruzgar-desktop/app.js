@@ -1453,7 +1453,9 @@ function updateSloPanel(payload) {
   const hint = document.getElementById("ana-motor-slo-hint");
   const detail = document.getElementById("ana-motor-slo-detail");
   const geceEl = document.getElementById("ana-motor-slo-gece");
+  const ozetEl = document.getElementById("ana-motor-slo-ozet");
   const trendEl = document.getElementById("ana-motor-slo-trend");
+  const actionsEl = document.getElementById("ana-motor-slo-actions");
   const recsEl = document.getElementById("ana-motor-slo-recs");
   const fold = document.getElementById("ana-motor-slo-fold");
   const runBtn = document.getElementById("btn-ana-slo-run");
@@ -1471,6 +1473,16 @@ function updateSloPanel(payload) {
       ? `Gece koşusu: ${interval} saatte bir · Son kayıt: ${saved ? String(saved).slice(0, 19) : "henüz yok"}`
       : "Gece koşusu kapalı (RUZGAR_SLO_GECE_KOSUSU=0)";
   }
+  const ozet = (payload && payload.ozet) || null;
+  if (ozetEl) {
+    if (ozet && ozet.summary_tr) {
+      ozetEl.textContent = `Özet (AG2): ${ozet.summary_tr}`;
+    } else if (ozet && ozet.enabled === false) {
+      ozetEl.textContent = "SLO birleşik özet kapalı";
+    } else {
+      ozetEl.textContent = "";
+    }
+  }
   const trend = (payload && payload.trend) || null;
   if (trendEl) {
     if (trend && trend.summary_tr) {
@@ -1479,6 +1491,23 @@ function updateSloPanel(payload) {
       trendEl.textContent = "SLO trend kapalı";
     } else {
       trendEl.textContent = "";
+    }
+  }
+  const actionPlan = (payload && payload.action_plan) || null;
+  if (actionsEl) {
+    const acts = actionPlan && Array.isArray(actionPlan.actions) ? actionPlan.actions : [];
+    if (acts.length > 0) {
+      actionsEl.innerHTML = acts
+        .slice(0, 5)
+        .map(
+          (a) =>
+            `<li><strong>${esc(String(a.id || ""))}</strong> ${esc(String(a.label || ""))}: ${esc(
+              (Array.isArray(a.items) ? a.items[0] : "") || "",
+            )}</li>`,
+        )
+        .join("");
+    } else {
+      actionsEl.innerHTML = "";
     }
   }
   if (running) {
@@ -1523,14 +1552,18 @@ function updateSloPanel(payload) {
 
 async function refreshSloStatus() {
   try {
-    const [jobRes, lastRes, trendRes] = await Promise.all([
+    const [jobRes, lastRes, trendRes, actionRes, ozetRes] = await Promise.all([
       fetch(`${API}/api/ana-motor/slo-pack/job`, { cache: "no-store" }),
       fetch(`${API}/api/ana-motor/slo-pack/last-report`, { cache: "no-store" }),
       fetch(`${API}/api/ana-motor/slo-pack/trend?limit=8`, { cache: "no-store" }),
+      fetch(`${API}/api/ana-motor/slo-pack/action-plan?limit=6`, { cache: "no-store" }),
+      fetch(`${API}/api/ana-motor/slo-pack/ozet`, { cache: "no-store" }),
     ]);
     const job = await jobRes.json().catch(() => ({}));
     const last = await lastRes.json().catch(() => ({}));
     const trend = await trendRes.json().catch(() => ({}));
+    const actionPlan = await actionRes.json().catch(() => ({}));
+    const ozet = await ozetRes.json().catch(() => ({}));
     if (!jobRes.ok) return;
     const merged = {
       job,
@@ -1538,6 +1571,8 @@ async function refreshSloStatus() {
       last_persisted: last.report && last.report.saved_at,
       report: last.report,
       trend,
+      action_plan: actionPlan,
+      ozet,
     };
     updateSloPanel(merged);
     if (job.running) {
@@ -2144,6 +2179,10 @@ function wireFazAaChatSearch() {
     });
   }
   if (clearBtn) clearBtn.addEventListener("click", () => clearChatHistorySearch());
+  const panelClearBtn = document.getElementById("btn-chat-panel-clear");
+  if (panelClearBtn) {
+    panelClearBtn.addEventListener("click", () => void clearChatSession({ confirm: true }));
+  }
   const exportBtn = document.getElementById("btn-chat-history-export");
   if (exportBtn) exportBtn.addEventListener("click", () => void exportChatHistoryJson());
   const birlesikBtn = document.getElementById("btn-ana-kaynak-birlesik-apply");
@@ -10515,8 +10554,20 @@ function interruptRuzgar() {
   syncInterruptButton();
 }
 
-/** Uygulamayı kapatmadan sohbet oturumunu sıfırla */
-function clearChatSession() {
+/** Uygulamayı kapatmadan sohbet ekranını sıfırla — sunucu jsonl arşivi korunur (hafıza) */
+async function clearChatSession(options = {}) {
+  const askConfirm = options.confirm !== false;
+  const clearArchive = options.clearArchive === true;
+  if (
+    askConfirm &&
+    !globalThis.confirm(
+      clearArchive
+        ? "Sohbet ekranı VE sunucu arşivi (hafıza) silinsin mi?\n\nBu işlem geri alınamaz."
+        : "Sohbet ekranı temizlensin mi?\n\nRüzgar'ın arşiv hafızası (jsonl) korunur.",
+    )
+  ) {
+    return false;
+  }
   const store = ensureSharedChatStore();
   store.history = [];
   store.lastAssistantReply = "";
@@ -10535,9 +10586,30 @@ function clearChatSession() {
   el.input.value = "";
   clearOrchestraBridge();
   renderDashboardAgentSteps([]);
+  clearChatHistorySearch();
   showChatWelcomeIfEmpty();
-  setStatus("Sohbet temizlendi", "Rüzgar");
-  window.setTimeout(() => setStatus("Hazır", "Rüzgar"), 1600);
+  let serverNote = "";
+  if (clearArchive) {
+    try {
+      const res = await fetch(`${API}/api/ana-motor/chat-history/clear`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ all_modes: true }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (res.ok && j.ok !== false) {
+        const n = j.cleared != null ? Number(j.cleared) : 0;
+        serverNote = n > 0 ? ` · arşiv ${n} satır silindi` : " · arşiv temizlendi";
+      } else if (j.error) {
+        serverNote = ` · arşiv: ${String(j.error).slice(0, 48)}`;
+      }
+    } catch {
+      serverNote = " · arşiv: API yok";
+    }
+  }
+  setStatus(`Sohbet ekranı temizlendi${serverNote}`, "Rüzgar");
+  window.setTimeout(() => setStatus("Hazır", "Rüzgar"), 2200);
+  return true;
 }
 
 async function refreshCurrentMotorPanel() {
@@ -10657,7 +10729,7 @@ function wireNavToolbar() {
     });
   }
   if (el.navClearChat) {
-    el.navClearChat.addEventListener("click", () => clearChatSession());
+    el.navClearChat.addEventListener("click", () => void clearChatSession({ confirm: true }));
   }
 
   document.addEventListener(
@@ -13957,7 +14029,10 @@ async function streamChat(userText, streamOpts = {}) {
     if (totals.tdk) parts.push(`TDK ${totals.tdk}`);
     if (totals.indeks) parts.push(`İndeks ${totals.indeks}`);
     const webTxt = card.web_used ? " · Web" : "";
-    sumEl.textContent = `${card.primary || "bilgi"} — ${parts.join(" · ") || "yerel"}${webTxt} · ${card.stamp || ""}`;
+    const proTxt = card.pro_badge ? ` · ${card.pro_badge}` : "";
+    let sum = `${card.primary || "bilgi"} — ${parts.join(" · ") || "yerel"}${webTxt}${proTxt} · ${card.stamp || ""}`;
+    if (card.pro_summary_tr) sum += ` · ${card.pro_summary_tr}`;
+    sumEl.textContent = sum;
     listEl.innerHTML = "";
     const titles = {
       nebula: "Nebula",
@@ -15708,7 +15783,7 @@ if (window.ruzgarApi?.onMenu) {
     }
     if (action === "menu:bellek-temizle") {
       console.log("[RÜZGAR] Hazırlanıyor... (Bellek temizliği)");
-      clearChatSession();
+      void clearChatSession({ confirm: true });
     }
     if (action === "menu:kaynak-eklendi") {
       console.log("[RÜZGAR] Mimar, yeni eser kütüphaneye eklendi");
