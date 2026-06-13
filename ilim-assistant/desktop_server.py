@@ -1255,9 +1255,11 @@ def _health_build_block() -> dict:
     except Exception:
         pass
     try:
-        from ilim_assistant.ruzgar_canli_slo_faz_k import slo_pack_status
+        from ilim_assistant.ruzgar_canli_slo_faz_k import get_slo_job_status, slo_pack_status
 
-        base["canli_slo_faz_k"] = slo_pack_status()
+        st = slo_pack_status()
+        st["job"] = get_slo_job_status()
+        base["canli_slo_faz_k"] = st
     except Exception:
         pass
     try:
@@ -2916,20 +2918,54 @@ def api_ana_motor_chat_history_export(
 
 @app.get("/api/ana-motor/slo-pack/status")
 def api_ana_motor_slo_pack_status() -> dict[str, Any]:
-    """Faz K — ChatGPT SLO paketi durumu."""
-    from ilim_assistant.ruzgar_canli_slo_faz_k import slo_pack_status
+    """Faz K / AC2 — ChatGPT SLO paketi durumu."""
+    from ilim_assistant.ruzgar_canli_slo_faz_k import get_slo_job_status, slo_pack_status
 
-    return slo_pack_status()
+    base = slo_pack_status()
+    base["job"] = get_slo_job_status()
+    return base
+
+
+@app.get("/api/ana-motor/slo-pack/job")
+def api_ana_motor_slo_pack_job() -> dict[str, Any]:
+    """Faz AC2 — arka plan SLO işi + son zayıf nokta raporu."""
+    from ilim_assistant.ruzgar_canli_slo_faz_k import get_slo_job_status
+
+    return get_slo_job_status()
 
 
 @app.post("/api/ana-motor/slo-pack/run")
 def api_ana_motor_slo_pack_run(
     workspace_root: str | None = None,
 ) -> dict[str, Any]:
-    """Faz K — yerel SLO paketi (S1–S10, uzun sürebilir)."""
+    """Faz K — yerel SLO paketi (S1–S10, uzun sürebilir — senkron)."""
     from ilim_assistant.ruzgar_canli_slo_faz_k import run_slo_pack
 
     return run_slo_pack(workspace_root=workspace_root)
+
+
+class SloPackRunBody(BaseModel):
+    live: bool = True
+    live_base: str | None = None
+    workspace_root: str | None = None
+
+
+@app.post("/api/ana-motor/slo-pack/run-background")
+def api_ana_motor_slo_pack_run_background(
+    body: SloPackRunBody | None = None,
+) -> dict[str, Any]:
+    """Faz AC2 — arka planda SLO (canlı veya yerel)."""
+    from ilim_assistant.ruzgar_canli_slo_faz_k import (
+        resolve_live_slo_base,
+        start_slo_pack_background,
+    )
+
+    b = body or SloPackRunBody()
+    live_base = resolve_live_slo_base(b.live_base) if b.live else None
+    return start_slo_pack_background(
+        live_base=live_base,
+        workspace_root=b.workspace_root,
+    )
 
 
 @app.get("/api/ana-motor/denge70/status")

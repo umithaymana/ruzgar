@@ -2127,6 +2127,64 @@ def run_offline() -> int:
     else:
         _ok(f"denge70 pull dry: {str(dry)[:72]}")
 
+    print("\n=== Faz AC2 — SLO zayif nokta raporu ===")
+    from ilim_assistant.ruzgar_canli_slo_faz_k import (
+        build_weak_point_report,
+        get_slo_job_status,
+        resolve_live_slo_base,
+        slo_pack_enabled,
+        start_slo_pack_background,
+    )
+
+    mock_results = [
+        {
+            "id": "S3",
+            "ok": False,
+            "issues": ["icerik_eslesmedi"],
+            "elapsed_sec": 12.0,
+            "reply_len": 40,
+            "reply_preview": "test",
+            "label": "Tarih / bilgi",
+        },
+        {
+            "id": "S1",
+            "ok": True,
+            "issues": [],
+            "elapsed_sec": 2.0,
+            "reply_len": 80,
+            "reply_preview": "selam",
+            "label": "Sohbet",
+        },
+    ]
+    rep = build_weak_point_report(mock_results, passed=1, total=2, min_pass=2)
+    if not rep.get("weak_turns") or not rep.get("recommendations"):
+        _fail("slo_weak_report", str(rep)[:120])
+        fails += 1
+    else:
+        _ok(f"SLO rapor: {rep.get('summary_tr', '')[:56]}")
+    job = get_slo_job_status()
+    if "last_report" not in job:
+        _fail("slo_job_status", str(job.keys()))
+        fails += 1
+    else:
+        _ok(f"SLO job phase={job.get('phase')}")
+    base_url = resolve_live_slo_base()
+    if not base_url.startswith("http"):
+        _fail("slo_live_base", base_url)
+        fails += 1
+    else:
+        _ok(f"SLO live base={base_url}")
+    if not slo_pack_enabled():
+        _fail("slo_pack_enabled", "kapali")
+        fails += 1
+    else:
+        _ok("SLO paket acik")
+    if not callable(start_slo_pack_background):
+        _fail("slo_background_fn", "yok")
+        fails += 1
+    else:
+        _ok("SLO arka plan API hazir (tam kosu: --live --slo-pack)")
+
     print("\n=== Faz AB — oturum export / birlesik nebula apply ===")
     from ilim_assistant.ana_motor_faz_ab import (
         birlesik_apply_enabled,
@@ -3587,6 +3645,13 @@ def run_slo_pack_offline() -> int:
         fails += 1
     else:
         _ok(f"SLO paket geçti {out.get('passed')}/{out.get('total')}")
+    rep = out.get("weak_point_report") or {}
+    if rep:
+        print(f"\n  RAPOR: {rep.get('summary_tr')}")
+        for w in rep.get("weak_turns") or []:
+            print(f"  - {w.get('id')}: {', '.join(w.get('issues') or [])}")
+        for r in rep.get("recommendations") or []:
+            print(f"  → {r}")
     return fails
 
 
@@ -3612,6 +3677,14 @@ def run_slo_pack_live(base: str) -> int:
         fails += 1
     else:
         _ok(f"canlı SLO {out.get('passed')}/{out.get('total')}")
+    rep = out.get("weak_point_report") or {}
+    if rep:
+        print(f"\n=== SLO zayıf nokta raporu ===")
+        print(rep.get("summary_tr"))
+        for w in rep.get("weak_turns") or []:
+            print(f"  FAIL {w.get('id')} ({w.get('label')}): {', '.join(w.get('issues') or [])}")
+        for r in rep.get("recommendations") or []:
+            print(f"  ÖNERİ: {r}")
     return fails
 
 

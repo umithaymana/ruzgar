@@ -5429,6 +5429,51 @@ body.faz-z-chat-simple .composer-advanced-fold {
   gap: 0.5rem;
   margin-top: 8px;
 }
+.ana-motor-slo-fold {
+  margin-bottom: 10px;
+}
+.ana-motor-slo-fold > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+  padding: 4px 0 8px;
+}
+.ana-motor-slo-fold > summary::-webkit-details-marker {
+  display: none;
+}
+.ana-motor-slo-fold > summary::before {
+  content: "▸";
+  color: #4ec9b0;
+  margin-right: 4px;
+}
+.ana-motor-slo-fold[open] > summary::before {
+  transform: rotate(90deg);
+  display: inline-block;
+}
+.ana-motor-slo-body {
+  border-top: 1px solid #333;
+  padding-top: 8px;
+}
+.ana-motor-slo-recs {
+  margin: 8px 0 0 1.1rem;
+  font-size: 0.92rem;
+  opacity: 0.92;
+}
+.ana-motor-slo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 8px;
+}
+.ana-motor-slo-fold.slo-pass > summary strong {
+  color: #4ec9b0;
+}
+.ana-motor-slo-fold.slo-fail > summary strong {
+  color: #f97316;
+}
 .ana-motor-research-card,
 .ana-motor-nebula-oneri-card {
   padding: 8px 10px;

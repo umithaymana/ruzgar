@@ -1294,8 +1294,12 @@ function updateFaz7HealthStrip(j) {
   if (d70.ready) bits.push(`70B ✓ ${d70.model || "denge70"}`);
   else if (d70.pull_job?.running) bits.push("70B indiriliyor…");
   else if (d70.auto_chain_ready) bits.push("70B zincir hazır");
+  const sloSt = j.canli_slo_faz_k || {};
+  if (sloSt.job_running) bits.push("SLO koşuluyor…");
+  else if (sloSt.last_score_pct != null) bits.push(`SLO ${sloSt.last_score_pct}%`);
   faz7HealthStripEl.textContent = bits.join(" · ");
   updateDenge70Panel(j);
+  if (sloSt.job) updateSloPanel(sloSt.job);
 }
 
 function updateDenge70Panel(healthPayload) {
@@ -1379,6 +1383,92 @@ async function runDenge70Pull() {
       if (fold) fold.open = true;
       window.setTimeout(() => void refreshDenge70Status(), 4000);
     }
+  } catch {
+    if (hint) hint.textContent = "API bağlantı hatası";
+  }
+}
+
+function updateSloPanel(payload) {
+  const hint = document.getElementById("ana-motor-slo-hint");
+  const detail = document.getElementById("ana-motor-slo-detail");
+  const recsEl = document.getElementById("ana-motor-slo-recs");
+  const fold = document.getElementById("ana-motor-slo-fold");
+  const runBtn = document.getElementById("btn-ana-slo-run");
+  if (!hint || !detail) return;
+  const job = (payload && payload.job) || payload || {};
+  const report = job.last_report || null;
+  const running = !!job.running;
+  if (running) {
+    hint.textContent = job.progress || "Koşuluyor…";
+    detail.textContent =
+      "S1–S10 ardışık sohbet simülasyonu — pencereyi kapatmayın. Bu işlem birkaç dakika sürebilir.";
+    if (fold) fold.open = true;
+    if (runBtn) {
+      runBtn.disabled = true;
+      runBtn.textContent = "SLO koşuluyor…";
+    }
+    if (recsEl) recsEl.innerHTML = "";
+    return;
+  }
+  if (runBtn) {
+    runBtn.disabled = false;
+    runBtn.textContent = "SLO koş (arka plan, ~10 dk)";
+  }
+  if (!report || typeof report !== "object") {
+    hint.textContent = "Henüz rapor yok";
+    detail.textContent =
+      "10 senaryoluk ChatGPT uyum testi. Başlatınca zayıf turlar ve öneriler burada listelenir.";
+    if (recsEl) recsEl.innerHTML = "";
+    if (fold) fold.classList.remove("slo-pass", "slo-fail");
+    return;
+  }
+  hint.textContent = report.summary_tr || `Skor ${report.score_pct || 0}%`;
+  const weak = Array.isArray(report.weak_turns) ? report.weak_turns : [];
+  detail.textContent =
+    weak.length > 0
+      ? `Başarısız: ${weak.map((w) => w.id).join(", ")} · Skor ${report.score_pct || 0}%`
+      : `Tüm senaryolar geçti · Skor ${report.score_pct || 0}%`;
+  if (fold) {
+    fold.classList.toggle("slo-pass", !!report.ok);
+    fold.classList.toggle("slo-fail", !report.ok);
+  }
+  if (recsEl) {
+    const recs = Array.isArray(report.recommendations) ? report.recommendations : [];
+    recsEl.innerHTML = recs.map((r) => `<li>${esc(String(r))}</li>`).join("");
+  }
+}
+
+async function refreshSloStatus() {
+  try {
+    const res = await fetch(`${API}/api/ana-motor/slo-pack/job`, { cache: "no-store" });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) return;
+    updateSloPanel(j);
+    if (j.running) {
+      window.setTimeout(() => void refreshSloStatus(), 8000);
+    }
+  } catch {
+    /* yok say */
+  }
+}
+
+async function runSloPackBackground() {
+  const hint = document.getElementById("ana-motor-slo-hint");
+  if (hint) hint.textContent = "SLO başlatılıyor…";
+  try {
+    const res = await fetch(`${API}/api/ana-motor/slo-pack/run-background`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ live: true }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || j.ok === false) {
+      if (hint) hint.textContent = j.error || "SLO başlatılamadı";
+      return;
+    }
+    const fold = document.getElementById("ana-motor-slo-fold");
+    if (fold) fold.open = true;
+    window.setTimeout(() => void refreshSloStatus(), 3000);
   } catch {
     if (hint) hint.textContent = "API bağlantı hatası";
   }
@@ -1741,6 +1831,10 @@ function wireFazAaChatSearch() {
   if (d70Pull) d70Pull.addEventListener("click", () => void runDenge70Pull());
   const d70Refresh = document.getElementById("btn-ana-denge70-refresh");
   if (d70Refresh) d70Refresh.addEventListener("click", () => void refreshDenge70Status());
+  const sloRun = document.getElementById("btn-ana-slo-run");
+  if (sloRun) sloRun.addEventListener("click", () => void runSloPackBackground());
+  const sloRefresh = document.getElementById("btn-ana-slo-refresh");
+  if (sloRefresh) sloRefresh.addEventListener("click", () => void refreshSloStatus());
   const d70Fold = document.getElementById("ana-motor-denge70-fold");
   if (d70Fold) {
     const savedD70 = localStorage.getItem("ruzgar_denge70_panel_open");
