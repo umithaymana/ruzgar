@@ -2619,6 +2619,58 @@ def run_offline() -> int:
     else:
         _ok("istemci öncelikli disk birleşimi")
 
+    print("\n=== Tek beyin Faz J — bilgi cevap doğrulama ===")
+    from ilim_assistant.ruzgar_tek_beyin_bilgi_guard import (
+        apply_tek_beyin_bilgi_guard,
+        assess_bilgi_topic_alignment,
+        looks_like_bilgi_guard_turn,
+        query_anchor_tokens,
+        tek_beyin_bilgi_guard_enabled,
+        tek_beyin_bilgi_guard_status,
+    )
+
+    if not tek_beyin_bilgi_guard_enabled():
+        _fail("tek_beyin_bilgi_guard", "kapalı")
+        fails += 1
+    else:
+        _ok(f"tek beyin bilgi guard — {tek_beyin_bilgi_guard_status().get('version')}")
+    if not looks_like_bilgi_guard_turn("yavuz kara kimdir"):
+        _fail("bilgi_guard_detect", "kimdir")
+        fails += 1
+    else:
+        _ok("bilgi guard algısı")
+    _anchors = query_anchor_tokens("yavuz kara kimdir")
+    if "yavuz" not in _anchors and "kara" not in _anchors:
+        _fail("query_anchors", str(_anchors))
+        fails += 1
+    else:
+        _ok("soru odak kelimeleri")
+    _bad = "Osmanlı İmparatorluğu 1299 yılında kuruldu ve uzun süre hüküm sürdü."
+    ok_align, ov, _rs = assess_bilgi_topic_alignment("yavuz kara kimdir", _bad)
+    if ok_align:
+        _fail("topic_drift_detect", f"ov={ov}")
+        fails += 1
+    else:
+        _ok("konu kayması algısı")
+    _good = "Yavuz Kara, Türk oyuncu ve yönetmendir."
+    ok2, _, _ = assess_bilgi_topic_alignment("yavuz kara kimdir", _good)
+    if not ok2:
+        _fail("topic_align_good", _good)
+        fails += 1
+    else:
+        _ok("doğru konu hizalaması")
+    _fixed, _meta = apply_tek_beyin_bilgi_guard(
+        _bad,
+        "yavuz kara kimdir",
+        hits=[],
+        web_was_used=False,
+    )
+    if not _meta.get("replaced") or "Güven: düşük" not in _fixed:
+        _fail("bilgi_guard_replace", (_fixed or "")[:80])
+        fails += 1
+    else:
+        _ok("kayıp konu → dürüst fallback")
+
     d70 = denge70_faz_k_status()
     _ok(
         f"denge70 — ready={d70.get('ready')} ram={d70.get('ram_sufficient')} "

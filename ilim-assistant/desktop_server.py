@@ -1285,6 +1285,18 @@ def _health_build_block() -> dict:
     except Exception:
         pass
     try:
+        from ilim_assistant.ruzgar_tek_beyin_izolasyon import tek_beyin_izolasyon_status
+
+        base["tek_beyin_izolasyon"] = tek_beyin_izolasyon_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_tek_beyin_bilgi_guard import tek_beyin_bilgi_guard_status
+
+        base["tek_beyin_bilgi_guard"] = tek_beyin_bilgi_guard_status()
+    except Exception:
+        pass
+    try:
         from ilim_assistant.ruzgar_denge70_faz_k import denge70_faz_k_status
 
         base["denge70_faz_k"] = denge70_faz_k_status()
@@ -11348,6 +11360,8 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         web_used = False
         _noc = None
         _source_trust_card: dict[str, Any] | None = None
+        _refl_meta: dict[str, Any] = {}
+        _tb_bilgi_meta: dict[str, Any] = {}
         try:
             from ilim_assistant.ana_motor_reflection_llm import apply_bilgi_kalite_pass
 
@@ -11363,6 +11377,23 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 question_plan=turn_plan,
                 web_was_used=web_used,
             )
+            try:
+                from ilim_assistant.ruzgar_tek_beyin_bilgi_guard import (
+                    apply_tek_beyin_bilgi_guard,
+                )
+
+                body_fixed, _tb_bilgi_meta = apply_tek_beyin_bilgi_guard(
+                    body_fixed,
+                    msg,
+                    hits=hits,
+                    question_plan=turn_plan,
+                    web_was_used=web_used,
+                    reflection_meta=_refl_meta,
+                )
+                if _tb_bilgi_meta.get("applied"):
+                    _refl_meta = {**(_refl_meta or {}), "tek_beyin_bilgi_guard": _tb_bilgi_meta}
+            except Exception:
+                pass
         except Exception:
             try:
                 from ilim_assistant.ana_motor_reflection import apply_answer_quality_pass
@@ -11379,6 +11410,20 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     question_plan=turn_plan,
                     web_was_used=web_used,
                 )
+                try:
+                    from ilim_assistant.ruzgar_tek_beyin_bilgi_guard import (
+                        apply_tek_beyin_bilgi_guard,
+                    )
+
+                    body_fixed, _tb_bilgi_meta = apply_tek_beyin_bilgi_guard(
+                        body_fixed,
+                        msg,
+                        hits=hits,
+                        question_plan=turn_plan,
+                        web_was_used=web_used,
+                    )
+                except Exception:
+                    pass
             except Exception:
                 pass
         try:
@@ -11420,6 +11465,23 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     ):
                         _fb_body += piece
                     if (_fb_body or "").strip():
+                        try:
+                            from ilim_assistant.ruzgar_tek_beyin_bilgi_guard import (
+                                apply_tek_beyin_bilgi_guard,
+                            )
+
+                            _fb_body, _ = apply_tek_beyin_bilgi_guard(
+                                _fb_body,
+                                msg,
+                                hits=hits,
+                                question_plan=turn_plan,
+                                web_was_used=bool(
+                                    turn_plan is not None
+                                    and getattr(turn_plan, "prefer_web", False)
+                                ),
+                            )
+                        except Exception:
+                            pass
                         full_out = finalize_assistant_reply(_fb_body) + footer
             except Exception:
                 pass
@@ -11497,6 +11559,8 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             done_llm["nebula_oneri_card"] = _noc
         if _source_trust_card and _source_trust_card.get("ok"):
             done_llm["source_trust_card"] = _source_trust_card
+        if _tb_bilgi_meta.get("applied"):
+            done_llm["tek_beyin_bilgi_guard"] = _tb_bilgi_meta
         if mode_norm == "programlama":
             try:
                 from ilim_assistant.motorlar.programlama_faz11 import merge_orchestra_programlama

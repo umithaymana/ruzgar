@@ -98,7 +98,7 @@ function Test-HealthOk {
 
     try {
 
-        $j = Invoke-RestMethod "http://127.0.0.1:$Port/api/health" -TimeoutSec 5
+        $j = Invoke-RestMethod "http://127.0.0.1:$Port/api/health" -TimeoutSec 15
 
         return [bool]$j.ok
 
