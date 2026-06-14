@@ -255,6 +255,8 @@ def ensure_ruzgar_env() -> list[str]:
         os.environ.setdefault("RUZGAR_ARSIV_ONIZLEME", "1")
         os.environ.setdefault("RUZGAR_ARSIV_YAPISTIR", "1")
         os.environ.setdefault("RUZGAR_SLO_ENV_DIFF", "1")
+        os.environ.setdefault("RUZGAR_SLO_ENV_KOPYA", "1")
+        os.environ.setdefault("RUZGAR_ARSIV_HATIRLAT", "1")
 
     sync_global_api_key_aliases()
     try:

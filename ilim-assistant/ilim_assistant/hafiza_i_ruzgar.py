@@ -403,10 +403,38 @@ class HafizaIRuzgar:
         return None
 
     @classmethod
+    def _fuzzy_kimdir_sorgu_adayda_tamam_mi(cls, sorgu: str, aday_soru: str) -> bool:
+        """Kimdir sorusunda fuzzy: sorgudaki her anlamlı kelime adayda (typo toleranslı) bulunmalı.
+
+        Örn. «emine haymana kimdir» yalnızca soyadı «haymana» ile «gökçe nur haymana» kaydına
+        düşmesin — «emine» adayda yoksa eşleşme reddedilir.
+        """
+        sq = cls._norm_eslesme(sorgu)
+        if not re.search(r"\b(kimdir|kimdi|kim)\b", sq):
+            return True
+        sorgu_tok = cls._token_kumesi(sorgu)
+        if not sorgu_tok:
+            return True
+        aday_tok = cls._token_kumesi(aday_soru)
+        if not aday_tok:
+            return False
+        for s in sorgu_tok:
+            if s in aday_tok:
+                continue
+            if any(
+                cls._benzerlik(s, a) >= cls.TOKEN_KELIME_BENZERLIK_ESIK for a in aday_tok
+            ):
+                continue
+            return False
+        return True
+
+    @classmethod
     def _fuzzy_aday_elenmeli_mi(cls, sorgu: str, aday_soru: str) -> bool:
         """Oturum özeti / ham öğretim satırı — «kimdir» sorusunda aday olmasın."""
         aq = cls._norm_eslesme(aday_soru)
         if not aq:
+            return True
+        if aq.startswith("__ruzgar_") or aq.startswith("__"):
             return True
         if aq.startswith("kisisel not") or aq.startswith("oturum ozeti"):
             return True
@@ -461,6 +489,8 @@ class HafizaIRuzgar:
                 token_skor = self._token_kapsama(sorgu_tok, aday_tok)
             final_skor = max(char_skor, token_skor * self.TOKEN_KAPSAMA_AGIRLIK)
             if final_skor < esik:
+                continue
+            if not self._fuzzy_kimdir_sorgu_adayda_tamam_mi(sorgu, k):
                 continue
             if en_iyi is None or final_skor > en_iyi[2]:
                 en_iyi = (cv, k, final_skor)
@@ -723,7 +753,21 @@ def genel_hafiza_lookup_detayli(
     message: str, motor_tipi: str | None = None
 ) -> Optional[dict]:
     """Genel hafıza eşleşmesi + skor + eşleşme türü."""
-    return get_hafiza_motor().ogrenme_cevabi_bak_detayli(message, motor_tipi=motor_tipi)
+    detay = get_hafiza_motor().ogrenme_cevabi_bak_detayli(message, motor_tipi=motor_tipi)
+    if not detay:
+        return None
+    try:
+        from ilim_assistant.ruzgar_tek_beyin_hafiza_seed import sanitize_gokcenur_hafiza_cevap
+
+        cevap = sanitize_gokcenur_hafiza_cevap(
+            str(detay.get("cevap") or ""),
+            soru=str(detay.get("soru") or ""),
+        )
+        if cevap:
+            detay = {**detay, "cevap": cevap}
+    except Exception:
+        pass
+    return detay
 
 
 def etkileşimli_mod() -> None:

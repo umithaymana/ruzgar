@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-06-13 (Faz AB: oturum JSON export + Kaynak panel birleşik Nebula apply)
+**Son güncelleme:** 2026-06-14 (Faz AM: build rev + bu? netleştirme; AK/AL tamamlandı)
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -31,9 +31,10 @@ Modül: `ilim_assistant.nebula_kitap_hafiza` — `desktop_server` sohbetinde kit
 
 ### Sunucu yeniden başlatma (zorunlu kontrol)
 
-1. `.\Ruzgar.ps1 -ForceRestart` (yönetici gerekebilir — 8777 zombi PID).
-2. `ruzgar-desktop/ruzgar_remote_api.txt` → `http://127.0.0.1:8779`.
-3. Dashboard şeridi: `build 2026-05-20-nebula-v1` · **`Nebula kitap ✓`**.
+1. `Ruzgar_TemizBaslat.bat` veya `.\Ruzgar.ps1 -ForceRestart` (yönetici gerekebilir — eski PID).
+2. `ruzgar-desktop/ruzgar_remote_api.txt` → `http://127.0.0.1:8779` (8777 eski).
+3. Dashboard şeridi: `build 2026-06-14-ruzgar-ana-motor-faz-am` · **Faz AK–AL–AM**.
+4. Smoke: `cd ilim-assistant` → `python scripts/ana_motor_smoke.py` (0 hata hedefi).
 4. `tarih_kaynak_buyuk.json` komutu → **anında**: «zaten tarih hafızasında 12190 kayıt» (tekrar yükleme gerekmez). Zorla nebula kopyası: mesaja `zorla nebula` ekle (arka planda, 2–8 dk; «nebula durum» ile izle).
 5. Kitap komutu «Hatırladım» **değil**; büyük dosyada zaman aşımı olmamalı (`nebula-v2-async`).
 

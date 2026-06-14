@@ -12,7 +12,7 @@ if errorlevel 1 (
 
 echo.
 echo [Yonetici] Port 8779/8777 ve Ruzgar API python surecleri durduruluyor...
-set RUZGAR_EXPECTED_BUILD_REV=2026-06-11-ruzgar-sesli-vad-faz-l
+set RUZGAR_EXPECTED_BUILD_REV=2026-06-14-ruzgar-ana-motor-faz-am
 py -3 "%~dp0ilim-assistant\scripts\ruzgar_port_ops.py" kill-all-api --port 8779
 py -3 "%~dp0ilim-assistant\scripts\ruzgar_port_ops.py" kill-process --port 8779
 py -3 "%~dp0ilim-assistant\scripts\ruzgar_port_ops.py" kill-process --port 8777

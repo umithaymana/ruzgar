@@ -5359,9 +5359,14 @@ body.faz-z-chat-simple .composer-advanced-fold {
 .chat-archive-search-preview[hidden] {
   display: none !important;
 }
+.chat-archive-preview-row {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+  margin-bottom: 4px;
+}
 .chat-archive-preview-item {
-  display: block;
-  width: 100%;
+  flex: 1 1 auto;
   text-align: left;
   font-size: 11px;
   line-height: 1.4;
@@ -5377,6 +5382,21 @@ body.faz-z-chat-simple .composer-advanced-fold {
   border-color: #6eb5ff;
   color: #e8ecf0;
   background: #1a2230;
+}
+.chat-archive-preview-recall {
+  flex: 0 0 auto;
+  font-size: 10px;
+  line-height: 1.3;
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid #4a5560;
+  background: #1c2430;
+  color: #8ec5ff;
+  cursor: pointer;
+}
+.chat-archive-preview-recall:hover {
+  border-color: #6eb5ff;
+  background: #243040;
 }
 .ana-motor-slo-env-diff {
   color: #c9a227;

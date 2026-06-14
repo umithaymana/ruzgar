@@ -143,6 +143,14 @@ def lookup_bilgi_kutuphane_hint(message: str) -> Optional[dict[str, Any]]:
         cevap = str(detay.get("cevap") or "").strip()
         if _is_miss_answer(cevap) or _MISS_REPLY.search(cevap):
             continue
+        try:
+            from ilim_assistant.ruzgar_tek_beyin_hafiza_seed import sanitize_gokcenur_hafiza_cevap
+
+            cevap = sanitize_gokcenur_hafiza_cevap(
+                cevap, soru=str(detay.get("soru") or "")
+            )
+        except Exception:
+            pass
         if len(cevap) < 20:
             continue
         skor = float(detay.get("skor") or 0.0)
@@ -160,15 +168,10 @@ def lookup_bilgi_kutuphane_hint(message: str) -> Optional[dict[str, Any]]:
 
 
 def synthesize_kutuphane_reply(message: str, hint: dict[str, Any]) -> str:
+    """Kütüphane eşleşmesi — «kimdir» vb. sorularda doğrudan cevap metni."""
+    del message  # soru metni yanıtta tekrarlanmaz; net cevap öncelikli
     ham = str(hint.get("cevap") or "").strip()
-    if not ham:
-        return ""
-    q = " ".join((message or "").split())[:90]
-    src = str(hint.get("eslesme") or "kütüphane")
-    return (
-        f"Ümit abi, «{q}» sorusunu hafızamdaki bilgi kütüphanemden hatırlıyorum "
-        f"({src} eşleşme):\n\n{ham}"
-    )
+    return ham
 
 
 def try_bilgi_kutuphane_instant_reply(message: str) -> Optional[str]:

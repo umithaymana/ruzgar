@@ -544,12 +544,100 @@ def _status_for_plan(primary: str, web_query: str = "") -> str:
     return base
 
 
+def looks_like_current_geopolitics_question(message: str) -> bool:
+    """Güncel jeopolitik / aktif çatışma — web öncelikli (RAG tarih arşivi yetmez)."""
+    raw = (message or "").strip()
+    if len(raw) < 10:
+        return False
+    low = raw.lower()
+    asc = _norm_ascii(raw)
+    geo = (
+        "iran",
+        "israil",
+        "israel",
+        "abd",
+        "amerika",
+        "ukrayna",
+        "rusya",
+        "gazze",
+        "filistin",
+        "myanmar",
+        "cin",
+        "china",
+        "taiwan",
+        "tayvan",
+        "kore",
+    )
+    time_cues = (
+        "su an",
+        "şu an",
+        "suan",
+        "simdi",
+        "şimdi",
+        "bugun",
+        "bugün",
+        "guncel",
+        "güncel",
+        "son durum",
+        "haber",
+        "son dakika",
+        "halen",
+        "hala",
+        "devam eden",
+    )
+    conflict = (
+        "savas",
+        "savaş",
+        "catisma",
+        "çatışma",
+        "saldir",
+        "saldır",
+        "operasyon",
+        "kimle savas",
+        "kimle savaş",
+        "aktif savas",
+        "aktif savaş",
+        "carpisma",
+        "çarpışma",
+    )
+    has_geo = any(g in asc for g in geo)
+    has_time = any(t in asc or t in low for t in time_cues)
+    has_conflict = any(c in asc or c in low for c in conflict)
+    if has_geo and (has_time or has_conflict):
+        return True
+    if re.search(r"\b(abd|amerika|usa)\b", asc) and has_conflict:
+        return True
+    if re.search(r"\biran\b", asc) and re.search(r"\b(israil|israel|abd|amerika)\b", asc):
+        return True
+    return False
+
+
 def plan_question(
     message: str,
     mode_norm: str,
     motor_flags: dict[str, bool] | None = None,
 ) -> QuestionPlan:
     flags = motor_flags or {}
+    try:
+        from ilim_assistant.ruzgar_tek_beyin import resolve_effective_user_query
+
+        effective_msg = resolve_effective_user_query(message)
+    except Exception:
+        effective_msg = (message or "").strip()
+    if looks_like_current_geopolitics_question(effective_msg):
+        web_q = rewrite_web_search_query(effective_msg, "bilgi", mode_norm)
+        return QuestionPlan(
+            primary="bilgi",
+            secondary=["bilim"],
+            use_ilim_rag=True,
+            prefer_web=True,
+            prefer_archive=False,
+            ambiguous=False,
+            clarification=None,
+            web_query=web_q,
+            rag_query=rewrite_rag_search_query(effective_msg, "bilgi"),
+            status_text="Soru analizi: güncel jeopolitik — web ve kaynak taraması…",
+        )
     try:
         from ilim_assistant.ruzgar_tek_beyin_analiz import (
             classify_question_intent,
@@ -735,7 +823,11 @@ def plan_question(
     try:
         from ilim_assistant.ruzgar_tek_beyin import tek_beyin_plan_override
 
-        _tb = tek_beyin_plan_override(message)
+        _tb = (
+            None
+            if looks_like_clarification_short_query(message)
+            else tek_beyin_plan_override(message)
+        )
         if _tb:
             primary = str(_tb.get("primary") or "hafiza")
             secondary = [x for x in secondary if x != primary][:2]
@@ -835,7 +927,7 @@ def rewrite_web_search_query(message: str, primary: str, mode_norm: str) -> str:
         "yes",
         "on",
     ):
-        if any(
+        recency = any(
             x in low
             for x in (
                 "güncel",
@@ -848,9 +940,16 @@ def rewrite_web_search_query(message: str, primary: str, mode_norm: str) -> str:
                 "2026",
                 "haber",
             )
-        ):
+        )
+        try:
+            recency = recency or looks_like_current_geopolitics_question(message)
+        except Exception:
+            pass
+        if recency:
             if "2026" not in low and "2025" not in low:
                 base = f"{base} 2026"
+            if looks_like_current_geopolitics_question(message) and "güncel" not in low:
+                base = f"{base} güncel"
     words = base.split()
     if primary == "gundelik" and len(words) > 12:
         base = " ".join(words[:12])
@@ -994,6 +1093,22 @@ def looks_like_educational_code_question(message: str) -> bool:
     ):
         return False
     return True
+
+
+_CLARIFY_SHORT_RE = re.compile(
+    r"^(?:bu|o|şu|su|ne|hangisi|hangi|kim|nasıl|nasil|neden|niye|mi|mı|mu|mü)\??$",
+    re.I,
+)
+
+
+def looks_like_clarification_short_query(message: str) -> bool:
+    """«bu?» gibi belirsiz kısa soru — hafıza/chat_history hijack etmesin."""
+    raw = (message or "").strip()
+    if not raw or len(raw) >= 12:
+        return False
+    if _CLARIFY_SHORT_RE.match(raw):
+        return True
+    return "?" in raw and len(raw.split()) <= 2
 
 
 def looks_like_casual_social_chat(message: str) -> bool:

@@ -6,7 +6,7 @@ $Repo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $Assistant = Join-Path $Repo "ilim-assistant"
 $Desktop = $PSScriptRoot
 $ApiPort = 8779
-$ExpectedBuildRev = "2026-06-11-ruzgar-sesli-vad-faz-l"
+$ExpectedBuildRev = "2026-06-14-ruzgar-ana-motor-faz-am"
 if ($env:RUZGAR_API_PORT) { [int]$ApiPort = $env:RUZGAR_API_PORT }
 $env:RUZGAR_EXPECTED_BUILD_REV = $ExpectedBuildRev
 

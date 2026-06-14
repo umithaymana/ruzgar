@@ -1201,7 +1201,7 @@ def _health_build_block() -> dict:
     import os as _os
 
     base = {
-        "rev": "2026-06-11-ruzgar-sesli-vad-faz-l",
+        "rev": "2026-06-14-ruzgar-ana-motor-faz-am",
         "nebula_kitap": True,
         "tek_ses_faz_b": True,
         "orkestrasyon_faz_c": True,
@@ -1435,6 +1435,18 @@ def _health_build_block() -> dict:
         from ilim_assistant.ana_motor_faz_aj_slo_env_diff import slo_env_diff_status
 
         base["slo_env_diff_faz_aj"] = slo_env_diff_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ana_motor_faz_ak_slo_env_kopya import slo_env_kopya_status
+
+        base["slo_env_kopya_faz_ak"] = slo_env_kopya_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ana_motor_faz_ak_arsiv_hatirlat import arsiv_hatirlat_status
+
+        base["arsiv_hatirlat_faz_ak"] = arsiv_hatirlat_status()
     except Exception:
         pass
     try:
@@ -3168,6 +3180,14 @@ def api_ana_motor_slo_env_diff(limit: int = 8) -> dict[str, Any]:
     from ilim_assistant.ana_motor_faz_aj_slo_env_diff import build_slo_env_diff
 
     return build_slo_env_diff(limit=limit)
+
+
+@app.get("/api/ana-motor/slo-pack/env-copy")
+def api_ana_motor_slo_env_copy(limit: int = 8) -> dict[str, Any]:
+    """Faz AK1 — eksik/farklı env satırlarını kopyalamak için metin."""
+    from ilim_assistant.ana_motor_faz_ak_slo_env_kopya import build_copyable_env_diff
+
+    return build_copyable_env_diff(limit=limit)
 
 
 @app.get("/api/ana-motor/arastirma-pro/status")
@@ -9673,7 +9693,13 @@ def _yield_programlama_instant(
 def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
     """SSE/WS: Ana motor durumları → prepare_turn (İdrak + orkestra) → LLM."""
     orch_early: dict[str, Any] = {}
-    msg_early = (req.message or "").strip()
+    msg_raw = (req.message or "").strip()
+    try:
+        from ilim_assistant.ruzgar_tek_beyin import resolve_effective_user_query
+
+        msg_early = resolve_effective_user_query(msg_raw) or msg_raw
+    except Exception:
+        msg_early = msg_raw
     if msg_early:
         try:
             from ilim_assistant.kullanici_baglami import ingest_message

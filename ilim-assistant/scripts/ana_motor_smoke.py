@@ -20,14 +20,22 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 
+def _safe_out(text: str) -> str:
+    try:
+        text.encode(sys.stdout.encoding or "utf-8")
+        return text
+    except (UnicodeEncodeError, LookupError, AttributeError):
+        return text.encode("ascii", "replace").decode("ascii")
+
+
 def _ok(label: str) -> None:
-    print(f"  OK  {label}")
+    print(f"  OK  {_safe_out(label)}")
 
 
 def _fail(label: str, detail: str = "") -> None:
-    msg = f"  FAIL {label}"
+    msg = f"  FAIL {_safe_out(label)}"
     if detail:
-        msg += f" — {detail}"
+        msg += f" — {_safe_out(detail)}"
     print(msg)
 
 
@@ -2377,11 +2385,11 @@ def run_offline() -> int:
     print("\n=== Faz AE2 — PRO ogrenme koprusu ===")
     from ilim_assistant.ana_motor_faz_ae_pro_ogrenme import (
         maybe_boost_learn_after_pro_turn,
-        pro_ogrenme_enabled,
+        pro_ogrenme_bridge_enabled,
         pro_ogrenme_status,
     )
 
-    if not pro_ogrenme_enabled():
+    if not pro_ogrenme_bridge_enabled():
         _fail("pro_ogrenme_enabled", "kapali")
         fails += 1
     else:
@@ -2669,6 +2677,154 @@ def run_offline() -> int:
         fails += 1
     else:
         _ok(f"SLO env diff version={st_aj2.get('version')}")
+
+    print("\n=== Faz AK1 — SLO env kopyala ===")
+    from ilim_assistant.ana_motor_faz_ak_slo_env_kopya import (
+        build_copyable_env_diff,
+        slo_env_kopya_enabled,
+        slo_env_kopya_status,
+    )
+
+    if not slo_env_kopya_enabled():
+        _fail("slo_env_kopya", "kapali")
+        fails += 1
+    else:
+        _ok("SLO env kopya acik")
+    cp = build_copyable_env_diff(limit=6)
+    if not cp.get("enabled"):
+        _fail("env_copy", str(cp)[:80])
+        fails += 1
+    else:
+        _ok(f"Env copy: {cp.get('summary_tr', '')[:48]}")
+    st_ak1 = slo_env_kopya_status()
+    if not st_ak1.get("version"):
+        _fail("slo_env_kopya_status", str(st_ak1))
+        fails += 1
+    else:
+        _ok(f"SLO env kopya version={st_ak1.get('version')}")
+
+    print("\n=== Faz AK2 — arsiv hatirlat ===")
+    from ilim_assistant.ana_motor_faz_ak_arsiv_hatirlat import (
+        arsiv_hatirlat_enabled,
+        arsiv_hatirlat_status,
+        build_archive_recall_card,
+    )
+
+    if not arsiv_hatirlat_enabled():
+        _fail("arsiv_hatirlat", "kapali")
+        fails += 1
+    else:
+        _ok("Arsiv hatirlat acik")
+    card = build_archive_recall_card(
+        {"user_snippet": "test soru", "assistant_snippet": "test cevap uzun"}
+    )
+    if not card.get("body_md"):
+        _fail("archive_recall_card", str(card))
+        fails += 1
+    else:
+        _ok(f"Hatirlat kart: {card.get('badge_tr')}")
+    st_ak2 = arsiv_hatirlat_status()
+    if not st_ak2.get("version"):
+        _fail("arsiv_hatirlat_status", str(st_ak2))
+        fails += 1
+    else:
+        _ok(f"Arsiv hatirlat version={st_ak2.get('version')}")
+
+    print("\n=== Aile hafizasi — cekirdek profiller ===")
+    from ilim_assistant.ruzgar_otomatik_ogrenme import try_bilgi_kutuphane_instant_reply
+    from ilim_assistant.ruzgar_tek_beyin_hafiza_seed import ensure_core_hafiza_profiles
+
+    seed_res = ensure_core_hafiza_profiles()
+    if not seed_res.get("ok"):
+        _fail("aile_seed", str(seed_res.get("error") or seed_res))
+        fails += 1
+    else:
+        _ok(f"aile seed — {seed_res.get('reason') or seed_res.get('version') or 'ok'}")
+
+    _aile_cases = (
+        ("emine haymana kimdir", ("eşidir", "esidir"), ("kızıdır", "kizidir")),
+        ("gokcenur kimdir", ("kızı", "kizi"), ("mimar ümit'in eşi", "senin eşin")),
+        ("busenaz kimdir", ("kız", "kiz"), ()),
+        ("mertcan kimdir", ("oğl", "ogl"), ()),
+        ("kardelen kim", ("nişan", "nisan"), ()),
+        ("babam kim", ("zeki",), ()),
+        ("murat haymana kimdir", ("kardeş", "kardes"), ()),
+        (
+            "emine cicek haymana kimdir",
+            ("kız kardeş", "kiz kardes"),
+            ("eşin emine haymana", "o senin eşin"),
+        ),
+    )
+    for q, must_any, must_not_any in _aile_cases:
+        ans = (try_bilgi_kutuphane_instant_reply(q) or "").lower()
+        if not ans:
+            _fail(f"aile:{q}", "cevap yok")
+            fails += 1
+            continue
+        bad = False
+        if must_any and not any(m in ans for m in must_any):
+            _fail(f"aile:{q}", ans[:72])
+            fails += 1
+            bad = True
+        elif must_not_any and any(m in ans for m in must_not_any):
+            _fail(f"aile:{q} karisma", ans[:72])
+            fails += 1
+            bad = True
+        if not bad:
+            _ok(f"aile: {q[:36]}")
+
+    print("\n=== Hitap + guncel jeopolitik ===")
+    from ilim_assistant.ana_motor_plan import (
+        looks_like_current_geopolitics_question,
+        plan_question,
+        rewrite_web_search_query,
+    )
+    from ilim_assistant.ruzgar_tek_beyin import (
+        looks_like_ruzgar_identity_query,
+        resolve_effective_user_query,
+    )
+
+    voc = resolve_effective_user_query("Rüzgar abd şuan kimle savaşıyor")
+    if "abd" not in voc.lower() or "rüzgar" in voc.lower() or "ruzgar" in voc.lower():
+        _fail("vocative_strip", voc)
+        fails += 1
+    else:
+        _ok(f"hitap ayrildi: {voc[:40]}")
+    if looks_like_ruzgar_identity_query("Rüzgar abd şuan kimle savaşıyor"):
+        _fail("ruzgar_identity", "bilesik mesaj kimlik sanildi")
+        fails += 1
+    else:
+        _ok("bilesik mesaj Rüzgar kimdir degil")
+    if not looks_like_ruzgar_identity_query("Rüzgar kimdir"):
+        _fail("ruzgar_identity2", "kimdir sorusu algilanmadi")
+        fails += 1
+    else:
+        _ok("Rüzgar kimdir algisi")
+    kut_bilesik = try_bilgi_kutuphane_instant_reply(
+        "Rüzgar abd şuan kimle savaşıyor"
+    )
+    if kut_bilesik and "mimar" in kut_bilesik.lower() and "asistan" in kut_bilesik.lower():
+        _fail("kutuphane_vocative", kut_bilesik[:72])
+        fails += 1
+    else:
+        _ok("bilesik mesaj kutuphane self-profile degil")
+    if not looks_like_current_geopolitics_question("abd şuan kimle savaşıyor"):
+        _fail("geo_detect", "jeopolitik algilanmadi")
+        fails += 1
+    else:
+        _ok("jeopolitik soru algisi")
+    p_geo = plan_question("abd şuan kimle savaşıyor", "genel", {})
+    if p_geo.primary != "bilgi" or not p_geo.prefer_web:
+        _fail("geo_plan", f"{p_geo.primary} web={p_geo.prefer_web}")
+        fails += 1
+    else:
+        _ok(f"jeopolitik plan web={p_geo.prefer_web}")
+    wq = rewrite_web_search_query("iran abd çatışma şu an", "bilgi", "genel")
+    if "2026" not in wq:
+        _fail("geo_web_query", wq)
+        fails += 1
+    else:
+        _ok(f"web sorgu: {wq[:48]}")
 
     print("\n=== Faz AB — oturum export / birlesik nebula apply ===")
     from ilim_assistant.ana_motor_faz_ab import (
@@ -3531,6 +3687,18 @@ def run_live(base: str) -> int:
         fails += 1
     elif diff_aj:
         _ok(f"Faz AJ env diff — {str(diff_aj.get('summary_tr') or '')[:48]}")
+    kopya_ak = build.get("slo_env_kopya_faz_ak") or {}
+    if kopya_ak.get("enabled") is False:
+        _fail("slo_env_kopya_faz_ak", str(kopya_ak))
+        fails += 1
+    elif kopya_ak:
+        _ok(f"Faz AK env kopya — version={kopya_ak.get('version')}")
+    hatirlat_ak = build.get("arsiv_hatirlat_faz_ak") or {}
+    if hatirlat_ak.get("enabled") is False:
+        _fail("arsiv_hatirlat_faz_ak", str(hatirlat_ak))
+        fails += 1
+    elif hatirlat_ak:
+        _ok(f"Faz AK arsiv hatirlat — version={hatirlat_ak.get('version')}")
     hs = build.get("hub_sse") or {}
     if hs.get("enabled") is False:
         _fail("hub_sse enabled", str(hs))

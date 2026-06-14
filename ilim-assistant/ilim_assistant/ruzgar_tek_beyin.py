@@ -44,11 +44,37 @@ _KIM_STRIP_RE = re.compile(
     r"\b(?:kimdir|kimdi|kim|kimi|kimesne|nedir)\b",
     re.I,
 )
+_RUZGAR_VOCATIVE_RE = re.compile(
+    r"^(?:"
+    r"r[uü]zgar(?:\s*(?:abi|bey|can[ıi]m|hm|hey))?"
+    r"[\s,;:!?.…\-]+"
+    r")+",
+    re.I,
+)
+_RUZGAR_IDENTITY = re.compile(
+    r"\br[uü]zgar\b.*\b(kimdir|kimdi|kim|kimsin|nesin|nedir)\b|\b"
+    r"(kimdir|kimdi|kim|kimsin|nesin|nedir)\b.*\br[uü]zgar\b",
+    re.I,
+)
 _KNOWN_CIRCLE_ALIASES: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"\bemine(?:\s*haymana)?\b", re.I), "emine haymana"),
+    (re.compile(r"\bemine\s*[çc]i[çc]ek(?:\s*haymana)?\b", re.I), "emine çiçek haymana"),
+    (re.compile(r"\bbusenaz(?:\s*haymana)?\b", re.I), "busenaz haymana"),
+    (re.compile(r"\bmertcan(?:\s*haymana)?\b", re.I), "mertcan haymana"),
+    (re.compile(r"\bkardelen\b", re.I), "kardelen"),
+    (re.compile(r"\bzeki(?:\s*haymana)?\b", re.I), "zeki haymana"),
+    (re.compile(r"\b[sş]ükriye(?:\s*haymana)?\b", re.I), "şükriye haymana"),
+    (re.compile(r"\bmurat(?:\s*haymana)?\b", re.I), "murat haymana"),
+    (re.compile(r"\bmesut(?:\s*haymana)?\b", re.I), "mesut haymana"),
+    (re.compile(r"\bfadime(?:\s*penekli(?:\s*haymana)?)?\b", re.I), "fadime penekli haymana"),
+    (re.compile(r"\bs[uü]leyla(?:\s*[oö]zta[sş](?:\s*haymana)?)?\b", re.I), "süleyla öztaş haymana"),
+    (re.compile(r"\bmeryem(?:\s*y[ıi]ld[ıi]r[ıi]m(?:\s*haymana)?)?\b", re.I), "meryem yıldırım haymana"),
+    (re.compile(r"\bmelek(?:\s*sar[ıi]g[üu]l(?:\s*haymana)?)?\b", re.I), "melek sarıgül haymana"),
+    (re.compile(r"\bfiliz(?:\s*haymana)?\b", re.I), "filiz haymana"),
+    (re.compile(r"\bhatice(?:\s*haymana)?\b", re.I), "hatice haymana"),
     (re.compile(r"g[oö]k[cç]e\s*nur\s*haymana", re.I), "gökçenur"),
     (re.compile(r"g[oö]k[cç]enur(?:\s*haymana)?", re.I), "gökçenur"),
     (re.compile(r"\b[uü]mit(?:\s*abi|\s*bey)?\b", re.I), "ümit"),
-    (re.compile(r"\br[uü]zgar\b", re.I), "rüzgar"),
     (re.compile(r"\byavuz\s*kara\b", re.I), "yavuz kara"),
 )
 _LEGACY_HAFIZA_FILES = ("ogrenme_merkezi.json", "hafiza_arsivi.json")
@@ -97,6 +123,29 @@ def looks_like_personal_memory_query(message: str) -> bool:
             "cocuklarim",
             "eşim",
             "esim",
+            "oğlum",
+            "oglum",
+            "kızım",
+            "kizim",
+            "gelinim",
+            "nişanlı",
+            "nisanli",
+            "busenaz",
+            "mertcan",
+            "kardelen",
+            "babam",
+            "annem",
+            "kardeş",
+            "kardes",
+            "kardeşim",
+            "kardesim",
+            "ablam",
+            "abim",
+            "murat",
+            "mesut",
+            "zeki",
+            "şükriye",
+            "sukriye",
         )
     ):
         return True
@@ -160,9 +209,42 @@ def _strip_kim_question_suffix(message: str) -> str:
     return re.sub(r"\s+", " ", stripped).strip(" ?!.…")
 
 
+def strip_assistant_vocative(message: str) -> str:
+    """«Rüzgar, …» hitabını ayır; asıl soru kalsın."""
+    raw = (message or "").strip()
+    if not raw:
+        return raw
+    stripped = _RUZGAR_VOCATIVE_RE.sub("", raw).strip(" ,;:!?.…")
+    return stripped or raw
+
+
+def looks_like_ruzgar_identity_query(message: str) -> bool:
+    """Kullanıcı yalnızca asistanın kim olduğunu soruyor mu?"""
+    raw = (message or "").strip()
+    if not raw or not re.search(r"\br[uü]zgar\b", _norm_blob(raw), re.I):
+        return False
+    core = strip_assistant_vocative(raw)
+    if len(core.split()) >= 10 and not _RUZGAR_IDENTITY.search(_norm_blob(raw)):
+        return False
+    return bool(_RUZGAR_IDENTITY.search(_norm_blob(raw))) or (
+        _norm_blob(core) in ("ruzgar", "rüzgar") and len(core) <= 12
+    )
+
+
+def resolve_effective_user_query(message: str) -> str:
+    """Hitap + gürültü sonrası asıl kullanıcı sorusu."""
+    raw = (message or "").strip()
+    if not raw:
+        return raw
+    core = strip_assistant_vocative(raw)
+    if len(core) >= 8 and core != raw:
+        return core
+    return raw
+
+
 def memory_lookup_variants(message: str) -> list[str]:
     """Hafıza araması için sorgu varyantları (kimdir soneki, yakın çevre takma adları)."""
-    raw = (message or "").strip()
+    raw = resolve_effective_user_query(message)
     out: list[str] = []
     seen: set[str] = set()
 
@@ -182,11 +264,14 @@ def memory_lookup_variants(message: str) -> list[str]:
         if pat.search(blob) or (stripped and pat.search(_norm_blob(stripped))):
             _add(alias)
             _add(f"{alias} kimdir")
+    if looks_like_ruzgar_identity_query(message):
+        _add("Rüzgar kimdir")
+        _add("rüzgar kimdir")
     return out
 
 
 def matches_known_circle_name(message: str) -> bool:
-    blob = _norm_blob(message)
+    blob = _norm_blob(resolve_effective_user_query(message))
     return any(pat.search(blob) for pat, _ in _KNOWN_CIRCLE_ALIASES)
 
 
@@ -233,11 +318,39 @@ def _lookup_legacy_hafiza_hint(message: str) -> Optional[dict[str, Any]]:
     return None
 
 
+def _skip_hafiza_for_clarification_short(message: str) -> bool:
+    try:
+        from ilim_assistant.ana_motor_plan import looks_like_clarification_short_query
+
+        return looks_like_clarification_short_query(message)
+    except Exception:
+        raw = (message or "").strip()
+        return len(raw) < 8 and "?" in raw
+
+
+def _casual_weak_fuzzy_hafiza_hint(message: str, hint: dict[str, Any] | None) -> bool:
+    """Sohbet selamına zayıf fuzzy «nasılsın» vb. eşleşmeyi yok say."""
+    if not hint:
+        return False
+    try:
+        from ilim_assistant.ana_motor_plan import looks_like_casual_social_chat
+
+        if not looks_like_casual_social_chat(message):
+            return False
+    except Exception:
+        return False
+    if str(hint.get("eslesme") or "") != "fuzzy":
+        return False
+    return float(hint.get("skor") or 0.0) < 0.9
+
+
 def lookup_chat_history_person_hint(
     message: str,
     client_history: list | None = None,
 ) -> Optional[dict[str, Any]]:
     """Disk/oturum sohbet geçmişinden aynı konuya yakın yanıt."""
+    if _skip_hafiza_for_clarification_short(message):
+        return None
     try:
         from ilim_assistant.ana_motor_sohbet_gecmis import search_chat_history
     except Exception:
@@ -371,12 +484,15 @@ def lookup_personal_hafiza_hint(message: str) -> Optional[dict[str, Any]]:
         base_min = min(base_min, 0.55)
     if skor < base_min:
         return None
-    return {
+    hint = {
         "cevap": cevap,
         "soru": str(detay.get("soru") or "").strip(),
         "eslesme": str(detay.get("eslesme") or "fuzzy"),
         "skor": skor,
     }
+    if _casual_weak_fuzzy_hafiza_hint(msg, hint):
+        return None
+    return hint
 
 
 def personal_hafiza_blocks_bilgi_path(message: str) -> bool:
@@ -384,10 +500,19 @@ def personal_hafiza_blocks_bilgi_path(message: str) -> bool:
     if not tek_beyin_enabled():
         return False
     target = resolve_memory_query_message(message)
+    if _skip_hafiza_for_clarification_short(target):
+        return False
+    try:
+        from ilim_assistant.ana_motor_plan import looks_like_casual_social_chat
+
+        if looks_like_casual_social_chat(target):
+            return False
+    except Exception:
+        pass
     if matches_known_circle_name(target):
         return True
     hint = _resolve_personal_hafiza_hint(target)
-    if not hint:
+    if not hint or _casual_weak_fuzzy_hafiza_hint(target, hint):
         return False
     try:
         from ilim_assistant.ruzgar_tek_beyin_dogrulama import should_skip_bilgi_for_weak_hafiza
@@ -447,13 +572,52 @@ def synthesize_hafiza_instant_reply(message: str, hint: dict[str, Any]) -> str:
         return ""
     blob = _norm_blob(message)
     asc = blob.replace("ö", "o").replace("ü", "u").replace("ğ", "g").replace("ç", "c")
+    if "emine" in asc and ("cicek" in asc or "çiçek" in blob):
+        return ham
+    if "emine" in asc and "haymana" in asc:
+        return ham
+    if "busenaz" in asc:
+        return ham
+    if "mertcan" in asc:
+        return ham
+    if "kardelen" in asc or ("gelin" in blob and "kim" in blob):
+        return ham
+    for key in (
+        "babam",
+        "annem",
+        "zeki",
+        "sukriye",
+        "murat",
+        "mesut",
+        "fadime",
+        "suleyla",
+        "meryem",
+        "melek",
+        "filiz",
+        "hatice",
+        "kardes",
+    ):
+        if key in asc or (key == "sukriye" and "sukriye" in asc):
+            return ham
     if "gokcenur" in asc or "gokce nur" in asc:
-        if "mimar" not in ham.lower() and "eş" not in ham.lower() and "es" not in ham.lower():
-            ham = (
-                "Gökçenur Haymana, senin eşin ve Rüzgar projesinin mimarı. "
-                + ham
+        try:
+            from ilim_assistant.ruzgar_tek_beyin_hafiza_seed import sanitize_gokcenur_hafiza_cevap
+
+            ham = sanitize_gokcenur_hafiza_cevap(ham, soru=message)
+        except Exception:
+            ham = re.sub(
+                r"Mimar Ümit'in eşi|senin eşin|Ümit'in eşi",
+                "Mimar Ümit'in kızı",
+                ham,
+                flags=re.I,
             )
-        return f"Ümit abi, Gökçenur'u tanıyorum — {ham}"
+        if "kiz" not in asc.replace("ı", "i") and "kız" not in ham.lower():
+            if "mimar" not in ham.lower():
+                ham = (
+                    "Gökçenur Haymana, senin kızın ve Rüzgar projesinin mimarlarından biri. "
+                    + ham
+                )
+        return ham
     if "yavuz" in blob and "kara" in blob:
         return f"Ümit abi, Yavuz Kara senin yakın çevrenden; hafızama göre: {ham}"
     if "umit" in asc and "kim" in blob:
@@ -552,6 +716,8 @@ def iter_tek_beyin_hafiza_reply(
 def tek_beyin_plan_override(message: str) -> dict[str, Any] | None:
     """plan_question için hafıza önceliği meta."""
     if not tek_beyin_enabled():
+        return None
+    if _skip_hafiza_for_clarification_short(message):
         return None
     target = resolve_memory_query_message(message)
     if not (

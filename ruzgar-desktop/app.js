@@ -4,7 +4,7 @@
  * Kök sonda `/api` ise kırpılır — aksi halde fetch `.../api/api/merkezi-bellek` ile 404 verir.
  */
 const RUZGAR_LOCAL_API_PORT = 8779;
-const RUZGAR_EXPECTED_BUILD_REV = "2026-06-11-ruzgar-sesli-vad-faz-l";
+const RUZGAR_EXPECTED_BUILD_REV = "2026-06-14-ruzgar-ana-motor-faz-am";
 const LS_VAD_USER = "ruzgar_vad_user_v1";
 const RUZGAR_LOCAL_API_FALLBACK = `http://127.0.0.1:${RUZGAR_LOCAL_API_PORT}`;
 
@@ -1464,7 +1464,7 @@ function updateSloPanel(payload) {
   const job = (payload && payload.job) || payload || {};
   const gece = (payload && payload.gece) || job.gece || null;
   const persisted = (payload && payload.last_persisted) || job.last_persisted || null;
-  const report = job.last_report || (payload && payload.report && payload.report.weak_point_report) || null;
+  const report = resolveSloWeakReport(payload, job);
   const running = !!job.running;
   if (geceEl) {
     const geceOn = gece && gece.gece_enabled !== false;
@@ -1574,6 +1574,22 @@ function updateSloPanel(payload) {
   }
 }
 
+function resolveSloWeakReport(payload, job) {
+  const j = job || {};
+  const lr = j.last_report;
+  if (lr && typeof lr === "object" && (lr.score_pct != null || lr.weak_turns || lr.summary_tr)) {
+    return lr;
+  }
+  const saved = payload && payload.report;
+  if (saved && typeof saved === "object") {
+    if (saved.weak_point_report && typeof saved.weak_point_report === "object") {
+      return saved.weak_point_report;
+    }
+    if (saved.score_pct != null || saved.weak_turns) return saved;
+  }
+  return null;
+}
+
 async function refreshSloStatus() {
   try {
     const [jobRes, lastRes, trendRes, actionRes, ozetRes, rehberRes, diffRes] = await Promise.all([
@@ -1592,7 +1608,7 @@ async function refreshSloStatus() {
     const ozet = await ozetRes.json().catch(() => ({}));
     const envRehber = await rehberRes.json().catch(() => ({}));
     const envDiff = await diffRes.json().catch(() => ({}));
-    if (!jobRes.ok) return;
+    if (!jobRes.ok && !lastRes.ok) return;
     const merged = {
       job,
       gece: last.gece || job.gece,
@@ -2179,6 +2195,22 @@ async function copySloEnvRehber() {
   }
 }
 
+async function copySloEnvDiff() {
+  try {
+    const res = await fetch(`${API}/api/ana-motor/slo-pack/env-copy?limit=10`, { cache: "no-store" });
+    const j = await res.json().catch(() => ({}));
+    const text = String(j.copy_text || "");
+    if (!res.ok || !text.trim()) {
+      setStatus(j.summary_tr || "Kopyalanacak env farkı yok", "Rüzgar");
+      return;
+    }
+    await navigator.clipboard.writeText(text);
+    setStatus("Eksik/farklı env satırları panoya kopyalandı", "Rüzgar");
+  } catch {
+    setStatus("Env diff kopyalanamadı", "Rüzgar");
+  }
+}
+
 function clearChatHistorySearch() {
   const input = document.getElementById("chat-history-search");
   const hint = document.getElementById("chat-history-search-hint");
@@ -2228,6 +2260,31 @@ function insertArchivePreviewItem(item) {
   );
 }
 
+function insertArchiveRecallBubble(item) {
+  if (!item || !el.chat) return;
+  dismissChatWelcome();
+  const user = String(item.user_snippet || item.user || "").trim();
+  const assistant = String(item.assistant_snippet || item.assistant || "").trim();
+  if (!user && !assistant) return;
+  const lines = ["**Arşivden hatırlatma**", ""];
+  if (user) lines.push(`**Sen:** ${user.slice(0, 240)}`);
+  if (assistant) lines.push(`**Rüzgar:** ${assistant.slice(0, 360)}`);
+  lines.push("", "*(jsonl arşivinden — kalıcı hafıza korunur.)*");
+  const bubble = document.createElement("div");
+  bubble.className = "bubble assistant chat-archive-recall";
+  const body = lines.join("\n");
+  if (body.includes("```")) {
+    bubble.innerHTML = renderAssistantRichHtml(body);
+    wireAssistantCodeButtons(bubble);
+  } else {
+    bubble.innerHTML = esc(body).replace(/\n/g, "<br>");
+  }
+  applyArchiveRecallBadge(bubble, { badge_tr: "Arşivden · hatırlat", recall_kind: "archive_card" });
+  el.chat.appendChild(bubble);
+  el.chat.scrollTop = el.chat.scrollHeight;
+  setStatus("Arşiv hatırlatma balonu eklendi", "Rüzgar");
+}
+
 function renderArchiveSearchPreview(items, enabled) {
   const preview = document.getElementById("chat-archive-search-preview");
   if (!preview) return;
@@ -2241,15 +2298,26 @@ function renderArchiveSearchPreview(items, enabled) {
   for (let i = 0; i < lastArchivePreviewItems.length; i += 1) {
     const row = lastArchivePreviewItems[i];
     const li = document.createElement("li");
+    li.className = "chat-archive-preview-row";
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "chat-archive-preview-item";
     const u = String(row.user_snippet || row.user || "").trim();
     const a = String(row.assistant_snippet || row.assistant || "").trim();
     btn.title = a ? `Yanıt: ${a.slice(0, 160)}` : "Soruyu yazı alanına yapıştır";
-    btn.textContent = u.length > 110 ? `${u.slice(0, 107)}…` : u;
+    btn.textContent = u.length > 90 ? `${u.slice(0, 87)}…` : u;
     btn.addEventListener("click", () => insertArchivePreviewItem(row));
+    const recallBtn = document.createElement("button");
+    recallBtn.type = "button";
+    recallBtn.className = "chat-archive-preview-recall";
+    recallBtn.title = "Arşiv turunu sohbete balon olarak ekle";
+    recallBtn.textContent = "Hatırlat";
+    recallBtn.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      insertArchiveRecallBubble(row);
+    });
     li.appendChild(btn);
+    li.appendChild(recallBtn);
     preview.appendChild(li);
   }
 }
@@ -2333,6 +2401,8 @@ function wireFazAaChatSearch() {
   if (sloRefresh) sloRefresh.addEventListener("click", () => void refreshSloStatus());
   const sloEnvCopy = document.getElementById("btn-ana-slo-env-copy");
   if (sloEnvCopy) sloEnvCopy.addEventListener("click", () => void copySloEnvRehber());
+  const sloEnvDiffCopy = document.getElementById("btn-ana-slo-env-diff-copy");
+  if (sloEnvDiffCopy) sloEnvDiffCopy.addEventListener("click", () => void copySloEnvDiff());
   const vadSave = document.getElementById("btn-ana-vad-save");
   if (vadSave) vadSave.addEventListener("click", () => void saveVadSettings());
   const vadReset = document.getElementById("btn-ana-vad-reset");

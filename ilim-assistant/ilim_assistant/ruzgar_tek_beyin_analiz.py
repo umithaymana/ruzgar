@@ -113,7 +113,13 @@ def classify_question_intent(message: str) -> dict[str, Any]:
     if not raw:
         out["intent"] = "sohbet"
         return out
-    blob = _norm(raw)
+    try:
+        from ilim_assistant.ruzgar_tek_beyin import resolve_effective_user_query
+
+        effective = resolve_effective_user_query(raw)
+    except Exception:
+        effective = raw
+    blob = _norm(effective)
     try:
         from ilim_assistant.ruzgar_tek_beyin_konusma_akisi import (
             looks_like_meta_feedback,
@@ -134,15 +140,23 @@ def classify_question_intent(message: str) -> dict[str, Any]:
             should_use_personal_hafiza_first,
         )
 
-        if should_use_personal_hafiza_first(raw) or matches_known_circle_name(raw):
+        if should_use_personal_hafiza_first(effective) or matches_known_circle_name(effective):
             out.update(intent="personal", confidence=0.9, skip_web=True, skip_rag=True)
+            return out
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ana_motor_plan import looks_like_current_geopolitics_question
+
+        if looks_like_current_geopolitics_question(effective):
+            out.update(intent="bilgi", confidence=0.92, skip_web=False, skip_rag=False)
             return out
     except Exception:
         pass
     try:
         from ilim_assistant.ruzgar_otomatik_ogrenme import lookup_bilgi_kutuphane_hint
 
-        ku = lookup_bilgi_kutuphane_hint(raw)
+        ku = lookup_bilgi_kutuphane_hint(effective)
         if ku and float(ku.get("skor") or 0) >= 0.68:
             out.update(
                 intent="bilgi_kutuphane",

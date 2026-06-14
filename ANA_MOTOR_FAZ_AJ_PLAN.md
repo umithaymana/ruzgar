@@ -29,4 +29,8 @@ RUZGAR_ARSIV_YAPISTIR=1
 RUZGAR_SLO_ENV_DIFF=1
 ```
 
+## Sıradaki (Faz AK — uygulandı)
+
+Detay: `ANA_MOTOR_FAZ_AK_PLAN.md`
+
 *Bismillah — Ümit & Gökçenur — Faz AJ tamam*

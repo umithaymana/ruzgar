@@ -26,8 +26,6 @@ _CONTRADICTION_CUES = (
 _STOP = frozenset(
     {
         "mit",
-        "emine",
-        "haymana",
         "gökçenur",
         "gokcenur",
         "ümit",
