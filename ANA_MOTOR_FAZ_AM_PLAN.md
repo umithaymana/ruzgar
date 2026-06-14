@@ -13,8 +13,8 @@ Faz AK (SLO env kopyala, arşiv hatırlat) ve AL (hitap ayrıştırma, jeopoliti
 | P0 | Smoke `bu?` → hafıza hijack | `looks_like_clarification_short_query` + tek beyin skip | ✅ AM1 |
 | P0 | Health build eski (Faz L) | `2026-06-14-ruzgar-ana-motor-faz-am` | ✅ AM2 |
 | P1 | PROJE_DURUMU port/build | 8779 + AM build rev | ✅ AM3 |
-| P1 | AK+AL yerel commit | Tek commit/push turu | ⏳ AM4 |
-| P1 | SLO panel canlı doğrulama | TemizBaslat + dashboard | ⏳ AM5 |
+| P1 | AK+AL yerel commit | Tek commit/push turu | ✅ `d656679` |
+| P1 | SLO panel canlı doğrulama | TemizBaslat + dashboard | ⏳ PID 9844 — yönetici restart gerekli |
 | P2 | denge70 model indir | Operasyonel (Ollama pull) | — |
 | P2 | Motor boot 5 vs 7 dokümantasyon | `.cursorrules` uyum notu | ⏳ AM6 |
 
