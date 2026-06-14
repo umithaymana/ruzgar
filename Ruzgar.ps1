@@ -316,7 +316,7 @@ if ($env:RUZGAR_OLLAMA_ONLY -eq "1") {
     Log "Bulut kapali - yerel Ollama"
 }
 
-$script:RuzgarExpectedBuildRev = "2026-06-14-ruzgar-ana-motor-faz-am"
+$script:RuzgarExpectedBuildRev = "2026-06-14-ruzgar-web-first-faz-ap2"
 $env:RUZGAR_EXPECTED_BUILD_REV = $script:RuzgarExpectedBuildRev
 
 function Show-RuzgarFaz60BuildMismatchPrompt {

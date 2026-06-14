@@ -1201,7 +1201,7 @@ def _health_build_block() -> dict:
     import os as _os
 
     base = {
-        "rev": "2026-06-14-ruzgar-ana-motor-faz-am",
+        "rev": "2026-06-14-ruzgar-web-first-faz-ap2",
         "nebula_kitap": True,
         "tek_ses_faz_b": True,
         "orkestrasyon_faz_c": True,
@@ -1354,6 +1354,12 @@ def _health_build_block() -> dict:
     except Exception:
         pass
     try:
+        from ilim_assistant.ana_motor_web_first import web_first_status
+
+        base["web_first_faz_ap"] = web_first_status()
+    except Exception:
+        pass
+    try:
         from ilim_assistant.ana_motor_faz_ad_sentez_pro import sentez_pro_status
 
         base["sentez_pro_faz_ad"] = sentez_pro_status()
@@ -1447,6 +1453,12 @@ def _health_build_block() -> dict:
         from ilim_assistant.ana_motor_faz_ak_arsiv_hatirlat import arsiv_hatirlat_status
 
         base["arsiv_hatirlat_faz_ak"] = arsiv_hatirlat_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ana_motor_idrak_zihin import idrak_zihin_status
+
+        base["idrak_zihin_faz_an"] = idrak_zihin_status()
     except Exception:
         pass
     try:
@@ -10934,7 +10946,9 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
 
                 motor_flags = motor_niyeti_heuristic(req.message)
-                turn_plan = plan_question(req.message, mode_norm, motor_flags)
+                turn_plan = plan_question(
+                    req.message, mode_norm, motor_flags, history=req.history
+                )
                 try:
                     from ilim_assistant.ruzgar_tek_beyin_web_arastirma import (
                         apply_force_web_to_plan,
@@ -10995,6 +11009,60 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                             instant_gundelik=False,
                         )
                         return
+                except Exception:
+                    pass
+                try:
+                    from ilim_assistant.ana_motor_web_first import (
+                        build_web_first_reply,
+                        should_web_first_fast,
+                        web_first_enabled,
+                    )
+
+                    if web_first_enabled() and should_web_first_fast(
+                        req.message,
+                        mode_norm,
+                        turn_plan,
+                        history=req.history,
+                    ):
+                        yield {
+                            "type": "status",
+                            "text": "Web öncelik — hızlı tarama (bulut/Ollama beklemeden)…",
+                        }
+                        reply_body, wf_meta = build_web_first_reply(
+                            req.message,
+                            turn_plan,
+                            history=req.history,
+                        )
+                        if (reply_body or "").strip():
+                            import os as _os_wf
+
+                            step = max(
+                                8,
+                                int(_os_wf.environ.get("RUZGAR_WEB_FIRST_STREAM_CHARS", "14")),
+                            )
+                            for i in range(0, len(reply_body), step):
+                                chunk = reply_body[i : i + step]
+                                yield {"type": "token", "text": chunk}
+                            full_out = finalize_assistant_reply(reply_body)
+                            orch_wf = dict(orch)
+                            orch_wf["web_first_faz_ap"] = True
+                            orch_wf["bilgi_cloud_fast"] = False
+                            if isinstance(wf_meta.get("verify"), dict):
+                                orch_wf["web_first_verify"] = wf_meta["verify"]
+                            yield {
+                                "type": "done",
+                                "full_reply": full_out,
+                                "user_message": (req.message or "").strip(),
+                                "new_wake_used": req.session_wake_used
+                                or message_calls_wake_name(req.message),
+                                "orchestra": orch_wf,
+                                "web_first_faz_ap": True,
+                            }
+                            return
+                        yield {
+                            "type": "status",
+                            "text": "Web sonuç yok — bulut yedek yolu deneniyor…",
+                        }
                 except Exception:
                     pass
                 try:

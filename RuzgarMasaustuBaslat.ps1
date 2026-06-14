@@ -14,7 +14,7 @@ $Log = Join-Path $env:TEMP "ruzgar-masaustu-launch.log"
 
 $ApiErr = Join-Path $env:TEMP "ruzgar-api.err"
 
-$ExpectedRev = "2026-06-14-ruzgar-ana-motor-faz-am"
+$ExpectedRev = "2026-06-14-ruzgar-web-first-faz-ap2"
 
 $Port = 8779
 

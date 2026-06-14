@@ -31,9 +31,26 @@ _USER_AGENT = os.environ.get(
 )
 
 
-def _ddgs_search(query: str, max_results: int) -> List[dict]:
-    from duckduckgo_search import DDGS
+def _ddg_client():
+    import warnings
 
+    try:
+        from ddgs import DDGS
+
+        return DDGS
+    except ImportError:
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                message=r".*duckduckgo_search.*renamed to.*ddgs.*",
+                category=RuntimeWarning,
+            )
+            from duckduckgo_search import DDGS  # type: ignore[no-redef]
+
+            return DDGS
+
+
+def _ddgs_search(query: str, max_results: int) -> List[dict]:
     q = (query or "").strip()
     if not q:
         return []
@@ -44,9 +61,34 @@ def _ddgs_search(query: str, max_results: int) -> List[dict]:
         return list(cached[1])
 
     rows: list[dict] = []
-    with DDGS() as ddgs:
-        for r in ddgs.text(q, max_results=max_results):
-            rows.append(r)
+    try:
+        DDGS = _ddg_client()
+        with DDGS() as ddgs:
+            try:
+                raw = list(
+                    ddgs.text(
+                        q,
+                        max_results=max_results,
+                        region="tr-tr",
+                        safesearch="moderate",
+                        backend="auto",
+                    )
+                )
+            except TypeError:
+                raw = list(ddgs.text(q, max_results=max_results))
+            except Exception:
+                raw = []
+            if not raw:
+                try:
+                    raw = list(ddgs.text(q, max_results=max_results, region="wt-wt"))
+                except Exception:
+                    raw = []
+            for r in raw or []:
+                if isinstance(r, dict):
+                    rows.append(r)
+    except Exception:
+        rows = []
+
     _SEARCH_CACHE[cache_key] = (now, rows)
     return rows
 
@@ -355,11 +397,23 @@ def _ddgs_news_search(query: str, max_results: int) -> list[dict]:
     if not q:
         return []
     try:
-        from duckduckgo_search import DDGS
-
+        DDGS = _ddg_client()
         rows: list[dict] = []
         with DDGS() as ddgs:
-            for r in ddgs.news(q, max_results=max_results):
+            try:
+                raw = list(
+                    ddgs.news(
+                        q,
+                        max_results=max_results,
+                        region="tr-tr",
+                        safesearch="moderate",
+                    )
+                )
+            except TypeError:
+                raw = list(ddgs.news(q, max_results=max_results))
+            except Exception:
+                raw = []
+            for r in raw or []:
                 rows.append(
                     {
                         "title": r.get("title") or "",

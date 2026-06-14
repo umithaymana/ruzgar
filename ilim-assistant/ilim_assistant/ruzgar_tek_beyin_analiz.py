@@ -114,6 +114,28 @@ def classify_question_intent(message: str) -> dict[str, Any]:
         out["intent"] = "sohbet"
         return out
     try:
+        from ilim_assistant.ana_motor_idrak_zihin import analyze_turn, idrak_zihin_enabled
+
+        if idrak_zihin_enabled():
+            _idrak = analyze_turn(raw)
+            if _idrak.intent == "current_events":
+                out.update(
+                    intent="bilgi",
+                    confidence=max(0.92, _idrak.confidence),
+                    skip_web=False,
+                    skip_rag=False,
+                )
+                out["idrak_temporal"] = _idrak.temporal
+                return out
+            if _idrak.intent == "personal":
+                out.update(intent="personal", confidence=0.9, skip_web=True, skip_rag=True)
+                return out
+            if _idrak.intent == "casual":
+                out.update(intent="sohbet", confidence=0.88, skip_web=True, skip_rag=True)
+                return out
+    except Exception:
+        pass
+    try:
         from ilim_assistant.ruzgar_tek_beyin import resolve_effective_user_query
 
         effective = resolve_effective_user_query(raw)

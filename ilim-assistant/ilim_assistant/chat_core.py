@@ -929,6 +929,16 @@ def prepare_turn(
     from ilim_assistant.idrak_on_islem import pretreat_user_turn
 
     msg = pretreat_user_turn(msg, history).text
+    _turn_idrak = None
+    try:
+        from ilim_assistant.ana_motor_idrak_zihin import analyze_turn, idrak_zihin_enabled
+
+        if idrak_zihin_enabled():
+            _turn_idrak = analyze_turn(msg, history)
+            if orchestration_out is not None:
+                orchestration_out["idrak"] = _turn_idrak.to_dict()
+    except Exception:
+        _turn_idrak = None
     try:
         from ilim_assistant.kullanici_baglami import ingest_message
 
@@ -1045,10 +1055,12 @@ def prepare_turn(
     if m in ("genel", "uretim", "gelisim") and not coding_mode:
         try:
             from ilim_assistant.ana_motor_sohbet_gecmis import try_past_conversation_reply
+            from ilim_assistant.ana_motor_idrak_zihin import should_skip_past_conversation_reply
 
-            past_reply = try_past_conversation_reply(msg, client_history=history)
-            if past_reply:
-                return msg, [], "", "", "", past_reply
+            if not should_skip_past_conversation_reply(_turn_idrak):
+                past_reply = try_past_conversation_reply(msg, client_history=history)
+                if past_reply:
+                    return msg, [], "", "", "", past_reply
         except Exception:
             pass
 
@@ -1099,7 +1111,9 @@ def prepare_turn(
         )
 
         if turn_plan is None and _plan_enabled():
-            turn_plan = plan_question(msg, m, motor_flags)
+            turn_plan = plan_question(
+                msg, m, motor_flags, history=history, idrak_pre=_turn_idrak
+            )
         if orchestration_out is not None and turn_plan is not None:
             orchestration_out.setdefault("plan", turn_plan.to_dict())
     except Exception:
@@ -2009,6 +2023,19 @@ def prepare_turn(
 
     if turn_plan is not None and append_plan_directive is not None:
         user_payload = append_plan_directive(user_payload, turn_plan, m)
+
+    try:
+        from ilim_assistant.ana_motor_idrak_zihin import (
+            analyze_turn,
+            build_idrak_zihin_directive,
+            idrak_zihin_enabled,
+        )
+
+        if idrak_zihin_enabled():
+            _idrak_d = _turn_idrak or analyze_turn(msg, history)
+            user_payload = user_payload.rstrip() + build_idrak_zihin_directive(_idrak_d)
+    except Exception:
+        pass
 
     if not (m == "programlama" and _prog_light):
         from ilim_assistant.idrak_entegrasyon import append_idrak_agent_layer

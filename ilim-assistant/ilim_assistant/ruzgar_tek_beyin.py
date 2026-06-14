@@ -318,6 +318,21 @@ def _lookup_legacy_hafiza_hint(message: str) -> Optional[dict[str, Any]]:
     return None
 
 
+def _idrak_blocks_personal_hafiza(message: str) -> bool:
+    try:
+        from ilim_assistant.ana_motor_idrak_zihin import (
+            analyze_turn,
+            idrak_zihin_enabled,
+            should_block_hafiza_path,
+        )
+
+        if not idrak_zihin_enabled():
+            return False
+        return should_block_hafiza_path(analyze_turn(message))
+    except Exception:
+        return False
+
+
 def _skip_hafiza_for_clarification_short(message: str) -> bool:
     try:
         from ilim_assistant.ana_motor_plan import looks_like_clarification_short_query
@@ -350,6 +365,8 @@ def lookup_chat_history_person_hint(
 ) -> Optional[dict[str, Any]]:
     """Disk/oturum sohbet geçmişinden aynı konuya yakın yanıt."""
     if _skip_hafiza_for_clarification_short(message):
+        return None
+    if _idrak_blocks_personal_hafiza(message):
         return None
     try:
         from ilim_assistant.ana_motor_sohbet_gecmis import search_chat_history
@@ -501,6 +518,8 @@ def personal_hafiza_blocks_bilgi_path(message: str) -> bool:
         return False
     target = resolve_memory_query_message(message)
     if _skip_hafiza_for_clarification_short(target):
+        return False
+    if _idrak_blocks_personal_hafiza(target):
         return False
     try:
         from ilim_assistant.ana_motor_plan import looks_like_casual_social_chat
@@ -718,6 +737,8 @@ def tek_beyin_plan_override(message: str) -> dict[str, Any] | None:
     if not tek_beyin_enabled():
         return None
     if _skip_hafiza_for_clarification_short(message):
+        return None
+    if _idrak_blocks_personal_hafiza(message):
         return None
     target = resolve_memory_query_message(message)
     if not (

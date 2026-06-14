@@ -616,6 +616,9 @@ def plan_question(
     message: str,
     mode_norm: str,
     motor_flags: dict[str, bool] | None = None,
+    *,
+    history: list | None = None,
+    idrak_pre: Any | None = None,
 ) -> QuestionPlan:
     flags = motor_flags or {}
     try:
@@ -624,6 +627,22 @@ def plan_question(
         effective_msg = resolve_effective_user_query(message)
     except Exception:
         effective_msg = (message or "").strip()
+
+    try:
+        from ilim_assistant.ana_motor_idrak_zihin import (
+            analyze_turn,
+            apply_idrak_plan_bootstrap,
+            idrak_zihin_enabled,
+        )
+
+        if idrak_zihin_enabled():
+            _idrak = idrak_pre if idrak_pre is not None else analyze_turn(message, history)
+            _early = apply_idrak_plan_bootstrap(message, mode_norm, _idrak)
+            if _early is not None:
+                return _early
+    except Exception:
+        pass
+
     if looks_like_current_geopolitics_question(effective_msg):
         web_q = rewrite_web_search_query(effective_msg, "bilgi", mode_norm)
         return QuestionPlan(
@@ -809,23 +828,47 @@ def plan_question(
     status = _status_for_plan(primary, web_q if prefer_web else "")
 
     if looks_like_past_conversation_query(message):
-        primary = "hafiza"
-        secondary = [x for x in secondary if x != "hafiza"][:2]
-        use_ilim_rag = False
-        prefer_web = False
-        prefer_archive = False
-        ambiguous = False
-        clarification = None
-        web_q = ""
-        rag_q = ""
-        status = _status_for_plan("hafiza", "")
+        _skip_hafiza_recall = False
+        try:
+            from ilim_assistant.ana_motor_idrak_zihin import analyze_turn, idrak_zihin_enabled
+
+            if idrak_zihin_enabled():
+                _idrak_past = idrak_pre if idrak_pre is not None else analyze_turn(
+                    message, history
+                )
+                _skip_hafiza_recall = bool(
+                    _idrak_past.block_archive_recall
+                    or _idrak_past.intent == "current_events"
+                )
+        except Exception:
+            _skip_hafiza_recall = False
+        if not _skip_hafiza_recall:
+            primary = "hafiza"
+            secondary = [x for x in secondary if x != "hafiza"][:2]
+            use_ilim_rag = False
+            prefer_web = False
+            prefer_archive = False
+            ambiguous = False
+            clarification = None
+            web_q = ""
+            rag_q = ""
+            status = _status_for_plan("hafiza", "")
 
     try:
         from ilim_assistant.ruzgar_tek_beyin import tek_beyin_plan_override
+        from ilim_assistant.ana_motor_idrak_zihin import analyze_turn, idrak_zihin_enabled
 
+        _tb_block = False
+        if idrak_zihin_enabled():
+            _idrak_tb = idrak_pre if idrak_pre is not None else analyze_turn(message, history)
+            _tb_block = bool(
+                _idrak_tb.block_hafiza_first
+                or _idrak_tb.block_chat_history_hint
+                or _idrak_tb.intent == "current_events"
+            )
         _tb = (
             None
-            if looks_like_clarification_short_query(message)
+            if looks_like_clarification_short_query(message) or _tb_block
             else tek_beyin_plan_override(message)
         )
         if _tb:

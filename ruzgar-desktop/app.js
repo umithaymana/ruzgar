@@ -4,7 +4,7 @@
  * Kök sonda `/api` ise kırpılır — aksi halde fetch `.../api/api/merkezi-bellek` ile 404 verir.
  */
 const RUZGAR_LOCAL_API_PORT = 8779;
-const RUZGAR_EXPECTED_BUILD_REV = "2026-06-14-ruzgar-ana-motor-faz-am";
+const RUZGAR_EXPECTED_BUILD_REV = "2026-06-14-ruzgar-web-first-faz-ap2";
 const LS_VAD_USER = "ruzgar_vad_user_v1";
 const RUZGAR_LOCAL_API_FALLBACK = `http://127.0.0.1:${RUZGAR_LOCAL_API_PORT}`;
 

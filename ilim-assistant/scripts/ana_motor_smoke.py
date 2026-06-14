@@ -2085,6 +2085,73 @@ def run_offline() -> int:
     else:
         _ok("bilgi sorusu web oncelikli")
 
+    print("\n=== Faz AP — web öncelikli hızlı yol ===")
+    from ilim_assistant.ana_motor_fast import should_bilgi_cloud_fast
+    from ilim_assistant.ana_motor_web_first import (
+        apply_web_first_quality_pass,
+        compose_web_first_reply,
+        should_web_first_fast,
+        web_first_enabled,
+        web_first_status,
+    )
+
+    wf = web_first_status()
+    if not web_first_enabled():
+        _fail("web_first", "kapali")
+        fails += 1
+    else:
+        _ok(f"Web first acik ({wf.get('version', '')[:28]})")
+    _iran_plan = {"primary": "bilgi", "prefer_web": True, "web_query": "iran guncel savas"}
+    if not should_web_first_fast("iran suan kimlerle savasiyor", "genel", _iran_plan):
+        _fail("web_first_iran", "guncel bilgi web first degil")
+        fails += 1
+    else:
+        _ok("guncel jeopolitik web first")
+    if not should_bilgi_cloud_fast("iran suan kimlerle savasiyor", "genel", _iran_plan):
+        _fail("cloud_fast_fallback", "bilgi_cloud_fast yedek yolu kapali")
+        fails += 1
+    else:
+        _ok("bilgi_cloud_fast yedek yolu acik")
+    _mock_rows = [
+        {
+            "title": "Iran conflict update",
+            "body": "Iran is engaged in regional tensions with Israel and allied forces according to recent Reuters reports.",
+            "href": "https://www.reuters.com/world/middle-east/example",
+        },
+        {
+            "title": "Middle East tensions",
+            "body": "Iran regional tensions continue with Israel and proxy groups in the current conflict.",
+            "href": "https://www.bbc.com/news/world-middle-east-example",
+        },
+    ]
+    comp, meta = compose_web_first_reply("iran suan kimlerle savasiyor", _mock_rows)
+    if len(comp) < 40:
+        _fail("web_first_compose", comp[:80])
+        fails += 1
+    else:
+        _ok(f"web snippet birlestirme ({meta.get('used_rows')} parca)")
+    final, vmeta = apply_web_first_quality_pass(
+        "iran suan kimlerle savasiyor", comp, _mock_rows, meta
+    )
+    if not final or vmeta.get("reject"):
+        _fail("web_first_verify", str(vmeta))
+        fails += 1
+    elif "Güven:" not in final:
+        _fail("web_first_guven", final[:80])
+        fails += 1
+    else:
+        _ok(f"web dogrulama guven={vmeta.get('guven')} cov={vmeta.get('coverage')}")
+    _weak_rows = [{"title": "Ads", "body": "Buy shoes online cheap.", "href": "https://spam.example/x"}]
+    _wcomp, _wmeta = compose_web_first_reply("iran suan kimlerle savasiyor", _weak_rows)
+    _wfinal, _wv = apply_web_first_quality_pass(
+        "iran suan kimlerle savasiyor", _wcomp, _weak_rows, _wmeta
+    )
+    if _wfinal and not _wv.get("reject"):
+        _fail("web_first_spam", "alakasiz snippet kabul edildi")
+        fails += 1
+    else:
+        _ok("alakasiz snippet reddi")
+
     print("\n=== Faz AC1 — denge70 otomasyon ===")
     from ilim_assistant.ruzgar_denge70_faz_k import (
         denge70_auto_pull_enabled,
@@ -2825,6 +2892,101 @@ def run_offline() -> int:
         fails += 1
     else:
         _ok(f"web sorgu: {wq[:48]}")
+
+    print("\n=== Faz AN — idrak zihin (zaman + niyet) ===")
+    from ilim_assistant.ana_motor_idrak_zihin import (
+        analyze_turn,
+        idrak_zihin_enabled,
+        should_skip_past_conversation_reply,
+    )
+    from ilim_assistant.ruzgar_tek_beyin import (
+        personal_hafiza_blocks_bilgi_path,
+        tek_beyin_plan_override,
+    )
+
+    if not idrak_zihin_enabled():
+        _fail("idrak_zihin", "kapali")
+        fails += 1
+    else:
+        _ok("idrak zihin acik")
+    iran_q = "iranın şuan kimlerle savaştığı konusu hakkında güncel bilgi ver"
+    idr = analyze_turn(iran_q)
+    if idr.temporal != "present" or idr.intent != "current_events":
+        _fail("idrak_iran", f"t={idr.temporal} i={idr.intent}")
+        fails += 1
+    else:
+        _ok(f"idrak iran — {idr.temporal}/{idr.intent}")
+    if not idr.force_web or not should_skip_past_conversation_reply(idr):
+        _fail("idrak_iran_policy", str(idr.to_dict())[:120])
+        fails += 1
+    else:
+        _ok("idrak: arsiv kapali + web zorunlu")
+    if tek_beyin_plan_override(iran_q) is not None:
+        _fail("idrak_iran_tb", "tek beyin hafiza override kalmis")
+        fails += 1
+    else:
+        _ok("idrak: tek beyin hafiza blok")
+    if personal_hafiza_blocks_bilgi_path(iran_q):
+        _fail("idrak_iran_blocks", "bilgi yolu bloklu")
+        fails += 1
+    else:
+        _ok("idrak: bilgi yolu acik")
+    past_q = "daha once ne konusmustuk"
+    idr_p = analyze_turn(past_q)
+    if idr_p.intent != "archive_recall":
+        _fail("idrak_past", idr_p.intent)
+        fails += 1
+    else:
+        _ok("idrak gecmis sohbet niyeti")
+    em_q = "emine haymana kimdir"
+    idr_e = analyze_turn(em_q)
+    if idr_e.intent != "personal":
+        _fail("idrak_emine", idr_e.intent)
+        fails += 1
+    else:
+        _ok("idrak kisisel niyet")
+    p_iran = plan_question(iran_q, "genel", {})
+    if p_iran.primary != "bilgi" or not p_iran.prefer_web:
+        _fail("idrak_iran_plan", f"{p_iran.primary} web={p_iran.prefer_web}")
+        fails += 1
+    else:
+        _ok(f"idrak plan web={p_iran.prefer_web}")
+
+    print("\n=== Faz AO — sohbet devami devralma ===")
+    from ilim_assistant.ana_motor_idrak_zihin import thread_inherit_enabled
+
+    hist_iran = [
+        {"role": "user", "content": "iran şuan kimlerle savaşıyor"},
+        {"role": "assistant", "content": "Son kaynaklara göre çatışma alanları…"},
+    ]
+    if not thread_inherit_enabled():
+        _fail("thread_inherit", "kapali")
+        fails += 1
+    else:
+        _ok("thread inherit acik")
+    idr_peki = analyze_turn("peki israil?", hist_iran)
+    if idr_peki.intent != "current_events" or idr_peki.temporal != "present":
+        _fail("ao_peki", f"i={idr_peki.intent} t={idr_peki.temporal}")
+        fails += 1
+    else:
+        _ok("ao: peki israil -> guncel devam")
+    if not idr_peki.meta.get("thread_inherit"):
+        _fail("ao_meta", "thread_inherit bayragi yok")
+        fails += 1
+    else:
+        _ok("ao: onceki tur devralindi")
+    p_peki = plan_question("peki israil?", "genel", {}, history=hist_iran)
+    if p_peki.primary != "bilgi" or not p_peki.prefer_web:
+        _fail("ao_plan_peki", f"{p_peki.primary} web={p_peki.prefer_web}")
+        fails += 1
+    else:
+        _ok(f"ao plan devam web={p_peki.prefer_web}")
+    idr_devam = analyze_turn("devam et", hist_iran)
+    if idr_devam.temporal != "present" or not idr_devam.force_web:
+        _fail("ao_devam", str(idr_devam.to_dict())[:100])
+        fails += 1
+    else:
+        _ok("ao: devam et -> guncel zincir")
 
     print("\n=== Faz AB — oturum export / birlesik nebula apply ===")
     from ilim_assistant.ana_motor_faz_ab import (
