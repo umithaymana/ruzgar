@@ -2513,6 +2513,163 @@ def run_offline() -> int:
     else:
         _ok(f"SLO ozet version={st_ag2.get('version')}")
 
+    print("\n=== Faz AH1 — hafiza arsiv durumu ===")
+    from ilim_assistant.ana_motor_faz_ah_hafiza_recall import (
+        build_chat_memory_status,
+        hafiza_recall_enabled,
+        hafiza_recall_status,
+    )
+    from ilim_assistant.ana_motor_sohbet_gecmis import chat_history_stats
+
+    if not hafiza_recall_enabled():
+        _fail("hafiza_recall", "kapali")
+        fails += 1
+    else:
+        _ok("Hafiza recall acik")
+    st_ah1 = hafiza_recall_status()
+    if not st_ah1.get("version"):
+        _fail("hafiza_recall_status", str(st_ah1))
+        fails += 1
+    else:
+        _ok(f"Hafiza recall version={st_ah1.get('version')}")
+    mem = build_chat_memory_status()
+    if mem.get("enabled") and not mem.get("ok"):
+        _fail("chat_memory_status", str(mem)[:80])
+        fails += 1
+    else:
+        _ok(f"Hafiza: {mem.get('summary_tr', '')[:56]}")
+    stats = chat_history_stats()
+    if stats.get("enabled") and stats.get("ok") is False:
+        _fail("chat_history_stats", str(stats))
+        fails += 1
+    else:
+        _ok(f"Arsiv stats turns={stats.get('stored_turns', 0)}")
+
+    print("\n=== Faz AH2 — SLO env rehberi ===")
+    from ilim_assistant.ana_motor_faz_ah_slo_env_rehber import (
+        build_slo_env_rehber,
+        slo_env_rehber_enabled,
+        slo_env_rehber_status,
+    )
+
+    if not slo_env_rehber_enabled():
+        _fail("slo_env_rehber", "kapali")
+        fails += 1
+    else:
+        _ok("SLO env rehber acik")
+    rehber = build_slo_env_rehber(limit=6)
+    if not rehber.get("enabled"):
+        _fail("slo_env_rehber_build", str(rehber)[:80])
+        fails += 1
+    else:
+        _ok(f"Env rehber: {rehber.get('summary_tr', '')[:56]}")
+    st_ah2 = slo_env_rehber_status()
+    if not st_ah2.get("version"):
+        _fail("slo_env_rehber_status", str(st_ah2))
+        fails += 1
+    else:
+        _ok(f"SLO env rehber version={st_ah2.get('version')}")
+
+    print("\n=== Faz AI1 — arsiv rozeti ===")
+    from ilim_assistant.ana_motor_faz_ai_archive_badge import (
+        archive_badge_enabled,
+        archive_badge_status,
+        resolve_archive_recall_turn,
+    )
+
+    if not archive_badge_enabled():
+        _fail("archive_badge", "kapali")
+        fails += 1
+    else:
+        _ok("Arsiv rozeti acik")
+    st_ai1 = archive_badge_status()
+    if not st_ai1.get("version"):
+        _fail("archive_badge_status", str(st_ai1))
+        fails += 1
+    else:
+        _ok(f"Arsiv badge version={st_ai1.get('version')}")
+    turn = resolve_archive_recall_turn("daha once ne konusmustuk")
+    if turn and not turn.get("badge_tr"):
+        _fail("archive_recall_turn", str(turn)[:80])
+        fails += 1
+    elif turn:
+        _ok(f"Arsiv recall badge={turn.get('badge_tr')}")
+
+    print("\n=== Faz AI2 — arsiv arama onizleme ===")
+    from ilim_assistant.ana_motor_faz_ai_arsiv_onizleme import (
+        arsiv_onizleme_enabled,
+        arsiv_onizleme_status,
+        build_archive_search_preview,
+    )
+
+    if not arsiv_onizleme_enabled():
+        _fail("arsiv_onizleme", "kapali")
+        fails += 1
+    else:
+        _ok("Arsiv onizleme acik")
+    prev = build_archive_search_preview("ruzgar", limit=3)
+    if not prev.get("enabled"):
+        _fail("archive_search_preview", str(prev)[:80])
+        fails += 1
+    else:
+        _ok(f"Arsiv onizleme: {prev.get('summary_tr', '')[:48]}")
+    st_ai2 = arsiv_onizleme_status()
+    if not st_ai2.get("version"):
+        _fail("arsiv_onizleme_status", str(st_ai2))
+        fails += 1
+    else:
+        _ok(f"Arsiv onizleme version={st_ai2.get('version')}")
+
+    print("\n=== Faz AJ1 — arsiv yapistir ===")
+    from ilim_assistant.ana_motor_faz_aj_arsiv_yapistir import (
+        arsiv_yapistir_enabled,
+        arsiv_yapistir_status,
+        resolve_archive_insert_text,
+    )
+
+    if not arsiv_yapistir_enabled():
+        _fail("arsiv_yapistir", "kapali")
+        fails += 1
+    else:
+        _ok("Arsiv yapistir acik")
+    st_aj1 = arsiv_yapistir_status()
+    if not st_aj1.get("version"):
+        _fail("arsiv_yapistir_status", str(st_aj1))
+        fails += 1
+    else:
+        _ok(f"Arsiv yapistir version={st_aj1.get('version')}")
+    ins = resolve_archive_insert_text({"user_snippet": "test sorusu", "assistant_snippet": "test cevap"})
+    if not ins.get("insert_text"):
+        _fail("archive_insert", str(ins))
+        fails += 1
+    else:
+        _ok(f"Arsiv insert: {ins.get('insert_text')[:40]}")
+
+    print("\n=== Faz AJ2 — SLO env diff ===")
+    from ilim_assistant.ana_motor_faz_aj_slo_env_diff import (
+        build_slo_env_diff,
+        slo_env_diff_enabled,
+        slo_env_diff_status,
+    )
+
+    if not slo_env_diff_enabled():
+        _fail("slo_env_diff", "kapali")
+        fails += 1
+    else:
+        _ok("SLO env diff acik")
+    diff = build_slo_env_diff(limit=6)
+    if not diff.get("enabled"):
+        _fail("slo_env_diff_build", str(diff)[:80])
+        fails += 1
+    else:
+        _ok(f"SLO env diff: {diff.get('summary_tr', '')[:56]}")
+    st_aj2 = slo_env_diff_status()
+    if not st_aj2.get("version"):
+        _fail("slo_env_diff_status", str(st_aj2))
+        fails += 1
+    else:
+        _ok(f"SLO env diff version={st_aj2.get('version')}")
+
     print("\n=== Faz AB — oturum export / birlesik nebula apply ===")
     from ilim_assistant.ana_motor_faz_ab import (
         birlesik_apply_enabled,
@@ -3338,6 +3495,42 @@ def run_live(base: str) -> int:
         fails += 1
     elif slo_ozet_ag:
         _ok(f"Faz AG SLO ozet — {str(slo_ozet_ag.get('summary_tr') or '')[:48]}")
+    hafiza_ah = build.get("hafiza_recall_faz_ah") or {}
+    if hafiza_ah.get("enabled") is False:
+        _fail("hafiza_recall_faz_ah", str(hafiza_ah))
+        fails += 1
+    elif hafiza_ah:
+        _ok(f"Faz AH hafiza — {str(hafiza_ah.get('summary_tr') or '')[:48]}")
+    env_ah = build.get("slo_env_rehber_faz_ah") or {}
+    if env_ah.get("enabled") is False:
+        _fail("slo_env_rehber_faz_ah", str(env_ah))
+        fails += 1
+    elif env_ah:
+        _ok(f"Faz AH env rehber — {str(env_ah.get('summary_tr') or '')[:48]}")
+    badge_ai = build.get("archive_badge_faz_ai") or {}
+    if badge_ai.get("enabled") is False:
+        _fail("archive_badge_faz_ai", str(badge_ai))
+        fails += 1
+    elif badge_ai:
+        _ok(f"Faz AI arsiv rozeti — version={badge_ai.get('version')}")
+    oniz_ai = build.get("arsiv_onizleme_faz_ai") or {}
+    if oniz_ai.get("enabled") is False:
+        _fail("arsiv_onizleme_faz_ai", str(oniz_ai))
+        fails += 1
+    elif oniz_ai:
+        _ok(f"Faz AI arsiv onizleme — version={oniz_ai.get('version')}")
+    yapistir_aj = build.get("arsiv_yapistir_faz_aj") or {}
+    if yapistir_aj.get("enabled") is False:
+        _fail("arsiv_yapistir_faz_aj", str(yapistir_aj))
+        fails += 1
+    elif yapistir_aj:
+        _ok(f"Faz AJ arsiv yapistir — version={yapistir_aj.get('version')}")
+    diff_aj = build.get("slo_env_diff_faz_aj") or {}
+    if diff_aj.get("enabled") is False:
+        _fail("slo_env_diff_faz_aj", str(diff_aj))
+        fails += 1
+    elif diff_aj:
+        _ok(f"Faz AJ env diff — {str(diff_aj.get('summary_tr') or '')[:48]}")
     hs = build.get("hub_sse") or {}
     if hs.get("enabled") is False:
         _fail("hub_sse enabled", str(hs))

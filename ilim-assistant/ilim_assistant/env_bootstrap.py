@@ -249,6 +249,12 @@ def ensure_ruzgar_env() -> list[str]:
         os.environ.setdefault("RUZGAR_ARASTIRMA_PRO_CARD", "1")
         os.environ.setdefault("RUZGAR_SOHBET_TEMIZ", "1")
         os.environ.setdefault("RUZGAR_SLO_OZET", "1")
+        os.environ.setdefault("RUZGAR_HAFIZA_RECALL", "1")
+        os.environ.setdefault("RUZGAR_SLO_ENV_REHBER", "1")
+        os.environ.setdefault("RUZGAR_ARCHIVE_BADGE", "1")
+        os.environ.setdefault("RUZGAR_ARSIV_ONIZLEME", "1")
+        os.environ.setdefault("RUZGAR_ARSIV_YAPISTIR", "1")
+        os.environ.setdefault("RUZGAR_SLO_ENV_DIFF", "1")
 
     sync_global_api_key_aliases()
     try:

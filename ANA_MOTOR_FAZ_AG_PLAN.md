@@ -32,4 +32,8 @@ RUZGAR_SOHBET_TEMIZ=1
 RUZGAR_SLO_OZET=1
 ```
 
+## Sıradaki (Faz AH — uygulandı)
+
+Detay: `ANA_MOTOR_FAZ_AH_PLAN.md`
+
 *Bismillah — Ümit & Gökçenur — Faz AG tamam*

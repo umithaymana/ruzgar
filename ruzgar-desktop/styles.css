@@ -5343,6 +5343,74 @@ body.faz-z-chat-simple .composer-advanced-fold {
   color: #8a939c;
   flex: 1 1 100%;
 }
+.chat-memory-status-hint {
+  font-size: 11px;
+  color: #6eb5ff;
+  flex: 1 1 100%;
+}
+.chat-archive-search-preview {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  max-height: 132px;
+  overflow: auto;
+  flex: 1 1 100%;
+}
+.chat-archive-search-preview[hidden] {
+  display: none !important;
+}
+.chat-archive-preview-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-size: 11px;
+  line-height: 1.4;
+  padding: 5px 8px;
+  margin: 0 0 4px;
+  border-radius: 6px;
+  border: 1px solid #2c3440;
+  background: #141820;
+  color: #b8c0c8;
+  cursor: pointer;
+}
+.chat-archive-preview-item:hover {
+  border-color: #6eb5ff;
+  color: #e8ecf0;
+  background: #1a2230;
+}
+.ana-motor-slo-env-diff {
+  color: #c9a227;
+}
+.bubble-archive-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #6eb5ff;
+  background: rgba(110, 181, 255, 0.12);
+  border: 1px solid rgba(110, 181, 255, 0.35);
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin-bottom: 6px;
+}
+.bubble.chat-archive-recall {
+  border-left: 3px solid #6eb5ff;
+}
+.ana-motor-slo-env-rehber {
+  font-size: 11px;
+  line-height: 1.45;
+  max-height: 160px;
+  overflow: auto;
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  background: #12151a;
+  border: 1px solid #2a3038;
+  border-radius: 6px;
+  color: #b8c0c8;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
 .bubble.chat-search-hit {
   outline: 2px solid #4ec9b0;
   outline-offset: 2px;

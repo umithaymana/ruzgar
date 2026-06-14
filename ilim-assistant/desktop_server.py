@@ -1402,6 +1402,42 @@ def _health_build_block() -> dict:
     except Exception:
         pass
     try:
+        from ilim_assistant.ana_motor_faz_ah_hafiza_recall import hafiza_recall_status
+
+        base["hafiza_recall_faz_ah"] = hafiza_recall_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ana_motor_faz_ah_slo_env_rehber import slo_env_rehber_status
+
+        base["slo_env_rehber_faz_ah"] = slo_env_rehber_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ana_motor_faz_ai_archive_badge import archive_badge_status
+
+        base["archive_badge_faz_ai"] = archive_badge_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ana_motor_faz_ai_arsiv_onizleme import arsiv_onizleme_status
+
+        base["arsiv_onizleme_faz_ai"] = arsiv_onizleme_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ana_motor_faz_aj_arsiv_yapistir import arsiv_yapistir_status
+
+        base["arsiv_yapistir_faz_aj"] = arsiv_yapistir_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ana_motor_faz_aj_slo_env_diff import slo_env_diff_status
+
+        base["slo_env_diff_faz_aj"] = slo_env_diff_status()
+    except Exception:
+        pass
+    try:
         from ilim_assistant.ruzgar_otomatik_ogrenme import otomatik_ogrenme_status
 
         base["otomatik_ogrenme"] = otomatik_ogrenme_status()
@@ -2998,6 +3034,26 @@ def api_ana_motor_chat_history_clear(
     )
 
 
+@app.get("/api/ana-motor/chat-memory/status")
+def api_ana_motor_chat_memory_status() -> dict[str, Any]:
+    """Faz AH1 — jsonl sohbet arşivi durumu (hafıza geri çağırma)."""
+    from ilim_assistant.ana_motor_faz_ah_hafiza_recall import build_chat_memory_status
+
+    return build_chat_memory_status()
+
+
+@app.get("/api/ana-motor/chat-memory/search-preview")
+def api_ana_motor_chat_memory_search_preview(
+    q: str = "",
+    limit: int = 4,
+    mode: str | None = None,
+) -> dict[str, Any]:
+    """Faz AI2 — arşiv arama önizlemesi."""
+    from ilim_assistant.ana_motor_faz_ai_arsiv_onizleme import build_archive_search_preview
+
+    return build_archive_search_preview(q, limit=limit, mode=mode)
+
+
 @app.get("/api/ana-motor/slo-pack/status")
 def api_ana_motor_slo_pack_status() -> dict[str, Any]:
     """Faz K / AC2 — ChatGPT SLO paketi durumu."""
@@ -3096,6 +3152,22 @@ def api_ana_motor_slo_ozet() -> dict[str, Any]:
     from ilim_assistant.ana_motor_faz_ag_slo_ozet import build_slo_ozet_panel
 
     return build_slo_ozet_panel()
+
+
+@app.get("/api/ana-motor/slo-pack/env-rehber")
+def api_ana_motor_slo_env_rehber(limit: int = 8) -> dict[str, Any]:
+    """Faz AH2 — SLO aksiyon planından kopyalanabilir .env rehberi."""
+    from ilim_assistant.ana_motor_faz_ah_slo_env_rehber import build_slo_env_rehber
+
+    return build_slo_env_rehber(limit=limit)
+
+
+@app.get("/api/ana-motor/slo-pack/env-diff")
+def api_ana_motor_slo_env_diff(limit: int = 8) -> dict[str, Any]:
+    """Faz AJ2 — SLO env rehberi vs canlı ortam."""
+    from ilim_assistant.ana_motor_faz_aj_slo_env_diff import build_slo_env_diff
+
+    return build_slo_env_diff(limit=limit)
 
 
 @app.get("/api/ana-motor/arastirma-pro/status")
@@ -9522,6 +9594,7 @@ def _iter_instant_chat_events(
     programlama_focus_rel: str | None = None,
     programlama_project_rel: str | None = None,
     programlama_expand_tree: bool = False,
+    archive_recall: dict[str, Any] | None = None,
 ) -> Iterator[dict]:
     """Ollama/RAG beklemeden tek tur bitir (SSE/WS)."""
     channel = ""
@@ -9559,6 +9632,12 @@ def _iter_instant_chat_events(
         done["programlama_expand_tree"] = True
     if instant_clarify:
         done["instant_clarify"] = True
+    if archive_recall and isinstance(archive_recall, dict):
+        done["archive_recall"] = {
+            k: archive_recall[k]
+            for k in ("source", "recall_kind", "badge_tr", "version")
+            if k in archive_recall
+        }
     if orch and isinstance(orch, dict) and orch.get("motor_action"):
         done["motor_action"] = dict(orch["motor_action"])
     yield done
@@ -9832,20 +9911,21 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         except Exception:
             pass
         try:
-            from ilim_assistant.ana_motor_sohbet_gecmis import try_past_conversation_reply
+            from ilim_assistant.ana_motor_faz_ai_archive_badge import resolve_archive_recall_turn
 
-            _past_early = try_past_conversation_reply(
+            _past_early = resolve_archive_recall_turn(
                 msg_early,
                 client_history=req.history,
             )
-            if _past_early:
+            if _past_early and _past_early.get("reply"):
                 yield from _iter_instant_chat_events(
-                    _past_early,
+                    str(_past_early["reply"]),
                     msg_early,
                     session_wake_used=req.session_wake_used,
                     msg_for_wake=req.message,
                     orch=orch_early,
                     instant_gundelik=True,
+                    archive_recall=_past_early,
                 )
                 return
         except Exception:
@@ -11250,20 +11330,21 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             pass
 
     try:
-        from ilim_assistant.ana_motor_sohbet_gecmis import try_past_conversation_reply
+        from ilim_assistant.ana_motor_faz_ai_archive_badge import resolve_archive_recall_turn
 
-        _past_reply = try_past_conversation_reply(
+        _past_turn = resolve_archive_recall_turn(
             req.message or "",
             client_history=req.history,
         )
-        if _past_reply:
+        if _past_turn and _past_turn.get("reply"):
             yield from _iter_instant_chat_events(
-                _past_reply,
+                str(_past_turn["reply"]),
                 (req.message or "").strip(),
                 session_wake_used=req.session_wake_used,
                 msg_for_wake=req.message,
                 orch=orch,
                 instant_gundelik=True,
+                archive_recall=_past_turn,
             )
             return
     except Exception:

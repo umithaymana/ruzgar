@@ -366,7 +366,9 @@
           <button type="button" id="btn-chat-history-clear" class="btn-secondary btn-compact" title="Aramayı temizle">Aramayı temizle</button>
           <button type="button" id="btn-chat-panel-clear" class="btn-secondary btn-compact" title="Sohbet ekranını temizle — arşiv hafızası korunur">Sohbeti temizle</button>
           <button type="button" id="btn-chat-history-export" class="btn-secondary btn-compact" title="Sohbet geçmişini JSON indir">Dışa aktar</button>
+          <span id="chat-memory-status-hint" class="chat-memory-status-hint" aria-live="polite"></span>
           <span id="chat-history-search-hint" class="chat-history-search-hint" aria-live="polite"></span>
+          <ul id="chat-archive-search-preview" class="chat-archive-search-preview" hidden aria-live="polite"></ul>
         </div>
         <div class="chat-scroll" id="chat-messages"></div>
         <div id="orchestra-bridge" class="orchestra-bridge" hidden aria-live="polite"></div>
@@ -540,9 +542,12 @@
                 <p id="ana-motor-slo-trend" class="ana-motor-card-sub ana-motor-slo-trend"></p>
                 <ul id="ana-motor-slo-actions" class="ana-motor-slo-actions"></ul>
                 <ul id="ana-motor-slo-recs" class="ana-motor-slo-recs"></ul>
+                <pre id="ana-motor-slo-env-rehber" class="ana-motor-slo-env-rehber" hidden></pre>
+                <p id="ana-motor-slo-env-diff" class="ana-motor-card-sub ana-motor-slo-env-diff"></p>
                 <div class="ana-motor-slo-actions">
                   <button type="button" class="btn-primary btn-compact" id="btn-ana-slo-run">SLO koş (arka plan, ~10 dk)</button>
                   <button type="button" class="btn-secondary btn-compact" id="btn-ana-slo-refresh">Raporu yenile</button>
+                  <button type="button" class="btn-secondary btn-compact" id="btn-ana-slo-env-copy" title="SLO önerilen .env satırlarını panoya kopyala">Env rehberi kopyala</button>
                 </div>
               </div>
             </details>

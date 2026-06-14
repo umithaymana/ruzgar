@@ -120,6 +120,37 @@ def recent_chat_history(*, limit: int | None = None) -> dict[str, Any]:
     }
 
 
+def chat_history_stats() -> dict[str, Any]:
+    """jsonl arşiv özeti — satır sayısı + son tur (Faz AH1)."""
+    if not chat_history_enabled():
+        return {
+            "ok": True,
+            "enabled": False,
+            "stored_turns": 0,
+            "version": FAZ_AA_CHAT_VERSION,
+        }
+    stored = 0
+    if _HISTORY_PATH.is_file():
+        try:
+            stored = sum(1 for line in _HISTORY_PATH.read_text(encoding="utf-8").splitlines() if line.strip())
+        except Exception:
+            stored = 0
+    recent = _load_entries(limit=1)
+    last = recent[0] if recent else {}
+    last_user = str(last.get("user") or "").strip()
+    return {
+        "ok": True,
+        "enabled": True,
+        "stored_turns": stored,
+        "max_store": _MAX_STORE,
+        "last_at": last.get("ts"),
+        "last_mode": last.get("mode"),
+        "last_user_preview": last_user[:120] if last_user else "",
+        "recall_active": stored > 0,
+        "version": FAZ_AA_CHAT_VERSION,
+    }
+
+
 def export_session_chat_history(
     *,
     session_id: str | None = None,

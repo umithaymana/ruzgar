@@ -1147,6 +1147,7 @@ const LS_FAZ7_REDUCED_MOTION = "ruzgarFaz7ReducedMotion";
 let faz7HealthStripEl = null;
 let apiWasOffline = false;
 let lastHealthSnapshot = null;
+let lastArchivePreviewItems = [];
 
 function isHubSseFazDEnabled() {
   const b = lastHealthSnapshot?.build;
@@ -1548,22 +1549,49 @@ function updateSloPanel(payload) {
     const recs = Array.isArray(report.recommendations) ? report.recommendations : [];
     recsEl.innerHTML = recs.map((r) => `<li>${esc(String(r))}</li>`).join("");
   }
+  const rehberEl = document.getElementById("ana-motor-slo-env-rehber");
+  const rehber = (payload && payload.env_rehber) || null;
+  if (rehberEl) {
+    const text = rehber && rehber.checklist_tr ? String(rehber.checklist_tr) : "";
+    if (text) {
+      rehberEl.hidden = false;
+      rehberEl.textContent = text;
+    } else {
+      rehberEl.hidden = true;
+      rehberEl.textContent = "";
+    }
+  }
+  const diffEl = document.getElementById("ana-motor-slo-env-diff");
+  const envDiff = (payload && payload.env_diff) || null;
+  if (diffEl) {
+    if (envDiff && envDiff.summary_tr) {
+      diffEl.textContent = `Env diff (AJ2): ${envDiff.summary_tr}`;
+    } else if (envDiff && envDiff.enabled === false) {
+      diffEl.textContent = "SLO env diff kapalı";
+    } else {
+      diffEl.textContent = "";
+    }
+  }
 }
 
 async function refreshSloStatus() {
   try {
-    const [jobRes, lastRes, trendRes, actionRes, ozetRes] = await Promise.all([
+    const [jobRes, lastRes, trendRes, actionRes, ozetRes, rehberRes, diffRes] = await Promise.all([
       fetch(`${API}/api/ana-motor/slo-pack/job`, { cache: "no-store" }),
       fetch(`${API}/api/ana-motor/slo-pack/last-report`, { cache: "no-store" }),
       fetch(`${API}/api/ana-motor/slo-pack/trend?limit=8`, { cache: "no-store" }),
       fetch(`${API}/api/ana-motor/slo-pack/action-plan?limit=6`, { cache: "no-store" }),
       fetch(`${API}/api/ana-motor/slo-pack/ozet`, { cache: "no-store" }),
+      fetch(`${API}/api/ana-motor/slo-pack/env-rehber?limit=8`, { cache: "no-store" }),
+      fetch(`${API}/api/ana-motor/slo-pack/env-diff?limit=8`, { cache: "no-store" }),
     ]);
     const job = await jobRes.json().catch(() => ({}));
     const last = await lastRes.json().catch(() => ({}));
     const trend = await trendRes.json().catch(() => ({}));
     const actionPlan = await actionRes.json().catch(() => ({}));
     const ozet = await ozetRes.json().catch(() => ({}));
+    const envRehber = await rehberRes.json().catch(() => ({}));
+    const envDiff = await diffRes.json().catch(() => ({}));
     if (!jobRes.ok) return;
     const merged = {
       job,
@@ -1573,6 +1601,8 @@ async function refreshSloStatus() {
       trend,
       action_plan: actionPlan,
       ozet,
+      env_rehber: envRehber,
+      env_diff: envDiff,
     };
     updateSloPanel(merged);
     if (job.running) {
@@ -2104,11 +2134,62 @@ async function runKaynakBirlesikApply() {
   }
 }
 
+async function refreshChatMemoryStatus() {
+  const hint = document.getElementById("chat-memory-status-hint");
+  if (!hint) return;
+  try {
+    const res = await fetch(`${API}/api/ana-motor/chat-memory/status`, { cache: "no-store" });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || j.enabled === false) {
+      hint.textContent = j.summary_tr || "Arşiv kapalı";
+      return;
+    }
+    hint.textContent = j.summary_tr ? `Hafıza: ${j.summary_tr}` : "";
+  } catch {
+    hint.textContent = "";
+  }
+}
+
+async function copySloEnvRehber() {
+  const pre = document.getElementById("ana-motor-slo-env-rehber");
+  let text = pre && !pre.hidden ? String(pre.textContent || "") : "";
+  if (!text.trim()) {
+    try {
+      const res = await fetch(`${API}/api/ana-motor/slo-pack/env-rehber?limit=10`, { cache: "no-store" });
+      const j = await res.json().catch(() => ({}));
+      text = String(j.checklist_tr || "");
+      if (pre && text) {
+        pre.hidden = false;
+        pre.textContent = text;
+      }
+    } catch {
+      setStatus("Env rehberi alınamadı", "Rüzgar");
+      return;
+    }
+  }
+  if (!text.trim()) {
+    setStatus("Kopyalanacak env önerisi yok — önce SLO koşusu", "Rüzgar");
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    setStatus("SLO env rehberi panoya kopyalandı", "Rüzgar");
+  } catch {
+    setStatus("Panoya kopyalanamadı — metni panelden seçin", "Rüzgar");
+  }
+}
+
 function clearChatHistorySearch() {
   const input = document.getElementById("chat-history-search");
   const hint = document.getElementById("chat-history-search-hint");
+  const preview = document.getElementById("chat-archive-search-preview");
   if (input) input.value = "";
   if (hint) hint.textContent = "";
+  lastArchivePreviewItems = [];
+  if (preview) {
+    preview.hidden = true;
+    preview.innerHTML = "";
+  }
   el.chat?.querySelectorAll(".bubble").forEach((b) => {
     b.classList.remove("chat-search-hit", "chat-search-dim");
   });
@@ -2132,6 +2213,47 @@ function highlightChatBubbles(query) {
   return hits;
 }
 
+function insertArchivePreviewItem(item) {
+  if (!item || !el.input) return;
+  const user = String(item.user_snippet || item.user || "").trim();
+  if (!user) return;
+  el.input.value = user;
+  el.input.focus();
+  const ans = String(item.assistant_snippet || item.assistant || "").trim();
+  setStatus(
+    ans
+      ? `Arşiv sorusu yazı alanına geldi · yanıt: ${ans.slice(0, 72)}${ans.length > 72 ? "…" : ""}`
+      : "Arşiv sorusu yazı alanına geldi",
+    "Rüzgar",
+  );
+}
+
+function renderArchiveSearchPreview(items, enabled) {
+  const preview = document.getElementById("chat-archive-search-preview");
+  if (!preview) return;
+  lastArchivePreviewItems = Array.isArray(items) ? items.slice(0, 6) : [];
+  preview.innerHTML = "";
+  if (!enabled || lastArchivePreviewItems.length === 0) {
+    preview.hidden = true;
+    return;
+  }
+  preview.hidden = false;
+  for (let i = 0; i < lastArchivePreviewItems.length; i += 1) {
+    const row = lastArchivePreviewItems[i];
+    const li = document.createElement("li");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "chat-archive-preview-item";
+    const u = String(row.user_snippet || row.user || "").trim();
+    const a = String(row.assistant_snippet || row.assistant || "").trim();
+    btn.title = a ? `Yanıt: ${a.slice(0, 160)}` : "Soruyu yazı alanına yapıştır";
+    btn.textContent = u.length > 110 ? `${u.slice(0, 107)}…` : u;
+    btn.addEventListener("click", () => insertArchivePreviewItem(row));
+    li.appendChild(btn);
+    preview.appendChild(li);
+  }
+}
+
 async function runChatHistorySearch(query) {
   const hint = document.getElementById("chat-history-search-hint");
   const q = String(query || "").trim();
@@ -2143,18 +2265,32 @@ async function runChatHistorySearch(query) {
   if (hint) hint.textContent = localHits ? `${localHits} eşleşme (ekran)` : "Ekranda yok…";
   try {
     const mode = currentMode === "genel" ? "" : currentMode;
-    const url =
-      `${API}/api/ana-motor/chat-history/search?q=${encodeURIComponent(q)}&limit=12` +
-      (mode ? `&mode=${encodeURIComponent(mode)}` : "");
-    const res = await fetch(url, { cache: "no-store" });
-    const j = await res.json().catch(() => ({}));
-    if (!res.ok || !j.ok) return;
-    const remote = Number(j.count || 0);
-    if (hint) {
-      const bits = [];
-      if (localHits) bits.push(`${localHits} ekran`);
-      if (remote) bits.push(`${remote} arşiv`);
-      hint.textContent = bits.length ? bits.join(" · ") : "Sonuç yok";
+    const modeQs = mode ? `&mode=${encodeURIComponent(mode)}` : "";
+    const [searchRes, previewRes] = await Promise.all([
+      fetch(
+        `${API}/api/ana-motor/chat-history/search?q=${encodeURIComponent(q)}&limit=12${modeQs}`,
+        { cache: "no-store" },
+      ),
+      fetch(
+        `${API}/api/ana-motor/chat-memory/search-preview?q=${encodeURIComponent(q)}&limit=4${modeQs}`,
+        { cache: "no-store" },
+      ),
+    ]);
+    const j = await searchRes.json().catch(() => ({}));
+    const pv = await previewRes.json().catch(() => ({}));
+    if (searchRes.ok && j.ok) {
+      const remote = Number(j.count || 0);
+      if (hint) {
+        const bits = [];
+        if (localHits) bits.push(`${localHits} ekran`);
+        if (remote) bits.push(`${remote} arşiv`);
+        hint.textContent = bits.length ? bits.join(" · ") : "Sonuç yok";
+      }
+    }
+    if (previewRes.ok && pv.enabled !== false && pv.count > 0) {
+      renderArchiveSearchPreview(pv.items, true);
+    } else {
+      renderArchiveSearchPreview([], false);
     }
   } catch {
     /* yok say */
@@ -2195,6 +2331,8 @@ function wireFazAaChatSearch() {
   if (sloRun) sloRun.addEventListener("click", () => void runSloPackBackground());
   const sloRefresh = document.getElementById("btn-ana-slo-refresh");
   if (sloRefresh) sloRefresh.addEventListener("click", () => void refreshSloStatus());
+  const sloEnvCopy = document.getElementById("btn-ana-slo-env-copy");
+  if (sloEnvCopy) sloEnvCopy.addEventListener("click", () => void copySloEnvRehber());
   const vadSave = document.getElementById("btn-ana-vad-save");
   if (vadSave) vadSave.addEventListener("click", () => void saveVadSettings());
   const vadReset = document.getElementById("btn-ana-vad-reset");
@@ -2208,6 +2346,7 @@ function wireFazAaChatSearch() {
   if (sentezProRefresh) sentezProRefresh.addEventListener("click", () => void refreshSentezProStatus());
   void refreshSentezProStatus();
   void refreshSloStatus();
+  void refreshChatMemoryStatus();
   const d70Fold = document.getElementById("ana-motor-denge70-fold");
   if (d70Fold) {
     const savedD70 = localStorage.getItem("ruzgar_denge70_panel_open");
@@ -10756,6 +10895,20 @@ function esc(s) {
   return d.innerHTML;
 }
 
+function applyArchiveRecallBadge(bubble, meta) {
+  if (!bubble || !meta || !meta.badge_tr) return;
+  bubble.classList.add("chat-archive-recall");
+  bubble.dataset.recallKind = String(meta.recall_kind || "generic");
+  let badge = bubble.querySelector(".bubble-archive-badge");
+  if (!badge) {
+    badge = document.createElement("span");
+    badge.className = "bubble-archive-badge";
+    badge.setAttribute("aria-label", "Yanıt sohbet arşivinden");
+    bubble.prepend(badge);
+  }
+  badge.textContent = String(meta.badge_tr);
+}
+
 /** UTF-8 yanlışlıkla Latin-1 gibi okunmuşsa (Ãœ, Ä±) düzelt — birikmiş metin üzerinde */
 /** Sunucu full_reply bazen UTF-8 iki kez yanlış okunmuş gibi gelir; akış metni düzgün kalır */
 function looksLikeMojibake(s) {
@@ -14278,6 +14431,9 @@ async function streamChat(userText, streamOpts = {}) {
         wireAssistantCodeButtons(responseBubble);
       } else {
         responseBubble.innerHTML = esc(full).replace(/\n/g, "<br>");
+      }
+      if (ev.archive_recall) {
+        applyArchiveRecallBadge(responseBubble, ev.archive_recall);
       }
       lastAssistantReply = full;
       if (window.RuzgarTercumeAtolye) window.RuzgarTercumeAtolye.onAssistantReply(full);
