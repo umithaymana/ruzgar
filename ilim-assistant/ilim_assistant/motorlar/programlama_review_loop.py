@@ -101,6 +101,8 @@ def format_review_loop_instant_report(rep: dict[str, Any]) -> str:
         "Ümit abi, **P6 review loop gate** (S9):",
         "",
         f"Sonuç: **{'OK' if rep.get('ok') else 'KIRIK'}**",
+        "**Sonraki:** `patch özeti` · `p8 gate`",
+        "",
     ]
     for key, ok in checks.items():
         lines.append(f"- {'✓' if ok else '✗'} {key}")

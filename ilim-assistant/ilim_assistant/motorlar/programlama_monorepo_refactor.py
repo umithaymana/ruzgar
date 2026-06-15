@@ -110,6 +110,8 @@ def format_monorepo_refactor_instant_report(rep: dict[str, Any]) -> str:
         "Ümit abi, **P5 monorepo refactor gate** (S8):",
         "",
         f"Sonuç: **{'OK' if rep.get('ok') else 'KIRIK'}**",
+        "**Sonraki:** `p6 gate`",
+        "",
     ]
     for key, ok in checks.items():
         lines.append(f"- {'✓' if ok else '✗'} {key}")

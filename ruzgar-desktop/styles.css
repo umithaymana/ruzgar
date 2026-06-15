@@ -5204,6 +5204,21 @@ body.faz7-reduced-motion .agent-step-active .agent-step-label {
   border-left: 3px solid #4ec9b0;
   background: linear-gradient(135deg, #262a2d 0%, #202728 100%);
 }
+.bubble.assistant.chat-gate-report {
+  border-left: 3px solid #569cd6;
+  background: linear-gradient(135deg, #262a30 0%, #1e2430 100%);
+  max-height: min(52vh, 440px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.chat-gate-quick-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #3c3c3c;
+}
 .chat-source-trust-wrap {
   margin: 4px 0 10px 8px;
   max-width: 96%;

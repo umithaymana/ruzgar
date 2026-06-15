@@ -11019,6 +11019,52 @@ function attachSourceTrustBadge(bubbleEl, card) {
   }
 }
 
+function isGateReportText(text) {
+  const t = String(text || "");
+  return (
+    /\bP[5-9]\b.*gate\b/i.test(t) ||
+    /monorepo refactor gate/i.test(t) ||
+    /review loop gate/i.test(t) ||
+    /delivery gate/i.test(t) ||
+    /non-block gate/i.test(t)
+  );
+}
+
+function appendGateQuickBar(bubbleEl, text) {
+  if (currentMode !== "programlama" || !bubbleEl) return;
+  const low = String(text || "").toLowerCase();
+  const bar = document.createElement("div");
+  bar.className = "chat-gate-quick-bar";
+  const addBtn = (label, cmd) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "btn-secondary btn-compact";
+    b.textContent = label;
+    b.addEventListener("click", () => {
+      if (el.msgInput) {
+        el.msgInput.value = cmd;
+        el.msgInput.focus();
+      }
+    });
+    bar.appendChild(b);
+  };
+  if (low.includes("p9 delivery") || low.includes("delivery gate")) {
+    addBtn("Zayıflık raporu", "zayıflık raporu");
+    addBtn("PR hazırla", "pr hazırla: ");
+  } else if (low.includes("p8 agent") || low.includes("non-block gate")) {
+    addBtn("P9 gate", "p9 gate");
+    addBtn("P6 gate", "p6 gate");
+  } else if (low.includes("p6 review") || low.includes("review loop")) {
+    addBtn("Patch özeti", "patch özeti");
+    addBtn("P8 gate", "p8 gate");
+  } else if (low.includes("p5 monorepo") || low.includes("refactor gate")) {
+    addBtn("P6 gate", "p6 gate");
+  }
+  if (bar.childNodes.length) {
+    bubbleEl.insertBefore(bar, bubbleEl.firstChild);
+  }
+}
+
 function shouldShowProgRollbackBar(text) {
   if (currentMode !== "programlama") return false;
   const t = String(text || "");
@@ -11049,6 +11095,7 @@ function appendBubble(role, text, opts = {}) {
   if (role === "assistant" && opts.error) cls += " chat-error-bubble";
   if (role === "assistant" && opts.clarify) cls += " chat-clarify";
   if (role === "assistant" && opts.actionCard) cls += " chat-action-card";
+  if (role === "assistant" && isGateReportText(text)) cls += " chat-gate-report";
   div.className = cls;
   if (role === "assistant" && opts.error) {
     div.innerHTML = renderChatErrorHtml(String(text || ""));
@@ -11113,10 +11160,13 @@ function appendBubble(role, text, opts = {}) {
     });
   } else {
     div.innerHTML = esc(text).replace(/\n/g, "<br>");
-    if (role === "assistant") appendProgReviewRollbackBar(div, text);
+    if (role === "assistant") {
+      if (isGateReportText(text)) appendGateQuickBar(div, text);
+      appendProgReviewRollbackBar(div, text);
+    }
   }
   el.chat.appendChild(div);
-  scrollChatToBottom({ smooth: role === "user" });
+  scrollChatToBottom({ smooth: role === "user", force: true });
   if (role === "user") {
     pushMotorChatHistory("user", text, opts);
   }

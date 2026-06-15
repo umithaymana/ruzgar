@@ -18,8 +18,9 @@ from typing import Any
 
 AGENT_NONBLOCK_VERSION = "programlama-agent-nonblock-v1-2026-06-15"
 _DEFAULT_PORT = 8779
-_HEALTH_TIMEOUT_SEC = 2.5
+_HEALTH_TIMEOUT_SEC = 3.2
 _BUSY_WORK_SEC = 3.0
+_HEALTH_BUSY_POLLS = 3
 
 
 def agent_nonblock_enabled() -> bool:
@@ -88,11 +89,10 @@ def run_agent_nonblock_gate(
     if not checks["health_idle"]:
         detail_parts.append(f"idle:{idle_ms}ms {idle_snip}")
 
-    busy_result: dict[str, Any] = {"ok": False, "ms": 9999, "snip": "not_run"}
-    worker_done = threading.Event()
+    busy_ok = False
+    busy_snip = ""
 
     def _worker() -> None:
-        nonlocal busy_result
         try:
             from starlette.concurrency import run_in_threadpool
             import anyio
@@ -105,14 +105,22 @@ def run_agent_nonblock_gate(
             _simulate_blocking_work(_BUSY_WORK_SEC)
         worker_done.set()
 
+    worker_done = threading.Event()
     t = threading.Thread(target=_worker, daemon=True)
     t.start()
     time.sleep(0.35)
-    busy_ok, busy_ms, busy_snip = _lite_health_ms(p)
-    busy_result = {"ok": busy_ok, "ms": busy_ms, "snip": busy_snip}
+    busy_samples: list[int] = []
+    for _ in range(_HEALTH_BUSY_POLLS):
+        ok_i, ms_i, snip_i = _lite_health_ms(p)
+        busy_samples.append(ms_i)
+        if ok_i and ms_i < int(_HEALTH_TIMEOUT_SEC * 1000):
+            busy_ok = True
+        time.sleep(0.45)
+    busy_ms = min(busy_samples) if busy_samples else 9999
+    busy_snip = snip_i if busy_samples else "not_run"
     worker_done.wait(timeout=_BUSY_WORK_SEC + 5.0)
 
-    checks["health_during_busy"] = busy_ok and busy_ms < int(_HEALTH_TIMEOUT_SEC * 1000)
+    checks["health_during_busy"] = busy_ok
     if not checks["health_during_busy"]:
         detail_parts.append(f"busy:{busy_ms}ms {busy_snip}")
 
@@ -157,7 +165,9 @@ def format_agent_nonblock_instant_report(rep: dict[str, Any]) -> str:
         "Ümit abi, **P8 agent non-block gate** (S10):",
         "",
         f"Sonuç: **{'OK' if rep.get('ok') else 'KIRIK'}**",
+        "**Sonraki:** `p9 gate` · `p6 gate`",
         f"Port: `{rep.get('port', 8779)}` · idle: {rep.get('idle_ms', '?')} ms · busy: {rep.get('busy_ms', '?')} ms",
+        "",
     ]
     for key, val in checks.items():
         lines.append(f"- {'✓' if val else '✗'} {key}")

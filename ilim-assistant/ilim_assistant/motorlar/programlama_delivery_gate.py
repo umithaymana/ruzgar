@@ -33,6 +33,8 @@ def format_delivery_instant_report(rep: dict[str, Any]) -> str:
         "Ümit abi, **P9 delivery gate** (S11):",
         "",
         f"Sonuç: **{'OK' if rep.get('ok') else 'KIRIK'}**",
+        "**Sonraki komutlar:** `zayıflık raporu` · `pr hazırla: başlık`",
+        "",
     ]
     for key, ok in checks.items():
         lines.append(f"- {'✓' if ok else '✗'} {key}")
@@ -42,7 +44,6 @@ def format_delivery_instant_report(rep: dict[str, Any]) -> str:
     branch = str(rep.get("pr_branch") or "").strip()
     if branch:
         lines.append(f"PR dalı: `{branch}` · gh: {'✓' if rep.get('gh_available') else '—'}")
-    lines.append(f"\nKomutlar: `zayıflık raporu` · `pr hazırla: başlık`")
     lines.append(f"({DELIVERY_GATE_VERSION})")
     return "\n".join(lines)
 
