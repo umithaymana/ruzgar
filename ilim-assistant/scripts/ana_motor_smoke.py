@@ -2152,6 +2152,39 @@ def run_offline() -> int:
     else:
         _ok("alakasiz snippet reddi")
 
+    print("\n=== Faz AQ — sohbet hattı kopukluk onarımı ===")
+    from ilim_assistant.ana_motor_idrak_zihin import analyze_turn
+    from ilim_assistant.ana_motor_skip import should_skip_stream_prefetch
+    from ilim_assistant.ruzgar_tek_beyin import (
+        _idrak_blocks_personal_hafiza,
+        should_use_personal_hafiza_first,
+    )
+
+    hist_iran = [
+        {"role": "user", "content": "iran suan kimlerle savasiyor"},
+        {"role": "assistant", "content": "Iran regional conflict summary."},
+    ]
+    if not _idrak_blocks_personal_hafiza("peki israil?", hist_iran):
+        _fail("aq_idrak_block", "peki israil hafiza bloklanmadi")
+        fails += 1
+    else:
+        _ok("peki israil idrak ile hafiza blok")
+    if should_use_personal_hafiza_first("peki israil?", hist_iran):
+        _fail("aq_hafiza_first", "guncel devam hafiza first acik")
+        fails += 1
+    else:
+        _ok("guncel devam hafiza first kapali")
+    if not should_skip_stream_prefetch(
+        "iran suan kimlerle savasiyor",
+        [],
+        "genel",
+        question_plan={"primary": "bilgi", "prefer_web": True},
+    ):
+        _fail("aq_prefetch_web", "web first prefetch skip yok")
+        fails += 1
+    else:
+        _ok("web first prefetch skip")
+
     print("\n=== Faz AC1 — denge70 otomasyon ===")
     from ilim_assistant.ruzgar_denge70_faz_k import (
         denge70_auto_pull_enabled,

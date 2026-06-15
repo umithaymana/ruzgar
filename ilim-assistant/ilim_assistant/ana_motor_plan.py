@@ -869,7 +869,7 @@ def plan_question(
         _tb = (
             None
             if looks_like_clarification_short_query(message) or _tb_block
-            else tek_beyin_plan_override(message)
+            else tek_beyin_plan_override(message, history)
         )
         if _tb:
             primary = str(_tb.get("primary") or "hafiza")

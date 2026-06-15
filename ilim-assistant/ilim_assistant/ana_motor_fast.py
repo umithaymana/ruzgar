@@ -33,10 +33,28 @@ def bilgi_cloud_fast_enabled() -> bool:
     )
 
 
+def _plan_primary(question_plan: Any | None) -> str:
+    if question_plan is None:
+        return ""
+    if isinstance(question_plan, dict):
+        return str(question_plan.get("primary") or "").strip().lower()
+    return str(getattr(question_plan, "primary", "") or "").strip().lower()
+
+
+def _plan_use_rag(question_plan: Any | None) -> bool:
+    if question_plan is None:
+        return True
+    if isinstance(question_plan, dict):
+        return bool(question_plan.get("use_ilim_rag", True))
+    return bool(getattr(question_plan, "use_ilim_rag", True))
+
+
 def should_bilgi_cloud_fast(
     message: str,
     mode_norm: str,
     question_plan: Any | None = None,
+    *,
+    history: list | None = None,
 ) -> bool:
     if not bilgi_cloud_fast_enabled() or not fast_paths_enabled():
         return False
@@ -45,9 +63,7 @@ def should_bilgi_cloud_fast(
     msg = (message or "").strip()
     if len(msg) < 8 or len(msg) > 600:
         return False
-    primary = ""
-    if question_plan is not None:
-        primary = str(getattr(question_plan, "primary", "") or "").strip().lower()
+    primary = _plan_primary(question_plan)
     if primary not in ("bilgi", "bilim", "dilbilgisi"):
         return False
     try:
@@ -61,7 +77,7 @@ def should_bilgi_cloud_fast(
             return False
         from ilim_assistant.ruzgar_tek_beyin import personal_hafiza_blocks_bilgi_path
 
-        if personal_hafiza_blocks_bilgi_path(msg):
+        if personal_hafiza_blocks_bilgi_path(msg, history):
             return False
     except Exception:
         pass
@@ -78,9 +94,7 @@ def iter_bilgi_cloud_fast_reply(
     from ilim_assistant.chat_core import pick_system, prior_messages_for_turn
     from ilim_assistant.llm_brain import stream_ilim_cloud_reply
 
-    primary = ""
-    if question_plan is not None:
-        primary = str(getattr(question_plan, "primary", "") or "").strip().lower()
+    primary = _plan_primary(question_plan)
     topic = "bilim/tarih" if primary == "bilim" else "bilgi"
     try:
         from ilim_assistant.ruzgar_tek_beyin_tek_ses import build_bilgi_cloud_voice_instruction
@@ -115,6 +129,8 @@ def should_fast_direct_llm(
     message: str,
     mode_norm: str,
     question_plan: Any | None = None,
+    *,
+    history: list | None = None,
 ) -> bool:
     """
     Hafızada yok / ansiklopedik bilgi: ağır prepare_turn yerine doğrudan LLM.
@@ -128,11 +144,8 @@ def should_fast_direct_llm(
     if len(msg) < 4 or len(msg) > 500:
         return False
 
-    primary = ""
-    use_rag = True
-    if question_plan is not None:
-        primary = str(getattr(question_plan, "primary", "") or "").strip().lower()
-        use_rag = bool(getattr(question_plan, "use_ilim_rag", True))
+    primary = _plan_primary(question_plan)
+    use_rag = _plan_use_rag(question_plan)
 
     try:
         from ilim_assistant.ana_motor_plan import (
@@ -146,7 +159,7 @@ def should_fast_direct_llm(
             return False
         from ilim_assistant.ruzgar_tek_beyin import personal_hafiza_blocks_bilgi_path
 
-        if personal_hafiza_blocks_bilgi_path(msg):
+        if personal_hafiza_blocks_bilgi_path(msg, history):
             return False
         if is_casual_conversation_turn(msg, mode_norm, question_plan):
             return False
@@ -248,9 +261,7 @@ def iter_fast_direct_llm_reply(
     from ilim_assistant.chat_core import pick_system, prior_messages_for_turn
     from ilim_assistant.llm_brain import stream_chat_with_brain
 
-    primary = ""
-    if question_plan is not None:
-        primary = str(getattr(question_plan, "primary", "") or "").strip().lower()
+    primary = _plan_primary(question_plan)
 
     try:
         from ilim_assistant.ana_motor_plan import looks_like_encyclopedic_fact_question

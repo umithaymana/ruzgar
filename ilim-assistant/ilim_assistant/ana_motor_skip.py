@@ -44,6 +44,18 @@ def should_skip_stream_prefetch(
     except Exception:
         pass
     try:
+        from ilim_assistant.ana_motor_web_first import should_web_first_fast
+
+        if should_web_first_fast(
+            msg,
+            mode_norm,
+            question_plan,
+            history=history,
+        ):
+            return True
+    except Exception:
+        pass
+    try:
         from ilim_assistant.ana_motor_plan import (
             is_casual_conversation_turn,
             looks_like_fast_llm_fact_question,

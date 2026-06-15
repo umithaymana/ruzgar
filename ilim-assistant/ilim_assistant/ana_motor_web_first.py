@@ -361,7 +361,7 @@ def should_web_first_fast(
             return False
         from ilim_assistant.ruzgar_tek_beyin import personal_hafiza_blocks_bilgi_path
 
-        if personal_hafiza_blocks_bilgi_path(msg):
+        if personal_hafiza_blocks_bilgi_path(msg, history):
             return False
     except Exception:
         pass

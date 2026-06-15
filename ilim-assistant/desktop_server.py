@@ -1201,7 +1201,7 @@ def _health_build_block() -> dict:
     import os as _os
 
     base = {
-        "rev": "2026-06-14-ruzgar-web-first-faz-ap2",
+        "rev": "2026-06-14-ruzgar-sohbet-aq-faz-aq",
         "nebula_kitap": True,
         "tek_ses_faz_b": True,
         "orkestrasyon_faz_c": True,
@@ -9702,6 +9702,39 @@ def _yield_programlama_instant(
     )
 
 
+def _persist_done_chat_turn(req: ChatRequest, done: dict[str, Any]) -> dict[str, Any]:
+    """Tüm done yollarında jsonl + özet — tek merkez (Faz AQ)."""
+    if done.get("chat_persisted"):
+        return done
+    user_msg = str(done.get("user_message") or getattr(req, "message", "") or "").strip()
+    reply = str(done.get("full_reply") or "").strip()
+    if not user_msg or not reply:
+        return done
+    try:
+        from ilim_assistant.chat_core import normalize_mode
+        from ilim_assistant.ruzgar_tek_beyin_ozet import persist_tek_beyin_turn
+
+        mode_norm = normalize_mode(_effective_chat_mode_raw(req))
+        orch = done.get("orchestra") if isinstance(done.get("orchestra"), dict) else {}
+        plan_prim = ""
+        plan = orch.get("plan")
+        if isinstance(plan, dict):
+            plan_prim = str(plan.get("primary") or "")
+        persist_tek_beyin_turn(
+            user_message=user_msg,
+            assistant_message=reply,
+            history=getattr(req, "history", None),
+            mode_norm=mode_norm,
+            session_id=getattr(req, "ana_motor_session_id", None),
+            plan_primary=plan_prim,
+        )
+        out = dict(done)
+        out["chat_persisted"] = True
+        return out
+    except Exception:
+        return done
+
+
 def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
     """SSE/WS: Ana motor durumları → prepare_turn (İdrak + orkestra) → LLM."""
     orch_early: dict[str, Any] = {}
@@ -10048,19 +10081,6 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                         new_wake = req.session_wake_used or message_calls_wake_name(
                             req.message
                         )
-                        try:
-                            from ilim_assistant.ruzgar_tek_beyin_ozet import persist_tek_beyin_turn
-
-                            persist_tek_beyin_turn(
-                                user_message=msg_early,
-                                assistant_message=full_out,
-                                history=req.history,
-                                mode_norm="genel",
-                                session_id=getattr(req, "ana_motor_session_id", None),
-                                plan_primary="hafiza",
-                            )
-                        except Exception:
-                            pass
                         yield {
                             "type": "done",
                             "full_reply": full_out,
@@ -10167,19 +10187,6 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                         new_wake = req.session_wake_used or message_calls_wake_name(
                             req.message
                         )
-                        try:
-                            from ilim_assistant.ruzgar_tek_beyin_ozet import persist_tek_beyin_turn
-
-                            persist_tek_beyin_turn(
-                                user_message=msg_early,
-                                assistant_message=full_out,
-                                history=req.history,
-                                mode_norm="genel",
-                                session_id=getattr(req, "ana_motor_session_id", None),
-                                plan_primary="gundelik",
-                            )
-                        except Exception:
-                            pass
                         yield {
                             "type": "done",
                             "full_reply": full_out,
@@ -10227,19 +10234,6 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     orch=orch_early,
                     instant_gundelik=True,
                 )
-                try:
-                    from ilim_assistant.ruzgar_tek_beyin_ozet import persist_tek_beyin_turn
-
-                    persist_tek_beyin_turn(
-                        user_message=msg_early,
-                        assistant_message=_hatirla_sess,
-                        history=req.history,
-                        mode_norm="genel",
-                        session_id=getattr(req, "ana_motor_session_id", None),
-                        plan_primary="hafiza",
-                    )
-                except Exception:
-                    pass
                 return
         except Exception:
             pass
@@ -10946,8 +10940,23 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
 
                 motor_flags = motor_niyeti_heuristic(req.message)
+                _idrak_turn = None
+                try:
+                    from ilim_assistant.ana_motor_idrak_zihin import (
+                        analyze_turn,
+                        idrak_zihin_enabled,
+                    )
+
+                    if idrak_zihin_enabled():
+                        _idrak_turn = analyze_turn(req.message, req.history)
+                except Exception:
+                    _idrak_turn = None
                 turn_plan = plan_question(
-                    req.message, mode_norm, motor_flags, history=req.history
+                    req.message,
+                    mode_norm,
+                    motor_flags,
+                    history=req.history,
+                    idrak_pre=_idrak_turn,
                 )
                 try:
                     from ilim_assistant.ruzgar_tek_beyin_web_arastirma import (
@@ -11280,6 +11289,83 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 agent_context = ""
                 workspace_step = None
 
+    _casual_fast_pre = False
+    try:
+        from ilim_assistant.ana_motor_casual import casual_fast_enabled
+        from ilim_assistant.ana_motor_plan import (
+            is_casual_conversation_turn,
+            looks_like_past_conversation_query,
+        )
+
+        _casual_fast_pre = (
+            casual_fast_enabled()
+            and not coding
+            and mode_norm in ("genel", "uretim", "gelisim")
+            and not looks_like_past_conversation_query(req.message or "")
+            and is_casual_conversation_turn(
+                req.message, mode_norm, turn_plan, history=req.history
+            )
+        )
+    except Exception:
+        _casual_fast_pre = False
+    try:
+        from ilim_assistant.ruzgar_umed_cevap_emri import should_disable_casual_fast_path
+
+        if should_disable_casual_fast_path(req.message or ""):
+            _casual_fast_pre = False
+    except Exception:
+        pass
+    if _casual_fast_pre:
+        try:
+            from ilim_assistant.ana_motor_casual import iter_casual_fast_reply
+            from ilim_assistant.llm_brain import free_brain_enabled
+
+            try:
+                from ilim_assistant.ruzgar_dogal_sohbet_faz91 import dogal_sohbet_enabled
+
+                _dogal = dogal_sohbet_enabled()
+            except Exception:
+                _dogal = False
+            status_txt = (
+                "Doğal sohbet — Groq/Ollama (Faz 91, hızlı zincir)…"
+                if _dogal
+                else (
+                    "Kısa sohbet — Groq/Ollama/Gemini…"
+                    if free_brain_enabled()
+                    else "Kısa sohbet — Gemini (hızlı yol)…"
+                )
+            )
+            yield {"type": "status", "text": status_txt}
+            reply_body = ""
+            for piece in iter_casual_fast_reply(
+                req.message,
+                req.history,
+                mode_norm=mode_norm,
+            ):
+                reply_body += piece
+                yield {"type": "token", "text": piece}
+            if not (reply_body or "").strip():
+                from ilim_assistant.chat_core import empty_reply_fallback
+
+                reply_body = empty_reply_fallback(req.message or "", req.history)
+                yield {"type": "token", "text": reply_body}
+            full_out = finalize_assistant_reply(reply_body)
+            yield {
+                "type": "done",
+                "full_reply": full_out,
+                "user_message": (req.message or "").strip(),
+                "new_wake_used": req.session_wake_used or message_calls_wake_name(req.message),
+                "orchestra": orch,
+                "instant_gundelik": True,
+                "casual_fast": True,
+            }
+            return
+        except Exception as exc:
+            yield {
+                "type": "status",
+                "text": f"Hızlı sohbet yolu atlandı: {str(exc)[:120]}",
+            }
+
     reuse_b = None
     _skip_prefetch = mode_norm in ("programlama", "hafiza") or coding or (
         turn_plan is not None
@@ -11443,83 +11529,6 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             return
     except Exception:
         pass
-
-    _casual_fast = False
-    try:
-        from ilim_assistant.ana_motor_casual import casual_fast_enabled
-        from ilim_assistant.ana_motor_plan import (
-            is_casual_conversation_turn,
-            looks_like_past_conversation_query,
-        )
-
-        _casual_fast = (
-            casual_fast_enabled()
-            and not coding
-            and not looks_like_past_conversation_query(req.message or "")
-            and is_casual_conversation_turn(
-                req.message, mode_norm, turn_plan, history=req.history
-            )
-        )
-    except Exception:
-        _casual_fast = False
-    try:
-        from ilim_assistant.ruzgar_umed_cevap_emri import should_disable_casual_fast_path
-
-        if should_disable_casual_fast_path(req.message or ""):
-            _casual_fast = False
-    except Exception:
-        pass
-
-    if _casual_fast:
-        try:
-            from ilim_assistant.ana_motor_casual import iter_casual_fast_reply
-            from ilim_assistant.llm_brain import free_brain_enabled
-
-            try:
-                from ilim_assistant.ruzgar_dogal_sohbet_faz91 import dogal_sohbet_enabled
-
-                _dogal = dogal_sohbet_enabled()
-            except Exception:
-                _dogal = False
-            status_txt = (
-                "Doğal sohbet — Groq/Ollama (Faz 91, hızlı zincir)…"
-                if _dogal
-                else (
-                    "Kısa sohbet — Groq/Ollama/Gemini…"
-                    if free_brain_enabled()
-                    else "Kısa sohbet — Gemini (hızlı yol)…"
-                )
-            )
-            yield {"type": "status", "text": status_txt}
-            reply_body = ""
-            for piece in iter_casual_fast_reply(
-                req.message,
-                req.history,
-                mode_norm=mode_norm,
-            ):
-                reply_body += piece
-                yield {"type": "token", "text": piece}
-            if not (reply_body or "").strip():
-                from ilim_assistant.chat_core import empty_reply_fallback
-
-                reply_body = empty_reply_fallback(req.message or "", req.history)
-                yield {"type": "token", "text": reply_body}
-            full_out = finalize_assistant_reply(reply_body)
-            yield {
-                "type": "done",
-                "full_reply": full_out,
-                "user_message": (req.message or "").strip(),
-                "new_wake_used": req.session_wake_used or message_calls_wake_name(req.message),
-                "orchestra": orch,
-                "instant_gundelik": True,
-                "casual_fast": True,
-            }
-            return
-        except Exception as exc:
-            yield {
-                "type": "status",
-                "text": f"Hızlı sohbet yolu atlandı: {str(exc)[:120]}",
-            }
 
     try:
         from ilim_assistant.ruzgar_umed_cevap_emri import (
@@ -12455,79 +12464,55 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 )
             except Exception:
                 pass
+        _plan_prim = ""
+        if turn_plan is not None:
+            _plan_prim = str(
+                getattr(turn_plan, "primary", "")
+                if hasattr(turn_plan, "primary")
+                else (turn_plan.get("primary") if isinstance(turn_plan, dict) else "")
+                or ""
+            )
         try:
-            from ilim_assistant.ana_motor_sohbet_gecmis import append_chat_turn
+            from ilim_assistant.ana_motor_oturum_ozet import maybe_remember_session_summary
 
-            _plan_prim = ""
-            if turn_plan is not None:
-                _plan_prim = str(
-                    getattr(turn_plan, "primary", "")
-                    if hasattr(turn_plan, "primary")
-                    else (turn_plan.get("primary") if isinstance(turn_plan, dict) else "")
-                    or ""
-                )
-            append_chat_turn(
+            maybe_remember_session_summary(
                 user_message=msg,
                 assistant_message=body_fixed,
                 mode_norm=mode_norm,
-                session_id=getattr(req, "ana_motor_session_id", None),
-                plan_primary=_plan_prim,
             )
-            try:
-                from ilim_assistant.ana_motor_oturum_ozet import maybe_remember_session_summary
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ruzgar_otomatik_ogrenme import auto_learn_from_turn
 
-                maybe_remember_session_summary(
-                    user_message=msg,
-                    assistant_message=body_fixed,
-                    mode_norm=mode_norm,
-                )
-            except Exception:
-                pass
-            try:
-                from ilim_assistant.ruzgar_tek_beyin_ozet import maybe_refresh_tek_beyin_ozet
+            _learn_meta = auto_learn_from_turn(
+                msg,
+                body_fixed,
+                plan_primary=_plan_prim,
+                instant=bool(orch.get("instant_gundelik")),
+                web_used=web_used,
+                force_web=bool(orch.get("force_web_research")),
+                hits=hits,
+            )
+            if orch.get("sentez_pro"):
+                try:
+                    from ilim_assistant.ana_motor_faz_ae_pro_ogrenme import (
+                        maybe_boost_learn_after_pro_turn,
+                    )
 
-                maybe_refresh_tek_beyin_ozet(
-                    user_message=msg,
-                    assistant_message=body_fixed,
-                    history=req.history,
-                    session_id=getattr(req, "ana_motor_session_id", None),
-                    mode_norm=mode_norm,
-                )
-            except Exception:
-                pass
-            try:
-                from ilim_assistant.ruzgar_otomatik_ogrenme import auto_learn_from_turn
-
-                _learn_meta = auto_learn_from_turn(
-                    msg,
-                    body_fixed,
-                    plan_primary=_plan_prim,
-                    instant=bool(orch.get("instant_gundelik")),
-                    web_used=web_used,
-                    force_web=bool(orch.get("force_web_research")),
-                    hits=hits,
-                )
-                if orch.get("sentez_pro"):
-                    try:
-                        from ilim_assistant.ana_motor_faz_ae_pro_ogrenme import (
-                            maybe_boost_learn_after_pro_turn,
-                        )
-
-                        _learn_meta = maybe_boost_learn_after_pro_turn(
-                            msg,
-                            body_fixed,
-                            _learn_meta,
-                            sentez_pro=True,
-                            plan_primary=_plan_prim,
-                            web_used=web_used,
-                            hits=hits,
-                        )
-                    except Exception:
-                        pass
-                if _learn_meta.get("saved"):
-                    orch["otomatik_ogrenme"] = _learn_meta
-            except Exception:
-                pass
+                    _learn_meta = maybe_boost_learn_after_pro_turn(
+                        msg,
+                        body_fixed,
+                        _learn_meta,
+                        sentez_pro=True,
+                        plan_primary=_plan_prim,
+                        web_used=web_used,
+                        hits=hits,
+                    )
+                except Exception:
+                    pass
+            if _learn_meta.get("saved"):
+                orch["otomatik_ogrenme"] = _learn_meta
         except Exception:
             pass
         yield done_llm
@@ -12543,6 +12528,7 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
     for obj in _iter_chat_turn_events_impl(req):
         if obj.get("type") == "done":
             obj = dict(obj)
+            obj = _persist_done_chat_turn(req, obj)
             obj.setdefault("elapsed_sec", time.perf_counter() - t0)
             try:
                 from ilim_assistant.ruzgar_egitim import on_chat_turn_done

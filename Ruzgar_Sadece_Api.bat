@@ -2,7 +2,7 @@
 chcp 65001 >nul
 title RUZGAR — sadece API (Faz 98)
 cd /d "%~dp0"
-set RUZGAR_EXPECTED_BUILD_REV=2026-06-14-ruzgar-web-first-faz-ap2
+set RUZGAR_EXPECTED_BUILD_REV=2026-06-14-ruzgar-sohbet-aq-faz-aq
 echo Eski API durduruluyor...
 py -3 "%~dp0ilim-assistant\scripts\ruzgar_port_ops.py" kill-all-api --port 8779
 timeout /t 3 /nobreak >nul

@@ -318,7 +318,10 @@ def _lookup_legacy_hafiza_hint(message: str) -> Optional[dict[str, Any]]:
     return None
 
 
-def _idrak_blocks_personal_hafiza(message: str) -> bool:
+def _idrak_blocks_personal_hafiza(
+    message: str,
+    history: list | None = None,
+) -> bool:
     try:
         from ilim_assistant.ana_motor_idrak_zihin import (
             analyze_turn,
@@ -328,7 +331,7 @@ def _idrak_blocks_personal_hafiza(message: str) -> bool:
 
         if not idrak_zihin_enabled():
             return False
-        return should_block_hafiza_path(analyze_turn(message))
+        return should_block_hafiza_path(analyze_turn(message, history))
     except Exception:
         return False
 
@@ -366,7 +369,7 @@ def lookup_chat_history_person_hint(
     """Disk/oturum sohbet geçmişinden aynı konuya yakın yanıt."""
     if _skip_hafiza_for_clarification_short(message):
         return None
-    if _idrak_blocks_personal_hafiza(message):
+    if _idrak_blocks_personal_hafiza(message, client_history):
         return None
     try:
         from ilim_assistant.ana_motor_sohbet_gecmis import search_chat_history
@@ -512,14 +515,17 @@ def lookup_personal_hafiza_hint(message: str) -> Optional[dict[str, Any]]:
     return hint
 
 
-def personal_hafiza_blocks_bilgi_path(message: str) -> bool:
+def personal_hafiza_blocks_bilgi_path(
+    message: str,
+    history: list | None = None,
+) -> bool:
     """Bilgi/cloud/web hızlı yollarını kapat — kişisel kayıt var."""
     if not tek_beyin_enabled():
         return False
-    target = resolve_memory_query_message(message)
+    target = resolve_memory_query_message(message, history)
     if _skip_hafiza_for_clarification_short(target):
         return False
-    if _idrak_blocks_personal_hafiza(target):
+    if _idrak_blocks_personal_hafiza(target, history):
         return False
     try:
         from ilim_assistant.ana_motor_plan import looks_like_casual_social_chat
@@ -548,6 +554,8 @@ def should_use_personal_hafiza_first(
     client_history: list | None = None,
 ) -> bool:
     if not tek_beyin_enabled():
+        return False
+    if _idrak_blocks_personal_hafiza(message, client_history):
         return False
     target = resolve_memory_query_message(message, client_history)
     try:
@@ -732,15 +740,18 @@ def iter_tek_beyin_hafiza_reply(
         return None
 
 
-def tek_beyin_plan_override(message: str) -> dict[str, Any] | None:
+def tek_beyin_plan_override(
+    message: str,
+    history: list | None = None,
+) -> dict[str, Any] | None:
     """plan_question için hafıza önceliği meta."""
     if not tek_beyin_enabled():
         return None
     if _skip_hafiza_for_clarification_short(message):
         return None
-    if _idrak_blocks_personal_hafiza(message):
+    if _idrak_blocks_personal_hafiza(message, history):
         return None
-    target = resolve_memory_query_message(message)
+    target = resolve_memory_query_message(message, history)
     if not (
         should_use_personal_hafiza_first(target)
         or matches_known_circle_name(target)
