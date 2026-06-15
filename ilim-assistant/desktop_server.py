@@ -76,6 +76,7 @@ from ilim_assistant.video_ffmpeg import (
 )
 
 app = FastAPI(title="RÜZGAR Desktop API")
+_WARMUP_BACKGROUND_ACTIVE = False
 
 # Video probe: tarayıcıdan gelen dosya üst sınırı (metadata okuma; yine de güvenlik)
 MAX_VIDEO_PROBE_BYTES = 600 * 1024 * 1024
@@ -453,14 +454,18 @@ def _boot_motorlar_anaonce() -> None:
         importlib.import_module(name)
 
 
-@app.on_event("startup")
-async def _warmup_rag() -> None:
-    """İlk sohbet turunda RAG disk okumasını ve gömme modelini önceden yükle."""
-    try:
-        from ilim_assistant.config import defer_motor_boot, skip_rag_warmup
+def _sync_startup_warmups() -> None:
+    """Port açıldıktan sonra arka planda — RAG, hafıza, hatırlatıcı (motor boot port öncesi)."""
+    global _WARMUP_BACKGROUND_ACTIVE
+    _WARMUP_BACKGROUND_ACTIVE = True
+    import sys as _sys
 
-        if not defer_motor_boot():
-            _boot_motorlar_anaonce()
+    try:
+        from ilim_assistant.config import defer_motor_boot
+
+        if "ilim_assistant.main_engine" not in _sys.modules:
+            if not defer_motor_boot():
+                _boot_motorlar_anaonce()
     except Exception:
         pass
     try:
@@ -532,6 +537,18 @@ async def _warmup_rag() -> None:
             "Rüzgar Kullanıma Hazır, Sistemi Yeniden Başlatabilirsiniz.",
             flush=True,
         )
+    _WARMUP_BACKGROUND_ACTIVE = False
+
+
+@app.on_event("startup")
+async def _warmup_rag() -> None:
+    """Isınmalar port açıldıktan sonra arka planda — health hemen yanıt verir."""
+    import asyncio
+
+    async def _bg() -> None:
+        await run_in_threadpool(_sync_startup_warmups)
+
+    asyncio.create_task(_bg())
 
 
 def _default_fetch_pages() -> float:
@@ -1509,8 +1526,18 @@ def _health_build_block() -> dict:
         return base
 
 
-@app.get("/api/health")
-def health():
+def _health_lite_response() -> dict[str, Any]:
+    """Hızlı health — bağlantı kontrolü; ağır motor snapshot'ları yok."""
+    return {
+        "ok": True,
+        "lite": True,
+        "service": "ruzgar-desktop-api",
+        "merkezi_bellek": True,
+        "build": _health_build_block(),
+    }
+
+
+def _health_full_response() -> dict[str, Any]:
     import os as _os
 
     _m = _os.environ.get("HIZIR_MOCK_MARKETPLACE", "0").strip().lower() in (
@@ -1796,6 +1823,21 @@ def health():
     }
 
 
+@app.get("/api/health")
+def health(full: Annotated[int, Query()] = 0):
+    if _WARMUP_BACKGROUND_ACTIVE:
+        return {
+            "ok": True,
+            "booting": True,
+            "warmup": True,
+            "service": "ruzgar-desktop-api",
+            "build": _health_build_block(),
+        }
+    if full != 1:
+        return _health_lite_response()
+    return _health_full_response()
+
+
 @app.post("/api/vision/analyze")
 async def api_vision_analyze(
     file: UploadFile = File(...),
@@ -1831,7 +1873,7 @@ def api_ui_manifest():
     """Dashboard/atölye metinleri için tek kaynak; UI statik Faz 7'ye takılmaz."""
     from ilim_assistant.ruzgar_ui_manifest import build_ui_manifest
 
-    return build_ui_manifest(health=health())
+    return build_ui_manifest(health=_health_lite_response())
 
 
 @app.get("/api/system-metrics")

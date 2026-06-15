@@ -87,6 +87,14 @@ def _turns_merged(
     if len(client_rows) >= _min_turns():
         return client_rows[-disk_limit:]
 
+    try:
+        from ilim_assistant.ana_motor_sohbet_gecmis import should_inject_disk_history_into_prior
+    except Exception:
+        should_inject_disk_history_into_prior = lambda: False  # type: ignore[assignment,misc]
+
+    if not should_inject_disk_history_into_prior():
+        return client_rows[-disk_limit:] if client_rows else []
+
     disk_rows: list[dict[str, str]] = []
     try:
         from ilim_assistant.ana_motor_sohbet_gecmis import recent_chat_history

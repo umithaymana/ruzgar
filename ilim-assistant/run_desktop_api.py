@@ -29,9 +29,32 @@ def _bootstrap() -> None:
     )
 
 
+def _boot_motorlar_locked() -> None:
+    """.cursorrules — port açılmadan ana motor → çekirdek → 5 ara motor (sıra kilitli)."""
+    import importlib
+
+    importlib.import_module("ilim_assistant.main_engine")
+    importlib.import_module("ilim_assistant.motorlar.ruzgar_cekirdegi")
+    for name in (
+        "ilim_assistant.ses_motoru",
+        "ilim_assistant.video_motoru",
+        "ilim_assistant.okuma_motoru",
+        "ilim_assistant.mimar_motoru",
+        "ilim_assistant.tercume_motoru",
+        "ilim_assistant.motorlar.hafiza_motoru",
+        "ilim_assistant.programlama_motoru",
+    ):
+        importlib.import_module(name)
+    print("[Rüzgar] Motor boot tamam (port öncesi).", file=sys.stderr, flush=True)
+
+
 def main() -> None:
     forced = (os.environ.get("RUZGAR_CI_FORCED_PORT") or "").strip()
     _bootstrap()
+    from ilim_assistant.config import defer_motor_boot
+
+    if not defer_motor_boot():
+        _boot_motorlar_locked()
     import uvicorn
 
     if forced:

@@ -209,45 +209,86 @@ async function waitForExpectedHealth(port, expectedRev, maxMs = 120000) {
   while (Date.now() < deadline) {
     const j = await fetchHealthJson(port);
     const rev = String(j?.build?.rev || "").trim();
-    if (j && j.ok === true && rev === expectedRev) {
+    const pro = j?.build?.programlama_pro_v1 === true;
+    if (j && j.ok === true && rev === expectedRev && pro) {
       return true;
+    }
+    if (j && j.ok === true && j.booting === true) {
+      /* warmup sırasında da bekle */
     }
     await new Promise((r) => setTimeout(r, 600));
   }
   return false;
 }
 
+function readLauncherFreshMarker() {
+  try {
+    const p = path.join(WORKSPACE_ROOT, ".ruzgar", "electron_api_fresh.marker");
+    if (fs.existsSync(p)) {
+      const rev = fs.readFileSync(p, "utf8").trim();
+      try {
+        fs.unlinkSync(p);
+      } catch (_) {
+        /* ignore */
+      }
+      return rev || null;
+    }
+  } catch (_) {
+    /* ignore */
+  }
+  return null;
+}
+
 async function ensureFreshApiOnLaunch() {
   const port = readLocalApiPortFromDisk();
   const expected = readExpectedBuildRev();
-  const skipBecauseLauncher = process.env.RUZGAR_ELECTRON_API_FRESH === "1";
-  const j = await fetchHealthJson(port);
-  const rev = String(j?.build?.rev || "").trim();
-  const pro = j?.build?.programlama_pro_v1 === true;
-  const fresh = Boolean(j && j.ok === true && rev === expected && pro);
+  const markerRev = readLauncherFreshMarker();
+  const skipBecauseLauncher =
+    process.env.RUZGAR_ELECTRON_API_FRESH === "1" || Boolean(markerRev);
 
-  if (skipBecauseLauncher && fresh) {
-    console.info(`[RÜZGAR] API launcher taze (rev=${rev})`);
+  if (skipBecauseLauncher) {
+    console.info(
+      `[RÜZGAR] Launcher taze API — çift yeniden başlatma atlandi (rev=${markerRev || expected})`
+    );
+    await waitForExpectedHealth(port, expected, 180000);
     return;
   }
+
+  const j = await fetchHealthJson(port);
+  if (!j) {
+    console.info("[RÜZGAR] API boot bekleniyor (yanıt yok — öldürme yok)…");
+    await waitForExpectedHealth(port, expected, 180000);
+    return;
+  }
+
+  const rev = String(j?.build?.rev || "").trim();
+  const pro = j?.build?.programlama_pro_v1 === true;
+  const fresh = Boolean(j.ok === true && rev === expected && pro);
+
   if (process.env.RUZGAR_DESKTOP_FRESH_API === "0" && fresh) {
     return;
   }
-  if (fresh && !skipBecauseLauncher) {
+  if (fresh) {
     console.info(`[RÜZGAR] API guncel rev=${rev}; yeniden baslatma atlandi`);
     return;
   }
 
-  console.info(
-    `[RÜZGAR] API yenileniyor (sunucu=${rev || "?"} beklenen=${expected})…`
-  );
-  await spawnForceRestartApi();
-  const ok = await waitForExpectedHealth(port, expected, 120000);
-  if (!ok) {
-    console.warn("[RÜZGAR] API beklenen build rev ile hazir olmadi");
-  } else {
-    console.info(`[RÜZGAR] API hazir rev=${expected}`);
+  if (rev && rev !== expected) {
+    console.info(
+      `[RÜZGAR] Eski API rev=${rev} — yenileniyor (beklenen=${expected})…`
+    );
+    await spawnForceRestartApi();
+    const ok = await waitForExpectedHealth(port, expected, 180000);
+    if (!ok) {
+      console.warn("[RÜZGAR] API beklenen build rev ile hazir olmadi");
+    } else {
+      console.info(`[RÜZGAR] API hazir rev=${expected}`);
+    }
+    return;
   }
+
+  console.info("[RÜZGAR] API durumu belirsiz — boot bekleniyor");
+  await waitForExpectedHealth(port, expected, 180000);
 }
 
 async function ensureLocalApiServer() {

@@ -295,7 +295,7 @@ function ruzgarLikelyLocalDesktopApi() {
 
 /** Sunucudaki prior_messages limitiyle uyumlu; gereksiz büyük JSON göndermez */
 const MAX_CLIENT_HISTORY_MSGS = 32;
-const UI_MANIFEST_POLL_MS = 3000;
+const UI_MANIFEST_POLL_MS = 15000;
 
 const MODE_QS = new URLSearchParams(window.location.search);
 
@@ -10440,77 +10440,28 @@ function ensureSharedChatStore() {
       history: [],
       lastAssistantReply: "",
     };
-    try {
-      let raw = localStorage.getItem(RUZGAR_SHARED_CHAT_LS);
-      if (!raw) {
-        raw = sessionStorage.getItem(RUZGAR_SHARED_CHAT_LS);
-      }
-      if (raw) {
-        const j = JSON.parse(raw);
-        if (Array.isArray(j.history)) {
-          motorChatSessions[RUZGAR_SHARED_CHAT_KEY].history = j.history.slice(
-            -MAX_CLIENT_HISTORY_MSGS,
-          );
-        }
-        if (j.lastAssistantReply) {
-          motorChatSessions[RUZGAR_SHARED_CHAT_KEY].lastAssistantReply = String(
-            j.lastAssistantReply,
-          );
-          lastAssistantReply = motorChatSessions[RUZGAR_SHARED_CHAT_KEY].lastAssistantReply;
-        }
-      }
-    } catch (_) {
-      /* yok say */
-    }
   }
   return motorChatSessions[RUZGAR_SHARED_CHAT_KEY];
 }
 
-/** Uygulama yeniden açıldığında disk sohbet geçmişini API'den yükle. */
-async function hydrateSharedChatFromServer() {
-  const store = ensureSharedChatStore();
-  if (Array.isArray(store.history) && store.history.length >= 4) {
-    return;
-  }
+/** Açılış/yenileme: sohbet paneli boş — geçmiş yalnızca «dün ne konuştuk» gibi sorularda API'den gelir. */
+function initFreshChatPanelOnLoad() {
   try {
-    const res = await fetch(`${API}/api/ana-motor/chat-history/recent?limit=24`);
-    if (!res.ok) return;
-    const data = await res.json();
-    const items = Array.isArray(data?.items) ? data.items : [];
-    if (!items.length) return;
-    const rebuilt = [];
-    for (const row of items.slice().reverse()) {
-      const user = String(row.user || "").trim();
-      const assistant = String(row.assistant || "").trim();
-      if (!user || !assistant) continue;
-      rebuilt.push({ role: "user", content: user });
-      rebuilt.push({ role: "assistant", content: assistant });
-    }
-    if (!rebuilt.length) return;
-    if (!store.history.length) {
-      store.history = rebuilt.slice(-MAX_CLIENT_HISTORY_MSGS);
-    } else {
-      const seen = new Set(
-        store.history.map((m) => `${m.role}\0${String(m.content || "").trim()}`),
-      );
-      for (const msg of rebuilt) {
-        const key = `${msg.role}\0${String(msg.content || "").trim()}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        store.history.push(msg);
-      }
-      store.history = store.history.slice(-MAX_CLIENT_HISTORY_MSGS);
-    }
-    const lastAsst = [...store.history].reverse().find((m) => m.role === "assistant");
-    if (lastAsst?.content) {
-      store.lastAssistantReply = String(lastAsst.content);
-      lastAssistantReply = store.lastAssistantReply;
-    }
-    persistSharedChatStore();
-    renderMotorChatFromSession(activeMotorChatMode());
+    localStorage.removeItem(RUZGAR_SHARED_CHAT_LS);
+    sessionStorage.removeItem(RUZGAR_SHARED_CHAT_LS);
   } catch (_) {
     /* yok say */
   }
+  motorChatSessions[RUZGAR_SHARED_CHAT_KEY] = {
+    history: [],
+    lastAssistantReply: "",
+  };
+  lastAssistantReply = "";
+}
+
+/** Eski: sunucu jsonl → UI (kapalı — yalnızca arama kutusu / açık soru yolu kullanır). */
+async function hydrateSharedChatFromServer() {
+  return;
 }
 
 function getSharedChatHistory() {
@@ -10518,21 +10469,7 @@ function getSharedChatHistory() {
 }
 
 function persistSharedChatStore() {
-  const store = ensureSharedChatStore();
-  const payload = JSON.stringify({
-    history: store.history.slice(-MAX_CLIENT_HISTORY_MSGS),
-    lastAssistantReply: store.lastAssistantReply || lastAssistantReply || "",
-  });
-  try {
-    localStorage.setItem(RUZGAR_SHARED_CHAT_LS, payload);
-  } catch (_) {
-    /* yok say */
-  }
-  try {
-    sessionStorage.setItem(RUZGAR_SHARED_CHAT_LS, payload);
-  } catch (_) {
-    /* yok say */
-  }
+  /* Oturum içi bellek yeterli — yenilemede geçmiş gösterme (initFreshChatPanelOnLoad). */
 }
 
 /** API'ye giderken son tur kullanıcı mesajı history'de varsa çift göndermeyi önle. */
@@ -11811,6 +11748,26 @@ async function checkApi() {
       }
       initFazZUx();
       updateFaz7HealthStrip(j);
+      if (j.lite && !window.__ruzgarFullHealthInflight) {
+        const now = Date.now();
+        const last = window.__ruzgarFullHealthAt || 0;
+        if (now - last > 45000) {
+          window.__ruzgarFullHealthInflight = true;
+          void fetch(`${base}/api/health?full=1`, { method: "GET", cache: "no-store" })
+            .then((fr) => fr.json())
+            .then((fj) => {
+              if (fj && fj.ok) {
+                lastHealthSnapshot = fj;
+                updateFaz7HealthStrip(fj);
+                window.__ruzgarFullHealthAt = Date.now();
+              }
+            })
+            .catch(() => {})
+            .finally(() => {
+              window.__ruzgarFullHealthInflight = false;
+            });
+        }
+      }
       const badge = document.getElementById("ana-motor-phase-badge");
       const promise = document.getElementById("ana-motor-promise");
       if (badge) {
@@ -16080,15 +16037,15 @@ wireNavToolbar();
 wireFaz7Cila();
 wireChatAutoScroll();
 document.body.classList.add("faz7-complete", "faz8-complete", "faz-z-complete", "faz-aa-complete");
+initFreshChatPanelOnLoad();
+ensureSharedChatStore();
 setAnaMotorInfoStripState("loading");
 void checkApi().then((ok) => {
   if (ok) {
     void refreshUiManifest();
-    void hydrateSharedChatFromServer();
   }
   renderMotorChatFromSession(activeMotorChatMode());
 });
-ensureSharedChatStore();
 setInterval(() => void checkApi(), 15000);
 /** Sunucu kapalıyken daha sık dene (ilk 2 dk) */
 (function ruzgarFastHealthPoll() {

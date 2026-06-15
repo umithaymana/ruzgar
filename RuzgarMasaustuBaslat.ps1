@@ -135,84 +135,57 @@ function Test-PortFree {
 
 
 $ops = Join-Path $Ia "scripts\ruzgar_port_ops.py"
-
-# Temiz baslat: API her zaman taze baslatilir (yalnizca Electron yenilemek eski Python'u birakir)
-if (Test-Path $ops) {
-
-    Log "Eski API surecleri durduruluyor (port $Port)"
-
-    & py -3 $ops kill-all-api --port $Port 2>&1 | ForEach-Object { Log $_ }
-
-    Start-Sleep -Seconds 2
-
-    if (-not (Test-PortFree)) {
-
-        Log "Port $Port hala dolu — yonetici temizligi deneniyor"
-
-        $bat = Join-Path $Root "Ruzgar_Port_Temizle.bat"
-
-        if (Test-Path $bat) {
-
-            Start-Process -FilePath $bat -Verb RunAs -Wait
-
-            Start-Sleep -Seconds 2
-
-            & py -3 $ops kill-all-api --port $Port 2>&1 | ForEach-Object { Log $_ }
-
-            Start-Sleep -Seconds 1
-
-        }
-
-    }
-
-    if (-not (Test-PortFree)) {
-
-        Log "UYARI port $Port hala dolu - Ruzgar_Port_Temizle.bat (yonetici) gerekebilir"
-
-    }
-
-}
-
-if (-not (Test-PortFree)) {
-
-    Log "HATA port $Port bosaltılamadi (zombi surec)"
-
-    $msg = @"
-
-Port $Port hala kilitli — yeni API baslatilamaz.
-
-
-
-1) Ruzgar_Port_Temizle.bat dosyasina sag tik → Yonetici olarak calistir
-
-2) Sonra Ruzgar_TemizBaslat.bat tekrar deneyin
-
-
-
-Log: $Log
-
-"@
-
-    [System.Windows.Forms.MessageBox]::Show($msg, "RUZGAR") | Out-Null
-
-    exit 1
-
-}
-
-Remove-Item $ApiErr -ErrorAction SilentlyContinue
-
-Log "API baslatiliyor..."
-
-Start-Process -FilePath "py" -ArgumentList @("-3", "run_desktop_api.py", "--host", "127.0.0.1", "--port", "$Port") -WorkingDirectory $Ia -WindowStyle Hidden -RedirectStandardError $ApiErr
-
+$skipApiRestart = $false
 $ok = $false
 
-for ($i = 0; $i -lt 180; $i++) {
+if (Test-HealthCurrent) {
+    Log "API zaten guncel - yeniden baslatma atlandi (rev=$ExpectedRev)"
+    $skipApiRestart = $true
+    $ok = $true
+}
 
-    if (Test-HealthCurrent) { $ok = $true; break }
+if (-not $skipApiRestart) {
+    if (Test-Path $ops) {
+        Log "Eski API surecleri durduruluyor (port $Port)"
+        & py -3 $ops kill-all-api --port $Port 2>&1 | ForEach-Object { Log $_ }
+        Start-Sleep -Seconds 2
+        if (-not (Test-PortFree)) {
+            Log "Port $Port hala dolu - yonetici temizligi deneniyor"
+            $bat = Join-Path $Root "Ruzgar_Port_Temizle.bat"
+            if (Test-Path $bat) {
+                Start-Process -FilePath $bat -Verb RunAs -Wait
+                Start-Sleep -Seconds 2
+                & py -3 $ops kill-all-api --port $Port 2>&1 | ForEach-Object { Log $_ }
+                Start-Sleep -Seconds 1
+            }
+        }
+        if (-not (Test-PortFree)) {
+            Log "UYARI port $Port hala dolu - Ruzgar_Port_Temizle.bat (yonetici) gerekebilir"
+        }
+    }
 
-    Start-Sleep -Milliseconds 500
+    if (-not (Test-PortFree)) {
+        Log "HATA port $Port bosaltilamadi (zombi surec)"
+        $msg = @"
+Port $Port hala kilitli - yeni API baslatilamaz.
 
+1) Ruzgar_Port_Temizle.bat dosyasina sag tik - Yonetici olarak calistir
+2) Sonra Ruzgar_TemizBaslat.bat tekrar deneyin
+
+Log: $Log
+"@
+        [System.Windows.Forms.MessageBox]::Show($msg, "RUZGAR") | Out-Null
+        exit 1
+    }
+
+    Remove-Item $ApiErr -ErrorAction SilentlyContinue
+    Log "API baslatiliyor..."
+    Start-Process -FilePath "py" -ArgumentList @("-3", "run_desktop_api.py", "--host", "127.0.0.1", "--port", "$Port") -WorkingDirectory $Ia -WindowStyle Hidden -RedirectStandardError $ApiErr
+
+    for ($i = 0; $i -lt 180; $i++) {
+        if (Test-HealthCurrent) { $ok = $true; break }
+        Start-Sleep -Milliseconds 500
+    }
 }
 
 if (-not $ok) {
@@ -247,7 +220,7 @@ try {
     $liveRev = [string]$hj.build.rev
     Log "API build.rev=$liveRev beklenen=$ExpectedRev"
     if ($liveRev -ne $ExpectedRev) {
-        Log "UYARI build rev uyumsuz — port temizleyip tekrar deneyin"
+        Log "UYARI build rev uyumsuz - port temizleyip tekrar deneyin"
     }
 } catch {
     Log "UYARI health rev kontrolu atlandi"
@@ -255,6 +228,12 @@ try {
 
 $env:RUZGAR_EXPECTED_BUILD_REV = $ExpectedRev
 $env:RUZGAR_ELECTRON_API_FRESH = "1"
+
+$markerDir = Join-Path $Root ".ruzgar"
+if (-not (Test-Path $markerDir)) { New-Item -ItemType Directory -Path $markerDir -Force | Out-Null }
+$marker = Join-Path $markerDir "electron_api_fresh.marker"
+$ExpectedRev | Set-Content -Path $marker -Encoding UTF8 -NoNewline
+Log "Electron fresh marker yazildi rev=$ExpectedRev"
 
 
 

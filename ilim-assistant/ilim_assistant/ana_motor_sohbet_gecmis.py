@@ -120,6 +120,16 @@ def recent_chat_history(*, limit: int | None = None) -> dict[str, Any]:
     }
 
 
+def should_inject_disk_history_into_prior() -> bool:
+    """Kapalı (varsayılan): disk jsonl yalnızca açık «geçmiş sohbet» sorusunda kullanılır."""
+    return os.environ.get("RUZGAR_CHAT_DISK_PRIOR", "0").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+
+
 def chat_history_stats() -> dict[str, Any]:
     """jsonl arşiv özeti — satır sayısı + son tur (Faz AH1)."""
     if not chat_history_enabled():

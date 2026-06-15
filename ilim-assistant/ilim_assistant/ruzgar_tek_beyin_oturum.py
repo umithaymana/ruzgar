@@ -396,31 +396,41 @@ def enrich_dost_history(
     if len(client_rows) >= 2:
         merged_rows = client_rows[-(cap // 2 or 1) :]
     else:
-        disk_rows: list[dict[str, str]] = []
         try:
-            from ilim_assistant.ana_motor_sohbet_gecmis import recent_chat_history
-
-            disk = recent_chat_history(limit=cap).get("items") or []
-            for row in reversed(disk):
-                user = str(row.get("user") or "").strip()
-                assistant = str(row.get("assistant") or "").strip()
-                if user:
-                    disk_rows.append(
-                        {
-                            "user": user,
-                            "assistant": assistant,
-                            "session_id": str(row.get("session_id") or ""),
-                        }
-                    )
+            from ilim_assistant.ana_motor_sohbet_gecmis import (
+                recent_chat_history,
+                should_inject_disk_history_into_prior,
+            )
         except Exception:
-            disk_rows = []
-        merged_rows = merge_turn_rows_client_first(
-            client_rows,
-            disk_rows,
-            limit=cap // 2 or 1,
-            session_id=session_id,
-            min_client_turns=2,
-        )
+            recent_chat_history = None  # type: ignore[assignment,misc]
+            should_inject_disk_history_into_prior = lambda: False  # type: ignore[assignment,misc]
+
+        if should_inject_disk_history_into_prior() and recent_chat_history is not None:
+            disk_rows: list[dict[str, str]] = []
+            try:
+                disk = recent_chat_history(limit=cap).get("items") or []
+                for row in reversed(disk):
+                    user = str(row.get("user") or "").strip()
+                    assistant = str(row.get("assistant") or "").strip()
+                    if user:
+                        disk_rows.append(
+                            {
+                                "user": user,
+                                "assistant": assistant,
+                                "session_id": str(row.get("session_id") or ""),
+                            }
+                        )
+            except Exception:
+                disk_rows = []
+            merged_rows = merge_turn_rows_client_first(
+                client_rows,
+                disk_rows,
+                limit=cap // 2 or 1,
+                session_id=session_id,
+                min_client_turns=2,
+            )
+        else:
+            merged_rows = client_rows[-(cap // 2 or 1) :] if client_rows else []
 
     out: list[dict[str, str]] = []
     for row in merged_rows:
