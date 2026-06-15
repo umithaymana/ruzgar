@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-_FALLBACK = "2026-06-15-ruzgar-programlama-pro-v3"
+_FALLBACK = "2026-06-15-ruzgar-programlama-pro-v4"
 _REV_FILE = Path(__file__).resolve().parent.parent / "ruzgar_build_rev.txt"
 
 

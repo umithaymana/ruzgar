@@ -8,7 +8,7 @@ from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parents[1]
 _REV_FILE = _ROOT / "ruzgar_build_rev.txt"
-_FALLBACK = "2026-06-15-ruzgar-programlama-pro-v3"
+_FALLBACK = "2026-06-15-ruzgar-programlama-pro-v4"
 
 
 def read_build_rev() -> str:

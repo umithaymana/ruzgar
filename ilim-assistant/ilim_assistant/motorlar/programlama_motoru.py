@@ -354,6 +354,25 @@ def is_programlama_reserved_command(message: str) -> bool:
             return True
     except Exception:
         pass
+    try:
+        from ilim_assistant.motorlar.programlama_agent_nonblock import (
+            wants_agent_nonblock_gate,
+        )
+
+        if wants_agent_nonblock_gate(message):
+            return True
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_delivery_gate import (
+            wants_delivery_gate,
+            wants_delivery_summary,
+        )
+
+        if wants_delivery_gate(message) or wants_delivery_summary(message):
+            return True
+    except Exception:
+        pass
     if is_code_agent_task_message(message):
         return False
     try:
@@ -805,6 +824,26 @@ def _maybe_programlama_instant_reply_impl(
         p6_hit = maybe_instant_review_loop(message, workspace_root)
         if p6_hit:
             parts.append(p6_hit)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_agent_nonblock import (
+            maybe_instant_agent_nonblock,
+        )
+
+        p8_hit = maybe_instant_agent_nonblock(message, workspace_root)
+        if p8_hit:
+            parts.append(p8_hit)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_delivery_gate import (
+            maybe_instant_delivery,
+        )
+
+        p9_hit = maybe_instant_delivery(message, workspace_root)
+        if p9_hit:
+            parts.append(p9_hit)
     except Exception:
         pass
     try:

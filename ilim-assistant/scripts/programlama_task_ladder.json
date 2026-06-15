@@ -61,5 +61,19 @@
     "description": "P6 — diff özeti + checkpoint + rollback planı",
     "min_score": 100,
     "require_ok": true
+  },
+  {
+    "id": "ladder-s10-agent-nonblock",
+    "level": "agent_nonblock",
+    "description": "P8 — uzun iş sırasında lite health yanıtı (threadpool)",
+    "min_score": 100,
+    "require_ok": true
+  },
+  {
+    "id": "ladder-s11-delivery",
+    "level": "delivery",
+    "description": "P9 — zayıflık raporu + PR hazırlık (Faz 82/83)",
+    "min_score": 100,
+    "require_ok": true
   }
 ]

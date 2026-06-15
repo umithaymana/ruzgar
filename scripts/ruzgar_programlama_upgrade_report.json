@@ -1,7 +1,7 @@
 {
   "ok": true,
   "version": "programlama-upgrade-runner-v2-2026-05-29",
-  "elapsed_sec": 22.45,
+  "elapsed_sec": 27.73,
   "scores": {
     "command_level": 100,
     "autonomy_level": 100,
@@ -92,6 +92,22 @@
       "score": 100,
       "min_score": 100,
       "pass": true
+    },
+    {
+      "id": "ladder-s10-agent-nonblock",
+      "level": "agent_nonblock",
+      "description": "P8 — uzun iş sırasında lite health yanıtı (threadpool)",
+      "score": 100,
+      "min_score": 100,
+      "pass": true
+    },
+    {
+      "id": "ladder-s11-delivery",
+      "level": "delivery",
+      "description": "P9 — zayıflık raporu + PR hazırlık (Faz 82/83)",
+      "score": 100,
+      "min_score": 100,
+      "pass": true
     }
   ],
   "command_eval": {
@@ -164,8 +180,8 @@
   "artifacts": {
     "dataset": "D:\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\scripts\\programlama_command_goldens.json",
     "ladder": "D:\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\scripts\\programlama_task_ladder.json",
-    "faz99_scope_1": "projects/smoke-autonomy-9a64f213",
-    "faz99_scope_2": "projects/smoke-autonomy-8136de6d",
+    "faz99_scope_1": "projects/smoke-autonomy-9f1272c0",
+    "faz99_scope_2": "projects/smoke-autonomy-8954cf73",
     "parity_mode": "quick",
     "parity_passed": 8,
     "parity_total": 8,
@@ -230,7 +246,7 @@
         "version": "programlama-faz93-v2-2026-05-27",
         "recorded": true,
         "applied_count": 3,
-        "checkpoint_id": 2,
+        "checkpoint_id": 3,
         "rollback": {
           "version": "programlama-faz93-v2-2026-05-27",
           "has_plan": true,
@@ -253,6 +269,38 @@
         }
       },
       "version": "programlama-review-loop-v1-2026-06-15"
+    },
+    "agent_nonblock": {
+      "ok": true,
+      "detail": "agent nonblock gate",
+      "checks": {
+        "health_idle": true,
+        "health_during_busy": true,
+        "iterate_threadpool_health": true
+      },
+      "port": 8779,
+      "idle_ms": 97,
+      "busy_ms": 185,
+      "version": "programlama-agent-nonblock-v1-2026-06-15"
+    },
+    "delivery": {
+      "ok": true,
+      "detail": "delivery gate",
+      "checks": {
+        "faz82_enabled": true,
+        "weakness_report": true,
+        "weakness_format": true,
+        "faz83_enabled": true,
+        "pr_plan": true,
+        "pr_steps": true,
+        "pr_parse": true,
+        "p8_module": true
+      },
+      "weakness_score": 95,
+      "weakness_items": 1,
+      "pr_branch": "main",
+      "gh_available": false,
+      "version": "programlama-delivery-gate-v1-2026-06-15"
     }
   }
 }

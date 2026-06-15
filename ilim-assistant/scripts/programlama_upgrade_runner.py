@@ -69,6 +69,8 @@ def main() -> int:
     from ilim_assistant.motorlar.programlama_monorepo_live import run_monorepo_live_gate
     from ilim_assistant.motorlar.programlama_monorepo_refactor import run_monorepo_refactor_gate
     from ilim_assistant.motorlar.programlama_review_loop import run_review_loop_gate
+    from ilim_assistant.motorlar.programlama_agent_nonblock import run_agent_nonblock_gate
+    from ilim_assistant.motorlar.programlama_delivery_gate import run_delivery_gate
 
     dataset = _load_json(dataset_fp)
     ladder = _load_json(ladder_fp)
@@ -97,6 +99,10 @@ def main() -> int:
     monorepo_refactor_score = 100 if bool(monorepo_refactor.get("ok")) else 0
     review_loop = run_review_loop_gate(ws)
     review_loop_score = 100 if bool(review_loop.get("ok")) else 0
+    agent_nonblock = run_agent_nonblock_gate(ws)
+    agent_nonblock_score = 100 if bool(agent_nonblock.get("ok")) else 0
+    delivery = run_delivery_gate(ws)
+    delivery_score = 100 if bool(delivery.get("ok")) else 0
 
     cmd_score = int(c98.get("score") or 0)
     auto_score = min(int(b1.get("score") or 0), int(b2.get("score") or 0))
@@ -156,6 +162,12 @@ def main() -> int:
         elif level == "review_loop":
             lv_score = review_loop_score
             lv_ok = bool(review_loop.get("ok"))
+        elif level == "agent_nonblock":
+            lv_score = agent_nonblock_score
+            lv_ok = bool(agent_nonblock.get("ok"))
+        elif level == "delivery":
+            lv_score = delivery_score
+            lv_ok = bool(delivery.get("ok"))
         else:
             lv_score = auto_score
             lv_ok = consistency_ok
@@ -217,6 +229,8 @@ def main() -> int:
             "monorepo_live": monorepo_live,
             "monorepo_refactor": monorepo_refactor,
             "review_loop": review_loop,
+            "agent_nonblock": agent_nonblock,
+            "delivery": delivery,
         },
     }
     out_fp = ws / OUT_REL

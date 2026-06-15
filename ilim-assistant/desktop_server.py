@@ -1222,7 +1222,7 @@ def _health_build_block() -> dict:
 
         _rev = canonical_build_rev()
     except Exception:
-        _rev = "2026-06-15-ruzgar-programlama-pro-v3"
+        _rev = "2026-06-15-ruzgar-programlama-pro-v4"
 
     base = {
         "rev": _rev,
