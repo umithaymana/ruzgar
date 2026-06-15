@@ -23,6 +23,7 @@ _MAX_FILES_PER_TURN_DEFAULT = 8
 _MULTI_FILE_CUES = (
     r"\b(refactor|refaktör|çok dosya|cok dosya|multi\s*file|tüm dosya|tum dosya)\b",
     r"\b(util|service|main\.py|üç dosya|uc dosya|3 dosya)\b",
+    r"\b(monorepo|ilim-assistant|bench_pkg)\b",
 )
 
 

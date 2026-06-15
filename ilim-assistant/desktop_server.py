@@ -1222,7 +1222,7 @@ def _health_build_block() -> dict:
 
         _rev = canonical_build_rev()
     except Exception:
-        _rev = "2026-06-15-ruzgar-programlama-pro-v1"
+        _rev = "2026-06-15-ruzgar-programlama-pro-v3"
 
     base = {
         "rev": _rev,
@@ -12632,10 +12632,10 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
 
 
 @app.post("/api/chat/stream")
-def chat_stream(req: ChatRequest):
-    def generate():
+async def chat_stream(req: ChatRequest):
+    async def generate():
         yield ":ruzgar-events\n\n"
-        for obj in iter_chat_turn_events(req):
+        async for obj in iterate_in_threadpool(iter_chat_turn_events(req)):
             yield _sse(obj)
 
     return StreamingResponse(
@@ -12645,9 +12645,7 @@ def chat_stream(req: ChatRequest):
     )
 
 
-@app.post("/api/chat/full")
-def chat_full(req: ChatRequest):
-    """Streaming kapalı UI yolu: tüm cevabı üret, tek JSON yanıt olarak döndür."""
+def _chat_full_sync(req: ChatRequest) -> dict[str, Any]:
     events: list[dict[str, Any]] = []
     full_reply = ""
     done_event: dict[str, Any] | None = None
@@ -12690,6 +12688,12 @@ def chat_full(req: ChatRequest):
         "instant_memory": bool(done_event.get("instant_memory")),
         "paket_auto": done_event.get("paket_auto"),
     }
+
+
+@app.post("/api/chat/full")
+async def chat_full(req: ChatRequest):
+    """Streaming kapalı UI yolu: tüm cevabı üret, tek JSON yanıt olarak döndür."""
+    return await run_in_threadpool(_chat_full_sync, req)
 
 
 @app.websocket("/ws/chat")

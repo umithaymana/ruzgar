@@ -1,24 +1,24 @@
 {
-  "ok": false,
+  "ok": true,
   "version": "programlama-upgrade-runner-v2-2026-05-29",
-  "elapsed_sec": 23.45,
+  "elapsed_sec": 22.45,
   "scores": {
     "command_level": 100,
-    "autonomy_level": 92,
-    "independence_level": 92,
+    "autonomy_level": 100,
+    "independence_level": 100,
     "parity_level": 100,
     "approval_safety": 100,
     "natural_language": 100,
-    "reliability": 33
+    "reliability": 100
   },
   "checks": {
-    "consistency_two_runs": false,
-    "faz99_run1_ok": false,
+    "consistency_two_runs": true,
+    "faz99_run1_ok": true,
     "faz99_run2_ok": true,
-    "faz99_dual_run_required": false,
+    "faz99_dual_run_required": true,
     "parity_8_8_ok": true,
     "git_commit_proof": true,
-    "independence_min_95": false
+    "independence_min_95": true
   },
   "ladder": [
     {
@@ -33,17 +33,17 @@
       "id": "ladder-s2-static-delivery",
       "level": "medium",
       "description": "Static site scaffold + banner change + smoke",
-      "score": 92,
+      "score": 100,
       "min_score": 90,
-      "pass": false
+      "pass": true
     },
     {
       "id": "ladder-s3-recovery-git-stability",
       "level": "production",
       "description": "Runtime+compile recovery, branch+commit proof, two-run stability",
-      "score": 92,
+      "score": 100,
       "min_score": 95,
-      "pass": false
+      "pass": true
     },
     {
       "id": "ladder-s4-parity-8",
@@ -57,9 +57,9 @@
       "id": "ladder-s5-full-gate",
       "level": "full",
       "description": "Komut 50 + Faz99 çift koşu + parity 8/8 + git commit kanıtı",
-      "score": 92,
+      "score": 100,
       "min_score": 95,
-      "pass": false
+      "pass": true
     },
     {
       "id": "ladder-s6-monorepo-pro",
@@ -73,6 +73,22 @@
       "id": "ladder-s7-monorepo-live",
       "level": "monorepo_live",
       "description": "ilim-assistant gerçek patch + import + ana motor havuz okuma",
+      "score": 100,
+      "min_score": 100,
+      "pass": true
+    },
+    {
+      "id": "ladder-s8-monorepo-refactor",
+      "level": "monorepo_refactor",
+      "description": "P5 — üç dosyalı cerrahi refactor + paralel keşif + pytest",
+      "score": 100,
+      "min_score": 100,
+      "pass": true
+    },
+    {
+      "id": "ladder-s9-review-loop",
+      "level": "review_loop",
+      "description": "P6 — diff özeti + checkpoint + rollback planı",
       "score": 100,
       "min_score": 100,
       "pass": true
@@ -148,8 +164,8 @@
   "artifacts": {
     "dataset": "D:\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\scripts\\programlama_command_goldens.json",
     "ladder": "D:\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\scripts\\programlama_task_ladder.json",
-    "faz99_scope_1": "projects/smoke-autonomy-11648",
-    "faz99_scope_2": "projects/smoke-autonomy-11658",
+    "faz99_scope_1": "projects/smoke-autonomy-9a64f213",
+    "faz99_scope_2": "projects/smoke-autonomy-8136de6d",
     "parity_mode": "quick",
     "parity_passed": 8,
     "parity_total": 8,
@@ -180,6 +196,63 @@
       },
       "probe_rel": "ilim-assistant/tests/monorepo_live/probe_marker.py",
       "version": "programlama-monorepo-live-v1-2026-06-15"
+    },
+    "monorepo_refactor": {
+      "ok": true,
+      "detail": "monorepo refactor gate",
+      "checks": {
+        "bench_reset": true,
+        "triple_patch": true,
+        "pytest_triple": true,
+        "parallel_explore": true,
+        "context_budget": true,
+        "havuz_write": true
+      },
+      "scope_rel": "ilim-assistant/tests/monorepo_refactor",
+      "patches": 3,
+      "version": "programlama-monorepo-refactor-v1-2026-06-15"
+    },
+    "review_loop": {
+      "ok": true,
+      "detail": "review loop gate",
+      "checks": {
+        "bench_reset": true,
+        "patch_apply": true,
+        "diff_summary": true,
+        "checkpoint": true,
+        "rollback_plan": true
+      },
+      "scope_rel": "ilim-assistant/tests/monorepo_refactor",
+      "files": 3,
+      "diff_summary_text": "**Diff özeti (P6):**\n- `ilim-assistant/tests/monorepo_refactor/bench_pkg/core.py` · +1 / −1\n- `ilim-assistant/tests/monorepo_refactor/bench_pkg/service.py` · +1 / −1\n- `ilim-assistant/tests/monorepo_refactor/bench_pkg/api.py` · +1 / −1",
+      "rollback_hint": "Geri dönüş planı hazır (3 dosya). Örnek: `git checkout -- ilim-assistant/tests/monorepo_refactor/bench_pkg/core.py`",
+      "checkpoint": {
+        "version": "programlama-faz93-v2-2026-05-27",
+        "recorded": true,
+        "applied_count": 3,
+        "checkpoint_id": 2,
+        "rollback": {
+          "version": "programlama-faz93-v2-2026-05-27",
+          "has_plan": true,
+          "files": [
+            "ilim-assistant/tests/monorepo_refactor/bench_pkg/core.py",
+            "ilim-assistant/tests/monorepo_refactor/bench_pkg/service.py",
+            "ilim-assistant/tests/monorepo_refactor/bench_pkg/api.py"
+          ],
+          "sample_files": [
+            "ilim-assistant/tests/monorepo_refactor/bench_pkg/core.py",
+            "ilim-assistant/tests/monorepo_refactor/bench_pkg/service.py",
+            "ilim-assistant/tests/monorepo_refactor/bench_pkg/api.py"
+          ],
+          "git_commands": [
+            "git checkout -- ilim-assistant/tests/monorepo_refactor/bench_pkg/core.py",
+            "git checkout -- ilim-assistant/tests/monorepo_refactor/bench_pkg/service.py",
+            "git checkout -- ilim-assistant/tests/monorepo_refactor/bench_pkg/api.py"
+          ],
+          "manual_hint": "Patch oncesi commit yoksa dosyalari yedekten geri yukle."
+        }
+      },
+      "version": "programlama-review-loop-v1-2026-06-15"
     }
   }
 }

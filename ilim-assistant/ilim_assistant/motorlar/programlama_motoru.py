@@ -335,6 +335,25 @@ def is_code_agent_task_message(message: str, mode_norm: str = "programlama") -> 
 
 def is_programlama_reserved_command(message: str) -> bool:
     """Eğitim hafızası / genel sohbet bu komutları yutmasın."""
+    try:
+        from ilim_assistant.motorlar.programlama_monorepo_refactor import (
+            wants_monorepo_refactor_gate,
+        )
+
+        if wants_monorepo_refactor_gate(message):
+            return True
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_review_loop import (
+            wants_review_loop_gate,
+            wants_review_summary,
+        )
+
+        if wants_review_loop_gate(message) or wants_review_summary(message):
+            return True
+    except Exception:
+        pass
     if is_code_agent_task_message(message):
         return False
     try:
@@ -380,12 +399,14 @@ def is_programlama_reserved_command(message: str) -> bool:
     try:
         from ilim_assistant.motorlar.programlama_faz5 import (
             wants_project_clear,
+            wants_project_recall,
             wants_project_summary,
             patch_project_from_message,
         )
 
         if (
             wants_project_summary(message)
+            or wants_project_recall(message)
             or wants_project_clear(message)
             or patch_project_from_message(message)
         ):
@@ -747,6 +768,7 @@ def _maybe_programlama_instant_reply_impl(
         pass
     parts: list[str] = []
     focus_meta: dict[str, Any] = {}
+    recall_only = False
     try:
         from ilim_assistant.ruzgar_owner_lock import maybe_owner_instant_reply
 
@@ -763,6 +785,26 @@ def _maybe_programlama_instant_reply_impl(
         rep101 = maybe_instant_report_read(message, workspace_root)
         if rep101:
             parts.append(rep101)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_monorepo_refactor import (
+            maybe_instant_monorepo_refactor,
+        )
+
+        p5_hit = maybe_instant_monorepo_refactor(message, workspace_root)
+        if p5_hit:
+            parts.append(p5_hit)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_review_loop import (
+            maybe_instant_review_loop,
+        )
+
+        p6_hit = maybe_instant_review_loop(message, workspace_root)
+        if p6_hit:
+            parts.append(p6_hit)
     except Exception:
         pass
     try:
@@ -808,19 +850,26 @@ def _maybe_programlama_instant_reply_impl(
         parts.append(format_self_scan_report(workspace_root))
     try:
         from ilim_assistant.motorlar.programlama_faz5 import (
+            format_project_recall_report,
             format_project_summary_report,
             wants_project_clear,
+            wants_project_recall,
             wants_project_summary,
             clear_session,
             maybe_apply_message_project_patch,
+            sync_session_to_havuz,
         )
 
-        if wants_project_clear(message):
+        if wants_project_recall(message):
+            parts.append(format_project_recall_report(workspace_root, message))
+            recall_only = True
+        elif wants_project_clear(message):
             clear_session(workspace_root)
             parts.append(
                 "Proje oturum bağlamı temizlendi (.ruzgar/programlama_oturum.json)."
             )
         elif wants_project_summary(message):
+            sync_session_to_havuz(workspace_root)
             parts.append(format_project_summary_report(workspace_root))
             try:
                 from ilim_assistant.motorlar.programlama_faz13 import (
@@ -845,6 +894,7 @@ def _maybe_programlama_instant_reply_impl(
             except Exception:
                 pass
         elif maybe_apply_message_project_patch(message, workspace_root):
+            sync_session_to_havuz(workspace_root)
             parts.append(format_project_summary_report(workspace_root))
     except Exception:
         pass
@@ -1184,17 +1234,18 @@ def _maybe_programlama_instant_reply_impl(
     try:
         from ilim_assistant.motorlar.programlama_faz29 import maybe_instant_faz29
 
-        faz29_hit = maybe_instant_faz29(message, workspace_root)
-        if faz29_hit:
-            if isinstance(faz29_hit, dict):
-                t29 = str(faz29_hit.get("text") or "").strip()
-                if t29:
-                    parts.append(t29)
-                for key in ("focus_rel", "project_rel", "expand_tree"):
-                    if faz29_hit.get(key):
-                        focus_meta[key] = faz29_hit[key]
-            else:
-                parts.append(str(faz29_hit))
+        if not recall_only:
+            faz29_hit = maybe_instant_faz29(message, workspace_root)
+            if faz29_hit:
+                if isinstance(faz29_hit, dict):
+                    t29 = str(faz29_hit.get("text") or "").strip()
+                    if t29:
+                        parts.append(t29)
+                    for key in ("focus_rel", "project_rel", "expand_tree"):
+                        if faz29_hit.get(key):
+                            focus_meta[key] = faz29_hit[key]
+                else:
+                    parts.append(str(faz29_hit))
     except Exception:
         pass
     try:

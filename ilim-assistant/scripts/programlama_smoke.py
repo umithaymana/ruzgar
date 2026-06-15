@@ -3620,6 +3620,22 @@ def main() -> int:
         _fail("monorepo live gate", str(exc)[:120])
         fails += 1
 
+    print("=== S8 — monorepo refactor gate (P5) ===")
+    try:
+        from ilim_assistant.motorlar.programlama_monorepo_refactor import (
+            run_monorepo_refactor_gate,
+        )
+
+        ref = run_monorepo_refactor_gate(WORKSPACE)
+        if ref.get("ok"):
+            _ok("monorepo refactor gate")
+        else:
+            _fail("monorepo refactor gate", str(ref.get("detail") or ref.get("checks"))[:120])
+            fails += 1
+    except Exception as exc:
+        _fail("monorepo refactor gate", str(exc)[:120])
+        fails += 1
+
     print()
     if fails:
         print(f"SONUÇ: {fails} hata")

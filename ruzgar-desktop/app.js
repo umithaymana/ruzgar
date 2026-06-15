@@ -4,7 +4,7 @@
  * Kök sonda `/api` ise kırpılır — aksi halde fetch `.../api/api/merkezi-bellek` ile 404 verir.
  */
 const RUZGAR_LOCAL_API_PORT = 8779;
-const RUZGAR_EXPECTED_BUILD_REV = "2026-06-15-ruzgar-programlama-pro-v1";
+const RUZGAR_EXPECTED_BUILD_REV = "2026-06-15-ruzgar-programlama-pro-v3";
 const LS_VAD_USER = "ruzgar_vad_user_v1";
 const RUZGAR_LOCAL_API_FALLBACK = `http://127.0.0.1:${RUZGAR_LOCAL_API_PORT}`;
 
@@ -281,7 +281,7 @@ function ruzgarLikelyLocalDesktopApi() {
   if (!intervalMs) return;
   const ping = () => {
     window
-      .fetch(`${API}/api/health`, {
+      .fetch(`${API}/api/health?lite=1`, {
         method: "GET",
         cache: "no-store",
         keepalive: true,
@@ -11019,6 +11019,30 @@ function attachSourceTrustBadge(bubbleEl, card) {
   }
 }
 
+function shouldShowProgRollbackBar(text) {
+  if (currentMode !== "programlama") return false;
+  const t = String(text || "");
+  return (
+    /Geri dönüş planı|GERI DONUS PLANI|git checkout --/i.test(t) ||
+    /P6 review loop/i.test(t) ||
+    /programlama-review-loop/i.test(t)
+  );
+}
+
+function appendProgReviewRollbackBar(bubbleEl, text) {
+  if (!bubbleEl || !shouldShowProgRollbackBar(text)) return;
+  const bar = document.createElement("div");
+  bar.className = "chat-prog-rollback-bar";
+  bar.style.cssText = "margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;";
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "btn-secondary btn-compact";
+  btn.textContent = "Patch geri al";
+  btn.addEventListener("click", () => void rollbackPatchFromAtolye());
+  bar.appendChild(btn);
+  bubbleEl.appendChild(bar);
+}
+
 function appendBubble(role, text, opts = {}) {
   const div = document.createElement("div");
   let cls = `bubble ${role}`;
@@ -11089,6 +11113,7 @@ function appendBubble(role, text, opts = {}) {
     });
   } else {
     div.innerHTML = esc(text).replace(/\n/g, "<br>");
+    if (role === "assistant") appendProgReviewRollbackBar(div, text);
   }
   el.chat.appendChild(div);
   scrollChatToBottom({ smooth: role === "user" });
@@ -11679,7 +11704,17 @@ function localApiHealthCandidates() {
   return [...new Set(out.map((x) => normalizeRuzgarApiRootTail(x)).filter(Boolean))];
 }
 
-async function checkApi() {
+async function checkApi(opts = {}) {
+  const graceMs = typeof opts.graceMs === "number" ? opts.graceMs : 120000;
+  const lastOkAt = Number(window.__ruzgarLastHealthOkAt || 0);
+  if (
+    opts.allowGrace !== false &&
+    lastHealthSnapshot?.ok &&
+    lastOkAt > 0 &&
+    Date.now() - lastOkAt < graceMs
+  ) {
+    return true;
+  }
   if (window.__RUZGAR_BOOT_HEALTH__?.ok && !lastHealthSnapshot?.ok) {
     const bootBase = normalizeRuzgarApiRootTail(
       window.__RUZGAR_BOOT_API__ || window.__RUZGAR_API_ROOT__ || API,
@@ -11699,10 +11734,10 @@ async function checkApi() {
   for (const base of bases) {
   try {
     const ctrl = new AbortController();
-    const tid = window.setTimeout(() => ctrl.abort(), 15000);
+    const tid = window.setTimeout(() => ctrl.abort(), opts.timeoutMs || 12000);
     let r;
     try {
-      r = await fetch(`${base}/api/health`, { method: "GET", signal: ctrl.signal });
+      r = await fetch(`${base}/api/health?lite=1`, { method: "GET", signal: ctrl.signal, cache: "no-store" });
     } finally {
       window.clearTimeout(tid);
     }
@@ -11727,6 +11762,7 @@ async function checkApi() {
       fast_paths: j?.build?.fast_paths,
     });
     if (j.ok) {
+      window.__ruzgarLastHealthOkAt = Date.now();
       lastHealthSnapshot = j;
       if (
         typeof window !== "undefined" &&

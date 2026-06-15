@@ -301,10 +301,19 @@
     }
   }
 
+  function shouldUseActionCard(target, reply) {
+    const mode = normalizeMotorId(target);
+    if (mode !== "tercume") return false;
+    const body = String(reply || "");
+    return /^Adımlar\s*:/im.test(body) || /^Güven\s*:/im.test(body);
+  }
+
   async function dispatchBackendInstant(text, target) {
     const j = await fetchMotorDispatch(text, target);
     if (j?.handled && j.reply) {
-      say(j.reply, { actionCard: true });
+      const reply = String(j.reply);
+      const opts = shouldUseActionCard(target, reply) ? { actionCard: true } : undefined;
+      say(reply, opts);
       return { handled: true, replyShown: true, mode: normalizeMotorId(target) };
     }
     return { handled: false };

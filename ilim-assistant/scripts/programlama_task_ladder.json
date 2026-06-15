@@ -47,5 +47,19 @@
     "description": "ilim-assistant gerçek patch + import + ana motor havuz okuma",
     "min_score": 100,
     "require_ok": true
+  },
+  {
+    "id": "ladder-s8-monorepo-refactor",
+    "level": "monorepo_refactor",
+    "description": "P5 — üç dosyalı cerrahi refactor + paralel keşif + pytest",
+    "min_score": 100,
+    "require_ok": true
+  },
+  {
+    "id": "ladder-s9-review-loop",
+    "level": "review_loop",
+    "description": "P6 — diff özeti + checkpoint + rollback planı",
+    "min_score": 100,
+    "require_ok": true
   }
 ]

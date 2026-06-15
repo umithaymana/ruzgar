@@ -292,6 +292,88 @@ def wants_project_summary(message: str) -> bool:
     )
 
 
+def wants_project_recall(message: str) -> bool:
+    """«az önce hangi projeye baktık, devam et» — havuz + oturum hatırlama."""
+    low = (message or "").lower()
+    if wants_project_summary(message):
+        return False
+    if "hangi proj" in low and "bakt" in low:
+        return True
+    if ("az önce" in low or "az once" in low) and "proje" in low:
+        if "bakt" in low or "devam" in low:
+            return True
+    if "aynı proje" in low or "ayni proje" in low:
+        return True
+    return False
+
+
+def sync_session_to_havuz(workspace_root: str | Path | None) -> None:
+    """Oturum projesini merkezi havuza yazar (P4 recall için)."""
+    sess = load_session(workspace_root)
+    proj = sess.get("project") or {}
+    name = str(proj.get("name") or "").strip()
+    goal = str(proj.get("goal") or "").strip()
+    if not name and not goal:
+        return
+    try:
+        from ilim_assistant.motorlar.programlama_havuz_bridge import record_tool_outcome
+
+        scope = f"projects/{name}" if name else ""
+        record_tool_outcome(
+            workspace_root,
+            goal=goal or name,
+            scope_rel=scope,
+        )
+    except Exception:
+        pass
+
+
+def format_project_recall_report(
+    workspace_root: str | Path | None,
+    message: str = "",
+) -> str:
+    sess = load_session(workspace_root)
+    proj = sess.get("project") or {}
+    name = str(proj.get("name") or "").strip()
+    goal = str(proj.get("goal") or "").strip()
+    last_tool: dict[str, Any] = {}
+    try:
+        from ilim_assistant.ana_motor_programlama_havuz import read_programlama_havuz_snapshot
+
+        snap = read_programlama_havuz_snapshot()
+        raw = snap.get("last_tool_outcome")
+        if isinstance(raw, dict):
+            last_tool = raw
+    except Exception:
+        pass
+
+    lines = ["Ümit abi, az önce baktığımız proje:", ""]
+    if name:
+        lines.append(f"- **Proje:** `{name}`")
+    if goal:
+        lines.append(f"- **Hedef:** {goal}")
+    scope = str(last_tool.get("scope_rel") or "").strip()
+    if scope and scope != f"projects/{name}":
+        lines.append(f"- **Son kapsam:** `{scope}`")
+    turns = sess.get("recent_turns") or []
+    if turns and isinstance(turns[0], dict):
+        last_user = str(turns[0].get("user") or "").strip()[:160]
+        if last_user:
+            lines.append(f"- **Son istek:** {last_user}")
+    if not name and not goal:
+        lines.append(
+            "_(Henüz kayıtlı oturum projesi yok — `proje kaydet: Ad | hedef: …` ile tanımla.)_"
+        )
+    lines.extend(
+        [
+            "",
+            "Devam etmek için ne yapmamı istersin? (dosya aç, patch, test, endpoint…)",
+            f"({FAZ5_VERSION} · havuz recall)",
+        ]
+    )
+    return "\n".join(lines)
+
+
 def wants_project_clear(message: str) -> bool:
     low = (message or "").lower()
     return any(

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import secrets
+import shutil
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -9,7 +11,7 @@ from typing import Any
 from ilim_assistant.approved_executor import run_argv
 from ilim_assistant.motorlar.programlama_motoru import repo_root
 
-FAZ99_VERSION = "programlama-faz99-v2-2026-05-29"
+FAZ99_VERSION = "programlama-faz99-v3-2026-06-15"
 _OUT_JSON = "scripts/ruzgar_autonomy_benchmark_sonuc.json"
 _ARCHIVE_DIR = ".ruzgar/autonomy_reports"
 
@@ -44,6 +46,26 @@ def archive_autonomy_report(
         return fp
     except OSError:
         return None
+
+
+def _unique_bench_slug(prefix: str = "smoke-autonomy") -> str:
+    """Çift koşu / hızlı ardışık bench'te slug çakışmasını önle."""
+    return f"{prefix}-{secrets.token_hex(4)}"
+
+
+def _clear_pytest_cache(scope_abs: Path, test_py: Path | None = None) -> None:
+    """pytest + importlib eski .pyc ile güncel kaynak uyumsuzluğunu önle."""
+    tests_dir = scope_abs / "tests"
+    cache = tests_dir / "__pycache__"
+    if cache.is_dir():
+        shutil.rmtree(cache, ignore_errors=True)
+    if test_py is not None and test_py.is_file():
+        stem = test_py.stem
+        for pyc in tests_dir.glob(f"__pycache__/{stem}.*.pyc"):
+            try:
+                pyc.unlink()
+            except OSError:
+                pass
 
 
 def faz99_check_named(checks: list[dict[str, Any]] | None, name: str) -> bool:
@@ -162,9 +184,11 @@ def _recovery_probe(scope_abs: Path) -> tuple[bool, str]:
 
 
 def _runtime_recovery_probe(scope_abs: Path) -> tuple[bool, str]:
-    tag = int(time.time() * 1000) % 100000
+    scope_abs = scope_abs.resolve()
+    tag = secrets.token_hex(4)
     test_name = f"test_runtime_recovery_case_{tag}"
-    test_fp = scope_abs / "tests" / f"test_faz99_runtime_recovery_{tag}.py"
+    rel_test = Path("tests") / f"test_faz99_runtime_recovery_{tag}.py"
+    test_fp = scope_abs / rel_test
     broken = (
         f"def {test_name}() -> None:\n"
         "    assert 1 == 2\n"
@@ -173,27 +197,30 @@ def _runtime_recovery_probe(scope_abs: Path) -> tuple[bool, str]:
         f"def {test_name}() -> None:\n"
         "    assert 1 == 1\n"
     )
+    pytest_argv = [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        str(rel_test).replace("\\", "/"),
+        "-p",
+        "no:cacheprovider",
+    ]
     try:
         test_fp.parent.mkdir(parents=True, exist_ok=True)
         test_fp.write_text(broken, encoding="utf-8")
+        _clear_pytest_cache(scope_abs, test_fp)
     except OSError as exc:
         return False, f"write_fail:{str(exc)[:80]}"
 
-    c1, _, e1 = run_argv(
-        ["python", "-m", "pytest", "-q", str(test_fp), "-p", "no:cacheprovider"],
-        cwd=str(scope_abs),
-        timeout_sec=40,
-    )
+    c1, _, e1 = run_argv(pytest_argv, cwd=str(scope_abs), timeout_sec=40)
     fail_seen = c1 != 0
     try:
         test_fp.write_text(healed, encoding="utf-8")
+        _clear_pytest_cache(scope_abs, test_fp)
     except OSError as exc:
         return False, f"heal_write_fail:{str(exc)[:80]}"
-    c2, o2, e2 = run_argv(
-        ["python", "-m", "pytest", "-q", str(test_fp), "-p", "no:cacheprovider"],
-        cwd=str(scope_abs),
-        timeout_sec=40,
-    )
+    c2, o2, e2 = run_argv(pytest_argv, cwd=str(scope_abs), timeout_sec=40)
     pass_seen = c2 == 0
     return fail_seen and pass_seen, ((o2 or e2 or e1 or "")[:140] or "runtime_recovery_ok")
 
@@ -288,7 +315,7 @@ def run_autonomy_benchmark(workspace_root: str | Path | None = None) -> dict[str
         add("plan_build", False, str(exc), points=8)
         plan = {}
 
-    slug = f"smoke-autonomy-{int(time.time()) % 100000}"
+    slug = _unique_bench_slug()
     scope = f"projects/{slug}"
     static_slug = f"{slug}-site"
     static_scope = f"projects/{static_slug}"

@@ -67,6 +67,8 @@ def main() -> int:
     )
     from ilim_assistant.motorlar.programlama_router import run_monorepo_router_smoke
     from ilim_assistant.motorlar.programlama_monorepo_live import run_monorepo_live_gate
+    from ilim_assistant.motorlar.programlama_monorepo_refactor import run_monorepo_refactor_gate
+    from ilim_assistant.motorlar.programlama_review_loop import run_review_loop_gate
 
     dataset = _load_json(dataset_fp)
     ladder = _load_json(ladder_fp)
@@ -91,6 +93,10 @@ def main() -> int:
     monorepo_score = 100 if bool(monorepo_smoke.get("ok")) else 0
     monorepo_live = run_monorepo_live_gate(ws)
     monorepo_live_score = 100 if bool(monorepo_live.get("ok")) else 0
+    monorepo_refactor = run_monorepo_refactor_gate(ws)
+    monorepo_refactor_score = 100 if bool(monorepo_refactor.get("ok")) else 0
+    review_loop = run_review_loop_gate(ws)
+    review_loop_score = 100 if bool(review_loop.get("ok")) else 0
 
     cmd_score = int(c98.get("score") or 0)
     auto_score = min(int(b1.get("score") or 0), int(b2.get("score") or 0))
@@ -144,6 +150,12 @@ def main() -> int:
         elif level == "monorepo_live":
             lv_score = monorepo_live_score
             lv_ok = bool(monorepo_live.get("ok"))
+        elif level == "monorepo_refactor":
+            lv_score = monorepo_refactor_score
+            lv_ok = bool(monorepo_refactor.get("ok"))
+        elif level == "review_loop":
+            lv_score = review_loop_score
+            lv_ok = bool(review_loop.get("ok"))
         else:
             lv_score = auto_score
             lv_ok = consistency_ok
@@ -203,6 +215,8 @@ def main() -> int:
             "parity_total": parity_total,
             "monorepo_smoke": monorepo_smoke,
             "monorepo_live": monorepo_live,
+            "monorepo_refactor": monorepo_refactor,
+            "review_loop": review_loop,
         },
     }
     out_fp = ws / OUT_REL

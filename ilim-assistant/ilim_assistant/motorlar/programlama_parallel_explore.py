@@ -43,6 +43,11 @@ def _guess_paths(scope_rel: str, goal: str) -> list[str]:
         paths.append(f"{scope_rel}/tests/test_health.py")
     if "readme" in low:
         paths.append(f"{scope_rel}/README.md")
+    if "refactor" in low or "monorepo" in low or "bench_pkg" in low:
+        for tail in ("bench_pkg/core.py", "bench_pkg/service.py", "bench_pkg/api.py"):
+            rel = f"{scope_rel}/{tail}".replace("//", "/")
+            if rel not in paths:
+                paths.append(rel)
     m = re.search(r"([\w./\-]+\.(?:py|js|ts|tsx|jsx|md))", goal or "", re.I)
     if m:
         p = m.group(1).replace("\\", "/").lstrip("/")

@@ -198,6 +198,13 @@ def parse_project_switch(message: str) -> str | None:
 
 
 def wants_project_list(message: str) -> bool:
+    try:
+        from ilim_assistant.motorlar.programlama_faz5 import wants_project_recall
+
+        if wants_project_recall(message):
+            return False
+    except Exception:
+        pass
     low = _ascii_fold(message)
     return any(
         k in low
