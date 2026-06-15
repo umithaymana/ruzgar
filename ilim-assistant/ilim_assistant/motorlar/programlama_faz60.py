@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any
 
 FAZ60_VERSION = "programlama-faz60-v1-2026-05-26"
-_DEFAULT_EXPECTED_REV = "2026-06-14-ruzgar-sohbet-aq-faz-aq"
+_DEFAULT_EXPECTED_REV = "2026-06-15-ruzgar-programlama-pro-v1"
 _FAZ60_PATCH = "v71-hotfix1"
 _LAST_FULL_PARITY_FILE = "last_parity_full_run.json"
 _WEEKLY_KPI_PREFIX = "weekly_kpi_"
@@ -39,7 +39,12 @@ def expected_build_rev() -> str:
     raw = os.environ.get("RUZGAR_EXPECTED_BUILD_REV", "").strip()
     if raw:
         return raw
-    return _DEFAULT_EXPECTED_REV
+    try:
+        from ilim_assistant.ruzgar_build import canonical_build_rev
+
+        return canonical_build_rev()
+    except Exception:
+        return _DEFAULT_EXPECTED_REV
 
 
 def build_mismatch_info(server_rev: str | None) -> dict[str, Any]:

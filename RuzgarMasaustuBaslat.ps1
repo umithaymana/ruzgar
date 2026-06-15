@@ -14,7 +14,9 @@ $Log = Join-Path $env:TEMP "ruzgar-masaustu-launch.log"
 
 $ApiErr = Join-Path $env:TEMP "ruzgar-api.err"
 
-$ExpectedRev = "2026-06-14-ruzgar-sohbet-aq-faz-aq"
+$ExpectedRev = & py -3 (Join-Path $Ia "scripts\ruzgar_read_build_rev.py") 2>$null
+if (-not $ExpectedRev) { $ExpectedRev = "2026-06-15-ruzgar-programlama-pro-v1" }
+$ExpectedRev = $ExpectedRev.Trim()
 
 $Port = 8779
 
@@ -94,13 +96,19 @@ $env:RUZGAR_CORS_PERMISSIVE = "1"
 
 
 
-function Test-HealthOk {
+function Test-HealthCurrent {
 
     try {
 
         $j = Invoke-RestMethod "http://127.0.0.1:$Port/api/health" -TimeoutSec 15
 
-        return [bool]$j.ok
+        if (-not $j.ok) { return $false }
+
+        if ([string]$j.build.rev -ne $ExpectedRev) { return $false }
+
+        if ($j.build.programlama_pro_v1 -ne $true) { return $false }
+
+        return $true
 
     } catch { return $false }
 
@@ -136,6 +144,26 @@ if (Test-Path $ops) {
     & py -3 $ops kill-all-api --port $Port 2>&1 | ForEach-Object { Log $_ }
 
     Start-Sleep -Seconds 2
+
+    if (-not (Test-PortFree)) {
+
+        Log "Port $Port hala dolu — yonetici temizligi deneniyor"
+
+        $bat = Join-Path $Root "Ruzgar_Port_Temizle.bat"
+
+        if (Test-Path $bat) {
+
+            Start-Process -FilePath $bat -Verb RunAs -Wait
+
+            Start-Sleep -Seconds 2
+
+            & py -3 $ops kill-all-api --port $Port 2>&1 | ForEach-Object { Log $_ }
+
+            Start-Sleep -Seconds 1
+
+        }
+
+    }
 
     if (-not (Test-PortFree)) {
 
@@ -181,7 +209,7 @@ $ok = $false
 
 for ($i = 0; $i -lt 180; $i++) {
 
-    if (Test-HealthOk) { $ok = $true; break }
+    if (Test-HealthCurrent) { $ok = $true; break }
 
     Start-Sleep -Milliseconds 500
 
@@ -213,6 +241,20 @@ $(if ($errTail) { "`nSon hata:`n$errTail" })
     exit 1
 
 }
+
+try {
+    $hj = Invoke-RestMethod "http://127.0.0.1:$Port/api/health" -TimeoutSec 10
+    $liveRev = [string]$hj.build.rev
+    Log "API build.rev=$liveRev beklenen=$ExpectedRev"
+    if ($liveRev -ne $ExpectedRev) {
+        Log "UYARI build rev uyumsuz — port temizleyip tekrar deneyin"
+    }
+} catch {
+    Log "UYARI health rev kontrolu atlandi"
+}
+
+$env:RUZGAR_EXPECTED_BUILD_REV = $ExpectedRev
+$env:RUZGAR_ELECTRON_API_FRESH = "1"
 
 
 

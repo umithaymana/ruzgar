@@ -310,7 +310,8 @@ def _bilge_programlama_directive() -> str:
     return (
         "[BİLGE PROGRAMLAMA — Ümit & Gökçenur]\n"
         "Akış: (1) kısa plan (2–4 madde) → (2) ilgili dosyaları oku → "
-        "(3) `@@write yol` + kod bloğu ile patch → (4) pytest/ruff çıktısını yorumla.\n"
+        "(3) `@@write yol` + kod bloğu veya `@@patch yol` + search-replace ile patch → "
+        "(4) pytest/ruff çıktısını yorumla.\n"
         "Uydurma dosya yolu yazma; üstteki haritada olmayan yolu önce sor veya @@ ile oku.\n"
         "Traceback varsa satır numarasına göre düzelt; başarısız testte assertion'ı hedefle.\n"
         "Kullanıcı istemedikçe kapsamı büyütme; her turda yalnızca gerekli değişiklik.\n"
@@ -704,6 +705,35 @@ def maybe_programlama_instant_reply(
     editor_snippet: str | None = None,
 ) -> str | dict[str, Any] | None:
     """Programlama motoruna özel anında yanıtlar (LLM turu atlanır)."""
+    try:
+        from ilim_assistant.motorlar.programlama_router import dispatch_instant_reply
+
+        return dispatch_instant_reply(
+            message,
+            mode_norm,
+            workspace_root=workspace_root,
+            active_file=active_file,
+            editor_snippet=editor_snippet,
+        )
+    except Exception:
+        return _maybe_programlama_instant_reply_impl(
+            message,
+            mode_norm,
+            workspace_root=workspace_root,
+            active_file=active_file,
+            editor_snippet=editor_snippet,
+        )
+
+
+def _maybe_programlama_instant_reply_impl(
+    message: str,
+    mode_norm: str,
+    *,
+    workspace_root: str | Path | None = None,
+    active_file: str | None = None,
+    editor_snippet: str | None = None,
+) -> str | dict[str, Any] | None:
+    """Dahili anında yanıt zinciri (router tarafından çağrılır)."""
     if mode_norm != "programlama":
         return None
     try:
@@ -1275,6 +1305,23 @@ def apply_assistant_reply_tools(
         )
     except Exception:
         pass
+    try:
+        from ilim_assistant.motorlar.programlama_havuz_bridge import record_tool_outcome
+
+        write_paths = [w.path for w in summary.writes if w.ok and w.path]
+        patch_paths = [
+            w.path
+            for w in summary.writes
+            if w.ok and w.path and "Patch uygulandı" in (w.detail or "")
+        ]
+        record_tool_outcome(
+            root,
+            writes=write_paths,
+            patches=patch_paths,
+            pytest_ok=pytest_rep.ok if pytest_rep else None,
+        )
+    except Exception:
+        pass
     return summary, pytest_rep
 
 
@@ -1420,6 +1467,24 @@ def run_tools_for_message(
         else:
             blocks.append(f"=== Yazma: {rel} ===\n[HATA] {wrep.detail}")
 
+    try:
+        from ilim_assistant.motorlar.programlama_patch import apply_patch_jobs
+
+        for prep in apply_patch_jobs(message, workspace_root):
+            wrep = WriteReport(path=prep.path, ok=prep.ok, detail=prep.detail)
+            summary.writes.append(wrep)
+            tag = "Patch" if prep.ok else "Patch HATA"
+            blocks.append(f"=== {tag}: {prep.path} ===\n{prep.detail}")
+            if prep.ok:
+                reread = tools.read(prep.path)
+                summary.reads.append(reread)
+                if reread.ok:
+                    blocks.append(
+                        f"=== Patch sonrası okuma: {prep.path} ===\n{reread.content[:2000]}"
+                    )
+    except Exception:
+        pass
+
     if run_presets:
         if _wants_full_verify(message):
             summary.execs.extend(tools.verify_pipeline(lint=True, pytest=True, smoke=False))
@@ -1466,7 +1531,8 @@ def run_tools_for_message(
         "\n[TALİMAT — PROGRAMLAMA ARAÇLARI — Ümit & Gökçenur]\n"
         "Üstteki okuma/yazma/terminal çıktıları gerçek sistem verisidir. "
         "Traceback veya lint satırlarını yorumla; gerekirse patch öner. "
-        "Dosya yazımı `@@write yol` + kod bloğu ile veya API `write_file` ile yapılır; "
+        "Dosya yazımı `@@write yol` + kod bloğu, küçük değişiklikte `@@patch yol` + "
+        "search-replace bloğu veya API `write_file` ile yapılır; "
         "her yazımda `.bak` yedeği alınır.\n"
     )
     body = "\n\n".join(blocks)
@@ -1516,13 +1582,29 @@ def build_motor_context(
         )
 
         if light_context_enabled():
-            return build_light_programming_context(
+            raw = build_light_programming_context(
                 message,
                 workspace_root=workspace_root,
                 active_file=active_file,
                 editor_snippet=editor_snippet,
                 include_tools=True,
             )
+            try:
+                from ilim_assistant.motorlar.programlama_context_budget import budget_wrap_light_context
+                from ilim_assistant.motorlar.programlama_router import classify_route, ProgRoute
+
+                route = classify_route(
+                    message,
+                    "programlama",
+                    workspace_root=workspace_root,
+                    active_file=active_file,
+                )
+                return budget_wrap_light_context(
+                    raw,
+                    meta={"route": route.value if isinstance(route, ProgRoute) else str(route)},
+                )
+            except Exception:
+                return raw
     except Exception:
         pass
 

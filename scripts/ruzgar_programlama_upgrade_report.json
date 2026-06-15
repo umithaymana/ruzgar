@@ -1,24 +1,24 @@
 {
-  "ok": true,
+  "ok": false,
   "version": "programlama-upgrade-runner-v2-2026-05-29",
-  "elapsed_sec": 68.26,
+  "elapsed_sec": 23.45,
   "scores": {
     "command_level": 100,
-    "autonomy_level": 100,
-    "independence_level": 100,
+    "autonomy_level": 92,
+    "independence_level": 92,
     "parity_level": 100,
     "approval_safety": 100,
     "natural_language": 100,
-    "reliability": 100
+    "reliability": 33
   },
   "checks": {
-    "consistency_two_runs": true,
-    "faz99_run1_ok": true,
+    "consistency_two_runs": false,
+    "faz99_run1_ok": false,
     "faz99_run2_ok": true,
-    "faz99_dual_run_required": true,
+    "faz99_dual_run_required": false,
     "parity_8_8_ok": true,
     "git_commit_proof": true,
-    "independence_min_95": true
+    "independence_min_95": false
   },
   "ladder": [
     {
@@ -33,17 +33,17 @@
       "id": "ladder-s2-static-delivery",
       "level": "medium",
       "description": "Static site scaffold + banner change + smoke",
-      "score": 100,
+      "score": 92,
       "min_score": 90,
-      "pass": true
+      "pass": false
     },
     {
       "id": "ladder-s3-recovery-git-stability",
       "level": "production",
       "description": "Runtime+compile recovery, branch+commit proof, two-run stability",
-      "score": 100,
+      "score": 92,
       "min_score": 95,
-      "pass": true
+      "pass": false
     },
     {
       "id": "ladder-s4-parity-8",
@@ -57,8 +57,24 @@
       "id": "ladder-s5-full-gate",
       "level": "full",
       "description": "Komut 50 + Faz99 çift koşu + parity 8/8 + git commit kanıtı",
-      "score": 100,
+      "score": 92,
       "min_score": 95,
+      "pass": false
+    },
+    {
+      "id": "ladder-s6-monorepo-pro",
+      "level": "monorepo",
+      "description": "Router + cerrahi patch + context budget + havuz köprüsü smoke",
+      "score": 100,
+      "min_score": 100,
+      "pass": true
+    },
+    {
+      "id": "ladder-s7-monorepo-live",
+      "level": "monorepo_live",
+      "description": "ilim-assistant gerçek patch + import + ana motor havuz okuma",
+      "score": 100,
+      "min_score": 100,
       "pass": true
     }
   ],
@@ -132,10 +148,38 @@
   "artifacts": {
     "dataset": "D:\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\scripts\\programlama_command_goldens.json",
     "ladder": "D:\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\scripts\\programlama_task_ladder.json",
-    "faz99_scope_1": "projects/smoke-autonomy-54043",
-    "faz99_scope_2": "projects/smoke-autonomy-54072",
+    "faz99_scope_1": "projects/smoke-autonomy-11648",
+    "faz99_scope_2": "projects/smoke-autonomy-11658",
     "parity_mode": "quick",
     "parity_passed": 8,
-    "parity_total": 8
+    "parity_total": 8,
+    "monorepo_smoke": {
+      "ok": true,
+      "checks": {
+        "patch_smoke": true,
+        "context_budget": true,
+        "router_classify": true,
+        "havuz_bridge": true
+      },
+      "version": "programlama-router-v1-2026-06-15"
+    },
+    "monorepo_live": {
+      "ok": true,
+      "detail": "monorepo live gate",
+      "checks": {
+        "probe_reset": true,
+        "patch_ok": true,
+        "import_v2": true,
+        "havuz_write": true,
+        "havuz_read": true,
+        "router_import": true,
+        "router_classify": true,
+        "budget_ok": true,
+        "explore_flag": true,
+        "stack_smoke": true
+      },
+      "probe_rel": "ilim-assistant/tests/monorepo_live/probe_marker.py",
+      "version": "programlama-monorepo-live-v1-2026-06-15"
+    }
   }
 }

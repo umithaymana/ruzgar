@@ -1023,6 +1023,25 @@ def iter_code_agent_turn_events(
             "faz55b_bonus": _faz55b_bonus,
         },
     }
+    _parallel_explore_block = ""
+    try:
+        from ilim_assistant.motorlar.programlama_parallel_explore import (
+            build_parallel_explore_block,
+        )
+
+        _parallel_explore_block = build_parallel_explore_block(
+            workspace,
+            scope_rel=task.scope_rel,
+            goal=task.goal,
+            message=message,
+        )
+        if _parallel_explore_block.strip():
+            yield {
+                "type": "status",
+                "text": "Paralel keşif tamamlandı — ilgili dosyalar önceden okundu.",
+            }
+    except Exception:
+        _parallel_explore_block = ""
     if delegated_from_genel:
         try:
             from ilim_assistant.motorlar.programlama_faz38 import delegation_status_text
@@ -1171,6 +1190,8 @@ def iter_code_agent_turn_events(
             max_turns=max_turns_total,
             failure_snippet=last_fail_snippet,
         )
+        if turn == 1 and _parallel_explore_block.strip():
+            turn_user = f"{turn_user}\n\n{_parallel_explore_block}"
         if _is_faz55b:
             try:
                 from ilim_assistant.motorlar.programlama_faz55 import inject_faz55b_turn_prefix
@@ -2088,6 +2109,17 @@ def iter_code_agent_turn_events(
         pass
 
     full_out = body_fixed + footer
+    try:
+        from ilim_assistant.motorlar.programlama_havuz_bridge import record_tool_outcome
+
+        record_tool_outcome(
+            workspace,
+            goal=task.goal,
+            scope_rel=task.scope_rel,
+            pytest_ok=success,
+        )
+    except Exception:
+        pass
     done: dict[str, Any] = {
         "type": "done",
         "full_reply": full_out,

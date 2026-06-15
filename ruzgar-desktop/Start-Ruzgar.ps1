@@ -6,7 +6,9 @@ $Repo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $Assistant = Join-Path $Repo "ilim-assistant"
 $Desktop = $PSScriptRoot
 $ApiPort = 8779
-$ExpectedBuildRev = "2026-06-14-ruzgar-sohbet-aq-faz-aq"
+$ExpectedBuildRev = & py -3 (Join-Path $Assistant "scripts\ruzgar_read_build_rev.py") 2>$null
+if (-not $ExpectedBuildRev) { $ExpectedBuildRev = "2026-06-15-ruzgar-programlama-pro-v1" }
+$ExpectedBuildRev = $ExpectedBuildRev.Trim()
 if ($env:RUZGAR_API_PORT) { [int]$ApiPort = $env:RUZGAR_API_PORT }
 $env:RUZGAR_EXPECTED_BUILD_REV = $ExpectedBuildRev
 
@@ -107,6 +109,7 @@ function Test-ApiHealthCurrent {
     if ($r.StatusCode -ne 200) { return $false }
     $j = $r.Content | ConvertFrom-Json
     if ([string]$j.build.rev -ne $ExpectedBuildRev) { return $false }
+    if ($j.build.programlama_pro_v1 -ne $true) { return $false }
     if ($env:RUZGAR_OLLAMA_ONLY -eq "1" -and $j.super_brain.gemini_configured -eq $true) { return $false }
     if ($env:RUZGAR_OLLAMA_ONLY -eq "1" -and $j.ruzgar_mode.ollama_only -ne $true) { return $false }
     return [bool]$j.ok
@@ -150,10 +153,10 @@ if (-not (Test-PortListen 11434)) {
 $null = Import-RuzgarEnvFile -IaRoot $Assistant
 Write-RuzgarRemoteApiTxt -Port $ApiPort
 
-if (-not (Test-ApiHealthCurrent -Port $ApiPort)) {
-  Stop-ApiPort -Port $ApiPort
-  Start-ApiOnPort -Port $ApiPort
-}
+# Masaustu her acilista taze API (diskteki kod yuklensin)
+Stop-ApiPort -Port $ApiPort
+Start-ApiOnPort -Port $ApiPort
+$env:RUZGAR_ELECTRON_API_FRESH = "1"
 
 $ruzgarWin = Get-Process -Name "electron" -ErrorAction SilentlyContinue |
   Where-Object { $_.MainWindowTitle -match "Rüzgar|RUZGAR" }

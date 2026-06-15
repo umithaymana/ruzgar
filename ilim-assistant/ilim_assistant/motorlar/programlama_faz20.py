@@ -62,6 +62,7 @@ def tool_catalog() -> list[dict[str, str]]:
     return [
         {"id": "read", "desc": "Dosya oku — path: projects/.../dosya"},
         {"id": "write", "desc": "Dosya yaz — path, content"},
+        {"id": "patch", "desc": "Cerrahi patch — path, search, replace"},
         {"id": "grep", "desc": "Proje içi ara — scope, pattern"},
         {"id": "verify", "desc": "pytest/npm — scope (proje kökü)"},
         {"id": "run", "desc": "Terminal preset — scope, preset: npm_test|npm_build|git_status"},
@@ -78,8 +79,8 @@ def faz20_tool_directive() -> str:
         '{"tool":"read","path":"projects/foo/app/main.py"}',
         "```",
         "",
-        "İzinli tool: read, write, grep, symbol, verify, run, goto, refs, rename",
-        "write için content alanı zorunlu. grep: scope + pattern. run: preset.",
+        "İzinli tool: read, write, patch, grep, symbol, verify, run, goto, refs, rename",
+        "write için content alanı zorunlu. patch için search+replace. grep: scope + pattern. run: preset.",
         "Plan 3 madde; sonra araçlar; gereksiz sohbet yok.",
     ]
     return "\n".join(lines)
@@ -246,6 +247,20 @@ def execute_tool(
             path = str(spec.get("path") or "")
             content = str(spec.get("content") or "")
             rep = ProgramlamaAraclari(workspace_root).write(path, content)
+            return {
+                "ok": rep.ok,
+                "tool": tool,
+                "path": path,
+                "output": rep.detail,
+            }
+
+        if tool == "patch":
+            from ilim_assistant.motorlar.programlama_patch import apply_search_replace
+
+            path = str(spec.get("path") or "")
+            search = str(spec.get("search") or spec.get("old") or "")
+            replace = str(spec.get("replace") or spec.get("new") or "")
+            rep = apply_search_replace(workspace_root, path, search, replace)
             return {
                 "ok": rep.ok,
                 "tool": tool,

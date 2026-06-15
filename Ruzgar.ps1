@@ -316,7 +316,9 @@ if ($env:RUZGAR_OLLAMA_ONLY -eq "1") {
     Log "Bulut kapali - yerel Ollama"
 }
 
-$script:RuzgarExpectedBuildRev = "2026-06-14-ruzgar-sohbet-aq-faz-aq"
+$script:RuzgarExpectedBuildRev = & py -3 (Join-Path $Root "ilim-assistant\scripts\ruzgar_read_build_rev.py") 2>$null
+if (-not $script:RuzgarExpectedBuildRev) { $script:RuzgarExpectedBuildRev = "2026-06-15-ruzgar-programlama-pro-v1" }
+$script:RuzgarExpectedBuildRev = $script:RuzgarExpectedBuildRev.Trim()
 $env:RUZGAR_EXPECTED_BUILD_REV = $script:RuzgarExpectedBuildRev
 
 function Show-RuzgarFaz60BuildMismatchPrompt {

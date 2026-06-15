@@ -1200,8 +1200,16 @@ def _sample_gpu_percent() -> float | None:
 def _health_build_block() -> dict:
     import os as _os
 
+    try:
+        from ilim_assistant.ruzgar_build import canonical_build_rev
+
+        _rev = canonical_build_rev()
+    except Exception:
+        _rev = "2026-06-15-ruzgar-programlama-pro-v1"
+
     base = {
-        "rev": "2026-06-14-ruzgar-sohbet-aq-faz-aq",
+        "rev": _rev,
+        "programlama_pro_v1": True,
         "nebula_kitap": True,
         "tek_ses_faz_b": True,
         "orkestrasyon_faz_c": True,

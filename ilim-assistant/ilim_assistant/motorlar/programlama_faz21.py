@@ -224,7 +224,57 @@ def build_light_programming_context(
     parts.append(f"\n[Kullanıcı]\n{(message or '').strip()}\n")
     elapsed = time.perf_counter() - t0
     parts.append(f"({FAZ21_VERSION} · {elapsed:.2f}s hazırlık)")
-    return "\n\n".join(p for p in parts if p.strip())
+
+    try:
+        from ilim_assistant.motorlar.programlama_patch import patch_directive
+
+        parts.append(patch_directive()[:500])
+    except Exception:
+        pass
+
+    raw = "\n\n".join(p for p in parts if p.strip())
+    try:
+        from ilim_assistant.motorlar.programlama_context_budget import (
+            assemble_context,
+            ContextPart,
+            context_budget_enabled,
+            directive_priority_map,
+        )
+
+        if context_budget_enabled():
+            pri = directive_priority_map()
+            ctx_parts: list[ContextPart] = []
+            for i, chunk in enumerate(raw.split("\n\n")):
+                key = "misc_directive"
+                head = chunk[:40].lower()
+                if "faz 21" in head or "[programlama" in head:
+                    key = "system"
+                elif "[kullanıcı]" in head or "[kullanici]" in head:
+                    key = "user"
+                elif "[proje" in head or "özet" in head:
+                    key = "summary"
+                elif "[aktif" in head:
+                    key = "active_file"
+                elif "[i̇ndeks]" in head or "[indeks]" in head:
+                    key = "index"
+                elif "hafiza" in head or "havuz" in head:
+                    key = "session"
+                elif "patch" in head:
+                    key = "patch"
+                ctx_parts.append(
+                    ContextPart(
+                        key=f"p{i}",
+                        text=chunk,
+                        priority=pri.get(key, 50),
+                    )
+                )
+            raw, _ = assemble_context(ctx_parts)
+            footer = f"({FAZ21_VERSION} · {elapsed:.2f}s hazırlık)"
+            if FAZ21_VERSION not in raw:
+                raw = raw.rstrip() + "\n\n" + footer
+    except Exception:
+        pass
+    return raw
 
 
 def wrap_prepare_turn_light(

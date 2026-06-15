@@ -127,6 +127,129 @@ function probeApiHealth(port) {
   });
 }
 
+function readExpectedBuildRev() {
+  try {
+    const p = path.join(WORKSPACE_ROOT, "ilim-assistant", "ruzgar_build_rev.txt");
+    if (fs.existsSync(p)) {
+      const line = fs
+        .readFileSync(p, "utf8")
+        .split(/\r?\n/)
+        .find((l) => {
+          const t = String(l || "").trim();
+          return t.length > 0 && !t.startsWith("#");
+        });
+      if (line) return String(line).trim();
+    }
+  } catch (_) {
+    /* ignore */
+  }
+  return "2026-06-15-ruzgar-programlama-pro-v1";
+}
+
+function fetchHealthJson(port) {
+  return new Promise((resolve) => {
+    const req = http.get(
+      `http://127.0.0.1:${port}/api/health`,
+      { timeout: 8000 },
+      (res) => {
+        let body = "";
+        res.on("data", (c) => {
+          body += c;
+        });
+        res.on("end", () => {
+          try {
+            resolve(JSON.parse(body));
+          } catch (_) {
+            resolve(null);
+          }
+        });
+      }
+    );
+    req.on("error", () => resolve(null));
+    req.on("timeout", () => {
+      req.destroy();
+      resolve(null);
+    });
+  });
+}
+
+function spawnForceRestartApi() {
+  const ps1 = path.join(WORKSPACE_ROOT, "Ruzgar.ps1");
+  if (!fs.existsSync(ps1)) return Promise.resolve(false);
+  return new Promise((resolve) => {
+    try {
+      const child = spawn(
+        "powershell.exe",
+        [
+          "-NoProfile",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-File",
+          ps1,
+          "-ForceRestart",
+          "-ApiOnly",
+        ],
+        {
+          cwd: WORKSPACE_ROOT,
+          detached: true,
+          stdio: "ignore",
+          windowsHide: true,
+        }
+      );
+      child.unref();
+      resolve(true);
+    } catch (_) {
+      resolve(false);
+    }
+  });
+}
+
+async function waitForExpectedHealth(port, expectedRev, maxMs = 120000) {
+  const deadline = Date.now() + maxMs;
+  while (Date.now() < deadline) {
+    const j = await fetchHealthJson(port);
+    const rev = String(j?.build?.rev || "").trim();
+    if (j && j.ok === true && rev === expectedRev) {
+      return true;
+    }
+    await new Promise((r) => setTimeout(r, 600));
+  }
+  return false;
+}
+
+async function ensureFreshApiOnLaunch() {
+  const port = readLocalApiPortFromDisk();
+  const expected = readExpectedBuildRev();
+  const skipBecauseLauncher = process.env.RUZGAR_ELECTRON_API_FRESH === "1";
+  const j = await fetchHealthJson(port);
+  const rev = String(j?.build?.rev || "").trim();
+  const pro = j?.build?.programlama_pro_v1 === true;
+  const fresh = Boolean(j && j.ok === true && rev === expected && pro);
+
+  if (skipBecauseLauncher && fresh) {
+    console.info(`[RÜZGAR] API launcher taze (rev=${rev})`);
+    return;
+  }
+  if (process.env.RUZGAR_DESKTOP_FRESH_API === "0" && fresh) {
+    return;
+  }
+  if (fresh && !skipBecauseLauncher) {
+    console.info(`[RÜZGAR] API guncel rev=${rev}; yeniden baslatma atlandi`);
+    return;
+  }
+
+  console.info(
+    `[RÜZGAR] API yenileniyor (sunucu=${rev || "?"} beklenen=${expected})…`
+  );
+  await spawnForceRestartApi();
+  const ok = await waitForExpectedHealth(port, expected, 120000);
+  if (!ok) {
+    console.warn("[RÜZGAR] API beklenen build rev ile hazir olmadi");
+  } else {
+    console.info(`[RÜZGAR] API hazir rev=${expected}`);
+  }
+}
+
 async function ensureLocalApiServer() {
   const port = readLocalApiPortFromDisk();
   if (await probeApiHealth(port)) return;
@@ -433,6 +556,7 @@ app.on("second-instance", async () => {
 
 app.whenReady().then(async () => {
   if (!gotSingleInstanceLock) return;
+  await ensureFreshApiOnLaunch();
   await ensureLocalApiServer();
   /** Mikrofon / ses yakalama — Windows izin diyaloğu ve Electron oturumu için */
   try {

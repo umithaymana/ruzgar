@@ -3606,6 +3606,20 @@ def main() -> int:
             print(f"  [FAIL] upgrade gate — {txt}")
             fails += 1
 
+    print("=== S7 — monorepo canlı gate ===")
+    try:
+        from ilim_assistant.motorlar.programlama_monorepo_live import run_monorepo_live_gate
+
+        live = run_monorepo_live_gate(WORKSPACE)
+        if live.get("ok"):
+            _ok("monorepo live gate")
+        else:
+            _fail("monorepo live gate", str(live.get("detail") or live.get("checks"))[:120])
+            fails += 1
+    except Exception as exc:
+        _fail("monorepo live gate", str(exc)[:120])
+        fails += 1
+
     print()
     if fails:
         print(f"SONUÇ: {fails} hata")

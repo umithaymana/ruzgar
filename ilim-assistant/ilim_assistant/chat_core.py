@@ -1721,6 +1721,24 @@ def prepare_turn(
         user_payload = bilissel_ctx + "\n\n---\n" + user_payload
     if session_mem_ctx:
         user_payload = session_mem_ctx.rstrip() + "\n\n---\n" + user_payload
+    try:
+        from ilim_assistant.ana_motor_programlama_havuz import (
+            inject_programlama_havuz_into_payload,
+            should_inject_programlama_havuz,
+        )
+
+        if m != "programlama" and should_inject_programlama_havuz(
+            m, msg, coding_mode=coding_mode
+        ):
+            user_payload = inject_programlama_havuz_into_payload(
+                user_payload,
+                message=msg,
+                mode_norm=m,
+                workspace_root=workspace_root,
+                compact=True,
+            )
+    except Exception:
+        pass
     _agent_ctx = (agent_context or "").strip()
     if _agent_ctx:
         user_payload = _agent_ctx + "\n\n" + user_payload
@@ -1969,6 +1987,20 @@ def prepare_turn(
                     user_payload = _pc.rstrip() + "\n\n---\n" + user_payload
             except Exception:
                 pass
+        try:
+            from ilim_assistant.ana_motor_programlama_havuz import (
+                inject_programlama_havuz_into_payload,
+            )
+
+            user_payload = inject_programlama_havuz_into_payload(
+                user_payload,
+                message=msg,
+                mode_norm=m,
+                workspace_root=workspace_root,
+                compact=bool(_prog_light),
+            )
+        except Exception:
+            pass
     elif m == "mimar":
         try:
             from ilim_assistant.mimar_motoru import build_motor_context as mimar_ctx

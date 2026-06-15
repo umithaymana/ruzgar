@@ -305,6 +305,37 @@ def run_offline() -> int:
         _fail("programlama havuz", "kapali")
         fails += 1
 
+    from ilim_assistant.ana_motor_programlama_havuz import (
+        build_programlama_havuz_context_block,
+        read_programlama_havuz_snapshot,
+        should_inject_programlama_havuz,
+    )
+
+    persist_programlama_turn(
+        "pytest health ekle",
+        "Tamam, patch uygulandı.",
+        workspace_root=str(_ROOT),
+        active_file="projects/demo/app/main.py",
+        patch_meta={"written": ["projects/demo/app/main.py"]},
+    )
+    snap = read_programlama_havuz_snapshot()
+    if not isinstance(snap.get("last_turn"), dict):
+        _fail("havuz aktif okuma last_turn", str(snap)[:120])
+        fails += 1
+    else:
+        _ok("havuz aktif okuma: last_turn yazildi")
+    blk = build_programlama_havuz_context_block(mode_norm="programlama", message="devam et")
+    if "ANA MOTOR" not in blk or "Son kod turu" not in blk:
+        _fail("havuz context block", blk[:160])
+        fails += 1
+    else:
+        _ok("havuz context block dolu")
+    if not should_inject_programlama_havuz("programlama", "pytest calistir"):
+        _fail("should_inject programlama", "True bekleniyordu")
+        fails += 1
+    else:
+        _ok("should_inject programlama")
+
     print("\n=== Super beyin modulleri ===")
     from ilim_assistant.ana_motor_kaynak import citation_directive_for_turn, format_context_blocks
     from ilim_assistant.ana_motor_super import append_super_brain_directive

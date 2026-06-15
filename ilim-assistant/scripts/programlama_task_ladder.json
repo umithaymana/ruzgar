@@ -33,5 +33,19 @@
     "description": "Komut 50 + Faz99 çift koşu + parity 8/8 + git commit kanıtı",
     "min_score": 95,
     "require_ok": true
+  },
+  {
+    "id": "ladder-s6-monorepo-pro",
+    "level": "monorepo",
+    "description": "Router + cerrahi patch + context budget + havuz köprüsü smoke",
+    "min_score": 100,
+    "require_ok": true
+  },
+  {
+    "id": "ladder-s7-monorepo-live",
+    "level": "monorepo_live",
+    "description": "ilim-assistant gerçek patch + import + ana motor havuz okuma",
+    "min_score": 100,
+    "require_ok": true
   }
 ]

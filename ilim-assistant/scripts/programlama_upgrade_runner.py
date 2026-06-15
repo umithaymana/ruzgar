@@ -65,6 +65,8 @@ def main() -> int:
         faz99_check_named,
         run_autonomy_benchmark,
     )
+    from ilim_assistant.motorlar.programlama_router import run_monorepo_router_smoke
+    from ilim_assistant.motorlar.programlama_monorepo_live import run_monorepo_live_gate
 
     dataset = _load_json(dataset_fp)
     ladder = _load_json(ladder_fp)
@@ -84,6 +86,11 @@ def main() -> int:
     parity_passed = int(getattr(parity_rep, "passed", 0) or 0)
     parity_score = int(round((parity_passed / parity_total) * 100))
     parity_ok = bool(getattr(parity_rep, "ok", False))
+
+    monorepo_smoke = run_monorepo_router_smoke(ws)
+    monorepo_score = 100 if bool(monorepo_smoke.get("ok")) else 0
+    monorepo_live = run_monorepo_live_gate(ws)
+    monorepo_live_score = 100 if bool(monorepo_live.get("ok")) else 0
 
     cmd_score = int(c98.get("score") or 0)
     auto_score = min(int(b1.get("score") or 0), int(b2.get("score") or 0))
@@ -131,6 +138,12 @@ def main() -> int:
                 and git_commit_ok
                 and consistency_ok
             )
+        elif level == "monorepo":
+            lv_score = monorepo_score
+            lv_ok = bool(monorepo_smoke.get("ok"))
+        elif level == "monorepo_live":
+            lv_score = monorepo_live_score
+            lv_ok = bool(monorepo_live.get("ok"))
         else:
             lv_score = auto_score
             lv_ok = consistency_ok
@@ -188,6 +201,8 @@ def main() -> int:
             "parity_mode": "quick",
             "parity_passed": parity_passed,
             "parity_total": parity_total,
+            "monorepo_smoke": monorepo_smoke,
+            "monorepo_live": monorepo_live,
         },
     }
     out_fp = ws / OUT_REL
