@@ -258,6 +258,14 @@ def augment_turn_with_root_cause_learn(
     return block.rstrip() + "\n\n" + (turn_user or "").lstrip()
 
 
+def root_cause_learn_directive() -> str:
+    return (
+        "[KÖK NEDEN ÖĞRENME — Adım 7]\n"
+        "Tekrarlayan görev hataları bağlama kural olarak enjekte edilir.\n"
+        "Kapat: RUZGAR_PROG_ROOT_CAUSE_LEARN=0\n"
+    )
+
+
 def run_root_cause_learn_smoke(
     workspace_root: str | Path | None,
     *,

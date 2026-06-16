@@ -179,6 +179,20 @@ def run_delivery_gate(workspace_root: str | Path | None) -> dict[str, Any]:
     except Exception:
         checks["p8_module"] = False
 
+    try:
+        from ilim_assistant.motorlar.programlama_ci_pr_loop import (
+            ci_pr_loop_enabled,
+            run_ci_pr_loop_smoke,
+        )
+
+        checks["ci_pr_loop_enabled"] = ci_pr_loop_enabled()
+        smoke = run_ci_pr_loop_smoke(root)
+        checks["ci_pr_loop_smoke"] = bool(smoke.get("ok"))
+    except Exception as exc:
+        checks["ci_pr_loop_enabled"] = False
+        checks["ci_pr_loop_smoke"] = False
+        detail_parts.append(f"ci_pr:{exc}")
+
     ok = all(checks.values()) if checks else False
     return {
         "ok": ok,

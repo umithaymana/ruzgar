@@ -852,6 +852,16 @@ def _maybe_programlama_instant_reply_impl(
     except Exception:
         pass
     try:
+        from ilim_assistant.motorlar.programlama_ci_pr_loop import (
+            maybe_instant_ci_pr_loop,
+        )
+
+        ci_hit = maybe_instant_ci_pr_loop(message, workspace_root)
+        if ci_hit:
+            parts.append(ci_hit)
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_faz2 import (
             build_startup_briefing,
             wants_briefing,
@@ -1548,13 +1558,13 @@ class ProgramlamaAraclari:
             reports.append(self.run_dev_preset("pytest_run"))
         return reports
 
-    def verify_after_writes(
+    def _verify_after_writes_python(
         self,
         write_paths: list[str],
         *,
         scope_rel: str | None = None,
     ) -> list[ExecReport]:
-        """Yazım sonrası: ruff → mypy → pytest (kapsam projects/* ise hedefli)."""
+        """Python odaklı verify: ruff → mypy → pytest."""
         reports: list[ExecReport] = []
         if self._root is None:
             return reports
@@ -1577,6 +1587,8 @@ class ProgramlamaAraclari:
                     verify = run_project_verify(self._root, scope, goal="pytest")
                     if verify is not None:
                         reports.append(verify)
+                    else:
+                        reports.append(self.run_dev_preset("pytest_run"))
                 except Exception:
                     reports.append(self.run_dev_preset("pytest_run"))
             else:
@@ -1591,6 +1603,27 @@ class ProgramlamaAraclari:
             else:
                 os.environ["RUZGAR_MYPY_TARGET"] = old_mypy
         return reports
+
+    def verify_after_writes(
+        self,
+        write_paths: list[str],
+        *,
+        scope_rel: str | None = None,
+    ) -> list[ExecReport]:
+        """Yazım sonrası verify — stack algılar (Adım 10)."""
+        try:
+            from ilim_assistant.motorlar.programlama_multilingual_verify import (
+                multilingual_verify_after_writes,
+                multilingual_verify_enabled,
+            )
+
+            if multilingual_verify_enabled():
+                return multilingual_verify_after_writes(
+                    self, write_paths, scope_rel=scope_rel
+                )
+        except Exception:
+            pass
+        return self._verify_after_writes_python(write_paths, scope_rel=scope_rel)
 
 
 def run_tools_for_message(
@@ -1881,383 +1914,16 @@ def build_motor_context(
     except Exception:
         pass
     try:
-        from ilim_assistant.motorlar.programlama_faz14 import faz14_directive
-
-        base += faz14_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz15 import faz15_directive
-
-        base += faz15_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz16 import faz16_directive
-
-        base += faz16_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz17 import faz17_directive
-
-        base += faz17_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz18 import faz18_directive
-
-        base += faz18_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz19 import faz19_directive
-
-        base += faz19_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz20 import faz20_tool_directive
-
-        base += faz20_tool_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz22 import faz22_directive
-
-        base += faz22_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz23 import faz23_directive
-
-        base += faz23_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz24 import faz24_directive
-
-        base += faz24_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz25 import faz25_directive
-
-        base += faz25_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz26 import faz26_directive
-
-        base += faz26_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz27 import faz27_directive
-
-        base += faz27_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz28 import faz28_directive
-
-        base += faz28_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz29 import faz29_directive
-
-        base += faz29_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz30 import faz30_directive
-
-        base += faz30_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz31 import faz31_directive
-
-        base += faz31_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz32 import faz32_directive
-
-        base += faz32_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz33 import faz33_directive
-
-        base += faz33_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz34 import faz34_directive
-
-        base += faz34_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz35 import faz35_directive
-
-        base += faz35_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz36 import faz36_directive
-
-        base += faz36_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz37 import faz37_directive
-
-        base += faz37_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz38 import faz38_directive
-
-        base += faz38_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz39 import faz39_directive
-
-        base += faz39_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz40 import faz40_directive
-
-        base += faz40_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz41 import faz41_directive
-
-        base += faz41_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz42 import faz42_directive
-
-        base += faz42_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz43 import faz43_directive
-
-        base += faz43_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz44 import faz44_directive
-
-        base += faz44_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz45 import faz45_directive
-
-        base += faz45_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz46 import faz46_directive
-
-        base += faz46_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz47 import faz47_directive
-
-        base += faz47_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz50 import faz50_directive
-
-        base += faz50_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz51 import faz51_directive
-
-        base += faz51_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz52 import faz52_directive
-
-        base += faz52_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz53 import faz53_directive
-
-        base += faz53_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz54 import faz54_directive
-
-        base += faz54_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz55 import faz55_directive
-
-        base += faz55_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz56 import faz56_directive
-
-        base += faz56_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz57 import faz57_directive
-
-        base += faz57_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz58 import faz58_directive
-
-        base += faz58_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz60 import faz60_directive
-
-        base += faz60_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz61 import faz61_directive
-
-        base += faz61_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz62 import faz62_directive
-
-        base += faz62_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz63 import faz63_directive
-
-        base += faz63_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz64 import faz64_directive
-
-        base += faz64_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz65 import faz65_directive
-
-        base += faz65_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz66 import faz66_directive
-
-        base += faz66_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz67 import faz67_directive
-
-        base += faz67_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz98 import faz98_directive
-
-        base += faz98_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz68 import faz68_directive
-
-        base += faz68_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz69 import faz69_directive
-
-        base += faz69_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz70 import faz70_directive
-
-        base += faz70_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz78 import (
-            core_scope_directive,
-            faz78_directive,
+        from ilim_assistant.motorlar.programlama_cekirdek_paketleri import (
+            append_registry_directives,
         )
 
-        base += faz78_directive() + "\n"
-        cs = core_scope_directive(prompt)
-        if cs:
-            base += cs + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz79 import (
-            faz79_directive,
-            format_handoff_context_block,
+        base = append_registry_directives(
+            base,
+            prompt=prompt,
+            workspace_root=workspace_root,
+            active_file=active_file,
         )
-
-        base += faz79_directive() + "\n"
-        h79 = format_handoff_context_block(
-            prompt, workspace_root, active_file=active_file
-        )
-        if h79:
-            base += f"\n[HANDOFF v3]\n{h79}\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz84 import faz84_directive
-
-        base += faz84_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz80 import (
-            faz80_directive,
-            mega_refactor_directive,
-        )
-
-        base += faz80_directive() + "\n"
-        mr = mega_refactor_directive(prompt)
-        if mr:
-            base += mr + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz81 import faz81_directive
-
-        base += faz81_directive() + "\n"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz48 import faz48_directive
-
-        base += faz48_directive() + "\n"
     except Exception:
         pass
     try:
