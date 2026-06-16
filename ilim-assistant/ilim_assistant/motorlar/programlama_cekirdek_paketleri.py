@@ -152,9 +152,6 @@ _FAZ_DIRECTIVE_REGISTRY: list[tuple[str, str]] = [
     ("programlama_faz68", "faz68_directive"),
     ("programlama_faz69", "faz69_directive"),
     ("programlama_faz70", "faz70_directive"),
-    ("programlama_faz78", "faz78_directive"),
-    ("programlama_faz79", "faz79_directive"),
-    ("programlama_faz80", "faz80_directive"),
     ("programlama_faz81", "faz81_directive"),
     ("programlama_faz84", "faz84_directive"),
     ("programlama_faz98", "faz98_directive"),
@@ -219,16 +216,24 @@ def append_registry_directives(
             out += piece.rstrip() + "\n"
 
     try:
-        from ilim_assistant.motorlar.programlama_faz78 import core_scope_directive
+        from ilim_assistant.motorlar.programlama_faz78 import (
+            core_scope_directive,
+            faz78_directive,
+        )
 
+        out += faz78_directive().rstrip() + "\n"
         cs = core_scope_directive(prompt)
         if cs:
             out += cs.rstrip() + "\n"
     except Exception:
         pass
     try:
-        from ilim_assistant.motorlar.programlama_faz79 import format_handoff_context_block
+        from ilim_assistant.motorlar.programlama_faz79 import (
+            faz79_directive,
+            format_handoff_context_block,
+        )
 
+        out += faz79_directive().rstrip() + "\n"
         h79 = format_handoff_context_block(
             prompt, workspace_root, active_file=active_file
         )
@@ -237,8 +242,12 @@ def append_registry_directives(
     except Exception:
         pass
     try:
-        from ilim_assistant.motorlar.programlama_faz80 import mega_refactor_directive
+        from ilim_assistant.motorlar.programlama_faz80 import (
+            faz80_directive,
+            mega_refactor_directive,
+        )
 
+        out += faz80_directive().rstrip() + "\n"
         mr = mega_refactor_directive(prompt)
         if mr:
             out += mr.rstrip() + "\n"

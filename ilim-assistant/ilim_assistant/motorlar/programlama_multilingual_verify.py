@@ -83,17 +83,17 @@ def _run_argv_step(
     *,
     timeout: int = 300,
 ) -> ExecReport:
+    if not argv or not _tool_available(argv[0]):
+        cmd = argv[0] if argv else "?"
+        return ExecReport(
+            preset=preset,
+            exit_code=0,
+            output=f"[Araç yok: {cmd} — atlandı]",
+        )
     code, out, err = run_argv(argv, timeout_sec=timeout, cwd=str(cwd))
     body = f"[Komut: {' '.join(argv)}]\n[Cwd: {cwd}]\n[Çıkış kodu: {code}]\n{out}"
     if err:
         body += f"\n[Hata] {err}"
-    missing = not _tool_available(argv[0])
-    if missing:
-        return ExecReport(
-            preset=preset,
-            exit_code=0,
-            output=f"[Araç yok: {argv[0]} — atlandı]\n{body[:400]}",
-        )
     if code != 0 and "not found" in (out + err).lower():
         return ExecReport(
             preset=preset,

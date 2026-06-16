@@ -8,6 +8,7 @@ Görev başarılı -> diff özeti -> commit mesajı -> pending -> «commit onayl
 from __future__ import annotations
 
 import os
+import time
 from pathlib import Path
 from typing import Any
 
@@ -189,7 +190,8 @@ def run_git_closure_smoke(
         if root is None:
             return {"ok": False, "error": "workspace_root yok"}
         marker = root / scope_rel.replace("/", os.sep) / ".ruzgar_git_closure_smoke"
-        marker.write_text("smoke\n", encoding="utf-8")
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        marker.write_text(f"smoke-{time.time():.3f}\n", encoding="utf-8")
     except OSError as exc:
         return {"ok": False, "error": str(exc)[:120]}
 
