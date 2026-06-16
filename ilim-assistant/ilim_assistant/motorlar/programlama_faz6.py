@@ -178,6 +178,7 @@ def test_health_has_version() -> None:
     data = r.json()
     assert "version" in data and str(data.get("version", "")).strip()
 ''',
+            f"{base}/app/__init__.py": f'"""{title} uygulama paketi."""\n',
             f"{base}/app/main.py": f'''"""FastAPI — {title}"""
 from __future__ import annotations
 

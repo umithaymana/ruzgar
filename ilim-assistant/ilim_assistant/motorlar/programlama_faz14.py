@@ -1205,6 +1205,20 @@ def iter_code_agent_turn_events(
                 )
             except Exception:
                 pass
+        elif turn > 1:
+            try:
+                from ilim_assistant.motorlar.programlama_root_cause_learn import (
+                    augment_turn_with_root_cause_learn,
+                )
+
+                turn_user = augment_turn_with_root_cause_learn(
+                    turn_user,
+                    workspace,
+                    scope_rel=task.scope_rel,
+                    failure_snippet=last_fail_snippet,
+                )
+            except Exception:
+                pass
         try:
             from ilim_assistant.motorlar.programlama_faz34 import augment_turn_user_message
 
@@ -2030,19 +2044,33 @@ def iter_code_agent_turn_events(
     except Exception:
         pass
     try:
-        from ilim_assistant.motorlar.programlama_faz62 import (
-            append_commit_footer_to_reply,
-            maybe_auto_suggest_commit_after_task,
+        from ilim_assistant.motorlar.programlama_git_closure import (
+            append_git_closure_to_reply,
+            run_git_closure_after_task,
         )
 
-        _commit_sug = maybe_auto_suggest_commit_after_task(
+        _closure = run_git_closure_after_task(
             workspace,
             scope_rel=task.scope_rel,
             goal=task.goal,
             success=success,
         )
-        if _commit_sug.get("ok"):
-            reply_body = append_commit_footer_to_reply(reply_body, _commit_sug)
+        if _closure.get("ok") and not _closure.get("skipped"):
+            reply_body = append_git_closure_to_reply(reply_body, _closure)
+        elif not _closure.get("ok") or _closure.get("skipped"):
+            from ilim_assistant.motorlar.programlama_faz62 import (
+                append_commit_footer_to_reply,
+                maybe_auto_suggest_commit_after_task,
+            )
+
+            _commit_sug = maybe_auto_suggest_commit_after_task(
+                workspace,
+                scope_rel=task.scope_rel,
+                goal=task.goal,
+                success=success,
+            )
+            if _commit_sug.get("ok"):
+                reply_body = append_commit_footer_to_reply(reply_body, _commit_sug)
     except Exception:
         pass
     try:

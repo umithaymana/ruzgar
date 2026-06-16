@@ -276,6 +276,21 @@ def inject_faz55b_turn_prefix(
         for_bonus_turn=True,
     )
     if not nudge:
+        nudge = ""
+    try:
+        from ilim_assistant.motorlar.programlama_root_cause_learn import (
+            augment_turn_with_root_cause_learn,
+        )
+
+        turn_user = augment_turn_with_root_cause_learn(
+            turn_user,
+            workspace_root,
+            scope_rel=scope_rel,
+            failure_snippet=last_fail_snippet,
+        )
+    except Exception:
+        pass
+    if not nudge:
         return turn_user
     return nudge.rstrip() + "\n\n" + (turn_user or "").lstrip()
 

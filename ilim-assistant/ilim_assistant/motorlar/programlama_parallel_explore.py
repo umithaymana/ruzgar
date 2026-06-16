@@ -15,9 +15,17 @@ from typing import Any
 
 from ilim_assistant.motorlar.programlama_motoru import ProgramlamaAraclari, repo_root
 
-PROG_PARALLEL_EXPLORE_VERSION = "programlama-parallel-explore-v1-2026-06-15"
+PROG_PARALLEL_EXPLORE_VERSION = "programlama-parallel-explore-v2-2026-06-16"
 _MAX_WORKERS = 4
-_READ_CAP = 4000
+
+
+def _read_cap() -> int:
+    try:
+        from ilim_assistant.motorlar.programlama_context_budget import parallel_read_cap
+
+        return parallel_read_cap()
+    except Exception:
+        return 6000
 
 
 def parallel_explore_enabled() -> bool:
@@ -65,7 +73,8 @@ def _guess_paths(scope_rel: str, goal: str) -> list[str]:
 
 
 def _read_one(tools: ProgramlamaAraclari, rel: str) -> tuple[str, str]:
-    rep = tools.read(rel, max_chars=_READ_CAP)
+    cap = _read_cap()
+    rep = tools.read(rel, max_chars=cap)
     if rep.ok:
         return rel, rep.content
     return rel, f"[HATA] {rep.error or 'okunamadı'}"
@@ -95,6 +104,7 @@ def build_parallel_explore_block(
     scope_rel: str,
     goal: str = "",
     message: str = "",
+    active_file: str | None = None,
 ) -> str:
     if not parallel_explore_enabled():
         return ""
@@ -104,6 +114,46 @@ def build_parallel_explore_block(
 
     tools = ProgramlamaAraclari(root)
     paths = _guess_paths(scope_rel.replace("\\", "/").strip("/"), goal or message)
+    if active_file:
+        try:
+            from ilim_assistant.motorlar.programlama_faz21 import (
+                build_import_chain_block,
+                import_chain_enabled,
+                _local_import_targets,
+            )
+
+            af = active_file.replace("\\", "/").lstrip("/")
+            if af not in paths:
+                paths.insert(0, af)
+            if import_chain_enabled():
+                head = tools.read(af, max_chars=_read_cap())
+                if head.ok:
+                    for rel in _local_import_targets(af, head.content, scope_rel):
+                        if rel not in paths:
+                            paths.append(rel)
+        except Exception:
+            pass
+    paths = paths[:8]
+    try:
+        from ilim_assistant.motorlar.programlama_code_index import (
+            code_index_enabled,
+            search_code_index,
+        )
+
+        if code_index_enabled() and (goal or message):
+            sem = search_code_index(
+                workspace_root,
+                goal or message,
+                scope_rel=scope_rel.replace("\\", "/").strip("/"),
+                top_k=4,
+            )
+            for h in sem.get("hits") or []:
+                rel = str(h.get("rel") or "")
+                if rel and rel not in paths:
+                    paths.append(rel)
+    except Exception:
+        pass
+    paths = paths[:10]
     patterns: list[str] = []
     for token in re.findall(r"\b(?:health|version|endpoint|test_\w+)\b", goal or message, re.I):
         if token not in patterns:
@@ -127,8 +177,15 @@ def build_parallel_explore_block(
                 continue
             if key in patterns or key in paths:
                 label = "grep" if key in patterns else "read"
-                blocks.append(f"=== {label}: {key} ===\n{body[:_READ_CAP]}")
+                cap = _read_cap()
+                blocks.append(f"=== {label}: {key} ===\n{body[:cap]}")
 
     if len(blocks) <= 1:
         return ""
-    return "\n\n".join(blocks)[:12000]
+    try:
+        from ilim_assistant.motorlar.programlama_context_budget import max_context_chars
+
+        out_cap = max_context_chars()
+    except Exception:
+        out_cap = 14000
+    return "\n\n".join(blocks)[:out_cap]

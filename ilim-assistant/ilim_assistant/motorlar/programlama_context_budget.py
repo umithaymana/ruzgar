@@ -3,7 +3,7 @@
 Programlama motoru — bağlam bütçe yöneticisi.
 
 Öncelik sırasıyla parçaları birleştirir; üst karakter sınırını aşmaz.
-Varsayılan: RUZGAR_PROG_CONTEXT_MAX_CHARS=8000
+Varsayılan: RUZGAR_PROG_CONTEXT_MAX_CHARS=14000
 """
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ import os
 from dataclasses import dataclass, field
 from typing import Any
 
-PROG_CONTEXT_BUDGET_VERSION = "programlama-context-budget-v1-2026-06-15"
+PROG_CONTEXT_BUDGET_VERSION = "programlama-context-budget-v2-2026-06-16"
 
 
 @dataclass
@@ -41,9 +41,22 @@ def context_budget_enabled() -> bool:
 
 def max_context_chars() -> int:
     try:
-        return max(2000, int(os.environ.get("RUZGAR_PROG_CONTEXT_MAX_CHARS", "8000")))
+        return max(2000, int(os.environ.get("RUZGAR_PROG_CONTEXT_MAX_CHARS", "14000")))
     except ValueError:
-        return 8000
+        return 14000
+
+
+def max_file_read_chars() -> int:
+    """Tek dosya okuma üst sınırı (Adım 5). Env: LOCAL_TOOLS_FILE_MAX_CHARS."""
+    try:
+        return max(500, int(os.environ.get("LOCAL_TOOLS_FILE_MAX_CHARS", "12000")))
+    except ValueError:
+        return 12000
+
+
+def parallel_read_cap() -> int:
+    """Paralel keşif — dosya başına okuma (toplam bütçenin ~yarısı tavan)."""
+    return min(max_file_read_chars(), max(4000, max_context_chars() // 2))
 
 
 def _trim(text: str, cap: int) -> tuple[str, bool]:
@@ -120,6 +133,7 @@ def directive_priority_map() -> dict[str, int]:
         "session": 90,
         "summary": 88,
         "handoff": 86,
+        "import_chain": 87,
         "context_v3": 85,
         "active_file": 84,
         "editor": 83,

@@ -15,7 +15,7 @@ from typing import Any
 FAZ102_VERSION = "programlama-faz102-v1-2026-05-29"
 _RULE_HINTS_FILE = "root_cause_rule_hints.jsonl"
 _ROLLING_WINDOW = 20
-_REPEAT_THRESHOLD = 3
+_REPEAT_THRESHOLD = 2
 
 
 def _enabled() -> bool:

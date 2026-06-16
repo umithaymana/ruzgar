@@ -292,6 +292,58 @@ def search_in_project(
     }
 
 
+def search_in_project_semantic(
+    workspace_root: str | Path | None,
+    scope_rel: str,
+    query: str,
+    *,
+    top_k: int = 6,
+) -> dict[str, Any]:
+    """Semantik kod araması (embedding)."""
+    try:
+        from ilim_assistant.motorlar.programlama_code_index import (
+            code_index_enabled,
+            search_code_index,
+        )
+
+        if not code_index_enabled():
+            return {"ok": False, "error": "RUZGAR_PROG_CODE_INDEX=0"}
+        return search_code_index(
+            workspace_root,
+            query,
+            scope_rel=scope_rel,
+            top_k=top_k,
+        )
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+def search_in_project_hybrid(
+    workspace_root: str | Path | None,
+    scope_rel: str,
+    pattern: str,
+    *,
+    max_hits: int = 20,
+    semantic_top_k: int = 6,
+) -> dict[str, Any]:
+    """Regex + semantik birleşik arama."""
+    regex = search_in_project(
+        workspace_root, scope_rel, pattern, max_hits=max_hits
+    )
+    semantic = search_in_project_semantic(
+        workspace_root, scope_rel, pattern, top_k=semantic_top_k
+    )
+    return {
+        "ok": bool(regex.get("ok")),
+        "scope_rel": scope_rel,
+        "pattern": pattern,
+        "regex_hits": regex.get("hits") or [],
+        "semantic_hits": semantic.get("hits") or [],
+        "semantic_ok": bool(semantic.get("ok")),
+        "version": FAZ13_VERSION,
+    }
+
+
 def detect_entrypoints(scope_rel: str, entries: list[dict[str, Any]]) -> list[str]:
     rels = {str(e.get("rel") or "") for e in entries}
     candidates = [
@@ -396,7 +448,24 @@ def expand_find_paths(
     if not scope:
         return []
     res = search_in_project(workspace_root, scope, pat, max_hits=max_hits)
-    return [str(h.get("rel") or "") for h in (res.get("hits") or []) if h.get("rel")]
+    paths = [str(h.get("rel") or "") for h in (res.get("hits") or []) if h.get("rel")]
+    try:
+        from ilim_assistant.motorlar.programlama_code_index import (
+            code_index_enabled,
+            search_code_index,
+        )
+
+        if code_index_enabled():
+            sem = search_code_index(
+                workspace_root, pat, scope_rel=scope, top_k=max_hits
+            )
+            for h in sem.get("hits") or []:
+                rel = str(h.get("rel") or "")
+                if rel and rel not in paths:
+                    paths.append(rel)
+    except Exception:
+        pass
+    return paths
 
 
 def wants_project_scan_instant(message: str) -> bool:
@@ -462,16 +531,25 @@ def format_scan_report(scan: dict[str, Any]) -> str:
 def format_find_report(result: dict[str, Any]) -> str:
     if not result.get("ok"):
         return f"Arama yapılamadı: {result.get('error')}"
-    hits = result.get("hits") or []
+    hits = result.get("hits") or result.get("regex_hits") or []
     lines = [
         f"Ümit abi, `{result.get('scope_rel')}` içinde **{result.get('pattern')}**:",
         "",
     ]
     if not hits:
-        lines.append("Eşleşme yok.")
+        lines.append("Regex eşleşmesi yok.")
     else:
+        lines.append("**Regex:**")
         for h in hits:
             lines.append(f"· `{h.get('rel')}`:{h.get('line')} — {h.get('text')}")
+    sem_hits = result.get("semantic_hits") or []
+    if sem_hits:
+        lines.append("")
+        lines.append("**Semantik:**")
+        for h in sem_hits:
+            lines.append(
+                f"· `{h.get('rel')}` (skor {h.get('score')}) — {str(h.get('text') or '')[:120]}"
+            )
     lines.append(f"\n({FAZ13_VERSION})")
     return "\n".join(lines)
 
@@ -515,7 +593,9 @@ def maybe_instant_faz13(
             return "Ümit abi, `@@find <desen>` veya `find: health` yaz."
         if not scope:
             return "Ümit abi, arama için proje kapsamı gerekli (`projects/...` açık veya yol yaz)."
-        return format_find_report(search_in_project(workspace_root, scope, pat))
+        return format_find_report(
+            search_in_project_hybrid(workspace_root, scope, pat)
+        )
 
     return None
 
@@ -523,5 +603,5 @@ def maybe_instant_faz13(
 def faz13_directive() -> str:
     return (
         "[PROJE ZEKÂSI — Faz 13]\n"
-        "Komutlar: `proje özeti` · `@@find <desen>` · giriş: app/main.py, index.html, src/App.jsx\n"
+        "Komutlar: `proje özeti` · `@@find <desen>` (regex+semantik) · giriş: app/main.py, index.html, src/App.jsx\n"
     )

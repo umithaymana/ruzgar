@@ -4,7 +4,7 @@ Programlama motoru — güvenli dosya okuma/yazma ve onaylı test/lint preset'le
 
 Omurgalar:
   - ``local_tools.safe_read_file_under_root`` / ``safe_write_file_under_root``
-  - ``approved_executor.run_preset`` (pytest_run, python_module_run, ruff_check)
+  - ``approved_executor.run_preset`` (pytest_run, python_module_run, ruff_check, mypy_check)
 """
 
 from __future__ import annotations
@@ -24,9 +24,9 @@ from ilim_assistant.local_tools import (
 MIMAR_IMZA = "Ümit & Gökçenur"
 PROJE_ADI = "RÜZGAR Programlama Motoru"
 
-DevPresetKey = Literal["pytest_run", "python_module_run", "ruff_check"]
+DevPresetKey = Literal["pytest_run", "python_module_run", "ruff_check", "mypy_check"]
 ALLOWED_DEV_PRESETS: frozenset[str] = frozenset(
-    {"pytest_run", "python_module_run", "ruff_check"}
+    {"pytest_run", "python_module_run", "ruff_check", "mypy_check"}
 )
 
 _WRITE_FENCE_RE = re.compile(
@@ -117,9 +117,14 @@ def infer_rel_paths(message: str, root: Path) -> list[str]:
 
 def _max_read_chars() -> int:
     try:
-        return max(500, int(os.environ.get("LOCAL_TOOLS_FILE_MAX_CHARS", "6000")))
-    except ValueError:
-        return 6000
+        from ilim_assistant.motorlar.programlama_context_budget import max_file_read_chars
+
+        return max_file_read_chars()
+    except Exception:
+        try:
+            return max(500, int(os.environ.get("LOCAL_TOOLS_FILE_MAX_CHARS", "12000")))
+        except ValueError:
+            return 12000
 
 
 def _extract_write_jobs(message: str) -> list[tuple[str, str]]:
@@ -1349,6 +1354,26 @@ def _maybe_programlama_instant_reply_impl(
     return None
 
 
+def _infer_scope_rel_from_paths(paths: list[str]) -> str | None:
+    for raw in paths:
+        rel = (raw or "").strip().replace("\\", "/").lstrip("/")
+        if not rel.startswith("projects/"):
+            continue
+        parts = rel.split("/")
+        if len(parts) >= 2 and parts[1]:
+            return f"{parts[0]}/{parts[1]}"
+    return None
+
+
+def _verify_triple_after_write_enabled() -> bool:
+    """Yazım sonrası ruff + mypy + pytest (Adım 4). Kapat: RUZGAR_PROG_VERIFY_TRIPLE=0"""
+    return os.environ.get("RUZGAR_PROG_VERIFY_TRIPLE", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
 def code_debug_max_retries() -> int:
     """Başarısız pytest sonrası en fazla kaç ek LLM turu (varsayılan 2, tavan 5)."""
     try:
@@ -1380,9 +1405,22 @@ def apply_assistant_reply_tools(
     summary, _ = run_tools_for_message((reply_body or "").strip(), root)
     pytest_rep: ExecReport | None = None
     tools = ProgramlamaAraclari(root)
+    write_paths = [w.path for w in summary.writes if w.ok and w.path]
     if run_pytest and tools.root is not None:
-        pytest_rep = tools.run_dev_preset("pytest_run")
-        summary.execs.append(pytest_rep)
+        if write_paths and _verify_triple_after_write_enabled():
+            verify_reports = tools.verify_after_writes(write_paths)
+            summary.execs.extend(verify_reports)
+            for rep in reversed(verify_reports):
+                if rep.preset in ("pytest_run", "pytest_scope") or (
+                    rep.preset and "pytest" in rep.preset
+                ):
+                    pytest_rep = rep
+                    break
+            if pytest_rep is None and verify_reports:
+                pytest_rep = verify_reports[-1]
+        else:
+            pytest_rep = tools.run_dev_preset("pytest_run")
+            summary.execs.append(pytest_rep)
     try:
         from ilim_assistant.motorlar.programlama_faz5 import record_tool_summary
 
@@ -1488,14 +1526,70 @@ class ProgramlamaAraclari:
         code, out = run_preset(key)
         return ExecReport(preset=key, exit_code=code, output=out)
 
-    def verify_pipeline(self, *, lint: bool = True, pytest: bool = True, smoke: bool = False) -> list[ExecReport]:
+    def verify_pipeline(
+        self,
+        *,
+        lint: bool = True,
+        mypy: bool = True,
+        pytest: bool = True,
+        smoke: bool = False,
+        scope_rel: str | None = None,
+    ) -> list[ExecReport]:
         reports: list[ExecReport] = []
+        if scope_rel:
+            return self.verify_after_writes([], scope_rel=scope_rel)
         if lint:
             reports.append(self.run_dev_preset("ruff_check"))
+        if mypy:
+            reports.append(self.run_dev_preset("mypy_check"))
         if smoke:
             reports.append(self.run_dev_preset("python_module_run"))
         if pytest:
             reports.append(self.run_dev_preset("pytest_run"))
+        return reports
+
+    def verify_after_writes(
+        self,
+        write_paths: list[str],
+        *,
+        scope_rel: str | None = None,
+    ) -> list[ExecReport]:
+        """Yazım sonrası: ruff → mypy → pytest (kapsam projects/* ise hedefli)."""
+        reports: list[ExecReport] = []
+        if self._root is None:
+            return reports
+        scope = scope_rel or _infer_scope_rel_from_paths(write_paths)
+        old_ruff = os.environ.get("RUZGAR_RUFF_TARGET")
+        old_mypy = os.environ.get("RUZGAR_MYPY_TARGET")
+        try:
+            if scope:
+                os.environ["RUZGAR_RUFF_TARGET"] = scope
+                os.environ["RUZGAR_MYPY_TARGET"] = scope
+            else:
+                os.environ.pop("RUZGAR_RUFF_TARGET", None)
+                os.environ.setdefault("RUZGAR_MYPY_TARGET", "projects")
+            reports.append(self.run_dev_preset("ruff_check"))
+            reports.append(self.run_dev_preset("mypy_check"))
+            if scope:
+                try:
+                    from ilim_assistant.motorlar.programlama_faz14 import run_project_verify
+
+                    verify = run_project_verify(self._root, scope, goal="pytest")
+                    if verify is not None:
+                        reports.append(verify)
+                except Exception:
+                    reports.append(self.run_dev_preset("pytest_run"))
+            else:
+                reports.append(self.run_dev_preset("pytest_run"))
+        finally:
+            if old_ruff is None:
+                os.environ.pop("RUZGAR_RUFF_TARGET", None)
+            else:
+                os.environ["RUZGAR_RUFF_TARGET"] = old_ruff
+            if old_mypy is None:
+                os.environ.pop("RUZGAR_MYPY_TARGET", None)
+            else:
+                os.environ["RUZGAR_MYPY_TARGET"] = old_mypy
         return reports
 
 
@@ -1577,7 +1671,9 @@ def run_tools_for_message(
 
     if run_presets:
         if _wants_full_verify(message):
-            summary.execs.extend(tools.verify_pipeline(lint=True, pytest=True, smoke=False))
+            summary.execs.extend(
+                tools.verify_pipeline(lint=True, mypy=True, pytest=True, smoke=False)
+            )
         else:
             if _wants_lint(message):
                 summary.execs.append(tools.run_dev_preset("ruff_check"))
@@ -2179,7 +2275,7 @@ def build_motor_context(
         f"\n[PROGRAMLAMA MOTORU — {MIMAR_IMZA}]\n"
         "Bu modda cevaplar teknik, doğru ve adım adım uygulanabilir olsun. "
         "Güvenli okuma/yazma (`local_tools`) ve onaylı test preset'leri "
-        "(pytest_run, python_module_run, ruff_check) etkindir.\n"
+        "(pytest_run, python_module_run, ruff_check, mypy_check) etkindir.\n"
         f"Kullanici mesaji: {prompt}\n"
     )
     if wants_autonomous_code_debug(prompt):

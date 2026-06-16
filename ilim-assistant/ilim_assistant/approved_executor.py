@@ -189,6 +189,20 @@ def build_presets() -> List[Preset]:
         )
     )
 
+    out.append(
+        Preset(
+            key="mypy_check",
+            label="mypy — tip kontrolü",
+            description=(
+                "python -m mypy --ignore-missing-imports <hedef>. "
+                "Hedef: RUZGAR_MYPY_TARGET (varsayılan projects)."
+            ),
+            argv=["python", "-m", "mypy", "--ignore-missing-imports", "projects"],
+            timeout_sec=300,
+            use_project_cwd=True,
+        )
+    )
+
     return out
 
 
@@ -238,9 +252,26 @@ def _lint_missing_tool(combined: str, tool: str) -> bool:
     )
 
 
+def _scoped_lint_target() -> str:
+    raw = (os.environ.get("RUZGAR_RUFF_TARGET") or ".").strip().replace("\\", "/")
+    if not raw or raw == ".":
+        return "."
+    if re.match(r"^[\w./\-]+$", raw):
+        return raw.lstrip("/")
+    return "."
+
+
+def _scoped_mypy_target() -> str:
+    raw = (os.environ.get("RUZGAR_MYPY_TARGET") or "projects").strip().replace("\\", "/")
+    if raw and re.match(r"^[\w./\-]+$", raw):
+        return raw.lstrip("/")
+    return "projects"
+
+
 def _run_ruff_or_flake8(cwd: str | None, timeout_sec: int) -> Tuple[int, str]:
-    """ruff check . → yoksa flake8 ."""
-    ruff_argv = ["python", "-m", "ruff", "check", "."]
+    """ruff check <hedef> → yoksa flake8 ."""
+    target = _scoped_lint_target()
+    ruff_argv = ["python", "-m", "ruff", "check", target]
     code, out, err = run_argv(ruff_argv, timeout_sec=timeout_sec, cwd=cwd)
     combined = f"{out}\n{err}".strip()
     if code >= 0 and not _lint_missing_tool(combined, "ruff"):
@@ -267,6 +298,47 @@ def _run_ruff_or_flake8(cwd: str | None, timeout_sec: int) -> Tuple[int, str]:
     return code2, tail
 
 
+def _run_mypy_scoped(cwd: str | None, timeout_sec: int) -> Tuple[int, str]:
+    """mypy --ignore-missing-imports <hedef>; kurulu değilse atla (exit 0)."""
+    if not cwd:
+        return -1, "Proje çalışma kökü yok."
+    target = _scoped_mypy_target()
+    abs_target = os.path.join(cwd, target.replace("/", os.sep))
+    if not os.path.exists(abs_target):
+        return 0, f"[Araç: mypy]\n`{target}` yok — atlandı."
+
+    scope_cwd = cwd
+    check_paths: list[str] = []
+    norm = target.replace("\\", "/").strip("/")
+    parts = norm.split("/")
+    if len(parts) == 2 and parts[0] == "projects" and os.path.isdir(abs_target):
+        scope_cwd = abs_target
+        for sub in ("app", "src", "tests"):
+            if os.path.isdir(os.path.join(scope_cwd, sub)):
+                check_paths.append(sub)
+        if not check_paths:
+            check_paths = ["."]
+    else:
+        check_paths = [target]
+
+    argv = ["python", "-m", "mypy", "--ignore-missing-imports"] + check_paths
+    code, out, err = run_argv(argv, timeout_sec=timeout_sec, cwd=scope_cwd)
+    combined = f"{out}\n{err}".strip()
+    if _lint_missing_tool(combined, "mypy"):
+        return 0, (
+            "[Araç: mypy]\n"
+            "Kurulu değil — atlandı (kurulum: pip install mypy).\n"
+            f"{combined[:800]}"
+        )
+    tail = (
+        f"[Araç: mypy]\n[Hedef: {target}]\n"
+        f"[Cwd: {scope_cwd}]\n[Çıkış kodu: {code}]\n{out}"
+    )
+    if err:
+        tail += f"\n[Hata] {err}"
+    return code, tail
+
+
 def _resolve_preset_argv(p: Preset) -> List[str]:
     if p.key == "python_module_run":
         return _python_module_argv()
@@ -289,6 +361,9 @@ def run_preset(key: str) -> Tuple[int, str]:
 
     if p.key == "ruff_check":
         return _run_ruff_or_flake8(cwd, p.timeout_sec)
+
+    if p.key == "mypy_check":
+        return _run_mypy_scoped(cwd, p.timeout_sec)
 
     argv = _resolve_preset_argv(p)
     code, out, err = run_argv(

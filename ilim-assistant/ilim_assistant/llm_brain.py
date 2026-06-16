@@ -126,6 +126,12 @@ def _programlama_chain_ids() -> list[str]:
                     ids.append(fallback)
     except Exception:
         pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz85 import local_first_brain_chain
+
+        ids = local_first_brain_chain(ids)
+    except Exception:
+        pass
     return ids
 
 
@@ -781,6 +787,14 @@ def select_brain_chain(
         profiles=profiles,
     )
     chain_ids = _filter_chain_ids_for_quota(chain_ids)
+
+    if coding_mode or mode_norm == "programlama":
+        try:
+            from ilim_assistant.motorlar.programlama_faz85 import local_first_brain_chain
+
+            chain_ids = local_first_brain_chain(chain_ids)
+        except Exception:
+            pass
 
     chain: list[BrainEndpoint] = []
     seen: set[str] = set()
