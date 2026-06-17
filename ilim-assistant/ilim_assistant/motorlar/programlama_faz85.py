@@ -164,7 +164,11 @@ def _goal_wants_health_fix(goal: str) -> bool:
 
 
 def _extract_version(goal: str) -> str:
-    m = re.search(r"version\s*[=:]\s*['\"]?([\w.\-]+)", goal or "", re.I)
+    text = goal or ""
+    m = re.search(r"version\s*[=:]\s*['\"]?([\w.\-]+)", text, re.I)
+    if m:
+        return m.group(1)
+    m = re.search(r"version\s+['\"]?(\d+(?:\.\d+)*)", text, re.I)
     return m.group(1) if m else "1.0.0"
 
 

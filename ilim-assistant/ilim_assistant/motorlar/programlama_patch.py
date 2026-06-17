@@ -182,10 +182,14 @@ def apply_search_replace(
 
     try:
         from ilim_assistant.motorlar.programlama_faz4 import validate_write_content
+        from ilim_assistant.motorlar.programlama_motoru import validate_write_syntax
 
         ok_content, creason = validate_write_content(patched)
         if not ok_content:
             return PatchReport(path=rel_path, ok=False, detail=creason, strategy="search_replace")
+        ok_syntax, sreason = validate_write_syntax(rel_path, patched)
+        if not ok_syntax:
+            return PatchReport(path=rel_path, ok=False, detail=sreason, strategy="search_replace")
     except Exception:
         pass
 

@@ -9,6 +9,8 @@ Omurgalar:
 
 from __future__ import annotations
 
+import ast
+import json
 import os
 import re
 from dataclasses import dataclass, field
@@ -159,6 +161,41 @@ def _extract_write_jobs(message: str) -> list[tuple[str, str]]:
 
 def _is_effectively_empty(content: str) -> bool:
     return not (content or "").strip()
+
+
+def validate_write_syntax(rel_path: str, content: str) -> tuple[bool, str]:
+    """Geçersiz sözdizimi içeren yazımları reddet (.py, .json)."""
+    if os.environ.get("RUZGAR_ALLOW_INVALID_WRITE", "0").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    ):
+        return True, ""
+    body = content or ""
+    if not body.strip():
+        return True, ""
+    ext = Path(rel_path).suffix.lower()
+    if ext == ".py":
+        try:
+            ast.parse(body, filename=rel_path)
+        except SyntaxError as exc:
+            msg = (exc.msg or "SyntaxError").strip()
+            return (
+                False,
+                "Güvenlik: geçersiz Python sözdizimi "
+                f"({msg}). RUZGAR_ALLOW_INVALID_WRITE=1 ile geçersiz kılınabilir.",
+            )
+    elif ext == ".json":
+        try:
+            json.loads(body)
+        except json.JSONDecodeError as exc:
+            return (
+                False,
+                "Güvenlik: geçersiz JSON "
+                f"({exc.msg}). RUZGAR_ALLOW_INVALID_WRITE=1 ile geçersiz kılınabilir.",
+            )
+    return True, ""
 
 
 def _wants_pytest(message: str) -> bool:
@@ -1541,6 +1578,12 @@ class ProgramlamaAraclari:
             ok_content, creason = validate_write_content(content)
             if not ok_content:
                 return WriteReport(path=rel_path, ok=False, detail=creason)
+        except Exception:
+            pass
+        try:
+            ok_syntax, sreason = validate_write_syntax(rel_path, content)
+            if not ok_syntax:
+                return WriteReport(path=rel_path, ok=False, detail=sreason)
         except Exception:
             pass
         try:
