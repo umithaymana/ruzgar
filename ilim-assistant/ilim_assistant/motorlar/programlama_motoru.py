@@ -388,6 +388,17 @@ def is_code_agent_task_message(message: str, mode_norm: str = "programlama") -> 
     if mode_norm != "programlama":
         return False
     try:
+        from ilim_assistant.motorlar.programlama_faz43 import is_misrouted_terminal_gorev
+
+        if is_misrouted_terminal_gorev(message):
+            return False
+        from ilim_assistant.motorlar.programlama_faz91 import wants_e1_maintenance
+
+        if wants_e1_maintenance(message):
+            return False
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_faz19 import normalize_agent_message
         from ilim_assistant.motorlar.programlama_faz14 import parse_code_agent_task
 
@@ -606,6 +617,20 @@ def is_programlama_reserved_command(message: str) -> bool:
         from ilim_assistant.motorlar.programlama_faz63 import wants_live_kpi
 
         if wants_live_kpi(message):
+            return True
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz91 import wants_e1_maintenance
+
+        if wants_e1_maintenance(message):
+            return True
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz82 import wants_weakness_report
+
+        if wants_weakness_report(message):
             return True
     except Exception:
         pass

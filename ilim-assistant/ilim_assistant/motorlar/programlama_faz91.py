@@ -27,6 +27,16 @@ _SMOKE_GOAL_RE = re.compile(
 _BENCH_SOURCES = frozenset({"smoke", "bench", "parity", "upgrade_runner", "ci"})
 
 
+def _is_legacy_verify_ok_but_failed(row: dict[str, Any]) -> bool:
+    """Eski ajan: detayda doğrulama OK ama success=false (yazım/scope uyumsuzluğu)."""
+    if row.get("success"):
+        return False
+    if str(row.get("source") or "") != "code_agent":
+        return False
+    detail = str(row.get("detail") or "").lower()
+    return "doğrulama: ok" in detail or "dogrulama: ok" in detail
+
+
 def _is_synthetic_smoke_failure(row: dict[str, Any]) -> bool:
     """Smoke scriptlerinin KPI'ya yazdığı sahte başarısızlıklar."""
     if row.get("success"):
@@ -76,6 +86,8 @@ def is_kpi_eligible_outcome(row: dict[str, Any]) -> bool:
     if _SMOKE_GOAL_RE.search(goal):
         return False
     if _is_synthetic_smoke_failure(row):
+        return False
+    if _is_legacy_verify_ok_but_failed(row):
         return False
     detail = str(row.get("detail") or "").lower()
     if "dosya içeriği" in detail or "dosya icerigi" in detail:

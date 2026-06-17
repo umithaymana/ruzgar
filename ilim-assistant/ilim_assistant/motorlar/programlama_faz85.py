@@ -568,6 +568,8 @@ def iter_fast_task_events(
         "full_reply": body,
         "user_message": message,
         "new_wake_used": new_wake,
+        "instant_gundelik": True,
+        "programlama_instant": True,
         "code_agent": {
             "success": success,
             "scope_rel": scope_out,

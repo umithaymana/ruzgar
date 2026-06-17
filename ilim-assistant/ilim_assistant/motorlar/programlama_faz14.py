@@ -171,7 +171,15 @@ def _parse_code_agent_task_body(raw: str) -> CodeAgentTask | None:
             scope = _scope_from_slug(first)
             slug = first
         if scope and goal:
-            return CodeAgentTask(scope_rel=scope, goal=goal, project_slug=slug)
+            task = CodeAgentTask(scope_rel=scope, goal=goal, project_slug=slug)
+            try:
+                from ilim_assistant.motorlar.programlama_faz43 import is_misrouted_terminal_gorev
+
+                if is_misrouted_terminal_gorev(text, slug=slug, goal=goal):
+                    return None
+            except Exception:
+                pass
+            return task
         return None
 
     m2 = _TASK_INLINE_RE.search(text)
@@ -180,7 +188,15 @@ def _parse_code_agent_task_body(raw: str) -> CodeAgentTask | None:
         goal = m2.group(2).strip()
         scope = _scope_from_slug(slug)
         if scope and goal:
-            return CodeAgentTask(scope_rel=scope, goal=goal, project_slug=slug)
+            task = CodeAgentTask(scope_rel=scope, goal=goal, project_slug=slug)
+            try:
+                from ilim_assistant.motorlar.programlama_faz43 import is_misrouted_terminal_gorev
+
+                if is_misrouted_terminal_gorev(text, slug=slug, goal=goal):
+                    return None
+            except Exception:
+                pass
+            return task
 
     m_path = _SCOPE_RE.search(text)
     if m_path:
@@ -1076,6 +1092,24 @@ def iter_code_agent_turn_events(
             "faz55b_bonus": _faz55b_bonus,
         },
     }
+    try:
+        from ilim_assistant.motorlar.programlama_faz56 import (
+            build_multi_file_plan_block,
+            looks_like_multi_file_task,
+        )
+
+        if looks_like_multi_file_task(message, task.goal or ""):
+            _mf_plan = build_multi_file_plan_block(
+                workspace,
+                scope_rel=task.scope_rel,
+                message=message,
+                goal=task.goal or "",
+                turn=1,
+            )
+            if _mf_plan.strip():
+                yield {"type": "status", "text": _mf_plan}
+    except Exception:
+        pass
     _parallel_explore_block = ""
     try:
         from ilim_assistant.motorlar.programlama_parallel_explore import (

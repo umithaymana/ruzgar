@@ -745,6 +745,28 @@ def should_delegate_to_programlama(
     )
     if any(c in low for c in code_cues):
         return True
+    bridge_cues = (
+        "health endpoint",
+        "endpointine version",
+        "smoke-live",
+        "smoke_live",
+        "terminal calistir",
+        "terminal çalıştır",
+        "terminal run",
+        "e1 bakim",
+        "e1 bakım",
+        "e1 kpi",
+        "atolye",
+        "atölye",
+        "proje uret",
+        "proje üret",
+        "gorev ",
+        "görev ",
+        "calistir: pytest",
+        "çalıştır: pytest",
+    )
+    if any(c in low for c in bridge_cues):
+        return True
     try:
         from ilim_assistant.ana_motor_otonom_debug import should_delegate_genel_debug
 

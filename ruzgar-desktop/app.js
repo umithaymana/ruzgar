@@ -3229,6 +3229,33 @@ function isProgramlamaFastPathGoal(text) {
   return hasHealth && hasVersion && hasTest;
 }
 
+/** Bakım / KPI / terminal — görev değil; Faz85 overlay gösterme */
+function isProgramlamaInstantCmd(text) {
+  const low = String(text || "").trim().toLowerCase();
+  if (/^e1\s+(?:bakim|bakım|kpi|maintenance)\b/.test(low)) return true;
+  if (/^(?:görev|gorev)\s+istatistik\b/.test(low)) return true;
+  if (/^(?:zayıflık|zayiflik)\s+rapor/.test(low)) return true;
+  if (/^terminal\s+(?:calistir|çalıştır|run)\s*:/.test(low)) return true;
+  if (/^(?:git\s+status|git\s+diff|pytest|verify)\b/.test(low)) return true;
+  if (/^(?:api\s+durum|sunucu\s+durum)\b/.test(low)) return true;
+  return false;
+}
+
+function isProgramlamaGorevMessage(text) {
+  const raw = String(text || "");
+  return (
+    /^\s*(?:görev|gorev)\s*:/im.test(raw) ||
+    /^\s*(?:görev|gorev)\s+[\w.\-]+\s+/im.test(raw)
+  );
+}
+
+function isProgramlamaMultiFileGorev(text) {
+  if (!isProgramlamaGorevMessage(text)) return false;
+  return /\b(refactor|refaktör|çok dosya|cok dosya|multi\s*file|tüm dosya|tum dosya|monorepo)\b/i.test(
+    String(text || ""),
+  );
+}
+
 function programlamaScopeFromContext() {
   const rel = String(atolyeOpenRel || "").replace(/\\/g, "/");
   if (rel.startsWith("projects/")) {
@@ -6358,6 +6385,28 @@ async function applyProgramlamaFocusFromChat(ev) {
   }
   if (focus) {
     await openProgramlamaWorkspaceFile(focus);
+  }
+}
+
+/** Sıra 4 — genel sohbetten programlama atölyesine erken geçiş */
+function handleAnaMotorProgramlamaBridge(ev) {
+  const cr = ev?.chat_route && typeof ev.chat_route === "object" ? ev.chat_route : {};
+  const delegated = !!(ev.programlama_delegated || cr.programlama_delegated);
+  if (!delegated) return;
+  const sumTxt = String(ev.delegate_summary_text || cr.delegate_summary_text || "").trim();
+  flashRuzgarDurum(
+    sumTxt || "Ana sohbet → Programlama atölyesi (köprü aktif).",
+  );
+  if (el.code && !el.code.checked) el.code.checked = true;
+  if (currentMode !== "programlama") switchMode("programlama");
+  const scope =
+    String(ev.programlama_project_rel || ev.programlama_focus_rel || "").trim() ||
+    String(cr.handoff?.scope_rel || "").trim();
+  if (scope) {
+    void applyProgramlamaFocusFromChat({
+      programlama_project_rel: scope,
+      programlama_expand_tree: true,
+    });
   }
 }
 
@@ -14230,6 +14279,9 @@ async function streamChat(userText, streamOpts = {}) {
   const chatSess = getMotorChatSession(chatMode);
   const codingMode =
     chatMode === "programlama" || !!(el.code && el.code.checked);
+  const isProgramlamaAgentTask =
+    chatMode === "programlama" &&
+    (isProgramlamaGorevMessage(userText) || isProgramlamaFastPathGoal(userText));
   const sharedHist = getSharedChatHistory();
   const body = {
     message: userText,
@@ -14430,6 +14482,9 @@ async function streamChat(userText, streamOpts = {}) {
 
   function processChatEvent(ev) {
     ruzgarDebugLog(`chat:${ev.type || "?"}`, ev);
+    if (ev.type === "meta") {
+      handleAnaMotorProgramlamaBridge(ev);
+    }
     if (ev.type === "meta" && ev.research_card) {
       renderAnaMotorResearchCard(ev.research_card);
       return;
@@ -14510,6 +14565,9 @@ async function streamChat(userText, streamOpts = {}) {
       const phase = String(ev.phase || "").toLowerCase();
       if (t) {
         let label = t;
+        if (/faz\s*85|hızlı\s*yol|hizli\s*yol/i.test(t)) {
+          clearDeferThinking();
+        }
         if (phase === "bilim_derin" || phase === "bilim_derin_llm") {
           label = `🔬 ${t}`;
         } else if (
@@ -14576,6 +14634,10 @@ async function streamChat(userText, streamOpts = {}) {
       full = stripYerelFooter(merged);
       chatSess.sessionWakeUsed = !!ev.new_wake_used;
       hideThinkingCenter();
+      const faz85Done = !!(ev.code_agent && ev.code_agent.fast_local);
+      if (faz85Done) {
+        setStatus("Faz 85 tamam", "Rüzgar");
+      }
       if (!responseBubble) {
         responseBubble = document.createElement("div");
         responseBubble.className = "bubble assistant";
@@ -14583,6 +14645,10 @@ async function streamChat(userText, streamOpts = {}) {
       }
       responseBubble.classList.toggle("chat-clarify", !!ev.instant_clarify || !!ev.instant_gundelik);
       responseBubble.classList.toggle("chat-instant-memory", !!ev.instant_memory);
+      responseBubble.classList.toggle(
+        "chat-instant-gundelik",
+        !!(ev.instant_gundelik || faz85Done || ev.programlama_instant),
+      );
       // Streaming bittikten sonra zenginleştirilmiş render: ```fenced``` kod blokları
       // Programlama Atölyesi'ne tek tıkla atılabilir kart hâline gelir.
       if (full.includes("```")) {
@@ -14615,16 +14681,7 @@ async function streamChat(userText, streamOpts = {}) {
         void applyProgramlamaFocusFromChat(ev);
       }
       if (ev.programlama_delegated) {
-        const sumTxt = String(ev.delegate_summary_text || "").trim();
-        flashRuzgarDurum(
-          sumTxt
-            ? sumTxt.replace(/\*\*/g, "").slice(0, 220)
-            : "Kod sorusu → Programlama motoru (Faz 59 delege).",
-        );
-        if (el.code && !el.code.checked) {
-          el.code.checked = true;
-          switchMode("programlama");
-        }
+        handleAnaMotorProgramlamaBridge(ev);
       }
       const caDone = ev.code_agent || {};
       if (caDone.fast_local) {
@@ -14842,11 +14899,6 @@ async function streamChat(userText, streamOpts = {}) {
     /yanl[ıi]ş\s*cevap|yanlis\s*cevap|cevab[ıi]n\s+şu\s+olmalı|cevabin\s+su\s+olmalı|doğru\s+cevap|dogru\s+cevap/i.test(
       String(userText || ""),
     );
-  const isProgramlamaAgentTask =
-    chatMode === "programlama" &&
-    (codingMode ||
-      /^\s*(?:görev|gorev)\s*:/im.test(String(userText || "")) ||
-      /^\s*(?:görev|gorev)\s+[\w.\-]+\s+/im.test(String(userText || "")));
   const chatFullTimeoutMs = casualShortCmd
     ? RUZGAR_CHAT_CASUAL_TIMEOUT_MS
     : egitimCmd
@@ -14903,7 +14955,9 @@ async function streamChat(userText, streamOpts = {}) {
   }
 
   // Kısa sohbet (nasılsın/selam): tam yanıt beklemeden WS ile token göster — boş balon takılması olmasın
-  const useChatFullBatch = RUZGAR_DISABLE_STREAMING && !casualShortCmd;
+  // Programlama görev: Faz85 SSE — chat/full tek parça beklemesin (45 sn «düşünüyor» olmasın)
+  const useChatFullBatch =
+    RUZGAR_DISABLE_STREAMING && !casualShortCmd && !isProgramlamaAgentTask;
   if (useChatFullBatch) {
     const fullCtrl = new AbortController();
     activeChatAbort = fullCtrl;
@@ -15028,7 +15082,25 @@ async function streamChat(userText, streamOpts = {}) {
   }
 
   if (currentMode !== "hafiza") {
-    scheduleDeferThinkingOverlay();
+    if (isProgramlamaAgentTask) {
+      clearDeferThinking();
+      if (isProgramlamaMultiFileGorev(userText)) {
+        showThinkingCenter("Çok dosya görevi — ajan planlıyor…");
+        setStatus("Çok dosya görevi…", "Rüzgar");
+      } else if (isProgramlamaFastPathGoal(userText)) {
+        showThinkingCenter("Faz 85 görevi — yerel hızlı yol…");
+        setStatus("Faz 85 görevi…", "Rüzgar");
+      } else {
+        showThinkingCenter("Programlama görevi — ajan çalışıyor…");
+        setStatus("Görev…", "Rüzgar");
+      }
+    } else if (chatMode === "programlama" && isProgramlamaInstantCmd(userText)) {
+      clearDeferThinking();
+      showThinkingCenter("Programlama komutu işleniyor…");
+      setStatus("Komut…", "Rüzgar");
+    } else {
+      scheduleDeferThinkingOverlay();
+    }
   }
   try {
     let usedHttp = false;

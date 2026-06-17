@@ -27,10 +27,19 @@ def _enabled() -> bool:
 
 
 def e1_target_rate() -> float:
+    """E1 hedef çizgisi — faz55 ile aynı (varsayılan %70; Blok C için RUZGAR_E1_TARGET_RATE=0.90)."""
+    env = os.environ.get("RUZGAR_E1_TARGET_RATE", "").strip()
+    if env:
+        try:
+            return max(0.5, min(0.99, float(env)))
+        except ValueError:
+            pass
     try:
-        return max(0.5, min(0.99, float(os.environ.get("RUZGAR_E1_TARGET_RATE", "0.90"))))
-    except ValueError:
-        return 0.90
+        from ilim_assistant.motorlar.programlama_faz55 import target_success_rate
+
+        return target_success_rate()
+    except Exception:
+        return 0.70
 
 
 def task_duration_warn_sec() -> float:
@@ -53,7 +62,9 @@ def classify_root_cause(
     low = (detail or "").lower()
     if bonus_retry:
         return "bonus_retry_still_fail"
-    if any(x in low for x in ("scope", "kapsam", "çekirdek", "cekirdek", "faz 78")):
+    # pytest_scope doğrulama etiketi — kök neden «scope_rejected» sayılmaz
+    low_scope = low.replace("pytest_scope", "")
+    if any(x in low_scope for x in ("scope", "kapsam", "çekirdek", "cekirdek", "faz 78")):
         return "scope_rejected"
     if any(x in low for x in ("timeout", "timed out", "süre sınırı", "sure siniri")):
         return "timeout"

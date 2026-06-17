@@ -153,6 +153,44 @@ def parse_safe_argv_command(message: str) -> list[str] | None:
     return argv
 
 
+def extract_terminal_command_text(message: str) -> str:
+    """görev: terminal çalıştır: pytest → terminal çalıştır: pytest"""
+    raw = (message or "").strip()
+    m = re.match(
+        r"^\s*(?:görev|gorev)\s*:?\s+terminal\s+(.+)$",
+        raw,
+        re.I,
+    )
+    if m:
+        rest = m.group(1).strip()
+        if re.search(r"(?:calistir|çalıştır|run)\s*:", rest, re.I):
+            return f"terminal calistir: {rest.split(':', 1)[-1].strip()}" if ":" in rest else f"terminal calistir: {rest}"
+        return f"terminal calistir: {rest}"
+    return raw
+
+
+def is_misrouted_terminal_gorev(
+    message: str,
+    *,
+    slug: str = "",
+    goal: str = "",
+) -> bool:
+    """Terminal komutu yanlışlıkla görev/Faz85 yoluna düşmesin."""
+    if wants_terminal_v3(message):
+        return True
+    sl = _ascii_fold(slug or "")
+    if sl not in ("terminal", "term"):
+        return False
+    g = goal or message
+    if re.search(r"(?:calistir|çalıştır|run)\s*:", g, re.I):
+        return True
+    low = _ascii_fold(g)
+    return any(
+        k in low
+        for k in ("pytest", "pip install", "npm ci", "git status", "uv sync")
+    )
+
+
 def _scope_cwd(workspace_root: str | Path | None, scope_rel: str) -> Path | None:
     from ilim_assistant.motorlar.programlama_faz15 import _scope_cwd as _s15
 
@@ -343,13 +381,14 @@ def maybe_instant_faz43(
     *,
     active_file: str | None = None,
 ) -> str | None:
-    if not wants_terminal_v3(message):
+    cmd_msg = extract_terminal_command_text(message)
+    if not wants_terminal_v3(cmd_msg):
         return None
     res = run_terminal_v3(
         workspace_root,
-        message,
+        cmd_msg,
         active_file=active_file,
-        message=message,
+        message=cmd_msg,
     )
     return format_terminal_report_v3(res)
 

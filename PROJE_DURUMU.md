@@ -24,14 +24,18 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 
 **Yerel commit edilmemiş (diskte):** `programlama_faz85.py` — `iter_fast_path_early` + `intent_message` (henüz `faz14`/`faz20`'ye bağlanmadı; sonraki tur).
 
-**E1 KPI:** Filtre sonrası ~**%50** (3/6), hedef %70 — zayıflık skoru **75/100**. Smoke gürültüsü elendi; birkaç başarılı Faz85 göreviyle yükselir.
+**E1 KPI (2026-06-17):** Filtre sonrası **%80** (12/15, 7 gün), hedef ≥%70 **karşılandı** · birleşik pil %100 · E1 zayıflık **temiz**. `e1 bakım` pili koşuldu.
 
-**Dönüşte önerilen sıra (Yol C ertelendi):**
+**Tamamlanan sıra (bu oturum):**
 
-1. `iter_fast_path_early`'yi `faz14` başına bağla (LLM öncesi, «düşünüyor» kaçınma).
-2. Yerel `faz85` diff'i commit + push.
-3. İsteğe bağlı: `version 2.1.0` ile Faz85 yazım testi; E1 kartını health'te doğrula.
-4. Uzun vade: tam ajan performansı (Honor RAM düşükken saatler sürebilir).
+1. UI hızı — görev streaming + Faz85 overlay (test geçti).
+2. E1 KPI %50→%70+ — Faz85 canlı kayıtlar + bakım pili + filtre iyileştirmesi.
+3. Programlama güçlendirme — `e1 bakım` overlay + terminal yönlendirme düzeltmesi; çok dosya Faz56 planı.
+4. Ana motor köprüsü — genel sohbetten atölye: erken meta + proje odak (Faz 59/79); delegasyon ipuçları genişletildi.
+
+**Sırada:**
+
+5. Uzun vade: tek yüz asistan · Blok C hedefi E1 %90 (`RUZGAR_E1_TARGET_RATE=0.90`).
 
 **Hızlı başlatma:** `.\Ruzgar.ps1 -ForceRestart` · port **8779** · build `2026-06-15-ruzgar-programlama-pro-v4`.
 

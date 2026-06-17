@@ -160,6 +160,17 @@ def parse_implicit_programming_task(message: str) -> str | None:
     raw = (message or "").strip()
     if len(raw) < 12 or len(raw) > 500:
         return None
+    try:
+        from ilim_assistant.motorlar.programlama_faz43 import is_misrouted_terminal_gorev
+
+        if is_misrouted_terminal_gorev(raw):
+            return None
+        from ilim_assistant.motorlar.programlama_faz91 import wants_e1_maintenance
+
+        if wants_e1_maintenance(raw):
+            return None
+    except Exception:
+        pass
     low = _ascii_fold(raw)
     if parse_task_aliases(raw):
         return None

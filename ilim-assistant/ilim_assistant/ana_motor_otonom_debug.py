@@ -7,6 +7,8 @@ import os
 import re
 import unicodedata
 
+from typing import Any
+
 
 def _fold(text: str) -> str:
     t = unicodedata.normalize("NFKD", text or "")
@@ -129,3 +131,45 @@ def build_otonom_debug_directive(message: str) -> str:
         "Traceback varsa kök nedeni bul; yalnızca semptom yamama.\n"
         f"[Kullanıcı isteği özeti]\n{(message or '').strip()[:1200]}\n"
     )
+
+
+_GENEL_MODES = frozenset({"genel", "gelisim", "uretim", ""})
+
+
+def is_delegated_from_genel_chat(
+    req_mode: str,
+    *,
+    coding_mode: bool = False,
+    effective_mode: str = "",
+) -> bool:
+    """Ana sohbet modundan programlama atölyesine sessiz delege."""
+    if coding_mode:
+        return False
+    if (req_mode or "").strip().lower() not in _GENEL_MODES:
+        return False
+    return (effective_mode or "").strip().lower() == "programlama"
+
+
+def bridge_ui_fields_from_route(
+    route_meta: dict | None,
+    *,
+    req_mode: str = "genel",
+) -> dict[str, Any]:
+    """SSE/WS meta — atölye açılışı için UI alanları."""
+    handoff = (
+        (route_meta or {}).get("handoff")
+        if isinstance((route_meta or {}).get("handoff"), dict)
+        else {}
+    )
+    scope = str(handoff.get("scope_rel") or "").strip()
+    out: dict[str, Any] = {
+        "programlama_delegated": True,
+        "delegate_from_mode": (req_mode or "").strip() or "genel",
+        "delegate_summary_text": (
+            "Ana sohbet → Programlama atölyesi (köprü aktif)."
+        ),
+    }
+    if scope:
+        out["programlama_project_rel"] = scope
+        out["programlama_expand_tree"] = True
+    return out

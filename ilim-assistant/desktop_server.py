@@ -9676,6 +9676,9 @@ def _iter_instant_chat_events(
     programlama_focus_rel: str | None = None,
     programlama_project_rel: str | None = None,
     programlama_expand_tree: bool = False,
+    programlama_delegated: bool = False,
+    delegate_summary_text: str | None = None,
+    delegate_from_mode: str | None = None,
     archive_recall: dict[str, Any] | None = None,
 ) -> Iterator[dict]:
     """Ollama/RAG beklemeden tek tur bitir (SSE/WS)."""
@@ -9712,6 +9715,12 @@ def _iter_instant_chat_events(
         done["programlama_project_rel"] = programlama_project_rel
     if programlama_expand_tree:
         done["programlama_expand_tree"] = True
+    if programlama_delegated:
+        done["programlama_delegated"] = True
+    if delegate_summary_text:
+        done["delegate_summary_text"] = delegate_summary_text
+    if delegate_from_mode:
+        done["delegate_from_mode"] = delegate_from_mode
     if instant_clarify:
         done["instant_clarify"] = True
     if archive_recall and isinstance(archive_recall, dict):
@@ -9732,12 +9741,29 @@ def _yield_programlama_instant(
     session_wake_used: bool,
     msg_for_wake: str,
     orch: dict[str, Any] | None = None,
+    delegated_from_genel: bool = False,
+    delegate_from_mode: str = "genel",
+    route_meta: dict[str, Any] | None = None,
 ) -> Iterator[dict]:
     from ilim_assistant.motorlar.programlama_motoru import unpack_programlama_instant
 
     text, meta = unpack_programlama_instant(raw)
     if not text:
         return
+    bridge: dict[str, Any] = {}
+    if delegated_from_genel:
+        try:
+            from ilim_assistant.ana_motor_otonom_debug import bridge_ui_fields_from_route
+
+            bridge = bridge_ui_fields_from_route(route_meta, req_mode=delegate_from_mode)
+        except Exception:
+            bridge = {
+                "programlama_delegated": True,
+                "delegate_from_mode": delegate_from_mode,
+                "delegate_summary_text": (
+                    "Ana sohbet → Programlama atölyesi (köprü aktif)."
+                ),
+            }
     yield from _iter_instant_chat_events(
         text,
         user_message,
@@ -9746,9 +9772,15 @@ def _yield_programlama_instant(
         orch=orch or {},
         instant_gundelik=True,
         programlama_instant=True,
-        programlama_focus_rel=str(meta.get("focus_rel") or "") or None,
-        programlama_project_rel=str(meta.get("project_rel") or "") or None,
-        programlama_expand_tree=bool(meta.get("expand_tree")),
+        programlama_focus_rel=str(meta.get("focus_rel") or bridge.get("programlama_focus_rel") or "") or None,
+        programlama_project_rel=str(
+            meta.get("project_rel") or bridge.get("programlama_project_rel") or ""
+        )
+        or None,
+        programlama_expand_tree=bool(meta.get("expand_tree") or bridge.get("programlama_expand_tree")),
+        programlama_delegated=bool(bridge.get("programlama_delegated")),
+        delegate_summary_text=str(bridge.get("delegate_summary_text") or "") or None,
+        delegate_from_mode=str(bridge.get("delegate_from_mode") or "") or None,
     )
 
 
@@ -9800,6 +9832,8 @@ def _iter_gorev_faz85_fast_only(
     req: Any,
     mode_norm: str,
     new_wake: bool,
+    delegated_from_genel: bool = False,
+    route_meta: dict[str, Any] | None = None,
 ) -> Iterator[dict[str, Any]]:
     """`görev:` satırı — yalnızca Faz 85; başarısızsa kırmızı done (tam LLM ajanı yok)."""
     from ilim_assistant.motorlar.programlama_faz20 import resolve_agent_task
@@ -9827,7 +9861,31 @@ def _iter_gorev_faz85_fast_only(
         new_wake=new_wake,
     )
     if early is not None:
-        yield from early
+        for ev in early:
+            if (
+                delegated_from_genel
+                and isinstance(ev, dict)
+                and ev.get("type") == "done"
+            ):
+                patched = dict(ev)
+                try:
+                    from ilim_assistant.ana_motor_otonom_debug import (
+                        bridge_ui_fields_from_route,
+                    )
+
+                    patched.update(
+                        bridge_ui_fields_from_route(
+                            route_meta,
+                            req_mode=(getattr(req, "mode", None) or "genel"),
+                        )
+                    )
+                except Exception:
+                    patched["programlama_delegated"] = True
+                patched.setdefault("programlama_project_rel", task.scope_rel)
+                patched["programlama_expand_tree"] = True
+                yield patched
+            else:
+                yield ev
         return
     body = (
         "Ümit abi, Faz 85 hızlı yol bu görevde devreye girmedi (tam ajan atlandı).\n\n"
@@ -9837,7 +9895,7 @@ def _iter_gorev_faz85_fast_only(
         "· Proje `projects/` altında mı kontrol et.\n"
         "· Zorunlu tam ajan: mesaja `tam ajan` ekle veya `RUZGAR_FAZ85=0`."
     )
-    yield {
+    done_ev: dict[str, Any] = {
         "type": "done",
         "full_reply": body,
         "user_message": msg,
@@ -9850,6 +9908,21 @@ def _iter_gorev_faz85_fast_only(
             "fast_miss": True,
         },
     }
+    if delegated_from_genel:
+        try:
+            from ilim_assistant.ana_motor_otonom_debug import bridge_ui_fields_from_route
+
+            done_ev.update(
+                bridge_ui_fields_from_route(
+                    route_meta,
+                    req_mode=(getattr(req, "mode", None) or "genel"),
+                )
+            )
+        except Exception:
+            done_ev["programlama_delegated"] = True
+        done_ev["programlama_project_rel"] = task.scope_rel
+        done_ev["programlama_expand_tree"] = True
+    yield done_ev
 
 
 def _iter_programlama_agent_pipeline(
@@ -10043,6 +10116,45 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             if _mode_gate == "programlama":
                 _wake_gate = req.session_wake_used or message_calls_wake_name(msg_early)
                 try:
+                    from ilim_assistant.ana_motor_otonom_debug import (
+                        bridge_ui_fields_from_route,
+                        is_delegated_from_genel_chat,
+                    )
+
+                    _deleg_gate = is_delegated_from_genel_chat(
+                        req.mode or "",
+                        coding_mode=bool(req.coding_mode),
+                        effective_mode=_mode_gate,
+                    )
+                    _route_early: dict[str, Any] = {}
+                    if _deleg_gate:
+                        try:
+                            from ilim_assistant.motorlar.programlama_faz79 import (
+                                build_handoff_packet_v3,
+                            )
+
+                            _hp = build_handoff_packet_v3(
+                                msg_early,
+                                req.workspace_root,
+                                active_file=getattr(req, "programlama_active_file", None),
+                            )
+                            if _hp.get("ok"):
+                                _route_early["handoff"] = {
+                                    "scope_rel": _hp.get("scope_rel"),
+                                }
+                        except Exception:
+                            pass
+                        yield {
+                            "type": "meta",
+                            **bridge_ui_fields_from_route(
+                                _route_early,
+                                req_mode=(req.mode or "genel"),
+                            ),
+                        }
+                except Exception:
+                    _deleg_gate = False
+                    _route_early = {}
+                try:
                     from ilim_assistant.motorlar.programlama_motoru import (
                         is_code_agent_task_message,
                     )
@@ -10053,6 +10165,8 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                             req=req,
                             mode_norm=_mode_gate,
                             new_wake=_wake_gate,
+                            delegated_from_genel=_deleg_gate,
+                            route_meta=_route_early,
                         )
                         return
                 except Exception as exc:
@@ -10609,6 +10723,17 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
 
             _mode_early = normalize_mode(_effective_chat_mode_raw(req))
             _coding_early = bool(req.coding_mode) or _mode_early == "programlama"
+            _deleg_early = False
+            try:
+                from ilim_assistant.ana_motor_otonom_debug import is_delegated_from_genel_chat
+
+                _deleg_early = is_delegated_from_genel_chat(
+                    req.mode or "",
+                    coding_mode=bool(req.coding_mode),
+                    effective_mode=_mode_early,
+                )
+            except Exception:
+                pass
             if _coding_early or _mode_early == "programlama":
                 if is_programlama_reserved_command(msg_early):
                     _prog_early = maybe_programlama_instant_reply(
@@ -10625,6 +10750,8 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                             session_wake_used=req.session_wake_used,
                             msg_for_wake=req.message,
                             orch=orch_early,
+                            delegated_from_genel=_deleg_early,
+                            delegate_from_mode=(req.mode or "genel"),
                         )
                         return
         except Exception:
@@ -10885,7 +11012,20 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
     else:
         _handoff = {}
         _intent59 = {}
-    yield {"type": "meta", "chat_route": route_meta}
+    _meta_out: dict[str, Any] = {"type": "meta", "chat_route": route_meta}
+    if _delegated_from_genel:
+        try:
+            from ilim_assistant.ana_motor_otonom_debug import bridge_ui_fields_from_route
+
+            _meta_out.update(
+                bridge_ui_fields_from_route(
+                    route_meta,
+                    req_mode=(req.mode or "genel"),
+                )
+            )
+        except Exception:
+            _meta_out["programlama_delegated"] = True
+    yield _meta_out
     yield {"type": "status", "text": "Rüzgar hazırlanıyor…"}
     if _p92_block_msg:
         yield from _iter_instant_chat_events(
