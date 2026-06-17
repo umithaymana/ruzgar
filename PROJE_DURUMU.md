@@ -1,8 +1,39 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-06-17 (Programlama A+B: yazım koruması birleşik, Faz85 UI, E1 KPI filtre)
+**Son güncelleme:** 2026-06-17 (Programlama oturumu kapanış — Faz85 canlı doğrulandı)
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
+
+### 2026-06-17 — Programlama motoru oturumu (Mimar ara — devam bekliyor)
+
+**Git (push edildi, `origin/main`):**
+
+| Commit | Özet |
+|--------|------|
+| `2d0dd7c` | Faz85 scope yönlendirme (kullanıcı niyeti > oturum kapsamı) |
+| `5b91c00` | Ajan scope sabitleme + boş yazım koruması |
+| `7f7f151` | Upgrade raporu S10 11/11 |
+| `72a89b3` | Geçersiz Python/JSON syntax yazım koruması + `version 2.0.0` parse |
+| `cd6f508` | Patch→write birleşik kapı, E1 KPI filtre, Faz85 UI kartı, write-guard smoke |
+
+**Offline gate (son koşu):** `programlama_upgrade_runner.py --strict` → **11/11** · parity full **8/8**.
+
+**Canlı doğrulama (UI):** `görev: smoke-live-test health endpointine version 2.0.0 ekle pytest geçir` → **Faz 85 hızlı yol OK** (~2.3 sn, LLM yok, yeşil). `projects/smoke-live-test/app/main.py` → `version: "2.0.0"` · pytest **2/2**.
+
+**İlk deneme hatası:** Aynı görevde bir kez **137 sn «Rüzgar düşünüyor»** (tam ajan yolu); restart sonrası Faz85 devreye girdi. Basit health+version görevlerinde tam ajan kullanma; `RUZGAR_FAZ85=1` (varsayılan) açık kalsın.
+
+**Yerel commit edilmemiş (diskte):** `programlama_faz85.py` — `iter_fast_path_early` + `intent_message` (henüz `faz14`/`faz20`'ye bağlanmadı; sonraki tur).
+
+**E1 KPI:** Filtre sonrası ~**%50** (3/6), hedef %70 — zayıflık skoru **75/100**. Smoke gürültüsü elendi; birkaç başarılı Faz85 göreviyle yükselir.
+
+**Dönüşte önerilen sıra (Yol C ertelendi):**
+
+1. `iter_fast_path_early`'yi `faz14` başına bağla (LLM öncesi, «düşünüyor» kaçınma).
+2. Yerel `faz85` diff'i commit + push.
+3. İsteğe bağlı: `version 2.1.0` ile Faz85 yazım testi; E1 kartını health'te doğrula.
+4. Uzun vade: tam ajan performansı (Honor RAM düşükken saatler sürebilir).
+
+**Hızlı başlatma:** `.\Ruzgar.ps1 -ForceRestart` · port **8779** · build `2026-06-15-ruzgar-programlama-pro-v4`.
 
 ## Kuzey yıldızı — asıl amaç
 
@@ -85,7 +116,9 @@ Modül: `ilim_assistant.nebula_kitap_hafiza` — `desktop_server` sohbetinde kit
 
 ## Sıradaki adım (devam)
 
-Örnek seçenekler: çeviri sonrası **`.srt` üretimi** veya **yumuşak altyazı izi**; arayüz için **çeviri anahtarları**; Programlama **Faz 1.4+**; Ana Motor’dan **tek sohbetten motor orkestrasyonu**. Öncelik her oturumda birlikte seçilir.
+**Öncelik — programlama:** Faz85’i LLM’den önce çalıştır (`iter_fast_path_early` bağla) · E1 %70+ · isteğe bağlı karmaşık görevlerde Yol C (tam ajan optimizasyonu).
+
+Diğer seçenekler: çeviri `.srt` / yumuşak altyazı · çeviri anahtarları · Ana Motor tek sohbet orkestrasyonu.
 
 ## Referans
 
