@@ -3365,6 +3365,22 @@ def run_parity(*, live_base: str | None = None) -> int:
     st = compute_e1_stats(WORKSPACE)
     _ok(f"faz91 e1={st.get('success_count')}/{st.get('total')} ({FAZ91_VERSION})")
 
+    print("=== Yazım güvenliği smoke ===")
+    import subprocess
+
+    guard = subprocess.run(
+        [sys.executable, str(_ROOT / "scripts" / "programlama_write_guard_smoke.py")],
+        cwd=str(_ROOT),
+        capture_output=True,
+        text=True,
+        timeout=90,
+    )
+    if guard.returncode == 0:
+        _ok("write guard smoke OK")
+    else:
+        _fail("write guard smoke", (guard.stdout or guard.stderr or "")[-200:])
+        fails += 1
+
     print("=== Faz 79/84 — handoff + LLM tur süresi ===")
     from ilim_assistant.motorlar.programlama_faz79 import (
         FAZ79_VERSION,

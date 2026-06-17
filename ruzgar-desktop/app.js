@@ -3186,6 +3186,47 @@ function renderProgramlamaP89Kpi(build) {
   chainEl.textContent = `${first} · ${localFirst ? "yerel-öncelik ✓" : "yerel-öncelik ×"}`;
   detailEl.textContent =
     `Cache 5dk: ${hits}/${hits + misses} · strict=${strict ? "on" : "off"} · zincir: ${chain.slice(0, 5).join("→") || "—"}`;
+  renderProgramlamaFaz85Hint(b);
+}
+
+function renderProgramlamaFaz85Hint(build) {
+  const wrap = document.getElementById("programlama-faz85-hint-card");
+  const stateEl = document.getElementById("programlama-faz85-state");
+  const e1El = document.getElementById("programlama-faz85-e1");
+  const detailEl = document.getElementById("programlama-faz85-detail");
+  if (!wrap || !stateEl || !e1El || !detailEl) return;
+  const b = build || {};
+  const faz85On = b.programlama_faz85 !== false;
+  const fallback = b.faz85_fallback_on_fail !== false;
+  const e1Rate = b.e1_success_rate;
+  const e1Ok = b.e1_meets_target === true;
+  wrap.hidden = false;
+  stateEl.textContent = faz85On ? "Faz85 açık" : "Faz85 kapalı";
+  stateEl.style.color = faz85On ? "" : "#b91c1c";
+  if (e1Rate != null && Number.isFinite(Number(e1Rate))) {
+    const pct = Math.round(Number(e1Rate) * 100);
+    e1El.textContent = e1Ok ? `E1 %${pct} ✓` : `E1 %${pct}`;
+    e1El.style.color = e1Ok ? "" : "#b45309";
+  } else {
+    e1El.textContent = "E1 —";
+  }
+  const tips = [
+    "health+version+pytest → hızlı yol (saniyeler)",
+    fallback ? "kırmızıysa tam ajan devreye girer" : "fallback kapalı",
+    "tam ajan: uzun sürebilir (düşük RAM’de dakikalar/saatler)",
+  ];
+  detailEl.textContent = tips.join(" · ");
+  detailEl.title =
+    "Örnek: görev: smoke-live-test health endpointine version 2.0.0 ekle pytest geçir\n" +
+    "Tam ajan için RUZGAR_FAZ85=0 (yalnızca gerektiğinde).";
+}
+
+function isProgramlamaFastPathGoal(text) {
+  const low = String(text || "").toLowerCase();
+  const hasHealth = /health|endpoint|\/health/.test(low);
+  const hasVersion = /version|versiyon/.test(low);
+  const hasTest = /pytest|test|geçir|gecir|doğrula|dogrula/.test(low);
+  return hasHealth && hasVersion && hasTest;
 }
 
 function programlamaScopeFromContext() {
@@ -14449,6 +14490,11 @@ async function streamChat(userText, streamOpts = {}) {
         showThinkingCenter(`Görev tur ${turn}/${maxT}${phaseTr}${remTxt}`);
       } else if (phase === "started") {
         setStatus("Otonom görev başladı", "Rüzgar");
+        if (!ca.fast_local) {
+          flashRuzgarDurum(
+            "Tam ajan başladı — basit health+version görevlerinde Faz 85 hızlı yol tercih edilir; bu tur uzun sürebilir.",
+          );
+        }
       } else if (phase === "finish") {
         hideThinkingCenter();
       }
@@ -14579,6 +14625,16 @@ async function streamChat(userText, streamOpts = {}) {
           el.code.checked = true;
           switchMode("programlama");
         }
+      }
+      const caDone = ev.code_agent || {};
+      if (caDone.fast_local) {
+        flashRuzgarDurum(
+          `Faz 85 hızlı yol tamamlandı (${Number(caDone.elapsed_sec || 0).toFixed(1)}s · LLM yok).`,
+        );
+      } else if (caDone.success === false && Number(caDone.turns || 0) > 0) {
+        flashRuzgarDurum(
+          "Tam ajan görevi kırmızı — basit health+version için «görev: … health … version … pytest» deneyin.",
+        );
       }
       if (ev.patch_approval_card) {
         renderAnaMotorPatchCard(ev.patch_approval_card);
@@ -15125,6 +15181,14 @@ async function sendMessageWithText(t, opts = {}) {
   el.input.value = "";
   const chatSess = getMotorChatSession(activeMotorChatMode());
   const priorHistory = getSharedChatHistory().slice();
+  if (
+    (currentMode === "programlama" || /\bgorev\s*:/i.test(text)) &&
+    isProgramlamaFastPathGoal(text)
+  ) {
+    flashRuzgarDurum(
+      "Faz 85 hızlı yol uygun görünüyor (health+version+pytest) — LLM turu atlanabilir.",
+    );
+  }
   let dispatchText = text;
   let understanding = null;
   if (window.RuzgarSohbetAnlama?.understand) {

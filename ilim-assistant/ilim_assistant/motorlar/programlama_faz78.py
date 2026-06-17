@@ -20,6 +20,8 @@ _CORE_PREFIXES = (
     "ilim-assistant/ilim_assistant/motorlar/",
     "ilim-assistant/desktop_server.py",
     "ilim-assistant/scripts/",
+    "ilim-assistant/tests/monorepo_live/",
+    "ilim-assistant/tests/monorepo_refactor/",
     "ruzgar-desktop/",
     "PROGRAMMING_MOTOR_YOL_HARITASI.md",
     "PROGRAMMING_DALGA_H.md",

@@ -27,8 +27,8 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from ilim_assistant.local_tools import safe_read_file_under_root, safe_write_file_under_root
-from ilim_assistant.motorlar.programlama_motoru import repo_root
+from ilim_assistant.local_tools import safe_read_file_under_root
+from ilim_assistant.motorlar.programlama_motoru import ProgramlamaAraclari, repo_root
 
 PROG_PATCH_VERSION = "programlama-patch-v1-2026-06-15"
 
@@ -180,28 +180,31 @@ def apply_search_replace(
     else:
         patched = content.replace(search, replace, 1)
 
+    prev_msg = os.environ.get("RUZGAR_LAST_PROG_MSG")
+    rel_norm = (rel_path or "").replace("\\", "/").lstrip("/")
+    if not rel_norm.startswith("projects/"):
+        os.environ["RUZGAR_LAST_PROG_MSG"] = f"çekirdek: patch {rel_norm}"
     try:
-        from ilim_assistant.motorlar.programlama_faz4 import validate_write_content
-        from ilim_assistant.motorlar.programlama_motoru import validate_write_syntax
-
-        ok_content, creason = validate_write_content(patched)
-        if not ok_content:
-            return PatchReport(path=rel_path, ok=False, detail=creason, strategy="search_replace")
-        ok_syntax, sreason = validate_write_syntax(rel_path, patched)
-        if not ok_syntax:
-            return PatchReport(path=rel_path, ok=False, detail=sreason, strategy="search_replace")
-    except Exception:
-        pass
-
-    ok = safe_write_file_under_root(root, rel_path, patched)
-    if ok:
+        wrep = ProgramlamaAraclari(workspace_root).write(rel_path, patched)
+    finally:
+        if not rel_norm.startswith("projects/"):
+            if prev_msg is None:
+                os.environ.pop("RUZGAR_LAST_PROG_MSG", None)
+            else:
+                os.environ["RUZGAR_LAST_PROG_MSG"] = prev_msg
+    if wrep.ok:
         return PatchReport(
             path=rel_path,
             ok=True,
-            detail="Patch uygulandı (.bak yedek).",
+            detail=wrep.detail or "Patch uygulandı (.bak yedek).",
             strategy="search_replace",
         )
-    return PatchReport(path=rel_path, ok=False, detail="Yazma başarısız.", strategy="search_replace")
+    return PatchReport(
+        path=rel_path,
+        ok=False,
+        detail=wrep.detail or "Yazma başarısız.",
+        strategy="search_replace",
+    )
 
 
 def apply_patch_jobs(

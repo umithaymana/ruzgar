@@ -187,6 +187,19 @@ def compute_task_stats(
         for o in (store.get("outcomes") or [])
         if isinstance(o, dict) and float(o.get("ts") or 0) >= cutoff
     ]
+    filtered_out = 0
+    try:
+        from ilim_assistant.motorlar.programlama_faz91 import (
+            faz91_enabled,
+            is_kpi_eligible_outcome,
+        )
+
+        if faz91_enabled():
+            eligible = [o for o in rows if is_kpi_eligible_outcome(o)]
+            filtered_out = len(rows) - len(eligible)
+            rows = eligible
+    except Exception:
+        pass
     if not rows:
         return {
             "ok": True,
@@ -198,6 +211,7 @@ def compute_task_stats(
             "avg_turns": 0.0,
             "avg_elapsed_sec": 0.0,
             "recent": [],
+            "filtered_out": filtered_out,
         }
     ok_n = sum(1 for r in rows if r.get("success"))
     total = len(rows)
@@ -218,6 +232,7 @@ def compute_task_stats(
         ),
         "recent": rows[-8:],
         "window_days": window_days,
+        "filtered_out": filtered_out,
     }
     try:
         from ilim_assistant.motorlar.programlama_faz102_e1_live import enrich_task_stats

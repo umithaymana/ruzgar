@@ -1,7 +1,7 @@
 {
   "ok": true,
   "version": "programlama-upgrade-runner-v2-2026-05-29",
-  "elapsed_sec": 47.93,
+  "elapsed_sec": 40.41,
   "scores": {
     "command_level": 100,
     "autonomy_level": 100,
@@ -180,8 +180,8 @@
   "artifacts": {
     "dataset": "D:\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\scripts\\programlama_command_goldens.json",
     "ladder": "D:\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\scripts\\programlama_task_ladder.json",
-    "faz99_scope_1": "projects/smoke-autonomy-80cd9ce8",
-    "faz99_scope_2": "projects/smoke-autonomy-3a9e8791",
+    "faz99_scope_1": "projects/smoke-autonomy-57fa9224",
+    "faz99_scope_2": "projects/smoke-autonomy-86c68dc4",
     "parity_mode": "quick",
     "parity_passed": 8,
     "parity_total": 8,
@@ -246,7 +246,7 @@
         "version": "programlama-faz93-v2-2026-05-27",
         "recorded": true,
         "applied_count": 3,
-        "checkpoint_id": 7,
+        "checkpoint_id": 11,
         "rollback": {
           "version": "programlama-faz93-v2-2026-05-27",
           "has_plan": true,
@@ -279,8 +279,8 @@
         "iterate_threadpool_health": true
       },
       "port": 8779,
-      "idle_ms": 100,
-      "busy_ms": 237,
+      "idle_ms": 139,
+      "busy_ms": 149,
       "version": "programlama-agent-nonblock-v1-2026-06-15"
     },
     "delivery": {

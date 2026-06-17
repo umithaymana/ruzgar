@@ -21,7 +21,7 @@ _MAINT_RE = re.compile(
 )
 _PARITY_POLLUTION_SCOPE = re.compile(r"smoke-cursor-ref", re.I)
 _SMOKE_GOAL_RE = re.compile(
-    r"\b(smoke|bench|parity|upgrade\s*runner|e1\s*bakim|e1\s*bakım)\b",
+    r"\b(smoke|bench|parity|upgrade\s*runner|e1\s*bakim|e1\s*bakım|root\s*cause\s*learn)\b",
     re.I,
 )
 _BENCH_SOURCES = frozenset({"smoke", "bench", "parity", "upgrade_runner", "ci"})
@@ -76,6 +76,9 @@ def is_kpi_eligible_outcome(row: dict[str, Any]) -> bool:
     if _SMOKE_GOAL_RE.search(goal):
         return False
     if _is_synthetic_smoke_failure(row):
+        return False
+    detail = str(row.get("detail") or "").lower()
+    if "dosya içeriği" in detail or "dosya icerigi" in detail:
         return False
     scope = str(row.get("scope_rel") or "")
     if _PARITY_POLLUTION_SCOPE.search(scope):
