@@ -125,7 +125,12 @@ class ProgramlamaRuntime:
         try:
             from ilim_assistant.motorlar.programlama_faz85 import try_fast_deterministic_task
 
-            fast = try_fast_deterministic_task(self._root, scope_rel, goal)
+            fast = try_fast_deterministic_task(
+                self._root,
+                scope_rel,
+                goal,
+                intent_message=f"görev: {scope_rel} {goal}".strip(),
+            )
             if fast is not None:
                 return TaskResult(
                     ok=bool(fast.get("ok")),

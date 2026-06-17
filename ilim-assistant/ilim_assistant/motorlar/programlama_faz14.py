@@ -902,6 +902,21 @@ def iter_code_agent_turn_events(
 
     workspace = req.workspace_root
     try:
+        from ilim_assistant.motorlar.programlama_faz85 import iter_fast_path_early
+
+        _early = iter_fast_path_early(
+            message=message,
+            task=task,
+            workspace_root=workspace,
+            new_wake=new_wake,
+        )
+        if _early is not None:
+            for _ev in _early:
+                yield _ev
+            return
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_faz80 import set_mega_context
 
         if set_mega_context(message, task.goal):
@@ -1098,40 +1113,6 @@ def iter_code_agent_turn_events(
             }
         except Exception:
             pass
-
-    try:
-        from ilim_assistant.motorlar.programlama_faz85 import (
-            iter_fast_task_events,
-            try_fast_deterministic_task,
-        )
-
-        _fast = try_fast_deterministic_task(workspace, task.scope_rel, task.goal)
-        if _fast is None:
-            yield {
-                "type": "status",
-                "text": (
-                    "Hızlı yol uygun değil veya kırmızı — "
-                    "ajan döngüsü (yerel Ollama öncelikli) devam ediyor…"
-                ),
-            }
-        if _fast is not None:
-            for _ev in iter_fast_task_events(
-                message=message,
-                task=task,
-                fast=_fast,
-                new_wake=new_wake,
-                workspace_root=workspace,
-            ):
-                yield _ev
-            if _exit_task_mode is not None:
-                try:
-                    _exit_task_mode()
-                except Exception:
-                    pass
-            clear_agent_state(workspace)
-            return
-    except Exception:
-        pass
 
     def _emit_agent_step(raw: dict[str, Any] | None) -> dict[str, Any] | None:
         if raw is None:

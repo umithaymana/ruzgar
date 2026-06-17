@@ -489,6 +489,32 @@ def iter_unified_programming_agent_events(
         except Exception:
             pass
 
+    task = resolve_agent_task(
+        norm_msg,
+        req.workspace_root,
+        active_file=getattr(req, "programlama_active_file", None),
+        mode_norm=mode_norm,
+    )
+    if task is None:
+        yield {"type": "error", "text": "Proje odakı yok — `projects/<ad>/` açın veya yol yazın."}
+        return
+
+    try:
+        from ilim_assistant.motorlar.programlama_faz85 import iter_fast_path_early
+
+        _early = iter_fast_path_early(
+            message=message,
+            task=task,
+            workspace_root=req.workspace_root,
+            new_wake=new_wake,
+        )
+        if _early is not None:
+            for _ev in _early:
+                yield _ev
+            return
+    except Exception:
+        pass
+
     try:
         from ilim_assistant.motorlar.programlama_faz69 import (
             ensure_scope_for_agent,
@@ -517,18 +543,20 @@ def iter_unified_programming_agent_events(
                 )
             except Exception:
                 pass
+            task = resolve_agent_task(
+                norm_msg,
+                req.workspace_root,
+                active_file=getattr(req, "programlama_active_file", None),
+                mode_norm=mode_norm,
+            )
+            if task is None:
+                yield {
+                    "type": "error",
+                    "text": "Proje odakı yok — `projects/<ad>/` açın veya yol yazın.",
+                }
+                return
     except Exception:
         pass
-
-    task = resolve_agent_task(
-        norm_msg,
-        req.workspace_root,
-        active_file=getattr(req, "programlama_active_file", None),
-        mode_norm=mode_norm,
-    )
-    if task is None:
-        yield {"type": "error", "text": "Proje odakı yok — `projects/<ad>/` açın veya yol yazın."}
-        return
 
     try:
         from ilim_assistant.motorlar.programlama_faz68 import agent_plan_sse

@@ -842,6 +842,32 @@ def _maybe_programlama_instant_reply_impl(
     if mode_norm != "programlama":
         return None
     try:
+        from ilim_assistant.motorlar.programlama_faz14 import parse_code_agent_task
+        from ilim_assistant.motorlar.programlama_faz85 import try_fast_deterministic_task
+
+        if is_code_agent_task_message(message, mode_norm):
+            task = parse_code_agent_task(message)
+            if task:
+                fast = try_fast_deterministic_task(
+                    workspace_root,
+                    task.scope_rel,
+                    task.goal,
+                    intent_message=message,
+                )
+                if fast is not None:
+                    ok = bool(fast.get("ok"))
+                    detail = str(fast.get("detail") or "")
+                    scope = str(fast.get("scope_rel") or task.scope_rel)
+                    return (
+                        "Ümit abi, **görev yerel hızlı yoldan** işlendi (Faz 85).\n\n"
+                        f"Proje: `{scope}`\n"
+                        f"Hedef: {task.goal}\n\n"
+                        f"{detail}\n\n"
+                        f"({'tamam' if ok else 'kırmızı'}) · LLM turu yok"
+                    )
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_faz10 import extract_user_intent_message
         from ilim_assistant.ana_motor_plan import looks_like_casual_social_chat
 

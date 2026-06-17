@@ -9752,6 +9752,246 @@ def _yield_programlama_instant(
     )
 
 
+def _programlama_agent_should_run(
+    msg: str,
+    mode_norm: str,
+    req: Any,
+) -> bool:
+    """Faz 47/20/14 otonom görev — prepare_turn atlanabilir."""
+    if mode_norm != "programlama":
+        return False
+    active = getattr(req, "programlama_active_file", None)
+    ws = req.workspace_root
+    try:
+        from ilim_assistant.motorlar.programlama_faz47 import should_run_proje_uret_pipeline
+
+        if should_run_proje_uret_pipeline(
+            msg, mode_norm, workspace_root=ws, active_file=active
+        ):
+            return True
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz20 import (
+            should_run_unified_programming_agent,
+        )
+
+        if should_run_unified_programming_agent(
+            msg, mode_norm, workspace_root=ws, active_file=active
+        ):
+            return True
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz14 import should_run_code_agent_loop
+
+        if should_run_code_agent_loop(
+            msg, mode_norm, workspace_root=ws, active_file=active
+        ):
+            return True
+    except Exception:
+        pass
+    return False
+
+
+def _iter_gorev_faz85_fast_only(
+    *,
+    msg: str,
+    req: Any,
+    mode_norm: str,
+    new_wake: bool,
+) -> Iterator[dict[str, Any]]:
+    """`görev:` satırı — yalnızca Faz 85; başarısızsa kırmızı done (tam LLM ajanı yok)."""
+    from ilim_assistant.motorlar.programlama_faz20 import resolve_agent_task
+    from ilim_assistant.motorlar.programlama_faz85 import iter_fast_path_early
+
+    task = resolve_agent_task(
+        msg,
+        req.workspace_root,
+        active_file=getattr(req, "programlama_active_file", None),
+        mode_norm=mode_norm,
+    )
+    if task is None:
+        yield {
+            "type": "error",
+            "text": (
+                "Görev ayrıştırılamadı — örnek: "
+                "`görev: smoke-live-test health'e version 2.0.0 ekle pytest geçir`"
+            ),
+        }
+        return
+    early = iter_fast_path_early(
+        message=msg,
+        task=task,
+        workspace_root=req.workspace_root,
+        new_wake=new_wake,
+    )
+    if early is not None:
+        yield from early
+        return
+    body = (
+        "Ümit abi, Faz 85 hızlı yol bu görevde devreye girmedi (tam ajan atlandı).\n\n"
+        f"Proje: `{task.scope_rel}`\n"
+        f"Hedef: {task.goal}\n\n"
+        "· `Ruzgar_YenidenBaslat.bat` ile sunucuyu yenile ve tekrar dene.\n"
+        "· Proje `projects/` altında mı kontrol et.\n"
+        "· Zorunlu tam ajan: mesaja `tam ajan` ekle veya `RUZGAR_FAZ85=0`."
+    )
+    yield {
+        "type": "done",
+        "full_reply": body,
+        "user_message": msg,
+        "new_wake_used": new_wake,
+        "code_agent": {
+            "success": False,
+            "scope_rel": task.scope_rel,
+            "turns": 0,
+            "fast_local": False,
+            "fast_miss": True,
+        },
+    }
+
+
+def _iter_programlama_agent_pipeline(
+    *,
+    msg: str,
+    req: Any,
+    mode_norm: str,
+    coding: bool,
+    turn_plan: Any,
+    orch: dict[str, Any],
+    delegated_from_genel: bool,
+    prior: list,
+    new_wake: bool,
+    system: str,
+    user_payload: str,
+    model: str,
+    hits: list,
+) -> Iterator[dict[str, Any]]:
+    """Faz 47 → Faz 20 → Faz 14; Faz 85 hızlı yol ajan girişinde."""
+    active = getattr(req, "programlama_active_file", None)
+    try:
+        from ilim_assistant.motorlar.programlama_faz47 import (
+            iter_proje_uret_events,
+            should_run_proje_uret_pipeline,
+        )
+
+        if should_run_proje_uret_pipeline(
+            msg,
+            mode_norm,
+            workspace_root=req.workspace_root,
+            active_file=active,
+        ):
+            yield from iter_proje_uret_events(
+                message=msg,
+                req=req,
+                system=system,
+                user_payload=user_payload,
+                model=model,
+                prior=prior,
+                mode_norm=mode_norm,
+                coding=coding,
+                turn_plan=turn_plan,
+                hits=hits,
+                new_wake=new_wake,
+                orch=orch,
+                delegated_from_genel=delegated_from_genel,
+            )
+            return
+    except Exception as p47_exc:
+        import traceback
+
+        tb = traceback.format_exc(limit=6)
+        yield {
+            "type": "error",
+            "text": (
+                "Bağımsız proje üretimi (Faz 47) hata verdi.\n"
+                f"{str(p47_exc)[:300]}\n{tb[-500:]}"
+            ),
+        }
+        return
+    try:
+        from ilim_assistant.motorlar.programlama_faz20 import (
+            iter_unified_programming_agent_events,
+            should_run_unified_programming_agent,
+        )
+
+        if should_run_unified_programming_agent(
+            msg,
+            mode_norm,
+            workspace_root=req.workspace_root,
+            active_file=active,
+        ):
+            yield from iter_unified_programming_agent_events(
+                message=msg,
+                req=req,
+                system=system,
+                user_payload=user_payload,
+                model=model,
+                prior=prior,
+                mode_norm=mode_norm,
+                coding=coding,
+                turn_plan=turn_plan,
+                hits=hits,
+                new_wake=new_wake,
+                orch=orch,
+                delegated_from_genel=delegated_from_genel,
+            )
+            return
+    except Exception as agent20_exc:
+        import traceback
+
+        tb = traceback.format_exc(limit=6)
+        yield {
+            "type": "error",
+            "text": (
+                "Birleşik kod ajanı (Faz 20) hata verdi.\n"
+                f"{str(agent20_exc)[:300]}\n{tb[-500:]}"
+            ),
+        }
+        return
+    try:
+        from ilim_assistant.motorlar.programlama_faz14 import (
+            iter_code_agent_turn_events,
+            should_run_code_agent_loop,
+        )
+
+        if should_run_code_agent_loop(
+            msg,
+            mode_norm,
+            workspace_root=req.workspace_root,
+            active_file=active,
+        ):
+            yield from iter_code_agent_turn_events(
+                message=msg,
+                req=req,
+                system=system,
+                user_payload=user_payload,
+                model=model,
+                prior=prior,
+                mode_norm=mode_norm,
+                coding=coding,
+                turn_plan=turn_plan,
+                hits=hits,
+                new_wake=new_wake,
+                orch=orch,
+                delegated_from_genel=delegated_from_genel,
+            )
+            return
+    except Exception as agent_exc:
+        import traceback
+
+        tb = traceback.format_exc(limit=6)
+        yield {
+            "type": "error",
+            "text": (
+                "Otonom görev (Faz 14) hata verdi — sunucu güncel mi? "
+                "`Ruzgar.ps1 -ForceRestart` dene.\n"
+                f"{str(agent_exc)[:300]}\n{tb[-500:]}"
+            ),
+        }
+
+
 def _persist_done_chat_turn(req: ChatRequest, done: dict[str, Any]) -> dict[str, Any]:
     """Tüm done yollarında jsonl + özet — tek merkez (Faz AQ)."""
     if done.get("chat_persisted"):
@@ -9795,6 +10035,63 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         msg_early = resolve_effective_user_query(msg_raw) or msg_raw
     except Exception:
         msg_early = msg_raw
+    if msg_early:
+        try:
+            from ilim_assistant.chat_core import normalize_mode
+
+            _mode_gate = normalize_mode(_effective_chat_mode_raw(req))
+            if _mode_gate == "programlama":
+                _wake_gate = req.session_wake_used or message_calls_wake_name(msg_early)
+                try:
+                    from ilim_assistant.motorlar.programlama_motoru import (
+                        is_code_agent_task_message,
+                    )
+
+                    if is_code_agent_task_message(msg_early, _mode_gate):
+                        yield from _iter_gorev_faz85_fast_only(
+                            msg=msg_early,
+                            req=req,
+                            mode_norm=_mode_gate,
+                            new_wake=_wake_gate,
+                        )
+                        return
+                except Exception as exc:
+                    yield {
+                        "type": "status",
+                        "text": f"Görev hızlı yol hatası: {str(exc)[:120]}",
+                    }
+                if _programlama_agent_should_run(msg_early, _mode_gate, req):
+                    _coding_gate = bool(req.coding_mode) or _mode_gate == "programlama"
+                    _deleg_gate = bool(
+                        (req.mode or "").strip().lower() in ("genel", "gelisim", "uretim", "")
+                        and not req.coding_mode
+                        and _mode_gate == "programlama"
+                    )
+                    yield {
+                        "type": "status",
+                        "text": "Programlama görevi alındı — ajan boru hattı…",
+                    }
+                    _prior_gate = prior_messages_for_turn(
+                        req.history, _mode_gate, message=msg_early
+                    )
+                    yield from _iter_programlama_agent_pipeline(
+                        msg=msg_early,
+                        req=req,
+                        mode_norm=_mode_gate,
+                        coding=_coding_gate,
+                        turn_plan=None,
+                        orch=dict(orch_early),
+                        delegated_from_genel=_deleg_gate,
+                        prior=_prior_gate,
+                        new_wake=_wake_gate,
+                        system="",
+                        user_payload=msg_early,
+                        model="",
+                        hits=[],
+                    )
+                    return
+        except Exception:
+            pass
     if msg_early:
         try:
             from ilim_assistant.kullanici_baglami import ingest_message
@@ -11808,128 +12105,23 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 "type": "status",
                 "text": f"Ana Motor ajan (Faz 92) atlandı: {str(agent92_exc)[:100]}",
             }
-    if mode_norm == "programlama":
-        try:
-            from ilim_assistant.motorlar.programlama_faz47 import (
-                iter_proje_uret_events,
-                should_run_proje_uret_pipeline,
-            )
-
-            if should_run_proje_uret_pipeline(
-                msg,
-                mode_norm,
-                workspace_root=req.workspace_root,
-                active_file=getattr(req, "programlama_active_file", None),
-            ):
-                yield from iter_proje_uret_events(
-                    message=msg,
-                    req=req,
-                    system=system,
-                    user_payload=user_payload,
-                    model=model,
-                    prior=prior,
-                    mode_norm=mode_norm,
-                    coding=coding,
-                    turn_plan=turn_plan,
-                    hits=hits,
-                    new_wake=new_wake,
-                    orch=orch,
-                    delegated_from_genel=_delegated_from_genel,
-                )
-                return
-        except Exception as p47_exc:
-            import traceback
-
-            tb = traceback.format_exc(limit=6)
-            yield {
-                "type": "error",
-                "text": (
-                    "Bağımsız proje üretimi (Faz 47) hata verdi.\n"
-                    f"{str(p47_exc)[:300]}\n{tb[-500:]}"
-                ),
-            }
-            return
-        try:
-            from ilim_assistant.motorlar.programlama_faz20 import (
-                iter_unified_programming_agent_events,
-                should_run_unified_programming_agent,
-            )
-
-            if should_run_unified_programming_agent(
-                msg,
-                mode_norm,
-                workspace_root=req.workspace_root,
-                active_file=getattr(req, "programlama_active_file", None),
-            ):
-                yield from iter_unified_programming_agent_events(
-                    message=msg,
-                    req=req,
-                    system=system,
-                    user_payload=user_payload,
-                    model=model,
-                    prior=prior,
-                    mode_norm=mode_norm,
-                    coding=coding,
-                    turn_plan=turn_plan,
-                    hits=hits,
-                    new_wake=new_wake,
-                    orch=orch,
-                    delegated_from_genel=_delegated_from_genel,
-                )
-                return
-        except Exception as agent20_exc:
-            import traceback
-
-            tb = traceback.format_exc(limit=6)
-            yield {
-                "type": "error",
-                "text": (
-                    "Birleşik kod ajanı (Faz 20) hata verdi.\n"
-                    f"{str(agent20_exc)[:300]}\n{tb[-500:]}"
-                ),
-            }
-            return
-        try:
-            from ilim_assistant.motorlar.programlama_faz14 import (
-                iter_code_agent_turn_events,
-                should_run_code_agent_loop,
-            )
-
-            if should_run_code_agent_loop(
-                msg,
-                mode_norm,
-                workspace_root=req.workspace_root,
-                active_file=getattr(req, "programlama_active_file", None),
-            ):
-                yield from iter_code_agent_turn_events(
-                    message=msg,
-                    req=req,
-                    system=system,
-                    user_payload=user_payload,
-                    model=model,
-                    prior=prior,
-                    mode_norm=mode_norm,
-                    coding=coding,
-                    turn_plan=turn_plan,
-                    hits=hits,
-                    new_wake=new_wake,
-                    orch=orch,
-                    delegated_from_genel=_delegated_from_genel,
-                )
-                return
-        except Exception as agent_exc:
-            import traceback
-
-            tb = traceback.format_exc(limit=6)
-            yield {
-                "type": "error",
-                "text": (
-                    "Otonom görev (Faz 14) hata verdi — sunucu güncel mi? "
-                    "`Ruzgar.ps1 -ForceRestart` dene.\n"
-                    f"{str(agent_exc)[:300]}\n{tb[-500:]}"
-                ),
-            }
-            return
+    if mode_norm == "programlama" and _programlama_agent_should_run(msg, mode_norm, req):
+        yield from _iter_programlama_agent_pipeline(
+            msg=msg,
+            req=req,
+            mode_norm=mode_norm,
+            coding=coding,
+            turn_plan=turn_plan,
+            orch=orch,
+            delegated_from_genel=_delegated_from_genel,
+            prior=prior,
+            new_wake=new_wake,
+            system=system,
+            user_payload=user_payload,
+            model=model,
+            hits=hits,
+        )
+        return
     reply_body = ""
     try:
         wants_dbg = mode_norm == "programlama" and (

@@ -249,14 +249,14 @@ def _resolve_preferred_scope(
     scope_rel: str,
     goal: str,
 ) -> str:
-    """Kullanıcı niyetindeki mevcut proje, oturum kapsamından önceliklidir."""
+    """Kullanıcı görev satırındaki proje adı oturum kapsamından önceliklidir (yoksa şablon)."""
     try:
         from ilim_assistant.motorlar.programlama_faz10 import extract_user_intent_message
         from ilim_assistant.motorlar.programlama_faz14 import parse_code_agent_task
 
         intent = (extract_user_intent_message(goal) or goal or "").strip()
         task = parse_code_agent_task(intent)
-        if task and _scope_project_dir(workspace_root, task.scope_rel) is not None:
+        if task:
             return task.scope_rel
     except Exception:
         pass
@@ -460,10 +460,13 @@ def try_fast_deterministic_task(
     goal: str,
     *,
     allow_agent_fallback: bool = True,
+    intent_message: str = "",
 ) -> dict[str, Any] | None:
     if not _enabled():
         return None
-    scope_rel = _resolve_preferred_scope(workspace_root, scope_rel, goal)
+    scope_rel = _resolve_preferred_scope(
+        workspace_root, scope_rel, (intent_message or goal or "").strip()
+    )
     handlers: list[Callable[..., dict[str, Any] | None]] = [
         _try_scaffold_fastapi,
         _try_fix_health_ok,
@@ -478,10 +481,41 @@ def try_fast_deterministic_task(
             else:
                 finalized = raw
             if finalized is not None:
+                finalized = {**finalized, "scope_rel": scope_rel}
                 return finalized
         except Exception:
             continue
     return None
+
+
+def iter_fast_path_early(
+    *,
+    message: str,
+    task: Any,
+    workspace_root: str | Path | None,
+    new_wake: bool = False,
+) -> Iterator[dict[str, Any]] | None:
+    """Faz 85 hızlı yol — LLM turundan önce."""
+    if not _enabled():
+        return None
+    try:
+        fast = try_fast_deterministic_task(
+            workspace_root,
+            task.scope_rel,
+            task.goal,
+            intent_message=message,
+        )
+        if fast is None:
+            return None
+        return iter_fast_task_events(
+            message=message,
+            task=task,
+            fast=fast,
+            new_wake=new_wake,
+            workspace_root=workspace_root,
+        )
+    except Exception:
+        return None
 
 
 def iter_fast_task_events(
@@ -504,6 +538,7 @@ def iter_fast_task_events(
     elapsed = time.perf_counter() - t0
     success = bool(fast.get("ok"))
     detail = str(fast.get("detail") or "")
+    scope_out = str(fast.get("scope_rel") or task.scope_rel)
     try:
         from ilim_assistant.motorlar.programlama_faz55 import record_task_outcome
 
@@ -523,7 +558,7 @@ def iter_fast_task_events(
         pass
     body = (
         "Ümit abi, **görev yerel hızlı yoldan** işlendi (Faz 85).\n\n"
-        f"Proje: `{task.scope_rel}`\n"
+        f"Proje: `{scope_out}`\n"
         f"Hedef: {task.goal}\n\n"
         f"{detail}\n\n"
         f"({'tamam' if success else 'kırmızı'}) · {elapsed:.1f}s · LLM turu yok"
@@ -535,7 +570,7 @@ def iter_fast_task_events(
         "new_wake_used": new_wake,
         "code_agent": {
             "success": success,
-            "scope_rel": task.scope_rel,
+            "scope_rel": scope_out,
             "turns": 0,
             "elapsed_sec": elapsed,
             "fast_local": True,
