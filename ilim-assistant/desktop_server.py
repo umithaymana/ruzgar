@@ -10482,11 +10482,12 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             p7_pre = ""
             _p_scope = ""
             try:
-                from ilim_assistant.motorlar.programlama_faz10 import resolve_scope_rel
+                from ilim_assistant.motorlar.programlama_faz13 import resolve_scope_rel
 
                 _p_scope = resolve_scope_rel(
                     req.workspace_root,
                     active_file=req.programlama_active_file,
+                    message=req.message or "",
                 )
                 if looks_like_refactor_pilot(req.message or ""):
                     _pilot = build_refactor_pilot_plan(

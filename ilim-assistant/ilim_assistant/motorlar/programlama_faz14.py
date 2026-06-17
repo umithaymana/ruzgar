@@ -132,6 +132,52 @@ def _scope_from_slug(slug: str) -> str:
     return f"{_projects_base()}/{s}"
 
 
+def _parse_code_agent_task_body(raw: str) -> CodeAgentTask | None:
+    """Görev metnini ayrıştır — yalnızca kullanıcı niyeti; plan blokları yok."""
+    text = (raw or "").strip()
+    if not text:
+        return None
+
+    scope = ""
+    slug = ""
+
+    m = _TASK_PREFIX_RE.search(text)
+    if m:
+        rest = m.group(1).strip()
+        parts = rest.split(None, 1)
+        if not parts:
+            return None
+        first = parts[0].strip()
+        goal = parts[1].strip() if len(parts) > 1 else rest
+        if first.startswith(f"{_projects_base()}/"):
+            scope = _norm_rel(first)
+            slug = scope.split("/")[-1]
+        else:
+            scope = _scope_from_slug(first)
+            slug = first
+        if scope and goal:
+            return CodeAgentTask(scope_rel=scope, goal=goal, project_slug=slug)
+        return None
+
+    m2 = _TASK_INLINE_RE.search(text)
+    if m2:
+        slug = m2.group(1).strip()
+        goal = m2.group(2).strip()
+        scope = _scope_from_slug(slug)
+        if scope and goal:
+            return CodeAgentTask(scope_rel=scope, goal=goal, project_slug=slug)
+
+    m_path = _SCOPE_RE.search(text)
+    if m_path:
+        scope = _norm_rel(m_path.group(1))
+        slug = scope.split("/")[-1] if "/" in scope else scope
+        goal = text
+        if scope and goal:
+            return CodeAgentTask(scope_rel=scope, goal=goal, project_slug=slug)
+
+    return None
+
+
 def parse_code_agent_task(message: str) -> CodeAgentTask | None:
     raw = (message or "").strip()
     try:
@@ -143,43 +189,20 @@ def parse_code_agent_task(message: str) -> CodeAgentTask | None:
     if not raw:
         return None
 
-    m_path = _SCOPE_RE.search(raw)
-    if m_path:
-        scope = _norm_rel(m_path.group(1))
-        slug = scope.split("/")[-1] if "/" in scope else scope
-    else:
-        scope = ""
-        slug = ""
+    intent = raw
+    try:
+        from ilim_assistant.motorlar.programlama_faz10 import extract_user_intent_message
 
-    m = _TASK_PREFIX_RE.search(raw)
-    if m:
-        rest = m.group(1).strip()
-        parts = rest.split(None, 1)
-        if not parts:
-            return None
-        first = parts[0].strip()
-        goal = parts[1].strip() if len(parts) > 1 else rest
-        if first.startswith(f"{_projects_base()}/"):
-            scope = _norm_rel(first)
-            slug = scope.split("/")[-1]
-        elif not scope:
-            scope = _scope_from_slug(first)
-            slug = first
-        else:
-            goal = rest
-        if scope and goal:
-            return CodeAgentTask(scope_rel=scope, goal=goal, project_slug=slug)
+        intent = (extract_user_intent_message(message) or raw).strip()
+    except Exception:
+        pass
+
+    task = _parse_code_agent_task_body(intent)
+    if task:
+        return task
+    if intent != raw:
         return None
-
-    m2 = _TASK_INLINE_RE.search(raw)
-    if m2:
-        slug = m2.group(1).strip()
-        goal = m2.group(2).strip()
-        scope = _scope_from_slug(slug)
-        if scope and goal:
-            return CodeAgentTask(scope_rel=scope, goal=goal, project_slug=slug)
-
-    return None
+    return _parse_code_agent_task_body(raw)
 
 
 def wants_code_agent_stop(message: str) -> bool:

@@ -84,6 +84,19 @@ def _enabled() -> bool:
     return os.environ.get("RUZGAR_FAZ13", "1").strip().lower() not in ("0", "false", "no")
 
 
+def _scope_project_exists(
+    workspace_root: str | Path | None,
+    scope_rel: str,
+) -> bool:
+    from ilim_assistant.motorlar.programlama_motoru import repo_root
+
+    root = repo_root(workspace_root)
+    scope = _norm_rel(scope_rel)
+    if root is None or not scope.startswith(f"{_projects_base()}/"):
+        return False
+    return (root / scope.replace("/", os.sep)).is_dir()
+
+
 def resolve_scope_rel(
     workspace_root: str | Path | None,
     *,
@@ -91,6 +104,29 @@ def resolve_scope_rel(
     message: str = "",
 ) -> str | None:
     from ilim_assistant.motorlar.programlama_faz10 import resolve_scope_rel as _r10
+
+    intent = (message or "").strip()
+    try:
+        from ilim_assistant.motorlar.programlama_faz10 import extract_user_intent_message
+
+        intent = (extract_user_intent_message(message) or intent).strip()
+    except Exception:
+        pass
+
+    if intent:
+        try:
+            from ilim_assistant.motorlar.programlama_faz14 import parse_code_agent_task
+
+            task = parse_code_agent_task(intent)
+            if task and _scope_project_exists(workspace_root, task.scope_rel):
+                return _norm_rel(task.scope_rel)
+        except Exception:
+            pass
+        m = re.search(rf"{re.escape(_projects_base())}/[\w.\-]+", intent, re.I)
+        if m:
+            scope = "/".join(_norm_rel(m.group(0)).split("/")[:2])
+            if _scope_project_exists(workspace_root, scope):
+                return scope
 
     scope = _r10(workspace_root, active_file=active_file)
     if scope:

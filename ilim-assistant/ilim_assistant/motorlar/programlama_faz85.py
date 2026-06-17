@@ -172,6 +172,14 @@ def _patch_health_return_block(block: str, *, service: str, version: str) -> tup
     if not block.strip().startswith("{"):
         return block, False
     if re.search(r"""['"]version['"]\s*:""", block):
+        patched, n = re.subn(
+            r"""(['"]version['"]\s*:\s*)['"][^'"]*['"]""",
+            rf'\1"{version}"',
+            block,
+            count=1,
+        )
+        if n and patched != block:
+            return patched, True
         return block, False
     inner = block.strip()
     if not inner.endswith("}"):
@@ -232,11 +240,31 @@ def _finalize_result(result: dict[str, Any] | None) -> dict[str, Any] | None:
     return result
 
 
+def _resolve_preferred_scope(
+    workspace_root: str | Path | None,
+    scope_rel: str,
+    goal: str,
+) -> str:
+    """Kullanıcı niyetindeki mevcut proje, oturum kapsamından önceliklidir."""
+    try:
+        from ilim_assistant.motorlar.programlama_faz10 import extract_user_intent_message
+        from ilim_assistant.motorlar.programlama_faz14 import parse_code_agent_task
+
+        intent = (extract_user_intent_message(goal) or goal or "").strip()
+        task = parse_code_agent_task(intent)
+        if task and _scope_project_dir(workspace_root, task.scope_rel) is not None:
+            return task.scope_rel
+    except Exception:
+        pass
+    return scope_rel
+
+
 def _try_scaffold_fastapi(
     workspace_root: str | Path | None,
     scope_rel: str,
     goal: str,
 ) -> dict[str, Any] | None:
+    scope_rel = _resolve_preferred_scope(workspace_root, scope_rel, goal)
     if _scope_project_dir(workspace_root, scope_rel) is not None:
         return None
     if not (_goal_wants_create(goal) or _goal_wants_health_version(goal)):
@@ -431,6 +459,7 @@ def try_fast_deterministic_task(
 ) -> dict[str, Any] | None:
     if not _enabled():
         return None
+    scope_rel = _resolve_preferred_scope(workspace_root, scope_rel, goal)
     handlers: list[Callable[..., dict[str, Any] | None]] = [
         _try_scaffold_fastapi,
         _try_fix_health_ok,
