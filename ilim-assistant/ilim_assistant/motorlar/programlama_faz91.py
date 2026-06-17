@@ -20,6 +20,26 @@ _MAINT_RE = re.compile(
     re.I,
 )
 _PARITY_POLLUTION_SCOPE = re.compile(r"smoke-cursor-ref", re.I)
+_SMOKE_GOAL_RE = re.compile(
+    r"\b(smoke|bench|parity|upgrade\s*runner|e1\s*bakim|e1\s*bakım)\b",
+    re.I,
+)
+_BENCH_SOURCES = frozenset({"smoke", "bench", "parity", "upgrade_runner", "ci"})
+
+
+def _is_synthetic_smoke_failure(row: dict[str, Any]) -> bool:
+    """Smoke scriptlerinin KPI'ya yazdığı sahte başarısızlıklar."""
+    if row.get("success"):
+        return False
+    if int(row.get("turns_used") or 0) != 0:
+        return False
+    if float(row.get("elapsed_sec") or 0) != 0:
+        return False
+    goal = str(row.get("goal") or "").lower()
+    detail = str(row.get("detail") or "").lower()
+    if "smoke" in goal:
+        return True
+    return "pytest assert failed in test_health" in detail
 
 
 def _enabled() -> bool:
@@ -46,8 +66,16 @@ def e1_window_days() -> int:
 
 
 def is_kpi_eligible_outcome(row: dict[str, Any]) -> bool:
-    """E1 ölçümünde sayılmaması gereken parity/agent kirliliği."""
+    """E1 ölçümünde sayılmaması gereken parity/agent/smoke kirliliği."""
     if not isinstance(row, dict):
+        return False
+    src = str(row.get("source") or "").strip().lower()
+    if src in _BENCH_SOURCES:
+        return False
+    goal = str(row.get("goal") or "")
+    if _SMOKE_GOAL_RE.search(goal):
+        return False
+    if _is_synthetic_smoke_failure(row):
         return False
     scope = str(row.get("scope_rel") or "")
     if _PARITY_POLLUTION_SCOPE.search(scope):

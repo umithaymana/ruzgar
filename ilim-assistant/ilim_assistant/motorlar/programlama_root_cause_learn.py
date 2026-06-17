@@ -287,6 +287,7 @@ def run_root_cause_learn_smoke(
                 verify_ok=False,
                 writes_ok=1,
                 detail="pytest assert failed in test_health",
+                source="smoke",
             )
     except Exception as exc:
         return {"ok": False, "error": str(exc)[:120]}
