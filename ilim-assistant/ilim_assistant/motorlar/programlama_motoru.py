@@ -34,6 +34,25 @@ _WRITE_FENCE_RE = re.compile(
     re.DOTALL | re.IGNORECASE,
 )
 
+_EMPTY_WRITE_BLOCK_EXTS = frozenset(
+    {
+        ".py",
+        ".js",
+        ".jsx",
+        ".ts",
+        ".tsx",
+        ".json",
+        ".md",
+        ".yml",
+        ".yaml",
+        ".toml",
+        ".ini",
+        ".txt",
+        ".css",
+        ".html",
+    }
+)
+
 
 @dataclass
 class ReadReport:
@@ -136,6 +155,10 @@ def _extract_write_jobs(message: str) -> list[tuple[str, str]]:
         if rel and body is not None:
             jobs.append((rel, body.rstrip("\n") + "\n"))
     return jobs
+
+
+def _is_effectively_empty(content: str) -> bool:
+    return not (content or "").strip()
 
 
 def _wants_pytest(message: str) -> bool:
@@ -1518,6 +1541,28 @@ class ProgramlamaAraclari:
             ok_content, creason = validate_write_content(content)
             if not ok_content:
                 return WriteReport(path=rel_path, ok=False, detail=creason)
+        except Exception:
+            pass
+        try:
+            # Koruma: var olan dosyayı boş içeriğe düşüren yazımı engelle.
+            allow_empty = os.environ.get("RUZGAR_ALLOW_EMPTY_WRITE", "0").strip().lower() in (
+                "1",
+                "true",
+                "yes",
+                "on",
+            )
+            ext = Path(rel_path).suffix.lower()
+            if not allow_empty and ext in _EMPTY_WRITE_BLOCK_EXTS:
+                prev = self.read(rel_path, max_chars=400000)
+                if prev.ok and prev.content.strip() and _is_effectively_empty(content):
+                    return WriteReport(
+                        path=rel_path,
+                        ok=False,
+                        detail=(
+                            "Güvenlik: var olan dosyayı boşaltan yazım reddedildi "
+                            "(RUZGAR_ALLOW_EMPTY_WRITE=1 ile geçersiz kılınabilir)."
+                        ),
+                    )
         except Exception:
             pass
         ok = safe_write_file_under_root(self._root, rel_path, content)

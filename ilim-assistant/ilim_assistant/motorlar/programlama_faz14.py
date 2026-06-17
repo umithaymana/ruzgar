@@ -82,7 +82,22 @@ def load_agent_state(workspace_root: str | Path | None) -> dict[str, Any]:
         return {"status": "idle"}
     try:
         data = json.loads(p.read_text(encoding="utf-8"))
-        return data if isinstance(data, dict) else {"status": "idle"}
+        if not isinstance(data, dict):
+            return {"status": "idle"}
+        # Koruma: turn=0 ve çok eski running/stopping durumunu idle'a çek.
+        try:
+            stale_sec = int(os.environ.get("RUZGAR_AGENT_STALE_ZERO_TURN_SEC", "1800"))
+        except ValueError:
+            stale_sec = 1800
+        if stale_sec > 0 and str(data.get("status") or "") in ("running", "stopping"):
+            turn = int(data.get("turn") or 0)
+            started_at = float(data.get("started_at") or 0.0)
+            age = (time.time() - started_at) if started_at > 0 else 0.0
+            if turn <= 0 and age >= stale_sec:
+                healed = {"status": "idle", "stop_requested": False}
+                save_agent_state(workspace_root, healed)
+                return healed
+        return data
     except (OSError, json.JSONDecodeError):
         return {"status": "idle"}
 
@@ -1659,10 +1674,8 @@ def iter_code_agent_turn_events(
         try:
             from ilim_assistant.motorlar.programlama_faz23 import apply_agent_turn_patches
 
-            scope_turn = resolve_scope_rel(
-                workspace,
-                active_file=getattr(req, "programlama_active_file", None),
-            ) or task.scope_rel
+            # Otonom görevde patch kapsamı her zaman task scope'u olmalı.
+            scope_turn = task.scope_rel
             turn_patch = apply_agent_turn_patches(
                 round_body,
                 workspace,
@@ -2133,10 +2146,8 @@ def iter_code_agent_turn_events(
     body_fixed = finalize_assistant_reply(reply_body)
     code_patch_meta: dict[str, Any] = {}
     try:
-        scope = resolve_scope_rel(
-            workspace,
-            active_file=getattr(req, "programlama_active_file", None),
-        ) or task.scope_rel
+        # Tur sonu patch finalize da aynı görev kapsamını korur.
+        scope = task.scope_rel
         try:
             from ilim_assistant.motorlar.programlama_faz23 import finalize_agent_patches
 
