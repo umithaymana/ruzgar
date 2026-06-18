@@ -476,6 +476,32 @@
     return { ...result, switched: !fromGenel, mode, label, fromGenel };
   }
 
+  function showOrchestraFromRoute(route) {
+    if (!route || !d().renderOrchestraBridge) return;
+    const orch = route.orchestra;
+    if (
+      orch &&
+      (orch.active_motor || (Array.isArray(orch.motors) && orch.motors.length))
+    ) {
+      d().renderOrchestraBridge(orch);
+      return;
+    }
+    const tgt = normalizeMotorId(route.target);
+    if (!tgt || tgt === "genel") return;
+    d().renderOrchestraBridge({
+      active_motor: tgt,
+      hub_preview: { reason: route.meta?.reason },
+      hub: { channel: String(route.meta?.reason || "") },
+      motors: [
+        {
+          id: tgt,
+          label: route.target_label || tgt,
+          handoff: "",
+        },
+      ],
+    });
+  }
+
   async function tryDispatchFromGenel(text, motorCtx) {
     if (!deps) return { handled: false };
     if (d().getCurrentMode?.() !== "genel") return { handled: false };
@@ -531,6 +557,7 @@
     }
 
     const route = await fetchHubRoute(raw);
+    if (route) showOrchestraFromRoute(route);
     if (route?.target && shouldRouteViaServerStream(route.target)) {
       return { handled: false };
     }

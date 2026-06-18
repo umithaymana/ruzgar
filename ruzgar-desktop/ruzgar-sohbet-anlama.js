@@ -229,13 +229,13 @@
   }
 
   function buildContextBrief(history, maxLines) {
-    const tail = trimHistory(history, maxLines || 14);
+    const tail = trimHistory(history, maxLines || 16);
     const lines = [];
     for (const m of tail) {
       const role = String(m?.role || "").toLowerCase() === "user" ? "Ümit abi" : "Rüzgar";
       const c = String(m?.content || "").trim();
       if (!c) continue;
-      lines.push(`${role}: ${c.slice(0, 320)}`);
+      lines.push(`${role}: ${c.slice(0, 420)}`);
     }
     return lines.join("\n");
   }
@@ -318,7 +318,7 @@
 
   function resolveFromHistory(text, ctx) {
     let out = String(text || "").trim();
-    const history = trimHistory(ctx?.history || [], ctx?.maxHistory || 32);
+    const history = trimHistory(ctx?.history || [], ctx?.maxHistory || 40);
     if (!out) return out;
 
     out = resolveEllipticalFollowUp(out, history);
@@ -504,7 +504,7 @@
    */
   function understand(raw, ctx) {
     const original = String(raw || "").trim();
-    const history = trimHistory(ctx?.history || [], ctx?.maxHistory || 32);
+    const history = trimHistory(ctx?.history || [], ctx?.maxHistory || 40);
     let text = normalizeSurface(original);
     text = resolveFromHistory(text, { ...ctx, history });
 
@@ -516,7 +516,7 @@
     const motorHint = inferMotorHint(text, { ...ctx, history });
     const fromHistory = text !== original;
     const low = fold(text);
-    const contextBrief = buildContextBrief(history, 12);
+    const contextBrief = buildContextBrief(history, 16);
 
     let intent = "sohbet";
     const videoUrl = firstVideoUrlInText(text) || ctx?.vision?.urls?.[0] || "";

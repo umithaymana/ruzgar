@@ -69,6 +69,7 @@ def build_ui_manifest(*, health: dict[str, Any] | None = None) -> dict[str, Any]
             "Video: URL indir · isimle YouTube ara",
             "Programlama: proje üret, ajan uyum, pytest",
             "ROK tüm yardımcı motorlar · Ümit cevap emri",
+            "Sıra 5c: uzun oturum bağlamı — özet + dosya paketi + geniş sohbet geçmişi",
             "Faz 100: Ana Motor hub — tercüme/programlama/video/ses/okuma/hafıza/hızır",
             "Tercüme atölye: OCR, e-kitap, URL içe aktar, hedef kaydet",
         ],

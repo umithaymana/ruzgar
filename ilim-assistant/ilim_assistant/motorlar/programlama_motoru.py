@@ -449,6 +449,13 @@ def is_programlama_reserved_command(message: str) -> bool:
             return True
     except Exception:
         pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz98 import wants_umit_gate
+
+        if wants_umit_gate(message):
+            return True
+    except Exception:
+        pass
     if is_code_agent_task_message(message):
         return False
     try:
@@ -1249,29 +1256,30 @@ def _maybe_programlama_instant_reply_impl(
                 parts.append(faz67_hit)
         except Exception:
             pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz43 import maybe_instant_faz43
-
-        faz43_hit = maybe_instant_faz43(
-            message,
-            workspace_root,
-            active_file=active_file,
-        )
-        if faz43_hit:
-            parts.append(faz43_hit)
-    except Exception:
+    if not _faz98_claimed:
         try:
-            from ilim_assistant.motorlar.programlama_faz15 import maybe_instant_faz15
+            from ilim_assistant.motorlar.programlama_faz43 import maybe_instant_faz43
 
-            faz15_hit = maybe_instant_faz15(
+            faz43_hit = maybe_instant_faz43(
                 message,
                 workspace_root,
                 active_file=active_file,
             )
-            if faz15_hit:
-                parts.append(faz15_hit)
+            if faz43_hit:
+                parts.append(faz43_hit)
         except Exception:
-            pass
+            try:
+                from ilim_assistant.motorlar.programlama_faz15 import maybe_instant_faz15
+
+                faz15_hit = maybe_instant_faz15(
+                    message,
+                    workspace_root,
+                    active_file=active_file,
+                )
+                if faz15_hit:
+                    parts.append(faz15_hit)
+            except Exception:
+                pass
     try:
         from ilim_assistant.motorlar.programlama_faz63 import maybe_instant_faz63
 

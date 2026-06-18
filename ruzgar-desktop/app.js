@@ -2739,7 +2739,7 @@ function applyUiManifest(manifest) {
 window.refreshUiManifest = refreshUiManifest;
 async function refreshUiManifest() {
   const ac = new AbortController();
-  const timer = setTimeout(() => ac.abort(), 8000);
+  const timer = setTimeout(() => ac.abort(), 20000);
   try {
     const r = await fetch(`${API}/api/ui/manifest`, {
       method: "GET",
@@ -2751,7 +2751,21 @@ async function refreshUiManifest() {
     applyUiManifest(j);
     return j;
   } catch (e) {
-    console.warn("[RÜZGAR] UI manifest okunamadı:", e);
+    console.warn("[RÜZGAR] UI manifest okunamadı (1. deneme):", e);
+    try {
+      await new Promise((resolve) => window.setTimeout(resolve, 1500));
+      const r2 = await fetch(`${API}/api/ui/manifest`, {
+        method: "GET",
+        cache: "no-store",
+      });
+      const j2 = await r2.json();
+      if (r2.ok && j2.ok !== false) {
+        applyUiManifest(j2);
+        return j2;
+      }
+    } catch (e2) {
+      console.warn("[RÜZGAR] UI manifest okunamadı (2. deneme):", e2);
+    }
     if (lastHealthSnapshot?.ok) {
       setAnaMotorInfoStripState("ready");
       const badge = document.getElementById("ana-motor-phase-badge");
@@ -2983,6 +2997,87 @@ function clearOrchestraBridge() {
   wrap.innerHTML = "";
 }
 
+/** Genel sohbet — mesaj gönderilir gönderilmez hub/orkestra önizlemesi (sıra 5a). */
+async function prefetchGenelOrchestraBridge(text) {
+  const raw = String(text || "").trim();
+  if (!raw || currentMode !== "genel") return;
+  if (/^(?:tamam\s+yap|tamam|yapma|iptal|işlem\s+liste|islem\s+liste)$/i.test(raw)) {
+    renderOrchestraBridge({
+      active_motor: "programlama",
+      hub: { channel: "faz98_gate" },
+      motors: [
+        { id: "programlama", label: "Programlama atölyesi", handoff: raw },
+      ],
+    });
+    return;
+  }
+  try {
+    let rootQs = "";
+    if (window.ruzgarApi?.getRoot) {
+      const root = await window.ruzgarApi.getRoot();
+      if (root) rootQs = `&workspace_root=${encodeURIComponent(String(root))}`;
+    }
+    const res = await fetch(
+      `${API}/api/ana-motor/hub-route?message=${encodeURIComponent(raw)}${rootQs}`,
+    );
+    if (!res.ok) return;
+    const j = await res.json();
+    if (
+      j.orchestra &&
+      (j.orchestra.active_motor || (Array.isArray(j.orchestra.motors) && j.orchestra.motors.length))
+    ) {
+      renderOrchestraBridge(j.orchestra);
+      return;
+    }
+    const tgt = String(j.target || "").trim().toLowerCase();
+    if (tgt && tgt !== "genel") {
+      renderOrchestraBridge({
+        active_motor: tgt,
+        hub_preview: { reason: j.meta?.reason },
+        hub: { channel: String(j.meta?.reason || "") },
+        motors: [
+          {
+            id: tgt,
+            label: j.target_label || orchestraMotorLabelTr(tgt),
+            handoff: raw,
+          },
+        ],
+      });
+    }
+  } catch (_) {
+    /* sunucu yoksa sessiz */
+  }
+}
+
+/** Genel sohbet — terminal/e1 bakım vb. hub anında yanıt (SSE/LLM atla). */
+async function tryGenelProgramlamaHubInstant(text) {
+  const raw = String(text || "").trim();
+  if (!raw || currentMode !== "genel" || !isProgramlamaInstantCmd(raw)) return false;
+  try {
+    let rootQs = "";
+    if (window.ruzgarApi?.getRoot) {
+      const root = await window.ruzgarApi.getRoot();
+      if (root) rootQs = `&workspace_root=${encodeURIComponent(String(root))}`;
+    }
+    const res = await fetch(
+      `${API}/api/ana-motor/motor-dispatch?message=${encodeURIComponent(raw)}&target=programlama${rootQs}`,
+      { method: "GET" },
+    );
+    if (!res.ok) return false;
+    const j = await res.json();
+    if (!j?.handled || !String(j.reply || "").trim()) return false;
+    const reply = String(j.reply).trim();
+    appendBubble("assistant", reply);
+    pushMotorChatHistory("user", raw, {});
+    pushMotorChatHistory("assistant", reply, { instant_gundelik: true });
+    lastAssistantReply = reply;
+    scrollChatToBottom();
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
 function applyMotorHandoff(modeId, handoffText) {
   const t = String(handoffText || "").trim();
   const mid = String(modeId || "").trim().toLowerCase();
@@ -3200,12 +3295,13 @@ function renderProgramlamaFaz85Hint(build) {
   const fallback = b.faz85_fallback_on_fail !== false;
   const e1Rate = b.e1_success_rate;
   const e1Ok = b.e1_meets_target === true;
+  const e1Tgt = b.e1_target_rate != null ? Math.round(Number(b.e1_target_rate) * 100) : 90;
   wrap.hidden = false;
   stateEl.textContent = faz85On ? "Faz85 açık" : "Faz85 kapalı";
   stateEl.style.color = faz85On ? "" : "#b91c1c";
   if (e1Rate != null && Number.isFinite(Number(e1Rate))) {
     const pct = Math.round(Number(e1Rate) * 100);
-    e1El.textContent = e1Ok ? `E1 %${pct} ✓` : `E1 %${pct}`;
+    e1El.textContent = e1Ok ? `E1 %${pct} ✓ (≥${e1Tgt}%)` : `E1 %${pct} (hedef ≥${e1Tgt}%)`;
     e1El.style.color = e1Ok ? "" : "#b45309";
   } else {
     e1El.textContent = "E1 —";
@@ -3236,6 +3332,7 @@ function isProgramlamaInstantCmd(text) {
   if (/^(?:görev|gorev)\s+istatistik\b/.test(low)) return true;
   if (/^(?:zayıflık|zayiflik)\s+rapor/.test(low)) return true;
   if (/^terminal\s+(?:calistir|çalıştır|run)\s*:/.test(low)) return true;
+  if (/^(?:tamam\s+yap|tamam|yapma|iptal|işlem\s+liste|islem\s+liste)$/.test(low)) return true;
   if (/^(?:git\s+status|git\s+diff|pytest|verify)\b/.test(low)) return true;
   if (/^(?:api\s+durum|sunucu\s+durum)\b/.test(low)) return true;
   return false;
@@ -4559,6 +4656,21 @@ function renderDashboardAgentSteps(steps) {
   });
 }
 
+function orchestraMotorLabelTr(id) {
+  const m = {
+    programlama: "Programlama",
+    video: "Video",
+    tercume: "Tercüme",
+    ses: "Ses",
+    hafiza: "Hafıza",
+    mimar: "Mimar",
+    okuma: "Okuma",
+    hizir: "Hızır",
+    genel: "Ana Motor",
+  };
+  return m[String(id || "").toLowerCase()] || id || "Motor";
+}
+
 function renderOrchestraBridge(orch) {
   const wrap = el.orchestraBridge;
   if (!orch) {
@@ -4574,13 +4686,23 @@ function renderOrchestraBridge(orch) {
   }
   const motors = Array.isArray(orch.motors) ? orch.motors : [];
   const plan = orch.plan && typeof orch.plan === "object" ? orch.plan : null;
+  const active = String(orch.active_motor || "").trim().toLowerCase();
   if (!wrap) return;
-  if (!plan && motors.length === 0) {
+  if (!plan && motors.length === 0 && (!active || active === "genel")) {
     clearOrchestraBridge();
     return;
   }
   wrap.hidden = false;
   wrap.innerHTML = "";
+  if (active && active !== "genel") {
+    const am = document.createElement("div");
+    am.className = "orchestra-plan-hint";
+    const reason = String(orch.hub?.channel || orch.hub_preview?.reason || "").trim();
+    am.textContent = reason
+      ? `Aktif motor: ${orchestraMotorLabelTr(active)} · ${reason}`
+      : `Aktif motor: ${orchestraMotorLabelTr(active)}`;
+    wrap.appendChild(am);
+  }
   if (plan && plan.primary) {
     const hint = document.createElement("div");
     hint.className = "orchestra-plan-hint";
@@ -9789,6 +9911,7 @@ function initAnaMotorHub() {
       return true;
     },
     openEylemPanel: () => window.RuzgarMotorEylemPanel?.openPanel?.(),
+    renderOrchestraBridge,
   });
 }
 
@@ -14310,7 +14433,7 @@ async function streamChat(userText, streamOpts = {}) {
         }
       : {}),
     ...(streamOpts.contextBrief
-      ? { conversation_context: String(streamOpts.contextBrief).slice(0, 8000) }
+      ? { conversation_context: String(streamOpts.contextBrief).slice(0, 12000) }
       : {}),
     ...(streamOpts.userRaw ? { user_message_raw: String(streamOpts.userRaw).slice(0, 4000) } : {}),
     ...(streamOpts.cinema ? { cinema_context: streamOpts.cinema } : {}),
@@ -14483,7 +14606,11 @@ async function streamChat(userText, streamOpts = {}) {
   function processChatEvent(ev) {
     ruzgarDebugLog(`chat:${ev.type || "?"}`, ev);
     if (ev.type === "meta") {
+      clearDeferThinking();
       handleAnaMotorProgramlamaBridge(ev);
+      if (ev.orchestra) {
+        renderOrchestraBridge(ev.orchestra);
+      }
     }
     if (ev.type === "meta" && ev.research_card) {
       renderAnaMotorResearchCard(ev.research_card);
@@ -15094,9 +15221,9 @@ async function streamChat(userText, streamOpts = {}) {
         showThinkingCenter("Programlama görevi — ajan çalışıyor…");
         setStatus("Görev…", "Rüzgar");
       }
-    } else if (chatMode === "programlama" && isProgramlamaInstantCmd(userText)) {
+    } else if (isProgramlamaInstantCmd(userText)) {
       clearDeferThinking();
-      showThinkingCenter("Programlama komutu işleniyor…");
+      showThinkingCenter("Komut işleniyor…");
       setStatus("Komut…", "Rüzgar");
     } else {
       scheduleDeferThinkingOverlay();
@@ -15298,6 +15425,15 @@ async function sendMessageWithText(t, opts = {}) {
     updatePerformanceIndicators(perfBusy);
     syncInterruptButton();
   };
+
+  if (currentMode === "genel") {
+    void prefetchGenelOrchestraBridge(dispatchText);
+    const hubFast = await tryGenelProgramlamaHubInstant(dispatchText);
+    if (hubFast) {
+      finishMotorInstant("Ana Motor");
+      return;
+    }
+  }
 
   const tryInstantMotors =
     !window.RuzgarSohbetAnlama?.shouldTryInstantMotor

@@ -639,6 +639,15 @@ def _effective_chat_mode_raw(req: ChatRequest) -> str:
             coding_mode=False,
             motor_flags=flags,
         ):
+            try:
+                from ilim_assistant.motorlar.programlama_motoru import (
+                    is_programlama_reserved_command,
+                )
+
+                if is_programlama_reserved_command((req.message or "").strip()):
+                    return raw
+            except Exception:
+                pass
             return "programlama"
     except Exception:
         pass
@@ -1873,7 +1882,7 @@ def api_ui_manifest():
     """Dashboard/atölye metinleri için tek kaynak; UI statik Faz 7'ye takılmaz."""
     from ilim_assistant.ruzgar_ui_manifest import build_ui_manifest
 
-    return build_ui_manifest(health=_health_lite_response())
+    return build_ui_manifest()
 
 
 @app.get("/api/system-metrics")
@@ -2941,11 +2950,19 @@ def api_ana_motor_hub_route(message: str = "", workspace_root: str | None = None
     root = (workspace_root or "").strip() or None
     flags = motor_niyeti_heuristic(msg) if msg else {}
     target, meta = resolve_hub_target(msg, flags, workspace_root=root)
+    orchestra: dict[str, Any] = {}
+    try:
+        from ilim_assistant.ruzgar_orkestrasyon_faz_c import build_genel_orchestra_preview
+
+        orchestra, _ = build_genel_orchestra_preview(msg, root)
+    except Exception:
+        pass
     return {
         "ok": True,
         "target": target,
         "target_label": motor_label(target),
         "meta": meta,
+        "orchestra": orchestra,
         "version": FAZ76_VERSION,
     }
 
@@ -9682,6 +9699,12 @@ def _iter_instant_chat_events(
     archive_recall: dict[str, Any] | None = None,
 ) -> Iterator[dict]:
     """Ollama/RAG beklemeden tek tur bitir (SSE/WS)."""
+    if orch and isinstance(orch, dict):
+        active = str(orch.get("active_motor") or "").strip().lower()
+        motors = orch.get("motors") if isinstance(orch.get("motors"), list) else []
+        plan = orch.get("plan") if isinstance(orch.get("plan"), dict) else {}
+        if (active and active != "genel") or motors or plan.get("primary"):
+            yield {"type": "meta", "orchestra": orch}
     channel = ""
     if orch and isinstance(orch, dict):
         channel = str((orch.get("hub") or {}).get("channel") or "")
@@ -10224,7 +10247,9 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             try:
                 from ilim_assistant.chat_core import normalize_mode
 
-                if normalize_mode(_effective_chat_mode_raw(req)) == "genel":
+                _ui_mode_early = normalize_mode((req.mode or "").strip() or "genel")
+
+                if _ui_mode_early in ("genel", "gelisim", "uretim"):
                     from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
 
                     _mf_early = motor_niyeti_heuristic(msg_early)
@@ -10256,6 +10281,19 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                             workspace_root=req.workspace_root,
                         )
                     if hub_early:
+                        try:
+                            from ilim_assistant.ruzgar_orkestrasyon_faz_c import (
+                                build_genel_orchestra_preview,
+                            )
+
+                            _orch_prev, _route_patch = build_genel_orchestra_preview(
+                                msg_early,
+                                req.workspace_root,
+                            )
+                            if _orch_prev.get("motors") or _orch_prev.get("active_motor"):
+                                _orch_early = {**_orch_early, **_orch_prev}
+                        except Exception:
+                            pass
                         yield from _iter_instant_chat_events(
                             hub_early,
                             msg_early,
@@ -11025,6 +11063,25 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             )
         except Exception:
             _meta_out["programlama_delegated"] = True
+    if (
+        mode_norm in ("genel", "uretim", "gelisim")
+        and not coding
+        and not _casual_social_turn
+    ):
+        try:
+            from ilim_assistant.ruzgar_orkestrasyon_faz_c import build_genel_orchestra_preview
+
+            _orch_prev, _route_patch = build_genel_orchestra_preview(
+                req.message or "",
+                req.workspace_root,
+            )
+            if _route_patch:
+                route_meta.update(_route_patch)
+                _meta_out["chat_route"] = route_meta
+            if _orch_prev.get("motors") or _orch_prev.get("active_motor"):
+                _meta_out["orchestra"] = _orch_prev
+        except Exception:
+            pass
     yield _meta_out
     yield {"type": "status", "text": "Rüzgar hazırlanıyor…"}
     if _p92_block_msg:

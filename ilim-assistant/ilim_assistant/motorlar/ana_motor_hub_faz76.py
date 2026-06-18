@@ -251,6 +251,19 @@ def resolve_hub_target(
         return "video", meta
 
     try:
+        from ilim_assistant.motorlar.programlama_faz98 import wants_umit_gate
+
+        if wants_umit_gate(msg):
+            meta["candidates"].append(
+                {"motor": "programlama", "score": 99, "reason": "faz98_gate"}
+            )
+            meta["winner"] = "programlama"
+            meta["reason"] = "faz98_gate"
+            return "programlama", meta
+    except Exception:
+        pass
+
+    try:
         from ilim_assistant.motorlar.motor_kabiliyetleri import resolve_target_from_registry
 
         reg_id, reg_meta = resolve_target_from_registry(msg)

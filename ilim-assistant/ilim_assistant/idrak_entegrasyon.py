@@ -59,6 +59,12 @@ def motor_niyeti_heuristic(message: str) -> dict[str, bool]:
                 "class ",
                 "def ",
                 "import ",
+                "terminal",
+                "pytest",
+                "görev",
+                "gorev",
+                "git ",
+                "commit",
             )
         ),
         "tercume": any(

@@ -431,6 +431,21 @@ if (-not $script:RuzgarUseColab -and $env:RUZGAR_DISABLE_LOCAL_OLLAMA -ne "1" -a
 }
 
 $env:RUZGAR_CORS_PERMISSIVE = "1"
+if (-not $env:RUZGAR_E1_TARGET_RATE) {
+    $env:RUZGAR_E1_TARGET_RATE = "0.90"
+}
+if (-not $env:RUZGAR_ANA_UZUN_BAGLAM) {
+    $env:RUZGAR_ANA_UZUN_BAGLAM = "1"
+}
+if (-not $env:CHAT_HISTORY_MSGS) {
+    $env:CHAT_HISTORY_MSGS = "30"
+}
+if (-not $env:CHAT_HISTORY_CHARS) {
+    $env:CHAT_HISTORY_CHARS = "36000"
+}
+if (-not $env:RUZGAR_ANA_CONV_CHARS) {
+    $env:RUZGAR_ANA_CONV_CHARS = "12000"
+}
 
 $portCheckRc = Invoke-RuzgarPortOps -Command "port-check" -IaRoot $ia -Port $ApiPort
 # 0=saglikli, 1=bos, 2=kilitli/zombi

@@ -75,6 +75,15 @@ def e1_window_days() -> int:
         return 7
 
 
+def _e1_target_rate() -> float:
+    try:
+        from ilim_assistant.motorlar.programlama_faz102_e1_live import e1_target_rate
+
+        return e1_target_rate()
+    except Exception:
+        return 0.90
+
+
 def is_kpi_eligible_outcome(row: dict[str, Any]) -> bool:
     """E1 ölçümünde sayılmaması gereken parity/agent/smoke kirliliği."""
     if not isinstance(row, dict):
@@ -115,10 +124,10 @@ def compute_e1_stats(
         from ilim_assistant.motorlar.programlama_faz55 import (
             _load_store,
             _outcomes_path,
-            target_success_rate,
         )
     except Exception:
         return {"ok": False, "error": "faz55"}
+    target_fn = _e1_target_rate
     path = _outcomes_path(workspace_root)
     if path is None or not path.is_file():
         return {
@@ -126,7 +135,7 @@ def compute_e1_stats(
             "total": 0,
             "success_count": 0,
             "success_rate": 0.0,
-            "target_rate": target_success_rate(),
+            "target_rate": target_fn(),
             "meets_target": False,
             "window_days": days,
             "filtered_out": 0,
@@ -146,7 +155,7 @@ def compute_e1_stats(
             "total": 0,
             "success_count": 0,
             "success_rate": 0.0,
-            "target_rate": target_success_rate(),
+            "target_rate": target_fn(),
             "meets_target": False,
             "window_days": days,
             "filtered_out": filtered_out,
@@ -154,7 +163,7 @@ def compute_e1_stats(
     ok_n = sum(1 for r in rows if r.get("success"))
     total = len(rows)
     rate = ok_n / total if total else 0.0
-    target = target_success_rate()
+    target = target_fn()
     return {
         "ok": True,
         "total": total,
@@ -214,6 +223,7 @@ def format_e1_maintenance_report(report: dict[str, Any]) -> str:
     bef = report.get("before") or {}
     pct = int(float(aft.get("success_rate") or 0) * 100)
     bpct = int(float(bef.get("success_rate") or 0) * 100)
+    tgt = int(float(aft.get("target_rate") or _e1_target_rate()) * 100)
     lines = [
         "**E1 bakım (Faz 91)**",
         "",
@@ -222,9 +232,9 @@ def format_e1_maintenance_report(report: dict[str, Any]) -> str:
         f"Pencere: {aft.get('window_days', 7)} gün · filtrelenen: {aft.get('filtered_out', 0)}",
     ]
     if aft.get("meets_target"):
-        lines.append("Hedef >=%70: **evet**")
+        lines.append(f"Hedef ≥%{tgt} (Blok C): **evet**")
     else:
-        lines.append("Hedef >=%70: **hayir**")
+        lines.append(f"Hedef ≥%{tgt} (Blok C): **hayır**")
     comb = report.get("combined_battery") or {}
     if comb.get("ok"):
         cpct = int(float(comb.get("combined_success_rate") or 0) * 100)
@@ -261,6 +271,7 @@ def enrich_health_build(build: dict[str, Any] | None) -> dict[str, Any]:
         stats = {}
     out["e1_success_rate"] = stats.get("success_rate")
     out["e1_meets_target"] = stats.get("meets_target")
+    out["e1_target_rate"] = stats.get("target_rate")
     return out
 
 

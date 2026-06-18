@@ -16,6 +16,7 @@ FAZ102_VERSION = "programlama-faz102-v1-2026-05-29"
 _RULE_HINTS_FILE = "root_cause_rule_hints.jsonl"
 _ROLLING_WINDOW = 20
 _REPEAT_THRESHOLD = 2
+_E1_BLOK_C_TARGET = 0.90
 
 
 def _enabled() -> bool:
@@ -27,19 +28,14 @@ def _enabled() -> bool:
 
 
 def e1_target_rate() -> float:
-    """E1 hedef çizgisi — faz55 ile aynı (varsayılan %70; Blok C için RUZGAR_E1_TARGET_RATE=0.90)."""
+    """E1 hedef çizgisi — Blok C varsayılan %90 (`RUZGAR_E1_TARGET_RATE` ile override)."""
     env = os.environ.get("RUZGAR_E1_TARGET_RATE", "").strip()
     if env:
         try:
             return max(0.5, min(0.99, float(env)))
         except ValueError:
             pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz55 import target_success_rate
-
-        return target_success_rate()
-    except Exception:
-        return 0.70
+    return _E1_BLOK_C_TARGET
 
 
 def task_duration_warn_sec() -> float:

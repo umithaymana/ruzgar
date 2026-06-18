@@ -14,28 +14,33 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 | `5b91c00` | Ajan scope sabitleme + boş yazım koruması |
 | `7f7f151` | Upgrade raporu S10 11/11 |
 | `72a89b3` | Geçersiz Python/JSON syntax yazım koruması + `version 2.0.0` parse |
-| `cd6f508` | Patch→write birleşik kapı, E1 KPI filtre, Faz85 UI kartı, write-guard smoke |
+| `2ef5634` | E1 KPI, UI overlay, terminal yolu, ana motor köprüsü (sıra 1–4) |
+| `cb62964` | Faz85 erken kapı + scope önceliği (`iter_fast_path_early` bağlı) |
+
+**Faz85 durumu:** Çekirdek hızlı yol `cb62964` · anında bayraklar/UI `2ef5634` — **push edildi**, geride dosya yok.
 
 **Offline gate (son koşu):** `programlama_upgrade_runner.py --strict` → **11/11** · parity full **8/8**.
 
 **Canlı doğrulama (UI):** `görev: smoke-live-test health endpointine version 2.0.0 ekle pytest geçir` → **Faz 85 hızlı yol OK** (~2.3 sn, LLM yok, yeşil). `projects/smoke-live-test/app/main.py` → `version: "2.0.0"` · pytest **2/2**.
 
-**İlk deneme hatası:** Aynı görevde bir kez **137 sn «Rüzgar düşünüyor»** (tam ajan yolu); restart sonrası Faz85 devreye girdi. Basit health+version görevlerinde tam ajan kullanma; `RUZGAR_FAZ85=1` (varsayılan) açık kalsın.
+**Yerel commit edilmemiş:** sıra 5a/5b/5c + Faz 98 onay düzeltmeleri (commit+push birlikte).
 
-**Yerel commit edilmemiş (diskte):** `programlama_faz85.py` — `iter_fast_path_early` + `intent_message` (henüz `faz14`/`faz20`'ye bağlanmadı; sonraki tur).
-
-**E1 KPI (2026-06-17):** Filtre sonrası **%80** (12/15, 7 gün), hedef ≥%70 **karşılandı** · birleşik pil %100 · E1 zayıflık **temiz**. `e1 bakım` pili koşuldu.
+**E1 KPI (2026-06-17):** Filtre sonrası **%91** (22/24, 7 gün), hedef Blok C **≥%90 karşılandı** · birleşik pil %100 · E1 zayıflık **temiz**.
 
 **Tamamlanan sıra (bu oturum):**
 
 1. UI hızı — görev streaming + Faz85 overlay (test geçti).
 2. E1 KPI %50→%70+ — Faz85 canlı kayıtlar + bakım pili + filtre iyileştirmesi.
 3. Programlama güçlendirme — `e1 bakım` overlay + terminal yönlendirme düzeltmesi; çok dosya Faz56 planı.
-4. Ana motor köprüsü — genel sohbetten atölye: erken meta + proje odak (Faz 59/79); delegasyon ipuçları genişletildi.
+4. Ana motor köprüsü — genel sohbetten atölye: erken meta + proje odak (Faz 59/79).
 
-**Sırada:**
+**Sırada (sıra 5 — devam):**
 
-5. Uzun vade: tek yüz asistan · Blok C hedefi E1 %90 (`RUZGAR_E1_TARGET_RATE=0.90`).
+5a. Tek orkestra görünürlüğü (genel sohbet) — **tamam** (hub-route önizleme + erken meta + Faz 98 onay yolu).
+5b. E1 Blok C %90 — **tamam** (varsayılan hedef çizgisi %90, `e1 bakım` + health kartı).
+5c. Ana motor güç (uzun bağlam) — **tamam** (`ana_motor_uzun_baglam.py` · özet + dosya paketi · 30 tur / 36k char).
+
+**Sıra 5 kapandı** — commit+push sırada.
 
 **Hızlı başlatma:** `.\Ruzgar.ps1 -ForceRestart` · port **8779** · build `2026-06-15-ruzgar-programlama-pro-v4`.
 

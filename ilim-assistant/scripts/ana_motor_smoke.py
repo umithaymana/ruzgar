@@ -3541,6 +3541,41 @@ def run_offline() -> int:
     else:
         _ok("tek beyin bağlam addon")
 
+    print("\n=== Sıra 5c — Ana motor uzun bağlam ===")
+    from ilim_assistant.ana_motor_uzun_baglam import (
+        build_ana_motor_uzun_baglam_addon,
+        conversation_context_char_cap,
+        history_message_cap,
+        uzun_baglam_enabled,
+        uzun_baglam_status,
+    )
+
+    if not uzun_baglam_enabled():
+        _fail("uzun_baglam", "kapalı")
+        fails += 1
+    else:
+        _ok(f"uzun bağlam — {uzun_baglam_status().get('version')}")
+    if history_message_cap("genel") != 30:
+        _fail("uzun_hist_msgs", str(history_message_cap("genel")))
+        fails += 1
+    else:
+        _ok("uzun bağlam — 30 tur geçmiş")
+    if conversation_context_char_cap() < 10000:
+        _fail("uzun_conv_cap", str(conversation_context_char_cap()))
+        fails += 1
+    else:
+        _ok(f"uzun bağlam — conv {conversation_context_char_cap()} char")
+    addon5c = build_ana_motor_uzun_baglam_addon(
+        "az önce konuştuğumuz gibi",
+        _hist_brief,
+        mode_norm="genel",
+    )
+    if "OTURUM ÖZETİ" not in addon5c:
+        _fail("uzun_addon", addon5c[:80] if addon5c else "boş")
+        fails += 1
+    else:
+        _ok("ana motor uzun bağlam addon")
+
     print("\n=== Tek beyin Faz G — uzun oturum özeti ===")
     from ilim_assistant.ruzgar_tek_beyin_ozet import (
         looks_like_session_summary_query,

@@ -630,6 +630,14 @@ _HISTORY_FAST_MODES = frozenset({"hizli", "ses", "okuma", "tercume", "uretim", "
 
 def _history_msg_cap(mode: str) -> int:
     m = normalize_mode(mode)
+    try:
+        from ilim_assistant.ana_motor_uzun_baglam import history_message_cap
+
+        uzun = history_message_cap(m)
+        if uzun is not None:
+            return uzun
+    except Exception:
+        pass
     if m == "programlama":
         return max(2, int(os.environ.get("CHAT_HISTORY_MSGS_CODE", "24")))
     if m in _HISTORY_FAST_MODES:
@@ -639,6 +647,14 @@ def _history_msg_cap(mode: str) -> int:
 
 def _history_char_cap(mode: str) -> int:
     m = normalize_mode(mode)
+    try:
+        from ilim_assistant.ana_motor_uzun_baglam import history_char_cap
+
+        uzun = history_char_cap(m)
+        if uzun is not None:
+            return uzun
+    except Exception:
+        pass
     if m == "programlama":
         return max(1000, int(os.environ.get("CHAT_HISTORY_CHARS_CODE", "48000")))
     if m in _HISTORY_FAST_MODES:
@@ -1699,7 +1715,13 @@ def prepare_turn(
             "[SOHBET BAĞLAMI — kullanıcıya aynen yazdırma; yukarıdaki konuşmayı hatırla]",
         ]
         if _conv_ctx:
-            conv_lines.append(_conv_ctx[:7500])
+            try:
+                from ilim_assistant.ana_motor_uzun_baglam import conversation_context_char_cap
+
+                _conv_cap = conversation_context_char_cap()
+            except Exception:
+                _conv_cap = 7500
+            conv_lines.append(_conv_ctx[:_conv_cap])
         if cinema_context and isinstance(cinema_context, dict):
             cu = str(cinema_context.get("url") or "")[:240]
             cr = str(cinema_context.get("localRel") or cinema_context.get("local_rel") or "")[:120]
@@ -1721,6 +1743,21 @@ def prepare_turn(
         user_payload = bilissel_ctx + "\n\n---\n" + user_payload
     if session_mem_ctx:
         user_payload = session_mem_ctx.rstrip() + "\n\n---\n" + user_payload
+    if m in ("genel", "uretim", "gelisim") and not _prog_light:
+        try:
+            from ilim_assistant.ana_motor_uzun_baglam import build_ana_motor_uzun_baglam_addon
+
+            uzun_addon = build_ana_motor_uzun_baglam_addon(
+                msg,
+                history,
+                mode_norm=m,
+                session_id=ana_motor_session_id,
+                upload_ids=ana_motor_upload_ids,
+            )
+            if uzun_addon.strip():
+                user_payload = uzun_addon.rstrip() + "\n\n---\n" + user_payload
+        except Exception:
+            pass
     try:
         from ilim_assistant.ana_motor_programlama_havuz import (
             inject_programlama_havuz_into_payload,
