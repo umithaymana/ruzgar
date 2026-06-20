@@ -127,9 +127,16 @@ def classify_hafiza_intent(
         return {"intent": INTENT_DO, "reason": "task"}
     if _REMINDER_RE.search(low):
         return {"intent": INTENT_DO, "reason": "reminder"}
-    if _LOOKUP_RE.search(low) or (
-        len(raw) < 120 and "?" in raw and not _REMEMBER_RE.search(low)
-    ):
+
+    try:
+        from ilim_assistant.ana_motor_plan import should_stay_on_ana_motor_bilgi
+
+        if should_stay_on_ana_motor_bilgi(raw):
+            return {"intent": INTENT_CHAT, "reason": "bilgi_ana_motor"}
+    except Exception:
+        pass
+
+    if _LOOKUP_RE.search(low):
         return {"intent": INTENT_DO, "reason": "lookup"}
 
     if _QUESTION_RE.search(raw):

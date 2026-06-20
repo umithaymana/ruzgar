@@ -55,7 +55,23 @@ def main() -> None:
 
     if not defer_motor_boot():
         _boot_motorlar_locked()
+    import asyncio
+    import sys
     import uvicorn
+
+    if sys.platform == "win32":
+        def _win_proactor_noise_handler(loop, context):
+            exc = context.get("exception")
+            if isinstance(exc, OSError) and getattr(exc, "winerror", None) == 64:
+                return
+            loop.default_exception_handler(context)
+
+        try:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.set_exception_handler(_win_proactor_noise_handler)
+        except Exception:
+            pass
 
     if forced:
         port = int(forced)

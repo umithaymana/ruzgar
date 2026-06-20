@@ -555,6 +555,13 @@ def should_use_personal_hafiza_first(
 ) -> bool:
     if not tek_beyin_enabled():
         return False
+    try:
+        from ilim_assistant.ana_motor_plan import should_stay_on_ana_motor_bilgi
+
+        if should_stay_on_ana_motor_bilgi(message):
+            return False
+    except Exception:
+        pass
     if _idrak_blocks_personal_hafiza(message, client_history):
         return False
     target = resolve_memory_query_message(message, client_history)
@@ -841,13 +848,20 @@ def should_use_dost_sohbet_first(
     *,
     mode_norm: str = "genel",
 ) -> bool:
-    """Kişisel hafıza değil — dost/sohbet modu (Faz B + D devam)."""
+    """Kişisel hafıza değil — dost/sohbet modu (Faz B + devam)."""
     if not dost_sohbet_enabled():
-        return False
-    if should_use_personal_hafiza_first(message, client_history):
         return False
     raw = (message or "").strip()
     if not raw:
+        return False
+    try:
+        from ilim_assistant.ana_motor_plan import looks_like_instant_social_ack
+
+        if looks_like_instant_social_ack(raw):
+            return False
+    except Exception:
+        pass
+    if should_use_personal_hafiza_first(message, client_history):
         return False
     if mode_norm not in ("genel", "uretim", "gelisim"):
         return False

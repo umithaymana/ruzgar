@@ -146,6 +146,7 @@
     }
     if (/^nas(?:ilsin|ılsın|lsin|ıl|il)/.test(w) && w.length < 50) return true;
     if (/^naber|nbr|ne haber/.test(w) && w.length < 40) return true;
+    if (/^(?:selam|merhaba|hey|slm)\s+(?:naber|nbr|ne\s*haber|nas[ıi]ls[ıi]n)/.test(w)) return true;
     return false;
   }
 
@@ -239,15 +240,26 @@
     return "";
   }
 
+  async function fetchJsonTimeout(url, ms = 3500) {
+    const ctrl = new AbortController();
+    const tid = global.setTimeout(() => ctrl.abort(), ms);
+    try {
+      const res = await fetch(url, { method: "GET", signal: ctrl.signal });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch {
+      return null;
+    } finally {
+      global.clearTimeout(tid);
+    }
+  }
+
   async function fetchLearnedInstant(text) {
     try {
       const rootQs = await workspaceRootQs();
-      const res = await fetch(
+      const j = await fetchJsonTimeout(
         `${d().getApi?.()}/api/ana-motor/learned-instant?message=${encodeURIComponent(String(text || ""))}${rootQs}`,
-        { method: "GET" },
       );
-      if (!res.ok) return null;
-      const j = await res.json();
       return j && j.ok && j.handled ? j : null;
     } catch {
       return null;
@@ -257,12 +269,9 @@
   async function fetchHubRoute(text) {
     try {
       const rootQs = await workspaceRootQs();
-      const res = await fetch(
+      const j = await fetchJsonTimeout(
         `${d().getApi?.()}/api/ana-motor/hub-route?message=${encodeURIComponent(String(text || ""))}${rootQs}`,
-        { method: "GET" },
       );
-      if (!res.ok) return null;
-      const j = await res.json();
       return j && j.ok ? j : null;
     } catch {
       return null;
@@ -289,12 +298,9 @@
     if (!mode || mode === "genel") return null;
     try {
       const rootQs = await workspaceRootQs();
-      const res = await fetch(
+      const j = await fetchJsonTimeout(
         `${d().getApi?.()}/api/ana-motor/motor-dispatch?message=${encodeURIComponent(String(text || ""))}&target=${encodeURIComponent(mode)}${rootQs}`,
-        { method: "GET" },
       );
-      if (!res.ok) return null;
-      const j = await res.json();
       return j && j.ok ? j : null;
     } catch {
       return null;

@@ -3576,6 +3576,144 @@ def run_offline() -> int:
     else:
         _ok("ana motor uzun bağlam addon")
 
+    print("\n=== Sira 6a — bilgi turu (RAG -> web -> LLM) ===")
+    from ilim_assistant.ana_motor_bilgi_turu import (
+        bilgi_turu_status,
+        full_power_bilgi_turu,
+        main_only_genel_hafiza_active,
+        resolve_web_allow_for_bilgi_turu,
+        should_prefetch_rag_for_bilgi_turn,
+        should_skip_bilgi_cloud_fast,
+    )
+    from ilim_assistant.ana_motor_fast import should_bilgi_cloud_fast
+    from ilim_assistant.ana_motor_plan import plan_question
+
+    st6a = bilgi_turu_status()
+    if not st6a.get("enabled"):
+        _fail("bilgi_turu", "kapali")
+        fails += 1
+    else:
+        _ok(f"bilgi turu — {st6a.get('version')}")
+    if main_only_genel_hafiza_active():
+        _fail("main_only_genel_hafiza", "dar mod acik — tam guc kapali")
+        fails += 1
+    else:
+        _ok("tam guc — MAIN_ONLY kapali")
+    if not full_power_bilgi_turu():
+        _fail("full_power", "bilgi turu tam guc degil")
+        fails += 1
+    else:
+        _ok("bilgi turu tam guc")
+    _osmanli_plan = plan_question("Osmanli devletini kim kurdu", "genel", {})
+    if not should_prefetch_rag_for_bilgi_turn(
+        "Osmanli devletini kim kurdu",
+        "genel",
+        _osmanli_plan,
+    ):
+        _fail("6a_prefetch", "ansiklopedik RAG prefetch yok")
+        fails += 1
+    else:
+        _ok("ansiklopedik — RAG prefetch zorunlu")
+    if should_bilgi_cloud_fast(
+        "Osmanli devletini kim kurdu",
+        "genel",
+        _osmanli_plan,
+    ):
+        _fail("6a_cloud_fast", "bulut hizli yol RAG atliyor")
+        fails += 1
+    else:
+        _ok("ansiklopedik — bulut hizli yol kapali")
+    if should_skip_bilgi_cloud_fast(
+        "Osmanli devletini kim kurdu",
+        "genel",
+        _osmanli_plan,
+    ):
+        _ok("yerel RAG once — cloud fast skip")
+    else:
+        _fail("6a_skip_cloud", "should_skip_bilgi_cloud_fast")
+        fails += 1
+    if resolve_web_allow_for_bilgi_turu(
+        [("t", "s", 0.1)],
+        [],
+        archive_primary=False,
+        prefer_web=True,
+    ):
+        _ok("zayif RAG — web acik")
+    else:
+        _fail("6a_web_weak", "zayif RAG web kapali")
+        fails += 1
+    if not resolve_web_allow_for_bilgi_turu(
+        [("t", "s", 0.55)],
+        [],
+        archive_primary=False,
+        prefer_web=True,
+    ):
+        _ok("guclu RAG — web kapatilabilir")
+    else:
+        _fail("6a_web_strong", "guclu RAG web acik kaldi")
+        fails += 1
+    if "rag_indeks" in (st6a.get("pipeline") or []):
+        _ok(f"pipeline: {' -> '.join(st6a.get('pipeline') or [])}")
+    else:
+        _fail("6a_pipeline", str(st6a.get("pipeline")))
+        fails += 1
+
+    print("\n=== Oturum hafızası — tekrar soru anında cevap ===")
+    from ilim_assistant.ana_motor_sohbet_gecmis import try_session_echo_reply
+    from ilim_assistant.ruzgar_tek_beyin_analiz import try_simple_factual_reply
+
+    _echo_hist = [
+        {"role": "user", "content": "Osman Bey kimdir?"},
+        {
+            "role": "assistant",
+            "content": "Osman Bey, Osmanlı Devleti'nin kurucusudur; 1299'da beyliği kurmuştur.",
+        },
+    ]
+    _echo = try_session_echo_reply("osman bey kimdir?", client_history=_echo_hist)
+    if not _echo or "1299" not in _echo:
+        _fail("session_echo", str(_echo)[:80] if _echo else "None")
+        fails += 1
+    else:
+        _ok("session_echo — tekrar soru anında")
+    _osman_fact = try_simple_factual_reply("Osman Bey kimdir?")
+    if _osman_fact:
+        _fail("osman_fact_tablo", "ansiklopedik tabloda olmamali")
+        fails += 1
+    else:
+        from ilim_assistant.ana_motor_bilgi_turu import should_route_bilgi_turu_pipeline
+
+        if not should_route_bilgi_turu_pipeline("Osman Bey kimdir?"):
+            _fail("osman_bilgi_turu", "bilgi turu kapisi acik olmali")
+            fails += 1
+        else:
+            _ok("Osman Bey — bilgi turu (tablo yok, RAG/web/LLM)")
+
+    print("\n=== Hafıza hub — bilgi sorusu Ana Motor'da kalmalı ===")
+    from ilim_assistant.ana_motor_plan import should_stay_on_ana_motor_bilgi
+    from ilim_assistant.motorlar.ana_motor_hub_faz76 import resolve_hub_target
+    from ilim_assistant.motorlar.hafiza_faz75 import classify_hafiza_intent
+    from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
+
+    for q in ("Osman Bey kimdir?", "OSMANLI DEVLETİNİ KİM KURDU?"):
+        if not should_stay_on_ana_motor_bilgi(q):
+            _fail("bilgi_stay", q)
+            fails += 1
+        else:
+            _ok(f"bilgi turu — {q[:32]}")
+        hi = classify_hafiza_intent(q, mode_norm="hafiza")
+        if hi.get("reason") == "lookup":
+            _fail("hafiza_lookup_leak", q)
+            fails += 1
+        else:
+            _ok(f"hafiza lookup yok — {q[:28]}")
+        flags = motor_niyeti_heuristic(q)
+        tgt, meta = resolve_hub_target(q, flags)
+        if tgt == "hafiza":
+            _fail("hub_hafiza_leak", f"{q} → {tgt} ({meta.get('reason')})")
+            fails += 1
+        else:
+            _ok(f"hub genel — {q[:28]}")
+
     print("\n=== Tek beyin Faz G — uzun oturum özeti ===")
     from ilim_assistant.ruzgar_tek_beyin_ozet import (
         looks_like_session_summary_query,

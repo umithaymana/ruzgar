@@ -14,6 +14,8 @@ Set-Location $Root
 
 $Log = Join-Path $env:TEMP "ruzgar-launch.log"
 $ApiErr = Join-Path $env:TEMP "ruzgar-api.err"
+$ApiErrPathMarker = Join-Path $env:TEMP "ruzgar-api.err.path"
+$ApiSyntaxLog = Join-Path $env:TEMP "ruzgar-api-syntax-check.log"
 $ApiPort = 8779
 if ($env:RUZGAR_API_PORT) { [int]$ApiPort = $env:RUZGAR_API_PORT }
 # 8777'de eski/zombi uvicorn kalabiliyor; varsayilan yeni motor 8779
@@ -165,10 +167,10 @@ ast.parse(p.read_text(encoding='utf-8'))
 print('desktop_server syntax ok')
 "@ 2>&1
         if ($importOut) {
-            ($importOut | ForEach-Object { "$_" }) | Out-File -FilePath $ApiErr -Encoding utf8
+            ($importOut | ForEach-Object { "$_" }) | Out-File -FilePath $ApiSyntaxLog -Encoding utf8 -Force
         }
         if ($LASTEXITCODE -ne 0) {
-            throw "Python syntax kontrolu basarisiz (ruzgar-api.err)"
+            throw "Python syntax kontrolu basarisiz ($ApiSyntaxLog)"
         }
     } finally {
         $ErrorActionPreference = $prevEa
@@ -178,7 +180,7 @@ print('desktop_server syntax ok')
 
 function Start-ApiServer {
     param([string]$Ia)
-    Remove-Item $ApiErr -ErrorAction SilentlyContinue
+    $errPath = Resolve-RuzgarApiErrPath
     if ($env:GLOBAL_API_KEY -and $env:GLOBAL_API_KEY.Trim()) {
         $len = $env:GLOBAL_API_KEY.Trim().Length
         Log "GLOBAL_API_KEY aktarildi (uzunluk=$len) - Gemini arayuz+API"
@@ -192,12 +194,12 @@ function Start-ApiServer {
     $uargs += "127.0.0.1"
     $uargs += "--port"
     $uargs += "$ApiPort"
-    Log "API: $PyExe $($uargs -join ' ') WD=$Ia"
+    Log "API: $PyExe $($uargs -join ' ') WD=$Ia stderr=$errPath"
     try {
         Start-Process -FilePath $script:PyExe -ArgumentList $uargs -WorkingDirectory $Ia `
-            -WindowStyle Hidden -RedirectStandardError $ApiErr -PassThru | Out-Null
+            -WindowStyle Hidden -RedirectStandardError $errPath -PassThru | Out-Null
     } catch {
-        Log "Start-Process redirect basarisiz, redirectsiz deneniyor"
+        Log "Start-Process redirect basarisiz ($($_.Exception.Message)), redirectsiz deneniyor"
         Start-Process -FilePath $script:PyExe -ArgumentList $uargs -WorkingDirectory $Ia -WindowStyle Hidden
     }
 }
@@ -256,12 +258,69 @@ function Start-ElectronApp {
     Start-Process -FilePath $electronCmd -ArgumentList "." -WorkingDirectory $rd -ErrorAction Stop
 }
 
-function Read-ApiErrTail {
-    if (-not (Test-Path $ApiErr)) { return "(ruzgar-api.err yok)" }
+function Clear-RuzgarApiErrFile {
+    param([int]$MaxAttempts = 16)
+    for ($i = 0; $i -lt $MaxAttempts; $i++) {
+        try {
+            Get-ChildItem -Path $env:TEMP -Filter "ruzgar-api*.err" -ErrorAction SilentlyContinue |
+                ForEach-Object {
+                    try { Remove-Item $_.FullName -Force -ErrorAction Stop } catch {}
+                }
+            if (Test-Path $ApiErrPathMarker) {
+                Remove-Item $ApiErrPathMarker -Force -ErrorAction SilentlyContinue
+            }
+            return $true
+        } catch {
+            Start-Sleep -Milliseconds 350
+        }
+    }
+    return $false
+}
+
+function Resolve-RuzgarApiErrPath {
+    Clear-RuzgarApiErrFile | Out-Null
+    for ($i = 0; $i -lt 12; $i++) {
+        try {
+            if (Test-Path $ApiErr) {
+                Remove-Item $ApiErr -Force -ErrorAction Stop
+            }
+            $null = New-Item -Path $ApiErr -ItemType File -Force -ErrorAction Stop
+            Set-Content -Path $ApiErrPathMarker -Value $ApiErr -Encoding UTF8 -Force
+            return $ApiErr
+        } catch {
+            Start-Sleep -Milliseconds 400
+        }
+    }
+    $alt = Join-Path $env:TEMP ("ruzgar-api-{0}.err" -f (Get-Date -Format "yyyyMMdd-HHmmss"))
     try {
-        return (Get-Content $ApiErr -Tail 25 -ErrorAction Stop) -join "`n"
+        $null = New-Item -Path $alt -ItemType File -Force
+        Set-Content -Path $ApiErrPathMarker -Value $alt -Encoding UTF8 -Force
+        Log "ruzgar-api.err kilitli - yedek log: $alt"
+        return $alt
     } catch {
-        return "(log okunamadi)"
+        throw "API hata logu olusturulamadi (TEMP kilitli). Gorev Yoneticisi: python.exe sonlandir, tekrar dene."
+    }
+}
+
+function Read-ApiErrTail {
+    $path = $ApiErr
+    if (Test-Path $ApiErrPathMarker) {
+        try {
+            $marked = (Get-Content $ApiErrPathMarker -Raw -ErrorAction Stop).Trim()
+            if ($marked -and (Test-Path $marked)) { $path = $marked }
+        } catch {}
+    }
+    if (-not (Test-Path $path)) {
+        $latest = Get-ChildItem -Path $env:TEMP -Filter "ruzgar-api*.err" -ErrorAction SilentlyContinue |
+            Sort-Object LastWriteTime -Descending |
+            Select-Object -First 1
+        if ($latest) { $path = $latest.FullName }
+    }
+    if (-not (Test-Path $path)) { return "(ruzgar-api.err yok)" }
+    try {
+        return (Get-Content $path -Tail 25 -ErrorAction Stop) -join "`n"
+    } catch {
+        return "(log okunamadi - dosya baska surec tarafindan kilitli olabilir)"
     }
 }
 
@@ -446,6 +505,12 @@ if (-not $env:CHAT_HISTORY_CHARS) {
 if (-not $env:RUZGAR_ANA_CONV_CHARS) {
     $env:RUZGAR_ANA_CONV_CHARS = "12000"
 }
+if (-not $env:RUZGAR_BILGI_TURU) {
+    $env:RUZGAR_BILGI_TURU = "1"
+}
+if (-not $env:RUZGAR_FAST_LOCAL_RAG_FIRST) {
+    $env:RUZGAR_FAST_LOCAL_RAG_FIRST = "1"
+}
 
 $portCheckRc = Invoke-RuzgarPortOps -Command "port-check" -IaRoot $ia -Port $ApiPort
 # 0=saglikli, 1=bos, 2=kilitli/zombi
@@ -559,7 +624,10 @@ if ($ForceRestart) {
     $null = Invoke-RuzgarPortOps -Command "kill-all-api" -IaRoot $ia -Port $ApiPort
     Stop-RuzgarApiPort -Port $ApiPort
     if ($ApiPort -ne 8777) { Stop-RuzgarApiPort -Port 8777 }
-    Start-Sleep -Seconds 3
+    Start-Sleep -Seconds 2
+    $null = Invoke-RuzgarPortOps -Command "kill-all-api" -IaRoot $ia -Port $ApiPort
+    Clear-RuzgarApiErrFile | Out-Null
+    Start-Sleep -Seconds 2
     if (-not (Test-RuzgarPortFree -Port $ApiPort)) {
         Log "HATA: port $ApiPort hala dolu - Ruzgar_Port_Temizle.bat (yonetici) calistirin"
         [void][System.Windows.Forms.MessageBox]::Show(

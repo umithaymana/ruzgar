@@ -37,9 +37,21 @@ def should_skip_stream_prefetch(
     except Exception:
         pass
     try:
+        from ilim_assistant.ana_motor_bilgi_turu import should_prefetch_rag_for_bilgi_turn
+
+        if should_prefetch_rag_for_bilgi_turn(
+            msg,
+            mode_norm,
+            question_plan,
+            history=history,
+        ):
+            return False
+    except Exception:
+        pass
+    try:
         from ilim_assistant.ana_motor_fast import should_bilgi_cloud_fast
 
-        if should_bilgi_cloud_fast(msg, mode_norm, question_plan):
+        if should_bilgi_cloud_fast(msg, mode_norm, question_plan, history=history):
             return True
     except Exception:
         pass

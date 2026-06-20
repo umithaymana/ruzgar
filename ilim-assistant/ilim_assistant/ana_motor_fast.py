@@ -67,6 +67,19 @@ def should_bilgi_cloud_fast(
     if primary not in ("bilgi", "bilim", "dilbilgisi"):
         return False
     try:
+        from ilim_assistant.ana_motor_bilgi_turu import should_skip_bilgi_cloud_fast
+
+        if should_skip_bilgi_cloud_fast(
+            msg,
+            mode_norm,
+            question_plan,
+            history=history,
+        ):
+            return False
+    except Exception:
+        if fast_local_rag_first_enabled() and primary in ("bilgi", "bilim", "dilbilgisi"):
+            return False
+    try:
         from ilim_assistant.ana_motor_plan import is_casual_conversation_turn
 
         if is_casual_conversation_turn(msg, mode_norm, question_plan):

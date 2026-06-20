@@ -361,6 +361,17 @@ def resolve_hub_target(
             best_reason = str(spec.get("reason") or "rok")
 
     if best_score > 0:
+        if best_id == "hafiza":
+            try:
+                from ilim_assistant.ana_motor_plan import should_stay_on_ana_motor_bilgi
+
+                if should_stay_on_ana_motor_bilgi(msg):
+                    meta["winner"] = "genel"
+                    meta["reason"] = "bilgi_stay_genel"
+                    meta["skipped_hafiza_lookup"] = True
+                    return "genel", meta
+            except Exception:
+                pass
         meta["winner"] = best_id
         meta["reason"] = best_reason
         return best_id, meta
@@ -747,7 +758,7 @@ def apply_genel_hub_routing(
         out["hub_meta"] = hm
         return out
 
-    target, meta = resolve_hub_target(message, flags)
+    target, meta = resolve_hub_target(message, flags, workspace_root=workspace_root)
     out["hub_meta"] = meta
     if target != "genel":
         try:

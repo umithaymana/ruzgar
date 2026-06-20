@@ -181,7 +181,7 @@ def _kill_ruzgar_api_processes() -> list[int]:
                 "-Command",
                 (
                     "Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" -EA SilentlyContinue | "
-                    "Where-Object { $_.CommandLine -match 'run_desktop_api|desktop_server:app' } | "
+                    "Where-Object { $_.CommandLine -match 'run_desktop_api|desktop_server:app|uvicorn' } | "
                     "Select-Object -ExpandProperty ProcessId"
                 ),
             ],

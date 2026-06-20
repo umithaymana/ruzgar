@@ -125,6 +125,13 @@ def lookup_bilgi_kutuphane_hint(message: str) -> Optional[dict[str, Any]]:
     if not otomatik_ogrenme_enabled():
         return None
     try:
+        from ilim_assistant.ana_motor_plan import should_stay_on_ana_motor_bilgi
+
+        if should_stay_on_ana_motor_bilgi(message):
+            return None
+    except Exception:
+        pass
+    try:
         from ilim_assistant.hafiza_dogal_sentez import _is_miss_answer
         from ilim_assistant.hafiza_i_ruzgar import genel_hafiza_lookup_detayli
         from ilim_assistant.ruzgar_tek_beyin import memory_lookup_variants

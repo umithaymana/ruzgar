@@ -14,10 +14,23 @@ TEK_BEYIN_ANALIZ_VERSION = "tek-beyin-analiz-v1-2026-06-13-faz-n"
 _SIMPLE_FACTS: tuple[tuple[re.Pattern[str], str], ...] = (
     (
         re.compile(
-            r"(?:senede|y[ıi]lda|bir\s+y[ıi]lda|yillik)\s+ka[cç]\s+ay",
+            r"(?:"
+            r"bir\s+senede|"
+            r"senede|"
+            r"y[ıi]lda|"
+            r"bir\s+y[ıi]lda|"
+            r"yillik"
+            r")\s+ka[cç]\s+ay",
             re.I,
         ),
         "Ümit abi, bir senede **12 ay** vardır — Ocak'tan Aralık'a kadar.",
+    ),
+    (
+        re.compile(
+            r"ka[cç]\s+ay\s+var(?:\s*$|\s*\?)",
+            re.I,
+        ),
+        "Ümit abi, takvim yılında **12 ay** vardır.",
     ),
     (
         re.compile(
@@ -68,6 +81,7 @@ _SIMPLE_FACTS: tuple[tuple[re.Pattern[str], str], ...] = (
         ),
         "Ümit abi, Türkiye'de **81 il** vardır.",
     ),
+    # Tarih/biyografi tabloya eklenmez — bilgi turu (RAG → web → LLM) tek kapı (6a).
 )
 
 _TEMPORAL_NOW = re.compile(
@@ -156,6 +170,29 @@ def classify_question_intent(message: str) -> dict[str, Any]:
             return out
     except Exception:
         pass
+    # Ansiklopedik/tarih sorulari — kisisel hafiza ve kutuphane taramasini atla (6a bilgi turu).
+    try:
+        from ilim_assistant.ana_motor_plan import should_stay_on_ana_motor_bilgi
+
+        if should_stay_on_ana_motor_bilgi(effective):
+            if _TEMPORAL_NOW.search(blob):
+                out.update(intent="temporal_now", confidence=0.88)
+                return out
+            if tek_beyin_analiz_enabled():
+                ans = try_simple_factual_reply(raw)
+                if ans:
+                    out.update(
+                        intent="simple_fact",
+                        confidence=0.98,
+                        skip_web=True,
+                        skip_rag=True,
+                        direct_answer=ans,
+                    )
+                    return out
+            out.update(intent="bilgi", confidence=0.88, skip_web=False, skip_rag=False)
+            return out
+    except Exception:
+        pass
     try:
         from ilim_assistant.ruzgar_tek_beyin import (
             matches_known_circle_name,
@@ -175,6 +212,20 @@ def classify_question_intent(message: str) -> dict[str, Any]:
             return out
     except Exception:
         pass
+    if _TEMPORAL_NOW.search(blob):
+        out.update(intent="temporal_now", confidence=0.88)
+        return out
+    if tek_beyin_analiz_enabled():
+        ans = try_simple_factual_reply(raw)
+        if ans:
+            out.update(
+                intent="simple_fact",
+                confidence=0.98,
+                skip_web=True,
+                skip_rag=True,
+                direct_answer=ans,
+            )
+            return out
     try:
         from ilim_assistant.ruzgar_otomatik_ogrenme import lookup_bilgi_kutuphane_hint
 
@@ -190,20 +241,6 @@ def classify_question_intent(message: str) -> dict[str, Any]:
             return out
     except Exception:
         pass
-    if _TEMPORAL_NOW.search(blob):
-        out.update(intent="temporal_now", confidence=0.88)
-        return out
-    if tek_beyin_analiz_enabled():
-        ans = try_simple_factual_reply(raw)
-        if ans:
-            out.update(
-                intent="simple_fact",
-                confidence=0.98,
-                skip_web=True,
-                skip_rag=True,
-                direct_answer=ans,
-            )
-            return out
     try:
         from ilim_assistant.ana_motor_plan import looks_like_casual_social_chat
 
@@ -252,12 +289,19 @@ def try_temporal_now_reply(message: str) -> Optional[str]:
 
 
 def try_simple_factual_reply(message: str) -> Optional[str]:
-    """Evrensel kısa gerçekler — tarih/bağlam karıştırmadan."""
+    """Evrensel mikro gerçekler — takvim/sayı; ansiklopedik sorular bilgi turuna kalır."""
     if not tek_beyin_analiz_enabled():
         return None
     raw = (message or "").strip()
     if not raw or len(raw) > 120:
         return None
+    try:
+        from ilim_assistant.ana_motor_bilgi_turu import should_route_bilgi_turu_pipeline
+
+        if should_route_bilgi_turu_pipeline(raw):
+            return None
+    except Exception:
+        pass
     if _TEMPORAL_NOW.search(_norm(raw)):
         return None
     for pat, ans in _SIMPLE_FACTS:

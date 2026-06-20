@@ -9,7 +9,7 @@ import time
 import unicodedata
 from typing import Any, Iterator
 
-from ilim_assistant.chat_core import _tarih_intent, prior_messages_for_turn
+from ilim_assistant.tarih_intent import tarih_intent as _tarih_intent
 from ilim_assistant.persona import ASSISTANT_NAME, OWNER_ADDRESS
 from ilim_assistant.rag_store import search_tarih_hafiza
 
@@ -160,6 +160,122 @@ def _format_hits(hits: list[tuple[str, str, float]], max_chars: int = 4500) -> s
     return "\n".join(parts).strip()
 
 
+def _collect_tarih_hits(message: str) -> list[tuple[str, str, float]]:
+    msg = (message or "").strip()
+    if not msg:
+        return []
+    try:
+        top_k = max(2, min(int(os.environ.get("RUZGAR_TARIH_FAST_TOP_K", "4")), 6))
+    except ValueError:
+        top_k = 4
+    try:
+        scan = max(24, int(os.environ.get("RUZGAR_TARIH_FAST_SCAN", "48")))
+    except ValueError:
+        scan = 48
+    try:
+        score_min = float(os.environ.get("RUZGAR_TARIH_FAST_SCORE", "0.22"))
+    except ValueError:
+        score_min = 0.22
+    search_q = msg
+    low = msg.casefold()
+    if "fatih" in low or "fethett" in low or "istanbul" in low and "feth" in low:
+        search_q = f"{msg} fatih sultan mehmet istanbul fethi 1453 konstantinopolis"
+    hits = search_tarih_hafiza(search_q, top_k=top_k, scan_cap=scan)
+    good = [h for h in hits if float(h[2]) >= score_min]
+    if not good and hits and float(hits[0][2]) >= 0.12:
+        good = [hits[0]]
+    return good
+
+
+def _pasaj_reply_from_hits(message: str, good: list[tuple[str, str, float]]) -> str:
+    msg = (message or "").strip()
+    q = msg.casefold()
+    if not good:
+        return (
+            "Ümit abi, bu tarih sorusunda yerel kayıttan net bir satır bulamadım. "
+            "Bana öğretir misin?"
+        )
+    for text, _src, _score in good[:3]:
+        raw = (text or "").strip()
+        if not raw:
+            continue
+        if "wikidata" in raw.casefold() and not re.search(r"\b(12\d{2}|13\d{2}|14\d{2})\b", raw):
+            continue
+        if ("kurul" in q or "ne zaman" in q or "kim kur" in q) and re.search(r"\b1299\b", raw):
+            return (
+                "Ümit abi, kayıtlara göre Osmanlı Devleti 1299 yılında, "
+                "Osman Bey döneminde kurulmuş kabul edilir."
+            )
+        if re.search(r"osman\s*bey", q) and re.search(r"kurucu|kurdu|1299|beylik", raw, re.I):
+            body = re.sub(r"\s+", " ", raw).strip()
+            if len(body) > 280:
+                m = re.search(r"^([^.!?…]+[.!?…])", body)
+                body = m.group(1).strip() if m else body[:280].rsplit(" ", 1)[0] + "…"
+            if body and not _is_archive_metadata_text(body):
+                return f"Ümit abi, kısaca: {body}"
+        lines: list[str] = []
+        if _is_archive_metadata_text(raw):
+            continue
+        for ln in raw.splitlines():
+            s = ln.strip().lstrip("#").strip()
+            if not s or len(s) < 10:
+                continue
+            if s.casefold().startswith("http"):
+                continue
+            if s.startswith("Konu:") or s.startswith("Vikiveri:"):
+                continue
+            if _is_archive_metadata_text(s):
+                continue
+            if "description:" in s.casefold() and len(s) > 120:
+                continue
+            lines.append(s)
+        body = " ".join(lines[:3])
+        if _is_archive_metadata_text(body):
+            continue
+        body = re.sub(r"\s+", " ", body).strip()
+        if len(body) > 280:
+            m = re.search(r"^([^.!?…]+[.!?…])", body)
+            body = m.group(1).strip() if m else body[:280].rsplit(" ", 1)[0] + "…"
+        if body:
+            return f"Ümit abi, kısaca: {body}"
+    return (
+        "Ümit abi, yerel tarih kaydı var ama net özet çıkaramadım. "
+        "Doğru cevabı bana öğretir misin?"
+    )
+
+
+def try_tarih_instant_pasaj_reply(
+    message: str,
+    *,
+    mode_norm: str = "genel",
+    question_plan: Any | None = None,
+) -> str | None:
+    """Yerel tarih pasajından LLM beklemeden kısa yanıt — bilgi turu defer atlanır."""
+    if not tarih_fast_enabled():
+        return None
+    msg = (message or "").strip()
+    if not msg or looks_like_list_bilgi_question(msg):
+        return None
+    if mode_norm not in ("genel", "uretim", "gelisim"):
+        return None
+    try:
+        from ilim_assistant.chat_core import _is_live_weather_query
+
+        if _is_live_weather_query(msg):
+            return None
+    except Exception:
+        pass
+    if not _tarih_intent(msg):
+        return None
+    good = _collect_tarih_hits(msg)
+    if not good:
+        return None
+    reply = _pasaj_reply_from_hits(msg, good)
+    if is_tarih_fast_teach_fallback(reply):
+        return None
+    return reply
+
+
 def iter_tarih_hafiza_reply(
     message: str,
     history: list,
@@ -190,27 +306,7 @@ def iter_tarih_hafiza_reply(
     if not _tarih_intent(msg):
         return None
 
-    try:
-        top_k = max(2, min(int(os.environ.get("RUZGAR_TARIH_FAST_TOP_K", "4")), 6))
-    except ValueError:
-        top_k = 4
-    try:
-        scan = max(24, int(os.environ.get("RUZGAR_TARIH_FAST_SCAN", "48")))
-    except ValueError:
-        scan = 48
-    try:
-        score_min = float(os.environ.get("RUZGAR_TARIH_FAST_SCORE", "0.22"))
-    except ValueError:
-        score_min = 0.22
-
-    search_q = msg
-    low = msg.casefold()
-    if "fatih" in low or "fethett" in low or "istanbul" in low and "feth" in low:
-        search_q = f"{msg} fatih sultan mehmet istanbul fethi 1453 konstantinopolis"
-    hits = search_tarih_hafiza(search_q, top_k=top_k, scan_cap=scan)
-    good = [h for h in hits if float(h[2]) >= score_min]
-    if not good and hits and float(hits[0][2]) >= 0.12:
-        good = [hits[0]]
+    good = _collect_tarih_hits(msg)
 
     if good:
         ctx = _format_hits(good)
@@ -229,7 +325,13 @@ def iter_tarih_hafiza_reply(
         "Sesli okunacağı için net ve kısa cevap ver. Kaynak uydurma.\n"
     )
     user = f"BAĞLAM (Tarih Hafızası):\n{ctx}\n\n---\n\nSORU: {msg}"
-    prior = prior_messages_for_turn(history, mode_norm)
+    prior = []
+    try:
+        from ilim_assistant.chat_core import prior_messages_for_turn
+
+        prior = prior_messages_for_turn(history, mode_norm)
+    except Exception:
+        prior = []
 
     try:
         from ilim_assistant.llm_ollama import chat_completion_stream, ollama_reachable
@@ -246,57 +348,7 @@ def iter_tarih_hafiza_reply(
         gemini_cap = 28.0
 
     def _net_pasaj_metni() -> str:
-        """Ham pasaj dökümü yerine kısa, sesli okunabilir özet."""
-        if not good:
-            return (
-                "Ümit abi, bu tarih sorusunda yerel kayıttan net bir satır bulamadım. "
-                "Bana öğretir misin?"
-            )
-        q = msg.casefold()
-        for text, _src, _score in good[:3]:
-            raw = (text or "").strip()
-            if not raw:
-                continue
-            if "wikidata" in raw.casefold() and not re.search(
-                r"\b(12\d{2}|13\d{2}|14\d{2})\b", raw
-            ):
-                continue
-            if ("kurul" in q or "ne zaman" in q) and re.search(
-                r"\b1299\b", raw
-            ):
-                return (
-                    "Ümit abi, kayıtlara göre Osmanlı Devleti 1299 yılında, "
-                    "Osman Bey döneminde kurulmuş kabul edilir."
-                )
-            lines: list[str] = []
-            if _is_archive_metadata_text(raw):
-                continue
-            for ln in raw.splitlines():
-                s = ln.strip().lstrip("#").strip()
-                if not s or len(s) < 10:
-                    continue
-                if s.casefold().startswith("http"):
-                    continue
-                if s.startswith("Konu:") or s.startswith("Vikiveri:"):
-                    continue
-                if _is_archive_metadata_text(s):
-                    continue
-                if "description:" in s.casefold() and len(s) > 120:
-                    continue
-                lines.append(s)
-            body = " ".join(lines[:3])
-            if _is_archive_metadata_text(body):
-                continue
-            body = re.sub(r"\s+", " ", body).strip()
-            if len(body) > 280:
-                m = re.search(r"^([^.!?…]+[.!?…])", body)
-                body = m.group(1).strip() if m else body[:280].rsplit(" ", 1)[0] + "…"
-            if body:
-                return f"Ümit abi, kısaca: {body}"
-        return (
-            "Ümit abi, yerel tarih kaydı var ama net özet çıkaramadım. "
-            "Doğru cevabı bana öğretir misin?"
-        )
+        return _pasaj_reply_from_hits(msg, good)
 
     def _rag_pasaj_yanit() -> Iterator[str]:
         yield _net_pasaj_metni()
@@ -378,8 +430,18 @@ def iter_tarih_hafiza_reply(
                 os.environ["RUZGAR_OLLAMA_READ_TIMEOUT_SEC"] = old_read_to
 
     def _gen() -> Iterator[str]:
+        pasaj_first = os.environ.get("RUZGAR_TARIH_PASAJ_FIRST", "1").strip().lower() not in (
+            "0",
+            "false",
+            "no",
+        )
+        if pasaj_first and good:
+            fallback = _net_pasaj_metni()
+            if not is_tarih_fast_teach_fallback(fallback):
+                yield fallback
+                return
         body = ""
-        gemini_first = os.environ.get("RUZGAR_TARIH_GEMINI_FIRST", "1").strip().lower() not in (
+        gemini_first = os.environ.get("RUZGAR_TARIH_GEMINI_FIRST", "0").strip().lower() not in (
             "0",
             "false",
             "no",

@@ -1,7 +1,7 @@
 {
-  "ok": true,
+  "ok": false,
   "version": "programlama-upgrade-runner-v2-2026-05-29",
-  "elapsed_sec": 40.41,
+  "elapsed_sec": 86.18,
   "scores": {
     "command_level": 100,
     "autonomy_level": 100,
@@ -97,9 +97,9 @@
       "id": "ladder-s10-agent-nonblock",
       "level": "agent_nonblock",
       "description": "P8 — uzun iş sırasında lite health yanıtı (threadpool)",
-      "score": 100,
+      "score": 0,
       "min_score": 100,
-      "pass": true
+      "pass": false
     },
     {
       "id": "ladder-s11-delivery",
@@ -180,8 +180,8 @@
   "artifacts": {
     "dataset": "D:\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\scripts\\programlama_command_goldens.json",
     "ladder": "D:\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\scripts\\programlama_task_ladder.json",
-    "faz99_scope_1": "projects/smoke-autonomy-57fa9224",
-    "faz99_scope_2": "projects/smoke-autonomy-86c68dc4",
+    "faz99_scope_1": "projects/smoke-autonomy-5fbd6517",
+    "faz99_scope_2": "projects/smoke-autonomy-8a411371",
     "parity_mode": "quick",
     "parity_passed": 8,
     "parity_total": 8,
@@ -246,7 +246,7 @@
         "version": "programlama-faz93-v2-2026-05-27",
         "recorded": true,
         "applied_count": 3,
-        "checkpoint_id": 11,
+        "checkpoint_id": 12,
         "rollback": {
           "version": "programlama-faz93-v2-2026-05-27",
           "has_plan": true,
@@ -271,16 +271,16 @@
       "version": "programlama-review-loop-v1-2026-06-15"
     },
     "agent_nonblock": {
-      "ok": true,
-      "detail": "agent nonblock gate",
+      "ok": false,
+      "detail": "idle:3262ms timed out; busy:3207ms timed out",
       "checks": {
-        "health_idle": true,
-        "health_during_busy": true,
-        "iterate_threadpool_health": true
+        "health_idle": false,
+        "health_during_busy": false,
+        "iterate_threadpool_health": false
       },
       "port": 8779,
-      "idle_ms": 139,
-      "busy_ms": 149,
+      "idle_ms": 3262,
+      "busy_ms": 3207,
       "version": "programlama-agent-nonblock-v1-2026-06-15"
     },
     "delivery": {

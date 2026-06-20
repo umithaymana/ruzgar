@@ -103,7 +103,7 @@
         const tid = global.setTimeout(() => ctrl.abort(), 12000);
         let r;
         try {
-          r = await global.fetch(`${base}/api/health`, {
+          r = await global.fetch(`${base}/api/health?lite=1`, {
             method: "GET",
             cache: "no-store",
             signal: ctrl.signal,
@@ -114,6 +114,7 @@
         const j = await r.json();
         if (j && j.ok) {
           applyReady(j, base);
+          global.__ruzgarBootHealthAt = Date.now();
           return true;
         }
       } catch (_) {

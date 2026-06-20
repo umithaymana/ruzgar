@@ -67,6 +67,13 @@ def should_skip_hafiza_dogal(message: str) -> bool:
             return True
     except Exception:
         pass
+    try:
+        from ilim_assistant.ana_motor_plan import should_stay_on_ana_motor_bilgi
+
+        if should_stay_on_ana_motor_bilgi(m):
+            return True
+    except Exception:
+        pass
     return False
 
 
@@ -74,6 +81,13 @@ def lookup_genel_hafiza_hint(message: str) -> Optional[dict[str, Any]]:
     """Eşleşen hafıza satırı; yer tutucu ve düşük skor elenir."""
     if not dogal_konus_enabled() or should_skip_hafiza_dogal(message):
         return None
+    try:
+        from ilim_assistant.ana_motor_plan import should_stay_on_ana_motor_bilgi
+
+        if should_stay_on_ana_motor_bilgi(message):
+            return None
+    except Exception:
+        pass
     try:
         from ilim_assistant.hafiza_i_ruzgar import genel_hafiza_lookup_detayli
 
@@ -132,10 +146,10 @@ def _build_user_block(message: str, hint: dict[str, Any], extra_ctx: str = "") -
 
 def _optional_rag_context(message: str, mode_norm: str) -> str:
     try:
-        from ilim_assistant.chat_core import _tarih_intent
+        from ilim_assistant.tarih_intent import tarih_intent
         from ilim_assistant.rag_store import search_arsiv, search_tarih_hafiza
 
-        if _tarih_intent(message):
+        if tarih_intent(message):
             hits = search_tarih_hafiza(message, top_k=3, scan_cap=36)
         else:
             hits = search_arsiv(message, top_k=2)

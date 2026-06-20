@@ -11,6 +11,9 @@ from __future__ import annotations
 
 import json
 import os
+
+# Sohbet thread pool tıkanmasında health yine yanıt verir; daha geniş havuz.
+os.environ.setdefault("ANYIO_WORKER_THREAD_COUNT", "48")
 import shutil
 import subprocess
 import sys
@@ -1535,6 +1538,29 @@ def _health_build_block() -> dict:
         return base
 
 
+_HEALTH_LITE_BUILD_CACHE: dict[str, Any] | None = None
+
+
+def _health_lite_build_block() -> dict[str, Any]:
+    """Lite health — ağır faz snapshot importu yok (tıkanan sunucuda health yine yanıt verir)."""
+    global _HEALTH_LITE_BUILD_CACHE
+    if _HEALTH_LITE_BUILD_CACHE is not None:
+        return _HEALTH_LITE_BUILD_CACHE
+    try:
+        from ilim_assistant.ruzgar_build import canonical_build_rev
+
+        rev = canonical_build_rev()
+    except Exception:
+        rev = "2026-06-15-ruzgar-programlama-pro-v4"
+    _HEALTH_LITE_BUILD_CACHE = {
+        "rev": rev,
+        "lite": True,
+        "fast_lane": True,
+        "programlama_pro_v1": True,
+    }
+    return _HEALTH_LITE_BUILD_CACHE
+
+
 def _health_lite_response() -> dict[str, Any]:
     """Hızlı health — bağlantı kontrolü; ağır motor snapshot'ları yok."""
     return {
@@ -1542,7 +1568,8 @@ def _health_lite_response() -> dict[str, Any]:
         "lite": True,
         "service": "ruzgar-desktop-api",
         "merkezi_bellek": True,
-        "build": _health_build_block(),
+        "build": _health_lite_build_block(),
+        "booting": bool(_WARMUP_BACKGROUND_ACTIVE),
     }
 
 
@@ -1617,6 +1644,10 @@ def _health_full_response() -> dict[str, Any]:
                 if _main_only
                 else None
             ),
+            "bilgi_turu": __import__(
+                "ilim_assistant.ana_motor_bilgi_turu",
+                fromlist=["bilgi_turu_status"],
+            ).bilgi_turu_status(),
             "web_secondary_strong_rag_only": _web_secondary_policy_enabled(),
             "question_plan_enabled": os.environ.get("RUZGAR_ANA_MOTOR_PLAN", "1").strip().lower()
             not in ("0", "false", "no"),
@@ -1840,11 +1871,17 @@ def health(full: Annotated[int, Query()] = 0):
             "booting": True,
             "warmup": True,
             "service": "ruzgar-desktop-api",
-            "build": _health_build_block(),
+            "build": _health_lite_build_block(),
         }
     if full != 1:
         return _health_lite_response()
     return _health_full_response()
+
+
+@app.get("/api/health/full")
+async def health_full_async():
+    """Ağır health — ana thread'i bloklamaz (sohbet/health lite yanıt vermeye devam eder)."""
+    return await run_in_threadpool(_health_full_response)
 
 
 @app.post("/api/vision/analyze")
@@ -9688,6 +9725,7 @@ def _iter_instant_chat_events(
     orch: dict[str, Any] | None = None,
     instant_gundelik: bool = False,
     instant_clarify: bool = False,
+    session_echo: bool = False,
     egitim_instant: bool = False,
     programlama_instant: bool = False,
     programlama_focus_rel: str | None = None,
@@ -9746,6 +9784,8 @@ def _iter_instant_chat_events(
         done["delegate_from_mode"] = delegate_from_mode
     if instant_clarify:
         done["instant_clarify"] = True
+    if session_echo:
+        done["session_echo"] = True
     if archive_recall and isinstance(archive_recall, dict):
         done["archive_recall"] = {
             k: archive_recall[k]
@@ -10121,10 +10161,79 @@ def _persist_done_chat_turn(req: ChatRequest, done: dict[str, Any]) -> dict[str,
         return done
 
 
+def _fast_lane_post_done(req: ChatRequest, done: dict[str, Any]) -> None:
+    try:
+        d = _persist_done_chat_turn(req, done)
+        from ilim_assistant.ruzgar_egitim import on_chat_turn_done
+
+        on_chat_turn_done(req, d)
+    except Exception:
+        pass
+
+
+def _collect_fast_lane_chat_events(req: ChatRequest) -> list[dict[str, Any]] | None:
+    """
+    Selam / teşekkür / mikro gerçek — thread pool beklemeden anında SSE/WS olayları.
+
+    chat_core / tek_beyin import EDİLMEZ (import zinciri dakikalarca takılabilir).
+    """
+    msg_raw = (req.message or "").strip()
+    if not msg_raw or len(msg_raw) > 400:
+        return None
+    try:
+        from ilim_assistant.chat_fast_lane import mode_norm_from_request, try_instant_reply
+
+        mode_norm = mode_norm_from_request(getattr(req, "mode", None))
+        reply = try_instant_reply(msg_raw, mode_norm)
+        if not reply:
+            return None
+        orch: dict[str, Any] = {
+            "plan": {"primary": "gundelik", "label_tr": "Aninda (hizli serit)"},
+            "fast_lane": True,
+        }
+        return list(
+            _iter_instant_chat_events(
+                reply,
+                msg_raw,
+                session_wake_used=req.session_wake_used,
+                msg_for_wake=req.message,
+                orch=orch,
+                instant_gundelik=True,
+            )
+        )
+    except Exception:
+        return None
+
+
+async def _async_iter_chat_events(req: ChatRequest):
+    """Önce hızlı şerit (thread yok), sonra tam tur."""
+    fast = _collect_fast_lane_chat_events(req)
+    if fast:
+        for obj in fast:
+            if obj.get("type") == "done":
+                obj = dict(obj)
+                obj.setdefault("elapsed_sec", 0.05)
+                obj["fast_lane"] = True
+                yield obj
+                try:
+                    await run_in_threadpool(_fast_lane_post_done, req, obj)
+                except Exception:
+                    pass
+            else:
+                yield obj
+        return
+    async for obj in iterate_in_threadpool(iter_chat_turn_events(req)):
+        yield obj
+
+
 def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
     """SSE/WS: Ana motor durumları → prepare_turn (İdrak + orkestra) → LLM."""
-    orch_early: dict[str, Any] = {}
     msg_raw = (req.message or "").strip()
+    fast = _collect_fast_lane_chat_events(req)
+    if fast:
+        yield from fast
+        return
+    orch_early: dict[str, Any] = {}
     try:
         from ilim_assistant.ruzgar_tek_beyin import resolve_effective_user_query
 
@@ -10243,6 +10352,115 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             _skip_early_hub = looks_like_casual_social_chat(msg_early)
         except Exception:
             pass
+        # Aninda bilgi yolu — hub/hafiza yonlendirmesinden ONCE (tikanmayi onler).
+        try:
+            from ilim_assistant.ruzgar_tek_beyin_analiz import (
+                try_simple_factual_reply,
+                try_temporal_now_reply,
+            )
+
+            _temp = try_temporal_now_reply(msg_early)
+            if _temp:
+                _orch_t = dict(orch_early)
+                _orch_t.setdefault("plan", {})["primary"] = "gundelik"
+                _orch_t["plan"]["label_tr"] = "Güncel tarih (Faz N)"
+                yield from _iter_instant_chat_events(
+                    _temp,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_t,
+                    instant_gundelik=True,
+                )
+                return
+
+            _fact = None
+            try:
+                from ilim_assistant.ana_motor_bilgi_turu import should_route_bilgi_turu_pipeline
+
+                if not should_route_bilgi_turu_pipeline(msg_early):
+                    _fact = try_simple_factual_reply(msg_early)
+            except Exception:
+                _fact = try_simple_factual_reply(msg_early)
+            if _fact:
+                _orch_f = dict(orch_early)
+                _orch_f.setdefault("plan", {})["primary"] = "bilgi"
+                _orch_f["plan"]["label_tr"] = "Basit gerçek (Faz N)"
+                yield from _iter_instant_chat_events(
+                    _fact,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_f,
+                    instant_gundelik=True,
+                )
+                return
+
+            from ilim_assistant.ana_motor_sohbet_gecmis import try_session_echo_reply
+
+            _echo_early = try_session_echo_reply(msg_early, client_history=req.history)
+            if _echo_early:
+                _orch_echo = dict(orch_early)
+                _orch_echo.setdefault("plan", {})["primary"] = "hafiza"
+                _orch_echo["plan"]["label_tr"] = "Oturum hafızası"
+                _orch_echo["session_echo"] = True
+                yield from _iter_instant_chat_events(
+                    _echo_early,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_echo,
+                    instant_gundelik=True,
+                    session_echo=True,
+                )
+                return
+
+            from ilim_assistant.tarih_fast import try_tarih_instant_pasaj_reply
+
+            _mode_echo = "genel"
+            try:
+                from ilim_assistant.chat_core import normalize_mode
+
+                _mode_echo = normalize_mode((req.mode or "").strip() or "genel")
+            except Exception:
+                pass
+            _tarih_p = try_tarih_instant_pasaj_reply(msg_early, mode_norm=_mode_echo)
+            if _tarih_p:
+                _orch_tp = dict(orch_early)
+                _orch_tp.setdefault("plan", {})["primary"] = "bilgi"
+                _orch_tp["plan"]["label_tr"] = "Tarih hafızası (anında)"
+                _orch_tp["tarih_fast"] = True
+                yield from _iter_instant_chat_events(
+                    _tarih_p,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_tp,
+                    instant_gundelik=True,
+                )
+                return
+            from ilim_assistant.ana_motor_plan import (
+                looks_like_casual_social_chat,
+                maybe_gundelik_instant_reply,
+            )
+
+            if looks_like_casual_social_chat(msg_early):
+                _gund_early = maybe_gundelik_instant_reply(msg_early, "genel", {})
+                if _gund_early:
+                    _orch_ge = dict(orch_early)
+                    _orch_ge.setdefault("plan", {})["primary"] = "gundelik"
+                    _orch_ge["plan"]["label_tr"] = "Kisa sohbet (aninda)"
+                    yield from _iter_instant_chat_events(
+                        _gund_early,
+                        msg_early,
+                        session_wake_used=req.session_wake_used,
+                        msg_for_wake=req.message,
+                        orch=_orch_ge,
+                        instant_gundelik=True,
+                    )
+                    return
+        except Exception:
+            pass
         if not _skip_early_hub:
             try:
                 from ilim_assistant.chat_core import normalize_mode
@@ -10305,46 +10523,6 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                         return
             except Exception:
                 pass
-        try:
-            from ilim_assistant.ruzgar_tek_beyin_analiz import (
-                classify_question_intent,
-                try_simple_factual_reply,
-                try_temporal_now_reply,
-            )
-
-            _temp = try_temporal_now_reply(msg_early)
-            if _temp:
-                _orch_t = dict(orch_early)
-                _orch_t.setdefault("plan", {})["primary"] = "gundelik"
-                _orch_t["plan"]["label_tr"] = "Güncel tarih (Faz N)"
-                _orch_t["tek_beyin_analiz"] = classify_question_intent(msg_early)
-                yield from _iter_instant_chat_events(
-                    _temp,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_t,
-                    instant_gundelik=True,
-                )
-                return
-
-            _fact = try_simple_factual_reply(msg_early)
-            if _fact:
-                _orch_f = dict(orch_early)
-                _orch_f.setdefault("plan", {})["primary"] = "bilgi"
-                _orch_f["plan"]["label_tr"] = "Basit gerçek (Faz N)"
-                _orch_f["tek_beyin_analiz"] = classify_question_intent(msg_early)
-                yield from _iter_instant_chat_events(
-                    _fact,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_f,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
         try:
             from ilim_assistant.ruzgar_otomatik_ogrenme import try_bilgi_kutuphane_instant_reply
 
@@ -11527,6 +11705,16 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 yield {"type": "status", "text": turn_plan.status_text}
                 plan_dict = turn_plan.to_dict()
                 orch["plan"] = plan_dict
+                try:
+                    from ilim_assistant.ana_motor_bilgi_turu import (
+                        annotate_orchestra_bilgi_turu,
+                        should_route_bilgi_turu_pipeline,
+                    )
+
+                    if should_route_bilgi_turu_pipeline(req.message, turn_plan):
+                        annotate_orchestra_bilgi_turu(orch, turn_plan, stage="plan")
+                except Exception:
+                    pass
                 yield {"type": "meta", "plan": plan_dict}
                 try:
                     from ilim_assistant.ana_motor_plan import maybe_gundelik_instant_reply
@@ -11937,6 +12125,18 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             req.message, mode_norm, turn_plan, history=req.history
         ):
             _skip_prefetch = True
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ana_motor_bilgi_turu import should_prefetch_rag_for_bilgi_turn
+
+        if should_prefetch_rag_for_bilgi_turn(
+            req.message,
+            mode_norm,
+            turn_plan,
+            history=req.history,
+        ):
+            _skip_prefetch = False
     except Exception:
         pass
     try:
@@ -12968,8 +13168,13 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
     for obj in _iter_chat_turn_events_impl(req):
         if obj.get("type") == "done":
             obj = dict(obj)
-            obj = _persist_done_chat_turn(req, obj)
             obj.setdefault("elapsed_sec", time.perf_counter() - t0)
+            # Önce done — istemci DURDUR/Gönder ve TTS kilidi hemen açılsın (persist sonra).
+            yield obj
+            try:
+                obj = _persist_done_chat_turn(req, obj)
+            except Exception:
+                pass
             try:
                 from ilim_assistant.ruzgar_egitim import on_chat_turn_done
 
@@ -13018,6 +13223,7 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
                         )
             except Exception:
                 pass
+            continue
         yield obj
 
 
@@ -13025,7 +13231,7 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
 async def chat_stream(req: ChatRequest):
     async def generate():
         yield ":ruzgar-events\n\n"
-        async for obj in iterate_in_threadpool(iter_chat_turn_events(req)):
+        async for obj in _async_iter_chat_events(req):
             yield _sse(obj)
 
     return StreamingResponse(
@@ -13109,10 +13315,24 @@ async def websocket_chat(ws: WebSocket) -> None:
         await ws.close()
         return
     try:
-        async for obj in iterate_in_threadpool(iter_chat_turn_events(req)):
+        async for obj in _async_iter_chat_events(req):
             await ws.send_json(obj)
-    except Exception:
-        pass
+    except Exception as exc:
+        try:
+            from ilim_assistant.chat_core import empty_reply_fallback
+
+            fb = empty_reply_fallback(req.message or "", req.history)
+            await ws.send_json({"type": "error", "text": str(exc)[:240]})
+            await ws.send_json(
+                {
+                    "type": "done",
+                    "full_reply": fb,
+                    "user_message": (req.message or "").strip(),
+                    "stream_error": True,
+                }
+            )
+        except Exception:
+            pass
     try:
         await ws.close()
     except Exception:

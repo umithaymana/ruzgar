@@ -49,13 +49,6 @@ def looks_like_encyclopedic_fact_question(msg: str) -> bool:
     raw = (msg or "").strip()
     if len(raw) < 8:
         return False
-    try:
-        from ilim_assistant.ruzgar_tek_beyin import personal_hafiza_blocks_bilgi_path
-
-        if personal_hafiza_blocks_bilgi_path(raw):
-            return False
-    except Exception:
-        pass
     asc = _norm_ascii(raw)
     low = raw.lower()
     blob = low + " " + asc
@@ -63,6 +56,8 @@ def looks_like_encyclopedic_fact_question(msg: str) -> bool:
     history_terms = (
         "osmanlı",
         "osmanli",
+        "osman bey",
+        "osman gazi",
         "padişah",
         "padisah",
         "devlet",
@@ -96,6 +91,43 @@ def looks_like_encyclopedic_fact_question(msg: str) -> bool:
         if any(x in blob for x in history_terms + ("halifelik", "abbasi", "abbâsî")):
             return True
 
+    try:
+        from ilim_assistant.ruzgar_tek_beyin import personal_hafiza_blocks_bilgi_path
+
+        if personal_hafiza_blocks_bilgi_path(raw):
+            return False
+    except Exception:
+        pass
+
+    return False
+
+
+def should_stay_on_ana_motor_bilgi(message: str) -> bool:
+    """
+    Ansiklopedi/tarih sorusu — Hafıza motoru lookup veya yavaş sentez yerine Ana Motor bilgi turu.
+
+    «Osman Bey kimdir?» gibi sorular hafıza Faz 75'te yanlışlıkla lookup sayılıyordu.
+    """
+    raw = (message or "").strip()
+    if not raw or len(raw) > 400:
+        return False
+    if looks_like_encyclopedic_fact_question(raw):
+        return True
+    try:
+        from ilim_assistant.tarih_intent import tarih_intent
+
+        if tarih_intent(raw):
+            return True
+    except Exception:
+        pass
+    asc = _norm_ascii(raw)
+    if re.search(r"\b(kimdir|kimdi|nedir|ne zaman|kuruldu|kurucu)\b", asc):
+        if re.search(
+            r"\b(osman|padisah|padişah|sultan|bey|devlet|imparator|hanedan|"
+            r"selcuk|selçuk|bizans|fatih|murat|kanuni|yavuz)\b",
+            asc,
+        ):
+            return True
     return False
 
 
@@ -215,6 +247,28 @@ def _sources_summary(plan: QuestionPlan) -> str:
     return " + ".join(parts) if parts else "doğrudan yanıt"
 
 
+def _light_weather_intent(msg: str) -> bool:
+    """Hafif hava niyeti — chat_core importu olmadan plan skorlamasi."""
+    low = (msg or "").lower()
+    if not low:
+        return False
+    needles = (
+        "hava nasil",
+        "hava nasıl",
+        "hava durumu",
+        "bugun hava",
+        "bugün hava",
+        "kac derece",
+        "kaç derece",
+        "yagmur",
+        "yağmur",
+        "kar yag",
+        "kar yağ",
+        "meteoroloji",
+    )
+    return any(n in low for n in needles)
+
+
 def _score_categories(msg: str, mode_norm: str, motor_flags: dict[str, bool]) -> dict[str, float]:
     raw = (msg or "").strip()
     low = raw.lower()
@@ -262,15 +316,10 @@ def _score_categories(msg: str, mode_norm: str, motor_flags: dict[str, bool]) ->
         )
     ):
         s["hava"] += 3.0
-    try:
-        from ilim_assistant.chat_core import _is_live_weather_query, _weather_intent
-
-        if _weather_intent(raw) or _is_live_weather_query(raw):
-            s["hava"] += 5.0
-            s["gundelik"] = max(0.0, s["gundelik"] - 2.0)
-            s["bilim"] = max(0.0, s["bilim"] - 2.0)
-    except Exception:
-        pass
+    if _light_weather_intent(raw):
+        s["hava"] += 5.0
+        s["gundelik"] = max(0.0, s["gundelik"] - 2.0)
+        s["bilim"] = max(0.0, s["bilim"] - 2.0)
 
     if any(
         x in blob
@@ -657,6 +706,41 @@ def plan_question(
             rag_query=rewrite_rag_search_query(effective_msg, "bilgi"),
             status_text="Soru analizi: güncel jeopolitik — web ve kaynak taraması…",
         )
+    try:
+        from ilim_assistant.ruzgar_tek_beyin_analiz import (
+            tek_beyin_analiz_enabled,
+            try_simple_factual_reply,
+        )
+
+        if tek_beyin_analiz_enabled() and should_stay_on_ana_motor_bilgi(effective_msg):
+            fact = try_simple_factual_reply(message)
+            if fact:
+                return QuestionPlan(
+                    primary="bilgi",
+                    secondary=[],
+                    use_ilim_rag=False,
+                    prefer_web=False,
+                    prefer_archive=False,
+                    ambiguous=False,
+                    clarification=None,
+                    web_query="",
+                    rag_query="",
+                    status_text="Soru analizi: basit gerçek — doğrudan yanıt",
+                )
+            return QuestionPlan(
+                primary="bilgi",
+                secondary=["bilim"],
+                use_ilim_rag=True,
+                prefer_web=True,
+                prefer_archive=True,
+                ambiguous=False,
+                clarification=None,
+                web_query=rewrite_web_search_query(effective_msg, "bilgi", mode_norm),
+                rag_query=rewrite_rag_search_query(effective_msg, "bilgi"),
+                status_text="Soru analizi: ansiklopedik bilgi — yerel kaynak turu…",
+            )
+    except Exception:
+        pass
     try:
         from ilim_assistant.ruzgar_tek_beyin_analiz import (
             classify_question_intent,
@@ -1240,6 +1324,49 @@ def looks_like_greeting_or_smalltalk(message: str) -> bool:
     return looks_like_casual_social_chat(message)
 
 
+def looks_like_instant_social_ack(message: str) -> bool:
+    """Tesekkur, sagol, tamam — aninda sablon; dost/LLM yoluna dusmesin."""
+    raw = (message or "").strip().lower()
+    if not raw or len(raw) > 72:
+        return False
+    blob = _norm_ascii(raw) + " " + raw
+    if any(
+        x in blob
+        for x in (
+            "tesekkur",
+            "teşekkür",
+            "sagol",
+            "sağol",
+            "sağ ol",
+            "sag ol",
+            "eyvallah",
+            "rica ederim",
+            "cok tesekkur",
+            "çok teşekkür",
+            "tesekkurler",
+            "teşekkürler",
+            "minnettar",
+        )
+    ):
+        return True
+    if raw in (
+        "tamam",
+        "ok",
+        "peki",
+        "anladim",
+        "anladım",
+        "harika",
+        "super",
+        "süper",
+        "guzel",
+        "güzel",
+        "mukemmel",
+        "mükemmel",
+    ):
+        return True
+    return False
+
+
 def _explicit_research_intent(message: str) -> bool:
     """Açık bilgi/ilim araştırması — sohbet yoluna düşmesin."""
     raw = (message or "").strip()
@@ -1439,7 +1566,7 @@ def maybe_gundelik_instant_reply(
             "Ne üzerinde konuşmak istersin?"
         )
     if any(x in blob for x in ("tesekkur", "teşekkür", "sagol", "sağol", "eyvallah")):
-        return "Rica ederim — başka bir konuda yazman yeterli."
+        return "Rica ederim Ümit abi — başka bir konuda yazman yeterli."
     # Sohbet davetleri: şablon yerine Gemini hızlı yol (çeşitli, doğal yanıtlar)
 
     if not _plan_enabled():

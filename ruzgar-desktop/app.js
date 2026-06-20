@@ -3,6 +3,7 @@
  * Beyin adresi önceliği: preload + ruzgar_remote_api.txt > ?api > localStorage > yalın yerel.
  * Kök sonda `/api` ise kırpılır — aksi halde fetch `.../api/api/merkezi-bellek` ile 404 verir.
  */
+window.__RUZGAR_UI_REV = "20260620-tdz-fix";
 const RUZGAR_LOCAL_API_PORT = 8779;
 const RUZGAR_EXPECTED_BUILD_REV = "2026-06-15-ruzgar-programlama-pro-v4";
 const LS_VAD_USER = "ruzgar_vad_user_v1";
@@ -173,6 +174,29 @@ function bridgeTimeoutMsHardCap() {
 }
 
 const RUZGAR_CHAT_STREAM_HARD_CAP_MS = bridgeTimeoutMsHardCap();
+/** SSE/WS akışında olay gelmezse iptal (ms) — «düşünüyor» takılmasını keser */
+const RUZGAR_STREAM_IDLE_DEFAULT_MS = 75000;
+
+function resolveStreamHardCapMs(chatFullTimeoutMs, isCasual = false) {
+  if (RUZGAR_CHAT_STREAM_HARD_CAP_MS > 0) {
+    return RUZGAR_CHAT_STREAM_HARD_CAP_MS;
+  }
+  if (isCasual) {
+    return Math.max(15000, Number(chatFullTimeoutMs) || RUZGAR_CHAT_CASUAL_TIMEOUT_MS);
+  }
+  return Math.max(
+    Number(chatFullTimeoutMs) || RUZGAR_CHAT_FULL_TIMEOUT_MS,
+    RUZGAR_CHAT_FULL_TIMEOUT_MS,
+  );
+}
+
+function streamIdleTimeoutMs(userText) {
+  const tarihSoruCmd =
+    /osmanl|fatih|murat|selçuk|selcuk|istanbul|fethett|tarih|padişah|padisah|osman\s+bey/i.test(
+      String(userText || ""),
+    );
+  return tarihSoruCmd ? 90000 : RUZGAR_STREAM_IDLE_DEFAULT_MS;
+}
 
 /** Kesin Köprü WebSocket ilk açılış tavanı (ms); llm_ollama._BRIDGE_UI_WS_HANDSHAKE_MAX_MS ile aynı rakam */
 const RUZGAR_WS_BRIDGE_HANDSHAKE_CEILING_MS = 2147483647;
@@ -1009,24 +1033,26 @@ function applyModeToUI() {
     }
   }
   syncWebFetchUi();
-  if (currentMode === "mimar" || currentMode === "okuma") {
-    el.input.placeholder =
-      "Mimar: fotoğraf, resim·sanat, tasarım — sohbet solda; her sekme ayrı sayfa.";
-  } else if (currentMode === "tercume") {
-    el.input.placeholder =
-      "«imam-ı rabbani eserlerini ara» → Eser ara · Okuma sekmesi → arşiv · Çevir ile çeviri";
-  } else if (currentMode === "ses") {
-    el.input.placeholder =
-      "Ses motorunda transkripti panelden sohbete aktarabilir veya doğrudan soru yazabilirsiniz.";
-  } else if (currentMode === "video") {
-    el.input.placeholder =
-      "Sohbetle söyle — link indir/oynat, kes 0:30-1:00, medya bilgisi, kurgu, panel aç… «yardım»";
-  } else if (currentMode === "hizir") {
-    el.input.placeholder =
-      "Örn: «Pazar yerini tara», «Hava durumuna bak», Trendyol fiyat. Yanıt sohbette; veri HIZIR sekmesinde güncellenir.";
-  } else {
-    el.input.placeholder =
-      "Ana Motor — video, tercüme, kod, mimar… Tek sohbet; «hub yardım» ile motor listesi.";
+  if (el.input) {
+    if (currentMode === "mimar" || currentMode === "okuma") {
+      el.input.placeholder =
+        "Mimar: fotoğraf, resim·sanat, tasarım — sohbet solda; her sekme ayrı sayfa.";
+    } else if (currentMode === "tercume") {
+      el.input.placeholder =
+        "«imam-ı rabbani eserlerini ara» → Eser ara · Okuma sekmesi → arşiv · Çevir ile çeviri";
+    } else if (currentMode === "ses") {
+      el.input.placeholder =
+        "Ses motorunda transkripti panelden sohbete aktarabilir veya doğrudan soru yazabilirsiniz.";
+    } else if (currentMode === "video") {
+      el.input.placeholder =
+        "Sohbetle söyle — link indir/oynat, kes 0:30-1:00, medya bilgisi, kurgu, panel aç… «yardım»";
+    } else if (currentMode === "hizir") {
+      el.input.placeholder =
+        "Örn: «Pazar yerini tara», «Hava durumuna bak», Trendyol fiyat. Yanıt sohbette; veri HIZIR sekmesinde güncellenir.";
+    } else {
+      el.input.placeholder =
+        "Ana Motor — video, tercüme, kod, mimar… Tek sohbet; «hub yardım» ile motor listesi.";
+    }
   }
   syncTopModeButtons();
   syncHizirWorkbenchStripVisibility();
@@ -1057,6 +1083,13 @@ window.currentMode = currentMode;
 applyModeToUI();
 if (el.web) el.web.addEventListener("change", syncWebFetchUi);
 let perfBusy = false;
+/** Hub/health aşamasında perfBusy henüz false — DURDUR yine görünsün */
+let chatSendInFlight = false;
+/** Akış kesintisi — WebSocket + SSE (syncInterruptButton erken çağrılır) */
+let activeChatAbort = null;
+/** @type {WebSocket | null} */
+let activeChatWs = null;
+let userRequestedChatStop = false;
 let latestMetrics = { cpu: null, gpu: null };
 
 /** Edge-TTS: SSE ile cümle tamponu; üst üste istekleri önlemek için oturum sayacı */
@@ -1071,9 +1104,18 @@ let ttsPaused = false;
 let ttsWebUtterance = null;
 /** Ses sentezi isteği giderken de duraklat düğmesi görünsün */
 let ttsArmed = false;
+/** Tur içinde kaç MP3 parçası çalındı (preroll yalnızca ilkinde). */
+let ttsPlayedChunksThisTurn = 0;
 
 const RUZGAR_TTS_MAX_SPEECH_CHARS = 420;
 const RUZGAR_TTS_MAX_SENTENCES = 3;
+/** İlk parça: kısa tampon; sonraki parçalar prefetch ile arka arkaya (kesik ses azaltma). */
+const RUZGAR_TTS_PLAY_PREROLL_MS = 100;
+const RUZGAR_TTS_INTER_CHUNK_PREROLL_MS = 0;
+const RUZGAR_TTS_CHUNK_GAP_MS = 45;
+/** Kuyrukta birleştirme — daha az Edge isteği, daha akıcı konuşma. */
+const RUZGAR_TTS_MERGE_TARGET_CHARS = 220;
+const RUZGAR_TTS_MIN_QUEUE_CHARS = 28;
 
 /** TTS sentez — arka iş parçacığı (Web Worker); yoksa fetch ile düşme (Ümit & Gökçenur). */
 let _ttsWorker = null;
@@ -1235,10 +1277,16 @@ async function maybeResumeVoiceListenAfterReply() {
   if (!el.voiceOut?.checked) return;
   if (!navigator.mediaDevices?.getUserMedia) return;
   if (recState || micBootPromise) return;
+  try {
+    await waitTtsIdle(ttsSessionCounter);
+  } catch (_) {
+    /* ignore */
+  }
+  if (perfBusy || isTtsActive()) return;
   sesliTurResumePending = true;
   const vadResume = getSesliTurVadParams().resumeDelay;
   await new Promise((r) => window.setTimeout(r, vadResume));
-  if (!sesliTurResumePending || perfBusy || recState) return;
+  if (!sesliTurResumePending || perfBusy || recState || isTtsActive()) return;
   sesliTurResumePending = false;
   try {
     pushSessionSend = true;
@@ -2939,6 +2987,7 @@ function switchMode(mode) {
   currentMode = next;
   window.currentMode = currentMode;
   applyModeToUI();
+  flashRuzgarDurum(`Motor: ${MODE_LABELS[currentMode] || currentMode}`);
   if (window.RuzgarSidebarManager?.setMotor) {
     void window.RuzgarSidebarManager.setMotor(next);
   } else if (window.RuzgarPanelManager?.openPanel) {
@@ -6177,22 +6226,44 @@ function wireMotorsCompactToggle() {
   wire(panelBtn);
 }
 
+function resetChatUiLocksOnBoot() {
+  micPressed = false;
+  micBootPromise = null;
+  recState = null;
+  sesliTurResumePending = false;
+  userRequestedChatStop = false;
+  stopMicLevelMeter();
+  el.mic?.classList.remove("recording", "listening");
+  perfBusy = false;
+  chatSendInFlight = false;
+  activeChatAbort = null;
+  activeChatWs = null;
+  if (el.send) el.send.disabled = false;
+  if (el.voiceSend) el.voiceSend.checked = false;
+  if (el.code && currentMode === "genel") el.code.checked = false;
+  hideThinkingCenter();
+  syncInterruptButton();
+  if (typeof discardActiveRecording === "function") {
+    void discardActiveRecording();
+  }
+}
+
 function wireTopModeButtons() {
-  // Tek bir handler hem eski üst topbar hem yeni sol motor menüsü için çalışır.
-  // Idempotent: aynı butona iki kez bağlamayalım diye işaretliyoruz.
-  const allModeButtons = document.querySelectorAll("[data-mode]");
-  allModeButtons.forEach((btn) => {
-    if (btn.dataset.modeWired === "1") return;
-    btn.dataset.modeWired = "1";
-    btn.addEventListener("click", () => {
-      const mode = String(btn.getAttribute("data-mode") || "").trim().toLowerCase();
-      if (!mode) return;
-      if (btn.classList.contains("motor-item")) {
-        autoCompactMotorsOnMotorPick();
-      }
-      switchMode(mode);
-      if (el.input) el.input.focus();
-    });
+  if (document.body.dataset.ruzgarModeWired === "1") return;
+  document.body.dataset.ruzgarModeWired = "1";
+  document.body.addEventListener("click", (ev) => {
+    const btn =
+      ev.target instanceof Element
+        ? ev.target.closest("button[data-mode], .motor-item[data-mode], .mode-tab[data-mode]")
+        : null;
+    if (!btn || btn.disabled) return;
+    const mode = String(btn.getAttribute("data-mode") || "").trim().toLowerCase();
+    if (!mode) return;
+    if (btn.classList.contains("motor-item")) {
+      autoCompactMotorsOnMotorPick();
+    }
+    switchMode(mode);
+    if (el.input) el.input.focus();
   });
 }
 
@@ -10591,12 +10662,6 @@ function wireContextMenu() {
   });
 }
 
-/** Akış kesintisi — WebSocket + SSE (Ümit & Gökçenur UX) */
-let activeChatAbort = null;
-/** @type {WebSocket | null} */
-let activeChatWs = null;
-let userRequestedChatStop = false;
-
 const KEYS_VOICE_SILENCE_IGNORE = new Set([
   "Escape",
   "Tab",
@@ -10833,9 +10898,21 @@ function silenceVoiceOnUserEdit() {
 }
 
 /** Durdur / duraklat görünürlüğü: yanıt beklerken veya ses aktifken */
+/** Metin akışı bitti — TTS ayrı; Gönder/DURDUR hemen serbest kalsın */
+function releaseChatTransportLocks() {
+  activeChatAbort = null;
+  activeChatWs = null;
+  perfBusy = false;
+  chatSendInFlight = false;
+  if (el.send) el.send.disabled = false;
+  syncInterruptButton();
+}
+
 function syncInterruptButton() {
   const ttsBusy = isTtsActive();
-  if (el.stop) el.stop.hidden = !perfBusy && !ttsBusy;
+  const awaitingTransport = !!(activeChatAbort || activeChatWs);
+  const chatBusy = perfBusy || awaitingTransport;
+  if (el.stop) el.stop.hidden = !chatBusy && !ttsBusy;
   if (el.ttsPause) {
     el.ttsPause.hidden = !ttsBusy;
     updateTtsPauseButton();
@@ -10890,6 +10967,9 @@ function toggleTtsPause() {
 
 function interruptRuzgar() {
   if (activeChatAbort || activeChatWs) userRequestedChatStop = true;
+  chatSendInFlight = false;
+  perfBusy = false;
+  if (el.send) el.send.disabled = false;
   ttsPaused = false;
   bumpTtsSession();
   try {
@@ -11954,16 +12034,7 @@ async function loadIlimFileList() {
 }
 
 function localApiHealthCandidates() {
-  const out = [API];
-  try {
-    const u = new URL(API);
-    const h = String(u.hostname || "").toLowerCase();
-    if (h === "127.0.0.1" || h === "localhost") {
-      out.push(RUZGAR_LOCAL_API_FALLBACK);
-    }
-  } catch (_) {
-    out.push(RUZGAR_LOCAL_API_FALLBACK);
-  }
+  const out = [API, RUZGAR_LOCAL_API_FALLBACK];
   return [...new Set(out.map((x) => normalizeRuzgarApiRootTail(x)).filter(Boolean))];
 }
 
@@ -11997,10 +12068,16 @@ async function checkApi(opts = {}) {
   for (const base of bases) {
   try {
     const ctrl = new AbortController();
-    const tid = window.setTimeout(() => ctrl.abort(), opts.timeoutMs || 12000);
+    const healthTimeoutMs =
+      typeof opts.timeoutMs === "number" ? opts.timeoutMs : 10000;
+    const tid = window.setTimeout(() => ctrl.abort(), healthTimeoutMs);
     let r;
     try {
-      r = await fetch(`${base}/api/health?lite=1`, { method: "GET", signal: ctrl.signal, cache: "no-store" });
+      r = await fetch(`${base}/api/health?lite=1`, {
+        method: "GET",
+        signal: ctrl.signal,
+        cache: "no-store",
+      });
     } finally {
       window.clearTimeout(tid);
     }
@@ -12047,12 +12124,12 @@ async function checkApi(opts = {}) {
       }
       initFazZUx();
       updateFaz7HealthStrip(j);
-      if (j.lite && !window.__ruzgarFullHealthInflight) {
+      if (j.lite && !window.__ruzgarFullHealthInflight && !document.hidden) {
         const now = Date.now();
         const last = window.__ruzgarFullHealthAt || 0;
-        if (now - last > 45000) {
+        if (now - last > 300000) {
           window.__ruzgarFullHealthInflight = true;
-          void fetch(`${base}/api/health?full=1`, { method: "GET", cache: "no-store" })
+          void fetch(`${base}/api/health/full`, { method: "GET", cache: "no-store" })
             .then((fr) => fr.json())
             .then((fj) => {
               if (fj && fj.ok) {
@@ -12421,6 +12498,10 @@ function wireKuvveHafizaUi() {
 
 wireKuvveHafizaUi();
 wireTopModeButtons();
+if (window.__RUZGAR_PENDING_MODE && typeof switchMode === "function") {
+  switchMode(window.__RUZGAR_PENDING_MODE);
+  window.__RUZGAR_PENDING_MODE = null;
+}
 wireMotorsCompactToggle();
 wireMotorHoverTips();
 wireDynamicWorkbench();
@@ -14155,31 +14236,52 @@ function updateTtsPauseButton() {
 }
 
 /**
- * İlk cümle / erken kesit — seslendirme metin tamamlanmadan başlasın (Ümit & Gökçenur).
+ * İlk cümle / erken kesit — yalnızca tam cümle sınırında kes (streaming’de kelime ortası bölme yok).
  */
-function takeFirstTtsSentence(s) {
+function takeFirstTtsSentence(s, opts = {}) {
+  const streaming = opts.streaming !== false;
   const t = String(s);
   if (!t.trim()) return null;
   const m = t.match(/^([\s\S]+?)([.!?…])(\s+|$)/);
   if (m && m[0]) {
     const head = (m[1] + m[2]).trim();
     const rest = t.slice(m[0].length);
-    if (head.length >= 3) return { head, rest };
+    const minLen = streaming ? RUZGAR_TTS_MIN_QUEUE_CHARS : 3;
+    if (head.length >= minLen) return { head, rest };
   }
-  if (t.length >= 32) {
-    const cut = t.lastIndexOf(" ", 34);
-    if (cut > 10) {
+  if (!streaming && t.length >= 80) {
+    const cut = t.lastIndexOf(" ", 80);
+    if (cut > 20) {
       return {
         head: t.slice(0, cut).trim(),
         rest: t.slice(cut + 1),
       };
     }
   }
-  if (t.length >= 420) {
+  if (!streaming && t.length >= 420) {
     const cut = t.lastIndexOf(" ", 420);
     if (cut > 50) return { head: t.slice(0, cut).trim(), rest: t.slice(cut) };
   }
   return null;
+}
+
+function pullMergedTtsChunk() {
+  let merged = "";
+  while (ttsTextQueue.length > 0 && merged.length < RUZGAR_TTS_MERGE_TARGET_CHARS) {
+    const raw = ttsTextQueue[0];
+    const next = ttsPlainForSpeech(raw);
+    ttsTextQueue.shift();
+    if (!next || next.length < 2) continue;
+    if (
+      merged &&
+      merged.length + next.length + 1 > RUZGAR_TTS_MERGE_TARGET_CHARS
+    ) {
+      ttsTextQueue.unshift(raw);
+      break;
+    }
+    merged = merged ? `${merged} ${next}` : next;
+  }
+  return merged.length >= 2 ? merged : "";
 }
 
 function bumpTtsSession() {
@@ -14191,6 +14293,7 @@ function bumpTtsSession() {
   ttsPaused = false;
   ttsArmed = false;
   ttsWebUtterance = null;
+  ttsPlayedChunksThisTurn = 0;
   try {
     if (ttsAbortController) ttsAbortController.abort();
   } catch (_) {
@@ -14210,10 +14313,7 @@ function bumpTtsSession() {
   return ttsSessionCounter;
 }
 
-/** Ses yankısını azaltmak: çalma öncesi kısa tampon ve parçalar arası nefes (CPU yükünde daha temiz çıkış). */
-const RUZGAR_TTS_PLAY_PREROLL_MS = 420;
-const RUZGAR_TTS_CHUNK_GAP_MS = 520;
-
+/** Ses yankısını azaltmak: ilk parçada kısa tampon; sonraki parçalar prefetch ile arka arkaya. */
 function playTtsBlob(blob) {
   return new Promise((resolve) => {
     try {
@@ -14222,6 +14322,11 @@ function playTtsBlob(blob) {
       ttsPlayingEl = a;
       a.src = url;
       a.preload = "auto";
+      const isFirst = ttsPlayedChunksThisTurn === 0;
+      ttsPlayedChunksThisTurn += 1;
+      const prerollMs = isFirst
+        ? RUZGAR_TTS_PLAY_PREROLL_MS
+        : RUZGAR_TTS_INTER_CHUNK_PREROLL_MS;
       a.onended = () => {
         try {
           URL.revokeObjectURL(url);
@@ -14242,7 +14347,7 @@ function playTtsBlob(blob) {
         syncInterruptButton();
         resolve();
       };
-      window.setTimeout(() => {
+      const startPlay = () => {
         try {
           if (ttsPlayingEl !== a) {
             try {
@@ -14262,7 +14367,12 @@ function playTtsBlob(blob) {
           }
           resolve();
         }
-      }, RUZGAR_TTS_PLAY_PREROLL_MS);
+      };
+      if (prerollMs > 0) {
+        window.setTimeout(startPlay, prerollMs);
+      } else {
+        startPlay();
+      }
       setStatus("Sesli okuma…");
       syncInterruptButton();
     } catch (_) {
@@ -14319,13 +14429,9 @@ async function runTtsPump(ttsSess, karakter, signal) {
 
     const fillPrefetch = () => {
       if (prefetch != null) return;
-      while (ttsTextQueue.length > 0) {
-        const raw = ttsTextQueue.shift();
-        const chunk = ttsPlainForSpeech(raw);
-        if (!chunk || chunk.length < 2) continue;
-        prefetch = synthOne(chunk);
-        return;
-      }
+      const chunk = pullMergedTtsChunk();
+      if (!chunk) return;
+      prefetch = synthOne(chunk);
     };
 
     fillPrefetch();
@@ -14340,9 +14446,12 @@ async function runTtsPump(ttsSess, karakter, signal) {
       if (!blob || blob.size <= 80) continue;
       ttsEdgeSpokeTurn = true;
       await playTtsBlob(blob);
-      await new Promise((r) =>
-        window.setTimeout(r, RUZGAR_TTS_CHUNK_GAP_MS)
-      );
+      if (ttsSess !== ttsSessionCounter) break;
+      if (prefetch != null && RUZGAR_TTS_CHUNK_GAP_MS > 0) {
+        await new Promise((r) =>
+          window.setTimeout(r, RUZGAR_TTS_CHUNK_GAP_MS)
+        );
+      }
     }
   } catch (_) {
     /* iptal veya ağ */
@@ -14358,7 +14467,14 @@ async function runTtsPump(ttsSess, karakter, signal) {
 async function waitTtsIdle(ttsSess) {
   for (let i = 0; i < 2400; i++) {
     if (ttsSess !== ttsSessionCounter) return;
-    if (!ttsPumping && ttsTextQueue.length === 0) return;
+    if (
+      !ttsPumping &&
+      ttsTextQueue.length === 0 &&
+      !ttsPlayingEl &&
+      !isWebSpeechActive()
+    ) {
+      return;
+    }
     await new Promise((r) => setTimeout(r, 40));
   }
 }
@@ -14449,6 +14565,7 @@ async function streamChat(userText, streamOpts = {}) {
   let full = "";
   let responseBubble = null;
   let streamAssistHtmlRaf = null;
+  let streamDoneReceived = false;
 
   /** Akış sırasında: kapalı fenced blok oluşunca kod kartları; değilse satır sonlarıyla düzgün metin */
   function paintStreamingAssistantBubble() {
@@ -14491,6 +14608,16 @@ async function streamChat(userText, streamOpts = {}) {
   }
 
   /** Token/done/error/status — zorunlu akış + hazırlık durumu (Ümit & Gökçenur Işık Hızı). */
+  let streamIdleTimer = null;
+  function bumpStreamIdleTimer() {
+    if (streamIdleTimer != null) window.clearTimeout(streamIdleTimer);
+    const idleMs = streamIdleTimeoutMs(userText);
+    streamIdleTimer = window.setTimeout(() => {
+      timedOutAbort = true;
+      streamCtrl.abort();
+    }, idleMs);
+  }
+
   function renderAnaMotorResearchCard(card) {
     const wrap = document.getElementById("ana-motor-research-card");
     const sumEl = document.getElementById("ana-motor-research-summary");
@@ -14604,6 +14731,7 @@ async function streamChat(userText, streamOpts = {}) {
   }
 
   function processChatEvent(ev) {
+    bumpStreamIdleTimer();
     ruzgarDebugLog(`chat:${ev.type || "?"}`, ev);
     if (ev.type === "meta") {
       clearDeferThinking();
@@ -14734,7 +14862,7 @@ async function streamChat(userText, streamOpts = {}) {
       ) {
         ttsPendingChunks += ev.text;
         while (ttsSess === ttsSessionCounter) {
-          const sp = takeFirstTtsSentence(ttsPendingChunks);
+          const sp = takeFirstTtsSentence(ttsPendingChunks, { streaming: true });
           if (!sp) break;
           ttsPendingChunks = sp.rest;
           ttsTextQueue.push(sp.head);
@@ -14748,6 +14876,8 @@ async function streamChat(userText, streamOpts = {}) {
         }
       }
     } else if (ev.type === "done") {
+      streamDoneReceived = true;
+      releaseChatTransportLocks();
       if (streamAssistHtmlRaf != null) {
         cancelAnimationFrame(streamAssistHtmlRaf);
         streamAssistHtmlRaf = null;
@@ -14894,7 +15024,7 @@ async function streamChat(userText, streamOpts = {}) {
       if (wantEdge && ttsSess === ttsSessionCounter && ttsAbortController) {
         const tail = ttsPlainForSpeech(ttsPendingChunks);
         ttsPendingChunks = "";
-        if (tail.length >= 2) {
+        if (tail.length >= RUZGAR_TTS_MIN_QUEUE_CHARS) {
           ttsTextQueue.push(tail);
           queueMicrotask(() => {
             void runTtsPump(
@@ -14903,6 +15033,12 @@ async function streamChat(userText, streamOpts = {}) {
               ttsAbortController.signal
             );
           });
+        } else if (!ttsEdgeSpokeTurn && full.trim()) {
+          lastAssistantReply = full;
+          window.setTimeout(async () => {
+            if (ttsSess !== ttsSessionCounter) return;
+            await speakLast();
+          }, 60);
         }
         void (async () => {
           await waitTtsIdle(ttsSess);
@@ -14919,13 +15055,21 @@ async function streamChat(userText, streamOpts = {}) {
           }, 80);
         }
       } else if (isSesliTurFazKEnabled() && el.voiceSend?.checked) {
-        void maybeResumeVoiceListenAfterReply();
+        void (async () => {
+          try {
+            await waitTtsIdle(ttsSessionCounter);
+          } catch (_) {
+            /* ignore */
+          }
+          void maybeResumeVoiceListenAfterReply();
+        })();
       }
       trimMotorChatHistory(ensureSharedChatStore());
       window.setTimeout(() => {
         lastVoiceEmotion = null;
       }, 90000);
     } else if (ev.type === "error") {
+      releaseChatTransportLocks();
       hideThinkingCenter();
       ensureReplyBubble();
       const errText = String(ev.text || "Bilinmeyen hata").trim();
@@ -14952,13 +15096,20 @@ async function streamChat(userText, streamOpts = {}) {
     new Promise((resolve, reject) => {
       const wsBase = apiToWsBase(API);
       const ws = new WebSocket(`${wsBase}/ws/chat`);
+      let settled = false;
+      const finish = (err) => {
+        if (settled) return;
+        settled = true;
+        if (err) reject(err);
+        else resolve();
+      };
       const tid = window.setTimeout(() => {
         try {
           ws.close();
         } catch (_) {
           /* ignore */
         }
-        reject(new Error("ws-open-timeout"));
+        finish(new Error("ws-open-timeout"));
       }, RUZGAR_WS_OPEN_WAIT_MS);
       ws.onopen = () => {
         clearTimeout(tid);
@@ -14966,7 +15117,7 @@ async function streamChat(userText, streamOpts = {}) {
         try {
           ws.send(JSON.stringify(body));
         } catch (e) {
-          reject(e);
+          finish(e);
           return;
         }
         const onAbort = () => {
@@ -14977,7 +15128,7 @@ async function streamChat(userText, streamOpts = {}) {
           }
           const err = new Error("aborted");
           err.name = "AbortError";
-          reject(err);
+          finish(err);
         };
         streamCtrl.signal.addEventListener("abort", onAbort);
         ws.onmessage = (e) => {
@@ -14991,7 +15142,7 @@ async function streamChat(userText, streamOpts = {}) {
               } catch (_) {
                 /* ignore */
               }
-              resolve();
+              finish();
             }
           } catch (_) {
             /* tek çerçeve */
@@ -15000,12 +15151,27 @@ async function streamChat(userText, streamOpts = {}) {
         ws.onerror = () => {
           clearTimeout(tid);
           streamCtrl.signal.removeEventListener("abort", onAbort);
-          reject(new Error("ws-error"));
+          finish(new Error("ws-error"));
+        };
+        ws.onclose = () => {
+          streamCtrl.signal.removeEventListener("abort", onAbort);
+          if (!streamDoneReceived && full.trim()) {
+            processChatEvent({
+              type: "done",
+              full_reply: full,
+              user_message: userText,
+              stream_close_fallback: true,
+            });
+          } else if (!streamDoneReceived && !settled) {
+            finish(new Error("ws-closed-without-done"));
+            return;
+          }
+          finish();
         };
       };
       ws.onerror = () => {
         clearTimeout(tid);
-        reject(new Error("ws-connect-error"));
+        finish(new Error("ws-connect-error"));
       };
     });
 
@@ -15019,14 +15185,28 @@ async function streamChat(userText, streamOpts = {}) {
       String(userText || ""),
     );
   const casualShortCmd =
-    /^(selam|merhaba|naber|nas[ıi]ls[ıi]n|iyi\s+(akşam|aksam|geceler)|günayd[ıi]n|gunaydin|ben\s+geldim|geldim|teşekkür|tesekkur)\b/i.test(
+    (/^(selam|merhaba|naber|nas[ıi]ls[ıi]n|iyi\s+(akşam|aksam|geceler)|günayd[ıi]n|gunaydin|ben\s+geldim|geldim|teşekkür|tesekkur|sağol|sagol|eyvallah|rica\s+ederim|tamam|peki|harika)\b/i.test(
       String(userText || "").trim(),
-    ) && String(userText || "").trim().length < 48;
+    ) ||
+      /\b(?:neredesin|sen\s+nerede|burada\s+m[ıi]s[ıi]n|duyuyor\s+musun|beni\s+duyuyor|var\s+m[ıi]s[ıi]n)\b/i.test(
+        String(userText || "").trim(),
+      ) ||
+      /\b(?:bir\s+)?senede\s+ka[cç]\s+ay|ka[cç]\s+ay\s+var\b/i.test(
+        String(userText || "").trim(),
+      )) &&
+    String(userText || "").trim().length < 72;
+  const shortGenelCmd =
+    chatMode === "genel" &&
+    String(userText || "").trim().length < 72 &&
+    !tarihSoruCmd &&
+    !nebulaKitapCmd &&
+    !isProgramlamaAgentTask;
   const egitimCmd =
     /yanl[ıi]ş\s*cevap|yanlis\s*cevap|cevab[ıi]n\s+şu\s+olmalı|cevabin\s+su\s+olmalı|doğru\s+cevap|dogru\s+cevap/i.test(
       String(userText || ""),
     );
-  const chatFullTimeoutMs = casualShortCmd
+  const chatFullTimeoutMs =
+    casualShortCmd || shortGenelCmd
     ? RUZGAR_CHAT_CASUAL_TIMEOUT_MS
     : egitimCmd
       ? 15000
@@ -15081,10 +15261,8 @@ async function streamChat(userText, streamOpts = {}) {
   }
   }
 
-  // Kısa sohbet (nasılsın/selam): tam yanıt beklemeden WS ile token göster — boş balon takılması olmasın
-  // Programlama görev: Faz85 SSE — chat/full tek parça beklemesin (45 sn «düşünüyor» olmasın)
-  const useChatFullBatch =
-    RUZGAR_DISABLE_STREAMING && !casualShortCmd && !isProgramlamaAgentTask;
+  // Batch yalnızca otonom programlama görevi — genel sohbet SSE ile anında token/done alsın.
+  const useChatFullBatch = isProgramlamaAgentTask && RUZGAR_DISABLE_STREAMING;
   if (useChatFullBatch) {
     const fullCtrl = new AbortController();
     activeChatAbort = fullCtrl;
@@ -15136,9 +15314,11 @@ async function streamChat(userText, streamOpts = {}) {
       const replyPreview = String(j.full_reply || "").trim();
       let gotDoneFromEvents = false;
       events.forEach((ev) => {
-        if (ev && ev.type !== "token" && ev.type !== "done") processChatEvent(ev);
+        if (!ev) return;
+        if (ev.type === "done") gotDoneFromEvents = true;
+        processChatEvent(ev);
       });
-      if (!gotDoneFromEvents) {
+      if (!gotDoneFromEvents && (j.full_reply || full.trim())) {
         processChatEvent({
           type: "done",
           full_reply: j.full_reply || "",
@@ -15198,15 +15378,17 @@ async function streamChat(userText, streamOpts = {}) {
   const STREAM_ABORT_MAX_DELAY_MS = 2147483647;
   /** @type {ReturnType<typeof setTimeout> | null} */
   let streamDeadline = null;
-  if (RUZGAR_CHAT_STREAM_HARD_CAP_MS > 0) {
+  const streamHardCapMs = resolveStreamHardCapMs(chatFullTimeoutMs, casualShortCmd);
+  if (streamHardCapMs > 0) {
     streamDeadline = window.setTimeout(
       () => {
         timedOutAbort = true;
         streamCtrl.abort();
       },
-      Math.min(RUZGAR_CHAT_STREAM_HARD_CAP_MS, STREAM_ABORT_MAX_DELAY_MS),
+      Math.min(streamHardCapMs, STREAM_ABORT_MAX_DELAY_MS),
     );
   }
+  bumpStreamIdleTimer();
 
   if (currentMode !== "hafiza") {
     if (isProgramlamaAgentTask) {
@@ -15280,6 +15462,14 @@ async function streamChat(userText, streamOpts = {}) {
       const payload = tailLine.slice(5).trim();
       if (payload && payload !== "[DONE]") handleSseJson(payload);
     }
+    if (!streamDoneReceived && full.trim()) {
+      processChatEvent({
+        type: "done",
+        full_reply: full,
+        user_message: userText,
+        stream_close_fallback: true,
+      });
+    }
     }
   } catch (e) {
     hideThinkingCenter();
@@ -15292,11 +15482,9 @@ async function streamChat(userText, streamOpts = {}) {
       if (timedOutAbort) {
         timedOutAbort = false;
         throw new Error(
-          RUZGAR_CHAT_STREAM_HARD_CAP_MS <= 0
+          streamHardCapMs <= 0
             ? "Yanıt kesildi — istek iptali. Ümit & Gökçenur Connection Bridge."
-            : `Yanıt zaman aşımı (${Math.round(
-                RUZGAR_CHAT_STREAM_HARD_CAP_MS / 1000,
-              )} sn) — Colab / Ollama / Köprü. Ümit & Gökçenur.`
+            : `Yanıt zaman aşımı (${Math.round(streamHardCapMs / 1000)} sn) — sunucu yanıt vermiyor; DURDUR veya yeniden başlatın.`
         );
       }
       timedOutAbort = false;
@@ -15306,6 +15494,7 @@ async function streamChat(userText, streamOpts = {}) {
     throw e;
   } finally {
     if (streamDeadline != null) clearTimeout(streamDeadline);
+    if (streamIdleTimer != null) clearTimeout(streamIdleTimer);
     clearDeferThinking();
     hideThinkingCenter();
     activeChatAbort = null;
@@ -15354,19 +15543,54 @@ function hizirQueryFromChat(text) {
     .trim();
 }
 
+async function withHubCallTimeout(promise, ms = 3500) {
+  let timer = 0;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise((resolve) => {
+        timer = window.setTimeout(() => resolve({ handled: false }), ms);
+      }),
+    ]);
+  } finally {
+    if (timer) window.clearTimeout(timer);
+  }
+}
+
+function isCasualChatMessage(text) {
+  const raw = String(text || "").trim();
+  if (!raw || raw.length > 72) return false;
+  return (
+    /^(selam|merhaba|naber|nas[ıi]ls[ıi]n|iyi\s+(akşam|aksam|geceler)|günayd[ıi]n|gunaydin|ben\s+geldim|geldim|teşekkür|tesekkur|sağol|sagol|eyvallah|rica\s+ederim|tamam|peki|harika)\b/i.test(
+      raw,
+    ) ||
+    /\b(?:neredesin|sen\s+nerede|burada\s+m[ıi]s[ıi]n|duyuyor\s+musun|beni\s+duyuyor|var\s+m[ıi]s[ıi]n)\b/i.test(
+      raw,
+    ) ||
+    /\b(?:bir\s+)?senede\s+ka[cç]\s+ay|ka[cç]\s+ay\s+var\b/i.test(raw)
+  );
+}
+
 async function sendMessageWithText(t, opts = {}) {
   const skipUser = !!opts.skipUserBubble;
   const text = (t || "").trim();
   if (!text) return;
-  if (perfBusy) {
+  if (perfBusy || chatSendInFlight) {
     flashRuzgarDurum("Önceki yanıt bitene kadar bekleyin veya DURDUR'a basın.");
     return;
   }
+  chatSendInFlight = true;
+  syncInterruptButton();
+  try {
+  setStatus("Gönderiliyor…", "Rüzgar");
   chatStickToBottom = true;
   dismissChatWelcome();
   silenceVoiceOutputNow();
   clearOrchestraBridge();
-  const ok = await checkApi();
+  const ok =
+    (await checkApi({ graceMs: 20000, timeoutMs: 8000, allowGrace: true })) ||
+    (window.__RUZGAR_BOOT_HEALTH__?.ok === true &&
+      Date.now() - Number(window.__ruzgarBootHealthAt || 0) < 120000);
   if (!ok) {
     ruzgarDebugLog("send:block", { api: API, reason: "health-fail" });
     appendBubble(
@@ -15426,9 +15650,12 @@ async function sendMessageWithText(t, opts = {}) {
     syncInterruptButton();
   };
 
-  if (currentMode === "genel") {
+  if (currentMode === "genel" && !isCasualChatMessage(text)) {
     void prefetchGenelOrchestraBridge(dispatchText);
-    const hubFast = await tryGenelProgramlamaHubInstant(dispatchText);
+    const hubFast = await withHubCallTimeout(
+      tryGenelProgramlamaHubInstant(dispatchText),
+      3500,
+    );
     if (hubFast) {
       finishMotorInstant("Ana Motor");
       return;
@@ -15441,7 +15668,10 @@ async function sendMessageWithText(t, opts = {}) {
       : understanding?.instantMotor === true;
 
   if (tryInstantMotors && window.RuzgarAnaMotorHub?.tryEylemCommand) {
-    const eylemHit = await window.RuzgarAnaMotorHub.tryEylemCommand(dispatchText, motorCtx);
+    const eylemHit = await withHubCallTimeout(
+      window.RuzgarAnaMotorHub.tryEylemCommand(dispatchText, motorCtx),
+      3500,
+    );
     if (eylemHit?.handled) {
       finishMotorInstant(currentMode === "genel" ? "Ana Motor" : MODE_LABELS[currentMode] || currentMode);
       return;
@@ -15449,7 +15679,10 @@ async function sendMessageWithText(t, opts = {}) {
   }
 
   if (tryInstantMotors && currentMode === "genel" && window.RuzgarAnaMotorHub?.tryDispatchFromGenel) {
-    const hubHit = await window.RuzgarAnaMotorHub.tryDispatchFromGenel(dispatchText, motorCtx);
+    const hubHit = await withHubCallTimeout(
+      window.RuzgarAnaMotorHub.tryDispatchFromGenel(dispatchText, motorCtx),
+      3500,
+    );
     if (hubHit?.handled) {
       finishMotorInstant("Ana Motor");
       return;
@@ -15457,7 +15690,10 @@ async function sendMessageWithText(t, opts = {}) {
   }
 
   if (tryInstantMotors && currentMode !== "genel" && window.RuzgarAnaMotorHub?.tryDispatchActiveMotor) {
-    const motorHit = await window.RuzgarAnaMotorHub.tryDispatchActiveMotor(dispatchText, motorCtx);
+    const motorHit = await withHubCallTimeout(
+      window.RuzgarAnaMotorHub.tryDispatchActiveMotor(dispatchText, motorCtx),
+      3500,
+    );
     if (motorHit?.handled) {
       finishMotorInstant(MODE_LABELS[currentMode] || currentMode);
       return;
@@ -15525,6 +15761,14 @@ async function sendMessageWithText(t, opts = {}) {
     if (el.send) el.send.disabled = false;
     perfBusy = false;
     updatePerformanceIndicators(perfBusy);
+    syncInterruptButton();
+  }
+  } finally {
+    chatSendInFlight = false;
+    if (!perfBusy && !(activeChatAbort || activeChatWs)) {
+      setStatus(`Hazır · UI ${window.__RUZGAR_UI_REV || "?"}`, "Rüzgar");
+      if (el.send) el.send.disabled = false;
+    }
     syncInterruptButton();
   }
 }
@@ -15622,6 +15866,13 @@ async function maybeEndRecordingOnSilence() {
   if (silenceAutoStopBusy) return;
   const s = recState;
   if (!s || (s.kind !== "btn" && s.kind !== "menu")) return;
+  if (perfBusy || isTtsActive()) {
+    micPressed = false;
+    recState = null;
+    await discardActiveRecording();
+    sesliTurResumePending = false;
+    return;
+  }
   const vadMinRec = getSesliTurVadParams().minRec;
   if (!s.startedAt || Date.now() - s.startedAt < vadMinRec) {
     return;
@@ -15878,6 +16129,9 @@ async function finalizeRecording(state) {
 }
 
 async function startBtnRecording() {
+  if (perfBusy || isTtsActive()) {
+    throw new Error("Yanıt veya ses bitene kadar bekleyin.");
+  }
   await discardActiveRecording();
   if (!navigator.mediaDevices?.getUserMedia) {
     throw new Error("Bu ortamda mikrofon API yok.");
@@ -15923,6 +16177,10 @@ async function startBtnRecording() {
 
 function micPointerDown(e) {
   if (e.pointerType === "mouse" && e.button !== 0) return;
+  if (perfBusy || isTtsActive()) {
+    flashRuzgarDurum("Yanıt veya ses bitene kadar bekleyin.");
+    return;
+  }
   e.preventDefault();
   try {
     el.mic.setPointerCapture(e.pointerId);
@@ -16207,30 +16465,68 @@ async function speakStudioTilavet(raw, opts) {
 function speakTextImmediate(text) {
   const plain = truncateForTtsSpeech(text || "");
   if (!plain) return;
+  if (el.voiceOut != null && !el.voiceOut.checked) return;
   ttsArmed = true;
   syncInterruptButton();
-  try {
-    window.speechSynthesis.cancel();
-  } catch (_) {
-    /* yok say */
-  }
-  try {
-    const u = new SpeechSynthesisUtterance(plain);
-    u.lang = "tr-TR";
-    ttsWebUtterance = u;
-    window.speechSynthesis.speak(u);
-    setStatus("Sesli okuma…");
-    syncInterruptButton();
-    u.onend = () => {
-      ttsWebUtterance = null;
-      ttsArmed = false;
-      setStatus("Hazır");
+  bumpTtsSession();
+  const ttsSess = ttsSessionCounter;
+  void (async () => {
+    try {
+      let kar = "asistan";
+      try {
+        const rs = await fetch(`${API}/api/ses/settings`);
+        if (rs.ok) {
+          const j = await rs.json();
+          kar = normalizeKarakterForTts(j.karakter);
+        }
+      } catch (_) {
+        /* yok say */
+      }
+      const res = await fetch(`${API}/api/tts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: plain,
+          karakter: kar,
+          backend: "edge",
+          ...(lastVoiceEmotion && lastVoiceEmotion !== "notr"
+            ? { emotion: lastVoiceEmotion }
+            : {}),
+        }),
+      });
+      if (res.ok && ttsSess === ttsSessionCounter) {
+        const blob = await res.blob();
+        await playTtsBlob(blob);
+        setStatus("Hazır");
+        return;
+      }
+    } catch (_) {
+      /* Edge yok — Web Speech yedeği */
+    }
+    if (ttsSess !== ttsSessionCounter) return;
+    try {
+      window.speechSynthesis.cancel();
+    } catch (_) {
+      /* yok say */
+    }
+    try {
+      const u = new SpeechSynthesisUtterance(plain);
+      u.lang = "tr-TR";
+      ttsWebUtterance = u;
+      window.speechSynthesis.speak(u);
+      setStatus("Sesli okuma…");
       syncInterruptButton();
-    };
-  } catch (_) {
-    ttsArmed = false;
-    syncInterruptButton();
-  }
+      u.onend = () => {
+        ttsWebUtterance = null;
+        ttsArmed = false;
+        setStatus("Hazır");
+        syncInterruptButton();
+      };
+    } catch (_) {
+      ttsArmed = false;
+      syncInterruptButton();
+    }
+  })();
 }
 window.ruzgarSpeak = speakTextImmediate;
 
@@ -16256,7 +16552,7 @@ if (el.stop) {
 if (el.ttsPause) {
   el.ttsPause.addEventListener("click", () => toggleTtsPause());
 }
-el.input.addEventListener("keydown", (e) => {
+if (el.input) el.input.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
     e.preventDefault();
     void sendMessage();
@@ -16268,7 +16564,18 @@ el.input.addEventListener("keydown", (e) => {
   silenceVoiceOnUserEdit();
 });
 /** IME commit, dokunmatik klavye, sürükleyip bırakma metin — ses varsayılanı kes (görsel yapıştırma wireDinamitFeatures) */
-el.input.addEventListener("input", () => silenceVoiceOnUserEdit());
+if (el.input) el.input.addEventListener("input", () => silenceVoiceOnUserEdit());
+window.__RUZGAR_APP_SEND_READY = true;
+window.sendMessage = sendMessage;
+window.interruptRuzgar = interruptRuzgar;
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape" || e.isComposing) return;
+  if (!(chatSendInFlight || perfBusy || activeChatAbort || activeChatWs || isTtsActive())) {
+    return;
+  }
+  e.preventDefault();
+  interruptRuzgar();
+});
 if (el.mic) {
   el.mic.addEventListener("pointerdown", (e) => {
     void micPointerDown(e);
@@ -16394,6 +16701,10 @@ if (window.ruzgarApi?.onMenu) {
 wireNavToolbar();
 wireFaz7Cila();
 wireChatAutoScroll();
+resetChatUiLocksOnBoot();
+if (el.api) {
+  setStatus(`Hazır · UI ${window.__RUZGAR_UI_REV || "?"}`, "Rüzgar");
+}
 document.body.classList.add("faz7-complete", "faz8-complete", "faz-z-complete", "faz-aa-complete");
 initFreshChatPanelOnLoad();
 ensureSharedChatStore();

@@ -1,10 +1,23 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-06-17 (Programlama oturumu kapanış — Faz85 canlı doğrulandı)
+**Son güncelleme:** 2026-06-18 (Sıra 6a — bilgi turu sağlamlaştırma)
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
-### 2026-06-17 — Programlama motoru oturumu (Mimar ara — devam bekliyor)
+### 2026-06-18 — Sıra 6a: bilgi turu (devam: 6b…)
+
+**Git:** Sıra 5 push edildi (`2c66853` · `origin/main`). Sıra 6a yerelde — commit bekliyor.
+
+**6a tamamlandı:**
+- `ana_motor_bilgi_turu.py` — merkezi bilgi turu politikası (hafıza → RAG → web → LLM)
+- Yerel-RAG-önce: ansiklopedik/bilgi sorularında bulut hızlı yol RAG prefetch'i atlamaz
+- Zayıf RAG → web açık kalır (güçlü eşleşmede kapatılabilir)
+- `MAIN_ONLY_GENEL_HAFIZA` kapalı = tam güç (health + smoke doğrulama)
+- Health `/api/health` → `ana_motor.bilgi_turu` durum kartı
+
+**Sırada:** 6b (programlama çok dosya / E2), 6c (tek yüz pilot), 6d (offline gate), 6e (isteğe bağlı temizlik).
+
+### 2026-06-17 — Programlama motoru oturumu (kapandı)
 
 **Git (push edildi, `origin/main`):**
 
@@ -23,24 +36,7 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 
 **Canlı doğrulama (UI):** `görev: smoke-live-test health endpointine version 2.0.0 ekle pytest geçir` → **Faz 85 hızlı yol OK** (~2.3 sn, LLM yok, yeşil). `projects/smoke-live-test/app/main.py` → `version: "2.0.0"` · pytest **2/2**.
 
-**Yerel commit edilmemiş:** sıra 5a/5b/5c + Faz 98 onay düzeltmeleri (commit+push birlikte).
-
-**E1 KPI (2026-06-17):** Filtre sonrası **%91** (22/24, 7 gün), hedef Blok C **≥%90 karşılandı** · birleşik pil %100 · E1 zayıflık **temiz**.
-
-**Tamamlanan sıra (bu oturum):**
-
-1. UI hızı — görev streaming + Faz85 overlay (test geçti).
-2. E1 KPI %50→%70+ — Faz85 canlı kayıtlar + bakım pili + filtre iyileştirmesi.
-3. Programlama güçlendirme — `e1 bakım` overlay + terminal yönlendirme düzeltmesi; çok dosya Faz56 planı.
-4. Ana motor köprüsü — genel sohbetten atölye: erken meta + proje odak (Faz 59/79).
-
-**Sırada (sıra 5 — devam):**
-
-5a. Tek orkestra görünürlüğü (genel sohbet) — **tamam** (hub-route önizleme + erken meta + Faz 98 onay yolu).
-5b. E1 Blok C %90 — **tamam** (varsayılan hedef çizgisi %90, `e1 bakım` + health kartı).
-5c. Ana motor güç (uzun bağlam) — **tamam** (`ana_motor_uzun_baglam.py` · özet + dosya paketi · 30 tur / 36k char).
-
-**Sıra 5 kapandı** — commit+push sırada.
+**Yerel commit edilmemiş:** sıra 6a (bilgi turu).
 
 **Hızlı başlatma:** `.\Ruzgar.ps1 -ForceRestart` · port **8779** · build `2026-06-15-ruzgar-programlama-pro-v4`.
 

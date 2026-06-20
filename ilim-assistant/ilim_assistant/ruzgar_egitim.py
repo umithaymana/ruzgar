@@ -1434,6 +1434,8 @@ def on_chat_turn_done(req: Any, done: dict[str, Any]) -> dict[str, Any]:
             done = dict(done)
             done["full_reply"] = reply2
             done["egitim_miss"] = True
+    if done.get("instant_gundelik") or done.get("session_echo") or done.get("instant_clarify"):
+        return done
     hist = list(getattr(req, "history", None) or [])
     if msg:
         hist = hist + [

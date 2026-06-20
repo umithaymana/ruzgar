@@ -70,6 +70,7 @@ def build_ui_manifest(*, health: dict[str, Any] | None = None) -> dict[str, Any]
             "Programlama: proje üret, ajan uyum, pytest",
             "ROK tüm yardımcı motorlar · Ümit cevap emri",
             "Sıra 5c: uzun oturum bağlamı — özet + dosya paketi + geniş sohbet geçmişi",
+            "Sıra 6a: bilgi turu — hafıza → RAG → web → LLM (yerel önce)",
             "Faz 100: Ana Motor hub — tercüme/programlama/video/ses/okuma/hafıza/hızır",
             "Tercüme atölye: OCR, e-kitap, URL içe aktar, hedef kaydet",
         ],

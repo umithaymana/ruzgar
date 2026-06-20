@@ -121,103 +121,9 @@ def _rag_source_is_archive(rel: str) -> bool:
 
 
 def _tarih_intent(msg: str) -> bool:
-    """
-    Tarih / medeniyet soruları — önce TARIH_VE_KULTUR vektör hafızası taranır.
-    Kapatmak: RUZGAR_TARIH_INTENT=0
-    """
-    if os.environ.get("RUZGAR_TARIH_INTENT", "1").strip().lower() in ("0", "false", "no"):
-        return False
-    raw = (msg or "").strip()
-    if len(raw) < 6:
-        return False
-    if _is_live_weather_query(raw):
-        return False
-    low = unicodedata.normalize("NFKD", raw).encode("ascii", "ignore").decode("ascii").lower()
-    low_tr = raw.lower()
-    blob = low_tr + " " + low
-    needles = (
-        "lale devri",
-        "gokturk",
-        "göktürk",
-        "osmanli",
-        "osmanlı",
-        "selcuklu",
-        "selçuklu",
-        "turk tarih kurumu",
-        "türk tarih kurumu",
-        " turk tarih",
-        " turk tarih kurumu",
-        "ottoman",
-        "padisah",
-        "padişah",
-        "hanedan",
-        " malazgirt",
-        "manzikert",
-        "kurtulus savasi",
-        "kurtuluş savaşı",
-        "bizans",
-        "fatih sultan",
-        "fethett",
-        "fethi",
-        "istanbul",
-        "konstantinopolis",
-        "4. murat",
-        "dorduncu murat",
-        "murat ",
-        "kanuni sultan",
-        "yavuz sultan",
-        "orhun",
-        "bilge kag",
-        "bumin kag",
-        "buyuk turk tarihi",
-        "büyük türk tarihi",
-        "mezopotamya",
-        "anadolu selcuk",
-        "anzak",
-        "canakkale savas",
-        "çanakkale savaş",
-        "tanzimat",
-        "ilk turk ",
-        "ilk türk ",
-        "gokturkler",
-        "göktürkler",
-        " osmanli imparator",
-        " osmanlı imparator",
-        " saltanat",
-        " cumhuriyet ilan",
-        " cumhuriyet'in ilan",
-    )
-    if any(n in blob for n in needles):
-        return True
-    if any(x in blob for x in (" ttk ", " ttk,", " (ttk", "[ttk", "ttk ", "ttk'n")):
-        return True
-    if "tarih" in blob or "tarihi" in blob:
-        hints = (
-            "nedir",
-            "kim",
-            "ne zaman",
-            "hangi",
-            "nasil",
-            "nasıl",
-            "donem",
-            "dönem",
-            "devir",
-            "olayi",
-            "olayı",
-            " savas",
-            " savaş",
-            " imparator",
-            "beylik",
-            "yonetimi",
-            "yönetimi",
-            "hanedan",
-            "padişah",
-            "padisah",
-            "sultan",
-        )
-        if any(h in blob for h in hints):
-            return True
-    return False
+    from ilim_assistant.tarih_intent import tarih_intent
+
+    return tarih_intent(msg)
 
 
 _FILL_TDK_Q = frozenset(
@@ -461,6 +367,13 @@ def try_genel_hafiza_reply(message: str, mode: str) -> str | None:
     msg = (message or "").strip()
     if not msg or len(msg) > 4000:
         return None
+    try:
+        from ilim_assistant.ana_motor_plan import should_stay_on_ana_motor_bilgi
+
+        if should_stay_on_ana_motor_bilgi(msg):
+            return None
+    except Exception:
+        pass
     try:
         from ilim_assistant.hafiza_i_ruzgar import HafizaIRuzgar, genel_hafiza_lookup
 
@@ -1077,6 +990,11 @@ def prepare_turn(
                 past_reply = try_past_conversation_reply(msg, client_history=history)
                 if past_reply:
                     return msg, [], "", "", "", past_reply
+            from ilim_assistant.ana_motor_sohbet_gecmis import try_session_echo_reply
+
+            echo_reply = try_session_echo_reply(msg, client_history=history)
+            if echo_reply:
+                return msg, [], "", "", "", echo_reply
         except Exception:
             pass
 
@@ -1515,11 +1433,25 @@ def prepare_turn(
         local_rag_present = bool(blocks or hits or ar_hits) or bool(live_weather_ctx)
         allow_web = True
         if web_secondary_only_on_empty and local_rag_present:
-            allow_web = not local_rag_strong_enough_to_skip_web(
-                hits,
-                ar_hits,
-                archive_primary=archive_primary_flag,
-            )
+            try:
+                from ilim_assistant.ana_motor_bilgi_turu import resolve_web_allow_for_bilgi_turu
+
+                _prefer_web = (
+                    bool(getattr(turn_plan, "prefer_web", True)) if turn_plan is not None else True
+                )
+                allow_web = resolve_web_allow_for_bilgi_turu(
+                    hits,
+                    ar_hits,
+                    archive_primary=archive_primary_flag,
+                    web_pro=_web_pro,
+                    prefer_web=_prefer_web,
+                )
+            except Exception:
+                allow_web = not local_rag_strong_enough_to_skip_web(
+                    hits,
+                    ar_hits,
+                    archive_primary=archive_primary_flag,
+                )
         if _web_pro:
             allow_web = True
         try:

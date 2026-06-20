@@ -41,10 +41,19 @@ function New-RuzgarShortcut {
     $Sc.Arguments = '//B //nologo "' + $vbs + '"'
     $Sc.WorkingDirectory = $Root
     $Sc.IconLocation = $ico
-    $Sc.Description = "RUZGAR Faz 98 - masaustu Electron + API 8779"
+    $Sc.Description = "RUZGAR - Electron + API 8779 (cift tik ile ac)"
     $Sc.Save()
     return $p
 }
+
+$rev = "8779"
+try {
+    $revScript = Join-Path $Root "ilim-assistant\scripts\ruzgar_read_build_rev.py"
+    if (Test-Path $revScript) {
+        $r = (& py -3 $revScript 2>$null | Out-String).Trim()
+        if ($r) { $rev = $r }
+    }
+} catch {}
 
 $primary = New-RuzgarShortcut -DesktopFolder $deskShell
 $secondaryPath = $null
@@ -65,10 +74,17 @@ try {
     Start-Process "explorer.exe" -ArgumentList "/select,`"$primary`""
 } catch {}
 
-$msg = "RUZGAR kisayolu guncellendi.`n`n$primary"
+$msg = "RUZGAR masaustu kisayolu hazir.`n`n$primary"
 if ($secondaryPath) {
     $msg += "`n`nIkinci konum:`n$secondaryPath"
 }
-$msg += "`n`nCift tik: masaustu Ruzgar (Electron) acilir.`nAPI: http://127.0.0.1:8779`nBuild: faz98-v107"
+$msg += @"
+
+Cift tik: Ruzgar acilir (Electron + API).
+Adres: http://127.0.0.1:8779
+Build: $rev
+
+Not: Her acilista taze API yuklenir.
+"@
 
 [System.Windows.Forms.MessageBox]::Show($msg, "RUZGAR") | Out-Null

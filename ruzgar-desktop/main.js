@@ -102,8 +102,8 @@ function readLocalApiPortFromDisk() {
 function probeApiHealth(port) {
   return new Promise((resolve) => {
     const req = http.get(
-      `http://127.0.0.1:${port}/api/health`,
-      { timeout: 6000 },
+      `http://127.0.0.1:${port}/api/health?lite=1`,
+      { timeout: 8000 },
       (res) => {
         let body = "";
         res.on("data", (c) => {
@@ -246,11 +246,16 @@ async function ensureFreshApiOnLaunch() {
   const skipBecauseLauncher =
     process.env.RUZGAR_ELECTRON_API_FRESH === "1" || Boolean(markerRev);
 
-  if (skipBecauseLauncher) {
+    if (skipBecauseLauncher) {
     console.info(
-      `[RÜZGAR] Launcher taze API — çift yeniden başlatma atlandi (rev=${markerRev || expected})`
+      `[RUZGAR] Launcher taze API — cift yeniden baslatma atlandi (rev=${markerRev || expected})`
     );
-    await waitForExpectedHealth(port, expected, 180000);
+    const ok = await waitForExpectedHealth(port, expected, 180000);
+    if (!ok) {
+      console.warn(
+        "[RUZGAR] API hazir degil — Ruzgar_YenidenBaslat.bat calistirin"
+      );
+    }
     return;
   }
 
@@ -344,9 +349,9 @@ function sharedWebPreferences() {
 
 async function loadUiIntoWindow(win, queryString) {
   const port = readLocalApiPortFromDisk();
-  const htmlPath = path.join(__dirname, "index.html");
   const qs = queryString ? `?${queryString}` : "";
-  const uiUrl = `http://127.0.0.1:${port}/ui/index.html${qs}`;
+  const bust = `${qs ? "&" : "?"}_ui=${Date.now()}`;
+  const uiUrl = `http://127.0.0.1:${port}/ui/index.html${qs}${bust}`;
   for (let i = 0; i < 180; i++) {
     if (await probeApiHealth(port)) {
       console.info(`[RÜZGAR] UI: ${uiUrl}`);

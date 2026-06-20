@@ -1,6 +1,18 @@
 # RUZGAR — masaustu (Electron) + API 8779 (Faz 98)
+# Temiz baslat = diskteki guncel kod yuklensin diye API her seferinde yeniden baslatilir.
+
+param(
+    [switch]$FastReuse
+)
 
 $ErrorActionPreference = "Continue"
+
+try {
+    [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    $OutputEncoding = [System.Text.Encoding]::UTF8
+} catch {
+    # ignore
+}
 
 Add-Type -AssemblyName System.Windows.Forms -ErrorAction SilentlyContinue
 
@@ -23,9 +35,8 @@ $Port = 8779
 
 
 function Log([string]$m) {
-
     Add-Content -Path $Log -Value "$(Get-Date -Format o) $m" -Encoding UTF8
-
+    Write-Host "[RUZGAR] $m"
 }
 
 
@@ -92,6 +103,8 @@ $env:RUZGAR_API_MANAGED = "1"
 
 $env:RUZGAR_SKIP_RAG_WARMUP = "1"
 
+$env:RUZGAR_DEFER_MOTOR_BOOT = "1"
+
 $env:RUZGAR_CORS_PERMISSIVE = "1"
 
 
@@ -100,11 +113,17 @@ function Test-HealthCurrent {
 
     try {
 
-        $j = Invoke-RestMethod "http://127.0.0.1:$Port/api/health" -TimeoutSec 15
+        $j = Invoke-RestMethod "http://127.0.0.1:$Port/api/health?lite=1" -TimeoutSec 10
 
         if (-not $j.ok) { return $false }
 
-        if ([string]$j.build.rev -ne $ExpectedRev) { return $false }
+        if ($j.booting -eq $true) { return $true }
+
+        $rev = [string]$j.build.rev
+
+        if ($rev -and $rev -ne $ExpectedRev) { return $false }
+
+        if ($j.lite -eq $true) { return $true }
 
         if ($j.build.programlama_pro_v1 -ne $true) { return $false }
 
@@ -138,10 +157,13 @@ $ops = Join-Path $Ia "scripts\ruzgar_port_ops.py"
 $skipApiRestart = $false
 $ok = $false
 
-if (Test-HealthCurrent) {
-    Log "API zaten guncel - yeniden baslatma atlandi (rev=$ExpectedRev)"
+# TemizBaslat: varsayilan = API'yi her zaman oldur + taze baslat (eski surec kodu bellekte tutar).
+if ($FastReuse -and (Test-HealthCurrent)) {
+    Log "FastReuse: API zaten saglikli — yeniden baslatma atlandi (rev=$ExpectedRev)"
     $skipApiRestart = $true
     $ok = $true
+} else {
+    Log "Taze API: diskteki kod yuklenecek — once eski surec durduruluyor (rev=$ExpectedRev)"
 }
 
 if (-not $skipApiRestart) {
@@ -182,7 +204,7 @@ Log: $Log
     Log "API baslatiliyor..."
     Start-Process -FilePath "py" -ArgumentList @("-3", "run_desktop_api.py", "--host", "127.0.0.1", "--port", "$Port") -WorkingDirectory $Ia -WindowStyle Hidden -RedirectStandardError $ApiErr
 
-    for ($i = 0; $i -lt 180; $i++) {
+    for ($i = 0; $i -lt 300; $i++) {
         if (Test-HealthCurrent) { $ok = $true; break }
         Start-Sleep -Milliseconds 500
     }

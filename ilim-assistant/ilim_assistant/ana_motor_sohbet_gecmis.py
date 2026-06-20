@@ -494,6 +494,101 @@ def _reply_topic_recall(message: str, items: list[dict[str, Any]]) -> str:
     return "\n".join(lines).strip()
 
 
+def _normalize_question(q: str) -> str:
+    t = _normalize_query(q)
+    t = re.sub(r"[?!.…,:;]+$", "", t).strip()
+    return t
+
+
+def _question_tokens(q: str) -> set[str]:
+    return {
+        w
+        for w in re.split(r"[^\wçğıöşü]+", _normalize_question(q), flags=re.I)
+        if len(w) >= 2
+    }
+
+
+def _questions_equivalent(a: str, b: str) -> bool:
+    na = _normalize_question(a)
+    nb = _normalize_question(b)
+    if not na or not nb:
+        return False
+    if na == nb:
+        return True
+    if len(na) >= 6 and len(nb) >= 6:
+        if na in nb or nb in na:
+            return True
+        ta = _question_tokens(na)
+        tb = _question_tokens(nb)
+        if ta and tb:
+            inter = ta & tb
+            union = ta | tb
+            if len(inter) / max(len(union), 1) >= 0.72:
+                return True
+    return False
+
+
+def _is_usable_echo_answer(text: str) -> bool:
+    t = (text or "").strip()
+    if len(t) < 16:
+        return False
+    low = t.lower()
+    if t.startswith("[") or "henüz öğrenmedim" in low or "henuz ogrenmedim" in low:
+        return False
+    if "bulamadım" in low and "öğret" in low:
+        return False
+    if "bulamadim" in low and "ogret" in low:
+        return False
+    return True
+
+
+def try_session_echo_reply(
+    message: str,
+    *,
+    client_history: list | None = None,
+    limit: int = 48,
+) -> str | None:
+    """Aynı oturumda tekrar sorulan soruya önceki assistant cevabını anında döndür."""
+    if not chat_history_enabled():
+        return None
+    msg = (message or "").strip()
+    if len(msg) < 4 or len(msg) > 500:
+        return None
+    try:
+        from ilim_assistant.ana_motor_plan import looks_like_past_conversation_query
+
+        if looks_like_past_conversation_query(msg):
+            return None
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_tek_beyin_karsilama import looks_like_session_greeting
+
+        if looks_like_session_greeting(msg):
+            return None
+    except Exception:
+        pass
+
+    client_rows = _history_from_client(client_history)
+    for row in reversed(client_rows):
+        u = str(row.get("user") or "").strip()
+        a = str(row.get("assistant") or "").strip()
+        if not u or not _is_usable_echo_answer(a):
+            continue
+        if _questions_equivalent(msg, u):
+            return a
+
+    cap = max(12, min(int(limit or 48), 80))
+    for row in _load_entries(limit=cap):
+        u = str(row.get("user") or "").strip()
+        a = str(row.get("assistant") or "").strip()
+        if not u or not _is_usable_echo_answer(a):
+            continue
+        if _questions_equivalent(msg, u):
+            return a
+    return None
+
+
 def try_past_conversation_reply(
     message: str,
     *,

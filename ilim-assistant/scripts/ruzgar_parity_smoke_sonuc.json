@@ -4,10 +4,38 @@
   "total": 8,
   "checks": [
     {
+      "id": "parity_api",
+      "label": "Cursor API + pytest",
+      "ok": true,
+      "elapsed_sec": 1.75,
+      "detail": "projects/smoke-cursor-api-3584"
+    },
+    {
+      "id": "parity_bugfix",
+      "label": "Cursor bugfix",
+      "ok": true,
+      "elapsed_sec": 2.516,
+      "detail": "fail_before=True pass_after=True fix=True"
+    },
+    {
+      "id": "parity_refactor",
+      "label": "Cursor 3 dosya",
+      "ok": true,
+      "elapsed_sec": 1.468,
+      "detail": "writes=4 files=True pytest=True"
+    },
+    {
+      "id": "compliance_v3_offline",
+      "label": "Uyum smoke ≥85",
+      "ok": true,
+      "elapsed_sec": 0.047,
+      "detail": "score=100 target=85"
+    },
+    {
       "id": "kpi_capabilities",
       "label": "Kabiliyet matrisi (Faz 20–54)",
       "ok": true,
-      "elapsed_sec": 0.0,
+      "elapsed_sec": 0.031,
       "detail": "20/20 acik (hedef >=12)"
     },
     {
@@ -16,13 +44,6 @@
       "ok": true,
       "elapsed_sec": 0.0,
       "detail": "tools=8"
-    },
-    {
-      "id": "compliance_v3_offline",
-      "label": "Uyum smoke ≥85",
-      "ok": true,
-      "elapsed_sec": 0.079,
-      "detail": "score=100 target=85"
     },
     {
       "id": "templates_faz51",
@@ -37,31 +58,10 @@
       "ok": true,
       "elapsed_sec": 0.0,
       "detail": "{'editor_v2_default': True, 'multi_file_preview_de fc=groq decl=8"
-    },
-    {
-      "id": "faz50_natural",
-      "label": "Doğal dil proje üret",
-      "ok": true,
-      "elapsed_sec": 0.0,
-      "detail": "static_site"
-    },
-    {
-      "id": "proje_uret_fastapi",
-      "label": "Proje üret FastAPI",
-      "ok": true,
-      "elapsed_sec": 2.953,
-      "detail": "scaffold=True verify=True"
-    },
-    {
-      "id": "proje_uret_crud",
-      "label": "Proje üret CRUD (Faz 51)",
-      "ok": true,
-      "elapsed_sec": 3.031,
-      "detail": "scaffold=True verify=True"
     }
   ],
   "groq_e2e_ran": false,
-  "mode": "quick",
-  "elapsed_sec": 6.063,
+  "mode": "full",
+  "elapsed_sec": 5.812,
   "version": "programlama-faz54-v1-2026-05-26"
 }

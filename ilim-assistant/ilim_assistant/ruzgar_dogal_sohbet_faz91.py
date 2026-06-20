@@ -82,6 +82,20 @@ def is_natural_conversation_turn(
     raw = (message or "").strip()
     if not raw:
         return False
+    try:
+        from ilim_assistant.ana_motor_plan import looks_like_instant_social_ack
+
+        if looks_like_instant_social_ack(raw):
+            return False
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ana_motor_bilgi_turu import should_route_bilgi_turu_pipeline
+
+        if should_route_bilgi_turu_pipeline(raw, question_plan):
+            return False
+    except Exception:
+        pass
     if _explicit_research_intent(raw):
         return False
 
