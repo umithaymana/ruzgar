@@ -693,7 +693,7 @@ def _append_anti_repeat_instruction(user_payload: str, history: list | None) -> 
 
 
 def _web_secondary_policy_enabled() -> bool:
-    default = "1"
+    default = "0"
     try:
         from ilim_assistant.ruzgar_web_arastirma_pro import web_arastirma_pro_enabled
 
@@ -1125,9 +1125,12 @@ def prepare_turn(
 
     if not skip_ogrenme_lookup:
         try:
-            from ilim_assistant.ana_motor_plan import looks_like_casual_social_chat
+            from ilim_assistant.ana_motor_plan import (
+                looks_like_casual_social_chat,
+                looks_like_ruzgar_relational_chat,
+            )
 
-            if looks_like_casual_social_chat(msg):
+            if looks_like_casual_social_chat(msg) or looks_like_ruzgar_relational_chat(msg):
                 skip_ogrenme_lookup = True
         except Exception:
             pass
@@ -1463,6 +1466,20 @@ def prepare_turn(
             )
         except Exception:
             _fast_fact_no_web = False
+        try:
+            from ilim_assistant.ana_motor_bilgi_turu import (
+                bilgi_primary_turn,
+                should_route_bilgi_turu_pipeline,
+            )
+
+            if bilgi_primary_turn(turn_plan) or should_route_bilgi_turu_pipeline(
+                msg, turn_plan
+            ):
+                allow_web = True
+                if use_web and m not in _NOWEB_MODES:
+                    web_on = True
+        except Exception:
+            pass
         if (
             m == "genel"
             and web_on

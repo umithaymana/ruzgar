@@ -68,6 +68,13 @@ def should_skip_hafiza_dogal(message: str) -> bool:
     except Exception:
         pass
     try:
+        from ilim_assistant.ana_motor_plan import looks_like_ruzgar_relational_chat
+
+        if looks_like_ruzgar_relational_chat(m):
+            return True
+    except Exception:
+        pass
+    try:
         from ilim_assistant.ana_motor_plan import should_stay_on_ana_motor_bilgi
 
         if should_stay_on_ana_motor_bilgi(m):

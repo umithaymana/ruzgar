@@ -194,6 +194,18 @@ def try_bilgi_kutuphane_instant_reply(message: str) -> Optional[str]:
 def kutuphane_blocks_web_path(message: str) -> bool:
     if not should_check_bilgi_kutuphane_first(message):
         return False
+    try:
+        from ilim_assistant.ana_motor_plan import (
+            looks_like_casual_social_chat,
+            looks_like_ruzgar_relational_chat,
+        )
+
+        if looks_like_casual_social_chat(message) or looks_like_ruzgar_relational_chat(
+            message
+        ):
+            return False
+    except Exception:
+        pass
     return lookup_bilgi_kutuphane_hint(message) is not None
 
 

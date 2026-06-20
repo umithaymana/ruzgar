@@ -107,6 +107,14 @@ def is_natural_conversation_turn(
     except Exception:
         pass
 
+    try:
+        from ilim_assistant.ana_motor_plan import looks_like_ruzgar_relational_chat
+
+        if looks_like_ruzgar_relational_chat(raw):
+            return True
+    except Exception:
+        pass
+
     if question_plan is not None:
         primary = str(getattr(question_plan, "primary", "") or "")
         use_rag = bool(getattr(question_plan, "use_ilim_rag", True))
@@ -137,6 +145,16 @@ def is_natural_conversation_turn(
         "baslayalim",
         "geliştir",
         "gelistir",
+        "gelisim",
+        "gelişim",
+        "ogren",
+        "öğren",
+        "ogrendin",
+        "öğrendin",
+        "nasil gidiyor",
+        "nasıl gidiyor",
+        "yeni seyler",
+        "yeni şeyler",
         "güçlendir",
         "guclendir",
         "ana motor",

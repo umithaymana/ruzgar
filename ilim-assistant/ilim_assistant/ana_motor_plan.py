@@ -351,6 +351,11 @@ def _score_categories(msg: str, mode_norm: str, motor_flags: dict[str, bool]) ->
     except Exception:
         pass
 
+    if looks_like_ruzgar_relational_chat(raw):
+        s["gundelik"] += 6.5
+        s["hafiza"] = max(0.0, s["hafiza"] - 4.0)
+        s["bilgi"] = max(0.0, s["bilgi"] - 3.0)
+
     if any(
         x in blob
         for x in (
@@ -528,6 +533,7 @@ def _score_categories(msg: str, mode_norm: str, motor_flags: dict[str, bool]) ->
         mode_norm in ("genel", "uretim", "gelisim")
         and len(raw) < 80
         and not looks_like_casual_social_chat(raw)
+        and not looks_like_ruzgar_relational_chat(raw)
     ):
         if _explicit_research_intent(raw) or "?" in raw:
             s["bilgi"] += 2.4
@@ -1238,6 +1244,68 @@ def looks_like_clarification_short_query(message: str) -> bool:
     return "?" in raw and len(raw.split()) <= 2
 
 
+def looks_like_ruzgar_relational_chat(message: str) -> bool:
+    """
+    Rüzgar'a yönelik samimi / gelişim / öğrenme soruları — hafıza JSON kopyası değil LLM sohbet.
+    Örn: «gelişim nasıl gidiyor», «yeni şeyler öğrendin mi».
+    """
+    raw = (message or "").strip()
+    if not raw or len(raw) > 420:
+        return False
+    if _explicit_research_intent(raw) and not any(
+        x in _norm_ascii(raw.lower()) + " " + raw.lower()
+        for x in ("gelisim", "gelişim", "ogren", "öğren", "ruzgar", "rüzgar")
+    ):
+        return False
+    blob = _norm_ascii(raw.lower()) + " " + raw.lower()
+    rel_markers = (
+        "gelisim",
+        "gelişim",
+        "ogren",
+        "öğren",
+        "ogrendin",
+        "öğrendin",
+        "ogreniyor",
+        "öğreniyor",
+        "ilerleme",
+        "gelistin",
+        "geliştin",
+        "nasil gidiyor",
+        "nasıl gidiyor",
+        "ne ogrendin",
+        "ne öğrendin",
+        "yeni seyler",
+        "yeni şeyler",
+        "gelisim nasil",
+        "gelişim nasıl",
+        "kendini gelistir",
+        "kendini geliştir",
+        "gelisiyor musun",
+        "gelişiyor musun",
+    )
+    to_assistant = any(
+        x in blob
+        for x in (
+            "ruzgar",
+            "rüzgar",
+            "sen ",
+            "sana ",
+            "siz ",
+            "asistan",
+            "yardimcin",
+            "yardımcın",
+        )
+    )
+    if any(m in blob for m in rel_markers):
+        if to_assistant or len(raw.split()) <= 14:
+            return True
+    if to_assistant and any(
+        x in blob for x in ("nasilsin", "nasılsın", "keyfin", "naber", "ne haber")
+    ):
+        return True
+    return False
+
+
 def looks_like_casual_social_chat(message: str) -> bool:
     """Selam, sohbet daveti, kısa muhabbet — ağır RAG / dev hafıza taraması yok."""
     raw = (message or "").strip().lower()
@@ -1435,6 +1503,8 @@ def is_casual_conversation_turn(
         return False
     if looks_like_casual_social_chat(message):
         return True
+    if looks_like_ruzgar_relational_chat(message):
+        return True
     if question_plan is None:
         return False
     if question_plan.primary == "gundelik" and not question_plan.use_ilim_rag:
@@ -1452,7 +1522,7 @@ def apply_casual_plan_overrides(
         return plan
     if _explicit_research_intent(message):
         return plan
-    if looks_like_casual_social_chat(message) or (
+    if looks_like_casual_social_chat(message) or looks_like_ruzgar_relational_chat(message) or (
         plan.primary == "gundelik" and len((message or "").strip()) < 180
     ):
         plan.primary = "gundelik"
