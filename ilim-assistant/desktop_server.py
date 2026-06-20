@@ -405,25 +405,29 @@ if (_DESKTOP_UI_DIR / "index.html").is_file():
                     response.headers[k] = v
             return response
 
-    def _ui_api_root_snippet() -> str:
+    def _ui_api_root_js_body() -> str:
         if os.environ.get("PORT") or os.environ.get("RUZGAR_PUBLIC_MODE", "").strip().lower() in (
             "1",
             "true",
             "yes",
             "on",
         ):
-            return '<script>window.__RUZGAR_API_ROOT__=window.location.origin;</script>'
+            return "window.__RUZGAR_API_ROOT__=window.location.origin;"
         from ilim_assistant.ruzgar_api_port import resolve_api_port
 
         port = resolve_api_port()
-        return f'<script>window.__RUZGAR_API_ROOT__="http://127.0.0.1:{port}";</script>'
+        return f'window.__RUZGAR_API_ROOT__="http://127.0.0.1:{port}";'
 
     def _ui_index_html() -> str:
-        raw = _UI_INDEX_PATH.read_text(encoding="utf-8")
-        ok_snip = _ui_api_root_snippet()
-        if ok_snip not in raw and "__RUZGAR_API_ROOT__" not in raw:
-            raw = raw.replace("</head>", f"  {ok_snip}\n  </head>", 1)
-        return raw
+        return _UI_INDEX_PATH.read_text(encoding="utf-8")
+
+    @app.get("/ui/ruzgar-api-root.js", include_in_schema=False)
+    def ruzgar_ui_api_root_js() -> Response:
+        return Response(
+            content=_ui_api_root_js_body(),
+            media_type="application/javascript",
+            headers=_UI_NO_CACHE,
+        )
 
     @app.get("/ui", include_in_schema=False)
     @app.get("/ui/", include_in_schema=False)
@@ -816,6 +820,7 @@ class TtsBody(BaseModel):
     lang: str | None = "tr"
     speaker_rel: str | None = None
     tilavet_referans: str | None = None
+    prosody: bool | None = None
 
 
 class SesSettingsPatchBody(BaseModel):
@@ -9283,7 +9288,12 @@ async def api_tts(body: TtsBody):
                 huzur_carpani=float(ayar.get("huzur", 0.88)),
             )
             pitch = edge_pitch_string(kar, icerik)
-            use_prosody = prosody_etkin(ayar) and prosody_gerekli(text)
+            if body.prosody is False:
+                use_prosody = False
+            elif body.prosody is True:
+                use_prosody = prosody_etkin(ayar) and prosody_gerekli(text, icerik)
+            else:
+                use_prosody = prosody_etkin(ayar) and prosody_gerekli(text, icerik)
             if use_prosody:
                 out_path = await synthesize_edge_mp3_prosody(
                     text,
@@ -11867,9 +11877,24 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                         should_skip_hafiza_dogal,
                     )
 
-                    if dogal_konus_enabled() and not should_skip_hafiza_dogal(
-                        req.message
-                    ):
+                    _skip_hafiza_dogal = should_skip_hafiza_dogal(req.message)
+                    if not _skip_hafiza_dogal:
+                        try:
+                            from ilim_assistant.ana_motor_plan import (
+                                is_casual_conversation_turn,
+                                looks_like_ruzgar_relational_chat,
+                            )
+
+                            if looks_like_ruzgar_relational_chat(req.message) or is_casual_conversation_turn(
+                                req.message,
+                                mode_norm,
+                                turn_plan,
+                                history=req.history,
+                            ):
+                                _skip_hafiza_dogal = True
+                        except Exception:
+                            pass
+                    if dogal_konus_enabled() and not _skip_hafiza_dogal:
                         hint = lookup_genel_hafiza_hint(req.message)
                         if hint:
                             hstream = iter_hafiza_dogal_reply(

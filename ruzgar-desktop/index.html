@@ -8,32 +8,10 @@
     <title>RÜZGAR — Mimarlar: Ümit & Gökçenur</title>
     <link rel="stylesheet" href="styles.css?v=20260608-klon-below" />
     <link rel="stylesheet" href="ruzgar-split.css?v=20260602-workbench-split" />
+    <script src="ruzgar-api-root.js?v=20260620-csp"></script>
   </head>
   <body>
-    <script>
-      try {
-        const motorsCompact = localStorage.getItem("ruzgarMotorsCompact");
-        const compactOn = motorsCompact === "1" || motorsCompact === null;
-        if (compactOn) {
-          document.body.classList.add("ui-motors-compact");
-          document.documentElement.style.setProperty("--ruzgar-motors-w", "52px");
-        }
-        if (!compactOn) {
-          const splitRaw = localStorage.getItem("ruzgarSplit.v1");
-          if (splitRaw) {
-            const split = JSON.parse(splitRaw);
-            if (typeof split.motors === "number" && split.motors > 80) {
-              document.documentElement.style.setProperty("--ruzgar-motors-w", `${split.motors}px`);
-            }
-            if (typeof split.chat === "number") {
-              document.documentElement.style.setProperty("--ruzgar-chat-w", `${split.chat}px`);
-            }
-          }
-        }
-      } catch (_) {
-        /* ignore */
-      }
-    </script>
+    <script src="ruzgar-ui-prebody.js?v=20260620-csp"></script>
     <div class="title-strip">
       <div class="title-row title-row-info">
         <div class="header-tech-strip header-tech-strip--top" aria-label="Sistem göstergeleri">

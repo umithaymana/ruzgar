@@ -78,16 +78,18 @@ def metin_normalize(metin: str) -> str:
     return t.strip()
 
 
-def prosody_gerekli(metin: str) -> bool:
+def prosody_gerekli(metin: str, icerik: IcerikYolu | None = None) -> bool:
+    """Genel sohbet kısa yanıtları tek parça Edge-TTS (Gemini gibi akıcı); özel içerikte durak."""
     t = metin_normalize(metin)
     if len(t) < MIN_PROSODY_CHARS:
         return False
+    if icerik is not None and icerik != IcerikYolu.genel:
+        return True
     if "\n\n" in t:
         return True
-    if len(t) > MAX_PARCA_CHARS:
+    if len(t) > max(900, MAX_PARCA_CHARS * 2):
         return True
-    cumle = re.split(r"(?<=[.!?…؟])\s+", t)
-    return len([c for c in cumle if c.strip()]) > 1
+    return False
 
 
 def _sonraki_durak(

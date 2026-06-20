@@ -3,7 +3,7 @@
  * Beyin adresi önceliği: preload + ruzgar_remote_api.txt > ?api > localStorage > yalın yerel.
  * Kök sonda `/api` ise kırpılır — aksi halde fetch `.../api/api/merkezi-bellek` ile 404 verir.
  */
-window.__RUZGAR_UI_REV = "20260620-tdz-fix";
+window.__RUZGAR_UI_REV = "20260620-parallel-tts";
 const RUZGAR_LOCAL_API_PORT = 8779;
 const RUZGAR_EXPECTED_BUILD_REV = "2026-06-15-ruzgar-programlama-pro-v4";
 const LS_VAD_USER = "ruzgar_vad_user_v1";
@@ -1107,15 +1107,24 @@ let ttsArmed = false;
 /** Tur içinde kaç MP3 parçası çalındı (preroll yalnızca ilkinde). */
 let ttsPlayedChunksThisTurn = 0;
 
-const RUZGAR_TTS_MAX_SPEECH_CHARS = 420;
-const RUZGAR_TTS_MAX_SENTENCES = 3;
-/** İlk parça: kısa tampon; sonraki parçalar prefetch ile arka arkaya (kesik ses azaltma). */
-const RUZGAR_TTS_PLAY_PREROLL_MS = 100;
+/** Yazı + ses birlikte: akış sırasında konuş, yanıt bitince yalnız kuyruk kuyruğunu oku. */
+const RUZGAR_TTS_PARALLEL_STREAM = true;
+const RUZGAR_TTS_MAX_SPEECH_CHARS = 3200;
+const RUZGAR_TTS_MAX_SENTENCES = 80;
+const RUZGAR_TTS_CHUNK_MAX_CHARS = 2800;
+/** İlk parça hızlı başlasın; sonraki parçalar prefetch ile arka arkaya. */
+const RUZGAR_TTS_PLAY_PREROLL_MS = 12;
 const RUZGAR_TTS_INTER_CHUNK_PREROLL_MS = 0;
-const RUZGAR_TTS_CHUNK_GAP_MS = 45;
-/** Kuyrukta birleştirme — daha az Edge isteği, daha akıcı konuşma. */
-const RUZGAR_TTS_MERGE_TARGET_CHARS = 220;
-const RUZGAR_TTS_MIN_QUEUE_CHARS = 28;
+const RUZGAR_TTS_CHUNK_GAP_MS = 0;
+const RUZGAR_TTS_BUFFER_FALLBACK_FIRST_MS = 380;
+const RUZGAR_TTS_BUFFER_FALLBACK_MS = 280;
+/** Paralel akış: ilk konuşma eşiği düşük, sonraki parçalar birleşik (kesik ses yok). */
+const RUZGAR_TTS_STREAM_MIN_FIRST_CHARS = 36;
+const RUZGAR_TTS_STREAM_FIRST_CHARS = 130;
+const RUZGAR_TTS_STREAM_EARLY_CHARS = 88;
+const RUZGAR_TTS_STREAM_MERGE_CHARS = 520;
+const RUZGAR_TTS_MERGE_TARGET_CHARS = 520;
+const RUZGAR_TTS_MIN_QUEUE_CHARS = 24;
 
 /** TTS sentez — arka iş parçacığı (Web Worker); yoksa fetch ile düşme (Ümit & Gökçenur). */
 let _ttsWorker = null;
@@ -14172,8 +14181,8 @@ function ttsPlainForSpeech(t) {
     .trim();
 }
 
-/** Sesli okuma: ekranda tam metin kalır; TTS kısa ve net (Ümit abi). */
-function truncateForTtsSpeech(text) {
+/** Gemini tarzı: tam yanıt, doğal hız, tek parça tercih. */
+function prepareTtsSpeechText(text) {
   let t = ttsPlainForSpeech(text || "");
   if (!t) return "";
   t = t.replace(
@@ -14183,22 +14192,150 @@ function truncateForTtsSpeech(text) {
   t = t.replace(/\(TARIH_VE_KULTUR[^)]+\)/gi, "");
   t = t.replace(/https?:\/\/\S+/g, "");
   t = t.replace(/\s+/g, " ").trim();
-  const sentences = [];
-  let rest = t;
-  const re = /([\s\S]+?)([.!?…])(\s+|$)/g;
-  let m;
-  while ((m = re.exec(rest)) && sentences.length < RUZGAR_TTS_MAX_SENTENCES) {
-    const s = (m[1] + m[2]).trim();
-    if (s.length >= 4) sentences.push(s);
-  }
-  if (sentences.length) {
-    t = sentences.join(" ");
-  }
   if (t.length > RUZGAR_TTS_MAX_SPEECH_CHARS) {
-    const cut = t.lastIndexOf(" ", RUZGAR_TTS_MAX_SPEECH_CHARS - 1);
-    t = (cut > 40 ? t.slice(0, cut) : t.slice(0, RUZGAR_TTS_MAX_SPEECH_CHARS)).trim() + "…";
+    const cut = t.lastIndexOf(". ", RUZGAR_TTS_MAX_SPEECH_CHARS);
+    t = (
+      cut > 80 ? t.slice(0, cut + 1) : t.slice(0, RUZGAR_TTS_MAX_SPEECH_CHARS)
+    ).trim();
+    if (!/[.!?…]$/.test(t)) t += "…";
   }
   return t;
+}
+
+function ttsRequestPayload(text, karakter, extra) {
+  const payload = {
+    text,
+    karakter: normalizeKarakterForTts(karakter),
+    backend: "edge",
+    prosody: false,
+  };
+  if (lastVoiceEmotion && lastVoiceEmotion !== "notr") {
+    payload.emotion = lastVoiceEmotion;
+  }
+  if (extra && typeof extra === "object") {
+    Object.assign(payload, extra);
+  }
+  return payload;
+}
+
+function splitTtsLargeChunks(text) {
+  const t = String(text || "").trim();
+  if (!t) return [];
+  if (t.length <= RUZGAR_TTS_CHUNK_MAX_CHARS) return [t];
+  const chunks = [];
+  let rest = t;
+  while (rest.length > RUZGAR_TTS_CHUNK_MAX_CHARS) {
+    const window = rest.slice(0, RUZGAR_TTS_CHUNK_MAX_CHARS + 1);
+    const cut = Math.max(
+      window.lastIndexOf(". "),
+      window.lastIndexOf("! "),
+      window.lastIndexOf("? "),
+      window.lastIndexOf("… ")
+    );
+    if (cut > 120) {
+      chunks.push(rest.slice(0, cut + 1).trim());
+      rest = rest.slice(cut + 1).trim();
+    } else {
+      const sp = window.lastIndexOf(" ");
+      const at = sp > 80 ? sp : RUZGAR_TTS_CHUNK_MAX_CHARS;
+      chunks.push(rest.slice(0, at).trim());
+      rest = rest.slice(at).trim();
+    }
+  }
+  if (rest) chunks.push(rest);
+  return chunks.filter((c) => c.length >= 2);
+}
+
+function enqueueGeminiStyleTts(fullText, ttsSess, karakter, signal) {
+  const plain = prepareTtsSpeechText(fullText);
+  ttsPendingChunks = "";
+  if (plain.length < 2) return;
+  ttsTextQueue.length = 0;
+  for (const chunk of splitTtsLargeChunks(plain)) {
+    ttsTextQueue.push(chunk);
+  }
+  queueMicrotask(() => {
+    void runTtsPump(ttsSess, karakter, signal);
+  });
+}
+
+/** Akış sırasında konuşulacak sonraki parçayı seç (ilk parça erken, sonrakiler birleşik). */
+function pullNextParallelTtsChunk(opts) {
+  const options = opts && typeof opts === "object" ? opts : {};
+  const force = !!options.force;
+  const pending = String(ttsPendingChunks || "");
+  if (!pending.trim()) return null;
+
+  if (force) {
+    const plain = prepareTtsSpeechText(pending);
+    return plain.length >= 2 ? { head: plain, rest: "" } : null;
+  }
+
+  const isFirst =
+    ttsPlayedChunksThisTurn === 0 &&
+    !ttsEdgeSpokeTurn &&
+    !ttsPumping &&
+    ttsTextQueue.length === 0;
+  const target = isFirst ? RUZGAR_TTS_STREAM_FIRST_CHARS : RUZGAR_TTS_STREAM_MERGE_CHARS;
+  const minLen = isFirst
+    ? RUZGAR_TTS_STREAM_MIN_FIRST_CHARS
+    : RUZGAR_TTS_MIN_QUEUE_CHARS;
+
+  let head = "";
+  let rest = pending;
+  while (rest.length > 0 && head.length < target) {
+    const sp = takeFirstTtsSentence(rest, { streaming: true });
+    if (!sp) break;
+    if (head && head.length + sp.head.length + 1 > target) break;
+    head = head ? `${head} ${sp.head}` : sp.head;
+    rest = sp.rest;
+    if (isFirst && head.length >= minLen) break;
+    if (!isFirst && head.length >= Math.floor(target * 0.72)) break;
+  }
+
+  if (head.length >= minLen) {
+    return { head, rest };
+  }
+
+  if (isFirst && pending.length >= RUZGAR_TTS_STREAM_EARLY_CHARS) {
+    for (const sep of [", ", "; ", ": ", " — ", " - "]) {
+      const i = pending.lastIndexOf(sep, RUZGAR_TTS_STREAM_EARLY_CHARS);
+      if (i >= minLen) {
+        return {
+          head: pending.slice(0, i + sep.length).trim(),
+          rest: pending.slice(i + sep.length),
+        };
+      }
+    }
+    const sp = pending.lastIndexOf(" ", RUZGAR_TTS_STREAM_EARLY_CHARS);
+    if (sp >= minLen) {
+      return { head: pending.slice(0, sp).trim(), rest: pending.slice(sp + 1) };
+    }
+  }
+
+  return null;
+}
+
+function drainParallelStreamTts(ttsSess, karakter, signal, opts) {
+  if (ttsSess !== ttsSessionCounter || !signal) return;
+  let queued = false;
+  while (ttsSess === ttsSessionCounter) {
+    const chunk = pullNextParallelTtsChunk(opts);
+    if (!chunk) break;
+    ttsPendingChunks = chunk.rest;
+    ttsTextQueue.push(chunk.head);
+    queued = true;
+  }
+  if (queued) {
+    queueMicrotask(() => {
+      void runTtsPump(ttsSess, karakter, signal);
+    });
+  }
+}
+
+/** Sesli okuma: ekranda tam metin kalır; TTS tam yanıt (Gemini akışı). */
+function truncateForTtsSpeech(text) {
+  return prepareTtsSpeechText(text);
 }
 
 function isWebSpeechActive() {
@@ -14368,11 +14505,38 @@ function playTtsBlob(blob) {
           resolve();
         }
       };
-      if (prerollMs > 0) {
-        window.setTimeout(startPlay, prerollMs);
-      } else {
-        startPlay();
-      }
+      const schedulePlay = () => {
+        if (prerollMs > 0) {
+          window.setTimeout(tryBufferedPlay, prerollMs);
+        } else {
+          tryBufferedPlay();
+        }
+      };
+      const tryBufferedPlay = () => {
+        if (ttsPlayingEl !== a) {
+          resolve();
+          return;
+        }
+        const readyLevel = isFirst ? 2 : 3;
+        if (a.readyState >= readyLevel) {
+          startPlay();
+          return;
+        }
+        let played = false;
+        const onReady = () => {
+          if (played) return;
+          played = true;
+          startPlay();
+        };
+        a.addEventListener(isFirst ? "canplay" : "canplaythrough", onReady, {
+          once: true,
+        });
+        window.setTimeout(
+          onReady,
+          isFirst ? RUZGAR_TTS_BUFFER_FALLBACK_FIRST_MS : RUZGAR_TTS_BUFFER_FALLBACK_MS
+        );
+      };
+      schedulePlay();
       setStatus("Sesli okuma…");
       syncInterruptButton();
     } catch (_) {
@@ -14412,14 +14576,7 @@ async function runTtsPump(ttsSess, karakter, signal) {
         const res = await fetch(`${API}/api/tts`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            text: chunk,
-            karakter: k,
-            backend: "edge",
-            ...(lastVoiceEmotion && lastVoiceEmotion !== "notr"
-              ? { emotion: lastVoiceEmotion }
-              : {}),
-          }),
+          body: JSON.stringify(ttsRequestPayload(chunk, k)),
           signal,
         });
         if (!res.ok || ttsSess !== ttsSessionCounter) return null;
@@ -14861,18 +15018,26 @@ async function streamChat(userText, streamOpts = {}) {
         ttsAbortController
       ) {
         ttsPendingChunks += ev.text;
-        while (ttsSess === ttsSessionCounter) {
-          const sp = takeFirstTtsSentence(ttsPendingChunks, { streaming: true });
-          if (!sp) break;
-          ttsPendingChunks = sp.rest;
-          ttsTextQueue.push(sp.head);
-          queueMicrotask(() => {
-            void runTtsPump(
-              ttsSess,
-              sesVoice,
-              ttsAbortController.signal
-            );
-          });
+        if (RUZGAR_TTS_PARALLEL_STREAM) {
+          drainParallelStreamTts(
+            ttsSess,
+            sesVoice,
+            ttsAbortController.signal
+          );
+        } else {
+          while (ttsSess === ttsSessionCounter) {
+            const sp = takeFirstTtsSentence(ttsPendingChunks, { streaming: true });
+            if (!sp) break;
+            ttsPendingChunks = sp.rest;
+            ttsTextQueue.push(sp.head);
+            queueMicrotask(() => {
+              void runTtsPump(
+                ttsSess,
+                sesVoice,
+                ttsAbortController.signal
+              );
+            });
+          }
         }
       }
     } else if (ev.type === "done") {
@@ -15022,23 +15187,20 @@ async function streamChat(userText, streamOpts = {}) {
       setStatus("Hazır");
       scrollChatToBottom();
       if (wantEdge && ttsSess === ttsSessionCounter && ttsAbortController) {
-        const tail = ttsPlainForSpeech(ttsPendingChunks);
-        ttsPendingChunks = "";
-        if (tail.length >= RUZGAR_TTS_MIN_QUEUE_CHARS) {
-          ttsTextQueue.push(tail);
-          queueMicrotask(() => {
-            void runTtsPump(
-              ttsSess,
-              sesVoice,
-              ttsAbortController.signal
-            );
-          });
-        } else if (!ttsEdgeSpokeTurn && full.trim()) {
-          lastAssistantReply = full;
-          window.setTimeout(async () => {
-            if (ttsSess !== ttsSessionCounter) return;
-            await speakLast();
-          }, 60);
+        if (RUZGAR_TTS_PARALLEL_STREAM) {
+          drainParallelStreamTts(
+            ttsSess,
+            sesVoice,
+            ttsAbortController.signal,
+            { force: true }
+          );
+        } else {
+          enqueueGeminiStyleTts(
+            full || ttsPendingChunks,
+            ttsSess,
+            sesVoice,
+            ttsAbortController.signal
+          );
         }
         void (async () => {
           await waitTtsIdle(ttsSess);
@@ -16314,14 +16476,7 @@ async function speakLast() {
     const res = await fetch(`${API}/api/tts`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        text,
-        karakter: kar,
-        backend: "edge",
-        ...(lastVoiceEmotion && lastVoiceEmotion !== "notr"
-          ? { emotion: lastVoiceEmotion }
-          : {}),
-      }),
+      body: JSON.stringify(ttsRequestPayload(text, kar)),
     });
     if (res.ok) {
       const blob = await res.blob();
@@ -16365,19 +16520,13 @@ async function speakStudioTranscript(raw) {
     /* ignore */
   }
   try {
-    const res = await fetch(`${API}/api/tts`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        text: plain,
-        karakter: kar,
-        backend: sesTtsBackendPreference(),
-        lang: "tr",
-        ...(lastVoiceEmotion && lastVoiceEmotion !== "notr"
-          ? { emotion: lastVoiceEmotion }
-          : {}),
-      }),
-    });
+      const res = await fetch(`${API}/api/tts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          ttsRequestPayload(plain, kar, { backend: sesTtsBackendPreference() })
+        ),
+      });
     if (res.ok) {
       const blob = await res.blob();
       await playTtsBlob(blob);
@@ -16485,14 +16634,7 @@ function speakTextImmediate(text) {
       const res = await fetch(`${API}/api/tts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: plain,
-          karakter: kar,
-          backend: "edge",
-          ...(lastVoiceEmotion && lastVoiceEmotion !== "notr"
-            ? { emotion: lastVoiceEmotion }
-            : {}),
-        }),
+        body: JSON.stringify(ttsRequestPayload(plain, kar)),
       });
       if (res.ok && ttsSess === ttsSessionCounter) {
         const blob = await res.blob();

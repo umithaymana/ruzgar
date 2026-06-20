@@ -147,9 +147,9 @@ def read_ses_ayarlari() -> dict[str, Any]:
 
     defaults = {
         "karakter": "asistan",
-        "hiz": 0.92,
-        "huzur": 0.88,
-        "prosody": True,
+        "hiz": 1.0,
+        "huzur": 0.96,
+        "prosody": False,
         "durak": 1.0,
         "tilavet": True,
         "referans": {},
@@ -164,7 +164,7 @@ def read_ses_ayarlari() -> dict[str, Any]:
             str(cur.get("karakter", "asistan"))
         ).value
         if "prosody" not in cur:
-            cur["prosody"] = True
+            cur["prosody"] = False
         if "durak" not in cur:
             cur["durak"] = 1.0
         if "referans" not in cur or not isinstance(cur.get("referans"), dict):

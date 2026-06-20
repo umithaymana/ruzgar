@@ -24,6 +24,7 @@ self.onmessage = async (ev) => {
         text: String(text),
         karakter: String(karakter || "asistan"),
         backend: "edge",
+        prosody: false,
         ...(emotion && emotion !== "notr" ? { emotion: String(emotion) } : {}),
       }),
     });
