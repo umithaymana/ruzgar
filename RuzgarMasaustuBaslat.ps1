@@ -26,9 +26,52 @@ $Log = Join-Path $env:TEMP "ruzgar-masaustu-launch.log"
 
 $ApiErr = Join-Path $env:TEMP "ruzgar-api.err"
 
-$ExpectedRev = & py -3 (Join-Path $Ia "scripts\ruzgar_read_build_rev.py") 2>$null
+function Resolve-RuzgarPython {
+    $cands = @(
+        $env:RUZGAR_PYTHON,
+        "D:\ÜMİT\PROGRAMLAR\venvs\ruzgar\Scripts\python.exe",
+        (Join-Path $Ia ".venv\Scripts\python.exe")
+    ) | Where-Object { $_ -and (Test-Path $_) }
+    foreach ($p in $cands) { return $p }
+    foreach ($name in @("python", "py")) {
+        $c = Get-Command $name -ErrorAction SilentlyContinue
+        if ($c) { return $c.Source }
+    }
+    return $null
+}
+
+# D: kurulum yolları (yeni makine)
+$NodeRoot = "D:\ÜMİT\PROGRAMLAR\Nodejs"
+if (Test-Path (Join-Path $NodeRoot "node.exe")) {
+    $env:Path = "$NodeRoot;" + $env:Path
+}
+if (-not $env:OLLAMA_MODELS) {
+    $om = "D:\ÜMİT\PROGRAMLAR\Ollama\models"
+    if (Test-Path $om) { $env:OLLAMA_MODELS = $om }
+}
+foreach ($pair in @(
+    @{ K = "PIP_CACHE_DIR"; V = "D:\ÜMİT\PROGRAMLAR\Caches\pip" },
+    @{ K = "HF_HOME"; V = "D:\ÜMİT\PROGRAMLAR\Caches\huggingface" },
+    @{ K = "TORCH_HOME"; V = "D:\ÜMİT\PROGRAMLAR\Caches\torch" }
+)) {
+    if (-not (Get-Item -Path "Env:$($pair.K)" -ErrorAction SilentlyContinue)) {
+        if (Test-Path $pair.V) { Set-Item -Path "Env:$($pair.K)" -Value $pair.V }
+    }
+}
+
+$script:PyExe = Resolve-RuzgarPython
+if (-not $script:PyExe) {
+    [System.Windows.Forms.MessageBox]::Show("Python bulunamadi. D:\ÜMİT\PROGRAMLAR\venvs\ruzgar kurulu mu?", "RUZGAR") | Out-Null
+    exit 1
+}
+$env:RUZGAR_PYTHON = $script:PyExe
+
+$ExpectedRev = $null
+try {
+    $ExpectedRev = & $script:PyExe (Join-Path $Ia "scripts\ruzgar_read_build_rev.py") 2>$null
+} catch {}
 if (-not $ExpectedRev) { $ExpectedRev = "2026-06-15-ruzgar-programlama-pro-v1" }
-$ExpectedRev = $ExpectedRev.Trim()
+$ExpectedRev = "$ExpectedRev".Trim()
 
 $Port = 8779
 
@@ -169,7 +212,7 @@ if ($FastReuse -and (Test-HealthCurrent)) {
 if (-not $skipApiRestart) {
     if (Test-Path $ops) {
         Log "Eski API surecleri durduruluyor (port $Port)"
-        & py -3 $ops kill-all-api --port $Port 2>&1 | ForEach-Object { Log $_ }
+        & $script:PyExe $ops kill-all-api --port $Port 2>&1 | ForEach-Object { Log $_ }
         Start-Sleep -Seconds 2
         if (-not (Test-PortFree)) {
             Log "Port $Port hala dolu - yonetici temizligi deneniyor"
@@ -177,7 +220,7 @@ if (-not $skipApiRestart) {
             if (Test-Path $bat) {
                 Start-Process -FilePath $bat -Verb RunAs -Wait
                 Start-Sleep -Seconds 2
-                & py -3 $ops kill-all-api --port $Port 2>&1 | ForEach-Object { Log $_ }
+                & $script:PyExe $ops kill-all-api --port $Port 2>&1 | ForEach-Object { Log $_ }
                 Start-Sleep -Seconds 1
             }
         }
@@ -202,7 +245,7 @@ Log: $Log
 
     Remove-Item $ApiErr -ErrorAction SilentlyContinue
     Log "API baslatiliyor..."
-    Start-Process -FilePath "py" -ArgumentList @("-3", "run_desktop_api.py", "--host", "127.0.0.1", "--port", "$Port") -WorkingDirectory $Ia -WindowStyle Hidden -RedirectStandardError $ApiErr
+    Start-Process -FilePath $script:PyExe -ArgumentList @("run_desktop_api.py", "--host", "127.0.0.1", "--port", "$Port") -WorkingDirectory $Ia -WindowStyle Hidden -RedirectStandardError $ApiErr
 
     for ($i = 0; $i -lt 300; $i++) {
         if (Test-HealthCurrent) { $ok = $true; break }
@@ -260,14 +303,10 @@ Log "Electron fresh marker yazildi rev=$ExpectedRev"
 
 
 @(
-
-    "# UI -> yerel API"
-
+    "# UI -> yerel API",
     "http://127.0.0.1:$Port"
-
+    
 ) | Set-Content -Path (Join-Path $Rd "ruzgar_remote_api.txt") -Encoding UTF8
-
-
 
 $electron = Join-Path $Rd "node_modules\.bin\electron.cmd"
 

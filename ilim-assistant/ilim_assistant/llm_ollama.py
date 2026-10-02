@@ -106,7 +106,7 @@ def ollama_list_model_names(timeout_sec: float = 3.0) -> list[str]:
 
 
 def ollama_model_available(model: str, *, timeout_sec: float = 3.0) -> bool:
-    """Model Ollama'da indirilmiş mi? (llama3.1:70b / llama3.1:70b-instruct vb.)"""
+    """Model Ollama'da indirilmiş mi? (llama3 / llama3-instruct vb.)"""
     want = (model or "").strip()
     if not want:
         return False
@@ -193,6 +193,27 @@ def _apply_sampling_extras(payload: dict) -> None:
         pass
 
 
+def _apply_ollama_runtime_options(payload: dict) -> None:
+    """
+    Ollama uzantıları: bağlam penceresi + keep_alive (VRAM'de model tut = sonraki tur hızlı).
+    OpenAI uyumlu /v1 gövdesinde Ollama bunları tanır.
+    """
+    opts: dict = dict(payload.get("options") or {})
+    raw_ctx = (os.environ.get("OLLAMA_NUM_CTX") or os.environ.get("RUZGAR_OLLAMA_NUM_CTX") or "").strip()
+    if raw_ctx:
+        try:
+            ctx = int(raw_ctx)
+            if ctx >= 2048:
+                opts["num_ctx"] = min(ctx, 32768)
+        except ValueError:
+            pass
+    if opts:
+        payload["options"] = opts
+    raw_ka = (os.environ.get("OLLAMA_KEEP_ALIVE") or os.environ.get("RUZGAR_OLLAMA_KEEP_ALIVE") or "30m").strip()
+    if raw_ka and raw_ka.lower() not in ("0", "false", "no", "-"):
+        payload["keep_alive"] = raw_ka
+
+
 def chat_completion(
     system: str,
     user: str,
@@ -221,6 +242,7 @@ def chat_completion(
     }
     _apply_chat_limits(payload)
     _apply_sampling_extras(payload)
+    _apply_ollama_runtime_options(payload)
     url = base.rstrip("/") + "/chat/completions"
     headers = {
         "Content-Type": "application/json",
@@ -276,6 +298,7 @@ def chat_completion_stream(
         payload["max_tokens"] = max(64, min(int(max_tokens), 4096))
     _apply_chat_limits(payload)
     _apply_sampling_extras(payload)
+    _apply_ollama_runtime_options(payload)
     url = base.rstrip("/") + "/chat/completions"
     headers = {
         "Content-Type": "application/json",

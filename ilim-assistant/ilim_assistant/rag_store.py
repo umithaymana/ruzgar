@@ -73,9 +73,14 @@ def _load_markdown_files(root: Path) -> List[Tuple[str, str]]:
 
 
 def _embed_model():
+    import os
+
     from sentence_transformers import SentenceTransformer
 
-    return SentenceTransformer(_MODEL_NAME)
+    # Ollama GPU VRAM kullanırken gömme CUDA'ya binmesin (8GB kartlarda kilitlenme).
+    # RUZGAR_EMBED_DEVICE=cuda ile zorla GPU.
+    device = (os.environ.get("RUZGAR_EMBED_DEVICE") or "cpu").strip() or "cpu"
+    return SentenceTransformer(_MODEL_NAME, device=device)
 
 
 _cached_embedder = None

@@ -131,6 +131,15 @@ function Test-RuzgarGeminiKeyConfigured {
 Log "Basladi Root=$Root port=$ApiPort WantGradio=$WantGradio ForceRestart=$ForceRestart"
 
 function Find-Py {
+    # Öncelik: D:\ÜMİT\PROGRAMLAR venv (yeni makine / C: dışı kurulum)
+    $preferred = @(
+        $env:RUZGAR_PYTHON,
+        "D:\ÜMİT\PROGRAMLAR\venvs\ruzgar\Scripts\python.exe",
+        (Join-Path $Root "ilim-assistant\.venv\Scripts\python.exe")
+    ) | Where-Object { $_ -and (Test-Path $_) }
+    foreach ($p in $preferred) {
+        return @($p, @())
+    }
     try {
         $c = Get-Command py -ErrorAction Stop
         return @($c.Path, @("-3"))
@@ -375,9 +384,13 @@ if ($env:RUZGAR_OLLAMA_ONLY -eq "1") {
     Log "Bulut kapali - yerel Ollama"
 }
 
-$script:RuzgarExpectedBuildRev = & py -3 (Join-Path $Root "ilim-assistant\scripts\ruzgar_read_build_rev.py") 2>$null
+try {
+    $script:RuzgarExpectedBuildRev = & $script:PyExe @($script:PyArgs) (Join-Path $Root "ilim-assistant\scripts\ruzgar_read_build_rev.py") 2>$null
+} catch {
+    $script:RuzgarExpectedBuildRev = $null
+}
 if (-not $script:RuzgarExpectedBuildRev) { $script:RuzgarExpectedBuildRev = "2026-06-15-ruzgar-programlama-pro-v1" }
-$script:RuzgarExpectedBuildRev = $script:RuzgarExpectedBuildRev.Trim()
+$script:RuzgarExpectedBuildRev = "$($script:RuzgarExpectedBuildRev)".Trim()
 $env:RUZGAR_EXPECTED_BUILD_REV = $script:RuzgarExpectedBuildRev
 
 function Show-RuzgarFaz60BuildMismatchPrompt {
@@ -455,7 +468,7 @@ function Start-OllamaIfNeeded {
     if (Test-PortListen 11434) {
         Log "Ollama hazir (11434)"
         $ramGb = [math]::Round((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory / 1GB, 0)
-        $defaultMain = if ($ramGb -ge 24) { "llama3.1:70b" } elseif ($ramGb -ge 12) { "llama3.1:8b" } else { "llama3.2:3b" }
+        $defaultMain = if ($ramGb -ge 24) { "llama3" } elseif ($ramGb -ge 12) { "llama3.1:8b" } else { "llama3.2:3b" }
         $mainModel = if ($env:OLLAMA_CHAT_MODEL) { $env:OLLAMA_CHAT_MODEL.Trim() } else { $defaultMain }
         $fastModel = if ($env:RUZGAR_BRAIN_HIZLI_MODEL) { $env:RUZGAR_BRAIN_HIZLI_MODEL.Trim() } else { "llama3.2:3b" }
         if ($ramGb -lt 16 -and $mainModel -match "70b") {
@@ -601,14 +614,19 @@ function Test-ApiBuildCurrent {
             return $false
         }
         if ($env:RUZGAR_OLLAMA_ONLY -eq "1") {
+            # Lite health kartında super_brain olmayabilir — ollama_only yoksa rev yeterli say.
             $sb = $j.super_brain
-            if ($sb.gemini_configured -eq $true) {
-                Log "health: Gemini hala acik - eski API sureci"
-                return $false
-            }
-            if ($sb.ollama_only -ne $true) {
-                Log "health: ollama_only bayragi yok - eski kod"
-                return $false
+            if ($null -ne $sb) {
+                if ($sb.gemini_configured -eq $true) {
+                    Log "health: Gemini hala acik - eski API sureci"
+                    return $false
+                }
+                if ($sb.PSObject.Properties.Name -contains "ollama_only" -and $sb.ollama_only -ne $true) {
+                    Log "health: ollama_only=false - eski API sureci"
+                    return $false
+                }
+            } else {
+                Log "health: lite kart (super_brain yok) - rev ile kabul"
             }
         }
         return $true

@@ -367,6 +367,12 @@ def try_genel_hafiza_reply(message: str, mode: str) -> str | None:
     msg = (message or "").strip()
     if not msg or len(msg) > 4000:
         return None
+    # Kısa aritmetik / sayı sorularında fuzzy hafıza yanlış eşleşmesin (örn. 2+2 → kardeşler)
+    low = msg.lower()
+    if re.search(r"\d+\s*[\+\-\*/x×]\s*\d+", low) or re.search(
+        r"\b(arti|eksi|çargı|carpi|kaç eder|kac eder|kaçtır|kactir)\b", low
+    ):
+        return None
     try:
         from ilim_assistant.ana_motor_plan import should_stay_on_ana_motor_bilgi
 

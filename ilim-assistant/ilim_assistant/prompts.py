@@ -154,6 +154,37 @@ def _bilge_voice_suffix() -> str:
 """
 
 
+def _ollama_sohbet_suffix() -> str:
+    """Yalnızca yerel Ollama iken kısa/robotik cevapları gevşetir."""
+    try:
+        from ilim_assistant.config import ollama_only_mode
+
+        if not ollama_only_mode():
+            return ""
+    except Exception:
+        if os.environ.get("RUZGAR_OLLAMA_ONLY", "0").strip().lower() not in (
+            "1",
+            "true",
+            "yes",
+            "on",
+        ):
+            return ""
+    if os.environ.get("RUZGAR_OLLAMA_SOHBET_BOOST", "1").strip().lower() in (
+        "0",
+        "false",
+        "no",
+    ):
+        return ""
+    return """
+
+Yerel sohbet (Ollama-only — akıcı asistan):
+- ChatGPT gibi doğal konuş: robotik tek cümle veya şablon yasak; en az 2–4 dolu cümle (gündelik sohbet/açıklamada).
+- Önceki turları hatırla; kullanıcı «bu / o / devam» derse bağlamı kaçırma.
+- Bilgi sorusunda önce net cevap, ardından kısa gerekçe veya örnek; yetmezse dürüstçe söyle, uydurma.
+- Madde listesini yalnız gerçekten yapı gerektiğinde kullan; sohbette düzyazı tercih et.
+"""
+
+
 def pick_system(coding_mode: bool, mode_norm: str | None = None) -> str:
     if coding_mode:
         return CODING_SYSTEM
@@ -164,7 +195,7 @@ def pick_system(coding_mode: bool, mode_norm: str | None = None) -> str:
         return SES_SYSTEM
     if m == "video":
         return VIDEO_SYSTEM
-    return ASSISTANT_SYSTEM + _bilge_voice_suffix()
+    return ASSISTANT_SYSTEM + _bilge_voice_suffix() + _ollama_sohbet_suffix()
 
 
 def append_direct_answer_directive(user_payload: str, user_message: str) -> str:
@@ -196,8 +227,9 @@ def append_direct_answer_directive(user_payload: str, user_message: str) -> str:
         + "\"Buyur …\" gibi **önceki tur şablonlarından hiçbirini yazma**. "
         + "\"Ümit abi\" diye hitap ederek mesajın içeriğine **doğrudan** yanıt ver. "
         + "Kullanıcının cümlesini kopyalama veya aynı yapıda yanıt kurma. "
-        + "Kısa bilgi sorularında önce tek cümlelik net cevabı ver; "
-        + "gerekirse ardından en fazla 2-4 maddeyle bağlam ekle. "
+        + "Kısa bilgi sorularında önce net cevabı ver; ardından 2–4 cümle bağlam veya örnek ekle "
+        + "(tek kelimelik / tek satırlık robotik cevap verme). "
+        + "Sohbet/muhabbet turunda en az 2–3 dolu cümle yaz. "
         + "Araştırma/kod/iş emri ise sonucu, uygulama adımını ve varsa riski ayrı ayrı kısa yaz.\n"
     )
 

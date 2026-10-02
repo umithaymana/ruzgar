@@ -1,8 +1,40 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-06-18 (Sıra 6a — bilgi turu sağlamlaştırma)
+**Son güncelleme:** 2026-10-03 (yeni makine kurulum + sohbet paketi)
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
+
+### 2026-10-03 — Yeni PC taşıma + Ollama-only sohbet (ara verildi)
+
+**Donanım:** Ryzen 5 5500 · 16 GB RAM · RTX 4060 8 GB · Ollama 0.35
+
+**D: kurulumlar (`D:\ÜMİT\PROGRAMLAR\`):**
+- Ollama modelleri → `Ollama\models` (`OLLAMA_MODELS`)
+- Python 3.12 + venv → `venvs\ruzgar` (`RUZGAR_PYTHON`)
+- Node LTS → `Nodejs` · cache’ler → `Caches\`
+- Git → `Git\cmd`
+
+**Modeller:** `llama3.2:3b` (hizli) · `llama3.1:8b` (denge) · `qwen2.5-coder:7b` (kod)
+
+**`.env` (git’te yok):** `RUZGAR_OLLAMA_ONLY=1` · Gemini/Groq kapalı · RAG warmup açık · `RUZGAR_EMBED_DEVICE=cpu` · web PRO/search şimdilik kapalı (bilgi yolu kilidi araştırılırken)
+
+**Kod (bu oturum):**
+- `Ruzgar.ps1` — D: venv önceliği · lite health’te `ollama_only` döngü düzeltmesi · `py` yerine `PyExe`
+- `RuzgarMasaustuBaslat.ps1` + `scripts/Masaustune_Kisayol.ps1` — masaüstü kısayol / D: yolları
+- `llm_ollama.py` — `num_ctx` + `keep_alive`
+- `prompts.py` — Ollama-only sohbet üslubu
+- `rag_store.py` — gömme cihazı CPU (VRAM çakışması)
+- `chat_core.py` — aritmetik soruda fuzzy hafıza atlama
+
+**Doğrulama:** Selam / anlık yollar OK · bilgi sorularında `prepare_turn` hâlâ takılabiliyor (sonraki oturum hedefi).
+
+**Masaüstü kısayol:** `C:\Users\hayma\Desktop\RUZGAR.lnk`
+
+**Sırada (dönünce):**
+1. Bilgi sohbeti kilidi — `prepare_turn` / plan / retrieval hang’ini çöz
+2. Sohbet kalitesini ölç (bellek + dolu cevap)
+3. İsteğe bağlı: kontrollü bulut geri açma (kota korumalı)
+4. 6b–6c (programlama / tek yüz) — önceki plandan
 
 ### 2026-06-18 — Sıra 6a: bilgi turu (devam: 6b…)
 
