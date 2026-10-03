@@ -29,6 +29,8 @@ from pathlib import Path
 from typing import Annotated, Any, Iterator
 
 import uvicorn
+from duckduckgo_search import DDGS
+
 from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response, StreamingResponse
@@ -533,6 +535,18 @@ def _sync_startup_warmups() -> None:
         from ilim_assistant.ruzgar_denge70_faz_k import maybe_auto_pull_on_startup
 
         maybe_auto_pull_on_startup()
+    except Exception:
+        pass
+    # Port + motor boot sonrası: denge modelini VRAM'de tut (ilk bilgi sorusu soğuk yüklenmesin).
+    try:
+        if os.environ.get("RUZGAR_OLLAMA_PRELOAD", "1").strip().lower() not in (
+            "0",
+            "false",
+            "no",
+        ):
+            from ilim_assistant.llm_ollama import preload_primary_chat_model
+
+            preload_primary_chat_model()
     except Exception:
         pass
     if os.environ.get("RUZGAR_PRINT_READY_SEAL", "1").strip().lower() not in (
@@ -1512,7 +1526,7 @@ def _health_build_block() -> dict:
     try:
         from ilim_assistant.ruzgar_denge70_faz_k import denge70_faz_k_status
 
-        base["denge70_faz_k"] = denge70_faz_k_status()
+        #base["denge70_faz_k"] = denge70_faz_k_status()
     except Exception:
         pass
     try:
@@ -1673,7 +1687,7 @@ def _health_full_response() -> dict[str, Any]:
             "bilgi_brain_chain": os.environ.get("RUZGAR_BILGI_BRAIN_CHAIN", "").strip() or None,
             "bilim_derin": os.environ.get("RUZGAR_BILIM_DERIN", "1").strip().lower()
             not in ("0", "false", "no"),
-            "brain_denge70_model": os.environ.get("RUZGAR_BRAIN_DENGE70_MODEL", "llama3.1:70b"),
+            "brain_denge70_model": os.environ.get("RUZGAR_BRAIN_DENGE70_MODEL", "llama3"),
             "otonom_debug_bridge": os.environ.get("RUZGAR_ANA_MOTOR_OTONOM_DEBUG", "1").strip().lower()
             not in ("0", "false", "no"),
             "denge70_ready": bool(_d70_health.get("ready")),
@@ -10194,6 +10208,35 @@ def _collect_fast_lane_chat_events(req: ChatRequest) -> list[dict[str, Any]] | N
         from ilim_assistant.chat_fast_lane import mode_norm_from_request, try_instant_reply
 
         mode_norm = mode_norm_from_request(getattr(req, "mode", None))
+        if mode_norm in ("genel", "gelisim", "uretim") and not bool(
+            getattr(req, "coding_mode", False)
+        ):
+            try:
+                from ilim_assistant.weather_live import maybe_weather_instant_reply
+
+                weather_hi = maybe_weather_instant_reply(
+                    msg_raw,
+                    getattr(req, "history", None),
+                    coding_mode=False,
+                )
+                if weather_hi:
+                    orch_w: dict[str, Any] = {
+                        "plan": {"primary": "hava", "label_tr": "Guncel hava"},
+                        "weather_live": True,
+                        "fast_lane": True,
+                    }
+                    return list(
+                        _iter_instant_chat_events(
+                            weather_hi,
+                            msg_raw,
+                            session_wake_used=req.session_wake_used,
+                            msg_for_wake=req.message,
+                            orch=orch_w,
+                            instant_gundelik=True,
+                        )
+                    )
+            except Exception:
+                pass
         reply = try_instant_reply(msg_raw, mode_norm)
         if not reply:
             return None
@@ -10362,6 +10405,13 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             _skip_early_hub = looks_like_casual_social_chat(msg_early)
         except Exception:
             pass
+        try:
+            from ilim_assistant.weather_live import is_weather_query
+
+            if is_weather_query(msg_early):
+                _skip_early_hub = True
+        except Exception:
+            pass
         # Aninda bilgi yolu — hub/hafiza yonlendirmesinden ONCE (tikanmayi onler).
         try:
             from ilim_assistant.ruzgar_tek_beyin_analiz import (
@@ -10383,6 +10433,31 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     instant_gundelik=True,
                 )
                 return
+
+            try:
+                from ilim_assistant.weather_live import maybe_weather_instant_reply
+
+                _wx_early = maybe_weather_instant_reply(
+                    msg_early,
+                    req.history,
+                    coding_mode=False,
+                )
+                if _wx_early:
+                    _orch_wx = dict(orch_early)
+                    _orch_wx["weather_live"] = True
+                    _orch_wx.setdefault("plan", {})["primary"] = "hava"
+                    _orch_wx["plan"]["label_tr"] = "Güncel hava"
+                    yield from _iter_instant_chat_events(
+                        _wx_early,
+                        msg_early,
+                        session_wake_used=req.session_wake_used,
+                        msg_for_wake=req.message,
+                        orch=_orch_wx,
+                        instant_gundelik=True,
+                    )
+                    return
+            except Exception:
+                pass
 
             _fact = None
             try:
@@ -10688,206 +10763,215 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 return
         except Exception:
             pass
+        _wx_skip_heavy = False
         try:
-            from ilim_assistant.ruzgar_tek_beyin import (
-                iter_tek_beyin_hafiza_reply,
-                should_use_personal_hafiza_first,
-                tek_beyin_enabled,
-            )
+            from ilim_assistant.weather_live import is_weather_query
 
-            if tek_beyin_enabled() and should_use_personal_hafiza_first(
-                msg_early, req.history
-            ):
+            _wx_skip_heavy = is_weather_query(msg_early)
+        except Exception:
+            _wx_skip_heavy = False
+        if not _wx_skip_heavy:
+            try:
                 from ilim_assistant.ruzgar_tek_beyin import (
-                    resolve_memory_query_message,
-                    _resolve_personal_hafiza_hint,
+                    iter_tek_beyin_hafiza_reply,
+                    should_use_personal_hafiza_first,
+                    tek_beyin_enabled,
                 )
 
-                _tb_target = resolve_memory_query_message(msg_early, req.history)
-                _tb_hint = _resolve_personal_hafiza_hint(_tb_target, req.history)
-                _tb_stream = iter_tek_beyin_hafiza_reply(
-                    msg_early,
-                    req.history,
-                    mode_norm="genel",
-                    conversation_context=getattr(req, "conversation_context", None),
-                    session_id=getattr(req, "ana_motor_session_id", None),
-                )
-                if _tb_stream is None:
-                    from ilim_assistant.ruzgar_tek_beyin import try_instant_hafiza_reply
+                if tek_beyin_enabled() and should_use_personal_hafiza_first(
+                    msg_early, req.history
+                ):
+                    from ilim_assistant.ruzgar_tek_beyin import (
+                        resolve_memory_query_message,
+                        _resolve_personal_hafiza_hint,
+                    )
 
-                    _tb_instant = try_instant_hafiza_reply(msg_early, req.history)
-                    if _tb_instant:
+                    _tb_target = resolve_memory_query_message(msg_early, req.history)
+                    _tb_hint = _resolve_personal_hafiza_hint(_tb_target, req.history)
+                    _tb_stream = iter_tek_beyin_hafiza_reply(
+                        msg_early,
+                        req.history,
+                        mode_norm="genel",
+                        conversation_context=getattr(req, "conversation_context", None),
+                        session_id=getattr(req, "ana_motor_session_id", None),
+                    )
+                    if _tb_stream is None:
+                        from ilim_assistant.ruzgar_tek_beyin import try_instant_hafiza_reply
+
+                        _tb_instant = try_instant_hafiza_reply(msg_early, req.history)
+                        if _tb_instant:
+                            _orch_tb = dict(orch_early)
+                            _orch_tb.setdefault("plan", {})["primary"] = "hafiza"
+                            _orch_tb["plan"]["label_tr"] = "Hafıza / kayıt"
+                            _orch_tb["tek_beyin"] = True
+                            yield from _iter_instant_chat_events(
+                                _tb_instant,
+                                msg_early,
+                                session_wake_used=req.session_wake_used,
+                                msg_for_wake=req.message,
+                                orch=_orch_tb,
+                                instant_gundelik=True,
+                            )
+                            return
+                    if _tb_stream is not None:
                         _orch_tb = dict(orch_early)
                         _orch_tb.setdefault("plan", {})["primary"] = "hafiza"
                         _orch_tb["plan"]["label_tr"] = "Hafıza / kayıt"
                         _orch_tb["tek_beyin"] = True
-                        yield from _iter_instant_chat_events(
-                            _tb_instant,
-                            msg_early,
-                            session_wake_used=req.session_wake_used,
-                            msg_for_wake=req.message,
-                            orch=_orch_tb,
-                            instant_gundelik=True,
-                        )
-                        return
-                if _tb_stream is not None:
-                    _orch_tb = dict(orch_early)
-                    _orch_tb.setdefault("plan", {})["primary"] = "hafiza"
-                    _orch_tb["plan"]["label_tr"] = "Hafıza / kayıt"
-                    _orch_tb["tek_beyin"] = True
-                    yield {
-                        "type": "status",
-                        "text": "Kişisel hafıza — doğal yanıt hazırlanıyor…",
-                    }
-                    reply_body = ""
-                    for piece in _tb_stream:
-                        reply_body += piece
-                        yield {"type": "token", "text": piece}
-                    if not (reply_body or "").strip():
-                        from ilim_assistant.ruzgar_tek_beyin import try_instant_hafiza_reply
-
-                        _tb_fb = try_instant_hafiza_reply(msg_early, req.history)
-                        if _tb_fb:
-                            reply_body = _tb_fb
-                            yield {"type": "token", "text": _tb_fb}
-                    if (reply_body or "").strip():
-                        try:
-                            from ilim_assistant.ruzgar_tek_beyin_dogrulama import (
-                                apply_personal_hafiza_guard,
-                            )
-
-                            if _tb_hint:
-                                reply_body = apply_personal_hafiza_guard(
-                                    _tb_target,
-                                    reply_body,
-                                    _tb_hint,
-                                )
-                        except Exception:
-                            pass
-                        full_out = finalize_assistant_reply(reply_body)
-                        new_wake = req.session_wake_used or message_calls_wake_name(
-                            req.message
-                        )
                         yield {
-                            "type": "done",
-                            "full_reply": full_out,
-                            "user_message": msg_early,
-                            "new_wake_used": new_wake,
-                            "orchestra": _orch_tb,
-                            "instant_gundelik": True,
-                            "tek_beyin": True,
-                            "hafiza_dogal": True,
+                            "type": "status",
+                            "text": "Kişisel hafıza — doğal yanıt hazırlanıyor…",
                         }
-                        return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_tek_beyin import (
-                dost_sohbet_enabled,
-                iter_tek_beyin_dost_reply,
-                should_use_dost_sohbet_first,
-            )
+                        reply_body = ""
+                        for piece in _tb_stream:
+                            reply_body += piece
+                            yield {"type": "token", "text": piece}
+                        if not (reply_body or "").strip():
+                            from ilim_assistant.ruzgar_tek_beyin import try_instant_hafiza_reply
 
-            if dost_sohbet_enabled() and should_use_dost_sohbet_first(
-                msg_early, req.history, mode_norm="genel"
-            ):
-                from ilim_assistant.ruzgar_tek_beyin_karsilama import (
-                    looks_like_greeting_complaint,
-                    looks_like_session_greeting,
-                    try_session_resume_greeting,
+                            _tb_fb = try_instant_hafiza_reply(msg_early, req.history)
+                            if _tb_fb:
+                                reply_body = _tb_fb
+                                yield {"type": "token", "text": _tb_fb}
+                        if (reply_body or "").strip():
+                            try:
+                                from ilim_assistant.ruzgar_tek_beyin_dogrulama import (
+                                    apply_personal_hafiza_guard,
+                                )
+
+                                if _tb_hint:
+                                    reply_body = apply_personal_hafiza_guard(
+                                        _tb_target,
+                                        reply_body,
+                                        _tb_hint,
+                                    )
+                            except Exception:
+                                pass
+                            full_out = finalize_assistant_reply(reply_body)
+                            new_wake = req.session_wake_used or message_calls_wake_name(
+                                req.message
+                            )
+                            yield {
+                                "type": "done",
+                                "full_reply": full_out,
+                                "user_message": msg_early,
+                                "new_wake_used": new_wake,
+                                "orchestra": _orch_tb,
+                                "instant_gundelik": True,
+                                "tek_beyin": True,
+                                "hafiza_dogal": True,
+                            }
+                            return
+            except Exception:
+                pass
+        if not _wx_skip_heavy:
+            try:
+                from ilim_assistant.ruzgar_tek_beyin import (
+                    dost_sohbet_enabled,
+                    iter_tek_beyin_dost_reply,
+                    should_use_dost_sohbet_first,
                 )
 
-                if looks_like_session_greeting(msg_early) or looks_like_greeting_complaint(
-                    msg_early
+                if dost_sohbet_enabled() and should_use_dost_sohbet_first(
+                    msg_early, req.history, mode_norm="genel"
                 ):
-                    _kars_dost = try_session_resume_greeting(
-                        msg_early,
-                        client_history=req.history,
+                    from ilim_assistant.ruzgar_tek_beyin_karsilama import (
+                        looks_like_greeting_complaint,
+                        looks_like_session_greeting,
+                        try_session_resume_greeting,
                     )
-                    if _kars_dost:
-                        _orch_kd = dict(orch_early)
-                        _orch_kd.setdefault("plan", {})["primary"] = "gundelik"
-                        _orch_kd["plan"]["label_tr"] = "Oturum karşılama"
-                        yield from _iter_instant_chat_events(
-                            _kars_dost,
-                            msg_early,
-                            session_wake_used=req.session_wake_used,
-                            msg_for_wake=req.message,
-                            orch=_orch_kd,
-                            instant_gundelik=True,
-                        )
-                        return
-                _dost_stream = iter_tek_beyin_dost_reply(
-                    msg_early,
-                    req.history,
-                    mode_norm="genel",
-                    voice_turn=bool(getattr(req, "voice_turn", False)),
-                    conversation_context=getattr(req, "conversation_context", None),
-                    session_id=getattr(req, "ana_motor_session_id", None),
-                )
-                if _dost_stream is not None:
-                    _orch_d = dict(orch_early)
-                    _orch_d.setdefault("plan", {})["primary"] = "gundelik"
-                    _orch_d["plan"]["label_tr"] = "Sohbet"
-                    _orch_d["tek_beyin"] = True
-                    _orch_d["tek_beyin_dost"] = True
-                    try:
-                        from ilim_assistant.ruzgar_tek_beyin_oturum import (
-                            analyze_mood_thread,
-                            is_mood_thread_active,
-                            is_mood_thread_paused,
-                            looks_like_mood_resume,
-                        )
 
-                        _mt = analyze_mood_thread(req.history)
-                        if is_mood_thread_active(req.history):
-                            _orch_d["tek_beyin_mood"] = _mt.mood_label or True
-                            _orch_d["tek_beyin_mood_turns"] = _mt.turn_count
-                        elif is_mood_thread_paused(req.history) and looks_like_mood_resume(
-                            msg_early, req.history
-                        ):
-                            _orch_d["tek_beyin_mood"] = _mt.mood_label or True
-                            _orch_d["tek_beyin_mood_resume"] = True
-                            _orch_d["tek_beyin_mood_turns"] = _mt.turn_count
-                    except Exception:
-                        pass
-                    if getattr(req, "voice_turn", False):
-                        _orch_d["voice_turn"] = True
-                    yield {
-                        "type": "status",
-                        "text": "Dost sohbet — doğal yanıt hazırlanıyor…",
-                    }
-                    reply_body = ""
-                    for piece in _dost_stream:
-                        reply_body += piece
-                        yield {"type": "token", "text": piece}
-                    if not (reply_body or "").strip():
-                        _kars_fb = try_session_resume_greeting(
+                    if looks_like_session_greeting(msg_early) or looks_like_greeting_complaint(
+                        msg_early
+                    ):
+                        _kars_dost = try_session_resume_greeting(
                             msg_early,
                             client_history=req.history,
                         )
-                        if _kars_fb:
-                            reply_body = _kars_fb
-                            yield {"type": "token", "text": _kars_fb}
-                    if (reply_body or "").strip():
-                        full_out = finalize_assistant_reply(reply_body)
-                        new_wake = req.session_wake_used or message_calls_wake_name(
-                            req.message
-                        )
+                        if _kars_dost:
+                            _orch_kd = dict(orch_early)
+                            _orch_kd.setdefault("plan", {})["primary"] = "gundelik"
+                            _orch_kd["plan"]["label_tr"] = "Oturum karşılama"
+                            yield from _iter_instant_chat_events(
+                                _kars_dost,
+                                msg_early,
+                                session_wake_used=req.session_wake_used,
+                                msg_for_wake=req.message,
+                                orch=_orch_kd,
+                                instant_gundelik=True,
+                            )
+                            return
+                    _dost_stream = iter_tek_beyin_dost_reply(
+                        msg_early,
+                        req.history,
+                        mode_norm="genel",
+                        voice_turn=bool(getattr(req, "voice_turn", False)),
+                        conversation_context=getattr(req, "conversation_context", None),
+                        session_id=getattr(req, "ana_motor_session_id", None),
+                    )
+                    if _dost_stream is not None:
+                        _orch_d = dict(orch_early)
+                        _orch_d.setdefault("plan", {})["primary"] = "gundelik"
+                        _orch_d["plan"]["label_tr"] = "Sohbet"
+                        _orch_d["tek_beyin"] = True
+                        _orch_d["tek_beyin_dost"] = True
+                        try:
+                            from ilim_assistant.ruzgar_tek_beyin_oturum import (
+                                analyze_mood_thread,
+                                is_mood_thread_active,
+                                is_mood_thread_paused,
+                                looks_like_mood_resume,
+                            )
+
+                            _mt = analyze_mood_thread(req.history)
+                            if is_mood_thread_active(req.history):
+                                _orch_d["tek_beyin_mood"] = _mt.mood_label or True
+                                _orch_d["tek_beyin_mood_turns"] = _mt.turn_count
+                            elif is_mood_thread_paused(req.history) and looks_like_mood_resume(
+                                msg_early, req.history
+                            ):
+                                _orch_d["tek_beyin_mood"] = _mt.mood_label or True
+                                _orch_d["tek_beyin_mood_resume"] = True
+                                _orch_d["tek_beyin_mood_turns"] = _mt.turn_count
+                        except Exception:
+                            pass
+                        if getattr(req, "voice_turn", False):
+                            _orch_d["voice_turn"] = True
                         yield {
-                            "type": "done",
-                            "full_reply": full_out,
-                            "user_message": msg_early,
-                            "new_wake_used": new_wake,
-                            "orchestra": _orch_d,
-                            "instant_gundelik": True,
-                            "tek_beyin": True,
-                            "tek_beyin_dost": True,
-                            "casual_fast": True,
+                            "type": "status",
+                            "text": "Dost sohbet — doğal yanıt hazırlanıyor…",
                         }
-                        return
-        except Exception:
-            pass
+                        reply_body = ""
+                        for piece in _dost_stream:
+                            reply_body += piece
+                            yield {"type": "token", "text": piece}
+                        if not (reply_body or "").strip():
+                            _kars_fb = try_session_resume_greeting(
+                                msg_early,
+                                client_history=req.history,
+                            )
+                            if _kars_fb:
+                                reply_body = _kars_fb
+                                yield {"type": "token", "text": _kars_fb}
+                        if (reply_body or "").strip():
+                            full_out = finalize_assistant_reply(reply_body)
+                            new_wake = req.session_wake_used or message_calls_wake_name(
+                                req.message
+                            )
+                            yield {
+                                "type": "done",
+                                "full_reply": full_out,
+                                "user_message": msg_early,
+                                "new_wake_used": new_wake,
+                                "orchestra": _orch_d,
+                                "instant_gundelik": True,
+                                "tek_beyin": True,
+                                "tek_beyin_dost": True,
+                                "casual_fast": True,
+                            }
+                            return
+            except Exception:
+                pass
         try:
             from ilim_assistant.nebula_kitap_hafiza import try_consume_nebula_kitap_command
 
@@ -13190,6 +13274,11 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
     import time
 
     t0 = time.perf_counter()
+    if "ara " in (req.message or "").lower():
+        query = req.message.lower().replace("ara ", "")
+        results = web_search(query)
+        yield {"type": "token", "text": f"\n\nBulduklarım: {results}"}
+        return
     for obj in _iter_chat_turn_events_impl(req):
         if obj.get("type") == "done":
             obj = dict(obj)
@@ -13380,3 +13469,9 @@ if __name__ == "__main__":
         log_level=log_level,
         access_log=access_log,
     )
+
+
+def web_search(query):
+    with DDGS() as ddgs:
+        results = list(ddgs.text(query, max_results=3))
+        return results

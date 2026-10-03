@@ -376,6 +376,31 @@ if (-not (Test-Path (Join-Path $iaJoin "desktop_server.py"))) {
 $ia = (Resolve-Path $iaJoin).Path
 
 Import-RuzgarEnvFile -IaRoot $ia | Out-Null
+
+# Ollama model dizini — tray bazen User env'yi gormeden bos liste verir.
+function Ensure-RuzgarOllamaModelsPath {
+    $candidates = @(
+        $env:OLLAMA_MODELS,
+        "D:\ÜMİT\PROGRAMLAR\Ollama\models",
+        "D:\UMIT_PROGRAMLAR_Ollama_models"
+    ) | Where-Object { $_ -and $_.Trim() }
+    foreach ($c in $candidates) {
+        try {
+            if (Test-Path -LiteralPath $c) {
+                $resolved = (Resolve-Path -LiteralPath $c).Path
+                $env:OLLAMA_MODELS = $resolved
+                try {
+                    [Environment]::SetEnvironmentVariable("OLLAMA_MODELS", $resolved, "User")
+                } catch { }
+                Log "OLLAMA_MODELS=$resolved"
+                return
+            }
+        } catch { }
+    }
+    Log "UYARI: OLLAMA_MODELS yolu bulunamadi (modeller gorunmeyebilir)"
+}
+Ensure-RuzgarOllamaModelsPath
+
 if ($env:RUZGAR_OLLAMA_ONLY -eq "1") {
     Log "RUZGAR_OLLAMA_ONLY=1 - yalnizca yerel Ollama (Gemini/Groq kapali)"
 } elseif (Test-RuzgarGeminiKeyConfigured -IaRoot $ia) {

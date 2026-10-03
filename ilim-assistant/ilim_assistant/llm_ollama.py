@@ -214,6 +214,46 @@ def _apply_ollama_runtime_options(payload: dict) -> None:
         payload["keep_alive"] = raw_ka
 
 
+def preload_primary_chat_model(*, timeout_sec: float = 120.0) -> dict:
+    """
+    Arka plan ısınması: denge (veya OLLAMA_CHAT_MODEL) VRAM'de tutulsun.
+    Motor boot'undan sonra çağrılmalı; soğuk ilk bilgi sorusunu kısaltır.
+    """
+    model = (
+        os.environ.get("RUZGAR_BRAIN_DENGE_MODEL")
+        or os.environ.get("OLLAMA_CHAT_MODEL")
+        or DEFAULT_OLLAMA_CHAT_MODEL
+    ).strip()
+    if not model:
+        return {"ok": False, "reason": "empty_model"}
+    if not ollama_reachable(timeout_sec=min(3.0, timeout_sec)):
+        return {"ok": False, "reason": "ollama_unreachable", "model": model}
+    root = _ollama_api_root()
+    ka = (os.environ.get("OLLAMA_KEEP_ALIVE") or os.environ.get("RUZGAR_OLLAMA_KEEP_ALIVE") or "60m").strip()
+    payload = {
+        "model": model,
+        "prompt": "ping",
+        "stream": False,
+        "keep_alive": ka if ka.lower() not in ("0", "false", "no", "-") else "60m",
+        "options": {"num_predict": 1},
+    }
+    try:
+        r = _http_session_singleton().post(
+            f"{root}/api/generate",
+            json=payload,
+            timeout=max(15.0, min(float(timeout_sec), 300.0)),
+        )
+        ok = r.status_code == 200
+        if ok:
+            print(f"[Rüzgar] Ollama ön yükleme OK: {model} (keep_alive={payload['keep_alive']})", flush=True)
+        else:
+            print(f"[Rüzgar] Ollama ön yükleme HTTP {r.status_code}: {model}", flush=True)
+        return {"ok": ok, "model": model, "status": r.status_code}
+    except Exception as exc:
+        print(f"[Rüzgar] Ollama ön yükleme atlandı: {exc}", flush=True)
+        return {"ok": False, "model": model, "reason": str(exc)[:200]}
+
+
 def chat_completion(
     system: str,
     user: str,
