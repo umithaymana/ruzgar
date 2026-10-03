@@ -18,7 +18,9 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 
 **Doğrulama (hedef):** selam anında · fotosentez/uydu bilgi yolu kilit değil · kaynar ≠ hava.
 
-**Devam (kalite):** `Ruzgar.ps1` OLLAMA_MODELS garantisi · arka plan `preload_primary_chat_model` · Ollama-only talimat sızıntısı yasağı.
+**Devam (kalite):** `Ruzgar.ps1` OLLAMA_MODELS garantisi · arka plan `preload_primary_chat_model` · Ollama-only talimat sızıntısı yasağı · aritmetik anında (`2+2=4`) · Ay mikro gerçek · scrub güçlendirildi.
+
+**Canlı (2026-10-03):** selam/2+2/Ay anında · kaynar/fotosentez ~3–5 sn · Ollama preload OK · push bekliyor (ahead).
 
 ### 2026-10-03 — Yeni PC taşıma + Ollama-only sohbet (ara verildi)
 
