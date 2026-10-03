@@ -424,12 +424,23 @@ def _weather_intent(msg: str) -> bool:
         return False
 
 
+_PHYSICS_TEMP_RE = re.compile(
+    r"\b(kaynar|kaynama|erir|erime|donar|donma|kaynama\s*nokt|erime\s*nokt|"
+    r"donma\s*nokt|boiling|melting|freezing)\w*\b",
+    re.I,
+)
+_WEATHER_KAÇ_DERECE_RE = re.compile(r"\bka[cç]\s+derece(?:\s|[?!.,]|$)", re.I)
+
+
 def _is_live_weather_query(msg: str) -> bool:
     """
     Güncel hava / anlık durum — yerel RAG (gramer, tecvid md) çekildiğinde model saçma üretir.
     Bu durumda RAG kapatılır; web özetine güvenilir (veya kısa dürüst yanıt).
     """
     low = (msg or "").lower()
+    # "Su kaç derecede kaynar?" ≠ hava durumu ("kaç derece" ⊂ "kaç derecede").
+    if _PHYSICS_TEMP_RE.search(low):
+        return False
     needles = (
         "hava nasıl",
         "hava nasil",
@@ -447,7 +458,6 @@ def _is_live_weather_query(msg: str) -> bool:
         "havalar nasıl",
         "hava durumuna bak",
         "hava durumu bak",
-        "kaç derece",
         "derece mi",
         "yağmur var",
         "yağacak",
@@ -462,6 +472,8 @@ def _is_live_weather_query(msg: str) -> bool:
         "ruzgar esiyor",
     )
     if any(n in low for n in needles):
+        return True
+    if _WEATHER_KAÇ_DERECE_RE.search(low):
         return True
     # Çok kısa günlük sorular (RAG gramer metnine düşmesin)
     s = low.strip().strip("?!.")

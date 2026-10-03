@@ -91,13 +91,9 @@ def looks_like_encyclopedic_fact_question(msg: str) -> bool:
         if any(x in blob for x in history_terms + ("halifelik", "abbasi", "abbâsî")):
             return True
 
-    try:
-        from ilim_assistant.ruzgar_tek_beyin import personal_hafiza_blocks_bilgi_path
-
-        if personal_hafiza_blocks_bilgi_path(raw):
-            return False
-    except Exception:
-        pass
+    # Not: burada personal_hafiza_blocks_bilgi_path ÇAĞRILMAZ.
+    # O yol analyze_turn / should_use_personal_hafiza_first ile döngüye girip
+    # bilgi sorularında prepare_turn'ü kilitliyordu (2026-10-03).
 
     return False
 

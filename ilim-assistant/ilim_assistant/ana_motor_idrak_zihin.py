@@ -16,7 +16,7 @@ import unicodedata
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
-IDRAK_ZIHIN_VERSION = "idrak-zihin-faz-ao-v1-2026-06-14"
+IDRAK_ZIHIN_VERSION = "idrak-zihin-faz-ao-v2-2026-10-03"
 
 _TEMPORAL_PRESENT = re.compile(
     r"(?:"
@@ -315,6 +315,12 @@ def analyze_turn(
     history: list | None = None,
 ) -> TurnIdrak:
     """Tur başı idrak — plan, hafıza ve web kapıları için tek kaynak."""
+    # Kişisel-hafıza yolu analyze_turn'e geri çağırabiliyor; reentry'de hafif yol.
+    try:
+        from ilim_assistant.ruzgar_tek_beyin import _idrak_reentry
+    except Exception:
+        _idrak_reentry = None  # type: ignore[assignment]
+
     raw = (message or "").strip()
     out = TurnIdrak(effective_query=raw)
     if not raw:
@@ -325,104 +331,115 @@ def analyze_turn(
         out.status_tr = "İdrak zihin kapalı"
         return out
 
+    reentry_active = bool(_idrak_reentry is not None and getattr(_idrak_reentry, "active", False))
+    if _idrak_reentry is not None and not reentry_active:
+        _idrak_reentry.active = True
     try:
-        from ilim_assistant.ruzgar_tek_beyin import resolve_effective_user_query
+        try:
+            from ilim_assistant.ruzgar_tek_beyin import resolve_effective_user_query
 
-        effective = resolve_effective_user_query(raw)
-    except Exception:
-        effective = raw
-    out.effective_query = effective
+            effective = resolve_effective_user_query(raw)
+        except Exception:
+            effective = raw
+        out.effective_query = effective
 
-    blob = _norm_blob(effective)
-    asc = _norm_ascii(effective)
-    temporal, t_conf = _detect_temporal(blob, asc)
-    out.temporal = temporal
-    out.confidence = t_conf
+        blob = _norm_blob(effective)
+        asc = _norm_ascii(effective)
+        temporal, t_conf = _detect_temporal(blob, asc)
+        out.temporal = temporal
+        out.confidence = t_conf
 
-    # Kişisel hafıza — güncel jeopolitik değilse
-    try:
-        from ilim_assistant.ruzgar_tek_beyin import (
-            matches_known_circle_name,
-            should_use_personal_hafiza_first,
-        )
+        # Kişisel hafıza — güncel jeopolitik değilse.
+        # Reentry'de should_use_personal_hafiza_first çağırmayız (döngü riski).
+        try:
+            from ilim_assistant.ruzgar_tek_beyin import (
+                looks_like_personal_memory_query,
+                matches_known_circle_name,
+                should_use_personal_hafiza_first,
+            )
 
-        if should_use_personal_hafiza_first(effective, history) or matches_known_circle_name(
-            effective
-        ):
-            if not _is_current_events(blob, asc, temporal):
+            personal_hit = matches_known_circle_name(effective) or looks_like_personal_memory_query(
+                effective
+            )
+            if not reentry_active and not personal_hit:
+                personal_hit = should_use_personal_hafiza_first(effective, history)
+            if personal_hit and not _is_current_events(blob, asc, temporal):
                 out.intent = "personal"
                 out.confidence = 0.9
                 out.block_archive_recall = True
                 out.status_tr = "Kişisel hafıza / tanıdık çevre"
                 return out
-    except Exception:
-        pass
+        except Exception:
+            pass
 
-    # Arşiv geri çağırma — açık geçmiş sorusu
-    try:
-        from ilim_assistant.ana_motor_plan import looks_like_past_conversation_query
+        # Arşiv geri çağırma — açık geçmiş sorusu
+        try:
+            from ilim_assistant.ana_motor_plan import looks_like_past_conversation_query
 
-        if looks_like_past_conversation_query(raw) and temporal != "present":
-            out.intent = "archive_recall"
-            out.confidence = 0.92
-            out.status_tr = "Geçmiş sohbet / arşiv geri çağırma"
+            if looks_like_past_conversation_query(raw) and temporal != "present":
+                out.intent = "archive_recall"
+                out.confidence = 0.92
+                out.status_tr = "Geçmiş sohbet / arşiv geri çağırma"
+                return out
+        except Exception:
+            pass
+
+        # Güncel olay / jeopolitik — web zorunlu, hafıza yasak
+        if _is_current_events(blob, asc, temporal) or (
+            temporal == "present"
+            and re.search(r"\b(kim|kimler|ne\s+oluyor|durum)\b", asc)
+        ):
+            out.intent = "current_events"
+            out.confidence = max(out.confidence, 0.9)
+            out.force_web = True
+            out.block_archive_recall = True
+            out.block_hafiza_first = True
+            out.block_chat_history_hint = True
+            out.status_tr = "Güncel olay — web öncelikli, arşiv kapalı"
             return out
-    except Exception:
-        pass
 
-    # Güncel olay / jeopolitik — web zorunlu, hafıza yasak
-    if _is_current_events(blob, asc, temporal) or (
-        temporal == "present"
-        and re.search(r"\b(kim|kimler|ne\s+oluyor|durum)\b", asc)
-    ):
-        out.intent = "current_events"
-        out.confidence = max(out.confidence, 0.9)
-        out.force_web = True
-        out.block_archive_recall = True
-        out.block_hafiza_first = True
-        out.block_chat_history_hint = True
-        out.status_tr = "Güncel olay — web öncelikli, arşiv kapalı"
+        # Takvim «hangi aydayız»
+        try:
+            from ilim_assistant.ruzgar_tek_beyin_analiz import _TEMPORAL_NOW
+
+            if _TEMPORAL_NOW.search(blob):
+                out.intent = "calendar"
+                out.temporal = "present"
+                out.confidence = 0.88
+                out.status_tr = "Güncel takvim sorusu"
+                return out
+        except Exception:
+            pass
+
+        # Sohbet
+        try:
+            from ilim_assistant.ana_motor_plan import looks_like_casual_social_chat
+
+            if looks_like_casual_social_chat(raw):
+                out.intent = "casual"
+                out.prefer_natural_sohbet = True
+                out.confidence = 0.85
+                out.status_tr = "Gündelik sohbet"
+                return out
+        except Exception:
+            pass
+
+        if temporal == "past":
+            out.intent = "factual"
+            out.status_tr = "Geçmiş / tarihsel bilgi"
+        elif temporal == "future":
+            out.intent = "factual"
+            out.status_tr = "Gelecek / olasılık sorusu"
+        else:
+            out.intent = "bilgi"
+            out.status_tr = "Genel bilgi"
+
+        if _should_inherit_thread(raw, out):
+            out = _apply_thread_inheritance(out, raw, history)
         return out
-
-    # Takvim «hangi aydayız»
-    try:
-        from ilim_assistant.ruzgar_tek_beyin_analiz import _TEMPORAL_NOW
-
-        if _TEMPORAL_NOW.search(blob):
-            out.intent = "calendar"
-            out.temporal = "present"
-            out.confidence = 0.88
-            out.status_tr = "Güncel takvim sorusu"
-            return out
-    except Exception:
-        pass
-
-    # Sohbet
-    try:
-        from ilim_assistant.ana_motor_plan import looks_like_casual_social_chat
-
-        if looks_like_casual_social_chat(raw):
-            out.intent = "casual"
-            out.prefer_natural_sohbet = True
-            out.confidence = 0.85
-            out.status_tr = "Gündelik sohbet"
-            return out
-    except Exception:
-        pass
-
-    if temporal == "past":
-        out.intent = "factual"
-        out.status_tr = "Geçmiş / tarihsel bilgi"
-    elif temporal == "future":
-        out.intent = "factual"
-        out.status_tr = "Gelecek / olasılık sorusu"
-    else:
-        out.intent = "bilgi"
-        out.status_tr = "Genel bilgi"
-
-    if _should_inherit_thread(raw, out):
-        out = _apply_thread_inheritance(out, raw, history)
-    return out
+    finally:
+        if _idrak_reentry is not None and not reentry_active:
+            _idrak_reentry.active = False
 
 
 def should_skip_past_conversation_reply(idrak: TurnIdrak | None) -> bool:

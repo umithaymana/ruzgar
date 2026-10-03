@@ -5,10 +5,15 @@ from __future__ import annotations
 
 import os
 import re
+import threading
 import unicodedata
 from typing import Any, Iterator, Optional
 
 TEK_BEYIN_VERSION = "tek-beyin-v16-2026-06-13-otomatik-ogrenme"
+
+# analyze_turn → should_use_personal_hafiza_first → _idrak_blocks_personal_hafiza
+# → analyze_turn döngüsünü keser (bilgi sorularında prepare_turn kilidi).
+_idrak_reentry = threading.local()
 
 _KIM_SORUSU = re.compile(
     r"\b(kimdir|kimdi|kim\b|kimi|kimler|kimesne)\b",
@@ -322,6 +327,9 @@ def _idrak_blocks_personal_hafiza(
     message: str,
     history: list | None = None,
 ) -> bool:
+    # analyze_turn içinden çağrılıyorsa tekrar analyze_turn yapma (sonsuz döngü).
+    if getattr(_idrak_reentry, "active", False):
+        return False
     try:
         from ilim_assistant.ana_motor_idrak_zihin import (
             analyze_turn,
@@ -555,6 +563,12 @@ def should_use_personal_hafiza_first(
 ) -> bool:
     if not tek_beyin_enabled():
         return False
+    # analyze_turn reentry: yalnızca hafif kontroller (döngü / ağır lookup yok).
+    if getattr(_idrak_reentry, "active", False):
+        target = resolve_memory_query_message(message, client_history)
+        return bool(
+            looks_like_personal_memory_query(target) or matches_known_circle_name(target)
+        )
     try:
         from ilim_assistant.ana_motor_plan import should_stay_on_ana_motor_bilgi
 

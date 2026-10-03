@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 import unicodedata
 from typing import Any
 
@@ -154,6 +155,64 @@ def _norm_match(text: str) -> str:
     ):
         s = s.replace(a, b)
     return s.lower()
+
+
+def is_weather_query(message: str) -> bool:
+    """Canlı hava / tahmin — chat_core import etmeden (hızlı şerit + erken yol)."""
+    low = (message or "").strip().lower()
+    if not low or len(low) > 420:
+        return False
+    # Fizik sıcaklık sorusu ("Su kaç derecede kaynar?") hava niyeti değildir.
+    if re.search(
+        r"\b(kaynar|kaynama|erir|erime|donar|donma|kaynama\s*nokt|erime\s*nokt|"
+        r"donma\s*nokt|boiling|melting|freezing)\w*\b",
+        low,
+        re.I,
+    ):
+        return False
+    needles = (
+        "hava nasıl",
+        "hava nasil",
+        "hava ne olacak",
+        "hava olacak",
+        "bugün hava",
+        "bugun hava",
+        "hava durumu",
+        "hava bugün",
+        "hava yarın",
+        "yarın hava nasıl",
+        "yarin hava nasil",
+        "yarın hava durumu",
+        "yarın hava",
+        "yarin hava",
+        "havalar nasıl",
+        "hava durumuna bak",
+        "hava durumu bak",
+        "derece mi",
+        "yağmur var",
+        "yagmur var",
+        "yağacak",
+        "yagacak",
+        "meteoroloji",
+        "sıcaklık",
+        "sicaklik",
+        "soğuk mu",
+        "soguk mu",
+        "sıcak mı",
+        "sicak mi",
+    )
+    if any(n in low for n in needles):
+        return True
+    # "kaç derece" ⊂ "kaç derecede" olmasın — yalnızca hava bağlamındaki derece.
+    if re.search(r"\bka[cç]\s+derece(?:\s|[?!.,]|$)", low):
+        return True
+    nm = _norm_match(low)
+    if "yarin" in nm and "hava" in nm:
+        return True
+    if "hava" in nm and any(k in nm for k in ("olacak", "nasil", "nasıl", "durumu", "derece")):
+        return True
+    s = low.strip().strip("?!.")
+    return s in ("hava", "hava bugün", "hava bugun", "hava şimdi", "hava simdi")
 
 
 def _extract_city_from_message(message: str) -> str | None:
@@ -463,19 +522,29 @@ def maybe_weather_instant_reply(
         return None
     if os.environ.get("RUZGAR_WEATHER_INSTANT_REPLY", "1").strip() in ("0", "false", "no"):
         return None
-    try:
-        from ilim_assistant.chat_core import (
-            _weather_follow_up,
-            _weather_instant_allowed,
-            _weather_intent,
-        )
-    except Exception:
-        return None
     msg = (message or "").strip()
     if not msg:
         return None
-    weather_q = _weather_intent(msg) or _weather_follow_up(msg, history)
-    if not weather_q or not _weather_instant_allowed(msg, coding_mode=coding_mode):
+    weather_q = is_weather_query(msg)
+    if not weather_q:
+        try:
+            from ilim_assistant.chat_core import _weather_follow_up, _weather_intent
+
+            weather_q = _weather_intent(msg) or _weather_follow_up(msg, history)
+        except Exception:
+            weather_q = False
+    if not weather_q:
+        return None
+    if coding_mode:
+        return None
+    try:
+        cap = int(os.environ.get("RUZGAR_WEATHER_INSTANT_MAX_CHARS", "360"))
+    except ValueError:
+        cap = 360
+    if len(msg) > cap:
+        return None
+    low = msg.lower()
+    if "http://" in low or "https://" in low or "```" in msg:
         return None
     try:
         _ctx, instant = compute_live_weather_outcome(msg)

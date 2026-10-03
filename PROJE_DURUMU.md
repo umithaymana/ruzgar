@@ -1,8 +1,22 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-03 (yeni makine kurulum + sohbet paketi)
+**Son güncelleme:** 2026-10-03 (bilgi sohbeti kilidi + Ollama modelleri)
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
+
+### 2026-10-03 — Bilgi sohbeti kilidi (prepare_turn hang)
+
+**Kök neden:** `analyze_turn` ↔ `should_use_personal_hafiza_first` ↔ `should_stay_on_ana_motor_bilgi` ↔ `looks_like_encyclopedic_fact_question` ↔ `personal_hafiza_blocks_bilgi_path` sonsuz döngü.
+
+**Düzeltme:**
+- `ruzgar_tek_beyin.py` — `_idrak_reentry` + reentry’de hafif kişisel kontrol
+- `ana_motor_idrak_zihin.py` — reentry bayrağı (v2)
+- `ana_motor_plan.py` — ansiklopedik sınıflandırmadan kişisel-hafıza çağrısı kaldırıldı
+- `chat_core.py` / `weather_live.py` — «Su kaç derecede kaynar?» hava yanlış sınıflaması düzeltildi
+
+**Ollama:** User `OLLAMA_MODELS` = `D:\ÜMİT\PROGRAMLAR\Ollama\models` (3 model). Tray/serve bazen env görmeden boş liste veriyor → Ollama’yı env ile yeniden başlat. ASCII junction: `D:\UMIT_PROGRAMLAR_Ollama_models`.
+
+**Doğrulama (hedef):** selam anında · fotosentez/uydu bilgi yolu kilit değil · kaynar ≠ hava.
 
 ### 2026-10-03 — Yeni PC taşıma + Ollama-only sohbet (ara verildi)
 
