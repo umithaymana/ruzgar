@@ -10461,12 +10461,10 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
 
             _fact = None
             try:
-                from ilim_assistant.ana_motor_bilgi_turu import should_route_bilgi_turu_pipeline
-
-                if not should_route_bilgi_turu_pipeline(msg_early):
-                    _fact = try_simple_factual_reply(msg_early)
-            except Exception:
+                # Mikro gerçek + aritmetik her zaman erken (bilgi turu kapısı atlanır).
                 _fact = try_simple_factual_reply(msg_early)
+            except Exception:
+                _fact = None
             if _fact:
                 _orch_f = dict(orch_early)
                 _orch_f.setdefault("plan", {})["primary"] = "bilgi"

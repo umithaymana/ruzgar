@@ -127,17 +127,41 @@ def finalize_assistant_reply(raw: str, *, channel: str = "") -> str:
 
 def scrub_leaked_instructions(text: str) -> str:
     """
-    Model bazen kullanıcı mesajında sistem köşeli etiketlerini ([TALİMAT …]) kopyalar.
-    Bu satırları çıkarır (asıl içerik silinmez).
+    Model bazen kullanıcı mesajında sistem köşeli etiketlerini ([TALİMAT …]) kopyalar
+    veya talimat cümlelerini cevaba yazar. Bu satırları çıkarır (asıl içerik silinmez).
     """
     if not text:
         return text
+    import re
+
     out_lines: list[str] = []
     for ln in text.split("\n"):
         st = ln.strip()
+        if not st:
+            out_lines.append(ln)
+            continue
         if "[TALİMAT" in st or "[TALIMAT" in st.upper():
             continue
         if "TALÄ°MAT" in st or "Ã–NCELÄ°KLÄ°" in st:
             continue
+        low = st.lower()
+        # Küçük modellerin talimatı cevap diye yazması (2026-10-03).
+        if "bu soruya" in low and (
+            "yanıt ver" in low or "yanit ver" in low or "cevap ver" in low
+        ):
+            continue
+        if "genel sohbet turunda" in low or "doğal ve akıcı bir şekilde yanıt" in low:
+            continue
+        if "kullanıcının sorusunu aynen kopyala" in low or "kullanicinin sorusunu aynen kopyala" in low:
+            continue
+        if re.match(r"(?i)^\[(?:faz|talimat|sistem|dahili)", st):
+            continue
         out_lines.append(ln)
-    return "\n".join(out_lines).strip()
+    t = "\n".join(out_lines).strip()
+    # Tek paragraf sızıntısı (satır kırığı yokken)
+    if t and "bu soruya" in t.lower() and "yanıt ver" in t.lower() and len(t) < 400:
+        if "kaynar" not in t.lower() and "nedir" not in t.lower():
+            # Tamamen talimat gibi görünüyorsa boşalt — üst katman yeniden üretir / miss der.
+            if "ümit abi" not in t.lower() and not re.search(r"\d+\s*derece", t.lower()):
+                return ""
+    return t

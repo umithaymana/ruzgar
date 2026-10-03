@@ -81,6 +81,13 @@ _SIMPLE_FACTS: tuple[tuple[re.Pattern[str], str], ...] = (
         ),
         "Ümit abi, Türkiye'de **81 il** vardır.",
     ),
+    (
+        re.compile(
+            r"d[üu]nya(?:'?\s*n[ıi]n|nin)?\s+uydusu\s*(?:nedir|ne(?:dir)?|hangisi)?",
+            re.I,
+        ),
+        "Ümit abi, Dünya'nın doğal uydusu **Ay**'dır.",
+    ),
     # Tarih/biyografi tabloya eklenmez — bilgi turu (RAG → web → LLM) tek kapı (6a).
 )
 
@@ -288,6 +295,58 @@ def try_temporal_now_reply(message: str) -> Optional[str]:
         return None
 
 
+def try_simple_arithmetic_reply(message: str) -> Optional[str]:
+    """Kısa dört işlem — fuzzy hafıza / kütüphane yanlış eşleşmesini keser."""
+    raw = (message or "").strip()
+    if not raw or len(raw) > 80:
+        return None
+    blob = _norm(raw)
+    # «kaç eder / kaçtır / eşittir» veya çıplak 2+2
+    if not (
+        re.search(r"\b(ka[cç]\s+eder|ka[cç]t[ıi]r|e[sş]itt?[ıi]r|hesapla|topla)\b", blob)
+        or re.search(r"^\s*\d+\s*[+\-*/x×:]\s*\d+\s*[?.!]?\s*$", blob)
+    ):
+        return None
+    # Metinden ilk a ? b ifadesini çıkar
+    m = re.search(
+        r"(\d+(?:[.,]\d+)?)\s*([+\-*/x×:])\s*(\d+(?:[.,]\d+)?)",
+        blob,
+    )
+    if not m:
+        return None
+    try:
+        a = float(m.group(1).replace(",", "."))
+        b = float(m.group(3).replace(",", "."))
+    except ValueError:
+        return None
+    op = m.group(2)
+    if op in ("x", "×", ":"):
+        op = "*" if op in ("x", "×") else "/"
+    if op == "/" and b == 0:
+        return "Ümit abi, sıfıra bölme tanımsız — bölen sıfır olamaz."
+    try:
+        if op == "+":
+            val = a + b
+        elif op == "-":
+            val = a - b
+        elif op == "*":
+            val = a * b
+        elif op == "/":
+            val = a / b
+        else:
+            return None
+    except Exception:
+        return None
+    if abs(val - round(val)) < 1e-9:
+        shown = str(int(round(val)))
+    else:
+        shown = f"{val:.6g}"
+    a_s = str(int(a)) if abs(a - round(a)) < 1e-9 else f"{a:g}"
+    b_s = str(int(b)) if abs(b - round(b)) < 1e-9 else f"{b:g}"
+    op_tr = {"+": "+", "-": "-", "*": "×", "/": "÷"}[op]
+    return f"Ümit abi, {a_s} {op_tr} {b_s} = **{shown}**."
+
+
 def try_simple_factual_reply(message: str) -> Optional[str]:
     """Evrensel mikro gerçekler — takvim/sayı; ansiklopedik sorular bilgi turuna kalır."""
     if not tek_beyin_analiz_enabled():
@@ -295,6 +354,15 @@ def try_simple_factual_reply(message: str) -> Optional[str]:
     raw = (message or "").strip()
     if not raw or len(raw) > 120:
         return None
+    # Aritmetik + mikro tablo, bilgi turu / kütüphane kapısından önce (her zaman).
+    arith = try_simple_arithmetic_reply(raw)
+    if arith:
+        return arith
+    if _TEMPORAL_NOW.search(_norm(raw)):
+        return None
+    for pat, ans in _SIMPLE_FACTS:
+        if pat.search(_norm(raw)):
+            return ans
     try:
         from ilim_assistant.ana_motor_bilgi_turu import should_route_bilgi_turu_pipeline
 
@@ -302,11 +370,6 @@ def try_simple_factual_reply(message: str) -> Optional[str]:
             return None
     except Exception:
         pass
-    if _TEMPORAL_NOW.search(_norm(raw)):
-        return None
-    for pat, ans in _SIMPLE_FACTS:
-        if pat.search(_norm(raw)):
-            return ans
     return None
 
 

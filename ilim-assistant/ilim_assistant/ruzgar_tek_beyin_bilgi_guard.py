@@ -74,6 +74,13 @@ def looks_like_bilgi_guard_turn(
     if not tek_beyin_bilgi_guard_enabled():
         return False
     try:
+        from ilim_assistant.ruzgar_tek_beyin_analiz import try_simple_arithmetic_reply
+
+        if try_simple_arithmetic_reply(message or ""):
+            return False
+    except Exception:
+        pass
+    try:
         from ilim_assistant.ruzgar_tek_beyin_izolasyon import looks_like_bilgi_isolation_turn
 
         return looks_like_bilgi_isolation_turn(message, question_plan)

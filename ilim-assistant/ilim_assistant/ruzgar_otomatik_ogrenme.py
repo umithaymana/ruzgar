@@ -94,6 +94,14 @@ def should_check_bilgi_kutuphane_first(message: str) -> bool:
     raw = (message or "").strip()
     if not raw or len(raw) > 500 or _SKIP_USER.search(_norm(raw)):
         return False
+    # Kısa aritmetik kütüphaneye düşmesin (2+2 → yanlış fuzzy / Faz J miss).
+    try:
+        from ilim_assistant.ruzgar_tek_beyin_analiz import try_simple_arithmetic_reply
+
+        if try_simple_arithmetic_reply(raw):
+            return False
+    except Exception:
+        pass
     if lookup_bilgi_kutuphane_hint(raw):
         return True
     try:
