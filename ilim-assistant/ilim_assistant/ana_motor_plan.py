@@ -601,6 +601,36 @@ def _score_categories(msg: str, mode_norm: str, motor_flags: dict[str, bool]) ->
     if looks_like_encyclopedic_fact_question(raw):
         s["bilgi"] += 2.6
 
+    # Spor / maç / lig / kupa — sohbet değil, bilgi + web
+    try:
+        from ilim_assistant.ruzgar_web_arastirma_pro import (
+            looks_like_live_web_needed,
+            looks_like_sports_live_question,
+        )
+
+        if looks_like_sports_live_question(raw) or (
+            looks_like_live_web_needed(raw)
+            and any(x in blob for x in ("mac", "maç", "skor", "lig", "kupa", "fikstur", "fikstür"))
+        ):
+            s["bilgi"] += 5.0
+            s["gundelik"] = max(0.0, s["gundelik"] - 4.0)
+    except Exception:
+        if any(
+            x in blob
+            for x in (
+                "mac ",
+                "maç ",
+                "skor",
+                "lig",
+                "kupa",
+                "fikstur",
+                "fikstür",
+                "erzurum",
+            )
+        ):
+            s["bilgi"] += 4.0
+            s["gundelik"] = max(0.0, s["gundelik"] - 3.0)
+
     # Faz B3 — genel modda kısa sorular bilgi + web önceliği (sohbet selamı hariç)
     if (
         mode_norm in ("genel", "uretim", "gelisim")
@@ -1120,7 +1150,16 @@ def rag_search_query_for_turn(message: str, plan: QuestionPlan | None) -> str:
 
 def rewrite_web_search_query(message: str, primary: str, mode_norm: str) -> str:
     """B2 — DuckDuckGo için odaklı sorgu."""
-    base = refined_search_query(message)
+    try:
+        from ilim_assistant.ruzgar_web_arastirma_pro import rewrite_sports_web_query
+
+        sports_q = rewrite_sports_web_query(message)
+        if sports_q and sports_q.strip() != (message or "").strip():
+            base = sports_q
+        else:
+            base = refined_search_query(message)
+    except Exception:
+        base = refined_search_query(message)
     if not base:
         return ""
     low = base.lower()
@@ -1145,17 +1184,53 @@ def rewrite_web_search_query(message: str, primary: str, mode_norm: str) -> str:
                 "2025",
                 "2026",
                 "haber",
+                "spor",
+                "maç",
+                "mac",
+                "skor",
+                "lig",
+                "transfer",
+                "olay",
+                "kupa",
+                "fikstür",
+                "fikstur",
             )
         )
         try:
             recency = recency or looks_like_current_geopolitics_question(message)
         except Exception:
             pass
+        try:
+            from ilim_assistant.ruzgar_web_arastirma_pro import looks_like_live_web_needed
+
+            recency = recency or looks_like_live_web_needed(message)
+        except Exception:
+            pass
         if recency:
-            if "2026" not in low and "2025" not in low:
-                base = f"{base} 2026"
+            # Spor/kupa: yıl sayfası kirliliği yapmasın; rewrite_sports zaten 2026 ekler
+            is_sports = any(
+                x in low
+                for x in (
+                    "spor",
+                    "maç",
+                    "mac",
+                    "skor",
+                    "lig",
+                    "kupa",
+                    "fikstür",
+                    "fikstur",
+                    "erzurumspor",
+                    "fifa",
+                )
+            )
+            if not is_sports:
+                if "2026" not in low and "2025" not in low:
+                    base = f"{base} 2026"
             if looks_like_current_geopolitics_question(message) and "güncel" not in low:
                 base = f"{base} güncel"
+            if is_sports and "sonuç" not in low and "şampiyon" not in low and "sampiyon" not in low:
+                if "fikstür" not in low and "fikstur" not in low:
+                    base = f"{base} sonuç"
     words = base.split()
     if primary == "gundelik" and len(words) > 12:
         base = " ".join(words[:12])

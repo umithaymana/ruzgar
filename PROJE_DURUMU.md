@@ -34,7 +34,7 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 
 **Modeller:** `llama3.2:3b` (hizli) · `llama3.1:8b` (denge) · `qwen2.5-coder:7b` (kod)
 
-**`.env` (git’te yok):** `RUZGAR_OLLAMA_ONLY=1` · Gemini/Groq kapalı · RAG warmup açık · `RUZGAR_EMBED_DEVICE=cpu` · web PRO/search şimdilik kapalı (bilgi yolu kilidi araştırılırken)
+**`.env` (git’te yok):** `RUZGAR_OLLAMA_ONLY=1` · Gemini/Groq kapalı · RAG warmup açık · `RUZGAR_EMBED_DEVICE=cpu` · `ENABLE_WEB_SEARCH=1` + `RUZGAR_WEB_ARASTIRMA_PRO=1` + `RUZGAR_WEB_SECONDARY_ONLY_ON_EMPTY=1` (yerel-önce; yoksa/zayıfsa veya canlı kur-haber → web) · `fx_live` (DDG/doviz.com anlık kur)
 
 **Kod (bu oturum):**
 - `Ruzgar.ps1` — D: venv önceliği · lite health’te `ollama_only` döngü düzeltmesi · `py` yerine `PyExe`

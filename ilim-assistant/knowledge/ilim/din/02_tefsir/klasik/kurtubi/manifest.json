@@ -1,0 +1,48 @@
+{
+  "ok": true,
+  "version": "din-02-tefsir-klasik-kurtubi-v1",
+  "eser_id": "kurtubi",
+  "eser": "el-Câmi' li-ahkâmi'l-Kur'ân",
+  "yazar": "Kurtubî (Ebû Abdillâh Muhammed b. Ahmed)",
+  "dil": "ar",
+  "collection": "din_02_tefsir_klasik_kurtubi",
+  "kaynak": "https://github.com/spa5k/tafsir_api/tree/main/tafsir/ar-tafseer-al-qurtubi",
+  "slug": "ar-tafseer-al-qurtubi",
+  "staging": "arsiv/_ilim_staging/02_tefsir/klasik/kurtubi",
+  "ciktilar": {
+    "ayet_indeks": "knowledge/ilim/din/02_tefsir/klasik/kurtubi/tefsir_ayet_indeks.jsonl",
+    "bloklar": "knowledge/ilim/din/02_tefsir/klasik/kurtubi/tefsir_bloklari.jsonl",
+    "incremental": "knowledge/ilim/din/02_tefsir/klasik/kurtubi/incremental"
+  },
+  "ayrilik": {
+    "kuran_yolu_dokunulmadi": true,
+    "kuran_yolu_path": "knowledge/ilim/din/02_tefsir/kuran_yolu"
+  },
+  "content_fingerprint": "06c71af166d8d485",
+  "qa": {
+    "hedef": 6236,
+    "indeks_adet": 6236,
+    "dolu_tefsir": 6236,
+    "eksik_kayit": [],
+    "eksik_kayit_adet": 0,
+    "bos_tefsir": [],
+    "bos_tefsir_adet": 0,
+    "kisa_tefsir_adet": 3,
+    "kisa_tefsir_ornek": [
+      [
+        23,
+        102
+      ],
+      [
+        23,
+        103
+      ],
+      [
+        45,
+        15
+      ]
+    ],
+    "tam_tefsir": true,
+    "kapsama_orani": 1.0
+  }
+}

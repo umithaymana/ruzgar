@@ -1,0 +1,413 @@
+{
+  "version": "din-02-tefsir-library-v2",
+  "not": "Kur'an Yolu modern katmanda ayrıdır; klasik eserler burada.",
+  "modern": {
+    "kuran_yolu": {
+      "path": "knowledge/ilim/din/02_tefsir/kuran_yolu",
+      "manifest": "knowledge/ilim/din/02_tefsir/manifest.json"
+    }
+  },
+  "klasik_sira": [
+    "ibn_kesir",
+    "taberi",
+    "kurtubi",
+    "beyzavi",
+    "razi"
+  ],
+  "klasik": {
+    "ibn_kesir": {
+      "ok": true,
+      "version": "din-02-tefsir-klasik-ibn_kesir-v1",
+      "eser_id": "ibn_kesir",
+      "eser": "Tefsîru'l-Kur'âni'l-Azîm",
+      "yazar": "İbn Kesîr (Ebü'l-Fidâ İsmâîl b. Ömer)",
+      "dil": "ar",
+      "collection": "din_02_tefsir_klasik_ibn_kesir",
+      "kaynak": "https://github.com/spa5k/tafsir_api/tree/main/tafsir/ar-tafsir-ibn-kathir",
+      "slug": "ar-tafsir-ibn-kathir",
+      "staging": "arsiv/_ilim_staging/02_tefsir/klasik/ibn_kesir",
+      "ciktilar": {
+        "ayet_indeks": "knowledge/ilim/din/02_tefsir/klasik/ibn_kesir/tefsir_ayet_indeks.jsonl",
+        "bloklar": "knowledge/ilim/din/02_tefsir/klasik/ibn_kesir/tefsir_bloklari.jsonl",
+        "incremental": "knowledge/ilim/din/02_tefsir/klasik/ibn_kesir/incremental"
+      },
+      "ayrilik": {
+        "kuran_yolu_dokunulmadi": true,
+        "kuran_yolu_path": "knowledge/ilim/din/02_tefsir/kuran_yolu"
+      },
+      "content_fingerprint": "06c71af166d8d485",
+      "qa": {
+        "hedef": 6236,
+        "indeks_adet": 6236,
+        "dolu_tefsir": 6236,
+        "eksik_kayit": [],
+        "eksik_kayit_adet": 0,
+        "bos_tefsir": [],
+        "bos_tefsir_adet": 0,
+        "kisa_tefsir_adet": 0,
+        "kisa_tefsir_ornek": [],
+        "tam_tefsir": true,
+        "kapsama_orani": 1.0
+      }
+    },
+    "taberi": {
+      "ok": true,
+      "version": "din-02-tefsir-klasik-taberi-v1",
+      "eser_id": "taberi",
+      "eser": "Câmiu'l-beyân an te'vîli âyi'l-Kur'ân",
+      "yazar": "Taberî (Ebû Ca'fer Muhammed b. Cerîr)",
+      "dil": "ar",
+      "collection": "din_02_tefsir_klasik_taberi",
+      "kaynak": "https://github.com/spa5k/tafsir_api/tree/main/tafsir/ar-tafsir-al-tabari",
+      "slug": "ar-tafsir-al-tabari",
+      "staging": "arsiv/_ilim_staging/02_tefsir/klasik/taberi",
+      "ciktilar": {
+        "ayet_indeks": "knowledge/ilim/din/02_tefsir/klasik/taberi/tefsir_ayet_indeks.jsonl",
+        "bloklar": "knowledge/ilim/din/02_tefsir/klasik/taberi/tefsir_bloklari.jsonl",
+        "incremental": "knowledge/ilim/din/02_tefsir/klasik/taberi/incremental"
+      },
+      "ayrilik": {
+        "kuran_yolu_dokunulmadi": true,
+        "kuran_yolu_path": "knowledge/ilim/din/02_tefsir/kuran_yolu"
+      },
+      "content_fingerprint": "06c71af166d8d485",
+      "qa": {
+        "hedef": 6236,
+        "indeks_adet": 6236,
+        "dolu_tefsir": 6236,
+        "eksik_kayit": [],
+        "eksik_kayit_adet": 0,
+        "bos_tefsir": [],
+        "bos_tefsir_adet": 0,
+        "kisa_tefsir_adet": 0,
+        "kisa_tefsir_ornek": [],
+        "tam_tefsir": true,
+        "kapsama_orani": 1.0
+      }
+    },
+    "kurtubi": {
+      "ok": true,
+      "version": "din-02-tefsir-klasik-kurtubi-v1",
+      "eser_id": "kurtubi",
+      "eser": "el-Câmi' li-ahkâmi'l-Kur'ân",
+      "yazar": "Kurtubî (Ebû Abdillâh Muhammed b. Ahmed)",
+      "dil": "ar",
+      "collection": "din_02_tefsir_klasik_kurtubi",
+      "kaynak": "https://github.com/spa5k/tafsir_api/tree/main/tafsir/ar-tafseer-al-qurtubi",
+      "slug": "ar-tafseer-al-qurtubi",
+      "staging": "arsiv/_ilim_staging/02_tefsir/klasik/kurtubi",
+      "ciktilar": {
+        "ayet_indeks": "knowledge/ilim/din/02_tefsir/klasik/kurtubi/tefsir_ayet_indeks.jsonl",
+        "bloklar": "knowledge/ilim/din/02_tefsir/klasik/kurtubi/tefsir_bloklari.jsonl",
+        "incremental": "knowledge/ilim/din/02_tefsir/klasik/kurtubi/incremental"
+      },
+      "ayrilik": {
+        "kuran_yolu_dokunulmadi": true,
+        "kuran_yolu_path": "knowledge/ilim/din/02_tefsir/kuran_yolu"
+      },
+      "content_fingerprint": "06c71af166d8d485",
+      "qa": {
+        "hedef": 6236,
+        "indeks_adet": 6236,
+        "dolu_tefsir": 6236,
+        "eksik_kayit": [],
+        "eksik_kayit_adet": 0,
+        "bos_tefsir": [],
+        "bos_tefsir_adet": 0,
+        "kisa_tefsir_adet": 3,
+        "kisa_tefsir_ornek": [
+          [
+            23,
+            102
+          ],
+          [
+            23,
+            103
+          ],
+          [
+            45,
+            15
+          ]
+        ],
+        "tam_tefsir": true,
+        "kapsama_orani": 1.0
+      }
+    },
+    "beyzavi": {
+      "ok": true,
+      "version": "din-02-tefsir-klasik-beyzavi-v1",
+      "eser_id": "beyzavi",
+      "eser": "Envârü't-tenzîl ve esrârü't-te'vîl",
+      "yazar": "Beyzâvî (Nâsırüddîn Abdullâh b. Ömer)",
+      "dil": "ar",
+      "collection": "din_02_tefsir_klasik_beyzavi",
+      "kaynak": "huggingface:quranlab/quran-tafsir:tafsir-baydawi-ar",
+      "slug": "tafsir-al-baydawi",
+      "hf_config": "tafsir-baydawi-ar",
+      "staging": "arsiv/_ilim_staging/02_tefsir/klasik/beyzavi",
+      "ciktilar": {
+        "ayet_indeks": "knowledge/ilim/din/02_tefsir/klasik/beyzavi/tefsir_ayet_indeks.jsonl",
+        "bloklar": "knowledge/ilim/din/02_tefsir/klasik/beyzavi/tefsir_bloklari.jsonl",
+        "incremental": "knowledge/ilim/din/02_tefsir/klasik/beyzavi/incremental"
+      },
+      "ayrilik": {
+        "kuran_yolu_dokunulmadi": true,
+        "kuran_yolu_path": "knowledge/ilim/din/02_tefsir/kuran_yolu"
+      },
+      "content_fingerprint": "b8cd70b7a0a7b3ca",
+      "qa": {
+        "hedef": 6236,
+        "indeks_adet": 6236,
+        "dolu_tefsir": 3811,
+        "eksik_kayit": [],
+        "eksik_kayit_adet": 0,
+        "bos_tefsir": [
+          [
+            37,
+            24
+          ],
+          [
+            37,
+            25
+          ],
+          [
+            37,
+            26
+          ],
+          [
+            37,
+            27
+          ],
+          [
+            37,
+            28
+          ],
+          [
+            37,
+            29
+          ],
+          [
+            37,
+            30
+          ],
+          [
+            37,
+            31
+          ],
+          [
+            37,
+            32
+          ],
+          [
+            37,
+            33
+          ],
+          [
+            37,
+            34
+          ],
+          [
+            37,
+            35
+          ],
+          [
+            37,
+            36
+          ],
+          [
+            37,
+            37
+          ],
+          [
+            37,
+            38
+          ],
+          [
+            37,
+            39
+          ],
+          [
+            37,
+            40
+          ],
+          [
+            37,
+            41
+          ],
+          [
+            37,
+            42
+          ],
+          [
+            37,
+            43
+          ],
+          [
+            37,
+            44
+          ],
+          [
+            37,
+            45
+          ],
+          [
+            37,
+            46
+          ],
+          [
+            37,
+            47
+          ],
+          [
+            37,
+            48
+          ],
+          [
+            37,
+            49
+          ],
+          [
+            37,
+            50
+          ],
+          [
+            37,
+            51
+          ],
+          [
+            37,
+            52
+          ],
+          [
+            37,
+            53
+          ],
+          [
+            37,
+            54
+          ],
+          [
+            37,
+            55
+          ],
+          [
+            37,
+            56
+          ],
+          [
+            37,
+            57
+          ],
+          [
+            37,
+            58
+          ],
+          [
+            37,
+            59
+          ],
+          [
+            37,
+            60
+          ],
+          [
+            37,
+            61
+          ],
+          [
+            37,
+            62
+          ],
+          [
+            37,
+            63
+          ],
+          [
+            37,
+            64
+          ],
+          [
+            37,
+            65
+          ],
+          [
+            37,
+            66
+          ],
+          [
+            37,
+            67
+          ],
+          [
+            37,
+            68
+          ],
+          [
+            37,
+            69
+          ],
+          [
+            37,
+            70
+          ],
+          [
+            37,
+            71
+          ],
+          [
+            37,
+            72
+          ],
+          [
+            37,
+            73
+          ]
+        ],
+        "bos_tefsir_adet": 2425,
+        "kisa_tefsir_adet": 0,
+        "kisa_tefsir_ornek": [],
+        "tam_tefsir": false,
+        "kapsama_orani": 0.6111,
+        "kabul_edilen_kismi": true
+      },
+      "kismi_kapsama": true,
+      "kismi_not": "Açık dijital kaynaklar (QUL/spa5k/quranlab) Beyzâvî için ~3811 ayet sunuyor; Sâffât 24 sonrası source-unavailable. Eksik ayetlere metin uydurulmadı. Rüzgar o ayetlerde diğer tefsirleri tarar."
+    },
+    "razi": {
+      "ok": true,
+      "version": "din-02-tefsir-klasik-razi-v1",
+      "eser_id": "razi",
+      "eser": "Mefâtîhu'l-gayb (et-Tefsîrü'l-kebîr)",
+      "yazar": "Fahreddin er-Râzî",
+      "dil": "ar",
+      "collection": "din_02_tefsir_klasik_razi",
+      "kaynak": "huggingface:quranlab/quran-tafsir:tafsir-razi-ar",
+      "slug": "tafsir-al-razi",
+      "hf_config": "tafsir-razi-ar",
+      "staging": "arsiv/_ilim_staging/02_tefsir/klasik/razi",
+      "ciktilar": {
+        "ayet_indeks": "knowledge/ilim/din/02_tefsir/klasik/razi/tefsir_ayet_indeks.jsonl",
+        "bloklar": "knowledge/ilim/din/02_tefsir/klasik/razi/tefsir_bloklari.jsonl",
+        "incremental": "knowledge/ilim/din/02_tefsir/klasik/razi/incremental"
+      },
+      "ayrilik": {
+        "kuran_yolu_dokunulmadi": true,
+        "kuran_yolu_path": "knowledge/ilim/din/02_tefsir/kuran_yolu"
+      },
+      "content_fingerprint": "e3b0c44298fc1c14",
+      "qa": {
+        "hedef": 6236,
+        "indeks_adet": 6236,
+        "dolu_tefsir": 6236,
+        "eksik_kayit": [],
+        "eksik_kayit_adet": 0,
+        "bos_tefsir": [],
+        "bos_tefsir_adet": 0,
+        "kisa_tefsir_adet": 0,
+        "kisa_tefsir_ornek": [],
+        "tam_tefsir": true,
+        "kapsama_orani": 1.0
+      }
+    }
+  }
+}

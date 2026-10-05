@@ -1,0 +1,55 @@
+{
+  "version": "din-02-tefsir-kutuphane-v2",
+  "katmanlar": {
+    "modern": [
+      "kuran_yolu"
+    ],
+    "klasik": [
+      "ibn_kesir",
+      "taberi",
+      "kurtubi",
+      "beyzavi",
+      "razi"
+    ]
+  },
+  "eserler": {
+    "kuran_yolu": {
+      "satir": 6236,
+      "dolu": 6236,
+      "tam": null,
+      "kismi": null
+    },
+    "ibn_kesir": {
+      "satir": 6236,
+      "dolu": 6236,
+      "tam": true,
+      "kismi": null
+    },
+    "taberi": {
+      "satir": 6236,
+      "dolu": 6236,
+      "tam": true,
+      "kismi": null
+    },
+    "kurtubi": {
+      "satir": 6236,
+      "dolu": 6236,
+      "tam": true,
+      "kismi": null
+    },
+    "beyzavi": {
+      "satir": 6236,
+      "dolu": 3811,
+      "tam": false,
+      "kismi": true
+    },
+    "razi": {
+      "satir": 6236,
+      "dolu": 6236,
+      "tam": true,
+      "kismi": null
+    }
+  },
+  "ruzgar_tarama": "ilim_assistant.ruzgar_tefsir_kutuphane",
+  "not": "Her eser kendi klasorunde; Kur'an Yolu manifest.json yalniz modern eser içindir."
+}

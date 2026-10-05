@@ -1524,6 +1524,12 @@ def _health_build_block() -> dict:
     except Exception:
         pass
     try:
+        from ilim_assistant.ruzgar_kutuphane import kutuphane_status
+
+        base["kutuphane"] = kutuphane_status()
+    except Exception:
+        pass
+    try:
         from ilim_assistant.ruzgar_denge70_faz_k import denge70_faz_k_status
 
         #base["denge70_faz_k"] = denge70_faz_k_status()
@@ -3369,6 +3375,23 @@ def api_ana_motor_otomatik_ogrenme_status() -> dict[str, Any]:
     from ilim_assistant.ruzgar_otomatik_ogrenme import otomatik_ogrenme_panel_payload
 
     return otomatik_ogrenme_panel_payload()
+
+
+@app.get("/api/kutuphane/status")
+def api_kutuphane_status() -> dict[str, Any]:
+    """Rüzgar Kütüphanesi — raf/eser özeti."""
+    from ilim_assistant.ruzgar_kutuphane import kutuphane_status
+
+    return kutuphane_status()
+
+
+@app.get("/api/kutuphane/search")
+def api_kutuphane_search(q: str = "", limit: int = 8) -> dict[str, Any]:
+    """Rüzgar Kütüphanesi — katalog araması."""
+    from ilim_assistant.ruzgar_kutuphane import search_kutuphane
+
+    hits = search_kutuphane(q, limit=limit)
+    return {"ok": True, "query": q, "count": len(hits), "hits": hits}
 
 
 @app.get("/api/ana-motor/sesli-tur/vad")
@@ -10631,6 +10654,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             except Exception:
                 pass
         try:
+            from ilim_assistant.ruzgar_kutuphane import try_kutuphane_instant_reply
+
+            _raf = try_kutuphane_instant_reply(msg_early)
+            if _raf:
+                _orch_raf = dict(orch_early)
+                _orch_raf.setdefault("plan", {})["primary"] = "bilgi"
+                _orch_raf["plan"]["label_tr"] = "Rüzgar Kütüphanesi"
+                _orch_raf["kutuphane_raf_hit"] = True
+                yield from _iter_instant_chat_events(
+                    _raf,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_raf,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
             from ilim_assistant.ruzgar_otomatik_ogrenme import try_bilgi_kutuphane_instant_reply
 
             _kut = try_bilgi_kutuphane_instant_reply(msg_early)
@@ -11037,6 +11080,22 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             if mem_reply:
                 yield from _iter_instant_chat_events(
                     mem_reply,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=orch_early,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ruzgar_kuran_anlik import try_kuran_instant_reply
+
+            _kuran_early = try_kuran_instant_reply(msg_early)
+            if _kuran_early:
+                yield from _iter_instant_chat_events(
+                    _kuran_early,
                     msg_early,
                     session_wake_used=req.session_wake_used,
                     msg_for_wake=req.message,

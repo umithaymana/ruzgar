@@ -29,6 +29,7 @@ STATUS_INTERNET_HADITH = "İnternette hadisler ve ilgili metinler araştırılı
 STATUS_WEB_SCAN = "İnternette hızlı tarama yapılıyor (DuckDuckGo)…"
 STATUS_FULL_INDEX = "Yerel indeks taranıyor (bilgi + arşiv birlikte)…"
 STATUS_BILGI_INDEX = "Genel bilgi — yerel ilim indeksi taranıyor…"
+STATUS_TEFSIR_KUTUPHANE = "Tefsir kütüphanesi — tüm eserler taranıyor…"
 STATUS_BILIM_FAST_INDEX = "Yerel indeks (hızlı tur) — ağır arşiv atlandı…"
 STATUS_GEMINI_FIRST = "Gemini hızlı yanıt — önce yerel kaynak taraması…"
 STATUS_ENCYCLOPEDIC_MERGE = "Ansiklopedik soru — hızlı arşiv + indeks birleştiriliyor…"
@@ -168,6 +169,18 @@ def _yield_index_only(
     if upload_ids or session_id:
         yield {"kind": "status", "phase": "upload_context", "text": STATUS_UPLOAD_CONTEXT}
         hits = _apply_upload_context(hits, msg, upload_ids, session_id=session_id)
+    try:
+        from ilim_assistant.ruzgar_tefsir_kutuphane import looks_like_tefsir_question
+
+        if looks_like_tefsir_question(msg):
+            yield {
+                "kind": "status",
+                "phase": "tefsir_kutuphane",
+                "text": STATUS_TEFSIR_KUTUPHANE,
+            }
+            hits = _merge_tefsir_library_hits(msg, hits)
+    except Exception:
+        pass
     tail = smart_filter_vision_directive()
     yield {
         "kind": "result",
@@ -241,6 +254,28 @@ def _apply_upload_context(
         return hits
 
 
+def _merge_tefsir_library_hits(
+    msg: str,
+    hits: list[tuple[str, str, float]],
+) -> list[tuple[str, str, float]]:
+    """Tefsir sorusunda modern+klasik tüm eserleri ekle (Kur'an Yolu ile karıştırmadan)."""
+    try:
+        from ilim_assistant.ruzgar_tefsir_kutuphane import (
+            hits_as_rag_tuples,
+            looks_like_tefsir_question,
+            search_tefsir_library,
+        )
+
+        if not looks_like_tefsir_question(msg):
+            return hits
+        t_hits = hits_as_rag_tuples(search_tefsir_library(msg))
+        if not t_hits:
+            return hits
+        return _merge_hits_dedupe(t_hits, hits)
+    except Exception:
+        return hits
+
+
 def _yield_encyclopedic_fast_merge(
     msg: str,
     *,
@@ -308,6 +343,19 @@ def _yield_encyclopedic_fast_merge(
     if upload_ids or session_id:
         yield {"kind": "status", "phase": "upload_context", "text": STATUS_UPLOAD_CONTEXT}
         hits = _apply_upload_context(hits, msg, upload_ids, session_id=session_id)
+
+    try:
+        from ilim_assistant.ruzgar_tefsir_kutuphane import looks_like_tefsir_question
+
+        if looks_like_tefsir_question(msg):
+            yield {
+                "kind": "status",
+                "phase": "tefsir_kutuphane",
+                "text": STATUS_TEFSIR_KUTUPHANE,
+            }
+            hits = _merge_tefsir_library_hits(msg, hits)
+    except Exception:
+        pass
 
     archive_primary = archive_match_is_strong(ar_hits)
     suppress_web = archive_primary

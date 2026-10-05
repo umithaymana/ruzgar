@@ -102,6 +102,14 @@ def should_check_bilgi_kutuphane_first(message: str) -> bool:
             return False
     except Exception:
         pass
+    # Güncel kur/haber — eski kütüphane kaydı web'i engellemesin.
+    try:
+        from ilim_assistant.ruzgar_web_arastirma_pro import looks_like_live_web_needed
+
+        if looks_like_live_web_needed(raw):
+            return False
+    except Exception:
+        pass
     if lookup_bilgi_kutuphane_hint(raw):
         return True
     try:
@@ -158,6 +166,18 @@ def lookup_bilgi_kutuphane_hint(message: str) -> Optional[dict[str, Any]]:
         cevap = str(detay.get("cevap") or "").strip()
         if _is_miss_answer(cevap) or _MISS_REPLY.search(cevap):
             continue
+        # Soru yankısı / boş güven — kütüphaneden dönme
+        if cevap.rstrip().endswith("?") and len(cevap) < 220:
+            continue
+        if "pip install" in cevap.lower() or "python paket kurulumu" in cevap.lower():
+            continue
+        try:
+            from ilim_assistant.ruzgar_egitim import is_invalid_egitim_pair
+
+            if is_invalid_egitim_pair(str(detay.get("soru") or message), cevap):
+                continue
+        except Exception:
+            pass
         try:
             from ilim_assistant.ruzgar_tek_beyin_hafiza_seed import sanitize_gokcenur_hafiza_cevap
 
@@ -168,6 +188,16 @@ def lookup_bilgi_kutuphane_hint(message: str) -> Optional[dict[str, Any]]:
             pass
         if len(cevap) < 20:
             continue
+        # Kur'an sure/ayet sorularında zehirli fuzzy kaydı engelle
+        try:
+            from ilim_assistant.ruzgar_kuran_anlik import looks_like_kuran_question
+
+            if looks_like_kuran_question(message):
+                skor_tmp = float(detay.get("skor") or 0.0)
+                if skor_tmp < 0.95:
+                    continue
+        except Exception:
+            pass
         skor = float(detay.get("skor") or 0.0)
         if skor < min_sc:
             continue
@@ -246,12 +276,37 @@ def _should_auto_learn_turn(
             return False
     except Exception:
         pass
+    # Kullanıcı tercih / asistan geribildirimi — her zaman öğren
+    ul = _norm(u)
+    if any(
+        x in ul
+        for x in (
+            "robot gibi",
+            "insan gibi",
+            "hatırla",
+            "hatirla",
+            "unutma",
+            "kişisel asistan",
+            "kisisel asistan",
+            "doğal konuş",
+            "dogal konus",
+            "yönlendir",
+            "yonlendir",
+            "öğren",
+            "ogren",
+        )
+    ):
+        return True
     prim = (plan_primary or "").strip().lower()
     if prim in ("gundelik", "hafiza", "islem", "dosya", "hava"):
         if not web_used:
             return False
     if prim in ("bilgi", "bilim", "dilbilgisi") or web_used:
         return True
+    # Anlamlı genel sohbet / tefsir okuma — hafızaya al
+    if prim in ("", "genel") or "tefsir" in ul or "meal" in ul:
+        if len(a) >= 120 and len(u) >= 8:
+            return True
     try:
         from ilim_assistant.ruzgar_tek_beyin_analiz import classify_question_intent
 

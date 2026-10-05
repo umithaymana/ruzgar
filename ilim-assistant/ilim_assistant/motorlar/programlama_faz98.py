@@ -76,8 +76,9 @@ _COPY_RE = re.compile(
     r")",
     re.I | re.S,
 )
+# Kelime sınırı zorunlu — yoksa «okur musun» içindeki «kur» → pip install musun olur.
 _PIP_RE = re.compile(
-    r"(?:pip\s+install|kur(?:ulum)?|yükle|yukle)\s+([a-zA-Z0-9_\-\.]+)",
+    r"(?:pip\s+install|\bkur(?:ulum)?\b|\byükle\b|\byukle\b)\s+([a-zA-Z0-9_\-\.]+)",
     re.I,
 )
 _SHELL_NATURAL_RE = re.compile(
@@ -873,6 +874,21 @@ def wants_umit_gate(message: str) -> bool:
     ):
         return True
     low = _ascii_fold(raw)
+    # Kur'an / tefsir / meal — asla programlama kapısına düşmesin
+    if any(
+        k in low
+        for k in (
+            "sure",
+            "sûre",
+            "ayet",
+            "tefsir",
+            "meal",
+            "kuran",
+            "kur'an",
+            "okur musun",
+        )
+    ) and not any(k in low for k in ("pip ", "paket kur", "winget")):
+        return False
     if any(
         k in low
         for k in (

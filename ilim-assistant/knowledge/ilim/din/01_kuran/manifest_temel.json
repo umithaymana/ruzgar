@@ -1,0 +1,27 @@
+{
+  "ok": true,
+  "version": "din-01-kuran-temel-kavramlar-v1",
+  "yukleme_tarihi": "2026-10-05T20:10:03Z",
+  "collection": "din_01_kuran_kavram",
+  "kaynak_notu": "Diyanet mushaf düzeni + klasik Mısır kronolojik nüzûl sırası / yaygın Medenî-Mekkî sınıflandırması. İhtilaflı sûreler işaretlidir. Tecvid giriş: kısa usul özeti (tam ilmihal değil).",
+  "qa": {
+    "sure_adet": 114,
+    "sure_beklenen": 114,
+    "kavram_adet": 41,
+    "tecvid_madde": 8,
+    "cuz_adet": 30,
+    "nuzul_liste_uzunluk": 114,
+    "ayetler_jsonl_satir": 6236,
+    "ayet_beklenen": 6236,
+    "mekki_adet": 86,
+    "medeni_adet": 28
+  },
+  "dosyalar": {
+    "sureler": "metadata/sureler.json",
+    "cuz_hizb": "metadata/cuz_hizb.json",
+    "nuzul_sirasi": "metadata/nuzul_sirasi.json",
+    "temel_kavramlar": "temel_kavramlar.jsonl",
+    "tecvid_giris": "tecvid_giris.jsonl",
+    "incremental": "incremental/"
+  }
+}

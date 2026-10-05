@@ -523,6 +523,11 @@ def _questions_equivalent(a: str, b: str) -> bool:
         if ta and tb:
             inter = ta & tb
             union = ta | tb
+            # Sayısal fark varsa (5. sure ≠ 7. sure / 15. ayet) eşleşme yok
+            nums_a = set(re.findall(r"\d+", na))
+            nums_b = set(re.findall(r"\d+", nb))
+            if nums_a and nums_b and nums_a != nums_b:
+                return False
             if len(inter) / max(len(union), 1) >= 0.72:
                 return True
     return False
@@ -538,6 +543,17 @@ def _is_usable_echo_answer(text: str) -> bool:
     if "bulamadım" in low and "öğret" in low:
         return False
     if "bulamadim" in low and "ogret" in low:
+        return False
+    # Soru yankısı / boş güven şeridi — kullanılmaz
+    if t.rstrip().endswith("?"):
+        return False
+    if re.search(r"\bhangisi\s*\?", low) and len(t) < 220:
+        return False
+    if "güven: orta" in low and "kaynak sayısı: 0" in low.replace("ı", "i"):
+        return False
+    if "guven: orta" in low and "kaynak sayisi: 0" in low:
+        return False
+    if "python paket kurulumu" in low or "pip install" in low:
         return False
     return True
 
@@ -565,6 +581,14 @@ def try_session_echo_reply(
         from ilim_assistant.ruzgar_tek_beyin_karsilama import looks_like_session_greeting
 
         if looks_like_session_greeting(msg):
+            return None
+    except Exception:
+        pass
+    # Canlı kur/haber — eski oturum cevabı (ör. 18,45 TL) web'i engellemesin.
+    try:
+        from ilim_assistant.ruzgar_web_arastirma_pro import looks_like_live_web_needed
+
+        if looks_like_live_web_needed(msg):
             return None
     except Exception:
         pass

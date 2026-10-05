@@ -327,10 +327,16 @@ def is_invalid_egitim_pair(soru: str, cevap: str) -> bool:
             "yanlış cevap",
             "doğrusunu bana öğret",
             "empati sorularında",
+            "python paket kurulumu",
+            "pip install",
         )
     ):
         return True
-    if c.endswith("?") or re.search(r"\b(?:nedir|nasıl|nasil)\s*\??\s*$", c, re.I):
+    # Cevap soruyu yankılıyor (soru metni cevabın başında)
+    s_core = re.sub(r"[?!.…]+$", "", s).strip().casefold()
+    if len(s_core) >= 12 and low.startswith(s_core[: min(40, len(s_core))]):
+        return True
+    if c.endswith("?") or re.search(r"\b(?:nedir|nasıl|nasil|hangisi)\s*\??\s*$", c, re.I):
         return True
     if _is_bilgi_sorusu(s) and _is_bilgi_sorusu(c) and len(c) < 120:
         return True

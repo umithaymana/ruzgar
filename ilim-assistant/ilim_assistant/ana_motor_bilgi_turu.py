@@ -124,10 +124,12 @@ def resolve_web_allow_for_bilgi_turu(
     prefer_web: bool = True,
 ) -> bool:
     """
-    Zayıf yerel eşleşmede web açık kalsın; güçlü arşiv/RAG tek başına yeterliyse kapatılabilir.
+    Yerel önce: güçlü arşiv/RAG varsa web kapalı; zayıf/yoksa açık.
+    ``web_pro`` yalnızca arama kalitesini etkiler — güçlü yereli ezmez.
     """
-    if web_pro or prefer_web is False:
-        return bool(web_pro)
+    del web_pro  # PRO builder ayrı; bu kapı yalnızca «web gerekli mi?»
+    if prefer_web is False:
+        return False
     try:
         from ilim_assistant.chat_core import local_rag_strong_enough_to_skip_web
 

@@ -530,6 +530,16 @@ def personal_hafiza_blocks_bilgi_path(
     """Bilgi/cloud/web hızlı yollarını kapat — kişisel kayıt var."""
     if not tek_beyin_enabled():
         return False
+    try:
+        from ilim_assistant.ruzgar_web_arastirma_pro import (
+            looks_like_live_web_needed,
+            looks_like_sports_live_question,
+        )
+
+        if looks_like_live_web_needed(message) or looks_like_sports_live_question(message):
+            return False
+    except Exception:
+        pass
     target = resolve_memory_query_message(message, history)
     if _skip_hafiza_for_clarification_short(target):
         return False
@@ -770,6 +780,17 @@ def tek_beyin_plan_override(
         return None
     if _skip_hafiza_for_clarification_short(message):
         return None
+    # Canlı haber/spor/kur — eski sohbet cevabını tekrar basma; web zorunlu
+    try:
+        from ilim_assistant.ruzgar_web_arastirma_pro import (
+            looks_like_live_web_needed,
+            looks_like_sports_live_question,
+        )
+
+        if looks_like_live_web_needed(message) or looks_like_sports_live_question(message):
+            return None
+    except Exception:
+        pass
     if _idrak_blocks_personal_hafiza(message, history):
         return None
     target = resolve_memory_query_message(message, history)

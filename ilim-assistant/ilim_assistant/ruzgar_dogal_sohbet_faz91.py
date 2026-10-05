@@ -32,13 +32,25 @@ def _explicit_research_intent(message: str) -> bool:
     try:
         from ilim_assistant.ana_motor_plan import _explicit_research_intent as _eri
 
+        raw = (message or "").strip()
+        low = raw.lower()
+        # Meal/tefsir «okur musun / anlat» — sohbet; ansiklopedi araştırma değil
+        if re.search(
+            r"(okur\s*musun|anlat(?:ır\s*mısın)?|oku\b|payla[sş]|birlikte\s*oku)",
+            low,
+        ) and any(x in low for x in ("tefsir", "meal", "sure", "sûre", "ayet")):
+            return False
         return bool(_eri(message))
     except Exception:
         raw = (message or "").strip()
         if not raw:
             return False
         blob = _norm_ascii(raw.lower()) + " " + raw.lower()
-        cues = ("nedir", "kimdir", "ne zaman", "kaç", "kac", "hadis", "ayet", "tefsir")
+        if re.search(r"(okur\s*musun|anlat|oku\b)", blob) and any(
+            x in blob for x in ("tefsir", "meal", "sure", "ayet")
+        ):
+            return False
+        cues = ("nedir", "kimdir", "ne zaman", "kaç", "kac", "hadis")
         return any(c in blob for c in cues)
 
 

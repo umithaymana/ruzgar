@@ -1,0 +1,306 @@
+{
+  "ok": true,
+  "cuz_sayisi": 30,
+  "hizb_sayisi": 60,
+  "not": "Her cüz ≈ 2 hizb; hizb ≈ 4 rub'. Tam hizb sınırları mushaf işaretlerine göredir.",
+  "items": [
+    {
+      "cuz_no": 1,
+      "baslangic_sure": 1,
+      "baslangic_ayet": 1,
+      "baslangic_sure_adi": "Fâtiha",
+      "sonraki_cuz_baslangic": {
+        "sure": 2,
+        "ayet": 142
+      }
+    },
+    {
+      "cuz_no": 2,
+      "baslangic_sure": 2,
+      "baslangic_ayet": 142,
+      "baslangic_sure_adi": "Bakara",
+      "sonraki_cuz_baslangic": {
+        "sure": 2,
+        "ayet": 253
+      }
+    },
+    {
+      "cuz_no": 3,
+      "baslangic_sure": 2,
+      "baslangic_ayet": 253,
+      "baslangic_sure_adi": "Bakara",
+      "sonraki_cuz_baslangic": {
+        "sure": 3,
+        "ayet": 92
+      }
+    },
+    {
+      "cuz_no": 4,
+      "baslangic_sure": 3,
+      "baslangic_ayet": 92,
+      "baslangic_sure_adi": "Âl-i İmrân",
+      "sonraki_cuz_baslangic": {
+        "sure": 4,
+        "ayet": 24
+      }
+    },
+    {
+      "cuz_no": 5,
+      "baslangic_sure": 4,
+      "baslangic_ayet": 24,
+      "baslangic_sure_adi": "Nisâ",
+      "sonraki_cuz_baslangic": {
+        "sure": 4,
+        "ayet": 148
+      }
+    },
+    {
+      "cuz_no": 6,
+      "baslangic_sure": 4,
+      "baslangic_ayet": 148,
+      "baslangic_sure_adi": "Nisâ",
+      "sonraki_cuz_baslangic": {
+        "sure": 5,
+        "ayet": 82
+      }
+    },
+    {
+      "cuz_no": 7,
+      "baslangic_sure": 5,
+      "baslangic_ayet": 82,
+      "baslangic_sure_adi": "Mâide",
+      "sonraki_cuz_baslangic": {
+        "sure": 6,
+        "ayet": 111
+      }
+    },
+    {
+      "cuz_no": 8,
+      "baslangic_sure": 6,
+      "baslangic_ayet": 111,
+      "baslangic_sure_adi": "En'âm",
+      "sonraki_cuz_baslangic": {
+        "sure": 7,
+        "ayet": 88
+      }
+    },
+    {
+      "cuz_no": 9,
+      "baslangic_sure": 7,
+      "baslangic_ayet": 88,
+      "baslangic_sure_adi": "A'râf",
+      "sonraki_cuz_baslangic": {
+        "sure": 8,
+        "ayet": 41
+      }
+    },
+    {
+      "cuz_no": 10,
+      "baslangic_sure": 8,
+      "baslangic_ayet": 41,
+      "baslangic_sure_adi": "Enfâl",
+      "sonraki_cuz_baslangic": {
+        "sure": 9,
+        "ayet": 93
+      }
+    },
+    {
+      "cuz_no": 11,
+      "baslangic_sure": 9,
+      "baslangic_ayet": 93,
+      "baslangic_sure_adi": "Tevbe",
+      "sonraki_cuz_baslangic": {
+        "sure": 11,
+        "ayet": 6
+      }
+    },
+    {
+      "cuz_no": 12,
+      "baslangic_sure": 11,
+      "baslangic_ayet": 6,
+      "baslangic_sure_adi": "Hûd",
+      "sonraki_cuz_baslangic": {
+        "sure": 12,
+        "ayet": 53
+      }
+    },
+    {
+      "cuz_no": 13,
+      "baslangic_sure": 12,
+      "baslangic_ayet": 53,
+      "baslangic_sure_adi": "Yûsuf",
+      "sonraki_cuz_baslangic": {
+        "sure": 15,
+        "ayet": 1
+      }
+    },
+    {
+      "cuz_no": 14,
+      "baslangic_sure": 15,
+      "baslangic_ayet": 1,
+      "baslangic_sure_adi": "Hicr",
+      "sonraki_cuz_baslangic": {
+        "sure": 17,
+        "ayet": 1
+      }
+    },
+    {
+      "cuz_no": 15,
+      "baslangic_sure": 17,
+      "baslangic_ayet": 1,
+      "baslangic_sure_adi": "İsrâ",
+      "sonraki_cuz_baslangic": {
+        "sure": 18,
+        "ayet": 75
+      }
+    },
+    {
+      "cuz_no": 16,
+      "baslangic_sure": 18,
+      "baslangic_ayet": 75,
+      "baslangic_sure_adi": "Kehf",
+      "sonraki_cuz_baslangic": {
+        "sure": 21,
+        "ayet": 1
+      }
+    },
+    {
+      "cuz_no": 17,
+      "baslangic_sure": 21,
+      "baslangic_ayet": 1,
+      "baslangic_sure_adi": "Enbiyâ",
+      "sonraki_cuz_baslangic": {
+        "sure": 23,
+        "ayet": 1
+      }
+    },
+    {
+      "cuz_no": 18,
+      "baslangic_sure": 23,
+      "baslangic_ayet": 1,
+      "baslangic_sure_adi": "Mü'minûn",
+      "sonraki_cuz_baslangic": {
+        "sure": 25,
+        "ayet": 21
+      }
+    },
+    {
+      "cuz_no": 19,
+      "baslangic_sure": 25,
+      "baslangic_ayet": 21,
+      "baslangic_sure_adi": "Furkân",
+      "sonraki_cuz_baslangic": {
+        "sure": 27,
+        "ayet": 56
+      }
+    },
+    {
+      "cuz_no": 20,
+      "baslangic_sure": 27,
+      "baslangic_ayet": 56,
+      "baslangic_sure_adi": "Neml",
+      "sonraki_cuz_baslangic": {
+        "sure": 29,
+        "ayet": 46
+      }
+    },
+    {
+      "cuz_no": 21,
+      "baslangic_sure": 29,
+      "baslangic_ayet": 46,
+      "baslangic_sure_adi": "Ankebût",
+      "sonraki_cuz_baslangic": {
+        "sure": 33,
+        "ayet": 31
+      }
+    },
+    {
+      "cuz_no": 22,
+      "baslangic_sure": 33,
+      "baslangic_ayet": 31,
+      "baslangic_sure_adi": "Ahzâb",
+      "sonraki_cuz_baslangic": {
+        "sure": 36,
+        "ayet": 28
+      }
+    },
+    {
+      "cuz_no": 23,
+      "baslangic_sure": 36,
+      "baslangic_ayet": 28,
+      "baslangic_sure_adi": "Yâsîn",
+      "sonraki_cuz_baslangic": {
+        "sure": 39,
+        "ayet": 32
+      }
+    },
+    {
+      "cuz_no": 24,
+      "baslangic_sure": 39,
+      "baslangic_ayet": 32,
+      "baslangic_sure_adi": "Zümer",
+      "sonraki_cuz_baslangic": {
+        "sure": 41,
+        "ayet": 47
+      }
+    },
+    {
+      "cuz_no": 25,
+      "baslangic_sure": 41,
+      "baslangic_ayet": 47,
+      "baslangic_sure_adi": "Fussilet",
+      "sonraki_cuz_baslangic": {
+        "sure": 46,
+        "ayet": 1
+      }
+    },
+    {
+      "cuz_no": 26,
+      "baslangic_sure": 46,
+      "baslangic_ayet": 1,
+      "baslangic_sure_adi": "Ahkâf",
+      "sonraki_cuz_baslangic": {
+        "sure": 51,
+        "ayet": 31
+      }
+    },
+    {
+      "cuz_no": 27,
+      "baslangic_sure": 51,
+      "baslangic_ayet": 31,
+      "baslangic_sure_adi": "Zâriyât",
+      "sonraki_cuz_baslangic": {
+        "sure": 58,
+        "ayet": 1
+      }
+    },
+    {
+      "cuz_no": 28,
+      "baslangic_sure": 58,
+      "baslangic_ayet": 1,
+      "baslangic_sure_adi": "Mücâdele",
+      "sonraki_cuz_baslangic": {
+        "sure": 67,
+        "ayet": 1
+      }
+    },
+    {
+      "cuz_no": 29,
+      "baslangic_sure": 67,
+      "baslangic_ayet": 1,
+      "baslangic_sure_adi": "Mülk",
+      "sonraki_cuz_baslangic": {
+        "sure": 78,
+        "ayet": 1
+      }
+    },
+    {
+      "cuz_no": 30,
+      "baslangic_sure": 78,
+      "baslangic_ayet": 1,
+      "baslangic_sure_adi": "Nebe'",
+      "sonraki_cuz_baslangic": null
+    }
+  ],
+  "kaynak_notu": "Diyanet mushaf düzeni + klasik Mısır kronolojik nüzûl sırası / yaygın Medenî-Mekkî sınıflandırması. İhtilaflı sûreler işaretlidir. Tecvid giriş: kısa usul özeti (tam ilmihal değil)."
+}

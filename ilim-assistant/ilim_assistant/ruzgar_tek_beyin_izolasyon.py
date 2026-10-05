@@ -59,12 +59,36 @@ def looks_like_bilgi_isolation_turn(
     """Ansiklopedik / bilgi sorusu — önceki sohbet kirliliğini sınırla."""
     if not tek_beyin_izolasyon_enabled():
         return False
+    raw = (message or "").strip()
+    # Tefsir sohbeti / takip («bu tefsir hangi kitap») — bağlam KESİLMEZ
+    try:
+        from ilim_assistant.ruzgar_tefsir_kutuphane import (
+            looks_like_tefsir_followup,
+            looks_like_tefsir_question,
+        )
+
+        if looks_like_tefsir_followup(raw):
+            return False
+        low = raw.lower()
+        if looks_like_tefsir_question(raw) and re.search(
+            r"(okur\s*musun|anlat|oku\b|payla[sş]|sohbet|konu[sş])",
+            low,
+        ):
+            return False
+    except Exception:
+        pass
+    # Kısa deiktik takip («bu?», «hangisi», «kimden») — izolasyon kapalı
+    if len(raw) < 80 and re.search(
+        r"\b(bu|şu|o|hangisi|hangi|kimden|nereden|neyi|neydi)\b",
+        raw,
+        re.I,
+    ):
+        return False
     primary = ""
     if question_plan is not None:
         primary = str(getattr(question_plan, "primary", "") or "").strip().lower()
     if primary in ("bilgi", "bilim", "dilbilgisi"):
         return True
-    raw = (message or "").strip()
     if _KIM_SORUSU.search(raw):
         return True
     try:
@@ -79,9 +103,9 @@ def looks_like_bilgi_isolation_turn(
 
 def _bilgi_prior_cap() -> int:
     try:
-        return max(0, min(int(os.environ.get("RUZGAR_TEK_BEYIN_BILGI_PRIOR", "4")), 8))
+        return max(2, min(int(os.environ.get("RUZGAR_TEK_BEYIN_BILGI_PRIOR", "8")), 16))
     except ValueError:
-        return 4
+        return 8
 
 
 def prior_messages_for_turn_isolated(

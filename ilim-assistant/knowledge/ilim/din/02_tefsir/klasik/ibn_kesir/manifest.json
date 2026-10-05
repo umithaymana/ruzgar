@@ -1,0 +1,35 @@
+{
+  "ok": true,
+  "version": "din-02-tefsir-klasik-ibn_kesir-v1",
+  "eser_id": "ibn_kesir",
+  "eser": "Tefsîru'l-Kur'âni'l-Azîm",
+  "yazar": "İbn Kesîr (Ebü'l-Fidâ İsmâîl b. Ömer)",
+  "dil": "ar",
+  "collection": "din_02_tefsir_klasik_ibn_kesir",
+  "kaynak": "https://github.com/spa5k/tafsir_api/tree/main/tafsir/ar-tafsir-ibn-kathir",
+  "slug": "ar-tafsir-ibn-kathir",
+  "staging": "arsiv/_ilim_staging/02_tefsir/klasik/ibn_kesir",
+  "ciktilar": {
+    "ayet_indeks": "knowledge/ilim/din/02_tefsir/klasik/ibn_kesir/tefsir_ayet_indeks.jsonl",
+    "bloklar": "knowledge/ilim/din/02_tefsir/klasik/ibn_kesir/tefsir_bloklari.jsonl",
+    "incremental": "knowledge/ilim/din/02_tefsir/klasik/ibn_kesir/incremental"
+  },
+  "ayrilik": {
+    "kuran_yolu_dokunulmadi": true,
+    "kuran_yolu_path": "knowledge/ilim/din/02_tefsir/kuran_yolu"
+  },
+  "content_fingerprint": "06c71af166d8d485",
+  "qa": {
+    "hedef": 6236,
+    "indeks_adet": 6236,
+    "dolu_tefsir": 6236,
+    "eksik_kayit": [],
+    "eksik_kayit_adet": 0,
+    "bos_tefsir": [],
+    "bos_tefsir_adet": 0,
+    "kisa_tefsir_adet": 0,
+    "kisa_tefsir_ornek": [],
+    "tam_tefsir": true,
+    "kapsama_orani": 1.0
+  }
+}

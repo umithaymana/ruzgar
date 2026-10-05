@@ -202,6 +202,9 @@ def build_session_memory_context(
         sections.extend(f"- {x}" for x in reminders)
     sections.append(
         "Talimat: Bu bloğu kullanıcıya aynen okuma; kişisel asistan hafızası olarak kullan. "
+        "Robot gibi liste okuma. Ümit ile devam eden bir sohbet varmış gibi doğal konuş; "
+        "«bu / şu / hangisi / kimden» deyince AZ ÖNCEKİ konuyu hatırla. "
+        "Ne istediğini idrak et, gerekirse nazikçe yönlendir. "
         "Kullanıcı 'beni hatırlıyor musun' derse bu notlardan doğal ve kısa cevap ver."
     )
     sections.append("[/RÜZGAR KALICI HAFIZA]")

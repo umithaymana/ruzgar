@@ -1,0 +1,186 @@
+{
+  "ok": true,
+  "version": "din-01-kuran-v1",
+  "yukleme_tarihi": "2026-10-05T18:18:06Z",
+  "collection": "din_01_kuran",
+  "kaynak": "Diyanet İşleri Başkanlığı — kuran.diyanet.gov.tr / dijital.diyanet.gov.tr",
+  "kaynaklar": [
+    {
+      "dosya": "kuran_mushaf.docx",
+      "url": "https://kuran.diyanet.gov.tr/Content/dosyalar/kuran.docx",
+      "bytes": 550793,
+      "sha256": "88cca6d590ff8a4caac027ee37a65e2b40b67edf6421e28bd995385a18da7d26"
+    },
+    {
+      "dosya": "diyanet_meali.epub",
+      "url": "https://dijital.diyanet.gov.tr/File/EpubDownload?path=430_2.epub&name=KUR%27AN-I_KER%C4%B0M_MEAL%C4%B0&id=430",
+      "bytes": 599671,
+      "sha256": "fab5d793643cfdff389dc81df6aba7fcb55a14fcd599f8e58c28d9c6db5e6b3a"
+    },
+    {
+      "dosya": "kuran_yolu_meali.epub",
+      "url": "https://dijital.diyanet.gov.tr/File/EpubDownload?path=429_2.epub&name=KUR%27AN_YOLU_MEAL%C4%B0&id=429",
+      "bytes": 2006796,
+      "sha256": "9c858a01c27c93beaacb1f28fa868840573f5a0c809f164904a4b2d15c0f62ad"
+    },
+    {
+      "dosya": "diyanet_meali.pdf",
+      "url": "https://dijital.diyanet.gov.tr/File/Download?path=430_1.pdf&id=430",
+      "bytes": 4032422,
+      "sha256": "41af26d0147d792d0e9bc7a3eaef6fc1d2466470ede9732377db3e73eb6707be"
+    }
+  ],
+  "ciktilar": {
+    "ayetler_jsonl": "knowledge/ilim/din/01_kuran/ayetler.jsonl",
+    "arsiv_index": "arsiv/kuran/index.jsonl",
+    "sureler": "knowledge/ilim/din/01_kuran/metadata/sureler.json"
+  },
+  "qa": {
+    "sure_beklenen": 114,
+    "ayet_beklenen": 6236,
+    "arapca_adet": 6236,
+    "meal_diyanet_adet": 5925,
+    "meal_kuran_yolu_adet": 6236,
+    "sure_eksik_arapca": [],
+    "sure_eksik_meal_diyanet": [
+      {
+        "sure": 3,
+        "beklenen": 200,
+        "bulunan": 196
+      },
+      {
+        "sure": 8,
+        "beklenen": 75,
+        "bulunan": 74
+      },
+      {
+        "sure": 9,
+        "beklenen": 129,
+        "bulunan": 128
+      },
+      {
+        "sure": 10,
+        "beklenen": 109,
+        "bulunan": 108
+      },
+      {
+        "sure": 11,
+        "beklenen": 123,
+        "bulunan": 120
+      },
+      {
+        "sure": 16,
+        "beklenen": 128,
+        "bulunan": 127
+      },
+      {
+        "sure": 23,
+        "beklenen": 118,
+        "bulunan": 117
+      },
+      {
+        "sure": 27,
+        "beklenen": 93,
+        "bulunan": 0
+      },
+      {
+        "sure": 37,
+        "beklenen": 182,
+        "bulunan": 0
+      },
+      {
+        "sure": 51,
+        "beklenen": 60,
+        "bulunan": 58
+      },
+      {
+        "sure": 68,
+        "beklenen": 52,
+        "bulunan": 47
+      },
+      {
+        "sure": 70,
+        "beklenen": 44,
+        "bulunan": 40
+      },
+      {
+        "sure": 74,
+        "beklenen": 56,
+        "bulunan": 53
+      },
+      {
+        "sure": 78,
+        "beklenen": 40,
+        "bulunan": 36
+      },
+      {
+        "sure": 79,
+        "beklenen": 46,
+        "bulunan": 44
+      },
+      {
+        "sure": 81,
+        "beklenen": 29,
+        "bulunan": 26
+      },
+      {
+        "sure": 96,
+        "beklenen": 19,
+        "bulunan": 18
+      }
+    ],
+    "sure_eksik_meal_yolu": [],
+    "ornekler": [
+      {
+        "sure_no": 1,
+        "ayet_no": 1,
+        "ar_len": 1,
+        "meal_dib_len": 25,
+        "meal_ky_len": 39,
+        "ar_preview": "﷽",
+        "meal_ky_preview": "Rahmân ve rahîm olan Allah’ın adıyla..."
+      },
+      {
+        "sure_no": 1,
+        "ayet_no": 7,
+        "ar_len": 91,
+        "meal_dib_len": 2159,
+        "meal_ky_len": 1498,
+        "ar_preview": "صِرَاطَ الَّذ۪ينَ اَنْعَمْتَ عَلَيْهِمْۙ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا ال",
+        "meal_ky_preview": "Nimetine erdirdiklerinin yoluna; gazaba uğramışların yoluna da, dalâlete sapmışların yoluna da değil! Âmin! [2] Rahmân, "
+      },
+      {
+        "sure_no": 2,
+        "ayet_no": 255,
+        "ar_len": 409,
+        "meal_dib_len": 569,
+        "meal_ky_len": 454,
+        "ar_preview": "اَللّٰهُ لَٓا اِلٰهَ اِلَّا هُوَۚ اَلْحَيُّ الْقَيُّومُۚ لَا تَأْخُذُهُ سِنَةٌ و",
+        "meal_ky_preview": "Allah, O’ndan başka tanrı yoktur; diridir, her şeyin varlığı O’na bağlı ve dayalıdır. Ne uykusu gelir ne de uyur. Gökler"
+      },
+      {
+        "sure_no": 112,
+        "ayet_no": 1,
+        "ar_len": 25,
+        "meal_dib_len": 34,
+        "meal_ky_len": 29,
+        "ar_preview": "قُلْ هُوَ اللّٰهُ اَحَدٌۚ",
+        "meal_ky_preview": "De ki: “O, Allah’tır, tektir."
+      }
+    ],
+    "dolu_arapca": 6236,
+    "dolu_meal_diyanet": 6236,
+    "dolu_meal_kuran_yolu": 6236,
+    "tam_arapca": true,
+    "tam_meal_diyanet": true,
+    "tam_meal_kuran_yolu": true
+  },
+  "legacy_tasinan": [],
+  "notlar": [
+    "Birincil meal: Kur'an Yolu (EPUB) — ayet ayet (Diyanet resmi yayın).",
+    "İkincil meal: DİB Cep Meal EPUB — bazı sureler resmi EPUB'ta boş stub (Neml/Saffat); boş kalanlar Kur'an Yolu ile dolduruldu ve meal_diyanet_kaynak alanında işaretlendi.",
+    "Cep Meal'de birleşik ayet meal'leri orijinal yayına sadık (meal_diyanet_birlesik).",
+    "Arapça: Diyanet Word mushaf (Hamdullah hattı) — 6236/6236.",
+    "RAG rebuild bu scriptte yapılmaz; ayrı adım."
+  ]
+}

@@ -905,6 +905,16 @@ def prepare_turn(
     except Exception:
         pass
 
+    # Kur'an anlık — sure adı / ayet meal (yanlış hafıza & pip tuzaklarından önce)
+    try:
+        from ilim_assistant.ruzgar_kuran_anlik import try_kuran_instant_reply
+
+        kuran_hi = try_kuran_instant_reply(msg)
+        if kuran_hi:
+            return msg, [], "", "", "", kuran_hi
+    except Exception:
+        pass
+
     if m == "programlama":
         try:
             from ilim_assistant.motorlar.programlama_motoru import (
@@ -1386,6 +1396,61 @@ def prepare_turn(
         except Exception:
             blocks = [(t, s) for t, s, _ in hits]
 
+    # Rüzgar Kütüphanesi — raflı yerel eser kesitleri
+    try:
+        from ilim_assistant.ruzgar_kutuphane import build_kutuphane_context, kutuphane_enabled
+
+        if kutuphane_enabled() and m in ("genel", "uretim", "gelisim", "okuma"):
+            _kx = build_kutuphane_context(msg, max_eser=3, max_chars=3200)
+            if _kx:
+                blocks = list(blocks or [])
+                blocks.insert(0, (_kx, "knowledge/kutuphane"))
+    except Exception:
+        pass
+
+    # Din tefsir kütüphanesi — modern + klasik (zorunlu atıf bağlamı)
+    _tefsir_ctx = ""
+    try:
+        from ilim_assistant.ruzgar_tefsir_kutuphane import (
+            build_tefsir_context,
+            looks_like_tefsir_followup,
+            looks_like_tefsir_question,
+        )
+
+        if m in ("genel", "uretim", "gelisim", "okuma", "ilim") and (
+            looks_like_tefsir_question(msg) or looks_like_tefsir_followup(msg)
+        ):
+            _tefsir_ctx = build_tefsir_context(msg, max_chars=9000)
+            if _tefsir_ctx:
+                blocks = list(blocks or [])
+                blocks.insert(0, (_tefsir_ctx, "knowledge/ilim/din/02_tefsir"))
+                # Yerel tefsir varken web'i kapat — kaynak karışmasın
+                me_suppress_web = True
+                if not ilim_merge_tail:
+                    ilim_merge_tail = (
+                        "\n【Asistan】 Tefsiri robot gibi madde madde okuma; "
+                        "dostça anlat, eserleri doğal cümleyle söyle, sohbeti yönlendir."
+                    )
+    except Exception:
+        pass
+
+    # Kur'an temel kavram / tecvid / kronoloji bağlamı
+    try:
+        from ilim_assistant.ruzgar_kuran_anlik import (
+            build_kuran_kavram_context,
+            looks_like_kuran_question,
+        )
+
+        if m in ("genel", "uretim", "gelisim", "okuma", "ilim") and looks_like_kuran_question(
+            msg
+        ):
+            _kav_ctx = build_kuran_kavram_context(msg, max_chars=3500)
+            if _kav_ctx:
+                blocks = list(blocks or [])
+                blocks.insert(0, (_kav_ctx, "knowledge/ilim/din/01_kuran/kavram"))
+    except Exception:
+        pass
+
     archive_direct = try_archive_rag_direct_reply(
         msg, ar_hits, coding_mode=coding_mode, mode_norm=m
     )
@@ -1573,6 +1638,30 @@ def prepare_turn(
                     # Sabit bilgi: Wikipedia öncelikli sorgu
                     if text_q and "wikipedia" not in text_q.lower():
                         text_q = f"{text_q} wikipedia"
+                _live_ground = False
+                try:
+                    from ilim_assistant.ruzgar_web_arastirma_pro import looks_like_live_web_needed
+
+                    _live_ground = looks_like_live_web_needed(msg)
+                except Exception:
+                    _live_ground = False
+                if _live_ground:
+                    try:
+                        from ilim_assistant.ana_motor_plan import rewrite_web_search_query
+                        from ilim_assistant.ruzgar_web_arastirma_pro import rewrite_sports_web_query
+
+                        sq = rewrite_sports_web_query(msg) or rewrite_web_search_query(
+                            msg, "bilgi", m
+                        )
+                        if sq:
+                            text_q = sq
+                    except Exception:
+                        pass
+                    try:
+                        n_fetch = max(n_fetch, int(os.environ.get("RUZGAR_LIVE_FETCH_URLS", "5")))
+                    except ValueError:
+                        n_fetch = max(n_fetch, 5)
+                    n_fetch = min(n_fetch, 8)
                 skip_ddg = (
                     weather_q
                     and live_weather_ctx
@@ -1951,9 +2040,10 @@ def prepare_turn(
     ):
         user_payload += (
             "\n\n[TALİMAT — OTURUM BAĞLAMI]\n"
-            "Bu mesaj **aynı sohbet oturumunun devamıdır**; modele iletilen önceki kullanıcı ve asistan "
-            "mesajları geçerlidir. Son soruyu önceki konuyla ilişkilendir; yeni tanışma veya yalnızca "
-            "\"nasıl yardımcı olabilirim\" / sabit karşılama ile yanıtlama. "
+            "Bu mesaj **aynı sohbet oturumunun devamıdır**; önceki kullanıcı ve asistan mesajları geçerlidir. "
+            "Sen Ümit'in kişisel asistanısın — konuyu unutma, niyeti idrak et, gerekirse nazikçe yönlendir. "
+            "«bu / şu / hangisi / kimden» deyince AZ ÖNCEKİ cevaba bağla. "
+            "Yeni tanışma veya yalnızca \"nasıl yardımcı olabilirim\" / sabit karşılama ile yanıtlama. "
             "Kullanıcı bilgi veya iş istiyorsa doğrudan yerine getir.\n"
         )
 
