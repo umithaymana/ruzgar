@@ -915,6 +915,16 @@ def prepare_turn(
     except Exception:
         pass
 
+    # Arapça lügat / kök-müştak / nahiv-sarf
+    try:
+        from ilim_assistant.ruzgar_arapca_lugat import try_arapca_lugat_reply
+
+        ar_hi = try_arapca_lugat_reply(msg)
+        if ar_hi:
+            return msg, [], "", "", "", ar_hi
+    except Exception:
+        pass
+
     if m == "programlama":
         try:
             from ilim_assistant.motorlar.programlama_motoru import (
@@ -1448,6 +1458,23 @@ def prepare_turn(
             if _kav_ctx:
                 blocks = list(blocks or [])
                 blocks.insert(0, (_kav_ctx, "knowledge/ilim/din/01_kuran/kavram"))
+    except Exception:
+        pass
+
+    # Arapça lügat bağlamı
+    try:
+        from ilim_assistant.ruzgar_arapca_lugat import (
+            build_arapca_lugat_context,
+            looks_like_arapca_lugat_question,
+        )
+
+        if m in ("genel", "uretim", "gelisim", "okuma", "ilim") and looks_like_arapca_lugat_question(
+            msg
+        ):
+            _ar_ctx = build_arapca_lugat_context(msg, max_chars=4000)
+            if _ar_ctx:
+                blocks = list(blocks or [])
+                blocks.insert(0, (_ar_ctx, "knowledge/ilim/din/03_arapca_lugat"))
     except Exception:
         pass
 

@@ -11106,6 +11106,22 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         except Exception:
             pass
         try:
+            from ilim_assistant.ruzgar_arapca_lugat import try_arapca_lugat_reply
+
+            _ar_early = try_arapca_lugat_reply(msg_early)
+            if _ar_early:
+                yield from _iter_instant_chat_events(
+                    _ar_early,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=orch_early,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
             from ilim_assistant.chat_core import normalize_mode
             from ilim_assistant.motorlar.programlama_motoru import (
                 is_programlama_reserved_command,

@@ -1,0 +1,28 @@
+{
+  "ok": true,
+  "version": "din-03-arapca-lugat-v1",
+  "yukleme_tarihi": "2026-10-05T20:29:24Z",
+  "collection": "din_03_arapca_lugat",
+  "qa": {
+    "kuran_kok_adet": 1231,
+    "nahiv_sarf_madde": 20,
+    "morfoloji_etiket": 14,
+    "lookup_anahtar": 19533,
+    "quranRoots_kaynak_adet": 1922,
+    "tr_ipucu_adet": 68,
+    "klasik_kok_adet": 20662
+  },
+  "kaynaklar": [
+    "iqrossed/quran-bil-quran roots.jsonl (Lane Arabic-English)",
+    "mustafa0x/quran-morphology morphology-terms-ar.json",
+    "AbstractThinker0/quran-roots (referans)",
+    "Yerel nahiv/sarf TR giriş + sık kök TR ipuçları",
+    "MohamedRashad/arabic-roots (Mufradat, Lisan, AR-EN klasik)"
+  ],
+  "dosyalar": {
+    "kuran_kok_lugat": "kuran_kok_lugat.jsonl",
+    "nahiv_sarf": "nahiv_sarf_temel.jsonl",
+    "lookup_index": "lookup_index.json",
+    "incremental": "incremental/"
+  }
+}
