@@ -25,7 +25,9 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 4. Nebula `tarih_kaynak/incremental` untracked batch’ler — ayrı karar
 5. (Eski borç) `prepare_turn` bilgi kilidi / Ollama kalite
 
-**Doğrulama:** `rahman kökü` · `صبر nedir` · `nahiv nedir` · `Fatiha kaç ayet` · `fotosentez nedir` (SSS hâlâ doğru)
+**Doğrulama:** `rahman kökü` · `صبر nedir` · `nahiv nedir` · `Fatiha kaç ayet` · `Bakara kaç ayet` · `fotosentez nedir` (SSS hâlâ doğru) — canlı **8/8**
+
+**Git:** Commitler yerelde (`1370a16` … ahead **11**). **Push:** GitHub kimlik diyaloğu bu oturumda açılamadı — yarın `git push origin main` (veya IDE Sync).
 
 **Not:** Akaid’e dokunulmadı.
 
