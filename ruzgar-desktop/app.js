@@ -3,7 +3,7 @@
  * Beyin adresi önceliği: preload + ruzgar_remote_api.txt > ?api > localStorage > yalın yerel.
  * Kök sonda `/api` ise kırpılır — aksi halde fetch `.../api/api/merkezi-bellek` ile 404 verir.
  */
-window.__RUZGAR_UI_REV = "20260620-parallel-tts";
+window.__RUZGAR_UI_REV = "20260620-weather-fast";
 const RUZGAR_LOCAL_API_PORT = 8779;
 const RUZGAR_EXPECTED_BUILD_REV = "2026-06-15-ruzgar-programlama-pro-v4";
 const LS_VAD_USER = "ruzgar_vad_user_v1";
@@ -127,6 +127,8 @@ console.info("[RÜZGAR Connection Bridge] API kök:", API);
 const RUZGAR_CHAT_FULL_TIMEOUT_MS = 180000;
 /** Kısa selam / nasılsın — Ollama yavaşken 12 sn yetmiyordu */
 const RUZGAR_CHAT_CASUAL_TIMEOUT_MS = 25000;
+/** Canlı hava / tahmin — Open-Meteo hızlı yol (~2–5 sn) */
+const RUZGAR_CHAT_WEATHER_TIMEOUT_MS = 22000;
 /** Video indirme — /api/video/download; sohbet 180sn sınırından bağımsız */
 const RUZGAR_VIDEO_DOWNLOAD_TIMEOUT_MS = 600000;
 /** Metinden video oluşturma — plan + TTS + FFmpeg (uzun sürebilir) */
@@ -190,9 +192,56 @@ function resolveStreamHardCapMs(chatFullTimeoutMs, isCasual = false) {
   );
 }
 
+function isWeatherChatQuery(userText) {
+  const t = String(userText || "").trim().toLowerCase();
+  if (!t || t.length > 420) return false;
+  const needles = [
+    "hava nasıl",
+    "hava nasil",
+    "hava ne olacak",
+    "hava olacak",
+    "bugün hava",
+    "bugun hava",
+    "hava durumu",
+    "hava bugün",
+    "hava yarın",
+    "yarın hava nasıl",
+    "yarin hava nasil",
+    "yarın hava durumu",
+    "yarın hava",
+    "yarin hava",
+    "havalar nasıl",
+    "hava durumuna bak",
+    "hava durumu bak",
+    "kaç derece",
+    "kac derece",
+    "derece mi",
+    "yağmur var",
+    "yagmur var",
+    "yağacak",
+    "yagacak",
+    "meteoroloji",
+    "sıcaklık",
+    "sicaklik",
+    "soğuk mu",
+    "soguk mu",
+    "sıcak mı",
+    "sicak mi",
+  ];
+  if (needles.some((n) => t.includes(n))) return true;
+  if (/yarin.*hava|hava.*yarin|yarın.*hava|hava.*yarın/.test(t)) return true;
+  if (/hava.*(?:olacak|nasil|nasıl|durumu|derece)|(?:olacak|durumu|derece).*hava/.test(t)) {
+    return true;
+  }
+  const bare = t.replace(/[?!.]+$/g, "").trim();
+  return bare === "hava" || bare === "hava bugün" || bare === "hava bugun" || bare === "hava şimdi" || bare === "hava simdi";
+}
+
 function streamIdleTimeoutMs(userText) {
+  if (isWeatherChatQuery(userText)) return RUZGAR_CHAT_WEATHER_TIMEOUT_MS;
   const tarihSoruCmd =
-    /osmanl|fatih|murat|selçuk|selcuk|istanbul|fethett|tarih|padişah|padisah|osman\s+bey/i.test(
+    !isWeatherChatQuery(userText) &&
+    /osmanl|fatih|murat|selçuk|selcuk|istanbul\s+feth|feth.*istanbul|fethett|tarih|padişah|padisah|osman\s+bey/i.test(
       String(userText || ""),
     );
   return tarihSoruCmd ? 90000 : RUZGAR_STREAM_IDLE_DEFAULT_MS;
@@ -1433,7 +1482,7 @@ function updateDenge70Panel(healthPayload) {
   const ramOk = d.ram_sufficient !== false;
   const job = d.pull_job || {};
   const running = !!job.running;
-  const model = String(d.model || "llama3.1:70b");
+  const model = String(d.model || "llama3");
   const avail = d.ram_available_gb != null ? `${d.ram_available_gb} GB boş` : "RAM ?";
   const minRam = d.min_ram_gb != null ? d.min_ram_gb : 14;
 
@@ -14579,7 +14628,25 @@ async function runTtsPump(ttsSess, karakter, signal) {
           body: JSON.stringify(ttsRequestPayload(chunk, k)),
           signal,
         });
-        if (!res.ok || ttsSess !== ttsSessionCounter) return null;
+        if (ttsSess !== ttsSessionCounter) return null;
+        if (!res.ok) {
+          let detail = `TTS HTTP ${res.status}`;
+          try {
+            const j = await res.json();
+            if (j && j.detail) detail = String(j.detail);
+          } catch (_) {
+            /* yok say */
+          }
+          if (!window.__ruzgarTtsFailNoted) {
+            window.__ruzgarTtsFailNoted = true;
+            try {
+              setStatus(`Sesli yanıt çalışmadı: ${detail}`, "Rüzgar");
+            } catch (_) {
+              /* yok say */
+            }
+          }
+          return null;
+        }
         return res.blob();
       }
     };
@@ -15343,7 +15410,8 @@ async function streamChat(userText, streamOpts = {}) {
     /\.(?:json|txt|md)\b/i.test(String(userText || "")) &&
     /haf[ıi]zana\s+kaydet|dosyas[ıi]n[ıi]\s+oku/i.test(String(userText || ""));
   const tarihSoruCmd =
-    /osmanl|fatih|murat|selçuk|selcuk|istanbul|fethett|tarih|padişah|padisah|ttk|bizans|osman\s+bey/i.test(
+    !isWeatherChatQuery(userText) &&
+    /osmanl|fatih|murat|selçuk|selcuk|istanbul\s+feth|feth.*istanbul|fethett|tarih|padişah|padisah|ttk|bizans|osman\s+bey/i.test(
       String(userText || ""),
     );
   const casualShortCmd =
@@ -15368,7 +15436,9 @@ async function streamChat(userText, streamOpts = {}) {
       String(userText || ""),
     );
   const chatFullTimeoutMs =
-    casualShortCmd || shortGenelCmd
+    isWeatherChatQuery(userText)
+      ? RUZGAR_CHAT_WEATHER_TIMEOUT_MS
+      : casualShortCmd || shortGenelCmd
     ? RUZGAR_CHAT_CASUAL_TIMEOUT_MS
     : egitimCmd
       ? 15000

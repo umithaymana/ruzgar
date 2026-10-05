@@ -31,9 +31,9 @@ def casual_gemini_only_mode() -> bool:
 
 def _casual_max_tokens() -> int:
     try:
-        return max(80, min(int(os.environ.get("RUZGAR_CASUAL_MAX_TOKENS", "420")), 900))
+        return max(80, min(int(os.environ.get("RUZGAR_CASUAL_MAX_TOKENS", "720")), 1100))
     except ValueError:
-        return 420
+        return 720
 
 
 def _casual_system_and_user(
@@ -78,19 +78,25 @@ def _casual_system_and_user(
     system = (
         pick_system(False, mode_norm)
         + "\n\n[TALİMAT — KISA SOHBET]\n"
-        "Ümit abi ile doğal, sıcak sohbet. 2–4 cümle, Türkçe. "
+        "Ümit abi ile doğal, sıcak ve doğru konuş. 2–5 cümle, Türkçe. "
+        "Önce net cevap; emin değilsen söyle, uydurma. "
         "Liste veya uzun ders anlatımı yok; soruya doğrudan yanıt ver.\n"
     )
     if system_addon:
         system += system_addon
     user = (
         f"Kullanıcı mesajı:\n{(message or '').strip()}\n\n"
-        "Bu bir sohbet veya günlük konuşma turudur; soruya **doğrudan**, samimi ve "
-        "kısa yanıt ver. Konu dışına çıkma; ders anlatımı veya kaynak listesi verme."
+        "Bu bir sohbet veya günlük konuşma turudur; soruya **doğrudan**, samimi, "
+        "net ve doğru yanıt ver. Konu dışına çıkma; ders anlatımı veya kaynak listesi verme."
     )
     max_tok = max_tokens_override if max_tokens_override is not None else _casual_max_tokens()
     prior_n = prior_depth_override if prior_depth_override is not None else 6
-    return system, user, 0.55, max_tok, prior_n
+    try:
+        casual_temp = float(os.environ.get("CHAT_TEMPERATURE", "0.38"))
+    except ValueError:
+        casual_temp = 0.38
+    casual_temp = max(0.2, min(casual_temp, 0.7))
+    return system, user, casual_temp, max_tok, prior_n
 
 
 def iter_casual_gemini_reply(

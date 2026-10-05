@@ -88,6 +88,40 @@ _SIMPLE_FACTS: tuple[tuple[re.Pattern[str], str], ...] = (
         ),
         "Ümit abi, Dünya'nın doğal uydusu **Ay**'dır.",
     ),
+    (
+        re.compile(
+            r"(?:"
+            r"(?:d[üu]nya(?:m[ıi]z)?|gezegenimiz|earth).{0,48}(?:hangi\s+)?(?:galaksi|galaxi|galaxy)|"
+            r"(?:galaksi|galaxi|galaxy).{0,48}(?:d[üu]nya(?:m[ıi]z)?|earth)|"
+            r"(?:hangi\s+)?(?:galaksi|galaxi|galaxy)(?:de|sinin|sistemi)?"
+            r")",
+            re.I,
+        ),
+        "Ümit abi, Dünya **Samanyolu** (Milky Way) galaksisinin içinde yer alır. "
+        "Güneş sistemimiz bu galaksinin Orion Kolu civarındadır.",
+    ),
+    (
+        re.compile(
+            r"(?:"
+            r"(?:g[üu]ne[sş]e|g[üu]ne[sş]\s*(?:e|ye)?|sun).{0,30}uzak|"
+            r"uzak.{0,30}(?:g[üu]ne[sş]|sun)|"
+            r"(?:d[üu]nya(?:m[ıi]z)?|earth).{0,40}(?:g[üu]ne[sş]|sun).{0,30}(?:uzak|mesafe|km)"
+            r")",
+            re.I,
+        ),
+        "Ümit abi, Dünya'nın Güneş'e ortalama uzaklığı yaklaşık **149,6 milyon km**'dir "
+        "(1 astronomik birim / 1 AU). Bu mesafe yıl içinde biraz değişir "
+        "(en yakın ~147 milyon km, en uzak ~152 milyon km).",
+    ),
+    (
+        re.compile(
+            r"(?:su|water).{0,25}(?:ka[cç]\s+derece(?:de)?|derecede).{0,15}kayn|"
+            r"kaynama\s*nokt",
+            re.I,
+        ),
+        "Ümit abi, deniz seviyesinde saf su **100 °C**'de kaynar "
+        "(standart atmosfer basıncında). Yüksekte basınç düştüğü için daha düşük sıcaklıkta kaynar.",
+    ),
     # Tarih/biyografi tabloya eklenmez — bilgi turu (RAG → web → LLM) tek kapı (6a).
 )
 
@@ -352,7 +386,7 @@ def try_simple_factual_reply(message: str) -> Optional[str]:
     if not tek_beyin_analiz_enabled():
         return None
     raw = (message or "").strip()
-    if not raw or len(raw) > 120:
+    if not raw or len(raw) > 160:
         return None
     # Aritmetik + mikro tablo, bilgi turu / kütüphane kapısından önce (her zaman).
     arith = try_simple_arithmetic_reply(raw)

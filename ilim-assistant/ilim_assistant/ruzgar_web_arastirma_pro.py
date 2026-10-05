@@ -32,18 +32,59 @@ def _plan_primary(question_plan: Any | None) -> str:
     return ""
 
 
+def looks_like_live_web_needed(message: str) -> bool:
+    """Güncel kur / haber / «şu an» — yerel hafıza yetmez, web zorunlu."""
+    low = (message or "").lower()
+    return any(
+        x in low
+        for x in (
+            "güncel",
+            "guncel",
+            "haber",
+            "bugün",
+            "bugun",
+            "şu an",
+            "su an",
+            "şimdi",
+            "simdi",
+            "dolar",
+            "euro",
+            "altın",
+            "altin",
+            "borsa",
+            "seçim",
+            "secim",
+            "son dakika",
+            "araştır",
+            "arastir",
+            "web'den",
+            "webden",
+            "internet",
+            "kaynak bul",
+        )
+    )
+
+
 def should_prioritize_web_research(
     message: str,
     question_plan: Any | None,
     mode_norm: str,
 ) -> bool:
-    """Web PRO — bilgi/bilim/güncellik sorularında web her zaman açık."""
+    """
+    Web PRO arama motoru kullanılsın mı?
+
+    Yerel-önce: yalnızca güncel/araştırma niyeti veya bilgi planı + zayıf yerel
+    (asıl «web aç» kapısı chat_core secondary politikasında).
+    Burada True = PRO builder / çok kaynak; zorunlu web değil.
+    """
     if not web_arastirma_pro_enabled():
         return False
     if mode_norm not in ("genel", "uretim", "gelisim", "okuma"):
         return False
     if os.environ.get("ENABLE_WEB_SEARCH", "1").strip() in ("0", "false", "no"):
         return False
+    if looks_like_live_web_needed(message):
+        return True
     primary = _plan_primary(question_plan)
     if primary in ("bilgi", "bilim", "dilbilgisi", "hava"):
         return True
@@ -57,22 +98,18 @@ def should_prioritize_web_research(
             return True
     except Exception:
         pass
-    low = (message or "").lower()
-    if any(
-        x in low
-        for x in (
-            "güncel",
-            "guncel",
-            "haber",
-            "araştır",
-            "arastir",
-            "web",
-            "internet",
-            "kaynak",
-        )
-    ):
-        return True
     return False
+
+
+def should_force_web_despite_local(
+    message: str,
+    question_plan: Any | None = None,
+) -> bool:
+    """Güçlü yerel RAG olsa bile web açılsın (canlı kur/haber)."""
+    del question_plan
+    if os.environ.get("ENABLE_WEB_SEARCH", "1").strip() in ("0", "false", "no"):
+        return False
+    return looks_like_live_web_needed(message)
 
 
 def apply_web_pro_plan_overrides(plan: Any, message: str) -> Any:
@@ -147,14 +184,44 @@ def resolve_pro_max_results(default: int) -> int:
 
 def build_web_pro_system_addon(message: str) -> str:
     q = (message or "").strip()[:180]
+    live = looks_like_live_web_needed(message)
+    science = False
+    try:
+        from ilim_assistant.ana_motor_plan import (
+            looks_like_encyclopedic_fact_question,
+            looks_like_science_knowledge_question,
+        )
+
+        science = looks_like_science_knowledge_question(message) or looks_like_encyclopedic_fact_question(
+            message
+        )
+    except Exception:
+        science = False
+    extra = ""
+    if live:
+        extra = (
+            "- Bu soru **canlı/güncel** (kur/haber). Yerel hafızadaki eski rakamları **yoksay**.\n"
+            "- Kur sorularında sayısal değeri **ilk cümlede** ver; meta konuşma / «anlamaya çalışacağım» yasak.\n"
+            "- Web raporunda «CANLI KUR ÖZETİ» varsa onu esas al.\n"
+        )
+    if science:
+        extra += (
+            "- Bu bir **sabit bilgi** sorusu. Yalnızca konuyla **doğrudan ilgili** kaynak metinlerini kullan.\n"
+            "- Alakasız site/snippet (forum, burç, ürün tanıtımı, sözlük mizahı) görürsen **yoksay**.\n"
+            "- Önce 1 cümlede net doğru cevap; sonra 1–3 cümle basit gerekçe. Uydurma yasak.\n"
+            "- Sayı/uzaklık/tanım için Wikipedia veya güvenilir ansiklopedi metnini tercih et.\n"
+            "- Kaynak yetersizse «emin değilim» de; rastgele web parçası birleştirme.\n"
+        )
     return (
         "\n\n[TALİMAT — WEB ARAŞTIRMA PRO — Ümit & Gökçenur]\n"
         f"Soru: «{q}»\n"
-        "- Yanıtı **web tarama raporundaki** kaynaklara dayandır; uydurma bilgi verme.\n"
-        "- Mümkünse **2–4 cümlede öz** cevap, ardından kısa kaynak notu (site/ad).\n"
+        "- Yanıtı **web tarama raporundaki** ilgili kaynaklara dayandır; uydurma bilgi verme.\n"
+        "- Mümkünse **2–4 cümlede öz** cevap (Ümit abinin anlayacağı sade Türkçe), ardından kısa kaynak notu.\n"
         "- Resmi (.gov.tr), akademik (.edu), ansiklopedi ve güvenilir haber kaynaklarına öncelik ver.\n"
         "- Çelişen kaynak varsa en güvenilirini seç ve belirsizliği dürüstçe belirt.\n"
-        "- Yerel indeks parçaları ile web çelişirse ikisini kıyasla.\n"
+        "- Yerel indeks parçaları ile web çelişirse: sabit bilgide tutarlı ansiklopediyi, "
+        "canlı konuda **web'i** önceliklendir.\n"
+        f"{extra}"
     )
 
 

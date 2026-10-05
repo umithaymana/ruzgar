@@ -1448,12 +1448,19 @@ def prepare_turn(
 
     web_extra = ""
     if not _is_wake_only_message(msg):
-        # Web'i ikinci plana al: lokal hafıza / vektör araması bir bağlam üretmişse
-        # (hits/blocks boş değilse) DuckDuckGo + link okuma gecikmeli devreye girer.
-        web_secondary_only_on_empty = _web_secondary_policy_enabled() and not _web_pro
+        # Web ikinci plan: güçlü yerel (hafıza/RAG) varsa atla; yoksa / zayıfsa aç.
+        # RUZGAR_WEB_SECONDARY_ONLY_ON_EMPTY=1 (önerilen) — PRO yalnızca arama kalitesi.
+        web_secondary_only_on_empty = _web_secondary_policy_enabled()
         local_rag_present = bool(blocks or hits or ar_hits) or bool(live_weather_ctx)
         allow_web = True
-        if web_secondary_only_on_empty and local_rag_present:
+        _force_live_web = False
+        try:
+            from ilim_assistant.ruzgar_web_arastirma_pro import should_force_web_despite_local
+
+            _force_live_web = should_force_web_despite_local(msg, turn_plan)
+        except Exception:
+            _force_live_web = False
+        if web_secondary_only_on_empty and local_rag_present and not _force_live_web:
             try:
                 from ilim_assistant.ana_motor_bilgi_turu import resolve_web_allow_for_bilgi_turu
 
@@ -1473,15 +1480,29 @@ def prepare_turn(
                     ar_hits,
                     archive_primary=archive_primary_flag,
                 )
-        if _web_pro:
+        if _force_live_web:
             allow_web = True
+            if use_web and m not in _NOWEB_MODES:
+                web_on = True
+            # Canlı kur/haber — eski Nebula/RAG parçaları (ör. 18,45 TL) modeli zehirlemesin.
+            try:
+                from ilim_assistant.fx_live import looks_like_fx_rate_question
+                from ilim_assistant.ruzgar_web_arastirma_pro import looks_like_live_web_needed as _live_need
+
+                if looks_like_fx_rate_question(msg) or _live_need(msg):
+                    hits = []
+                    ar_hits = []
+                    blocks = []
+                    local_rag_present = bool(live_weather_ctx)
+            except Exception:
+                pass
         try:
             from ilim_assistant.ana_motor_plan import looks_like_fast_llm_fact_question
             from ilim_assistant.ruzgar_web_arastirma_pro import should_prioritize_web_research
 
             _fast_fact_no_web = looks_like_fast_llm_fact_question(msg) and not should_prioritize_web_research(
                 msg, turn_plan, m
-            )
+            ) and not _force_live_web
         except Exception:
             _fast_fact_no_web = False
         try:
@@ -1493,19 +1514,12 @@ def prepare_turn(
             if bilgi_primary_turn(turn_plan) or should_route_bilgi_turu_pipeline(
                 msg, turn_plan
             ):
-                allow_web = True
+                # Web'i açılabilir tut; güçlü yereli ezme (secondary politika).
                 if use_web and m not in _NOWEB_MODES:
                     web_on = True
         except Exception:
             pass
-        if (
-            m == "genel"
-            and web_on
-            and not archive_primary_flag
-            and not allow_web
-            and not _fast_fact_no_web
-        ):
-            allow_web = True
+        # Eski «genel her zaman web» zorlaması kaldırıldı — yerel yoksa zaten allow_web True.
 
         web_parts: list[str] = []
         if allow_web:
@@ -1526,6 +1540,18 @@ def prepare_turn(
                 else:
                     text_q = refined_search_query(msg).strip()
                 n_fetch = int(min(max(fetch_pages, 0), 5))
+                _science_ground = False
+                try:
+                    from ilim_assistant.ana_motor_plan import (
+                        looks_like_encyclopedic_fact_question,
+                        looks_like_science_knowledge_question,
+                    )
+
+                    _science_ground = looks_like_science_knowledge_question(
+                        msg
+                    ) or looks_like_encyclopedic_fact_question(msg)
+                except Exception:
+                    _science_ground = False
                 try:
                     from ilim_assistant.ruzgar_web_arastirma_pro import (
                         pick_web_context_builder,
@@ -1534,10 +1560,19 @@ def prepare_turn(
                         should_prioritize_web_research,
                     )
 
-                    if should_prioritize_web_research(msg, turn_plan, m):
+                    if should_prioritize_web_research(msg, turn_plan, m) or _science_ground:
                         n_fetch = resolve_pro_fetch_pages(fetch_pages)
                 except Exception:
                     pass
+                if _science_ground:
+                    try:
+                        n_fetch = max(n_fetch, int(os.environ.get("RUZGAR_ENCYC_FETCH_URLS", "3")))
+                    except ValueError:
+                        n_fetch = max(n_fetch, 3)
+                    n_fetch = min(n_fetch, 5)
+                    # Sabit bilgi: Wikipedia öncelikli sorgu
+                    if text_q and "wikipedia" not in text_q.lower():
+                        text_q = f"{text_q} wikipedia"
                 skip_ddg = (
                     weather_q
                     and live_weather_ctx
@@ -1553,8 +1588,13 @@ def prepare_turn(
                         should_prioritize_web_research,
                     )
 
-                    if looks_like_fast_llm_fact_question(msg) and not should_prioritize_web_research(
-                        msg, turn_plan, m
+                    # Eski: fast-fact → web tamamen kapalı (halüsinasyon riski).
+                    # Yeni: bilim/ansiklopedi için web+sayfa okuma AÇIK; yalnızca
+                    # güncel olmayan ve PRO/bilgi önceliği olmayan sohbet «nedir»inde atla.
+                    if (
+                        looks_like_fast_llm_fact_question(msg)
+                        and not should_prioritize_web_research(msg, turn_plan, m)
+                        and not _science_ground
                     ):
                         skip_ddg = True
                         n_fetch = 0

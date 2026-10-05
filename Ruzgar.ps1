@@ -1,4 +1,4 @@
-# RUZGAR - API (8779) + Electron; istege bagli Gradio tarayici (7861): Ruzgar.ps1 -WithGradio veya Ruzgar_Hepsi.bat
+﻿# RUZGAR - API (8779) + Electron; istege bagli Gradio tarayici (7861): Ruzgar.ps1 -WithGradio veya Ruzgar_Hepsi.bat
 # Zorla yeniden baslatma: Ruzgar.ps1 -ForceRestart  (8779 + eski 8777 zombi portunu bosaltir)
 param(
     [switch]$WithGradio,
@@ -106,8 +106,8 @@ function Invoke-RuzgarPortOps {
     $prevEa = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
     try {
-        & $script:PyExe @($script:PyArgs) $ops $Command --port $Port 2>&1 | ForEach-Object { Log $_; $_ }
-        return $LASTEXITCODE
+        & $script:PyExe @($script:PyArgs) $ops $Command --port $Port 2>&1 | ForEach-Object { Log $_ }
+        return [int]$LASTEXITCODE
     } finally {
         $ErrorActionPreference = $prevEa
     }
@@ -164,7 +164,7 @@ function Ensure-PythonDeps {
 
 function Test-ApiImport {
     param([string]$Ia)
-    # Tam import desktop_server ~20–60 sn sürebilir (Gemini/RAG); syntax yeterli.
+    # Tam import desktop_server ~20-60 sn sürebilir (Gemini/RAG); syntax yeterli.
     Push-Location $Ia
     $prevEa = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
@@ -204,12 +204,80 @@ function Start-ApiServer {
     $uargs += "--port"
     $uargs += "$ApiPort"
     Log "API: $PyExe $($uargs -join ' ') WD=$Ia stderr=$errPath"
+    $script:RuzgarApiPid = $null
     try {
-        Start-Process -FilePath $script:PyExe -ArgumentList $uargs -WorkingDirectory $Ia `
-            -WindowStyle Hidden -RedirectStandardError $errPath -PassThru | Out-Null
+        $proc = Start-Process -FilePath $script:PyExe -ArgumentList $uargs -WorkingDirectory $Ia `
+            -WindowStyle Hidden -RedirectStandardError $errPath -PassThru
+        if ($proc) {
+            $script:RuzgarApiPid = [int]$proc.Id
+            Log "API pid=$($script:RuzgarApiPid) (korunan)"
+        }
     } catch {
         Log "Start-Process redirect basarisiz ($($_.Exception.Message)), redirectsiz deneniyor"
-        Start-Process -FilePath $script:PyExe -ArgumentList $uargs -WorkingDirectory $Ia -WindowStyle Hidden
+        $proc = Start-Process -FilePath $script:PyExe -ArgumentList $uargs -WorkingDirectory $Ia -WindowStyle Hidden -PassThru
+        if ($proc) {
+            $script:RuzgarApiPid = [int]$proc.Id
+            Log "API pid=$($script:RuzgarApiPid) (korunan, redirectsiz)"
+        }
+    }
+}
+
+function Get-RuzgarApiListenPid {
+    try {
+        $pids = @(
+            Get-NetTCPConnection -LocalPort $ApiPort -State Listen -ErrorAction SilentlyContinue |
+                Select-Object -ExpandProperty OwningProcess -Unique
+        )
+        if ($pids.Count -ge 1) { return [int]$pids[0] }
+    } catch {}
+    return 0
+}
+
+function Sync-RuzgarApiProtectedPid {
+    $listenPid = Get-RuzgarApiListenPid
+    if ($listenPid -gt 0) {
+        $script:RuzgarApiPid = $listenPid
+        Log "Korunan API listen pid=$listenPid"
+    }
+}
+
+function Stop-NonPreferredRuzgarApi {
+    <#
+    Electron bazen sistem Python312 ile ikinci API açıp 8779'u çalıyor.
+    Dinleyen/korunan API'ye dokunma. Venv stub'i bazen ayrı PID ile base Python312 dinler.
+    #>
+    try {
+        Sync-RuzgarApiProtectedPid
+        $preferredPid = 0
+        if ($script:RuzgarApiPid) { $preferredPid = [int]$script:RuzgarApiPid }
+        $listenPid = Get-RuzgarApiListenPid
+        $procs = @(
+            Get-CimInstance Win32_Process -Filter "Name='python.exe'" -ErrorAction SilentlyContinue |
+                Where-Object { $_.CommandLine -match 'run_desktop_api' }
+        )
+        if ($procs.Count -le 1) {
+            if ($procs.Count -eq 1 -and $preferredPid -le 0) {
+                $script:RuzgarApiPid = [int]$procs[0].ProcessId
+            }
+            Log "Stop-NonPreferred: tek/yok API - oldurme yok (n=$($procs.Count))"
+            return
+        }
+
+        foreach ($p in $procs) {
+            $procId = [int]$p.ProcessId
+            if ($preferredPid -gt 0 -and $procId -eq $preferredPid) { continue }
+            if ($listenPid -gt 0 -and $procId -eq $listenPid) { continue }
+            $cmd = [string]$p.CommandLine
+            if ($cmd -match 'venvs\\ruzgar|venvs/ruzgar|\\.venv\\Scripts\\python|\\venv\\Scripts\\python') {
+                continue
+            }
+            if ($cmd -match 'Python312|Python311|Python310|\\Python\\python\.exe') {
+                Log "Yanlis Python API kapatiliyor pid=$procId (listen=$listenPid preferred=$preferredPid)"
+                Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
+            }
+        }
+    } catch {
+        Log "Stop-NonPreferredRuzgarApi: $($_.Exception.Message)"
     }
 }
 
@@ -377,12 +445,11 @@ $ia = (Resolve-Path $iaJoin).Path
 
 Import-RuzgarEnvFile -IaRoot $ia | Out-Null
 
-# Ollama model dizini — tray bazen User env'yi gormeden bos liste verir.
+# Ollama model dizini - tray bazen User env'yi gormeden bos liste verir.
 function Ensure-RuzgarOllamaModelsPath {
     $candidates = @(
         $env:OLLAMA_MODELS,
-        "D:\ÜMİT\PROGRAMLAR\Ollama\models",
-        "D:\UMIT_PROGRAMLAR_Ollama_models"
+        "D:\ÜMİT\PROGRAMLAR\Ollama\models"
     ) | Where-Object { $_ -and $_.Trim() }
     foreach ($c in $candidates) {
         try {
@@ -639,7 +706,7 @@ function Test-ApiBuildCurrent {
             return $false
         }
         if ($env:RUZGAR_OLLAMA_ONLY -eq "1") {
-            # Lite health kartında super_brain olmayabilir — ollama_only yoksa rev yeterli say.
+            # Lite health kartında super_brain olmayabilir - ollama_only yoksa rev yeterli say.
             $sb = $j.super_brain
             if ($null -ne $sb) {
                 if ($sb.gemini_configured -eq $true) {
@@ -789,6 +856,9 @@ Cozum:
             )
             exit 1
         }
+        Sync-RuzgarApiProtectedPid
+        # Yeni API ayaga kalktiysa hemen oldurme; Electron sonrasi cift surec temizligi yeter.
+        Log "API hazir - erken Stop-NonPreferred atlandi"
     } catch {
         Log "API blok hata: $($_.Exception.Message)"
         $tail = Read-ApiErrTail
@@ -865,6 +935,13 @@ try {
             if (-not (Test-ApiNebulaBuild -Url $apiUrl)) {
                 Log "UYARI: build.nebula_kitap yok - eski desktop_server, -ForceRestart veya kod guncel mi kontrol edin"
             }
+        } elseif ($finalRc -ne 0) {
+            Log "HATA: port $ApiPort dinlenmiyor (rc=$finalRc) - API dusmus olabilir"
+            [void][System.Windows.Forms.MessageBox]::Show(
+                "Ruzgar API port $ApiPort dinlemiyor.`n`nRuzgar_Port_Temizle.bat sonra Ruzgar_TemizBaslat.bat`nLog: $Log",
+                "RUZGAR - API yok"
+            )
+            exit 1
         } elseif (-not $buildOk) {
             Log "HATA: API calisiyor ama build uyumsuz - Ruzgar_TemizBaslat.bat tekrar"
             [void][System.Windows.Forms.MessageBox]::Show(
@@ -877,8 +954,22 @@ try {
         }
     }
     if (-not $ApiOnly) {
+        try {
+            $kisayolPs1 = Join-Path $Root "scripts\Masaustune_Kisayol.ps1"
+            if (Test-Path $kisayolPs1) {
+                & powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $kisayolPs1 -Quiet
+                Log "Masaustu kisayol yenilendi (Quiet)"
+            }
+        } catch {
+            Log "Kisayol yenileme atlandi: $($_.Exception.Message)"
+        }
         Start-ElectronApp -AppsRoot $Root
         Log "Electron OK - UI: Ruzgar Baslatildi - Baglanti Aktif"
+        # Electron boot yarışı: sistem Python ikinci API açtıysa temizle.
+        Start-Sleep -Seconds 3
+        Stop-NonPreferredRuzgarApi
+        Start-Sleep -Seconds 1
+        Stop-NonPreferredRuzgarApi
     } else {
         Log "ApiOnly - Electron atlandi (API yeniden baslatildi)"
         if (-not (Test-ApiBuildCurrent -Url $apiUrl)) {

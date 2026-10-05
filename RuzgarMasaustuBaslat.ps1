@@ -118,6 +118,17 @@ function Import-RuzgarDotEnvFile {
 
 Log "=== Masaustu baslat ==="
 
+# Masaustu kisayolu her acilista taze kalsin (hedef/ikon/build yolu)
+try {
+    $kisayolPs1 = Join-Path $Root "scripts\Masaustune_Kisayol.ps1"
+    if (Test-Path $kisayolPs1) {
+        & powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $kisayolPs1 -Quiet
+        Log "Masaustu kisayol yenilendi (Quiet)"
+    }
+} catch {
+    Log "Kisayol yenileme atlandi: $($_.Exception.Message)"
+}
+
 $TessData = Join-Path $Root ".ruzgar\tessdata"
 
 if (Test-Path $TessData) {

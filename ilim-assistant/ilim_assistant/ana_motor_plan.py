@@ -34,11 +34,10 @@ def _norm_ascii(s: str) -> str:
 
 def looks_like_encyclopedic_fact_question(msg: str) -> bool:
     """
-    Tek cevaplı genel tarih / devlet sorusu (ör. «Osmanlı devletini kim kurdu»).
+    Tek cevaplı genel tarih / devlet / bilim-ansiklopedi sorusu.
 
-    Amaç (Faz 9): Ana motor `bilim` → ağır arşiv+tam indeks zincirine düşmeden
-    `bilgi` veya hızlı indeks turuna yönlendirmek; tasavvuf/ilim derinliği
-    sorusu gibi kalıpları tetiklemez (kim + kurdu / ne zaman + uygarlık vb.).
+    Amaç: Ana motor bilgi turuna (RAG → ilgili web sayfası → LLM özet) yönlendirmek;
+    web_first snippet birleşimini ve sohbet kısa yolunu atlamak.
     """
     if os.environ.get("RUZGAR_FAZ9_ENCYCLOPEDIC_BILGI_BOOST", "1").strip().lower() in (
         "0",
@@ -91,10 +90,88 @@ def looks_like_encyclopedic_fact_question(msg: str) -> bool:
         if any(x in blob for x in history_terms + ("halifelik", "abbasi", "abbâsî")):
             return True
 
+    # Bilim / doğa / uzay — sabit bilgi; web snippet değil kaynaklı bilgi turu.
+    if looks_like_science_knowledge_question(raw):
+        return True
+
     # Not: burada personal_hafiza_blocks_bilgi_path ÇAĞRILMAZ.
     # O yol analyze_turn / should_use_personal_hafiza_first ile döngüye girip
     # bilgi sorularında prepare_turn'ü kilitliyordu (2026-10-03).
 
+    return False
+
+
+def looks_like_science_knowledge_question(msg: str) -> bool:
+    """
+    Uzay/doğa/bilim sabit bilgi sorusu — kaynaklı cevap ister
+    (hafıza/RAG/web sayfası → LLM; snippet birleşimi yok).
+    """
+    raw = (msg or "").strip()
+    if not raw or len(raw) > 280:
+        return False
+    asc = _norm_ascii(raw)
+    low = raw.lower()
+    if any(x in low for x in ("güncel", "guncel", "bugün", "bugun", "haber", "son dakika")):
+        return False
+    science = (
+        "galaksi",
+        "galaxi",
+        "galaxy",
+        "samanyolu",
+        "milky",
+        "gezegen",
+        "yildiz",
+        "yıldız",
+        "gunes",
+        "güneş",
+        "uzay",
+        "astronomi",
+        "atmosfer",
+        "fotosentez",
+        "molekul",
+        "molekül",
+        "atom",
+        "elektron",
+        "yercekimi",
+        "yerçekimi",
+        "isik yili",
+        "ışık yılı",
+        "neptun",
+        "neptün",
+        "jupiter",
+        "jüpiter",
+        "mars",
+        "venus",
+        "venüs",
+        "merkur",
+        "merkür",
+        "pluton",
+        "plüton",
+        "ay ",
+        " dünya",
+        "dunya",
+        "earth",
+        "kaynama",
+        "kaynar",
+        "erime",
+        "sicaklik",
+        "sıcaklık",
+        "uzaklik",
+        "uzaklık",
+        "mesafe",
+        "km",
+        "derece",
+    )
+    has_science = any(k.strip() in asc or k.strip() in low for k in science)
+    if not has_science:
+        return False
+    if re.search(
+        r"\b(hangi|nedir|ne demek|kac|kaç|nerede|nasil|nasıl|ne kadar|kac km|kaç km)\b",
+        asc,
+    ):
+        return True
+    if "?" in raw and len(raw.split()) <= 22:
+        return True
     return False
 
 

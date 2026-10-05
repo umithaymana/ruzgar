@@ -1,0 +1,21 @@
+{
+  "karakter": "asistan",
+  "hiz": 1.0,
+  "huzur": 0.94,
+  "prosody": true,
+  "durak": 1.0,
+  "tilavet": true,
+  "referans": {
+    "kolon_tilavet": "ilim-assistant/arsiv/ses-referans/kuran.wav",
+    "kuran": "ilim-assistant/arsiv/ses-referans/kuran.wav",
+    "kolon_okuma": "ilim-assistant/arsiv/ses-referans/ilahi.wav",
+    "kolon_sohbet": "ilim-assistant/arsiv/ses-referans/kuran.wav"
+  },
+  "mimarlar": "Ümit & Gökçenur",
+  "created_by": "Ümit & Gökçenur",
+  "kolon_aktif": {
+    "sohbet": null,
+    "tilavet": "kuran",
+    "okuma": null
+  }
+}

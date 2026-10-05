@@ -228,6 +228,58 @@ def fetch_url_text(url: str, max_chars: int = _MAX_FETCH_CHARS) -> Tuple[str, st
         return "", str(e)
 
 
+def _query_focus_terms(query: str) -> set[str]:
+    stop = {
+        "nedir",
+        "hangi",
+        "kac",
+        "kaç",
+        "ne",
+        "nasil",
+        "nasıl",
+        "icin",
+        "için",
+        "bir",
+        "ile",
+        "ve",
+        "the",
+        "what",
+        "which",
+        "where",
+        "wikipedia",
+        "mesala",
+        "mesela",
+    }
+    out: set[str] = set()
+    for w in re.findall(r"[a-zA-ZçğıöşüÇĞİÖŞÜ0-9]{3,}", (query or "").lower()):
+        if w not in stop:
+            out.add(w)
+    return out
+
+
+def _web_result_relevance(query: str, title: str, body: str, href: str = "") -> float:
+    terms = _query_focus_terms(query)
+    if not terms:
+        return 1.0
+    blob = f"{title} {body} {href}".lower()
+    hits = sum(1 for t in terms if t in blob)
+    score = hits / max(1, len(terms))
+    host = ""
+    try:
+        from urllib.parse import urlparse
+
+        host = (urlparse(href).netloc or "").lower()
+    except Exception:
+        host = ""
+    if any(x in host for x in ("wikipedia.org", "britannica.com", "nasa.gov", "esa.int", "tubitak")):
+        score += 0.45
+    if any(x in host for x in ("eksisozluk", "instagram", "pinterest", " astrolog", "horoscope")):
+        score -= 0.55
+    if any(x in blob for x in ("burç", "burc", "astrology", "laptop", "ekran parlak")):
+        score -= 0.4
+    return score
+
+
 def build_web_context(
     query: str,
     max_results: int = 10,
@@ -249,6 +301,28 @@ def build_web_context(
     if not results:
         return "[Web: sonuç bulunamadı.]"
 
+    # Alakasız satırları ele: soru terimleriyle örtüşmeyen snippet/URL'yi modele verme.
+    ranked: List[tuple[float, dict]] = []
+    for r in results:
+        title = (r.get("title") or "").strip()
+        body = (r.get("body") or "").strip()
+        href = (r.get("href") or "").strip()
+        score = _web_result_relevance(q, title, body, href)
+        if score < 0.18 and "wikipedia.org" not in href.lower():
+            continue
+        ranked.append((score, r))
+    ranked.sort(key=lambda x: x[0], reverse=True)
+    if not ranked:
+        # Hepsi elendiyse en azından en yüksek skorlu 2 satırı bırak (tamamen boş bağlam olmasın)
+        soft: List[tuple[float, dict]] = []
+        for r in results:
+            title = (r.get("title") or "").strip()
+            body = (r.get("body") or "").strip()
+            href = (r.get("href") or "").strip()
+            soft.append((_web_result_relevance(q, title, body, href), r))
+        soft.sort(key=lambda x: x[0], reverse=True)
+        ranked = soft[:2]
+
     lines: List[str] = []
     try:
         from ilim_assistant.ana_motor_guncellik import web_scan_stamp_line
@@ -265,7 +339,14 @@ def build_web_context(
     seen_urls: set[str] = set()
     urls_to_fetch: List[str] = []
 
-    for i, r in enumerate(results, 1):
+    # Önce Wikipedia / güvenilir domain
+    for _score, r in ranked:
+        href = (r.get("href") or "").strip()
+        if "wikipedia.org" in href.lower() and href.startswith("http") and href not in seen_urls:
+            seen_urls.add(href)
+            urls_to_fetch.append(href)
+
+    for i, (_score, r) in enumerate(ranked, 1):
         title = (r.get("title") or "").strip()
         body = (r.get("body") or "").strip()
         href = (r.get("href") or "").strip()
@@ -278,6 +359,8 @@ def build_web_context(
         ):
             seen_urls.add(href)
             urls_to_fetch.append(href)
+
+    urls_to_fetch = urls_to_fetch[: max(0, fetch_first_n_urls)]
 
     for j, pack in enumerate(
         _fetch_urls_parallel(urls_to_fetch, max_workers=4) if web_fast_mode_enabled() else [],
@@ -495,6 +578,14 @@ def build_web_context_pro(
         stamp = web_scan_stamp_line()
         if stamp:
             lines.append(stamp.rstrip())
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.fx_live import fx_live_context_line
+
+        fx_line = fx_live_context_line(q)
+        if fx_line:
+            lines.append(fx_line.rstrip())
     except Exception:
         pass
 

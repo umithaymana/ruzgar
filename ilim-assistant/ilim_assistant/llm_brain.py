@@ -304,17 +304,17 @@ def _profile_denge() -> BrainEndpoint | None:
 
 
 def _profile_denge70() -> BrainEndpoint | None:
-    """Faz D / 8 — yerel 70B denge profili (llama3.1:70b vb.)."""
+    """Faz D / 8 — yerel 70B denge profili (llama3 vb.)."""
     model = (
         os.environ.get("RUZGAR_BRAIN_DENGE70_MODEL")
         or os.environ.get("OLLAMA_CHAT_MODEL_70B")
-        or "llama3.1:70b"
+        or "llama3"
     ).strip()
     if not model:
         return None
     return BrainEndpoint(
-        profile_id="denge70",
-        label="Denge 70B (yerel Ollama)",
+        profile_id="denge_yeni",
+        label="Denge (llama3.1:8b)",
         model=model,
         provider="ollama",
         base_url=_ollama_base(),
@@ -880,12 +880,20 @@ def _looks_like_error_chunk(piece: str) -> bool:
 
 
 def build_casual_fast_chain_ids() -> list[str]:
-    """Kısa sohbet — Groq önce; Ollama yavaşsa hızlı düş."""
+    """Kısa sohbet — Ollama-only'de denge önce; aksi halde Groq → hizli."""
     custom = (os.environ.get("RUZGAR_CASUAL_BRAIN_CHAIN") or "").strip()
     if custom:
         ids = [x.strip() for x in custom.split(",") if x.strip()]
     else:
-        ids = ["groq", "hizli", "denge", "gemini"]
+        try:
+            from ilim_assistant.config import ollama_only_mode
+
+            if ollama_only_mode():
+                ids = ["denge", "hizli"]
+            else:
+                ids = ["groq", "hizli", "denge", "gemini"]
+        except Exception:
+            ids = ["groq", "hizli", "denge", "gemini"]
     return _filter_chain_ids_for_quota(ids)
 
 

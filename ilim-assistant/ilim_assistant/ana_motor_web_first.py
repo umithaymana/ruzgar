@@ -385,6 +385,24 @@ def should_web_first_fast(
         if getattr(idrak_pre, "intent", "") == "current_events":
             return True
 
+    # Ansiklopedik / bilim sabit bilgi — snippet birleşimi uyduruyor;
+    # prepare_turn: RAG → ilgili sayfa okuma → LLM özet yoluna bırak.
+    try:
+        from ilim_assistant.ana_motor_plan import (
+            looks_like_encyclopedic_fact_question,
+            looks_like_fast_llm_fact_question,
+            looks_like_science_knowledge_question,
+        )
+
+        if looks_like_encyclopedic_fact_question(msg) or looks_like_science_knowledge_question(
+            msg
+        ):
+            return False
+        if looks_like_fast_llm_fact_question(msg):
+            return False
+    except Exception:
+        pass
+
     if question_plan is not None and getattr(question_plan, "prefer_web", False):
         if primary in ("", "bilgi", "bilim", "dilbilgisi", "hava"):
             return True
@@ -823,15 +841,25 @@ def apply_web_first_quality_pass(
     verify["guven"] = guven
 
     min_cov = _min_term_coverage()
-    if coverage < min_cov * 0.55 and trusted == 0 and int(meta.get("used_rows") or 0) < 2:
-        verify["reject"] = True
-        verify["reason"] = "dusuk_ilgi"
-        return "", verify
-
-    if coverage < min_cov and guven == "düşük" and trusted == 0:
+    # Alakasız snippet birleşimini kes: soru kelimeleri cevapta yoksa reddet
+    # (eski kural trusted Wikipedia domain'i yüzünden ekşi/laptop çöplerini geçiriyordu).
+    if coverage < min_cov:
         verify["reject"] = True
         verify["reason"] = "dusuk_kapsam"
         return "", verify
+
+    if coverage < min_cov * 0.85 and not consensus_ok:
+        verify["reject"] = True
+        verify["reason"] = "zayif_oydasma"
+        return "", verify
+
+    # Cevap gövdesinde odak terimlerden hiçbiri yoksa (galaksi→ekşi sözlük) kesin red
+    if terms:
+        blob = _norm(body)
+        if not any(t in blob for t in _expand_terms_for_match(terms)):
+            verify["reject"] = True
+            verify["reason"] = "konu_kaymasi"
+            return "", verify
 
     srcs = list(meta.get("sources") or [])
     out = body

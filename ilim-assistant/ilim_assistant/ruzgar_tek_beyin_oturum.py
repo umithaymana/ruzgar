@@ -340,18 +340,19 @@ def dost_max_tokens(*, mood_active: bool, voice_turn: bool) -> int:
             base = max(base, 880)
     if voice_turn:
         try:
-            cap = int(os.environ.get("RUZGAR_TEK_BEYIN_VOICE_MAX_TOKENS", "320"))
+            cap = int(os.environ.get("RUZGAR_TEK_BEYIN_VOICE_MAX_TOKENS", "560"))
         except ValueError:
-            cap = 320
+            cap = 560
         base = min(base, cap)
-    return max(120, min(base, 1200))
+    return max(120, min(base, 1400))
 
 
 def build_voice_turn_addon() -> str:
     return (
         "\n\n[SESLİ TUR — TTS]\n"
-        "Yanıt sesli okunacak: 2–4 kısa cümle, akıcı paragraf; madde listesi yok. "
-        "Uzun açıklama veya kaynak listesi verme.\n"
+        "Yanıt sesli okunacak: 3–5 net cümle, akıcı paragraf; madde listesi yok. "
+        "Önce doğru cevabı söyle, sonra kısa gerekçe ekle; uydurma. "
+        "Gereksiz uzun ders veya kaynak listesi verme.\n"
         "[/SESLİ TUR]\n"
     )
 

@@ -1576,6 +1576,7 @@ def _health_lite_build_block() -> dict[str, Any]:
         "lite": True,
         "fast_lane": True,
         "programlama_pro_v1": True,
+        "nebula_kitap": True,
     }
     return _HEALTH_LITE_BUILD_CACHE
 
@@ -10453,6 +10454,29 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                         session_wake_used=req.session_wake_used,
                         msg_for_wake=req.message,
                         orch=_orch_wx,
+                        instant_gundelik=True,
+                    )
+                    return
+            except Exception:
+                pass
+
+            try:
+                from ilim_assistant.fx_live import try_live_fx_reply
+
+                _fx_early = try_live_fx_reply(msg_early)
+                if _fx_early:
+                    _orch_fx = dict(orch_early)
+                    _orch_fx["fx_live"] = True
+                    _orch_fx.setdefault("plan", {})["primary"] = "bilgi"
+                    _orch_fx["plan"]["label_tr"] = "Canlı döviz (web)"
+                    _orch_fx["plan"]["prefer_web"] = True
+                    _orch_fx["plan"]["sources"] = "web"
+                    yield from _iter_instant_chat_events(
+                        _fx_early,
+                        msg_early,
+                        session_wake_used=req.session_wake_used,
+                        msg_for_wake=req.message,
+                        orch=_orch_fx,
                         instant_gundelik=True,
                     )
                     return
