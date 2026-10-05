@@ -156,6 +156,13 @@ def scrub_leaked_instructions(text: str) -> str:
             continue
         if re.match(r"(?i)^\[(?:faz|talimat|sistem|dahili)", st):
             continue
+        # Ajan / sistem rol sızıntısı
+        if "sen yalnızca metin basan" in low or "sen yalnizca metin basan" in low:
+            continue
+        if "rüzgar temsilcisisin" in low or "ruzgar temsilcisisin" in low:
+            continue
+        if "önce düşün, sonra üret" in low or "once dusun, sonra uret" in low:
+            continue
         out_lines.append(ln)
     t = "\n".join(out_lines).strip()
     # Tek paragraf sızıntısı (satır kırığı yokken)

@@ -33,7 +33,7 @@ def _plan_primary(question_plan: Any | None) -> str:
 
 
 def looks_like_live_web_needed(message: str) -> bool:
-    """Güncel kur / haber / «şu an» — yerel hafıza yetmez, web zorunlu."""
+    """Güncel kur / haber / spor / olay — yerel hafıza yetmez, web zorunlu."""
     low = (message or "").lower()
     return any(
         x in low
@@ -41,6 +41,8 @@ def looks_like_live_web_needed(message: str) -> bool:
             "güncel",
             "guncel",
             "haber",
+            "manşet",
+            "manset",
             "bugün",
             "bugun",
             "şu an",
@@ -55,6 +57,48 @@ def looks_like_live_web_needed(message: str) -> bool:
             "seçim",
             "secim",
             "son dakika",
+            "gelişme",
+            "gelisme",
+            "olay",
+            "olaylar",
+            "spor",
+            "maç",
+            "mac",
+            "skor",
+            "fikstür",
+            "fikstur",
+            "lig",
+            "süper lig",
+            "super lig",
+            "şampiyonlar",
+            "sampiyonlar",
+            "transfer",
+            "galatasaray",
+            "fenerbahçe",
+            "fenerbahce",
+            "beşiktaş",
+            "besiktas",
+            "trabzonspor",
+            "erzurum",
+            "erzurumspor",
+            "eşleş",
+            "esles",
+            "rakipleri",
+            "rakibi",
+            "hafta maç",
+            "son hafta",
+            "milli takım",
+            "milli takim",
+            "dünya kupası",
+            "dunya kupasi",
+            "dünya kupas",
+            "dunya kupas",
+            "fifa",
+            "nba",
+            "ufc",
+            "formula 1",
+            "f1 ",
+            "tenis",
             "araştır",
             "arastir",
             "web'den",
@@ -63,6 +107,97 @@ def looks_like_live_web_needed(message: str) -> bool:
             "kaynak bul",
         )
     )
+
+
+def looks_like_sports_live_question(message: str) -> bool:
+    low = (message or "").lower()
+    return any(
+        x in low
+        for x in (
+            "spor",
+            "maç",
+            "mac",
+            "skor",
+            "fikstür",
+            "fikstur",
+            "lig",
+            "transfer",
+            "galatasaray",
+            "fenerbahçe",
+            "fenerbahce",
+            "beşiktaş",
+            "besiktas",
+            "trabzonspor",
+            "erzurum",
+            "erzurumspor",
+            "dünya kupa",
+            "dunya kupa",
+            "fifa",
+            "eşleş",
+            "esles",
+            "son hafta",
+            "milli takım",
+            "milli takim",
+            "nba",
+            "formula 1",
+            "f1 ",
+            "tenis",
+            "ufc",
+        )
+    )
+
+
+def rewrite_sports_web_query(message: str) -> str:
+    """Maç/lig/kupa sorularını arama motorunun anlayacağı net sorguya çevir."""
+    raw = (message or "").strip()
+    if not raw:
+        return ""
+    low = raw.lower()
+    sports = looks_like_sports_live_question(raw) or any(
+        x in low
+        for x in (
+            "maç",
+            "mac",
+            "skor",
+            "fikstür",
+            "fikstur",
+            "lig",
+            "kupa",
+            "eşleş",
+            "esles",
+            "erzurum",
+            "hafta",
+        )
+    )
+    if not sports and not looks_like_live_web_needed(raw):
+        return raw
+
+    import re
+
+    q = raw
+    # Şehir adı → kulüp (aksi halde Vikipedi şehir sayfası gelir)
+    team_map = (
+        (r"\berzurumspor\b", "Erzurumspor"),
+        (r"\berzurum\b(?!\s*spor)", "Erzurumspor"),
+        (r"\bgalatasaray\b", "Galatasaray"),
+        (r"\bfenerbah[cç]e\b", "Fenerbahçe"),
+        (r"\bbe[sş]ikta[sş]\b", "Beşiktaş"),
+        (r"\btrabzonspor\b", "Trabzonspor"),
+    )
+    for pat, repl in team_map:
+        q = re.sub(pat, repl, q, flags=re.I)
+
+    ql = q.lower()
+    if any(x in ql for x in ("dünya kupa", "dunya kupa", "world cup", "fifa")):
+        return "2026 FIFA Dünya Kupası"
+    if "erzurumspor" in ql:
+        if any(x in ql for x in ("son hafta", "fikstür", "fikstur", "eşleş", "esles", "ne zaman")):
+            return "Erzurumspor FK fikstür 2026"
+        return "Erzurumspor FK"
+    # Kısa tut — uzun sorgu DDG'yi bozuyor
+    q = re.sub(r"[?\.,!;:]+", " ", q)
+    words = [w for w in q.split() if w]
+    return " ".join(words[:10])
 
 
 def should_prioritize_web_research(
@@ -158,8 +293,9 @@ def pick_web_context_builder(
         primary = _plan_primary(question_plan) or "bilgi"
 
         def _pro(q: str, max_results: int = 10, fetch_first_n_urls: int = 0) -> str:
+            qq = rewrite_sports_web_query(q) or q
             return build_web_context_pro(
-                q,
+                qq,
                 primary=primary,
                 max_results=max_results,
                 fetch_first_n_urls=fetch_first_n_urls,
@@ -185,6 +321,7 @@ def resolve_pro_max_results(default: int) -> int:
 def build_web_pro_system_addon(message: str) -> str:
     q = (message or "").strip()[:180]
     live = looks_like_live_web_needed(message)
+    sports = looks_like_sports_live_question(message)
     science = False
     try:
         from ilim_assistant.ana_motor_plan import (
@@ -200,11 +337,22 @@ def build_web_pro_system_addon(message: str) -> str:
     extra = ""
     if live:
         extra = (
-            "- Bu soru **canlı/güncel** (kur/haber). Yerel hafızadaki eski rakamları **yoksay**.\n"
-            "- Kur sorularında sayısal değeri **ilk cümlede** ver; meta konuşma / «anlamaya çalışacağım» yasak.\n"
+            "- Bu soru **canlı/güncel** (haber/olay/kur/spor). Yerel hafızadaki eski rakamları **yoksay**.\n"
+            "- **İlk cümlede net cevap** ver (skor, olay, rakam, kim/ne). Yuvarlak konuşma yasak.\n"
+            "- Kur sorularında sayısal değeri ilk cümlede ver; «anlamaya çalışacağım» yasak.\n"
             "- Web raporunda «CANLI KUR ÖZETİ» varsa onu esas al.\n"
+            "- Haber/olayda: ne oldu + ne zaman + kim; 2–5 cümle sade Türkçe; kaynak site adı ekle.\n"
+            "- Kaynaklar çelişirse en güvenilir haberi seç; emin değilsen söyle, uydurma.\n"
         )
-    if science:
+    if sports:
+        extra += (
+            "- Spor sorusu: mümkünse **rakip + tarih + saat/skor** ilk cümlede.\n"
+            "- Eski sezon (2023 vb.) görürsen ve soru 2026 ise **yoksay**; güncel fikstürü ara.\n"
+            "- Turnuva henüz oynanmadıysa / şampiyon belli değilse **açıkça söyle**; uydurma şampiyon yasak.\n"
+            "- «Resmi siteleri kontrol edin» diye savuşturma; web raporundaki somut bilgiyi ver.\n"
+            "- Kaynak yoksa: «Bu fikstürü/sonucu webde net bulamadım» de — genel sohbet yapma.\n"
+        )
+    if science and not live:
         extra += (
             "- Bu bir **sabit bilgi** sorusu. Yalnızca konuyla **doğrudan ilgili** kaynak metinlerini kullan.\n"
             "- Alakasız site/snippet (forum, burç, ürün tanıtımı, sözlük mizahı) görürsen **yoksay**.\n"
@@ -216,7 +364,7 @@ def build_web_pro_system_addon(message: str) -> str:
         "\n\n[TALİMAT — WEB ARAŞTIRMA PRO — Ümit & Gökçenur]\n"
         f"Soru: «{q}»\n"
         "- Yanıtı **web tarama raporundaki** ilgili kaynaklara dayandır; uydurma bilgi verme.\n"
-        "- Mümkünse **2–4 cümlede öz** cevap (Ümit abinin anlayacağı sade Türkçe), ardından kısa kaynak notu.\n"
+        "- Mümkünse **2–5 cümlede öz** cevap (Ümit abinin anlayacağı sade Türkçe), ardından kısa kaynak notu.\n"
         "- Resmi (.gov.tr), akademik (.edu), ansiklopedi ve güvenilir haber kaynaklarına öncelik ver.\n"
         "- Çelişen kaynak varsa en güvenilirini seç ve belirsizliği dürüstçe belirt.\n"
         "- Yerel indeks parçaları ile web çelişirse: sabit bilgide tutarlı ansiklopediyi, "

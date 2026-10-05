@@ -63,6 +63,25 @@ def _last_meaningful_history_text(history: list[Any] | None) -> str:
     return ""
 
 
+def _last_user_history_text(history: list[Any] | None) -> str:
+    """Son kullanıcı mesajını tercih et (takip cümleleri için)."""
+    for row in reversed(history or []):
+        if not isinstance(row, dict):
+            continue
+        role = str(row.get("role") or "").lower()
+        if role and role not in ("user", "human"):
+            continue
+        txt = str(row.get("content") or row.get("text") or "").strip()
+        if txt and role in ("user", "human"):
+            return txt[:420]
+        if not role and txt and not str(row.get("role") or "").lower().startswith("assist"):
+            # role yoksa content varsa kullanıcı varsay
+            if "assistant" not in str(row.keys()).lower():
+                return txt[:420]
+    # fallback: herhangi son metin
+    return _last_meaningful_history_text(history)
+
+
 def _expand_continuation(raw: str, history: list[Any] | None) -> tuple[str, bool]:
     low = raw.strip().casefold().strip(" .,!?\t\r\n")
     exact_cues = {
@@ -88,6 +107,9 @@ def _expand_continuation(raw: str, history: list[Any] | None) -> tuple[str, bool
         "dedigim gibi",
         "sen yap",
         "hallet",
+        "evet",
+        "hayır",
+        "hayir",
     }
     prefix_cues = (
         "yukarıdaki",
@@ -107,16 +129,33 @@ def _expand_continuation(raw: str, history: list[Any] | None) -> tuple[str, bool
         "onu ",
         "şunu ",
         "sunu ",
+        "hayır ",
+        "hayir ",
+        "evet ",
+        "son hafta",
+        "2026",
+        "2027",
     )
-    is_cont = low in exact_cues or any(low.startswith(p) for p in prefix_cues)
+    # Kısa düzeltme / takip: «hayır 2026…», «evet son hafta…»
+    follow_sports = bool(
+        re.search(
+            r"(?i)\b(hay[ıi]r|evet|son hafta|e[sş]le[sş]|fikst[uü]r|ma[cç]|skor|lig)\b",
+            raw,
+        )
+        and len(raw) < 160
+    )
+    is_cont = low in exact_cues or any(low.startswith(p) for p in prefix_cues) or follow_sports
     if not is_cont:
         return raw, False
-    ctx = _last_meaningful_history_text(history)
+    ctx = _last_user_history_text(history) or _last_meaningful_history_text(history)
     if not ctx:
         return raw, False
+    # Aynı metni tekrar bağlamaya gerek yok
+    if ctx.casefold()[:40] in raw.casefold():
+        return raw, False
     return (
-        f"{raw}\n\n[İdrak bağlamı: Bu kısa devam ifadesi önceki bağlama bağlıdır. "
-        f"Önceki bağlam özeti: {ctx}]",
+        f"{raw}\n\n[İdrak bağlamı: Bu kısa devam/düzeltme önceki soruya bağlıdır. "
+        f"Önceki kullanıcı sorusu: {ctx}]",
         True,
     )
 

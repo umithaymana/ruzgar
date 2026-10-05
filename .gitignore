@@ -58,10 +58,27 @@ ilim-assistant/ruzgar_kullanici_baglami.json
 ilim-assistant/video_hafiza.json
 ilim-assistant/hafiza/*.db
 ilim-assistant/hafiza/video_indirilen/
+ilim-assistant/hafiza/gecmis_sohbetler.db
 chat_stream_probe.txt
 ilim-assistant/hafiza/son_debug_raporu.txt
 scripts/ruzgar_autonomy_benchmark_sonuc.json
 scripts/*_sonuc.json
+
+# Kişisel sağlık / özel belgeler — yalnızca bu bilgisayarda
+sağlık belgelerim/
+"sağlık belgelerim"/
+**/sağlık belgelerim/**
+
+# Ham staging indirmeleri (epub/pdf/parquet) — işlenmiş knowledge commit edilir
+ilim-assistant/arsiv/_ilim_staging/
+ilim-assistant/arsiv/_virus_guard_staging/
+ilim-assistant/arsiv/_legacy_demo/
+ilim-assistant/arsiv/ana_motor_uploads/
+ilim-assistant/arsiv/hafiza_karantina/
+ilim-assistant/.ruzgar_ses_kolonlari.json
+ilim-assistant/arsiv/klon-sesler/*.wav
+ilim-assistant/arsiv/ses-referans/*.wav
+ilim-assistant/.rag_index/embeddings.npy
 
 # Arşiv indirilen ham dosyalar (index.jsonl, manifest, ARSIV_*.md commit kalır)
 ilim-assistant/arsiv/**/*.pdf

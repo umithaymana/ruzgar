@@ -27,7 +27,7 @@ def denge70_model_name() -> str:
     return (
         os.environ.get("RUZGAR_BRAIN_DENGE70_MODEL", "").strip()
         or os.environ.get("OLLAMA_DENGE70_MODEL", "").strip()
-        or "llama3.1:70b"
+        or "llama3"
     )
 
 

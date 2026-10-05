@@ -1,0 +1,934 @@
+{
+  "ok": true,
+  "version": "kutuphane-v1-2026-10-05",
+  "guncelleme": "2026-10-05T12:04:49Z",
+  "kok": "knowledge/kutuphane",
+  "raf_sayisi": 10,
+  "eser_sayisi": 51,
+  "toplam_karakter": 24780,
+  "toplam_baslik": 262,
+  "raflar": [
+    {
+      "id": "01_astronomi_uzay",
+      "ad": "Astronomi ve Uzay",
+      "aciklama": "Güneş sistemi, galaksiler, yıldızlar, uzay araştırmaları.",
+      "etiketler": [
+        "astronomi",
+        "uzay",
+        "gezegen",
+        "galaksi",
+        "yıldız"
+      ],
+      "dosya": 6,
+      "karakter": 4878,
+      "baslik": 34
+    },
+    {
+      "id": "02_fizik_kimya",
+      "ad": "Fizik ve Kimya",
+      "aciklama": "Temel fizik yasaları, maddenin halleri, elementler, enerji.",
+      "etiketler": [
+        "fizik",
+        "kimya",
+        "enerji",
+        "atom",
+        "ısı"
+      ],
+      "dosya": 5,
+      "karakter": 2612,
+      "baslik": 24
+    },
+    {
+      "id": "03_biyoloji_dunya",
+      "ad": "Biyoloji ve Canlılar",
+      "aciklama": "Hücre, fotosentez, ekosistem, insan vücudu (genel bilgi).",
+      "etiketler": [
+        "biyoloji",
+        "hücre",
+        "fotosentez",
+        "canlı",
+        "doğa"
+      ],
+      "dosya": 5,
+      "karakter": 2633,
+      "baslik": 25
+    },
+    {
+      "id": "04_cografya",
+      "ad": "Coğrafya",
+      "aciklama": "Türkiye ve dünya coğrafyası, iklim, kıtalar, okyanuslar.",
+      "etiketler": [
+        "coğrafya",
+        "ülke",
+        "şehir",
+        "iklim",
+        "kıta"
+      ],
+      "dosya": 5,
+      "karakter": 2676,
+      "baslik": 27
+    },
+    {
+      "id": "05_tarih",
+      "ad": "Tarih",
+      "aciklama": "Osmanlı, Cumhuriyet, dünya tarihi özetleri (yerel ansiklopedi).",
+      "etiketler": [
+        "tarih",
+        "osmanlı",
+        "cumhuriyet",
+        "medeniyet"
+      ],
+      "dosya": 5,
+      "karakter": 2705,
+      "baslik": 27
+    },
+    {
+      "id": "06_matematik",
+      "ad": "Matematik",
+      "aciklama": "Günlük matematik, birimler, oran-orantı, basit geometri.",
+      "etiketler": [
+        "matematik",
+        "sayı",
+        "oran",
+        "geometri",
+        "birim"
+      ],
+      "dosya": 5,
+      "karakter": 1551,
+      "baslik": 25
+    },
+    {
+      "id": "07_dil_turkce",
+      "ad": "Dil ve Türkçe",
+      "aciklama": "Yazım, anlam, dilbilgisi özetleri; TDK ile uyumlu kısa notlar.",
+      "etiketler": [
+        "dil",
+        "türkçe",
+        "yazım",
+        "anlam",
+        "dilbilgisi"
+      ],
+      "dosya": 4,
+      "karakter": 1348,
+      "baslik": 20
+    },
+    {
+      "id": "08_teknoloji",
+      "ad": "Teknoloji ve Bilgisayar",
+      "aciklama": "Bilgisayar temelleri, internet, yapay zekâ kavramları (genel).",
+      "etiketler": [
+        "teknoloji",
+        "bilgisayar",
+        "internet",
+        "yazılım",
+        "yapay zeka"
+      ],
+      "dosya": 5,
+      "karakter": 2026,
+      "baslik": 24
+    },
+    {
+      "id": "09_kultur_yasam",
+      "ad": "Kültür ve Günlük Yaşam",
+      "aciklama": "Türk kültürü, adetler, genel yaşam bilgisi.",
+      "etiketler": [
+        "kültür",
+        "gelenek",
+        "yaşam",
+        "bayram"
+      ],
+      "dosya": 4,
+      "karakter": 1344,
+      "baslik": 15
+    },
+    {
+      "id": "10_hizli_referans",
+      "ad": "Hızlı Referans (Sık Sorulanlar)",
+      "aciklama": "Kısa soru–cevap kartları; sohbet anında hızlı doğruluk.",
+      "etiketler": [
+        "sss",
+        "nedir",
+        "kaç",
+        "hangi",
+        "referans"
+      ],
+      "dosya": 7,
+      "karakter": 3007,
+      "baslik": 41
+    }
+  ],
+  "eserler": [
+    {
+      "id": "001_gunes_sistemi",
+      "raf": "01_astronomi_uzay",
+      "raf_ad": "Astronomi ve Uzay",
+      "yol": "raflar/01_astronomi_uzay/incremental/001_gunes_sistemi.md",
+      "basliklar": [
+        "Güneş Sistemi — Rüzgar Kütüphanesi",
+        "Güneş nedir",
+        "Gezegenler (içten dışa)",
+        "Cüce gezegen ve küçük cisimler",
+        "Ay ve gelgit",
+        "Kısa özet"
+      ],
+      "karakter": 1405,
+      "satir": 30
+    },
+    {
+      "id": "002_galaksiler_samanyolu",
+      "raf": "01_astronomi_uzay",
+      "raf_ad": "Astronomi ve Uzay",
+      "yol": "raflar/01_astronomi_uzay/incremental/002_galaksiler_samanyolu.md",
+      "basliklar": [
+        "Galaksiler ve Samanyolu",
+        "Galaksi nedir",
+        "Samanyolu",
+        "Yerel Grup",
+        "Işık yılı",
+        "Sık soru — Dünyamız hangi galakside?"
+      ],
+      "karakter": 861,
+      "satir": 23
+    },
+    {
+      "id": "003_yildizlar_ve_isik",
+      "raf": "01_astronomi_uzay",
+      "raf_ad": "Astronomi ve Uzay",
+      "yol": "raflar/01_astronomi_uzay/incremental/003_yildizlar_ve_isik.md",
+      "basliklar": [
+        "Yıldızlar, ışık ve uzaklık",
+        "Yıldız nasıl parlar",
+        "Süpernova",
+        "Kara delik (kısa)",
+        "Takımyıldız"
+      ],
+      "karakter": 685,
+      "satir": 18
+    },
+    {
+      "id": "004_gezegen_karsilastirma",
+      "raf": "01_astronomi_uzay",
+      "raf_ad": "Astronomi ve Uzay",
+      "yol": "raflar/01_astronomi_uzay/incremental/004_gezegen_karsilastirma.md",
+      "basliklar": [
+        "Gezegen karşılaştırma notları",
+        "Merkür",
+        "Venüs",
+        "Dünya",
+        "Mars",
+        "Gaz devleri"
+      ],
+      "karakter": 485,
+      "satir": 17
+    },
+    {
+      "id": "005_uzay_arastirma_ve_uydular",
+      "raf": "01_astronomi_uzay",
+      "raf_ad": "Astronomi ve Uzay",
+      "yol": "raflar/01_astronomi_uzay/incremental/005_uzay_arastirma_ve_uydular.md",
+      "basliklar": [
+        "Uzay araştırmaları ve uydular",
+        "Yapay uydu nedir",
+        "Alçak / orta / jeostatik yörünge (özet)",
+        "İnsanlı uçuş kilometreleri",
+        "Teleskoplar",
+        "Türkiye notu"
+      ],
+      "karakter": 892,
+      "satir": 19
+    },
+    {
+      "id": "006_ay_evreleme_tutulma",
+      "raf": "01_astronomi_uzay",
+      "raf_ad": "Astronomi ve Uzay",
+      "yol": "raflar/01_astronomi_uzay/incremental/006_ay_evreleme_tutulma.md",
+      "basliklar": [
+        "Ay evreleri ve tutulmalar",
+        "Evreler neden oluşur",
+        "Ay tutulması",
+        "Güneş tutulması",
+        "Gelgit"
+      ],
+      "karakter": 550,
+      "satir": 14
+    },
+    {
+      "id": "001_maddenin_halleri_isi",
+      "raf": "02_fizik_kimya",
+      "raf_ad": "Fizik ve Kimya",
+      "yol": "raflar/02_fizik_kimya/incremental/001_maddenin_halleri_isi.md",
+      "basliklar": [
+        "Maddenin halleri ve ısı",
+        "Temel haller",
+        "Erime ve kaynama",
+        "Isı ve sıcaklık",
+        "Genleşme"
+      ],
+      "karakter": 679,
+      "satir": 20
+    },
+    {
+      "id": "002_atom_element_periyodik",
+      "raf": "02_fizik_kimya",
+      "raf_ad": "Fizik ve Kimya",
+      "yol": "raflar/02_fizik_kimya/incremental/002_atom_element_periyodik.md",
+      "basliklar": [
+        "Atom, element ve periyodik tablo",
+        "Atom",
+        "Molekül ve bileşik",
+        "Periyodik tablo",
+        "Asit–baz (basit)"
+      ],
+      "karakter": 577,
+      "satir": 17
+    },
+    {
+      "id": "003_enerji_hareket_basit",
+      "raf": "02_fizik_kimya",
+      "raf_ad": "Fizik ve Kimya",
+      "yol": "raflar/02_fizik_kimya/incremental/003_enerji_hareket_basit.md",
+      "basliklar": [
+        "Enerji ve hareket — temel",
+        "Enerji türleri (örnek)",
+        "Korunum",
+        "Hız, ivme",
+        "Ses ve ışık"
+      ],
+      "karakter": 501,
+      "satir": 17
+    },
+    {
+      "id": "004_elektrik_magnetizma_kisa",
+      "raf": "02_fizik_kimya",
+      "raf_ad": "Fizik ve Kimya",
+      "yol": "raflar/02_fizik_kimya/incremental/004_elektrik_magnetizma_kisa.md",
+      "basliklar": [
+        "Elektrik ve manyetizma — kısa",
+        "Akım ve gerilim",
+        "Devre",
+        "Manyetizma"
+      ],
+      "karakter": 400,
+      "satir": 13
+    },
+    {
+      "id": "005_basinc_yogunluk_kuvvet",
+      "raf": "02_fizik_kimya",
+      "raf_ad": "Fizik ve Kimya",
+      "yol": "raflar/02_fizik_kimya/incremental/005_basinc_yogunluk_kuvvet.md",
+      "basliklar": [
+        "Basınç, yoğunluk ve kuvvet",
+        "Yoğunluk",
+        "Basınç",
+        "Kuvvet ve ağırlık",
+        "Arşimet (kısa)"
+      ],
+      "karakter": 455,
+      "satir": 14
+    },
+    {
+      "id": "001_hucre_fotosentez",
+      "raf": "03_biyoloji_dunya",
+      "raf_ad": "Biyoloji ve Canlılar",
+      "yol": "raflar/03_biyoloji_dunya/incremental/001_hucre_fotosentez.md",
+      "basliklar": [
+        "Hücre ve fotosentez",
+        "Hücre",
+        "Fotosentez",
+        "Solunum (kısa)",
+        "DNA (kısa)"
+      ],
+      "karakter": 717,
+      "satir": 20
+    },
+    {
+      "id": "002_ekosistem_besin_zinciri",
+      "raf": "03_biyoloji_dunya",
+      "raf_ad": "Biyoloji ve Canlılar",
+      "yol": "raflar/03_biyoloji_dunya/incremental/002_ekosistem_besin_zinciri.md",
+      "basliklar": [
+        "Ekosistem ve besin zinciri",
+        "Ekosistem",
+        "Besin zinciri / ağı",
+        "Biyoçeşitlilik",
+        "Su döngüsü (kısa)"
+      ],
+      "karakter": 529,
+      "satir": 17
+    },
+    {
+      "id": "003_insan_vucudu_genel",
+      "raf": "03_biyoloji_dunya",
+      "raf_ad": "Biyoloji ve Canlılar",
+      "yol": "raflar/03_biyoloji_dunya/incremental/003_insan_vucudu_genel.md",
+      "basliklar": [
+        "İnsan vücudu — genel bilgi (tıbbi tavsiye değil)",
+        "Sistemler (özet)",
+        "Kalp ve kan",
+        "Beyin",
+        "Uyarı"
+      ],
+      "karakter": 433,
+      "satir": 15
+    },
+    {
+      "id": "004_bitkiler_hayvanlar",
+      "raf": "03_biyoloji_dunya",
+      "raf_ad": "Biyoloji ve Canlılar",
+      "yol": "raflar/03_biyoloji_dunya/incremental/004_bitkiler_hayvanlar.md",
+      "basliklar": [
+        "Bitkiler ve hayvanlar — sınıflama özeti",
+        "Bitkiler",
+        "Omurgalılar",
+        "Omurgasızlar",
+        "Uyum"
+      ],
+      "karakter": 430,
+      "satir": 14
+    },
+    {
+      "id": "005_mikroplar_bagisiklik_genel",
+      "raf": "03_biyoloji_dunya",
+      "raf_ad": "Biyoloji ve Canlılar",
+      "yol": "raflar/03_biyoloji_dunya/incremental/005_mikroplar_bagisiklik_genel.md",
+      "basliklar": [
+        "Mikroplar ve bağışıklık — genel (tıbbi tavsiye değil)",
+        "Bakteri / virüs (basit ayrım)",
+        "Aşı (kavram)",
+        "Hijyen",
+        "Uyarı"
+      ],
+      "karakter": 524,
+      "satir": 15
+    },
+    {
+      "id": "001_turkiye_cografyasi",
+      "raf": "04_cografya",
+      "raf_ad": "Coğrafya",
+      "yol": "raflar/04_cografya/incremental/001_turkiye_cografyasi.md",
+      "basliklar": [
+        "Türkiye coğrafyası — özet",
+        "Konum",
+        "Bölgeler (coğrafi)",
+        "Başkent ve büyük şehirler",
+        "İklim çeşitliliği",
+        "Dağlar ve ovalar",
+        "Komşular (kara)"
+      ],
+      "karakter": 789,
+      "satir": 23
+    },
+    {
+      "id": "002_kitalar_okyanuslar",
+      "raf": "04_cografya",
+      "raf_ad": "Coğrafya",
+      "yol": "raflar/04_cografya/incremental/002_kitalar_okyanuslar.md",
+      "basliklar": [
+        "Kıtalar ve okyanuslar",
+        "Kıtalar (yaygın liste)",
+        "Okyanuslar",
+        "Ekvator ve kutuplar",
+        "Saat dilimleri"
+      ],
+      "karakter": 562,
+      "satir": 17
+    },
+    {
+      "id": "003_harita_yon_olcek",
+      "raf": "04_cografya",
+      "raf_ad": "Coğrafya",
+      "yol": "raflar/04_cografya/incremental/003_harita_yon_olcek.md",
+      "basliklar": [
+        "Harita, yön ve ölçek",
+        "Ana yönler",
+        "Ölçek",
+        "Enlem–boylam"
+      ],
+      "karakter": 367,
+      "satir": 13
+    },
+    {
+      "id": "004_iklim_tipleri",
+      "raf": "04_cografya",
+      "raf_ad": "Coğrafya",
+      "yol": "raflar/04_cografya/incremental/004_iklim_tipleri.md",
+      "basliklar": [
+        "İklim tipleri — pratik",
+        "Akdeniz",
+        "Karasal",
+        "Okyanusal / nemli ılıman",
+        "Muson",
+        "Küresel ısınma notu"
+      ],
+      "karakter": 424,
+      "satir": 17
+    },
+    {
+      "id": "005_turkiye_akarsu_dag_deniz",
+      "raf": "04_cografya",
+      "raf_ad": "Coğrafya",
+      "yol": "raflar/04_cografya/incremental/005_turkiye_akarsu_dag_deniz.md",
+      "basliklar": [
+        "Türkiye — dağ, deniz, akarsu özeti",
+        "Denizler",
+        "Dağ kuşakları",
+        "Akarsular",
+        "Göller"
+      ],
+      "karakter": 534,
+      "satir": 15
+    },
+    {
+      "id": "001_osmanli_ozet",
+      "raf": "05_tarih",
+      "raf_ad": "Tarih",
+      "yol": "raflar/05_tarih/incremental/001_osmanli_ozet.md",
+      "basliklar": [
+        "Osmanlı İmparatorluğu — kısa özet",
+        "Kuruluş",
+        "İstanbul’un fethi",
+        "Klasik dönem temaları",
+        "Son dönem ve yıkılış",
+        "Not"
+      ],
+      "karakter": 781,
+      "satir": 20
+    },
+    {
+      "id": "002_cumhuriyet_temel",
+      "raf": "05_tarih",
+      "raf_ad": "Tarih",
+      "yol": "raflar/05_tarih/incremental/002_cumhuriyet_temel.md",
+      "basliklar": [
+        "Türkiye Cumhuriyeti — temel bilgiler",
+        "İlân",
+        "Başkent",
+        "Harf inkılabı (kısa)",
+        "Çağdaşlaşma temaları"
+      ],
+      "karakter": 487,
+      "satir": 16
+    },
+    {
+      "id": "003_dunya_tarihi_kilometre",
+      "raf": "05_tarih",
+      "raf_ad": "Tarih",
+      "yol": "raflar/05_tarih/incremental/003_dunya_tarihi_kilometre.md",
+      "basliklar": [
+        "Dünya tarihi — kilometre taşları (çok kısa)",
+        "Tarım devrimi",
+        "Yazının icadı",
+        "Antik uygarlıklar",
+        "Coğrafi keşifler / sanayi",
+        "20. yüzyıl"
+      ],
+      "karakter": 561,
+      "satir": 17
+    },
+    {
+      "id": "004_anadolu_uygarliklari_kisa",
+      "raf": "05_tarih",
+      "raf_ad": "Tarih",
+      "yol": "raflar/05_tarih/incremental/004_anadolu_uygarliklari_kisa.md",
+      "basliklar": [
+        "Anadolu uygarlıkları — çok kısa",
+        "Hititler",
+        "Urartu, Frig, Lidya",
+        "Antik Yunan–Roma etkisi",
+        "Selçuklu"
+      ],
+      "karakter": 403,
+      "satir": 14
+    },
+    {
+      "id": "005_inkilaplar_ozet",
+      "raf": "05_tarih",
+      "raf_ad": "Tarih",
+      "yol": "raflar/05_tarih/incremental/005_inkilaplar_ozet.md",
+      "basliklar": [
+        "Cumhuriyet inkılapları — özet liste",
+        "Siyasal / hukuk",
+        "Eğitim ve kültür",
+        "Toplumsal",
+        "Not"
+      ],
+      "karakter": 473,
+      "satir": 14
+    },
+    {
+      "id": "001_temel_islemler_oran",
+      "raf": "06_matematik",
+      "raf_ad": "Matematik",
+      "yol": "raflar/06_matematik/incremental/001_temel_islemler_oran.md",
+      "basliklar": [
+        "Temel işlemler ve oran",
+        "Dört işlem",
+        "Kesir ve yüzde",
+        "Oran–orantı",
+        "Ortalama"
+      ],
+      "karakter": 391,
+      "satir": 15
+    },
+    {
+      "id": "002_birimler_ceviri",
+      "raf": "06_matematik",
+      "raf_ad": "Matematik",
+      "yol": "raflar/06_matematik/incremental/002_birimler_ceviri.md",
+      "basliklar": [
+        "Birimler ve çeviriler",
+        "Uzunluk",
+        "Kütle",
+        "Hacim / sıvı",
+        "Zaman",
+        "Sıcaklık"
+      ],
+      "karakter": 273,
+      "satir": 17
+    },
+    {
+      "id": "003_geometri_kisa",
+      "raf": "06_matematik",
+      "raf_ad": "Matematik",
+      "yol": "raflar/06_matematik/incremental/003_geometri_kisa.md",
+      "basliklar": [
+        "Geometri — kısa",
+        "Açı",
+        "Üçgen",
+        "Alan / çevre (örnek)",
+        "π (pi)"
+      ],
+      "karakter": 294,
+      "satir": 15
+    },
+    {
+      "id": "004_hiz_yol_zaman",
+      "raf": "06_matematik",
+      "raf_ad": "Matematik",
+      "yol": "raflar/06_matematik/incremental/004_hiz_yol_zaman.md",
+      "basliklar": [
+        "Hız–yol–zaman",
+        "Temel formül",
+        "Ortalama hız",
+        "Pratik ipucu"
+      ],
+      "karakter": 268,
+      "satir": 12
+    },
+    {
+      "id": "005_istatistik_ortalama",
+      "raf": "06_matematik",
+      "raf_ad": "Matematik",
+      "yol": "raflar/06_matematik/incremental/005_istatistik_ortalama.md",
+      "basliklar": [
+        "İstatistik — ortalama, medyan, mod",
+        "Aritmetik ortalama",
+        "Medyan",
+        "Mod",
+        "Yüzde değişim"
+      ],
+      "karakter": 325,
+      "satir": 14
+    },
+    {
+      "id": "001_yazim_sik_hatalar",
+      "raf": "07_dil_turkce",
+      "raf_ad": "Dil ve Türkçe",
+      "yol": "raflar/07_dil_turkce/incremental/001_yazim_sik_hatalar.md",
+      "basliklar": [
+        "Türkçe yazım — sık karışanlar",
+        "bir şey / hiçbir şey",
+        "Ki bağlacı",
+        "De/da bağlacı",
+        "mı/mi soru eki",
+        "Not"
+      ],
+      "karakter": 431,
+      "satir": 18
+    },
+    {
+      "id": "002_cumle_anlatim",
+      "raf": "07_dil_turkce",
+      "raf_ad": "Dil ve Türkçe",
+      "yol": "raflar/07_dil_turkce/incremental/002_cumle_anlatim.md",
+      "basliklar": [
+        "Cümle ve anlatım — pratik",
+        "Net cümle",
+        "Anlatım bozukluğu (örnek tipler)",
+        "Noktalama"
+      ],
+      "karakter": 308,
+      "satir": 12
+    },
+    {
+      "id": "003_anlam_es_zit",
+      "raf": "07_dil_turkce",
+      "raf_ad": "Dil ve Türkçe",
+      "yol": "raflar/07_dil_turkce/incremental/003_anlam_es_zit.md",
+      "basliklar": [
+        "Anlam: eş / zıt / mecaz",
+        "Eş anlamlı",
+        "Zıt anlamlı",
+        "Mecaz"
+      ],
+      "karakter": 253,
+      "satir": 12
+    },
+    {
+      "id": "004_noktalama_ozet",
+      "raf": "07_dil_turkce",
+      "raf_ad": "Dil ve Türkçe",
+      "yol": "raflar/07_dil_turkce/incremental/004_noktalama_ozet.md",
+      "basliklar": [
+        "Noktalama — pratik özet",
+        "Nokta (.)",
+        "Virgül (,)",
+        "Soru (?) / ünlem (!)",
+        "İki nokta (:) / tire",
+        "Tırnak"
+      ],
+      "karakter": 356,
+      "satir": 17
+    },
+    {
+      "id": "001_bilgisayar_temel",
+      "raf": "08_teknoloji",
+      "raf_ad": "Teknoloji ve Bilgisayar",
+      "yol": "raflar/08_teknoloji/incremental/001_bilgisayar_temel.md",
+      "basliklar": [
+        "Bilgisayar temelleri",
+        "Donanım / yazılım",
+        "CPU, RAM, depolama",
+        "Dosya ve klasör",
+        "İnternet (kısa)"
+      ],
+      "karakter": 429,
+      "satir": 16
+    },
+    {
+      "id": "002_yapay_zeka_kavram",
+      "raf": "08_teknoloji",
+      "raf_ad": "Teknoloji ve Bilgisayar",
+      "yol": "raflar/08_teknoloji/incremental/002_yapay_zeka_kavram.md",
+      "basliklar": [
+        "Yapay zekâ — kavramsal özet",
+        "Ne yapar",
+        "Ne yapmaz",
+        "Yerel / bulut",
+        "İyi kullanım"
+      ],
+      "karakter": 507,
+      "satir": 16
+    },
+    {
+      "id": "003_guvenlik_temel",
+      "raf": "08_teknoloji",
+      "raf_ad": "Teknoloji ve Bilgisayar",
+      "yol": "raflar/08_teknoloji/incremental/003_guvenlik_temel.md",
+      "basliklar": [
+        "Temel dijital güvenlik",
+        "Parola",
+        "Şüpheli bağlantı",
+        "Güncelleme",
+        "Rüzgar notu"
+      ],
+      "karakter": 428,
+      "satir": 16
+    },
+    {
+      "id": "004_ag_ve_url",
+      "raf": "08_teknoloji",
+      "raf_ad": "Teknoloji ve Bilgisayar",
+      "yol": "raflar/08_teknoloji/incremental/004_ag_ve_url.md",
+      "basliklar": [
+        "Ağ, URL ve DNS — kısa",
+        "URL",
+        "DNS",
+        "HTTP / HTTPS",
+        "Gecikme (ping)"
+      ],
+      "karakter": 330,
+      "satir": 14
+    },
+    {
+      "id": "005_veri_yedek_bulut",
+      "raf": "08_teknoloji",
+      "raf_ad": "Teknoloji ve Bilgisayar",
+      "yol": "raflar/08_teknoloji/incremental/005_veri_yedek_bulut.md",
+      "basliklar": [
+        "Veri, yedek ve bulut",
+        "3-2-1 yedek fikri",
+        "Bulut",
+        "Rüzgar yaklaşımı"
+      ],
+      "karakter": 332,
+      "satir": 11
+    },
+    {
+      "id": "001_bayramlar_selamlasma",
+      "raf": "09_kultur_yasam",
+      "raf_ad": "Kültür ve Günlük Yaşam",
+      "yol": "raflar/09_kultur_yasam/incremental/001_bayramlar_selamlasma.md",
+      "basliklar": [
+        "Bayramlar ve selamlaşma — kültür notları",
+        "Dinî bayramlar (Türkiye)",
+        "Ulusal günler",
+        "Selamlaşma"
+      ],
+      "karakter": 408,
+      "satir": 12
+    },
+    {
+      "id": "002_misafirlik_ikram",
+      "raf": "09_kultur_yasam",
+      "raf_ad": "Kültür ve Günlük Yaşam",
+      "yol": "raflar/09_kultur_yasam/incremental/002_misafirlik_ikram.md",
+      "basliklar": [
+        "Misafirlik ve ikram kültürü",
+        "Geleneksel izler",
+        "Ortak değer"
+      ],
+      "karakter": 260,
+      "satir": 9
+    },
+    {
+      "id": "003_yemek_cay_kulturu",
+      "raf": "09_kultur_yasam",
+      "raf_ad": "Kültür ve Günlük Yaşam",
+      "yol": "raflar/09_kultur_yasam/incremental/003_yemek_cay_kulturu.md",
+      "basliklar": [
+        "Çay ve sofra kültürü — not",
+        "Çay",
+        "Sofra",
+        "Coğrafi işaret (kavram)"
+      ],
+      "karakter": 308,
+      "satir": 11
+    },
+    {
+      "id": "004_muzik_edebiyat_kisa",
+      "raf": "09_kultur_yasam",
+      "raf_ad": "Kültür ve Günlük Yaşam",
+      "yol": "raflar/09_kultur_yasam/incremental/004_muzik_edebiyat_kisa.md",
+      "basliklar": [
+        "Müzik ve edebiyat — kültür köprüsü",
+        "Halk edebiyatı",
+        "Divan / halk / modern",
+        "Müzik"
+      ],
+      "karakter": 368,
+      "satir": 12
+    },
+    {
+      "id": "001_sss_fen_uzay",
+      "raf": "10_hizli_referans",
+      "raf_ad": "Hızlı Referans (Sık Sorulanlar)",
+      "yol": "raflar/10_hizli_referans/incremental/001_sss_fen_uzay.md",
+      "basliklar": [
+        "Hızlı referans — fen ve uzay",
+        "Dünyamız hangi galakside",
+        "Su kaç derecede kaynar",
+        "Fotosentez nedir",
+        "Güneş bir yıldız mıdır",
+        "Ay neden bazen hilal görünür",
+        "Işık yılı nedir"
+      ],
+      "karakter": 615,
+      "satir": 20
+    },
+    {
+      "id": "002_sss_turkiye_tarih",
+      "raf": "10_hizli_referans",
+      "raf_ad": "Hızlı Referans (Sık Sorulanlar)",
+      "yol": "raflar/10_hizli_referans/incremental/002_sss_turkiye_tarih.md",
+      "basliklar": [
+        "Hızlı referans — Türkiye ve tarih",
+        "Türkiye'nin başkenti neresi",
+        "Cumhuriyet ne zaman ilan edildi",
+        "İstanbul ne zaman fethedildi",
+        "Osmanlı ne zaman kuruldu",
+        "Türkiye hangi kıtalarda yer alır"
+      ],
+      "karakter": 363,
+      "satir": 17
+    },
+    {
+      "id": "003_sss_matematik_dil",
+      "raf": "10_hizli_referans",
+      "raf_ad": "Hızlı Referans (Sık Sorulanlar)",
+      "yol": "raflar/10_hizli_referans/incremental/003_sss_matematik_dil.md",
+      "basliklar": [
+        "Hızlı referans — matematik ve dil",
+        "Yüzde elli kaçtır",
+        "Bir kilometre kaç metre",
+        "Pi yaklaşık kaçtır",
+        "Hiçbir şey nasıl yazılır",
+        "Soru eki nasıl yazılır"
+      ],
+      "karakter": 251,
+      "satir": 17
+    },
+    {
+      "id": "004_sss_teknoloji",
+      "raf": "10_hizli_referans",
+      "raf_ad": "Hızlı Referans (Sık Sorulanlar)",
+      "yol": "raflar/10_hizli_referans/incremental/004_sss_teknoloji.md",
+      "basliklar": [
+        "Hızlı referans — teknoloji",
+        "RAM ne işe yarar",
+        "SSD ile HDD farkı (kısa)",
+        "Rüzgar kimdir",
+        "Yerel model ne demek"
+      ],
+      "karakter": 431,
+      "satir": 14
+    },
+    {
+      "id": "005_sss_gunluk",
+      "raf": "10_hizli_referans",
+      "raf_ad": "Hızlı Referans (Sık Sorulanlar)",
+      "yol": "raflar/10_hizli_referans/incremental/005_sss_gunluk.md",
+      "basliklar": [
+        "Hızlı referans — günlük",
+        "Bir gün kaç saattir",
+        "Bir hafta kaç gündür",
+        "Bir yıl yaklaşık kaç gündür",
+        "Pusula nereyi gösterir",
+        "Gökyüzü neden mavi görünür"
+      ],
+      "karakter": 381,
+      "satir": 17
+    },
+    {
+      "id": "006_sss_fen_ileri",
+      "raf": "10_hizli_referans",
+      "raf_ad": "Hızlı Referans (Sık Sorulanlar)",
+      "yol": "raflar/10_hizli_referans/incremental/006_sss_fen_ileri.md",
+      "basliklar": [
+        "Hızlı referans — fen ek",
+        "Dünya Güneş etrafında mı döner",
+        "Atomun çekirdeğinde ne vardır",
+        "Ses uzayda duyulur mu",
+        "Manyetik kuzey ile coğrafi kuzey aynı mı",
+        "Ozon tabakası ne işe yarar"
+      ],
+      "karakter": 528,
+      "satir": 17
+    },
+    {
+      "id": "007_sss_cografya",
+      "raf": "10_hizli_referans",
+      "raf_ad": "Hızlı Referans (Sık Sorulanlar)",
+      "yol": "raflar/10_hizli_referans/incremental/007_sss_cografya.md",
+      "basliklar": [
+        "Hızlı referans — coğrafya",
+        "En büyük okyanus hangisi",
+        "Türkiye'nin en kalabalık şehri hangisi (genel bilgi)",
+        "Ekvator nedir",
+        "GMT / UTC farkı (kısa)"
+      ],
+      "karakter": 438,
+      "satir": 14
+    }
+  ]
+}

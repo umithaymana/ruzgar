@@ -1,6 +1,6 @@
 """Ortam değişkeni verilmediğinde kullanılan Rüzgar varsayılanları."""
 
-# Yerel birincil model (Ollama). 16GB+ RAM için: llama3.1:70b
+# Yerel birincil model (Ollama). 16GB+ RAM için: llama3
 DEFAULT_OLLAMA_CHAT_MODEL = "llama3.1:8b"
 DEFAULT_OLLAMA_FAST_MODEL = "llama3.2:3b"
 

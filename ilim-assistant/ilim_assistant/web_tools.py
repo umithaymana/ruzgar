@@ -273,7 +273,26 @@ def _web_result_relevance(query: str, title: str, body: str, href: str = "") -> 
         host = ""
     if any(x in host for x in ("wikipedia.org", "britannica.com", "nasa.gov", "esa.int", "tubitak")):
         score += 0.45
-    if any(x in host for x in ("eksisozluk", "instagram", "pinterest", " astrolog", "horoscope")):
+    if any(
+        x in host
+        for x in (
+            "aa.com.tr",
+            "trthaber.com",
+            "bbc.com",
+            "reuters.com",
+            "ntv.com.tr",
+            "cnnturk.com",
+            "haberturk.com",
+            "sozcu.com.tr",
+            "hurriyet.com.tr",
+            "milliyet.com.tr",
+            "fotomac.com.tr",
+            "mackolik.com",
+            "tff.org",
+        )
+    ):
+        score += 0.35
+    if any(x in host for x in ("eksisozluk", "instagram", "pinterest", "astrolog", "horoscope")):
         score -= 0.55
     if any(x in blob for x in ("burç", "burc", "astrology", "laptop", "ekran parlak")):
         score -= 0.4
@@ -414,12 +433,22 @@ _TRUSTED_DOMAIN_HINTS: tuple[tuple[str, float], ...] = (
     ("scholar.google", 2.5),
     ("reuters.com", 2.2),
     ("bbc.com", 2.0),
-    ("aa.com.tr", 2.2),
+    ("aa.com.tr", 2.4),
+    ("trthaber.com", 2.3),
     ("trtworld.com", 1.8),
+    ("ntv.com.tr", 2.0),
+    ("cnnturk.com", 2.0),
+    ("haberturk.com", 1.9),
+    ("hurriyet.com.tr", 1.8),
+    ("milliyet.com.tr", 1.8),
+    ("sozcu.com.tr", 1.8),
+    ("fotomac.com.tr", 2.0),
+    ("mackolik.com", 2.0),
+    ("tff.org", 2.2),
 )
 
 
-def _url_trust_score(url: str) -> float:
+def _url_trust_score(url: str, *, query: str = "") -> float:
     u = (url or "").lower()
     score = 1.0
     for hint, bonus in _TRUSTED_DOMAIN_HINTS:
@@ -427,6 +456,36 @@ def _url_trust_score(url: str) -> float:
             score += bonus
     if u.startswith("https://"):
         score += 0.15
+    qlow = (query or "").lower()
+    sports_q = any(
+        x in qlow
+        for x in (
+            "maç",
+            "mac",
+            "skor",
+            "lig",
+            "fikstür",
+            "fikstur",
+            "kupa",
+            "erzurumspor",
+            "fifa",
+            "spor",
+            "şampiyon",
+            "sampiyon",
+        )
+    )
+    if sports_q:
+        # Yıl/takvim Vikipedi sayfaları spor sonucunu ezer — cezalandır
+        if re.search(r"wikipedia\.org/wiki/20\d{2}$", u) or "/wiki/2026" in u or "/wiki/2025" in u:
+            if "world_cup" not in u and "dünya" not in u and "kupa" not in u and "cup" not in u:
+                score -= 4.0
+        if any(x in u for x in ("takvim", "calendar", "haftanumarasi")):
+            score -= 3.0
+        if any(x in u for x in ("mackolik", "tff.org", "fotomac", "skorx", "erzurumspor.com", "fifa.com")):
+            score += 2.5
+        # Şehir/il sayfası (Erzurum) maç sorusunda yanıltıcı
+        if re.search(r"wikipedia\.org/wiki/erzurum", u) and "spor" not in u:
+            score -= 3.5
     return score
 
 
@@ -462,8 +521,48 @@ def expand_web_queries(query: str, *, primary: str = "bilgi") -> list[str]:
         x in low for x in ("osman", "fatih", "padişah", "padisah", "devri", "dönem")
     ):
         out.append(f"{base} tarih")
-    if any(x in low for x in ("güncel", "guncel", "haber", "son dakika")):
+    if any(
+        x in low
+        for x in (
+            "güncel",
+            "guncel",
+            "haber",
+            "son dakika",
+            "bugün",
+            "bugun",
+            "olay",
+            "spor",
+            "maç",
+            "mac",
+            "skor",
+            "kupa",
+            "fikstür",
+            "fikstur",
+            "erzurumspor",
+            "fifa",
+        )
+    ):
         out.append(f"{base} haber")
+        if any(
+            x in low
+            for x in (
+                "spor",
+                "maç",
+                "mac",
+                "skor",
+                "lig",
+                "transfer",
+                "fikstür",
+                "fikstur",
+                "erzurumspor",
+                "kupa",
+            )
+        ):
+            out.append(f"{base} maç sonucu fikstür")
+            if "mackolik" not in low:
+                out.append(f"{base} site:mackolik.com")
+            if "tff" not in low and "lig" in low:
+                out.append(f"{base} site:tff.org")
     # Yinelenenleri koru sırayla
     seen: set[str] = set()
     uniq: list[str] = []
@@ -472,7 +571,7 @@ def expand_web_queries(query: str, *, primary: str = "bilgi") -> list[str]:
         if k not in seen:
             seen.add(k)
             uniq.append(q)
-    return uniq[:3]
+    return uniq[:4]
 
 
 def _ddgs_news_search(query: str, max_results: int) -> list[dict]:
@@ -512,6 +611,13 @@ def _ddgs_news_search(query: str, max_results: int) -> list[dict]:
 
 def _wants_news_search(query: str) -> bool:
     low = (query or "").lower()
+    try:
+        from ilim_assistant.ruzgar_web_arastirma_pro import looks_like_live_web_needed
+
+        if looks_like_live_web_needed(query):
+            return True
+    except Exception:
+        pass
     return any(
         x in low
         for x in (
@@ -521,11 +627,107 @@ def _wants_news_search(query: str) -> bool:
             "son dakika",
             "bugün",
             "bugun",
+            "spor",
+            "maç",
+            "mac",
+            "skor",
+            "lig",
+            "transfer",
             "2024",
             "2025",
             "2026",
         )
     )
+
+
+def _sports_seed_rows(query: str) -> list[dict]:
+    """DDG çökerse / saçmalarsa güvenilir spor sayfalarını tohumla."""
+    low = (query or "").lower()
+    rows: list[dict] = []
+    try:
+        from ilim_assistant.ana_motor_web_first import _fetch_wikipedia_rows
+
+        wiki_q = query
+        if any(x in low for x in ("dünya kupa", "dunya kupa", "world cup", "fifa")):
+            wiki_q = "2026 FIFA Dünya Kupası"
+            rows.append(
+                {
+                    "title": "2026 FIFA World Cup — Wikipedia",
+                    "body": "2026 FIFA World Cup tournament page",
+                    "href": "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup",
+                    "source": "seed",
+                }
+            )
+            rows.append(
+                {
+                    "title": "2026 FIFA Dünya Kupası — Vikipedi",
+                    "body": "2026 FIFA Dünya Kupası turnuva sayfası",
+                    "href": "https://tr.wikipedia.org/wiki/2026_FIFA_D%C3%BCnya_Kupas%C4%B1",
+                    "source": "seed",
+                }
+            )
+        elif "erzurum" in low:
+            wiki_q = "Erzurumspor FK"
+            rows.append(
+                {
+                    "title": "Erzurumspor FK Fikstür — Mackolik",
+                    "body": "Erzurumspor FK güncel fikstür ve maçlar",
+                    "href": "https://www.mackolik.com/takim/erzurumspor-fk/maçlar/ea2gyhkv6vwmxbxevdb4u3796",
+                    "source": "seed",
+                }
+            )
+            rows.append(
+                {
+                    "title": "Erzurumspor fikstür",
+                    "body": "Erzurumspor resmi fikstür",
+                    "href": "https://erzurumspor.com/fikstur",
+                    "source": "seed",
+                }
+            )
+        rows.extend(_fetch_wikipedia_rows(wiki_q, max_results=3) or [])
+        # EN wiki for world cup
+        if any(x in low for x in ("dünya kupa", "dunya kupa", "world cup", "fifa")):
+            try:
+                import json
+                import urllib.parse
+                import urllib.request
+
+                api = (
+                    "https://en.wikipedia.org/w/api.php?"
+                    + urllib.parse.urlencode(
+                        {
+                            "action": "query",
+                            "list": "search",
+                            "srsearch": "2026 FIFA World Cup",
+                            "format": "json",
+                            "srlimit": 3,
+                            "utf8": 1,
+                        }
+                    )
+                )
+                req = urllib.request.Request(
+                    api, headers={"User-Agent": "RuzgarAssistant/1.0 (local)"}
+                )
+                with urllib.request.urlopen(req, timeout=8) as resp:
+                    data = json.loads(resp.read().decode("utf-8", errors="replace"))
+                for hit in list((data.get("query") or {}).get("search") or [])[:3]:
+                    title = str(hit.get("title") or "").strip()
+                    if not title:
+                        continue
+                    slug = urllib.parse.quote(title.replace(" ", "_"))
+                    rows.append(
+                        {
+                            "title": title,
+                            "body": re.sub(r"<[^>]+>", " ", str(hit.get("snippet") or "")),
+                            "href": f"https://en.wikipedia.org/wiki/{slug}",
+                            "source": "wikipedia_en",
+                        }
+                    )
+            except Exception:
+                pass
+    except Exception:
+        pass
+    return rows
 
 
 def build_web_context_pro(
@@ -552,6 +754,26 @@ def build_web_context_pro(
         fetch_n = max(0, min(fetch_first_n_urls, 6))
 
     all_rows: list[dict] = []
+    sports_like = any(
+        x in q.lower()
+        for x in (
+            "maç",
+            "mac",
+            "skor",
+            "lig",
+            "fikstür",
+            "fikstur",
+            "kupa",
+            "erzurumspor",
+            "fifa",
+            "spor",
+            "galatasaray",
+            "fenerbahçe",
+        )
+    )
+    if sports_like:
+        all_rows.extend(_sports_seed_rows(q))
+
     for sub_q in expand_web_queries(q, primary=primary):
         try:
             all_rows.extend(_ddgs_search(sub_q, max_results=per_q))
@@ -565,11 +787,20 @@ def build_web_context_pro(
     if not results:
         return "[Web PRO: sonuç bulunamadı.]"
 
-    results.sort(
-        key=lambda r: _url_trust_score(str(r.get("href") or "")),
-        reverse=True,
-    )
-    results = results[: max(6, min(max_results, 16))]
+    def _rank(r: dict) -> float:
+        href = str(r.get("href") or "")
+        title = str(r.get("title") or "")
+        body = str(r.get("body") or "")
+        trust = _url_trust_score(href, query=q)
+        rel = _web_result_relevance(q, title, body, href)
+        src = str(r.get("source") or "")
+        bonus = 2.0 if src in ("seed", "wikipedia_tr", "wikipedia_en") else 0.0
+        return trust + (rel * 2.0) + bonus
+
+    results.sort(key=_rank, reverse=True)
+    # Alakasız (yıl takvimi / şehir) düşük skorları at
+    filtered = [r for r in results if _rank(r) >= 0.8]
+    results = (filtered or results)[: max(6, min(max_results, 16))]
 
     lines: list[str] = []
     try:
@@ -603,8 +834,8 @@ def build_web_context_pro(
         title = (r.get("title") or "").strip()
         body = (r.get("body") or "").strip()
         href = (r.get("href") or "").strip()
-        src_tag = f" [{r.get('source')}]" if r.get("source") == "news" else ""
-        trust = _url_trust_score(href)
+        src_tag = f" [{r.get('source')}]" if r.get("source") else ""
+        trust = _url_trust_score(href, query=q)
         lines.append(
             f"{i}. [{trust:.1f}] {title}{src_tag}\n   {body}\n   URL: {href}"
         )
@@ -617,7 +848,21 @@ def build_web_context_pro(
             seen_urls.add(href)
             urls_to_fetch.append(href)
 
-    urls_to_fetch.sort(key=_url_trust_score, reverse=True)
+    # Spor: seed URL'leri fetch listesinin başına al
+    if sports_like:
+        seed_urls = [
+            str(r.get("href") or "")
+            for r in results
+            if r.get("source") in ("seed", "wikipedia_tr", "wikipedia_en")
+            and str(r.get("href") or "").startswith("http")
+        ]
+        for su in reversed(seed_urls):
+            if su in urls_to_fetch:
+                urls_to_fetch.remove(su)
+            urls_to_fetch.insert(0, su)
+        urls_to_fetch = urls_to_fetch[: max(fetch_n, min(6, fetch_n + 2))]
+
+    urls_to_fetch.sort(key=lambda u: _url_trust_score(u, query=q), reverse=True)
 
     for j, pack in enumerate(_fetch_urls_parallel(urls_to_fetch, max_workers=5), 1):
         u, txt, st = pack

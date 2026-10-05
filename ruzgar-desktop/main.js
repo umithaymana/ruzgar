@@ -296,22 +296,54 @@ async function ensureFreshApiOnLaunch() {
   await waitForExpectedHealth(port, expected, 180000);
 }
 
+/** Ruzgar.ps1 Find-Py ile aynı öncelik — sistem py/Python312 venv'i ezmesin. */
+function resolveRuzgarPython() {
+  const candidates = [
+    process.env.RUZGAR_PYTHON,
+    "D:\\ÜMİT\\PROGRAMLAR\\venvs\\ruzgar\\Scripts\\python.exe",
+    path.join(WORKSPACE_ROOT, "ilim-assistant", ".venv", "Scripts", "python.exe"),
+    path.join(WORKSPACE_ROOT, "ilim-assistant", "venv", "Scripts", "python.exe"),
+  ].filter(Boolean);
+  for (const p of candidates) {
+    try {
+      if (fs.existsSync(p)) return { exe: p, argsPrefix: [] };
+    } catch (_) {
+      /* yok say */
+    }
+  }
+  if (process.platform === "win32") {
+    return { exe: "py", argsPrefix: ["-3"] };
+  }
+  return { exe: "python", argsPrefix: [] };
+}
+
 async function ensureLocalApiServer() {
+  // Ruzgar.ps1 zaten API'yi venv ile yönetiyorsa ikinci (sistem) Python açma.
+  if (String(process.env.RUZGAR_API_MANAGED || "").trim() === "1") {
+    console.info("[RÜZGAR] RUZGAR_API_MANAGED=1 — Electron API spawn atlandı");
+    return;
+  }
   const port = readLocalApiPortFromDisk();
   if (await probeApiHealth(port)) return;
   const ia = path.join(WORKSPACE_ROOT, "ilim-assistant");
   if (!fs.existsSync(path.join(ia, "run_desktop_api.py"))) return;
-  const py = process.platform === "win32" ? "py" : "python";
-  const args =
-    process.platform === "win32"
-      ? ["-3", "run_desktop_api.py", "--host", "127.0.0.1", "--port", String(port)]
-      : ["run_desktop_api.py", "--host", "127.0.0.1", "--port", String(port)];
+  const { exe: py, argsPrefix } = resolveRuzgarPython();
+  const args = [
+    ...argsPrefix,
+    "run_desktop_api.py",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    String(port),
+  ];
   const env = {
     ...process.env,
     RUZGAR_API_PORT: String(port),
     RUZGAR_SKIP_RAG_WARMUP: process.env.RUZGAR_SKIP_RAG_WARMUP || "1",
+    ENABLE_WEB_SEARCH: process.env.ENABLE_WEB_SEARCH || "1",
   };
   try {
+    console.info(`[RÜZGAR] Yerel API başlatılıyor: ${py}`);
     const child = spawn(py, args, {
       cwd: ia,
       detached: true,

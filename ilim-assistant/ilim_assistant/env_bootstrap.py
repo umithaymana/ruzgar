@@ -130,8 +130,12 @@ def _load_dotenv_file(path: Path, loaded: list[str], *, force_secrets: bool = Fa
             key.startswith("RUZGAR_")
             or key.startswith("OLLAMA_")
             or key.startswith("GROQ_")
+            or key.startswith("ENABLE_WEB_")
+            or key.startswith("WEB_")
             or key in _GEMINI_KEY_NAMES
         ):
+            # Proje .env / RUZGAR_BRAIN.env — oturumda kalan ENABLE_WEB_SEARCH=0 gibi
+            # eski değerleri ezsin (yerel-önce + web yedek politikası için şart).
             os.environ[key] = val
             loaded.append(f"{path.name}:{key}")
             continue
@@ -241,7 +245,7 @@ def ensure_ruzgar_env() -> list[str]:
         os.environ.setdefault("RUZGAR_DENGE70_AUTO_CHAIN", "1")
         os.environ.setdefault("RUZGAR_DENGE70_MIN_RAM_GB", "14")
         os.environ.setdefault("RUZGAR_DENGE70_PULL_TIMEOUT_SEC", "7200")
-        os.environ.setdefault("RUZGAR_BRAIN_DENGE70_MODEL", "llama3.1:70b")
+        os.environ.setdefault("RUZGAR_BRAIN_DENGE70_MODEL", "llama3")
         os.environ.setdefault("RUZGAR_OTOMATIK_OGRENME", "1")
         os.environ.setdefault("RUZGAR_KUTUPHANE_ONCE", "1")
         os.environ.setdefault("RUZGAR_OGRENME_NEBULA_BRIDGE", "1")

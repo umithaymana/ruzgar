@@ -1,11 +1,11 @@
-# RÜZGAR — denge70 (llama3.1:70b) Ollama çekimi
+# RÜZGAR — denge70 (llama3) Ollama çekimi
 # Ümit & Gökçenur
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $Root
 
 $model = $env:RUZGAR_BRAIN_DENGE70_MODEL
-if (-not $model) { $model = "llama3.1:70b" }
+if (-not $model) { $model = "llama3" }
 
 Write-Host "Ollama model cekiliyor: $model"
 Write-Host "(RAM ~40GB+ gerekebilir; uzun surebilir.)"
