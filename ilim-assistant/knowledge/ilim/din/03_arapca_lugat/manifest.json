@@ -9,8 +9,9 @@
     "morfoloji_etiket": 14,
     "lookup_anahtar": 19533,
     "quranRoots_kaynak_adet": 1922,
-    "tr_ipucu_adet": 68,
-    "klasik_kok_adet": 20662
+    "tr_ipucu_adet": 96,
+    "klasik_kok_adet": 20662,
+    "empty_en_adet": 15
   },
   "kaynaklar": [
     "iqrossed/quran-bil-quran roots.jsonl (Lane Arabic-English)",

@@ -455,9 +455,13 @@ def lookup_hizli_referans(message: str) -> Optional[dict[str, Any]]:
             if len(cevap) < 20:
                 continue
             sn = _norm(soru)
-            # Basit örtüşme
-            qw = set(re.findall(r"[a-z0-9çğıöşü]{3,}", qn))
-            sw = set(re.findall(r"[a-z0-9çğıöşü]{3,}", sn))
+            # Basit örtüşme — «nedir» gibi stopword tek başına yetmesin
+            _STOP = {
+                "nedir", "nedır", "demek", "nasil", "nasıl", "hangi", "neydi",
+                "icin", "için", "hakkinda", "hakkında", "olan", "nedir?",
+            }
+            qw = set(re.findall(r"[a-z0-9çğıöşü]{3,}", qn)) - _STOP
+            sw = set(re.findall(r"[a-z0-9çğıöşü]{3,}", sn)) - _STOP
             if not qw or not sw:
                 continue
             inter = len(qw & sw)
@@ -466,7 +470,7 @@ def lookup_hizli_referans(message: str) -> Optional[dict[str, Any]]:
             sc = inter / max(len(qw), 1)
             if sn in qn or qn in sn:
                 sc += 0.35
-            if sc > best_sc and sc >= 0.45:
+            if sc > best_sc and sc >= 0.55:
                 best_sc = sc
                 best = {
                     "soru": soru,

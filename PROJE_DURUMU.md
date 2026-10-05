@@ -1,8 +1,33 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-03 (bilgi sohbeti kilidi + Ollama modelleri)
+**Son güncelleme:** 2026-10-05 (ilim din: Kur’an/tefsir/Arapça lügat — gece ara)
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
+
+### 2026-10-05 — İlim din kütüphanesi (yarın devam)
+
+**Bugün bitti:**
+- Gizlilik: `sağlık belgelerim/` + `gecmis_sohbetler.db` gitignore; kişisel sohbet yalnızca bu PC (`fd871a7`)
+- Kur’an + tefsir + temel kavramlar (`7e208f7`)
+- Arapça: `03_arapca_lugat` — 1231 Kur’an kökü, ~20k klasik (Mufradat/Lisan), nahiv/sarf, müştak; anlık cevap `ruzgar_arapca_lugat.py`
+- Hata düzeltmeleri (canlı):
+  - Kütüphane SSS «nedir» stopword’ü → fotosentez yanlış eşleşmesi (nahiv/صبر)
+  - Early path: Kur’an + Arapça, kütüphaneden **önce** (`desktop_server`)
+  - «Fatiha kaç ayet» artık **7** (genel 6236 yalnızca sûre adı yoksa)
+  - `Bakara` içindeki `ara ` alt dizisi → yanlış `web_search` tuzağı (`^ara ` komutu)
+- Smoke: `python scripts/smoke_arapca_lugat.py` → **9/9**
+- Lane GitHub klonu başarısız (404/timeout) — alternatif kaynaklarla idare edildi
+
+**Yarın sıra (Mimar onayıyla):**
+1. **Akaid** kütüphanesi (`04_akaid`) — henüz başlamadı; **açık onay şart**
+2. Daha dolu **AR–TR sözlük** (TR ipucu ~96 kök; klasik AR güçlü)
+3. Arapça lügati RAG’e tam gömme + health kartında gösterge
+4. Nebula `tarih_kaynak/incremental` untracked batch’ler — ayrı karar
+5. (Eski borç) `prepare_turn` bilgi kilidi / Ollama kalite
+
+**Doğrulama:** `rahman kökü` · `صبر nedir` · `nahiv nedir` · `Fatiha kaç ayet` · `fotosentez nedir` (SSS hâlâ doğru)
+
+**Not:** Akaid’e dokunulmadı.
 
 ### 2026-10-03 — Bilgi sohbeti kilidi (prepare_turn hang)
 

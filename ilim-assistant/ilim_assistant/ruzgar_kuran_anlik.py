@@ -309,6 +309,25 @@ def try_kavram_reply(message: str) -> Optional[str]:
             "Mushaf sırası 1 Fâtiha → 114 Nâs; nüzûl sırası bundan farklıdır."
         )
     if re.search(r"(kac|kaç)\s*ayet", low):
+        # «Fatiha kaç ayet» → sûreye özel; genel toplam yalnızca sûre yoksa
+        sno = None
+        try:
+            from ilim_assistant.ruzgar_tefsir_kutuphane import detect_sure_no
+
+            sno = detect_sure_no(message)
+        except Exception:
+            sno = None
+        if not sno:
+            sno = parse_sure_number_question(message)
+        if sno:
+            row = _load_sureler().get(sno) or {}
+            ayet_n = row.get("ayet_sayisi")
+            name = sure_name(sno)
+            if ayet_n:
+                return (
+                    f"Ümit abi, **{name}** sûresinde **{ayet_n} âyet** vardır "
+                    f"(mushaf no {sno})."
+                )
         return (
             "Ümit abi, standart Diyanet / yaygın sayımla Kur'an'da **6236 âyet** vardır. "
             "Bazı geleneklerde besmele sayımı nedeniyle rakam biraz değişebilir."

@@ -436,18 +436,31 @@ def format_root_reply(row: dict[str, Any]) -> str:
     tr = (row.get("meaning_tr") or "").strip() or _TR_ROOT_HINTS.get(root, "")
     forms = row.get("forms") or []
     verses = row.get("verse_keys") or []
+    klasik_rows = _load_klasik().get(root) or []
+    if not en:
+        for k in klasik_rows:
+            if k.get("lang") == "en" and (k.get("definition") or "").strip():
+                en = (k.get("definition") or "").strip()[:800]
+                break
     parts = [f"Ümit abi, kök **{root}**:"]
     if tr:
         parts.append(f"**TR (kısa):** {tr}")
     if en:
         parts.append(f"**EN (Lane / Kur'an kök):** {en}")
-    for k in (_load_klasik().get(root) or [])[:2]:
+    shown = 0
+    for k in klasik_rows:
+        if shown >= 2:
+            break
         book = (k.get("book_name") or "")[:60]
         definition = (k.get("definition") or "").strip()
         if not definition:
             continue
+        # EN zaten üstte basıldıysa aynı klasik EN'i tekrarlama
+        if k.get("lang") == "en" and en and definition[:80] == en[:80]:
+            continue
         label = "EN (klasik sözlük)" if k.get("lang") == "en" else "AR (klasik lügat)"
         parts.append(f"**{label} — {book}:** {definition[:500]}")
+        shown += 1
     if forms:
         parts.append("**Müştak / formlar:** " + ", ".join(forms[:12]))
     if verses:

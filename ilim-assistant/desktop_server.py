@@ -10654,6 +10654,46 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             except Exception:
                 pass
         try:
+            from ilim_assistant.ruzgar_kuran_anlik import try_kuran_instant_reply
+
+            _kuran_e = try_kuran_instant_reply(msg_early)
+            if _kuran_e:
+                _orch_k = dict(orch_early)
+                _orch_k.setdefault("plan", {})["primary"] = "ilim"
+                _orch_k["plan"]["label_tr"] = "Kur'an (anında)"
+                _orch_k["kuran_anlik"] = True
+                yield from _iter_instant_chat_events(
+                    _kuran_e,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_k,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ruzgar_arapca_lugat import try_arapca_lugat_reply
+
+            _ar_e = try_arapca_lugat_reply(msg_early)
+            if _ar_e:
+                _orch_ar = dict(orch_early)
+                _orch_ar.setdefault("plan", {})["primary"] = "ilim"
+                _orch_ar["plan"]["label_tr"] = "Arapça lügat (anında)"
+                _orch_ar["arapca_lugat"] = True
+                yield from _iter_instant_chat_events(
+                    _ar_e,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_ar,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
             from ilim_assistant.ruzgar_kutuphane import try_kutuphane_instant_reply
 
             _raf = try_kutuphane_instant_reply(msg_early)
@@ -13369,11 +13409,14 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
 def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
     """Tur süresi + eğitim sonrası işlemler (oturum özeti, bulamadım)."""
     import time
+    import re
 
     t0 = time.perf_counter()
-    if "ara " in (req.message or "").lower():
-        query = req.message.lower().replace("ara ", "")
-        results = web_search(query)
+    _msg0 = (req.message or "").strip()
+    # Yalnızca komut: «ara …» — Bakara/… içindeki «ara» alt dizisini yakalama
+    if re.match(r"(?i)^ara\s+\S", _msg0):
+        query = re.sub(r"(?i)^ara\s+", "", _msg0, count=1).strip()
+        results = web_search(query) if query else []
         yield {"type": "token", "text": f"\n\nBulduklarım: {results}"}
         return
     for obj in _iter_chat_turn_events_impl(req):
