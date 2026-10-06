@@ -4,7 +4,7 @@
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
-### 2026-10-06 — Fıkıh (`06_fikh`) 4 mezhep + ilmihal matınları
+### 2026-10-06 — Fıkıh (`06_fikh`) 4 mezhep + ilmihal matınları · push `1d3f406` (+ RAG fix `10d3291`)
 
 **Kaynak:** arabic-digital-humanities/fiqh (OpenITI / Şâmile kökenli Arapça)
 
