@@ -1,0 +1,15 @@
+{
+  "eser_id": "tabaqat_ibn_sad",
+  "eser_tr": "et-Tabakâtü'l-kübrâ",
+  "eser_ar": "الطبقات الكبرى",
+  "yazar": "İbn Sa'd (ö. 230/845)",
+  "rol": "tabakat",
+  "collection": "din_08_siyer_tabaqat_ibn_sad",
+  "kaynak": "OpenITI",
+  "source_file": "tabaqat_ibn_sad__0230IbnSacd.TabaqatKubra.ShamAY0035884-ara1.mARkdown",
+  "sha256": "f1e5a796400f79ed91cd2f3e6372dd6249d98e86e2f32fed7e3a002589f78714",
+  "char_count": 6448996,
+  "chunk_count": 4237,
+  "batch_sayisi": 212,
+  "updated_utc": "2026-10-06T20:02:11Z"
+}

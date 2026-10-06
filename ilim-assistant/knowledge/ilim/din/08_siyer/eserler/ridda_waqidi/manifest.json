@@ -1,0 +1,15 @@
+{
+  "eser_id": "ridda_waqidi",
+  "eser_tr": "Kitâbü'r-Ridde",
+  "eser_ar": "كتاب الردة",
+  "yazar": "el-Vâkıdî (ö. 207/823)",
+  "rol": "erken",
+  "collection": "din_08_siyer_ridda_waqidi",
+  "kaynak": "OpenITI",
+  "source_file": "ridda_waqidi__0207Waqidi.Ridda.Shamela0012222-ara1.mARkdown",
+  "sha256": "bb6dcbb30bbab055565b97c30179fcfe0f71754aaee01b7afd7ad48c292ad3db",
+  "char_count": 189609,
+  "chunk_count": 126,
+  "batch_sayisi": 7,
+  "updated_utc": "2026-10-06T20:02:12Z"
+}

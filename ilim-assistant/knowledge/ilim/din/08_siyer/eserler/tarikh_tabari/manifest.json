@@ -1,0 +1,15 @@
+{
+  "eser_id": "tarikh_tabari",
+  "eser_tr": "Târîhu'r-rusül ve'l-mülûk",
+  "eser_ar": "تاريخ الرسل والملوك",
+  "yazar": "et-Taberî (ö. 310/923)",
+  "rol": "tarih",
+  "collection": "din_08_siyer_tarikh_tabari",
+  "kaynak": "OpenITI",
+  "source_file": "tarikh_tabari__0310Tabari.Tarikh.Shamela0009783BK1-ara1.mARkdown",
+  "sha256": "5b50955188fa38a9ac93d971e286042e95c6f99d221fd93c660df854d035540a",
+  "char_count": 8022284,
+  "chunk_count": 5375,
+  "batch_sayisi": 269,
+  "updated_utc": "2026-10-06T20:02:12Z"
+}

@@ -1,0 +1,15 @@
+{
+  "eser_id": "sira_ibn_hisham",
+  "eser_tr": "es-Sîretü'n-nebeviyye (İbn Hişâm)",
+  "eser_ar": "السيرة النبوية",
+  "yazar": "İbn Hişâm (ö. 213/828)",
+  "rol": "asıl",
+  "collection": "din_08_siyer_sira_ibn_hisham",
+  "kaynak": "OpenITI",
+  "source_file": "sira_ibn_hisham__0213IbnHisham.SiraNabawiyya.Shamela0023833-ara1.completed",
+  "sha256": "2324caa9af62d10be2d9efc9199dd96e06af2a41ed6d80f8b61b8b90cd3a7dc6",
+  "char_count": 1537073,
+  "chunk_count": 1029,
+  "batch_sayisi": 52,
+  "updated_utc": "2026-10-06T20:02:09Z"
+}

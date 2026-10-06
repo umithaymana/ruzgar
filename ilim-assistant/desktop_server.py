@@ -10754,6 +10754,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         except Exception:
             pass
         try:
+            from ilim_assistant.ruzgar_siyer_kutuphane import try_siyer_reply
+
+            _siyer_e = try_siyer_reply(msg_early)
+            if _siyer_e:
+                _orch_sy = dict(orch_early)
+                _orch_sy.setdefault("plan", {})["primary"] = "ilim"
+                _orch_sy["plan"]["label_tr"] = "Siyer (anında)"
+                _orch_sy["siyer_anlik"] = True
+                yield from _iter_instant_chat_events(
+                    _siyer_e,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_sy,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
             from ilim_assistant.ruzgar_usul_fikh_kutuphane import try_usul_fikh_reply
 
             _usul_e = try_usul_fikh_reply(msg_early)
@@ -11316,6 +11336,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     session_wake_used=req.session_wake_used,
                     msg_for_wake=req.message,
                     orch=_orch_hd2,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ruzgar_siyer_kutuphane import try_siyer_reply
+
+            _siyer_early = try_siyer_reply(msg_early)
+            if _siyer_early:
+                _orch_sy2 = dict(orch_early)
+                _orch_sy2.setdefault("plan", {})["primary"] = "ilim"
+                _orch_sy2["plan"]["label_tr"] = "Siyer (anında)"
+                _orch_sy2["siyer_anlik"] = True
+                yield from _iter_instant_chat_events(
+                    _siyer_early,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_sy2,
                     instant_gundelik=True,
                 )
                 return

@@ -1,0 +1,15 @@
+{
+  "eser_id": "fusul_sira_kathir",
+  "eser_tr": "el-Fusûl min sîreti'r-Rasûl",
+  "eser_ar": "الفصول من سيرة الرسول",
+  "yazar": "İbn Kesîr (ö. 774/1373)",
+  "rol": "muteber",
+  "collection": "din_08_siyer_fusul_sira_kathir",
+  "kaynak": "OpenITI",
+  "source_file": "fusul_sira_kathir__0774IbnKathir.FusulMinSira.Shamela0009241-ara1",
+  "sha256": "fdb0ecf4dd4edb5fbc2a0638223a56da2fba15ff6cc9a850afedb6e1480f5e51",
+  "char_count": 217279,
+  "chunk_count": 144,
+  "batch_sayisi": 8,
+  "updated_utc": "2026-10-06T20:02:13Z"
+}

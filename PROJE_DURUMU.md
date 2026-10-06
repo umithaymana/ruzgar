@@ -1,8 +1,21 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-06 (Usûl-i fıkıh `07` tamam)
+**Son güncelleme:** 2026-10-06 (Siyer `08` tamam)
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
+
+### 2026-10-06 — Siyer (`08_siyer`)
+
+**Kaynak:** OpenITI (İbn Hişâm, Vâkıdî, İbn Sa'd, Taberî, İbn Kesîr)
+
+- **8 eser** · ~**20.970** chunk · smoke `smoke_siyer.py` **8/8**
+- Asıl: İbn Hişâm Sîre · Megâzî: Vâkıdî · Tabakât: İbn Sa'd · Tarih: Taberî · Muteber: Fusûl + Bidâye (İbn Kesîr) · Erken: Ridde, Fütûhu'ş-Şâm
+- Anlık: `ruzgar_siyer_kutuphane.py` (hadis sonrası early path)
+- **Politika:** Fetva yok
+
+**Dene:** «siyer nedir» · «hicret nedir» · «bedir nedir» · «ibn hisham nedir»
+
+**Sonraki kütüphane:** `09_ahlak_tasavvuf`
 
 ### 2026-10-06 — Usûl-i fıkıh (`07_usul_fikh`)
 
@@ -14,8 +27,6 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 - **Politika:** Fetva yok
 
 **Dene:** «usul fıkıh nedir» · «kıyas nedir» · «varakat nedir» · «mustasfa nedir»
-
-**Sonraki kütüphane:** `08_siyer` · `09_ahlak_tasavvuf`
 
 ### 2026-10-06 — Fıkıh (`06_fikh`) 4 mezhep + ilmihal matınları · push `1d3f406` (+ RAG fix `10d3291`)
 

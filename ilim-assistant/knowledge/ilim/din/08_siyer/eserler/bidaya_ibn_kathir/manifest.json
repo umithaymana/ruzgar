@@ -1,0 +1,15 @@
+{
+  "eser_id": "bidaya_ibn_kathir",
+  "eser_tr": "el-Bidâye ve'n-nihâye",
+  "eser_ar": "البداية والنهاية",
+  "yazar": "İbn Kesîr (ö. 774/1373)",
+  "rol": "muteber",
+  "collection": "din_08_siyer_bidaya_ibn_kathir",
+  "kaynak": "OpenITI",
+  "source_file": "bidaya_ibn_kathir__0774IbnKathir.Bidaya.Shamela0004445-ara1.completed",
+  "sha256": "8232118a2542243c3bf8ccf3b43065af32929b668f3cfae65b8290ffdd1948c9",
+  "char_count": 12317725,
+  "chunk_count": 8218,
+  "batch_sayisi": 411,
+  "updated_utc": "2026-10-06T20:02:16Z"
+}
