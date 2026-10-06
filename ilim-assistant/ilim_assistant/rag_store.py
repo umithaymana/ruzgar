@@ -43,6 +43,27 @@ def _index_dir() -> Path:
         return p
 
 
+
+def _atomic_write_text(path: Path, text: str, *, encoding: str = "utf-8") -> None:
+    """Windows'ta büyük jsonl yeniden yazımında Errno 22 / kilit riskine karşı."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(text, encoding=encoding)
+    os.replace(tmp, path)
+
+
+def _atomic_write_chunks_jsonl(path: Path, chunks: List["Chunk"]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    with tmp.open("w", encoding="utf-8", newline="\n") as f:
+        for c in chunks:
+            f.write(
+                json.dumps({"text": c.text, "source": c.source}, ensure_ascii=False)
+                + "\n"
+            )
+    os.replace(tmp, path)
+
+
 @dataclass
 class Chunk:
     text: str
@@ -200,16 +221,11 @@ def build_index(
                     emb_out = keep_emb
 
                 chunks_out = kept_chunks + new_chunks
-                # Persist
+                # Persist (tmp → replace)
                 np.save(str(emb_path), emb_out)
-                with chunks_path.open("w", encoding="utf-8") as f:
-                    for c in chunks_out:
-                        f.write(
-                            json.dumps({"text": c.text, "source": c.source}, ensure_ascii=False)
-                            + "\n"
-                        )
-
-                manifest_path.write_text(
+                _atomic_write_chunks_jsonl(chunks_path, chunks_out)
+                _atomic_write_text(
+                    manifest_path,
                     json.dumps(
                         {
                             "digest": digest,
@@ -219,8 +235,8 @@ def build_index(
                         },
                         ensure_ascii=False,
                         indent=2,
-                    ),
-                    encoding="utf-8",
+                    )
+                    + "\n",
                 )
                 return {
                     "status": "incremental",
@@ -240,12 +256,9 @@ def build_index(
     texts = [c.text for c in chunks]
     emb = model.encode(texts, normalize_embeddings=True, show_progress_bar=True)
     np.save(str(emb_path), emb)
-
-    with chunks_path.open("w", encoding="utf-8") as f:
-        for c in chunks:
-            f.write(json.dumps({"text": c.text, "source": c.source}, ensure_ascii=False) + "\n")
-
-    manifest_path.write_text(
+    _atomic_write_chunks_jsonl(chunks_path, chunks)
+    _atomic_write_text(
+        manifest_path,
         json.dumps(
             {
                 "digest": digest,
@@ -255,8 +268,8 @@ def build_index(
             },
             ensure_ascii=False,
             indent=2,
-        ),
-        encoding="utf-8",
+        )
+        + "\n",
     )
     return {"status": "built", "chunks": len(chunks), "digest": digest}
 
