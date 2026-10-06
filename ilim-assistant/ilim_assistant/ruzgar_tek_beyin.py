@@ -972,6 +972,30 @@ def should_use_dost_sohbet_first(
         return False
     if personal_hafiza_blocks_bilgi_path(raw):
         return False
+    # Anlat/açıkla + din kütüphanesi eşleşmesi → dost şeridi değil; tam tur + LLM ipucu
+    try:
+        from ilim_assistant.ruzgar_anlik_niyet_gate import (
+            library_instant_would_match,
+            should_defer_library_instant,
+        )
+
+        if should_defer_library_instant(raw) and library_instant_would_match(raw):
+            low = raw.casefold()
+            chat_invite = any(
+                x in low
+                for x in (
+                    "sohbet",
+                    "konuşalım",
+                    "konusalim",
+                    "muhabbet",
+                    "dertleş",
+                    "dertles",
+                )
+            )
+            if not chat_invite:
+                return False
+    except Exception:
+        pass
     try:
         from ilim_assistant.ruzgar_tek_beyin_oturum import looks_like_mood_continuation
 

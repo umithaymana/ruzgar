@@ -447,14 +447,24 @@ Import-RuzgarEnvFile -IaRoot $ia | Out-Null
 
 # Ollama model dizini - tray bazen User env'yi gormeden bos liste verir.
 function Ensure-RuzgarOllamaModelsPath {
+    # ASCII junction once (Ollama Unicode path D:\ÜMİT... ile modelleri saymayabiliyor)
+    $asciiLink = "D:\OllamaModels"
+    $unicodeModels = "D:\ÜMİT\PROGRAMLAR\Ollama\models"
+    try {
+        if (-not (Test-Path -LiteralPath $asciiLink) -and (Test-Path -LiteralPath $unicodeModels)) {
+            cmd /c "mklink /J `"$asciiLink`" `"$unicodeModels`"" | Out-Null
+        }
+    } catch { }
     $candidates = @(
+        $asciiLink,
         $env:OLLAMA_MODELS,
-        "D:\ÜMİT\PROGRAMLAR\Ollama\models"
-    ) | Where-Object { $_ -and $_.Trim() }
+        $unicodeModels
+    ) | Where-Object { $_ -and $_.Trim() } | Select-Object -Unique
     foreach ($c in $candidates) {
         try {
             if (Test-Path -LiteralPath $c) {
-                $resolved = (Resolve-Path -LiteralPath $c).Path
+                # Prefer ASCII path string (junction) so Ollama never sees non-ASCII
+                $resolved = if ($c -eq $asciiLink) { $asciiLink } else { (Resolve-Path -LiteralPath $c).Path }
                 $env:OLLAMA_MODELS = $resolved
                 try {
                     [Environment]::SetEnvironmentVariable("OLLAMA_MODELS", $resolved, "User")

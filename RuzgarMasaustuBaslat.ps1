@@ -45,9 +45,16 @@ $NodeRoot = "D:\ÜMİT\PROGRAMLAR\Nodejs"
 if (Test-Path (Join-Path $NodeRoot "node.exe")) {
     $env:Path = "$NodeRoot;" + $env:Path
 }
-if (-not $env:OLLAMA_MODELS) {
-    $om = "D:\ÜMİT\PROGRAMLAR\Ollama\models"
-    if (Test-Path $om) { $env:OLLAMA_MODELS = $om }
+# ASCII junction once — Ollama Unicode D:\ÜMİT yolunda modelleri saymayabiliyor
+$asciiOm = "D:\OllamaModels"
+$unicodeOm = "D:\ÜMİT\PROGRAMLAR\Ollama\models"
+if (-not (Test-Path -LiteralPath $asciiOm) -and (Test-Path -LiteralPath $unicodeOm)) {
+    cmd /c "mklink /J `"$asciiOm`" `"$unicodeOm`"" | Out-Null
+}
+if (Test-Path -LiteralPath $asciiOm) {
+    $env:OLLAMA_MODELS = $asciiOm
+} elseif (-not $env:OLLAMA_MODELS -and (Test-Path -LiteralPath $unicodeOm)) {
+    $env:OLLAMA_MODELS = $unicodeOm
 }
 foreach ($pair in @(
     @{ K = "PIP_CACHE_DIR"; V = "D:\ÜMİT\PROGRAMLAR\Caches\pip" },

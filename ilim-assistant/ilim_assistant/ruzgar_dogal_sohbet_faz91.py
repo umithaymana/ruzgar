@@ -111,6 +111,30 @@ def is_natural_conversation_turn(
     if _explicit_research_intent(raw):
         return False
 
+    # Kütüphane anlat/açıkla → doğal sohbet şablonu değil; LLM + ipucu yolu
+    try:
+        from ilim_assistant.ruzgar_anlik_niyet_gate import (
+            library_instant_would_match,
+            should_defer_library_instant,
+        )
+
+        if should_defer_library_instant(raw) and library_instant_would_match(raw):
+            low = raw.casefold()
+            if not any(
+                x in low
+                for x in (
+                    "sohbet",
+                    "konuşalım",
+                    "konusalim",
+                    "muhabbet",
+                    "dertleş",
+                    "dertles",
+                )
+            ):
+                return False
+    except Exception:
+        pass
+
     try:
         from ilim_assistant.ana_motor_plan import looks_like_casual_social_chat
 
