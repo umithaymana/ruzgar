@@ -137,6 +137,9 @@ def try_fikh_reply(msg: str) -> Optional[str]:
     if not (msg or "").strip():
         return None
     low = _fold(msg)
+    # Usûl-i fıkıh soruları 07 yoluna gitsin
+    if ("usul" in low or "usûl" in low) and "furû" not in low and "furu " not in low:
+        return None
     is_cue = looks_like_fikh_question(msg)
     ask = any(
         p in low
