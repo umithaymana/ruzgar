@@ -1,8 +1,25 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-06 (akaid + sohbet yanlış cevap düzeltmeleri)
+**Son güncelleme:** 2026-10-06 (RAG/LLM anlam koruması — Mimar çıkış)
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
+
+### 2026-10-06 — Neredeyiz (çıkış özeti)
+
+**Bitti (çekirdek):**
+1. **Akaid** `04_akaid` — Arapça corpus + 18 TR kavram + anlık yol + RAG · smoke 8/8
+2. **Sohbet karıştırma kökleri** — fuzzy özne, kimlik anlık, geçmiş `sordum`, Kur’an meta/aşır, sure adı sınırı
+3. **Sistematik anlam kilidi** `ruzgar_anlam_koruma.py` — fuzzy + oturum yankısı
+4. **RAG/LLM koruma:** chunk içerik süzgeci · `RAG_SCORE_MIN` varsayılan **0.32** · cevap `guard_assistant_reply` · otomatik öğrenme zehir kilidi · `smoke_anlam_koruma` 8/8
+
+**Canlı:** `.\Ruzgar.ps1 -ForceRestart`
+
+### Sonraki adım planı
+1. Alan süzgeci (akaid/tefsir sorusunda yanlış raftı kapat)
+2. Smoke setini CI’ya bağla (`smoke_akaid` + `smoke_anlam_koruma` + Kur’an)
+3. el-Luma‘ OCR (Tesseract)
+4. TR çeviriler → `bekleyen_tr/` (Mimar dosya koyunca)
+5. İsteğe bağlı: BM25+embed hybrid · daha sert «yalnız bağlam» LLM promptu
 
 ### 2026-10-06 — Sohbet yanlış cevap kökleri (düzeltildi)
 

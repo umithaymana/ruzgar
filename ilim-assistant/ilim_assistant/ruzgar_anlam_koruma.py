@@ -226,3 +226,107 @@ def answer_fits_question(sorgu: str, cevap: str) -> bool:
 def fuzzy_pair_allowed(sorgu: str, aday_soru: str) -> bool:
     """Hafıza fuzzy eşleşmesi için tek kapı."""
     return questions_share_content(sorgu, aday_soru)
+
+
+def rag_default_score_min() -> float:
+    """Bilgi RAG taban eşiği — düşük skor alakasız chunk getiriyordu."""
+    import os
+
+    raw = (os.environ.get("RAG_SCORE_MIN") or "0.32").strip()
+    try:
+        v = float(raw)
+    except ValueError:
+        v = 0.32
+    return max(0.0, min(1.0, v))
+
+
+def chunk_fits_query(sorgu: str, chunk_text: str) -> bool:
+    """RAG parçası sorunun anlam kelimesini taşıyor mu?"""
+    toks = content_tokens(sorgu, min_len=4)
+    if not toks:
+        toks = content_tokens(sorgu, min_len=3)
+    if not toks:
+        return True
+    blob = fold_ascii(chunk_text or "")
+    if not blob:
+        return False
+    ctoks = content_tokens(chunk_text or "", min_len=3)
+    for t in toks:
+        if _token_hit(t, ctoks):
+            return True
+        if len(t) >= 4 and t in blob:
+            return True
+    return False
+
+
+def filter_rag_hits(
+    sorgu: str,
+    hits: list,
+    *,
+    min_score: float | None = None,
+    soft: bool = False,
+) -> list:
+    """(metin, kaynak, skor) listesini skor + anlam kelimesiyle süz.
+
+    soft=True: anlam süzgeci boşaltırsa skora göre ilk 1–2 zayıf adayı bırakır
+    (eski davranışa yakın yedek). Varsayılan hard: boş liste > yanlış bağlam.
+    """
+    if not hits:
+        return []
+    floor = rag_default_score_min() if min_score is None else float(min_score)
+    scored = []
+    for h in hits:
+        try:
+            text, src, sc = h[0], h[1], float(h[2])
+        except Exception:
+            continue
+        if sc < floor:
+            continue
+        scored.append((text, src, sc))
+    if not scored:
+        return []
+
+    fitted = [h for h in scored if chunk_fits_query(sorgu, h[0])]
+    if fitted:
+        return fitted
+    if soft and scored:
+        return scored[:2]
+    return []
+
+
+def looks_like_grounded_fact_question(sorgu: str) -> bool:
+    """Tanım / kimdir / ansiklopedik — cevapsız uydurma yasak sınıfı."""
+    q = fold_ascii(sorgu)
+    if not q:
+        return False
+    if re.search(r"\b(nedir|nedemek|kimdir|kimdi|hangisi|kac|kaç)\b", q):
+        return True
+    if re.search(r"\b(ne\s+demek|ne\s+anlama)\b", q):
+        return True
+    return False
+
+
+def guard_assistant_reply(sorgu: str, cevap: str) -> str | None:
+    """Anlam uyumsuz bilgi cevabını düşür; None = cevap kullanılamaz.
+
+    Kimlik / selam / kısa sohbet dokunulmaz.
+    """
+    ans = (cevap or "").strip()
+    if not ans or len(ans) < 12:
+        return ans or None
+    if not looks_like_grounded_fact_question(sorgu):
+        return ans
+    # Zaten reddedilmiş / düşük güven notu
+    low = fold_ascii(ans)
+    if "guven: dusuk" in low and "anlam" in low:
+        return ans
+    if answer_fits_question(sorgu, ans):
+        return ans
+    q_short = " ".join((sorgu or "").split())[:100]
+    return (
+        f"Ümit abi, «{q_short}» için bağladığım kaynaklar soruyla örtüşmedi; "
+        "uydurmak yerine duruyorum. Soruyu biraz netleştirir veya «webten ara» "
+        "dersen yeniden bakarım.\n\n"
+        "**Güven: düşük** — anlam doğrulama (RAG/LLM koruma)."
+    )
+

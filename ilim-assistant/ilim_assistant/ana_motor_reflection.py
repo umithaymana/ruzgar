@@ -217,6 +217,16 @@ def apply_answer_quality_pass(
                 flags=re.I,
             )
 
+    # Anlam kilidi — tanım/kimdir cevabı soruyla örtüşmüyorsa uydurmayı kes
+    try:
+        from ilim_assistant.ruzgar_anlam_koruma import guard_assistant_reply
+
+        guarded = guard_assistant_reply(user_message, body)
+        if guarded is not None and guarded != body:
+            return guarded
+    except Exception:
+        pass
+
     try:
         from ilim_assistant.ana_motor_guncellik import append_reply_freshness_stamp
 

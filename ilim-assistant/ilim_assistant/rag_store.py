@@ -436,7 +436,11 @@ def search_tdk_exact_lemma(lemma: str, top_k: int = 5) -> List[Tuple[str, str, f
 
 
 def search(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
-    """Dönüş: (metin, kaynak, skor) — skor yaklaşık uyum."""
+    """Dönüş: (metin, kaynak, skor) — skor yaklaşık uyum.
+
+    Anlam kilidi: içerik kelimesi taşımayan chunk'lar elenir (yanlış raftan
+    cevap karışmasını keser). Kapat: ``RUZGAR_RAG_CONTENT_FILTER=0``.
+    """
     chunks, emb = _get_cached_index()
     if not chunks or emb is None or len(chunks) != len(emb):
         return []
@@ -444,11 +448,40 @@ def search(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
     model = _get_embedder()
     q = model.encode([query], normalize_embeddings=True, show_progress_bar=False)[0]
     sim = emb @ q
-    idx = np.argsort(-sim)[:top_k]
-    out: List[Tuple[str, str, float]] = []
+    # Geniş havuz al, sonra skor+anlam süz
+    pool = max(int(top_k) * 4, 16)
+    idx = np.argsort(-sim)[: min(pool, len(sim))]
+    raw: List[Tuple[str, str, float]] = []
     for i in idx:
-        out.append((chunks[int(i)].text, chunks[int(i)].source, float(sim[int(i)])))
-    return out
+        raw.append((chunks[int(i)].text, chunks[int(i)].source, float(sim[int(i)])))
+    try:
+        if os.environ.get("RUZGAR_RAG_CONTENT_FILTER", "1").strip().lower() not in (
+            "0",
+            "false",
+            "no",
+        ):
+            from ilim_assistant.ruzgar_anlam_koruma import filter_rag_hits, rag_default_score_min
+
+            soft = os.environ.get("RUZGAR_RAG_CONTENT_SOFT", "0").strip().lower() in (
+                "1",
+                "true",
+                "yes",
+            )
+            filtered = filter_rag_hits(
+                query,
+                raw,
+                min_score=rag_default_score_min(),
+                soft=soft,
+            )
+            if filtered:
+                return filtered[: max(1, int(top_k))]
+            # Hard boş: alakasız bağlam verme
+            if not soft:
+                return []
+    except Exception:
+        pass
+    # Filtre kapalı / hata — eski davranış (üst skor)
+    return raw[: max(1, int(top_k))]
 
 
 def search_arsiv(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:

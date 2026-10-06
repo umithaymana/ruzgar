@@ -1260,7 +1260,7 @@ def prepare_turn(
             rag_k = int(os.environ.get("RAG_TOP_K", "2"))
             rag_k_clamped = max(1, min(rag_k, 12))
         pool_k = min(max(rag_k_clamped * 3, 10), 28)
-        rag_score_min = float(os.environ.get("RAG_SCORE_MIN", "0.20"))
+        rag_score_min = float(os.environ.get("RAG_SCORE_MIN", "0.32"))
         tarih_on = _tarih_intent(msg)
         use_tarih_rag_branch = tarih_on
         try:
@@ -1304,8 +1304,15 @@ def prepare_turn(
         if _bundle_in is not None:
             bh = list(_bundle_in.hits)
             good_hits = [h for h in bh if float(h[2]) >= rag_score_min]
-            if not good_hits and bh:
-                good_hits = bh[:rag_k_clamped]
+            try:
+                from ilim_assistant.ruzgar_anlam_koruma import filter_rag_hits
+
+                good_hits = filter_rag_hits(
+                    search_msg, good_hits or bh, min_score=rag_score_min
+                )
+            except Exception:
+                if not good_hits:
+                    good_hits = []
             ilim_merge_tail = (_bundle_in.ilim_citation_tail or "").strip()
             me_suppress_web = bool(_bundle_in.suppress_main_web_search)
             archive_primary_flag = bool(_bundle_in.archive_was_primary)
@@ -1382,8 +1389,15 @@ def prepare_turn(
             )
             bh = list(me_bundle.hits)
             good_hits = [h for h in bh if float(h[2]) >= rag_score_min]
-            if not good_hits and bh:
-                good_hits = bh[:rag_k_clamped]
+            try:
+                from ilim_assistant.ruzgar_anlam_koruma import filter_rag_hits
+
+                good_hits = filter_rag_hits(
+                    search_msg, good_hits or bh, min_score=rag_score_min
+                )
+            except Exception:
+                if not good_hits:
+                    good_hits = []
             ilim_merge_tail = (me_bundle.ilim_citation_tail or "").strip()
             me_suppress_web = bool(me_bundle.suppress_main_web_search)
             archive_primary_flag = bool(me_bundle.archive_was_primary)

@@ -297,6 +297,19 @@ def _should_auto_learn_turn(
         )
     ):
         return True
+    # Anlam uyumsuz / düşük güven cevabı hafızayı zehirlemesin
+    try:
+        from ilim_assistant.ruzgar_anlam_koruma import answer_fits_question
+
+        al = a.casefold()
+        if "güven: düşük" in al or "guven: dusuk" in al.replace("ü", "u"):
+            return False
+        if "anlam doğrulama" in al or "anlam dogrulama" in al:
+            return False
+        if not answer_fits_question(u, a):
+            return False
+    except Exception:
+        pass
     prim = (plan_primary or "").strip().lower()
     if prim in ("gundelik", "hafiza", "islem", "dosya", "hava"):
         if not web_used:
