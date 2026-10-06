@@ -1,0 +1,15 @@
+{
+  "eser_id": "manthur_qawaid",
+  "eser_tr": "el-Mensûr fi'l-kavâid",
+  "eser_ar": "المنثور في القواعد",
+  "yazar": "Bedreddîn ez-Zerkeşî (ö. 794/1392)",
+  "rol": "qawaid",
+  "collection": "din_07_usul_fikh_manthur_qawaid",
+  "kaynak": "OpenITI",
+  "source_file": "manthur_qawaid__0794BadrDinZarkashi.ManthurFiQawacid.JK000226-ara1",
+  "sha256": "aad1b1efe665ea6128ee7d4c12475b5f416430502b13aab3fd51b2316856ad63",
+  "char_count": 1011697,
+  "chunk_count": 693,
+  "batch_sayisi": 35,
+  "updated_utc": "2026-10-06T19:34:34Z"
+}

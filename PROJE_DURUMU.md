@@ -1,8 +1,21 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-06 (Fıkıh 4 mezhep tamam)
+**Son güncelleme:** 2026-10-06 (Usûl-i fıkıh `07` tamam)
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
+
+### 2026-10-06 — Usûl-i fıkıh (`07_usul_fikh`)
+
+**Kaynak:** OpenITI (Cüveynî, Gazzâlî, Pezdevî, Serahsî, Âmidî, Beyzâvî, Zerkeşî)
+
+- **10 eser** · ~**7.102** chunk · smoke `smoke_usul_fikh.py` **8/8**
+- Matın: Varakât, Minhâcü'l-vusûl · Muteber: Burhân, Mustasfâ, Menhûl, Pezdevî, Serahsî, İhkâm, Bahru'l-muhît · Kavâid: Mensûr
+- Anlık: `ruzgar_usul_fikh_kutuphane.py` (fıkıh sonrası early path)
+- **Politika:** Fetva yok
+
+**Dene:** «usul fıkıh nedir» · «kıyas nedir» · «varakat nedir» · «mustasfa nedir»
+
+**Sonraki kütüphane:** `08_siyer` · `09_ahlak_tasavvuf`
 
 ### 2026-10-06 — Fıkıh (`06_fikh`) 4 mezhep + ilmihal matınları · push `1d3f406` (+ RAG fix `10d3291`)
 

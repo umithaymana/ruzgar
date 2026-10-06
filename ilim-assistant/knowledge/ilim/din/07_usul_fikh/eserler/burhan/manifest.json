@@ -1,0 +1,15 @@
+{
+  "eser_id": "burhan",
+  "eser_tr": "el-Burhân",
+  "eser_ar": "البرهان في أصول الفقه",
+  "yazar": "İmâmü'l-Haremeyn el-Cüveynî (ö. 478/1085)",
+  "rol": "muteber",
+  "collection": "din_07_usul_fikh_burhan",
+  "kaynak": "OpenITI",
+  "source_file": "burhan__0478ImamHaramaynJuwayni.BurhanFiUsulFiqh.ShamAY0034188-ara1",
+  "sha256": "22df27180c3df8be917e0a2819bffe4330071985d359d988466731f3f67f9eff",
+  "char_count": 874045,
+  "chunk_count": 584,
+  "batch_sayisi": 30,
+  "updated_utc": "2026-10-06T19:34:32Z"
+}

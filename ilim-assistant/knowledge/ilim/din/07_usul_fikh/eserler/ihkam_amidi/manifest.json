@@ -1,0 +1,15 @@
+{
+  "eser_id": "ihkam_amidi",
+  "eser_tr": "el-İhkâm",
+  "eser_ar": "الإحكام في أصول الأحكام",
+  "yazar": "Seyfüddîn el-Âmidî (ö. 631/1233)",
+  "rol": "muteber",
+  "collection": "din_07_usul_fikh_ihkam_amidi",
+  "kaynak": "OpenITI",
+  "source_file": "ihkam_amidi__0631SayfDinAmidi.IhkamFiUsulAhkam.Shamela0010801-ara1",
+  "sha256": "41b8ecf1abd9f7737d0cbbfdbe513c92650492898befa53b298d92ff2c0cfd0a",
+  "char_count": 1633383,
+  "chunk_count": 1094,
+  "batch_sayisi": 55,
+  "updated_utc": "2026-10-06T19:34:33Z"
+}

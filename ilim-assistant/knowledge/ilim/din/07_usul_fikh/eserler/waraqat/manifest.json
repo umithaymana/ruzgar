@@ -1,0 +1,15 @@
+{
+  "eser_id": "waraqat",
+  "eser_tr": "el-Varakât",
+  "eser_ar": "الورقات",
+  "yazar": "İmâmü'l-Haremeyn el-Cüveynî (ö. 478/1085)",
+  "rol": "matn",
+  "collection": "din_07_usul_fikh_waraqat",
+  "kaynak": "OpenITI",
+  "source_file": "waraqat__0478ImamHaramaynJuwayni.Waraqat.Shamela0006297-ara1",
+  "sha256": "460751e10f59bb09173a940694c670f9bb133d18e465e58dc37706c4092a6f23",
+  "char_count": 11064,
+  "chunk_count": 7,
+  "batch_sayisi": 1,
+  "updated_utc": "2026-10-06T19:34:32Z"
+}

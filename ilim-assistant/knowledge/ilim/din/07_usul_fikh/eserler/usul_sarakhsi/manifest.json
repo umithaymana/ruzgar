@@ -1,0 +1,15 @@
+{
+  "eser_id": "usul_sarakhsi",
+  "eser_tr": "Usûlü's-Serahsî",
+  "eser_ar": "أصول السرخسي",
+  "yazar": "eş-Şemsü'l-Eimme es-Serahsî (ö. 483/1090)",
+  "rol": "muteber",
+  "collection": "din_07_usul_fikh_usul_sarakhsi",
+  "kaynak": "OpenITI",
+  "source_file": "usul_sarakhsi__0483IbnAhmadSarakhsi.Usul.Shamela0006301-ara1",
+  "sha256": "ad362389fef14edbd095966b865fc78ad9bfc9ba126a406f047573adaa0cd411",
+  "char_count": 1222334,
+  "chunk_count": 820,
+  "batch_sayisi": 41,
+  "updated_utc": "2026-10-06T19:34:33Z"
+}

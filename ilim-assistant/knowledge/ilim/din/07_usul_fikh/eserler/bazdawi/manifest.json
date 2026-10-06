@@ -1,0 +1,15 @@
+{
+  "eser_id": "bazdawi",
+  "eser_tr": "Usûlü'l-Pezdevî",
+  "eser_ar": "كنز الوصول",
+  "yazar": "Fahrülislâm el-Pezdevî (ö. 482/1089)",
+  "rol": "muteber",
+  "collection": "din_07_usul_fikh_bazdawi",
+  "kaynak": "OpenITI",
+  "source_file": "bazdawi__0482IbnMuhammadBazdawi.KanzWusul.JK000173-ara1",
+  "sha256": "a090958fc6249c326706117e24e4356afec94849f9ce587b70d545e577778aa0",
+  "char_count": 551850,
+  "chunk_count": 369,
+  "batch_sayisi": 19,
+  "updated_utc": "2026-10-06T19:34:33Z"
+}

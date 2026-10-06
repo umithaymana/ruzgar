@@ -1,0 +1,15 @@
+{
+  "eser_id": "mustasfa",
+  "eser_tr": "el-Mustasfâ",
+  "eser_ar": "المستصفى",
+  "yazar": "el-Gazzâlî (ö. 505/1111)",
+  "rol": "muteber",
+  "collection": "din_07_usul_fikh_mustasfa",
+  "kaynak": "OpenITI",
+  "source_file": "mustasfa__0505Ghazali.Mustasfa.Shamela0005459-ara1",
+  "sha256": "c45e5643301867f2f7c4958913b3fbe3748a2c8ac48b0abb63eb915e711673b8",
+  "char_count": 1025332,
+  "chunk_count": 689,
+  "batch_sayisi": 35,
+  "updated_utc": "2026-10-06T19:34:33Z"
+}
