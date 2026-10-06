@@ -1,24 +1,20 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-06 (Hadis usûl+tarihçe tamam — commit)
+**Son güncelleme:** 2026-10-06 (Hadis tamam — push `bf2b1f4`)
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
-### 2026-10-06 — Hadis tamam (matın + usûl + tarihçe)
+### 2026-10-06 — Hadis tamam (matın + usûl + tarihçe) · push OK
 
-**Kutüb-i Sitte (matın):** 6 ayrı raf · **34.153** hadis · `kutub_i_sitte/`
+**Commit:** `bf2b1f4` → `origin/main`  
+**Canlı:** `.\Ruzgar.ps1 -ForceRestart` (RAG chunks yerelde; `python -m ilim_assistant.ingest_cli --incremental`)
 
-**Usûl + tarihçe:**
-- `usul_tarih/ibn_salah/` — Mukaddime (hdith Arapça) · 437 paket
-- `usul_tarih/nukhba/` — Nuhbetü'l-fiker matın
-- `usul_tarih/bayquniyya/` — Beykûniyye
-- TR: `hadis_tarihce_tr.md` · `muhaddisler_tr.md` · 28 kavram
-- Smoke: `scripts/smoke_hadis.py` → **10/10**
-- Script: `faz5_hadis_kutub_sitte_ingest.py` + `faz5b_hadis_usul_tarih_ingest.py`
+**Kutüb-i Sitte:** 6 raf · **34.153** hadis  
+**Usûl:** İbnü's-Salâh (437 paket) · Nuhbe · Beykûniyye  
+**TR:** tedvin tarihçesi · muhaddisler · 28 kavram · smoke **10/10**  
+**RAG:** ~72.302 parça (chunks.jsonl gitignore — GitHub 100MB)
 
-**Dene:** «tedvin nedir» · «hadis tarihcesi» · «ibn salah nedir» · «buhari kimdir» · «buhari 1»
-
-**Akaid:** ara (çekirdek bitti). **Sırada (dönünce):** fıkıh veya alan süzgeci.
+**Dönünce sırada:** fıkıh (`06_fikh`) veya alan süzgeci.
 
 ### 2026-10-06 — Hadis (`05_hadis`) Kutüb-i Sitte
 
@@ -26,11 +22,11 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 - Kaynak: `fawazahmed0/hadith-api@1` Arapça matın (6 eser ayrı raf)
 - Toplam **34.153** hadis · `kutub_i_sitte/{buhari,muslim,ebu_davud,tirmizi,nesai,ibn_mace}/`
 - Anlık: `ruzgar_hadis_kutuphane.py` + early path (akaid sonrası)
-- Kavramlar: 14 TR madde · smoke `scripts/smoke_hadis.py`
-- İncegest: `python scripts/faz5_hadis_kutub_sitte_ingest.py`
-- RAG incremental: **71.219** parça (`changed_files` 1371)
+- Kavramlar + usûl/tarihçe · smoke `scripts/smoke_hadis.py` **10/10**
+- İncegest: `faz5_hadis_kutub_sitte_ingest.py` + `faz5b_hadis_usul_tarih_ingest.py`
+- RAG: ~72.302 parça
 
-**Usûl RAG güncelleme:** **72.302** parça (`changed_files` 445 — ibn_salah/nukhba/bayquniyya + TR)
+**Usûl RAG güncelleme:** ibn_salah/nukhba/bayquniyya + TR
 
 **Dene:** «hadis nedir» · «kutub-i sitte nedir» · «buhari 1» · «muslim 1» · «tirmizi 1»
 
