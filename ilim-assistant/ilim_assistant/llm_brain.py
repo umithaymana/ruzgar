@@ -1166,6 +1166,15 @@ def _stream_brain_chain_loop(
             continue
 
     if _umed and not any_content and is_real_user_question(message or user):
+        try:
+            from ilim_assistant.ruzgar_anlik_niyet_gate import soft_library_synth_fallback
+
+            soft = soft_library_synth_fallback(message or user)
+            if soft:
+                yield soft
+                return
+        except Exception:
+            pass
         yield umed_miss_reply()
         return
     if not any_content and (coding_mode or mode_norm == "programlama"):
@@ -1179,6 +1188,15 @@ def _stream_brain_chain_loop(
         yield last_err
         return
     if not any_content:
+        try:
+            from ilim_assistant.ruzgar_anlik_niyet_gate import soft_library_synth_fallback
+
+            soft = soft_library_synth_fallback(message or user)
+            if soft:
+                yield soft
+                return
+        except Exception:
+            pass
         yield (
             "Ümit abi, şu an yanıt üretemedim — `ollama serve` veya GROQ_API_KEY kontrol et; "
             "biraz sonra tekrar dene."
@@ -1270,6 +1288,15 @@ def stream_chat_with_brain(
             continue
 
     if _umed and not any_content and is_real_user_question(message or user):
+        try:
+            from ilim_assistant.ruzgar_anlik_niyet_gate import soft_library_synth_fallback
+
+            soft = soft_library_synth_fallback(message or user)
+            if soft:
+                yield soft
+                return
+        except Exception:
+            pass
         yield umed_miss_reply()
         return
 
@@ -1305,6 +1332,17 @@ def stream_chat_with_brain(
                 except Exception:
                     pass
                 if _umed:
+                    try:
+                        from ilim_assistant.ruzgar_anlik_niyet_gate import (
+                            soft_library_synth_fallback,
+                        )
+
+                        soft = soft_library_synth_fallback(message or user)
+                        if soft:
+                            yield soft
+                            return
+                    except Exception:
+                        pass
                     yield umed_miss_reply()
                     return
                 yield (
@@ -1315,6 +1353,15 @@ def stream_chat_with_brain(
         except Exception:
             pass
         if _umed and is_real_user_question(message or user):
+            try:
+                from ilim_assistant.ruzgar_anlik_niyet_gate import soft_library_synth_fallback
+
+                soft = soft_library_synth_fallback(message or user)
+                if soft:
+                    yield soft
+                    return
+            except Exception:
+                pass
             yield umed_miss_reply()
             return
         if last_err and not _looks_like_error_chunk(last_err):
@@ -1328,6 +1375,15 @@ def stream_chat_with_brain(
             return
         return
     if _umed and is_real_user_question(message or user):
+        try:
+            from ilim_assistant.ruzgar_anlik_niyet_gate import soft_library_synth_fallback
+
+            soft = soft_library_synth_fallback(message or user)
+            if soft:
+                yield soft
+                return
+        except Exception:
+            pass
         yield umed_miss_reply()
         return
     yield (

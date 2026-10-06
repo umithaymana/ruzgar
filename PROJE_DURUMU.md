@@ -4,11 +4,11 @@
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
-### 2026-10-06 — Doğal sohbet P0 (anlık kapı / panel)
+### 2026-10-06 — Doğal sohbet P0+P1
 
-- Video: çıplak «panel» artık YouTube tuzağı değil; yalnız kesim/indirme/sinema paneli
-- Din kütüphanesi: «X nedir» anlık kalır; «anlat / sohbet / daha açık» → LLM sentez
-- Arşiv-fast dump sohbet niyetinde atlanır (`ruzgar_anlik_niyet_gate.py`)
+- P0: video panel tuzağı kapandı; lookup anlık / anlat→LLM ayrımı
+- P1: kütüphane ipucu LLM’e enjekte; session echo ilim/sohbeti ezmez; devam cümleleri genişledi
+- LLM yokken «anlat» için yumuşak kütüphane özeti (`soft_library_synth_fallback`)
 - Smoke: `smoke_dogal_sohbet_p0.py` · Kapat: `RUZGAR_ANLIK_NIYET_GATE=0`
 
 ### 2026-10-06 — Siyer (`08_siyer`)

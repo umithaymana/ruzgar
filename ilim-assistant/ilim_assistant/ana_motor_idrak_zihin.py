@@ -75,6 +75,11 @@ _CONTINUATION_EXACT = frozenset(
         "sonra?",
         "ee?",
         "hmm?",
+        "anlat",
+        "daha?",
+        "neden?",
+        "niye?",
+        "mesela?",
     }
 )
 _CONTINUATION_PREFIX = (
@@ -89,6 +94,12 @@ _CONTINUATION_PREFIX = (
     "onun ",
     "şunun ",
     "sunun ",
+    "daha açık",
+    "daha acik",
+    "biraz daha",
+    "onu ",
+    "bunu ",
+    "peki ya ",
 )
 
 
@@ -424,15 +435,27 @@ def analyze_turn(
         except Exception:
             pass
 
+        # Kütüphane «anlat / sohbet» — anlık dump değil, doğal sentez
+        try:
+            from ilim_assistant.ruzgar_anlik_niyet_gate import should_defer_library_instant
+
+            if should_defer_library_instant(raw):
+                out.prefer_natural_sohbet = True
+                out.meta["library_synth"] = True
+                out.confidence = max(out.confidence, 0.78)
+                out.status_tr = "Kütüphane → doğal anlatım"
+        except Exception:
+            pass
+
         if temporal == "past":
             out.intent = "factual"
-            out.status_tr = "Geçmiş / tarihsel bilgi"
+            out.status_tr = out.status_tr or "Geçmiş / tarihsel bilgi"
         elif temporal == "future":
             out.intent = "factual"
-            out.status_tr = "Gelecek / olasılık sorusu"
+            out.status_tr = out.status_tr or "Gelecek / olasılık sorusu"
         else:
             out.intent = "bilgi"
-            out.status_tr = "Genel bilgi"
+            out.status_tr = out.status_tr or "Genel bilgi"
 
         if _should_inherit_thread(raw, out):
             out = _apply_thread_inheritance(out, raw, history)

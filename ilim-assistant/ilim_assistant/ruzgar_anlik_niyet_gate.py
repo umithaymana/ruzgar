@@ -8,6 +8,7 @@ from __future__ import annotations
 import os
 import re
 import unicodedata
+from typing import Callable, Optional
 
 _SYNTH_RE = re.compile(
     r"(?:"
@@ -18,12 +19,11 @@ _SYNTH_RE = re.compile(
     r"\bsohbet\b|\bkonuş(?:alım|alim)?\b|\bkonus(?:alim)?\b|"
     r"devam\s+et|anlamad[ıi]m|örnekle|ornekle|"
     r"doğal\s+konuş|dogal\s+konus|arkada[sş]\s+gibi|"
-    r"panelde\s+aç|panelde\s+ac"  # kitap/UI; video paneli ayrı regex'te
+    r"panelde\s+aç|panelde\s+ac"
     r")",
     re.I,
 )
 
-# Numaralı matın / kesin lookup — anlık koru
 _STRICT_LOOKUP_RE = re.compile(
     r"(?:"
     r"\b(?:buhari|buhârî|muslim|müslim|tirmizi|ebu\s*davud|nesai|ibn\s*mace)\b"
@@ -32,6 +32,14 @@ _STRICT_LOOKUP_RE = re.compile(
     r"^\s*[\w'’çğıöşüâîû\.\-]{2,40}\s+(?:nedir|ne\s+demek)\s*[?.!]?\s*$"
     r")",
     re.I,
+)
+
+_LIBRARY_TRYERS: tuple[tuple[str, str, str], ...] = (
+    ("ilim_assistant.ruzgar_siyer_kutuphane", "try_siyer_reply", "Siyer"),
+    ("ilim_assistant.ruzgar_usul_fikh_kutuphane", "try_usul_fikh_reply", "Usûl"),
+    ("ilim_assistant.ruzgar_fikh_kutuphane", "try_fikh_reply", "Fıkıh"),
+    ("ilim_assistant.ruzgar_hadis_kutuphane", "try_hadis_reply", "Hadis"),
+    ("ilim_assistant.ruzgar_akaid_kutuphane", "try_akaid_reply", "Akaid"),
 )
 
 
@@ -50,7 +58,6 @@ def _fold(s: str) -> str:
 
 
 def is_strict_library_lookup(message: str) -> bool:
-    """Kısa «X nedir» / numaralı hadis — anlık cevap korunsun."""
     raw = (message or "").strip()
     if not raw or len(raw) > 120:
         return False
@@ -58,10 +65,6 @@ def is_strict_library_lookup(message: str) -> bool:
 
 
 def should_defer_library_instant(message: str) -> bool:
-    """
-    True → din kütüphanesi / arşiv-fast anlık yolu atla; LLM sentezine bırak.
-    False → mevcut anlık try_*_reply çalışsın.
-    """
     if not anlik_niyet_gate_enabled():
         return False
     raw = (message or "").strip()
@@ -75,5 +78,82 @@ def should_defer_library_instant(message: str) -> bool:
 
 
 def should_defer_archive_fast(message: str) -> bool:
-    """Arşiv pasaj dump'ını sohbet/anlat niyetinde atla."""
     return should_defer_library_instant(message)
+
+
+def _call_try(mod_path: str, fn_name: str, message: str) -> Optional[str]:
+    try:
+        import importlib
+
+        mod = importlib.import_module(mod_path)
+        fn: Callable[[str], Optional[str]] = getattr(mod, fn_name)
+        out = fn(message)
+        return (out or "").strip() or None
+    except Exception:
+        return None
+
+
+def library_instant_would_match(message: str) -> bool:
+    raw = (message or "").strip()
+    if not raw:
+        return False
+    for mod_path, fn_name, _label in _LIBRARY_TRYERS:
+        if _call_try(mod_path, fn_name, raw):
+            return True
+    return False
+
+
+def collect_library_llm_context(message: str, *, max_chars: int = 2800) -> str:
+    """Kütüphane eşleşmesini LLM ipucu olarak derle (kullanıcıya aynen basma)."""
+    raw = (message or "").strip()
+    if not raw:
+        return ""
+    if is_strict_library_lookup(raw) and not should_defer_library_instant(raw):
+        return ""
+    parts: list[str] = []
+    used = 0
+    for mod_path, fn_name, label in _LIBRARY_TRYERS:
+        hit = _call_try(mod_path, fn_name, raw)
+        if not hit:
+            continue
+        chunk = hit[:1200].strip()
+        if not chunk:
+            continue
+        block = f"### {label}\n{chunk}"
+        if used + len(block) > max_chars:
+            break
+        parts.append(block)
+        used += len(block)
+        if len(parts) >= 2:
+            break
+    if not parts:
+        return ""
+    return (
+        "[KÜTÜPHANE İPUCU — dahili; kullanıcıya aynen okuma]\n"
+        "Aşağıdaki kavram notunu kendi cümlelerinle, akıcı Türkçe ile anlat. "
+        "Madde madde robot okuması yapma; kaynak dosya yolu veya «hafızamda» deme.\n\n"
+        + "\n\n".join(parts)
+        + "\n[/KÜTÜPHANE İPUCU]"
+    )
+
+
+def soft_library_synth_fallback(message: str) -> Optional[str]:
+    """LLM yokken sohbet/anlat niyetinde kısa doğal köprü + kavram notu."""
+    if not should_defer_library_instant(message):
+        return None
+    raw = (message or "").strip()
+    hit = None
+    for mod_path, fn_name, _label in _LIBRARY_TRYERS:
+        hit = _call_try(mod_path, fn_name, raw)
+        if hit:
+            break
+    if not hit:
+        return None
+    body = re.sub(r"\*+", "", hit).strip()
+    if len(body) > 1600:
+        body = body[:1600].rsplit(maxsplit=1)[0] + "…"
+    return (
+        "Ümit abi, kısaca şöyle özetleyeyim:\n\n"
+        f"{body}\n\n"
+        "İstersen bir yönünü daha açalım veya sohbete devam edelim."
+    )

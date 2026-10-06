@@ -1844,6 +1844,20 @@ def prepare_turn(
             bilissel_ctx = ""
 
     user_payload = build_user_prompt(msg, blocks)
+    try:
+        from ilim_assistant.ruzgar_anlik_niyet_gate import (
+            collect_library_llm_context,
+            should_defer_library_instant,
+        )
+
+        if should_defer_library_instant(msg) or (
+            m in ("genel", "uretim", "gelisim") and "anlat" in (msg or "").lower()
+        ):
+            _lib_ctx = collect_library_llm_context(msg)
+            if _lib_ctx.strip():
+                user_payload = _lib_ctx.rstrip() + "\n\n---\n" + user_payload
+    except Exception:
+        pass
     _conv_ctx = (conversation_context or "").strip()
     _raw_note = (user_message_raw or "").strip()
     _conv_continuation = bool(

@@ -609,6 +609,17 @@ def try_session_echo_reply(
             return None
     except Exception:
         pass
+    # Sohbet/anlat niyeti veya din kütüphanesi cevabı — eski yankıyı ezmesin
+    try:
+        from ilim_assistant.ruzgar_anlik_niyet_gate import (
+            library_instant_would_match,
+            should_defer_library_instant,
+        )
+
+        if should_defer_library_instant(msg) or library_instant_would_match(msg):
+            return None
+    except Exception:
+        pass
     try:
         from ilim_assistant.ana_motor_plan import looks_like_past_conversation_query
 

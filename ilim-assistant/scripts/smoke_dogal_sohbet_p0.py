@@ -11,6 +11,8 @@ if str(ROOT) not in sys.path:
 
 from ilim_assistant.motorlar.video_faz71 import maybe_instant_faz71  # noqa: E402
 from ilim_assistant.ruzgar_anlik_niyet_gate import (  # noqa: E402
+    collect_library_llm_context,
+    library_instant_would_match,
     should_defer_library_instant,
 )
 from ilim_assistant.ruzgar_siyer_kutuphane import try_siyer_reply  # noqa: E402
@@ -50,7 +52,16 @@ def main() -> int:
         should_defer_library_instant("siyer hakkında sohbet edelim"),
         "siyer sohbet → defer",
     )
-    print(f"result: {6 - failed}/6 pass" if failed <= 6 else "result: fail")
+    ctx = collect_library_llm_context("hicreti daha açık anlat")
+    failed += _ok(
+        bool(ctx) and "KÜTÜPHANE İPUCU" in ctx and "hicret" in ctx.lower(),
+        "anlat → LLM kütüphane ipucu",
+    )
+    failed += _ok(
+        library_instant_would_match("siyer nedir"),
+        "siyer nedir → library match",
+    )
+    print(f"result: {8 - failed}/8 pass")
     return 1 if failed else 0
 
 
