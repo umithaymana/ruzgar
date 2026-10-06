@@ -30,7 +30,9 @@ _QUESTION_RE = re.compile(
 _ACTION_RE = re.compile(
     r"(?:indir|download|youtube|kes|kurgu|birleştir|birlestir|altyazı|altyazi|"
     r"göm|gom|ffmpeg|video\s+yap|klip|oynat|sinema|dönüştür|donustur|transcode|"
-    r"medya\s+bilgi|panel|montaj|mux)",
+    r"medya\s+bilgi|montaj|mux|"
+    # «panel» tek başına kitap/UI cümlesini video yapmasın; yalnız video paneli
+    r"(?:kesim|indirme|sinema|video|montaj|kurgu|medya)\s+panel)",
     re.I,
 )
 _LIST_RE = re.compile(
@@ -45,8 +47,15 @@ _EXPORT_RE = re.compile(
     r"(?:çıktı\s+klasör|cikti\s+klasor|export\s+klasör|export\s+klasor|dışa\s+aktar\s+klasör)",
     re.I,
 )
+# Yalnızca video/sinema paneli — «kitabı panelde aç» vb. sohbette kalsın
 _PANEL_RE = re.compile(
-    r"(?:panel(?:i|ini)?\s+aç|panel(?:i|ini)?\s+ac|aç\s+.*panel|ac\s+.*panel)",
+    r"(?:"
+    r"(?:kesim|indirme|sinema|video|montaj|kurgu|medya|ffmpeg)\s+panel(?:i|ini)?\s+(?:aç|ac)"
+    r"|"
+    r"(?:aç|ac)\s+(?:.*\s+)?(?:kesim|indirme|sinema|video|montaj|kurgu|medya)\s*panel"
+    r"|"
+    r"panel(?:i|ini)?\s+(?:aç|ac).{0,48}(?:kesim|indirme|sinema|video|montaj|kurgu)"
+    r")",
     re.I,
 )
 _TRIM_RANGE_RE = re.compile(

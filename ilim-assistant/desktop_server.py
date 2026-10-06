@@ -9764,6 +9764,21 @@ def api_ses_kolonlar_sil(
     return list_kolonlar_snapshot()
 
 
+def _library_instant_or_none(msg: str, try_fn) -> str | None:
+    """Din kütüphanesi anlık: sohbet/anlat niyetinde LLM'e bırak (lookup korunur)."""
+    try:
+        from ilim_assistant.ruzgar_anlik_niyet_gate import should_defer_library_instant
+
+        if should_defer_library_instant(msg):
+            return None
+    except Exception:
+        pass
+    try:
+        return try_fn(msg)
+    except Exception:
+        return None
+
+
 def _iter_instant_chat_events(
     reply: str,
     user_message: str,
@@ -10716,7 +10731,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         try:
             from ilim_assistant.ruzgar_akaid_kutuphane import try_akaid_reply
 
-            _akaid_e = try_akaid_reply(msg_early)
+            _akaid_e = _library_instant_or_none(msg_early, try_akaid_reply)
             if _akaid_e:
                 _orch_ak = dict(orch_early)
                 _orch_ak.setdefault("plan", {})["primary"] = "ilim"
@@ -10736,7 +10751,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         try:
             from ilim_assistant.ruzgar_hadis_kutuphane import try_hadis_reply
 
-            _hadis_e = try_hadis_reply(msg_early)
+            _hadis_e = _library_instant_or_none(msg_early, try_hadis_reply)
             if _hadis_e:
                 _orch_hd = dict(orch_early)
                 _orch_hd.setdefault("plan", {})["primary"] = "ilim"
@@ -10756,7 +10771,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         try:
             from ilim_assistant.ruzgar_siyer_kutuphane import try_siyer_reply
 
-            _siyer_e = try_siyer_reply(msg_early)
+            _siyer_e = _library_instant_or_none(msg_early, try_siyer_reply)
             if _siyer_e:
                 _orch_sy = dict(orch_early)
                 _orch_sy.setdefault("plan", {})["primary"] = "ilim"
@@ -10776,7 +10791,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         try:
             from ilim_assistant.ruzgar_usul_fikh_kutuphane import try_usul_fikh_reply
 
-            _usul_e = try_usul_fikh_reply(msg_early)
+            _usul_e = _library_instant_or_none(msg_early, try_usul_fikh_reply)
             if _usul_e:
                 _orch_us = dict(orch_early)
                 _orch_us.setdefault("plan", {})["primary"] = "ilim"
@@ -10796,7 +10811,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         try:
             from ilim_assistant.ruzgar_fikh_kutuphane import try_fikh_reply
 
-            _fikh_e = try_fikh_reply(msg_early)
+            _fikh_e = _library_instant_or_none(msg_early, try_fikh_reply)
             if _fikh_e:
                 _orch_fk = dict(orch_early)
                 _orch_fk.setdefault("plan", {})["primary"] = "ilim"
@@ -11304,7 +11319,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         try:
             from ilim_assistant.ruzgar_akaid_kutuphane import try_akaid_reply
 
-            _akaid_early = try_akaid_reply(msg_early)
+            _akaid_early = _library_instant_or_none(msg_early, try_akaid_reply)
             if _akaid_early:
                 _orch_ak2 = dict(orch_early)
                 _orch_ak2.setdefault("plan", {})["primary"] = "ilim"
@@ -11324,7 +11339,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         try:
             from ilim_assistant.ruzgar_hadis_kutuphane import try_hadis_reply
 
-            _hadis_early = try_hadis_reply(msg_early)
+            _hadis_early = _library_instant_or_none(msg_early, try_hadis_reply)
             if _hadis_early:
                 _orch_hd2 = dict(orch_early)
                 _orch_hd2.setdefault("plan", {})["primary"] = "ilim"
@@ -11344,7 +11359,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         try:
             from ilim_assistant.ruzgar_siyer_kutuphane import try_siyer_reply
 
-            _siyer_early = try_siyer_reply(msg_early)
+            _siyer_early = _library_instant_or_none(msg_early, try_siyer_reply)
             if _siyer_early:
                 _orch_sy2 = dict(orch_early)
                 _orch_sy2.setdefault("plan", {})["primary"] = "ilim"
@@ -11364,7 +11379,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         try:
             from ilim_assistant.ruzgar_usul_fikh_kutuphane import try_usul_fikh_reply
 
-            _usul_early = try_usul_fikh_reply(msg_early)
+            _usul_early = _library_instant_or_none(msg_early, try_usul_fikh_reply)
             if _usul_early:
                 _orch_us2 = dict(orch_early)
                 _orch_us2.setdefault("plan", {})["primary"] = "ilim"
@@ -11384,7 +11399,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         try:
             from ilim_assistant.ruzgar_fikh_kutuphane import try_fikh_reply
 
-            _fikh_early = try_fikh_reply(msg_early)
+            _fikh_early = _library_instant_or_none(msg_early, try_fikh_reply)
             if _fikh_early:
                 _orch_fk2 = dict(orch_early)
                 _orch_fk2.setdefault("plan", {})["primary"] = "ilim"

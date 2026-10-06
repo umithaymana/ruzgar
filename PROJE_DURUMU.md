@@ -1,8 +1,15 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-06 (Siyer `08` tamam)
+**Son güncelleme:** 2026-10-06 (Doğal sohbet P0 + Siyer `08`)
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
+
+### 2026-10-06 — Doğal sohbet P0 (anlık kapı / panel)
+
+- Video: çıplak «panel» artık YouTube tuzağı değil; yalnız kesim/indirme/sinema paneli
+- Din kütüphanesi: «X nedir» anlık kalır; «anlat / sohbet / daha açık» → LLM sentez
+- Arşiv-fast dump sohbet niyetinde atlanır (`ruzgar_anlik_niyet_gate.py`)
+- Smoke: `smoke_dogal_sohbet_p0.py` · Kapat: `RUZGAR_ANLIK_NIYET_GATE=0`
 
 ### 2026-10-06 — Siyer (`08_siyer`)
 

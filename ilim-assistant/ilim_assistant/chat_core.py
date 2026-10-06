@@ -252,6 +252,7 @@ def try_archive_rag_direct_reply(
     """
     Güçlü arşiv (RAG) eşleşmesinde LLM beklemeden doğrudan pasaj döndürür.
     Kapatmak: ENABLE_RAG_ARCHIVE_FAST=0
+    Sohbet/anlat niyeti: RUZGAR_ANLIK_NIYET_GATE (varsayılan açık) → LLM sentezine bırak.
     """
     if os.environ.get("ENABLE_RAG_ARCHIVE_FAST", "1").strip().lower() in (
         "0",
@@ -259,6 +260,13 @@ def try_archive_rag_direct_reply(
         "no",
     ):
         return None
+    try:
+        from ilim_assistant.ruzgar_anlik_niyet_gate import should_defer_archive_fast
+
+        if should_defer_archive_fast(message):
+            return None
+    except Exception:
+        pass
     if coding_mode or mode_norm in _NO_RAG_MODES:
         return None
     if _is_wake_only_message(message):

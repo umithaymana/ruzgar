@@ -270,13 +270,23 @@ def should_skip_instant_shortcuts(
     history: list | None = None,
     question_plan: Any | None = None,
 ) -> bool:
-    """Şablon selam/empati yanıtlarını atla — LLM üretsin."""
+    """Şablon selam/empati yanıtlarını atla — LLM üretsin.
+
+    Din kütüphanesi anlık yolları ayrıca `ruzgar_anlik_niyet_gate` ile yönetilir.
+    """
     if not dogal_sohbet_enabled():
         return False
     if mode_norm not in ("genel", "uretim", "gelisim"):
         return False
     if is_pure_short_greeting(message):
         return False
+    try:
+        from ilim_assistant.ruzgar_anlik_niyet_gate import should_defer_library_instant
+
+        if should_defer_library_instant(message):
+            return True
+    except Exception:
+        pass
     return is_natural_conversation_turn(
         message, mode_norm, question_plan, history=history
     )
