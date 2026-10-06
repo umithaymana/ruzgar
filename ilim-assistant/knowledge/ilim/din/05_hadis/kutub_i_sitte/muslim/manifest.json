@@ -1,0 +1,21 @@
+{
+  "eser_id": "muslim",
+  "eser_tr": "Sahîh-i Müslim",
+  "eser_ar": "صحيح مسلم",
+  "yazar": "İmam Müslim (Müslim b. el-Haccâc)",
+  "edition": "ara-muslim",
+  "collection": "din_05_hadis_muslim",
+  "aliases": [
+    "muslim",
+    "müslim",
+    "sahih muslim",
+    "sahîh-i müslim"
+  ],
+  "kaynak": "fawazahmed0/hadith-api@1",
+  "kaynak_url": "https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions/ara-muslim.json",
+  "sha256": "194073b24090c5368e4d14a3f55c9e0ef144c7437bd7e5aa83aa4d2bc54a8ea0",
+  "hadis_sayisi": 7360,
+  "bolum_sayisi": 56,
+  "incremental_batches": 295,
+  "updated_utc": "2026-10-06T08:57:43Z"
+}

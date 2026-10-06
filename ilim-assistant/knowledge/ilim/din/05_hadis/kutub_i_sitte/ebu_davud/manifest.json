@@ -1,0 +1,22 @@
+{
+  "eser_id": "ebu_davud",
+  "eser_tr": "Sünen-i Ebû Dâvûd",
+  "eser_ar": "سنن أبي داود",
+  "yazar": "Ebû Dâvûd es-Sicistânî",
+  "edition": "ara-abudawud",
+  "collection": "din_05_hadis_ebu_davud",
+  "aliases": [
+    "ebu davud",
+    "ebû dâvûd",
+    "abu dawud",
+    "ebu davûd",
+    "sünen ebu davud"
+  ],
+  "kaynak": "fawazahmed0/hadith-api@1",
+  "kaynak_url": "https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions/ara-abudawud.json",
+  "sha256": "216139c5f40a8147e700d62ffa3b5b2fe45d0e034f86941a193c598c10056189",
+  "hadis_sayisi": 5272,
+  "bolum_sayisi": 43,
+  "incremental_batches": 211,
+  "updated_utc": "2026-10-06T08:57:45Z"
+}

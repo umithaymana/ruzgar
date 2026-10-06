@@ -1,0 +1,22 @@
+{
+  "eser_id": "ibn_mace",
+  "eser_tr": "Sünen-i İbn Mâce",
+  "eser_ar": "سنن ابن ماجه",
+  "yazar": "İbn Mâce (Muhammed b. Yezîd)",
+  "edition": "ara-ibnmajah",
+  "collection": "din_05_hadis_ibn_mace",
+  "aliases": [
+    "ibn mace",
+    "ibn mâce",
+    "ibn majah",
+    "ibn mâce",
+    "sünen ibn mace"
+  ],
+  "kaynak": "fawazahmed0/hadith-api@1",
+  "kaynak_url": "https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions/ara-ibnmajah.json",
+  "sha256": "b406e6be81588ab0ec1ddbed32f5fd95bbcdda242c460d88331e82eb5c2bc0aa",
+  "hadis_sayisi": 4338,
+  "bolum_sayisi": 37,
+  "incremental_batches": 174,
+  "updated_utc": "2026-10-06T08:57:50Z"
+}

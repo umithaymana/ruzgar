@@ -93,3 +93,7 @@ ilim-assistant/arsiv/klon-sesler-umit-ozel/**
 ilim-assistant/.ruzgar_ses_kolonlari_ozel.json
 ilim-assistant/.ruzgar_vad_ayarlari.json
 
+
+# RAG chunks GitHub 100MB üstü — yerelde üretilir
+ilim-assistant/.rag_index/chunks.jsonl
+

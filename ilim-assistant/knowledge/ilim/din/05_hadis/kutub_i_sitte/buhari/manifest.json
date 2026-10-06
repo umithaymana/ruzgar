@@ -1,0 +1,22 @@
+{
+  "eser_id": "buhari",
+  "eser_tr": "Sahîh-i Buhârî",
+  "eser_ar": "صحيح البخاري",
+  "yazar": "İmam Buhârî (Muhammed b. İsmâîl el-Buhârî)",
+  "edition": "ara-bukhari",
+  "collection": "din_05_hadis_buhari",
+  "aliases": [
+    "buhari",
+    "buhârî",
+    "bukhari",
+    "sahih buhari",
+    "sahîh-i buhârî"
+  ],
+  "kaynak": "fawazahmed0/hadith-api@1",
+  "kaynak_url": "https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions/ara-bukhari.json",
+  "sha256": "e34a3402889ca378871da3c5984b7875c680920e93f1c8738ac7afe502179562",
+  "hadis_sayisi": 7580,
+  "bolum_sayisi": 97,
+  "incremental_batches": 304,
+  "updated_utc": "2026-10-06T08:57:40Z"
+}

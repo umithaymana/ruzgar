@@ -1,0 +1,21 @@
+{
+  "eser_id": "nesai",
+  "eser_tr": "Sünen-i Nesâî",
+  "eser_ar": "سنن النسائي",
+  "yazar": "İmam Nesâî (Ahmed b. Şuayb)",
+  "edition": "ara-nasai",
+  "collection": "din_05_hadis_nesai",
+  "aliases": [
+    "nesai",
+    "nesâî",
+    "nasai",
+    "sünen nesai"
+  ],
+  "kaynak": "fawazahmed0/hadith-api@1",
+  "kaynak_url": "https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions/ara-nasai.json",
+  "sha256": "c705983c19bb089c87cd6531aff609bd94d862183ed0859115b0ff991826a956",
+  "hadis_sayisi": 5679,
+  "bolum_sayisi": 51,
+  "incremental_batches": 228,
+  "updated_utc": "2026-10-06T08:57:49Z"
+}

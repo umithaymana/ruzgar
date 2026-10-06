@@ -1,0 +1,21 @@
+{
+  "eser_id": "tirmizi",
+  "eser_tr": "Câmiu't-Tirmizî",
+  "eser_ar": "جامع الترمذي",
+  "yazar": "İmam Tirmizî (Muhammed b. Îsâ)",
+  "edition": "ara-tirmidhi",
+  "collection": "din_05_hadis_tirmizi",
+  "aliases": [
+    "tirmizi",
+    "tirmizî",
+    "tirmidhi",
+    "cami tirmizi"
+  ],
+  "kaynak": "fawazahmed0/hadith-api@1",
+  "kaynak_url": "https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions/ara-tirmidhi.json",
+  "sha256": "408028cd56329ed78edbe3ad443beb96b58e16c3e5bd49f9bc7b0eac77c8820f",
+  "hadis_sayisi": 3924,
+  "bolum_sayisi": 49,
+  "incremental_batches": 157,
+  "updated_utc": "2026-10-06T08:57:47Z"
+}

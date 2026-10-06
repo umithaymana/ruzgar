@@ -1,10 +1,42 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-06 (RAG/LLM anlam koruması — Mimar çıkış)
+**Son güncelleme:** 2026-10-06 (Hadis usûl+tarihçe tamam — commit)
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
-### 2026-10-06 — Neredeyiz (çıkış özeti)
+### 2026-10-06 — Hadis tamam (matın + usûl + tarihçe)
+
+**Kutüb-i Sitte (matın):** 6 ayrı raf · **34.153** hadis · `kutub_i_sitte/`
+
+**Usûl + tarihçe:**
+- `usul_tarih/ibn_salah/` — Mukaddime (hdith Arapça) · 437 paket
+- `usul_tarih/nukhba/` — Nuhbetü'l-fiker matın
+- `usul_tarih/bayquniyya/` — Beykûniyye
+- TR: `hadis_tarihce_tr.md` · `muhaddisler_tr.md` · 28 kavram
+- Smoke: `scripts/smoke_hadis.py` → **10/10**
+- Script: `faz5_hadis_kutub_sitte_ingest.py` + `faz5b_hadis_usul_tarih_ingest.py`
+
+**Dene:** «tedvin nedir» · «hadis tarihcesi» · «ibn salah nedir» · «buhari kimdir» · «buhari 1»
+
+**Akaid:** ara (çekirdek bitti). **Sırada (dönünce):** fıkıh veya alan süzgeci.
+
+### 2026-10-06 — Hadis (`05_hadis`) Kutüb-i Sitte
+
+**Bitti:**
+- Kaynak: `fawazahmed0/hadith-api@1` Arapça matın (6 eser ayrı raf)
+- Toplam **34.153** hadis · `kutub_i_sitte/{buhari,muslim,ebu_davud,tirmizi,nesai,ibn_mace}/`
+- Anlık: `ruzgar_hadis_kutuphane.py` + early path (akaid sonrası)
+- Kavramlar: 14 TR madde · smoke `scripts/smoke_hadis.py`
+- İncegest: `python scripts/faz5_hadis_kutub_sitte_ingest.py`
+- RAG incremental: **71.219** parça (`changed_files` 1371)
+
+**Usûl RAG güncelleme:** **72.302** parça (`changed_files` 445 — ibn_salah/nukhba/bayquniyya + TR)
+
+**Dene:** «hadis nedir» · «kutub-i sitte nedir» · «buhari 1» · «muslim 1» · «tirmizi 1»
+
+**Akaid:** çekirdek tamam; ara verildi (Luma OCR / bekleyen_tr sonra).
+
+### 2026-10-06 — Neredeyiz (önceki çıkış)
 
 **Bitti (çekirdek):**
 1. **Akaid** `04_akaid` — Arapça corpus + 18 TR kavram + anlık yol + RAG · smoke 8/8
@@ -15,11 +47,10 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 **Canlı:** `.\Ruzgar.ps1 -ForceRestart`
 
 ### Sonraki adım planı
-1. Alan süzgeci (akaid/tefsir sorusunda yanlış raftı kapat)
-2. Smoke setini CI’ya bağla (`smoke_akaid` + `smoke_anlam_koruma` + Kur’an)
-3. el-Luma‘ OCR (Tesseract)
-4. TR çeviriler → `bekleyen_tr/` (Mimar dosya koyunca)
-5. İsteğe bağlı: BM25+embed hybrid · daha sert «yalnız bağlam» LLM promptu
+1. Alan süzgeci (akaid/tefsir/hadis raftı)
+2. Smoke setini CI’ya bağla (`smoke_hadis` + akaid + anlam)
+3. el-Luma‘ OCR (akaid)
+4. İsteğe bağlı: Muvatta / Müsned Ahmed (Sitte dışı)
 
 ### 2026-10-06 — Sohbet yanlış cevap kökleri (düzeltildi)
 
