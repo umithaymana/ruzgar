@@ -22,8 +22,9 @@ class HafizaIRuzgar:
     VARSAYILAN_MOTOR_TIPI = "Hafıza"
     BILINMEYEN_YANIT = "Mimar, bunu henüz öğrenmedim, bana öğretir misin?"
 
-    # Fuzzy eşik: 0.70 = %70 benzerlik. RUZGAR_FUZZY_MIN env değişkeniyle override edilebilir.
-    FUZZY_VARSAYILAN_ESIK = 0.70
+    # Fuzzy eşik: 0.78 = %78. RUZGAR_FUZZY_MIN env ile override.
+    # Düşük eşik + yalnız karakter benzerliği «maturidi»↔«esari» karıştırıyordu.
+    FUZZY_VARSAYILAN_ESIK = 0.78
 
     # Token kapsama (sorgu kelimelerinin adayda bulunma oranı) → karakter benzerliği yetmediğinde
     # asıl kararı veren ikinci eksen. Tam kapsama %92 puan değerindedir; eşik %70'i geçer.
@@ -73,7 +74,7 @@ class HafizaIRuzgar:
         "ö": "o", "Ö": "o", "ç": "c", "Ç": "c",
     })
     _KIM_IDENTITY_SUFFIX = re.compile(
-        r"\s+(?:kimdir|kimdi|kim|kimi|kimesne|nedir)\s*[\?.!…]*\s*$",
+        r"\s+(?:kimdir|kimdi|kim|kimi|kimesne)\s*[\?.!…]*\s*$",
         re.I,
     )
 
@@ -499,6 +500,13 @@ class HafizaIRuzgar:
                 return True
         if cls._fuzzy_ozne_uyusmazligi(sorgu, aday_soru):
             return True
+        try:
+            from ilim_assistant.ruzgar_anlam_koruma import fuzzy_pair_allowed
+
+            if not fuzzy_pair_allowed(sorgu, aday_soru):
+                return True
+        except Exception:
+            pass
         return False
 
     def _fuzzy_en_iyi_eslesme(
@@ -513,7 +521,10 @@ class HafizaIRuzgar:
             `sen kimsin ne iş yaparsın`).
         Final skor = max(karakter, token_kapsama * TOKEN_KAPSAMA_AGIRLIK).
 
-        Skor `RUZGAR_FUZZY_MIN` (varsayılan 0.70) altındaysa None.
+        **Anlam kilidi:** içerik kelimesi adayda yoksa eşleşme yok
+        (`ruzgar_anlam_koruma`) — yalnız karakter benzerliği yetmez.
+
+        Skor `RUZGAR_FUZZY_MIN` (varsayılan 0.78) altındaysa None.
         Aynı skorda birden çok aday varsa daha yeni eklenen tercih edilir
         (kayıtlar listesi sondan başa taranır).
         """
@@ -542,11 +553,22 @@ class HafizaIRuzgar:
             if sorgu_tok:
                 aday_tok = self._token_kumesi(k)
                 token_skor = self._token_kapsama(sorgu_tok, aday_tok)
+            # İçerik kelimesi yoksa karakter skoru tek başına kazanamaz
+            if sorgu_tok and token_skor <= 0.0:
+                continue
             final_skor = max(char_skor, token_skor * self.TOKEN_KAPSAMA_AGIRLIK)
             if final_skor < esik:
                 continue
             if not self._fuzzy_kimdir_sorgu_adayda_tamam_mi(sorgu, k):
                 continue
+            # Cevap da sorunun anlam kelimesini taşımalı (zehirli kayıt koruması)
+            try:
+                from ilim_assistant.ruzgar_anlam_koruma import answer_fits_question
+
+                if not answer_fits_question(sorgu, cv):
+                    continue
+            except Exception:
+                pass
             if en_iyi is None or final_skor > en_iyi[2]:
                 en_iyi = (cv, k, final_skor)
         return en_iyi

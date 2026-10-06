@@ -639,6 +639,13 @@ def try_session_echo_reply(
         if not u or not _is_usable_echo_answer(a):
             continue
         if _questions_equivalent(msg, u):
+            try:
+                from ilim_assistant.ruzgar_anlam_koruma import answer_fits_question
+
+                if not answer_fits_question(msg, a):
+                    continue
+            except Exception:
+                pass
             return a
 
     cap = max(12, min(int(limit or 48), 80))
@@ -648,6 +655,13 @@ def try_session_echo_reply(
         if not u or not _is_usable_echo_answer(a):
             continue
         if _questions_equivalent(msg, u):
+            try:
+                from ilim_assistant.ruzgar_anlam_koruma import answer_fits_question
+
+                if not answer_fits_question(msg, a):
+                    continue
+            except Exception:
+                pass
             return a
     return None
 
