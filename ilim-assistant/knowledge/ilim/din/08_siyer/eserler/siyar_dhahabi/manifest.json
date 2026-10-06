@@ -1,0 +1,15 @@
+{
+  "eser_id": "siyar_dhahabi",
+  "eser_tr": "Siyeru a'lâmi'n-nübelâ",
+  "eser_ar": "سير أعلام النبلاء",
+  "yazar": "ez-Zehebî (ö. 748/1348)",
+  "rol": "tercuma",
+  "collection": "din_08_siyer_siyar_dhahabi",
+  "kaynak": "OpenITI",
+  "source_file": "siyar_dhahabi__0748Dhahabi.SiyarAclamNubala.Sham30K0010906-ara1",
+  "sha256": "a977807fa6a39b1508e2d025072cf29cbf5d9a442df38b4e51f4d0d89cc5a25c",
+  "char_count": 18728084,
+  "chunk_count": 12943,
+  "batch_sayisi": 648,
+  "updated_utc": "2026-10-06T20:08:47Z"
+}

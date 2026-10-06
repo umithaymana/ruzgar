@@ -14,4 +14,4 @@
 **Kaynak:** OpenITI · **Modül:** `ruzgar_siyer_kutuphane`  
 **Script:** `faz8_siyer_download.py` + `faz8_siyer_ingest.py`
 
-Yüklenen: **8** eser · **20970** chunk
+Yüklenen: **9** eser · **33913** chunk

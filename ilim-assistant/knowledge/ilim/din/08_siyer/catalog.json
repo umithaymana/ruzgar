@@ -1,7 +1,7 @@
 {
   "domain": "din_08_siyer",
   "kaynak": "OpenITI",
-  "updated_utc": "2026-10-06T20:02:16Z",
+  "updated_utc": "2026-10-06T20:08:47Z",
   "politika": "Fetva yok. Siyer kavramı + Arapça klasik metin.",
   "eserler": [
     {
@@ -17,7 +17,7 @@
       "char_count": 1537073,
       "chunk_count": 1029,
       "batch_sayisi": 52,
-      "updated_utc": "2026-10-06T20:02:09Z"
+      "updated_utc": "2026-10-06T20:08:35Z"
     },
     {
       "eser_id": "maghazi_waqidi",
@@ -32,7 +32,7 @@
       "char_count": 1386227,
       "chunk_count": 928,
       "batch_sayisi": 47,
-      "updated_utc": "2026-10-06T20:02:09Z"
+      "updated_utc": "2026-10-06T20:08:36Z"
     },
     {
       "eser_id": "tabaqat_ibn_sad",
@@ -47,7 +47,7 @@
       "char_count": 6448996,
       "chunk_count": 4237,
       "batch_sayisi": 212,
-      "updated_utc": "2026-10-06T20:02:11Z"
+      "updated_utc": "2026-10-06T20:08:37Z"
     },
     {
       "eser_id": "tarikh_tabari",
@@ -62,7 +62,7 @@
       "char_count": 8022284,
       "chunk_count": 5375,
       "batch_sayisi": 269,
-      "updated_utc": "2026-10-06T20:02:12Z"
+      "updated_utc": "2026-10-06T20:08:39Z"
     },
     {
       "eser_id": "ridda_waqidi",
@@ -77,7 +77,7 @@
       "char_count": 189609,
       "chunk_count": 126,
       "batch_sayisi": 7,
-      "updated_utc": "2026-10-06T20:02:12Z"
+      "updated_utc": "2026-10-06T20:08:39Z"
     },
     {
       "eser_id": "futuh_sham_waqidi",
@@ -92,7 +92,7 @@
       "char_count": 1358050,
       "chunk_count": 913,
       "batch_sayisi": 46,
-      "updated_utc": "2026-10-06T20:02:13Z"
+      "updated_utc": "2026-10-06T20:08:40Z"
     },
     {
       "eser_id": "fusul_sira_kathir",
@@ -107,7 +107,7 @@
       "char_count": 217279,
       "chunk_count": 144,
       "batch_sayisi": 8,
-      "updated_utc": "2026-10-06T20:02:13Z"
+      "updated_utc": "2026-10-06T20:08:40Z"
     },
     {
       "eser_id": "bidaya_ibn_kathir",
@@ -122,11 +122,26 @@
       "char_count": 12317725,
       "chunk_count": 8218,
       "batch_sayisi": 411,
-      "updated_utc": "2026-10-06T20:02:16Z"
+      "updated_utc": "2026-10-06T20:08:43Z"
+    },
+    {
+      "eser_id": "siyar_dhahabi",
+      "eser_tr": "Siyeru a'lâmi'n-nübelâ",
+      "eser_ar": "سير أعلام النبلاء",
+      "yazar": "ez-Zehebî (ö. 748/1348)",
+      "rol": "tercuma",
+      "collection": "din_08_siyer_siyar_dhahabi",
+      "kaynak": "OpenITI",
+      "source_file": "siyar_dhahabi__0748Dhahabi.SiyarAclamNubala.Sham30K0010906-ara1",
+      "sha256": "a977807fa6a39b1508e2d025072cf29cbf5d9a442df38b4e51f4d0d89cc5a25c",
+      "char_count": 18728084,
+      "chunk_count": 12943,
+      "batch_sayisi": 648,
+      "updated_utc": "2026-10-06T20:08:47Z"
     }
   ],
   "sayilar": {
-    "eser": 8,
-    "chunk_toplam": 20970
+    "eser": 9,
+    "chunk_toplam": 33913
   }
 }

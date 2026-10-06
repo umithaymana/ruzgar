@@ -8,8 +8,8 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 
 **Kaynak:** OpenITI (İbn Hişâm, Vâkıdî, İbn Sa'd, Taberî, İbn Kesîr)
 
-- **8 eser** · ~**20.970** chunk · smoke `smoke_siyer.py` **8/8**
-- Asıl: İbn Hişâm Sîre · Megâzî: Vâkıdî · Tabakât: İbn Sa'd · Tarih: Taberî · Muteber: Fusûl + Bidâye (İbn Kesîr) · Erken: Ridde, Fütûhu'ş-Şâm
+- **9 eser** · ~**33.913** chunk · smoke `smoke_siyer.py` **8/8**
+- Asıl: İbn Hişâm Sîre · Megâzî: Vâkıdî · Tabakât: İbn Sa'd · Tarih: Taberî · Muteber: Fusûl + Bidâye (İbn Kesîr) · Tercüme: Zehebî Siyer · Erken: Ridde, Fütûhu'ş-Şâm
 - Anlık: `ruzgar_siyer_kutuphane.py` (hadis sonrası early path)
 - **Politika:** Fetva yok
 
