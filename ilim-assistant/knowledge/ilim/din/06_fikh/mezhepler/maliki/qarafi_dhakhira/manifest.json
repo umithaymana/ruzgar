@@ -1,0 +1,17 @@
+{
+  "eser_id": "qarafi_dhakhira",
+  "mezhep": "maliki",
+  "mezhep_tr": "Mâlikî",
+  "eser_tr": "ez-Zehîra",
+  "eser_ar": "الذخيرة",
+  "yazar": "el-Karâfî (ö. 684/1285)",
+  "rol": "muteber",
+  "collection": "din_06_fikh_maliki_qarafi_dhakhira",
+  "kaynak": "arabic-digital-humanities/fiqh",
+  "source_file": "0684ShihabDinQarafi.Thakhira.txt",
+  "sha256": "7032f58d03fcf8af5f88ad31405259e078428c3620f9400c16409d92f8cdf3cd",
+  "char_count": 6448567,
+  "chunk_count": 4313,
+  "batch_sayisi": 216,
+  "updated_utc": "2026-10-06T12:03:00Z"
+}

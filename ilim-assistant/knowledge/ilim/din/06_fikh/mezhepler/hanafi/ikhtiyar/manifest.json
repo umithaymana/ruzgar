@@ -1,0 +1,17 @@
+{
+  "eser_id": "ikhtiyar",
+  "mezhep": "hanafi",
+  "mezhep_tr": "Hanefî",
+  "eser_tr": "el-İhtiyâr",
+  "eser_ar": "الاختيار لتعليل المختار",
+  "yazar": "el-Mevsılî (ö. 683/1284)",
+  "rol": "matn_ilmihal",
+  "collection": "din_06_fikh_hanafi_ikhtiyar",
+  "kaynak": "arabic-digital-humanities/fiqh",
+  "source_file": "0683AlMusali.AlIkhtiar.txt",
+  "sha256": "34fc943e055fbcf1aa52e23f0066a42467a342078db6ed6a69fb1bb7c77db2a3",
+  "char_count": 1773111,
+  "chunk_count": 1061,
+  "batch_sayisi": 54,
+  "updated_utc": "2026-10-06T12:02:55Z"
+}

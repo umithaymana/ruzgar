@@ -1,0 +1,17 @@
+{
+  "eser_id": "kifayat_akhyar",
+  "mezhep": "shafii",
+  "mezhep_tr": "Şâfiî",
+  "eser_tr": "Kifâyetü'l-ahyâr",
+  "eser_ar": "كفاية الأخيار",
+  "yazar": "el-Hısnî (ö. 829/1426)",
+  "rol": "matn_ilmihal",
+  "collection": "din_06_fikh_shafii_kifayat_akhyar",
+  "kaynak": "arabic-digital-humanities/fiqh",
+  "source_file": "0829TaqiDinDimashqiHisni.KifayatAkhyar.txt",
+  "sha256": "e645908c1f61b02b8c03f3d813f945e85e715563d8a958446da5e5d144e8b6a9",
+  "char_count": 1036441,
+  "chunk_count": 695,
+  "batch_sayisi": 35,
+  "updated_utc": "2026-10-06T12:03:04Z"
+}

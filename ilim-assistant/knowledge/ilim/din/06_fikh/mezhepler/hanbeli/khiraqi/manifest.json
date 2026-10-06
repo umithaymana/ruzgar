@@ -1,0 +1,17 @@
+{
+  "eser_id": "khiraqi",
+  "mezhep": "hanbeli",
+  "mezhep_tr": "Hanbelî",
+  "eser_tr": "Muhtasarü'l-Hırakî",
+  "eser_ar": "مختصر الخرقي",
+  "yazar": "el-Hırakî (ö. 334/945)",
+  "rol": "matn_ilmihal",
+  "collection": "din_06_fikh_hanbeli_khiraqi",
+  "kaynak": "arabic-digital-humanities/fiqh",
+  "source_file": "0334IbnHusaynKhiraqi.MukhtasarMinMasailIbnHanbal.txt",
+  "sha256": "03ee9c9755433e277c889f02b55f0a8acdd752bc5d132fd52cb3e5ba503a5f34",
+  "char_count": 164015,
+  "chunk_count": 109,
+  "batch_sayisi": 6,
+  "updated_utc": "2026-10-06T12:03:07Z"
+}

@@ -1,0 +1,17 @@
+{
+  "eser_id": "ibn_abidin",
+  "mezhep": "hanafi",
+  "mezhep_tr": "Hanefî",
+  "eser_tr": "Reddü'l-muhtâr",
+  "eser_ar": "رد المحتار",
+  "yazar": "İbn Âbidîn (ö. 1252/1836)",
+  "rol": "muteber",
+  "collection": "din_06_fikh_hanafi_ibn_abidin",
+  "kaynak": "arabic-digital-humanities/fiqh",
+  "source_file": "1252IbnCabidinDimashqi.RaddMuhtar.txt",
+  "sha256": "bbf9758718a337268f51ac6da97d9b71c28171e0a4a7bafac63064f9d26eb412",
+  "char_count": 13444672,
+  "chunk_count": 9490,
+  "batch_sayisi": 475,
+  "updated_utc": "2026-10-06T12:02:58Z"
+}

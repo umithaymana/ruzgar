@@ -1,0 +1,17 @@
+{
+  "eser_id": "muntaha",
+  "mezhep": "hanbeli",
+  "mezhep_tr": "Hanbelî",
+  "eser_tr": "Müntehe'l-irâdât",
+  "eser_ar": "منتهى الإرادات",
+  "yazar": "İbnü'n-Neccâr (ö. 972/1564)",
+  "rol": "muteber",
+  "collection": "din_06_fikh_hanbeli_muntaha",
+  "kaynak": "arabic-digital-humanities/fiqh",
+  "source_file": "0972IbnAhmadIbnNajjarHanbali.MuntahaIradat.txt",
+  "sha256": "6d7e4d784e9f3c50c6362075747b416a8ea665066c450798f5320592b9b59abe",
+  "char_count": 710587,
+  "chunk_count": 492,
+  "batch_sayisi": 25,
+  "updated_utc": "2026-10-06T12:03:09Z"
+}

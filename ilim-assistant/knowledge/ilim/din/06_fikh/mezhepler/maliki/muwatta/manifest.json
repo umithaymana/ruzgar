@@ -1,0 +1,17 @@
+{
+  "eser_id": "muwatta",
+  "mezhep": "maliki",
+  "mezhep_tr": "Mâlikî",
+  "eser_tr": "el-Muvatta'",
+  "eser_ar": "الموطأ",
+  "yazar": "İmam Mâlik (ö. 179/795)",
+  "rol": "temel",
+  "collection": "din_06_fikh_maliki_muwatta",
+  "kaynak": "arabic-digital-humanities/fiqh",
+  "source_file": "0179MalikIbnAnas.Muwatta.txt",
+  "sha256": "cbce0c4393c8e4f5a6e02bf7f48f3f68d553cc5f0b5efc14618c90a1eb3dc2e3",
+  "char_count": 800248,
+  "chunk_count": 517,
+  "batch_sayisi": 26,
+  "updated_utc": "2026-10-06T12:02:58Z"
+}

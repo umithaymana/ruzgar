@@ -1,8 +1,29 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-06 (Hadis tamam — push `bf2b1f4`)
+**Son güncelleme:** 2026-10-06 (Fıkıh 4 mezhep tamam)
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
+
+### 2026-10-06 — Fıkıh (`06_fikh`) 4 mezhep + ilmihal matınları
+
+**Kaynak:** arabic-digital-humanities/fiqh (OpenITI / Şâmile kökenli Arapça)
+
+| Mezhep | Matın / ilmihal | Muteber |
+|--------|-----------------|---------|
+| Hanefî | Kudûrî, İhtiyâr, Lübâb | Bedâi', Reddü'l-muhtâr |
+| Mâlikî | Kâfî, Düsûkî | Muvatta', Zehîra, Tâc |
+| Şâfiî | Minhâc, Kifâyetü'l-ahyâr | Ümm, Tuhfe, Nihâye |
+| Hanbelî | Hırakî, Ravzü'l-murbi' | Muğnî, Müntehâ |
+
+- **19 eser** · ~**49.514** metin parçası · smoke `smoke_fikh.py` **8/8**
+- Anlık: `ruzgar_fikh_kutuphane.py` (hadis sonrası early path)
+- TR: kavramlar + ilmihal rehberi + mezhep tarihçesi
+- Script: `faz6_fikh_download.py` + `faz6_fikh_ingest.py`
+- **Politika:** Fetva yok
+
+**Dene:** «fıkıh nedir» · «hanefi mezhebi» · «ilmihal nedir» · «minhac nedir» · «kuduri nedir»
+
+**Dönünce sırada:** alan süzgeci · akaid Luma OCR · veya usûl-i fıkıh genişletme
 
 ### 2026-10-06 — Hadis tamam (matın + usûl + tarihçe) · push OK
 
@@ -13,8 +34,6 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 **Usûl:** İbnü's-Salâh (437 paket) · Nuhbe · Beykûniyye  
 **TR:** tedvin tarihçesi · muhaddisler · 28 kavram · smoke **10/10**  
 **RAG:** ~72.302 parça (chunks.jsonl gitignore — GitHub 100MB)
-
-**Dönünce sırada:** fıkıh (`06_fikh`) veya alan süzgeci.
 
 ### 2026-10-06 — Hadis (`05_hadis`) Kutüb-i Sitte
 

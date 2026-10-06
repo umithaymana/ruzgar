@@ -1,0 +1,17 @@
+{
+  "eser_id": "rawd_murbi",
+  "mezhep": "hanbeli",
+  "mezhep_tr": "Hanbelî",
+  "eser_tr": "er-Ravzü'l-murbi'",
+  "eser_ar": "الروض المربع",
+  "yazar": "el-Buhûtî (ö. 1051/1641)",
+  "rol": "matn_ilmihal",
+  "collection": "din_06_fikh_hanbeli_rawd_murbi",
+  "kaynak": "arabic-digital-humanities/fiqh",
+  "source_file": "1051IbnYunusBuhutiHanbali.RawdMurbic.txt",
+  "sha256": "e44dac3b7bf7b12b4214e0baf235a9293828cfbda61982e03b6602996ffd07d4",
+  "char_count": 829995,
+  "chunk_count": 549,
+  "batch_sayisi": 28,
+  "updated_utc": "2026-10-06T12:03:09Z"
+}

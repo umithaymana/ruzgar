@@ -1,0 +1,17 @@
+{
+  "eser_id": "umm",
+  "mezhep": "shafii",
+  "mezhep_tr": "Şâfiî",
+  "eser_tr": "el-Ümm",
+  "eser_ar": "الأم",
+  "yazar": "İmam Şâfiî (ö. 204/820)",
+  "rol": "temel",
+  "collection": "din_06_fikh_shafii_umm",
+  "kaynak": "arabic-digital-humanities/fiqh",
+  "source_file": "0204Shafici.Umm.txt",
+  "sha256": "5b526a0759a63feb839ec62b53c7cd2aa71ddcd2d74ad14bcd4ad917895332d6",
+  "char_count": 6086865,
+  "chunk_count": 2548,
+  "batch_sayisi": 128,
+  "updated_utc": "2026-10-06T12:03:04Z"
+}

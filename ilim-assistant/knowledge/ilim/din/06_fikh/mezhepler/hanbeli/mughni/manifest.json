@@ -1,0 +1,17 @@
+{
+  "eser_id": "mughni",
+  "mezhep": "hanbeli",
+  "mezhep_tr": "Hanbelî",
+  "eser_tr": "el-Muğnî",
+  "eser_ar": "المغني",
+  "yazar": "İbn Kudâme (ö. 620/1223)",
+  "rol": "muteber",
+  "collection": "din_06_fikh_hanbeli_mughni",
+  "kaynak": "arabic-digital-humanities/fiqh",
+  "source_file": "0620IbnQudamaMaqdisi.MughniFiFiqh.txt",
+  "sha256": "5f478bac9526d247a7f6f037f859034d0077edd0c85da0820f2f29a2a8f48fe8",
+  "char_count": 9074174,
+  "chunk_count": 6368,
+  "batch_sayisi": 319,
+  "updated_utc": "2026-10-06T12:03:09Z"
+}

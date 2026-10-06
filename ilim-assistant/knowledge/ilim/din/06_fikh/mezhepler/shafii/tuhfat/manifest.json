@@ -1,0 +1,17 @@
+{
+  "eser_id": "tuhfat",
+  "mezhep": "shafii",
+  "mezhep_tr": "Şâfiî",
+  "eser_tr": "Tuhfetü'l-muhtâc",
+  "eser_ar": "تحفة المحتاج",
+  "yazar": "İbn Hacer el-Heytemî (ö. 974/1567)",
+  "rol": "muteber",
+  "collection": "din_06_fikh_shafii_tuhfat",
+  "kaynak": "arabic-digital-humanities/fiqh",
+  "source_file": "0973AlHutaimi.TuhfatAlmuhtaj.txt",
+  "sha256": "4b68a268bbdec413365c4bd332d82b0c765dc496df2ec36edb2660c9ac20cb2d",
+  "char_count": 5555053,
+  "chunk_count": 4220,
+  "batch_sayisi": 211,
+  "updated_utc": "2026-10-06T12:03:05Z"
+}

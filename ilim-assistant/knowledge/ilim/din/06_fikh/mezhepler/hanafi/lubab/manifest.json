@@ -1,0 +1,17 @@
+{
+  "eser_id": "lubab",
+  "mezhep": "hanafi",
+  "mezhep_tr": "Hanefî",
+  "eser_tr": "el-Lübâb",
+  "eser_ar": "اللباب في شرح الكتاب",
+  "yazar": "el-Meydânî (ö. 1298/1881)",
+  "rol": "matn_ilmihal",
+  "collection": "din_06_fikh_hanafi_lubab",
+  "kaynak": "arabic-digital-humanities/fiqh",
+  "source_file": "1298AlMaidani.AlLubab.txt",
+  "sha256": "99b92f89a7dad5adf0579261c5c6a0318a99b86f004b0646ebb76b3deeb102b9",
+  "char_count": 1277595,
+  "chunk_count": 906,
+  "batch_sayisi": 46,
+  "updated_utc": "2026-10-06T12:02:55Z"
+}

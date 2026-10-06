@@ -1,0 +1,17 @@
+{
+  "eser_id": "nihayat",
+  "mezhep": "shafii",
+  "mezhep_tr": "Şâfiî",
+  "eser_tr": "Nihâyetü'l-muhtâc",
+  "eser_ar": "نهاية المحتاج",
+  "yazar": "er-Remlî (ö. 1004/1596)",
+  "rol": "muteber",
+  "collection": "din_06_fikh_shafii_nihayat",
+  "kaynak": "arabic-digital-humanities/fiqh",
+  "source_file": "1004ShamsDinRamli.NihayatMuhtaj.txt",
+  "sha256": "cc42a9931a839d8520f3c4f900a217e7e1fe1211559be707d9d3323e647845c5",
+  "char_count": 5264469,
+  "chunk_count": 3532,
+  "batch_sayisi": 177,
+  "updated_utc": "2026-10-06T12:03:07Z"
+}

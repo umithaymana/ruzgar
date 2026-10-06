@@ -1,0 +1,17 @@
+{
+  "eser_id": "minhaj",
+  "mezhep": "shafii",
+  "mezhep_tr": "Şâfiî",
+  "eser_tr": "Minhâcü't-tâlibîn",
+  "eser_ar": "منهاج الطالبين",
+  "yazar": "en-Nevevî (ö. 676/1277)",
+  "rol": "matn_ilmihal",
+  "collection": "din_06_fikh_shafii_minhaj",
+  "kaynak": "arabic-digital-humanities/fiqh",
+  "source_file": "0676Nawawi.ManahijTalibin.txt",
+  "sha256": "c935d94229aa64aa29455ea6a643836438f61b973d5720865cb0a1a255df1327",
+  "char_count": 402675,
+  "chunk_count": 269,
+  "batch_sayisi": 14,
+  "updated_utc": "2026-10-06T12:03:04Z"
+}

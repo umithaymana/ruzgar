@@ -1,0 +1,17 @@
+{
+  "eser_id": "taj_iklil",
+  "mezhep": "maliki",
+  "mezhep_tr": "Mâlikî",
+  "eser_tr": "et-Tâc ve'l-iklîl",
+  "eser_ar": "التاج والإكليل لمختصر خليل",
+  "yazar": "el-Mevvâk (ö. 897/1492)",
+  "rol": "muteber",
+  "collection": "din_06_fikh_maliki_taj_iklil",
+  "kaynak": "arabic-digital-humanities/fiqh",
+  "source_file": "0897IbnYusufCabdariGharnati.TajWaIklilLiMukhtasarKhalil.txt",
+  "sha256": "46bec64716e7c05991e564d83feac9788f756617f8fe32793fa58ca4a4dcce17",
+  "char_count": 3665341,
+  "chunk_count": 2441,
+  "batch_sayisi": 123,
+  "updated_utc": "2026-10-06T12:03:01Z"
+}
