@@ -1269,6 +1269,24 @@ def looks_like_past_conversation_query(message: str) -> bool:
     if len(raw) < 8:
         return False
     blob = _norm_ascii(raw.lower()) + " " + raw.lower()
+    # «senin adını sordum» / kimlik düzeltmesi — geçmiş listesi değil
+    try:
+        from ilim_assistant.ruzgar_tek_beyin import looks_like_assistant_self_query
+
+        if looks_like_assistant_self_query(raw):
+            return False
+    except Exception:
+        pass
+    if re.search(
+        r"\b(?:sen\s+kimsin|ad[ıi]n[ıi]?\s+sordum|kimsin\s+sen)\b",
+        blob,
+        re.I,
+    ) and not re.search(
+        r"\b(?:ne|hangi)\s+soru|\bd[uü]n\b|\bdaha\s+[oö]nce\b|\bhat[ıi]rl",
+        blob,
+        re.I,
+    ):
+        return False
     cues = (
         "dun ",
         "dün ",
@@ -1289,10 +1307,11 @@ def looks_like_past_conversation_query(message: str) -> bool:
         "ne sormu",
         "sormustum",
         "sormuştum",
-        "sordum ",
-        " sordum",
-        "sormus",
-        "sormuş",
+        "ne sordum",
+        "neler sordum",
+        "hangi soruyu sordum",
+        "sormus muydum",
+        "sormuş muydum",
         "hatirliyor musun",
         "hatırlıyor musun",
         "konuşmuş olabilir",

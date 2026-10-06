@@ -429,6 +429,59 @@ class HafizaIRuzgar:
         return True
 
     @classmethod
+    def _fuzzy_ozne_uyusmazligi(cls, sorgu: str, aday_soru: str) -> bool:
+        """«senin adın ne» ↔ «annemin adı ne» gibi özne kaymalarını kes."""
+        sq = cls._fuzzy_anahtar(sorgu)
+        aq = cls._fuzzy_anahtar(aday_soru)
+        if not sq or not aq:
+            return False
+        sen_tok = {"sen", "senin", "sana", "seni", "adin"}
+        aile_tok = {
+            "annem",
+            "annemin",
+            "annesi",
+            "babam",
+            "babamin",
+            "babasi",
+            "esim",
+            "esimin",
+            "esi",
+            "oglum",
+            "kizim",
+            "kardesim",
+            "ablam",
+            "abim",
+            "dayim",
+            "amcam",
+            "halam",
+            "teyzem",
+        }
+        s_tok = set(sq.split())
+        a_tok = set(aq.split())
+        sorgu_sen = bool(s_tok & sen_tok) or bool(
+            re.search(r"\b(adin|ismin)\s+ne\b", sq)
+        )
+        aday_aile = bool(a_tok & aile_tok)
+        if sorgu_sen and aday_aile and not (a_tok & {"sen", "senin"}):
+            return True
+        # Tanım sorusu ↔ kaynak/takip sorusu
+        if re.search(r"\bnedir\b", sq) and not re.search(r"\bnedir\b", aq):
+            if any(
+                x in aq
+                for x in (
+                    "kimden",
+                    "hangi kitap",
+                    "hangi eser",
+                    "hangi kayn",
+                    "nereden",
+                    "aldin",
+                    "aldım",
+                )
+            ):
+                return True
+        return False
+
+    @classmethod
     def _fuzzy_aday_elenmeli_mi(cls, sorgu: str, aday_soru: str) -> bool:
         """Oturum özeti / ham öğretim satırı — «kimdir» sorusunda aday olmasın."""
         aq = cls._norm_eslesme(aday_soru)
@@ -444,6 +497,8 @@ class HafizaIRuzgar:
         if re.search(r"\b(kimdir|kimdi|kim)\b", sq) and len(aq) > len(sq) + 24:
             if "oturum" in aq or "konuşulan başlık" in aday_soru.lower():
                 return True
+        if cls._fuzzy_ozne_uyusmazligi(sorgu, aday_soru):
+            return True
         return False
 
     def _fuzzy_en_iyi_eslesme(

@@ -28,6 +28,10 @@ def _knowledge_root() -> Path:
         return _PKG_ROOT / "knowledge"
 
 
+# Eski importlar: `from rag_store import _KNOWLEDGE_ROOT`
+_KNOWLEDGE_ROOT = _knowledge_root()
+
+
 def _index_dir() -> Path:
     try:
         from ilim_assistant.ruzgar_public_mode import shared_rag_index_dir

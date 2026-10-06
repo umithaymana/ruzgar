@@ -117,8 +117,16 @@ def looks_like_tefsir_followup(msg: str) -> bool:
 
 def detect_sure_no(msg: str) -> int | None:
     low = _fold(msg)
-    for name, sno in sorted(SURE_ALIASES.items(), key=lambda x: -len(x[0])):
-        if name in low:
+    # Önce «X suresi / X sure» — «türkçe» içindeki «tur» yanlışlıkla Tûr olmasın
+    ranked = sorted(SURE_ALIASES.items(), key=lambda x: -len(x[0]))
+    for name, sno in ranked:
+        if re.search(
+            rf"(?<![a-z0-9]){re.escape(name)}\s*(?:suresi|suresinin|sure\b|sûresi|sûre\b)",
+            low,
+        ):
+            return sno
+    for name, sno in ranked:
+        if re.search(rf"(?<![a-z0-9]){re.escape(name)}(?![a-z0-9])", low):
             return sno
     return None
 
@@ -159,10 +167,36 @@ def parse_sure_ayet(msg: str) -> list[tuple[int, int]]:
                 sure_only.append(sno)
 
     if not out and sure_only:
-        wants_whole = any(
-            k in low for k in ("tefsir", "meal", "oku", "acikla", "anlat", "nedir", "ne demek")
+        # Meta sorular (kaç ayet / kaçıncı / nüzul) → örnek ayet genişletme yok
+        meta_block = any(
+            k in low
+            for k in (
+                "kac ayet",
+                "kaç ayet",
+                "kacıncı",
+                "kaçıncı",
+                "kacinci",
+                "siralam",
+                "sıralam",
+                "nuzul sebebi",
+                "nüzul sebebi",
+                "nerede in",
+                "nerede indig",
+                "mekki",
+                "medeni",
+                "mekkî",
+                "medenî",
+            )
         )
-        if wants_whole or looks_like_tefsir_question(msg):
+        wants_whole = (not meta_block) and any(
+            k in low for k in ("tefsir", "meal", "oku", "acikla", "anlat", "ne demek")
+        )
+        # Çıplak «nedir» tek başına sure meta/okuma karıştırır — yalnız tefsir bağlamında
+        if not meta_block and "tefsir" in low and "nedir" in low:
+            wants_whole = True
+        if wants_whole or (
+            (not meta_block) and looks_like_tefsir_question(msg) and "tefsir" in low
+        ):
             sno = sure_only[0]
             n = AYET_SAYILARI[sno - 1]
             if n <= 12:

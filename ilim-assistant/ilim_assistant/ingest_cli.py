@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import argparse
 
-from ilim_assistant.rag_store import _KNOWLEDGE_ROOT, build_index
+from ilim_assistant.rag_store import build_index, _knowledge_root
 from ilim_assistant.tarih_incremental_protocol import protocol_lock_active as tarih_protocol_lock_active
 from ilim_assistant.tdk_incremental_protocol import protocol_lock_active as tdk_protocol_lock_active
 
@@ -22,7 +22,7 @@ def main():
         action="store_true",
         help="TDK veya Tarih kademeli protokolü (exclusive) aktifken bile genel indekslemeye izin ver.",
     )
-    p.add_argument("--knowledge", default=str(_KNOWLEDGE_ROOT), type=str)
+    p.add_argument("--knowledge", default=str(_knowledge_root()), type=str)
     args = p.parse_args()
     if not args.allow_other_knowledge:
         if tdk_protocol_lock_active():

@@ -301,6 +301,15 @@ def _looks_like_generic_past_summary(message: str) -> bool:
 
 def _looks_like_question_list_request(message: str) -> bool:
     blob = _normalize_query(message)
+    try:
+        from ilim_assistant.ruzgar_tek_beyin import looks_like_assistant_self_query
+
+        if looks_like_assistant_self_query(message):
+            return False
+    except Exception:
+        pass
+    if re.search(r"\b(?:sen\s+kimsin|ad[ıi]n[ıi]?\s+sordum)\b", blob, re.I):
+        return False
     if any(
         x in blob
         for x in (
@@ -308,7 +317,8 @@ def _looks_like_question_list_request(message: str) -> bool:
             "ne sormu",
             "sormustum",
             "sormuştum",
-            "sordum",
+            "ne sordum",
+            "neler sordum",
             "baska hangi",
             "başka hangi",
         )
@@ -549,11 +559,18 @@ def _is_usable_echo_answer(text: str) -> bool:
         return False
     if re.search(r"\bhangisi\s*\?", low) and len(t) < 220:
         return False
+    if "güven: düşük" in low or "guven: dusuk" in low:
+        return False
     if "güven: orta" in low and "kaynak sayısı: 0" in low.replace("ı", "i"):
         return False
     if "guven: orta" in low and "kaynak sayisi: 0" in low:
         return False
     if "python paket kurulumu" in low or "pip install" in low:
+        return False
+    # Bilinen zehirli çapraz eşleşmeler (eski oturum)
+    if "fotosentez" in low or "karbondioksit ve sudan besin" in low:
+        return False
+    if "şükriye" in low and ("annen" in low or "annendir" in low):
         return False
     return True
 
@@ -570,6 +587,28 @@ def try_session_echo_reply(
     msg = (message or "").strip()
     if len(msg) < 4 or len(msg) > 500:
         return None
+    # Yerel ilim / kimlik anlık yolları — eski yanlış yankıyı ezmesin
+    try:
+        from ilim_assistant.ruzgar_tek_beyin import looks_like_assistant_self_query
+
+        if looks_like_assistant_self_query(msg):
+            return None
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_kuran_anlik import looks_like_kuran_question, try_kuran_instant_reply
+
+        if looks_like_kuran_question(msg) and try_kuran_instant_reply(msg):
+            return None
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_akaid_kutuphane import try_akaid_reply
+
+        if try_akaid_reply(msg):
+            return None
+    except Exception:
+        pass
     try:
         from ilim_assistant.ana_motor_plan import looks_like_past_conversation_query
 

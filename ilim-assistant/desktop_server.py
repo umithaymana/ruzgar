@@ -10654,6 +10654,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             except Exception:
                 pass
         try:
+            from ilim_assistant.ruzgar_tek_beyin import try_assistant_identity_reply
+
+            _id_e = try_assistant_identity_reply(msg_early)
+            if _id_e:
+                _orch_id = dict(orch_early)
+                _orch_id.setdefault("plan", {})["primary"] = "gundelik"
+                _orch_id["plan"]["label_tr"] = "Kimlik (anında)"
+                _orch_id["assistant_identity"] = True
+                yield from _iter_instant_chat_events(
+                    _id_e,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_id,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
             from ilim_assistant.ruzgar_kuran_anlik import try_kuran_instant_reply
 
             _kuran_e = try_kuran_instant_reply(msg_early)
@@ -10688,6 +10708,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     session_wake_used=req.session_wake_used,
                     msg_for_wake=req.message,
                     orch=_orch_ar,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ruzgar_akaid_kutuphane import try_akaid_reply
+
+            _akaid_e = try_akaid_reply(msg_early)
+            if _akaid_e:
+                _orch_ak = dict(orch_early)
+                _orch_ak.setdefault("plan", {})["primary"] = "ilim"
+                _orch_ak["plan"]["label_tr"] = "Akaid (anında)"
+                _orch_ak["akaid_anlik"] = True
+                yield from _iter_instant_chat_events(
+                    _akaid_e,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_ak,
                     instant_gundelik=True,
                 )
                 return
@@ -11130,6 +11170,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         except Exception:
             pass
         try:
+            from ilim_assistant.ruzgar_tek_beyin import try_assistant_identity_reply
+
+            _id_early = try_assistant_identity_reply(msg_early)
+            if _id_early:
+                _orch_id2 = dict(orch_early)
+                _orch_id2.setdefault("plan", {})["primary"] = "gundelik"
+                _orch_id2["plan"]["label_tr"] = "Kimlik (anında)"
+                _orch_id2["assistant_identity"] = True
+                yield from _iter_instant_chat_events(
+                    _id_early,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_id2,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
             from ilim_assistant.ruzgar_kuran_anlik import try_kuran_instant_reply
 
             _kuran_early = try_kuran_instant_reply(msg_early)
@@ -11156,6 +11216,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     session_wake_used=req.session_wake_used,
                     msg_for_wake=req.message,
                     orch=orch_early,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ruzgar_akaid_kutuphane import try_akaid_reply
+
+            _akaid_early = try_akaid_reply(msg_early)
+            if _akaid_early:
+                _orch_ak2 = dict(orch_early)
+                _orch_ak2.setdefault("plan", {})["primary"] = "ilim"
+                _orch_ak2["plan"]["label_tr"] = "Akaid (anında)"
+                _orch_ak2["akaid_anlik"] = True
+                yield from _iter_instant_chat_events(
+                    _akaid_early,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_ak2,
                     instant_gundelik=True,
                 )
                 return

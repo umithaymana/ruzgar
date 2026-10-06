@@ -61,6 +61,19 @@ _RUZGAR_IDENTITY = re.compile(
     r"(kimdir|kimdi|kim|kimsin|nesin|nedir)\b.*\br[uü]zgar\b",
     re.I,
 )
+_ASSISTANT_SELF_Q = re.compile(
+    r"(?:^|\b)(?:"
+    r"senin\s+ad[ıi]n\s+ne|"
+    r"ad[ıi]n\s+ne(?:dir)?|"
+    r"ismin\s+ne|"
+    r"sen\s+kimsin|"
+    r"kimsin\s+sen|"
+    r"sen\s+nesin|"
+    r"sen\s+kim(?:sin)?|"
+    r"kendini\s+tan[ıi]t"
+    r")\b",
+    re.I,
+)
 _KNOWN_CIRCLE_ALIASES: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"\bemine(?:\s*haymana)?\b", re.I), "emine haymana"),
     (re.compile(r"\bemine\s*[çc]i[çc]ek(?:\s*haymana)?\b", re.I), "emine çiçek haymana"),
@@ -223,16 +236,70 @@ def strip_assistant_vocative(message: str) -> str:
     return stripped or raw
 
 
+def looks_like_assistant_self_query(message: str) -> bool:
+    """«senin adın ne / sen kimsin» — asistanın kendi kimliği (aile hafızası değil)."""
+    raw = (message or "").strip()
+    if not raw or len(raw) > 220:
+        return False
+    blob = _norm_blob(raw)
+    # Aile sorusu netse asistan kimliği sayma
+    if any(
+        x in blob
+        for x in (
+            "annem",
+            "babam",
+            "eşim",
+            "esim",
+            "oğlum",
+            "oglum",
+            "kızım",
+            "kizim",
+            "kardeş",
+            "kardes",
+        )
+    ) and not _ASSISTANT_SELF_Q.search(blob):
+        return False
+    if _ASSISTANT_SELF_Q.search(blob):
+        return True
+    return looks_like_ruzgar_identity_query(raw)
+
+
 def looks_like_ruzgar_identity_query(message: str) -> bool:
     """Kullanıcı yalnızca asistanın kim olduğunu soruyor mu?"""
     raw = (message or "").strip()
-    if not raw or not re.search(r"\br[uü]zgar\b", _norm_blob(raw), re.I):
+    if not raw:
+        return False
+    blob = _norm_blob(raw)
+    if _ASSISTANT_SELF_Q.search(blob) and not re.search(
+        r"\b(?:annem|babam|eşim|esim)\b", blob
+    ):
+        return True
+    if not re.search(r"\br[uü]zgar\b", blob, re.I):
         return False
     core = strip_assistant_vocative(raw)
-    if len(core.split()) >= 10 and not _RUZGAR_IDENTITY.search(_norm_blob(raw)):
+    if len(core.split()) >= 10 and not _RUZGAR_IDENTITY.search(blob):
         return False
-    return bool(_RUZGAR_IDENTITY.search(_norm_blob(raw))) or (
+    return bool(_RUZGAR_IDENTITY.search(blob)) or (
         _norm_blob(core) in ("ruzgar", "rüzgar") and len(core) <= 12
+    )
+
+
+def try_assistant_identity_reply(message: str) -> Optional[str]:
+    """Asistan adı/kimlik — aile fuzzy eşleşmesini bypass eder."""
+    if not looks_like_assistant_self_query(message):
+        return None
+    try:
+        from ilim_assistant.hafiza_i_ruzgar import genel_hafiza_lookup
+
+        for key in ("Rüzgar kimdir", "rüzgar kimdir", "sen kimsin"):
+            ans = genel_hafiza_lookup(key)
+            if ans and "rüzgar" in ans.lower():
+                return str(ans).strip()
+    except Exception:
+        pass
+    return (
+        "Ben Rüzgar; Mimar Ümit ve Gökçenur tarafından geliştirilen, "
+        "kişiye özel süper asistanım."
     )
 
 
@@ -269,9 +336,12 @@ def memory_lookup_variants(message: str) -> list[str]:
         if pat.search(blob) or (stripped and pat.search(_norm_blob(stripped))):
             _add(alias)
             _add(f"{alias} kimdir")
-    if looks_like_ruzgar_identity_query(message):
+    if looks_like_assistant_self_query(message) or looks_like_ruzgar_identity_query(
+        message
+    ):
         _add("Rüzgar kimdir")
         _add("rüzgar kimdir")
+        _add("sen kimsin")
     return out
 
 

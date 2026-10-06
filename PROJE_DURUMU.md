@@ -1,35 +1,47 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-05 (ilim din: Kur’an/tefsir/Arapça lügat — gece ara)
+**Son güncelleme:** 2026-10-06 (akaid + sohbet yanlış cevap düzeltmeleri)
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
-### 2026-10-05 — İlim din kütüphanesi (yarın devam)
+### 2026-10-06 — Sohbet yanlış cevap kökleri (düzeltildi)
+
+**Bulunan hatalar (Mimar sohbet kaydı):**
+- «senin adın ne» → anne adı (fuzzy özne kayması)
+- «…adını sordum» → geçmiş soru listesi (çıplak `sordum` cue)
+- «tefsir nedir» / «aşır nedir» → yanlış yol veya kavram eksik
+- «bakara … kaçıncı/kaç ayet/nüzul» → 1. ayet (örnek ayet genişletmesi)
+- «cin … türkçe» → Tûr sûresi (`tur` ∈ `türkçe`)
+
+**Düzeltme:** fuzzy özne filtresi · asistan kimlik anlık yol · geçmiş sohbet cue sıkılaştırma · Kur'an meta/aşır · `detect_sure_no` kelime sınırı
+
+### 2026-10-06 — Akaid (`04_akaid`) tamam (çekirdek)
 
 **Bugün bitti:**
-- Gizlilik: `sağlık belgelerim/` + `gecmis_sohbetler.db` gitignore; kişisel sohbet yalnızca bu PC (`fd871a7`)
-- Kur’an + tefsir + temel kavramlar (`7e208f7`)
-- Arapça: `03_arapca_lugat` — 1231 Kur’an kökü, ~20k klasik (Mufradat/Lisan), nahiv/sarf, müştak; anlık cevap `ruzgar_arapca_lugat.py`
-- Hata düzeltmeleri (canlı):
-  - Kütüphane SSS «nedir» stopword’ü → fotosentez yanlış eşleşmesi (nahiv/صبر)
-  - Early path: Kur’an + Arapça, kütüphaneden **önce** (`desktop_server`)
-  - «Fatiha kaç ayet» artık **7** (genel 6236 yalnızca sûre adı yoksa)
-  - `Bakara` içindeki `ara ` alt dizisi → yanlış `web_search` tuzağı (`^ara ` komutu)
-- Smoke: `python scripts/smoke_arapca_lugat.py` → **9/9**
-- Lane GitHub klonu başarısız (404/timeout) — alternatif kaynaklarla idare edildi
+- Staging PDF: Mâtürîdî Tevhîd (Huleyf + Topaloğlu–Aruçi), Eş‘arî Luma‘, Makâlât → `arsiv/_ilim_staging/04_akaid/`
+- Archive OCR metin → knowledge paketleri: Tevhîd ~788 + Makâlât ~654 batch (`scripts/faz4_akaid_ingest.py`)
+- TR kavramlar: `kavramlar_akaid.jsonl` (18 madde) — fetva değil, kaynaklı özet
+- Anlık yol: `ruzgar_akaid_kutuphane.py` + `desktop_server` early path (Kur’an/Arapça sonrası, iki blok)
+- Smoke: `python scripts/smoke_akaid.py` → **8/8**
+- `ingest_cli` `_KNOWLEDGE_ROOT` uyumluluk düzeltmesi (`rag_store`)
+- RAG incremental ingest OK — indeks **42.502** parça (akaid md indekste)
 
-**Yarın sıra (Mimar onayıyla):**
-1. **Akaid** kütüphanesi (`04_akaid`) — henüz başlamadı; **açık onay şart**
-2. Daha dolu **AR–TR sözlük** (TR ipucu ~96 kök; klasik AR güçlü)
-3. Arapça lügati RAG’e tam gömme + health kartında gösterge
-4. Nebula `tarih_kaynak/incremental` untracked batch’ler — ayrı karar
-5. (Eski borç) `prepare_turn` bilgi kilidi / Ollama kalite
+**Canlı için:** `.\Ruzgar.ps1 -ForceRestart` → dene: «akaid nedir» · «maturidi kimdir» · «tevhid nedir» · «senin adın ne» · «aşır nedir»
 
-**Doğrulama:** `rahman kökü` · `صبر nedir` · `nahiv nedir` · `Fatiha kaç ayet` · `Bakara kaç ayet` · `fotosentez nedir` (SSS hâlâ doğru) — canlı **8/8**
+**Luma notu:** PDF tarama-only; konu iskeleti MD var. Tam OCR sonra (Tesseract yoktu).
 
-**Git:** Commitler yerelde (`1370a16` … ahead **11**). **Push:** GitHub kimlik diyaloğu bu oturumda açılamadı — yarın `git push origin main` (veya IDE Sync).
+**TR çeviriler:** Telifli modern baskılar Mimar’ın `bekleyen_tr/` klasörüne yasal dosya koymasıyla eklenir.
 
-**Not:** Akaid’e dokunulmadı.
+**Sırada:**
+1. Luma OCR (Tesseract/ara kurulum) veya senin TR PDF’lerin
+2. Daha dolu AR–TR sözlük
+3. Nebula untracked batch kararı
+4. Git push (yerel ahead)
+
+### 2026-10-05 — İlim din kütüphanesi (Kur’an/tefsir/Arapça)
+
+**Bitti:** Gizlilik gitignore · Kur’an+tefsir · Arapça lügat · early path düzeltmeleri · smoke 9/9  
+**Akaid:** 6 Ekim’de tamamlandı (yukarı).
 
 ### 2026-10-03 — Bilgi sohbeti kilidi (prepare_turn hang)
 

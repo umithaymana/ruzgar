@@ -60,8 +60,9 @@ def looks_like_kuran_question(msg: str) -> bool:
         "hatim", "vahiy", "kelamullah", "müfessir", "mufessir", "tertib",
         "tertîb", "iniş sırası", "siralam", "sıralama", "fatiha", "bakara",
         "cin suresi", "ihlas", "ayetel kursi", "ayatul kursi",
+        "aşır", "asır", "asir", "aşir", "ruku", "rükû", "rüku",
     )
-    return any(c in low for c in cues)
+    return any(_fold(c) in low for c in cues)
 
 
 @lru_cache(maxsize=1)
@@ -192,18 +193,25 @@ def parse_sure_number_question(msg: str) -> Optional[int]:
 
 
 def parse_ayah_read_request(msg: str) -> Optional[tuple[int, int]]:
-    """«cin suresi 12. ayet» veya «7. sure 15. ayet»."""
-    from ilim_assistant.ruzgar_tefsir_kutuphane import AYET_SAYILARI, detect_sure_no, parse_sure_ayet
+    """«cin suresi 12. ayet» veya «7. sure 15. ayet» — yalnızca açık ayet numarası."""
+    from ilim_assistant.ruzgar_tefsir_kutuphane import AYET_SAYILARI, detect_sure_no
 
-    refs = parse_sure_ayet(msg)
-    if refs:
-        if len(refs) == 1:
-            return refs[0]
-        sures = {s for s, _ in refs}
-        if len(sures) == 1:
-            return refs[0]
+    raw = msg or ""
+    low = _fold(raw)
 
-    low = _fold(msg)
+    # Meta sure sorusu → ayet okuma değil
+    if re.search(
+        r"(kac|kaç)[ıi]?nc[ıi]|(kac|kaç)\s*ayet|nuzul\s*sebebi|nüzul\s*sebebi|"
+        r"nerede\s+in|siralam|sıralam",
+        low,
+    ):
+        return None
+
+    for m in re.finditer(r"\b(\d{1,3})\s*[:/]\s*(\d{1,3})\b", raw):
+        s, a = int(m.group(1)), int(m.group(2))
+        if 1 <= s <= 114 and 1 <= a <= AYET_SAYILARI[s - 1]:
+            return (s, a)
+
     m_num = re.search(
         r"\b(\d{1,3})\s*\.?\s*sure(?:si)?\s*(?:nin)?\s*(\d{1,3})\s*\.?\s*ayet",
         low,
@@ -218,15 +226,27 @@ def parse_ayah_read_request(msg: str) -> Optional[tuple[int, int]]:
         return None
     m = re.search(r"\b(\d{1,3})\s*\.?\s*ayet", low)
     if not m:
-        m = re.search(rf"\b{sno}\s*[:/]\s*(\d{{1,3}})\b", msg or "")
-        if m:
-            return (sno, int(m.group(1)))
         return None
     a = int(m.group(1))
     n_max = AYET_SAYILARI[sno - 1]
     if 1 <= a <= n_max:
         return (sno, a)
     return None
+
+
+def looks_like_sure_meta_question(msg: str) -> bool:
+    """Sûre kimliği / ayet sayısı / nüzul — ayet metni değil."""
+    low = _fold(msg)
+    if not low:
+        return False
+    return bool(
+        re.search(
+            r"(kac|kaç)[ıi]?nc[ıi]|(kac|kaç)\s*ayet|nuzul|nüzul|ini[sş]|"
+            r"nerede\s+in|siralam|sıralam|mekki|medeni|mekkî|medenî|"
+            r"kacinci|hangisi",
+            low,
+        )
+    )
 
 
 def format_sure_identity_reply(sure_no: int) -> str:
@@ -457,12 +477,32 @@ def try_kuran_instant_reply(message: str) -> Optional[str]:
     except Exception:
         pass
 
+    low = _fold(msg)
+
+    # Sûre kimliği / kaç ayet / nüzul — örnek 1. ayete düşmesin
+    try:
+        from ilim_assistant.ruzgar_tefsir_kutuphane import detect_sure_no
+
+        sno_meta = detect_sure_no(msg)
+    except Exception:
+        sno_meta = None
+    if sno_meta and looks_like_sure_meta_question(msg) and not parse_ayah_read_request(msg):
+        # «bakara kaç ayet» için kısa ayet sayısı cevabı da yeterli
+        if re.search(r"(kac|kaç)\s*ayet", low) and not re.search(
+            r"(kac|kaç)[ıi]?nc[ıi]|nuzul|ini[sş]|nerede\s+in|siralam|sıralam|hangisi",
+            low,
+        ):
+            kav_short = try_kavram_reply(msg)
+            if kav_short:
+                return kav_short
+        return format_sure_identity_reply(sno_meta)
+
     # Tanım / kronoloji / tecvid — ayet okumadan önce
     kav = try_kavram_reply(msg)
     if kav:
         # Sure kimliği daha spesifikse onu tercih et
         sno = parse_sure_number_question(msg)
-        if sno and re.search(r"\b\d{1,3}\s*\.?\s*sure\b", _fold(msg)):
+        if sno and re.search(r"\b\d{1,3}\s*\.?\s*sure\b", low):
             return format_sure_identity_reply(sno)
         # Ayet okuma isteği tanımı ezmesin
         if not parse_ayah_read_request(msg):
@@ -472,7 +512,6 @@ def try_kuran_instant_reply(message: str) -> Optional[str]:
     if sno:
         return format_sure_identity_reply(sno)
 
-    low = _fold(msg)
     ref = parse_ayah_read_request(msg)
     if ref:
         if "tefsir" in low:
