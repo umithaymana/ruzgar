@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-07 gece — RAG incremental (ortak alanlar)
+**Son güncelleme:** 2026-10-07 gece — RAG ortak alan boost
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -9,7 +9,7 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 - **Faz 1:** Canonical eserler (OpenITI / kamu malı) + anlık
 - **Faz 2:** Dil/dönem/kavram katmanları (aynı oturumda; iskelet bırakıp kaçma yok)
 - Telif: modern/yakın dönem **tam metin yok** — yalnızca kavram/özet + kamu malı çerçeve
-- Felsefe/psikoloji: hâlâ Faz 1 (sonraki turda Faz 2)
+- Felsefe/psikoloji/edebiyat/bilim/coğrafya/teknoloji: Faz 1+2 tamam
 
 ### Şimdi kaldığımız yer (öncelik)
 
@@ -31,14 +31,22 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 16. ~~Coğrafya Faz 1+2 + derin~~ — **18 md · ~7.6 KB · 28 kavram** · smoke 9/9
 17. ~~Teknoloji Faz 1+2~~ — 10 md · 3 katman · 13 kavram · smoke 7/7
 18. ~~RAG incremental~~ — **302.676** chunk · 177 dosya değişti · yerel indeks
-19. **Sonraki:** din rafları hijyeni / anlık–RAG anlam filtresi ince ayar (isteğe bağlı)
+19. ~~RAG ortak alan boost~~ — `rag_store.search` domain ipucu + yol eşlemesi; din baskınlığı kesildi
+20. **Sonraki:** din rafları hijyeni (isteğe bağlı) · `RUZGAR_RAG_CONTENT_FILTER=0` env gözden geçir
+
+### 2026-10-07 — RAG ortak alan boost
+
+- `rag_store.search`: sorgu ipucu → `ortak_kaynak/alanlar/*` / fen rafları alt küme + skor boost
+- Yol token eşlemesi (örn. `nefs_gucleri`, `bilimsel_yontem`, `yapay_zeka`)
+- Domain-öncelikli birleştirme — `RUZGAR_RAG_CONTENT_FILTER=0` iken de çalışır
+- Kapat: `RUZGAR_RAG_ORTAK_BOOST=0` · skor: `RUZGAR_RAG_ORTAK_BOOST_SCORE` (varsayılan 0.10)
+- Smoke: Karadeniz / bilimsel yöntem / nefs güçleri / divan / yapay zekâ → doğru raf
 
 ### 2026-10-07 — RAG incremental (ortak alanlar)
 
 - `build_index(incremental=True)` → status=incremental · chunks=**302676** · changed_files=**177**
 - İndekste: `ortak_kaynak/alanlar` ~6641 · edebiyat ~3222 · felsefe eser ~2477 · psikoloji eser ~920
 - Script: `scripts/rag_incremental_rebuild.py`
-- Not: kısa «nedir» soruları anlık kütüphane; vektör aramada büyük din külliyatı skor baskın olabilir
 - `embeddings.npy` / `chunks.jsonl` gitignore — commit edilmez
 
 ### 2026-10-07 — Teknoloji (2 faz)

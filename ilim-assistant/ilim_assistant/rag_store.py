@@ -468,11 +468,166 @@ def search_tdk_exact_lemma(lemma: str, top_k: int = 5) -> List[Tuple[str, str, f
     return out
 
 
+# Ortak alan / fen rafları — din külliyatı altında ezilmesin diye sorgu ipucu → yol öneği.
+_ORTAK_DOMAIN_HINTS: tuple[tuple[tuple[str, ...], tuple[str, ...]], ...] = (
+    (
+        (
+            "bilim",
+            "astronomi",
+            "fotosentez",
+            "atom",
+            "matematik",
+            "fizik",
+            "kimya",
+            "biyoloji",
+            "hipotez",
+            "bilimsel",
+            "galaksi",
+            "newton",
+            "dna",
+            "geometri",
+        ),
+        (
+            "ortak_kaynak/alanlar/bilim",
+            "kutuphane/raflar/01_",
+            "kutuphane/raflar/02_",
+            "kutuphane/raflar/03_",
+            "kutuphane/raflar/06_",
+        ),
+    ),
+    (
+        (
+            "cografya",
+            "coğrafya",
+            "karadeniz",
+            "marmara",
+            "akdeniz",
+            "anadolu",
+            "iklim",
+            "harita",
+            "kita",
+            "kıta",
+            "okyanus",
+            "enlem",
+            "boylam",
+        ),
+        ("ortak_kaynak/alanlar/cografya", "kutuphane/raflar/04_"),
+    ),
+    (
+        (
+            "edebiyat",
+            "divan",
+            "kelile",
+            "makamat",
+            "maqamat",
+            "tanzimat",
+            "fuzuli",
+            "shakespeare",
+            "maarri",
+            "buhturi",
+        ),
+        ("ortak_kaynak/alanlar/edebiyat_sanat",),
+    ),
+    (
+        (
+            "felsefe",
+            "meşşai",
+            "messai",
+            "metafizik",
+            "tahafut",
+            "tehafut",
+            "farabi",
+            "ibn sina",
+            "avicenna",
+        ),
+        ("ortak_kaynak/alanlar/felsefe",),
+    ),
+    (
+        (
+            "psikoloji",
+            "nefs",
+            "nefis",
+            "idrak",
+            "mizan amal",
+            "nefs gucler",
+            "nefis güç",
+        ),
+        ("ortak_kaynak/alanlar/psikoloji",),
+    ),
+    (
+        (
+            "teknoloji",
+            "bilgisayar",
+            "internet",
+            "yapay zeka",
+            "yapay zekâ",
+            "şifre",
+            "sifre",
+            "programlama",
+            "https",
+        ),
+        ("ortak_kaynak/alanlar/teknoloji", "kutuphane/raflar/08_"),
+    ),
+)
+
+_ortak_path_row_cache: dict[tuple[str, ...], np.ndarray] = {}
+_ortak_path_cache_chunks_id: int | None = None
+
+
+def _fold_q(s: str) -> str:
+    t = unicodedata.normalize("NFKD", s or "")
+    t = "".join(c for c in t if not unicodedata.combining(c))
+    return t.lower()
+
+
+def _ortak_path_prefixes_for_query(query: str) -> tuple[str, ...]:
+    if os.environ.get("RUZGAR_RAG_ORTAK_BOOST", "1").strip().lower() in (
+        "0",
+        "false",
+        "no",
+    ):
+        return ()
+    low = _fold_q(query)
+    found: list[str] = []
+    for cues, paths in _ORTAK_DOMAIN_HINTS:
+        if any(_fold_q(c) in low for c in cues):
+            found.extend(paths)
+    # benzersiz, sıra korunur
+    out: list[str] = []
+    for p in found:
+        if p not in out:
+            out.append(p)
+    return tuple(out)
+
+
+def _ortak_domain_row_indices(chunks: List[Chunk], prefixes: tuple[str, ...]) -> np.ndarray:
+    global _ortak_path_row_cache, _ortak_path_cache_chunks_id
+    cid = id(chunks)
+    if _ortak_path_cache_chunks_id != cid:
+        _ortak_path_row_cache = {}
+        _ortak_path_cache_chunks_id = cid
+    cached = _ortak_path_row_cache.get(prefixes)
+    if cached is not None:
+        return cached
+    prefs = tuple(p.replace("\\", "/") for p in prefixes)
+
+    def _ok(src: str) -> bool:
+        s = (src or "").replace("\\", "/")
+        return any(p in s for p in prefs)
+
+    arr = np.array([i for i, c in enumerate(chunks) if _ok(c.source)], dtype=np.int64)
+    _ortak_path_row_cache[prefixes] = arr
+    return arr
+
+
 def search(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
     """Dönüş: (metin, kaynak, skor) — skor yaklaşık uyum.
 
     Anlam kilidi: içerik kelimesi taşımayan chunk'lar elenir (yanlış raftan
     cevap karışmasını keser). Kapat: ``RUZGAR_RAG_CONTENT_FILTER=0``.
+
+    Ortak alan ipucu varsa (`RUZGAR_RAG_ORTAK_BOOST`, varsayılan açık) ilgili
+    yollar alt kümeden aday çekilip hafifçe öne alınır — din külliyatı baskınlığını azaltır.
     """
     chunks, emb = _get_cached_index()
     if not chunks or emb is None or len(chunks) != len(emb):
@@ -484,9 +639,134 @@ def search(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
     # Geniş havuz al, sonra skor+anlam süz
     pool = max(int(top_k) * 4, 16)
     idx = np.argsort(-sim)[: min(pool, len(sim))]
-    raw: List[Tuple[str, str, float]] = []
+    best: dict[tuple[str, str], Tuple[str, str, float]] = {}
+
+    def _put(text: str, source: str, score: float) -> None:
+        key = (source, (text or "")[:96])
+        prev = best.get(key)
+        if prev is None or score > prev[2]:
+            best[key] = (text, source, score)
+
     for i in idx:
-        raw.append((chunks[int(i)].text, chunks[int(i)].source, float(sim[int(i)])))
+        ii = int(i)
+        _put(chunks[ii].text, chunks[ii].source, float(sim[ii]))
+
+    # Ortak alan / fen rafı boost (+ yol ipucu; düşük skorlu kavram md kaçmasın)
+    try:
+        boost = float(os.environ.get("RUZGAR_RAG_ORTAK_BOOST_SCORE", "0.10") or "0.10")
+    except ValueError:
+        boost = 0.10
+    boost = max(0.0, min(0.25, boost))
+    prefixes = _ortak_path_prefixes_for_query(query)
+    domain_hits: List[Tuple[str, str, float]] = []
+    if prefixes:
+        row_idx = _ortak_domain_row_indices(chunks, prefixes)
+        if row_idx.size:
+            sub = emb[row_idx]
+            sub_sim = sub @ q
+            try:
+                take_n = int(os.environ.get("RUZGAR_RAG_ORTAK_SCAN", "256") or "256")
+            except ValueError:
+                take_n = 256
+            take = min(max(pool, int(top_k) * 8, take_n), int(row_idx.size))
+            order = np.argsort(-sub_sim)[:take]
+            path_toks = [
+                t
+                for t in _fold_q(query).replace("ı", "i").split()
+                if len(t) >= 4 and t not in {"nedir", "nasil", "nasildir", "hakkinda", "neden"}
+            ]
+            seen_gi: set[int] = set()
+            for j in order:
+                ji = int(j)
+                gi = int(row_idx[ji])
+                seen_gi.add(gi)
+                sc = float(sub_sim[ji]) + boost
+                _put(chunks[gi].text, chunks[gi].source, sc)
+                domain_hits.append((chunks[gi].text, chunks[gi].source, sc))
+            # Yol adında sorgu ipucu (nefs_gucleri, bilimsel_yontem, …)
+            # Erken kesme yok: tek token çok dosyaya uyuyor; çoklu token + skor ile seç.
+            if path_toks:
+                path_extra: list[tuple[int, float, int]] = []
+                for gi0 in row_idx.tolist():
+                    gi = int(gi0)
+                    src_fold = _fold_q(chunks[gi].source or "").replace("\\", "/")
+                    n_hit = sum(1 for t in path_toks if t.replace("ı", "i") in src_fold)
+                    if n_hit <= 0:
+                        continue
+                    sc = float(emb[gi] @ q) + boost + 0.04 * n_hit
+                    path_extra.append((n_hit, sc, gi))
+                path_extra.sort(key=lambda x: (x[0], x[1]), reverse=True)
+                for _n, sc, gi in path_extra[:96]:
+                    _put(chunks[gi].text, chunks[gi].source, sc)
+                    domain_hits.append((chunks[gi].text, chunks[gi].source, sc))
+
+    raw = sorted(best.values(), key=lambda h: h[2], reverse=True)
+    tk = max(1, int(top_k))
+
+    def _in_domain(src: str) -> bool:
+        if not prefixes:
+            return False
+        s = (src or "").replace("\\", "/")
+        return any(p.replace("\\", "/") in s for p in prefixes)
+
+    def _merge_domain_first(
+        dom: List[Tuple[str, str, float]],
+        glob: List[Tuple[str, str, float]],
+    ) -> List[Tuple[str, str, float]]:
+        out: List[Tuple[str, str, float]] = []
+        seen: set[tuple[str, str]] = set()
+        for h in dom:
+            key = (h[1], (h[0] or "")[:96])
+            if key in seen:
+                continue
+            out.append(h)
+            seen.add(key)
+            if len(out) >= tk:
+                return out[:tk]
+        for h in glob:
+            key = (h[1], (h[0] or "")[:96])
+            if key in seen:
+                continue
+            out.append(h)
+            seen.add(key)
+            if len(out) >= tk:
+                break
+        return out[:tk]
+
+    # İçerik filtresi kapalı olsa bile ortak/fen rafı din altında ezilmesin
+    domain_preferred: List[Tuple[str, str, float]] | None = None
+    if prefixes and domain_hits:
+        dom_sorted = sorted(domain_hits, key=lambda h: h[2], reverse=True)
+        try:
+            from ilim_assistant.ruzgar_anlam_koruma import (
+                chunk_fits_query,
+                filter_rag_hits,
+                rag_default_score_min,
+            )
+
+            floor = rag_default_score_min()
+            dom_fit = filter_rag_hits(
+                query,
+                dom_sorted,
+                min_score=max(0.18, floor - 0.12),
+                soft=False,
+            )
+            if not dom_fit:
+                dom_fit = [
+                    h
+                    for h in dom_sorted
+                    if h[2] >= max(0.15, floor - 0.16) and chunk_fits_query(query, h[0])
+                ][: max(tk * 2, 8)]
+            if not dom_fit:
+                dom_fit = [h for h in dom_sorted if h[2] >= 0.28][:tk]
+            if dom_fit:
+                domain_preferred = _merge_domain_first(dom_fit, raw)
+        except Exception:
+            domain_preferred = _merge_domain_first(
+                [h for h in dom_sorted if h[2] >= 0.28][:tk],
+                raw,
+            )
+
     try:
         if os.environ.get("RUZGAR_RAG_CONTENT_FILTER", "1").strip().lower() not in (
             "0",
@@ -500,21 +780,30 @@ def search(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
                 "true",
                 "yes",
             )
+            floor = rag_default_score_min()
+            base = domain_preferred if domain_preferred else raw
             filtered = filter_rag_hits(
                 query,
-                raw,
-                min_score=rag_default_score_min(),
+                base,
+                min_score=floor if not domain_preferred else max(0.18, floor - 0.12),
                 soft=soft,
             )
             if filtered:
-                return filtered[: max(1, int(top_k))]
-            # Hard boş: alakasız bağlam verme
+                if domain_preferred and prefixes:
+                    dom_f = [h for h in filtered if _in_domain(h[1])]
+                    glob_f = [h for h in filtered if not _in_domain(h[1])]
+                    if dom_f:
+                        return _merge_domain_first(dom_f, glob_f or filtered)
+                return filtered[:tk]
+            if domain_preferred:
+                return domain_preferred[:tk]
             if not soft:
                 return []
     except Exception:
         pass
-    # Filtre kapalı / hata — eski davranış (üst skor)
-    return raw[: max(1, int(top_k))]
+    if domain_preferred:
+        return domain_preferred[:tk]
+    return raw[:tk]
 
 
 def search_arsiv(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
