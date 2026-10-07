@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-07 gece — Edebiyat Faz 2 (dil/dönem katmanları)
+**Son güncelleme:** 2026-10-07 gece — Bilim 2 faz (katalog + yöntem/miras)
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -27,7 +27,16 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 12. ~~Felsefe OpenITI~~ — 7 eser · **1306** chunk · smoke PASS
 13. ~~Psikoloji OpenITI~~ — 4 eser · **524** chunk · anlık smoke PASS
 14. ~~Edebiyat Faz 1+2~~ — 7 OpenITI eser · 4 katman · 31 kavram · smoke 9/9
-15. **Sonraki:** bilim rafı **2 fazlı** (Faz1 canonical + Faz2 kavram/dönem) — edebiyat bitmeden geçilmezdi, bitti
+15. ~~Bilim Faz 1+2~~ — 4 raf · 25 md · 3 katman · 19 kavram · anlık smoke
+16. **Sonraki:** coğrafya rafı **2 fazlı** (aynı disiplin)
+
+### 2026-10-07 — Bilim (2 faz)
+
+- Faz 1: kutuphane `01/02/03/06` katalog + ek md (kara delik, Newton, DNA, yüzde)
+- Faz 2: `bilimsel_yontem` · `islam_bilim_mirasi` · `disiplinler`
+- Yol: `ortak_kaynak/alanlar/bilim/` · Script: `faz13_bilim_raf_ingest.py`
+- Anlık: `ruzgar_bilim_kutuphane.py` + desktop/niyet gate
+- Politika: eğitim özeti · tıbbi teşhis yok
 
 ### 2026-10-07 — Edebiyat Faz 2 (dil/dönem)
 

@@ -10869,6 +10869,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         except Exception:
             pass
         try:
+            from ilim_assistant.ruzgar_bilim_kutuphane import try_bilim_reply
+
+            _bilim_e = _library_instant_or_none(msg_early, try_bilim_reply)
+            if _bilim_e:
+                _orch_bl = dict(orch_early)
+                _orch_bl.setdefault("plan", {})["primary"] = "bilgi"
+                _orch_bl["plan"]["label_tr"] = "Bilim (anında)"
+                _orch_bl["bilim_anlik"] = True
+                yield from _iter_instant_chat_events(
+                    _bilim_e,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_bl,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
             from ilim_assistant.ruzgar_usul_fikh_kutuphane import try_usul_fikh_reply
 
             _usul_e = _library_instant_or_none(msg_early, try_usul_fikh_reply)
@@ -11531,6 +11551,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     session_wake_used=req.session_wake_used,
                     msg_for_wake=req.message,
                     orch=_orch_ed2,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ruzgar_bilim_kutuphane import try_bilim_reply
+
+            _bilim_early = _library_instant_or_none(msg_early, try_bilim_reply)
+            if _bilim_early:
+                _orch_bl2 = dict(orch_early)
+                _orch_bl2.setdefault("plan", {})["primary"] = "bilgi"
+                _orch_bl2["plan"]["label_tr"] = "Bilim (anında)"
+                _orch_bl2["bilim_anlik"] = True
+                yield from _iter_instant_chat_events(
+                    _bilim_early,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_bl2,
                     instant_gundelik=True,
                 )
                 return

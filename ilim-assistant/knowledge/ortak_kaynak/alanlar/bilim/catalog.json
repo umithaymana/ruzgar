@@ -1,0 +1,139 @@
+{
+  "domain": "bilim",
+  "faz": {
+    "1": "kutuphane_raflar",
+    "2": "yontem_miras_disiplin"
+  },
+  "updated_utc": "2026-10-07T19:58:26Z",
+  "politika": "2 fazlı. Eğitim özeti. Tıbbi teşhis/tedavi yok. Fetva yok. Sayfa/cilt uydurma yasak.",
+  "faz1_raflar": [
+    {
+      "id": "01_astronomi_uzay",
+      "ad": "Astronomi ve Uzay",
+      "etiketler": [
+        "astronomi",
+        "uzay",
+        "gezegen",
+        "yildiz",
+        "galaksi"
+      ],
+      "raf_id": "01_astronomi_uzay",
+      "dosya": 7,
+      "karakter": 5318,
+      "dosya_yolu": "knowledge/kutuphane/raflar/01_astronomi_uzay",
+      "faz": 1,
+      "ilim_alani": "bilim",
+      "durum": "hazir",
+      "updated_utc": "2026-10-07T19:58:25Z"
+    },
+    {
+      "id": "02_fizik_kimya",
+      "ad": "Fizik ve Kimya",
+      "etiketler": [
+        "fizik",
+        "kimya",
+        "atom",
+        "enerji",
+        "elektrik"
+      ],
+      "raf_id": "02_fizik_kimya",
+      "dosya": 6,
+      "karakter": 2949,
+      "dosya_yolu": "knowledge/kutuphane/raflar/02_fizik_kimya",
+      "faz": 1,
+      "ilim_alani": "bilim",
+      "durum": "hazir",
+      "updated_utc": "2026-10-07T19:58:25Z"
+    },
+    {
+      "id": "03_biyoloji_dunya",
+      "ad": "Biyoloji ve Canlılar",
+      "etiketler": [
+        "biyoloji",
+        "hucre",
+        "ekosistem",
+        "fotosentez"
+      ],
+      "raf_id": "03_biyoloji_dunya",
+      "dosya": 6,
+      "karakter": 2944,
+      "dosya_yolu": "knowledge/kutuphane/raflar/03_biyoloji_dunya",
+      "faz": 1,
+      "ilim_alani": "bilim",
+      "durum": "hazir",
+      "updated_utc": "2026-10-07T19:58:25Z"
+    },
+    {
+      "id": "06_matematik",
+      "ad": "Matematik",
+      "etiketler": [
+        "matematik",
+        "geometri",
+        "oran",
+        "istatistik"
+      ],
+      "raf_id": "06_matematik",
+      "dosya": 6,
+      "karakter": 1818,
+      "dosya_yolu": "knowledge/kutuphane/raflar/06_matematik",
+      "faz": 1,
+      "ilim_alani": "bilim",
+      "durum": "hazir",
+      "updated_utc": "2026-10-07T19:58:26Z"
+    }
+  ],
+  "faz2_katmanlar": [
+    {
+      "katman_id": "bilimsel_yontem",
+      "baslik": "Bilimsel yöntem",
+      "kaynak_id": "bilim_katman_yontem",
+      "ilim_alani": "bilim",
+      "faz": 2,
+      "dil": "tr",
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/bilim/katmanlar/bilimsel_yontem",
+      "guvenilirlik": "orta",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "parca_sayisi": 3,
+      "batch_sayisi": 1,
+      "updated_utc": "2026-10-07T19:58:26Z"
+    },
+    {
+      "katman_id": "islam_bilim_mirasi",
+      "baslik": "İslâm bilim mirası (kavram)",
+      "kaynak_id": "bilim_katman_islam_miras",
+      "ilim_alani": "bilim",
+      "faz": 2,
+      "dil": "tr",
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/bilim/katmanlar/islam_bilim_mirasi",
+      "guvenilirlik": "orta",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "parca_sayisi": 3,
+      "batch_sayisi": 1,
+      "updated_utc": "2026-10-07T19:58:26Z"
+    },
+    {
+      "katman_id": "disiplinler",
+      "baslik": "Disiplin haritası",
+      "kaynak_id": "bilim_katman_disiplin",
+      "ilim_alani": "bilim",
+      "faz": 2,
+      "dil": "tr",
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/bilim/katmanlar/disiplinler",
+      "guvenilirlik": "orta",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "parca_sayisi": 2,
+      "batch_sayisi": 1,
+      "updated_utc": "2026-10-07T19:58:26Z"
+    }
+  ],
+  "sayilar": {
+    "raf": 4,
+    "md_dosya": 25,
+    "faz2_katman": 3,
+    "kavram": 19,
+    "ek_md_yeni": 4
+  }
+}

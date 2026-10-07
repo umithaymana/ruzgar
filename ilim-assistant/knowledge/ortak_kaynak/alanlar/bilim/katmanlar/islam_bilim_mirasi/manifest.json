@@ -1,0 +1,15 @@
+{
+  "katman_id": "islam_bilim_mirasi",
+  "baslik": "İslâm bilim mirası (kavram)",
+  "kaynak_id": "bilim_katman_islam_miras",
+  "ilim_alani": "bilim",
+  "faz": 2,
+  "dil": "tr",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/bilim/katmanlar/islam_bilim_mirasi",
+  "guvenilirlik": "orta",
+  "kaynak_sinifi": "kalici",
+  "durum": "hazir",
+  "parca_sayisi": 3,
+  "batch_sayisi": 1,
+  "updated_utc": "2026-10-07T19:58:26Z"
+}
