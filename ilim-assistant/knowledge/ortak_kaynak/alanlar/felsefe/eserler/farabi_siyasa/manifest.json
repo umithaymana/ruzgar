@@ -1,0 +1,21 @@
+{
+  "eser_id": "farabi_siyasa",
+  "eser_tr": "es-Siyâsetü'l-medeniyye",
+  "eser_ar": "السياسة المدنية",
+  "yazar": "Ebû Nasr el-Fârâbî (ö. 339/950)",
+  "rol": "asıl",
+  "eser_turu": "kitap",
+  "ilim_alani": "felsefe",
+  "dil": "ar",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/felsefe/eserler/farabi_siyasa",
+  "guvenilirlik": "yuksek",
+  "kaynak_sinifi": "kalici",
+  "durum": "hazir",
+  "kaynak": "OpenITI",
+  "source_file": "0339AbuNasrFarabi.Siyasa.Shamela0007228-ara1",
+  "sha256": "7bcddbba6df7d88481550d2c3d12e71ceb95ed561bc1242e85e0e2e26b1caba1",
+  "char_count": 27356,
+  "chunk_count": 18,
+  "batch_sayisi": 1,
+  "updated_utc": "2026-10-07T19:16:46Z"
+}

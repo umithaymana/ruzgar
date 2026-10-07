@@ -1,0 +1,21 @@
+{
+  "eser_id": "ibn_sina_shifa_ilahiyyat",
+  "eser_tr": "eş-Şifâ — İlâhiyyât",
+  "eser_ar": "الشفاء — الإلهيات",
+  "yazar": "İbn Sînâ (ö. 428/1037)",
+  "rol": "asıl",
+  "eser_turu": "kitap",
+  "ilim_alani": "felsefe",
+  "dil": "ar",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/felsefe/eserler/ibn_sina_shifa_ilahiyyat",
+  "guvenilirlik": "yuksek",
+  "kaynak_sinifi": "kalici",
+  "durum": "hazir",
+  "kaynak": "OpenITI",
+  "source_file": "0428IbnSina.ShifaIlahiyyat.Rafed0001128-ara1",
+  "sha256": "1d3212e8afec56b802bbfbf40d49e1460d6184853464a30a069f0f949c20bd63",
+  "char_count": 543818,
+  "chunk_count": 378,
+  "batch_sayisi": 19,
+  "updated_utc": "2026-10-07T19:16:46Z"
+}

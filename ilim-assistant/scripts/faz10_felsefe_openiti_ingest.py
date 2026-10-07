@@ -91,6 +91,86 @@ OPENITI_WORKS = [
             "Kütüphanede Arapça OpenITI metni vardır. Rüzgar fetva vermez."
         ),
     },
+    {
+        "id": "gazali_maqasid",
+        "repo": "0525AH",
+        "author": "0505Ghazali",
+        "work": "0505Ghazali.MaqasidFalasifa",
+        "eser_tr": "Makâsıdü'l-Felâsife",
+        "eser_ar": "مقاصد الفلاسفة",
+        "yazar": "İmam Gazâlî (ö. 505/1111)",
+        "aliases": [
+            "maqasid",
+            "makasid",
+            "makâsıd",
+            "makasidu l felasife",
+            "filozofların maksatları",
+        ],
+        "metin": (
+            "Gazâlî'nin filozofların görüşlerini özetlediği Makâsıdü'l-Felâsife "
+            "(Tehâfüt'e giriş mahiyetinde). Kütüphanede Arapça OpenITI metni vardır. "
+            "Rüzgar fetva vermez."
+        ),
+    },
+    {
+        "id": "farabi_siyasa",
+        "repo": "0350AH",
+        "author": "0339AbuNasrFarabi",
+        "work": "0339AbuNasrFarabi.Siyasa",
+        "eser_tr": "es-Siyâsetü'l-medeniyye",
+        "eser_ar": "السياسة المدنية",
+        "yazar": "Ebû Nasr el-Fârâbî (ö. 339/950)",
+        "aliases": [
+            "siyasa farabi",
+            "siyaseti medeniye",
+            "siyâsetü'l-medeniyye",
+            "farabi siyaset",
+        ],
+        "metin": (
+            "Fârâbî'nin siyaset felsefesi eseri es-Siyâsetü'l-medeniyye. "
+            "Kütüphanede Arapça OpenITI metni vardır. Rüzgar fetva vermez."
+        ),
+    },
+    {
+        "id": "ibn_sina_najat",
+        "repo": "0450AH",
+        "author": "0428IbnSina",
+        "work": "0428IbnSina.Najat",
+        "eser_tr": "en-Necât",
+        "eser_ar": "النجاة",
+        "yazar": "İbn Sînâ (ö. 428/1037)",
+        "aliases": [
+            "necat",
+            "najat",
+            "necât",
+            "ibn sina necat",
+            "en necat",
+        ],
+        "metin": (
+            "İbn Sînâ'nın Necât'ı: mantık-tabiat-ilâhiyyât özeti. "
+            "Kütüphanede Arapça OpenITI metni vardır. Rüzgar fetva vermez."
+        ),
+    },
+    {
+        "id": "ibn_sina_shifa_ilahiyyat",
+        "repo": "0450AH",
+        "author": "0428IbnSina",
+        "work": "0428IbnSina.ShifaIlahiyyat",
+        "eser_tr": "eş-Şifâ — İlâhiyyât",
+        "eser_ar": "الشفاء — الإلهيات",
+        "yazar": "İbn Sînâ (ö. 428/1037)",
+        "aliases": [
+            "sifa ilahiyyat",
+            "şifâ ilâhiyyât",
+            "shifa ilahiyyat",
+            "ibn sina sifa",
+            "şifâ metafizik",
+        ],
+        "metin": (
+            "İbn Sînâ Şifâ külliyatının İlâhiyyât (metafizik) bölümü. "
+            "Kütüphanede Arapça OpenITI metni vardır. Rüzgar fetva vermez."
+        ),
+    },
 ]
 
 
@@ -359,12 +439,15 @@ def main() -> int:
         },
     }
     CATALOG.write_text(json.dumps(cat, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    rows_md = ["| Eser | Müellif |", "|------|---------|"]
+    for r in catalog_rows:
+        rows_md.append(
+            f"| `{r['eser_id']}` | {(r.get('yazar') or '').split('(')[0].strip()} |"
+        )
     (OUT / "README.md").write_text(
         "# Felsefe — İslâm felsefesi\n\n"
-        "| Eser | Müellif |\n|------|---------|\n"
-        "| `farabi_ara_ahl_madina` | Fârâbî |\n"
-        "| `ibn_sina_isharat` | İbn Sînâ |\n"
-        "| `gazali_tahafut` | Gazâlî |\n\n"
+        + "\n".join(rows_md)
+        + "\n\n"
         f"Yüklenen: **{len(catalog_rows)}** eser · "
         f"**{cat['sayilar']['chunk_toplam']}** chunk\n\n"
         "**Politika:** Fetva yok. OpenITI Arapça. Sayfa uydurma yasak.\n"

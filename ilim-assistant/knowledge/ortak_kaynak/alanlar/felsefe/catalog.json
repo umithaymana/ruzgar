@@ -1,7 +1,7 @@
 {
   "domain": "felsefe_islam",
   "kaynak": "OpenITI",
-  "updated_utc": "2026-10-07T19:12:20Z",
+  "updated_utc": "2026-10-07T19:16:46Z",
   "politika": "Fetva yok. Sayfa/cilt uydurma yasak.",
   "eserler": [
     {
@@ -23,7 +23,7 @@
       "char_count": 130108,
       "chunk_count": 97,
       "batch_sayisi": 5,
-      "updated_utc": "2026-10-07T19:12:20Z"
+      "updated_utc": "2026-10-07T19:16:46Z"
     },
     {
       "eser_id": "ibn_sina_isharat",
@@ -44,7 +44,7 @@
       "char_count": 133495,
       "chunk_count": 87,
       "batch_sayisi": 5,
-      "updated_utc": "2026-10-07T19:12:20Z"
+      "updated_utc": "2026-10-07T19:16:46Z"
     },
     {
       "eser_id": "gazali_tahafut",
@@ -65,11 +65,95 @@
       "char_count": 277510,
       "chunk_count": 185,
       "batch_sayisi": 10,
-      "updated_utc": "2026-10-07T19:12:20Z"
+      "updated_utc": "2026-10-07T19:16:46Z"
+    },
+    {
+      "eser_id": "gazali_maqasid",
+      "eser_tr": "Makâsıdü'l-Felâsife",
+      "eser_ar": "مقاصد الفلاسفة",
+      "yazar": "İmam Gazâlî (ö. 505/1111)",
+      "rol": "asıl",
+      "eser_turu": "kitap",
+      "ilim_alani": "felsefe",
+      "dil": "ar",
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/felsefe/eserler/gazali_maqasid",
+      "guvenilirlik": "yuksek",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "kaynak": "OpenITI",
+      "source_file": "0505Ghazali.MaqasidFalasifa.ALCorpus00027-ara1",
+      "sha256": "5073707c1ca16a00aa9583f8c4492aa09d0c2dfbc17f1c2995820705d466756d",
+      "char_count": 312853,
+      "chunk_count": 229,
+      "batch_sayisi": 12,
+      "updated_utc": "2026-10-07T19:16:46Z"
+    },
+    {
+      "eser_id": "farabi_siyasa",
+      "eser_tr": "es-Siyâsetü'l-medeniyye",
+      "eser_ar": "السياسة المدنية",
+      "yazar": "Ebû Nasr el-Fârâbî (ö. 339/950)",
+      "rol": "asıl",
+      "eser_turu": "kitap",
+      "ilim_alani": "felsefe",
+      "dil": "ar",
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/felsefe/eserler/farabi_siyasa",
+      "guvenilirlik": "yuksek",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "kaynak": "OpenITI",
+      "source_file": "0339AbuNasrFarabi.Siyasa.Shamela0007228-ara1",
+      "sha256": "7bcddbba6df7d88481550d2c3d12e71ceb95ed561bc1242e85e0e2e26b1caba1",
+      "char_count": 27356,
+      "chunk_count": 18,
+      "batch_sayisi": 1,
+      "updated_utc": "2026-10-07T19:16:46Z"
+    },
+    {
+      "eser_id": "ibn_sina_najat",
+      "eser_tr": "en-Necât",
+      "eser_ar": "النجاة",
+      "yazar": "İbn Sînâ (ö. 428/1037)",
+      "rol": "asıl",
+      "eser_turu": "kitap",
+      "ilim_alani": "felsefe",
+      "dil": "ar",
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/felsefe/eserler/ibn_sina_najat",
+      "guvenilirlik": "yuksek",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "kaynak": "OpenITI",
+      "source_file": "0428IbnSina.Najat.MP002-ara1",
+      "sha256": "67e6f397a90bc58e42f5a7b92da71848fba2127d12491f20c3b38041056f0e8e",
+      "char_count": 458643,
+      "chunk_count": 312,
+      "batch_sayisi": 16,
+      "updated_utc": "2026-10-07T19:16:46Z"
+    },
+    {
+      "eser_id": "ibn_sina_shifa_ilahiyyat",
+      "eser_tr": "eş-Şifâ — İlâhiyyât",
+      "eser_ar": "الشفاء — الإلهيات",
+      "yazar": "İbn Sînâ (ö. 428/1037)",
+      "rol": "asıl",
+      "eser_turu": "kitap",
+      "ilim_alani": "felsefe",
+      "dil": "ar",
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/felsefe/eserler/ibn_sina_shifa_ilahiyyat",
+      "guvenilirlik": "yuksek",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "kaynak": "OpenITI",
+      "source_file": "0428IbnSina.ShifaIlahiyyat.Rafed0001128-ara1",
+      "sha256": "1d3212e8afec56b802bbfbf40d49e1460d6184853464a30a069f0f949c20bd63",
+      "char_count": 543818,
+      "chunk_count": 378,
+      "batch_sayisi": 19,
+      "updated_utc": "2026-10-07T19:16:46Z"
     }
   ],
   "sayilar": {
-    "eser": 3,
-    "chunk_toplam": 369
+    "eser": 7,
+    "chunk_toplam": 1306
   }
 }

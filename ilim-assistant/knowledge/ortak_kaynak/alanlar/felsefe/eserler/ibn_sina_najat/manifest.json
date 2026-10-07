@@ -1,0 +1,21 @@
+{
+  "eser_id": "ibn_sina_najat",
+  "eser_tr": "en-Necât",
+  "eser_ar": "النجاة",
+  "yazar": "İbn Sînâ (ö. 428/1037)",
+  "rol": "asıl",
+  "eser_turu": "kitap",
+  "ilim_alani": "felsefe",
+  "dil": "ar",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/felsefe/eserler/ibn_sina_najat",
+  "guvenilirlik": "yuksek",
+  "kaynak_sinifi": "kalici",
+  "durum": "hazir",
+  "kaynak": "OpenITI",
+  "source_file": "0428IbnSina.Najat.MP002-ara1",
+  "sha256": "67e6f397a90bc58e42f5a7b92da71848fba2127d12491f20c3b38041056f0e8e",
+  "char_count": 458643,
+  "chunk_count": 312,
+  "batch_sayisi": 16,
+  "updated_utc": "2026-10-07T19:16:46Z"
+}

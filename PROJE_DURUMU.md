@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-07 gece — Felsefe OpenITI dolgu
+**Son güncelleme:** 2026-10-07 gece — Felsefe genişletme (7 eser)
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -17,16 +17,21 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 9. ~~Kur’ân ayet RAG~~ — push `180c679` · 416 batch · smoke PASS
 10. ~~Kayserî tam AR şerh~~ — `qaysari_sharh_fusus` **1176** chunk · smoke PASS
 11. ~~09 catalog sync~~ — `e200735`
-12. ~~Felsefe OpenITI~~ — Fârâbî · İbn Sînâ İşârât · Gazâlî Tehâfüt (**369** chunk) · smoke PASS
-13. **Sonraki:** psikoloji iskelet / felsefe genişletme (Maqâsıd, Şifâ) veya başka din rafı
+12. ~~Felsefe OpenITI~~ — 7 eser · **1306** chunk · smoke PASS
+13. **Sonraki:** psikoloji iskelet dolgu veya başka din rafı
+
+### 2026-10-07 — Felsefe genişletme
+
+- + Makâsıd (229) · Fârâbî Siyâse (18) · Necât (312) · Şifâ İlâhiyyât (378)
+- Toplam: **7** eser · **1306** chunk · RAG **298.478**
+- Anlık: maqasid / necat / siyasa farabi / sifa ilahiyyat
 
 ### 2026-10-07 — Felsefe (İslâm felsefesi) dolgu
 
 - Yol: `ortak_kaynak/alanlar/felsefe/eserler/`
-- OpenITI: Fârâbî Medîne-i Fâzıla (97) · İbn Sînâ İşârât (87) · Gazâlî Tehâfüt (185)
+- OpenITI: Fârâbî Medîne-i Fâzıla · Siyâse · İbn Sînâ İşârât · Necât · Şifâ İlâhiyyât · Gazâlî Tehâfüt · Makâsıd
 - Script: `faz10_felsefe_openiti_ingest.py`
 - Anlık: `ruzgar_felsefe_kutuphane.py` + desktop early path
-- RAG: **296.703** chunk
 
 ### 2026-10-07 — Kayserî tam Arapça şerh
 

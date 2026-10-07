@@ -2,11 +2,15 @@
 
 | Eser | Müellif |
 |------|---------|
-| `farabi_ara_ahl_madina` | Fârâbî |
+| `farabi_ara_ahl_madina` | Ebû Nasr el-Fârâbî |
 | `ibn_sina_isharat` | İbn Sînâ |
-| `gazali_tahafut` | Gazâlî |
+| `gazali_tahafut` | İmam Gazâlî |
+| `gazali_maqasid` | İmam Gazâlî |
+| `farabi_siyasa` | Ebû Nasr el-Fârâbî |
+| `ibn_sina_najat` | İbn Sînâ |
+| `ibn_sina_shifa_ilahiyyat` | İbn Sînâ |
 
-Yüklenen: **3** eser · **369** chunk
+Yüklenen: **7** eser · **1306** chunk
 
 **Politika:** Fetva yok. OpenITI Arapça. Sayfa uydurma yasak.
 **Script:** `faz10_felsefe_openiti_ingest.py` · **Anlık:** `ruzgar_felsefe_kutuphane.py`

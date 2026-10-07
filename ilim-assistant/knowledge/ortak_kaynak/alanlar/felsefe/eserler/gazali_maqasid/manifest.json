@@ -1,0 +1,21 @@
+{
+  "eser_id": "gazali_maqasid",
+  "eser_tr": "Makâsıdü'l-Felâsife",
+  "eser_ar": "مقاصد الفلاسفة",
+  "yazar": "İmam Gazâlî (ö. 505/1111)",
+  "rol": "asıl",
+  "eser_turu": "kitap",
+  "ilim_alani": "felsefe",
+  "dil": "ar",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/felsefe/eserler/gazali_maqasid",
+  "guvenilirlik": "yuksek",
+  "kaynak_sinifi": "kalici",
+  "durum": "hazir",
+  "kaynak": "OpenITI",
+  "source_file": "0505Ghazali.MaqasidFalasifa.ALCorpus00027-ara1",
+  "sha256": "5073707c1ca16a00aa9583f8c4492aa09d0c2dfbc17f1c2995820705d466756d",
+  "char_count": 312853,
+  "chunk_count": 229,
+  "batch_sayisi": 12,
+  "updated_utc": "2026-10-07T19:16:46Z"
+}
