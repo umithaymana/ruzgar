@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Rüzgar — klasik edebiyat/adab anlık cevap.
+"""Rüzgar — edebiyat anlık cevap (Faz 1 Arap + Faz 2 dil/dönem).
 
 Kaynak: knowledge/ortak_kaynak/alanlar/edebiyat_sanat/
-Fetva yok.
+Fetva yok. Telifli modern tam metin yok.
 """
 from __future__ import annotations
 
@@ -42,6 +42,38 @@ _CUES = (
     "maarri",
     "maʿarrî",
     "el maarri",
+    # Faz 2
+    "divan",
+    "aruz",
+    "gazel",
+    "kaside",
+    "mesnevi",
+    "fuzuli",
+    "fuzûlî",
+    "baki",
+    "bâkî",
+    "nedim",
+    "yunus emre",
+    "seyh galib",
+    "şeyh gâlib",
+    "tanzimat",
+    "servet",
+    "servet-i",
+    "milli edebiyat",
+    "millî edebiyat",
+    "halk edebiyat",
+    "cumhuriyet edebiyat",
+    "bati edebiyat",
+    "batı edebiyat",
+    "homeros",
+    "shakespeare",
+    "romantizm",
+    "realizm",
+    "yakin donem",
+    "yakın dönem",
+    "cagdas edebiyat",
+    "çağdaş edebiyat",
+    "modernizm",
 )
 
 

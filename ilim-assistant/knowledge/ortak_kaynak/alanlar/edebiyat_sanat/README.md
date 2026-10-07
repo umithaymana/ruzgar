@@ -14,3 +14,13 @@ Yüklenen: **7** eser · **1612** chunk
 
 **Politika:** Fetva yok · OpenITI Arapça · sayfa uydurma yasak.
 **Script:** `faz12_edebiyat_openiti_ingest.py` · **Anlık:** `ruzgar_edebiyat_kutuphane.py`
+
+## Faz 2 — dil/dönem katmanları
+
+- `katmanlar/divan` — divan/halk klasik çerçeve
+- `katmanlar/turk_donem` — Tanzimat → Cumhuriyet kavram
+- `katmanlar/bati` — batı klasik/akım kavram
+- `katmanlar/yakin_donem` — yalnızca akım (telifli metin yok)
+- Script: `faz12b_edebiyat_katman_ingest.py`
+- Katalog: `catalog_faz2.json`
+

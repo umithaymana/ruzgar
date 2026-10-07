@@ -1,0 +1,17 @@
+{
+  "katman_id": "bati",
+  "baslik": "Batı edebiyatı (kamu malı / kavram)",
+  "kaynak_id": "edebiyat_katman_bati",
+  "ilim_alani": "edebiyat_sanat",
+  "faz": 2,
+  "dil": "tr",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/edebiyat_sanat/katmanlar/bati",
+  "guvenilirlik": "orta",
+  "kaynak_sinifi": "kalici",
+  "durum": "hazir",
+  "kaynak": "Rüzgar Faz2 özet + kamu malı çerçeve",
+  "parca_sayisi": 3,
+  "batch_sayisi": 1,
+  "updated_utc": "2026-10-07T19:53:26Z",
+  "politika": "Telifli modern metin yok. Fetva yok."
+}

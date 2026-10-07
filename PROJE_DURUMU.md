@@ -1,8 +1,15 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-07 gece — Edebiyat genişletme (7 eser)
+**Son güncelleme:** 2026-10-07 gece — Edebiyat Faz 2 (dil/dönem katmanları)
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
+
+### Kilit politika — 2 fazlı raf
+
+- **Faz 1:** Canonical eserler (OpenITI / kamu malı) + anlık
+- **Faz 2:** Dil/dönem/kavram katmanları (aynı oturumda; iskelet bırakıp kaçma yok)
+- Telif: modern/yakın dönem **tam metin yok** — yalnızca kavram/özet + kamu malı çerçeve
+- Felsefe/psikoloji: hâlâ Faz 1 (sonraki turda Faz 2)
 
 ### Şimdi kaldığımız yer (öncelik)
 
@@ -19,8 +26,16 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 11. ~~09 catalog sync~~ — `e200735`
 12. ~~Felsefe OpenITI~~ — 7 eser · **1306** chunk · smoke PASS
 13. ~~Psikoloji OpenITI~~ — 4 eser · **524** chunk · anlık smoke PASS
-14. ~~Edebiyat OpenITI~~ — 7 eser · **1612** chunk · anlık smoke PASS
-15. **Sonraki:** bilim/coğrafya raf hijyeni veya RAG incremental (felsefe/psikoloji/edebiyat md)
+14. ~~Edebiyat Faz 1+2~~ — 7 OpenITI eser · 4 katman · 31 kavram · smoke 9/9
+15. **Sonraki:** bilim rafı **2 fazlı** (Faz1 canonical + Faz2 kavram/dönem) — edebiyat bitmeden geçilmezdi, bitti
+
+### 2026-10-07 — Edebiyat Faz 2 (dil/dönem)
+
+- Katmanlar: `katmanlar/divan` · `turk_donem` · `bati` · `yakin_donem`
+- Kavram: divan/aruz/gazel + Fuzûlî/Bâkî/Nedîm/Yunus · Tanzimat→Cumhuriyet · batı (Homeros/Shakespeare/akımlar) · yakın dönem (yalnızca akım)
+- Script: `faz12b_edebiyat_katman_ingest.py` · `catalog_faz2.json`
+- Anlık smoke: divan/tanzimat/fuzuli/bati/shakespeare/yunus + Arap alias’lar OK
+- Telif: modern roman metni yok
 
 ### 2026-10-07 — Edebiyat genişletme
 

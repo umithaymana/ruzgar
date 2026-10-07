@@ -1,6 +1,6 @@
 {
   "version": "ortak-kaynak-kayit-v1-2026-10-07",
-  "guncelleme": "2026-10-07T19:42:06Z",
+  "guncelleme": "2026-10-07T19:53:26Z",
   "aciklama": "Kalıcı kütüphane kayıtları. Metin henüz yoksa durum=placeholder. Web kayıtları buraya karıştırılmaz — web_cache kullan.",
   "kayitlar": [
     {
@@ -556,6 +556,74 @@
       "kaynak_sinifi": "kalici",
       "durum": "hazir",
       "not": "OpenITI klasik edebiyat/adab; fetva değil; sayfa uydurma yasak."
+    },
+    {
+      "kaynak_id": "edebiyat_katman_divan",
+      "kaynak_adi": "Divan ve klasik Türk şiiri",
+      "yazar": null,
+      "ilim_alani": "edebiyat_sanat",
+      "eser_turu": "katman",
+      "dil": "tr",
+      "yayin": null,
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/edebiyat_sanat/katmanlar/divan",
+      "guvenilirlik": "orta",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "Edebiyat Faz 2 katman; telifli modern metin yok."
+    },
+    {
+      "kaynak_id": "edebiyat_katman_turk_donem",
+      "kaynak_adi": "Türk edebiyatı dönemleri",
+      "yazar": null,
+      "ilim_alani": "edebiyat_sanat",
+      "eser_turu": "katman",
+      "dil": "tr",
+      "yayin": null,
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/edebiyat_sanat/katmanlar/turk_donem",
+      "guvenilirlik": "orta",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "Edebiyat Faz 2 katman; telifli modern metin yok."
+    },
+    {
+      "kaynak_id": "edebiyat_katman_bati",
+      "kaynak_adi": "Batı edebiyatı (kamu malı / kavram)",
+      "yazar": null,
+      "ilim_alani": "edebiyat_sanat",
+      "eser_turu": "katman",
+      "dil": "tr",
+      "yayin": null,
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/edebiyat_sanat/katmanlar/bati",
+      "guvenilirlik": "orta",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "Edebiyat Faz 2 katman; telifli modern metin yok."
+    },
+    {
+      "kaynak_id": "edebiyat_katman_yakin",
+      "kaynak_adi": "Yakın dönem edebiyat (yalnızca kavram)",
+      "yazar": null,
+      "ilim_alani": "edebiyat_sanat",
+      "eser_turu": "katman",
+      "dil": "tr",
+      "yayin": null,
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/edebiyat_sanat/katmanlar/yakin_donem",
+      "guvenilirlik": "orta",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "Edebiyat Faz 2 katman; telifli modern metin yok."
     }
   ]
 }

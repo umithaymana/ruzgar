@@ -1,7 +1,7 @@
 {
   "version": "ortak-kaynak-alanlar-v1-2026-10-07",
   "extensible": true,
-  "aciklama": "Geliştirme sırası; içerik mevcut kök yollarda kalır. Yeni alan eklemek için bu listeye kayıt + isteğe bağlı alanlar/<id>/README.md.",
+  "aciklama": "Geliştirme sırası; içerik mevcut kök yollarda kalır. Yeni alan eklemek için bu listeye kayıt + isteğe bağlı alanlar/<id>/README.md. Dolgu politikası (2026-10-07): her alanda 2 faz — (1) canonical eser+anlık (2) dil/dönem/kavram katmanı; iskelet bırakıp kaçma yok. Telifli modern tam metin yok.",
   "alanlar": [
     {
       "id": "dini_ilimler",

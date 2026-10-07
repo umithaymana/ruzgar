@@ -1,0 +1,17 @@
+{
+  "katman_id": "yakin_donem",
+  "baslik": "Yakın dönem edebiyat (yalnızca kavram)",
+  "kaynak_id": "edebiyat_katman_yakin",
+  "ilim_alani": "edebiyat_sanat",
+  "faz": 2,
+  "dil": "tr",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/edebiyat_sanat/katmanlar/yakin_donem",
+  "guvenilirlik": "orta",
+  "kaynak_sinifi": "kalici",
+  "durum": "hazir",
+  "kaynak": "Rüzgar Faz2 özet + kamu malı çerçeve",
+  "parca_sayisi": 2,
+  "batch_sayisi": 1,
+  "updated_utc": "2026-10-07T19:53:26Z",
+  "politika": "Telifli modern metin yok. Fetva yok."
+}
