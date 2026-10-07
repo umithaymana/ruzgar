@@ -1,6 +1,6 @@
 {
   "version": "ortak-kaynak-kayit-v1-2026-10-07",
-  "guncelleme": "2026-10-07T20:07:30Z",
+  "guncelleme": "2026-10-07T20:10:18Z",
   "aciklama": "Kalıcı kütüphane kayıtları. Metin henüz yoksa durum=placeholder. Web kayıtları buraya karıştırılmaz — web_cache kullan.",
   "kayitlar": [
     {
@@ -828,6 +828,23 @@
       "kaynak_sinifi": "kalici",
       "durum": "hazir",
       "not": "Coğrafya derinleştirme indeksi."
+    },
+    {
+      "kaynak_id": "bilim_katman_derin",
+      "kaynak_adi": "Bilim derin katman indeksi",
+      "yazar": null,
+      "ilim_alani": "bilim",
+      "eser_turu": "katman",
+      "dil": "tr",
+      "yayin": null,
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/bilim/katmanlar/derin",
+      "guvenilirlik": "orta",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "Bilim derinleştirme indeksi."
     }
   ]
 }

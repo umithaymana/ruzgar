@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-07 gece — Coğrafya derinleştirme (18 md · 28 kavram)
+**Son güncelleme:** 2026-10-07 gece — Bilim derinleştirme (40 md · 34 kavram)
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -27,9 +27,15 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 12. ~~Felsefe OpenITI~~ — 7 eser · **1306** chunk · smoke PASS
 13. ~~Psikoloji OpenITI~~ — 4 eser · **524** chunk · anlık smoke PASS
 14. ~~Edebiyat Faz 1+2~~ — 7 OpenITI eser · 4 katman · 31 kavram · smoke 9/9
-15. ~~Bilim Faz 1+2~~ — 4 raf · 25 md · 3 katman · 19 kavram · anlık smoke
+15. ~~Bilim Faz 1+2 + derin~~ — **40 md · ~17 KB · 34 kavram** · smoke 10/10
 16. ~~Coğrafya Faz 1+2 + derin~~ — **18 md · ~7.6 KB · 28 kavram** · smoke 9/9
 17. **Sonraki:** teknoloji 2 fazlı veya felsefe/psikoloji Faz 2; RAG incremental
+
+### 2026-10-07 — Bilim derinleştirme (13b)
+
+- +15 md: yıldız/Büyük Patlama · ısı/asit–baz/dalga · solunum/evrim · denklem/olasılık
+- Kavram: 19 → **34** · Script: `faz13b_bilim_derin_ingest.py`
+- Sınır: klinik teşhis yok · tehlikeli deney protokolü yok
 
 ### 2026-10-07 — Coğrafya derinleştirme (14b)
 

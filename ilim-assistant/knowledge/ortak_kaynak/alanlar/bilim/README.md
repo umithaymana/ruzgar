@@ -10,3 +10,8 @@ MD dosya: **25** · Kavram: **19**
 
 **Politika:** Eğitim · tıbbi teşhis yok · fetva yok
 **Script:** `faz13_bilim_raf_ingest.py` · **Anlık:** `ruzgar_bilim_kutuphane.py`
+
+## Derinleştirme (13b)
+- MD: **40** · karakter ≈ **17413** · kavram: **34**
+- Script: `faz13b_bilim_derin_ingest.py`
+
