@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-07 gece — Kur’ân ayet RAG katmanı
+**Son güncelleme:** 2026-10-07 gece — Kayserî tam Arapça şerh
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -12,10 +12,18 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 4. ~~Arapça Fütûh/Feth~~ — Fütûh AR+EN (~580 chunk); Feth zaten AR'dı (etiket düzeltildi)
 5. ~~İbnü'l-Arabî şerh (Câmî)~~ — `serh_ve_aciklama/jami_sharh_fusus` (~820 chunk)
 6. ~~Nebula tarih batch~~ — ayrı commit `15fac9c` (200 dosya, yalnızca `nebula_batch_*.md`)
-7. ~~Kâşânî + Kayserî~~ — Kâşânî AR ~633 chunk; Kayserî mukaddime EN ~356 chunk
+7. ~~Kâşânî + Kayserî mukaddime~~ — Kâşânî AR ~633; mukaddime EN ~356
 8. ~~P2/Ollama/tasavvuf commit+push~~ — `d9a2b81` (+ nebula `15fac9c`) → `origin/main`
-9. ~~Kur’ân ayet RAG~~ — `ayetler.jsonl` → `incremental/ayetler/` **416** batch (6236 ayet); RAG **293.610** · smoke PASS
-10. **Sonraki:** tam Arapça Kayserî şerhi (IA’da yok)
+9. ~~Kur’ân ayet RAG~~ — push `180c679` · 416 batch · smoke PASS
+10. ~~Kayserî tam AR şerh~~ — `qaysari_sharh_fusus` **1176** chunk (Âştiyânî PDF+NFKC) · smoke PASS
+11. **Sonraki:** (boş alan) felsefe/psikoloji iskelet dolgu veya başka din rafı
+
+### 2026-10-07 — Kayserî tam Arapça şerh
+
+- Kaynak: Âştiyânî nşr. PDF (IA yazma OCR bozuk → kullanılmadı)
+- PDF metin + NFKC → `qaysari_sharh_fusus` (**1176** chunk / 59 batch)
+- Anlık: «kayseri fusus» → tam AR; «mukaddime kayseri» → EN mukaddime
+- RAG: **296.000** chunk · indeks `qaysari_sharh_*` ~2390 parça · «Dawud al-Qaysari Fusus» 8/8 hit
 
 ### 2026-10-07 — Kur’ân ayet RAG katmanı
 

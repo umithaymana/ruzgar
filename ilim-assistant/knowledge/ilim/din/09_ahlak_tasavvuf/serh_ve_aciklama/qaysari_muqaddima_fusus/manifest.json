@@ -12,12 +12,12 @@
   "guvenilirlik": "orta",
   "kaynak_sinifi": "kalici",
   "durum": "hazir",
-  "kaynak": "Internet Archive (İngilizce çeviri OCR — Kayserî mukaddimesi; tam Arapça şerh henüz yok)",
+  "kaynak": "Internet Archive (İngilizce çeviri OCR — Kayserî mukaddimesi; tam Arapça şerh: qaysari_sharh_fusus)",
   "source_file": "qaysari_muqaddima_fusus__Muqadimah_of_Qaisari_djvu.txt",
   "sha256": "1479034166946bed7cddec00f13fce444affe7ec29cb3fb62d8fb616e7996865",
   "char_count": 501036,
   "chunk_count": 356,
   "batch_sayisi": 18,
   "not": "Fusûs şerhi; sayfa uydurma yasak.",
-  "updated_utc": "2026-10-07T18:25:14Z"
+  "updated_utc": "2026-10-07T18:59:15Z"
 }

@@ -1,6 +1,6 @@
 {
   "version": "ortak-kaynak-kayit-v1-2026-10-07",
-  "guncelleme": "2026-10-07T18:46:27Z",
+  "guncelleme": "2026-10-07T18:59:15Z",
   "aciklama": "Kalıcı kütüphane kayıtları. Metin henüz yoksa durum=placeholder. Web kayıtları buraya karıştırılmaz — web_cache kullan.",
   "kayitlar": [
     {
@@ -233,6 +233,23 @@
       "kaynak_sinifi": "kalici",
       "durum": "hazir",
       "not": "RAG batch: 416 paket · 6236 ayet. Meal çeviridir; fetva/tefsir değildir."
+    },
+    {
+      "kaynak_id": "qaysari_sharh_fusus",
+      "kaynak_adi": "Şerh-i Fusûs / Matla‘-ı Husûsi’l-Kelim (Kayserî)",
+      "yazar": "Dâvûd el-Kayserî (ö. 751/1350); nşr. Seyyid Celâleddin Âştiyânî",
+      "ilim_alani": "tasavvuf",
+      "eser_turu": "serh",
+      "dil": "ar",
+      "yayin": null,
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/ilim/din/09_ahlak_tasavvuf/serh_ve_aciklama/qaysari_sharh_fusus",
+      "guvenilirlik": "orta",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "Fusûs şerhi; sayfa uydurma yasak."
     }
   ]
 }

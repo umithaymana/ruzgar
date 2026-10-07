@@ -79,6 +79,37 @@ SERHLER = [
         "kavram_not": "Şerh rafı — Kâşânî; fetva yok.",
     },
     {
+        "id": "qaysari_sharh_fusus",
+        "eser_tr": "Şerh-i Fusûs / Matla‘-ı Husûsi’l-Kelim (Kayserî)",
+        "eser_ar": "شرح فصوص الحكم المسمى بمطلع خصوص الكلم في معاني فصوص الحكم",
+        "yazar": "Dâvûd el-Kayserî (ö. 751/1350); nşr. Seyyid Celâleddin Âştiyânî",
+        "ilgili_eser_id": "ibn_arabi_fusus",
+        "dil": "ar",
+        # Basılı PDF metin katmanı (presentation-form → NFKC); IA yazma OCR kullanılmaz
+        "local_file": "qaysari_sharh_fusus__ashatiyani_nfkc.txt",
+        "kaynak": (
+            "Basılı Arapça (Âştiyânî nşr., Şirket-i İntişârât-ı İlmî ve Ferhengî 1375ş) "
+            "— PDF metin çıkarma + NFKC; güven orta"
+        ),
+        "aliases": [
+            "kayseri fusus",
+            "kayserî fusus",
+            "qaysari fusus",
+            "qaisari fusus",
+            "şerh kayseri",
+            "serh kayseri",
+            "matla khusus",
+            "matla husus",
+        ],
+        "metin": (
+            "Dâvûd el-Kayserî'nin Fusûsu'l-Hikem şerhi (Matla‘-ı Husûsi’l-Kelim). "
+            "Kütüphanede Arapça basılı metin vardır (güven orta; sayfa uydurma yasak). "
+            "Rüzgar fetva vermez."
+        ),
+        "kavram_baslik": "kayseri fusus",
+        "kavram_not": "Şerh rafı — Kayserî tam AR; fetva yok.",
+    },
+    {
         "id": "qaysari_muqaddima_fusus",
         "eser_tr": "Mukaddimetü'l-Kayserî (Fusûs)",
         "eser_ar": "مقدمة القيصري على فصوص الحكم",
@@ -89,24 +120,20 @@ SERHLER = [
         "files": ["Muqadimah of Qaisari_djvu.txt"],
         "kaynak": (
             "Internet Archive (İngilizce çeviri OCR — Kayserî mukaddimesi; "
-            "tam Arapça şerh henüz yok)"
+            "tam Arapça şerh: qaysari_sharh_fusus)"
         ),
         "aliases": [
-            "kayseri fusus",
-            "kayserî fusus",
-            "qaysari fusus",
-            "qaisari fusus",
             "mukaddime kayseri",
             "muqaddima qaysari",
-            "şerh kayseri",
-            "serh kayseri",
+            "mukaddimat al qaysari",
+            "kayseri mukaddime",
         ],
         "metin": (
-            "Dâvûd el-Kayserî'nin Fusûs şerhine mukaddimesi (Muqaddimat al-Qaysari). "
-            "Kütüphanede İngilizce çeviri OCR vardır; tam Arapça şerh henüz eklenmedi. "
+            "Dâvûd el-Kayserî'nin Fusûs şerhine mukaddimesinin İngilizce çevirisi. "
+            "Tam Arapça şerh ayrıca `qaysari_sharh_fusus` rafındadır. "
             "Güven orta; sayfa uydurma yasak. Rüzgar fetva vermez."
         ),
-        "kavram_baslik": "kayseri fusus",
+        "kavram_baslik": "mukaddime kayseri",
         "kavram_not": "Şerh rafı — Kayserî mukaddime (EN); fetva yok.",
     },
 ]
@@ -124,6 +151,10 @@ def _http_get(url: str, dest: Path) -> None:
 
 
 def _strip(text: str) -> str:
+    import unicodedata
+
+    # PDF presentation-form Arapça → standart kod noktaları
+    text = unicodedata.normalize("NFKC", text)
     text = text.replace("\r\n", "\n").replace("\r", "\n")
     text = re.sub(r"\n{3,}", "\n\n", text)
     text = re.sub(r"[^\S\n]{2,}", " ", text)
@@ -166,6 +197,18 @@ def _chunk(text: str) -> list[str]:
 
 
 def _download(w: dict) -> Path:
+    local = w.get("local_file")
+    if local:
+        src = STAGE / local if not Path(local).is_absolute() else Path(local)
+        if not src.is_file():
+            # staging kökünde ara
+            alt = STAGE / Path(local).name
+            src = alt if alt.is_file() else src
+        if not src.is_file():
+            raise FileNotFoundError(f"local_file yok: {local} (STAGE={STAGE})")
+        print(f"  [local] {src.name}")
+        return src
+
     parts: list[Path] = []
     for fname in w["files"]:
         url = f"https://archive.org/download/{w['ia_id']}/{urllib.request.quote(fname)}"
@@ -337,8 +380,8 @@ def main() -> int:
         "# Şerh ve açıklama rafları\n\n"
         "Özellikle İbnü'l-Arabî (`Fütûhât`, `Fusûs`) için şerh/açıklama kaynakları buraya konur.\n\n"
         + "\n".join(rows_md)
-        + "\n\n**Politika:** Fetva yok. Sayfa/cilt uydurma yasak. OCR güven orta.\n"
-        "Kayserî satırı şu an mukaddime (EN çeviri); tam Arapça şerh ayrı eklenir.\n",
+        + "\n\n**Politika:** Fetva yok. Sayfa/cilt uydurma yasak. OCR/PDF metin güven orta.\n"
+        "Kayserî: tam AR `qaysari_sharh_fusus` + EN mukaddime `qaysari_muqaddima_fusus`.\n",
         encoding="utf-8",
     )
     print(f"\nTOPLAM serh={ok}")

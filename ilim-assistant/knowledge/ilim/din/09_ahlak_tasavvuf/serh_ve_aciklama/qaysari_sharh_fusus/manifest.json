@@ -1,0 +1,23 @@
+{
+  "eser_id": "qaysari_sharh_fusus",
+  "eser_tr": "Şerh-i Fusûs / Matla‘-ı Husûsi’l-Kelim (Kayserî)",
+  "eser_ar": "شرح فصوص الحكم المسمى بمطلع خصوص الكلم في معاني فصوص الحكم",
+  "yazar": "Dâvûd el-Kayserî (ö. 751/1350); nşr. Seyyid Celâleddin Âştiyânî",
+  "rol": "serh",
+  "eser_turu": "serh",
+  "ilgili_eser_id": "ibn_arabi_fusus",
+  "ilim_alani": "tasavvuf",
+  "dil": "ar",
+  "dosya_yolu": "knowledge/ilim/din/09_ahlak_tasavvuf/serh_ve_aciklama/qaysari_sharh_fusus",
+  "guvenilirlik": "orta",
+  "kaynak_sinifi": "kalici",
+  "durum": "hazir",
+  "kaynak": "Basılı Arapça (Âştiyânî nşr., Şirket-i İntişârât-ı İlmî ve Ferhengî 1375ş) — PDF metin çıkarma + NFKC; güven orta",
+  "source_file": "qaysari_sharh_fusus__ashatiyani_nfkc.txt",
+  "sha256": "0124ce18e72b02962d7e83c1241f530007ee239a81256cf3bc7595da64395ce7",
+  "char_count": 1907882,
+  "chunk_count": 1176,
+  "batch_sayisi": 59,
+  "not": "Fusûs şerhi; sayfa uydurma yasak.",
+  "updated_utc": "2026-10-07T18:59:15Z"
+}
