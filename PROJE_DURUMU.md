@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-07 — tasavvuf dolum + ortak kaynak
+**Son güncelleme:** 2026-10-07 — push `5fd9071` (ortak kaynak + tasavvuf 09)
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
