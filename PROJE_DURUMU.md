@@ -13,7 +13,8 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 5. ~~İbnü'l-Arabî şerh (Câmî)~~ — `serh_ve_aciklama/jami_sharh_fusus` (~820 chunk)
 6. ~~Nebula tarih batch~~ — ayrı commit `15fac9c` (200 dosya, yalnızca `nebula_batch_*.md`)
 7. ~~Kâşânî + Kayserî~~ — Kâşânî AR ~633 chunk; Kayserî mukaddime EN ~356 chunk
-8. **Sonraki:** P2/Ollama/tasavvuf kod+şerh commit (istenirse push); tam Arapça Kayserî şerhi IA’da yok
+8. ~~P2/Ollama/tasavvuf commit+push~~ — `d9a2b81` (+ nebula `15fac9c`) → `origin/main`
+9. **Sonraki:** tam Arapça Kayserî şerhi (IA’da yok); yerel RAG `embeddings.npy`/`chunks.jsonl` gitignore (push dışı)
 
 ### 2026-10-07 — Kâşânî / Kayserî şerh
 
