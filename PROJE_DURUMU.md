@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-07 gece — Teknoloji 2 faz
+**Son güncelleme:** 2026-10-07 gece — RAG incremental (ortak alanlar)
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -30,7 +30,16 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 15. ~~Bilim Faz 1+2 + derin~~ — **40 md · ~17 KB · 34 kavram** · smoke 10/10
 16. ~~Coğrafya Faz 1+2 + derin~~ — **18 md · ~7.6 KB · 28 kavram** · smoke 9/9
 17. ~~Teknoloji Faz 1+2~~ — 10 md · 3 katman · 13 kavram · smoke 7/7
-18. **Sonraki:** RAG incremental (ortak alan md’leri) veya din rafları hijyeni
+18. ~~RAG incremental~~ — **302.676** chunk · 177 dosya değişti · yerel indeks
+19. **Sonraki:** din rafları hijyeni / anlık–RAG anlam filtresi ince ayar (isteğe bağlı)
+
+### 2026-10-07 — RAG incremental (ortak alanlar)
+
+- `build_index(incremental=True)` → status=incremental · chunks=**302676** · changed_files=**177**
+- İndekste: `ortak_kaynak/alanlar` ~6641 · edebiyat ~3222 · felsefe eser ~2477 · psikoloji eser ~920
+- Script: `scripts/rag_incremental_rebuild.py`
+- Not: kısa «nedir» soruları anlık kütüphane; vektör aramada büyük din külliyatı skor baskın olabilir
+- `embeddings.npy` / `chunks.jsonl` gitignore — commit edilmez
 
 ### 2026-10-07 — Teknoloji (2 faz)
 
