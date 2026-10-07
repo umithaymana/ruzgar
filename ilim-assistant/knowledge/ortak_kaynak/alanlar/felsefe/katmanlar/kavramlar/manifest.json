@@ -1,0 +1,12 @@
+{
+  "katman_id": "kavramlar",
+  "baslik": "Temel felsefe kavramları",
+  "kaynak_id": "felsefe_katman_kavramlar",
+  "ilim_alani": "felsefe",
+  "faz": 2,
+  "dil": "tr",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/felsefe/katmanlar/kavramlar",
+  "parca_sayisi": 3,
+  "updated_utc": "2026-10-07T20:14:35Z",
+  "durum": "hazir"
+}

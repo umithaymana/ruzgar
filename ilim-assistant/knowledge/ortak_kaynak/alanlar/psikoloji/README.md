@@ -13,3 +13,10 @@ Yüklenen: **4** eser · **524** chunk
 
 **Politika:** Fetva yok · klinik değil · OpenITI Arapça · sayfa uydurma yasak.
 **Script:** `faz11_psikoloji_openiti_ingest.py` · **Anlık:** `ruzgar_psikoloji_kutuphane.py`
+
+## Faz 2
+- `katmanlar/nefs_gucleri` · `ahlak_bag` · `klinik_sinir`
+- Kavram toplam: **13**
+- Script: `faz11b_psikoloji_faz2_ingest.py`
+- **Uyarı:** Klinik teşhis değildir.
+

@@ -32,6 +32,20 @@ _CUES = (
     "mîzân",
     "nâtıka",
     "natika nefs",
+    "nefs gucler",
+    "nefis güç",
+    "idrak",
+    "tahayyul",
+    "vehim",
+    "ahlak nefs",
+    "nefs terbiye",
+    "klinik",
+    "modern psikoloji",
+    "duygu",
+    "isk",
+    "işk",
+    "akil nefs",
+    "akıl nefs",
 )
 
 

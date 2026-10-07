@@ -1,8 +1,8 @@
 {
   "domain": "psikoloji_nefs",
   "kaynak": "OpenITI",
-  "updated_utc": "2026-10-07T19:23:58Z",
-  "politika": "Klasik nefs/ahlâk. Klinik teşhis/tedavi değildir. Fetva yok. Sayfa/cilt uydurma yasak.",
+  "updated_utc": "2026-10-07T20:14:35Z",
+  "politika": "2 fazlı. Klasik nefs/ahlâk. Klinik teşhis/tedavi değildir. Fetva yok. Sayfa uydurma yasak.",
   "eserler": [
     {
       "eser_id": "ibn_sina_shifa_nafs",
@@ -91,6 +91,50 @@
   ],
   "sayilar": {
     "eser": 4,
-    "chunk_toplam": 524
-  }
+    "chunk_toplam": 524,
+    "faz2_katman": 3,
+    "kavram": 13
+  },
+  "faz": {
+    "1": "openiti_nefs",
+    "2": "gucler_ahlak_sinir"
+  },
+  "faz2_katmanlar": [
+    {
+      "katman_id": "nefs_gucleri",
+      "baslik": "Nefs güçleri",
+      "kaynak_id": "psikoloji_katman_gucler",
+      "ilim_alani": "psikoloji",
+      "faz": 2,
+      "dil": "tr",
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/psikoloji/katmanlar/nefs_gucleri",
+      "parca_sayisi": 2,
+      "updated_utc": "2026-10-07T20:14:35Z",
+      "durum": "hazir"
+    },
+    {
+      "katman_id": "ahlak_bag",
+      "baslik": "Ahlâk ve nefs bağı",
+      "kaynak_id": "psikoloji_katman_ahlak",
+      "ilim_alani": "psikoloji",
+      "faz": 2,
+      "dil": "tr",
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/psikoloji/katmanlar/ahlak_bag",
+      "parca_sayisi": 2,
+      "updated_utc": "2026-10-07T20:14:35Z",
+      "durum": "hazir"
+    },
+    {
+      "katman_id": "klinik_sinir",
+      "baslik": "Klasik / klinik sınır",
+      "kaynak_id": "psikoloji_katman_sinir",
+      "ilim_alani": "psikoloji",
+      "faz": 2,
+      "dil": "tr",
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/psikoloji/katmanlar/klinik_sinir",
+      "parca_sayisi": 2,
+      "updated_utc": "2026-10-07T20:14:35Z",
+      "durum": "hazir"
+    }
+  ]
 }

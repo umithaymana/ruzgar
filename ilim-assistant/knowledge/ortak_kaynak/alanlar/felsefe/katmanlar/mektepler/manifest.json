@@ -1,0 +1,12 @@
+{
+  "katman_id": "mektepler",
+  "baslik": "Felsefe mektepleri",
+  "kaynak_id": "felsefe_katman_mektepler",
+  "ilim_alani": "felsefe",
+  "faz": 2,
+  "dil": "tr",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/felsefe/katmanlar/mektepler",
+  "parca_sayisi": 3,
+  "updated_utc": "2026-10-07T20:14:35Z",
+  "durum": "hazir"
+}

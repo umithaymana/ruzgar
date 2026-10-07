@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-07 gece — Bilim derinleştirme (40 md · 34 kavram)
+**Son güncelleme:** 2026-10-07 gece — Felsefe+Psikoloji Faz 2
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -24,12 +24,24 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 9. ~~Kur’ân ayet RAG~~ — push `180c679` · 416 batch · smoke PASS
 10. ~~Kayserî tam AR şerh~~ — `qaysari_sharh_fusus` **1176** chunk · smoke PASS
 11. ~~09 catalog sync~~ — `e200735`
-12. ~~Felsefe OpenITI~~ — 7 eser · **1306** chunk · smoke PASS
-13. ~~Psikoloji OpenITI~~ — 4 eser · **524** chunk · anlık smoke PASS
+12. ~~Felsefe Faz 1+2~~ — 7 OpenITI · 3 katman · **18 kavram** · smoke OK
+13. ~~Psikoloji Faz 1+2~~ — 4 OpenITI · 3 katman · **13 kavram** · smoke OK
 14. ~~Edebiyat Faz 1+2~~ — 7 OpenITI eser · 4 katman · 31 kavram · smoke 9/9
 15. ~~Bilim Faz 1+2 + derin~~ — **40 md · ~17 KB · 34 kavram** · smoke 10/10
 16. ~~Coğrafya Faz 1+2 + derin~~ — **18 md · ~7.6 KB · 28 kavram** · smoke 9/9
-17. **Sonraki:** teknoloji 2 fazlı veya felsefe/psikoloji Faz 2; RAG incremental
+17. **Sonraki:** teknoloji 2 fazlı; RAG incremental (ortak alan md’leri)
+
+### 2026-10-07 — Felsefe Faz 2
+
+- Katman: mektepler · kavramlar · dönem/antik köprü
+- Kavram: Meşşâî, işrâk, kelâm–felsefe, metafizik, mantık, siyaset, ahlâk, nedensellik, Aristoteles–Platon
+- Script: `faz10b_felsefe_faz2_ingest.py` · OpenITI Faz 1 korunur
+
+### 2026-10-07 — Psikoloji Faz 2
+
+- Katman: nefs güçleri · ahlâk bağı · klasik/klinik sınır
+- Kavram: idrak, ahlâk–nefs, duygu klasik, nâtıka, işk; klinik teşhis uyarısı
+- Script: `faz11b_psikoloji_faz2_ingest.py` · OpenITI Faz 1 korunur
 
 ### 2026-10-07 — Bilim derinleştirme (13b)
 

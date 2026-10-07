@@ -14,3 +14,9 @@ Yüklenen: **7** eser · **1306** chunk
 
 **Politika:** Fetva yok. OpenITI Arapça. Sayfa uydurma yasak.
 **Script:** `faz10_felsefe_openiti_ingest.py` · **Anlık:** `ruzgar_felsefe_kutuphane.py`
+
+## Faz 2
+- `katmanlar/mektepler` · `kavramlar` · `donem_kopru`
+- Kavram toplam: **18**
+- Script: `faz10b_felsefe_faz2_ingest.py`
+

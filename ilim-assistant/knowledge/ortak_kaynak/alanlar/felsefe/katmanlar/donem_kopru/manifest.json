@@ -1,0 +1,12 @@
+{
+  "katman_id": "donem_kopru",
+  "baslik": "Dönem ve antik köprü",
+  "kaynak_id": "felsefe_katman_donem",
+  "ilim_alani": "felsefe",
+  "faz": 2,
+  "dil": "tr",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/felsefe/katmanlar/donem_kopru",
+  "parca_sayisi": 2,
+  "updated_utc": "2026-10-07T20:14:35Z",
+  "durum": "hazir"
+}

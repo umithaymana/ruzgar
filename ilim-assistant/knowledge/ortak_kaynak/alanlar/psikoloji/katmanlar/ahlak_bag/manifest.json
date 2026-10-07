@@ -1,0 +1,12 @@
+{
+  "katman_id": "ahlak_bag",
+  "baslik": "Ahlâk ve nefs bağı",
+  "kaynak_id": "psikoloji_katman_ahlak",
+  "ilim_alani": "psikoloji",
+  "faz": 2,
+  "dil": "tr",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/psikoloji/katmanlar/ahlak_bag",
+  "parca_sayisi": 2,
+  "updated_utc": "2026-10-07T20:14:35Z",
+  "durum": "hazir"
+}
