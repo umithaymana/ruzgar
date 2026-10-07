@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-07 gece — Kayserî tam Arapça şerh
+**Son güncelleme:** 2026-10-07 gece — Felsefe OpenITI dolgu
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -15,8 +15,18 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 7. ~~Kâşânî + Kayserî mukaddime~~ — Kâşânî AR ~633; mukaddime EN ~356
 8. ~~P2/Ollama/tasavvuf commit+push~~ — `d9a2b81` (+ nebula `15fac9c`) → `origin/main`
 9. ~~Kur’ân ayet RAG~~ — push `180c679` · 416 batch · smoke PASS
-10. ~~Kayserî tam AR şerh~~ — `qaysari_sharh_fusus` **1176** chunk (Âştiyânî PDF+NFKC) · smoke PASS
-11. **Sonraki:** (boş alan) felsefe/psikoloji iskelet dolgu veya başka din rafı
+10. ~~Kayserî tam AR şerh~~ — `qaysari_sharh_fusus` **1176** chunk · smoke PASS
+11. ~~09 catalog sync~~ — `e200735`
+12. ~~Felsefe OpenITI~~ — Fârâbî · İbn Sînâ İşârât · Gazâlî Tehâfüt (**369** chunk) · smoke PASS
+13. **Sonraki:** psikoloji iskelet / felsefe genişletme (Maqâsıd, Şifâ) veya başka din rafı
+
+### 2026-10-07 — Felsefe (İslâm felsefesi) dolgu
+
+- Yol: `ortak_kaynak/alanlar/felsefe/eserler/`
+- OpenITI: Fârâbî Medîne-i Fâzıla (97) · İbn Sînâ İşârât (87) · Gazâlî Tehâfüt (185)
+- Script: `faz10_felsefe_openiti_ingest.py`
+- Anlık: `ruzgar_felsefe_kutuphane.py` + desktop early path
+- RAG: **296.703** chunk
 
 ### 2026-10-07 — Kayserî tam Arapça şerh
 

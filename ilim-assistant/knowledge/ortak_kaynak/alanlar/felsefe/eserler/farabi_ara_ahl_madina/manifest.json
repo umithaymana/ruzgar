@@ -1,0 +1,21 @@
+{
+  "eser_id": "farabi_ara_ahl_madina",
+  "eser_tr": "Ârâu ehli'l-medîneti'l-fâdıla",
+  "eser_ar": "آراء أهل المدينة الفاضلة",
+  "yazar": "Ebû Nasr el-Fârâbî (ö. 339/950)",
+  "rol": "asıl",
+  "eser_turu": "kitap",
+  "ilim_alani": "felsefe",
+  "dil": "ar",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/felsefe/eserler/farabi_ara_ahl_madina",
+  "guvenilirlik": "yuksek",
+  "kaynak_sinifi": "kalici",
+  "durum": "hazir",
+  "kaynak": "OpenITI",
+  "source_file": "0339AbuNasrFarabi.AraAhlMadina.EShia0010461-ara1",
+  "sha256": "303d35866db8fa1e3c2c678e6e6f14a4a205da0f3831751a2a72c01d7ced3fb4",
+  "char_count": 130108,
+  "chunk_count": 97,
+  "batch_sayisi": 5,
+  "updated_utc": "2026-10-07T19:12:20Z"
+}

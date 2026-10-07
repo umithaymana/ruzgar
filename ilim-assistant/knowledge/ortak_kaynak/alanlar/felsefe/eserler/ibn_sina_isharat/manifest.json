@@ -1,0 +1,21 @@
+{
+  "eser_id": "ibn_sina_isharat",
+  "eser_tr": "el-İşârât ve't-Tenbîhât",
+  "eser_ar": "الإشارات والتنبيهات",
+  "yazar": "İbn Sînâ (ö. 428/1037)",
+  "rol": "asıl",
+  "eser_turu": "kitap",
+  "ilim_alani": "felsefe",
+  "dil": "ar",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/felsefe/eserler/ibn_sina_isharat",
+  "guvenilirlik": "yuksek",
+  "kaynak_sinifi": "kalici",
+  "durum": "hazir",
+  "kaynak": "OpenITI",
+  "source_file": "0428IbnSina.IsharatWaTanbihat.Shamela0006534BK1-ara1.mARkdown",
+  "sha256": "6c4be12d13ba794f100a3fa890576c0086041a3511031839a531d0af4f545157",
+  "char_count": 133495,
+  "chunk_count": 87,
+  "batch_sayisi": 5,
+  "updated_utc": "2026-10-07T19:12:20Z"
+}

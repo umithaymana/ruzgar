@@ -1,3 +1,12 @@
-# Felsefe
+# Felsefe — İslâm felsefesi
 
-Yer tutucu kök. Klasik/modern felsefe eserleri buraya veya ileride seçilecek `knowledge/` altına konacak; kayıt `ortak_kaynak/KAYNAK_KAYIT.json` + `ilim_alani: felsefe`.
+| Eser | Müellif |
+|------|---------|
+| `farabi_ara_ahl_madina` | Fârâbî |
+| `ibn_sina_isharat` | İbn Sînâ |
+| `gazali_tahafut` | Gazâlî |
+
+Yüklenen: **3** eser · **369** chunk
+
+**Politika:** Fetva yok. OpenITI Arapça. Sayfa uydurma yasak.
+**Script:** `faz10_felsefe_openiti_ingest.py` · **Anlık:** `ruzgar_felsefe_kutuphane.py`

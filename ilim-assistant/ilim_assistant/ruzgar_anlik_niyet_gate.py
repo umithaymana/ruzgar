@@ -40,6 +40,7 @@ _LIBRARY_TRYERS: tuple[tuple[str, str, str], ...] = (
     ("ilim_assistant.ruzgar_fikh_kutuphane", "try_fikh_reply", "Fıkıh"),
     ("ilim_assistant.ruzgar_hadis_kutuphane", "try_hadis_reply", "Hadis"),
     ("ilim_assistant.ruzgar_akaid_kutuphane", "try_akaid_reply", "Akaid"),
+    ("ilim_assistant.ruzgar_felsefe_kutuphane", "try_felsefe_reply", "Felsefe"),
 )
 
 

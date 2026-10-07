@@ -1,6 +1,6 @@
 {
   "version": "ortak-kaynak-kayit-v1-2026-10-07",
-  "guncelleme": "2026-10-07T18:59:15Z",
+  "guncelleme": "2026-10-07T19:12:20Z",
   "aciklama": "Kalıcı kütüphane kayıtları. Metin henüz yoksa durum=placeholder. Web kayıtları buraya karıştırılmaz — web_cache kullan.",
   "kayitlar": [
     {
@@ -250,6 +250,57 @@
       "kaynak_sinifi": "kalici",
       "durum": "hazir",
       "not": "Fusûs şerhi; sayfa uydurma yasak."
+    },
+    {
+      "kaynak_id": "farabi_ara_ahl_madina",
+      "kaynak_adi": "Ârâu ehli'l-medîneti'l-fâdıla",
+      "yazar": "Ebû Nasr el-Fârâbî (ö. 339/950)",
+      "ilim_alani": "felsefe",
+      "eser_turu": "kitap",
+      "dil": "ar",
+      "yayin": null,
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/felsefe/eserler/farabi_ara_ahl_madina",
+      "guvenilirlik": "yuksek",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "OpenITI; sayfa uydurma yasak."
+    },
+    {
+      "kaynak_id": "ibn_sina_isharat",
+      "kaynak_adi": "el-İşârât ve't-Tenbîhât",
+      "yazar": "İbn Sînâ (ö. 428/1037)",
+      "ilim_alani": "felsefe",
+      "eser_turu": "kitap",
+      "dil": "ar",
+      "yayin": null,
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/felsefe/eserler/ibn_sina_isharat",
+      "guvenilirlik": "yuksek",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "OpenITI; sayfa uydurma yasak."
+    },
+    {
+      "kaynak_id": "gazali_tahafut",
+      "kaynak_adi": "Tehâfütü'l-Felâsife",
+      "yazar": "İmam Gazâlî (ö. 505/1111)",
+      "ilim_alani": "felsefe",
+      "eser_turu": "kitap",
+      "dil": "ar",
+      "yayin": null,
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/felsefe/eserler/gazali_tahafut",
+      "guvenilirlik": "yuksek",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "OpenITI; sayfa uydurma yasak."
     }
   ]
 }
