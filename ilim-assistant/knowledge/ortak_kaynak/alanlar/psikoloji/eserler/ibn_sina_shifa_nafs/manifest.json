@@ -1,0 +1,21 @@
+{
+  "eser_id": "ibn_sina_shifa_nafs",
+  "eser_tr": "eş-Şifâ — Kitâbü'n-Nefs",
+  "eser_ar": "الشفاء — كتاب النفس",
+  "yazar": "İbn Sînâ (ö. 428/1037)",
+  "rol": "asıl",
+  "eser_turu": "kitap",
+  "ilim_alani": "psikoloji",
+  "dil": "ar",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/psikoloji/eserler/ibn_sina_shifa_nafs",
+  "guvenilirlik": "yuksek",
+  "kaynak_sinifi": "kalici",
+  "durum": "hazir",
+  "kaynak": "OpenITI",
+  "source_file": "0428IbnSina.ShifaNafs.Rafed0000904-ara1",
+  "sha256": "5a34943613ad944106cc9152555bda5cb5b4670eb3c0fbb2a629612ba776178c",
+  "char_count": 462650,
+  "chunk_count": 357,
+  "batch_sayisi": 18,
+  "updated_utc": "2026-10-07T19:23:58Z"
+}

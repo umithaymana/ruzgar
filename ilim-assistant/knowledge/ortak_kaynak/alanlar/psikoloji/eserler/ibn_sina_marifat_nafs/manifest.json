@@ -1,0 +1,21 @@
+{
+  "eser_id": "ibn_sina_marifat_nafs",
+  "eser_tr": "Ma'rifetü'n-nefsi'n-nâtıka",
+  "eser_ar": "معرفة النفس الناطقة",
+  "yazar": "İbn Sînâ (ö. 428/1037)",
+  "rol": "asıl",
+  "eser_turu": "kitap",
+  "ilim_alani": "psikoloji",
+  "dil": "ar",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/psikoloji/eserler/ibn_sina_marifat_nafs",
+  "guvenilirlik": "yuksek",
+  "kaynak_sinifi": "kalici",
+  "durum": "hazir",
+  "kaynak": "OpenITI",
+  "source_file": "0428IbnSina.MacrifatNafsNatiq.Hindawi018403864-ara1",
+  "sha256": "5b5a95d3cb9f8d286f20e5a3e356bbb1a79d0f6d279d703b36791bcc88a44e6f",
+  "char_count": 14089,
+  "chunk_count": 11,
+  "batch_sayisi": 1,
+  "updated_utc": "2026-10-07T19:23:58Z"
+}

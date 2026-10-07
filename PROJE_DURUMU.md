@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-07 gece — Felsefe genişletme (7 eser)
+**Son güncelleme:** 2026-10-07 gece — Psikoloji (klasik nefs) iskelet
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -18,7 +18,17 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 10. ~~Kayserî tam AR şerh~~ — `qaysari_sharh_fusus` **1176** chunk · smoke PASS
 11. ~~09 catalog sync~~ — `e200735`
 12. ~~Felsefe OpenITI~~ — 7 eser · **1306** chunk · smoke PASS
-13. **Sonraki:** psikoloji iskelet dolgu veya başka din rafı
+13. ~~Psikoloji OpenITI~~ — 4 eser · **524** chunk · anlık smoke PASS
+14. **Sonraki:** başka boş ortak alan (veya psikoloji TR modern kavram — klinik değil)
+
+### 2026-10-07 — Psikoloji (klasik nefs / ahlâk)
+
+- Yol: `ortak_kaynak/alanlar/psikoloji/eserler/`
+- OpenITI: İbn Sînâ Şifâ-Nefs (357) · Ma'rifetü'n-nefs (11) · Gazâlî Mîzânü'l-amel (133) · Mâhiyyetü'l-işk (23)
+- Toplam: **4** eser · **524** chunk
+- Script: `faz11_psikoloji_openiti_ingest.py`
+- Anlık: `ruzgar_psikoloji_kutuphane.py` + desktop early path + niyet gate
+- Politika: klinik teşhis değildir · fetva yok · sayfa uydurma yasak
 
 ### 2026-10-07 — Felsefe genişletme
 

@@ -10829,6 +10829,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         except Exception:
             pass
         try:
+            from ilim_assistant.ruzgar_psikoloji_kutuphane import try_psikoloji_reply
+
+            _psikoloji_e = _library_instant_or_none(msg_early, try_psikoloji_reply)
+            if _psikoloji_e:
+                _orch_ps = dict(orch_early)
+                _orch_ps.setdefault("plan", {})["primary"] = "ilim"
+                _orch_ps["plan"]["label_tr"] = "Psikoloji (anında)"
+                _orch_ps["psikoloji_anlik"] = True
+                yield from _iter_instant_chat_events(
+                    _psikoloji_e,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_ps,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
             from ilim_assistant.ruzgar_usul_fikh_kutuphane import try_usul_fikh_reply
 
             _usul_e = _library_instant_or_none(msg_early, try_usul_fikh_reply)
@@ -11451,6 +11471,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     session_wake_used=req.session_wake_used,
                     msg_for_wake=req.message,
                     orch=_orch_fl2,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ruzgar_psikoloji_kutuphane import try_psikoloji_reply
+
+            _psikoloji_early = _library_instant_or_none(msg_early, try_psikoloji_reply)
+            if _psikoloji_early:
+                _orch_ps2 = dict(orch_early)
+                _orch_ps2.setdefault("plan", {})["primary"] = "ilim"
+                _orch_ps2["plan"]["label_tr"] = "Psikoloji (anında)"
+                _orch_ps2["psikoloji_anlik"] = True
+                yield from _iter_instant_chat_events(
+                    _psikoloji_early,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_ps2,
                     instant_gundelik=True,
                 )
                 return

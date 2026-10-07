@@ -1,0 +1,21 @@
+{
+  "eser_id": "ibn_sina_mahiya_ishq",
+  "eser_tr": "Risâle fî mâhiyyeti'l-işk",
+  "eser_ar": "رسالة في ماهية العشق",
+  "yazar": "İbn Sînâ (ö. 428/1037)",
+  "rol": "asıl",
+  "eser_turu": "kitap",
+  "ilim_alani": "psikoloji",
+  "dil": "ar",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/psikoloji/eserler/ibn_sina_mahiya_ishq",
+  "guvenilirlik": "yuksek",
+  "kaynak_sinifi": "kalici",
+  "durum": "hazir",
+  "kaynak": "OpenITI",
+  "source_file": "0428IbnSina.MaHiyaCishq.Hindawi053714184-ara1",
+  "sha256": "ffc911aa6f17691a590f72313c2388ebdf605f5ba55bcba8052325a56e2f0d8b",
+  "char_count": 28606,
+  "chunk_count": 23,
+  "batch_sayisi": 2,
+  "updated_utc": "2026-10-07T19:23:58Z"
+}

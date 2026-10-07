@@ -1,6 +1,6 @@
 {
   "version": "ortak-kaynak-kayit-v1-2026-10-07",
-  "guncelleme": "2026-10-07T19:16:46Z",
+  "guncelleme": "2026-10-07T19:23:58Z",
   "aciklama": "Kalıcı kütüphane kayıtları. Metin henüz yoksa durum=placeholder. Web kayıtları buraya karıştırılmaz — web_cache kullan.",
   "kayitlar": [
     {
@@ -369,6 +369,74 @@
       "kaynak_sinifi": "kalici",
       "durum": "hazir",
       "not": "OpenITI; sayfa uydurma yasak."
+    },
+    {
+      "kaynak_id": "ibn_sina_shifa_nafs",
+      "kaynak_adi": "eş-Şifâ — Kitâbü'n-Nefs",
+      "yazar": "İbn Sînâ (ö. 428/1037)",
+      "ilim_alani": "psikoloji",
+      "eser_turu": "kitap",
+      "dil": "ar",
+      "yayin": null,
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/psikoloji/eserler/ibn_sina_shifa_nafs",
+      "guvenilirlik": "yuksek",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "OpenITI klasik nefs/ahlâk; klinik değil; sayfa uydurma yasak."
+    },
+    {
+      "kaynak_id": "ibn_sina_marifat_nafs",
+      "kaynak_adi": "Ma'rifetü'n-nefsi'n-nâtıka",
+      "yazar": "İbn Sînâ (ö. 428/1037)",
+      "ilim_alani": "psikoloji",
+      "eser_turu": "kitap",
+      "dil": "ar",
+      "yayin": null,
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/psikoloji/eserler/ibn_sina_marifat_nafs",
+      "guvenilirlik": "yuksek",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "OpenITI klasik nefs/ahlâk; klinik değil; sayfa uydurma yasak."
+    },
+    {
+      "kaynak_id": "gazali_mizan_amal",
+      "kaynak_adi": "Mîzânü'l-amel",
+      "yazar": "İmam Gazâlî (ö. 505/1111)",
+      "ilim_alani": "psikoloji",
+      "eser_turu": "kitap",
+      "dil": "ar",
+      "yayin": null,
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/psikoloji/eserler/gazali_mizan_amal",
+      "guvenilirlik": "yuksek",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "OpenITI klasik nefs/ahlâk; klinik değil; sayfa uydurma yasak."
+    },
+    {
+      "kaynak_id": "ibn_sina_mahiya_ishq",
+      "kaynak_adi": "Risâle fî mâhiyyeti'l-işk",
+      "yazar": "İbn Sînâ (ö. 428/1037)",
+      "ilim_alani": "psikoloji",
+      "eser_turu": "kitap",
+      "dil": "ar",
+      "yayin": null,
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/psikoloji/eserler/ibn_sina_mahiya_ishq",
+      "guvenilirlik": "yuksek",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "OpenITI klasik nefs/ahlâk; klinik değil; sayfa uydurma yasak."
     }
   ]
 }
