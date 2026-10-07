@@ -1,7 +1,7 @@
 {
   "domain": "edebiyat_sanat",
   "kaynak": "OpenITI",
-  "updated_utc": "2026-10-07T19:31:00Z",
+  "updated_utc": "2026-10-07T19:42:06Z",
   "politika": "Klasik edebiyat/adab. Fetva yok. Sayfa/cilt uydurma yasak.",
   "eserler": [
     {
@@ -23,7 +23,7 @@
       "char_count": 245569,
       "chunk_count": 163,
       "batch_sayisi": 9,
-      "updated_utc": "2026-10-07T19:30:59Z"
+      "updated_utc": "2026-10-07T19:42:05Z"
     },
     {
       "eser_id": "hamadhani_maqamat",
@@ -44,7 +44,7 @@
       "char_count": 129353,
       "chunk_count": 87,
       "batch_sayisi": 5,
-      "updated_utc": "2026-10-07T19:31:00Z"
+      "updated_utc": "2026-10-07T19:42:05Z"
     },
     {
       "eser_id": "hariri_maqamat",
@@ -65,7 +65,7 @@
       "char_count": 307330,
       "chunk_count": 203,
       "batch_sayisi": 11,
-      "updated_utc": "2026-10-07T19:31:00Z"
+      "updated_utc": "2026-10-07T19:42:05Z"
     },
     {
       "eser_id": "abu_tammam_diwan",
@@ -86,7 +86,7 @@
       "char_count": 441468,
       "chunk_count": 291,
       "batch_sayisi": 15,
-      "updated_utc": "2026-10-07T19:31:00Z"
+      "updated_utc": "2026-10-07T19:42:05Z"
     },
     {
       "eser_id": "ibn_qutayba_shir",
@@ -107,11 +107,53 @@
       "char_count": 527132,
       "chunk_count": 350,
       "batch_sayisi": 18,
-      "updated_utc": "2026-10-07T19:31:00Z"
+      "updated_utc": "2026-10-07T19:42:06Z"
+    },
+    {
+      "eser_id": "buhturi_diwan",
+      "eser_tr": "Dîvânü'l-Buḥturî",
+      "eser_ar": "ديوان البحتري",
+      "yazar": "el-Buḥturî (ö. 284/897)",
+      "rol": "asıl",
+      "eser_turu": "kitap",
+      "ilim_alani": "edebiyat_sanat",
+      "dil": "ar",
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/edebiyat_sanat/eserler/buhturi_diwan",
+      "guvenilirlik": "yuksek",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "kaynak": "OpenITI",
+      "source_file": "0284Buhturi.Diwan.JK007601-ara1",
+      "sha256": "63ea483be1dd3544585d5858ecfe5f98e969bc8e0fc808deb96317c6bc9ce606",
+      "char_count": 86303,
+      "chunk_count": 57,
+      "batch_sayisi": 3,
+      "updated_utc": "2026-10-07T19:42:06Z"
+    },
+    {
+      "eser_id": "maarri_diwan",
+      "eser_tr": "Dîvânü Ebî'l-Alâ el-Maʿarrî",
+      "eser_ar": "ديوان أبي العلاء المعري",
+      "yazar": "Ebü'l-Alâ el-Maʿarrî (ö. 449/1057)",
+      "rol": "asıl",
+      "eser_turu": "kitap",
+      "ilim_alani": "edebiyat_sanat",
+      "dil": "ar",
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/edebiyat_sanat/eserler/maarri_diwan",
+      "guvenilirlik": "yuksek",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "kaynak": "OpenITI",
+      "source_file": "0449AbuCalaMacarri.Diwan.JK007580-ara1",
+      "sha256": "b77922fb13ee20f9fc1c1ba6f1e1100bf2a9af3e83cedacb898d104a12ef6b0a",
+      "char_count": 702919,
+      "chunk_count": 461,
+      "batch_sayisi": 24,
+      "updated_utc": "2026-10-07T19:42:06Z"
     }
   ],
   "sayilar": {
-    "eser": 5,
-    "chunk_toplam": 1094
+    "eser": 7,
+    "chunk_toplam": 1612
   }
 }

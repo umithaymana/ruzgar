@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-07 gece — Edebiyat (klasik adab) iskelet
+**Son güncelleme:** 2026-10-07 gece — Edebiyat genişletme (7 eser)
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -19,14 +19,18 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 11. ~~09 catalog sync~~ — `e200735`
 12. ~~Felsefe OpenITI~~ — 7 eser · **1306** chunk · smoke PASS
 13. ~~Psikoloji OpenITI~~ — 4 eser · **524** chunk · anlık smoke PASS
-14. ~~Edebiyat OpenITI~~ — 5 eser · **1094** chunk · anlık smoke PASS
-15. **Sonraki:** ortak alan genişletme (Maʿarrî / Buḥturî) veya bilim/coğrafya raf hijyeni; RAG incremental isteğe bağlı
+14. ~~Edebiyat OpenITI~~ — 7 eser · **1612** chunk · anlık smoke PASS
+15. **Sonraki:** bilim/coğrafya raf hijyeni veya RAG incremental (felsefe/psikoloji/edebiyat md)
+
+### 2026-10-07 — Edebiyat genişletme
+
+- + Buḥturî Dîvân (57) · Maʿarrî Dîvân (461)
+- Toplam: **7** eser · **1612** chunk
 
 ### 2026-10-07 — Edebiyat ve sanat (klasik Arap adab)
 
 - Yol: `ortak_kaynak/alanlar/edebiyat_sanat/eserler/`
-- OpenITI: Kelîle (163) · Hemedânî Makâmât (87) · Harîrî Makâmât (203) · Ebû Temmâm Dîvân (291) · İbn Kuteybe Şiʿr (350)
-- Toplam: **5** eser · **1094** chunk
+- OpenITI: Kelîle · Hemedânî/Harîrî Makâmât · Ebû Temmâm · Buḥturî · Maʿarrî · İbn Kuteybe Şiʿr
 - Script: `faz12_edebiyat_openiti_ingest.py`
 - Anlık: `ruzgar_edebiyat_kutuphane.py` + desktop early path + niyet gate
 

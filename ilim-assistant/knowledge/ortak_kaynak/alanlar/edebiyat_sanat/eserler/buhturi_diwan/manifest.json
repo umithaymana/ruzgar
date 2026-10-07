@@ -1,0 +1,21 @@
+{
+  "eser_id": "buhturi_diwan",
+  "eser_tr": "Dîvânü'l-Buḥturî",
+  "eser_ar": "ديوان البحتري",
+  "yazar": "el-Buḥturî (ö. 284/897)",
+  "rol": "asıl",
+  "eser_turu": "kitap",
+  "ilim_alani": "edebiyat_sanat",
+  "dil": "ar",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/edebiyat_sanat/eserler/buhturi_diwan",
+  "guvenilirlik": "yuksek",
+  "kaynak_sinifi": "kalici",
+  "durum": "hazir",
+  "kaynak": "OpenITI",
+  "source_file": "0284Buhturi.Diwan.JK007601-ara1",
+  "sha256": "63ea483be1dd3544585d5858ecfe5f98e969bc8e0fc808deb96317c6bc9ce606",
+  "char_count": 86303,
+  "chunk_count": 57,
+  "batch_sayisi": 3,
+  "updated_utc": "2026-10-07T19:42:06Z"
+}

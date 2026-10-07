@@ -7,8 +7,10 @@
 | `hariri_maqamat` | el-Harîrî |
 | `abu_tammam_diwan` | Ebû Temmâm |
 | `ibn_qutayba_shir` | İbn Kuteybe |
+| `buhturi_diwan` | el-Buḥturî |
+| `maarri_diwan` | Ebü'l-Alâ el-Maʿarrî |
 
-Yüklenen: **5** eser · **1094** chunk
+Yüklenen: **7** eser · **1612** chunk
 
 **Politika:** Fetva yok · OpenITI Arapça · sayfa uydurma yasak.
 **Script:** `faz12_edebiyat_openiti_ingest.py` · **Anlık:** `ruzgar_edebiyat_kutuphane.py`

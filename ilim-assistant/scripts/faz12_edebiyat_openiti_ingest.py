@@ -129,6 +129,47 @@ OPENITI_WORKS = [
             "biyografileri. Edebî kaynaktır; fetva değildir."
         ),
     },
+    {
+        "id": "buhturi_diwan",
+        "repo": "0300AH",
+        "author": "0284Buhturi",
+        "work": "0284Buhturi.Diwan",
+        "eser_tr": "Dîvânü'l-Buḥturî",
+        "eser_ar": "ديوان البحتري",
+        "yazar": "el-Buḥturî (ö. 284/897)",
+        "aliases": [
+            "buhturi",
+            "buhturî",
+            "el buhturi",
+            "diwan buhturi",
+            "divan buhturi",
+        ],
+        "metin": (
+            "el-Buḥturî'nin Dîvân'ı: Abbâsî klasik Arap şiiri; Ebû Temmâm çizgisinin "
+            "çağdaşı. Edebî metindir; fetva değildir."
+        ),
+    },
+    {
+        "id": "maarri_diwan",
+        "repo": "0450AH",
+        "author": "0449AbuCalaMacarri",
+        "work": "0449AbuCalaMacarri.Diwan",
+        "eser_tr": "Dîvânü Ebî'l-Alâ el-Maʿarrî",
+        "eser_ar": "ديوان أبي العلاء المعري",
+        "yazar": "Ebü'l-Alâ el-Maʿarrî (ö. 449/1057)",
+        "aliases": [
+            "maarri",
+            "maʿarrî",
+            "el maarri",
+            "abu ala maarri",
+            "diwan maarri",
+            "divan maarri",
+        ],
+        "metin": (
+            "Ebü'l-Alâ el-Maʿarrî'nin Dîvân'ı: klasik Arap şiiri ve düşünce tonu. "
+            "Edebî metindir; fetva değildir."
+        ),
+    },
 ]
 
 
@@ -316,8 +357,8 @@ def _write_kavramlar(works: list[dict]) -> None:
             ],
             "metin": (
                 "Bu rafta klasik Arap edebiyatı ve adab vardır: Kelîle ve Dimne, "
-                "makâmât (Hemedânî, Harîrî), Dîvân (Ebû Temmâm), şi'r tarihi "
-                "(İbn Kuteybe). Fetva değildir; edebî metindir."
+                "makâmât (Hemedânî, Harîrî), Dîvân (Ebû Temmâm, Buḥturî, Maʿarrî), "
+                "şi'r tarihi (İbn Kuteybe). Fetva değildir; edebî metindir."
             ),
             "kaynak_notu": "Edebiyat rafı — klasik adab/şiir.",
         },

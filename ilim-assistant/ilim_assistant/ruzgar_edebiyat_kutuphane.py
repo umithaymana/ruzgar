@@ -37,6 +37,11 @@ _CUES = (
     "ibn qutayba",
     "şiir ve şair",
     "sir ve suara",
+    "buhturi",
+    "buhturî",
+    "maarri",
+    "maʿarrî",
+    "el maarri",
 )
 
 

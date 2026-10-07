@@ -1,0 +1,21 @@
+{
+  "eser_id": "maarri_diwan",
+  "eser_tr": "Dîvânü Ebî'l-Alâ el-Maʿarrî",
+  "eser_ar": "ديوان أبي العلاء المعري",
+  "yazar": "Ebü'l-Alâ el-Maʿarrî (ö. 449/1057)",
+  "rol": "asıl",
+  "eser_turu": "kitap",
+  "ilim_alani": "edebiyat_sanat",
+  "dil": "ar",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/edebiyat_sanat/eserler/maarri_diwan",
+  "guvenilirlik": "yuksek",
+  "kaynak_sinifi": "kalici",
+  "durum": "hazir",
+  "kaynak": "OpenITI",
+  "source_file": "0449AbuCalaMacarri.Diwan.JK007580-ara1",
+  "sha256": "b77922fb13ee20f9fc1c1ba6f1e1100bf2a9af3e83cedacb898d104a12ef6b0a",
+  "char_count": 702919,
+  "chunk_count": 461,
+  "batch_sayisi": 24,
+  "updated_utc": "2026-10-07T19:42:06Z"
+}
