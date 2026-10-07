@@ -1,6 +1,6 @@
 {
   "version": "ortak-kaynak-kayit-v1-2026-10-07",
-  "guncelleme": "2026-10-07T20:01:58Z",
+  "guncelleme": "2026-10-07T20:07:30Z",
   "aciklama": "Kalıcı kütüphane kayıtları. Metin henüz yoksa durum=placeholder. Web kayıtları buraya karıştırılmaz — web_cache kullan.",
   "kayitlar": [
     {
@@ -811,6 +811,23 @@
       "kaynak_sinifi": "kalici",
       "durum": "hazir",
       "not": "Coğrafya Faz 2 katman."
+    },
+    {
+      "kaynak_id": "cografya_katman_derin",
+      "kaynak_adi": "Coğrafya derin katman indeksi",
+      "yazar": null,
+      "ilim_alani": "cografya",
+      "eser_turu": "katman",
+      "dil": "tr",
+      "yayin": null,
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/cografya/katmanlar/derin",
+      "guvenilirlik": "orta",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "Coğrafya derinleştirme indeksi."
     }
   ]
 }

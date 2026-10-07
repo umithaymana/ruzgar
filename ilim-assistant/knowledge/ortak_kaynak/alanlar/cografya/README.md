@@ -9,3 +9,9 @@
 MD: **7** · Kavram: **10**
 
 **Script:** `faz14_cografya_raf_ingest.py` · **Anlık:** `ruzgar_cografya_kutuphane.py`
+
+## Derinleştirme (14b)
+- Yedi bölge ayrıntı · komşular/deniz · göller/platolar · dünya çerçevesi
+- MD: **18** · karakter ≈ **7636** · kavram: **28**
+- Script: `faz14b_cografya_derin_ingest.py`
+
