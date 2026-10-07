@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-07 gece — Felsefe+Psikoloji Faz 2
+**Son güncelleme:** 2026-10-07 gece — Teknoloji 2 faz
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -29,7 +29,14 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 14. ~~Edebiyat Faz 1+2~~ — 7 OpenITI eser · 4 katman · 31 kavram · smoke 9/9
 15. ~~Bilim Faz 1+2 + derin~~ — **40 md · ~17 KB · 34 kavram** · smoke 10/10
 16. ~~Coğrafya Faz 1+2 + derin~~ — **18 md · ~7.6 KB · 28 kavram** · smoke 9/9
-17. **Sonraki:** teknoloji 2 fazlı; RAG incremental (ortak alan md’leri)
+17. ~~Teknoloji Faz 1+2~~ — 10 md · 3 katman · 13 kavram · smoke 7/7
+18. **Sonraki:** RAG incremental (ortak alan md’leri) veya din rafları hijyeni
+
+### 2026-10-07 — Teknoloji (2 faz)
+
+- Faz 1: `08_teknoloji` + OS/programlama/DNS-HTTP/şifre-2FA/YZ sınır
+- Faz 2: güvenlik hijyeni · yazılım · YZ sınırları (exploit yok)
+- Script: `faz15_teknoloji_raf_ingest.py` · Anlık: `ruzgar_teknoloji_kutuphane.py`
 
 ### 2026-10-07 — Felsefe Faz 2
 

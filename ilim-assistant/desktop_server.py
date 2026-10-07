@@ -10909,6 +10909,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         except Exception:
             pass
         try:
+            from ilim_assistant.ruzgar_teknoloji_kutuphane import try_teknoloji_reply
+
+            _teknoloji_e = _library_instant_or_none(msg_early, try_teknoloji_reply)
+            if _teknoloji_e:
+                _orch_tk = dict(orch_early)
+                _orch_tk.setdefault("plan", {})["primary"] = "bilgi"
+                _orch_tk["plan"]["label_tr"] = "Teknoloji (anında)"
+                _orch_tk["teknoloji_anlik"] = True
+                yield from _iter_instant_chat_events(
+                    _teknoloji_e,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_tk,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
             from ilim_assistant.ruzgar_usul_fikh_kutuphane import try_usul_fikh_reply
 
             _usul_e = _library_instant_or_none(msg_early, try_usul_fikh_reply)
@@ -11611,6 +11631,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     session_wake_used=req.session_wake_used,
                     msg_for_wake=req.message,
                     orch=_orch_cg2,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ruzgar_teknoloji_kutuphane import try_teknoloji_reply
+
+            _teknoloji_early = _library_instant_or_none(msg_early, try_teknoloji_reply)
+            if _teknoloji_early:
+                _orch_tk2 = dict(orch_early)
+                _orch_tk2.setdefault("plan", {})["primary"] = "bilgi"
+                _orch_tk2["plan"]["label_tr"] = "Teknoloji (anında)"
+                _orch_tk2["teknoloji_anlik"] = True
+                yield from _iter_instant_chat_events(
+                    _teknoloji_early,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_tk2,
                     instant_gundelik=True,
                 )
                 return

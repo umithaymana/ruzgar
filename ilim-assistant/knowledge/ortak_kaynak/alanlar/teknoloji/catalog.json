@@ -1,0 +1,63 @@
+{
+  "domain": "teknoloji",
+  "faz": {
+    "1": "kutuphane_08",
+    "2": "guvenlik_yazilim_yz"
+  },
+  "updated_utc": "2026-10-07T20:17:36Z",
+  "politika": "2 fazlı. Eğitim. Saldırı/exploit tarifi yok.",
+  "faz1_raf": {
+    "raf_id": "08_teknoloji",
+    "ad": "Teknoloji ve Bilgisayar",
+    "dosya": 10,
+    "karakter": 3372,
+    "dosya_yolu": "knowledge/kutuphane/raflar/08_teknoloji",
+    "faz": 1,
+    "updated_utc": "2026-10-07T20:17:36Z"
+  },
+  "faz2_katmanlar": [
+    {
+      "katman_id": "guvenlik_hijyen",
+      "baslik": "Güvenlik hijyeni",
+      "kaynak_id": "teknoloji_katman_guvenlik",
+      "ilim_alani": "teknoloji",
+      "faz": 2,
+      "dil": "tr",
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/teknoloji/katmanlar/guvenlik_hijyen",
+      "parca_sayisi": 2,
+      "updated_utc": "2026-10-07T20:17:36Z",
+      "durum": "hazir"
+    },
+    {
+      "katman_id": "yazilim",
+      "baslik": "Yazılım kavramları",
+      "kaynak_id": "teknoloji_katman_yazilim",
+      "ilim_alani": "teknoloji",
+      "faz": 2,
+      "dil": "tr",
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/teknoloji/katmanlar/yazilim",
+      "parca_sayisi": 2,
+      "updated_utc": "2026-10-07T20:17:36Z",
+      "durum": "hazir"
+    },
+    {
+      "katman_id": "yz_sinir",
+      "baslik": "YZ sınırları",
+      "kaynak_id": "teknoloji_katman_yz",
+      "ilim_alani": "teknoloji",
+      "faz": 2,
+      "dil": "tr",
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/teknoloji/katmanlar/yz_sinir",
+      "parca_sayisi": 2,
+      "updated_utc": "2026-10-07T20:17:36Z",
+      "durum": "hazir"
+    }
+  ],
+  "sayilar": {
+    "md_dosya": 10,
+    "karakter": 3372,
+    "faz2_katman": 3,
+    "kavram": 13,
+    "ek_md": 5
+  }
+}

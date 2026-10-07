@@ -1,0 +1,12 @@
+{
+  "katman_id": "yz_sinir",
+  "baslik": "YZ sınırları",
+  "kaynak_id": "teknoloji_katman_yz",
+  "ilim_alani": "teknoloji",
+  "faz": 2,
+  "dil": "tr",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/teknoloji/katmanlar/yz_sinir",
+  "parca_sayisi": 2,
+  "updated_utc": "2026-10-07T20:17:36Z",
+  "durum": "hazir"
+}

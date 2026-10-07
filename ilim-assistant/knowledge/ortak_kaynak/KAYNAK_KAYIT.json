@@ -1,6 +1,6 @@
 {
   "version": "ortak-kaynak-kayit-v1-2026-10-07",
-  "guncelleme": "2026-10-07T20:14:35Z",
+  "guncelleme": "2026-10-07T20:17:36Z",
   "aciklama": "Kalıcı kütüphane kayıtları. Metin henüz yoksa durum=placeholder. Web kayıtları buraya karıştırılmaz — web_cache kullan.",
   "kayitlar": [
     {
@@ -947,6 +947,74 @@
       "kaynak_sinifi": "kalici",
       "durum": "hazir",
       "not": "Psikoloji Faz 2; klinik değil."
+    },
+    {
+      "kaynak_id": "teknoloji_raf_08",
+      "kaynak_adi": "Teknoloji ve Bilgisayar",
+      "yazar": null,
+      "ilim_alani": "teknoloji",
+      "eser_turu": "raf",
+      "dil": "tr",
+      "yayin": null,
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/kutuphane/raflar/08_teknoloji",
+      "guvenilirlik": "orta",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "Kutuphane teknoloji rafı; eğitim; saldırı yok."
+    },
+    {
+      "kaynak_id": "teknoloji_katman_guvenlik",
+      "kaynak_adi": "Güvenlik hijyeni",
+      "yazar": null,
+      "ilim_alani": "teknoloji",
+      "eser_turu": "katman",
+      "dil": "tr",
+      "yayin": null,
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/teknoloji/katmanlar/guvenlik_hijyen",
+      "guvenilirlik": "orta",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "Teknoloji Faz 2; exploit yok."
+    },
+    {
+      "kaynak_id": "teknoloji_katman_yazilim",
+      "kaynak_adi": "Yazılım kavramları",
+      "yazar": null,
+      "ilim_alani": "teknoloji",
+      "eser_turu": "katman",
+      "dil": "tr",
+      "yayin": null,
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/teknoloji/katmanlar/yazilim",
+      "guvenilirlik": "orta",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "Teknoloji Faz 2; exploit yok."
+    },
+    {
+      "kaynak_id": "teknoloji_katman_yz",
+      "kaynak_adi": "YZ sınırları",
+      "yazar": null,
+      "ilim_alani": "teknoloji",
+      "eser_turu": "katman",
+      "dil": "tr",
+      "yayin": null,
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/teknoloji/katmanlar/yz_sinir",
+      "guvenilirlik": "orta",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "Teknoloji Faz 2; exploit yok."
     }
   ]
 }

@@ -89,7 +89,8 @@
       "ad": "Teknoloji ve Bilgisayar",
       "sira": 9,
       "kok_yollar": [
-        "knowledge/kutuphane/raflar/08_teknoloji"
+        "knowledge/kutuphane/raflar/08_teknoloji",
+        "knowledge/ortak_kaynak/alanlar/teknoloji"
       ]
     }
   ]

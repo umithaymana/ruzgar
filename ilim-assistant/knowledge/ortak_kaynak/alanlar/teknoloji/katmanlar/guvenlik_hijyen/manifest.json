@@ -1,0 +1,12 @@
+{
+  "katman_id": "guvenlik_hijyen",
+  "baslik": "Güvenlik hijyeni",
+  "kaynak_id": "teknoloji_katman_guvenlik",
+  "ilim_alani": "teknoloji",
+  "faz": 2,
+  "dil": "tr",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/teknoloji/katmanlar/guvenlik_hijyen",
+  "parca_sayisi": 2,
+  "updated_utc": "2026-10-07T20:17:36Z",
+  "durum": "hazir"
+}
