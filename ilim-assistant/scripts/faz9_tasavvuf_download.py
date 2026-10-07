@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import subprocess
 import urllib.request
@@ -29,6 +30,7 @@ OPENITI_WORKS = [
         "dil": "ar",
     },
     {
+        # Kısa Arapça özet nüsha — dolu metin IA'dan (aşağıda) gelir
         "id": "gazali_kimya_saadet",
         "repo": "0525AH",
         "author": "0505Ghazali",
@@ -36,8 +38,9 @@ OPENITI_WORKS = [
         "eser_tr": "Kimyâ-yı Saâdet",
         "eser_ar": "كيمياء السعادة",
         "yazar": "İmam Gazâlî (ö. 505/1111)",
-        "rol": "asıl",
-        "dil": "fa",
+        "rol": "yedek",
+        "dil": "ar",
+        "optional": True,
     },
     {
         "id": "ibn_arabi_futuhat",
@@ -79,17 +82,50 @@ OPENITI_WORKS = [
 # Internet Archive — istenen eserler (OpenITI'de yok / Farsça-İngilizce)
 IA_WORKS = [
     {
+        "id": "gazali_kimya_saadet",
+        "eser_tr": "Kimyâ-yı Saâdet",
+        "eser_ar": "كيمياء السعادة",
+        "yazar": "İmam Gazâlî (ö. 505/1111)",
+        "rol": "asıl",
+        "dil": "fa",
+        "ia_id": "kimiyayi-saadat-farsi-arabic-turkish-english",
+        "files": [
+            {
+                "ia_id": "kimiyayi-saadat-farsi-arabic-turkish-english",
+                "name": "کیمیای سعادت ج۱_djvu.txt",
+            },
+            {
+                "ia_id": "kimiyayi-saadat-farsi-arabic-turkish-english",
+                "name": "کیمیای سعادت ج۲_djvu.txt",
+            },
+            {
+                "ia_id": "KimiyaISaadatAnEnglishTranslationOfImamGhazzalisAlchemyOfEternalBlissabuHamidAlGhazali",
+                "name": "Kimiya-i-saadat-AnEnglishTranslationOfImamGhazzalisAlchemyOfEternalBlissabuHamidAl-ghazali_djvu.txt",
+            },
+        ],
+        "kaynak": "Internet Archive (Farsça OCR + EN çeviri; OpenITI kısa ara1 yedek)",
+        "merge": True,
+    },
+    {
         "id": "geylani_futuh_gayb",
         "eser_tr": "Fütûhu'l-Gayb",
         "eser_ar": "فتوح الغيب",
         "yazar": "Abdülkadir Geylânî (ö. 561/1166)",
         "rol": "asıl",
-        "dil": "en",
-        "ia_id": "abdalqadiralgilanirevelationsoftheunseenfutuhalghayb",
+        "dil": "ar",
+        "ia_id": "futuhul-ghaibb",
         "files": [
-            "Abd al Qadir al Gilani - Revelations of the Unseen (Futuh al-Ghayb)_djvu.txt",
+            {
+                "ia_id": "futuhul-ghaibb",
+                "name": "Futuhul ghaibb_djvu.txt",
+            },
+            {
+                "ia_id": "abdalqadiralgilanirevelationsoftheunseenfutuhalghayb",
+                "name": "Abd al Qadir al Gilani - Revelations of the Unseen (Futuh al-Ghayb)_djvu.txt",
+            },
         ],
-        "kaynak": "Internet Archive (EN çeviri)",
+        "kaynak": "Internet Archive (Arapça OCR + EN çeviri)",
+        "merge": True,
     },
     {
         "id": "geylani_feth_rabbani",
@@ -97,12 +133,12 @@ IA_WORKS = [
         "eser_ar": "الفتح الرباني",
         "yazar": "Abdülkadir Geylânî (ö. 561/1166)",
         "rol": "asıl",
-        "dil": "en",
+        "dil": "ar",
         "ia_id": "Al-fathAl-rabbaniByShaykhGilani",
         "files": [
             "50913918-AL-FATHUR-RABBANI-BY-SHEIKH-ABDUL-QADIR-JILLANI_djvu.txt",
         ],
-        "kaynak": "Internet Archive (EN çeviri)",
+        "kaynak": "Internet Archive (Arapça OCR)",
     },
     {
         "id": "mevlana_mesnevi",
@@ -266,15 +302,28 @@ def _download_openiti() -> list[dict]:
     return catalog
 
 
+def _ia_file_spec(entry) -> tuple[str, str]:
+    """files[] öğesi: str veya {name, ia_id?} → (ia_id_override_or_empty, filename)."""
+    if isinstance(entry, dict):
+        return str(entry.get("ia_id") or "").strip(), str(entry.get("name") or "").strip()
+    return "", str(entry).strip()
+
+
 def _download_ia() -> list[dict]:
     catalog: list[dict] = []
     print("=== Internet Archive ===")
     for w in IA_WORKS:
         parts: list[Path] = []
-        for fname in w["files"]:
+        for entry in w["files"]:
+            ia_override, fname = _ia_file_spec(entry)
+            if not fname:
+                continue
+            ia_id = ia_override or w["ia_id"]
             enc = urllib.request.quote(fname)
-            url = f"https://archive.org/download/{w['ia_id']}/{enc}"
-            dest = RAW / f"{w['id']}__{Path(fname).name}"
+            url = f"https://archive.org/download/{ia_id}/{enc}"
+            # ASCII-safe local name (Unicode dosya adları Windows'ta sorun çıkarabilir)
+            safe = re.sub(r"[^\w.\-]+", "_", fname, flags=re.UNICODE)[:120]
+            dest = RAW / f"{w['id']}__{safe}"
             if dest.is_file() and dest.stat().st_size > 1000:
                 print(f"  [skip-exist] {dest.name}")
                 parts.append(dest)
@@ -283,7 +332,7 @@ def _download_ia() -> list[dict]:
                 print(f"  [get] {w['id']} <- {fname}")
                 _http_get(url, dest)
                 if dest.stat().st_size < 500:
-                    print(f"  [warn] çok küçük: {dest.name}")
+                    print(f"  [warn] cok kucuk: {dest.name}")
                     if w.get("optional_files"):
                         dest.unlink(missing_ok=True)
                         continue

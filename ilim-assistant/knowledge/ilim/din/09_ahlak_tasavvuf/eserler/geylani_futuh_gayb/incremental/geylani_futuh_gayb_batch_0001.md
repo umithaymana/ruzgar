@@ -5,739 +5,898 @@ Kaynak: Kaynak: klasik tasavvuf / ahlâk metni (OpenITI veya Internet Archive ç
 
 ## parça 1
 
-Revelations
+عل سوسم ني 4
 
-of The Unseen j
+اتمایف باو تما شخ لين
 
-A COLLECTION OF SEVENTY-EIGHT DISCOURSES
+ب نال داجیا 4
 
-I^evel a+i o ns
+نش "۱ سس ھت 
+يمه الله تناك
 
-Of lAn seen
+٭ ع 8533 قر
 
-(Fu+uk al-0\kaib)
+جات سکم لباس ع یلم
 
-A COLLECTION OF SEVENTY-EIGHT DISCOURSES
+كندل ادما نها عدا نيمتهم
 
-SHAIKH ‘ABD AL-QADIR AL-JTlAN1
+مه انزه تما
 
-TRANSLATED FROM THE ARABIC BY MUHTAR HOLLAND
+۱ — ۸ ۷ ۷ ار
 
-•And with Him are tbe beys of the unseen.” Qur'an (&59)
+رس رر سر اس و
 
-Cover calligraphy: Rohana Filippi
+ی تصصرصه ہت ا ماد شر
 
-Using watercolor and wax to combine the beauty of Arabic 
-script with the Quranic message on paper, Italian artist Rohana 
-Filippi has developed her own artistic style through personal 
-research and inner inspiration. Her art is entirely devoted to 
-•expressing Allah's presence everywhere," and as such her 
-paintings offer an opportunity to enjoy a harmonious, universal 
-experience that transcends all cultural and religious barriers.
+Emo
 
-Ms. Filippi, who currently resides in Colombia, has lived and 
-worked in England, Mexico, and the United States.
+ف ۰۱۷ # 3 
+ا ا 3
 
-Publisher’s Preface
+F0 ۳ سے‎
 
-The words of Shaikh 'Abd al-Qadir al-JIlanl can undoubtedly be 
-considered among the most precious treasures of Islam. Indeed, 
-Al-Baz Publishing was founded with the intention of providing fine 
-English translations of his works for the benefit of English-speaking 
-Muslims everywhere, in the spirit of wishing to share the benefit and 
-blessing we have received ourselves at his hand.
+مر كاده 5 
+تر كط سد
+
+مر كاده 5 
+تر كط سد
+
+مر كاده 5 
+تر كط سد
+
+مقدمة المحقق ۵
+
+الْحَمْدُ لله رت ور پر نو ہد مر وه اللي سی 
+پ مد سس وت ١‏ الشف على آشر ف الْمُرْسَلِيْنَ » سينا مد
+
+آله وَصحْبِهِ أَجْمَعِيْنَ .
+
+وَأَشْهَدُ آن لآ إِلَهَ الا الله وَحْدَهُ لا شَرِيِكَ له » واشهد أن مُحَمَدَا عبد ده وَرَسْزلّه » شہادۂً 
+لجو بها یر م القيَامَة
+
+ا
+
+2 0ے
+
+5 ۳ َإصْلآَحُهَا مَهَمَةُ الما لن اله عر وجل تمُا بالإنْسَانٍ وَیمْلُوا به فوق 
+الشْهُوَاتِ ارات ۱
+
+وَحَيْدُ من يَفْعَلُ لك مَنْ تحت بصایرهم وابصازهم عَلَى مَعْرِفَة دَقَائِقِ النفؤس » وَمَرَائيهَا 
+الا ء بِحَيْتُ يُعْطْوْنَ الدّوَاءَ الصَّحِيْحَ في مکانه الْمُتاسب له .
+
+ول من لین و ر من الآخِرِينَ .
+
+إنهُم اكتَسَفُوا أن الالْيْرَامَ یم پکتاب الله رت َيه هُو السَبيْلُ اموي ء الذي با 
+باندنهم تا ل رت ات ايا » قو إلى الدع ب م
+
+فَمَنْ وُجڈ فیّه َذا الالْيْرَامُ کان إِمَامَا دی به ا قا شلوك
+
+کے
+
+داش رای عبد لقار اي کن تحت بَصِيرَة على هم کتاب الف وة نوک 
+فاهتای بهمّا 3 وَسَارَ عَلَى دزبهما ۰
+
+لك شبح الا سلام أَحْمَد بن عد لیم سار عَلیٰ تشي النهج فتافح عَنْ وتاب اروش 
+نيه و ٠‏ وَلِكنّهُ کان ادا فی خطابه » و على مُخَالِفي الْنَة تبوبة الشْریْفة » يَحْمِلهُ
+
+5 فتوح الغيب 
+نت و ۳۳ ۱ 220,۵ تس ۱
+
+جوم و ۱
+
+فمل - رحمَه الله حَقَيْقَة لوف الشني الذي كان عليه الشيخ عَبْدُ القادر الْجيْلانِيَ البَعِيْدٍ 
+عَنْ الشٌطط الكل
 
 ## parça 2
 
-I first became interested in Shaikh ‘Abd al-Qadir in learning from 
-my own spiritual guide and benefactor Bapak Muhammad Sumo- 
-hadiwidjojo, founder of the Subud brotherhood (may Allah be well 
-pleased with him), that Allah had bestowed on the Shaikh the same 
-opening and contact that Bapak himself received from Allah, and 
-which he has passed on to us.
+نَا الوَسَطِيَةُ التي دعا لها الإسْلامُ وَحَتٌ عَلَيها أنبَاعَهُ لیکزثرا امه وَسَطا في كَل شي: . 
+فاا خوَجَتا أن تنل من مدا الم الضّافِي ۰ وَالْمَوْردِ الشافي ۱ هدب نفو شتا ۱ تقوم
 
-Anyone familiar with the latiban kejiwaan of.Subud will under¬ 
-stand that to be so honored by Almighty God is art unusual 
-occurrence in the history of mankind, such grace usually being 
-bestowed on very few of His creatures. My interest thus being 
-aroused, I sought out the surviving manuscripts from their various- 
-repositories around the world, and began the task of having them 
-translated. From the very first reading it was apparent to me that 
-what Bapak had said about the Shaikh was true.
+کو ام رس
 
-O reader! This endeavor is for you! If you find benefit in the 
-reading of these talks, pray that Allah bless the Shaikh, and pray for 
-us too, that our offering may find acceptance in His sight!
+آخلافتا ء تسیر قلربتا .
 
-Acknowledgments
+* عَمَلي في هَذَا الکتاب :
 
-All praise is due to Allah, the Beneficent, the Merciful!
+١۔ضبط‏ الم .
 
-We bear witness that there is no god except Allah, and that 
-Muhammad is the Messenger of Allah!
+۲- تَخْرِيِجٌ الآيَاتٍ القرآنّة الشریْفةٍ .
 
-Our Lord, thank You for giving us this wholesome task!
+۴ تریح الأَحَادِيثِ ك لول الَرِيْفَة على صاحبها سل الصَّلاةَ وَالسّلم :
 
-Grateful thanks to Muhtar Holland for devoting years of his life to 
-translating these works; may Allah bless him! Thanks too, to the 
-many who have helped make this publication possible, among 
-them the following:
+NE ور‎
 
-Salim al-din Quraishi of the British India Office Library, London
+- تج الْأَخْطاءِ الكَثيْرَة الوَاقَعَدٍ ذ في الخ الْمَطبوْعَةِ قَبْلَ مَذه في الاَبَاتِ وَالْأَحَادِيْثِ
+
+تالم ات واج الله عر وجل آن رن قَذ تَجَاوَرْتُ کل آخطانها ال وَل الّوْفِيِق
+
+7 رضم بَعْض اراد من کت الأئعة الم في الْهَایش ۱
+
+۷ تَرْجَِمَة الْثصَتَِ للأسْتَاذٍ أبي الْحَسَن لنڈوي ۔رٌحتۂ الله .
+
+۸ر رال ۴ اسر و كه . 
+# سخ الکتاب المَخطو طة : 
+كان وقت تأليف هذا الكتاب فى ليلة الأحد » ثانى عشر ذي الحجة ؛ من سنة ٥١٣ھ‏ كما 
+یہ 00302" 
+سمي
+
+دہشت : سليمان بن محمد الحوّاط الحموي الشافعي الخلوتي »
+
+مقدمة المحقق ۷ 
+بتاریخ الاحد ۹ شوّال سنة ١۱۲۳ھ‏ ؛ بخط نسخ مُعتاد . ( ۱4۹-۹۰ ) ورقة .
+
+. ء بخط نسّخي جميل ء عليها تملك باسم : محمد المبارك‎ )٢۹۰۸( ظاهرية‎ ١ 
+. ورقة‎ ) 1۸ (
+
+۳ برلین ( ۳۸۳۷ ) .
+
+6 مکتبة الأوقاف العامّة ببغداد ( ۱۹٦۷‏ و۱۹۱۸ ) .
+
+رسي : الكشْف وفتئزح لغب في :
+
+5 ظاهرية ( ۸۳۳۷ ) ۰ نسخها : آحمد بن عبد السلام الحنفي ۰ یوم الثلائاء ١١‏ ذي 
+الحجة » سنة ۹۰۱۷ھ . بخط نسخ معتاد دقیق . ( 50 ) ورقة .
+
+وشئي : آداب اللو لول إلى ما الم في :
+
+٦‏ ظاهرية ( ۱۲۲۱ ) » نسخها : محم ل توص وصطفى المقید بالمحكمة الکبری بحلب 
+سنة ۱۱۹۱ھ . واستکتبه لنفسه سماعیل المواهبي القادري المدرس بالمسجد الأموي 
+بحلب » بخط نسخ معتاد . ( ۸۷ ) ورَقة > 
+٭ تسخ الکتاب الْمَطَبْوْعَةٍ :
+
+ا الامتانة سنة ۱۷۸۱ھ بهامش الاسرار .
 
 ## parça 3
 
-Dr. Hars Kurio of the Staaisbibliothek Preussischer Kulturbesitz, Berlin
+-١‏ مطبعة البابي الحلبي سنة ١٣٥۱ھ‏ بھامش قلائد الجواهر
 
-Husein Rofe
+رحم الم رما وَاسِعَةٌ » وَغَفَرَ لله لتا وله لكل مَنْ ترا هذا الکتاب أو ام بو ء 
+و له" في صَحَائِفِ أَمْعَاِنًا الصَّالِحَةٍ . 
+خر وعد انا أن الد للم رب الَعَالمين
 
-Lateef Ismail for his part
+أ
 
-Rohana Woodward for the clue
+حَادِمٌ الملم الشُریف
 
-Marius Moore for his help
+عَبْدُ القَلیٔم مُحَمَّد الدُرویش
 
-Ridwan Lowther for research and for style and font assistance
+م
 
-Liliana Gardner for design fundamentals
+مر كاده 5 
+تر كط سد
 
-Frances Gardner for the flowers
+نرجمة الشيخ عبد القادر الجيلائي ۹
 
-Rohana Filippi for the cover art
+الشیٔخ عبد القادر الجيلاني 
+۱ص
 
-Susannah Ortego for coordinating the production
+وق مر قرو 
+# اسمه ونسه :
 
-vii
+efe . ۰ 8‏ و سا و 7 یھ ووم اياي 5
 
-Contents
+قال الذهبي 7" : الب » الما العام ء الرَاهد » العارف ‏ القذرّة » شيخ الوسلام ء 
+علم الأؤلياء + مُخبي الڈیْن ء أَبُو مُحَمّد » عبد القادر بن أبي صالح عند الله من جنکی 
+دوست" الجیل ٩‏ الحنبلنُ » شَیْٔخ بَعْدَاد .
 
-Publisher's Preface v 
-Acknowledgments vii
+وقال ابن ناصر الدين الذُمَشْقَيٌ في توضیح اَلْمُشٍتبہ'“ : هو العَارف الوَلِيُ اكير 
+5 و او ا محم معند ‏ مبان ہہت
 
-Concerning the Author, Shaikh Abd al-Qadir al-JIlani:
+ان بن عل : کاب ےت > اح الگراقاتِ وَالَوَامظ .
 
-A Brief Introduction by the Translator xiii
+)۱ سیر علام النبلاء ( ۰ ).,
 
-Author's Genealogy 5
+)۲( في ذیل طبقات الحنابلة لابن رجب (۰/۱ ۲۰ )6 ی بي صالح بن عبد الله ) . 
+بزيادة لفظ ٤‏ ابن . وفي شذرات الذهب : ( عبد القادر بن أ بي صالح عبد اللہ ) . وفي تمه 
+المختصر ( ۲/ ۱۰۷ ) : ( عبد القادر بن أبي صالح موسی جذكي دوست ) .
 
-Author’s Prologue 6
+(۳) أي : العظیم القدر .
 
-The Seventy-eight Discourses
+29 هي بلاد متفرقة وراء طبرستان ؛ ويقال لها : كيل وكيلان » والشسبة إليها : جبلي وجيلاتي وکیلالي ۽ 
+0 ےم . وإلى قرية تحت المدائن يُسَنُونَهَا : الکیل » وسمّاها ابن اي : الكال ؛ 
+ذكرها ر بعضهم أنها قرية على شاطىء دجلة » على مسيرة يوم من بغداد مما يلي طريق واسط ٠‏ توضیح 
+0
 
-1 On the essential tasks of every true believer 9
+. ) ۱۹۷/۲ ( )0(
 
-2 On sharing good advice 10
+0 في شذرات الذهب )١98/4(‏ ؛ (بن جنکی دوست بن أبي عبد الله عبد الله ) . وذکره بنفس 
+النسب . وكذلك الحافظ ابن رجب . وساق ابن شاكر الكتبي في فوات الوفيات ( ۳۷۳/۲ ) نب إلى 
+الحسين بن علي رضي الله عنه .
 
-3 On being tried and tested 11
-
-4 On spiritual death 13
-
-5 On the nature of this world, detachment from which is 
-strongly advised 15
-
-6 On passing beyond the creation 16
-
-I On removing the cares of the heart [qalb] 20
-
-8 On drawing near to Allah 24
-
-9 On disclosure and contemplation 26
-
-10 On the self and its states 28
-
-II On carnal appetite 33
-
-12 On the prohibition of love of wealth 34
-
-13 On submission to Allah’s command 35
-
-14 On following the practice of Allah 's own 39
-
-15 On fear and hope 41
-
-16 On trust and its stages 42
-
-17 On how the contact iwusul) with Allah is attained 45
-
-18 On not complaining 48
-
-19 On promises 51
-
-20 On the saying of the Prophet (Allah bless him and give 
-him peace): “Leave anything that makes you doubtful and 
-stick to what arouses no misgivings in you.' 53
-
-21 On addressing Iblis the accursed 55
-
-22 On the testing of the believer’s faith 56
+۳ فتوح الغيب
 
 ## parça 4
 
-23 On contentment with one's lot from Allah 58
-
-Contents
-
-24 On cleaving lo Allah's door 60
-
-25 On (he free c r faith 62
-
-26 On not unveiling one’s face 65
-
-27 On good and evil as two fruits 69
-
-28 On the classification of the seeker’s state 74
-
-29 On the saying of the Prophet (Allah Bless him and give him 
-peace): "Poverty is on the verge of slipping into unbelief." 76
-
-30 On not saying "What shall I do and howf 78
-
-31 On hatred for Allah’s sake 80
-
-32 On not sharing one's love of Allah 81
-
-33 On the four types of men 83
-
-34 On not resenting Allah 86
-
-35 On pious caution lal-wara'] 90
-
-36 On the explanation of this world and the hereafter, and what 
-one must do in them both 92
-
-37 On censure of envy 97
-
-38 On honesty Isidq] and s/ncerify (nisah] 100
-
-39 On dissension, concord and hypocrisy Inifaql 101
-
-40 On when the aspirant truly belongs in the company of spiritual 
-people 102
-
-41 Illustrating the nature of annihilation [fana’j 104
-
-42 On the two conditions of the self [nafs\ 107
-
-43 On censure of asking from any but Allah 110
-
-44 On the reason for non-response to the supplication of one 
-who knows Allah lal-'arif bi'llahl 111
-
-45 On blessings and trials 113
-
-46 On the Sacred Tradition: “When someone is too busy 
-remembering Me..." 118
-
-47 On closeness to Allah 120 ’
-
-48 On what the believer must attend to 121
-
-49 On censure of sleep 123
-
-50 On how to treat the servant's remoteness from Allah; 
-explanation of how to achieve closeness to Him 124
-
-51 On abstinence 126
-
-52 On the reason for the trials borne by certain believers 128
-
-## parça 5
-
-53 On the commandment to seek contentment with Allah 
-and annihilation lfana'1 in Him 129 ,
-
-54 On those who wish to attain to the contact Iwusul) with Allah, 
-an explanation of the nature of that contact 132
-
-Contents
-
-xi
-
-55 On giving up life’s pleasures 134
-
-56 On the servant's becoming extinct (fanaj to creatures, passions, 
-the self, the will and desires 137
-
-57 On not contesting destiny, and the commandment to keep 
-oneself content therewith 139
-
-58 On looking away from all other directions, and seeking the 
-direction of Allah's favor 141
-
-59 On cheerful acceptance of misfortune, and being grateful 
-for blessings 143
-
-60 On the beginning and the end 147
-
-61 On pausing before taking any action until its permissibility 
-is clear 150
-
-62 On love, the beloved, and what is required in respect of both 152
-
-63 On a kind of inner knowledge [ma'rifa] 154
-
-64 On death without life, and life without death 155
-
-65 On the prohibition of resenting Allah for deferring response 
-to supplication 156
-
-66 On the commandment to make supplication, and the 
-prohibition of omitting it 158
-
-67 On struggle with the self, and description of its nature 160
-
-68 On the words of Allah (Exalted is He): “Every day He is about 
-some business." 163
-
-69 On the commandment to ask Allah for forgiveness, protection 
-from sin, help toward success, contentment and patience 165
-
-70 On gratitude and acknowledgment of shortcomings 167
-
-71 On the seeker and the sought 169
-
-72 On those who are attracted to what they see in the market 
-and those who view it with patient restraint 171
-
-## parça 6
-
-73 On a party of saints whom Allah makes aware of the faults 
-of others 173
-
-74 On how the intelligent person should prove to himself the 
-Uniqueness of Allah 175
-
-75 On spiritual culture lta$awwuf] and what it is based on 177
-
-76 On advice 179
-
-77 On staying with Allah and becoming extinct to creatures 181
-
-78 On the people devoted to spiritual struggle and self- 
-examination and the masters of resolve; explanation of 
-their virtues 183
-
-Addendum 188 
-About the Translator 191
-
-Concerning the Author,
-
-Shaikh ^Abd al-Qadir al-Jllanl
-
-A brief introduction by the translator
-
-## parça 7
-
-Many words a&ou/Shaikh 'Abd al-Qadir al-Jllanl (may Allah be well 
-pleased with him) have been written in English and other Western 
-European languages, and have been published in books, encyclo¬ 
-pedias and journals. Most of the Shaikh’s own words, however, 
-have remained accessible only to those who can read his writings, 
-and his recorded utterances, in the original Arabic or in translations 
-into other Oriental languages, such as Persian and Urdu. As one 
-who has been blessed with sufficient skill—and with the practical 
-opportunity—to make his humble contribution toward correcting 
-this imbalance, I feel obliged to assure the reader that I intend to 
-concentrate on further tasks of translation, rather than expatiating 
-at great length on my personal view of Shaikh 'Abd al-Qadir, his life, 
-his works, and his spiritual influence through the ages. The 
-following brief introduction may nevertheless serve a useful pur¬ 
-pose, especially for readers who lack ready access to publications 
-containing relevant background material.
-
-The Author’s Names and Tides
-
-A rich store of information about the author of Revelations of the 
-Unseen is conveniently available, to those familiar with the religious 
-and spiritual tradition of Islam, in his names, his surnames, and the 
-many titles conferred upon him by his devoted followers. It is not 
-unusual for these to take up several lines in an Arabic manuscript, 
-but let us start with the short form of the author’s name as it appears 
-on the cover and title page of this book: Shaikh 'Abd al-Qadir al- 
-Jilani.
-
-## parça 8
-
-Shaikh: A term applied throughout the Islamic world to respected 
-persons of recognized seniority in learning, experience and wis-
-
-xiii
-
-xiv
-
-Concerning the Author
-
-dom. Its basic meaning in Arabic is “an elder; a man over fifty years 
-of age.” (The spellings Sheikh and Shaykb may also be encountered 
-in English-language publications.)
-
-Abdal-Qadir: This is the author’s personal name, meaning “Servant 
-[or Slave! of the All-Powerful.” (The form 'Abdul Qadir, which the 
-reader may come across elsewhere, is simply an alternative translit¬ 
-eration of the Arabic spelling.) It has always been a common 
-practice, in the Muslim community, to give a male child a name in 
-which 'Abd is prefixed to one of the Names of Allah.
-
-al-Jilini: A surname ending in -twill often indicate the bearer’s place 
-of birth. Shaikh 'Abd al-Qadir was bom in the Iranian district of 
-Gilan, south of the Caspian Sea, in A.H. 470/1077-8 C.E. (In some 
-texts, the Persian spelling Gilant is used instead of the arabicized 
-form al-Jtlani. The abbreviated form al-Jili, which may also be 
-encountered, should not be confused with the surname of the 
-venerable 'Abd al-Karim al-Jili, author of the celebrated work al- 
-Jnsan al-Kamil, who came from Jil in the district of Baghdad.)
-
-Let us now consider a slightly longer version of the Shaikh’s name, 
-as it occurs near the beginning of another collection of his dis¬ 
-courses, entitled Al-Fath ar-Rabbani [The Sublime Revelation]: 
-Sayyiduna ’sh-Shaikh Mubyi'd-Din Abu Muhammad 'Abd al- 
-Qadir (Radiya 'llahu 'anh).
-
-## parça 9
-
-Sayyiduna ’sh-Shaikh: “Our Master, the Shaikh." A writer who 
-regards himself as a Qadiri, a devoted follower of Shaikh 'Abd al- 
-Qadir, will generally refer to the latter as Sayyiduna [our Master], or 
-Sayyidi [my Master].
-
-Muhyi’d-Din: “Reviver of the Religion.” It is widely acknowledged 
-by historians, non-Muslim as well as Muslim, that Shaikh ‘Abd al- 
-Qadir displayed great courage in reaffirming the traditional teach¬ 
-ings of Islam, in an era when sectarianism was rife, and when 
-materialistic and rationalistic tendencies were predominant in all
-
-Concerning the Author
-
-xv
-
-sections of society. In matters of Islamic jurisprudence [fiqh] and 
-theology fkalamj, he adhefed quite strictly to the highly “orthodox" 
-school of Imam Ahmad ibn Hanbal.
-
-Abo Muhammad: “Father of Muhammad." In the Arabic system of 
-nomenclature, a man’s surnames usually include the name of his 
-first-born son, with the prefix Abu (Father of—]. According to at 
-least one account of his life,' Shaikh 'Abd al-Qadir remained 
-unmarried until his fifty-first year. He then took four wives, who 
-bore him twenty-seven sons and twenty-two daughters.
-
-Ratfiya’llahu 'anh: “May Allah be well pleased with him!” This 
-benediction is the one customarily pronounced—and spelled out in 
-writing—after mentioning the name of a Companion of the Prophet 
-(Allah bless him and give him peace). The preference for this 
-particular invocation is yet another mark of the extraordinary status 
-held by Shaikh 'Abd al-Qadir in the eyes of his devoted followers.
-
-## parça 10
-
-Finally, we must note some important elements contained within 
-this even longer version: al-Ghawth al-A'zam Sultan al-Awliya 
-Sayyiduna 'sh-Shaikh Muhyi'd-Din 'Abd al-Qadir al-Jilani al- 
-Hasani al-Husaini (Radiya’llabu 'anh).
-
-al-Ghawth al-A'zam: “The Supreme Helper" (or, “The Mightiest 
-Succor”). Ghawth is an Arabic word meaning: 1. A cry for aid or 
-succor. 2. Aid, help, succor; deliverance from adversity. 3. The chief 
-of the Saints, who is empowered by Allah to bring succor to 
-suffering humanity, in response to His creatures’ cry for help in 
-times of extreme adversity.
-
-Sultan al-Awliya *: "The Sultan of the Saints.” This reinforces the 
-preceding title, emphasizing the supremacy of the Ghawth above 
-all other orders of sanctity.
-
-al-Hasani al-Husaini: “The descendant of both al-Hasan and al- 
-Husain, the grandsons of the Prophet (Allah bless him and give him
-
-XV i
-
-Concerning the Author
-
-peace)." To quote the Turkish author, Shaikh Muzaffer Ozak Efendi 
-(may Allah bestow His mercy upon him): “The lineage of Shaikh 
-'Abd al-Qadir is known as the Chain of Gold, since both his parents 
-were descendants of the Messenger (Allah bless him and give him 
-peace). His noble father, ‘Abdullah, traced his descent by way of 
-Imam Hasan, while his revered mother, Umm a!-Khair, traced hers 
-through Imam Husain."
-
-As for the many other surnames, titles and honorific appellations 
-that have been conferred upon Shaikh 'Abd al-Qadir al-JIlani, it may 
-suffice at this point to mention al-Baz al-Ashhab[The Gray Falcon).
-
-The Author’s Life in Baghdad
-
-## parça 11
-
-Through the mists of legend surrounding the life of Shaikh ‘Abd al- 
-Qadir al-JIlani, it is possible to discern the outlines of the following 
-biographical sketch:
-
-In A.H. 488, at the age of eighteen, he left his native province to 
-become a student in the great capital city of Baghdad, the hub of 
-political, commercial and cultural activity, and the center of reli¬ 
-gious learning in the world of Islam. After studying traditional 
-sciences under such teachers as the prominent Hanball jurist Ifaqihl, 
-Abu Sa'd ‘All al-Mukharrimi, he encountered a more spiritually 
-oriented instructor in the saintly person of Abu’l-Khair Hammad ad- 
-Dabbas. Then,insteadofembarkingonhisownprofessorialcareer, 
-he abandoned the city and spent twenty-five years as a wanderer in 
-the desert regions of 'Iraq. He was over fifty years old by the time 
-he returned to Baghdad, in A.H. 521/1127 C.E., and began to preach 
-in public. His hearers were profoundly affected by the style and 
-content of his lectures, and his reputation grew and spread through 
-all sections of society. He moved into the school [madrasal 
-belonging to his old teacher al-Mukharrimi, but the premises 
-eventually proved inadequate. In A.H. 528, pious donations were 
-applied to the construction of a residence and guesthouse fribatj,
-
-Concerning the Author
-
-1
-
-## parça 12
-
-capable of housing the Shaikh and his large family, as well as 
-providing accommodation for his pupils and space for those who 
-came from far and wide to attend his regular sessions (majalis). He 
-lived to a ripe old age, and continued his work until his very last 
-breath, as we know from the accounts of his final moments re¬ 
-corded in the Addendum to Revelations of the Unseen. 1
-
-In the words of Shaikh Muzaffer Ozak Efendi: “The venerable ‘Abd 
-al-Qadir al-Jiianl passed on to the Realm of Divine Beauty in 
-A H. 561/1166 C.E., and his blessed mausoleum in Baghdad is still a 
-place of pious visitation. He is noted for his extraordinary spiritual 
-experiences and exploits, as well as his memorable sayings and 
-wise teachings. It is rightly said of him that ‘he was bom in love, 
-grew in perfection, and met his Lord in the perfection of love.’ Mpiy 
-the All-Glorious Lord bring us in contact with his lofty spiritual 
-influence!”
-
-The Author’s Literary Works
-
-Al-Ghunya li-(alibi (ariq al-haqq [Sufficient Provision for Seekers of the 
-Path of Truth]. Arabic text published in two parts by Dar al-Albab, 
-Damascus, n.d., 192 pp. + 200 pp. English translation commis¬ 
-sioned for eventual publication by Al-Baz Publishing, Inc.
-
-## parça 13
-
-In his own introductory remarks, Shaikh 'Abd al-Qadir explains 
-how he came to compose this monumental work: "One of my 
-friends had been pressing me, urging me in very emphatic terms to 
-compose this book, because of his excellent appreciation of what 
-is right and proper... I came to recognize the sincerity of his wish to 
-acquire real knowledge of modes of behavior consistent with the 
-sacred law..., real knowledge of the Maker (Almighty and Glorious - 
-is He)..., instruction in the Qur'an and Prophetic utterances, and 
-real knowledge of the morals and ethics of the righteous. All of 
-these subjects we shall review in the course of the book, so that it 
-may serve as a helper to him in following the path of Allah (Almighty
-
-2
-
-2
-
-Concerning the Author
-
-and Glorious is He), in carrying out His commandments and 
-observing His prohibitions."
-
-Al-Fath ar-Rabbani [The Sublime Revelation]. A collection of sixty- 
-two discourses delivered by Shaikh 'Abd al-Qadir in the years 
-a h. 545-546/1150-1152 c.E. Although it contains fewer separate 
-discourses, this work is well over twice the length of Revelations of 
-the Unseen. Arabic text published by Dar al-Albab, Damascus, n.d. 
-Arabic text with Urdu translation: Madina Publishing Co., Karachi, 
-1989. Complete English translation prepared for publication by 
-Al-Baz Publishing, Inc.
-
-## parça 14
-
-Even a non-Muslim scholar like D.S. Margoliouth was so favorably 
-impressed by the content and style of Al-Fath ar-Rabbani that he 
-wrote:-’ “The sermons included in (this work] are some of the very 
-best in Muslim literature: the spirit which they breathe is one of 
-charity and philanthropy: the preacher would like to ‘close the 
-gates of Hell and open those of Paradise to all mankind.' He 
-employs Sufi technicalities very rarely, and none that would occa¬ 
-sion the ordinary reader much difficulty...”
-
-Malfuzat [Utterances]. A loosely organized compilation of talks and 
-sayings by Shaikh ‘Abd al-Qadir, almost equal in total length to 
-Revelations of the Unseen. Frequently treated as a kind of appendix 
-or supplement to manuscript and printed versions of Al-Fath ar- 
-Rabbani. Complete English translation prepared for publication by 
-Al-Baz Publishing, Inc.
-
-Futiih al-Ghaib [Revelations of the Unseen]. The Arabic text, edited 
-by Muhammad Salim al-Bawwab, has been published by Dar al- 
-Albab, Damascus, 1986. (On translations published in Western 
-languages, please see concluding section of this Introduction).
-
-Jala’al-Khaur [The Removal of Care] or Jala al-Khawaur [The Removal 
-of Cares], A collection of forty-five discourses by Shaikh Abd 
-al-Qadir. Arabic text with Urdu translation, under title Jala'
-
-i
-
-Concerning the Author
+34 
+#ولاد یه 
+ولد بجیلان في سَنة خی وَسَبْعِيْنَ راربم ملة . 
+* شوہ 
+نم ۲ یس ا را مہ ہر ۳ سو عن ےہ ہے کے رب س 3 
+دم اك عَبِدُ القادر بداد شاا سنا ۸۸٦ھ‏ فسّمم الحَدِيْث وتفقة على العَلامَة ٠‏ شيخ 
+الْحَنَابلة ‏ آبي سَعْدٍ مر بن عَلِيَ بن الْحْسَيْنِ لحم البَعْدَادِيَ 0 کات مَذْرَسَتَه یاب
+
+54
 
 3
 
-al-Khawatir, published by Maktaba Nabawiyya, Lahore, n.d.
+لأ :تس ۱۳ هه ١‏ یی جابآي بغر اللا جل تا لإمام أَحْمَّد . 
+وقد تفع ال بد القادرِ به کر ؛ حَیْث فراض ال له ٠‏ ََكَلّم عَلَى الناس 
+بلسَانِ الوّغظ ۰ وَظَهَرَ [ له صیْتٌٗ بالژھْد ند آن مات الم ارم وَسَّعَهَا الشَّيْحْ عَبْدُ 
+ر م 0 تی 
+القاور وَسَكنَ بها » وَأصْبَحَّث تغرف يِمَدْرْسَةٍ السب الْجيْلاَنِيٌ . 
+م vv‏ سی ۹4 فا ۹ 4 ۰ اخ سوه ودي 
+رسمع من كير ٠‏ کَالشٌیٔخ الصّالح الْمُْدْثِ>أبي غالب مُحَمّدٍ بن ا ن الباقلاني 
+البَعْدَادِيٌ » مات سنة ٥٥٠٤ھ‏ . ركان كثير اليكاء إن بحشِيّة الله . 
+والشت الالح المع الصَّدُوقٍ يشمي بن غَْدِ الگریم بن غقیش البَعْدَادِيْ ء 
+مات سنه ۵۰۱۲ھ . 
+والشیخ المعگر أبي بكر أَحْمَدَ ن الْمظفر بْن سُوسّن الَگار » مَاتَ سَتَذَ ٥٥٣ھ‏ . 
+- و بر ل / ۰ ۲ 34 فی 21 3 و م م ٠‏ سس ی 
+و بخ امین ال لالم اليد اي طالب عبر القاور بن حك بن عبد القاور بن مد 
+ہت دی ع الحا کاچ کنا قفن
+
+۶ 0 و عدي رز سم 7 3 س * سے 1 ۸ و م مق ادا ہاو سے Ge‏ ےھ 
+.وت في درسي إلى أن توّفي رَحمَة ال وممن حذدث عنه : 
+الشنماني ٠‏ وه ماع الد شی ٠‏ وَالْحَافِظ عَبْدٌ اليم الْمَقفدِسیُ ء الم موف الڈین اب 
+َدَامَة المقیسی » وَوَلَدَاهُ عَبْدُ اراق وَمُوْسَى. . وحن کید . 
+٭ ولام
+
+یب 2
+
+02 ىر گے م گی لا ار و سم بع قم مم 2 
+عبد الوهاب 4 وَعبّد الرّزاق 3 وعبد العزیز ؛ وموسی ؛ ویحیی ؛ ومحمد .
+
+ترجمة الشیخ عبد القادر الجيلائي ١‏
+
+ر مب ی
+
+## parça 5
+
+وَقَالَ الب عبد الورّاق2'0 : ولد لأبي يَسْعَةٌ وَأریَمُْنَ وَلَدا ٠‏ سَبْعَة 2ء عشجون ذکرا
+
+والباقي نات . 
+* أَقْوَالُ اللماء عَنْهُ :
+
+© قَالَ لیم مُوَفْقُ این ان دام“ : أَدْرَكْتَاهُ في آخر عُمُرِهِ » فأسکتنا في مَذرَسَیِوء 
+وَكَانَ يُعْنَى بتا ء وَرُكَمَا أَرْسَلَ نا اب 4 بح یخی فیشرج لنا السرا » وَرُبَمَا سل ایا طَعَاماً من 
+رلو وان بصلي ایض ناما »گنت أفرأ له ين حفي من ككاب اي و 
+قرا عليه انظ عبد اي ن کتاب الهِدَاةِ في الکتاب » رما ان أحد بغرا عل في دبک 
+الوَقْتٍِ سوَانًا » فَأَقَمَْا عِنْدَهُ شهر) ونسعه شمه أيَام ٿم مات ١‏ وَصَلَيَا عليه یل في مَدرَسَهه » ولم 
+E‏ بت آحدا مه الٛاس
+
+دين کر منه ٠‏ وَسَمغتا عَلَيه جرا يسيرَة .
+
+© وال الْحَافظ اب ُو الین عل بن مخت ' 1 سَمِعْتُ الشَّيِحَ عَبْدَ الَریز بْنَّ عَبْدِ التّلآم
+
+یه السافيي یل :ما نلیتا کزان حت بالات لالم عبد لقایر . فقيل له : 
+هذا مَع اعْتقَادِءِ » كيف هذا ؟ . فقال کاو قب لین بتذخب .
+
+© رتال السَمْعَانيُ " : هو ام الْعََبلَة ریم في عُضرہ » فَقَيْةٌ صالخ دين خی 
+کی الذكر » دائم الفکر » مریم ر الدَّمْعَة ؛ تفه عَلى الْمُخْرمِيٌ ء وَصحب المع > حَمًاداً 
+لثمن ٠‏ وكا َك ياب الأ بي رویط » مَضَيْنَا لزیازته ء فخرج وَفَعَدَ بَیْنَ 
+أَسْحَابہ » وَحَتَمُوا رن » ی دزسا ما قهشث مه شینا » وَأَعْجَبُ من ذا أن أصْحَابَه 4 قامُوا 
+وََعَادُوَا الرس » فَلعَلَهْمْ فَھِمُوا لالّفهم بکلامه وَعِبَارَتَه
+
+(۱) سیر أعلام البلاء ( 41۷/۲۰ ) وشذرات الذهب ( 5١7/4‏ ) .
+
+(۲) سير أعلام البلاء ( 44۲/۲۰ ) .
+
+(۳) سير أعلام النبلاء ( 447/5١‏ ) . وقال الذهبي : يُشِيْر إلى إثباته صفة الل ونحو ذلك ۰ ومذهبُ 
+الحنابلة في ذلك معلومٌ ؛ » پمشون مت ما ثبت عن آمامهم رحمه اھ الا من تعد منهم ۰ وتوسّع في 
+العبارة .
+
+## parça 6
+
+)٤(‏ ذیل طبقات الحنابلة لابن رجب ( ۲۹۱/۱ ) وسیر ير اعلام النبلاء للذهبي ( 48۱/۲۰ ) وشذرات الذهب 
+لابن العماد ( ۲۰۰/4 ) .
+
+1 فوح الغيب
+
+© رال اليَافیئ!'' : کان سُکُوْت الشیٔخ عَبْدٍ القایر کر من کلام وَكَانَ يَتَكَلَّمُ عَلَّى 
+لحار هر له ميث عم ويرد ام٠‏ وما ا خوج من عذرسیم إلا يوم شمه 
+إلى الرتاط » وتاب عَلَى يده مُظم هل بعْدَادَ ء وَلَسْلَمٌ عَلَیْ ٠‏ وَکان يَصْدَعْ بالْحَقٌ عَلی 
+لیر ء وکان لَه کراماث ظاهرة .
+
+© وَقَالَ الحافظ ابن رجب الحنبلیه ۲۳ : هر الشيْخٌ عَبْدُ القاور ناس وَجَلَس لوغ بعد 
+العشْرِيْنَ وَحْمْسٍ مت 00 4 لول لام من غ الئاس » وَاعْتَّقَدُوا دِيَّائئَةٌ رَصَلاَحَۂ 
+وَاثَفَمُوا یکلاّبه ء اص أل اش يظهُوره . َاشْتَهَوَتْ حول رَفراله رکرام ہہ 
+ںا المُلوك فَمَنْ دون وَصَنْف الشطنوفي الْمِضْرِيٌ في آخبار عَبْدٍ القایر وَمتاقبه لت 
+مُجَلَّدَاتِ . ۱
+
+© وَقَال الإمامُ الحَافظ ال ۵ : لیس في کب الْمَشَايخ ءَ ن اغرال مہوت 
+الم ند القدر »لکن كيرا نا مخ #يوفِي یَعّض ذلك آشیاء مُسْتَجِيْله وق : 
+رفي اج : ال عند لایر یز الا رظ ٹاڈ في ی آفله اون .واه 
+مد » تفص ذلك درت مله .
+
+5
+
+© وقال الْحَافظ عِمَادُ لین ابن كير“ : ١‏ تفع الناسن به انْتِمَاعا کیا ٠‏ وَكَانَ له 
+خسن وَصَّمْتُ ۰ غَيْرالأئر روف رای ءَ عن المُنكر » وَكَانَ فيه رهد كيه ء وله أَحْوَالٌ
+
+صَالِحَة وُمُکاشفاتع وَلأَتباعہ نے فيد مَقَالاتٌ 5 ریذکخون عنه نه آقراله اشا
+
+وَمُكَاشْفَاتَ ت أَکُٹڑھا مُغَالاة » وَقَذْ كان صَالِحَا وَرِعا ء وَقَدْ صف کتاب الغنية رن اد
+
+<
+
+وفیهما اه حَسََةٌ 4 دک فیهما أحاوبت بمب وَمَوْضُوْمَة 3 وَبِالْجْمْلةٍ : گان مِنْ سَادّاتِ 
+لایخ 4 توف وَلَهُ تسْعُوْنَ سنا وَدْفِنَ بِالْمَدْرَسَةٍ التي کانث لَهُ .
+
+) 170 /۸ ( في مراة الزّمَانِ‎ )١(
+
+## parça 7
+
+( في ذيل طبقات الحنابلة ( /١‏ ۲۹۰-) . وانظر شذرات الذهب لابن العماد ( 7٠١/4‏ ) 
+)۳( في سير أَعْلام ال 0970
+
+.) ۰ في سیم الل(‎ (٤
+
+)0( في البدَايَة والنهایة ( ۲۵۲/۱۲ ) .
+
+ترجمة الشیخ عبد القادر الجيلاني ۳
+
+* نتاجه الفکر 
+ص 9۹ ۳ ۴ و بر 5 ہے ارم ۳ کی ٠‏ مر 1 و م 
+له الکثیر من المُوّلفاتِ الغنيّة بالمَعانی السَّييّه › وَإِليِكَ ذکر مَا له مِنْ مُخطوْطاتِ في 
+ا سط ٣ب‏ 8 - اع © ب الله عي م وه ۳۰ EET‏ ۳ 
+لْمَحْتََةِ الظاهريّة مما ذَكَرَهُ شَيْحُنَا مُحَمّد راض المَالح - رَحِمَُ الله تالی - في فهرّس 
+مگ سم 11 3 8 
+مَحْطوْطاتِ دار الکثب الظاهرية ‏ التَصَوُف ‏ :
+
+۳۹
+
+. )۱8۰/۱( ۰ آوراد الایام والأوقات‎ -١
+
+۲ آوراد الجيلاني ۰ ۱4۳/۱۱ ) .
+
+۳ الاق الْمُجَدِب ۰ ( 784/١‏ ) .
+
+. ) 535/١ ( ۰ جلا الْحَاطِرٍ الائتي في الوّعْظ وَالتَّصَوّفِ وَالرَقَايِتِ‎ ٤
+
+۵ الحزب الكبير . ( 4/١‏ ) . والمعروف بجزب الكيلاني . ( 474/١‏ ) ,
+
+1 دعاء أوراد الفتحية . ( 0514/١‏ )×
+
+۷۔ دعاء البسملة . ( ۵6۵/۱ ) .
+
+۸۔ رسالة في الأسماء العظيمة للظريق إل ال .551/12 ) .
+
+۹۔ سر الأَسْرَار وَمَظوَر الأنوَار فما يَحْتَاجٌ له ابر . ( 7/7 - 78) . وباسم : 
+الاسرار فيما یحتاج إليه الابرار . (۷۵/۱) . وهذا الكتاب منسوبٌ له وهو للكوراني 
+واسمه : السلوك في باطن الأسرار . ( 54/7 ) .
+
+٠_الصلاة‏ الكبرى . ( ۲۵۰/۲ ) . 
+١‏ کاب الفنية لطالبي طَرِئْقٍ لح . (۳۲۹/۲) .
+
+۲۔ لت الَبَانِيَ وَالْفَيْضَ الوَحْمَائِيٌ ۰ ( 75/7 ) .
+
+۳۔ المسبعات في الأوراد والصلوات . ( ۱۱/۲ ) .
+
+6 - ررد الجلالة . ( ١157/8‏ ). 
+6 ورد الشيخ عبد القادر الكيلاني. ( ۱۲4/۳ ) . 
+٦۔‏ وصية الكيلاني . ( 177/7 ) .
+
+١‏ فتوح الغيب
+
+۳
+
+## parça 8
+
+٭ وفائه : 
+عاش الشّيِحُْ عَبْدُ القادر نینس » وَاتتقَلَ ای الله بعد عَنْمَة َنمَة ليله الست في عاشر رَبیٔع 
+مر إختى تب يني يك سأ له لغب . وين َل ا 
+يُحْصَوْنَ ۰ وَدُفِنَ رای مذزسیه رَحِمَهُ اله تَعَالَى » ول بلتم م باب الْمَدْرَسَة حى علا اهار 
+اهر الس لِلصّلاَۃ ة على قَبْرِهِ وزیاریه ٠‏ وَكَانَ يَوْما مَشْهُوداً . 
+8ؿ ۴۰× بد
+
+الإمام عبد القادر الجيلاتي ١‏
+
+لاخ عَبْد القادر الجیلاني
+
+و
+
+بقلم : الأشتا اي الْحَسَن عَلِيَ الْحَسَنِيَ الذي
+
+د السَاجة ای الدُغوَة 7 الشَعييّة ب والاضلاح العام :
+
+لقذ قامَ حجة ا الغَْرَالِیُ » بشَخْصييِه الفَرِيِدَة القَرِیِة ء رجاو العلمن 
+رالاصلاحی ۰ پر عنم في تاریخ الإضلآح وَالتجْدِيْل > وگان ال مرب لداع عند 
+هجوم لس اليُونَانيَةَ » رالکاد با وانحراف العُلْمَاءِ ؛ رن ظل العام نی 
+حاجة شدِيْدَة ز إلى کر و وَشْحْصبَّة رُوْحيّة رَفِيْعَةٍ › ا اتال بِالشّعْب و رَطبَقَا 
+الْجَمَامیرِ ٠‏ ینف في في الْمُجْتَمَع > بدغوتواومراعظه رَبتزکیته كيه رس واضلاحه لاأَغانِ 
+زرح و > وَحَيَاة مان .
+
+قذ كانت الكَغرة الكائرَة ین از رس لب رَالاجيَمَاعية ء وَقّد اتشر فیها
+
+72 رَالْفْلةٌ وَالْجَهَالَةُ رالثفاق ‏ وَل تو تور الْمُنَاقفْشَاتُ العلمعه وَالفْلمَفَاتُ الْمُلْحِدَة الا في 
+یف الم الواقيّة » وَخاصّةٍ الحَاصّةِ .
+
+مذ طت الْمَلَكِهُ الْمُطلقة E‏ المُحْصيَةُ ٠‏ تلا له م ادر الشّعْبِ
+
+0 ذل هورق کات لجع پا اب ند وُلکٹھا 
+ی اوق بر اب که مُْرَفة لاهيّة
+
+وَقَذ نشب الْحَضَارَة المَجَمِيّةُ أَظْفَارَمًا في الْتجْتَمَع لول وتغلغت العَادات
+
+مج اَي الْجَاهِليَهُ چوپ لو لیا یت سس اس یق نی الحراضر از الإشلاميّة
+
+وملا تب 0 انت من راب وو 93 وَوُجِدَتْ ك امه من م رجَالِ البَاذط رخاف 7 
+الأمَرَاءِ ٠‏ وَنْدَمَاءِ اء ال وَعبَادِ الأَغْرَاضٍ » وَمُنتهزي افرص لین .
+
+۳ فتوح الغيب
+
+## parça 9
+
+قد کاٹ الطَبَقَةُ الوُسْطَى عَلَى آثر الأمَرَاءِ وَالأَغْييَاهِ » وکا الا العف الما شرن
+
+ضِعِيْنَ لأخلآقٍ الطَبقة الوُسْطى ٠‏ يرون الشَّرْفَ فی تمَلَيْعَ اه بها » وکان این
+
+َوه رسای ايا :الم بي اليرت تیم مُوْنَهَا في التَمقُم بِالْحَیاۃ زضاء ال
+
+5 لین 4 حرموها ٠‏ فکانوا يصون حَياتهم في تَحَشْرٍ وتوجع ۰ یرون نفزسهم - مهما
+
+۸ من الم الب وَالأَخْلآقٍ الفَاضِلَةٍ اذ نالدرا الا . رَكَانَ کاب لیر
+
+4 یار وَالمَطف عَلَى الضَعَمَاء والبر بالفقرای. َالشّكْرَ عَلَى ما رهم اله‎ a 
+په مِنْ سَعَة وَرَخاءٍ‎
+
+ا البٰوسَاء وَالکاددخون 3 فکانوا لا یرفن الس الضا 4 7 والوباء 3 i‏ 
+فقدّت الْحَبّاة ؛ اتزاتها ودرا » وأصییت وه عَصَبيٍَ یه » لا ری لا من عر على 
+1 مرا عَظِيْمَةٍ ء وتسلط علی مَلَكَيھَا واسیفلالها للوَوی ی أر اعد وش و 
+من يَحسد هذ البق یش في هُمُوم وَعْسُومٍ ابيا ها ٠‏ ولا تتهي إلا مَعّ الا > فلا
+
+چو نر یک 
+نيا يلهو بها وه يفضي وَطَرَهُ ۽ راميب پیش بر .
+
+ناراب اي وکو إلى دغرو وی تف موا 
+حك الثشا . نج و زحد » وتوفظ في النفؤس الإيمَان » رتیه يده الأخر: . 
+وَتَحركُ في اقلوب الب لل این یه » خث على الطفزح رل الهکة وَبَذلٍ الْجُهْدٍ في 
+لحْصُولِ عَلَى یلم الله الصّحِيْح رعبادته » ون رضوّانه الا في له ۰ رَتَذُعُو إلى 
+لو حیّد الکامل » وَالدیْن حالص > دَغوَۃ ریغ مکشرفت وس 2 + أَهْلٍ الدّنيًا 
+وَأَصْحَاب رو وَرجَالِ الحكؤْمَة وَفَفْرَهُمْ ٠‏ في قُوَةٍ رو وَوُضْوْحٍ وَيْقَةٍ راغتداد او 
+الأَسبَاب لا فد لا ولا تار . رآنها مُسَكُرَةٌ حَاضَعَةً لإرَادَة الله تمَالی یتصرف نیها » ینک 
+رَيَصْرِفْهَا کلف بَشَاء
+
+٭ مُوَمْلاْتْ الذّاعي العلمئة :
+
+يم القزن لایس في تارنخ الوشلام بسَعَةٍ في الیلم وَتَقَدْمٍ في الاب . و ۹ 
+کپ ا وم لفن ارمُون . وَقَدْ كان من رجَّالٍ ار هذا القَرَنِ َأوَائلٍ قرو سا
+
+## parça 10
+
+الامام عبد القادر الجيلاني ۱۷ 
+العامة بو إِسْحَاق الشَیْرَازی ( الْمُتَرَفى “4ه ) › 13 حه الإشلام الْرَالِن ( الْمُتَوَفَى 
+۵ص واو الوَقَاِ ابْنُ عَقیل ( الْمْتَوَفَى ٥١٣ھ‏ )ء وَأَبُو زكرا راز ي ( ای 
+۲م ۰ وَأَبُو القاسم الْحَرِئْرِيُ ( الْمْتَوَنَى ٥١٦ھ‏ ) ء وَجَارَ الله الرَّمَخْشَرِيُ ( الْمُتَوََى 
+وس دی تس NS‏
+
+این لوا رونا مرن عَلی الول وَالانْجَامَاتٍ ‏ وَكَانُوا مَدَارس ية علي ؛ 20 
+يَكُنْ لأَحَدٍ في ما لد الاجر بالکیاة ‏ َة رابغ المَنْ كالقرْنِ الخايس وَالمٌادِس ۰ رفي 
+لڍ ار ترس ولات الڈژرس نف أن ني مجققيه الي قلح ازع
+
+في اليم ؛ وا a‏ ل کيا ؛ وَل يَكَنْ لَه آن يُلْفَتَ إِلَيْهِ الأنْظارُ › 
+رتفد 9 َعْمَاق النفزس الب 5 رَتخضم له 1 لَه الطبَقّاثُ الْمُتَقَفَةُ لرَاءِ الیلم في
+
+عَصْرِهِ » الا ۷ 6ة عاي اكب صرفل ال في الم اکن رر نو 
+وَالدُنيًا » َد مه له معا صوره بالضل ؛ هد معا بل مار الیلم ر سَعَة الْمّعَارفٍ .
+
+وَكَانَ بَجبٍ آن يَكُوْنَ هذا الدّاعي ضاحب بیان وَلِسَانٍ ۰ يُخَاطِبُ العْلْمَاءً لین في 
+آسلوبهم َالمَائة في اوه + وکان یبن کون صَاحب نفس زک ؛ وهمَة ئّة مور 
+ی جانب ۽ عط منّ ارهد وَالْقَاعَة وَالعروفيٍ صن الشُهَوَاتِ وَکبْر اللفس » جد وت 
+الإيِمَانِ رَضماف لس في مَجَالِسِهِ وه ت اليَقيْن رَحَرَارَةَ الایمان ۰ وب جد أَهْلُ 
+وَالازْتیّاب السّكينة وَالإِذْعَانَ ٠‏ وَيَجل E A‏ ارس القلقة ة الب اک ضر ہی 
+0 وَالعَرَاءَ وَالسُلْوَان ٠‏ وَيَجِدُ هواه اي وَالْمَمَارفِ وَأَصْحَابُ الذَرَاسَاتِ : اللوم
+
+## parça 11
+
+بْقَةَ وَالنّكَتَ اللْطيفة 0 يج ساب البطَالَةَ وَالمَطْلَةِ وَأَصْحَابُ القلرّب الْحَامِدَة ما 
+سوق ؛ حَمَاساً وَإيْمَانآ ء وَمَا يُحَفَرُمُمْ إِلَى العَمَل وَالْجِهَادٍ ء وَيَجِدُ غاد لدابت وَالشّهُواتِ 
+والمترفون في لْحَيَاۃِ ۰ تجرؤوا على الا وَالْمَحَارم ٠‏ ما يَبْعَثْ فنهم الاقلاع 
+وَالنَدَامَةً وَالتوْبَةَ وَالإنَايَة . ۱
+
+وَبالْجُملَةٍ : : جد کل أحَدٍ في مالسو ناء ودرا وَغِاءَهُ رَشفاءه یف كَمَنَارَة عَالِيَةِ من 
+یا الم في بخ لاب وَالْجَاهِلِيّةِ » يَأوِي لها الغرقی يت بها الْحَائْرُونَ ۱
+
+لت الأنبياء في دُعَاءِ الْخَلْتٍ إلى اش » وَدَعْوَةِ التاس إلى دار الکلام » وَإِخْرَاجِهِمْ من
+
+۸ فتوح الغيب 
+ت إلى الور ؛ ویخلفون الا 58 تهذیب لس رَتجدید الصْلَة با : تعَالى.: 
+واقکنر ارو وزرا عَلَى الا .تخر لزید واخلاص الثنن نی 
+کل من آَم مقاصد بغ الأنبياءِ من مفظم آخدانهم » ولا ینکن آن ی یقی الإسْلاَم کی وَنظام 
+لقع سلوب لیام ودغْرَة وم ی بر له دعا مود من َا اراز .
+
+قد کات وَطَأَةٌ الْحَكَوْمة التي كان عَلَى راسا الْمُلْوْكٌ وَالْمُسْلِمُونَ ای یعون بالْحُلَفَاء 
+ية علی الُْجتَمَع الإسلآِي » ولد كان لماعت إلى الْجَاهِلئة ‏ »ولد كانت 
+هذه و الأؤضاع خطراً کبیرا عَلَى 0 وَعَلَى امراج الاسلامی » فكان ات الوسلايي 
+الْمُحَاط بهذ الأخطار في حَاجَ رید و ی مضلح دی وَمجَڈو منلايي من الطبقة ای 
+يُحَاربٌ الْجَامهلیۃ الي تسر یی بث الی الإسلام ؛ في عَاصمَيتِهًا ء وّفي أَوْجِهًا . رم TE‏ 
+من جَدِيْدَة في مَذا العام مار
+
+قذ وُجد هَذا الْمضْلِحُ في شَخْصٍ الدب راد اي الذي هر في اي 
+أخر القَرْنٍ الخایس ء الرَعَامَةً ای رعاش نو قزن فزداً فریداً في الدَّعْوَ 
+إلى الله » والقت حَولّه لالم الو لای وَج في تاییرا لم بر مله عَالِمٌ از مُصْلِحٌ من مده
+
+طَويْلةٍ . 
+* دراسته ونبوغه :
+
+## parça 12
+
+وُلِدَ الشّبْحْ عَبْدُ القادر سَنَةَ ٤٤٦ھ‏ فی جیلان » با هي نب إلى الْحَسَنِ بن علي - رضي اللہ“ 
+تمالی عَنْهُمًا - .
+
+َل بعْدَادَ ست ۸۸م ۽ وله ماني عفرة سن » هي اله اي حَرَجَ فنها آبو حاير
+
+ہے مس رھ ہہ لاد وچ 
+ی الم هة عَالية وج وَجزص ٠‏ ول فش اباد وَالاشْيمَالٍ بان عن الاشتغال
+
+عالِیّة
+
+بالیلم ٤‏ ولم برضن لت في الم َالاميصَارِعََى الیل الذي لا بد من ۱
+
+( البداية واللهاية ( ۱4۹/۱۲ .
+
+الإمام عبد القادر الجيلاتي 1
+
+ترا لزع سای ني حطر على أسايليها الجبار وارز ِنَّ فيهَا رانقنها وَ وميه مه فيها ›
+
+حصّلت لَه فيا اليد الطوتی 
+٭ من شیوخه : 
+زارد یل e‏ 
+وَأَحَذَ الطَریقَةً عن الب أبي اير خاد بن لِم الئاس" ٠‏ وَأكَمَلَهّا عند القاضي أبي
+
+سعد الحرم : رَحَصَلَے له اجار عه .
+
+* الاصلاح وَالإرْشَادُ :
+
+عُنِيَ اليح عَبْدٌ القاِر ‏ بَعْدَمَا تم ِرَاسَتَهُ العِلميَة وَالدْوْحِيَة ج بالإضلاج و َإِرْشَادٍ الْخَلَقٍ إلى 
+الق » وَجَمَع بَیْنَ الَیَاسَة مو الاب a‏ الم ۱ كان ا تن قذ ئی مَدرْسَة لطيفةٌ 
+باب الاژج ٤‏ ففوّضت إِلَيْه و كلم مَم آلثاس یمان الوَعْظ » وه[ له صيْثٌ » فضاقت 
+مرس بالثاس من اژدخایهم : فجلس لاس عندالشور آیاما ء م وُسْمَتْ بما ضیف لا 
+من الْمَتَازل وَالأَمْكِنة ابي لها قن کف ادتقا أ a‏ ی1 
+اسهم وَاكْتَمَلَتْ الْمَذرَسَةُ في سَنة مان وَعِشْرِيْنَ وخمس مِنَةِ ۰ وَصَارّت مَنْسُوْبَة ۳ 
+وَتصَدَّرَ با لِلْتدْرِيْسٍ وَالمَعْرَى وَالوَغظ ‏ تح الاجتِهادِ في الهم وَالعَمَلٍ » وَجَمَح اله لت 
+عبّاده على سه » وَأَلْمَجَ ا باللناء عليه › وَانْتَهَتْ یه ا الیلم وَالتوْبِيَة رَالإضلاح 
+ژالازشاد وَالدُعْوَة إلى للم بالعِرَاقٍِ ؛ وَفَصَدَہُ الاس من الاق ٠‏ وَرَرَقَهٌ الله مِنَ الوّجَامَة 
+وَالقَبُولٍ ما أَرْرَى بِرّجَامَةِ الم وَالسَلآَطِيْنِ » وَمَابَهُ ال وَالْمُلُوكُ وَالْوْرََاهُ من
+
+0
+
+## parça 13
+
+دونهم .
+
+(۱) قال الشعرانی : انتهت إليه رياسة تربية المريدين » وانتهی إليه معظم مشايخ بغداد وصوفيتهم في 
+وقته ؛ توفي سئة ۵۲۵ه .
+
+(۲) في المطبوع : ( سعيد ) . خخطأ . وهو المبارك بن علي بن الحسين ؛ فال عنه ابن كثير : سمع 
+الحديث . وتفقه على مذهب أحمد » وناظر وأفتى ودرس ؛ وكان حسن السيرة » جميل الطريقة 
+سديد الأقضية » توفي سنة ٥١١ھ‏ .
+
+۲٢‏ فتوح الغيب
+
+5-4 574
+
+قال الشيْحُ موی ابن قدَامَةَ صاحب الْمُفْنِي : لم أَرَ أَحَدا عم من أ جل الدَيِنٍ آکثر مِنْهُ . 
+وكان ا مَحَالسَه في تعض الأحيّان الْحليْفة وَالْمْلوْهُ والوَرَراء ‏ اون مد
+
+خَاشمِیْنَ . 
+۲ ا ا کرے < 1 ۰ م 9 م9 2 7 تس وم 5 
+ما العلماء والفهاء ۶ فلا يَأتِي علیهم حطر وَقذ عد في بَعْض مَجالسه ارب مئة 
+نم و مر (۱) 
+0
+
+و ے۔
+
+« صفته وَأَخْلدقهُ :
+
+ان ین لاق أن يف ملق 2 مع الصَفیر وَالْجَاريَةِ ء وَیْجَالس الفعَرَاءَ وَفلي لَه 
+م ٠‏ دكا ٩‏ اي م معاد ونر ٠‏ ول بلع بط پیب ونر ور 
+ا
+
+3
+
+وان ذا جَاءَهُ خَلِيْفَةُ أو وزيب و ا حَبَّى لا يقو ۳۸ .
+
+رقد اقب الأَلْسئ وشهاداث المعاصر ان لی حشن غلقہ مر هئيه » وتراضعه له 
+تتا ٠‏ فسخ رز قورع « حرادة ٩‏ وقذ عاش طویلا 
+وَصحِبٌ یال الكبَارٍ » قال : د ما رت عَيْنَايَ أَحْسَنّ من خلقا ء ولا آزسم صَّذْرا ء وله 
+رم تفا eS‏ 
+مح جلا قذرو » ولو میم » وَسَعٍَ لوه - مح الصّغيْرٍ ٠‏ وَيُرَقْدُ الكَبيْر ء وَیبدَاً 
+بالملام ء وَیُجَالِسْ اضما عاض للفقراو 5 قَامَ لأَحَدٍ من المُمَاءِ ولا الأميَانٍ » 
+آل ياب وري ولا ان(“
+
+ہس 7 گے ہے يي ۳ 1 587 7 ۳ 05 > سر 
+وَقَالَ الإِمَامٌ الحافظ أبو عبد الله محمد بْنْ يُوْسْف البَرْزَالِيُ الأشبيْلیُ : « كان مُجَابَ
+
+. ملخصامن المنتظم والهداية وذيل طبقات الحنابلة والطبقات الکبری‎ )١( 
+. ) الطبقات الكبرى للشعراني ( ص۱۲۷‎ )٢(
+
+)۳( الطبقات الكبرى للشعراني ( ص۱۲۸) .
+
+## parça 14
+
+2 أقول : لم أجد له ترجمة .
+
+. قلائد الجواهر‎ )٥(
+
+الإمام عبد القادر الجيلاني ۸ 
+وس ید ی ٠‏ كير الفكر » رَقَيِقَ القلب ٠‏ دایم البشر » كريم 
+لس حاف و تی یت ب غراف ۰ مَع دم راسخ في 
+العِبَادَة ّالاجتهّاد ۱۳۰
+
+رَقَالَ مُفْتِي العراتی ء مُخيي الڈیْن » أَبُو عَبْدِ اللو مُحمّد بْنُ حَامِدٍ البَعْدَادِيُ : « كان آبْعَدَ 
+الاس عَن الشخش » أَفْرَب لاس إِلَى اکن . ی باس ذا هکت مَحَارمُ اللو عر وجل ء 
+ليَعْضَبُ لِنَفْسه » ولا يَمَصِرٌ لِغیْر اللو » .
+
+کان لَه رام بإطعَام الم ریس ہے سد ا و ر في 
+تارئخه : قَالَ الْجبائي : قَالَ سيم عَبْدُ القاور : « شت شت الأعْمَال کُنھا > فما وَجَدْتُ فیها 
+الل ن إفقا لقم » ول أرق بن الي لعي .زا ڈ لو کات الا يدي أَطْعَمْتْهَا 
+الْجَائِمَ ؛ . وَقَالَ : قال لي : « كفي مَتْقُوبَةٌ لا تضبْط شيعا ٠‏ لو جَاءَنِي آلف وتار لَمْ تن
+
+عندی ید
+
+سم ری سید ےہر مود کل یل سس ہت 
+الأَضْيَافٍ » وَيُجَالِنُ الصَعَمَاء » ریصب لى لب العلم » ) لا يط جَلئِسَهُ أن أحدا آرم لَه 
+مك یڈ م قب ين أشعيو» ونأك مز .وق رش تشر 
+ساتم » وَيُصَدّقْ من حَلَفَ له ء وَيَخْمَى عِلَمُهُ فيه ۲۱۰
+
+: و 7 
+# اخ سن الم : 
+تفن الْمُوَرُحْوْنَ عَلی كثْرَة کرامات الشيْخ عَيْدٍ القاور
+
+دم رت : لم آسمم عَن أَحَدٍ يُحْكَى عَنْهُ من الكَرَامَاتٍ ء 
+اکٹ مما یُحُکی صن ال عبد القادر ١‏ ۰
+
+. قلائد الجواھر ( ص۹)‎ )١( 
+. ) ۱۰ قلائد اللجواهر ( ص‎ )۲( 
+. قلائد الجواهر ( ص۹)‎ )۳(
+
+۲۲ فتوح الغیب
+
+كر ايخ عر ال ابن مد عبد الکلام : * نم 
+عَبْدُ القادر > فان كرَامَاتَِ فلت بالات 07
+
+7”. 8
+
+۳ ۳ ع شرم 23 ٰ7 في 
+تتوفر کرامات أَحَدٍ من المشايخ إلا الشيخ
+
+وَكَذلِكَ تال شيخ الاسلام ابن سا ,
 
 ## parça 15
 
-Other works attributed to Shaikh ‘Abd al-Qadir include short trea¬ 
-tises on some of the Divine Names; litanies [awrad/ahzabl; prayers 
-and supplications [da'awat/ munajatj; mystical poems [qasaidj.
+وَلَکن من أَجَلٌ یں لس والقلوب . وَرَرْعٌ الإیِمَانِ وَحَشْيْةِ الله وخب 
+بها ٠‏ مَِشْعَالُ مَجَامر الوب الي نات من ی َد آماد الله به إلى قرب ل دی
 
-Previous translations of Fut&h al-Ghaib
+^ ور 
+او
 
-With gratitude and respect, I wish to conclude this brief introduction 
-by acknowledging the work of my predecessors, whose earlier 
-translations of Futuh al-Ghaib [Revelations of the Unseen] have 
-been most helpful to me while preparing the version now offered 
-to the reader.
+لا الله حا نا رهبت تراه ويه رباع بن تن عات يها فرب مي . 
+قطن بها نمس مده رَانطلقت في العَالم الاسلامی مَوْجَةٌ منّ الإِئِمَانِ الْجَدِيْدٍ . 
+وراج القَويّة ء وَالَخْلاَقِ ا ٠‏ ای
 
-W. Braune published his German translation, Die Futuh al-Gaibdes 
-'Abd al-Qadir, in Berlin in the fateful year of 1933- My sense of awe 
-grows more intense, each time I reflect on the juxtaposition of that 
-title with that place and date. Almost eight hundred years had then 
-elapsed, since Shaikh 'Abd al-Qadir uttered his enlightening and 
-spiritually liberating words in the Arabic tongue. Providence 
-enabled him to acquire a German voice at the very moment when 
-falsehood and tyranny were abusing the German language to 
-proclaim their triumph, as Hitler became Chancellor in Berlin.
+وقد م يا الله الرَعَامة ال يي وَالؤوْسبة في العالم اسلا ٠‏ فاخمار ل غاد عَاصمة 
+الْمَعْلْكَةِ العئّاسية 2 ول لب الا وین - وجامته بغذاد - هي ین بر مدن لام تہ 
+رادم 7 عله ؛ اژیخاماً كبيراً » قال« نجل عنيي رجُلان ولاه يَسْمَعُوْنَ 
+كلآبي ؛ ٿم تامع بي لسن راحم علي الخ کن أجلس في الْمُصَّلَّى پیاب الْحَلَبَة : 
+ٿو ضاق عَلْ لاس َأَخْرَجُوا الکرسي وی اي الور ی انار وَكَانَ الاس يَجِيْؤونَ في 
+الیل عَلَى الشنم وَالْمَشَاعٍِ ٠‏ و تمغ ماع ؛ > ثم ضاق عَلَى الّاس الْمَوْضِمٌ ٠‏ حمل 
+كي نی حارج الب ٠‏ وَجُهلَ في المُصَلَى ۰ وََانُوا يوون عَلَى ای ولبایوالحمیر 
+وَالْجِمَالِ یفن ما دار الْمَجْلِسنٌ کشر ۰ رَكَانَ تخضر الْمَجْلِسَ نَحْومِنْ سین يد آلا ۾" .
 
-To the best of my knowledge, there has been only one other 
-complete translation into any Western language, namely the 
-English version by M. Aftab-ud-Din Ahmad, entitled Futuh Al- 
-Ghaib [The Revelations of the Unseen! and published in Lahore, 
-Pakistan, by Sh. Muhammad Ashraf. The original date of publica¬ 
-tion is not mentioned in the copy at my disposal, which is a reprint 
-issued in 1986, but I believe that the book first appeared several 
-decades ago.
+وان لِمَجَالْسهِ یز لیم تفع کر قال الشَیْخٌ عُمَر الكَيْسَانِيَ : « لم تكن مَجَالِسُ 
+سينا الشیٔخ عبد القایر رَضي الله عَنْه عَْهُ تخلو يِن تلم من ال وَالْصَارَى ۰ ولا بنیز
+
+ین فطاع الطَرئِقٍ ے وَقاتلي الأَنفْسٍ . ری ذَلِكَ مِنّ الفاق » ولا ممن یرجم عَنْ مُعْتَقَدٍ 
+0 و 
+شيء ٤‏
+
+. ذيل طبقات الحنابلة لابن رجب‎ )١( 
+جلاء العبلین للالوسي‎ 2»
+
+( قلائد الجواهر ( ص6١-5١‏ ) . 
+2 قلائد الجواهر ( ص ۲۲ ) .
+
+فا عبد القادر الجپلائي ۳۳
+
+قذ كَانَ يَشْعُُ بذلك مَيَحْمَدُ بَحمّد الله عليه عم عل قا کاٹ تو ات من الْخُلوَة باشر 
+ی من الق والاشتغال بالعبّاداتٍ ۱
 
 ## parça 16
 
-As for my own translation, printed within the covers of the book that 
-is now in the reader's hands, it may well be regarded as a tribute to 
-Maulvi Aftab-ud-Din, whose work was avidly read—and re-read, 
-and re-read—by Ruslan Moore, the person who would become the
+ل الجانی : قَالَ لي سید الشّيْحُ : « أتمَنّى أن أكون في الصَّحَارَى وَالبَراري كَمَا كنث 
+في الاو ٠‏ لا آزی في الكل ولا زی ٤ء‏ ثم قال : « راد الله عر وجل مني مَنفعَةً 
+الخ ء فَإنَه قد أَسْلّمَ عَلَى يدي کته من حَمْسَةِ آلاف مِنّ اليَھُودِ وَالنْصَارّی ۰ وتاب َلی يَدَيّ 
+من العَيّارئْنَ ۷" من متة آلف ء وَهَذَا خیه کیب 217 .
 
-4
+ركان اسح ید قد د بحق َه مُكَل لك انرايد 0ق الا ما
 
-Concerning the Author
+ن شی في یل ونل فب ئي » إِني آنصَخ ولا رید عَلَى ذَلِكَ جَراء 
+اج تی قد حَصَلَتْ لي عند رئي عر وجل » تَا آنا طالب د 00 
+وَل کا سوّی الْحَنٌّ عر وجل > ما أَعْْدُ إلا الْخَالِنَ الاح لاد اليم » قرحي بِفَلاَحگم » 
+رمي لهلاکگم ۳۰ .
 
-founder of Al-Baz Publishing, Inc. The fellowship between Ruslan 
-and myself is rooted in our experience of the latihan kejiwaan of 
-Subud, an experience shared over many long years, and that 
-fellowship has been further enriched since we became brothers in 
-Islam. I agreed with his perception of the need fora new translation, 
-to complement rather than totally supercede the work of the 
-venerable Aftab-ud-Din, for the benefit of readers who are unfamil¬ 
-iar with sentence structures and turns of phrase peculiar to the 
-Anglo-Indian variety of the English language.
+* اشقا بالیلم و وت نضرئه للشكة :
 
-May Allah forgive our mistakes and failings, and may He bestow His 
-blessings upon all connected with our project—especially our 
-gracious readers! Amin.
+ولم يَمْنعْهُ مه له بالط والازاد لسن لاضیفالباتذریس ٠‏ ور ر العلم 
+وَنَصْرٍ السُنَّهَ وَالعَقَيْدّة الصحبْحة ٠‏ وَمُحَارَبَة ية البدّع ٠‏ وَقَدْ كان في المَقیْدَۃِ وال زع مُتّبعا نامام 
+ا وَالْمْحَدَئِينَ وَالكَلَفِ . قال ابْنُ رَجّب : ١‏ كان مُتَمَسّكا في مَسَائلِ الصّمَاتٍ وَالقدر 
+رَتَحْوِهِمَا بالشْن » ها ني الود عَلَى مرن حالم ۴0(
 
-Muhtar Holland
+رَقَدْ كان وي الاشْتِعَالٍ بالٹڈریِس » عالما مَُفننا . قَانُوا : کان یکلم في لاه عَشَرَ 
+ِلماء وکا يقرو علي عذرسیوفزسا ین اتف ء وتزسا ناینب » ووَْسآ من 
+مدب » وَتَوْسا مِنَ الخلاف » رَكَانُوا يَفْرَؤُونَ عليه طرفي التهار : المفْسِيْرَ ء ولو 
+الْحَدِيْثِ ؛ وَالْمَدْمَبِ ء الخلاف ‏ وَالأصُزلِ » وَاللّحْي .
 
-1 See SA. Salik. The Saint of Jilan. lahore: Ashraf (publ.), 1974, pp. 80-84.
+د
 
-2 See p. 188.
+۔
 
-3 In his article “Abd al-K2dir" in Encyclopaedia of Islam (also printed in Shorter 
-Encyclopaedia of Islam. Leiden, Netherlands: E.J. Brill, 1961).
+۰
 
-Author’s Genealogy
+. المسالح : الجماعة ؛ أو القوم ذوو السلاح‎ )١( 
+. ) ۲۲ (؟) قلائد الجواهر ( ص‎
+
+(۳) الفئح الربّاني ( المجلس السادس ) .
+
+. ذيل طبقات الحنابلة‎ )٤(
+
+۲ فتوح الغيب
 
 ## parça 17
 
-According to Shaikh ‘Abd al-Razzaq, noble son of the author: “These 
-are the words of my father (may Allah—Exalted is He—bestow His 
-approval upon him!), Supporter of the Imams, Master of the Orders, 
-Abu Muhammad Muhyi’d-dln ‘Abd al-Qadir al-JIlanl al-Hasani al- 
-Husainl al-Siddiqi, son of Abu $alih Musa Jangi Dost, son of Imam 
-'Abdu’llah, son ofImam Yahya the Ascetic, son of Imam Muhammad, 
-son of Imam Dawud, son of Imam Musa, son of Imam 'Abdu’llah, 
-son of Imam Musa al-Jawn, son of Imam ‘Abdu’llah al-Mahd, son of 
-Imam al-Hasan the Junior, son of the Imam, the Commander of the 
-Believers, our Master al-Hasan the Grandson [of the Prophet), son of 
-the valiant Imam, heroic Lion of Allah, hero’s proud son, Com¬ 
-mander of the Believers, our Master ‘Alt ibn Abi Talib (may Allah 
-ennoble his countenance, and be well pleased with him and with 
-them all. Amin.)"
+رَكَانَ يقرأ اران بالقراءات بَعْدَ الظهر » ركان بتي عَلَى مب الإتام شین َالإمَام 
+َحْمّد بن حنبل - رَضِيّ الله عَنْهُمَا ‏ » کانث فَنْوَاهُ عرض على العلما: ء بالعراي » فَتُعْجِبُهُمْ اشد 
+ااي
 
-!
+رُفع لب وسوا ِي جلي حَلَفَ بالطَلآقِ الب » أ لا ُد نیب اله عر وجل عِبَادة كرد 
+يها ُن جيم الاس في قتِ تابي پا ٠‏ قَمَاذا یف منّ العبادّات ؟ قاجا عَلَى اور :
 
-Author’s Prologue
+ONT
+
+مک ِ3 
+« یی م مک : وَيخْلَى ا و وت شر ہے 
+اراي ؛ وکانوا قذ عَجَرُوا من الْجَوَابِ .
+
+قد اجه اصرف في القرن الخامس اتجَاها فيه الاستقلال الذي قد ينهي إلى الانفصّال
+
+من لشي ۱ رب - أَوْ كاد يُصْبِحٌ - مؤش أَوِمَدْرْسَة قَائِمَةَ بنفْسهًا » ٠‏ لا کباش 
+له تصَالاً مکی .
+
+رشاعت شطحاث الصّوْفِيّة ٠‏ وَوَجَاوَيَمَالوْصوْلٍ إلى الْسَقَيِقَة وَالنْهَايَة البی ف 
+الفرانض وَالتَكَالِيَفْ الشَّرْعِيْةُ » وَطَهَرتْ نم ١‏ وَحْدَۃِ جرد » ۰ رید الفَوْضَى فی بض 
+زرا لس » فان لم عبْدُ القاور من أكبر الْمُعَارضِيْنَ لهذا الاتبّاه الثائر » ومن أَكُبر 
+الذعَاة إلى لی إخضاع الطرِيْقة لِلْشَرِيْمَةٍ ١‏ رتمك بالکتاب وَالشْنَة وتخکنمهما فی جَمیٔع 
+رن وَالأَفْوَالٍ وَالأَمَْالٍ . ۱
+
+ود استطاع بر ۳ شخصيته وبإخلاصه رعلمه القَوِيٌ ء أن یَمْنَمَ هذا الاتجاه الْخَطِيْرَ » 
+زج اون نیاق نی لتر ال
+
+قال الشْعْرَاننُ : ٠‏ کاٹ طریْقثه النُوْحِيْدَ وَصفا وَحکما وَحَالاً ء وَتَحْقِیقَه الشّرْعٌ ظاهر)
+
+و و 
+تلقط
+
+. ) ٠۲١ص‎ ( الطبقات الکبری للشعراني‎ )١( 
+. ) الطبقات الکبری ( ص۱۲۷‎ )۳(
+
+الإمام عبد القادر الجيلاني ”> 
+وباطناً ۰ . رَكَانَ رضي الله عَنْهُ يَقَرْلُ لأَصْحَابهِ : « اتبمُوا وَلاً تبْتَدِعُوا» وَأَطِيْمُوا ولا 
+تَكَالفُو] ۲۷۷ .
 
 ## parça 18
 
-Praise be to Allah, Lord of All the Worlds, first and last, outwardly 
-and inwardly, frequent as the tally of His creatures, far-reaching as 
-His words and weighty as His throne, fit for His own approval, 
-frequent as the count of all things paired and single, of all things 
-"fresh and dry in a lucid Book” *, and of all that our Lord has created, 
-fashioned and formed—creating without model or mold, always 
-and forever in purity and blessedness. Praise be to Him Who creates 
-and then disposes, Who measures and then guides, Who causes 
-death and brings to life, Who makes one laugh and makes one cry, 
-Who draws one near and brings one close, Who shows mercy and 
-abases, Who gives to eat and gives to drink, Who gives good fortune 
-and misfortune, Who withholds and bestows, by Whose command 
-the seven strong heavens stand firm and the mountains and hills stay 
-fixed and the level earth lies still. Of His mercy none need despair; 
-from His cunning design and jealous supervision no one is exempt, 
-and there is no escape from His decrees, His action, His command; 
-none can evade His service, and none is bereft of His grace. 
-Therefore to Him all praise is due for what He has given, and to Him 
-all thanks are due for what He has set aside.
+ومن قؤلِهِ رَحمَهُ الله : ( إن ن نکر فيك شيء من الْحْدُزو ‏ اعم نك مفُْوْنْ ٠‏ قذ لیب 
+بك ان ؛ قازجع إلى خکم الشرع وَالرّمهُ ٠‏ وَدَعْ عَنْكَ الْمَوَى ؛ ؛ أن الْحَقيْقَة الي لا تشهد 
+لها الشَرِیْعَةُ نهي بَاطِلَةٌ ۷''' .
+
+یل حَانَاً عَلَى اسب بالکثاب وال والیزام انباع الرْسْوْلٍ بك : ٭ كل حَقَيْقةٍ 
+تشْهَدُ لها الشْریْعَة أي .بي الع مزر اتاب وا ال قي 
+وید في ید الوَسُوْلٍ يلل › اجْمَلَهُ وَزِيْرَكَ ا دع ده ۾ ينك رتمك وََعْرضاكٌ 
+عَلَيْه! ,
+
+وق و رت زُ أن التْكَالِیْفَ سرا تنقط عَيٍ الاك في حال ین
+
+مر و و
+
+الأَحْوَالٍ : « ترك العبّاداتِ الْعَفروضات زَنَدقة تو َاِرتِكَاب الْمخْظُزرَاتِ مَعْصِيَةٌ › لا قط 
+0 و الاحْوَالِ ۲ .
+
+رَد كان جَبَلاً راسيا في الاشتقامة ل شرع » وقذ وَصَلَّ بكمّالٍ اتبّاعه ژملیه 
+اكاب سخ ۰ ونيد اله سبحانه وتعالى ‏ عیث صَارَمُميْربيْنَ الْحَقوَلبَاطلٍ »ور وال . 
+وراد رق تہ قَدْ کان اشد النّاس إِيْمَاناً۔ کما قَدَّْنًا ‏ بان الأَحَكَامَ 
+د ياه ا یپ وہ یر م سیت 
+َكَانَ مَطِيّة الشّيْطَانٍ » وَقَدْ عرضت له مح ثْبَتَ فِيْهًا ؛ لعلو الؤاسخ وَبَصِيْرَتَهِ النافذة » 
+59 
+يفول :
+
+ا رای لی نو عظیم ملا الأ َه فبه صُوْرَةٌ تتادِذني : يا عَبْدَ القَاِر » آنا فلت ء وََدْ 
+لت لک الْمْحَرْمَات! . تَقُلثُ : اخسا بَا لین ء فَإِذًا ذَلِكَ ال ظلامٌ » وتلك الصؤرة
+
+. الطبقات الکبری ( ص۱۲۹)‎ )١(
+
+)۲( ایضا ( ص۱۳۱ ) .
+
+(۳) الفتح الرباني ( المجلس الرابع والأربعون ) . 
+)٤(‏ الفتح الرباني ( المجلس الحادي عشر ) .
+
+۳۹ فتوح الغبب 
+ذُخَان » ثم حَاطَبَتِي ٠‏ يَا عَبْدَ القادر » نَجَوْتَ بيلك بان رَبك وَفِقَهِكَ في أَخْرَالٍ 
+مُنازَلاَكَ + قد آضلث يبأل هله الطعة شين Ee‏ من أَهْلٍ الط » فَقَلْتُ : لله الفضل ›
+
+و مج 3
+
+فقیل له : كيف علمت أنه شیطان ؟ قال : عفر :قح لک سوا 000
 
 ## parça 19
 
-Then blessings upon His Chosen Prophet (Allah bless him and 
-give him peace!)—to follow whose message is to be guided aright, 
-while to turn aside therefrom is to go astray and perish— the truthful 
-Prophet known for the truth of his word, abstainer from the 
-pleasures of this world, seeker yearning for the Friend on high, 
-chosen from all His creation, selected from all His creatures, with 
-whose advent came the truth, at whose appearance falsehood 
-vanished away, and by whose light the earth became illumined.
+# التَقُويْض وَالتَوْحیْدُ :
 
-Then upon him be further blessings copious, and benedictions 
-good and pure and blessed; also upon the good members of his 
-family, his companions, and their successors in active goodness,
+کائٹ قَدَمُهُ رَحمه مه الله على ایض وَالْحُوَافقَةِ مَعَ التي مِنّ الْحَوْلٍ وَالقَوَۃِ .
 
-• Allusion to Qur'an (6:59)
+کان ال مَي بن مَُازر ۷ ین : «وکان الم عَبْدُ القادر رضي الله عَنه طرق 
+الدخول تخت ت محا مَجَارِي الافدار بمْوَافقة القلب وَالْوُوْحِ ؛
 
-6
+می موی یی جو ہی فی ترك 
+لتاق ٠‏ حى حَصُلِ لي ذلِكَ جا اون ََوذي ١‏ وَالْمة تنصرني ۰ وَالفِعْلٌ 
+يُح ركني ؛ یره تعصمنِي تَعْصِمُنِي ۰ والارادة تطيفتبي ۰ رَالَابقَة تَقدمُني ء وال عر وجل 
+يَرْفَعُنِي )۳
 
-Author's Prologue
+ےم “ےر م 5 چم ۶ ۰ و چپ < ۳ ره يمرم کا 2 ٩‏
 
-7
+وقد تجلی هذا الذؤق وَھذہ الانجاه فی کلامه وَاضحاً فوا » وقد وَصف رجلا تجرد عَنْ 
+دنه واختياره » اكلم للقضاء وإرادة الله سبحانه وتعالی ۰ - وتا يَْنِي : تسه يفول 
+رَحمه الله :
 
-those most excellent for their Lord in deed, most upright for Him in 
-speech, and most correct in following His path and way.
+٠‏ إذا ابثلي ابد ل تحرك ولا في تفسم بتفسه » إن َم تحلص مِنْهًا اسْتَمَانَ بيه من 
+الْخَليٍ : كَالسَلآطِيْنٍ ۰ وَأَرْبَابٍ الْمَناصب ‏ وَأبتَاء انیا وَأَصْحَاپ الأَمْوَالِ » رال الطب 
+في الأمراض لجع ٠‏ قإن لم جذ في ذلك لاه » رَجَح حبذ إلى ره بالدعَاء افرع 
+وَالعْنَاهِ .
+
+ما دام يج عند نفسه ن نضْرَة لم برجم إلى اللي .
+
+اد د 0029 ۰ 9
+
+ثم ما دام جد عند الق نضرة لم جع إلى الْحَالِقٍ .
+
+. ) الطبقات الکبری ( ص۱۲۷‎ )١( 
+. ) الطبقات الکبری ( ص۱۲۷‎ )۲( 
+. ) الفتح الرباني ( المجلس الثالث والاربمون‎ )۴(
+
+الإمام عبد القادر الجيلاني ۳۷
+
+م إا تم يَجذ عن اْخالتي ُضْرَةٌ > استطرح بين يديه یما وال وَالذعَاء وضع 
+وَالْثنَاء > وَالافتقَار مَمّ حرف منه وَالرَجَاء :
 
 ## parça 20
 
-Then let our entreaty, supplication and"recourse he to our Lord, 
-our Author and Creator, our Provider Who gives us food and drink, 
-our Benefactor and Preserver, our Guardian and the One Who gives 
-us life, our Protector and Defender against everything that brings us 
-grief and pain—and all this through His mercy and His tender care, 
-His gracious favor of perpetual safekeeping in all we say and do, in 
-private and in public, in the open and in secret, in hardship and in 
-ease, in comfort and in misery and woe. Surely He is Absolute Doer 
-of whatever He wishes, Ordainer of whatever He wills, Knower of 
-what is concealed, Aware of all states and conditions, be they lapses 
-or acts of obedience and intimate worship, Hearer of all sounds and 
-voices, Accepter of all prayers from anyone He wills, without 
-dispute or hesitation.
+ته يُعْجِرْهُ الْخَالِقُ عر وجل عَن الدُعَاءِ وم يُجِبْهُ » حى ينقطع عَنْ جَمِيْع الأَسْبَاب » 
+سید بد يد ال مَيَفْمَلُ اي َف الب عَنْ جینم أب ولعي ی 
+درْحا ققط ء فلا ری إلا نل الق عر وجل تسیر وتا مُرَحْداً صَرْوْرَةٌ ء ویفلم آن لا 
+فَاعِلَ في الْحَقيقة إلا ات رل محر وَل مُسَکن الا الل ولا یر وَلاً شر » ولا ضر ولا 
+لم » ولا لاه لا ملع ٠‏ ول قح ولا » ولا وت ولا حَيَاة ٠‏ ولا و لا ذل » ولا 
+نی وَل فَقْرَ » الا ید الله . تمرح کلف ارم في بد الظفر ٠‏ والْمَيتِ اس في
+
+ِِ ال ۰ ارو في سَوَلَجَان الفارس ۰ بل وه بل رو ٠‏ ولا رل بو في
+
+تسه ولا في ڪهره ء هو عايب عَنْ تسه في فل موله ‏ فا ری عير ولاه وله ٠‏ ولا رى 
+سواهٌ » ولا ینتم ولا بقل من غَيْرِه من بر فَلِصَنْمَةِ بص > وَإِنْ سمع وَعَلِمَ فلکلامه 
+سوم ۰ وليه علم ء وينخميه تم »قرو مود » ویو تن زتشرّت ۰ وبزغرو طابَ 
+سکن » وه ام ٠‏ یکره بسن وعن غیرو اسْتَوْجَسنَ ور » وَإلی ذكره الَجَا وَرَكنَ ‏ 
+به عر وجل ون ؛ وَعَلَيه یه کل » وبنور مَغرفته امُتی رصن » ول ا
+
+"9 رت کرت لاع دمل حقة لکل ين بوه وی 
+عَنْهُ كما یتنا الق ا ٠‏ قَيَنقَى بلا حي في الْجُمْلَةَ » يَحْمَى عَن یهن 
+وو یہ بت لب وس ۲۳۰ .
+
+ہے
+
+شَفَقته مَن الق : 
+وَقَدْ كَانَّ ‏ رحْمَة اللہ علیہ - عطوفا ‏ شمْيْقاً › ریما بالأکۂ الْمُحَمَّدِيَةَ وَعَا َة الئاس ٠‏ دائم 
+و وَالدُعَاءِ له رق لب يرثي لضعفانهم وَالْمْشْتَفلِیْنَ بمَا لا يَنفْعْهُمْ في الاخرة »
+
+. ) فتوح الغیب ( المقالة الثالثة‎ )١( 
+. ) الفتح الرباني ( المجلس السادس والخمسون‎ )۲(
+
+۸ فتوح الغيب 
+تاصحا لک طَبَقةٍ ٠‏ مُحِبًا لح لا » تخرص عَلَى إِسْعَادِمَا زاخراجها من الما ی 
+لور » وَيَقَوْلُ مُخَاطِبا لعستممیه :

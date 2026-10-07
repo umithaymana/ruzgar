@@ -1,14 +1,74 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-07 — push `5fd9071` (ortak kaynak + tasavvuf 09)
+**Son güncelleme:** 2026-10-07 gece — Nebula commit + Kâşânî/Kayserî şerh
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
-### Yarın kaldığımız yer (öncelik)
+### Şimdi kaldığımız yer (öncelik)
 
-1. **Doğal sohbet P2** — oturum/thread cilası; `use_web=false` iken «web taraması / güven düşük» gürültüsünü azalt
-2. **RAG indeks** — `ingest_cli --incremental` arka planda başladı (venv `ruzgar`; ~3096 batch embedding); bitince ForceRestart
-3. İsteğe bağlı: Kimyâ-yı Saâdet daha dolu nüsha; Arapça Fütûh/Feth; İbnü'l-Arabî şerhleri
+1. ~~P2 / Ollama / tasavvuf anlık~~ — tamam
+2. ~~Kimyâ anlık sapma~~ — `kimya-yi` / `kimya yi` Gazâlî yoluna düşüyor (smoke 10/10)
+3. ~~Kimyâ dolgu~~ — IA Farsça OCR + EN (~2363 chunk, 4.8 MB)
+4. ~~Arapça Fütûh/Feth~~ — Fütûh AR+EN (~580 chunk); Feth zaten AR'dı (etiket düzeltildi)
+5. ~~İbnü'l-Arabî şerh (Câmî)~~ — `serh_ve_aciklama/jami_sharh_fusus` (~820 chunk)
+6. ~~Nebula tarih batch~~ — ayrı commit `15fac9c` (200 dosya, yalnızca `nebula_batch_*.md`)
+7. ~~Kâşânî + Kayserî~~ — Kâşânî AR ~633 chunk; Kayserî mukaddime EN ~356 chunk
+8. **Sonraki:** P2/Ollama/tasavvuf kod+şerh commit (istenirse push); tam Arapça Kayserî şerhi IA’da yok
+
+### 2026-10-07 — Kâşânî / Kayserî şerh
+
+- Kâşânî: IA `sharh-fusus-kashani` Arapça OCR → `kashani_sharh_fusus` (**633** chunk)
+- Kayserî: IA mukaddime İng. çeviri → `qaysari_muqaddima_fusus` (**356** chunk; tam AR şerh yok)
+- Anlık: «kashani fusus» / «kayseri fusus» / «qashani fusus»
+- Script: `faz9_tasavvuf_serh_download_ingest.py` (3 şerh)
+- RAG incremental: **290.573** chunk
+
+### 2026-10-07 — Nebula tarih batch commit
+
+- Commit: `15fac9c` — `docs(nebula): tarih kaynak incremental batch paketlerini ekle`
+- 200 dosya · yalnızca `knowledge/nebula/tarih_kaynak/incremental/nebula_batch_*.md`
+- Push yok (istenmedi)
+
+### 2026-10-07 — Fusûs şerhi (Câmî)
+
+- Kaynak: IA `sharh_al_jami_ala_fusus_al-hikam` Arapça OCR
+- Script: `faz9_tasavvuf_serh_download_ingest.py`
+- Anlık: «jami fusus» / «serh fusus»
+- RAG incremental: **288.908** chunk
+
+### 2026-10-07 — Fütûh / Feth Arapça
+
+- Fütûh: `futuhul-ghaibb` Arapça OCR + mevcut EN çeviri birleştirildi (250→580 chunk)
+- Feth: dosya zaten Arapça OCR imiş; dil etiketi `en`→`ar`
+- Smoke tasavvuf 10/10 beklenir
+
+### 2026-10-07 — Kimyâ-yı Saâdet dolgu
+
+- Önce: OpenITI kısa ara1 (~13 chunk)
+- Şimdi: IA Farsça ج۱+ج۲ + EN Bilal çeviri → `gazali_kimya_saadet__merged.txt` (4.8 MB)
+- Ingest: **2363** chunk · dil `fa` · güven orta · sayfa uydurma yasak
+- Smoke tasavvuf 10/10
+
+### 2026-10-07 — Ollama boş liste (düzeltildi)
+
+- Dosyalar zaten vardı: D:\\ÜMİT\\PROGRAMLAR\\Ollama\\models (~11.6 GB)
+- Modeller: llama3.1:8b · llama3.2:3b · qwen2.5-coder:7b (blob eksiksiz)
+- Sorun: Ollama **0.40** D:\\OllamaModels junction ile boş liste; gerçek Unicode yol ile 3 model görünür
+- Ruzgar.ps1 + RuzgarMasaustuBaslat.ps1 + User OLLAMA_MODELS → Unicode yola çevrildi
+- ollama list yeniden dolu; yeniden indirme yok
+
+### 2026-10-07 — Doğal sohbet P2
+
+- `chat_core`: `use_web=false` iken `_web_pro` / hava web zorlaması yok
+- `desktop_server`: `web_used` = `use_web` + gerçek web metni (`payload_indicates_web_used`)
+- `ana_motor_kaynak` + `ruzgar_dogal_sohbet_faz91`: soft citation / trust-noise suppress
+- Smoke: `scripts/smoke_dogal_sohbet_p2.py` (10/10) · P0 8/8
+
+### 2026-10-07 — RAG indeks (tamam)
+
+- Embedding bitti; `chunks.jsonl` yazımı kilide takıldı → `.tmp` yerine kondu + manifest güncellendi
+- Durum: **cached** · **282.873** chunk · tasavvuf ~32k parça
+- Kavram MD’ye Latin anahtar eklendi (anlam süzgeci / TR sorgu uyumu)
 
 ### 2026-10-07 — Tasavvuf (`09_ahlak_tasavvuf`) dolum
 

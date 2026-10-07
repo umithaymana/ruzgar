@@ -1,0 +1,23 @@
+{
+  "eser_id": "qaysari_muqaddima_fusus",
+  "eser_tr": "Mukaddimetü'l-Kayserî (Fusûs)",
+  "eser_ar": "مقدمة القيصري على فصوص الحكم",
+  "yazar": "Dâvûd el-Kayserî (ö. 751/1350); İng. çeviri Mukhtar H. Ali",
+  "rol": "serh",
+  "eser_turu": "serh",
+  "ilgili_eser_id": "ibn_arabi_fusus",
+  "ilim_alani": "tasavvuf",
+  "dil": "en",
+  "dosya_yolu": "knowledge/ilim/din/09_ahlak_tasavvuf/serh_ve_aciklama/qaysari_muqaddima_fusus",
+  "guvenilirlik": "orta",
+  "kaynak_sinifi": "kalici",
+  "durum": "hazir",
+  "kaynak": "Internet Archive (İngilizce çeviri OCR — Kayserî mukaddimesi; tam Arapça şerh henüz yok)",
+  "source_file": "qaysari_muqaddima_fusus__Muqadimah_of_Qaisari_djvu.txt",
+  "sha256": "1479034166946bed7cddec00f13fce444affe7ec29cb3fb62d8fb616e7996865",
+  "char_count": 501036,
+  "chunk_count": 356,
+  "batch_sayisi": 18,
+  "not": "Fusûs şerhi; sayfa uydurma yasak.",
+  "updated_utc": "2026-10-07T18:25:14Z"
+}

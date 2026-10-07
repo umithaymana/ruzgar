@@ -5,563 +5,619 @@ Kaynak: Kaynak: klasik tasavvuf / ahlâk metni (OpenITI veya Internet Archive ç
 
 ## parça 201
 
-H ow olion thoboliovor will say: "So and so is brought noartotho 
-Lord, while 1 am kopt at a distance-, so and so receives gilts, 
-while 1 am deprived; so and so is enriched, while I am impover¬ 
-ished; so and so is granted good health, while I am plagued with 
-illness; so anti so is honored, while I am despised; so and so is 
-praised, while I am blamed; so anti so is believed, while I am called 
-a liar." Does he not know that He is One. and that the One loves 
-oneness in love, and loves one who is single in his love for I Iim? If 
-He drew you near to I Iim by means of any other, your love for Him 
-(Almighty and Glorious is He) might lx* diminished and dispersed. 
-Perhaps you would develop an affection for the one at whose hands 
-you experienced the connection anti the blessing, so that the len t* 
-for Allah in your heart would decrease.
+را اد عر وجل زین اي ان داز لین رنواده وَدعاته فَدُوْنَكَ 
+فاتهم ۰ وَاذْعُهُم إلى طاعَة 2 الله عر وجل رهم مه اھ یں ٠‏ َب ند اللہ حبذ جؤيز)©؟ 
+قتَمْطَى ناب الژسُل وَالأَنْبيَاءٍ .
+
+ل رَسُولُ اللو يق لأمير امین على بن آبي طالب رضي الله" عَنْهُ : « لأن يَهْدٍ ي الله 
+داك وَجْلا یر 2 وكا خلت عل 1ل ۲*۷ .
+
+. ) في المطبوع : ( وتحرك‎ )١( 
+. ) تحرف في المطبوع إلى : ( معصية‎ (٢) 
+. اهب : الاد الْحَبیْژ‎ (۳) 
+رواه الطبراني في الكبير ( ۰ ) عن علي بن عبد العزيز ؛ عن أبي غسان مالك بن إسماعيل + عن‎ 2) 
+عبد السلام بن حرب ؛ عن أي خالد الدالاني ؛ عن زيد , بن أسلم »> عن يزيد بن زياد » عن أبي رافع‎ 
+قال : قال النبي گلا [في المجمع : قال رسول الله ها لعلي] : « لان يهدي الله عن وجل على يديك‎ 
+) 241 ( رجلاً یر لك مما طلعت عليه الشمس وغَوَبّت ؛ . وذكره الحكيم الثرمذي في وادر الاصول‎ 
+. عن أبي رافع‎ 
+ورواه الطبراني في الكبير ( ۹۹۶ ) عن أبي حصین محمد بن الحسین القاضي والحسين بن إسحاق‎ 
+التستري » عن يحيى الحماني ۰ عن قيس بن الربيع » عن يزيد بن عبد الرحمن بن أبي خالد » عن‎ 
+عبد الرحمن بن عبد الله مولى علي رضي الله عنه » عن أبي رافع قال : بعث اللبي بل علي إلى‎ 
+ اليمن ؛ فعقد له لواء فلما مضى : قال : « يا آبا رافع » الحقه ولا تدعه من خلفه » وليقف ولا يلتفت‎
+
+YE
+
+توح الغبب
+
+۲ الوّجْلُ الثاني : رَجْلْ لَه لسان بلا قلب فيط ِالْحَکُمَة''' ولا بَعْمَلُ بها ء يَدْهُو الناس
+
+إلى الله وهر فو من عر وجل » » يَسْتَفبِحُ عَیْبَ غیره يدوم ُو عَلَى مله في نَفْسِهِ » مُه لاس 
+تشک وارز الله عر وجل بِالْعَظائِم من الْمَعَاصِي › إِذَا خلاً که زنب نب عَلَيْهِ ثاب » وَهُوَ الذي
+
+حدر من الي كل بقزله : : « أو ما ات عَلَى أئيي من كل نيعم ان ٠٠‏ ۱
+
+(1) 
+(۲)
 
 ## parça 202
 
-Allah (Almighty and Glorious is He) is jealous and loves no 
-partner, so He keeps the hands of others from connecting with you. 
-their tongues from praising anti complimenting you. anti their feet 
-from running toward you. so that you will not devote your attention 
-to them instead of to Him. Have you not heard the saying of the 
-Prophet (Allah bless him and give him peace): "Hearts are disposed 
-by nature to love those who treat them well ? Allah (Almighty and 
-Glorious is He) therefore uses all ways and means to keep people 
-from treating you well, until you profess His Oneness, love Him. and 
-become His in every respect, outwardly and inwardly, in action and 
-at rest, so that you see no good coming from any but Him and no evil 
-coming from any but Him (Almighty and Glorious is He). You 
-become extinct to creatures and to the self, to passion, will and 
-desire, and to everything apart from the Lord. Then He causes 
-hands to open up to you with delights and gifts and presents, and
-
-152
-
-Sixty-second Discourse
-
-153
-
-longues u> praise and compliment you, and so 1 Ie always pampers 
-you in this world and then in the hereafter.
+حتی أجيثه » , وأتاه فأوصاه بأشباء فقال : : يا علي » yS‏ 
+طلعت عليه الشمس » . وقال الهيئمي في مجمع الزوائد ( ۹۷۱۵ و91 ) : رواه الطبراني ‏ 
+يزيد بن آبي زیاد ‏ وهو يزيد بن يزيد بن أبي زياد مولى ابن عباس ؛ ذكره المزي في ازس 
+أبي رافع ۰ وذكره ابن حبان في الثقات ‏ وبقية رجال الطريق الأولى ثقات . 
+في المطبوع : ( الحكمة ) . 
+رواه البزار في البحر الزخار ( ۰ ( ۱۷۰ زوائد ) عن محمد بن عبد الملك القرشي ٠‏ ورواه ابن 
+حبان ( 8١‏ ) عن أبي يعلى » عن خلیفة بن خیاط ؛ كلاهما عن خالد بن الحارث ؛ عن حسين 
+المعلم ؛ عن عبد الله بن بريدة » عن عمرانا پن کین رفعه : « أخوف ما أخاف عليكم جدال المنافق 
+عليم اللسان ٤‏ . ولفظ البزار : حڈرنا رشول/الله يت كل منافق عليم اللسان . ورواه جعفر الفريابي في 
+صفة المنافق ( ۲۳ ) والطبراني في الكبير 3/17۳ ۵۹۳ ) والببهفي في الشعب ( ۱۷۷۵ ) والذهبي 
+في تذكرة الحفاظ ( 1۹۰/۲ ) والسيرله(80:/117) من,طریق عبيد الله بن معاذ العنبري ؛ عن أبيه ؛ 
+عن حسين المعلم » عن عبد الله بن بريدة » عن عمران بن حصين رفعه : ١‏ إن أخوف ما أخاف عليكم 
+بعدي كل منافق عليم اللسان » . وقال البزار في البحر الزخار : وهذا الكلام لا نحفظه الا عن عمر بن 
+الخطاب رضي الله عنه » واختلفوا في رفعه عن عمر عمر ؛ فذكرناء عن عمران ۰ إذ کان يختلف في رفعه 
+عن عمر ؛ وإسناد عمر إسناد صالح ؛ فأخرجناه عن عمر ؛ وأعدناه عن عمران لحسن إسناد عمران . 
+وقال الهيثمي في مجمع الزوائد ( ۸۸۵ ) : رواه الطبرالي في الكبير والبزار ورجاله رجال الصحيح , 
+ورواه الحارث بن أبي أسامة ( ٦٦٤‏ زوائد ) عن روح بن عبادة » عن حسين بن ذكوان المعلم ء 
+عن عبد الله بن بريدة : أن عمر بن الخطاب جمع الناس لقدوم الوفد ۰ فقال لابنه عبيد الله - أو : 
+عبد الله بن الارقم - : انظروا أصحاب محمد ي ٠‏ فأذن لهم أول الناس ۰ ثم القوم الذي يلونهم . 
+قال : فدخلوا عليه فصفوا قدامه » فإذا رجل ضخم عليه مقطعة برود ؛ فأوما إليه » فقال عمر : إيه 
+ثلاث مرار . فقال الرجل : إيه ثلاث مرار . فقال له عمر : قم » فقام إلى مجلسه ۰ قال : ثم نظر فإدًا 
+الاشعري خفيف الجسم قصير سبط قال : فأوماً إليه فأتاه » فقال له عمر : إيه » فقال له الأشعري : 
+يا أمير المؤمنين ؛ سلتا أو حدثنا فتحدثك ؛ قال عمر : أفاء قال : فنظر فإذا رجل أبيض خفیف 
+الجسم ؛ فأومأ إليه . فأناه » فقال له عمر : إيه » قال : فوثب » فحمد الله وأثلى عليه ووعظ با › 
+ثم قال : إنك وليت هذه الأمة ؛ فاتق الله فيما وليت من أمر هذه الأمة ء ورعيتك » وفي نفسك 
+خاصة . فانك محاسب ومسؤول عن ما استرعیت ‏ وإنما أنت أمين » وإنما عليك أن تؤدي ما عليك
 
 ## parça 203
 
-So do not misbehave. Notice I lim who notices you, attend to Him 
-who attends to you, love Him who loves you. answer Him who 
-summons you. give your hand to Him who holds you light from 
-falling, who brings you out of the darkness of your ignorance, saves 
-you from destruction, washes away all your dirt, cleans up all your 
-filth, and releases you from your stinking carcass, from your wicked 
-fantasies, from your evil-prompting self, from your misguided and 
-misguiding fellows, from your devils and your ignorant friends, 
-those highway robbers on the road to the Lord of Taith. who stand 
-between you and all that is precious and valuable and dear.
+رتو اس وب چٹ وو جع تیج و .وی رو وھ وہ aa‏ اق رق وق رظ نو و تو o‏ تو وس و 1۵ با در ےو ور وا ےہ جو ۱ EAP FOND‏ وا ہے و ا ها کم
 
-How much longer habits, how much longer creatures, how much 
-longer passions, how much longer folly, how much longer this 
-world, how much longerthe hereafter, how much longerthat which 
-is other than the Lord? Where are you in relation to the Creator of 
-things, the Maker and Shaper, the First and the Last, the Outer an 
-the Inner, the point of return and point of origin, to whom all heart, 
-belong, the solace of spirits, the resting place of burdens, the giving 
-of gifts and bestowal of blessings?
+من الأمائة ء وتعط أجرك على قدر عملك . قال : ما صدقني رجل منذ استخلفت غيرك » من أنت ؟ 
+قال : أنا ربيع بن زياد » قال : أخو المهاجر بن زياد ؟ فال رو ل 
+الأشعري » » ثم قال : انظر رہیع بن زياد » فإنه إن كان صادقاً فيما يقول فإن عندہ عون على هذا الأمر 
+فاستممله ۰ ثم لا يأنين عليك عشر إلا تعاهدت فيهن عمله ۰ واكتب الي سيرته في عمله حتى كأني أنا 
+الذي استعملته » ثم قال عمر : عهد إلينا رسول الله اة : ١‏ إن أخوف ما آخاف عليكم منافق عليم 
+اللسان » .
 
-Mighty is His estate!'
+ورواہ الإمام أحمد ( ١4‏ ) عن أبي سعيد مولى بني هاشم ۰ ورواه البزار في البحر الزخار 
+( ۳۰۵ ) ( ۱3۸ زوائد ) عن محمد بن عبد الملك القرشي ؛ كلاهما عن دیلم بن غزوان العبديٰ » عن 
+ميمون الكُرديّ » عن أبي عثمان النهدي عبد الرحمن بن مل » عن عمر بن الخطاب رضي الله عنه 
+رفعه : ١‏ إن أخوف ما آخاف على آمتي كل منافق عليم اللسان » .
 
-Sixty-third Discourse
+ولفظ البزار : حذرنا رسول الله ية كل منافق عليم اللسان .
 
-On a kind of inner knowledge \ ma'rifal
+ورواه الإمام أحمد ( ۳٠١‏ ) والبيهقي في الٹعب ( ۱۷۷۷ ) عن يزيد بن هارون ؛ عن ديلم بن 
+غزوان العبدي » عن ميمون الكردي ۰ عن أبي عثمات النهدي قال : إني لجالس تحت منبر غمر 
+رضي الله عله وهو يخطب الناس ٠‏ فقال في خطبته : سمعت رسول الله يب يقول : ١‏ إن أخوف 
+ما أحاف على هذه الأمة كل منافق عليم اللسان » .
 
-The Shaikh (may Allah he well pleased with him, and grant him 
-contentment) said:
+ورواه ابن عدي في الکامل ( ٤/۳‏ ۰ ) قن آبي يعلى >٦‏ عن إبراهيم بن عرعرة ؛ عن ديلم بن 
+غزوان أبو غالب البصري › عن میمون الكردي › عن آبي عثمان النهدي قال : كنت تحت منبر 
+عمر بن الخطاب وهو يخطب الناس ؛ فقال في خطبته : سمحت رسول الله و يقول : « أخوف 
+ما أخاف على أمتي منافق عليم اللسان ١‏ .
 
 ## parça 204
 
-I n a dream, 1 seemed to be saying: “O polytheist, guilty of 
-associating partners with his Lord: inwardly, his own self, out¬ 
-wardly, His creation, and in his behavior, his own will!” A man by 
-my side then asked: “What kind of talk is this?” I replied: “This is 
-a kind of inner knowledge.”
+وقال الهيثمي في مجمع الزوائد ( 887 ) : رواه البزار وأحمد وأبو يعلى ورجاله موثقون .
 
-154
+سے ا شاپ اوس پور و ور 
+عمر القواريري وأبي عبد الله محمد بن أبي بكر المقدمي » » عن ديلم بن غزوان ۽ عن ميمون الكردي ۽ 
+عن أبي عثمان النهدي قال : كنت عند عمر بن الخطاب رضي الله عنه فسمعته يقول في خطبته : 
+سمعت رسول الله يق يقول : « آخوف ما آنعاف على أمتي کل منافق علیم اللسان » .
 
-Sixty-fourth Discourse
+ورواه عبد بن حميد ( ١١‏ ) . والبيهقي في الشعب ( ۱۷۷۷) من طريق علي بن عبد العزیز » 
+كلاهما عن محمد بن الفضل السدوسي عارم › عن ديلم بن غزوان » عن ميمون الكردي » عن 
+أبي عثمان النهدي ۰ عن عمر بن الخطاب ؛ عن النبي بهار قال : « إنما خاف على هذه الامة [عند ابن 
+حميد ؛ عليكم] كل منافق عليم يتكلم بالحكمة ؛ ويعمل بالجور ٩‏
 
-On death without life, and life without death
+ورواه الفريابي ( ۲۵ ) عن محمد بن المثنى ؛ عن مسلم بن إبراهيم ؛ عن الحسن بن أبي جعفر ؛ 
+عن ميمون الكردي » عن أبي عثمان النهدي : سمعت عمر بن الخطاب في خطبته يقول : حذرنا 
+رسول اللہ پچ كل منافق علیم اللسان . 5
 
-The Shaikh (may Allah be well pleased with him, and grant him 
-contentment) said:
+ورواه البزار في البحر الزخار ( ۱٦۹ ( )۳۰٣‏ زرائد) عن آبي غسان روح بن حاتم ٠‏ عن 
+سليمان بن حرب ؛ عن حماد بن زيد ؛ عن سويد بن المغيرة ؛ عن الحسن » عن الأحنف » عن عمر 
+بنحوه . وقال البزار : لا تعلمه پروی عن عمر متصلاً الا عن الأحنف وأبي عثمان » وسويد بن 
+المغيرة بصريٌّ جليل .
 
-I was feeling very depressed one day, and my soul was in turmoil.
-
-Then someone said to me: “What do you want?" I replied: “1 want 
-a death without life and a life without death.” 1 was then asked: 
-“What is death without life and life without death?" 1 said: “Death 
-without life is my dying to my own species of creatures, so that I do 
-not see them as the source of injury or benefit. It is my dying to my 
-own self, my passion, my will and my desire, in this world and the 
-hereafter, so that I do not live or exist in any of these. As for life 
-without death, that is my living by the action of my Lord (Almighty 
-and Glorious is He) without my having any existence in it, while the 
-dying therein is my existence with Him (Almighty and Glorious is 
-He). This has been the most precious purpose I have held before 
-me, ever since I became conscious."
-
-155
-
-Sixty-Fifth Discourse
-
-On the prohibition of resenting Allah for deferring response to
-
-supplication
-
-The Shaikh (may Allah be well pleased with him, and grant him 
-contentment) said:
+ورواه الفريابي ( ۲۷ ) عن عبد الأعلى بن حماد الثرسي ؛ عن حماد بن سلمة » عن علي بن 
+زيد » عن الحسن ء عن الأحنف بن قيس قال : قدمت على عمر بن الخطاب رضي الله عنه فاحتبسني 
+عنده حولاً ۰ فقال : يا احنف ۰ إني قد بلوتك وخبرتك حسنة » وآنا أرجو أن تكون سريرتك علي » 
+وا كنا نتحدث نما يهلك هذه الأمة كل منافق عليم .
 
 ## parça 205
 
-W hat is this indignation with your Lord (Almighty and Glorious 
-is He) for delay in responding to your supplication? You say: 
-*'I am forbidden to ask of creatures and am required to ask of Him, 
-but I appeal to Him and He does not answer me." Well, it may be 
-said to you: "Are you a free man or a slave?” If you say: “I am a free 
-man,” you must be an unbeliever. If you say: “1 am a slave to Allah,” 
-we must ask you: “Are you then distrustful of your Master for 
-deferring a response to your supplication? Are you doubting His 
-wisdom and His mercy toward you and all His creatures, and His 
-knowledge of all their conditions, or are you not distrustful of Him 
-(Almighty and Glorious is He)?"
+ورواه البيهقي في الشعب (۱۷۷۲ ) عن أبي عبد الرحمن السلمي ۰ عن محمد بن عبد الله بن 
+محمد بن فريش ؛ عن الحسن بن سفیان ۽ عن محمد بن عبيد بن حسان ؛ عن حماد بن زيد ۰ عن ميمون 
+الكردي قال : سمعت أبا عثمان النهدي قال : سمعت عمر بن الخطاب رضي الله عنه يقرل على المنبر : 
+إياكم والمثافق العالم . قالوا : وكيف يكون المنافق عالماً ؟ قال : يتكلم بالحق ويعمل بالمنكر .
+
+ورواہ جعفر الفريابي في صفة المنافق )۴٦(‏ ون طریقه الضياء في المختارة ( ۲١١‏ ) عن قتيبة بن 
+سعيد ؛ عن جعفر بن سليمان . عن المعلی بنزیاد » عن أبي عثمان النهدي قال : سمعت عمر بن 
+الخطاب وهو على منبر رسول الله 246 اکٹ رمق عادد اصايعي هذه ؛ وهو يقول : إن أخوف ما أخخاف 
+على هذه الأمة المنافق العليم . قيل : وكيف يكون المنافق العليم ؟ قال : عالم اللسان » جاهل 
+القلب والعمل .
+
+أقول : ميمون الكردي ۰ قال عنه ابن معين : ليس به بأس . وقال مرّة : صالح . ووثقه آبو داود 
+وابن حبان ؛ وضعفه الأزدي ١‏
+
+وسٹل الدارقطني في علله ( ۱۷۰/۲ ) عن حديث عبد الله بن بريدة » عن عمر ٠‏ عن النبي كه : 
+«أخوف ما أخاف عليكم من منافق عليم اللسان ؛ ؟ . فقال : هو حديثٌ رواه حسين المعلم 
+واختلف عنه : فرواه معاذ بن معاذ » عن حسين المعلم ؛ عن ابن بريدة » عن عمران بن حصين ؛ عن 
+النبي َة > ووهم فيه . ورواه عبد الوهاب بن عطاء وروح بن عبادة وغيرهما » عن حسين ؛ عن ابن 
+بريدة » عن عمر بن الخطاب ؛ وهو الصواب في قصة طويلة .
 
 ## parça 206
 
-If you are not distrustful of Him, but acknowledge His wisdom, 
-His will and His beneficence toward you, and the postponement of 
-this, then you owe Him (Almighty and Glorious is He) your 
-gratitude, because He has chosen what is most beneficial for you, 
-as a blessing and to prevent corruption. If you are distrustful of Him 
-because of this, you are an unbeliever by virtue of that distrust, since 
-you thereby ascribe injustice to Him, and He is no tyrant to His 
-servants. He does not approve of injustice, and it is impossible for 
-Him to be unjust, for He is your owner and the owner of everything. 
-The term injustice does not apply to Him, because an unjust person 
-is one who disposes of another's property without his permission. 
-You therefore have no pretext for resentment against Him for the 
-way He operates in dealing with you, contrary to your natural 
-disposition and selfish desire, even though it may be outwardly 
-detrimental to you.
+وسئل الدارقطني في علله ( ۲4۲/۲ ) عن حديث أبي عثمان النهدي . عن عمر قوله : « أخوف 
+ما أخاف عليكم كل منافق عليم اللسان » ؟ فقال : رواه المعلى بن زياد ؛ عن أبي عثمان ؛ عن عمر , 
+وكذلك رواه حماد بن زيد ؛ عن ميمون الكردي ؛ عن أبي عثمان ؛ عن عمر قوله . وخالفه ديلم بن 
+غزوان ويكنى أبا غالب ؛ عن ميمون الكردي » عن آي عثمان ۽ عن عمر ؛ عن النبي يك . وتابعه 
+الحسن بن أبي جعفر الجفري ؛ عن ميمون الكردي فرفعه أيضا إلى النبي او ٠‏ والموقوف أشبه 
+بالصواب . والل أعلم ,
 
-It is your duty to be thankful, to practice patience and compliance,
+وَفى حَدِيْثٍ خر : « خوّف ما أخ ف على امي من عُلَمَاء شوه ۲“ 
+A” 4 4‏ “عير ۰ و رم ۰ ےھر ور 
+٦‏ ھ0 ول » لت يَخْتَطِفَكَ بلذید لِسَانِهِ فتخرقك نار مَعَاصِيْهِ »
 
-156
+جم سر صر
 
-Sixty-fifth Discourse
+د و علي : اچ پر يخ ع اع رمق نع وأ 
+عليه کت و بَصَرَۃُ ؛ یوب تفسه ) 7 وَعَرَفَهُ ٠‏ غَوَائْلَ مُحَالطة لاس شوم الكلآم 
+راطق » ون للم في الصّمْتٍ وَالائْرزاء الاو .
 
-157
+رامع فَولَهُ کل : « مَنْ صَِمَتَ نا ۲۷ .
 
-and to give up resentment, distrust, and indulgence of the folly and 
-passion of the self, which makes you stray from the path of Allah. 
-It is your duty to persist in supplication, to be sincere in seeking 
-refuge, to think well of your Lord, to await relief from Him, to believe 
-His promise, to be modest toward Him, to comply with His com¬ 
-mandment, to keep up the affirmation of His Oneness, to be quick 
-to carry out His orders, and to be as if you were dead when His 
-decree alights upon you and takes effect within you.
+کا و ۳ رر چم کے ۰ 
+وَاسْمَع قول بع مس امرس
+
+)۱( لم أجده , 
+وروی الامام أحمد في الزهد ( ۱۳۹۲) وغیزه عن هيدنا عیسی عليه السلام أنه قال :۰۰ ویلکم 
+عشائالسودت
 
 ## parça 207
 
-If you simply cannot avoid being distrustful and entertaining bad 
-thoughts, well, your evil-prompting self, so rebellious against its 
-Lord (Almighty and Glorious is He), is best suited to such attitudes, 
-so you should ascribe injustice to it rather than to your Lord. Beware 
-of teaming up and making friends with it, of accepting its deeds and 
-words under any circumstances, for it is Allah’s enemy and your 
-enemy, and its ally is Allah’s enemy and your enemy, Satan the 
-accursed. It is the devil’s friend, his spy and his confidant. Allah, 
-Allah, and again Allah! Beware, beware! Escape, escape! Distrust 
-it, ascribe injustice to it, and recite to it the words of Allah (Almighty 
-and Glorious is He):
+(۲) رواہ ابن المبارك في الزهد ( ۳۸۵ واین وهب في الجامم ٩/۱۱‏ ) والإمام احمد ( 14۸۱ 
+و5704 ) وعبد بن حميد ( 40" ) والذارمي ( ۲۷۲۳ ) والترمذي )50١1١(‏ وابن أبي الدنيا في 
+الصمت ( ٠١‏ ) وابن أبي عاصم في الزهد ( ١‏ ) وأبو الشيخ في الأمثال ( ۲۰۷ ) والبيهفي في الشعب 
+( 1۹۸۳ ) والقضاعي في مسند الشهاب ( ۳۳۶ ) والمزي في تهذيب الكمال ( ۲۱۹/۳۲ ) من طرق 
+عن ابن لهيعة [سيء الحفظ] » عن يزيد بن عمرو المعافري ؛ عن آبي عبد الرحمن الحبلي عبد الله بن 
+يزيد » عن عبد الله بن عمرو رضي الله عنه . وقال الترمذي : حديث غريب . وقال العراقي في 
+تخريجه للاحياء ( ۱۰۸/۳ ) : أخرجه الترمذي بسندٍ فيه ضعف ۰ وهو عند الطبراني بسنل جیّد . وقال 
+ابن حجر في فتح الباري ( ۳۰۹/۱۱ ) : أخرجه الترمذي ٠‏ ورواته ثقات .
 
-What concern has Allah for your punishment if you are thankful and 
-believe? (4:147)
+ورواہ الطبرانی في الأوسط ( ۱۹۳۴ ) وابن عبد البر في التمھید ( ۳۷/۲۱ ) من طريق عبد الله بن 
+وهب قال : آخبرني ابن لهيعة وعمرو بن الحارث ؛ عن يزيد بن عمرو المعافري ٠‏ بهذا الاسناد .
 
-And His words (Exalted is He):
+(۳) رواہ ابن حبان في روضة العقلاء ( بتحقیقي ) عن محمد بن سعيد القزاز » عن معروف بن الحسن 
+الكتاني [ذكره في الثقات] ۰ عن كثير بن هشام الكلابي + عن عيسى بن إبراهيم الهاشمي [متروك 
+الحديث ؛ لا يجوز الاحتجاج به] » عن سعيد بن أبي سعید المقبري ؛ عن كَْب [في ترجمة سعيد ٠‏ 
+روى عن : کعب بن شُججرة رَضي الله عَنْهُ] قال : الْعَافیة عم آجراء ٠‏ تسم منهاا في امكو .
 
-Surely Allah does not wrong mankind in anything, but mankind 
-wrong themselves. (10:44)
+ورواه ابن أبي الدنيا في الصمت ( ۳١‏ ) والخطابي في العزلة ( ص ۸۱-۸۵ ) من طريق محمد بن 
+يزيد بن خیس » عن وهيب بن الورد قال : كان يقال : الحكمة عشرة أجزاء » فتسعة منها في 
+الصمت » والعاشرة عزلة الناس .
 
-Recite these and other Quranic verses and traditions. Fight for 
-Allah against your own self, do battle with it for His sake (Almighty 
-and Glorious is He), be a warrior, sword-bearer and commander of 
-His troops and His army, for it is the greatest enemy of Allah 
-(Almighty and Glorious is He). Allah (Exalted is He) has said:
-
-O David, relinquish your passion, for there is no contender who 
-contends with Me for My kingdom except the passion of man.
-
-Sixty-sixth Discourse
-
-On the commandment to make supplication, and the 
-prohibition of omitting it
-
-The Shaikh (may Allah be well pleased with him, and grant him 
-contentment) said:
+9 ھ هن عم © ی ODO‏ یچ ٹج ق تچ ٭ػ ا © لا ا عم خخ 8 یا 0 0 0 اق "4 © :یھ UO OCDE‏ © شا ة ۵ OE HCO‏ چ ہے ما وج وج ۷
 
 ## parça 208
 
-D o not say: “1 shall not offer prayers of supplication to Allah, 
-because if what I ask for has been allotted to me, it will come 
-to me whether I ask for it or not, while if it has not been so allotted 
-it will not be given to me on request.” No, you should ask Him 
-(Almighty and Glorious is He) for all you want and need of the good 
-things of this world and the hereafter, provided there is nothing 
-unlawful or harmful included, because Allah (Almighty and Glori¬ 
-ous is He) has commanded us to ask and urges us to do so. He says 
-(Exalted is He):
+ورواه أبو نعيم في الحلية ( ۱۸۲/۸ ) من طريق محمد بن يزيد بن خنیس » عن وهيب بن الورد 
+قال : قال حكيم من الحكماء : العبادة ‏ أو قال : الحكمة ‏ عشرة أجزاء . تسعة منها في الصمت 
+وواحدة في العزلة فأردت نفسي من الصمت على شيء فلم أقدر عليه » فصرت إلى العزلة فخلصت إلى 
+التسعة ,
 
-Call upon Me and I will answer you. (40:60)
+ورواه البيهقي في الزهد الكبير ( ۱۲١‏ ) من طريق ابن خنيس » عن وهيب بن الورد قال : کان 
+يقال : الحكمة عشرة أجزاء تسعة منها في الصمت › والعاشرة عزلة الناس . قال : فعالجت نفسي 
+على الصمت فلم أجدني أضبط كما أريد أن خبر هذه العشرة عاشرها عزلة الئاس .
 
-He also says (Almighty and Glorious is He):
+وذكره الثعالبي في الاعجاز والإيجاز ( ص۳4 ) والأبشيهي في المستطرف ( باب في الوصايا 
+الحسنة ) من قول علي بن أبي طالب رضي الله عنه لابنه الحسين رضي الله عنه : یا بني ء العافية عشرة 
+أجزاء تسعة منها في الصمث إلا بذكر الله تعالی ؛ وواحد في ترك مجالسة السفهاء .
 
-Ask Allah of His bounty—and do not covet that whereby Allah has 
-made some of you excel others. (4:32)
+ورواه البيهقي في شعب الإيمان ( 8584 ) من طريق ابن أبي الدئيا » عن محمد بن عبد الله 
+الخزاعي قال : سمعت عثمان بن زائدة قول : العافية عشرة أجزاء تسعة منها في التغافل .
 
-The Prophet (Allah bless him and give him peace) has said: “Ask 
-of Allah, fully confident of His response.” He has also said (Allah 
-bless him and give him peace): “Ask of Allah with the palms of your 
-hands [upturned].” There are other traditions of similar import.
+قال : فحدثت به أحمد بن حنبل فقال' : العافية عِشرة أجزاء كلها في التغافل .
+
+ورواه ابن عدي في الكامل ۲٤١٤١ /٦(‏ وآلبيهقي في الزهد الكبير ( ۱۲۷) من حديث أبي هريرة 
+رفعه . وقال البيهقي : إسناده ضعیفت ومتنه مرفوع منكر. . ونسبه السيوطي في حسن السمت في 
+الصمت ( ١5‏ ) للبيهقي في الزهد وابن بطال في مکارم الأخلاق .
+
+وذكره الديلمي في الفردوس ( ۲۷۷۱ ) عن أبي هريرة رفعه : « الحكمة عشرة أجزاء تسعة منها في 
+العزلة وواحدة في الصمت ؟ .
 
 ## parça 209
 
-Do not say: “I asked something of Him, but He did not give it to 
-me, so I shall notask Him again." No, goon appealing to Him, then 
-if what you ask for is allotted to you, He will deliver it to you after 
-you have requested it, thereby increasing your faith, certitude and 
-profession of Oneness, and encouraging you to give up asking 
-things of people in favor of turning to Him in every situation and 
-presenting all your needs to Him (Almighty and Glorious is He). If 
-it is not allotted to you, on the other hand, He will grantyou freedom 
-from needing it, and make you content with Him (Almighty and
+وذكره الديلمي في الفردوس 177١(‏ ) وإسناده في زهر الفردوس ( ۳۲۹/۲ ) عن محمد بن 
+عمر بن حفص + عن إسحاق بن الفيض ؛ عن أحمد بن جميل » عن السلمي ؛ عن الخطاب ؛ عن 
+داود بن شريح ؛ عن ابن عباس رفعه : « العافية عشرة أجزاء : نسعة منها في الصمت » والعاشرة 
+اعتزالك عن الناس ٤‏ . وقال المناوي في فيض القدير ( ۳۷١/٤‏ ) : قال الحافظ العراقي : حديث 
+مشک ء 
+وذكره الديلمي في الفردوس ( 1777 ) وإسنادہ في زهر الفردوس ( ۳۲۹/۲ ) عن البجلي ۰ عن 
+السلمي › عن أبي جعفر محمد بن أحمد بن سعيد الرازي ؛ عن الحسين بن داود البلخي : عن 
+يزيد بن هارون ء عن حميد الطويل » عن أنس رفعه : ١‏ العيادة عشرة أجزاء : تسعة متها في 
+الصمت ‏ والعاشرة كسب اليد من الحلال » .
 
-Sixty-sixth Discourse
+وذكره الديلمي في الفردوس كما في الجامع الصغير ( ٩۱۷۹‏ ) وکنز العمال ٩۲۰۸۱‏ ) عن ألس 
+رفعه : ١‏ العافية عشرة أجزاء : تسعة في طلب المعيشة ۰ وجزء في سائر الأشياء » .
 
-159
+ورواه أبو نعيم في الحلية ( ۱۵/۱ ) ومن طريقه ابن عساكر في تاریخ دمشق ( 584/47 ) وانظر 
+ميزان الاعتدال للذهبي ( ۱/ ۱۳۶ ) ولسان الميزان لابن حجر ( ۲۳۹/۱ ) عن أبي أحمد الغطريفي ء
 
-Glorious is He) in spite of your poverty. Be it poverty or sickness, 
-He will help you to accept your condition. If it is a question of debt, 
-He will change the creditor’s attitude from one of harsh demand to 
-one of sympathy and willingness to wait and make it easy for you 
-until you are better off, or even to waive or reduce the debt. If it is 
-not written off or reduced in this world, Allah (Almighty and 
-Glorious is He) will give you abundant compensation in the here¬ 
-after for what He did not give you in response to your prayer in this 
-world. For He is Generous, Self-Sufficing and Compassionate, and 
-will not disappoint one who prays to Him in this world or the 
-hereafter. Some benefit and gain is therefore bound to come of it, 
-sooner or later.
+فتوح الغيب ۱۷۹ 
+فهّذَا رَجْلُ وَل ھ''' عر وجل في سثْر الله تخفوظاً ء ذو سَلآَمَةٍ وَعَقَلٍ اف 0
+
+الرَحمَن 5 مه عَليْهِ : فال کل الي عنده ‏ ومصاحته وم مُخَالْطْئَةُ و 
+الب له بقضاء خَوَائج'' تَسْتَحٌ لَهُ » وَمَرَافِقَ يَرْتَفِقُ بها فیحبّك الله رَبَصْطیْيكَ 
+:
+
+َيْذجِلّكَ في ذُمْرَة أحبّائه وَعِبَادِِ الصَالجین ببرکته ء إِنْ شاء الله تعالی .
+
+وَالرَجُل لايع : الْمَدْعدُ ذ في الْمَلَكُوْتٍ بِالعظِیْم ء > كما جَاءَ في الْحَدِيْثِ عن النين يي : 
+لاص )
+
+ہ مَنْ تلم و لم ول ِي ِي الْمَلَكُوْتٍ عَظيْما » ۳ :
 
 ## parça 210
 
-As it is reported in the tradition: “The believer will see in his 
-record, on the Day of Resurrection, some good deeds he had not 
-done and knew nothing about. He will be asked: Do you recognize 
-them?’ So he will say: ‘I don't know how I came by these.' Then he 
-will be told: ‘These are compensation for the requests you made in 
-the abode of the lower world.’" This is because, in addressing hi 
-requests to Allah (Almighty and Glorious is He), he is rememberin' 
-Allah, professing His Oneness, putting things in their proper place, 
-giving credit where it is due, attributing nothing to his own power 
-and strength, and forsaking pride, arrogance and haughtiness—all 
-righteous deeds, forwhich there is reward with Allah (Almighty and 
-Glorious is He).
+هو العَالِم باشو عر وجل وآیاته ٠‏ اسْنَوَْعٌ الها عر وجل قَلْبَهُ غرالب علمه » وََطْلَعَهُ عَلَى 
+2 طواها عَنْ غیره > وَاصطفاء وَاجَْبَاُ وَجَذَبَهُ له وَرَقَاهُ » وَإِلَى باب قزبه هدام » وَشرح
 
-Sixty-seventh Discourse
+شنز يلك رار الو عله ويلا لته وج توم . مایا
 
-On struggle with the self, and description of its nature
+مَهْدِيَاً شافعاً مُمَفعاً صادفاً صقا : بدلا لالہ رانائ + هم ا 
+وَيَرَكّائَةٌ .
 
-The Shaikh (may Allah be well pleased with him, and grant him 
-contentment) said:
+د0 ٠ع Pe‏ 5 8 ہےر سے سس تسرد 40000 1 ڈو مرح و سو 
+هه هی العَايَةً القضوی فی بني دم لا مرل قوق منرلته إلا الو ۰ فيك به وَاخْدز آن
+
+عن أبي الحسین [في حلية : الحسن] بن آبي مقائل » عن محمد بن عبید بن عتبة » عن محمد بن حلي 
+الوهبي الكوفي ۰ عن أحمد بن عمران بن سلمة - قال آبو نعیم : وکان ثقة عدلاً مرضياً » وقال 
+الذهبي : لا يدري من ذا : عن سفيان الثوري ۰ عن منصور › عن ابراهيم » عن علقمة : عن 
+عبد الله قال : كنت عند النبي ےج فسئل عن على ؟ , فقال : ١‏ فسمت الحکمة [في حلية : الحکم] 
+عشرة اجزاء ؛ فاعطي علی تسعةٌ اجزاء » واللاس جزءاً واحداً » . قال الذهبي : هذا کذب . ورواه 
+ابن عساکر في تاریخ دمشق ( ۳۸4/۶۳) عن آبي غالب بن البنا » عن آبي محمد الجوهري ؛ عن 
+آبي عمر بن حيوية ۰ عن أبي عبد الله الحسين بن علي الدهان » عن محمد بن عبید بن عتبة الكندي ؛ 
+عن أبي هاشم محمد بن يعلى يعني : الوهبي ؛ عن آحمد بن عمران بن سلمة بن عجلان مولی 
+یحبی بن عبد الله ؛ عن سفیان بن سعيد » عن منصور » عن إبراهيم ؛ عن علقمة » عن عبد الله قال : 
+كنت عند النبي ل فسئل عن علي ؟ فقال : « قسمت الحكمة عشرة أجزاء ٠‏ فأعطي علي تسعة 
+أجزاء ؛ والناس جزءاً واحداً ا
+
+. ) في المطبوع : ( ولي الله‎ )١(
+
+(؟) في المطبوع : ( الحوائج ) .
+
+(۳) لم أجده ؛ وهو من فول سیدنا عيسى ابن مریم عليه السلام كما في عون المعبود ( ۲۲۹/۶ ) .
+
+۳ فتوح الغيب 
+یه وَالْجُوْعَ إل نصیِحته وَقَوْلِهِ ۰ إن السْلامَة
 
 ## parça 211
 
-W henever you struggle with your own self, overcome it, and 
-slay it with the sword of opposition, Allah brings it back 
-to life. It pits itself against you, and tries to get you to satisfy its 
-appetites and desires, sinful as well as permissible, so you must 
-keep returning to the struggle and competition, so that merit is 
-always being recorded in your favor. This is the meaning of the 
-saying of the Prophet (Allah bless him and give him peace): “We 
-have returned from the minor stmggle lal-jibac/ al-asgbarj to the 
-major struggle lal-jibddal-ctkba/j." He was referring to the battle 
-with the self, because it is constantly addicted to cravings and 
-pleasures, and engrossed in sinful disobedience. This is the mean¬ 
-ing of Allah’s words (Almighty and Glorious is He):
+فا یل عِنْدَهُ » وال وَالضّلاَلَ عند غَيْرِهِ الا من يوفقة الله عر وجل وَيَمْدُهُ بِالسّدَادٍ 
+وال حمَة ۱
 
-And sen e your Lord until the Certainty comes to you. (15:99)
+مكالقة مشاه وتمانه واوا و الق ل دا
 
-Allah (Almighty and Glorious is He) commanded His Prophet 
-(Allah bless him and give him peace) to serve Him, and that service 
-is performed by opposing the self, because all service is rejected by 
-the self, which desires its very opposite until the coming of the 
-Certainty, meaning death.
+4 مر لح هم رد * م ووح .م‎ e و سے‎ ۶ 2 ta 
+فقذ شدخ لك الثاس + فانط لتك إن كنت تاظرا وَاخترز لها إن كنت مخقرزا لها‎ 
+. شفیقاً له . هَدَانَا الله وَإِيَاكَ لما يُحَبّهُ وَيَدْضَاهُ‎
+
+40 4
+
+فتوح الغیب ۱۸۱
+
+الْمَقَاله الرَاعَة مه وَالْْلاَنُونَ
+
+ني اللي هَن ا اللہ تَعَالٰی
+
+تا أفظم تمَحُطَكَ عَلَى ری وَنْهْمَكَكَ لَه مر وجل » واغتراضك عليه وَانتِسَابِكَ لَه عز 
+وجل بالظلم . واسیطاءة في الرزي وَالغتی کف سے َالبَلَوَى › اتا تلم آن گی 
+لجل کا ت 14الرعد : ۳۸] ٤‏ ولکل ریادة ب بل اك وک بے غاب وی وا لا ید ذلك رل 
+مات البلآيا لا لب( فَمَصِيْدُ عَوافی وَوَفْتُ البُؤس لا يَنقَلِبُ نمیما۳؟ » وَحَالَهُ الفقرٍ لا 
+أخين لاب » وَالْرَم الصَمْتَ صمت رالا هال والْجْوَائْقَةَ لرك عر وجل » 0 
+تَسَحُطِكٌ عَلَبْهِ وَتهْمَتِكَ لَه في فغلی ؛ لیس تاك اسيا اقا من عير دنب » ولا عرض 
+عَلَى الطنع کما هُوَ في حى لیب مضه ضف في بض هو عر وجل هرد بالأَرلِ رَسَبَنَ 
+الأَسْيٰاءَء عَلَقَهَا وَخَلَقَ مَصَالِکھا وَمَفَاسِدَهَا وَعَلم ابْتِدَاَهَا وَائْتَِاءَهَا وَانْمَضَاءَهَاء وَهُوَ عر وجل 
+یم في ففله ی تن ني سوه تفن في لہ » للع لا بناج با ول 
+تجوز له لنتانمن ۳ ولا ١‏ اللَوْمٌ في أَْعَالِۃِ ء فانتظر فرح حَنّى ان عَجَرْتَ عَنْ مُوَافقَِهِ رَعَن 
+الڑضا والفّی٩)‏ في فعله < حى يبلح الب أجلم #[البقرة : ۰۵ فَتُسْفِرُ الْحَالَةُ عن ضذها 
+مُزور الرّمَانِ وَانْقَضَاءٍ الآجَالٍ » کُمَا يَنْقَضِي الشْنَاء َيُسْفِرُ عَن الصَّيِفٍِ ٠‏ وَيَنْقَضي ال مسف 
+عن لتهار ۱ فاد بت نور ضرء ار - رنود بين العشاءین 3 تغطه » بل يزار“
+
+(۱) في نسخة : ( تتقلب ) .
+
+(1) في نسخة : ( نعيمه ) .
 
 ## parça 212
 
-If someone should ask: “How could the self of the Messenger 
-(Allah bless him and give him peace) refuse to serve, when he 
-(blessing and peace be upon him) has no passion, and “he does not 
-speak from his own desire; it is naught but an inspiration that is 
-inspired" (53:3,4), the answer will be that Allah (Almighty and 
-Glorious is He) addressed His Prophet (Allah bless him and give him 
-peace) in order that the sacred law might be established, and 
-become generally applicable to his community until the advent of 
-the Hour. Moreover. Allah (Almighty and Glorious is He) gave His
+(۳) في المطبوع : ( النقائض ) . 
+(4) في المطبوع : ( وعن الغنى ) . 
+(۵) في المطبوع : ( يزداد ) .
 
-160
+۱۸۲ عر سیب 
+في شُلْمَةِ اللي 1 لى إِذَا بل الْلعَةُ مها وَطلم جر وَجَاءَ اهاز بصَویه طَلَبْتَ ذَلِكَ 
+ره وسكت عنه تفن تا ال حي کم تب عوك وا : تغطَةُ لا 
+E‏ ء في غير - دو ررقو قبقی حَرييرأ مُنقيلعا معطا خجلا ؛ فارخ هذا كله وار 
+را رخشن الط برك عر وجل وَالصير یی :ما كان لك لا تله وا یت ااك
 
-Sixty-seventb Discourse
+و مر
 
-161
+لا تمطاه ,
 
-Prophet Con him be blessing and peace) power over the self and the 
-passions, so that they would not harm him or oblige him to struggle, 
-in contradistinction to his community.
+لَعَمْرِي نك تَذمُو وهل إلى ريك عر وجل بالڈعَاءِ و وَهْوَ عبَادة وَطاعَةُ امتتالا 
+مره عر وجل في د قله تعالی : « ادغوق سکب ل 1غائر :۰ . وَقَوْلِهِ تعَاًى : «وَسْكَلُوا 
+الله من قضرء كان ہی وف ات نت نش وف بت 
+ند جننه وج رز أرَاد وكَانَ لت في ذَلِكَ مَضْلَحَةٌ في داك رَأَخْرَاكَ وَبرَاْر في ذَلِكَ قَضَاء 
+اجه ٠‏ لا همه في تخیر الاجابة ولا تام من دُعَائِِ ‏ فنك ون لم تریخ نم شر 
+َِنْ لَم يُحبّكَ َاجلاً اب أجلاً ء فقذ جَاء فَِالْجَدِيْثٍ الصَّحِيْم 2 عَنِ ال لل : ١‏ اڈ ی
 
-When the believer persists in this struggle, therefore, until death 
-comes to him and he meets his Lord (Almighty and Glorious is 1 le) 
-with sword unsheathed, spattered with the blood of self and 
-passion, He gives him the share of Paradise He has guaranteed him, 
-in accordance with His word (Almighty and Glorious is He):
+۳3 
+727
 
-But as for him who feared to stand before his Lord and restrained the
+في صحایفه حَسَنَاتٍ يَوْمْ القيَامَة ترا میک :زب مت ينز 
+دز فَضَاؤه نها “أو کتا ورد .
 
-self from passion, the Garden will be his home. (79:40,41)
+ت
+
+۾ ال آخوالك أك تكوب ذاکرا ريك هر وجل وعدا له حیث تساه ولا تان اعدا
+
+ماعو
+
+35
+
+. ) ۱۱ ( سيأتي في المقالة‎ )١(
+
+وقال الحائظ اين رجب الحبیلي لي امع العلوم والحكم ( ۱4۱٩‏ ) : قال أء بو عثمان النهدي » 
+عن سلمان : یعطی الرجل سیل يرم الا فيفر شام سیا کات موه ٠‏ نظر في 
+سملا فا حَسََائهُ ء کم نظر إلى أَعْلاهًا دا هي قد يُدْلَثْ حَسّنات . وروي عن أبي عثمان » عن ابن 
+مسعود ؛ وعن أبي عثمان من قوله وهو أصح .
 
 ## parça 213
 
-Then when He has made him enter Paradise, and has made it his 
-home, his dwelling and his destination, he will be secure from 
-having to move or be transferred to any other place, or return to the 
-abode of this world. Every day and every hour, He will supply him 
-afresh with all kinds of blessings, and provide him with an endless 
-variety of fine attire and decorations, limitless and inexhaustible, 
-just as he kept renewing in this world, every day, every hour and 
-every moment, the struggle with self and passion.
+ورواء أبو نعيم في الحلية ( ۱۱/٩‏ ) عن أحمد بن (سحاق + عن عبد الرحمن بن محمد بن سلم ء 
+ورواہ الببهقي في شعب الإيمان ( ۷۴۸ ) عن أبي محمد عبد الله بن يوسف الأصبهاني ؛ عن أبي بكر 
+غمر بن محمد صاحب الکتاني > عن أبي عثمان الكرخي ؛ كلاهما عن عبد الرحمن بن عمر رمتة 
+قال : سمعت عبد الرحمن بن مهدي يقول : ولا أني أكره أن يعصى الله لتمنيت أن لا يبقى فى هذا 
+المعبر اح إلا وقع وافتابني + وآي شيء لها من حسنة يجنا الرجل في سيف يوم القياءة نہ 
+يعملها ولم يعلم بها .
 
-As for the unbeliever [kq/ir], the hypocrite Imunafiq] and the 
-sinner I'asi], since they have neglected to struggle with self and 
-passion in this world and preferred to follow them, since have they 
-allied themselves with Satan and indulged in all kinds of sinfulness, 
-such as unbelief and polytheism as well as lesser offenses, until 
-death overtakes them without submission [/s/am ]and repentance, 
-Allah will make them enter the fire prepared for unbelievers, 
-according to His words (Almighty and Glorious is He):
+وانظر نوادر الأصول للحكيم الترمذي عقب رقم ( ۱۷۸ ) .
 
-And be on your guard against the fire prepared for unbelievers.
+فتوح الفیپ AF‏ 
+غَيْرَهُ » ولا رك حَاجَتَكَ لعْیره تعالی ۰ فانت بَيْنَ الْحَالء , في زَّمَانِكَ7" که لبْلِكَ وَنهارة 
+رَصحتك وَسَقَمِكَ وَبُؤْسكٌ وَنَعْمَائِكَ وَشدتك وَرَحَائِكَ » ان نیت من شزا ری 
+بالقضاء وَنَوَافِقَ وَتَسْتَرْسِلَ لِفِغله عر وجل » كَالْمَيْتِ بَيْنِ يَدَي الغاسل ۰ رَالطْفْلٍ الرْضِيْعٍ في 
+يدي الظثْر : رالکرة تن قتي القارس با صولجایی بت الق كيف يَشَاءٗ » ان کان 
+النمْمَاءَ فَمِنْكٌ و َالَناُ وم عر وجل امريد في العَطَاءِ » كما قال 000 : © لبن 
+شحکگرنم لزید کک 14إبراهيم ۷3 . رن کان البأسَاء فالصّه الم افقة ۳ بتوفیّقه وَالتَمُْتْ
 
-(3:131)
+zag
 
-When He has made them enter it, and made it their dwelling and 
-destination and resort, so that it burns their skins and their flesh, 
-Allah (Almighty and Glorious is He) will renew their skin and flesh, 
-as He has said (Almighty and Glorious is He):
+سر می وت نز بت پت
 
-162
+0 
+وَقَالَ تَعَالَى : « ایا الزن »منوا إن تصروا الہ یرک ویب اقدامگز #[محمد : ۱۷ . إِذَا 
+نرت الله في مُحَالَمَةِ نفسك وَمَوَاكَ بترك الاء ہر له كيت کی 
+لل عَلَى نَفْسكَ سَيّاقا عَلَيْهَا كلما کت كفوعا وَتِرْكَهًا حَرَرْتَ راسَها بِصِبْركَ وم قَقَتِكَ
 
-Sixty-seventh Discourse
+رَبك كَ وَالطّمَنئِة لی فغله وَوَعْدہ والرضا بهما كان عر وجل لك مُعِينآ .
 
-As often as their skins are thoroughly burned, We shall exchange 
-them for fresh skins. (4:56)
+سے
+
+رأ اسلا وحم فز عر وجل :‏ وکتر لص بر () الین ذا امتهم مسب ولا 
+و عون ا 2 و مک سا خر مر ج صے
+
+1 وه رجعون © اولك عم صو من ديهم وة وأ EHF‏ مُمْلمُھْتَدُو € [البقرة : ١٥۱۔‏ 
+۷)],
 
 ## parça 214
 
-Allah (Almighty and Glorious is He) will do this to them, just as 
-they made alliance with their own selves and their passions in this 
-world, in disobedience to Him (Almighty and Glorious is He). So 
-the inmates of the fire will have their skin and flesh renewed all the 
-time, to inflict torment and agony upon them, whereas the people 
-of Paradise will have their bliss renewed at every moment, to 
-multiply the comforts and pleasures they enjoy. The reason for this 
-lies in their struggle with the self and their non-compliance with it 
-in the abode of this world. This is what is meant by the saying of the 
-Prophet (Allah bless him and give him peace): “This world is the 
-seed-bed of the hereafter.”
+وَالْحَالَةُ الأخرى : نت مهل ری رَبك عر وجل بالدْمَاء اضرع اغظاما لَه وانتقالا 
+ره > وفیه وضع الشّيءِ في مَضعه » لاه نك إلى سُوَاله 4 وَالوْجُوع اه » وَجَعَل ذلك 
+تراسا وَرَسٗولاً منك إلَيْهِ » وَمَوْصِلةٌ وَوَسیْلَة لَدَيْهِ برط ط ترك القهْمةٍ زالشخط عَلَيه عند تخیر 
+الإجابَة'' إلى - ھا ۱
 
-Sixty-eighth Discourse
+اعتبر ما ما بيْنَ الْحَالئيْن ولا تكن مِمَنْ تَجَاوَرَ عَنِ حَدَيِهمَا فَإِنَّهُ لیس هنال حَالَةٌ أخرى ,
 
-On the words of Allah (Exalted is He): “Every day He is about
+)۱( في نسخة : ( زمان ) . 
+)۲( في المطبوع : ( جابة )
 
-some business. ”
+:م1 فتوح الغيب 
+فاخدّز آن تون مِنّ الظَالِمِيْنَ الْمُعْتَدِيْنَ یلك عر وجل ولا الى كما هل مَنْ مَضَى من 
+الأئم السّالفة في الدنیا بشَدِئد”'' بَلأَبْهِ وَفِي الاخر: بَألیٔم عَذَابهِ .
 
-The Shaikh (may Allah be well pleased with him, and grant him 
-contentment) said:
+# # يس
 
-W hen Allah grants a servant what he asks for and gives him 
-what he requests, there is no disruption of His will, nor of the 
-decree on which the pen of destiny ran dry, and knowledge of 
-which was long ago established. In fact, the servant’s petition neatly 
-coincides with the purpose of his Lord (Almighty and Glorious is 
-He), so the response and the satisfaction of the need occur at the 
-precise moment appointed by Him, of old, as the time for the 
-fulfillment of destiny. This is how the scholars have taken His words 
-(Almighty and Glorious is He): “Every day He is about some 
-business” (55:29), meaning that He is steering the preordainments 
-toward their moments in time.
+)۱( في المطبوع : ( بتشديد ) ,
+
+فتوح الغیب ۱۸۵
+
+اقا لام ون 
+في السورع
+
+۳ 
+ر ت و ۹
+
+عَلَيْكَ بالور و۷ فَالْهَدَ فی زَيْفكَ ملا زم لك لا تنجو : دا الا ان مد الله تعالی
+
+فقَذ تَبَتَ في الْحَدِيْثِ ارو عَنٍ لني كف أنه ال : إن ما لذبن الوْرَعٌ ء وَمَلدَكهُ
+
+الطْمّمٌ » ٠‏ قن من حا ل لات ات أن یم » کالژانع إلى جَنْبٍ الرَّع يُوْشِكُ أن یمد اه
+
+له باذ آن بشلم ازرم من :۱۳ .
 
 ## parça 215
 
-Thus Allah gives nothing to anyone in this world just because of 
-his supplication, and by the same token He averts nothing from him 
--merely because of his prayer. The tradition: “Only by supplication 
-is the decree reversed,” has been said to mean that the decree is 
-reversed only by a prayer that has itself been destined to reverse the 
-decree.
+)١(‏ رواه الطبراني في الکبیر ( ۱۰۹۱۹) والقضاعي"في مسند الشهاب 4٠‏ ) من طریق علي بن 
+عبد العزيز » ورواه الخطیب في تاريخ بغذ8( 8۳۲/6 ) عن أبي طاهر الخفاف » عن عبد الله بن 
+القاسم بن سهل الففیه بالموصل ۰ عن بد الا بن زياد . کلاهما عن معلی بن مهدي الموصلي . 
+ورواه الطبراني في الکبیر )٠١979(‏ عَنیت بن علمان بن ضالح؛ عن أبي صالح عبد الله بن صالح . 
+ورواه ابن عدي ( 10۵/۳ ) عن آحمد بن عبد الله بن سالم أبو المنبه الباجري » عن آبیه » عن 
+آبي عبد الرحمن المقریء . ثلائتهم عن سوّار بن مصعب المزذن الكوفي [منکر الحدیث] » عن 
+ليث بن آبي سلیم [ضعیف » ترکوه] : عن طاوس ‏ عن ابن عباس قال : قال رسول اللہ يو : « فضل 
+العلم أفضل من العبادة ‏ وملاك الدين الورع » . وقال الهيثمي في مجمع الزوائد ( ٦۸٤‏ ) : رواه 
+الطبراني في الکبیر ؛ وفیه : شوّار بن مُصعب ؛ ضعیف جداً .
 
-Likewise, no one will enter Paradise in the hereafter on the 
-strength of his deeds, but only through the mercy of Allah (Almighty 
-and Glorious is He), although His servants will be given their 
-degrees in Paradise according to their works. Tradition tells us that 
-'A isha (may Allah be well pleased with her) once asked the Prophet 
-(Allah bless him and give him peace): “Will anyone enter Paradise 
-because of his deeds?" He said: “No, only through Allah’s mercy.” 
-She then said: “Not even you?” So he said: “Not even I, unless Allah 
-covers me with His mercy,” placing his hand on the top of his head 
-as he spoke.
+ورواه این عدي في الکامل ( ۱۲۰/۹ ) عن أحمد بن حفص السعدي › عن عمران بن سوار 
+البغدادي » عن محمد بن عبد الملك الانصاري [وضاع کذاب منك الحدیث] » عن الزهري ۰ عن 
+عروة ؛ عن عائشة قالت : قال رسول الله لا : ٠‏ فضل في علم حير من فضل في عبادة » وملاك الدين 
+الورع ٤‏ . 
+ورواه ابن حبان في المجروحين ( ۲/ ۲۹۹- ۲۷۰) عن محمد النيسابوري بالرملة » عن محمد بن
 
-163
+يزيد محمش » عن حفص بن عبد الرحمن البلخي » عن محمد بن عبد الملك ۰ عن هشام بن عروة ؛ 
+عن أبيه » عن عائشة مرفوعاً :۱ . الع ور رو ا و 
+ورواه البیھتی في الشعب ( ۵۷۵۱ ) عن أ بى الحسن محمد بن الحسين العلوي » عن أبي بكر 
+د ین علی بن اپرب سلمویه) هن محمه بن يزيا السلمي .1 هن عم بن عبد رین + هن 
+محمد بن عبد الملك » عن هشام بن عروة » عن أبيه » عن عائشة آنها قالت : سمحت رسول الله
 
-164
-
-Sixty-eighth Discourse
+يقول :‏ . .وقصد في علم خيرٌ من فضل في عبادة ء وملاك الدین الورع ٩‏ .
 
 ## parça 216
 
-By this he indicated that Allah (Almighty and Glorious is He) is 
-under no obligation to anyone, and is not bound to fulfill any 
-contract. He rather does whatever He wishes, chastises whom He 
-will, forgives whom He will, and has mercy on whom He will. He 
-has power to do whatever He wishes, and cannot be questioned 
-about what He does, though His servants will be questioned. He 
-provides sustenance to whom He will without reckoning, by His 
-favor, His mercy and His grace, and He withholds from whom He 
-will in His justice. How could it not be so, since all creation, from 
-the presence of the Throne down to the soil that is the seventh and 
-lowest earth, is His domain and His handiwork. They have no 
-owner other than Him, no maker other than Him. He says (Almighty 
-and Glorious is He): “Is there any Creator other than Allah?” (35:3). 
-And He says (Exalted is He): “Is there any God beside Allah?” 
-(27:63). And He says (Exalted is He): “Do you know of any that can 
-be named with His Name?” (19:63). And He says (Exalted is He):
+أقول : فيه : محمد بن عبد الملك . قال ابن حبان : آبو عبد الله الأنصاري من أهل المدینة 
+سكن الشام ء كان مِمن يروي الموضوعات عن الأثبات . لا يحل ذكره في الكتب إلا على جهة القدح 
+فيه » ولا الرواية عنه إلا على سبيل الاعتبار .
 
-Say: “O Allah! Owner of Sovereignty! You give sovereignty to 
-whom You will, and You withdraw sovereignty from whom You 
-will. You exalt whom You will, and You abase whom You will. In 
-Your hand is all good. You are Able to do all things. You cause the 
-night to pass into the day, and You cause the day to pass into the 
-night. You bring forth the living from the dead, and You bring forth 
-the dead from tne living. And you give sustenance to whom You 
-choose, without reckoning.” (3:26, 27)
+وفيه : حفص بن عبد الرحمن البلخي . قال الذهبي في السير (۳۱۰/۹) : حفص بن 
+عبد الرحمن ء الإمام الفقيه مُفتي خراسان ۰ أبو عمر البَلخي » ثم النبسابوري الحنفی » حدّث عنه : 
+محمد بر مُحخمش . احتج به النسائي في سننه » وأما أبو حاتم الرازي [۱۷۲/۳] فقال : مُضطرب 
+الحديث . وقال ( 480/4 ) : حفص بن عبد الله بن راشد الإمام الحافظ الصادق القاضي الكبير 
+أبو عمرو وأبو سهل السلمي الفقيه » قاضي نيسابور . حدث عنه : ولده المحدث أحمد بن حفص ۰ 
+ومحمد بن يزيد مخمش . وقال المزي في تهذيب الكمال ( ۱۸/۷ ) : حفص بن عبد الله بن راشد 
+السُلْمِيّ : أبو عمرو ؛ ويقال : أبو سهل » الليسابوري ؛ قاضيها » والد أحمد بن حفص . روى 
+عنه : محمد بن يزيد ولقبه مُخیش . وفال.اینحبان في كتاب الثقات ( الورقة ۹۷) : حفص بن 
+عبد الله السْلمي » كنيته : آبو عمرو ؛ اياك يساور ٠‏ يروي عن : إبراهيم بن طهمان » روى 
+عله : ابنه آحمد بن حفص ۰ وقد قبل : أكنيته أبو.سهل_؛ ومن أصحابنا من زعم أن آبا سهل الخراساني 
+الذي يروي عنه أبو نعيم الفضل بن"دكين ».عن إبراهيم بن طهمان » هو حفص بن عبد الله هذا ء وما 
+أراه بمحفوظ .
 
-Sixty-ninth Discourse
+ورواه ابن أبي شيبة ( 7544٠ ٥و ۲٦١٦٢‏ ) عن وكيع ؛ عن سفيان » عن عمرو بن قيس الملائي 
+قال : قال رسول الله 5 : ١‏ فضل العلم خير من فضل العبادة » وملاك دینکم الورع ٩‏ .
+
+ورواه ابن أبي شيبة ( ۳٠٠٠١‏ ) عن أسود بن عامر » عن ابن آبي السميط . عن قتادة » عن مطرف 
+قال : لفضل العلم أحبٌ ال من فضل العبادة ۱ وملاك دینکم الورع ۱
+
+وذكره الديلمي في الفردوس ( 1441 ) عن أبي هريرة : ملاك الدین الورع .
 
 ## parça 217
 
-On the commandment to ask Allah for forgiveness, protection 
-from sin, help toward success, contentment and patience
+وقال ابن الجرزي في العلل المتناهية ( ۷۸ ) : قال الدارقطني : لا يصح منها شيء ٠‏ والصحيح 
+أنه من قول مطرف بن الشخیر .
 
-The Shaikh (may Allah be well pleased with him, and grant him 
-contentment) said:
+ورواه آبو نعيم في الحلية ( ۲4/۷ ) من طريق سلمة بن شبيب ؛ عن مبارك أبي حماد مولى 
+إبراھیم بن سام قال : سمعت سفيان الثوري يقرأ على علي بن الحسن السليمي : يا أخي » لا تغبط 
+أهل الشهوات بشهواتهم ولا ما يتقلبون فيه من النعمة فإن أمامهم یوما تزل فيه الأقدام وترعد فيه 
+الأجسام وتتغیر فيه الألوان وبطول فيه القيام ويشتد فيه الحساب وتتطایر فيه القلوب حتی تبلغ الحناجر 
+فيا لها من ندامة على ما أصابوا من هذه الشهوات اجعل كسبك فيما يكون لك ولا تجعل كسبك فيما 
+يكون عليك فان الذي يقدم ماله ويعطي حق الله منه فماله له وأفضل منه والذي يخلف ماله ويضيع
 
-D o not ask Allah for anything except forgiveness of previous 
-sins, protection from sins in the coming days ahead, help to 
-succeed in goodly obedience and following orders, readiness to 
-accept the bitterness of destiny’s decree, patience in bearing the 
-hardships of misfortune, gratitude for the abundance of blessings 
-and gifts, and finally, to die with a good ending and then be united 
-with al-Anbiya, as-Siddiqun, asb-Sbubada' and as-Salibun, the 
-best of company!
+ر
 
-Ask Him not for worldly things like the removal of poverty and 
-misfortune and the granting of affluence and health, but rather for 
-contentment with what He has allotted and arranged. Ask Him for 
-constant safekeeping in the situation in which He has placed and 
-installed you as a trial, until He transfers you from it to another that 
-is its very opposite. For you do not know in which lies the good, 
-whether in poverty or in affluence, in misfortune or in well-being. 
-He has kept the knowledge of things hidden from you, and He deals 
-singlehandedly (Almighty and Glorious is He) with the good and 
-the bad.
+حق الله فيه فماله وبال عليه يوم القيامة اكسب حلالاً واجلس مع من كسبه من حلال وکل طعام من كسبه
+
+فتوح الغيب AY‏
+
+َع بي بكر الط تي رضي الله عته أنه قَالَ : كنا نترك مد سَبْعِيْنَ باب من الاح مَخَافَة أن نفع
+
+م
+
+(١)
+
+من امیر المزییین مرن الطاب رضي اء عَنْهُ أنه قَالَ : رسمه آغشار الْحَلآَلٍ
+
+کال دن نقع في الْحَرام''
+
+فَعَلُوا لك یو و ہر ڈور بقل ال لا : « لكل مَلِكِ جمی ٠‏ إن 
+حمى الله محارم فمَن سا حول الحم شك ن يَقَعَ 7 سا
 
 ## parça 218
 
-It is related of 'Umar ibn al-Khattab (may Allah be well pleased 
-with him) that he said: “I do not care in what condition I find myself 
-when morning comes, whether it be disagreeable to me or to my 
-liking, because I do not know in which of them lies the good.” He 
-could say this because he was well contented with Allah’s manage¬ 
-ment (Almighty and Glorious is He), and satisfied with His choice 
-and His judgment. Allah (Exalted is He) has said:
-
-Fighting is prescribed for you, though it be hateful to you. But it may 
-happen that you hate a thing which is good for you, and may happen
-
-165
-
-166
-
-Sixty-ninth Discourse
-
-tha: you love a thing which is bad for you. Allah knows, and you 
-know not. ( 2 : 216 )
+من حلال وليكن أهل مشورتك من كسبه من حلال » فإن الورع ملاك الدین واستكمال أمر الآخرة . 
+)0( قال الزبيدي في [نحاف السادة المتقين ( ۲۵/۷ ) ی بكر رضي سوب 
+كنا نترك سبعين باب من الحلال مخافة باب واحدٍ من الحرام . 
+وقال ابن الفیم في مدارج السالکین (۲۳/۲) E al‏ 
+سبعین باباً من الحلال مخافة أن نقع في باب من الجرام ؛ 
+أقول : وروی عبد بن حميد ( 485 ) والبخاري في التاریخ الکبیر ( ۱۵۸/۵ ) والترمذي 
+( ۲4۵۱ ) وابن ماجة ( 4۲۱۵ ) والطبراني في الكبير ( ۱۷/رقم 44۱ ) والبيهقي (۳۳۵/۵) 
+رالقضاعي في مسند الشهاب ( ٩۱۲/2۹۰۹‏ والمي فی تهاذیب الکمال (۳۱۹/۱۱) عن عطية 
+السعدي رفعه : « لا یبلغ العبد أن يكون من المتقین حتی يدع ما لا باس به حذراً لما به البأس » . وقال 
+الترمذي : حدیث حسن غريب . آقول : فيه : عبد الله بن يزيد » لا يُعرف حاله . 
+(۲) ذکره الغزالي في الاحیاء كما في الاتحاف ( ۲9/۷ ) والأربعين في أصول الدين له ( ۱۱ بتحقيقي ) . 
+وقال في الإحياء : وقیل : إن هذا عن ابن عباس رضي الله عنهما . اه ۱ 
+وروی البيهقي في الزهد الكبير ( ٩۳۳‏ ) عن المزين قال : الورع شدة الهرب من الشبهات مخافة 
+الوقوع في الحرام 
+(۳) رواه الامام أحمد ( ۲۷۰/۶ ) والدارمي ( ۲۵۳۶ ) والبخاري ( ۵۲ ) ومسلم ( ۱9۹۹ ) وأبو داود 
+( ۳۳۲۰) والترملي (0 ۰ ) وابن ماجة )۳۹۸٤(‏ من طريق زا بن أبي زائدة ء عَنْ عَامِرٍ 
+الشعبي ؛ عن الما بن بير رضي ال عَنْهُ رفمه : « إن الحلال بين وَإِن الحَرَام بن ؛ ونما 
+مهات الما كدير من الاس » فن انقَى البھاتِ اا کِا لدينه زعزضه ۰ وم وَقَمَ في الشّبّهَاتٍ 
+راقع الْحَرَامَ کالرًاعي یری حول الس رش آن رتم ہج آا ران لكل مَلِكِ حمّى ؛ لا وَإِنَ 
+حقی الم في آزضم مَحَارِثۂ ۰ الا رد في الْجََدٍ مُضَمَة إذا ١‏ سحت سلح الْجَسَدُ کل : وَإِذًا فد 
+ند الْجَمَدُ کلف آلا وهي القلبُ» . وانظر مسند الإمام أحمد ( 7717/4 و۲۷۵ ) والبخاري 
+( ۲۰۵۱ ) .
 
 ## parça 219
 
-Remain in this state until your passion fades away and your self is 
-broken, humbled, overpowered and subdued, and then your will 
-and desires vanish too, and all entities exit from your heart, leaving 
-nothing in it other than Allah (Exalted is He). Then your heart will 
-be filled with the love of Allah (Exalted is He), and your motive for 
-seeking Him (Almighty and Glorious is He) will be sincere. At His 
-command, your will is now restored to you, to seek some taste of 
-worldly and otherworldly joys, so you ask Him (Almighty and 
-Glorious is He) for such things and put your request to Him in 
-compliance with His command. If He grants your wish, you will 
-thank Him and put it to good use, and if He withholds it you will not 
-feel resentful orchange your inner attitude toward Him, and will not 
-accuse Him of being miserly about it. For your asking will not have 
-been motivated by your passion and self-will, since your heart is 
-free from such things and you have no desire for them. You are 
-simply following His orders by making your request.
+۱۸۸ فتوح الغيب
 
-So, peace!
+كي ارو دوب مو 
+ن وَقَففَ عَلَى الاب الْأَوّلٍ الذي يلي الب فَإِنْهُ إن علق عَنْهُ عَلَقَ الاب الَالِثِ لم یَضره وَهْوَ 
+52 من آنراب القَصْرٍ وَمِنْ دونه حراس / المَلكِ وَجندۂ .
 
-Seventieth Discourse
+راما إذا كان عَلَى البَّاب لول فَأَغْلَُوا عن قي في الب وَحْدَهُ » فَأَحَذَنْهُ الاب وَالأَمَدَاء 
+وَكَانَ منّ الْهَالكيْنَ ٠‏ قدا 2 ات سل العرِمة لزان شیب هه گت الاب 
+سی سای حر بارس رہ ٠‏ فَإِذًا أَدْرَكيْهُ الْمَيِيَهُ كان عَلَى المبَادة 
+وَالطاعَةٍ ره له یر العَعَلِ » وَمَنْ و عَلَى الصخَص وم یدای العَِِمَة ان سیب عَنه 
+التَؤْفِيْقٌ - َم عن ناه .نب الى َل راث انس ٠‏ تتاو الْحَرَامٌ - خرج من 
+الشزْع فصَارَ في زُمْرَةٍ الشیَاطِیْن أَعْدَاءِ ءِ اللہ عز وجل الضَّاليْنَ عَنْ سبل دی ٤‏ فان آذرکنه 
+اميه قبل الگربة ة ان من الْهَالِكِيْنَ إلا أن يتَعْمَدَهُ اله تعالی برخمته وَفضله ۰ فالخ في القبام 
+مع احص ء وَالسَلاَمَةُ كل السَلامَة مَعٌ العرِيمَة »,وال الْهَادِي إلى سَوَاء الطریِق .
 
-On gratitude and acknowledgment of shortcomings
+٭ 4 انا
 
-The Shaikh (may Allah be well pleased with him, and grant him 
-contentment) said:
+فتوح الفیب ۸۹
+
+۴ رم بل و مير ہس 
+الْمَقَالَهُ الكَادِسّة وان
+
+في بیان ال والخرة وَمَا ِي آن يَعْمَلَ فيْهمَا
+
+اجْعَلُ آخرتك : زاس مالك » وَدُنيَاكَ : ربْحَه » رارف زمَانكَ آوّلاً في تخصیل 
+أخرتك ؛ ال ننم ۱
 
 ## parça 220
 
-H ow can it be proper for you to be conceited about your deeds, 
-to take a self-centered view of them, and to demand remu¬ 
-neration for them, when all your success is due to Allah (Exalted is 
-He), to His help, His strength, His will and His favor? Even when it 
-is a matter of renouncing sinful rebellion against Him, this t<x) is 
-made possible through the immunity, protection and shelter He 
-provides. Where is your gratitude for this, your acknowledgment of 
-these blessings He has conferred on you?
+زا تجتل یو : تي ہہ ربکا سس رہ سی 
+في آخرنك تقة فضي بَا الصّلَوَاتِ تنبگها سَبيكَةوَاحِدَة سَاطة الأزكان » مُحْمَِة الواجبَاتٍ بن 
+َير كع رلا ود ا ب الأَرْکَانِ » أو بَلْعَقْكَ مك النَعَبُ وَالإِعيَاه َنام عَنِ القضام 
+نل يک ني ای بطلا يار َب لسك َمَوَل وشیطانك » وَبائعاً آخرتكٌ 
+نياك عند ۹ انس وَمَطِييِهًا وَمرْكَبهَا ٠‏ رونت برک لھا ود تهُذِيْهَا وَريَاضتِهًا وَالحُلْوْكِ بها في 
+سبل الات - وهي رف اجره وا عه مَولانا عر وجل » فظلنتها بولك منهّا . 
+رَسَلَنْتَ زمانها یه َتبعْتَهَا في ۸ شھواتھا رلداتها وموافتتها وشیطانها وَهَوَامَا ففاتكَ خَيْرُ الدنا 
+والاعرة وسرتهعا خلت القيامة فلس الاس وَأَحْسَرَهُمْ ينا دا ء وعا وَصَلْتَ بمتابتیها 
+ی کر من قَنمك من دك ء ول سَلَكْتَ طَرِيْقَ الآخرّة وَجعَلتَهَا زاس مس 
+والاخرة ء وَرَصَن”' إِلَيِْكَ مَسْمُكَ من الدنيا هنیا مَرِيْئاً وَأَنْتَ مصون مکرمْ ٠‏ كما 
+له ١ة‏ يد على جع رة » ولا خی لیر على ان پت
 
-What is this folly and ignorance, that you take pride in what is 
-really someone else’s courage, generosity and charitable outlay? 
-When you killed your enemy, it was only after someone brave had 
-struck him first, then you just finished off the killing. Hut for his 
-intervention, you would have been felled instead of your enemy. 
-Nor would you have laid out any of your money, had you not been 
-insured for the whole amount by an honest, honorable and trust¬ 
-worthy guarantor. But for his word, and your greed for what he had 
-promised and guaranteed you, you would not have donated 
-single grain of your wealth. How can you then take personal prid 
-in yourxleed?
+ہکا
+
+قال
+
+)۱( في نسخة : ( وسجود) .
+
+)۳( في نسخة : ( عبد ) .
+
+. ) في المطبوع : ( ووصلت‎ (r)
+
+)€( رواه ابن المبارك في الزهد ( 048 ) ومن طريقه القضاعي في مسند الشهاب ( ۱٠٠۸‏ ) عن عيسى بن 
+سبرة المدني قال : حدثني من سمع أنس بن مالك ؛ يُحدث عن النبي ب قال : * إن الله يعطي الدنیا 
+على نية الآخرة ء وأبى أن يعطي الآخرة على نية الدنيا ٤‏ .
+
+ورواء القضاعي ( 11١4‏ ) من طريق أبي جعفر محمد بن جرير الطبري ؛ عن ابن أبي العنبس »
+
+عن آحمد بن أسد البجلي آپی عاصم ابن بنت مالك بن مغول ۽ » عن عبد الله بن المبارك » عن ابن -
+
+۱۹۰ فتوح الغيب
+
+مر ۶ پک ات ۳ 2 1 31 عو ام نز 
+رکف لا يَكُوْنْ كَذَلِكَ ؟ رنه الاعرة هي طَاَة الله ۰ لأ ال رح العباذات ردنا .

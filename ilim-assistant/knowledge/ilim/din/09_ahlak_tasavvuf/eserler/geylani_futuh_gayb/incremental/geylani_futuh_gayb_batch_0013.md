@@ -5,296 +5,583 @@ Kaynak: Kaynak: klasik tasavvuf / ahlâk metni (OpenITI veya Internet Archive ç
 
 ## parça 241
 
-8. He should avoid laying a burden of his, big or small, on any 
-fellow creature. Rather should he relieve all creatures of his burden, 
-regardless of what he needs or does not need, for this is the height 
-of honor for servants and of nobility for the righteous. From this he 
-gains strength to fulfill his duty to enjoin what is good and fair and 
-forbid what is evil and unfair. All creatures should be of equal status 
-as far as he is concerned. When this stage is reached, Allah moves 
-him on toward annihilation (J,'ana '), certitude, and confidence in 
-Him (Almighty and Glorious is He). No other is raised to the same 
-height, yet he sees all creatures as having equal rights. This is quite 
-certainly the cause of honor for the believers and of nobility for the 
-righteous, and it is very close to the gate of sincerity.
+ماب ۳۳ 2 rer?‏ ہمہ یں ےی ما کپ ہہ وم > اوم ر e‏ 
+ينغي کل مُؤمن أن بَجْعَلَ هَذَا الحِیث مراة لقلبه وَشِعَارَه وَِثارَۂ وَحَدِيِئة » فيَعْمَلَ به في 
+جَمبْع حركاته وسکناته > حى یلم في ادا وَالأاخْرَۃ وَيَجدَ العرّةٌ فیهما برَّحْمَة الله 
+1 7 
+عز وجل .
 
-9 He must stop expecting human beings to satisfy his greed, and 
-not let himself covet what they have at their disposal. Thus he will 
-achieve the greatest honor, peculiar enrichment, vast dominion, 
-splendid glory, pure certitude, and frank, unequivocal trust in the 
-Lord. This is one of the doors to confidence in Allah (Almighty ant 
-Glorious is He), one of the doors to renunciation, leading to the 
-attainment of piety and the perfect practice of religion. It is one of 
-the marks of those who are wholly dedicated to Allah (Almighty and 
-Glorious is He).
+العقيلي : أن آسانید الحدیث كلها لينة » وبعضها أصح من بعض . وبکل حال : فطریق حنش التي 
+خرجھا الترمذي حسناً جيّدةٌ , وهلا الحدیث : یتضمن وصايا عظيمة وقواعد کلیة من هم آمور 
+الدين ؛ حتی قال بعض العلماء : تَدَوِزثُ هذا الحدیث فَأَدْهَْشَنِي وکدث آطیش ۰ فواأسفا منّ الجهل 
+بهذا الحدیث وقلة التفهم لمعناه . قلث : وقد أفردث لشرحه جزء کبیرً ونحن نذکر هاهنا مقاصده 
+على وجه الاختصار إن شاء الله تعالى .
+
+ما سَأَلَ الاس مَنْ سا إل : 
+١‏ لِجَھله''' بالله عر وجل › 
+۲- وَضعْف إِنْمَانِهِ وَمَعْر فته وَيَقَيْنِهٍ » 
+۴ فلز رو
+
+وَمَا تفت مَنْ م سم یم تفت عَنْ ذلك لا : 
+-١‏ لِوُفَورِ عليه باه عر وجل ؛
+
+ena
+
+و 
+١‏ وقوّة إِلمَانهِ وَيَقَيْنْهِ »
+
+۳۹ لے ۹ بي
+
+ی 0 ویو 2 ۰ ,8 ءا“ 
+٣‏ ورای مَعرفته بريه عز وجل في کل يوم وَلَحْظة ۰
+
+ا مو ے 5 
+4- وحیائه منهُ عز وجل
+
+تحرف في المطبوع إلى : ( جهله ) .
+
+فتوح الغیب ۲۲۹
+
+9 سَبّبٍ عدم شتحاية ذعاء العَارف بالّه تعالی
+
+اک وت ب لِلَارفِ کُلَمَا ينال لُ ره عر وجل وَيُوَفِي له کل رَعْدِ لملا يَغْلْتَ عَلَيِْ 
+الوْجَاءِ فِيَهْلِكٌ 3 ۲ ما نوتم لو زف وَرَجَا مُتا مَجناَیٰ عابر لب 
+الإیِمَاه زا بهما ء وک الخال وَانمقَامٌ » یرآ وت کل حَالٍَ رَرَجَاءَمًا کا يلين بها ء 
+وی ده ی ال او یط ی 
+1 عر وجل » ولا يَسْتَانِسَ بغیره ٠‏ قَطَلَيهُ لاجابة به سُوَالِهِ وَالوَفاء بِعَهْدِهِ غَیْر مَا هُوَ بصَدّده 
+2 بخاله » قفي لك آفر ان اتان :
+
+أَحَدُهُمَا : لتلا ینیب عليه ارجا وال بر ره عر وجل ْمَل عَن لیام بالدب 
+فيلك .
 
 ## parça 242
 
-10. The tenth is humility, for it is with this virtue that the servant’s 
-residence is erected, that his station is raised high, that his honor and 
-eminence are made perfect in the sight of Allah (Glory be to Him) 
-and in the sight of His creatures, and that he is empowered to 
-achieve all his worldly and otherworldly goals. This virtue is the 
-root, branch and consummation of all virtues, whereby the servant 
-attains to the stations of the righteous, those who are content with 
-Allah (Exalted is He) in joy and in sorrow alike. This is the perfection 
-of piety.
+ےج و 2 ¢ م "۲۳ ETN‏ ھا وت ۳ ٍ روت U:‏
 
-Humility means that the servant never meets anyone without
+والاخر : شرکه برَبّهِ عر وجل بشيءٍ سواه » إذ لا مُمْصُوْمٌ في العَالم في الظاهر بعد الانبیاء 
+لیم وَعَلَى تيا َفصَلُ الصّلاۃ وَالسَلام ء فلا یج و يُوَفي لذ كلا يَسْألَ عَادَة وَيُرِيْدُهُ با 
+کا Eat Cii oi‏ ا ۳ و ےر لن ۰ و ام ام 5 
+لأ انيئالاً للآمرء نما في ذَلِكَ مِنَ الشّرْكِ » وَالشّرْكُ كبيرَة في الاخوّال كلها وَالأقدام جَمِيِهًا 
+وَالْمَقَامَاتِ بِأَمْرمًا .
 
-186
+َأما ذا كان السْوَالُ با مك مئا رده قربا کالصّلاة وَالصَّيَامٍ وَغَيْرِهِمَا من الفرانض 
+رَالنْوَافل ء لأَنَه يَكُوْنُ في ذَلِكَ مُمْتیلا لمر .
 
-Seventy-eighth Discourse
+F#‏ .4 اہ
+
+)۱ في نسخة : ( لأنه ) .
+
+۲۰ فتوح الغبب
+
+الْمَفَالَة امه وَالأَزَمُونَ 
+في التْعمَة وَالابْتلاءِ
+
+7 5 م م 72 
+إن النَّاسَ رجلان : 
+ا شنم لو 
+قوس سن 5 رور 6 3 
+۲- وم بِمَا قضی ره عز وجل . 
+۰ و رم اس ۳ وم ۶ ° ۳۳ کم ی - 5 از و 
+تالم وی ی ما آنمَم علیّه ٠‏ فهو في انعم مَا یُکون ين
+
+لك إذْ جَاءَ القَدَر ہما كدر عَلَيْهِ م من اواع ابا ین الأمْراض رباع تایب في 
+لتقي والعال والأل والازنکد تین بقل ا لم نک و عَلَيهِ قط ويَنْسَى ذَلِكَ التمیم 
+وَحَلاَرَتهُ
+
+َإِنْ كان الع قائما بِالْمَالٍ جالع وَالامَاة والامن من الأعداء ء فَھُوَ في ال 
+الما کان لابلا ز في الخُود » كل تلف لجَهْله بمؤلآة عر وجل ال
+
+فلز یم أن مزلاهعز وجل : < مالا 
+وم وَيُعْنِي وَيُفقا یرف وَيَخْفْضَ و یم وین ؛ ريحي رَیْميْتٛ حر ما 
+اطمَأنَ ی ما یم مِنَ الم ء وَلَمَا ار بو ول ین ین ال في ال الآ ۱
 
 ## parça 243
 
-assuming him to be more worthy than himself. He will always say: 
-“Perhaps he is better than I in Allah’s sight, and higher in degree." 
-If it is someone young, he will say: “This person has not offended 
-Allah (Exalted is He) as I have done, so he is undoubtedly better 
-than 1." If it is someone older, he will say: “This person served Allah 
-long before I did.” If it is someone learned, he will say: “This person 
-has received something I have not experienced, and has acquired 
-something I have not acquired. He knows things of which I am 
-ignorant, and he puts his knowledge into practice.” If it is someone 
-who is ignorant, he will say: “This person has offended Allah in 
-ignorance, while I have offended him knowingly. I do not know 
-what end He has in store for me, nor what end He has in store for 
-him.” If it should be an unbeliever, he will say: “I don’t know; 
-perhaps he will embrace Islam and come to a good end, and maybe 
-I shall become an unbeliever and come to a bad end.”
+َبِجَهْلِهِ یا بِالدُنَا اطعا بَا وَطَلَبَ بها صَفَاء لا يسوب کَدَر 2 غ نها داز بل 
+تفص ٠‏ رتالف رتکدیر > ون أصْلَهًا بل وََا 595 نعْمَاءً ۰ فهي كکشْجر جر الس او 
+مرها مه واخرها شَهْدٌ حو » لا صل الْمَر ال ووه عل يتخ تك ہے 
+هد إلا اسب عَلَى الم ٠‏ فَمَنْ صَبَر عَلَى لها حلي له مغ الاجیر
 
-This is the topic of sympathy [for others] and apprehension [about 
-oneself], the first to become familiar and the last to remain with 
-servants of the Lord. When the servant is like this, Allah (Exalted is 
-He) keeps him safe from disasters, and brings him as a reward to the 
-stations of loyalty to Allah (Almighty and Glorious is He). He then 
-belongs among the chosen ones and friends of the All-Merciful, and 
-among the enemies of Iblls, Allah’s accursed foe.
+بعد عرق جبینه وَتَعَب جسّده رکب روحه وَضِيْقٍ صَدْره 6 ته َإِذْ لآل نف تک
+
+ما رید [هود + ۰۷ ۱ والبروج : ۰ ا ا
+
+9
+
+۰7
+
+. أي : مستحدث‎ )١(
+
+لتو الغیب ۲۱ 
+في دة مَخْلُوق مل » فلا تج هذه الْرَایرَ كلها أَعْمَبَتْ 1 له یب طعام ردام واه 
+ولبّاس وَرَاحَةَ وَسُرور َلَوْ َل ليلا" ء فَالڈنیا لها مده کالصَفحة ة العليًا من عَسَل في ظرفب 
+مش َة رارق فلا صل الال إلى 5 ار الظزف رین ول الْخَاِصَ منه إلا بَعْدَ تال الصفْحةٍ 
+العلا ء ٠‏ فاذ ۱ بر الب قلیأذاء آرامر الأب عر وجل وانتهاء نراهیّه ‏ لیم ایض 
+فما يَجْرِي به القدّرٌ , جع م مرَاثر ذلك كله وَ تحمل أَنْقَالَهُ » وخالت مرا ورك مراد 
+۱ عْقبَة الله عر وجل بلك طِیْبَ الیش ف في آخر عمُره والدّلال وَالرَاحَةً وَالعرَة ۱ و و 
+کم دى الطَفلُ الضيعٌ ء رقاب ره تخل و عة في اڈنا وَالأخرى كما 
+تاذ اکل امه مر الصَّفْحَةٍ ال ِنٌ المَسَلِ یاک من د رار لزق ١‏ ينبي لع امم مه 
+آن لآ یامن ( مِنْ ) مکر الله عر وجل ء فير بالْْمةٍ رََقَظم بِدَرَاِهَا وَيَعْمَلَ عَنْ شکرما 
+وبري قَيْدهَا بتزکه لِشْكْرِهًا .
+
+ال الب 4 : ٠‏ النمْمَة وَحْشِيْه نید اشک .
 
 ## parça 244
 
-This is the gate of mercy, with the attainment of which the gate of 
-pride is demolished and the cords of vanity are severed, and the 
-stage of self-aggrandizement in religious and worldly matters is left 
-behind. This is the very marrow of worshipful service, the ultimate 
-distinction of the self-denying, and the mark of the devout. There 
-is nothing more admirable than this.
+فشکر نِعْمَةٍ الْمَالِ : الاغتراث بها لِلْمُنهم ایض » وَهُْرَ الله عر وجل » وَالتَحَدتُ بها 
+لتقم في ساثر الأَخْرّالٍ » شر وران لا يتَمَلّك0* عَليْه ولا جاور 
+حَدَّهُ بی ولا ا أَمْرَهُ فيه › نم بدا حُفَْقه مِنّ الرّكاة وَالكَفَارَة وَالنّڈر وَالصَّدقَةِ » وَإِعَائة 
+مرف ء وَافْتِقَادٍ ناب الْحَاجَاتٍ رَأهْلها في الشْدَائِدِ عنْدَ تقَلب الأَحْوَال وَتيَدُل الْحَسَیات 
+بالسَيّئاتِ » نی : : سّاععات میم وّالوخاء بالبَاسَاء وَالضَكَاءِ » وَشْكْرٍ نَعْمَة الحَافِيّة في
 
-The servant should now prevent his tongue from discussing 
-human beings and matters of no importance, otherwise he will 
-accomplish nothing. Malice, pride and spite must leave his heart 
-wherever he finds himself, his tongue should be the same in private 
-as in public, his private and public wishes should be identical, and
+. ) تحرف في المطبوع إلى : ( قلیل‎ )١( 
+. ) في نسخة : ( يغذي‎ )٢( 
+. ]۹۹ : قال الله تمالی : « یواک راقو یمن مک أله إلا القَومْ آلْخَصِرُونَ4[الأعراف‎ )۳( 
+سط ار و‎ 2 
+والبيهقي في شعب‎ ) 71١/4 ( وروی ابن أبي الدنيا في الشكر ( ۲۷ ) وأبو نعيم في الحلية‎ 
+. عن عمر بن عبد العزيز قال : قیدوا نعم الله بشكر الله‎ ) ٦٢٤٤ ( الإيمان‎ 
+. عن عمر قال : ذكر النعم شكرها‎ ) ٦١٤٤ ( ورواه في الشکر ( ۵۸ ) والبيهقي في الشعب‎ 
+وابن أبي الدنيا في الشکر ( 77 ) والبيهقي في شعب‎ ) ١474 ( وروى ابن المبارك في الزهد‎ 
+. عن المبارك بن فضالة » عن الحسن قال : أكثروا ذكر هذه النعم فان ذکرها شكر‎ ) ٦١٤۷ ( الإيمان‎ 
+. ) في المطبوع : ( يمتلك‎ )٥(
 
-Seventy-eighth Discourse
+۱۲ توح الغيب 
+جرا وَالأَعْضَاءِ في الاسْیِمَاَ بها عَلَى الطَاعَاتِ الک عَن الْمَحَارم لیات ء 
+التتاوي الام » فَدَلِكَ يد الم عن الوحْلَةِ الاب . ۱
 
-187
-
-so should his words. All people should be as one to him in respect 
-of sincere advice. He should not be one of those counselors who 
-speak ill of one of Allah’s creatures, or condemn him for some 
-action, nor should it please him to be told of someone’s faults. This 
-vice is the bane of Allah’s servants, the ruin of the devout and the 
-destruction of the pious, except for those whom Allah (Exalted is 
-He) helps by keeping them safe in tongue and heart through His 
-mercy, His grace and His beneficence.
-
-*
-
-Addendum
-
-The Shaikh's final advice to his sons (sanctified be their innermost 
-secrets); some valuable remarks he made; his last illness and death 
-(may Allah be well pleased with him, and grant him contentment.)
+رس شَجَرَتِهًا ء وَتَنْمِيَةُ أَعْصَانِهًا وَأَْرَاقِهًا ٠‏ رَتَحْسِيْنُ رها » وَحَلآَوَةُ طَمْيِهًا ‏ 
+لام ا ولا تصفها » نولاشون رتش تب عَافِيتِهَا وَرَئْعِهَا في الْجَسَّدٍ » تم
 
 ## parça 245
 
-W hen the Shaikh (may Allah be content with him and grant him 
-contentment) was in the throes of the illness of which 
-he died, his son ‘Abd al-Wahhab (sanctified be his innermost secret) 
-said to him: “O my master, leave me with some advice to put into 
-practice after you are gone." To this he replied (may Allah be well 
-pleased with him, and grant him contentment): “You must observe 
-your duty to Allah (Almighty and Glorious is He), fear no one but 
-Allah, pin,your hopes on no one but Allah, and entrust all your needs 
-to Allah (Almighty and Glorious is He). Do not rely on anyone but 
-Him, address all your requests to Him (Exalted is He), and put your 
-trust in no one other than Allah (Glory be to Him). Affirm His 
-Oneness. All is contained within the affirmation of His Oneness.”
+برع جع نم ای لس ور 7 العند تة ذلك 
+في الاخرة في رَحْمَة اللو عر وجل وَالْحْلُودِ في الجنان مع « الب سیف واللهداه 
+لصون رمک ریما 6 ان. : 9 , فان لم يَمْعَلْ ذلك راغ َه بَا ظَهَرَ من زِیْنَة الذي 
+وَبمَا ذاق من لَذَاتِهَا » وَاطْمَانَّ ! إلى برثي سَرَابهَا ۱ وَمَا لاح من بَرْقهًا ۱ وَمَا مب من سیم أَولِ 
+نهار قَيِظِهًا ٠‏ وَنعُوْمَةٍ جُلودٍ يا وَعَقاربها » وَعْفْلَ وَحَمِيَ عَنْ سُمُوْبها الاتلة الْمُرْدَعَةَ في 
+أعْمَاقِهًا ء وعکامنها وَمَصَايدِمًا الْمَنصُوْيةِ لأخله وَحَبِِهِ وهاه ء قاری رتش 
+بالعطب وال المَاجلٍ » مَع ال رَالَْوَانِفِيْ انیا الاب الاجل في لثار 201
 
-He also said (may Allah be well pleased'With him, and grant him 
-contentment): “When the heart is as it should be with Allah 
-(Almighty and Glorious is He), it wants for nothing and contains 
-nothing superfluous."
+وی میتی : فتارة يى ربا ومقابلة لجريَة ارتکیها وَمَعْصِيَة ارفا وأَخْرَى یی 
+تکفیراً وتنحیصاً ؛ وَأَخْرى لى رادجات بيع المنَازِلِ الحَاليات یلح بازلي 
+الیلم 7 ¿ هل الحالات وَالْمَقَامَاتِ : 014 ال یا سَبقَتْ لهُم عِابَةً من رب الْخَلِيْقَةِ وَالبَِبّاتِ ء 
+یرم مولاهم مَيَادِيْنَ البَلِيّاتٍ عَلَى مَطَايَا الوق رالالطاف > وَرَوّحَهُمْ بنسیم النظرات 
+واللحَظات في الْحَرَكَاتٍِ وَالسَكَنَاتِ » إِذْ لم يكن لام لوفلا وَالإِهْوَاءِ في الدَرَكَاتِ » 
+رلک اش رهم بها اصْطِفَاءٌ وَاجَْبَاء' '» وَاستَخرح بها منم حَقَيْقَة الایمان رَصَفَامَا َمَيْرَم
 
-He said further (may Allah be well pleased with him, and grant 
-him contentment): “I am a kernel with no shell.”
+ین اش ی والتفای » وَنكُلْهُمْ بها آنا اع الم الوا وَالأنوَار > فجَعلهم من 
+ال ارام ء امتهم على سر نو سوت
 
-To his sons he said (may Allah be well pleased with him): “Keep 
-your distance from me, for I am with you outwardly, but inwardly 
-I am with others."
+ال الب پا : « الق 4 اضر : هُم جُلسَاء الرّحْمَّنِ یوم القيَامَة ۲۷ .
 
-He also said (may Allah be well pleased with him): “Others have 
-come into my presence, so make room for them and treat them 
-courteously. A very great kindness here. Do not crowd theirspace.”
+. في نسخة : (مما)‎ )١(
+
+(؟) في المطبوع : ( للاصطفاء والاجتباء ) .
+
+(۲) قال الغزالي في الاحیاء كما في الانحاف ۲۸۳/۹۱ ) وانظر الاربعین في آصول الدین له ( 1۲۱ 
+بتحقيقي ) : روي عن عمر بن الخطاب رضي الله عنه . عن النبي یو أنه قال : * إن لکل شيء
+
+توح النیب ۳۳
+
+نیا رأخری : في انیا لیم ؛ رفي الآخرَة باجساومم .
 
 ## parça 246
 
-He kept saying (may Allah be well pleased with him): “On you be 
-peace, and Allah’s mercy and His blessings. May Allah forgive me 
-and you. May Allah relent toward me and toward you. In the Name 
-of Allah, farewell!” He said this for a day and a night.
+َكَانّتِ اليا مُطَهُرَةٌ لقلوبهم مِنْ دَرَن ۰ الشّرْكٍ » وَالعلّی بالْكَلْقٍ وَالأَسْبَاب والأمَاني
 
-He said (may Allah be well pleased with him): “Woe unto you!
+وَالإِرَادَاتِ ء وَذُوَبًَ لها رَسَبَاكَةً من الأَعَارِي وَالْهَرَسَاتِ ؛ وطلب الأعْرّاض اوہ 97 
+الرجاتِ وَالْمَنازلِ العَاليّاتِ في الآخرة في الفزدزٴس وَالْجَنَاتِ ۰
 
-188
+تَمَلاَمَهُ الابتاکء عَلَى وَجْهِ الْمْقَابلٍَ وَالمُقُْبَاتٍ'' : عَدَمْ الصّبْر عند وُجُوْهِمَا . وَالجَزغ
 
-Addendum
+وَالتَّكْوَى إِلَى الْحَلِيْقَةِ وَالبرِيَاتٍ .
 
-189
+مه الاثيلآء تخفیرا وَتَنِْصا لِلْحَطِبَاتٍ : رود الب الْجَمِيْلٍ من غَيْرٍ شَكْوَى ء
 
-Nothing worries me, not the angel, not even you, O angel of death! 
-He who cares for us has blessed us with something beyond you.” 
-Then he uttered a loud cry. This was on the day in the late evening 
-of which he died (may Allah be well pleased with him). It is reported 
-by two of his sons, Shaikh ‘Abd al-Razzaq and Shaikh Musa (sanc¬ 
-tified be their innermost secrets) that the venerable Ghawth (may 
-Allah be well pleased with him) would raise his hands and stretch 
-them out, while saying: “On you be peace, and Allah’s mercy and 
-His blessings! Repent and get into line when it comes to your turn."
+افیا لجع ری الأَسْيَاء الجیران جر باه الا الاعات .
 
-He was sayng (may Allah be well pleased with him): “Wait!” Then 
-came to him the moment of truth and the pang of death.
+وَمَلاَمَةُ الابتلآء : ازتفاع و جُوْدِ الوضا وَالْمُوَافقَة ٠‏ وَمَایِینَةِ التفس واللکون بفغل له
 
-H e said (may Allah be well pleased with him): “Between me and 
-you and all other creatures there is a distance like that 
-between heaven and earth, so do not compare me to anyone, anr 
-do not compare us with anyone." Then his son Shaikh ‘Abd al-'Az! 
-(sanctified be his innermost secret) asked him again about his 
-suffering and how he felt, but he said (may Allah be well pleased 
-with him): “Let no one ask me anything. I am basking in the 
-knowledge of Allah (Almighty and Glorious is He).”
+الازض وَالسَمَارَاتِ » والفناء فبا إلى حيْن الانْكشْافٍ بمرزر الأيَام وَالسّاعَاتٍ .
+
+(١) 
+(۲)
+
+مفتاحا » ومفتاح الجنة حب المساكين » والفقراء الصبر هم جلساء اللہ تعالى يوم القيامة ٤‏ . وقال 
+العراقي في تخريجه ؛ رواه الدارقطني في غراف كمالك زابر ابن لال في مكارم الأخلاق وابن عدي 
+في الکامل وابن ن حبان في الضعفاء ء من حدیث ابن عمر . اه
+
+بل رواه القشيري فى رسالته ( ص8۰۸ )عن آيي عبد الرحمن السلمي : اخ ام بن ادن 
+محمد بن رجاء الفزاري ؛ عن عبد الله بن محمد بن جعفر بن آحمد بن خشیش البغدادي + عن 
+عثمان بن سعيد » عن عمر بن راشد أبي حفص اليمامي . عن مالك ۰ عن نافع ۽ عن ابن عمر ۽ عن 
+عمر بن الخطاب مرفوعاً . وذكره الديلمي في الفردوس ( 444 ) عن عمر بن الخطاب . أقول : 
+عمر بن راشد : قال الإمام أحمد : لا یسوی حديثه شيء . قال ابن حبان في المجروحين ( 875/7 ) : 
+كان ممن يروي الأشياء الموضوعات عن ثقات الأئمة .
 
 ## parça 247
 
-Shaikh ‘Abd al-‘AzIz (sanctified be his innermost secret) asked him 
-again about his illness, and he replied (may Allah be well pleased 
-with him): “No one knows the nature of my sickness, and nobody 
-understands it, be he human, jinn, or angel. Allah’s knowledge is 
-not diminished by Allah’s decree. The decree may change, but the 
-knowledge is unchanging. ‘Allah effaces or confirms whatever He 
-will, and with Him is the Essence of the Book,’ (13:39). ‘He will not 
-be questioned as to what He does, but they will be questioned.’ 
-(21:23).”
+العا ات ل و 147 ) عن أبي الليث عبيد الله الدارمي الأنطاكي ؛ 
+عن أحمد بن داود بن عبد الغفار أبي صالح الحران ني المصري [وضاع كذّاب] » رواه ابن عدي في 
+الكامل )۳۷۷/٦(‏ عن ابن أبي صالح ؛ كلاهما عن أبي مصعب مطرف بن عبد الله المدئي [قال 
+أبو حاتم : صدوق مضطرب الحديث . وقال ابن عدي : بأتي بمناكير] » عن مالك بن أنس ۰ عن 
+نافع » عن ابن عمر مرفوعاً . وقال ابن عدي : هذا عن مالك بهذا الإسناد منکر جداً . وانظر لسان 
+المیزان ( 158/١‏ ) . 
+في المطبوع : ( دون ) . 
+فى نسخة : ( والعقوبة )
 
-The following descriptions haVe'also been reported:
+این المكادسّة و 7 2 ن 
+r‏ ۱ سا
 
-H is son Shaikh 'Abd al-Jabbar (sanctified be his innermost 
-secret) asked him: “Which part of your body gives you pain?” 
-He replied (may Allah be well pleased with him): “All my organs are
+في قول الذي يله عَنْ رَه عر وجل : « مَنْ شَقَله ذكري ڪن“ مَسألتي أَعْطَبمه أَنضَلَ ما 
+آغطلی این > .
 
-190
+) في المطبوع : ( من‎ )١(
 
-Addendum
-
-hurting me except my heart. There is no pain there, for it is with 
-Allah (Almighty and Glorious is He).” Then death came to him, as 
-he was saying (may Allah be well pleased with him): 'i seek help in 
-the words; ‘There is none worthy of worship but Allah, Glorified 
-and Exalted is He, the Ever-Living, Who has no fear of passing away. 
-Glory be to Him Who exults in His omnipotence, and subdues His 
-servants with death. There is none worthy of worship but Allah. 
-Muhammad is Allah's Messenger.’”
+)٢(‏ رواه الدارمي ( 5707 ) والترمذي (۲۹۲۱ ) والعقيلي في الضعفاء الكبير ( 4۸/4 ) وعبد الله بن 
+الإمام أحمد في السنة ( ۱۲۵ ) وابن حبان في الفتتمروحين ( ۲/ ۲۷۷ ) والطبراني في الدعاء ( ۱۸۵۱) 
+وأبو نعيم في الحلية ( ٠١7/0‏ ) والبیھقيی'فی الاعتقادم( ۵۶ ) والأسماء والصفات ( ۵۰۷ ) والشعب 
+)۲۰٠٢(‏ من طرق عن محمد بن الحسن بن أبي يزيد الهمداني [ضعیف] : ورواه ابن حبان 
+(۲/ ۲۷۷ ) والبيهقي في الشعب (۲۰۱۱) من طريق محمد بن حميد الرازي [قال ابن حبان ؛ قد 
+تبرأنا من عهدته] . عن الحكم بن بشي 2 كلاهها عن ربن قيس الملائي ۰ عن عطية العوفي ؛ عن 
+أبي سعيد الخدري رضي الله عنه . وقال الترمذي : حديث حسن غريب . وفال البيهقي في الأسماء : 
+تابعه الحكم بن بشير ومحمد بن مروان . عن عمرو بن قيس . وقال ابن حجر في فتح الباري 
+)٦٦/4(‏ : رجال الترمذي ثقات إلا عطية العوفي ففيه ضعف . أقول : وسأل عنه ابن ابی حاتم أباه 
+كما في العلل ( ۱۷۳۸ ) فقال : هذا حديث منكر ؛ ومحمد بن الحسن ہ لیس بالقوي .
 
 ## parça 248
 
-H is son Shaikh Musa (sanctified be his innermost secret) told us 
-that when death approached the presence of the Shaikh (may 
-Allah be well pleased with him, and grant him contentment), he was 
-trying to say the word "ta'azzaza” (“exults”), but could not get the 
-pronunciation right, so he kept on repeating "ta-az-za-za," slowly 
-and emphatically, until his tongue shot it out. Then he said: “Allah, 
-Allah, Allah,” till his voice grew faint and his tongue was cleaving to 
-the roof of his mouth. Then his noble spirit went forth.
+ورواه البخاري في خلق أفعال العباد ( ص۱۰۹ ) والتاریخ الکبیر ( ۱۱۵/۲ ) والبزار في البحر الزخار 
+( ۳۷ ) وابن حبان في المجروحين ( ۳۷۱/۱ ) والطبراني في الدعاء ( ۱۸۵۰ ) وابن عبد البر في التمهيد 
+٦٦٤-٦٦ (‏ ) والبيهتي في الشعب ( 01/1 و۰۸۰ ) والقضاعي في مسند الشهاب ( ٠٠١١‏ ) والمزي في 
+تهذيب الكمال ( ۲٤۸/٤‏ و۱۹۱/۱۳) والذهبي في تذكرة الحفاظ ( 43077 ) من طرق عن صفوان بن 
+أبي الصهباء ٠‏ عن بكيز بن عتيق ؛ عن سالم بن عبد الله بن عمر + عن أبيه ؛ عن جده عمر بن الخطاب 
+رضي الله عنه . وفيه : صغوان بن أ, بي الصهباء » منكر الحدیث . وضرار بن صرد ؛ صدوق له أوهام . 
+وقال ابن حجر في فتح الباري ( ۱۳۶/۱۱ ) : آخرجه الطبراني بسند ليّن .
 
-The good pleasure of Allah (Exalted is He) be upon him!
+ورواه أبو نعيم في الحلية ( ۳۱۳/۷ ) عن حذيفة رضي الله عنه . وذكره الديلمي في الفردوس 
+(15141 )عن حذيفة .
 
-About the Translator
+ورواہ البيهقي في الشعب ( ۵۷۳ ) والقضاعي في مسند الشهاب ( ۵۸4 ) عن جابر بن عبد الله 
+رضي الله عنه . ۰
 
-Muhtar Holland was bom in 1935, in the ancient city of Durham in 
-the North East of England. This statement may be considered 
-anachronistic, however, since he did not bear the name Muhtar 
-until 1969, when he was moved—by powerful experiences in the 
-latihan kejiwaan of Subud—to embrace the religion of Islam.'
+فتوح الغیب ۳۱۵
+
+َذَلِكَ : أن الْمُؤْمِنَ إذًا أَرَادَ اه عر وجل اضطفاءه وَاجْتَبَاءَهُ » سك به الأَحْوَالَ وَامَْحَنَهُ
+
+اع ان وال يهب د الغنی ٠‏ وَيَضْطْره إلى تسا ال : في الطزق عند سد جهاته
+
+535 1 7- و حصم(١)‏ مه ۔, ھ ‏ 7ے سے سم 
+عليه » نم يَصِوْنه عَنْ مسألتهم یط 4 إلى القرض مِنْهُمْ , ثم يَصُونْهُ عَنِ القزض و 
+ور ود اس ین 4 اف اقب ليم ال فده 
+و لم 5 الكُوَالَ للخْلق » و 5 یامه و به 77 باطن و ویر فه يمجع دته فيه وَمَعْصیَتَه في
+
+ورواه آبو الشيخ في طبقات المحدئین باصبهان ( ۲/ ۳۸۲ ) عن ابن صبیح » عن عامر بن أسيد » 
+عن محمد البزار » عن آبي بكر بن عياش ۰ عن الاعمش » عن مالك بن الحارث ۰ عن عبد الله بن 
+عصمة » عن حكيم بن حزام مرفوعاً ,
+
+وذكره الديلمي في الفردوس ( ۸۱۷۰ ) عن أبي هريرة رضي الله عنه .
+
+ورواه ابن أبي شيبة ( ۲۹۲۷۳) عن عمرو بن مرة مرسلاً .
 
 ## parça 249
 
-At the age of four, according to an entry in his father’s diary, he 
-said to a man who asked his name: "I'm a stranger to myself.” 
-During his years at school he was drawn most strongly to the study 
-of languages, which seemed to offer signposts to guide the stranger 
-on his “Journey Home,” apart from their practical usefulness to one 
-who loved to spend his vacations traveling—at first on a bicycle- 
-through foreign lands. Serious courses in Latin, Greek, French, 
-Spanish and Danish, with additional smatterings of Anglo-Saxon, 
-Italian, German and Dutch. Travels in France, Germany, Belgium, 
-Holland and Denmark. Then a State Scholarship and up to Balliol 
-College, Oxford, fora degree course centered on the study of Arabic 
-and Turkish. Travels in Turkey and Syria. Then National Service ir 
-the Royal Navy, with most of the two years spent on an intensiv 
-course in the Russian language.
+ورواه ابن المبارك في الزهد ( 459 ) وعبد الرزاق ( ۳۱۹۹ و٤٤٥٦‏ ) والإمام أحمد في الزهد 
+( ۰۰۲ ) وابن أبي شيبة ( ۲۹۲۷۱ ) والبيهقي في الگنعب ( 2/4 ) من قول مالك بن الحارث .
 
-In the years since graduation from Oxford and Her Majesty’, 
-Senior Service, Mr. Holland has held academic posts at the Univer¬ 
-sity of Toronto, Canada; at the School of Oriental and African 
-Studies in the University of London, England (with a five-month 
-leave to study Islamic Law in Cairo, Egypt); and at the Universiti 
-Kebangsaan in Kuala Lumpur, Malaysia (followed by a six-month 
-sojourn in Indonesia). He also worked as Senior Research Fellow 
-at the Islamic Foundation in Leicester, England, and as Director of 
-the Nur al-Islam Translation Center in Valley Cottage, New York.
+جره ا سے ى الجا E‏ اسه ون ا و 
+إسحاق » عن عبد الله بن عوف ء عن الفرج بَنَآففتالة"؛ عن ثور بن يزيد » عن خالد بن معدان : أن 
+داود النبي عليه السلام قال : إن اللهتمالن یولج لاعطین المتشاغلين بذكري أفضل ما اعطي 
+السائلين .
+
+وقال ابن قيم الجوزية في مدارج السالكين ( ٦۰٠٢/٢‏ ۔ 7١8‏ ) : إن الرضا عن الله إنما یتحقق بهذه 
+الأمور الثلائة : ١‏ استواء الحالات عند العبد ۰ وسقوط الخصومة مع الخلق » والخلاص من المسألة 
+والإلحاح ٢‏ ء فإن الراضي الموافق تستوي عنده الحالات من النعمة والبلية في رضاه بحسن اختیار الله 
+له . ولیس المراد استواژها عنده في مُلاءمته ومنافرته » فان هذا خلاف الطبع البشري بل خلاف الطبع 
+الحيواني . وليس المراد أيضاً استواء الحالات عنده في الطاعة والمعصية ء فإن هذا مناف للعبودية من 
+كل وجه » وإنما تستوى النعمة والبلية عنده في الرضا بهما لوجوه : ومنها ( ۲۱۷/۲ ) : أن العبد إذا 
+رَضِيَ به وعنه في جميع الحالات ؛ لم يتخير عليه المسائل ؛ وأغناه رضاه ہما يقسمه له ويقدره ويفعله 
+به عن ذلك ؛ وجعل ذكره في محل سؤاله » بل يكون من سؤاله له الإعانة على ذكره » وبلوغ رضاه . 
+فهذا يُمطّى أفضل ما يعطاه سائل » كما جاء في الحديث : « من شغله ذكري عن مسألتي ؛ أعطيته 
+أفضل ما أعطى السائلين » . فان السائلين سألوه فأعطاهم الفضل الذي سألوه . والراضون رضوا 
+عنه » فاعطاهم رضاه عنهم ؛ ولا يمنع الرضا سؤاله أسباب الرضا » بل أصحابة مُلِخُونَ في سزاله 
+ذلك .
+
+وانظر الأربعين في أصول الدين للغزالي رقم ( ۲۸ بتحقيقي ) .
+
+. ) فی المطبوع : ( من‎ (١)
 
 ## parça 250
 
-* The name Muhtar was received at that time from Bapak Muhammad Subuh 
-Sumohadiwidjojo, of Wisma Subud, Jakarta, in response to a request for a suitable 
-Muslim name. In strict academic transliteration from the Arabic, the spelling would 
-be Mukbtdr. The form Muchtar is probably more common in Indonesia than 
-Muhtar, which happens to coincide with the modem Turkish spelling of the name.
+٦‏ فتوح الغيب 
+تک ٠‏ رل بذَلِكَ واه وتنس تسه ره هي حَالَة الرَيّاضة ؛ فیکون سُؤَالَهُ عَلَى رَجْهِ الإجبّار 
+لا عَلَی وَجْهِ ار بالجبار » تیصو شونه عَنْ ذلك وَيَأمُرَهُ بالقزض منهم آئراً جَرْما لا ينه 
+رکه كَالسْوَالٍ من قَبْلُ » تم ملق ہن ذَلِكَ وفع عَن الْخَلق رَمُحَامَلتهِمْ ء فَيَجْمَلُ ررتَهُ في 
+الال ل عر وجل یله جم ما تاج إل َه عر وجل ولا فطع إن سکت رَآَمْرَض 
+2 0 من الُوَال باللمَان إلى السوَالٍ بالقَلٍ فَيَألَ بلبه جَميِعَ ما يحت 
+فیعطيه - حٌى إِنَهُ لو سَألَهُ پلسانه لم يُمْطِِ أو : أل لح لم وه لي عَنه وَعَِ السوَالٍ 
+جَمْلَةٌ ظاهراً وَباطنا یناه بجَمیم ما يُصْلِحَهُ وَيَقَوْمُ به أده من الماكزل َالْمَشْدُوْبِ 
+الوس رجینم تصَالح ابر ِن َب یک ونیا أو تخطر اه ؛ یله عر وجل
 
-191
+ع چا سے نم نر یر
 
-192
+تید مج ا ید رل الککب وهو بی یرای : 195] .
 
-About the Translator ■
+54 3و
 
-His freelance activities have mostly been devoted to writing as 
-translating in various parts of the world, including Scotland ai 
-California. He made his Pilgrimage lHajj] to Mecca in 1980. 
-Published works include the following:
+قق حبذ ول عر وجل : مَنْ شَقَلَه ذِكري عَنْ مالي اَغطَيه أَْضَلَ ما أغطي 
+السَابْلِيْنَ ٤‏ .
 
-al-Ghazall. On the Duties of Brotherhood. Translated from th» 
-Classical Arabic by Muhtar Holland. London: Latimer New Dimer - 
-sions, 1975. New York: Overlook Press, 1977. Repr. 1980.
+وهي حال لاه اي هي غَايَةُ آخوال الأؤلياء تالم قذ بر ال کون کون 
+جَمیٔعٌ مَا یَختاج له بوذن الله : وهو له جل وَعَلاً في بَعْض الک ا 
+الِي لا إِلَهَ إلا آنا ۰ افون للشیء : کر ر اي أجْملكَ تقل بلئے : 9 
+فیکون 7
 
-Sheikh Muzaffer Ozak al-Jerrahi. The Unveiling of Love. Translates 
-from the Turkish by Muhtar Holland. New York: Inner Traditions 
-1981.
+<خ 
+۹
 
-Ibn Taymiya. Public Duties in Islam. Translated from the Arabic b> 
-Muhtar Holland. Leicester, England: Islamic Foundation, 1982.
+اعد 
+رر 
+١‏ ہمد 
+ہے 
+٦‏ 1 
+0 ۰ 
+> گی 
+- 
+مسر
 
-Hasan Shushud. Masters of Wisdom of Central Asia. Translated 
-from theTurkishbyMuhtarHolland. Ellingstring, England: Coombe 
-Springs Press, 1983.
+ی
 
-al-Ghazall. Inner Dimensions of Islamic Worship. Translated from 
-the Arabic by Muhtar Holland. Leicester, England: Islamic Founda¬ 
-tion, 1983.
+5
 
-Sheikh Muzaffer Ozak al-Jerrahi. Irshad. Translated [from the Turk¬ 
-ish] with an Introduction by Muhtar Holland. Warwick, New York: 
-Amity House, 1988.
+(1) في المطبوع : ( كتبه ) . 
+(۲) لم أجده ؛ ومرٌ في هذا الكتاب ( المقالة ۱۳ و١١‏ ) .
 
-PRINTED IN INDIA
+۹س
+
+سس ۳ مر 5 ۳ 
+الْمَقَالَةُ السابعة وَالأَرْبَعْوْنَ
+
+في الب ی الله تَعَالَى
+
+1 نج از سويت‎ 0 ۳) ے١‎ 1 4 7 f 
+ساني رَجل شیم في الْمَنَام » فقال : آي شيء یرب العَبْدَ إلى الله عر وجل ؟‎ 
+. فلت : لِذَلِكَ ابیداء وَانتَهَاءٌ‎
+
+اوه : الوَرَعْ » واه : الرضا ونم وا
+
+۱۸ ۲ فتوح الغيب
+
+الْمَقَالَةُ التَّامئَةُ والأز ون
+
+فیّما ينغي ِلمُؤمِن 5 تفل به
+
+## parça 251
+
+يب لِلمُؤْمن أن يشل اڑل بالفرایض ء اذ فرغ مها اسْتَغْلٌ بالشتنِ . نع تشز 
+بالگوافل وَالقَضَائْلٍ ۰ ما َم يَفْرَْ من القرانض فَالاشْتغَالٌ بالشتن من وَرُعُوتةٌ ء فَِنِ ال 
+بالشتن الق لرایض لم له رین »له كمي جل َمزۂ الَْيِك إلى خذميه 
+فلا تیه ١‏ وٹ فی ما الام اي مُوَ لا راومه وتخت يِه وولایته .
+
+عَنْ امير الْمُؤْم مین یدنا عَلِيٌ بن أ بي طالب رَضي الله عَنْهُ قال : قال رسشول اشر ےل : ؛ ان 
+بل مضلي الگزافل قبل القرایض کمتل خُبلی حملت لاد نقاشها أشقطّث نا من دا 
+ڪنل ولا يد ولاکق وَكَدَلِكَ ال لا یل ال فلا حى بي النرِِضَة ء زنل 
+السا َمل جر ۹ لص له ر نہ حم حَتَى یا رس الما » ول المُصَلي بالتوَالي لا 
+قبل له تافلة > : حَتَى يودي القَربْضَة 7
+
+## parça 252
+
+() رواه الرامهرمزي في آمثال الحدیث ( ۵۵ ) عن شيخ من أهل مدينة السلام » عن محرز بن سلمة » عن 
+الدراوردي ؛ عن موسي بن عبيدة › عن صالح بن سويد العرجي › عن علي بن أبي طالب رضي الله 
+عنه ‏ أن النبي بل قال : ١‏ مثل الذي لا يتم صلاته مثل المرأة حملت حتى إذا دنا نفاسها أسقطت ٠‏ 
+فلا حامل ولا ذات رضاع ؛ ومثل المصلي كمثل التاجر لا يخلص له الربح حتی يخلص له رأس ماله 
+فكذلك المصلي لا يقبل له نافلة حتى يؤدي الفريضة ٩‏ . 
+ورواه البيهقي في السنن الكبرى ( ۳۸۷/۲ ) عن أبي عبد الله الحافظ وأبي سعيد بن أبي عمرو › 
+عن أبي العباس محمد بن يعقوب ۰ عن الحسن بن علي بن عفان . ورواه في السنن أيضاً وفي الشعب 
+( ۲ ) عن أبي عبد الله محمد بن أحمد بن أبي طاهر الدقاق المعروف بابن البياض ببغداد ۰ عن 
+علي بن محمد بن الزبير القرشي + عن الحسن بن علي بن عفان » عن زيد بن الحباب » عن موسى بن 
+عبيلة » عن إبراهيم بن عبد الله بن حنین + عن آبیە عن علي بن أبي طالب قال : قال 
+رسول الله 2 . ورواه في السنن أيضاً عن أبي محمد عبد الله بن یوسف » عن أبي سعيد ابن 
+الأعرا؛ و اس مر ان > عن أسباط بن محمد القرشي ؛ وا 
+الربذي ٠‏ عن ابن حنين » عن أبيه » عن علي بن أبي طالب رضي الله عنه ؛ عن النبى ب قال : 
+ا کی E‏ الا وا
+
+فنوح الفیب ۲۹
+
+وَكَذَلِكٌ مَنْ ترك الحْنَةً رال بنافِلةِ لم رنب َع المْرَائْضِ وَلَم بصن عَلَيْهَا وید
+
+من الفَرَائِضٍ : ترك ارام ٠‏ والشرك باش عر وجل في خَلقهِ ۰ والاغتراض ۳ ل 
+قترو ا ة ال وَطَاعَتِهِمْ ٠‏ ژالاغراض عَنْ أثر الفوعرٌ وجل وَطَاعَیو .
+
+ال يله : « لا طاعَة لِمَخُلُوْقٍ في مَعْصِيَةِ الق ٩۳‏ .
+
+ولا هي ذات حمل : ومثل المصلي کمثل التاجر لا یخلص له ربحه حتی پخلص له رأس ماله » کذلك
+
+المصلي لا تقبل نافلنه حتی يژدي الفريضة ٩‏ .
+
+## parça 253
+
+وقال البيهقي في الشمب : هذا إن صح في المصلي [ذا ضيّم شیناً من واجباتها . وقال في السنن : 
+موسی بن عبيدة » لا یحتج به . وقد اختلف عليه في سناده : فرواه زيد بن الحباب وأسباط بن محمد 
+مکذا » ورواه سلیمان بن بلال » عن موسی بن عبيدة ۽ عن صالح بن سويد » عن علي كذلك 
+مرفوعاً » وهو إن صح كما آخبرنا آبو عبد الله الحافظ وأبو سعید بن أبي عمرو فالوا : حدثنا 
+آبو العباس محمد بن یعقوب ۰ حدئنا الربيع بن.منتليمان ۰ حدثنا عبد الله بن وهب » حدئنا سلیمان بن 
+بلال ؛ حدثني موسى » عن صالح بن سويك] 7۰ غلل علي بن أبي طالب رضي الله عنه ‏ أن 
+رسول الله يي قال : « مثل الذي لا يتم صلاته کمثل الحبلی حملت حتى إذا دنا نفاسها أسقطت فلا 
+حمل ولا هي ذات ولد » ومثل المصلي_كمثل التاجر لا يخلص له ربح حتى يخلص له رأس ماله ؛ 
+كذلك المصلی لا تقبل له نافلة حتی یرد الْفريْضَة 1““فتكون صحتھا بصحة الفريضة والأخبار 
+المتقدمة محمولة على نافلة تكون خارجة الفريضة فلا يكون صحٹھا بصحة الفريضة . والله أعلم . اه
+
+أقول : ورواه ابن راهويه ( ۳۹۰ ) عن أبي هريرة رضي الله عنه مختصراً .
+
+)١(‏ رواه ابن أبي شيبة ( ۳۳۷۱۷) والخلال في السنة ( 58 دار الراية ) عن وكيع ؛ عن مبارك ؛ عن
+
+الحسن قال : قال رسول الله گا : و لا طاعة لمخلوق في معصية الخال ٤‏ .
+
+ورواہ الطبراني في الکبیر ( ۱۸/رقم ۷ ۰ ) والاوسط ( 4777 ) عن عبد الله بن أحمد بن حنبل » 
+عن أبيه » ورواه البزار في البحر الزخار ۳۵۱۱۱) عن محمد بن موسى القطان ؛ کلاهما عن 
+سماعلبن لا [قال زار رن یتشیع] ؛ عن حفص بن عمران الكوفي ۰ عن سماك بن حرب » 
+عن الحسن » عن عمران بن حصين رفعه ؛ « لا طاعة لمخلوق في معصیة الله » .
+
+## parça 254
+
+ورواه الطبراني في الکبیر ( ۱۸/رفم ۳۹۷ ) عن أحمد بن سلیمان بن يوسف العقيلي الاصبهاني » 
+عن أبیع » عن اللعمان بن عبد السلام » عن الحسن بن دینار » عن الحسن قال : قال عمران بن 
+حصين للحکم بن عمرو الغفاري : سمحت رسول الله 7 يقول : « لا طاعة لمخلوق في 
+معصية الله » ؟ قال : نعم .
+
+ورواه الہزار في البحر الزخار ( ۳۵۸۱ ) عن محمد بن مرزوق ومحمد بن معمر » عن حجاج بن 
+المنهال » عن حماد بن سلمة » عن يونس ؛ عن الحسن ؛ عن عمران بن خصين والحكم بن عمرو 
+الغفاري مرفوعاً : « لاطاعة في معصية الله ٤‏ . -
+
+4 0 و 4 او و 4 0 و و وا چا جو E‏ کان 4 وہ و وا وو E CEC‏ ہہ تو ھب کر 8 E E e‏ و و انا تخس ہر رھ ہوا[ گا وو >ا- و و ور یو ےج
+
+ورواه الطبراني في الكبير (۱۸/رقم ۳۸۵ ) عن علي بن عبد العزیز » عن حجاج بن المنهال › 
+عن حماد بن سلمة ؛ عن حميد ويونس وحبيب ؛ عن الحسن ؛ عن عمران بن حصين رفعه : * لا 
+طاعة في معصیة اللہ » .
+
+ورواه الامام أحمد ( 57/5 ) وابن أبي عاصم في الآحاد والمثانی ( ۱۰۱۷ ) من طريق حماد بن
+
+## parça 255
+
+سلمة ٠‏ عن يونس وحميد . عن الحسن : أن زیاداً استعمل الحكم الغفاري على جیش ‏ فاتاہ 
+عمران بن حصين فلقيه بين الناس ؛ فقال : أتدري لم جنتك ؟ فقال له : لم ؟ قال : هل تذكر قول 
+رسول الله إلا للرجل الذي قال له آمیژه : قَعْ في النار ۰ فادرك ۰ فاحتسن ۰ فأَخْيرَ بذلك النبي ي ء 
+فقال : ١‏ لو وفع فيها لدخلا الثار جميعاً ء لا طاعة في معصية الله ؛ . قال : نعم . قال : إنما أردت 
+أن أذكرك هذا الحديث . 
+ورواه الطبراني ( ۳۱٥۹‏ و۱۸/رقم ۳۲٣‏ ) والحاكم ( 84۳/۳ ) من طريق حجاج بن المنهال » عن 
+حماد بن سلمة ؛ عن حميد وحبيب ويونس [عند الحاكم : حميد وحبيب] ۰ عن الحسن : أن زيادا 
+استعمل الحكم بن عمرو الغفاري على جیش"؛ افلقیه عمران بن حصين في دار الإمارة بين الناس , 
+فقال : هل تدري فيما جثتك ١‏ آما تذكر آن رسول اش لچ لما بلغه الذي قال له أميره : فقم فقم في 
+النار ٠‏ فقام الرجل ليقع » فأدرك » فأمسيك تقال النبي : 2 ١‏ لو وقع فيها لدخلا النار ء لا طاعة 
+في معصية الله » . قال : أي قال وإنما آردت أن أذكرك هذا الحديث .
+
+ورواه الطيالسي ( ۸۵۰) والامام احم ( ۲۹/۶ و٤٢٣‏ و٤٤٣٥‏ ) وابن أبي شيبة ( 018/17 ) 
+والحارث بن أبي أسامة ( ٢‏ زوائد ) والبزار في البحر الزخار ( ۳٥۹۹‏ و١750‏ ) والطبراني في 
+الكبير ( ۱۸/رقم ۵۷۰ و۷۵۱ ) من طرق عن قتادة » عن أبي مُرَاية عبد الله بن عمرو العجلي ۰ عن 
+عمران بن حصين رفعه : « لا طاعة في معصية الله > .
+
+## parça 256
+
+ورواه الإمام أحمد ( 577/5 ) عن عبد الوهاب بن عبد المجيد الثقفي ٠‏ ورواه ( 51/4 ) عن 
+سليمان بن حرب » عن حماد بن زيد » كلاهما عن أيوب السختياني » عن محمد بن سيرين : أن زياد 
+[أي : ابن أبي سفيان] استعمل الحكم بن عمرو الغفاري على خراسان . قال : فجعل عمران یتمنّاہ ‏ 
+فلقيه بالباب ؛ فقال : لقد كان يعجبني أن ألقاك ؛ هل سمعت رسول الله يق يقول : ١‏ لا طاعة في 
+معصية الله » ؟ . قال الحكم : نعم . قال : فکبّر عمران رضي الله عنه .
+
+ورواه عبد الرزاق ( ۲۰۷۰۰ ) وعنه الإمام أحمد ( 77/5 ) عن معمر › عن غير واحد منهم 
+أيوب» عن ابن سيرين : أن زياد استعمل الحكم بن عمرو الغفاري ‏ فقال عمران بن حصين : وددت 
+اني ألقاه قبل أن يخرج . قال : فلقيه » فقال له عمران : أما علمت ٠‏ أرما سمعت رسول الله 8 
+يقول : ١‏ لا طاعة لأحد في معصية الله ؛ ؟ قال : بلى . قال : فذاك الذي أردت أن أقول لك .
+
+ورواه الطيالسي ( ۸۵٦‏ ) عن يزيد بن إبراهيم قال : سألت محمد بن سيرين عن حديث عمران بن 
+حصين ؟ فقال : فال عمران للحكم الغفاري ‏ وکلاهما من أصحاب النبي ج - : هل تعلم یوما قال 
+رسول الله ےچ : « لا طاعة في محصية الله عر وجل ٩‏ ؟ قال : نعم . قال عمران : الله أکبر ‏ الله
+
+وهاه هاه و و وا هو هود هاه هاه ده هاه غ مف شان یب ھی اوه 43“ ج ,×<ةؿ ه هس هاس و ها ها ها و وا و وا هسه عه ده 6 قت ٭ ٹج هه 5 0 6 ۹ ٢۲‏
+
+ار ورواه الامام أحمد ( 57/9 ) عن عبد الصمد ؛ عن يزيد بن إبراهيم قال : سألت محمدا عن 
+حديث عمران بن حصين ؟ فقال : نبثت أن عمران بن حصين قال للحكم الغفاري ‏ وكلاهما من 
+أصحاب رسول الله يي : هل تعلم يوم قال رسول الله پا : « لا طاعة في معصیة الله » ؟ قال : 
+نعم . قال عمران : الله أكبر ء الله أكبر .
+
+## parça 257
+
+ورواه الطبراني في الكبير ( ۱۸/رقم 574 ) من طريق صلة بن سليمان [متروك] » عن أشعث بن 
+عبد الملك ؛ عن محمد قال : استعمل الحكم الغفاري على خراسان ؛ فبلغ ذلك عمران بن 
+الحصين ۰ فطلب الحكم حتى لقيه في الرحبة ؛ فقال : ما زلت أطلبك منذ اليوم ‏ إنك بعثت على أمرٍ 
+عظيم ؛ أنذكر يوم فال رسول الله ا : « لا طاعة في معصية الله ١‏ . قال : نعم . قال عمران : الله 
+أكبر ) حسبت نسيت ۔ :
+
+ورواه الطبراني في الكبير ( /١8‏ رقم ٦٤٤‏ ) عن الحسن بن علي الفسوي ۰ عن محمد بن عباد بن 
+معاذ العنبري » عن المعتمر بن سليمان » عن سلم بن أبي الذيال » عن محمد بن سيرين : أن 
+الحكم بن عمرو الغفاري وعمران بن حصينت أو آحدهما وأحسيه عمران كان بُحلّث - : أن 
+رسول الله يل فال : « لا طاعة في معصية الله ۲ فقالالاخر : الله أكبر ثلاثاً أو كما قال . ورواه البزار 
+في البحر ( 5114 ) عن عمرو بن علي » ورواه في الكبير ( 51١‏ ) والأوسط ( ۱۳۷۶ ) من طریق 
+إسحاق بن إبراهيم بن حبيب بن الشهيد ؛ کلاهعا عن المعتمر بن سليمان » عن سلم بن أبي الذيال » 
+عن محمد بن سيرين ؛ عن عمران بن حضنين والحکخ بن عضرو الغفاري .
+
+ورواه الطبراني ( ۱۸/رقم 477 ) عن معاذ بن المثنى ؛ عن مسدد . عن بشر بن الفضل + عن 
+سلمة بن علقمة ؛ عن محمد بن سيرين » عن عمران بن الحصين رفعه : ١‏ لا طاعة في معصية الله ٢‏ .
+
+ورواه الطبراني في الكبير ( ۱۸/رقم 478 ) عن أحمد بن زهير النستري + عن أبي حفص عمرو بن 
+علي ؛ عن يزيد بن زريع ۰ عن ابن عون » عن محمد بن سيرين : أن الحكم بن عمرو الغفاري 
+وعمران بن حصين التقيا » فقال أحدهما للآخر : آتذکر يوم قال رسول الله پل : « لا طاعة لاحد في 
+معصية الله » . قال : الله أكبر .
+
+## parça 258
+
+ورواه الإمام أحمد ( ۱۱/۵ ) عن يزيد بن هارون » عن هشام » عن محمد قال : جاء رجل إلى 
+عمران بن حصين ونحن عنده فقال : استعمل الحكم بن عمرو الغفاري على خراسان ؛ فتمناه عمران 
+حتى قال له رجلٌ من القوم : آلا ندعوه لك ؟ فقال له : لا . ثم قام عمران فلقيه بين الناس ؛ فقال 
+عمران : نك قد وليت أمراً من أمر المسلمين عظیماً ء ثم أمره ونهاه ووعظه ؛ ثم قال : هل تذكر يوم 
+قال رسول الله م : « لا طاعة لمخلوق فی معصية الله ؛ ؟ . قال الحكم : نعم . قال عمران : الله 
+اکبر . ورواه ابن آبي عاصم في الآحاد والمثاني ( ۱۰۱۸ ) عن يعقوب بن حميد ؛ عن پحبی بن 
+سليمان » عن هشام بن حسان ؛ عن محمد بن سيرين : يذكر عن عمران بن حصين والحكم بن 
+عمرو.. ورواه الطبراني في الكبير (8١/رقم ١‏ ) عن محمد بن علي الصائغ المكي ۰ عن 
+يعقوب بن حميد » عن یحیی بن سليم ء عن هشام بن حسان ؛ عن الحسن ؛ عن عمران بن حصين -
+
+a 6 ۵‏ ھ 8 ج کا ػ5 قش ےم ےت .4 ھ*“ ٭ م+ ؿ ج ها ٭ غض 8+ ٭ مہ ل أو وه چ ج ع نے +ھهھ یج ے ة ه “و ھ هپ ع8 لاله وله مج عة مج مج مم
+
+رفعه : ١‏ لا طاعة لمخلوق في معصیة الخالق » . ورواه الطبراني (۱۸/رقم 577 ) عن أحمد بن 
+عمرو الخلال المكي ؛ عن يعقوب بن حميد » عن بحبی بن سليم ۰ عن هشام بن حسان : عن 
+محمد بن سيرين ؛ عن عمران بن الحصين رفعه : « لا طاعة لمخلوق في معصية الله ٤‏ .
+
+ورواہ الطبراني (۱۸/رقم 4178 ) عن محمد بن عبد الرحمن المسروقي . عن عمه موسی بن 
+عبد الرحمن » عن حسين بن علي الجعفي » عن زائدة ٠‏ عن هشام بن حسان » عن محمد بن 
+سيرين ؛ عن عمران بن حصين رفعه : « لا طاعة في معصية الله ٤‏ .
+
+## parça 259
+
+ورواه القضاعي في مسند الشهاب ( ۸۷۳ ) عن أبي مسلم محمد بن أحمد بن علي الكاتب » عن 
+أبي القاسم عبد الله بن محمد البغوي ؛ عن محمد بن جعفر الوركاني ؛ عن حماد بن يحبى أبو بكر 
+الابح › عن محمد بن سيرين » عن عمران بن حصين رفعه : ١‏ طاعة لمخلوق في معصية 
+الخالق » . ورواه الخطیب في تاریخ بغداد ( ۱8۵/۳ ) من طريق محمد بن غالب بن حرب أبو جعفر 
+الضبي التمار المعروف بالتمتام البصري [ثقة مأمون لکنه یخطیء] ؛ عن محمد بن جعفر الوركاني ؛ 
+عن حماد بن يحيى الأبح ؛ عن ابن عون » عن:ابن سيرين ؛ عن عمران بن حصين رفعه : « لا طاعة 
+لمخلوق في معصية الخالق ٤‏ .
+
+## parça 260
+
+ورواه الإمام آحمد ( 17/0 ) عن بهز بن آسد المي ۰ ورواه الحارث بن أبي أسامة ( ۱۰۳ ) عن 
+أبي النضر هاشم بن القاسم ۰ ورواء الطبراني في الکبیر (۳۱۵۰۱ ) عن المقدام بن داود » عن أسد بن 
+موسی ۰ ثلائتهم عن سلیمان بن المغیرة»"غنْ حمیذا بن هلال » عن عبد الله بن الصامت قال : قال 
+عمران بن الحصین للحکم بن عمرو : أسمعت رسول الله و يقول : « لا طاعة لاحد في 
+معصية الله » ؟ . قال الحکم : نعم . ولفظ احمد : آراد زيادٌ أن يبعث عمران بن حصین على 
+خراسان » فأبى علیهم » فقال له آصحابه : آترکت خراسان أن تکون علیها ؟ قال : فقال : إني والله 
+ما يسرني أن أَصْلَى بحڑھا وتصلون ببردها ء إني أخاف إذا كنت في نحور العدو أن يأنيني كتا من 
+زياد » فان آنا آمضیت هلکت ؛ ون رجعت ضربت عنقي . قال : فاراد الحکم بن عمرو الغفاري 
+علیها ء قال : فانقاد لامره » قال : فقال عمران : ألا أحد يدعو لي الحكم ؟ قال : فانطلق الرسول ‏ 
+قال : فاقبل الحکم إليه » قال : فدخل عليه ؛ قال : فقال عمران للحکم : آسمعت رسول الله ل 
+يقول : ١‏ لا طاعة لاحد في معصية الله » ؟ قال : نعم . فقال عمران : لله الحمد » أو الله آکبر . ولفظ 
+الحارث : آراد زياد أن يبعث عمران بن حصین على خراسان ٠‏ فابی عليه ؛ فبعث الحکم علیها : 
+فانقاد لامره ۰ فقال عمران : ألا أحد يدعو لي الحکم ؛ فانطلق الرسول ۰ فاستقیله الحکم ۰ فجاء إلى 
+عمران ؛ فقال له عمران : أسمعت النبي 2 پقول : « لا طاعة لاحد في معصية الله » . قال : نعم , 
+فلله الحمد. » أو : الحمد لله » أو : الله اکبر .
+
+وانظر مجمع الزوائد للهيثمي ( ۹۱44-۹۱4۲ ) .
+
+وله شواهد :
+
+-١‏ رواہ الطيالسي ( ۱۰۹ ) والإمام أحمد ( ۷۲4 و۱۰1۵ و۱۰۹۵ ) والبخاري ( ۷۲۵۷ ) وسلم د
+
+شض ge‏ یش وا و و ےچ أ نین دو وو بک و وو عو وھ ھا جا هو“ EOE‏ ج25 1# جو 6G‏ وا تھا 9ھ چا ODE‏ ےچ وھ 3# وو و وم ےھ

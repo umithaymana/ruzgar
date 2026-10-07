@@ -1,0 +1,23 @@
+{
+  "eser_id": "kashani_sharh_fusus",
+  "eser_tr": "Şerh-i Fusûs (Kâşânî)",
+  "eser_ar": "شرح فصوص الحكم للقاشاني",
+  "yazar": "Abdürrezzâk Kâşânî (ö. ~730/1330)",
+  "rol": "serh",
+  "eser_turu": "serh",
+  "ilgili_eser_id": "ibn_arabi_fusus",
+  "ilim_alani": "tasavvuf",
+  "dil": "ar",
+  "dosya_yolu": "knowledge/ilim/din/09_ahlak_tasavvuf/serh_ve_aciklama/kashani_sharh_fusus",
+  "guvenilirlik": "orta",
+  "kaynak_sinifi": "kalici",
+  "durum": "hazir",
+  "kaynak": "Internet Archive (Arapça OCR — Kâşânî şerhi)",
+  "source_file": "kashani_sharh_fusus__Sharh_Fusus_Kashani_djvu.txt",
+  "sha256": "3bef28260c30081d277a811f46ac90032eeb4ca6b77cdac5971035bd6daaa63b",
+  "char_count": 831095,
+  "chunk_count": 633,
+  "batch_sayisi": 32,
+  "not": "Fusûs şerhi; sayfa uydurma yasak.",
+  "updated_utc": "2026-10-07T18:25:12Z"
+}

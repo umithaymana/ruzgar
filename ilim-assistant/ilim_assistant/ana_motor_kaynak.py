@@ -54,6 +54,7 @@ def citation_directive_for_turn(
     source_count: int,
     archive_primary: bool,
     web_present: bool,
+    soft_natural: bool = False,
 ) -> str:
     """Modele zorunlu kaynak / güven talimatı."""
     no_fabricate = (
@@ -62,6 +63,27 @@ def citation_directive_for_turn(
         "Kesin kaynak yoksa: «Bu bilgi mevcut kütüphanedeki kaynaklarda doğrulanamadı.»\n"
         "- Web bilgisini kalıcı kütüphane kaydı gibi gösterme; web varsa URL/site ayrı belirt.\n"
     )
+    if soft_natural:
+        # Faz 91 P2 — doğal sohbet: zorunlu «Güven: düşük» / web gürültüsü yok
+        if source_count <= 0 and not web_present:
+            return (
+                "\n\n[TALİMAT — KAYNAK — doğal sohbet]\n"
+                "Bu tur sohbet/anlatım; zorunlu güven satırı veya web damgası yazma. "
+                "Uydurma tarih/alıntı yok; bilmiyorsan kısaca dürüstçe söyle.\n"
+            )
+        lines = [
+            "\n\n[TALİMAT — KAYNAK — doğal sohbet]\n",
+            f"Bağlamda **{source_count}** yerel parça",
+        ]
+        if web_present:
+            lines.append(" ve web metni")
+        lines.append(
+            " var. Önce bunlara dayan; mümkünse [K1] kullan. "
+            "Zorunlu **Güven:** satırı veya «web taraması» notu yazma; "
+            "sohbet akışını bozma.\n"
+        )
+        lines.append(no_fabricate)
+        return "".join(lines)
     if source_count <= 0 and not web_present:
         return (
             "\n\n[TALİMAT — KAYNAK — Ana Motor]\n"

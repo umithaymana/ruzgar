@@ -447,7 +447,8 @@ Import-RuzgarEnvFile -IaRoot $ia | Out-Null
 
 # Ollama model dizini - tray bazen User env'yi gormeden bos liste verir.
 function Ensure-RuzgarOllamaModelsPath {
-    # ASCII junction once (Ollama Unicode path D:\ÜMİT... ile modelleri saymayabiliyor)
+    # 2026-10-07: Ollama 0.40 junction (D:\OllamaModels) ile bos liste veriyor;
+    # gercek Unicode yol modelleri goruyor. Once unicode, sonra junction yedek.
     $asciiLink = "D:\OllamaModels"
     $unicodeModels = "D:\ÜMİT\PROGRAMLAR\Ollama\models"
     try {
@@ -456,15 +457,21 @@ function Ensure-RuzgarOllamaModelsPath {
         }
     } catch { }
     $candidates = @(
-        $asciiLink,
+        $unicodeModels,
         $env:OLLAMA_MODELS,
-        $unicodeModels
+        $asciiLink
     ) | Where-Object { $_ -and $_.Trim() } | Select-Object -Unique
     foreach ($c in $candidates) {
         try {
             if (Test-Path -LiteralPath $c) {
-                # Prefer ASCII path string (junction) so Ollama never sees non-ASCII
-                $resolved = if ($c -eq $asciiLink) { $asciiLink } else { (Resolve-Path -LiteralPath $c).Path }
+                # Junction string'i Ollama 0.40'ta bos kalabiliyor; Resolve-Path gercek yolu verir
+                $resolved = try { (Resolve-Path -LiteralPath $c).Path } catch { $c }
+                # Eski User env junction'a kilitliyse unicode'a cevir
+                if ($resolved -eq $asciiLink -or $c -eq $asciiLink) {
+                    if (Test-Path -LiteralPath $unicodeModels) {
+                        $resolved = (Resolve-Path -LiteralPath $unicodeModels).Path
+                    }
+                }
                 $env:OLLAMA_MODELS = $resolved
                 try {
                     [Environment]::SetEnvironmentVariable("OLLAMA_MODELS", $resolved, "User")

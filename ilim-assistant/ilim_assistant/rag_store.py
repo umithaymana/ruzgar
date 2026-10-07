@@ -61,7 +61,27 @@ def _atomic_write_chunks_jsonl(path: Path, chunks: List["Chunk"]) -> None:
                 json.dumps({"text": c.text, "source": c.source}, ensure_ascii=False)
                 + "\n"
             )
-    os.replace(tmp, path)
+    # Windows: antivirüs / indeksleyici kilitlerse os.replace bir kez düşebiliyor
+    last_err: Exception | None = None
+    for attempt in range(8):
+        try:
+            os.replace(tmp, path)
+            return
+        except PermissionError as e:
+            last_err = e
+            import time
+
+            time.sleep(0.35 * (attempt + 1))
+            try:
+                if path.is_file():
+                    path.unlink()
+                os.replace(tmp, path)
+                return
+            except Exception as e2:
+                last_err = e2
+    if last_err:
+        raise last_err
+    raise PermissionError(f"chunks.jsonl yazılamadı: {path}")
 
 
 @dataclass

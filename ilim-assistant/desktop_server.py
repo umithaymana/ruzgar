@@ -13304,12 +13304,10 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         _tb_bilgi_meta: dict[str, Any] = {}
         try:
             from ilim_assistant.ana_motor_reflection_llm import apply_bilgi_kalite_pass
+            from ilim_assistant.ruzgar_dogal_sohbet_faz91 import payload_indicates_web_used
 
-            web_used = bool(
-                turn_plan is not None
-                and getattr(turn_plan, "prefer_web", False)
-                and os.environ.get("ENABLE_WEB_SEARCH", "1") == "1"
-            )
+            # Faz 91 P2: gerçek web metni + use_web; prefer_web tek başına yetmez
+            web_used = bool(req.use_web) and payload_indicates_web_used(user_payload or "")
             body_fixed, _refl_meta, _source_trust_card = apply_bilgi_kalite_pass(
                 body_fixed,
                 msg,
@@ -13337,12 +13335,11 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         except Exception:
             try:
                 from ilim_assistant.ana_motor_reflection import apply_answer_quality_pass
-
-                web_used = bool(
-                    turn_plan is not None
-                    and getattr(turn_plan, "prefer_web", False)
-                    and os.environ.get("ENABLE_WEB_SEARCH", "1") == "1"
+                from ilim_assistant.ruzgar_dogal_sohbet_faz91 import (
+                    payload_indicates_web_used as _payload_web,
                 )
+
+                web_used = bool(req.use_web) and _payload_web(user_payload or "")
                 body_fixed = apply_answer_quality_pass(
                     body_fixed,
                     msg,
@@ -13415,10 +13412,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                                 msg,
                                 hits=hits,
                                 question_plan=turn_plan,
-                                web_was_used=bool(
-                                    turn_plan is not None
-                                    and getattr(turn_plan, "prefer_web", False)
-                                ),
+                                web_was_used=web_used,
                             )
                         except Exception:
                             pass

@@ -20,6 +20,10 @@ CASES = [
     ("kalbin hastaliklari nelerdir", ("gazâlî", "muhlik")),
     ("futuh gayb nedir", ("geylânî", "gayb")),
     ("ibn arabi kimdir", ("fusûs", "fütûhât")),
+    ("kimya-yi saadet nedir", ("gazâlî", "saadet")),
+    ("kimya yi saadet nedir", ("gazâlî", "saadet")),
+    ("jami fusus nedir", ("câmî", "fusûs")),
+    ("serh fusus nedir", ("câmî", "fusûs")),
 ]
 
 

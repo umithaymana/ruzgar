@@ -7,7 +7,7 @@
   "collection": "din_09_tasavvuf_geylani_futuh_gayb",
   "ilim_alani": "tasavvuf",
   "eser_turu": "kitap",
-  "dil": "en",
+  "dil": "ar",
   "yayin": null,
   "cilt": null,
   "bolum": null,
@@ -16,11 +16,11 @@
   "guvenilirlik": "orta",
   "kaynak_sinifi": "kalici",
   "durum": "hazir",
-  "kaynak": "Internet Archive (EN çeviri)",
-  "source_file": "geylani_futuh_gayb__Abd al Qadir al Gilani - Revelations of the Unseen (Futuh al-Ghayb)_djvu.txt",
-  "sha256": "b1517db548d8b88fc8f8eb1fcd4e6a4b0965b5f5c51fe022b2b3541a4981f5ad",
-  "char_count": 327622,
-  "chunk_count": 250,
-  "batch_sayisi": 13,
-  "updated_utc": "2026-10-07T11:38:38Z"
+  "kaynak": "Internet Archive (Arapça OCR + EN çeviri)",
+  "source_file": "geylani_futuh_gayb__merged.txt",
+  "sha256": "86d621a2d6720af9403c8ac8509ec5cc1a285b257dece80935f32d609a71f1d7",
+  "char_count": 796629,
+  "chunk_count": 580,
+  "batch_sayisi": 29,
+  "updated_utc": "2026-10-07T18:13:13Z"
 }

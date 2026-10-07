@@ -1,0 +1,23 @@
+{
+  "eser_id": "jami_sharh_fusus",
+  "eser_tr": "Şerh-i Fusûs (Câmî)",
+  "eser_ar": "شرح فصوص الحكم للجامي",
+  "yazar": "Abdurrahman Câmî (ö. 898/1492)",
+  "rol": "serh",
+  "eser_turu": "serh",
+  "ilgili_eser_id": "ibn_arabi_fusus",
+  "ilim_alani": "tasavvuf",
+  "dil": "ar",
+  "dosya_yolu": "knowledge/ilim/din/09_ahlak_tasavvuf/serh_ve_aciklama/jami_sharh_fusus",
+  "guvenilirlik": "orta",
+  "kaynak_sinifi": "kalici",
+  "durum": "hazir",
+  "kaynak": "Internet Archive (Arapça OCR — Câmî şerhi)",
+  "source_file": "jami_sharh_fusus__SJAFH_01_djvu.txt",
+  "sha256": "c281cb46bd28fe388727faa2f643ea2dab2fdfd57931c79c77593482ff2b7453",
+  "char_count": 1085745,
+  "chunk_count": 820,
+  "batch_sayisi": 41,
+  "not": "Fusûs şerhi; sayfa uydurma yasak.",
+  "updated_utc": "2026-10-07T18:25:08Z"
+}

@@ -2,14 +2,11 @@
 
 Özellikle İbnü'l-Arabî (`Fütûhât`, `Fusûs`) için şerh/açıklama kaynakları buraya konur.
 
-Örnek yapı:
+| Şerh | Müellif | Dil | İlgili |
+|------|---------|-----|--------|
+| `jami_sharh_fusus` | Abdurrahman Câmî | ar | `ibn_arabi_fusus` |
+| `kashani_sharh_fusus` | Abdürrezzâk Kâşânî | ar | `ibn_arabi_fusus` |
+| `qaysari_muqaddima_fusus` | Dâvûd el-Kayserî | en | `ibn_arabi_fusus` |
 
-```
-serh_ve_aciklama/
-  <serh_id>/
-    manifest.json
-    incremental/
-```
-
-Her şerh için `manifest.json` içinde `eser_turu: serh`, `ilgili_eser_id` (örn. `ibn_arabi_fusus`) ve ortak şema alanları kullanılır.  
-Kayıt ayrıca `knowledge/ortak_kaynak/KAYNAK_KAYIT.json`’a eklenir.
+**Politika:** Fetva yok. Sayfa/cilt uydurma yasak. OCR güven orta.
+Kayserî satırı şu an mukaddime (EN çeviri); tam Arapça şerh ayrı eklenir.

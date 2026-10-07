@@ -52,7 +52,7 @@ WORKS: list[dict[str, Any]] = [
         "eser_ar": "فتوح الغيب",
         "yazar": "Abdülkadir Geylânî (ö. 561/1166)",
         "rol": "asıl",
-        "dil": "en",
+        "dil": "ar",
     },
     {
         "id": "geylani_feth_rabbani",
@@ -60,7 +60,7 @@ WORKS: list[dict[str, Any]] = [
         "eser_ar": "الفتح الرباني",
         "yazar": "Abdülkadir Geylânî (ö. 561/1166)",
         "rol": "asıl",
-        "dil": "en",
+        "dil": "ar",
     },
     {
         "id": "geylani_ghunya",
@@ -232,10 +232,20 @@ def _kavram_rows() -> list[dict[str, Any]]:
         {
             "id": "kimya_saadet",
             "baslik": "kimya saadet",
-            "aliases": ["kimya-yı saadet", "kimyai saadet", "kimya saadet"],
+            "aliases": [
+                "kimya-yı saadet",
+                "kimya-yi saadet",
+                "kimya yi saadet",
+                "kimyai saadet",
+                "kimiya saadet",
+                "kimiya sacada",
+                "kimya saadet",
+            ],
             "metin": (
                 "Kimyâ-yı Saâdet: Gazâlî'nin Farsça eseri; İhyâ'nın özü ve "
-                "saadet yolu temalarını daha kısa ve halka açık dilde işler."
+                "saadet yolu temalarını halka açık dilde işler. "
+                "Kütüphanede Farsça OCR + İngilizce çeviri metni vardır (güven orta; "
+                "sayfa uydurma yasak). Modern kimya veya fabrika ile karıştırılmaz."
             ),
         },
         {

@@ -1,6 +1,6 @@
 {
   "version": "ortak-kaynak-kayit-v1-2026-10-07",
-  "guncelleme": "2026-10-07T11:38:42Z",
+  "guncelleme": "2026-10-07T18:25:14Z",
   "aciklama": "Kalıcı kütüphane kayıtları. Metin henüz yoksa durum=placeholder. Web kayıtları buraya karıştırılmaz — web_cache kullan.",
   "kayitlar": [
     {
@@ -31,9 +31,10 @@
       "bolum": null,
       "sayfa": null,
       "dosya_yolu": "knowledge/ilim/din/09_ahlak_tasavvuf/eserler/gazali_kimya_saadet",
-      "guvenilirlik": "yuksek",
+      "guvenilirlik": "orta",
       "kaynak_sinifi": "kalici",
-      "durum": "hazir"
+      "durum": "hazir",
+      "not": "IA Farsça OCR (2 cilt) + EN çeviri; ~2363 chunk. Sayfa uydurma yasak."
     },
     {
       "kaynak_id": "geylani_futuh_gayb",
@@ -41,7 +42,7 @@
       "yazar": "Abdülkadir Geylânî (ö. 561/1166)",
       "ilim_alani": "tasavvuf",
       "eser_turu": "kitap",
-      "dil": "en",
+      "dil": "ar",
       "yayin": null,
       "cilt": null,
       "bolum": null,
@@ -49,7 +50,8 @@
       "dosya_yolu": "knowledge/ilim/din/09_ahlak_tasavvuf/eserler/geylani_futuh_gayb",
       "guvenilirlik": "orta",
       "kaynak_sinifi": "kalici",
-      "durum": "hazir"
+      "durum": "hazir",
+      "not": "IA Arapça OCR + EN çeviri; ~580 chunk. Güven orta; sayfa uydurma yasak."
     },
     {
       "kaynak_id": "geylani_feth_rabbani",
@@ -57,7 +59,7 @@
       "yazar": "Abdülkadir Geylânî (ö. 561/1166)",
       "ilim_alani": "tasavvuf",
       "eser_turu": "kitap",
-      "dil": "en",
+      "dil": "ar",
       "yayin": null,
       "cilt": null,
       "bolum": null,
@@ -65,7 +67,8 @@
       "dosya_yolu": "knowledge/ilim/din/09_ahlak_tasavvuf/eserler/geylani_feth_rabbani",
       "guvenilirlik": "orta",
       "kaynak_sinifi": "kalici",
-      "durum": "hazir"
+      "durum": "hazir",
+      "not": "IA Arapça OCR (önceden EN diye etiketlenmişti); ~391 chunk."
     },
     {
       "kaynak_id": "mevlana_mesnevi",
@@ -162,6 +165,57 @@
       "guvenilirlik": "yuksek",
       "kaynak_sinifi": "kalici",
       "durum": "hazir"
+    },
+    {
+      "kaynak_id": "jami_sharh_fusus",
+      "kaynak_adi": "Şerh-i Fusûs (Câmî)",
+      "yazar": "Abdurrahman Câmî (ö. 898/1492)",
+      "ilim_alani": "tasavvuf",
+      "eser_turu": "serh",
+      "dil": "ar",
+      "yayin": null,
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/ilim/din/09_ahlak_tasavvuf/serh_ve_aciklama/jami_sharh_fusus",
+      "guvenilirlik": "orta",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "Fusûs şerhi; sayfa uydurma yasak."
+    },
+    {
+      "kaynak_id": "kashani_sharh_fusus",
+      "kaynak_adi": "Şerh-i Fusûs (Kâşânî)",
+      "yazar": "Abdürrezzâk Kâşânî (ö. ~730/1330)",
+      "ilim_alani": "tasavvuf",
+      "eser_turu": "serh",
+      "dil": "ar",
+      "yayin": null,
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/ilim/din/09_ahlak_tasavvuf/serh_ve_aciklama/kashani_sharh_fusus",
+      "guvenilirlik": "orta",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "Fusûs şerhi; sayfa uydurma yasak."
+    },
+    {
+      "kaynak_id": "qaysari_muqaddima_fusus",
+      "kaynak_adi": "Mukaddimetü'l-Kayserî (Fusûs)",
+      "yazar": "Dâvûd el-Kayserî (ö. 751/1350); İng. çeviri Mukhtar H. Ali",
+      "ilim_alani": "tasavvuf",
+      "eser_turu": "serh",
+      "dil": "en",
+      "yayin": null,
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/ilim/din/09_ahlak_tasavvuf/serh_ve_aciklama/qaysari_muqaddima_fusus",
+      "guvenilirlik": "orta",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "Fusûs şerhi; sayfa uydurma yasak."
     }
   ]
 }

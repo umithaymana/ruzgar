@@ -7,7 +7,7 @@
   "collection": "din_09_tasavvuf_geylani_feth_rabbani",
   "ilim_alani": "tasavvuf",
   "eser_turu": "kitap",
-  "dil": "en",
+  "dil": "ar",
   "yayin": null,
   "cilt": null,
   "bolum": null,
@@ -16,11 +16,11 @@
   "guvenilirlik": "orta",
   "kaynak_sinifi": "kalici",
   "durum": "hazir",
-  "kaynak": "Internet Archive (EN çeviri)",
+  "kaynak": "Internet Archive (Arapça OCR)",
   "source_file": "geylani_feth_rabbani__50913918-AL-FATHUR-RABBANI-BY-SHEIKH-ABDUL-QADIR-JILLANI_djvu.txt",
   "sha256": "0434f4822a83ddf75fb7d06b3ff4aaa715e47cea992b71f2f556b06f8b5ede32",
   "char_count": 530079,
   "chunk_count": 391,
   "batch_sayisi": 20,
-  "updated_utc": "2026-10-07T11:38:38Z"
+  "updated_utc": "2026-10-07T18:13:13Z"
 }

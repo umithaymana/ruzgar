@@ -14,7 +14,7 @@ _Kaynak: klasik tasavvuf / ahlâk metni (OpenITI veya Internet Archive çeviri).
 
 ## kimya saadet
 
-Kimyâ-yı Saâdet: Gazâlî'nin Farsça eseri; İhyâ'nın özü ve saadet yolu temalarını daha kısa ve halka açık dilde işler.
+Kimyâ-yı Saâdet: Gazâlî'nin Farsça eseri; İhyâ'nın özü ve saadet yolu temalarını halka açık dilde işler. Kütüphanede Farsça OCR + İngilizce çeviri metni vardır (güven orta; sayfa uydurma yasak). Modern kimya veya fabrika ile karıştırılmaz.
 
 _Kaynak: klasik tasavvuf / ahlâk metni (OpenITI veya Internet Archive çeviri). Fetva değildir; sayfa/cilt uydurulmaz._
 

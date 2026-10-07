@@ -316,6 +316,52 @@ def should_skip_instant_shortcuts(
     )
 
 
+def should_suppress_trust_noise(
+    message: str,
+    mode_norm: str,
+    question_plan: Any | None = None,
+    *,
+    use_web: bool = True,
+    web_present: bool = False,
+    source_count: int = 0,
+    history: list | None = None,
+) -> bool:
+    """
+    Faz 91 P2 — «web taraması / Güven: düşük» gürültüsünü kes.
+
+    use_web=false ve gerçek web yokken, ya da doğal sohbet turunda True.
+    """
+    if not dogal_sohbet_enabled():
+        return False
+    if mode_norm not in ("genel", "uretim", "gelisim"):
+        return False
+    if is_natural_conversation_turn(
+        message, mode_norm, question_plan, history=history
+    ):
+        return True
+    # Kullanıcı web kapalı + bağlamda web yok → sahte web/güven damgası üretme
+    if (not use_web) and (not web_present) and int(source_count or 0) <= 0:
+        return True
+    return False
+
+
+def payload_indicates_web_used(user_payload: str) -> bool:
+    """prepare_turn sonrası gerçek web metni var mı? (prefer_web proxy değil)."""
+    blob = user_payload or ""
+    if not blob.strip():
+        return False
+    markers = (
+        "=== Web araması",
+        "=== WEB ARAŞTIRMA PRO",
+        "**Güncellik:** Web taraması",
+        "[Web araması",
+        "[Web:",
+        "[Web PRO:",
+        "DuckDuckGo",
+    )
+    return any(m in blob for m in markers)
+
+
 def natural_turn_budget_sec() -> float:
     try:
         return float(os.environ.get("RUZGAR_DOGAL_BUDGET_SEC", "32"))

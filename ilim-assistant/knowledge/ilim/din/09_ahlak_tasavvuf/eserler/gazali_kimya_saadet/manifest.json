@@ -13,14 +13,14 @@
   "bolum": null,
   "sayfa": null,
   "dosya_yolu": "knowledge/ilim/din/09_ahlak_tasavvuf/eserler/gazali_kimya_saadet",
-  "guvenilirlik": "yuksek",
+  "guvenilirlik": "orta",
   "kaynak_sinifi": "kalici",
   "durum": "hazir",
-  "kaynak": "OpenITI",
-  "source_file": "gazali_kimya_saadet__0505Ghazali.KimiyaSacada.Shamela0009261-ara1",
-  "sha256": "8709189888ac42a8c5b7f3c239d4cc8f236cefa311d49b14eacc39f11f0a5d9e",
-  "char_count": 20184,
-  "chunk_count": 13,
-  "batch_sayisi": 1,
-  "updated_utc": "2026-10-07T11:38:38Z"
+  "kaynak": "Internet Archive (Farsça OCR + EN çeviri; OpenITI kısa ara1 yedek)",
+  "source_file": "gazali_kimya_saadet__merged.txt",
+  "sha256": "1b9ea7bf1ebf639fb45f744d88ed2c6d05bfddf80256e728dfadd3ec445794f6",
+  "char_count": 3318945,
+  "chunk_count": 2363,
+  "batch_sayisi": 119,
+  "updated_utc": "2026-10-07T18:13:13Z"
 }

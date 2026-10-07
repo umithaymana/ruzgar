@@ -45,16 +45,17 @@ $NodeRoot = "D:\ÜMİT\PROGRAMLAR\Nodejs"
 if (Test-Path (Join-Path $NodeRoot "node.exe")) {
     $env:Path = "$NodeRoot;" + $env:Path
 }
-# ASCII junction once — Ollama Unicode D:\ÜMİT yolunda modelleri saymayabiliyor
+# Ollama 0.40: junction (D:\OllamaModels) bos liste; gercek Unicode yol dogru
 $asciiOm = "D:\OllamaModels"
 $unicodeOm = "D:\ÜMİT\PROGRAMLAR\Ollama\models"
 if (-not (Test-Path -LiteralPath $asciiOm) -and (Test-Path -LiteralPath $unicodeOm)) {
     cmd /c "mklink /J `"$asciiOm`" `"$unicodeOm`"" | Out-Null
 }
-if (Test-Path -LiteralPath $asciiOm) {
+if (Test-Path -LiteralPath $unicodeOm) {
+    $env:OLLAMA_MODELS = (Resolve-Path -LiteralPath $unicodeOm).Path
+    try { [Environment]::SetEnvironmentVariable("OLLAMA_MODELS", $env:OLLAMA_MODELS, "User") } catch { }
+} elseif (Test-Path -LiteralPath $asciiOm) {
     $env:OLLAMA_MODELS = $asciiOm
-} elseif (-not $env:OLLAMA_MODELS -and (Test-Path -LiteralPath $unicodeOm)) {
-    $env:OLLAMA_MODELS = $unicodeOm
 }
 foreach ($pair in @(
     @{ K = "PIP_CACHE_DIR"; V = "D:\ÜMİT\PROGRAMLAR\Caches\pip" },

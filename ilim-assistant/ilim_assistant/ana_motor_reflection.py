@@ -180,6 +180,29 @@ def apply_answer_quality_pass(
     if not body or body.startswith("["):
         return reply
 
+    # Faz 91 P2 — doğal sohbet: zorunlu güven/web damgası ekleme
+    try:
+        from ilim_assistant.ruzgar_dogal_sohbet_faz91 import is_natural_conversation_turn
+
+        if is_natural_conversation_turn(user_message, "genel", question_plan) and not web_was_used:
+            body = re.sub(
+                r"\n*\*\*Güncellik:\*\*\s*Yanıtta web taraması kullanıldı[^\n]*",
+                "",
+                body,
+                flags=re.I,
+            ).rstrip()
+            try:
+                from ilim_assistant.ruzgar_anlam_koruma import guard_assistant_reply
+
+                guarded = guard_assistant_reply(user_message, body)
+                if guarded is not None and guarded != body:
+                    return guarded
+            except Exception:
+                pass
+            return body
+    except Exception:
+        pass
+
     primary = _plan_primary(question_plan)
     factual = _looks_factual_question(user_message)
     n_src = len(hits or [])

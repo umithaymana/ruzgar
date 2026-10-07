@@ -1512,7 +1512,8 @@ def prepare_turn(
         from ilim_assistant.ruzgar_web_arastirma_pro import should_prioritize_web_research
 
         _web_pro = should_prioritize_web_research(msg, turn_plan, m)
-        if _web_pro:
+        # Faz 91 P2: use_web=false iken PRO niyeti web'i zorla açmasın
+        if _web_pro and use_web and (m not in _NOWEB_MODES):
             web_on = True
     except Exception:
         pass
@@ -1545,17 +1546,20 @@ def prepare_turn(
                     web_on = False
         except Exception:
             pass
-    if weather_q and (m not in _NOWEB_MODES):
+    # Hava: canlı Open-Meteo bloğu ayrı; DDG web yalnızca use_web açıksa
+    if weather_q and use_web and (m not in _NOWEB_MODES):
         web_on = True
     if (
         turn_plan is not None
         and m in ("genel", "uretim", "gelisim")
         and not turn_plan.prefer_web
         and not weather_q
-        and not _web_pro
+        and not (_web_pro and use_web)
     ):
         web_on = False
     if me_suppress_web:
+        web_on = False
+    if not use_web:
         web_on = False
 
     link_on = read_message_links and (m not in _NOWEB_MODES)
@@ -2113,11 +2117,43 @@ def prepare_turn(
     try:
         from ilim_assistant.ana_motor_kaynak import citation_directive_for_turn
 
-        user_payload += citation_directive_for_turn(
-            source_count=len(hits),
-            archive_primary=archive_primary_flag,
-            web_present=bool((web_extra or "").strip()),
-        )
+        _natural_soft = False
+        _web_present = bool((web_extra or "").strip())
+        try:
+            from ilim_assistant.ruzgar_dogal_sohbet_faz91 import (
+                dogal_sohbet_enabled,
+                is_natural_conversation_turn,
+                should_suppress_trust_noise,
+            )
+
+            if dogal_sohbet_enabled() and (
+                is_natural_conversation_turn(msg, m, turn_plan, history=history)
+                or should_suppress_trust_noise(
+                    msg,
+                    m,
+                    turn_plan,
+                    use_web=use_web,
+                    web_present=_web_present,
+                    source_count=len(hits),
+                )
+            ):
+                _natural_soft = True
+        except Exception:
+            _natural_soft = False
+        if not _natural_soft:
+            user_payload += citation_directive_for_turn(
+                source_count=len(hits),
+                archive_primary=archive_primary_flag,
+                web_present=_web_present,
+            )
+        else:
+            # Sohbet turu: yumuşak atıf; zorunlu «Güven: düşük» yok
+            user_payload += citation_directive_for_turn(
+                source_count=len(hits),
+                archive_primary=archive_primary_flag,
+                web_present=_web_present,
+                soft_natural=True,
+            )
     except Exception:
         pass
 
