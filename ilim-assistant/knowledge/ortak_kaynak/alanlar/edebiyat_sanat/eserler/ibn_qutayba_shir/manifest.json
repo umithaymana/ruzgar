@@ -1,0 +1,21 @@
+{
+  "eser_id": "ibn_qutayba_shir",
+  "eser_tr": "eş-Şiʿr ve'ş-şuʿarâ",
+  "eser_ar": "الشعر والشعراء",
+  "yazar": "İbn Kuteybe (ö. 276/889)",
+  "rol": "asıl",
+  "eser_turu": "kitap",
+  "ilim_alani": "edebiyat_sanat",
+  "dil": "ar",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/edebiyat_sanat/eserler/ibn_qutayba_shir",
+  "guvenilirlik": "yuksek",
+  "kaynak_sinifi": "kalici",
+  "durum": "hazir",
+  "kaynak": "OpenITI",
+  "source_file": "0276IbnQutaybaDinawari.ShicrWaShucara.Shamela0023785-ara1.mARkdown",
+  "sha256": "18aea5b6332b62d505e8fc5fd17f6bc20a2d4597ad48c42c9cd9f1ce7f4db583",
+  "char_count": 527132,
+  "chunk_count": 350,
+  "batch_sayisi": 18,
+  "updated_utc": "2026-10-07T19:31:00Z"
+}

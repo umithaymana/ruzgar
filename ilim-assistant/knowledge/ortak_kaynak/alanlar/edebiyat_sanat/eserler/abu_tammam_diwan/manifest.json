@@ -1,0 +1,21 @@
+{
+  "eser_id": "abu_tammam_diwan",
+  "eser_tr": "Dîvânü Ebî Temmâm",
+  "eser_ar": "ديوان أبي تمام",
+  "yazar": "Ebû Temmâm (ö. 231/846)",
+  "rol": "asıl",
+  "eser_turu": "kitap",
+  "ilim_alani": "edebiyat_sanat",
+  "dil": "ar",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/edebiyat_sanat/eserler/abu_tammam_diwan",
+  "guvenilirlik": "yuksek",
+  "kaynak_sinifi": "kalici",
+  "durum": "hazir",
+  "kaynak": "OpenITI",
+  "source_file": "0231AbuTamam.Diwan.JK007583-ara1",
+  "sha256": "f70f8dec8e1b6b16eb38920b13820cbb96913ea086c853477eea026953a0ebf1",
+  "char_count": 441468,
+  "chunk_count": 291,
+  "batch_sayisi": 15,
+  "updated_utc": "2026-10-07T19:31:00Z"
+}

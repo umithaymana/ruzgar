@@ -1,0 +1,21 @@
+{
+  "eser_id": "hariri_maqamat",
+  "eser_tr": "Makâmâtü'l-Harîrî",
+  "eser_ar": "مقامات الحريري",
+  "yazar": "el-Harîrî (ö. 516/1122)",
+  "rol": "asıl",
+  "eser_turu": "kitap",
+  "ilim_alani": "edebiyat_sanat",
+  "dil": "ar",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/edebiyat_sanat/eserler/hariri_maqamat",
+  "guvenilirlik": "yuksek",
+  "kaynak_sinifi": "kalici",
+  "durum": "hazir",
+  "kaynak": "OpenITI",
+  "source_file": "0516IbnCaliHariri.Maqamat.Shamela0026585-ara1",
+  "sha256": "9a7d678d402572f8d9dcd84f6d0e7d05ac65057a0b1bc279a0d6dac1b884566f",
+  "char_count": 307330,
+  "chunk_count": 203,
+  "batch_sayisi": 11,
+  "updated_utc": "2026-10-07T19:31:00Z"
+}

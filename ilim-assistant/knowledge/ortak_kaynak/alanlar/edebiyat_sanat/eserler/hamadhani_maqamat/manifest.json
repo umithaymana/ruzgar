@@ -1,0 +1,21 @@
+{
+  "eser_id": "hamadhani_maqamat",
+  "eser_tr": "Makâmât (Bedîüzzaman el-Hemedânî)",
+  "eser_ar": "مقامات بديع الزمان الهمذاني",
+  "yazar": "Bedîüzzaman el-Hemedânî (ö. 398/1008)",
+  "rol": "asıl",
+  "eser_turu": "kitap",
+  "ilim_alani": "edebiyat_sanat",
+  "dil": "ar",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/edebiyat_sanat/eserler/hamadhani_maqamat",
+  "guvenilirlik": "yuksek",
+  "kaynak_sinifi": "kalici",
+  "durum": "hazir",
+  "kaynak": "OpenITI",
+  "source_file": "0398BadicZamanHamadhani.Maqamat.JK009269-ara1.completed",
+  "sha256": "647f65a80495eda6c466c9fa198744293977070393492b2ef83a97fb5943b7bb",
+  "char_count": 129353,
+  "chunk_count": 87,
+  "batch_sayisi": 5,
+  "updated_utc": "2026-10-07T19:31:00Z"
+}

@@ -10849,6 +10849,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         except Exception:
             pass
         try:
+            from ilim_assistant.ruzgar_edebiyat_kutuphane import try_edebiyat_reply
+
+            _edebiyat_e = _library_instant_or_none(msg_early, try_edebiyat_reply)
+            if _edebiyat_e:
+                _orch_ed = dict(orch_early)
+                _orch_ed.setdefault("plan", {})["primary"] = "ilim"
+                _orch_ed["plan"]["label_tr"] = "Edebiyat (anında)"
+                _orch_ed["edebiyat_anlik"] = True
+                yield from _iter_instant_chat_events(
+                    _edebiyat_e,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_ed,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
             from ilim_assistant.ruzgar_usul_fikh_kutuphane import try_usul_fikh_reply
 
             _usul_e = _library_instant_or_none(msg_early, try_usul_fikh_reply)
@@ -11491,6 +11511,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     session_wake_used=req.session_wake_used,
                     msg_for_wake=req.message,
                     orch=_orch_ps2,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ruzgar_edebiyat_kutuphane import try_edebiyat_reply
+
+            _edebiyat_early = _library_instant_or_none(msg_early, try_edebiyat_reply)
+            if _edebiyat_early:
+                _orch_ed2 = dict(orch_early)
+                _orch_ed2.setdefault("plan", {})["primary"] = "ilim"
+                _orch_ed2["plan"]["label_tr"] = "Edebiyat (anında)"
+                _orch_ed2["edebiyat_anlik"] = True
+                yield from _iter_instant_chat_events(
+                    _edebiyat_early,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_ed2,
                     instant_gundelik=True,
                 )
                 return

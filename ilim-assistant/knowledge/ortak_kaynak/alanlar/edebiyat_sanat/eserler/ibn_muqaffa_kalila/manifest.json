@@ -1,0 +1,21 @@
+{
+  "eser_id": "ibn_muqaffa_kalila",
+  "eser_tr": "Kelîle ve Dimne",
+  "eser_ar": "كليلة ودمنة",
+  "yazar": "İbnü'l-Mukaffaʿ (ö. ~139/757)",
+  "rol": "asıl",
+  "eser_turu": "kitap",
+  "ilim_alani": "edebiyat_sanat",
+  "dil": "ar",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/edebiyat_sanat/eserler/ibn_muqaffa_kalila",
+  "guvenilirlik": "yuksek",
+  "kaynak_sinifi": "kalici",
+  "durum": "hazir",
+  "kaynak": "OpenITI",
+  "source_file": "0139IbnMuqaffac.KalilaWaDimna.Shamela0026537-ara1",
+  "sha256": "152aff964ae2b229ab91d8aa534a2c38b7673de2c8cb763a8500292f2fc438e9",
+  "char_count": 245569,
+  "chunk_count": 163,
+  "batch_sayisi": 9,
+  "updated_utc": "2026-10-07T19:30:59Z"
+}
