@@ -29,7 +29,8 @@ _STRICT_LOOKUP_RE = re.compile(
     r"\b(?:buhari|buhârî|muslim|müslim|tirmizi|ebu\s*davud|nesai|ibn\s*mace)\b"
     r".{0,20}\b\d{1,5}\b|"
     r"\b(?:hadis|ayet)\s*(?:no|numara|#)?\s*\d{1,5}\b|"
-    r"^\s*[\w'’çğıöşüâîû\.\-]{2,40}\s+(?:nedir|ne\s+demek)\s*[?.!]?\s*$"
+    # Tek veya çok kelimeli «… nedir / ne demek» — anlık kütüphane lookup
+    r"^\s*(?:[\w'’çğıöşüâîû\.\-]{2,40}\s+){1,5}(?:nedir|ne\s+demek)\s*[?.!]?\s*$"
     r")",
     re.I,
 )

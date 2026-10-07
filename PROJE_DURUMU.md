@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-07 gece — bilim/coğrafya derin2 + din hijyeni
+**Son güncelleme:** 2026-10-07 gece — anlık kavram eşleşme düzeltmesi
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -33,7 +33,15 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 18. ~~RAG incremental~~ — **302.676** chunk · 177 dosya değişti · yerel indeks
 19. ~~RAG ortak alan boost~~ — `rag_store.search` domain ipucu + yol eşlemesi; din baskınlığı kesildi
 20. ~~Bilim/coğrafya derin2 + din hijyeni~~ — 13c/14c ingest · `RUZGAR_RAG_DIN_HYGIENE=1`
-21. **Sonraki:** `RUZGAR_RAG_CONTENT_FILTER=0` env gözden geçir · isteğe bağlı başka ince raflar
+21. ~~Anlık yanlış eşleşme~~ — kısa alias (`os`→atmosfer) + ForceRestart; «nedir» anlık raftan
+22. **Sonraki:** isteğe bağlı başka ince raflar · canlı sohbet smoke (Mimar)
+
+### 2026-10-07 — Anlık kavram eşleşme (saçma cevap kökü)
+
+- Kök: teknoloji alias `os` «atmosfer» içinde substring; ayrıca API eski süreçte anlık raftan kaçıp LLM’e düşüyordu
+- `ruzgar_kavram_match.py` — len≥4 substring · kısa alias yalnız tam token · eşik 55/70
+- Ortak alan kütüphaneleri + çok kelimeli «… nedir» strict lookup
+- Smoke (canlı `/api/chat/full`): bilimsel yöntem / Karadeniz / nefs / YZ / atmosfer → `instant=True`, doğru raf
 
 ### 2026-10-07 — Bilim/coğrafya derin2 + din hijyeni
 

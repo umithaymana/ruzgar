@@ -135,33 +135,9 @@ def _load_kavramlar() -> list[dict[str, Any]]:
 
 
 def _match_kavram(msg: str) -> Optional[dict[str, Any]]:
-    low = _norm_query(msg)
-    tokens = set(re.findall(r"[\w'’]+", low, flags=re.UNICODE))
-    best: Optional[dict[str, Any]] = None
-    best_score = 0
-    for row in _load_kavramlar():
-        keys = [_norm_query(row.get("baslik") or "")]
-        keys.extend(_norm_query(a) for a in (row.get("aliases") or []))
-        score = 0
-        for k in keys:
-            if not k:
-                continue
-            if k == low or low == f"{k} nedir" or low.startswith(f"{k} nedir"):
-                score = max(score, 100)
-            elif k in low:
-                score = max(score, 60 + min(20, len(k)))
-            elif k in tokens:
-                score = max(score, 40)
-            else:
-                parts = [p for p in k.split() if len(p) > 1]
-                if len(parts) >= 2 and all(p in tokens or p in low for p in parts):
-                    score = max(score, 55 + min(15, len(k)))
-        if score > best_score:
-            best_score = score
-            best = row
-    if best_score >= 40:
-        return best
-    return None
+    from ilim_assistant.ruzgar_kavram_match import match_kavram_row
+
+    return match_kavram_row(msg, _load_kavramlar())
 
 
 def format_bilim_reply(row: dict[str, Any]) -> str:
@@ -182,7 +158,10 @@ def try_bilim_reply(msg: str) -> Optional[str]:
     ask = any(p in low for p in ("nedir", "ne demek", "anlat", "kimdir", "hangi", "nasil", "nasıl"))
     if not is_cue and not ask:
         return None
-    row = _match_kavram(msg)
+    # Alan ipucu yokken yalnızca güçlü eşleşme (yanlış rafa düşmeyi kes)
+    from ilim_assistant.ruzgar_kavram_match import match_kavram_row
+
+    row = match_kavram_row(msg, _load_kavramlar(), min_score=55 if is_cue else 70)
     if row:
         return format_bilim_reply(row)
     if is_cue and ask:
