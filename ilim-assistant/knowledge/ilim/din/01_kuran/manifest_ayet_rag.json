@@ -1,0 +1,11 @@
+{
+  "collection": "din_01_kuran_ayet_rag",
+  "source": "ayetler.jsonl",
+  "batch_dir": "knowledge/ilim/din/01_kuran/incremental/ayetler",
+  "ayet_count": 6236,
+  "batch_count": 416,
+  "batch_size": 15,
+  "durum": "hazir",
+  "politika": "Meal çeviridir; fetva/tefsir değil. Ayet uydurma yasak.",
+  "updated_utc": "2026-10-07T18:46:27Z"
+}

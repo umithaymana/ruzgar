@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-07 gece — Nebula commit + Kâşânî/Kayserî şerh
+**Son güncelleme:** 2026-10-07 gece — Kur’ân ayet RAG katmanı
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -14,7 +14,17 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 6. ~~Nebula tarih batch~~ — ayrı commit `15fac9c` (200 dosya, yalnızca `nebula_batch_*.md`)
 7. ~~Kâşânî + Kayserî~~ — Kâşânî AR ~633 chunk; Kayserî mukaddime EN ~356 chunk
 8. ~~P2/Ollama/tasavvuf commit+push~~ — `d9a2b81` (+ nebula `15fac9c`) → `origin/main`
-9. **Sonraki:** tam Arapça Kayserî şerhi (IA’da yok); yerel RAG `embeddings.npy`/`chunks.jsonl` gitignore (push dışı)
+9. ~~Kur’ân ayet RAG~~ — `ayetler.jsonl` → `incremental/ayetler/` **416** batch (6236 ayet); RAG **293.610** · smoke PASS
+10. **Sonraki:** tam Arapça Kayserî şerhi (IA’da yok)
+
+### 2026-10-07 — Kur’ân ayet RAG katmanı
+
+- Zaten vardı: `ayetler.jsonl` (6236 · AR + meal) + anlık `ruzgar_kuran_anlik.py`
+- Eksik: RAG yalnız `*.md` indeksler → ayetler indekste yoktu
+- Script: `faz1_kuran_ayet_rag_ingest.py` → `01_kuran/incremental/ayetler/kuran_ayet_batch_*.md`
+- Ortak kayıt: `kuran_ayetler` · meal=çeviri (fetva/tefsir değil)
+- RAG incremental: **293.610** chunk (+~3k)
+- Doğrulama: batch 416/6236 · RAG «Fatiha meal» → ayetler hit · anlık Fatiha 1:1 meal OK
 
 ### 2026-10-07 — Kâşânî / Kayserî şerh
 

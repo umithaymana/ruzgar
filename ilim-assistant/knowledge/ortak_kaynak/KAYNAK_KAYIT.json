@@ -1,6 +1,6 @@
 {
   "version": "ortak-kaynak-kayit-v1-2026-10-07",
-  "guncelleme": "2026-10-07T18:25:14Z",
+  "guncelleme": "2026-10-07T18:46:27Z",
   "aciklama": "Kalıcı kütüphane kayıtları. Metin henüz yoksa durum=placeholder. Web kayıtları buraya karıştırılmaz — web_cache kullan.",
   "kayitlar": [
     {
@@ -216,6 +216,23 @@
       "kaynak_sinifi": "kalici",
       "durum": "hazir",
       "not": "Fusûs şerhi; sayfa uydurma yasak."
+    },
+    {
+      "kaynak_id": "kuran_ayetler",
+      "kaynak_adi": "Kur'an-ı Kerim (mushaf + meal)",
+      "yazar": null,
+      "ilim_alani": "kuran",
+      "eser_turu": "mushaf_meal",
+      "dil": "ar+tr",
+      "yayin": "Diyanet İşleri Başkanlığı",
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/ilim/din/01_kuran/incremental/ayetler",
+      "guvenilirlik": "yuksek",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "RAG batch: 416 paket · 6236 ayet. Meal çeviridir; fetva/tefsir değildir."
     }
   ]
 }

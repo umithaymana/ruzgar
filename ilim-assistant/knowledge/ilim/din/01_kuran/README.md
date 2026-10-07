@@ -31,3 +31,10 @@
 | `temel_kavramlar.jsonl` | Sûre, âyet, meal, tefsir, tecvid… tanımları |
 | `tecvid_giris.jsonl` | Kısa tecvid usulü |
 | `incremental/*.md` | RAG için düz metin |
+
+## RAG ayet batch
+
+| Dosya | Açıklama |
+|-------|----------|
+| `incremental/ayetler/kuran_ayet_batch_*.md` | 6236 ayet — AR + meal (RAG `*.md` indeksi) |
+| Script | `scripts/faz1_kuran_ayet_rag_ingest.py` |
