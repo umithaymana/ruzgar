@@ -1,0 +1,24 @@
+{
+  "modul": "09_ahlak_tasavvuf",
+  "ad": "Ahlâk ve Tasavvuf",
+  "ilim_alani": "tasavvuf",
+  "version": "din-09-tasavvuf-v1-2026-10-07",
+  "durum": "hazir",
+  "eser_sayisi": 10,
+  "eserler": [
+    "gazali_ihya",
+    "gazali_kimya_saadet",
+    "geylani_futuh_gayb",
+    "geylani_feth_rabbani",
+    "geylani_ghunya",
+    "mevlana_mesnevi",
+    "mevlana_divan_kebir",
+    "imam_rabbani_mektubat",
+    "ibn_arabi_futuhat",
+    "ibn_arabi_fusus"
+  ],
+  "serh_rafi": "serh_ve_aciklama",
+  "ortak_kaynak": "knowledge/ortak_kaynak/KAYNAK_KAYIT.json",
+  "politika": "Fetva yok. Sayfa/cilt/bölüm uydurma yasak.",
+  "updated_utc": "2026-10-07T11:38:42Z"
+}

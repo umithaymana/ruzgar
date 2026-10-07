@@ -1,8 +1,39 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-06 (Doğal sohbet P0 + Siyer `08`)
+**Son güncelleme:** 2026-10-07 — tasavvuf dolum + ortak kaynak
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
+
+### Yarın kaldığımız yer (öncelik)
+
+1. **Doğal sohbet P2** — oturum/thread cilası; `use_web=false` iken «web taraması / güven düşük» gürültüsünü azalt
+2. **RAG indeks** — `ingest_cli --incremental` arka planda başladı (venv `ruzgar`; ~3096 batch embedding); bitince ForceRestart
+3. İsteğe bağlı: Kimyâ-yı Saâdet daha dolu nüsha; Arapça Fütûh/Feth; İbnü'l-Arabî şerhleri
+
+### 2026-10-07 — Tasavvuf (`09_ahlak_tasavvuf`) dolum
+
+**Kaynak:** OpenITI (Gazâlî İhyâ/Kimyâ, İbnü'l-Arabî Fütûhât/Fusûs, Geylânî Gunye) + Internet Archive (Fütûhu'l-Gayb, Feth-i Rabbânî, Mesnevî, Divân, Mektûbât — çoğunlukla EN çeviri OCR)
+
+- **10 eser** · ~**16.892** chunk · smoke `smoke_tasavvuf.py`
+- Anlık: `ruzgar_tasavvuf_kutuphane.py` (siyer sonrası early path)
+- Script: `faz9_tasavvuf_download.py` + `faz9_tasavvuf_ingest.py`
+- Ortak kayıt: `KAYNAK_KAYIT.json` → `durum: hazir`
+- **Politika:** Fetva yok · sayfa/cilt uydurma yasak
+
+**Dene:** «tasavvuf nedir» · «ihya nedir» · «mesnevi nedir» · «kalbin hastaliklari nelerdir»
+
+### 2026-10-07 — Ortak kütüphane / kaynak altyapısı
+
+- `knowledge/ortak_kaynak/` — SEMA + ALANLAR (9 alan) + KAYNAK_KAYIT + web_cache yer tutucu
+- Modül: `ruzgar_ortak_kaynak.py` · köprü: `ana_motor_kaynak.py` (güvenli atıf, uydurma yasak)
+- Smoke: `python scripts/smoke_ortak_kaynak.py` · Kapat: `RUZGAR_ORTAK_KAYNAK=0`
+
+### 2026-10-06 — Ollama + anlat/dost (push `aae43ae`)
+
+- Yerel modeller zaten `D:\ÜMİT\PROGRAMLAR\Ollama\models` (~10.8 GB: `llama3.1:8b`, `llama3.2:3b`, `qwen2.5-coder:7b`)
+- Ollama Unicode `ÜMİT` yolunu saymıyordu → `D:\OllamaModels` junction + `OLLAMA_MODELS` (`Ruzgar.ps1` / `RuzgarMasaustuBaslat.ps1`)
+- «hicreti daha açık anlat» dost şeridine kaçmasın: `ruzgar_tek_beyin` + `ruzgar_dogal_sohbet_faz91` (sohbet daveti hariç)
+- Canlı: `instant_gundelik=False`, beyin `denge/llama3.1:8b`, `RUZGAR_OLLAMA_ONLY=1`
 
 ### 2026-10-06 — Doğal sohbet P0+P1
 

@@ -10789,6 +10789,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         except Exception:
             pass
         try:
+            from ilim_assistant.ruzgar_tasavvuf_kutuphane import try_tasavvuf_reply
+
+            _tasavvuf_e = _library_instant_or_none(msg_early, try_tasavvuf_reply)
+            if _tasavvuf_e:
+                _orch_tv = dict(orch_early)
+                _orch_tv.setdefault("plan", {})["primary"] = "ilim"
+                _orch_tv["plan"]["label_tr"] = "Tasavvuf (anında)"
+                _orch_tv["tasavvuf_anlik"] = True
+                yield from _iter_instant_chat_events(
+                    _tasavvuf_e,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_tv,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
             from ilim_assistant.ruzgar_usul_fikh_kutuphane import try_usul_fikh_reply
 
             _usul_e = _library_instant_or_none(msg_early, try_usul_fikh_reply)
@@ -11371,6 +11391,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     session_wake_used=req.session_wake_used,
                     msg_for_wake=req.message,
                     orch=_orch_sy2,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ruzgar_tasavvuf_kutuphane import try_tasavvuf_reply
+
+            _tasavvuf_early = _library_instant_or_none(msg_early, try_tasavvuf_reply)
+            if _tasavvuf_early:
+                _orch_tv2 = dict(orch_early)
+                _orch_tv2.setdefault("plan", {})["primary"] = "ilim"
+                _orch_tv2["plan"]["label_tr"] = "Tasavvuf (anında)"
+                _orch_tv2["tasavvuf_anlik"] = True
+                yield from _iter_instant_chat_events(
+                    _tasavvuf_early,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_tv2,
                     instant_gundelik=True,
                 )
                 return

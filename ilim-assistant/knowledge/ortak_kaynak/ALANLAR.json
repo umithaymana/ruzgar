@@ -1,0 +1,94 @@
+{
+  "version": "ortak-kaynak-alanlar-v1-2026-10-07",
+  "extensible": true,
+  "aciklama": "Geliştirme sırası; içerik mevcut kök yollarda kalır. Yeni alan eklemek için bu listeye kayıt + isteğe bağlı alanlar/<id>/README.md.",
+  "alanlar": [
+    {
+      "id": "dini_ilimler",
+      "ad": "Dini İlimler",
+      "sira": 1,
+      "kok_yollar": [
+        "knowledge/ilim/din/01_kuran",
+        "knowledge/ilim/din/02_tefsir",
+        "knowledge/ilim/din/03_arapca_lugat",
+        "knowledge/ilim/din/04_akaid",
+        "knowledge/ilim/din/05_hadis",
+        "knowledge/ilim/din/06_fikh",
+        "knowledge/ilim/din/07_usul_fikh",
+        "knowledge/ilim/din/08_siyer"
+      ]
+    },
+    {
+      "id": "tasavvuf",
+      "ad": "Tasavvuf",
+      "sira": 2,
+      "kok_yollar": [
+        "knowledge/ilim/din/09_ahlak_tasavvuf"
+      ]
+    },
+    {
+      "id": "tarih",
+      "ad": "Tarih",
+      "sira": 3,
+      "kok_yollar": [
+        "knowledge/TARIH_VE_KULTUR",
+        "knowledge/nebula/tarih_kaynak",
+        "knowledge/nebula/tarih_kaynak_buyuk",
+        "knowledge/kutuphane/raflar/05_tarih"
+      ]
+    },
+    {
+      "id": "felsefe",
+      "ad": "Felsefe",
+      "sira": 4,
+      "kok_yollar": [
+        "knowledge/ortak_kaynak/alanlar/felsefe"
+      ]
+    },
+    {
+      "id": "bilim",
+      "ad": "Bilim",
+      "sira": 5,
+      "kok_yollar": [
+        "knowledge/kutuphane/raflar/01_astronomi_uzay",
+        "knowledge/kutuphane/raflar/02_fizik_kimya",
+        "knowledge/kutuphane/raflar/03_biyoloji_dunya",
+        "knowledge/kutuphane/raflar/06_matematik"
+      ]
+    },
+    {
+      "id": "psikoloji",
+      "ad": "Psikoloji",
+      "sira": 6,
+      "kok_yollar": [
+        "knowledge/ortak_kaynak/alanlar/psikoloji"
+      ]
+    },
+    {
+      "id": "cografya",
+      "ad": "Coğrafya",
+      "sira": 7,
+      "kok_yollar": [
+        "knowledge/kutuphane/raflar/04_cografya"
+      ]
+    },
+    {
+      "id": "edebiyat_sanat",
+      "ad": "Edebiyat ve Sanat",
+      "sira": 8,
+      "kok_yollar": [
+        "knowledge/turk_edebiyat",
+        "knowledge/kutuphane/raflar/09_kultur_yasam",
+        "knowledge/ortak_kaynak/alanlar/edebiyat_sanat"
+      ]
+    },
+    {
+      "id": "teknoloji",
+      "ad": "Teknoloji ve Bilgisayar",
+      "sira": 9,
+      "kok_yollar": [
+        "knowledge/kutuphane/raflar/08_teknoloji"
+      ]
+    }
+  ]
+}

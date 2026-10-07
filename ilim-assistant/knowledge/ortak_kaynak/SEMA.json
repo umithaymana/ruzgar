@@ -1,0 +1,92 @@
+{
+  "version": "ortak-kaynak-sema-v1-2026-10-07",
+  "aciklama": "Rüzgar ortak kaynak sözlüğü — tüm bilgi alanlarında ortak. Eksik alan uydurulmaz; null/boş yazılmaz.",
+  "kaynak_sinifi": ["kalici", "web"],
+  "alanlar": {
+    "kaynak_id": {
+      "tip": "string",
+      "zorunlu": true,
+      "aciklama": "Benzersiz kimlik (örn. gazali_ihya)"
+    },
+    "kaynak_adi": {
+      "tip": "string",
+      "zorunlu": true,
+      "aciklama": "Eser / kaynak adı"
+    },
+    "yazar": {
+      "tip": "string",
+      "zorunlu": false,
+      "aciklama": "Müellif veya kurum"
+    },
+    "ilim_alani": {
+      "tip": "string",
+      "zorunlu": true,
+      "aciklama": "ALANLAR.json içindeki alan id"
+    },
+    "eser_turu": {
+      "tip": "string",
+      "zorunlu": false,
+      "aciklama": "kitap | serh | ansiklopedi | makale | belgesi | web | diger"
+    },
+    "dil": {
+      "tip": "string",
+      "zorunlu": false,
+      "aciklama": "ar | tr | en | ..."
+    },
+    "yayin": {
+      "tip": "string",
+      "zorunlu": false,
+      "aciklama": "Yayın evi, baskı, yıl"
+    },
+    "cilt": {
+      "tip": ["string", "null"],
+      "zorunlu": false,
+      "aciklama": "Yalnızca kaynakta varsa; yoksa null — uydurma yasak"
+    },
+    "bolum": {
+      "tip": ["string", "null"],
+      "zorunlu": false,
+      "aciklama": "Kitap/bölüm adı — yalnızca mevcutsa"
+    },
+    "sayfa": {
+      "tip": ["string", "number", "null"],
+      "zorunlu": false,
+      "aciklama": "Sayfa — yalnızca mevcutsa; uydurma yasak"
+    },
+    "dosya_yolu": {
+      "tip": "string",
+      "zorunlu": false,
+      "aciklama": "knowledge/ altındaki göreli yol"
+    },
+    "guvenilirlik": {
+      "tip": "string",
+      "zorunlu": false,
+      "aciklama": "yuksek | orta | dusuk | bilinmiyor | placeholder"
+    },
+    "kaynak_sinifi": {
+      "tip": "string",
+      "zorunlu": true,
+      "aciklama": "kalici (kütüphane) veya web (geçici/güncel)"
+    },
+    "url": {
+      "tip": ["string", "null"],
+      "zorunlu": false,
+      "aciklama": "Web kaynakları için adres"
+    },
+    "erisim_utc": {
+      "tip": ["string", "null"],
+      "zorunlu": false,
+      "aciklama": "Web erişim zamanı ISO-8601"
+    },
+    "durum": {
+      "tip": "string",
+      "zorunlu": false,
+      "aciklama": "placeholder | hazir | ingest_bekliyor"
+    }
+  },
+  "atif_kurallari": {
+    "uydurma_yasak": ["sayfa", "bolum", "cilt", "alinti", "eser", "yazar", "kaynak_bilgisi"],
+    "eksik_alan": "atifa yazma",
+    "dogrulanamadi": "Bu bilgi mevcut kütüphanedeki kaynaklarda doğrulanamadı."
+  }
+}
