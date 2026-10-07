@@ -15,9 +15,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 STAGE = ROOT / "arsiv" / "_ilim_staging" / "09_tasavvuf" / "raw"
-SERH = ROOT / "knowledge" / "ilim" / "din" / "09_ahlak_tasavvuf" / "serh_ve_aciklama"
+TAS = ROOT / "knowledge" / "ilim" / "din" / "09_ahlak_tasavvuf"
+SERH = TAS / "serh_ve_aciklama"
 ORTAK = ROOT / "knowledge" / "ortak_kaynak" / "KAYNAK_KAYIT.json"
-KAV = ROOT / "knowledge" / "ilim" / "din" / "09_ahlak_tasavvuf" / "kavramlar_tasavvuf.jsonl"
+KAV = TAS / "kavramlar_tasavvuf.jsonl"
+CATALOG = TAS / "catalog.json"
 
 CHUNK = 1600
 OVERLAP = 120
@@ -324,6 +326,100 @@ def _update_kavram(w: dict) -> None:
     )
 
 
+def _sync_catalog() -> None:
+    """09 catalog.json: asıl eserler + şerh raflarını tek listede tut."""
+    if not CATALOG.is_file():
+        return
+    cat = json.loads(CATALOG.read_text(encoding="utf-8"))
+    asillar = [
+        e
+        for e in (cat.get("eserler") or [])
+        if (e.get("eser_turu") or "kitap") != "serh" and e.get("rol") != "serh"
+    ]
+    # asıl listesini eserler/ manifestlerinden tazele (chunk sayıları)
+    by = {e.get("eser_id"): e for e in asillar}
+    for mpath in sorted((TAS / "eserler").rglob("manifest.json")):
+        d = json.loads(mpath.read_text(encoding="utf-8"))
+        eid = d.get("eser_id")
+        if not eid:
+            continue
+        row = dict(by.get(eid) or {})
+        row.update(
+            {
+                "eser_id": eid,
+                "eser_tr": d.get("eser_tr") or row.get("eser_tr"),
+                "eser_ar": d.get("eser_ar") or row.get("eser_ar"),
+                "yazar": d.get("yazar") or row.get("yazar"),
+                "rol": d.get("rol") or row.get("rol") or "asıl",
+                "ilim_alani": "tasavvuf",
+                "eser_turu": d.get("eser_turu") or row.get("eser_turu") or "kitap",
+                "dil": d.get("dil") or row.get("dil"),
+                "dosya_yolu": d.get("dosya_yolu") or row.get("dosya_yolu"),
+                "guvenilirlik": d.get("guvenilirlik") or row.get("guvenilirlik"),
+                "kaynak_sinifi": d.get("kaynak_sinifi") or "kalici",
+                "durum": d.get("durum") or "hazir",
+                "kaynak": d.get("kaynak") or row.get("kaynak"),
+                "source_file": d.get("source_file") or row.get("source_file"),
+                "sha256": d.get("sha256") or row.get("sha256"),
+                "char_count": d.get("char_count") or row.get("char_count"),
+                "chunk_count": d.get("chunk_count") or row.get("chunk_count"),
+                "batch_sayisi": d.get("batch_sayisi") or row.get("batch_sayisi"),
+                "updated_utc": d.get("updated_utc") or row.get("updated_utc"),
+            }
+        )
+        by[eid] = row
+    asillar = list(by.values())
+
+    serhler = []
+    for mpath in sorted(SERH.rglob("manifest.json")):
+        d = json.loads(mpath.read_text(encoding="utf-8"))
+        serhler.append(
+            {
+                "eser_id": d.get("eser_id"),
+                "eser_tr": d.get("eser_tr"),
+                "eser_ar": d.get("eser_ar"),
+                "yazar": d.get("yazar"),
+                "rol": "serh",
+                "collection": f"din_09_tasavvuf_{d.get('eser_id')}",
+                "ilim_alani": "tasavvuf",
+                "eser_turu": "serh",
+                "ilgili_eser_id": d.get("ilgili_eser_id"),
+                "dil": d.get("dil"),
+                "yayin": None,
+                "cilt": None,
+                "bolum": None,
+                "sayfa": None,
+                "dosya_yolu": d.get("dosya_yolu"),
+                "guvenilirlik": d.get("guvenilirlik"),
+                "kaynak_sinifi": d.get("kaynak_sinifi"),
+                "durum": d.get("durum"),
+                "kaynak": d.get("kaynak"),
+                "source_file": d.get("source_file"),
+                "sha256": d.get("sha256"),
+                "char_count": d.get("char_count"),
+                "chunk_count": d.get("chunk_count"),
+                "batch_sayisi": d.get("batch_sayisi"),
+                "updated_utc": d.get("updated_utc"),
+            }
+        )
+
+    all_rows = asillar + serhler
+    cat["eserler"] = all_rows
+    cat["updated_utc"] = _utc()
+    cat["kaynak"] = "OpenITI + Internet Archive + basılı PDF (şerh)"
+    cat["sayilar"] = {
+        "eser": len(asillar),
+        "serh": len(serhler),
+        "kayit_toplam": len(all_rows),
+        "chunk_toplam": sum(int(r.get("chunk_count") or 0) for r in all_rows),
+    }
+    CATALOG.write_text(json.dumps(cat, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(
+        f"  [catalog] eser={len(asillar)} serh={len(serhler)} "
+        f"chunk={cat['sayilar']['chunk_toplam']}"
+    )
+
+
 def main() -> int:
     STAGE.mkdir(parents=True, exist_ok=True)
     SERH.mkdir(parents=True, exist_ok=True)
@@ -384,6 +480,7 @@ def main() -> int:
         "Kayserî: tam AR `qaysari_sharh_fusus` + EN mukaddime `qaysari_muqaddima_fusus`.\n",
         encoding="utf-8",
     )
+    _sync_catalog()
     print(f"\nTOPLAM serh={ok}")
     return 0 if ok else 1
 
