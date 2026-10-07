@@ -1,0 +1,15 @@
+{
+  "katman_id": "islam_miras",
+  "baslik": "İslâm coğrafya mirası (kavram)",
+  "kaynak_id": "cografya_katman_islam_miras",
+  "ilim_alani": "cografya",
+  "faz": 2,
+  "dil": "tr",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/cografya/katmanlar/islam_miras",
+  "guvenilirlik": "orta",
+  "kaynak_sinifi": "kalici",
+  "durum": "hazir",
+  "parca_sayisi": 2,
+  "batch_sayisi": 1,
+  "updated_utc": "2026-10-07T20:01:58Z"
+}

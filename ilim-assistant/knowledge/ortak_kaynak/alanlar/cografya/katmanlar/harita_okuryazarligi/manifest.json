@@ -1,0 +1,15 @@
+{
+  "katman_id": "harita_okuryazarligi",
+  "baslik": "Harita okuryazarlığı",
+  "kaynak_id": "cografya_katman_harita",
+  "ilim_alani": "cografya",
+  "faz": 2,
+  "dil": "tr",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/cografya/katmanlar/harita_okuryazarligi",
+  "guvenilirlik": "orta",
+  "kaynak_sinifi": "kalici",
+  "durum": "hazir",
+  "parca_sayisi": 2,
+  "batch_sayisi": 1,
+  "updated_utc": "2026-10-07T20:01:58Z"
+}

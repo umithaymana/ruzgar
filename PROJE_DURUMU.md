@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-07 gece — Bilim 2 faz (katalog + yöntem/miras)
+**Son güncelleme:** 2026-10-07 gece — Coğrafya 2 faz
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -28,7 +28,14 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 13. ~~Psikoloji OpenITI~~ — 4 eser · **524** chunk · anlık smoke PASS
 14. ~~Edebiyat Faz 1+2~~ — 7 OpenITI eser · 4 katman · 31 kavram · smoke 9/9
 15. ~~Bilim Faz 1+2~~ — 4 raf · 25 md · 3 katman · 19 kavram · anlık smoke
-16. **Sonraki:** coğrafya rafı **2 fazlı** (aynı disiplin)
+16. ~~Coğrafya Faz 1+2~~ — 7 md · 3 katman · 10 kavram · anlık smoke
+17. **Sonraki:** teknoloji rafı 2 fazlı veya felsefe/psikoloji Faz 2; RAG incremental
+
+### 2026-10-07 — Coğrafya (2 faz)
+
+- Faz 1: `04_cografya` + bölgeler + enlem/boylam
+- Faz 2: harita okuryazarlığı · beşeri · İslâm coğrafya mirası
+- Script: `faz14_cografya_raf_ingest.py` · Anlık: `ruzgar_cografya_kutuphane.py`
 
 ### 2026-10-07 — Bilim (2 faz)
 

@@ -1,0 +1,73 @@
+{
+  "domain": "cografya",
+  "faz": {
+    "1": "kutuphane_04",
+    "2": "harita_beseri_miras"
+  },
+  "updated_utc": "2026-10-07T20:01:58Z",
+  "politika": "2 fazlı. Eğitim özeti. Fetva yok. Siyasi propaganda yok. Sayfa/cilt uydurma yasak.",
+  "faz1_raf": {
+    "raf_id": "04_cografya",
+    "ad": "Coğrafya",
+    "dosya": 7,
+    "karakter": 3284,
+    "dosya_yolu": "knowledge/kutuphane/raflar/04_cografya",
+    "faz": 1,
+    "ilim_alani": "cografya",
+    "durum": "hazir",
+    "updated_utc": "2026-10-07T20:01:58Z"
+  },
+  "faz2_katmanlar": [
+    {
+      "katman_id": "harita_okuryazarligi",
+      "baslik": "Harita okuryazarlığı",
+      "kaynak_id": "cografya_katman_harita",
+      "ilim_alani": "cografya",
+      "faz": 2,
+      "dil": "tr",
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/cografya/katmanlar/harita_okuryazarligi",
+      "guvenilirlik": "orta",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "parca_sayisi": 2,
+      "batch_sayisi": 1,
+      "updated_utc": "2026-10-07T20:01:58Z"
+    },
+    {
+      "katman_id": "beseri",
+      "baslik": "Beşeri coğrafya (kavram)",
+      "kaynak_id": "cografya_katman_beseri",
+      "ilim_alani": "cografya",
+      "faz": 2,
+      "dil": "tr",
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/cografya/katmanlar/beseri",
+      "guvenilirlik": "orta",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "parca_sayisi": 2,
+      "batch_sayisi": 1,
+      "updated_utc": "2026-10-07T20:01:58Z"
+    },
+    {
+      "katman_id": "islam_miras",
+      "baslik": "İslâm coğrafya mirası (kavram)",
+      "kaynak_id": "cografya_katman_islam_miras",
+      "ilim_alani": "cografya",
+      "faz": 2,
+      "dil": "tr",
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/cografya/katmanlar/islam_miras",
+      "guvenilirlik": "orta",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "parca_sayisi": 2,
+      "batch_sayisi": 1,
+      "updated_utc": "2026-10-07T20:01:58Z"
+    }
+  ],
+  "sayilar": {
+    "md_dosya": 7,
+    "faz2_katman": 3,
+    "kavram": 10,
+    "ek_md_yeni": 2
+  }
+}

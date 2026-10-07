@@ -44,6 +44,7 @@ _LIBRARY_TRYERS: tuple[tuple[str, str, str], ...] = (
     ("ilim_assistant.ruzgar_psikoloji_kutuphane", "try_psikoloji_reply", "Psikoloji"),
     ("ilim_assistant.ruzgar_edebiyat_kutuphane", "try_edebiyat_reply", "Edebiyat"),
     ("ilim_assistant.ruzgar_bilim_kutuphane", "try_bilim_reply", "Bilim"),
+    ("ilim_assistant.ruzgar_cografya_kutuphane", "try_cografya_reply", "Coğrafya"),
 )
 
 

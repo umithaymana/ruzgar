@@ -1,6 +1,6 @@
 {
   "version": "ortak-kaynak-kayit-v1-2026-10-07",
-  "guncelleme": "2026-10-07T19:58:26Z",
+  "guncelleme": "2026-10-07T20:01:58Z",
   "aciklama": "Kalıcı kütüphane kayıtları. Metin henüz yoksa durum=placeholder. Web kayıtları buraya karıştırılmaz — web_cache kullan.",
   "kayitlar": [
     {
@@ -743,6 +743,74 @@
       "kaynak_sinifi": "kalici",
       "durum": "hazir",
       "not": "Bilim Faz 2 katman."
+    },
+    {
+      "kaynak_id": "cografya_raf_04",
+      "kaynak_adi": "Coğrafya (kutuphane rafı)",
+      "yazar": null,
+      "ilim_alani": "cografya",
+      "eser_turu": "raf",
+      "dil": "tr",
+      "yayin": null,
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/kutuphane/raflar/04_cografya",
+      "guvenilirlik": "orta",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "Kutuphane coğrafya rafı; eğitim özeti."
+    },
+    {
+      "kaynak_id": "cografya_katman_harita",
+      "kaynak_adi": "Harita okuryazarlığı",
+      "yazar": null,
+      "ilim_alani": "cografya",
+      "eser_turu": "katman",
+      "dil": "tr",
+      "yayin": null,
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/cografya/katmanlar/harita_okuryazarligi",
+      "guvenilirlik": "orta",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "Coğrafya Faz 2 katman."
+    },
+    {
+      "kaynak_id": "cografya_katman_beseri",
+      "kaynak_adi": "Beşeri coğrafya (kavram)",
+      "yazar": null,
+      "ilim_alani": "cografya",
+      "eser_turu": "katman",
+      "dil": "tr",
+      "yayin": null,
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/cografya/katmanlar/beseri",
+      "guvenilirlik": "orta",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "Coğrafya Faz 2 katman."
+    },
+    {
+      "kaynak_id": "cografya_katman_islam_miras",
+      "kaynak_adi": "İslâm coğrafya mirası (kavram)",
+      "yazar": null,
+      "ilim_alani": "cografya",
+      "eser_turu": "katman",
+      "dil": "tr",
+      "yayin": null,
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/cografya/katmanlar/islam_miras",
+      "guvenilirlik": "orta",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "Coğrafya Faz 2 katman."
     }
   ]
 }

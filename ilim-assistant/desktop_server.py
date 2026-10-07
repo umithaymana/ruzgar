@@ -10889,6 +10889,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         except Exception:
             pass
         try:
+            from ilim_assistant.ruzgar_cografya_kutuphane import try_cografya_reply
+
+            _cografya_e = _library_instant_or_none(msg_early, try_cografya_reply)
+            if _cografya_e:
+                _orch_cg = dict(orch_early)
+                _orch_cg.setdefault("plan", {})["primary"] = "bilgi"
+                _orch_cg["plan"]["label_tr"] = "Coğrafya (anında)"
+                _orch_cg["cografya_anlik"] = True
+                yield from _iter_instant_chat_events(
+                    _cografya_e,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_cg,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
             from ilim_assistant.ruzgar_usul_fikh_kutuphane import try_usul_fikh_reply
 
             _usul_e = _library_instant_or_none(msg_early, try_usul_fikh_reply)
@@ -11571,6 +11591,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     session_wake_used=req.session_wake_used,
                     msg_for_wake=req.message,
                     orch=_orch_bl2,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ruzgar_cografya_kutuphane import try_cografya_reply
+
+            _cografya_early = _library_instant_or_none(msg_early, try_cografya_reply)
+            if _cografya_early:
+                _orch_cg2 = dict(orch_early)
+                _orch_cg2.setdefault("plan", {})["primary"] = "bilgi"
+                _orch_cg2["plan"]["label_tr"] = "Coğrafya (anında)"
+                _orch_cg2["cografya_anlik"] = True
+                yield from _iter_instant_chat_events(
+                    _cografya_early,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_cg2,
                     instant_gundelik=True,
                 )
                 return
