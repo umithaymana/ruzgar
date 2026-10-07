@@ -4,7 +4,7 @@
     "1": "kutuphane_04",
     "2": "harita_beseri_miras"
   },
-  "updated_utc": "2026-10-07T20:07:30Z",
+  "updated_utc": "2026-10-07T20:45:42Z",
   "politika": "2 fazlı. Eğitim özeti. Fetva yok. Siyasi propaganda yok. Sayfa/cilt uydurma yasak.",
   "faz1_raf": {
     "raf_id": "04_cografya",
@@ -65,16 +65,23 @@
     }
   ],
   "sayilar": {
-    "md_dosya": 18,
+    "md_dosya": 30,
     "faz2_katman": 3,
-    "kavram": 28,
+    "kavram": 39,
     "ek_md_yeni": 2,
-    "karakter": 7636
+    "karakter": 11183
   },
   "derinlestirme": {
     "script": "faz14b_cografya_derin_ingest.py",
     "ek_md": 11,
     "kavram": 28,
     "updated_utc": "2026-10-07T20:07:30Z"
+  },
+  "derinlestirme_14c": {
+    "script": "faz14c_cografya_derin2_ingest.py",
+    "ek_md": 12,
+    "kavram_yeni": 12,
+    "kavram_toplam": 39,
+    "updated_utc": "2026-10-07T20:45:42Z"
   }
 }

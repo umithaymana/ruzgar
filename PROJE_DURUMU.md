@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-07 gece — RAG ortak alan boost
+**Son güncelleme:** 2026-10-07 gece — bilim/coğrafya derin2 + din hijyeni
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -32,7 +32,16 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 17. ~~Teknoloji Faz 1+2~~ — 10 md · 3 katman · 13 kavram · smoke 7/7
 18. ~~RAG incremental~~ — **302.676** chunk · 177 dosya değişti · yerel indeks
 19. ~~RAG ortak alan boost~~ — `rag_store.search` domain ipucu + yol eşlemesi; din baskınlığı kesildi
-20. **Sonraki:** din rafları hijyeni (isteğe bağlı) · `RUZGAR_RAG_CONTENT_FILTER=0` env gözden geçir
+20. ~~Bilim/coğrafya derin2 + din hijyeni~~ — 13c/14c ingest · `RUZGAR_RAG_DIN_HYGIENE=1`
+21. **Sonraki:** `RUZGAR_RAG_CONTENT_FILTER=0` env gözden geçir · isteğe bağlı başka ince raflar
+
+### 2026-10-07 — Bilim/coğrafya derin2 + din hijyeni
+
+- Bilim 13c: **+13 md** · kavram **47** · atmosfer, Ohm, organeller, kalıtım, oran… · `faz13c_bilim_derin2_ingest.py`
+- Coğrafya 14c: **+12 md** · kavram **39** · boğazlar, havza, nüfus, afet çerçevesi… · `faz14c_cografya_derin2_ingest.py`
+- RAG incremental: chunks=**302703** · changed_files=**29** · atomik `embeddings.npy` yazımı
+- Din hijyeni: ortak/fen ipucu varken global doldurmada `ilim/din` atlanır (`RUZGAR_RAG_DIN_HYGIENE=0` ile kapat)
+- Smoke: anlık yeni kavramlar OK · bilimsel yöntem / YZ / Karadeniz / nefs / atmosfer → din_hits=0
 
 ### 2026-10-07 — RAG ortak alan boost
 

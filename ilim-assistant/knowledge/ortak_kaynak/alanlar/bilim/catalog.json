@@ -4,7 +4,7 @@
     "1": "kutuphane_raflar",
     "2": "yontem_miras_disiplin"
   },
-  "updated_utc": "2026-10-07T20:10:18Z",
+  "updated_utc": "2026-10-07T20:45:42Z",
   "politika": "2 fazlı. Eğitim özeti. Tıbbi teşhis/tedavi yok. Fetva yok. Sayfa/cilt uydurma yasak.",
   "faz1_raflar": [
     {
@@ -131,11 +131,11 @@
   ],
   "sayilar": {
     "raf": 4,
-    "md_dosya": 40,
+    "md_dosya": 53,
     "faz2_katman": 3,
-    "kavram": 34,
+    "kavram": 47,
     "ek_md_yeni": 4,
-    "karakter": 17413
+    "karakter": 20819
   },
   "derinlestirme": {
     "script": "faz13b_bilim_derin_ingest.py",
@@ -164,5 +164,34 @@
       }
     },
     "updated_utc": "2026-10-07T20:10:18Z"
+  },
+  "derinlestirme_13c": {
+    "script": "faz13c_bilim_derin2_ingest.py",
+    "ek_md": 13,
+    "kavram_yeni": 13,
+    "kavram_toplam": 47,
+    "scan": {
+      "01_astronomi_uzay": {
+        "md": 13,
+        "char": 7421
+      },
+      "02_fizik_kimya": {
+        "md": 14,
+        "char": 5129
+      },
+      "03_biyoloji_dunya": {
+        "md": 13,
+        "char": 4894
+      },
+      "06_matematik": {
+        "md": 13,
+        "char": 3375
+      },
+      "_toplam": {
+        "md": 53,
+        "char": 20819
+      }
+    },
+    "updated_utc": "2026-10-07T20:45:42Z"
   }
 }

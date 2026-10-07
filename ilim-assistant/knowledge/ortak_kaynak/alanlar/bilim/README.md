@@ -15,3 +15,7 @@ MD dosya: **25** · Kavram: **19**
 - MD: **40** · karakter ≈ **17413** · kavram: **34**
 - Script: `faz13b_bilim_derin_ingest.py`
 
+## Derinleştirme 2 (13c)
+- +13 md · kavram toplam: **47**
+- Script: `faz13c_bilim_derin2_ingest.py`
+

@@ -1,6 +1,6 @@
 {
   "version": "ortak-kaynak-kayit-v1-2026-10-07",
-  "guncelleme": "2026-10-07T20:17:36Z",
+  "guncelleme": "2026-10-07T20:45:42Z",
   "aciklama": "Kalıcı kütüphane kayıtları. Metin henüz yoksa durum=placeholder. Web kayıtları buraya karıştırılmaz — web_cache kullan.",
   "kayitlar": [
     {
@@ -1015,6 +1015,40 @@
       "kaynak_sinifi": "kalici",
       "durum": "hazir",
       "not": "Teknoloji Faz 2; exploit yok."
+    },
+    {
+      "kaynak_id": "bilim_katman_derin2",
+      "kaynak_adi": "Bilim derin2 katman indeksi",
+      "yazar": null,
+      "ilim_alani": "bilim",
+      "eser_turu": "katman",
+      "dil": "tr",
+      "yayin": null,
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/bilim/katmanlar/derin2",
+      "guvenilirlik": "orta",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "Bilim derinleştirme 2 (13c)."
+    },
+    {
+      "kaynak_id": "cografya_katman_derin2",
+      "kaynak_adi": "Coğrafya derin2 katman indeksi",
+      "yazar": null,
+      "ilim_alani": "cografya",
+      "eser_turu": "katman",
+      "dil": "tr",
+      "yayin": null,
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/cografya/katmanlar/derin2",
+      "guvenilirlik": "orta",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "Coğrafya derinleştirme 2 (14c)."
     }
   ]
 }

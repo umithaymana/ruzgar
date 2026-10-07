@@ -52,6 +52,37 @@ def _atomic_write_text(path: Path, text: str, *, encoding: str = "utf-8") -> Non
     os.replace(tmp, path)
 
 
+def _atomic_save_npy(path: Path, arr: np.ndarray) -> None:
+    """Windows'ta açık/kilitli embeddings.npy üzerine doğrudan yazmayı önler."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.parent / f"{path.stem}_write.tmp.npy"
+    if tmp.is_file():
+        try:
+            tmp.unlink()
+        except OSError:
+            pass
+    np.save(str(tmp), arr)
+    last_err: Exception | None = None
+    for attempt in range(8):
+        try:
+            os.replace(tmp, path)
+            return
+        except OSError as e:
+            last_err = e
+            import time
+
+            time.sleep(0.35 * (attempt + 1))
+            try:
+                if path.is_file():
+                    path.unlink()
+                os.replace(tmp, path)
+                return
+            except Exception as e2:
+                last_err = e2
+    if last_err:
+        raise last_err
+
+
 def _atomic_write_chunks_jsonl(path: Path, chunks: List["Chunk"]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
@@ -242,7 +273,7 @@ def build_index(
 
                 chunks_out = kept_chunks + new_chunks
                 # Persist (tmp → replace)
-                np.save(str(emb_path), emb_out)
+                _atomic_save_npy(emb_path, emb_out)
                 _atomic_write_chunks_jsonl(chunks_path, chunks_out)
                 _atomic_write_text(
                     manifest_path,
@@ -275,7 +306,7 @@ def build_index(
     model = _get_embedder()
     texts = [c.text for c in chunks]
     emb = model.encode(texts, normalize_embeddings=True, show_progress_bar=True)
-    np.save(str(emb_path), emb)
+    _atomic_save_npy(emb_path, emb)
     _atomic_write_chunks_jsonl(chunks_path, chunks)
     _atomic_write_text(
         manifest_path,
@@ -425,6 +456,20 @@ def source_is_nebula(rel: str) -> bool:
     return _source_is_nebula(rel)
 
 
+def source_is_din(rel: str) -> bool:
+    """Dini ilimler külliyatı (`knowledge/ilim/din/...`). Silme değil; arama hijyeni için."""
+    p = (rel or "").replace("\\", "/").lower()
+    return "/ilim/din/" in f"/{p}" or p.startswith("ilim/din/")
+
+
+def _din_hygiene_enabled() -> bool:
+    return os.environ.get("RUZGAR_RAG_DIN_HYGIENE", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
 def _lemma_norm(s: str) -> str:
     t = unicodedata.normalize("NFKD", (s or "").strip()).casefold()
     return " ".join(t.split())
@@ -486,6 +531,19 @@ _ORTAK_DOMAIN_HINTS: tuple[tuple[tuple[str, ...], tuple[str, ...]], ...] = (
             "newton",
             "dna",
             "geometri",
+            "atmosfer",
+            "troposfer",
+            "ohm",
+            "organel",
+            "mitokondri",
+            "kalitim",
+            "kalıtım",
+            "bagisiklik",
+            "bağışıklık",
+            "oranti",
+            "orantı",
+            "medyan",
+            "gps",
         ),
         (
             "ortak_kaynak/alanlar/bilim",
@@ -628,6 +686,9 @@ def search(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
 
     Ortak alan ipucu varsa (`RUZGAR_RAG_ORTAK_BOOST`, varsayılan açık) ilgili
     yollar alt kümeden aday çekilip hafifçe öne alınır — din külliyatı baskınlığını azaltır.
+
+    Ortak/fen ipucu açıkken `RUZGAR_RAG_DIN_HYGIENE=1` (varsayılan) global doldurmada
+    `ilim/din` kaynaklarını atlar (külliyat silinmez).
     """
     chunks, emb = _get_cached_index()
     if not chunks or emb is None or len(chunks) != len(emb):
@@ -713,24 +774,35 @@ def search(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
         dom: List[Tuple[str, str, float]],
         glob: List[Tuple[str, str, float]],
     ) -> List[Tuple[str, str, float]]:
+        """Ortak/fen adayları önce; global doldurmada din külliyatı (hijyen açıkken) atlanır."""
         out: List[Tuple[str, str, float]] = []
         seen: set[tuple[str, str]] = set()
-        for h in dom:
+        skip_din = bool(prefixes) and _din_hygiene_enabled()
+
+        def _take(h: Tuple[str, str, float], *, allow_din: bool) -> bool:
+            if skip_din and not allow_din and source_is_din(h[1]):
+                return False
             key = (h[1], (h[0] or "")[:96])
             if key in seen:
-                continue
+                return False
             out.append(h)
             seen.add(key)
+            return True
+
+        for h in dom:
+            _take(h, allow_din=True)
             if len(out) >= tk:
                 return out[:tk]
+        # Global: önce din dışı, yetmezse (hijyen kapalıysa) din
         for h in glob:
-            key = (h[1], (h[0] or "")[:96])
-            if key in seen:
-                continue
-            out.append(h)
-            seen.add(key)
+            _take(h, allow_din=False)
             if len(out) >= tk:
-                break
+                return out[:tk]
+        if not skip_din:
+            for h in glob:
+                _take(h, allow_din=True)
+                if len(out) >= tk:
+                    break
         return out[:tk]
 
     # İçerik filtresi kapalı olsa bile ortak/fen rafı din altında ezilmesin
@@ -792,8 +864,12 @@ def search(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
                 if domain_preferred and prefixes:
                     dom_f = [h for h in filtered if _in_domain(h[1])]
                     glob_f = [h for h in filtered if not _in_domain(h[1])]
+                    if _din_hygiene_enabled():
+                        glob_f = [h for h in glob_f if not source_is_din(h[1])]
                     if dom_f:
-                        return _merge_domain_first(dom_f, glob_f or filtered)
+                        return _merge_domain_first(dom_f, glob_f)
+                if prefixes and _din_hygiene_enabled():
+                    filtered = [h for h in filtered if not source_is_din(h[1])] or filtered
                 return filtered[:tk]
             if domain_preferred:
                 return domain_preferred[:tk]

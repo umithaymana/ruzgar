@@ -15,3 +15,7 @@ MD: **7** · Kavram: **10**
 - MD: **18** · karakter ≈ **7636** · kavram: **28**
 - Script: `faz14b_cografya_derin_ingest.py`
 
+## Derinleştirme 2 (14c)
+- +12 md · kavram toplam: **39**
+- Script: `faz14c_cografya_derin2_ingest.py`
+
