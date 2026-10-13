@@ -49,6 +49,10 @@ def looks_like_live_web_needed(message: str) -> bool:
             "su an",
             "şimdi",
             "simdi",
+            "fiyat",
+            "ücret",
+            "ucret",
+            "hava durumu",
             "dolar",
             "euro",
             "altın",
@@ -336,39 +340,25 @@ def build_web_pro_system_addon(message: str) -> str:
         science = False
     extra = ""
     if live:
-        extra = (
-            "- Bu soru **canlı/güncel** (haber/olay/kur/spor). Yerel hafızadaki eski rakamları **yoksay**.\n"
-            "- **İlk cümlede net cevap** ver (skor, olay, rakam, kim/ne). Yuvarlak konuşma yasak.\n"
-            "- Kur sorularında sayısal değeri ilk cümlede ver; «anlamaya çalışacağım» yasak.\n"
-            "- Web raporunda «CANLI KUR ÖZETİ» varsa onu esas al.\n"
-            "- Haber/olayda: ne oldu + ne zaman + kim; 2–5 cümle sade Türkçe; kaynak site adı ekle.\n"
-            "- Kaynaklar çelişirse en güvenilir haberi seç; emin değilsen söyle, uydurma.\n"
+        extra += (
+            "Bu soru güncel. Eski rakamı kullanma. İlk cümlede net cevap ver.\n"
+            "Haberse: ne oldu, ne zaman, kim. Çelişirse en açık kaynağı seç.\n"
         )
     if sports:
         extra += (
-            "- Spor sorusu: mümkünse **rakip + tarih + saat/skor** ilk cümlede.\n"
-            "- Eski sezon (2023 vb.) görürsen ve soru 2026 ise **yoksay**; güncel fikstürü ara.\n"
-            "- Turnuva henüz oynanmadıysa / şampiyon belli değilse **açıkça söyle**; uydurma şampiyon yasak.\n"
-            "- «Resmi siteleri kontrol edin» diye savuşturma; web raporundaki somut bilgiyi ver.\n"
-            "- Kaynak yoksa: «Bu fikstürü/sonucu webde net bulamadım» de — genel sohbet yapma.\n"
+            "Spor: rakip, tarih ve skor veya saati söyle. Emin değilsen uydurma.\n"
         )
     if science and not live:
         extra += (
-            "- Bu bir **sabit bilgi** sorusu. Yalnızca konuyla **doğrudan ilgili** kaynak metinlerini kullan.\n"
-            "- Alakasız site/snippet (forum, burç, ürün tanıtımı, sözlük mizahı) görürsen **yoksay**.\n"
-            "- Önce 1 cümlede net doğru cevap; sonra 1–3 cümle basit gerekçe. Uydurma yasak.\n"
-            "- Sayı/uzaklık/tanım için Wikipedia veya güvenilir ansiklopedi metnini tercih et.\n"
-            "- Kaynak yetersizse «emin değilim» de; rastgele web parçası birleştirme.\n"
+            "Sabit bilgi: konu dışı siteyi at. Önce doğru cevap, sonra kısa gerekçe.\n"
         )
     return (
-        "\n\n[TALİMAT — WEB ARAŞTIRMA PRO — Ümit & Gökçenur]\n"
-        f"Soru: «{q}»\n"
-        "- Yanıtı **web tarama raporundaki** ilgili kaynaklara dayandır; uydurma bilgi verme.\n"
-        "- Mümkünse **2–5 cümlede öz** cevap (Ümit abinin anlayacağı sade Türkçe), ardından kısa kaynak notu.\n"
-        "- Resmi (.gov.tr), akademik (.edu), ansiklopedi ve güvenilir haber kaynaklarına öncelik ver.\n"
-        "- Çelişen kaynak varsa en güvenilirini seç ve belirsizliği dürüstçe belirt.\n"
-        "- Yerel indeks parçaları ile web çelişirse: sabit bilgide tutarlı ansiklopediyi, "
-        "canlı konuda **web'i** önceliklendir.\n"
+        "\n\nWeb notu:\n"
+        f"Soru: {q}\n"
+        "Aşağıdaki web metnini oku. Cevabı sen yaz; sohbet eder gibi, düz Türkçe.\n"
+        "Sayfayı olduğu gibi yapıştırma. İşe yarayan kısmı özetle.\n"
+        "Site adını bir cümlede an. Bilmediğini uydurma.\n"
+        "Raftaki not ile web çelişirse, güncel konuda web'i esas al.\n"
         f"{extra}"
     )
 

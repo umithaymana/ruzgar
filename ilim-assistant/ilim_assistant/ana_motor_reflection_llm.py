@@ -203,7 +203,7 @@ def apply_bilgi_kalite_pass(
     try:
         from ilim_assistant.prompts import sohbet_tarz_chatgpt
 
-        if sohbet_tarz_chatgpt() and not web_was_used and not hits:
+        if sohbet_tarz_chatgpt():
             return (
                 reply,
                 {"llm_reflection_applied": False, "skipped": "chatgpt_sohbet"},

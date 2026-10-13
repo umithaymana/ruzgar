@@ -42,7 +42,7 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 27. ~~Arama cetveli bulutta değil~~ — `.rag_index/` Git izinden çıktı, dosyalar diskte duruyor. Ders notları `knowledge/` ile repoda.
 28. **İlerisi (bugün değil):** telefon ince istemci, yalnız Rüzgar kapısı `8779` (`/api/chat/full`). Ollama telefona açılmaz. Kapı varsayılan `127.0.0.1`. Halka açılışta kimlik + TLS.
 29. **Sohbet konuşanı:** Gemini şimdilik kapalı (`RUZGAR_DISABLE_GEMINI=1`). Konuşan yerel denge (`llama3.1:8b`), yedek hizli. Anahtar dosyada kalır, repoya girmez.
-30. **Sıradaki:** Web — yerel model sayfayı okuyup sohbet ederek özetler. Snippet yapıştırma kapalı.
+30. ~~Web ilk adım~~ — fiyat/ücret/hava güncel sayılır. Web notu yerel modele «oku, sohbet ederek özetle, siteyi an» der. Faz Y/J damgası sohbetten silinir. Canlı: dolar ≈ 49,36 TL, kaynak kur.doviz.com. Yarın: sayfa okuma derinliği ve raf/web ayrımı.
 
 ### 2026-10-07 — Anlık kavram eşleşme (saçma cevap kökü)
 

@@ -129,6 +129,7 @@ def finalize_assistant_reply(raw: str, *, channel: str = "") -> str:
             import re
 
             t = re.sub(r"(?im)^[ \t]*\*{0,2}Güven:\s*.*$", "", t)
+            t = re.sub(r"\n+\*Not \(Faz [JY]\):[\s\S]*$", "", t)
             t = re.sub(r"\n{3,}", "\n\n", t)
     except Exception:
         pass
