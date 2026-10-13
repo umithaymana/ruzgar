@@ -1,0 +1,72 @@
+[
+  {
+    "sira": 1,
+    "id": "matematik_derin",
+    "baslik": "Matematik derin"
+  },
+  {
+    "sira": 2,
+    "id": "istatistik_olasilik",
+    "baslik": "İstatistik ve olasılık"
+  },
+  {
+    "sira": 3,
+    "id": "elektrik_elektronik",
+    "baslik": "Elektrik ve elektronik"
+  },
+  {
+    "sira": 4,
+    "id": "astronomi_derin",
+    "baslik": "Astronomi derin"
+  },
+  {
+    "sira": 5,
+    "id": "jeoloji",
+    "baslik": "Jeoloji"
+  },
+  {
+    "sira": 6,
+    "id": "cevre_bilimleri",
+    "baslik": "Çevre bilimleri"
+  },
+  {
+    "sira": 7,
+    "id": "anatomi_fizyoloji",
+    "baslik": "Anatomi ve fizyoloji"
+  },
+  {
+    "sira": 8,
+    "id": "dilbilim",
+    "baslik": "Dilbilim"
+  },
+  {
+    "sira": 9,
+    "id": "muzik",
+    "baslik": "Müzik"
+  },
+  {
+    "sira": 10,
+    "id": "sosyoloji",
+    "baslik": "Sosyoloji"
+  },
+  {
+    "sira": 11,
+    "id": "siyaset",
+    "baslik": "Siyaset"
+  },
+  {
+    "sira": 12,
+    "id": "ekonomi",
+    "baslik": "Ekonomi"
+  },
+  {
+    "sira": 13,
+    "id": "hukuk",
+    "baslik": "Hukuk"
+  },
+  {
+    "sira": 14,
+    "id": "egitim_bilimleri",
+    "baslik": "Eğitim bilimleri"
+  }
+]

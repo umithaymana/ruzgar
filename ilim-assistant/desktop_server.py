@@ -10869,6 +10869,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         except Exception:
             pass
         try:
+            from ilim_assistant.ruzgar_ek_raflar import try_ek_raf_reply
+
+            _ek_e = _library_instant_or_none(msg_early, try_ek_raf_reply)
+            if _ek_e:
+                _orch_ek = dict(orch_early)
+                _orch_ek.setdefault("plan", {})["primary"] = "bilgi"
+                _orch_ek["plan"]["label_tr"] = "İlim rafı (anında)"
+                _orch_ek["ek_raf_anlik"] = True
+                yield from _iter_instant_chat_events(
+                    _ek_e,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_ek,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
             from ilim_assistant.ruzgar_bilim_kutuphane import try_bilim_reply
 
             _bilim_e = _library_instant_or_none(msg_early, try_bilim_reply)
@@ -10903,6 +10923,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     session_wake_used=req.session_wake_used,
                     msg_for_wake=req.message,
                     orch=_orch_cg,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ruzgar_bilgisayar_kutuphane import try_bilgisayar_reply
+
+            _bilgisayar_e = _library_instant_or_none(msg_early, try_bilgisayar_reply)
+            if _bilgisayar_e:
+                _orch_bm = dict(orch_early)
+                _orch_bm.setdefault("plan", {})["primary"] = "bilgi"
+                _orch_bm["plan"]["label_tr"] = "Bilgisayar mühendisliği (anında)"
+                _orch_bm["bilgisayar_anlik"] = True
+                yield from _iter_instant_chat_events(
+                    _bilgisayar_e,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_bm,
                     instant_gundelik=True,
                 )
                 return
@@ -11597,6 +11637,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         except Exception:
             pass
         try:
+            from ilim_assistant.ruzgar_ek_raflar import try_ek_raf_reply
+
+            _ek_early = _library_instant_or_none(msg_early, try_ek_raf_reply)
+            if _ek_early:
+                _orch_ek2 = dict(orch_early)
+                _orch_ek2.setdefault("plan", {})["primary"] = "bilgi"
+                _orch_ek2["plan"]["label_tr"] = "İlim rafı (anında)"
+                _orch_ek2["ek_raf_anlik"] = True
+                yield from _iter_instant_chat_events(
+                    _ek_early,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_ek2,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
             from ilim_assistant.ruzgar_bilim_kutuphane import try_bilim_reply
 
             _bilim_early = _library_instant_or_none(msg_early, try_bilim_reply)
@@ -11631,6 +11691,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     session_wake_used=req.session_wake_used,
                     msg_for_wake=req.message,
                     orch=_orch_cg2,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ruzgar_bilgisayar_kutuphane import try_bilgisayar_reply
+
+            _bilgisayar_early = _library_instant_or_none(msg_early, try_bilgisayar_reply)
+            if _bilgisayar_early:
+                _orch_bm2 = dict(orch_early)
+                _orch_bm2.setdefault("plan", {})["primary"] = "bilgi"
+                _orch_bm2["plan"]["label_tr"] = "Bilgisayar mühendisliği (anında)"
+                _orch_bm2["bilgisayar_anlik"] = True
+                yield from _iter_instant_chat_events(
+                    _bilgisayar_early,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_bm2,
                     instant_gundelik=True,
                 )
                 return

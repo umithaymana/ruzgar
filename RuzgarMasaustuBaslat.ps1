@@ -57,6 +57,34 @@ if (Test-Path -LiteralPath $unicodeOm) {
 } elseif (Test-Path -LiteralPath $asciiOm) {
     $env:OLLAMA_MODELS = $asciiOm
 }
+# Tepsi, env gormeden bos ev klasorune bakinca llama 404 verir. Her acilista listeyi kontrol et.
+function Test-MasaustuOllamaModelsVisible {
+    if (-not (Get-Command ollama -ErrorAction SilentlyContinue)) { return $false }
+    try {
+        $out = & ollama list 2>&1 | Out-String
+        return ($out -match "llama3\.1" -or $out -match "llama3\.2" -or $out -match "qwen2\.5")
+    } catch { return $false }
+}
+function Test-MasaustuPortListen([int]$Port) {
+    try {
+        $l = New-Object System.Net.Sockets.TcpListener([Net.IPAddress]::Loopback, $Port)
+        $l.Start(); $l.Stop(); return $false
+    } catch { return $true }
+}
+if ($env:OLLAMA_MODELS -and (Get-Command ollama -ErrorAction SilentlyContinue)) {
+    $ollamaUp = Test-MasaustuPortListen 11434
+    $ollamaOk = $false
+    if ($ollamaUp) { $ollamaOk = Test-MasaustuOllamaModelsVisible }
+    if (-not $ollamaOk) {
+        if ($ollamaUp) {
+            Get-Process -Name "ollama app", "ollama" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+            $stopDeadline = (Get-Date).AddSeconds(15)
+            while ((Test-MasaustuPortListen 11434) -and (Get-Date) -lt $stopDeadline) { Start-Sleep -Milliseconds 300 }
+        }
+        $ollamaExe = (Get-Command ollama).Source
+        Start-Process -FilePath $ollamaExe -ArgumentList "serve" -WindowStyle Hidden -ErrorAction SilentlyContinue
+    }
+}
 foreach ($pair in @(
     @{ K = "PIP_CACHE_DIR"; V = "D:\ÜMİT\PROGRAMLAR\Caches\pip" },
     @{ K = "HF_HOME"; V = "D:\ÜMİT\PROGRAMLAR\Caches\huggingface" },

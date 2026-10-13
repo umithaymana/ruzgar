@@ -559,17 +559,39 @@ function Test-PortListen {
     }
 }
 
-function Start-OllamaIfNeeded {
-    if (Test-PortListen 11434) {
-        Log "Ollama zaten dinliyor (11434)"
-        return
+function Test-RuzgarOllamaModelsVisible {
+    try {
+        $out = & ollama list 2>&1 | Out-String
+        return ($out -match "llama3\.1" -or $out -match "llama3\.2" -or $out -match "qwen2\.5")
+    } catch {
+        return $false
     }
+}
+
+function Start-OllamaIfNeeded {
     if (-not (Get-Command ollama -ErrorAction SilentlyContinue)) {
         Log "Ollama PATH icinde yok - https://ollama.com kurulumu gerekir"
         return
     }
-    Log "Ollama serve baslatiliyor..."
-    Start-Process -FilePath "ollama" -ArgumentList "serve" -WindowStyle Hidden -ErrorAction SilentlyContinue
+    # Tepsi uygulamasi OLLAMA_MODELS gormeden acilirsa ev klasoru bos kalir; D: modeller 404 verir.
+    $listening = Test-PortListen 11434
+    $visible = $false
+    if ($listening) { $visible = Test-RuzgarOllamaModelsVisible }
+    if ($listening -and $visible) {
+        Log "Ollama zaten dinliyor ve modeller gorunuyor (11434)"
+        return
+    }
+    if ($listening -and -not $visible) {
+        Log "Ollama dinliyor ama model listesi bos - D: klasoru ile yeniden baslatiliyor"
+        Get-Process -Name "ollama app", "ollama" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+        $stopDeadline = (Get-Date).AddSeconds(15)
+        while ((Test-PortListen 11434) -and (Get-Date) -lt $stopDeadline) {
+            Start-Sleep -Milliseconds 300
+        }
+    }
+    Log "Ollama serve baslatiliyor (OLLAMA_MODELS=$env:OLLAMA_MODELS)..."
+    $ollamaExe = (Get-Command ollama -ErrorAction SilentlyContinue).Source
+    Start-Process -FilePath $ollamaExe -ArgumentList "serve" -WindowStyle Hidden -ErrorAction SilentlyContinue
     $deadline = (Get-Date).AddSeconds(12)
     while (-not (Test-PortListen 11434) -and (Get-Date) -lt $deadline) {
         Start-Sleep -Milliseconds 400
@@ -587,10 +609,14 @@ function Start-OllamaIfNeeded {
             $env:RUZGAR_BRAIN_DENGE_MODEL = "llama3.1:8b"
         }
         Log "Ollama model: $mainModel (RAM ~${ramGb} GB)"
-        & ollama pull $mainModel 2>&1 | ForEach-Object { Log $_ }
-        if ($fastModel -and $fastModel -ne $mainModel) {
-            Log "Hizli yedek model: $fastModel"
-            & ollama pull $fastModel 2>$null | Out-Null
+        if (Test-RuzgarOllamaModelsVisible) {
+            Log "Yerel modeller hazir - yeniden indirme yok"
+        } else {
+            & ollama pull $mainModel 2>&1 | ForEach-Object { Log $_ }
+            if ($fastModel -and $fastModel -ne $mainModel) {
+                Log "Hizli yedek model: $fastModel"
+                & ollama pull $fastModel 2>$null | Out-Null
+            }
         }
     } else {
         Log "Ollama acilmadi - yine de API/Electron baslatilacak"

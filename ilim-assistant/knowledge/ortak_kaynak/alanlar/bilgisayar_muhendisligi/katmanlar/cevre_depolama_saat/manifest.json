@@ -1,0 +1,12 @@
+{
+  "katman_id": "cevre_depolama_saat",
+  "baslik": "Çevre birimi, depolama, saat ve güç",
+  "kaynak_id": "bm_katman_cevre",
+  "ilim_alani": "bilgisayar_muhendisligi",
+  "faz": "16b",
+  "dil": "tr",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/bilgisayar_muhendisligi/katmanlar/cevre_depolama_saat",
+  "parca_sayisi": 3,
+  "updated_utc": "2026-10-13T07:27:20Z",
+  "durum": "hazir"
+}

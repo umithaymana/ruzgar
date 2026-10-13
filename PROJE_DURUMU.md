@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-07 gece — anlık kavram eşleşme düzeltmesi
+**Son güncelleme:** 2026-10-13 sabah — 14 ek ilim rafı dolu (sıra 1 matematik … 14 eğitim)
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -34,7 +34,11 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 19. ~~RAG ortak alan boost~~ — `rag_store.search` domain ipucu + yol eşlemesi; din baskınlığı kesildi
 20. ~~Bilim/coğrafya derin2 + din hijyeni~~ — 13c/14c ingest · `RUZGAR_RAG_DIN_HYGIENE=1`
 21. ~~Anlık yanlış eşleşme~~ — kısa alias (`os`→atmosfer) + ForceRestart; «nedir» anlık raftan
-22. **Sonraki:** isteğe bağlı başka ince raflar · canlı sohbet smoke (Mimar)
+22. ~~Bilgisayar mühendisliği yolu~~ — aynı 27 kavram, ders notu derinleştirildi (~18 bin karakter) · anlık duman 0 hata · kartlar en az 400 karakter
+23. ~~RAG artımlı~~ — derin metin yeniden gömüldü · toplam **302734** · programlama kavram notu kod görevine karışmaz
+24. ~~Ek ilim rafları~~ — 14 raf dolu (~38 bin karakter) · RAG **302805** · sıra: matematik derin, istatistik, elektrik, astronomi, jeoloji, çevre, anatomi, dilbilim, müzik, sosyoloji, siyaset, ekonomi, hukuk, eğitim
+25. **Sıradaki hatırlatma 1:** Rüzgar sohbet ayarları
+26. **Ondan sonra hatırlatma 2:** Rüzgar web ayarları
 
 ### 2026-10-07 — Anlık kavram eşleşme (saçma cevap kökü)
 

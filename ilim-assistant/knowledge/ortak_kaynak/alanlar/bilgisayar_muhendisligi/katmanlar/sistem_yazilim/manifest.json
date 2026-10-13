@@ -1,0 +1,12 @@
+{
+  "katman_id": "sistem_yazilim",
+  "baslik": "Sistem yazılımı",
+  "kaynak_id": "bm_katman_sistem",
+  "ilim_alani": "bilgisayar_muhendisligi",
+  "faz": "17",
+  "dil": "tr",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/bilgisayar_muhendisligi/katmanlar/sistem_yazilim",
+  "parca_sayisi": 6,
+  "updated_utc": "2026-10-13T07:27:20Z",
+  "durum": "hazir"
+}

@@ -1,0 +1,12 @@
+{
+  "katman_id": "donanim_cekirdek",
+  "baslik": "Donanım çekirdeği",
+  "kaynak_id": "bm_katman_donanim",
+  "ilim_alani": "bilgisayar_muhendisligi",
+  "faz": 16,
+  "dil": "tr",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/bilgisayar_muhendisligi/katmanlar/donanim_cekirdek",
+  "parca_sayisi": 6,
+  "updated_utc": "2026-10-13T07:26:20Z",
+  "durum": "hazir"
+}

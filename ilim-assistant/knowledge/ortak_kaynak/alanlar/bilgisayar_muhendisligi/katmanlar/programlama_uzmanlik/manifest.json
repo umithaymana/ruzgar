@@ -1,0 +1,12 @@
+{
+  "katman_id": "programlama_uzmanlik",
+  "baslik": "Programlama uzmanlığı",
+  "kaynak_id": "bm_katman_uzmanlik",
+  "ilim_alani": "bilgisayar_muhendisligi",
+  "faz": "19",
+  "dil": "tr",
+  "dosya_yolu": "knowledge/ortak_kaynak/alanlar/bilgisayar_muhendisligi/katmanlar/programlama_uzmanlik",
+  "parca_sayisi": 4,
+  "updated_utc": "2026-10-13T07:27:20Z",
+  "durum": "hazir"
+}

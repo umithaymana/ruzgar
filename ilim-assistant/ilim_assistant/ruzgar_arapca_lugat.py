@@ -272,8 +272,8 @@ def looks_like_arapca_lugat_question(msg: str) -> bool:
         "mustak", "nahiv", "sarf", "irab", "i'rab", "vezin", "masdar", "ism-i fail",
         "ism-i meful", "arapca ne demek", "arapça ne demek", "kelimesinin koku",
         "kelimenin koku", "lane", "morpholog", "morfoloji", "bab nedir",
-        "harf-i cer", "mubteda", "mübteda", "fail nedir", "turev", "türev",
-        "ne demek", "anlami", "anlamı",
+        "harf-i cer", "mubteda", "mübteda", "fail nedir", "mushtaq nedir",
+        "müştak nedir", "ne demek", "anlami", "anlamı",
     )
     if any(_fold_tr(c) in low for c in cues):
         return True

@@ -2234,6 +2234,14 @@ def prepare_turn(
             )
         except Exception:
             pass
+        try:
+            from ilim_assistant.ruzgar_bilgisayar_kutuphane import programlama_kavram_notu
+
+            _bm_note = programlama_kavram_notu(msg)
+            if _bm_note and "BİLGİSAYAR MÜHENDİSLİĞİ NOTU" not in user_payload:
+                user_payload = _bm_note.rstrip() + "\n\n---\n" + user_payload
+        except Exception:
+            pass
     elif m == "mimar":
         try:
             from ilim_assistant.mimar_motoru import build_motor_context as mimar_ctx
