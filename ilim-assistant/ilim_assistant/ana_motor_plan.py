@@ -1269,6 +1269,16 @@ def looks_like_past_conversation_query(message: str) -> bool:
     if len(raw) < 8:
         return False
     blob = _norm_ascii(raw.lower()) + " " + raw.lower()
+    if re.search(
+        r"(?:istiyorum|ister\s+misin|bilgi\s+ver|anlat|nedir|kimdir)",
+        blob,
+        re.I,
+    ) and not re.search(
+        r"(?:hat[ıi]r|ne\s+konu[sş]|hangi\s+konu|sohbet\s+ettik|az\s+[oö]nce|neler\s+hat)",
+        blob,
+        re.I,
+    ):
+        return False
     # «senin adını sordum» / kimlik düzeltmesi — geçmiş listesi değil
     try:
         from ilim_assistant.ruzgar_tek_beyin import looks_like_assistant_self_query
@@ -1302,6 +1312,12 @@ def looks_like_past_conversation_query(message: str) -> bool:
         "ne konuş",
         "hangi konulari",
         "hangi konuları",
+        "hangi konularda",
+        "neler hatir",
+        "neler hatır",
+        "sohbet ettik",
+        "az once",
+        "az önce",
         "hangi soru",
         "hangi sorular",
         "ne sormu",

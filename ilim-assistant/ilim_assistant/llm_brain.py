@@ -172,7 +172,16 @@ def _filter_chain_ids_for_quota(
             out = [x for x in out if x != "groq"]
     except Exception:
         pass
-    if "groq" in out:
+    preserve_gemini_first = False
+    try:
+        from ilim_assistant.prompts import sohbet_tarz_chatgpt
+
+        preserve_gemini_first = sohbet_tarz_chatgpt() and "gemini" in chain_ids
+    except Exception:
+        preserve_gemini_first = False
+    if preserve_gemini_first:
+        pass
+    elif "groq" in out:
         out = ["groq"] + [x for x in out if x != "groq"]
     elif _profile_groq() is not None:
         try:
@@ -881,6 +890,14 @@ def _looks_like_error_chunk(piece: str) -> bool:
 
 def build_casual_fast_chain_ids() -> list[str]:
     """Kısa sohbet — Ollama-only'de denge önce; aksi halde Groq → hizli."""
+    try:
+        from ilim_assistant.config import gemini_disabled
+        from ilim_assistant.prompts import sohbet_tarz_chatgpt
+
+        if sohbet_tarz_chatgpt() and not gemini_disabled():
+            return _filter_chain_ids_for_quota(["gemini", "denge", "hizli"])
+    except Exception:
+        pass
     custom = (os.environ.get("RUZGAR_CASUAL_BRAIN_CHAIN") or "").strip()
     if custom:
         ids = [x.strip() for x in custom.split(",") if x.strip()]

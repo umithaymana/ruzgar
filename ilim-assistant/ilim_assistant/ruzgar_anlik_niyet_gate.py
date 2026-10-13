@@ -19,6 +19,7 @@ _SYNTH_RE = re.compile(
     r"\bsohbet\b|\bkonuş(?:alım|alim)?\b|\bkonus(?:alim)?\b|"
     r"devam\s+et|anlamad[ıi]m|örnekle|ornekle|"
     r"doğal\s+konuş|dogal\s+konus|arkada[sş]\s+gibi|"
+    r"hakk[ıi]nda|bilgi\s+ver|bilgilendir|"
     r"panelde\s+aç|panelde\s+ac"
     r")",
     re.I,
@@ -80,7 +81,14 @@ def should_defer_library_instant(message: str) -> bool:
     if not raw:
         return False
     if is_strict_library_lookup(raw):
-        return False
+        try:
+            from ilim_assistant.prompts import sohbet_tarz_chatgpt
+
+            if not sohbet_tarz_chatgpt():
+                return False
+        except Exception:
+            return False
+        return True
     if _SYNTH_RE.search(raw) or _SYNTH_RE.search(_fold(raw)):
         return True
     return False

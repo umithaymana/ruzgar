@@ -216,6 +216,13 @@ def build_bilissel_turn_context(
     """LLM turuna eklenecek iç talimat (kullanıcıya gösterilmez)."""
     if not bilissel_enabled():
         return ""
+    try:
+        from ilim_assistant.prompts import sohbet_tarz_chatgpt
+
+        if sohbet_tarz_chatgpt():
+            return ""
+    except Exception:
+        pass
     a = analyze_message(message)
     lines = [
         "[BİLİŞSEL ANALİZ — bu tur; kullanıcıya aynen yazdırma]",

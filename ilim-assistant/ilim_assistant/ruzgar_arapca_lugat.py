@@ -281,11 +281,32 @@ def looks_like_arapca_lugat_question(msg: str) -> bool:
         x in low for x in ("nedir", "ne demek", "anlam", "kok", "kök", "mana")
     ):
         return True
-    # Latin/TR kök kelimesi tek başına (rahman, kitab…)
-    for tok in re.findall(r"[A-Za-zİıŞşĞğÜüÖöÇçÂâÎîÛû']{3,}", msg or ""):
-        if _fold_tr(tok) in _LATIN_TO_ROOT:
-            return True
-    return False
+    # Latin kök: kısa bakış («islam nedir»). Uzun sohbet cümlesi lügate düşmez.
+    root_hits = [
+        tok
+        for tok in re.findall(r"[A-Za-zİıŞşĞğÜüÖöÇçÂâÎîÛû']{3,}", msg or "")
+        if _fold_tr(tok) in _LATIN_TO_ROOT
+    ]
+    if not root_hits:
+        return False
+    words = low.split()
+    chatty = any(
+        x in low
+        for x in (
+            "konus",
+            "sohbet",
+            "hakkinda",
+            "anlat",
+            "bilgi",
+            "ogren",
+            "dinle",
+        )
+    )
+    if chatty and len(words) > 3:
+        return False
+    if len(words) <= 4:
+        return True
+    return any(x in low for x in ("nedir", "ne demek", "anlam", "koku", "kok"))
 
 
 @lru_cache(maxsize=1)

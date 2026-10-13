@@ -2140,6 +2140,13 @@ def prepare_turn(
                 _natural_soft = True
         except Exception:
             _natural_soft = False
+        try:
+            from ilim_assistant.prompts import sohbet_tarz_chatgpt
+
+            if sohbet_tarz_chatgpt():
+                _natural_soft = True
+        except Exception:
+            pass
         if not _natural_soft:
             user_payload += citation_directive_for_turn(
                 source_count=len(hits),

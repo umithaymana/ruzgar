@@ -96,7 +96,7 @@ def _gemini_vision(prompt: str, image_bytes: bytes, mime: str) -> str:
     key = gemini_api_key()
     if not key:
         return ""
-    model = os.environ.get("RUZGAR_GEMINI_VISION_MODEL", "gemini-2.0-flash").strip()
+    model = os.environ.get("RUZGAR_GEMINI_VISION_MODEL", "gemini-3.5-flash-lite").strip()
     b64 = base64.standard_b64encode(image_bytes).decode("ascii")
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
     body = {

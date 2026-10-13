@@ -115,6 +115,40 @@ def _normalize_model_name(model: str) -> str:
     return m or DEFAULT_GEMINI_MODEL
 
 
+# Emekli veya yoğun modeller 404/503 verince sıradaki çalışan modele geç.
+_GEMINI_MODEL_FALLBACKS = (
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite",
+    "gemini-3.8-flash",
+    "gemini-3.5-flash",
+)
+
+
+def _gemini_model_candidates(preferred: str) -> list[str]:
+    out: list[str] = []
+    for name in (preferred, *_GEMINI_MODEL_FALLBACKS):
+        n = _normalize_model_name(name)
+        if n and n not in out:
+            out.append(n)
+    return out
+
+
+def _gemini_error_is_retryable(status: int, body: str) -> bool:
+    low = (body or "").lower()
+    if status in (404, 503):
+        return True
+    return any(
+        k in low
+        for k in (
+            "no longer available",
+            "not found",
+            "high demand",
+            "overloaded",
+            "unavailable",
+        )
+    )
+
+
 def _gemini_timeout() -> tuple[float, float]:
     try:
         conn = float(os.environ.get("RUZGAR_GEMINI_CONNECT_TIMEOUT_SEC", "8"))
@@ -177,7 +211,7 @@ def format_gemini_user_error(exc: BaseException) -> str:
     if "404" in raw and "model" in low:
         return (
             f"Gemini modeli bulunamadı: {model}. "
-            "RUZGAR_GEMINI_MODEL değerini güncelleyin (ör. gemini-2.0-flash)."
+            "RUZGAR_GEMINI_MODEL değerini güncelleyin (ör. gemini-3.5-flash-lite)."
         )
     if not raw:
         return "Gemini isteği başarısız (ayrıntı yok)."
@@ -267,8 +301,10 @@ def chat_completion_stream_gemini(
         )
         return
 
-    model_id = _normalize_model_name(model or os.environ.get("RUZGAR_GEMINI_MODEL") or DEFAULT_GEMINI_MODEL)
-    url = f"{_GEMINI_API_ROOT}/models/{model_id}:streamGenerateContent?alt=sse"
+    preferred = _normalize_model_name(
+        model or os.environ.get("RUZGAR_GEMINI_MODEL") or DEFAULT_GEMINI_MODEL
+    )
+    candidates = _gemini_model_candidates(preferred)
 
     try:
         mt = int(
@@ -303,57 +339,72 @@ def chat_completion_stream_gemini(
         "x-goog-api-key": key,
     }
 
-    try:
-        with _session().post(
-            url,
-            json=payload,
-            headers=headers,
-            stream=True,
-            timeout=_gemini_timeout(),
-        ) as resp:
-            if resp.status_code >= 400:
-                err_body = resp.text[:800]
-                err = RuntimeError(f"HTTP {resp.status_code}: {err_body}")
-                try:
-                    from ilim_assistant.gemini_quota_guard import mark_gemini_quota_hit
+    last_error = ""
+    for model_id in candidates:
+        url = f"{_GEMINI_API_ROOT}/models/{model_id}:streamGenerateContent?alt=sse"
+        try:
+            with _session().post(
+                url,
+                json=payload,
+                headers=headers,
+                stream=True,
+                timeout=_gemini_timeout(),
+            ) as resp:
+                if resp.status_code >= 400:
+                    err_body = resp.text[:800]
+                    err = RuntimeError(f"HTTP {resp.status_code}: {err_body}")
+                    last_error = format_gemini_user_error(err)
+                    try:
+                        from ilim_assistant.gemini_quota_guard import mark_gemini_quota_hit
 
-                    if resp.status_code == 429 or is_gemini_quota_or_rate_error(err_body):
-                        mark_gemini_quota_hit()
-                except Exception:
-                    pass
-                yield format_gemini_user_error(err)
-                return
-            resp.encoding = "utf-8"
-            accumulated = ""
-            stream_deadline = time.monotonic() + _gemini_stream_wall_sec()
-            for raw_line in resp.iter_lines(decode_unicode=False):
-                if time.monotonic() > stream_deadline:
-                    yield format_gemini_user_error(
-                        TimeoutError(
-                            f"Gemini akışı {_gemini_stream_wall_sec():.0f} sn içinde tamamlanmadı."
-                        )
-                    )
+                        if resp.status_code == 429 or is_gemini_quota_or_rate_error(err_body):
+                            mark_gemini_quota_hit()
+                            yield last_error
+                            return
+                    except Exception:
+                        pass
+                    if resp.status_code in (401, 403):
+                        yield last_error
+                        return
+                    if _gemini_error_is_retryable(resp.status_code, err_body):
+                        continue
+                    yield last_error
                     return
-                if not raw_line:
-                    continue
-                try:
-                    line = raw_line.decode("utf-8")
-                except UnicodeDecodeError:
-                    line = raw_line.decode("utf-8", errors="replace")
-                piece = _parse_stream_line(line)
-                if not piece:
-                    continue
-                if piece.startswith(accumulated):
-                    delta = piece[len(accumulated) :]
-                else:
-                    delta = piece
-                accumulated = piece
-                if delta:
-                    yield repair_utf8_mojibake(delta)
-            if not accumulated:
-                yield "Gemini boş yanıt döndürdü."
-    except requests.RequestException as e:
-        yield format_gemini_user_error(e)
+                resp.encoding = "utf-8"
+                accumulated = ""
+                stream_deadline = time.monotonic() + _gemini_stream_wall_sec()
+                for raw_line in resp.iter_lines(decode_unicode=False):
+                    if time.monotonic() > stream_deadline:
+                        yield format_gemini_user_error(
+                            TimeoutError(
+                                f"Gemini akışı {_gemini_stream_wall_sec():.0f} sn içinde tamamlanmadı."
+                            )
+                        )
+                        return
+                    if not raw_line:
+                        continue
+                    try:
+                        line = raw_line.decode("utf-8")
+                    except UnicodeDecodeError:
+                        line = raw_line.decode("utf-8", errors="replace")
+                    piece = _parse_stream_line(line)
+                    if not piece:
+                        continue
+                    if piece.startswith(accumulated):
+                        delta = piece[len(accumulated) :]
+                    else:
+                        delta = piece
+                    accumulated = piece
+                    if delta:
+                        yield repair_utf8_mojibake(delta)
+                if accumulated:
+                    return
+                last_error = "Gemini boş yanıt döndürdü."
+        except requests.RequestException as e:
+            last_error = format_gemini_user_error(e)
+            continue
+    if last_error:
+        yield last_error
 
 
 def chat_completion_gemini(

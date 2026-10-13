@@ -294,7 +294,23 @@ _RECALL_STOP = frozenset(
 
 def _looks_like_generic_past_summary(message: str) -> bool:
     blob = _normalize_query(message)
-    if any(x in blob for x in ("dun ne", "dün ne", "gecen ne", "geçen ne", "daha once ne", "daha önce ne")):
+    if any(
+        x in blob
+        for x in (
+            "dun ne",
+            "dün ne",
+            "gecen ne",
+            "geçen ne",
+            "daha once ne",
+            "daha önce ne",
+            "neler hatir",
+            "neler hatır",
+            "hangi konularda",
+            "sohbet ettik",
+            "az once",
+            "az önce",
+        )
+    ):
         return True
     return bool(re.search(r"ne\s+(?:konus|konuş)(?:tuk|tik|mus|muş|mustuk|muştuk)?", blob, re.I))
 
@@ -587,6 +603,13 @@ def try_session_echo_reply(
     msg = (message or "").strip()
     if len(msg) < 4 or len(msg) > 500:
         return None
+    try:
+        from ilim_assistant.prompts import sohbet_tarz_chatgpt
+
+        if sohbet_tarz_chatgpt():
+            return None
+    except Exception:
+        pass
     # Yerel ilim / kimlik anlık yolları — eski yanlış yankıyı ezmesin
     try:
         from ilim_assistant.ruzgar_tek_beyin import looks_like_assistant_self_query
@@ -716,6 +739,32 @@ def try_past_conversation_reply(
             "Ümit abi, kayıtlı önceki oturum sohbeti bulamadım — "
             "bugünkü penceredeki konuşmalara bakabiliriz; istersen önemli bir şeyi «hatırla» ile yazdır."
         )
+    chatgpt = False
+    try:
+        from ilim_assistant.prompts import sohbet_tarz_chatgpt
+
+        chatgpt = sohbet_tarz_chatgpt()
+    except Exception:
+        chatgpt = False
+    if chatgpt:
+        topics: list[str] = []
+        seen: set[str] = set()
+        for row in items:
+            u = str(row.get("user") or "").strip()
+            if len(u) < 4:
+                continue
+            key = u[:80].casefold()
+            if key in seen:
+                continue
+            seen.add(key)
+            topics.append(u[:140])
+            if len(topics) >= 8:
+                break
+        if not topics:
+            return "Ümit abi, kayıtlı bir sohbet konusu bulamadım."
+        lines = ["Ümit abi, son sohbetlerde şunlar geçti:", ""]
+        lines.extend(f"· {t}" for t in topics)
+        return "\n".join(lines).strip()
     lines = [
         "Ümit abi, kayıtlı son sohbetlerden hatırladıklarım:",
         "",

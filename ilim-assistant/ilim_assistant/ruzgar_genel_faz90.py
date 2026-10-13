@@ -75,6 +75,17 @@ def build_ilim_rag_brain_chain_ids() -> list[str]:
 
 def build_genel_brain_chain_ids() -> list[str]:
     """Genel sohbet LLM zinciri — yerel öncelik; kota soğukken Gemini atlanır."""
+    try:
+        from ilim_assistant.config import gemini_disabled
+        from ilim_assistant.prompts import sohbet_tarz_chatgpt
+
+        if sohbet_tarz_chatgpt() and not gemini_disabled():
+            ids = ["gemini", "denge", "hizli"]
+            if _gemini_on_cooldown():
+                ids = ["denge", "hizli"]
+            return ids
+    except Exception:
+        pass
     custom = (os.environ.get("RUZGAR_GENEL_BRAIN_CHAIN") or "").strip()
     if custom:
         ids = [x.strip() for x in custom.split(",") if x.strip()]

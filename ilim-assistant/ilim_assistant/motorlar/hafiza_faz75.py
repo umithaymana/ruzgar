@@ -32,7 +32,7 @@ _STATUS_RE = re.compile(
     re.I,
 )
 _HELP_RE = re.compile(
-    r"(?:haf[ıi]za\s+komut|hafiza\s+komut|neler\s+hat[ıi]rl|komut\s+listesi)",
+    r"(?:haf[ıi]za\s+komut|hafiza\s+komut|komut\s+listesi|nasil\s+hat[ıi]rlat)",
     re.I,
 )
 _REMEMBER_RE = re.compile(

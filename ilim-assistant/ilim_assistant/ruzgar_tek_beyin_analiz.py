@@ -394,6 +394,17 @@ def try_simple_factual_reply(message: str) -> Optional[str]:
         return arith
     if _TEMPORAL_NOW.search(_norm(raw)):
         return None
+    try:
+        from ilim_assistant.prompts import sohbet_tarz_chatgpt
+
+        folded = _norm(raw)
+        if sohbet_tarz_chatgpt() and any(
+            x in folded
+            for x in ("hakkinda", "hakkında", "bilgi ver", "anlat", "acikla", "açıkla")
+        ):
+            return None
+    except Exception:
+        pass
     for pat, ans in _SIMPLE_FACTS:
         if pat.search(_norm(raw)):
             return ans

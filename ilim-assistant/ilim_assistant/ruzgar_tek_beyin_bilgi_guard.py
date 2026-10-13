@@ -284,6 +284,13 @@ def apply_tek_beyin_bilgi_guard(
 
     if not _GUVEN_RE.search(body):
         try:
+            from ilim_assistant.prompts import sohbet_tarz_chatgpt
+
+            if sohbet_tarz_chatgpt() and topic_ok and not mismatch:
+                return body, meta
+        except Exception:
+            pass
+        try:
             from ilim_assistant.ana_motor_reflection import _has_guven_line
 
             if not _has_guven_line(body):

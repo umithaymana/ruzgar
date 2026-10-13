@@ -54,6 +54,36 @@ def _explicit_research_intent(message: str) -> bool:
         return any(c in blob for c in cues)
 
 
+def _looks_like_topic_explanation(message: str) -> bool:
+    """Karşılaştırma ve konu anlatımı sohbet değil; bilgi yoluna kalsın."""
+    raw = (message or "").strip()
+    if not raw:
+        return False
+    blob = _norm_ascii(raw.lower()) + " " + raw.lower()
+    if "fark et" in blob or "farket" in blob or "farkında" in blob or "farkinda" in blob:
+        return False
+    cues = (
+        "farkı",
+        "farki",
+        "farkın",
+        "farkin",
+        "farklar",
+        "arasındaki",
+        "arasindaki",
+        "karşılaştır",
+        "karsilastir",
+        "kıyasla",
+        "kiyasla",
+        "ne işe yarar",
+        "ne ise yarar",
+        "nasıl çalış",
+        "nasil calis",
+        "neden olur",
+        "neden denir",
+    )
+    return any(c in blob for c in cues)
+
+
 def _last_assistant_snippet(history: list | None, *, max_len: int = 120) -> str:
     if not history:
         return ""
@@ -109,6 +139,24 @@ def is_natural_conversation_turn(
     except Exception:
         pass
     if _explicit_research_intent(raw):
+        return False
+    if _looks_like_topic_explanation(raw):
+        return False
+    explain_blob = _norm_ascii(raw.lower()) + " " + raw.lower()
+    if any(
+        x in explain_blob
+        for x in (
+            "daha acik",
+            "daha açık",
+            "anlat",
+            "acikla",
+            "açıkla",
+            "bilgi ver",
+            "bilgilendir",
+            "hakkinda",
+            "hakkında",
+        )
+    ):
         return False
 
     # Kütüphane anlat/açıkla → doğal sohbet şablonu değil; LLM + ipucu yolu

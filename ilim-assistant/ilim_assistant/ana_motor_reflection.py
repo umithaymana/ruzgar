@@ -180,6 +180,14 @@ def apply_answer_quality_pass(
     if not body or body.startswith("["):
         return reply
 
+    try:
+        from ilim_assistant.prompts import sohbet_tarz_chatgpt
+
+        if sohbet_tarz_chatgpt():
+            return re.sub(r"\n+\*{0,2}Güven:\s*[^\n]*", "", body, flags=re.I).rstrip() or body
+    except Exception:
+        pass
+
     # Faz 91 P2 — doğal sohbet: zorunlu güven/web damgası ekleme
     try:
         from ilim_assistant.ruzgar_dogal_sohbet_faz91 import is_natural_conversation_turn
