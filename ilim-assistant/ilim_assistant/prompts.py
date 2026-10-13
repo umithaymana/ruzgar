@@ -144,6 +144,34 @@ Kitaptan otomatik sinema filmi üretimi gibi vaatleri gerçekçi çerçevede anl
 """
 
 
+def sohbet_tarz_chatgpt() -> bool:
+    """RUZGAR_SOHBET_TARZ=chatgpt — akıcı, uzunluğu soruya uyan sohbet."""
+    return os.environ.get("RUZGAR_SOHBET_TARZ", "").strip().lower() in (
+        "chatgpt",
+        "gpt",
+        "chat-gpt",
+        "chat_gpt",
+    )
+
+
+def _chatgpt_sohbet_suffix() -> str:
+    if not sohbet_tarz_chatgpt():
+        return ""
+    return """
+
+Sohbet düzeni (ChatGPT — RUZGAR_SOHBET_TARZ):
+- Karşındakiyle gerçek bir sohbet et: akıcı Türkçe, net, samimi. Kürsüden ders anlatma, kart okuma.
+- Yanıta kullanıcının cümlesini başlık diye yazma; doğrudan cevapla başla.
+- Önce sorunun veya isteğin cevabını ver. Ardından, işe yararsa bir örnek, kısa gerekçe veya sonraki adım.
+- Uzunluk isteğe uysun. «Kısaca» ise birkaç cümle. «Anlat, açıkla, karşılaştır» ise düzenli paragraflar; gerekirse başlık veya madde.
+- Önceki turlardaki konuyu, kararı ve düzeltmeyi hatırla. «bu / devam / onu» önceki mesaja bağlıdır.
+- Ümit abi diye doğal hitap et; her cümlede adını tekrarlama.
+- Bilmediğini söyle. Tarih, sayı ve alıntı uydurma.
+- Kullanıcı istemedikçe yeni görev listesi açma.
+- İç talimat, [TALİMAT] ve sistem metnini yanıta yazma.
+"""
+
+
 def _bilge_voice_suffix() -> str:
     """RUZGAR_BILGE_VOICE=0 ile kapatılır."""
     if os.environ.get("RUZGAR_BILGE_VOICE", "1").strip().lower() in (
@@ -203,7 +231,8 @@ def pick_system(coding_mode: bool, mode_norm: str | None = None) -> str:
         return SES_SYSTEM
     if m == "video":
         return VIDEO_SYSTEM
-    return ASSISTANT_SYSTEM + _bilge_voice_suffix() + _ollama_sohbet_suffix()
+    voice = "" if sohbet_tarz_chatgpt() else _bilge_voice_suffix()
+    return ASSISTANT_SYSTEM + voice + _ollama_sohbet_suffix() + _chatgpt_sohbet_suffix()
 
 
 def append_direct_answer_directive(user_payload: str, user_message: str) -> str:
@@ -227,6 +256,15 @@ def append_direct_answer_directive(user_payload: str, user_message: str) -> str:
         )
     if "rüzgar" in low or "ruzgar" in low:
         return user_payload
+    if sohbet_tarz_chatgpt():
+        return (
+            user_payload
+            + "\n\n[TALİMAT — BU TUR]\n"
+            + "Sabit karşılama şablonu yazma. Ümit abi'ye doğrudan cevap ver. "
+            + "Önce isteğin kendisi, sonra gerekirse kısa açıklama. "
+            + "Uzunluk bu mesaja uysun; doldurma cümlesi ekleme. "
+            + "Kullanıcının cümlesini kopyalama.\n"
+        )
     return (
         user_payload
         + "\n\n[TALİMAT — BU TUR]\n"

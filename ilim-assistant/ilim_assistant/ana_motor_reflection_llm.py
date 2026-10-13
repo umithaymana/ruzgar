@@ -200,6 +200,17 @@ def apply_bilgi_kalite_pass(
     Faz Y boru hattı: kural reflection → LLM reflection → kaynak rozeti.
     Dönüş: (cevap, reflection_meta, source_trust_card)
     """
+    try:
+        from ilim_assistant.prompts import sohbet_tarz_chatgpt
+
+        if sohbet_tarz_chatgpt() and not web_was_used and not hits:
+            return (
+                reply,
+                {"llm_reflection_applied": False, "skipped": "chatgpt_sohbet"},
+                None,
+            )
+    except Exception:
+        pass
     from ilim_assistant.ana_motor_kaynak_rozet import build_source_trust_card
     from ilim_assistant.ana_motor_reflection import (
         apply_answer_quality_pass,

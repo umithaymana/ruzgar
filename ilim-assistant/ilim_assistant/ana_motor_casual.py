@@ -57,10 +57,25 @@ def _casual_system_and_user(
         )
 
         if dogal_sohbet_enabled():
-            system = pick_system(False, mode_norm) + "\n\n" + build_natural_sohbet_system_addon()
+            from ilim_assistant.prompts import sohbet_tarz_chatgpt
+
+            if sohbet_tarz_chatgpt():
+                system = (
+                    "Sen Rüzgar'sın. Karşındaki Ümit abi. Türkçe, doğal ve net konuş.\n"
+                    "İsteneni sen yap. «Anlat, açıkla, farkını söyle, kısaca» denmişse cevabı sen yaz; "
+                    "soruyu kullanıcıya geri sorma.\n"
+                    "Doğrudan cevapla başla. Kullanıcının cümlesini başa kopyalama.\n"
+                    "Kısa istekte birkaç cümle; anlat denmişse kısa paragraflar veya madde.\n"
+                    "Her cümlede adını tekrarlama. Bilmediğini söyle. Uydurma.\n"
+                )
+                user = (message or "").strip()
+            else:
+                system = pick_system(False, mode_norm) + "\n\n" + build_natural_sohbet_system_addon()
+                user = build_natural_user_tail(message).strip()
             if system_addon:
                 system += system_addon
-            user = build_natural_user_tail(message).strip()
+            if sohbet_tarz_chatgpt():
+                system += "\nSon söz: cevabı sen yaz. Kullanıcıya «anlatır mısın» diye sorma.\n"
             max_tok = max_tokens_override if max_tokens_override is not None else natural_max_tokens()
             prior_n = (
                 prior_depth_override if prior_depth_override is not None else natural_prior_depth()
@@ -75,22 +90,39 @@ def _casual_system_and_user(
     except Exception:
         pass
 
-    system = (
-        pick_system(False, mode_norm)
-        + "\n\n[TALİMAT — KISA SOHBET]\n"
-        "Ümit abi ile doğal, sıcak ve doğru konuş. 2–5 cümle, Türkçe. "
-        "Önce net cevap; emin değilsen söyle, uydurma. "
-        "Liste veya uzun ders anlatımı yok; soruya doğrudan yanıt ver.\n"
-    )
+    from ilim_assistant.prompts import sohbet_tarz_chatgpt
+
+    if sohbet_tarz_chatgpt():
+        sohbet_ek = (
+            "\n\n[TALİMAT — SOHBET]\n"
+            "Ümit abi ile doğal Türkçe konuş. Önce cevabı ver. "
+            "Kısaca istendiyse kısa tut; anlat denmişse birkaç paragraf serbest. "
+            "Maddeyi ancak yapı gerektiğinde kullan. Uydurma.\n"
+        )
+    else:
+        sohbet_ek = (
+            "\n\n[TALİMAT — KISA SOHBET]\n"
+            "Ümit abi ile doğal, sıcak ve doğru konuş. 2–5 cümle, Türkçe. "
+            "Önce net cevap; emin değilsen söyle, uydurma. "
+            "Liste veya uzun ders anlatımı yok; soruya doğrudan yanıt ver.\n"
+        )
+    system = pick_system(False, mode_norm) + sohbet_ek
     if system_addon:
         system += system_addon
-    user = (
-        f"Kullanıcı mesajı:\n{(message or '').strip()}\n\n"
-        "Bu bir sohbet veya günlük konuşma turudur; soruya **doğrudan**, samimi, "
-        "net ve doğru yanıt ver. Konu dışına çıkma; ders anlatımı veya kaynak listesi verme."
-    )
+    if sohbet_tarz_chatgpt():
+        user_ek = (
+            "Bu bir sohbet turudur. Doğrudan, samimi ve doğru yanıt ver. "
+            "İstenmişse açıkla; istenmemişse uzatma."
+        )
+    else:
+        user_ek = (
+            "Bu bir sohbet veya günlük konuşma turudur; soruya **doğrudan**, samimi, "
+            "net ve doğru yanıt ver. Konu dışına çıkma; ders anlatımı veya kaynak listesi verme."
+        )
+    user = f"Kullanıcı mesajı:\n{(message or '').strip()}\n\n{user_ek}"
     max_tok = max_tokens_override if max_tokens_override is not None else _casual_max_tokens()
-    prior_n = prior_depth_override if prior_depth_override is not None else 6
+    default_prior = 16 if sohbet_tarz_chatgpt() else 6
+    prior_n = prior_depth_override if prior_depth_override is not None else default_prior
     try:
         casual_temp = float(os.environ.get("CHAT_TEMPERATURE", "0.38"))
     except ValueError:

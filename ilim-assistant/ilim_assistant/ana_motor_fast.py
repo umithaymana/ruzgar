@@ -307,18 +307,33 @@ def iter_fast_direct_llm_reply(
             "Kullanıcı kişisel bir not paylaşıyor olabilir; kısa onay veya net soru.\n"
         )
     else:
-        extra = (
-            "\n\n[TALİMAT — HIZLI YANIT]\n"
-            "Kısa, doğrudan Türkçe yanıt (2–5 cümle).\n"
-        )
+        try:
+            from ilim_assistant.prompts import sohbet_tarz_chatgpt
+
+            chatgpt = sohbet_tarz_chatgpt()
+        except Exception:
+            chatgpt = False
+        if chatgpt:
+            extra = (
+                "\n\n[TALİMAT — SOHBET]\n"
+                "Önce cevabı ver. Uzunluk soruya uysun; kısaca denmişse kısa kal. "
+                "Anlat veya açıkla denmişse birkaç paragraf ve gerekirse madde serbest. "
+                "Önceki turu hatırla. Türkçe, uydurma yok.\n"
+            )
+        else:
+            extra = (
+                "\n\n[TALİMAT — HIZLI YANIT]\n"
+                "Kısa, doğrudan Türkçe yanıt (2–5 cümle).\n"
+            )
 
     system = pick_system(False, mode_norm) + extra
     user = (message or "").strip()
     prior = prior_messages_for_turn(history, mode_norm, message=message or "")
+    prior_keep = 24 if "SOHBET" in extra else 8
     for piece in stream_chat_with_brain(
         system,
         user,
-        prior_messages=prior[-8:] if prior else None,
+        prior_messages=prior[-prior_keep:] if prior else None,
         mode_norm=mode_norm,
         message=message,
         question_plan=question_plan,
