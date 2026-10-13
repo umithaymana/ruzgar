@@ -1,6 +1,10 @@
 # RÜZGAR — mobil (Expo)
 
-Telefonundan **aynı Wi‑Fi üzerindeki PC’de çalışan Ollama** ile sohbet eder.
+Telefon, Rüzgar sunucusuna sorar. Kütüphane, arama cetveli ve anahtarlar telefonda durmaz.
+
+Bugün kapı yalnız bu bilgisayardadır: `http://127.0.0.1:8779`. Uygulama `POST /api/chat/full` kullanır. Ollama adresi telefona verilmez.
+
+Halka açılış ayrı bir gündür. O gün sunucu adresi değişir; kapının önüne kimlik ve TLS konur.
 
 ## Kurulum
 
@@ -10,21 +14,8 @@ npm install
 npx expo start
 ```
 
-Expo Go uygulaması ile QR kodu tarayın veya emülatör kullanın.
+Expo Go ile QR kodu tarayın veya emülatör kullanın. Aynı bilgisayardaki emülatör varsayılan adrese bağlanır.
 
-## PC tarafı
+## Mağaza
 
-1. Ollama çalışıyor olmalı (`ollama serve`).
-2. Yerel ağdan erişim için (Windows PowerShell, bir kez):
-
-```powershell
-setx OLLAMA_HOST "0.0.0.0"
-```
-
-Ollama’yı yeniden başlatın. Güvenlik duvarında **11434** TCP izni verin.
-
-3. PC’nin IP adresini öğrenin (`ipconfig`) ve uygulamadaki adresi `http://IP:11434` yapın.
-
-## Mağazaya yükleme
-
-`eas build` ile Android APK/AAB veya iOS için Apple Developer hesabı gerekir; bu repo bir başlangıç iskeletidir.
+`eas build` ile Android veya iOS paketi ayrı bir adımdır. Bu klasör başlangıç istemcisidir.

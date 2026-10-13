@@ -12,6 +12,15 @@ if str(_IA) not in sys.path:
 os.chdir(_IA)
 
 
+def _api_host() -> str:
+    """Bugün kapı 127.0.0.1. Halka açılışta RUZGAR_API_HOST veya --host, kimlik ve TLS ile."""
+    if "--host" in sys.argv:
+        i = sys.argv.index("--host")
+        if i + 1 < len(sys.argv) and sys.argv[i + 1].strip():
+            return sys.argv[i + 1].strip()
+    return (os.environ.get("RUZGAR_API_HOST") or "127.0.0.1").strip() or "127.0.0.1"
+
+
 def _bootstrap() -> None:
     from ilim_assistant.env_bootstrap import ensure_ruzgar_env, sync_global_api_key_aliases
 
@@ -79,7 +88,7 @@ def main() -> None:
         port = int(os.environ.get("RUZGAR_API_PORT", "8779") or "8779")
     uvicorn.run(
         "desktop_server:app",
-        host="127.0.0.1",
+        host=_api_host(),
         port=port,
         log_level="info",
     )

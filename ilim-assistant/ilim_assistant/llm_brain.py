@@ -156,8 +156,17 @@ def _filter_chain_ids_for_quota(
     *,
     cloud_only: bool = False,
 ) -> list[str]:
-    """Kota soğukken Gemini/Groq'u zincirden çıkar."""
+    """Kota soğukken veya kapalıyken Gemini/Groq'u zincirden çıkar."""
     out = list(chain_ids)
+    try:
+        from ilim_assistant.config import gemini_disabled, groq_disabled
+
+        if gemini_disabled():
+            out = [x for x in out if x != "gemini"]
+        if groq_disabled():
+            out = [x for x in out if x != "groq"]
+    except Exception:
+        pass
     try:
         from ilim_assistant.gemini_quota_guard import gemini_cooldown_active
 
@@ -174,23 +183,36 @@ def _filter_chain_ids_for_quota(
         pass
     preserve_gemini_first = False
     try:
+        from ilim_assistant.config import gemini_disabled
         from ilim_assistant.prompts import sohbet_tarz_chatgpt
 
-        preserve_gemini_first = sohbet_tarz_chatgpt() and "gemini" in chain_ids
+        preserve_gemini_first = (
+            sohbet_tarz_chatgpt() and "gemini" in out and not gemini_disabled()
+        )
     except Exception:
         preserve_gemini_first = False
     if preserve_gemini_first:
         pass
-    elif "groq" in out:
-        out = ["groq"] + [x for x in out if x != "groq"]
-    elif _profile_groq() is not None:
+    else:
+        groq_off = False
         try:
-            from ilim_assistant.groq_quota_guard import groq_cooldown_active
+            from ilim_assistant.config import groq_disabled
 
-            if not groq_cooldown_active():
-                out = ["groq"] + out
+            groq_off = groq_disabled()
         except Exception:
-            out = ["groq"] + out
+            groq_off = False
+        if groq_off:
+            out = [x for x in out if x != "groq"]
+        elif "groq" in out:
+            out = ["groq"] + [x for x in out if x != "groq"]
+        elif _profile_groq() is not None:
+            try:
+                from ilim_assistant.groq_quota_guard import groq_cooldown_active
+
+                if not groq_cooldown_active():
+                    out = ["groq"] + out
+            except Exception:
+                out = ["groq"] + out
     if not cloud_only:
         for fb in ("denge", "hizli", "kod"):
             if fb not in out:
@@ -894,7 +916,9 @@ def build_casual_fast_chain_ids() -> list[str]:
         from ilim_assistant.config import gemini_disabled
         from ilim_assistant.prompts import sohbet_tarz_chatgpt
 
-        if sohbet_tarz_chatgpt() and not gemini_disabled():
+        if sohbet_tarz_chatgpt():
+            if gemini_disabled():
+                return ["denge", "hizli"]
             return _filter_chain_ids_for_quota(["gemini", "denge", "hizli"])
     except Exception:
         pass

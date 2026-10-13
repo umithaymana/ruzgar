@@ -79,7 +79,9 @@ def build_genel_brain_chain_ids() -> list[str]:
         from ilim_assistant.config import gemini_disabled
         from ilim_assistant.prompts import sohbet_tarz_chatgpt
 
-        if sohbet_tarz_chatgpt() and not gemini_disabled():
+        if sohbet_tarz_chatgpt():
+            if gemini_disabled():
+                return ["denge", "hizli"]
             ids = ["gemini", "denge", "hizli"]
             if _gemini_on_cooldown():
                 ids = ["denge", "hizli"]

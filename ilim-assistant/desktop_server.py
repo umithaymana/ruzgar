@@ -14206,8 +14206,9 @@ if __name__ == "__main__":
     from ilim_assistant.ruzgar_api_port import resolve_api_port
 
     port = resolve_api_port()
-    _default_host = "0.0.0.0" if os.environ.get("PORT") else "127.0.0.1"
-    host = os.environ.get("RUZGAR_API_HOST", _default_host)
+    # Kapı bugün yalnız bu makine. Halka açılış ayrı adım: RUZGAR_API_HOST sunucuda,
+    # kimlik ve TLS ile. PORT tek başına kapıyı dışarı açmaz.
+    host = (os.environ.get("RUZGAR_API_HOST") or "127.0.0.1").strip() or "127.0.0.1"
     # Varsayılan: daha az log I/O (yüksek trafikli token akışı için)
     log_level = os.environ.get("RUZGAR_UVICORN_LOG", "warning")
     access_log = os.environ.get("RUZGAR_ACCESS_LOG", "0").strip() in ("1", "true", "yes")

@@ -1,10 +1,7 @@
 /**
- * RÜZGAR — yerel ağdaki Ollama’ya bağlanır (OpenAI uyumlu API).
- * Örnek taban: http://192.168.1.10:11434  (sonunda /v1 olmadan)
- *
- * PC’de Ollama’nın telefondan erişilebilmesi için (Windows):
- *   setx OLLAMA_HOST 0.0.0.0
- * Ollama’yı yeniden başlat; güvenlik duvarında 11434 izni ver.
+ * RÜZGAR — ince istemci. Yalnız Rüzgar kapısına konuşur (POST /api/chat/full).
+ * Bugün kapı bu bilgisayarda: http://127.0.0.1:8779
+ * Ollama telefona açılmaz. Halka açılış ayrı gündür.
  */
 
 import { useCallback, useState } from "react";
@@ -21,27 +18,22 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 
-const SYSTEM_RÜZGAR = `Sen RÜZGAR adlı asistansın. Kullanıcıya her zaman "Ümit abi" diye hitap et. Nazik ve net ol.`;
-
 type Msg = { role: "user" | "assistant"; text: string };
 
-async function chatOllama(
+async function chatRuzgar(
   baseUrl: string,
-  model: string,
-  messages: { role: string; content: string }[],
+  message: string,
+  history: { role: string; content: string }[],
 ): Promise<string> {
-  const url = `${baseUrl.replace(/\/$/, "")}/v1/chat/completions`;
+  const url = `${baseUrl.replace(/\/$/, "")}/api/chat/full`;
   const res = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer ollama",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model,
-      messages,
-      temperature: 0.35,
-      stream: false,
+      message,
+      history,
+      mode: "genel",
+      use_web: false,
     }),
   });
   const raw = await res.text();
@@ -49,12 +41,12 @@ async function chatOllama(
     throw new Error(raw.slice(0, 400));
   }
   const j = JSON.parse(raw);
-  return j.choices?.[0]?.message?.content?.trim() ?? "(Yanıt yok)";
+  const reply = String(j.full_reply ?? "").trim();
+  return reply || "(Yanıt yok)";
 }
 
 export default function App() {
-  const [baseUrl, setBaseUrl] = useState("http://192.168.1.1:11434");
-  const [model, setModel] = useState("llama3.2");
+  const [baseUrl, setBaseUrl] = useState("http://127.0.0.1:8779");
   const [input, setInput] = useState("");
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [loading, setLoading] = useState(false);
@@ -67,14 +59,8 @@ export default function App() {
     setMsgs((m) => [...m, nextUser]);
     setLoading(true);
     try {
-      const history = [
-        { role: "system", content: SYSTEM_RÜZGAR },
-        ...msgs.flatMap((x) => [
-          { role: x.role, content: x.text },
-        ]),
-        { role: "user", content: t },
-      ];
-      const reply = await chatOllama(baseUrl, model, history);
+      const history = msgs.map((x) => ({ role: x.role, content: x.text }));
+      const reply = await chatRuzgar(baseUrl, t, history);
       setMsgs((m) => [...m, { role: "assistant", text: reply }]);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -83,7 +69,7 @@ export default function App() {
     } finally {
       setLoading(false);
     }
-  }, [baseUrl, input, loading, model, msgs]);
+  }, [baseUrl, input, loading, msgs]);
 
   return (
     <KeyboardAvoidingView
@@ -93,7 +79,7 @@ export default function App() {
       <StatusBar style="light" />
       <Text style={styles.title}>RÜZGAR</Text>
       <Text style={styles.hint}>
-        Ollama adresi (PC IP): aynı Wi‑Fi’de olmalısınız.
+        Rüzgar kapısı. Bugün bu bilgisayar: 127.0.0.1:8779
       </Text>
       <TextInput
         style={styles.cfg}
@@ -101,14 +87,7 @@ export default function App() {
         onChangeText={setBaseUrl}
         autoCapitalize="none"
         autoCorrect={false}
-        placeholder="http://192.168.x.x:11434"
-      />
-      <TextInput
-        style={styles.cfg}
-        value={model}
-        onChangeText={setModel}
-        autoCapitalize="none"
-        placeholder="Model adı (örn. llama3.2)"
+        placeholder="http://127.0.0.1:8779"
       />
       <ScrollView style={styles.chat}>
         {msgs.map((m, i) => (
@@ -128,7 +107,7 @@ export default function App() {
           style={styles.input}
           value={input}
           onChangeText={setInput}
-          placeholder="Ümit abi için mesaj…"
+          placeholder="Mesaj…"
           multiline
           editable={!loading}
         />
