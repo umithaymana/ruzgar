@@ -38,7 +38,9 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 23. ~~RAG artımlı~~ — derin metin yeniden gömüldü · toplam **302734** · programlama kavram notu kod görevine karışmaz
 24. ~~Ek ilim rafları~~ — 14 raf dolu (~38 bin karakter) · RAG **302805** · sıra: matematik derin, istatistik, elektrik, astronomi, jeoloji, çevre, anatomi, dilbilim, müzik, sosyoloji, siyaset, ekonomi, hukuk, eğitim
 25. ~~Sohbet — ChatGPT düzeni~~ — açıklama soruları kart/kök/komut listesi yerine düzyazı · Gemini `gemini-3.5-flash-lite` (2.0/2.5 emekli) · Güven damgası ve bilişsel talimat sızıntısı kesildi · canlı: İslam, hicret, siyer, galaksi, hatırlama
-26. **Sıradaki hatırlatma:** Rüzgar web ayarları
+26. ~~RAG gömme hizası~~ — `embeddings.npy` 42.502 satırdı, parça listesi 302.808 · mevcut parçalar yeniden gömüldü · şekil **302808×384** · arama: fotosentez / galaksi doğru raf
+27. ~~Arama cetveli bulutta değil~~ — `.rag_index/` Git izinden çıktı, dosyalar diskte duruyor. Telefon ince istemci; indeks ve anahtarlar sunucuda. Ders notları `knowledge/` ile repoda.
+28. **Sıradaki hatırlatma:** Rüzgar web ayarları
 
 ### 2026-10-07 — Anlık kavram eşleşme (saçma cevap kökü)
 
