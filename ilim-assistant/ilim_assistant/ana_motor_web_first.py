@@ -520,7 +520,11 @@ def fetch_web_rows_fast(
                 try:
                     txt, _st = fetch_url_text(href)
                     if txt:
-                        cleaned = _clean_snippet_text(txt[:900])
+                        from ilim_assistant.web_tools import focus_page_excerpt
+
+                        cleaned = _clean_snippet_text(
+                            focus_page_excerpt(txt, message, max_chars=1800)
+                        )
                         row["body"] = _clean_snippet_text(
                             (str(row.get("body") or "") + " " + cleaned).strip()
                         )

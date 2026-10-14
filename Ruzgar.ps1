@@ -131,10 +131,10 @@ function Test-RuzgarGeminiKeyConfigured {
 Log "Basladi Root=$Root port=$ApiPort WantGradio=$WantGradio ForceRestart=$ForceRestart"
 
 function Find-Py {
-    # Öncelik: D:\ÜMİT\PROGRAMLAR venv (yeni makine / C: dışı kurulum)
+    # Öncelik: D:\ÜMİT\14-) PROGRAMLAR venv (yeni makine / C: dışı kurulum)
     $preferred = @(
         $env:RUZGAR_PYTHON,
-        "D:\ÜMİT\PROGRAMLAR\venvs\ruzgar\Scripts\python.exe",
+        "D:\ÜMİT\14-) PROGRAMLAR\venvs\ruzgar\Scripts\python.exe",
         (Join-Path $Root "ilim-assistant\.venv\Scripts\python.exe")
     ) | Where-Object { $_ -and (Test-Path $_) }
     foreach ($p in $preferred) {
@@ -450,7 +450,7 @@ function Ensure-RuzgarOllamaModelsPath {
     # 2026-10-07: Ollama 0.40 junction (D:\OllamaModels) ile bos liste veriyor;
     # gercek Unicode yol modelleri goruyor. Once unicode, sonra junction yedek.
     $asciiLink = "D:\OllamaModels"
-    $unicodeModels = "D:\ÜMİT\PROGRAMLAR\Ollama\models"
+    $unicodeModels = "D:\ÜMİT\14-) PROGRAMLAR\Ollama\models"
     try {
         if (-not (Test-Path -LiteralPath $asciiLink) -and (Test-Path -LiteralPath $unicodeModels)) {
             cmd /c "mklink /J `"$asciiLink`" `"$unicodeModels`"" | Out-Null

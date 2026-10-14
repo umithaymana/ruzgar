@@ -1565,13 +1565,13 @@ def prepare_turn(
     link_on = read_message_links and (m not in _NOWEB_MODES)
 
     web_extra = ""
+    _force_live_web = False
     if not _is_wake_only_message(msg):
         # Web ikinci plan: güçlü yerel (hafıza/RAG) varsa atla; yoksa / zayıfsa aç.
         # RUZGAR_WEB_SECONDARY_ONLY_ON_EMPTY=1 (önerilen) — PRO yalnızca arama kalitesi.
         web_secondary_only_on_empty = _web_secondary_policy_enabled()
         local_rag_present = bool(blocks or hits or ar_hits) or bool(live_weather_ctx)
         allow_web = True
-        _force_live_web = False
         try:
             from ilim_assistant.ruzgar_web_arastirma_pro import should_force_web_despite_local
 
@@ -1637,7 +1637,29 @@ def prepare_turn(
                     web_on = True
         except Exception:
             pass
-        # Eski «genel her zaman web» zorlaması kaldırıldı — yerel yoksa zaten allow_web True.
+        # Web güçlü: bilgi / bilim / güncel turda raf aramayı kapatamaz.
+        try:
+            from ilim_assistant.ruzgar_web_arastirma_pro import (
+                shelf_should_block_web,
+                should_prioritize_web_research,
+            )
+
+            if _force_live_web or should_prioritize_web_research(msg, turn_plan, m):
+                allow_web = True
+                if use_web and m not in _NOWEB_MODES:
+                    web_on = True
+            elif shelf_should_block_web(
+                msg,
+                rag_strong=local_rag_strong_enough_to_skip_web(
+                    hits,
+                    ar_hits,
+                    archive_primary=archive_primary_flag,
+                ),
+            ):
+                allow_web = False
+                web_on = False
+        except Exception:
+            pass
 
         web_parts: list[str] = []
         if allow_web:
@@ -1687,7 +1709,7 @@ def prepare_turn(
                         n_fetch = max(n_fetch, int(os.environ.get("RUZGAR_ENCYC_FETCH_URLS", "3")))
                     except ValueError:
                         n_fetch = max(n_fetch, 3)
-                    n_fetch = min(n_fetch, 5)
+                    n_fetch = min(n_fetch, 8)
                     # Sabit bilgi: Wikipedia öncelikli sorgu
                     if text_q and "wikipedia" not in text_q.lower():
                         text_q = f"{text_q} wikipedia"
@@ -1714,7 +1736,15 @@ def prepare_turn(
                         n_fetch = max(n_fetch, int(os.environ.get("RUZGAR_LIVE_FETCH_URLS", "5")))
                     except ValueError:
                         n_fetch = max(n_fetch, 5)
-                    n_fetch = min(n_fetch, 8)
+                    n_fetch = min(n_fetch, 4)
+                try:
+                    from ilim_assistant.ruzgar_web_arastirma_pro import reason_web_question
+
+                    _reason_q = (reason_web_question(msg).get("query") or "").strip()
+                    if _reason_q:
+                        text_q = _reason_q
+                except Exception:
+                    pass
                 skip_ddg = (
                     weather_q
                     and live_weather_ctx
@@ -1854,8 +1884,9 @@ def prepare_turn(
             should_defer_library_instant,
         )
 
-        if should_defer_library_instant(msg) or (
-            m in ("genel", "uretim", "gelisim") and "anlat" in (msg or "").lower()
+        if (not _force_live_web) and (
+            should_defer_library_instant(msg)
+            or (m in ("genel", "uretim", "gelisim") and "anlat" in (msg or "").lower())
         ):
             _lib_ctx = collect_library_llm_context(msg)
             if _lib_ctx.strip():

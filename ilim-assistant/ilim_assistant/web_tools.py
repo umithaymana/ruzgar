@@ -216,9 +216,16 @@ def fetch_url_text(url: str, max_chars: int = _MAX_FETCH_CHARS) -> Tuple[str, st
             return "", f"HTML değil: {ct[:80]}"
 
         soup = BeautifulSoup(r.text, "html.parser")
-        for tag in soup(["script", "style", "noscript", "svg"]):
+        root = (
+            soup.find("article")
+            or soup.find("main")
+            or soup.find(attrs={"role": "main"})
+            or soup.body
+            or soup
+        )
+        for tag in root(["script", "style", "noscript", "svg", "nav", "footer", "aside", "form"]):
             tag.decompose()
-        text = soup.get_text(separator="\n")
+        text = root.get_text(separator="\n")
         lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
         body = re.sub(r"\n{3,}", "\n\n", "\n".join(lines))
         if len(body) > max_chars:
@@ -226,6 +233,112 @@ def fetch_url_text(url: str, max_chars: int = _MAX_FETCH_CHARS) -> Tuple[str, st
         return body, "ok"
     except Exception as e:
         return "", str(e)
+
+
+def page_focus_char_cap() -> int:
+    """Modele giden sayfa özeti — menü değil, soruyla örtüşen gövde."""
+    try:
+        return max(800, min(int(os.environ.get("WEB_PAGE_FOCUS_CHARS", "4800")), 12000))
+    except ValueError:
+        return 4800
+
+
+_PAGE_CHROME = (
+    "cookie",
+    "çerez",
+    "cerez",
+    "tüm hakları saklıdır",
+    "tum haklari saklidir",
+    "newsletter",
+    "abone ol",
+    "kabul et",
+    "sign in",
+    "giriş yap",
+    "giris yap",
+)
+
+
+def focus_page_excerpt(text: str, query: str = "", *, max_chars: int | None = None) -> str:
+    """
+    Sayfanın başındaki menüyü at.
+    Sorudaki kelimelerle örtüşen paragrafları, özgün sırada, modele ver.
+    """
+    raw = (text or "").strip()
+    if not raw:
+        return ""
+    cap = page_focus_char_cap() if max_chars is None else max(200, int(max_chars))
+    parts = [p.strip() for p in re.split(r"\n{2,}", raw) if p.strip()]
+    if not parts:
+        parts = [ln.strip() for ln in raw.splitlines() if ln.strip()]
+    kept: list[str] = []
+    for part in parts:
+        low = part.lower()
+        short = len(part) < 48 and "\n" not in part
+        has_digit = bool(re.search(r"\d", part))
+        chrome = any(x in low for x in _PAGE_CHROME) and len(part) < 220
+        if chrome:
+            continue
+        if short and not has_digit:
+            continue
+        kept.append(part)
+    if not kept:
+        kept = parts
+    terms = {
+        w
+        for w in re.findall(r"[0-9A-Za-zÇĞİÖŞÜçğıöşü]{4,}", (query or "").lower())
+        if w
+        not in {
+            "nedir",
+            "nasil",
+            "nasıl",
+            "hangi",
+            "kadar",
+            "bugun",
+            "bugün",
+            "guncel",
+            "güncel",
+            "wikipedia",
+        }
+    }
+    if not terms:
+        body = "\n\n".join(kept)
+        return body[:cap]
+    scored: list[tuple[float, int]] = []
+    for i, part in enumerate(kept):
+        low = part.lower()
+        hits = sum(1 for term in terms if term in low)
+        digit = 0.4 if re.search(r"\d", part) else 0.0
+        scored.append((hits * 3.0 + digit + min(len(part), 500) / 500.0, i))
+    scored.sort(key=lambda row: row[0], reverse=True)
+    chosen: list[int] = []
+    total = 0
+    for score, idx in scored:
+        if chosen and score < 1.2:
+            break
+        part = kept[idx]
+        if total and total + len(part) > cap:
+            continue
+        chosen.append(idx)
+        total += len(part) + 2
+        if total >= cap:
+            break
+    if chosen:
+        # Kur / skor satırı çoğu sitede ayrı ve kısadır; eşleşen gövdenin yanına al.
+        for i, part in enumerate(kept):
+            if i in chosen:
+                continue
+            if len(part) <= 96 and re.search(r"\d", part):
+                chosen.append(i)
+                total += len(part) + 2
+                if total >= cap:
+                    break
+    if not chosen:
+        return "\n\n".join(kept)[:cap]
+    chosen.sort()
+    out = "\n\n".join(kept[i] for i in chosen)
+    if len(out) > cap:
+        return out[:cap]
+    return out
 
 
 def _query_focus_terms(query: str) -> set[str]:
@@ -387,6 +500,7 @@ def build_web_context(
     ):
         u, txt, st = pack
         if txt:
+            txt = focus_page_excerpt(txt, q)
             lines.append(f"\n--- Sayfa metni #{j} ({st}) ---\n{u}\n\n{txt}")
         else:
             lines.append(f"\n--- Sayfa alınamadı ---\n{u}\n{st}")
@@ -395,6 +509,7 @@ def build_web_context(
         for j, u in enumerate(urls_to_fetch, 1):
             txt, st = fetch_url_text(u)
             if txt:
+                txt = focus_page_excerpt(txt, q)
                 lines.append(f"\n--- Sayfa metni #{j} ({st}) ---\n{u}\n\n{txt}")
             else:
                 lines.append(f"\n--- Sayfa alınamadı ---\n{u}\n{st}")
@@ -774,7 +889,8 @@ def build_web_context_pro(
     if sports_like:
         all_rows.extend(_sports_seed_rows(q))
 
-    for sub_q in expand_web_queries(q, primary=primary):
+    # İki odaklı sorgu yeter — ilgili sayfa çabuk gelsin, tur şişmesin.
+    for sub_q in expand_web_queries(q, primary=primary)[:2]:
         try:
             all_rows.extend(_ddgs_search(sub_q, max_results=per_q))
         except Exception:
@@ -867,6 +983,7 @@ def build_web_context_pro(
     for j, pack in enumerate(_fetch_urls_parallel(urls_to_fetch, max_workers=5), 1):
         u, txt, st = pack
         if txt:
+            txt = focus_page_excerpt(txt, q)
             lines.append(f"\n--- Sayfa metni PRO #{j} ({st}) ---\n{u}\n\n{txt}")
         else:
             lines.append(f"\n--- Sayfa alınamadı ---\n{u}\n{st}")

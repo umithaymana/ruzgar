@@ -24,7 +24,7 @@ if (-not (Test-Path $ico)) {
         try {
             $py = $env:RUZGAR_PYTHON
             if (-not $py -or -not (Test-Path $py)) {
-                $py = "D:\ÜMİT\PROGRAMLAR\venvs\ruzgar\Scripts\python.exe"
+                $py = "D:\ÜMİT\14-) PROGRAMLAR\venvs\ruzgar\Scripts\python.exe"
             }
             if (Test-Path $py) {
                 & $py -m pip install pillow -q 2>$null
@@ -60,7 +60,7 @@ try {
     $revScript = Join-Path $Root "ilim-assistant\scripts\ruzgar_read_build_rev.py"
     $py = $env:RUZGAR_PYTHON
     if (-not $py -or -not (Test-Path $py)) {
-        $py = "D:\ÜMİT\PROGRAMLAR\venvs\ruzgar\Scripts\python.exe"
+        $py = "D:\ÜMİT\14-) PROGRAMLAR\venvs\ruzgar\Scripts\python.exe"
     }
     if ((Test-Path $revScript) -and (Test-Path $py)) {
         $r = (& $py $revScript 2>$null | Out-String).Trim()

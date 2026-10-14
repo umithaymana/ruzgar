@@ -29,7 +29,7 @@ $ApiErr = Join-Path $env:TEMP "ruzgar-api.err"
 function Resolve-RuzgarPython {
     $cands = @(
         $env:RUZGAR_PYTHON,
-        "D:\ÜMİT\PROGRAMLAR\venvs\ruzgar\Scripts\python.exe",
+        "D:\ÜMİT\14-) PROGRAMLAR\venvs\ruzgar\Scripts\python.exe",
         (Join-Path $Ia ".venv\Scripts\python.exe")
     ) | Where-Object { $_ -and (Test-Path $_) }
     foreach ($p in $cands) { return $p }
@@ -41,13 +41,13 @@ function Resolve-RuzgarPython {
 }
 
 # D: kurulum yolları (yeni makine)
-$NodeRoot = "D:\ÜMİT\PROGRAMLAR\Nodejs"
+$NodeRoot = "D:\ÜMİT\14-) PROGRAMLAR\Nodejs"
 if (Test-Path (Join-Path $NodeRoot "node.exe")) {
     $env:Path = "$NodeRoot;" + $env:Path
 }
 # Ollama 0.40: junction (D:\OllamaModels) bos liste; gercek Unicode yol dogru
 $asciiOm = "D:\OllamaModels"
-$unicodeOm = "D:\ÜMİT\PROGRAMLAR\Ollama\models"
+$unicodeOm = "D:\ÜMİT\14-) PROGRAMLAR\Ollama\models"
 if (-not (Test-Path -LiteralPath $asciiOm) -and (Test-Path -LiteralPath $unicodeOm)) {
     cmd /c "mklink /J `"$asciiOm`" `"$unicodeOm`"" | Out-Null
 }
@@ -86,9 +86,9 @@ if ($env:OLLAMA_MODELS -and (Get-Command ollama -ErrorAction SilentlyContinue)) 
     }
 }
 foreach ($pair in @(
-    @{ K = "PIP_CACHE_DIR"; V = "D:\ÜMİT\PROGRAMLAR\Caches\pip" },
-    @{ K = "HF_HOME"; V = "D:\ÜMİT\PROGRAMLAR\Caches\huggingface" },
-    @{ K = "TORCH_HOME"; V = "D:\ÜMİT\PROGRAMLAR\Caches\torch" }
+    @{ K = "PIP_CACHE_DIR"; V = "D:\ÜMİT\14-) PROGRAMLAR\Caches\pip" },
+    @{ K = "HF_HOME"; V = "D:\ÜMİT\14-) PROGRAMLAR\Caches\huggingface" },
+    @{ K = "TORCH_HOME"; V = "D:\ÜMİT\14-) PROGRAMLAR\Caches\torch" }
 )) {
     if (-not (Get-Item -Path "Env:$($pair.K)" -ErrorAction SilentlyContinue)) {
         if (Test-Path $pair.V) { Set-Item -Path "Env:$($pair.K)" -Value $pair.V }
@@ -97,7 +97,7 @@ foreach ($pair in @(
 
 $script:PyExe = Resolve-RuzgarPython
 if (-not $script:PyExe) {
-    [System.Windows.Forms.MessageBox]::Show("Python bulunamadi. D:\ÜMİT\PROGRAMLAR\venvs\ruzgar kurulu mu?", "RUZGAR") | Out-Null
+    [System.Windows.Forms.MessageBox]::Show("Python bulunamadi. D:\ÜMİT\14-) PROGRAMLAR\venvs\ruzgar kurulu mu?", "RUZGAR") | Out-Null
     exit 1
 }
 $env:RUZGAR_PYTHON = $script:PyExe

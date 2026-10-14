@@ -124,8 +124,8 @@ def try_live_fx_reply(message: str) -> Optional[str]:
         host = src.split("/")[2] if "://" in src else src
         src_note = f" Kaynak: {host}."
     return (
-        f"{addr}, canlı piyasa verisine göre **1 {label} yaklaşık {rate} TL**."
-        f"{src_note} Kur anlık değişebilir."
+        f"{addr}, şu an 1 {label} yaklaşık {rate} TL."
+        f"{src_note} Kur gün içinde oynayabilir."
     )
 
 

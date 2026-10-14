@@ -9,6 +9,7 @@ sayfa derinliği, haber modu, profesyonel LLM talimatı.
 from __future__ import annotations
 
 import os
+import re
 from typing import Any, Callable
 
 WEB_ARASTIRMA_PRO_VERSION = "web-arastirma-pro-v1-2026-06-13-faz-ac"
@@ -240,6 +241,16 @@ def should_prioritize_web_research(
     return False
 
 
+def shelf_should_block_web(message: str, *, rag_strong: bool) -> bool:
+    """
+    Raf web'i kapatmasın.
+    Güncel soru zaten web'de. Bilgi sorusu da sayfa okur.
+    Raf yalnızca canlı turda ayrı temizlenir; burada web susmaz.
+    """
+    del message, rag_strong
+    return False
+
+
 def should_force_web_despite_local(
     message: str,
     question_plan: Any | None = None,
@@ -322,8 +333,60 @@ def resolve_pro_max_results(default: int) -> int:
         return max(default, 14)
 
 
+_ASK_RE = re.compile(
+    r"\b(?:nedir|ne\s+demek|ne\s+demektir|kaçtır|kactir|kaç|kac|nasıl|nasil|"
+    r"neden|niçin|nicin|midir|mıdır|mudur|"
+    r"söyler\s+misin|soyler\s+misin|anlatır\s+mısın|anlatir\s+misin|acaba)\b",
+    re.IGNORECASE,
+)
+
+
+def reason_web_question(message: str) -> dict[str, str]:
+    """
+    Soruyu muhakeme et: kullanıcı ne öğrenmek istiyor, arama cümlesi ne olsun.
+    Ek model çağrısı yok — tur uzamasın.
+    """
+    raw = (message or "").strip()
+    sports = rewrite_sports_web_query(raw)
+    try:
+        from ilim_assistant.web_tools import refined_search_query
+
+        base = sports if sports and sports.strip() != raw else refined_search_query(raw)
+    except Exception:
+        base = sports or raw
+    focus = _ASK_RE.sub(" ", base or raw)
+    focus = re.sub(r"\s+", " ", focus).strip(" ?.,!;:")
+    # «saat kaç» gibi kısa soruyu tek kelimeye indirme.
+    if len(focus.split()) >= 2:
+        query = focus[:180]
+    else:
+        query = (base or raw)[:180]
+    low = raw.lower()
+    if any(x in low for x in ("dolar", "euro", "altın", "altin", "sterlin")):
+        want = "bugünkü kuru, tek net rakamla"
+        if "kur" not in query.lower():
+            query = f"{query} kuru".strip()
+    elif looks_like_sports_live_question(raw) and any(
+        x in low for x in ("ne zaman", "saat", "fikst", "skor", "maç", "mac")
+    ):
+        want = "rakip, tarih ve skor veya saati"
+        if "fikst" not in query.lower() and "sonuç" not in query.lower() and "sonuc" not in query.lower():
+            query = f"{query} fikstür".strip()
+    elif "hava" in low:
+        want = "bugünkü hava durumunu"
+    elif re.search(r"\bnedir\b", low):
+        topic = re.sub(r"\bnedir\b.*", "", raw, flags=re.IGNORECASE).strip(" ?")
+        want = f"{topic or query} nedir; sade ve doğru"
+    else:
+        want = (raw.strip(" ?") or query)[:160]
+    kind = "canli" if looks_like_live_web_needed(raw) else "bilgi"
+    return {"want": want, "query": query, "kind": kind}
+
+
 def build_web_pro_system_addon(message: str) -> str:
-    q = (message or "").strip()[:180]
+    reasoned = reason_web_question(message)
+    q = reasoned.get("query") or (message or "").strip()[:180]
+    want = reasoned.get("want") or q
     live = looks_like_live_web_needed(message)
     sports = looks_like_sports_live_question(message)
     science = False
@@ -341,7 +404,7 @@ def build_web_pro_system_addon(message: str) -> str:
     extra = ""
     if live:
         extra += (
-            "Bu soru güncel. Eski rakamı kullanma. İlk cümlede net cevap ver.\n"
+            "Eski rakamı kullanma.\n"
             "Haberse: ne oldu, ne zaman, kim. Çelişirse en açık kaynağı seç.\n"
         )
     if sports:
@@ -354,11 +417,13 @@ def build_web_pro_system_addon(message: str) -> str:
         )
     return (
         "\n\nWeb notu:\n"
-        f"Soru: {q}\n"
-        "Aşağıdaki web metnini oku. Cevabı sen yaz; sohbet eder gibi, düz Türkçe.\n"
-        "Sayfayı olduğu gibi yapıştırma. İşe yarayan kısmı özetle.\n"
-        "Site adını bir cümlede an. Bilmediğini uydurma.\n"
-        "Raftaki not ile web çelişirse, güncel konuda web'i esas al.\n"
+        f"Öğrenmek istediği: {want}\n"
+        f"Arama: {q}\n"
+        "Sayfayı oku ve bu isteğin doğru karşılığını bul.\n"
+        "İlk cümlede asıl cevabı ver. Sonra bir iki akıcı cümleyle aç.\n"
+        "Sohbet eder gibi konuş: düz Türkçe, madde listesi yok, rapor dili yok.\n"
+        "Sayfayı yapıştırma. Menüyü yok say. Bilmediğin rakamı uydurma.\n"
+        "Site adını cümlenin içinde, doğal şekilde an.\n"
         f"{extra}"
     )
 

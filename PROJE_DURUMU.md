@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-13 öğlen — sohbet Gemini düzyazı (kart ve damga kesildi)
+**Son güncelleme:** 2026-10-14 öğle — soru muhakemesi, 3 sayfa, akıcı sohbet. Kapı kapalı; Mimar açacak.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -42,7 +42,18 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 27. ~~Arama cetveli bulutta değil~~ — `.rag_index/` Git izinden çıktı, dosyalar diskte duruyor. Ders notları `knowledge/` ile repoda.
 28. **İlerisi (bugün değil):** telefon ince istemci, yalnız Rüzgar kapısı `8779` (`/api/chat/full`). Ollama telefona açılmaz. Kapı varsayılan `127.0.0.1`. Halka açılışta kimlik + TLS.
 29. **Sohbet konuşanı:** Gemini şimdilik kapalı (`RUZGAR_DISABLE_GEMINI=1`). Konuşan yerel denge (`llama3.1:8b`), yedek hizli. Anahtar dosyada kalır, repoya girmez.
-30. ~~Web ilk adım~~ — fiyat/ücret/hava güncel sayılır. Web notu yerel modele «oku, sohbet ederek özetle, siteyi an» der. Faz Y/J damgası sohbetten silinir. Canlı: dolar ≈ 49,36 TL, kaynak kur.doviz.com. Yarın: sayfa okuma derinliği ve raf/web ayrımı.
+30. ~~Web ilk adım~~ — fiyat/ücret/hava güncel sayılır. Web notu yerel modele «oku, sohbet ederek özetle, siteyi an» der. Faz Y/J damgası sohbetten silinir. Canlı: dolar ≈ 49,36 TL, kaynak kur.doviz.com.
+31. ~~Sayfa derinliği + raf/web~~ — sayfa gövdesi okunur. Güncel turda raf susar.
+32. ~~Web güçlü~~ — bilgi/bilim/güncel turda raf aramayı kapatamaz.
+33. ~~Soru muhakemesi + akıcı sohbet~~ — `reason_web_question` ne öğrenildiğini ayırır, 3 ilgili sayfa okunur. `RUZGAR_SOHBET_TARZ=chatgpt`: «nedir» kartı kesilir, cevap ilk cümlede ve sohbet eder gibi. Kur cümlesi kart kalınlığından çıktı.
+
+### Mimar dönünce (sıra)
+
+1. `.\Ruzgar.ps1 -ForceRestart` — 8779 bu oturumda kapanmıştı, açılış Mimar’da.
+2. Canlı dene: «fotosentez nedir» sohbet cümlesi olsun, tek satır kart olmasın. «dolar kaç tl» rakam + kaynak, konuşur gibi. Bir haber veya maç saati: ilk cümlede cevap.
+3. Kart hâlâ kesiyorsa sağlıkta `RUZGAR_SOHBET_TARZ=chatgpt` yüklenmiş mi bak.
+4. Cevap doğru ama yavaşsa sayfa sayısını 3’te tut. Cevap boşsa `WEB_PAGE_FOCUS_CHARS` 2400’den 4000’e.
+5. **İlerisi:** telefon ince istemci, yalnız kapı `8779`. Ollama telefona açılmaz.
 
 ### 2026-10-07 — Anlık kavram eşleşme (saçma cevap kökü)
 
