@@ -33,6 +33,21 @@ def try_instant_reply(message: str, mode_norm: str = "genel") -> str | None:
         return None
     blob = _norm(raw) + " " + _ascii(raw)
 
+    if re.search(
+        r"\b(?:iyi\s+geceler|hosca\s+kal|hoşça\s+kal|görüşürüz|gorusuruz|ara\s+verec)\w*\b",
+        blob,
+    ):
+        return (
+            "İyi geceler Ümit abi. Dinlen, kafan dağınık kalmasın. "
+            "Yarın yine buradayım; kaldığımız yerden devam ederiz."
+        )
+
+    if re.fullmatch(
+        r"(?:çok|cok)\s+iyi|güzel|guzel|harika|süper|super|mükemmel|mukemmel|güzelmiş|guzelmis",
+        _norm(raw),
+    ):
+        return "Sevindim Ümit abi. İstersen bunu biraz daha açalım, istersen başka konuya geçelim."
+
     if re.search(r"\b(?:teşekkür|tesekkur|sağol|sagol|eyvallah|rica\s+ederim)\b", blob):
         return (
             "Rica ederim Ümit abi — ne demek. "

@@ -107,6 +107,7 @@ def strip_hafiza_robot_phrasing(text: str) -> str:
 def finalize_assistant_reply(raw: str, *, channel: str = "") -> str:
     """Mojibake onarımı, sızan talimat temizliği, sabit karşılama kırpma, Tek Ses (Faz B)."""
     t = repair_utf8_mojibake(raw or "")
+    t = strip_answer_scaffold(t)
     t = scrub_leaked_instructions(t)
     t = strip_wake_greeting_echo(t)
     t = strip_hafiza_robot_phrasing(t)
@@ -122,18 +123,53 @@ def finalize_assistant_reply(raw: str, *, channel: str = "") -> str:
         t = polish_tek_beyin_voice(t)
     except Exception:
         pass
-    try:
-        from ilim_assistant.prompts import sohbet_tarz_chatgpt
+    import re
 
-        if sohbet_tarz_chatgpt():
-            import re
-
-            t = re.sub(r"(?im)^[ \t]*\*{0,2}Güven:\s*.*$", "", t)
-            t = re.sub(r"\n+\*Not \(Faz [JY]\):[\s\S]*$", "", t)
-            t = re.sub(r"\n{3,}", "\n\n", t)
-    except Exception:
-        pass
+    t = re.sub(r"(?im)^[ \t]*\*{0,2}Güven:\s*.*$", "", t)
+    t = re.sub(r"\*{0,2}Güven:\s*[^*\n]+\*{0,2}", "", t)
+    t = re.sub(r"\n+\*Not \(Faz [A-Z]\):[\s\S]*$", "", t)
+    t = re.sub(r"\*Not \(Faz [^)]+\):[^\n]*", "", t)
+    t = re.sub(r"\(Talimat:[^)]*\)", "", t, flags=re.I)
+    t = re.sub(r"\n{3,}", "\n\n", t)
     return t.strip()
+
+
+def strip_answer_scaffold(text: str) -> str:
+    """Modelin «Niyet / Cevap / Gerekçe» şablonunu kullanıcıya bırakma."""
+    if not text:
+        return text
+    import re
+
+    if not re.search(r"(?im)^(?:niyet|sevinç|sevinc|kimlik)\s*:", text):
+        return text
+    label = re.compile(
+        r"(?i)^(?:niyet|kimlik(?:/yakınlık)?|üretim|uretim|sevinç|sevinc|soru)\s*:"
+    )
+    stop = re.compile(r"(?i)^(?:örnek|ornek|gerekçe|gerekce)\s*:")
+    body: list[str] = []
+    capture = False
+    saw = False
+    for ln in text.splitlines():
+        st = ln.strip()
+        if re.match(r"(?i)^cevap\s*:", st):
+            saw = True
+            capture = True
+            rest = re.sub(r"(?i)^cevap\s*:\s*", "", st).strip()
+            if rest:
+                body.append(rest)
+            continue
+        if capture and stop.match(st):
+            break
+        if capture:
+            body.append(ln)
+            continue
+        if label.match(st):
+            continue
+    cleaned = "\n".join(body).strip() if saw else ""
+    if cleaned:
+        return cleaned
+    kept = [ln for ln in text.splitlines() if ln.strip() and not label.match(ln.strip())]
+    return "\n".join(kept).strip() or text
 
 
 def scrub_leaked_instructions(text: str) -> str:

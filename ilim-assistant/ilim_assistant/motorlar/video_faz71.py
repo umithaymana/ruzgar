@@ -28,11 +28,11 @@ _QUESTION_RE = re.compile(
     re.I,
 )
 _ACTION_RE = re.compile(
-    r"(?:indir|download|youtube|kes|kurgu|birleştir|birlestir|altyazı|altyazi|"
+    r"(?<![\w])(?:indir|download|youtube|kes|kurgu|birleştir|birlestir|altyazı|altyazi|"
     r"göm|gom|ffmpeg|video\s+yap|klip|oynat|sinema|dönüştür|donustur|transcode|"
     r"medya\s+bilgi|montaj|mux|"
     # «panel» tek başına kitap/UI cümlesini video yapmasın; yalnız video paneli
-    r"(?:kesim|indirme|sinema|video|montaj|kurgu|medya)\s+panel)",
+    r"(?:kesim|indirme|sinema|video|montaj|kurgu|medya)\s+panel)(?![\w])",
     re.I,
 )
 _LIST_RE = re.compile(

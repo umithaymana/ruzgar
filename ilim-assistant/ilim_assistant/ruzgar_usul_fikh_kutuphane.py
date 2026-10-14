@@ -88,29 +88,9 @@ def _load_kavramlar() -> list[dict[str, Any]]:
 
 
 def _match_kavram(msg: str) -> Optional[dict[str, Any]]:
-    low = _fold(msg)
-    tokens = set(re.findall(r"[\w'’]+", low, flags=re.UNICODE))
-    best: Optional[dict[str, Any]] = None
-    best_score = 0
-    for row in _load_kavramlar():
-        keys = [_fold(row.get("baslik") or "")]
-        keys.extend(_fold(a) for a in (row.get("aliases") or []))
-        score = 0
-        for k in keys:
-            if not k:
-                continue
-            if k == low or low == f"{k} nedir" or low.startswith(f"{k} nedir"):
-                score = max(score, 100)
-            elif k in low:
-                score = max(score, 60 + min(20, len(k)))
-            elif k in tokens:
-                score = max(score, 40)
-        if score > best_score:
-            best_score = score
-            best = row
-    if best_score >= 40:
-        return best
-    return None
+    from ilim_assistant.ruzgar_kavram_match import match_kavram_row
+
+    return match_kavram_row(msg, _load_kavramlar(), min_score=70)
 
 
 def format_usul_reply(row: dict[str, Any]) -> str:

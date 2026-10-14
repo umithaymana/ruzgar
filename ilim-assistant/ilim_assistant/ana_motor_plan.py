@@ -1269,8 +1269,13 @@ def looks_like_past_conversation_query(message: str) -> bool:
     if len(raw) < 8:
         return False
     blob = _norm_ascii(raw.lower()) + " " + raw.lower()
+    if re.search(r"neden|niye|ulasamad|ulaşamad|yanlis|yanlış", blob) and not re.search(
+        r"ne\s+konu|hangi\s+konu|neler\s+hat|ne\s+sord|hangi\s+soru",
+        blob,
+    ):
+        return False
     if re.search(
-        r"(?:istiyorum|ister\s+misin|bilgi\s+ver|anlat|nedir|kimdir)",
+        r"(?:istiyorum|ister\s+misin|bilgi\s+ver|anlat|nedir|kimdir|kaçtır|kactir|kaç\s+tane|kac\s+tane)",
         blob,
         re.I,
     ) and not re.search(

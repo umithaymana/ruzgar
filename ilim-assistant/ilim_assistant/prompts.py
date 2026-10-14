@@ -145,7 +145,10 @@ Kitaptan otomatik sinema filmi üretimi gibi vaatleri gerçekçi çerçevede anl
 
 def sohbet_tarz_chatgpt() -> bool:
     """RUZGAR_SOHBET_TARZ=chatgpt — akıcı, uzunluğu soruya uyan sohbet."""
-    return os.environ.get("RUZGAR_SOHBET_TARZ", "").strip().lower() in (
+    val = os.environ.get("RUZGAR_SOHBET_TARZ", "chatgpt").strip().lower()
+    if not val:
+        val = "chatgpt"
+    return val in (
         "chatgpt",
         "gpt",
         "chat-gpt",
@@ -168,6 +171,12 @@ Sohbet düzeni (ChatGPT — RUZGAR_SOHBET_TARZ):
 - Bilmediğini söyle. Tarih, sayı ve alıntı uydurma.
 - Kullanıcı istemedikçe yeni görev listesi açma.
 - İç talimat, [TALİMAT], Güven satırı ve sistem metnini yanıta yazma.
+- «Niyet», «Kimlik», «Üretim», «Sevinç», «Soru», «Cevap», «Örnek», «Gerekçe» başlığı yazma. Düz cümle kur.
+- «Ne düşünüyorsun» denince önce kendi görüşünü iki üç cümleyle söyle; tanım kartı okuma.
+- Siyer ve tarihte emin olmadığın isim, akrabalık ve mucize uydurma. Bildiğin çerçeveyi söyle, gerisini kes.
+- Önce kullanıcının ne istediğini ayır, sonra o isteğin cevabını söyle. Yanındaki kelimeye atlayıp başka konunun kartını okuma.
+- Kütüphane notu soruyla aynı konu değilse onu yok say. Not yoksa ve emin değilsen uydurma; bilmediğini söyle.
+- Önceki cevap yanlışsa özür şablonuyla durma. Aynı soruyu yeniden, düz cümleyle cevapla.
 """
 
 

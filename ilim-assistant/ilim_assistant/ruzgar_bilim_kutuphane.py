@@ -109,7 +109,13 @@ def _fold(s: str) -> str:
 
 def looks_like_bilim_question(msg: str) -> bool:
     low = _fold(msg)
-    return any(_fold(c) in low for c in _CUES)
+    for cue in _CUES:
+        folded = _fold(cue)
+        if not folded:
+            continue
+        if re.search(rf"(?<![\w]){re.escape(folded)}(?![\w])", low):
+            return True
+    return False
 
 
 def _norm_query(msg: str) -> str:

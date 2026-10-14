@@ -22,6 +22,11 @@ def norm_query(msg: str) -> str:
     return re.sub(r"\s+", " ", low).strip()
 
 
+def _key_bounded(key: str, low: str) -> bool:
+    """Anahtar, daha uzun bir kelimenin içine gizlenmesin (bilim/bilgisayar)."""
+    return bool(re.search(rf"(?<![\w'’]){re.escape(key)}(?![\w'’])", low))
+
+
 def match_kavram_row(
     msg: str,
     rows: list[dict[str, Any]],
@@ -31,13 +36,13 @@ def match_kavram_row(
     """En iyi kavram satırını döndür.
 
     Kurallar:
-    - ``k in low`` yalnızca len(k) >= 4 (kısa alias substring tuzağı yok)
-    - tek-token eşleşme yalnızca tam token (len >= 3)
+    - eşleşme kelime sınırında (``bilim`` ``bilgisayar`` içinde tutmaz)
+    - 6 harften kısa tek kelime yalnız «kavram» veya «kavram nedir» ise
+    - uzun cümledeki ``alan`` gibi kısa alias kart açmaz
     """
     low = norm_query(msg)
     if not low:
         return None
-    tokens = set(re.findall(r"[\w'’]+", low, flags=re.UNICODE))
     best: Optional[dict[str, Any]] = None
     best_score = 0
     for row in rows:
@@ -49,13 +54,13 @@ def match_kavram_row(
                 continue
             if k == low or low == f"{k} nedir" or low.startswith(f"{k} nedir"):
                 score = max(score, 100)
-            elif len(k) >= 4 and k in low:
+            elif " " not in k and len(k) < 6:
+                continue
+            elif _key_bounded(k, low) and (len(k) >= 6 or " " in k):
                 score = max(score, 60 + min(20, len(k)))
-            elif len(k) >= 3 and k in tokens:
-                score = max(score, 50)
             else:
-                parts = [p for p in k.split() if len(p) >= 3]
-                if len(parts) >= 2 and all(p in tokens or p in low for p in parts):
+                parts = [p for p in k.split() if len(p) >= 4]
+                if len(parts) >= 2 and all(_key_bounded(p, low) for p in parts):
                     score = max(score, 55 + min(15, len(k)))
         if score > best_score:
             best_score = score

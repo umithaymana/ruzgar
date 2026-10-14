@@ -10499,8 +10499,22 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 pass
 
             try:
-                from ilim_assistant.fx_live import try_live_fx_reply
+                from ilim_assistant.fx_live import try_live_fx_reply, try_price_source_followup
 
+                _src_early = try_price_source_followup(msg_early)
+                if _src_early:
+                    _orch_src = dict(orch_early)
+                    _orch_src.setdefault("plan", {})["primary"] = "gundelik"
+                    _orch_src["plan"]["label_tr"] = "Kaynak sorusu"
+                    yield from _iter_instant_chat_events(
+                        _src_early,
+                        msg_early,
+                        session_wake_used=req.session_wake_used,
+                        msg_for_wake=req.message,
+                        orch=_orch_src,
+                        instant_gundelik=True,
+                    )
+                    return
                 _fx_early = try_live_fx_reply(msg_early)
                 if _fx_early:
                     _orch_fx = dict(orch_early)
@@ -11056,7 +11070,6 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 looks_like_web_research_command,
                 resolve_bilgi_target_from_history,
                 try_flow_teaching_reply,
-                try_meta_feedback_reply,
                 try_web_research_ack,
             )
 
@@ -11075,23 +11088,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 )
                 return
 
-            if looks_like_meta_feedback(msg_early):
-                _meta_fb = try_meta_feedback_reply(msg_early, req.history)
-                if _meta_fb:
-                    _orch_m = dict(orch_early)
-                    _orch_m.setdefault("plan", {})["primary"] = "gundelik"
-                    _orch_m["plan"]["label_tr"] = "Geri bildirim"
-                    yield from _iter_instant_chat_events(
-                        _meta_fb,
-                        msg_early,
-                        session_wake_used=req.session_wake_used,
-                        msg_for_wake=req.message,
-                        orch=_orch_m,
-                        instant_gundelik=True,
-                    )
-                    return
-
-            if looks_like_web_research_command(msg_early):
+            if looks_like_meta_feedback(msg_early) or looks_like_web_research_command(msg_early):
                 try:
                     from ilim_assistant.ruzgar_egitim import clear_pending
 

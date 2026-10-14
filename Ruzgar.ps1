@@ -431,7 +431,7 @@ if ($null -eq $py) {
 $script:PyExe = $py[0]
 $script:PyArgs = $py[1]
 
-if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
+if (-not $ApiOnly -and -not (Get-Command npm -ErrorAction SilentlyContinue)) {
     [void][System.Windows.Forms.MessageBox]::Show("npm bulunamadi (Node.js LTS kurun).", "RUZGAR")
     exit 1
 }

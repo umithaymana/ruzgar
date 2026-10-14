@@ -1,0 +1,203 @@
+/* Çalışma masası — sade yüz, ses ve proje. Ümit & Gökçenur */
+
+body.ruzgar-pro .title-row-motors,
+body.ruzgar-pro #nav-back,
+body.ruzgar-pro #nav-forward,
+body.ruzgar-pro #btn-chat-history-clear,
+body.ruzgar-pro #btn-chat-history-export,
+body.ruzgar-pro #ana-motor-denge_yeni-fold,
+body.ruzgar-pro #ana-motor-slo-fold,
+body.ruzgar-pro #ana-motor-vad-fold,
+body.ruzgar-pro #ana-motor-ogrenme-fold,
+body.ruzgar-pro #ana-motor-sentez-pro-fold,
+body.ruzgar-pro #ana-motor-kaynak-panel-fold,
+body.ruzgar-pro #ana-motor-session-card,
+body.ruzgar-pro #ana-motor-paket-ozet-card,
+body.ruzgar-pro #ana-motor-archive-card,
+body.ruzgar-pro .ruzgar-pro-quiet {
+  display: none !important;
+}
+
+body.ruzgar-pro.ruzgar-pro-tools #ana-motor-denge_yeni-fold,
+body.ruzgar-pro.ruzgar-pro-tools #ana-motor-slo-fold,
+body.ruzgar-pro.ruzgar-pro-tools #ana-motor-vad-fold,
+body.ruzgar-pro.ruzgar-pro-tools #ana-motor-ogrenme-fold,
+body.ruzgar-pro.ruzgar-pro-tools #ana-motor-sentez-pro-fold,
+body.ruzgar-pro.ruzgar-pro-tools #ana-motor-kaynak-panel-fold,
+body.ruzgar-pro.ruzgar-pro-tools #ana-motor-session-card,
+body.ruzgar-pro.ruzgar-pro-tools #ana-motor-paket-ozet-card,
+body.ruzgar-pro.ruzgar-pro-tools #ana-motor-archive-card,
+body.ruzgar-pro.ruzgar-pro-tools .ruzgar-pro-quiet {
+  display: block !important;
+}
+
+.ruzgar-presence {
+  display: flex;
+  gap: 22px;
+  align-items: center;
+  margin: 8px 12px 14px;
+  padding: 16px 18px;
+  border: 1px solid #3a3424;
+  border-radius: 16px;
+  background:
+    radial-gradient(120px 80px at 12% 20%, rgba(212, 175, 55, 0.16), transparent 70%),
+    #1a1a1c;
+}
+
+.ruzgar-face {
+  position: relative;
+  width: 168px;
+  flex: 0 0 168px;
+  text-align: center;
+}
+
+.ruzgar-face-ring {
+  position: absolute;
+  inset: 8px 18px 36px;
+  border-radius: 40px;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  pointer-events: none;
+}
+
+.ruzgar-face-svg {
+  width: 148px;
+  height: 156px;
+  display: block;
+  margin: 0 auto;
+}
+
+.ruzgar-head,
+.ruzgar-ear {
+  fill: #2a2a2e;
+  stroke: #d4af37;
+  stroke-width: 2;
+}
+
+.ruzgar-eye {
+  fill: #f2e6c4;
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: ruzgar-blink 5.5s infinite;
+}
+
+.ruzgar-mouth rect {
+  fill: #d4af37;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+.ruzgar-face.is-talking .ruzgar-mouth rect {
+  animation: ruzgar-talk 0.28s ease-in-out infinite alternate;
+}
+
+.ruzgar-face.is-talking .ruzgar-mouth rect:nth-child(2) { animation-delay: 0.06s; }
+.ruzgar-face.is-talking .ruzgar-mouth rect:nth-child(3) { animation-delay: 0.12s; }
+.ruzgar-face.is-talking .ruzgar-mouth rect:nth-child(4) { animation-delay: 0.04s; }
+
+.ruzgar-face.is-talking .ruzgar-face-ring {
+  box-shadow: 0 0 0 6px rgba(212, 175, 55, 0.12);
+}
+
+.ruzgar-face.is-listening .ruzgar-eye {
+  fill: #9ad7ff;
+}
+
+.ruzgar-face-name {
+  margin: 0;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  color: #f3ead2;
+}
+
+.ruzgar-face-state {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #b7aa88;
+}
+
+.ruzgar-presence-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.ruzgar-presence-title {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #f6f1e4;
+}
+
+.ruzgar-presence-lead,
+.ruzgar-presence-path,
+.ruzgar-presence-hint {
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #c8c2b2;
+}
+
+.ruzgar-presence-hint {
+  min-height: 1.2em;
+  color: #e6d7a8;
+}
+
+.ruzgar-presence-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.ruzgar-field {
+  font-size: 12px;
+  color: #b7aa88;
+}
+
+.ruzgar-select,
+.ruzgar-input {
+  background: #111113;
+  color: #f3ead2;
+  border: 1px solid #4a4332;
+  border-radius: 8px;
+  padding: 7px 10px;
+  font: inherit;
+  font-size: 13px;
+}
+
+.ruzgar-input {
+  min-width: 180px;
+}
+
+.ruzgar-btn {
+  appearance: none;
+  border: 1px solid #4a4332;
+  background: #242228;
+  color: #f3ead2;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.ruzgar-btn:hover {
+  border-color: #d4af37;
+}
+
+.ruzgar-btn-accent,
+.ruzgar-btn.is-on {
+  background: #d4af37;
+  color: #1a1408;
+  border-color: #d4af37;
+}
+
+@keyframes ruzgar-talk {
+  from { transform: scaleY(0.45); }
+  to { transform: scaleY(1.35); }
+}
+
+@keyframes ruzgar-blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  96% { transform: scaleY(0.12); }
+}

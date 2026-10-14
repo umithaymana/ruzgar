@@ -75,20 +75,26 @@ def is_strict_library_lookup(message: str) -> bool:
 
 
 def should_defer_library_instant(message: str) -> bool:
+    """Sohbette kart basma. Önce soru anlaşılsın, cevap cümleyle gelsin.
+
+    Numaralı hadis veya ayet isteği anlık kalır.
+    """
     if not anlik_niyet_gate_enabled():
         return False
     raw = (message or "").strip()
     if not raw:
         return False
-    if is_strict_library_lookup(raw):
-        try:
-            from ilim_assistant.prompts import sohbet_tarz_chatgpt
+    if re.search(r"\b(?:hadis|ayet)\s*(?:no|numara|#)?\s*\d{1,5}\b", raw, re.I):
+        return False
+    try:
+        from ilim_assistant.prompts import sohbet_tarz_chatgpt
 
-            if not sohbet_tarz_chatgpt():
-                return False
-        except Exception:
-            return False
-        return True
+        if sohbet_tarz_chatgpt():
+            return True
+    except Exception:
+        pass
+    if is_strict_library_lookup(raw):
+        return False
     if _SYNTH_RE.search(raw) or _SYNTH_RE.search(_fold(raw)):
         return True
     return False
@@ -156,6 +162,13 @@ def collect_library_llm_context(message: str, *, max_chars: int = 2800) -> str:
 
 def soft_library_synth_fallback(message: str) -> Optional[str]:
     """LLM yokken sohbet/anlat niyetinde kısa doğal köprü + kavram notu."""
+    try:
+        from ilim_assistant.prompts import sohbet_tarz_chatgpt
+
+        if sohbet_tarz_chatgpt():
+            return None
+    except Exception:
+        pass
     if not should_defer_library_instant(message):
         return None
     raw = (message or "").strip()

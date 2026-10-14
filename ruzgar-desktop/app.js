@@ -14255,9 +14255,21 @@ function ttsRequestPayload(text, karakter, extra) {
   const payload = {
     text,
     karakter: normalizeKarakterForTts(karakter),
-    backend: "edge",
-    prosody: false,
+    backend: "auto",
+    prosody: true,
   };
+  try {
+    if (typeof window.ruzgarProVoicePayload === "function") {
+      const chosen = window.ruzgarProVoicePayload();
+      if (chosen && typeof chosen === "object") {
+        if (chosen.karakter) payload.karakter = normalizeKarakterForTts(chosen.karakter);
+        if (chosen.backend) payload.backend = String(chosen.backend);
+        if (typeof chosen.prosody === "boolean") payload.prosody = chosen.prosody;
+      }
+    }
+  } catch (_) {
+    /* yüz katmanı yoksa mevcut ses kalır */
+  }
   if (lastVoiceEmotion && lastVoiceEmotion !== "notr") {
     payload.emotion = lastVoiceEmotion;
   }
@@ -16015,6 +16027,7 @@ async function sendMessage() {
 let recState = null;
 /** Basılı tutunca kayıt */
 let micPressed = false;
+let talkToggleBusy = false;
 /** Bırakınca Konuşunca gönder */
 let pushSessionSend = false;
 /** ses → Mikrofon menü oturumu (zamanlayıcı iptali) */
@@ -16160,9 +16173,13 @@ function startMicLevelMeter(stream) {
     if (recState && (recState.kind === "btn" || recState.kind === "menu")) {
       const vadP = getSesliTurVadParams();
       const quiet = avg < vadP.quietAvg;
-      if (quiet) vadSilentMs += 1000 / 58;
-      else vadSilentMs = 0;
+      if (!quiet) recState.heardVoice = true;
+      if (recState.heardVoice) {
+        if (quiet) vadSilentMs += 1000 / 58;
+        else vadSilentMs = 0;
+      }
       if (
+        recState.heardVoice &&
         vadSilentMs >= vadP.silenceEnd &&
         recState.startedAt &&
         Date.now() - recState.startedAt >= vadP.minRec
@@ -16341,6 +16358,11 @@ async function finalizeRecording(state) {
     return;
   }
   text = (text || "").trim();
+  if (!text) {
+    pushSessionSend = false;
+    setStatus("Duyamadım. Konuş'a basıp yeniden söyle.", "Rüzgar");
+    return;
+  }
   if (text && window.RuzgarVirusGuard?.consumeVoiceApproval?.(text)) {
     pushSessionSend = false;
     setStatus("İndirme onayı alındı.", "Rüzgar");
@@ -16415,7 +16437,7 @@ function micPointerDown(e) {
   }
   e.preventDefault();
   try {
-    el.mic.setPointerCapture(e.pointerId);
+    (e.currentTarget || el.mic).setPointerCapture(e.pointerId);
   } catch (_) {}
   if (micPressed) return;
   micPressed = true;
@@ -16446,7 +16468,7 @@ async function micPointerUp(e) {
   const wasHeld = micPressed;
   micPressed = false;
   try {
-    el.mic.releasePointerCapture(e.pointerId);
+    (e.currentTarget || el.mic).releasePointerCapture(e.pointerId);
   } catch (_) {}
   if (wasHeld) {
     const s = recState;
@@ -16503,7 +16525,7 @@ async function menuOpenMic() {
       recState = null;
       if (s.timer) clearTimeout(s.timer);
       await finalizeRecording(s);
-    }, 12000);
+    }, 20000);
     recState = {
       kind: "menu",
       menuSessionId: sessionId,
@@ -16516,7 +16538,7 @@ async function menuOpenMic() {
     };
     el.mic.classList.add("recording");
     el.mic.classList.add("listening");
-    setStatus("Dinliyorum… (en fazla 12 sn)", "Rüzgar");
+    setStatus("Dinliyorum… konuş, bitince sus veya tekrar bas", "Rüzgar");
   } catch (err) {
     pushSessionSend = false;
     stopMicLevelMeter();
@@ -16788,13 +16810,43 @@ document.addEventListener("keydown", (e) => {
   e.preventDefault();
   interruptRuzgar();
 });
+async function toggleTalkListen() {
+  if (talkToggleBusy) return;
+  const live = recState && (recState.kind === "btn" || recState.kind === "menu");
+  if (live || micPressed) {
+    talkToggleBusy = true;
+    try {
+      const s = recState;
+      micPressed = false;
+      recState = null;
+      if (s && s.timer) clearTimeout(s.timer);
+      if (s && (s.kind === "btn" || s.kind === "menu")) await finalizeRecording(s);
+      else await discardActiveRecording();
+    } finally {
+      talkToggleBusy = false;
+    }
+    return;
+  }
+  if (perfBusy || isTtsActive()) {
+    flashRuzgarDurum("Rüzgar konuşurken bekle, bitince Konuş'a bas.");
+    return;
+  }
+  talkToggleBusy = true;
+  try {
+    await menuOpenMic();
+  } finally {
+    talkToggleBusy = false;
+  }
+}
+window.__ruzgarMicToggle = () => {
+  void toggleTalkListen();
+};
 if (el.mic) {
-  el.mic.addEventListener("pointerdown", (e) => {
-    void micPointerDown(e);
+  el.mic.title = "Bas: dinle. Konuş, susunca gönderilir. Tekrar bas: bitir.";
+  el.mic.addEventListener("click", (e) => {
+    e.preventDefault();
+    void toggleTalkListen();
   });
-  el.mic.addEventListener("pointerup", micPointerUp);
-  el.mic.addEventListener("pointercancel", micPointerUp);
-  el.mic.addEventListener("lostpointercapture", micPointerUp);
 }
 /* pointerleave kaldırıldı: kenarda milimetrelik hareket “bırakıldı” sanıp tanımayı kesiyor + Windows’ta çok sayıda erişim kaydı */
 

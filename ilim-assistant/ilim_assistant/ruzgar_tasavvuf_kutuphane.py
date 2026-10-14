@@ -131,10 +131,10 @@ def _match_kavram(msg: str) -> Optional[dict[str, Any]]:
                 continue
             if k == low or low == f"{k} nedir" or low.startswith(f"{k} nedir"):
                 score = max(score, 100)
-            elif k in low:
+            elif re.search(rf"(?<![\w'’]){re.escape(k)}(?![\w'’])", low) and (
+                len(k) >= 6 or " " in k
+            ):
                 score = max(score, 60 + min(20, len(k)))
-            elif k in tokens:
-                score = max(score, 40)
             else:
                 # Çok kelimeli alias: tüm parçalar soruda var mı? (kimya + yi + saadet)
                 parts = [p for p in k.split() if len(p) > 1]
@@ -148,7 +148,7 @@ def _match_kavram(msg: str) -> Optional[dict[str, Any]]:
         if score > best_score:
             best_score = score
             best = row
-    if best_score >= 40:
+    if best_score >= 70:
         return best
     return None
 
