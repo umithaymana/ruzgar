@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="ruzgar-split.css?v=20260602-workbench-split" />
     <link rel="stylesheet" href="ruzgar-pro.css?v=20261016-motorlar" />
     <link rel="stylesheet" href="ruzgar-sade.css?v=20261016-sohbet-tutamac" />
+    <link rel="stylesheet" href="ruzgar-masa.css?v=20261016-sahne" />
     <script src="ruzgar-api-root.js?v=20260620-csp"></script>
   </head>
   <body class="ruzgar-pro ruzgar-sade">
@@ -533,6 +534,76 @@
         </div>
         <div id="dynamic-workbench" class="dynamic-workbench layout-full">
           <section class="motor-page" id="page-genel">
+            <div id="ruzgar-sahne" class="ruzgar-sahne" aria-label="Rüzgar konuşuyor">
+              <div class="ruzgar-sahne-wind" aria-hidden="true"></div>
+              <div class="ruzgar-face ruzgar-sahne-face" id="ruzgar-sahne-face">
+                <div class="ruzgar-face-ring"></div>
+                <svg class="ruzgar-face-svg" viewBox="0 0 160 168">
+                  <rect class="ruzgar-head" x="28" y="22" width="104" height="112" rx="28" />
+                  <rect class="ruzgar-ear" x="14" y="62" width="16" height="28" rx="6" />
+                  <rect class="ruzgar-ear" x="130" y="62" width="16" height="28" rx="6" />
+                  <g class="ruzgar-eyes">
+                    <ellipse class="ruzgar-eye" cx="62" cy="72" rx="8" ry="9" />
+                    <ellipse class="ruzgar-eye" cx="98" cy="72" rx="8" ry="9" />
+                  </g>
+                  <g class="ruzgar-mouth">
+                    <rect x="58" y="102" width="6" height="8" rx="2" />
+                    <rect x="70" y="98" width="6" height="14" rx="2" />
+                    <rect x="82" y="102" width="6" height="8" rx="2" />
+                    <rect x="94" y="100" width="6" height="11" rx="2" />
+                  </g>
+                </svg>
+                <p class="ruzgar-face-name">Rüzgar</p>
+              </div>
+              <p id="ruzgar-sahne-soz" class="ruzgar-sahne-soz">Yaz. Cevabı ben buradan söyleyeyim.</p>
+              <button type="button" id="ruzgar-sahne-masa" class="ruzgar-masa-btn">Çalışma masası</button>
+            </div>
+            <div id="ruzgar-masa" class="ruzgar-masa">
+              <div class="ruzgar-masa-bar">
+                <div class="ruzgar-masa-tabs" role="tablist" aria-label="Masa türü">
+                  <button type="button" class="is-on" data-masa="belge" role="tab" aria-selected="true">Belge</button>
+                  <button type="button" data-masa="tablo" role="tab" aria-selected="false">Tablo</button>
+                  <button type="button" data-masa="cizim" role="tab" aria-selected="false">Çizim</button>
+                  <button type="button" data-masa="sunum" role="tab" aria-selected="false">Sunum</button>
+                </div>
+                <div class="ruzgar-masa-file">
+                  <span id="ruzgar-masa-durum" class="ruzgar-masa-durum" aria-live="polite"></span>
+                  <button type="button" id="ruzgar-masa-sahne" class="ruzgar-masa-btn" hidden>Sahne</button>
+                  <button type="button" id="ruzgar-masa-yeni" class="ruzgar-masa-btn">Yeni</button>
+                  <button type="button" id="ruzgar-masa-indir" class="ruzgar-masa-btn ruzgar-masa-btn-accent">İndir</button>
+                </div>
+              </div>
+              <div id="ruzgar-masa-tools" class="ruzgar-masa-tools" role="toolbar" aria-label="Masa araçları"></div>
+              <div class="ruzgar-masa-stage">
+                <div class="ruzgar-masa-pane is-on" data-pane="belge">
+                  <div id="ruzgar-masa-belge" class="ruzgar-masa-belge" contenteditable="true" spellcheck="true" role="textbox" aria-label="Belge" data-placeholder="Yazmaya başla. Kalın, liste ve başlık üstteki araçlarda."></div>
+                </div>
+                <div class="ruzgar-masa-pane" data-pane="tablo" hidden>
+                  <div class="ruzgar-masa-formula">
+                    <span id="ruzgar-masa-cell-name">A1</span>
+                    <input id="ruzgar-masa-formula-input" type="text" spellcheck="false" aria-label="Formül" placeholder="Değer veya =A1+B1, =TOPLA(A1:A10)" />
+                  </div>
+                  <div id="ruzgar-masa-sheet" class="ruzgar-masa-sheet-wrap"></div>
+                </div>
+                <div class="ruzgar-masa-pane" data-pane="cizim" hidden>
+                  <div id="ruzgar-masa-canvas-wrap" class="ruzgar-masa-canvas-wrap" tabindex="-1">
+                    <canvas id="ruzgar-masa-canvas" aria-label="Çizim alanı"></canvas>
+                  </div>
+                </div>
+                <div class="ruzgar-masa-pane" data-pane="sunum" hidden>
+                  <aside id="ruzgar-masa-slides" class="ruzgar-masa-slides" aria-label="Slaytlar"></aside>
+                  <div class="ruzgar-masa-slide-editor">
+                    <input id="ruzgar-masa-slide-title" type="text" maxlength="120" placeholder="Slayt başlığı" aria-label="Slayt başlığı" />
+                    <textarea id="ruzgar-masa-slide-body" maxlength="2000" placeholder="Slayt metni" aria-label="Slayt metni"></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="ruzgar-masa-present" class="ruzgar-masa-present" hidden>
+              <p id="ruzgar-masa-present-title"></p>
+              <p id="ruzgar-masa-present-body"></p>
+              <span id="ruzgar-masa-present-hint">İleri: ok veya tık · Esc: kapat</span>
+            </div>
             <section class="ruzgar-presence" id="ruzgar-presence" aria-label="Çalışma masası">
               <div class="ruzgar-presence-body">
                 <p class="ruzgar-desk-note">Masa boş. Bir atölye açılınca işlem burada görünür.</p>
@@ -3156,6 +3227,7 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
     <script src="ruzgar-boot-health.js?v=20260620-conn-fix"></script>
     <script src="ruzgar-ui-bootstrap.js?v=20260620-btn-fallback"></script>
     <script src="ruzgar-pro-yuz.js?v=20261015-sade"></script>
+    <script src="ruzgar-masa.js?v=20261016-sahne"></script>
     <script src="app.js?v=20261016-motorlar2"></script>
   </body>
 </html>

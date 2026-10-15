@@ -1,0 +1,494 @@
+/* Ana Motor çalışma masası — belge, tablo, çizim, sunum. Ümit & Gökçenur */
+
+body.ruzgar-sade #page-genel {
+  overflow: hidden;
+  position: relative;
+}
+
+body.ruzgar-sade #page-genel #ruzgar-presence,
+body.ruzgar-sade #page-genel .ruzgar-desk-note {
+  display: none !important;
+}
+
+body.ruzgar-sade #ruzgar-robot-dock {
+  left: auto;
+  top: auto;
+  right: 18px;
+  bottom: 18px;
+  width: 96px;
+  transform: none;
+}
+
+.ruzgar-masa {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  background: #161618;
+  border: 1px solid #3a3428;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.ruzgar-masa-bar,
+.ruzgar-masa-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 10px;
+  background: #1c1c1f;
+  border-bottom: 1px solid #2e2e32;
+}
+
+.ruzgar-masa-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.ruzgar-masa-tabs button,
+.ruzgar-masa-btn,
+.ruzgar-masa-tools button {
+  border: 1px solid #3a3a40;
+  background: #242428;
+  color: #e8e2d4;
+  border-radius: 7px;
+  padding: 5px 10px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.ruzgar-masa-tabs button.is-on,
+.ruzgar-masa-tools button.is-on {
+  background: #3a3424;
+  border-color: #8a7844;
+  color: #f3ead2;
+}
+
+.ruzgar-masa-btn-accent {
+  background: #3a3424;
+  border-color: #8a7844;
+  color: #f3ead2;
+}
+
+.ruzgar-masa-file {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ruzgar-masa-durum {
+  color: #8d8678;
+  font-size: 12px;
+  min-width: 72px;
+}
+
+.ruzgar-masa-tools label,
+.ruzgar-masa-tools select,
+.ruzgar-masa-tools input[type="color"],
+.ruzgar-masa-tools input[type="range"] {
+  color: #c8c2b2;
+  font-size: 12px;
+}
+
+.ruzgar-masa-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  background: #101012;
+}
+
+.ruzgar-masa-pane {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+}
+
+.ruzgar-masa-pane[hidden] {
+  display: none !important;
+}
+
+.ruzgar-masa-belge {
+  flex: 1 1 auto;
+  margin: 12px;
+  padding: 22px 26px;
+  overflow: auto;
+  background: #f7f4ec;
+  color: #1c1a16;
+  border-radius: 4px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+  outline: none;
+  line-height: 1.55;
+  font-size: 16px;
+  min-height: 0;
+}
+
+.ruzgar-masa-belge:empty::before {
+  content: attr(data-placeholder);
+  color: #9a917f;
+}
+
+.ruzgar-masa-belge h2 {
+  font-size: 1.45em;
+  margin: 0.4em 0;
+}
+
+.ruzgar-masa-formula {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border-bottom: 1px solid #2e2e32;
+  background: #1c1c1f;
+}
+
+.ruzgar-masa-pane[data-pane="tablo"] {
+  flex-direction: column;
+}
+
+#ruzgar-masa-cell-name {
+  min-width: 42px;
+  color: #d4c49a;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+#ruzgar-masa-formula-input {
+  flex: 1;
+  background: #121214;
+  color: #f3ead2;
+  border: 1px solid #3a3a40;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 13px;
+}
+
+.ruzgar-masa-sheet-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.ruzgar-masa-sheet {
+  border-collapse: collapse;
+  min-width: 100%;
+}
+
+.ruzgar-masa-sheet th,
+.ruzgar-masa-sheet td {
+  border: 1px solid #2a2a2e;
+  background: #f7f4ec;
+  color: #1c1a16;
+  font-size: 13px;
+  font-weight: 400;
+  padding: 0;
+  min-width: 84px;
+  height: 26px;
+}
+
+.ruzgar-masa-sheet th {
+  position: sticky;
+  top: 0;
+  background: #2a2824;
+  color: #d4c49a;
+  z-index: 2;
+  font-size: 11px;
+  text-align: center;
+}
+
+.ruzgar-masa-sheet .ruzgar-masa-rowhead {
+  position: sticky;
+  left: 0;
+  min-width: 36px;
+  width: 36px;
+  background: #2a2824;
+  color: #d4c49a;
+  text-align: center;
+  z-index: 1;
+  font-size: 11px;
+}
+
+.ruzgar-masa-sheet th.ruzgar-masa-corner {
+  left: 0;
+  z-index: 3;
+}
+
+.ruzgar-masa-sheet input {
+  width: 84px;
+  height: 26px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 0 6px;
+  box-sizing: border-box;
+}
+
+.ruzgar-masa-sheet td.is-sel {
+  outline: 2px solid #8a7844;
+  outline-offset: -2px;
+}
+
+.ruzgar-masa-canvas-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 12px;
+  background: #f4f0e6;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+#ruzgar-masa-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.ruzgar-masa-pane[data-pane="sunum"] {
+  gap: 0;
+}
+
+.ruzgar-masa-slides {
+  width: 168px;
+  flex: 0 0 168px;
+  overflow: auto;
+  border-right: 1px solid #2e2e32;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ruzgar-masa-slide-thumb {
+  text-align: left;
+  border: 1px solid #3a3a40;
+  background: #242428;
+  color: #e8e2d4;
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+
+.ruzgar-masa-slide-thumb.is-on {
+  border-color: #8a7844;
+  background: #3a3424;
+}
+
+.ruzgar-masa-slide-thumb small {
+  display: block;
+  color: #8d8678;
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ruzgar-masa-slide-editor {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+}
+
+#ruzgar-masa-slide-title,
+#ruzgar-masa-slide-body {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #3a3a40;
+  border-radius: 8px;
+  background: #f7f4ec;
+  color: #1c1a16;
+  font: inherit;
+  padding: 10px 12px;
+}
+
+#ruzgar-masa-slide-title {
+  font-size: 22px;
+  font-weight: 650;
+}
+
+#ruzgar-masa-slide-body {
+  flex: 1 1 auto;
+  min-height: 120px;
+  resize: none;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.ruzgar-masa-present {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+  padding: 48px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.ruzgar-masa-present[hidden] {
+  display: none !important;
+}
+
+#ruzgar-masa-present-title {
+  margin: 0;
+  font-size: clamp(28px, 5vw, 64px);
+  font-weight: 700;
+  max-width: 18ch;
+}
+
+#ruzgar-masa-present-body {
+  margin: 0;
+  font-size: clamp(16px, 2.2vw, 28px);
+  max-width: 36ch;
+  white-space: pre-wrap;
+  line-height: 1.45;
+}
+
+#ruzgar-masa-present-hint {
+  position: absolute;
+  bottom: 18px;
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+.ruzgar-masa-menu {
+  position: fixed;
+  z-index: 13000;
+  min-width: 148px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
+  background: #2a2824;
+  border: 1px solid #8a7844;
+  border-radius: 8px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+
+.ruzgar-masa-menu[hidden] {
+  display: none !important;
+}
+
+.ruzgar-masa-menu button {
+  border: 0;
+  background: transparent;
+  color: #f3ead2;
+  text-align: left;
+  font: inherit;
+  font-size: 13px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.ruzgar-masa-menu button:hover:not(:disabled) {
+  background: #3a3424;
+}
+
+.ruzgar-masa-menu button:disabled {
+  color: #6e685c;
+  cursor: default;
+}
+
+.ruzgar-sahne {
+  display: none;
+}
+
+body.ruzgar-sahne-on #ruzgar-sahne {
+  display: flex;
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 28px 32px 22px;
+  background:
+    radial-gradient(ellipse at 50% 38%, rgba(212, 175, 55, 0.16), transparent 46%),
+    linear-gradient(180deg, #121218 0%, #1a1814 100%);
+  overflow: hidden;
+}
+
+body.ruzgar-sahne-on #ruzgar-robot-dock {
+  display: none !important;
+}
+
+.ruzgar-sahne-wind {
+  position: absolute;
+  inset: -20%;
+  background:
+    repeating-linear-gradient(
+      100deg,
+      transparent 0 40px,
+      rgba(212, 175, 55, 0.05) 40px 42px
+    );
+  animation: ruzgar-esinti 14s linear infinite;
+  pointer-events: none;
+}
+
+.ruzgar-sahne-face {
+  position: relative;
+  z-index: 1;
+  width: 280px;
+  flex: 0 0 auto;
+  animation: ruzgar-nefes 4.8s ease-in-out infinite;
+}
+
+.ruzgar-sahne-face .ruzgar-face-svg {
+  width: 250px;
+  height: 262px;
+}
+
+.ruzgar-sahne-face .ruzgar-face-name {
+  font-size: 22px;
+  letter-spacing: 0.18em;
+}
+
+.ruzgar-sahne-soz {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  max-width: 640px;
+  max-height: 38%;
+  overflow: auto;
+  padding: 16px 20px;
+  border-radius: 18px;
+  background: rgba(20, 18, 14, 0.78);
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  color: #f7f1e4;
+  font-size: 18px;
+  line-height: 1.5;
+  text-align: center;
+  white-space: pre-wrap;
+}
+
+#ruzgar-sahne-masa {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes ruzgar-esinti {
+  from { transform: translateX(0); }
+  to { transform: translateX(-80px); }
+}
+
+@keyframes ruzgar-nefes {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-8px) scale(1.03); }
+}

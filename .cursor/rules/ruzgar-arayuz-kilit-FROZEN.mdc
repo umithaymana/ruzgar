@@ -7,17 +7,23 @@ alwaysApply: true
 
 # Rüzgar arayüz kilidi — 2026-10-16
 
-Mimar bu düzeni beğendi ve kilitledi. **Aksini açıkça söyleyene kadar** aşağıdaki yüz bozulmaz. «Sadeleştir», «temizle», «sadece çalışma sayfası» gibi istekler bu kilidi tek başına açmaz; motor koduna da bu kural bahanesiyle dokunulmaz.
+Mimar bu düzeni beğendi ve kilitledi (2026-10-16 gece: «sakın bozma, sadece geliştir»). **Aksini açıkça söyleyene kadar** aşağıdaki yüz bozulmaz. «Sadeleştir», «temizle», «sadece çalışma sayfası» gibi istekler bu kilidi tek başına açmaz; motor koduna da bu kural bahanesiyle dokunulmaz. Geliştirme bu yüzün üstüne eklenir; motor listesi, geri/ileri/yenile, sohbet tutamacı, dört masa ve boşken Rüzgar sahnesi kaldırılmaz.
+
+## Sıra (Mimar, 2026-10-16)
+
+1. Şimdi kilitli yüz durur.
+2. Sonraki iş: Belge, Tablo, Çizim ve Sunum sayfalarını ana motora bağlamak; sohbetten bu sayfalara gerçek iş yaptırmak.
+3. O bağ tam çalışınca programlama atölyesine geçilir. Programlama bu bağ bitmeden öne alınmaz.
 
 ## Duracak olan
 
 - Sol motor listesi adlarıyla açık: Ana Motor, Hafıza, Hızır, Ses, Video, Mimar, Tercüme, Programlama. İkon şeridi yalnız daralt düğmesiyle.
 - Üstte **geri, ileri, yenile**. Motor seçmek listeyi daraltmaz.
 - Sohbet ile çalışma sayfası arası tutamaç `--ruzgar-chat-w` ile kayar (en dar 220, en geniş 860). `ruzgar-sade.css` sohbet genişliğini `auto` veya sabit piksele kilitlemez.
-- Sağ çalışma sayfası sade masa olarak kalır.
+- Sağ çalışma sayfası: Ana Motor masası aktif paneldir (Belge, Tablo, Çizim, Sunum). Masa boşken ve sohbet varken Rüzgar sahnesi tüm sayfayı kaplar; konuşmayı o yüz söyler. «Çalışma masası» ile belge, tablo, çizim ve sunum açılır. Boş «Masa boş» notuna geri dönülmez. Diğer motor atölyeleri aynı çerçevede açılır. Motor listesi, geri/ileri/yenile ve sohbet tutamacı bu istekle açılmaz.
 
 ## Dokunulmaz dosyalar (bu kilit açıkken)
 
-`ruzgar-desktop/index.html`, `app.js`, `ruzgar-sade.css`, `ruzgar-pro.css`, `ruzgar-split.js`, `ruzgar-ui-prebody.js` içinde yukarıdaki davranışı değiştiren satır.
+`ruzgar-desktop/index.html`, `app.js`, `ruzgar-sade.css`, `ruzgar-pro.css`, `ruzgar-split.js`, `ruzgar-ui-prebody.js` içinde yukarıdaki davranışı bozan satır. `ruzgar-masa.js` ve `ruzgar-masa.css` geliştirilebilir; sahneyi, dört masayı ve sağ tık kes/kopyala/yapıştırı kaldırmak bozmaktır.
 
 Motorların kendi atölye kodu (ses, video, tercüme, programlama) bu kuralın konusu değildir; yüz ölçüsünü bozmadan düzeltilebilir.
