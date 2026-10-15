@@ -1118,6 +1118,337 @@
   window.addEventListener("blur", hideMasaMenu);
   window.addEventListener("resize", hideMasaMenu);
 
+  const MASA_RENK = {
+    siyah: "#1a1a1c",
+    kirmizi: "#8c2f2f",
+    mavi: "#1e4d8c",
+    yesil: "#1f6b45",
+    altin: "#8a7844",
+    beyaz: "#f4f0e6",
+  };
+
+  function masaTemizMetin(value, max) {
+    return String(value || "").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "").slice(0, max);
+  }
+
+  function masaHarf(name) {
+    return String(name || "")
+      .toLowerCase()
+      .replace(/ı/g, "i")
+      .replace(/İ/g, "i")
+      .replace(/ş/g, "s")
+      .replace(/ğ/g, "g")
+      .replace(/ü/g, "u")
+      .replace(/ö/g, "o")
+      .replace(/ç/g, "c");
+  }
+
+  function masaSayi(value, lo, hi) {
+    const n = Number(value);
+    if (!isFinite(n)) return null;
+    return Math.max(lo, Math.min(hi, n));
+  }
+
+  function masaAc(mode) {
+    showMode(mode);
+    syncSahne();
+  }
+
+  function masaFormulGuvenli(value) {
+    return /^=[0-9A-Za-zÇĞİÖŞÜçğıöşü+\-*/().,:\s]+$/.test(value) && value.length <= 180;
+  }
+
+  function masaEylemGuvenli(action) {
+    const izin = {
+      "belge.yaz": ["metin"],
+      "belge.ekle": ["metin"],
+      "belge.temizle": [],
+      "tablo.hucre": ["hucre", "deger"],
+      "tablo.temizle": [],
+      "cizim.renk": ["ad"],
+      "cizim.cizgi": ["x1", "y1", "x2", "y2"],
+      "cizim.kutu": ["x", "y", "w", "h"],
+      "cizim.daire": ["x", "y", "rx", "ry"],
+      "cizim.temizle": [],
+      "sunum.ekle": ["baslik", "metin"],
+      "sunum.temizle": [],
+      "sunum.sun": [],
+    };
+    if (!action || typeof action !== "object" || Array.isArray(action)) return false;
+    const keys = Object.keys(action);
+    const need = izin[String(action.eylem || "")];
+    if (!need || keys.length > need.length + 1) return false;
+    const yazi = { metin: 1, deger: 1, hucre: 1, ad: 1, baslik: 1 };
+    for (let i = 0; i < keys.length; i++) {
+      if (keys[i] !== "eylem" && need.indexOf(keys[i]) < 0) return false;
+    }
+    for (let i = 0; i < need.length; i++) {
+      const key = need[i];
+      const value = action[key];
+      if (yazi[key]) {
+        if (typeof value !== "string" || !value.trim()) return false;
+      } else if (typeof value !== "number" || !isFinite(value)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function masaHucreYaz(letters, rowText, raw) {
+    const c = COLS.indexOf(String(letters || "").toUpperCase());
+    const r = Number(rowText) - 1;
+    if (c < 0 || r < 0 || r >= ROWS) return "Hücre A1 ile L28 arasında olmalı.";
+    const value = masaTemizMetin(raw, 180).trim();
+    if (!value) return "Hücreye yazılacak değer yok.";
+    if (value.charAt(0) === "=" && !masaFormulGuvenli(value)) {
+      return "Formülde yalnız sayı, hücre ve TOPLA, ORTALAMA, MİN, MAK kullanılabilir.";
+    }
+    state.sheet[r][c] = value;
+    paintSheet();
+    scheduleSave();
+    masaAc("tablo");
+    return addr(r, c) + " yazıldı.";
+  }
+
+  function masaBelgeYaz(text, append) {
+    const clean = masaTemizMetin(text, 8000).trim();
+    if (!clean) return "Yazılacak metin yok.";
+    if (append && (belge.textContent || "").trim()) {
+      belge.textContent = belge.textContent.replace(/\s+$/, "") + "\n" + clean;
+    } else {
+      belge.textContent = clean;
+    }
+    scheduleSave();
+    masaAc("belge");
+    return append ? "Belgeye eklendi." : "Belge yazıldı.";
+  }
+
+  function masaCizHazir() {
+    ensurePaper();
+    state.ink = true;
+    strokeStyle();
+    masaAc("cizim");
+  }
+
+  function masaSlaytEkle(title, body) {
+    const baslik = masaTemizMetin(title, 120).trim();
+    const metin = masaTemizMetin(body, 2000).trim();
+    if (!baslik && !metin) return "Slayt boş olamaz.";
+    if (state.slides.length >= 12) return "En fazla 12 slayt.";
+    const only = state.slides.length === 1 ? state.slides[0] : null;
+    const bosIlk = only && (!String(only.title || "").trim() && !String(only.body || "").trim()
+      || (only.title === "Başlık" && only.body === "Metin"));
+    const slide = { title: baslik, body: metin, bg: "#1c1a16", fg: "#f7f4ec" };
+    if (bosIlk) state.slides[0] = slide;
+    else state.slides.push(slide);
+    state.slideIndex = state.slides.length - 1;
+    renderTools();
+    renderSlides();
+    scheduleSave();
+    masaAc("sunum");
+    return "Slayt hazır.";
+  }
+
+  function masaUygula(action) {
+    if (!action || typeof action !== "object") return "Komut geçersiz.";
+    const eylem = String(action.eylem || "");
+    if (eylem === "belge.yaz") return masaBelgeYaz(action.metin, false);
+    if (eylem === "belge.ekle") return masaBelgeYaz(action.metin, true);
+    if (eylem === "belge.temizle") {
+      belge.textContent = "";
+      scheduleSave();
+      masaAc("belge");
+      return "Belge temizlendi.";
+    }
+    if (eylem === "tablo.hucre") {
+      const hucre = String(action.hucre || "");
+      const m = hucre.match(/^([A-La-l])(\d{1,2})$/);
+      if (!m) return "Hücre A1 biçiminde olmalı.";
+      return masaHucreYaz(m[1], m[2], action.deger);
+    }
+    if (eylem === "tablo.temizle") {
+      state.sheet = blankSheet();
+      paintSheet();
+      scheduleSave();
+      masaAc("tablo");
+      return "Tablo temizlendi.";
+    }
+    if (eylem === "cizim.renk") {
+      const renk = MASA_RENK[masaHarf(action.ad)];
+      if (!renk) return "Renk: siyah, kırmızı, mavi, yeşil, altın, beyaz.";
+      state.draw.color = renk;
+      return "Kalem rengi değişti.";
+    }
+    if (eylem === "cizim.cizgi" || eylem === "cizim.kutu" || eylem === "cizim.daire") {
+      let ciz = null;
+      if (eylem === "cizim.cizgi") {
+        ciz = {
+          x1: masaSayi(action.x1, 0, BW),
+          y1: masaSayi(action.y1, 0, BH),
+          x2: masaSayi(action.x2, 0, BW),
+          y2: masaSayi(action.y2, 0, BH),
+        };
+        if (ciz.x1 == null || ciz.y1 == null || ciz.x2 == null || ciz.y2 == null) return "Çizgi koordinatı geçersiz.";
+      } else if (eylem === "cizim.kutu") {
+        ciz = {
+          x: masaSayi(action.x, 0, BW),
+          y: masaSayi(action.y, 0, BH),
+          w: masaSayi(action.w, 1, BW),
+          h: masaSayi(action.h, 1, BH),
+        };
+        if (ciz.x == null || ciz.y == null || ciz.w == null || ciz.h == null) return "Kutu ölçüsü geçersiz.";
+      } else {
+        ciz = {
+          x: masaSayi(action.x, 0, BW),
+          y: masaSayi(action.y, 0, BH),
+          rx: masaSayi(action.rx, 1, 800),
+          ry: masaSayi(action.ry, 1, 800),
+        };
+        if (ciz.x == null || ciz.y == null || ciz.rx == null || ciz.ry == null) return "Daire ölçüsü geçersiz.";
+      }
+      masaCizHazir();
+      takeSnap();
+      ctx.beginPath();
+      if (eylem === "cizim.cizgi") {
+        ctx.moveTo(ciz.x1, ciz.y1);
+        ctx.lineTo(ciz.x2, ciz.y2);
+        ctx.stroke();
+      } else if (eylem === "cizim.kutu") {
+        ctx.strokeRect(ciz.x, ciz.y, ciz.w, ciz.h);
+      } else {
+        ctx.ellipse(ciz.x, ciz.y, ciz.rx, ciz.ry, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      scheduleSave();
+      return "Çizim işlendi.";
+    }
+    if (eylem === "cizim.temizle") {
+      ensurePaper();
+      clearPaper();
+      masaAc("cizim");
+      return "Çizim temizlendi.";
+    }
+    if (eylem === "sunum.ekle") return masaSlaytEkle(action.baslik, action.metin);
+    if (eylem === "sunum.temizle") {
+      state.slides = [{ title: "", body: "", bg: "#1c1a16", fg: "#f7f4ec" }];
+      state.slideIndex = 0;
+      present.hidden = true;
+      renderTools();
+      renderSlides();
+      scheduleSave();
+      masaAc("sunum");
+      return "Sunum temizlendi.";
+    }
+    if (eylem === "sunum.sun") {
+      if (!state.slides.length) return "Slayt yok.";
+      masaAc("sunum");
+      startPresent();
+      return "Sunum açıldı. Esc kapatır.";
+    }
+    return "";
+  }
+
+  function masaYardim() {
+    return [
+      "Çalışma masası komutları:",
+      "belgeye yaz: metin",
+      "belgeye ekle: metin",
+      "belgeyi temizle",
+      "tablo A1 = 10",
+      "tablo A3 = =TOPLA(A1:A2)",
+      "tabloyu temizle",
+      "çizgi 40 40 400 200",
+      "kutu 80 80 240 140",
+      "daire 300 220 80 60",
+      "renk kırmızı",
+      "çizimi temizle",
+      "slayt ekle: Başlık | metin",
+      "sunumu temizle",
+      "sun",
+    ].join("\n");
+  }
+
+  function masaKomutCoz(text) {
+    const raw = String(text || "").trim();
+    if (!raw || raw.length > 9000) return null;
+    const low = masaHarf(raw);
+    if (/^(masa yardim|calisma masasi yardim|masa komutlari)$/.test(low)) {
+      return { handled: true, reply: masaYardim() };
+    }
+    let m = raw.match(/^(belgeye yaz|belge yaz|belgeye ekle|belge ekle)\s*[:\-]?\s*([\s\S]+)$/i);
+    if (m) return { handled: true, reply: masaBelgeYaz(m[2], /ekle/i.test(m[1])) };
+    if (/^(belgeyi temizle|belge temizle)$/i.test(raw)) {
+      return { handled: true, reply: masaUygula({ eylem: "belge.temizle" }) };
+    }
+    if (/^tablo\s*:\s*\n/i.test(raw)) {
+      const lines = raw.split(/\n/).slice(1);
+      const notes = [];
+      lines.forEach(function (line) {
+        const cell = line.trim().match(/^([A-La-l])(\d{1,2})\s*(?:=|:)?\s*(.+)$/);
+        if (cell) notes.push(masaHucreYaz(cell[1], cell[2], cell[3]));
+      });
+      if (!notes.length) return { handled: true, reply: "Tablo satırı A1 10 biçiminde olmalı." };
+      return { handled: true, reply: notes.join(" ") };
+    }
+    m = raw.match(/^(?:tablo|hucre|hücre)\s+([A-La-l])(\d{1,2})\s*(?:=|:)?\s*([\s\S]+)$/i);
+    if (m) return { handled: true, reply: masaHucreYaz(m[1], m[2], m[3]) };
+    if (/^(tabloyu temizle|tablo temizle)$/i.test(raw)) {
+      return { handled: true, reply: masaUygula({ eylem: "tablo.temizle" }) };
+    }
+    m = raw.match(/^(?:renk)\s+([a-zA-ZçğıöşüÇĞİÖŞÜ]+)\s*$/i);
+    if (m) return { handled: true, reply: masaUygula({ eylem: "cizim.renk", ad: m[1] }) };
+    m = raw.match(/^(?:çizgi|cizgi)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*$/i);
+    if (m) return { handled: true, reply: masaUygula({ eylem: "cizim.cizgi", x1: m[1], y1: m[2], x2: m[3], y2: m[4] }) };
+    m = raw.match(/^(?:kutu)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s*$/i);
+    if (m) return { handled: true, reply: masaUygula({ eylem: "cizim.kutu", x: m[1], y: m[2], w: m[3], h: m[4] }) };
+    m = raw.match(/^(?:daire)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s*$/i);
+    if (m) return { handled: true, reply: masaUygula({ eylem: "cizim.daire", x: m[1], y: m[2], rx: m[3], ry: m[4] }) };
+    if (/^(çizimi temizle|cizimi temizle|çizim temizle|cizim temizle)$/i.test(raw)) {
+      return { handled: true, reply: masaUygula({ eylem: "cizim.temizle" }) };
+    }
+    m = raw.match(/^slayt ekle\s*[:\-]?\s*([\s\S]+?)\s*(?:\|\s*|\n)\s*([\s\S]+)$/i);
+    if (m) return { handled: true, reply: masaSlaytEkle(m[1], m[2]) };
+    if (/^(sunumu temizle|sunum temizle|slaytlari temizle|slaytları temizle)$/i.test(raw)) {
+      return { handled: true, reply: masaUygula({ eylem: "sunum.temizle" }) };
+    }
+    if (/^(sun|sunumu aç|sunumu ac|sunumu başlat|sunumu baslat)$/i.test(raw)) {
+      return { handled: true, reply: masaUygula({ eylem: "sunum.sun" }) };
+    }
+    return null;
+  }
+
+  window.ruzgarMasaKomut = function (text) {
+    try {
+      return masaKomutCoz(text);
+    } catch (err) {
+      return { handled: true, reply: "Masa komutu uygulanamadı." };
+    }
+  };
+
+  window.ruzgarMasaFence = function (text) {
+    const found = String(text || "").match(/```ruzgar-masa\s*([\s\S]{2,6000}?)```/);
+    if (!found) return null;
+    let data = null;
+    try {
+      data = JSON.parse(found[1]);
+    } catch (err) {
+      return null;
+    }
+    const list = Array.isArray(data) ? data.slice(0, 8) : [data];
+    if (!list.length || list.length > 8) return null;
+    for (let i = 0; i < list.length; i++) {
+      if (!masaEylemGuvenli(list[i])) return null;
+    }
+    const notes = [];
+    for (let i = 0; i < list.length; i++) {
+      const note = masaUygula(list[i]);
+      if (!note) return null;
+      notes.push(note);
+    }
+    const clean = String(text).replace(/```ruzgar-masa\s*[\s\S]*?```/g, "").trim();
+    return { clean: (clean ? clean + "\n\n" : "") + "Masa: " + notes.join(" ") };
+  };
+
   function masaBos() {
     const belgeBos = !(belge.innerText || "").trim();
     const tabloBos = state.sheet.every(function (row) {

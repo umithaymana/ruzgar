@@ -15135,6 +15135,10 @@ async function streamChat(userText, streamOpts = {}) {
         merged = streamed + extractYerelFooter(srv);
       }
       full = stripYerelFooter(merged);
+      if (currentMode === "genel" && window.ruzgarMasaFence) {
+        const masaFence = window.ruzgarMasaFence(full);
+        if (masaFence && masaFence.clean) full = masaFence.clean;
+      }
       chatSess.sessionWakeUsed = !!ev.new_wake_used;
       hideThinkingCenter();
       const faz85Done = !!(ev.code_agent && ev.code_agent.fast_local);
@@ -15897,6 +15901,15 @@ async function sendMessageWithText(t, opts = {}) {
   };
 
   if (currentMode === "genel" && !isCasualChatMessage(text)) {
+    if (window.ruzgarMasaKomut) {
+      const masaHit = window.ruzgarMasaKomut(dispatchText);
+      if (masaHit && masaHit.handled) {
+        appendBubble("assistant", String(masaHit.reply || "Tamam."));
+        scrollChatToBottom();
+        finishMotorInstant("Ana Motor");
+        return;
+      }
+    }
     void prefetchGenelOrchestraBridge(dispatchText);
     const hubFast = await withHubCallTimeout(
       tryGenelProgramlamaHubInstant(dispatchText),
