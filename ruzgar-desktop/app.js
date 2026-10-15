@@ -1099,8 +1099,7 @@ function applyModeToUI() {
       el.input.placeholder =
         "Örn: «Pazar yerini tara», «Hava durumuna bak», Trendyol fiyat. Yanıt sohbette; veri HIZIR sekmesinde güncellenir.";
     } else {
-      el.input.placeholder =
-        "Ana Motor — video, tercüme, kod, mimar… Tek sohbet; «hub yardım» ile motor listesi.";
+      el.input.placeholder = "Rüzgar’a yaz…";
     }
   }
   syncTopModeButtons();
@@ -3095,6 +3094,8 @@ function switchMode(mode) {
     "ruzgar-unified-face",
     isUnifiedFaceEnabled() && currentMode === "genel",
   );
+  document.body.dataset.motor = next === "okuma" ? "mimar" : next;
+  document.body.classList.toggle("ruzgar-is-work", next !== "genel");
 }
 
 function clearOrchestraBridge() {
@@ -6158,7 +6159,10 @@ function relayoutAppShell() {
   window.RuzgarSplit?.refresh?.();
   window.RuzgarSplit?._splits?.forEach((s) => s._reposition?.());
 
-  const mw = getMotorsShellWidthPx();
+  const sade = document.body.classList.contains("ruzgar-sade");
+  const side = document.getElementById("main-sidebar");
+  const sideOpen = !!(side && !side.hidden);
+  const mw = sade ? (sideOpen ? 260 : 0) : getMotorsShellWidthPx();
   document.documentElement.style.setProperty("--ruzgar-motors-w", `${mw}px`);
 
   if (layout && (videoOn || mimarOn || tercumeOn)) {
@@ -16853,6 +16857,63 @@ if (el.mic) {
 if (window.ruzgarApi?.onMenu) {
   window.ruzgarApi.onMenu((action) => {
     if (action === "focus-chat") el.input.focus();
+    if (action.startsWith("mode:")) {
+      switchMode(action.slice(5));
+      return;
+    }
+    if (action === "voice:open") {
+      window.ruzgarOpenVoiceSheet?.();
+      return;
+    }
+    if (action === "search:toggle") {
+      document.body.classList.toggle("ruzgar-search-open");
+      document.getElementById("chat-history-search")?.focus();
+      return;
+    }
+    const menuClick = {
+      "nav:back": "nav-back",
+      "nav:forward": "nav-forward",
+      "nav:refresh": "nav-refresh",
+      "nav:clear": "nav-clear-chat",
+      "work:folder": "ruzgar-pro-folder",
+      "work:folder-open": "ruzgar-pro-folder-open",
+      "work:tools": "ruzgar-pro-tools",
+      "work:talk": "ruzgar-pro-talk",
+      "work:read": "ruzgar-pro-read",
+    };
+    if (menuClick[action]) {
+      document.getElementById(menuClick[action])?.click();
+      return;
+    }
+    if (action.startsWith("work:tercume-")) {
+      switchMode("tercume");
+      const tercumeClick = {
+        "work:tercume-translate": "btn-tercume-translate",
+        "work:tercume-stop": "btn-tercume-stop",
+        "work:tercume-save": "btn-tercume-save-target",
+      };
+      const tid = tercumeClick[action];
+      if (tid) window.setTimeout(() => document.getElementById(tid)?.click(), 80);
+      return;
+    }
+    if (action.startsWith("work:video-")) {
+      switchMode("video");
+      const videoClick = {
+        "work:video-create": "video-quick-create",
+        "work:video-youtube": "video-quick-youtube",
+        "work:video-trim": "video-quick-trim",
+        "work:video-audio": "video-quick-audio",
+        "work:video-export": "video-quick-export",
+      };
+      const vid = videoClick[action];
+      if (vid) window.setTimeout(() => document.getElementById(vid)?.click(), 80);
+      return;
+    }
+    if (action === "menu:yeni-sohbet") {
+      switchMode("genel");
+      document.getElementById("nav-clear-chat")?.click();
+      return;
+    }
     if (action === "sidebar:duzen" || action === "sidebar:gelisim") {
       const kind = action === "sidebar:gelisim" ? "gelisim" : "duzen";
       void window.RuzgarSidebarManager?.renderFromMenu?.(kind);

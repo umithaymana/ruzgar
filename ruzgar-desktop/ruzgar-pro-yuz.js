@@ -100,6 +100,8 @@
     }
   }
 
+  let writing = false;
+
   function syncTalking() {
     const pill = document.getElementById("tts-status-pill");
     const mic = document.getElementById("btn-mic");
@@ -112,8 +114,12 @@
     const synth = !!(window.speechSynthesis && window.speechSynthesis.speaking);
     const talking = audioLive || synth || (pill && !pill.hidden);
     const listening = !!(mic && mic.classList.contains("listening"));
-    face.classList.toggle("is-talking", talking && !listening);
-    face.classList.toggle("is-listening", listening);
+    const pen = writing && !talking && !listening;
+    document.querySelectorAll(".ruzgar-face").forEach(function (el) {
+      el.classList.toggle("is-talking", talking && !listening);
+      el.classList.toggle("is-listening", listening);
+      el.classList.toggle("is-writing", pen);
+    });
     if (talkBtn) {
       talkBtn.classList.toggle("is-on", listening);
       talkBtn.textContent = listening ? "Dinliyorum…" : "Konuş";
@@ -157,6 +163,19 @@
     });
   }
   window.setInterval(syncTalking, 400);
+
+  const composer = document.getElementById("msg-input");
+  if (composer) {
+    composer.addEventListener("input", function () {
+      writing = composer.value.trim().length > 0;
+      syncTalking();
+    });
+  }
+
+  window.ruzgarOpenVoiceSheet = function () {
+    const sheet = document.getElementById("ruzgar-voice-sheet");
+    if (sheet && typeof sheet.showModal === "function" && !sheet.open) sheet.showModal();
+  };
 
   select.addEventListener("change", function () {
     const value = select.value;

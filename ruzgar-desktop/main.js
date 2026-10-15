@@ -480,32 +480,24 @@ function safeListDir(rel = "") {
     });
 }
 
+function sendMenu(mainWin, action) {
+  const w = activeWindow(mainWin);
+  w?.webContents.send("ruzgar-menu", action);
+}
+
 function buildMenu(mainWin) {
-  // Faz 0: Sol motor menüsü artık ses/okuma/video/programlama/üretim/gelişim/tercüme
-  // motorlarını yönetiyor. Üst native bar yalnızca dosya/düzen ve geliştirici aracıyla
-  // sade tutulur; mod pencerelerini açan eski menüler kaldırıldı.
   const template = [
     {
       label: "dosya",
       submenu: [
+        { label: "Yeni sohbet", click: () => sendMenu(mainWin, "menu:yeni-sohbet") },
+        { label: "Sohbeti dışa aktar", click: () => sendMenu(mainWin, "menu:disa-aktar") },
+        { type: "separator" },
+        { label: "Proje klasörü seç", click: () => sendMenu(mainWin, "work:folder") },
+        { label: "Klasörü aç", click: () => sendMenu(mainWin, "work:folder-open") },
         {
           label: "Çalışma klasörünü göster",
           click: () => shell.openPath(WORKSPACE_ROOT),
-        },
-        {
-          label: "ilim-assistant klasörü",
-          click: () =>
-            shell.openPath(path.join(WORKSPACE_ROOT, "ilim-assistant")),
-        },
-        {
-          label: "ilim-video klasörü",
-          click: () =>
-            shell.openPath(path.join(WORKSPACE_ROOT, "ilim-video")),
-        },
-        { type: "separator" },
-        {
-          label: "Yeni sohbet penceresi (genel)",
-          click: () => openIndexMode("genel"),
         },
         { type: "separator" },
         { label: "Çıkış", role: "quit" },
@@ -514,17 +506,16 @@ function buildMenu(mainWin) {
     {
       label: "düzen",
       submenu: [
-        {
-          label: "Sohbet kutusuna odaklan (aktif pencere)",
-          click: () => {
-            const w = activeWindow(mainWin);
-            w?.webContents.send("ruzgar-menu", "focus-chat");
-          },
-        },
+        { label: "Sohbet kutusuna odaklan", accelerator: "Ctrl+L", click: () => sendMenu(mainWin, "focus-chat") },
+        { label: "Sohbeti temizle", click: () => sendMenu(mainWin, "nav:clear") },
+        { label: "Sohbette ara", accelerator: "Ctrl+F", click: () => sendMenu(mainWin, "search:toggle") },
+        { type: "separator" },
+        { label: "Önceki motor", click: () => sendMenu(mainWin, "nav:back") },
+        { label: "Sonraki motor", click: () => sendMenu(mainWin, "nav:forward") },
+        { label: "Yenile", accelerator: "Ctrl+R", click: () => sendMenu(mainWin, "nav:refresh") },
         { type: "separator" },
         { label: "Geri al", role: "undo" },
         { label: "Yinele", role: "redo" },
-        { type: "separator" },
         { label: "Kes", role: "cut" },
         { label: "Kopyala", role: "copy" },
         { label: "Yapıştır", role: "paste" },
@@ -532,24 +523,51 @@ function buildMenu(mainWin) {
         {
           label: "Paneller…",
           accelerator: "Ctrl+Shift+P",
-          click: () => {
-            const w = activeWindow(mainWin);
-            w?.webContents.send("ruzgar-menu", "sidebar:duzen");
-          },
+          click: () => sendMenu(mainWin, "sidebar:duzen"),
         },
       ],
     },
     {
       label: "gelişim",
       submenu: [
+        { label: "Çalışma sayfası", click: () => sendMenu(mainWin, "mode:genel") },
+        { type: "separator" },
+        { label: "Ses motoru", click: () => sendMenu(mainWin, "mode:ses") },
+        {
+          label: "Video",
+          submenu: [
+            { label: "Atölyeyi aç", click: () => sendMenu(mainWin, "mode:video") },
+            { label: "Video oluştur", click: () => sendMenu(mainWin, "work:video-create") },
+            { label: "YouTube indir", click: () => sendMenu(mainWin, "work:video-youtube") },
+            { label: "Kes / dönüştür", click: () => sendMenu(mainWin, "work:video-trim") },
+            { label: "Videoya ses ver", click: () => sendMenu(mainWin, "work:video-audio") },
+            { label: "Dışa aktar", click: () => sendMenu(mainWin, "work:video-export") },
+          ],
+        },
+        { label: "Okuma", click: () => sendMenu(mainWin, "mode:mimar") },
+        {
+          label: "Tercüme",
+          submenu: [
+            { label: "Atölyeyi aç", click: () => sendMenu(mainWin, "mode:tercume") },
+            { label: "Çevir", click: () => sendMenu(mainWin, "work:tercume-translate") },
+            { label: "Durdur", click: () => sendMenu(mainWin, "work:tercume-stop") },
+            { label: "Kaydet", click: () => sendMenu(mainWin, "work:tercume-save") },
+          ],
+        },
+        { label: "Programlama", click: () => sendMenu(mainWin, "mode:programlama") },
+        { type: "separator" },
+        { label: "Konuşan ses…", click: () => sendMenu(mainWin, "voice:open") },
+        { label: "Konuş", click: () => sendMenu(mainWin, "work:talk") },
+        { label: "Sesli oku", click: () => sendMenu(mainWin, "work:read") },
+        { type: "separator" },
+        { label: "Hafıza", click: () => sendMenu(mainWin, "mode:hafiza") },
+        { label: "Hızır", click: () => sendMenu(mainWin, "mode:hizir") },
+        { label: "Atölye ayrıntıları", click: () => sendMenu(mainWin, "work:tools") },
+        { type: "separator" },
         {
           label: "Gelişim panelleri…",
-          click: () => {
-            const w = activeWindow(mainWin);
-            w?.webContents.send("ruzgar-menu", "sidebar:gelisim");
-          },
+          click: () => sendMenu(mainWin, "sidebar:gelisim"),
         },
-        { type: "separator" },
         {
           label: "Geliştirici araçları",
           accelerator: "F12",

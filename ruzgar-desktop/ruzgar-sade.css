@@ -1,0 +1,255 @@
+/* Sade yüz — sohbet, masa, robot. Motor koduna dokunmaz. Ümit & Gökçenur */
+
+body.ruzgar-sade .header-nav-toolbar,
+body.ruzgar-sade .tercume-top-flow,
+body.ruzgar-sade .video-top-flow,
+body.ruzgar-sade #title-row-tercume-controls,
+body.ruzgar-sade .panel-motors .motors-head,
+body.ruzgar-sade .panel-motors .motors-list,
+body.ruzgar-sade .panel-motors .motors-foot,
+body.ruzgar-sade #workbench-layout-tools,
+body.ruzgar-sade #page-genel .ruzgar-pro-quiet,
+body.ruzgar-sade #page-genel .dashboard-grid,
+body.ruzgar-sade #page-genel #dashboard-status,
+body.ruzgar-sade #ruzgar-presence-path,
+body.ruzgar-sade #ana-motor-info-strip,
+body.ruzgar-sade .ruzgar-presence-actions,
+body.ruzgar-sade .ruzgar-debug-log,
+body.ruzgar-sade .composer-actions-primary > .chk {
+  display: none !important;
+}
+
+body.ruzgar-sade .panel-motors {
+  width: 0;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+body.ruzgar-sade .panel-motors:has(#main-sidebar:not([hidden])) {
+  width: 260px;
+  min-width: 260px;
+  padding: 10px;
+  overflow: auto;
+  border-right: 1px solid #3c3c3c;
+  background: #16161a;
+}
+
+body.ruzgar-sade #chat-history-search-bar {
+  display: none;
+}
+
+body.ruzgar-sade.ruzgar-search-open #chat-history-search-bar {
+  display: flex;
+}
+
+body.ruzgar-sade .panel-chat {
+  flex: 1.15 1 0;
+  width: auto;
+  max-width: none;
+  background: #141416;
+  border-right: 1px solid #2a2a2e;
+}
+
+body.ruzgar-sade.ruzgar-is-work .panel-chat,
+body.ruzgar-sade[data-motor="tercume"] .panel-chat,
+body.ruzgar-sade[data-motor="video"] .panel-chat,
+body.ruzgar-sade[data-motor="mimar"] .panel-chat,
+body.ruzgar-sade[data-motor="programlama"] .panel-chat,
+body.ruzgar-sade[data-motor="ses"] .panel-chat,
+body.ruzgar-sade[data-motor="hafiza"] .panel-chat,
+body.ruzgar-sade[data-motor="hizir"] .panel-chat {
+  flex: 0 0 360px;
+  width: 360px;
+}
+
+body.ruzgar-sade .ruzgar-chat-companion {
+  display: flex;
+  justify-content: flex-start;
+  padding: 14px 18px 0;
+}
+
+body.ruzgar-sade .ruzgar-face-chat {
+  width: 72px;
+  flex: 0 0 72px;
+}
+
+body.ruzgar-sade .ruzgar-face-chat .ruzgar-face-svg {
+  width: 72px;
+  height: 76px;
+}
+
+body.ruzgar-sade .ruzgar-face-chat .ruzgar-face-ring {
+  inset: 2px 8px 8px;
+}
+
+body.ruzgar-sade .chat-scroll {
+  width: min(760px, 100%);
+  margin: 0 auto;
+  padding: 8px 22px 18px;
+  gap: 16px;
+  box-sizing: border-box;
+}
+
+body.ruzgar-sade .bubble.user {
+  max-width: 78%;
+  margin-left: auto;
+  margin-right: 0;
+  padding: 12px 16px;
+  border-radius: 18px 18px 6px 18px;
+  background: #2c2c34;
+  border: 1px solid #3a3a44;
+}
+
+body.ruzgar-sade .bubble.assistant {
+  max-width: 100%;
+  margin-right: 0;
+  padding: 4px 2px 8px;
+  background: transparent;
+  border: 0;
+  color: #f3f0e8;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+body.ruzgar-sade .composer {
+  width: min(760px, calc(100% - 28px));
+  margin: 0 auto 14px;
+  padding: 8px 8px 8px 16px;
+  border: 1px solid #3a3a44;
+  border-radius: 26px;
+  background: #1c1c22;
+}
+
+body.ruzgar-sade .composer textarea {
+  border: 0;
+  background: transparent;
+  min-height: 48px;
+  color: #f6f1e4;
+  font-size: 15px;
+}
+
+body.ruzgar-sade .composer-actions-primary {
+  justify-content: flex-end;
+}
+
+body.ruzgar-sade .panel-main {
+  background: #121214;
+}
+
+body.ruzgar-sade .workbench-title {
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  font-weight: 600;
+  color: #b7aa88;
+}
+
+body.ruzgar-sade .ruzgar-desk-note {
+  margin: 18px 8px 0;
+  color: #8d8678;
+  font-size: 14px;
+}
+
+body.ruzgar-sade #ruzgar-presence {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+}
+
+body.ruzgar-sade #dynamic-workbench {
+  position: relative;
+  z-index: 1;
+}
+
+body.ruzgar-sade #ruzgar-robot-dock {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  z-index: 30;
+  width: 200px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  transition: right 0.45s ease, bottom 0.45s ease, top 0.45s ease, left 0.45s ease, transform 0.45s ease, width 0.45s ease;
+}
+
+body.ruzgar-sade.ruzgar-is-work #ruzgar-robot-dock,
+body.ruzgar-sade[data-motor="tercume"] #ruzgar-robot-dock,
+body.ruzgar-sade[data-motor="video"] #ruzgar-robot-dock,
+body.ruzgar-sade[data-motor="mimar"] #ruzgar-robot-dock,
+body.ruzgar-sade[data-motor="programlama"] #ruzgar-robot-dock,
+body.ruzgar-sade[data-motor="ses"] #ruzgar-robot-dock,
+body.ruzgar-sade[data-motor="hafiza"] #ruzgar-robot-dock,
+body.ruzgar-sade[data-motor="hizir"] #ruzgar-robot-dock {
+  left: auto;
+  top: auto;
+  right: 18px;
+  bottom: 18px;
+  width: 96px;
+  transform: none;
+}
+
+body.ruzgar-sade .ruzgar-face.is-writing {
+  animation: ruzgar-sway 1.5s ease-in-out infinite;
+}
+
+body.ruzgar-sade .ruzgar-face.is-writing .ruzgar-head {
+  animation: ruzgar-nod 1.05s ease-in-out infinite;
+  transform-origin: center bottom;
+  transform-box: fill-box;
+}
+
+body.ruzgar-sade .ruzgar-face.is-listening {
+  animation: ruzgar-lean 1.2s ease-in-out infinite;
+}
+
+.ruzgar-voice-sheet {
+  border: 1px solid #4a4332;
+  border-radius: 16px;
+  background: #1a1a1c;
+  color: #f3ead2;
+  padding: 18px 18px 14px;
+  width: min(460px, calc(100vw - 32px));
+}
+
+.ruzgar-voice-sheet::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.ruzgar-voice-sheet h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+
+.ruzgar-voice-sheet p {
+  margin: 0 0 12px;
+  color: #c8c2b2;
+  font-size: 13px;
+}
+
+.ruzgar-voice-sheet-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+@keyframes ruzgar-sway {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(6px); }
+}
+
+@keyframes ruzgar-nod {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(4deg); }
+}
+
+@keyframes ruzgar-lean {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+body.ruzgar-sade.ruzgar-is-work #ruzgar-robot-dock .ruzgar-face.is-writing {
+  animation: ruzgar-sway 1.5s ease-in-out infinite;
+}

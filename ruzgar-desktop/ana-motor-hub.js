@@ -628,18 +628,7 @@
     w.className = "bubble assistant chat-welcome";
     w.setAttribute("role", "note");
     w.innerHTML =
-      `<p class="chat-welcome-lead"><strong>Ana Motor — tek sohbet, tüm motorlar.</strong></p>` +
-      `<p>Buradan yaz; gerekirse panel arka planda açılır, sohbet <strong>genel</strong> kalır.</p>` +
-      `<ul class="chat-welcome-list">` +
-      `<li><strong>Video:</strong> «indir» · «kes 0:30-1:00» · link yapıştır (YouTube/Dailymotion)</li>` +
-      `<li><strong>Kod:</strong> pytest geçir · git durumu · proje tara · briefing</li>` +
-      `<li><strong>Tercüme:</strong> eser ara · bu sayfayı çevir</li>` +
-      `<li><strong>Hafıza:</strong> hatırla: … · görev listesi · hafıza durumu</li>` +
-      `<li><strong>Ses:</strong> «kuran sesiyle oku: …» · gazel · ilahi · metne dök</li>` +
-      `<li><strong>Öğren:</strong> <code>eylem öğret: «tetik» → video/kes</code></li>` +
-      `<li><strong>Yönet:</strong> hub yardım · eylem listesi · eylem paneli</li>` +
-      `</ul>` +
-      `<p class="chat-welcome-foot">${VERSION} · Ümit &amp; Gökçenur</p>`;
+      `<p class="chat-welcome-lead">Merhaba Mimar. Yaz, Rüzgar karşılık versin. Atölyeler üstteki Gelişim menüsünde.</p>`;
     container.appendChild(w);
   }
 

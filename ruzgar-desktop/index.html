@@ -9,9 +9,10 @@
     <link rel="stylesheet" href="styles.css?v=20260608-klon-below" />
     <link rel="stylesheet" href="ruzgar-split.css?v=20260602-workbench-split" />
     <link rel="stylesheet" href="ruzgar-pro.css?v=20261014-kaydir" />
+    <link rel="stylesheet" href="ruzgar-sade.css?v=20261015-sade2" />
     <script src="ruzgar-api-root.js?v=20260620-csp"></script>
   </head>
-  <body class="ruzgar-pro">
+  <body class="ruzgar-pro ruzgar-sade">
     <script src="ruzgar-ui-prebody.js?v=20260620-csp"></script>
     <div class="title-strip">
       <div class="title-row title-row-info">
@@ -333,6 +334,26 @@
 
       <div class="tercume-center-row" id="tercume-center-row">
       <aside class="panel panel-chat">
+        <div class="ruzgar-chat-companion" id="ruzgar-chat-companion" aria-hidden="true">
+          <div class="ruzgar-face ruzgar-face-chat" id="ruzgar-chat-face">
+            <div class="ruzgar-face-ring"></div>
+            <svg class="ruzgar-face-svg" viewBox="0 0 160 168">
+              <rect class="ruzgar-head" x="28" y="22" width="104" height="112" rx="28" />
+              <rect class="ruzgar-ear" x="14" y="62" width="16" height="28" rx="6" />
+              <rect class="ruzgar-ear" x="130" y="62" width="16" height="28" rx="6" />
+              <g class="ruzgar-eyes">
+                <ellipse class="ruzgar-eye" cx="62" cy="72" rx="8" ry="9" />
+                <ellipse class="ruzgar-eye" cx="98" cy="72" rx="8" ry="9" />
+              </g>
+              <g class="ruzgar-mouth">
+                <rect x="58" y="102" width="6" height="8" rx="2" />
+                <rect x="70" y="98" width="6" height="14" rx="2" />
+                <rect x="82" y="102" width="6" height="8" rx="2" />
+                <rect x="94" y="100" width="6" height="11" rx="2" />
+              </g>
+            </svg>
+          </div>
+        </div>
         <div class="chat-history-search-bar faz-aa-chat-search" id="chat-history-search-bar">
           <input
             type="search"
@@ -415,12 +436,34 @@
           <textarea
             id="msg-input"
             rows="3"
-            placeholder="Soru yazın — Web açıkken arama yapılır. Gelişmiş: bağlantı oku, sayfa oku, kod modu."
+            placeholder="Rüzgar’a yaz…"
           ></textarea>
         </div>
       </aside>
 
       <main class="panel panel-main" id="panel-main">
+        <div id="ruzgar-robot-dock" class="ruzgar-robot-dock" aria-hidden="true">
+          <div class="ruzgar-face" id="ruzgar-face">
+            <div class="ruzgar-face-ring"></div>
+            <svg class="ruzgar-face-svg" viewBox="0 0 160 168">
+              <rect class="ruzgar-head" x="28" y="22" width="104" height="112" rx="28" />
+              <rect class="ruzgar-ear" x="14" y="62" width="16" height="28" rx="6" />
+              <rect class="ruzgar-ear" x="130" y="62" width="16" height="28" rx="6" />
+              <g class="ruzgar-eyes">
+                <ellipse class="ruzgar-eye" cx="62" cy="72" rx="8" ry="9" />
+                <ellipse class="ruzgar-eye" cx="98" cy="72" rx="8" ry="9" />
+              </g>
+              <g class="ruzgar-mouth">
+                <rect x="58" y="102" width="6" height="8" rx="2" />
+                <rect x="70" y="98" width="6" height="14" rx="2" />
+                <rect x="82" y="102" width="6" height="8" rx="2" />
+                <rect x="94" y="100" width="6" height="11" rx="2" />
+              </g>
+            </svg>
+            <p class="ruzgar-face-name">Rüzgar</p>
+            <p class="ruzgar-face-state" id="ruzgar-face-state">Hazır</p>
+          </div>
+        </div>
         <div
           id="thinking-center-overlay"
           class="thinking-center-overlay"
@@ -490,45 +533,12 @@
         </div>
         <div id="dynamic-workbench" class="dynamic-workbench layout-full">
           <section class="motor-page" id="page-genel">
-            <section class="ruzgar-presence" id="ruzgar-presence" aria-label="Rüzgar yüzü ve ses">
-              <div class="ruzgar-face" id="ruzgar-face">
-                <div class="ruzgar-face-ring" aria-hidden="true"></div>
-                <svg class="ruzgar-face-svg" viewBox="0 0 160 168" aria-hidden="true">
-                  <rect class="ruzgar-head" x="28" y="22" width="104" height="112" rx="28" />
-                  <rect class="ruzgar-ear" x="14" y="62" width="16" height="28" rx="6" />
-                  <rect class="ruzgar-ear" x="130" y="62" width="16" height="28" rx="6" />
-                  <g class="ruzgar-eyes">
-                    <ellipse class="ruzgar-eye" cx="62" cy="72" rx="8" ry="9" />
-                    <ellipse class="ruzgar-eye" cx="98" cy="72" rx="8" ry="9" />
-                  </g>
-                  <g class="ruzgar-mouth">
-                    <rect x="58" y="102" width="6" height="8" rx="2" />
-                    <rect x="70" y="98" width="6" height="14" rx="2" />
-                    <rect x="82" y="102" width="6" height="8" rx="2" />
-                    <rect x="94" y="100" width="6" height="11" rx="2" />
-                  </g>
-                </svg>
-                <p class="ruzgar-face-name">Rüzgar</p>
-                <p class="ruzgar-face-state" id="ruzgar-face-state">Hazır</p>
-              </div>
+            <section class="ruzgar-presence" id="ruzgar-presence" aria-label="Çalışma masası">
               <div class="ruzgar-presence-body">
-                <h3 class="ruzgar-presence-title">Çalışma masası</h3>
-                <p class="ruzgar-presence-lead">Konuşunca Rüzgar bu yüzle karşılık verir. Sesini buradan seçersin; kendi kaydını da ekleyebilirsin.</p>
-                <div class="ruzgar-presence-row">
-                  <label class="ruzgar-field" for="ruzgar-voice-select">Ses</label>
-                  <select id="ruzgar-voice-select" class="ruzgar-select">
-                    <option value="emel">Emel — sıcak, günlük</option>
-                    <option value="ahmet">Ahmet — sakin erkek</option>
-                    <option value="edip">Edip — yumuşak okuma</option>
-                  </select>
-                  <button type="button" class="ruzgar-btn" id="ruzgar-voice-preview">Dinle</button>
-                </div>
-                <div class="ruzgar-presence-row ruzgar-presence-row-voice">
-                  <input id="ruzgar-voice-name" class="ruzgar-input" type="text" maxlength="40" placeholder="Ses adı, örneğin Esin" />
-                  <label class="ruzgar-btn" for="ruzgar-voice-file">Kendi sesini ekle</label>
-                  <input id="ruzgar-voice-file" type="file" accept=".wav,.mp3,.m4a,.ogg,audio/*" hidden />
-                </div>
-                <div class="ruzgar-presence-row">
+                <p class="ruzgar-desk-note">Masa boş. Bir atölye açılınca işlem burada görünür.</p>
+                <p class="ruzgar-presence-path" id="ruzgar-presence-path">Bağlı klasör yok</p>
+                <p class="ruzgar-presence-hint" id="ruzgar-presence-hint" aria-live="polite"></p>
+                <div class="ruzgar-presence-row ruzgar-presence-actions">
                   <button type="button" class="ruzgar-btn ruzgar-btn-accent" id="ruzgar-pro-talk">Konuş</button>
                   <button type="button" class="ruzgar-btn" id="ruzgar-pro-read">Sesli oku</button>
                   <button type="button" class="ruzgar-btn" id="ruzgar-pro-folder">Proje klasörü</button>
@@ -536,8 +546,6 @@
                   <button type="button" class="ruzgar-btn" id="ruzgar-pro-code">Programlama</button>
                   <button type="button" class="ruzgar-btn" id="ruzgar-pro-tools">Atölye ayrıntıları</button>
                 </div>
-                <p class="ruzgar-presence-path" id="ruzgar-presence-path">Bağlı klasör yok</p>
-                <p class="ruzgar-presence-hint" id="ruzgar-presence-hint" aria-live="polite"></p>
               </div>
             </section>
             <div class="atelier-info-strip atelier-info-strip-ana atelier-info-strip-ana--loading" id="ana-motor-info-strip">
@@ -3097,6 +3105,30 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
       </aside>
     </div>
 
+    <dialog id="ruzgar-voice-sheet" class="ruzgar-voice-sheet">
+      <form method="dialog">
+        <h3>Konuşan ses</h3>
+        <p>Rüzgar’ın sesini seç. Kendi kaydını da ekleyebilirsin.</p>
+        <div class="ruzgar-presence-row">
+          <label class="ruzgar-field" for="ruzgar-voice-select">Ses</label>
+          <select id="ruzgar-voice-select" class="ruzgar-select">
+            <option value="emel">Emel — sıcak, günlük</option>
+            <option value="ahmet">Ahmet — sakin erkek</option>
+            <option value="edip">Edip — yumuşak okuma</option>
+          </select>
+          <button type="button" class="ruzgar-btn" id="ruzgar-voice-preview">Dinle</button>
+        </div>
+        <div class="ruzgar-presence-row ruzgar-presence-row-voice">
+          <input id="ruzgar-voice-name" class="ruzgar-input" type="text" maxlength="40" placeholder="Ses adı, örneğin Esin" />
+          <label class="ruzgar-btn" for="ruzgar-voice-file">Kendi sesini ekle</label>
+          <input id="ruzgar-voice-file" type="file" accept=".wav,.mp3,.m4a,.ogg,audio/*" hidden />
+        </div>
+        <div class="ruzgar-voice-sheet-actions">
+          <button type="submit" class="ruzgar-btn ruzgar-btn-accent" value="kapat">Kapat</button>
+        </div>
+      </form>
+    </dialog>
+
     <div id="ctx-menu" class="ctx-menu" hidden>
       <button type="button" data-act="cut">Kes</button>
       <button type="button" data-act="copy">Kopyala</button>
@@ -3119,11 +3151,11 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
     <script src="video-atolye.js?v=20260607-v5-create"></script>
     <script src="video-chat-brain.js?v=20260608-v72-v8"></script>
     <script src="motor-eylem-panel.js?v=20260607-faz-c2"></script>
-    <script src="ana-motor-hub.js?v=20260606-v4-anlama"></script>
+    <script src="ana-motor-hub.js?v=20261015-sade"></script>
     <script src="mimar-atolye.js?v=20260601-faz5"></script>
     <script src="ruzgar-boot-health.js?v=20260620-conn-fix"></script>
     <script src="ruzgar-ui-bootstrap.js?v=20260620-btn-fallback"></script>
-    <script src="ruzgar-pro-yuz.js?v=20261014-konus"></script>
-    <script src="app.js?v=20261014-konus"></script>
+    <script src="ruzgar-pro-yuz.js?v=20261015-sade"></script>
+    <script src="app.js?v=20261015-sade2"></script>
   </body>
 </html>
