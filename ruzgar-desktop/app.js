@@ -6162,7 +6162,8 @@ function relayoutAppShell() {
   const sade = document.body.classList.contains("ruzgar-sade");
   const side = document.getElementById("main-sidebar");
   const sideOpen = !!(side && !side.hidden);
-  const mw = sade ? (sideOpen ? 260 : 0) : getMotorsShellWidthPx();
+  const motorW = getMotorsShellWidthPx();
+  const mw = sade && sideOpen ? Math.max(motorW, 260) : motorW;
   document.documentElement.style.setProperty("--ruzgar-motors-w", `${mw}px`);
 
   if (layout && (videoOn || mimarOn || tercumeOn)) {
@@ -6254,7 +6255,7 @@ function applyMotorsCompact(compact, opts) {
   syncBtn(document.getElementById("btn-motors-panel-collapse"), !on);
 }
 
-/** Sol motor ikonuna tıklanınca panel otomatik ikon şeridine küçülür. */
+/** İkon şeridi yalnız üstteki daralt düğmesiyle. Motor seçmek adları gizlemez. */
 function autoCompactMotorsOnMotorPick() {
   if (isMotorsCompact()) return;
   applyMotorsCompact(true, { persist: true });
@@ -6270,7 +6271,7 @@ function wireMotorsCompactToggle() {
   let compact = true;
   try {
     const stored = localStorage.getItem(LS_MOTORS_COMPACT);
-    compact = stored === null || stored === "1";
+    compact = stored === "1";
   } catch (_) {
     compact = true;
   }
@@ -6321,9 +6322,6 @@ function wireTopModeButtons() {
     if (!btn || btn.disabled) return;
     const mode = String(btn.getAttribute("data-mode") || "").trim().toLowerCase();
     if (!mode) return;
-    if (btn.classList.contains("motor-item")) {
-      autoCompactMotorsOnMotorPick();
-    }
     switchMode(mode);
     if (el.input) el.input.focus();
   });

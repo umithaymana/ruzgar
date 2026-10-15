@@ -1,12 +1,8 @@
 /* Sade yüz — sohbet, masa, robot. Motor koduna dokunmaz. Ümit & Gökçenur */
 
-body.ruzgar-sade .header-nav-toolbar,
 body.ruzgar-sade .tercume-top-flow,
 body.ruzgar-sade .video-top-flow,
 body.ruzgar-sade #title-row-tercume-controls,
-body.ruzgar-sade .panel-motors .motors-head,
-body.ruzgar-sade .panel-motors .motors-list,
-body.ruzgar-sade .panel-motors .motors-foot,
 body.ruzgar-sade #workbench-layout-tools,
 body.ruzgar-sade #page-genel .ruzgar-pro-quiet,
 body.ruzgar-sade #page-genel .dashboard-grid,
@@ -19,24 +15,6 @@ body.ruzgar-sade .composer-actions-primary > .chk {
   display: none !important;
 }
 
-body.ruzgar-sade .panel-motors {
-  width: 0;
-  min-width: 0;
-  padding: 0;
-  border: 0;
-  overflow: hidden;
-  background: transparent;
-}
-
-body.ruzgar-sade .panel-motors:has(#main-sidebar:not([hidden])) {
-  width: 260px;
-  min-width: 260px;
-  padding: 10px;
-  overflow: auto;
-  border-right: 1px solid #3c3c3c;
-  background: #16161a;
-}
-
 body.ruzgar-sade #chat-history-search-bar {
   display: none;
 }
@@ -46,23 +24,12 @@ body.ruzgar-sade.ruzgar-search-open #chat-history-search-bar {
 }
 
 body.ruzgar-sade .panel-chat {
-  flex: 1.15 1 0;
-  width: auto;
+  flex: 0 0 var(--ruzgar-chat-w, 380px);
+  width: var(--ruzgar-chat-w, 380px);
+  min-width: 220px;
   max-width: none;
   background: #141416;
   border-right: 1px solid #2a2a2e;
-}
-
-body.ruzgar-sade.ruzgar-is-work .panel-chat,
-body.ruzgar-sade[data-motor="tercume"] .panel-chat,
-body.ruzgar-sade[data-motor="video"] .panel-chat,
-body.ruzgar-sade[data-motor="mimar"] .panel-chat,
-body.ruzgar-sade[data-motor="programlama"] .panel-chat,
-body.ruzgar-sade[data-motor="ses"] .panel-chat,
-body.ruzgar-sade[data-motor="hafiza"] .panel-chat,
-body.ruzgar-sade[data-motor="hizir"] .panel-chat {
-  flex: 0 0 360px;
-  width: 360px;
 }
 
 body.ruzgar-sade .ruzgar-chat-companion {

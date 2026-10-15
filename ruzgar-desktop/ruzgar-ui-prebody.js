@@ -5,8 +5,12 @@
 (function ruzgarUiPrebody(global) {
   "use strict";
   try {
+    if (global.localStorage.getItem("ruzgarMotorsNamedRestored") !== "2") {
+      global.localStorage.setItem("ruzgarMotorsCompact", "0");
+      global.localStorage.setItem("ruzgarMotorsNamedRestored", "2");
+    }
     const motorsCompact = global.localStorage.getItem("ruzgarMotorsCompact");
-    const compactOn = motorsCompact === "1" || motorsCompact === null;
+    const compactOn = motorsCompact === "1";
     if (compactOn) {
       global.document.body.classList.add("ui-motors-compact");
       global.document.documentElement.style.setProperty("--ruzgar-motors-w", "52px");

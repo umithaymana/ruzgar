@@ -38,7 +38,7 @@
     const root = document.documentElement;
     if (document.body.classList.contains("ui-motors-compact")) {
       root.style.setProperty("--ruzgar-motors-w", "52px");
-    } else if (typeof st.motors === "number") {
+    } else if (typeof st.motors === "number" && st.motors > 80) {
       root.style.setProperty("--ruzgar-motors-w", `${st.motors}px`);
     }
     if (typeof st.chat === "number") root.style.setProperty("--ruzgar-chat-w", `${st.chat}px`);
@@ -71,7 +71,16 @@
 
     getSize() {
       const saved = loadState()[this.key];
-      if (typeof saved === "number" && saved > 0) return saved;
+      if (typeof saved === "number" && saved > 0) {
+        if (
+          this.key === "motors" &&
+          saved <= 80 &&
+          !document.body.classList.contains("ui-motors-compact")
+        ) {
+          return this.defaultSize;
+        }
+        return saved;
+      }
       if (this.mode === "cssVar" && this.cssVar) {
         const raw = getComputedStyle(this.cssTarget).getPropertyValue(this.cssVar).trim();
         const n = parseFloat(raw);
@@ -404,7 +413,7 @@
         cssVar: "--ruzgar-chat-w",
         defaultSize: 320,
         min: 220,
-        max: 560,
+        max: 860,
         visible: () => getComputedStyle(chat).display !== "none",
       });
       sp.mount();

@@ -1,0 +1,23 @@
+---
+description: Mimar kilitli arayüz — motor listesi, geri/ileri/yenile, sohbet tutamacı (2026-10-16)
+globs:
+  - ruzgar-desktop/**/*
+alwaysApply: true
+---
+
+# Rüzgar arayüz kilidi — 2026-10-16
+
+Mimar bu düzeni beğendi ve kilitledi. **Aksini açıkça söyleyene kadar** aşağıdaki yüz bozulmaz. «Sadeleştir», «temizle», «sadece çalışma sayfası» gibi istekler bu kilidi tek başına açmaz; motor koduna da bu kural bahanesiyle dokunulmaz.
+
+## Duracak olan
+
+- Sol motor listesi adlarıyla açık: Ana Motor, Hafıza, Hızır, Ses, Video, Mimar, Tercüme, Programlama. İkon şeridi yalnız daralt düğmesiyle.
+- Üstte **geri, ileri, yenile**. Motor seçmek listeyi daraltmaz.
+- Sohbet ile çalışma sayfası arası tutamaç `--ruzgar-chat-w` ile kayar (en dar 220, en geniş 860). `ruzgar-sade.css` sohbet genişliğini `auto` veya sabit piksele kilitlemez.
+- Sağ çalışma sayfası sade masa olarak kalır.
+
+## Dokunulmaz dosyalar (bu kilit açıkken)
+
+`ruzgar-desktop/index.html`, `app.js`, `ruzgar-sade.css`, `ruzgar-pro.css`, `ruzgar-split.js`, `ruzgar-ui-prebody.js` içinde yukarıdaki davranışı değiştiren satır.
+
+Motorların kendi atölye kodu (ses, video, tercüme, programlama) bu kuralın konusu değildir; yüz ölçüsünü bozmadan düzeltilebilir.
