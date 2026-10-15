@@ -300,7 +300,7 @@ async function ensureFreshApiOnLaunch() {
 function resolveRuzgarPython() {
   const candidates = [
     process.env.RUZGAR_PYTHON,
-    "D:\\ÜMİT\\PROGRAMLAR\\venvs\\ruzgar\\Scripts\\python.exe",
+    "D:\\ÜMİT\\14-) PROGRAMLAR\\venvs\\ruzgar\\Scripts\\python.exe",
     path.join(WORKSPACE_ROOT, "ilim-assistant", ".venv", "Scripts", "python.exe"),
     path.join(WORKSPACE_ROOT, "ilim-assistant", "venv", "Scripts", "python.exe"),
   ].filter(Boolean);

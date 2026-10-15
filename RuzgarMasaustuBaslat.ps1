@@ -1,8 +1,10 @@
-# RUZGAR — masaustu (Electron) + API 8779 (Faz 98)
-# Temiz baslat = diskteki guncel kod yuklensin diye API her seferinde yeniden baslatilir.
+﻿# RUZGAR — masaustu (Electron) + API 8779 (Faz 98)
+# Kısayol: pencere varsa öne getirir. API ayaktaysa yeniden başlatmaz.
+# Zorla taze kod: -ForceRestart
 
 param(
-    [switch]$FastReuse
+    [switch]$FastReuse,
+    [switch]$ForceRestart
 )
 
 $ErrorActionPreference = "Continue"
@@ -25,6 +27,110 @@ $Rd = Join-Path $Root "ruzgar-desktop"
 $Log = Join-Path $env:TEMP "ruzgar-masaustu-launch.log"
 
 $ApiErr = Join-Path $env:TEMP "ruzgar-api.err"
+
+. (Join-Path $Root "scripts\Ruzgar_ProgramlarYolu.ps1")
+Repair-RuzgarProgramlarEnv -LogPath $Log
+
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+public static class RuzgarForeground {
+  [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+  [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
+  [DllImport("user32.dll")] public static extern bool IsIconic(IntPtr hWnd);
+}
+"@
+
+$script:SplashForm = $null
+$script:SplashLabel = $null
+$script:LaunchMutex = $null
+$script:OwnsLaunchMutex = $false
+
+function Update-RuzgarSplash([string]$text) {
+    if (-not $script:SplashForm) {
+        $form = New-Object System.Windows.Forms.Form
+        $form.Text = "Rüzgar"
+        $form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedDialog
+        $form.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen
+        $form.ClientSize = New-Object System.Drawing.Size(440, 120)
+        $form.TopMost = $true
+        $form.MaximizeBox = $false
+        $form.MinimizeBox = $false
+        $label = New-Object System.Windows.Forms.Label
+        $label.AutoSize = $false
+        $label.Size = New-Object System.Drawing.Size(400, 80)
+        $label.Location = New-Object System.Drawing.Point(20, 20)
+        $label.Text = $text
+        $form.Controls.Add($label)
+        $form.Show()
+        $script:SplashForm = $form
+        $script:SplashLabel = $label
+    } else {
+        $script:SplashLabel.Text = $text
+    }
+    [System.Windows.Forms.Application]::DoEvents()
+}
+
+function Close-RuzgarSplash {
+    if ($script:SplashForm) {
+        $script:SplashForm.Close()
+        $script:SplashForm.Dispose()
+        $script:SplashForm = $null
+        $script:SplashLabel = $null
+    }
+}
+
+function Get-RuzgarMainWindow {
+    $procs = Get-CimInstance Win32_Process -Filter "Name='electron.exe'" -ErrorAction SilentlyContinue |
+        Where-Object { $_.CommandLine -match 'ruzgar-desktop' }
+    foreach ($cim in $procs) {
+        $p = Get-Process -Id $cim.ProcessId -ErrorAction SilentlyContinue
+        if ($p -and $p.MainWindowHandle -ne [IntPtr]::Zero) { return $p }
+    }
+    return $null
+}
+
+function Focus-RuzgarWindow {
+    $p = Get-RuzgarMainWindow
+    if (-not $p) { return $false }
+    $hwnd = $p.MainWindowHandle
+    if ([RuzgarForeground]::IsIconic($hwnd)) {
+        [RuzgarForeground]::ShowWindow($hwnd, 9) | Out-Null
+    } else {
+        [RuzgarForeground]::ShowWindow($hwnd, 5) | Out-Null
+    }
+    try {
+        $ws = New-Object -ComObject WScript.Shell
+        $ws.AppActivate($p.Id) | Out-Null
+    } catch {}
+    [RuzgarForeground]::SetForegroundWindow($hwnd) | Out-Null
+    return $true
+}
+
+function Exit-RuzgarLaunch([int]$code) {
+    Close-RuzgarSplash
+    if ($script:OwnsLaunchMutex -and $script:LaunchMutex) {
+        try { [void]$script:LaunchMutex.ReleaseMutex() } catch {}
+    }
+    if ($script:LaunchMutex) {
+        $script:LaunchMutex.Dispose()
+        $script:LaunchMutex = $null
+    }
+    exit $code
+}
+
+$script:LaunchMutex = New-Object System.Threading.Mutex($false, "Local\RuzgarMasaustuLaunch")
+try {
+    $script:OwnsLaunchMutex = $script:LaunchMutex.WaitOne(0)
+} catch [System.Threading.AbandonedMutexException] {
+    $script:OwnsLaunchMutex = $true
+}
+if (-not $script:OwnsLaunchMutex) {
+    Focus-RuzgarWindow | Out-Null
+    exit 0
+}
+
+Update-RuzgarSplash "Rüzgar açılıyor…`nPencere birkaç saniye içinde gelecek."
 
 function Resolve-RuzgarPython {
     $cands = @(
@@ -53,7 +159,10 @@ if (-not (Test-Path -LiteralPath $asciiOm) -and (Test-Path -LiteralPath $unicode
 }
 if (Test-Path -LiteralPath $unicodeOm) {
     $env:OLLAMA_MODELS = (Resolve-Path -LiteralPath $unicodeOm).Path
-    try { [Environment]::SetEnvironmentVariable("OLLAMA_MODELS", $env:OLLAMA_MODELS, "User") } catch { }
+    $ollamaUser = [Environment]::GetEnvironmentVariable("OLLAMA_MODELS", "User")
+    if ($ollamaUser -ne $env:OLLAMA_MODELS) {
+        try { [Environment]::SetEnvironmentVariable("OLLAMA_MODELS", $env:OLLAMA_MODELS, "User") } catch { }
+    }
 } elseif (Test-Path -LiteralPath $asciiOm) {
     $env:OLLAMA_MODELS = $asciiOm
 }
@@ -85,20 +194,13 @@ if ($env:OLLAMA_MODELS -and (Get-Command ollama -ErrorAction SilentlyContinue)) 
         Start-Process -FilePath $ollamaExe -ArgumentList "serve" -WindowStyle Hidden -ErrorAction SilentlyContinue
     }
 }
-foreach ($pair in @(
-    @{ K = "PIP_CACHE_DIR"; V = "D:\ÜMİT\14-) PROGRAMLAR\Caches\pip" },
-    @{ K = "HF_HOME"; V = "D:\ÜMİT\14-) PROGRAMLAR\Caches\huggingface" },
-    @{ K = "TORCH_HOME"; V = "D:\ÜMİT\14-) PROGRAMLAR\Caches\torch" }
-)) {
-    if (-not (Get-Item -Path "Env:$($pair.K)" -ErrorAction SilentlyContinue)) {
-        if (Test-Path $pair.V) { Set-Item -Path "Env:$($pair.K)" -Value $pair.V }
-    }
-}
+# Önbellek yolları Repair-RuzgarProgramlarEnv ile 14-) PROGRAMLAR altına sabitlenir.
+# Eski D:\ÜMİT\PROGRAMLAR değeri burada yeniden yazılmaz.
 
 $script:PyExe = Resolve-RuzgarPython
 if (-not $script:PyExe) {
     [System.Windows.Forms.MessageBox]::Show("Python bulunamadi. D:\ÜMİT\14-) PROGRAMLAR\venvs\ruzgar kurulu mu?", "RUZGAR") | Out-Null
-    exit 1
+    Exit-RuzgarLaunch 1
 }
 $env:RUZGAR_PYTHON = $script:PyExe
 
@@ -203,7 +305,7 @@ function Test-HealthCurrent {
 
     try {
 
-        $j = Invoke-RestMethod "http://127.0.0.1:$Port/api/health?lite=1" -TimeoutSec 10
+        $j = Invoke-RestMethod "http://127.0.0.1:$Port/api/health?lite=1" -TimeoutSec 3
 
         if (-not $j.ok) { return $false }
 
@@ -247,13 +349,24 @@ $ops = Join-Path $Ia "scripts\ruzgar_port_ops.py"
 $skipApiRestart = $false
 $ok = $false
 
-# TemizBaslat: varsayilan = API'yi her zaman oldur + taze baslat (eski surec kodu bellekte tutar).
-if ($FastReuse -and (Test-HealthCurrent)) {
-    Log "FastReuse: API zaten saglikli — yeniden baslatma atlandi (rev=$ExpectedRev)"
-    $skipApiRestart = $true
-    $ok = $true
-} else {
-    Log "Taze API: diskteki kod yuklenecek — once eski surec durduruluyor (rev=$ExpectedRev)"
+# Kısayol her tıklamada API'yi öldürmez. Pencere varsa öne gelir.
+# Taze kod için: Ruzgar.ps1 -ForceRestart veya bu betik -ForceRestart.
+$alreadyOpen = Get-RuzgarMainWindow
+if (-not $ForceRestart -and $alreadyOpen -and (Test-HealthCurrent)) {
+    Log "Pencere zaten acik — one getirildi (rev=$ExpectedRev)"
+    Focus-RuzgarWindow | Out-Null
+    Exit-RuzgarLaunch 0
+}
+if ((-not $ForceRestart) -and ($FastReuse -or (Test-HealthCurrent))) {
+    if (Test-HealthCurrent) {
+        Log "API ayakta — yeniden baslatma yok (rev=$ExpectedRev)"
+        $skipApiRestart = $true
+        $ok = $true
+    }
+}
+if (-not $skipApiRestart) {
+    Log "API kapali veya -ForceRestart — baslatiliyor (rev=$ExpectedRev)"
+    Update-RuzgarSplash "Rüzgar açılıyor…`nİlk açılış birkaç dakika sürebilir. Bu pencereyi kapatma."
 }
 
 if (-not $skipApiRestart) {
@@ -287,15 +400,20 @@ Port $Port hala kilitli - yeni API baslatilamaz.
 Log: $Log
 "@
         [System.Windows.Forms.MessageBox]::Show($msg, "RUZGAR") | Out-Null
-        exit 1
+        Exit-RuzgarLaunch 1
     }
 
     Remove-Item $ApiErr -ErrorAction SilentlyContinue
     Log "API baslatiliyor..."
+    Update-RuzgarSplash "Rüzgar açılıyor…`nMotor hazırlanıyor. İlk sefer birkaç dakika sürebilir."
     Start-Process -FilePath $script:PyExe -ArgumentList @("run_desktop_api.py", "--host", "127.0.0.1", "--port", "$Port") -WorkingDirectory $Ia -WindowStyle Hidden -RedirectStandardError $ApiErr
 
     for ($i = 0; $i -lt 300; $i++) {
         if (Test-HealthCurrent) { $ok = $true; break }
+        if (($i % 4) -eq 0) {
+            $sn = [int]($i / 2)
+            Update-RuzgarSplash "Rüzgar açılıyor…`nMotor hazırlanıyor ($sn sn). Pencere kendiliğinden gelecek."
+        }
         Start-Sleep -Milliseconds 500
     }
 }
@@ -323,7 +441,7 @@ $(if ($errTail) { "`nSon hata:`n$errTail" })
 
     [System.Windows.Forms.MessageBox]::Show($msg, "RUZGAR") | Out-Null
 
-    exit 1
+    Exit-RuzgarLaunch 1
 
 }
 
@@ -373,21 +491,30 @@ if (-not (Test-Path $electron)) {
 
     [System.Windows.Forms.MessageBox]::Show("electron.cmd yok: $Rd", "RUZGAR") | Out-Null
 
-    exit 1
+    Exit-RuzgarLaunch 1
 
 }
 
+$liveWindow = Get-RuzgarMainWindow
+if ($liveWindow -and -not $ForceRestart) {
+    Log "Electron zaten acik — one getirildi"
+    Focus-RuzgarWindow | Out-Null
+    Exit-RuzgarLaunch 0
+}
 
-
-Get-CimInstance Win32_Process -Filter "Name='electron.exe'" -EA SilentlyContinue |
-    Where-Object { $_.CommandLine -match 'ruzgar-desktop' } |
-    ForEach-Object {
-        Log "Electron kapatiliyor pid=$($_.ProcessId)"
-        Stop-Process -Id $_.ProcessId -Force -EA SilentlyContinue
-    }
-Start-Sleep -Seconds 1
+if ($ForceRestart) {
+    Get-CimInstance Win32_Process -Filter "Name='electron.exe'" -EA SilentlyContinue |
+        Where-Object { $_.CommandLine -match 'ruzgar-desktop' } |
+        ForEach-Object {
+            Log "Electron kapatiliyor pid=$($_.ProcessId)"
+            Stop-Process -Id $_.ProcessId -Force -EA SilentlyContinue
+        }
+    Start-Sleep -Seconds 1
+}
 
 Log "Electron aciliyor..."
+Update-RuzgarSplash "Rüzgar açılıyor…`nPencere geliyor."
 Start-Process -FilePath $electron -ArgumentList @(".") -WorkingDirectory $Rd -WindowStyle Normal
 Log "Bitti rev=$ExpectedRev"
+Exit-RuzgarLaunch 0
 

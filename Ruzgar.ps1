@@ -11,6 +11,8 @@ $ErrorActionPreference = "Stop"
 Add-Type -AssemblyName System.Windows.Forms
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $Root
+. (Join-Path $Root "scripts\Ruzgar_ProgramlarYolu.ps1")
+Repair-RuzgarProgramlarEnv -LogPath (Join-Path $env:TEMP "ruzgar-launch.log")
 
 $Log = Join-Path $env:TEMP "ruzgar-launch.log"
 $ApiErr = Join-Path $env:TEMP "ruzgar-api.err"
@@ -473,9 +475,12 @@ function Ensure-RuzgarOllamaModelsPath {
                     }
                 }
                 $env:OLLAMA_MODELS = $resolved
-                try {
-                    [Environment]::SetEnvironmentVariable("OLLAMA_MODELS", $resolved, "User")
-                } catch { }
+                $ollamaUser = [Environment]::GetEnvironmentVariable("OLLAMA_MODELS", "User")
+                if ($ollamaUser -ne $resolved) {
+                    try {
+                        [Environment]::SetEnvironmentVariable("OLLAMA_MODELS", $resolved, "User")
+                    } catch { }
+                }
                 Log "OLLAMA_MODELS=$resolved"
                 return
             }
