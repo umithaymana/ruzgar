@@ -3050,6 +3050,7 @@ function switchMode(mode) {
   } else if (window.RuzgarPanelManager?.openPanel) {
     window.RuzgarPanelManager.openPanel(next);
   }
+  void window.ruzgarApi?.setMenuMotor?.(next);
   renderMotorChatFromSession(next);
   setStatus(`Mod: ${MODE_LABELS[currentMode] || currentMode}`, "Rüzgar");
   updatePerformanceIndicators(perfBusy);
@@ -3154,6 +3155,62 @@ async function prefetchGenelOrchestraBridge(text) {
     }
   } catch (_) {
     /* sunucu yoksa sessiz */
+  }
+}
+
+function programlamaOnayMetni(text) {
+  const low = String(text || "")
+    .replace(/İ/g, "i")
+    .replace(/I/g, "i")
+    .toLowerCase()
+    .replace(/ı/g, "i")
+    .replace(/ğ/g, "g")
+    .replace(/ü/g, "u")
+    .replace(/ş/g, "s")
+    .replace(/ö/g, "o")
+    .replace(/ç/g, "c")
+    .replace(/\s+/g, " ")
+    .trim();
+  const ortakOnay = /^(tamam yap|onayla|onayliyorum|onay ver)$/;
+  const ortakRet = /^(yapma|iptal|vazgec|iptal et)$/;
+  const liste = /^(islem liste|islem listesi)$/;
+  if (ortakOnay.test(low) || liste.test(low) || ortakRet.test(low)) {
+    if (liste.test(low)) return "işlem liste";
+    if (ortakRet.test(low)) return "yapma";
+    return "tamam yap";
+  }
+  if (currentMode !== "programlama") return "";
+  if (/^(tamam|evet|olur|evet yap|yap)$/.test(low)) return "tamam yap";
+  if (/^(hayir|dur)$/.test(low)) return "yapma";
+  return "";
+}
+
+/** Onay sohbetten de gider: onayla / tamam yap, yapma / vazgeç. */
+async function tryProgramlamaOnaySohbet(komut) {
+  const raw = String(komut || "").trim();
+  if (!raw || (currentMode !== "genel" && currentMode !== "programlama")) return false;
+  try {
+    let rootQs = "";
+    if (window.ruzgarApi?.getRoot) {
+      const root = await window.ruzgarApi.getRoot();
+      if (root) rootQs = `&workspace_root=${encodeURIComponent(String(root))}`;
+    }
+    const res = await fetch(
+      `${API}/api/ana-motor/motor-dispatch?message=${encodeURIComponent(raw)}&target=programlama${rootQs}`,
+      { method: "GET" },
+    );
+    if (!res.ok) return false;
+    const j = await res.json();
+    const reply = String(j.reply || "").trim();
+    if (!j?.handled || !reply) return false;
+    appendBubble("assistant", reply);
+    pushMotorChatHistory("user", raw, {});
+    pushMotorChatHistory("assistant", reply, { instant_gundelik: true });
+    lastAssistantReply = reply;
+    scrollChatToBottom();
+    return true;
+  } catch (_) {
+    return false;
   }
 }
 
@@ -3574,21 +3631,8 @@ function renderProgramlamaUmitOnay(payload) {
   if (!wrap || !stateEl || !kindEl || !detailEl) return;
   wrap.hidden = false;
   wrap.classList.remove("programlama-umit-onay-pending");
-  if (!payload || payload.ok === false) {
-    const http = payload && payload.http_status ? ` (HTTP ${payload.http_status})` : "";
-    stateEl.textContent = "API bağlantısı yok";
-    kindEl.textContent = "Faz 98 endpoint";
-    detailEl.textContent =
-      `Ruzgar_TemizBaslat.bat çalıştır, Electron'da Ctrl+Shift+R${http}.`;
-    if (applyBtn) applyBtn.disabled = true;
-    if (cancelBtn) cancelBtn.disabled = true;
-    return;
-  }
-  if (!payload.has_pending) {
-    stateEl.textContent = "Bekleyen işlem yok";
-    kindEl.textContent = "Sistem sakin";
-    detailEl.textContent =
-      "Sohbette: işlem iste: mkdir projects/onay-test → önizleme → Tamam yap.";
+  if (!payload || payload.ok === false || !payload.has_pending) {
+    wrap.hidden = true;
     if (applyBtn) applyBtn.disabled = true;
     if (cancelBtn) cancelBtn.disabled = true;
     return;
@@ -3605,7 +3649,7 @@ function renderProgramlamaUmitOnay(payload) {
   const pkg = op.package ? `Paket: ${op.package}` : "";
   const risk =
     riskCount > 0 ? `Risk(${riskCount}): ${String(op.risk_head || "").slice(0, 90)}` : "Risk: düşük";
-  detailEl.textContent = [src, dst, cmd, pkg, risk].filter(Boolean).join(" · ");
+  detailEl.textContent = [src, dst, cmd, pkg, risk, "Sohbet: onayla veya yapma"].filter(Boolean).join(" · ");
   if (applyBtn) applyBtn.disabled = false;
   if (cancelBtn) cancelBtn.disabled = false;
 }
@@ -6638,6 +6682,9 @@ async function applyProgramlamaFocusFromChat(ev) {
   }
   if (focus) {
     await openProgramlamaWorkspaceFile(focus);
+  }
+  if (window.ruzgarProjeOdak) {
+    void window.ruzgarProjeOdak(focus || project);
   }
 }
 
@@ -10339,12 +10386,8 @@ async function saveProgramlamaAtolyeBuffer() {
     rel = suggested.trim().replace(/^[/\\]+/, "");
     if (!rel) return;
   }
-  if (!window.ruzgarApi?.writeText) {
-    flashRuzgarDurum("Kaydetme yalnızca masaüstü Rüzgar’da (Electron).");
-    return;
-  }
   try {
-    const w = await window.ruzgarApi.writeText(rel, code);
+    const w = await writeProgramlamaText(rel, code);
     if (!w?.ok) {
       setCodeOutput(w?.error || "Yazılamadı.");
       flashRuzgarDurum("Kaydetme başarısız.");
@@ -10355,9 +10398,36 @@ async function saveProgramlamaAtolyeBuffer() {
     flashRuzgarDurum("Kaydedildi.");
     setCodeOutput(`Kaydedildi: ${rel}`);
     void programlamaAtolyeRefreshRoot();
+    if (window.ruzgarProjeKayitSonrasi) window.ruzgarProjeKayitSonrasi(rel);
   } catch (e) {
     setCodeOutput(`Kayıt hatası: ${e && e.message ? e.message : e}`);
   }
+}
+
+async function writeProgramlamaText(rel, code) {
+  const clean = String(rel || "").replace(/\\/g, "/");
+  if (window.ruzgarApi?.writeText) {
+    const w = await window.ruzgarApi.writeText(rel, code);
+    if (w?.ok) return w;
+    if (!clean.startsWith("projects/")) return w || { ok: false, error: "Yazılamadı." };
+  }
+  if (!clean.startsWith("projects/")) {
+    return { ok: false, error: "Kaydetme projects/ dışında masaüstü köprüsü ister." };
+  }
+  const res = await fetch(`${API}/api/programlama/proje-yaz`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ rel: clean, text: code }),
+  });
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok || j.ok === false) {
+    const detail = j.detail;
+    return {
+      ok: false,
+      error: typeof detail === "string" ? detail : j.error || "Yazılamadı.",
+    };
+  }
+  return { ok: true };
 }
 
 function wireProgrammingWorkbench() {
@@ -15900,6 +15970,31 @@ async function sendMessageWithText(t, opts = {}) {
     syncInterruptButton();
   };
 
+  if (currentMode === "genel" || currentMode === "programlama") {
+    const onayKomut = programlamaOnayMetni(dispatchText);
+    if (onayKomut) {
+      const onayOk = await tryProgramlamaOnaySohbet(onayKomut);
+      if (onayOk) {
+        void refreshProgramlamaUmitOnay();
+        finishMotorInstant(currentMode === "programlama" ? "Programlama" : "Ana Motor");
+        return;
+      }
+    }
+  }
+
+  if (
+    window.ruzgarProjeKomut &&
+    (currentMode === "genel" || currentMode === "programlama")
+  ) {
+    const projeHit = await Promise.resolve(window.ruzgarProjeKomut(dispatchText));
+    if (projeHit && projeHit.handled) {
+      appendBubble("assistant", String(projeHit.reply || "Tamam."));
+      scrollChatToBottom();
+      finishMotorInstant(currentMode === "programlama" ? "Programlama" : "Ana Motor");
+      return;
+    }
+  }
+
   if (currentMode === "genel" && !isCasualChatMessage(text)) {
     if (window.ruzgarMasaKomut) {
       const masaHit = window.ruzgarMasaKomut(dispatchText);
@@ -16920,9 +17015,20 @@ if (window.ruzgarApi?.onMenu) {
       if (vid) window.setTimeout(() => document.getElementById(vid)?.click(), 80);
       return;
     }
+    if (action.startsWith("masa:")) {
+      const kind = action.slice("masa:".length);
+      if (currentMode !== "genel") switchMode("genel");
+      window.ruzgarMasaSayfa?.(kind);
+      return;
+    }
     if (action === "menu:yeni-sohbet") {
       switchMode("genel");
       document.getElementById("nav-clear-chat")?.click();
+      return;
+    }
+    if (action.startsWith("menu:prog:")) {
+      if (currentMode !== "programlama") switchMode("programlama");
+      window.ruzgarProgramlamaMenu?.(action.slice("menu:prog:".length));
       return;
     }
     if (action === "sidebar:duzen" || action === "sidebar:gelisim") {

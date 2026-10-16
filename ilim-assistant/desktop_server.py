@@ -5264,6 +5264,100 @@ def api_programlama_project_tree(
     return out
 
 
+def _proje_masa_hata(exc: ValueError) -> HTTPException:
+    return HTTPException(status_code=400, detail=str(exc))
+
+
+@app.get("/api/programlama/projeler")
+def api_programlama_projeler():
+    """Çalışma sayfası — projects/ altındaki işler."""
+    from ilim_assistant.motorlar.programlama_proje_masasi import (
+        PROJE_MASA_VERSION,
+        list_projeler,
+    )
+
+    return {
+        "ok": True,
+        "projeler": list_projeler(REPO_ROOT),
+        "version": PROJE_MASA_VERSION,
+    }
+
+
+@app.get("/api/programlama/onizleme/{rel:path}")
+def api_programlama_onizleme(rel: str):
+    """Siteyi çalışma sayfasında göstermek için dosya. Yalnız projects/."""
+    from ilim_assistant.motorlar.programlama_proje_masasi import onizleme_dosyasi
+
+    try:
+        target, mime = onizleme_dosyasi(REPO_ROOT, rel)
+    except ValueError as exc:
+        raise _proje_masa_hata(exc) from exc
+    return FileResponse(str(target), media_type=mime)
+
+
+class ProgramlamaProjeYaziBody(BaseModel):
+    rel: str = ""
+    text: str = ""
+
+
+@app.post("/api/programlama/proje-yaz")
+def api_programlama_proje_yaz(body: ProgramlamaProjeYaziBody):
+    """Elle düzeltme — yazı yalnız projects/ altına iner."""
+    from ilim_assistant.motorlar.programlama_proje_masasi import (
+        PROJE_MASA_VERSION,
+        yaz_proje_dosyasi,
+    )
+
+    try:
+        out = yaz_proje_dosyasi(REPO_ROOT, body.rel, body.text)
+    except ValueError as exc:
+        raise _proje_masa_hata(exc) from exc
+    out["version"] = PROJE_MASA_VERSION
+    return out
+
+
+class ProgramlamaProjeSilBody(BaseModel):
+    rel: str = ""
+
+
+@app.post("/api/programlama/proje-sil")
+def api_programlama_proje_sil(body: ProgramlamaProjeSilBody):
+    """Dosya veya proje klasörü silinir. projects/ dışına çıkılmaz."""
+    from ilim_assistant.motorlar.programlama_proje_masasi import (
+        PROJE_MASA_VERSION,
+        sil_proje_yolu,
+    )
+
+    try:
+        out = sil_proje_yolu(REPO_ROOT, body.rel)
+    except ValueError as exc:
+        raise _proje_masa_hata(exc) from exc
+    out["version"] = PROJE_MASA_VERSION
+    return out
+
+
+class ProgramlamaProjeAjanBody(BaseModel):
+    rel: str = ""
+    emir: str = ""
+    dosya: str = ""
+
+
+@app.post("/api/programlama/proje-ajan")
+def api_programlama_proje_ajan(body: ProgramlamaProjeAjanBody):
+    """Ajan masası — bilinen emir seçili projede uygulanır. Model yok."""
+    from ilim_assistant.motorlar.programlama_proje_masasi import (
+        PROJE_MASA_VERSION,
+        ajan_uygula,
+    )
+
+    try:
+        out = ajan_uygula(REPO_ROOT, body.rel, body.emir, body.dosya)
+    except ValueError as exc:
+        raise _proje_masa_hata(exc) from exc
+    out["version"] = PROJE_MASA_VERSION
+    return out
+
+
 @app.post("/api/programlama/serve")
 def api_programlama_serve(body: ProgramlamaRunBody):
     """Faz 8 — FastAPI arka plan (başlat/durdur). action=start|stop|status."""

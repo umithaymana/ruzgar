@@ -1,15 +1,57 @@
 {
   "id": "programlama",
   "title": "Programlama",
-  "version": 2,
+  "version": 5,
   "sidebar": {
     "default": [
       {
-        "group": "Araçlar",
+        "group": "Dosya",
         "items": [
-          { "id": "root", "label": "Proje kökü", "title": "Çalışma klasörü", "action": "prog:root", "icon": "📂" },
-          { "id": "kpi", "label": "KPI", "title": "Metrik ve ilerleme paneli", "action": "prog:kpi", "icon": "📊" },
-          { "id": "onay", "label": "Onay kuyruğu", "title": "Ümit onay bekleyen işler", "action": "prog:onay", "icon": "✅" }
+          {
+            "id": "dosyalar",
+            "label": "Dosyalar",
+            "title": "Seçili projenin dosyaları",
+            "action": "prog:dosyalar",
+            "icon": "☰",
+            "phrases": ["dosyaları göster", "dosyalar", "dosyaları aç"],
+            "reply": "Dosyalar menüde açıldı."
+          },
+          {
+            "id": "ekle",
+            "label": "Dosya ekle",
+            "title": "Seçili projeye dosya ekle",
+            "action": "prog:ekle",
+            "icon": "+",
+            "phrases": ["dosya ekle"],
+            "reply": "Dosya adı soruluyor."
+          },
+          {
+            "id": "kaydet",
+            "label": "Kaydet",
+            "title": "Açık kodu diske yaz",
+            "action": "prog:kaydet",
+            "icon": "💾",
+            "phrases": ["kaydet"],
+            "reply": "Açık kod kaydediliyor."
+          },
+          {
+            "id": "sil",
+            "label": "Dosyayı sil",
+            "title": "Açık dosyayı sil",
+            "action": "prog:sil",
+            "icon": "⌫",
+            "phrases": ["dosyayı sil"],
+            "reply": "Açık dosya için silme onayı soruluyor."
+          },
+          {
+            "id": "proje-sil",
+            "label": "Projeyi sil",
+            "title": "Seçili proje klasörünü sil",
+            "action": "prog:proje-sil",
+            "icon": "🗑",
+            "phrases": ["projeyi sil"],
+            "reply": "Proje için silme onayı soruluyor."
+          }
         ]
       }
     ],
@@ -17,19 +59,51 @@
       {
         "group": "Görünüm",
         "items": [
-          { "id": "editor", "label": "Düzenleyici", "title": "Kod editörü", "action": "prog:editor", "icon": "{}" }
-        ]
-      },
-      {
-        "group": "Paneller",
-        "items": [
-          { "id": "tree", "label": "Dosya ağacı", "title": "Proje dosyaları", "action": "prog:tree", "icon": "🌲" }
-        ]
-      },
-      {
-        "group": "Çalışma",
-        "items": [
-          { "id": "refactor", "label": "Yeniden düzenle", "title": "Kod refaktör isteği", "action": "prog:refactor", "icon": "♻" }
+          {
+            "id": "kod",
+            "label": "Kodları göster",
+            "title": "Yalnız kod",
+            "action": "prog:kod",
+            "icon": "{}",
+            "phrases": ["kodları göster", "kodu göster", "kodları aç", "kodu aç"],
+            "reply": "Kod açık."
+          },
+          {
+            "id": "proje",
+            "label": "Projeyi göster",
+            "title": "Yalnız proje",
+            "action": "prog:proje",
+            "icon": "▣",
+            "phrases": ["projeyi göster", "proje göster", "siteyi göster"],
+            "reply": "Proje açık."
+          },
+          {
+            "id": "iki",
+            "label": "İkisini göster",
+            "title": "Proje ve kodu yan yana böl",
+            "action": "prog:iki",
+            "icon": "▥",
+            "phrases": ["ikisini göster", "ikisini de göster", "ikisini birden göster", "kodu ve projeyi göster", "kod ve proje"],
+            "reply": "Sayfa bölündü: proje bir yanda, kod öbür yanda."
+          },
+          {
+            "id": "projeler",
+            "label": "Projeler",
+            "title": "Proje listesi, arama ve denemeler",
+            "action": "prog:projeler",
+            "icon": "☰",
+            "phrases": ["projeleri göster", "projeleri aç", "projeler"],
+            "reply": "Projeler menüde açıldı."
+          },
+          {
+            "id": "yenile",
+            "label": "Listeyi yenile",
+            "title": "Proje listesini yenile",
+            "action": "prog:yenile",
+            "icon": "↻",
+            "phrases": ["listeyi yenile"],
+            "reply": "Proje listesi yenileniyor."
+          }
         ]
       }
     ],
@@ -37,8 +111,52 @@
       {
         "group": "Gelişim",
         "items": [
-          { "id": "test", "label": "Test koş", "title": "Test komutunu çalıştır", "action": "prog:test", "icon": "🧪" },
-          { "id": "devtools", "label": "Geliştirici araçları", "title": "DevTools (F12)", "action": "genel:devtools", "icon": "🛠" }
+          {
+            "id": "emir",
+            "label": "Emir",
+            "title": "Seçili projeye emir yaz",
+            "action": "prog:emir",
+            "icon": "✎",
+            "phrases": ["emir yaz"],
+            "reply": "Emir kutusu açıldı."
+          },
+          {
+            "id": "gunluk",
+            "label": "Günlük",
+            "title": "Ajanın son adımları",
+            "action": "prog:gunluk",
+            "icon": "≡",
+            "phrases": ["günlüğü göster", "günlük"],
+            "reply": "Günlük açıldı."
+          },
+          {
+            "id": "site",
+            "label": "Site üret",
+            "title": "Statik site şablonu",
+            "action": "prog:site",
+            "icon": "⌂",
+            "phrases": ["site üret"],
+            "reply": "Site üretimi açıldı."
+          }
+        ]
+      },
+      {
+        "group": "Onay",
+        "items": [
+          {
+            "id": "onayla",
+            "label": "Onayla",
+            "title": "Bekleyen işi uygula",
+            "action": "prog:onayla",
+            "icon": "✓"
+          },
+          {
+            "id": "yapma",
+            "label": "Yapma",
+            "title": "Bekleyen işi durdur",
+            "action": "prog:yapma",
+            "icon": "✕"
+          }
         ]
       }
     ]

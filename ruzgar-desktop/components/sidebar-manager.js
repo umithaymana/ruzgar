@@ -183,13 +183,31 @@
     }
 
     if (a.startsWith("prog:")) {
-      if (a === "prog:root") scrollToEl("code-work-root");
-      else if (a === "prog:kpi") scrollToEl("programlama-kpi-strip");
-      else if (a === "prog:onay") scrollToEl("programlama-umit-onay-card");
-      else if (a === "prog:editor") scrollToEl("code-editor");
-      else if (a === "prog:tree") scrollToEl("code-file-tree");
+      const menu = global.ruzgarProgramlamaMenu;
+      if (a === "prog:kod") menu?.("kod");
+      else if (a === "prog:proje") menu?.("proje");
+      else if (a === "prog:iki") menu?.("iki");
+      else if (a === "prog:ekle") menu?.("ekle");
+      else if (a === "prog:kaydet") menu?.("kaydet");
+      else if (a === "prog:sil") menu?.("sil");
+      else if (a === "prog:proje-sil") menu?.("proje-sil");
+      else if (a === "prog:yenile") menu?.("yenile");
+      else if (a === "prog:projeler") menu?.("projeler");
+      else if (a === "prog:dosyalar") menu?.("dosyalar");
+      else if (a === "prog:gunluk") menu?.("gunluk");
+      else if (a === "prog:emir") menu?.("emir");
+      else if (a === "prog:calistir") menu?.("calistir");
+      else if (a === "prog:acikla") menu?.("acikla");
+      else if (a === "prog:hata") menu?.("hata");
+      else if (a === "prog:test-yaz") menu?.("test");
+      else if (a === "prog:site") menu?.("site");
+      else if (a === "prog:onayla") menu?.("onayla");
+      else if (a === "prog:yapma") menu?.("yapma");
+      else if (a === "prog:root") scrollToEl("code-work-root");
+      else if (a === "prog:editor") menu?.("kod");
+      else if (a === "prog:tree") menu?.("proje");
       else if (a === "prog:refactor") clickEl("btn-code-refactor");
-      else if (a === "prog:test") clickEl("btn-code-run-tests");
+      else if (a === "prog:test") menu?.("calistir");
       return;
     }
 

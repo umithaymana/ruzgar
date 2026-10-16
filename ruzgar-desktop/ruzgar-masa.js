@@ -36,7 +36,7 @@
   let saveTimer = 0;
   let ctx = canvas.getContext("2d");
   let paperReady = false;
-  let deskPinned = false;
+  let sayfa = "sohbet";
   let sahneTimer = 0;
   let drawing = false;
   let lastPt = null;
@@ -233,7 +233,7 @@
   root.querySelector(".ruzgar-masa-tabs").addEventListener("click", function (ev) {
     const btn = ev.target.closest("[data-masa]");
     if (!btn) return;
-    showMode(btn.getAttribute("data-masa"));
+    masaSayfa(btn.getAttribute("data-masa"));
   });
 
   belge.addEventListener("input", scheduleSave);
@@ -1149,9 +1149,23 @@
     return Math.max(lo, Math.min(hi, n));
   }
 
-  function masaAc(mode) {
-    showMode(mode);
+  function masaSayfa(kind) {
+    const izin = { sohbet: 1, belge: 1, tablo: 1, cizim: 1, sunum: 1 };
+    if (!izin[kind]) return "";
+    sayfa = kind;
+    if (kind !== "sohbet") showMode(kind);
     syncSahne();
+    return {
+      sohbet: "Sohbet açık.",
+      belge: "Belge açık.",
+      tablo: "Tablo açık.",
+      cizim: "Çizim açık.",
+      sunum: "Sunum açık.",
+    }[kind];
+  }
+
+  function masaAc(mode) {
+    masaSayfa(mode);
   }
 
   function masaFormulGuvenli(value) {
@@ -1351,6 +1365,11 @@
   function masaYardim() {
     return [
       "Çalışma masası komutları:",
+      "sohbet",
+      "belgeyi aç",
+      "tabloyu göster",
+      "çizimi aç",
+      "sunumu aç",
       "belgeye yaz: metin",
       "belgeye ekle: metin",
       "belgeyi temizle",
@@ -1374,6 +1393,21 @@
     const low = masaHarf(raw);
     if (/^(masa yardim|calisma masasi yardim|masa komutlari)$/.test(low)) {
       return { handled: true, reply: masaYardim() };
+    }
+    if (/^(sohbet|sohbeti goster|sohbeti ac|sahne|robota don)$/.test(low)) {
+      return { handled: true, reply: masaSayfa("sohbet") };
+    }
+    if (/^(belgeyi ac|belgeyi goster|belge ac|belge goster)$/.test(low)) {
+      return { handled: true, reply: masaSayfa("belge") };
+    }
+    if (/^(tabloyu ac|tabloyu goster|tablo ac|tablo goster)$/.test(low)) {
+      return { handled: true, reply: masaSayfa("tablo") };
+    }
+    if (/^(cizimi ac|cizimi goster|cizim ac|cizim goster)$/.test(low)) {
+      return { handled: true, reply: masaSayfa("cizim") };
+    }
+    if (/^(sunumu ac|sunumu goster|sunum ac|sunum goster)$/.test(low)) {
+      return { handled: true, reply: masaSayfa("sunum") };
     }
     let m = raw.match(/^(belgeye yaz|belge yaz|belgeye ekle|belge ekle)\s*[:\-]?\s*([\s\S]+)$/i);
     if (m) return { handled: true, reply: masaBelgeYaz(m[2], /ekle/i.test(m[1])) };
@@ -1417,6 +1451,10 @@
     return null;
   }
 
+  window.ruzgarMasaSayfa = function (kind) {
+    return masaSayfa(String(kind || ""));
+  };
+
   window.ruzgarMasaKomut = function (text) {
     try {
       return masaKomutCoz(text);
@@ -1449,21 +1487,6 @@
     return { clean: (clean ? clean + "\n\n" : "") + "Masa: " + notes.join(" ") };
   };
 
-  function masaBos() {
-    const belgeBos = !(belge.innerText || "").trim();
-    const tabloBos = state.sheet.every(function (row) {
-      return row.every(function (cell) { return !String(cell || "").trim(); });
-    });
-    const cizimBos = !state.ink;
-    const sunumBos = state.slides.every(function (slide) {
-      const title = String(slide.title || "").trim();
-      const body = String(slide.body || "").trim();
-      if (!title && !body) return true;
-      return title === "Başlık" && body === "Metin";
-    });
-    return belgeBos && tabloBos && cizimBos && sunumBos;
-  }
-
   function paintSpeech() {
     const soz = document.getElementById("ruzgar-sahne-soz");
     const sahneFace = document.getElementById("ruzgar-sahne-face");
@@ -1487,11 +1510,16 @@
 
   function syncSahne() {
     const motor = document.body.dataset.motor || "genel";
-    const bos = masaBos();
-    const on = motor === "genel" && bos && !deskPinned;
+    const on = motor === "genel" && sayfa === "sohbet";
     document.body.classList.toggle("ruzgar-sahne-on", on);
     const back = document.getElementById("ruzgar-masa-sahne");
-    if (back) back.hidden = !bos;
+    if (back) back.hidden = on;
+    root.querySelectorAll("[data-masa]").forEach(function (btn) {
+      const id = btn.getAttribute("data-masa");
+      const active = on ? id === "sohbet" : id === state.mode;
+      btn.classList.toggle("is-on", active);
+      btn.setAttribute("aria-selected", active ? "true" : "false");
+    });
     if (on) paintSpeech();
   }
 
@@ -1500,14 +1528,12 @@
     const backStage = document.getElementById("ruzgar-masa-sahne");
     if (openDesk) {
       openDesk.addEventListener("click", function () {
-        deskPinned = true;
-        syncSahne();
+        masaSayfa(state.mode === "sohbet" ? "belge" : state.mode);
       });
     }
     if (backStage) {
       backStage.addEventListener("click", function () {
-        deskPinned = false;
-        syncSahne();
+        masaSayfa("sohbet");
       });
     }
     const chat = document.getElementById("chat-messages");

@@ -51,4 +51,5 @@ contextBridge.exposeInMainWorld("ruzgarApi", {
   onMenu: (fn) => {
     ipcRenderer.on("ruzgar-menu", (_e, action) => fn(action));
   },
+  setMenuMotor: (mode) => ipcRenderer.invoke("ruzgar:menu-motor", mode),
 });

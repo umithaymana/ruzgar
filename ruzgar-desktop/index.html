@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <!-- Colab tünel (ngrok, localtunnel, trycloudflare): http(s)/ws(s) tamam -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' blob: http: https: ws: wss: http://127.0.0.1:8779 ws://127.0.0.1:8779 wss://127.0.0.1:8779 http://localhost:8779 ws://localhost:8779 wss://localhost:8779 http://127.0.0.1:8777 ws://127.0.0.1:8777 http://localhost:8777 ws://localhost:8777 https://www.google.com https://*.google.com https://*.googleapis.com https://*.gstatic.com wss://*.google.com; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://upload.wikimedia.org https://*.wikimedia.org https://i.ytimg.com https://*.ytimg.com; media-src 'self' blob:; worker-src 'self' blob:; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://youtube.com https://*.youtube.com https://*.youtube-nocookie.com;" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' blob: http: https: ws: wss: http://127.0.0.1:8779 ws://127.0.0.1:8779 wss://127.0.0.1:8779 http://localhost:8779 ws://localhost:8779 wss://localhost:8779 http://127.0.0.1:8777 ws://127.0.0.1:8777 http://localhost:8777 ws://localhost:8777 https://www.google.com https://*.google.com https://*.googleapis.com https://*.gstatic.com wss://*.google.com; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://upload.wikimedia.org https://*.wikimedia.org https://i.ytimg.com https://*.ytimg.com; media-src 'self' blob:; worker-src 'self' blob:; frame-src 'self' http://127.0.0.1:8779 http://localhost:8779 http://127.0.0.1:8777 http://localhost:8777 https://www.youtube.com https://www.youtube-nocookie.com https://youtube.com https://*.youtube.com https://*.youtube-nocookie.com;" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RÜZGAR — Mimarlar: Ümit & Gökçenur</title>
     <link rel="stylesheet" href="styles.css?v=20260608-klon-below" />
@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="ruzgar-pro.css?v=20261016-motorlar" />
     <link rel="stylesheet" href="ruzgar-sade.css?v=20261016-sohbet-tutamac" />
     <link rel="stylesheet" href="ruzgar-masa.css?v=20261016-masa-bag" />
+    <link rel="stylesheet" href="ruzgar-projeler.css?v=20261016-tutamak" />
     <script src="ruzgar-api-root.js?v=20260620-csp"></script>
   </head>
   <body class="ruzgar-pro ruzgar-sade">
@@ -561,14 +562,15 @@
             <div id="ruzgar-masa" class="ruzgar-masa">
               <div class="ruzgar-masa-bar">
                 <div class="ruzgar-masa-tabs" role="tablist" aria-label="Masa türü">
-                  <button type="button" class="is-on" data-masa="belge" role="tab" aria-selected="true">Belge</button>
+                  <button type="button" class="is-on" data-masa="sohbet" role="tab" aria-selected="true">Sohbet</button>
+                  <button type="button" data-masa="belge" role="tab" aria-selected="false">Belge</button>
                   <button type="button" data-masa="tablo" role="tab" aria-selected="false">Tablo</button>
                   <button type="button" data-masa="cizim" role="tab" aria-selected="false">Çizim</button>
                   <button type="button" data-masa="sunum" role="tab" aria-selected="false">Sunum</button>
                 </div>
                 <div class="ruzgar-masa-file">
                   <span id="ruzgar-masa-durum" class="ruzgar-masa-durum" aria-live="polite"></span>
-                  <button type="button" id="ruzgar-masa-sahne" class="ruzgar-masa-btn" hidden>Sahne</button>
+                  <button type="button" id="ruzgar-masa-sahne" class="ruzgar-masa-btn" hidden>Sohbet</button>
                   <button type="button" id="ruzgar-masa-yeni" class="ruzgar-masa-btn">Yeni</button>
                   <button type="button" id="ruzgar-masa-indir" class="ruzgar-masa-btn ruzgar-masa-btn-accent">İndir</button>
                 </div>
@@ -2322,6 +2324,54 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
               </div>
             </div>
             <h3>Programlama Motoru — Atölye</h3>
+            <section id="ruzgar-projeler" class="ruzgar-projeler" aria-label="Ajan masası">
+              <header class="ruzgar-projeler-bas">
+                <strong>Ajan masası</strong>
+                <button type="button" id="ruzgar-projeler-yenile" class="btn-secondary btn-compact">Yenile</button>
+                <input id="ruzgar-projeler-ara" class="ruzgar-projeler-ara" type="search" placeholder="Proje ara" />
+                <label class="ruzgar-projeler-deneme">
+                  <input type="checkbox" id="ruzgar-projeler-deneme" />
+                  Denemeleri göster
+                </label>
+                <span id="ruzgar-projeler-durum" class="ruzgar-projeler-durum"></span>
+              </header>
+              <form id="ruzgar-ajan-form" class="ruzgar-ajan-form">
+                <input
+                  id="ruzgar-ajan-emir"
+                  class="ruzgar-ajan-emir"
+                  type="text"
+                  placeholder="Başlığı değiştir, paragraf ekle, buton ekle, basit site yap: ad"
+                  autocomplete="off"
+                />
+                <button type="submit" id="ruzgar-ajan-yap" class="btn-primary btn-compact">Yap</button>
+              </form>
+              <div id="ruzgar-calisma" class="ruzgar-calisma" data-gorunum="iki">
+              <div class="ruzgar-projeler-govde">
+                <div class="ruzgar-projeler-sol">
+                  <ul id="ruzgar-projeler-liste" class="ruzgar-projeler-liste"></ul>
+                  <ul id="ruzgar-projeler-dosyalar" class="ruzgar-projeler-dosyalar"></ul>
+                </div>
+                <div class="ruzgar-projeler-sag">
+                  <div class="ruzgar-projeler-arac" role="toolbar" aria-label="Proje işlemleri">
+                    <button type="button" id="ruzgar-proje-ekle" class="btn-secondary btn-compact">Dosya ekle</button>
+                    <button type="button" id="ruzgar-proje-kaydet" class="btn-primary btn-compact">Kaydet</button>
+                    <button type="button" id="ruzgar-proje-sil" class="btn-secondary btn-compact">Dosyayı sil</button>
+                    <button type="button" id="ruzgar-proje-klasor-sil" class="btn-secondary btn-compact">Projeyi sil</button>
+                  </div>
+                  <iframe
+                    id="ruzgar-proje-onizleme"
+                    class="ruzgar-proje-onizleme"
+                    title="Site önizlemesi"
+                    sandbox="allow-scripts allow-forms allow-modals"
+                  ></iframe>
+                  <p class="ruzgar-projeler-not">Metni alttaki editörde düzelt. Kaydet diske yazar. Önizleme yenilenir.</p>
+                </div>
+                <div class="ruzgar-ajan-sag">
+                  <strong>Ajan günlüğü</strong>
+                  <ol id="ruzgar-ajan-gunluk" class="ruzgar-ajan-gunluk"></ol>
+                </div>
+              </div>
+              <div id="ruzgar-calisma-tutamak" class="ruzgar-calisma-tutamak" role="separator" aria-orientation="vertical" aria-label="Kod ve proje bölmesi" tabindex="0"></div>
             <div class="code-workbench">
               <aside class="code-sidebar">
                 <div class="code-sidebar-head">
@@ -2629,6 +2679,8 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
                 </div>
               </div>
             </div>
+              </div>
+            </section>
           </section>
 
           <section class="motor-page" id="page-ses" hidden>
@@ -3211,7 +3263,7 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
     <link rel="stylesheet" href="mimar-atolye.css?v=20260601-mimar-polish" />
     <link rel="stylesheet" href="components/slide-panel.css?v=20260606-panels-drawer" />
     <script src="ruzgar-context-state.js?v=20260605-components"></script>
-    <script src="components/sidebar-manager.js?v=20260606-video-duzen"></script>
+    <script src="components/sidebar-manager.js?v=20261016-proje-tam"></script>
     <script src="ruzgar-split.js?v=20261016-sohbet-tutamac"></script>
     <script src="ruzgar-virus-guard.js?v=20260607-preflight-err"></script>
     <script src="tercume-atolye.js?v=20260606-tools-panel"></script>
@@ -3227,7 +3279,8 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
     <script src="ruzgar-boot-health.js?v=20260620-conn-fix"></script>
     <script src="ruzgar-ui-bootstrap.js?v=20260620-btn-fallback"></script>
     <script src="ruzgar-pro-yuz.js?v=20261015-sade"></script>
-    <script src="ruzgar-masa.js?v=20261016-masa-bag"></script>
-    <script src="app.js?v=20261016-masa-bag"></script>
+    <script src="ruzgar-masa.js?v=20261016-sohbet"></script>
+    <script src="app.js?v=20261016-sohbet"></script>
+    <script src="ruzgar-projeler.js?v=20261016-tutamak"></script>
   </body>
 </html>

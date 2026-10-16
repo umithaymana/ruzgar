@@ -485,7 +485,80 @@ function sendMenu(mainWin, action) {
   w?.webContents.send("ruzgar-menu", action);
 }
 
-function buildMenu(mainWin) {
+function programlamaMenuMaddeleri(anahtar) {
+  try {
+    const dosya = path.join(__dirname, "modules", "programlama", "manifest.json");
+    const data = JSON.parse(fs.readFileSync(dosya, "utf8"));
+    const gruplar = (data.sidebar && data.sidebar[anahtar]) || [];
+    const maddeler = [];
+    const gorulen = new Set();
+    for (const grup of gruplar) {
+      for (const item of grup.items || []) {
+        const action = String(item.action || "");
+        if (!action.startsWith("prog:") || gorulen.has(action)) continue;
+        gorulen.add(action);
+        maddeler.push({
+          label: String(item.label || action),
+          clickAction: "menu:" + action,
+        });
+      }
+    }
+    return maddeler;
+  } catch (_) {
+    return [];
+  }
+}
+
+function menuProgramlama(mainWin) {
+  const dugme = (madde) => ({
+    label: madde.label,
+    click: () => sendMenu(mainWin, madde.clickAction),
+  });
+  return [
+    {
+      label: "dosya",
+      submenu: [
+        ...programlamaMenuMaddeleri("default").map(dugme),
+        { type: "separator" },
+        { label: "Çıkış", role: "quit" },
+      ],
+    },
+    {
+      label: "düzen",
+      submenu: [
+        ...programlamaMenuMaddeleri("duzen").map(dugme),
+        { type: "separator" },
+        { label: "Geri al", role: "undo" },
+        { label: "Yinele", role: "redo" },
+        { label: "Kes", role: "cut" },
+        { label: "Kopyala", role: "copy" },
+        { label: "Yapıştır", role: "paste" },
+        { type: "separator" },
+        {
+          label: "Paneller…",
+          accelerator: "Ctrl+Shift+P",
+          click: () => sendMenu(mainWin, "sidebar:duzen"),
+        },
+      ],
+    },
+    {
+      label: "gelişim",
+      submenu: [
+        ...programlamaMenuMaddeleri("gelisim").map(dugme),
+        { type: "separator" },
+        {
+          label: "Gelişim panelleri…",
+          click: () => sendMenu(mainWin, "sidebar:gelisim"),
+        },
+      ],
+    },
+  ];
+}
+
+function buildMenu(mainWin, mode) {
+  if (String(mode || "") === "programlama") {
+    return Menu.buildFromTemplate(menuProgramlama(mainWin));
+  }
   const template = [
     {
       label: "dosya",
@@ -576,6 +649,16 @@ function buildMenu(mainWin) {
             w?.webContents.toggleDevTools();
           },
         },
+      ],
+    },
+    {
+      label: "masa",
+      submenu: [
+        { label: "Sohbet", click: () => sendMenu(mainWin, "masa:sohbet") },
+        { label: "Belge", click: () => sendMenu(mainWin, "masa:belge") },
+        { label: "Tablo", click: () => sendMenu(mainWin, "masa:tablo") },
+        { label: "Çizim", click: () => sendMenu(mainWin, "masa:cizim") },
+        { label: "Sunum", click: () => sendMenu(mainWin, "masa:sunum") },
       ],
     },
   ];
@@ -682,6 +765,11 @@ app.whenReady().then(async () => {
     console.error("[RÜZGAR] Oturum izin ayarları:", e);
   }
 
+  ipcMain.handle("ruzgar:menu-motor", (event, mode) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    Menu.setApplicationMenu(buildMenu(win, mode));
+    return { ok: true, mode: String(mode || "genel") };
+  });
   ipcMain.handle("workspace:list", (_e, rel) => safeListDir(rel || ""));
   ipcMain.handle("workspace:root", () => WORKSPACE_ROOT);
   ipcMain.handle("workspace:read-text", (_e, rel) => {
