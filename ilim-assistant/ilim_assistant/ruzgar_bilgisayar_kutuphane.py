@@ -273,6 +273,28 @@ def format_bilgisayar_envanter() -> str:
     return "\n".join(lines).strip()
 
 
+def format_raf_basliklari() -> str:
+    """Katman başlıkları — derin inceleme için kısa sıra."""
+    layers = _layer_manifests()
+    lines = [
+        f"Kavram: {len(_load_kavramlar())}",
+        f"Katman: {len(layers)}",
+        "Kök: knowledge/ortak_kaynak/alanlar/bilgisayar_muhendisligi",
+    ]
+    if not layers:
+        lines.append("Raf boş.")
+        return "\n".join(lines)
+    for index, layer in enumerate(layers, start=1):
+        title = str(layer.get("baslik") or layer.get("katman_id") or "katman").strip()
+        faz = str(layer.get("faz") or "").strip()
+        path = str(layer.get("dosya_yolu") or "").strip()
+        faz_bit = f" — faz {faz}" if faz else ""
+        lines.append(f"{index}. {title}{faz_bit}")
+        if path:
+            lines.append(f"   {path}")
+    return "\n".join(lines)
+
+
 def format_bilgisayar_reply(row: dict[str, Any]) -> str:
     title = (row.get("baslik") or row.get("id") or "bilgisayar").strip()
     body = (row.get("metin") or "").strip()

@@ -392,6 +392,10 @@ def is_code_agent_task_message(message: str, mode_norm: str = "programlama") -> 
 
         if wants_tarif(message):
             return False
+        from ilim_assistant.motorlar.programlama_acik_uc import wants_acik_uc
+
+        if wants_acik_uc(message):
+            return False
     except Exception:
         pass
     try:
@@ -485,6 +489,13 @@ def is_programlama_reserved_command(message: str) -> bool:
         from ilim_assistant.motorlar.programlama_tarif import wants_tarif
 
         if wants_tarif(message):
+            return True
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_acik_uc import wants_acik_uc
+
+        if wants_acik_uc(message):
             return True
     except Exception:
         pass
@@ -1043,7 +1054,12 @@ def _maybe_programlama_instant_reply_impl(
             clear_pending()
         except Exception:
             pass
-        parts.append(format_self_scan_report(workspace_root))
+        try:
+            from ilim_assistant.motorlar.programlama_derin_inceleme import format_derin_inceleme
+
+            parts.append(format_derin_inceleme(workspace_root))
+        except Exception:
+            parts.append(format_self_scan_report(workspace_root))
     try:
         from ilim_assistant.ruzgar_bilgisayar_kutuphane import (
             format_bilgisayar_envanter,
@@ -1135,6 +1151,16 @@ def _maybe_programlama_instant_reply_impl(
 
         if wants_tarif(message):
             parts.append(run_tarif(message, workspace_root))
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_acik_uc import (
+            format_acik_uc_report,
+            wants_acik_uc,
+        )
+
+        if wants_acik_uc(message):
+            parts.append(format_acik_uc_report())
     except Exception:
         pass
     try:

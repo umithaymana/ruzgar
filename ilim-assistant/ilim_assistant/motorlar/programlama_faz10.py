@@ -687,6 +687,10 @@ def should_delegate_to_programlama(
 
         if wants_tarif(message):
             return True
+        from ilim_assistant.motorlar.programlama_acik_uc import wants_acik_uc
+
+        if wants_acik_uc(message):
+            return True
     except Exception:
         pass
     flags = motor_flags or {}

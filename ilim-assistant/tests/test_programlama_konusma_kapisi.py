@@ -111,3 +111,42 @@ def test_tarif_site_ve_python_yazar_bilinmeyeni_yazmaz():
         after = {p.name for p in (root / "projects").iterdir()}
         assert before == after
     assert should_delegate_to_programlama("basit site yap", "genel")
+
+
+def test_derin_inceleme_sirali_ve_yazmaz():
+    from ilim_assistant.motorlar.programlama_derin_inceleme import format_derin_inceleme
+
+    text = format_derin_inceleme(scan_text="TARAMA-TAMAM")
+    assert "Çekirdek paketler" in text
+    assert "Çalışma zamanı" in text
+    assert "Bilgi rafları" in text
+    assert "Programlama dilleri" in text
+    assert "Dil araçları" in text
+    assert "Python" in text
+    assert "TARAMA-TAMAM" in text
+    assert "onayla 1" in text
+    assert text.index("Çekirdek paketler") < text.index("Bilgi rafları")
+    assert text.index("Bilgi rafları") < text.index("Dil araçları")
+    assert text.index("Dil araçları") < text.index("Son tarama")
+
+
+def test_acik_uc_tarifin_yerine_gecmez():
+    from ilim_assistant.motorlar.programlama_acik_uc import (
+        format_acik_uc_report,
+        open_end_chain,
+        wants_acik_uc,
+    )
+    from ilim_assistant.motorlar.programlama_faz26 import faz26_directive
+
+    assert wants_acik_uc("açık uç")
+    assert not wants_acik_uc("basit site yap")
+    chain = open_end_chain()
+    assert chain[:3] == ["kod", "denge", "hizli"]
+    assert chain[-1] == "web"
+    report = format_acik_uc_report(ollama_up=False)
+    assert "web" in report
+    assert "yerine geçmez" in report
+    assert "dosya uydurulmaz" in report
+    assert "AÇIK UÇ" in faz26_directive()
+    assert should_delegate_to_programlama("açık uç", "genel")
+    assert classify_route("açık uç", "programlama") is ProgRoute.INSTANT

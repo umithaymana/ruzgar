@@ -80,8 +80,15 @@ def p9_strict_local_first() -> bool:
 
 def faz26_directive() -> str:
     chain = ",".join(programming_brain_chain_ids()[:4]) or _DEFAULT_CHAIN
+    try:
+        from ilim_assistant.motorlar.programlama_acik_uc import acik_uc_directive
+
+        extra = acik_uc_directive()
+    except Exception:
+        extra = ""
     return (
         "[BEYİN — Faz 26]\n"
         f"Programlama modu zinciri: {chain}\n"
         "Env: RUZGAR_PROG_BRAIN_CHAIN=kod,denge,hizli,groq,gemini · RUZGAR_P9_STRICT_LOCAL_FIRST=1\n"
+        f"{extra}"
     )

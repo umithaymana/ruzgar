@@ -285,6 +285,10 @@ def should_run_code_agent_loop(
 
         if wants_tarif(message):
             return False
+        from ilim_assistant.motorlar.programlama_acik_uc import wants_acik_uc
+
+        if wants_acik_uc(message):
+            return False
     except Exception:
         pass
     if wants_code_agent_stop(message) or wants_code_agent_status(message):
