@@ -1,6 +1,6 @@
 {
   "version": "ortak-kaynak-kayit-v1-2026-10-07",
-  "guncelleme": "2026-10-13T07:55:40Z",
+  "guncelleme": "2026-10-16T11:45:17Z",
   "aciklama": "Kalıcı kütüphane kayıtları. Metin henüz yoksa durum=placeholder. Web kayıtları buraya karıştırılmaz — web_cache kullan.",
   "kayitlar": [
     {
@@ -1152,6 +1152,24 @@
       "durum": "hazir",
       "not": "Faz 19; eğitim; exploit yok."
     },
+    {
+      "kaynak_id": "bm_katman_diller",
+      "kaynak_adi": "Programlama dilleri",
+      "yazar": null,
+      "ilim_alani": "bilgisayar_muhendisligi",
+      "eser_turu": "katman",
+      "dil": "tr",
+      "yayin": null,
+      "cilt": null,
+      "bolum": null,
+      "sayfa": null,
+      "dosya_yolu": "knowledge/ortak_kaynak/alanlar/bilgisayar_muhendisligi/katmanlar/programlama_dilleri",
+      "guvenilirlik": "orta",
+      "kaynak_sinifi": "kalici",
+      "durum": "hazir",
+      "not": "Faz 20; eğitim; exploit yok."
+    },
+
     {
       "kaynak_id": "ek_matematik_derin",
       "kaynak_adi": "Matematik derin",

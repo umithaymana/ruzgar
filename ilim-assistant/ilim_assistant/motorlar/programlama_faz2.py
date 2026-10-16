@@ -33,7 +33,7 @@ _STATIC_MANIFEST = """
 - Patch biçimi: @@write göreli/yol + fenced kod bloğu; her yazımda .bak yedeği.
 - Otonom döngü: «otomatik debug», «kendin düzelt», traceback veya onaylı tarama sonrası.
 - Sahip: «rüzgar ben ümit» → yönetici oturumu (Ümit abi).
-- Komutlar: «kendini tara» → numaralı rapor; «onayla 1 2» / «hepsini onayla düzelt».
+- Komutlar: «kendini tara» / «kendini incele» → numaralı rapor; «kütüphanende hangi bilgiler var» → raf envanteri (model yok); «onayla 1 2» / «hepsini onayla düzelt».
 - Güvenlik (Faz 4): .env/hafiza yasak; patch içinde os.system/eval yasak; «güvenlik tara».
 - Oturum (Faz 5): .ruzgar/programlama_oturum.json — açık dosya, hedef, son patch/test.
 - Şablon (Faz 6): «şablon listele» · «şablon oluştur: fastapi_api ad» → projects/<ad>/
@@ -83,7 +83,8 @@ def build_startup_briefing(workspace_root: str | Path | None = None) -> dict[str
         "",
         "Ne yapabilirim:",
         "• Proje dosyalarını okur/yazarım (@@write + pytest/ruff)",
-        "• «kendini tara» → öz-denetim raporu",
+        "• «kendini tara» / «kendini incele» → öz-denetim raporu",
+        "• «kütüphanende hangi bilgiler var» → bilgisayar rafı sırayla (model yok)",
         "• «sistem analizi» / «hataları bul onar» → P11 otonom analiz + güvenli onarım (Faz 96)",
         "• Dosya taşı/kopyala/kur → önce önizleme, «tamam yap» ile uygula (Faz 98 — onaysız müdahale yok)",
         "• «kendini tara» → numaralı rapor; «onayla 1 2» veya «hepsini onayla düzelt»",
@@ -111,6 +112,8 @@ def build_startup_briefing(workspace_root: str | Path | None = None) -> dict[str
         "commands": [
             "rüzgar ben ümit",
             "kendini tara",
+            "kendini incele",
+            "kütüphanende hangi bilgiler var",
             "sistem analizi",
             "hataları bul onar",
             "tamam yap",

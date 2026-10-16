@@ -677,6 +677,14 @@ def should_delegate_to_programlama(
         return False
     if mode_norm not in ("genel", "gelisim", "uretim", ""):
         return False
+    try:
+        from ilim_assistant.motorlar.programlama_motoru import wants_self_scan
+        from ilim_assistant.ruzgar_bilgisayar_kutuphane import wants_bilgisayar_envanter
+
+        if wants_self_scan(message) or wants_bilgisayar_envanter(message):
+            return True
+    except Exception:
+        pass
     flags = motor_flags or {}
     low = _ascii_fold(message)
     try:

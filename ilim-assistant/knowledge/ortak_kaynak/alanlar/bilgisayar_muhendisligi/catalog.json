@@ -1,17 +1,18 @@
 {
   "domain": "bilgisayar_muhendisligi",
-  "updated_utc": "2026-10-13T07:27:20Z",
+  "updated_utc": "2026-10-16T11:47:14Z",
   "politika": "Eğitim özeti. Telifli tam metin yok. Saldırı/exploit yok.",
   "katmanlar": [
     "cevre_depolama_saat",
     "dayanak",
     "sistem_yazilim",
     "veri_yapilari",
-    "programlama_uzmanlik"
+    "programlama_uzmanlik",
+    "programlama_dilleri"
   ],
   "sayilar": {
-    "md_dosya": 6,
-    "karakter": 18841,
-    "kavram": 27
+    "md_dosya": 7,
+    "karakter": 26041,
+    "kavram": 45
   }
 }

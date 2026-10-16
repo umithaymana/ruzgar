@@ -468,6 +468,13 @@ def is_programlama_reserved_command(message: str) -> bool:
     if wants_self_scan(message):
         return True
     try:
+        from ilim_assistant.ruzgar_bilgisayar_kutuphane import wants_bilgisayar_envanter
+
+        if wants_bilgisayar_envanter(message):
+            return True
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_faz96 import (
             wants_autonomous_repair_start,
             wants_full_autonomous_cycle,
@@ -799,6 +806,9 @@ def wants_self_scan(message: str) -> bool:
         for k in (
             "kendini tara",
             "kendini kontrol",
+            "kendini incele",
+            "sistemini incele",
+            "sistemini tara",
             "öz kontrol",
             "oz kontrol",
             "self-test",
@@ -1020,6 +1030,16 @@ def _maybe_programlama_instant_reply_impl(
         except Exception:
             pass
         parts.append(format_self_scan_report(workspace_root))
+    try:
+        from ilim_assistant.ruzgar_bilgisayar_kutuphane import (
+            format_bilgisayar_envanter,
+            wants_bilgisayar_envanter,
+        )
+
+        if wants_bilgisayar_envanter(message):
+            parts.append(format_bilgisayar_envanter())
+    except Exception:
+        pass
     try:
         from ilim_assistant.motorlar.programlama_faz5 import (
             format_project_recall_report,
