@@ -683,6 +683,10 @@ def should_delegate_to_programlama(
 
         if wants_self_scan(message) or wants_bilgisayar_envanter(message):
             return True
+        from ilim_assistant.motorlar.programlama_tarif import wants_tarif
+
+        if wants_tarif(message):
+            return True
     except Exception:
         pass
     flags = motor_flags or {}

@@ -69,3 +69,45 @@ def test_dil_notlari_modelsiz_cevaplanir():
     assert "index.html" in site
     assert "uygulama.py" in app
     assert try_bilgisayar_reply("fotosentez nedir") is None
+
+
+def test_tarif_site_ve_python_yazar_bilinmeyeni_yazmaz():
+    import tempfile
+    from pathlib import Path
+
+    from ilim_assistant.motorlar.programlama_tarif import wants_tarif
+
+    assert wants_tarif("basit site yap")
+    assert wants_tarif("küçük python aracı yap")
+    assert not wants_tarif("site nasıl kurulur")
+    assert wants_tarif("react uygulama yap")
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        site = maybe_programlama_instant_reply(
+            "basit site yap: vitrin",
+            "programlama",
+            workspace_root=root,
+        )
+        assert isinstance(site, str)
+        assert "Model yok" in site
+        assert (root / "projects" / "vitrin" / "index.html").is_file()
+        tool = maybe_programlama_instant_reply(
+            "küçük python aracı yap: sayac",
+            "programlama",
+            workspace_root=root,
+        )
+        assert isinstance(tool, str)
+        main_py = root / "projects" / "sayac" / "main.py"
+        assert main_py.is_file()
+        compile(main_py.read_text(encoding="utf-8"), str(main_py), "exec")
+        before = {p.name for p in (root / "projects").iterdir()}
+        miss = maybe_programlama_instant_reply(
+            "react uygulama yap",
+            "programlama",
+            workspace_root=root,
+        )
+        assert isinstance(miss, str)
+        assert "rafta yok" in miss
+        after = {p.name for p in (root / "projects").iterdir()}
+        assert before == after
+    assert should_delegate_to_programlama("basit site yap", "genel")

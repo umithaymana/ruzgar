@@ -280,6 +280,13 @@ def should_run_code_agent_loop(
         return False
     if mode_norm != "programlama":
         return False
+    try:
+        from ilim_assistant.motorlar.programlama_tarif import wants_tarif
+
+        if wants_tarif(message):
+            return False
+    except Exception:
+        pass
     if wants_code_agent_stop(message) or wants_code_agent_status(message):
         return False
     try:

@@ -388,6 +388,13 @@ def is_code_agent_task_message(message: str, mode_norm: str = "programlama") -> 
     if mode_norm != "programlama":
         return False
     try:
+        from ilim_assistant.motorlar.programlama_tarif import wants_tarif
+
+        if wants_tarif(message):
+            return False
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_faz43 import is_misrouted_terminal_gorev
 
         if is_misrouted_terminal_gorev(message):
@@ -471,6 +478,13 @@ def is_programlama_reserved_command(message: str) -> bool:
         from ilim_assistant.ruzgar_bilgisayar_kutuphane import wants_bilgisayar_envanter
 
         if wants_bilgisayar_envanter(message):
+            return True
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_tarif import wants_tarif
+
+        if wants_tarif(message):
             return True
     except Exception:
         pass
@@ -1114,6 +1128,13 @@ def _maybe_programlama_instant_reply_impl(
                 parts.append(enrich_scaffold_report(result, fm))
                 if fm.get("focus_rel"):
                     focus_meta = fm
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_tarif import run_tarif, wants_tarif
+
+        if wants_tarif(message):
+            parts.append(run_tarif(message, workspace_root))
     except Exception:
         pass
     try:
