@@ -6603,6 +6603,22 @@ async function handleCodeTreeClick(ev) {
 
 async function openProgramlamaWorkspaceFile(rel) {
   try {
+    const clean = String(rel || "").replace(/\\/g, "/");
+    if (clean.startsWith("klasor/")) {
+      const res = await fetch(`${API}/api/programlama/calisma-oku?rel=${encodeURIComponent(clean)}`);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.ok === false) {
+        throw new Error(typeof data.detail === "string" ? data.detail : "Dosya okunamadı.");
+      }
+      atolyeOpenRel = data.rel || clean;
+      if (el.codeEditor) el.codeEditor.value = data.text || "";
+      applyLanguageFromFilename(clean);
+      updateProgramlamaActiveFileLabel();
+      setCodeOutput(`Açıldı: ${atolyeOpenRel}`);
+      flashRuzgarDurum(`Dosya açıldı: ${atolyeOpenRel}`);
+      el.codeEditor?.focus();
+      return;
+    }
     const text = await readWorkspaceText(rel);
     atolyeOpenRel = rel;
     if (el.codeEditor) el.codeEditor.value = text;
@@ -10406,6 +10422,19 @@ async function saveProgramlamaAtolyeBuffer() {
 
 async function writeProgramlamaText(rel, code) {
   const clean = String(rel || "").replace(/\\/g, "/");
+  if (clean.startsWith("klasor/")) {
+    const res = await fetch(`${API}/api/programlama/calisma-yaz`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rel: clean, text: code }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || j.ok === false) {
+      const detail = j.detail;
+      return { ok: false, error: typeof detail === "string" ? detail : j.error || "Yazılamadı." };
+    }
+    return { ok: true };
+  }
   if (window.ruzgarApi?.writeText) {
     const w = await window.ruzgarApi.writeText(rel, code);
     if (w?.ok) return w;
@@ -16059,6 +16088,16 @@ async function sendMessageWithText(t, opts = {}) {
       reason: understanding?.instantReason || "prefer_chat",
       intent: understanding?.intent,
     });
+  }
+
+  if ((currentMode === "genel" || currentMode === "programlama") && window.ruzgarEmirYalan) {
+    const yalan = await Promise.resolve(window.ruzgarEmirYalan(dispatchText));
+    if (yalan && yalan.handled) {
+      appendBubble("assistant", String(yalan.reply || "Bunu yapmadım. Dosya değişmedi."));
+      scrollChatToBottom();
+      finishMotorInstant(currentMode === "programlama" ? "Programlama" : "Ana Motor");
+      return;
+    }
   }
 
   if (currentMode === "hizir" && hizirChatImpliesProductScan(text)) {

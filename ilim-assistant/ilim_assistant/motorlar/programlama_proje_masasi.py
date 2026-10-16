@@ -6,6 +6,8 @@ Yol projects/ dışına çıkamaz. Ajan masası model çağırmaz; bilinen emri 
 
 from __future__ import annotations
 
+import json
+import os
 import re
 import shutil
 from pathlib import Path
@@ -290,6 +292,154 @@ def ajan_uygula(root: Path, rel: str, emir: str, dosya: str = "") -> dict:
         "Bu emri sayfada uygulayamam. "
         "Başlık, paragraf ekle, buton ekle, yerine yaz, basit site yap."
     )
+
+
+def _pin_dosyasi() -> Path:
+    kok = Path(os.environ.get("LOCALAPPDATA") or Path.home())
+    return kok / "Ruzgar" / "calisma_klasoru.json"
+
+
+def _icinde(yol: Path, ust: Path) -> bool:
+    try:
+        yol.resolve().relative_to(ust.resolve())
+        return True
+    except ValueError:
+        return False
+
+
+def klasor_guvenli(repo: Path, klasor: str) -> Path:
+    """Mimarın gösterdiği klasör. Uygulama ağacı ve sürücü kökü kapalı."""
+    raw = (klasor or "").strip().strip('"').strip("'")
+    if not raw:
+        raise ValueError("Klasör yok.")
+    path = Path(raw).expanduser()
+    if not path.is_absolute():
+        raise ValueError("Klasör tam yol olmalı.")
+    if not path.exists() or not path.is_dir():
+        raise ValueError("Klasör bulunamadı.")
+    if path.is_symlink():
+        raise ValueError("Bağ klasör açılmaz.")
+    resolved = path.resolve()
+    if resolved.parent == resolved:
+        raise ValueError("Sürücü kökü açılmaz.")
+    base = Path(repo).resolve()
+    kapali = (base / "ilim-assistant", base / "ruzgar-desktop", base / ".git")
+    if resolved == base:
+        raise ValueError("Uygulama kökü açılmaz.")
+    for dal in kapali:
+        if resolved == dal or _icinde(resolved, dal):
+            raise ValueError("Uygulama klasörü açılmaz.")
+        if dal.exists() and _icinde(dal.resolve(), resolved):
+            raise ValueError("Uygulama klasörünü içeren yer açılmaz.")
+    return resolved
+
+
+def klasor_kaydet(repo: Path, klasor: str) -> dict:
+    pin = _pin_dosyasi()
+    pin.parent.mkdir(parents=True, exist_ok=True)
+    if not (klasor or "").strip():
+        if pin.is_file():
+            pin.unlink()
+        return {"ok": True, "klasor": ""}
+    hedef = klasor_guvenli(repo, klasor)
+    pin.write_text(json.dumps({"klasor": str(hedef)}, ensure_ascii=False), encoding="utf-8")
+    return {"ok": True, "klasor": str(hedef)}
+
+
+def klasor_oku() -> str:
+    pin = _pin_dosyasi()
+    if not pin.is_file():
+        return ""
+    try:
+        data = json.loads(pin.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return ""
+    return str(data.get("klasor") or "")
+
+
+def _klasor_hedef(repo: Path, rel: str) -> tuple[Path, str]:
+    kayit = klasor_oku()
+    if not kayit:
+        raise ValueError("Çalışma klasörü seçilmedi.")
+    kok = klasor_guvenli(repo, kayit)
+    temiz = (rel or "").replace("\\", "/").lstrip("/")
+    if temiz.startswith("klasor/"):
+        temiz = temiz[len("klasor/") :]
+    if not temiz or ":" in temiz or "\x00" in temiz:
+        raise ValueError("Dosya adı geçersiz.")
+    parts = [p for p in temiz.split("/") if p not in ("", ".")]
+    if not parts or any(p == ".." or p.startswith(".") for p in parts):
+        raise ValueError("Dosya adı geçersiz.")
+    norm = "/".join(parts)
+    target = (kok / norm).resolve()
+    if not _icinde(target, kok):
+        raise ValueError("Klasör dışı.")
+    if target == kok:
+        raise ValueError("Klasörün kendisi dosya değildir.")
+    return target, norm
+
+
+def klasor_liste(repo: Path) -> dict:
+    kayit = klasor_oku()
+    if not kayit:
+        return {"ok": True, "klasor": "", "dosyalar": []}
+    kok = klasor_guvenli(repo, kayit)
+    atla = {"__pycache__", "node_modules", ".git", ".pytest_cache"}
+    dosyalar: list[dict] = []
+    for path in kok.rglob("*"):
+        if len(dosyalar) >= 80:
+            break
+        if any(parca in atla or parca.startswith(".") for parca in path.relative_to(kok).parts):
+            continue
+        if path.is_symlink() or not path.is_file():
+            continue
+        dosyalar.append(
+            {
+                "name": path.name,
+                "rel": "klasor/" + path.relative_to(kok).as_posix(),
+            }
+        )
+    dosyalar.sort(key=lambda row: row["rel"].lower())
+    return {"ok": True, "klasor": str(kok), "dosyalar": dosyalar}
+
+
+def klasor_oku_dosya(repo: Path, rel: str) -> dict:
+    target, norm = _klasor_hedef(repo, rel)
+    if not target.is_file() or target.is_symlink():
+        raise ValueError("Dosya yok.")
+    if target.suffix.lower() not in _YAZI_UZANTI and target.suffix.lower() not in _ONIZLEME_MIME:
+        raise ValueError("Bu dosya okunmaz.")
+    if target.stat().st_size > _YAZI_BAYT:
+        raise ValueError("Dosya çok büyük.")
+    text = target.read_text(encoding="utf-8")
+    return {"ok": True, "rel": "klasor/" + norm, "text": text}
+
+
+def klasor_yaz(repo: Path, rel: str, text: str) -> dict:
+    target, norm = _klasor_hedef(repo, rel)
+    if target.exists() and (target.is_dir() or target.is_symlink()):
+        raise ValueError("Bu yere yazılmaz.")
+    if target.suffix.lower() not in _YAZI_UZANTI:
+        raise ValueError("Bu uzantı yazılmaz.")
+    body = text if text is not None else ""
+    raw = body.encode("utf-8")
+    if len(raw) > _YAZI_BAYT:
+        raise ValueError("Metin çok büyük.")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(body, encoding="utf-8")
+    return {"ok": True, "rel": "klasor/" + norm, "bytes": len(raw)}
+
+
+def klasor_onizleme(repo: Path, rel: str) -> tuple[Path, str]:
+    target, _norm = _klasor_hedef(repo, rel)
+    if not target.is_file() or target.is_symlink():
+        raise ValueError("Önizlenecek dosya yok.")
+    if target.stat().st_size > _ONIZLEME_BAYT:
+        raise ValueError("Dosya önizleme için büyük.")
+    mime = _ONIZLEME_MIME.get(target.suffix.lower())
+    if not mime:
+        raise ValueError("Bu dosya önizlenmez.")
+    return target, mime
 
 
 def onizleme_dosyasi(root: Path, rel: str) -> tuple[Path, str]:

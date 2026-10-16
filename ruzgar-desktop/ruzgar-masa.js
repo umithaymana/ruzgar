@@ -1390,7 +1390,14 @@
   function masaKomutCoz(text) {
     const raw = String(text || "").trim();
     if (!raw || raw.length > 9000) return null;
-    const low = masaHarf(raw);
+    const sade = raw
+      .replace(/^[Ll]ütfen\s+/, "")
+      .replace(/\s+(mısın|misin|misiniz|mısınız|musun|musunuz)[.!?]*$/i, "")
+      .replace(/\?+$/g, "")
+      .trim();
+    const low = typeof window.ruzgarKomutGovdesi === "function"
+      ? window.ruzgarKomutGovdesi(sade)
+      : masaHarf(sade);
     if (/^(masa yardim|calisma masasi yardim|masa komutlari)$/.test(low)) {
       return { handled: true, reply: masaYardim() };
     }
@@ -1409,13 +1416,13 @@
     if (/^(sunumu ac|sunumu goster|sunum ac|sunum goster)$/.test(low)) {
       return { handled: true, reply: masaSayfa("sunum") };
     }
-    let m = raw.match(/^(belgeye yaz|belge yaz|belgeye ekle|belge ekle)\s*[:\-]?\s*([\s\S]+)$/i);
+    let m = sade.match(/^(belgeye yaz|belge yaz|belgeye ekle|belge ekle)\s*[:\-]?\s*([\s\S]+)$/i);
     if (m) return { handled: true, reply: masaBelgeYaz(m[2], /ekle/i.test(m[1])) };
-    if (/^(belgeyi temizle|belge temizle)$/i.test(raw)) {
+    if (/^(belgeyi temizle|belge temizle)$/i.test(sade)) {
       return { handled: true, reply: masaUygula({ eylem: "belge.temizle" }) };
     }
-    if (/^tablo\s*:\s*\n/i.test(raw)) {
-      const lines = raw.split(/\n/).slice(1);
+    if (/^tablo\s*:\s*\n/i.test(sade)) {
+      const lines = sade.split(/\n/).slice(1);
       const notes = [];
       lines.forEach(function (line) {
         const cell = line.trim().match(/^([A-La-l])(\d{1,2})\s*(?:=|:)?\s*(.+)$/);
@@ -1424,28 +1431,28 @@
       if (!notes.length) return { handled: true, reply: "Tablo satırı A1 10 biçiminde olmalı." };
       return { handled: true, reply: notes.join(" ") };
     }
-    m = raw.match(/^(?:tablo|hucre|hücre)\s+([A-La-l])(\d{1,2})\s*(?:=|:)?\s*([\s\S]+)$/i);
+    m = sade.match(/^(?:tablo|hucre|hücre)\s+([A-La-l])(\d{1,2})\s*(?:=|:)?\s*([\s\S]+)$/i);
     if (m) return { handled: true, reply: masaHucreYaz(m[1], m[2], m[3]) };
-    if (/^(tabloyu temizle|tablo temizle)$/i.test(raw)) {
+    if (/^(tabloyu temizle|tablo temizle)$/i.test(sade)) {
       return { handled: true, reply: masaUygula({ eylem: "tablo.temizle" }) };
     }
-    m = raw.match(/^(?:renk)\s+([a-zA-ZçğıöşüÇĞİÖŞÜ]+)\s*$/i);
+    m = sade.match(/^(?:renk)\s+([a-zA-ZçğıöşüÇĞİÖŞÜ]+)\s*$/i);
     if (m) return { handled: true, reply: masaUygula({ eylem: "cizim.renk", ad: m[1] }) };
-    m = raw.match(/^(?:çizgi|cizgi)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*$/i);
+    m = sade.match(/^(?:çizgi|cizgi)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*$/i);
     if (m) return { handled: true, reply: masaUygula({ eylem: "cizim.cizgi", x1: m[1], y1: m[2], x2: m[3], y2: m[4] }) };
-    m = raw.match(/^(?:kutu)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s*$/i);
+    m = sade.match(/^(?:kutu)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s*$/i);
     if (m) return { handled: true, reply: masaUygula({ eylem: "cizim.kutu", x: m[1], y: m[2], w: m[3], h: m[4] }) };
-    m = raw.match(/^(?:daire)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s*$/i);
+    m = sade.match(/^(?:daire)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s*$/i);
     if (m) return { handled: true, reply: masaUygula({ eylem: "cizim.daire", x: m[1], y: m[2], rx: m[3], ry: m[4] }) };
-    if (/^(çizimi temizle|cizimi temizle|çizim temizle|cizim temizle)$/i.test(raw)) {
+    if (/^(çizimi temizle|cizimi temizle|çizim temizle|cizim temizle)$/i.test(sade)) {
       return { handled: true, reply: masaUygula({ eylem: "cizim.temizle" }) };
     }
-    m = raw.match(/^slayt ekle\s*[:\-]?\s*([\s\S]+?)\s*(?:\|\s*|\n)\s*([\s\S]+)$/i);
+    m = sade.match(/^slayt ekle\s*[:\-]?\s*([\s\S]+?)\s*(?:\|\s*|\n)\s*([\s\S]+)$/i);
     if (m) return { handled: true, reply: masaSlaytEkle(m[1], m[2]) };
-    if (/^(sunumu temizle|sunum temizle|slaytlari temizle|slaytları temizle)$/i.test(raw)) {
+    if (/^(sunumu temizle|sunum temizle|slaytlari temizle|slaytları temizle)$/i.test(sade)) {
       return { handled: true, reply: masaUygula({ eylem: "sunum.temizle" }) };
     }
-    if (/^(sun|sunumu aç|sunumu ac|sunumu başlat|sunumu baslat)$/i.test(raw)) {
+    if (/^(sun|sunumu aç|sunumu ac|sunumu başlat|sunumu baslat)$/i.test(sade)) {
       return { handled: true, reply: masaUygula({ eylem: "sunum.sun" }) };
     }
     return null;

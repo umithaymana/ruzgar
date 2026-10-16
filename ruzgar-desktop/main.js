@@ -555,8 +555,22 @@ function menuProgramlama(mainWin) {
   ];
 }
 
+function masaMenusu(mainWin) {
+  return {
+    label: "masa",
+    submenu: [
+      { label: "Sohbet", click: () => sendMenu(mainWin, "masa:sohbet") },
+      { label: "Belge", click: () => sendMenu(mainWin, "masa:belge") },
+      { label: "Tablo", click: () => sendMenu(mainWin, "masa:tablo") },
+      { label: "Çizim", click: () => sendMenu(mainWin, "masa:cizim") },
+      { label: "Sunum", click: () => sendMenu(mainWin, "masa:sunum") },
+    ],
+  };
+}
+
 function buildMenu(mainWin, mode) {
-  if (String(mode || "") === "programlama") {
+  const motor = String(mode || "genel");
+  if (motor === "programlama") {
     return Menu.buildFromTemplate(menuProgramlama(mainWin));
   }
   const template = [
@@ -651,17 +665,8 @@ function buildMenu(mainWin, mode) {
         },
       ],
     },
-    {
-      label: "masa",
-      submenu: [
-        { label: "Sohbet", click: () => sendMenu(mainWin, "masa:sohbet") },
-        { label: "Belge", click: () => sendMenu(mainWin, "masa:belge") },
-        { label: "Tablo", click: () => sendMenu(mainWin, "masa:tablo") },
-        { label: "Çizim", click: () => sendMenu(mainWin, "masa:cizim") },
-        { label: "Sunum", click: () => sendMenu(mainWin, "masa:sunum") },
-      ],
-    },
   ];
+  if (motor === "genel") template.push(masaMenusu(mainWin));
   return Menu.buildFromTemplate(template);
 }
 

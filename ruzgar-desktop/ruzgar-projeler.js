@@ -155,11 +155,69 @@
     });
   }
 
+  function komutGovdesi(text) {
+    let low = harf(text);
+    if (!low || low.length > 600) return "";
+    const kolon = low.indexOf(":");
+    let bas = kolon >= 0 ? low.slice(0, kolon) : low;
+    const son = kolon >= 0 ? low.slice(kolon) : "";
+    bas = bas.replace(/[?!]+/g, " ").replace(/\s+/g, " ").trim();
+    bas = bas.replace(/^(lutfen|bana|rica etsem)\s+/, "");
+    bas = bas.replace(/\s+(lutfen|olur mu|yapar misin|yapar misiniz|misin|misiniz|musun|musunuz)$/, "");
+    bas = bas.replace(/\b(gosterir|gosteririm)\b/g, "goster");
+    bas = bas.replace(/\b(acar|acarim)\b/g, "ac");
+    bas = bas.replace(/\b(yazar|yazarim)\b/g, "yaz");
+    bas = bas.replace(/\byapar\b/g, "yap");
+    bas = bas.replace(/\b(ekler|eklerim)\b/g, "ekle");
+    bas = bas.replace(/\b(siler|silerim)\b/g, "sil");
+    return (bas.replace(/\s+/g, " ").trim() + son).trim();
+  }
+
+  function soruMu(low) {
+    return /\b(nedir|nasil|anlat|neden)\b/.test(low);
+  }
+
+  function sozlukBul(low) {
+    if (masaSozluk[low]) return masaSozluk[low];
+    const anahtarlar = Object.keys(masaSozluk).sort(function (a, b) { return b.length - a.length; });
+    for (let i = 0; i < anahtarlar.length; i++) {
+      const phrase = anahtarlar[i];
+      const kacis = phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      if (new RegExp("(^|\\s)" + kacis + "(\\s|$)").test(low)) return masaSozluk[phrase];
+    }
+    return "";
+  }
+
   function ajanEmriMi(low) {
     return /^(basligi|baslik)\b/.test(low)
       || /^(paragraf|buton)\b/.test(low)
       || /\byerine\b.+\byaz$/.test(low)
       || /^(basit site yap|statik site yap|web sitesi yap|bir site yap|site yap|kucuk python araci yap|python araci yap|python cli yap|komut satiri araci yap|kucuk uygulama yap)\b/.test(low);
+  }
+
+  function emirGibi(low) {
+    return /\b(goster|ac|yaz|ekle|sil|kaydet|yap|degistir|ciz|cizgi|kutu|daire|slayt|baslik|paragraf|buton|temizle)\b/.test(low);
+  }
+
+  function yakinSoz(low) {
+    const raf = [
+      ["kod", "kodları göster"],
+      ["proje", "projeyi göster"],
+      ["baslik", "başlığı … yap"],
+      ["paragraf", "paragraf ekle: …"],
+      ["buton", "buton ekle: …"],
+      ["belge", "belgeye yaz: …"],
+      ["tablo", "tablo A1 = 10"],
+      ["ciz", "çizgi 40 40 400 200"],
+      ["slayt", "slayt ekle: Başlık | metin"],
+      ["site", "site yap"],
+      ["kaydet", "kaydet"],
+      ["dosya", "dosyaları göster"],
+    ];
+    for (let i = 0; i < raf.length; i++) {
+      if (low.indexOf(raf[i][0]) >= 0) return raf[i][1];
+    }
+    return "masa komutları";
   }
 
   function yol(rel) {
@@ -179,6 +237,121 @@
       throw new Error(typeof detail === "string" ? detail : data.error || "İstek olmadı.");
     }
     return data;
+  }
+
+  async function klasorKaydet(yolMetin) {
+    return apiJson(apiKok() + "/api/programlama/calisma-klasoru", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ yol: yolMetin || "" }),
+    });
+  }
+
+  async function klasorListe() {
+    return apiJson(apiKok() + "/api/programlama/calisma-klasoru");
+  }
+
+  async function klasorSayfadaGoster() {
+    const data = await klasorListe();
+    if (!data.klasor) {
+      durum("Çalışma klasörü seçilmedi.");
+      return { handled: true, reply: "Çalışma klasörü seçilmedi. Şöyle söyle: çalışma klasörü: tam yol" };
+    }
+    if (window.switchMode) window.switchMode("programlama");
+    secili = "klasor";
+    dosyaEl.innerHTML = "";
+    (data.dosyalar || []).forEach(function (item) {
+      const li = document.createElement("li");
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = yol(item.rel).replace(/^klasor\//, "");
+      btn.dataset.rel = item.rel;
+      btn.addEventListener("click", function () { void dosyaAc(item.rel); });
+      li.appendChild(btn);
+      dosyaEl.appendChild(li);
+    });
+    if (!(data.dosyalar || []).length) dosyaEl.innerHTML = "<li>Dosya yok.</li>";
+    const html = (data.dosyalar || []).find(function (item) { return /index\.html?$/i.test(item.rel); });
+    if (html) {
+      onizleme.src = apiKok() + "/api/programlama/calisma-onizleme/" + encodeURI(yol(html.rel).replace(/^klasor\//, "")) + "?t=" + Date.now();
+    }
+    durum(data.klasor);
+    gorunumKur("proje");
+    const adlar = (data.dosyalar || []).slice(0, 12).map(function (item) { return yol(item.rel).replace(/^klasor\//, ""); });
+    return {
+      handled: true,
+      reply: "Klasör açık: " + data.klasor + (adlar.length ? "\n" + adlar.join(", ") : "\nDosya yok."),
+    };
+  }
+
+  async function klasorDosyaOku(ad) {
+    const data = await apiJson(apiKok() + "/api/programlama/calisma-oku?rel=" + encodeURIComponent(ad));
+    if (window.switchMode) window.switchMode("programlama");
+    acikDosya = data.rel;
+    if (typeof atolyeOpenRel !== "undefined") atolyeOpenRel = data.rel;
+    const editor = document.getElementById("code-editor");
+    if (editor) editor.value = data.text || "";
+    if (/\.html?$/i.test(data.rel)) {
+      onizleme.src = apiKok() + "/api/programlama/calisma-onizleme/" + encodeURI(yol(data.rel).replace(/^klasor\//, "")) + "?t=" + Date.now();
+    }
+    durum(data.rel);
+    const metin = String(data.text || "");
+    const kesik = metin.length > 500 ? metin.slice(0, 500) + "…" : metin;
+    return { handled: true, reply: data.rel + " okundu.\n" + (kesik || "(boş)") };
+  }
+
+  async function klasorDosyaYaz(ad, metin) {
+    const data = await apiJson(apiKok() + "/api/programlama/calisma-yaz", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rel: ad, text: metin }),
+    });
+    durum("Yazıldı: " + data.rel);
+    return { handled: true, reply: "Yazıldı: " + data.rel };
+  }
+
+  async function klasorSozu(raw) {
+    const yazi = String(raw || "").trim();
+    let m = yazi.match(/^(?:çalışma klasörü|calisma klasoru)\s*:\s*(.+)$/i);
+    if (m) {
+      try {
+        const data = await klasorKaydet(m[1].trim());
+        const goster = await klasorSayfadaGoster();
+        return { handled: true, reply: "Klasör kilitlendi: " + data.klasor + "\n" + (goster.reply || "") };
+      } catch (err) {
+        return { handled: true, reply: "Klasör açılmadı. " + (err.message || "Yol geçersiz.") };
+      }
+    }
+    if (/^(klasörü bırak|klasoru birak)$/i.test(yazi)) {
+      await klasorKaydet("");
+      secili = "";
+      durum("Çalışma klasörü bırakıldı. projects/ duruyor.");
+      return { handled: true, reply: "Çalışma klasörü bırakıldı. Dosyalar silinmedi." };
+    }
+    if (/^(klasörü göster|klasoru goster|çalışma klasörü|calisma klasoru)$/i.test(yazi)) {
+      try {
+        return await klasorSayfadaGoster();
+      } catch (err) {
+        return { handled: true, reply: err.message || "Klasör okunamadı." };
+      }
+    }
+    m = yazi.match(/^(?:dosyayı oku|dosyayi oku)\s*:\s*(.+)$/i);
+    if (m) {
+      try {
+        return await klasorDosyaOku(m[1].trim());
+      } catch (err) {
+        return { handled: true, reply: "Okunamadı. " + (err.message || "") };
+      }
+    }
+    m = yazi.match(/^(?:dosyaya yaz|dosyaya ekle)\s*:\s*(.+?)\s*\|\s*([\s\S]+)$/i);
+    if (m) {
+      try {
+        return await klasorDosyaYaz(m[1].trim(), m[2]);
+      } catch (err) {
+        return { handled: true, reply: "Yazılmadı. " + (err.message || "") };
+      }
+    }
+    return null;
   }
 
   async function listele(rel) {
@@ -320,6 +493,14 @@
       durum("Önce bir proje seç.");
       return;
     }
+    if (secili === "klasor") {
+      const adDis = window.prompt("Dosya adı (örnek not.txt)", "not.txt");
+      if (adDis == null) return;
+      klasorDosyaYaz(adDis, "").then(function () { return klasorSayfadaGoster(); }).catch(function (err) {
+        durum(err.message || "Eklenemedi.");
+      });
+      return;
+    }
     const ad = window.prompt("Dosya adı (örnek css/ek.css veya not.txt)", "not.txt");
     if (ad == null) return;
     const ek = yol(ad).replace(/^projects\//, "");
@@ -344,8 +525,12 @@
 
   async function dosyaSil() {
     const rel = yol(typeof atolyeOpenRel === "string" ? atolyeOpenRel : acikDosya);
-    if (!rel || rel.indexOf("projects/") !== 0) {
-      durum("Silinecek dosya projects/ altında değil.");
+    if (!rel || (rel.indexOf("projects/") !== 0 && rel.indexOf("klasor/") !== 0)) {
+      durum("Silinecek dosya seçili değil.");
+      return;
+    }
+    if (rel.indexOf("klasor/") === 0) {
+      durum("Gösterilen klasördeki dosya buradan silinmez.");
       return;
     }
     if (!window.confirm(rel + " silinsin mi?")) return;
@@ -372,6 +557,10 @@
   async function projeSil() {
     if (!secili) {
       durum("Önce bir proje seç.");
+      return;
+    }
+    if (secili === "klasor") {
+      durum("Bu klasör silinmez. Bırakmak için: klasörü bırak");
       return;
     }
     if (!window.confirm(secili + " klasörü silinsin mi?")) return;
@@ -579,19 +768,47 @@
     if (/\.(html|htm|css|js)$/i.test(clean)) goster(projeAdi(clean) ? "projects/" + projeAdi(clean) + "/index.html" : clean);
     if (secili) void dosyalariYaz(secili);
   };
+  window.ruzgarKomutGovdesi = komutGovdesi;
+
   window.ruzgarProjeKomut = function (text) {
     const raw = String(text || "").trim();
-    if (!raw || raw.length > 80 || raw.indexOf("?") >= 0) return null;
+    if (!raw || raw.length > 600) return null;
     return sozluguYukle().then(function () {
       return projeKomutCoz(raw);
     });
   };
 
+  window.ruzgarEmirYalan = function (text) {
+    const raw = String(text || "").trim();
+    if (!raw || raw.length > 600) return null;
+    return sozluguYukle().then(function () {
+      const low = komutGovdesi(raw);
+      if (!low || soruMu(low) || !emirGibi(low)) return null;
+      if (sozlukBul(low)) return null;
+      if (/^(calisma klasoru|klasoru goster|klasoru birak|dosyayi oku|dosyaya yaz|dosyaya ekle)\b/.test(low)) return null;
+      if (/^(?:projeyi|proje|siteyi|vitrini)\s+(?:goster|ac)\b/.test(low)) return null;
+      if (programlamaAcik() && ajanEmriMi(low)) return null;
+      if (ajanEmriMi(low)) {
+        return { handled: true, reply: "Bunu yapmadım. Dosya değişmedi. Programlama sayfasında söyle: " + yakinSoz(low) + "." };
+      }
+      return { handled: true, reply: "Bunu yapmadım. Dosya değişmedi. Şöyle söyle: " + yakinSoz(low) + "." };
+    });
+  };
+
+  function klasorSozuMu(raw) {
+    const yazi = String(raw || "").trim();
+    return /^(?:çalışma klasörü|calisma klasoru)\s*:/i.test(yazi)
+      || /^(?:klasörü bırak|klasoru birak|klasörü göster|klasoru goster|çalışma klasörü|calisma klasoru)$/i.test(yazi)
+      || /^(?:dosyayı oku|dosyayi oku)\s*:/i.test(yazi)
+      || /^(?:dosyaya yaz|dosyaya ekle)\s*:/i.test(yazi);
+  }
+
   function projeKomutCoz(raw) {
-    const low = harf(raw);
-    if (/(nedir|nasil|anlat|neden)/.test(low)) return null;
-    if (Object.prototype.hasOwnProperty.call(masaSozluk, low)) {
-      const komut = masaSozluk[low];
+    if (klasorSozuMu(raw)) return klasorSozu(raw);
+    const low = komutGovdesi(raw);
+    if (!low || soruMu(low)) return null;
+    const komut = sozlukBul(low);
+    if (komut) {
       window.ruzgarProgramlamaMenu(komut);
       return { handled: true, reply: masaCevap[komut] || "Tamam." };
     }
@@ -604,7 +821,7 @@
     }
     else if (/^(projeyi goster|projeyi ac|proje goster|proje ac)$/.test(low)) ad = "";
     else if (programlamaAcik() && ajanEmriMi(low)) {
-      return ajanYap(raw).then(function (sonuc) {
+      return ajanYap(raw.replace(/^[Ll]ütfen\s+/, "").replace(/\?+$/g, "").trim()).then(function (sonuc) {
         return { handled: true, reply: sonuc.reply };
       });
     }

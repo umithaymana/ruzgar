@@ -5358,6 +5358,66 @@ def api_programlama_proje_ajan(body: ProgramlamaProjeAjanBody):
     return out
 
 
+class CalismaKlasoruBody(BaseModel):
+    yol: str = ""
+
+
+@app.get("/api/programlama/calisma-klasoru")
+def api_calisma_klasoru_get():
+    from ilim_assistant.motorlar.programlama_proje_masasi import klasor_liste
+
+    try:
+        return klasor_liste(REPO_ROOT)
+    except ValueError as exc:
+        raise _proje_masa_hata(exc) from exc
+
+
+@app.post("/api/programlama/calisma-klasoru")
+def api_calisma_klasoru_post(body: CalismaKlasoruBody):
+    from ilim_assistant.motorlar.programlama_proje_masasi import klasor_kaydet
+
+    try:
+        return klasor_kaydet(REPO_ROOT, body.yol)
+    except ValueError as exc:
+        raise _proje_masa_hata(exc) from exc
+
+
+@app.get("/api/programlama/calisma-oku")
+def api_calisma_oku(rel: str = ""):
+    from ilim_assistant.motorlar.programlama_proje_masasi import klasor_oku_dosya
+
+    try:
+        return klasor_oku_dosya(REPO_ROOT, rel)
+    except ValueError as exc:
+        raise _proje_masa_hata(exc) from exc
+
+
+class CalismaYaziBody(BaseModel):
+    rel: str = ""
+    text: str = ""
+
+
+@app.post("/api/programlama/calisma-yaz")
+def api_calisma_yaz(body: CalismaYaziBody):
+    from ilim_assistant.motorlar.programlama_proje_masasi import klasor_yaz
+
+    try:
+        return klasor_yaz(REPO_ROOT, body.rel, body.text)
+    except ValueError as exc:
+        raise _proje_masa_hata(exc) from exc
+
+
+@app.get("/api/programlama/calisma-onizleme/{rel:path}")
+def api_calisma_onizleme(rel: str):
+    from ilim_assistant.motorlar.programlama_proje_masasi import klasor_onizleme
+
+    try:
+        target, mime = klasor_onizleme(REPO_ROOT, rel)
+    except ValueError as exc:
+        raise _proje_masa_hata(exc) from exc
+    return FileResponse(str(target), media_type=mime)
+
+
 @app.post("/api/programlama/serve")
 def api_programlama_serve(body: ProgramlamaRunBody):
     """Faz 8 — FastAPI arka plan (başlat/durdur). action=start|stop|status."""
