@@ -2,6 +2,7 @@
 """Programlama çalışma sayfası — projects/ altını gör, yaz, sil, emri uygula.
 
 Yol projects/ dışına çıkamaz. Bak kapısı bir cümle ister; modelin sözü dosyaya yazılmaz.
+Kilitli klasörde sayma, metin dosyası, ara başlık, http bağlantı, başlık rengi, resim ve ad değiştirme de aynı kapıdadır. Silme yok.
 """
 
 from __future__ import annotations
@@ -12,7 +13,7 @@ import re
 import shutil
 from pathlib import Path
 
-PROJE_MASA_VERSION = "programlama-proje-masa-v3-2026-10-17"
+PROJE_MASA_VERSION = "programlama-proje-masa-v4-2026-10-17"
 
 _DENEME = re.compile(
     r"^(smoke-|t-|agent-|_|"
@@ -465,6 +466,24 @@ _KALIP: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("kilit", re.compile(r"^(?:çalışma klasörü|calisma klasoru)\s*:\s*(?P<yol>.+)$", re.I)),
     ("birak", re.compile(r"^(?:klasörü bırak|klasoru birak)$", re.I)),
     ("goster_klasor", re.compile(r"^(?:klasörü göster|klasoru goster|çalışma klasörü|calisma klasoru)$", re.I)),
+    ("say", re.compile(r"^(?:klasördekileri|klasordekileri)\s+say$", re.I)),
+    ("dosya_not", re.compile(r"^(?:not defteri|not defter)\s+yap$", re.I)),
+    ("dosya_yap", re.compile(r"^(?P<ad>\S+)\s+dosyas[ıi]\s+yap$", re.I)),
+    ("ad_degistir", re.compile(
+        r"^(?P<eski>[A-Za-z0-9çğıöşüÇĞİÖŞÜ._-]+)\s+sayfas[ıi]n[ıi]n\s+ad[ıi]n[ıi]\s+"
+        r"(?P<yeni>[A-Za-z0-9çğıöşüÇĞİÖŞÜ._-]+)\s+yap$",
+        re.I,
+    )),
+    ("baslik_renk", re.compile(
+        r"^ba[sş]l[ıi]k\s+rengini\s+(?P<renk>siyah|mavi|kırmızı|kirmizi|yeşil|yesil)\s+yap$",
+        re.I,
+    )),
+    ("ara_baslik", re.compile(r"^ara\s+ba[sş]l[ıi]k(?:\s+ekle)?\s*[:\-]?\s*(?P<metin>.+)$", re.I)),
+    ("baglanti", re.compile(
+        r"^ba[gğ]lant[ıi](?:\s+ekle)?\s*[:\-]\s*(?P<soz>.+?)\s*\|\s*(?P<adres>https?://\S+)$",
+        re.I,
+    )),
+    ("resim", re.compile(r"^resim\s+koy\s*[:\-]\s*(?P<ad>\S+)$", re.I)),
     ("yaz_eski", re.compile(r"^(?:dosyaya yaz|dosyaya ekle)\s*:\s*(?P<ad>.+?)\s*\|\s*(?P<metin>[\s\S]+)$", re.I)),
     ("oku_eski", re.compile(r"^(?:dosyayı oku|dosyayi oku)\s*:\s*(?P<ad>.+)$", re.I)),
     ("yaz_duz", re.compile(r"^(?P<ad>\S+)\s+dosyas[ıi]na\s+(?P<metin>.+?)\s+yaz$", re.I)),
@@ -484,21 +503,31 @@ _KALIP: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("buton", re.compile(r"^buton(?:\s+ekle)?\s*[:\-]?\s*(?P<metin>.+)$", re.I)),
 )
 _AYIR = re.compile(
-    r"\s*,\s*(?=(?:başlığı|basligi|başlık|baslik|paragraf|buton|sayfayı|sayfayi|sayfa\b|\S+\s+sayfas|\S+\s+dosyas))"
+    r"\s*,\s*(?=(?:başlığı|basligi|başlık|baslik|ara\s+ba[sş]l|ba[gğ]lant|resim\s+koy|paragraf|buton|sayfayı|sayfayi|sayfa\b|\S+\s+sayfas|\S+\s+dosyas|klasördekileri|klasordekileri|not\s+defter))"
     r"|\s+sonra\s+",
     re.I,
 )
 _TARIF = {"baslik", "paragraf", "buton", "sayfa", "sayfa_ad", "sayfa_goster", "sayfa_goster_ad", "yerine"}
+_EL = {"say", "dosya_yap", "ara_baslik", "baglanti", "baslik_renk", "resim", "ad_degistir"}
 _USTA_IZ = re.compile(
-    r"sayfas[ıi]na|sayfas[ıi]nda|butonu\s+(?:koy|ekle)|başlığına|basligina|baştan\s+tasarla|bastan\s+tasarla|yerine|bak\s+ve\s+s[öo]yle|\buygula\b",
+    r"sayfas[ıi]na|sayfas[ıi]nda|butonu\s+(?:koy|ekle)|başlığına|basligina|baştan\s+tasarla|bastan\s+tasarla|yerine|bak\s+ve\s+s[öo]yle|\buygula\b"
+    r"|klasördekileri|klasordekileri|dosyas[ıi]\s+yap|not\s+defter|ara\s+ba[sş]l|ba[gğ]lant|rengini|resim\s+koy|ad[ıi]n[ıi]",
     re.I,
 )
+_RENK_HEX = {"siyah": "#111111", "mavi": "#1d4e89", "kirmizi": "#9b2c2c", "yesil": "#1f7a4d"}
+_RESIM_UZANTI = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
+_ADRES = re.compile(r"^https?://[A-Za-z0-9._~:/?#\[\]@!$&()*+,;=%-]{1,300}$")
 _ONERI = (
     ("baslik", re.compile(r"^(?:başlığı|basligi|başlık|baslik)\s+(?P<metin>.+?)\s+yap$", re.I)),
     ("paragraf", re.compile(r"^paragraf(?:\s+ekle)?\s*[:\-]\s*(?P<metin>.+)$", re.I)),
     ("buton", re.compile(r"^buton(?:\s+ekle)?\s*[:\-]\s*(?P<metin>.+)$", re.I)),
     ("sayfa_goster", re.compile(r"^(?:sayfayı göster|sayfayi goster)$", re.I)),
     ("yerine", re.compile(r"^(?P<eski>.+?)\s+yerine\s+(?P<yeni>.+?)\s+yaz$", re.I)),
+    ("ara_baslik", re.compile(r"^ara\s+ba[sş]l[ıi]k(?:\s+ekle)?\s*[:\-]\s*(?P<metin>.+)$", re.I)),
+    ("baslik_renk", re.compile(
+        r"^ba[sş]l[ıi]k\s+rengini\s+(?P<renk>siyah|mavi|kırmızı|kirmizi|yeşil|yesil)\s+yap$",
+        re.I,
+    )),
 )
 _BEKLEYEN: dict[str, dict] = {}
 _BAK_ISTEK = (
@@ -509,6 +538,8 @@ _BAK_ISTEK = (
     "paragraf ekle: sayfadaki söz\n"
     "buton ekle: sayfadaki söz\n"
     "sayfadaki söz yerine yeni söz yaz\n"
+    "ara başlık ekle: sayfadaki söz\n"
+    "başlık rengini mavi yap\n"
     "sayfayı göster\n"
     "Yazı:\n"
 )
@@ -524,11 +555,14 @@ _MASA_ISTEK = {
         "Yalnız bir cümle yaz. Nokta koyma.\n"
         "belgeye gördüğün söz yaz\n"
         "veya belgeye gördüğün söz ekle\n"
+        "veya belgede gördüğün söz yerine gördüğün söz yaz\n"
         "Yazı:\n"
     ),
     "tablo": (
         "Yalnız bir cümle yaz. Nokta koyma.\n"
         "tabloda A1 e gördüğün değer yaz\n"
+        "veya A sütununu topla\n"
+        "veya A1 hücresini sil\n"
         "Yazı:\n"
     ),
     "cizim": (
@@ -536,11 +570,14 @@ _MASA_ISTEK = {
         "çizime kutu çiz\n"
         "çizime çizgi çiz\n"
         "çizime daire çiz\n"
+        "veya çizime mavi kutu çiz\n"
+        "Renk: siyah, mavi, kırmızı, yeşil.\n"
         "Yazı:\n"
     ),
     "sunum": (
         "Yalnız bir cümle yaz. Nokta koyma.\n"
         "sunuma gördüğün başlık slaytı ekle: gördüğün metin\n"
+        "veya slaytın başlığını gördüğün başlık yap\n"
         "Yazı:\n"
     ),
 }
@@ -604,9 +641,13 @@ def _adim(text: str) -> dict | None:
             cozulen = "oku"
         elif kind in {"bak_sayfa", "bak_dosya"}:
             cozulen = "bak"
+        elif kind == "dosya_not":
+            cozulen = "dosya_yap"
         else:
             cozulen = kind
         adim = {"kind": cozulen, "ham": sade}
+        if kind == "dosya_not":
+            adim["ad"] = "notlar.txt"
         for anahtar, deger in bulunan.groupdict().items():
             if deger is not None:
                 adim[anahtar] = deger.strip()
@@ -740,6 +781,45 @@ def _sayfa_yaz(repo: Path, dosya: str, html: str, reply: str) -> dict:
         onizleme=True,
         sayfa=dosya,
     )
+
+
+def _renk_hex(ad: str) -> str:
+    sade = (
+        (ad or "")
+        .lower()
+        .replace("ı", "i")
+        .replace("ş", "s")
+        .replace("ğ", "g")
+        .replace("ü", "u")
+        .replace("ö", "o")
+        .replace("ç", "c")
+    )
+    return _RENK_HEX.get(sade, "")
+
+
+def _baslik_boya(html: str, hexcode: str) -> str:
+    bulunan = re.search(r"<h1\b([^>]*)>", html, re.I)
+    if not bulunan:
+        raise ValueError("Başlık yok.")
+    attrs = re.sub(r"""\sstyle\s*=\s*(?:"[^"]*"|'[^']*')""", "", bulunan.group(1), flags=re.I)
+    yeni = f'<h1{attrs} style="color:{hexcode}">'
+    return html[: bulunan.start()] + yeni + html[bulunan.end() :]
+
+
+def _adres_guvenli(adres: str) -> str:
+    temiz = (adres or "").strip()
+    if not _ADRES.match(temiz) or "\\" in temiz or temiz.lower().count("://") != 1:
+        raise ValueError("Bağlantı yalnız http veya https olur.")
+    return temiz
+
+
+def _resim_adi(ad: str) -> str:
+    temiz = (ad or "").strip().strip('"').strip("'")
+    if not temiz or "/" in temiz or "\\" in temiz or ".." in temiz or ":" in temiz or temiz.startswith("."):
+        raise ValueError("Dosya adı geçersiz.")
+    if Path(temiz).suffix.lower() not in _RESIM_UZANTI:
+        raise ValueError("Bu resim konmaz.")
+    return Path(temiz).name
 
 
 def _calistir(repo: Path, adim: dict, sayfa: str) -> dict:
@@ -886,6 +966,95 @@ def _calistir(repo: Path, adim: dict, sayfa: str) -> dict:
         yazilan = _yaz_geri(repo, dosya, guncel)
         yazilan["reply"] = reply
         return yazilan
+    if kind in _EL:
+        _kilit_yolu(repo)
+    if kind == "say":
+        liste = klasor_liste(repo)
+        adlar = [str(item["rel"]).replace("klasor/", "", 1) for item in liste["dosyalar"][:40]]
+        govde = "\n".join(adlar) if adlar else "Dosya yok."
+        return _paket(reply="Klasörde " + str(len(liste["dosyalar"])) + " dosya:\n" + govde, klasor=liste["klasor"])
+    if kind == "dosya_yap":
+        dosya = _dosya_adi(adim.get("ad") or "")
+        if not dosya.lower().endswith(".txt"):
+            raise ValueError("Yalnız metin dosyası açılır.")
+        try:
+            mevcut = klasor_oku_dosya(repo, dosya)
+        except ValueError:
+            mevcut = None
+        if mevcut:
+            return _paket(
+                reply="Dosya duruyor: " + mevcut["rel"],
+                gorunum="kod",
+                rel=mevcut["rel"],
+                text=mevcut["text"],
+            )
+        return _yaz_geri(repo, dosya, "")
+    if kind == "ara_baslik":
+        metin = (adim.get("metin") or "").strip().strip("\"'")
+        if not metin or len(metin) > 180:
+            raise ValueError("Ara başlık boş veya çok uzun.")
+        dosya = _sayfa_sec(repo, sayfa)
+        parca = "<h2>" + _html_kacis(metin) + "</h2>"
+        html = _govdeye_ekle(klasor_oku_dosya(repo, dosya)["text"], parca)
+        if parca not in html:
+            raise ValueError("Yazılmadı. " + dosya)
+        return _sayfa_yaz(repo, dosya, html, "Ara başlık yazıldı: klasor/" + dosya + "\n" + metin)
+    if kind == "baglanti":
+        soz = (adim.get("soz") or "").strip().strip("\"'")
+        if not soz or len(soz) > 180:
+            raise ValueError("Bağlantı yazısı boş veya çok uzun.")
+        adres = _adres_guvenli(adim.get("adres") or "")
+        dosya = _sayfa_sec(repo, sayfa)
+        parca = '<a href="' + _html_kacis(adres) + '">' + _html_kacis(soz) + "</a>"
+        html = _govdeye_ekle(klasor_oku_dosya(repo, dosya)["text"], parca)
+        if parca not in html:
+            raise ValueError("Yazılmadı. " + dosya)
+        return _sayfa_yaz(repo, dosya, html, "Bağlantı yazıldı: klasor/" + dosya + "\n" + soz)
+    if kind == "baslik_renk":
+        hexcode = _renk_hex(adim.get("renk") or "")
+        if not hexcode:
+            raise ValueError("Renk: siyah, mavi, kırmızı, yeşil.")
+        dosya = _sayfa_sec(repo, sayfa)
+        html = _baslik_boya(klasor_oku_dosya(repo, dosya)["text"], hexcode)
+        if f'style="color:{hexcode}"' not in html:
+            raise ValueError("Yazılmadı. " + dosya)
+        return _sayfa_yaz(repo, dosya, html, "Başlık rengi yazıldı: klasor/" + dosya + "\n" + hexcode)
+    if kind == "resim":
+        ad = _resim_adi(adim.get("ad") or "")
+        kaynak, _norm = _klasor_hedef(repo, ad)
+        if not kaynak.is_file() or kaynak.is_symlink():
+            raise ValueError("Dosya yok.")
+        dosya = _sayfa_sec(repo, sayfa)
+        parca = '<img src="' + _html_kacis(ad) + '" alt="' + _html_kacis(Path(ad).stem) + '">'
+        html = _govdeye_ekle(klasor_oku_dosya(repo, dosya)["text"], parca)
+        if parca not in html:
+            raise ValueError("Yazılmadı. " + dosya)
+        return _sayfa_yaz(repo, dosya, html, "Resim kondu: klasor/" + dosya + "\n" + ad)
+    if kind == "ad_degistir":
+        eski = _sayfa_dosyasi(adim.get("eski") or "")
+        yeni = _sayfa_dosyasi(adim.get("yeni") or "")
+        if eski == yeni:
+            raise ValueError("Ad aynı.")
+        kaynak, _eski_norm = _klasor_hedef(repo, eski)
+        hedef, _yeni_norm = _klasor_hedef(repo, yeni)
+        if not kaynak.is_file() or kaynak.is_symlink():
+            raise ValueError("Dosya yok.")
+        if hedef.exists():
+            raise ValueError("Bu ad duruyor.")
+        if kaynak.parent.resolve() != hedef.parent.resolve():
+            raise ValueError("Klasör dışı.")
+        icerik = kaynak.read_text(encoding="utf-8")
+        kaynak.replace(hedef)
+        if kaynak.exists() or not hedef.is_file() or hedef.read_text(encoding="utf-8") != icerik:
+            raise ValueError("Ad değişmedi.")
+        return _paket(
+            reply="Ad değişti: klasor/" + yeni,
+            gorunum="proje",
+            rel="klasor/" + yeni,
+            text=icerik,
+            onizleme=True,
+            sayfa=yeni,
+        )
     if kind == "bak":
         return _bak(repo, adim)
     if kind == "uygula":
@@ -1015,6 +1184,22 @@ def _tarif_satir(sade: str, hedef: str, kaynak: str) -> tuple[str, dict] | None:
             return cumle, _usta_adim("buton", cumle, metin=metin)
         if kind == "sayfa_goster":
             return "sayfayı göster", _usta_adim("sayfa_goster", "sayfayı göster")
+        if kind == "ara_baslik":
+            if not html_mi:
+                return None
+            metin = bulunan.group("metin").strip().strip("\"'")
+            if not _soz_var(metin) or len(metin) > 180 or metin not in kaynak:
+                return None
+            cumle = "ara başlık ekle: " + metin
+            return cumle, _usta_adim("ara_baslik", cumle, metin=metin)
+        if kind == "baslik_renk":
+            if not html_mi:
+                return None
+            renk = bulunan.group("renk").strip().lower()
+            if not _renk_hex(renk):
+                return None
+            cumle = "başlık rengini " + renk + " yap"
+            return cumle, _usta_adim("baslik_renk", cumle, renk=renk)
         eski = bulunan.group("eski").strip().strip("\"'")
         yeni = bulunan.group("yeni").strip().strip("\"'")
         if not _soz_var(eski) or not _soz_var(yeni) or len(eski) > 180 or len(yeni) > 400:
@@ -1098,8 +1283,29 @@ def _belge_metin(ham: str, kaynak: str) -> str:
     return metin
 
 
+def _masa_soz_temiz(ham: str) -> str:
+    return re.sub(
+        r"^(?:gördüğün söz|gordugun soz|gördüğün değer|gordugun deger|gördüğün başlık|gordugun baslik)\s*[:\-]?\s*",
+        "",
+        (ham or "").strip().strip("\"'"),
+        flags=re.I,
+    ).strip()
+
+
 def _masa_cumle_eylem(masa: str, sade: str, kaynak: str) -> dict | None:
     if masa == "belge":
+        yerine = re.match(r"^belgede\s+(?P<eski>.+?)\s+yerine\s+(?P<yeni>.+?)\s+yaz$", sade, re.I)
+        if yerine:
+            eski = _masa_soz_temiz(yerine.group("eski"))
+            yeni = _masa_soz_temiz(yerine.group("yeni"))
+            if _soz_var(eski) and _soz_var(yeni) and eski in kaynak and yeni in kaynak and len(eski) <= 180 and len(yeni) <= 400:
+                return {
+                    "eylem": "belge.yerine",
+                    "eski": eski,
+                    "yeni": yeni,
+                    "cumle": "belgede " + eski + " yerine " + yeni + " yaz",
+                }
+            return None
         bulunan = re.match(r"^belgeye\s+(?P<metin>.+?)\s+(?P<tur>yaz|ekle)$", sade, re.I)
         if bulunan:
             metin = _belge_metin(bulunan.group("metin"), kaynak)
@@ -1120,15 +1326,51 @@ def _masa_cumle_eylem(masa: str, sade: str, kaynak: str) -> dict | None:
             sade,
             re.I,
         )
-        if not bulunan:
-            return None
-        satir = int(bulunan.group("satir"))
-        deger = bulunan.group("deger").strip().strip("\"'")
-        if satir < 1 or satir > 28 or not _soz_var(deger) or len(deger) > 80 or deger not in kaynak:
-            return None
-        hucre = bulunan.group("sutun").upper() + str(satir)
-        return {"eylem": "tablo.hucre", "hucre": hucre, "deger": deger, "cumle": "tabloda " + hucre + " e " + deger + " yaz"}
+        if bulunan:
+            satir = int(bulunan.group("satir"))
+            deger = bulunan.group("deger").strip().strip("\"'")
+            if satir < 1 or satir > 28 or not _soz_var(deger) or len(deger) > 80 or deger not in kaynak:
+                return None
+            hucre = bulunan.group("sutun").upper() + str(satir)
+            return {"eylem": "tablo.hucre", "hucre": hucre, "deger": deger, "cumle": "tabloda " + hucre + " e " + deger + " yaz"}
+        sil = re.match(
+            r"^(?:tabloda\s+)?(?P<sutun>[A-La-l])(?P<satir>\d{1,2})\s+h[üu]cresini\s+sil$",
+            sade,
+            re.I,
+        )
+        if sil:
+            satir = int(sil.group("satir"))
+            hucre = sil.group("sutun").upper() + str(satir)
+            if satir < 1 or satir > 28 or hucre not in kaynak:
+                return None
+            return {"eylem": "tablo.sil", "hucre": hucre, "cumle": hucre + " hücresini sil"}
+        topla = re.match(r"^(?P<sutun>[A-La-l])\s+s[üu]tununu\s+topla$", sade, re.I)
+        if topla:
+            sutun = topla.group("sutun").upper()
+            if sutun not in kaynak:
+                return None
+            return {"eylem": "tablo.topla", "sutun": sutun, "cumle": sutun + " sütununu topla"}
+        return None
     if masa == "cizim":
+        renkli = re.search(
+            r"(?:çizime|cizime)\s+(?P<renk>siyah|mavi|kırmızı|kirmizi|yeşil|yesil)\s+(?P<tur>kutu|çizgi|cizgi|daire)\s+(?:çiz|ciz)",
+            sade,
+            re.I,
+        )
+        if renkli:
+            tur = renkli.group("tur").lower().replace("ç", "c")
+            renk = renkli.group("renk").lower()
+            if not _renk_hex(renk):
+                return None
+            if tur == "kutu":
+                eylem = {"eylem": "cizim.kutu", "x": 80, "y": 80, "w": 240, "h": 140}
+            elif tur == "daire":
+                eylem = {"eylem": "cizim.daire", "x": 300, "y": 220, "rx": 80, "ry": 60}
+            else:
+                eylem = {"eylem": "cizim.cizgi", "x1": 40, "y1": 40, "x2": 400, "y2": 200}
+            eylem["renk"] = renk
+            eylem["cumle"] = "çizime " + renk + " " + ("çizgi" if tur == "cizgi" else tur) + " çiz"
+            return eylem
         bulunan = re.search(r"(?:çizime|cizime)\s+(?P<tur>kutu|çizgi|cizgi|daire)\s+(?:çiz|ciz)", sade, re.I)
         if not bulunan:
             return None
@@ -1139,6 +1381,12 @@ def _masa_cumle_eylem(masa: str, sade: str, kaynak: str) -> dict | None:
             return {"eylem": "cizim.daire", "x": 300, "y": 220, "rx": 80, "ry": 60, "cumle": "çizime daire çiz"}
         return {"eylem": "cizim.cizgi", "x1": 40, "y1": 40, "x2": 400, "y2": 200, "cumle": "çizime çizgi çiz"}
     if masa == "sunum":
+        baslik_satir = re.match(r"^slayt[ıi]n\s+ba[sş]l[ıi][gğ][ıi]n[ıi]\s+(?P<baslik>.+?)\s+yap$", sade, re.I)
+        if baslik_satir:
+            baslik = _masa_soz_temiz(baslik_satir.group("baslik"))
+            if not _soz_var(baslik) or len(baslik) > 120 or baslik not in kaynak:
+                return None
+            return {"eylem": "sunum.baslik", "baslik": baslik, "cumle": "slaytın başlığını " + baslik + " yap"}
         bulunan = re.match(r"^sunuma\s+(?P<baslik>.+?)\s+slayt[ıi]\s+ekle\s*[:\-]\s*(?P<metin>.+)$", sade, re.I)
         if not bulunan:
             return None
@@ -1382,7 +1630,7 @@ def klasor_soz(repo: Path, yazi: str) -> dict:
         try:
             return _yurut(repo, [tek])
         except _KlasorYok:
-            if tek.get("kind") in {"bak", "uygula"}:
+            if tek.get("kind") in {"bak", "uygula"} or tek.get("kind") in _EL:
                 return _paket(
                     handled=True,
                     reply="Çalışma klasörü seçilmedi. Şöyle söyle: çalışma klasörü: tam yol",

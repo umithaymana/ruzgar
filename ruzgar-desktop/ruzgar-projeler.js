@@ -201,6 +201,10 @@
 
   function yakinSoz(low) {
     const raf = [
+      ["rengini", "başlık rengini mavi yap"],
+      ["resim", "resim koy: foto.png"],
+      ["baglanti", "bağlantı ekle: Rüzgar | https://ornek.com"],
+      ["klasordekileri", "klasördekileri say"],
       ["bak", "deneme sayfasına bak ve söyle"],
       ["belgeye", "belgeye bak ve söyle"],
       ["yerine", "deneme sayfasında selam yerine merhaba yaz"],
@@ -804,6 +808,15 @@
     if (/^(?:dosyayı oku|dosyayi oku)\s*:/i.test(yazi)) return true;
     if (/^(?:dosyaya yaz|dosyaya ekle)\s*:/i.test(yazi)) return true;
     const low = harf(yazi);
+    if (/^belgede\b/.test(low)) return false;
+    if (/^(?:klasordekileri)\s+say$/.test(low)) return true;
+    if (/^(?:not defteri|not defter)\s+yap$/.test(low)) return true;
+    if (/\sdosyasi\s+yap$/.test(low)) return true;
+    if (/^ara\s+baslik\b/.test(low)) return true;
+    if (/^baglanti\b/.test(low)) return true;
+    if (/^baslik\s+rengini\b/.test(low)) return true;
+    if (/^resim\s+koy\b/.test(low)) return true;
+    if (/\ssayfasinin\s+adini\b/.test(low)) return true;
     if (/\sdosyasina\s+\S/.test(low) && /\syaz$/.test(low)) return true;
     if (/\sdosyasini\s+oku$/.test(low)) return true;
     if (/(^|\s)(sayfa yap|sayfa ac|sayfayi goster)\b/.test(low)) return true;

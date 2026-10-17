@@ -17,12 +17,26 @@
   }
 
   function parca(raw) {
-    let m = raw.match(/^belgeye\s+(.+?)\s+yaz$/i);
+    let m = raw.match(/^belgede\s+(.+?)\s+yerine\s+(.+?)\s+yaz$/i);
+    if (m && m[1].trim() && m[2].trim()) return { eylem: "belge.yerine", eski: m[1].trim(), yeni: m[2].trim() };
+    m = raw.match(/^belgeye\s+(.+?)\s+yaz$/i);
     if (m && m[1].trim()) return { eylem: "belge.yaz", metin: m[1].trim() };
     m = raw.match(/^belgeye\s+(.+?)\s+ekle$/i);
     if (m && m[1].trim()) return { eylem: "belge.ekle", metin: m[1].trim() };
+    m = raw.match(/^(?:tabloda\s+)?([A-La-l])(\d{1,2})\s+h[üu]cresini\s+sil$/i);
+    if (m) return { eylem: "tablo.sil", hucre: (m[1] + m[2]).toUpperCase() };
+    m = raw.match(/^([A-La-l])\s+s[üu]tununu\s+topla$/i);
+    if (m) return { eylem: "tablo.topla", sutun: m[1].toUpperCase() };
     m = raw.match(/^(?:tabloda|tabloya)\s+([A-La-l])(\d{1,2})\s*(?:e|ye|hücresine|hucresine)?\s*(.+?)\s+yaz$/i);
     if (m && m[3].trim()) return { eylem: "tablo.hucre", hucre: (m[1] + m[2]).toUpperCase(), deger: m[3].trim() };
+    m = raw.match(/^(?:çizime|cizime)\s+(siyah|mavi|kırmızı|kirmizi|yeşil|yesil)\s+(kutu|çizgi|cizgi|daire)\s+(?:çiz|ciz)$/i);
+    if (m) {
+      const renk = m[1];
+      const tur = m[2].toLowerCase();
+      if (tur === "kutu") return { eylem: "cizim.kutu", x: 80, y: 80, w: 240, h: 140, renk: renk };
+      if (tur === "daire") return { eylem: "cizim.daire", x: 300, y: 220, rx: 80, ry: 60, renk: renk };
+      return { eylem: "cizim.cizgi", x1: 40, y1: 40, x2: 400, y2: 200, renk: renk };
+    }
     m = raw.match(/^(?:çizime|cizime)\s+(kutu|çizgi|cizgi|daire)\s+(?:çiz|ciz)$/i);
     if (m) {
       const tur = m[1].toLowerCase();
@@ -30,6 +44,8 @@
       if (tur === "daire") return { eylem: "cizim.daire", x: 300, y: 220, rx: 80, ry: 60 };
       return { eylem: "cizim.cizgi", x1: 40, y1: 40, x2: 400, y2: 200 };
     }
+    m = raw.match(/^slayt[ıi]n\s+ba[sş]l[ıi][gğ][ıi]n[ıi]\s+(.+?)\s+yap$/i);
+    if (m && m[1].trim()) return { eylem: "sunum.baslik", baslik: m[1].trim() };
     m = raw.match(/^sunuma\s+slayt\s+ekle\s*[:\-]\s*(.+?)\s*\|\s*(.+)$/i);
     if (m && (m[1].trim() || m[2].trim())) return { eylem: "sunum.ekle", baslik: m[1].trim(), metin: m[2].trim() };
     m = raw.match(/^sunuma\s+(.+?)\s+slayt[ıi]\s+ekle\s*[:\-]\s*(.+)$/i);

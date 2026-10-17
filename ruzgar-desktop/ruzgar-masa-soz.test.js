@@ -32,6 +32,15 @@ assert.strictEqual(liste.liste[3].baslik, "Hoş geldin");
 assert.strictEqual(liste.liste[3].metin, "bugün");
 assert.deepStrictEqual(coz("belgeye bak ve söyle"), { bak: "belge" });
 assert.deepStrictEqual(coz("çizime bak ve söyle"), { bak: "cizim" });
+assert.deepStrictEqual(coz("belgede selam yerine merhaba yaz"), {
+  eylem: "belge.yerine",
+  eski: "selam",
+  yeni: "merhaba",
+});
+assert.deepStrictEqual(coz("A1 hücresini sil"), { eylem: "tablo.sil", hucre: "A1" });
+assert.deepStrictEqual(coz("A sütununu topla"), { eylem: "tablo.topla", sutun: "A" });
+assert.strictEqual(coz("çizime mavi kutu çiz").renk, "mavi");
+assert.deepStrictEqual(coz("slaytın başlığını Hoş geldin yap"), { eylem: "sunum.baslik", baslik: "Hoş geldin" });
 assert.deepStrictEqual(coz("belgeye bak ve söyle, belgeye selam yaz"), { red: true });
 assert.deepStrictEqual(coz("masayı baştan tasarla"), { red: true });
 assert.deepStrictEqual(coz("belgeye selam yaz, şunu uydur"), { red: true });

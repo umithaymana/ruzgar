@@ -1176,8 +1176,11 @@
     const izin = {
       "belge.yaz": ["metin"],
       "belge.ekle": ["metin"],
+      "belge.yerine": ["eski", "yeni"],
       "belge.temizle": [],
       "tablo.hucre": ["hucre", "deger"],
+      "tablo.sil": ["hucre"],
+      "tablo.topla": ["sutun"],
       "tablo.temizle": [],
       "cizim.renk": ["ad"],
       "cizim.cizgi": ["x1", "y1", "x2", "y2"],
@@ -1185,16 +1188,25 @@
       "cizim.daire": ["x", "y", "rx", "ry"],
       "cizim.temizle": [],
       "sunum.ekle": ["baslik", "metin"],
+      "sunum.baslik": ["baslik"],
       "sunum.temizle": [],
       "sunum.sun": [],
     };
+    const renkli = { "cizim.cizgi": 1, "cizim.kutu": 1, "cizim.daire": 1 };
     if (!action || typeof action !== "object" || Array.isArray(action)) return false;
     const keys = Object.keys(action);
     const need = izin[String(action.eylem || "")];
-    if (!need || keys.length > need.length + 1) return false;
-    const yazi = { metin: 1, deger: 1, hucre: 1, ad: 1, baslik: 1 };
+    const renkVar = action.renk != null && renkli[String(action.eylem || "")] ? 1 : 0;
+    if (!need || keys.length > need.length + 1 + renkVar) return false;
+    const yazi = { metin: 1, deger: 1, hucre: 1, ad: 1, baslik: 1, eski: 1, yeni: 1, sutun: 1 };
     for (let i = 0; i < keys.length; i++) {
-      if (keys[i] !== "eylem" && need.indexOf(keys[i]) < 0) return false;
+      if (keys[i] === "eylem" || need.indexOf(keys[i]) >= 0) continue;
+      if (keys[i] === "renk" && renkli[String(action.eylem || "")]) continue;
+      return false;
+    }
+    if (action.renk != null) {
+      const renkAd = masaHarf(action.renk);
+      if (!/^(siyah|mavi|kirmizi|yesil)$/.test(renkAd) || !MASA_RENK[renkAd]) return false;
     }
     for (let i = 0; i < need.length; i++) {
       const key = need[i];
@@ -1268,6 +1280,17 @@
     const eylem = String(action.eylem || "");
     if (eylem === "belge.yaz") return masaBelgeYaz(action.metin, false);
     if (eylem === "belge.ekle") return masaBelgeYaz(action.metin, true);
+    if (eylem === "belge.yerine") {
+      const once = String(belge.textContent || "");
+      const eski = masaTemizMetin(action.eski, 180).trim();
+      const yeni = masaTemizMetin(action.yeni, 400).trim();
+      const yer = eski ? once.indexOf(eski) : -1;
+      if (!eski || !yeni || yer < 0) return "Metin belgede yok.";
+      belge.textContent = once.slice(0, yer) + yeni + once.slice(yer + eski.length);
+      scheduleSave();
+      masaAc("belge");
+      return "Belgede değişti.";
+    }
     if (eylem === "belge.temizle") {
       belge.textContent = "";
       scheduleSave();
@@ -1279,6 +1302,34 @@
       const m = hucre.match(/^([A-La-l])(\d{1,2})$/);
       if (!m) return "Hücre A1 biçiminde olmalı.";
       return masaHucreYaz(m[1], m[2], action.deger);
+    }
+    if (eylem === "tablo.sil") {
+      const hucre = String(action.hucre || "");
+      const silinen = hucre.match(/^([A-La-l])(\d{1,2})$/);
+      if (!silinen) return "Hücre A1 biçiminde olmalı.";
+      const c = COLS.indexOf(silinen[1].toUpperCase());
+      const r = Number(silinen[2]) - 1;
+      if (c < 0 || r < 0 || r >= ROWS) return "Hücre A1 ile L28 arasında olmalı.";
+      state.sheet[r][c] = "";
+      paintSheet();
+      scheduleSave();
+      masaAc("tablo");
+      return silinen[1].toUpperCase() + silinen[2] + " silindi.";
+    }
+    if (eylem === "tablo.topla") {
+      const c = COLS.indexOf(String(action.sutun || "").toUpperCase());
+      if (c < 0) return "Sütun A ile L arasında olmalı.";
+      let toplam = 0;
+      for (let r = 0; r < ROWS; r++) {
+        const raw = String(state.sheet[r][c] || "").trim().replace(",", ".");
+        if (!raw) continue;
+        const n = Number(raw);
+        if (!isFinite(n)) continue;
+        toplam += n;
+      }
+      const yazi = String(Math.round(toplam * 1000) / 1000);
+      masaAc("tablo");
+      return COLS[c] + " sütunu toplamı: " + yazi;
     }
     if (eylem === "tablo.temizle") {
       state.sheet = blankSheet();
@@ -1294,6 +1345,12 @@
       return "Kalem rengi değişti.";
     }
     if (eylem === "cizim.cizgi" || eylem === "cizim.kutu" || eylem === "cizim.daire") {
+      if (action.renk) {
+        const renk = MASA_RENK[masaHarf(action.renk)];
+        if (!renk) return "Renk: siyah, kırmızı, mavi, yeşil.";
+        state.draw.color = renk;
+        state.draw.tool = "kalem";
+      }
       let ciz = null;
       if (eylem === "cizim.cizgi") {
         ciz = {
@@ -1343,6 +1400,18 @@
       return "Çizim temizlendi.";
     }
     if (eylem === "sunum.ekle") return masaSlaytEkle(action.baslik, action.metin);
+    if (eylem === "sunum.baslik") {
+      const baslik = masaTemizMetin(action.baslik, 120).trim();
+      if (!baslik) return "Başlık boş.";
+      if (!state.slides.length) return "Slayt yok.";
+      const i = state.slideIndex >= 0 && state.slideIndex < state.slides.length ? state.slideIndex : 0;
+      state.slides[i].title = baslik;
+      renderTools();
+      renderSlides();
+      scheduleSave();
+      masaAc("sunum");
+      return "Slayt başlığı değişti.";
+    }
     if (eylem === "sunum.temizle") {
       state.slides = [{ title: "", body: "", bg: "#1c1a16", fg: "#f7f4ec" }];
       state.slideIndex = 0;
@@ -1392,7 +1461,7 @@
   }
 
   function masaOldu(cevap) {
-    return /yazıldı|eklendi|işlendi|hazır|değişti|açıldı|temizlendi/.test(String(cevap || ""));
+    return /yazıldı|eklendi|işlendi|hazır|değişti|açıldı|temizlendi|silindi|toplamı|toplami/.test(String(cevap || ""));
   }
 
   function masaListeUygula(liste) {

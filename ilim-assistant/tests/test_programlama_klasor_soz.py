@@ -413,6 +413,103 @@ def test_masa_bak_beyin_kaliba_yaklasinca_alir(monkeypatch):
     assert "Bu tarif değil" in sunum["reply"]
 
 
+def test_tavan_tarif_yazar_ve_tehlikeyi_yemez(masa, monkeypatch):
+    from ilim_assistant.motorlar.programlama_proje_masasi import masa_bak_soz
+
+    repo, el = masa
+    _kilitle(repo, el)
+    klasor_soz(repo, "deneme sayfası yap")
+    klasor_soz(repo, "başlığı selam yap")
+    once = (el / "deneme.html").read_text(encoding="utf-8")
+    say = klasor_soz(repo, "klasördekileri say")
+    assert "deneme.html" in say["reply"]
+    assert (el / "deneme.html").read_text(encoding="utf-8") == once
+    notlar = klasor_soz(repo, "not defteri yap")
+    assert (el / "notlar.txt").read_text(encoding="utf-8") == ""
+    assert "Yazıldı: klasor/notlar.txt" in notlar["reply"]
+    (el / "notlar.txt").write_text("eski", encoding="utf-8")
+    duran = klasor_soz(repo, "notlar dosyası yap")
+    assert "Dosya duruyor" in duran["reply"]
+    assert (el / "notlar.txt").read_text(encoding="utf-8") == "eski"
+    ara = klasor_soz(repo, "ara başlık ekle: iç kapı")
+    assert "<h2>iç kapı</h2>" in (el / "deneme.html").read_text(encoding="utf-8")
+    assert "Ara başlık yazıldı" in ara["reply"]
+    renk = klasor_soz(repo, "başlık rengini mavi yap")
+    assert 'style="color:#1d4e89"' in (el / "deneme.html").read_text(encoding="utf-8")
+    assert "Başlık rengi yazıldı" in renk["reply"]
+    bag = klasor_soz(repo, "bağlantı ekle: Rüzgar | https://ornek.com/yol")
+    assert 'href="https://ornek.com/yol"' in (el / "deneme.html").read_text(encoding="utf-8")
+    assert "Bağlantı yazıldı" in bag["reply"]
+    (el / "foto.png").write_bytes(b"\x89PNG\r\n")
+    (el / "logo.svg").write_text("<svg></svg>", encoding="utf-8")
+    svg_once = (el / "deneme.html").read_text(encoding="utf-8")
+    svg = klasor_soz(repo, "resim koy: logo.svg")
+    assert "konmaz" in svg["reply"]
+    assert (el / "deneme.html").read_text(encoding="utf-8") == svg_once
+    yok = klasor_soz(repo, "resim koy: yok.png")
+    assert "Dosya yok" in yok["reply"]
+    assert (el / "deneme.html").read_text(encoding="utf-8") == svg_once
+    resim = klasor_soz(repo, "resim koy: foto.png")
+    assert '<img src="foto.png"' in (el / "deneme.html").read_text(encoding="utf-8")
+    assert "Resim kondu" in resim["reply"]
+    ad = klasor_soz(repo, "deneme sayfasının adını merhaba yap")
+    assert not (el / "deneme.html").exists()
+    assert "Ad değişti: klasor/merhaba.html" in ad["reply"]
+    assert ">selam</h1>" in (el / "merhaba.html").read_text(encoding="utf-8")
+    klasor_soz(repo, "index sayfası yap")
+    dolu = (el / "merhaba.html").read_text(encoding="utf-8")
+    carpisma = klasor_soz(repo, "merhaba sayfasının adını index yap")
+    assert "duruyor" in carpisma["reply"]
+    assert (el / "merhaba.html").read_text(encoding="utf-8") == dolu
+    zehir = klasor_soz(repo, "deneme sayfası yap, bağlantı ekle: selam | javascript:alert(1)")
+    assert "Bunu yapmadım" in zehir["reply"]
+    assert not (el / "deneme.html").exists()
+    kacak = klasor_soz(repo, "merhaba sayfasının adını .. yap")
+    assert (el / "merhaba.html").is_file()
+    assert "geçersiz" in kacak["reply"]
+    monkeypatch.setattr(
+        "ilim_assistant.motorlar.programlama_proje_masasi._soyleyen",
+        lambda metin: "ara başlık ekle: selam",
+    )
+    bak = klasor_soz(repo, "merhaba sayfasına bak ve söyle")
+    assert "Önerim: ara başlık ekle: selam" in bak["reply"]
+    assert (el / "merhaba.html").read_text(encoding="utf-8") == dolu
+    uygulandi = klasor_soz(repo, "uygula")
+    assert "<h2>selam</h2>" in uygulandi["text"]
+    monkeypatch.setattr(
+        "ilim_assistant.motorlar.programlama_proje_masasi._soyleyen",
+        lambda metin: "bağlantı ekle: selam | https://ornek.com",
+    )
+    bag_bak = klasor_soz(repo, "merhaba sayfasına bak ve söyle")
+    assert "Bu tarif değil" in bag_bak["reply"]
+    monkeypatch.setattr(
+        "ilim_assistant.motorlar.programlama_proje_masasi._masa_soyleyen",
+        lambda ad, metin: "belgede selam yerine merhaba yaz",
+    )
+    belge = masa_bak_soz("belge", "selam merhaba")
+    assert belge["eylem"]["eylem"] == "belge.yerine"
+    assert belge["eylem"]["eski"] == "selam"
+    monkeypatch.setattr(
+        "ilim_assistant.motorlar.programlama_proje_masasi._masa_soyleyen",
+        lambda ad, metin: "A sütununu topla",
+    )
+    tablo = masa_bak_soz("tablo", "A1: 10")
+    assert tablo["eylem"] == {"eylem": "tablo.topla", "sutun": "A"}
+    monkeypatch.setattr(
+        "ilim_assistant.motorlar.programlama_proje_masasi._masa_soyleyen",
+        lambda ad, metin: "çizime mavi kutu çiz",
+    )
+    ciz = masa_bak_soz("cizim", "Çizim boş.")
+    assert ciz["eylem"]["renk"] == "mavi"
+    assert ciz["eylem"]["eylem"] == "cizim.kutu"
+    monkeypatch.setattr(
+        "ilim_assistant.motorlar.programlama_proje_masasi._masa_soyleyen",
+        lambda ad, metin: "slaytın başlığını Hoş geldin yap",
+    )
+    sunum = masa_bak_soz("sunum", "Slayt 1: Hoş geldin | bugün")
+    assert sunum["eylem"] == {"eylem": "sunum.baslik", "baslik": "Hoş geldin"}
+
+
 def test_bilinmeyen_ve_kapi(masa, tmp_path):
     repo, el = masa
     yok = klasor_soz(repo, "menüyü lacivert yap")
