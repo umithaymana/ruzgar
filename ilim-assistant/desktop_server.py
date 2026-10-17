@@ -5407,6 +5407,18 @@ def api_calisma_yaz(body: CalismaYaziBody):
         raise _proje_masa_hata(exc) from exc
 
 
+class CalismaSozBody(BaseModel):
+    yazi: str = ""
+
+
+@app.post("/api/programlama/calisma-soz")
+def api_calisma_soz(body: CalismaSozBody):
+    """Düz cümle, kilitli klasör. Bilinmeyen cümle handled=false döner, dosya yazmaz."""
+    from ilim_assistant.motorlar.programlama_proje_masasi import klasor_soz
+
+    return klasor_soz(REPO_ROOT, body.yazi)
+
+
 @app.get("/api/programlama/calisma-onizleme/{rel:path}")
 def api_calisma_onizleme(rel: str):
     from ilim_assistant.motorlar.programlama_proje_masasi import klasor_onizleme

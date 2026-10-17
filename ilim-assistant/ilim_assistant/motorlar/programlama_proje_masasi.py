@@ -12,7 +12,7 @@ import re
 import shutil
 from pathlib import Path
 
-PROJE_MASA_VERSION = "programlama-proje-masa-v2-2026-10-16"
+PROJE_MASA_VERSION = "programlama-proje-masa-v3-2026-10-17"
 
 _DENEME = re.compile(
     r"^(smoke-|t-|agent-|_|"
@@ -295,6 +295,9 @@ def ajan_uygula(root: Path, rel: str, emir: str, dosya: str = "") -> dict:
 
 
 def _pin_dosyasi() -> Path:
+    ozel = (os.environ.get("RUZGAR_CALISMA_PIN") or "").strip()
+    if ozel:
+        return Path(ozel)
     kok = Path(os.environ.get("LOCALAPPDATA") or Path.home())
     return kok / "Ruzgar" / "calisma_klasoru.json"
 
@@ -452,3 +455,382 @@ def onizleme_dosyasi(root: Path, rel: str) -> tuple[Path, str]:
     if not mime:
         raise ValueError("Bu dosya önizlenmez.")
     return target, mime
+
+
+class _KlasorYok(Exception):
+    """Kilit yok. Sayfa tarifleri projects/ ajanına düşsün."""
+
+
+_KALIP: tuple[tuple[str, re.Pattern[str]], ...] = (
+    ("kilit", re.compile(r"^(?:çalışma klasörü|calisma klasoru)\s*:\s*(?P<yol>.+)$", re.I)),
+    ("birak", re.compile(r"^(?:klasörü bırak|klasoru birak)$", re.I)),
+    ("goster_klasor", re.compile(r"^(?:klasörü göster|klasoru goster|çalışma klasörü|calisma klasoru)$", re.I)),
+    ("yaz_eski", re.compile(r"^(?:dosyaya yaz|dosyaya ekle)\s*:\s*(?P<ad>.+?)\s*\|\s*(?P<metin>[\s\S]+)$", re.I)),
+    ("oku_eski", re.compile(r"^(?:dosyayı oku|dosyayi oku)\s*:\s*(?P<ad>.+)$", re.I)),
+    ("yaz_duz", re.compile(r"^(?P<ad>\S+)\s+dosyas[ıi]na\s+(?P<metin>.+?)\s+yaz$", re.I)),
+    ("oku_duz", re.compile(r"^(?P<ad>\S+)\s+dosyas[ıi]n[ıi]\s+oku$", re.I)),
+    ("sayfa_goster_ad", re.compile(r"^(?P<ad>[A-Za-z0-9çğıöşüÇĞİÖŞÜ._-]+)\s+sayfas[ıi]n[ıi]\s+g[öo]ster$", re.I)),
+    ("sayfa_ad", re.compile(r"^(?P<ad>[A-Za-z0-9çğıöşüÇĞİÖŞÜ._-]+)\s+sayfas[ıi]\s+yap$", re.I)),
+    ("sayfa", re.compile(r"^(?:sayfa yap|sayfa aç|sayfa ac)$", re.I)),
+    ("sayfa_goster", re.compile(r"^(?:sayfayı göster|sayfayi goster)$", re.I)),
+    ("baslik", re.compile(r"^(?:başlığı|basligi|başlık|baslik)\s+(?P<metin>.+?)\s+yap$", re.I)),
+    ("paragraf", re.compile(r"^paragraf(?:\s+ekle)?\s*[:\-]?\s*(?P<metin>.+)$", re.I)),
+    ("buton", re.compile(r"^buton(?:\s+ekle)?\s*[:\-]?\s*(?P<metin>.+)$", re.I)),
+)
+_AYIR = re.compile(
+    r"\s*,\s*(?=(?:başlığı|basligi|başlık|baslik|paragraf|buton|sayfayı|sayfayi|sayfa\b|\S+\s+sayfas|\S+\s+dosyas))"
+    r"|\s+sonra\s+",
+    re.I,
+)
+_TARIF = {"baslik", "paragraf", "buton", "sayfa", "sayfa_ad", "sayfa_goster", "sayfa_goster_ad"}
+
+
+def _paket(
+    *,
+    handled: bool = True,
+    reply: str = "",
+    gorunum: str = "",
+    rel: str = "",
+    text: str | None = None,
+    onizleme: bool = False,
+    klasor: str = "",
+    sayfa: str = "",
+) -> dict:
+    out = {
+        "ok": True,
+        "handled": handled,
+        "reply": reply,
+        "gorunum": gorunum,
+        "rel": rel,
+        "onizleme": onizleme,
+        "klasor": klasor,
+    }
+    if text is not None:
+        out["text"] = text
+    if sayfa:
+        out["sayfa"] = sayfa
+    return out
+
+
+def _adim(text: str) -> dict | None:
+    raw = (text or "").strip()
+    if not raw or len(raw) > 600:
+        return None
+    sade = re.sub(r"\s+", " ", raw).strip()
+    sade = re.sub(r"^[Ll]ütfen\s+", "", sade)
+    sade = re.sub(
+        r"\s+(?:lütfen|lutfen|olur mu|yapar mısın|yapar misin)\s*$",
+        "",
+        sade,
+        flags=re.I,
+    ).strip()
+    for kind, cre in _KALIP:
+        bulunan = cre.match(sade)
+        if not bulunan:
+            continue
+        if kind in {"yaz_eski", "yaz_duz"}:
+            cozulen = "yaz"
+        elif kind in {"oku_eski", "oku_duz"}:
+            cozulen = "oku"
+        else:
+            cozulen = kind
+        adim = {"kind": cozulen, "ham": sade}
+        for anahtar, deger in bulunan.groupdict().items():
+            if deger is not None:
+                adim[anahtar] = deger.strip()
+        if cozulen == "yaz" and "metin" in adim:
+            adim["metin"] = bulunan.group("metin")
+        return adim
+    return None
+
+
+def _dosya_adi(ad: str) -> str:
+    temiz = (ad or "").strip().strip('"').strip("'")
+    if not temiz or "/" in temiz or "\\" in temiz or ".." in temiz or ":" in temiz:
+        raise ValueError("Dosya adı geçersiz.")
+    if temiz.startswith("."):
+        raise ValueError("Dosya adı geçersiz.")
+    if "." not in temiz:
+        temiz += ".txt"
+    if Path(temiz).suffix.lower() not in _YAZI_UZANTI:
+        raise ValueError("Bu uzantı yazılmaz.")
+    return temiz
+
+
+def _sayfa_dosyasi(ad: str) -> str:
+    tab = str.maketrans(
+        {
+            "İ": "i",
+            "I": "i",
+            "ı": "i",
+            "Ğ": "g",
+            "ğ": "g",
+            "Ü": "u",
+            "ü": "u",
+            "Ş": "s",
+            "ş": "s",
+            "Ö": "o",
+            "ö": "o",
+            "Ç": "c",
+            "ç": "c",
+        }
+    )
+    slug = re.sub(r"[^a-z0-9._-]", "", (ad or "").translate(tab).lower())
+    if not slug or slug in {".", ".."} or slug.startswith("."):
+        raise ValueError("Sayfa adı geçersiz.")
+    if not slug.endswith((".html", ".htm")):
+        slug += ".html"
+    return slug
+
+
+def _sayfa_html(baslik: str) -> str:
+    safe = _html_kacis(baslik)
+    return (
+        "<!DOCTYPE html>\n"
+        '<html lang="tr">\n'
+        f'<head><meta charset="utf-8"><title>{safe}</title></head>\n'
+        "<body>\n"
+        f"<h1>{safe}</h1>\n"
+        "</body>\n"
+        "</html>\n"
+    )
+
+
+def _kilit_yolu(repo: Path) -> str:
+    kayit = klasor_oku()
+    if not kayit:
+        raise _KlasorYok()
+    return str(klasor_guvenli(repo, kayit))
+
+
+def _yaz_geri(repo: Path, ad: str, metin: str) -> dict:
+    _kilit_yolu(repo)
+    rel_ad = _dosya_adi(ad)
+    klasor_yaz(repo, rel_ad, metin)
+    okunan = klasor_oku_dosya(repo, rel_ad)
+    if okunan["text"] != metin:
+        raise ValueError("Yazılmadı. " + okunan["rel"])
+    html = rel_ad.lower().endswith((".html", ".htm"))
+    gorunen = okunan["text"] if len(okunan["text"]) <= 500 else okunan["text"][:500] + "…"
+    return _paket(
+        reply=f"Yazıldı: {okunan['rel']}\n{gorunen}",
+        gorunum="proje" if html else "kod",
+        rel=okunan["rel"],
+        text=okunan["text"],
+        onizleme=html,
+        sayfa=rel_ad if html else "",
+    )
+
+
+def _oku_paket(repo: Path, ad: str) -> dict:
+    _kilit_yolu(repo)
+    rel_ad = _dosya_adi(ad)
+    okunan = klasor_oku_dosya(repo, rel_ad)
+    html = rel_ad.lower().endswith((".html", ".htm"))
+    govde = okunan["text"] if len(okunan["text"]) <= 500 else okunan["text"][:500] + "…"
+    return _paket(
+        reply=f"{okunan['rel']} okundu.\n{govde or '(boş)'}",
+        gorunum="proje" if html else "kod",
+        rel=okunan["rel"],
+        text=okunan["text"],
+        onizleme=html,
+        sayfa=rel_ad if html else "",
+    )
+
+
+def _sayfa_sec(repo: Path, tercih: str) -> str:
+    if tercih:
+        return tercih
+    htmls = []
+    for item in klasor_liste(repo)["dosyalar"]:
+        rel = str(item["rel"])
+        if rel.lower().endswith((".html", ".htm")):
+            htmls.append(rel[len("klasor/") :] if rel.startswith("klasor/") else rel)
+    if "index.html" in htmls:
+        return "index.html"
+    if len(htmls) == 1:
+        return htmls[0]
+    if not htmls:
+        raise ValueError("Sayfa yok. Şöyle söyle: deneme sayfası yap")
+    raise ValueError("Birden fazla sayfa var. Şöyle söyle: deneme sayfasını göster")
+
+
+def _sayfa_yaz(repo: Path, dosya: str, html: str, reply: str) -> dict:
+    klasor_yaz(repo, dosya, html)
+    okunan = klasor_oku_dosya(repo, dosya)
+    if okunan["text"] != html:
+        raise ValueError("Yazılmadı. " + okunan["rel"])
+    return _paket(
+        reply=reply,
+        gorunum="proje",
+        rel=okunan["rel"],
+        text=okunan["text"],
+        onizleme=True,
+        sayfa=dosya,
+    )
+
+
+def _calistir(repo: Path, adim: dict, sayfa: str) -> dict:
+    kind = adim["kind"]
+    if kind == "kilit":
+        try:
+            data = klasor_kaydet(repo, adim.get("yol") or "")
+        except ValueError as exc:
+            raise ValueError("Klasör açılmadı. " + str(exc)) from exc
+        goster = _calistir(repo, {"kind": "goster_klasor", "ham": "klasörü göster"}, "")
+        return _paket(
+            reply="Klasör kilitlendi: " + data["klasor"] + "\n" + goster["reply"],
+            gorunum=goster.get("gorunum") or "proje",
+            rel=goster.get("rel") or "",
+            text=goster.get("text"),
+            onizleme=bool(goster.get("onizleme")),
+            klasor=data["klasor"],
+        )
+    if kind == "birak":
+        klasor_kaydet(repo, "")
+        return _paket(reply="Çalışma klasörü bırakıldı. Dosyalar silinmedi.")
+    if kind == "goster_klasor":
+        liste = klasor_liste(repo)
+        if not liste["klasor"]:
+            raise ValueError("Çalışma klasörü seçilmedi. Şöyle söyle: çalışma klasörü: tam yol")
+        adlar = [str(item["rel"]).replace("klasor/", "", 1) for item in liste["dosyalar"][:12]]
+        html = next((ad for ad in adlar if ad.lower().endswith((".html", ".htm"))), "")
+        text = klasor_oku_dosya(repo, html)["text"] if html else None
+        govde = "\n".join(adlar) if adlar else "Dosya yok."
+        return _paket(
+            reply="Klasör açık: " + liste["klasor"] + "\n" + govde,
+            gorunum="proje",
+            rel=("klasor/" + html) if html else "",
+            text=text,
+            onizleme=bool(html),
+            klasor=liste["klasor"],
+            sayfa=html,
+        )
+    if kind in _TARIF or kind in {"yaz", "oku"}:
+        try:
+            _kilit_yolu(repo)
+        except _KlasorYok:
+            if kind in _TARIF:
+                raise
+            raise ValueError("Çalışma klasörü seçilmedi. Şöyle söyle: çalışma klasörü: tam yol") from None
+    if kind == "yaz":
+        metin = adim.get("metin") or ""
+        if metin == "":
+            raise ValueError("Yazılacak metin yok.")
+        return _yaz_geri(repo, adim.get("ad") or "", metin)
+    if kind == "oku":
+        return _oku_paket(repo, adim.get("ad") or "")
+    if kind in {"sayfa", "sayfa_ad"}:
+        dosya = _sayfa_dosyasi("index" if kind == "sayfa" else adim.get("ad") or "")
+        try:
+            mevcut = klasor_oku_dosya(repo, dosya)
+        except ValueError:
+            mevcut = None
+        if mevcut:
+            return _paket(
+                reply="Sayfa duruyor: " + mevcut["rel"],
+                gorunum="proje",
+                rel=mevcut["rel"],
+                text=mevcut["text"],
+                onizleme=True,
+                sayfa=dosya,
+            )
+        html = _sayfa_html(Path(dosya).stem)
+        return _sayfa_yaz(repo, dosya, html, "Sayfa yazıldı: klasor/" + dosya)
+    if kind in {"sayfa_goster", "sayfa_goster_ad"}:
+        tercih = _sayfa_dosyasi(adim["ad"]) if kind == "sayfa_goster_ad" else sayfa
+        dosya = _sayfa_sec(repo, tercih)
+        okunan = klasor_oku_dosya(repo, dosya)
+        return _paket(
+            reply="Sayfa açık: " + okunan["rel"],
+            gorunum="proje",
+            rel=okunan["rel"],
+            text=okunan["text"],
+            onizleme=True,
+            sayfa=dosya,
+        )
+    if kind == "baslik":
+        metin = (adim.get("metin") or "").strip().strip("\"'")
+        if not metin or len(metin) > 180:
+            raise ValueError("Başlık boş veya çok uzun.")
+        dosya = _sayfa_sec(repo, sayfa)
+        html = _baslik_yaz(klasor_oku_dosya(repo, dosya)["text"], metin)
+        safe = _html_kacis(metin)
+        if f"<title>{safe}</title>" not in html:
+            raise ValueError("Yazılmadı. " + dosya)
+        return _sayfa_yaz(repo, dosya, html, "Başlık yazıldı: klasor/" + dosya + "\n" + metin)
+    if kind == "paragraf":
+        metin = (adim.get("metin") or "").strip()
+        if not metin or len(metin) > 400:
+            raise ValueError("Paragraf boş veya çok uzun.")
+        dosya = _sayfa_sec(repo, sayfa)
+        parca = "<p>" + _html_kacis(metin) + "</p>"
+        html = _govdeye_ekle(klasor_oku_dosya(repo, dosya)["text"], parca)
+        if parca not in html:
+            raise ValueError("Yazılmadı. " + dosya)
+        return _sayfa_yaz(repo, dosya, html, "Paragraf yazıldı: klasor/" + dosya + "\n" + metin)
+    if kind == "buton":
+        metin = (adim.get("metin") or "").strip().strip("\"'")
+        if not metin or len(metin) > 80:
+            raise ValueError("Buton yazısı boş veya çok uzun.")
+        dosya = _sayfa_sec(repo, sayfa)
+        parca = '<button type="button">' + _html_kacis(metin) + "</button>"
+        html = _govdeye_ekle(klasor_oku_dosya(repo, dosya)["text"], parca)
+        if parca not in html:
+            raise ValueError("Yazılmadı. " + dosya)
+        return _sayfa_yaz(repo, dosya, html, "Buton yazıldı: klasor/" + dosya + "\n" + metin)
+    return _paket(handled=False)
+
+
+def klasor_soz(repo: Path, yazi: str) -> dict:
+    """Kilitli klasörde bilinen cümle. Bilinmeyen cümle dosyaya dokunmaz."""
+    raw = (yazi or "").strip()
+    if not raw or len(raw) > 600:
+        return _paket(handled=False)
+    tek = _adim(raw)
+    if tek is not None:
+        try:
+            return _calistir(repo, tek, "")
+        except _KlasorYok:
+            return _paket(handled=False)
+        except ValueError as exc:
+            return _paket(handled=True, reply=str(exc))
+    parcalar = [p.strip() for p in _AYIR.split(raw) if p.strip()]
+    if len(parcalar) < 2:
+        return _paket(handled=False)
+    adimlar = []
+    for parca in parcalar:
+        bulunan = _adim(parca)
+        if bulunan is None:
+            return _paket(handled=False)
+        adimlar.append(bulunan)
+    sayfa = ""
+    son = _paket(handled=True)
+    cevaplar: list[str] = []
+    for sira, adim in enumerate(adimlar, 1):
+        try:
+            son = _calistir(repo, adim, sayfa)
+        except _KlasorYok:
+            return _paket(
+                handled=True,
+                reply="Çalışma klasörü seçilmedi. Şöyle söyle: çalışma klasörü: tam yol",
+            )
+        except ValueError as exc:
+            once = "\nÖnceki adımlar yazıldı." if cevaplar else ""
+            return _paket(
+                handled=True,
+                reply=f"{sira}. adım durdu: {adim['ham']}. {exc}{once}",
+                gorunum=str(son.get("gorunum") or ""),
+                rel=str(son.get("rel") or ""),
+                text=son.get("text") if isinstance(son.get("text"), str) else None,
+                onizleme=bool(son.get("onizleme")),
+                klasor=str(son.get("klasor") or ""),
+                sayfa=str(son.get("sayfa") or ""),
+            )
+        if son.get("sayfa"):
+            sayfa = str(son["sayfa"])
+        if son.get("reply"):
+            cevaplar.append(str(son["reply"]))
+    son = dict(son)
+    son["reply"] = "\n".join(cevaplar)
+    return son

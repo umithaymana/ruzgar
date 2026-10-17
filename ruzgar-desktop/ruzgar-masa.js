@@ -1371,17 +1371,21 @@
       "çizimi aç",
       "sunumu aç",
       "belgeye yaz: metin",
+      "belgeye selam mimar yaz",
       "belgeye ekle: metin",
+      "tabloda A1 e 10 yaz",
       "belgeyi temizle",
       "tablo A1 = 10",
       "tablo A3 = =TOPLA(A1:A2)",
       "tabloyu temizle",
       "çizgi 40 40 400 200",
+      "çizime kutu çiz",
       "kutu 80 80 240 140",
       "daire 300 220 80 60",
       "renk kırmızı",
       "çizimi temizle",
       "slayt ekle: Başlık | metin",
+      "sunuma Hoş geldin slaytı ekle: metin",
       "sunumu temizle",
       "sun",
     ].join("\n");
@@ -1390,6 +1394,10 @@
   function masaKomutCoz(text) {
     const raw = String(text || "").trim();
     if (!raw || raw.length > 9000) return null;
+    if (window.ruzgarMasaSoz && typeof window.ruzgarMasaSoz.coz === "function") {
+      const duz = window.ruzgarMasaSoz.coz(raw);
+      if (duz) return { handled: true, reply: masaUygula(duz) };
+    }
     const sade = raw
       .replace(/^[Ll]ütfen\s+/, "")
       .replace(/\s+(mısın|misin|misiniz|mısınız|musun|musunuz)[.!?]*$/i, "")

@@ -201,6 +201,10 @@
 
   function yakinSoz(low) {
     const raf = [
+      ["dosyasina", "merhaba dosyasına selam yaz"],
+      ["dosyasini", "merhaba dosyasını oku"],
+      ["sayfasi", "deneme sayfası yap"],
+      ["sayfayi", "sayfayı göster"],
       ["kod", "kodları göster"],
       ["proje", "projeyi göster"],
       ["baslik", "başlığı … yap"],
@@ -310,48 +314,41 @@
     return { handled: true, reply: "Yazıldı: " + data.rel };
   }
 
+  function klasorGorunum(data) {
+    if (window.switchMode) window.switchMode("programlama");
+    if ((data.rel && String(data.rel).indexOf("klasor/") === 0) || data.klasor) secili = "klasor";
+    if (data.gorunum) gorunumKur(data.gorunum);
+    const editor = document.getElementById("code-editor");
+    const etiket = document.getElementById("code-active-file");
+    if (data.rel) {
+      acikDosya = data.rel;
+      if (typeof atolyeOpenRel !== "undefined") atolyeOpenRel = data.rel;
+      if (etiket) etiket.textContent = "Dosya: " + data.rel;
+      durum(data.rel);
+    } else if (data.klasor) {
+      durum(data.klasor);
+    }
+    if (editor && typeof data.text === "string") editor.value = data.text;
+    if (data.onizleme && data.rel && /\.html?$/i.test(data.rel)) {
+      onizleme.src = apiKok() + "/api/programlama/calisma-onizleme/" + encodeURI(yol(data.rel).replace(/^klasor\//, "")) + "?t=" + Date.now();
+    } else if (data.gorunum === "kod") {
+      onizleme.removeAttribute("src");
+    }
+  }
+
   async function klasorSozu(raw) {
-    const yazi = String(raw || "").trim();
-    let m = yazi.match(/^(?:çalışma klasörü|calisma klasoru)\s*:\s*(.+)$/i);
-    if (m) {
-      try {
-        const data = await klasorKaydet(m[1].trim());
-        const goster = await klasorSayfadaGoster();
-        return { handled: true, reply: "Klasör kilitlendi: " + data.klasor + "\n" + (goster.reply || "") };
-      } catch (err) {
-        return { handled: true, reply: "Klasör açılmadı. " + (err.message || "Yol geçersiz.") };
-      }
+    try {
+      const data = await apiJson(apiKok() + "/api/programlama/calisma-soz", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ yazi: raw }),
+      });
+      if (!data.handled) return null;
+      if (data.gorunum || data.rel) klasorGorunum(data);
+      return { handled: true, reply: data.reply || "Tamam." };
+    } catch (err) {
+      return { handled: true, reply: "Yazılmadı. " + (err.message || "Kapı kapalı.") };
     }
-    if (/^(klasörü bırak|klasoru birak)$/i.test(yazi)) {
-      await klasorKaydet("");
-      secili = "";
-      durum("Çalışma klasörü bırakıldı. projects/ duruyor.");
-      return { handled: true, reply: "Çalışma klasörü bırakıldı. Dosyalar silinmedi." };
-    }
-    if (/^(klasörü göster|klasoru goster|çalışma klasörü|calisma klasoru)$/i.test(yazi)) {
-      try {
-        return await klasorSayfadaGoster();
-      } catch (err) {
-        return { handled: true, reply: err.message || "Klasör okunamadı." };
-      }
-    }
-    m = yazi.match(/^(?:dosyayı oku|dosyayi oku)\s*:\s*(.+)$/i);
-    if (m) {
-      try {
-        return await klasorDosyaOku(m[1].trim());
-      } catch (err) {
-        return { handled: true, reply: "Okunamadı. " + (err.message || "") };
-      }
-    }
-    m = yazi.match(/^(?:dosyaya yaz|dosyaya ekle)\s*:\s*(.+?)\s*\|\s*([\s\S]+)$/i);
-    if (m) {
-      try {
-        return await klasorDosyaYaz(m[1].trim(), m[2]);
-      } catch (err) {
-        return { handled: true, reply: "Yazılmadı. " + (err.message || "") };
-      }
-    }
-    return null;
   }
 
   async function listele(rel) {
@@ -785,7 +782,6 @@
       const low = komutGovdesi(raw);
       if (!low || soruMu(low) || !emirGibi(low)) return null;
       if (sozlukBul(low)) return null;
-      if (/^(calisma klasoru|klasoru goster|klasoru birak|dosyayi oku|dosyaya yaz|dosyaya ekle)\b/.test(low)) return null;
       if (/^(?:projeyi|proje|siteyi|vitrini)\s+(?:goster|ac)\b/.test(low)) return null;
       if (programlamaAcik() && ajanEmriMi(low)) return null;
       if (ajanEmriMi(low)) {
@@ -797,14 +793,33 @@
 
   function klasorSozuMu(raw) {
     const yazi = String(raw || "").trim();
-    return /^(?:çalışma klasörü|calisma klasoru)\s*:/i.test(yazi)
-      || /^(?:klasörü bırak|klasoru birak|klasörü göster|klasoru goster|çalışma klasörü|calisma klasoru)$/i.test(yazi)
-      || /^(?:dosyayı oku|dosyayi oku)\s*:/i.test(yazi)
-      || /^(?:dosyaya yaz|dosyaya ekle)\s*:/i.test(yazi);
+    if (!yazi || yazi.length > 600) return false;
+    if (/^(?:çalışma klasörü|calisma klasoru)\s*:/i.test(yazi)) return true;
+    if (/^(?:klasörü bırak|klasoru birak|klasörü göster|klasoru goster|çalışma klasörü|calisma klasoru)$/i.test(yazi)) return true;
+    if (/^(?:dosyayı oku|dosyayi oku)\s*:/i.test(yazi)) return true;
+    if (/^(?:dosyaya yaz|dosyaya ekle)\s*:/i.test(yazi)) return true;
+    const low = harf(yazi);
+    if (/\sdosyasina\s+\S/.test(low) && /\syaz$/.test(low)) return true;
+    if (/\sdosyasini\s+oku$/.test(low)) return true;
+    if (/(^|\s)(sayfa yap|sayfa ac|sayfayi goster)\b/.test(low)) return true;
+    if (/\ssayfasi\s+yap\b/.test(low) || /\ssayfasini\s+goster\b/.test(low)) return true;
+    if (/^(basligi|baslik|paragraf|buton)\b/.test(low)) return true;
+    if ((low.indexOf(",") >= 0 || /\ssonra\s/.test(low))
+      && /dosyasina|dosyasini|sayfa|baslig|paragraf|buton|calisma klasoru|klasoru/.test(low)) return true;
+    return false;
   }
 
   function projeKomutCoz(raw) {
-    if (klasorSozuMu(raw)) return klasorSozu(raw);
+    if (klasorSozuMu(raw)) {
+      return klasorSozu(raw).then(function (sonuc) {
+        if (sonuc) return sonuc;
+        return projeKomutDevam(raw);
+      });
+    }
+    return projeKomutDevam(raw);
+  }
+
+  function projeKomutDevam(raw) {
     const low = komutGovdesi(raw);
     if (!low || soruMu(low)) return null;
     const komut = sozlukBul(low);
