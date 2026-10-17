@@ -6,6 +6,16 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
 
+  function bakMasa(raw) {
+    const m = String(raw || "").match(/^(belgeye|tabloya|çizime|cizime|sunuma)\s+bak\s+ve\s+s[öo]yle$/i);
+    if (!m) return "";
+    const ad = m[1].toLowerCase();
+    if (ad === "belgeye") return "belge";
+    if (ad === "tabloya") return "tablo";
+    if (ad === "sunuma") return "sunum";
+    return "cizim";
+  }
+
   function parca(raw) {
     let m = raw.match(/^belgeye\s+(.+?)\s+yaz$/i);
     if (m && m[1].trim()) return { eylem: "belge.yaz", metin: m[1].trim() };
@@ -30,18 +40,21 @@
   function coz(text) {
     const raw = String(text || "").replace(/\s+/g, " ").trim();
     if (!raw || raw.length > 9000) return null;
-    const tek = parca(raw);
-    if (tek) return tek;
+    const bak = bakMasa(raw);
+    if (bak) return { bak: bak };
     if (/^masay[ıi]\s+ba[sş]tan\s+tasarla$/i.test(raw)) return { red: true };
     const parcalar = raw.split(/\s*,\s*|\s+sonra\s+/).map(function (p) { return p.trim(); }).filter(Boolean);
-    if (parcalar.length < 2) return null;
-    const liste = [];
-    for (let i = 0; i < parcalar.length; i++) {
-      const hit = parca(parcalar[i]);
-      if (!hit) return liste.length ? { red: true } : null;
-      liste.push(hit);
+    if (parcalar.length >= 2) {
+      const liste = [];
+      for (let i = 0; i < parcalar.length; i++) {
+        if (bakMasa(parcalar[i])) return { red: true };
+        const hit = parca(parcalar[i]);
+        if (!hit) return liste.length ? { red: true } : null;
+        liste.push(hit);
+      }
+      return { liste: liste };
     }
-    return { liste: liste };
+    return parca(raw);
   }
 
   return { coz: coz };

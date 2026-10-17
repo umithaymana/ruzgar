@@ -5419,6 +5419,27 @@ def api_calisma_soz(body: CalismaSozBody):
     return klasor_soz(REPO_ROOT, body.yazi)
 
 
+class MasaBakBody(BaseModel):
+    masa: str = ""
+    yazi: str = ""
+
+
+@app.post("/api/programlama/masa-bak")
+def api_masa_bak(body: MasaBakBody):
+    """Dört masa: görünen yazıdan tek tarif. Masa bu istekte değişmez."""
+    from ilim_assistant.motorlar.programlama_proje_masasi import masa_bak_soz
+
+    return masa_bak_soz(body.masa, body.yazi)
+
+
+@app.post("/api/programlama/bekleyen-birak")
+def api_bekleyen_birak():
+    """Klasörde bekleyen öneriyi siler. Dosya yazmaz."""
+    from ilim_assistant.motorlar.programlama_proje_masasi import bekleyen_birak
+
+    return bekleyen_birak(REPO_ROOT)
+
+
 @app.get("/api/programlama/calisma-onizleme/{rel:path}")
 def api_calisma_onizleme(rel: str):
     from ilim_assistant.motorlar.programlama_proje_masasi import klasor_onizleme

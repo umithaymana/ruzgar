@@ -319,6 +319,77 @@ def test_bak_klasorsuz_ve_metin_dosyasi(masa, monkeypatch):
     assert "Bekleyen öneri yok." in klasor_soz(repo, "uygula")["reply"]
 
 
+def test_masa_bak_tarif_ayrir_ve_yazmaz(masa, monkeypatch):
+    from ilim_assistant.motorlar.programlama_proje_masasi import bekleyen_birak, masa_bak_soz
+
+    repo, el = masa
+    cagrilar = []
+
+    def sahte(ad, metin):
+        cagrilar.append((ad, metin))
+        return {
+            "belge": "belgeye ... yaz",
+            "tablo": "tabloda A1 e 10 yaz",
+            "cizim": "çizime kutu çiz",
+            "sunum": "sunuma Hoş geldin slaytı ekle: bugün",
+        }[ad]
+
+    monkeypatch.setattr(
+        "ilim_assistant.motorlar.programlama_proje_masasi._masa_soyleyen",
+        sahte,
+    )
+    bos = masa_bak_soz("belge", "")
+    assert "Öneri çıkmadı" in bos["reply"]
+    assert bos["eylem"] is None
+    assert cagrilar == []
+    red = masa_bak_soz("belge", "selam")
+    assert "Bu tarif değil" in red["reply"]
+    assert red["eylem"] is None
+    assert "<" not in cagrilar[0][1]
+    monkeypatch.setattr(
+        "ilim_assistant.motorlar.programlama_proje_masasi._masa_soyleyen",
+        lambda ad, metin: "belgeye selam yaz" if ad == "belge" else "tabloda B1 e 99 yaz",
+    )
+    kabul = masa_bak_soz("belge", "selam")
+    assert kabul["eylem"] == {"eylem": "belge.yaz", "metin": "selam"}
+    assert "Önerim: belgeye selam yaz" in kabul["reply"]
+    yanlis = masa_bak_soz("tablo", "A1: 10")
+    assert yanlis["eylem"] is None
+    dogru = masa_bak_soz("tablo", "A1: 10")
+    monkeypatch.setattr(
+        "ilim_assistant.motorlar.programlama_proje_masasi._masa_soyleyen",
+        lambda ad, metin: "tabloda A1 e 10 yaz",
+    )
+    dogru = masa_bak_soz("tablo", "A1: 10")
+    assert dogru["eylem"]["hucre"] == "A1"
+    assert dogru["eylem"]["deger"] == "10"
+    ciz = masa_bak_soz("cizim", "Çizim boş.")
+    monkeypatch.setattr(
+        "ilim_assistant.motorlar.programlama_proje_masasi._masa_soyleyen",
+        lambda ad, metin: "çizime kutu çiz",
+    )
+    ciz = masa_bak_soz("cizim", "Çizim boş.")
+    assert ciz["eylem"]["eylem"] == "cizim.kutu"
+    sunum = masa_bak_soz("sunum", "Slayt 1: Hoş geldin | bugün")
+    monkeypatch.setattr(
+        "ilim_assistant.motorlar.programlama_proje_masasi._masa_soyleyen",
+        lambda ad, metin: "sunuma Hoş geldin slaytı ekle: bugün",
+    )
+    sunum = masa_bak_soz("sunum", "Slayt 1: Hoş geldin | bugün")
+    assert sunum["eylem"]["baslik"] == "Hoş geldin"
+    assert sunum["eylem"]["metin"] == "bugün"
+    _kilitle(repo, el)
+    klasor_soz(repo, "deneme sayfası yap")
+    monkeypatch.setattr(
+        "ilim_assistant.motorlar.programlama_proje_masasi._soyleyen",
+        lambda metin: "başlığı merhaba yap",
+    )
+    klasor_soz(repo, "deneme sayfasına bak ve söyle")
+    assert bekleyen_birak(repo)["birakildi"] is True
+    assert bekleyen_birak(repo)["birakildi"] is False
+    assert list(el.glob("*.html"))
+
+
 def test_bilinmeyen_ve_kapi(masa, tmp_path):
     repo, el = masa
     yok = klasor_soz(repo, "menüyü lacivert yap")

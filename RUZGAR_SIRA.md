@@ -17,10 +17,11 @@
 | 9 | Masa işi: dört masayı tek cümlede böl | bitti | `ruzgar-masa-soz.test.js` |
 | 10 | Sayfada oku, bir kez değiştir | bitti | `test_yerine_bir_kez_ve_yoksa_durur` |
 | 11 | Bak ve söyle, uygula bir kez | bitti | `test_bak_soyler_uygula_bir_kez` |
+| 12 | Dört masa bak ve söyle | bitti | `test_masa_bak_tarif_ayrir_ve_yazmaz` |
 
-**Denenecek cümle:** `deneme sayfasına bak ve söyle`
+**Denenecek cümle:** `belgeye bak ve söyle`
 
-**11. iş bitti.** Kapı dosyayı okur ve `Gördüm` satırını dosyadan kurar. Konuşan beyne görünen yazı gider. `...` ve örnek söz tarif sayılmaz. Dosya, `uygula` denince ve tarif bilinen kapıdan geçince değişir. Karışık cümle yazmaz.
+**12. iş bitti.** Klasör cümlesi `deneme sayfasına bak ve söyle` olarak durur. Masa cümlesi `belgeye bak ve söyle` olur. `uygula` yalnız en son bakılan yeri bir kez çalıştırır. İkisi aynı anda bekletilmez. Karışık cümle yazmaz.
 
 **Bilerek kapalı:** modelin ürettiği kodu çalıştırmak, uygulama klasörüne yazmak, 32B/70B, telefon.
 

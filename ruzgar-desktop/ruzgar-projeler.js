@@ -202,6 +202,7 @@
   function yakinSoz(low) {
     const raf = [
       ["bak", "deneme sayfasına bak ve söyle"],
+      ["belgeye", "belgeye bak ve söyle"],
       ["yerine", "deneme sayfasında selam yerine merhaba yaz"],
       ["sayfasina", "deneme sayfasına başlığı selam yap, hoş geldin yaz, tıkla butonu koy, sayfayı göster"],
       ["dosyasina", "merhaba dosyasına selam yaz"],
@@ -348,6 +349,7 @@
       });
       if (!data.handled) return null;
       if (data.gorunum || data.rel) klasorGorunum(data);
+      if (window.ruzgarMasaBekleyenSil && /\bbak\s+ve\s+s[öo]yle\b/i.test(String(raw))) window.ruzgarMasaBekleyenSil();
       return { handled: true, reply: data.reply || "Tamam." };
     } catch (err) {
       return { handled: true, reply: "Yazılmadı. " + (err.message || "Kapı kapalı.") };
@@ -807,7 +809,7 @@
     if (/(^|\s)(sayfa yap|sayfa ac|sayfayi goster)\b/.test(low)) return true;
     if (/\ssayfasi\s+yap\b/.test(low) || /\ssayfasini\s+goster\b/.test(low)) return true;
     if (/\ssayfasina\b/.test(low) || /\ssayfasinda\b/.test(low)) return true;
-    if (/\bbak\s+ve\s+soyle\b/.test(low)) return true;
+    if (/\b(sayfasina|dosyasina)\s+bak\s+ve\s+soyle\b/.test(low)) return true;
     if (/^uygula$/.test(low)) return true;
     if (/\byerine\b/.test(low) && /\byaz$/.test(low)) return true;
     if (/\bicinde\b/.test(low) && /\byerine\b/.test(low)) return true;
@@ -820,7 +822,25 @@
     return false;
   }
 
+  function masaBakAd(low) {
+    if (/^belgeye\s+bak\s+ve\s+soyle$/.test(low)) return "belge";
+    if (/^tabloya\s+bak\s+ve\s+soyle$/.test(low)) return "tablo";
+    if (/^cizime\s+bak\s+ve\s+soyle$/.test(low)) return "cizim";
+    if (/^sunuma\s+bak\s+ve\s+soyle$/.test(low)) return "sunum";
+    return "";
+  }
+
   function projeKomutCoz(raw) {
+    const bakLow = harf(raw);
+    const masaAd = masaBakAd(bakLow);
+    if (masaAd) {
+      if (window.ruzgarMasaBak) return window.ruzgarMasaBak(masaAd);
+      return { handled: true, reply: "Masa kapalı." };
+    }
+    if (/^uygula$/.test(bakLow) && window.ruzgarMasaBekleyenUygula) {
+      const bekleyen = window.ruzgarMasaBekleyenUygula();
+      if (bekleyen) return bekleyen;
+    }
     if (klasorSozuMu(raw)) {
       return klasorSozu(raw).then(function (sonuc) {
         if (sonuc) return sonuc;

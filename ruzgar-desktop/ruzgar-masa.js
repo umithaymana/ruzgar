@@ -1490,6 +1490,68 @@
     return null;
   }
 
+  let masaBekleyen = null;
+
+  function masaApiKok() {
+    const kok = typeof API === "string" ? API : "";
+    return String(kok || "http://127.0.0.1:8779").replace(/\/$/, "");
+  }
+
+  function masaGorunen(masa) {
+    if (masa === "belge") return String(belge.innerText || belge.textContent || "").replace(/\s+/g, " ").trim().slice(0, 1200);
+    if (masa === "tablo") {
+      const satirlar = [];
+      for (let r = 0; r < ROWS && satirlar.length < 40; r++) {
+        for (let c = 0; c < COLS.length; c++) {
+          const deger = String(state.sheet[r][c] || "").trim();
+          if (deger) satirlar.push(COLS[c] + (r + 1) + ": " + deger);
+        }
+      }
+      return satirlar.join("\n").slice(0, 1200);
+    }
+    if (masa === "cizim") return state.ink ? "Çizimde kayıtlı resim var." : "Çizim boş.";
+    return state.slides.map(function (slayt, i) {
+      return "Slayt " + (i + 1) + ": " + String(slayt.title || "") + " | " + String(slayt.body || "");
+    }).join("\n").slice(0, 1200);
+  }
+
+  async function masaBak(masa) {
+    masaBekleyen = null;
+    const yazi = masaGorunen(masa);
+    try {
+      await fetch(masaApiKok() + "/api/programlama/bekleyen-birak", { method: "POST" });
+    } catch (err) { /* klasör önerisi duruyorsa da masa bakışı sürer */ }
+    let data = {};
+    try {
+      const res = await fetch(masaApiKok() + "/api/programlama/masa-bak", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ masa: masa, yazi: yazi }),
+      });
+      data = await res.json();
+    } catch (err) {
+      return { handled: true, reply: "Öneri çıkmadı. Masa aynı." };
+    }
+    if (data && data.eylem) masaBekleyen = data.eylem;
+    masaAc(masa);
+    return { handled: true, reply: (data && data.reply) || "Masa aynı." };
+  }
+
+  window.ruzgarMasaBak = function (masa) {
+    return masaBak(String(masa || ""));
+  };
+
+  window.ruzgarMasaBekleyenUygula = function () {
+    if (!masaBekleyen) return null;
+    const eylem = masaBekleyen;
+    masaBekleyen = null;
+    return { handled: true, reply: masaUygula(eylem) || "Masa değişmedi." };
+  };
+
+  window.ruzgarMasaBekleyenSil = function () {
+    masaBekleyen = null;
+  };
+
   window.ruzgarMasaSayfa = function (kind) {
     return masaSayfa(String(kind || ""));
   };

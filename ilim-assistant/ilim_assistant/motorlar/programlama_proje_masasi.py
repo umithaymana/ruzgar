@@ -513,9 +513,37 @@ _BAK_ISTEK = (
     "Yazı:\n"
 )
 _ORNEK_SOZ = re.compile(
-    r"^(?:\.{2,}|…+|sayfadaki söz|sayfadaki soz|yeni söz|yeni soz|buradaki söz|buradaki soz)$",
+    r"^(?:\.{2,}|…+|sayfadaki söz|sayfadaki soz|yeni söz|yeni soz|buradaki söz|buradaki soz"
+    r"|gördüğün söz|gordugun soz|gördüğün değer|gordugun deger|gördüğün başlık|gordugun baslik"
+    r"|gördüğün metin|gordugun metin)$",
     re.I,
 )
+_MASA_AD = {"belge": "belge", "tablo": "tablo", "cizim": "cizim", "çizim": "cizim", "sunum": "sunum"}
+_MASA_ISTEK = {
+    "belge": (
+        "Yalnız bir cümle yaz. Nokta koyma.\n"
+        "belgeye gördüğün söz yaz\n"
+        "veya belgeye gördüğün söz ekle\n"
+        "Yazı:\n"
+    ),
+    "tablo": (
+        "Yalnız bir cümle yaz. Nokta koyma.\n"
+        "tabloda A1 e gördüğün değer yaz\n"
+        "Yazı:\n"
+    ),
+    "cizim": (
+        "Yalnız şunlardan birini yaz:\n"
+        "çizime kutu çiz\n"
+        "çizime çizgi çiz\n"
+        "çizime daire çiz\n"
+        "Yazı:\n"
+    ),
+    "sunum": (
+        "Yalnız bir cümle yaz. Nokta koyma.\n"
+        "sunuma gördüğün başlık slaytı ekle: gördüğün metin\n"
+        "Yazı:\n"
+    ),
+}
 _USTA_YAZI_YASAK = re.compile(r"\b(dosya|klasör|klasor|sayfa|başl|basl)\b", re.I)
 _USTA_RED = (
     "Bunu yapmadım. Dosya değişmedi. "
@@ -865,8 +893,8 @@ def _calistir(repo: Path, adim: dict, sayfa: str) -> dict:
     return _paket(handled=False)
 
 
-def _soyleyen(metin: str) -> str:
-    """Yerel denge, 15 saniye. Test bunu değiştirir. Boş dönüş öneri yok demektir."""
+def _soyle(istem: str, metin: str) -> str:
+    """Yerel denge, 15 saniye. Boş dönüş öneri yok demektir."""
     import json
     import urllib.request
 
@@ -878,7 +906,7 @@ def _soyleyen(metin: str) -> str:
     body = json.dumps(
         {
             "model": model,
-            "prompt": _BAK_ISTEK + parca,
+            "prompt": istem + parca,
             "stream": False,
             "options": {"temperature": 0.1, "num_predict": 60},
         }
@@ -894,6 +922,16 @@ def _soyleyen(metin: str) -> str:
         return str(data.get("response") or "").strip()
     except Exception:
         return ""
+
+
+def _soyleyen(metin: str) -> str:
+    """Klasör bak kapısı. Test bunu değiştirir."""
+    return _soyle(_BAK_ISTEK, metin)
+
+
+def _masa_soyleyen(masa: str, metin: str) -> str:
+    """Masa bak kapısı. Test bunu değiştirir."""
+    return _soyle(_MASA_ISTEK.get(masa) or "", metin)
 
 
 def _soz_var(metin: str) -> bool:
@@ -1046,6 +1084,106 @@ def _uygula(repo: Path) -> dict:
     if not bekleyen:
         return _paket(reply="Bekleyen öneri yok.")
     return _calistir(repo, bekleyen["adim"], str(bekleyen.get("sayfa") or ""))
+
+
+def _masa_cumle_eylem(masa: str, sade: str, kaynak: str) -> dict | None:
+    if masa == "belge":
+        bulunan = re.match(r"^belgeye\s+(?P<metin>.+?)\s+(?P<tur>yaz|ekle)$", sade, re.I)
+        if not bulunan:
+            return None
+        metin = bulunan.group("metin").strip().strip("\"'")
+        if not _soz_var(metin) or len(metin) > 400:
+            return None
+        tur = bulunan.group("tur").lower()
+        eylem = "belge.ekle" if tur == "ekle" else "belge.yaz"
+        cumle = "belgeye " + metin + (" ekle" if tur == "ekle" else " yaz")
+        return {"eylem": eylem, "metin": metin, "cumle": cumle}
+    if masa == "tablo":
+        bulunan = re.match(
+            r"^(?:tabloda|tabloya)\s+(?P<sutun>[A-La-l])(?P<satir>\d{1,2})\s*(?:e|ye)?\s+(?P<deger>.+?)\s+yaz$",
+            sade,
+            re.I,
+        )
+        if not bulunan:
+            return None
+        satir = int(bulunan.group("satir"))
+        deger = bulunan.group("deger").strip().strip("\"'")
+        if satir < 1 or satir > 28 or not _soz_var(deger) or len(deger) > 80 or deger not in kaynak:
+            return None
+        hucre = bulunan.group("sutun").upper() + str(satir)
+        return {"eylem": "tablo.hucre", "hucre": hucre, "deger": deger, "cumle": "tabloda " + hucre + " e " + deger + " yaz"}
+    if masa == "cizim":
+        bulunan = re.match(r"^(?:çizime|cizime)\s+(?P<tur>kutu|çizgi|cizgi|daire)\s+(?:çiz|ciz)$", sade, re.I)
+        if not bulunan:
+            return None
+        tur = bulunan.group("tur").lower().replace("ç", "c")
+        if tur == "kutu":
+            return {"eylem": "cizim.kutu", "x": 80, "y": 80, "w": 240, "h": 140, "cumle": "çizime kutu çiz"}
+        if tur == "daire":
+            return {"eylem": "cizim.daire", "x": 300, "y": 220, "rx": 80, "ry": 60, "cumle": "çizime daire çiz"}
+        return {"eylem": "cizim.cizgi", "x1": 40, "y1": 40, "x2": 400, "y2": 200, "cumle": "çizime çizgi çiz"}
+    if masa == "sunum":
+        bulunan = re.match(r"^sunuma\s+(?P<baslik>.+?)\s+slayt[ıi]\s+ekle\s*[:\-]\s*(?P<metin>.+)$", sade, re.I)
+        if not bulunan:
+            return None
+        baslik = bulunan.group("baslik").strip().strip("\"'")
+        metin = bulunan.group("metin").strip().strip("\"'")
+        if not _soz_var(baslik) or not _soz_var(metin) or len(baslik) > 120 or len(metin) > 400:
+            return None
+        if baslik not in kaynak:
+            return None
+        return {"eylem": "sunum.ekle", "baslik": baslik, "metin": metin, "cumle": "sunuma " + baslik + " slaytı ekle: " + metin}
+    return None
+
+
+def _masa_eylem(masa: str, ham: str, kaynak: str) -> dict | None:
+    for satir in (ham or "").splitlines():
+        aday = satir.strip().strip("`").strip()
+        aday = re.sub(r"^(?:önerim|onerim)\s*:\s*", "", aday, flags=re.I).strip().strip("\"'")
+        denenecek = [aday]
+        if aday.endswith("."):
+            denenecek.append(aday[:-1].strip())
+        for sade in denenecek:
+            if not sade:
+                continue
+            eylem = _masa_cumle_eylem(masa, sade, kaynak)
+            if eylem is not None:
+                return eylem
+    return None
+
+
+def masa_bak_soz(masa: str, gorunen: str) -> dict:
+    """Görünen yazıdan tek masa tarifi. Bu fonksiyon masayı değiştirmez."""
+    anahtar = _MASA_AD.get((masa or "").strip().lower())
+    if not anahtar:
+        return {"ok": True, "handled": True, "reply": "Bu masa yok.", "eylem": None}
+    yazi = (gorunen or "").strip()[:1200]
+    gordum = next((satir.strip() for satir in yazi.splitlines() if satir.strip()), "")[:180] or "(boş)"
+    if not yazi:
+        return {"ok": True, "handled": True, "reply": "Gördüm: (boş)\nÖneri çıkmadı. Masa aynı.", "eylem": None}
+    soz = _masa_soyleyen(anahtar, yazi)
+    if not soz.strip():
+        return {"ok": True, "handled": True, "reply": "Gördüm: " + gordum + "\nÖneri çıkmadı. Masa aynı.", "eylem": None}
+    bulunan = _masa_eylem(anahtar, soz, yazi)
+    if not bulunan:
+        return {"ok": True, "handled": True, "reply": "Gördüm: " + gordum + "\nBu tarif değil. Masa aynı.", "eylem": None}
+    cumle = str(bulunan.pop("cumle"))
+    return {
+        "ok": True,
+        "handled": True,
+        "reply": "Gördüm: " + gordum + "\nÖnerim: " + cumle + "\nUygula dersen bunu yaparım.",
+        "eylem": bulunan,
+    }
+
+
+def bekleyen_birak(repo: Path) -> dict:
+    """Klasör önerisini siler. Dosyaya dokunmaz."""
+    try:
+        yol = _kilit_yolu(repo)
+    except _KlasorYok:
+        return {"ok": True, "birakildi": False}
+    vardi = _BEKLEYEN.pop(yol, None) is not None
+    return {"ok": True, "birakildi": vardi}
 
 
 def _karisik_bak(adimlar: list[dict]) -> bool:
