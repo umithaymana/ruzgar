@@ -1391,12 +1391,36 @@
     ].join("\n");
   }
 
+  function masaOldu(cevap) {
+    return /yazıldı|eklendi|işlendi|hazır|değişti|açıldı|temizlendi/.test(String(cevap || ""));
+  }
+
+  function masaListeUygula(liste) {
+    const notlar = [];
+    for (let i = 0; i < liste.length; i++) {
+      const cevap = masaUygula(liste[i]);
+      if (!masaOldu(cevap)) {
+        const once = notlar.length ? "\nÖnceki parçalar işlendi." : "";
+        return (i + 1) + ". parça durdu. " + (cevap || "Masa değişmedi.") + once;
+      }
+      notlar.push(cevap);
+    }
+    return notlar.join("\n");
+  }
+
   function masaKomutCoz(text) {
     const raw = String(text || "").trim();
     if (!raw || raw.length > 9000) return null;
     if (window.ruzgarMasaSoz && typeof window.ruzgarMasaSoz.coz === "function") {
       const duz = window.ruzgarMasaSoz.coz(raw);
-      if (duz) return { handled: true, reply: masaUygula(duz) };
+      if (duz && duz.red) {
+        return {
+          handled: true,
+          reply: "Bunu yapmadım. Masa değişmedi. Şöyle söyle: belgeye selam yaz, tabloda A1 e 10 yaz, çizime kutu çiz, sunuma Hoş geldin slaytı ekle: bugün.",
+        };
+      }
+      if (duz && duz.liste) return { handled: true, reply: masaListeUygula(duz.liste) };
+      if (duz && duz.eylem) return { handled: true, reply: masaUygula(duz) };
     }
     const sade = raw
       .replace(/^[Ll]ütfen\s+/, "")

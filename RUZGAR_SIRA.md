@@ -15,7 +15,9 @@
 | 7 | Commit ve push | bitti | `1289384` |
 | 8 | Usta kapısı: işi tarife böl | bitti | `test_usta_kabul_cumlesi` |
 
-**Sıradaki cümle:** `deneme sayfasına başlığı selam yap, hoş geldin yaz, tıkla butonu koy, sayfayı göster`
+| 9 | Masa işi: dört masayı tek cümlede böl | bitti | `ruzgar-masa-soz.test.js` |
+
+**Sıradaki cümle:** `belgeye selam yaz, tabloda A1 e 10 yaz, çizime kutu çiz, sunuma Hoş geldin slaytı ekle: bugün`
 
 **Bilerek kapalı:** modelin ürettiği kodu çalıştırmak, uygulama klasörüne yazmak, 32B/70B, telefon.
 

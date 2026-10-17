@@ -16,4 +16,20 @@ assert.deepStrictEqual(coz("sunuma Hoş geldin slaytı ekle: bugün deneme"), {
 });
 assert.strictEqual(coz("menüyü lacivert yap"), null);
 assert.strictEqual(coz("çizgi 40 40 400 200"), null);
+
+const kabul = "belgeye selam yaz, tabloda A1 e 10 yaz, çizime kutu çiz, sunuma Hoş geldin slaytı ekle: bugün";
+const liste = coz(kabul);
+assert.deepStrictEqual(liste.liste.map(function (adim) { return adim.eylem; }), [
+  "belge.yaz",
+  "tablo.hucre",
+  "cizim.kutu",
+  "sunum.ekle",
+]);
+assert.strictEqual(liste.liste[0].metin, "selam");
+assert.strictEqual(liste.liste[1].hucre, "A1");
+assert.strictEqual(liste.liste[1].deger, "10");
+assert.strictEqual(liste.liste[3].baslik, "Hoş geldin");
+assert.strictEqual(liste.liste[3].metin, "bugün");
+assert.deepStrictEqual(coz("masayı baştan tasarla"), { red: true });
+assert.deepStrictEqual(coz("belgeye selam yaz, şunu uydur"), { red: true });
 console.log("masa soz ok");
