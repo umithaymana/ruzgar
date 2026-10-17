@@ -180,6 +180,17 @@ Sohbet düzeni (ChatGPT — RUZGAR_SOHBET_TARZ):
 """
 
 
+def _cevap_duzeni_suffix() -> str:
+    """Genel sohbetin son sözü. 8B uzun talimatın ortasını düşürür; kural sonda durur."""
+    return """
+
+Cevap düzeni (bağlayıcı):
+- İlk cümle sorunun sonucu olsun.
+- Sayı, kişi adı ve dosya içeriği yalnızca önüne konan notta yazıyorsa söylensin.
+- Not yoksa uydurma. Şunu söyle: «Ümit abi, bu sorunun cevabını bulamadım. Bana öğretir misin?»
+"""
+
+
 def _bilge_voice_suffix() -> str:
     """RUZGAR_BILGE_VOICE=0 ile kapatılır."""
     if os.environ.get("RUZGAR_BILGE_VOICE", "1").strip().lower() in (
@@ -240,7 +251,13 @@ def pick_system(coding_mode: bool, mode_norm: str | None = None) -> str:
     if m == "video":
         return VIDEO_SYSTEM
     voice = "" if sohbet_tarz_chatgpt() else _bilge_voice_suffix()
-    return ASSISTANT_SYSTEM + voice + _ollama_sohbet_suffix() + _chatgpt_sohbet_suffix()
+    return (
+        ASSISTANT_SYSTEM
+        + voice
+        + _ollama_sohbet_suffix()
+        + _chatgpt_sohbet_suffix()
+        + _cevap_duzeni_suffix()
+    )
 
 
 def append_direct_answer_directive(user_payload: str, user_message: str) -> str:
