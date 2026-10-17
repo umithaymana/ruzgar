@@ -135,8 +135,9 @@ def test_usta_cozulmeyen_yazmaz(masa):
     assert list(el.iterdir()) == []
     yarim = klasor_soz(repo, "deneme sayfasına başlığı selam yap, yok dosyasını oku, sayfayı göster")
     assert yarim["reply"].startswith("3. adım durdu") or "adım durdu" in yarim["reply"]
+    assert "geri alındı" in yarim["reply"]
     assert "Sayfa açık" not in yarim["reply"]
-    assert (el / "deneme.html").is_file()
+    assert not (el / "deneme.html").exists()
     assert not (el / "yok.txt").exists()
 
 
@@ -508,6 +509,46 @@ def test_tavan_tarif_yazar_ve_tehlikeyi_yemez(masa, monkeypatch):
     )
     sunum = masa_bak_soz("sunum", "Slayt 1: Hoş geldin | bugün")
     assert sunum["eylem"] == {"eylem": "sunum.baslik", "baslik": "Hoş geldin"}
+
+
+def test_el_sayfa_renk_okuma_ve_geri(masa, monkeypatch):
+    from ilim_assistant.motorlar import programlama_proje_masasi as kapi
+
+    repo, el = masa
+    _kilitle(repo, el)
+    (el / "index.html").write_text("<title>selam</title>\n<p>selam mimar</p>\n", encoding="utf-8")
+    (el / "merhaba.html").write_text("<h1>selam</h1>\n", encoding="utf-8")
+    renk = klasor_soz(repo, "index sayfasının başlık rengini mavi yap")
+    index = (el / "index.html").read_text(encoding="utf-8")
+    assert '<h1 style="color:#1d4e89">selam</h1>' in index
+    assert "Başlık rengi yazıldı: klasor/index.html" in renk["reply"]
+    assert (el / "merhaba.html").read_text(encoding="utf-8") == "<h1>selam</h1>\n"
+    ara = klasor_soz(repo, "merhaba sayfasına ara başlık ekle: iç kapı")
+    assert "<h2>iç kapı</h2>" in (el / "merhaba.html").read_text(encoding="utf-8")
+    assert "<h2>" not in (el / "index.html").read_text(encoding="utf-8")
+    assert "Ara başlık yazıldı" in ara["reply"]
+    tekrar = klasor_soz(repo, "merhaba sayfasına ara başlık ekle: iç kapı")
+    assert "Zaten var" in tekrar["reply"]
+    assert (el / "merhaba.html").read_text(encoding="utf-8").count("<h2>iç kapı</h2>") == 1
+    bag = klasor_soz(repo, "index sayfasına bağlantı ekle: Rüzgar | https://ornek.com")
+    assert bag["reply"].startswith("Bağlantı yazıldı")
+    ikinci = klasor_soz(repo, "index sayfasına bağlantı ekle: Rüzgar | https://ornek.com")
+    assert "Zaten var" in ikinci["reply"]
+    assert (el / "index.html").read_text(encoding="utf-8").count("https://ornek.com") == 1
+    oku = klasor_soz(repo, "merhaba dosyasını oku")
+    assert "klasor/merhaba.html okundu" in oku["reply"]
+    assert "sayfa açıldı" in oku["reply"]
+    once = (el / "merhaba.html").read_text(encoding="utf-8")
+    kirik = klasor_soz(repo, "merhaba sayfasına ara başlık ekle: yeni kapı, yok dosyasını oku")
+    assert "geri alındı" in kirik["reply"]
+    assert (el / "merhaba.html").read_text(encoding="utf-8") == once
+    monkeypatch.setattr(kapi, "_soyleyen", lambda metin: "başlık rengini yeşil yap")
+    bak = klasor_soz(repo, "index sayfasına bak ve söyle")
+    assert "Önerim: başlık rengini yeşil yap" in bak["reply"]
+    kapi._BEKLEYEN.clear()
+    uygulandi = klasor_soz(repo, "uygula")
+    assert 'style="color:#1f7a4d"' in uygulandi["text"]
+    assert "Bekleyen öneri yok" in klasor_soz(repo, "uygula")["reply"]
 
 
 def test_bilinmeyen_ve_kapi(masa, tmp_path):

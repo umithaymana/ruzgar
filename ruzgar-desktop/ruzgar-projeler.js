@@ -815,6 +815,7 @@
     if (/^ara\s+baslik\b/.test(low)) return true;
     if (/^baglanti\b/.test(low)) return true;
     if (/^baslik\s+rengini\b/.test(low)) return true;
+    if (/\ssayfasinin\s+baslik\s+rengini\b/.test(low)) return true;
     if (/^resim\s+koy\b/.test(low)) return true;
     if (/\ssayfasinin\s+adini\b/.test(low)) return true;
     if (/\sdosyasina\s+\S/.test(low) && /\syaz$/.test(low)) return true;

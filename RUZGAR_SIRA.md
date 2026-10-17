@@ -19,10 +19,13 @@
 | 11 | Bak ve söyle, uygula bir kez | bitti | `test_bak_soyler_uygula_bir_kez` |
 | 12 | Dört masa bak ve söyle | bitti | `test_masa_bak_tarif_ayrir_ve_yazmaz` |
 | 13 | Güvenli tarif tavanı | bitti | `test_tavan_tarif_yazar_ve_tehlikeyi_yemez` |
+| 14 | Sayfa adı, tekrar yok, yarım iş geri | bitti | `test_el_sayfa_renk_okuma_ve_geri` |
 
-**Denenecek cümle:** `klasördekileri say`
+**Denenecek cümle:** `index sayfasının başlık rengini mavi yap`
 
 **13. iş bitti.** Kilitli klasör sayar, metin dosyası açar, ara başlık, http bağlantı, başlık rengi, klasördeki resim ve sayfa adı değişir. Dört masa: belgede bir kez değiştir, hücre sil, sütun topla, renkli çiz, slayt başlığı. Bak bu tariflerden yazı ve rengi önerebilir. Bağlantı, resim ve ad değiştirme yalnız sen söyleyince olur. `uygula` yine son bakışı bir kez çalıştırır.
+
+**14. iş bitti.** Renk, ara başlık, bağlantı ve resim sayfa adı alır. Büyük başlık yoksa pencere başlığından görünür başlık boyanır. Aynı parça ikinci kez eklenmez. Zincir yarım kalırsa dosya eski hâline döner. `deneme dosyasını oku` metin dosyası yoksa sayfayı açar. Son bakış yeniden açılışta da durur.
 
 **Bilerek kapalı:** dosya silmek, modelin ürettiği kodu çalıştırmak, uygulama klasörüne yazmak, klasör dışına çıkmak, 32B/70B, telefon.
 

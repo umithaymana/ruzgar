@@ -1560,6 +1560,26 @@
   }
 
   let masaBekleyen = null;
+  const MASA_BEKLEYEN_ANAHTAR = "ruzgarMasaBekleyenV1";
+
+  function masaBekleyenYaz(eylem) {
+    masaBekleyen = eylem || null;
+    try {
+      if (masaBekleyen) localStorage.setItem(MASA_BEKLEYEN_ANAHTAR, JSON.stringify(masaBekleyen));
+      else localStorage.removeItem(MASA_BEKLEYEN_ANAHTAR);
+    } catch (err) { /* tarayıcı saklamazsa bu oturumda durur */ }
+  }
+
+  function masaBekleyenOku() {
+    if (masaBekleyen) return masaBekleyen;
+    try {
+      const ham = localStorage.getItem(MASA_BEKLEYEN_ANAHTAR);
+      if (ham) masaBekleyen = JSON.parse(ham);
+    } catch (err) {
+      masaBekleyen = null;
+    }
+    return masaBekleyen;
+  }
 
   function masaApiKok() {
     const kok = typeof API === "string" ? API : "";
@@ -1585,7 +1605,7 @@
   }
 
   async function masaBak(masa) {
-    masaBekleyen = null;
+    masaBekleyenYaz(null);
     const yazi = masaGorunen(masa);
     try {
       await fetch(masaApiKok() + "/api/programlama/bekleyen-birak", { method: "POST" });
@@ -1601,7 +1621,7 @@
     } catch (err) {
       return { handled: true, reply: "Öneri çıkmadı. Masa aynı." };
     }
-    if (data && data.eylem) masaBekleyen = data.eylem;
+    if (data && data.eylem) masaBekleyenYaz(data.eylem);
     masaAc(masa);
     return { handled: true, reply: (data && data.reply) || "Masa aynı." };
   }
@@ -1611,14 +1631,14 @@
   };
 
   window.ruzgarMasaBekleyenUygula = function () {
-    if (!masaBekleyen) return null;
-    const eylem = masaBekleyen;
-    masaBekleyen = null;
+    const eylem = masaBekleyenOku();
+    if (!eylem) return null;
+    masaBekleyenYaz(null);
     return { handled: true, reply: masaUygula(eylem) || "Masa değişmedi." };
   };
 
   window.ruzgarMasaBekleyenSil = function () {
-    masaBekleyen = null;
+    masaBekleyenYaz(null);
   };
 
   window.ruzgarMasaSayfa = function (kind) {
