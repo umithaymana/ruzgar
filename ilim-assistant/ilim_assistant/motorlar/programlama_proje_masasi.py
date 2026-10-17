@@ -1,7 +1,7 @@
 # Created by Ümit & Gökçenur
 """Programlama çalışma sayfası — projects/ altını gör, yaz, sil, emri uygula.
 
-Yol projects/ dışına çıkamaz. Ajan masası model çağırmaz; bilinen emri yerelde yazar.
+Yol projects/ dışına çıkamaz. Bak kapısı bir cümle ister; modelin sözü dosyaya yazılmaz.
 """
 
 from __future__ import annotations
@@ -473,6 +473,12 @@ _KALIP: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("sayfa_ad", re.compile(r"^(?P<ad>[A-Za-z0-9çğıöşüÇĞİÖŞÜ._-]+)\s+sayfas[ıi]\s+yap$", re.I)),
     ("sayfa", re.compile(r"^(?:sayfa yap|sayfa aç|sayfa ac)$", re.I)),
     ("sayfa_goster", re.compile(r"^(?:sayfayı göster|sayfayi goster)$", re.I)),
+    ("bak_sayfa", re.compile(
+        r"^(?P<ad>[A-Za-z0-9çğıöşüÇĞİÖŞÜ._-]+)\s+sayfas[ıi]na\s+bak\s+ve\s+s[öo]yle$",
+        re.I,
+    )),
+    ("bak_dosya", re.compile(r"^(?P<dosya>\S+)\s+dosyas[ıi]na\s+bak\s+ve\s+s[öo]yle$", re.I)),
+    ("uygula", re.compile(r"^uygula$", re.I)),
     ("baslik", re.compile(r"^(?:başlığı|basligi|başlık|baslik)\s+(?P<metin>.+?)\s+yap$", re.I)),
     ("paragraf", re.compile(r"^paragraf(?:\s+ekle)?\s*[:\-]?\s*(?P<metin>.+)$", re.I)),
     ("buton", re.compile(r"^buton(?:\s+ekle)?\s*[:\-]?\s*(?P<metin>.+)$", re.I)),
@@ -484,8 +490,25 @@ _AYIR = re.compile(
 )
 _TARIF = {"baslik", "paragraf", "buton", "sayfa", "sayfa_ad", "sayfa_goster", "sayfa_goster_ad", "yerine"}
 _USTA_IZ = re.compile(
-    r"sayfas[ıi]na|sayfas[ıi]nda|butonu\s+(?:koy|ekle)|başlığına|basligina|baştan\s+tasarla|bastan\s+tasarla|yerine",
+    r"sayfas[ıi]na|sayfas[ıi]nda|butonu\s+(?:koy|ekle)|başlığına|basligina|baştan\s+tasarla|bastan\s+tasarla|yerine|bak\s+ve\s+s[öo]yle|\buygula\b",
     re.I,
+)
+_ONERI = (
+    ("baslik", re.compile(r"^(?:başlığı|basligi|başlık|baslik)\s+(?P<metin>.+?)\s+yap$", re.I)),
+    ("paragraf", re.compile(r"^paragraf(?:\s+ekle)?\s*[:\-]\s*(?P<metin>.+)$", re.I)),
+    ("buton", re.compile(r"^buton(?:\s+ekle)?\s*[:\-]\s*(?P<metin>.+)$", re.I)),
+    ("sayfa_goster", re.compile(r"^(?:sayfayı göster|sayfayi goster)$", re.I)),
+    ("yerine", re.compile(r"^(?P<eski>.+?)\s+yerine\s+(?P<yeni>.+?)\s+yaz$", re.I)),
+)
+_BEKLEYEN: dict[str, dict] = {}
+_BAK_ISTEK = (
+    "Dosyaya baktın. Yalnız şu kalıplardan bir cümle yaz, başka söz yazma:\n"
+    "başlığı ... yap\n"
+    "paragraf ekle: ...\n"
+    "buton ekle: ...\n"
+    "... yerine ... yaz\n"
+    "sayfayı göster\n"
+    "Dosya:\n"
 )
 _USTA_YAZI_YASAK = re.compile(r"\b(dosya|klasör|klasor|sayfa|başl|basl)\b", re.I)
 _USTA_RED = (
@@ -545,6 +568,8 @@ def _adim(text: str) -> dict | None:
             cozulen = "yaz"
         elif kind in {"oku_eski", "oku_duz"}:
             cozulen = "oku"
+        elif kind in {"bak_sayfa", "bak_dosya"}:
+            cozulen = "bak"
         else:
             cozulen = kind
         adim = {"kind": cozulen, "ham": sade}
@@ -827,7 +852,149 @@ def _calistir(repo: Path, adim: dict, sayfa: str) -> dict:
         yazilan = _yaz_geri(repo, dosya, guncel)
         yazilan["reply"] = reply
         return yazilan
+    if kind == "bak":
+        return _bak(repo, adim)
+    if kind == "uygula":
+        return _uygula(repo)
     return _paket(handled=False)
+
+
+def _soyleyen(metin: str) -> str:
+    """Yerel denge, 15 saniye. Test bunu değiştirir. Boş dönüş öneri yok demektir."""
+    import json
+    import urllib.request
+
+    parca = (metin or "")[:1200]
+    base = (os.environ.get("OLLAMA_API_BASE") or "http://127.0.0.1:11434/v1").rstrip("/")
+    if base.endswith("/v1"):
+        base = base[:-3]
+    model = os.environ.get("OLLAMA_CHAT_MODEL") or "llama3.1:8b"
+    body = json.dumps(
+        {
+            "model": model,
+            "prompt": _BAK_ISTEK + parca,
+            "stream": False,
+            "options": {"temperature": 0.1, "num_predict": 60},
+        }
+    ).encode("utf-8")
+    istek = urllib.request.Request(
+        base + "/api/generate",
+        data=body,
+        headers={"Content-Type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(istek, timeout=15) as resp:
+            data = json.loads(resp.read().decode("utf-8", "replace"))
+        return str(data.get("response") or "").strip()
+    except Exception:
+        return ""
+
+
+def _gordum_satir(ham: str) -> str:
+    baslik = re.search(r"<title>(.*?)</title>", ham, re.I | re.S)
+    if baslik:
+        ic = re.sub(r"\s+", " ", baslik.group(1)).strip()
+        if ic:
+            return ic[:180]
+    for satir in ham.splitlines():
+        temiz = satir.strip()
+        if temiz:
+            return temiz[:180]
+    return "(boş)"
+
+
+def _tarif_coz(ham: str, hedef: str) -> tuple[str, dict] | None:
+    html_mi = hedef.lower().endswith((".html", ".htm"))
+    for satir in (ham or "").splitlines():
+        aday = satir.strip().strip("`").strip()
+        aday = re.sub(r"^(?:önerim|onerim)\s*:\s*", "", aday, flags=re.I).strip().strip("\"'")
+        denenecek = [aday]
+        if aday.endswith("."):
+            denenecek.append(aday[:-1].strip())
+        for sade in denenecek:
+            if not sade:
+                continue
+            for kind, cre in _ONERI:
+                bulunan = cre.match(sade)
+                if not bulunan:
+                    continue
+                if kind in {"baslik", "paragraf", "buton", "sayfa_goster"} and not html_mi:
+                    return None
+                if kind == "baslik":
+                    metin = bulunan.group("metin").strip().strip("\"'")
+                    if not metin or len(metin) > 180:
+                        return None
+                    cumle = "başlığı " + metin + " yap"
+                    return cumle, _usta_adim("baslik", cumle, metin=metin)
+                if kind == "paragraf":
+                    metin = bulunan.group("metin").strip()
+                    if not metin or len(metin) > 400:
+                        return None
+                    cumle = "paragraf ekle: " + metin
+                    return cumle, _usta_adim("paragraf", cumle, metin=metin)
+                if kind == "buton":
+                    metin = bulunan.group("metin").strip().strip("\"'")
+                    if not metin or len(metin) > 80:
+                        return None
+                    cumle = "buton ekle: " + metin
+                    return cumle, _usta_adim("buton", cumle, metin=metin)
+                if kind == "sayfa_goster":
+                    return "sayfayı göster", _usta_adim("sayfa_goster", "sayfayı göster")
+                eski = bulunan.group("eski").strip().strip("\"'")
+                yeni = bulunan.group("yeni").strip().strip("\"'")
+                if not eski or len(eski) > 180 or not yeni or len(yeni) > 400:
+                    return None
+                cumle = eski + " yerine " + yeni + " yaz"
+                return cumle, _usta_adim("yerine", cumle, dosya=hedef, eski=eski, yeni=yeni)
+    return None
+
+
+def _bak(repo: Path, adim: dict) -> dict:
+    yol = _kilit_yolu(repo)
+    if adim.get("dosya"):
+        dosya = _dosya_adi(str(adim["dosya"]))
+    else:
+        dosya = _sayfa_dosyasi(str(adim.get("ad") or ""))
+    okunan = klasor_oku_dosya(repo, dosya)
+    ham = okunan["text"]
+    gordum = _gordum_satir(ham)
+    _BEKLEYEN.pop(yol, None)
+    soz = _soyleyen(ham[:1200])
+    if not soz.strip():
+        reply = "Gördüm: " + gordum + "\nÖneri çıkmadı. Dosya aynı."
+    else:
+        cozulen = _tarif_coz(soz, dosya)
+        if cozulen is None:
+            reply = "Gördüm: " + gordum + "\nBu tarif değil. Dosya aynı."
+        else:
+            cumle, bekleyen = cozulen
+            _BEKLEYEN[yol] = {
+                "adim": bekleyen,
+                "sayfa": dosya if dosya.lower().endswith((".html", ".htm")) else "",
+            }
+            reply = "Gördüm: " + gordum + "\nÖnerim: " + cumle + "\nUygula dersen bunu yaparım."
+    html = dosya.lower().endswith((".html", ".htm"))
+    return _paket(
+        reply=reply,
+        gorunum="proje" if html else "kod",
+        rel=okunan["rel"],
+        text=ham,
+        onizleme=html,
+        sayfa=dosya if html else "",
+    )
+
+
+def _uygula(repo: Path) -> dict:
+    yol = _kilit_yolu(repo)
+    bekleyen = _BEKLEYEN.pop(yol, None)
+    if not bekleyen:
+        return _paket(reply="Bekleyen öneri yok.")
+    return _calistir(repo, bekleyen["adim"], str(bekleyen.get("sayfa") or ""))
+
+
+def _karisik_bak(adimlar: list[dict]) -> bool:
+    kinds = {a.get("kind") for a in adimlar}
+    return ("bak" in kinds or "uygula" in kinds) and len(adimlar) > 1
 
 
 def _sade_cumle(text: str) -> str:
@@ -1005,6 +1172,11 @@ def klasor_soz(repo: Path, yazi: str) -> dict:
         try:
             return _yurut(repo, [tek])
         except _KlasorYok:
+            if tek.get("kind") in {"bak", "uygula"}:
+                return _paket(
+                    handled=True,
+                    reply="Çalışma klasörü seçilmedi. Şöyle söyle: çalışma klasörü: tam yol",
+                )
             return _paket(handled=False)
     parcalar = [p.strip() for p in _AYIR.split(raw) if p.strip()]
     if len(parcalar) >= 2:
@@ -1017,6 +1189,8 @@ def klasor_soz(repo: Path, yazi: str) -> dict:
                 break
             adimlar.append(bulunan)
         if tam:
+            if _karisik_bak(adimlar):
+                return _paket(handled=True, reply=_USTA_RED)
             try:
                 return _yurut(repo, adimlar)
             except _KlasorYok:
@@ -1029,6 +1203,8 @@ def klasor_soz(repo: Path, yazi: str) -> dict:
     except _UstaRed:
         return _paket(handled=True, reply=_USTA_RED)
     if usta:
+        if _karisik_bak(usta):
+            return _paket(handled=True, reply=_USTA_RED)
         try:
             return _yurut(repo, usta)
         except _KlasorYok:

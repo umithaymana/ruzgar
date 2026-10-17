@@ -16,10 +16,11 @@
 | 8 | Usta kapısı: işi tarife böl | bitti | `test_usta_kabul_cumlesi` |
 | 9 | Masa işi: dört masayı tek cümlede böl | bitti | `ruzgar-masa-soz.test.js` |
 | 10 | Sayfada oku, bir kez değiştir | bitti | `test_yerine_bir_kez_ve_yoksa_durur` |
+| 11 | Bak ve söyle, uygula bir kez | bitti | `test_bak_soyler_uygula_bir_kez` |
 
-**Denenecek cümle:** `deneme sayfasında selam yerine merhaba yaz`
+**Denenecek cümle:** `deneme sayfasına bak ve söyle`
 
-**10. iş bitti.** Kilitli klasörde dosya önce okunur. `eski yerine yeni yaz` ilk geçtiği yerde bir kez değişir, geri okunur. Metin yoksa dosya aynı kalır. Çözülemeyen parça yazılmaz.
+**11. iş bitti.** Kapı dosyayı okur ve `Gördüm` satırını dosyadan kurar. Konuşan beyin tek tarif önerir. Dosya, `uygula` denince ve tarif bilinen kapıdan geçince değişir. Karışık cümle yazmaz.
 
 **Bilerek kapalı:** modelin ürettiği kodu çalıştırmak, uygulama klasörüne yazmak, 32B/70B, telefon.
 

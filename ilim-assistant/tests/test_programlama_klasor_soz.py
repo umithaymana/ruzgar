@@ -189,6 +189,106 @@ def test_yerine_klasor_yoksa_projects_yoluna_birakir(masa):
     assert list(el.iterdir()) == []
 
 
+def _sahte_soyleyen(monkeypatch, cevap):
+    cagrilar = []
+
+    def sahte(metin):
+        cagrilar.append(metin)
+        if callable(cevap):
+            return cevap(metin)
+        return cevap
+
+    monkeypatch.setattr(
+        "ilim_assistant.motorlar.programlama_proje_masasi._soyleyen",
+        sahte,
+    )
+    return cagrilar
+
+
+def test_bak_soyler_uygula_bir_kez(masa, monkeypatch):
+    repo, el = masa
+    _kilitle(repo, el)
+    klasor_soz(repo, "deneme sayfası yap")
+    klasor_soz(repo, "başlığı selam yap")
+    once = (el / "deneme.html").read_text(encoding="utf-8")
+    cagrilar = _sahte_soyleyen(monkeypatch, "başlığı merhaba yap")
+    bak = klasor_soz(repo, "deneme sayfasına bak ve söyle")
+    assert cagrilar and len(cagrilar[0]) <= 1200
+    assert "selam" in cagrilar[0]
+    assert (el / "deneme.html").read_text(encoding="utf-8") == once
+    assert bak["onizleme"] is True
+    assert "Gördüm: selam" in bak["reply"]
+    assert "Önerim: başlığı merhaba yap" in bak["reply"]
+    assert "Uygula dersen bunu yaparım." in bak["reply"]
+    uygulanan = klasor_soz(repo, "uygula")
+    govde = (el / "deneme.html").read_text(encoding="utf-8")
+    assert "<title>merhaba</title>" in govde
+    assert "Başlık yazıldı" in uygulanan["reply"]
+    ikinci = klasor_soz(repo, "uygula")
+    assert "Bekleyen öneri yok." in ikinci["reply"]
+    assert (el / "deneme.html").read_text(encoding="utf-8") == govde
+
+
+def test_bak_tarif_degilse_ve_susarsa_yazmaz(masa, monkeypatch):
+    repo, el = masa
+    _kilitle(repo, el)
+    klasor_soz(repo, "deneme sayfası yap")
+    once = (el / "deneme.html").read_text(encoding="utf-8")
+    cagrilar = _sahte_soyleyen(monkeypatch, "menüyü lacivert yap")
+    red = klasor_soz(repo, "deneme sayfasına bak ve söyle")
+    assert "Bu tarif değil. Dosya aynı." in red["reply"]
+    assert (el / "deneme.html").read_text(encoding="utf-8") == once
+    assert "Bekleyen öneri yok." in klasor_soz(repo, "uygula")["reply"]
+    cagrilar.clear()
+    _sahte_soyleyen(monkeypatch, "")
+    sus = klasor_soz(repo, "deneme sayfasına bak ve söyle")
+    assert "Öneri çıkmadı. Dosya aynı." in sus["reply"]
+    assert "Gördüm:" in sus["reply"]
+    assert (el / "deneme.html").read_text(encoding="utf-8") == once
+
+
+def test_bak_karisik_ve_dosya_yok_beyni_cagirmaz(masa, monkeypatch):
+    repo, el = masa
+    _kilitle(repo, el)
+    klasor_soz(repo, "deneme sayfası yap")
+    once = (el / "deneme.html").read_text(encoding="utf-8")
+
+    def yasak(_metin):
+        raise AssertionError("beyin çağrılmamalı")
+
+    _sahte_soyleyen(monkeypatch, yasak)
+    karisik = klasor_soz(repo, "deneme sayfasına bak ve söyle, paragraf ekle: selam")
+    assert "Bunu yapmadım" in karisik["reply"]
+    assert (el / "deneme.html").read_text(encoding="utf-8") == once
+    zincir = klasor_soz(repo, "uygula, paragraf ekle: selam")
+    assert "Bunu yapmadım" in zincir["reply"]
+    assert (el / "deneme.html").read_text(encoding="utf-8") == once
+    yok = klasor_soz(repo, "yok sayfasına bak ve söyle")
+    assert "Dosya yok" in yok["reply"]
+    assert (el / "deneme.html").read_text(encoding="utf-8") == once
+
+
+def test_bak_klasorsuz_ve_metin_dosyasi(masa, monkeypatch):
+    repo, el = masa
+    cagrilar = _sahte_soyleyen(monkeypatch, "selam yerine günaydın yaz")
+    bak = klasor_soz(repo, "deneme sayfasına bak ve söyle")
+    uyg = klasor_soz(repo, "uygula")
+    assert bak["handled"] is True and "seçilmedi" in bak["reply"]
+    assert uyg["handled"] is True and "seçilmedi" in uyg["reply"]
+    assert cagrilar == []
+    assert list(el.iterdir()) == []
+    _kilitle(repo, el)
+    klasor_soz(repo, "dosyaya yaz: merhaba.txt | selam selam")
+    baktim = klasor_soz(repo, "merhaba.txt dosyasına bak ve söyle")
+    assert baktim["gorunum"] == "kod"
+    assert "Gördüm: selam selam" in baktim["reply"]
+    assert "Önerim: selam yerine günaydın yaz" in baktim["reply"]
+    assert (el / "merhaba.txt").read_text(encoding="utf-8") == "selam selam"
+    klasor_soz(repo, "uygula")
+    assert (el / "merhaba.txt").read_text(encoding="utf-8") == "günaydın selam"
+    assert "Bekleyen öneri yok." in klasor_soz(repo, "uygula")["reply"]
+
+
 def test_bilinmeyen_ve_kapi(masa, tmp_path):
     repo, el = masa
     yok = klasor_soz(repo, "menüyü lacivert yap")
