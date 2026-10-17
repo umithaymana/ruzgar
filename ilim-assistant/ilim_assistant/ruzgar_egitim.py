@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 _MOTOR_TIPI = "Egitim"
+_MOTOR_DUZELTME = "EgitimDuzeltme"
 
 from ilim_assistant.ruzgar_umed_kurallari import (  # noqa: E402
     MISS_PHRASE as _MISS_PHRASE,
@@ -778,6 +779,42 @@ def lookup_egitim_reply(message: str) -> Optional[str]:
     return lookup_greeting_egitim_reply(msg)
 
 
+def _norm_duzeltme(text: str) -> str:
+    t = _norm_trigger(text)
+    return t.translate(str.maketrans("ışğüöç", "isguoc"))
+
+
+def lookup_onayli_duzeltme(message: str) -> Optional[str]:
+    """Ümit abi «yanlış, doğrusu şu» dediyse o cümle karttan önce söylenir."""
+    if not _egitim_enabled():
+        return None
+    msg = (message or "").strip()
+    if not msg or len(msg) > 500 or is_wrong_answer_trigger(msg):
+        return None
+    try:
+        from ilim_assistant.hafiza_i_ruzgar import get_hafiza_motor
+
+        motor = get_hafiza_motor()
+    except Exception:
+        return None
+    loose = _norm_duzeltme(msg)
+    best: tuple[int, str] | None = None
+    for row in motor._kayitlar:
+        if row.get("motor_tipi") != _MOTOR_DUZELTME:
+            continue
+        soru = str(row.get("soru") or "").strip()
+        cevap = str(row.get("cevap") or "").strip()
+        if not soru or not cevap or is_invalid_egitim_pair(soru, cevap):
+            continue
+        if not _trigger_matches(msg, soru):
+            tr = _norm_duzeltme(soru)
+            if not tr or not (tr == loose or tr in loose):
+                continue
+        if best is None or len(soru) >= best[0]:
+            best = (len(soru), cevap)
+    return best[1] if best else None
+
+
 def taught_reply_for_message(message: str) -> Optional[str]:
     """Öğretilmiş soru→cevap (Egitim rafı) — hızlı, doğrudan."""
     hit = lookup_egitim_reply(message)
@@ -949,6 +986,15 @@ def save_teaching_pair(
                 and not is_invalid_egitim_pair(trig, resp)
             ):
                 motor.ekle_bilgi(trig, resp, motor_tipi=_MOTOR_TIPI)
+        if (
+            correction
+            and s
+            and c
+            and not cevap_kullaniciya_okunmamali(c)
+            and not cevap_is_davranis_talimati(c)
+            and not is_invalid_egitim_pair(s, c)
+        ):
+            motor.ekle_bilgi(s, c, motor_tipi=_MOTOR_DUZELTME)
     except Exception as exc:
         return f"Hafızaya yazamadım: {exc}"
     clear_pending()
@@ -963,11 +1009,30 @@ def is_wrong_answer_trigger(message: str) -> bool:
     low = (message or "").strip().casefold()
     if re.fullmatch(r"yanl[ıi]ş(\s*cevap)?|yanlis(\s*cevap)?", low):
         return True
-    return bool(re.match(r"^(doğrusu|dogrusu)\s+şu|^(doğru|dogru)\s+cevap\s+şu", low))
+    if re.match(r"^(doğrusu|dogrusu)\s+şu|^(doğru|dogru)\s+cevap\s+şu", low):
+        return True
+    return _extract_yanlis_dogrusu_body(message) is not None
+
+
+def _extract_yanlis_dogrusu_body(message: str) -> Optional[str]:
+    raw = (message or "").strip()
+    m = re.search(
+        r"(?is)^yanl[ıi]ş(?:\s*cevap)?\s*[,.]?\s*(?:doğrusu|dogrusu)\s+şu(?:dur)?\s*[:\-–]?\s*(?P<body>.+)$",
+        raw,
+    )
+    if not m:
+        return None
+    body = (m.group("body") or "").strip()
+    if len(body) < 3:
+        return None
+    return body
 
 
 def _extract_dogrusu_su_body(message: str) -> Optional[str]:
     raw = (message or "").strip()
+    birlesik = _extract_yanlis_dogrusu_body(raw)
+    if birlesik:
+        return birlesik
     patterns = [
         r"(?is)^(?:doğrusu|dogrusu)\s+şu(?:dur|dur)?\s*[:\-–]?\s*(?P<body>.+)$",
         r"(?is)^(?:doğru|dogru)\s+cevap\s+şu(?:dur|dur)?\s*[:\-–]?\s*(?P<body>.+)$",
@@ -1060,7 +1125,7 @@ def try_consume_egitim_command(message: str, history: list | None = None) -> Opt
         if looks_like_refuse_to_teach(raw) or looks_like_web_research_command(raw):
             clear_pending()
             return None
-        if looks_like_meta_feedback(raw):
+        if looks_like_meta_feedback(raw) and not is_wrong_answer_trigger(raw):
             clear_pending()
             return None
         flow = try_flow_teaching_reply(raw, history)
@@ -1089,10 +1154,6 @@ def try_consume_egitim_command(message: str, history: list | None = None) -> Opt
             return None
     except Exception:
         pass
-    if _is_bilgi_sorusu(raw):
-        if str(pend.get("mode") or "") in ("await_teaching", "await_correction"):
-            clear_pending()
-        return None
 
     if is_wrong_answer_trigger(raw):
         body = _extract_dogrusu_su_body(raw)
@@ -1106,6 +1167,11 @@ def try_consume_egitim_command(message: str, history: list | None = None) -> Opt
         soru = _last_user_question(history or []) or str(d.get("last_soru") or "").strip()
         set_pending("await_correction", soru)
         return _WRONG_PROMPT
+
+    if _is_bilgi_sorusu(raw):
+        if str(pend.get("mode") or "") in ("await_teaching", "await_correction"):
+            clear_pending()
+        return None
 
     if is_teach_mode_trigger(raw):
         body = re.sub(

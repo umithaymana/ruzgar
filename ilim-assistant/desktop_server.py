@@ -10724,6 +10724,25 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
 
             _fact = None
             try:
+                from ilim_assistant.ruzgar_egitim import lookup_onayli_duzeltme
+
+                _duz = lookup_onayli_duzeltme(msg_early)
+            except Exception:
+                _duz = None
+            if _duz:
+                _orch_d = dict(orch_early)
+                _orch_d.setdefault("plan", {})["primary"] = "bilgi"
+                _orch_d["plan"]["label_tr"] = "Onaylı düzeltme"
+                yield from _iter_instant_chat_events(
+                    _duz,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_d,
+                    instant_gundelik=True,
+                )
+                return
+            try:
                 # Mikro gerçek + aritmetik her zaman erken (bilgi turu kapısı atlanır).
                 _fact = try_simple_factual_reply(msg_early)
             except Exception:
