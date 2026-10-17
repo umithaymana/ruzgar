@@ -390,6 +390,29 @@ def test_masa_bak_tarif_ayrir_ve_yazmaz(masa, monkeypatch):
     assert list(el.glob("*.html"))
 
 
+def test_masa_bak_beyin_kaliba_yaklasinca_alir(monkeypatch):
+    from ilim_assistant.motorlar.programlama_proje_masasi import masa_bak_soz
+
+    def sahte(ad, metin):
+        return {
+            "belge": "Belgeye gördüğün söz: selam mimar",
+            "cizim": "Cevap: çizime kutu çiz",
+            "sunum": "Slayt 1: Başlık | Metin",
+        }[ad]
+
+    monkeypatch.setattr(
+        "ilim_assistant.motorlar.programlama_proje_masasi._masa_soyleyen",
+        sahte,
+    )
+    belge = masa_bak_soz("belge", "selam mimar")
+    assert belge["eylem"] == {"eylem": "belge.yaz", "metin": "selam mimar"}
+    ciz = masa_bak_soz("cizim", "Çizim boş.")
+    assert ciz["eylem"]["eylem"] == "cizim.kutu"
+    sunum = masa_bak_soz("sunum", "Slayt 1: Başlık | Metin")
+    assert sunum["eylem"] is None
+    assert "Bu tarif değil" in sunum["reply"]
+
+
 def test_bilinmeyen_ve_kapi(masa, tmp_path):
     repo, el = masa
     yok = klasor_soz(repo, "menüyü lacivert yap")

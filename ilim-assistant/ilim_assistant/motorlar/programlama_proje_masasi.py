@@ -1086,18 +1086,34 @@ def _uygula(repo: Path) -> dict:
     return _calistir(repo, bekleyen["adim"], str(bekleyen.get("sayfa") or ""))
 
 
+def _belge_metin(ham: str, kaynak: str) -> str:
+    metin = re.sub(
+        r"^(?:gördüğün söz|gordugun soz)\s*[:\-]?\s*",
+        "",
+        (ham or "").strip().strip("\"'"),
+        flags=re.I,
+    ).strip()
+    if not _soz_var(metin) or len(metin) > 400 or metin not in kaynak:
+        return ""
+    return metin
+
+
 def _masa_cumle_eylem(masa: str, sade: str, kaynak: str) -> dict | None:
     if masa == "belge":
         bulunan = re.match(r"^belgeye\s+(?P<metin>.+?)\s+(?P<tur>yaz|ekle)$", sade, re.I)
-        if not bulunan:
-            return None
-        metin = bulunan.group("metin").strip().strip("\"'")
-        if not _soz_var(metin) or len(metin) > 400:
-            return None
-        tur = bulunan.group("tur").lower()
-        eylem = "belge.ekle" if tur == "ekle" else "belge.yaz"
-        cumle = "belgeye " + metin + (" ekle" if tur == "ekle" else " yaz")
-        return {"eylem": eylem, "metin": metin, "cumle": cumle}
+        if bulunan:
+            metin = _belge_metin(bulunan.group("metin"), kaynak)
+            if metin:
+                tur = bulunan.group("tur").lower()
+                eylem = "belge.ekle" if tur == "ekle" else "belge.yaz"
+                cumle = "belgeye " + metin + (" ekle" if tur == "ekle" else " yaz")
+                return {"eylem": eylem, "metin": metin, "cumle": cumle}
+        serbest = re.match(r"^belgeye\s+(?P<metin>.+)$", sade, re.I)
+        if serbest:
+            metin = _belge_metin(serbest.group("metin"), kaynak)
+            if metin:
+                return {"eylem": "belge.yaz", "metin": metin, "cumle": "belgeye " + metin + " yaz"}
+        return None
     if masa == "tablo":
         bulunan = re.match(
             r"^(?:tabloda|tabloya)\s+(?P<sutun>[A-La-l])(?P<satir>\d{1,2})\s*(?:e|ye)?\s+(?P<deger>.+?)\s+yaz$",
@@ -1113,7 +1129,7 @@ def _masa_cumle_eylem(masa: str, sade: str, kaynak: str) -> dict | None:
         hucre = bulunan.group("sutun").upper() + str(satir)
         return {"eylem": "tablo.hucre", "hucre": hucre, "deger": deger, "cumle": "tabloda " + hucre + " e " + deger + " yaz"}
     if masa == "cizim":
-        bulunan = re.match(r"^(?:çizime|cizime)\s+(?P<tur>kutu|çizgi|cizgi|daire)\s+(?:çiz|ciz)$", sade, re.I)
+        bulunan = re.search(r"(?:çizime|cizime)\s+(?P<tur>kutu|çizgi|cizgi|daire)\s+(?:çiz|ciz)", sade, re.I)
         if not bulunan:
             return None
         tur = bulunan.group("tur").lower().replace("ç", "c")
@@ -1139,7 +1155,7 @@ def _masa_cumle_eylem(masa: str, sade: str, kaynak: str) -> dict | None:
 def _masa_eylem(masa: str, ham: str, kaynak: str) -> dict | None:
     for satir in (ham or "").splitlines():
         aday = satir.strip().strip("`").strip()
-        aday = re.sub(r"^(?:önerim|onerim)\s*:\s*", "", aday, flags=re.I).strip().strip("\"'")
+        aday = re.sub(r"^(?:cevap|yanıt|yanit|önerim|onerim)\s*:\s*", "", aday, flags=re.I).strip().strip("\"'")
         denenecek = [aday]
         if aday.endswith("."):
             denenecek.append(aday[:-1].strip())
