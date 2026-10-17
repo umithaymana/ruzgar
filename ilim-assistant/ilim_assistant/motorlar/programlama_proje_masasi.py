@@ -3,7 +3,7 @@
 
 Yol projects/ dışına çıkamaz. Bak kapısı bir cümle ister; modelin sözü dosyaya yazılmaz.
 Kilitli klasörde sayma, metin dosyası, ara başlık, http bağlantı, başlık rengi, resim ve ad değiştirme de aynı kapıdadır. Silme yok.
-Sayfa adı verilirse o sayfaya yazar. Aynı parça ikinci kez eklenmez. Zincir yarım kalırsa önceki yazı geri alınır.
+Sayfa adı verilirse o sayfaya yazar. Aynı parça ikinci kez eklenmez. Var olan kopyalar teke iner. Zincir yarım kalırsa önceki yazı geri alınır.
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ import re
 import shutil
 from pathlib import Path
 
-PROJE_MASA_VERSION = "programlama-proje-masa-v5-2026-10-17"
+PROJE_MASA_VERSION = "programlama-proje-masa-v6-2026-10-17"
 
 _DENEME = re.compile(
     r"^(smoke-|t-|agent-|_|"
@@ -496,6 +496,11 @@ _KALIP: tuple[tuple[str, re.Pattern[str]], ...] = (
         r"resim\s+koy\s*[:\-]\s*(?P<ad>\S+)$",
         re.I,
     )),
+    ("teke", re.compile(
+        r"^(?:(?P<sayfa_ad>[A-Za-z0-9çğıöşüÇĞİÖŞÜ._-]+)\s+sayfas[ıi]ndaki\s+)?"
+        r"ayn[ıi]\s+(?P<ne>ba[gğ]lant[ıi]lar[ıi]|ara\s+ba[sş]l[ıi]klar[ıi]|resimleri)\s+teke\s+indir$",
+        re.I,
+    )),
     ("baslik_renk", re.compile(
         r"^ba[sş]l[ıi]k\s+rengini\s+(?P<renk>siyah|mavi|kırmızı|kirmizi|yeşil|yesil)\s+yap$",
         re.I,
@@ -534,15 +539,15 @@ _KALIP: tuple[tuple[str, re.Pattern[str]], ...] = (
     )),
 )
 _AYIR = re.compile(
-    r"\s*,\s*(?=(?:başlığı|basligi|başlık|baslik|ara\s+ba[sş]l|ba[gğ]lant|resim\s+koy|paragraf|buton|sayfayı|sayfayi|sayfa\b|\S+\s+sayfas|\S+\s+dosyas|klasördekileri|klasordekileri|not\s+defter))"
+    r"\s*,\s*(?=(?:başlığı|basligi|başlık|baslik|ara\s+ba[sş]l|ba[gğ]lant|resim\s+koy|paragraf|buton|sayfayı|sayfayi|sayfa\b|\S+\s+sayfas|\S+\s+dosyas|klasördekileri|klasordekileri|not\s+defter|ayn[ıi]\s+))"
     r"|\s+sonra\s+",
     re.I,
 )
 _TARIF = {"baslik", "paragraf", "buton", "sayfa", "sayfa_ad", "sayfa_goster", "sayfa_goster_ad", "yerine"}
-_EL = {"say", "dosya_yap", "ara_baslik", "baglanti", "baslik_renk", "resim", "ad_degistir"}
+_EL = {"say", "dosya_yap", "ara_baslik", "baglanti", "baslik_renk", "resim", "ad_degistir", "teke"}
 _USTA_IZ = re.compile(
     r"sayfas[ıi]na|sayfas[ıi]nda|butonu\s+(?:koy|ekle)|başlığına|basligina|baştan\s+tasarla|bastan\s+tasarla|yerine|bak\s+ve\s+s[öo]yle|\buygula\b"
-    r"|klasördekileri|klasordekileri|dosyas[ıi]\s+yap|not\s+defter|ara\s+ba[sş]l|ba[gğ]lant|rengini|resim\s+koy|ad[ıi]n[ıi]",
+    r"|klasördekileri|klasordekileri|dosyas[ıi]\s+yap|not\s+defter|ara\s+ba[sş]l|ba[gğ]lant|rengini|resim\s+koy|ad[ıi]n[ıi]|teke\s+indir",
     re.I,
 )
 _RENK_HEX = {"siyah": "#111111", "mavi": "#1d4e89", "kirmizi": "#9b2c2c", "yesil": "#1f7a4d"}
@@ -979,6 +984,43 @@ def _bir_kez(repo: Path, dosya: str, parca: str, oldu: str) -> dict:
     return _sayfa_yaz(repo, dosya, html, oldu)
 
 
+def _teke_etiket(ne: str) -> str:
+    sade = (ne or "").lower()
+    for eski, yeni in (("ı", "i"), ("ş", "s"), ("ğ", "g"), ("ü", "u"), ("ö", "o"), ("ç", "c")):
+        sade = sade.replace(eski, yeni)
+    if "baglanti" in sade:
+        return "a"
+    if "baslik" in sade:
+        return "h2"
+    if "resim" in sade:
+        return "img"
+    raise ValueError("Bu parça inmez.")
+
+
+def _cift_kaldir(html: str, etiket: str) -> tuple[str, int]:
+    if etiket == "img":
+        cre = re.compile(r"<img\b[^>]*>", re.I)
+    elif etiket in {"a", "h2"}:
+        cre = re.compile(rf"<{etiket}\b[^>]*>.*?</{etiket}>", re.I | re.S)
+    else:
+        raise ValueError("Bu parça inmez.")
+    gorulen: set[str] = set()
+    adet = 0
+
+    def degistir(bulunan: re.Match[str]) -> str:
+        nonlocal adet
+        parca = bulunan.group(0)
+        anahtar = re.sub(r"\s+", " ", parca).strip().lower()
+        if anahtar in gorulen:
+            adet += 1
+            return ""
+        gorulen.add(anahtar)
+        return parca
+
+    yeni = cre.sub(degistir, html)
+    return re.sub(r"\n{3,}", "\n\n", yeni), adet
+
+
 def _adres_guvenli(adres: str) -> str:
     temiz = (adres or "").strip()
     if not _ADRES.match(temiz) or "\\" in temiz or temiz.lower().count("://") != 1:
@@ -1076,6 +1118,11 @@ def _calistir(repo: Path, adim: dict, sayfa: str) -> dict:
         )
     if kind == "baslik":
         metin = (adim.get("metin") or "").strip().strip("\"'")
+        if _renk_hex(metin):
+            boya = dict(adim)
+            boya["kind"] = "baslik_renk"
+            boya["renk"] = metin
+            return _calistir(repo, boya, sayfa)
         if not metin or len(metin) > 180:
             raise ValueError("Başlık boş veya çok uzun.")
         dosya = _sayfa_sec(repo, sayfa)
@@ -1215,6 +1262,23 @@ def _calistir(repo: Path, adim: dict, sayfa: str) -> dict:
             onizleme=True,
             sayfa=yeni,
         )
+    if kind == "teke":
+        etiket = _teke_etiket(str(adim.get("ne") or ""))
+        dosya = _hedef_sayfa(repo, adim, sayfa)
+        html = klasor_oku_dosya(repo, dosya)["text"]
+        yeni_html, adet = _cift_kaldir(html, etiket)
+        if adet == 0:
+            return _paket(
+                reply="Zaten tek: klasor/" + dosya,
+                gorunum="proje",
+                rel="klasor/" + dosya,
+                text=html,
+                onizleme=True,
+                sayfa=dosya,
+            )
+        if yeni_html == html:
+            raise ValueError("Yazılmadı. " + dosya)
+        return _sayfa_yaz(repo, dosya, yeni_html, "Tekrar kalktı: klasor/" + dosya + "\n" + str(adet) + " kopya indi.")
     if kind == "bak":
         return _bak(repo, adim)
     if kind == "uygula":

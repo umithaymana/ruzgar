@@ -20,12 +20,15 @@
 | 12 | Dört masa bak ve söyle | bitti | `test_masa_bak_tarif_ayrir_ve_yazmaz` |
 | 13 | Güvenli tarif tavanı | bitti | `test_tavan_tarif_yazar_ve_tehlikeyi_yemez` |
 | 14 | Sayfa adı, tekrar yok, yarım iş geri | bitti | `test_el_sayfa_renk_okuma_ve_geri` |
+| 15 | Aynı kopyayı teke indir, renk kelimesi boyar | bitti | `test_teke_ve_renk_kelimesi` |
 
-**Denenecek cümle:** `index sayfasının başlık rengini mavi yap`
+**Denenecek cümle:** `aynı bağlantıları teke indir`
 
 **13. iş bitti.** Kilitli klasör sayar, metin dosyası açar, ara başlık, http bağlantı, başlık rengi, klasördeki resim ve sayfa adı değişir. Dört masa: belgede bir kez değiştir, hücre sil, sütun topla, renkli çiz, slayt başlığı. Bak bu tariflerden yazı ve rengi önerebilir. Bağlantı, resim ve ad değiştirme yalnız sen söyleyince olur. `uygula` yine son bakışı bir kez çalıştırır.
 
 **14. iş bitti.** Renk, ara başlık, bağlantı ve resim sayfa adı alır. Büyük başlık yoksa pencere başlığından görünür başlık boyanır. Aynı parça ikinci kez eklenmez. Zincir yarım kalırsa dosya eski hâline döner. `deneme dosyasını oku` metin dosyası yoksa sayfayı açar. Son bakış yeniden açılışta da durur.
+
+**15. iş bitti.** `aynı bağlantıları teke indir`, `aynı ara başlıkları teke indir` ve `aynı resimleri teke indir` fazla kopyayı bırakır, farklı olanı silmez. Dosyanın kendisi silinmez. `başlığı mavi yap` başlığın yazısını «mavi» yapmaz, rengi boyar.
 
 **Bilerek kapalı:** dosya silmek, modelin ürettiği kodu çalıştırmak, uygulama klasörüne yazmak, klasör dışına çıkmak, 32B/70B, telefon.
 

@@ -201,6 +201,7 @@
 
   function yakinSoz(low) {
     const raf = [
+      ["teke", "aynı bağlantıları teke indir"],
       ["rengini", "başlık rengini mavi yap"],
       ["resim", "resim koy: foto.png"],
       ["baglanti", "bağlantı ekle: Rüzgar | https://ornek.com"],
@@ -816,6 +817,7 @@
     if (/^baglanti\b/.test(low)) return true;
     if (/^baslik\s+rengini\b/.test(low)) return true;
     if (/\ssayfasinin\s+baslik\s+rengini\b/.test(low)) return true;
+    if (/\bayni\s+(?:baglantilari|ara\s+basliklari|resimleri)\s+teke\s+indir$/.test(low)) return true;
     if (/^resim\s+koy\b/.test(low)) return true;
     if (/\ssayfasinin\s+adini\b/.test(low)) return true;
     if (/\sdosyasina\s+\S/.test(low) && /\syaz$/.test(low)) return true;

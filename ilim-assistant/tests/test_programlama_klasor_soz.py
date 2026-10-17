@@ -551,6 +551,45 @@ def test_el_sayfa_renk_okuma_ve_geri(masa, monkeypatch):
     assert "Bekleyen öneri yok" in klasor_soz(repo, "uygula")["reply"]
 
 
+def test_teke_ve_renk_kelimesi(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    klasor_soz(repo, "deneme sayfası yap")
+    klasor_soz(repo, "başlığı selam yap")
+    renk = klasor_soz(repo, "başlığı mavi yap")
+    govde = (el / "deneme.html").read_text(encoding="utf-8")
+    assert "<title>selam</title>" in govde
+    assert 'style="color:#1d4e89"' in govde
+    assert ">mavi</h1>" not in govde
+    assert "Başlık rengi yazıldı" in renk["reply"]
+    (el / "index.html").write_text(
+        "<title>selam</title>\n"
+        "<h2>iç kapı</h2>\n<h2>iç kapı</h2>\n<h2>dış kapı</h2>\n"
+        '<a href="https://ornek.com">Rüzgar</a>\n'
+        '<a href="https://ornek.com">Rüzgar</a>\n'
+        '<a href="https://ornek.com">Rüzgar</a>\n'
+        '<a href="https://baska.com">Başka</a>\n',
+        encoding="utf-8",
+    )
+    inen = klasor_soz(repo, "index sayfasındaki aynı bağlantıları teke indir")
+    html = (el / "index.html").read_text(encoding="utf-8")
+    assert html.count('href="https://ornek.com"') == 1
+    assert 'href="https://baska.com"' in html
+    assert html.count("<h2>iç kapı</h2>") == 2
+    assert "2 kopya indi" in inen["reply"]
+    duran = klasor_soz(repo, "index sayfasındaki aynı bağlantıları teke indir")
+    assert "Zaten tek" in duran["reply"]
+    baslik = klasor_soz(repo, "index sayfasındaki aynı ara başlıkları teke indir")
+    html = (el / "index.html").read_text(encoding="utf-8")
+    assert html.count("<h2>iç kapı</h2>") == 1
+    assert "<h2>dış kapı</h2>" in html
+    assert "1 kopya indi" in baslik["reply"]
+    sil = klasor_soz(repo, "index dosyasını sil")
+    assert sil["handled"] is False
+    assert (el / "index.html").is_file()
+    assert (el / "deneme.html").is_file()
+
+
 def test_bilinmeyen_ve_kapi(masa, tmp_path):
     repo, el = masa
     yok = klasor_soz(repo, "menüyü lacivert yap")
