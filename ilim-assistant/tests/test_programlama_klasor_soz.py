@@ -215,6 +215,8 @@ def test_bak_soyler_uygula_bir_kez(masa, monkeypatch):
     bak = klasor_soz(repo, "deneme sayfasına bak ve söyle")
     assert cagrilar and len(cagrilar[0]) <= 1200
     assert "selam" in cagrilar[0]
+    assert "<title>" not in cagrilar[0]
+    assert "<h1>" not in cagrilar[0]
     assert (el / "deneme.html").read_text(encoding="utf-8") == once
     assert bak["onizleme"] is True
     assert "Gördüm: selam" in bak["reply"]
@@ -227,6 +229,34 @@ def test_bak_soyler_uygula_bir_kez(masa, monkeypatch):
     ikinci = klasor_soz(repo, "uygula")
     assert "Bekleyen öneri yok." in ikinci["reply"]
     assert (el / "deneme.html").read_text(encoding="utf-8") == govde
+
+
+def test_bak_uc_nokta_ve_gorunen_yazi(masa, monkeypatch):
+    repo, el = masa
+    _kilitle(repo, el)
+    klasor_soz(repo, "deneme sayfası yap")
+    klasor_soz(repo, "başlığı selam yap")
+    klasor_soz(repo, "paragraf ekle: hoş geldin")
+    klasor_soz(repo, "buton ekle: tıkla")
+    govde = (el / "deneme.html").read_text(encoding="utf-8")
+    nokta = govde.replace("<title>selam</title>", "<title>...</title>").replace("<h1>selam</h1>", "<h1>...</h1>")
+    (el / "deneme.html").write_text(nokta, encoding="utf-8")
+    cagrilar = _sahte_soyleyen(monkeypatch, "başlığı ... yap")
+    red = klasor_soz(repo, "deneme sayfasına bak ve söyle")
+    assert "Gördüm: ..." in red["reply"]
+    assert "Bu tarif değil. Dosya aynı." in red["reply"]
+    assert (el / "deneme.html").read_text(encoding="utf-8") == nokta
+    assert "..." not in cagrilar[0]
+    assert "<p>" not in cagrilar[0]
+    assert "hoş geldin" in cagrilar[0]
+    assert "tıkla" in cagrilar[0]
+    _sahte_soyleyen(monkeypatch, "yok yerine var yaz\nhoş geldin yerine merhaba yaz")
+    kabul = klasor_soz(repo, "deneme sayfasına bak ve söyle")
+    assert "Önerim: hoş geldin yerine merhaba yaz" in kabul["reply"]
+    assert (el / "deneme.html").read_text(encoding="utf-8") == nokta
+    klasor_soz(repo, "uygula")
+    assert "merhaba" in (el / "deneme.html").read_text(encoding="utf-8")
+    assert "<title>...</title>" in (el / "deneme.html").read_text(encoding="utf-8")
 
 
 def test_bak_tarif_degilse_ve_susarsa_yazmaz(masa, monkeypatch):

@@ -502,13 +502,19 @@ _ONERI = (
 )
 _BEKLEYEN: dict[str, dict] = {}
 _BAK_ISTEK = (
-    "Dosyaya baktın. Yalnız şu kalıplardan bir cümle yaz, başka söz yazma:\n"
-    "başlığı ... yap\n"
-    "paragraf ekle: ...\n"
-    "buton ekle: ...\n"
-    "... yerine ... yaz\n"
+    "Sana sayfanın görünen yazısı verildi.\n"
+    "Yalnız bir tarif cümlesi yaz. Başka söz yazma. Nokta koyma.\n"
+    "Kalıplar:\n"
+    "başlığı sayfadaki söz yap\n"
+    "paragraf ekle: sayfadaki söz\n"
+    "buton ekle: sayfadaki söz\n"
+    "sayfadaki söz yerine yeni söz yaz\n"
     "sayfayı göster\n"
-    "Dosya:\n"
+    "Yazı:\n"
+)
+_ORNEK_SOZ = re.compile(
+    r"^(?:\.{2,}|…+|sayfadaki söz|sayfadaki soz|yeni söz|yeni soz|buradaki söz|buradaki soz)$",
+    re.I,
 )
 _USTA_YAZI_YASAK = re.compile(r"\b(dosya|klasör|klasor|sayfa|başl|basl)\b", re.I)
 _USTA_RED = (
@@ -890,6 +896,46 @@ def _soyleyen(metin: str) -> str:
         return ""
 
 
+def _soz_var(metin: str) -> bool:
+    temiz = (metin or "").strip()
+    if not temiz or _ORNEK_SOZ.match(temiz):
+        return False
+    return re.search(r"[0-9A-Za-zÇĞİÖŞÜçğıöşü]", temiz) is not None
+
+
+def _duz_metin(parca: str) -> str:
+    metin = re.sub(r"<[^>]+>", " ", parca or "")
+    metin = (
+        metin.replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&amp;", "&")
+        .replace("&quot;", '"')
+    )
+    return re.sub(r"\s+", " ", metin).strip()
+
+
+def _gorunen_yazi(ham: str) -> str:
+    govde = ham or ""
+    if "<" not in govde:
+        return govde.strip()[:1200]
+    satirlar: list[str] = []
+    baslik = re.search(r"<title\b[^>]*>(.*?)</title>", govde, re.I | re.S)
+    if baslik:
+        ic = _duz_metin(baslik.group(1))
+        if _soz_var(ic):
+            satirlar.append("başlık: " + ic)
+    for etiket, ad in (("h1", "başlık"), ("h2", "ara başlık"), ("p", "paragraf"), ("button", "buton")):
+        for bulunan in re.finditer(rf"<{etiket}\b[^>]*>(.*?)</{etiket}>", govde, re.I | re.S):
+            ic = _duz_metin(bulunan.group(1))
+            if _soz_var(ic):
+                satirlar.append(ad + ": " + ic)
+    if not satirlar:
+        duz = _duz_metin(govde)
+        if _soz_var(duz):
+            satirlar.append(duz)
+    return "\n".join(satirlar)[:1200]
+
+
 def _gordum_satir(ham: str) -> str:
     baslik = re.search(r"<title>(.*?)</title>", ham, re.I | re.S)
     if baslik:
@@ -903,8 +949,46 @@ def _gordum_satir(ham: str) -> str:
     return "(boş)"
 
 
-def _tarif_coz(ham: str, hedef: str) -> tuple[str, dict] | None:
+def _tarif_satir(sade: str, hedef: str, kaynak: str) -> tuple[str, dict] | None:
     html_mi = hedef.lower().endswith((".html", ".htm"))
+    for kind, cre in _ONERI:
+        bulunan = cre.match(sade)
+        if not bulunan:
+            continue
+        if kind in {"baslik", "paragraf", "buton", "sayfa_goster"} and not html_mi:
+            return None
+        if kind == "baslik":
+            metin = bulunan.group("metin").strip().strip("\"'")
+            if not _soz_var(metin) or len(metin) > 180:
+                return None
+            cumle = "başlığı " + metin + " yap"
+            return cumle, _usta_adim("baslik", cumle, metin=metin)
+        if kind == "paragraf":
+            metin = bulunan.group("metin").strip()
+            if not _soz_var(metin) or len(metin) > 400:
+                return None
+            cumle = "paragraf ekle: " + metin
+            return cumle, _usta_adim("paragraf", cumle, metin=metin)
+        if kind == "buton":
+            metin = bulunan.group("metin").strip().strip("\"'")
+            if not _soz_var(metin) or len(metin) > 80:
+                return None
+            cumle = "buton ekle: " + metin
+            return cumle, _usta_adim("buton", cumle, metin=metin)
+        if kind == "sayfa_goster":
+            return "sayfayı göster", _usta_adim("sayfa_goster", "sayfayı göster")
+        eski = bulunan.group("eski").strip().strip("\"'")
+        yeni = bulunan.group("yeni").strip().strip("\"'")
+        if not _soz_var(eski) or not _soz_var(yeni) or len(eski) > 180 or len(yeni) > 400:
+            return None
+        if eski not in kaynak:
+            return None
+        cumle = eski + " yerine " + yeni + " yaz"
+        return cumle, _usta_adim("yerine", cumle, dosya=hedef, eski=eski, yeni=yeni)
+    return None
+
+
+def _tarif_coz(ham: str, hedef: str, kaynak: str) -> tuple[str, dict] | None:
     for satir in (ham or "").splitlines():
         aday = satir.strip().strip("`").strip()
         aday = re.sub(r"^(?:önerim|onerim)\s*:\s*", "", aday, flags=re.I).strip().strip("\"'")
@@ -914,38 +998,9 @@ def _tarif_coz(ham: str, hedef: str) -> tuple[str, dict] | None:
         for sade in denenecek:
             if not sade:
                 continue
-            for kind, cre in _ONERI:
-                bulunan = cre.match(sade)
-                if not bulunan:
-                    continue
-                if kind in {"baslik", "paragraf", "buton", "sayfa_goster"} and not html_mi:
-                    return None
-                if kind == "baslik":
-                    metin = bulunan.group("metin").strip().strip("\"'")
-                    if not metin or len(metin) > 180:
-                        return None
-                    cumle = "başlığı " + metin + " yap"
-                    return cumle, _usta_adim("baslik", cumle, metin=metin)
-                if kind == "paragraf":
-                    metin = bulunan.group("metin").strip()
-                    if not metin or len(metin) > 400:
-                        return None
-                    cumle = "paragraf ekle: " + metin
-                    return cumle, _usta_adim("paragraf", cumle, metin=metin)
-                if kind == "buton":
-                    metin = bulunan.group("metin").strip().strip("\"'")
-                    if not metin or len(metin) > 80:
-                        return None
-                    cumle = "buton ekle: " + metin
-                    return cumle, _usta_adim("buton", cumle, metin=metin)
-                if kind == "sayfa_goster":
-                    return "sayfayı göster", _usta_adim("sayfa_goster", "sayfayı göster")
-                eski = bulunan.group("eski").strip().strip("\"'")
-                yeni = bulunan.group("yeni").strip().strip("\"'")
-                if not eski or len(eski) > 180 or not yeni or len(yeni) > 400:
-                    return None
-                cumle = eski + " yerine " + yeni + " yaz"
-                return cumle, _usta_adim("yerine", cumle, dosya=hedef, eski=eski, yeni=yeni)
+            cozulen = _tarif_satir(sade, hedef, kaynak)
+            if cozulen is not None:
+                return cozulen
     return None
 
 
@@ -959,11 +1014,12 @@ def _bak(repo: Path, adim: dict) -> dict:
     ham = okunan["text"]
     gordum = _gordum_satir(ham)
     _BEKLEYEN.pop(yol, None)
-    soz = _soyleyen(ham[:1200])
+    gorunen = _gorunen_yazi(ham)
+    soz = _soyleyen(gorunen[:1200]) if gorunen.strip() else ""
     if not soz.strip():
         reply = "Gördüm: " + gordum + "\nÖneri çıkmadı. Dosya aynı."
     else:
-        cozulen = _tarif_coz(soz, dosya)
+        cozulen = _tarif_coz(soz, dosya, ham)
         if cozulen is None:
             reply = "Gördüm: " + gordum + "\nBu tarif değil. Dosya aynı."
         else:

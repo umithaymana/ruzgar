@@ -20,7 +20,7 @@
 
 **Denenecek cümle:** `deneme sayfasına bak ve söyle`
 
-**11. iş bitti.** Kapı dosyayı okur ve `Gördüm` satırını dosyadan kurar. Konuşan beyin tek tarif önerir. Dosya, `uygula` denince ve tarif bilinen kapıdan geçince değişir. Karışık cümle yazmaz.
+**11. iş bitti.** Kapı dosyayı okur ve `Gördüm` satırını dosyadan kurar. Konuşan beyne görünen yazı gider. `...` ve örnek söz tarif sayılmaz. Dosya, `uygula` denince ve tarif bilinen kapıdan geçince değişir. Karışık cümle yazmaz.
 
 **Bilerek kapalı:** modelin ürettiği kodu çalıştırmak, uygulama klasörüne yazmak, 32B/70B, telefon.
 
