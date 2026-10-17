@@ -140,6 +140,55 @@ def test_usta_cozulmeyen_yazmaz(masa):
     assert not (el / "yok.txt").exists()
 
 
+def test_yerine_bir_kez_ve_yoksa_durur(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    klasor_soz(repo, "deneme sayfası yap")
+    klasor_soz(repo, "başlığı selam yap")
+    once = (el / "deneme.html").read_text(encoding="utf-8")
+    assert once.count("selam") == 2
+    sonuc = klasor_soz(repo, "deneme sayfasında selam yerine merhaba yaz")
+    govde = (el / "deneme.html").read_text(encoding="utf-8")
+    assert sonuc["onizleme"] is True
+    assert "<title>merhaba</title>" in govde
+    assert "<h1>selam</h1>" in govde
+    assert "selam yerine merhaba" in sonuc["reply"]
+    klasor_soz(repo, "paragraf ekle: <script>alert(1)</script>")
+    kacis = klasor_soz(repo, "deneme sayfasında alert yerine <b>kalın</b> yaz")
+    govde = (el / "deneme.html").read_text(encoding="utf-8")
+    assert "<b>" not in govde
+    assert "&lt;b&gt;kalın&lt;/b&gt;" in govde
+    assert "yerine" in kacis["reply"]
+    sabit = govde
+    yok = klasor_soz(repo, "deneme sayfasında olmayan yerine x yaz")
+    assert "Metin dosyada yok" in yok["reply"]
+    assert (el / "deneme.html").read_text(encoding="utf-8") == sabit
+    klasor_soz(repo, "dosyaya yaz: merhaba.txt | selam selam")
+    klasor_soz(repo, "merhaba.txt içinde selam yerine günaydın yaz")
+    metin = (el / "merhaba.txt").read_text(encoding="utf-8")
+    assert metin == "günaydın selam"
+    zincir = klasor_soz(repo, "deneme sayfasını oku, selam yerine merhaba yaz, sayfayı göster")
+    assert "Sayfa açık" in zincir["reply"]
+    assert "<h1>merhaba</h1>" in (el / "deneme.html").read_text(encoding="utf-8")
+    dur_once = (el / "deneme.html").read_text(encoding="utf-8")
+    dur = klasor_soz(repo, "deneme sayfasını oku, yokmetin yerine x yaz, sayfayı göster")
+    assert "adım durdu" in dur["reply"]
+    assert "Sayfa açık" not in dur["reply"]
+    assert (el / "deneme.html").read_text(encoding="utf-8") == dur_once
+    klasor_soz(repo, "dosyaya yaz: index.html | <p>diger</p>")
+    cok_once = (el / "deneme.html").read_text(encoding="utf-8")
+    cok = klasor_soz(repo, "selam yerine merhaba yaz")
+    assert "Birden fazla sayfa" in cok["reply"]
+    assert (el / "deneme.html").read_text(encoding="utf-8") == cok_once
+
+
+def test_yerine_klasor_yoksa_projects_yoluna_birakir(masa):
+    repo, el = masa
+    sonuc = klasor_soz(repo, "selam yerine merhaba yaz")
+    assert sonuc["handled"] is False
+    assert list(el.iterdir()) == []
+
+
 def test_bilinmeyen_ve_kapi(masa, tmp_path):
     repo, el = masa
     yok = klasor_soz(repo, "menüyü lacivert yap")

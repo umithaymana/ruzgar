@@ -14,10 +14,12 @@
 | 6 | Dört masa düz cümle, yüz aynı | bitti | `ruzgar-masa-soz.test.js` |
 | 7 | Commit ve push | bitti | `1289384` |
 | 8 | Usta kapısı: işi tarife böl | bitti | `test_usta_kabul_cumlesi` |
-
 | 9 | Masa işi: dört masayı tek cümlede böl | bitti | `ruzgar-masa-soz.test.js` |
+| 10 | Sayfada oku, bir kez değiştir | bitti | `test_yerine_bir_kez_ve_yoksa_durur` |
 
-**Sıradaki cümle:** `belgeye selam yaz, tabloda A1 e 10 yaz, çizime kutu çiz, sunuma Hoş geldin slaytı ekle: bugün`
+**Denenecek cümle:** `deneme sayfasında selam yerine merhaba yaz`
+
+**10. iş bitti.** Kilitli klasörde dosya önce okunur. `eski yerine yeni yaz` ilk geçtiği yerde bir kez değişir, geri okunur. Metin yoksa dosya aynı kalır. Çözülemeyen parça yazılmaz.
 
 **Bilerek kapalı:** modelin ürettiği kodu çalıştırmak, uygulama klasörüne yazmak, 32B/70B, telefon.
 

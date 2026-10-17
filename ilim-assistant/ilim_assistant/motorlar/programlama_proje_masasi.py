@@ -482,9 +482,9 @@ _AYIR = re.compile(
     r"|\s+sonra\s+",
     re.I,
 )
-_TARIF = {"baslik", "paragraf", "buton", "sayfa", "sayfa_ad", "sayfa_goster", "sayfa_goster_ad"}
+_TARIF = {"baslik", "paragraf", "buton", "sayfa", "sayfa_ad", "sayfa_goster", "sayfa_goster_ad", "yerine"}
 _USTA_IZ = re.compile(
-    r"sayfas[ıi]na|sayfas[ıi]nda|butonu\s+(?:koy|ekle)|başlığına|basligina|baştan\s+tasarla|bastan\s+tasarla",
+    r"sayfas[ıi]na|sayfas[ıi]nda|butonu\s+(?:koy|ekle)|başlığına|basligina|baştan\s+tasarla|bastan\s+tasarla|yerine",
     re.I,
 )
 _USTA_YAZI_YASAK = re.compile(r"\b(dosya|klasör|klasor|sayfa|başl|basl)\b", re.I)
@@ -792,6 +792,41 @@ def _calistir(repo: Path, adim: dict, sayfa: str) -> dict:
         if parca not in html:
             raise ValueError("Yazılmadı. " + dosya)
         return _sayfa_yaz(repo, dosya, html, "Buton yazıldı: klasor/" + dosya + "\n" + metin)
+    if kind == "yerine":
+        eski = (adim.get("eski") or "").strip().strip("\"'")
+        yeni = (adim.get("yeni") or "").strip().strip("\"'")
+        if not eski or len(eski) > 180:
+            raise ValueError("Eski metin boş veya çok uzun.")
+        if not yeni or len(yeni) > 400:
+            raise ValueError("Yeni metin boş veya çok uzun.")
+        if adim.get("dosya"):
+            dosya = _dosya_adi(str(adim["dosya"]))
+        elif adim.get("ad"):
+            dosya = _sayfa_dosyasi(str(adim["ad"]))
+        else:
+            if not sayfa:
+                htmls = [
+                    str(item["rel"]).split("/", 1)[-1]
+                    for item in klasor_liste(repo)["dosyalar"]
+                    if str(item["rel"]).lower().endswith((".html", ".htm"))
+                ]
+                if len(htmls) > 1:
+                    raise ValueError("Birden fazla sayfa var. Şöyle söyle: deneme sayfasında eski yerine yeni yaz")
+            dosya = _sayfa_sec(repo, sayfa)
+        ham = klasor_oku_dosya(repo, dosya)["text"]
+        if eski not in ham:
+            raise ValueError("Metin dosyada yok.")
+        html_mi = dosya.lower().endswith((".html", ".htm"))
+        yeni_yaz = _html_kacis(yeni) if html_mi else yeni
+        guncel = ham.replace(eski, yeni_yaz, 1)
+        if yeni_yaz not in guncel or guncel == ham:
+            raise ValueError("Yazılmadı. " + dosya)
+        reply = "Değişti: klasor/" + dosya + "\n" + eski + " yerine " + yeni
+        if html_mi:
+            return _sayfa_yaz(repo, dosya, guncel, reply)
+        yazilan = _yaz_geri(repo, dosya, guncel)
+        yazilan["reply"] = reply
+        return yazilan
     return _paket(handled=False)
 
 
@@ -819,6 +854,53 @@ def _usta_parca(parca: str) -> list[dict] | None:
     sade = _sade_cumle(parca)
     if not sade:
         return None
+    oku_sayfa = re.match(
+        r"^(?P<ad>[A-Za-z0-9çğıöşüÇĞİÖŞÜ._-]+)\s+sayfas[ıi]n[ıi]\s+oku$",
+        sade,
+        re.I,
+    )
+    if oku_sayfa:
+        return [_usta_adim("sayfa_goster_ad", sade, ad=oku_sayfa.group("ad"))]
+    sayfada = re.match(
+        r"^(?P<ad>[A-Za-z0-9çğıöşüÇĞİÖŞÜ._-]+)\s+sayfas[ıi]nda\s+(?P<eski>.+?)\s+yerine\s+(?P<yeni>.+?)\s+yaz$",
+        sade,
+        re.I,
+    )
+    if sayfada:
+        return [
+            _usta_adim(
+                "yerine",
+                sade,
+                ad=sayfada.group("ad"),
+                eski=sayfada.group("eski").strip(),
+                yeni=sayfada.group("yeni").strip(),
+            )
+        ]
+    icinde = re.match(
+        r"^(?P<dosya>\S+)\s+i[çc]inde\s+(?P<eski>.+?)\s+yerine\s+(?P<yeni>.+?)\s+yaz$",
+        sade,
+        re.I,
+    )
+    if icinde:
+        return [
+            _usta_adim(
+                "yerine",
+                sade,
+                dosya=icinde.group("dosya"),
+                eski=icinde.group("eski").strip(),
+                yeni=icinde.group("yeni").strip(),
+            )
+        ]
+    duz_yerine = re.match(r"^(?P<eski>.+?)\s+yerine\s+(?P<yeni>.+?)\s+yaz$", sade, re.I)
+    if duz_yerine:
+        return [
+            _usta_adim(
+                "yerine",
+                sade,
+                eski=duz_yerine.group("eski").strip(),
+                yeni=duz_yerine.group("yeni").strip(),
+            )
+        ]
     baslik = re.match(
         r"^(?P<ad>[A-Za-z0-9çğıöşüÇĞİÖŞÜ._-]+)\s+sayfas[ıi](?:na|nda)\s+"
         r"(?:başlığı|basligi|başlık|baslik)\s+(?P<metin>.+?)\s+(?:yap|olsun)$",
@@ -950,6 +1032,13 @@ def klasor_soz(repo: Path, yazi: str) -> dict:
         try:
             return _yurut(repo, usta)
         except _KlasorYok:
+            if (
+                len(usta) == 1
+                and usta[0].get("kind") == "yerine"
+                and not usta[0].get("ad")
+                and not usta[0].get("dosya")
+            ):
+                return _paket(handled=False)
             return _paket(
                 handled=True,
                 reply="Çalışma klasörü seçilmedi. Şöyle söyle: çalışma klasörü: tam yol",
