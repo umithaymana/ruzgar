@@ -509,6 +509,19 @@ def test_tavan_tarif_yazar_ve_tehlikeyi_yemez(masa, monkeypatch):
     )
     sunum = masa_bak_soz("sunum", "Slayt 1: Hoş geldin | bugün")
     assert sunum["eylem"] == {"eylem": "sunum.baslik", "baslik": "Hoş geldin"}
+    monkeypatch.setattr(
+        "ilim_assistant.motorlar.programlama_proje_masasi._masa_soyleyen",
+        lambda ad, metin: "çizime ortaya mavi kutu çiz",
+    )
+    orta = masa_bak_soz("cizim", "Çizim boş.")
+    assert orta["eylem"]["x"] == 680
+    assert orta["eylem"]["y"] == 430
+    monkeypatch.setattr(
+        "ilim_assistant.motorlar.programlama_proje_masasi._masa_soyleyen",
+        lambda ad, metin: "slaytın metnini bugün yap",
+    )
+    govde = masa_bak_soz("sunum", "Slayt 1: Hoş geldin | bugün")
+    assert govde["eylem"] == {"eylem": "sunum.metin", "metin": "bugün"}
 
 
 def test_el_sayfa_renk_okuma_ve_geri(masa, monkeypatch):

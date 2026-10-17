@@ -21,14 +21,22 @@
 | 13 | Güvenli tarif tavanı | bitti | `test_tavan_tarif_yazar_ve_tehlikeyi_yemez` |
 | 14 | Sayfa adı, tekrar yok, yarım iş geri | bitti | `test_el_sayfa_renk_okuma_ve_geri` |
 | 15 | Aynı kopyayı teke indir, renk kelimesi boyar | bitti | `test_teke_ve_renk_kelimesi` |
+| 16 | Masa temizle, slayt metni | bitti | `ruzgar-masa-soz.test.js` |
+| 17 | Çizimde üç sabit yer | bitti | `ruzgar-masa-soz.test.js` |
+| 18 | Masa zinciri geri alır | bitti | `ruzgar-masa-soz.test.js` |
+| 19 | Tuval gözü, dört renk üç yer | bitti | `ruzgar-masa-goz.test.js` |
 
-**Denenecek cümle:** `aynı bağlantıları teke indir`
+**Denenecek cümle:** `çizime bak ve söyle`
 
 **13. iş bitti.** Kilitli klasör sayar, metin dosyası açar, ara başlık, http bağlantı, başlık rengi, klasördeki resim ve sayfa adı değişir. Dört masa: belgede bir kez değiştir, hücre sil, sütun topla, renkli çiz, slayt başlığı. Bak bu tariflerden yazı ve rengi önerebilir. Bağlantı, resim ve ad değiştirme yalnız sen söyleyince olur. `uygula` yine son bakışı bir kez çalıştırır.
 
 **14. iş bitti.** Renk, ara başlık, bağlantı ve resim sayfa adı alır. Büyük başlık yoksa pencere başlığından görünür başlık boyanır. Aynı parça ikinci kez eklenmez. Zincir yarım kalırsa dosya eski hâline döner. `deneme dosyasını oku` metin dosyası yoksa sayfayı açar. Son bakış yeniden açılışta da durur.
 
 **15. iş bitti.** `aynı bağlantıları teke indir`, `aynı ara başlıkları teke indir` ve `aynı resimleri teke indir` fazla kopyayı bırakır, farklı olanı silmez. Dosyanın kendisi silinmez. `başlığı mavi yap` başlığın yazısını «mavi» yapmaz, rengi boyar.
+
+**16–18. iş bitti.** `belgeyi temizle`, `tabloyu temizle`, `çizimi temizle`, `sunumu temizle` masayı boşaltır, klasör dosyasına dokunmaz. `slaytın metnini bugün yap` açık slaytın yazısını değiştirir. `çizime ortaya mavi kutu çiz`, `çizime üste çizgi çiz`, `çizime alta daire çiz` sabit yerdedir. Masa işi yarıda kalırsa önceki parça geri alınır.
+
+**19. iş bitti.** Çizime bakınca tuvalin pikseli okunur. Üst, orta, alt ve siyah, mavi, kırmızı, yeşil söylenir. Yeni şekil önerilmez. Klasördeki sayfa hâlâ yazı olarak okunur.
 
 **Bilerek kapalı:** dosya silmek, modelin ürettiği kodu çalıştırmak, uygulama klasörüne yazmak, klasör dışına çıkmak, 32B/70B, telefon.
 

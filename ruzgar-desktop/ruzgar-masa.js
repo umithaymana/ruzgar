@@ -1189,6 +1189,7 @@
       "cizim.temizle": [],
       "sunum.ekle": ["baslik", "metin"],
       "sunum.baslik": ["baslik"],
+      "sunum.metin": ["metin"],
       "sunum.temizle": [],
       "sunum.sun": [],
     };
@@ -1412,6 +1413,18 @@
       masaAc("sunum");
       return "Slayt başlığı değişti.";
     }
+    if (eylem === "sunum.metin") {
+      const metin = masaTemizMetin(action.metin, 2000).trim();
+      if (!metin) return "Metin boş.";
+      if (!state.slides.length) return "Slayt yok.";
+      const i = state.slideIndex >= 0 && state.slideIndex < state.slides.length ? state.slideIndex : 0;
+      state.slides[i].body = metin;
+      renderTools();
+      renderSlides();
+      scheduleSave();
+      masaAc("sunum");
+      return "Slayt metni değişti.";
+    }
     if (eylem === "sunum.temizle") {
       state.slides = [{ title: "", body: "", bg: "#1c1a16", fg: "#f7f4ec" }];
       state.slideIndex = 0;
@@ -1464,12 +1477,55 @@
     return /yazıldı|eklendi|işlendi|hazır|değişti|açıldı|temizlendi|silindi|toplamı|toplami/.test(String(cevap || ""));
   }
 
+  function masaAnlikAl() {
+    let piksel = null;
+    try {
+      if (paperReady && canvas.width && ctx) piksel = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    } catch (err) {
+      piksel = null;
+    }
+    return {
+      belge: belge.innerHTML,
+      sheet: JSON.parse(JSON.stringify(state.sheet)),
+      slides: JSON.parse(JSON.stringify(state.slides)),
+      slideIndex: state.slideIndex,
+      ink: !!state.ink,
+      piksel: piksel,
+      color: state.draw.color,
+      tool: state.draw.tool,
+    };
+  }
+
+  function masaAnlikYaz(anlik) {
+    belge.innerHTML = anlik.belge;
+    state.sheet = anlik.sheet;
+    paintSheet();
+    state.slides = anlik.slides.length ? anlik.slides : state.slides;
+    state.slideIndex = anlik.slideIndex;
+    state.draw.color = anlik.color;
+    state.draw.tool = anlik.tool;
+    renderTools();
+    renderSlides();
+    if (anlik.piksel && ctx) {
+      try { ctx.putImageData(anlik.piksel, 0, 0); } catch (err) { /* tuval eski kareyi tutamadı */ }
+      state.ink = !!anlik.ink;
+    } else if (!anlik.ink) {
+      ensurePaper();
+      ctx.fillStyle = "#f4f0e6";
+      ctx.fillRect(0, 0, BW, BH);
+      state.ink = false;
+    }
+    scheduleSave();
+  }
+
   function masaListeUygula(liste) {
+    const anlik = masaAnlikAl();
     const notlar = [];
     for (let i = 0; i < liste.length; i++) {
       const cevap = masaUygula(liste[i]);
       if (!masaOldu(cevap)) {
-        const once = notlar.length ? "\nÖnceki parçalar işlendi." : "";
+        if (notlar.length) masaAnlikYaz(anlik);
+        const once = notlar.length ? "\nÖnceki parçalar geri alındı." : "";
         return (i + 1) + ". parça durdu. " + (cevap || "Masa değişmedi.") + once;
       }
       notlar.push(cevap);
@@ -1598,14 +1654,31 @@
       }
       return satirlar.join("\n").slice(0, 1200);
     }
-    if (masa === "cizim") return state.ink ? "Çizimde kayıtlı resim var." : "Çizim boş.";
+    if (masa === "cizim") return masaCizimGor();
     return state.slides.map(function (slayt, i) {
       return "Slayt " + (i + 1) + ": " + String(slayt.title || "") + " | " + String(slayt.body || "");
     }).join("\n").slice(0, 1200);
   }
 
+  function masaCizimGor() {
+    ensurePaper();
+    if (!state.ink || !ctx || !canvas.width) return "Çizim boş.";
+    let kare = null;
+    try { kare = ctx.getImageData(0, 0, canvas.width, canvas.height); } catch (err) { kare = null; }
+    if (!kare || !window.ruzgarMasaGoz) return "Çizimde iz var.";
+    return window.ruzgarMasaGoz.cizimSoz(kare.data, canvas.width, canvas.height);
+  }
+
   async function masaBak(masa) {
     masaBekleyenYaz(null);
+    if (masa === "cizim") {
+      try {
+        await fetch(masaApiKok() + "/api/programlama/bekleyen-birak", { method: "POST" });
+      } catch (err) { /* klasör önerisi duruyorsa da çizime bakılır */ }
+      const yazi = masaCizimGor();
+      masaAc("cizim");
+      return { handled: true, reply: "Gördüm: " + yazi + "\nÖneri çıkmadı. Çizim aynı." };
+    }
     const yazi = masaGorunen(masa);
     try {
       await fetch(masaApiKok() + "/api/programlama/bekleyen-birak", { method: "POST" });

@@ -14,7 +14,7 @@ import re
 import shutil
 from pathlib import Path
 
-PROJE_MASA_VERSION = "programlama-proje-masa-v6-2026-10-17"
+PROJE_MASA_VERSION = "programlama-proje-masa-v7-2026-10-17"
 
 _DENEME = re.compile(
     r"^(smoke-|t-|agent-|_|"
@@ -1580,6 +1580,41 @@ def _masa_cumle_eylem(masa: str, sade: str, kaynak: str) -> dict | None:
             return {"eylem": "tablo.topla", "sutun": sutun, "cumle": sutun + " sütununu topla"}
         return None
     if masa == "cizim":
+        yerli = re.search(
+            r"(?:çizime|cizime)\s+(?P<yer>ortaya|üste|uste|alta)\s+"
+            r"(?:(?P<renk>siyah|mavi|kırmızı|kirmizi|yeşil|yesil)\s+)?"
+            r"(?P<tur>kutu|çizgi|cizgi|daire)\s+(?:çiz|ciz)",
+            sade,
+            re.I,
+        )
+        if yerli:
+            yer = yerli.group("yer").lower()
+            tur = yerli.group("tur").lower().replace("ç", "c")
+            renk = (yerli.group("renk") or "").lower()
+            if renk and not _renk_hex(renk):
+                return None
+            if yer == "ortaya" and tur == "kutu":
+                eylem = {"eylem": "cizim.kutu", "x": 680, "y": 430, "w": 240, "h": 140}
+            elif yer == "ortaya" and tur == "daire":
+                eylem = {"eylem": "cizim.daire", "x": 800, "y": 500, "rx": 80, "ry": 60}
+            elif yer == "ortaya":
+                eylem = {"eylem": "cizim.cizgi", "x1": 200, "y1": 500, "x2": 1400, "y2": 500}
+            elif yer in {"üste", "uste"} and tur == "kutu":
+                eylem = {"eylem": "cizim.kutu", "x": 80, "y": 40, "w": 240, "h": 140}
+            elif yer in {"üste", "uste"} and tur == "daire":
+                eylem = {"eylem": "cizim.daire", "x": 300, "y": 120, "rx": 80, "ry": 60}
+            elif yer in {"üste", "uste"}:
+                eylem = {"eylem": "cizim.cizgi", "x1": 80, "y1": 60, "x2": 1520, "y2": 60}
+            elif tur == "kutu":
+                eylem = {"eylem": "cizim.kutu", "x": 80, "y": 780, "w": 240, "h": 140}
+            elif tur == "cizgi":
+                eylem = {"eylem": "cizim.cizgi", "x1": 80, "y1": 920, "x2": 1520, "y2": 920}
+            else:
+                eylem = {"eylem": "cizim.daire", "x": 800, "y": 860, "rx": 80, "ry": 60}
+            if renk:
+                eylem["renk"] = renk
+            eylem["cumle"] = "çizime " + yer + (" " + renk if renk else "") + " " + tur + " çiz"
+            return eylem
         renkli = re.search(
             r"(?:çizime|cizime)\s+(?P<renk>siyah|mavi|kırmızı|kirmizi|yeşil|yesil)\s+(?P<tur>kutu|çizgi|cizgi|daire)\s+(?:çiz|ciz)",
             sade,
@@ -1609,6 +1644,12 @@ def _masa_cumle_eylem(masa: str, sade: str, kaynak: str) -> dict | None:
             return {"eylem": "cizim.daire", "x": 300, "y": 220, "rx": 80, "ry": 60, "cumle": "çizime daire çiz"}
         return {"eylem": "cizim.cizgi", "x1": 40, "y1": 40, "x2": 400, "y2": 200, "cumle": "çizime çizgi çiz"}
     if masa == "sunum":
+        metin_satir = re.match(r"^slayt[ıi]n\s+metnini\s+(?P<metin>.+?)\s+yap$", sade, re.I)
+        if metin_satir:
+            metin = _masa_soz_temiz(metin_satir.group("metin"))
+            if not _soz_var(metin) or len(metin) > 400 or metin not in kaynak:
+                return None
+            return {"eylem": "sunum.metin", "metin": metin, "cumle": "slaytın metnini " + metin + " yap"}
         baslik_satir = re.match(r"^slayt[ıi]n\s+ba[sş]l[ıi][gğ][ıi]n[ıi]\s+(?P<baslik>.+?)\s+yap$", sade, re.I)
         if baslik_satir:
             baslik = _masa_soz_temiz(baslik_satir.group("baslik"))

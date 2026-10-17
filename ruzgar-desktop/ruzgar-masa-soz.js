@@ -16,6 +16,27 @@
     return "cizim";
   }
 
+  function yerCiz(yer, tur, renk) {
+    const yerAd = String(yer || "").toLowerCase();
+    const sekil = String(tur || "").toLowerCase();
+    let eylem = null;
+    if (yerAd === "ortaya" && sekil === "kutu") eylem = { eylem: "cizim.kutu", x: 680, y: 430, w: 240, h: 140 };
+    else if (yerAd === "ortaya" && sekil === "daire") eylem = { eylem: "cizim.daire", x: 800, y: 500, rx: 80, ry: 60 };
+    else if (yerAd === "ortaya") eylem = { eylem: "cizim.cizgi", x1: 200, y1: 500, x2: 1400, y2: 500 };
+    else if (yerAd === "üste" || yerAd === "uste") {
+      if (sekil === "kutu") eylem = { eylem: "cizim.kutu", x: 80, y: 40, w: 240, h: 140 };
+      else if (sekil === "daire") eylem = { eylem: "cizim.daire", x: 300, y: 120, rx: 80, ry: 60 };
+      else eylem = { eylem: "cizim.cizgi", x1: 80, y1: 60, x2: 1520, y2: 60 };
+    } else if (yerAd === "alta") {
+      if (sekil === "kutu") eylem = { eylem: "cizim.kutu", x: 80, y: 780, w: 240, h: 140 };
+      else if (sekil === "çizgi" || sekil === "cizgi") eylem = { eylem: "cizim.cizgi", x1: 80, y1: 920, x2: 1520, y2: 920 };
+      else eylem = { eylem: "cizim.daire", x: 800, y: 860, rx: 80, ry: 60 };
+    }
+    if (!eylem) return null;
+    if (renk) eylem.renk = renk;
+    return eylem;
+  }
+
   function parca(raw) {
     let m = raw.match(/^belgede\s+(.+?)\s+yerine\s+(.+?)\s+yaz$/i);
     if (m && m[1].trim() && m[2].trim()) return { eylem: "belge.yerine", eski: m[1].trim(), yeni: m[2].trim() };
@@ -29,6 +50,14 @@
     if (m) return { eylem: "tablo.topla", sutun: m[1].toUpperCase() };
     m = raw.match(/^(?:tabloda|tabloya)\s+([A-La-l])(\d{1,2})\s*(?:e|ye|hücresine|hucresine)?\s*(.+?)\s+yaz$/i);
     if (m && m[3].trim()) return { eylem: "tablo.hucre", hucre: (m[1] + m[2]).toUpperCase(), deger: m[3].trim() };
+    if (/^(?:belgeyi temizle|belge temizle)$/i.test(raw)) return { eylem: "belge.temizle" };
+    if (/^(?:tabloyu temizle|tablo temizle)$/i.test(raw)) return { eylem: "tablo.temizle" };
+    if (/^(?:çizimi temizle|cizimi temizle|çizim temizle)$/i.test(raw)) return { eylem: "cizim.temizle" };
+    if (/^(?:sunumu temizle|sunum temizle)$/i.test(raw)) return { eylem: "sunum.temizle" };
+    m = raw.match(/^slayt[ıi]n\s+metnini\s+(.+?)\s+yap$/i);
+    if (m && m[1].trim()) return { eylem: "sunum.metin", metin: m[1].trim() };
+    m = raw.match(/^(?:çizime|cizime)\s+(ortaya|üste|uste|alta)\s+(?:(siyah|mavi|kırmızı|kirmizi|yeşil|yesil)\s+)?(kutu|çizgi|cizgi|daire)\s+(?:çiz|ciz)$/i);
+    if (m) return yerCiz(m[1], m[3], m[2] || "");
     m = raw.match(/^(?:çizime|cizime)\s+(siyah|mavi|kırmızı|kirmizi|yeşil|yesil)\s+(kutu|çizgi|cizgi|daire)\s+(?:çiz|ciz)$/i);
     if (m) {
       const renk = m[1];
