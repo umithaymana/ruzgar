@@ -25,7 +25,7 @@
     const w = Number(width) || 0;
     const h = Number(height) || 0;
     if (!data || w < 2 || h < 2) return "Çizim boş.";
-    const adim = Math.max(2, Math.floor(Math.min(w, h) / 40));
+    const adim = 4;
     const bant = { ust: {}, orta: {}, alt: {} };
     let iz = 0;
     for (let y = 0; y < h; y += adim) {

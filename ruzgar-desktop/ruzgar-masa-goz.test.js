@@ -32,4 +32,9 @@ const soz = cizimSoz(mavi, 40, 30);
 assert.ok(soz.indexOf("Üstte mavi iz var.") >= 0, soz);
 assert.ok(soz.indexOf("Altta") < 0, soz);
 
+const ince = kagit(200, 1000);
+boya(ince, 200, 0, 10, 200, 18, [30, 77, 140]);
+const inceSoz = cizimSoz(ince, 200, 1000);
+assert.ok(inceSoz.indexOf("Üstte mavi iz var.") >= 0, inceSoz);
+
 console.log("masa goz ok");
