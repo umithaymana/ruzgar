@@ -201,6 +201,7 @@
 
   function yakinSoz(low) {
     const raf = [
+      ["sayfasina", "deneme sayfasına başlığı selam yap, hoş geldin yaz, tıkla butonu koy, sayfayı göster"],
       ["dosyasina", "merhaba dosyasına selam yaz"],
       ["dosyasini", "merhaba dosyasını oku"],
       ["sayfasi", "deneme sayfası yap"],
@@ -803,6 +804,10 @@
     if (/\sdosyasini\s+oku$/.test(low)) return true;
     if (/(^|\s)(sayfa yap|sayfa ac|sayfayi goster)\b/.test(low)) return true;
     if (/\ssayfasi\s+yap\b/.test(low) || /\ssayfasini\s+goster\b/.test(low)) return true;
+    if (/\ssayfasina\b/.test(low) || /\ssayfasinda\b/.test(low)) return true;
+    if (/\sbutonu\s+(koy|ekle)\b/.test(low) || /^buton koy\b/.test(low)) return true;
+    if (/^basligina\b/.test(low) || /\bbasligi\b.+\bolsun$/.test(low)) return true;
+    if (/\bsayfayi\b/.test(low) && /\b(bastan|tasarla|yeniden)\b/.test(low)) return true;
     if (/^(basligi|baslik|paragraf|buton)\b/.test(low)) return true;
     if ((low.indexOf(",") >= 0 || /\ssonra\s/.test(low))
       && /dosyasina|dosyasini|sayfa|baslig|paragraf|buton|calisma klasoru|klasoru/.test(low)) return true;

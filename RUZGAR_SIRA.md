@@ -1,8 +1,8 @@
 # Rüzgar sıra tahtası
 
-**Onay:** 2026-10-17 — düz cümle, aynı kapı. Serbest usta, kendi kodu, model büyütme, halka açılış bu sırada yok.
+**Onay:** 2026-10-17 — usta kapısı. İş, kilitli klasörde bilinen tariflere bölünür. Serbest kod, kendi kodu, model büyütme, halka açılış yok.
 
-**Kıvam:** Kilitli klasörde ve dört masada bilinen cümle dosyaya iner, geri okunur, bilinmeyen cümle dosyaya dokunmaz.
+**Kıvam:** Düz cümle durur. Üstüne, çözülen iş sırayla yazılır ve geri okunur. Çözülemeyen parça dosyaya dokunmaz.
 
 | Sıra | İş | Durum | Son test |
 | --- | --- | --- | --- |
@@ -12,9 +12,10 @@
 | 4 | Sayfa, başlık, paragraf, buton, göster | bitti | `test_sayfa_baslik_paragraf_buton` |
 | 5 | İş listesi, düşen adımda dur | bitti | `test_is_listesi_ve_dusen_adim` |
 | 6 | Dört masa düz cümle, yüz aynı | bitti | `ruzgar-masa-soz.test.js` |
-| 7 | Commit ve push | bu kayıt | düz cümle kapısı |
+| 7 | Commit ve push | bitti | `1289384` |
+| 8 | Usta kapısı: işi tarife böl | bitti | `test_usta_kabul_cumlesi` |
 
-**Sıradaki cümle:** `merhaba dosyasına selam mimar yaz`
+**Sıradaki cümle:** `deneme sayfasına başlığı selam yap, hoş geldin yaz, tıkla butonu koy, sayfayı göster`
 
 **Bilerek kapalı:** modelin ürettiği kodu çalıştırmak, uygulama klasörüne yazmak, 32B/70B, telefon.
 

@@ -106,6 +106,40 @@ def test_is_listesi_ve_dusen_adim(masa):
         klasor_oku_dosya(repo, "yok.txt")
 
 
+def test_usta_kabul_cumlesi(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    isim = "deneme sayfasına başlığı selam yap, hoş geldin yaz, tıkla butonu koy, sayfayı göster"
+    sonuc = klasor_soz(repo, isim)
+    govde = (el / "deneme.html").read_text(encoding="utf-8")
+    assert sonuc["handled"] is True
+    assert sonuc["gorunum"] == "proje"
+    assert sonuc["onizleme"] is True
+    assert "<title>selam</title>" in govde
+    assert "<h1>selam</h1>" in govde
+    assert "<p>hoş geldin</p>" in govde
+    assert "<button" in govde and "tıkla" in govde
+    assert "Sayfa açık" in sonuc["reply"]
+
+
+def test_usta_cozulmeyen_yazmaz(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    red = klasor_soz(repo, "deneme sayfasına başlığı selam yap, şunu tasarla")
+    assert red["handled"] is True
+    assert "Bunu yapmadım" in red["reply"]
+    assert not (el / "deneme.html").exists()
+    tasarla = klasor_soz(repo, "sayfayı baştan tasarla")
+    assert tasarla["handled"] is True
+    assert "Dosya değişmedi" in tasarla["reply"]
+    assert list(el.iterdir()) == []
+    yarim = klasor_soz(repo, "deneme sayfasına başlığı selam yap, yok dosyasını oku, sayfayı göster")
+    assert yarim["reply"].startswith("3. adım durdu") or "adım durdu" in yarim["reply"]
+    assert "Sayfa açık" not in yarim["reply"]
+    assert (el / "deneme.html").is_file()
+    assert not (el / "yok.txt").exists()
+
+
 def test_bilinmeyen_ve_kapi(masa, tmp_path):
     repo, el = masa
     yok = klasor_soz(repo, "menüyü lacivert yap")

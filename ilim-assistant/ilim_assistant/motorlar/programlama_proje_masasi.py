@@ -483,6 +483,19 @@ _AYIR = re.compile(
     re.I,
 )
 _TARIF = {"baslik", "paragraf", "buton", "sayfa", "sayfa_ad", "sayfa_goster", "sayfa_goster_ad"}
+_USTA_IZ = re.compile(
+    r"sayfas[ıi]na|sayfas[ıi]nda|butonu\s+(?:koy|ekle)|başlığına|basligina|baştan\s+tasarla|bastan\s+tasarla",
+    re.I,
+)
+_USTA_YAZI_YASAK = re.compile(r"\b(dosya|klasör|klasor|sayfa|başl|basl)\b", re.I)
+_USTA_RED = (
+    "Bunu yapmadım. Dosya değişmedi. "
+    "Şöyle söyle: deneme sayfasına başlığı selam yap, hoş geldin yaz, tıkla butonu koy, sayfayı göster."
+)
+
+
+class _UstaRed(Exception):
+    """Cümle işe benziyor ama her parça tarife inmiyor. Dosya yazılmaz."""
 
 
 def _paket(
@@ -782,40 +795,102 @@ def _calistir(repo: Path, adim: dict, sayfa: str) -> dict:
     return _paket(handled=False)
 
 
-def klasor_soz(repo: Path, yazi: str) -> dict:
-    """Kilitli klasörde bilinen cümle. Bilinmeyen cümle dosyaya dokunmaz."""
-    raw = (yazi or "").strip()
-    if not raw or len(raw) > 600:
-        return _paket(handled=False)
-    tek = _adim(raw)
+def _sade_cumle(text: str) -> str:
+    sade = re.sub(r"\s+", " ", (text or "").strip())
+    sade = re.sub(r"^[Ll]ütfen\s+", "", sade)
+    return re.sub(
+        r"\s+(?:lütfen|lutfen|olur mu|yapar mısın|yapar misin)\s*$",
+        "",
+        sade,
+        flags=re.I,
+    ).strip()
+
+
+def _usta_adim(kind: str, ham: str, **alan) -> dict:
+    adim = {"kind": kind, "ham": ham}
+    adim.update(alan)
+    return adim
+
+
+def _usta_parca(parca: str) -> list[dict] | None:
+    tek = _adim(parca)
     if tek is not None:
-        try:
-            return _calistir(repo, tek, "")
-        except _KlasorYok:
-            return _paket(handled=False)
-        except ValueError as exc:
-            return _paket(handled=True, reply=str(exc))
-    parcalar = [p.strip() for p in _AYIR.split(raw) if p.strip()]
-    if len(parcalar) < 2:
-        return _paket(handled=False)
-    adimlar = []
+        return [tek]
+    sade = _sade_cumle(parca)
+    if not sade:
+        return None
+    baslik = re.match(
+        r"^(?P<ad>[A-Za-z0-9çğıöşüÇĞİÖŞÜ._-]+)\s+sayfas[ıi](?:na|nda)\s+"
+        r"(?:başlığı|basligi|başlık|baslik)\s+(?P<metin>.+?)\s+(?:yap|olsun)$",
+        sade,
+        re.I,
+    )
+    if baslik:
+        return [
+            _usta_adim("sayfa_ad", sade, ad=baslik.group("ad")),
+            _usta_adim("baslik", sade, metin=baslik.group("metin").strip().strip("\"'")),
+        ]
+    yazi = re.match(
+        r"^(?P<ad>[A-Za-z0-9çğıöşüÇĞİÖŞÜ._-]+)\s+sayfas[ıi](?:na|nda)\s+(?P<metin>.+?)\s+yaz$",
+        sade,
+        re.I,
+    )
+    if yazi and not _USTA_YAZI_YASAK.search(yazi.group("metin")):
+        return [
+            _usta_adim("sayfa_ad", sade, ad=yazi.group("ad")),
+            _usta_adim("paragraf", sade, metin=yazi.group("metin").strip()),
+        ]
+    olsun = re.match(
+        r"^(?:başlığı|basligi|başlık|baslik)\s+(?P<metin>.+?)\s+olsun$",
+        sade,
+        re.I,
+    )
+    if olsun:
+        return [_usta_adim("baslik", sade, metin=olsun.group("metin").strip().strip("\"'"))]
+    basliga = re.match(r"^(?:başlığına|basligina)\s+(?P<metin>.+?)\s+yaz$", sade, re.I)
+    if basliga:
+        return [_usta_adim("baslik", sade, metin=basliga.group("metin").strip().strip("\"'"))]
+    buton = re.match(r"^(?P<metin>.+?)\s+butonu\s+(?:koy|ekle)$", sade, re.I)
+    if not buton:
+        buton = re.match(r"^buton\s+koy\s*[:\-]?\s*(?P<metin>.+)$", sade, re.I)
+    if buton:
+        return [_usta_adim("buton", sade, metin=buton.group("metin").strip().strip("\"'"))]
+    if re.match(r"^(?:sayfayı|sayfayi)\s+(?:aç|ac)$", sade, re.I):
+        return [_usta_adim("sayfa_goster", sade)]
+    duz = re.match(r"^(?P<metin>.+?)\s+yaz$", sade, re.I)
+    if duz and not _USTA_YAZI_YASAK.search(duz.group("metin")):
+        return [_usta_adim("paragraf", sade, metin=duz.group("metin").strip())]
+    return None
+
+
+def _usta_coz(raw: str) -> list[dict] | None:
+    sade = _sade_cumle(raw)
+    parcalar = [p.strip() for p in re.split(r"\s*,\s*|\s+sonra\s+", sade) if p.strip()]
+    if not parcalar:
+        return None
+    benzer = _USTA_IZ.search(sade) is not None
+    adimlar: list[dict] = []
     for parca in parcalar:
-        bulunan = _adim(parca)
+        bulunan = _usta_parca(parca)
         if bulunan is None:
-            return _paket(handled=False)
-        adimlar.append(bulunan)
+            if benzer or adimlar:
+                raise _UstaRed()
+            return None
+        adimlar.extend(bulunan)
+        benzer = True
+    return adimlar or None
+
+
+def _yurut(repo: Path, adimlar: list[dict]) -> dict:
     sayfa = ""
     son = _paket(handled=True)
     cevaplar: list[str] = []
     for sira, adim in enumerate(adimlar, 1):
         try:
             son = _calistir(repo, adim, sayfa)
-        except _KlasorYok:
-            return _paket(
-                handled=True,
-                reply="Çalışma klasörü seçilmedi. Şöyle söyle: çalışma klasörü: tam yol",
-            )
         except ValueError as exc:
+            if len(adimlar) == 1:
+                return _paket(handled=True, reply=str(exc))
             once = "\nÖnceki adımlar yazıldı." if cevaplar else ""
             return _paket(
                 handled=True,
@@ -831,6 +906,52 @@ def klasor_soz(repo: Path, yazi: str) -> dict:
             sayfa = str(son["sayfa"])
         if son.get("reply"):
             cevaplar.append(str(son["reply"]))
+    if len(adimlar) == 1:
+        return son
     son = dict(son)
     son["reply"] = "\n".join(cevaplar)
     return son
+
+
+def klasor_soz(repo: Path, yazi: str) -> dict:
+    """Kilitli klasörde bilinen cümle. Çözülemeyen iş dosyaya dokunmaz."""
+    raw = (yazi or "").strip()
+    if not raw or len(raw) > 600:
+        return _paket(handled=False)
+    tek = _adim(raw)
+    if tek is not None:
+        try:
+            return _yurut(repo, [tek])
+        except _KlasorYok:
+            return _paket(handled=False)
+    parcalar = [p.strip() for p in _AYIR.split(raw) if p.strip()]
+    if len(parcalar) >= 2:
+        adimlar = []
+        tam = True
+        for parca in parcalar:
+            bulunan = _adim(parca)
+            if bulunan is None:
+                tam = False
+                break
+            adimlar.append(bulunan)
+        if tam:
+            try:
+                return _yurut(repo, adimlar)
+            except _KlasorYok:
+                return _paket(
+                    handled=True,
+                    reply="Çalışma klasörü seçilmedi. Şöyle söyle: çalışma klasörü: tam yol",
+                )
+    try:
+        usta = _usta_coz(raw)
+    except _UstaRed:
+        return _paket(handled=True, reply=_USTA_RED)
+    if usta:
+        try:
+            return _yurut(repo, usta)
+        except _KlasorYok:
+            return _paket(
+                handled=True,
+                reply="Çalışma klasörü seçilmedi. Şöyle söyle: çalışma klasörü: tam yol",
+            )
+    return _paket(handled=False)
