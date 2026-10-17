@@ -92,8 +92,7 @@ _SIMPLE_FACTS: tuple[tuple[re.Pattern[str], str], ...] = (
         re.compile(
             r"(?:"
             r"(?:d[üu]nya(?:m[ıi]z)?|gezegenimiz|earth).{0,48}(?:hangi\s+)?(?:galaksi|galaxi|galaxy)|"
-            r"(?:galaksi|galaxi|galaxy).{0,48}(?:d[üu]nya(?:m[ıi]z)?|earth)|"
-            r"(?:hangi\s+)?(?:galaksi|galaxi|galaxy)(?:de|sinin|sistemi)?"
+            r"(?:galaksi|galaxi|galaxy).{0,48}(?:d[üu]nya(?:m[ıi]z)?|earth)"
             r")",
             re.I,
         ),
@@ -381,6 +380,15 @@ def try_simple_arithmetic_reply(message: str) -> Optional[str]:
     return f"Ümit abi, {a_s} {op_tr} {b_s} = **{shown}**."
 
 
+def _card_soruyu_kacirir(message: str, answer: str) -> bool:
+    """Konum kartı, sayı sorusuna yapışmasın. Kart o zaman okunmaz."""
+    n = _norm(message)
+    a = _norm(answer)
+    if "samanyolu" not in a:
+        return False
+    return bool(re.search(r"\bka[cç]\b|y[ıi]ld", n))
+
+
 def try_simple_factual_reply(message: str) -> Optional[str]:
     """Evrensel mikro gerçekler — takvim/sayı; ansiklopedik sorular bilgi turuna kalır."""
     if not tek_beyin_analiz_enabled():
@@ -407,6 +415,8 @@ def try_simple_factual_reply(message: str) -> Optional[str]:
         pass
     for pat, ans in _SIMPLE_FACTS:
         if pat.search(_norm(raw)):
+            if _card_soruyu_kacirir(raw, ans):
+                continue
             return ans
     try:
         from ilim_assistant.ana_motor_bilgi_turu import should_route_bilgi_turu_pipeline
@@ -439,6 +449,11 @@ def build_analiz_system_addon(message: str) -> str:
         lines.append(
             "Bilgi sorusu — önce sorunun özünü yanıtla; gereksiz sohbet veya "
             "alakasız konuya atlama."
+        )
+        lines.append(
+            "Önündeki not sorulan sayıya veya ada cevap değilse notu okuma. "
+            "Kendi cümlenle yalnız notun karşıladığı kısmı söyle. "
+            "Karşılamıyorsa uydurma."
         )
     elif it == "personal":
         lines.append(
