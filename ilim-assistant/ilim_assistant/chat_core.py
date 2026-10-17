@@ -515,6 +515,29 @@ def _weather_instant_allowed(msg: str, *, coding_mode: bool) -> bool:
     return True
 
 
+def _weather_yeni_konu(low: str) -> bool:
+    """Hava yapışması yeni işi yutmasın."""
+    n = (low or "").lower()
+    return any(
+        k in n
+        for k in (
+            "web sitesi",
+            "web site",
+            "site yap",
+            "öğrendin",
+            "ogrendin",
+            "ne öğrend",
+            "ne ogrend",
+            "neler öğrend",
+            "neler ogrend",
+            "kimsin",
+            "galaksi",
+            "yıldız",
+            "yildiz",
+        )
+    )
+
+
 def _weather_follow_up(msg: str, history: list | None) -> bool:
     """
     Önceki tur(lar)da hava konuşulduysa kısa devam cümlelerini hava bağlamında tut.
@@ -526,6 +549,8 @@ def _weather_follow_up(msg: str, history: list | None) -> bool:
     if len(t) > 220:
         return False
     low = t.lower()
+    if _weather_yeni_konu(low):
+        return False
     hints = (
         "benim için",
         "sen bak",
@@ -535,7 +560,6 @@ def _weather_follow_up(msg: str, history: list | None) -> bool:
         "bana anlat",
         "anlatır mısın",
         "söyler misin",
-        "öğren",
         "neden demedin",
         "niye demedin",
         "peki ",

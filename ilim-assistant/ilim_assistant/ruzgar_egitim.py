@@ -815,6 +815,39 @@ def lookup_onayli_duzeltme(message: str) -> Optional[str]:
     return best[1] if best else None
 
 
+def looks_like_ne_ogrendin(message: str) -> bool:
+    n = _norm_duzeltme(message or "")
+    return any(
+        k in n
+        for k in ("neler ogrendin", "ne ogrendin", "ogrendin")
+    )
+
+
+def reply_saklanan_dogrular(message: str) -> Optional[str]:
+    """«Neler öğrendin?» düzeltme rafını söyler. Raf boşsa uydurma ders yok."""
+    if not _egitim_enabled() or not looks_like_ne_ogrendin(message):
+        return None
+    try:
+        from ilim_assistant.hafiza_i_ruzgar import get_hafiza_motor
+
+        motor = get_hafiza_motor()
+    except Exception:
+        return "Ümit abi, bugün senin söylediğin yeni bir doğru kaydetmedim."
+    satirlar: list[str] = []
+    for row in motor._kayitlar:
+        if row.get("motor_tipi") != _MOTOR_DUZELTME:
+            continue
+        soru = str(row.get("soru") or "").strip()
+        cevap = str(row.get("cevap") or "").strip()
+        if not soru or not cevap or is_invalid_egitim_pair(soru, cevap):
+            continue
+        satirlar.append(f"«{soru}» için şunu tutuyorum: {cevap}")
+    if not satirlar:
+        return "Ümit abi, bugün senin söylediğin yeni bir doğru kaydetmedim."
+    secilen = satirlar[-4:]
+    return "Ümit abi, senin düzelttiğin doğrular şunlar. " + " ".join(secilen)
+
+
 def taught_reply_for_message(message: str) -> Optional[str]:
     """Öğretilmiş soru→cevap (Egitim rafı) — hızlı, doğrudan."""
     hit = lookup_egitim_reply(message)

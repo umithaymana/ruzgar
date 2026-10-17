@@ -210,6 +210,10 @@ def scrub_leaked_instructions(text: str) -> str:
             continue
         if "önce düşün, sonra üret" in low or "once dusun, sonra uret" in low:
             continue
+        if re.search(r"(?i)bilgi\s+turu", st):
+            continue
+        if re.match(r"(?i)^(?:niyet|güven|guven)\s*:", st):
+            continue
         out_lines.append(ln)
     t = "\n".join(out_lines).strip()
     # Tek paragraf sızıntısı (satır kırığı yokken)

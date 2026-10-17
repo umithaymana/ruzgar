@@ -10438,6 +10438,27 @@ def _collect_fast_lane_chat_events(req: ChatRequest) -> list[dict[str, Any]] | N
             getattr(req, "coding_mode", False)
         ):
             try:
+                from ilim_assistant.ruzgar_egitim import reply_saklanan_dogrular
+
+                ogren_hi = reply_saklanan_dogrular(msg_raw)
+                if ogren_hi:
+                    orch_o: dict[str, Any] = {
+                        "plan": {"primary": "gundelik", "label_tr": "Saklanan dogrular"},
+                        "fast_lane": True,
+                    }
+                    return list(
+                        _iter_instant_chat_events(
+                            ogren_hi,
+                            msg_raw,
+                            session_wake_used=req.session_wake_used,
+                            msg_for_wake=req.message,
+                            orch=orch_o,
+                            instant_gundelik=True,
+                        )
+                    )
+            except Exception:
+                pass
+            try:
                 from ilim_assistant.weather_live import maybe_weather_instant_reply
 
                 weather_hi = maybe_weather_instant_reply(
@@ -10656,6 +10677,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     session_wake_used=req.session_wake_used,
                     msg_for_wake=req.message,
                     orch=_orch_t,
+                    instant_gundelik=True,
+                )
+                return
+
+            try:
+                from ilim_assistant.ruzgar_egitim import reply_saklanan_dogrular
+
+                _ogren = reply_saklanan_dogrular(msg_early)
+            except Exception:
+                _ogren = None
+            if _ogren:
+                _orch_o = dict(orch_early)
+                _orch_o.setdefault("plan", {})["primary"] = "gundelik"
+                _orch_o["plan"]["label_tr"] = "Saklanan doğrular"
+                yield from _iter_instant_chat_events(
+                    _ogren,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_o,
                     instant_gundelik=True,
                 )
                 return
