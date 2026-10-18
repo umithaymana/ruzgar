@@ -1068,6 +1068,30 @@ def test_orta_arac_bir_kez_sayar_dosyayi_degistirmez(masa):
 
     assert tarif_cumlesi("orta aracında notu say") is True
     assert tarif_cumlesi("orta aracında satır say") is True
+
+
+def test_orta_testi_sonucu_soyler_duzeltmez(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    yok = klasor_soz(repo, "orta testini çalıştır")
+    assert "orta/arac.py yok." in yok["reply"]
+    klasor_soz(repo, "orta iş yap")
+    arac = el / "orta" / "arac.py"
+    once = arac.read_bytes()
+    gecti = klasor_soz(repo, "orta testini çalıştır")
+    assert "Test geçti." in gecti["reply"]
+    assert "Düzeltmedim" in gecti["reply"]
+    assert "Dosya aynı" in gecti["reply"]
+    assert arac.read_bytes() == once
+    arac.write_text("import os\n", encoding="utf-8")
+    bozuk = arac.read_bytes()
+    kaldi = klasor_soz(repo, "orta testini çalıştır")
+    assert "Hazır araç değil" in kaldi["reply"]
+    assert "Düzeltmedim" in kaldi["reply"]
+    assert arac.read_bytes() == bozuk
+    from ilim_assistant.motorlar.programlama_motoru import is_code_agent_task_message
+
+    assert is_code_agent_task_message("orta testini çalıştır", "programlama") is False
     assert is_code_agent_task_message("orta aracında notu say", "programlama") is False
     assert is_code_agent_task_message("hesap.py çalıştır", "programlama") is False
 
@@ -1099,6 +1123,25 @@ def test_uygulama_notu_yalniz_deftere_yazar(masa):
 
     assert tarif_cumlesi("uygulama notu yaz: selam") is True
     assert is_code_agent_task_message("uygulama notu yaz: selam", "programlama") is False
+
+
+def test_kaynak_satiri_tek_dosyaya_yazar_calistirmaz(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    yaz = klasor_soz(repo, "kaynak satırı yaz: selam")
+    assert "Yazıldı: ilim-assistant/ilim_assistant/kapi_notu.py." in yaz["reply"]
+    assert "Çalıştırmadım" in yaz["reply"]
+    dosya = repo / "ilim-assistant" / "ilim_assistant" / "kapi_notu.py"
+    assert dosya.read_text(encoding="utf-8") == '"""Kapı notu. Çalıştırılmaz."""\n\nSATIR = "selam"\n'
+    assert not (el / "kapi_notu.py").exists()
+    ikinci = klasor_soz(repo, "kaynak satırı yaz: başka")
+    assert "Üstüne yazmadım" in ikinci["reply"]
+    assert dosya.read_text(encoding="utf-8").count("SATIR") == 1
+    tirnak = klasor_soz(repo, 'kaynak satırı yaz: "kirik')
+    assert "tırnak" in tirnak["reply"]
+    from ilim_assistant.motorlar.programlama_motoru import is_code_agent_task_message
+
+    assert is_code_agent_task_message("kaynak satırı yaz: selam", "programlama") is False
 
 
 def test_dis_klasor_okur_yazmaz(masa, tmp_path):
@@ -1147,6 +1190,27 @@ def test_dis_klasor_okur_yazmaz(masa, tmp_path):
     assert is_code_agent_task_message("dış dosyayı oku: not.txt", "programlama") is False
 
 
+def test_dis_dosyaya_bir_kez_yazar(masa, tmp_path):
+    repo, el = masa
+    _kilitle(repo, el)
+    dis = tmp_path / "dis-yaz"
+    dis.mkdir()
+    klasor_soz(repo, f"dış klasör: {dis}")
+    yaz = klasor_soz(repo, "dış dosyaya yaz: kapi.txt: selam")
+    assert "Yazıldı: kapi.txt." in yaz["reply"]
+    assert "Çalıştırmadım" in yaz["reply"]
+    assert (dis / "kapi.txt").read_text(encoding="utf-8") == "selam\n"
+    ikinci = klasor_soz(repo, "dış dosyaya yaz: kapi.txt: başka")
+    assert "Üstüne yazmadım" in ikinci["reply"]
+    assert (dis / "kapi.txt").read_text(encoding="utf-8") == "selam\n"
+    kac = klasor_soz(repo, "dış dosyaya yaz: alt/kapi.txt: selam")
+    assert "geçersiz" in kac["reply"]
+    assert not (dis / "alt").exists()
+    env = klasor_soz(repo, "dış dosyaya yaz: gizli.env: sir")
+    assert "yazılmaz" in env["reply"]
+    assert not (dis / "gizli.env").exists()
+
+
 def test_git_durumu_soyler_gondermez(masa):
     import shutil
     import subprocess
@@ -1174,8 +1238,11 @@ def test_git_durumu_soyler_gondermez(masa):
     assert "Göndermedim" in soz["reply"]
     assert subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"]) == bas
     red = klasor_soz(repo, "git gönder")
+    assert "Uzak yok" in red["reply"]
     assert "Göndermedim" in red["reply"]
-    assert "Bunu yapmadım" in red["reply"]
+    assert subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"]) == bas
+    duz = klasor_soz(repo, "git kaydet")
+    assert "Bunu yapmadım" in duz["reply"]
     assert subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"]) == bas
     from ilim_assistant.motorlar.programlama_motoru import is_code_agent_task_message
     from ilim_assistant.motorlar.programlama_proje_masasi import tarif_cumlesi
@@ -1183,3 +1250,49 @@ def test_git_durumu_soyler_gondermez(masa):
     assert tarif_cumlesi("git ne durumda") is True
     assert tarif_cumlesi("git gönder") is True
     assert is_code_agent_task_message("git ne durumda", "programlama") is False
+
+
+def test_git_kaydet_yalniz_kapi_notunu_gonderir(masa, tmp_path):
+    import shutil
+    import subprocess
+
+    repo, el = masa
+    _kilitle(repo, el)
+    shutil.rmtree(repo / ".git")
+    subprocess.run(["git", "init"], cwd=repo, check=True, capture_output=True)
+    (repo / "a.txt").write_text("bir\n", encoding="utf-8")
+    subprocess.run(["git", "-C", str(repo), "add", "a.txt"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "-C", str(repo), "-c", "user.email=t@example.com", "-c", "user.name=t", "commit", "-m", "ilk"],
+        check=True,
+        capture_output=True,
+    )
+    (repo / "a.txt").write_text("iki\n", encoding="utf-8")
+    yok = klasor_soz(repo, "git kaydet: kapi notu")
+    assert "Kaynak satırı yok" in yok["reply"]
+    assert "a.txt" in subprocess.check_output(["git", "-C", str(repo), "status", "--porcelain"], text=True)
+    klasor_soz(repo, "kaynak satırı yaz: selam")
+    kayit = klasor_soz(repo, "git kaydet: kapi notu")
+    assert "Kaydedildi:" in kayit["reply"]
+    assert "Göndermedim" in kayit["reply"]
+    adlar = subprocess.check_output(
+        ["git", "-C", str(repo), "diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD"],
+        text=True,
+    ).strip()
+    assert adlar == "ilim-assistant/ilim_assistant/kapi_notu.py"
+    kalan = subprocess.check_output(["git", "-C", str(repo), "status", "--porcelain"], text=True)
+    assert "a.txt" in kalan
+    assert "kapi_notu.py" not in kalan
+    tekrar = klasor_soz(repo, "git kaydet: kapi notu")
+    assert "Kaydetmedim" in tekrar["reply"]
+    yerel = subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"])
+    uzak = tmp_path / "uzak.git"
+    subprocess.run(["git", "init", "--bare", str(uzak)], check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(repo), "remote", "add", "origin", str(uzak)], check=True, capture_output=True)
+    gonder = klasor_soz(repo, "git gönder")
+    assert "Gönderildi: origin HEAD." in gonder["reply"]
+    assert "Zorlamadım" in gonder["reply"]
+    dal = subprocess.check_output(["git", "-C", str(repo), "rev-parse", "--abbrev-ref", "HEAD"], text=True).strip()
+    alinan = subprocess.check_output(["git", "--git-dir", str(uzak), "rev-parse", "refs/heads/" + dal])
+    assert alinan == yerel
+    assert subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"]) == yerel

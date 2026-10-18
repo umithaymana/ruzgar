@@ -595,16 +595,27 @@ _KALIP: tuple[tuple[str, re.Pattern[str]], ...] = (
         r"^orta\s+arac[ıi]nda\s+sat[ıi]r\s+say\s*[:\-]\s*(?P<metin>.+)$",
         re.I,
     )),
+    ("orta_test", re.compile(r"^orta\s+testini\s+[çc]al[ıi][sş]t[ıi]r$", re.I)),
     ("uygulama_not", re.compile(
         r"^uygulama\s+notu\s+yaz\s*[:\-]\s*(?P<metin>.+)$",
         re.I,
     )),
     ("uygulama_not_oku", re.compile(r"^uygulama\s+notunu\s+oku$", re.I)),
+    ("kaynak_satir", re.compile(
+        r"^kaynak\s+sat[ıi]r[ıi]\s+yaz\s*[:\-]\s*(?P<metin>.+)$",
+        re.I,
+    )),
     ("dis_klasor", re.compile(r"^d[ıi]ş\s+klas[öo]r\s*:\s*(?P<yol>.+)$", re.I)),
     ("dis_say", re.compile(r"^d[ıi]ş\s+klas[öo]r[üu]\s+say$", re.I)),
     ("dis_oku", re.compile(r"^d[ıi]ş\s+dosyay[ıi]\s+oku\s*:\s*(?P<ad>\S+)$", re.I)),
+    ("dis_yaz", re.compile(
+        r"^d[ıi]ş\s+dosyaya\s+yaz\s*:\s*(?P<ad>[^:\s]+)\s*:\s*(?P<metin>.+)$",
+        re.I,
+    )),
     ("git_durum", re.compile(r"^git\s+ne\s+durumda$", re.I)),
-    ("git_yazma", re.compile(r"^git\s+(?:g[öo]nder|kaydet)$", re.I)),
+    ("git_kaydet", re.compile(r"^git\s+kaydet\s*:\s*(?P<metin>.+)$", re.I)),
+    ("git_gonder", re.compile(r"^git\s+g[öo]nder$", re.I)),
+    ("git_yazma", re.compile(r"^git\s+kaydet$", re.I)),
     ("py_soyle", re.compile(
         r"^(?P<ad>\S+\.py)\s+dosyas[ıi]n[ıi]n\s+ne\s+yapt[ıi][gğ][ıi]n[ıi]\s+s[öo]yle$",
         re.I,
@@ -893,12 +904,17 @@ _PY_OKU = {
     "orta_not_satir",
     "orta_arac_not",
     "orta_arac_satir",
+    "orta_test",
     "uygulama_not",
     "uygulama_not_oku",
+    "kaynak_satir",
     "dis_klasor",
     "dis_say",
     "dis_oku",
+    "dis_yaz",
     "git_durum",
+    "git_kaydet",
+    "git_gonder",
     "git_yazma",
 }
 
@@ -1707,6 +1723,59 @@ def _orta_arac_satir(repo: Path, metin: str) -> dict:
     return _orta_arac_calistir(repo, _not_satiri(metin))
 
 
+def _orta_test(repo: Path) -> dict:
+    import subprocess
+    import sys
+
+    try:
+        yol, _norm = _klasor_hedef(repo, "orta/arac.py")
+    except ValueError as exc:
+        if "seçilmedi" in str(exc):
+            raise
+        return _paket(reply="orta/arac.py yok.\nÇalıştırmadım.")
+    if not yol.is_file() or yol.is_symlink():
+        return _paket(reply="orta/arac.py yok.\nÇalıştırmadım.")
+    once = yol.read_bytes()
+    try:
+        agac = ast.parse(once.decode("utf-8"))
+    except (UnicodeError, SyntaxError):
+        return _paket(reply="Bunu çalıştırmadım. Hazır araç değil.\nDosya aynı. Düzeltmedim.")
+    if not _arac_hazir(agac):
+        return _paket(reply="Bunu çalıştırmadım. Hazır araç değil.\nDosya aynı. Düzeltmedim.")
+    kod = (
+        "import pathlib,sys\n"
+        "src=pathlib.Path(sys.argv[1]).read_text(encoding='utf-8')\n"
+        "ns={}\n"
+        "exec(compile(src,'orta/arac.py','exec'),{'__builtins__':{'len':len}},ns)\n"
+        "fn=ns.get('satir_say')\n"
+        "beklenen=[('selam',1),('selam\\nikinci',2),('\\n\\n',0)]\n"
+        "for metin,sayi in beklenen:\n"
+        "    gelen=fn(metin)\n"
+        "    if type(gelen) is not int or gelen!=sayi:\n"
+        "        print('KALDI')\n"
+        "        raise SystemExit(0)\n"
+        "print('GECTI')\n"
+    )
+    try:
+        sonuc = subprocess.run(
+            [sys.executable, "-c", kod, str(yol)],
+            capture_output=True,
+            text=True,
+            timeout=8,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        sonuc = None
+    if not _arac_ayni(yol, once):
+        return _paket(reply="Dosya değişti. Sonucu söylemedim. Düzeltmedim.")
+    cikti = "" if sonuc is None else (sonuc.stdout or "").strip()
+    if cikti == "GECTI":
+        return _paket(reply="Test geçti.\nDosya aynı. Düzeltmedim.")
+    if cikti == "KALDI":
+        return _paket(reply="Test kaldı.\nDosya aynı. Düzeltmedim.")
+    return _paket(reply="Çalışmadı.\nDosya aynı. Düzeltmedim.")
+
+
 def _uygulama_not_yolu(repo: Path) -> Path:
     kok = repo.resolve()
     ust = kok / "ilim-assistant" / ".ruzgar"
@@ -1744,6 +1813,34 @@ def _uygulama_not_oku(repo: Path) -> dict:
         rel="ilim-assistant/.ruzgar/uygulama_notu.txt",
         text=govde,
     )
+
+
+def _kapi_notu_yolu(repo: Path) -> Path:
+    kok = repo.resolve()
+    ust = kok / "ilim-assistant" / "ilim_assistant"
+    hedef = ust / "kapi_notu.py"
+    if ust.is_symlink() or hedef.is_symlink():
+        raise ValueError("Bu yere yazılmaz.")
+    gercek = hedef.resolve()
+    if gercek.name != "kapi_notu.py" or not _icinde(gercek, kok):
+        raise ValueError("Bu yere yazılmaz.")
+    return gercek
+
+
+def _kaynak_satir(repo: Path, metin: str) -> dict:
+    satir = _not_satiri(metin)
+    if any(im in satir for im in ('"', "\\", "'")):
+        raise ValueError("Satırda tırnak olmasın.")
+    yol = _kapi_notu_yolu(repo)
+    if yol.is_file():
+        govde = yol.read_text(encoding="utf-8").strip()
+        return _paket(reply="Kaynak satırı duruyor.\n" + govde + "\nÜstüne yazmadım. Çalıştırmadım.")
+    govde = '"""Kapı notu. Çalıştırılmaz."""\n\nSATIR = "' + satir + '"\n'
+    yol.parent.mkdir(parents=True, exist_ok=True)
+    yol.write_text(govde, encoding="utf-8")
+    if yol.read_text(encoding="utf-8") != govde:
+        raise ValueError("Yazılmadı. kapi_notu.py")
+    return _paket(reply="Yazıldı: ilim-assistant/ilim_assistant/kapi_notu.py.\nÇalıştırmadım.")
 
 
 _DIS_OKU = {".txt", ".md"}
@@ -1815,23 +1912,119 @@ def _dis_oku(repo: Path, ad: str) -> dict:
     )
 
 
-def _git_satir(repo: Path, args: list[str]) -> str:
+def _dis_ad(ad: str, uzantilar: set[str]) -> str:
+    temiz = (ad or "").strip().strip('"').strip("'")
+    if (
+        not temiz
+        or "/" in temiz
+        or "\\" in temiz
+        or ".." in temiz
+        or ":" in temiz
+        or temiz.startswith(".")
+        or temiz != Path(temiz).name
+    ):
+        raise ValueError("Dosya adı geçersiz.")
+    if Path(temiz).suffix.lower() not in uzantilar:
+        raise ValueError("Bu dosya yazılmaz.")
+    return Path(temiz).name
+
+
+def _dis_yaz(repo: Path, ad: str, metin: str) -> dict:
+    satir = _not_satiri(metin)
+    ad = _dis_ad(ad, {".txt"})
+    kok = _dis_kok(repo)
+    hedef = (kok / ad).resolve()
+    if hedef.is_symlink() or not _icinde(hedef, kok) or hedef.parent.resolve() != kok:
+        raise ValueError("Bu yere yazılmaz.")
+    if hedef.exists():
+        if not hedef.is_file():
+            raise ValueError("Bu yere yazılmaz.")
+        govde = hedef.read_text(encoding="utf-8").strip()
+        return _paket(reply="Dış dosya duruyor: " + govde + "\nÜstüne yazmadım. Çalıştırmadım.")
+    hedef.write_text(satir + "\n", encoding="utf-8")
+    if hedef.read_text(encoding="utf-8") != satir + "\n":
+        raise ValueError("Yazılmadı. " + ad)
+    return _paket(reply="Yazıldı: " + ad + ".\nÇalıştırmadım.")
+
+
+_KAPI_NOTU = "ilim-assistant/ilim_assistant/kapi_notu.py"
+
+
+def _git_calis(repo: Path, args: list[str], timeout: int = 8):
     import subprocess
 
     kok = repo.resolve()
     try:
-        sonuc = subprocess.run(
+        return subprocess.run(
             ["git", "--no-optional-locks", "-C", str(kok), *args],
             capture_output=True,
             text=True,
-            timeout=8,
+            timeout=timeout,
             check=False,
         )
     except (OSError, subprocess.TimeoutExpired):
-        return ""
-    if sonuc.returncode != 0:
+        return None
+
+
+def _git_satir(repo: Path, args: list[str]) -> str:
+    sonuc = _git_calis(repo, args)
+    if sonuc is None or sonuc.returncode != 0:
         return ""
     return (sonuc.stdout or "").strip()
+
+
+def _git_kimlik(repo: Path) -> tuple[str, str] | None:
+    satir = _git_satir(repo, ["log", "-1", "--format=%an%x00%ae"])
+    if "\x00" not in satir:
+        return None
+    ad, posta = satir.split("\x00", 1)
+    ad, posta = ad.strip(), posta.strip()
+    if not ad or "@" not in posta:
+        return None
+    return ad, posta
+
+
+def _git_kaydet(repo: Path, metin: str) -> dict:
+    mesaj = _not_satiri(metin)
+    if mesaj.startswith("-"):
+        raise ValueError("Kayıt cümlesi olmaz.")
+    try:
+        yol = _kapi_notu_yolu(repo)
+    except ValueError:
+        return _paket(reply="Kaynak satırı yok. Kaydetmedim.")
+    if not yol.is_file():
+        return _paket(reply="Kaynak satırı yok. Kaydetmedim.")
+    kimlik = _git_kimlik(repo)
+    if not kimlik:
+        return _paket(reply="Kimlik yok. Kaydetmedim.")
+    once = _git_satir(repo, ["rev-parse", "HEAD"])
+    if not once:
+        return _paket(reply="Bu depo değil. Kaydetmedim.")
+    ad, posta = kimlik
+    kim = ["-c", "user.name=" + ad, "-c", "user.email=" + posta]
+    ekle = _git_calis(repo, [*kim, "add", "--", _KAPI_NOTU])
+    if ekle is None or ekle.returncode != 0:
+        return _paket(reply="Kaydetmedim. Göndermedim.")
+    kayit = _git_calis(repo, [*kim, "commit", "-m", mesaj, "--", _KAPI_NOTU])
+    if kayit is None or kayit.returncode != 0:
+        return _paket(reply="Değişen kaynak satırı yok. Kaydetmedim. Göndermedim.")
+    sonra = _git_satir(repo, ["rev-parse", "HEAD"])
+    adlar = _git_satir(repo, ["diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD"])
+    if not sonra or sonra == once or adlar != _KAPI_NOTU:
+        return _paket(reply="Kayıt tek dosya değil. Göndermedim.")
+    kisa = _git_satir(repo, ["rev-parse", "--short", "HEAD"]) or sonra[:8]
+    return _paket(reply="Kaydedildi: " + kisa + "\nYalnız " + _KAPI_NOTU + ".\nGöndermedim.")
+
+
+def _git_gonder(repo: Path) -> dict:
+    if not _git_satir(repo, ["rev-parse", "--abbrev-ref", "HEAD"]):
+        return _paket(reply="Bu depo değil.\nGöndermedim.")
+    if not _git_satir(repo, ["remote", "get-url", "origin"]):
+        return _paket(reply="Uzak yok. Göndermedim.")
+    sonuc = _git_calis(repo, ["push", "origin", "HEAD"], timeout=20)
+    if sonuc is None or sonuc.returncode != 0:
+        return _paket(reply="Gönderilmedi.")
+    return _paket(reply="Gönderildi: origin HEAD.\nZorlamadım.")
 
 
 def _git_durum(repo: Path) -> dict:
@@ -2083,18 +2276,28 @@ def _calistir(repo: Path, adim: dict, sayfa: str) -> dict:
             return _orta_arac_not(repo)
         if kind == "orta_arac_satir":
             return _orta_arac_satir(repo, adim.get("metin") or "")
+        if kind == "orta_test":
+            return _orta_test(repo)
         if kind == "uygulama_not":
             return _uygulama_not(repo, adim.get("metin") or "")
         if kind == "uygulama_not_oku":
             return _uygulama_not_oku(repo)
+        if kind == "kaynak_satir":
+            return _kaynak_satir(repo, adim.get("metin") or "")
         if kind == "dis_klasor":
             return _dis_klasor(repo, adim.get("yol") or "")
         if kind == "dis_say":
             return _dis_say(repo)
         if kind == "dis_oku":
             return _dis_oku(repo, adim.get("ad") or "")
+        if kind == "dis_yaz":
+            return _dis_yaz(repo, adim.get("ad") or "", adim.get("metin") or "")
         if kind == "git_durum":
             return _git_durum(repo)
+        if kind == "git_kaydet":
+            return _git_kaydet(repo, adim.get("metin") or "")
+        if kind == "git_gonder":
+            return _git_gonder(repo)
         if kind == "git_yazma":
             return _paket(reply="Bunu yapmadım. Göndermedim. Dosya aynı.")
         return _py_soyle(repo, adim.get("ad") or "")

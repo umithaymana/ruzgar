@@ -55,8 +55,12 @@
 | 47 | Uygulama defterine bir satır | bitti | `test_uygulama_notu_yalniz_deftere_yazar` |
 | 48 | Dış klasöre bak, yazma | bitti | `test_dis_klasor_okur_yazmaz` |
 | 49 | Git durumunu söyle, gönderme | bitti | `test_git_durumu_soyler_gondermez` |
+| 50 | Orta testini söyle, düzeltme | bitti | `test_orta_testi_sonucu_soyler_duzeltmez` |
+| 51 | Kaynak satırı, tek dosya | bitti | `test_kaynak_satiri_tek_dosyaya_yazar_calistirmaz` |
+| 52 | Dış dosyaya bir kez yaz | bitti | `test_dis_dosyaya_bir_kez_yazar` |
+| 53 | Kapı notunu kaydet, düz gönder | bitti | `test_git_kaydet_yalniz_kapi_notunu_gonderir` |
 
-**Denenecek cümle:** `git ne durumda`
+**Denenecek cümle:** `orta testini çalıştır`
 
 **13. iş bitti.** Kilitli klasör sayar, metin dosyası açar, ara başlık, http bağlantı, başlık rengi, klasördeki resim ve sayfa adı değişir. Dört masa: belgede bir kez değiştir, hücre sil, sütun topla, renkli çiz, slayt başlığı. Bak bu tariflerden yazı ve rengi önerebilir. Bağlantı, resim ve ad değiştirme yalnız sen söyleyince olur. `uygula` yine son bakışı bir kez çalıştırır.
 
@@ -122,8 +126,16 @@
 
 **48. iş bitti. 4. basamağın üçüncü kapısı.** `dış klasör: tam yol` kilitli klasörün dışında bir yer seçer. Uygulama ağacı, sürücü kökü ve kilitli klasörün içi açılmaz. `dış klasörü say` yalnız üst adları söyler. `dış dosyayı oku: not.txt` yalnız o klasördeki metin dosyasını okur. Yazmaz, çalıştırmaz.
 
-**49. iş bitti. 4. basamağın dördüncü kapısı.** `git ne durumda` dalı, son kaydı ve değişen dosya adlarını söyler. `git gönder` ve `git kaydet` durur. Kayıt yazılmaz, uzak depoya gönderilmez.
+**49. iş bitti. 4. basamağın dördüncü kapısı.** `git ne durumda` dalı, son kaydı ve değişen dosya adlarını söyler. Yalın `git kaydet` durur. Kayıt yazılmaz.
 
-**Bilerek kapalı:** dosya silmek, modelin ürettiği kodu çalıştırmak, kaynak dosyasına yazmak, dış klasöre yazmak, git kaydı ve gönderim, 32B/70B, telefon.
+**50. iş bitti. Sayma kapısı genişledi.** `orta testini çalıştır` hazır `orta/arac.py` içindeki `satir_say` için üç bilinen kontrolü çalıştırır ve geçti ya da kaldı der. Dosyayı değiştirmez, düzeltmez. Hazır olmayan araç çalışmaz.
+
+**51. iş bitti. Defter kapısı genişledi.** `kaynak satırı yaz: selam` yalnız `ilim-assistant/ilim_assistant/kapi_notu.py` dosyasına bir satır yazar. Dosya varsa üstüne yazmaz. Tırnak ve ters bölü girmez. Çalıştırmaz.
+
+**52. iş bitti. Dış kapı genişledi.** `dış dosyaya yaz: kapi.txt: selam` seçilen dış klasöre tek `.txt` yazar. Ad yalın olur. Dosya varsa üstüne yazmaz. Klasörün dışına çıkmaz. Çalıştırmaz.
+
+**53. iş bitti. Git kapısı genişledi.** `git kaydet: kapi notu` yalnız `kapi_notu.py` dosyasını kaydeder. Başka dosya kayda girmez. Yalın `git kaydet` durur. `git gönder` yalnız `origin HEAD` gönderir, zorlamaz. Uzak yoksa göndermez.
+
+**Bilerek kapalı:** dosya silmek, modelin ürettiği kodu çalıştırmak, serbest kaynak yazmak, serbest dış yazmak, zorla göndermek, 32B/70B, telefon.
 
 **Deneme klasörü:** `C:\Users\hayma\Desktop\ruzgar-el`
