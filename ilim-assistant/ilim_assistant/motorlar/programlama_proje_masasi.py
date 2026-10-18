@@ -595,6 +595,13 @@ _KALIP: tuple[tuple[str, re.Pattern[str]], ...] = (
         r"^orta\s+arac[ıi]nda\s+sat[ıi]r\s+say\s*[:\-]\s*(?P<metin>.+)$",
         re.I,
     )),
+    ("orta_neden", re.compile(r"^orta\s+testi\s+neden\s+kald[ıi]$", re.I)),
+    ("orta_duzelt", re.compile(
+        r"^orta\s+arac[ıi]n[ıi]\s+d[üu]zelt\s*:\s*(?P<metin>.+)$",
+        re.I,
+    )),
+    ("orta_bakis", re.compile(r"^orta\s+testine\s+ikinci\s+bak$", re.I)),
+    ("tahta_bitti", re.compile(r"^a[çc][ıi]k\s+sat[ıi]r[ıi]\s+bitti\s+yap$", re.I)),
     ("orta_test", re.compile(r"^orta\s+testini\s+[çc]al[ıi][sş]t[ıi]r$", re.I)),
     ("uygulama_not", re.compile(
         r"^uygulama\s+notu\s+yaz\s*[:\-]\s*(?P<metin>.+)$",
@@ -904,6 +911,10 @@ _PY_OKU = {
     "orta_not_satir",
     "orta_arac_not",
     "orta_arac_satir",
+    "orta_neden",
+    "orta_duzelt",
+    "orta_bakis",
+    "tahta_bitti",
     "orta_test",
     "uygulama_not",
     "uygulama_not_oku",
@@ -1723,6 +1734,204 @@ def _orta_arac_satir(repo: Path, metin: str) -> dict:
     return _orta_arac_calistir(repo, _not_satiri(metin))
 
 
+_ORTA_KONTROL = (
+    ("selam", 1, "1. kontrol: selam"),
+    ("selam\nikinci", 2, "2. kontrol: selam ve ikinci"),
+    ("\n\n", 0, "3. kontrol: boş satır"),
+)
+
+
+def _kontrol_kaldi(fn) -> str:
+    for metin, sayi, ad in _ORTA_KONTROL:
+        try:
+            gelen = fn(metin)
+        except Exception:
+            return ad + " kaldı. Çalışmadı."
+        if type(gelen) is not int or gelen != sayi:
+            gelen_yazi = str(gelen) if type(gelen) is int else "sayı değil"
+            return ad + " kaldı. Beklenen " + str(sayi) + ", gelen " + gelen_yazi + "."
+    return ""
+
+
+def _orta_arac_yukle(repo: Path) -> tuple[Path, bytes, dict] | dict:
+    try:
+        yol, _norm = _klasor_hedef(repo, "orta/arac.py")
+    except ValueError as exc:
+        if "seçilmedi" in str(exc):
+            raise
+        return _paket(reply="orta/arac.py yok.\nÇalıştırmadım.")
+    if not yol.is_file() or yol.is_symlink():
+        return _paket(reply="orta/arac.py yok.\nÇalıştırmadım.")
+    once = yol.read_bytes()
+    try:
+        agac = ast.parse(once.decode("utf-8"))
+    except (UnicodeError, SyntaxError):
+        return _paket(reply="Bunu çalıştırmadım. Hazır araç değil.\nDosya aynı. Düzeltmedim.")
+    if not _arac_hazir(agac):
+        return _paket(reply="Bunu çalıştırmadım. Hazır araç değil.\nDosya aynı. Düzeltmedim.")
+    ns: dict = {}
+    try:
+        exec(compile(agac, "orta/arac.py", "exec"), {"__builtins__": {"len": len}}, ns)
+    except Exception:
+        ns = {}
+    if not _arac_ayni(yol, once):
+        return _paket(reply="Dosya değişti. Sonucu söylemedim. Düzeltmedim.")
+    return yol, once, ns
+
+
+def _orta_test_neden(repo: Path) -> dict:
+    yuklu = _orta_arac_yukle(repo)
+    if isinstance(yuklu, dict):
+        cevap = str(yuklu.get("reply") or "")
+        if "Hazır araç değil" in cevap:
+            return _paket(reply="Hazır araç değil. Kontrol çalışmadı.\nDosya aynı. Düzeltmedim.")
+        return yuklu
+    yol, once, ns = yuklu
+    fn = ns.get("satir_say")
+    if not callable(fn):
+        cevap = "Çalışmadı.\nDosya aynı. Düzeltmedim."
+    else:
+        kalan = _kontrol_kaldi(fn)
+        if kalan:
+            cevap = kalan + "\nDosya aynı. Düzeltmedim."
+        else:
+            cevap = "Üç kontrol de geçti.\nDosya aynı. Düzeltmedim."
+    if not _arac_ayni(yol, once):
+        return _paket(reply="Dosya değişti. Sonucu söylemedim. Düzeltmedim.")
+    return _paket(reply=cevap)
+
+
+_ARAC_SATIR = "return len([satir for satir in metin.splitlines() if satir.strip()])"
+
+
+def _orta_tur_yolu(repo: Path) -> Path:
+    kok = repo.resolve()
+    ust = kok / "ilim-assistant" / ".ruzgar"
+    hedef = ust / "orta_tur.txt"
+    if ust.is_symlink() or hedef.is_symlink():
+        raise ValueError("Bu yere yazılmaz.")
+    gercek = hedef.resolve()
+    if gercek.name != "orta_tur.txt" or not _icinde(gercek, kok):
+        raise ValueError("Bu yere yazılmaz.")
+    return gercek
+
+
+def _orta_tur_oku(repo: Path) -> dict[str, str]:
+    veri = {"duzeltme": "0", "bakis": "0", "gecti": "0"}
+    try:
+        yol = _orta_tur_yolu(repo)
+    except ValueError:
+        return veri
+    if not yol.is_file():
+        return veri
+    for satir in yol.read_text(encoding="utf-8").splitlines():
+        if "=" not in satir:
+            continue
+        anahtar, deger = satir.split("=", 1)
+        deger = deger.strip()
+        if anahtar in veri and deger in {"0", "1"}:
+            veri[anahtar] = deger
+    return veri
+
+
+def _orta_tur_yaz(repo: Path, veri: dict[str, str]) -> None:
+    yol = _orta_tur_yolu(repo)
+    yol.parent.mkdir(parents=True, exist_ok=True)
+    govde = (
+        "duzeltme=" + veri.get("duzeltme", "0")
+        + "\nbakis=" + veri.get("bakis", "0")
+        + "\ngecti=" + veri.get("gecti", "0")
+        + "\n"
+    )
+    yol.write_text(govde, encoding="utf-8")
+
+
+def _orta_arac_duzelt(repo: Path, metin: str) -> dict:
+    satir = _not_satiri(metin)
+    if satir != _ARAC_SATIR:
+        return _paket(reply="Bu satır yazılmaz.\nDosya aynı. Çalıştırmadım.")
+    sablon = _ORTA_DOSYA["orta/arac.py"]
+    yol, _norm = _klasor_hedef(repo, "orta/arac.py")
+    if yol.is_symlink():
+        raise ValueError("Bu yere yazılmaz.")
+    if yol.is_file() and yol.read_text(encoding="utf-8") == sablon:
+        return _paket(reply="Bu satır duruyor.\nÜstüne yazmadım. Çalıştırmadım.")
+    klasor_yaz(repo, "orta/arac.py", sablon)
+    okunan = klasor_oku_dosya(repo, "orta/arac.py")
+    if okunan.get("text") != sablon:
+        raise ValueError("Yazılmadı. orta/arac.py")
+    _orta_tur_yaz(repo, {"duzeltme": "1", "bakis": "0", "gecti": "0"})
+    return _paket(reply="Yazıldı: orta/arac.py.\nÇalıştırmadım.")
+
+
+_TAHTA_SATIR = re.compile(r"^(\|\s*\d+\s*\|[^|]*\|)\s*([^|\n]*?)\s*(\|.*)$")
+
+
+def _tahta_yolu(repo: Path) -> Path:
+    kok = repo.resolve()
+    hedef = kok / "RUZGAR_SIRA.md"
+    if hedef.is_symlink():
+        raise ValueError("Bu yere yazılmaz.")
+    gercek = hedef.resolve()
+    if gercek.name != "RUZGAR_SIRA.md" or not _icinde(gercek, kok):
+        raise ValueError("Bu yere yazılmaz.")
+    return gercek
+
+
+def _acik_satiri_bitti(repo: Path) -> dict:
+    if _orta_tur_oku(repo).get("gecti") != "1":
+        return _paket(reply="Test geçmedi. Tahtaya yazmadım.")
+    yol = _tahta_yolu(repo)
+    if not yol.is_file():
+        return _paket(reply="Tahta yok. Tahtaya yazmadım.")
+    metin = yol.read_text(encoding="utf-8")
+    satirlar = metin.splitlines()
+    acik: list[int] = []
+    for i, satir in enumerate(satirlar):
+        bulunan = _TAHTA_SATIR.match(satir)
+        if bulunan and bulunan.group(2).strip().lower() != "bitti":
+            acik.append(i)
+    if not acik:
+        return _paket(reply="Açık satır yok. Tahtaya yazmadım.")
+    if len(acik) > 1:
+        return _paket(reply="Birden fazla açık satır var. Tahtaya yazmadım.")
+    yer = acik[0]
+    bulunan = _TAHTA_SATIR.match(satirlar[yer])
+    if not bulunan:
+        return _paket(reply="Açık satır yok. Tahtaya yazmadım.")
+    yeni = bulunan.group(1) + " bitti " + bulunan.group(3)
+    if yeni == satirlar[yer]:
+        return _paket(reply="Açık satır yok. Tahtaya yazmadım.")
+    onceki = list(satirlar)
+    satirlar[yer] = yeni
+    if len(satirlar) != len(onceki):
+        return _paket(reply="Tahtaya yazmadım.")
+    for i, (eski, guncel) in enumerate(zip(onceki, satirlar)):
+        if i != yer and eski != guncel:
+            return _paket(reply="Tahtaya yazmadım.")
+    son = "\n".join(satirlar)
+    if metin.endswith("\n"):
+        son += "\n"
+    yol.write_text(son, encoding="utf-8")
+    if yol.read_text(encoding="utf-8").splitlines() != satirlar:
+        raise ValueError("Yazılmadı. RUZGAR_SIRA.md")
+    return _paket(reply="Açık satır bitti oldu.\nBaşka satır silinmedi. Satır eklenmedi.")
+
+
+def _orta_ikinci_bak(repo: Path) -> dict:
+    tur = _orta_tur_oku(repo)
+    if tur.get("duzeltme") != "1":
+        return _paket(reply="Düzeltme yok. İkinci bakışa geçmedim.")
+    if tur.get("bakis") == "1":
+        return _paket(reply="İkinci bakış duruyor. Üçüncüye geçmedim.")
+    sonuc = _orta_test(repo)
+    cevap = str(sonuc.get("reply") or "")
+    tur["bakis"] = "1"
+    tur["gecti"] = "1" if "Test geçti." in cevap else "0"
+    _orta_tur_yaz(repo, tur)
+    return sonuc
+
+
 def _orta_test(repo: Path) -> dict:
     import subprocess
     import sys
@@ -2276,6 +2485,14 @@ def _calistir(repo: Path, adim: dict, sayfa: str) -> dict:
             return _orta_arac_not(repo)
         if kind == "orta_arac_satir":
             return _orta_arac_satir(repo, adim.get("metin") or "")
+        if kind == "orta_neden":
+            return _orta_test_neden(repo)
+        if kind == "orta_duzelt":
+            return _orta_arac_duzelt(repo, adim.get("metin") or "")
+        if kind == "orta_bakis":
+            return _orta_ikinci_bak(repo)
+        if kind == "tahta_bitti":
+            return _acik_satiri_bitti(repo)
         if kind == "orta_test":
             return _orta_test(repo)
         if kind == "uygulama_not":

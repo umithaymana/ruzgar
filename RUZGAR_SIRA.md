@@ -59,8 +59,12 @@
 | 51 | Kaynak satırı, tek dosya | bitti | `test_kaynak_satiri_tek_dosyaya_yazar_calistirmaz` |
 | 52 | Dış dosyaya bir kez yaz | bitti | `test_dis_dosyaya_bir_kez_yazar` |
 | 53 | Kapı notunu kaydet, düz gönder | bitti | `test_git_kaydet_yalniz_kapi_notunu_gonderir` |
+| 54 | Testin neden kaldığını söyle | bitti | `test_orta_testi_neden_kaldigini_soyler_duzeltmez` |
+| 55 | Hazır araca bilinen satır | bitti | `test_orta_araci_yalniz_bilinen_satiri_yazar` |
+| 56 | İkinci bakış, üçüncü yok | bitti | `test_ikinci_bakis_bir_kez_bakar_ucuncuye_gecmez` |
+| 57 | Açık satırı bitti yap | bitti | `test_acik_satir_yalniz_gecince_bitti_olur` |
 
-**Denenecek cümle:** `orta testini çalıştır`
+**Denenecek cümle:** `orta testi neden kaldı`
 
 **13. iş bitti.** Kilitli klasör sayar, metin dosyası açar, ara başlık, http bağlantı, başlık rengi, klasördeki resim ve sayfa adı değişir. Dört masa: belgede bir kez değiştir, hücre sil, sütun topla, renkli çiz, slayt başlığı. Bak bu tariflerden yazı ve rengi önerebilir. Bağlantı, resim ve ad değiştirme yalnız sen söyleyince olur. `uygula` yine son bakışı bir kez çalıştırır.
 
@@ -135,6 +139,14 @@
 **52. iş bitti. Dış kapı genişledi.** `dış dosyaya yaz: kapi.txt: selam` seçilen dış klasöre tek `.txt` yazar. Ad yalın olur. Dosya varsa üstüne yazmaz. Klasörün dışına çıkmaz. Çalıştırmaz.
 
 **53. iş bitti. Git kapısı genişledi.** `git kaydet: kapi notu` yalnız `kapi_notu.py` dosyasını kaydeder. Başka dosya kayda girmez. Yalın `git kaydet` durur. `git gönder` yalnız `origin HEAD` gönderir, zorlamaz. Uzak yoksa göndermez.
+
+**54. iş bitti. 5. basamağın ilk adımı.** `orta testi neden kaldı` üç kontrolden hangisinin kaldığını söyler. Araç hazır değilse kontrolün çalışmadığını söyler. Dosyayı düzeltmez.
+
+**55. iş bitti. 5. basamağın ikinci adımı.** `orta aracını düzelt:` yalnız hazır `orta/arac.py` içindeki bilinen dönüş satırını yazar. Başka satır yazılmaz. Dosya varsa ve aynıysa üstüne yazılmaz. Çalıştırılmaz.
+
+**56. iş bitti. 5. basamağın üçüncü adımı.** `orta testine ikinci bak` bir düzeltmeden sonra testi bir kez daha söyler. İkinci istek üçüncü bakışa geçmez. Dosyayı düzeltmez.
+
+**57. iş bitti. 5. basamağın dördüncü adımı.** `açık satırı bitti yap` ikinci bakış geçtiyse tahtadaki tek açık satırı bitti yapar. Açık satır yoksa ya da birden fazlaysa yazmaz. Eski satırı silmez, yeni satır eklemez. Test geçmeden tahtaya dokunmaz.
 
 **Bilerek kapalı:** dosya silmek, modelin ürettiği kodu çalıştırmak, serbest kaynak yazmak, serbest dış yazmak, zorla göndermek, 32B/70B, telefon.
 

@@ -1092,6 +1092,140 @@ def test_orta_testi_sonucu_soyler_duzeltmez(masa):
     from ilim_assistant.motorlar.programlama_motoru import is_code_agent_task_message
 
     assert is_code_agent_task_message("orta testini çalıştır", "programlama") is False
+
+
+def test_orta_testi_neden_kaldigini_soyler_duzeltmez(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    yok = klasor_soz(repo, "orta testi neden kaldı")
+    assert "orta/arac.py yok." in yok["reply"]
+    klasor_soz(repo, "orta iş yap")
+    arac = el / "orta" / "arac.py"
+    once = arac.read_bytes()
+    gecti = klasor_soz(repo, "orta testi neden kaldı")
+    assert "Üç kontrol de geçti." in gecti["reply"]
+    assert "Düzeltmedim" in gecti["reply"]
+    assert arac.read_bytes() == once
+    arac.write_text("import os\n", encoding="utf-8")
+    bozuk = arac.read_bytes()
+    neden = klasor_soz(repo, "orta testi neden kaldı")
+    assert "Hazır araç değil" in neden["reply"]
+    assert "Kontrol çalışmadı" in neden["reply"]
+    assert "Düzeltmedim" in neden["reply"]
+    assert arac.read_bytes() == bozuk
+    from ilim_assistant.motorlar.programlama_proje_masasi import _kontrol_kaldi
+
+    def yanlis(metin):
+        return 0
+
+    assert "1. kontrol: selam kaldı" in _kontrol_kaldi(yanlis)
+    from ilim_assistant.motorlar.programlama_motoru import is_code_agent_task_message
+
+    assert is_code_agent_task_message("orta testi neden kaldı", "programlama") is False
+
+
+_ARAC_SATIR = "return len([satir for satir in metin.splitlines() if satir.strip()])"
+
+
+def test_orta_araci_yalniz_bilinen_satiri_yazar(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    arac = el / "orta" / "arac.py"
+    red = klasor_soz(repo, "orta aracını düzelt: import os")
+    assert "Bu satır yazılmaz." in red["reply"]
+    assert "Çalıştırmadım" in red["reply"]
+    assert not arac.exists()
+    yaz = klasor_soz(repo, "orta aracını düzelt: " + _ARAC_SATIR)
+    assert "Yazıldı: orta/arac.py." in yaz["reply"]
+    assert "Çalıştırmadım" in yaz["reply"]
+    assert "Sayı:" not in yaz["reply"]
+    from ilim_assistant.motorlar.programlama_proje_masasi import _ORTA_DOSYA
+
+    assert arac.read_text(encoding="utf-8") == _ORTA_DOSYA["orta/arac.py"]
+    assert not (el / "orta" / "not.txt").exists()
+    duran = arac.read_bytes()
+    ikinci = klasor_soz(repo, "orta aracını düzelt: " + _ARAC_SATIR)
+    assert "Üstüne yazmadım" in ikinci["reply"]
+    assert arac.read_bytes() == duran
+    arac.write_text("import os\n", encoding="utf-8")
+    bozuk = arac.read_bytes()
+    yeme = klasor_soz(repo, "orta aracını düzelt: return 1")
+    assert "Bu satır yazılmaz." in yeme["reply"]
+    assert arac.read_bytes() == bozuk
+    geri = klasor_soz(repo, "orta aracını düzelt: " + _ARAC_SATIR)
+    assert "Yazıldı: orta/arac.py." in geri["reply"]
+    assert arac.read_text(encoding="utf-8") == _ORTA_DOSYA["orta/arac.py"]
+    from ilim_assistant.motorlar.programlama_motoru import is_code_agent_task_message
+
+    assert is_code_agent_task_message("orta aracını düzelt: " + _ARAC_SATIR, "programlama") is False
+
+
+def test_ikinci_bakis_bir_kez_bakar_ucuncuye_gecmez(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    erken = klasor_soz(repo, "orta testine ikinci bak")
+    assert "Düzeltme yok" in erken["reply"]
+    assert not (el / "orta" / "arac.py").exists()
+    klasor_soz(repo, "orta aracını düzelt: " + _ARAC_SATIR)
+    arac = el / "orta" / "arac.py"
+    once = arac.read_bytes()
+    bak = klasor_soz(repo, "orta testine ikinci bak")
+    assert "Test geçti." in bak["reply"]
+    assert "Düzeltmedim" in bak["reply"]
+    assert arac.read_bytes() == once
+    ucuncu = klasor_soz(repo, "orta testine ikinci bak")
+    assert "Üçüncüye geçmedim" in ucuncu["reply"]
+    assert arac.read_bytes() == once
+    from ilim_assistant.motorlar.programlama_motoru import is_code_agent_task_message
+
+    assert is_code_agent_task_message("orta testine ikinci bak", "programlama") is False
+
+
+def test_acik_satir_yalniz_gecince_bitti_olur(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    tahta = repo / "RUZGAR_SIRA.md"
+    govde = (
+        "| Sıra | İş | Durum | Son test |\n"
+        "| --- | --- | --- | --- |\n"
+        "| 1 | Eski iş | bitti | eski |\n"
+        "| 2 | Açık iş | bekliyor | yok |\n"
+        "\n"
+        "**Denenecek cümle:** `orta testi neden kaldı`\n"
+        "**Bilerek kapalı:** dosya silmek\n"
+    )
+    tahta.write_text(govde, encoding="utf-8")
+    erken = klasor_soz(repo, "açık satırı bitti yap")
+    assert "Test geçmedi" in erken["reply"]
+    assert tahta.read_text(encoding="utf-8") == govde
+    klasor_soz(repo, "orta aracını düzelt: " + _ARAC_SATIR)
+    klasor_soz(repo, "orta testine ikinci bak")
+    once_satir = tahta.read_text(encoding="utf-8").splitlines()
+    isaret = klasor_soz(repo, "açık satırı bitti yap")
+    assert "Açık satır bitti oldu." in isaret["reply"]
+    assert "silinmedi" in isaret["reply"]
+    sonra = tahta.read_text(encoding="utf-8").splitlines()
+    assert len(sonra) == len(once_satir)
+    assert sonra[0] == once_satir[0]
+    assert sonra[2] == once_satir[2]
+    assert "| 2 | Açık iş | bitti | yok |" == sonra[3]
+    assert sonra[-1] == "**Bilerek kapalı:** dosya silmek"
+    assert sonra[-2] == "**Denenecek cümle:** `orta testi neden kaldı`"
+    tekrar = klasor_soz(repo, "açık satırı bitti yap")
+    assert "Açık satır yok" in tekrar["reply"]
+    assert tahta.read_text(encoding="utf-8").splitlines() == sonra
+    cok = (
+        "| 1 | Bir | bekliyor | a |\n"
+        "| 2 | İki | bekliyor | b |\n"
+    )
+    tahta.write_text(cok, encoding="utf-8")
+    red = klasor_soz(repo, "açık satırı bitti yap")
+    assert "Birden fazla açık satır" in red["reply"]
+    assert tahta.read_text(encoding="utf-8") == cok
+    assert (el / "orta" / "arac.py").is_file()
+    from ilim_assistant.motorlar.programlama_motoru import is_code_agent_task_message
+
+    assert is_code_agent_task_message("açık satırı bitti yap", "programlama") is False
     assert is_code_agent_task_message("orta aracında notu say", "programlama") is False
     assert is_code_agent_task_message("hesap.py çalıştır", "programlama") is False
 
