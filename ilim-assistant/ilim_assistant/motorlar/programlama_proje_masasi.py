@@ -563,6 +563,15 @@ _KALIP: tuple[tuple[str, re.Pattern[str]], ...] = (
     )),
     ("orta_is", re.compile(r"^orta\s+i[şs]\s+yap$", re.I)),
     ("orta_soyle", re.compile(r"^orta\s+i[şs]i\s+s[öo]yle$", re.I)),
+    ("orta_not", re.compile(
+        r"^orta\s+notu\s+yaz\s*[:\-]\s*(?P<metin>.+)$",
+        re.I,
+    )),
+    ("orta_not_oku", re.compile(r"^orta\s+notunu\s+oku$", re.I)),
+    ("orta_not_satir", re.compile(
+        r"^orta\s+notuna\s+sat[ıi]r\s+ekle\s*[:\-]\s*(?P<metin>.+)$",
+        re.I,
+    )),
     ("py_soyle", re.compile(
         r"^(?P<ad>\S+\.py)\s+dosyas[ıi]n[ıi]n\s+ne\s+yapt[ıi][gğ][ıi]n[ıi]\s+s[öo]yle$",
         re.I,
@@ -846,6 +855,9 @@ _PY_OKU = {
     "py_ice",
     "orta_is",
     "orta_soyle",
+    "orta_not",
+    "orta_not_oku",
+    "orta_not_satir",
 }
 
 
@@ -853,6 +865,17 @@ def py_kilit_cumlesi(message: str) -> bool:
     """Python oku/söyle ve çalıştırma reddi. Ajan kapısından önce gelir."""
     adim = _adim(message or "")
     return bool(adim and adim.get("kind") in _PY_OKU)
+
+
+def tarif_cumlesi(message: str) -> bool:
+    """Kilitli klasörün bildiği cümle. Ses kartından ve ajandan önce gelir."""
+    raw = (message or "").strip()
+    if _adim(raw):
+        return True
+    parcalar = [p.strip() for p in _AYIR.split(raw) if p.strip()]
+    if len(parcalar) < 2:
+        return False
+    return all(_adim(parca) for parca in parcalar)
 
 
 def _dosya_adi(ad: str) -> str:
@@ -1416,6 +1439,10 @@ def _orta_ozet(rel: str, metin: str) -> str:
     return "dosya var. Çalıştırmadım."
 
 
+_ORTA_NOT = "orta/not.txt"
+_ORTA_NOT_TAVAN = 8
+
+
 def _orta_soyle(repo: Path) -> dict:
     satirlar: list[str] = []
     for rel in _ORTA_DOSYA:
@@ -1425,7 +1452,83 @@ def _orta_soyle(repo: Path) -> dict:
             satirlar.append(rel + " yok.")
             continue
         satirlar.append(rel + ": " + _orta_ozet(rel, bulunan.get("text") or ""))
+    satirlar.append(_orta_not_satiri(repo))
     return _paket(reply="\n".join(satirlar) + "\nÇalıştırmadım. Dosya aynı.")
+
+
+def _not_satiri(metin: str) -> str:
+    satir = re.sub(r"\s+", " ", metin or "").strip()
+    if not satir or len(satir) > 180:
+        raise ValueError("Not bir satır olsun. En çok 180 karakter.")
+    return satir
+
+
+def _not_satirlari(metin: str) -> list[str]:
+    return [satir.strip() for satir in (metin or "").splitlines() if satir.strip()]
+
+
+def _orta_not_satiri(repo: Path) -> str:
+    try:
+        duran = klasor_oku_dosya(repo, _ORTA_NOT)
+    except ValueError:
+        return _ORTA_NOT + " yok."
+    govde = " | ".join(_not_satirlari(duran.get("text") or ""))
+    return _ORTA_NOT + ": " + (govde or "boş") + "."
+
+
+def _orta_not(repo: Path, metin: str) -> dict:
+    satir = _not_satiri(metin)
+    try:
+        duran = klasor_oku_dosya(repo, _ORTA_NOT)
+    except ValueError:
+        klasor_yaz(repo, _ORTA_NOT, satir + "\n")
+        return _paket(reply="Yazıldı: " + _ORTA_NOT + ".\nÇalıştırmadım.")
+    govde = (duran.get("text") or "").strip()
+    return _paket(reply="Orta not duruyor: " + govde + "\nÜstüne yazmadım. Çalıştırmadım.")
+
+
+def _orta_not_oku(repo: Path) -> dict:
+    try:
+        duran = klasor_oku_dosya(repo, _ORTA_NOT)
+    except ValueError:
+        return _paket(reply=_ORTA_NOT + " yok.\nÇalıştırmadım.")
+    govde = duran.get("text") or ""
+    return _paket(
+        reply=_ORTA_NOT + " okundu.\n" + (govde.strip() or "(boş)") + "\nÇalıştırmadım. Dosya aynı.",
+        gorunum="kod",
+        rel=duran["rel"],
+        text=govde,
+    )
+
+
+def _orta_not_satir(repo: Path, metin: str) -> dict:
+    satir = _not_satiri(metin)
+    try:
+        duran = klasor_oku_dosya(repo, _ORTA_NOT)
+    except ValueError:
+        return _paket(
+            reply="Not yok. Şöyle söyle: orta notu yaz: " + satir + "\nÇalıştırmadım."
+        )
+    eski = duran.get("text") or ""
+    satirlar = _not_satirlari(eski)
+    if satir in satirlar:
+        return _paket(reply="Bu satır duruyor: " + satir + "\nÜstüne yazmadım. Çalıştırmadım.")
+    if len(satirlar) >= _ORTA_NOT_TAVAN:
+        return _paket(reply="Not doldu. Üstüne yazmadım. Çalıştırmadım.")
+    taban = eski if eski.endswith("\n") or eski == "" else eski + "\n"
+    yeni = taban + satir + "\n"
+    if not yeni.startswith(eski):
+        raise ValueError("Üstüne yazmadım.")
+    klasor_yaz(repo, _ORTA_NOT, yeni)
+    okunan = klasor_oku_dosya(repo, _ORTA_NOT)
+    if okunan.get("text") != yeni or not (okunan.get("text") or "").startswith(eski):
+        raise ValueError("Yazılmadı. " + _ORTA_NOT)
+    return _paket(
+        reply="Satır eklendi: " + _ORTA_NOT + ".\n" + satir + "\nÇalıştırmadım.",
+        gorunum="kod",
+        rel=okunan["rel"],
+        text=okunan["text"],
+    )
 
 
 def _sayfa_sec(repo: Path, tercih: str) -> str:
@@ -1649,6 +1752,12 @@ def _calistir(repo: Path, adim: dict, sayfa: str) -> dict:
             return _orta_is(repo)
         if kind == "orta_soyle":
             return _orta_soyle(repo)
+        if kind == "orta_not":
+            return _orta_not(repo, adim.get("metin") or "")
+        if kind == "orta_not_oku":
+            return _orta_not_oku(repo)
+        if kind == "orta_not_satir":
+            return _orta_not_satir(repo, adim.get("metin") or "")
         return _py_soyle(repo, adim.get("ad") or "")
     if kind in {"sayfa", "sayfa_ad"}:
         dosya = _sayfa_dosyasi("index" if kind == "sayfa" else adim.get("ad") or "")

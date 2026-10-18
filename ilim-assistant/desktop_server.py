@@ -10559,6 +10559,45 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             instant_gundelik=True,
         )
         return
+    try:
+        from ilim_assistant.ruzgar_sira_tahtasi import sira_tahtasi_yaniti
+
+        _sira_y = sira_tahtasi_yaniti(msg_raw, REPO_ROOT / "RUZGAR_SIRA.md")
+    except Exception:
+        _sira_y = None
+    if _sira_y:
+        yield from _iter_instant_chat_events(
+            _sira_y,
+            msg_raw,
+            session_wake_used=req.session_wake_used,
+            msg_for_wake=req.message,
+            orch={"plan": {"primary": "sira", "label_tr": "Sıra tahtası"}},
+            instant_gundelik=True,
+        )
+        return
+    try:
+        from ilim_assistant.motorlar.programlama_proje_masasi import (
+            klasor_soz,
+            tarif_cumlesi,
+        )
+
+        if tarif_cumlesi(msg_raw):
+            _tarif = klasor_soz(REPO_ROOT, msg_raw)
+            _tarif_y = str(_tarif.get("reply") or "").strip() if _tarif.get("handled") else ""
+        else:
+            _tarif_y = ""
+    except Exception:
+        _tarif_y = ""
+    if _tarif_y:
+        yield from _iter_instant_chat_events(
+            _tarif_y,
+            msg_raw,
+            session_wake_used=req.session_wake_used,
+            msg_for_wake=req.message,
+            orch={"plan": {"primary": "programlama", "label_tr": "Kilitli klasör"}},
+            programlama_instant=True,
+        )
+        return
     fast = _collect_fast_lane_chat_events(req)
     if fast:
         yield from fast

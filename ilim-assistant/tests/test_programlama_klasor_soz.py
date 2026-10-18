@@ -952,3 +952,77 @@ def test_orta_isi_soyler_yazmaz_calistirmaz(masa):
     from ilim_assistant.motorlar.programlama_motoru import is_code_agent_task_message
 
     assert is_code_agent_task_message("orta işi söyle", "programlama") is False
+
+
+def test_orta_notu_yoksa_yazar_varsa_ustune_yazmaz(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    ilk = klasor_soz(repo, "orta notu yaz: ilk satır")
+    assert "Yazıldı: orta/not.txt." in ilk["reply"]
+    assert "Çalıştırmadım" in ilk["reply"]
+    assert (el / "orta" / "not.txt").read_text(encoding="utf-8") == "ilk satır\n"
+    ikinci = klasor_soz(repo, "orta notu yaz: başka satır")
+    assert "Üstüne yazmadım" in ikinci["reply"]
+    assert "ilk satır" in ikinci["reply"]
+    assert (el / "orta" / "not.txt").read_text(encoding="utf-8") == "ilk satır\n"
+    from ilim_assistant.motorlar.programlama_motoru import is_code_agent_task_message
+    from ilim_assistant.motorlar.programlama_proje_masasi import tarif_cumlesi
+
+    assert tarif_cumlesi("orta işi söyle") is True
+    assert tarif_cumlesi("orta notu yaz: selam") is True
+    assert tarif_cumlesi("şu gazeli söyle: merhaba dünya bugün") is False
+    assert is_code_agent_task_message("orta notu yaz: selam", "programlama") is False
+
+
+def test_orta_not_okur_yoksa_yazmaz(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    bos = klasor_soz(repo, "orta notunu oku")
+    assert "orta/not.txt yok." in bos["reply"]
+    assert "Çalıştırmadım" in bos["reply"]
+    assert not (el / "orta" / "not.txt").exists()
+    klasor_soz(repo, "orta notu yaz: selam")
+    once = (el / "orta" / "not.txt").read_bytes()
+    okunan = klasor_soz(repo, "orta notunu oku")
+    assert "selam" in okunan["reply"]
+    assert "Çalıştırmadım. Dosya aynı." in okunan["reply"]
+    assert okunan["text"] == "selam\n"
+    assert (el / "orta" / "not.txt").read_bytes() == once
+    from ilim_assistant.motorlar.programlama_motoru import is_code_agent_task_message
+
+    assert is_code_agent_task_message("orta notunu oku", "programlama") is False
+
+
+def test_orta_not_satir_ekler_ustune_yazmaz(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    yok = klasor_soz(repo, "orta notuna satır ekle: ikinci")
+    assert yok["handled"] is True
+    assert "Not yok." in yok["reply"]
+    assert not (el / "orta").exists()
+    klasor_soz(repo, "orta notu yaz: selam")
+    ek = klasor_soz(repo, "orta notuna satır ekle: ikinci")
+    assert "Satır eklendi: orta/not.txt." in ek["reply"]
+    assert "Çalıştırmadım" in ek["reply"]
+    assert (el / "orta" / "not.txt").read_text(encoding="utf-8") == "selam\nikinci\n"
+    ayni = klasor_soz(repo, "orta notuna satır ekle: selam")
+    assert "Bu satır duruyor" in ayni["reply"]
+    assert "Üstüne yazmadım" in ayni["reply"]
+    assert (el / "orta" / "not.txt").read_text(encoding="utf-8") == "selam\nikinci\n"
+    soz = klasor_soz(repo, "orta işi söyle")
+    assert "orta/not.txt: selam | ikinci." in soz["reply"]
+    assert (el / "orta" / "not.txt").read_text(encoding="utf-8") == "selam\nikinci\n"
+    for n in range(6):
+        klasor_soz(repo, f"orta notuna satır ekle: satir {n}")
+    dolu = klasor_soz(repo, "orta notuna satır ekle: fazla")
+    assert "Not doldu" in dolu["reply"]
+    assert "Üstüne yazmadım" in dolu["reply"]
+    govde = (el / "orta" / "not.txt").read_text(encoding="utf-8")
+    assert "fazla" not in govde
+    assert govde.startswith("selam\nikinci\n")
+    assert len([satir for satir in govde.splitlines() if satir.strip()]) == 8
+    from ilim_assistant.motorlar.programlama_motoru import is_code_agent_task_message
+    from ilim_assistant.motorlar.programlama_proje_masasi import tarif_cumlesi
+
+    assert tarif_cumlesi("orta notuna satır ekle: ikinci") is True
+    assert is_code_agent_task_message("orta notuna satır ekle: ikinci", "programlama") is False

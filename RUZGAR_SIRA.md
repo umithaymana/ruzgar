@@ -46,8 +46,13 @@
 | 38 | Sohbet cilası | bitti | `test_sohbet_cilasi_kart_tekrar_ve_uydurma_sayiyi_birakir` |
 | 39 | Dört masa sohbette | bitti | `test_masa_sohbeti_modelden_once_durur` |
 | 40 | Orta işi söyle | bitti | `test_orta_isi_soyler_yazmaz_calistirmaz` |
+| 41 | Tarif cümlesi ses kartından önce | bitti | `test_orta_notu_yoksa_yazar_varsa_ustune_yazmaz` |
+| 42 | Sıra tahtasını oku | bitti | `test_sira_tahtasi_biteni_soyler_yazmaz` |
+| 43 | Orta notu, varsa üstüne yazma | bitti | `test_orta_notu_yoksa_yazar_varsa_ustune_yazmaz` |
+| 44 | Orta notunu oku | bitti | `test_orta_not_okur_yoksa_yazmaz` |
+| 45 | Orta notuna satır ekle | bitti | `test_orta_not_satir_ekler_ustune_yazmaz` |
 
-**Denenecek cümle:** `orta işi söyle`
+**Denenecek cümle:** `orta notuna satır ekle: ikinci`
 
 **13. iş bitti.** Kilitli klasör sayar, metin dosyası açar, ara başlık, http bağlantı, başlık rengi, klasördeki resim ve sayfa adı değişir. Dört masa: belgede bir kez değiştir, hücre sil, sütun topla, renkli çiz, slayt başlığı. Bak bu tariflerden yazı ve rengi önerebilir. Bağlantı, resim ve ad değiştirme yalnız sen söyleyince olur. `uygula` yine son bakışı bir kez çalıştırır.
 
@@ -100,6 +105,12 @@
 **39. iş bitti.** `belgeye selam yaz`, `tabloda A1 e 10 yaz`, `çizime kutu çiz` ve `sunuma Hoş geldin slaytı ekle: bugün` ana motor ve programlama sohbetinde masaya gider. Model bu cümlede dosya yazmaz. Çözülemeyen parça masayı değiştirmez.
 
 **40. iş bitti.** `orta işi söyle` kilitli klasördeki dört orta dosyayı okur ve ne olduklarını söyler. Dosya yoksa yazmaz. Varsa üstüne yazmaz. Çalıştırmaz.
+
+**41. iş bitti.** Genel sohbette kilitli klasörün bildiği cümle ses kartından önce durur. `orta işi söyle` dört dosyayı sayar. `şu gazeli söyle:` ses cümlesi olarak kalır.
+
+**42. iş bitti.** `sıra tahtası`, `sırada ne var` ve `ne bitti` tahtayı okur. Son biten işi ve açık satırı söyler. Tahtaya yazmaz.
+
+**43–45. iş bitti. 3. basamak kapandı.** Orta notun eli üç cümledir ve yalnız `orta/not.txt` dosyasına bakar. `orta notu yaz: selam` dosya yoksa bir satır yazar; varsa üstüne yazmaz. `orta notunu oku` duran satırları söyler; dosya yoksa açmaz. `orta notuna satır ekle: ikinci` eski satırların sonuna bir satır koyar. Aynı satır ikinci kez girmez. Sekiz satırdan sonra durur. Not yokken satır eklemez. `orta işi söyle` bu notu da sayar. Hiçbiri kod çalıştırmaz, dosya silmez, klasör dışına çıkmaz.
 
 **Bilerek kapalı:** dosya silmek, modelin ürettiği kodu çalıştırmak, uygulama klasörüne yazmak, klasör dışına çıkmak, 32B/70B, telefon.
 
