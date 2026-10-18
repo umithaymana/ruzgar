@@ -826,6 +826,17 @@
     if (/\ssayfasi\s+yap\b/.test(low) || /\ssayfasini\s+goster\b/.test(low)) return true;
     if (/\ssayfasina\b/.test(low) || /\ssayfasinda\b/.test(low)) return true;
     if (/\b(sayfasina|dosyasina)\s+bak\s+ve\s+soyle\b/.test(low)) return true;
+    if (/\.py\s+icinde\s+[a-z_][a-z0-9_]*\s+ne\s+yapiyor$/.test(low)) return true;
+    if (/\.py\s+icinde\s+[a-z_][a-z0-9_]*\s+ne\s+donduruyor$/.test(low)) return true;
+    if (/\.py\s+icinde\s+[a-z_][a-z0-9_]*\s+kimi\s+cagiriyor$/.test(low)) return true;
+    if (/\.py\s+icinde\s+[a-z_][a-z0-9_]*\s+nerede$/.test(low)) return true;
+    if (/\.py\s+icinde\s+[a-z_][a-z0-9_]*\s+neye\s+yaziyor$/.test(low)) return true;
+    if (/\.py\s+icinde\s+[a-z_][a-z0-9_]*\s+neye\s+bakiyor$/.test(low)) return true;
+    if (/\.py\s+icinde\s+[a-z_][a-z0-9_]*\s+sinifi\s+ne\s+yapiyor$/.test(low)) return true;
+    if (/\.py\s+neyi\s+ice\s+aliyor$/.test(low)) return true;
+    if (/\.py\s+ne\s+yapiyor$/.test(low)) return true;
+    if (/\.py\s+dosyasinin\s+ne\s+yaptigini\s+soyle$/.test(low)) return true;
+    if (/\.py(?:\s+dosyasini)?\s+calistir$/.test(low)) return true;
     if (/^uygula$/.test(low)) return true;
     if (/\byerine\b/.test(low) && /\byaz$/.test(low)) return true;
     if (/\bicinde\b/.test(low) && /\byerine\b/.test(low)) return true;

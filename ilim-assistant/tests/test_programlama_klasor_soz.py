@@ -625,3 +625,275 @@ def test_bilinmeyen_ve_kapi(masa, tmp_path):
     assert "geçersiz" in kacak["reply"]
     assert not (tmp_path / "gizli.txt").exists()
     assert not (el / "gizli.txt").exists()
+
+
+def test_python_ne_yapiyor_calistirmaz(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    kaynak = (
+        '"""İki sayıyı toplar."""\n'
+        "import os\n"
+        "def topla(a, b):\n"
+        "    return a + b\n"
+        "def yaz():\n"
+        "    open('iz.txt', 'w', encoding='utf-8').write('calisti')\n"
+    )
+    (el / "hesap.py").write_text(kaynak, encoding="utf-8")
+    once = (el / "hesap.py").read_bytes()
+    soyle = klasor_soz(repo, "hesap.py dosyasının ne yaptığını söyle")
+    assert soyle["handled"] is True
+    assert soyle["gorunum"] == "kod"
+    assert "topla" in soyle["reply"]
+    assert "yaz" in soyle["reply"]
+    assert "Çalıştırmadım" in soyle["reply"]
+    assert "Dosya aynı" in soyle["reply"]
+    assert "calisti" not in soyle["reply"]
+    assert (el / "hesap.py").read_bytes() == once
+    assert not (el / "iz.txt").exists()
+    kisa = klasor_soz(repo, "hesap.py ne yapıyor")
+    assert "topla" in kisa["reply"]
+    assert (el / "hesap.py").read_bytes() == once
+    assert not (el / "iz.txt").exists()
+    calistir = klasor_soz(repo, "hesap.py çalıştır")
+    assert "çalıştırmadım" in calistir["reply"].lower()
+    assert (el / "hesap.py").read_bytes() == once
+    assert not (el / "iz.txt").exists()
+    bozuk = el / "kirik.py"
+    bozuk.write_text("def (", encoding="utf-8")
+    red = klasor_soz(repo, "kirik.py ne yapıyor")
+    assert "açılmadı" in red["reply"]
+    assert bozuk.read_text(encoding="utf-8") == "def ("
+    yok = klasor_soz(repo, "yok.py ne yapıyor")
+    assert "Dosya yok" in yok["reply"]
+    assert not (el / "yok.py").exists()
+    from ilim_assistant.motorlar.programlama_motoru import is_code_agent_task_message
+    from ilim_assistant.motorlar.programlama_proje_masasi import py_kilit_cumlesi
+
+    assert py_kilit_cumlesi("hesap.py ne yapıyor") is True
+    assert is_code_agent_task_message("hesap.py ne yapıyor", "programlama") is False
+
+
+def test_python_fonksiyon_imzasi(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    (el / "hesap.py").write_text(
+        '"""Dosya."""\n'
+        "def topla(a, b):\n"
+        '    """İki sayıyı toplar."""\n'
+        "    return a + b\n"
+        "def yaz():\n"
+        "    open('iz.txt', 'w', encoding='utf-8').write('calisti')\n",
+        encoding="utf-8",
+    )
+    once = (el / "hesap.py").read_bytes()
+    sonuc = klasor_soz(repo, "hesap.py içinde topla ne yapıyor")
+    assert sonuc["handled"] is True
+    assert "topla(a, b)" in sonuc["reply"]
+    assert "İki sayıyı toplar" in sonuc["reply"]
+    assert "Çalıştırmadım" in sonuc["reply"]
+    assert "calisti" not in sonuc["reply"]
+    assert (el / "hesap.py").read_bytes() == once
+    assert not (el / "iz.txt").exists()
+    yok = klasor_soz(repo, "hesap.py içinde carp ne yapıyor")
+    assert "carp bu dosyada yok" in yok["reply"]
+    assert (el / "hesap.py").read_bytes() == once
+    from ilim_assistant.motorlar.programlama_motoru import is_code_agent_task_message
+
+    assert is_code_agent_task_message("hesap.py içinde topla ne yapıyor", "programlama") is False
+
+
+def test_python_fonksiyon_donusu(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    (el / "hesap.py").write_text(
+        "def topla(a, b):\n"
+        "    return a + b\n"
+        "def yaz():\n"
+        "    open('iz.txt', 'w', encoding='utf-8').write('calisti')\n"
+        "    return yaz()\n"
+        "def sus():\n"
+        "    a = 1\n",
+        encoding="utf-8",
+    )
+    once = (el / "hesap.py").read_bytes()
+    sonuc = klasor_soz(repo, "hesap.py içinde topla ne döndürüyor")
+    assert sonuc["handled"] is True
+    assert "a + b döndürür" in sonuc["reply"]
+    assert "Çalıştırmadım" in sonuc["reply"]
+    assert (el / "hesap.py").read_bytes() == once
+    assert not (el / "iz.txt").exists()
+    yaz = klasor_soz(repo, "hesap.py içinde yaz ne döndürüyor")
+    assert "yaz() döndürür" in yaz["reply"]
+    assert not (el / "iz.txt").exists()
+    sus = klasor_soz(repo, "hesap.py içinde sus ne döndürüyor")
+    assert "Bir değer döndürmez" in sus["reply"]
+    assert (el / "hesap.py").read_bytes() == once
+    from ilim_assistant.motorlar.programlama_motoru import is_code_agent_task_message
+
+    assert is_code_agent_task_message("hesap.py içinde topla ne döndürüyor", "programlama") is False
+
+
+def test_python_fonksiyon_cagrisi(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    (el / "hesap.py").write_text(
+        "def topla(a, b):\n"
+        "    return a + b\n"
+        "def yaz():\n"
+        "    open('iz.txt', 'w', encoding='utf-8').write('calisti')\n"
+        "    return yaz()\n",
+        encoding="utf-8",
+    )
+    once = (el / "hesap.py").read_bytes()
+    sonuc = klasor_soz(repo, "hesap.py içinde topla kimi çağırıyor")
+    assert sonuc["handled"] is True
+    assert "Kimseyi çağırmaz" in sonuc["reply"]
+    assert "Çalıştırmadım" in sonuc["reply"]
+    assert (el / "hesap.py").read_bytes() == once
+    yaz = klasor_soz(repo, "hesap.py içinde yaz kimi çağırıyor")
+    assert "open" in yaz["reply"]
+    assert "yaz" in yaz["reply"]
+    assert "calisti" not in yaz["reply"]
+    assert "iz.txt" not in yaz["reply"]
+    assert not (el / "iz.txt").exists()
+    yok = klasor_soz(repo, "hesap.py içinde carp kimi çağırıyor")
+    assert "carp bu dosyada yok" in yok["reply"]
+    assert (el / "hesap.py").read_bytes() == once
+    from ilim_assistant.motorlar.programlama_motoru import is_code_agent_task_message
+
+    assert is_code_agent_task_message("hesap.py içinde topla kimi çağırıyor", "programlama") is False
+
+
+def _ajan_degil(cumle: str) -> None:
+    from ilim_assistant.motorlar.programlama_motoru import is_code_agent_task_message
+
+    assert is_code_agent_task_message(cumle, "programlama") is False
+
+
+def test_python_fonksiyon_yeri(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    (el / "hesap.py").write_text(
+        "def topla(a, b):\n"
+        "    return a + b\n"
+        "def yaz():\n"
+        "    open('iz.txt', 'w', encoding='utf-8').write('calisti')\n",
+        encoding="utf-8",
+    )
+    once = (el / "hesap.py").read_bytes()
+    sonuc = klasor_soz(repo, "hesap.py içinde topla nerede")
+    assert sonuc["handled"] is True
+    assert "1. satırdan 2. satıra." in sonuc["reply"]
+    assert "return" not in sonuc["reply"]
+    assert "Çalıştırmadım" in sonuc["reply"]
+    assert (el / "hesap.py").read_bytes() == once
+    assert not (el / "iz.txt").exists()
+    yok = klasor_soz(repo, "hesap.py içinde carp nerede")
+    assert "carp bu dosyada yok" in yok["reply"]
+    assert (el / "hesap.py").read_bytes() == once
+    _ajan_degil("hesap.py içinde topla nerede")
+
+
+def test_python_fonksiyon_yazdigi(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    (el / "hesap.py").write_text(
+        "def topla(a, b):\n"
+        "    return a + b\n"
+        "def yaz():\n"
+        "    iz = open('iz.txt', 'w', encoding='utf-8')\n"
+        "    iz.write('calisti')\n",
+        encoding="utf-8",
+    )
+    once = (el / "hesap.py").read_bytes()
+    bos = klasor_soz(repo, "hesap.py içinde topla neye yazıyor")
+    assert "Bir şeye yazmaz" in bos["reply"]
+    assert "Çalıştırmadım" in bos["reply"]
+    yaz = klasor_soz(repo, "hesap.py içinde yaz neye yazıyor")
+    assert "iz yazar" in yaz["reply"]
+    assert "calisti" not in yaz["reply"]
+    assert "iz.txt" not in yaz["reply"]
+    assert not (el / "iz.txt").exists()
+    assert (el / "hesap.py").read_bytes() == once
+    _ajan_degil("hesap.py içinde topla neye yazıyor")
+
+
+def test_python_fonksiyon_kosulu(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    (el / "hesap.py").write_text(
+        "def topla(a, b):\n"
+        "    return a + b\n"
+        "def yaz(a):\n"
+        "    if a > 0:\n"
+        "        open('iz.txt', 'w', encoding='utf-8').write('calisti')\n"
+        "    while a < 3:\n"
+        "        a = a + 1\n",
+        encoding="utf-8",
+    )
+    once = (el / "hesap.py").read_bytes()
+    bos = klasor_soz(repo, "hesap.py içinde topla neye bakıyor")
+    assert "Bir koşula bakmaz" in bos["reply"]
+    yaz = klasor_soz(repo, "hesap.py içinde yaz neye bakıyor")
+    assert "a > 0" in yaz["reply"]
+    assert "a < 3" in yaz["reply"]
+    assert "calisti" not in yaz["reply"]
+    assert "Çalıştırmadım" in yaz["reply"]
+    assert not (el / "iz.txt").exists()
+    assert (el / "hesap.py").read_bytes() == once
+    _ajan_degil("hesap.py içinde topla neye bakıyor")
+
+
+def test_python_sinif_imzalari(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    (el / "hesap.py").write_text(
+        "class Hesap:\n"
+        "    def topla(self, a, b):\n"
+        '        """İki sayıyı toplar."""\n'
+        "        return a + b\n"
+        "    def yaz(self):\n"
+        "        open('iz.txt', 'w', encoding='utf-8').write('calisti')\n"
+        "class Baska:\n"
+        "    def gizli(self):\n"
+        "        open('iz.txt', 'w', encoding='utf-8').write('calisti')\n",
+        encoding="utf-8",
+    )
+    once = (el / "hesap.py").read_bytes()
+    sonuc = klasor_soz(repo, "hesap.py içinde Hesap sınıfı ne yapıyor")
+    assert sonuc["handled"] is True
+    assert "topla(self, a, b)" in sonuc["reply"]
+    assert "yaz(self)" in sonuc["reply"]
+    assert "gizli" not in sonuc["reply"]
+    assert "calisti" not in sonuc["reply"]
+    assert "İki sayıyı toplar" not in sonuc["reply"]
+    assert "Çalıştırmadım" in sonuc["reply"]
+    assert not (el / "iz.txt").exists()
+    yok = klasor_soz(repo, "hesap.py içinde Carp sınıfı ne yapıyor")
+    assert "Carp bu dosyada yok" in yok["reply"]
+    assert (el / "hesap.py").read_bytes() == once
+    _ajan_degil("hesap.py içinde Hesap sınıfı ne yapıyor")
+
+
+def test_python_ice_alma(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    (el / "hesap.py").write_text(
+        "import os\n"
+        "from pathlib import Path\n"
+        "def yaz():\n"
+        "    open('iz.txt', 'w', encoding='utf-8').write('calisti')\n",
+        encoding="utf-8",
+    )
+    once = (el / "hesap.py").read_bytes()
+    sonuc = klasor_soz(repo, "hesap.py neyi içe alıyor")
+    assert sonuc["handled"] is True
+    assert "os" in sonuc["reply"]
+    assert "pathlib" in sonuc["reply"]
+    assert "Çalıştırmadım" in sonuc["reply"]
+    assert not (el / "iz.txt").exists()
+    (el / "bos.py").write_text("def topla(a, b):\n    return a + b\n", encoding="utf-8")
+    bos = klasor_soz(repo, "bos.py neyi içe alıyor")
+    assert "Bir şey içe almaz" in bos["reply"]
+    assert (el / "hesap.py").read_bytes() == once
+    _ajan_degil("hesap.py neyi içe alıyor")

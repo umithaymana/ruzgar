@@ -10105,6 +10105,13 @@ def _programlama_agent_should_run(
     """Faz 47/20/14 otonom görev — prepare_turn atlanabilir."""
     if mode_norm != "programlama":
         return False
+    try:
+        from ilim_assistant.motorlar.programlama_proje_masasi import py_kilit_cumlesi
+
+        if py_kilit_cumlesi(msg):
+            return False
+    except Exception:
+        pass
     active = getattr(req, "programlama_active_file", None)
     ws = req.workspace_root
     try:
@@ -10586,6 +10593,32 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 except Exception:
                     _deleg_gate = False
                     _route_early = {}
+                try:
+                    from ilim_assistant.motorlar.programlama_proje_masasi import (
+                        klasor_soz,
+                        py_kilit_cumlesi,
+                    )
+
+                    if py_kilit_cumlesi(msg_early):
+                        _kapi = klasor_soz(REPO_ROOT, msg_early)
+                        if _kapi.get("handled"):
+                            _orch_k: dict[str, Any] = {
+                                "plan": {
+                                    "primary": "programlama",
+                                    "label_tr": "Kilitli klasör",
+                                }
+                            }
+                            yield from _iter_instant_chat_events(
+                                str(_kapi.get("reply") or "Dosya aynı."),
+                                msg_raw,
+                                session_wake_used=req.session_wake_used,
+                                msg_for_wake=req.message,
+                                orch=_orch_k,
+                                programlama_instant=True,
+                            )
+                            return
+                except Exception:
+                    pass
                 try:
                     from ilim_assistant.motorlar.programlama_motoru import (
                         is_code_agent_task_message,

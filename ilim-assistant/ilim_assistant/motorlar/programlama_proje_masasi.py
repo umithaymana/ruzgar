@@ -8,6 +8,7 @@ Sayfa adı verilirse o sayfaya yazar. Aynı parça ikinci kez eklenmez. Var olan
 
 from __future__ import annotations
 
+import ast
 import json
 import os
 import re
@@ -528,6 +529,47 @@ _KALIP: tuple[tuple[str, re.Pattern[str]], ...] = (
     )),
     ("bak_dosya", re.compile(r"^(?P<dosya>\S+)\s+dosyas[ıi]na\s+bak\s+ve\s+s[öo]yle$", re.I)),
     ("uygula", re.compile(r"^uygula$", re.I)),
+    ("py_fonksiyon", re.compile(
+        r"^(?P<ad>\S+\.py)\s+i[çc]inde\s+(?P<fonk>[A-Za-z_][A-Za-z0-9_]*)\s+ne\s+yap[ıi]yor$",
+        re.I,
+    )),
+    ("py_donus", re.compile(
+        r"^(?P<ad>\S+\.py)\s+i[çc]inde\s+(?P<fonk>[A-Za-z_][A-Za-z0-9_]*)\s+ne\s+d[öo]nd[üu]r[üu]yor$",
+        re.I,
+    )),
+    ("py_cagri", re.compile(
+        r"^(?P<ad>\S+\.py)\s+i[çc]inde\s+(?P<fonk>[A-Za-z_][A-Za-z0-9_]*)\s+kimi\s+[çc]a[gğ][ıi]r[ıi]yor$",
+        re.I,
+    )),
+    ("py_sinif", re.compile(
+        r"^(?P<ad>\S+\.py)\s+i[çc]inde\s+(?P<sinif>[A-Za-z_][A-Za-z0-9_]*)\s+s[ıi]n[ıi]f[ıi]\s+ne\s+yap[ıi]yor$",
+        re.I,
+    )),
+    ("py_yer", re.compile(
+        r"^(?P<ad>\S+\.py)\s+i[çc]inde\s+(?P<fonk>[A-Za-z_][A-Za-z0-9_]*)\s+nerede$",
+        re.I,
+    )),
+    ("py_yazar", re.compile(
+        r"^(?P<ad>\S+\.py)\s+i[çc]inde\s+(?P<fonk>[A-Za-z_][A-Za-z0-9_]*)\s+neye\s+yaz[ıi]yor$",
+        re.I,
+    )),
+    ("py_bakar", re.compile(
+        r"^(?P<ad>\S+\.py)\s+i[çc]inde\s+(?P<fonk>[A-Za-z_][A-Za-z0-9_]*)\s+neye\s+bak[ıi]yor$",
+        re.I,
+    )),
+    ("py_ice", re.compile(
+        r"^(?P<ad>\S+\.py)\s+neyi\s+i[çc]e\s+al[ıi]yor$",
+        re.I,
+    )),
+    ("py_soyle", re.compile(
+        r"^(?P<ad>\S+\.py)\s+dosyas[ıi]n[ıi]n\s+ne\s+yapt[ıi][gğ][ıi]n[ıi]\s+s[öo]yle$",
+        re.I,
+    )),
+    ("py_soyle", re.compile(r"^(?P<ad>\S+\.py)\s+ne\s+yap[ıi]yor$", re.I)),
+    ("py_calistir", re.compile(
+        r"^(?P<ad>\S+\.py)(?:\s+dosyas[ıi]n[ıi])?\s+[çc]al[ıi][sş]t[ıi]r$",
+        re.I,
+    )),
     ("baslik", re.compile(r"^(?:başlığı|basligi|başlık|baslik)\s+(?P<metin>.+?)\s+yap$", re.I)),
     ("paragraf", re.compile(
         r"^paragraf(?:\s+ekle)?\s*[:\-]?\s*(?P<metin>(?:(?!\s+sonra\s)[^,\n])+)$",
@@ -789,6 +831,26 @@ def _adim(text: str) -> dict | None:
     return None
 
 
+_PY_OKU = {
+    "py_soyle",
+    "py_calistir",
+    "py_fonksiyon",
+    "py_donus",
+    "py_cagri",
+    "py_yer",
+    "py_yazar",
+    "py_bakar",
+    "py_sinif",
+    "py_ice",
+}
+
+
+def py_kilit_cumlesi(message: str) -> bool:
+    """Python oku/söyle ve çalıştırma reddi. Ajan kapısından önce gelir."""
+    adim = _adim(message or "")
+    return bool(adim and adim.get("kind") in _PY_OKU)
+
+
 def _dosya_adi(ad: str) -> str:
     temiz = (ad or "").strip().strip('"').strip("'")
     if not temiz or "/" in temiz or "\\" in temiz or ".." in temiz or ":" in temiz:
@@ -892,6 +954,380 @@ def _oku_paket(repo: Path, ad: str) -> dict:
         text=okunan["text"],
         onizleme=html,
         sayfa=rel_ad if html else "",
+    )
+
+
+def _py_adi(ad: str) -> str:
+    temiz = _dosya_adi(ad)
+    if not temiz.lower().endswith(".py"):
+        raise ValueError("Bu tarif yalnız Python dosyası içindir.")
+    return temiz
+
+
+def _py_ozet(kaynak: str) -> str | None:
+    """Dosyayı ağaç olarak okur. Çalıştırmaz."""
+    try:
+        agac = ast.parse(kaynak)
+    except SyntaxError:
+        return None
+    satirlar: list[str] = []
+    belge = ast.get_docstring(agac)
+    if belge:
+        ilk = belge.strip().splitlines()[0].strip()
+        if ilk:
+            satirlar.append(ilk[:160])
+    ice: list[str] = []
+    fonksiyonlar: list[str] = []
+    siniflar: list[str] = []
+    for dugum in agac.body:
+        if isinstance(dugum, ast.Import):
+            ice.extend(alias.name.split(".")[0] for alias in dugum.names)
+        elif isinstance(dugum, ast.ImportFrom) and dugum.module:
+            ice.append(dugum.module.split(".")[0])
+        elif isinstance(dugum, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            fonksiyonlar.append(dugum.name)
+        elif isinstance(dugum, ast.ClassDef):
+            siniflar.append(dugum.name)
+    if ice:
+        satirlar.append("İçe alır: " + ", ".join(ice[:6]) + ".")
+    if fonksiyonlar:
+        satirlar.append("Fonksiyonlar: " + ", ".join(fonksiyonlar[:8]) + ".")
+    if siniflar:
+        satirlar.append("Sınıflar: " + ", ".join(siniflar[:6]) + ".")
+    if not satirlar:
+        return ""
+    return " ".join(satirlar)
+
+
+def _py_soyle(repo: Path, ad: str) -> dict:
+    rel_ad = _py_adi(ad)
+    okunan = klasor_oku_dosya(repo, rel_ad)
+    ozet = _py_ozet(okunan["text"])
+    if ozet is None:
+        govde = "Python olarak açılmadı."
+    elif not ozet:
+        govde = "İçinde fonksiyon yok."
+    else:
+        govde = ozet
+    return _paket(
+        reply=rel_ad + " okundu. Çalıştırmadım.\n" + govde + "\nDosya aynı.",
+        gorunum="kod",
+        rel=okunan["rel"],
+        text=okunan["text"],
+        onizleme=False,
+    )
+
+
+def _py_imza(fonk: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
+    adlar = [parca.arg for parca in list(fonk.args.posonlyargs) + list(fonk.args.args)]
+    return fonk.name + "(" + ", ".join(adlar) + ")"
+
+
+def _py_fonksiyon(repo: Path, ad: str, fonk_ad: str) -> dict:
+    rel_ad = _py_adi(ad)
+    okunan = klasor_oku_dosya(repo, rel_ad)
+    try:
+        agac = ast.parse(okunan["text"])
+    except SyntaxError:
+        govde = "Python olarak açılmadı."
+    else:
+        bulunan = next(
+            (
+                dugum
+                for dugum in agac.body
+                if isinstance(dugum, (ast.FunctionDef, ast.AsyncFunctionDef))
+                and dugum.name == fonk_ad
+            ),
+            None,
+        )
+        if bulunan is None:
+            govde = fonk_ad + " bu dosyada yok."
+        else:
+            belge = ast.get_docstring(bulunan)
+            ilk = belge.strip().splitlines()[0].strip()[:160] if belge else ""
+            govde = _py_imza(bulunan) + "."
+            if ilk:
+                govde += " " + ilk
+    return _paket(
+        reply=rel_ad + " içinde " + fonk_ad + " okundu. Çalıştırmadım.\n" + govde + "\nDosya aynı.",
+        gorunum="kod",
+        rel=okunan["rel"],
+        text=okunan["text"],
+        onizleme=False,
+    )
+
+
+def _py_donus_metinleri(dugumler: list[ast.stmt]) -> list[str]:
+    bulunan: list[str] = []
+    for dugum in dugumler:
+        if isinstance(dugum, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            continue
+        if isinstance(dugum, ast.Return) and dugum.value is not None:
+            bulunan.append(ast.unparse(dugum.value)[:120])
+        bulunan.extend(_py_donus_metinleri(list(ast.iter_child_nodes(dugum))))
+    return bulunan
+
+
+def _py_donus(repo: Path, ad: str, fonk_ad: str) -> dict:
+    rel_ad = _py_adi(ad)
+    okunan = klasor_oku_dosya(repo, rel_ad)
+    try:
+        agac = ast.parse(okunan["text"])
+    except SyntaxError:
+        govde = "Python olarak açılmadı."
+    else:
+        bulunan = next(
+            (
+                dugum
+                for dugum in agac.body
+                if isinstance(dugum, (ast.FunctionDef, ast.AsyncFunctionDef))
+                and dugum.name == fonk_ad
+            ),
+            None,
+        )
+        if bulunan is None:
+            govde = fonk_ad + " bu dosyada yok."
+        else:
+            metinler = _py_donus_metinleri(bulunan.body)
+            if not metinler:
+                govde = "Bir değer döndürmez."
+            else:
+                govde = " veya ".join(metinler[:4]) + " döndürür."
+    return _paket(
+        reply=rel_ad + " içinde " + fonk_ad + " okundu. Çalıştırmadım.\n" + govde + "\nDosya aynı.",
+        gorunum="kod",
+        rel=okunan["rel"],
+        text=okunan["text"],
+        onizleme=False,
+    )
+
+
+def _py_cagri_adlari(dugumler: list[ast.AST]) -> list[str]:
+    bulunan: list[str] = []
+    for dugum in dugumler:
+        if isinstance(dugum, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            continue
+        if isinstance(dugum, ast.Call):
+            func = dugum.func
+            ad = ""
+            if isinstance(func, ast.Name):
+                ad = func.id
+            elif isinstance(func, ast.Attribute):
+                ad = func.attr
+            if ad and ad not in bulunan:
+                bulunan.append(ad)
+        bulunan.extend(_py_cagri_adlari(list(ast.iter_child_nodes(dugum))))
+    return bulunan
+
+
+def _py_cagri(repo: Path, ad: str, fonk_ad: str) -> dict:
+    rel_ad = _py_adi(ad)
+    okunan = klasor_oku_dosya(repo, rel_ad)
+    try:
+        agac = ast.parse(okunan["text"])
+    except SyntaxError:
+        govde = "Python olarak açılmadı."
+    else:
+        bulunan = next(
+            (
+                dugum
+                for dugum in agac.body
+                if isinstance(dugum, (ast.FunctionDef, ast.AsyncFunctionDef))
+                and dugum.name == fonk_ad
+            ),
+            None,
+        )
+        if bulunan is None:
+            govde = fonk_ad + " bu dosyada yok."
+        else:
+            adlar = _py_cagri_adlari(bulunan.body)
+            if not adlar:
+                govde = "Kimseyi çağırmaz."
+            else:
+                govde = ", ".join(adlar[:6]) + " çağırır."
+    return _paket(
+        reply=rel_ad + " içinde " + fonk_ad + " okundu. Çalıştırmadım.\n" + govde + "\nDosya aynı.",
+        gorunum="kod",
+        rel=okunan["rel"],
+        text=okunan["text"],
+        onizleme=False,
+    )
+
+
+def _py_ust_fonk(agac: ast.AST, fonk_ad: str) -> ast.FunctionDef | ast.AsyncFunctionDef | None:
+    return next(
+        (
+            dugum
+            for dugum in agac.body
+            if isinstance(dugum, (ast.FunctionDef, ast.AsyncFunctionDef)) and dugum.name == fonk_ad
+        ),
+        None,
+    )
+
+
+def _py_fonk_cevap(repo: Path, ad: str, fonk_ad: str, doldur) -> dict:
+    rel_ad = _py_adi(ad)
+    okunan = klasor_oku_dosya(repo, rel_ad)
+    try:
+        agac = ast.parse(okunan["text"])
+    except SyntaxError:
+        govde = "Python olarak açılmadı."
+    else:
+        bulunan = _py_ust_fonk(agac, fonk_ad)
+        if bulunan is None:
+            govde = fonk_ad + " bu dosyada yok."
+        else:
+            govde = doldur(bulunan)
+    return _paket(
+        reply=rel_ad + " içinde " + fonk_ad + " okundu. Çalıştırmadım.\n" + govde + "\nDosya aynı.",
+        gorunum="kod",
+        rel=okunan["rel"],
+        text=okunan["text"],
+        onizleme=False,
+    )
+
+
+def _py_yer(repo: Path, ad: str, fonk_ad: str) -> dict:
+    def doldur(fonk: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
+        bas = int(fonk.lineno or 0)
+        bit = int(fonk.end_lineno or bas)
+        if bas and bit and bit != bas:
+            return str(bas) + ". satırdan " + str(bit) + ". satıra."
+        if bas:
+            return str(bas) + ". satır."
+        return "Satır yok."
+
+    return _py_fonk_cevap(repo, ad, fonk_ad, doldur)
+
+
+def _py_yazilan_adlar(hedef: ast.AST) -> list[str]:
+    if isinstance(hedef, ast.Name):
+        return [hedef.id]
+    if isinstance(hedef, (ast.Tuple, ast.List)):
+        adlar: list[str] = []
+        for parca in hedef.elts:
+            adlar.extend(_py_yazilan_adlar(parca))
+        return adlar
+    return []
+
+
+def _py_yazar_adlari(dugumler: list[ast.AST]) -> list[str]:
+    bulunan: list[str] = []
+    for dugum in dugumler:
+        if isinstance(dugum, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            continue
+        hedefler: list[ast.AST] = []
+        if isinstance(dugum, ast.Assign):
+            hedefler = list(dugum.targets)
+        elif isinstance(dugum, ast.AnnAssign) and dugum.target is not None:
+            hedefler = [dugum.target]
+        elif isinstance(dugum, ast.AugAssign):
+            hedefler = [dugum.target]
+        elif isinstance(dugum, ast.NamedExpr):
+            hedefler = [dugum.target]
+        for hedef in hedefler:
+            for ad in _py_yazilan_adlar(hedef):
+                if ad not in bulunan:
+                    bulunan.append(ad)
+        bulunan.extend(_py_yazar_adlari(list(ast.iter_child_nodes(dugum))))
+    return bulunan
+
+
+def _py_yazar(repo: Path, ad: str, fonk_ad: str) -> dict:
+    def doldur(fonk: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
+        adlar = _py_yazar_adlari(fonk.body)
+        if not adlar:
+            return "Bir şeye yazmaz."
+        return ", ".join(adlar[:6]) + " yazar."
+
+    return _py_fonk_cevap(repo, ad, fonk_ad, doldur)
+
+
+def _py_kosullar(dugumler: list[ast.AST]) -> list[str]:
+    bulunan: list[str] = []
+    for dugum in dugumler:
+        if isinstance(dugum, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            continue
+        if isinstance(dugum, (ast.If, ast.While)) and dugum.test is not None:
+            metin = ast.unparse(dugum.test)[:120]
+            if metin and metin not in bulunan:
+                bulunan.append(metin)
+        bulunan.extend(_py_kosullar(list(ast.iter_child_nodes(dugum))))
+    return bulunan
+
+
+def _py_bakar(repo: Path, ad: str, fonk_ad: str) -> dict:
+    def doldur(fonk: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
+        metinler = _py_kosullar(fonk.body)
+        if not metinler:
+            return "Bir koşula bakmaz."
+        return " veya ".join(metinler[:4]) + "."
+
+    return _py_fonk_cevap(repo, ad, fonk_ad, doldur)
+
+
+def _py_sinif(repo: Path, ad: str, sinif_ad: str) -> dict:
+    rel_ad = _py_adi(ad)
+    okunan = klasor_oku_dosya(repo, rel_ad)
+    try:
+        agac = ast.parse(okunan["text"])
+    except SyntaxError:
+        govde = "Python olarak açılmadı."
+    else:
+        sinif = next(
+            (dugum for dugum in agac.body if isinstance(dugum, ast.ClassDef) and dugum.name == sinif_ad),
+            None,
+        )
+        if sinif is None:
+            govde = sinif_ad + " bu dosyada yok."
+        else:
+            imzalar = [
+                _py_imza(dugum)
+                for dugum in sinif.body
+                if isinstance(dugum, (ast.FunctionDef, ast.AsyncFunctionDef))
+            ]
+            if not imzalar:
+                govde = "İçinde fonksiyon yok."
+            else:
+                govde = ". ".join(imzalar[:8]) + "."
+    return _paket(
+        reply=rel_ad + " içinde " + sinif_ad + " okundu. Çalıştırmadım.\n" + govde + "\nDosya aynı.",
+        gorunum="kod",
+        rel=okunan["rel"],
+        text=okunan["text"],
+        onizleme=False,
+    )
+
+
+def _py_ice(repo: Path, ad: str) -> dict:
+    rel_ad = _py_adi(ad)
+    okunan = klasor_oku_dosya(repo, rel_ad)
+    try:
+        agac = ast.parse(okunan["text"])
+    except SyntaxError:
+        govde = "Python olarak açılmadı."
+    else:
+        ice: list[str] = []
+        for dugum in agac.body:
+            if isinstance(dugum, ast.Import):
+                adaylar = [alias.name.split(".")[0] for alias in dugum.names]
+            elif isinstance(dugum, ast.ImportFrom) and dugum.module:
+                adaylar = [dugum.module.split(".")[0]]
+            else:
+                adaylar = []
+            for parca in adaylar:
+                if parca and parca not in ice:
+                    ice.append(parca)
+        if not ice:
+            govde = "Bir şey içe almaz."
+        else:
+            govde = ", ".join(ice[:6]) + "."
+    return _paket(
+        reply=rel_ad + " okundu. Çalıştırmadım.\n" + govde + "\nDosya aynı.",
+        gorunum="kod",
+        rel=okunan["rel"],
+        text=okunan["text"],
+        onizleme=False,
     )
 
 
@@ -1087,6 +1523,32 @@ def _calistir(repo: Path, adim: dict, sayfa: str) -> dict:
         return _yaz_geri(repo, adim.get("ad") or "", metin)
     if kind == "oku":
         return _oku_paket(repo, adim.get("ad") or "")
+    if kind in _PY_OKU:
+        try:
+            _kilit_yolu(repo)
+        except _KlasorYok:
+            raise ValueError(
+                "Çalışma klasörü seçilmedi. Şöyle söyle: çalışma klasörü: tam yol"
+            ) from None
+        if kind == "py_calistir":
+            return _paket(reply="Bunu yapmadım. Kodu çalıştırmadım. Dosya aynı.")
+        if kind == "py_fonksiyon":
+            return _py_fonksiyon(repo, adim.get("ad") or "", adim.get("fonk") or "")
+        if kind == "py_donus":
+            return _py_donus(repo, adim.get("ad") or "", adim.get("fonk") or "")
+        if kind == "py_cagri":
+            return _py_cagri(repo, adim.get("ad") or "", adim.get("fonk") or "")
+        if kind == "py_yer":
+            return _py_yer(repo, adim.get("ad") or "", adim.get("fonk") or "")
+        if kind == "py_yazar":
+            return _py_yazar(repo, adim.get("ad") or "", adim.get("fonk") or "")
+        if kind == "py_bakar":
+            return _py_bakar(repo, adim.get("ad") or "", adim.get("fonk") or "")
+        if kind == "py_sinif":
+            return _py_sinif(repo, adim.get("ad") or "", adim.get("sinif") or "")
+        if kind == "py_ice":
+            return _py_ice(repo, adim.get("ad") or "")
+        return _py_soyle(repo, adim.get("ad") or "")
     if kind in {"sayfa", "sayfa_ad"}:
         dosya = _sayfa_dosyasi("index" if kind == "sayfa" else adim.get("ad") or "")
         try:
