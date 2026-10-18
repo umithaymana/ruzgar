@@ -157,10 +157,34 @@ def _norm_match(text: str) -> str:
     return s.lower()
 
 
+def weather_ask_denied(message: str) -> bool:
+    """«Hava durumunu sormadım» hava sorusu değildir. İnkardan sonra yeni hava sorusu varsa sayılır."""
+    low = (message or "").lower()
+    marks = ("sormadım", "sormadim", "istemedim", "istemiyorum", "demedim")
+    hit = next((m for m in marks if m in low), "")
+    if not hit:
+        return False
+    after = low.split(hit, 1)[-1]
+    fresh = (
+        "hava nas",
+        "hava durum",
+        "havalar",
+        "kaç derece",
+        "kac derece",
+        "yağmur",
+        "yagmur",
+        "yağacak",
+        "yagacak",
+    )
+    return not any(k in after for k in fresh)
+
+
 def is_weather_query(message: str) -> bool:
     """Canlı hava / tahmin — chat_core import etmeden (hızlı şerit + erken yol)."""
     low = (message or "").strip().lower()
     if not low or len(low) > 420:
+        return False
+    if weather_ask_denied(low):
         return False
     # Fizik sıcaklık sorusu ("Su kaç derecede kaynar?") hava niyeti değildir.
     if re.search(

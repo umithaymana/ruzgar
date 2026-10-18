@@ -81,6 +81,7 @@ def tarih_intent(msg: str) -> bool:
         "buyuk turk tarihi",
         "büyük türk tarihi",
         "mezopotamya",
+        "medeniyet",
         "anadolu selcuk",
         "anzak",
         "canakkale savas",

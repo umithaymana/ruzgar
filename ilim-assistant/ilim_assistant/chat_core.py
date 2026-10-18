@@ -449,6 +449,13 @@ def _is_live_weather_query(msg: str) -> bool:
     # "Su kaç derecede kaynar?" ≠ hava durumu ("kaç derece" ⊂ "kaç derecede").
     if _PHYSICS_TEMP_RE.search(low):
         return False
+    try:
+        from ilim_assistant.weather_live import weather_ask_denied
+
+        if weather_ask_denied(low):
+            return False
+    except Exception:
+        pass
     needles = (
         "hava nasıl",
         "hava nasil",
@@ -534,8 +541,73 @@ def _weather_yeni_konu(low: str) -> bool:
             "galaksi",
             "yıldız",
             "yildiz",
+            "öğrenmiş",
+            "ogrenmis",
+            "nerede",
+            "nedir",
+            "kimdir",
+            "hangi",
+            "ne zaman",
+            "medeniyet",
+            "kurul",
         )
     )
+
+
+_HAVA_DEVAM_KELIME = frozenset(
+    {
+        "benim",
+        "icin",
+        "için",
+        "sen",
+        "bakip",
+        "bakıp",
+        "bilgi",
+        "verir",
+        "bana",
+        "soyle",
+        "söyle",
+        "soyler",
+        "söyler",
+        "misin",
+        "anlat",
+        "anlatir",
+        "anlatır",
+        "neden",
+        "niye",
+        "demedin",
+        "peki",
+        "tamam",
+        "biraz",
+        "bugun",
+        "bugün",
+        "yarin",
+        "yarın",
+        "simdi",
+        "şimdi",
+        "istanbul",
+        "ankara",
+        "izmir",
+        "hava",
+        "havalar",
+        "derece",
+        "yagmur",
+        "yağmur",
+        "sicak",
+        "sıcak",
+        "soguk",
+        "soğuk",
+        "bulut",
+        "bulutlu",
+        "nem",
+    }
+)
+
+
+def _weather_baska_isim(low: str) -> bool:
+    """Devam cümlesi başka bir işin adını taşıyorsa hava kapısı kapansın."""
+    words = re.findall(r"[0-9A-Za-zÇĞİÖŞÜçğıöşü]{4,}", low or "")
+    return any(w.lower() not in _HAVA_DEVAM_KELIME for w in words)
 
 
 def _weather_follow_up(msg: str, history: list | None) -> bool:
@@ -549,7 +621,7 @@ def _weather_follow_up(msg: str, history: list | None) -> bool:
     if len(t) > 220:
         return False
     low = t.lower()
-    if _weather_yeni_konu(low):
+    if _weather_yeni_konu(low) or _weather_baska_isim(low):
         return False
     hints = (
         "benim için",

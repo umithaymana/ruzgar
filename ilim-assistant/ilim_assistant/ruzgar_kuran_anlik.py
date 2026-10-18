@@ -47,6 +47,29 @@ def _fold(s: str) -> str:
     return t.lower().strip()
 
 
+_TR_CEKIM = (
+    "leri|ları|ler|lar|nin|nın|nun|nün|den|dan|de|da|"
+    "si|sı|su|sü|yi|yı|yu|yü|in|ın|un|ün"
+)
+
+
+def _cue_hit(cue: str, low: str) -> bool:
+    """Kelime sınırı. «medeni» «medeniyet» içinde kart açmasın; «sure» «suresi» kalsın."""
+    c = _fold(cue)
+    if not c or not low:
+        return False
+    from ilim_assistant.ruzgar_kavram_match import _key_bounded
+
+    if _key_bounded(c, low):
+        return True
+    return bool(
+        re.search(
+            rf"(?<![\w'’]){re.escape(c)}(?:{_TR_CEKIM})(?![\w'’])",
+            low,
+        )
+    )
+
+
 def looks_like_kuran_question(msg: str) -> bool:
     low = _fold(msg)
     if not low:
@@ -62,7 +85,7 @@ def looks_like_kuran_question(msg: str) -> bool:
         "cin suresi", "ihlas", "ayetel kursi", "ayatul kursi",
         "aşır", "asır", "asir", "aşir", "ruku", "rükû", "rüku",
     )
-    return any(_fold(c) in low for c in cues)
+    return any(_cue_hit(c, low) for c in cues)
 
 
 @lru_cache(maxsize=1)
@@ -303,7 +326,7 @@ def _score_kavram(msg_fold: str, row: dict[str, Any]) -> float:
             continue
         if msg_fold == k or msg_fold == f"{k} nedir" or msg_fold == f"{k} ne demek":
             score = max(score, 10.0)
-        elif k in msg_fold:
+        elif _cue_hit(k, msg_fold):
             score = max(score, 4.0 + min(len(k), 20) * 0.05)
     # ek ipuçları
     blob = _fold(str(row.get("metin") or ""))[:200]
@@ -380,7 +403,7 @@ def try_kavram_reply(message: str) -> Optional[str]:
             )
 
     # «X suresi mekki mi» / «bakara medeni mi»
-    if any(x in low for x in ("mekki", "medeni", "mekkî", "medenî")):
+    if any(_cue_hit(x, low) for x in ("mekki", "medeni", "mekkî", "medenî")):
         sno = None
         try:
             from ilim_assistant.ruzgar_tefsir_kutuphane import detect_sure_no

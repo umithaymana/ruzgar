@@ -819,7 +819,7 @@ def looks_like_ne_ogrendin(message: str) -> bool:
     n = _norm_duzeltme(message or "")
     return any(
         k in n
-        for k in ("neler ogrendin", "ne ogrendin", "ogrendin")
+        for k in ("neler ogrendin", "ne ogrendin", "ogrendin", "ogrenmis")
     )
 
 
