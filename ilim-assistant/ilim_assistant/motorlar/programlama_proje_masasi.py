@@ -340,27 +340,44 @@ def klasor_guvenli(repo: Path, klasor: str) -> Path:
     return resolved
 
 
-def klasor_kaydet(repo: Path, klasor: str) -> dict:
+def _pin_data() -> dict:
     pin = _pin_dosyasi()
-    pin.parent.mkdir(parents=True, exist_ok=True)
-    if not (klasor or "").strip():
+    if not pin.is_file() or pin.is_symlink():
+        return {}
+    try:
+        data = json.loads(pin.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _pin_yaz(data: dict) -> None:
+    pin = _pin_dosyasi()
+    if pin.is_symlink():
+        raise ValueError("Bu yere yazılmaz.")
+    temiz = {anahtar: str(deger) for anahtar, deger in data.items() if deger and anahtar in {"klasor", "dis"}}
+    if not temiz:
         if pin.is_file():
             pin.unlink()
+        return
+    pin.parent.mkdir(parents=True, exist_ok=True)
+    pin.write_text(json.dumps(temiz, ensure_ascii=False), encoding="utf-8")
+
+
+def klasor_kaydet(repo: Path, klasor: str) -> dict:
+    data = _pin_data()
+    if not (klasor or "").strip():
+        data.pop("klasor", None)
+        _pin_yaz(data)
         return {"ok": True, "klasor": ""}
     hedef = klasor_guvenli(repo, klasor)
-    pin.write_text(json.dumps({"klasor": str(hedef)}, ensure_ascii=False), encoding="utf-8")
+    data["klasor"] = str(hedef)
+    _pin_yaz(data)
     return {"ok": True, "klasor": str(hedef)}
 
 
 def klasor_oku() -> str:
-    pin = _pin_dosyasi()
-    if not pin.is_file():
-        return ""
-    try:
-        data = json.loads(pin.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return ""
-    return str(data.get("klasor") or "")
+    return str(_pin_data().get("klasor") or "")
 
 
 def _klasor_hedef(repo: Path, rel: str) -> tuple[Path, str]:
@@ -572,6 +589,22 @@ _KALIP: tuple[tuple[str, re.Pattern[str]], ...] = (
         r"^orta\s+notuna\s+sat[ıi]r\s+ekle\s*[:\-]\s*(?P<metin>.+)$",
         re.I,
     )),
+    ("orta_arac_not", re.compile(r"^orta\s+arac[ıi]nda\s+notu\s+say$", re.I)),
+    ("orta_arac_not", re.compile(r"^orta\s+arac[ıi]nda\s+sat[ıi]r\s+say$", re.I)),
+    ("orta_arac_satir", re.compile(
+        r"^orta\s+arac[ıi]nda\s+sat[ıi]r\s+say\s*[:\-]\s*(?P<metin>.+)$",
+        re.I,
+    )),
+    ("uygulama_not", re.compile(
+        r"^uygulama\s+notu\s+yaz\s*[:\-]\s*(?P<metin>.+)$",
+        re.I,
+    )),
+    ("uygulama_not_oku", re.compile(r"^uygulama\s+notunu\s+oku$", re.I)),
+    ("dis_klasor", re.compile(r"^d[ıi]ş\s+klas[öo]r\s*:\s*(?P<yol>.+)$", re.I)),
+    ("dis_say", re.compile(r"^d[ıi]ş\s+klas[öo]r[üu]\s+say$", re.I)),
+    ("dis_oku", re.compile(r"^d[ıi]ş\s+dosyay[ıi]\s+oku\s*:\s*(?P<ad>\S+)$", re.I)),
+    ("git_durum", re.compile(r"^git\s+ne\s+durumda$", re.I)),
+    ("git_yazma", re.compile(r"^git\s+(?:g[öo]nder|kaydet)$", re.I)),
     ("py_soyle", re.compile(
         r"^(?P<ad>\S+\.py)\s+dosyas[ıi]n[ıi]n\s+ne\s+yapt[ıi][gğ][ıi]n[ıi]\s+s[öo]yle$",
         re.I,
@@ -858,6 +891,15 @@ _PY_OKU = {
     "orta_not",
     "orta_not_oku",
     "orta_not_satir",
+    "orta_arac_not",
+    "orta_arac_satir",
+    "uygulama_not",
+    "uygulama_not_oku",
+    "dis_klasor",
+    "dis_say",
+    "dis_oku",
+    "git_durum",
+    "git_yazma",
 }
 
 
@@ -1531,6 +1573,285 @@ def _orta_not_satir(repo: Path, metin: str) -> dict:
     )
 
 
+def _arac_donusu(node: ast.AST | None) -> bool:
+    if not isinstance(node, ast.Call) or node.keywords or len(node.args) != 1:
+        return False
+    if not isinstance(node.func, ast.Name) or node.func.id != "len":
+        return False
+    comp = node.args[0]
+    if not isinstance(comp, ast.ListComp) or len(comp.generators) != 1:
+        return False
+    if not isinstance(comp.elt, ast.Name) or comp.elt.id != "satir":
+        return False
+    gen = comp.generators[0]
+    if gen.is_async or len(gen.ifs) != 1 or not isinstance(gen.target, ast.Name) or gen.target.id != "satir":
+        return False
+    cagri = gen.iter
+    if not isinstance(cagri, ast.Call) or cagri.args or cagri.keywords:
+        return False
+    if not isinstance(cagri.func, ast.Attribute) or cagri.func.attr != "splitlines":
+        return False
+    if not isinstance(cagri.func.value, ast.Name) or cagri.func.value.id != "metin":
+        return False
+    kond = gen.ifs[0]
+    if not isinstance(kond, ast.Call) or kond.args or kond.keywords:
+        return False
+    if not isinstance(kond.func, ast.Attribute) or kond.func.attr != "strip":
+        return False
+    return isinstance(kond.func.value, ast.Name) and kond.func.value.id == "satir"
+
+
+def _arac_hazir(agac: ast.AST) -> bool:
+    if not isinstance(agac, ast.Module):
+        return False
+    govde = list(agac.body)
+    if (
+        govde
+        and isinstance(govde[0], ast.Expr)
+        and isinstance(govde[0].value, ast.Constant)
+        and isinstance(govde[0].value.value, str)
+    ):
+        govde = govde[1:]
+    if len(govde) != 1 or not isinstance(govde[0], ast.FunctionDef):
+        return False
+    fn = govde[0]
+    args = fn.args
+    if (
+        fn.name != "satir_say"
+        or fn.decorator_list
+        or args.posonlyargs
+        or args.kwonlyargs
+        or args.vararg
+        or args.kwarg
+        or args.defaults
+        or args.kw_defaults
+        or len(args.args) != 1
+        or args.args[0].arg != "metin"
+    ):
+        return False
+    ic = list(fn.body)
+    if (
+        ic
+        and isinstance(ic[0], ast.Expr)
+        and isinstance(ic[0].value, ast.Constant)
+        and isinstance(ic[0].value.value, str)
+    ):
+        ic = ic[1:]
+    return len(ic) == 1 and isinstance(ic[0], ast.Return) and _arac_donusu(ic[0].value)
+
+
+def _arac_ayni(yol: Path, once: bytes) -> bool:
+    try:
+        return yol.is_file() and not yol.is_symlink() and yol.read_bytes() == once
+    except OSError:
+        return False
+
+
+def _orta_arac_calistir(repo: Path, metin: str) -> dict:
+    try:
+        yol, _norm = _klasor_hedef(repo, "orta/arac.py")
+    except ValueError as exc:
+        if "seçilmedi" in str(exc):
+            raise
+        return _paket(reply="orta/arac.py yok.\nÇalıştırmadım.")
+    if not yol.is_file() or yol.is_symlink():
+        return _paket(reply="orta/arac.py yok.\nÇalıştırmadım.")
+    once = yol.read_bytes()
+    try:
+        agac = ast.parse(once.decode("utf-8"))
+    except (UnicodeError, SyntaxError):
+        return _paket(reply="Bunu çalıştırmadım. Hazır araç değil.\nDosya aynı.")
+    if not _arac_hazir(agac):
+        return _paket(reply="Bunu çalıştırmadım. Hazır araç değil.\nDosya aynı.")
+    sonuc = None
+    try:
+        ns: dict = {}
+        exec(compile(agac, "orta/arac.py", "exec"), {"__builtins__": {"len": len}}, ns)
+        fn = ns.get("satir_say")
+        if callable(fn):
+            sonuc = fn(metin)
+    except Exception:
+        sonuc = None
+    if not _arac_ayni(yol, once):
+        return _paket(reply="Dosya değişti. Sayıyı söylemedim.")
+    if type(sonuc) is not int:
+        return _paket(reply="Çalışmadı.\nDosya aynı.")
+    return _paket(reply="Sayı: " + str(sonuc) + "\norta/arac.py içinde satir_say bir kez çalıştı.\nDosya aynı.")
+
+
+def _orta_arac_not(repo: Path) -> dict:
+    try:
+        arac, _norm = _klasor_hedef(repo, "orta/arac.py")
+    except ValueError as exc:
+        if "seçilmedi" in str(exc):
+            raise
+        return _paket(reply="orta/arac.py yok.\nÇalıştırmadım.")
+    if not arac.is_file() or arac.is_symlink():
+        return _paket(reply="orta/arac.py yok.\nÇalıştırmadım.")
+    try:
+        not_yol, _norm = _klasor_hedef(repo, _ORTA_NOT)
+    except ValueError as exc:
+        if "seçilmedi" in str(exc):
+            raise
+        return _paket(reply=_ORTA_NOT + " yok.\nÇalıştırmadım.")
+    if not not_yol.is_file() or not_yol.is_symlink():
+        return _paket(reply=_ORTA_NOT + " yok.\nÇalıştırmadım.")
+    once = not_yol.read_bytes()
+    paket = _orta_arac_calistir(repo, once.decode("utf-8"))
+    if not _arac_ayni(not_yol, once):
+        return _paket(reply="Not değişti. Sayıyı söylemedim.")
+    return paket
+
+
+def _orta_arac_satir(repo: Path, metin: str) -> dict:
+    return _orta_arac_calistir(repo, _not_satiri(metin))
+
+
+def _uygulama_not_yolu(repo: Path) -> Path:
+    kok = repo.resolve()
+    ust = kok / "ilim-assistant" / ".ruzgar"
+    hedef = ust / "uygulama_notu.txt"
+    if ust.is_symlink() or hedef.is_symlink():
+        raise ValueError("Bu yere yazılmaz.")
+    gercek = hedef.resolve()
+    if gercek.name != "uygulama_notu.txt" or not _icinde(gercek, kok):
+        raise ValueError("Bu yere yazılmaz.")
+    return gercek
+
+
+def _uygulama_not(repo: Path, metin: str) -> dict:
+    satir = _not_satiri(metin)
+    yol = _uygulama_not_yolu(repo)
+    if yol.is_file():
+        govde = yol.read_text(encoding="utf-8").strip()
+        return _paket(reply="Uygulama notu duruyor: " + govde + "\nÜstüne yazmadım. Çalıştırmadım.")
+    yol.parent.mkdir(parents=True, exist_ok=True)
+    yol.write_text(satir + "\n", encoding="utf-8")
+    okunan = yol.read_text(encoding="utf-8")
+    if okunan != satir + "\n":
+        raise ValueError("Yazılmadı. uygulama notu")
+    return _paket(reply="Yazıldı: ilim-assistant/.ruzgar/uygulama_notu.txt.\nÇalıştırmadım.")
+
+
+def _uygulama_not_oku(repo: Path) -> dict:
+    yol = _uygulama_not_yolu(repo)
+    if not yol.is_file():
+        return _paket(reply="ilim-assistant/.ruzgar/uygulama_notu.txt yok.\nÇalıştırmadım.")
+    govde = yol.read_text(encoding="utf-8")
+    return _paket(
+        reply="Uygulama notu okundu.\n" + (govde.strip() or "(boş)") + "\nÇalıştırmadım. Dosya aynı.",
+        gorunum="kod",
+        rel="ilim-assistant/.ruzgar/uygulama_notu.txt",
+        text=govde,
+    )
+
+
+_DIS_OKU = {".txt", ".md"}
+
+
+def _dis_kok(repo: Path) -> Path:
+    kayit = str(_pin_data().get("dis") or "")
+    if not kayit:
+        raise ValueError("Dış klasör seçilmedi. Şöyle söyle: dış klasör: tam yol")
+    return klasor_guvenli(repo, kayit)
+
+
+def _dis_klasor(repo: Path, yol: str) -> dict:
+    hedef = klasor_guvenli(repo, yol)
+    kilit = klasor_oku()
+    if kilit:
+        kilit_yol = klasor_guvenli(repo, kilit)
+        if hedef == kilit_yol or _icinde(hedef, kilit_yol):
+            raise ValueError("Bu kilitli klasörün içi. Dış klasör başka yer olsun.")
+    data = _pin_data()
+    data["dis"] = str(hedef)
+    _pin_yaz(data)
+    return _paket(reply="Dış klasör: " + str(hedef) + "\nYazmadım. Çalıştırmadım.")
+
+
+def _dis_say(repo: Path) -> dict:
+    kok = _dis_kok(repo)
+    adlar: list[str] = []
+    for path in sorted(kok.iterdir(), key=lambda item: item.name.lower()):
+        if path.name.startswith(".") or path.is_symlink():
+            continue
+        if path.name in {"__pycache__", "node_modules", ".git"}:
+            continue
+        adlar.append(path.name)
+        if len(adlar) >= 12:
+            break
+    govde = "\n".join(adlar) if adlar else "Dosya yok."
+    return _paket(reply="Dış klasör: " + str(kok) + "\n" + govde + "\nYazmadım. Çalıştırmadım.")
+
+
+def _dis_oku(repo: Path, ad: str) -> dict:
+    temiz = (ad or "").strip().strip('"').strip("'")
+    if (
+        not temiz
+        or "/" in temiz
+        or "\\" in temiz
+        or ".." in temiz
+        or ":" in temiz
+        or temiz.startswith(".")
+    ):
+        raise ValueError("Dosya adı geçersiz.")
+    if Path(temiz).suffix.lower() not in _DIS_OKU:
+        raise ValueError("Bu dosya okunmaz.")
+    kok = _dis_kok(repo)
+    hedef = (kok / Path(temiz).name).resolve()
+    if hedef.is_symlink() or not _icinde(hedef, kok) or not hedef.is_file():
+        raise ValueError("Dosya yok.")
+    once = hedef.read_bytes()
+    if len(once) > 20_000:
+        raise ValueError("Dosya çok büyük.")
+    if hedef.read_bytes() != once:
+        return _paket(reply="Dosya değişti. Okumadım.")
+    govde = once.decode("utf-8")
+    goster = govde if len(govde) <= 500 else govde[:500] + "…"
+    return _paket(
+        reply=temiz + " okundu.\n" + (goster.strip() or "(boş)") + "\nYazmadım. Çalıştırmadım. Dosya aynı.",
+        gorunum="kod",
+        text=govde,
+    )
+
+
+def _git_satir(repo: Path, args: list[str]) -> str:
+    import subprocess
+
+    kok = repo.resolve()
+    try:
+        sonuc = subprocess.run(
+            ["git", "--no-optional-locks", "-C", str(kok), *args],
+            capture_output=True,
+            text=True,
+            timeout=8,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+    if sonuc.returncode != 0:
+        return ""
+    return (sonuc.stdout or "").strip()
+
+
+def _git_durum(repo: Path) -> dict:
+    dal = _git_satir(repo, ["rev-parse", "--abbrev-ref", "HEAD"])
+    if not dal:
+        return _paket(reply="Bu depo değil.\nYazmadım. Göndermedim.")
+    kayit = _git_satir(repo, ["log", "-1", "--format=%h %s"]) or "kayıt yok"
+    durum = _git_satir(repo, ["status", "--porcelain", "--untracked-files=normal"])
+    satirlar = [satir for satir in durum.splitlines() if satir.strip()]
+    if not satirlar:
+        fark = "Değişen dosya yok."
+    else:
+        goster = satirlar[:20]
+        fark = "Değişen:\n" + "\n".join(goster)
+        kalan = len(satirlar) - len(goster)
+        if kalan:
+            fark += f"\nve {kalan} dosya daha."
+    return _paket(reply=f"Dal: {dal}\nSon kayıt: {kayit}\n{fark}\nYazmadım. Göndermedim.")
+
+
 def _sayfa_sec(repo: Path, tercih: str) -> str:
     if tercih:
         return tercih
@@ -1758,6 +2079,24 @@ def _calistir(repo: Path, adim: dict, sayfa: str) -> dict:
             return _orta_not_oku(repo)
         if kind == "orta_not_satir":
             return _orta_not_satir(repo, adim.get("metin") or "")
+        if kind == "orta_arac_not":
+            return _orta_arac_not(repo)
+        if kind == "orta_arac_satir":
+            return _orta_arac_satir(repo, adim.get("metin") or "")
+        if kind == "uygulama_not":
+            return _uygulama_not(repo, adim.get("metin") or "")
+        if kind == "uygulama_not_oku":
+            return _uygulama_not_oku(repo)
+        if kind == "dis_klasor":
+            return _dis_klasor(repo, adim.get("yol") or "")
+        if kind == "dis_say":
+            return _dis_say(repo)
+        if kind == "dis_oku":
+            return _dis_oku(repo, adim.get("ad") or "")
+        if kind == "git_durum":
+            return _git_durum(repo)
+        if kind == "git_yazma":
+            return _paket(reply="Bunu yapmadım. Göndermedim. Dosya aynı.")
         return _py_soyle(repo, adim.get("ad") or "")
     if kind in {"sayfa", "sayfa_ad"}:
         dosya = _sayfa_dosyasi("index" if kind == "sayfa" else adim.get("ad") or "")

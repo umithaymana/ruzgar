@@ -1026,3 +1026,160 @@ def test_orta_not_satir_ekler_ustune_yazmaz(masa):
 
     assert tarif_cumlesi("orta notuna satır ekle: ikinci") is True
     assert is_code_agent_task_message("orta notuna satır ekle: ikinci", "programlama") is False
+
+
+def test_orta_arac_bir_kez_sayar_dosyayi_degistirmez(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    yok = klasor_soz(repo, "orta aracında notu say")
+    assert "orta/arac.py yok." in yok["reply"]
+    assert "Çalıştırmadım" in yok["reply"]
+    assert not (el / "orta").exists()
+    klasor_soz(repo, "orta iş yap")
+    arac = el / "orta" / "arac.py"
+    notsuz = klasor_soz(repo, "orta aracında notu say")
+    assert "orta/not.txt yok." in notsuz["reply"]
+    assert "Çalıştırmadım" in notsuz["reply"]
+    once = arac.read_bytes()
+    klasor_soz(repo, "orta notu yaz: selam")
+    klasor_soz(repo, "orta notuna satır ekle: ikinci")
+    say = klasor_soz(repo, "orta aracında notu say")
+    assert "Sayı: 2" in say["reply"]
+    assert "bir kez çalıştı" in say["reply"]
+    assert "Dosya aynı" in say["reply"]
+    assert arac.read_bytes() == once
+    assert (el / "orta" / "not.txt").read_text(encoding="utf-8") == "selam\nikinci\n"
+    tek = klasor_soz(repo, "orta aracında satır say: selam")
+    assert "Sayı: 1" in tek["reply"]
+    assert arac.read_bytes() == once
+    kisa = klasor_soz(repo, "orta aracında satır say")
+    assert "Sayı: 2" in kisa["reply"]
+    assert arac.read_bytes() == once
+    red = klasor_soz(repo, "hesap.py çalıştır")
+    assert "Kodu çalıştırmadım" in red["reply"]
+    arac.write_text("import os\nos.system('echo olmaz')\n", encoding="utf-8")
+    bozuk = arac.read_bytes()
+    yeme = klasor_soz(repo, "orta aracında satır say: selam")
+    assert "Hazır araç değil" in yeme["reply"]
+    assert "Sayı:" not in yeme["reply"]
+    assert arac.read_bytes() == bozuk
+    from ilim_assistant.motorlar.programlama_motoru import is_code_agent_task_message
+    from ilim_assistant.motorlar.programlama_proje_masasi import tarif_cumlesi
+
+    assert tarif_cumlesi("orta aracında notu say") is True
+    assert tarif_cumlesi("orta aracında satır say") is True
+    assert is_code_agent_task_message("orta aracında notu say", "programlama") is False
+    assert is_code_agent_task_message("hesap.py çalıştır", "programlama") is False
+
+
+def test_uygulama_notu_yalniz_deftere_yazar(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    bos = klasor_soz(repo, "uygulama notunu oku")
+    assert "uygulama_notu.txt yok." in bos["reply"]
+    assert "Çalıştırmadım" in bos["reply"]
+    assert not (repo / "ilim-assistant" / ".ruzgar" / "uygulama_notu.txt").exists()
+    yaz = klasor_soz(repo, "uygulama notu yaz: selam")
+    assert "Yazıldı: ilim-assistant/.ruzgar/uygulama_notu.txt." in yaz["reply"]
+    assert "Çalıştırmadım" in yaz["reply"]
+    defter = repo / "ilim-assistant" / ".ruzgar" / "uygulama_notu.txt"
+    assert defter.read_text(encoding="utf-8") == "selam\n"
+    assert not (el / "uygulama_notu.txt").exists()
+    ikinci = klasor_soz(repo, "uygulama notu yaz: başka")
+    assert "Üstüne yazmadım" in ikinci["reply"]
+    assert "selam" in ikinci["reply"]
+    assert defter.read_text(encoding="utf-8") == "selam\n"
+    okunan = klasor_soz(repo, "uygulama notunu oku")
+    assert "selam" in okunan["reply"]
+    assert "Dosya aynı" in okunan["reply"]
+    assert defter.read_text(encoding="utf-8") == "selam\n"
+    assert not list((repo / "ilim-assistant").rglob("*.py"))
+    from ilim_assistant.motorlar.programlama_motoru import is_code_agent_task_message
+    from ilim_assistant.motorlar.programlama_proje_masasi import tarif_cumlesi
+
+    assert tarif_cumlesi("uygulama notu yaz: selam") is True
+    assert is_code_agent_task_message("uygulama notu yaz: selam", "programlama") is False
+
+
+def test_dis_klasor_okur_yazmaz(masa, tmp_path):
+    repo, el = masa
+    _kilitle(repo, el)
+    yok = klasor_soz(repo, "dış klasörü say")
+    assert "Dış klasör seçilmedi" in yok["reply"]
+    dis = tmp_path / "dis"
+    alt = dis / "alt"
+    alt.mkdir(parents=True)
+    (alt / "gizli.txt").write_text("gizli\n", encoding="utf-8")
+    not_ = dis / "not.txt"
+    not_.write_text("dışarı\n", encoding="utf-8")
+    (dis / "gizli.env").write_text("sir\n", encoding="utf-8")
+    once = not_.read_bytes()
+    ic = klasor_soz(repo, f"dış klasör: {el}")
+    assert "kilitli klasör" in ic["reply"]
+    kok = klasor_soz(repo, "dış klasör: C:\\")
+    assert "Sürücü kökü" in kok["reply"]
+    uygulama = klasor_soz(repo, f"dış klasör: {repo / 'ilim-assistant'}")
+    assert "Uygulama klasörü" in uygulama["reply"]
+    ac = klasor_soz(repo, f"dış klasör: {dis}")
+    assert "Dış klasör:" in ac["reply"]
+    assert "Yazmadım" in ac["reply"]
+    say = klasor_soz(repo, "dış klasörü say")
+    assert "not.txt" in say["reply"]
+    assert "alt" in say["reply"]
+    assert "gizli.txt" not in say["reply"]
+    assert "Yazmadım. Çalıştırmadım." in say["reply"]
+    okunan = klasor_soz(repo, "dış dosyayı oku: not.txt")
+    assert "dışarı" in okunan["reply"]
+    assert "Dosya aynı" in okunan["reply"]
+    assert not_.read_bytes() == once
+    env = klasor_soz(repo, "dış dosyayı oku: gizli.env")
+    assert "okunmaz" in env["reply"]
+    assert (dis / "gizli.env").read_text(encoding="utf-8") == "sir\n"
+    kac = klasor_soz(repo, "dış dosyayı oku: alt/gizli.txt")
+    assert "geçersiz" in kac["reply"]
+    klasor_soz(repo, f"çalışma klasörü: {el}")
+    duran = klasor_soz(repo, "dış klasörü say")
+    assert "not.txt" in duran["reply"]
+    from ilim_assistant.motorlar.programlama_motoru import is_code_agent_task_message
+    from ilim_assistant.motorlar.programlama_proje_masasi import tarif_cumlesi
+
+    assert tarif_cumlesi("dış klasörü say") is True
+    assert is_code_agent_task_message("dış dosyayı oku: not.txt", "programlama") is False
+
+
+def test_git_durumu_soyler_gondermez(masa):
+    import shutil
+    import subprocess
+
+    repo, el = masa
+    _kilitle(repo, el)
+    shutil.rmtree(repo / ".git")
+    subprocess.run(["git", "init"], cwd=repo, check=True, capture_output=True)
+    (repo / "a.txt").write_text("bir\n", encoding="utf-8")
+    subprocess.run(["git", "-C", str(repo), "add", "a.txt"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "-C", str(repo), "-c", "user.email=t@example.com", "-c", "user.name=t", "commit", "-m", "ilk"],
+        check=True,
+        capture_output=True,
+    )
+    bas = subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"])
+    (repo / "a.txt").write_text("iki\n", encoding="utf-8")
+    (repo / "yeni.txt").write_text("x\n", encoding="utf-8")
+    soz = klasor_soz(repo, "git ne durumda")
+    assert soz["handled"] is True
+    assert "Dal:" in soz["reply"]
+    assert "Son kayıt:" in soz["reply"]
+    assert "a.txt" in soz["reply"]
+    assert "yeni.txt" in soz["reply"]
+    assert "Göndermedim" in soz["reply"]
+    assert subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"]) == bas
+    red = klasor_soz(repo, "git gönder")
+    assert "Göndermedim" in red["reply"]
+    assert "Bunu yapmadım" in red["reply"]
+    assert subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"]) == bas
+    from ilim_assistant.motorlar.programlama_motoru import is_code_agent_task_message
+    from ilim_assistant.motorlar.programlama_proje_masasi import tarif_cumlesi
+
+    assert tarif_cumlesi("git ne durumda") is True
+    assert tarif_cumlesi("git gönder") is True
+    assert is_code_agent_task_message("git ne durumda", "programlama") is False

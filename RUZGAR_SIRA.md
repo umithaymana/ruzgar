@@ -51,8 +51,12 @@
 | 43 | Orta notu, varsa üstüne yazma | bitti | `test_orta_notu_yoksa_yazar_varsa_ustune_yazmaz` |
 | 44 | Orta notunu oku | bitti | `test_orta_not_okur_yoksa_yazmaz` |
 | 45 | Orta notuna satır ekle | bitti | `test_orta_not_satir_ekler_ustune_yazmaz` |
+| 46 | Orta aracı bir kez sayar | bitti | `test_orta_arac_bir_kez_sayar_dosyayi_degistirmez` |
+| 47 | Uygulama defterine bir satır | bitti | `test_uygulama_notu_yalniz_deftere_yazar` |
+| 48 | Dış klasöre bak, yazma | bitti | `test_dis_klasor_okur_yazmaz` |
+| 49 | Git durumunu söyle, gönderme | bitti | `test_git_durumu_soyler_gondermez` |
 
-**Denenecek cümle:** `orta notuna satır ekle: ikinci`
+**Denenecek cümle:** `git ne durumda`
 
 **13. iş bitti.** Kilitli klasör sayar, metin dosyası açar, ara başlık, http bağlantı, başlık rengi, klasördeki resim ve sayfa adı değişir. Dört masa: belgede bir kez değiştir, hücre sil, sütun topla, renkli çiz, slayt başlığı. Bak bu tariflerden yazı ve rengi önerebilir. Bağlantı, resim ve ad değiştirme yalnız sen söyleyince olur. `uygula` yine son bakışı bir kez çalıştırır.
 
@@ -112,6 +116,14 @@
 
 **43–45. iş bitti. 3. basamak kapandı.** Orta notun eli üç cümledir ve yalnız `orta/not.txt` dosyasına bakar. `orta notu yaz: selam` dosya yoksa bir satır yazar; varsa üstüne yazmaz. `orta notunu oku` duran satırları söyler; dosya yoksa açmaz. `orta notuna satır ekle: ikinci` eski satırların sonuna bir satır koyar. Aynı satır ikinci kez girmez. Sekiz satırdan sonra durur. Not yokken satır eklemez. `orta işi söyle` bu notu da sayar. Hiçbiri kod çalıştırmaz, dosya silmez, klasör dışına çıkmaz.
 
-**Bilerek kapalı:** dosya silmek, modelin ürettiği kodu çalıştırmak, uygulama klasörüne yazmak, klasör dışına çıkmak, 32B/70B, telefon.
+**46. iş bitti. 4. basamağın ilk kapısı.** `orta aracında notu say`, `orta aracında satır say` ve `orta aracında satır say: selam` yalnız hazır `orta/arac.py` içindeki `satir_say` fonksiyonunu bir kez çalıştırır ve sayıyı söyler. Dosya değişmez. Başka Python dosyası, `hesap.py çalıştır` ve hazır olmayan araç çalışmaz.
+
+**47. iş bitti. 4. basamağın ikinci kapısı.** `uygulama notu yaz: selam` yalnız `ilim-assistant/.ruzgar/uygulama_notu.txt` dosyasına bir satır yazar. Varsa üstüne yazmaz. `uygulama notunu oku` duran satırı söyler, dosya yoksa açmaz. Kaynak dosyasına yazmaz, kod çalıştırmaz.
+
+**48. iş bitti. 4. basamağın üçüncü kapısı.** `dış klasör: tam yol` kilitli klasörün dışında bir yer seçer. Uygulama ağacı, sürücü kökü ve kilitli klasörün içi açılmaz. `dış klasörü say` yalnız üst adları söyler. `dış dosyayı oku: not.txt` yalnız o klasördeki metin dosyasını okur. Yazmaz, çalıştırmaz.
+
+**49. iş bitti. 4. basamağın dördüncü kapısı.** `git ne durumda` dalı, son kaydı ve değişen dosya adlarını söyler. `git gönder` ve `git kaydet` durur. Kayıt yazılmaz, uzak depoya gönderilmez.
+
+**Bilerek kapalı:** dosya silmek, modelin ürettiği kodu çalıştırmak, kaynak dosyasına yazmak, dış klasöre yazmak, git kaydı ve gönderim, 32B/70B, telefon.
 
 **Deneme klasörü:** `C:\Users\hayma\Desktop\ruzgar-el`

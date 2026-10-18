@@ -839,6 +839,16 @@
     if (/^orta\s+notu\s+yaz\s*[:\-]/.test(low)) return true;
     if (/^orta\s+notunu\s+oku$/.test(low)) return true;
     if (/^orta\s+notuna\s+satir\s+ekle\s*[:\-]/.test(low)) return true;
+    if (/^orta\s+aracinda\s+notu\s+say$/.test(low)) return true;
+    if (/^orta\s+aracinda\s+satir\s+say$/.test(low)) return true;
+    if (/^orta\s+aracinda\s+satir\s+say\s*[:\-]/.test(low)) return true;
+    if (/^uygulama\s+notu\s+yaz\s*[:\-]/.test(low)) return true;
+    if (/^uygulama\s+notunu\s+oku$/.test(low)) return true;
+    if (/^dis\s+klasor\s*:/.test(low)) return true;
+    if (/^dis\s+klasoru\s+say$/.test(low)) return true;
+    if (/^dis\s+dosyayi\s+oku\s*:/.test(low)) return true;
+    if (/^git\s+ne\s+durumda$/.test(low)) return true;
+    if (/^git\s+(?:gonder|kaydet)$/.test(low)) return true;
     if (/\.py\s+ne\s+yapiyor$/.test(low)) return true;
     if (/\.py\s+dosyasinin\s+ne\s+yaptigini\s+soyle$/.test(low)) return true;
     if (/\.py(?:\s+dosyasini)?\s+calistir$/.test(low)) return true;
