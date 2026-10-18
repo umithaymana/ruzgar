@@ -328,6 +328,10 @@ _CONCEPT_ASK = (
     "nasıl",
     "farki",
     "farkı",
+    "ne yazilir",
+    "ne yazılır",
+    "neler yazilir",
+    "neler yazılır",
 )
 
 
@@ -352,17 +356,260 @@ def programlama_kavram_notu(msg: str) -> str:
     )
 
 
+def _yazi_kat(s: str) -> str:
+    t = _fold(s).replace("ı", "i")
+    return (
+        t.replace("ç", "c")
+        .replace("ğ", "g")
+        .replace("ö", "o")
+        .replace("ş", "s")
+        .replace("ü", "u")
+    )
+
+
+_DIL_ADLAR = (
+    ("javascript", "javascript"),
+    ("typescript", "typescript"),
+    ("powershell", "powershell"),
+    ("markdown", "markdown"),
+    ("sqlite", "sqlite"),
+    ("kotlin", "kotlin"),
+    ("python", "python"),
+    ("c sharp", "csharp"),
+    ("csharp", "csharp"),
+    ("c#", "csharp"),
+    ("c++", "cpp"),
+    ("cpp", "cpp"),
+    ("bash", "bash"),
+    ("kabuk", "bash"),
+    ("java", "java"),
+    ("rust", "rust"),
+    ("php", "php"),
+    ("sql", "sql"),
+    ("json", "json"),
+    ("html", "html"),
+    ("css", "css"),
+    ("golang", "go"),
+    ("go", "go"),
+    ("c dili", "c"),
+)
+
+_DIL_IS = (
+    ("html", "HTML", "Sayfa iskeleti"),
+    ("css", "CSS", "Görünüş"),
+    ("javascript", "JavaScript", "Tarayıcı davranışı"),
+    ("typescript", "TypeScript", "Tipli web uygulaması"),
+    ("python", "Python", "Araç, hesap, dosya okuma"),
+    ("sql", "SQL", "Tablo sorgusu"),
+    ("sqlite", "SQLite", "Tek dosyalık veritabanı"),
+    ("json", "JSON", "Veri dosyası"),
+    ("markdown", "Markdown", "Not ve belge"),
+    ("bash", "Bash", "Unix klasöründe görev sırası"),
+    ("powershell", "PowerShell", "Windows görev sırası"),
+    ("java", "Java", "Kurum uygulaması ve sunucu"),
+    ("csharp", "C#", "Windows uygulaması ve oyun aracı"),
+    ("cpp", "C++", "Oyun motoru ve sistem aracı"),
+    ("c", "C", "Çekirdeğe yakın araç"),
+    ("rust", "Rust", "Bellek güvenliği isteyen sistem aracı"),
+    ("php", "PHP", "Sunucunun ürettiği sayfa"),
+    ("go", "Go", "Ağ servisi ve küçük sunucu"),
+    ("kotlin", "Kotlin", "Android uygulaması"),
+)
+
+_MUFREDAT = (
+    "dili",
+    "dosya_duzeni",
+    "calistirma",
+    "sinama",
+    "sozdizimi",
+    "turler",
+    "atama",
+    "fonksiyon",
+    "kosul",
+    "dongu",
+    "veri",
+    "modul",
+    "hata",
+    "stdlib",
+    "sinir",
+    "ornek",
+    "adlandirma",
+    "yorum",
+    "girdi",
+    "metin",
+    "sayi",
+    "gezinme",
+    "dosya_okuma",
+    "hata_ornek",
+    "karisik",
+    "ne_zaman",
+    "ne_zaman_degil",
+    "kucuk_is",
+    "orta_is",
+    "el_cumlesi",
+    "operator",
+    "karsilastirma",
+    "mantik",
+    "bos_deger",
+    "tur_donusumu",
+    "metin_bicim",
+    "koleksiyon",
+    "kapsam",
+    "giris",
+    "cikti",
+    "dosya_yolu",
+    "uzanti",
+    "paket",
+    "yazim",
+    "el_siniri",
+)
+
+
+def _kullanim_ayir(msg: str) -> tuple[str, str] | None:
+    low = _yazi_kat(msg).strip(" ?.!")
+    if not low:
+        return None
+    if low.startswith("hangi dil"):
+        return ("sec", "")
+    niyet = ""
+    govde = low
+    for ek, ad in (
+        (" ne zaman secilmez", "degil"),
+        (" ne zaman secilir", "zaman"),
+        (" nerede kullan", "nerede"),
+        (" nasil kullan", "nasil"),
+        (" ile neler yaz", "nerede"),
+        (" ile ne yaz", "nerede"),
+    ):
+        if ek in low:
+            niyet = ad
+            govde = low.split(ek, 1)[0].strip()
+            break
+    if not niyet:
+        return None
+    for ad, kok in _DIL_ADLAR:
+        if govde == ad:
+            return (niyet, kok)
+    return None
+
+
+def dil_kullanim_sorusu(msg: str) -> bool:
+    return _kullanim_ayir(msg) is not None
+
+
+def _kart_satir(kok: str, ek: str) -> dict[str, Any] | None:
+    kim = f"{kok}_{ek}"
+    for row in _load_kavramlar():
+        if row.get("id") == kim:
+            return row
+    return None
+
+
+def dil_kullanim_yaniti(msg: str) -> str | None:
+    """Nerede, nasıl ve ne zaman sorusu raftaki kartı okur. Model yok."""
+    ayrik = _kullanim_ayir(msg)
+    if not ayrik:
+        return None
+    niyet, kok = ayrik
+    if niyet == "sec":
+        satirlar = ["Hangi iş hangi dilde yazılır. Raftan okundu.", ""]
+        for _kok, baslik, is_ in _DIL_IS:
+            satirlar.append(f"{is_}: {baslik}. Ayrıntı: {baslik} nedir")
+        satirlar.extend(["", "El bu listeyi okur. Dili kendiliğinden çalıştırmaz."])
+        return "\n".join(satirlar)
+    baslik = next((ad for k, ad, _is in _DIL_IS if k == kok), kok)
+    if niyet == "nerede":
+        kart = _kart_satir(kok, "dili")
+        if not kart:
+            return None
+        return "Nerede kullanılır. Raftan okundu.\n\n" + format_bilgisayar_reply(kart)
+    if niyet in ("zaman", "degil"):
+        ek = "ne_zaman" if niyet == "zaman" else "ne_zaman_degil"
+        kart = _kart_satir(kok, ek)
+        if not kart:
+            return None
+        bas = "ne zaman seçilir" if niyet == "zaman" else "ne zaman seçilmez"
+        return baslik + " " + bas + ". Raftan okundu.\n\n" + format_bilgisayar_reply(kart)
+    parcalar = []
+    for ek in ("calistirma", "sinir"):
+        kart = _kart_satir(kok, ek)
+        if kart:
+            parcalar.append(format_bilgisayar_reply(kart))
+    if not parcalar:
+        return None
+    return (
+        baslik
+        + " nasıl kullanılır. Raftan okundu.\n\n"
+        + "\n\n".join(parcalar)
+    )
+
+
+def dil_mufredat_raporu() -> list[dict[str, Any]]:
+    """Kırk beş kartlık müfredat. Dilin resmi bütünü bu sayı değildir."""
+    rows = _load_kavramlar()
+    by_id = {str(row.get("id") or ""): row for row in rows}
+    rapor = []
+    for kok, baslik, _is in _DIL_IS:
+        dolu = 0
+        karakter = 0
+        for ek in _MUFREDAT:
+            row = by_id.get(f"{kok}_{ek}")
+            metin = str((row or {}).get("metin") or "").strip()
+            karakter += len(metin)
+            if len(metin) >= 80:
+                dolu += 1
+        rapor.append(
+            {
+                "kok": kok,
+                "baslik": baslik,
+                "dolu": dolu,
+                "slot": len(_MUFREDAT),
+                "yuzde": int(round(100 * dolu / len(_MUFREDAT))),
+                "karakter": karakter,
+            }
+        )
+    return rapor
+
+
+def _nedir_cumlesi(msg: str) -> str:
+    """«ne işe yarar» ve «ne yapar» aynı kartı «nedir» gibi açar."""
+    low = _yazi_kat(msg).strip(" ?.!")
+    for eski in (" ne isine yarar", " ne ise yarar", " ne yapar", " ne demek"):
+        if eski in low:
+            return low.replace(eski, " nedir", 1)
+    return low
+
+
 def try_bilgisayar_reply(msg: str) -> Optional[str]:
     if not (msg or "").strip():
         return None
+    ders = dil_kullanim_yaniti(msg)
+    if ders:
+        return ders
     low = _fold(msg)
+    soru = _nedir_cumlesi(msg)
     is_cue = looks_like_bilgisayar_question(msg)
-    ask = any(p in low for p in ("nedir", "ne demek", "anlat", "nasil", "nasıl"))
+    ask = "nedir" in soru or any(
+        p in low
+        for p in (
+            "nedir",
+            "ne demek",
+            "anlat",
+            "nasil",
+            "nasıl",
+            "ne yazilir",
+            "ne yazılır",
+            "neler yazilir",
+            "neler yazılır",
+            "ne ise yarar",
+            "ne yapar",
+        )
+    )
     if not is_cue and not ask:
         return None
     from ilim_assistant.ruzgar_kavram_match import match_kavram_row
 
-    row = match_kavram_row(msg, _load_kavramlar(), min_score=55 if is_cue else 70)
+    row = match_kavram_row(soru, _load_kavramlar(), min_score=55 if is_cue else 70)
     if row:
         return format_bilgisayar_reply(row)
     if is_cue and ask:

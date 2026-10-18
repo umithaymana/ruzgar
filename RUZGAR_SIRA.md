@@ -34,8 +34,17 @@
 | 26 | Fonksiyonun baktığı koşulu söyle | bitti | `test_python_fonksiyon_kosulu` |
 | 27 | Sınıfın fonksiyon imzalarını söyle | bitti | `test_python_sinif_imzalari` |
 | 28 | Dosyanın içe aldıklarını söyle | bitti | `test_python_ice_alma` |
+| 29 | Yoğun dilleri rafa yaz | bitti | `faz20_programlama_dilleri_ingest.py` |
+| 30 | Dil sorusu kartı okur | bitti | `test_yaygin_dil_karttan_okunur_ve_modele_birakilmaz` |
+| 31 | Orta işi şablondan kur | bitti | `test_orta_is_sablondan_yazar_calistirmaz` |
+| 32 | On dokuz dilin teferruatını rafa yaz | bitti | `test_dil_teferruati_ayri_karttan_okunur` |
+| 33 | Nerede ve nasıl karttan okunur | bitti | `test_dil_nerede_ve_nasil_karttan_okunur` |
+| 34 | İkinci on beş kart raftan okunur | bitti | `test_dil_ikinci_on_bes_kart_okunur` |
+| 35 | Üçüncü on beş kart raftan okunur | bitti | `test_dil_ucuncu_on_bes_kart_okunur` |
+| 36 | Python 3.14.5 standart kütüphane adları | bitti | `test_python_stdlib_modulleri_karttan_okunur` |
+| 37 | Raf sorusu modelden önce kartı açar | bitti | `test_python_stdlib_modulleri_karttan_okunur` |
 
-**Denenecek cümle:** okuma eli bitti. Son cümle: `hesap.py neyi içe alıyor`
+**Denenecek cümle:** `python os modülü ne işe yarar`
 
 **13. iş bitti.** Kilitli klasör sayar, metin dosyası açar, ara başlık, http bağlantı, başlık rengi, klasördeki resim ve sayfa adı değişir. Dört masa: belgede bir kez değiştir, hücre sil, sütun topla, renkli çiz, slayt başlığı. Bak bu tariflerden yazı ve rengi önerebilir. Bağlantı, resim ve ad değiştirme yalnız sen söyleyince olur. `uygula` yine son bakışı bir kez çalıştırır.
 
@@ -64,6 +73,24 @@
 **27. iş bitti.** `hesap.py içinde Hesap sınıfı ne yapıyor` sınıftaki fonksiyon imzalarını söyler. Gövdeyi açmaz. Dosya aynı kalır.
 
 **28. iş bitti.** `hesap.py neyi içe alıyor` içe alınan adları söyler. Modülü yüklemez. İçe alma yoksa bunu söyler. Dosya aynı kalır. Okuma eli burada biter.
+
+**29. iş bitti.** 2026 anketinde yüzde 10 ve üstü diller rafa yazıldı. HTML, CSS, JavaScript ve Python duruyordu. Ek: TypeScript, SQL, Bash, Java, C#, PowerShell, C++, C, Rust, PHP, Go, Kotlin. Eşlikçi: JSON, Markdown, SQLite. Her birinde dört not. Kod çalıştırılmaz.
+
+**30. iş bitti.** `go nedir` ve `typescript ile ne yazılır` kartın metnini okur. Model serbest anlatmaz.
+
+**31. iş bitti.** `orta iş yap` kilitli klasöre `orta/index.html`, `site.css`, `site.js` ve `arac.py` şablonunu yazar. Varsa üstüne yazmaz. Çalıştırmaz.
+
+**32. iş bitti.** On dokuz dilde on bir teferruat kartı rafa yazıldı: sözdizimi, tür, atama, fonksiyon, koşul, döngü, veri, modül, hata, standart kütüphane, sınır. `python döngüsü nedir` o kartı okur.
+
+**33. iş bitti.** `python nerede kullanılır` dil kartını, `python nasıl kullanılır` çalıştırma ve sınır kartını okur. `hangi dil` işin hangi dile gittiğini raftan dizer. Ajan bu cümleyi almaz. Dil çalıştırılmaz.
+
+**34. iş bitti.** On dokuz adın her birine on beş kart daha yazıldı: örnek, adlandırma, yorum, girdi, metin, sayı, gezme, dosya okuma, hata örneği, karıştığı dil, ne zaman seçilir, ne zaman seçilmez, küçük iş, orta iş, el cümlesi. `python örneği nedir` ve `python ne zaman seçilir` o kartı açar. Otuz kart, dilin tamamı değildir. Kod çalıştırılmaz.
+
+**35. iş bitti.** On dokuz adın her birine on beş kart daha yazıldı: işleç, karşılaştırma, mantık, boş değer, tür dönüşümü, metin biçimi, koleksiyon, kapsam, giriş noktası, çıktı, dosya yolu, uzantı, paket, yazım, el sınırı. `python işleci nedir` ve `python boş değeri nedir` o kartı açar. Kırk beş kart, dilin tamamı değildir. Kod çalıştırılmaz.
+
+**36. iş bitti.** CPython 3.14.5 `stdlib_module_names.h` listesindeki 297 ad rafa yazıldı. 194 açık adın işi bir cümledir. 103 iç ad, kullanıcının doğrudan çağırmadığı modüldür. `python os modülü nedir` o kartı açar. `json nedir` JSON dilinde kalır. Alt modüller ve her işlev bu listede yoktur. Modül yüklenmez ve çalıştırılmaz.
+
+**37. iş bitti.** `ne işe yarar` ve `ne yapar`, `nedir` ile aynı kartı açar. Programlama sohbetinde bu soru ajan ve modelden önce raftan okunur.
 
 **Bilerek kapalı:** dosya silmek, modelin ürettiği kodu çalıştırmak, uygulama klasörüne yazmak, klasör dışına çıkmak, 32B/70B, telefon.
 

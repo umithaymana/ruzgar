@@ -561,6 +561,7 @@ _KALIP: tuple[tuple[str, re.Pattern[str]], ...] = (
         r"^(?P<ad>\S+\.py)\s+neyi\s+i[çc]e\s+al[ıi]yor$",
         re.I,
     )),
+    ("orta_is", re.compile(r"^orta\s+i[şs]\s+yap$", re.I)),
     ("py_soyle", re.compile(
         r"^(?P<ad>\S+\.py)\s+dosyas[ıi]n[ıi]n\s+ne\s+yapt[ıi][gğ][ıi]n[ıi]\s+s[öo]yle$",
         re.I,
@@ -842,6 +843,7 @@ _PY_OKU = {
     "py_bakar",
     "py_sinif",
     "py_ice",
+    "orta_is",
 }
 
 
@@ -1331,6 +1333,63 @@ def _py_ice(repo: Path, ad: str) -> dict:
     )
 
 
+_ORTA_DOSYA = {
+    "orta/index.html": """<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <title>Orta iş</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <h1 id="baslik">Orta iş</h1>
+  <button id="dugme" type="button">Say</button>
+  <script src="site.js"></script>
+</body>
+</html>
+""",
+    "orta/site.css": """body { font-family: sans-serif; margin: 2rem; }
+h1 { color: #1a365d; }
+button { padding: 0.5rem 1rem; }
+""",
+    "orta/site.js": """var dugme = document.getElementById("dugme");
+var baslik = document.getElementById("baslik");
+if (dugme && baslik) {
+  dugme.addEventListener("click", function () {
+    baslik.textContent = "Sayıldı";
+  });
+}
+""",
+    "orta/arac.py": '''"""Satir sayar. Calistirilmaz; el yalniz okur."""
+
+
+def satir_say(metin):
+    """Bos olmayan satirlari sayar."""
+    return len([satir for satir in metin.splitlines() if satir.strip()])
+''',
+}
+
+
+def _orta_is(repo: Path) -> dict:
+    yazilan: list[str] = []
+    duran: list[str] = []
+    for rel, metin in _ORTA_DOSYA.items():
+        try:
+            klasor_oku_dosya(repo, rel)
+        except ValueError:
+            klasor_yaz(repo, rel, metin)
+            yazilan.append(rel)
+        else:
+            duran.append(rel)
+    if not yazilan:
+        govde = "Orta iş duruyor."
+    else:
+        govde = "Yazıldı: " + ", ".join(yazilan) + "."
+        if duran:
+            govde += " Duruyor: " + ", ".join(duran) + "."
+    return _paket(reply=govde + "\nÇalıştırmadım. Dosya şablondan geldi.")
+
+
 def _sayfa_sec(repo: Path, tercih: str) -> str:
     if tercih:
         return tercih
@@ -1548,6 +1607,8 @@ def _calistir(repo: Path, adim: dict, sayfa: str) -> dict:
             return _py_sinif(repo, adim.get("ad") or "", adim.get("sinif") or "")
         if kind == "py_ice":
             return _py_ice(repo, adim.get("ad") or "")
+        if kind == "orta_is":
+            return _orta_is(repo)
         return _py_soyle(repo, adim.get("ad") or "")
     if kind in {"sayfa", "sayfa_ad"}:
         dosya = _sayfa_dosyasi("index" if kind == "sayfa" else adim.get("ad") or "")

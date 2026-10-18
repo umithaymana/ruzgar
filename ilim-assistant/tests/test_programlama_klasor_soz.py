@@ -897,3 +897,32 @@ def test_python_ice_alma(masa):
     assert "Bir şey içe almaz" in bos["reply"]
     assert (el / "hesap.py").read_bytes() == once
     _ajan_degil("hesap.py neyi içe alıyor")
+
+
+def test_orta_is_sablondan_yazar_calistirmaz(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    sonuc = klasor_soz(repo, "orta iş yap")
+    assert sonuc["handled"] is True
+    assert "Çalıştırmadım" in sonuc["reply"]
+    html = (el / "orta" / "index.html").read_text(encoding="utf-8")
+    css = (el / "orta" / "site.css").read_text(encoding="utf-8")
+    js = (el / "orta" / "site.js").read_text(encoding="utf-8")
+    py = (el / "orta" / "arac.py").read_text(encoding="utf-8")
+    assert "site.css" in html and "site.js" in html
+    assert "font-family" in css
+    assert "Sayıldı" in js
+    assert "eval" not in js
+    import ast
+
+    agac = ast.parse(py)
+    adlar = [d.name for d in agac.body if isinstance(d, ast.FunctionDef)]
+    assert adlar == ["satir_say"]
+    assert not (el / "orta" / "iz.txt").exists()
+    once = (el / "orta" / "arac.py").read_bytes()
+    ikinci = klasor_soz(repo, "orta iş yap")
+    assert "Orta iş duruyor" in ikinci["reply"]
+    assert (el / "orta" / "arac.py").read_bytes() == once
+    from ilim_assistant.motorlar.programlama_motoru import is_code_agent_task_message
+
+    assert is_code_agent_task_message("orta iş yap", "programlama") is False

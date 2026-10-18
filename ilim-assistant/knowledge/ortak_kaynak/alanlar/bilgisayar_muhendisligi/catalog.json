@@ -1,6 +1,6 @@
 {
   "domain": "bilgisayar_muhendisligi",
-  "updated_utc": "2026-10-16T11:47:14Z",
+  "updated_utc": "2026-10-18T11:55:56Z",
   "politika": "Eğitim özeti. Telifli tam metin yok. Saldırı/exploit yok.",
   "katmanlar": [
     "cevre_depolama_saat",
@@ -12,7 +12,7 @@
   ],
   "sayilar": {
     "md_dosya": 7,
-    "karakter": 26041,
-    "kavram": 45
+    "karakter": 204870,
+    "kavram": 1181
   }
 }

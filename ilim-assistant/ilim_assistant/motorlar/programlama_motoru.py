@@ -395,6 +395,14 @@ def is_code_agent_task_message(message: str, mode_norm: str = "programlama") -> 
     except Exception:
         pass
     try:
+        from ilim_assistant.ruzgar_anlik_niyet_gate import is_strict_library_lookup
+        from ilim_assistant.ruzgar_bilgisayar_kutuphane import dil_kullanim_sorusu
+
+        if dil_kullanim_sorusu(message) or is_strict_library_lookup(message):
+            return False
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_tarif import wants_tarif
 
         if wants_tarif(message):

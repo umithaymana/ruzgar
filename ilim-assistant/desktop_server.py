@@ -10112,6 +10112,13 @@ def _programlama_agent_should_run(
             return False
     except Exception:
         pass
+    try:
+        from ilim_assistant.ruzgar_bilgisayar_kutuphane import dil_kullanim_sorusu
+
+        if dil_kullanim_sorusu(msg):
+            return False
+    except Exception:
+        pass
     active = getattr(req, "programlama_active_file", None)
     ws = req.workspace_root
     try:
@@ -10614,6 +10621,56 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                                 session_wake_used=req.session_wake_used,
                                 msg_for_wake=req.message,
                                 orch=_orch_k,
+                                programlama_instant=True,
+                            )
+                            return
+                except Exception:
+                    pass
+                try:
+                    from ilim_assistant.ruzgar_bilgisayar_kutuphane import dil_kullanim_yaniti
+
+                    _ders = dil_kullanim_yaniti(msg_early)
+                    if _ders:
+                        _orch_d: dict[str, Any] = {
+                            "plan": {
+                                "primary": "bilgi",
+                                "label_tr": "Dil dersi",
+                            }
+                        }
+                        yield from _iter_instant_chat_events(
+                            _ders,
+                            msg_raw,
+                            session_wake_used=req.session_wake_used,
+                            msg_for_wake=req.message,
+                            orch=_orch_d,
+                            programlama_instant=True,
+                        )
+                        return
+                except Exception:
+                    pass
+                try:
+                    from ilim_assistant.ruzgar_anlik_niyet_gate import (
+                        is_strict_library_lookup,
+                    )
+                    from ilim_assistant.ruzgar_bilgisayar_kutuphane import (
+                        try_bilgisayar_reply,
+                    )
+
+                    if is_strict_library_lookup(msg_early):
+                        _raf = try_bilgisayar_reply(msg_early)
+                        if _raf:
+                            _orch_r: dict[str, Any] = {
+                                "plan": {
+                                    "primary": "bilgi",
+                                    "label_tr": "Raf kartı",
+                                }
+                            }
+                            yield from _iter_instant_chat_events(
+                                _raf,
+                                msg_raw,
+                                session_wake_used=req.session_wake_used,
+                                msg_for_wake=req.message,
+                                orch=_orch_r,
                                 programlama_instant=True,
                             )
                             return

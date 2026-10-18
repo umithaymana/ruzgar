@@ -834,6 +834,7 @@
     if (/\.py\s+icinde\s+[a-z_][a-z0-9_]*\s+neye\s+bakiyor$/.test(low)) return true;
     if (/\.py\s+icinde\s+[a-z_][a-z0-9_]*\s+sinifi\s+ne\s+yapiyor$/.test(low)) return true;
     if (/\.py\s+neyi\s+ice\s+aliyor$/.test(low)) return true;
+    if (/^orta\s+is\s+yap$/.test(low)) return true;
     if (/\.py\s+ne\s+yapiyor$/.test(low)) return true;
     if (/\.py\s+dosyasinin\s+ne\s+yaptigini\s+soyle$/.test(low)) return true;
     if (/\.py(?:\s+dosyasini)?\s+calistir$/.test(low)) return true;

@@ -31,7 +31,17 @@ _STRICT_LOOKUP_RE = re.compile(
     r".{0,20}\b\d{1,5}\b|"
     r"\b(?:hadis|ayet)\s*(?:no|numara|#)?\s*\d{1,5}\b|"
     # Tek veya çok kelimeli «… nedir / ne demek» — anlık kütüphane lookup
-    r"^\s*(?:[\w'’çğıöşüâîû\.\-]{2,40}\s+){1,5}(?:nedir|ne\s+demek)\s*[?.!]?\s*$"
+    r"^\s*(?:[\w'’çğıöşüâîû\.\+\-#_]{1,40}\s+){1,6}(?:nedir|ne\s+demek)\s*[?.!]?\s*$|"
+    r"^\s*(?:[\w'’çğıöşüâîû\.\+\-#_]{1,40}\s+){1,6}ne\s+i[sş](?:ine|e)\s+yarar\s*[?.!]?\s*$|"
+    r"^\s*(?:[\w'’çğıöşüâîû\.\+\-#_]{1,40}\s+){1,6}ne\s+yapar\s*[?.!]?\s*$|"
+    r"^\s*c(?:\+\+|#)?(?:\s+dili)?(?:\s+[\w'’çğıöşüâîû\.\+\-#]{2,40}){1,4}\s+nedir\s*[?.!]?\s*$|"
+    r"^\s*(?:[\w'’çğıöşüâîû\.\+\-]{2,40}\s+){1,6}ile\s+ne(?:ler)?\s+yaz[ıi]l[ıi]r\s*[?.!]?\s*$|"
+    r"^\s*c(?:\+\+)?\s+dili\s+(?:nedir|ile\s+ne(?:ler)?\s+yaz[ıi]l[ıi]r)\s*[?.!]?\s*$|"
+    r"^\s*(?:[\w'’çğıöşüâîû\.\+\-]{2,40}\s+){1,4}(?:nerede|nas[ıi]l)\s+kullan[ıi]l[ıi]r\s*[?.!]?\s*$|"
+    r"^\s*c(?:\+\+)?(?:\s+dili)?\s+(?:nerede|nas[ıi]l)\s+kullan[ıi]l[ıi]r\s*[?.!]?\s*$|"
+    r"^\s*(?:[\w'’çğıöşüâîû\.\+\-]{2,40}\s+){1,4}ne\s+zaman\s+se[cç]il(?:ir|mez)\s*[?.!]?\s*$|"
+    r"^\s*c(?:\+\+)?(?:\s+dili)?\s+ne\s+zaman\s+se[cç]il(?:ir|mez)\s*[?.!]?\s*$|"
+    r"^\s*hangi\s+dil(?:le)?(?:\s+ile)?(?:\s+ne(?:ler)?\s+yaz[ıi]l[ıi]r)?\s*[?.!]?\s*$"
     r")",
     re.I,
 )
@@ -86,6 +96,8 @@ def should_defer_library_instant(message: str) -> bool:
         return False
     if re.search(r"\b(?:hadis|ayet)\s*(?:no|numara|#)?\s*\d{1,5}\b", raw, re.I):
         return False
+    if is_strict_library_lookup(raw):
+        return False
     try:
         from ilim_assistant.prompts import sohbet_tarz_chatgpt
 
@@ -93,8 +105,6 @@ def should_defer_library_instant(message: str) -> bool:
             return True
     except Exception:
         pass
-    if is_strict_library_lookup(raw):
-        return False
     if _SYNTH_RE.search(raw) or _SYNTH_RE.search(_fold(raw)):
         return True
     return False

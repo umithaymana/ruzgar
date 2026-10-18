@@ -141,6 +141,81 @@ PARCALAR: list[tuple[str, str, list[str], str]] = [
 ]
 
 
+def _ek_parcalar() -> list[tuple[str, str, list[str], str]]:
+    import importlib.util
+
+    yol = Path(__file__).with_name("faz20_yaygin_diller.py")
+    spec = importlib.util.spec_from_file_location("faz20_yaygin_diller", yol)
+    if spec is None or spec.loader is None:
+        return []
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return list(mod.PARCALAR_EK)
+
+
+PARCALAR.extend(_ek_parcalar())
+
+
+def _ek_teferruat() -> list[tuple[str, str, list[str], str]]:
+    import importlib.util
+
+    yol = Path(__file__).with_name("faz20_dil_teferruat.py")
+    spec = importlib.util.spec_from_file_location("faz20_dil_teferruat", yol)
+    if spec is None or spec.loader is None:
+        return []
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return list(mod.parcalar())
+
+
+PARCALAR.extend(_ek_teferruat())
+
+
+def _ek_ikinci() -> list[tuple[str, str, list[str], str]]:
+    import importlib.util
+
+    yol = Path(__file__).with_name("faz20_dil_ikinci.py")
+    spec = importlib.util.spec_from_file_location("faz20_dil_ikinci", yol)
+    if spec is None or spec.loader is None:
+        return []
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return list(mod.parcalar())
+
+
+PARCALAR.extend(_ek_ikinci())
+
+
+def _ek_ucuncu() -> list[tuple[str, str, list[str], str]]:
+    import importlib.util
+
+    yol = Path(__file__).with_name("faz20_dil_ucuncu.py")
+    spec = importlib.util.spec_from_file_location("faz20_dil_ucuncu", yol)
+    if spec is None or spec.loader is None:
+        return []
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return list(mod.parcalar())
+
+
+PARCALAR.extend(_ek_ucuncu())
+
+
+def _ek_python_moduller() -> list[tuple[str, str, list[str], str]]:
+    import importlib.util
+
+    yol = Path(__file__).with_name("faz20_python_moduller.py")
+    spec = importlib.util.spec_from_file_location("faz20_python_moduller", yol)
+    if spec is None or spec.loader is None:
+        return []
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return list(mod.parcalar())
+
+
+PARCALAR.extend(_ek_python_moduller())
+
+
 def _rows() -> list[dict]:
     out = []
     for kid, title, aliases, metin in PARCALAR:
@@ -233,9 +308,39 @@ def _update_readme(kavram: int, notes: int) -> None:
     block = (
         "## Faz 20 — programlama dilleri\n"
         "`katmanlar/programlama_dilleri`\n\n"
-        "HTML, CSS, JavaScript, Python. Her dilde dört not: nedir, dosya düzeni, çalıştırma, sınama. "
-        "Ayrıca statik site kurulumu ve küçük Python uygulaması.\n"
+        "HTML, CSS, JavaScript, Python ve 2026 yoğun dilleri. Her dilde kırk beş kart: dört kısa not, on bir teferruat, otuz ek kart. "
+        "Python 3.14.5 standart kütüphane listesindeki 297 ad ayrı karttır. "
+        "Eşlikçi: JSON, Markdown, SQLite. Ayrıca statik site kurulumu ve küçük Python uygulaması.\n"
     )
+    eski = (
+        "HTML, CSS, JavaScript, Python ve 2026 yoğun dilleri. Her dilde dört not: nedir, dosya düzeni, çalıştırma, sınama. "
+        "Eşlikçi: JSON, Markdown, SQLite. Ayrıca statik site kurulumu ve küçük Python uygulaması.\n"
+    )
+    ara = (
+        "HTML, CSS, JavaScript, Python ve 2026 yoğun dilleri. Her dilde dört kısa not ve on bir teferruat kartı. "
+        "Eşlikçi: JSON, Markdown, SQLite. Ayrıca statik site kurulumu ve küçük Python uygulaması.\n"
+    )
+    otuz = (
+        "HTML, CSS, JavaScript, Python ve 2026 yoğun dilleri. Her dilde otuz kart: dört kısa not, on bir teferruat, on beş ikinci kart. "
+        "Eşlikçi: JSON, Markdown, SQLite. Ayrıca statik site kurulumu ve küçük Python uygulaması.\n"
+    )
+    kirk = (
+        "HTML, CSS, JavaScript, Python ve 2026 yoğun dilleri. Her dilde kırk beş kart: dört kısa not, on bir teferruat, otuz ek kart. "
+        "Eşlikçi: JSON, Markdown, SQLite. Ayrıca statik site kurulumu ve küçük Python uygulaması.\n"
+    )
+    yeni = (
+        "HTML, CSS, JavaScript, Python ve 2026 yoğun dilleri. Her dilde kırk beş kart: dört kısa not, on bir teferruat, otuz ek kart. "
+        "Python 3.14.5 standart kütüphane listesindeki 297 ad ayrı karttır. "
+        "Eşlikçi: JSON, Markdown, SQLite. Ayrıca statik site kurulumu ve küçük Python uygulaması.\n"
+    )
+    if eski in text:
+        text = text.replace(eski, yeni, 1)
+    if ara in text:
+        text = text.replace(ara, yeni, 1)
+    if otuz in text:
+        text = text.replace(otuz, yeni, 1)
+    if kirk in text:
+        text = text.replace(kirk, yeni, 1)
     if "Faz 20" not in text:
         needle = "`katmanlar/programlama_uzmanlik`\n"
         if needle in text:
