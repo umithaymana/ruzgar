@@ -596,6 +596,7 @@ _KALIP: tuple[tuple[str, re.Pattern[str]], ...] = (
         re.I,
     )),
     ("orta_neden", re.compile(r"^orta\s+testi\s+neden\s+kald[ıi]$", re.I)),
+    ("orta_duzelt_eksik", re.compile(r"^orta\s+arac[ıi]n[ıi]\s+d[üu]zelt\s*:?\s*$", re.I)),
     ("orta_duzelt", re.compile(
         r"^orta\s+arac[ıi]n[ıi]\s+d[üu]zelt\s*:\s*(?P<metin>.+)$",
         re.I,
@@ -912,6 +913,7 @@ _PY_OKU = {
     "orta_arac_not",
     "orta_arac_satir",
     "orta_neden",
+    "orta_duzelt_eksik",
     "orta_duzelt",
     "orta_bakis",
     "tahta_bitti",
@@ -1846,6 +1848,16 @@ def _orta_tur_yaz(repo: Path, veri: dict[str, str]) -> None:
     yol.write_text(govde, encoding="utf-8")
 
 
+def _orta_arac_duzelt_eksik(repo: Path) -> dict:
+    return _paket(
+        reply=(
+            "Satır yok. Şöyle söyle: orta aracını düzelt: "
+            + _ARAC_SATIR
+            + "\nDosya aynı. Çalıştırmadım."
+        )
+    )
+
+
 def _orta_arac_duzelt(repo: Path, metin: str) -> dict:
     satir = _not_satiri(metin)
     if satir != _ARAC_SATIR:
@@ -2487,6 +2499,8 @@ def _calistir(repo: Path, adim: dict, sayfa: str) -> dict:
             return _orta_arac_satir(repo, adim.get("metin") or "")
         if kind == "orta_neden":
             return _orta_test_neden(repo)
+        if kind == "orta_duzelt_eksik":
+            return _orta_arac_duzelt_eksik(repo)
         if kind == "orta_duzelt":
             return _orta_arac_duzelt(repo, adim.get("metin") or "")
         if kind == "orta_bakis":

@@ -1160,6 +1160,30 @@ def test_orta_araci_yalniz_bilinen_satiri_yazar(masa):
     assert is_code_agent_task_message("orta aracını düzelt: " + _ARAC_SATIR, "programlama") is False
 
 
+def test_eksik_duzeltme_kapida_kalir_yazmaz(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    klasor_soz(repo, "orta iş yap")
+    arac = el / "orta" / "arac.py"
+    once = arac.read_bytes()
+    from ilim_assistant.motorlar.programlama_motoru import is_code_agent_task_message
+    from ilim_assistant.motorlar.programlama_proje_masasi import tarif_cumlesi
+
+    for cumle in ("orta aracını düzelt", "orta aracını düzelt:"):
+        cevap = klasor_soz(repo, cumle)
+        assert cevap["handled"] is True
+        assert _ARAC_SATIR in cevap["reply"]
+        assert "Çalıştırmadım" in cevap["reply"]
+        assert "Dosya aynı" in cevap["reply"]
+        assert "Yazıldı" not in cevap["reply"]
+        assert arac.read_bytes() == once
+        assert tarif_cumlesi(cumle) is True
+        assert is_code_agent_task_message(cumle, "programlama") is False
+    yaz = klasor_soz(repo, "orta aracını düzelt: " + _ARAC_SATIR)
+    assert "Üstüne yazmadım" in yaz["reply"]
+    assert arac.read_bytes() == once
+
+
 def test_ikinci_bakis_bir_kez_bakar_ucuncuye_gecmez(masa):
     repo, el = masa
     _kilitle(repo, el)

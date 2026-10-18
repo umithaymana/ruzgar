@@ -843,6 +843,7 @@
     if (/^orta\s+aracinda\s+satir\s+say$/.test(low)) return true;
     if (/^orta\s+aracinda\s+satir\s+say\s*[:\-]/.test(low)) return true;
     if (/^orta\s+testi\s+neden\s+kaldi$/.test(low)) return true;
+    if (/^orta\s+aracini\s+duzelt$/.test(low)) return true;
     if (/^orta\s+aracini\s+duzelt\s*:/.test(low)) return true;
     if (/^orta\s+testine\s+ikinci\s+bak$/.test(low)) return true;
     if (/^acik\s+satiri\s+bitti\s+yap$/.test(low)) return true;
