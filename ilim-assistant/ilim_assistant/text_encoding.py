@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 
 
 def repair_utf8_mojibake(s: str) -> str:
@@ -131,7 +132,59 @@ def finalize_assistant_reply(raw: str, *, channel: str = "") -> str:
     t = re.sub(r"\*Not \(Faz [^)]+\):[^\n]*", "", t)
     t = re.sub(r"\(Talimat:[^)]*\)", "", t, flags=re.I)
     t = re.sub(r"\n{3,}", "\n\n", t)
+    t = cila_sohbet_metni(t)
     return t.strip()
+
+
+_SES_KART_SATIRI = re.compile(
+    r"(?im)^\s*\[(?:edip|alim|âlim|asistan|tecvid)\b[^\n]*\n?"
+)
+_TEKRAR_SATIRI = re.compile(r"(?im)^\s*\[[^\n]*tekrar etme[^\n]*\n?")
+_REFERANS_SATIRI = re.compile(r"(?im)^\s*referans\s*\([^\n]*\n?")
+_OKUL_SAYISI = re.compile(r"(?i)\d{3,}\s*(?:bin\s+)?özel\s+okul")
+_CUMLE_AYIR = re.compile(r"(?<=[.!?])\s+")
+_OKUL_YOK = "Özel okul sayısını rafta bulamadım. Sayı uydurmam."
+
+
+def _cila_kat(parca: str) -> str:
+    return re.sub(r"\s+", " ", parca).strip().lower()
+
+
+def cila_sohbet_metni(text: str) -> str:
+    """Ses kartı, tekrar talimatı, aynı paragraf ve kaynaksız okul sayısı cevapta kalmaz."""
+    if not text:
+        return text
+    t = _SES_KART_SATIRI.sub("", text)
+    t = _TEKRAR_SATIRI.sub("", t)
+    t = _REFERANS_SATIRI.sub("", t)
+    satirlar: list[str] = []
+    once = ""
+    for satir in t.splitlines():
+        kat = _cila_kat(satir)
+        if not kat:
+            if satirlar and satirlar[-1] != "":
+                satirlar.append("")
+            continue
+        if kat == once:
+            continue
+        satirlar.append(satir.strip())
+        once = kat
+    t = "\n".join(satirlar).strip()
+    if not t or re.search(r"https?://", t, re.I) or not _OKUL_SAYISI.search(t):
+        return t
+    yeni: list[str] = []
+    kondu = False
+    for cumle in _CUMLE_AYIR.split(t):
+        kat = _cila_kat(cumle)
+        if not kat or (yeni and kat == _cila_kat(yeni[-1])):
+            continue
+        if _OKUL_SAYISI.search(cumle):
+            if not kondu:
+                yeni.append(_OKUL_YOK)
+                kondu = True
+            continue
+        yeni.append(cumle.strip())
+    return " ".join(yeni).strip()
 
 
 def strip_answer_scaffold(text: str) -> str:

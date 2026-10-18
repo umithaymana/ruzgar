@@ -562,6 +562,7 @@ _KALIP: tuple[tuple[str, re.Pattern[str]], ...] = (
         re.I,
     )),
     ("orta_is", re.compile(r"^orta\s+i[şs]\s+yap$", re.I)),
+    ("orta_soyle", re.compile(r"^orta\s+i[şs]i\s+s[öo]yle$", re.I)),
     ("py_soyle", re.compile(
         r"^(?P<ad>\S+\.py)\s+dosyas[ıi]n[ıi]n\s+ne\s+yapt[ıi][gğ][ıi]n[ıi]\s+s[öo]yle$",
         re.I,
@@ -844,6 +845,7 @@ _PY_OKU = {
     "py_sinif",
     "py_ice",
     "orta_is",
+    "orta_soyle",
 }
 
 
@@ -1390,6 +1392,42 @@ def _orta_is(repo: Path) -> dict:
     return _paket(reply=govde + "\nÇalıştırmadım. Dosya şablondan geldi.")
 
 
+def _orta_ozet(rel: str, metin: str) -> str:
+    if rel.endswith(".html"):
+        bulunan = re.search(r"<h1[^>]*>(.*?)</h1>", metin, re.I | re.S)
+        baslik = re.sub(r"<[^>]+>", "", bulunan.group(1)).strip() if bulunan else ""
+        dugme = "düğme var" if "<button" in metin.lower() else "düğme yok"
+        return f"başlık {baslik or 'yok'}. {dugme}."
+    if rel.endswith(".css"):
+        return f"{metin.count('{')} görünüş kuralı."
+    if rel.endswith(".js"):
+        if "textContent" in metin:
+            return "düğme yazısını değiştirir. Çalıştırmadım."
+        return "betik var. Çalıştırmadım."
+    if rel.endswith(".py"):
+        try:
+            agac = ast.parse(metin)
+        except SyntaxError:
+            return "Python dosyası okunmadı. Çalıştırmadım."
+        adlar = [d.name for d in agac.body if isinstance(d, ast.FunctionDef)]
+        if adlar:
+            return "fonksiyon: " + ", ".join(adlar) + ". Çalıştırmadım."
+        return "fonksiyon yok. Çalıştırmadım."
+    return "dosya var. Çalıştırmadım."
+
+
+def _orta_soyle(repo: Path) -> dict:
+    satirlar: list[str] = []
+    for rel in _ORTA_DOSYA:
+        try:
+            bulunan = klasor_oku_dosya(repo, rel)
+        except ValueError:
+            satirlar.append(rel + " yok.")
+            continue
+        satirlar.append(rel + ": " + _orta_ozet(rel, bulunan.get("text") or ""))
+    return _paket(reply="\n".join(satirlar) + "\nÇalıştırmadım. Dosya aynı.")
+
+
 def _sayfa_sec(repo: Path, tercih: str) -> str:
     if tercih:
         return tercih
@@ -1609,6 +1647,8 @@ def _calistir(repo: Path, adim: dict, sayfa: str) -> dict:
             return _py_ice(repo, adim.get("ad") or "")
         if kind == "orta_is":
             return _orta_is(repo)
+        if kind == "orta_soyle":
+            return _orta_soyle(repo)
         return _py_soyle(repo, adim.get("ad") or "")
     if kind in {"sayfa", "sayfa_ad"}:
         dosya = _sayfa_dosyasi("index" if kind == "sayfa" else adim.get("ad") or "")

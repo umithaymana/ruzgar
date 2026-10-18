@@ -15234,7 +15234,7 @@ async function streamChat(userText, streamOpts = {}) {
         merged = streamed + extractYerelFooter(srv);
       }
       full = stripYerelFooter(merged);
-      if (currentMode === "genel" && window.ruzgarMasaFence) {
+      if ((currentMode === "genel" || currentMode === "programlama") && window.ruzgarMasaFence) {
         const masaFence = window.ruzgarMasaFence(full);
         if (masaFence && masaFence.clean) full = masaFence.clean;
       }
@@ -16024,24 +16024,26 @@ async function sendMessageWithText(t, opts = {}) {
     }
   }
 
-  if (currentMode === "genel" && !isCasualChatMessage(text)) {
+  if ((currentMode === "genel" || currentMode === "programlama") && !isCasualChatMessage(text)) {
     if (window.ruzgarMasaKomut) {
       const masaHit = window.ruzgarMasaKomut(dispatchText);
       if (masaHit && masaHit.handled) {
         appendBubble("assistant", String(masaHit.reply || "Tamam."));
         scrollChatToBottom();
-        finishMotorInstant("Ana Motor");
+        finishMotorInstant(currentMode === "programlama" ? "Programlama" : "Ana Motor");
         return;
       }
     }
-    void prefetchGenelOrchestraBridge(dispatchText);
-    const hubFast = await withHubCallTimeout(
-      tryGenelProgramlamaHubInstant(dispatchText),
-      3500,
-    );
-    if (hubFast) {
-      finishMotorInstant("Ana Motor");
-      return;
+    if (currentMode === "genel") {
+      void prefetchGenelOrchestraBridge(dispatchText);
+      const hubFast = await withHubCallTimeout(
+        tryGenelProgramlamaHubInstant(dispatchText),
+        3500,
+      );
+      if (hubFast) {
+        finishMotorInstant("Ana Motor");
+        return;
+      }
     }
   }
 

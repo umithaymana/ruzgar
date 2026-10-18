@@ -7,7 +7,7 @@ from ilim_assistant.ruzgar_kuran_anlik import (
     try_kuran_instant_reply,
 )
 from ilim_assistant.tarih_intent import tarih_intent
-from ilim_assistant.text_encoding import scrub_leaked_instructions
+from ilim_assistant.text_encoding import cila_sohbet_metni, finalize_assistant_reply, scrub_leaked_instructions
 from ilim_assistant.weather_live import is_weather_query
 from ilim_assistant import ruzgar_egitim as eg
 
@@ -129,3 +129,31 @@ def test_ogrenilen_rafi_duzeltmeyi_soyler(monkeypatch):
     assert yanit
     assert "yüz milyarlarca" in yanit
     assert "kaydetmedim" not in yanit
+
+
+def test_sohbet_cilasi_kart_tekrar_ve_uydurma_sayiyi_birakir():
+    ham = (
+        "[Edip] Edebiyat ve gazel okumasında durur.\n"
+        "Erzurum'un ilçeleri vardır.\n\n"
+        "Erzurum'un ilçeleri vardır.\n\n"
+        "[TALİMAT — TEKRAR ETME] önceki cevabı kopyalama.\n"
+        "Referans (kopyalama değil): eski paragraf.\n"
+        "Türkiye'de 1500 özel okul vardır. Doğu Anadolu illeri ayrıdır."
+    )
+    temiz = cila_sohbet_metni(ham)
+    assert "[Edip]" not in temiz
+    assert "TEKRAR ETME" not in temiz
+    assert "Referans" not in temiz
+    assert temiz.count("Erzurum'un ilçeleri") == 1
+    assert "1500" not in temiz
+    assert "Sayı uydurmam" in temiz
+    assert "Doğu Anadolu" in temiz
+    kaynakli = cila_sohbet_metni(
+        "MEB sayfası 1500 özel okul yazar. https://ornek.example/okul"
+    )
+    assert "1500" in kaynakli
+    son = finalize_assistant_reply(
+        "[Alim] İlmihal kartı.\nGüneş sisteminde bir yıldız vardır."
+    )
+    assert "[Alim]" not in son
+    assert "bir yıldız" in son

@@ -10543,6 +10543,22 @@ async def _async_iter_chat_events(req: ChatRequest):
 def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
     """SSE/WS: Ana motor durumları → prepare_turn (İdrak + orkestra) → LLM."""
     msg_raw = (req.message or "").strip()
+    try:
+        from ilim_assistant.ruzgar_masa_soz import masa_sohbet_yaniti
+
+        _masa_y = masa_sohbet_yaniti(msg_raw)
+    except Exception:
+        _masa_y = None
+    if _masa_y:
+        yield from _iter_instant_chat_events(
+            _masa_y,
+            msg_raw,
+            session_wake_used=req.session_wake_used,
+            msg_for_wake=req.message,
+            orch={"plan": {"primary": "masa", "label_tr": "Masa cümlesi"}},
+            instant_gundelik=True,
+        )
+        return
     fast = _collect_fast_lane_chat_events(req)
     if fast:
         yield from fast

@@ -403,6 +403,13 @@ def is_code_agent_task_message(message: str, mode_norm: str = "programlama") -> 
     except Exception:
         pass
     try:
+        from ilim_assistant.ruzgar_masa_soz import coz as masa_coz
+
+        if masa_coz(message):
+            return False
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_tarif import wants_tarif
 
         if wants_tarif(message):

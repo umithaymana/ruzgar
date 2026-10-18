@@ -926,3 +926,29 @@ def test_orta_is_sablondan_yazar_calistirmaz(masa):
     from ilim_assistant.motorlar.programlama_motoru import is_code_agent_task_message
 
     assert is_code_agent_task_message("orta iş yap", "programlama") is False
+
+
+def test_orta_isi_soyler_yazmaz_calistirmaz(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    bos = klasor_soz(repo, "orta işi söyle")
+    assert bos["handled"] is True
+    assert "orta/index.html yok." in bos["reply"]
+    assert "Çalıştırmadım" in bos["reply"]
+    assert not (el / "orta").exists()
+    klasor_soz(repo, "orta iş yap")
+    once = {
+        ad: (el / "orta" / ad).read_bytes()
+        for ad in ("index.html", "site.css", "site.js", "arac.py")
+    }
+    soz = klasor_soz(repo, "orta işi söyle")
+    assert "satir_say" in soz["reply"]
+    assert "Çalıştırmadım. Dosya aynı." in soz["reply"]
+    sonra = {
+        ad: (el / "orta" / ad).read_bytes()
+        for ad in ("index.html", "site.css", "site.js", "arac.py")
+    }
+    assert sonra == once
+    from ilim_assistant.motorlar.programlama_motoru import is_code_agent_task_message
+
+    assert is_code_agent_task_message("orta işi söyle", "programlama") is False

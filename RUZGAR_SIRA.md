@@ -43,8 +43,11 @@
 | 35 | Üçüncü on beş kart raftan okunur | bitti | `test_dil_ucuncu_on_bes_kart_okunur` |
 | 36 | Python 3.14.5 standart kütüphane adları | bitti | `test_python_stdlib_modulleri_karttan_okunur` |
 | 37 | Raf sorusu modelden önce kartı açar | bitti | `test_python_stdlib_modulleri_karttan_okunur` |
+| 38 | Sohbet cilası | bitti | `test_sohbet_cilasi_kart_tekrar_ve_uydurma_sayiyi_birakir` |
+| 39 | Dört masa sohbette | bitti | `test_masa_sohbeti_modelden_once_durur` |
+| 40 | Orta işi söyle | bitti | `test_orta_isi_soyler_yazmaz_calistirmaz` |
 
-**Denenecek cümle:** `python os modülü ne işe yarar`
+**Denenecek cümle:** `orta işi söyle`
 
 **13. iş bitti.** Kilitli klasör sayar, metin dosyası açar, ara başlık, http bağlantı, başlık rengi, klasördeki resim ve sayfa adı değişir. Dört masa: belgede bir kez değiştir, hücre sil, sütun topla, renkli çiz, slayt başlığı. Bak bu tariflerden yazı ve rengi önerebilir. Bağlantı, resim ve ad değiştirme yalnız sen söyleyince olur. `uygula` yine son bakışı bir kez çalıştırır.
 
@@ -91,6 +94,12 @@
 **36. iş bitti.** CPython 3.14.5 `stdlib_module_names.h` listesindeki 297 ad rafa yazıldı. 194 açık adın işi bir cümledir. 103 iç ad, kullanıcının doğrudan çağırmadığı modüldür. `python os modülü nedir` o kartı açar. `json nedir` JSON dilinde kalır. Alt modüller ve her işlev bu listede yoktur. Modül yüklenmez ve çalıştırılmaz.
 
 **37. iş bitti.** `ne işe yarar` ve `ne yapar`, `nedir` ile aynı kartı açar. Programlama sohbetinde bu soru ajan ve modelden önce raftan okunur.
+
+**38. iş bitti.** Cevaptan ses kartı, tekrar talimatı ve aynı paragraf çıkar. Kaynağı olmayan üç haneli özel okul sayısı yerine «rafta bulamadım» kalır. Kaynak adresi duran sayı durur.
+
+**39. iş bitti.** `belgeye selam yaz`, `tabloda A1 e 10 yaz`, `çizime kutu çiz` ve `sunuma Hoş geldin slaytı ekle: bugün` ana motor ve programlama sohbetinde masaya gider. Model bu cümlede dosya yazmaz. Çözülemeyen parça masayı değiştirmez.
+
+**40. iş bitti.** `orta işi söyle` kilitli klasördeki dört orta dosyayı okur ve ne olduklarını söyler. Dosya yoksa yazmaz. Varsa üstüne yazmaz. Çalıştırmaz.
 
 **Bilerek kapalı:** dosya silmek, modelin ürettiği kodu çalıştırmak, uygulama klasörüne yazmak, klasör dışına çıkmak, 32B/70B, telefon.
 
