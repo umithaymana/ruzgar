@@ -78,12 +78,22 @@
 | 70 | Dış ölçü dosyasını oku | bitti | `test_dis_olcu_yalniz_olcu_txt_okur` |
 | 71 | Git farkını söyle | bitti | `test_git_farkini_soyler_yazmaz` |
 | 72 | Ölçüye bir kez bak | bitti | `test_olcu_bak_bir_kez_bakar_ucuncuye_gecmez` |
-| 73 | Ölçüyü kapat, tahtaya yazma | bitti | `test_olcu_kapat_bakis_gecince_tahtaya_yazmaz` |
-| 74 | Ölçü sırasını söyle | bitti | `test_olcu_sirasi_soyler_yazmaz` |
+| 73 | Ölçüyü kapat | bitti | `test_olcu_kapat_tek_acik_satiri_bitti_yapar` |
+| 74 | Ölçü sırasını söyle | bitti | `test_hazir_olcu_sira_yok_demez_bakis_bakar` |
 | 75 | Dış ölçü dosyasına bir kez yaz | bitti | `test_dis_olcu_yaz_yalniz_bilinen_satiri_bir_kez_yazar` |
 | 76 | Git ölçü farkını söyle | bitti | `test_git_olcu_farkini_soyler_yazmaz` |
+| 77 | Ölçü kapanışı tek açık satır | bitti | `test_olcu_kapat_tek_acik_satiri_bitti_yapar` |
+| 78 | Kapı notunu söyle | bitti | `test_kaynak_satirini_soyler_yoksa_yazmaz` |
+| 79 | Ölçü satırına kullanıcı metni girmez | bitti | `test_olcu_satiri_kullanici_satirini_yemez` |
+| 80 | Uygulama notuna satır ekle | bitti | `test_uygulama_notuna_satir_ekler_ustune_yazmaz` |
+| 81 | Ölçü testini söyle | bitti | `test_olcu_testi_sonucu_soyler_duzeltmez` |
+| 82 | Düzelt hazır dosyayı görsün | sırada | — |
+| 83 | Neden cümlesi bayrak silmesin | sırada | — |
+| 84 | Ölçü farkı yoksa dosya yok desin | sırada | — |
+| 85 | Dış ölçü klasörse dosya değil desin | sırada | — |
+| 86 | Hazır dosyada beş cümle aynı hikâye | sırada | — |
 
-**Denenecek cümle:** `orta ölçüsüne bak`
+**Denenecek cümle:** sıradaki iş `orta ölçüsünü düzelt` (henüz yazılmadı)
 
 **13. iş bitti.** Kilitli klasör sayar, metin dosyası açar, ara başlık, http bağlantı, başlık rengi, klasördeki resim ve sayfa adı değişir. Dört masa: belgede bir kez değiştir, hücre sil, sütun topla, renkli çiz, slayt başlığı. Bak bu tariflerden yazı ve rengi önerebilir. Bağlantı, resim ve ad değiştirme yalnız sen söyleyince olur. `uygula` yine son bakışı bir kez çalıştırır.
 
@@ -195,14 +205,26 @@
 
 **72. iş bitti.** `orta ölçüsüne bak` düzeltmeden sonra üç kontrolü bir kez söyler. Aynı cümle yeniden söylenirse üçüncü bakışa geçmez. `orta/olcu.py` aynı kalır. Düzeltmez.
 
-**73. iş bitti.** `orta ölçüsünü kapat` bakış geçtiyse ölçü kaydını kapatır. Tahtaya yazmaz. Eski satırı silmez, yeni satır eklemez. Bakış geçmediyse kapanmaz.
+**73. iş bitti.** `orta ölçüsünü kapat` bakış geçtiyse ölçü kaydını kapatır. 77’de tek açık satırı da bitti yapar. Bakış geçmediyse kapanmaz.
 
-**74. iş bitti.** `orta ölçü sırasını söyle` dört cümleyi ve ölçünün yerini söyler. Dosyaya yazmaz. Tahtaya yazmaz. Yazmayı kendisi seçmez.
+**74. iş bitti.** `orta ölçü sırasını söyle` dört cümleyi ve ölçünün yerini söyler. Hazır şablon durup tur bayrağı boşsa «Şimdi: dosya hazır, bakış yok.» der. «ölçü yok» demez. Dosyaya yazmaz. Tahtaya yazmaz. Yazmayı kendisi seçmez. Canlıda doğrulandı.
 
 **75. iş bitti.** `dış ölçü dosyasına yaz` seçilen dış klasöre yalnız `olcu.txt` yazar. İçerik bilinen satırdır. Kullanıcının metni girmez. Dosya varsa üstüne yazmaz. Başka ad yazmaz. Çalıştırmaz.
 
 **76. iş bitti.** `git ölçü farkını söyle` yalnız `olcu_notu.py` farkını söyler. `kapi_notu.py` bu cümlede açılmaz. Baş değişmez. Kaydetmez, göndermez.
 
-**Bilerek kapalı:** dosya silmek, modelin ürettiği kodu çalıştırmak, serbest kaynak yazmak, serbest dış yazmak, zorla göndermek, 32B/70B, telefon.
+**77. iş bitti.** `orta ölçüsünü kapat` bakış geçtiyse tahtadaki tek açık satırı bitti yapar. Açık satır yoksa ya da birden fazlaysa tahta aynı kalır. Eski satır silinmez, yeni satır eklenmez. `orta/olcu.py` aynı kalır.
+
+**78. iş bitti.** `kaynak satırını söyle` `kapi_notu.py` dosyasını okur. Yoksa açmaz. Yazmaz, çalıştırmaz.
+
+**79. iş bitti.** `ölçü satırı yaz: selam` yazmaz. Kullanıcının metni `olcu_notu.py` dosyasına girmez. Yalın `ölçü satırı yaz` yalnız bilinen satırı bir kez yazar.
+
+**80. iş bitti.** `uygulama notuna satır ekle: ikinci` uygulama defterinin sonuna bir satır koyar. Not yokken açmaz. Aynı satır ikinci kez girmez. Sekiz satırdan sonra durur. Eski satırlar durur. Başka dosyaya yazmaz.
+
+**81. iş bitti.** `orta ölçüsünü çalıştır` üç kontrolü söyler: geçti ya da kaldı. Dosyayı değiştirmez. Düzeltme kapısını açmaz. Hazır olmayan araç çalışmaz.
+
+**82–86 sırada.** Henüz yazılmadı. Düzelt hazır dosyayı görsün. Neden cümlesi bakış ve kapanışı silmesin. Ölçü farkı dosya yokken «yok» desin. Dış ölçü klasörse içini açmasın. Beş cümle hazır dosyada aynı hikâyeyi söylesin.
+
+**Bilerek kapalı:** dosya silmek, modelin ürettiği kodu çalıştırmak, serbest kaynak yazmak, serbest dış yazmak, zorla göndermek, ölçü notunu kaydetmek, 32B/70B, telefon.
 
 **Deneme klasörü:** `C:\Users\hayma\Desktop\ruzgar-el`

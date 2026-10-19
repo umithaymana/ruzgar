@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-19 sabah — dün geceki oturum dosyaya işlendi. Son git kaydı `ad7e4520` (`origin/main`). Sıra tahtası 1–58 bitti. Sıradaki iş 6. basamak: `orta turu başlat`.
+**Son güncelleme:** 2026-10-19 — kapı 77–81 ve hazır şablon tanıması. Canlıda `orta ölçü sırasını söyle` «dosya hazır, bakış yok» dedi. Sıradaki plan 82–86, henüz yazılmadı.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -47,17 +47,21 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 32. ~~Web güçlü~~ — bilgi/bilim/güncel turda raf aramayı kapatamaz.
 33. ~~Soru muhakemesi + akıcı sohbet~~ — `reason_web_question` ne öğrenildiğini ayırır, 3 ilgili sayfa okunur. `RUZGAR_SOHBET_TARZ=chatgpt`: «nedir» kartı kesilir, cevap ilk cümlede ve sohbet eder gibi. Kur cümlesi kart kalınlığından çıktı.
 34. ~~Yüz kilidi~~ — 2026-10-16. Motor listesi, geri/ileri/yenile, sohbet tutamacı, dört masa, boşken Rüzgar sahnesi durur.
-35. ~~Sıra tahtası 1–76~~ — `RUZGAR_SIRA.md`. El kilitli klasörde (`C:\Users\hayma\Desktop\ruzgar-el`). Raf: 19 dil × 45 kart, Python 3.14.5 üst modül adları 297. Kod çalıştırma serbest değil.
+35. ~~Sıra tahtası 1–81~~ — `RUZGAR_SIRA.md`. El kilitli klasörde (`C:\Users\hayma\Desktop\ruzgar-el`). Raf: 19 dil × 45 kart, Python 3.14.5 üst modül adları 297. Kod çalıştırma serbest değil.
 36. ~~4. basamak, dört kapı~~ — sayma, uygulama defteri, dış klasör, git durum. Geniş hali: test söyle, tek satır, dışa bir kez yaz, yalnız kapı notunu kaydet.
 37. ~~5. basamak~~ — test nedeni, bilinen satır, ikinci bakış, açık satırı bitti, eksik düzeltme kapıda. Son kayıt `ad7e4520`.
-38. ~~6. basamak + ölçü kapısı~~ — tur 59–63 canlıda kapıdan döndü. Ölçü 64–76: bakış, kapanış, sıra, dışa bilinen satır, ölçü farkı. Tahta 76. Canlı deneme bekliyor. Git kaydı yok.
+38. ~~Kapı 77–81 + hazır şablon~~ — sıra canlıda «dosya hazır, bakış yok». Kapanış tek açık satırı bitti yapar. Kapı notu okunur. Kullanıcı metni ölçü satırına girmez. Uygulama notuna bir satır eklenir. Ölçü testi düzeltme açmaz.
 
 ### Mimar dönünce (sıra)
 
-1. Tahta 72–76 testte yeşil. Canlı deneme: `orta ölçüsüne bak`, `orta ölçüsünü kapat`, `orta ölçü sırasını söyle`, `dış ölçü dosyasına yaz`, `git ölçü farkını söyle`.
-2. Canlı doğruysa git kaydı ve gönderim. Öğrenilen notlar ve nebula paketleri kayda girmez.
-3. Kapalı duranlar: dosya silmek, modelin ürettiği kodu çalıştırmak, serbest kaynak yazmak, serbest dış yazmak, zorla göndermek, 32B/70B, telefon.
-5. **İlerisi:** telefon ince istemci, yalnız kapı `8779`. Ollama telefona açılmaz.
+1. **82** `orta ölçüsünü düzelt` — hazır şablon duruyorsa «Bilinen satır duruyor» desin, üstüne yazmasın. «Ölçü kalmadı» demesin.
+2. **83** `orta ölçüsü neden kaldı` — üç kontrol geçtiyse geçti desin. Bakış ve kapanış bayraklarını silmesin.
+3. **84** `git ölçü farkını söyle` — `olcu_notu.py` yoksa «yok» desin, dosyayı açmasın. «Fark yok» demesin.
+4. **85** `dış ölçü dosyasını oku` — `olcu.txt` klasörse «dosya değil» desin, içini açmasın.
+5. **86** Hazır dosyada sıra, düzelt, neden, bak ve kapat aynı hikâyeyi söylesin. Yeni yazma yok.
+6. Beşi yeşil olunca canlı, sonra kayıt ve gönderim. Ölçü notunu kaydetmek ayrı evet ister.
+7. Kapalı duranlar: dosya silmek, modelin ürettiği kodu çalıştırmak, serbest kaynak yazmak, serbest dış yazmak, zorla göndermek, ölçü notunu kaydetmek, 32B/70B, telefon.
+8. **İlerisi:** telefon ince istemci, yalnız kapı `8779`. Ollama telefona açılmaz.
 
 ### 2026-10-18 / 19 — oturum kaydı (geç yazıldı)
 
