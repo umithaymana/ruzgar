@@ -1273,7 +1273,8 @@
     renderSlides();
     scheduleSave();
     masaAc("sunum");
-    return "Slayt hazır.\n" + (baslik || metin);
+    const satir = [baslik, metin].filter(Boolean).join("\n");
+    return "Slayt hazır.\n" + satir;
   }
 
   function masaUygula(action) {
@@ -1414,7 +1415,7 @@
       renderSlides();
       scheduleSave();
       masaAc("sunum");
-      return "Slayt başlığı değişti.";
+      return "Slayt başlığı değişti.\n" + baslik;
     }
     if (eylem === "sunum.metin") {
       const metin = masaTemizMetin(action.metin, 2000).trim();
@@ -1426,7 +1427,7 @@
       renderSlides();
       scheduleSave();
       masaAc("sunum");
-      return "Slayt metni değişti.";
+      return "Slayt metni değişti.\n" + metin;
     }
     if (eylem === "sunum.temizle") {
       state.slides = [{ title: "", body: "", bg: "#1c1a16", fg: "#f7f4ec" }];
