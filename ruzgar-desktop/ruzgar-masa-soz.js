@@ -83,7 +83,8 @@
   }
 
   function coz(text) {
-    const raw = String(text || "").replace(/\s+/g, " ").trim();
+    let raw = String(text || "").replace(/\s+/g, " ").trim();
+    raw = raw.replace(/[.!?…]+$/, "").trim();
     if (!raw || raw.length > 9000) return null;
     const bak = bakMasa(raw);
     if (bak) return { bak: bak };

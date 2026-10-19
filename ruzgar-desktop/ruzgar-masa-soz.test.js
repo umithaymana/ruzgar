@@ -16,6 +16,11 @@ assert.deepStrictEqual(coz("sunuma Hoş geldin slaytı ekle: bugün deneme"), {
 });
 assert.strictEqual(coz("menüyü lacivert yap"), null);
 assert.strictEqual(coz("çizgi 40 40 400 200"), null);
+assert.deepStrictEqual(coz("belgeye selam yaz."), { eylem: "belge.yaz", metin: "selam" });
+assert.deepStrictEqual(coz("tabloda A1 e 10 yaz."), { eylem: "tablo.hucre", hucre: "A1", deger: "10" });
+assert.strictEqual(coz("çizime kutu çiz.").eylem, "cizim.kutu");
+assert.strictEqual(coz("sunuma Hoş geldin slaytı ekle: bugün.").metin, "bugün");
+assert.deepStrictEqual(coz("belgeye 3.14 yaz"), { eylem: "belge.yaz", metin: "3.14" });
 
 const kabul = "belgeye selam yaz, tabloda A1 e 10 yaz, çizime kutu çiz, sunuma Hoş geldin slaytı ekle: bugün";
 const liste = coz(kabul);

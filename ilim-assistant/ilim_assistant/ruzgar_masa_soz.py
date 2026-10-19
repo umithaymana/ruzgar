@@ -143,6 +143,7 @@ def _parca(raw: str) -> dict | None:
 
 def coz(text: str) -> dict | None:
     raw = re.sub(r"\s+", " ", str(text or "")).strip()
+    raw = re.sub(r"[.!?…]+$", "", raw).strip()
     if not raw or len(raw) > 9000:
         return None
     bak = _bak_masa(raw)

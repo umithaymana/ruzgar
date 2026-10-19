@@ -52,6 +52,11 @@ def test_masa_zinciri_bak_ve_red():
     assert coz("belgeye bak ve söyle, belgeye selam yaz") == {"red": True}
     assert coz("masayı baştan tasarla") == {"red": True}
     assert coz("belgeye selam yaz, şunu uydur") == {"red": True}
+    assert coz("belgeye selam yaz.") == {"eylem": "belge.yaz", "metin": "selam"}
+    assert coz("tabloda A1 e 10 yaz.") == {"eylem": "tablo.hucre", "hucre": "A1", "deger": "10"}
+    assert coz("çizime kutu çiz.")["eylem"] == "cizim.kutu"
+    assert coz("sunuma Hoş geldin slaytı ekle: bugün.")["metin"] == "bugün"
+    assert coz("belgeye 3.14 yaz") == {"eylem": "belge.yaz", "metin": "3.14"}
 
 
 def test_masa_sohbeti_modelden_once_durur():

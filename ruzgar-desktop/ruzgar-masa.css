@@ -125,6 +125,7 @@ body.ruzgar-sade #ruzgar-robot-dock {
   line-height: 1.55;
   font-size: 16px;
   min-height: 0;
+  white-space: pre-wrap;
 }
 
 .ruzgar-masa-belge:empty::before {

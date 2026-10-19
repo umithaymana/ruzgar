@@ -55,6 +55,7 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 ### Mimar dönünce (sıra)
 
 1. Kapı 137–166 testte yeşil. 151 test geçti.
+2. Dört masa açık sayfaya işi yazar. Sondaki nokta cümleyi düşürmez. Zincirde kutu çizimi önceki masayı geri almaz. Belge: yaz, ekle, bak. Yerine eski sözü, yeni sözü ve kalan satırı söyler. Tablo: hücre, toplam, sil.
 2. Kapalı duranlar: dosya silmek, modelin ürettiği kodu çalıştırmak, serbest kaynak yazmak, serbest dış yazmak, zorla göndermek, ölçü notunu kaydetmek, 32B/70B, telefon.
 3. **İlerisi:** telefon ince istemci, yalnız kapı `8779`. Ollama telefona açılmaz.
 

@@ -1234,7 +1234,7 @@
     paintSheet();
     scheduleSave();
     masaAc("tablo");
-    return addr(r, c) + " yazıldı.";
+    return addr(r, c) + " yazıldı: " + value;
   }
 
   function masaBelgeYaz(text, append) {
@@ -1247,7 +1247,7 @@
     }
     scheduleSave();
     masaAc("belge");
-    return append ? "Belgeye eklendi." : "Belge yazıldı.";
+    return (append ? "Belgeye eklendi." : "Belge yazıldı.") + "\n" + clean;
   }
 
   function masaCizHazir() {
@@ -1273,7 +1273,7 @@
     renderSlides();
     scheduleSave();
     masaAc("sunum");
-    return "Slayt hazır.";
+    return "Slayt hazır.\n" + (baslik || metin);
   }
 
   function masaUygula(action) {
@@ -1282,15 +1282,16 @@
     if (eylem === "belge.yaz") return masaBelgeYaz(action.metin, false);
     if (eylem === "belge.ekle") return masaBelgeYaz(action.metin, true);
     if (eylem === "belge.yerine") {
-      const once = String(belge.textContent || "");
       const eski = masaTemizMetin(action.eski, 180).trim();
       const yeni = masaTemizMetin(action.yeni, 400).trim();
+      const once = String(belge.innerText || "").replace(/\u00a0/g, " ").replace(/\s+$/, "");
       const yer = eski ? once.indexOf(eski) : -1;
       if (!eski || !yeni || yer < 0) return "Metin belgede yok.";
-      belge.textContent = once.slice(0, yer) + yeni + once.slice(yer + eski.length);
+      const sonra = (once.slice(0, yer) + yeni + once.slice(yer + eski.length)).replace(/\s+$/, "");
+      belge.textContent = sonra;
       scheduleSave();
       masaAc("belge");
-      return "Belgede değişti.";
+      return "Belgede değişti.\n" + eski + " yerine " + yeni + "\n" + sonra;
     }
     if (eylem === "belge.temizle") {
       belge.textContent = "";
@@ -1392,7 +1393,9 @@
         ctx.stroke();
       }
       scheduleSave();
-      return "Çizim işlendi.";
+      if (eylem === "cizim.cizgi") return "Çizgi çizildi.";
+      if (eylem === "cizim.kutu") return "Kutu çizildi.";
+      return "Daire çizildi.";
     }
     if (eylem === "cizim.temizle") {
       ensurePaper();
@@ -1474,7 +1477,7 @@
   }
 
   function masaOldu(cevap) {
-    return /yazıldı|eklendi|işlendi|hazır|değişti|açıldı|temizlendi|silindi|toplamı|toplami/.test(String(cevap || ""));
+    return /yazıldı|eklendi|işlendi|çizildi|cizildi|hazır|değişti|açıldı|temizlendi|silindi|toplamı|toplami/.test(String(cevap || ""));
   }
 
   function masaAnlikAl() {
