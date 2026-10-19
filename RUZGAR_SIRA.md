@@ -142,8 +142,38 @@
 | 134 | Hazır ölçü satırını söyle | bitti | `test_hazir_olcu_satirini_soyler_yazmaz` |
 | 135 | Hazır araç satırını söyle | bitti | `test_hazir_arac_satirini_soyler_yazmaz` |
 | 136 | Bu yirmi cümle yazmaz | bitti | `test_okuyan_ucuncu_on_cumle_yazmaz` |
+| 137 | Ölçü düzeltmesini söyle | bitti | `test_olcu_duzeltmesini_soyler_yazmaz` |
+| 138 | Ölçü geçti mi söyle | bitti | `test_olcu_gecti_mi_soyler_yazmaz` |
+| 139 | Ölçü durdu mu söyle | bitti | `test_olcu_durdu_mu_soyler_yazmaz` |
+| 140 | Ölçü kaldı mı söyle | bitti | `test_olcu_kaldi_mi_soyler_yazmaz` |
+| 141 | Araç düzeltmesini söyle | bitti | `test_arac_duzeltmesini_soyler_yazmaz` |
+| 142 | Araç geçti mi söyle | bitti | `test_arac_gecti_mi_soyler_yazmaz` |
+| 143 | Araç durdu mu söyle | bitti | `test_arac_durdu_mu_soyler_yazmaz` |
+| 144 | Araç kaldı mı söyle | bitti | `test_arac_kaldi_mi_soyler_yazmaz` |
+| 145 | Araç turunu söyle | bitti | `test_arac_turunu_soyler_yazmaz` |
+| 146 | Hazır aracı söyle | bitti | `test_hazir_araci_soyler_yazmaz` |
+| 147 | Tek açık satır var mı söyle | bitti | `test_tek_acik_satir_var_mi_soyler_yazmaz` |
+| 148 | Tahtanın ilk satırını söyle | bitti | `test_tahtanin_ilk_satirini_soyler_yazmaz` |
+| 149 | Tahtanın son satırını söyle | bitti | `test_tahtanin_son_satirini_soyler_yazmaz` |
+| 150 | Tahta boş mu söyle | bitti | `test_tahta_bos_mu_soyler_yazmaz` |
+| 151 | Kilitli klasör boş mu söyle | bitti | `test_kilitli_klasor_bos_mu_soyler_ad_yazmaz` |
+| 152 | Dış klasör boş mu söyle | bitti | `test_dis_klasor_bos_mu_soyler_ad_yazmaz` |
+| 153 | Uygulama notu boş mu söyle | bitti | `test_uygulama_notu_bos_mu_soyler_yazmaz` |
+| 154 | Orta notu var mı söyle | bitti | `test_orta_notu_var_mi_soyler_acmaz` |
+| 155 | Orta notunun satırını söyle | bitti | `test_orta_notunun_satirini_soyler_acmaz` |
+| 156 | Kapı notunun ilk satırını söyle | bitti | `test_kapi_notunun_ilk_satirini_soyler_acmaz` |
+| 157 | Git uzak var mı söyle | bitti | `test_git_uzak_var_mi_soyler_gonderemez` |
+| 158 | Git başını söyle | bitti | `test_git_basini_soyler_gonderemez` |
+| 159 | Git kayıt sayısını söyle | bitti | `test_git_kayit_sayisini_soyler_gonderemez` |
+| 160 | Git dalı temiz mi söyle | bitti | `test_git_dali_temiz_mi_soyler_ad_yazmaz` |
+| 161 | Ölçü kaydı boş mu söyle | bitti | `test_olcu_kaydi_bos_mu_soyler_yazmaz` |
+| 162 | Araç kaydı boş mu söyle | bitti | `test_arac_kaydi_bos_mu_soyler_yazmaz` |
+| 163 | Ölçü dosyası boş mu söyle | bitti | `test_olcu_dosyasi_bos_mu_soyler_acmaz` |
+| 164 | Araç dosyası boş mu söyle | bitti | `test_arac_dosyasi_bos_mu_soyler_acmaz` |
+| 165 | Hazır ölçü kaldı mı söyle | bitti | `test_hazir_olcu_kaldi_mi_soyler_yazmaz` |
+| 166 | Bu otuz cümle yazmaz | bitti | `test_okuyan_otuz_cumle_yazmaz` |
 
-**Denenecek cümle:** `hazır ölçüyü söyle`
+**Denenecek cümle:** `tek açık satır var mı söyle`
 
 **13. iş bitti.** Kilitli klasör sayar, metin dosyası açar, ara başlık, http bağlantı, başlık rengi, klasördeki resim ve sayfa adı değişir. Dört masa: belgede bir kez değiştir, hücre sil, sütun topla, renkli çiz, slayt başlığı. Bak bu tariflerden yazı ve rengi önerebilir. Bağlantı, resim ve ad değiştirme yalnız sen söyleyince olur. `uygula` yine son bakışı bir kez çalıştırır.
 
@@ -382,6 +412,66 @@
 **135. iş bitti.** `hazır araç satırını söyle` hazır şablonda bilinen satırı söyler. Hazır değilse yazmaz.
 
 **136. iş bitti.** Bu okuyan cümleler dosya açmaz ve tahtaya yazmaz.
+
+**137. iş bitti.** `ölçü düzeltmesini söyle` yalnız düzeltme bayrağını söyler. Kayıt yokken açmaz.
+
+**138. iş bitti.** `ölçü geçti mi söyle` geçti ya da geçmedi der. Kayıt yokken açmaz.
+
+**139. iş bitti.** `ölçü durdu mu söyle` durdu ya da durmadı der. Kayıt yokken açmaz.
+
+**140. iş bitti.** `ölçü kaldı mı söyle` kaldı ya da kalmadı der. Kayıt yokken açmaz.
+
+**141. iş bitti.** `araç düzeltmesini söyle` yalnız düzeltme bayrağını söyler. Kayıt yokken açmaz.
+
+**142. iş bitti.** `araç geçti mi söyle` geçti ya da geçmedi der. Kayıt yokken açmaz.
+
+**143. iş bitti.** `araç durdu mu söyle` durdu ya da durmadı der. Kayıt yokken açmaz.
+
+**144. iş bitti.** `araç kaldı mı söyle` kaldı ya da kalmadı der. Kayıt yokken açmaz.
+
+**145. iş bitti.** `araç turunu söyle` tur bayrağını söyler. Kayıt yokken açmaz.
+
+**146. iş bitti.** `hazır aracı söyle` hazır şablon duruyorsa «Araç hazır» der. Yazmaz.
+
+**147. iş bitti.** `tek açık satır var mı söyle` tek, birden fazla ya da açık yok der. Tahtaya yazmaz. Başlığı yazmaz.
+
+**148. iş bitti.** `tahtanın ilk satırını söyle` ilk satırın numarasını ve durumunu söyler. Başlığı yazmaz.
+
+**149. iş bitti.** `tahtanın son satırını söyle` son satırın numarasını ve durumunu söyler. Başlığı yazmaz.
+
+**150. iş bitti.** `tahta boş mu söyle` satır yoksa boş, varsa dolu der. Tahta yokken açmaz.
+
+**151. iş bitti.** `kilitli klasör boş mu söyle` boş ya da dolu der. Adları yazmaz.
+
+**152. iş bitti.** `dış klasör boş mu söyle` boş ya da dolu der. Adları yazmaz.
+
+**153. iş bitti.** `uygulama notu boş mu söyle` boş ya da dolu der. Not yokken açmaz. Gövdeyi yazmaz.
+
+**154. iş bitti.** `orta notu var mı söyle` orta notun varlığını söyler. Gövdeyi açmaz. Dosya yokken açmaz.
+
+**155. iş bitti.** `orta notunun satırını söyle` satır sayısını söyler. Gövdeyi açmaz. Dosya yokken açmaz.
+
+**156. iş bitti.** `kapı notunun ilk satırını söyle` ilk dolu satırı söyler. Dosya yokken açmaz.
+
+**157. iş bitti.** `git uzak var mı söyle` uzak var ya da yok der. Adresi yazmaz. Göndermez.
+
+**158. iş bitti.** `git başını söyle` yalnız kısa kayıt adını söyler. Kaydetmez, göndermez.
+
+**159. iş bitti.** `git kayıt sayısını söyle` kayıt sayısını söyler. Üst sınır 200. Kaydetmez.
+
+**160. iş bitti.** `git dalı temiz mi söyle` dal adını ve temizlik durumunu söyler. Dosya adını yazmaz.
+
+**161. iş bitti.** `ölçü kaydı boş mu söyle` kayıt boş ya da dolu der. Bayrak dökmez. Dosya yokken açmaz.
+
+**162. iş bitti.** `araç kaydı boş mu söyle` kayıt boş ya da dolu der. Bayrak dökmez. Dosya yokken açmaz.
+
+**163. iş bitti.** `ölçü dosyası boş mu söyle` boş, dolu ya da yok der. Gövdeyi açmaz.
+
+**164. iş bitti.** `araç dosyası boş mu söyle` boş, dolu ya da yok der. Gövdeyi açmaz.
+
+**165. iş bitti.** `hazır ölçü kaldı mı söyle` hazır şablonda «Kalmadı» der. Hazır değilse yazmaz.
+
+**166. iş bitti.** Bu okuyan cümleler dosya açmaz ve tahtaya yazmaz.
 
 **Bilerek kapalı:** dosya silmek, modelin ürettiği kodu çalıştırmak, serbest kaynak yazmak, serbest dış yazmak, zorla göndermek, ölçü notunu kaydetmek, 32B/70B, telefon.
 
