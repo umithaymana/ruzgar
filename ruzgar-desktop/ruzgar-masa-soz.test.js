@@ -74,4 +74,14 @@ assert.deepStrictEqual(coz("belgeye selam yaz, belgede yok yerine x yaz").liste.
 assert.deepStrictEqual(coz("belgeye bak ve söyle, belgeye selam yaz"), { red: true });
 assert.deepStrictEqual(coz("masayı baştan tasarla"), { red: true });
 assert.deepStrictEqual(coz("belgeye selam yaz, şunu uydur"), { red: true });
+const { karisikAyir } = require("./ruzgar-masa-soz.js");
+const ayir = karisikAyir("belgeye selam yaz, deneme sayfasına başlığı selam yap.");
+assert.deepStrictEqual(ayir.masa, ["belgeye selam yaz"]);
+assert.deepStrictEqual(ayir.dosya, ["deneme sayfasına başlığı selam yap"]);
+assert.strictEqual(karisikAyir("belgeye selam yaz, tabloda A1 e 10 yaz"), null);
+assert.strictEqual(karisikAyir("deneme sayfasına başlığı selam yap"), null);
+assert.deepStrictEqual(coz("belgede ne yazıyor"), { eylem: "belge.oku" });
+assert.deepStrictEqual(coz("tabloda A1 ne"), { eylem: "tablo.oku", hucre: "A1" });
+assert.deepStrictEqual(coz("slaytın başlığı ne"), { eylem: "sunum.oku" });
+assert.deepStrictEqual(coz("çizimde ne var"), { eylem: "cizim.oku" });
 console.log("masa soz ok");

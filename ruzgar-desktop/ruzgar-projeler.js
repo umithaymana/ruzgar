@@ -354,6 +354,7 @@
       });
       if (!data.handled) return null;
       if (data.gorunum || data.rel) klasorGorunum(data);
+      else if (data.klasor) await klasorSayfadaGoster();
       if (window.ruzgarMasaBekleyenSil && /\bbak\s+ve\s+s[öo]yle\b/i.test(String(raw))) window.ruzgarMasaBekleyenSil();
       return { handled: true, reply: data.reply || "Tamam." };
     } catch (err) {
@@ -863,6 +864,30 @@
     if (/\.py\s+dosyasinin\s+ne\s+yaptigini\s+soyle$/.test(low)) return true;
     if (/\.py(?:\s+dosyasini)?\s+calistir$/.test(low)) return true;
     if (/^uygula$/.test(low)) return true;
+    if (/^acik sayfanin adini soyle$/.test(low)) return true;
+    if (/^gorunen satir sayisini soyle$/.test(low)) return true;
+    if (/^ilk gorunen satiri soyle$/.test(low)) return true;
+    if (/^son gorunen satiri soyle$/.test(low)) return true;
+    if (/^baglanti var mi soyle$/.test(low)) return true;
+    if (/^dugme var mi soyle$/.test(low)) return true;
+    if (/^resim var mi soyle$/.test(low)) return true;
+    if (/^baslik rengini soyle$/.test(low)) return true;
+    if (/^basliklar ayni mi soyle$/.test(low)) return true;
+    if (/^notlar dosyasinin satirini soyle$/.test(low)) return true;
+    if (/^notlar dosyasinin ilk satirini soyle$/.test(low)) return true;
+    if (/^notlar dosyasinin son satirini soyle$/.test(low)) return true;
+    if (/^notlar dosyasina satir ekle\b/.test(low)) return true;
+    if (/^site\.css dosyasinin satirini soyle$/.test(low)) return true;
+    if (/^site\.css dosyasina\b/.test(low)) return true;
+    if (/^site\.js ne yapiyor$/.test(low)) return true;
+    if (/^site\.js icinde\b/.test(low)) return true;
+    if (/^site\.js(?: dosyasini)? calistir$/.test(low)) return true;
+    if (/^orta\/site\.css dosyasinin satirini soyle$/.test(low)) return true;
+    if (/^orta\/site\.js ne yapiyor$/.test(low)) return true;
+    if (/^orta\/site\.js(?: dosyasini)? calistir$/.test(low)) return true;
+    if (/^sayfalari soyle$/.test(low)) return true;
+    if (/^merhaba\.txt dosyasinin (?:satirini|ilk satirini|son satirini) soyle$/.test(low)) return true;
+    if (/^merhaba\.txt dosyasina satir ekle\b/.test(low)) return true;
     if (/\byerine\b/.test(low) && /\byaz$/.test(low)) return true;
     if (/\bicinde\b/.test(low) && /\byerine\b/.test(low)) return true;
     if (/\sbutonu\s+(koy|ekle)\b/.test(low) || /^buton koy\b/.test(low)) return true;
@@ -882,7 +907,24 @@
     return "";
   }
 
+  function karisikBasarisiz(reply) {
+    return /adım durdu|geri alındı|Bunu yapmadım|Yazılmadı|Dosya yok|seçilmedi|durur|yazılmaz|Sayfa yok|Notlar yok|site\.css yok|site\.js yok/.test(String(reply || ""));
+  }
+
   function projeKomutCoz(raw) {
+    const ayir = window.ruzgarMasaSoz && window.ruzgarMasaSoz.karisikAyir && window.ruzgarMasaSoz.karisikAyir(raw);
+    if (ayir && window.ruzgarMasaParcalari) {
+      const masaSon = window.ruzgarMasaParcalari(ayir.masa);
+      if (!masaSon.ok) return { handled: true, reply: masaSon.reply + "\nDosya yazılmadı." };
+      return klasorSozu(ayir.dosya.join(", ")).then(function (sonuc) {
+        const cevap = sonuc && sonuc.reply;
+        if (!sonuc || karisikBasarisiz(cevap)) {
+          if (masaSon.geri) masaSon.geri();
+          return { handled: true, reply: (cevap || "Yazılmadı.") + "\nMasa geri alındı." };
+        }
+        return { handled: true, reply: masaSon.reply + "\n" + cevap };
+      });
+    }
     const bakLow = harf(raw);
     const masaAd = masaBakAd(bakLow);
     if (masaAd) {

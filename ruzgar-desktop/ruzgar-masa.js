@@ -1280,6 +1280,32 @@
   function masaUygula(action) {
     if (!action || typeof action !== "object") return "Komut geçersiz.";
     const eylem = String(action.eylem || "");
+    if (eylem === "belge.oku") {
+      const yazi = String(belge.innerText || "").replace(/\u00a0/g, " ").trim();
+      masaAc("belge");
+      return yazi ? "Belgede: " + yazi : "Belge boş.";
+    }
+    if (eylem === "tablo.oku") {
+      const hucre = String(action.hucre || "");
+      const bak = hucre.match(/^([A-L])(\d{1,2})$/);
+      if (!bak) return "Hücre A1 biçiminde olmalı.";
+      const c = COLS.indexOf(bak[1]);
+      const r = Number(bak[2]) - 1;
+      if (c < 0 || r < 0 || r >= ROWS) return "Hücre A1 ile L28 arasında olmalı.";
+      const deger = String(state.sheet[r][c] || "").trim();
+      masaAc("tablo");
+      return deger ? hucre + ": " + deger : hucre + " boş.";
+    }
+    if (eylem === "sunum.oku") {
+      const slide = currentSlide();
+      const baslik = String((slide && slide.title) || "").trim();
+      masaAc("sunum");
+      return baslik ? "Başlık: " + baslik : "Başlık yok.";
+    }
+    if (eylem === "cizim.oku") {
+      masaAc("cizim");
+      return state.ink ? "Çizimde iz var." : "Çizim boş.";
+    }
     if (eylem === "belge.yaz") return masaBelgeYaz(action.metin, false);
     if (eylem === "belge.ekle") return masaBelgeYaz(action.metin, true);
     if (eylem === "belge.yerine") {
@@ -1478,7 +1504,7 @@
   }
 
   function masaOldu(cevap) {
-    return /yazıldı|eklendi|işlendi|çizildi|cizildi|hazır|değişti|açıldı|temizlendi|silindi|toplamı|toplami/.test(String(cevap || ""));
+    return /yazıldı|eklendi|işlendi|çizildi|cizildi|hazır|değişti|açıldı|temizlendi|silindi|toplamı|toplami|boş|Belgede:|Başlık|Çizim/.test(String(cevap || ""));
   }
 
   function masaAnlikAl() {
@@ -1720,6 +1746,33 @@
 
   window.ruzgarMasaSayfa = function (kind) {
     return masaSayfa(String(kind || ""));
+  };
+
+  window.ruzgarMasaParcalari = function (cumleler) {
+    const liste = Array.isArray(cumleler) ? cumleler : [];
+    const anlik = masaAnlikAl();
+    const notlar = [];
+    for (let i = 0; i < liste.length; i++) {
+      const duz = window.ruzgarMasaSoz && window.ruzgarMasaSoz.coz(liste[i]);
+      if (!duz || duz.red || duz.bak) {
+        masaAnlikYaz(anlik);
+        return { ok: false, reply: (i + 1) + ". parça durdu. Masa değişmedi." };
+      }
+      const adimlar = duz.liste || [duz];
+      for (let j = 0; j < adimlar.length; j++) {
+        const cevap = masaUygula(adimlar[j]);
+        if (!masaOldu(cevap)) {
+          masaAnlikYaz(anlik);
+          return { ok: false, reply: (i + 1) + ". parça durdu. " + (cevap || "Masa değişmedi.") };
+        }
+        notlar.push(cevap);
+      }
+    }
+    return {
+      ok: true,
+      reply: notlar.join("\n"),
+      geri: function () { masaAnlikYaz(anlik); },
+    };
   };
 
   window.ruzgarMasaKomut = function (text) {

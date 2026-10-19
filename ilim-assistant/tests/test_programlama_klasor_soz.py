@@ -260,6 +260,27 @@ def test_bak_uc_nokta_ve_gorunen_yazi(masa, monkeypatch):
     assert "<title>...</title>" in (el / "deneme.html").read_text(encoding="utf-8")
 
 
+def test_bak_baglantiyi_da_soyler_yazmaz(masa, monkeypatch):
+    repo, el = masa
+    _kilitle(repo, el)
+    (el / "index.html").write_text(
+        "<title>selam</title><h1>selam</h1><p>selam mimar</p>"
+        "<h2>iç kapı</h2><a href=\"https://ornek.com\">Rüzgar</a>",
+        encoding="utf-8",
+    )
+    once = (el / "index.html").read_bytes()
+    cagrilar = _sahte_soyleyen(monkeypatch, "")
+    bak = klasor_soz(repo, "index sayfasına bak ve söyle")
+    assert "Gördüm: selam" in bak["reply"]
+    assert "selam mimar" in bak["reply"]
+    assert "iç kapı" in bak["reply"]
+    assert "Rüzgar" in bak["reply"]
+    assert "ornek.com" not in bak["reply"]
+    assert "https://" not in bak["reply"]
+    assert "bağlantı: Rüzgar" in cagrilar[0]
+    assert (el / "index.html").read_bytes() == once
+
+
 def test_bak_tarif_degilse_ve_susarsa_yazmaz(masa, monkeypatch):
     repo, el = masa
     _kilitle(repo, el)
@@ -3750,5 +3771,306 @@ def test_okuyan_otuz_cumle_yazmaz(masa, tmp_path):
     assert not (el / "orta" / "arac.py").exists()
     assert not (el / "orta" / "not.txt").exists()
     assert not (repo / "ilim-assistant" / "ilim_assistant" / "kapi_notu.py").exists()
+
+
+def test_acik_sayfa_dokuz_cumle_yazmaz(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    (el / "index.html").write_text(
+        "<title>selam</title>"
+        '<h1 style="color:#1d4e89">selam</h1>'
+        "<p>selam mimar</p><h2>iç kapı</h2>"
+        '<a href="https://ornek.com">Rüzgar</a>'
+        '<button type="button">tıkla</button>'
+        '<img src="foto.png" alt="">',
+        encoding="utf-8",
+    )
+    (el / "notlar.txt").write_text("dur\n", encoding="utf-8")
+    once = {p.name: p.read_bytes() for p in el.iterdir() if p.is_file()}
+    beklenen = {
+        "açık sayfanın adını söyle": "Sayfa: index.html",
+        "görünen satır sayısını söyle": "Satır: 5",
+        "ilk görünen satırı söyle": "selam",
+        "son görünen satırı söyle": "tıkla",
+        "bağlantı var mı söyle": "Bağlantı var.",
+        "düğme var mı söyle": "Düğme var.",
+        "resim var mı söyle": "Resim var.",
+        "başlık rengini söyle": "Renk: mavi",
+        "başlıklar aynı mı söyle": "Başlıklar aynı.",
+    }
+    for cumle, cevap in beklenen.items():
+        sonuc = klasor_soz(repo, cumle)
+        assert sonuc["reply"] == cevap
+        assert "ornek.com" not in sonuc["reply"]
+        assert "foto.png" not in sonuc["reply"]
+        assert "https" not in sonuc["reply"]
+    fazla = klasor_soz(repo, "açık sayfanın adını söyle şimdi")
+    assert "Bu cümle söylemez" in fazla["reply"]
+    assert "Yazmadım" in fazla["reply"]
+    for ad, bayt in once.items():
+        assert (el / ad).read_bytes() == bayt
+    assert not (el / "deneme.html").exists()
+
+
+def test_acik_sayfa_yoksa_ve_ayriysa_yazmaz(masa):
+    repo, el = masa
+    secilmedi = klasor_soz(repo, "açık sayfanın adını söyle")
+    assert "seçilmedi" in secilmedi["reply"]
+    _kilitle(repo, el)
+    assert "Sayfa yok" in klasor_soz(repo, "görünen satır sayısını söyle")["reply"]
+    (el / "deneme.html").write_text("<title>selam</title><h1>merhaba</h1>", encoding="utf-8")
+    (el / "baska.html").write_text("<title>a</title><h1>a</h1>", encoding="utf-8")
+    assert "Birden fazla sayfa" in klasor_soz(repo, "açık sayfanın adını söyle")["reply"]
+    (el / "baska.html").unlink()
+    once = (el / "deneme.html").read_bytes()
+    assert klasor_soz(repo, "açık sayfanın adını söyle")["reply"] == "Sayfa: deneme.html"
+    assert klasor_soz(repo, "başlıklar aynı mı söyle")["reply"] == "Başlıklar ayrı."
+    assert klasor_soz(repo, "başlık rengini söyle")["reply"] == "Renk yok."
+    assert klasor_soz(repo, "bağlantı var mı söyle")["reply"] == "Bağlantı yok."
+    assert klasor_soz(repo, "düğme var mı söyle")["reply"] == "Düğme yok."
+    assert klasor_soz(repo, "resim var mı söyle")["reply"] == "Resim yok."
+    assert (el / "deneme.html").read_bytes() == once
+
+
+def test_sondaki_nokta_cumleyi_dusurmez(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    (el / "index.html").write_text("<title>selam</title><h1>selam</h1>", encoding="utf-8")
+    once = (el / "index.html").read_bytes()
+    assert klasor_soz(repo, "açık sayfanın adını söyle.")["reply"] == "Sayfa: index.html"
+    assert klasor_soz(repo, "index sayfasına bak ve söyle.")["reply"].startswith("Gördüm: selam")
+    assert "Bu cümle söylemez" in klasor_soz(repo, "açık sayfanın adını söyle şimdi.")["reply"]
+    assert (el / "index.html").read_bytes() == once
+
+
+def test_notlar_satir_soyler_ekler_py_yazmaz(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    assert klasor_soz(repo, "notlar dosyasının satırını söyle")["reply"] == "Notlar yok."
+    assert not (el / "notlar.txt").exists()
+    (el / "notlar.txt").write_text("alfa\nbeta\n", encoding="utf-8")
+    once = (el / "notlar.txt").read_bytes()
+    say = klasor_soz(repo, "notlar dosyasının satırını söyle")
+    ilk = klasor_soz(repo, "notlar dosyasının ilk satırını söyle")
+    son = klasor_soz(repo, "notlar dosyasının son satırını söyle")
+    assert say["reply"] == "Satır: 2"
+    assert "alfa" not in say["reply"] and "beta" not in say["reply"]
+    assert ilk["reply"] == "İlk satır: alfa"
+    assert "beta" not in ilk["reply"]
+    assert son["reply"] == "Son satır: beta"
+    assert "alfa" not in son["reply"]
+    assert (el / "notlar.txt").read_bytes() == once
+    assert "Bu cümle söylemez" in klasor_soz(repo, "notlar dosyasının satırını söyle hemen")["reply"]
+    ek = klasor_soz(repo, "notlar dosyasına satır ekle: yeni")
+    assert ek["reply"] == "Satır eklendi.\nyeni"
+    assert (el / "notlar.txt").read_text(encoding="utf-8") == "alfa\nbeta\nyeni\n"
+    assert klasor_soz(repo, "notlar dosyasına satır ekle: yeni")["reply"] == "Zaten var."
+    assert (el / "notlar.txt").read_text(encoding="utf-8") == "alfa\nbeta\nyeni\n"
+    py = el / "hesap.py"
+    py.write_text("def topla(a, b):\n    return a + b\n", encoding="utf-8")
+    py_once = py.read_bytes()
+    klasor_soz(repo, "hesap.py çalıştır")
+    assert py.read_bytes() == py_once
+    kirik = klasor_soz(repo, "notlar dosyasına satır ekle: zincir, yok dosyasını oku")
+    assert "geri alındı" in kirik["reply"]
+    assert (el / "notlar.txt").read_text(encoding="utf-8") == "alfa\nbeta\nyeni\n"
+
+
+def test_deneme_turu_indexi_ellemez(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    (el / "index.html").write_text("<title>DUR</title><h1>DUR</h1>", encoding="utf-8")
+    index_once = (el / "index.html").read_bytes()
+    yap = klasor_soz(
+        repo,
+        "deneme sayfasına başlığı selam yap, hoş geldin yaz, tıkla butonu koy, sayfayı göster",
+    )
+    govde = (el / "deneme.html").read_text(encoding="utf-8")
+    assert "Sayfa açık" in yap["reply"]
+    assert "<h1>selam</h1>" in govde
+    assert "<p>hoş geldin</p>" in govde
+    assert "tıkla" in govde
+    ara = klasor_soz(repo, "deneme sayfasına ara başlık ekle: iç kapı")
+    assert "Ara başlık yazıldı" in ara["reply"]
+    tekrar = klasor_soz(repo, "deneme sayfasına ara başlık ekle: iç kapı")
+    assert "Zaten var" in tekrar["reply"]
+    renk = klasor_soz(repo, "deneme sayfasının başlık rengini mavi yap")
+    sayfa = (el / "deneme.html").read_text(encoding="utf-8")
+    assert "Başlık rengi yazıldı: klasor/deneme.html" in renk["reply"]
+    assert 'style="color:#1d4e89"' in sayfa
+    assert ">mavi<" not in sayfa
+    bag = klasor_soz(repo, "deneme sayfasına bağlantı ekle: Rüzgar | https://ornek.com")
+    assert bag["reply"].startswith("Bağlantı yazıldı")
+    assert (el / "deneme.html").read_text(encoding="utf-8").count("https://ornek.com") == 1
+    ikinci = klasor_soz(repo, "deneme sayfasına bağlantı ekle: Rüzgar | https://ornek.com")
+    assert "Zaten var" in ikinci["reply"]
+    assert (el / "index.html").read_bytes() == index_once
+    once_deneme = (el / "deneme.html").read_bytes()
+    kirik = klasor_soz(repo, "deneme sayfasına ara başlık ekle: yeni kapı, yok dosyasını oku")
+    assert "geri alındı" in kirik["reply"]
+    assert (el / "deneme.html").read_bytes() == once_deneme
+    assert (el / "index.html").read_bytes() == index_once
+
+
+def test_yuz_deneme_bakis_ve_bos_not(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    (el / "index.html").write_text("<title>DUR</title><h1>DUR</h1>", encoding="utf-8")
+    index_once = (el / "index.html").read_bytes()
+    yok = klasor_soz(repo, "deneme sayfasına bak ve söyle")
+    assert "Dosya yok" in yok["reply"]
+    assert not (el / "deneme.html").exists()
+    klasor_soz(repo, "deneme sayfasına başlığı selam yap, hoş geldin yaz, tıkla butonu koy, sayfayı göster")
+    ikinci = klasor_soz(repo, "deneme sayfasına başlığı selam yap, tıkla butonu koy")
+    assert "Zaten var" in ikinci["reply"]
+    bak = klasor_soz(repo, "deneme sayfasına bak ve söyle")
+    assert "Gördüm:" in bak["reply"]
+    assert "https" not in bak["reply"]
+    assert (el / "index.html").read_bytes() == index_once
+    (el / "notlar.txt").write_text("\n", encoding="utf-8")
+    assert klasor_soz(repo, "notlar dosyasının satırını söyle.")["reply"] == "Satır: 0"
+    ek = klasor_soz(repo, "notlar dosyasına satır ekle: söz.")
+    assert ek["reply"] == "Satır eklendi.\nsöz"
+    assert "söz" not in klasor_soz(repo, "notlar dosyasının satırını söyle")["reply"]
+
+
+def test_site_css_ve_js_okur_yazmaz(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    assert klasor_soz(repo, "site.css dosyasının satırını söyle")["reply"] == "site.css yok."
+    assert not (el / "site.css").exists()
+    (el / "site.css").write_text("body { color: #111111; }\nh1 { color: #1d4e89; }\n", encoding="utf-8")
+    once = (el / "site.css").read_bytes()
+    say = klasor_soz(repo, "site.css dosyasının satırını söyle")
+    assert say["reply"] == "Satır: 2"
+    assert "color" not in say["reply"]
+    assert say["gorunum"] == "kod"
+    red = klasor_soz(repo, "site.css dosyasına color: red yaz")
+    assert "yazılmaz" in red["reply"]
+    assert (el / "site.css").read_bytes() == once
+    assert klasor_soz(repo, "site.js ne yapıyor")["reply"] == "site.js yok."
+    (el / "site.js").write_text(
+        "function selam() {\n  document.getElementById('dugme');\n}\n",
+        encoding="utf-8",
+    )
+    js_once = (el / "site.js").read_bytes()
+    soyle = klasor_soz(repo, "site.js ne yapıyor")
+    assert "selam" in soyle["reply"]
+    assert "Çalıştırmadım" in soyle["reply"]
+    assert "getElementById" in soyle["reply"]
+    assert soyle["gorunum"] == "kod" and soyle["text"]
+    fonk = klasor_soz(repo, "site.js içinde selam ne yapıyor")
+    assert "selam()." in fonk["reply"]
+    cagri = klasor_soz(repo, "site.js içinde selam kimi çağırıyor")
+    assert "getElementById çağırır." in cagri["reply"]
+    yok_fonk = klasor_soz(repo, "site.js içinde yok ne yapıyor")
+    assert "yok bu dosyada yok." in yok_fonk["reply"]
+    assert "Kodu çalıştırmadım" in klasor_soz(repo, "site.js çalıştır")["reply"]
+    assert (el / "site.js").read_bytes() == js_once
+    (el / "hesap.py").write_text("def topla(a, b):\n    return a + b\n", encoding="utf-8")
+    ozet = klasor_soz(repo, "hesap.py ne yapıyor")
+    assert ozet["gorunum"] == "kod" and "Çalıştırmadım" in ozet["reply"]
+    assert "bu dosyada yok" in klasor_soz(repo, "hesap.py içinde yok ne yapıyor")["reply"]
+    bozuk_once = (el / "hesap.py").read_bytes()
+    (el / "hesap.py").write_text("def (\n", encoding="utf-8")
+    bozuk = klasor_soz(repo, "hesap.py ne yapıyor")
+    assert "Python olarak açılmadı" in bozuk["reply"]
+    assert (el / "hesap.py").read_text(encoding="utf-8") == "def (\n"
+    assert bozuk_once != (el / "hesap.py").read_bytes()
+    assert "Kodu çalıştırmadım" in klasor_soz(repo, "hesap.py çalıştır")["reply"]
+
+
+def test_deneme_notlar_zinciri_ve_index_durur(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    (el / "index.html").write_text("<title>DUR</title><h1>DUR</h1>", encoding="utf-8")
+    (el / "deneme.html").write_text("<h1>eski</h1>\n", encoding="utf-8")
+    (el / "notlar.txt").write_text("eski\n", encoding="utf-8")
+    index_once = (el / "index.html").read_bytes()
+    zincir = klasor_soz(repo, "deneme sayfasına ara başlık ekle: iç kapı, notlar dosyasına satır ekle: söz")
+    assert "Ara başlık yazıldı" in zincir["reply"]
+    assert "Satır eklendi" in zincir["reply"]
+    assert "<h2>iç kapı</h2>" in (el / "deneme.html").read_text(encoding="utf-8")
+    assert (el / "notlar.txt").read_text(encoding="utf-8") == "eski\nsöz\n"
+    deneme_once = (el / "deneme.html").read_bytes()
+    not_once = (el / "notlar.txt").read_bytes()
+    kirik = klasor_soz(repo, "deneme sayfasına ara başlık ekle: yeni kapı, yok dosyasını oku")
+    assert "geri alındı" in kirik["reply"]
+    assert (el / "deneme.html").read_bytes() == deneme_once
+    assert (el / "notlar.txt").read_bytes() == not_once
+    assert (el / "index.html").read_bytes() == index_once
+    yasak = klasor_soz(repo, "index sayfasına başlığı selam yap")
+    assert "index.html durur" in yasak["reply"]
+    assert (el / "index.html").read_bytes() == index_once
+    karisik = klasor_soz(repo, "belgeye selam yaz, deneme sayfasına başlığı rüzgar yap")
+    govde = (el / "deneme.html").read_text(encoding="utf-8")
+    assert "belgeye selam" not in govde
+    assert "<h1>eski</h1>" in govde
+    assert (el / "index.html").read_bytes() == index_once
+    py = el / "hesap.py"
+    py.write_text("def topla(a):\n    return a\n", encoding="utf-8")
+    py_once = py.read_bytes()
+    klasor_soz(repo, "hesap.py dosyasına selam yaz")
+    klasor_soz(repo, "index dosyasını sil")
+    klasor_soz(repo, "deneme sayfasına bağlantı ekle: selam | javascript:alert(1)")
+    assert py.read_bytes() == py_once
+    assert (el / "index.html").read_bytes() == index_once
+    assert "javascript:" not in (el / "deneme.html").read_text(encoding="utf-8")
+
+
+def test_yuz_elli_orta_sayfa_ve_merhaba(masa):
+    repo, el = masa
+    secilmedi = klasor_soz(repo, "sayfaları söyle")
+    assert "seçilmedi" in secilmedi["reply"]
+    _kilitle(repo, el)
+    (el / "index.html").write_text("<title>DUR</title><h1>DUR</h1>", encoding="utf-8")
+    (el / "notlar.txt").write_text("gizli satır\n", encoding="utf-8")
+    index_once = (el / "index.html").read_bytes()
+    sayfa = klasor_soz(repo, "sayfaları söyle")
+    assert sayfa["reply"] == "Sayfalar: index.html"
+    assert "gizli" not in sayfa["reply"]
+    assert "notlar.txt" not in sayfa["reply"]
+    assert not sayfa.get("text")
+    assert not (el / "deneme.html").exists()
+    assert klasor_soz(repo, "orta/site.css dosyasının satırını söyle")["reply"] == "orta/site.css yok."
+    assert not (el / "site.css").exists()
+    orta = el / "orta"
+    orta.mkdir()
+    (orta / "site.css").write_text("body { color: #111111; }\nh1 { color: #1d4e89; }\n", encoding="utf-8")
+    css_once = (orta / "site.css").read_bytes()
+    css = klasor_soz(repo, "orta/site.css dosyasının satırını söyle")
+    assert css["reply"] == "Satır: 2"
+    assert "color" not in css["reply"]
+    assert css["gorunum"] == "kod" and css["text"]
+    assert (orta / "site.css").read_bytes() == css_once
+    (orta / "site.js").write_text("function selam() {\n  document.getElementById('dugme');\n}\n", encoding="utf-8")
+    js_once = (orta / "site.js").read_bytes()
+    js = klasor_soz(repo, "orta/site.js ne yapıyor")
+    assert "selam" in js["reply"] and "Çalıştırmadım" in js["reply"]
+    assert "Kodu çalıştırmadım" in klasor_soz(repo, "orta/site.js çalıştır")["reply"]
+    assert (orta / "site.js").read_bytes() == js_once
+    (orta / "arac.py").write_text('"""Satir sayar."""\n\ndef satir_say(metin):\n    return len(metin.splitlines())\n', encoding="utf-8")
+    py_once = (orta / "arac.py").read_bytes()
+    arac = klasor_soz(repo, "orta/arac.py ne yapıyor")
+    assert arac["gorunum"] == "kod" and "Çalıştırmadım" in arac["reply"]
+    assert "Kodu çalıştırmadım" in klasor_soz(repo, "orta/arac.py çalıştır")["reply"]
+    assert (orta / "arac.py").read_bytes() == py_once
+    soyle = klasor_soz(repo, "orta işi söyle")
+    assert "Çalıştırmadım" in soyle["reply"]
+    assert (orta / "arac.py").read_bytes() == py_once
+    assert klasor_soz(repo, "merhaba.txt dosyasının satırını söyle")["reply"] == "merhaba.txt yok."
+    assert not (el / "merhaba.txt").exists()
+    (el / "merhaba.txt").write_text("alfa\nbeta\n", encoding="utf-8")
+    merhaba_once = (el / "merhaba.txt").read_bytes()
+    assert klasor_soz(repo, "merhaba.txt dosyasının satırını söyle")["reply"] == "Satır: 2"
+    assert klasor_soz(repo, "merhaba.txt dosyasının ilk satırını söyle")["reply"] == "İlk satır: alfa"
+    son = klasor_soz(repo, "merhaba.txt dosyasının son satırını söyle")
+    assert son["reply"] == "Son satır: beta"
+    assert "alfa" not in son["reply"]
+    red = klasor_soz(repo, "merhaba.txt dosyasına satır ekle: söz")
+    assert "eklenmez" in red["reply"]
+    assert (el / "merhaba.txt").read_bytes() == merhaba_once
+    assert (el / "index.html").read_bytes() == index_once
+    assert not (el / "deneme.html").exists()
 
 

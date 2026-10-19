@@ -57,7 +57,7 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 1. Kapı 137–166 testte yeşil. 151 test geçti.
 2. Dört masa açık sayfaya işi yazar. Sondaki nokta cümleyi düşürmez. Zincirde kutu çizimi önceki masayı geri almaz. Belge: yaz, ekle, bak. Yerine eski sözü, yeni sözü ve kalan satırı söyler. Tablo: hücre, toplam, sil. Çizim: çizgi, kutu, daire, mavi, ortaya, temizle. Sunum: slayt, başlık ve metin söylenir.
 2. Kapalı duranlar: dosya silmek, modelin ürettiği kodu çalıştırmak, serbest kaynak yazmak, serbest dış yazmak, zorla göndermek, ölçü notunu kaydetmek, 32B/70B, telefon.
-3. **İlerisi:** telefon ince istemci, yalnız kapı `8779`. Ollama telefona açılmaz.
+3. Programlama sayfası (yeşil, kayıt bekliyor): açık sayfa, sayfa adları, deneme ve notlar. `orta/site.css` satır sayısı, `orta/site.js` ve `orta/arac.py` okunur, çalışmaz. `merhaba.txt` okunur, satır eklenmez, yoksa açılmaz. Masa okuması dosyaya yazmaz. `index.html` bu turda değişmez.
 
 ### 2026-10-18 / 19 — oturum kaydı (geç yazıldı)
 

@@ -79,6 +79,11 @@
     if (m && (m[1].trim() || m[2].trim())) return { eylem: "sunum.ekle", baslik: m[1].trim(), metin: m[2].trim() };
     m = raw.match(/^sunuma\s+(.+?)\s+slayt[ıi]\s+ekle\s*[:\-]\s*(.+)$/i);
     if (m && (m[1].trim() || m[2].trim())) return { eylem: "sunum.ekle", baslik: m[1].trim(), metin: m[2].trim() };
+    if (/^belgede\s+ne\s+yaz[ıi]yor$/i.test(raw)) return { eylem: "belge.oku" };
+    m = raw.match(/^tabloda\s+([A-La-l])(\d{1,2})\s+ne$/i);
+    if (m) return { eylem: "tablo.oku", hucre: (m[1] + m[2]).toUpperCase() };
+    if (/^slayt[ıi]n\s+ba[sş]l[ıi][gğ][ıi]\s+ne$/i.test(raw)) return { eylem: "sunum.oku" };
+    if (/^(?:çizimde|cizimde)\s+ne\s+var$/i.test(raw)) return { eylem: "cizim.oku" };
     return null;
   }
 
@@ -103,5 +108,20 @@
     return parca(raw);
   }
 
-  return { coz: coz };
+  function karisikAyir(text) {
+    let raw = String(text || "").replace(/\s+/g, " ").trim();
+    raw = raw.replace(/[.!?…]+$/, "").trim();
+    const parcalar = raw.split(/\s*,\s*|\s+sonra\s+/).map(function (p) { return p.trim(); }).filter(Boolean);
+    if (parcalar.length < 2) return null;
+    const masa = [];
+    const dosya = [];
+    for (let i = 0; i < parcalar.length; i++) {
+      if (/^(?:belgeye|belgede|belgeyi|tabloda|tabloya|tabloyu|çizime|cizime|çizimi|cizimi|sunuma|sunumu|slaytın|slaytin)\b/i.test(parcalar[i])) masa.push(parcalar[i]);
+      else dosya.push(parcalar[i]);
+    }
+    if (!masa.length || !dosya.length) return null;
+    return { masa: masa, dosya: dosya };
+  }
+
+  return { coz: coz, karisikAyir: karisikAyir };
 });

@@ -812,6 +812,67 @@ _KALIP: tuple[tuple[str, re.Pattern[str]], ...] = (
         r"^(?P<ad>\S+\.py)(?:\s+dosyas[ıi]n[ıi])?\s+[çc]al[ıi][sş]t[ıi]r$",
         re.I,
     )),
+    ("sayfa_ad_soyle_fazla", re.compile(r"^a[çc][ıi]k\s+sayfan[ıi]n\s+ad[ıi]n[ıi]\s+s[öo]yle\b.+$", re.I)),
+    ("sayfa_ad_soyle", re.compile(r"^a[çc][ıi]k\s+sayfan[ıi]n\s+ad[ıi]n[ıi]\s+s[öo]yle$", re.I)),
+    ("gorunen_say_fazla", re.compile(r"^g[öo]r[üu]nen\s+sat[ıi]r\s+say[ıi]s[ıi]n[ıi]\s+s[öo]yle\b.+$", re.I)),
+    ("gorunen_say", re.compile(r"^g[öo]r[üu]nen\s+sat[ıi]r\s+say[ıi]s[ıi]n[ıi]\s+s[öo]yle$", re.I)),
+    ("gorunen_ilk_fazla", re.compile(r"^ilk\s+g[öo]r[üu]nen\s+sat[ıi]r[ıi]\s+s[öo]yle\b.+$", re.I)),
+    ("gorunen_ilk", re.compile(r"^ilk\s+g[öo]r[üu]nen\s+sat[ıi]r[ıi]\s+s[öo]yle$", re.I)),
+    ("gorunen_son_fazla", re.compile(r"^son\s+g[öo]r[üu]nen\s+sat[ıi]r[ıi]\s+s[öo]yle\b.+$", re.I)),
+    ("gorunen_son", re.compile(r"^son\s+g[öo]r[üu]nen\s+sat[ıi]r[ıi]\s+s[öo]yle$", re.I)),
+    ("baglanti_var_fazla", re.compile(r"^ba[gğ]lant[ıi]\s+var\s+m[ıi]\s+s[öo]yle\b.+$", re.I)),
+    ("baglanti_var", re.compile(r"^ba[gğ]lant[ıi]\s+var\s+m[ıi]\s+s[öo]yle$", re.I)),
+    ("dugme_var_fazla", re.compile(r"^d[üu][gğ]me\s+var\s+m[ıi]\s+s[öo]yle\b.+$", re.I)),
+    ("dugme_var", re.compile(r"^d[üu][gğ]me\s+var\s+m[ıi]\s+s[öo]yle$", re.I)),
+    ("resim_var_fazla", re.compile(r"^resim\s+var\s+m[ıi]\s+s[öo]yle\b.+$", re.I)),
+    ("resim_var", re.compile(r"^resim\s+var\s+m[ıi]\s+s[öo]yle$", re.I)),
+    ("baslik_renk_soyle_fazla", re.compile(r"^ba[sş]l[ıi]k\s+rengini\s+s[öo]yle\b.+$", re.I)),
+    ("baslik_renk_soyle", re.compile(r"^ba[sş]l[ıi]k\s+rengini\s+s[öo]yle$", re.I)),
+    ("baslik_ayni_fazla", re.compile(r"^ba[sş]l[ıi]klar\s+ayn[ıi]\s+m[ıi]\s+s[öo]yle\b.+$", re.I)),
+    ("baslik_ayni", re.compile(r"^ba[sş]l[ıi]klar\s+ayn[ıi]\s+m[ıi]\s+s[öo]yle$", re.I)),
+    ("notlar_ekle", re.compile(
+        r"^notlar\s+dosyas[ıi]na\s+sat[ıi]r\s+ekle\s*[:\-]\s*(?P<metin>[^,\n]+)$",
+        re.I,
+    )),
+    ("notlar_ekle_fazla", re.compile(r"^notlar\s+dosyas[ıi]na\s+sat[ıi]r\s+ekle\b[^,\n]+$", re.I)),
+    ("notlar_ilk_fazla", re.compile(r"^notlar\s+dosyas[ıi]n[ıi]n\s+ilk\s+sat[ıi]r[ıi]n[ıi]\s+s[öo]yle\b.+$", re.I)),
+    ("notlar_ilk", re.compile(r"^notlar\s+dosyas[ıi]n[ıi]n\s+ilk\s+sat[ıi]r[ıi]n[ıi]\s+s[öo]yle$", re.I)),
+    ("notlar_son_fazla", re.compile(r"^notlar\s+dosyas[ıi]n[ıi]n\s+son\s+sat[ıi]r[ıi]n[ıi]\s+s[öo]yle\b.+$", re.I)),
+    ("notlar_son", re.compile(r"^notlar\s+dosyas[ıi]n[ıi]n\s+son\s+sat[ıi]r[ıi]n[ıi]\s+s[öo]yle$", re.I)),
+    ("notlar_satir_fazla", re.compile(r"^notlar\s+dosyas[ıi]n[ıi]n\s+sat[ıi]r[ıi]n[ıi]\s+s[öo]yle\b.+$", re.I)),
+    ("notlar_satir", re.compile(r"^notlar\s+dosyas[ıi]n[ıi]n\s+sat[ıi]r[ıi]n[ıi]\s+s[öo]yle$", re.I)),
+    ("index_baslik_yasak", re.compile(
+        r"^index\s+sayfas[ıi]na\s+(?:başlığı|basligi|başlık|baslik)\s+.+\s+yap$",
+        re.I,
+    )),
+    ("site_css_fazla", re.compile(r"^site\.css\s+dosyas[ıi]n[ıi]n\s+sat[ıi]r[ıi]n[ıi]\s+s[öo]yle\b.+$", re.I)),
+    ("site_css", re.compile(r"^site\.css\s+dosyas[ıi]n[ıi]n\s+sat[ıi]r[ıi]n[ıi]\s+s[öo]yle$", re.I)),
+    ("css_yaz", re.compile(r"^site\.css\s+dosyas[ıi]na\b.+$", re.I)),
+    ("js_cagri", re.compile(
+        r"^site\.js\s+i[çc]inde\s+(?P<fonk>[A-Za-z_][A-Za-z0-9_]*)\s+kimi\s+[çc]a[gğ][ıi]r[ıi]yor$",
+        re.I,
+    )),
+    ("js_fonk", re.compile(
+        r"^site\.js\s+i[çc]inde\s+(?P<fonk>[A-Za-z_][A-Za-z0-9_]*)\s+ne\s+yap[ıi]yor$",
+        re.I,
+    )),
+    ("js_soyle", re.compile(r"^site\.js\s+ne\s+yap[ıi]yor$", re.I)),
+    ("js_calistir", re.compile(r"^site\.js(?:\s+dosyas[ıi]n[ıi])?\s+[çc]al[ıi][sş]t[ıi]r$", re.I)),
+    ("js_fazla", re.compile(r"^site\.js\b.+$", re.I)),
+    ("orta_css_fazla", re.compile(r"^orta/site\.css\s+dosyas[ıi]n[ıi]n\s+sat[ıi]r[ıi]n[ıi]\s+s[öo]yle\b.+$", re.I)),
+    ("orta_css", re.compile(r"^orta/site\.css\s+dosyas[ıi]n[ıi]n\s+sat[ıi]r[ıi]n[ıi]\s+s[öo]yle$", re.I)),
+    ("orta_js_calistir", re.compile(r"^orta/site\.js(?:\s+dosyas[ıi]n[ıi])?\s+[çc]al[ıi][sş]t[ıi]r$", re.I)),
+    ("orta_js_soyle", re.compile(r"^orta/site\.js\s+ne\s+yap[ıi]yor$", re.I)),
+    ("orta_js_fazla", re.compile(r"^orta/site\.js\b.+$", re.I)),
+    ("sayfalar_fazla", re.compile(r"^sayfalar[ıi]\s+s[öo]yle\b.+$", re.I)),
+    ("sayfalar", re.compile(r"^sayfalar[ıi]\s+s[öo]yle$", re.I)),
+    ("merhaba_ekle", re.compile(r"^merhaba\.txt\s+dosyas[ıi]na\s+sat[ıi]r\s+ekle\b.+$", re.I)),
+    ("merhaba_ilk_fazla", re.compile(r"^merhaba\.txt\s+dosyas[ıi]n[ıi]n\s+ilk\s+sat[ıi]r[ıi]n[ıi]\s+s[öo]yle\b.+$", re.I)),
+    ("merhaba_ilk", re.compile(r"^merhaba\.txt\s+dosyas[ıi]n[ıi]n\s+ilk\s+sat[ıi]r[ıi]n[ıi]\s+s[öo]yle$", re.I)),
+    ("merhaba_son_fazla", re.compile(r"^merhaba\.txt\s+dosyas[ıi]n[ıi]n\s+son\s+sat[ıi]r[ıi]n[ıi]\s+s[öo]yle\b.+$", re.I)),
+    ("merhaba_son", re.compile(r"^merhaba\.txt\s+dosyas[ıi]n[ıi]n\s+son\s+sat[ıi]r[ıi]n[ıi]\s+s[öo]yle$", re.I)),
+    ("merhaba_satir_fazla", re.compile(r"^merhaba\.txt\s+dosyas[ıi]n[ıi]n\s+sat[ıi]r[ıi]n[ıi]\s+s[öo]yle\b.+$", re.I)),
+    ("merhaba_satir", re.compile(r"^merhaba\.txt\s+dosyas[ıi]n[ıi]n\s+sat[ıi]r[ıi]n[ıi]\s+s[öo]yle$", re.I)),
     ("baslik", re.compile(r"^(?:başlığı|basligi|başlık|baslik)\s+(?P<metin>.+?)\s+yap$", re.I)),
     ("paragraf", re.compile(
         r"^paragraf(?:\s+ekle)?\s*[:\-]?\s*(?P<metin>(?:(?!\s+sonra\s)[^,\n])+)$",
@@ -835,6 +896,41 @@ _USTA_IZ = re.compile(
     re.I,
 )
 _RENK_HEX = {"siyah": "#111111", "mavi": "#1d4e89", "kirmizi": "#9b2c2c", "yesil": "#1f7a4d"}
+_RENK_AD = {"siyah": "siyah", "mavi": "mavi", "kirmizi": "kırmızı", "yesil": "yeşil"}
+_SAYFA_FAZLA = {
+    "sayfa_ad_soyle_fazla": "açık sayfanın adını söyle",
+    "gorunen_say_fazla": "görünen satır sayısını söyle",
+    "gorunen_ilk_fazla": "ilk görünen satırı söyle",
+    "gorunen_son_fazla": "son görünen satırı söyle",
+    "baglanti_var_fazla": "bağlantı var mı söyle",
+    "dugme_var_fazla": "düğme var mı söyle",
+    "resim_var_fazla": "resim var mı söyle",
+    "baslik_renk_soyle_fazla": "başlık rengini söyle",
+    "baslik_ayni_fazla": "başlıklar aynı mı söyle",
+    "notlar_ekle_fazla": "notlar dosyasına satır ekle: söz",
+    "notlar_ilk_fazla": "notlar dosyasının ilk satırını söyle",
+    "notlar_son_fazla": "notlar dosyasının son satırını söyle",
+    "notlar_satir_fazla": "notlar dosyasının satırını söyle",
+    "site_css_fazla": "site.css dosyasının satırını söyle",
+    "js_fazla": "site.js ne yapıyor",
+    "orta_css_fazla": "orta/site.css dosyasının satırını söyle",
+    "orta_js_fazla": "orta/site.js ne yapıyor",
+    "sayfalar_fazla": "sayfaları söyle",
+    "merhaba_ilk_fazla": "merhaba.txt dosyasının ilk satırını söyle",
+    "merhaba_son_fazla": "merhaba.txt dosyasının son satırını söyle",
+    "merhaba_satir_fazla": "merhaba.txt dosyasının satırını söyle",
+}
+_SAYFA_OKU = {
+    "sayfa_ad_soyle",
+    "gorunen_say",
+    "gorunen_ilk",
+    "gorunen_son",
+    "baglanti_var",
+    "dugme_var",
+    "resim_var",
+    "baslik_renk_soyle",
+    "baslik_ayni",
+}
 _RESIM_UZANTI = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
 _ADRES = re.compile(r"^https?://[A-Za-z0-9._~:/?#\[\]@!$&()*+,;=%-]{1,300}$")
 _ONERI = (
@@ -1045,6 +1141,7 @@ def _adim(text: str) -> dict | None:
         sade,
         flags=re.I,
     ).strip()
+    sade = re.sub(r"[.!?…]+$", "", sade).strip()
     for kind, cre in _KALIP:
         bulunan = cre.match(sade)
         if not bulunan:
@@ -1281,6 +1378,55 @@ _PY_OKU = {
     "git_kaydet",
     "git_gonder",
     "git_yazma",
+    "sayfa_ad_soyle_fazla",
+    "sayfa_ad_soyle",
+    "gorunen_say_fazla",
+    "gorunen_say",
+    "gorunen_ilk_fazla",
+    "gorunen_ilk",
+    "gorunen_son_fazla",
+    "gorunen_son",
+    "baglanti_var_fazla",
+    "baglanti_var",
+    "dugme_var_fazla",
+    "dugme_var",
+    "resim_var_fazla",
+    "resim_var",
+    "baslik_renk_soyle_fazla",
+    "baslik_renk_soyle",
+    "baslik_ayni_fazla",
+    "baslik_ayni",
+    "notlar_ekle",
+    "notlar_ekle_fazla",
+    "notlar_ilk_fazla",
+    "notlar_ilk",
+    "notlar_son_fazla",
+    "notlar_son",
+    "notlar_satir_fazla",
+    "notlar_satir",
+    "index_baslik_yasak",
+    "site_css_fazla",
+    "site_css",
+    "css_yaz",
+    "js_cagri",
+    "js_fonk",
+    "js_soyle",
+    "js_calistir",
+    "js_fazla",
+    "orta_css_fazla",
+    "orta_css",
+    "orta_js_calistir",
+    "orta_js_soyle",
+    "orta_js_fazla",
+    "sayfalar_fazla",
+    "sayfalar",
+    "merhaba_ekle",
+    "merhaba_ilk_fazla",
+    "merhaba_ilk",
+    "merhaba_son_fazla",
+    "merhaba_son",
+    "merhaba_satir_fazla",
+    "merhaba_satir",
 }
 
 
@@ -1408,6 +1554,9 @@ def _oku_paket(repo: Path, ad: str) -> dict:
 
 
 def _py_adi(ad: str) -> str:
+    duz = (ad or "").strip().replace("\\", "/")
+    if duz == "orta/arac.py":
+        return duz
     temiz = _dosya_adi(ad)
     if not temiz.lower().endswith(".py"):
         raise ValueError("Bu tarif yalnız Python dosyası içindir.")
@@ -4038,10 +4187,15 @@ def _calistir(repo: Path, adim: dict, sayfa: str) -> dict:
             if kind in _TARIF:
                 raise
             raise ValueError("Çalışma klasörü seçilmedi. Şöyle söyle: çalışma klasörü: tam yol") from None
+    if kind == "index_baslik_yasak":
+        raise ValueError("Bunu yapmadım. index.html durur.")
     if kind == "yaz":
         metin = adim.get("metin") or ""
         if metin == "":
             raise ValueError("Yazılacak metin yok.")
+        hedef = str(adim.get("ad") or "").lower()
+        if hedef.endswith((".css", ".js", ".mjs", ".py")):
+            raise ValueError("Bu dosyaya satır yazılmaz.")
         return _yaz_geri(repo, adim.get("ad") or "", metin)
     if kind == "oku":
         return _oku_paket(repo, adim.get("ad") or "")
@@ -4052,6 +4206,30 @@ def _calistir(repo: Path, adim: dict, sayfa: str) -> dict:
             raise ValueError(
                 "Çalışma klasörü seçilmedi. Şöyle söyle: çalışma klasörü: tam yol"
             ) from None
+        if kind in _SAYFA_FAZLA:
+            return _paket(reply="Bu cümle söylemez. Şöyle söyle: " + _SAYFA_FAZLA[kind] + "\nYazmadım.")
+        if kind in _SAYFA_OKU:
+            return _sayfa_oku(repo, kind)
+        if kind in {"notlar_satir", "notlar_ilk", "notlar_son", "notlar_ekle"}:
+            return _notlar(repo, kind, adim.get("metin") or "")
+        if kind == "site_css":
+            return _site_css(repo, "site.css")
+        if kind == "orta_css":
+            return _site_css(repo, "orta/site.css")
+        if kind == "css_yaz":
+            raise ValueError("Bu dosyaya satır yazılmaz.")
+        if kind in {"js_soyle", "js_fonk", "js_cagri", "js_calistir"}:
+            return _site_js(repo, kind, adim.get("fonk") or "", "site.js")
+        if kind == "orta_js_soyle":
+            return _site_js(repo, "js_soyle", "", "orta/site.js")
+        if kind == "orta_js_calistir":
+            return _site_js(repo, "js_calistir", "", "orta/site.js")
+        if kind == "sayfalar":
+            return _sayfalar(repo)
+        if kind == "merhaba_ekle":
+            raise ValueError("Bu dosyaya satır eklenmez.")
+        if kind in {"merhaba_satir", "merhaba_ilk", "merhaba_son"}:
+            return _metin_satir(repo, "merhaba.txt", kind)
         if kind == "py_calistir":
             return _paket(reply="Bunu yapmadım. Kodu çalıştırmadım. Dosya aynı.")
         if kind == "py_fonksiyon":
@@ -4734,7 +4912,7 @@ def _gorunen_yazi(ham: str) -> str:
         ic = _duz_metin(baslik.group(1))
         if _soz_var(ic):
             satirlar.append("başlık: " + ic)
-    for etiket, ad in (("h1", "başlık"), ("h2", "ara başlık"), ("p", "paragraf"), ("button", "buton")):
+    for etiket, ad in (("h1", "başlık"), ("h2", "ara başlık"), ("p", "paragraf"), ("button", "buton"), ("a", "bağlantı")):
         for bulunan in re.finditer(rf"<{etiket}\b[^>]*>(.*?)</{etiket}>", govde, re.I | re.S):
             ic = _duz_metin(bulunan.group(1))
             if _soz_var(ic):
@@ -4746,17 +4924,246 @@ def _gorunen_yazi(ham: str) -> str:
     return "\n".join(satirlar)[:1200]
 
 
+def _gorunen_satirlar(ham: str) -> list[str]:
+    govde = ham or ""
+    if "<" not in govde:
+        return [satir.strip()[:180] for satir in govde.splitlines() if satir.strip()]
+    desen = re.compile(r"<(title|h1|h2|p|button|a)\b[^>]*>(.*?)</\1>", re.I | re.S)
+    satirlar: list[str] = []
+    gorulen: set[str] = set()
+    for bulunan in desen.finditer(govde):
+        ic = _duz_metin(bulunan.group(2))
+        if not ic:
+            continue
+        anahtar = ic.casefold()
+        if anahtar in gorulen:
+            continue
+        gorulen.add(anahtar)
+        satirlar.append(ic[:180])
+    return satirlar
+
+
 def _gordum_satir(ham: str) -> str:
-    baslik = re.search(r"<title>(.*?)</title>", ham, re.I | re.S)
-    if baslik:
-        ic = re.sub(r"\s+", " ", baslik.group(1)).strip()
-        if ic:
-            return ic[:180]
-    for satir in ham.splitlines():
+    govde = ham or ""
+    if "<" not in govde:
+        for satir in govde.splitlines():
+            temiz = satir.strip()
+            if temiz:
+                return temiz[:180]
+        return "(boş)"
+    satirlar = _gorunen_satirlar(govde)
+    if satirlar:
+        return "\n".join(satirlar)[:1200]
+    for satir in govde.splitlines():
         temiz = satir.strip()
         if temiz:
             return temiz[:180]
     return "(boş)"
+
+
+def _h1_renk_adi(ham: str) -> str:
+    bulunan = re.search(r"<h1\b([^>]*)>", ham or "", re.I)
+    if not bulunan:
+        return ""
+    renk = re.search(r"color\s*:\s*(#[0-9A-Fa-f]{6})", bulunan.group(1), re.I)
+    if not renk:
+        return ""
+    kod = renk.group(1).lower()
+    for anahtar, hexcode in _RENK_HEX.items():
+        if hexcode.lower() == kod:
+            return _RENK_AD[anahtar]
+    return "başka"
+
+
+def _baslik_cifti(ham: str) -> tuple[str, str]:
+    govde = ham or ""
+    pencere = re.search(r"<title\b[^>]*>(.*?)</title>", govde, re.I | re.S)
+    buyuk = re.search(r"<h1\b[^>]*>(.*?)</h1>", govde, re.I | re.S)
+    return (
+        _duz_metin(pencere.group(1)) if pencere else "",
+        _duz_metin(buyuk.group(1)) if buyuk else "",
+    )
+
+
+def _sayfa_oku(repo: Path, kind: str) -> dict:
+    dosya = _sayfa_sec(repo, "")
+    okunan = klasor_oku_dosya(repo, dosya)
+    ham = okunan["text"]
+    satirlar = _gorunen_satirlar(ham) if "<" in ham else [s.strip() for s in ham.splitlines() if s.strip()]
+    if kind == "sayfa_ad_soyle":
+        reply = "Sayfa: " + dosya
+    elif kind == "gorunen_say":
+        reply = "Satır: " + str(len(satirlar))
+    elif kind == "gorunen_ilk":
+        reply = satirlar[0] if satirlar else "Satır yok."
+    elif kind == "gorunen_son":
+        reply = satirlar[-1] if satirlar else "Satır yok."
+    elif kind == "baglanti_var":
+        reply = "Bağlantı var." if re.search(r"<a\b", ham, re.I) else "Bağlantı yok."
+    elif kind == "dugme_var":
+        reply = "Düğme var." if re.search(r"<button\b", ham, re.I) else "Düğme yok."
+    elif kind == "resim_var":
+        reply = "Resim var." if re.search(r"<img\b", ham, re.I) else "Resim yok."
+    elif kind == "baslik_renk_soyle":
+        ad = _h1_renk_adi(ham)
+        reply = "Renk yok." if not ad else "Renk: " + ad
+    else:
+        pencere, buyuk = _baslik_cifti(ham)
+        if not pencere or not buyuk:
+            reply = "Başlık yok."
+        elif pencere.casefold() == buyuk.casefold():
+            reply = "Başlıklar aynı."
+        else:
+            reply = "Başlıklar ayrı."
+    return _paket(
+        reply=reply,
+        gorunum="proje",
+        rel=okunan["rel"],
+        text=ham,
+        onizleme=True,
+        sayfa=dosya,
+    )
+
+
+def _notlar_satirlari(ham: str) -> list[str]:
+    return [satir.strip() for satir in (ham or "").splitlines() if satir.strip()]
+
+
+def _notlar(repo: Path, kind: str, metin: str) -> dict:
+    try:
+        okunan = klasor_oku_dosya(repo, "notlar.txt")
+    except ValueError:
+        return _paket(reply="Notlar yok.")
+    satirlar = _notlar_satirlari(okunan["text"])
+    if kind == "notlar_satir":
+        reply = "Satır: " + str(len(satirlar))
+    elif kind == "notlar_ilk":
+        reply = "İlk satır: " + satirlar[0] if satirlar else "Satır yok."
+    elif kind == "notlar_son":
+        reply = "Son satır: " + satirlar[-1] if satirlar else "Satır yok."
+    else:
+        temiz = (metin or "").strip()
+        if not temiz or len(temiz) > 180 or "\n" in metin:
+            raise ValueError("Satır boş veya çok uzun.")
+        if temiz in satirlar:
+            return _paket(reply="Zaten var.", gorunum="kod", rel=okunan["rel"], text=okunan["text"])
+        govde = okunan["text"]
+        if govde and not govde.endswith("\n"):
+            govde += "\n"
+        govde += temiz + "\n"
+        klasor_yaz(repo, "notlar.txt", govde)
+        yazilan = klasor_oku_dosya(repo, "notlar.txt")
+        reply = "Satır eklendi.\n" + temiz
+        return _paket(reply=reply, gorunum="kod", rel=yazilan["rel"], text=yazilan["text"])
+    return _paket(reply=reply, gorunum="kod", rel=okunan["rel"], text=okunan["text"])
+
+
+def _site_oku(repo: Path, ad: str) -> dict | None:
+    try:
+        return klasor_oku_dosya(repo, ad)
+    except ValueError:
+        return None
+
+
+def _site_css(repo: Path, rel: str) -> dict:
+    okunan = _site_oku(repo, rel)
+    if okunan is None:
+        return _paket(reply=rel + " yok.")
+    adet = len([satir for satir in okunan["text"].splitlines() if satir.strip()])
+    return _paket(
+        reply="Satır: " + str(adet),
+        gorunum="kod",
+        rel=okunan["rel"],
+        text=okunan["text"],
+    )
+
+
+def _js_cagrilar(ham: str) -> list[str]:
+    bulunan: list[str] = []
+    for eslesen in re.finditer(r"(?<![\w])([A-Za-z_][A-Za-z0-9_]*)\s*\(", ham or ""):
+        ad = eslesen.group(1)
+        once = (ham or "")[: eslesen.start()].rstrip()
+        if once.endswith("function") or ad in {"if", "for", "while", "switch", "catch", "return"}:
+            continue
+        if ad not in bulunan:
+            bulunan.append(ad)
+    return bulunan
+
+
+def _js_fonk_govde(ham: str, ad: str) -> str | None:
+    bulunan = re.search(r"function\s+" + re.escape(ad) + r"\s*\([^)]*\)\s*\{", ham or "")
+    if not bulunan:
+        return None
+    derinlik = 1
+    uc = bulunan.end()
+    for i in range(uc, len(ham)):
+        if ham[i] == "{":
+            derinlik += 1
+        elif ham[i] == "}":
+            derinlik -= 1
+            if derinlik == 0:
+                return ham[uc:i]
+    return ham[uc:]
+
+
+def _site_js(repo: Path, kind: str, fonk: str, rel: str = "site.js") -> dict:
+    okunan = _site_oku(repo, rel)
+    if okunan is None:
+        return _paket(reply=rel + " yok.")
+    ham = okunan["text"]
+    paket = {"gorunum": "kod", "rel": okunan["rel"], "text": ham}
+    if kind == "js_calistir":
+        return _paket(reply="Bunu yapmadım. Kodu çalıştırmadım. Dosya aynı.", **paket)
+    if kind == "js_soyle":
+        adlar = re.findall(r"function\s+([A-Za-z_][A-Za-z0-9_]*)", ham)[:6]
+        cagrilar = _js_cagrilar(ham)[:6]
+        govde = ", ".join(adlar) + "." if adlar else "Fonksiyon yok."
+        if cagrilar:
+            govde += "\n" + ", ".join(cagrilar) + " çağırır."
+        return _paket(
+            reply=rel + " okundu. Çalıştırmadım.\n" + govde + "\nDosya aynı.",
+            **paket,
+        )
+    govde_fonk = _js_fonk_govde(ham, fonk)
+    if govde_fonk is None:
+        cevap = fonk + " bu dosyada yok."
+    elif kind == "js_cagri":
+        adlar = _js_cagrilar(govde_fonk)[:6]
+        cevap = ", ".join(adlar) + " çağırır." if adlar else "Kimseyi çağırmaz."
+    else:
+        cevap = fonk + "()."
+    return _paket(
+        reply=rel + " içinde " + fonk + " okundu. Çalıştırmadım.\n" + cevap + "\nDosya aynı.",
+        **paket,
+    )
+
+
+def _sayfalar(repo: Path) -> dict:
+    liste = klasor_liste(repo)
+    if not liste["klasor"]:
+        raise ValueError("Çalışma klasörü seçilmedi. Şöyle söyle: çalışma klasörü: tam yol")
+    adlar = [
+        str(item["rel"]).replace("klasor/", "", 1)
+        for item in liste["dosyalar"]
+        if str(item["rel"]).lower().endswith((".html", ".htm"))
+    ]
+    if not adlar:
+        return _paket(reply="Sayfa yok.", klasor=liste["klasor"])
+    return _paket(reply="Sayfalar: " + ", ".join(adlar), klasor=liste["klasor"])
+
+
+def _metin_satir(repo: Path, ad: str, kind: str) -> dict:
+    okunan = _site_oku(repo, ad)
+    if okunan is None:
+        return _paket(reply=ad + " yok.")
+    satirlar = [satir.strip() for satir in okunan["text"].splitlines() if satir.strip()]
+    if kind.endswith("_satir"):
+        reply = "Satır: " + str(len(satirlar))
+    elif kind.endswith("_ilk"):
+        reply = "İlk satır: " + satirlar[0] if satirlar else "Satır yok."
+    else:
+        reply = "Son satır: " + satirlar[-1] if satirlar else "Satır yok."
+    return _paket(reply=reply, gorunum="kod", rel=okunan["rel"], text=okunan["text"])
 
 
 def _tarif_satir(sade: str, hedef: str, kaynak: str) -> tuple[str, dict] | None:
@@ -5107,12 +5514,13 @@ def _karisik_bak(adimlar: list[dict]) -> bool:
 def _sade_cumle(text: str) -> str:
     sade = re.sub(r"\s+", " ", (text or "").strip())
     sade = re.sub(r"^[Ll]ütfen\s+", "", sade)
-    return re.sub(
+    sade = re.sub(
         r"\s+(?:lütfen|lutfen|olur mu|yapar mısın|yapar misin)\s*$",
         "",
         sade,
         flags=re.I,
     ).strip()
+    return re.sub(r"[.!?…]+$", "", sade).strip()
 
 
 def _usta_adim(kind: str, ham: str, **alan) -> dict:
@@ -5127,6 +5535,12 @@ def _usta_parca(parca: str) -> list[dict] | None:
         return [tek]
     sade = _sade_cumle(parca)
     if not sade:
+        return None
+    if re.match(
+        r"^(?:belgeye|belgede|belgeyi|tabloda|tabloya|tabloyu|çizime|cizime|çizimi|cizimi|sunuma|sunumu|slaytın|slaytin)\b",
+        sade,
+        re.I,
+    ):
         return None
     oku_sayfa = re.match(
         r"^(?P<ad>[A-Za-z0-9çğıöşüÇĞİÖŞÜ._-]+)\s+sayfas[ıi]n[ıi]\s+oku$",
