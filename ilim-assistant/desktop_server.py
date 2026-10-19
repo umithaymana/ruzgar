@@ -10445,6 +10445,13 @@ def _collect_fast_lane_chat_events(req: ChatRequest) -> list[dict[str, Any]] | N
     if not msg_raw or len(msg_raw) > 400:
         return None
     try:
+        from ilim_assistant.motorlar.programlama_proje_masasi import tarif_cumlesi
+
+        if tarif_cumlesi(msg_raw):
+            return None
+    except Exception:
+        pass
+    try:
         from ilim_assistant.chat_fast_lane import mode_norm_from_request, try_instant_reply
 
         mode_norm = mode_norm_from_request(getattr(req, "mode", None))

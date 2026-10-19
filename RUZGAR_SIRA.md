@@ -64,8 +64,26 @@
 | 56 | İkinci bakış, üçüncü yok | bitti | `test_ikinci_bakis_bir_kez_bakar_ucuncuye_gecmez` |
 | 57 | Açık satırı bitti yap | bitti | `test_acik_satir_yalniz_gecince_bitti_olur` |
 | 58 | Eksik düzeltme kapıda kalır | bitti | `test_eksik_duzeltme_kapida_kalir_yazmaz` |
+| 59 | Turun başı, yalnız oku | bitti | `test_orta_turu_baslat_okur_yazmaz` |
+| 60 | Turun düzeltmesi, bilinen satır | bitti | `test_orta_turu_duzelt_yalniz_kalinca_bilinen_satiri_yazar` |
+| 61 | Turun bakışı, bir kez | bitti | `test_orta_turu_bak_bir_kez_bakar_ucuncuye_gecmez` |
+| 62 | Turun kapanışı, tek açık satır | bitti | `test_orta_turu_kapat_bakis_gecince_tek_satiri_bitti_yapar` |
+| 63 | Turu tek cümlede söyle, yazma | bitti | `test_orta_turu_soyle_sirayi_soyler_yazmaz` |
+| 64 | Ölçüyü söyle, yazma | bitti | `test_olcu_soyle_okur_yazmaz` |
+| 65 | Ölçüde kelime say, bir kez | bitti | `test_olcu_kelime_say_bir_kez_calisir_dosyayi_degistirmez` |
+| 66 | Ölçü neden kaldı | bitti | `test_olcu_neden_ve_duzelt_yalniz_bilinen_satiri_yazar` |
+| 67 | Ölçüyü bilinen satıra düzelt | bitti | `test_olcu_neden_ve_duzelt_yalniz_bilinen_satiri_yazar` |
+| 68 | Selam, kapı cümlesini yutmasın | bitti | `test_selam_iceren_olcu_cumlesi_selamlamaz` |
+| 69 | Ölçü satırı, ikinci dosya | bitti | `test_olcu_satiri_yalniz_bilinen_satiri_yazar` |
+| 70 | Dış ölçü dosyasını oku | bitti | `test_dis_olcu_yalniz_olcu_txt_okur` |
+| 71 | Git farkını söyle | bitti | `test_git_farkini_soyler_yazmaz` |
+| 72 | Ölçüye bir kez bak | bitti | `test_olcu_bak_bir_kez_bakar_ucuncuye_gecmez` |
+| 73 | Ölçüyü kapat, tahtaya yazma | bitti | `test_olcu_kapat_bakis_gecince_tahtaya_yazmaz` |
+| 74 | Ölçü sırasını söyle | bitti | `test_olcu_sirasi_soyler_yazmaz` |
+| 75 | Dış ölçü dosyasına bir kez yaz | bitti | `test_dis_olcu_yaz_yalniz_bilinen_satiri_bir_kez_yazar` |
+| 76 | Git ölçü farkını söyle | bitti | `test_git_olcu_farkini_soyler_yazmaz` |
 
-**Denenecek cümle:** `orta aracını düzelt`
+**Denenecek cümle:** `orta ölçüsüne bak`
 
 **13. iş bitti.** Kilitli klasör sayar, metin dosyası açar, ara başlık, http bağlantı, başlık rengi, klasördeki resim ve sayfa adı değişir. Dört masa: belgede bir kez değiştir, hücre sil, sütun topla, renkli çiz, slayt başlığı. Bak bu tariflerden yazı ve rengi önerebilir. Bağlantı, resim ve ad değiştirme yalnız sen söyleyince olur. `uygula` yine son bakışı bir kez çalıştırır.
 
@@ -150,6 +168,40 @@
 **57. iş bitti. 5. basamağın dördüncü adımı.** `açık satırı bitti yap` ikinci bakış geçtiyse tahtadaki tek açık satırı bitti yapar. Açık satır yoksa ya da birden fazlaysa yazmaz. Eski satırı silmez, yeni satır eklemez. Test geçmeden tahtaya dokunmaz.
 
 **58. iş bitti. Eksik düzeltme kapıda kalır.** `orta aracını düzelt` ve sonu boş `orta aracını düzelt:` dosyaya yazmaz, kod çalıştırmaz. Cevap bilinen satırı söyler. Bu cümle modele gitmez. Satır doluysa eski kapı durur.
+
+**59. iş bitti. 6. basamağın ilk adımı.** `orta turu başlat` üç kontrolün nedenini okur. Üçü de geçtiyse tur durur. Kaldıysa nedeni söyler. `orta/arac.py` aynı kalır. Düzeltmez, çalıştırmaz.
+
+**60. iş bitti. 6. basamağın ikinci adımı.** `orta turu düzelt` yalnız tur kaldıysa bilinen satırı `orta/arac.py` içine yazar. Tur geçtiyse yazmaz. Satırın sonuna eklenen metin yazılmaz. Dosya aynıysa üstüne yazmaz. Çalıştırmaz.
+
+**61. iş bitti. 6. basamağın üçüncü adımı.** `orta turu bak` düzeltmeden sonra testi bir kez söyler. Aynı cümle yeniden söylenirse üçüncü bakışa geçmez. Dosyayı düzeltmez.
+
+**62. iş bitti. 6. basamağın dördüncü adımı.** `orta turu kapat` bakış geçtiyse tahtadaki tek açık satırı bitti yapar. Bakış geçmediyse tahtaya yazmaz. Eski satırı silmez, yeni satır eklemez. Birden fazla açık satır varsa durur.
+
+**63. iş bitti. 7. basamağın ilk adımı.** `orta turu söyle` dört cümleyi sırayla söyler ve turun nerede durduğunu okur. Dosyaya yazmaz. Tahtaya yazmaz. Yazmayı kendisi seçmez.
+
+**64. iş bitti. Ölçü kapısının ilk adımı.** `orta ölçüsünü söyle` `orta/olcu.py` dosyasını okur. Yoksa açmaz. Hazırsa `kelime_say` adını ve bilinen satırı söyler. Yazmaz, çalıştırmaz.
+
+**65. iş bitti.** `orta ölçüsünde kelime say` hazır `kelime_say` aracını bir kez çalıştırır. Metin verilmezse `orta/not.txt` okunur. `orta ölçüsünde kelime say: selam` verilen metni sayar. Dosya aynı kalır. Hazır olmayan araç çalışmaz.
+
+**66–67. iş bitti.** `orta ölçüsü neden kaldı` üç kontrolün nedenini söyler. Dosya yoksa ya da hazır değilse düzeltme kapısı açılır. `orta ölçüsünü düzelt` yalnız o zaman bilinen satırı yazar. Ölçü geçtiyse yazmaz. Eklenen metin yazılmaz. Çalıştırmaz.
+
+**68. iş bitti.** `orta ölçüsünde kelime say: selam ikinci` selamlama şeridine düşmez. Kapı cümlesi selamdan önce durur. Yalın `selam` yine selamdır.
+
+**69. iş bitti.** `ölçü satırı yaz` yalnız bilinen satırı `ilim-assistant/ilim_assistant/olcu_notu.py` dosyasına bir kez yazar. Kullanıcının yazdığı metin girmez. Varsa üstüne yazmaz. `ölçü satırını söyle` okur, açmaz. Çalıştırmaz.
+
+**70. iş bitti.** `dış ölçü dosyasını oku` seçilen dış klasörde yalnız `olcu.txt` okur. Başka ad okumaz. Dosya yoksa açmaz. Yazmaz, çalıştırmaz.
+
+**71. iş bitti.** `git farkını söyle` yalnız `kapi_notu.py` farkını söyler. Başka dosyanın içeriğini açmaz. Baş değişmez. Kaydetmez, göndermez.
+
+**72. iş bitti.** `orta ölçüsüne bak` düzeltmeden sonra üç kontrolü bir kez söyler. Aynı cümle yeniden söylenirse üçüncü bakışa geçmez. `orta/olcu.py` aynı kalır. Düzeltmez.
+
+**73. iş bitti.** `orta ölçüsünü kapat` bakış geçtiyse ölçü kaydını kapatır. Tahtaya yazmaz. Eski satırı silmez, yeni satır eklemez. Bakış geçmediyse kapanmaz.
+
+**74. iş bitti.** `orta ölçü sırasını söyle` dört cümleyi ve ölçünün yerini söyler. Dosyaya yazmaz. Tahtaya yazmaz. Yazmayı kendisi seçmez.
+
+**75. iş bitti.** `dış ölçü dosyasına yaz` seçilen dış klasöre yalnız `olcu.txt` yazar. İçerik bilinen satırdır. Kullanıcının metni girmez. Dosya varsa üstüne yazmaz. Başka ad yazmaz. Çalıştırmaz.
+
+**76. iş bitti.** `git ölçü farkını söyle` yalnız `olcu_notu.py` farkını söyler. `kapi_notu.py` bu cümlede açılmaz. Baş değişmez. Kaydetmez, göndermez.
 
 **Bilerek kapalı:** dosya silmek, modelin ürettiği kodu çalıştırmak, serbest kaynak yazmak, serbest dış yazmak, zorla göndermek, 32B/70B, telefon.
 

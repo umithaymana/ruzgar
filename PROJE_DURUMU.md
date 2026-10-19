@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-14 öğle — soru muhakemesi, 3 sayfa, akıcı sohbet. Kapı kapalı; Mimar açacak.
+**Son güncelleme:** 2026-10-19 sabah — dün geceki oturum dosyaya işlendi. Son git kaydı `ad7e4520` (`origin/main`). Sıra tahtası 1–58 bitti. Sıradaki iş 6. basamak: `orta turu başlat`.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -46,14 +46,24 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 31. ~~Sayfa derinliği + raf/web~~ — sayfa gövdesi okunur. Güncel turda raf susar.
 32. ~~Web güçlü~~ — bilgi/bilim/güncel turda raf aramayı kapatamaz.
 33. ~~Soru muhakemesi + akıcı sohbet~~ — `reason_web_question` ne öğrenildiğini ayırır, 3 ilgili sayfa okunur. `RUZGAR_SOHBET_TARZ=chatgpt`: «nedir» kartı kesilir, cevap ilk cümlede ve sohbet eder gibi. Kur cümlesi kart kalınlığından çıktı.
+34. ~~Yüz kilidi~~ — 2026-10-16. Motor listesi, geri/ileri/yenile, sohbet tutamacı, dört masa, boşken Rüzgar sahnesi durur.
+35. ~~Sıra tahtası 1–76~~ — `RUZGAR_SIRA.md`. El kilitli klasörde (`C:\Users\hayma\Desktop\ruzgar-el`). Raf: 19 dil × 45 kart, Python 3.14.5 üst modül adları 297. Kod çalıştırma serbest değil.
+36. ~~4. basamak, dört kapı~~ — sayma, uygulama defteri, dış klasör, git durum. Geniş hali: test söyle, tek satır, dışa bir kez yaz, yalnız kapı notunu kaydet.
+37. ~~5. basamak~~ — test nedeni, bilinen satır, ikinci bakış, açık satırı bitti, eksik düzeltme kapıda. Son kayıt `ad7e4520`.
+38. ~~6. basamak + ölçü kapısı~~ — tur 59–63 canlıda kapıdan döndü. Ölçü 64–76: bakış, kapanış, sıra, dışa bilinen satır, ölçü farkı. Tahta 76. Canlı deneme bekliyor. Git kaydı yok.
 
 ### Mimar dönünce (sıra)
 
-1. `.\Ruzgar.ps1 -ForceRestart` — 8779 bu oturumda kapanmıştı, açılış Mimar’da.
-2. Canlı dene: «fotosentez nedir» sohbet cümlesi olsun, tek satır kart olmasın. «dolar kaç tl» rakam + kaynak, konuşur gibi. Bir haber veya maç saati: ilk cümlede cevap.
-3. Kart hâlâ kesiyorsa sağlıkta `RUZGAR_SOHBET_TARZ=chatgpt` yüklenmiş mi bak.
-4. Cevap doğru ama yavaşsa sayfa sayısını 3’te tut. Cevap boşsa `WEB_PAGE_FOCUS_CHARS` 2400’den 4000’e.
+1. Tahta 72–76 testte yeşil. Canlı deneme: `orta ölçüsüne bak`, `orta ölçüsünü kapat`, `orta ölçü sırasını söyle`, `dış ölçü dosyasına yaz`, `git ölçü farkını söyle`.
+2. Canlı doğruysa git kaydı ve gönderim. Öğrenilen notlar ve nebula paketleri kayda girmez.
+3. Kapalı duranlar: dosya silmek, modelin ürettiği kodu çalıştırmak, serbest kaynak yazmak, serbest dış yazmak, zorla göndermek, 32B/70B, telefon.
 5. **İlerisi:** telefon ince istemci, yalnız kapı `8779`. Ollama telefona açılmaz.
+
+### 2026-10-18 / 19 — oturum kaydı (geç yazıldı)
+
+- 18 Ekim: sohbet kapısı (hava yeni konuya yapışmasın, medeniyet kartı), program okuma eli 20–28, dil rafı Faz 20, sohbet cilası, dört masa sohbeti, orta iş.
+- 19 Ekim gece: orta not 43–45, dört kapı 46–49 (`e3d95275`), kapı genişlemesi 50–57, eksik düzeltme 58 (`ad7e4520`). Hepsi `origin/main`.
+- Bu dosya o gece yazılmadı. 19 Ekim sabahı Mimar sorunca işlendi. Git kaydı ayrıca duruyordu.
 
 ### 2026-10-07 — Anlık kavram eşleşme (saçma cevap kökü)
 

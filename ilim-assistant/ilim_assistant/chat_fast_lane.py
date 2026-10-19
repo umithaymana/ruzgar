@@ -31,6 +31,13 @@ def try_instant_reply(message: str, mode_norm: str = "genel") -> str | None:
     raw = (message or "").strip()
     if not raw or len(raw) > 120:
         return None
+    try:
+        from ilim_assistant.motorlar.programlama_proje_masasi import tarif_cumlesi
+
+        if tarif_cumlesi(raw):
+            return None
+    except Exception:
+        pass
     blob = _norm(raw) + " " + _ascii(raw)
 
     if re.search(
