@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-19 — kapı 107–116 yeşil. Okuyan cümleler son satırı, satır sayısını, dalı ve notun varlığını söyler. Yazmaz.
+**Son güncelleme:** 2026-10-19 — kapı 117–136 yeşil. Okuyan cümleler varlığı, bakışı, kapanışı ve temizliği söyler. Yazmaz.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -47,14 +47,14 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 32. ~~Web güçlü~~ — bilgi/bilim/güncel turda raf aramayı kapatamaz.
 33. ~~Soru muhakemesi + akıcı sohbet~~ — `reason_web_question` ne öğrenildiğini ayırır, 3 ilgili sayfa okunur. `RUZGAR_SOHBET_TARZ=chatgpt`: «nedir» kartı kesilir, cevap ilk cümlede ve sohbet eder gibi. Kur cümlesi kart kalınlığından çıktı.
 34. ~~Yüz kilidi~~ — 2026-10-16. Motor listesi, geri/ileri/yenile, sohbet tutamacı, dört masa, boşken Rüzgar sahnesi durur.
-35. ~~Sıra tahtası 1–116~~ — `RUZGAR_SIRA.md`. El kilitli klasörde (`C:\Users\hayma\Desktop\ruzgar-el`). Raf: 19 dil × 45 kart, Python 3.14.5 üst modül adları 297. Kod çalıştırma serbest değil.
+35. ~~Sıra tahtası 1–136~~ — `RUZGAR_SIRA.md`. El kilitli klasörde (`C:\Users\hayma\Desktop\ruzgar-el`). Raf: 19 dil × 45 kart, Python 3.14.5 üst modül adları 297. Kod çalıştırma serbest değil.
 36. ~~4. basamak, dört kapı~~ — sayma, uygulama defteri, dış klasör, git durum. Geniş hali: test söyle, tek satır, dışa bir kez yaz, yalnız kapı notunu kaydet.
 37. ~~5. basamak~~ — test nedeni, bilinen satır, ikinci bakış, açık satırı bitti, eksik düzeltme kapıda. Son kayıt `ad7e4520`.
-38. ~~Kapı 107–116~~ — son satır, dosya satır sayısı, bitti sayısı, git dalı, dış adet, kapı notu ve ölçü notunun varlığı, hazır ikisi. Hepsi okur, yazmaz.
+38. ~~Kapı 117–136~~ — ilk satır, dosya ve kayıt varlığı, git deposu ve temizlik, kilit adedi, hazır ölçü, satır sayıları, bakış ve kapanış. Hepsi okur, yazmaz.
 
 ### Mimar dönünce (sıra)
 
-1. Kapı 107–116 testte yeşil. 101 test geçti.
+1. Kapı 117–136 testte yeşil. 121 test geçti.
 2. Kapalı duranlar: dosya silmek, modelin ürettiği kodu çalıştırmak, serbest kaynak yazmak, serbest dış yazmak, zorla göndermek, ölçü notunu kaydetmek, 32B/70B, telefon.
 3. **İlerisi:** telefon ince istemci, yalnız kapı `8779`. Ollama telefona açılmaz.
 
