@@ -2710,3 +2710,183 @@ def test_okuyan_on_cumle_dosyaya_yazmaz(masa, tmp_path):
     assert not (el / "orta" / "arac.py").exists()
     assert not (dis / "olcu.txt").exists()
 
+
+def test_uygulama_notunun_son_satirini_soyler(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    yol = repo / "ilim-assistant" / ".ruzgar" / "uygulama_notu.txt"
+    yok = klasor_soz(repo, "uygulama notunun son satırını söyle")
+    assert "Not yok." in yok["reply"]
+    assert not yol.exists()
+    klasor_soz(repo, "uygulama notu yaz: selam")
+    klasor_soz(repo, "uygulama notuna satır ekle: ikinci")
+    once = yol.read_bytes()
+    son = klasor_soz(repo, "uygulama notunun son satırını söyle")
+    assert "Son satır: ikinci" in son["reply"]
+    assert yol.read_bytes() == once
+
+
+def test_olcu_dosyasinin_satirini_soyler_yazmaz(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    olcu = el / "orta" / "olcu.py"
+    yok = klasor_soz(repo, "ölçü dosyasının satırını söyle")
+    assert "orta/olcu.py yok." in yok["reply"]
+    assert not olcu.exists()
+    olcu.parent.mkdir()
+    olcu.write_text("bir\niki\n", encoding="utf-8")
+    once = olcu.read_bytes()
+    say = klasor_soz(repo, "ölçü dosyasının satırını söyle")
+    assert "Satır: 2" in say["reply"]
+    assert olcu.read_bytes() == once
+
+
+def test_arac_dosyasinin_satirini_soyler_yazmaz(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    arac = el / "orta" / "arac.py"
+    yok = klasor_soz(repo, "araç dosyasının satırını söyle")
+    assert "orta/arac.py yok." in yok["reply"]
+    assert not arac.exists()
+    arac.parent.mkdir()
+    arac.write_text("bir\niki\nuc\n", encoding="utf-8")
+    once = arac.read_bytes()
+    say = klasor_soz(repo, "araç dosyasının satırını söyle")
+    assert "Satır: 3" in say["reply"]
+    assert arac.read_bytes() == once
+
+
+def test_bitti_satir_sayisini_soyler_yazmaz(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    tahta = repo / "RUZGAR_SIRA.md"
+    govde = "| 1 | Eski | bitti | a |\n| 2 | Açık | bekliyor | b |\n"
+    tahta.write_text(govde, encoding="utf-8")
+    soyle = klasor_soz(repo, "bitti satır sayısını söyle")
+    assert "Bitti satır: 1" in soyle["reply"]
+    assert "Tahtaya yazmadım" in soyle["reply"]
+    assert tahta.read_text(encoding="utf-8") == govde
+
+
+def test_git_dalini_soyler_gonderemez(masa):
+    import shutil
+    import subprocess
+
+    repo, el = masa
+    _kilitle(repo, el)
+    git = repo / ".git"
+    if git.exists():
+        shutil.rmtree(git)
+    subprocess.run(["git", "init", "-b", "deneme"], cwd=repo, check=True, capture_output=True)
+    (repo / "a.txt").write_text("bir\n", encoding="utf-8")
+    subprocess.run(["git", "-C", str(repo), "add", "a.txt"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "-C", str(repo), "-c", "user.email=t@example.com", "-c", "user.name=t", "commit", "-m", "ilk"],
+        check=True,
+        capture_output=True,
+    )
+    bas = subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"])
+    soyle = klasor_soz(repo, "git dalını söyle")
+    assert "Dal: deneme" in soyle["reply"]
+    assert "Göndermedim" in soyle["reply"]
+    assert subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"]) == bas
+
+
+def test_dis_klasorun_sayisini_soyler_ad_yazmaz(masa, tmp_path):
+    repo, el = masa
+    _kilitle(repo, el)
+    dis = tmp_path / "adet"
+    dis.mkdir()
+    (dis / "gizli.txt").write_text("sir\n", encoding="utf-8")
+    (dis / "b.txt").write_text("iki\n", encoding="utf-8")
+    klasor_soz(repo, f"dış klasör: {dis}")
+    soyle = klasor_soz(repo, "dış klasörün sayısını söyle")
+    assert "Sayı: 2." in soyle["reply"]
+    assert "gizli" not in soyle["reply"]
+    assert "sir" not in soyle["reply"]
+
+
+def test_kapi_notu_var_mi_soyler_acmaz(masa):
+    repo, _el = masa
+    _kilitle(repo, _el)
+    yol = repo / "ilim-assistant" / "ilim_assistant" / "kapi_notu.py"
+    yok = klasor_soz(repo, "kapı notu var mı söyle")
+    assert "Kapı notu yok." in yok["reply"]
+    assert not yol.exists()
+    klasor_soz(repo, "kaynak satırı yaz: selam")
+    once = yol.read_bytes()
+    var = klasor_soz(repo, "kapı notu var mı söyle")
+    assert "Kapı notu var." in var["reply"]
+    assert "selam" not in var["reply"]
+    assert yol.read_bytes() == once
+
+
+def test_olcu_notu_var_mi_soyler_acmaz(masa):
+    repo, _el = masa
+    _kilitle(repo, _el)
+    yol = repo / "ilim-assistant" / "ilim_assistant" / "olcu_notu.py"
+    yok = klasor_soz(repo, "ölçü notu var mı söyle")
+    assert "Ölçü notu yok." in yok["reply"]
+    assert not yol.exists()
+    klasor_soz(repo, "ölçü satırı yaz")
+    once = yol.read_bytes()
+    var = klasor_soz(repo, "ölçü notu var mı söyle")
+    assert "Ölçü notu var." in var["reply"]
+    assert "kelime" not in var["reply"]
+    assert yol.read_bytes() == once
+
+
+def test_hazir_ikisini_soyler_yazmaz(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    from ilim_assistant.motorlar.programlama_proje_masasi import _OLCU_SABLON, _ORTA_DOSYA
+
+    yok = klasor_soz(repo, "hazır ikisini söyle")
+    assert "İkisi de yok." in yok["reply"]
+    assert not (el / "orta" / "arac.py").exists()
+    assert not (el / "orta" / "olcu.py").exists()
+    arac = el / "orta" / "arac.py"
+    olcu = el / "orta" / "olcu.py"
+    arac.parent.mkdir()
+    arac.write_text(_ORTA_DOSYA["orta/arac.py"], encoding="utf-8")
+    olcu.write_text(_OLCU_SABLON, encoding="utf-8")
+    once_arac = arac.read_bytes()
+    once_olcu = olcu.read_bytes()
+    soyle = klasor_soz(repo, "hazır ikisini söyle")
+    assert "İkisi hazır." in soyle["reply"]
+    assert "satir_say" in soyle["reply"]
+    assert "kelime_say" in soyle["reply"]
+    assert arac.read_bytes() == once_arac
+    assert olcu.read_bytes() == once_olcu
+
+
+def test_okuyan_ikinci_on_cumle_yazmaz(masa, tmp_path):
+    repo, el = masa
+    _kilitle(repo, el)
+    dis = tmp_path / "on2"
+    dis.mkdir()
+    (dis / "a.txt").write_text("a\n", encoding="utf-8")
+    klasor_soz(repo, f"dış klasör: {dis}")
+    tahta = repo / "RUZGAR_SIRA.md"
+    tahta.write_text("| 1 | Eski | bitti | a |\n", encoding="utf-8")
+    once = tahta.read_bytes()
+    for cumle in (
+        "uygulama notunun son satırını söyle",
+        "ölçü dosyasının satırını söyle",
+        "araç dosyasının satırını söyle",
+        "bitti satır sayısını söyle",
+        "git dalını söyle",
+        "dış klasörün sayısını söyle",
+        "kapı notu var mı söyle",
+        "ölçü notu var mı söyle",
+        "hazır ikisini söyle",
+    ):
+        klasor_soz(repo, cumle)
+    assert tahta.read_bytes() == once
+    assert not (repo / "ilim-assistant" / ".ruzgar" / "uygulama_notu.txt").exists()
+    assert not (el / "orta" / "olcu.py").exists()
+    assert not (el / "orta" / "arac.py").exists()
+    assert not (repo / "ilim-assistant" / "ilim_assistant" / "kapi_notu.py").exists()
+    assert not (repo / "ilim-assistant" / "ilim_assistant" / "olcu_notu.py").exists()
+
+

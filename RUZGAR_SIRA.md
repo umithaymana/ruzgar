@@ -112,8 +112,18 @@
 | 104 | Tahtadaki açık satır sayısını söyle | bitti | `test_acik_satir_sayisini_soyler_yazmaz` |
 | 105 | Hazır aracın adını söyle | bitti | `test_orta_aracini_soyler_yazmaz` |
 | 106 | Bu on cümle yazmaz | bitti | `test_okuyan_on_cumle_dosyaya_yazmaz` |
+| 107 | Notun son satırını söyle | bitti | `test_uygulama_notunun_son_satirini_soyler` |
+| 108 | Ölçü dosyasının satırını söyle | bitti | `test_olcu_dosyasinin_satirini_soyler_yazmaz` |
+| 109 | Araç dosyasının satırını söyle | bitti | `test_arac_dosyasinin_satirini_soyler_yazmaz` |
+| 110 | Bitti satır sayısını söyle | bitti | `test_bitti_satir_sayisini_soyler_yazmaz` |
+| 111 | Git dalını söyle | bitti | `test_git_dalini_soyler_gonderemez` |
+| 112 | Dış klasörün sayısını söyle | bitti | `test_dis_klasorun_sayisini_soyler_ad_yazmaz` |
+| 113 | Kapı notu var mı söyle | bitti | `test_kapi_notu_var_mi_soyler_acmaz` |
+| 114 | Ölçü notu var mı söyle | bitti | `test_olcu_notu_var_mi_soyler_acmaz` |
+| 115 | Hazır ikisini söyle | bitti | `test_hazir_ikisini_soyler_yazmaz` |
+| 116 | Bu on cümle de yazmaz | bitti | `test_okuyan_ikinci_on_cumle_yazmaz` |
 
-**Denenecek cümle:** `dış ölçü yerini söyle`
+**Denenecek cümle:** `hazır ikisini söyle`
 
 **13. iş bitti.** Kilitli klasör sayar, metin dosyası açar, ara başlık, http bağlantı, başlık rengi, klasördeki resim ve sayfa adı değişir. Dört masa: belgede bir kez değiştir, hücre sil, sütun topla, renkli çiz, slayt başlığı. Bak bu tariflerden yazı ve rengi önerebilir. Bağlantı, resim ve ad değiştirme yalnız sen söyleyince olur. `uygula` yine son bakışı bir kez çalıştırır.
 
@@ -292,6 +302,26 @@
 **105. iş bitti.** `orta aracını söyle` hazır araçta `satir_say` adını söyler. Dosya yokken açmaz.
 
 **106. iş bitti.** Bu okuyan cümleler dosya açmaz ve tahtaya yazmaz.
+
+**107. iş bitti.** `uygulama notunun son satırını söyle` son dolu satırı söyler. Not yokken açmaz.
+
+**108. iş bitti.** `ölçü dosyasının satırını söyle` `orta/olcu.py` satır sayısını söyler. Dosya yokken açmaz.
+
+**109. iş bitti.** `araç dosyasının satırını söyle` `orta/arac.py` satır sayısını söyler. Dosya yokken açmaz.
+
+**110. iş bitti.** `bitti satır sayısını söyle` tahtadaki bitti satırlarını sayar. Tahtaya yazmaz.
+
+**111. iş bitti.** `git dalını söyle` dalın adını söyler. Kaydetmez, göndermez.
+
+**112. iş bitti.** `dış klasörün sayısını söyle` dış klasördeki adedi söyler. Adları yazmaz.
+
+**113. iş bitti.** `kapı notu var mı söyle` `kapi_notu.py` var ya da yok der. Gövdeyi açmaz. Dosya yokken açmaz.
+
+**114. iş bitti.** `ölçü notu var mı söyle` `olcu_notu.py` var ya da yok der. Gövdeyi açmaz. Dosya yokken açmaz.
+
+**115. iş bitti.** `hazır ikisini söyle` hazır araç ve hazır ölçüyü birlikte söyler. Biri yoksa onu ayırır. Dosya açmaz.
+
+**116. iş bitti.** Bu okuyan cümleler dosya açmaz ve tahtaya yazmaz.
 
 **Bilerek kapalı:** dosya silmek, modelin ürettiği kodu çalıştırmak, serbest kaynak yazmak, serbest dış yazmak, zorla göndermek, ölçü notunu kaydetmek, 32B/70B, telefon.
 
