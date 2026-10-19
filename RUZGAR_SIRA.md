@@ -87,13 +87,33 @@
 | 79 | Ölçü satırına kullanıcı metni girmez | bitti | `test_olcu_satiri_kullanici_satirini_yemez` |
 | 80 | Uygulama notuna satır ekle | bitti | `test_uygulama_notuna_satir_ekler_ustune_yazmaz` |
 | 81 | Ölçü testini söyle | bitti | `test_olcu_testi_sonucu_soyler_duzeltmez` |
-| 82 | Düzelt hazır dosyayı görsün | sırada | — |
-| 83 | Neden cümlesi bayrak silmesin | sırada | — |
-| 84 | Ölçü farkı yoksa dosya yok desin | sırada | — |
-| 85 | Dış ölçü klasörse dosya değil desin | sırada | — |
-| 86 | Hazır dosyada beş cümle aynı hikâye | sırada | — |
+| 82 | Düzelt hazır dosyayı görsün | bitti | `test_hazir_olcu_duzelt_kalmadi_demez` |
+| 83 | Neden cümlesi bayrak silmesin | bitti | `test_olcu_neden_gectiyse_bakis_silinmez` |
+| 84 | Ölçü farkı yoksa dosya yok desin | bitti | `test_git_olcu_farkini_soyler_yazmaz` |
+| 85 | Dış ölçü klasörse dosya değil desin | bitti | `test_dis_olcu_klasorse_dosya_degil_der` |
+| 86 | Hazır dosyada beş cümle aynı hikâye | bitti | `test_hazir_olcuda_bes_cumle_ayni_hikayeyi_soyler` |
+| 87 | Tur sırası hazır dosyayı görsün | bitti | `test_hazir_arac_turu_yok_demez` |
+| 88 | Tur düzelt hazır dosyayı görsün | bitti | `test_hazir_arac_duzelt_kalmadi_demez` |
+| 89 | Tur bakışı hazır dosyada bir kez | bitti | `test_hazir_arac_bak_duzeltme_yok_demez` |
+| 90 | Tur başlat bayrak silmesin | bitti | `test_orta_turu_baslat_gectiyse_bakis_silinmez` |
+| 91 | Tur kapat hazır bakıştan sonra | bitti | `test_hazir_arac_kapat_bakistan_sonra_tek_satiri_bitti_yapar` |
+| 92 | Kapı farkı yoksa dosya yok desin | bitti | `test_git_farkini_soyler_yazmaz` |
+| 93 | Dış ölçü yazma klasörse dosya değil | bitti | `test_dis_olcu_yaz_klasorse_dosya_degil_der` |
+| 94 | Eski geçti bayrağı bozuk ölçüyü gizlemesin | bitti | `test_eski_gecti_bayragi_bozuk_olcuyu_gizlemez` |
+| 95 | Eski geçti bayrağı bozuk aracı gizlemesin | bitti | `test_eski_gecti_bayragi_bozuk_araci_gizlemez` |
+| 96 | Hazır araçta dört cümle aynı hikâye | bitti | `test_hazir_aracta_dort_cumle_ayni_hikayeyi_soyler` |
+| 97 | Dış ölçü yerini söyle | sırada | — |
+| 98 | Uygulama notunun satır sayısını söyle | sırada | — |
+| 99 | Ölçü kaydını söyle | sırada | — |
+| 100 | Araç kaydını söyle | sırada | — |
+| 101 | Son git kaydını söyle | sırada | — |
+| 102 | Kilitli klasörün adını söyle | sırada | — |
+| 103 | Dış klasörün adını söyle | sırada | — |
+| 104 | Tahtadaki açık satır sayısını söyle | sırada | — |
+| 105 | Hazır ölçünün adını söyle | sırada | — |
+| 106 | Bu on cümle yazmaz | sırada | — |
 
-**Denenecek cümle:** sıradaki iş `orta ölçüsünü düzelt` (henüz yazılmadı)
+**Denenecek cümle:** sıradaki on iş henüz yazılmadı. İlk cümle: `dış ölçü yerini söyle`
 
 **13. iş bitti.** Kilitli klasör sayar, metin dosyası açar, ara başlık, http bağlantı, başlık rengi, klasördeki resim ve sayfa adı değişir. Dört masa: belgede bir kez değiştir, hücre sil, sütun topla, renkli çiz, slayt başlığı. Bak bu tariflerden yazı ve rengi önerebilir. Bağlantı, resim ve ad değiştirme yalnız sen söyleyince olur. `uygula` yine son bakışı bir kez çalıştırır.
 
@@ -223,7 +243,35 @@
 
 **81. iş bitti.** `orta ölçüsünü çalıştır` üç kontrolü söyler: geçti ya da kaldı. Dosyayı değiştirmez. Düzeltme kapısını açmaz. Hazır olmayan araç çalışmaz.
 
-**82–86 sırada.** Henüz yazılmadı. Düzelt hazır dosyayı görsün. Neden cümlesi bakış ve kapanışı silmesin. Ölçü farkı dosya yokken «yok» desin. Dış ölçü klasörse içini açmasın. Beş cümle hazır dosyada aynı hikâyeyi söylesin.
+**82. iş bitti.** `orta ölçüsünü düzelt` hazır şablon duruyorsa «Bilinen satır duruyor» der. «Ölçü kalmadı» demez. Üstüne yazmaz. Bakış bayrağını silmez.
+
+**83. iş bitti.** `orta ölçüsü neden kaldı` üç kontrol geçtiyse geçti der. Bakış, düzeltme ve kapanış bayraklarını silmez.
+
+**84. iş bitti.** `git ölçü farkını söyle` `olcu_notu.py` yoksa «yok» der. Dosyayı açmaz. «Fark yok» demez.
+
+**85. iş bitti.** `dış ölçü dosyasını oku` `olcu.txt` klasörse «dosya değil» der. İçini açmaz. Yazmaz.
+
+**86. iş bitti.** Hazır `orta/olcu.py` dosyasında sıra, düzelt, neden, bak ve kapat aynı hikâyeyi söyler. Dosya aynı kalır.
+
+**87. iş bitti.** `orta turu söyle` hazır `orta/arac.py` durup bayrak boşsa «dosya hazır, bakış yok» der. «tur yok» demez. Yazmaz.
+
+**88. iş bitti.** `orta turu düzelt` hazır şablon duruyorsa «Bilinen satır duruyor» der. «Tur kalmadı» demez. Üstüne yazmaz. Bakışı silmez.
+
+**89. iş bitti.** `orta turu bak` hazır şablonda bir kez bakar. «Düzeltme yok» demez. İkinci bakış üçüncüye geçmez. Dosya aynı kalır.
+
+**90. iş bitti.** `orta turu başlat` üç kontrol geçtiyse bakış ve düzeltme bayraklarını silmez.
+
+**91. iş bitti.** Hazır araçta bakış geçtikten sonra `orta turu kapat` tek açık satırı bitti yapar. Bakış yokken tahtaya yazmaz.
+
+**92. iş bitti.** `git farkını söyle` `kapi_notu.py` yoksa «yok» der. Dosyayı açmaz. «Fark yok» demez.
+
+**93. iş bitti.** `dış ölçü dosyasına yaz` `olcu.txt` klasörse «dosya değil» der. İçine yazmaz.
+
+**94. iş bitti.** `orta ölçüsünü düzelt` eski «geçti» bayrağı bozuk dosyayı gizlemez. «Hazır ölçü değil» der. Yazmaz.
+
+**95. iş bitti.** `orta turu düzelt` eski «geçti» bayrağı bozuk aracı gizlemez. «Hazır araç değil» der. Yazmaz.
+
+**96. iş bitti.** Hazır `orta/arac.py` dosyasında söyle, düzelt, bak ve kapat aynı hikâyeyi söyler. Araç dosyası aynı kalır.
 
 **Bilerek kapalı:** dosya silmek, modelin ürettiği kodu çalıştırmak, serbest kaynak yazmak, serbest dış yazmak, zorla göndermek, ölçü notunu kaydetmek, 32B/70B, telefon.
 

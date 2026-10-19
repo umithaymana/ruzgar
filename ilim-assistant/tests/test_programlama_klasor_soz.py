@@ -1305,6 +1305,173 @@ def test_orta_turu_soyle_sirayi_soyler_yazmaz(masa):
     assert is_code_agent_task_message("orta turu söyle", "programlama") is False
 
 
+def test_hazir_arac_turu_yok_demez(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    from ilim_assistant.motorlar.programlama_proje_masasi import _ORTA_DOSYA
+
+    arac = el / "orta" / "arac.py"
+    arac.parent.mkdir()
+    arac.write_text(_ORTA_DOSYA["orta/arac.py"], encoding="utf-8")
+    (repo / "ilim-assistant" / ".ruzgar").mkdir()
+    (repo / "ilim-assistant" / ".ruzgar" / "orta_tur.txt").write_text("kaldi=0\ndurdu=0\n", encoding="utf-8")
+    once = arac.read_bytes()
+    soyle = klasor_soz(repo, "orta turu söyle")
+    assert "dosya hazır, bakış yok." in soyle["reply"]
+    assert "tur yok" not in soyle["reply"]
+    assert "Yazmadım" in soyle["reply"]
+    assert arac.read_bytes() == once
+
+
+def test_hazir_arac_duzelt_kalmadi_demez(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    from ilim_assistant.motorlar.programlama_proje_masasi import _ORTA_DOSYA
+
+    arac = el / "orta" / "arac.py"
+    arac.parent.mkdir()
+    arac.write_text(_ORTA_DOSYA["orta/arac.py"], encoding="utf-8")
+    durum = repo / "ilim-assistant" / ".ruzgar" / "orta_tur.txt"
+    durum.parent.mkdir(parents=True)
+    durum.write_text(
+        "duzeltme=0\nbakis=1\ngecti=0\ndurdu=0\nkaldi=0\ntur=0\n",
+        encoding="utf-8",
+    )
+    once = arac.read_bytes()
+    duzelt = klasor_soz(repo, "orta turu düzelt")
+    assert "Bilinen satır duruyor" in duzelt["reply"]
+    assert "Tur kalmadı" not in duzelt["reply"]
+    assert "Üstüne yazmadım" in duzelt["reply"]
+    assert arac.read_bytes() == once
+    govde = durum.read_text(encoding="utf-8")
+    assert "duzeltme=1" in govde
+    assert "bakis=1" in govde
+    assert "tur=1" in govde
+
+
+def test_eski_gecti_bayragi_bozuk_araci_gizlemez(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    arac = el / "orta" / "arac.py"
+    arac.parent.mkdir()
+    arac.write_text("import os\n", encoding="utf-8")
+    durum = repo / "ilim-assistant" / ".ruzgar" / "orta_tur.txt"
+    durum.parent.mkdir(parents=True)
+    durum.write_text(
+        "duzeltme=1\nbakis=1\ngecti=1\ndurdu=1\nkaldi=0\ntur=1\n",
+        encoding="utf-8",
+    )
+    once = arac.read_bytes()
+    duzelt = klasor_soz(repo, "orta turu düzelt")
+    assert "Hazır araç değil" in duzelt["reply"]
+    assert "Yazmadım" in duzelt["reply"]
+    assert "Tur geçti" not in duzelt["reply"]
+    assert arac.read_bytes() == once
+
+
+def test_hazir_arac_bak_duzeltme_yok_demez(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    from ilim_assistant.motorlar.programlama_proje_masasi import _ORTA_DOSYA
+
+    arac = el / "orta" / "arac.py"
+    arac.parent.mkdir()
+    arac.write_text(_ORTA_DOSYA["orta/arac.py"], encoding="utf-8")
+    (repo / "ilim-assistant" / ".ruzgar").mkdir()
+    (repo / "ilim-assistant" / ".ruzgar" / "orta_tur.txt").write_text("kaldi=0\ndurdu=0\n", encoding="utf-8")
+    once = arac.read_bytes()
+    bak = klasor_soz(repo, "orta turu bak")
+    assert "Test geçti." in bak["reply"]
+    assert "Düzeltme yok" not in bak["reply"]
+    assert arac.read_bytes() == once
+    ikinci = klasor_soz(repo, "orta turu bak")
+    assert "Üçüncüye geçmedim" in ikinci["reply"]
+    assert arac.read_bytes() == once
+
+
+def test_orta_turu_baslat_gectiyse_bakis_silinmez(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    from ilim_assistant.motorlar.programlama_proje_masasi import _ORTA_DOSYA
+
+    arac = el / "orta" / "arac.py"
+    arac.parent.mkdir()
+    arac.write_text(_ORTA_DOSYA["orta/arac.py"], encoding="utf-8")
+    durum = repo / "ilim-assistant" / ".ruzgar" / "orta_tur.txt"
+    durum.parent.mkdir(parents=True)
+    durum.write_text(
+        "duzeltme=1\nbakis=1\ngecti=1\ndurdu=0\nkaldi=0\ntur=1\n",
+        encoding="utf-8",
+    )
+    once = arac.read_bytes()
+    baslat = klasor_soz(repo, "orta turu başlat")
+    assert "Üç kontrol de geçti." in baslat["reply"]
+    assert arac.read_bytes() == once
+    govde = durum.read_text(encoding="utf-8")
+    assert "bakis=1" in govde
+    assert "gecti=1" in govde
+    assert "duzeltme=1" in govde
+    assert "tur=1" in govde
+    assert "durdu=1" in govde
+
+
+def test_hazir_arac_kapat_bakistan_sonra_tek_satiri_bitti_yapar(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    from ilim_assistant.motorlar.programlama_proje_masasi import _ORTA_DOSYA
+
+    arac = el / "orta" / "arac.py"
+    arac.parent.mkdir()
+    arac.write_text(_ORTA_DOSYA["orta/arac.py"], encoding="utf-8")
+    (repo / "ilim-assistant" / ".ruzgar").mkdir()
+    (repo / "ilim-assistant" / ".ruzgar" / "orta_tur.txt").write_text("kaldi=0\ndurdu=0\n", encoding="utf-8")
+    tahta = repo / "RUZGAR_SIRA.md"
+    govde = "| 1 | Açık iş | bekliyor | yok |\n"
+    tahta.write_text(govde, encoding="utf-8")
+    once = arac.read_bytes()
+    erken = klasor_soz(repo, "orta turu kapat")
+    assert "Bakış geçmedi" in erken["reply"]
+    assert tahta.read_text(encoding="utf-8") == govde
+    bak = klasor_soz(repo, "orta turu bak")
+    assert "Test geçti." in bak["reply"]
+    kapat = klasor_soz(repo, "orta turu kapat")
+    assert "Açık satır bitti oldu." in kapat["reply"]
+    assert "| 1 | Açık iş | bitti | yok |" in tahta.read_text(encoding="utf-8")
+    assert arac.read_bytes() == once
+
+
+def test_hazir_aracta_dort_cumle_ayni_hikayeyi_soyler(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    from ilim_assistant.motorlar.programlama_proje_masasi import _ORTA_DOSYA
+
+    arac = el / "orta" / "arac.py"
+    arac.parent.mkdir()
+    arac.write_text(_ORTA_DOSYA["orta/arac.py"], encoding="utf-8")
+    (repo / "ilim-assistant" / ".ruzgar").mkdir()
+    (repo / "ilim-assistant" / ".ruzgar" / "orta_tur.txt").write_text("kaldi=0\ndurdu=0\n", encoding="utf-8")
+    tahta = repo / "RUZGAR_SIRA.md"
+    tahta.write_text("| 1 | Açık iş | bekliyor | yok |\n", encoding="utf-8")
+    once = arac.read_bytes()
+    soyle = klasor_soz(repo, "orta turu söyle")
+    duzelt = klasor_soz(repo, "orta turu düzelt")
+    bak = klasor_soz(repo, "orta turu bak")
+    kapat = klasor_soz(repo, "orta turu kapat")
+    sonra = klasor_soz(repo, "orta turu söyle")
+    assert "dosya hazır, bakış yok." in soyle["reply"]
+    assert "Bilinen satır duruyor" in duzelt["reply"]
+    assert "Test geçti." in bak["reply"]
+    assert "Açık satır bitti oldu." in kapat["reply"]
+    assert "bakış geçti." in sonra["reply"]
+    for cevap in (soyle, duzelt, bak, kapat, sonra):
+        assert "tur yok" not in cevap["reply"]
+        assert "Tur kalmadı" not in cevap["reply"]
+        assert "Düzeltme yok" not in cevap["reply"]
+        assert "Bakış geçmedi" not in cevap["reply"]
+    assert arac.read_bytes() == once
+    assert "| 1 | Açık iş | bitti | yok |" in tahta.read_text(encoding="utf-8")
+
+
 _ARAC_SATIR = "return len([satir for satir in metin.splitlines() if satir.strip()])"
 
 
@@ -1816,6 +1983,23 @@ def test_dis_olcu_yalniz_olcu_txt_okur(masa, tmp_path):
     assert is_code_agent_task_message("dış ölçü dosyasını oku", "programlama") is False
 
 
+def test_dis_olcu_klasorse_dosya_degil_der(masa, tmp_path):
+    repo, el = masa
+    _kilitle(repo, el)
+    dis = tmp_path / "dis-olcu-klasor"
+    dis.mkdir()
+    klasor = dis / "olcu.txt"
+    klasor.mkdir()
+    (klasor / "gizli.txt").write_text("ic\n", encoding="utf-8")
+    klasor_soz(repo, f"dış klasör: {dis}")
+    okunan = klasor_soz(repo, "dış ölçü dosyasını oku")
+    assert "dosya değil" in okunan["reply"]
+    assert "gizli" not in okunan["reply"]
+    assert "ic" not in okunan["reply"]
+    assert klasor.is_dir()
+    assert (klasor / "gizli.txt").read_text(encoding="utf-8") == "ic\n"
+
+
 def test_git_farkini_soyler_yazmaz(masa):
     import shutil
     import subprocess
@@ -1833,8 +2017,10 @@ def test_git_farkini_soyler_yazmaz(masa):
     )
     bas = subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"])
     yok = klasor_soz(repo, "git farkını söyle")
-    assert "Fark yok." in yok["reply"]
+    assert "kapi_notu.py yok." in yok["reply"]
+    assert "Fark yok." not in yok["reply"]
     assert "Göndermedim" in yok["reply"]
+    assert not (repo / "ilim-assistant" / "ilim_assistant" / "kapi_notu.py").exists()
     fazla = klasor_soz(repo, "git farkını söyle hemen")
     assert "Bu cümle söylemez" in fazla["reply"]
     klasor_soz(repo, "kaynak satırı yaz: selam")
@@ -2025,6 +2211,23 @@ def test_dis_olcu_yaz_yalniz_bilinen_satiri_bir_kez_yazar(masa, tmp_path):
     assert is_code_agent_task_message("dış ölçü dosyasına yaz", "programlama") is False
 
 
+def test_dis_olcu_yaz_klasorse_dosya_degil_der(masa, tmp_path):
+    repo, el = masa
+    _kilitle(repo, el)
+    dis = tmp_path / "dis-olcu-yaz-klasor"
+    dis.mkdir()
+    klasor = dis / "olcu.txt"
+    klasor.mkdir()
+    (klasor / "gizli.txt").write_text("ic\n", encoding="utf-8")
+    klasor_soz(repo, f"dış klasör: {dis}")
+    yaz = klasor_soz(repo, "dış ölçü dosyasına yaz")
+    assert "dosya değil" in yaz["reply"]
+    assert "gizli" not in yaz["reply"]
+    assert klasor.is_dir()
+    assert (klasor / "gizli.txt").read_text(encoding="utf-8") == "ic\n"
+    assert not (dis / "olcu.txt").is_file()
+
+
 def test_git_olcu_farkini_soyler_yazmaz(masa):
     import shutil
     import subprocess
@@ -2042,8 +2245,10 @@ def test_git_olcu_farkini_soyler_yazmaz(masa):
     )
     bas = subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"])
     yok = klasor_soz(repo, "git ölçü farkını söyle")
-    assert "Fark yok." in yok["reply"]
+    assert "olcu_notu.py yok." in yok["reply"]
+    assert "Fark yok." not in yok["reply"]
     assert "Göndermedim" in yok["reply"]
+    assert not (repo / "ilim-assistant" / "ilim_assistant" / "olcu_notu.py").exists()
     fazla = klasor_soz(repo, "git ölçü farkını söyle hemen")
     assert "Bu cümle söylemez" in fazla["reply"]
     klasor_soz(repo, "kaynak satırı yaz: selam")
@@ -2118,6 +2323,79 @@ def test_olcu_satiri_kullanici_satirini_yemez(masa):
     assert is_code_agent_task_message("ölçü satırı yaz: selam", "programlama") is False
 
 
+def test_hazir_olcu_duzelt_kalmadi_demez(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    from ilim_assistant.motorlar.programlama_proje_masasi import _OLCU_SABLON
+
+    olcu = el / "orta" / "olcu.py"
+    olcu.parent.mkdir()
+    olcu.write_text(_OLCU_SABLON, encoding="utf-8")
+    durum = repo / "ilim-assistant" / ".ruzgar" / "olcu_tur.txt"
+    durum.parent.mkdir(parents=True)
+    durum.write_text(
+        "kaldi=0\ndurdu=0\nduzeltme=0\nbakis=1\ngecti=0\nkapandi=0\n",
+        encoding="utf-8",
+    )
+    once = olcu.read_bytes()
+    duzelt = klasor_soz(repo, "orta ölçüsünü düzelt")
+    assert "Bilinen satır duruyor" in duzelt["reply"]
+    assert "Ölçü kalmadı" not in duzelt["reply"]
+    assert "Üstüne yazmadım" in duzelt["reply"]
+    assert olcu.read_bytes() == once
+    govde = durum.read_text(encoding="utf-8")
+    assert "duzeltme=1" in govde
+    assert "bakis=1" in govde
+    assert "kapandi=0" in govde
+
+
+def test_eski_gecti_bayragi_bozuk_olcuyu_gizlemez(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    olcu = el / "orta" / "olcu.py"
+    olcu.parent.mkdir()
+    olcu.write_text("import os\n", encoding="utf-8")
+    durum = repo / "ilim-assistant" / ".ruzgar" / "olcu_tur.txt"
+    durum.parent.mkdir(parents=True)
+    durum.write_text(
+        "kaldi=0\ndurdu=1\nduzeltme=1\nbakis=1\ngecti=1\nkapandi=0\n",
+        encoding="utf-8",
+    )
+    once = olcu.read_bytes()
+    duzelt = klasor_soz(repo, "orta ölçüsünü düzelt")
+    assert "Hazır ölçü değil" in duzelt["reply"]
+    assert "Yazmadım" in duzelt["reply"]
+    assert "Ölçü geçti" not in duzelt["reply"]
+    assert olcu.read_bytes() == once
+
+
+def test_olcu_neden_gectiyse_bakis_silinmez(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    from ilim_assistant.motorlar.programlama_proje_masasi import _OLCU_SABLON
+
+    olcu = el / "orta" / "olcu.py"
+    olcu.parent.mkdir()
+    olcu.write_text(_OLCU_SABLON, encoding="utf-8")
+    durum = repo / "ilim-assistant" / ".ruzgar" / "olcu_tur.txt"
+    durum.parent.mkdir(parents=True)
+    durum.write_text(
+        "kaldi=0\ndurdu=0\nduzeltme=1\nbakis=1\ngecti=1\nkapandi=0\n",
+        encoding="utf-8",
+    )
+    once = olcu.read_bytes()
+    neden = klasor_soz(repo, "orta ölçüsü neden kaldı")
+    assert "Üç kontrol de geçti." in neden["reply"]
+    assert "kaldı" not in neden["reply"].split(".", 1)[0]
+    assert olcu.read_bytes() == once
+    govde = durum.read_text(encoding="utf-8")
+    assert "duzeltme=1" in govde
+    assert "bakis=1" in govde
+    assert "gecti=1" in govde
+    assert "kapandi=0" in govde
+    assert "durdu=1" in govde
+
+
 def test_hazir_olcu_sira_yok_demez_bakis_bakar(masa):
     repo, el = masa
     _kilitle(repo, el)
@@ -2139,6 +2417,43 @@ def test_hazir_olcu_sira_yok_demez_bakis_bakar(masa):
     kapat = klasor_soz(repo, "orta ölçüsünü kapat")
     assert "Ölçü kapandı." in kapat["reply"]
     assert olcu.read_bytes() == once
+
+
+def test_hazir_olcuda_bes_cumle_ayni_hikayeyi_soyler(masa):
+    repo, el = masa
+    _kilitle(repo, el)
+    from ilim_assistant.motorlar.programlama_proje_masasi import _OLCU_SABLON
+
+    olcu = el / "orta" / "olcu.py"
+    olcu.parent.mkdir()
+    olcu.write_text(_OLCU_SABLON, encoding="utf-8")
+    durum = repo / "ilim-assistant" / ".ruzgar" / "olcu_tur.txt"
+    durum.parent.mkdir(parents=True)
+    durum.write_text("kaldi=0\ndurdu=0\n", encoding="utf-8")
+    once = olcu.read_bytes()
+    soyle = klasor_soz(repo, "orta ölçü sırasını söyle")
+    duzelt = klasor_soz(repo, "orta ölçüsünü düzelt")
+    neden = klasor_soz(repo, "orta ölçüsü neden kaldı")
+    bak = klasor_soz(repo, "orta ölçüsüne bak")
+    kapat = klasor_soz(repo, "orta ölçüsünü kapat")
+    sonra = klasor_soz(repo, "orta ölçü sırasını söyle")
+    assert "dosya hazır, bakış yok." in soyle["reply"]
+    assert "Bilinen satır duruyor" in duzelt["reply"]
+    assert "Üç kontrol de geçti." in neden["reply"]
+    assert "Üç kontrol de geçti." in bak["reply"]
+    assert "Ölçü kapandı." in kapat["reply"]
+    assert "ölçü kapandı." in sonra["reply"]
+    for cevap in (soyle, duzelt, neden, bak, kapat, sonra):
+        assert "ölçü yok" not in cevap["reply"]
+        assert "Ölçü kalmadı" not in cevap["reply"]
+        assert "Düzeltme yok" not in cevap["reply"]
+        assert "Bakış geçmedi" not in cevap["reply"]
+    assert olcu.read_bytes() == once
+    govde = durum.read_text(encoding="utf-8")
+    assert "duzeltme=1" in govde
+    assert "bakis=1" in govde
+    assert "gecti=1" in govde
+    assert "kapandi=1" in govde
 
 
 def test_uygulama_notuna_satir_ekler_ustune_yazmaz(masa):

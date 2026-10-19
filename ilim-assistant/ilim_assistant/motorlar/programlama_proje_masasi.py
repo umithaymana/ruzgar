@@ -1870,10 +1870,11 @@ def _orta_arac_yukle(repo: Path) -> tuple[Path, bytes, dict] | dict:
 
 
 def _orta_tur_baslat(repo: Path) -> dict:
+    tur = _orta_tur_oku(repo)
     sonuc = _orta_test_neden(repo)
     cevap = str(sonuc.get("reply") or "")
     if "Üç kontrol de geçti." in cevap:
-        _orta_tur_yaz(repo, {"durdu": "1"})
+        _orta_tur_yaz(repo, {**tur, "durdu": "1", "kaldi": "0"})
         return _paket(reply="Üç kontrol de geçti. Tur durdu.\nDosya aynı. Düzeltmedim.")
     if "orta/arac.py yok." in cevap or "Dosya değişti" in cevap:
         return sonuc
@@ -1952,7 +1953,14 @@ def _orta_tur_yaz(repo: Path, veri: dict[str, str]) -> None:
 def _orta_tur_duzelt(repo: Path) -> dict:
     tur = _orta_tur_oku(repo)
     if tur.get("durdu") == "1":
-        return _paket(reply="Tur geçti. Yazmadım.\nDosya aynı. Çalıştırmadım.")
+        if _arac_sablon_duruyor(repo):
+            return _paket(reply="Tur geçti. Yazmadım.\nDosya aynı. Çalıştırmadım.")
+        return _paket(reply="Hazır araç değil. Yazmadım.\nDosya aynı. Çalıştırmadım.")
+    if _arac_sablon_duruyor(repo):
+        _orta_tur_yaz(repo, {**tur, "tur": "1", "duzeltme": "1", "kaldi": "0"})
+        return _paket(
+            reply="Bilinen satır duruyor: " + _ARAC_SATIR + "\nÜstüne yazmadım. Çalıştırmadım."
+        )
     if tur.get("kaldi") != "1":
         return _paket(reply="Tur kalmadı. Yazmadım.\nDosya aynı. Çalıştırmadım.")
     sablon = _ORTA_DOSYA["orta/arac.py"]
@@ -1961,18 +1969,13 @@ def _orta_tur_duzelt(repo: Path) -> dict:
     yol, _norm = _klasor_hedef(repo, "orta/arac.py")
     if yol.is_symlink():
         raise ValueError("Bu yere yazılmaz.")
-    if yol.is_file() and yol.read_text(encoding="utf-8") == sablon:
-        _orta_tur_yaz(repo, {**tur, "tur": "1", "duzeltme": "1", "bakis": "0", "gecti": "0"})
-        return _paket(
-            reply="Bilinen satır duruyor: " + _ARAC_SATIR + "\nÜstüne yazmadım. Çalıştırmadım."
-        )
     klasor_yaz(repo, "orta/arac.py", sablon)
     okunan = klasor_oku_dosya(repo, "orta/arac.py")
     if okunan.get("text") != sablon:
         raise ValueError("Yazılmadı. orta/arac.py")
     _orta_tur_yaz(
         repo,
-        {"tur": "1", "duzeltme": "1", "bakis": "0", "gecti": "0", "kaldi": "1", "durdu": "0"},
+        {"tur": "1", "duzeltme": "1", "bakis": "0", "gecti": "0", "kaldi": "0", "durdu": "0"},
     )
     return _paket(
         reply="Yazıldı: orta/arac.py.\nBilinen satır: " + _ARAC_SATIR + "\nÇalıştırmadım."
@@ -1981,8 +1984,9 @@ def _orta_tur_duzelt(repo: Path) -> dict:
 
 def _orta_tur_bak(repo: Path) -> dict:
     tur = _orta_tur_oku(repo)
-    if tur.get("tur") != "1" or tur.get("duzeltme") != "1":
+    if (tur.get("tur") != "1" or tur.get("duzeltme") != "1") and not _arac_sablon_duruyor(repo):
         return _paket(reply="Düzeltme yok. Bakmadım.")
+    tur = {**tur, "tur": "1", "duzeltme": "1"}
     if tur.get("bakis") == "1":
         return _paket(reply="İkinci bakış duruyor. Üçüncüye geçmedim.")
     sonuc = _orta_test(repo)
@@ -2000,6 +2004,19 @@ def _orta_tur_kapat(repo: Path) -> dict:
     return _acik_satiri_bitti(repo)
 
 
+def _arac_sablon_duruyor(repo: Path) -> bool:
+    try:
+        yol, _norm = _klasor_hedef(repo, "orta/arac.py")
+    except ValueError:
+        return False
+    if not yol.is_file() or yol.is_symlink():
+        return False
+    try:
+        return yol.read_text(encoding="utf-8") == _ORTA_DOSYA["orta/arac.py"]
+    except OSError:
+        return False
+
+
 def _orta_tur_soyle(repo: Path) -> dict:
     tur = _orta_tur_oku(repo)
     if tur.get("durdu") == "1":
@@ -2012,6 +2029,8 @@ def _orta_tur_soyle(repo: Path) -> dict:
         simdi = "Şimdi: düzeltildi, bakış yok."
     elif tur.get("kaldi") == "1":
         simdi = "Şimdi: tur kaldı, düzeltme yok."
+    elif _arac_sablon_duruyor(repo):
+        simdi = "Şimdi: dosya hazır, bakış yok."
     else:
         simdi = "Şimdi: tur yok."
     return _paket(
@@ -2240,6 +2259,7 @@ def _olcu_say_not(repo: Path) -> dict:
 
 
 def _olcu_neden(repo: Path) -> dict:
+    tur = _olcu_tur_oku(repo)
     yuklu = _olcu_yukle(repo)
     if isinstance(yuklu, dict):
         cevap = str(yuklu.get("reply") or "")
@@ -2255,6 +2275,7 @@ def _olcu_neden(repo: Path) -> dict:
         cevap = "Çalışmadı.\nDosya aynı. Düzeltmedim."
         kaldi = "1"
         durdu = "0"
+        gecti = False
     else:
         kalan = ""
         for metin, sayi, ad in _OLCU_KONTROL:
@@ -2271,20 +2292,30 @@ def _olcu_neden(repo: Path) -> dict:
             cevap = kalan + "\nDosya aynı. Düzeltmedim."
             kaldi = "1"
             durdu = "0"
+            gecti = False
         else:
             cevap = "Üç kontrol de geçti.\nDosya aynı. Düzeltmedim."
             kaldi = "0"
             durdu = "1"
+            gecti = True
     if not _arac_ayni(yol, once):
         return _paket(reply="Dosya değişti. Sonucu söylemedim. Düzeltmedim.")
-    _olcu_tur_yaz(repo, {"kaldi": kaldi, "durdu": durdu})
+    if gecti:
+        _olcu_tur_yaz(repo, {**tur, "kaldi": kaldi, "durdu": durdu})
+    else:
+        _olcu_tur_yaz(repo, {"kaldi": kaldi, "durdu": durdu})
     return _paket(reply=cevap)
 
 
 def _olcu_duzelt(repo: Path) -> dict:
     tur = _olcu_tur_oku(repo)
     if tur.get("durdu") == "1":
-        return _paket(reply="Ölçü geçti. Yazmadım.\nDosya aynı. Çalıştırmadım.")
+        if _olcu_sablon_duruyor(repo):
+            return _paket(reply="Ölçü geçti. Yazmadım.\nDosya aynı. Çalıştırmadım.")
+        return _paket(reply="Hazır ölçü değil. Yazmadım.\nDosya aynı. Çalıştırmadım.")
+    if _olcu_sablon_duruyor(repo):
+        _olcu_tur_yaz(repo, {**tur, "duzeltme": "1", "kaldi": "0"})
+        return _paket(reply="Bilinen satır duruyor: " + _OLCU_SATIR + "\nÜstüne yazmadım. Çalıştırmadım.")
     if tur.get("kaldi") != "1":
         return _paket(reply="Ölçü kalmadı. Yazmadım.\nDosya aynı. Çalıştırmadım.")
     if _OLCU_SATIR not in _OLCU_SABLON:
@@ -2292,14 +2323,11 @@ def _olcu_duzelt(repo: Path) -> dict:
     yol, _norm = _klasor_hedef(repo, _OLCU_REL)
     if yol.is_symlink():
         raise ValueError("Bu yere yazılmaz.")
-    if yol.is_file() and yol.read_text(encoding="utf-8") == _OLCU_SABLON:
-        _olcu_tur_yaz(repo, {"duzeltme": "1"})
-        return _paket(reply="Bilinen satır duruyor: " + _OLCU_SATIR + "\nÜstüne yazmadım. Çalıştırmadım.")
     klasor_yaz(repo, _OLCU_REL, _OLCU_SABLON)
     okunan = klasor_oku_dosya(repo, _OLCU_REL)
     if okunan.get("text") != _OLCU_SABLON:
         raise ValueError("Yazılmadı. orta/olcu.py")
-    _olcu_tur_yaz(repo, {"duzeltme": "1"})
+    _olcu_tur_yaz(repo, {**tur, "duzeltme": "1", "kaldi": "0"})
     return _paket(reply="Yazıldı: " + _OLCU_REL + ".\nBilinen satır: " + _OLCU_SATIR + "\nÇalıştırmadım.")
 
 
@@ -2754,6 +2782,8 @@ def _dis_olcu_yaz(repo: Path) -> dict:
     hedef = (kok / "olcu.txt").resolve()
     if not _dis_ayni_klasor(kok, hedef):
         raise ValueError("Bu yere yazılmaz.")
+    if hedef.is_dir():
+        raise ValueError("Bu yer dosya değil.")
     if hedef.exists():
         if not hedef.is_file():
             raise ValueError("Bu yere yazılmaz.")
@@ -2795,7 +2825,11 @@ def _dis_oku(repo: Path, ad: str) -> dict:
         raise ValueError("Bu dosya okunmaz.")
     kok = _dis_kok(repo)
     hedef = (kok / Path(temiz).name).resolve()
-    if hedef.is_symlink() or not _icinde(hedef, kok) or not hedef.is_file():
+    if hedef.is_symlink() or not _icinde(hedef, kok):
+        raise ValueError("Dosya yok.")
+    if hedef.is_dir():
+        raise ValueError("Bu yer dosya değil.")
+    if not hedef.is_file():
         raise ValueError("Dosya yok.")
     once = hedef.read_bytes()
     if len(once) > 20_000:
@@ -2964,6 +2998,8 @@ def _git_fark(repo: Path, yol_rel: str = _KAPI_NOTU) -> dict:
         govde = yol.read_text(encoding="utf-8")
         goster = govde if len(govde) <= 500 else govde[:500] + "…"
         return _paket(reply="İzlenmeyen dosya.\n" + goster.strip() + "\nYazmadım. Göndermedim.")
+    if yol_rel in {_KAPI_NOTU, _OLCU_NOTU} and not yol.is_file():
+        return _paket(reply=yol_rel + " yok.\nYazmadım. Göndermedim.")
     return _paket(reply="Fark yok.\nYazmadım. Göndermedim.")
 
 
