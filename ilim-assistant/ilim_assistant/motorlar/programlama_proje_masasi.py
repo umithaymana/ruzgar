@@ -604,6 +604,10 @@ _KALIP: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("orta_tur_kapat", re.compile(r"^orta\s+turu\s+kapat$", re.I)),
     ("orta_tur_soyle_fazla", re.compile(r"^orta\s+turu\s+s[öo]yle\b.+$", re.I)),
     ("orta_tur_soyle", re.compile(r"^orta\s+turu\s+s[öo]yle$", re.I)),
+    ("orta_kayit_fazla", re.compile(r"^orta\s+ara[çc]\s+kayd[ıi]n[ıi]\s+s[öo]yle\b.+$", re.I)),
+    ("orta_kayit", re.compile(r"^orta\s+ara[çc]\s+kayd[ıi]n[ıi]\s+s[öo]yle$", re.I)),
+    ("orta_arac_soyle_fazla", re.compile(r"^orta\s+arac[ıi]n[ıi]\s+s[öo]yle\b.+$", re.I)),
+    ("orta_arac_soyle", re.compile(r"^orta\s+arac[ıi]n[ıi]\s+s[öo]yle$", re.I)),
     ("olcu_soyle_fazla", re.compile(r"^orta\s+[öo]l[çc][üu]s[üu]n[üu]\s+s[öo]yle\b.+$", re.I)),
     ("olcu_soyle", re.compile(r"^orta\s+[öo]l[çc][üu]s[üu]n[üu]\s+s[öo]yle$", re.I)),
     ("olcu_say_metin", re.compile(
@@ -623,6 +627,8 @@ _KALIP: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("olcu_test", re.compile(r"^orta\s+[öo]l[çc][üu]s[üu]n[üu]\s+[çc]al[ıi][sş]t[ıi]r$", re.I)),
     ("olcu_sira_fazla", re.compile(r"^orta\s+[öo]l[çc][üu]\s+s[ıi]ras[ıi]n[ıi]\s+s[öo]yle\b.+$", re.I)),
     ("olcu_sira", re.compile(r"^orta\s+[öo]l[çc][üu]\s+s[ıi]ras[ıi]n[ıi]\s+s[öo]yle$", re.I)),
+    ("olcu_kayit_fazla", re.compile(r"^orta\s+[öo]l[çc][üu]\s+kayd[ıi]n[ıi]\s+s[öo]yle\b.+$", re.I)),
+    ("olcu_kayit", re.compile(r"^orta\s+[öo]l[çc][üu]\s+kayd[ıi]n[ıi]\s+s[öo]yle$", re.I)),
     ("olcu_satir_soyle_fazla", re.compile(r"^[öo]l[çc][üu]\s+sat[ıi]r[ıi]n[ıi]\s+s[öo]yle\b.+$", re.I)),
     ("olcu_satir_soyle", re.compile(r"^[öo]l[çc][üu]\s+sat[ıi]r[ıi]n[ıi]\s+s[öo]yle$", re.I)),
     ("olcu_satir_yaz_fazla", re.compile(r"^[öo]l[çc][üu]\s+sat[ıi]r[ıi]\s+yaz\b.+$", re.I)),
@@ -635,12 +641,18 @@ _KALIP: tuple[tuple[str, re.Pattern[str]], ...] = (
     )),
     ("orta_bakis", re.compile(r"^orta\s+testine\s+ikinci\s+bak$", re.I)),
     ("tahta_bitti", re.compile(r"^a[çc][ıi]k\s+sat[ıi]r[ıi]\s+bitti\s+yap$", re.I)),
+    ("tahta_say_fazla", re.compile(r"^a[çc][ıi]k\s+sat[ıi]r\s+say[ıi]s[ıi]n[ıi]\s+s[öo]yle\b.+$", re.I)),
+    ("tahta_say", re.compile(r"^a[çc][ıi]k\s+sat[ıi]r\s+say[ıi]s[ıi]n[ıi]\s+s[öo]yle$", re.I)),
+    ("kilit_soyle_fazla", re.compile(r"^kilitli\s+klas[öo]r[üu]\s+s[öo]yle\b.+$", re.I)),
+    ("kilit_soyle", re.compile(r"^kilitli\s+klas[öo]r[üu]\s+s[öo]yle$", re.I)),
     ("orta_test", re.compile(r"^orta\s+testini\s+[çc]al[ıi][sş]t[ıi]r$", re.I)),
     ("uygulama_not", re.compile(
         r"^uygulama\s+notu\s+yaz\s*[:\-]\s*(?P<metin>.+)$",
         re.I,
     )),
     ("uygulama_not_oku", re.compile(r"^uygulama\s+notunu\s+oku$", re.I)),
+    ("uygulama_not_say_fazla", re.compile(r"^uygulama\s+notunun\s+sat[ıi]r[ıi]n[ıi]\s+s[öo]yle\b.+$", re.I)),
+    ("uygulama_not_say", re.compile(r"^uygulama\s+notunun\s+sat[ıi]r[ıi]n[ıi]\s+s[öo]yle$", re.I)),
     ("uygulama_not_satir", re.compile(
         r"^uygulama\s+notuna\s+sat[ıi]r\s+ekle\s*[:\-]\s*(?P<metin>.+)$",
         re.I,
@@ -659,6 +671,10 @@ _KALIP: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("dis_olcu", re.compile(r"^d[ıi]ş\s+[öo]l[çc][üu]\s+dosyas[ıi]n[ıi]\s+oku$", re.I)),
     ("dis_olcu_yaz_fazla", re.compile(r"^d[ıi]ş\s+[öo]l[çc][üu]\s+dosyas[ıi]na\s+yaz\b.+$", re.I)),
     ("dis_olcu_yaz", re.compile(r"^d[ıi]ş\s+[öo]l[çc][üu]\s+dosyas[ıi]na\s+yaz$", re.I)),
+    ("dis_olcu_yer_fazla", re.compile(r"^d[ıi]ş\s+[öo]l[çc][üu]\s+yerini\s+s[öo]yle\b.+$", re.I)),
+    ("dis_olcu_yer", re.compile(r"^d[ıi]ş\s+[öo]l[çc][üu]\s+yerini\s+s[öo]yle$", re.I)),
+    ("dis_klasor_soyle_fazla", re.compile(r"^d[ıi]ş\s+klas[öo]r[üu]\s+s[öo]yle\b.+$", re.I)),
+    ("dis_klasor_soyle", re.compile(r"^d[ıi]ş\s+klas[öo]r[üu]\s+s[öo]yle$", re.I)),
     ("dis_yaz", re.compile(
         r"^d[ıi]ş\s+dosyaya\s+yaz\s*:\s*(?P<ad>[^:\s]+)\s*:\s*(?P<metin>.+)$",
         re.I,
@@ -668,6 +684,8 @@ _KALIP: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("git_olcu_fark", re.compile(r"^git\s+[öo]l[çc][üu]\s+fark[ıi]n[ıi]\s+s[öo]yle$", re.I)),
     ("git_fark_fazla", re.compile(r"^git\s+fark[ıi]n[ıi]\s+s[öo]yle\b.+$", re.I)),
     ("git_fark", re.compile(r"^git\s+fark[ıi]n[ıi]\s+s[öo]yle$", re.I)),
+    ("git_son_fazla", re.compile(r"^git\s+son\s+kayd[ıi]\s+s[öo]yle\b.+$", re.I)),
+    ("git_son", re.compile(r"^git\s+son\s+kayd[ıi]\s+s[öo]yle$", re.I)),
     ("git_kaydet", re.compile(r"^git\s+kaydet\s*:\s*(?P<metin>.+)$", re.I)),
     ("git_gonder", re.compile(r"^git\s+g[öo]nder$", re.I)),
     ("git_yazma", re.compile(r"^git\s+kaydet$", re.I)),
@@ -968,6 +986,10 @@ _PY_OKU = {
     "orta_tur_kapat",
     "orta_tur_soyle_fazla",
     "orta_tur_soyle",
+    "orta_kayit_fazla",
+    "orta_kayit",
+    "orta_arac_soyle_fazla",
+    "orta_arac_soyle",
     "olcu_soyle_fazla",
     "olcu_soyle",
     "olcu_say_metin",
@@ -984,6 +1006,8 @@ _PY_OKU = {
     "olcu_test",
     "olcu_sira_fazla",
     "olcu_sira",
+    "olcu_kayit_fazla",
+    "olcu_kayit",
     "olcu_satir_soyle_fazla",
     "olcu_satir_soyle",
     "olcu_satir_yaz_fazla",
@@ -993,9 +1017,15 @@ _PY_OKU = {
     "orta_duzelt",
     "orta_bakis",
     "tahta_bitti",
+    "tahta_say_fazla",
+    "tahta_say",
+    "kilit_soyle_fazla",
+    "kilit_soyle",
     "orta_test",
     "uygulama_not",
     "uygulama_not_oku",
+    "uygulama_not_say_fazla",
+    "uygulama_not_say",
     "uygulama_not_satir",
     "uygulama_not_satir_fazla",
     "kaynak_satir_soyle_fazla",
@@ -1008,12 +1038,18 @@ _PY_OKU = {
     "dis_olcu",
     "dis_olcu_yaz_fazla",
     "dis_olcu_yaz",
+    "dis_olcu_yer_fazla",
+    "dis_olcu_yer",
+    "dis_klasor_soyle_fazla",
+    "dis_klasor_soyle",
     "dis_yaz",
     "git_durum",
     "git_olcu_fark_fazla",
     "git_olcu_fark",
     "git_fark_fazla",
     "git_fark",
+    "git_son_fazla",
+    "git_son",
     "git_kaydet",
     "git_gonder",
     "git_yazma",
@@ -2537,6 +2573,29 @@ def _acik_satiri_bitti(repo: Path) -> dict:
     return _tahta_tek_satiri_bitti(repo)
 
 
+def _tahta_acik_say(repo: Path) -> dict:
+    yol = _tahta_yolu(repo)
+    if not yol.is_file():
+        return _paket(reply="Tahta yok.\nYazmadım.")
+    once = yol.read_bytes()
+    adet = 0
+    for satir in once.decode("utf-8").splitlines():
+        bulunan = _TAHTA_SATIR.match(satir)
+        if bulunan and bulunan.group(2).strip().lower() != "bitti":
+            adet += 1
+    if yol.read_bytes() != once:
+        return _paket(reply="Tahta değişti. Sayıyı söylemedim.")
+    return _paket(reply="Açık satır: " + str(adet) + "\nYazmadım. Tahtaya yazmadım.")
+
+
+def _kilit_soyle(repo: Path) -> dict:
+    try:
+        yol = _kilit_yolu(repo)
+    except _KlasorYok:
+        raise ValueError("Çalışma klasörü seçilmedi. Şöyle söyle: çalışma klasörü: tam yol") from None
+    return _paket(reply="Kilitli klasör: " + yol + "\nYazmadım. Çalıştırmadım.")
+
+
 def _tahta_tek_satiri_bitti(repo: Path) -> dict:
     yol = _tahta_yolu(repo)
     if not yol.is_file():
@@ -2681,6 +2740,65 @@ def _uygulama_not_oku(repo: Path) -> dict:
     )
 
 
+def _uygulama_not_say(repo: Path) -> dict:
+    yol = _uygulama_not_yolu(repo)
+    if not yol.is_file() or yol.is_symlink():
+        return _paket(reply="Not yok.\nYazmadım. Çalıştırmadım.")
+    once = yol.read_bytes()
+    adet = len([satir for satir in once.decode("utf-8").splitlines() if satir.strip()])
+    if yol.read_bytes() != once:
+        return _paket(reply="Not değişti. Sayıyı söylemedim.")
+    return _paket(reply="Satır: " + str(adet) + "\nYazmadım. Çalıştırmadım.")
+
+
+def _olcu_kayit_soyle(repo: Path) -> dict:
+    try:
+        yol = _olcu_tur_yolu(repo)
+    except ValueError:
+        yol = None
+    vardi = bool(yol and yol.is_file())
+    tur = _olcu_tur_oku(repo)
+    if yol is not None and yol.is_file() != vardi:
+        return _paket(reply="Kayıt değişti. Söylemedim.")
+    parca = " ".join(anahtar + "=" + tur[anahtar] for anahtar in _OLCU_ANAHTAR)
+    ek = "" if vardi else "\nKayıt dosyası yok."
+    return _paket(reply="Ölçü kaydı: " + parca + ek + "\nYazmadım.")
+
+
+def _arac_kayit_soyle(repo: Path) -> dict:
+    try:
+        yol = _orta_tur_yolu(repo)
+    except ValueError:
+        yol = None
+    vardi = bool(yol and yol.is_file())
+    tur = _orta_tur_oku(repo)
+    if yol is not None and yol.is_file() != vardi:
+        return _paket(reply="Kayıt değişti. Söylemedim.")
+    parca = " ".join(anahtar + "=" + tur[anahtar] for anahtar in _TUR_ANAHTAR)
+    ek = "" if vardi else "\nKayıt dosyası yok."
+    return _paket(reply="Araç kaydı: " + parca + ek + "\nYazmadım.")
+
+
+def _arac_soyle(repo: Path) -> dict:
+    if _arac_sablon_duruyor(repo):
+        return _paket(
+            reply=(
+                "orta/arac.py içinde satir_say.\nBilinen satır: "
+                + _ARAC_SATIR
+                + "\nYazmadım. Çalıştırmadım."
+            )
+        )
+    try:
+        yol, _norm = _klasor_hedef(repo, "orta/arac.py")
+    except ValueError as exc:
+        if "seçilmedi" in str(exc):
+            raise
+        return _paket(reply="orta/arac.py yok.\nYazmadım. Çalıştırmadım.")
+    if not yol.is_file() or yol.is_symlink():
+        return _paket(reply="orta/arac.py yok.\nYazmadım. Çalıştırmadım.")
+    return _paket(reply="Hazır araç değil.\nDosya aynı. Yazmadım. Çalıştırmadım.")
+
+
 def _uygulama_not_satir(repo: Path, metin: str) -> dict:
     satir = _not_satiri(metin)
     yol = _uygulama_not_yolu(repo)
@@ -2793,6 +2911,25 @@ def _dis_olcu_yaz(repo: Path) -> dict:
     if hedef.read_text(encoding="utf-8") != _OLCU_SATIR + "\n":
         raise ValueError("Yazılmadı. olcu.txt")
     return _paket(reply="Yazıldı: olcu.txt.\nBilinen satır: " + _OLCU_SATIR + "\nÇalıştırmadım.")
+
+
+def _dis_olcu_yer(repo: Path) -> dict:
+    kok = _dis_kok(repo)
+    hedef = (kok / "olcu.txt").resolve()
+    if not _dis_ayni_klasor(kok, hedef):
+        raise ValueError("Bu yere yazılmaz.")
+    if hedef.is_dir():
+        yer = "klasör"
+    elif hedef.is_file():
+        yer = "dosya"
+    else:
+        yer = "yok"
+    return _paket(reply="olcu.txt " + yer + ".\nYazmadım. Çalıştırmadım.")
+
+
+def _dis_klasor_soyle(repo: Path) -> dict:
+    kok = _dis_kok(repo)
+    return _paket(reply="Dış klasör: " + str(kok) + "\nYazmadım. Çalıştırmadım.")
 
 
 def _dis_say(repo: Path) -> dict:
@@ -2977,6 +3114,15 @@ def _git_durum(repo: Path) -> dict:
         if kalan:
             fark += f"\nve {kalan} dosya daha."
     return _paket(reply=f"Dal: {dal}\nSon kayıt: {kayit}\n{fark}\nYazmadım. Göndermedim.")
+
+
+def _git_son(repo: Path) -> dict:
+    if not _git_satir(repo, ["rev-parse", "--is-inside-work-tree"]):
+        return _paket(reply="Bu depo değil.\nYazmadım. Göndermedim.")
+    kayit = _git_satir(repo, ["log", "-1", "--format=%h %s"])
+    if not kayit:
+        return _paket(reply="Kayıt yok.\nYazmadım. Göndermedim.")
+    return _paket(reply="Son kayıt: " + kayit + "\nYazmadım. Göndermedim.")
 
 
 def _git_fark(repo: Path, yol_rel: str = _KAPI_NOTU) -> dict:
@@ -3252,6 +3398,14 @@ def _calistir(repo: Path, adim: dict, sayfa: str) -> dict:
             return _paket(reply="Bu cümle söylemez. Şöyle söyle: orta turu söyle\nYazmadım. Tahtaya yazmadım.")
         if kind == "orta_tur_soyle":
             return _orta_tur_soyle(repo)
+        if kind == "orta_kayit_fazla":
+            return _paket(reply="Bu cümle söylemez. Şöyle söyle: orta araç kaydını söyle\nYazmadım.")
+        if kind == "orta_kayit":
+            return _arac_kayit_soyle(repo)
+        if kind == "orta_arac_soyle_fazla":
+            return _paket(reply="Bu cümle söylemez. Şöyle söyle: orta aracını söyle\nYazmadım. Çalıştırmadım.")
+        if kind == "orta_arac_soyle":
+            return _arac_soyle(repo)
         if kind == "olcu_soyle_fazla":
             return _paket(reply="Bu cümle söylemez. Şöyle söyle: orta ölçüsünü söyle\nYazmadım. Çalıştırmadım.")
         if kind == "olcu_soyle":
@@ -3284,6 +3438,10 @@ def _calistir(repo: Path, adim: dict, sayfa: str) -> dict:
             return _paket(reply="Bu cümle söylemez. Şöyle söyle: orta ölçü sırasını söyle\nYazmadım. Tahtaya yazmadım.")
         if kind == "olcu_sira":
             return _olcu_sira(repo)
+        if kind == "olcu_kayit_fazla":
+            return _paket(reply="Bu cümle söylemez. Şöyle söyle: orta ölçü kaydını söyle\nYazmadım.")
+        if kind == "olcu_kayit":
+            return _olcu_kayit_soyle(repo)
         if kind == "olcu_satir_soyle_fazla":
             return _paket(reply="Bu cümle söylemez. Şöyle söyle: ölçü satırını söyle\nYazmadım. Çalıştırmadım.")
         if kind == "olcu_satir_soyle":
@@ -3302,12 +3460,24 @@ def _calistir(repo: Path, adim: dict, sayfa: str) -> dict:
             return _orta_ikinci_bak(repo)
         if kind == "tahta_bitti":
             return _acik_satiri_bitti(repo)
+        if kind == "tahta_say_fazla":
+            return _paket(reply="Bu cümle söylemez. Şöyle söyle: açık satır sayısını söyle\nYazmadım. Tahtaya yazmadım.")
+        if kind == "tahta_say":
+            return _tahta_acik_say(repo)
+        if kind == "kilit_soyle_fazla":
+            return _paket(reply="Bu cümle söylemez. Şöyle söyle: kilitli klasörü söyle\nYazmadım. Çalıştırmadım.")
+        if kind == "kilit_soyle":
+            return _kilit_soyle(repo)
         if kind == "orta_test":
             return _orta_test(repo)
         if kind == "uygulama_not":
             return _uygulama_not(repo, adim.get("metin") or "")
         if kind == "uygulama_not_oku":
             return _uygulama_not_oku(repo)
+        if kind == "uygulama_not_say_fazla":
+            return _paket(reply="Bu cümle söylemez. Şöyle söyle: uygulama notunun satırını söyle\nYazmadım. Çalıştırmadım.")
+        if kind == "uygulama_not_say":
+            return _uygulama_not_say(repo)
         if kind == "uygulama_not_satir_fazla":
             return _paket(reply="Bu cümle eklemez. Şöyle söyle: uygulama notuna satır ekle: metin\nÜstüne yazmadım. Çalıştırmadım.")
         if kind == "uygulama_not_satir":
@@ -3332,6 +3502,14 @@ def _calistir(repo: Path, adim: dict, sayfa: str) -> dict:
             return _paket(reply="Bu cümle yazmaz. Şöyle söyle: dış ölçü dosyasına yaz\nDosya aynı. Çalıştırmadım.")
         if kind == "dis_olcu_yaz":
             return _dis_olcu_yaz(repo)
+        if kind == "dis_olcu_yer_fazla":
+            return _paket(reply="Bu cümle söylemez. Şöyle söyle: dış ölçü yerini söyle\nYazmadım. Çalıştırmadım.")
+        if kind == "dis_olcu_yer":
+            return _dis_olcu_yer(repo)
+        if kind == "dis_klasor_soyle_fazla":
+            return _paket(reply="Bu cümle söylemez. Şöyle söyle: dış klasörü söyle\nYazmadım. Çalıştırmadım.")
+        if kind == "dis_klasor_soyle":
+            return _dis_klasor_soyle(repo)
         if kind == "dis_yaz":
             return _dis_yaz(repo, adim.get("ad") or "", adim.get("metin") or "")
         if kind == "git_durum":
@@ -3344,6 +3522,10 @@ def _calistir(repo: Path, adim: dict, sayfa: str) -> dict:
             return _paket(reply="Bu cümle söylemez. Şöyle söyle: git farkını söyle\nYazmadım. Göndermedim.")
         if kind == "git_fark":
             return _git_fark(repo)
+        if kind == "git_son_fazla":
+            return _paket(reply="Bu cümle söylemez. Şöyle söyle: git son kaydı söyle\nYazmadım. Göndermedim.")
+        if kind == "git_son":
+            return _git_son(repo)
         if kind == "git_kaydet":
             return _git_kaydet(repo, adim.get("metin") or "")
         if kind == "git_gonder":

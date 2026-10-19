@@ -102,18 +102,18 @@
 | 94 | Eski geçti bayrağı bozuk ölçüyü gizlemesin | bitti | `test_eski_gecti_bayragi_bozuk_olcuyu_gizlemez` |
 | 95 | Eski geçti bayrağı bozuk aracı gizlemesin | bitti | `test_eski_gecti_bayragi_bozuk_araci_gizlemez` |
 | 96 | Hazır araçta dört cümle aynı hikâye | bitti | `test_hazir_aracta_dort_cumle_ayni_hikayeyi_soyler` |
-| 97 | Dış ölçü yerini söyle | sırada | — |
-| 98 | Uygulama notunun satır sayısını söyle | sırada | — |
-| 99 | Ölçü kaydını söyle | sırada | — |
-| 100 | Araç kaydını söyle | sırada | — |
-| 101 | Son git kaydını söyle | sırada | — |
-| 102 | Kilitli klasörün adını söyle | sırada | — |
-| 103 | Dış klasörün adını söyle | sırada | — |
-| 104 | Tahtadaki açık satır sayısını söyle | sırada | — |
-| 105 | Hazır ölçünün adını söyle | sırada | — |
-| 106 | Bu on cümle yazmaz | sırada | — |
+| 97 | Dış ölçü yerini söyle | bitti | `test_dis_olcu_yerini_soyler_icini_acmaz` |
+| 98 | Uygulama notunun satır sayısını söyle | bitti | `test_uygulama_notunun_satirini_soyler_yazmaz` |
+| 99 | Ölçü kaydını söyle | bitti | `test_olcu_kaydini_soyler_yazmaz` |
+| 100 | Araç kaydını söyle | bitti | `test_arac_kaydini_soyler_yazmaz` |
+| 101 | Son git kaydını söyle | bitti | `test_git_son_kaydi_soyler_gonderemez` |
+| 102 | Kilitli klasörün adını söyle | bitti | `test_kilitli_klasoru_soyler_listelemez` |
+| 103 | Dış klasörün adını söyle | bitti | `test_dis_klasoru_soyler_listelemez` |
+| 104 | Tahtadaki açık satır sayısını söyle | bitti | `test_acik_satir_sayisini_soyler_yazmaz` |
+| 105 | Hazır aracın adını söyle | bitti | `test_orta_aracini_soyler_yazmaz` |
+| 106 | Bu on cümle yazmaz | bitti | `test_okuyan_on_cumle_dosyaya_yazmaz` |
 
-**Denenecek cümle:** sıradaki on iş henüz yazılmadı. İlk cümle: `dış ölçü yerini söyle`
+**Denenecek cümle:** `dış ölçü yerini söyle`
 
 **13. iş bitti.** Kilitli klasör sayar, metin dosyası açar, ara başlık, http bağlantı, başlık rengi, klasördeki resim ve sayfa adı değişir. Dört masa: belgede bir kez değiştir, hücre sil, sütun topla, renkli çiz, slayt başlığı. Bak bu tariflerden yazı ve rengi önerebilir. Bağlantı, resim ve ad değiştirme yalnız sen söyleyince olur. `uygula` yine son bakışı bir kez çalıştırır.
 
@@ -272,6 +272,26 @@
 **95. iş bitti.** `orta turu düzelt` eski «geçti» bayrağı bozuk aracı gizlemez. «Hazır araç değil» der. Yazmaz.
 
 **96. iş bitti.** Hazır `orta/arac.py` dosyasında söyle, düzelt, bak ve kapat aynı hikâyeyi söyler. Araç dosyası aynı kalır.
+
+**97. iş bitti.** `dış ölçü yerini söyle` `olcu.txt` için yok, dosya ya da klasör der. İçini açmaz. Yazmaz.
+
+**98. iş bitti.** `uygulama notunun satırını söyle` dolu satır sayısını söyler. Not yokken açmaz.
+
+**99. iş bitti.** `orta ölçü kaydını söyle` ölçü bayraklarını okur. Dosya yokken açmaz.
+
+**100. iş bitti.** `orta araç kaydını söyle` araç bayraklarını okur. Dosya yokken açmaz.
+
+**101. iş bitti.** `git son kaydı söyle` son kaydın kısa adını söyler. Kaydetmez, göndermez.
+
+**102. iş bitti.** `kilitli klasörü söyle` kilitli klasörün yolunu söyler. İçindeki dosyaları saymaz.
+
+**103. iş bitti.** `dış klasörü söyle` seçilen dış klasörün yolunu söyler. İçindeki dosyaları saymaz.
+
+**104. iş bitti.** `açık satır sayısını söyle` tahtadaki açık satır sayısını söyler. Tahtaya yazmaz.
+
+**105. iş bitti.** `orta aracını söyle` hazır araçta `satir_say` adını söyler. Dosya yokken açmaz.
+
+**106. iş bitti.** Bu okuyan cümleler dosya açmaz ve tahtaya yazmaz.
 
 **Bilerek kapalı:** dosya silmek, modelin ürettiği kodu çalıştırmak, serbest kaynak yazmak, serbest dış yazmak, zorla göndermek, ölçü notunu kaydetmek, 32B/70B, telefon.
 
