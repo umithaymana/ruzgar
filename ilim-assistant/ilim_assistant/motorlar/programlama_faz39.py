@@ -36,7 +36,23 @@ def mandate_followup_enabled() -> bool:
 
 
 def code_agent_max_turns_effective() -> int:
-    """Faz 80 mega → 30 tur; Faz 56 → 20 tur; Faz 41 → 15 tur; Faz 39 → 12 tur."""
+    """Faz 80 mega → 30 tur; Faz 56 → 20 tur; Faz 41 → 15 tur; Faz 39 → 12 tur.
+
+    `RUZGAR_CODE_AGENT_MAX_TURNS` açıkça set ise **üst tavan** (canlı E2 pil).
+    """
+    env_cap: int | None = None
+    raw_cap = os.environ.get("RUZGAR_CODE_AGENT_MAX_TURNS", "").strip()
+    if raw_cap:
+        try:
+            env_cap = max(1, min(int(raw_cap), 40))
+        except ValueError:
+            env_cap = None
+
+    def _cap(n: int) -> int:
+        if env_cap is None:
+            return n
+        return min(n, env_cap)
+
     try:
         from ilim_assistant.motorlar.programlama_faz80 import (
             agent_max_turns_mega,
@@ -44,7 +60,7 @@ def code_agent_max_turns_effective() -> int:
         )
 
         if mega_context_active():
-            return agent_max_turns_mega()
+            return _cap(agent_max_turns_mega())
     except Exception:
         pass
     try:
@@ -54,7 +70,7 @@ def code_agent_max_turns_effective() -> int:
         )
 
         if long_task_v2_enabled():
-            return agent_max_turns_v2()
+            return _cap(agent_max_turns_v2())
     except Exception:
         pass
     try:
@@ -64,21 +80,19 @@ def code_agent_max_turns_effective() -> int:
         )
 
         if long_task_enabled():
-            return long_task_max_turns()
+            return _cap(long_task_max_turns())
     except Exception:
         pass
     if not _enabled():
         try:
             from ilim_assistant.motorlar.programlama_faz14 import code_agent_max_turns
 
-            return code_agent_max_turns()
+            return _cap(code_agent_max_turns())
         except Exception:
-            return 8
-    try:
-        v = int(os.environ.get("RUZGAR_CODE_AGENT_MAX_TURNS", "12"))
-        return max(3, min(v, 20))
-    except ValueError:
-        return 12
+            return _cap(8)
+    if env_cap is not None:
+        return env_cap
+    return 12
 
 
 def task_brain_profile_override() -> str | None:

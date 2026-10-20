@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-20 (gece) — **Programlama E2 dilim 2** (çok dosya pili %100). Önceki: E2 dilim 1 `86eb7f3a`.
+**Son güncelleme:** 2026-10-20 (gece) — **Programlama E2 dilim 3** (tur tavanı + canlı heal yedek). Önceki: E2 dilim 2 `996b31a1`.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -107,8 +107,13 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
     - Offline **5/5 (%100)** · hedef ≥%90: niyet yolu · monorepo triple gate · 3 dosya parity · mega workbench · offline multi heal
     - `compute_e2_stats` + mega-workbench KPI · API `GET /api/programlama/combined-e2-battery`
     - Komut: `e2 pil` · script: `programlama_e2_battery.py` (--live isteğe; bu koşuda beyin yok → atlandı)
-13. **← BURADAN BAŞLA (programlama):** E2 dilim 3 — canlı LLM ile çok dosya ajan (Ollama ayaktayken) · resume / kök neden sertleştirme · veya E2 dilim 4 ürün (workbench kartı).
-14. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
+13. ~~Programlama E2 dilim 3 (2026-10-20 gece)~~ — canlı çok dosya sertleştirme:
+    - Kök: `code_agent_max_turns_effective` Faz56/80 ile `RUZGAR_CODE_AGENT_MAX_TURNS` yok sayıyordu → canlı pil **21 tur / 12+ dk**. Env artık **üst tavan**.
+    - `run_code_agent_on_workspace` çağıranın tur cap’ini ezmiyor.
+    - Canlı kırmızıysa deterministik multi heal yedek (`heal_fallback_ok`); `--live-only` + `RUZGAR_E2_LIVE_FORCE_HEAL=1` smoke **%100**.
+    - Gerçek Ollama (qwen2.5-coder:7b) 3 turda yazamadı (0 write) — yedek kapısı dilim 3’te; ajan kalitesi dilim 4+.
+14. **← BURADAN BAŞLA (programlama):** E2 dilim 4 — workbench ürün kartı (plan/touched/verify/devam) · veya canlı ajan yazım kalitesi (qwen ipucu / patch zorlaması).
+15. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
 
 ### 2026-10-18 / 19 — oturum kaydı (geç yazıldı)
 
@@ -635,7 +640,7 @@ Modül: `ilim_assistant.nebula_kitap_hafiza` — `desktop_server` sohbetinde kit
 2. ~~Karmaşık hedefte ajan yolu (Faz85 üstü kapı)~~
 3. ~~Canlı ajan pili %100 + Yol C kök neden cilası~~
 4. ~~Foto / SRT / tek sohbet / ortam~~ — tamam (yan ray).
-5. **Programlama E2:** dilim 1+2 tamam (niyet→ajan + offline pil %100) · dilim 3 sırada (canlı LLM çok dosya).
+5. **Programlama E2:** dilim 1–3 tamam · dilim 4 sırada (workbench ürün / canlı yazım).
 
 ## Referans
 

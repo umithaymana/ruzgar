@@ -277,8 +277,11 @@ def run_code_agent_on_workspace(
             "detail": str(og_direct)[:400],
         }
     prior = prior_messages_for_turn([], "programlama")
+    # Canlı pil / dış çağıran RUZGAR_CODE_AGENT_MAX_TURNS set ettiyse onu koru
+    # (önceden max_agent_turns() her zaman üzerine yazıyordu → E2 canlı 20+ dk).
     prev_turns = os.environ.get("RUZGAR_CODE_AGENT_MAX_TURNS")
-    os.environ["RUZGAR_CODE_AGENT_MAX_TURNS"] = str(max_agent_turns())
+    if not (prev_turns or "").strip():
+        os.environ["RUZGAR_CODE_AGENT_MAX_TURNS"] = str(max_agent_turns())
     t0 = time.perf_counter()
     out: dict[str, Any] = {
         "ok": False,

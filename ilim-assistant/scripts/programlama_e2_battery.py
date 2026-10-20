@@ -36,6 +36,11 @@ def main() -> int:
         action="store_true",
         help="Offline + canlı birleşik (canlı yoksa offline oranı)",
     )
+    p.add_argument(
+        "--live-only",
+        action="store_true",
+        help="Yalnız canlı çok dosya ajan (offline atla)",
+    )
     args = p.parse_args()
 
     from ilim_assistant.motorlar.programlama_faz103_e2 import (
@@ -44,12 +49,16 @@ def main() -> int:
         run_e2_offline_battery,
     )
 
-    if args.live or args.combined:
-        print("=== E2 birleşik pil (Faz 103) ===\n")
-        bundle = run_combined_e2_battery(WORKSPACE, live_llm=bool(args.live))
-        print(format_e2_battery_report(bundle))
-        print()
-        print(json.dumps(bundle, ensure_ascii=True, indent=2, default=str)[:6000])
+    if args.live or args.combined or args.live_only:
+        print("=== E2 birleşik pil (Faz 103) ===\n", flush=True)
+        bundle = run_combined_e2_battery(
+            WORKSPACE,
+            live_llm=bool(args.live or args.live_only),
+            skip_offline=bool(args.live_only),
+        )
+        print(format_e2_battery_report(bundle), flush=True)
+        print(flush=True)
+        print(json.dumps(bundle, ensure_ascii=True, indent=2, default=str)[:6000], flush=True)
         if not bundle.get("ok"):
             return 1
         return 0 if bundle.get("combined_meets_target_90") else 2
