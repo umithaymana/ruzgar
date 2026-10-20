@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-20 — **CHECKPOINT** Foto referans kutusu OK; yüz araması şimdilik zayıf bırakıldı. Dönüş: **Programlama (Faz88 ajan E1)**.
+**Son güncelleme:** 2026-10-20 (gece) — **Uçtan uca sağlık taraması + masa TDZ düzeltmesi** (sohbet «Masa komutu uygulanamadı» kırığı kapandı). Önceki: Faz88 E1 dilimi 2 birleşik pil **100%**.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -82,16 +82,24 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
 37. ~~5. basamak~~ — test nedeni, bilinen satır, ikinci bakış, açık satırı bitti, eksik düzeltme kapıda. Son kayıt `ad7e4520`.
 38. ~~Kapı 137–166~~ — tek bayrak, hazır araç, tek açık satır, tahta kenarı, boşluk, orta not, git uzak ve baş, hazır ölçüde kalmadı. Hepsi okur, yazmaz.
 
-### Mimar dönünce (sıra) — 2026-10-20 CHECKPOINT
+### Mimar dönünce (sıra) — 2026-10-20 CHECKPOINT → E1 dilimi 1
 
 **Kaydetme noktası:** Foto UI (katalog, referans seç→Aç, kutu önizleme, yenile `-3` susturma) canlı. Yüz eşleştirme **bilinçli olarak zayıf bırakıldı** (sonraki turda güçlendirilmez; önce Programlama).
 
 1. ~~Kapı 137–166~~ yeşil (151 test).
 2. ~~Ana Yüzey A–F~~ + Foto YuNet canlı (venv OpenCV 5; referans kutusu OK).
 3. ~~Programlama E1 hızlı yol~~ — birleşik canlı API %100 (`run_argv` → `sys.executable`).
-4. **← BURADAN BAŞLA — Programlama atölyesi (Faz88 ajan E1):** yüzey→görev satırı + handoff workbench güçlendirme; ajan yolu (Faz85 hızlı yolun üstü); isteğe Yol C. Kapalı yüzey kuralları durur.
-5. Sonra (isteğe): Foto yüz aramasını güçlendir (gömme/eşik) — şimdi değil.
-6. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
+4. ~~Faz88 E1 dilimi 1 (2026-10-20 akşam)~~ — yüzey→görev:
+   - `programlama_yuzey_bridge.py` + `POST /api/programlama/yuzey-handoff`
+   - UI: `applyMotorHandoff` → görev satırı + handoff kartında hedef/yol
+   - Faz85: karmaşık marker’da hızlı yol atlanır → ajan (v3.1)
+   - Smoke: `programlama_yuzey_bridge_smoke.py` · handoff · offline ajan pili **2/2**
+5. ~~Faz88 E1 dilimi 2 (2026-10-20 akşam)~~ — canlı birleşik pil:
+   - `programlama_agent_battery.py --live --combined` → **Kombine %100** (hızlı 3/3 · ajan 4/4, Ollama)
+   - Yol C: `classify_root_cause` daraltıldı (pytest_scope / «Doğrulama: kırmızı» artık `pytest_failed`, yanlış `scope_rejected` yok) · smoke `programlama_e1_root_cause_smoke.py`
+6. ~~2026-10-20 gece — uçtan uca tarama~~ — health OK · 9/9 motor import · sohbet API+UI (nasılsın / İslam / Osmanlı / Lale) · masa TDZ (`let m` köprü regex’inden önce) + catch `handled:false` · programlama handoff/agent idle · foto katalog 8642 · bilinen boşluk: OCR runtime yok, ffmpeg yok, ruff isteğe bağlı.
+7. **← BURADAN BAŞLA (isteğe):** Foto yüz aramasını güçlendir (gömme/eşik) — veya çeviri `.srt` · Ana Motor tek sohbet orkestrasyonu.
+7. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
 
 ### 2026-10-18 / 19 — oturum kaydı (geç yazıldı)
 
@@ -613,13 +621,11 @@ Modül: `ilim_assistant.nebula_kitap_hafiza` — `desktop_server` sohbetinde kit
 ## Sıradaki adım (devam)
 
 **Dönüş planı (Mimar onayı 2026-10-20):** Foto burada dursun.  
-**Öncelik — Programlama atölyesi:**
-1. Faz88 ajan E1 — karmaşık görevlerde ajan yolu (hızlı yol zaten %100).
-2. Yüzey → görev satırı + workbench handoff cilası.
-3. İsteğe Yol C.
-4. Foto yüz güçlendirme **sonra** (şimdi değil).
-
-Diğer seçenekler (programlamadan sonra): çeviri `.srt` · Ana Motor tek sohbet orkestrasyonu.
+**Programlama E1 (Faz88) — dilim 1+2 tamam:**
+1. ~~Yüzey → görev satırı + workbench handoff~~
+2. ~~Karmaşık hedefte ajan yolu (Faz85 üstü kapı)~~
+3. ~~Canlı ajan pili %100 + Yol C kök neden cilası~~
+4. **Sonraki (isteğe):** Foto yüz güçlendirme · çeviri `.srt` · Ana Motor tek sohbet orkestrasyonu.
 
 ## Referans
 

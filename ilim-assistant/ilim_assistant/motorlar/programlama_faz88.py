@@ -18,7 +18,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
-FAZ88_VERSION = "programlama-faz88-v1-2026-05-27"
+FAZ88_VERSION = "programlama-faz88-v1.1-2026-10-20"
 _BATTERY_RE = re.compile(
     r"(?:ajan\s+gorev\s+test|ajan\s+görev\s+test|agent\s+task\s+battery|"
     r"ajan\s+pili|e1\s+ajan\s+test)",

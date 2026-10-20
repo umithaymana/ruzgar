@@ -15,7 +15,35 @@ import unicodedata
 from pathlib import Path
 from typing import Any, Callable, Iterator
 
-FAZ85_VERSION = "programlama-faz85-v3-2026-05-27"
+FAZ85_VERSION = "programlama-faz85-v3.1-2026-10-20"
+
+# Karmaşık hedefler → Faz85 atlanır, Faz14/88 ajan yolu (E1).
+# Kısa belirsiz parçalar (bol/ayır) yok — yanlış pozitif riski.
+_AGENT_PATH_MARKERS = (
+    "refactor",
+    "cok dosya",
+    "çok dosya",
+    "multi file",
+    "middleware",
+    "oauth",
+    "jwt",
+    "database",
+    "veritaban",
+    "migrate",
+    "migration",
+    "websocket",
+    "redis",
+    "docker",
+    "kubernetes",
+    "celery",
+    "graphql",
+    "servislere",
+    "auth ekle",
+    "kimlik dogrul",
+    "kimlik doğrul",
+    "authentication",
+    "authorization",
+)
 
 _MAIN_CANDIDATES = (
     "app/main.py",
@@ -161,6 +189,14 @@ def _goal_wants_create(goal: str) -> bool:
 def _goal_wants_health_fix(goal: str) -> bool:
     low = _ascii_fold(goal)
     return any(k in low for k in ("duzelt", "düzelt", "fix", "kirmizi", "kırmızı")) and "health" in low
+
+
+def goal_wants_agent_path(goal: str) -> bool:
+    """True ise hızlı yol atlanır — ajan döngüsü (Faz14/88)."""
+    low = _ascii_fold(goal or "")
+    if not low:
+        return False
+    return any(m in low for m in _AGENT_PATH_MARKERS)
 
 
 def _extract_version(goal: str) -> str:
@@ -463,6 +499,9 @@ def try_fast_deterministic_task(
     intent_message: str = "",
 ) -> dict[str, Any] | None:
     if not _enabled():
+        return None
+    combined = f"{intent_message or ''} {goal or ''}".strip()
+    if goal_wants_agent_path(combined):
         return None
     scope_rel = _resolve_preferred_scope(
         workspace_root, scope_rel, (intent_message or goal or "").strip()

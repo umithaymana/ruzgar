@@ -330,9 +330,52 @@ def is_invalid_egitim_pair(soru: str, cevap: str) -> bool:
             "empati sorularında",
             "python paket kurulumu",
             "pip install",
+            # Zehirli otomatik-öğrenme kalıpları (2026-10-20)
+            "cihadi iman",
+            "namazı icma",
+            "namazi icma",
+            "mahmud ii.'nin saltanat",
+            "tanzimat'ın başlangıcından",
+            "ankara kalesi",
+            "dosyayı buldum ama açamıyorum",
+            "dosyayi buldum ama acamiyorum",
         )
     ):
         return True
+    # Lale Devri ≠ Tanzimat / II. Mahmud / Abdülhamid
+    # Doğru cevapta «Tanzimat değildir / Fuzuli değildir» geçebilir — olumsuzlamayı sayma.
+    s_low = s.casefold()
+    if "lale" in s_low and "devri" in s_low:
+        neg = any(
+            x in low
+            for x in ("değildir", "degildir", "değil;", "degil;", " değil ", " degil ")
+        )
+        if not neg:
+            wrong_era = any(
+                x in low
+                for x in (
+                    "1839",
+                    "1909",
+                    "abdülhamid",
+                    "abdulhamid",
+                    "tanzimat",
+                    "ii. mahmud",
+                    "mahmud ii",
+                    "18. yüzyılın son",
+                    "18. yuzyilin son",
+                    "19. yüzyıl",
+                    "19. yuzyil",
+                    "19. yüzyılın baş",
+                )
+            )
+            claims_classic_poets = "fuzuli" in low or "bâkî" in low or re.search(
+                r"\bbaki\b", low
+            )
+            # 1718–1730 yoksa Lale Devri cevabı güvenilmez say
+            if wrong_era or claims_classic_poets or (
+                "1718" not in (cevap or "") and "nedim" not in low
+            ):
+                return True
     # Cevap soruyu yankılıyor (soru metni cevabın başında)
     s_core = re.sub(r"[?!.…]+$", "", s).strip().casefold()
     if len(s_core) >= 12 and low.startswith(s_core[: min(40, len(s_core))]):

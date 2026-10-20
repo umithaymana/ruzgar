@@ -736,14 +736,20 @@
       return "Gönderilecek içerik yok. Önce yüzeyde yaz / aç.";
     }
     if (hedef === "programlama") {
+      // Faz88 E1: yüzey gövdesini görev satırı olarak da işaretle (API köprüsü okur)
+      const govde = String(metin || "").trim();
+      const hasGorev = /^(?:görev|gorev)\s*:/im.test(govde);
       if (paket.tur !== "kod") {
         metin =
           "# Yüzeyden görev (çalıştırma kapalı — güvenli atölye)\n" +
-          "# Kaynak yetenek: " + paket.tur + "\n\n" +
+          "# Kaynak yetenek: " + paket.tur + "\n" +
+          (hasGorev ? "" : "# görev ipucu: sohbet kutusuna aktarılır\n") +
+          "\n" +
           metin;
       } else {
         metin =
           "# Yüzey → Programlama (Faz85 güvenli yol; serbest çalıştırma kapalı)\n" +
+          (hasGorev ? "" : "# görev: bu kodu gözden geçir ve pytest geçir\n") +
           metin;
       }
     }
@@ -3234,7 +3240,14 @@
     const raw = String(text || "").trim();
     if (!raw || raw.length > 9000) return null;
     if (window.ruzgarMasaSoz && typeof window.ruzgarMasaSoz.coz === "function") {
-      const duz = window.ruzgarMasaSoz.coz(raw);
+      let duz = null;
+      try {
+        duz = window.ruzgarMasaSoz.coz(raw);
+      } catch (sozErr) {
+        // Söz çözücü patlarsa sohbeti yutma — masa komutu değil say
+        try { console.warn("[ruzgar-masa] soz.coz:", sozErr); } catch (_) { /* ignore */ }
+        duz = null;
+      }
       if (duz && duz.red) {
         return {
           handled: true,
@@ -3250,9 +3263,16 @@
       .replace(/\s+(mısın|misin|misiniz|mısınız|musun|musunuz)[.!?]*$/i, "")
       .replace(/\?+$/g, "")
       .trim();
-    const low = typeof window.ruzgarKomutGovdesi === "function"
-      ? window.ruzgarKomutGovdesi(sade)
-      : masaHarf(sade);
+    let low = "";
+    try {
+      low = typeof window.ruzgarKomutGovdesi === "function"
+        ? window.ruzgarKomutGovdesi(sade)
+        : masaHarf(sade);
+    } catch (govErr) {
+      try { console.warn("[ruzgar-masa] komutGovdesi:", govErr); } catch (_) { /* ignore */ }
+      low = masaHarf(sade);
+    }
+    low = String(low || "");
     if (/^(masa yardim|calisma masasi yardim|masa komutlari|yuzey yardim|calisma yuzeyi yardim)$/.test(low)) {
       return { handled: true, reply: masaYardim() };
     }
@@ -3277,7 +3297,8 @@
     if (/^(fotoyu ac|fotoyu goster|foto ac|foto goster|fotograf ac|fotografi ac)$/.test(low)) {
       return masaKomutSonuc(masaSayfa("foto"));
     }
-    m = sade.match(/^(?:bunu|belgeyi|kodu|notlari|notları|metni|yuzeyi|yüzeyi|tabloyu|sunumu|okumayi|okumayı)\s+(tercumeye|tercümeye|programlamaya|sese|videoya|hafizaya|hafızaya|okumaya|mimara)\s+g[öo]nder$/i);
+    // let m burada — köprü regex’leri let satırından önce m kullanıyordu (TDZ → tüm sohbet kırılıyordu)
+    let m = sade.match(/^(?:bunu|belgeyi|kodu|notlari|notları|metni|yuzeyi|yüzeyi|tabloyu|sunumu|okumayi|okumayı)\s+(tercumeye|tercümeye|programlamaya|sese|videoya|hafizaya|hafızaya|okumaya|mimara)\s+g[öo]nder$/i);
     if (m) return masaKomutSonuc(yuzeyMotorGonder(m[1]));
     m = sade.match(/^(?:kopru|köprü)\s*[:\-]?\s*(tercume|tercüme|programlama|ses|video|hafiza|hafıza|okuma|mimar)$/i);
     if (m) return masaKomutSonuc(yuzeyMotorGonder(m[1]));
@@ -3302,7 +3323,7 @@
     if (/^(web ac|web goster|webi ac|webi goster)$/.test(low)) {
       return masaKomutSonuc(masaSayfa("web"));
     }
-    let m = sade.match(/^(?:web ac|site ac|sayfa ac)\s+(.+)$/i);
+    m = sade.match(/^(?:web ac|site ac|sayfa ac)\s+(.+)$/i);
     if (m) return masaKomutSonuc(webAc(m[1]));
     m = sade.match(/^(?:notlara|nota)\s+(.+?)\s+yaz$/i);
     if (m) return masaKomutSonuc(notlarYaz(m[1], false));
@@ -3534,7 +3555,11 @@
       }
       return hit;
     } catch (err) {
-      return { handled: true, reply: "Masa komutu uygulanamadı." };
+      // Hata sohbeti yutmasın — handled:false ile API/sohbet yolu açılsın
+      try {
+        console.warn("[ruzgar-masa] komut hatası:", err && err.message, err);
+      } catch (_) { /* ignore */ }
+      return { handled: false, reply: "", error: String((err && err.message) || err || "") };
     }
   };
 

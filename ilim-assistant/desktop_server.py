@@ -3082,6 +3082,30 @@ def api_programlama_handoff_workbench(
     return payload
 
 
+class YuzeyHandoffBody(BaseModel):
+    surface_text: str = ""
+    workspace_root: str | None = None
+    active_file: str | None = None
+
+
+@app.post("/api/programlama/yuzey-handoff")
+def api_programlama_yuzey_handoff(body: YuzeyHandoffBody):
+    """Faz88 E1 — yüzey metni → görev satırı + handoff workbench (yazım yok)."""
+    from ilim_assistant.motorlar.programlama_yuzey_bridge import (
+        YUZEY_BRIDGE_VERSION,
+        build_surface_handoff_payload,
+    )
+
+    root = (body.workspace_root or "").strip() or None
+    payload = build_surface_handoff_payload(
+        body.surface_text or "",
+        root,
+        active_file=(body.active_file or "").strip() or None,
+    )
+    payload["version"] = YUZEY_BRIDGE_VERSION
+    return payload
+
+
 @app.get("/api/programlama/mega-workbench")
 def api_programlama_mega_workbench(workspace_root: str | None = None):
     """Blok G — mega görev özeti (tur, touched_files, patch, verify, E2)."""

@@ -7,12 +7,13 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import time
 from collections import Counter
 from pathlib import Path
 from typing import Any
 
-FAZ102_VERSION = "programlama-faz102-v1-2026-05-29"
+FAZ102_VERSION = "programlama-faz102-v1.1-2026-10-20"
 _RULE_HINTS_FILE = "root_cause_rule_hints.jsonl"
 _ROLLING_WINDOW = 20
 _REPEAT_THRESHOLD = 2
@@ -58,14 +59,22 @@ def classify_root_cause(
     low = (detail or "").lower()
     if bonus_retry:
         return "bonus_retry_still_fail"
-    # pytest_scope doğrulama etiketi — kök neden «scope_rejected» sayılmaz
-    low_scope = low.replace("pytest_scope", "")
-    if any(x in low_scope for x in ("scope", "kapsam", "çekirdek", "cekirdek", "faz 78")):
+    # Dar kapsam sinyali — çıplak "scope"/"kapsam" pytest_scope ve sohbet metninde
+    # yanlış pozitif üretiyordu (Yol C / Blok C E1 metrik cilası).
+    scope_hit = bool(
+        re.search(
+            r"(?:kapsam\s*d[ıi][sş][ıi]|scope\s*(?:d[ıi][sş][ıi]|rejected|denied|outside)|"
+            r"out\s+of\s+scope|faz\s*78|cekirdek\s*d[ıi][sş]|çekirdek\s*d[ıi][sş])",
+            low,
+            re.I,
+        )
+    )
+    if scope_hit:
         return "scope_rejected"
     if any(x in low for x in ("timeout", "timed out", "süre sınırı", "sure siniri")):
         return "timeout"
     if not verify_ok:
-        if any(x in low for x in ("pytest", "test", "verify")):
+        if any(x in low for x in ("pytest", "test", "verify", "doğrulama", "dogrulama")):
             return "pytest_failed"
         return "verify_failed"
     if int(writes_ok or 0) <= 0:

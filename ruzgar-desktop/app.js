@@ -3273,32 +3273,15 @@ function applyMotorHandoff(modeId, handoffText) {
       switchMode("programlama");
       if (el.codeEditor) el.codeEditor.value = t;
       updateProgramlamaActiveFileLabel();
-      // Derin bağ: yüzey metninden görev satırı çıkar → sohbet kutusuna (Faz85 erken yol)
+      // Faz88 E1: yüzey → görev satırı (API) + handoff workbench (mesajlı)
       {
-        const lines = t.split(/\r?\n/).map((x) => x.trim()).filter(Boolean);
-        let gorev = "";
-        for (const ln of lines) {
-          if (/^#\s*/.test(ln)) continue;
-          if (/^görev\s*:/i.test(ln) || /^gorev\s*:/i.test(ln)) {
-            gorev = ln;
-            break;
-          }
-        }
-        if (!gorev) {
-          const body = lines.filter((ln) => !/^#\s*/.test(ln)).join(" ").slice(0, 400);
-          if (body && /pytest|health|endpoint|smoke|düzelt|duzelt|ekle|yaz/i.test(body)) {
-            gorev = "görev: " + body;
-          }
-        }
-        if (gorev && el.input) {
-          el.input.value = gorev;
+        const localGorev = extractLocalYuzeyGorevSatiri(t);
+        if (localGorev && el.input) {
+          el.input.value = localGorev;
           el.input.focus();
         }
+        void applyYuzeyProgramlamaHandoff(t, localGorev);
       }
-      void refreshProgramlamaHandoffWorkbench();
-      flashRuzgarDurum(
-        "Programlama: yüzeyden geldi. Faz85 güvenli yol açık; serbest çalıştırma kapalı.",
-      );
       break;
     case "mimar":
     case "okuma":
@@ -3863,10 +3846,92 @@ async function refreshProgramlamaLocalWorkbench() {
   }
 }
 
-function renderProgramlamaHandoff(payload) {
+function extractLocalYuzeyGorevSatiri(text) {
+  const lines = String(text || "")
+    .split(/\r?\n/)
+    .map((x) => x.trim())
+    .filter(Boolean);
+  let gorev = "";
+  for (const ln of lines) {
+    const stripped = ln.replace(/^#\s*/, "").trim();
+    if (/^(görev|gorev|iş|is|yap)\s*:/i.test(stripped)) {
+      gorev = /^(görev|gorev)\s*:/i.test(stripped) ? stripped : `görev: ${stripped.replace(/^(iş|is|yap)\s*:\s*/i, "")}`;
+      break;
+    }
+  }
+  if (!gorev) {
+    const body = lines
+      .filter((ln) => !/^#\s*(?:Yüzey|Yuzey|Kaynak yetenek|Faz85|Programlama)/i.test(ln))
+      .filter((ln) => !/^#\s*/.test(ln))
+      .join(" ")
+      .slice(0, 400);
+    if (
+      body &&
+      /pytest|health|endpoint|smoke|version|düzelt|duzelt|ekle|yaz|geçir|gecir|refactor|oluştur|olustur/i.test(
+        body,
+      )
+    ) {
+      gorev = "görev: " + body;
+    }
+  }
+  return gorev;
+}
+
+async function applyYuzeyProgramlamaHandoff(surfaceText, localGorev) {
+  const workspaceRoot = await getProgramlamaWorkspaceRoot();
+  let pathHint = "agent";
+  let taskLine = localGorev || "";
+  try {
+    const res = await fetch(`${API}/api/programlama/yuzey-handoff`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        surface_text: String(surfaceText || ""),
+        workspace_root: workspaceRoot || null,
+        active_file: atolyeOpenRel || null,
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (data && data.ok) {
+      if (data.task_line) {
+        taskLine = String(data.task_line);
+        if (el.input) {
+          el.input.value = taskLine;
+          el.input.focus();
+        }
+      }
+      pathHint = String(data.path_hint || "agent");
+      if (data.handoff_workbench) {
+        renderProgramlamaHandoff(data.handoff_workbench, {
+          goal: data.goal || taskLine,
+          pathHint,
+        });
+      } else {
+        await refreshProgramlamaHandoffWorkbench(taskLine, {
+          goal: data.goal || taskLine,
+          pathHint,
+        });
+      }
+    } else {
+      await refreshProgramlamaHandoffWorkbench(taskLine);
+    }
+  } catch (_) {
+    await refreshProgramlamaHandoffWorkbench(taskLine);
+  }
+  const yol =
+    pathHint === "faz85_fast"
+      ? "Faz85 hızlı yol adayı"
+      : "ajan yolu (Faz14/88) — karmaşık görev";
+  flashRuzgarDurum(
+    `Programlama: yüzeyden geldi · ${yol}. Serbest çalıştırma kapalı.`,
+  );
+}
+
+function renderProgramlamaHandoff(payload, extras) {
   const wrap = document.getElementById("programlama-handoff-card");
   const scopeEl = document.getElementById("programlama-handoff-scope");
   const pytestEl = document.getElementById("programlama-handoff-pytest");
+  const goalEl = document.getElementById("programlama-handoff-goal");
   const chainEl = document.getElementById("programlama-handoff-chain");
   const logEl = document.getElementById("programlama-handoff-log");
   if (!wrap || !scopeEl) return;
@@ -3877,9 +3942,29 @@ function renderProgramlamaHandoff(payload) {
   wrap.hidden = false;
   const ho = payload.handoff || {};
   const e4 = payload.e4 || {};
+  const extra = extras || {};
   scopeEl.textContent = ho.scope_rel ? `kapsam: ${ho.scope_rel}` : "handoff hazır";
   if (pytestEl) {
     pytestEl.textContent = (payload.delegation || {}).pytest_footer || "pytest: —";
+  }
+  if (goalEl) {
+    const goalTxt = String(
+      extra.goal || ho.goal_preview || "",
+    )
+      .trim()
+      .slice(0, 160);
+    const preview = String(ho.packet_preview || "")
+      .trim()
+      .replace(/\s+/g, " ")
+      .slice(0, 120);
+    const path = extra.pathHint ? ` · yol: ${extra.pathHint}` : "";
+    if (goalTxt) {
+      goalEl.textContent = `hedef: ${goalTxt}${path}`;
+    } else if (preview) {
+      goalEl.textContent = `paket: ${preview}${path}`;
+    } else {
+      goalEl.textContent = path ? `yol: ${extra.pathHint}` : "";
+    }
   }
   if (chainEl) {
     const chain = (payload.motor_chain || []).map((m) => m.id).join(" → ");
@@ -3897,15 +3982,17 @@ function renderProgramlamaHandoff(payload) {
   window.__ruzgarHandoffWorkbench = payload;
 }
 
-async function refreshProgramlamaHandoffWorkbench() {
+async function refreshProgramlamaHandoffWorkbench(message, extras) {
   const workspaceRoot = await getProgramlamaWorkspaceRoot();
   if (!workspaceRoot) return;
   try {
     const qs = new URLSearchParams({ workspace_root: workspaceRoot });
     if (atolyeOpenRel) qs.set("active_file", atolyeOpenRel);
+    const msg = String(message || "").trim();
+    if (msg) qs.set("message", msg);
     const res = await fetch(`${API}/api/programlama/handoff-workbench?${qs}`);
     const data = await res.json().catch(() => ({}));
-    renderProgramlamaHandoff(data);
+    renderProgramlamaHandoff(data, extras);
   } catch (_) {
     /* ignore */
   }

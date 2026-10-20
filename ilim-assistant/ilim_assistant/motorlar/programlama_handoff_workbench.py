@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-HANDOFF_WORKBENCH_VERSION = "programlama-handoff-v4-2026-05-29"
+HANDOFF_WORKBENCH_VERSION = "programlama-handoff-v4.1-2026-10-20"
 _E4_TARGET = 0.85
 _HUB_CHAIN = (
     "genel",
@@ -101,6 +101,11 @@ def build_handoff_workbench_payload(
     successes = sum(1 for it in items if it.get("success"))
     e4_rate = (successes / len(items)) if items else 0.0
 
+    goal_preview = (msg or "").strip()
+    if goal_preview.lower().startswith(("görev:", "gorev:")):
+        goal_preview = goal_preview.split(":", 1)[-1].strip()
+    goal_preview = goal_preview[:160]
+
     return {
         "ok": True,
         "version": HANDOFF_WORKBENCH_VERSION,
@@ -109,6 +114,7 @@ def build_handoff_workbench_payload(
             "scope_rel": pkt.get("scope_rel"),
             "template": pkt.get("parsed_template"),
             "packet_preview": str(pkt.get("packet_text") or "")[:1200],
+            "goal_preview": goal_preview,
             "v3": bool(pkt.get("handoff_v3")),
         },
         "delegation": {

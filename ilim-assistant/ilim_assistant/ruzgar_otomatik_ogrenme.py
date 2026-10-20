@@ -103,15 +103,21 @@ def should_check_bilgi_kutuphane_first(message: str) -> bool:
     except Exception:
         pass
     # Güncel kur/haber — eski kütüphane kaydı web'i engellemesin.
+    # İstisna: kütüphanede kesin kayıt (skor≥0.95) varsa yine de önce onu kullan
+    # (tarih sorularında «gelişme oldu» yanlışlıkla web sayılabiliyor).
+    _web_needed = False
     try:
         from ilim_assistant.ruzgar_web_arastirma_pro import looks_like_live_web_needed
 
-        if looks_like_live_web_needed(raw):
-            return False
+        _web_needed = bool(looks_like_live_web_needed(raw))
     except Exception:
-        pass
-    if lookup_bilgi_kutuphane_hint(raw):
-        return True
+        _web_needed = False
+    _hint_early = lookup_bilgi_kutuphane_hint(raw)
+    if _hint_early:
+        if (not _web_needed) or float(_hint_early.get("skor") or 0) >= 0.95:
+            return True
+    if _web_needed:
+        return False
     try:
         from ilim_assistant.ruzgar_tek_beyin import looks_like_personal_memory_query
 
@@ -143,10 +149,20 @@ def lookup_bilgi_kutuphane_hint(message: str) -> Optional[dict[str, Any]]:
     try:
         from ilim_assistant.ana_motor_plan import should_stay_on_ana_motor_bilgi
 
+        # Ansiklopedi/tarih sorusunda LLM yoluna düşmeden önce kütüphanede
+        # yüksek skorlu kesin kayıt varsa onu kullan (yanlış LLM / zehirli RAG önlemi).
         if should_stay_on_ana_motor_bilgi(message):
-            return None
+            allow_strong = os.environ.get(
+                "RUZGAR_KUTUPHANE_STRONG_OVERRIDE", "1"
+            ).strip().lower() not in ("0", "false", "no")
+            if not allow_strong:
+                return None
+            # Aşağıda skor eşiğini yükseltmek için bayrak; erken return yok.
+            _strong_override = True
+        else:
+            _strong_override = False
     except Exception:
-        pass
+        _strong_override = False
     try:
         from ilim_assistant.hafiza_dogal_sentez import _is_miss_answer
         from ilim_assistant.hafiza_i_ruzgar import genel_hafiza_lookup_detayli
@@ -156,6 +172,9 @@ def lookup_bilgi_kutuphane_hint(message: str) -> Optional[dict[str, Any]]:
 
     best: Optional[dict[str, Any]] = None
     min_sc = _kutuphane_min_score()
+    if _strong_override:
+        # Tarih/ansiklopedi: yalnız kesin kayıt (yanlış LLM'e düşmeyi kes)
+        min_sc = max(min_sc, 0.95)
     for variant in memory_lookup_variants(message):
         try:
             detay = genel_hafiza_lookup_detayli(variant)
