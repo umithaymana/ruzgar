@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-21 (gece) — **Programlama E2 dilim 4** (workbench ürün paneli). Önceki: E2 dilim 3 `d751521d`.
+**Son güncelleme:** 2026-10-21 (gece) — **6c tek yüz + E2 mühür yeşil**. Önceki: E2 dilim 4 `8ffa4b92`.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -116,8 +116,25 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
     - mega-workbench v1.1: status · goal · multi_file_plan · path_hint · E2 KPI · resume
     - UI: plan/dosya/verify/devam satırları · `programlama_e2_workbench_smoke` PASS
     - Offline pil **5/5** · multi smoke · mega stress · heal yedek **%100**
-15. **← BURADAN BAŞLA (programlama):** E2 kapanış / 6c tek yüz pilot · veya canlı ajan yazım kalitesi (qwen gerçek yazım).
-16. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
+15. ~~Faz 6c tek yüz pilot (2026-10-21 gece)~~ — sohbet → programlama `görev:` + path_hint (quiet handoff) · `ana_motor_faz6c_tek_yuz` · UI `maybeRunTekSohbetUiAction` task_line.
+16. ~~Canlı yazım mandate (2026-10-21)~~ — Faz39: keşif yokken de E2/çok dosyada zorunlu yazım turu.
+17. ~~E2 kapanış mühürü~~ — `programlama_e2_seal.py` **YEŞİL** (multi · workbench · mega · mandate · 6c · tek sohbet · offline 5/5 · heal).
+18. **← YARIN BURADAN BAŞLA:** aşağı «Yarın planı (2026-10-22)» — Mimar inceleyip uygular.
+19. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
+
+### Yarın planı (2026-10-22) — Mimar dönüşünde
+
+**İncele:** Bu gece commit’leri `8ffa4b92` → E2 dilim4 · ardından 6c+mühür commit’i. Atölyede E2 paneli + sohbette «şu projede …» handoff’u dene.
+
+| Sıra | İş | Neden | Çıkış |
+|------|-----|--------|--------|
+| **A** | Canlı ajan **gerçek yazım** ölçümü | qwen hâlâ 0 write; mandate güçlendi — canlı `--live-only` (FORCE_HEAL=0) ile `agent_ok` dene | En az 1 yeşil agent_ok veya kök neden kaydı |
+| **B** | 6d offline gate taze | `programlama_upgrade_runner --strict` + parity full | 11/11 · 8/8 |
+| **C** | 6c UI cilası (isteğe) | Genel sohbette flash + mega panel yenileme; motor sekmesine zorlamadan | 3 cümle smoke manuel |
+| **D** | Belge/Tablo → programlama köprüsü (masa) | Arayüz kilidi üstüne: yalnızca izinli masa komutu | 1 senaryo yeşil |
+| **E** (sonra) | Tercüme/Video tek yüz genişletme | 6c kalıbını diğer motorlara | Ayrı dilim |
+
+**Öneri yarın sabah:** önce **A** (canlı yazım), sonra **B** (gate). D/E öğleden sonra.
 
 ### 2026-10-18 / 19 — oturum kaydı (geç yazıldı)
 
@@ -644,7 +661,7 @@ Modül: `ilim_assistant.nebula_kitap_hafiza` — `desktop_server` sohbetinde kit
 2. ~~Karmaşık hedefte ajan yolu (Faz85 üstü kapı)~~
 3. ~~Canlı ajan pili %100 + Yol C kök neden cilası~~
 4. ~~Foto / SRT / tek sohbet / ortam~~ — tamam (yan ray).
-5. **Programlama E2:** dilim 1–4 tamam (niyet · pil · tavan/heal · ürün paneli) · sırada 6c tek yüz veya canlı yazım.
+5. **Programlama E2 + 6c:** dilim 1–4 + tek yüz pilot + mühür yeşil · yarın: canlı yazım (A) + offline gate (B).
 
 ## Referans
 

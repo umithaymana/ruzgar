@@ -1291,6 +1291,12 @@ def _health_build_block() -> dict:
         from ilim_assistant.ana_motor_tek_sohbet import tek_sohbet_status
 
         base["tek_sohbet"] = tek_sohbet_status()
+        try:
+            from ilim_assistant.ana_motor_faz6c_tek_yuz import faz6c_status
+
+            base["faz6c"] = faz6c_status()
+        except Exception:
+            base["faz6c"] = {"enabled": False}
     except Exception:
         pass
     try:

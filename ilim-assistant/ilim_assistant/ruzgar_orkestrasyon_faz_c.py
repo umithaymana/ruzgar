@@ -161,6 +161,17 @@ def build_genel_orchestra_preview(
             )
     except Exception:
         pass
+    # Faz 6c — genel sohbetten programlama görev (tek yüz pilot)
+    try:
+        from ilim_assistant.ana_motor_faz6c_tek_yuz import enrich_orchestra_faz6c
+
+        orch = enrich_orchestra_faz6c(orch, message)
+        if orch.get("faz6c") and orch.get("ui_action", {}).get("type") == "surface_handoff":
+            route_patch["tek_sohbet"] = dict(orch.get("ui_action") or {})
+            route_patch["faz6c"] = True
+            route_patch["hub_target"] = "programlama"
+    except Exception:
+        pass
     return orch, route_patch
 
 

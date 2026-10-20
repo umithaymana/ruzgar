@@ -3358,13 +3358,26 @@ function applyMotorHandoff(modeId, handoffText, opts) {
   setStatus(`Köprü: ${mid}`, "Rüzgar");
 }
 
-/** Orchestra / API ui_action — yüzey paketini motora (tek sohbet). */
+/** Orchestra / API ui_action — yüzey paketini motora (tek sohbet / Faz 6c). */
 function maybeRunTekSohbetUiAction(orch) {
   const a = orch && orch.ui_action;
   if (!a || a.type !== "surface_handoff") return false;
   if (currentMode !== "genel") return false;
   const motor = String(a.motor || "").trim().toLowerCase();
   if (!motor) return false;
+  // Faz 6c: görev satırı hazır — yüzey gonder yerine doğrudan doldur
+  const taskLine = String(a.task_line || a.goal || "").trim();
+  if (motor === "programlama" && taskLine) {
+    applyMotorHandoff(motor, taskLine, {
+      quiet: true,
+      pathHint: a.path_hint || "",
+    });
+    flashRuzgarDurum(
+      `Tek yüz → Programlama · ${String(a.path_hint || "ajan").slice(0, 40)}`,
+    );
+    void refreshProgramlamaMegaWorkbench();
+    return true;
+  }
   if (typeof window.ruzgarYuzey?.gonder === "function") {
     try {
       const reply = window.ruzgarYuzey.gonder(motor);
@@ -3374,7 +3387,7 @@ function maybeRunTekSohbetUiAction(orch) {
       return false;
     }
   }
-  applyMotorHandoff(motor, "", { quiet: true });
+  applyMotorHandoff(motor, taskLine, { quiet: true });
   return true;
 }
 

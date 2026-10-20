@@ -232,13 +232,26 @@ def build_write_mandate_message(
     tool_block: str,
     turn: int,
 ) -> str:
+    multi_hint = ""
+    try:
+        from ilim_assistant.motorlar.programlama_faz56 import looks_like_multi_file_task
+        from ilim_assistant.motorlar.programlama_faz85 import goal_wants_agent_path
+
+        if looks_like_multi_file_task(goal) or goal_wants_agent_path(goal):
+            multi_hint = (
+                "\nE2/çok dosya: her hedef dosyaya ayrı @@write veya search-replace.\n"
+                "Boş tur / yalnız grep-read YASAK — en az bir dosya içeriği değişmeli.\n"
+            )
+    except Exception:
+        pass
     return (
         f"[FAZ 39 — ZORUNLU YAZIM — tur {turn}]\n"
         f"Proje: `{scope_rel}`\n"
-        "Keşif tamamlandı. Bu turda **mutlaka** dosya yaz:\n"
-        "- `ruzgar-tool` write VEYA `@@write` ile patch\n"
+        "Bu turda **mutlaka** dosya yaz (önceki turda yazım yoktu veya keşif bitti):\n"
+        "- `ruzgar-tool` write VEYA `@@write` / search-replace ile patch\n"
         "- Ardından verify (pytest) çalıştır\n"
-        "Sadece plan veya açıklama YASAK — somut kod değişikliği şart.\n\n"
+        "Sadece plan veya açıklama YASAK — somut kod değişikliği şart.\n"
+        f"{multi_hint}\n"
         f"Hedef: {(goal or '').strip()}\n\n"
         f"{(tool_block or '').strip()}\n"
     )
@@ -262,12 +275,20 @@ def run_write_mandate_followup(
     workspace_root: Any,
     stream_fn: Callable[..., tuple[str, list[str]]],
 ) -> tuple[str, str, list[dict[str, Any]], list[str], bool]:
-    """Keşif var, yazım yok — son şans LLM + araçlar."""
+    """Yazım yok — son şans LLM + araçlar (keşif VEYA E2/çok dosya niyeti)."""
     if not mandate_followup_enabled():
         return llm_body, round_body, tool_results, [], False
     if _has_write(llm_body, tool_results):
         return llm_body, round_body, tool_results, [], False
-    if not turn_had_discovery(tool_results):
+    force_e2 = False
+    try:
+        from ilim_assistant.motorlar.programlama_faz56 import looks_like_multi_file_task
+        from ilim_assistant.motorlar.programlama_faz85 import goal_wants_agent_path
+
+        force_e2 = looks_like_multi_file_task(goal) or goal_wants_agent_path(goal)
+    except Exception:
+        force_e2 = False
+    if not turn_had_discovery(tool_results) and not force_e2:
         return llm_body, round_body, tool_results, [], False
 
     mandate_user = build_write_mandate_message(
