@@ -1261,6 +1261,7 @@ def _health_build_block() -> dict:
         "nebula_kitap": True,
         "tek_ses_faz_b": True,
         "orkestrasyon_faz_c": True,
+        "tek_sohbet_orkestra": True,
         "hub_sse_faz_d": True,
         "hub_sse_faz_e": True,
         "bilgi_hybrid": True,
@@ -1284,6 +1285,12 @@ def _health_build_block() -> dict:
         from ilim_assistant.ruzgar_orkestrasyon_faz_c import orkestrasyon_status
 
         base["orkestrasyon"] = orkestrasyon_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ana_motor_tek_sohbet import tek_sohbet_status
+
+        base["tek_sohbet"] = tek_sohbet_status()
     except Exception:
         pass
     try:

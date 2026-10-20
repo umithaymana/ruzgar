@@ -149,6 +149,18 @@ def build_genel_orchestra_preview(
                 }
     except Exception:
         pass
+    # Tek sohbet — yüzey→motor gönderme niyeti (quiet handoff)
+    try:
+        from ilim_assistant.ana_motor_tek_sohbet import enrich_orchestra_tek_sohbet
+
+        orch = enrich_orchestra_tek_sohbet(orch, message)
+        if orch.get("ui_action", {}).get("type") == "surface_handoff":
+            route_patch["tek_sohbet"] = dict(orch.get("ui_action") or {})
+            route_patch["hub_target"] = str(
+                (orch.get("ui_action") or {}).get("motor") or route_patch.get("hub_target") or ""
+            )
+    except Exception:
+        pass
     return orch, route_patch
 
 

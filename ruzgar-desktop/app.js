@@ -3243,74 +3243,144 @@ async function tryGenelProgramlamaHubInstant(text) {
   }
 }
 
-function applyMotorHandoff(modeId, handoffText) {
-  const t = String(handoffText || "").trim();
-  const mid = String(modeId || "").trim().toLowerCase();
+/** Ana Motor tek sohbet — motor sekmesine atlamadan atölye doldur. */
+function wantsTekSohbetQuietHandoff(opts) {
+  if (opts && opts.quiet === false) return false;
+  if (opts && opts.quiet === true) return true;
+  if (currentMode !== "genel") return false;
+  return isUnifiedFaceEnabled();
+}
+
+function fillMotorWorkbenchFields(mid, t) {
+  const text = String(t || "").trim();
   switch (mid) {
     case "tercume":
-      switchMode("tercume");
-      if (window.RuzgarTercumeAtolye) window.RuzgarTercumeAtolye.importText(t, null);
+      if (window.RuzgarTercumeAtolye) window.RuzgarTercumeAtolye.importText(text, null);
       break;
     case "video":
-      switchMode("video");
-      flashRuzgarDurum("Video motoru: metin panoya kopyalandı.");
-      void navigator.clipboard?.writeText(t);
+      flashRuzgarDurum("Video: metin panoya kopyalandı (tek sohbet).");
+      void navigator.clipboard?.writeText(text);
       break;
     case "ses":
-      switchMode("ses");
       if (window.RuzgarAnaMotorHub?.parseTilavetReadCommand) {
-        const tr = window.RuzgarAnaMotorHub.parseTilavetReadCommand(t);
+        const tr = window.RuzgarAnaMotorHub.parseTilavetReadCommand(text);
         if (tr?.text) {
           if (el.sesTranscript) el.sesTranscript.value = tr.text;
-          el.sesTranscript?.focus();
           break;
         }
       }
-      if (el.sesTranscript) el.sesTranscript.value = t;
-      el.sesTranscript?.focus();
+      if (el.sesTranscript) el.sesTranscript.value = text;
       break;
     case "programlama":
-      switchMode("programlama");
-      if (el.codeEditor) el.codeEditor.value = t;
-      updateProgramlamaActiveFileLabel();
-      // Faz88 E1: yüzey → görev satırı (API) + handoff workbench (mesajlı)
+      if (el.codeEditor) el.codeEditor.value = text;
+      try {
+        updateProgramlamaActiveFileLabel();
+      } catch (_) { /* ignore */ }
       {
-        const localGorev = extractLocalYuzeyGorevSatiri(t);
+        const localGorev = extractLocalYuzeyGorevSatiri(text);
         if (localGorev && el.input) {
           el.input.value = localGorev;
           el.input.focus();
         }
-        void applyYuzeyProgramlamaHandoff(t, localGorev);
+        void applyYuzeyProgramlamaHandoff(text, localGorev);
       }
       break;
     case "mimar":
     case "okuma":
-      switchMode("mimar");
-      if (el.input) el.input.value = t;
+      if (el.input) el.input.value = text;
       window.RuzgarMimarAtolye?.setMimarTab?.("tasarim");
+      break;
+    case "hafiza":
+      if (el.hafizaInput) el.hafizaInput.value = text.slice(0, 8000);
+      break;
+    case "hizir":
+      if (el.input) el.input.value = text;
+      void HIZIR_MODU.refreshPanel();
+      flashRuzgarDurum("HIZIR paneli yenilendi (tek sohbet).");
+      break;
+    default:
+      if (el.input && text) {
+        el.input.value = text;
+        el.input.focus();
+      }
+  }
+}
+
+function applyMotorHandoff(modeId, handoffText, opts) {
+  const t = String(handoffText || "").trim();
+  let mid = String(modeId || "").trim().toLowerCase();
+  if (mid === "okuma") mid = "mimar";
+  const quiet = wantsTekSohbetQuietHandoff(opts);
+  if (quiet && mid && mid !== "genel") {
+    openMotorWorkbenchQuiet(mid);
+    fillMotorWorkbenchFields(mid, t);
+    updateDynamicWorkbench();
+    setStatus(`Tek sohbet → ${orchestraMotorLabelTr(mid)}`, "Rüzgar");
+    flashRuzgarDurum(`Ana Motor’da kaldın · ${orchestraMotorLabelTr(mid)} atölyesi açık`);
+    return;
+  }
+  switch (mid) {
+    case "tercume":
+      switchMode("tercume");
+      fillMotorWorkbenchFields("tercume", t);
+      break;
+    case "video":
+      switchMode("video");
+      fillMotorWorkbenchFields("video", t);
+      break;
+    case "ses":
+      switchMode("ses");
+      fillMotorWorkbenchFields("ses", t);
+      el.sesTranscript?.focus();
+      break;
+    case "programlama":
+      switchMode("programlama");
+      fillMotorWorkbenchFields("programlama", t);
+      break;
+    case "mimar":
+      switchMode("mimar");
+      fillMotorWorkbenchFields("mimar", t);
       el.input?.focus();
       break;
     case "hafiza":
       switchMode("hafiza");
-      if (el.hafizaInput) el.hafizaInput.value = t.slice(0, 8000);
+      fillMotorWorkbenchFields("hafiza", t);
       break;
     case "hizir":
       switchMode("hizir");
-      if (el.input) el.input.value = t;
+      fillMotorWorkbenchFields("hizir", t);
       el.input?.focus();
-      void HIZIR_MODU.refreshPanel();
-      flashRuzgarDurum("HIZIR paneli: merkezi bellek sunucudan yenilendi.");
       break;
     default:
       switchMode("genel");
-      if (el.input) el.input.value = t;
-      el.input?.focus();
+      fillMotorWorkbenchFields("genel", t);
   }
   setStatus(`Köprü: ${mid}`, "Rüzgar");
 }
 
-/** Ana Yüzey / masa komutları motor atölyesine içerik aktarır (Faz E). */
+/** Orchestra / API ui_action — yüzey paketini motora (tek sohbet). */
+function maybeRunTekSohbetUiAction(orch) {
+  const a = orch && orch.ui_action;
+  if (!a || a.type !== "surface_handoff") return false;
+  if (currentMode !== "genel") return false;
+  const motor = String(a.motor || "").trim().toLowerCase();
+  if (!motor) return false;
+  if (typeof window.ruzgarYuzey?.gonder === "function") {
+    try {
+      const reply = window.ruzgarYuzey.gonder(motor);
+      if (reply) flashRuzgarDurum(String(reply).slice(0, 160));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+  applyMotorHandoff(motor, "", { quiet: true });
+  return true;
+}
+
+/** Ana Yüzey / masa komutları motor atölyesine içerik aktarır (Faz E + tek sohbet). */
 window.applyMotorHandoff = applyMotorHandoff;
+window.maybeRunTekSohbetUiAction = maybeRunTekSohbetUiAction;
 
 let dashboardAgentWrapEl = null;
 let dashboardAgentListEl = null;
@@ -15191,6 +15261,14 @@ async function streamChat(userText, streamOpts = {}) {
       handleAnaMotorProgramlamaBridge(ev);
       if (ev.orchestra) {
         renderOrchestraBridge(ev.orchestra);
+        if (
+          currentMode === "genel" &&
+          ev.orchestra.active_motor &&
+          !ev.orchestra.ui_action &&
+          isHubSseFazDEnabled()
+        ) {
+          openMotorWorkbenchQuiet(ev.orchestra.active_motor);
+        }
       }
     }
     if (ev.type === "meta" && ev.research_card) {
@@ -15387,7 +15465,9 @@ async function streamChat(userText, streamOpts = {}) {
       updateDashboardLastSpeech();
       updateDynamicWorkbench();
       renderOrchestraBridge(ev.orchestra);
-      if (
+      if (ev.orchestra?.ui_action) {
+        maybeRunTekSohbetUiAction(ev.orchestra);
+      } else if (
         currentMode === "genel" &&
         ev.orchestra?.active_motor &&
         isHubSseFazDEnabled()

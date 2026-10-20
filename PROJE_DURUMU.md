@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-20 (gece) — **CHECKPOINT `27e2eee6`** + Foto yüz gömme **v2** (CLAHE/48 + eşik). Önceki: masa TDZ + Faz88 E1 %100.
+**Son güncelleme:** 2026-10-20 (gece) — **Ana Motor tek sohbet orkestra** (quiet handoff). CHECKPOINT sağlık: `27e2eee6` · foto v2: `84d48d60`.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -98,9 +98,10 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
    - `programlama_agent_battery.py --live --combined` → **Kombine %100** (hızlı 3/3 · ajan 4/4, Ollama)
    - Yol C: `classify_root_cause` daraltıldı (pytest_scope / «Doğrulama: kırmızı» artık `pytest_failed`, yanlış `scope_rejected` yok) · smoke `programlama_e1_root_cause_smoke.py`
 6. ~~2026-10-20 gece — uçtan uca tarama + push~~ — `27e2eee6` · masa TDZ + catch `handled:false` · sohbet kırığı kapandı.
-7. ~~Foto yüz gömme v2 (2026-10-20 gece)~~ — `EMBED_VERSION=v2-clahe-48` · kutu margin · en büyük yüz · dinamik eşik · stale gömme uyarısı · test **11/11**. Canlı arşivde «Katmanları kur» ile vektörleri yenile (eski dim geçersiz).
-8. **← BURADAN BAŞLA:** çeviri `.srt` · veya Ana Motor tek sohbet orkestrasyonu.
-9. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
+7. ~~Foto yüz gömme v2 (2026-10-20 gece)~~ — `EMBED_VERSION=v2-clahe-48` · test **11/11** · `84d48d60`.
+8. ~~Ana Motor tek sohbet orkestra (2026-10-20 gece)~~ — `ana_motor_tek_sohbet.py` · genel sohbette motor sekmesine atlamadan quiet atölye (`applyMotorHandoff` quiet) · yüzey «…e gönder» → `ui_action.surface_handoff` · smoke PASS · `RUZGAR_ANA_TEK_SOHBET=0` ile kapatılır.
+9. **← BURADAN BAŞLA:** çeviri `.srt` · veya OCR/ffmpeg ortam boşlukları.
+10. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
 
 ### 2026-10-18 / 19 — oturum kaydı (geç yazıldı)
 
