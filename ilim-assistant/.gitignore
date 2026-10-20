@@ -3,3 +3,4 @@ __pycache__/
 .venv/
 .ruzgar_slo_last_report.json
 .ruzgar_slo_reports/
+.ruzgar_foto_index/

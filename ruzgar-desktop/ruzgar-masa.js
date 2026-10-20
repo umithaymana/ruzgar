@@ -1,16 +1,32 @@
-/* Ana Motor çalışma masası. Sohbet ve motor listesine dokunmaz. */
+/* Ana Motor çalışma yüzeyi — tek sahne, çok yetenek. Sohbet ve motor listesine dokunmaz. */
 (function () {
   const KEY = "ruzgarMasaDeskV1";
   const COLS = "ABCDEFGHIJKL".split("");
   const ROWS = 28;
   const BW = 1600;
   const BH = 1000;
+  const YETENEK_AD = {
+    sohbet: "Sohbet",
+    belge: "Belge",
+    tablo: "Tablo",
+    cizim: "Çizim",
+    sunum: "Sunum",
+    medya: "Medya",
+    foto: "Foto",
+    notlar: "Notlar",
+    kod: "Kod",
+    ses: "Ses",
+    okuma: "Okuma",
+    web: "Web",
+  };
+  const IKINCIL = { notlar: 1, kod: 1, ses: 1, okuma: 1, web: 1 };
 
   const root = document.getElementById("ruzgar-masa");
   if (!root) return;
 
   const tools = document.getElementById("ruzgar-masa-tools");
   const statusEl = document.getElementById("ruzgar-masa-durum");
+  const chipEl = document.getElementById("ruzgar-masa-chip");
   const belge = document.getElementById("ruzgar-masa-belge");
   const sheetWrap = document.getElementById("ruzgar-masa-sheet");
   const formulaInput = document.getElementById("ruzgar-masa-formula-input");
@@ -19,9 +35,50 @@
   const slidesEl = document.getElementById("ruzgar-masa-slides");
   const slideTitle = document.getElementById("ruzgar-masa-slide-title");
   const slideBody = document.getElementById("ruzgar-masa-slide-body");
+  const slidePreview = document.getElementById("ruzgar-masa-slide-preview");
+  const slidePreviewTitle = document.getElementById("ruzgar-masa-slide-preview-title");
+  const slidePreviewBody = document.getElementById("ruzgar-masa-slide-preview-body");
   const present = document.getElementById("ruzgar-masa-present");
   const presentTitle = document.getElementById("ruzgar-masa-present-title");
   const presentBody = document.getElementById("ruzgar-masa-present-body");
+  const medyaRoot = document.getElementById("ruzgar-masa-medya");
+  const medyaEmpty = document.getElementById("ruzgar-masa-medya-empty");
+  const medyaView = document.getElementById("ruzgar-masa-medya-view");
+  const medyaFile = document.getElementById("ruzgar-masa-medya-file");
+  const notlarEl = document.getElementById("ruzgar-masa-notlar");
+  const gorevlerEl = document.getElementById("ruzgar-masa-gorevler");
+  const kodEl = document.getElementById("ruzgar-masa-kod");
+  const kodDil = document.getElementById("ruzgar-masa-kod-dil");
+  const kodSatir = document.getElementById("ruzgar-masa-kod-satir");
+  const sesRoot = document.getElementById("ruzgar-masa-ses");
+  const sesEmpty = document.getElementById("ruzgar-masa-ses-empty");
+  const sesView = document.getElementById("ruzgar-masa-ses-view");
+  const sesFile = document.getElementById("ruzgar-masa-ses-file");
+  const sesPlayer = document.getElementById("ruzgar-masa-ses-player");
+  const sesAd = document.getElementById("ruzgar-masa-ses-ad");
+  const sesKayitBtn = document.getElementById("ruzgar-masa-ses-kayit");
+  const okumaFile = document.getElementById("ruzgar-masa-okuma-file");
+  const okumaAd = document.getElementById("ruzgar-masa-okuma-ad");
+  const okumaText = document.getElementById("ruzgar-masa-okuma-text");
+  const okumaPdf = document.getElementById("ruzgar-masa-okuma-pdf");
+  const okumaEmpty = document.getElementById("ruzgar-masa-okuma-empty");
+  const webForm = document.getElementById("ruzgar-masa-web-form");
+  const webUrl = document.getElementById("ruzgar-masa-web-url");
+  const webFrame = document.getElementById("ruzgar-masa-web-frame");
+  const webPane = document.querySelector('.ruzgar-masa-pane[data-pane="web"] .ruzgar-masa-web');
+  const webYenile = document.getElementById("ruzgar-masa-web-yenile");
+  const fotoRoot = document.getElementById("ruzgar-masa-foto");
+  const fotoRef = document.getElementById("ruzgar-masa-foto-ref");
+  const fotoRefImg = document.getElementById("ruzgar-masa-foto-ref-img");
+  const fotoRefEmpty = document.getElementById("ruzgar-masa-foto-ref-empty");
+  const fotoRefFile = document.getElementById("ruzgar-masa-foto-ref-file");
+  const fotoKok = document.getElementById("ruzgar-masa-foto-kok");
+  const fotoTara = document.getElementById("ruzgar-masa-foto-tara");
+  const fotoEsle = document.getElementById("ruzgar-masa-foto-esle");
+  const fotoDurum = document.getElementById("ruzgar-masa-foto-durum");
+  const fotoGrid = document.getElementById("ruzgar-masa-foto-grid");
+  const fotoSayi = document.getElementById("ruzgar-masa-foto-sayi");
+  const fotoEmpty = document.getElementById("ruzgar-masa-foto-empty");
 
   const state = {
     mode: "belge",
@@ -31,9 +88,20 @@
     slides: [{ title: "Başlık", body: "Metin", bg: "#1c1a16", fg: "#f7f4ec" }],
     slideIndex: 0,
     draw: { tool: "kalem", color: "#1a1a1c", size: 4 },
+    medya: { name: "", kind: "", url: "" },
+    foto: { refName: "", refUrl: "", refFile: null, kok: "", sayi: 0, ornek: [], katman: {}, sonuclar: [] },
+    notlar: "",
+    gorevler: [],
+    kod: "",
+    kodDil: "text",
+    ses: { name: "", url: "" },
+    okuma: { name: "", kind: "", text: "", url: "" },
+    web: "",
+    sesRec: null,
   };
 
   let saveTimer = 0;
+  let flashTimer = 0;
   let ctx = canvas.getContext("2d");
   let paperReady = false;
   let sayfa = "sohbet";
@@ -49,12 +117,29 @@
     });
   }
 
-  function setStatus(text) {
-    if (statusEl) statusEl.textContent = text || "";
+  function setStatus(text, tone) {
+    if (!statusEl) return;
+    statusEl.textContent = text || "";
+    statusEl.classList.toggle("is-ok", tone === "ok");
+    statusEl.classList.toggle("is-busy", tone === "busy");
+  }
+
+  function setChip(kind) {
+    if (!chipEl) return;
+    const ad = YETENEK_AD[kind] || YETENEK_AD[state.mode] || "Yüzey";
+    chipEl.textContent = ad;
+  }
+
+  function flashYuzey() {
+    root.classList.add("is-flash");
+    clearTimeout(flashTimer);
+    flashTimer = setTimeout(function () {
+      root.classList.remove("is-flash");
+    }, 420);
   }
 
   function scheduleSave() {
-    setStatus("Yazılıyor…");
+    setStatus("Yazılıyor…", "busy");
     clearTimeout(saveTimer);
     saveTimer = setTimeout(persist, 350);
   }
@@ -68,6 +153,14 @@
       slideIndex: state.slideIndex,
       ink: !!state.ink,
       drawPng: "",
+      notlar: notlarEl ? notlarEl.value : state.notlar,
+      gorevler: state.gorevler,
+      kod: kodEl ? kodEl.value : state.kod,
+      kodDil: kodDil ? kodDil.value : state.kodDil,
+      web: state.web,
+      fotoKok: state.foto.kok || "",
+      okumaText: state.okuma && state.okuma.kind === "text" ? state.okuma.text : "",
+      okumaName: state.okuma && state.okuma.kind === "text" ? state.okuma.name : "",
     };
     try {
       if (state.ink && canvas.width) payload.drawPng = canvas.toDataURL("image/png");
@@ -76,7 +169,8 @@
     }
     try {
       localStorage.setItem(KEY, JSON.stringify(payload));
-      setStatus("Kaydedildi");
+      setStatus("Kaydedildi", "ok");
+      syncChip();
     } catch (err) {
       payload.drawPng = "";
       try {
@@ -112,13 +206,46 @@
       if (!state.slides.length) state.slides = [{ title: "Başlık", body: "", bg: "#1c1a16", fg: "#f7f4ec" }];
     }
     state.slideIndex = Math.min(state.slides.length - 1, Math.max(0, data.slideIndex || 0));
-    if (data.mode) state.mode = data.mode;
+    if (data.mode && YETENEK_AD[data.mode] && data.mode !== "sohbet") state.mode = data.mode;
     state.ink = data.ink === true;
     state._png = state.ink && typeof data.drawPng === "string" ? data.drawPng : "";
+    if (typeof data.notlar === "string" && notlarEl) {
+      state.notlar = data.notlar;
+      notlarEl.value = data.notlar;
+    }
+    if (Array.isArray(data.gorevler)) {
+      state.gorevler = data.gorevler
+        .filter(function (g) { return g && typeof g.text === "string"; })
+        .slice(0, 80)
+        .map(function (g) { return { text: String(g.text).slice(0, 200), done: !!g.done }; });
+    }
+    if (typeof data.kod === "string" && kodEl) {
+      state.kod = data.kod;
+      kodEl.value = data.kod;
+    }
+    if (typeof data.kodDil === "string" && kodDil) {
+      state.kodDil = data.kodDil;
+      kodDil.value = data.kodDil;
+    }
+    if (typeof data.web === "string") state.web = data.web;
+    if (typeof data.fotoKok === "string" && data.fotoKok) {
+      state.foto.kok = data.fotoKok;
+      if (fotoKok) fotoKok.value = data.fotoKok;
+    }
+    if (typeof data.okumaText === "string" && data.okumaText) {
+      state.okuma = {
+        name: String(data.okumaName || "not.txt").slice(0, 180),
+        kind: "text",
+        text: data.okumaText.slice(0, 200000),
+        url: "",
+      };
+    }
   }
 
   function showMode(mode, opts) {
     state.mode = mode;
+    root.dataset.yetenek = mode;
+    root.classList.toggle("has-ikincil", !!IKINCIL[mode]);
     root.querySelectorAll("[data-masa]").forEach(function (btn) {
       const on = btn.getAttribute("data-masa") === mode;
       btn.classList.toggle("is-on", on);
@@ -132,14 +259,78 @@
     });
     renderTools();
     if (mode === "cizim") requestAnimationFrame(ensurePaper);
-    if (mode === "sunum") renderSlides();
+    if (mode === "sunum") {
+      renderSlides();
+      syncSlidePreview();
+    }
+    if (mode === "medya") paintMedya();
+    if (mode === "foto") {
+      paintFoto();
+      fotoDurumYenile();
+    }
+    if (mode === "notlar") paintGorevler();
+    if (mode === "kod") syncKodSatir();
+    if (mode === "ses") paintSes();
+    if (mode === "okuma") paintOkuma();
+    if (mode === "web") paintWeb();
+    syncChip();
     if (!opts || !opts.keep) scheduleSave();
+    focusYetenek(mode);
+  }
+
+  function focusYetenek(mode) {
+    try {
+      if (mode === "belge" && belge) belge.focus({ preventScroll: true });
+      else if (mode === "tablo" && formulaInput) formulaInput.focus({ preventScroll: true });
+      else if (mode === "cizim") {
+        const wrap = document.getElementById("ruzgar-masa-canvas-wrap");
+        if (wrap) wrap.focus({ preventScroll: true });
+      } else if (mode === "sunum" && slideTitle) slideTitle.focus({ preventScroll: true });
+      else if (mode === "medya" && medyaRoot) medyaRoot.focus({ preventScroll: true });
+      else if (mode === "foto" && fotoKok) fotoKok.focus({ preventScroll: true });
+      else if (mode === "notlar" && notlarEl) notlarEl.focus({ preventScroll: true });
+      else if (mode === "kod" && kodEl) kodEl.focus({ preventScroll: true });
+      else if (mode === "ses" && sesRoot) sesRoot.focus({ preventScroll: true });
+      else if (mode === "web" && webUrl) webUrl.focus({ preventScroll: true });
+    } catch (err) { /* odak zorunlu değil */ }
+  }
+
+  function syncChip() {
+    const kind = sayfa === "sohbet" ? "sohbet" : state.mode;
+    setChip(kind);
+  }
+
+  function syncSlidePreview() {
+    const slide = currentSlide();
+    if (!slidePreview || !slide) return;
+    const bg = toHex(slide.bg, "#1c1a16");
+    const fg = toHex(slide.fg, "#f7f4ec");
+    slidePreview.style.background = bg;
+    slidePreview.style.color = fg;
+    if (slidePreviewTitle) slidePreviewTitle.textContent = slide.title || "Başlık";
+    if (slidePreviewBody) slidePreviewBody.textContent = slide.body || "Metin";
+  }
+
+  function kopruAracHtml() {
+    return (
+      '<label class="ruzgar-masa-kopru-label">Gönder ' +
+      '<select id="ruzgar-masa-kopru" aria-label="Motora gönder">' +
+      '<option value="">—</option>' +
+      '<option value="tercume">Tercüme</option>' +
+      '<option value="programlama">Programlama</option>' +
+      '<option value="ses">Ses</option>' +
+      '<option value="video">Video</option>' +
+      '<option value="hafiza">Hafıza</option>' +
+      '<option value="okuma">Okuma</option>' +
+      "</select></label>"
+    );
   }
 
   function renderTools() {
     const mode = state.mode;
     if (mode === "belge") {
       tools.innerHTML =
+        '<span class="ruzgar-masa-tools-hint">Belge</span>' +
         '<button type="button" data-cmd="bold" title="Kalın"><b>B</b></button>' +
         '<button type="button" data-cmd="italic" title="İtalik"><i>I</i></button>' +
         '<button type="button" data-cmd="underline" title="Altı çizili"><u>U</u></button>' +
@@ -148,12 +339,18 @@
         '<button type="button" data-cmd="insertOrderedList">Numara</button>' +
         '<button type="button" data-cmd="justifyLeft">Sola</button>' +
         '<button type="button" data-cmd="justifyCenter">Ortala</button>' +
-        '<button type="button" data-cmd="justifyRight">Sağa</button>';
+        '<button type="button" data-cmd="justifyRight">Sağa</button>' +
+        '<button type="button" id="ruzgar-masa-belge-img-btn" title="Resim ekle">Resim</button>' +
+        '<button type="button" id="ruzgar-masa-belge-tablo-btn" title="Tablo ekle">Tablo</button>' +
+        kopruAracHtml();
     } else if (mode === "tablo") {
       tools.innerHTML =
-        '<span>Formül: =A1+B1 · =TOPLA(A1:A8) · =ORTALAMA · =MİN · =MAK</span>';
+        '<span class="ruzgar-masa-tools-hint">Tablo</span>' +
+        '<span>=A1+B1 · =TOPLA(A1:A8) · =ORTALAMA · =MİN · =MAK</span>' +
+        kopruAracHtml();
     } else if (mode === "cizim") {
       tools.innerHTML =
+        '<span class="ruzgar-masa-tools-hint">Çizim</span>' +
         '<button type="button" data-tool="kalem" class="is-on">Kalem</button>' +
         '<button type="button" data-tool="silgi">Silgi</button>' +
         '<button type="button" data-tool="cizgi">Çizgi</button>' +
@@ -168,16 +365,75 @@
       color.value = state.draw.color;
       size.value = String(state.draw.size);
       markTool(state.draw.tool);
+    } else if (mode === "medya") {
+      tools.innerHTML =
+        '<span class="ruzgar-masa-tools-hint">Medya</span>' +
+        '<button type="button" id="ruzgar-masa-medya-pick">Dosya seç</button>' +
+        '<button type="button" id="ruzgar-masa-medya-clear">Temizle</button>' +
+        '<span>Önizleme · ağır kesim Video motorunda</span>' +
+        kopruAracHtml();
+    } else if (mode === "foto") {
+      tools.innerHTML =
+        '<span class="ruzgar-masa-tools-hint">Foto</span>' +
+        '<button type="button" id="ruzgar-masa-foto-ref-pick">Referans</button>' +
+        '<button type="button" id="ruzgar-masa-foto-tara-tool">Katalog tara</button>' +
+        '<button type="button" id="ruzgar-masa-foto-katman-tool">Katmanları kur</button>' +
+        '<button type="button" id="ruzgar-masa-foto-esle-tool">Yüz ara</button>' +
+        '<span>Yerel Haar · OpenCV</span>';
+    } else if (mode === "notlar") {
+      tools.innerHTML =
+        '<span class="ruzgar-masa-tools-hint">Notlar</span>' +
+        '<button type="button" id="ruzgar-masa-gorev-ekle-tool">Görev ekle</button>' +
+        '<button type="button" id="ruzgar-masa-notlar-temizle">Notları temizle</button>' +
+        kopruAracHtml();
+    } else if (mode === "kod") {
+      tools.innerHTML =
+        '<span class="ruzgar-masa-tools-hint">Kod</span>' +
+        '<button type="button" id="ruzgar-masa-kod-temizle">Temizle</button>' +
+        '<span>Çalıştırma kapalı</span>' +
+        kopruAracHtml();
+    } else if (mode === "ses") {
+      tools.innerHTML =
+        '<span class="ruzgar-masa-tools-hint">Ses</span>' +
+        '<button type="button" id="ruzgar-masa-ses-pick">Dosya seç</button>' +
+        '<button type="button" id="ruzgar-masa-ses-rec-tool">Kayıt</button>' +
+        '<button type="button" id="ruzgar-masa-ses-clear">Temizle</button>' +
+        '<span>Stüdyo Ses motorunda</span>' +
+        kopruAracHtml();
+    } else if (mode === "okuma") {
+      tools.innerHTML =
+        '<span class="ruzgar-masa-tools-hint">Okuma</span>' +
+        '<button type="button" id="ruzgar-masa-okuma-pick">Dosya aç</button>' +
+        '<button type="button" id="ruzgar-masa-okuma-clear">Temizle</button>' +
+        '<span>TXT · MD · PDF</span>' +
+        kopruAracHtml();
+    } else if (mode === "web") {
+      tools.innerHTML =
+        '<span class="ruzgar-masa-tools-hint">Web</span>' +
+        '<button type="button" id="ruzgar-masa-web-go">Aç</button>' +
+        '<button type="button" id="ruzgar-masa-web-external">Tarayıcıda aç</button>' +
+        '<span>Önizleme · bazı siteler çerçeveyi engeller</span>' +
+        kopruAracHtml();
     } else {
       tools.innerHTML =
+        '<span class="ruzgar-masa-tools-hint">Sunum</span>' +
         '<button type="button" id="ruzgar-masa-add-slide">Slayt ekle</button>' +
         '<button type="button" id="ruzgar-masa-del-slide">Slaytı sil</button>' +
         '<label>Zemin <input id="ruzgar-masa-bg" type="color" value="#1c1a16"></label>' +
         '<label>Yazı <input id="ruzgar-masa-fg" type="color" value="#f7f4ec"></label>' +
-        '<button type="button" id="ruzgar-masa-play" class="ruzgar-masa-btn-accent">Sun</button>';
+        '<button type="button" id="ruzgar-masa-play" class="ruzgar-masa-btn-accent">Sun</button>' +
+        kopruAracHtml();
       const slide = currentSlide();
       document.getElementById("ruzgar-masa-bg").value = toHex(slide.bg, "#1c1a16");
       document.getElementById("ruzgar-masa-fg").value = toHex(slide.fg, "#f7f4ec");
+    }
+    const kopruSel = document.getElementById("ruzgar-masa-kopru");
+    if (kopruSel) {
+      kopruSel.onchange = function () {
+        const hedef = kopruSel.value;
+        kopruSel.value = "";
+        if (hedef) yuzeyMotorGonder(hedef);
+      };
     }
   }
 
@@ -216,6 +472,31 @@
     if (ev.target.id === "ruzgar-masa-add-slide") addSlide();
     if (ev.target.id === "ruzgar-masa-del-slide") deleteSlide();
     if (ev.target.id === "ruzgar-masa-play") startPresent();
+    if (ev.target.id === "ruzgar-masa-belge-img-btn") {
+      const inp = document.getElementById("ruzgar-masa-belge-img");
+      if (inp) inp.click();
+      return;
+    }
+    if (ev.target.id === "ruzgar-masa-belge-tablo-btn") {
+      belgeTabloEkle(3, 3);
+      return;
+    }
+    if (ev.target.id === "ruzgar-masa-medya-pick" && medyaFile) medyaFile.click();
+    if (ev.target.id === "ruzgar-masa-medya-clear") medyaTemizle();
+    if (ev.target.id === "ruzgar-masa-foto-ref-pick") void fotoReferansSecDialog();
+    if (ev.target.id === "ruzgar-masa-foto-tara-tool") fotoKatalogTara();
+    if (ev.target.id === "ruzgar-masa-foto-katman-tool") void fotoKatmanKur();
+    if (ev.target.id === "ruzgar-masa-foto-esle-tool") void fotoYuzAra();
+    if (ev.target.id === "ruzgar-masa-gorev-ekle-tool") gorevEkle();
+    if (ev.target.id === "ruzgar-masa-notlar-temizle") notlarTemizle();
+    if (ev.target.id === "ruzgar-masa-kod-temizle") kodTemizle();
+    if (ev.target.id === "ruzgar-masa-ses-pick" && sesFile) sesFile.click();
+    if (ev.target.id === "ruzgar-masa-ses-rec-tool") sesKayitToggle();
+    if (ev.target.id === "ruzgar-masa-ses-clear") sesTemizle();
+    if (ev.target.id === "ruzgar-masa-okuma-pick" && okumaFile) okumaFile.click();
+    if (ev.target.id === "ruzgar-masa-okuma-clear") okumaTemizle();
+    if (ev.target.id === "ruzgar-masa-web-go") webAc(webUrl && webUrl.value);
+    if (ev.target.id === "ruzgar-masa-web-external") webDisarida();
   });
 
   tools.addEventListener("input", function (ev) {
@@ -226,6 +507,7 @@
       if (ev.target.id === "ruzgar-masa-bg") slide.bg = ev.target.value;
       else slide.fg = ev.target.value;
       renderSlides();
+      syncSlidePreview();
       scheduleSave();
     }
   });
@@ -237,6 +519,307 @@
   });
 
   belge.addEventListener("input", scheduleSave);
+
+  function belgeInsertNode(node) {
+    belge.focus();
+    const sel = window.getSelection();
+    let range = null;
+    if (sel && sel.rangeCount && belge.contains(sel.anchorNode)) {
+      range = sel.getRangeAt(0);
+      range.deleteContents();
+      range.insertNode(node);
+    } else {
+      belge.appendChild(node);
+      range = document.createRange();
+      range.selectNodeContents(belge);
+      range.collapse(false);
+    }
+    const after = document.createRange();
+    after.setStartAfter(node);
+    after.collapse(true);
+    if (sel) {
+      sel.removeAllRanges();
+      sel.addRange(after);
+    }
+    scheduleSave();
+    flashYuzey();
+  }
+
+  function belgeResimEkle(file) {
+    if (!file) return "Dosya yok.";
+    if (String(file.type || "").indexOf("image/") !== 0) return "Yalnız resim.";
+    if (file.size > 12 * 1024 * 1024) return "Belge resmi 12 MB üstü olamaz.";
+    const reader = new FileReader();
+    reader.onload = function () {
+      const src = String(reader.result || "");
+      if (!src || src.length > 2_500_000) {
+        setStatus("Resim belgede çok büyük — küçültülüyor…", "busy");
+      }
+      const img = new Image();
+      img.onload = function () {
+        const maxW = 960;
+        let w = img.naturalWidth || img.width;
+        let h = img.naturalHeight || img.height;
+        if (w > maxW) {
+          h = Math.round((h * maxW) / w);
+          w = maxW;
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, w);
+        canvas.height = Math.max(1, h);
+        const c = canvas.getContext("2d");
+        c.drawImage(img, 0, 0, canvas.width, canvas.height);
+        let dataUrl = "";
+        try {
+          dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+        } catch (err) {
+          dataUrl = src.slice(0, 2_000_000);
+        }
+        if (dataUrl.length > 2_800_000) {
+          setStatus("Resim sığmadı", "busy");
+          return;
+        }
+        const el = document.createElement("img");
+        el.className = "ruzgar-belge-img";
+        el.src = dataUrl;
+        el.alt = String(file.name || "resim").slice(0, 120);
+        masaAc("belge");
+        belgeInsertNode(el);
+        setStatus("Resim eklendi", "ok");
+      };
+      img.onerror = function () { setStatus("Resim okunamadı", "busy"); };
+      img.src = src;
+    };
+    reader.onerror = function () { setStatus("Resim okunamadı", "busy"); };
+    reader.readAsDataURL(file);
+    return "Resim ekleniyor…";
+  }
+
+  function belgeTabloEkle(rows, cols) {
+    const r = Math.max(1, Math.min(12, Number(rows) || 3));
+    const c = Math.max(1, Math.min(8, Number(cols) || 3));
+    const table = document.createElement("table");
+    table.className = "ruzgar-belge-tablo";
+    for (let i = 0; i < r; i++) {
+      const tr = document.createElement("tr");
+      for (let j = 0; j < c; j++) {
+        const cell = document.createElement(i === 0 ? "th" : "td");
+        cell.textContent = i === 0 ? "Başlık " + (j + 1) : "";
+        tr.appendChild(cell);
+      }
+      table.appendChild(tr);
+    }
+    masaAc("belge");
+    belgeInsertNode(table);
+    setStatus("Tablo eklendi", "ok");
+    return "Belgeye " + r + "×" + c + " tablo eklendi.";
+  }
+
+  const KOPRU_AD = {
+    tercume: "Tercüme",
+    programlama: "Programlama",
+    ses: "Ses",
+    video: "Video",
+    hafiza: "Hafıza",
+    okuma: "Okuma",
+    mimar: "Mimar",
+  };
+
+  function yuzeyPaketAl() {
+    const mode = sayfa === "sohbet" ? "sohbet" : state.mode;
+    if (mode === "belge") {
+      return {
+        tur: "belge",
+        metin: String(belge.innerText || "").replace(/\u00a0/g, " ").trim().slice(0, 50000),
+      };
+    }
+    if (mode === "kod") {
+      const body = String(kodEl ? kodEl.value : state.kod || "");
+      const dil = String(kodDil ? kodDil.value : state.kodDil || "text");
+      const header = dil && dil !== "text" ? "// dil: " + dil + "\n" : "";
+      return { tur: "kod", metin: (header + body).trim().slice(0, 50000) };
+    }
+    if (mode === "notlar") {
+      const gorev = state.gorevler.map(function (g) {
+        return (g.done ? "[x] " : "[ ] ") + g.text;
+      }).join("\n");
+      const not = notlarEl ? notlarEl.value : state.notlar;
+      return { tur: "notlar", metin: (String(not || "") + (gorev ? "\n\n" + gorev : "")).trim().slice(0, 50000) };
+    }
+    if (mode === "tablo") {
+      const satirlar = [];
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS.length; c++) {
+          const deger = String(state.sheet[r][c] || "").trim();
+          if (deger) satirlar.push(COLS[c] + (r + 1) + "\t" + deger);
+        }
+      }
+      return { tur: "tablo", metin: satirlar.join("\n").slice(0, 50000) };
+    }
+    if (mode === "sunum") {
+      const metin = state.slides.map(function (sl, i) {
+        return "Slayt " + (i + 1) + ": " + String(sl.title || "") + "\n" + String(sl.body || "");
+      }).join("\n\n");
+      return { tur: "sunum", metin: metin.trim().slice(0, 50000) };
+    }
+    if (mode === "okuma") {
+      if (state.okuma.kind === "text") {
+        return { tur: "okuma", metin: String(state.okuma.text || "").slice(0, 50000) };
+      }
+      return { tur: "okuma", metin: state.okuma.name ? ("PDF: " + state.okuma.name) : "" };
+    }
+    if (mode === "web") {
+      return { tur: "web", metin: String(state.web || (webUrl && webUrl.value) || "").trim() };
+    }
+    if (mode === "medya") {
+      return {
+        tur: "medya",
+        metin: state.medya.name
+          ? ("Medya yüzeyde: " + state.medya.name + " (" + (state.medya.kind || "dosya") + "). Ağır işlem Video motorunda.")
+          : "",
+      };
+    }
+    if (mode === "ses") {
+      return {
+        tur: "ses",
+        metin: state.ses.name ? ("Ses yüzeyde: " + state.ses.name) : "",
+      };
+    }
+    if (mode === "foto") {
+      return {
+        tur: "foto",
+        metin: [
+          state.foto.refName ? "Referans: " + state.foto.refName : "",
+          state.foto.kok ? "Kütüphane: " + state.foto.kok : "",
+          state.foto.sayi ? "Katalog: " + state.foto.sayi + " foto" : "",
+        ].filter(Boolean).join("\n"),
+      };
+    }
+    return { tur: mode, metin: "" };
+  }
+
+  function yuzeyMotorGonder(motor) {
+    const mid = String(motor || "")
+      .toLowerCase()
+      .replace(/ğ/g, "g")
+      .replace(/ü/g, "u")
+      .replace(/ş/g, "s")
+      .replace(/ı/g, "i")
+      .replace(/ö/g, "o")
+      .replace(/ç/g, "c");
+    const map = {
+      tercume: "tercume",
+      tercumeye: "tercume",
+      ceviri: "tercume",
+      programlama: "programlama",
+      programlamaya: "programlama",
+      koda: "programlama",
+      kod: "programlama",
+      ses: "ses",
+      sese: "ses",
+      video: "video",
+      videoya: "video",
+      hafiza: "hafiza",
+      hafizaya: "hafiza",
+      okuma: "okuma",
+      okumaya: "okuma",
+      mimar: "mimar",
+      mimara: "mimar",
+    };
+    const hedef = map[mid] || mid;
+    if (!KOPRU_AD[hedef]) {
+      return "Bilinmeyen motor. Tercüme, Programlama, Ses, Video, Hafıza, Okuma.";
+    }
+    const paket = yuzeyPaketAl();
+    let metin = paket.metin;
+    if (!metin) {
+      return "Gönderilecek içerik yok. Önce yüzeyde yaz / aç.";
+    }
+    if (hedef === "programlama") {
+      if (paket.tur !== "kod") {
+        metin =
+          "# Yüzeyden görev (çalıştırma kapalı — güvenli atölye)\n" +
+          "# Kaynak yetenek: " + paket.tur + "\n\n" +
+          metin;
+      } else {
+        metin =
+          "# Yüzey → Programlama (Faz85 güvenli yol; serbest çalıştırma kapalı)\n" +
+          metin;
+      }
+    }
+    if (typeof window.applyMotorHandoff !== "function") {
+      return "Motor köprüsü henüz yüklenmedi. Sayfayı yenile.";
+    }
+    try {
+      window.applyMotorHandoff(hedef, metin);
+    } catch (err) {
+      return "Köprü uygulanamadı.";
+    }
+    flashYuzey();
+    setStatus("→ " + KOPRU_AD[hedef], "ok");
+    const guven = hedef === "programlama"
+      ? " Çalıştırma kapalı; Faz85 hızlı yol / onaylı yazım."
+      : "";
+    return "Yüzey (" + (YETENEK_AD[state.mode] || paket.tur) + ") → " + KOPRU_AD[hedef] + " aktarıldı." + guven;
+  }
+
+  function wireBelgeKarma() {
+    const imgInp = document.getElementById("ruzgar-masa-belge-img");
+    if (imgInp) {
+      imgInp.addEventListener("change", function () {
+        belgeResimEkle(imgInp.files && imgInp.files[0]);
+        imgInp.value = "";
+      });
+    }
+    belge.addEventListener("paste", function (ev) {
+      const items = ev.clipboardData && ev.clipboardData.items;
+      if (!items) return;
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type && items[i].type.indexOf("image/") === 0) {
+          const file = items[i].getAsFile();
+          if (file) {
+            ev.preventDefault();
+            belgeResimEkle(file);
+            return;
+          }
+        }
+      }
+    });
+    belge.addEventListener("dragover", function (ev) {
+      if (ev.dataTransfer && Array.prototype.some.call(ev.dataTransfer.types || [], function (t) {
+        return t === "Files";
+      })) {
+        ev.preventDefault();
+        belge.classList.add("is-drag-img");
+      }
+    });
+    belge.addEventListener("dragleave", function () {
+      belge.classList.remove("is-drag-img");
+    });
+    belge.addEventListener("drop", function (ev) {
+      belge.classList.remove("is-drag-img");
+      const file = ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0];
+      if (file && String(file.type || "").indexOf("image/") === 0) {
+        ev.preventDefault();
+        belgeResimEkle(file);
+      }
+    });
+  }
+
+  function belgeMetinNodunaYaz(eski, yeni) {
+    const walker = document.createTreeWalker(belge, NodeFilter.SHOW_TEXT, null);
+    let node = walker.nextNode();
+    while (node) {
+      const val = node.nodeValue || "";
+      const yer = val.indexOf(eski);
+      if (yer >= 0) {
+        node.nodeValue = val.slice(0, yer) + yeni + val.slice(yer + eski.length);
+        return true;
+      }
+      node = walker.nextNode();
+    }
+    return false;
+  }
 
   function colLabel(c) { return COLS[c] || ""; }
   function addr(r, c) { return colLabel(c) + (r + 1); }
@@ -707,12 +1290,14 @@
     const slide = currentSlide();
     if (document.activeElement !== slideTitle) slideTitle.value = slide.title || "";
     if (document.activeElement !== slideBody) slideBody.value = slide.body || "";
+    syncSlidePreview();
   }
 
   function bindSlideField(el, key) {
     el.addEventListener("input", function () {
       currentSlide()[key] = el.value;
       scheduleSave();
+      syncSlidePreview();
       slidesEl.querySelectorAll(".ruzgar-masa-slide-thumb").forEach(function (btn, index) {
         if (index !== state.slideIndex) return;
         const slide = currentSlide();
@@ -798,6 +1383,61 @@
       download("ruzgar-tablo.csv", new Blob([lines.join("\n")], { type: "text/csv" }));
     } else if (state.mode === "cizim") {
       canvas.toBlob(function (blob) { if (blob) download("ruzgar-cizim.png", blob); });
+    } else if (state.mode === "medya") {
+      if (!state.medya.url) {
+        setStatus("Medya boş", "busy");
+        return;
+      }
+      const a = document.createElement("a");
+      a.href = state.medya.url;
+      a.download = state.medya.name || (state.medya.kind === "video" ? "ruzgar-medya.mp4" : "ruzgar-medya.png");
+      a.click();
+    } else if (state.mode === "foto") {
+      if (state.foto.refUrl) {
+        const a = document.createElement("a");
+        a.href = state.foto.refUrl;
+        a.download = state.foto.refName || "ruzgar-referans.jpg";
+        a.click();
+      } else {
+        download(
+          "ruzgar-foto-katalog.txt",
+          new Blob(
+            [(state.foto.kok || "") + "\n" + state.foto.sayi + " foto\n" + (state.foto.ornek || []).map(function (x) {
+              return typeof x === "string" ? x : (x.rel || "");
+            }).join("\n")],
+            { type: "text/plain;charset=utf-8" },
+          ),
+        );
+      }
+    } else if (state.mode === "notlar") {
+      const gorevMetin = state.gorevler.map(function (g) {
+        return (g.done ? "[x] " : "[ ] ") + g.text;
+      }).join("\n");
+      const body = (notlarEl ? notlarEl.value : "") + (gorevMetin ? "\n\n---\n" + gorevMetin : "");
+      download("ruzgar-notlar.txt", new Blob([body], { type: "text/plain;charset=utf-8" }));
+    } else if (state.mode === "kod") {
+      const ext = { javascript: "js", python: "py", html: "html", css: "css", json: "json", markdown: "md", text: "txt" }[state.kodDil] || "txt";
+      download("ruzgar-kod." + ext, new Blob([kodEl ? kodEl.value : ""], { type: "text/plain;charset=utf-8" }));
+    } else if (state.mode === "ses") {
+      if (!state.ses.url) {
+        setStatus("Ses boş", "busy");
+        return;
+      }
+      const a = document.createElement("a");
+      a.href = state.ses.url;
+      a.download = state.ses.name || "ruzgar-ses.webm";
+      a.click();
+    } else if (state.mode === "okuma") {
+      if (state.okuma.kind === "text") {
+        download(state.okuma.name || "ruzgar-okuma.txt", new Blob([state.okuma.text || ""], { type: "text/plain;charset=utf-8" }));
+      } else if (state.okuma.url) {
+        const a = document.createElement("a");
+        a.href = state.okuma.url;
+        a.download = state.okuma.name || "ruzgar-okuma.pdf";
+        a.click();
+      } else setStatus("Okuma boş", "busy");
+    } else if (state.mode === "web") {
+      download("ruzgar-web-url.txt", new Blob([state.web || ""], { type: "text/plain;charset=utf-8" }));
     } else {
       const parts = state.slides.map(function (slide) {
         return "<section style=\"min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;background:" +
@@ -809,14 +1449,41 @@
   });
 
   document.getElementById("ruzgar-masa-yeni").addEventListener("click", function () {
-    const label = { belge: "belgeyi", tablo: "tabloyu", cizim: "çizimi", sunum: "sunumu" }[state.mode];
-    if (!window.confirm("Bu " + label + " temizlensin mi?")) return;
+    const label = YETENEK_AD[state.mode] || "yüzeyi";
+    if (!window.confirm(label + " temizlensin mi?")) return;
     if (state.mode === "belge") belge.innerHTML = "";
     else if (state.mode === "tablo") {
       state.sheet = blankSheet();
       paintSheet();
     } else if (state.mode === "cizim") clearPaper();
-    else {
+    else if (state.mode === "medya") medyaTemizle();
+    else if (state.mode === "foto") {
+      if (state.foto.refUrl) {
+        try { URL.revokeObjectURL(state.foto.refUrl); } catch (err) { /* tarayıcı */ }
+      }
+      state.foto.refName = "";
+      state.foto.refUrl = "";
+      state.foto.refFile = null;
+      state.foto.sonuclar = [];
+      if (fotoRefImg) {
+        fotoRefImg.removeAttribute("src");
+        fotoRefImg.hidden = true;
+      }
+      if (fotoRefEmpty) fotoRefEmpty.hidden = false;
+      paintFoto();
+    } else if (state.mode === "notlar") notlarTemizle();
+    else if (state.mode === "kod") kodTemizle();
+    else if (state.mode === "ses") sesTemizle();
+    else if (state.mode === "okuma") okumaTemizle();
+    else if (state.mode === "web") {
+      state.web = "";
+      if (webUrl) webUrl.value = "";
+      if (webFrame) {
+        webFrame.removeAttribute("data-src");
+        webFrame.src = "about:blank";
+      }
+      paintWeb();
+    } else {
       state.slides = [{ title: "", body: "", bg: "#1c1a16", fg: "#f7f4ec" }];
       state.slideIndex = 0;
       renderSlides();
@@ -863,6 +1530,11 @@
   }
 
   function writeClipboardText(text) {
+    try {
+      if (window.ruzgarApi && typeof window.ruzgarApi.writeClipboardText === "function") {
+        if (window.ruzgarApi.writeClipboardText(text)) return Promise.resolve();
+      }
+    } catch (err) { /* Electron panosu */ }
     if (navigator.clipboard && navigator.clipboard.writeText) {
       return navigator.clipboard.writeText(text).catch(function () { return copyWithBox(text); });
     }
@@ -883,6 +1555,12 @@
   }
 
   function readClipboardText() {
+    try {
+      if (window.ruzgarApi && typeof window.ruzgarApi.readClipboardText === "function") {
+        const t = window.ruzgarApi.readClipboardText();
+        return Promise.resolve(String(t || ""));
+      }
+    } catch (err) { /* Electron panosu */ }
     if (navigator.clipboard && navigator.clipboard.readText) return navigator.clipboard.readText();
     return Promise.reject(new Error("clipboard"));
   }
@@ -1150,18 +1828,989 @@
   }
 
   function masaSayfa(kind) {
-    const izin = { sohbet: 1, belge: 1, tablo: 1, cizim: 1, sunum: 1 };
-    if (!izin[kind]) return "";
+    if (!YETENEK_AD[kind]) return "";
     sayfa = kind;
     if (kind !== "sohbet") showMode(kind);
     syncSahne();
-    return {
-      sohbet: "Sohbet açık.",
-      belge: "Belge açık.",
-      tablo: "Tablo açık.",
-      cizim: "Çizim açık.",
-      sunum: "Sunum açık.",
-    }[kind];
+    syncChip();
+    flashYuzey();
+    return (YETENEK_AD[kind] || "Yüzey") + " açık.";
+  }
+
+  function medyaTemizle() {
+    if (state.medya.url) {
+      try { URL.revokeObjectURL(state.medya.url); } catch (err) { /* tarayıcı */ }
+    }
+    state.medya = { name: "", kind: "", url: "" };
+    paintMedya();
+    setStatus("Medya temizlendi", "ok");
+    return "Medya temizlendi.";
+  }
+
+  function medyaYukle(file) {
+    if (!file) return "Dosya yok.";
+    const tip = String(file.type || "");
+    const kind = tip.indexOf("video/") === 0 ? "video" : tip.indexOf("image/") === 0 ? "image" : "";
+    if (!kind) return "Yalnız resim veya kısa video.";
+    if (file.size > 80 * 1024 * 1024) return "Dosya 80 MB üstü olamaz.";
+    if (state.medya.url) {
+      try { URL.revokeObjectURL(state.medya.url); } catch (err) { /* tarayıcı */ }
+    }
+    state.medya = {
+      name: String(file.name || "medya").slice(0, 180),
+      kind: kind,
+      url: URL.createObjectURL(file),
+    };
+    masaAc("medya");
+    paintMedya();
+    flashYuzey();
+    setStatus(kind === "video" ? "Video hazır" : "Resim hazır", "ok");
+    return (kind === "video" ? "Video" : "Resim") + " yüzeyde: " + state.medya.name;
+  }
+
+  function paintMedya() {
+    if (!medyaEmpty || !medyaView) return;
+    const varMi = !!(state.medya && state.medya.url);
+    medyaEmpty.hidden = varMi;
+    medyaView.hidden = !varMi;
+    medyaView.replaceChildren();
+    if (!varMi) return;
+    if (state.medya.kind === "video") {
+      const video = document.createElement("video");
+      video.src = state.medya.url;
+      video.controls = true;
+      video.playsInline = true;
+      medyaView.appendChild(video);
+    } else {
+      const img = document.createElement("img");
+      img.src = state.medya.url;
+      img.alt = state.medya.name || "Medya";
+      medyaView.appendChild(img);
+    }
+  }
+
+  function wireMedya() {
+    if (medyaFile) {
+      medyaFile.addEventListener("change", function () {
+        const file = medyaFile.files && medyaFile.files[0];
+        medyaYukle(file);
+        medyaFile.value = "";
+      });
+    }
+    if (!medyaRoot) return;
+    medyaRoot.addEventListener("dragover", function (ev) {
+      ev.preventDefault();
+      medyaRoot.classList.add("is-drag");
+    });
+    medyaRoot.addEventListener("dragleave", function () {
+      medyaRoot.classList.remove("is-drag");
+    });
+    medyaRoot.addEventListener("drop", function (ev) {
+      ev.preventDefault();
+      medyaRoot.classList.remove("is-drag");
+      const file = ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0];
+      medyaYukle(file);
+    });
+    medyaRoot.addEventListener("paste", function (ev) {
+      const items = ev.clipboardData && ev.clipboardData.items;
+      if (!items) return;
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].kind === "file") {
+          const file = items[i].getAsFile();
+          if (file) {
+            ev.preventDefault();
+            medyaYukle(file);
+            return;
+          }
+        }
+      }
+    });
+  }
+
+  function fotoRelOf(item) {
+    if (typeof item === "string") return item;
+    return String((item && item.rel) || "").trim();
+  }
+
+  function fotoOnizUrl(rel) {
+    const r = String(rel || "").trim();
+    if (!r) return "";
+    return masaApiKok() + "/api/foto/dosya?rel=" + encodeURIComponent(r);
+  }
+
+  function paintFoto() {
+    if (!fotoRoot) return;
+    const sonuclar = state.foto.sonuclar || [];
+    const has = state.foto.sayi > 0 || sonuclar.length > 0;
+    fotoRoot.classList.toggle("has-catalog", has);
+    if (fotoEmpty) fotoEmpty.hidden = has;
+    if (fotoSayi) {
+      fotoSayi.textContent = sonuclar.length
+        ? sonuclar.length + " eşleşme"
+        : state.foto.sayi + " foto";
+    }
+    if (fotoGrid) {
+      fotoGrid.replaceChildren();
+      const liste = sonuclar.length
+        ? sonuclar.map(function (s) {
+          return { rel: s.rel, bytes: 0, skor: s.skor };
+        })
+        : (state.foto.ornek || []).slice(0, 48);
+      liste.forEach(function (item) {
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = "ruzgar-masa-foto-card" + (item.skor != null ? " is-hit" : "");
+        const rel = fotoRelOf(item);
+        const ad = rel.split("/").pop() || rel;
+        const bytes = item && item.bytes ? Math.round(item.bytes / 1024) + " KB" : "";
+        const skor = item.skor != null ? "skor " + item.skor : "";
+        const img = document.createElement("img");
+        img.alt = ad;
+        img.loading = "lazy";
+        img.decoding = "async";
+        const url = fotoOnizUrl(rel);
+        if (url) img.src = url;
+        img.addEventListener("error", function () {
+          card.classList.add("is-broken");
+        });
+        const meta = document.createElement("span");
+        meta.className = "ruzgar-masa-foto-card-meta";
+        meta.innerHTML = "<strong>" + escapeText(ad) + "</strong><small>" +
+          escapeText(rel) + (bytes ? " · " + bytes : "") + (skor ? " · " + skor : "") + "</small>";
+        card.appendChild(img);
+        card.appendChild(meta);
+        card.title = "Tıkla: referans yap";
+        card.addEventListener("click", function () {
+          void fotoKartReferansYap(rel, ad);
+        });
+        fotoGrid.appendChild(card);
+      });
+    }
+    const kat = state.foto.katman || {};
+    root.querySelectorAll(".ruzgar-masa-foto-layers li").forEach(function (li) {
+      const key = li.getAttribute("data-kat");
+      li.classList.toggle("is-on", !!kat[key]);
+      li.classList.toggle("is-next", false);
+    });
+    if (fotoKok && state.foto.kok && !fotoKok.value) fotoKok.value = state.foto.kok;
+    if (fotoRefImg && state.foto.refUrl) {
+      fotoRefImg.src = state.foto.refUrl;
+      fotoRefImg.hidden = false;
+      if (fotoRefEmpty) fotoRefEmpty.hidden = true;
+    }
+  }
+
+  function fotoDosyaGecerli(file) {
+    if (!file) return false;
+    const tip = String(file.type || "").toLowerCase();
+    if (tip.indexOf("image/") === 0) return true;
+    // Windows sürükle-bırak bazen type boş bırakır — sunucu yine decode eder
+    return /\.(jpe?g|jfif|png|webp|bmp|gif|tif{1,2}|heic|heif|avif)$/i.test(String(file.name || ""))
+      || !tip; // uzantısız / type boş: sunucuya bırak
+  }
+
+  function fotoRefGoster(file, opts) {
+    if (state.foto.refUrl && String(state.foto.refUrl).indexOf("blob:") === 0) {
+      try { URL.revokeObjectURL(state.foto.refUrl); } catch (err) { /* tarayıcı */ }
+    }
+    state.foto.refName = String((file && file.name) || (opts && opts.name) || "referans.jpg").slice(0, 180);
+    // Kutuda blob yerine sunucu önizlemesi — Electron/IPC yolunda daha güvenilir
+    const serverUrl = (opts && opts.serverUrl) ||
+      (masaApiKok() + "/api/foto/referans-oniz?t=" + Date.now());
+    state.foto.refUrl = serverUrl;
+    state.foto.refFile = file || null;
+    masaAc("foto");
+    if (fotoRefImg) {
+      fotoRefImg.onload = function () {
+        fotoDurumYaz("Referans kutuda: " + state.foto.refName + " — Yüz ara.");
+      };
+      fotoRefImg.onerror = function () {
+        // Sunucu önizleme yoksa dosyadan blob dene
+        if (file) {
+          try {
+            const blobUrl = URL.createObjectURL(file);
+            state.foto.refUrl = blobUrl;
+            fotoRefImg.onerror = function () {
+              fotoDurumYaz("Önizleme görünmedi. Fotoğraf seç → Aç tekrar.");
+            };
+            fotoRefImg.src = blobUrl;
+            return;
+          } catch (err) { /* yedek */ }
+        }
+        fotoDurumYaz("Önizleme görünmedi. Fotoğraf seç → Aç tekrar.");
+      };
+      fotoRefImg.removeAttribute("hidden");
+      fotoRefImg.hidden = false;
+      fotoRefImg.style.display = "block";
+      fotoRefImg.style.visibility = "visible";
+      fotoRefImg.src = serverUrl;
+    }
+    if (fotoRefEmpty) {
+      fotoRefEmpty.setAttribute("hidden", "");
+      fotoRefEmpty.hidden = true;
+      fotoRefEmpty.style.display = "none";
+    }
+    paintFoto();
+    flashYuzey();
+    fotoDurumYaz("Referans hazır: " + state.foto.refName + " — Yüz ara.");
+    setStatus("Referans hazır", "ok");
+    return "Referans foto: " + state.foto.refName;
+  }
+
+  function fotoRefYukle(file) {
+    if (!file) {
+      fotoDurumYaz("Dosya yok.");
+      return "Dosya yok.";
+    }
+    // Yerel File → sunucuda normalize (boyut/uzantı fark etmez)
+    void fotoReferansDosyaYukle(file);
+    return "Yükleniyor…";
+  }
+
+  async function fotoReferansSunucudanCek(nameHint) {
+    let hj = {};
+    try {
+      const haz = await fetch(masaApiKok() + "/api/foto/referans-hazirla", { method: "POST" });
+      hj = await haz.json().catch(function () { return {}; });
+      if (!haz.ok) {
+        // Ham kopya duruyorsa yine de önizlemeyi dene
+        fotoDurumYaz(hj.detail || "Normalize atlandı — önizleme deneniyor…");
+      }
+    } catch (err) {
+      fotoDurumYaz("Sunucu hazırlık hatası — önizleme deneniyor…");
+    }
+    const url = masaApiKok() + "/api/foto/referans-oniz?t=" + Date.now();
+    let res;
+    try {
+      res = await fetch(url);
+    } catch (err) {
+      fotoDurumYaz("Önizleme isteği gitmedi. Sunucu kapalı olabilir.");
+      return false;
+    }
+    if (!res.ok) {
+      fotoDurumYaz((hj && hj.detail) || "Önizleme gelmedi. Fotoğraf seç → Aç.");
+      return false;
+    }
+    const blob = await res.blob();
+    if (!blob || blob.size < 32) {
+      fotoDurumYaz("Önizleme boş geldi.");
+      return false;
+    }
+    const ad = (hj && hj.name) || nameHint || "referans.jpg";
+    const file = new File([blob], ad, { type: blob.type || "image/jpeg" });
+    fotoRefGoster(file, { name: ad, serverUrl: url });
+    if (hj.w && hj.h) {
+      fotoDurumYaz("Referans hazır (" + hj.w + "×" + hj.h + ") — Yüz ara.");
+    }
+    return true;
+  }
+
+  async function fotoReferansDosyaYukle(file) {
+    masaAc("foto");
+    fotoDurumYaz("Resim hazırlanıyor (boyut/uzantı uyarlanıyor)…");
+    try {
+      // 1) Electron yolu varsa diskten (sürükle-bırak)
+      let abs = "";
+      try {
+        if (window.ruzgarApi && typeof window.ruzgarApi.getPathForFile === "function") {
+          abs = String(window.ruzgarApi.getPathForFile(file) || "");
+        }
+      } catch (err) { abs = ""; }
+      if (abs && window.ruzgarApi && typeof window.ruzgarApi.importImagePath === "function") {
+        const ir = await window.ruzgarApi.importImagePath(abs);
+        if (!ir || !ir.ok) {
+          fotoDurumYaz((ir && ir.error) || "Dosya kopyalanamadı.");
+          return;
+        }
+        await fotoReferansSunucudanCek(ir.name || file.name);
+        return;
+      }
+      // 2) FormData yükle — dosya seç / sürükle (yol yoksa)
+      const fd = new FormData();
+      fd.append("file", file, file.name || "referans.bin");
+      const res = await fetch(masaApiKok() + "/api/foto/referans-yukle", { method: "POST", body: fd });
+      const data = await res.json().catch(function () { return {}; });
+      if (!res.ok) {
+        fotoDurumYaz(data.detail || "Yükleme başarısız.");
+        return;
+      }
+      const url = masaApiKok() + "/api/foto/referans-oniz?t=" + Date.now();
+      const imgRes = await fetch(url);
+      if (!imgRes.ok) {
+        fotoDurumYaz("Önizleme gelmedi.");
+        return;
+      }
+      const blob = await imgRes.blob();
+      const ad = (data && data.name) || file.name || "referans.jpg";
+      fotoRefGoster(new File([blob], ad, { type: "image/jpeg" }), { name: ad, serverUrl: url });
+      if (data.w && data.h) {
+        fotoDurumYaz("Referans hazır (" + data.w + "×" + data.h + ") — Yüz ara.");
+      }
+    } catch (err) {
+      fotoDurumYaz("Resim alınamadı. «Fotoğraf seç» ile Aç'a bas.");
+    }
+  }
+
+  async function fotoReferansSecDialog() {
+    masaAc("foto");
+    fotoDurumYaz("Fotoğraf seç — pencerede Aç'a bas (sürükleme değil).");
+    if (window.ruzgarApi && typeof window.ruzgarApi.pickImageFile === "function") {
+      try {
+        const r = await window.ruzgarApi.pickImageFile();
+        if (!r || !r.ok) {
+          fotoDurumYaz(r && r.error ? String(r.error) : "Fotoğraf seçilmedi.");
+          return;
+        }
+        fotoDurumYaz("Resim hazırlanıyor…");
+        const ok = await fotoReferansSunucudanCek(r.name);
+        if (!ok) return;
+        return;
+      } catch (err) {
+        fotoDurumYaz("Seçim hatası — tekrar dene.");
+      }
+    }
+    if (fotoRefFile) fotoRefFile.click();
+  }
+
+  async function fotoKartReferansYap(rel, ad) {
+    const url = fotoOnizUrl(rel);
+    if (!url) return;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("okunamadi");
+      const blob = await res.blob();
+      const tip = blob.type || "image/jpeg";
+      const file = new File([blob], ad || "referans.jpg", { type: tip });
+      fotoRefYukle(file);
+      fotoDurumYaz("Referans seçildi: " + (ad || rel) + " — şimdi Yüz ara.");
+    } catch (err) {
+      fotoDurumYaz("Bu foto açılamadı (önizleme).");
+    }
+  }
+
+  function fotoDurumYaz(text) {
+    if (fotoDurum) fotoDurum.textContent = text || "";
+  }
+
+  async function fotoDurumYenile() {
+    try {
+      const res = await fetch(masaApiKok() + "/api/foto/durum");
+      const data = await res.json();
+      if (data && data.kok) state.foto.kok = data.kok;
+      state.foto.sayi = Number(data.dosya_sayisi) || 0;
+      state.foto.katman = data.katman || {};
+      if (fotoKok && data.kok && !fotoKok.value) fotoKok.value = data.kok;
+      fotoDurumYaz(data.not || "");
+      paintFotoKatman(data.sonraki);
+      if (state.foto.sayi && !(state.foto.ornek || []).length) {
+        const or = await fetch(masaApiKok() + "/api/foto/ornek?limit=36");
+        const oj = await or.json();
+        state.foto.ornek = oj.ornek || [];
+      }
+      paintFoto();
+    } catch (err) {
+      fotoDurumYaz("Sunucu kapalıysa katalog bekler. ForceRestart sonrası tekrar dene.");
+    }
+  }
+
+  function paintFotoKatman(sonraki) {
+    root.querySelectorAll(".ruzgar-masa-foto-layers li").forEach(function (li) {
+      const key = li.getAttribute("data-kat");
+      const on = !!(state.foto.katman && state.foto.katman[key]);
+      li.classList.toggle("is-on", on);
+      li.classList.toggle("is-next", !on && key === sonraki);
+    });
+  }
+
+  async function fotoKatalogTara() {
+    const kok = String((fotoKok && fotoKok.value) || state.foto.kok || "").trim();
+    if (!kok) {
+      fotoDurumYaz("Klasör yolu yaz (ör. D:\\Fotoğraflar).");
+      return "Klasör yolu yok.";
+    }
+    state.foto.kok = kok;
+    masaAc("foto");
+    fotoDurumYaz("Taranıyor…");
+    setStatus("Katalog taranıyor…", "busy");
+    try {
+      const res = await fetch(masaApiKok() + "/api/foto/katalog", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kok: kok, limit: 20000 }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        fotoDurumYaz(data.detail || "Tarama başarısız.");
+        return data.detail || "Tarama başarısız.";
+      }
+      state.foto.sayi = Number(data.dosya_sayisi) || 0;
+      state.foto.katman = data.katman || {};
+      state.foto.ornek = (data.ornek || []).map(function (rel) { return { rel: rel }; });
+      fotoDurumYaz(data.not || "");
+      paintFotoKatman(data.sonraki);
+      paintFoto();
+      scheduleSave();
+      flashYuzey();
+      setStatus(state.foto.sayi + " foto katalog", "ok");
+      return data.not || ("Katalog: " + state.foto.sayi);
+    } catch (err) {
+      fotoDurumYaz("Katalog isteği gitmedi. Sunucu açık mı?");
+      return "Katalog isteği gitmedi.";
+    }
+  }
+
+  async function fotoKatmanKur() {
+    masaAc("foto");
+    fotoDurumYaz("Yüz + gömme kuruluyor… (büyük arşivde sürebilir)");
+    setStatus("Katmanlar…", "busy");
+    try {
+      const res = await fetch(masaApiKok() + "/api/foto/katman-kur", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        fotoDurumYaz(data.detail || "Katman kurulamadı.");
+        return data.detail || "Katman kurulamadı.";
+      }
+      state.foto.katman = data.katman || {};
+      fotoDurumYaz(data.not || "");
+      paintFotoKatman(data.sonraki);
+      paintFoto();
+      flashYuzey();
+      setStatus(
+        (data.yuz_sayisi || 0) + " yüz · " + (data.vektor_sayisi || 0) + " vektör",
+        "ok",
+      );
+      return data.not || "Katmanlar hazır.";
+    } catch (err) {
+      fotoDurumYaz("Katman isteği gitmedi. OpenCV kurulu mu?");
+      return "Katman isteği gitmedi.";
+    }
+  }
+
+  async function fotoYuzAra() {
+    masaAc("foto");
+    if (!state.foto.refFile && !state.foto.refUrl) {
+      fotoDurumYaz("Önce referans fotoğraf bırak.");
+      return "Referans yok.";
+    }
+    try {
+      let res;
+      if (state.foto.refFile) {
+        const fd = new FormData();
+        fd.append("file", state.foto.refFile, state.foto.refName || "referans.jpg");
+        fd.append("top_k", "24");
+        res = await fetch(masaApiKok() + "/api/foto/eslestir-dosya", {
+          method: "POST",
+          body: fd,
+        });
+      } else {
+        res = await fetch(masaApiKok() + "/api/foto/eslestir", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ referans_adi: state.foto.refName || "" }),
+        });
+      }
+      const data = await res.json();
+      if (!res.ok) {
+        fotoDurumYaz(data.detail || data.reply || "Eşleştirme başarısız.");
+        return data.detail || "Eşleştirme başarısız.";
+      }
+      state.foto.sonuclar = Array.isArray(data.sonuclar) ? data.sonuclar : [];
+      fotoDurumYaz(data.reply || "");
+      if (data.sonraki) paintFotoKatman(data.sonraki);
+      await fotoDurumYenile();
+      paintFoto();
+      flashYuzey();
+      setStatus(
+        state.foto.sonuclar.length ? state.foto.sonuclar.length + " aday" : "Eşleşme yok",
+        state.foto.sonuclar.length ? "ok" : "busy",
+      );
+      return data.reply || "Yüz araması bitti.";
+    } catch (err) {
+      fotoDurumYaz("Eşleştirme isteği gitmedi.");
+      return "Eşleştirme isteği gitmedi.";
+    }
+  }
+
+  function wireFoto() {
+    if (fotoRef) {
+      fotoRef.addEventListener("click", function () {
+        void fotoReferansSecDialog();
+      });
+      fotoRef.addEventListener("keydown", function (ev) {
+        if (ev.key === "Enter" || ev.key === " ") {
+          ev.preventDefault();
+          void fotoReferansSecDialog();
+        }
+      });
+      fotoRef.addEventListener("dragover", function (ev) {
+        ev.preventDefault();
+        if (ev.dataTransfer) ev.dataTransfer.dropEffect = "copy";
+        fotoRef.classList.add("is-drag");
+      });
+      fotoRef.addEventListener("dragleave", function () {
+        fotoRef.classList.remove("is-drag");
+      });
+      fotoRef.addEventListener("drop", function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        fotoRef.classList.remove("is-drag");
+        const files = ev.dataTransfer && ev.dataTransfer.files;
+        let file = files && files[0];
+        if (!file && ev.dataTransfer && ev.dataTransfer.items) {
+          for (let i = 0; i < ev.dataTransfer.items.length; i++) {
+            if (ev.dataTransfer.items[i].kind === "file") {
+              file = ev.dataTransfer.items[i].getAsFile();
+              if (file) break;
+            }
+          }
+        }
+        if (!file) {
+          fotoDurumYaz("Bırakılan şey resim değil. Klasörden bir fotoğraf sürükle.");
+          return;
+        }
+        void fotoReferansDosyaYukle(file);
+      });
+      fotoRef.addEventListener("paste", function (ev) {
+        const items = ev.clipboardData && ev.clipboardData.items;
+        if (!items) return;
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type && items[i].type.indexOf("image/") === 0) {
+            ev.preventDefault();
+            void fotoReferansDosyaYukle(items[i].getAsFile());
+            return;
+          }
+        }
+      });
+    }
+    const fotoRefSec = document.getElementById("ruzgar-masa-foto-ref-sec");
+    if (fotoRefSec) {
+      fotoRefSec.addEventListener("click", function () {
+        void fotoReferansSecDialog();
+      });
+    }
+    if (fotoRefFile) {
+      fotoRefFile.addEventListener("change", function () {
+        const f = fotoRefFile.files && fotoRefFile.files[0];
+        fotoRefFile.value = "";
+        if (f) void fotoReferansDosyaYukle(f);
+      });
+    }
+    if (fotoTara) fotoTara.addEventListener("click", function () { void fotoKatalogTara(); });
+    const fotoKatmanBtn = document.getElementById("ruzgar-masa-foto-katman");
+    if (fotoKatmanBtn) fotoKatmanBtn.addEventListener("click", function () { void fotoKatmanKur(); });
+    if (fotoEsle) fotoEsle.addEventListener("click", function () { void fotoYuzAra(); });
+    if (fotoKok) {
+      fotoKok.addEventListener("change", function () {
+        state.foto.kok = fotoKok.value.trim();
+        scheduleSave();
+      });
+      fotoKok.addEventListener("focus", function () {
+        // Eski yolu kolay silmek için: odaklanınca seç
+        try { fotoKok.select(); } catch (err) { /* tarayıcı */ }
+      });
+      fotoKok.addEventListener("paste", function (ev) {
+        // Electron'da native yapıştır bazen susar — panodan elle yaz
+        const clip = (ev.clipboardData && ev.clipboardData.getData("text")) || "";
+        let text = clip;
+        if (!text && window.ruzgarApi && typeof window.ruzgarApi.readClipboardText === "function") {
+          text = window.ruzgarApi.readClipboardText() || "";
+        }
+        if (!text) return;
+        ev.preventDefault();
+        const start = fotoKok.selectionStart == null ? fotoKok.value.length : fotoKok.selectionStart;
+        const end = fotoKok.selectionEnd == null ? start : fotoKok.selectionEnd;
+        const clean = String(text).replace(/^["']+|["']+$/g, "").trim();
+        fotoKok.setRangeText(clean, start, end, "end");
+        state.foto.kok = fotoKok.value.trim();
+        scheduleSave();
+        setStatus("Yol yapıştırıldı", "ok");
+      });
+    }
+    const fotoKokSec = document.getElementById("ruzgar-masa-foto-kok-sec");
+    if (fotoKokSec) {
+      fotoKokSec.addEventListener("click", function () {
+        void fotoKlasorSec();
+      });
+    }
+  }
+
+  async function fotoKlasorSec() {
+    masaAc("foto");
+    if (!window.ruzgarApi || typeof window.ruzgarApi.pickSaveDirectory !== "function") {
+      fotoDurumYaz("Klasör seçici yok. Kutuya yolu elle yaz veya Ctrl+V dene.");
+      if (fotoKok) fotoKok.focus();
+      return "Klasör seçici yok.";
+    }
+    try {
+      const r = await window.ruzgarApi.pickSaveDirectory();
+      if (!r || !r.ok || !r.abs) {
+        fotoDurumYaz("Klasör seçilmedi.");
+        return "Klasör seçilmedi.";
+      }
+      const yol = String(r.abs || "").trim();
+      if (fotoKok) fotoKok.value = yol;
+      state.foto.kok = yol;
+      scheduleSave();
+      fotoDurumYaz("Klasör seçildi. Şimdi «Katalog tara».");
+      setStatus("Klasör hazır", "ok");
+      return yol;
+    } catch (err) {
+      fotoDurumYaz("Klasör seçilemedi.");
+      return "Klasör seçilemedi.";
+    }
+  }
+
+  function paintGorevler() {
+    if (!gorevlerEl) return;
+    gorevlerEl.replaceChildren();
+    state.gorevler.forEach(function (gorev, index) {
+      const li = document.createElement("li");
+      if (gorev.done) li.className = "is-done";
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = !!gorev.done;
+      cb.addEventListener("change", function () {
+        state.gorevler[index].done = cb.checked;
+        paintGorevler();
+        scheduleSave();
+      });
+      const span = document.createElement("span");
+      span.textContent = gorev.text;
+      const sil = document.createElement("button");
+      sil.type = "button";
+      sil.setAttribute("aria-label", "Sil");
+      sil.textContent = "×";
+      sil.addEventListener("click", function () {
+        state.gorevler.splice(index, 1);
+        paintGorevler();
+        scheduleSave();
+      });
+      li.appendChild(cb);
+      li.appendChild(span);
+      li.appendChild(sil);
+      gorevlerEl.appendChild(li);
+    });
+  }
+
+  function gorevEkle(metin) {
+    let text = String(metin || "").trim();
+    if (!text) {
+      text = window.prompt("Görev:", "");
+      if (text == null) return "İptal.";
+      text = String(text).trim();
+    }
+    if (!text) return "Görev boş.";
+    if (state.gorevler.length >= 80) return "En fazla 80 görev.";
+    state.gorevler.push({ text: text.slice(0, 200), done: false });
+    masaAc("notlar");
+    paintGorevler();
+    scheduleSave();
+    flashYuzey();
+    return "Görev eklendi: " + text.slice(0, 80);
+  }
+
+  function notlarYaz(metin, ekle) {
+    const clean = masaTemizMetin(metin, 20000).trim();
+    if (!clean || !notlarEl) return "Yazılacak not yok.";
+    if (ekle && notlarEl.value.trim()) {
+      notlarEl.value = notlarEl.value.replace(/\s+$/, "") + "\n" + clean;
+    } else {
+      notlarEl.value = clean;
+    }
+    state.notlar = notlarEl.value;
+    masaAc("notlar");
+    scheduleSave();
+    flashYuzey();
+    return (ekle ? "Nota eklendi." : "Not yazıldı.") + "\n" + clean.slice(0, 400);
+  }
+
+  function notlarTemizle() {
+    if (notlarEl) notlarEl.value = "";
+    state.notlar = "";
+    state.gorevler = [];
+    paintGorevler();
+    scheduleSave();
+    setStatus("Notlar temizlendi", "ok");
+    return "Notlar temizlendi.";
+  }
+
+  function syncKodSatir() {
+    if (!kodEl || !kodSatir) return;
+    const n = String(kodEl.value || "").split(/\n/).length;
+    kodSatir.textContent = n + " satır";
+  }
+
+  function kodTemizle() {
+    if (kodEl) kodEl.value = "";
+    state.kod = "";
+    syncKodSatir();
+    scheduleSave();
+    return "Kod temizlendi.";
+  }
+
+  function kodYaz(metin) {
+    const clean = String(metin || "");
+    if (!clean.trim() || !kodEl) return "Kod yok.";
+    if (clean.length > 200000) return "Kod çok uzun.";
+    kodEl.value = clean;
+    state.kod = clean;
+    masaAc("kod");
+    syncKodSatir();
+    scheduleSave();
+    flashYuzey();
+    return "Kod yazıldı (" + clean.split(/\n/).length + " satır).";
+  }
+
+  function paintSes() {
+    if (!sesEmpty || !sesView) return;
+    const varMi = !!(state.ses && state.ses.url);
+    sesEmpty.hidden = varMi;
+    sesView.hidden = !varMi;
+    if (sesPlayer) sesPlayer.src = varMi ? state.ses.url : "";
+    if (sesAd) sesAd.textContent = varMi ? state.ses.name : "";
+    if (sesKayitBtn) {
+      sesKayitBtn.textContent = state.sesRec ? "Durdur" : "Kayıt";
+    }
+  }
+
+  function sesTemizle() {
+    if (state.sesRec) {
+      try { state.sesRec.stop(); } catch (err) { /* mikrofon */ }
+      state.sesRec = null;
+    }
+    if (state.ses.url) {
+      try { URL.revokeObjectURL(state.ses.url); } catch (err) { /* tarayıcı */ }
+    }
+    state.ses = { name: "", url: "" };
+    paintSes();
+    setStatus("Ses temizlendi", "ok");
+    return "Ses temizlendi.";
+  }
+
+  function sesYukle(file) {
+    if (!file) return "Dosya yok.";
+    if (String(file.type || "").indexOf("audio/") !== 0 && !/\.(mp3|wav|ogg|m4a|webm)$/i.test(file.name || "")) {
+      return "Yalnız ses dosyası.";
+    }
+    if (file.size > 60 * 1024 * 1024) return "Ses 60 MB üstü olamaz.";
+    if (state.ses.url) {
+      try { URL.revokeObjectURL(state.ses.url); } catch (err) { /* tarayıcı */ }
+    }
+    state.ses = {
+      name: String(file.name || "ses").slice(0, 180),
+      url: URL.createObjectURL(file),
+    };
+    masaAc("ses");
+    paintSes();
+    flashYuzey();
+    setStatus("Ses hazır", "ok");
+    return "Ses yüzeyde: " + state.ses.name;
+  }
+
+  function sesKayitToggle() {
+    if (state.sesRec) {
+      try { state.sesRec.stop(); } catch (err) { /* mikrofon */ }
+      return "Kayıt duruyor…";
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === "undefined") {
+      return "Bu ortamda kayıt yok. Dosya seçebilirsin.";
+    }
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+      const rec = new MediaRecorder(stream);
+      const chunks = [];
+      state.sesRec = rec;
+      paintSes();
+      rec.ondataavailable = function (ev) {
+        if (ev.data && ev.data.size) chunks.push(ev.data);
+      };
+      rec.onstop = function () {
+        stream.getTracks().forEach(function (t) { t.stop(); });
+        state.sesRec = null;
+        const blob = new Blob(chunks, { type: rec.mimeType || "audio/webm" });
+        const file = new File([blob], "ruzgar-kayit.webm", { type: blob.type });
+        sesYukle(file);
+      };
+      rec.start();
+      masaAc("ses");
+      setStatus("Kaydediliyor…", "busy");
+    }).catch(function () {
+      setStatus("Mikrofon izni yok", "busy");
+    });
+    return "Kayıt başladı.";
+  }
+
+  function paintOkuma() {
+    if (!okumaEmpty || !okumaText || !okumaPdf) return;
+    const o = state.okuma || {};
+    const varMi = !!(o.kind && (o.text || o.url));
+    okumaEmpty.hidden = varMi;
+    okumaText.hidden = !(varMi && o.kind === "text");
+    okumaPdf.hidden = !(varMi && o.kind === "pdf");
+    if (okumaAd) okumaAd.textContent = varMi ? (o.name || "Dosya") : "Dosya yok";
+    if (o.kind === "text") okumaText.textContent = o.text || "";
+    if (o.kind === "pdf") okumaPdf.src = o.url || "about:blank";
+    else if (okumaPdf.src && okumaPdf.src !== "about:blank") okumaPdf.src = "about:blank";
+  }
+
+  function okumaTemizle() {
+    if (state.okuma && state.okuma.url) {
+      try { URL.revokeObjectURL(state.okuma.url); } catch (err) { /* tarayıcı */ }
+    }
+    state.okuma = { name: "", kind: "", text: "", url: "" };
+    paintOkuma();
+    scheduleSave();
+    return "Okuma temizlendi.";
+  }
+
+  function okumaYukle(file) {
+    if (!file) return "Dosya yok.";
+    const name = String(file.name || "dosya").slice(0, 180);
+    const tip = String(file.type || "");
+    const pdf = tip === "application/pdf" || /\.pdf$/i.test(name);
+    if (pdf) {
+      if (file.size > 40 * 1024 * 1024) return "PDF 40 MB üstü olamaz.";
+      if (state.okuma.url) {
+        try { URL.revokeObjectURL(state.okuma.url); } catch (err) { /* tarayıcı */ }
+      }
+      state.okuma = { name: name, kind: "pdf", text: "", url: URL.createObjectURL(file) };
+      masaAc("okuma");
+      paintOkuma();
+      flashYuzey();
+      return "PDF açık: " + name;
+    }
+    if (file.size > 4 * 1024 * 1024) return "Metin 4 MB üstü olamaz.";
+    const reader = new FileReader();
+    reader.onload = function () {
+      state.okuma = {
+        name: name,
+        kind: "text",
+        text: String(reader.result || "").slice(0, 200000),
+        url: "",
+      };
+      masaAc("okuma");
+      paintOkuma();
+      scheduleSave();
+      flashYuzey();
+      setStatus("Okuma hazır", "ok");
+    };
+    reader.onerror = function () { setStatus("Okunamadı", "busy"); };
+    reader.readAsText(file);
+    return "Okunuyor: " + name;
+  }
+
+  function webNormalize(raw) {
+    let u = String(raw || "").trim();
+    if (!u) return "";
+    if (!/^https?:\/\//i.test(u)) u = "https://" + u;
+    try {
+      const parsed = new URL(u);
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return "";
+      return parsed.href;
+    } catch (err) {
+      return "";
+    }
+  }
+
+  function paintWeb() {
+    if (webUrl && state.web && webUrl.value !== state.web) webUrl.value = state.web;
+    if (webPane) webPane.classList.toggle("has-url", !!state.web);
+    if (webFrame && state.web && webFrame.getAttribute("data-src") !== state.web) {
+      webFrame.setAttribute("data-src", state.web);
+      webFrame.src = state.web;
+    }
+  }
+
+  function webAc(raw) {
+    const href = webNormalize(raw);
+    if (!href) return "Geçerli bir https adresi yaz.";
+    state.web = href;
+    if (webUrl) webUrl.value = href;
+    masaAc("web");
+    paintWeb();
+    scheduleSave();
+    flashYuzey();
+    return "Web açık: " + href;
+  }
+
+  function webDisarida() {
+    const href = webNormalize((webUrl && webUrl.value) || state.web);
+    if (!href) return "Adres yok.";
+    if (window.ruzgarApi && typeof window.ruzgarApi.openExternalUrl === "function") {
+      window.ruzgarApi.openExternalUrl(href);
+    } else {
+      window.open(href, "_blank", "noopener,noreferrer");
+    }
+    return "Tarayıcıda açılıyor.";
+  }
+
+  function wireYetenekler() {
+    if (notlarEl) {
+      notlarEl.addEventListener("input", function () {
+        state.notlar = notlarEl.value;
+        scheduleSave();
+      });
+    }
+    const gorevBtn = document.getElementById("ruzgar-masa-gorev-ekle");
+    if (gorevBtn) gorevBtn.addEventListener("click", function () { gorevEkle(); });
+    if (kodEl) {
+      kodEl.addEventListener("input", function () {
+        state.kod = kodEl.value;
+        syncKodSatir();
+        scheduleSave();
+      });
+      kodEl.addEventListener("keydown", function (ev) {
+        if (ev.key === "Tab") {
+          ev.preventDefault();
+          const start = kodEl.selectionStart;
+          const end = kodEl.selectionEnd;
+          const v = kodEl.value;
+          kodEl.value = v.slice(0, start) + "  " + v.slice(end);
+          kodEl.selectionStart = kodEl.selectionEnd = start + 2;
+          state.kod = kodEl.value;
+          scheduleSave();
+        }
+      });
+    }
+    if (kodDil) {
+      kodDil.addEventListener("change", function () {
+        state.kodDil = kodDil.value;
+        scheduleSave();
+      });
+    }
+    if (sesFile) {
+      sesFile.addEventListener("change", function () {
+        sesYukle(sesFile.files && sesFile.files[0]);
+        sesFile.value = "";
+      });
+    }
+    if (sesKayitBtn) sesKayitBtn.addEventListener("click", function () { sesKayitToggle(); });
+    if (sesRoot) {
+      sesRoot.addEventListener("dragover", function (ev) { ev.preventDefault(); });
+      sesRoot.addEventListener("drop", function (ev) {
+        ev.preventDefault();
+        sesYukle(ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0]);
+      });
+    }
+    if (okumaFile) {
+      okumaFile.addEventListener("change", function () {
+        okumaYukle(okumaFile.files && okumaFile.files[0]);
+        okumaFile.value = "";
+      });
+    }
+    if (webForm) {
+      webForm.addEventListener("submit", function (ev) {
+        ev.preventDefault();
+        webAc(webUrl && webUrl.value);
+      });
+    }
+    if (webYenile) {
+      webYenile.addEventListener("click", function () {
+        if (state.web && webFrame) {
+          webFrame.src = state.web;
+          setStatus("Yenilendi", "ok");
+        }
+      });
+    }
   }
 
   function masaAc(mode) {
@@ -1178,6 +2827,10 @@
       "belge.ekle": ["metin"],
       "belge.yerine": ["eski", "yeni"],
       "belge.temizle": [],
+      "belge.tablo": [],
+      "notlar.yaz": ["metin"],
+      "notlar.ekle": ["metin"],
+      "notlar.gorev": ["metin"],
       "tablo.hucre": ["hucre", "deger"],
       "tablo.sil": ["hucre"],
       "tablo.topla": ["sutun"],
@@ -1196,13 +2849,19 @@
     const renkli = { "cizim.cizgi": 1, "cizim.kutu": 1, "cizim.daire": 1 };
     if (!action || typeof action !== "object" || Array.isArray(action)) return false;
     const keys = Object.keys(action);
-    const need = izin[String(action.eylem || "")];
-    const renkVar = action.renk != null && renkli[String(action.eylem || "")] ? 1 : 0;
-    if (!need || keys.length > need.length + 1 + renkVar) return false;
+    const eylemAd = String(action.eylem || "");
+    const need = izin[eylemAd];
+    const renkVar = action.renk != null && renkli[eylemAd] ? 1 : 0;
+    const ekstra = eylemAd === "belge.tablo" ? 2 : 0;
+    if (!need || keys.length > need.length + 1 + renkVar + ekstra) return false;
     const yazi = { metin: 1, deger: 1, hucre: 1, ad: 1, baslik: 1, eski: 1, yeni: 1, sutun: 1 };
     for (let i = 0; i < keys.length; i++) {
       if (keys[i] === "eylem" || need.indexOf(keys[i]) >= 0) continue;
-      if (keys[i] === "renk" && renkli[String(action.eylem || "")]) continue;
+      if (keys[i] === "renk" && renkli[eylemAd]) continue;
+      if (eylemAd === "belge.tablo" && (keys[i] === "satir" || keys[i] === "sutun")) {
+        if (typeof action[keys[i]] !== "number" || !isFinite(action[keys[i]])) return false;
+        continue;
+      }
       return false;
     }
     if (action.renk != null) {
@@ -1240,13 +2899,19 @@
   function masaBelgeYaz(text, append) {
     const clean = masaTemizMetin(text, 8000).trim();
     if (!clean) return "Yazılacak metin yok.";
-    if (append && (belge.textContent || "").trim()) {
-      belge.textContent = belge.textContent.replace(/\s+$/, "") + "\n" + clean;
+    const p = document.createElement("p");
+    p.textContent = clean;
+    if (append && (belge.innerText || "").trim()) {
+      belge.appendChild(p);
+    } else if (append) {
+      belge.appendChild(p);
     } else {
-      belge.textContent = clean;
+      belge.innerHTML = "";
+      belge.appendChild(p);
     }
     scheduleSave();
     masaAc("belge");
+    flashYuzey();
     return (append ? "Belgeye eklendi." : "Belge yazıldı.") + "\n" + clean;
   }
 
@@ -1308,23 +2973,28 @@
     }
     if (eylem === "belge.yaz") return masaBelgeYaz(action.metin, false);
     if (eylem === "belge.ekle") return masaBelgeYaz(action.metin, true);
+    if (eylem === "notlar.yaz") return notlarYaz(action.metin, false);
+    if (eylem === "notlar.ekle") return notlarYaz(action.metin, true);
+    if (eylem === "notlar.gorev") return gorevEkle(action.metin);
     if (eylem === "belge.yerine") {
       const eski = masaTemizMetin(action.eski, 180).trim();
       const yeni = masaTemizMetin(action.yeni, 400).trim();
-      const once = String(belge.innerText || "").replace(/\u00a0/g, " ").replace(/\s+$/, "");
-      const yer = eski ? once.indexOf(eski) : -1;
-      if (!eski || !yeni || yer < 0) return "Metin belgede yok.";
-      const sonra = (once.slice(0, yer) + yeni + once.slice(yer + eski.length)).replace(/\s+$/, "");
-      belge.textContent = sonra;
+      if (!eski || !yeni) return "Metin belgede yok.";
+      if (!belgeMetinNodunaYaz(eski, yeni)) return "Metin belgede yok.";
+      const sonra = String(belge.innerText || "").replace(/\u00a0/g, " ").replace(/\s+$/, "");
       scheduleSave();
       masaAc("belge");
+      flashYuzey();
       return "Belgede değişti.\n" + eski + " yerine " + yeni + "\n" + sonra;
     }
     if (eylem === "belge.temizle") {
-      belge.textContent = "";
+      belge.innerHTML = "";
       scheduleSave();
       masaAc("belge");
       return "Belge temizlendi.";
+    }
+    if (eylem === "belge.tablo") {
+      return belgeTabloEkle(action.satir || 3, action.sutun || 3);
     }
     if (eylem === "tablo.hucre") {
       const hucre = String(action.hucre || "");
@@ -1476,35 +3146,22 @@
 
   function masaYardim() {
     return [
-      "Çalışma masası komutları:",
-      "sohbet",
-      "belgeyi aç",
-      "tabloyu göster",
-      "çizimi aç",
-      "sunumu aç",
-      "belgeye yaz: metin",
-      "belgeye selam mimar yaz",
-      "belgeye ekle: metin",
-      "tabloda A1 e 10 yaz",
-      "belgeyi temizle",
-      "tablo A1 = 10",
-      "tablo A3 = =TOPLA(A1:A2)",
-      "tabloyu temizle",
-      "çizgi 40 40 400 200",
-      "çizime kutu çiz",
-      "kutu 80 80 240 140",
-      "daire 300 220 80 60",
-      "renk kırmızı",
-      "çizimi temizle",
-      "slayt ekle: Başlık | metin",
-      "sunuma Hoş geldin slaytı ekle: metin",
-      "sunumu temizle",
-      "sun",
+      "Çalışma yüzeyi — tek sahne, yetenekler:",
+      "Birincil: sohbet · belge · tablo · çizim · sunum · medya · foto",
+      "İkincil: notlar · kod · ses · okuma · web",
+      "Foto: fotoyu aç · katalog tara · referans bırak · yüz ara (katmanlı)",
+      "Köprü: bunu tercümeye gönder · kodu programlamaya gönder · belgeyi sese gönder",
+      "Aç: belgeyi aç · notları aç · kodu aç · sesi aç · okumayı aç · web aç",
+      "belgeye … yaz · belgeye tablo ekle · belgeye 4x2 tablo ekle · resim: bırak/yapıştır",
+      "notlara … yaz · göreve … ekle · koda … yaz",
+      "tabloda A1 e 10 yaz · çizime kutu çiz · sunuma … slaytı ekle: …",
+      "web aç https://örnek.com · medya/ses/okuma: dosya bırak",
+      "Derin iş: Video / Ses / Okuma / Programlama / Tercüme (köprü ile)",
     ].join("\n");
   }
 
   function masaOldu(cevap) {
-    return /yazıldı|eklendi|işlendi|çizildi|cizildi|hazır|değişti|açıldı|temizlendi|silindi|toplamı|toplami|boş|Belgede:|Başlık|Çizim/.test(String(cevap || ""));
+    return /yazıldı|eklendi|işlendi|çizildi|cizildi|hazır|değişti|açıldı|temizlendi|silindi|toplamı|toplami|boş|Belgede:|Başlık|Çizim|yüzeyde|yuzeyde|Resim|Video|Medya|Not|Görev|Kod|Web|PDF|Ses|Okuma|tablo|seç|aktarıldı|aktarildi|Köprü|Kopru/.test(String(cevap || ""));
   }
 
   function masaAnlikAl() {
@@ -1563,6 +3220,16 @@
     return notlar.join("\n");
   }
 
+  function masaKomutSonuc(reply) {
+    const text = String(reply || "");
+    if (masaOldu(text) || /açık\.|acik\./i.test(text)) {
+      flashYuzey();
+      setStatus("Uygulandı", "ok");
+      syncChip();
+    }
+    return { handled: true, reply: text };
+  }
+
   function masaKomutCoz(text) {
     const raw = String(text || "").trim();
     if (!raw || raw.length > 9000) return null;
@@ -1571,11 +3238,12 @@
       if (duz && duz.red) {
         return {
           handled: true,
-          reply: "Bunu yapmadım. Masa değişmedi. Şöyle söyle: belgeye selam yaz, tabloda A1 e 10 yaz, çizime kutu çiz, sunuma Hoş geldin slaytı ekle: bugün.",
+          reply: "Bunu yapmadım. Yüzey değişmedi. Şöyle söyle: belgeye selam yaz, tabloda A1 e 10 yaz, çizime kutu çiz, sunuma Hoş geldin slaytı ekle: bugün.",
         };
       }
-      if (duz && duz.liste) return { handled: true, reply: masaListeUygula(duz.liste) };
-      if (duz && duz.eylem) return { handled: true, reply: masaUygula(duz) };
+      if (duz && duz.bak) return null;
+      if (duz && duz.liste) return masaKomutSonuc(masaListeUygula(duz.liste));
+      if (duz && duz.eylem) return masaKomutSonuc(masaUygula(duz));
     }
     const sade = raw
       .replace(/^[Ll]ütfen\s+/, "")
@@ -1585,28 +3253,80 @@
     const low = typeof window.ruzgarKomutGovdesi === "function"
       ? window.ruzgarKomutGovdesi(sade)
       : masaHarf(sade);
-    if (/^(masa yardim|calisma masasi yardim|masa komutlari)$/.test(low)) {
+    if (/^(masa yardim|calisma masasi yardim|masa komutlari|yuzey yardim|calisma yuzeyi yardim)$/.test(low)) {
       return { handled: true, reply: masaYardim() };
     }
     if (/^(sohbet|sohbeti goster|sohbeti ac|sahne|robota don)$/.test(low)) {
-      return { handled: true, reply: masaSayfa("sohbet") };
+      return masaKomutSonuc(masaSayfa("sohbet"));
     }
     if (/^(belgeyi ac|belgeyi goster|belge ac|belge goster)$/.test(low)) {
-      return { handled: true, reply: masaSayfa("belge") };
+      return masaKomutSonuc(masaSayfa("belge"));
     }
     if (/^(tabloyu ac|tabloyu goster|tablo ac|tablo goster)$/.test(low)) {
-      return { handled: true, reply: masaSayfa("tablo") };
+      return masaKomutSonuc(masaSayfa("tablo"));
     }
     if (/^(cizimi ac|cizimi goster|cizim ac|cizim goster)$/.test(low)) {
-      return { handled: true, reply: masaSayfa("cizim") };
+      return masaKomutSonuc(masaSayfa("cizim"));
     }
     if (/^(sunumu ac|sunumu goster|sunum ac|sunum goster)$/.test(low)) {
-      return { handled: true, reply: masaSayfa("sunum") };
+      return masaKomutSonuc(masaSayfa("sunum"));
     }
-    let m = sade.match(/^(belgeye yaz|belge yaz|belgeye ekle|belge ekle)\s*[:\-]?\s*([\s\S]+)$/i);
-    if (m) return { handled: true, reply: masaBelgeYaz(m[2], /ekle/i.test(m[1])) };
+    if (/^(medyayi ac|medyayi goster|medya ac|medya goster|resmi goster|videoyu goster)$/.test(low)) {
+      return masaKomutSonuc(masaSayfa("medya"));
+    }
+    if (/^(fotoyu ac|fotoyu goster|foto ac|foto goster|fotograf ac|fotografi ac)$/.test(low)) {
+      return masaKomutSonuc(masaSayfa("foto"));
+    }
+    m = sade.match(/^(?:bunu|belgeyi|kodu|notlari|notları|metni|yuzeyi|yüzeyi|tabloyu|sunumu|okumayi|okumayı)\s+(tercumeye|tercümeye|programlamaya|sese|videoya|hafizaya|hafızaya|okumaya|mimara)\s+g[öo]nder$/i);
+    if (m) return masaKomutSonuc(yuzeyMotorGonder(m[1]));
+    m = sade.match(/^(?:kopru|köprü)\s*[:\-]?\s*(tercume|tercüme|programlama|ses|video|hafiza|hafıza|okuma|mimar)$/i);
+    if (m) return masaKomutSonuc(yuzeyMotorGonder(m[1]));
+    if (/^(katalog tara|foto katalog|fotografi tara)$/.test(low)) {
+      return { handled: true, reply: "Katalog taranıyor…", asyncFoto: "tara" };
+    }
+    if (/^(yuz ara|yuz eslestir|fotograf ara|yuzu bul)$/.test(low)) {
+      return { handled: true, reply: "Yüz araması…", asyncFoto: "esle" };
+    }
+    if (/^(notlari ac|notlari goster|notlar ac|notlar goster|notu ac)$/.test(low)) {
+      return masaKomutSonuc(masaSayfa("notlar"));
+    }
+    if (/^(kodu ac|kodu goster|kod ac|kod goster)$/.test(low)) {
+      return masaKomutSonuc(masaSayfa("kod"));
+    }
+    if (/^(sesi ac|sesi goster|ses ac|ses goster)$/.test(low)) {
+      return masaKomutSonuc(masaSayfa("ses"));
+    }
+    if (/^(okumayi ac|okumayi goster|okuma ac|okuma goster)$/.test(low)) {
+      return masaKomutSonuc(masaSayfa("okuma"));
+    }
+    if (/^(web ac|web goster|webi ac|webi goster)$/.test(low)) {
+      return masaKomutSonuc(masaSayfa("web"));
+    }
+    let m = sade.match(/^(?:web ac|site ac|sayfa ac)\s+(.+)$/i);
+    if (m) return masaKomutSonuc(webAc(m[1]));
+    m = sade.match(/^(?:notlara|nota)\s+(.+?)\s+yaz$/i);
+    if (m) return masaKomutSonuc(notlarYaz(m[1], false));
+    m = sade.match(/^(?:notlara|nota)\s+(.+?)\s+ekle$/i);
+    if (m) return masaKomutSonuc(notlarYaz(m[1], true));
+    m = sade.match(/^(?:goreve|göreve|gorev|görev)\s+(.+?)\s+ekle$/i);
+    if (m) return masaKomutSonuc(gorevEkle(m[1]));
+    m = sade.match(/^(?:koda|kode)\s+yaz\s*[:\-]?\s*([\s\S]+)$/i);
+    if (m) return masaKomutSonuc(kodYaz(m[1]));
+    m = sade.match(/^(belgeye yaz|belge yaz|belgeye ekle|belge ekle)\s*[:\-]?\s*([\s\S]+)$/i);
+    if (m) return masaKomutSonuc(masaBelgeYaz(m[2], /ekle/i.test(m[1])));
     if (/^(belgeyi temizle|belge temizle)$/i.test(sade)) {
-      return { handled: true, reply: masaUygula({ eylem: "belge.temizle" }) };
+      return masaKomutSonuc(masaUygula({ eylem: "belge.temizle" }));
+    }
+    if (/^belgeye\s+tablo\s+ekle$/i.test(sade)) {
+      return masaKomutSonuc(belgeTabloEkle(3, 3));
+    }
+    m = sade.match(/^belgeye\s+(\d{1,2})\s*[x×]\s*(\d{1,2})\s+tablo\s+ekle$/i);
+    if (m) return masaKomutSonuc(belgeTabloEkle(m[1], m[2]));
+    if (/^(belgeye\s+resim\s+ekle|belgeye\s+gorsel\s+ekle|belgeye\s+görsel\s+ekle)$/i.test(sade)) {
+      masaAc("belge");
+      const inp = document.getElementById("ruzgar-masa-belge-img");
+      if (inp) inp.click();
+      return masaKomutSonuc("Resim seç — dosya penceresi açıldı.");
     }
     if (/^tablo\s*:\s*\n/i.test(sade)) {
       const lines = sade.split(/\n/).slice(1);
@@ -1616,31 +3336,46 @@
         if (cell) notes.push(masaHucreYaz(cell[1], cell[2], cell[3]));
       });
       if (!notes.length) return { handled: true, reply: "Tablo satırı A1 10 biçiminde olmalı." };
-      return { handled: true, reply: notes.join(" ") };
+      return masaKomutSonuc(notes.join(" "));
     }
     m = sade.match(/^(?:tablo|hucre|hücre)\s+([A-La-l])(\d{1,2})\s*(?:=|:)?\s*([\s\S]+)$/i);
-    if (m) return { handled: true, reply: masaHucreYaz(m[1], m[2], m[3]) };
+    if (m) return masaKomutSonuc(masaHucreYaz(m[1], m[2], m[3]));
     if (/^(tabloyu temizle|tablo temizle)$/i.test(sade)) {
-      return { handled: true, reply: masaUygula({ eylem: "tablo.temizle" }) };
+      return masaKomutSonuc(masaUygula({ eylem: "tablo.temizle" }));
     }
     m = sade.match(/^(?:renk)\s+([a-zA-ZçğıöşüÇĞİÖŞÜ]+)\s*$/i);
-    if (m) return { handled: true, reply: masaUygula({ eylem: "cizim.renk", ad: m[1] }) };
+    if (m) return masaKomutSonuc(masaUygula({ eylem: "cizim.renk", ad: m[1] }));
     m = sade.match(/^(?:çizgi|cizgi)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*$/i);
-    if (m) return { handled: true, reply: masaUygula({ eylem: "cizim.cizgi", x1: m[1], y1: m[2], x2: m[3], y2: m[4] }) };
+    if (m) return masaKomutSonuc(masaUygula({ eylem: "cizim.cizgi", x1: m[1], y1: m[2], x2: m[3], y2: m[4] }));
     m = sade.match(/^(?:kutu)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s*$/i);
-    if (m) return { handled: true, reply: masaUygula({ eylem: "cizim.kutu", x: m[1], y: m[2], w: m[3], h: m[4] }) };
+    if (m) return masaKomutSonuc(masaUygula({ eylem: "cizim.kutu", x: m[1], y: m[2], w: m[3], h: m[4] }));
     m = sade.match(/^(?:daire)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s*$/i);
-    if (m) return { handled: true, reply: masaUygula({ eylem: "cizim.daire", x: m[1], y: m[2], rx: m[3], ry: m[4] }) };
+    if (m) return masaKomutSonuc(masaUygula({ eylem: "cizim.daire", x: m[1], y: m[2], rx: m[3], ry: m[4] }));
     if (/^(çizimi temizle|cizimi temizle|çizim temizle|cizim temizle)$/i.test(sade)) {
-      return { handled: true, reply: masaUygula({ eylem: "cizim.temizle" }) };
+      return masaKomutSonuc(masaUygula({ eylem: "cizim.temizle" }));
     }
     m = sade.match(/^slayt ekle\s*[:\-]?\s*([\s\S]+?)\s*(?:\|\s*|\n)\s*([\s\S]+)$/i);
-    if (m) return { handled: true, reply: masaSlaytEkle(m[1], m[2]) };
+    if (m) return masaKomutSonuc(masaSlaytEkle(m[1], m[2]));
     if (/^(sunumu temizle|sunum temizle|slaytlari temizle|slaytları temizle)$/i.test(sade)) {
-      return { handled: true, reply: masaUygula({ eylem: "sunum.temizle" }) };
+      return masaKomutSonuc(masaUygula({ eylem: "sunum.temizle" }));
     }
     if (/^(sun|sunumu aç|sunumu ac|sunumu başlat|sunumu baslat)$/i.test(sade)) {
-      return { handled: true, reply: masaUygula({ eylem: "sunum.sun" }) };
+      return masaKomutSonuc(masaUygula({ eylem: "sunum.sun" }));
+    }
+    if (/^(medyayi temizle|medya temizle)$/i.test(sade)) {
+      return masaKomutSonuc(medyaTemizle());
+    }
+    if (/^(notlari temizle|notlar temizle)$/i.test(sade)) {
+      return masaKomutSonuc(notlarTemizle());
+    }
+    if (/^(kodu temizle|kod temizle)$/i.test(sade)) {
+      return masaKomutSonuc(kodTemizle());
+    }
+    if (/^(sesi temizle|ses temizle)$/i.test(sade)) {
+      return masaKomutSonuc(sesTemizle());
+    }
+    if (/^(okumayi temizle|okuma temizle)$/i.test(sade)) {
+      return masaKomutSonuc(okumaTemizle());
     }
     return null;
   }
@@ -1748,6 +3483,15 @@
     return masaSayfa(String(kind || ""));
   };
 
+  window.ruzgarYuzey = {
+    ac: function (kind) { return masaSayfa(String(kind || "")); },
+    yetenek: function () { return sayfa === "sohbet" ? "sohbet" : state.mode; },
+    paket: yuzeyPaketAl,
+    gonder: yuzeyMotorGonder,
+    medyaYukle: medyaYukle,
+    medyaTemizle: medyaTemizle,
+  };
+
   window.ruzgarMasaParcalari = function (cumleler) {
     const liste = Array.isArray(cumleler) ? cumleler : [];
     const anlik = masaAnlikAl();
@@ -1777,7 +3521,18 @@
 
   window.ruzgarMasaKomut = function (text) {
     try {
-      return masaKomutCoz(text);
+      const hit = masaKomutCoz(text);
+      if (hit && hit.asyncFoto === "tara") {
+        return fotoKatalogTara().then(function (reply) {
+          return { handled: true, reply: reply };
+        });
+      }
+      if (hit && hit.asyncFoto === "esle") {
+        return fotoYuzAra().then(function (reply) {
+          return { handled: true, reply: reply };
+        });
+      }
+      return hit;
     } catch (err) {
       return { handled: true, reply: "Masa komutu uygulanamadı." };
     }
@@ -1840,6 +3595,7 @@
       btn.classList.toggle("is-on", active);
       btn.setAttribute("aria-selected", active ? "true" : "false");
     });
+    syncChip();
     if (on) paintSpeech();
   }
 
@@ -1868,9 +3624,21 @@
   load();
   buildSheet();
   ensurePaper();
-  showMode(state.mode === "tablo" || state.mode === "cizim" || state.mode === "sunum" ? state.mode : "belge", { keep: true });
+  showMode(YETENEK_AD[state.mode] && state.mode !== "sohbet" ? state.mode : "belge", { keep: true });
   renderSlides();
-  setStatus("Hazır");
+  paintMedya();
+  paintFoto();
+  paintGorevler();
+  paintSes();
+  paintOkuma();
+  paintWeb();
+  syncKodSatir();
+  setStatus("Hazır", "ok");
   wireSahne();
+  wireMedya();
+  wireFoto();
+  wireBelgeKarma();
+  wireYetenekler();
   syncSahne();
+  if (state.foto.kok) void fotoDurumYenile();
 })();

@@ -84,4 +84,8 @@ assert.deepStrictEqual(coz("belgede ne yazıyor"), { eylem: "belge.oku" });
 assert.deepStrictEqual(coz("tabloda A1 ne"), { eylem: "tablo.oku", hucre: "A1" });
 assert.deepStrictEqual(coz("slaytın başlığı ne"), { eylem: "sunum.oku" });
 assert.deepStrictEqual(coz("çizimde ne var"), { eylem: "cizim.oku" });
+assert.deepStrictEqual(coz("notlara hatırla yaz"), { eylem: "notlar.yaz", metin: "hatırla" });
+assert.deepStrictEqual(coz("göreve alışveriş ekle"), { eylem: "notlar.gorev", metin: "alışveriş" });
+assert.deepStrictEqual(coz("belgeye tablo ekle"), { eylem: "belge.tablo", satir: 3, sutun: 3 });
+assert.deepStrictEqual(coz("belgeye 4x2 tablo ekle"), { eylem: "belge.tablo", satir: 4, sutun: 2 });
 console.log("masa soz ok");

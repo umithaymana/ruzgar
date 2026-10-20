@@ -40,10 +40,19 @@
   function parca(raw) {
     let m = raw.match(/^belgede\s+(.+?)\s+yerine\s+(.+?)\s+yaz$/i);
     if (m && m[1].trim() && m[2].trim()) return { eylem: "belge.yerine", eski: m[1].trim(), yeni: m[2].trim() };
+    m = raw.match(/^belgeye\s+(\d{1,2})\s*[x×]\s*(\d{1,2})\s+tablo\s+ekle$/i);
+    if (m) return { eylem: "belge.tablo", satir: Number(m[1]), sutun: Number(m[2]) };
+    if (/^belgeye\s+tablo\s+ekle$/i.test(raw)) return { eylem: "belge.tablo", satir: 3, sutun: 3 };
     m = raw.match(/^belgeye\s+(.+?)\s+yaz$/i);
     if (m && m[1].trim()) return { eylem: "belge.yaz", metin: m[1].trim() };
     m = raw.match(/^belgeye\s+(.+?)\s+ekle$/i);
     if (m && m[1].trim()) return { eylem: "belge.ekle", metin: m[1].trim() };
+    m = raw.match(/^(?:notlara|nota)\s+(.+?)\s+yaz$/i);
+    if (m && m[1].trim()) return { eylem: "notlar.yaz", metin: m[1].trim() };
+    m = raw.match(/^(?:notlara|nota)\s+(.+?)\s+ekle$/i);
+    if (m && m[1].trim()) return { eylem: "notlar.ekle", metin: m[1].trim() };
+    m = raw.match(/^(?:goreve|göreve|gorev|görev)\s+(.+?)\s+ekle$/i);
+    if (m && m[1].trim()) return { eylem: "notlar.gorev", metin: m[1].trim() };
     m = raw.match(/^(?:tabloda\s+)?([A-La-l])(\d{1,2})\s+h[üu]cresini\s+sil$/i);
     if (m) return { eylem: "tablo.sil", hucre: (m[1] + m[2]).toUpperCase() };
     m = raw.match(/^([A-La-l])\s+s[üu]tununu\s+topla$/i);
@@ -116,7 +125,7 @@
     const masa = [];
     const dosya = [];
     for (let i = 0; i < parcalar.length; i++) {
-      if (/^(?:belgeye|belgede|belgeyi|tabloda|tabloya|tabloyu|çizime|cizime|çizimi|cizimi|sunuma|sunumu|slaytın|slaytin)\b/i.test(parcalar[i])) masa.push(parcalar[i]);
+      if (/^(?:belgeye|belgede|belgeyi|tabloda|tabloya|tabloyu|çizime|cizime|çizimi|cizimi|sunuma|sunumu|slaytın|slaytin|notlara|nota|goreve|göreve|gorev|görev)\b/i.test(parcalar[i])) masa.push(parcalar[i]);
       else dosya.push(parcalar[i]);
     }
     if (!masa.length || !dosya.length) return null;

@@ -1,8 +1,38 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-19 — kapı 137–166 yeşil. Okuyan cümleler tek bayrağı, açık satırı ve boşluğu söyler. Yazmaz.
+**Son güncelleme:** 2026-10-20 — **CHECKPOINT** Foto referans kutusu OK; yüz araması şimdilik zayıf bırakıldı. Dönüş: **Programlama (Faz88 ajan E1)**.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
+
+### KİLİTLİ MİMARİ — Ana Motor Çalışma Yüzeyi (2026-10-20, Mimar onayı)
+
+**İlke:** Ayrı «masa» yığını değil; **tek profesyonel yüzey + yetenekler**. Ne istersek yüzey onu gösterir. Sohbet/boş → Rüzgar sahnesi. Ağır/derin iş dal motorunda; yüzey önizler ve günlük işi taşır.
+
+**Yetenek seti (kilitli, 2026-10-20):**
+- Birincil: Sohbet · Belge · Tablo · Çizim · Sunum · Medya · **Foto**
+- İkincil: Notlar (+görev) · Kod (taslak, çalıştırma yok) · Ses (dinle/kayıt) · Okuma (txt/md/pdf) · Web (önizleme)
+- Derin atölye (yüzeye gömülmez): Video · Ses stüdyo · Okuma OCR · Programlama ajanı · Tercüme
+
+**Foto / Yüz eşleştirme (yerel, katmanlı — atlanmaz):**
+1. **katalog** — `/api/foto/katalog` · açık
+2. **yuz** — OpenCV 5 **YuNet** (`data/face_detection_yunet_*.onnx`, Unicode yol → bellekten yükleme) · Haar yedek (OpenCV 4) · `/api/foto/yuz-tara`
+3. **gomme** — yerel görünüm vektörü · `/api/foto/gomme-kur` · açık
+4. **eslesme** — referans yükle · `/api/foto/eslestir-dosya` (+ yerel yol `eslestir_istem`)  
+Tek tuş: `/api/foto/katman-kur` (yüz→gömme). Bağımlılık: `opencv-python-headless` (+ gömülü ONNX).  
+Politika: yalnız yerel; bulut yok; eşik altı sonuç uydurulmaz. Kimlik modeli değil — benzer kare bulur.  
+Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
+
+| Faz | İçerik | Durum |
+|---|---|---|
+| **A** | Sohbetten yüzeye gerçek iş | güçlendirildi |
+| **B** | Profesyonel kabuk | yapıldı |
+| **C** | Medya + ikincil yetenekler + **Foto UI + katalog** | yapıldı |
+| **D** | Karma belge (metin+tablo+görsel aynı sayfa) | yapıldı |
+| **E** | Motor köprüleri + programlama aktarımı (güvenli kapılar) | yapıldı |
+| **F** | Foto yüz→gömme→eşleşme (katman 2–4) | yapıldı |
+
+**Kapalı yüzeyde:** serbest kod çalıştırma, serbest dış yazma, dosya silme.  
+**Yüz kilidi:** motor listesi, geri/ileri/yenile, sohbet tutamacı, sahne + birincil yetenekler durur; ikinciller/Foto eklenir, silinmez.
 
 ### Kilit politika — 2 fazlı raf
 
@@ -52,12 +82,16 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 37. ~~5. basamak~~ — test nedeni, bilinen satır, ikinci bakış, açık satırı bitti, eksik düzeltme kapıda. Son kayıt `ad7e4520`.
 38. ~~Kapı 137–166~~ — tek bayrak, hazır araç, tek açık satır, tahta kenarı, boşluk, orta not, git uzak ve baş, hazır ölçüde kalmadı. Hepsi okur, yazmaz.
 
-### Mimar dönünce (sıra)
+### Mimar dönünce (sıra) — 2026-10-20 CHECKPOINT
 
-1. Kapı 137–166 testte yeşil. 151 test geçti.
-2. Dört masa açık sayfaya işi yazar. Sondaki nokta cümleyi düşürmez. Zincirde kutu çizimi önceki masayı geri almaz. Belge: yaz, ekle, bak. Yerine eski sözü, yeni sözü ve kalan satırı söyler. Tablo: hücre, toplam, sil. Çizim: çizgi, kutu, daire, mavi, ortaya, temizle. Sunum: slayt, başlık ve metin söylenir.
-2. Kapalı duranlar: dosya silmek, modelin ürettiği kodu çalıştırmak, serbest kaynak yazmak, serbest dış yazmak, zorla göndermek, ölçü notunu kaydetmek, 32B/70B, telefon.
-3. Programlama sayfası (yeşil, kayıt bekliyor): açık sayfa, sayfa adları, deneme ve notlar. `orta/site.css` satır sayısı, `orta/site.js` ve `orta/arac.py` okunur, çalışmaz. `merhaba.txt` okunur, satır eklenmez, yoksa açılmaz. Masa okuması dosyaya yazmaz. `index.html` bu turda değişmez.
+**Kaydetme noktası:** Foto UI (katalog, referans seç→Aç, kutu önizleme, yenile `-3` susturma) canlı. Yüz eşleştirme **bilinçli olarak zayıf bırakıldı** (sonraki turda güçlendirilmez; önce Programlama).
+
+1. ~~Kapı 137–166~~ yeşil (151 test).
+2. ~~Ana Yüzey A–F~~ + Foto YuNet canlı (venv OpenCV 5; referans kutusu OK).
+3. ~~Programlama E1 hızlı yol~~ — birleşik canlı API %100 (`run_argv` → `sys.executable`).
+4. **← BURADAN BAŞLA — Programlama atölyesi (Faz88 ajan E1):** yüzey→görev satırı + handoff workbench güçlendirme; ajan yolu (Faz85 hızlı yolun üstü); isteğe Yol C. Kapalı yüzey kuralları durur.
+5. Sonra (isteğe): Foto yüz aramasını güçlendir (gömme/eşik) — şimdi değil.
+6. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
 
 ### 2026-10-18 / 19 — oturum kaydı (geç yazıldı)
 
@@ -578,9 +612,14 @@ Modül: `ilim_assistant.nebula_kitap_hafiza` — `desktop_server` sohbetinde kit
 
 ## Sıradaki adım (devam)
 
-**Öncelik — programlama:** Faz85’i LLM’den önce çalıştır (`iter_fast_path_early` bağla) · E1 %70+ · isteğe bağlı karmaşık görevlerde Yol C (tam ajan optimizasyonu).
+**Dönüş planı (Mimar onayı 2026-10-20):** Foto burada dursun.  
+**Öncelik — Programlama atölyesi:**
+1. Faz88 ajan E1 — karmaşık görevlerde ajan yolu (hızlı yol zaten %100).
+2. Yüzey → görev satırı + workbench handoff cilası.
+3. İsteğe Yol C.
+4. Foto yüz güçlendirme **sonra** (şimdi değil).
 
-Diğer seçenekler: çeviri `.srt` / yumuşak altyazı · çeviri anahtarları · Ana Motor tek sohbet orkestrasyonu.
+Diğer seçenekler (programlamadan sonra): çeviri `.srt` · Ana Motor tek sohbet orkestrasyonu.
 
 ## Referans
 

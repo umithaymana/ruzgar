@@ -162,6 +162,12 @@ function Ensure-PythonDeps {
         & $script:PyExe @($script:PyArgs) -m pip install -r $req
         if ($LASTEXITCODE -ne 0) { throw "pip basarisiz" }
     }
+    # Foto yüz (Faz F): OpenCV 5 YuNet — venv'de yoksa sessiz kur
+    & $script:PyExe @($script:PyArgs) -c "import cv2" 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        Log "pip opencv-python-headless..."
+        & $script:PyExe @($script:PyArgs) -m pip install "opencv-python-headless>=4.8.0" "numpy>=1.24.0"
+    }
 }
 
 function Test-ApiImport {
@@ -245,8 +251,8 @@ function Sync-RuzgarApiProtectedPid {
 
 function Stop-NonPreferredRuzgarApi {
     <#
-    Electron bazen sistem Python312 ile ikinci API açıp 8779'u çalıyor.
-    Dinleyen/korunan API'ye dokunma. Venv stub'i bazen ayrı PID ile base Python312 dinler.
+    Windows venv: Scripts\python.exe (ebeveyn) + base Python312 (çocuk dinleyici) normaldir.
+    Yalnızca ebeveyni venv olmayan bağımsız sistem-Python API'lerini kapat.
     #>
     try {
         Sync-RuzgarApiProtectedPid
@@ -265,16 +271,24 @@ function Stop-NonPreferredRuzgarApi {
             return
         }
 
+        $venvPids = @{}
         foreach ($p in $procs) {
-            $procId = [int]$p.ProcessId
-            if ($preferredPid -gt 0 -and $procId -eq $preferredPid) { continue }
-            if ($listenPid -gt 0 -and $procId -eq $listenPid) { continue }
             $cmd = [string]$p.CommandLine
             if ($cmd -match 'venvs\\ruzgar|venvs/ruzgar|\\.venv\\Scripts\\python|\\venv\\Scripts\\python') {
-                continue
+                $venvPids[[int]$p.ProcessId] = $true
             }
+        }
+
+        foreach ($p in $procs) {
+            $procId = [int]$p.ProcessId
+            $parentId = [int]$p.ParentProcessId
+            if ($preferredPid -gt 0 -and $procId -eq $preferredPid) { continue }
+            if ($venvPids.ContainsKey($procId)) { continue }
+            # Venv stub'inin çocuğu (base Python) — dokunma
+            if ($venvPids.ContainsKey($parentId)) { continue }
+            $cmd = [string]$p.CommandLine
             if ($cmd -match 'Python312|Python311|Python310|\\Python\\python\.exe') {
-                Log "Yanlis Python API kapatiliyor pid=$procId (listen=$listenPid preferred=$preferredPid)"
+                Log "Yanlis Python API kapatiliyor pid=$procId parent=$parentId (listen=$listenPid preferred=$preferredPid)"
                 Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
             }
         }

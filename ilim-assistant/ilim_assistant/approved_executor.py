@@ -5,12 +5,26 @@ from __future__ import annotations
 import os
 import re
 import subprocess
+import sys
 from dataclasses import dataclass
 from typing import List, Tuple
 
 from ilim_assistant.safety_policy import validate_custom_winget_line
 
 _MODULE_NAME_RE = re.compile(r"^[a-zA-Z_][\w.]*$")
+_PYTHON_LAUNCHERS = frozenset({"python", "python3", "python.exe", "python3.exe", "py", "py.exe"})
+
+
+def _resolve_python_argv(argv: List[str]) -> List[str]:
+    """PATH'teki boş `python` yerine Rüzgar'ın kendi yorumlayıcısı (sys.executable)."""
+    if not argv:
+        return argv
+    head = str(argv[0] or "").strip().lower()
+    # yalnız çıplak launcher; tam yol verilmişse dokunma
+    base = head.replace("\\", "/").rsplit("/", 1)[-1]
+    if base in _PYTHON_LAUNCHERS or head in _PYTHON_LAUNCHERS:
+        return [sys.executable, *argv[1:]]
+    return argv
 
 
 @dataclass
@@ -219,6 +233,7 @@ def run_argv(
     """Çıkış kodu, stdout+stderr birleşik çıktı, ayrı hata metni."""
     if not argv:
         return -1, "", "Boş argv."
+    argv = _resolve_python_argv(list(argv))
     try:
         kw: dict = {
             "capture_output": True,

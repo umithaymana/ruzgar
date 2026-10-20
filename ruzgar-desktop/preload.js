@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require("electron");
+const { contextBridge, ipcRenderer, clipboard, webUtils } = require("electron");
 const fs = require("fs");
 const path = require("path");
 
@@ -37,6 +37,33 @@ contextBridge.exposeInMainWorld("ruzgarApi", {
   openWorkspaceRel: (rel) => ipcRenderer.invoke("ruzgar:open-workspace", rel),
   pickWorkspaceDirectory: () => ipcRenderer.invoke("ruzgar:pick-directory"),
   pickSaveDirectory: () => ipcRenderer.invoke("ruzgar:pick-save-directory"),
+  pickImageFile: () => ipcRenderer.invoke("ruzgar:pick-image"),
+  importImagePath: (abs) => ipcRenderer.invoke("ruzgar:import-image-path", abs),
+  /** Sürükle-bırak File → gerçek Windows yolu (Electron). */
+  getPathForFile: (file) => {
+    try {
+      if (!file || !webUtils || typeof webUtils.getPathForFile !== "function") return "";
+      return String(webUtils.getPathForFile(file) || "");
+    } catch (_) {
+      return "";
+    }
+  },
+  /** Electron panosu — navigator.clipboard izni gerekmez (Ctrl+V / sağ tık yapıştır). */
+  readClipboardText: () => {
+    try {
+      return String(clipboard.readText() || "");
+    } catch (_) {
+      return "";
+    }
+  },
+  writeClipboardText: (text) => {
+    try {
+      clipboard.writeText(String(text ?? ""));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  },
   openLocalhostUrl: (url) => ipcRenderer.invoke("ruzgar:open-external", url),
   openExternalUrl: (url) => ipcRenderer.invoke("ruzgar:open-external", url),
   showYoutubeCinema: (payload) => ipcRenderer.invoke("ruzgar:youtube-cinema-show", payload),

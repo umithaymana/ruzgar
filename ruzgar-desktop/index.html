@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="ruzgar-split.css?v=20260602-workbench-split" />
     <link rel="stylesheet" href="ruzgar-pro.css?v=20261016-motorlar" />
     <link rel="stylesheet" href="ruzgar-sade.css?v=20261016-sohbet-tutamac" />
-    <link rel="stylesheet" href="ruzgar-masa.css?v=20261019-masa3" />
+    <link rel="stylesheet" href="ruzgar-masa.css?v=20261020-fazf6" />
     <link rel="stylesheet" href="ruzgar-projeler.css?v=20261016-tutamak" />
     <script src="ruzgar-api-root.js?v=20260620-csp"></script>
   </head>
@@ -557,28 +557,41 @@
                 <p class="ruzgar-face-name">Rüzgar</p>
               </div>
               <p id="ruzgar-sahne-soz" class="ruzgar-sahne-soz">Yaz. Cevabı ben buradan söyleyeyim.</p>
-              <button type="button" id="ruzgar-sahne-masa" class="ruzgar-masa-btn">Çalışma masası</button>
+              <button type="button" id="ruzgar-sahne-masa" class="ruzgar-masa-btn">Çalışma yüzeyi</button>
             </div>
-            <div id="ruzgar-masa" class="ruzgar-masa">
+            <div id="ruzgar-masa" class="ruzgar-masa" data-yuzey="1" aria-label="Ana Motor çalışma yüzeyi">
               <div class="ruzgar-masa-bar">
-                <div class="ruzgar-masa-tabs" role="tablist" aria-label="Masa türü">
+                <div class="ruzgar-masa-brand" title="Tek yüzey · yetenekler">
+                  <span class="ruzgar-masa-brand-mark">Yüzey</span>
+                </div>
+                <div class="ruzgar-masa-tabs" role="tablist" aria-label="Çalışma yetenekleri">
                   <button type="button" class="is-on" data-masa="sohbet" role="tab" aria-selected="true">Sohbet</button>
                   <button type="button" data-masa="belge" role="tab" aria-selected="false">Belge</button>
                   <button type="button" data-masa="tablo" role="tab" aria-selected="false">Tablo</button>
                   <button type="button" data-masa="cizim" role="tab" aria-selected="false">Çizim</button>
                   <button type="button" data-masa="sunum" role="tab" aria-selected="false">Sunum</button>
+                  <button type="button" data-masa="medya" role="tab" aria-selected="false">Medya</button>
+                  <button type="button" data-masa="foto" role="tab" aria-selected="false">Foto</button>
+                  <span class="ruzgar-masa-tabs-gap" aria-hidden="true"></span>
+                  <button type="button" data-masa="notlar" role="tab" aria-selected="false">Notlar</button>
+                  <button type="button" data-masa="kod" role="tab" aria-selected="false">Kod</button>
+                  <button type="button" data-masa="ses" role="tab" aria-selected="false">Ses</button>
+                  <button type="button" data-masa="okuma" role="tab" aria-selected="false">Okuma</button>
+                  <button type="button" data-masa="web" role="tab" aria-selected="false">Web</button>
                 </div>
                 <div class="ruzgar-masa-file">
+                  <span id="ruzgar-masa-chip" class="ruzgar-masa-chip" aria-live="polite">Sohbet</span>
                   <span id="ruzgar-masa-durum" class="ruzgar-masa-durum" aria-live="polite"></span>
                   <button type="button" id="ruzgar-masa-sahne" class="ruzgar-masa-btn" hidden>Sohbet</button>
                   <button type="button" id="ruzgar-masa-yeni" class="ruzgar-masa-btn">Yeni</button>
                   <button type="button" id="ruzgar-masa-indir" class="ruzgar-masa-btn ruzgar-masa-btn-accent">İndir</button>
                 </div>
               </div>
-              <div id="ruzgar-masa-tools" class="ruzgar-masa-tools" role="toolbar" aria-label="Masa araçları"></div>
+              <div id="ruzgar-masa-tools" class="ruzgar-masa-tools" role="toolbar" aria-label="Yüzey araçları"></div>
               <div class="ruzgar-masa-stage">
                 <div class="ruzgar-masa-pane is-on" data-pane="belge">
-                  <div id="ruzgar-masa-belge" class="ruzgar-masa-belge" contenteditable="true" spellcheck="true" role="textbox" aria-label="Belge" data-placeholder="Yazmaya başla. Kalın, liste ve başlık üstteki araçlarda."></div>
+                  <div id="ruzgar-masa-belge" class="ruzgar-masa-belge" contenteditable="true" spellcheck="true" role="textbox" aria-label="Belge" data-placeholder="Karma belge: yaz, resim bırak, tablo ekle. Sohbetten «belgeye … yaz» · «belgeye tablo ekle»."></div>
+                  <input type="file" id="ruzgar-masa-belge-img" accept="image/*" hidden />
                 </div>
                 <div class="ruzgar-masa-pane" data-pane="tablo" hidden>
                   <div class="ruzgar-masa-formula">
@@ -595,8 +608,153 @@
                 <div class="ruzgar-masa-pane" data-pane="sunum" hidden>
                   <aside id="ruzgar-masa-slides" class="ruzgar-masa-slides" aria-label="Slaytlar"></aside>
                   <div class="ruzgar-masa-slide-editor">
+                    <div class="ruzgar-masa-slide-preview" id="ruzgar-masa-slide-preview" aria-hidden="true">
+                      <p class="ruzgar-masa-slide-preview-title" id="ruzgar-masa-slide-preview-title">Başlık</p>
+                      <p class="ruzgar-masa-slide-preview-body" id="ruzgar-masa-slide-preview-body">Metin</p>
+                    </div>
                     <input id="ruzgar-masa-slide-title" type="text" maxlength="120" placeholder="Slayt başlığı" aria-label="Slayt başlığı" />
                     <textarea id="ruzgar-masa-slide-body" maxlength="2000" placeholder="Slayt metni" aria-label="Slayt metni"></textarea>
+                  </div>
+                </div>
+                <div class="ruzgar-masa-pane" data-pane="medya" hidden>
+                  <div id="ruzgar-masa-medya" class="ruzgar-masa-medya" tabindex="0" aria-label="Medya yüzeyi">
+                    <div id="ruzgar-masa-medya-empty" class="ruzgar-masa-medya-empty">
+                      <strong>Medya</strong>
+                      <p>Resim veya kısa video bırak / yapıştır. Önizleme burada; ağır kesim Video motorunda.</p>
+                      <label class="ruzgar-masa-medya-pick">
+                        Dosya seç
+                        <input type="file" id="ruzgar-masa-medya-file" accept="image/*,video/*" hidden />
+                      </label>
+                    </div>
+                    <div id="ruzgar-masa-medya-view" class="ruzgar-masa-medya-view" hidden></div>
+                  </div>
+                </div>
+                <div class="ruzgar-masa-pane" data-pane="foto" hidden>
+                  <div class="ruzgar-masa-foto" id="ruzgar-masa-foto" aria-label="Foto ve yüz eşleştirme">
+                    <aside class="ruzgar-masa-foto-side">
+                      <div class="ruzgar-masa-foto-block">
+                        <strong>Referans foto</strong>
+                        <p class="ruzgar-masa-foto-hint">Galeriden tıkla · klasörden sürükle · veya «Fotoğraf seç» → Aç. Her boyut/uzantı kutuya sığdırılır.</p>
+                        <div id="ruzgar-masa-foto-ref" class="ruzgar-masa-foto-drop" tabindex="0" role="button" aria-label="Referans fotoğraf">
+                          <img id="ruzgar-masa-foto-ref-img" alt="" hidden />
+                          <span id="ruzgar-masa-foto-ref-empty">Foto bırak · yapıştır · veya seç</span>
+                        </div>
+                        <input type="file" id="ruzgar-masa-foto-ref-file" class="ruzgar-masa-file-hidden" accept="image/*,.jpg,.jpeg,.jfif,.png,.webp,.bmp,.gif,.tif,.tiff,.heic,.heif,.avif" />
+                        <button type="button" id="ruzgar-masa-foto-ref-sec" class="ruzgar-masa-btn ruzgar-masa-btn-accent" style="margin-top:8px;width:100%">Fotoğraf seç (Aç)</button>
+                      </div>
+                      <div class="ruzgar-masa-foto-block">
+                        <strong>Kütüphane</strong>
+                        <p class="ruzgar-masa-foto-hint">Binlerce fotoğrafın klasörü (yerel).</p>
+                        <div class="ruzgar-masa-foto-kok-row">
+                          <input id="ruzgar-masa-foto-kok" type="text" spellcheck="false" placeholder="D:\Fotoğraflar\Arşiv" aria-label="Fotoğraf klasörü" autocomplete="off" />
+                          <button type="button" id="ruzgar-masa-foto-kok-sec" class="ruzgar-masa-btn" title="Klasör seç">Klasör seç</button>
+                        </div>
+                        <div class="ruzgar-masa-foto-actions">
+                          <button type="button" id="ruzgar-masa-foto-tara" class="ruzgar-masa-btn ruzgar-masa-btn-accent">Katalog tara</button>
+                          <button type="button" id="ruzgar-masa-foto-katman" class="ruzgar-masa-btn">Katmanları kur</button>
+                          <button type="button" id="ruzgar-masa-foto-esle" class="ruzgar-masa-btn">Yüz ara</button>
+                        </div>
+                        <p id="ruzgar-masa-foto-durum" class="ruzgar-masa-foto-status" aria-live="polite">Katman 1: katalog bekleniyor.</p>
+                      </div>
+                      <ol class="ruzgar-masa-foto-layers" aria-label="Katman sırası">
+                        <li data-kat="katalog">1 · Katalog</li>
+                        <li data-kat="yuz">2 · Yüz algı</li>
+                        <li data-kat="gomme">3 · Gömme</li>
+                        <li data-kat="eslesme">4 · Eşleşme</li>
+                      </ol>
+                    </aside>
+                    <div class="ruzgar-masa-foto-main">
+                      <div class="ruzgar-masa-foto-main-head">
+                        <strong>Sonuç / galeri</strong>
+                        <span id="ruzgar-masa-foto-sayi" class="ruzgar-masa-foto-sayi">0 foto</span>
+                      </div>
+                      <div id="ruzgar-masa-foto-grid" class="ruzgar-masa-foto-grid"></div>
+                      <div id="ruzgar-masa-foto-empty" class="ruzgar-masa-medya-empty">
+                        <strong>Foto</strong>
+                        <p>1) Klasör tara · 2) Katmanları kur (yüz+gömme) · 3) Referans bırak · 4) Yüz ara. Yerel Haar; bulut yok. OpenCV: pip install opencv-python-headless</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="ruzgar-masa-pane" data-pane="notlar" hidden>
+                  <div class="ruzgar-masa-notlar">
+                    <aside class="ruzgar-masa-notlar-list" aria-label="Yapılacaklar">
+                      <div class="ruzgar-masa-notlar-head">
+                        <strong>Yapılacaklar</strong>
+                        <button type="button" id="ruzgar-masa-gorev-ekle" class="ruzgar-masa-btn">Ekle</button>
+                      </div>
+                      <ul id="ruzgar-masa-gorevler" class="ruzgar-masa-gorevler"></ul>
+                    </aside>
+                    <textarea id="ruzgar-masa-notlar" class="ruzgar-masa-notlar-text" maxlength="20000" spellcheck="true" placeholder="Hızlı notlar… Sohbetten «notlara … yaz» de." aria-label="Notlar"></textarea>
+                  </div>
+                </div>
+                <div class="ruzgar-masa-pane" data-pane="kod" hidden>
+                  <div class="ruzgar-masa-kod">
+                    <div class="ruzgar-masa-kod-meta">
+                      <label>Dil
+                        <select id="ruzgar-masa-kod-dil" aria-label="Kod dili">
+                          <option value="text">Metin</option>
+                          <option value="javascript">JavaScript</option>
+                          <option value="python">Python</option>
+                          <option value="html">HTML</option>
+                          <option value="css">CSS</option>
+                          <option value="json">JSON</option>
+                          <option value="markdown">Markdown</option>
+                        </select>
+                      </label>
+                      <span id="ruzgar-masa-kod-satir" class="ruzgar-masa-kod-satir">0 satır</span>
+                    </div>
+                    <textarea id="ruzgar-masa-kod" class="ruzgar-masa-kod-editor" spellcheck="false" maxlength="200000" placeholder="// Kod / taslak buraya. Çalıştırma Kapalı — Programlama motoru derin iş içindir." aria-label="Kod editörü"></textarea>
+                  </div>
+                </div>
+                <div class="ruzgar-masa-pane" data-pane="ses" hidden>
+                  <div id="ruzgar-masa-ses" class="ruzgar-masa-ses" tabindex="0" aria-label="Ses yüzeyi">
+                    <div id="ruzgar-masa-ses-empty" class="ruzgar-masa-medya-empty">
+                      <strong>Ses</strong>
+                      <p>Ses dosyası bırak / seç, veya kısa kayıt al. Derin stüdyo Ses motorunda.</p>
+                      <div class="ruzgar-masa-ses-actions">
+                        <label class="ruzgar-masa-medya-pick">
+                          Dosya seç
+                          <input type="file" id="ruzgar-masa-ses-file" accept="audio/*" hidden />
+                        </label>
+                        <button type="button" id="ruzgar-masa-ses-kayit" class="ruzgar-masa-btn ruzgar-masa-btn-accent">Kayıt</button>
+                      </div>
+                    </div>
+                    <div id="ruzgar-masa-ses-view" class="ruzgar-masa-ses-view" hidden>
+                      <p id="ruzgar-masa-ses-ad" class="ruzgar-masa-ses-ad"></p>
+                      <audio id="ruzgar-masa-ses-player" controls></audio>
+                    </div>
+                  </div>
+                </div>
+                <div class="ruzgar-masa-pane" data-pane="okuma" hidden>
+                  <div class="ruzgar-masa-okuma">
+                    <div class="ruzgar-masa-okuma-bar">
+                      <label class="ruzgar-masa-medya-pick">
+                        Dosya aç
+                        <input type="file" id="ruzgar-masa-okuma-file" accept=".txt,.md,.markdown,.pdf,text/plain,application/pdf" hidden />
+                      </label>
+                      <span id="ruzgar-masa-okuma-ad" class="ruzgar-masa-okuma-ad">Dosya yok</span>
+                    </div>
+                    <pre id="ruzgar-masa-okuma-text" class="ruzgar-masa-okuma-text" hidden></pre>
+                    <iframe id="ruzgar-masa-okuma-pdf" class="ruzgar-masa-okuma-pdf" hidden title="PDF okuma"></iframe>
+                    <div id="ruzgar-masa-okuma-empty" class="ruzgar-masa-medya-empty">
+                      <strong>Okuma</strong>
+                      <p>Metin, Markdown veya PDF aç. Uzun kitap / OCR derinliği Okuma motorunda.</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="ruzgar-masa-pane" data-pane="web" hidden>
+                  <div class="ruzgar-masa-web">
+                    <form id="ruzgar-masa-web-form" class="ruzgar-masa-web-bar" autocomplete="off">
+                      <input id="ruzgar-masa-web-url" type="url" inputmode="url" spellcheck="false" placeholder="https://… sayfa önizle" aria-label="Web adresi" />
+                      <button type="submit" class="ruzgar-masa-btn ruzgar-masa-btn-accent">Aç</button>
+                      <button type="button" id="ruzgar-masa-web-yenile" class="ruzgar-masa-btn">Yenile</button>
+                    </form>
+                    <iframe id="ruzgar-masa-web-frame" class="ruzgar-masa-web-frame" sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads" referrerpolicy="no-referrer" title="Web önizleme"></iframe>
+                    <div id="ruzgar-masa-web-empty" class="ruzgar-masa-medya-empty ruzgar-masa-web-empty">
+                      <strong>Web</strong>
+                      <p>Adres yaz, önizle. Bazı siteler çerçeveyi engeller — o zaman tarayıcıda açılır.</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -3280,9 +3438,9 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
     <script src="ruzgar-ui-bootstrap.js?v=20260620-btn-fallback"></script>
     <script src="ruzgar-pro-yuz.js?v=20261015-sade"></script>
     <script src="ruzgar-masa-goz.js?v=20261017-goz4"></script>
-    <script src="ruzgar-masa-soz.js?v=20261019-masa6"></script>
-    <script src="ruzgar-masa.js?v=20261019-masa6"></script>
-    <script src="app.js?v=20261018-masa"></script>
+    <script src="ruzgar-masa-soz.js?v=20261020-fazf8"></script>
+    <script src="ruzgar-masa.js?v=20261020-fazf8"></script>
+    <script src="app.js?v=20261020-fazf7"></script>
     <script src="ruzgar-projeler.js?v=20261019-atolye4"></script>
   </body>
 </html>

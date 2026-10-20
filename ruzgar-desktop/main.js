@@ -418,6 +418,8 @@ function openIndexMode(mode) {
   const htmlPath = path.join(__dirname, "index.html");
   win.webContents.on("did-fail-load", (_e, code, desc, url, isMainFrame) => {
     if (isMainFrame === false) return;
+    // -3 ERR_ABORTED: yenile/çift navigasyon iptali — kullanıcıya hata kutusu gösterme
+    if (code === -3 || code === -2) return;
     dialog.showErrorBox(
       "RUZGAR",
       `Sayfa yuklenemedi: ${desc} (${code})\n${url}\n\nDosya: ${htmlPath}`
@@ -687,6 +689,8 @@ function createWindow() {
   const htmlPath = path.join(__dirname, "index.html");
   win.webContents.on("did-fail-load", (_e, code, desc, url, isMainFrame) => {
     if (isMainFrame === false) return;
+    // -3 ERR_ABORTED: yenile sırasında sık görülür; korkutucu kutu gösterme
+    if (code === -3 || code === -2) return;
     dialog.showErrorBox(
       "RUZGAR",
       `Sayfa yuklenemedi: ${desc} (${code})\n${url}\n\nDosya: ${htmlPath}`
@@ -869,6 +873,100 @@ app.whenReady().then(async () => {
     }
     return { ok: true, abs: picked, rel };
   });
+  ipcMain.handle("ruzgar:pick-image", async () => {
+    const win = BrowserWindow.getFocusedWindow();
+    const opts = {
+      properties: ["openFile"],
+      title: "Referans fotoğraf seçin",
+      filters: [
+        { name: "Fotoğraf", extensions: ["jpg", "jpeg", "png", "webp", "bmp", "gif", "tif", "tiff"] },
+      ],
+    };
+    const r = win
+      ? await dialog.showOpenDialog(win, opts)
+      : await dialog.showOpenDialog(opts);
+    if (r.canceled || !r.filePaths?.length) {
+      return { ok: false };
+    }
+    const abs = path.resolve(r.filePaths[0]);
+    let st;
+    try {
+      st = fs.statSync(abs);
+    } catch (err) {
+      return { ok: false, error: "Dosya okunamadı." };
+    }
+    if (!st.isFile() || st.size < 32) {
+      return { ok: false, error: "Dosya boş." };
+    }
+    if (st.size > 40_000_000) {
+      return { ok: false, error: "Fotoğraf 40 MB üstü olamaz." };
+    }
+    const ext = path.extname(abs).toLowerCase();
+    let mime = "image/jpeg";
+    if (ext === ".png") mime = "image/png";
+    else if (ext === ".webp") mime = "image/webp";
+    else if (ext === ".gif") mime = "image/gif";
+    else if (ext === ".bmp") mime = "image/bmp";
+    // Büyük base64 IPC'si bozuluyor — API'nin okuyacağı yere kopyala
+    const destDir = path.join(WORKSPACE_ROOT, "ilim-assistant", ".ruzgar_foto_index");
+    try {
+      fs.mkdirSync(destDir, { recursive: true });
+      const dest = path.join(destDir, "referans_secilen");
+      fs.copyFileSync(abs, dest);
+      fs.writeFileSync(
+        path.join(destDir, "referans_secilen.json"),
+        JSON.stringify({ name: path.basename(abs), mime, abs, size: st.size }),
+        "utf8"
+      );
+    } catch (err) {
+      return { ok: false, error: "Kopyalanamadı." };
+    }
+    return {
+      ok: true,
+      name: path.basename(abs),
+      mime,
+      via: "disk",
+    };
+  });
+  ipcMain.handle("ruzgar:import-image-path", async (_e, absPath) => {
+    const abs = path.resolve(String(absPath || ""));
+    if (!abs || !fs.existsSync(abs)) {
+      return { ok: false, error: "Dosya yolu yok." };
+    }
+    let st;
+    try {
+      st = fs.statSync(abs);
+    } catch (err) {
+      return { ok: false, error: "Dosya okunamadı." };
+    }
+    if (!st.isFile() || st.size < 32) {
+      return { ok: false, error: "Dosya boş." };
+    }
+    if (st.size > 80_000_000) {
+      return { ok: false, error: "Dosya 80 MB üstü." };
+    }
+    const ext = path.extname(abs).toLowerCase();
+    let mime = "application/octet-stream";
+    if ([".jpg", ".jpeg", ".jfif"].includes(ext)) mime = "image/jpeg";
+    else if (ext === ".png") mime = "image/png";
+    else if (ext === ".webp") mime = "image/webp";
+    else if (ext === ".gif") mime = "image/gif";
+    else if (ext === ".bmp") mime = "image/bmp";
+    else if ([".heic", ".heif"].includes(ext)) mime = "image/heic";
+    const destDir = path.join(WORKSPACE_ROOT, "ilim-assistant", ".ruzgar_foto_index");
+    try {
+      fs.mkdirSync(destDir, { recursive: true });
+      fs.copyFileSync(abs, path.join(destDir, "referans_secilen"));
+      fs.writeFileSync(
+        path.join(destDir, "referans_secilen.json"),
+        JSON.stringify({ name: path.basename(abs), mime, abs, size: st.size }),
+        "utf8"
+      );
+    } catch (err) {
+      return { ok: false, error: "Kopyalanamadı." };
+    }
+    return { ok: true, name: path.basename(abs), mime, via: "drop-path" };
+  });
   ipcMain.handle("ruzgar:youtube-cinema-show", async (_e, payload) => {
     const win = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
     if (!win) return { ok: false, error: "Pencere yok" };
@@ -964,13 +1062,31 @@ app.whenReady().then(async () => {
     }
     return false;
   });
-  ipcMain.handle("ruzgar:nav-reload", (_evt, opts = {}) => {
+  ipcMain.handle("ruzgar:nav-reload", async (_evt, opts = {}) => {
     const wc = focusedWebContents();
     if (!wc) return false;
     const ignoreCache = !opts || opts.ignoreCache !== false;
-    if (ignoreCache) wc.reloadIgnoringCache();
-    else wc.reload();
-    return true;
+    try {
+      // reloadIgnoringCache bazen -3 ERR_ABORTED üretir; tek loadURL daha sakin
+      const cur = wc.getURL() || "";
+      if (cur.startsWith("http://127.0.0.1:") || cur.startsWith("http://localhost:")) {
+        const u = new URL(cur);
+        u.searchParams.set("_r", String(Date.now()));
+        await wc.loadURL(u.toString(), {
+          extraHeaders: ignoreCache ? "Cache-Control: no-cache\n" : "",
+        });
+        return true;
+      }
+    } catch (_) {
+      /* yedek */
+    }
+    try {
+      if (ignoreCache) wc.reloadIgnoringCache();
+      else wc.reload();
+      return true;
+    } catch (_) {
+      return false;
+    }
   });
 
   ipcMain.handle("ruzgar:restart-api", async () => {

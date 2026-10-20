@@ -1940,6 +1940,194 @@ async def api_vision_analyze(
         raise HTTPException(status_code=500, detail=f"Görsel analiz: {str(exc)[:220]}") from exc
 
 
+class FotoKatalogBody(BaseModel):
+    kok: str = Field(..., min_length=1, max_length=500)
+    limit: int = Field(20000, ge=1, le=20000)
+
+
+class FotoEslesBody(BaseModel):
+    referans_adi: str = Field("", max_length=180)
+
+
+@app.get("/api/foto/durum")
+def api_foto_durum() -> dict[str, Any]:
+    """Foto / yüz katman durumu (yerel katalog)."""
+    from ilim_assistant.ruzgar_foto_yuz import durum
+
+    return durum()
+
+
+@app.post("/api/foto/katalog")
+async def api_foto_katalog(body: FotoKatalogBody) -> dict[str, Any]:
+    """Katman 1: klasördeki fotoğrafları tara ve yerelde indeksle."""
+    from ilim_assistant.ruzgar_foto_yuz import katalog_tara
+
+    try:
+        return await run_in_threadpool(katalog_tara, body.kok, limit=body.limit)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)[:220]) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Foto katalog: {str(exc)[:220]}") from exc
+
+
+@app.get("/api/foto/ornek")
+def api_foto_ornek(limit: int = Query(24, ge=1, le=200)) -> dict[str, Any]:
+    from ilim_assistant.ruzgar_foto_yuz import katalog_ornek
+
+    return katalog_ornek(limit)
+
+
+@app.get("/api/foto/dosya")
+def api_foto_dosya(rel: str = Query("")):
+    """Katalogdaki bir fotoğrafı önizleme için sun (yalnız katalog kökü içi)."""
+    from ilim_assistant.ruzgar_foto_yuz import coz_katalog_dosya
+
+    try:
+        target = coz_katalog_dosya(rel)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)[:220]) from exc
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)[:220]) from exc
+    suf = target.suffix.lower()
+    media = "image/jpeg"
+    if suf == ".png":
+        media = "image/png"
+    elif suf == ".webp":
+        media = "image/webp"
+    elif suf == ".gif":
+        media = "image/gif"
+    elif suf in (".bmp", ".tif", ".tiff"):
+        media = "image/bmp"
+    return FileResponse(str(target), media_type=media, filename=target.name)
+
+
+@app.get("/api/foto/referans-oniz")
+def api_foto_referans_oniz():
+    """Seçilip normalize edilmiş referans fotoğraf."""
+    from ilim_assistant.ruzgar_foto_yuz import referans_secilen_meta, referans_secilen_yol
+
+    try:
+        target = referans_secilen_yol()
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)[:220]) from exc
+    meta = referans_secilen_meta()
+    media = str(meta.get("mime") or "image/jpeg")
+    name = str(meta.get("name") or "referans.jpg")[:180]
+    return FileResponse(str(target), media_type=media, filename=name)
+
+
+@app.post("/api/foto/referans-hazirla")
+async def api_foto_referans_hazirla() -> dict[str, Any]:
+    """Diskteki ham referansı kutuya uygun JPEG'e çevir."""
+    from ilim_assistant.ruzgar_foto_yuz import referans_hazirla_diskten
+
+    try:
+        return await run_in_threadpool(referans_hazirla_diskten)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)[:220]) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)[:220]) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Referans: {str(exc)[:220]}") from exc
+
+
+@app.post("/api/foto/referans-yukle")
+async def api_foto_referans_yukle(file: UploadFile = File(...)) -> dict[str, Any]:
+    """Sürükle-bırak / dosya seçimi — her boyutu normalize edip kaydet."""
+    from ilim_assistant.ruzgar_foto_yuz import referans_yaz_normalize
+
+    raw = await file.read()
+    if not raw or len(raw) < 32:
+        raise HTTPException(status_code=400, detail="Dosya boş.")
+    try:
+        return await run_in_threadpool(
+            referans_yaz_normalize,
+            raw,
+            (file.filename or "referans.jpg")[:180],
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)[:220]) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Referans yükleme: {str(exc)[:220]}") from exc
+
+
+@app.post("/api/foto/eslestir")
+def api_foto_eslestir(body: FotoEslesBody) -> dict[str, Any]:
+    """Dosyasız durum sorgusu — uydurma eşleşme yok."""
+    from ilim_assistant.ruzgar_foto_yuz import eslestir_istem
+
+    return eslestir_istem(body.referans_adi or "")
+
+
+@app.post("/api/foto/yuz-tara")
+async def api_foto_yuz_tara(limit: int | None = Query(None, ge=1, le=20000)) -> dict[str, Any]:
+    """Katman 2: YuNet (OpenCV 5) veya Haar (OpenCV 4) yüz algılama."""
+    from ilim_assistant.ruzgar_foto_yuz import yuz_tara
+
+    try:
+        return await run_in_threadpool(yuz_tara, limit=limit)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)[:220]) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)[:220]) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Yüz tara: {str(exc)[:220]}") from exc
+
+
+@app.post("/api/foto/gomme-kur")
+async def api_foto_gomme_kur() -> dict[str, Any]:
+    """Katman 3: yerel görünüm gömmesi."""
+    from ilim_assistant.ruzgar_foto_yuz import gomme_kur
+
+    try:
+        return await run_in_threadpool(gomme_kur)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)[:220]) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)[:220]) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Gömme: {str(exc)[:220]}") from exc
+
+
+@app.post("/api/foto/katman-kur")
+async def api_foto_katman_kur(limit: int | None = Query(None, ge=1, le=20000)) -> dict[str, Any]:
+    """Yüz → gömme sırayla."""
+    from ilim_assistant.ruzgar_foto_yuz import katman_kur
+
+    try:
+        return await run_in_threadpool(katman_kur, limit=limit)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)[:220]) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)[:220]) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Katman kur: {str(exc)[:220]}") from exc
+
+
+@app.post("/api/foto/eslestir-dosya")
+async def api_foto_eslestir_dosya(
+    file: UploadFile = File(...),
+    top_k: int = Form(24),
+) -> dict[str, Any]:
+    """Katman 4: referans görsel yükle → en yakın fotoğraflar."""
+    from ilim_assistant.ruzgar_foto_yuz import eslestir_bytes
+
+    raw = await file.read()
+    if not raw or len(raw) < 32:
+        raise HTTPException(status_code=400, detail="Referans görsel boş.")
+    if len(raw) > 40_000_000:
+        raise HTTPException(status_code=400, detail="Referans 40 MB üstü olamaz.")
+    try:
+        return await run_in_threadpool(
+            eslestir_bytes,
+            raw,
+            referans_adi=(file.filename or "")[:180],
+            top_k=int(top_k or 24),
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Eşleştirme: {str(exc)[:220]}") from exc
+
+
 @app.get("/api/ui/manifest")
 def api_ui_manifest():
     """Dashboard/atölye metinleri için tek kaynak; UI statik Faz 7'ye takılmaz."""

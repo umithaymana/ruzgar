@@ -3273,6 +3273,32 @@ function applyMotorHandoff(modeId, handoffText) {
       switchMode("programlama");
       if (el.codeEditor) el.codeEditor.value = t;
       updateProgramlamaActiveFileLabel();
+      // Derin bağ: yüzey metninden görev satırı çıkar → sohbet kutusuna (Faz85 erken yol)
+      {
+        const lines = t.split(/\r?\n/).map((x) => x.trim()).filter(Boolean);
+        let gorev = "";
+        for (const ln of lines) {
+          if (/^#\s*/.test(ln)) continue;
+          if (/^görev\s*:/i.test(ln) || /^gorev\s*:/i.test(ln)) {
+            gorev = ln;
+            break;
+          }
+        }
+        if (!gorev) {
+          const body = lines.filter((ln) => !/^#\s*/.test(ln)).join(" ").slice(0, 400);
+          if (body && /pytest|health|endpoint|smoke|düzelt|duzelt|ekle|yaz/i.test(body)) {
+            gorev = "görev: " + body;
+          }
+        }
+        if (gorev && el.input) {
+          el.input.value = gorev;
+          el.input.focus();
+        }
+      }
+      void refreshProgramlamaHandoffWorkbench();
+      flashRuzgarDurum(
+        "Programlama: yüzeyden geldi. Faz85 güvenli yol açık; serbest çalıştırma kapalı.",
+      );
       break;
     case "mimar":
     case "okuma":
@@ -3299,6 +3325,9 @@ function applyMotorHandoff(modeId, handoffText) {
   }
   setStatus(`Köprü: ${mid}`, "Rüzgar");
 }
+
+/** Ana Yüzey / masa komutları motor atölyesine içerik aktarır (Faz E). */
+window.applyMotorHandoff = applyMotorHandoff;
 
 let dashboardAgentWrapEl = null;
 let dashboardAgentListEl = null;
@@ -11274,10 +11303,10 @@ async function hardReloadRuzgarUi() {
     u.searchParams.set("mode", mode);
     u.searchParams.set("_r", String(Date.now()));
     target = u.toString();
-    globalThis.history.replaceState(null, "", target);
   } catch {
     /* ignore */
   }
+  // Tek navigasyon — replaceState + reload çift yükleme -3 hatası üretmesin
   try {
     if (window.ruzgarApi?.navReload) {
       const ok = await window.ruzgarApi.navReload({ ignoreCache: true });
@@ -16026,7 +16055,7 @@ async function sendMessageWithText(t, opts = {}) {
 
   if ((currentMode === "genel" || currentMode === "programlama") && !isCasualChatMessage(text)) {
     if (window.ruzgarMasaKomut) {
-      const masaHit = window.ruzgarMasaKomut(dispatchText);
+      const masaHit = await Promise.resolve(window.ruzgarMasaKomut(dispatchText));
       if (masaHit && masaHit.handled) {
         appendBubble("assistant", String(masaHit.reply || "Tamam."));
         scrollChatToBottom();
