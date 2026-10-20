@@ -52,7 +52,8 @@ def main() -> int:
     if not wb.get("ok"):
         print("FAIL nested workbench", wb)
         return 1
-    if payload.get("path_hint") not in ("faz85_fast", "agent"):
+    _agentish = ("agent", "agent_multi", "agent_mega")
+    if payload.get("path_hint") not in ("faz85_fast", *_agentish):
         print("FAIL path_hint", payload.get("path_hint"))
         return 1
 
@@ -60,8 +61,8 @@ def main() -> int:
         "# Yüzey\n\nlogin modülünü servislere refactor et\n",
         WORKSPACE,
     )
-    if complex_payload.get("path_hint") != "agent":
-        print("FAIL complex should be agent", complex_payload.get("path_hint"))
+    if complex_payload.get("path_hint") not in _agentish:
+        print("FAIL complex should be agent*", complex_payload.get("path_hint"))
         return 1
 
     print(

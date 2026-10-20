@@ -21,9 +21,19 @@ _V2_BUDGET_SEC_DEFAULT = 1200.0
 _MAX_FILES_PER_TURN_DEFAULT = 8
 
 _MULTI_FILE_CUES = (
-    r"\b(refactor|refaktör|çok dosya|cok dosya|multi\s*file|tüm dosya|tum dosya)\b",
-    r"\b(util|service|main\.py|üç dosya|uc dosya|3 dosya)\b",
+    r"\b(refactor|refaktör|çok dosya|cok dosya|cok dosyali|çok dosyalı|"
+    r"multi\s*file|tüm dosya|tum dosya)\b",
+    r"\b(util|service|main\.py)\b",
+    # «iki dosyada» / «3 dosyalı» — dosya kökü yeterli
+    r"\b(üç|uc|iki|dort|dört|bes|beş|\d+)\s*\+?\s*dosya",
+    r"\b(\d+)\s*\+?\s*dosya",
     r"\b(monorepo|ilim-assistant|bench_pkg)\b",
+    # iki açık yol: a.py … b.py
+    r"[\w./\\-]+\.(?:py|ts|tsx|js)\b.+\b[\w./\\-]+\.(?:py|ts|tsx|js)\b",
+)
+_NAMED_PATH_RE = re.compile(
+    r"([\w./\\-]+\.(?:py|ts|tsx|js|jsx|go|rs))\b",
+    re.I,
 )
 
 
@@ -100,8 +110,23 @@ def _ascii_fold(text: str) -> str:
 
 
 def looks_like_multi_file_task(message: str, goal: str = "") -> bool:
-    raw = _ascii_fold(f"{message} {goal}")
-    return any(re.search(p, raw, re.I) for p in _MULTI_FILE_CUES)
+    blob = f"{message} {goal}"
+    raw = _ascii_fold(blob)
+    if any(re.search(p, raw, re.I) for p in _MULTI_FILE_CUES):
+        return True
+    return len(_NAMED_PATH_RE.findall(blob)) >= 2
+
+
+def extract_named_paths(message: str, *, limit: int = 16) -> list[str]:
+    """Cümleden açık dosya yolları (app/main.py, …)."""
+    out: list[str] = []
+    for m in _NAMED_PATH_RE.finditer(message or ""):
+        n = m.group(1).replace("\\", "/").lstrip("./")
+        if n and n not in out:
+            out.append(n)
+        if len(out) >= limit:
+            break
+    return out
 
 
 def infer_target_files(
@@ -111,8 +136,15 @@ def infer_target_files(
     *,
     limit: int = 12,
 ) -> list[str]:
-    """Hedef dosya listesi — ilgili dosyalar + anahtar kelime."""
+    """Hedef dosya listesi — önce cümledeki yollar, sonra ilgili dosyalar."""
     targets: list[str] = []
+    named = extract_named_paths(message, limit=limit)
+    scope = (scope_rel or "").replace("\\", "/").strip("/")
+    for n in named:
+        if scope and not n.startswith(scope + "/") and "/" not in n:
+            targets.append(f"{scope}/{n}")
+        else:
+            targets.append(n)
     try:
         from ilim_assistant.motorlar.programlama_faz44 import select_relevant_files
 

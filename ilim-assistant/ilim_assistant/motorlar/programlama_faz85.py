@@ -17,13 +17,25 @@ from typing import Any, Callable, Iterator
 
 FAZ85_VERSION = "programlama-faz85-v3.1-2026-10-20"
 
-# Karmaşık hedefler → Faz85 atlanır, Faz14/88 ajan yolu (E1).
+# Karmaşık hedefler → Faz85 atlanır, Faz14/88 ajan yolu (E1/E2).
 # Kısa belirsiz parçalar (bol/ayır) yok — yanlış pozitif riski.
 _AGENT_PATH_MARKERS = (
     "refactor",
     "cok dosya",
     "çok dosya",
+    "cok dosyali",
+    "çok dosyalı",
     "multi file",
+    "mega refactor",
+    "10+ dosya",
+    "2 dosya",
+    "3 dosya",
+    "iki dosya",  # «iki dosyada» içinde de yakalanır (substring)
+    "uc dosya",
+    "üç dosya",
+    "dort dosya",
+    "dört dosya",
+    "dosyada",  # «N dosyada …» E2 ipucu
     "middleware",
     "oauth",
     "jwt",
@@ -43,6 +55,11 @@ _AGENT_PATH_MARKERS = (
     "kimlik doğrul",
     "authentication",
     "authorization",
+)
+# İki+ açık dosya yolu → E2 ajan (hızlı yol yetmez)
+_MULTI_PATH_RE = re.compile(
+    r"[\w./\\-]+\.(?:py|ts|tsx|js|jsx|go|rs|java)\b",
+    re.I,
 )
 
 _MAIN_CANDIDATES = (
@@ -192,11 +209,31 @@ def _goal_wants_health_fix(goal: str) -> bool:
 
 
 def goal_wants_agent_path(goal: str) -> bool:
-    """True ise hızlı yol atlanır — ajan döngüsü (Faz14/88)."""
-    low = _ascii_fold(goal or "")
+    """True ise hızlı yol atlanır — ajan döngüsü (Faz14/88 / E2 çok dosya)."""
+    raw = goal or ""
+    low = _ascii_fold(raw)
     if not low:
         return False
-    return any(m in low for m in _AGENT_PATH_MARKERS)
+    if any(m in low for m in _AGENT_PATH_MARKERS):
+        return True
+    # «app/main.py ve app/api.py düzelt» → ajan
+    if len(_MULTI_PATH_RE.findall(raw)) >= 2:
+        return True
+    try:
+        from ilim_assistant.motorlar.programlama_faz56 import looks_like_multi_file_task
+
+        if looks_like_multi_file_task(raw):
+            return True
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz80 import wants_mega_refactor
+
+        if wants_mega_refactor(raw):
+            return True
+    except Exception:
+        pass
+    return False
 
 
 def _extract_version(goal: str) -> str:

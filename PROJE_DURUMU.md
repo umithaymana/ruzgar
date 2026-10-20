@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-20 (gece) — **SRT panel + ffmpeg + OCR ortamı.** Önceki: SRT API `23fe3be5` · tek sohbet · CHECKPOINT `27e2eee6`.
+**Son güncelleme:** 2026-10-20 (gece) — **Programlama E2 dilim 1** (çok dosya → ajan). Önceki ortam: `b7608525`.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -101,9 +101,10 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
 7. ~~Foto yüz gömme v2 (2026-10-20 gece)~~ — `EMBED_VERSION=v2-clahe-48` · test **11/11** · `84d48d60`.
 8. ~~Ana Motor tek sohbet orkestra (2026-10-20 gece)~~ — quiet handoff · `957c632f`.
 9. ~~Tercüme SRT (2026-10-20 gece)~~ — API + sohbet · `23fe3be5`.
-10. ~~SRT panel + ortam (2026-10-20 gece)~~ — Tercüme üstte **SRT çevir** düğmesi · winget **FFmpeg 9** + **Tesseract 5.4** · `ffmpeg_bin`/`tesseract_bin` Windows yolları · OCR `available`+`cloud_ready` (ara/tur/eng tessdata).
-11. **← BURADAN BAŞLA:** Canlı ForceRestart sonrası health doğrula · veya foto arşivde «Katmanları kur».
-12. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
+10. ~~SRT panel + ortam (2026-10-20 gece)~~ — `b7608525`.
+11. ~~Programlama E2 dilim 1 (2026-10-20 gece)~~ — çok dosya / mega niyeti → `goal_wants_agent_path` + `path_hint` (`agent_multi` / `agent_mega`) · Faz56 isimli yol çıkarımı · yüzey handoff’ta çok dosya planı · smoke PASS. **Programlama rayı açık.**
+12. **← BURADAN BAŞLA (programlama):** E2 dilim 2 — canlı çok dosya pil / mega-workbench ölçüm · veya monorepo 3 dosya refactor senaryosu.
+13. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
 
 ### 2026-10-18 / 19 — oturum kaydı (geç yazıldı)
 
@@ -629,7 +630,8 @@ Modül: `ilim_assistant.nebula_kitap_hafiza` — `desktop_server` sohbetinde kit
 1. ~~Yüzey → görev satırı + workbench handoff~~
 2. ~~Karmaşık hedefte ajan yolu (Faz85 üstü kapı)~~
 3. ~~Canlı ajan pili %100 + Yol C kök neden cilası~~
-4. **Sonraki (isteğe):** Foto yüz güçlendirme · çeviri `.srt` · Ana Motor tek sohbet orkestrasyonu.
+4. ~~Foto / SRT / tek sohbet / ortam~~ — tamam (yan ray).
+5. **Programlama E2:** dilim 1 (niyet→ajan) tamam · dilim 2 sırada.
 
 ## Referans
 

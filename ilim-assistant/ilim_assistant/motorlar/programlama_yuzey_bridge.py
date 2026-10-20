@@ -13,7 +13,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-YUZEY_BRIDGE_VERSION = "programlama-yuzey-bridge-v1-2026-10-20"
+YUZEY_BRIDGE_VERSION = "programlama-yuzey-bridge-v1.1-2026-10-20"
 
 _HEADER_RE = re.compile(
     r"^#\s*(?:Yüzey|Yuzey|Kaynak yetenek|Faz85|Programlama)\b",
@@ -134,8 +134,41 @@ def build_surface_handoff_payload(
         message=task_line or goal or "programlama görevi",
         active_file=active_file,
     )
-    # Dosya yazmadan ipucu: bilinen Faz85 kalıpları vs ajan
+    # Dosya yazmadan ipucu: bilinen Faz85 kalıpları vs ajan / E2 çok dosya
     path_hint = _path_hint_for_goal(goal)
+    multi_preview = ""
+    named_paths: list[str] = []
+    try:
+        from ilim_assistant.motorlar.programlama_faz56 import (
+            build_multi_file_plan_block,
+            extract_named_paths,
+            looks_like_multi_file_task,
+        )
+
+        if looks_like_multi_file_task(goal) or path_hint.startswith("agent"):
+            named_paths = extract_named_paths(goal)
+            scope = ""
+            try:
+                scope = str((wb.get("handoff") or {}).get("scope_rel") or "")
+            except Exception:
+                scope = ""
+            multi_preview = build_multi_file_plan_block(
+                workspace_root,
+                scope_rel=scope,
+                message=task_line or goal,
+                goal=goal,
+                turn=1,
+                touched_files=[],
+            )
+    except Exception:
+        pass
+
+    note = {
+        "faz85_fast": "Faz85 hızlı yol adayı",
+        "agent_mega": "E2 mega refactor → ajan (Faz80 limitleri)",
+        "agent_multi": "E2 çok dosya → ajan + Faz56 plan",
+        "agent": "Karmaşık / eşleşmeyen → ajan yolu (Faz14/88)",
+    }.get(path_hint, "Ajan yolu")
 
     return {
         "ok": True,
@@ -143,20 +176,32 @@ def build_surface_handoff_payload(
         "goal": goal,
         "task_line": task_line,
         "path_hint": path_hint,
+        "named_paths": named_paths,
+        "multi_file_plan": multi_preview,
         "handoff_workbench": wb,
-        "note": (
-            "Faz85 hızlı yol adayı"
-            if path_hint == "faz85_fast"
-            else "Karmaşık / eşleşmeyen → ajan yolu (Faz14/88)"
-        ),
+        "note": note,
     }
 
 
 def _path_hint_for_goal(goal: str) -> str:
-    """Çalıştırmadan: basit health/version/verify → faz85; aksi ajan."""
+    """Çalıştırmadan: basit health/version → faz85; çok dosya/mega → ajan."""
     g = (goal or "").lower()
     if not g:
         return "agent"
+    try:
+        from ilim_assistant.motorlar.programlama_faz80 import wants_mega_refactor
+
+        if wants_mega_refactor(goal):
+            return "agent_mega"
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.motorlar.programlama_faz56 import looks_like_multi_file_task
+
+        if looks_like_multi_file_task(goal):
+            return "agent_multi"
+    except Exception:
+        pass
     try:
         from ilim_assistant.motorlar.programlama_faz85 import goal_wants_agent_path
 
