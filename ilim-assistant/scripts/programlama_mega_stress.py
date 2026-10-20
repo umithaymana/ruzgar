@@ -35,9 +35,15 @@ def main() -> int:
     if not wb.get("ok"):
         print("FAIL workbench")
         return 1
+    if not wb.get("product"):
+        print("FAIL product flag", wb.get("version"))
+        return 1
+    if "e2" not in wb or "target_rate" not in (wb.get("e2") or {}):
+        print("FAIL e2 block")
+        return 1
     print(
         f"OK mega stress — {lim['max_turns']} tur, {cap} dosya/tur, "
-        f"e2 hedef {wb.get('e2', {}).get('target_rate')}"
+        f"e2 hedef {wb.get('e2', {}).get('target_rate')} · product={wb.get('product')}"
     )
     return 0
 

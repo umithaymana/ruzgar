@@ -560,8 +560,10 @@ def run_combined_e2_battery(
         scope = f"projects/e2-bat-{stamp}-live"
         setup_ok, setup_msg = _setup_multi_file_broken(workspace_root, scope)
         goal = (
-            "app/util.py ve app/service.py duzelt: VERSION 2.0.0 olsun, "
-            "health payload'a version ekle, pytest gecir"
+            "app/util.py ve app/service.py duzelt. "
+            "Zorunlu: util.py icinde VERSION = \"2.0.0\" yaz; "
+            "service.py health_payload dict'ine version: VERSION ekle; "
+            "search-replace veya @@write kullan, sadece oku-turu yapma; pytest gecir"
         )
         if setup_ok:
             force_heal = os.environ.get("RUZGAR_E2_LIVE_FORCE_HEAL", "").strip().lower() in (

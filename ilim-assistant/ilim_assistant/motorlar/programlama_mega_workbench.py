@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-MEGA_WORKBENCH_VERSION = "programlama-mega-workbench-v1-2026-05-29"
+MEGA_WORKBENCH_VERSION = "programlama-mega-workbench-v1.1-2026-10-20"
 _E2_TARGET = 0.90
 
 
@@ -19,6 +19,7 @@ def e2_target_rate() -> float:
 
 
 def build_mega_workbench_payload(workspace_root: str | Path | None) -> dict[str, Any]:
+    """E2 ürün kartı: tur · plan · touched · verify · devam · KPI."""
     from ilim_assistant.motorlar.programlama_faz14 import load_agent_state
     from ilim_assistant.motorlar.programlama_faz16 import build_pending_bundle
     from ilim_assistant.motorlar.programlama_faz55 import compute_task_stats
@@ -77,9 +78,47 @@ def build_mega_workbench_payload(workspace_root: str | Path | None) -> dict[str,
     )
     e2_total = int(e2.get("total") or (rolling or {}).get("total") or 0)
 
+    named_paths: list[str] = []
+    multi_plan = ""
+    path_hint = "idle"
+    scope_rel = str(st.get("scope_rel") or "")
+    try:
+        from ilim_assistant.motorlar.programlama_faz56 import (
+            build_multi_file_plan_block,
+            extract_named_paths,
+            looks_like_multi_file_task,
+        )
+        from ilim_assistant.motorlar.programlama_yuzey_bridge import _path_hint_for_goal
+
+        if goal:
+            path_hint = _path_hint_for_goal(goal)
+            named_paths = extract_named_paths(goal)
+            if looks_like_multi_file_task(goal) or path_hint.startswith("agent"):
+                multi_plan = build_multi_file_plan_block(
+                    workspace_root,
+                    scope_rel=scope_rel,
+                    message=msg or goal,
+                    goal=goal,
+                    turn=max(1, turn),
+                    touched_files=touched,
+                )
+    except Exception:
+        pass
+
+    status_label = {
+        "running": "çalışıyor",
+        "done": "bitti",
+        "completed": "bitti",
+        "success": "başarılı",
+        "idle": "bekliyor",
+        "failed": "kırmızı",
+        "error": "hata",
+    }.get(status.lower(), status or "bekliyor")
+
     return {
         "ok": True,
         "version": MEGA_WORKBENCH_VERSION,
+        "product": True,
         "mega": {
             "active": mega_active,
             "limits": mega_lim if mega_lim.get("mega") else {
@@ -91,17 +130,21 @@ def build_mega_workbench_payload(workspace_root: str | Path | None) -> dict[str,
         },
         "agent": {
             "status": status,
-            "scope_rel": st.get("scope_rel"),
+            "status_label": status_label,
+            "scope_rel": scope_rel,
             "goal": goal[:500] if goal else "",
             "turn": turn,
             "max_turns": max_turns,
             "can_resume": can_resume,
             "resume_hint": (
-                f"görev: {st.get('scope_rel', 'projects')} {goal[:200]}"
+                f"görev: {scope_rel or 'projects'} {goal[:200]}"
                 if can_resume and goal
                 else ""
             ),
+            "path_hint": path_hint,
+            "named_paths": named_paths[:12],
         },
+        "multi_file_plan": multi_plan[:1200] if multi_plan else "",
         "touched_files": touched[:32],
         "touched_count": len(touched),
         "patch_plan": {
@@ -115,5 +158,6 @@ def build_mega_workbench_payload(workspace_root: str | Path | None) -> dict[str,
             "current_rate": e2_rate,
             "sample_total": e2_total,
             "meets_target": e2_total >= 5 and e2_rate >= e2_target_rate(),
+            "success_count": int(e2.get("success_count") or 0),
         },
     }

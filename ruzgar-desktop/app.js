@@ -3777,9 +3777,12 @@ async function refreshProgramlamaGitChanges(scopeRel) {
 
 function renderProgramlamaMegaWorkbench(payload) {
   const megaCard = document.getElementById("programlama-mega-workbench-card");
+  const statusEl = document.getElementById("programlama-mega-status");
   const turnEl = document.getElementById("programlama-mega-turn");
   const filesEl = document.getElementById("programlama-mega-files");
   const e2El = document.getElementById("programlama-mega-e2");
+  const goalEl = document.getElementById("programlama-mega-goal");
+  const multiPlanEl = document.getElementById("programlama-mega-plan");
   const resumeBtn = document.getElementById("btn-mega-resume");
   const touchCard = document.getElementById("programlama-touched-files-card");
   const touchCount = document.getElementById("programlama-touched-count");
@@ -3802,6 +3805,10 @@ function renderProgramlamaMegaWorkbench(payload) {
   const budget = intOr(lim.budget_sec, 900);
   if (megaCard && turnEl && filesEl) {
     megaCard.hidden = false;
+    if (statusEl) {
+      const hint = ag.path_hint && ag.path_hint !== "idle" ? ` · ${ag.path_hint}` : "";
+      statusEl.textContent = `${ag.status_label || ag.status || "bekliyor"}${hint}`;
+    }
     turnEl.textContent = `tur ${ag.turn || 0}/${maxT}`;
     filesEl.textContent = payload.mega?.active
       ? `mega · ${maxF} dosya/tur · ${budget}s`
@@ -3809,11 +3816,27 @@ function renderProgramlamaMegaWorkbench(payload) {
     if (e2El) {
       const pct = Math.round(Number(e2.current_rate || 0) * 100);
       const tgt = Math.round(Number(e2.target_rate || 0.9) * 100);
-      e2El.textContent = `E2: %${pct} (hedef ≥${tgt}%) · ${e2.sample_total || 0} örnek`;
+      const okN = e2.success_count != null ? `${e2.success_count}/` : "";
+      e2El.textContent = `E2: %${pct} (hedef ≥${tgt}%) · ${okN}${e2.sample_total || 0} örnek`;
+    }
+    if (goalEl) {
+      const g = String(ag.goal || "").trim();
+      const scope = ag.scope_rel ? `[${ag.scope_rel}] ` : "";
+      goalEl.textContent = g ? `${scope}${g}`.slice(0, 280) : "Hedef yok — görev başlatınca burada görünür.";
+    }
+    if (multiPlanEl) {
+      const mp = String(payload.multi_file_plan || "").trim();
+      const named = Array.isArray(ag.named_paths) ? ag.named_paths : [];
+      if (mp) multiPlanEl.textContent = mp.slice(0, 600);
+      else if (named.length) multiPlanEl.textContent = `Dosyalar: ${named.slice(0, 8).join(", ")}`;
+      else multiPlanEl.textContent = "";
     }
     if (resumeBtn) {
       resumeBtn.disabled = !ag.can_resume;
       resumeBtn.dataset.resumeHint = ag.resume_hint || "";
+      resumeBtn.title = ag.can_resume
+        ? "Yarım görevi aynı görev: satırıyla sürdür"
+        : "Devam edilecek yarım görev yok";
     }
   }
   const touched = Array.isArray(payload.touched_files) ? payload.touched_files : [];
