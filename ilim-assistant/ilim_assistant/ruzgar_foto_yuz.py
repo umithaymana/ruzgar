@@ -19,7 +19,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-SCHEMA = 2
+SCHEMA = 3
 IMAGE_EXT = {
     ".jpg",
     ".jpeg",
@@ -37,12 +37,20 @@ IMAGE_EXT = {
 MAX_FILES = 20_000
 MAX_DEPTH = 12
 MAX_FACES_PER_IMG = 8
-EMBED_SIZE = 32  # 32x32 gri + hist → vektör
+EMBED_SIZE = 48  # 48×48 CLAHE + hist + blok ort. → vektör (v2)
+EMBED_HIST_BINS = 48
+EMBED_BLOCK = 8  # 8×8 blok ortalama (64)
+EMBED_MARGIN = 0.18  # yüz kutusunu biraz genişlet
+EMBED_VERSION = "v2-clahe-48"
+# dim = flat + hist + block
+EMBED_DIM = EMBED_SIZE * EMBED_SIZE + EMBED_HIST_BINS + (EMBED_BLOCK * EMBED_BLOCK)
 MATCH_TOP = 24
-MATCH_MIN_SCORE = 0.62
+MATCH_MIN_SCORE = 0.55  # v2 gömme daha ayırt edici; eşik biraz gevşek (geri çağırım)
+MATCH_REL_OF_BEST = 0.12  # en iyi skordan bu kadar aşağısı elenir
 REF_MAX_SIDE = 2048  # kutuya / eşleşmeye uygun üst kenar
 REF_JPEG_QUALITY = 92
 REF_RAW_MAX_BYTES = 80_000_000
+YUNET_SCORE_TH = 0.55  # aile fotoğraflarında daha çok yüz (eski 0.7)
 
 _DATA_DIR = Path(__file__).resolve().parent / "data"
 _INDEX_DIR = Path(__file__).resolve().parent.parent / ".ruzgar_foto_index"
@@ -98,11 +106,30 @@ def durum() -> dict[str, Any]:
             yuz_n = int(json.loads(_YUZ.read_text(encoding="utf-8")).get("yuz_sayisi") or 0)
         except (OSError, json.JSONDecodeError, TypeError, ValueError):
             yuz_n = 0
+    gomme_dim = 0
+    gomme_ver = ""
     if _GOMME.is_file():
         try:
-            gomme_n = int(json.loads(_GOMME.read_text(encoding="utf-8")).get("vektor_sayisi") or 0)
+            graw = json.loads(_GOMME.read_text(encoding="utf-8"))
+            gomme_n = int(graw.get("vektor_sayisi") or 0)
+            gomme_dim = int(graw.get("dim") or 0)
+            gomme_ver = str(graw.get("embed_version") or "")
         except (OSError, json.JSONDecodeError, TypeError, ValueError):
             gomme_n = 0
+    # Eski gömme (schema/dim) → katman 3 yeniden
+    gomme_stale = False
+    if kat.get("gomme") and gomme_n > 0:
+        if gomme_dim and gomme_dim != EMBED_DIM:
+            gomme_stale = True
+        elif gomme_ver and gomme_ver != EMBED_VERSION:
+            gomme_stale = True
+        elif not gomme_ver and gomme_dim and gomme_dim != EMBED_DIM:
+            gomme_stale = True
+    if gomme_stale:
+        kat = dict(kat)
+        kat["gomme"] = False
+        kat["eslesme"] = False
+        gomme_n = 0
     sonraki = _next_layer(kat)
     notlar = []
     if not opencv_hazir():
@@ -112,7 +139,13 @@ def durum() -> dict[str, Any]:
     elif sonraki == "yuz":
         notlar.append("Sırada: yüz algılama (Yüz tara).")
     elif sonraki == "gomme":
-        notlar.append(f"Yüzler hazır ({yuz_n}). Sırada: gömme kur.")
+        if gomme_stale:
+            notlar.append(
+                f"Gömme v2’ye yükseltildi — yeniden «Gömme kur» / «Katmanları kur» "
+                f"(yüzler hazır: {yuz_n})."
+            )
+        else:
+            notlar.append(f"Yüzler hazır ({yuz_n}). Sırada: gömme kur.")
     elif sonraki == "eslesme":
         notlar.append(f"Gömme hazır ({gomme_n}). Referans bırakıp Yüz ara.")
     else:
@@ -126,6 +159,9 @@ def durum() -> dict[str, Any]:
         "vektor_sayisi": gomme_n,
         "guncelleme": int(data.get("guncelleme") or 0),
         "opencv": opencv_hazir(),
+        "embed_version": EMBED_VERSION,
+        "embed_dim": EMBED_DIM,
+        "gomme_stale": gomme_stale,
         "katman": {
             "katalog": bool(kat.get("katalog")),
             "yuz": bool(kat.get("yuz")),
@@ -460,7 +496,7 @@ def _make_face_detector() -> tuple[str, Any]:
                     raw,
                     b"",
                     (320, 320),
-                    0.7,
+                    float(YUNET_SCORE_TH),
                     0.3,
                     5000,
                 )
@@ -474,7 +510,7 @@ def _make_face_detector() -> tuple[str, Any]:
                     str(tmp),
                     "",
                     (320, 320),
-                    0.7,
+                    float(YUNET_SCORE_TH),
                     0.3,
                     5000,
                 )
@@ -652,17 +688,50 @@ def yuz_tara(*, limit: int | None = None) -> dict[str, Any]:
     }
 
 
+def _expand_box(
+    x: int, y: int, w: int, h: int, gw: int, gh: int, *, margin: float = EMBED_MARGIN
+) -> tuple[int, int, int, int]:
+    """Yüz kutusunu margin kadar genişlet (saç / çene bağlamı)."""
+    mx = int(w * margin)
+    my = int(h * margin)
+    x0 = max(0, x - mx)
+    y0 = max(0, y - my)
+    x1 = min(gw, x + w + mx)
+    y1 = min(gh, y + h + my)
+    return x0, y0, max(1, x1 - x0), max(1, y1 - y0)
+
+
+def _pick_largest_face(faces: list[tuple[int, int, int, int]]) -> tuple[int, int, int, int]:
+    return max(faces, key=lambda b: int(b[2]) * int(b[3]))
+
+
 def _embed_face(gray_face) -> list[float]:
+    """v2: CLAHE + 48×48 + hist + 8×8 blok ortalamaları (L2)."""
     import cv2
     import numpy as np
 
-    face = cv2.resize(gray_face, (EMBED_SIZE, EMBED_SIZE), interpolation=cv2.INTER_AREA)
-    face = face.astype(np.float32) / 255.0
-    flat = face.reshape(-1)
-    hist = cv2.calcHist([ (face * 255).astype(np.uint8) ], [0], None, [32], [0, 256])
+    if gray_face is None or getattr(gray_face, "size", 0) < 64:
+        return [0.0] * EMBED_DIM
+    try:
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        face = clahe.apply(gray_face)
+    except Exception:
+        face = cv2.equalizeHist(gray_face)
+    face = cv2.resize(face, (EMBED_SIZE, EMBED_SIZE), interpolation=cv2.INTER_AREA)
+    face_f = face.astype(np.float32) / 255.0
+    flat = face_f.reshape(-1)
+    hist = cv2.calcHist([face], [0], None, [EMBED_HIST_BINS], [0, 256])
     hist = hist.reshape(-1).astype(np.float32)
     hist = hist / (float(np.sum(hist)) + 1e-6)
-    vec = np.concatenate([flat, hist])
+    # mekansal yapı: 8×8 blok ortalama
+    bs = EMBED_SIZE // EMBED_BLOCK
+    blocks = []
+    for by in range(EMBED_BLOCK):
+        for bx in range(EMBED_BLOCK):
+            tile = face_f[by * bs : (by + 1) * bs, bx * bs : (bx + 1) * bs]
+            blocks.append(float(np.mean(tile)) if tile.size else 0.0)
+    block_arr = np.asarray(blocks, dtype=np.float32)
+    vec = np.concatenate([flat, hist, block_arr])
     n = float(np.linalg.norm(vec))
     if n < 1e-8:
         return [0.0] * int(vec.size)
@@ -702,12 +771,13 @@ def gomme_kur() -> dict[str, Any]:
             x, y, w, h = int(f["x"]), int(f["y"]), int(f["w"]), int(f["h"])
             if w < 24 or h < 24:
                 continue
-            x2, y2 = min(gw, x + w), min(gh, y + h)
-            x, y = max(0, x), max(0, y)
-            crop = gray[y:y2, x:x2]
+            x, y, w, h = _expand_box(x, y, w, h, gw, gh)
+            crop = gray[y : y + h, x : x + w]
             if crop.size < 64:
                 continue
             vec = _embed_face(crop)
+            if len(vec) != EMBED_DIM:
+                continue
             vektorler.append(
                 {
                     "id": f"{rel}#{i}",
@@ -720,9 +790,10 @@ def gomme_kur() -> dict[str, Any]:
     payload = {
         "schema": SCHEMA,
         "kok": str(root),
+        "embed_version": EMBED_VERSION,
         "guncelleme": int(time.time()),
         "vektor_sayisi": len(vektorler),
-        "dim": len(vektorler[0]["v"]) if vektorler else 0,
+        "dim": len(vektorler[0]["v"]) if vektorler else EMBED_DIM,
         "sure_sn": round(time.time() - t0, 2),
         "vektorler": vektorler,
     }
@@ -851,6 +922,19 @@ def eslestir_bytes(
             "reply": "Referans görsel okunamadı.",
             "sonuclar": [],
         }
+    # Eski gömme boyutu / sürümü → yeniden kur
+    if st.get("gomme_stale") or not st["katman"].get("gomme"):
+        return {
+            "ok": False,
+            "handled": True,
+            "katman_hazir": False,
+            "sonraki": "gomme",
+            "reply": (
+                "Gömme v2’ye yükseldi. «Katmanları kur» veya «Gömme kur» ile "
+                "vektörleri yenile, sonra Yüz ara."
+            ),
+            "sonuclar": [],
+        }
     det_kind, detector = _make_face_detector()
     faces = _detect_faces_bgr(img, det_kind, detector)
     if not faces:
@@ -862,24 +946,39 @@ def eslestir_bytes(
             "sonuclar": [],
         }
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    x, y, w, h = faces[0]
+    gh, gw = gray.shape[:2]
+    # En büyük yüz (grup fotoğrafta ilk tespit gürültülü olabilir)
+    x, y, w, h = _pick_largest_face(faces)
+    x, y, w, h = _expand_box(x, y, w, h, gw, gh)
     crop = gray[y : y + h, x : x + w]
     ref_vec = _embed_face(crop)
     gomme = json.loads(_GOMME.read_text(encoding="utf-8"))
+    gdim = int(gomme.get("dim") or 0)
+    if gdim and gdim != EMBED_DIM:
+        return {
+            "ok": False,
+            "handled": True,
+            "katman_hazir": False,
+            "sonraki": "gomme",
+            "reply": "Gömme boyutu eski. «Gömme kur» ile yenile.",
+            "sonuclar": [],
+        }
     skorlar: list[tuple[float, dict[str, Any]]] = []
     for item in gomme.get("vektorler") or []:
         v = item.get("v")
-        if not isinstance(v, list) or not v:
+        if not isinstance(v, list) or len(v) != len(ref_vec):
             continue
         sc = _cosine(ref_vec, v)
         skorlar.append((sc, item))
     skorlar.sort(key=lambda t: t[0], reverse=True)
     k = max(1, min(int(top_k or MATCH_TOP), 50))
+    best = float(skorlar[0][0]) if skorlar else 0.0
+    floor = max(float(MATCH_MIN_SCORE), best - float(MATCH_REL_OF_BEST)) if best > 0 else float(MATCH_MIN_SCORE)
     # en iyi skor dosya başına bir kez
     seen: set[str] = set()
     sonuclar: list[dict[str, Any]] = []
     for sc, item in skorlar:
-        if sc < MATCH_MIN_SCORE:
+        if sc < floor:
             break
         rel = str(item.get("rel") or "")
         if not rel or rel in seen:
@@ -902,10 +1001,12 @@ def eslestir_bytes(
             "handled": True,
             "katman_hazir": True,
             "referans": ad,
-            "referans_yuz": 1,
+            "referans_yuz": len(faces),
+            "embed_version": EMBED_VERSION,
+            "esik": round(floor, 4),
             "sonuclar": [],
             "reply": (
-                "Eşik üstü eşleşme yok (yerel görünüm gömmesi). "
+                "Eşik üstü eşleşme yok (yerel görünüm gömmesi v2). "
                 "Daha net referans veya aynı kişinin daha çok fotoğrafı dene."
             ),
         }
@@ -915,9 +1016,11 @@ def eslestir_bytes(
         "katman_hazir": True,
         "referans": ad,
         "referans_yuz": len(faces),
+        "embed_version": EMBED_VERSION,
+        "esik": round(floor, 4),
         "sonuclar": sonuclar,
         "reply": (
-            f"{len(sonuclar)} aday bulundu (yerel yüz + görünüm gömmesi). "
+            f"{len(sonuclar)} aday bulundu (yüz gömmesi {EMBED_VERSION}). "
             f"En yüksek skor: {sonuclar[0]['skor']}."
         ),
     }

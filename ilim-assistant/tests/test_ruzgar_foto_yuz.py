@@ -147,9 +147,55 @@ def test_pipeline_lena_eslesme(tmp_path, monkeypatch):
     assert yuz.get("motor") in ("yunet", "haar")
     gom = fz.gomme_kur()
     assert gom["katman"]["gomme"] is True
+    assert gom.get("dim") == fz.EMBED_DIM
+    assert fz.durum().get("embed_version") == fz.EMBED_VERSION
     esle = fz.eslestir_bytes(ref.read_bytes(), referans_adi="ref.jpg")
     assert esle["ok"] is True
+    assert esle.get("embed_version") == fz.EMBED_VERSION
     assert len(esle.get("sonuclar") or []) >= 1
+    # Aynı yüz → yüksek skor
+    assert float(esle["sonuclar"][0]["skor"]) >= 0.85
     esle2 = fz.eslestir_istem(str(ref))
     assert esle2["ok"] is True
     assert len(esle2.get("sonuclar") or []) >= 1
+
+
+def test_gomme_stale_eski_dim(tmp_path, monkeypatch):
+    """Eski v1 gömme dim’i → durum gömmeyi stale sayar."""
+    monkeypatch.setattr(fz, "_INDEX_DIR", tmp_path / "idx")
+    monkeypatch.setattr(fz, "_CATALOG", tmp_path / "idx" / "katalog.json")
+    monkeypatch.setattr(fz, "_YUZ", tmp_path / "idx" / "yuz.json")
+    monkeypatch.setattr(fz, "_GOMME", tmp_path / "idx" / "gomme.json")
+    img = tmp_path / "a.jpg"
+    img.write_bytes(b"\xff\xd8\xff" + b"0" * 200)
+    fz.katalog_tara(str(tmp_path))
+    cat = fz._load_catalog()
+    cat["katman"]["yuz"] = True
+    cat["katman"]["gomme"] = True
+    cat["katman"]["eslesme"] = True
+    fz._save_catalog(cat)
+    fz._YUZ.parent.mkdir(parents=True, exist_ok=True)
+    fz._YUZ.write_text('{"yuz_sayisi":1,"kayitlar":[]}', encoding="utf-8")
+    fz._GOMME.write_text(
+        '{"vektor_sayisi":1,"dim":1056,"embed_version":"v1","vektorler":[]}',
+        encoding="utf-8",
+    )
+    st = fz.durum()
+    assert st["gomme_stale"] is True
+    assert st["katman"]["gomme"] is False
+    assert st["sonraki"] == "gomme"
+
+
+def test_embed_dim_sabit():
+    assert fz.EMBED_DIM == fz.EMBED_SIZE * fz.EMBED_SIZE + fz.EMBED_HIST_BINS + (
+        fz.EMBED_BLOCK * fz.EMBED_BLOCK
+    )
+    if not fz.opencv_hazir():
+        return
+    import numpy as np
+
+    face = np.zeros((80, 80), dtype=np.uint8)
+    face[20:60, 20:60] = 180
+    vec = fz._embed_face(face)
+    assert len(vec) == fz.EMBED_DIM
+    assert abs(sum(x * x for x in vec) - 1.0) < 1e-3
