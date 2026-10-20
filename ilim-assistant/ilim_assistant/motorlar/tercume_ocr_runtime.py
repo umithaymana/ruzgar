@@ -35,7 +35,7 @@ def _tessdata_dirs() -> list[Path]:
     if env:
         p = Path(env)
         out.append(p if p.name == "tessdata" else p / "tessdata")
-    exe = shutil.which("tesseract")
+    exe = tesseract_bin()
     if exe:
         base = Path(exe).resolve().parent
         out.append(base / "tessdata")
@@ -69,10 +69,49 @@ def _lang_files() -> dict[str, list[str]]:
     return found
 
 
+def tesseract_bin() -> str | None:
+    """PATH + RUZGAR_TESSERACT + Windows varsayılan kurulum."""
+    env = (os.environ.get("RUZGAR_TESSERACT") or "").strip()
+    if env and Path(env).is_file():
+        return env
+    hit = shutil.which("tesseract")
+    if hit:
+        return hit
+    for guess in (
+        Path(r"C:\Program Files\Tesseract-OCR\tesseract.exe"),
+        Path(r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe"),
+    ):
+        if guess.is_file():
+            return str(guess)
+    return None
+
+
+def configure_pytesseract() -> bool:
+    """pytesseract’e exe + TESSDATA_PREFIX bağla."""
+    try:
+        import pytesseract  # type: ignore
+    except Exception:
+        return False
+    exe = tesseract_bin()
+    if not exe:
+        return False
+    try:
+        pytesseract.pytesseract.tesseract_cmd = exe
+    except Exception:
+        pass
+    # Yerel dil paketleri
+    repo_td = _repo_tessdata()
+    if repo_td and repo_td.is_dir() and not (os.environ.get("TESSDATA_PREFIX") or "").strip():
+        os.environ["TESSDATA_PREFIX"] = str(repo_td)
+    return True
+
+
 def ocr_runtime_available() -> bool:
     try:
         import pytesseract  # type: ignore
 
+        if not configure_pytesseract():
+            return False
         pytesseract.get_tesseract_version()
         return True
     except Exception:
@@ -85,6 +124,7 @@ def ocr_installed_langs() -> list[str]:
     try:
         import pytesseract  # type: ignore
 
+        configure_pytesseract()
         return sorted(pytesseract.get_languages(config="") or [])
     except Exception:
         return []

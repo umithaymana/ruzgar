@@ -4445,6 +4445,86 @@
     void refreshMemoryStatus();
   }
 
+  function looksLikeSrtPanel(text) {
+    const t = String(text || "");
+    return t.includes("-->") && /\d{2}:\d{2}:\d{2}[,.]\d{3}\s*-->/.test(t);
+  }
+
+  async function postSrtTranslate({ text, rel, save }) {
+    const src = String($("tercume-src-lang")?.value || "auto").trim() || "auto";
+    const tgt = String($("tercume-tgt-lang")?.value || "tr").trim() || "tr";
+    const res = await fetch(`${api()}/api/tercume/srt`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: text || "",
+        rel: rel || "",
+        src_lang: src,
+        tgt_lang: tgt,
+        save: !!save,
+      }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || j.ok === false) {
+      throw new Error(j.detail || j.error || `HTTP ${res.status}`);
+    }
+    return j;
+  }
+
+  async function runSrtTranslatePanel() {
+    const raw = getSourceText().trim();
+    const rel = String(openRel || "");
+    const relIsSub = /\.(srt|vtt)$/i.test(rel);
+    if (relIsSub && (!raw || looksLikeSrtPanel(raw))) {
+      flash("SRT dosyası çevriliyor…");
+      const j = await postSrtTranslate({ rel, save: true });
+      if (j.srt) setTargetText(j.srt);
+      flash(
+        j.output_rel
+          ? `SRT hazır (${j.cue_count || "?"} cue) · ${j.output_rel}`
+          : `SRT hazır (${j.cue_count || "?"} cue)`,
+      );
+      return;
+    }
+    if (looksLikeSrtPanel(raw)) {
+      flash("Kaynak paneldaki SRT çevriliyor…");
+      const j = await postSrtTranslate({ text: raw, save: true });
+      if (j.srt) setTargetText(j.srt);
+      flash(
+        j.output_rel
+          ? `SRT hazır (${j.cue_count || "?"} cue) · kaydedildi: ${j.output_rel}`
+          : `SRT hazır (${j.cue_count || "?"} cue)`,
+      );
+      return;
+    }
+    $("tercume-srt-file")?.click();
+  }
+
+  async function importSrtFileThenTranslate(file) {
+    if (!file) return;
+    const name = String(file.name || "").toLowerCase();
+    if (!name.endsWith(".srt") && !name.endsWith(".vtt")) {
+      flash("Yalnız .srt veya .vtt seçin.");
+      return;
+    }
+    const text = await file.text();
+    if (!looksLikeSrtPanel(text) && !text.trim()) {
+      flash("Dosyada altyazı satırı yok.");
+      return;
+    }
+    setSourceText(text);
+    openRel = "";
+    updateActiveLabel();
+    flash("SRT yüklendi — çevriliyor…");
+    const j = await postSrtTranslate({ text, save: true });
+    if (j.srt) setTargetText(j.srt);
+    flash(
+      j.output_rel
+        ? `SRT hazır (${j.cue_count || "?"} cue) · ${j.output_rel}`
+        : `SRT hazır (${j.cue_count || "?"} cue)`,
+    );
+  }
+
   async function translateViaChat() {
     const raw = getSourceText();
     if (!raw) {
@@ -5444,6 +5524,14 @@ ${chunk}`;
           flash(e.message || "Arka plan çevirisi başlatılamadı");
         });
       else void runPagedTranslation("single");
+    });
+    $("btn-tercume-srt")?.addEventListener("click", () => {
+      void runSrtTranslatePanel().catch((e) => flash(e.message || "SRT çevirisi başarısız"));
+    });
+    $("tercume-srt-file")?.addEventListener("change", (ev) => {
+      const f = ev.target.files?.[0];
+      void importSrtFileThenTranslate(f).catch((e) => flash(e.message || "SRT dosyası okunamadı"));
+      ev.target.value = "";
     });
     $("btn-tercume-stop")?.addEventListener("click", () => {
       translateAbort = true;

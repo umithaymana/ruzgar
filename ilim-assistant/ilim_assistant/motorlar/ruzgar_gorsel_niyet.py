@@ -80,9 +80,14 @@ def ocr_image_bytes(raw: bytes, lang: str = "tur+eng") -> tuple[str, str]:
         from PIL import Image
         import pytesseract
 
-        tess_cmd = os.environ.get("TESSERACT_CMD", "").strip()
-        if tess_cmd:
-            pytesseract.pytesseract.tesseract_cmd = tess_cmd
+        try:
+            from ilim_assistant.motorlar.tercume_ocr_runtime import configure_pytesseract
+
+            configure_pytesseract()
+        except Exception:
+            tess_cmd = (os.environ.get("TESSERACT_CMD") or os.environ.get("RUZGAR_TESSERACT") or "").strip()
+            if tess_cmd:
+                pytesseract.pytesseract.tesseract_cmd = tess_cmd
     except Exception:
         return "", "none"
     try:

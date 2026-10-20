@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-20 (gece) — **Tercüme SRT çeviri** (sohbet + `/api/tercume/srt`). Önceki: tek sohbet `957c632f` · foto v2 · CHECKPOINT `27e2eee6`.
+**Son güncelleme:** 2026-10-20 (gece) — **SRT panel + ffmpeg + OCR ortamı.** Önceki: SRT API `23fe3be5` · tek sohbet · CHECKPOINT `27e2eee6`.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -100,9 +100,10 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
 6. ~~2026-10-20 gece — uçtan uca tarama + push~~ — `27e2eee6` · masa TDZ + catch `handled:false` · sohbet kırığı kapandı.
 7. ~~Foto yüz gömme v2 (2026-10-20 gece)~~ — `EMBED_VERSION=v2-clahe-48` · test **11/11** · `84d48d60`.
 8. ~~Ana Motor tek sohbet orkestra (2026-10-20 gece)~~ — quiet handoff · `957c632f`.
-9. ~~Tercüme SRT (2026-10-20 gece)~~ — `tercume_srt.py` · sohbet yapıştır / göreli yol · `POST /api/tercume/srt` · zaman damgası korunur · anlık ≤60 cue · smoke PASS · `RUZGAR_TERCUME_SRT=0`.
-10. **← BURADAN BAŞLA:** OCR/ffmpeg ortam boşlukları · veya çeviri panel UI cilası.
-11. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
+9. ~~Tercüme SRT (2026-10-20 gece)~~ — API + sohbet · `23fe3be5`.
+10. ~~SRT panel + ortam (2026-10-20 gece)~~ — Tercüme üstte **SRT çevir** düğmesi · winget **FFmpeg 9** + **Tesseract 5.4** · `ffmpeg_bin`/`tesseract_bin` Windows yolları · OCR `available`+`cloud_ready` (ara/tur/eng tessdata).
+11. **← BURADAN BAŞLA:** Canlı ForceRestart sonrası health doğrula · veya foto arşivde «Katmanları kur».
+12. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
 
 ### 2026-10-18 / 19 — oturum kaydı (geç yazıldı)
 

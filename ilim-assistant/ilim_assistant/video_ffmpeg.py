@@ -17,11 +17,52 @@ DEFAULT_FFMPEG_TIMEOUT = 2 * 60 * 60
 
 
 def ffmpeg_bin() -> str | None:
-    return shutil.which("ffmpeg")
+    """PATH + RUZGAR_FFMPEG + yaygın Windows yolları."""
+    import os
+    from pathlib import Path
+
+    env = (os.environ.get("RUZGAR_FFMPEG") or "").strip()
+    if env and Path(env).is_file():
+        return env
+    hit = shutil.which("ffmpeg")
+    if hit:
+        return hit
+    for guess in (
+        Path(r"C:\ffmpeg\bin\ffmpeg.exe"),
+        Path(r"C:\Program Files\ffmpeg\bin\ffmpeg.exe"),
+        Path(r"C:\Program Files\Gyan\ffmpeg\bin\ffmpeg.exe"),
+        Path.home() / "scoop" / "apps" / "ffmpeg" / "current" / "bin" / "ffmpeg.exe",
+        Path(os.environ.get("LOCALAPPDATA") or "") / "Microsoft" / "WinGet" / "Links" / "ffmpeg.exe",
+    ):
+        if guess.is_file():
+            return str(guess)
+    return None
 
 
 def ffprobe_bin() -> str | None:
-    return shutil.which("ffprobe")
+    import os
+    from pathlib import Path
+
+    env = (os.environ.get("RUZGAR_FFPROBE") or "").strip()
+    if env and Path(env).is_file():
+        return env
+    hit = shutil.which("ffprobe")
+    if hit:
+        return hit
+    ff = ffmpeg_bin()
+    if ff:
+        sibling = Path(ff).with_name("ffprobe.exe" if ff.lower().endswith(".exe") else "ffprobe")
+        if sibling.is_file():
+            return str(sibling)
+    for guess in (
+        Path(r"C:\ffmpeg\bin\ffprobe.exe"),
+        Path(r"C:\Program Files\ffmpeg\bin\ffprobe.exe"),
+        Path(r"C:\Program Files\Gyan\ffmpeg\bin\ffprobe.exe"),
+        Path.home() / "scoop" / "apps" / "ffmpeg" / "current" / "bin" / "ffprobe.exe",
+    ):
+        if guess.is_file():
+            return str(guess)
+    return None
 
 
 def ffmpeg_available() -> bool:

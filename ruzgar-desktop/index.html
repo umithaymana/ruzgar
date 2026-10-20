@@ -55,8 +55,10 @@
           <div class="tercume-top-flow" aria-label="Çeviri komutları">
             <div class="tercume-top-flow-actions">
               <button type="button" class="btn-primary btn-compact" id="btn-tercume-translate">Çevir</button>
+              <button type="button" class="btn-secondary btn-compact" id="btn-tercume-srt" title="Kaynak paneldaki SRT/VTT veya seçilen dosyayı çevir (zaman damgası korunur)">SRT çevir</button>
               <button type="button" class="btn-secondary btn-compact" id="btn-tercume-stop">Durdur</button>
               <button type="button" class="btn-secondary btn-compact" id="btn-tercume-save-target">Kaydet</button>
+              <input type="file" id="tercume-srt-file" hidden accept=".srt,.vtt,text/plain" />
             </div>
           </div>
           <div class="video-top-flow" aria-label="Video hızlı işlemler">
@@ -1459,7 +1461,7 @@
                   </div>
                   <p class="tercume-file-tree-hint" id="tercume-file-tree-hint">Listeden dosyaya tıklayın veya «Dosya aç» ile bilgisayardan seçin.</p>
                 </div>
-                <input type="file" id="tercume-import-file" hidden accept=".pdf,.docx,.epub,.txt,.md,.png,.jpg,.jpeg,.webp,.html,.rtf,.fb2,.mobi,.djvu,.djv" />
+                <input type="file" id="tercume-import-file" hidden accept=".pdf,.docx,.epub,.txt,.md,.srt,.vtt,.png,.jpg,.jpeg,.webp,.html,.rtf,.fb2,.mobi,.djvu,.djv" />
               </aside>
               <aside class="tercume-ara-panel" id="tercume-ara-panel" aria-label="İnternet kaynak arama" hidden>
                 <div class="tercume-ara-head">İnternet kaynakları</div>
@@ -3425,7 +3427,7 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
     <script src="components/sidebar-manager.js?v=20261016-proje-tam"></script>
     <script src="ruzgar-split.js?v=20261016-sohbet-tutamac"></script>
     <script src="ruzgar-virus-guard.js?v=20260607-preflight-err"></script>
-    <script src="tercume-atolye.js?v=20260606-tools-panel"></script>
+    <script src="tercume-atolye.js?v=20261020-srt1"></script>
     <script src="ruzgar-sohbet-anlama.js?v=20260608-v4-sinema-url"></script>
     <script src="ruzgar-gorsel-niyet.js?v=20260608-v1"></script>
     <script src="ruzgar-ses-kolonlar.js?v=20260608-v1"></script>
