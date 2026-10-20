@@ -217,6 +217,28 @@ def classify_tercume_intent(
     if _SUBTITLE_RE.search(low) and not _TRANSLATE_RE.search(low):
         return {"intent": INTENT_COMMAND, "reason": "subtitle_help"}
 
+    # SRT yapıştırma / yol + çevir
+    try:
+        from ilim_assistant.motorlar.tercume_srt import (
+            extract_srt_body_from_message,
+            extract_srt_path_hint,
+            looks_like_srt_body,
+        )
+
+        if extract_srt_path_hint(raw) or extract_srt_body_from_message(raw) or (
+            looks_like_srt_body(raw) and _TRANSLATE_RE.search(raw)
+        ):
+            src, tgt = parse_language_pair(raw)
+            return {
+                "intent": INTENT_DO,
+                "reason": "translate_srt",
+                "src": src,
+                "tgt": tgt,
+                "defer_llm": True,
+            }
+    except Exception:
+        pass
+
     body = extract_translate_text(raw)
     if _TRANSLATE_RE.search(raw) or body:
         src, tgt = parse_language_pair(raw)
@@ -262,10 +284,10 @@ def format_lang_list() -> str:
 def format_subtitle_help() -> str:
     return (
         "Ümit abi, **altyazı / SRT** hattı:\n\n"
-        "1. Video motorunda videoyu indirin veya dosya seçin.\n"
-        "2. Altyazı dosyasını (SRT/VTT) videoya gömün veya metni çıkarın.\n"
-        "3. Metni tercüme atölyesine yapıştırıp **Çevir** veya sohbette "
-        "`altyazıyı türkçeye çevir:` + metin yazın.\n\n"
+        "· Sohbete SRT yapıştırıp `türkçeye çevir:` yazın (zaman damgaları korunur).\n"
+        "· veya `srt çevir: klasor/altyazi.srt` (çalışma alanı göreli yolu).\n"
+        "· Video motoru: Altyazı işle / gömme (ASS şablon).\n"
+        "· API: `POST /api/tercume/srt` · kapat: `RUZGAR_TERCUME_SRT=0`\n\n"
         f"({FAZ74_VERSION})"
     )
 
@@ -330,6 +352,16 @@ def maybe_instant_faz74(message: str) -> str | None:
                 str(intent.get("src") or "auto"),
                 str(intent.get("tgt") or "en"),
             )
+        if reason == "translate_srt" and intent.get("defer_llm"):
+            try:
+                from ilim_assistant.motorlar.tercume_srt import maybe_run_srt_translate
+
+                hit = maybe_run_srt_translate(raw)
+                if hit.get("handled") and hit.get("reply"):
+                    return str(hit["reply"])
+            except Exception:
+                return None
+            return None
         if reason == "translate_text" and intent.get("defer_llm"):
             body = str(intent.get("text") or "")
             if len(body) > 3500:

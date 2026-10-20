@@ -52,9 +52,30 @@ def maybe_run_instant_translate(message: str) -> dict[str, Any]:
     if not raw:
         return {"ok": True, "handled": False, "reason": "empty"}
 
+    # SRT/VTT — düz metinden önce
+    try:
+        from ilim_assistant.motorlar.tercume_srt import maybe_run_srt_translate
+
+        srt_hit = maybe_run_srt_translate(raw)
+        if srt_hit.get("handled"):
+            return srt_hit
+    except Exception:
+        pass
+
     intent = classify_tercume_intent(raw, mode_norm="tercume")
-    if intent.get("intent") != INTENT_DO or intent.get("reason") != "translate_text":
+    if intent.get("intent") != INTENT_DO or intent.get("reason") not in (
+        "translate_text",
+        "translate_srt",
+    ):
         return {"ok": True, "handled": False, "reason": "not_translate"}
+
+    if intent.get("reason") == "translate_srt":
+        try:
+            from ilim_assistant.motorlar.tercume_srt import maybe_run_srt_translate
+
+            return maybe_run_srt_translate(raw)
+        except Exception as exc:
+            return {"ok": False, "handled": False, "error": str(exc)[:200]}
 
     body = str(intent.get("text") or extract_translate_text(raw) or "").strip()
     if not body:

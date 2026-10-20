@@ -8173,8 +8173,76 @@ def api_tercume_capabilities() -> dict[str, Any]:
             "ocr": "Taranmış görsel/PDF için Tesseract",
             "pdf_preview": "PDF sayfa görüntüsü için PyMuPDF (pip install pymupdf)",
             "virus_guard": "Rüzgar Virüs Kalkanı: çok katmanlı tarama + nötralize + sesli onay",
+            "srt": "SRT/VTT çeviri: POST /api/tercume/srt (ffmpeg yok)",
         },
     }
+
+
+class TercumeSrtBody(BaseModel):
+    text: str = Field("", max_length=2_000_000)
+    rel: str = Field("", max_length=500)
+    src_lang: str = Field("auto", max_length=12)
+    tgt_lang: str = Field("tr", max_length=8)
+    save: bool = False
+
+
+@app.post("/api/tercume/srt")
+async def api_tercume_srt(body: TercumeSrtBody) -> dict[str, Any]:
+    """SRT/VTT çevir — zaman damgaları korunur; çıktı isteğe bağlı export klasörüne."""
+    from ilim_assistant.motorlar.tercume_srt import (
+        SRT_VERSION,
+        srt_translate_enabled,
+        translate_srt_path,
+        translate_srt_text,
+    )
+
+    if not srt_translate_enabled():
+        raise HTTPException(status_code=503, detail="RUZGAR_TERCUME_SRT kapalı.")
+
+    rel = (body.rel or "").strip()
+    text = (body.text or "").strip()
+    src = (body.src_lang or "auto").strip().lower()[:8]
+    tgt = (body.tgt_lang or "tr").strip().lower()[:2]
+
+    def _run() -> dict[str, Any]:
+        if rel:
+            path = _repo_resolve_under_root(rel)
+            out = translate_srt_path(path, src_lang=src, tgt_lang=tgt)
+        elif text:
+            out = translate_srt_text(text, src_lang=src, tgt_lang=tgt)
+        else:
+            return {"ok": False, "error": "text veya rel gerekli"}
+        if not out.get("ok"):
+            return out
+        saved_rel = None
+        if body.save and out.get("srt"):
+            from ilim_assistant.motorlar.altyazi_fabrika import write_subtitle_export
+
+            stem = Path(rel).stem if rel else "paste"
+            out_path = write_subtitle_export(
+                str(out["srt"]),
+                export_dir=export_directory(REPO_ROOT),
+                stem=f"{stem}_{tgt}",
+                suffix=".srt",
+            )
+            saved_rel = out_path.relative_to(REPO_ROOT.resolve()).as_posix()
+            out["output_rel"] = saved_rel
+        return out
+
+    try:
+        meta = await run_in_threadpool(_run)
+    except HTTPException:
+        raise
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)[:220]) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)[:220]) from exc
+    if not meta.get("ok"):
+        raise HTTPException(
+            status_code=400,
+            detail=str(meta.get("error") or "SRT çevirisi başarısız")[:220],
+        )
+    return {"ok": True, "version": SRT_VERSION, **meta}
 
 
 @app.post("/api/tercume/batch-start")
