@@ -154,6 +154,7 @@ def enrich_health_build(build: dict[str, Any] | None) -> dict[str, Any]:
         ("programlama_faz89", "enrich_health_build"),
         ("programlama_faz91", "enrich_health_build"),
         ("programlama_faz96", "enrich_health_build"),
+        ("programlama_faz103_e2", "enrich_health_build"),
     ):
         try:
             m = __import__(f"ilim_assistant.motorlar.{_mod}", fromlist=[_fn])

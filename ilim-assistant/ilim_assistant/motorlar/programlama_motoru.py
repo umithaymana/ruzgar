@@ -1304,6 +1304,14 @@ def _maybe_programlama_instant_reply_impl(
     except Exception:
         pass
     try:
+        from ilim_assistant.motorlar.programlama_faz103_e2 import maybe_instant_faz103
+
+        faz103_hit = maybe_instant_faz103(message, workspace_root)
+        if faz103_hit:
+            parts.append(faz103_hit)
+    except Exception:
+        pass
+    try:
         from ilim_assistant.motorlar.programlama_faz88 import maybe_instant_faz88
 
         faz88_hit = maybe_instant_faz88(message, workspace_root)

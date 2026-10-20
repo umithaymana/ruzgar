@@ -61,10 +61,21 @@ def build_mega_workbench_payload(workspace_root: str | Path | None) -> dict[str,
         stats = compute_task_stats(workspace_root, window_days=30)
     except Exception:
         pass
-    e2 = stats.get("e2") if isinstance(stats, dict) else None
+    e2: dict[str, Any] = {}
+    try:
+        from ilim_assistant.motorlar.programlama_faz103_e2 import compute_e2_stats
+
+        e2 = compute_e2_stats(workspace_root, window_days=30)
+    except Exception:
+        e2 = stats.get("e2") if isinstance(stats, dict) else {}
+        e2 = e2 if isinstance(e2, dict) else {}
     rolling = stats.get("rolling_20") if isinstance(stats, dict) else None
-    e2_rate = float((e2 or {}).get("success_rate") or (rolling or {}).get("success_rate") or 0)
-    e2_total = int((e2 or {}).get("total") or (rolling or {}).get("total") or 0)
+    e2_rate = float(
+        e2.get("success_rate")
+        or (rolling or {}).get("success_rate")
+        or 0
+    )
+    e2_total = int(e2.get("total") or (rolling or {}).get("total") or 0)
 
     return {
         "ok": True,

@@ -2968,6 +2968,32 @@ def api_programlama_combined_e1_battery(
     }
 
 
+@app.get("/api/programlama/combined-e2-battery")
+def api_programlama_combined_e2_battery(
+    workspace_root: str | None = None,
+    live: int = 0,
+):
+    """Faz 103 — E2 çok dosya pili (offline + isteğe canlı)."""
+    from ilim_assistant.motorlar.programlama_faz103_e2 import (
+        FAZ103_VERSION,
+        format_e2_battery_report,
+        run_combined_e2_battery,
+        run_e2_offline_battery,
+    )
+
+    root = (workspace_root or "").strip() or None
+    if live:
+        bundle = run_combined_e2_battery(root, live_llm=True)
+    else:
+        bundle = run_e2_offline_battery(root)
+    return {
+        "ok": bool(bundle.get("ok")),
+        "report": bundle,
+        "text": format_e2_battery_report(bundle),
+        "version": FAZ103_VERSION,
+    }
+
+
 @app.post("/api/programlama/e1-maintenance")
 def api_programlama_e1_maintenance(workspace_root: str | None = None):
     """Faz 91 — E1 bakım pili (birleşik pil + temiz KPI)."""

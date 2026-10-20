@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-20 (gece) — **Programlama E2 dilim 1** (çok dosya → ajan). Önceki ortam: `b7608525`.
+**Son güncelleme:** 2026-10-20 (gece) — **Programlama E2 dilim 2** (çok dosya pili %100). Önceki: E2 dilim 1 `86eb7f3a`.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -103,8 +103,12 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
 9. ~~Tercüme SRT (2026-10-20 gece)~~ — API + sohbet · `23fe3be5`.
 10. ~~SRT panel + ortam (2026-10-20 gece)~~ — `b7608525`.
 11. ~~Programlama E2 dilim 1 (2026-10-20 gece)~~ — çok dosya / mega niyeti → `goal_wants_agent_path` + `path_hint` (`agent_multi` / `agent_mega`) · Faz56 isimli yol çıkarımı · yüzey handoff’ta çok dosya planı · smoke PASS. **Programlama rayı açık.**
-12. **← BURADAN BAŞLA (programlama):** E2 dilim 2 — canlı çok dosya pil / mega-workbench ölçüm · veya monorepo 3 dosya refactor senaryosu.
-13. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
+12. ~~Programlama E2 dilim 2 (2026-10-20 gece)~~ — Faz 103 E2 pili:
+    - Offline **5/5 (%100)** · hedef ≥%90: niyet yolu · monorepo triple gate · 3 dosya parity · mega workbench · offline multi heal
+    - `compute_e2_stats` + mega-workbench KPI · API `GET /api/programlama/combined-e2-battery`
+    - Komut: `e2 pil` · script: `programlama_e2_battery.py` (--live isteğe; bu koşuda beyin yok → atlandı)
+13. **← BURADAN BAŞLA (programlama):** E2 dilim 3 — canlı LLM ile çok dosya ajan (Ollama ayaktayken) · resume / kök neden sertleştirme · veya E2 dilim 4 ürün (workbench kartı).
+14. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
 
 ### 2026-10-18 / 19 — oturum kaydı (geç yazıldı)
 
@@ -631,7 +635,7 @@ Modül: `ilim_assistant.nebula_kitap_hafiza` — `desktop_server` sohbetinde kit
 2. ~~Karmaşık hedefte ajan yolu (Faz85 üstü kapı)~~
 3. ~~Canlı ajan pili %100 + Yol C kök neden cilası~~
 4. ~~Foto / SRT / tek sohbet / ortam~~ — tamam (yan ray).
-5. **Programlama E2:** dilim 1 (niyet→ajan) tamam · dilim 2 sırada.
+5. **Programlama E2:** dilim 1+2 tamam (niyet→ajan + offline pil %100) · dilim 3 sırada (canlı LLM çok dosya).
 
 ## Referans
 
