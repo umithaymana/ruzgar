@@ -238,7 +238,23 @@ def synthesize_kutuphane_reply(message: str, hint: dict[str, Any]) -> str:
     return ham
 
 
+def _try_osmanli_donem_kart(message: str) -> Optional[str]:
+    """Sabit dönem kartı — Lale Devri LLM/fuzzy sapmasını kes (#5)."""
+    low = _norm(message)
+    if "lale" in low and "devri" in low:
+        return (
+            "Lale Devri, Osmanlı'da III. Ahmed döneminde yaklaşık **1718–1730** arası "
+            "kültürel bir dönemdir. Pasarofça Antlaşması sonrası barış yıllarında mimari, "
+            "eğlence ve Nedim'in şiiriyle anılır; Patrona Halil isyanıyla biter. "
+            "Tanzimat veya 19. yüzyıl sonu değildir."
+        )
+    return None
+
+
 def try_bilgi_kutuphane_instant_reply(message: str) -> Optional[str]:
+    donem = _try_osmanli_donem_kart(message)
+    if donem:
+        return donem
     if not should_check_bilgi_kutuphane_first(message):
         return None
     hint = lookup_bilgi_kutuphane_hint(message)

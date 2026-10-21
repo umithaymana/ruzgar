@@ -147,7 +147,19 @@ def try_cografya_reply(msg: str) -> Optional[str]:
         return None
     low = _fold(msg)
     is_cue = looks_like_cografya_question(msg)
-    ask = any(p in low for p in ("nedir", "ne demek", "anlat", "hangi", "nerede", "nasil", "nasıl"))
+    ask = any(
+        p in low
+        for p in (
+            "nedir",
+            "ne demek",
+            "anlat",
+            "hangi",
+            "nerede",
+            "nasil",
+            "nasıl",
+            "ne zaman",
+        )
+    )
     if not is_cue and not ask:
         return None
     from ilim_assistant.ruzgar_kavram_match import match_kavram_row
@@ -155,7 +167,13 @@ def try_cografya_reply(msg: str) -> Optional[str]:
     row = match_kavram_row(msg, _load_kavramlar(), min_score=55 if is_cue else 70)
     if row:
         return format_cografya_reply(row)
-    if is_cue and ask:
+    # Yalnız «coğrafya nedir» gibi alan sorusunda genel kart —
+    # Karadeniz/Marmara ipucu eşleşmeyince genel karta düşmesin (#5).
+    field_ask = any(
+        low == x or low.startswith(f"{x} nedir") or low.startswith(f"{x} ne demek")
+        for x in ("cografya", "coğrafya")
+    )
+    if field_ask and ask:
         for r in _load_kavramlar():
             if r.get("id") == "cografya":
                 return format_cografya_reply(r)

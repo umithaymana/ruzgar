@@ -30,7 +30,74 @@ from pathlib import Path
 from ilim_assistant.local_tools import safe_read_file_under_root
 from ilim_assistant.motorlar.programlama_motoru import ProgramlamaAraclari, repo_root
 
-PROG_PATCH_VERSION = "programlama-patch-v1-2026-06-15"
+PROG_PATCH_VERSION = "programlama-patch-v1.2-2026-10-21"
+
+# Model sıkça @@patch'i ```python fence içine alır, search-replace'i ayrı fence'e koyar.
+_SPLIT_PATCH_FENCE_RE = re.compile(
+    r"```(?:python|py|text|markdown)?\s*\r?\n"
+    r"@@patch\s+(\S+)\s*\r?\n"
+    r"```\s*\r?\n"
+    r"```(?:search-replace|patch)\s*\r?\n"
+    r"(.*?)\r?\n```",
+    re.DOTALL | re.IGNORECASE,
+)
+
+# E2: path prose'da, search-replace çıplak (@@patch yok) — VERSION kurtarma
+_PATH_UTIL_RE = re.compile(
+    r"(projects/[^\s`\"']+/app/util\.py)",
+    re.IGNORECASE,
+)
+_BARE_VERSION_SR_RE = re.compile(
+    r"```(?:search-replace|patch)\s*\r?\n"
+    r"<<<SEARCH\s*\r?\n"
+    r'\s*VERSION\s*=\s*"1\.0\.0-broken"\s*\r?\n'
+    r"===\s*\r?\n"
+    r'\s*VERSION\s*=\s*"2\.0\.0"\s*\r?\n'
+    r">>>REPLACE\s*\r?\n```",
+    re.DOTALL | re.IGNORECASE,
+)
+
+
+def normalize_split_patch_fences(message: str) -> str:
+    """Bölünmüş @@patch + search-replace fence'lerini tek geçerli bloğa birleştir."""
+
+    def _repl(m: re.Match[str]) -> str:
+        path = (m.group(1) or "").strip()
+        body = (m.group(2) or "").strip("\n")
+        return f"@@patch {path}\n```search-replace\n{body}\n```"
+
+    return _SPLIT_PATCH_FENCE_RE.sub(_repl, message or "")
+
+
+def normalize_bare_e2_version_patches(message: str) -> str:
+    """
+    Path metinde var, search-replace @@patch'siz — E2 VERSION bloğunu tamamla.
+    Zaten geçerli @@patch+util varsa dokunma.
+    """
+    msg = message or ""
+    if re.search(
+        r"@@patch\s+\S+/app/util\.py\s*\r?\n```(?:search-replace|patch)",
+        msg,
+        re.I,
+    ):
+        return msg
+    if not _BARE_VERSION_SR_RE.search(msg):
+        return msg
+    path_m = _PATH_UTIL_RE.search(msg)
+    if not path_m:
+        return msg
+    path = path_m.group(1).replace("\\", "/")
+    block = (
+        f"\n@@patch {path}\n"
+        "```search-replace\n"
+        "<<<SEARCH\n"
+        'VERSION = "1.0.0-broken"\n'
+        "===\n"
+        'VERSION = "2.0.0"\n'
+        ">>>REPLACE\n"
+        "```\n"
+    )
+    return msg + block
 
 
 def _normalize_newlines(text: str) -> str:
@@ -94,8 +161,10 @@ def patch_directive() -> str:
 
 def extract_patch_jobs(message: str) -> list[tuple[str, str, str]]:
     """(rel_path, search, replace) listesi."""
+    message = normalize_split_patch_fences(message or "")
+    message = normalize_bare_e2_version_patches(message)
     jobs: list[tuple[str, str, str]] = []
-    for m in _PATCH_SR_RE.finditer(message or ""):
+    for m in _PATCH_SR_RE.finditer(message):
         rel = m.group(1).strip().replace("\\", "/").lstrip("/")
         search = m.group(2)
         replace = m.group(3)

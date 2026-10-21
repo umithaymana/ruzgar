@@ -374,6 +374,13 @@ def reason_web_question(message: str) -> dict[str, str]:
             query = f"{query} fikstür".strip()
     elif "hava" in low:
         want = "bugünkü hava durumunu"
+    elif re.search(r"\bka[cç]\b", low) or "adet" in low or "sayısı" in low or "sayisi" in low:
+        want = (
+            "güncel resmi veya en güvenilir kaynak rakamı; "
+            "kaynak zayıfsa sayı uydurma, dürüstçe söyle"
+        )
+        if "özel okul" in low or "ozel okul" in low:
+            query = "Türkiye özel okul sayısı MEB istatistik"
     elif re.search(r"\bnedir\b", low):
         topic = re.sub(r"\bnedir\b.*", "", raw, flags=re.IGNORECASE).strip(" ?")
         want = f"{topic or query} nedir; sade ve doğru"
@@ -415,6 +422,13 @@ def build_web_pro_system_addon(message: str) -> str:
         extra += (
             "Sabit bilgi: konu dışı siteyi at. Önce doğru cevap, sonra kısa gerekçe.\n"
         )
+    low_msg = (message or "").lower()
+    if re.search(r"\bka[cç]\b", low_msg) or "adet" in low_msg or "sayısı" in low_msg:
+        extra += (
+            "Sayı sorusu: yalnızca sayfada açık rakam varsa söyle. "
+            "Yoksa «net resmi rakam bulamadım» de — tahmin etme.\n"
+            "«Web yeteneğim / görünmez yanıt / sorgulama yaptım» meta cümlesi yazma.\n"
+        )
     return (
         "\n\nWeb notu:\n"
         f"Öğrenmek istediği: {want}\n"
@@ -424,6 +438,7 @@ def build_web_pro_system_addon(message: str) -> str:
         "Sohbet eder gibi konuş: düz Türkçe, madde listesi yok, rapor dili yok.\n"
         "Sayfayı yapıştırma. Menüyü yok say. Bilmediğin rakamı uydurma.\n"
         "Site adını cümlenin içinde, doğal şekilde an.\n"
+        "Soruyu başlığa yazma. Web araması yaptığını anlatma — sonucu söyle.\n"
         f"{extra}"
     )
 

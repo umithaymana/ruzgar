@@ -30,8 +30,10 @@ _STRICT_LOOKUP_RE = re.compile(
     r"\b(?:buhari|buhârî|muslim|müslim|tirmizi|ebu\s*davud|nesai|ibn\s*mace)\b"
     r".{0,20}\b\d{1,5}\b|"
     r"\b(?:hadis|ayet)\s*(?:no|numara|#)?\s*\d{1,5}\b|"
-    # Tek veya çok kelimeli «… nedir / ne demek» — anlık kütüphane lookup
+    # Tek veya çok kelimeli «… nedir / ne demek / ne zaman / kimdir» — anlık lookup
     r"^\s*(?:[\w'’çğıöşüâîû\.\+\-#_]{1,40}\s+){1,6}(?:nedir|ne\s+demek)\s*[?.!]?\s*$|"
+    r"^\s*(?:[\w'’çğıöşüâîû\.\+\-#_]{1,40}\s+){1,6}ne\s+zaman(?:\s+oldu|\s+ydi|\s+idi)?\s*[?.!]?\s*$|"
+    r"^\s*(?:[\w'’çğıöşüâîû\.\+\-#_]{1,40}\s+){1,6}(?:kimdir|kim\s+kurdu)\s*[?.!]?\s*$|"
     r"^\s*(?:[\w'’çğıöşüâîû\.\+\-#_]{1,40}\s+){1,6}ne\s+i[sş](?:ine|e)\s+yarar\s*[?.!]?\s*$|"
     r"^\s*(?:[\w'’çğıöşüâîû\.\+\-#_]{1,40}\s+){1,6}ne\s+yapar\s*[?.!]?\s*$|"
     r"^\s*c(?:\+\+|#)?(?:\s+dili)?(?:\s+[\w'’çğıöşüâîû\.\+\-#]{2,40}){1,4}\s+nedir\s*[?.!]?\s*$|"

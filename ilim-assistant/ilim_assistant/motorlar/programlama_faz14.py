@@ -364,30 +364,48 @@ def build_agent_turn_user_message(
     failure_snippet: str = "",
 ) -> str:
     e2_nudge = ""
+    e2_multi = False
     try:
         from ilim_assistant.motorlar.programlama_faz103_e2 import e2_write_template_nudge
+        from ilim_assistant.motorlar.programlama_faz56 import looks_like_multi_file_task
+        from ilim_assistant.motorlar.programlama_faz85 import goal_wants_agent_path
 
         e2_nudge = e2_write_template_nudge(task.scope_rel, task.goal) or ""
+        e2_multi = bool(
+            looks_like_multi_file_task(task.goal) or goal_wants_agent_path(task.goal)
+        )
     except Exception:
         e2_nudge = ""
+        e2_multi = False
     if turn <= 1:
-        body = (
-            f"[OTONOM GÖREV — Faz 14 — tur {turn}/{max_turns}]\n"
-            f"Proje: `{task.scope_rel}`\n"
-            f"Hedef: {task.goal}\n\n"
-            "Adımlar:\n"
-            "1) Kısa plan (madde)\n"
-            "2) Gerekli dosyaları `@@read` ile oku (veya zaten bağlamda)\n"
-            "3) `@@write yol` + kod bloğu ile patch\n"
-            "4) Test isteniyorsa `tests/test_health.py` ve health'te `version` alanı\n"
-            "5) Gereksiz refaktör yok\n"
-        )
+        if e2_multi:
+            # Saf yazım dilimi: plan/read-first küçük modelleri 0 write'a iter.
+            body = (
+                f"[OTONOM GÖREV — Faz 14 — tur {turn}/{max_turns} — YAZIM ÖNCE]\n"
+                f"Proje: `{task.scope_rel}`\n"
+                f"Hedef: {task.goal}\n\n"
+                "İLK ÇIKTI: plan yazma, salt okuma yapma.\n"
+                "Doğrudan `@@patch yol` + ```search-replace``` (veya `@@write`) üret.\n"
+                "Sonra pytest/verify. Gereksiz refaktör yok.\n"
+            )
+        else:
+            body = (
+                f"[OTONOM GÖREV — Faz 14 — tur {turn}/{max_turns}]\n"
+                f"Proje: `{task.scope_rel}`\n"
+                f"Hedef: {task.goal}\n\n"
+                "Adımlar:\n"
+                "1) Kısa plan (madde)\n"
+                "2) Gerekli dosyaları `@@read` ile oku (veya zaten bağlamda)\n"
+                "3) `@@write yol` + kod bloğu ile patch\n"
+                "4) Test isteniyorsa `tests/test_health.py` ve health'te `version` alanı\n"
+                "5) Gereksiz refaktör yok\n"
+            )
         return body + e2_nudge
     body = (
         f"[OTONOM GÖREV — tur {turn}/{max_turns} — düzeltme]\n"
         "Doğrulama kırmızı. Traceback/çıktı:\n\n"
         f"```text\n{failure_snippet[:14000]}\n```\n\n"
-        "Yalnızca gerekli `@@write` patch; kabuk komutu yazma.\n"
+        "Yalnızca gerekli `@@write` / `@@patch` ; kabuk komutu yazma.\n"
     )
     return body + e2_nudge
 

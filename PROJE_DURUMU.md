@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-21 (öğle) — **D+: Çizim/Sunum → programlama** · C 6c UI.
+**Son güncelleme:** 2026-10-21 (gece) — **#5 hafıza/eşleşme YEŞİL:** Karadeniz/Hicret/Lale/os canlı OK · zayıflık sırası 1–5 kapandı.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -149,8 +149,13 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
 29. ~~**C: 6c UI cilası**~~ — `paintFaz6cTekYuzPanels` · smoke `ana_motor_faz6c_ui_smoke`.
 30. ~~**D+: Çizim/Sunum → programlama**~~ — yuzey-bridge v1.4 · masa `→ Programlama` + «çizimi/sunumu programlamaya gönder» · smoke genişletildi.
 31. ~~**Dilimler commit+push**~~ — Faz85 alan · yazım yedek · C 6c UI · D+ çizim/sunum (bu tur).
-32. **← ŞİMDİ:** Mimar inceleme; 14b BOOT=0 ölçüm isteğe.
-33. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
+32. ~~**#1 saf yazım**~~ — şablon @@patch · yazım-önce · bölünmüş fence kurtarma · BOOT=0 canlı **agent_ok** (writes=2, 1 tur, heal yok).
+33. ~~**#2 sohbet akıcılığı**~~ — ChatGPT tarzında Güven/Faz J damgası yok · soru yankısı strip · smoke PASS · canlı: galaksi/görüş temizlik OK (görüş hâlâ tanım ağırlıklı — model).
+34. ~~**#3 web/genel bilgi**~~ — reason/MEB arama · sayı sorusu uydurma yasağı · 17.000 okul cilası · web meta strip · smoke PASS · canlı: dolar/hava OK, okul dürüst.
+35. ~~**#4 E2 kararlılık**~~ — KPI’de agent_ok / heal payı ayrı · çıplak VERSION patch kurtarma · smoke PASS · canlı BOOT=1 **agent_ok** · heal yok (~831s).
+36. ~~**#5 hafıza/eşleşme**~~ — kavram head-match · coğrafya/bilim genel kart tuzağı kapandı · «ne zaman/kimdir» strict · Lale 1718 kartı · smoke PASS · canlı: Karadeniz/Hicret/Lale/os OK.
+37. **← ŞİMDİ:** zayıflık sırası 1–5 tamam; Mimar inceleme / commit+push veya yeni zayıflık listesi.
+38. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
 
 ### Sıradaki (programlama → diğer)
 

@@ -137,6 +137,26 @@ def compute_e2_stats(
     ok_n = sum(1 for r in rows if r.get("success"))
     total = len(rows)
     rate = ok_n / total if total else 0.0
+    # #4 kararlılık: heal şişkinliğini ayır — saf ajan vs yedek
+    live_rows = [
+        r
+        for r in rows
+        if "live" in str(r.get("source") or "").lower()
+    ]
+    heal_n = sum(
+        1 for r in live_rows if "heal" in str(r.get("source") or "").lower()
+    )
+    agent_ok_n = 0
+    for r in live_rows:
+        if r.get("agent_ok") is True:
+            agent_ok_n += 1
+        elif r.get("agent_ok") is False:
+            continue
+        elif r.get("success") and "heal" not in str(r.get("source") or "").lower():
+            agent_ok_n += 1
+    live_total = len(live_rows)
+    agent_rate = agent_ok_n / live_total if live_total else 0.0
+    heal_share = heal_n / live_total if live_total else 0.0
     return {
         "ok": True,
         "total": total,
@@ -147,6 +167,11 @@ def compute_e2_stats(
         "window_days": window_days,
         "filtered_from": len(raw),
         "recent": rows[-8:],
+        "live_total": live_total,
+        "agent_ok_count": agent_ok_n,
+        "agent_ok_rate": round(agent_rate, 3),
+        "heal_fallback_count": heal_n,
+        "heal_share": round(heal_share, 3),
     }
 
 
@@ -430,20 +455,14 @@ def e2_write_template_nudge(scope_rel: str, goal: str = "") -> str:
     except Exception:
         pass
     if _e2_multi_goal(goal) or "version" in low:
-        service_name = scope_rel.split("/")[-1].replace("-", "_")
+        # Kök: çıplak ```search-replace (@@patch yolu yok) kopyalanınca
+        # apply_patch_jobs eşleşmez → 0 write. Tam @@patch blokları şart.
         chunks.append(
-            "\n[E2 yazım şablonu — bu turda aynen uygula, yalnız oku YASAK]\n"
-            f"1) `{scope_rel}/app/util.py` içinde `VERSION = \"2.0.0\"`\n"
-            f"2) `{scope_rel}/app/service.py` health_payload'a "
-            f'`"version": VERSION` ekle (service={service_name})\n'
-            "Örnek search-replace:\n"
-            "```search-replace\n"
-            "<<<SEARCH\n"
-            'VERSION = "1.0.0-broken"\n'
-            "===\n"
-            'VERSION = "2.0.0"\n'
-            ">>>REPLACE\n"
-            "```\n"
+            "\n[E2 yazım şablonu — AYNEN kopyala; ilk satır @@patch olsun]\n"
+            "Plan / yalnız-oku YASAK. Aşağıdaki iki bloğu üret, sonra pytest.\n"
+            "UYARI: `@@patch yol` satırını ```python fence içine ALMA — "
+            "ham satır + hemen altında ```search-replace.\n"
+            + _e2_multi_version_patch(scope_rel)
         )
     return "".join(chunks)
 
@@ -639,6 +658,7 @@ def _record_e2_outcome(
     try:
         from ilim_assistant.motorlar.programlama_faz55 import record_task_outcome
 
+        _agent = row.get("agent_ok")
         record_task_outcome(
             workspace_root,
             scope_rel=scope_rel,
@@ -650,6 +670,7 @@ def _record_e2_outcome(
             elapsed_sec=float(row.get("elapsed_sec") or 0),
             source=f"e2_battery_{row.get('source', 'faz103')}",
             detail=f"[{name}] {str(row.get('detail') or '')[:180]}",
+            agent_ok=bool(_agent) if _agent is not None else None,
         )
     except Exception:
         pass
@@ -927,6 +948,12 @@ def format_e2_battery_report(report: dict[str, Any]) -> str:
             f"\nE2 KPI (30g): **{int(float(e2.get('success_rate') or 0) * 100)}%** "
             f"({e2.get('success_count')}/{e2.get('total')})"
         )
+        if int(e2.get("live_total") or 0) > 0:
+            lines.append(
+                f"Canlı ajan: **{int(float(e2.get('agent_ok_rate') or 0) * 100)}%** "
+                f"agent_ok ({e2.get('agent_ok_count')}/{e2.get('live_total')}) · "
+                f"heal payı {int(float(e2.get('heal_share') or 0) * 100)}%"
+            )
     lines.append(f"\n({FAZ103_VERSION})")
     return "\n".join(lines)
 

@@ -105,6 +105,91 @@ def strip_hafiza_robot_phrasing(text: str) -> str:
     return t.strip()
 
 
+def strip_web_capability_noise(text: str) -> str:
+    """Web cevabındaki «yeteneğimle buldum / görünmez yanıt» meta gürültüsünü kes."""
+    if not text:
+        return text
+    import re
+
+    t = text
+    # Soru başlığı olarak markdown yankı
+    t = re.sub(r"(?m)^\*{0,2}.{8,120}\?\*{0,2}\s*\n+", "", t, count=1)
+    drop_frags = (
+        r"görünmez bir yanıt[^.]*\.?",
+        r"gorunmez bir yanit[^.]*\.?",
+        r"web sorgulama yetene[gğ]imle[^.]*\.?",
+        r"web sorgulamas[ıi] yap[ıi]ld[ıi][^.]*\.?",
+        r"bilgi için web sorgulamas[ıi][^.]*\.?",
+        r"bu sorunun cevab[ıi],\s*soruldu[gğ]unda[^.]*\.?",
+        r"ilgili bilgilerimden do[gğ]rudan elde edilemedi[^.]*\.?",
+        r"kullan[ıi]c[ıi]ya bu bilgiyi soruldu[gğ]unda[^.!\n]*[.!]?",
+    )
+    for pat in drop_frags:
+        t = re.sub(pat, " ", t, flags=re.I)
+    # --- sonrası meta blok
+    t = re.sub(r"\n---\n[\s\S]*$", "", t)
+    t = re.sub(r"[ \t]{2,}", " ", t)
+    t = re.sub(r"\n{3,}", "\n\n", t)
+    return t.strip()
+
+
+def strip_rhetorical_self_question(text: str) -> str:
+    """
+    Küçük modeller «X hakkında ne düşünüyorum?» diye soruyu yankılayıp sonra tanıma geçer.
+    ChatGPT tarzında ilk cümle gerçek cevap olmalı — bu yankıyı kes.
+    """
+    if not text:
+        return text
+    try:
+        from ilim_assistant.prompts import sohbet_tarz_chatgpt
+
+        if not sohbet_tarz_chatgpt():
+            return text
+    except Exception:
+        return text
+    import re
+
+    t = text.lstrip()
+    m = re.match(r"^([^.!\n]{6,180}\?)\s+", t)
+    if not m:
+        return text
+    q = m.group(1).lower()
+    cues = (
+        "düşünüyor",
+        "dusunuyor",
+        "ne demek",
+        "hakkında ne",
+        "hakkinda ne",
+        "nedir",
+        "kimdir",
+        "nasıl anlat",
+        "nasil anlat",
+    )
+    if not any(c in q for c in cues):
+        return text
+    rest = t[m.end() :].lstrip()
+    if len(rest) < 24:
+        return text
+    return rest
+
+
+def strip_trust_and_faz_noise(text: str) -> str:
+    """Güven damgası ve *Not (Faz …)* satırlarını sohbetten temizle."""
+    if not text:
+        return text
+    import re
+
+    t = text
+    t = re.sub(r"(?im)^[ \t]*\*{0,2}G[uü]ven:\s*.*$", "", t)
+    t = re.sub(r"\*{0,2}G[uü]ven:\s*[^*\n]*\*{0,2}[^\n]*", "", t)
+    t = re.sub(r"(?im)^[ \t]*\*Not \(Faz [^)]+\):[^\n]*\*?\s*$", "", t)
+    t = re.sub(r"\n+\*Not \(Faz [A-Z0-9]+\):[\s\S]*$", "", t)
+    t = re.sub(r"\*Not \(Faz [^)]+\):[^\n]*", "", t)
+    t = re.sub(r"\(Talimat:[^)]*\)", "", t, flags=re.I)
+    t = re.sub(r"\n{3,}", "\n\n", t)
+    return t.strip()
+
+
 def finalize_assistant_reply(raw: str, *, channel: str = "") -> str:
     """Mojibake onarımı, sızan talimat temizliği, sabit karşılama kırpma, Tek Ses (Faz B)."""
     t = repair_utf8_mojibake(raw or "")
@@ -112,6 +197,8 @@ def finalize_assistant_reply(raw: str, *, channel: str = "") -> str:
     t = scrub_leaked_instructions(t)
     t = strip_wake_greeting_echo(t)
     t = strip_hafiza_robot_phrasing(t)
+    t = strip_web_capability_noise(t)
+    t = strip_rhetorical_self_question(t)
     try:
         from ilim_assistant.ruzgar_tek_ses_faz_b import polish_tek_ses
 
@@ -126,11 +213,7 @@ def finalize_assistant_reply(raw: str, *, channel: str = "") -> str:
         pass
     import re
 
-    t = re.sub(r"(?im)^[ \t]*\*{0,2}Güven:\s*.*$", "", t)
-    t = re.sub(r"\*{0,2}Güven:\s*[^*\n]+\*{0,2}", "", t)
-    t = re.sub(r"\n+\*Not \(Faz [A-Z]\):[\s\S]*$", "", t)
-    t = re.sub(r"\*Not \(Faz [^)]+\):[^\n]*", "", t)
-    t = re.sub(r"\(Talimat:[^)]*\)", "", t, flags=re.I)
+    t = strip_trust_and_faz_noise(t)
     t = re.sub(r"\n{3,}", "\n\n", t)
     t = cila_sohbet_metni(t)
     return t.strip()
@@ -141,9 +224,20 @@ _SES_KART_SATIRI = re.compile(
 )
 _TEKRAR_SATIRI = re.compile(r"(?im)^\s*\[[^\n]*tekrar etme[^\n]*\n?")
 _REFERANS_SATIRI = re.compile(r"(?im)^\s*referans\s*\([^\n]*\n?")
-_OKUL_SAYISI = re.compile(r"(?i)\d{3,}\s*(?:bin\s+)?özel\s+okul")
+# 17000 / 17.000 / 17 bin / 17.000'den fazla özel okul
+_OKUL_SAYISI = re.compile(
+    r"(?i)(?:\d{1,3}(?:[.\s]\d{3})+|\d{4,}|\d{1,3}\s*bin)\s*"
+    r"(?:['’]?\s*den\s+fazla\s+)?(?:özel|ozel)\s+okul"
+)
+_OKUL_KAYNAK_OK = re.compile(
+    r"(?i)(?:meb\.gov|tuik\.gov|tüik\.gov|www\.meb|resmi\s+istatistik|"
+    r"mill[iı]\s+e[gğ]itim)"
+)
 _CUMLE_AYIR = re.compile(r"(?<=[.!?])\s+")
-_OKUL_YOK = "Özel okul sayısını rafta bulamadım. Sayı uydurmam."
+_OKUL_YOK = (
+    "Ümit abi, özel okul için net resmi rakamı güvenilir kaynaktan çıkaramadım; "
+    "sayı uydurmam. MEB veya TÜİK istatistiğine bakmak daha doğru."
+)
 
 
 def _cila_kat(parca: str) -> str:
@@ -170,7 +264,10 @@ def cila_sohbet_metni(text: str) -> str:
         satirlar.append(satir.strip())
         once = kat
     t = "\n".join(satirlar).strip()
-    if not t or re.search(r"https?://", t, re.I) or not _OKUL_SAYISI.search(t):
+    if not t or not _OKUL_SAYISI.search(t):
+        return t
+    # Resmi kaynak adı geçiyorsa rakamı bırak; rastgele URL yetmez.
+    if _OKUL_KAYNAK_OK.search(t):
         return t
     yeni: list[str] = []
     kondu = False

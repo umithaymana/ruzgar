@@ -171,11 +171,18 @@ def honest_bilgi_fallback(message: str, *, reason: str = "") -> str:
         why = " Konu hizalaması zayıf."
     elif reason == "hallucinated_profile":
         why = " Model kaynak olmadan genel bir meslek/kişilik şablonu üretmiş olabilir."
-    return (
+    body = (
         f"Ümit abi, «{q}» sorusuna net ve güvenilir bir yanıt veremedim.{why} "
-        "Web araması açıksa tekrar deneyebilir veya soruyu biraz daha netleştirebilirsin.\n\n"
-        "**Güven: düşük** — tek beyin bilgi doğrulama (Faz J)."
+        "Web araması açıksa tekrar deneyebilir veya soruyu biraz daha netleştirebilirsin."
     )
+    try:
+        from ilim_assistant.prompts import sohbet_tarz_chatgpt
+
+        if sohbet_tarz_chatgpt():
+            return body
+    except Exception:
+        pass
+    return body + "\n\n**Güven: düşük** — tek beyin bilgi doğrulama (Faz J)."
 
 
 def _ensure_low_guven(reply: str) -> str:
@@ -270,26 +277,37 @@ def apply_tek_beyin_bilgi_guard(
         meta["replaced"] = True
         return honest_bilgi_fallback(message, reason=topic_reason), meta
 
+    chatgpt = False
+    try:
+        from ilim_assistant.prompts import sohbet_tarz_chatgpt
+
+        chatgpt = bool(sohbet_tarz_chatgpt())
+    except Exception:
+        chatgpt = False
+
+    # ChatGPT tarzı: zayıf hizalama damgası / Faz J notu sohbeti bozar — sessiz bırak.
     if not topic_ok and topic_reason == "weak_alignment":
-        body = _append_note_if_missing(
-            body,
-            f"«{_clip_question(message, 72)}» sorusuyla konu hizalaması zayıf; "
-            "cevabı kaynaklarla doğrula.",
-        )
-        body = _ensure_low_guven(body)
+        if not chatgpt:
+            body = _append_note_if_missing(
+                body,
+                f"«{_clip_question(message, 72)}» sorusuyla konu hizalaması zayıf; "
+                "cevabı kaynaklarla doğrula.",
+            )
+            body = _ensure_low_guven(body)
+        else:
+            meta["chatgpt_silent_weak"] = True
 
     if mismatch and mismatch_note:
-        body = _append_note_if_missing(body, mismatch_note)
-        body = _ensure_low_guven(body)
+        if not chatgpt:
+            body = _append_note_if_missing(body, mismatch_note)
+            body = _ensure_low_guven(body)
+        else:
+            meta["chatgpt_silent_mismatch"] = True
 
     if not _GUVEN_RE.search(body):
-        try:
-            from ilim_assistant.prompts import sohbet_tarz_chatgpt
-
-            if sohbet_tarz_chatgpt() and topic_ok and not mismatch:
-                return body, meta
-        except Exception:
-            pass
+        # ChatGPT tarzı: Güven damgası sohbete yazılmaz (meta sessiz kalır).
+        if chatgpt:
+            return body, meta
         try:
             from ilim_assistant.ana_motor_reflection import _has_guven_line
 

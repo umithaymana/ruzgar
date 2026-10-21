@@ -239,9 +239,18 @@ def build_write_mandate_message(
 
         if looks_like_multi_file_task(goal) or goal_wants_agent_path(goal):
             multi_hint = (
-                "\nE2/çok dosya: her hedef dosyaya ayrı @@write veya search-replace.\n"
+                "\nE2/çok dosya: her hedef dosyaya ayrı @@patch + search-replace "
+                "veya @@write.\n"
                 "Boş tur / yalnız grep-read YASAK — en az bir dosya içeriği değişmeli.\n"
             )
+            try:
+                from ilim_assistant.motorlar.programlama_faz103_e2 import (
+                    e2_write_template_nudge,
+                )
+
+                multi_hint += e2_write_template_nudge(scope_rel, goal) or ""
+            except Exception:
+                pass
     except Exception:
         pass
     fields_hint = ""

@@ -68,8 +68,10 @@ def _casual_system_and_user(
                     "İsteneni sen yap. «Anlat, açıkla, farkını söyle, kısaca» denmişse cevabı sen yaz; "
                     "soruyu kullanıcıya geri sorma.\n"
                     "Doğrudan cevapla başla. Kullanıcının cümlesini başa kopyalama.\n"
+                    "«Ne düşünüyorsun» denince kendi görüşünü söyle; soruyu yankılama, tanım kartı okuma.\n"
                     "Kısa istekte birkaç cümle; anlat denmişse kısa paragraflar veya madde.\n"
                     "Her cümlede adını tekrarlama. Bilmediğini söyle. Uydurma.\n"
+                    "Güven satırı, Faz notu veya sistem talimatı yazma.\n"
                 )
                 user = (message or "").strip()
             else:

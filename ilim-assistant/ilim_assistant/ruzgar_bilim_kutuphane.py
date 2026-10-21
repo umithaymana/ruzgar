@@ -170,7 +170,12 @@ def try_bilim_reply(msg: str) -> Optional[str]:
     row = match_kavram_row(msg, _load_kavramlar(), min_score=55 if is_cue else 70)
     if row:
         return format_bilim_reply(row)
-    if is_cue and ask:
+    # Yalnız «bilim nedir» alan sorusunda genel kart (#5 — yanlış rafa düşme)
+    field_ask = any(
+        low == x or low.startswith(f"{x} nedir") or low.startswith(f"{x} ne demek")
+        for x in ("bilim", "fen bilim")
+    )
+    if field_ask and ask:
         for r in _load_kavramlar():
             if r.get("id") == "bilim":
                 return format_bilim_reply(r)

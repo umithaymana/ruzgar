@@ -98,6 +98,7 @@ def record_task_outcome(
     source: str = "code_agent",
     detail: str = "",
     bonus_retry: bool = False,
+    agent_ok: bool | None = None,
 ) -> dict[str, Any]:
     """Görev sonunu kaydet."""
     if not _enabled():
@@ -137,6 +138,8 @@ def record_task_outcome(
         "bonus_retry": bool(bonus_retry),
         "root_cause": root_cause,
     }
+    if agent_ok is not None:
+        entry["agent_ok"] = bool(agent_ok)
     outcomes.append(entry)
     store["outcomes"] = outcomes[-_MAX_HISTORY:]
     try:
