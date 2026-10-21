@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-21 (sabah) — **E2 canlı agent_ok + supervised boot + 6d gate %100**. Önceki gece: 6c+mühür `82f32d85`.
+**Son güncelleme:** 2026-10-21 (öğle) — **14b bağlandı; boot=0 ölçüm kırmızı; boot yedek kalır**. Önceki: E2 boot commit `02bed213`.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -125,18 +125,22 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
     - Yazım şablonu tur mesajında; Faz34 E2’de salt-okuma yasağı; Faz52 FC `force_e2`; rapor ASCII; skip’te sahte %100 yok.
     - Saf LLM ölçümü: `RUZGAR_E2_SUPERVISED_BOOT=0` (hâlâ 0 write beklenir).
 19. ~~2026-10-21 sabah — B: 6d offline gate~~ — `programlama_upgrade_runner --strict` **ok** · ladder **11/11** · scores hepsi **100** (parity dahil) · E2 offline **5/5**.
-20. **← ŞİMDİ BURADAN:** programlama ürün uçları C/D (aşağı). Commit henüz yok (Mimar onayı).
-21. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
+20. ~~E2 supervised boot commit~~ — `02bed213`.
+21. ~~2026-10-21 öğle — 14b~~ — `ollama pull qwen2.5-coder:14b` · `.env`: `OLLAMA_CHAT_MODEL_CODING` + `RUZGAR_BRAIN_KOD_MODEL` → **14b** · ForceRestart.
+    - Ölçüm BOOT=0 FORCE_HEAL=0: **agent_ok=false** · 3 tur · **0 write** · ~24 dk · heal yedek yeşil.
+    - **Karar:** 14b kod varsayılanı kalır; **supervised boot yedek kalır** (`RUZGAR_E2_SUPERVISED_BOOT=1`). Saf bağımsız yazım bu donanımda henüz yok.
+22. **← ŞİMDİ BURADAN:** **D** Belge/Tablo → programlama köprüsü.
+23. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
 
 ### Sıradaki (programlama → diğer)
 
 | Sıra | İş | Neden | Çıkış |
 |------|-----|--------|--------|
-| **C** | 6c UI cilası (isteğe) | Genel sohbette flash + mega panel yenileme | 3 cümle smoke manuel |
 | **D** | Belge/Tablo → programlama köprüsü (masa) | Arayüz kilidi üstüne: yalnızca izinli masa komutu | 1 senaryo yeşil |
-| **E** (sonra) | Tercüme/Video tek yüz genişletme | 6c kalıbını diğer motorlara | Ayrı dilim |
+| **C** | 6c UI cilası (isteğe) | Genel sohbette flash + mega panel | 3 cümle smoke |
+| **E** (sonra) | Tercüme/Video tek yüz | 6c kalıbı | Ayrı dilim |
 
-**Öneri:** Programlama rayı A+B yeşil — sırada **D** (masa köprüsü) en yüksek kaldıraç; C isteğe. Commit isteği gelince bugünkü E2 supervised + rapor düzeltmeleri.
+**Öneri:** 14b + boot yedek oturdu — sırada **D**.
 
 ### 2026-10-18 / 19 — oturum kaydı (geç yazıldı)
 
