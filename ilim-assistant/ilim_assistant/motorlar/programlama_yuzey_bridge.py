@@ -13,7 +13,11 @@ import re
 from pathlib import Path
 from typing import Any
 
-YUZEY_BRIDGE_VERSION = "programlama-yuzey-bridge-v1.2-2026-10-21"
+YUZEY_BRIDGE_VERSION = "programlama-yuzey-bridge-v1.3-2026-10-21"
+_EPHEMERAL_PROJECT_RE = re.compile(
+    r"^(?:smoke[-_]|e2-bat-|e2-boot-|agent-bat-|e2-bat)",
+    re.I,
+)
 
 _HEADER_RE = re.compile(
     r"^#\s*(?:Yüzey|Yuzey|Kaynak yetenek|Faz85|Programlama)\b",
@@ -155,6 +159,18 @@ def extract_surface_goal(surface_text: str) -> str:
     return body[:400]
 
 
+def _slug_named_in_goal(goal: str, slug: str) -> bool:
+    g = (goal or "").lower()
+    s = (slug or "").lower().strip()
+    if not s or len(s) < 2:
+        return False
+    return s in g
+
+
+def _is_ephemeral_project_slug(slug: str) -> bool:
+    return bool(_EPHEMERAL_PROJECT_RE.match((slug or "").strip()))
+
+
 def build_surface_task_line(
     surface_text: str,
     workspace_root: str | Path | None = None,
@@ -163,7 +179,9 @@ def build_surface_task_line(
 ) -> str:
     """
     Yüzey metni → sohbet kutusuna konacak `görev: …` satırı.
-    Aktif proje varsa Faz68 `build_agent_task_line` ile zenginleştirilir.
+
+    Belge/Tablo köprüsünde oturumdaki eski smoke/e2 test projesini YAPISTIRMA.
+    Proje adı yalnızca hedef metinde geçiyorsa veya açık dosya gerçek projeyse eklenir.
     """
     goal = extract_surface_goal(surface_text)
     if not goal:
@@ -171,18 +189,32 @@ def build_surface_task_line(
 
     low = goal.lower()
     if low.startswith(("görev:", "gorev:", "iş:", "is:", "yap:")):
+        # Zaten görev satırı — ephemeral slug enjekte edilmişse sadeleştir
+        try:
+            from ilim_assistant.motorlar.programlama_faz14 import parse_code_agent_task
+
+            task = parse_code_agent_task(goal)
+            if task and _is_ephemeral_project_slug(getattr(task, "project_slug", "") or ""):
+                body = (getattr(task, "goal", None) or goal).strip()
+                if body.lower().startswith(("görev:", "gorev:")):
+                    return body[:600]
+                return f"görev: {body}"[:600]
+        except Exception:
+            pass
         return goal[:600]
 
+    # Oturum active_project / son smoke testi YAPISTIRMA.
+    # Proje adı yalnızca hedef metinde geçiyorsa eklenir (belge/tablo metni esas).
+    _ = active_file, workspace_root  # API imzası korunur; yüzey bağlamı metinden gelir
     try:
-        from ilim_assistant.motorlar.programlama_faz68 import build_agent_task_line
+        from ilim_assistant.motorlar.programlama_faz33 import resolve_project_slug
 
-        line = build_agent_task_line(
-            goal,
-            workspace_root,
-            active_file=active_file,
-        )
-        if line:
-            return line[:600]
+        named = resolve_project_slug(goal, workspace_root, active_file=None)
+        if named and not _is_ephemeral_project_slug(named) and _slug_named_in_goal(goal, named):
+            rest = goal
+            if rest.lower().startswith(named.lower()):
+                rest = rest[len(named) :].lstrip(" :-\t,.") or goal
+            return f"görev: {named} {rest.strip()}"[:600]
     except Exception:
         pass
 

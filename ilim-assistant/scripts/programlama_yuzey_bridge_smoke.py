@@ -75,8 +75,12 @@ def main() -> int:
     if "version" not in (belge_p.get("goal") or "").lower():
         print("FAIL belge goal", belge_p.get("goal"))
         return 1
-    if not (belge_p.get("task_line") or "").lower().startswith(("görev:", "gorev:")):
+    bt = (belge_p.get("task_line") or "").lower()
+    if not bt.startswith(("görev:", "gorev:")):
         print("FAIL belge task_line", belge_p.get("task_line"))
+        return 1
+    if "smoke-" in bt or "e2-bat-" in bt:
+        print("FAIL belge got ephemeral project slug", belge_p.get("task_line"))
         return 1
 
     tablo = (
@@ -92,12 +96,17 @@ def main() -> int:
     if not tablo_p.get("ok"):
         print("FAIL tablo payload", tablo_p)
         return 1
+    tt = (tablo_p.get("task_line") or "").lower()
+    if "smoke-" in tt or "e2-bat-" in tt:
+        print("FAIL tablo got ephemeral project slug", tablo_p.get("task_line"))
+        return 1
 
     print(
         f"OK yuzey-bridge — goal={goal[:40]!r} "
         f"path={payload.get('path_hint')} "
         f"complex={complex_payload.get('path_hint')} "
-        f"belge={belge_p.get('path_hint')} tablo={tablo_p.get('path_hint')}"
+        f"belge={belge_p.get('path_hint')} tablo={tablo_p.get('path_hint')} "
+        f"task={belge_p.get('task_line')!r}"
     )
     return 0
 
