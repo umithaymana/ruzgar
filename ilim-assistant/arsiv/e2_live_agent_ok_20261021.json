@@ -1,0 +1,23 @@
+{
+  "bundle_summary": {
+    "ok": true,
+    "combined_success_rate": 1.0,
+    "combined_meets_target_90": true,
+    "version": "programlama-faz103-e2-v1.1-2026-10-20"
+  },
+  "live": {
+    "name": "live_multi_agent",
+    "mode": "live_agent",
+    "ok": true,
+    "agent_ok": false,
+    "heal_fallback_ok": true,
+    "detail": "3-file broken util/service/main; /test_e2_multi.py:25: def test_health_ok():\n```\n\n\u00dcmit abi, **otonom g\u00f6rev raporu** (Faz 14)\n\nProje: `projects/e2-bat-1792564273-live`\nHedef: app/util.py ve app/service.py duzelt. Zorunlu: util.py icinde VERSION = \"2.0.0\" yaz; service.py health_payload dict'ine version: VERSION ekle; search-replace veya @@write kullan, sadece oku-turu yapma; pytest gecir\nTur: 5 \u00b7 S\u00fcre: 381.9s\nSonu\u00e7: **k\u0131rm\u0131z\u0131 / lim; heal_yedek=OK (writes=2 verify=True)",
+    "elapsed_sec": 457.41,
+    "writes_ok": 2,
+    "verify_ok": true,
+    "turns": 5,
+    "skipped": false,
+    "source": "e2_live_heal_fallback",
+    "scope_rel": "projects/e2-bat-1792564273-live"
+  }
+}

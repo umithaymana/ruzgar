@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-21 (gece) — **6c tek yüz + E2 mühür yeşil**. Önceki: E2 dilim 4 `8ffa4b92`.
+**Son güncelleme:** 2026-10-21 (sabah) — **E2 canlı agent_ok + supervised boot + 6d gate %100**. Önceki gece: 6c+mühür `82f32d85`.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -119,22 +119,24 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
 15. ~~Faz 6c tek yüz pilot (2026-10-21 gece)~~ — sohbet → programlama `görev:` + path_hint (quiet handoff) · `ana_motor_faz6c_tek_yuz` · UI `maybeRunTekSohbetUiAction` task_line.
 16. ~~Canlı yazım mandate (2026-10-21)~~ — Faz39: keşif yokken de E2/çok dosyada zorunlu yazım turu.
 17. ~~E2 kapanış mühürü~~ — `programlama_e2_seal.py` **YEŞİL** (multi · workbench · mega · mandate · 6c · tek sohbet · offline 5/5 · heal).
-18. **← YARIN BURADAN BAŞLA:** aşağı «Yarın planı (2026-10-22)» — Mimar inceleyip uygular.
-19. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
+18. ~~2026-10-21 sabah — A: canlı yazım~~ — kök: qwen 5 turda **0 write**; saf LLM kırmızı.
+    - **E2 supervised write boot** (`try_e2_supervised_write_boot`, `RUZGAR_E2_SUPERVISED_BOOT=1`): tur-içi VERSION patch → verify.
+    - Canlı `--live-only` FORCE_HEAL=0: **agent_ok=true** · 1 tur · writes=2 · ~104 sn · heal yok.
+    - Yazım şablonu tur mesajında; Faz34 E2’de salt-okuma yasağı; Faz52 FC `force_e2`; rapor ASCII; skip’te sahte %100 yok.
+    - Saf LLM ölçümü: `RUZGAR_E2_SUPERVISED_BOOT=0` (hâlâ 0 write beklenir).
+19. ~~2026-10-21 sabah — B: 6d offline gate~~ — `programlama_upgrade_runner --strict` **ok** · ladder **11/11** · scores hepsi **100** (parity dahil) · E2 offline **5/5**.
+20. **← ŞİMDİ BURADAN:** programlama ürün uçları C/D (aşağı). Commit henüz yok (Mimar onayı).
+21. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
 
-### Yarın planı (2026-10-22) — Mimar dönüşünde
-
-**İncele:** Bu gece commit’leri `8ffa4b92` → E2 dilim4 · ardından 6c+mühür commit’i. Atölyede E2 paneli + sohbette «şu projede …» handoff’u dene.
+### Sıradaki (programlama → diğer)
 
 | Sıra | İş | Neden | Çıkış |
 |------|-----|--------|--------|
-| **A** | Canlı ajan **gerçek yazım** ölçümü | qwen hâlâ 0 write; mandate güçlendi — canlı `--live-only` (FORCE_HEAL=0) ile `agent_ok` dene | En az 1 yeşil agent_ok veya kök neden kaydı |
-| **B** | 6d offline gate taze | `programlama_upgrade_runner --strict` + parity full | 11/11 · 8/8 |
-| **C** | 6c UI cilası (isteğe) | Genel sohbette flash + mega panel yenileme; motor sekmesine zorlamadan | 3 cümle smoke manuel |
+| **C** | 6c UI cilası (isteğe) | Genel sohbette flash + mega panel yenileme | 3 cümle smoke manuel |
 | **D** | Belge/Tablo → programlama köprüsü (masa) | Arayüz kilidi üstüne: yalnızca izinli masa komutu | 1 senaryo yeşil |
 | **E** (sonra) | Tercüme/Video tek yüz genişletme | 6c kalıbını diğer motorlara | Ayrı dilim |
 
-**Öneri yarın sabah:** önce **A** (canlı yazım), sonra **B** (gate). D/E öğleden sonra.
+**Öneri:** Programlama rayı A+B yeşil — sırada **D** (masa köprüsü) en yüksek kaldıraç; C isteğe. Commit isteği gelince bugünkü E2 supervised + rapor düzeltmeleri.
 
 ### 2026-10-18 / 19 — oturum kaydı (geç yazıldı)
 

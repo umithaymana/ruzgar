@@ -330,7 +330,15 @@ def run_write_mandate_followup_fc(
 
     if not mandate_followup_enabled():
         return llm_body, round_body, tool_results, [], False
-    if not _disc(tool_results):
+    force_e2 = False
+    try:
+        from ilim_assistant.motorlar.programlama_faz56 import looks_like_multi_file_task
+        from ilim_assistant.motorlar.programlama_faz85 import goal_wants_agent_path
+
+        force_e2 = looks_like_multi_file_task(goal) or goal_wants_agent_path(goal)
+    except Exception:
+        force_e2 = False
+    if not _disc(tool_results) and not force_e2:
         return llm_body, round_body, tool_results, [], False
     if _has_write(llm_body, tool_results):
         return llm_body, round_body, tool_results, [], False

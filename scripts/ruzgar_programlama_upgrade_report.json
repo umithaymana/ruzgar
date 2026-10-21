@@ -1,7 +1,7 @@
 {
-  "ok": false,
+  "ok": true,
   "version": "programlama-upgrade-runner-v2-2026-05-29",
-  "elapsed_sec": 86.18,
+  "elapsed_sec": 81.99,
   "scores": {
     "command_level": 100,
     "autonomy_level": 100,
@@ -97,9 +97,9 @@
       "id": "ladder-s10-agent-nonblock",
       "level": "agent_nonblock",
       "description": "P8 — uzun iş sırasında lite health yanıtı (threadpool)",
-      "score": 0,
+      "score": 100,
       "min_score": 100,
-      "pass": false
+      "pass": true
     },
     {
       "id": "ladder-s11-delivery",
@@ -178,10 +178,10 @@
     }
   },
   "artifacts": {
-    "dataset": "D:\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\scripts\\programlama_command_goldens.json",
-    "ladder": "D:\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\scripts\\programlama_task_ladder.json",
-    "faz99_scope_1": "projects/smoke-autonomy-5fbd6517",
-    "faz99_scope_2": "projects/smoke-autonomy-8a411371",
+    "dataset": "D:\\ÜMİT\\PROJELER\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\scripts\\programlama_command_goldens.json",
+    "ladder": "D:\\ÜMİT\\PROJELER\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\scripts\\programlama_task_ladder.json",
+    "faz99_scope_1": "projects/smoke-autonomy-0705e702",
+    "faz99_scope_2": "projects/smoke-autonomy-853a3ef6",
     "parity_mode": "quick",
     "parity_passed": 8,
     "parity_total": 8,
@@ -246,7 +246,7 @@
         "version": "programlama-faz93-v2-2026-05-27",
         "recorded": true,
         "applied_count": 3,
-        "checkpoint_id": 12,
+        "checkpoint_id": 13,
         "rollback": {
           "version": "programlama-faz93-v2-2026-05-27",
           "has_plan": true,
@@ -271,16 +271,16 @@
       "version": "programlama-review-loop-v1-2026-06-15"
     },
     "agent_nonblock": {
-      "ok": false,
-      "detail": "idle:3262ms timed out; busy:3207ms timed out",
+      "ok": true,
+      "detail": "agent nonblock gate",
       "checks": {
-        "health_idle": false,
-        "health_during_busy": false,
-        "iterate_threadpool_health": false
+        "health_idle": true,
+        "health_during_busy": true,
+        "iterate_threadpool_health": true
       },
       "port": 8779,
-      "idle_ms": 3262,
-      "busy_ms": 3207,
+      "idle_ms": 14,
+      "busy_ms": 2,
       "version": "programlama-agent-nonblock-v1-2026-06-15"
     },
     "delivery": {
@@ -298,8 +298,8 @@
         "ci_pr_loop_enabled": true,
         "ci_pr_loop_smoke": true
       },
-      "weakness_score": 75,
-      "weakness_items": 1,
+      "weakness_score": 70,
+      "weakness_items": 2,
       "pr_branch": "main",
       "gh_available": false,
       "version": "programlama-delivery-gate-v1-2026-06-15"

@@ -363,8 +363,15 @@ def build_agent_turn_user_message(
     max_turns: int,
     failure_snippet: str = "",
 ) -> str:
+    e2_nudge = ""
+    try:
+        from ilim_assistant.motorlar.programlama_faz103_e2 import e2_write_template_nudge
+
+        e2_nudge = e2_write_template_nudge(task.scope_rel, task.goal) or ""
+    except Exception:
+        e2_nudge = ""
     if turn <= 1:
-        return (
+        body = (
             f"[OTONOM GÖREV — Faz 14 — tur {turn}/{max_turns}]\n"
             f"Proje: `{task.scope_rel}`\n"
             f"Hedef: {task.goal}\n\n"
@@ -375,12 +382,14 @@ def build_agent_turn_user_message(
             "4) Test isteniyorsa `tests/test_health.py` ve health'te `version` alanı\n"
             "5) Gereksiz refaktör yok\n"
         )
-    return (
+        return body + e2_nudge
+    body = (
         f"[OTONOM GÖREV — tur {turn}/{max_turns} — düzeltme]\n"
         "Doğrulama kırmızı. Traceback/çıktı:\n\n"
         f"```text\n{failure_snippet[:14000]}\n```\n\n"
         "Yalnızca gerekli `@@write` patch; kabuk komutu yazma.\n"
     )
+    return body + e2_nudge
 
 
 def _goal_wants_tests(goal: str) -> bool:
@@ -1737,6 +1746,36 @@ def iter_code_agent_turn_events(
                     pass
         except Exception:
             pass
+        # E2: yerel 7B 0 write → tur-içi supervised VERSION patch (verify öncesi)
+        if not any(w.ok for w in summ.writes):
+            try:
+                from ilim_assistant.motorlar.programlama_faz103_e2 import (
+                    try_e2_supervised_write_boot,
+                )
+                from ilim_assistant.motorlar.programlama_motoru import WriteReport
+
+                _boot = try_e2_supervised_write_boot(
+                    workspace, task.scope_rel, task.goal
+                )
+                if _boot.get("writes_ok"):
+                    for rel in _boot.get("paths") or []:
+                        if rel and not any(w.path == rel and w.ok for w in summ.writes):
+                            summ.writes.append(
+                                WriteReport(
+                                    path=rel,
+                                    ok=True,
+                                    detail="E2 supervised write boot",
+                                )
+                            )
+                    yield {
+                        "type": "status",
+                        "text": (
+                            f"Tur {turn}: E2 supervised yazım — "
+                            f"{_boot.get('detail')}"
+                        )[:600],
+                    }
+            except Exception:
+                pass
         verify = run_project_verify(
             workspace,
             task.scope_rel,

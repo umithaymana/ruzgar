@@ -276,13 +276,28 @@ def build_tool_first_nudge(violations: list[str], turn: int) -> str:
 def augment_turn_user_message(base: str, *, turn: int, goal: str = "") -> str:
     if not tool_first_enabled():
         return base
-    rules = (
-        "\n\n[Faz 34 — araç-öncelik]\n"
-        "Sıra: 1) read/grep/symbol  2) write  3) verify/run.\n"
-        "Her turda en az bir `ruzgar-tool` bloğu kullan.\n"
-    )
-    if turn <= 1:
-        rules += "İlk turda yazmadan önce keşif araçları zorunlu.\n"
+    e2_multi = False
+    try:
+        from ilim_assistant.motorlar.programlama_faz56 import looks_like_multi_file_task
+        from ilim_assistant.motorlar.programlama_faz85 import goal_wants_agent_path
+
+        e2_multi = bool(looks_like_multi_file_task(goal) or goal_wants_agent_path(goal))
+    except Exception:
+        e2_multi = False
+    if e2_multi:
+        rules = (
+            "\n\n[Faz 34 — E2 çok dosya]\n"
+            "Sıra: 1) kısa keşif VEYA doğrudan write  2) write zorunlu  3) verify.\n"
+            "Salt okuma turu YASAK — en az bir dosya değişmeli.\n"
+        )
+    else:
+        rules = (
+            "\n\n[Faz 34 — araç-öncelik]\n"
+            "Sıra: 1) read/grep/symbol  2) write  3) verify/run.\n"
+            "Her turda en az bir `ruzgar-tool` bloğu kullan.\n"
+        )
+        if turn <= 1:
+            rules += "İlk turda yazmadan önce keşif araçları zorunlu.\n"
     if goal_wants_verify(goal):
         rules += "Hedefte test var — yazımdan sonra verify çalıştır.\n"
     return base.rstrip() + rules

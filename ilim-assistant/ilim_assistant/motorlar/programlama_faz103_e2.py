@@ -23,7 +23,7 @@ import unicodedata
 from pathlib import Path
 from typing import Any
 
-FAZ103_VERSION = "programlama-faz103-e2-v1.1-2026-10-20"
+FAZ103_VERSION = "programlama-faz103-e2-v1.2-2026-10-21"
 _E2_BATTERY_TARGET = 0.90
 _INTENT_CASES: list[tuple[str, str]] = [
     ("health endpointine version 2.0.0 ekle pytest gecir", "faz85_fast"),
@@ -337,15 +337,53 @@ def test_health_ok():
         return False, str(exc)[:120]
 
 
-def _run_offline_multi_heal(
+def e2_supervised_boot_enabled() -> bool:
+    """Yerel 7B çoğu turda 0 write — E2 çok dosyada tur-içi supervised yazım rayı."""
+    return os.environ.get("RUZGAR_E2_SUPERVISED_BOOT", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+        "off",
+    )
+
+
+def _e2_multi_goal(goal: str) -> bool:
+    try:
+        from ilim_assistant.motorlar.programlama_faz56 import looks_like_multi_file_task
+        from ilim_assistant.motorlar.programlama_faz85 import goal_wants_agent_path
+
+        return bool(looks_like_multi_file_task(goal) or goal_wants_agent_path(goal))
+    except Exception:
+        return bool(_E2_GOAL_RE.search(goal or ""))
+
+
+def _e2_version_broken_on_disk(
     workspace_root: str | Path | None,
     scope_rel: str,
-) -> dict[str, Any]:
-    """Deterministik 3 dosya patch + pytest (canlı LLM yok)."""
-    t0 = time.perf_counter()
-    # service satırı setup’taki service_name ile uyumlu aranır
+) -> bool:
+    """util.py hâlâ 1.0.0-broken veya VERSION != 2.0.0 ise supervised aday."""
+    try:
+        from ilim_assistant.motorlar.programlama_motoru import repo_root
+
+        root = repo_root(workspace_root)
+        if root is None:
+            return False
+        util = root / scope_rel.replace("/", os.sep) / "app" / "util.py"
+        if not util.is_file():
+            return False
+        text = util.read_text(encoding="utf-8", errors="replace")
+        if 'VERSION = "1.0.0-broken"' in text:
+            return True
+        if 'VERSION = "2.0.0"' not in text and "VERSION" in text:
+            return True
+        return False
+    except Exception:
+        return False
+
+
+def _e2_multi_version_patch(scope_rel: str) -> str:
     service_name = scope_rel.split("/")[-1].replace("-", "_")
-    patch = f"""@@patch {scope_rel}/app/util.py
+    return f"""@@patch {scope_rel}/app/util.py
 ```search-replace
 <<<SEARCH
 VERSION = "1.0.0-broken"
@@ -367,6 +405,85 @@ VERSION = "2.0.0"
 >>>REPLACE
 ```
 """
+
+
+def e2_write_template_nudge(scope_rel: str, goal: str = "") -> str:
+    """7B için kopyalanabilir @@write / search-replace şablonu (tur mesajı)."""
+    if not _e2_multi_goal(goal) and "version" not in _ascii_fold(goal):
+        return ""
+    service_name = scope_rel.split("/")[-1].replace("-", "_")
+    return (
+        "\n[E2 yazım şablonu — bu turda aynen uygula, yalnız oku YASAK]\n"
+        f"1) `{scope_rel}/app/util.py` içinde `VERSION = \"2.0.0\"`\n"
+        f"2) `{scope_rel}/app/service.py` health_payload'a "
+        f'`"version": VERSION` ekle (service={service_name})\n'
+        "Örnek search-replace:\n"
+        "```search-replace\n"
+        "<<<SEARCH\n"
+        'VERSION = "1.0.0-broken"\n'
+        "===\n"
+        'VERSION = "2.0.0"\n'
+        ">>>REPLACE\n"
+        "```\n"
+    )
+
+
+def try_e2_supervised_write_boot(
+    workspace_root: str | Path | None,
+    scope_rel: str,
+    goal: str = "",
+) -> dict[str, Any]:
+    """
+    Tur içinde 0 yazım + bozuk VERSION → deterministik 2 dosya patch (verify yok).
+    Canlı 7B rayı; kapat: RUZGAR_E2_SUPERVISED_BOOT=0
+    """
+    empty: dict[str, Any] = {
+        "ok": False,
+        "writes_ok": 0,
+        "paths": [],
+        "detail": "",
+        "source": "e2_supervised_boot",
+    }
+    if not _enabled() or not e2_supervised_boot_enabled():
+        empty["detail"] = "supervised boot kapalı"
+        return empty
+    if not _e2_multi_goal(goal):
+        empty["detail"] = "e2 multi değil"
+        return empty
+    if not _e2_version_broken_on_disk(workspace_root, scope_rel):
+        empty["detail"] = "diskte bozuk VERSION yok"
+        return empty
+    try:
+        from ilim_assistant.motorlar.programlama_motoru import repo_root
+        from ilim_assistant.motorlar.programlama_patch import apply_patch_jobs
+
+        root = repo_root(workspace_root)
+        if root is None:
+            empty["detail"] = "workspace yok"
+            return empty
+        patch = _e2_multi_version_patch(scope_rel)
+        reps = apply_patch_jobs(patch, root)
+        paths = [getattr(r, "path", "") for r in reps if r.ok and getattr(r, "path", "")]
+        writes = len(paths)
+        return {
+            "ok": writes >= 1,
+            "writes_ok": writes,
+            "paths": paths,
+            "detail": f"supervised boot writes={writes}",
+            "source": "e2_supervised_boot",
+        }
+    except Exception as exc:
+        empty["detail"] = str(exc)[:200]
+        return empty
+
+
+def _run_offline_multi_heal(
+    workspace_root: str | Path | None,
+    scope_rel: str,
+) -> dict[str, Any]:
+    """Deterministik 3 dosya patch + pytest (canlı LLM yok)."""
+    t0 = time.perf_counter()
+    patch = _e2_multi_version_patch(scope_rel)
     try:
         from ilim_assistant.motorlar.programlama_motoru import repo_root
         from ilim_assistant.motorlar.programlama_patch import apply_patch_jobs
@@ -585,7 +702,11 @@ def run_combined_e2_battery(
                     "source": "e2_live_force_heal",
                 }
             else:
-                print(f"[E2 live] scope={scope} turns<=3 …", flush=True)
+                try:
+                    _tmax = int(os.environ.get("RUZGAR_E2_LIVE_MAX_TURNS", "3"))
+                except ValueError:
+                    _tmax = 3
+                print(f"[E2 live] scope={scope} turns<={max(1, min(6, _tmax))} ...", flush=True)
                 live_row = _run_live_multi_agent(workspace_root, scope, goal)
             agent_ok = bool(live_row.get("ok"))
             heal_note = ""
@@ -635,12 +756,19 @@ def run_combined_e2_battery(
             }
 
     o_rate = float(offline.get("success_rate") or 0)
-    if skip_offline and live_row and not live_row.get("skipped"):
+    live_skipped = bool(live_row and live_row.get("skipped"))
+    if skip_offline and live_row and live_skipped:
+        # Offline atlandı + beyin yok → sahte %100 verme
+        combined = 0.0
+    elif skip_offline and live_row and not live_skipped:
         combined = 1.0 if live_row.get("ok") else 0.0
-    elif live_row and not live_row.get("skipped"):
+    elif live_row and not live_skipped:
         combined = (o_rate + (1.0 if live_row.get("ok") else 0.0)) / 2.0
+    elif live_llm and live_skipped:
+        combined = o_rate * 0.5  # canlı istendi ama atlandı — cezalı
     else:
         combined = o_rate
+    agent_ok_flag = bool(live_row and live_row.get("agent_ok")) if live_row else None
     return {
         "ok": True,
         "version": FAZ103_VERSION,
@@ -650,6 +778,7 @@ def run_combined_e2_battery(
         "live_scenario": live_row,
         "combined_success_rate": combined,
         "combined_meets_target_90": combined >= e2_battery_target(),
+        "agent_ok": agent_ok_flag,
         "e2_stats": compute_e2_stats(workspace_root, window_days=30),
     }
 
@@ -660,30 +789,36 @@ def format_e2_battery_report(report: dict[str, Any]) -> str:
     # combined veya offline tek paket
     offline = report.get("offline_battery") or report
     lines = [
-        "**E2 çok dosya pili (Faz 103)**",
+        "**E2 cok dosya pili (Faz 103)**",
         "",
         f"Offline: **{offline.get('success_count')}/{offline.get('total')}** "
         f"({int(float(offline.get('success_rate') or 0) * 100)}%) · "
-        f"hedef ≥{int(float(offline.get('target_rate') or 0.9) * 100)}% "
-        f"{'✓' if offline.get('meets_target_90') else '↓'}",
+        f"hedef >={int(float(offline.get('target_rate') or 0.9) * 100)}% "
+        f"{'OK' if offline.get('meets_target_90') else 'NO'}",
         "",
     ]
     for s in offline.get("scenarios") or []:
-        mark = "✓" if s.get("ok") else "✗"
+        mark = "OK" if s.get("ok") else "NO"
         lines.append(f"- {mark} `{s.get('name')}` — {str(s.get('detail') or '')[:120]}")
     live = report.get("live_scenario")
     if live:
         if live.get("skipped"):
-            lines.append(f"\n- ○ canlı ajan atlandı — {live.get('detail')}")
+            lines.append(f"\n- SKIP canli ajan — {live.get('detail')}")
         else:
-            mark = "✓" if live.get("ok") else "✗"
+            mark = "OK" if live.get("ok") else "NO"
+            aok = live.get("agent_ok")
+            aok_s = (
+                f" agent_ok={'yes' if aok else 'no'}"
+                if aok is not None
+                else ""
+            )
             lines.append(
-                f"\n- {mark} canlı çok dosya — {live.get('detail')} "
+                f"\n- {mark} canli cok dosya{aok_s} — {live.get('detail')} "
                 f"({live.get('elapsed_sec')} sn)"
             )
         lines.append(
-            f"\nBirleşik: **{int(float(report.get('combined_success_rate') or 0) * 100)}%** "
-            f"{'✓' if report.get('combined_meets_target_90') else '↓'}"
+            f"\nBirlesik: **{int(float(report.get('combined_success_rate') or 0) * 100)}%** "
+            f"{'OK' if report.get('combined_meets_target_90') else 'NO'}"
         )
     e2 = report.get("e2_stats") or offline.get("e2_stats") or {}
     if e2.get("total"):

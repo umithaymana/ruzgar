@@ -1,0 +1,19 @@
+{
+  "live": {
+    "name": "live_multi_agent",
+    "mode": "live_agent",
+    "ok": true,
+    "agent_ok": true,
+    "heal_fallback_ok": false,
+    "detail": "3-file broken util/service/main; v raporu** (Faz 14)\n\nProje: `projects/e2-bat-1792564981-live`\nHedef: app/util.py ve app/service.py duzelt. Zorunlu: util.py icinde VERSION = \"2.0.0\" yaz; service.py health_payload dict'ine version: VERSION ekle; search-replace veya @@write kullan, sadece oku-turu yapma; pytest gecir\nTur: 1 \u00b7 S\u00fcre: 44.4s\nSonu\u00e7: **tamam**\n\n**Tur 1/4** (44.2s)\nYaz\u0131lan: 2 dosya\n\u00b7 `projects/e2-bat-1792564981-live/app/u",
+    "elapsed_sec": 103.85,
+    "writes_ok": 2,
+    "verify_ok": true,
+    "turns": 1,
+    "skipped": false,
+    "source": "e2_live_multi",
+    "scope_rel": "projects/e2-bat-1792564981-live"
+  },
+  "agent_ok": true,
+  "combined": 1.0
+}

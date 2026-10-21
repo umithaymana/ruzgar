@@ -233,6 +233,14 @@ def run_live_code_agent(
         success = bool(agent.get("success"))
         out["ok"] = success
         out["verify_ok"] = success
+        # writes_ok: ajan özetinden veya reply_tail "Yazılan: N"
+        w_ok = int(agent.get("writes_ok") or 0)
+        if w_ok <= 0:
+            tail0 = str(agent.get("reply_tail") or "")
+            m = re.search(r"Yaz[iı]lan:\s*(\d+)", tail0, re.I)
+            if m:
+                w_ok = int(m.group(1))
+        out["writes_ok"] = w_ok
         tail = str(agent.get("reply_tail") or agent.get("error") or "")[:400]
         out["detail"] = tail or ("OK" if success else "ajan kırmızı")
         if agent.get("error"):
