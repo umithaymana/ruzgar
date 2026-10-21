@@ -424,6 +424,12 @@ def _score_categories(msg: str, mode_norm: str, motor_flags: dict[str, bool]) ->
     except Exception:
         pass
 
+    if looks_like_opinion_request(raw):
+        s["gundelik"] += 6.5
+        s["bilgi"] = max(0.0, s["bilgi"] - 4.5)
+        s["hafiza"] = max(0.0, s["hafiza"] - 4.0)
+        s["bilim"] = max(0.0, s["bilim"] - 2.0)
+
     if looks_like_ruzgar_relational_chat(raw):
         s["gundelik"] += 6.5
         s["hafiza"] = max(0.0, s["hafiza"] - 4.0)
@@ -891,6 +897,19 @@ def plan_question(
             )
     except Exception:
         pass
+    if looks_like_opinion_request(effective_msg) or looks_like_opinion_request(message):
+        return QuestionPlan(
+            primary="gundelik",
+            secondary=[],
+            use_ilim_rag=False,
+            prefer_web=False,
+            prefer_archive=False,
+            ambiguous=False,
+            clarification=None,
+            web_query="",
+            rag_query="",
+            status_text="Soru analizi: görüş — sohbet",
+        )
     try:
         from ilim_assistant.ana_motor_tercume_yurut import is_instant_translate_message
 
@@ -1432,6 +1451,59 @@ def looks_like_clarification_short_query(message: str) -> bool:
     return "?" in raw and len(raw.split()) <= 2
 
 
+def looks_like_opinion_request(message: str) -> bool:
+    """
+    Görüş / değerlendirme sorusu — tanım kartı veya zehirli hafıza kopyası değil.
+    Örn: «YZ hakkında ne düşünüyorsun?», «Sence Rüzgar iyi asistan mı?»
+    """
+    raw = (message or "").strip()
+    if not raw or len(raw) > 420:
+        return False
+    asc = _norm_ascii(raw)
+    low = raw.lower()
+    blob = f"{low} {asc}"
+
+    # Saf tanım/kimdir — görüş değil (sence/düşün eşlik etse bile nedir kazanır)
+    if re.search(
+        r"\b(nedir|ne\s+demek|kimdir|ne\s+zaman|nerede|ka[cç]|hangi\s+y[ıi]l)\b",
+        asc,
+    ):
+        return False
+    if _explicit_research_intent(raw):
+        return False
+
+    if re.search(
+        r"\bne\s+d[uü][sş][uü]n[uü]yor(?:sun|sunuz|um)\b",
+        blob,
+        re.I,
+    ):
+        return True
+    if re.search(
+        r"\b(?:sence|ne\s+dersin|fikrin\s+ne|g[oö]r[uü][sş][uü]n|"
+        r"nas[iı]l\s+buluyorsun|nasil\s+buluyorsun)\b",
+        blob,
+        re.I,
+    ):
+        return True
+    if re.search(
+        r"\b(?:iyi|g[uü]zel|ba[sş]ar[iı]l[iı])\s+(?:bir\s+)?"
+        r"(?:asistan|yard[iı]mc[iı]|motor)\b",
+        blob,
+        re.I,
+    ) and (
+        "?" in raw
+        or re.search(r"\b(?:mi|m[ıi]|mu|m[uü])\b", blob)
+        or "sence" in blob
+    ):
+        return True
+    if "hakkinda" in asc or "hakkında" in low:
+        if re.search(r"\bd[uü][sş][uü]n", blob, re.I) and (
+            "?" in raw or "mi" in asc or "mı" in low
+        ):
+            return True
+    return False
+
+
 def looks_like_ruzgar_relational_chat(message: str) -> bool:
     """
     Rüzgar'a yönelik samimi / gelişim / öğrenme soruları — hafıza JSON kopyası değil LLM sohbet.
@@ -1725,6 +1797,36 @@ def apply_casual_plan_overrides(
     return plan
 
 
+def maybe_opinion_instant_reply(message: str) -> str | None:
+    """Görüş sorusu — tanım kartı yerine 2–4 cümle tutum (B1)."""
+    if not looks_like_opinion_request(message):
+        return None
+    asc = _norm_ascii(message)
+    low = (message or "").lower()
+    if "yapay zeka" in low or "yapay zeka" in asc or re.search(r"\byz\b", asc):
+        return (
+            "Ümit abi, yapay zekayı yararlı bir araç olarak görüyorum: işleri hızlandırır "
+            "ama her çıktıyı doğrulamak gerekir. Ben Rüzgar olarak yerelde çalışıp hafızamla "
+            "yardımcı olmayı tercih ederim; bilmediğimi uydurmam."
+        )
+    if (
+        "asistan" in asc
+        or "ruzgar" in asc
+        or "rüzgar" in low
+        or "yardimci" in asc
+        or "yardımcı" in low
+    ):
+        return (
+            "Ümit abi, elimden geldiğince iyi bir asistan olmaya çalışıyorum: net cevap, "
+            "yerel hafıza, gerektiğinde dürüst «bilmiyorum». Hâlâ eksiklerim var; sen "
+            "düzeltince öğrenirim."
+        )
+    return (
+        "Ümit abi, bu konuda ansiklopedi tanımı okumak yerine kendi tutumumu söyleyeyim: "
+        "faydasını ve riskini birlikte tartarım; emin değilsem uydurmam, senden öğrenirim."
+    )
+
+
 def maybe_gundelik_instant_reply(
     message: str,
     mode_norm: str,
@@ -1742,6 +1844,10 @@ def maybe_gundelik_instant_reply(
             return karsilama
     except Exception:
         pass
+    # Görüş: anlık tutum — LLM tanım kartına düşmesin (B1)
+    op = maybe_opinion_instant_reply(message)
+    if op:
+        return op
     try:
         from ilim_assistant.ruzgar_dogal_sohbet_faz91 import should_skip_instant_shortcuts
 

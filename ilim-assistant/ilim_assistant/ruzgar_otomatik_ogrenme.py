@@ -94,6 +94,14 @@ def should_check_bilgi_kutuphane_first(message: str) -> bool:
     raw = (message or "").strip()
     if not raw or len(raw) > 500 or _SKIP_USER.search(_norm(raw)):
         return False
+    # Görüş sorusu — tanım kartı / zehirli öğrenme basma
+    try:
+        from ilim_assistant.ana_motor_plan import looks_like_opinion_request
+
+        if looks_like_opinion_request(raw):
+            return False
+    except Exception:
+        pass
     # Kısa aritmetik kütüphaneye düşmesin (2+2 → yanlış fuzzy / Faz J miss).
     try:
         from ilim_assistant.ruzgar_tek_beyin_analiz import try_simple_arithmetic_reply
@@ -146,6 +154,13 @@ def lookup_bilgi_kutuphane_hint(message: str) -> Optional[dict[str, Any]]:
     """ruzgar_genel_hafiza.json — BilgiKutuphane + Egitim + tüm raflar."""
     if not otomatik_ogrenme_enabled():
         return None
+    try:
+        from ilim_assistant.ana_motor_plan import looks_like_opinion_request
+
+        if looks_like_opinion_request(message):
+            return None
+    except Exception:
+        pass
     try:
         from ilim_assistant.ana_motor_plan import should_stay_on_ana_motor_bilgi
 
@@ -239,9 +254,28 @@ def synthesize_kutuphane_reply(message: str, hint: dict[str, Any]) -> str:
 
 
 def _try_osmanli_donem_kart(message: str) -> Optional[str]:
-    """Sabit dönem kartı — Lale Devri LLM/fuzzy sapmasını kes (#5)."""
+    """Sabit Lale Devri kartı — nedir ≠ hangi alan (B2 niyet ayrımı)."""
     low = _norm(message)
-    if "lale" in low and "devri" in low:
+    if "lale" not in low or "devri" not in low:
+        return None
+    # «Hangi alanlarda gelişme?» — dönem özeti basma
+    if re.search(
+        r"(?:hangi\s+alan|alanlarda|gelisme|gelisti|ilerleme|"
+        r"kulturel\s+gelisme|nelerde\s+(?:gelis|iler)|ne\s+gelisti)",
+        low,
+    ):
+        return (
+            "Lale Devri'nde (yaklaşık 1718–1730) gelişme özellikle şu alanlarda görülür: "
+            "mimari (çeşme, kasır, Sadabad çevresi), edebiyat (Nedim; şarkı ve gazel), "
+            "eğlence ve bahçe/lale kültürü, matbaa ve Avrupa ile kültürel temas. "
+            "Askerî fetih dönemi değildir; Pasarofça sonrası barış yıllarının kültürel yükselişidir."
+        )
+    # «Nedir / ne zaman / kim?» veya kısa soru — dönem kartı
+    if re.search(
+        r"\b(?:nedir|ne\s+demek|ne\s+zaman|kim(?:dir)?|hangi\s+padisah|"
+        r"hangi\s+yil|kac\s+yil|donemi?\s+nedir)\b",
+        low,
+    ) or len(low) <= 28:
         return (
             "Lale Devri, Osmanlı'da III. Ahmed döneminde yaklaşık **1718–1730** arası "
             "kültürel bir dönemdir. Pasarofça Antlaşması sonrası barış yıllarında mimari, "

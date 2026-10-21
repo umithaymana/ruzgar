@@ -1975,14 +1975,24 @@ def prepare_turn(
 
     user_payload = build_user_prompt(msg, blocks)
     try:
+        from ilim_assistant.ana_motor_plan import looks_like_opinion_request
+
+        _skip_lib_for_opinion = looks_like_opinion_request(msg)
+    except Exception:
+        _skip_lib_for_opinion = False
+    try:
         from ilim_assistant.ruzgar_anlik_niyet_gate import (
             collect_library_llm_context,
             should_defer_library_instant,
         )
 
-        if (not _force_live_web) and (
-            should_defer_library_instant(msg)
-            or (m in ("genel", "uretim", "gelisim") and "anlat" in (msg or "").lower())
+        if (
+            (not _force_live_web)
+            and (not _skip_lib_for_opinion)
+            and (
+                should_defer_library_instant(msg)
+                or (m in ("genel", "uretim", "gelisim") and "anlat" in (msg or "").lower())
+            )
         ):
             _lib_ctx = collect_library_llm_context(msg)
             if _lib_ctx.strip():
@@ -2481,6 +2491,14 @@ def prepare_turn(
                 msg, m, turn_plan, history=history
             ):
                 system = system + "\n\n" + build_natural_sohbet_system_addon()
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ana_motor_casual import _opinion_system_addon
+
+            _op = _opinion_system_addon(msg)
+            if _op:
+                system = system + _op
         except Exception:
             pass
         try:

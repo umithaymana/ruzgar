@@ -137,7 +137,7 @@ def compute_e2_stats(
     ok_n = sum(1 for r in rows if r.get("success"))
     total = len(rows)
     rate = ok_n / total if total else 0.0
-    # #4 kararlılık: heal şişkinliğini ayır — saf ajan vs yedek
+    # #4 / B4: heal şişkinliğini ayır — force_heal denemeyi şişirmesin
     live_rows = [
         r
         for r in rows
@@ -146,17 +146,24 @@ def compute_e2_stats(
     heal_n = sum(
         1 for r in live_rows if "heal" in str(r.get("source") or "").lower()
     )
+    # Denominatör: gerçek ajan denemesi (force_heal satırı sayılmaz)
+    attempted = [
+        r
+        for r in live_rows
+        if "force_heal" not in str(r.get("source") or "").lower()
+        and "force_heal" not in str(r.get("detail") or "").lower()
+    ]
     agent_ok_n = 0
-    for r in live_rows:
+    for r in attempted:
         if r.get("agent_ok") is True:
             agent_ok_n += 1
         elif r.get("agent_ok") is False:
             continue
         elif r.get("success") and "heal" not in str(r.get("source") or "").lower():
             agent_ok_n += 1
-    live_total = len(live_rows)
+    live_total = len(attempted) if attempted else len(live_rows)
     agent_rate = agent_ok_n / live_total if live_total else 0.0
-    heal_share = heal_n / live_total if live_total else 0.0
+    heal_share = heal_n / max(len(live_rows), 1)
     return {
         "ok": True,
         "total": total,
@@ -168,10 +175,12 @@ def compute_e2_stats(
         "filtered_from": len(raw),
         "recent": rows[-8:],
         "live_total": live_total,
+        "live_raw_total": len(live_rows),
         "agent_ok_count": agent_ok_n,
         "agent_ok_rate": round(agent_rate, 3),
         "heal_fallback_count": heal_n,
         "heal_share": round(heal_share, 3),
+        "agent_ok_meets_50": live_total >= 3 and agent_rate >= 0.5,
     }
 
 

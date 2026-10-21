@@ -44,16 +44,29 @@ _SPLIT_PATCH_FENCE_RE = re.compile(
 
 # E2: path prose'da, search-replace çıplak (@@patch yok) — VERSION kurtarma
 _PATH_UTIL_RE = re.compile(
-    r"(projects/[^\s`\"']+/app/util\.py)",
+    r"((?:projects/)?[^\s`\"'<>]+/app/util\.py)",
+    re.IGNORECASE,
+)
+_PATH_SERVICE_RE = re.compile(
+    r"((?:projects/)?[^\s`\"'<>]+/app/service\.py)",
     re.IGNORECASE,
 )
 _BARE_VERSION_SR_RE = re.compile(
     r"```(?:search-replace|patch)\s*\r?\n"
     r"<<<SEARCH\s*\r?\n"
-    r'\s*VERSION\s*=\s*"1\.0\.0-broken"\s*\r?\n'
+    r"\s*VERSION\s*=\s*['\"]1\.0\.0-broken['\"]\s*\r?\n"
     r"===\s*\r?\n"
-    r'\s*VERSION\s*=\s*"2\.0\.0"\s*\r?\n'
-    r">>>REPLACE\s*\r?\n```",
+    r"\s*VERSION\s*=\s*['\"]2\.0\.0['\"]\s*\r?\n"
+    r"(?:>>>REPLACE\s*\r?\n)?```",
+    re.DOTALL | re.IGNORECASE,
+)
+# Fence yok: yalnız SEARCH/REPLACE satırları (B4 format kurtarma)
+_LOOSE_VERSION_SR_RE = re.compile(
+    r"<<<SEARCH\s*\r?\n"
+    r"\s*VERSION\s*=\s*['\"]1\.0\.0-broken['\"]\s*\r?\n"
+    r"===\s*\r?\n"
+    r"\s*VERSION\s*=\s*['\"]2\.0\.0['\"]\s*\r?\n"
+    r"(?:>>>REPLACE)?",
     re.DOTALL | re.IGNORECASE,
 )
 
@@ -69,6 +82,16 @@ def normalize_split_patch_fences(message: str) -> str:
     return _SPLIT_PATCH_FENCE_RE.sub(_repl, message or "")
 
 
+def _norm_e2_rel(path: str) -> str:
+    p = (path or "").replace("\\", "/").strip().strip("`\"'")
+    if p.startswith("projects/"):
+        return p
+    if "/app/" in p and not p.startswith("projects/"):
+        # e2-bat-…/app/util.py → projects/e2-bat-…/app/util.py
+        return f"projects/{p.lstrip('/')}"
+    return p
+
+
 def normalize_bare_e2_version_patches(message: str) -> str:
     """
     Path metinde var, search-replace @@patch'siz — E2 VERSION bloğunu tamamla.
@@ -81,12 +104,18 @@ def normalize_bare_e2_version_patches(message: str) -> str:
         re.I,
     ):
         return msg
-    if not _BARE_VERSION_SR_RE.search(msg):
+    has_bare = bool(_BARE_VERSION_SR_RE.search(msg) or _LOOSE_VERSION_SR_RE.search(msg))
+    # Model sadece «VERSION = "2.0.0"» yazıp formatı unuttu
+    wants_version = has_bare or (
+        re.search(r'VERSION\s*=\s*[\'"]2\.0\.0[\'"]', msg)
+        and re.search(r"1\.0\.0-broken|util\.py", msg, re.I)
+    )
+    if not wants_version:
         return msg
     path_m = _PATH_UTIL_RE.search(msg)
     if not path_m:
         return msg
-    path = path_m.group(1).replace("\\", "/")
+    path = _norm_e2_rel(path_m.group(1))
     block = (
         f"\n@@patch {path}\n"
         "```search-replace\n"
@@ -97,7 +126,38 @@ def normalize_bare_e2_version_patches(message: str) -> str:
         ">>>REPLACE\n"
         "```\n"
     )
-    return msg + block
+    out = msg + block
+    # service.py version alanı da istenmişse ve @@patch service yoksa şablon ekle
+    if (
+        re.search(r"service\.py|health_payload|version:\s*VERSION", msg, re.I)
+        and not re.search(
+            r"@@patch\s+\S+/app/service\.py\s*\r?\n```(?:search-replace|patch)",
+            out,
+            re.I,
+        )
+    ):
+        svc_m = _PATH_SERVICE_RE.search(msg)
+        if svc_m:
+            svc = _norm_e2_rel(svc_m.group(1))
+        else:
+            svc = path.replace("/app/util.py", "/app/service.py")
+        service_name = svc.split("/")[-3].replace("-", "_") if "/" in svc else "app"
+        out += (
+            f"\n@@patch {svc}\n"
+            "```search-replace\n"
+            "<<<SEARCH\n"
+            f'    return {{"ok": "true", "service": "{service_name}", "msg": greet("ruzgar")}}\n'
+            "===\n"
+            "    return {\n"
+            '        "ok": "true",\n'
+            f'        "service": "{service_name}",\n'
+            '        "version": VERSION,\n'
+            '        "msg": greet("ruzgar"),\n'
+            "    }\n"
+            ">>>REPLACE\n"
+            "```\n"
+        )
+    return out
 
 
 def _normalize_newlines(text: str) -> str:

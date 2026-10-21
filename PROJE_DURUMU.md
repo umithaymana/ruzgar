@@ -155,21 +155,27 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
 35. ~~**#4 E2 kararlılık**~~ — KPI’de agent_ok / heal payı ayrı · çıplak VERSION patch kurtarma · smoke PASS · canlı BOOT=1 **agent_ok** · heal yok (~831s).
 36. ~~**#5 hafıza/eşleşme**~~ — kavram head-match · coğrafya/bilim genel kart tuzağı kapandı · «ne zaman/kimdir» strict · Lale 1718 kartı · smoke PASS · canlı: Karadeniz/Hicret/Lale/os OK.
 37. ~~Zayıflık 1–5~~ commit `533b4d16` (push sırada).
-38. **← ŞİMDİ:** Zayıflık sırası **B** (aşağı).
-39. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
+38. ~~**B1 görüş→tanım**~~ — opinion route · smoke 17/17 · canlı yeşil.
+39. ~~**B2 Lale niyet**~~ — nedir ≠ alanlar · smoke 6/6 · canlı yeşil.
+40. ~~**B3 web sayı/meta**~~ — YÖK yolu + 209/webten scrub · smoke 10/10 · canlı dürüst.
+41. ~~**B5 anlık düzyazı**~~ — kart→prose · canlı fotosentez/hicret/karadeniz.
+42. ~~**B4 E2 agent_ok**~~ — format kurtarma · canlı agent_ok · KPI **%50** (5/10).
+43. ~~**B6 galaksi**~~ — tanım+örnek (Samanyolu/Andromeda) · smoke 6/6 · canlı yeşil.
+44. ~~**Zayıflık sırası B (B1–B6)**~~ tamam — commit/push emri beklenir.
+45. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
 
 ### Zayıflık sırası B — 2026-10-21 gece (yeni)
 
 | # | Zayıf nokta | Kanıt | Hedef | İlk dilim |
 |---|-------------|-------|-------|-----------|
-| **B1** | Görüş sorusu → tanım kartı | «YZ ne düşünüyorsun?» hâlâ tanım | 2–3 cümle görüş | opinion route + smoke |
-| **B2** | Lale «hangi alanlarda gelişme» → dönem kartı | Soru kaçıyor, 1718 özeti basılıyor | Alana özel cevap | niyet ayrımı (nedir ≠ hangi alan) |
-| **B3** | Web sayı + meta | «209 üniversite… webten bakarak» | Rakam+kaynak veya dürüst yok | üniversite MEB/YÖK yolu + meta strip |
-| **B4** | E2 agent_ok oranı düşük | KPI ~%21, heal payı yüksek | agent_ok ≥%50 | 2. canlı pil + format kurtarma |
-| **B5** | Anlık kart üslubu | `**baslik**` + dipnot | ChatGPT düzyazı | anlık→prose cila |
-| **B6** | Galaksi/kozmos derinlik | Kısa ama sığ | 1 net + 1 örnek | bilim kartı derinleştir |
+| **B1** | ~~Görüş → tanım~~ | canlı görüş anlık | 2–3 cümle görüş | ✅ |
+| **B2** | ~~Lale alan ≠ dönem~~ | canlı alan kartı | Alana özel cevap | ✅ |
+| **B3** | ~~Web sayı + meta~~ | canlı dürüst/YÖK | Rakam+kaynak veya dürüst yok | ✅ |
+| **B4** | ~~E2 agent_ok~~ | canlı %50 (5/10) | agent_ok ≥%50 | ✅ |
+| **B5** | ~~Anlık kart üslubu~~ | canlı düzyazı | ChatGPT düzyazı | ✅ |
+| **B6** | ~~Galaksi derinlik~~ | canlı tanım+örnek | 1 net + 1 örnek | ✅ |
 
-**Öneri sıra:** B1 → B2 → B3 → B5 → B4 → B6.
+**Öneri sıra:** B1 → B2 → B3 → B5 → B4 → B6 — **tamam.**
 
 ### Sıradaki (programlama → diğer)
 

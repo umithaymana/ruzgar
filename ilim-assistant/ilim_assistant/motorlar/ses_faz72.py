@@ -23,7 +23,10 @@ from ilim_assistant.ruzgar_motor_kernel import (
 FAZ72_VERSION = "ses-faz72-v1-2026-05-26"
 
 _QUESTION_RE = re.compile(
-    r"(?:\b(?:nedir|nasıl|nasil|ne\s+demek)\b|^(?:açıkla|acikla|anlat)\b)",
+    r"(?:\b(?:nedir|nasıl|nasil|ne\s+demek|sence|ne\s+düşün|ne\s+dusun)\b|"
+    r"^(?:açıkla|acikla|anlat)\b|"
+    r"[?？]\s*$|"
+    r"\b(?:mi|mı|mu|mü)\s*[?？]?\s*$)",
     re.I,
 )
 _PROFILE_RE = re.compile(r"\b(alim|edip|asistan)\b", re.I)
@@ -181,13 +184,15 @@ def classify_ses_intent(
     if _QUESTION_RE.search(raw) and not _READ_RE.search(raw):
         return {"intent": INTENT_CHAT, "reason": "question"}
 
-    if prof and not _PROFILE_SWITCH_RE.search(low):
-        return {
-            "intent": INTENT_DO,
-            "reason": "set_profile",
-            "profile": prof.group(1).lower(),
-        }
+    try:
+        from ilim_assistant.ana_motor_plan import looks_like_opinion_request
 
+        if looks_like_opinion_request(raw):
+            return {"intent": INTENT_CHAT, "reason": "opinion"}
+    except Exception:
+        pass
+
+    # Profil yalnız açık geçişte («asistan moduna geç») — cümlede geçen «asistan» yetmez
     return {"intent": INTENT_CHAT, "reason": "conversation"}
 
 

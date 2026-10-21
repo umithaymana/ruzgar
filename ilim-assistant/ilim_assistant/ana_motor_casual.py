@@ -36,6 +36,22 @@ def _casual_max_tokens() -> int:
         return 720
 
 
+def _opinion_system_addon(message: str) -> str:
+    try:
+        from ilim_assistant.ana_motor_plan import looks_like_opinion_request
+
+        if not looks_like_opinion_request(message):
+            return ""
+    except Exception:
+        return ""
+    return (
+        "\n[GÖRÜŞ SORUSU]\n"
+        "Bu turda ansiklopedi tanımı yazma. «… bir teknolojidir / demektir / olarak tanımlanır» "
+        "kalıbı yasak. 2–4 cümlede kendi tutumunu söyle: ne işe yaradığını, riskini veya "
+        "senin (Rüzgar olarak) deneyimini. Soruyu yankılama.\n"
+    )
+
+
 def _casual_system_and_user(
     message: str,
     mode_norm: str,
@@ -46,6 +62,7 @@ def _casual_system_and_user(
 ) -> tuple[str, str, float, int, int]:
     from ilim_assistant.chat_core import pick_system
 
+    _op_addon = _opinion_system_addon(message)
     try:
         from ilim_assistant.ruzgar_dogal_sohbet_faz91 import (
             build_natural_sohbet_system_addon,
@@ -77,6 +94,8 @@ def _casual_system_and_user(
             else:
                 system = pick_system(False, mode_norm) + "\n\n" + build_natural_sohbet_system_addon()
                 user = build_natural_user_tail(message).strip()
+            if _op_addon:
+                system += _op_addon
             if system_addon:
                 system += system_addon
             if sohbet_tarz_chatgpt():
@@ -115,6 +134,8 @@ def _casual_system_and_user(
             "Liste veya uzun ders anlatımı yok; soruya doğrudan yanıt ver.\n"
         )
     system = pick_system(False, mode_norm) + sohbet_ek
+    if _op_addon:
+        system += _op_addon
     if system_addon:
         system += system_addon
     if sohbet_tarz_chatgpt():

@@ -36,6 +36,16 @@ def _plan_primary(question_plan: Any | None) -> str:
 def looks_like_live_web_needed(message: str) -> bool:
     """Güncel kur / haber / spor / olay — yerel hafıza yetmez, web zorunlu."""
     low = (message or "").lower()
+    # Üniversite / okul sayısı — eski hafıza kartı yetmez (B3)
+    if (
+        ("üniversite" in low or "universite" in low)
+        and any(x in low for x in ("kaç", "kac", "sayısı", "sayisi", "adet", "var mı", "var mi"))
+    ):
+        return True
+    if ("özel okul" in low or "ozel okul" in low) and any(
+        x in low for x in ("kaç", "kac", "sayısı", "sayisi", "adet")
+    ):
+        return True
     return any(
         x in low
         for x in (
@@ -381,6 +391,8 @@ def reason_web_question(message: str) -> dict[str, str]:
         )
         if "özel okul" in low or "ozel okul" in low:
             query = "Türkiye özel okul sayısı MEB istatistik"
+        elif "üniversite" in low or "universite" in low:
+            query = "Türkiye üniversite sayısı YÖK istatistik"
     elif re.search(r"\bnedir\b", low):
         topic = re.sub(r"\bnedir\b.*", "", raw, flags=re.IGNORECASE).strip(" ?")
         want = f"{topic or query} nedir; sade ve doğru"

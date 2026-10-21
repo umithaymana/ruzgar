@@ -339,9 +339,21 @@ def is_invalid_egitim_pair(soru: str, cevap: str) -> bool:
             "ankara kalesi",
             "dosyayı buldum ama açamıyorum",
             "dosyayi buldum ama acamiyorum",
+            # B3 — kaynaksız web meta / sayı iddiası
+            "webten bakarak",
+            "web'den bakarak",
+            "webden bakarak",
+            "bu bilgiye ulaştım",
+            "bu bilgiye ulastim",
         )
     ):
         return True
+    # Kaynaksız üniversite sayısı — YÖK yoksa geçersiz
+    if re.search(r"\d{2,4}\s*(?:üniversite|universite)", low) and not re.search(
+        r"y[oö]k\.gov|y[oö]k\s+istatistik|y[uü]ksek[öo][gğ]retim", low
+    ):
+        if re.search(r"(?:kaç|kac|sayısı|sayisi|var\b)", s.casefold() + " " + low):
+            return True
     # Lale Devri ≠ Tanzimat / II. Mahmud / Abdülhamid
     # Doğru cevapta «Tanzimat değildir / Fuzuli değildir» geçebilir — olumsuzlamayı sayma.
     s_low = s.casefold()
@@ -386,6 +398,42 @@ def is_invalid_egitim_pair(soru: str, cevap: str) -> bool:
         return True
     if len(c) < 25 and _is_bilgi_sorusu(c):
         return True
+    # Görüş sorusuna tanım kartı — zehirli otomatik öğrenme
+    try:
+        from ilim_assistant.ana_motor_plan import looks_like_opinion_request
+
+        if looks_like_opinion_request(s):
+            def_markers = (
+                "bir teknolojidir",
+                "bir teknolojidir.",
+                "olarak tanımlanır",
+                "olarak tanimlanir",
+                "şu anlama gelir",
+                "su anlama gelir",
+                " demektir",
+                "bir alandır",
+                "bir bilimdir",
+                "yapay sinir",
+                "makine öğrenimi",
+                "makine ogrenimi",
+                "insan zekasını taklit",
+                "insan zekasini taklit",
+            )
+            if any(x in low for x in def_markers):
+                return True
+            # «… ne düşünüyorum?» yankısı + tanım
+            if re.search(
+                r"ne\s+d[uü][sş][uü]n[uü]yorum\s*\?",
+                low,
+            ) and (
+                "teknoloji" in low
+                or "tanım" in low
+                or "tanim" in low
+                or "olarak" in low
+            ):
+                return True
+    except Exception:
+        pass
     return False
 
 

@@ -11324,8 +11324,26 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 return
             from ilim_assistant.ana_motor_plan import (
                 looks_like_casual_social_chat,
+                looks_like_opinion_request,
                 maybe_gundelik_instant_reply,
+                maybe_opinion_instant_reply,
             )
+
+            # B1: görüş sorusu — casual gate'e takılmadan anlık tutum
+            _op_early = maybe_opinion_instant_reply(msg_early)
+            if _op_early and looks_like_opinion_request(msg_early):
+                _orch_op = dict(orch_early)
+                _orch_op.setdefault("plan", {})["primary"] = "gundelik"
+                _orch_op["plan"]["label_tr"] = "Gorus (aninda)"
+                yield from _iter_instant_chat_events(
+                    _op_early,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch=_orch_op,
+                    instant_gundelik=True,
+                )
+                return
 
             if looks_like_casual_social_chat(msg_early):
                 _gund_early = maybe_gundelik_instant_reply(msg_early, "genel", {})

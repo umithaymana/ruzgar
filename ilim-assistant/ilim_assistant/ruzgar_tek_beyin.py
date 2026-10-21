@@ -610,6 +610,13 @@ def personal_hafiza_blocks_bilgi_path(
             return False
     except Exception:
         pass
+    try:
+        from ilim_assistant.ana_motor_plan import looks_like_opinion_request
+
+        if looks_like_opinion_request(message):
+            return False
+    except Exception:
+        pass
     target = resolve_memory_query_message(message, history)
     if _skip_hafiza_for_clarification_short(target):
         return False
@@ -619,6 +626,13 @@ def personal_hafiza_blocks_bilgi_path(
         from ilim_assistant.ana_motor_plan import looks_like_casual_social_chat
 
         if looks_like_casual_social_chat(target):
+            return False
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ana_motor_plan import looks_like_opinion_request
+
+        if looks_like_opinion_request(target):
             return False
     except Exception:
         pass
@@ -650,6 +664,13 @@ def should_use_personal_hafiza_first(
             looks_like_personal_memory_query(target) or matches_known_circle_name(target)
         )
     try:
+        from ilim_assistant.ana_motor_plan import looks_like_opinion_request
+
+        if looks_like_opinion_request(message):
+            return False
+    except Exception:
+        pass
+    try:
         from ilim_assistant.ana_motor_plan import should_stay_on_ana_motor_bilgi
 
         if should_stay_on_ana_motor_bilgi(message):
@@ -659,6 +680,13 @@ def should_use_personal_hafiza_first(
     if _idrak_blocks_personal_hafiza(message, client_history):
         return False
     target = resolve_memory_query_message(message, client_history)
+    try:
+        from ilim_assistant.ana_motor_plan import looks_like_opinion_request
+
+        if looks_like_opinion_request(target):
+            return False
+    except Exception:
+        pass
     try:
         from ilim_assistant.ruzgar_tek_beyin_karsilama import looks_like_session_greeting
 
@@ -850,6 +878,13 @@ def tek_beyin_plan_override(
         return None
     if _skip_hafiza_for_clarification_short(message):
         return None
+    try:
+        from ilim_assistant.ana_motor_plan import looks_like_opinion_request
+
+        if looks_like_opinion_request(message):
+            return None
+    except Exception:
+        pass
     # Canlı haber/spor/kur — eski sohbet cevabını tekrar basma; web zorunlu
     try:
         from ilim_assistant.ruzgar_web_arastirma_pro import (

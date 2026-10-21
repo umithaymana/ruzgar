@@ -123,6 +123,11 @@ def strip_web_capability_noise(text: str) -> str:
         r"bu sorunun cevab[ıi],\s*soruldu[gğ]unda[^.]*\.?",
         r"ilgili bilgilerimden do[gğ]rudan elde edilemedi[^.]*\.?",
         r"kullan[ıi]c[ıi]ya bu bilgiyi soruldu[gğ]unda[^.!\n]*[.!]?",
+        r"webten\s+bakarak[^.]*\.?",
+        r"web['’]?\s*den\s+bakarak[^.]*\.?",
+        r"internetten\s+bakarak[^.]*\.?",
+        r"arama\s+yaparak\s+bu\s+bilgiye[^.]*\.?",
+        r"bu\s+bilgiye\s+ula[sş]t[ıi]m\.?",
     )
     for pat in drop_frags:
         t = re.sub(pat, " ", t, flags=re.I)
@@ -190,6 +195,55 @@ def strip_trust_and_faz_noise(text: str) -> str:
     return t.strip()
 
 
+def cila_anlik_kart_prose(text: str) -> str:
+    """
+    Anlık kütüphane kartı (**başlık** + gövde + _dipnot_) → ChatGPT düzyazı (B5).
+    Sohbet tarzı kapalıysa dokunma.
+    """
+    raw = (text or "").strip()
+    if not raw.startswith("**"):
+        return text
+    try:
+        from ilim_assistant.prompts import sohbet_tarz_chatgpt
+
+        if not sohbet_tarz_chatgpt():
+            return text
+    except Exception:
+        return text
+
+    m = re.match(
+        r"(?s)^\*\*([^*]+)\*\*\s*\n+(.*?)(?:\n+\s*_(.+?)_\s*)?\s*$",
+        raw,
+    )
+    if not m:
+        return text
+    title = (m.group(1) or "").strip()
+    body = (m.group(2) or "").strip()
+    # Dipnot / raf etiketi düşer
+    if not body:
+        return text
+
+    # «Fotosentez: …» tekrarını kır
+    lead = re.match(r"^([^:\n]{2,48})\s*:\s+", body)
+    if lead:
+        lead_t = lead.group(1).strip().casefold()
+        tit_cf = title.casefold()
+        if lead_t == tit_cf or lead_t in tit_cf or tit_cf in lead_t:
+            body = body[lead.end() :].strip()
+
+    # İlk harf küçükse ve başlık biliniyorsa «Başlık, …» doğal açılış
+    if body and title and not body.casefold().startswith(title.casefold()[: max(3, len(title) // 2)]):
+        # «ışıkla…» → «Fotosentez, ışıkla…»
+        if body[0].islower() or (body[0].isalpha() and title[0].isupper()):
+            nice = title[:1].upper() + title[1:] if title else title
+            # Başlık zaten cümlede geçiyorsa ekleme
+            if nice.casefold() not in body[:80].casefold():
+                body = f"{nice}, {body[0].lower() + body[1:] if body[0].isupper() else body}"
+
+    body = re.sub(r"\n{3,}", "\n\n", body).strip()
+    return body or text
+
+
 def finalize_assistant_reply(raw: str, *, channel: str = "") -> str:
     """Mojibake onarımı, sızan talimat temizliği, sabit karşılama kırpma, Tek Ses (Faz B)."""
     t = repair_utf8_mojibake(raw or "")
@@ -211,10 +265,10 @@ def finalize_assistant_reply(raw: str, *, channel: str = "") -> str:
         t = polish_tek_beyin_voice(t)
     except Exception:
         pass
-    import re
 
     t = strip_trust_and_faz_noise(t)
     t = re.sub(r"\n{3,}", "\n\n", t)
+    t = cila_anlik_kart_prose(t)
     t = cila_sohbet_metni(t)
     return t.strip()
 
@@ -233,10 +287,23 @@ _OKUL_KAYNAK_OK = re.compile(
     r"(?i)(?:meb\.gov|tuik\.gov|tüik\.gov|www\.meb|resmi\s+istatistik|"
     r"mill[iı]\s+e[gğ]itim)"
 )
+# 209 üniversite / 200'den fazla üniversite — kaynaksız uydurma (B3)
+_UNI_SAYISI = re.compile(
+    r"(?i)(?:\d{1,3}(?:[.\s]\d{3})*|\d{2,4}|\d{1,3}\s*bin)\s*"
+    r"(?:['’]?\s*den\s+fazla\s+)?(?:üniversite|universite)"
+)
+_UNI_KAYNAK_OK = re.compile(
+    r"(?i)(?:y[oö]k\.gov|www\.y[oö]k|y[oö]k\s+istatistik|y[oö]k\s+atlas|"
+    r"y[uü]ksek[öo][gğ]retim\s+kurulu|resmi\s+y[oö]k)"
+)
 _CUMLE_AYIR = re.compile(r"(?<=[.!?])\s+")
 _OKUL_YOK = (
     "Ümit abi, özel okul için net resmi rakamı güvenilir kaynaktan çıkaramadım; "
     "sayı uydurmam. MEB veya TÜİK istatistiğine bakmak daha doğru."
+)
+_UNI_YOK = (
+    "Ümit abi, Türkiye'deki üniversite sayısı için net resmi rakamı güvenilir "
+    "kaynaktan çıkaramadım; sayı uydurmam. YÖK istatistiğine bakmak daha doğru."
 )
 
 
@@ -244,8 +311,34 @@ def _cila_kat(parca: str) -> str:
     return re.sub(r"\s+", " ", parca).strip().lower()
 
 
+def _cila_kaynaksiz_sayi(
+    text: str,
+    *,
+    sayi_re: re.Pattern[str],
+    kaynak_re: re.Pattern[str],
+    yok_msg: str,
+) -> str:
+    if not text or not sayi_re.search(text):
+        return text
+    if kaynak_re.search(text):
+        return text
+    yeni: list[str] = []
+    kondu = False
+    for cumle in _CUMLE_AYIR.split(text):
+        kat = _cila_kat(cumle)
+        if not kat or (yeni and kat == _cila_kat(yeni[-1])):
+            continue
+        if sayi_re.search(cumle):
+            if not kondu:
+                yeni.append(yok_msg)
+                kondu = True
+            continue
+        yeni.append(cumle.strip())
+    return " ".join(yeni).strip()
+
+
 def cila_sohbet_metni(text: str) -> str:
-    """Ses kartı, tekrar talimatı, aynı paragraf ve kaynaksız okul sayısı cevapta kalmaz."""
+    """Ses kartı, tekrar talimatı, aynı paragraf ve kaynaksız okul/üniversite sayısı cevapta kalmaz."""
     if not text:
         return text
     t = _SES_KART_SATIRI.sub("", text)
@@ -264,24 +357,15 @@ def cila_sohbet_metni(text: str) -> str:
         satirlar.append(satir.strip())
         once = kat
     t = "\n".join(satirlar).strip()
-    if not t or not _OKUL_SAYISI.search(t):
+    if not t:
         return t
-    # Resmi kaynak adı geçiyorsa rakamı bırak; rastgele URL yetmez.
-    if _OKUL_KAYNAK_OK.search(t):
-        return t
-    yeni: list[str] = []
-    kondu = False
-    for cumle in _CUMLE_AYIR.split(t):
-        kat = _cila_kat(cumle)
-        if not kat or (yeni and kat == _cila_kat(yeni[-1])):
-            continue
-        if _OKUL_SAYISI.search(cumle):
-            if not kondu:
-                yeni.append(_OKUL_YOK)
-                kondu = True
-            continue
-        yeni.append(cumle.strip())
-    return " ".join(yeni).strip()
+    t = _cila_kaynaksiz_sayi(
+        t, sayi_re=_OKUL_SAYISI, kaynak_re=_OKUL_KAYNAK_OK, yok_msg=_OKUL_YOK
+    )
+    t = _cila_kaynaksiz_sayi(
+        t, sayi_re=_UNI_SAYISI, kaynak_re=_UNI_KAYNAK_OK, yok_msg=_UNI_YOK
+    )
+    return t
 
 
 def strip_answer_scaffold(text: str) -> str:
