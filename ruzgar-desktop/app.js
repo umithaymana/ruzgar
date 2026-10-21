@@ -3278,10 +3278,10 @@ function fillMotorWorkbenchFields(mid, t) {
       } catch (_) { /* ignore */ }
       {
         const localGorev = extractLocalYuzeyGorevSatiri(text);
-        if (localGorev && el.input) {
-          el.input.value = localGorev;
-          el.input.focus();
-        }
+        // Sohbet kutusuna her zaman yaz — API gelene kadar boş kalmasın
+        writeSohbetGorevSatiri(
+          localGorev || "görev: yüzeydeki belge/tablo talimatını uygula",
+        );
         void applyYuzeyProgramlamaHandoff(text, localGorev);
       }
       break;
@@ -3952,6 +3952,22 @@ async function refreshProgramlamaLocalWorkbench() {
   }
 }
 
+function writeSohbetGorevSatiri(line) {
+  const t = String(line || "").trim();
+  if (!t || !el.input) return;
+  el.input.value = t;
+  try {
+    el.input.dispatchEvent(new Event("input", { bubbles: true }));
+  } catch (_) { /* ignore */ }
+  try {
+    el.input.focus({ preventScroll: true });
+  } catch (_) {
+    try {
+      el.input.focus();
+    } catch (_2) { /* ignore */ }
+  }
+}
+
 function extractLocalYuzeyGorevSatiri(text) {
   const lines = String(text || "")
     .split(/\r?\n/)
@@ -3960,15 +3976,42 @@ function extractLocalYuzeyGorevSatiri(text) {
   let gorev = "";
   for (const ln of lines) {
     const stripped = ln.replace(/^#\s*/, "").trim();
+    // "# görev ipucu: …" görev satırı değil
+    if (/^(?:görev|gorev)\s+ipucu\s*:/i.test(stripped)) continue;
+    if (/^not\s*:/i.test(stripped)) continue;
     if (/^(görev|gorev|iş|is|yap)\s*:/i.test(stripped)) {
-      gorev = /^(görev|gorev)\s*:/i.test(stripped) ? stripped : `görev: ${stripped.replace(/^(iş|is|yap)\s*:\s*/i, "")}`;
+      gorev = /^(görev|gorev)\s*:/i.test(stripped)
+        ? stripped
+        : `görev: ${stripped.replace(/^(iş|is|yap)\s*:\s*/i, "")}`;
       break;
     }
   }
   if (!gorev) {
+    // Tablo hücresi: A1\t… veya A1=…
+    for (const ln of lines) {
+      if (/^#/.test(ln)) continue;
+      const cell = ln.match(/^[A-La-l]\d{1,2}\s*[\t:=]\s*(.+)$/i);
+      const val = cell ? String(cell[1] || "").trim() : "";
+      if (!val) continue;
+      if (/^(?:görev|gorev)\s*:/i.test(val)) {
+        gorev = val.replace(/^(?:görev|gorev)\s*:/i, "görev:").trim();
+        break;
+      }
+      if (
+        /pytest|health|endpoint|smoke|version|düzelt|duzelt|ekle|yaz|geçir|gecir|refactor/i.test(
+          val,
+        )
+      ) {
+        gorev = "görev: " + val.slice(0, 400);
+        break;
+      }
+    }
+  }
+  if (!gorev) {
     const body = lines
-      .filter((ln) => !/^#\s*(?:Yüzey|Yuzey|Kaynak yetenek|Faz85|Programlama)/i.test(ln))
+      .filter((ln) => !/^#\s*(?:Yüzey|Yuzey|Kaynak yetenek|Faz85|Programlama|not\b)/i.test(ln))
       .filter((ln) => !/^#\s*/.test(ln))
+      .filter((ln) => !/^(?:görev|gorev)\s+ipucu\s*:/i.test(ln.replace(/^#\s*/, "")))
       .join(" ")
       .slice(0, 400);
     if (
@@ -3978,6 +4021,8 @@ function extractLocalYuzeyGorevSatiri(text) {
       )
     ) {
       gorev = "görev: " + body;
+    } else if (body && body.length >= 8) {
+      gorev = "görev: " + body.slice(0, 280);
     }
   }
   return gorev;
@@ -4001,10 +4046,6 @@ async function applyYuzeyProgramlamaHandoff(surfaceText, localGorev) {
     if (data && data.ok) {
       if (data.task_line) {
         taskLine = String(data.task_line);
-        if (el.input) {
-          el.input.value = taskLine;
-          el.input.focus();
-        }
       }
       pathHint = String(data.path_hint || "agent");
       if (data.handoff_workbench) {
@@ -4024,6 +4065,10 @@ async function applyYuzeyProgramlamaHandoff(surfaceText, localGorev) {
   } catch (_) {
     await refreshProgramlamaHandoffWorkbench(taskLine);
   }
+  // API / atölye yenilemesi sohbeti boşaltmasın — görev satırını sonda yaz
+  writeSohbetGorevSatiri(
+    taskLine || localGorev || "görev: yüzeydeki belge/tablo talimatını uygula",
+  );
   const yol =
     pathHint === "faz85_fast"
       ? "Faz85 hızlı yol adayı"
@@ -4032,6 +4077,28 @@ async function applyYuzeyProgramlamaHandoff(surfaceText, localGorev) {
     `Programlama: yüzeyden geldi · ${yol}. Serbest çalıştırma kapalı.`,
   );
 }
+
+/** Masa → Programlama düğmesi: sohbete kısa balon + görev kutusuna odak. */
+function announceYuzeyProgramlamaKopru(reply) {
+  const r = String(reply || "").trim();
+  if (r) {
+    try {
+      appendBubble("assistant", r);
+      pushMotorChatHistory("assistant", r, { instant_gundelik: true });
+      scrollChatToBottom();
+    } catch (_) { /* ignore */ }
+  }
+  if (el.input && String(el.input.value || "").trim()) {
+    try {
+      el.input.focus({ preventScroll: true });
+    } catch (_) {
+      try {
+        el.input.focus();
+      } catch (_2) { /* ignore */ }
+    }
+  }
+}
+window.announceYuzeyProgramlamaKopru = announceYuzeyProgramlamaKopru;
 
 function renderProgramlamaHandoff(payload, extras) {
   const wrap = document.getElementById("programlama-handoff-card");

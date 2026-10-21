@@ -442,7 +442,10 @@
     const progBtn = document.getElementById("ruzgar-masa-prog-gonder");
     if (progBtn) {
       progBtn.onclick = function () {
-        yuzeyMotorGonder("programlama");
+        const reply = yuzeyMotorGonder("programlama");
+        if (typeof window.announceYuzeyProgramlamaKopru === "function") {
+          window.announceYuzeyProgramlamaKopru(reply);
+        }
       };
     }
   }
@@ -776,7 +779,7 @@
           (hasKaynak ? "" : "# Kaynak yetenek: " + paket.tur + "\n") +
           (hasGorev
             ? ""
-            : "# görev ipucu: belgedeki/tablodaki talimatı görev satırına çevir\n") +
+            : "# not: belgedeki/tablodaki talimat görev satırına çevrilir\n") +
           "\n" +
           metin;
       } else {
@@ -804,9 +807,13 @@
     flashYuzey();
     setStatus("→ " + KOPRU_AD[hedef], "ok");
     const guven = hedef === "programlama"
-      ? " Çalıştırma kapalı; Faz85 / ajan yolu API köprüsü."
+      ? " Çalıştırma kapalı; görev sohbet kutusuna yazıldı."
       : "";
-    return "Yüzey (" + (YETENEK_AD[state.mode] || paket.tur) + ") → " + KOPRU_AD[hedef] + " aktarıldı." + guven;
+    const reply =
+      "Yüzey (" + (YETENEK_AD[state.mode] || paket.tur) + ") → " + KOPRU_AD[hedef] + " aktarıldı." + guven;
+    // Sohbet komutundan gelince balon zaten masaKomutSonuc ile eklenir;
+    // buradan da görev kutusunu doğrula (app.js writeSohbetGorevSatiri).
+    return reply;
   }
 
   function wireBelgeKarma() {
