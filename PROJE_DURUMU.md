@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-21 (öğle) — **D: Belge/Tablo → programlama köprüsü**. Önceki: 14b + boot yedek `0e7f396b`.
+**Son güncelleme:** 2026-10-21 (öğle) — **görev: EmirYalan rayı** + **E dilimi**. Önceki: D köprü `583dc5ba`.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -130,17 +130,18 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
     - Ölçüm BOOT=0 FORCE_HEAL=0: **agent_ok=false** · 3 tur · **0 write** · ~24 dk · heal yedek yeşil.
     - **Karar:** 14b kod varsayılanı kalır; **supervised boot yedek kalır** (`RUZGAR_E2_SUPERVISED_BOOT=1`). Saf bağımsız yazım bu donanımda henüz yok.
 22. ~~**D** Belge/Tablo → programlama~~ — yuzey-bridge v1.2 (belge/tablo hedef çıkarımı) · masa `→ Programlama` · komut: belgeyi/tabloyu programlamaya gönder · quiet handoff · smoke OK.
-23. **← ŞİMDİ BURADAN:** **C** 6c cilası (isteğe) veya **E** Tercüme/Video tek yüz.
-24. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
+23. ~~**görev: EmirYalan**~~ — `kodAjaniGoreviMi` + `app.js` yalan kapısı; `görev: … ekle …` artık «masa komutları» değil Faz 85. Canlı: version 2.1.0 + pytest OK.
+24. **← ŞİMDİ:** **E** Tercüme/Video tek yüz (6c kalıbı). **C** (6c UI cilası) isteğe — incelemeden sonra.
+25. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
 
 ### Sıradaki (programlama → diğer)
 
 | Sıra | İş | Neden | Çıkış |
 |------|-----|--------|--------|
-| **C** | 6c UI cilası (isteğe) | Genel sohbette flash + mega panel | 3 cümle smoke |
-| **E** (sonra) | Tercüme/Video tek yüz | 6c kalıbı | Ayrı dilim |
+| **E** | Tercüme/Video tek yüz | 6c kalıbı · quiet handoff | smoke 3 cümle |
+| **C** (isteğe) | 6c UI cilası | Genel sohbette flash + mega panel | 3 cümle smoke |
 
-**Öneri:** D yeşil — C isteğe; ürün genişliği için **E**.
+**Öneri:** EmirYalan yeşil — **E** şimdi; C incelemeden sonra.
 
 ### 2026-10-18 / 19 — oturum kaydı (geç yazıldı)
 

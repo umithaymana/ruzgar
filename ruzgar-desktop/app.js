@@ -16391,7 +16391,15 @@ async function sendMessageWithText(t, opts = {}) {
     });
   }
 
-  if ((currentMode === "genel" || currentMode === "programlama") && window.ruzgarEmirYalan) {
+  // «görev: …» kod ajanına gider — masa emir-yalan kapısı engellemesin
+  const isKodAjaniGorev =
+    /^\s*(?:görev|gorev|iş|is|yap)\s*:/im.test(dispatchText) ||
+    /^\s*(?:görev|gorev)\s+[\w.\-]{2,64}\s+\S/im.test(dispatchText);
+  if (
+    (currentMode === "genel" || currentMode === "programlama") &&
+    window.ruzgarEmirYalan &&
+    !isKodAjaniGorev
+  ) {
     const yalan = await Promise.resolve(window.ruzgarEmirYalan(dispatchText));
     if (yalan && yalan.handled) {
       appendBubble("assistant", String(yalan.reply || "Bunu yapmadım. Dosya değişmedi."));

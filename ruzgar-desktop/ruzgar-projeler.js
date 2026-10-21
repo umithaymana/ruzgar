@@ -188,6 +188,15 @@
     return "";
   }
 
+  function kodAjaniGoreviMi(raw) {
+    const t = String(raw || "").trim();
+    // Faz14 / E2: «görev: …» veya «görev slug hedef» — masa yalanına düşmesin
+    if (/^(?:görev|gorev|iş|is|yap)\s*:/i.test(t)) return true;
+    if (/^(?:görev|gorev)\s+[\w.\-]{2,64}\s+\S/i.test(t)) return true;
+    if (/@@write\b/i.test(t)) return true;
+    return false;
+  }
+
   function ajanEmriMi(low) {
     return /^(basligi|baslik)\b/.test(low)
       || /^(paragraf|buton)\b/.test(low)
@@ -789,11 +798,14 @@
   window.ruzgarEmirYalan = function (text) {
     const raw = String(text || "").trim();
     if (!raw || raw.length > 600) return null;
+    // Kod ajanı görev satırı — masa «yalan» kapısına hiç girme
+    if (kodAjaniGoreviMi(raw)) return Promise.resolve(null);
     return sozluguYukle().then(function () {
       const low = komutGovdesi(raw);
       if (!low || soruMu(low) || !emirGibi(low)) return null;
       if (sozlukBul(low)) return null;
       if (/^(?:projeyi|proje|siteyi|vitrini)\s+(?:goster|ac)\b/.test(low)) return null;
+      if (kodAjaniGoreviMi(low)) return null;
       if (programlamaAcik() && ajanEmriMi(low)) return null;
       if (ajanEmriMi(low)) {
         return { handled: true, reply: "Bunu yapmadım. Dosya değişmedi. Programlama sayfasında söyle: " + yakinSoz(low) + "." };
