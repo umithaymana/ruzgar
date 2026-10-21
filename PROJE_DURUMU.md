@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-21 (öğle) — **14b bağlandı; boot=0 ölçüm kırmızı; boot yedek kalır**. Önceki: E2 boot commit `02bed213`.
+**Son güncelleme:** 2026-10-21 (öğle) — **D: Belge/Tablo → programlama köprüsü**. Önceki: 14b + boot yedek `0e7f396b`.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -129,18 +129,18 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
 21. ~~2026-10-21 öğle — 14b~~ — `ollama pull qwen2.5-coder:14b` · `.env`: `OLLAMA_CHAT_MODEL_CODING` + `RUZGAR_BRAIN_KOD_MODEL` → **14b** · ForceRestart.
     - Ölçüm BOOT=0 FORCE_HEAL=0: **agent_ok=false** · 3 tur · **0 write** · ~24 dk · heal yedek yeşil.
     - **Karar:** 14b kod varsayılanı kalır; **supervised boot yedek kalır** (`RUZGAR_E2_SUPERVISED_BOOT=1`). Saf bağımsız yazım bu donanımda henüz yok.
-22. **← ŞİMDİ BURADAN:** **D** Belge/Tablo → programlama köprüsü.
-23. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
+22. ~~**D** Belge/Tablo → programlama~~ — yuzey-bridge v1.2 (belge/tablo hedef çıkarımı) · masa `→ Programlama` · komut: belgeyi/tabloyu programlamaya gönder · quiet handoff · smoke OK.
+23. **← ŞİMDİ BURADAN:** **C** 6c cilası (isteğe) veya **E** Tercüme/Video tek yüz.
+24. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
 
 ### Sıradaki (programlama → diğer)
 
 | Sıra | İş | Neden | Çıkış |
 |------|-----|--------|--------|
-| **D** | Belge/Tablo → programlama köprüsü (masa) | Arayüz kilidi üstüne: yalnızca izinli masa komutu | 1 senaryo yeşil |
 | **C** | 6c UI cilası (isteğe) | Genel sohbette flash + mega panel | 3 cümle smoke |
 | **E** (sonra) | Tercüme/Video tek yüz | 6c kalıbı | Ayrı dilim |
 
-**Öneri:** 14b + boot yedek oturdu — sırada **D**.
+**Öneri:** D yeşil — C isteğe; ürün genişliği için **E**.
 
 ### 2026-10-18 / 19 — oturum kaydı (geç yazıldı)
 

@@ -311,8 +311,12 @@
     if (slidePreviewBody) slidePreviewBody.textContent = slide.body || "Metin";
   }
 
-  function kopruAracHtml() {
+  function kopruAracHtml(opts) {
+    const withProgBtn = !!(opts && opts.programlamaBtn);
     return (
+      (withProgBtn
+        ? '<button type="button" id="ruzgar-masa-prog-gonder" title="Belge/Tablo → Programlama (çalıştırma kapalı)">→ Programlama</button>'
+        : "") +
       '<label class="ruzgar-masa-kopru-label">Gönder ' +
       '<select id="ruzgar-masa-kopru" aria-label="Motora gönder">' +
       '<option value="">—</option>' +
@@ -342,12 +346,12 @@
         '<button type="button" data-cmd="justifyRight">Sağa</button>' +
         '<button type="button" id="ruzgar-masa-belge-img-btn" title="Resim ekle">Resim</button>' +
         '<button type="button" id="ruzgar-masa-belge-tablo-btn" title="Tablo ekle">Tablo</button>' +
-        kopruAracHtml();
+        kopruAracHtml({ programlamaBtn: true });
     } else if (mode === "tablo") {
       tools.innerHTML =
         '<span class="ruzgar-masa-tools-hint">Tablo</span>' +
         '<span>=A1+B1 · =TOPLA(A1:A8) · =ORTALAMA · =MİN · =MAK</span>' +
-        kopruAracHtml();
+        kopruAracHtml({ programlamaBtn: true });
     } else if (mode === "cizim") {
       tools.innerHTML =
         '<span class="ruzgar-masa-tools-hint">Çizim</span>' +
@@ -433,6 +437,12 @@
         const hedef = kopruSel.value;
         kopruSel.value = "";
         if (hedef) yuzeyMotorGonder(hedef);
+      };
+    }
+    const progBtn = document.getElementById("ruzgar-masa-prog-gonder");
+    if (progBtn) {
+      progBtn.onclick = function () {
+        yuzeyMotorGonder("programlama");
       };
     }
   }
@@ -648,13 +658,28 @@
     }
     if (mode === "tablo") {
       const satirlar = [];
+      let gorevHint = "";
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS.length; c++) {
           const deger = String(state.sheet[r][c] || "").trim();
-          if (deger) satirlar.push(COLS[c] + (r + 1) + "\t" + deger);
+          if (!deger) continue;
+          const cell = COLS[c] + (r + 1) + "\t" + deger;
+          satirlar.push(cell);
+          if (!gorevHint && /^(?:görev|gorev|iş|is|yap)\s*:/i.test(deger)) {
+            gorevHint = deger;
+          } else if (
+            !gorevHint &&
+            /pytest|health|version|endpoint|düzelt|duzelt|refactor|geçir|gecir/i.test(deger)
+          ) {
+            gorevHint = deger;
+          }
         }
       }
-      return { tur: "tablo", metin: satirlar.join("\n").slice(0, 50000) };
+      const baslik = "# Kaynak yetenek: tablo\n" + (gorevHint ? gorevHint + "\n" : "");
+      return {
+        tur: "tablo",
+        metin: (baslik + satirlar.join("\n")).trim().slice(0, 50000),
+      };
     }
     if (mode === "sunum") {
       const metin = state.slides.map(function (sl, i) {
@@ -736,20 +761,30 @@
       return "Gönderilecek içerik yok. Önce yüzeyde yaz / aç.";
     }
     if (hedef === "programlama") {
-      // Faz88 E1: yüzey gövdesini görev satırı olarak da işaretle (API köprüsü okur)
+      // Faz88 E1 + D: belge/tablo → görev satırı (API köprüsü okur); çalıştırma kapalı
       const govde = String(metin || "").trim();
       const hasGorev = /^(?:görev|gorev)\s*:/im.test(govde);
-      if (paket.tur !== "kod") {
+      const hasKaynak = /#\s*Kaynak yetenek\s*:/i.test(govde);
+      if (paket.tur === "kod") {
+        metin =
+          "# Yüzey → Programlama (Faz85 güvenli yol; serbest çalıştırma kapalı)\n" +
+          (hasGorev ? "" : "# görev: bu kodu gözden geçir ve pytest geçir\n") +
+          metin;
+      } else if (paket.tur === "belge" || paket.tur === "tablo") {
+        metin =
+          "# Yüzeyden görev (çalıştırma kapalı — güvenli atölye)\n" +
+          (hasKaynak ? "" : "# Kaynak yetenek: " + paket.tur + "\n") +
+          (hasGorev
+            ? ""
+            : "# görev ipucu: belgedeki/tablodaki talimatı görev satırına çevir\n") +
+          "\n" +
+          metin;
+      } else {
         metin =
           "# Yüzeyden görev (çalıştırma kapalı — güvenli atölye)\n" +
           "# Kaynak yetenek: " + paket.tur + "\n" +
           (hasGorev ? "" : "# görev ipucu: sohbet kutusuna aktarılır\n") +
           "\n" +
-          metin;
-      } else {
-        metin =
-          "# Yüzey → Programlama (Faz85 güvenli yol; serbest çalıştırma kapalı)\n" +
-          (hasGorev ? "" : "# görev: bu kodu gözden geçir ve pytest geçir\n") +
           metin;
       }
     }
@@ -757,14 +792,19 @@
       return "Motor köprüsü henüz yüklenmedi. Sayfayı yenile.";
     }
     try {
-      window.applyMotorHandoff(hedef, metin);
+      // Tek yüz: programlamaya atlamadan atölyeyi doldur (izinli masa komutu)
+      window.applyMotorHandoff(
+        hedef,
+        metin,
+        hedef === "programlama" ? { quiet: true } : undefined,
+      );
     } catch (err) {
       return "Köprü uygulanamadı.";
     }
     flashYuzey();
     setStatus("→ " + KOPRU_AD[hedef], "ok");
     const guven = hedef === "programlama"
-      ? " Çalıştırma kapalı; Faz85 hızlı yol / onaylı yazım."
+      ? " Çalıştırma kapalı; Faz85 / ajan yolu API köprüsü."
       : "";
     return "Yüzey (" + (YETENEK_AD[state.mode] || paket.tur) + ") → " + KOPRU_AD[hedef] + " aktarıldı." + guven;
   }
@@ -3156,7 +3196,8 @@
       "Birincil: sohbet · belge · tablo · çizim · sunum · medya · foto",
       "İkincil: notlar · kod · ses · okuma · web",
       "Foto: fotoyu aç · katalog tara · referans bırak · yüz ara (katmanlı)",
-      "Köprü: bunu tercümeye gönder · kodu programlamaya gönder · belgeyi sese gönder",
+      "Köprü: belgeyi/tabloyu programlamaya gönder · → Programlama (araç çubuğu) · kodu programlamaya gönder",
+      "Köprü: bunu tercümeye gönder · belgeyi sese gönder · köprü: programlama",
       "Aç: belgeyi aç · notları aç · kodu aç · sesi aç · okumayı aç · web aç",
       "belgeye … yaz · belgeye tablo ekle · belgeye 4x2 tablo ekle · resim: bırak/yapıştır",
       "notlara … yaz · göreve … ekle · koda … yaz",
@@ -3300,6 +3341,12 @@
     // let m burada — köprü regex’leri let satırından önce m kullanıyordu (TDZ → tüm sohbet kırılıyordu)
     let m = sade.match(/^(?:bunu|belgeyi|kodu|notlari|notları|metni|yuzeyi|yüzeyi|tabloyu|sunumu|okumayi|okumayı)\s+(tercumeye|tercümeye|programlamaya|sese|videoya|hafizaya|hafızaya|okumaya|mimara)\s+g[öo]nder$/i);
     if (m) return masaKomutSonuc(yuzeyMotorGonder(m[1]));
+    // D: belge/tablo → programlama kısa yolları (izinli masa komutu)
+    m = sade.match(/^(?:belgeyi|tabloyu|belgeden|tablodan|metni)\s+(?:koda|programlamaya|programlama\s+gorevine|programlama\s+görevine)\s+(?:g[öo]nder|aktar|cevir|çevir)$/i);
+    if (m) return masaKomutSonuc(yuzeyMotorGonder("programlama"));
+    if (/^(?:programlamaya\s+g[öo]nder|koda\s+g[öo]nder|programlama\s+kopr[uü]|programlama\s+köprü)$/i.test(sade)) {
+      return masaKomutSonuc(yuzeyMotorGonder("programlama"));
+    }
     m = sade.match(/^(?:kopru|köprü)\s*[:\-]?\s*(tercume|tercüme|programlama|ses|video|hafiza|hafıza|okuma|mimar)$/i);
     if (m) return masaKomutSonuc(yuzeyMotorGonder(m[1]));
     if (/^(katalog tara|foto katalog|fotografi tara)$/.test(low)) {

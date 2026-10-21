@@ -13,10 +13,14 @@ import re
 from pathlib import Path
 from typing import Any
 
-YUZEY_BRIDGE_VERSION = "programlama-yuzey-bridge-v1.1-2026-10-20"
+YUZEY_BRIDGE_VERSION = "programlama-yuzey-bridge-v1.2-2026-10-21"
 
 _HEADER_RE = re.compile(
     r"^#\s*(?:Yüzey|Yuzey|Kaynak yetenek|Faz85|Programlama)\b",
+    re.I,
+)
+_KAYNAK_TUR_RE = re.compile(
+    r"^#\s*Kaynak yetenek\s*:\s*(belge|tablo|kod|notlar)\b",
     re.I,
 )
 _EXPLICIT_GOREV_RE = re.compile(
@@ -38,12 +42,72 @@ _TODO_RE = re.compile(
     r"^(?:#|//)\s*(?:TODO|FIXME|görev|gorev)\s*[:\-]?\s*(.+)$",
     re.I,
 )
+_TABLO_CELL_RE = re.compile(
+    r"^([A-La-l])(\d{1,2})\s*[\t:=]\s*(.+)$",
+)
+
+
+def _detect_kaynak_tur(lines: list[str]) -> str:
+    for ln in lines[:8]:
+        m = _KAYNAK_TUR_RE.match(ln.strip())
+        if m:
+            return (m.group(1) or "").strip().lower()
+    return ""
+
+
+def _goal_from_tablo_cells(body_lines: list[str]) -> str:
+    """A1=… / A1\\t… hücrelerinden görev veya eylem özeti."""
+    cells: list[str] = []
+    for ln in body_lines:
+        m = _TABLO_CELL_RE.match(ln.strip())
+        if m:
+            cells.append((m.group(3) or "").strip())
+            continue
+        if "\t" in ln:
+            parts = [p.strip() for p in ln.split("\t") if p.strip()]
+            cells.extend(parts)
+    if not cells:
+        return ""
+    for c in cells:
+        em = _EXPLICIT_GOREV_RE.match(c)
+        if em:
+            return (em.group(1) or "").strip()[:500]
+        if _ACTION_HINT_RE.search(c) and len(c) <= 220:
+            return c[:400]
+    joined = " · ".join(cells[:12])
+    if _ACTION_HINT_RE.search(joined):
+        return joined[:500]
+    return f"tablodaki satırları uygula: {joined}"[:500]
+
+
+def _goal_from_belge_lines(body_lines: list[str]) -> str:
+    """Belge gövdesi — görev satırı veya eylem ipucu."""
+    for ln in body_lines[:20]:
+        em = _EXPLICIT_GOREV_RE.match(ln)
+        if em:
+            return (em.group(1) or "").strip()[:500]
+        todo = _TODO_RE.match(ln)
+        if todo:
+            return todo.group(1).strip()[:400]
+    body = " ".join(body_lines).strip()
+    if not body:
+        return ""
+    if _ACTION_HINT_RE.search(body) or len(body) <= 400:
+        return body[:500]
+    # Uzun belge: ilk anlamlı satır + eylem yoksa güvenli iskelet
+    for ln in body_lines:
+        if len(ln) >= 12 and not ln.startswith("#"):
+            if _ACTION_HINT_RE.search(ln):
+                return ln[:400]
+            return f"{ln[:180]} — belgedeki talimatı uygula"[:400]
+    return body[:400]
 
 
 def extract_surface_goal(surface_text: str) -> str:
     """Yüzey metninden ham hedef metni (görev: öneki olmadan)."""
     raw = (surface_text or "").replace("\r\n", "\n").replace("\r", "\n")
     lines = [ln.strip() for ln in raw.split("\n")]
+    kaynak = _detect_kaynak_tur(lines)
     body_lines: list[str] = []
     for ln in lines:
         if not ln:
@@ -53,11 +117,24 @@ def extract_surface_goal(surface_text: str) -> str:
         m = _EXPLICIT_GOREV_RE.match(stripped_hash)
         if m:
             return (m.group(1) or "").strip()[:500]
-        if _HEADER_RE.search(ln):
+        if _HEADER_RE.search(ln) or _KAYNAK_TUR_RE.match(ln):
             continue
         if ln.startswith("#") and not _TODO_RE.match(ln):
             continue
         body_lines.append(ln)
+
+    if not body_lines:
+        return ""
+
+    if kaynak == "tablo" or (
+        not kaynak and any(_TABLO_CELL_RE.match(ln) for ln in body_lines[:6])
+    ):
+        tablo_goal = _goal_from_tablo_cells(body_lines)
+        if tablo_goal:
+            return tablo_goal
+
+    if kaynak == "belge":
+        return _goal_from_belge_lines(body_lines)
 
     body = " ".join(body_lines).strip()
     if not body:

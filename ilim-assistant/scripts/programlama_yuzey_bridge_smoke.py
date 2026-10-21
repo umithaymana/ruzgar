@@ -65,10 +65,39 @@ def main() -> int:
         print("FAIL complex should be agent*", complex_payload.get("path_hint"))
         return 1
 
+    # D: Belge / Tablo → programlama
+    belge = (
+        "# Yüzeyden görev (çalıştırma kapalı — güvenli atölye)\n"
+        "# Kaynak yetenek: belge\n\n"
+        "görev: health endpointine version 2.0.0 ekle pytest geçir\n"
+    )
+    belge_p = build_surface_handoff_payload(belge, WORKSPACE)
+    if "version" not in (belge_p.get("goal") or "").lower():
+        print("FAIL belge goal", belge_p.get("goal"))
+        return 1
+    if not (belge_p.get("task_line") or "").lower().startswith(("görev:", "gorev:")):
+        print("FAIL belge task_line", belge_p.get("task_line"))
+        return 1
+
+    tablo = (
+        "# Kaynak yetenek: tablo\n"
+        "A1\thealth endpointine version ekle pytest geçir\n"
+        "B1\t2.0.0\n"
+    )
+    tablo_p = build_surface_handoff_payload(tablo, WORKSPACE)
+    tg = (tablo_p.get("goal") or "").lower()
+    if "health" not in tg and "version" not in tg and "pytest" not in tg:
+        print("FAIL tablo goal", tablo_p.get("goal"))
+        return 1
+    if not tablo_p.get("ok"):
+        print("FAIL tablo payload", tablo_p)
+        return 1
+
     print(
         f"OK yuzey-bridge — goal={goal[:40]!r} "
         f"path={payload.get('path_hint')} "
-        f"complex={complex_payload.get('path_hint')}"
+        f"complex={complex_payload.get('path_hint')} "
+        f"belge={belge_p.get('path_hint')} tablo={tablo_p.get('path_hint')}"
     )
     return 0
 
