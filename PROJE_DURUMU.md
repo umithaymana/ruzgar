@@ -154,8 +154,22 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
 34. ~~**#3 web/genel bilgi**~~ — reason/MEB arama · sayı sorusu uydurma yasağı · 17.000 okul cilası · web meta strip · smoke PASS · canlı: dolar/hava OK, okul dürüst.
 35. ~~**#4 E2 kararlılık**~~ — KPI’de agent_ok / heal payı ayrı · çıplak VERSION patch kurtarma · smoke PASS · canlı BOOT=1 **agent_ok** · heal yok (~831s).
 36. ~~**#5 hafıza/eşleşme**~~ — kavram head-match · coğrafya/bilim genel kart tuzağı kapandı · «ne zaman/kimdir» strict · Lale 1718 kartı · smoke PASS · canlı: Karadeniz/Hicret/Lale/os OK.
-37. **← ŞİMDİ:** zayıflık sırası 1–5 tamam; Mimar inceleme / commit+push veya yeni zayıflık listesi.
-38. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
+37. ~~Zayıflık 1–5~~ commit `533b4d16` (push sırada).
+38. **← ŞİMDİ:** Zayıflık sırası **B** (aşağı).
+39. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
+
+### Zayıflık sırası B — 2026-10-21 gece (yeni)
+
+| # | Zayıf nokta | Kanıt | Hedef | İlk dilim |
+|---|-------------|-------|-------|-----------|
+| **B1** | Görüş sorusu → tanım kartı | «YZ ne düşünüyorsun?» hâlâ tanım | 2–3 cümle görüş | opinion route + smoke |
+| **B2** | Lale «hangi alanlarda gelişme» → dönem kartı | Soru kaçıyor, 1718 özeti basılıyor | Alana özel cevap | niyet ayrımı (nedir ≠ hangi alan) |
+| **B3** | Web sayı + meta | «209 üniversite… webten bakarak» | Rakam+kaynak veya dürüst yok | üniversite MEB/YÖK yolu + meta strip |
+| **B4** | E2 agent_ok oranı düşük | KPI ~%21, heal payı yüksek | agent_ok ≥%50 | 2. canlı pil + format kurtarma |
+| **B5** | Anlık kart üslubu | `**baslik**` + dipnot | ChatGPT düzyazı | anlık→prose cila |
+| **B6** | Galaksi/kozmos derinlik | Kısa ama sığ | 1 net + 1 örnek | bilim kartı derinleştir |
+
+**Öneri sıra:** B1 → B2 → B3 → B5 → B4 → B6.
 
 ### Sıradaki (programlama → diğer)
 
