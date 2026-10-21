@@ -190,9 +190,20 @@
 
   function kodAjaniGoreviMi(raw) {
     const t = String(raw || "").trim();
-    // Faz14 / E2: «görev: …» veya «görev slug hedef» — masa yalanına düşmesin
+    // Faz14 / E2 / 6c: kod ajanı veya tek yüz görev — masa yalanına düşmesin
     if (/^(?:görev|gorev|iş|is|yap)\s*:/i.test(t)) return true;
     if (/^(?:görev|gorev)\s+[\w.\-]{2,64}\s+\S/i.test(t)) return true;
+    if (/^(?:programlamada|kodda|atölyede|atolyede)\s*[:\-]/i.test(t)) return true;
+    if (/^(?:şu|su|bu)\s+proje(?:de|yi)?\s+/i.test(t)) return true;
+    if (/\bprojects\/[\w.\-]+/i.test(t) && /\b(?:pytest|health|version|ekle|yaz|düzelt|duzelt|refactor)\b/i.test(t)) {
+      return true;
+    }
+    // Faz E: tercüme/video atölye handoff
+    if (/^(?:tercümede|tercumede|tercüme\s*atölyesinde|tercume\s*atolyesinde|tercüme\s*paneline|tercume\s*paneline)\s*[:\-]/i.test(t)) {
+      return true;
+    }
+    if (/\.(?:srt|vtt)\b/i.test(t) && /\b(?:çevir|cevir|tercüme|tercume)\b/i.test(t)) return true;
+    if (/https?:\/\//i.test(t) && /\b(?:indir|download|bilgi|oynat)\b/i.test(t)) return true;
     if (/@@write\b/i.test(t)) return true;
     return false;
   }

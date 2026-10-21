@@ -1,8 +1,18 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-21 (öğle) — **görev: EmirYalan rayı** + **E dilimi**. Önceki: D köprü `583dc5ba`.
+**Son güncelleme:** 2026-10-21 (öğle) — **GÜVENLİ KAYIT NOKTASI** · E tek yüz + köprü onarım + EmirYalan.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
+
+### GÜVENLİ BÖLGE — 2026-10-21 öğle (Mimar onayı)
+
+**İlke:** Buradan geri dönüş güvenli. Push `origin/main` ile hizalı kayıt.
+
+- EmirYalan: `görev:` / 6c / Faz E cümleleri masa yalanına düşmez (`db94cced` + devam).
+- **E** Tercüme/Video quiet handoff · smoke PASS.
+- Kritik köprü: preview `ui_action` → meta **ve** `done` orchestra; UI meta’da da handoff.
+- D Belge/Tablo → programlama; E2 supervised boot; 14b + boot yedek.
+- Kapalı: serbest kod çalıştırma, dosya silme, 32B/70B, telefon, push’suz deney.
 
 ### KİLİTLİ MİMARİ — Ana Motor Çalışma Yüzeyi (2026-10-20, Mimar onayı)
 
@@ -130,18 +140,20 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
     - Ölçüm BOOT=0 FORCE_HEAL=0: **agent_ok=false** · 3 tur · **0 write** · ~24 dk · heal yedek yeşil.
     - **Karar:** 14b kod varsayılanı kalır; **supervised boot yedek kalır** (`RUZGAR_E2_SUPERVISED_BOOT=1`). Saf bağımsız yazım bu donanımda henüz yok.
 22. ~~**D** Belge/Tablo → programlama~~ — yuzey-bridge v1.2 (belge/tablo hedef çıkarımı) · masa `→ Programlama` · komut: belgeyi/tabloyu programlamaya gönder · quiet handoff · smoke OK.
-23. ~~**görev: EmirYalan**~~ — `kodAjaniGoreviMi` + `app.js` yalan kapısı; `görev: … ekle …` artık «masa komutları» değil Faz 85. Canlı: version 2.1.0 + pytest OK.
-24. **← ŞİMDİ:** **E** Tercüme/Video tek yüz (6c kalıbı). **C** (6c UI cilası) isteğe — incelemeden sonra.
-25. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
+23. ~~**görev: EmirYalan**~~ — `kodAjaniGoreviMi` + `app.js` yalan kapısı · commit `db94cced`. Canlı: version 2.1.0 + pytest OK.
+24. ~~**E** Tercüme/Video tek yüz~~ — `ana_motor_faz_e_tek_yuz.py` · orkestrasyon 6c sonrası · UI `tercume_gorev`/`video_gorev` · smoke `ana_motor_faz_e_smoke` **PASS** · briefing `faz_e`.
+25. ~~**Köprü onarım**~~ — preview orchestra `done`’a birleşir · meta’da handoff · EmirYalan 6c/E muafiyeti · video URL / tercüme dil / path_hint.
+26. **← GÜVENLİ BÖLGE** — commit+push bu tur. Sonraki: Mimar inceleme veya **C** (isteğe).
+27. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
 
 ### Sıradaki (programlama → diğer)
 
 | Sıra | İş | Neden | Çıkış |
 |------|-----|--------|--------|
-| **E** | Tercüme/Video tek yüz | 6c kalıbı · quiet handoff | smoke 3 cümle |
+| **inceleme** | Mimar detaylı bakış | EmirYalan + E + D | onay / revize |
 | **C** (isteğe) | 6c UI cilası | Genel sohbette flash + mega panel | 3 cümle smoke |
 
-**Öneri:** EmirYalan yeşil — **E** şimdi; C incelemeden sonra.
+**Öneri:** E yeşil — inceleme sırası sende; C sonra.
 
 ### 2026-10-18 / 19 — oturum kaydı (geç yazıldı)
 

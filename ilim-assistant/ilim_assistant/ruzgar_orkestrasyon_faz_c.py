@@ -172,6 +172,20 @@ def build_genel_orchestra_preview(
             route_patch["hub_target"] = "programlama"
     except Exception:
         pass
+    # Faz E — genel sohbetten Tercüme / Video quiet handoff (6c kalıbı)
+    try:
+        from ilim_assistant.ana_motor_faz_e_tek_yuz import enrich_orchestra_faz_e
+
+        orch = enrich_orchestra_faz_e(orch, message)
+        if orch.get("faz_e") and orch.get("ui_action", {}).get("type") == "surface_handoff":
+            ua = dict(orch.get("ui_action") or {})
+            route_patch["tek_sohbet"] = ua
+            route_patch["faz_e"] = True
+            mid = str(ua.get("motor") or "")
+            if mid:
+                route_patch["hub_target"] = mid
+    except Exception:
+        pass
     return orch, route_patch
 
 

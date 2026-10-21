@@ -607,8 +607,8 @@ const el = {
   ilimStats: document.getElementById("ilim-stats"),
   ilimActiveFile: document.getElementById("ilim-active-file"),
   tercumeFileList: document.getElementById("tercume-file-list"),
-  tercumeSource: document.getElementById("tercume-source"),
-  tercumeTarget: document.getElementById("tercume-target"),
+  tercumeSource: document.getElementById("tercume-source-editor") || document.getElementById("tercume-source"),
+  tercumeTarget: document.getElementById("tercume-target-editor") || document.getElementById("tercume-target"),
   tercumeSrcLang: document.getElementById("tercume-src-lang"),
   tercumeTgtLang: document.getElementById("tercume-tgt-lang"),
   btnTercumeRefresh: document.getElementById("btn-tercume-refresh"),
@@ -3251,15 +3251,32 @@ function wantsTekSohbetQuietHandoff(opts) {
   return isUnifiedFaceEnabled();
 }
 
-function fillMotorWorkbenchFields(mid, t) {
+function fillVideoUrlFields(urlOrText) {
+  const raw = String(urlOrText || "").trim();
+  if (!raw) return false;
+  const m = raw.match(/https?:\/\/[^\s<>"']+|www\.[^\s<>"']+/i);
+  const url = m ? m[0].replace(/[.,);]+$/, "") : (/^www\./i.test(raw) ? `https://${raw}` : "");
+  const finalUrl = url && !/^https?:\/\//i.test(url) ? `https://${url}` : url;
+  if (!finalUrl) return false;
+  if (el.videoDownloadUrl) el.videoDownloadUrl.value = finalUrl;
+  if (el.videoCinemaUrl) el.videoCinemaUrl.value = finalUrl;
+  return true;
+}
+
+function fillMotorWorkbenchFields(mid, t, opts) {
   const text = String(t || "").trim();
+  const o = opts && typeof opts === "object" ? opts : {};
   switch (mid) {
     case "tercume":
       if (window.RuzgarTercumeAtolye) window.RuzgarTercumeAtolye.importText(text, null);
       break;
     case "video":
-      flashRuzgarDurum("Video: metin panoya kopyalandı (tek sohbet).");
-      void navigator.clipboard?.writeText(text);
+      if (fillVideoUrlFields(text)) {
+        flashRuzgarDurum("Video: URL atölyeye yazıldı (tek sohbet).");
+      } else {
+        flashRuzgarDurum("Video: metin panoya kopyalandı (tek sohbet).");
+        void navigator.clipboard?.writeText(text);
+      }
       break;
     case "ses":
       if (window.RuzgarAnaMotorHub?.parseTilavetReadCommand) {
@@ -3282,7 +3299,9 @@ function fillMotorWorkbenchFields(mid, t) {
         writeSohbetGorevSatiri(
           localGorev || "görev: yüzeydeki belge/tablo talimatını uygula",
         );
-        void applyYuzeyProgramlamaHandoff(text, localGorev);
+        void applyYuzeyProgramlamaHandoff(text, localGorev, {
+          pathHint: o.pathHint || "",
+        });
       }
       break;
     case "mimar":
@@ -3311,9 +3330,10 @@ function applyMotorHandoff(modeId, handoffText, opts) {
   let mid = String(modeId || "").trim().toLowerCase();
   if (mid === "okuma") mid = "mimar";
   const quiet = wantsTekSohbetQuietHandoff(opts);
+  const fieldOpts = { pathHint: opts?.pathHint || "" };
   if (quiet && mid && mid !== "genel") {
     openMotorWorkbenchQuiet(mid);
-    fillMotorWorkbenchFields(mid, t);
+    fillMotorWorkbenchFields(mid, t, fieldOpts);
     updateDynamicWorkbench();
     setStatus(`Tek sohbet → ${orchestraMotorLabelTr(mid)}`, "Rüzgar");
     flashRuzgarDurum(`Ana Motor’da kaldın · ${orchestraMotorLabelTr(mid)} atölyesi açık`);
@@ -3322,20 +3342,20 @@ function applyMotorHandoff(modeId, handoffText, opts) {
   switch (mid) {
     case "tercume":
       switchMode("tercume");
-      fillMotorWorkbenchFields("tercume", t);
+      fillMotorWorkbenchFields("tercume", t, fieldOpts);
       break;
     case "video":
       switchMode("video");
-      fillMotorWorkbenchFields("video", t);
+      fillMotorWorkbenchFields("video", t, fieldOpts);
       break;
     case "ses":
       switchMode("ses");
-      fillMotorWorkbenchFields("ses", t);
+      fillMotorWorkbenchFields("ses", t, fieldOpts);
       el.sesTranscript?.focus();
       break;
     case "programlama":
       switchMode("programlama");
-      fillMotorWorkbenchFields("programlama", t);
+      fillMotorWorkbenchFields("programlama", t, fieldOpts);
       break;
     case "mimar":
       switchMode("mimar");
@@ -3358,13 +3378,14 @@ function applyMotorHandoff(modeId, handoffText, opts) {
   setStatus(`Köprü: ${mid}`, "Rüzgar");
 }
 
-/** Orchestra / API ui_action — yüzey paketini motora (tek sohbet / Faz 6c). */
+/** Orchestra / API ui_action — yüzey paketini motora (tek sohbet / Faz 6c / Faz E). */
 function maybeRunTekSohbetUiAction(orch) {
   const a = orch && orch.ui_action;
   if (!a || a.type !== "surface_handoff") return false;
   if (currentMode !== "genel") return false;
   const motor = String(a.motor || "").trim().toLowerCase();
   if (!motor) return false;
+  const kind = String(a.kind || "").trim().toLowerCase();
   // Faz 6c: görev satırı hazır — yüzey gonder yerine doğrudan doldur
   const taskLine = String(a.task_line || a.goal || "").trim();
   if (motor === "programlama" && taskLine) {
@@ -3376,6 +3397,43 @@ function maybeRunTekSohbetUiAction(orch) {
       `Tek yüz → Programlama · ${String(a.path_hint || "ajan").slice(0, 40)}`,
     );
     void refreshProgramlamaMegaWorkbench();
+    return true;
+  }
+  // Faz E: Tercüme atölye doldur (quiet)
+  if (motor === "tercume" && kind === "tercume_gorev") {
+    const text = String(a.text || taskLine || "").trim();
+    const path = String(a.path || "").trim();
+    openMotorWorkbenchQuiet("tercume");
+    if (window.RuzgarTercumeAtolye?.importText) {
+      window.RuzgarTercumeAtolye.importText(text || path, path || null);
+    } else {
+      fillMotorWorkbenchFields("tercume", text || path);
+    }
+    if (path && window.RuzgarTercumeAtolye?.openFileByHint) {
+      void window.RuzgarTercumeAtolye.openFileByHint(path);
+    }
+    const srcL = String(a.source_lang || "").trim();
+    const tgtL = String(a.target_lang || "").trim();
+    if (srcL && el.tercumeSrcLang) el.tercumeSrcLang.value = srcL;
+    if (tgtL && el.tercumeTgtLang) el.tercumeTgtLang.value = tgtL;
+    updateDynamicWorkbench();
+    flashRuzgarDurum(
+      `Tek yüz → Tercüme · ${(a.target_lang || a.kind_detail || "panel").toString().slice(0, 40)}`,
+    );
+    setStatus("Tek sohbet → Tercüme", "Rüzgar");
+    return true;
+  }
+  // Faz E: Video URL alanını doldur (quiet)
+  if (motor === "video" && kind === "video_gorev") {
+    const url = String(a.url || "").trim();
+    openMotorWorkbenchQuiet("video");
+    fillVideoUrlFields(url);
+    if (url && el.input) el.input.value = url;
+    updateDynamicWorkbench();
+    flashRuzgarDurum(
+      `Tek yüz → Video · ${String(a.action || "indir").slice(0, 24)}`,
+    );
+    setStatus("Tek sohbet → Video", "Rüzgar");
     return true;
   }
   if (typeof window.ruzgarYuzey?.gonder === "function") {
@@ -4028,9 +4086,10 @@ function extractLocalYuzeyGorevSatiri(text) {
   return gorev;
 }
 
-async function applyYuzeyProgramlamaHandoff(surfaceText, localGorev) {
+async function applyYuzeyProgramlamaHandoff(surfaceText, localGorev, handoffOpts) {
   const workspaceRoot = await getProgramlamaWorkspaceRoot();
-  let pathHint = "agent";
+  const forcedHint = String(handoffOpts?.pathHint || "").trim();
+  let pathHint = forcedHint || "agent";
   let taskLine = localGorev || "";
   try {
     const res = await fetch(`${API}/api/programlama/yuzey-handoff`, {
@@ -4047,7 +4106,9 @@ async function applyYuzeyProgramlamaHandoff(surfaceText, localGorev) {
       if (data.task_line) {
         taskLine = String(data.task_line);
       }
-      pathHint = String(data.path_hint || "agent");
+      if (!forcedHint) {
+        pathHint = String(data.path_hint || "agent");
+      }
       if (data.handoff_workbench) {
         renderProgramlamaHandoff(data.handoff_workbench, {
           goal: data.goal || taskLine,
@@ -4060,10 +4121,10 @@ async function applyYuzeyProgramlamaHandoff(surfaceText, localGorev) {
         });
       }
     } else {
-      await refreshProgramlamaHandoffWorkbench(taskLine);
+      await refreshProgramlamaHandoffWorkbench(taskLine, { pathHint });
     }
   } catch (_) {
-    await refreshProgramlamaHandoffWorkbench(taskLine);
+    await refreshProgramlamaHandoffWorkbench(taskLine, { pathHint });
   }
   // API / atölye yenilemesi sohbeti boşaltmasın — görev satırını sonda yaz
   writeSohbetGorevSatiri(
@@ -15364,7 +15425,10 @@ async function streamChat(userText, streamOpts = {}) {
       handleAnaMotorProgramlamaBridge(ev);
       if (ev.orchestra) {
         renderOrchestraBridge(ev.orchestra);
-        if (
+        // 6c / Faz E / tek_sohbet: ui_action meta'da da gelsin (done beklemeden)
+        if (ev.orchestra.ui_action && maybeRunTekSohbetUiAction(ev.orchestra)) {
+          /* handoff uygulandı */
+        } else if (
           currentMode === "genel" &&
           ev.orchestra.active_motor &&
           !ev.orchestra.ui_action &&
@@ -16391,10 +16455,15 @@ async function sendMessageWithText(t, opts = {}) {
     });
   }
 
-  // «görev: …» kod ajanına gider — masa emir-yalan kapısı engellemesin
+  // Kod ajanı / 6c / Faz E — masa emir-yalan kapısı engellemesin
   const isKodAjaniGorev =
     /^\s*(?:görev|gorev|iş|is|yap)\s*:/im.test(dispatchText) ||
-    /^\s*(?:görev|gorev)\s+[\w.\-]{2,64}\s+\S/im.test(dispatchText);
+    /^\s*(?:görev|gorev)\s+[\w.\-]{2,64}\s+\S/im.test(dispatchText) ||
+    /^\s*(?:programlamada|kodda|atölyede|atolyede)\s*[:\-]/im.test(dispatchText) ||
+    /^\s*(?:şu|su|bu)\s+proje(?:de|yi)?\s+/im.test(dispatchText) ||
+    /^\s*(?:tercümede|tercumede|tercüme\s*paneline|tercume\s*paneline)\s*[:\-]/im.test(dispatchText) ||
+    (/\.(?:srt|vtt)\b/i.test(dispatchText) && /\b(?:çevir|cevir|tercüme|tercume)\b/i.test(dispatchText)) ||
+    (/https?:\/\//i.test(dispatchText) && /\b(?:indir|download|bilgi|oynat)\b/i.test(dispatchText));
   if (
     (currentMode === "genel" || currentMode === "programlama") &&
     window.ruzgarEmirYalan &&

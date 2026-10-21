@@ -1297,6 +1297,12 @@ def _health_build_block() -> dict:
             base["faz6c"] = faz6c_status()
         except Exception:
             base["faz6c"] = {"enabled": False}
+        try:
+            from ilim_assistant.ana_motor_faz_e_tek_yuz import faz_e_status
+
+            base["faz_e"] = faz_e_status()
+        except Exception:
+            base["faz_e"] = {"enabled": False}
     except Exception:
         pass
     try:
@@ -11385,7 +11391,11 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                                 msg_early,
                                 req.workspace_root,
                             )
-                            if _orch_prev.get("motors") or _orch_prev.get("active_motor"):
+                            if (
+                                _orch_prev.get("motors")
+                                or _orch_prev.get("active_motor")
+                                or _orch_prev.get("ui_action")
+                            ):
                                 _orch_early = {**_orch_early, **_orch_prev}
                         except Exception:
                             pass
@@ -12802,6 +12812,8 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             )
         except Exception:
             _meta_out["programlama_delegated"] = True
+    # Tek sohbet / 6c / Faz E preview — meta + turn orch (done'da ui_action kaybolmasın)
+    _orch_prev_turn: dict[str, Any] = {}
     if (
         mode_norm in ("genel", "uretim", "gelisim")
         and not coding
@@ -12814,11 +12826,18 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 req.message or "",
                 req.workspace_root,
             )
+            if isinstance(_orch_prev, dict) and _orch_prev:
+                _orch_prev_turn = dict(_orch_prev)
+                orch_early.update(_orch_prev_turn)
             if _route_patch:
                 route_meta.update(_route_patch)
                 _meta_out["chat_route"] = route_meta
-            if _orch_prev.get("motors") or _orch_prev.get("active_motor"):
-                _meta_out["orchestra"] = _orch_prev
+            if (
+                _orch_prev_turn.get("motors")
+                or _orch_prev_turn.get("active_motor")
+                or _orch_prev_turn.get("ui_action")
+            ):
+                _meta_out["orchestra"] = _orch_prev_turn
         except Exception:
             pass
     yield _meta_out
@@ -12959,6 +12978,10 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         pass
 
     orch: dict[str, Any] = dict(orch_early) if orch_early else {}
+    if _orch_prev_turn and not orch.get("ui_action"):
+        orch.update({k: v for k, v in _orch_prev_turn.items() if k not in orch or not orch.get(k)})
+        if _orch_prev_turn.get("ui_action"):
+            orch["ui_action"] = _orch_prev_turn["ui_action"]
     if isinstance(route_meta.get("task_plan_v92"), dict):
         orch["task_plan_v92"] = dict(route_meta["task_plan_v92"])
     try:

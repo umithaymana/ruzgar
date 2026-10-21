@@ -21,7 +21,7 @@ _GOREV_PREFIX_RE = re.compile(
     re.I,
 )
 _PROG_ATOLYE_RE = re.compile(
-    r"^(?:programlamada|kodda|atölyede|atolyeede)\s*[:\-]?\s*(.+)$",
+    r"^(?:programlamada|kodda|atölyede|atolyede)\s*[:\-]?\s*(.+)$",
     re.I,
 )
 _SU_PROJEDE_RE = re.compile(
