@@ -15,7 +15,7 @@ import unicodedata
 from pathlib import Path
 from typing import Any, Callable, Iterator
 
-FAZ85_VERSION = "programlama-faz85-v3.1-2026-10-20"
+FAZ85_VERSION = "programlama-faz85-v3.2-fields-2026-10-21"
 
 # Karmaşık hedefler → Faz85 atlanır, Faz14/88 ajan yolu (E1/E2).
 # Kısa belirsiz parçalar (bol/ayır) yok — yanlış pozitif riski.
@@ -192,11 +192,29 @@ def _goal_wants_tests(goal: str) -> bool:
     return any(k in low for k in ("pytest", "test", "gecir", "geçir", "dogrula", "doğrula"))
 
 
+def _goal_has_health_endpoint(goal: str) -> bool:
+    low = _ascii_fold(goal)
+    return any(k in low for k in ("health", "endpoint", "/health"))
+
+
 def _goal_wants_health_version(goal: str) -> bool:
     low = _ascii_fold(goal)
-    has_health = any(k in low for k in ("health", "endpoint", "/health"))
     has_version = any(k in low for k in ("version", "versiyon"))
-    return has_health and has_version
+    return _goal_has_health_endpoint(goal) and has_version
+
+
+def _goal_wants_health_extra_fields(goal: str) -> bool:
+    """status/durum veya ok alanı — version dışı health dict genişletmesi."""
+    if not _goal_has_health_endpoint(goal):
+        return False
+    low = _ascii_fold(goal)
+    if "status" in low or "durum" in low:
+        return True
+    if re.search(r"\bok\s+(?:alan|field|deger|değer|ekle)\b", low):
+        return True
+    if re.search(r"(?:alan|field)\s+(?:olarak\s+)?\bok\b", low):
+        return True
+    return False
 
 
 def _goal_wants_create(goal: str) -> bool:
@@ -245,38 +263,113 @@ def _extract_version(goal: str) -> str:
     return m.group(1) if m else "1.0.0"
 
 
-def _patch_health_return_block(block: str, *, service: str, version: str) -> tuple[str, bool]:
-    if not block.strip().startswith("{"):
-        return block, False
-    if re.search(r"""['"]version['"]\s*:""", block):
-        patched, n = re.subn(
-            r"""(['"]version['"]\s*:\s*)['"][^'"]*['"]""",
-            rf'\1"{version}"',
-            block,
-            count=1,
+def _extract_named_field_value(goal: str, *names: str, default: str) -> str:
+    text = goal or ""
+    for name in names:
+        m = re.search(
+            rf"(?:{name})\s*[=:]\s*['\"]?([\w.\-]+)['\"]?",
+            text,
+            re.I,
         )
-        if n and patched != block:
-            return patched, True
+        if m:
+            return m.group(1)
+        m = re.search(rf"(?:{name})\s+['\"]([\w.\-]+)['\"]", text, re.I)
+        if m:
+            return m.group(1)
+    return default
+
+
+def extract_health_fields(goal: str) -> dict[str, str]:
+    """Hedef metninden health dönüş alanları (status/ok/version)."""
+    out: dict[str, str] = {}
+    if not _goal_has_health_endpoint(goal):
+        return out
+    low = _ascii_fold(goal)
+    if any(k in low for k in ("version", "versiyon")):
+        out["version"] = _extract_version(goal)
+    if "status" in low or "durum" in low:
+        out["status"] = _extract_named_field_value(
+            goal, "status", "durum", default="ok"
+        )
+    if re.search(r"\bok\s+(?:alan|field|deger|değer|ekle)\b", low) or re.search(
+        r"(?:alan|field)\s+(?:olarak\s+)?\bok\b", low
+    ):
+        out["ok"] = _extract_named_field_value(goal, "ok", default="true")
+    return out
+
+
+def _set_jsonish_string_field(block: str, key: str, value: str) -> tuple[str, bool]:
+    """Dict literal içinde 'key': 'value' güncelle veya ekle."""
+    if not block.strip().startswith("{") or not block.strip().endswith("}"):
         return block, False
+    key_re = re.compile(
+        rf"""(['"]{re.escape(key)}['"]\s*:\s*)['"][^'"]*['"]""",
+        re.I,
+    )
+    if key_re.search(block):
+        patched, n = key_re.subn(rf'\1"{value}"', block, count=1)
+        return (patched, True) if n and patched != block else (block, False)
     inner = block.strip()
-    if not inner.endswith("}"):
-        return block, False
     body = inner[1:-1].strip()
     if body and not body.endswith(","):
         body += ","
-    add = f' "version": "{version}"'
-    if "service" not in body and service:
-        add = f' "service": "{service}",' + add
+    add = f' "{key}": "{value}"'
     return "{" + body + add + " }", True
 
 
-def patch_main_py_content(content: str, *, service: str, version: str) -> tuple[str, bool]:
+def _patch_health_return_block(
+    block: str,
+    *,
+    service: str = "",
+    version: str = "",
+    fields: dict[str, str] | None = None,
+) -> tuple[str, bool]:
+    if not block.strip().startswith("{"):
+        return block, False
+    merged: dict[str, str] = {}
+    if fields:
+        merged.update({str(k): str(v) for k, v in fields.items() if k and v is not None})
+    if version:
+        merged.setdefault("version", version)
+    if not merged:
+        return block, False
+    # service yalnız yeni version eklenirken (eski davranış) veya alan eklerken yoksa
+    out = block
+    changed = False
+    # Önce mevcut anahtarları güncelle / ekle
+    for key, val in merged.items():
+        out2, did = _set_jsonish_string_field(out, key, val)
+        if did:
+            out = out2
+            changed = True
+    if "version" in merged and service:
+        # service yoksa ekle (pytest uyumu)
+        if not re.search(r"""['"]service['"]\s*:""", out):
+            out2, did = _set_jsonish_string_field(out, "service", service)
+            if did:
+                out = out2
+                changed = True
+    return out, changed
+
+
+def patch_main_py_content(
+    content: str,
+    *,
+    service: str = "",
+    version: str = "",
+    fields: dict[str, str] | None = None,
+) -> tuple[str, bool]:
     out = content
     for pat in (_INLINE_RETURN_RE, _MULTILINE_RETURN_RE):
         m = pat.search(out)
         if not m:
             continue
-        new_dict, did = _patch_health_return_block(m.group(2), service=service, version=version)
+        new_dict, did = _patch_health_return_block(
+            m.group(2),
+            service=service,
+            version=version,
+            fields=fields,
+        )
         if did:
             return out[: m.start(2)] + new_dict + out[m.end(2) :], True
     return out, False
@@ -367,7 +460,9 @@ def _try_scaffold_fastapi(
         writes_ok = n
     except Exception as exc:
         return None
-    hv = _try_health_version(workspace_root, scope_rel, goal)
+    hv = _try_health_fields(workspace_root, scope_rel, goal)
+    if hv is None:
+        hv = _try_health_version(workspace_root, scope_rel, goal)
     if hv is not None:
         lines.append(str(hv.get("detail") or ""))
         writes_ok += int(hv.get("writes_ok") or 0)
@@ -463,6 +558,9 @@ def _try_health_version(
 ) -> dict[str, Any] | None:
     if not (_goal_wants_health_version(goal) and _goal_wants_tests(goal)):
         return None
+    # Extra fields (status/ok) — birleşik handler'a bırak
+    if _goal_wants_health_extra_fields(goal):
+        return None
     found = _find_main_py(workspace_root, scope_rel)
     if not found:
         return None
@@ -505,6 +603,76 @@ def _try_health_version(
     }
 
 
+def _try_health_fields(
+    workspace_root: str | Path | None,
+    scope_rel: str,
+    goal: str,
+) -> dict[str, Any] | None:
+    """Health dönüşüne status/ok (+isteğe version) ekle/güncelle — LLM yok."""
+    if not _goal_wants_health_extra_fields(goal):
+        return None
+    if not _goal_wants_tests(goal):
+        # Alan ekleme tek başına da yazılsın; verify isteğe
+        pass
+    found = _find_main_py(workspace_root, scope_rel)
+    if not found:
+        return None
+    rel_main, path_main = found
+    fields = extract_health_fields(goal)
+    # En az status veya ok şart
+    if "status" not in fields and "ok" not in fields:
+        return None
+    service = _service_slug_from_scope(scope_rel)
+    try:
+        original = path_main.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return None
+    patched, changed = patch_main_py_content(
+        original,
+        service=service,
+        version=fields.get("version") or "",
+        fields=fields,
+    )
+    lines = ["[Faz 85 — health+alanlar — LLM yok]"]
+    keys = ", ".join(sorted(fields.keys()))
+    from ilim_assistant.motorlar.programlama_motoru import ProgramlamaAraclari
+
+    tools = ProgramlamaAraclari(workspace_root)
+    writes_ok = 0
+    if changed:
+        wrep = tools.write(rel_main, patched)
+        if not wrep.ok:
+            return {
+                "ok": False,
+                "writes_ok": 0,
+                "verify_ok": False,
+                "detail": f"Yazım reddedildi: {wrep.detail}",
+                "source": "fast_health_fields_faz85",
+            }
+        writes_ok = 1
+        lines.append(f"· `{rel_main}` güncellendi ({keys}).")
+    else:
+        # Alanlar zaten varsa ve değer aynıysa yazma yok — yine verify dene
+        missing = [
+            k
+            for k in fields
+            if not re.search(rf"""['"]{re.escape(k)}['"]\s*:""", original)
+        ]
+        if missing:
+            return None
+        lines.append(f"· `{rel_main}` zaten alanları içeriyor ({keys}).")
+    verify_ok = True
+    if _goal_wants_tests(goal):
+        verify_ok, _ = _run_verify_block(workspace_root, scope_rel, goal, lines)
+    return {
+        "ok": verify_ok,
+        "writes_ok": writes_ok,
+        "verify_ok": verify_ok,
+        "detail": "\n".join(lines),
+        "source": "fast_health_fields_faz85",
+    }
+
+
 def _try_verify_only(
     workspace_root: str | Path | None,
     scope_rel: str,
@@ -512,7 +680,11 @@ def _try_verify_only(
 ) -> dict[str, Any] | None:
     if not _goal_wants_tests(goal):
         return None
-    if _goal_wants_health_version(goal) or _goal_wants_create(goal):
+    if (
+        _goal_wants_health_version(goal)
+        or _goal_wants_health_extra_fields(goal)
+        or _goal_wants_create(goal)
+    ):
         return None
     if _scope_project_dir(workspace_root, scope_rel) is None:
         return None
@@ -546,6 +718,7 @@ def try_fast_deterministic_task(
     handlers: list[Callable[..., dict[str, Any] | None]] = [
         _try_scaffold_fastapi,
         _try_fix_health_ok,
+        _try_health_fields,
         _try_health_version,
         _try_verify_only,
     ]

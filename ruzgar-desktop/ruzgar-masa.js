@@ -315,7 +315,7 @@
     const withProgBtn = !!(opts && opts.programlamaBtn);
     return (
       (withProgBtn
-        ? '<button type="button" id="ruzgar-masa-prog-gonder" title="Belge/Tablo → Programlama (çalıştırma kapalı)">→ Programlama</button>'
+        ? '<button type="button" id="ruzgar-masa-prog-gonder" title="Belge/Tablo/Çizim/Sunum → Programlama (çalıştırma kapalı)">→ Programlama</button>'
         : "") +
       '<label class="ruzgar-masa-kopru-label">Gönder ' +
       '<select id="ruzgar-masa-kopru" aria-label="Motora gönder">' +
@@ -363,7 +363,8 @@
         '<label>Renk <input id="ruzgar-masa-color" type="color" value="#1a1a1c"></label>' +
         '<label>Kalınlık <input id="ruzgar-masa-size" type="range" min="1" max="32" value="4"></label>' +
         '<button type="button" id="ruzgar-masa-undo">Geri al</button>' +
-        '<button type="button" id="ruzgar-masa-clear">Temizle</button>';
+        '<button type="button" id="ruzgar-masa-clear">Temizle</button>' +
+        kopruAracHtml({ programlamaBtn: true });
       const color = document.getElementById("ruzgar-masa-color");
       const size = document.getElementById("ruzgar-masa-size");
       color.value = state.draw.color;
@@ -426,7 +427,7 @@
         '<label>Zemin <input id="ruzgar-masa-bg" type="color" value="#1c1a16"></label>' +
         '<label>Yazı <input id="ruzgar-masa-fg" type="color" value="#f7f4ec"></label>' +
         '<button type="button" id="ruzgar-masa-play" class="ruzgar-masa-btn-accent">Sun</button>' +
-        kopruAracHtml();
+        kopruAracHtml({ programlamaBtn: true });
       const slide = currentSlide();
       document.getElementById("ruzgar-masa-bg").value = toHex(slide.bg, "#1c1a16");
       document.getElementById("ruzgar-masa-fg").value = toHex(slide.fg, "#f7f4ec");
@@ -688,7 +689,23 @@
       const metin = state.slides.map(function (sl, i) {
         return "Slayt " + (i + 1) + ": " + String(sl.title || "") + "\n" + String(sl.body || "");
       }).join("\n\n");
-      return { tur: "sunum", metin: metin.trim().slice(0, 50000) };
+      const gorevHint = state.slides.map(function (sl) {
+        return String(sl.title || "") + "\n" + String(sl.body || "");
+      }).join("\n").match(/(?:görev|gorev|iş|is|yap)\s*:\s*.+/i);
+      const baslik =
+        "# Kaynak yetenek: sunum\n" +
+        (gorevHint ? gorevHint[0].trim() + "\n" : "");
+      return { tur: "sunum", metin: (baslik + metin).trim().slice(0, 50000) };
+    }
+    if (mode === "cizim") {
+      if (!state.ink) {
+        return { tur: "cizim", metin: "" };
+      }
+      const metin =
+        "# Kaynak yetenek: cizim\n" +
+        "çizim durumu: dolu (kalem izi var)\n" +
+        "# not: görsel PNG aktarılmaz — metin görev satırına çevrilir\n";
+      return { tur: "cizim", metin: metin.trim().slice(0, 50000) };
     }
     if (mode === "okuma") {
       if (state.okuma.kind === "text") {
@@ -773,13 +790,22 @@
           "# Yüzey → Programlama (Faz85 güvenli yol; serbest çalıştırma kapalı)\n" +
           (hasGorev ? "" : "# görev: bu kodu gözden geçir ve pytest geçir\n") +
           metin;
-      } else if (paket.tur === "belge" || paket.tur === "tablo") {
+      } else if (
+        paket.tur === "belge" ||
+        paket.tur === "tablo" ||
+        paket.tur === "sunum" ||
+        paket.tur === "cizim"
+      ) {
+        const notlar = {
+          belge: "belgedeki talimat görev satırına çevrilir",
+          tablo: "tablodaki talimat görev satırına çevrilir",
+          sunum: "slayt metinleri görev satırına çevrilir",
+          cizim: "çizim özeti görev satırına çevrilir (PNG yok)",
+        };
         metin =
           "# Yüzeyden görev (çalıştırma kapalı — güvenli atölye)\n" +
           (hasKaynak ? "" : "# Kaynak yetenek: " + paket.tur + "\n") +
-          (hasGorev
-            ? ""
-            : "# not: belgedeki/tablodaki talimat görev satırına çevrilir\n") +
+          (hasGorev ? "" : "# not: " + (notlar[paket.tur] || "yüzey talimatı çevrilir") + "\n") +
           "\n" +
           metin;
       } else {
@@ -3203,7 +3229,7 @@
       "Birincil: sohbet · belge · tablo · çizim · sunum · medya · foto",
       "İkincil: notlar · kod · ses · okuma · web",
       "Foto: fotoyu aç · katalog tara · referans bırak · yüz ara (katmanlı)",
-      "Köprü: belgeyi/tabloyu programlamaya gönder · → Programlama (araç çubuğu) · kodu programlamaya gönder",
+      "Köprü: belgeyi/tabloyu/çizimi/sunumu programlamaya gönder · → Programlama (araç çubuğu) · kodu programlamaya gönder",
       "Köprü: bunu tercümeye gönder · belgeyi sese gönder · köprü: programlama",
       "Aç: belgeyi aç · notları aç · kodu aç · sesi aç · okumayı aç · web aç",
       "belgeye … yaz · belgeye tablo ekle · belgeye 4x2 tablo ekle · resim: bırak/yapıştır",
@@ -3349,7 +3375,7 @@
     let m = sade.match(/^(?:bunu|belgeyi|kodu|notlari|notları|metni|yuzeyi|yüzeyi|tabloyu|sunumu|okumayi|okumayı)\s+(tercumeye|tercümeye|programlamaya|sese|videoya|hafizaya|hafızaya|okumaya|mimara)\s+g[öo]nder$/i);
     if (m) return masaKomutSonuc(yuzeyMotorGonder(m[1]));
     // D: belge/tablo → programlama kısa yolları (izinli masa komutu)
-    m = sade.match(/^(?:belgeyi|tabloyu|belgeden|tablodan|metni)\s+(?:koda|programlamaya|programlama\s+gorevine|programlama\s+görevine)\s+(?:g[öo]nder|aktar|cevir|çevir)$/i);
+    m = sade.match(/^(?:belgeyi|tabloyu|belgeden|tablodan|metni|çizimi|cizimi|sunumu)\s+(?:koda|programlamaya|programlama\s+gorevine|programlama\s+görevine)\s+(?:g[öo]nder|aktar|cevir|çevir)$/i);
     if (m) return masaKomutSonuc(yuzeyMotorGonder("programlama"));
     if (/^(?:programlamaya\s+g[öo]nder|koda\s+g[öo]nder|programlama\s+kopr[uü]|programlama\s+köprü)$/i.test(sade)) {
       return masaKomutSonuc(yuzeyMotorGonder("programlama"));

@@ -101,11 +101,39 @@ def main() -> int:
         print("FAIL tablo got ephemeral project slug", tablo_p.get("task_line"))
         return 1
 
+    # D+: Çizim / Sunum → programlama
+    sunum = (
+        "# Kaynak yetenek: sunum\n"
+        "Slayt 1: Plan\n"
+        "görev: health endpointine version 2.0.0 ekle pytest geçir\n"
+    )
+    sunum_p = build_surface_handoff_payload(sunum, WORKSPACE)
+    if "version" not in (sunum_p.get("goal") or "").lower():
+        print("FAIL sunum goal", sunum_p.get("goal"))
+        return 1
+    if not (sunum_p.get("task_line") or "").lower().startswith(("görev:", "gorev:")):
+        print("FAIL sunum task_line", sunum_p.get("task_line"))
+        return 1
+
+    cizim = (
+        "# Kaynak yetenek: cizim\n"
+        "çizim durumu: dolu (kalem izi var)\n"
+    )
+    cizim_p = build_surface_handoff_payload(cizim, WORKSPACE)
+    cg = (cizim_p.get("goal") or "").lower()
+    if "çizim" not in cg and "cizim" not in cg and "özet" not in cg and "ozet" not in cg:
+        print("FAIL cizim goal", cizim_p.get("goal"))
+        return 1
+    if not cizim_p.get("ok"):
+        print("FAIL cizim payload", cizim_p)
+        return 1
+
     print(
         f"OK yuzey-bridge — goal={goal[:40]!r} "
         f"path={payload.get('path_hint')} "
         f"complex={complex_payload.get('path_hint')} "
         f"belge={belge_p.get('path_hint')} tablo={tablo_p.get('path_hint')} "
+        f"sunum={sunum_p.get('path_hint')} cizim={cizim_p.get('path_hint')} "
         f"task={belge_p.get('task_line')!r}"
     )
     return 0

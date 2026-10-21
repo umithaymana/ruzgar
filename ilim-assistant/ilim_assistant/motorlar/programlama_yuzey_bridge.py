@@ -13,7 +13,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-YUZEY_BRIDGE_VERSION = "programlama-yuzey-bridge-v1.3-2026-10-21"
+YUZEY_BRIDGE_VERSION = "programlama-yuzey-bridge-v1.4-cizim-sunum-2026-10-21"
 _EPHEMERAL_PROJECT_RE = re.compile(
     r"^(?:smoke[-_]|e2-bat-|e2-boot-|agent-bat-|e2-bat)",
     re.I,
@@ -24,7 +24,7 @@ _HEADER_RE = re.compile(
     re.I,
 )
 _KAYNAK_TUR_RE = re.compile(
-    r"^#\s*Kaynak yetenek\s*:\s*(belge|tablo|kod|notlar)\b",
+    r"^#\s*Kaynak yetenek\s*:\s*(belge|tablo|kod|notlar|cizim|çizim|sunum)\b",
     re.I,
 )
 _EXPLICIT_GOREV_RE = re.compile(
@@ -55,7 +55,15 @@ def _detect_kaynak_tur(lines: list[str]) -> str:
     for ln in lines[:8]:
         m = _KAYNAK_TUR_RE.match(ln.strip())
         if m:
-            return (m.group(1) or "").strip().lower()
+            raw = (m.group(1) or "").strip().lower()
+            return (
+                raw.replace("ç", "c")
+                .replace("ı", "i")
+                .replace("ş", "s")
+                .replace("ğ", "g")
+                .replace("ü", "u")
+                .replace("ö", "o")
+            )
     return ""
 
 
@@ -107,6 +115,48 @@ def _goal_from_belge_lines(body_lines: list[str]) -> str:
     return body[:400]
 
 
+def _goal_from_sunum_lines(body_lines: list[str]) -> str:
+    """Slayt başlık/metin — görev veya eylem özeti."""
+    for ln in body_lines[:30]:
+        em = _EXPLICIT_GOREV_RE.match(ln)
+        if em:
+            return (em.group(1) or "").strip()[:500]
+        todo = _TODO_RE.match(ln)
+        if todo:
+            return todo.group(1).strip()[:400]
+        if _ACTION_HINT_RE.search(ln) and len(ln) <= 220:
+            return ln[:400]
+    # Slayt N: başlık — anlamlı içerik
+    slides: list[str] = []
+    for ln in body_lines:
+        if re.match(r"^slayt\s+\d+", ln, re.I) or ln:
+            if not ln.startswith("#") and len(ln.strip()) >= 3:
+                slides.append(ln.strip())
+    joined = " · ".join(slides[:16])
+    if not joined:
+        return ""
+    if _ACTION_HINT_RE.search(joined):
+        return joined[:500]
+    return f"sunumdaki slayt metinlerini uygula: {joined}"[:500]
+
+
+def _goal_from_cizim_lines(body_lines: list[str]) -> str:
+    """Çizim özeti — görev satırı veya güvenli iskelet."""
+    for ln in body_lines[:20]:
+        em = _EXPLICIT_GOREV_RE.match(ln)
+        if em:
+            return (em.group(1) or "").strip()[:500]
+        if _ACTION_HINT_RE.search(ln) and len(ln) <= 220:
+            return ln[:400]
+    low = " ".join(body_lines).lower()
+    if any(k in low for k in ("dolu", "iz var", "kalem", "şekil", "sekil")):
+        return "çizim yüzeyindeki içeriği özetle ve kısa uygulama notu yaz"
+    if any(k in low for k in ("boş", "bos", "empty")):
+        return ""
+    body = " ".join(body_lines).strip()
+    return body[:400] if body else ""
+
+
 def extract_surface_goal(surface_text: str) -> str:
     """Yüzey metninden ham hedef metni (görev: öneki olmadan)."""
     raw = (surface_text or "").replace("\r\n", "\n").replace("\r", "\n")
@@ -139,6 +189,12 @@ def extract_surface_goal(surface_text: str) -> str:
 
     if kaynak == "belge":
         return _goal_from_belge_lines(body_lines)
+
+    if kaynak == "sunum":
+        return _goal_from_sunum_lines(body_lines)
+
+    if kaynak == "cizim":
+        return _goal_from_cizim_lines(body_lines)
 
     body = " ".join(body_lines).strip()
     if not body:

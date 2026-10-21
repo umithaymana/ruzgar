@@ -409,23 +409,117 @@ VERSION = "2.0.0"
 
 def e2_write_template_nudge(scope_rel: str, goal: str = "") -> str:
     """7B için kopyalanabilir @@write / search-replace şablonu (tur mesajı)."""
-    if not _e2_multi_goal(goal) and "version" not in _ascii_fold(goal):
-        return ""
-    service_name = scope_rel.split("/")[-1].replace("-", "_")
-    return (
-        "\n[E2 yazım şablonu — bu turda aynen uygula, yalnız oku YASAK]\n"
-        f"1) `{scope_rel}/app/util.py` içinde `VERSION = \"2.0.0\"`\n"
-        f"2) `{scope_rel}/app/service.py` health_payload'a "
-        f'`"version": VERSION` ekle (service={service_name})\n'
-        "Örnek search-replace:\n"
-        "```search-replace\n"
-        "<<<SEARCH\n"
-        'VERSION = "1.0.0-broken"\n'
-        "===\n"
-        'VERSION = "2.0.0"\n'
-        ">>>REPLACE\n"
-        "```\n"
-    )
+    low = _ascii_fold(goal or "")
+    chunks: list[str] = []
+    # Health status/ok alan şablonu (Faz85 ile aynı niyet)
+    try:
+        from ilim_assistant.motorlar.programlama_faz85 import (
+            extract_health_fields,
+            _goal_wants_health_extra_fields,
+        )
+
+        if _goal_wants_health_extra_fields(goal or ""):
+            fields = extract_health_fields(goal or "")
+            status_val = fields.get("status") or "ok"
+            chunks.append(
+                "\n[Health alan yazım şablonu — bu turda uygula, yalnız oku YASAK]\n"
+                f"1) `{scope_rel}/app/main.py` (veya main.py) health() return dict'ine "
+                f'`"status": "{status_val}"` ekle/güncelle\n'
+                "2) Sonra pytest doğrula\n"
+            )
+    except Exception:
+        pass
+    if _e2_multi_goal(goal) or "version" in low:
+        service_name = scope_rel.split("/")[-1].replace("-", "_")
+        chunks.append(
+            "\n[E2 yazım şablonu — bu turda aynen uygula, yalnız oku YASAK]\n"
+            f"1) `{scope_rel}/app/util.py` içinde `VERSION = \"2.0.0\"`\n"
+            f"2) `{scope_rel}/app/service.py` health_payload'a "
+            f'`"version": VERSION` ekle (service={service_name})\n'
+            "Örnek search-replace:\n"
+            "```search-replace\n"
+            "<<<SEARCH\n"
+            'VERSION = "1.0.0-broken"\n'
+            "===\n"
+            'VERSION = "2.0.0"\n'
+            ">>>REPLACE\n"
+            "```\n"
+        )
+    return "".join(chunks)
+
+
+def try_supervised_health_fields_boot(
+    workspace_root: str | Path | None,
+    scope_rel: str,
+    goal: str = "",
+) -> dict[str, Any]:
+    """
+    0 yazım + health status/ok niyeti → Faz85 yama (LLM yok).
+    Ajan/E2 turunda yedek; kapat: RUZGAR_E2_SUPERVISED_BOOT=0
+    """
+    empty: dict[str, Any] = {
+        "ok": False,
+        "writes_ok": 0,
+        "paths": [],
+        "detail": "",
+        "source": "e2_supervised_health_fields",
+    }
+    if not _enabled() or not e2_supervised_boot_enabled():
+        empty["detail"] = "supervised boot kapalı"
+        return empty
+    try:
+        from ilim_assistant.motorlar.programlama_faz85 import (
+            _goal_wants_health_extra_fields,
+            _find_main_py,
+            _service_slug_from_scope,
+            extract_health_fields,
+            patch_main_py_content,
+        )
+        from ilim_assistant.motorlar.programlama_motoru import ProgramlamaAraclari
+
+        if not _goal_wants_health_extra_fields(goal or ""):
+            empty["detail"] = "health alan niyeti yok"
+            return empty
+        fields = extract_health_fields(goal or "")
+        if "status" not in fields and "ok" not in fields:
+            empty["detail"] = "status/ok alanı yok"
+            return empty
+        found = _find_main_py(workspace_root, scope_rel)
+        if not found:
+            empty["detail"] = "main.py yok"
+            return empty
+        rel_main, path_main = found
+        original = path_main.read_text(encoding="utf-8", errors="replace")
+        # Zaten tüm alanlar varsa yazma
+        if all(
+            re.search(rf"""['"]{re.escape(k)}['"]\s*:""", original) for k in fields
+        ):
+            # Değer farklı olabilir — yine patch dene
+            pass
+        service = _service_slug_from_scope(scope_rel)
+        patched, changed = patch_main_py_content(
+            original,
+            service=service,
+            version=fields.get("version") or "",
+            fields=fields,
+        )
+        if not changed:
+            empty["detail"] = "yama gerekmedi / uygulanamadı"
+            return empty
+        wrep = ProgramlamaAraclari(workspace_root).write(rel_main, patched)
+        if not wrep.ok:
+            empty["detail"] = f"yazım reddi: {wrep.detail}"
+            return empty
+        return {
+            "ok": True,
+            "writes_ok": 1,
+            "paths": [rel_main],
+            "detail": f"supervised health fields ({', '.join(sorted(fields))})",
+            "source": "e2_supervised_health_fields",
+        }
+    except Exception as exc:
+        empty["detail"] = str(exc)[:200]
+        return empty
 
 
 def try_e2_supervised_write_boot(
@@ -434,8 +528,10 @@ def try_e2_supervised_write_boot(
     goal: str = "",
 ) -> dict[str, Any]:
     """
-    Tur içinde 0 yazım + bozuk VERSION → deterministik 2 dosya patch (verify yok).
-    Canlı 7B rayı; kapat: RUZGAR_E2_SUPERVISED_BOOT=0
+    Tur içinde 0 yazım → deterministik yedek:
+    1) E2 bozuk VERSION patch
+    2) Health status/ok alan yaması (Faz85)
+    Kapat: RUZGAR_E2_SUPERVISED_BOOT=0
     """
     empty: dict[str, Any] = {
         "ok": False,
@@ -447,34 +543,39 @@ def try_e2_supervised_write_boot(
     if not _enabled() or not e2_supervised_boot_enabled():
         empty["detail"] = "supervised boot kapalı"
         return empty
-    if not _e2_multi_goal(goal):
-        empty["detail"] = "e2 multi değil"
-        return empty
-    if not _e2_version_broken_on_disk(workspace_root, scope_rel):
-        empty["detail"] = "diskte bozuk VERSION yok"
-        return empty
-    try:
-        from ilim_assistant.motorlar.programlama_motoru import repo_root
-        from ilim_assistant.motorlar.programlama_patch import apply_patch_jobs
+    # 1) Klasik E2 VERSION boot
+    if _e2_multi_goal(goal) and _e2_version_broken_on_disk(workspace_root, scope_rel):
+        try:
+            from ilim_assistant.motorlar.programlama_motoru import repo_root
+            from ilim_assistant.motorlar.programlama_patch import apply_patch_jobs
 
-        root = repo_root(workspace_root)
-        if root is None:
-            empty["detail"] = "workspace yok"
-            return empty
-        patch = _e2_multi_version_patch(scope_rel)
-        reps = apply_patch_jobs(patch, root)
-        paths = [getattr(r, "path", "") for r in reps if r.ok and getattr(r, "path", "")]
-        writes = len(paths)
-        return {
-            "ok": writes >= 1,
-            "writes_ok": writes,
-            "paths": paths,
-            "detail": f"supervised boot writes={writes}",
-            "source": "e2_supervised_boot",
-        }
-    except Exception as exc:
-        empty["detail"] = str(exc)[:200]
-        return empty
+            root = repo_root(workspace_root)
+            if root is not None:
+                patch = _e2_multi_version_patch(scope_rel)
+                reps = apply_patch_jobs(patch, root)
+                paths = [
+                    getattr(r, "path", "")
+                    for r in reps
+                    if r.ok and getattr(r, "path", "")
+                ]
+                writes = len(paths)
+                if writes >= 1:
+                    return {
+                        "ok": True,
+                        "writes_ok": writes,
+                        "paths": paths,
+                        "detail": f"supervised boot writes={writes}",
+                        "source": "e2_supervised_boot",
+                    }
+        except Exception as exc:
+            empty["detail"] = str(exc)[:200]
+    # 2) Health alan yedek (ajan 0 write)
+    health_boot = try_supervised_health_fields_boot(workspace_root, scope_rel, goal)
+    if health_boot.get("writes_ok"):
+        return health_boot
+    if not empty.get("detail"):
+        empty["detail"] = health_boot.get("detail") or "supervised aday yok"
+    return empty
 
 
 def _run_offline_multi_heal(

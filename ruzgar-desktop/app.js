@@ -3378,6 +3378,88 @@ function applyMotorHandoff(modeId, handoffText, opts) {
   setStatus(`Köprü: ${mid}`, "Rüzgar");
 }
 
+/** Faz 6c UI cilası — genel sohbette flash + handoff/mega paneli hemen boya (API beklemeden). */
+function paintFaz6cTekYuzPanels(uiAction) {
+  const a = uiAction && typeof uiAction === "object" ? uiAction : {};
+  const taskLine = String(a.task_line || a.goal || "").trim();
+  const pathHint = String(a.path_hint || "agent").trim() || "agent";
+  const named = Array.isArray(a.named_paths) ? a.named_paths.filter(Boolean) : [];
+  const goalShort = String(a.goal || taskLine).trim().slice(0, 80);
+  const yolTr =
+    pathHint === "faz85_fast"
+      ? "Faz85 hızlı"
+      : pathHint === "agent_mega"
+        ? "mega ajan"
+        : pathHint === "agent_multi"
+          ? "çok dosya"
+          : "ajan";
+  flashRuzgarDurum(
+    `6c → Programlama · ${yolTr}${goalShort ? ` · ${goalShort}` : ""}`.slice(0, 160),
+  );
+  // Handoff kartı (anında)
+  renderProgramlamaHandoff(
+    {
+      ok: true,
+      handoff: {
+        scope_rel: named[0] ? String(named[0]).split("/").slice(0, 2).join("/") : "",
+        goal_preview: goalShort,
+        packet_preview: taskLine.slice(0, 120),
+      },
+      delegation: {
+        pytest_footer:
+          /pytest|geçir|gecir|test/i.test(taskLine) ? "pytest: isteniyor" : "pytest: —",
+      },
+      motor_chain: [{ id: "ana" }, { id: "programlama" }],
+      e4: { recent_success_rate: 0, target_rate: 0.85 },
+      context_log: [],
+    },
+    { goal: goalShort || taskLine, pathHint },
+  );
+  // Mega panel (anında — sonra API tazeler)
+  renderProgramlamaMegaWorkbench({
+    ok: true,
+    mega: { active: pathHint === "agent_mega", limits: { max_turns: 12, max_files_per_turn: 16, budget_sec: 900 } },
+    agent: {
+      status: "hazir",
+      status_label: "6c handoff",
+      path_hint: pathHint,
+      turn: 0,
+      max_turns: 12,
+      goal: goalShort || taskLine,
+      scope_rel: "",
+      named_paths: named.slice(0, 12),
+      can_resume: false,
+    },
+    e2: { current_rate: 0, target_rate: 0.9, sample_total: 0 },
+    multi_file_plan: named.length
+      ? `Dosyalar: ${named.slice(0, 8).join(", ")}`
+      : pathHint.startsWith("agent")
+        ? "Çok dosya / ajan yolu — görev gönderilince plan dolar."
+        : "",
+    touched_files: [],
+    touched_count: 0,
+    patch_plan: {},
+    verify: {},
+  });
+  // Faz85 ipucu kartı — hızlı yol seçildiyse öne çıkar
+  if (pathHint === "faz85_fast" || isProgramlamaFastPathGoal(taskLine)) {
+    const wrap = document.getElementById("programlama-faz85-hint-card");
+    const stateEl = document.getElementById("programlama-faz85-state");
+    const e1El = document.getElementById("programlama-faz85-e1");
+    const detailEl = document.getElementById("programlama-faz85-detail");
+    if (wrap && stateEl) {
+      wrap.hidden = false;
+      stateEl.textContent = "Faz85 adayı (6c)";
+      stateEl.style.color = "";
+      if (e1El) e1El.textContent = "hızlı yol";
+      if (detailEl) {
+        detailEl.textContent =
+          "health+version/alan+pytest → LLM yok · kırmızıysa ajan";
+      }
+    }
+  }
+}
+
 /** Orchestra / API ui_action — yüzey paketini motora (tek sohbet / Faz 6c / Faz E). */
 function maybeRunTekSohbetUiAction(orch) {
   const a = orch && orch.ui_action;
@@ -3393,10 +3475,12 @@ function maybeRunTekSohbetUiAction(orch) {
       quiet: true,
       pathHint: a.path_hint || "",
     });
-    flashRuzgarDurum(
-      `Tek yüz → Programlama · ${String(a.path_hint || "ajan").slice(0, 40)}`,
-    );
+    paintFaz6cTekYuzPanels(a);
     void refreshProgramlamaMegaWorkbench();
+    void refreshProgramlamaHandoffWorkbench(taskLine, {
+      goal: a.goal || taskLine,
+      pathHint: a.path_hint || "",
+    });
     return true;
   }
   // Faz E: Tercüme atölye doldur (quiet)

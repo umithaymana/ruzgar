@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-21 (öğle) — **GÜVENLİ KAYIT NOKTASI** · E tek yüz + köprü onarım + EmirYalan.
+**Son güncelleme:** 2026-10-21 (öğle) — **D+: Çizim/Sunum → programlama** · C 6c UI.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -143,17 +143,23 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
 23. ~~**görev: EmirYalan**~~ — `kodAjaniGoreviMi` + `app.js` yalan kapısı · commit `db94cced`. Canlı: version 2.1.0 + pytest OK.
 24. ~~**E** Tercüme/Video tek yüz~~ — `ana_motor_faz_e_tek_yuz.py` · orkestrasyon 6c sonrası · UI `tercume_gorev`/`video_gorev` · smoke `ana_motor_faz_e_smoke` **PASS** · briefing `faz_e`.
 25. ~~**Köprü onarım**~~ — preview orchestra `done`’a birleşir · meta’da handoff · EmirYalan 6c/E muafiyeti · video URL / tercüme dil / path_hint.
-26. **← GÜVENLİ BÖLGE** — commit+push bu tur. Sonraki: Mimar inceleme veya **C** (isteğe).
-27. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
+26. ~~**GÜVENLİ BÖLGE**~~ — `6c84c242` · origin/main.
+27. ~~**Faz 85 health alanları**~~ — status/ok (+version birleşik) · `_try_health_fields` · smoke `programlama_faz85_fields_smoke`.
+28. ~~**Saf yazım yedek (health)**~~ — `try_supervised_health_fields_boot` · E2 boot birleşik · Faz39/52 mandate · smoke `programlama_supervised_health_smoke`.
+29. ~~**C: 6c UI cilası**~~ — `paintFaz6cTekYuzPanels` · smoke `ana_motor_faz6c_ui_smoke`.
+30. ~~**D+: Çizim/Sunum → programlama**~~ — yuzey-bridge v1.4 · masa `→ Programlama` + «çizimi/sunumu programlamaya gönder» · smoke genişletildi.
+31. ~~**Dilimler commit+push**~~ — Faz85 alan · yazım yedek · C 6c UI · D+ çizim/sunum (bu tur).
+32. **← ŞİMDİ:** Mimar inceleme; 14b BOOT=0 ölçüm isteğe.
+33. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
 
 ### Sıradaki (programlama → diğer)
 
 | Sıra | İş | Neden | Çıkış |
 |------|-----|--------|--------|
-| **inceleme** | Mimar detaylı bakış | EmirYalan + E + D | onay / revize |
-| **C** (isteğe) | 6c UI cilası | Genel sohbette flash + mega panel | 3 cümle smoke |
+| **inceleme** | Mimar detaylı bakış | EmirYalan + E + D + C | onay / revize |
+| **ölçüm** (isteğe) | 14b BOOT=0 tekrar | saf yazım tabanı | rapor |
 
-**Öneri:** E yeşil — inceleme sırası sende; C sonra.
+**Öneri:** C yeşil — inceleme / commit sırası sende.
 
 ### 2026-10-18 / 19 — oturum kaydı (geç yazıldı)
 

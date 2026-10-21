@@ -244,6 +244,22 @@ def build_write_mandate_message(
             )
     except Exception:
         pass
+    fields_hint = ""
+    try:
+        from ilim_assistant.motorlar.programlama_faz85 import (
+            extract_health_fields,
+            _goal_wants_health_extra_fields,
+        )
+
+        if _goal_wants_health_extra_fields(goal or ""):
+            fields = extract_health_fields(goal or "")
+            status_val = fields.get("status") or "ok"
+            fields_hint = (
+                f"\nHealth: `{scope_rel}/app/main.py` health() return'e "
+                f'`"status": "{status_val}"` ekle — boş tur YASAK.\n'
+            )
+    except Exception:
+        pass
     return (
         f"[FAZ 39 — ZORUNLU YAZIM — tur {turn}]\n"
         f"Proje: `{scope_rel}`\n"
@@ -251,7 +267,7 @@ def build_write_mandate_message(
         "- `ruzgar-tool` write VEYA `@@write` / search-replace ile patch\n"
         "- Ardından verify (pytest) çalıştır\n"
         "Sadece plan veya açıklama YASAK — somut kod değişikliği şart.\n"
-        f"{multi_hint}\n"
+        f"{multi_hint}{fields_hint}\n"
         f"Hedef: {(goal or '').strip()}\n\n"
         f"{(tool_block or '').strip()}\n"
     )
@@ -280,15 +296,22 @@ def run_write_mandate_followup(
         return llm_body, round_body, tool_results, [], False
     if _has_write(llm_body, tool_results):
         return llm_body, round_body, tool_results, [], False
-    force_e2 = False
+    force_write = False
     try:
         from ilim_assistant.motorlar.programlama_faz56 import looks_like_multi_file_task
-        from ilim_assistant.motorlar.programlama_faz85 import goal_wants_agent_path
+        from ilim_assistant.motorlar.programlama_faz85 import (
+            goal_wants_agent_path,
+            _goal_wants_health_extra_fields,
+        )
 
-        force_e2 = looks_like_multi_file_task(goal) or goal_wants_agent_path(goal)
+        force_write = (
+            looks_like_multi_file_task(goal)
+            or goal_wants_agent_path(goal)
+            or _goal_wants_health_extra_fields(goal)
+        )
     except Exception:
-        force_e2 = False
-    if not turn_had_discovery(tool_results) and not force_e2:
+        force_write = False
+    if not turn_had_discovery(tool_results) and not force_write:
         return llm_body, round_body, tool_results, [], False
 
     mandate_user = build_write_mandate_message(
