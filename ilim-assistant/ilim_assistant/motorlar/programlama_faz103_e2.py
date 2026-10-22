@@ -537,6 +537,13 @@ def e2_write_template_nudge(scope_rel: str, goal: str = "") -> str:
             "ham satır + hemen altında ```search-replace.\n"
             + _e2_multi_version_patch(scope_rel)
         )
+        # P4 BOOT=0 — kısa few-shot (supervised kapalıyken de format hatırlatır)
+        try:
+            from ilim_assistant.motorlar.programlama_patch import boot0_write_fewshot
+
+            chunks.append(boot0_write_fewshot(scope_rel))
+        except Exception:
+            pass
     # P1 — ek pattern şablon ipuçları
     try:
         from ilim_assistant.motorlar.programlama_supervised_patterns import (

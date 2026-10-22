@@ -27,7 +27,10 @@ def main() -> int:
         normalize_split_patch_fences,
     )
 
-    failed += _ok("v1.3" in PROG_PATCH_VERSION, f"version {PROG_PATCH_VERSION}")
+    failed += _ok(
+        "v1.3" in PROG_PATCH_VERSION or "v1.4" in PROG_PATCH_VERSION,
+        f"version {PROG_PATCH_VERSION}",
+    )
     failed += _ok(
         clean_patch_path("`projects/demo/app/util.py`") == "projects/demo/app/util.py",
         "clean backtick path",

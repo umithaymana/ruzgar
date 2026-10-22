@@ -30,7 +30,7 @@ from pathlib import Path
 from ilim_assistant.local_tools import safe_read_file_under_root
 from ilim_assistant.motorlar.programlama_motoru import ProgramlamaAraclari, repo_root
 
-PROG_PATCH_VERSION = "programlama-patch-v1.3-2026-10-22"
+PROG_PATCH_VERSION = "programlama-patch-v1.4-p4-2026-10-23"
 
 # Model sıkça @@patch'i ```python fence içine alır, search-replace'i ayrı fence'e koyar.
 _SPLIT_PATCH_FENCE_RE = re.compile(
@@ -84,6 +84,26 @@ _LOOSE_VERSION_SR_RE = re.compile(
     re.DOTALL | re.IGNORECASE,
 )
 
+# P4 BOOT=0: @@patch yol + SEARCH/REPLACE fence'siz
+_UNFENCED_PATCH_SR_RE = re.compile(
+    r"(?m)^(@@patch\s+\S+)\s*\r?\n"
+    r"<<<SEARCH\s*\r?\n"
+    r"(.*?)"
+    r"===\s*\r?\n"
+    r"(.*?)"
+    r">>>REPLACE\s*(?:\r?\n|$)",
+    re.DOTALL | re.IGNORECASE,
+)
+
+# P4: @@patch yol + ``` ile -satır / +satır (SEARCH yok)
+_DIFF_LINES_UNDER_PATCH_RE = re.compile(
+    r"(?m)^(@@patch\s+(\S+))\s*\r?\n"
+    r"```(?:diff|patch|text|python)?\s*\r?\n"
+    r"((?:[-+].*\r?\n)+)"
+    r"```",
+    re.IGNORECASE,
+)
+
 
 def clean_patch_path(rel: str) -> str:
     """`` `path` `` / tırnak / ters eğik → temiz repo-rel yol (D1)."""
@@ -132,6 +152,63 @@ def _norm_e2_rel(path: str) -> str:
         # e2-bat-…/app/util.py → projects/e2-bat-…/app/util.py
         return f"projects/{p.lstrip('/')}"
     return p
+
+
+def normalize_unfenced_search_replace(message: str) -> str:
+    """P4: @@patch + <<<SEARCH…>>>REPLACE fence yok → search-replace fence."""
+
+    def _repl(m: re.Match[str]) -> str:
+        head = m.group(1).strip()
+        search = (m.group(2) or "").rstrip("\n")
+        replace = (m.group(3) or "").rstrip("\n")
+        return (
+            f"{head}\n```search-replace\n"
+            f"<<<SEARCH\n{search}\n===\n{replace}\n>>>REPLACE\n```\n"
+        )
+
+    return _UNFENCED_PATCH_SR_RE.sub(_repl, message or "")
+
+
+def normalize_diff_lines_under_patch(message: str) -> str:
+    """P4: @@patch + ```\\n-old\\n+new\\n``` → SEARCH/REPLACE."""
+
+    def _repl(m: re.Match[str]) -> str:
+        head = m.group(1).strip()
+        body = m.group(3) or ""
+        old_lines: list[str] = []
+        new_lines: list[str] = []
+        for line in body.splitlines():
+            if line.startswith("-") and not line.startswith("---"):
+                old_lines.append(line[1:])
+            elif line.startswith("+") and not line.startswith("+++"):
+                new_lines.append(line[1:])
+        if not old_lines or not new_lines:
+            return m.group(0)
+        search = "\n".join(old_lines)
+        replace = "\n".join(new_lines)
+        return (
+            f"{head}\n```search-replace\n"
+            f"<<<SEARCH\n{search}\n===\n{replace}\n>>>REPLACE\n```\n"
+        )
+
+    return _DIFF_LINES_UNDER_PATCH_RE.sub(_repl, message or "")
+
+
+def boot0_write_fewshot(scope_rel: str) -> str:
+    """BOOT=0 için kopyalanabilir mini örnek (supervised şişirme yok — sadece format)."""
+    scope = (scope_rel or "projects/demo").replace("\\", "/").rstrip("/")
+    return (
+        "\n[P4 BOOT=0 yazım — AYNEN bu format]\n"
+        f"@@patch {scope}/app/util.py\n"
+        "```search-replace\n"
+        "<<<SEARCH\n"
+        'VERSION = "1.0.0-broken"\n'
+        "===\n"
+        'VERSION = "2.0.0"\n'
+        ">>>REPLACE\n"
+        "```\n"
+        "Fence'siz SEARCH veya yalnız `-`/`+` satırları da kabul edilir; yine de bu formatı tercih et.\n"
+    )
 
 
 def normalize_bare_e2_version_patches(message: str) -> str:
@@ -265,6 +342,8 @@ def extract_patch_jobs(message: str) -> list[tuple[str, str, str]]:
     """(rel_path, search, replace) listesi."""
     message = normalize_patch_path_lines(message or "")
     message = normalize_split_patch_fences(message)
+    message = normalize_unfenced_search_replace(message)
+    message = normalize_diff_lines_under_patch(message)
     message = normalize_bare_e2_version_patches(message)
     jobs: list[tuple[str, str, str]] = []
     for m in _PATCH_SR_RE.finditer(message):

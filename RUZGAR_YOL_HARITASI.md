@@ -3,7 +3,7 @@
 **Kilit:** 2026-10-23 · Mimar onayı («bu planı sevdim, kilitle»)  
 **Kaynak güvenli bölge:** 2026-10-22 · `0c919d60` · `origin/main`  
 **Süre beklentisi:** birkaç gün (faz faz; atlama yok)  
-**Aktif faz:** **P4** (P0–P3✅ 2026-10-23)
+**Aktif faz:** **P5** (P0–P4✅ 2026-10-23)
 
 Bu dosya çok günlük çalışmada **tek sıra kaynağıdır**. Sapma yasak. Güncelleme: dilim yeşil → burada işaretle + `PROJE_DURUMU.md` özet.
 
@@ -48,7 +48,7 @@ M  Diğer motorlar (Video → Tercüme → Okuma → Mimar)
 | **P1** | Supervised pattern kütüphanesi (VERSION/health ötesi sık niyetler) | Dar görev boot ↑ | ✅ 2026-10-23 · 5 pattern · smoke 9/9 |
 | **P2** | Niyet → ray sınıflayıcı (scaffold / ajan+boot / mega) | Yanlış ray ↓ | ✅ 2026-10-23 · smoke 26/26 |
 | **P3** | Dosya-dosya verify + heal→kök öğrenme | heal_r10 düşük; verify∧ok | ✅ 2026-10-23 · smoke 12/12 |
-| **P4** | BOOT=0 yazım iyileştirme (dürüst KPI; şişirme yok) | boot0 agent_ok ↑ | ⬜ |
+| **P4** | BOOT=0 yazım iyileştirme (dürüst KPI; şişirme yok) | boot0 agent_ok ↑ | ✅ 2026-10-23 · patch v1.4 · smoke 10/10 |
 | **P5** | Scaffold ürün borusu (statik / react_vite / FastAPI) | Güvenli greenfield ray | ⬜ |
 | **P6** | Pilot A: küçük CLI/araç uçtan uca | Çalışır + pytest | ⬜ |
 | **P7** | Pilot B: basit web sitesi uçtan uca | Açılır + smoke | ⬜ |
@@ -107,12 +107,12 @@ Her motor: ölçüm → derin iş → uygulama denemesi → mühür. Önceki mot
 
 | Faz | Durum |
 |-----|--------|
-| P | 🔄 P0–P3✅ · sırada P4 |
+| P | 🔄 P0–P4✅ · sırada P5 |
 | S | ⬜ P mühürüne bağlı |
 | V | ⬜ S mühürüne bağlı |
 | M | ⬜ V mühürüne bağlı |
 
-**Son işaret:** 2026-10-23 — P3 yeşil (1 dosya→verify · heal→pattern) → P4.
+**Son işaret:** 2026-10-23 — P4 yeşil (unfenced/diff patch kurtarma + BOOT=0 fewshot) → P5.
 
 ---
 
