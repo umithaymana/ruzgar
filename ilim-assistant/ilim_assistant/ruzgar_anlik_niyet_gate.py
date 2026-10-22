@@ -138,8 +138,64 @@ def library_instant_would_match(message: str) -> bool:
     return False
 
 
+def _wants_grounded_anlat(message: str) -> bool:
+    """S6 — anlat/açıkla → kart metni zorunlu grounded blok (parametrik serbest değil)."""
+    raw = (message or "").strip()
+    if not raw:
+        return False
+    if _SYNTH_RE.search(raw) or _SYNTH_RE.search(_fold(raw)):
+        return True
+    try:
+        from ilim_assistant.sohbet_source_router import classify_source_intent
+
+        tip = classify_source_intent(raw).tip
+        return tip in ("anlat", "tarih_anlat", "liste_cografya")
+    except Exception:
+        return "anlat" in _fold(raw)
+
+
+def resolve_anlik_harman(message: str) -> dict:
+    """S6 — kart | grounded_anlat | miss kararı (smoke + orchestration)."""
+    raw = (message or "").strip()
+    out: dict = {
+        "mode": "miss",
+        "tip": "",
+        "has_card": False,
+        "defer": False,
+        "version": "anlik-harman-s6-v1-2026-10-23",
+    }
+    if not raw:
+        return out
+    try:
+        from ilim_assistant.sohbet_source_router import classify_source_intent
+
+        out["tip"] = classify_source_intent(raw).tip
+    except Exception:
+        out["tip"] = ""
+    defer = should_defer_library_instant(raw)
+    out["defer"] = defer
+    card = None
+    for mod_path, fn_name, _label in _LIBRARY_TRYERS:
+        card = _call_try(mod_path, fn_name, raw)
+        if card:
+            break
+    out["has_card"] = bool(card)
+    if is_strict_library_lookup(raw) and not defer and card:
+        out["mode"] = "kart"
+        return out
+    if defer and card and _wants_grounded_anlat(raw):
+        out["mode"] = "grounded_anlat"
+        return out
+    if defer and not card:
+        out["mode"] = "miss"
+        return out
+    if card:
+        out["mode"] = "kart" if not defer else "grounded_anlat"
+    return out
+
+
 def collect_library_llm_context(message: str, *, max_chars: int = 2800) -> str:
-    """Kütüphane eşleşmesini LLM ipucu olarak derle (kullanıcıya aynen basma)."""
+    """Kütüphane eşleşmesini LLM'e ver — S6'da anlat için zorunlu grounded blok."""
     raw = (message or "").strip()
     if not raw:
         return ""
@@ -163,6 +219,16 @@ def collect_library_llm_context(message: str, *, max_chars: int = 2800) -> str:
             break
     if not parts:
         return ""
+    grounded = _wants_grounded_anlat(raw)
+    if grounded:
+        return (
+            "[KÜTÜPHANE İPUCU — GROUNDED S6 — zorunlu kaynak bloğu; kullanıcıya aynen okuma]\n"
+            "Aşağıdaki not **tek kaynak**. Bundan sapma; parametrik ek bilgi / rakam / biyografi "
+            "uydurma. Konu dışıysa veya çelişki varsa dürüstçe «bu kayıttan net çıkaramadım» de.\n"
+            "Kendi cümlelerinle akıcı anlat; madde madde robot okuması yapma.\n\n"
+            + "\n\n".join(parts)
+            + "\n[/KÜTÜPHANE İPUCU]"
+        )
     return (
         "[KÜTÜPHANE İPUCU — dahili; kullanıcıya aynen okuma]\n"
         "Aşağıdaki kavram notunu kendi cümlelerinle, akıcı Türkçe ile anlat. "

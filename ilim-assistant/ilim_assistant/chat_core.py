@@ -2004,6 +2004,18 @@ def prepare_turn(
             _lib_ctx = collect_library_llm_context(msg)
             if _lib_ctx.strip():
                 user_payload = _lib_ctx.rstrip() + "\n\n---\n" + user_payload
+                if orchestration_out is not None:
+                    try:
+                        from ilim_assistant.ruzgar_anlik_niyet_gate import (
+                            resolve_anlik_harman,
+                        )
+
+                        orchestration_out["anlik_harman"] = resolve_anlik_harman(msg)
+                    except Exception:
+                        orchestration_out["anlik_harman"] = {
+                            "mode": "grounded_anlat",
+                            "has_card": True,
+                        }
     except Exception:
         pass
     _conv_ctx = (conversation_context or "").strip()

@@ -11,7 +11,7 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 | Faz | İçerik | Durum |
 |-----|--------|--------|
 | **P** | Programlama tavanı + 2 pilot (CLI + web) | ✅ **mühürlü** (P0–P8) |
-| **S** | Sohbet muhakeme (niyet→kaynak→harman) | 🔄 **S0–S3·S5✅ → S6** (S4=`evet`) |
+| **S** | Sohbet muhakeme (niyet→kaynak→harman) | 🔄 **S0–S3·S5–S6✅ → S7** (S4=`evet`) |
 | **V** | Ses STT/TTS | ⬜ S mühürüne bağlı |
 | **M** | Video→Tercüme→Okuma→Mimar | ⬜ V mühürüne bağlı |
 
@@ -30,6 +30,7 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 **S2 (2026-10-23):** Faz49 kısıt · `blocks_faz49_fast` · sayı/güncelde kaynaksız hızlı LLM yok · smoke 8/8.  
 **S3 (2026-10-23):** sayı/güncel hard-gate + geniş scrub · `sohbet_sayi_hard_gate.py` · smoke 12/12.  
 **S5 (2026-10-23):** fuzzy≥0.85 · nedir≠anlat tipi · doğal sentez sıkı · smoke 11/11 (S4=`evet` bekler).  
+**S6 (2026-10-23):** anlık kart vs GROUNDED S6 anlat · `resolve_anlik_harman` · smoke 11/11.  
 **Temizlik:** P+S+V+M bitince `RUZGAR_YOL_HARITASI.md` + FROZEN kural silinir; bu blok kısaltılır (kalabalık olmasın).
 
 ### GÜVENLİ BÖLGE — 2026-10-22 (Mimar onayı) ← **AKTİF ALT TABAN**
@@ -292,11 +293,11 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
 | ~~H1–H7~~ | Harman | C ile kapandı | ✅ |
 | ~~D1–D6~~ | Araç sözleşmesi | Programlama ~%70 bandı · verify+hub | ✅ 2026-10-22 |
 | ~~inceleme~~ | Mimar bakış | EmirYalan + E + D tutuyor | ✅ 2026-10-22 gece |
-| **P→S→V→M** | Yol haritası | `RUZGAR_YOL_HARITASI.md` | 🔒 · **P✅** · **S0–S3·S5✅ S6** (S4=`evet`) |
+| **P→S→V→M** | Yol haritası | `RUZGAR_YOL_HARITASI.md` | 🔒 · **P✅** · **S0–S3·S5–S6✅ S7** (S4=`evet`) |
 | ~~P0–P8~~ | Faz P | mühür YEŞİL | ✅ 2026-10-23 |
 | ~~S0~~ | Yalan korpusu | 28 case | ✅ 2026-10-23 |
 
-**Öneri şimdi:** **S6** anlık kart vs grounded anlat+harman (S4 için açık `evet`). Detay: yol haritası.
+**Öneri şimdi:** **S7** canlı batarya + Faz S mühür (S4 için açık `evet`). Detay: yol haritası.
 
 ### Sıra D — Araç sözleşmesi genişlemesi (2026-10-22 plan)
 
