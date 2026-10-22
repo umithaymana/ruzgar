@@ -3,7 +3,7 @@
 **Kilit:** 2026-10-23 · Mimar onayı («bu planı sevdim, kilitle»)  
 **Kaynak güvenli bölge:** 2026-10-22 · `0c919d60` · `origin/main`  
 **Süre beklentisi:** birkaç gün (faz faz; atlama yok)  
-**Aktif faz:** **S5** (S3✅ 2026-10-23 · S4 bekler Mimar `evet`)
+**Aktif faz:** **S6** (S5✅ 2026-10-23 · S4 bekler Mimar `evet`)
 
 Bu dosya çok günlük çalışmada **tek sıra kaynağıdır**. Sapma yasak. Güncelleme: dilim yeşil → burada işaretle + `PROJE_DURUMU.md` özet.
 
@@ -68,7 +68,7 @@ Kapılar kapalı: serbest exec · silme · serbest dış yazma.
 | **S2** | Faz49 kısıt (sayı/güncelde kaynaksız LLM yok) | Fast-fact güvenli | ✅ 2026-10-23 · smoke 8/8 · `blocks_faz49_fast` |
 | **S3** | Sayı/güncel hard-gate + geniş scrub | Kaynaksız rakam yok | ✅ 2026-10-23 · smoke 12/12 · `sohbet_sayi_hard_gate.py` |
 | **S4** | Ümit emri web sırası niyet-koşullu | **Ayrı Mimar `evet`** | ⬜ |
-| **S5** | Fuzzy + doğal sentez sıkı (bilir-gibi yalan ↓) | Yanlış kart özgüvensiz | ⬜ |
+| **S5** | Fuzzy + doğal sentez sıkı (bilir-gibi yalan ↓) | Yanlış kart özgüvensiz | ✅ 2026-10-23 · fuzzy≥0.85 · smoke 11/11 |
 | **S6** | Anlık kart vs grounded anlat + harman | Çelişkide dürüst miss | ⬜ |
 | **S7** | Canlı batarya + Faz S mühür | S kapanır → V | ⬜ |
 
@@ -108,11 +108,11 @@ Her motor: ölçüm → derin iş → uygulama denemesi → mühür. Önceki mot
 | Faz | Durum |
 |-----|--------|
 | P | ✅ mühürlü (P0–P8) |
-| S | 🔄 S0–S3✅ · **S4** Mimar `evet` · sırada **S5** |
+| S | 🔄 S0–S3·S5✅ · **S4** Mimar `evet` · sırada **S6** |
 | V | ⬜ S mühürüne bağlı |
 | M | ⬜ V mühürüne bağlı |
 
-**Son işaret:** 2026-10-23 — S3 yeşil (hard-gate) → S5 fuzzy/sentez (S4 ayrı `evet`).
+**Son işaret:** 2026-10-23 — S5 yeşil (fuzzy/sentez) → S6 anlık kart harman (S4 ayrı `evet`).
 
 ---
 

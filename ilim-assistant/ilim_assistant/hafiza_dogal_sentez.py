@@ -25,11 +25,12 @@ def dogal_konus_enabled() -> bool:
 
 
 def _hint_min_score() -> float:
-    raw = (os.environ.get("RUZGAR_HAFIZA_HINT_MIN") or "0.68").strip()
+    # S5 — varsayılan 0.85 (bilir-gibi yanlış kart ↓); env ile override
+    raw = (os.environ.get("RUZGAR_HAFIZA_HINT_MIN") or "0.85").strip()
     try:
         return max(0.55, min(float(raw), 0.98))
     except ValueError:
-        return 0.68
+        return 0.85
 
 
 def _is_miss_answer(ans: str) -> bool:
@@ -117,17 +118,23 @@ def lookup_genel_hafiza_hint(message: str) -> Optional[dict[str, Any]]:
     }
 
 
-def _dogal_system_tail(mode_norm: str) -> str:
+def _dogal_system_tail(mode_norm: str, *, fuzzy_weak: bool = False) -> str:
     _ = mode_norm
+    conf = (
+        "- İpucu **fuzzy/düşük güven**: yalnızca örtüşen kısmı söyle; emin değilsen kısa dürüst ol. "
+        "Özgüvenli «bilir gibi» uydurma yapma.\n"
+        if fuzzy_weak
+        else "- İpucu soruyla net örtüşüyorsa doğal anlat; örtüşmüyorsa uydurma, kısa dürüst ol.\n"
+    )
     return (
-        "\n\n[TALİMAT — DOĞAL KONUŞMA]\n"
+        "\n\n[TALİMAT — DOĞAL KONUŞMA S5]\n"
         "Ümit abi ile akıcı, sıcak Türkçe konuş — bir sohbet arkadaşı gibi; ders kağıdı veya "
         "kelime listesi değil.\n"
         "- Önce kullanıcının **ne sorduğunu** anla; yanıt tamamen buna bağlı olsun.\n"
         "- HAFIZA BLOĞU dahili ipucudur; **aynı kelimeleri kopyalayıp yapıştırma**, madde madde "
         "dökme. Bilgiyi kendi cümlelerinle 2–8 cümlede anlat; gerekirse önceki turla bağ kur.\n"
-        "- **Asla** «hafızamda», «kayıtlarımda», «buldum», «hafızaya baktım», «öğrettin» veya "
-        "benzeri kaynak/hafıza ifadeleri kullanma — sanki kendin biliyormuşsun gibi konuş.\n"
+        "- **Asla** «hafızamda», «kayıtlarımda», «buldum», «hafızaya baktım», «öğrettin» deme.\n"
+        f"{conf}"
         "- Emin olmadığın detayı uydurma; bilgi yetersizse kısa ve dürüstçe söyle (öğretme "
         "şablonu veya «hatırla:» komut önerme).\n"
         "- «Nasıl yardımcı olabilirim», sabit karşılama, sürüm etiketi veya konu dışı öneri yazma.\n"
@@ -178,11 +185,19 @@ def append_hafiza_hint_directive(
 ) -> str:
     """Tam boru hattında (RAG+web) hafıza ipucunu bağlama ekler."""
     block = _build_user_block(message, hint)
+    es = str(hint.get("eslesme") or "")
+    skor = float(hint.get("skor") or 0.0)
+    weak = es == "fuzzy" and skor < 0.92
     tail = (
-        "\n\n[TALİMAT — HAFIZA İPUCU]\n"
+        "\n\n[TALİMAT — HAFIZA İPUCU S5]\n"
         "Üstteki HAFIZA BLOĞU yalnızca dahili ipucudur; cevabı doğal Türkçe cümlelerle sen kur. "
         "Ham metni kopyalama; kaynağı veya hafızayı kullanıcıya belli etme. "
-        "BAĞLAM/RAG ile çelişirse önce güncel bağlamı kullan.\n"
+        "BAĞLAM/RAG ile çelişirse önce güncel bağlamı kullan. "
+        + (
+            "Eşleşme fuzzy/düşük güven: ipucu sorudan sapıyorsa kullanma, uydurma, kısa dürüst ol.\n"
+            if weak
+            else "İpucu doğruysa söyle; şüphede kısa dürüst ol.\n"
+        )
     )
     return (user_payload or "").rstrip() + "\n\n" + block + tail
 
@@ -218,7 +233,10 @@ def iter_hafiza_dogal_reply(
     ):
         extra = _optional_rag_context(msg, mode_norm)
 
-    system = pick_system(False, mode_norm) + _dogal_system_tail(mode_norm)
+    _weak = str(h.get("eslesme") or "") == "fuzzy" and float(h.get("skor") or 0) < 0.92
+    system = pick_system(False, mode_norm) + _dogal_system_tail(
+        mode_norm, fuzzy_weak=_weak
+    )
     if (context_addon or "").strip():
         system += (context_addon or "").strip() + "\n"
     user = _build_user_block(msg, h, extra)

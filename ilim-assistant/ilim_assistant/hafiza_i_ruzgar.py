@@ -22,9 +22,9 @@ class HafizaIRuzgar:
     VARSAYILAN_MOTOR_TIPI = "Hafıza"
     BILINMEYEN_YANIT = "Mimar, bunu henüz öğrenmedim, bana öğretir misin?"
 
-    # Fuzzy eşik: 0.78 = %78. RUZGAR_FUZZY_MIN env ile override.
-    # Düşük eşik + yalnız karakter benzerliği «maturidi»↔«esari» karıştırıyordu.
-    FUZZY_VARSAYILAN_ESIK = 0.78
+    # Fuzzy eşik: 0.85 = %85 (S5). RUZGAR_FUZZY_MIN env ile override.
+    # Düşük eşik + yalnız karakter benzerliği «maturidi»↔«esari» / yanlış kart üretiyordu.
+    FUZZY_VARSAYILAN_ESIK = 0.85
 
     # Token kapsama (sorgu kelimelerinin adayda bulunma oranı) → karakter benzerliği yetmediğinde
     # asıl kararı veren ikinci eksen. Tam kapsama %92 puan değerindedir; eşik %70'i geçer.
@@ -480,6 +480,18 @@ class HafizaIRuzgar:
                 )
             ):
                 return True
+        # S5 — soru tipi kayması: «nedir» ↔ «hangi alan / anlat / gelişme»
+        _anlat_side = re.compile(
+            r"(?:hangi|alanlar|alan\w*|anlat|acikla|gelisme|ne\s+zaman)"
+        )
+        if re.search(r"\bnedir\b", sq) and _anlat_side.search(aq) and not re.search(
+            r"\bnedir\b", aq
+        ):
+            return True
+        if _anlat_side.search(sq) and re.search(r"\bnedir\b", aq) and not _anlat_side.search(
+            aq
+        ):
+            return True
         return False
 
     @classmethod
@@ -524,7 +536,7 @@ class HafizaIRuzgar:
         **Anlam kilidi:** içerik kelimesi adayda yoksa eşleşme yok
         (`ruzgar_anlam_koruma`) — yalnız karakter benzerliği yetmez.
 
-        Skor `RUZGAR_FUZZY_MIN` (varsayılan 0.78) altındaysa None.
+        Skor `RUZGAR_FUZZY_MIN` (varsayılan 0.85, S5) altındaysa None.
         Aynı skorda birden çok aday varsa daha yeni eklenen tercih edilir
         (kayıtlar listesi sondan başa taranır).
         """
