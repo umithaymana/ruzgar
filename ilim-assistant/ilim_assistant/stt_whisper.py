@@ -46,7 +46,86 @@ def get_model():
         device = os.environ.get("RUZGAR_WHISPER_DEVICE", "cpu")
         ctype = os.environ.get("RUZGAR_WHISPER_COMPUTE", "int8")
         _MODEL = WhisperModel(name, device=device, compute_type=ctype)
+        # V2 — PyAV 19 + faster-whisper 1.2: metadata_errors uyumsuzluğu
+        _patch_faster_whisper_decode_audio()
     return _MODEL
+
+
+def _patch_faster_whisper_decode_audio() -> None:
+    """av.open(..., metadata_errors=) PyAV 19'da yok — decode'u sarmala."""
+    try:
+        import faster_whisper.audio as fw_audio
+    except Exception:
+        return
+    if getattr(fw_audio, "_ruzgar_v2_decode_patched", False):
+        return
+    _orig = fw_audio.decode_audio
+
+    def _safe_decode(input_file, sampling_rate=16000, **kwargs):
+        try:
+            return _orig(input_file, sampling_rate=sampling_rate, **kwargs)
+        except TypeError as exc:
+            if "metadata_errors" not in str(exc):
+                raise
+            return _decode_audio_f32(Path(str(input_file)), sampling_rate=sampling_rate)
+
+    fw_audio.decode_audio = _safe_decode  # type: ignore[assignment]
+    fw_audio._ruzgar_v2_decode_patched = True  # type: ignore[attr-defined]
+
+
+def _decode_audio_f32(path: Path, *, sampling_rate: int = 16000):
+    """WAV/PyAV ile 16 kHz mono float32 — faster-whisper girdi biçimi."""
+    import numpy as np
+
+    path = Path(path)
+    if path.suffix.lower() == ".wav":
+        import wave
+
+        with wave.open(str(path), "rb") as w:
+            ch = w.getnchannels()
+            sw = w.getsampwidth()
+            rate = w.getframerate()
+            n = w.getnframes()
+            raw = w.readframes(n)
+        if sw == 2:
+            x = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
+        elif sw == 1:
+            x = (np.frombuffer(raw, dtype=np.uint8).astype(np.float32) - 128.0) / 128.0
+        else:
+            raise ValueError(f"wav sampwidth={sw}")
+        if ch > 1:
+            x = x.reshape(-1, ch).mean(axis=1)
+        if rate != sampling_rate and rate > 0:
+            # lineer yeniden örnekleme (bağımlılıksız)
+            duration = x.shape[0] / float(rate)
+            n_out = max(1, int(round(duration * sampling_rate)))
+            xp = np.linspace(0.0, 1.0, num=x.shape[0], endpoint=False)
+            x_out = np.linspace(0.0, 1.0, num=n_out, endpoint=False)
+            x = np.interp(x_out, xp, x).astype(np.float32)
+        return x
+
+    import av
+
+    with av.open(str(path), mode="r") as container:
+        stream = next(s for s in container.streams if s.type == "audio")
+        resampler = av.audio.resampler.AudioResampler(
+            format="flt", layout="mono", rate=sampling_rate
+        )
+        chunks: list = []
+        for frame in container.decode(stream):
+            for rf in resampler.resample(frame):
+                arr = rf.to_ndarray()
+                if arr.ndim > 1:
+                    arr = arr.mean(axis=0)
+                chunks.append(np.asarray(arr, dtype=np.float32).reshape(-1))
+        for rf in resampler.resample(None):
+            arr = rf.to_ndarray()
+            if arr.ndim > 1:
+                arr = arr.mean(axis=0)
+            chunks.append(np.asarray(arr, dtype=np.float32).reshape(-1))
+    if not chunks:
+        return np.zeros(0, dtype=np.float32)
+    return np.concatenate(chunks)
 
 
 @dataclass(frozen=True)
@@ -94,7 +173,12 @@ def transcribe_file_detailed(
     kwargs: dict = {"vad_filter": True}
     if language:
         kwargs["language"] = language
-    raw_segments, info = model.transcribe(str(path), **kwargs)
+    # V2: önce numpy (PyAV metadata_errors tuzağını atlar); gerekirse yol
+    try:
+        audio = _decode_audio_f32(path, sampling_rate=16000)
+        raw_segments, info = model.transcribe(audio, **kwargs)
+    except Exception:
+        raw_segments, info = model.transcribe(str(path), **kwargs)
     segments: list[SttSegment] = []
     parts: list[str] = []
     for s in raw_segments:
