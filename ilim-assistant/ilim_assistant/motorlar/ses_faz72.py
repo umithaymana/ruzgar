@@ -30,8 +30,10 @@ _QUESTION_RE = re.compile(
     re.I,
 )
 _PROFILE_RE = re.compile(r"\b(alim|edip|asistan)\b", re.I)
+# D6/inceleme: «yap» çıkarıldı (yapay tuzağı + «asistan yap» belirsiz);
+# yalnız açık geçiş: geç / seç / kullan / mod / profil / karakter
 _PROFILE_SWITCH_RE = re.compile(
-    r"(?:geç|gec|seç|sec|kullan|yap|mod|profil|karakter|aktif)",
+    r"\b(?:geç|gec|seç|sec|kullan|mod(?:una|u)?|profil(?:i|e)?|karakter(?:i)?|aktif)\b",
     re.I,
 )
 _SETTINGS_RE = re.compile(
@@ -153,6 +155,15 @@ def classify_ses_intent(
     if _STT_RE.search(low):
         return {"intent": INTENT_COMMAND, "reason": "stt_status"}
 
+    # D6: görüş/bilgi sorusu profil geçişinden önce — «asistan sence… yapay zeka» tuzağı
+    try:
+        from ilim_assistant.ana_motor_plan import looks_like_opinion_request
+
+        if looks_like_opinion_request(raw):
+            return {"intent": INTENT_CHAT, "reason": "opinion"}
+    except Exception:
+        pass
+
     prof = _PROFILE_RE.search(raw)
     if prof and _PROFILE_SWITCH_RE.search(low):
         return {
@@ -183,14 +194,6 @@ def classify_ses_intent(
 
     if _QUESTION_RE.search(raw) and not _READ_RE.search(raw):
         return {"intent": INTENT_CHAT, "reason": "question"}
-
-    try:
-        from ilim_assistant.ana_motor_plan import looks_like_opinion_request
-
-        if looks_like_opinion_request(raw):
-            return {"intent": INTENT_CHAT, "reason": "opinion"}
-    except Exception:
-        pass
 
     # Profil yalnız açık geçişte («asistan moduna geç») — cümlede geçen «asistan» yetmez
     return {"intent": INTENT_CHAT, "reason": "conversation"}

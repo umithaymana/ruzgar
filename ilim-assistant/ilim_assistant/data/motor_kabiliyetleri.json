@@ -51,11 +51,13 @@
       "label_tr": "Mimar",
       "priority": 6,
       "route_regex": [
-        "\\b(fotoğraf|fotograf|resim|sanat|tasarım|tasarim|mimar)\\b",
+        "\\b(mimar|at[oö]lye)\\b",
+        "\\b(fotoğraf|fotograf|resim)\\b.*\\b(panel|a[cç]|galeri|y[uü]kle|e[sş]le[sş])\\b",
         "\\b(galeri|poster|kalem|çizim|cizim|svg)\\b",
+        "\\b(sanat|tasarım|tasarim)\\b.*\\b(panel|galeri|a[cç]|yap)\\b",
         "\\b(restaurasyon|restore|upscale)\\b"
       ],
-      "examples": ["fotoğraf paneli aç", "sanat galerisi"],
+      "examples": ["fotoğraf paneli aç", "sanat galerisi", "mimar atölye"],
       "dispatch": "frontend:mimar-atolye"
     },
     "ses": {

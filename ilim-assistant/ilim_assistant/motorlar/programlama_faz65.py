@@ -314,6 +314,11 @@ def run_code_agent_on_workspace(
                 out["turns"] = int(ca.get("turns") or 0)
                 out["scope_rel"] = ca.get("scope_rel") or out["scope_rel"]
                 out["reply_tail"] = (ev.get("full_reply") or "")[-1200:]
+                # Ayrı alanlar — success ile zorla eşitleme (D5 / inceleme)
+                if "verify_ok" in ca:
+                    out["verify_ok"] = bool(ca.get("verify_ok"))
+                if "writes_ok" in ca:
+                    out["writes_ok"] = int(ca.get("writes_ok") or 0)
     except Exception as exc:
         out["error"] = str(exc)[:300]
     finally:

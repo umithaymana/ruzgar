@@ -401,6 +401,15 @@ def build_agent_turn_user_message(
                 "5) Gereksiz refaktör yok\n"
             )
         return body + e2_nudge
+    # D2: E2 düzeltme turunda da salt okuma yasak — önce patch.
+    if e2_multi:
+        body = (
+            f"[OTONOM GÖREV — tur {turn}/{max_turns} — düzeltme · YAZIM ZORUNLU]\n"
+            "Doğrulama kırmızı. Traceback/çıktı:\n\n"
+            f"```text\n{failure_snippet[:14000]}\n```\n\n"
+            "Salt okuma YASAK. `@@patch yol` + search-replace veya `@@write` üret; sonra verify.\n"
+        )
+        return body + e2_nudge
     body = (
         f"[OTONOM GÖREV — tur {turn}/{max_turns} — düzeltme]\n"
         "Doğrulama kırmızı. Traceback/çıktı:\n\n"
@@ -2265,6 +2274,15 @@ def iter_code_agent_turn_events(
         )
     except Exception:
         pass
+    # D inceleme: canlı pil verify/writes'ı success'e eşitlemesin
+    _done_verify = False
+    _done_writes = 0
+    try:
+        _st_done = load_agent_state(workspace)
+        _done_verify = bool(_st_done.get("last_verify_ok"))
+        _done_writes = int(_st_done.get("total_writes") or 0)
+    except Exception:
+        pass
     done: dict[str, Any] = {
         "type": "done",
         "full_reply": full_out,
@@ -2275,6 +2293,8 @@ def iter_code_agent_turn_events(
             "scope_rel": task.scope_rel,
             "turns": len(turn_reports),
             "elapsed_sec": total_sec,
+            "verify_ok": _done_verify,
+            "writes_ok": _done_writes,
         },
     }
     if orch is not None or step_tracker is not None:

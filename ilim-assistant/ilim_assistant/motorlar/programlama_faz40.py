@@ -353,9 +353,20 @@ def run_structured_tool_loop(
     def _has_write(body: str, tools: list[dict[str, Any]]) -> bool:
         if has_write_fn:
             return has_write_fn(body, tools)
-        if any(str(t.get("tool")) == "write" and t.get("ok") for t in tools):
-            return True
-        return "@@write" in (body or "").lower()
+        # D inceleme: varsayılan @@patch'i de yazım saysın (faz39 ile hizalı)
+        try:
+            from ilim_assistant.motorlar.programlama_faz39 import _has_write as _f39
+
+            return _f39(body, tools)
+        except Exception:
+            if any(
+                str(t.get("tool") or "").lower() in ("write", "patch", "search_replace")
+                and t.get("ok")
+                for t in tools
+            ):
+                return True
+            low = (body or "").lower()
+            return "@@write" in low or "@@patch" in low
 
     all_results: list[dict[str, Any]] = []
     texts: list[str] = []

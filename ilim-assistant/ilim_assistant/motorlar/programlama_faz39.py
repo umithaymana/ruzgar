@@ -11,7 +11,7 @@ from __future__ import annotations
 import os
 from typing import Any, Callable
 
-FAZ39_VERSION = "programlama-faz39-v1-2026-05-25"
+FAZ39_VERSION = "programlama-faz39-v1.1-2026-10-22"
 _DISCOVERY_TOOLS = frozenset({"read", "grep", "symbol", "goto"})
 
 
@@ -208,21 +208,37 @@ def _ascii_fold(text: str) -> str:
 
 
 def _has_write(llm_body: str, tool_results: list[dict[str, Any]]) -> bool:
+    """@@write / write aracı / @@patch (D2 — patch de yazım sayılır)."""
     raw = llm_body or ""
-    if "@@write" in raw.lower():
+    low = raw.lower()
+    if "@@write" in low or "@@patch" in low:
         return True
+    if "```search-replace" in low or "```patch" in low:
+        if "<<<search" in low or "<<<SEARCH" in raw:
+            return True
     try:
         from ilim_assistant.motorlar.programlama_faz20 import extract_tool_calls
 
         for spec in extract_tool_calls(raw):
-            if str(spec.get("tool") or "").lower() == "write":
+            if str(spec.get("tool") or "").lower() in ("write", "patch", "search_replace"):
                 return True
     except Exception:
         pass
+    write_tools = frozenset({"write", "patch", "search_replace", "apply_patch"})
     return any(
-        str(r.get("tool") or "").lower() == "write" and r.get("ok")
+        str(r.get("tool") or "").lower() in write_tools and r.get("ok")
         for r in (tool_results or [])
     )
+
+
+def turn_was_read_only(
+    llm_body: str,
+    tool_results: list[dict[str, Any]] | None,
+) -> bool:
+    """Keşif var, yazım yok — mandate / yazım-önce tetikleyici (D2)."""
+    if _has_write(llm_body, tool_results or []):
+        return False
+    return turn_had_discovery(tool_results)
 
 
 def build_write_mandate_message(
@@ -273,9 +289,10 @@ def build_write_mandate_message(
         f"[FAZ 39 — ZORUNLU YAZIM — tur {turn}]\n"
         f"Proje: `{scope_rel}`\n"
         "Bu turda **mutlaka** dosya yaz (önceki turda yazım yoktu veya keşif bitti):\n"
-        "- `ruzgar-tool` write VEYA `@@write` / search-replace ile patch\n"
+        "- İlk satır: `@@patch yol` (fence İÇİNE alma) + ```search-replace```\n"
+        "- veya `@@write` / `ruzgar-tool` write\n"
         "- Ardından verify (pytest) çalıştır\n"
-        "Sadece plan veya açıklama YASAK — somut kod değişikliği şart.\n"
+        "Salt okuma / yalnız grep-read / plan-yalnız YASAK — somut kod değişikliği şart.\n"
         f"{multi_hint}{fields_hint}\n"
         f"Hedef: {(goal or '').strip()}\n\n"
         f"{(tool_block or '').strip()}\n"

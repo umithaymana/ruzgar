@@ -99,6 +99,7 @@ def record_task_outcome(
     detail: str = "",
     bonus_retry: bool = False,
     agent_ok: bool | None = None,
+    supervised_boot: bool | None = None,
 ) -> dict[str, Any]:
     """Görev sonunu kaydet."""
     if not _enabled():
@@ -140,6 +141,8 @@ def record_task_outcome(
     }
     if agent_ok is not None:
         entry["agent_ok"] = bool(agent_ok)
+    if supervised_boot is not None:
+        entry["supervised_boot"] = bool(supervised_boot)
     outcomes.append(entry)
     store["outcomes"] = outcomes[-_MAX_HISTORY:]
     try:

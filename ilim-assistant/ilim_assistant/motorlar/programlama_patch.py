@@ -30,7 +30,7 @@ from pathlib import Path
 from ilim_assistant.local_tools import safe_read_file_under_root
 from ilim_assistant.motorlar.programlama_motoru import ProgramlamaAraclari, repo_root
 
-PROG_PATCH_VERSION = "programlama-patch-v1.2-2026-10-21"
+PROG_PATCH_VERSION = "programlama-patch-v1.3-2026-10-22"
 
 # Model sıkça @@patch'i ```python fence içine alır, search-replace'i ayrı fence'e koyar.
 _SPLIT_PATCH_FENCE_RE = re.compile(
@@ -40,6 +40,20 @@ _SPLIT_PATCH_FENCE_RE = re.compile(
     r"```(?:search-replace|patch)\s*\r?\n"
     r"(.*?)\r?\n```",
     re.DOTALL | re.IGNORECASE,
+)
+
+# Aynı fence içinde @@patch + SEARCH/REPLACE (D1)
+_SAME_FENCE_PATCH_RE = re.compile(
+    r"```(?:python|py|text|markdown|search-replace|patch)?\s*\r?\n"
+    r"@@patch\s+(\S+)\s*\r?\n"
+    r"(<<<SEARCH\s*\r?\n.*?>>>REPLACE)\s*\r?\n"
+    r"```",
+    re.DOTALL | re.IGNORECASE,
+)
+
+_PATCH_LINE_RE = re.compile(
+    r"(?m)^(@@patch\s+)([^\r\n]+)$",
+    re.IGNORECASE,
 )
 
 # E2: path prose'da, search-replace çıplak (@@patch yok) — VERSION kurtarma
@@ -71,19 +85,47 @@ _LOOSE_VERSION_SR_RE = re.compile(
 )
 
 
-def normalize_split_patch_fences(message: str) -> str:
-    """Bölünmüş @@patch + search-replace fence'lerini tek geçerli bloğa birleştir."""
+def clean_patch_path(rel: str) -> str:
+    """`` `path` `` / tırnak / ters eğik → temiz repo-rel yol (D1)."""
+    p = (rel or "").strip().strip("`\"'")
+    p = p.replace("\\", "/").lstrip("/")
+    while "//" in p:
+        p = p.replace("//", "/")
+    # projects/projects/… çift önek
+    while p.startswith("projects/projects/"):
+        p = p[len("projects/") :]
+    return p
+
+
+def normalize_patch_path_lines(message: str) -> str:
+    """@@patch satırlarında yol temizliği (backslash, backtick)."""
 
     def _repl(m: re.Match[str]) -> str:
-        path = (m.group(1) or "").strip()
+        return f"{m.group(1)}{clean_patch_path(m.group(2))}"
+
+    return _PATCH_LINE_RE.sub(_repl, message or "")
+
+
+def normalize_split_patch_fences(message: str) -> str:
+    """Bölünmüş veya aynı-fence @@patch + search-replace → tek geçerli blok."""
+
+    def _split_repl(m: re.Match[str]) -> str:
+        path = clean_patch_path(m.group(1) or "")
         body = (m.group(2) or "").strip("\n")
         return f"@@patch {path}\n```search-replace\n{body}\n```"
 
-    return _SPLIT_PATCH_FENCE_RE.sub(_repl, message or "")
+    def _same_repl(m: re.Match[str]) -> str:
+        path = clean_patch_path(m.group(1) or "")
+        body = (m.group(2) or "").strip("\n")
+        return f"@@patch {path}\n```search-replace\n{body}\n```"
+
+    out = _SPLIT_PATCH_FENCE_RE.sub(_split_repl, message or "")
+    out = _SAME_FENCE_PATCH_RE.sub(_same_repl, out)
+    return out
 
 
 def _norm_e2_rel(path: str) -> str:
-    p = (path or "").replace("\\", "/").strip().strip("`\"'")
+    p = clean_patch_path(path)
     if p.startswith("projects/"):
         return p
     if "/app/" in p and not p.startswith("projects/"):
@@ -221,17 +263,18 @@ def patch_directive() -> str:
 
 def extract_patch_jobs(message: str) -> list[tuple[str, str, str]]:
     """(rel_path, search, replace) listesi."""
-    message = normalize_split_patch_fences(message or "")
+    message = normalize_patch_path_lines(message or "")
+    message = normalize_split_patch_fences(message)
     message = normalize_bare_e2_version_patches(message)
     jobs: list[tuple[str, str, str]] = []
     for m in _PATCH_SR_RE.finditer(message):
-        rel = m.group(1).strip().replace("\\", "/").lstrip("/")
+        rel = clean_patch_path(m.group(1))
         search = m.group(2)
         replace = m.group(3)
         if rel and search is not None:
             jobs.append((rel, search, replace if replace is not None else ""))
     for m in _PATCH_DIFF_RE.finditer(message or ""):
-        rel = m.group(1).strip().replace("\\", "/").lstrip("/")
+        rel = clean_patch_path(m.group(1))
         body = m.group(2) or ""
         parsed = _parse_simple_diff(body)
         if rel and parsed:

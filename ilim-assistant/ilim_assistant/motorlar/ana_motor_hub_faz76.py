@@ -19,7 +19,7 @@ from ilim_assistant.ruzgar_motor_kernel import (
     classify_motor_intent,
 )
 
-FAZ76_VERSION = "ana-motor-hub-faz76-v1-2026-05-26"
+FAZ76_VERSION = "ana-motor-hub-faz76-v1.1-2026-10-22"
 
 _HUB_MOTORS = (
     "programlama",
@@ -134,12 +134,49 @@ def is_video_download_request(message: str) -> bool:
     return len(rest) < 48 and len(raw) < 220
 
 
+def _hub_stay_on_ana_motor(message: str) -> bool:
+    """
+    Bilgi / görüş / kısa tanım — yardımcı motor yerine Ana Motor'da kal.
+    İnce ayar (2026-10-22): video/registry erken kaçışlarını keser.
+    """
+    raw = (message or "").strip()
+    if not raw:
+        return False
+    try:
+        from ilim_assistant.ana_motor_plan import (
+            looks_like_opinion_request,
+            should_stay_on_ana_motor_bilgi,
+        )
+
+        if should_stay_on_ana_motor_bilgi(raw):
+            return True
+        if looks_like_opinion_request(raw):
+            return True
+    except Exception:
+        pass
+    low = _ascii_fold(raw)
+    # «Ses nedir», «profil fotoğrafı nedir» — atölye fiili yoksa genel
+    if re.search(r"\b(nedir|ne\s+demek|kimdir)\b", low) or re.search(
+        r"\b(anlat|acikla|açıkla)\b", low
+    ):
+        if not re.search(
+            r"\b(indir|download|kes|kurgu|montaj|altyaz|ffmpeg|oynat|"
+            r"panel|galeri|cevir|çevir|tercume|pytest|commit|"
+            r"moduna\s+ge[cç]|profili\s+yap|seslendir\s*:)\b",
+            low,
+        ):
+            return True
+    return False
+
+
 def is_video_workflow_request(message: str) -> bool:
     """Kesim, kurgu, medya bilgisi vb. — genel moddan video motoruna."""
     if is_video_download_request(message):
         return True
     raw = (message or "").strip()
     if not raw:
+        return False
+    if _hub_stay_on_ana_motor(raw):
         return False
     try:
         from ilim_assistant.motorlar.video_faz84 import wants_video_search
@@ -168,13 +205,19 @@ def is_video_workflow_request(message: str) -> bool:
         low,
     ):
         return True
-    return bool(
-        re.search(
-            r"video|ffmpeg|kesim|\bkes\b|kurgu|montaj|altyaz|sinema|medya\s+bilgi|"
-            r"transcode|donustur|dönüştür|panel.*ac|panel.*aç|bunu|şunu|oynayan",
-            low,
-        )
-    )
+    # İnce ayar: çıplak «video/bunu/şunu» yetmez — eylem veya araç şart
+    if re.search(
+        r"(?:\bffmpeg\b|\bkesim\b|\bkes\b|\bkurgu\b|\bmontaj\b|\baltyaz|"
+        r"medya\s+bilgi|\btranscode\b|\bdonustur\b|\bdönüştür\b)",
+        low,
+    ):
+        return True
+    if re.search(r"\bvideo\b", low) and re.search(
+        r"\b(indir|download|kes|kurgu|oynat|montaj|panel|ac|aç)\b",
+        low,
+    ):
+        return True
+    return False
 
 
 def resolve_hub_target(
@@ -243,6 +286,10 @@ def resolve_hub_target(
         pass
 
     if is_video_workflow_request(msg):
+        if _hub_stay_on_ana_motor(msg):
+            meta["winner"] = "genel"
+            meta["reason"] = "bilgi_stay_genel_vs_video"
+            return "genel", meta
         meta["candidates"].append(
             {"motor": "video", "score": 8, "reason": "video_workflow"}
         )
@@ -271,6 +318,18 @@ def resolve_hub_target(
             meta["registry"] = reg_meta
             reg_score = int(reg_meta.get("score") or 0)
             if reg_score >= 4:
+                # «fotoğraf nedir» → mimar registry kaçmasın
+                if _hub_stay_on_ana_motor(msg) and reg_id in (
+                    "mimar",
+                    "ses",
+                    "video",
+                    "hafiza",
+                    "hizir",
+                ):
+                    meta["winner"] = "genel"
+                    meta["reason"] = "bilgi_stay_genel_vs_registry"
+                    meta["skipped_registry"] = reg_id
+                    return "genel", meta
                 meta["candidates"].append(
                     {
                         "motor": reg_id,
@@ -361,17 +420,18 @@ def resolve_hub_target(
             best_reason = str(spec.get("reason") or "rok")
 
     if best_score > 0:
-        if best_id == "hafiza":
-            try:
-                from ilim_assistant.ana_motor_plan import should_stay_on_ana_motor_bilgi
-
-                if should_stay_on_ana_motor_bilgi(msg):
-                    meta["winner"] = "genel"
-                    meta["reason"] = "bilgi_stay_genel"
-                    meta["skipped_hafiza_lookup"] = True
-                    return "genel", meta
-            except Exception:
-                pass
+        # Bilgi/görüş: hafıza + ses/mimar/video ROK kaçışını da kes
+        if _hub_stay_on_ana_motor(msg) and best_id in (
+            "hafiza",
+            "ses",
+            "mimar",
+            "video",
+            "hizir",
+        ):
+            meta["winner"] = "genel"
+            meta["reason"] = "bilgi_stay_genel"
+            meta["skipped_motor"] = best_id
+            return "genel", meta
         meta["winner"] = best_id
         meta["reason"] = best_reason
         return best_id, meta

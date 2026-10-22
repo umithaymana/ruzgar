@@ -23,7 +23,7 @@ import unicodedata
 from pathlib import Path
 from typing import Any
 
-FAZ103_VERSION = "programlama-faz103-e2-v1.2-2026-10-21"
+FAZ103_VERSION = "programlama-faz103-e2-v1.3-2026-10-22"
 _E2_BATTERY_TARGET = 0.90
 _INTENT_CASES: list[tuple[str, str]] = [
     ("health endpointine version 2.0.0 ekle pytest gecir", "faz85_fast"),
@@ -164,6 +164,38 @@ def compute_e2_stats(
     live_total = len(attempted) if attempted else len(live_rows)
     agent_rate = agent_ok_n / live_total if live_total else 0.0
     heal_share = heal_n / max(len(live_rows), 1)
+    # D3: son N=5 ajan denemesi + BOOT=0 (supervised_boot=false) ayrı KPI
+    recent5 = attempted[-5:] if attempted else []
+    r5_ok = 0
+    for r in recent5:
+        if r.get("agent_ok") is True:
+            r5_ok += 1
+        elif r.get("agent_ok") is False:
+            continue
+        elif r.get("success") and "heal" not in str(r.get("source") or "").lower():
+            r5_ok += 1
+    r5_total = len(recent5)
+    r5_rate = r5_ok / r5_total if r5_total else 0.0
+    boot0 = [
+        r
+        for r in attempted
+        if r.get("supervised_boot") is False
+        or (
+            r.get("supervised_boot") is None
+            and "boot0" in str(r.get("detail") or "").lower()
+        )
+    ]
+    # agent_ok_n ile aynı kurallar (yalnız True saymak heal'siz success'i kaçırıyordu)
+    boot0_ok = 0
+    for r in boot0:
+        if r.get("agent_ok") is True:
+            boot0_ok += 1
+        elif r.get("agent_ok") is False:
+            continue
+        elif r.get("success") and "heal" not in str(r.get("source") or "").lower():
+            boot0_ok += 1
+    boot0_total = len(boot0)
+    boot0_rate = boot0_ok / boot0_total if boot0_total else 0.0
     return {
         "ok": True,
         "total": total,
@@ -181,6 +213,37 @@ def compute_e2_stats(
         "heal_fallback_count": heal_n,
         "heal_share": round(heal_share, 3),
         "agent_ok_meets_50": live_total >= 3 and agent_rate >= 0.5,
+        "agent_ok_recent5_count": r5_ok,
+        "agent_ok_recent5_total": r5_total,
+        "agent_ok_recent5_rate": round(r5_rate, 3),
+        "agent_ok_meets_70_recent5": r5_total >= 5 and r5_rate >= 0.7,
+        "boot0_agent_ok_count": boot0_ok,
+        "boot0_agent_ok_total": boot0_total,
+        "boot0_agent_ok_rate": round(boot0_rate, 3),
+        # D4: son 10 canlı satırda heal payı (eski heal şişkinliğini seyrelt)
+        "heal_share_recent10": round(
+            (
+                sum(
+                    1
+                    for r in live_rows[-10:]
+                    if "heal" in str(r.get("source") or "").lower()
+                )
+                / max(len(live_rows[-10:]), 1)
+            ),
+            3,
+        ),
+        "heal_share_meets_35_recent10": (
+            len(live_rows) >= 5
+            and (
+                sum(
+                    1
+                    for r in live_rows[-10:]
+                    if "heal" in str(r.get("source") or "").lower()
+                )
+                / max(len(live_rows[-10:]), 1)
+            )
+            <= 0.35
+        ),
     }
 
 
@@ -469,6 +532,7 @@ def e2_write_template_nudge(scope_rel: str, goal: str = "") -> str:
         chunks.append(
             "\n[E2 yazım şablonu — AYNEN kopyala; ilk satır @@patch olsun]\n"
             "Plan / yalnız-oku YASAK. Aşağıdaki iki bloğu üret, sonra pytest.\n"
+            "D5: Yazım sonrası verify (pytest) ZORUNLU — verify yoksa görev başarısız.\n"
             "UYARI: `@@patch yol` satırını ```python fence içine ALMA — "
             "ham satır + hemen altında ```search-replace.\n"
             + _e2_multi_version_patch(scope_rel)
@@ -668,6 +732,10 @@ def _record_e2_outcome(
         from ilim_assistant.motorlar.programlama_faz55 import record_task_outcome
 
         _agent = row.get("agent_ok")
+        boot_on = e2_supervised_boot_enabled()
+        detail = f"[{name}] {str(row.get('detail') or '')[:160]}"
+        if not boot_on:
+            detail = f"boot0 {detail}"
         record_task_outcome(
             workspace_root,
             scope_rel=scope_rel,
@@ -678,8 +746,9 @@ def _record_e2_outcome(
             writes_ok=int(row.get("writes_ok") or 0),
             elapsed_sec=float(row.get("elapsed_sec") or 0),
             source=f"e2_battery_{row.get('source', 'faz103')}",
-            detail=f"[{name}] {str(row.get('detail') or '')[:180]}",
+            detail=detail,
             agent_ok=bool(_agent) if _agent is not None else None,
+            supervised_boot=boot_on,
         )
     except Exception:
         pass
@@ -839,12 +908,14 @@ def run_combined_e2_battery(
                     _tmax = 3
                 print(f"[E2 live] scope={scope} turns<={max(1, min(6, _tmax))} ...", flush=True)
                 live_row = _run_live_multi_agent(workspace_root, scope, goal)
-            agent_ok = bool(live_row.get("ok"))
+            # D5: yazım yetmez — verify yoksa agent_ok sayma; heal kapısı açılır
+            agent_ok = bool(live_row.get("ok")) and bool(live_row.get("verify_ok"))
             heal_note = ""
             heal_ok = False
             # Yerel 7B çoğu kez yazmadan biter — E1 tarzı deterministik heal yedek
             if not agent_ok and not live_row.get("skipped"):
-                print("[E2 live] ajan kırmızı → offline multi heal yedek…", flush=True)
+                why = "verify yok" if live_row.get("ok") and not live_row.get("verify_ok") else "ajan kırmızı"
+                print(f"[E2 live] {why} → offline multi heal yedek…", flush=True)
                 # Setup dosyalarını yeniden bozuk bırak: ajan kısmen bozmuş olabilir
                 _setup_multi_file_broken(workspace_root, scope)
                 heal = _run_offline_multi_heal(workspace_root, scope)

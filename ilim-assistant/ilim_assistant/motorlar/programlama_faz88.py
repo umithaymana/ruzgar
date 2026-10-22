@@ -232,7 +232,11 @@ def run_live_code_agent(
         out["turns"] = int(agent.get("turns") or 0)
         success = bool(agent.get("success"))
         out["ok"] = success
-        out["verify_ok"] = success
+        # D5/inceleme: verify ayrı — success True ama pytest kırmızı olabilir
+        if "verify_ok" in agent:
+            out["verify_ok"] = bool(agent.get("verify_ok"))
+        else:
+            out["verify_ok"] = success
         # writes_ok: ajan özetinden veya reply_tail "Yazılan: N"
         w_ok = int(agent.get("writes_ok") or 0)
         if w_ok <= 0:

@@ -51,14 +51,19 @@ def compliance_sse_enabled() -> bool:
 
 
 def _body_has_write(body: str) -> bool:
+    """@@write / @@patch / search-replace — faz39 ile aynı niyet."""
     raw = body or ""
-    if "@@write" in raw.lower():
+    low = raw.lower()
+    if "@@write" in low or "@@patch" in low:
         return True
+    if "```search-replace" in low or "```patch" in low:
+        if "<<<search" in low or "<<<SEARCH" in raw:
+            return True
     try:
         from ilim_assistant.motorlar.programlama_faz20 import extract_tool_calls
 
         for spec in extract_tool_calls(raw):
-            if str(spec.get("tool") or "").lower() == "write":
+            if str(spec.get("tool") or "").lower() in ("write", "patch", "search_replace"):
                 return True
     except Exception:
         pass
@@ -66,8 +71,10 @@ def _body_has_write(body: str) -> bool:
 
 
 def _tool_results_have_write(tool_results: list[dict[str, Any]]) -> bool:
+    write_tools = frozenset({"write", "patch", "search_replace", "apply_patch"})
     return any(
-        str(r.get("tool") or "").lower() == "write" and r.get("ok") for r in tool_results
+        str(r.get("tool") or "").lower() in write_tools and r.get("ok")
+        for r in tool_results
     )
 
 

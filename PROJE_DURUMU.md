@@ -1,12 +1,23 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-21 (gece) — **#5 hafıza/eşleşme YEŞİL:** Karadeniz/Hicret/Lale/os canlı OK · zayıflık sırası 1–5 kapandı.
+**Son güncelleme:** 2026-10-22 — **GÜVENLİ BÖLGE** (D1–D6 + inceleme + hub ince ayar) · Mimar onayı.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
-### GÜVENLİ BÖLGE — 2026-10-21 öğle (Mimar onayı)
+### GÜVENLİ BÖLGE — 2026-10-22 (Mimar onayı) ← **AKTİF**
 
 **İlke:** Buradan geri dönüş güvenli. Push `origin/main` ile hizalı kayıt.
+
+- **D1–D6** araç sözleşmesi: patch kurtarma, mandate, BOOT=0 KPI, heal≤%35 pencere, verify∧agent_ok, hub niyet.
+- **İnceleme:** verify_ok zinciri (faz14/65/88), @@patch yazım sayımı (faz38/40), ses `yap`/`yapay` tuzağı.
+- **Hub ince ayar (faz76 v1.1):** bilgi/görüş Ana Motor’da kalır; video/mimar gerçek işe gider · smoke_hub 17/17.
+- KPI anlık: agent_ok ~%70 · recent5 ~%80 · heal_r10 ~%10 · boot sırası **kilitli**.
+- Kapalı: serbest kod çalıştırma, dosya silme, 32B/70B, telefon.
+- Önceki güvenli: 2026-10-21 öğle (EmirYalan / E handoff) — hâlâ geçerli alt taban.
+
+### GÜVENLİ BÖLGE — 2026-10-21 öğle (önceki)
+
+**İlke:** Alt taban. Push ile hizalı eski kayıt.
 
 - EmirYalan: `görev:` / 6c / Faz E cümleleri masa yalanına düşmez (`db94cced` + devam).
 - **E** Tercüme/Video quiet handoff · smoke PASS.
@@ -164,9 +175,11 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
 44. ~~**Zayıflık sırası B (B1–B6)**~~ tamam · commit `c4d18ce2` · `origin/main`.
 45. ~~ŞİMDİ (yarın): Zayıflık sırası C~~ — gece kaydı duruyor; **bugün harman planı** aşağıda.
 46. ~~**C1–C6 + H7**~~ ✅ commit `9de43125` · `origin/main`.
-47. **← ŞİMDİ:** **Sıra D — Araç sözleşmesi genişlemesi** (aşağı) — hedef programlama otonomi ~%70–75.
-47. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
-48. **Boot sırası kilitli** (`.cursorrules`) — H turlarında değiştirilmez; «araç sözleşmesi» ≠ boot sırası (aşağı not).
+47. ~~**D1–D6**~~ ✅ araç sözleşmesi · agent_ok **%70** · recent5 **%80** · heal_r10 **%10** · D5 verify+heal · D6 hub.
+48. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
+49. **Boot sırası kilitli** (`.cursorrules`) — D turlarında değiştirilmez; «araç sözleşmesi» ≠ boot sırası (aşağı not).
+50. ~~İnceleme D kopukluk~~ ✅ · **← ŞİMDİ:** hub/sohbet ince ayar (faz76 v1.1 · bilgi kilidi).
+51. Hub ince ayar 2026-10-22: video/registry/ROK bilgi sızıntısı kesildi · smoke_hub_ince_ayar 17/17.
 
 ### Zayıflık sırası B — 2026-10-21 gece (kapandı)
 
@@ -249,29 +262,31 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
 | Sıra | İş | Neden | Çıkış |
 |------|-----|--------|--------|
 | ~~H1–H7~~ | Harman | C ile kapandı | ✅ |
-| **D1–D6** | Araç sözleşmesi | Programlama ~%70–75 tavanına yaklaş | madde madde yeşil |
+| ~~D1–D6~~ | Araç sözleşmesi | Programlama ~%70 bandı · verify+hub | ✅ 2026-10-22 |
 | **inceleme** | Mimar bakış | EmirYalan + E + D | onay / revize |
 
-**Öneri şimdi:** D1 ile başla (Mimar onayı).
+**Öneri şimdi:** D kapandı — commit+push emri veya sonraki sıra.
 
 ### Sıra D — Araç sözleşmesi genişlemesi (2026-10-22 plan)
 
 **Kaynak:** Dün gece «motor boot/araç sözleşmesi» — **boot sırası değil**; programlama yazım dili + hub niyet.
 
-**Şimdi:** E2 `agent_ok` ~**%61** (8/13) · heal payı ~%52 · supervised boot hâlâ yedek.  
-**Hedef tavan (bu PC + 14b):** programlama otonomi **~%70–75** · genel iş bitirme ~%65–70.  
+**Durum (2026-10-22 gece):** D1–D6 ✅ · `agent_ok` **%70** (14/20) · recent5 **%80** · heal_r10 **%10** · boot0 **%80**.  
+**Hedef tavan (bu PC + 14b):** programlama otonomi **~%70–75** · bandına oturdu.  
 **%90+ / Cursor seviyesi:** bu planda yok (daha güçlü sürekli beyin gerekir).
 
 **Çalışma kuralı:** C gibi — bir madde yeşil → sonraki; ölçüm → yama → smoke → canlı → bu dosyada işaret. Boot sırası **dokunulmaz**. Serbest kod çalıştırma / dosya silme **açılmaz**.
 
 | # | Katman | Zayıf nokta | Hedef çıkış | Doğrulama |
 |---|--------|-------------|-------------|-----------|
-| **D1** | Yazım dili | Model hâlâ fence/`@@patch` bozar; yazım-önce bazen zayıf | Geçerli patch oranı ↑; bölünmüş fence + çıplak VERSION kurtarma smoke geniş | Offline patch smoke + 1 canlı BOOT=0 |
-| **D2** | Mandate / tur | Keşif turu yazımı geciktirir; mandate tek sefer | 2. turda yazım zorunlu; oku-only tur cezası | Mandate smoke + canlı 1 görev |
-| **D3** | Supervised boot | BOOT=1 yeşil şişirir; BOOT=0 kırılgan | BOOT=0’da dar E2 `agent_ok` ≥%70 (son N=5 pencere) **veya** BOOT şartı net KPI’de ayrı | 3 canlı FORCE_HEAL=0 BOOT=0 |
-| **D4** | Heal payı | Heal ~%50 — otonomi maskeler | Heal payı ≤%35 (force_heal hariç) · agent_ok ≥%65 korunur | `compute_e2_stats` |
-| **D5** | Verify sözleşmesi | Verify yokken başarı sayılabiliyor | Yazım sonrası pytest/scope verify zorunlu; fails → heal kapısı | E2 offline + 1 canlı |
-| **D6** | Hub (hafif) | Yanlış motor anlık kenarda | Bilgi/görüş/programlama cümleleri doğru kapı; ses profil tuzağı yok | 5 tuzak smoke (C6 genişlet) |
+| **D1** | Yazım dili | ~~fence/backslash/backtick~~ | Geçerli patch ↑ | ✅ 2026-10-22 · v1.3 · smoke 10/10 · BOOT=0 agent_ok · KPI %64 |
+| **D2** | Mandate / tur | ~~keşif gecikmesi~~ | Yazım zorunlu + @@patch=_has_write | ✅ 2026-10-22 · smoke 7/7 · canlı agent_ok |
+| **D3** | Supervised boot | ~~BOOT=0 KPI yok~~ | recent5≥%70 + boot0 alanları | ✅ 2026-10-22 · recent5 5/5 · agent_ok %70 · boot0 2/2 |
+| **D4** | Heal payı | ~~heal ~%50~~ | recent10 heal ≤%35 | ✅ 2026-10-22 · heal_r10 %0 · agent_ok %74 |
+| **D5** | Verify sözleşmesi | ~~Verify yokken başarı~~ | agent_ok = ok∧verify; yoksa heal | ✅ 2026-10-22 · smoke 8/8 · canlı BOOT=0 · **inceleme:** faz14/65/88 verify_ok ayrı |
+| **D6** | Hub (hafif) | ~~Yanlış motor anlık~~ | Görüş/bilgi doğru kapı; `yap`/`yapay`≠profil | ✅ 2026-10-22 · smoke 18/18 · B1 17/17 · `yap` switch’ten çıkarıldı |
+
+**İnceleme (2026-10-22):** Kopukluklar kapatıldı — faz38/40 `@@patch` yazım; canlı `verify_ok≠success` zorlaması; boot0 KPI hizası; ses «asistan yap» tuzağı.
 
 **Sıra:** D1 → D2 → D3 → D4 → D5 → D6.
 
