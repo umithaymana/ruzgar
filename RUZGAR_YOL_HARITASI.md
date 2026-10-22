@@ -3,7 +3,7 @@
 **Kilit:** 2026-10-23 · Mimar onayı («bu planı sevdim, kilitle»)  
 **Kaynak güvenli bölge:** 2026-10-22 · `0c919d60` · `origin/main`  
 **Süre beklentisi:** birkaç gün (faz faz; atlama yok)  
-**Aktif faz:** **P6** (P0–P5✅ 2026-10-23)
+**Aktif faz:** **P7** (P0–P6✅ 2026-10-23)
 
 Bu dosya çok günlük çalışmada **tek sıra kaynağıdır**. Sapma yasak. Güncelleme: dilim yeşil → burada işaretle + `PROJE_DURUMU.md` özet.
 
@@ -50,7 +50,7 @@ M  Diğer motorlar (Video → Tercüme → Okuma → Mimar)
 | **P3** | Dosya-dosya verify + heal→kök öğrenme | heal_r10 düşük; verify∧ok | ✅ 2026-10-23 · smoke 12/12 |
 | **P4** | BOOT=0 yazım iyileştirme (dürüst KPI; şişirme yok) | boot0 agent_ok ↑ | ✅ 2026-10-23 · patch v1.4 · smoke 10/10 |
 | **P5** | Scaffold ürün borusu (statik / react_vite / FastAPI) | Güvenli greenfield ray | ✅ 2026-10-23 · smoke 15/15 |
-| **P6** | Pilot A: küçük CLI/araç uçtan uca | Çalışır + pytest | ⬜ |
+| **P6** | Pilot A: küçük CLI/araç uçtan uca | Çalışır + pytest | ✅ 2026-10-23 · `projects/pilot-a-selam-cli` · 4 pytest |
 | **P7** | Pilot B: basit web sitesi uçtan uca | Açılır + smoke | ⬜ |
 | **P8** | Faz P mühür (KPI + 2 pilot) | P kapanır → S | ⬜ |
 
@@ -107,12 +107,12 @@ Her motor: ölçüm → derin iş → uygulama denemesi → mühür. Önceki mot
 
 | Faz | Durum |
 |-----|--------|
-| P | 🔄 P0–P5✅ · sırada P6 |
+| P | 🔄 P0–P6✅ · sırada P7 |
 | S | ⬜ P mühürüne bağlı |
 | V | ⬜ S mühürüne bağlı |
 | M | ⬜ V mühürüne bağlı |
 
-**Son işaret:** 2026-10-23 — P5 yeşil (static/react/fastapi/cli boru) → P6 Pilot A.
+**Son işaret:** 2026-10-23 — P6 yeşil (pilot-a-selam-cli · 4 pytest) → P7 Pilot B web.
 
 ---
 
