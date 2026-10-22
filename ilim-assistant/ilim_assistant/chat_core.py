@@ -2092,6 +2092,27 @@ def prepare_turn(
         user_payload = op_ctx + "\n\n" + user_payload
     if live_weather_ctx:
         user_payload = live_weather_ctx + "\n\n" + user_payload
+    # S3 — sayı/güncel hard-gate (kaynak yok/zayıf → uydurma yasağı)
+    _s3_sayi_gate = False
+    try:
+        from ilim_assistant.sohbet_sayi_hard_gate import (
+            sayi_hard_miss_directive,
+            should_force_sayi_miss,
+        )
+
+        if should_force_sayi_miss(
+            msg,
+            web_extra=web_extra,
+            blocks=blocks,
+            hits=hits,
+            live_weather_ctx=live_weather_ctx or "",
+        ):
+            user_payload += sayi_hard_miss_directive()
+            _s3_sayi_gate = True
+            if orchestration_out is not None:
+                orchestration_out["sayi_hard_gate"] = True
+    except Exception:
+        _s3_sayi_gate = False
     if web_extra:
         user_payload += "\n\n" + web_extra
         _web_pro_addon = False
@@ -2199,7 +2220,8 @@ def prepare_turn(
         except Exception:
             pass
     elif (
-        m == "genel"
+        not _s3_sayi_gate
+        and m == "genel"
         and not archive_primary_flag
         and not (live_weather_ctx or "").strip()
         and not blocks

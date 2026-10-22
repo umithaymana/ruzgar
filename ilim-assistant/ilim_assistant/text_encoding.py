@@ -365,6 +365,13 @@ def cila_sohbet_metni(text: str) -> str:
     t = _cila_kaynaksiz_sayi(
         t, sayi_re=_UNI_SAYISI, kaynak_re=_UNI_KAYNAK_OK, yok_msg=_UNI_YOK
     )
+    # S3 — fx / skor / nüfus / ilçe geniş scrub
+    try:
+        from ilim_assistant.sohbet_sayi_hard_gate import scrub_ungrounded_live_numbers
+
+        t = scrub_ungrounded_live_numbers(t)
+    except Exception:
+        pass
     return t
 
 
