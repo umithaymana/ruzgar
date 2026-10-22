@@ -3,7 +3,7 @@
 **Kilit:** 2026-10-23 · Mimar onayı («bu planı sevdim, kilitle»)  
 **Kaynak güvenli bölge:** 2026-10-22 · `0c919d60` · `origin/main`  
 **Süre beklentisi:** birkaç gün (faz faz; atlama yok)  
-**Aktif faz:** **V1** (V0✅ 2026-10-23 · S4 askıda)
+**Aktif faz:** **V2** (V1✅ 2026-10-23 · S4 askıda)
 
 Bu dosya çok günlük çalışmada **tek sıra kaynağıdır**. Sapma yasak. Güncelleme: dilim yeşil → burada işaretle + `PROJE_DURUMU.md` özet.
 
@@ -81,7 +81,7 @@ Not: C/H yeşilleri semptom yaması sayılır; S borusu onları geçersiz kılma
 | Dilim | İş | Çıkış | Durum |
 |-------|-----|--------|--------|
 | **V0** | STT/TTS gecikme baseline (ms) | Ölçüm | ✅ 2026-10-23 · STT ılık 10.3s · TTS first ~1.7s · `docs/V0_STT_TTS_BASELINE_2026-10-23.md` |
-| **V1** | Isınma: Whisper `get_model` + TTS pool prime (boot 1–3’ü geciktirmeden, port sonrası) | Soğuk ilk tur yok | ⬜ |
+| **V1** | Isınma: Whisper `get_model` + TTS pool prime (boot 1–3’ü geciktirmeden, port sonrası) | Soğuk ilk tur yok | ✅ 2026-10-23 · `ses_v1_isinma` · smoke 9/9 |
 | **V2** | STT doğruluk/hız (model, VAD, cihaz, ffmpeg yolu) | Duyuyor | ⬜ |
 | **V3** | TTS ilk-byte (küçük chunk, workers, rate) | Gecikme ↓ | ⬜ |
 | **V4** | Barge-in / mic↔TTS kilidi | Konuşunca kes + dinle | ⬜ |
@@ -109,10 +109,10 @@ Her motor: ölçüm → derin iş → uygulama denemesi → mühür. Önceki mot
 |-----|--------|
 | P | ✅ mühürlü (P0–P8) |
 | S | ✅ mühürlü (S4 askıda `evet`) |
-| V | 🔄 V0✅ · sırada **V1** |
+| V | 🔄 V0–V1✅ · sırada **V2** |
 | M | ⬜ V mühürüne bağlı |
 
-**Son işaret:** 2026-10-23 — V0 baseline ✅ → V1 Whisper/TTS ısınma.
+**Son işaret:** 2026-10-23 — V1 ısınma ✅ → V2 STT doğruluk/hız.
 
 ---
 

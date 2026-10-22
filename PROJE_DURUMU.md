@@ -12,7 +12,7 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 |-----|--------|--------|
 | **P** | Programlama tavanı + 2 pilot (CLI + web) | ✅ **mühürlü** (P0–P8) |
 | **S** | Sohbet muhakeme (niyet→kaynak→harman) | ✅ **mühürlü** (S4=`evet` askıda) |
-| **V** | Ses STT/TTS | 🔄 **V0✅ → V1** |
+| **V** | Ses STT/TTS | 🔄 **V0–V1✅ → V2** |
 | **M** | Video→Tercüme→Okuma→Mimar | ⬜ V mühürüne bağlı |
 
 **Kural:** birkaç günlük iş; dilim atlama / cila ile geçme yok. Ölçüm→yama→smoke→canlı→✅ · dilim yeşil → commit+push.  
@@ -33,6 +33,7 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 **S6 (2026-10-23):** anlık kart vs GROUNDED S6 anlat · `resolve_anlik_harman` · smoke 11/11.  
 **S7 (2026-10-23):** Faz S mühür **YEŞİL** · batarya 28/28 · S4 askıda · `docs/S7_FAZ_S_MUHUR_2026-10-23.md` → **V0**.  
 **V0 (2026-10-23):** STT ılık get_model **~10.3s** · TTS first-byte **~1.7s** · `docs/V0_STT_TTS_BASELINE_2026-10-23.md`.  
+**V1 (2026-10-23):** port sonrası Whisper+TTS ısınma · `ses_v1_isinma.py` · boot 1–3 gecikmez · smoke 9/9.  
 **Temizlik:** P+S+V+M bitince `RUZGAR_YOL_HARITASI.md` + FROZEN kural silinir; bu blok kısaltılır (kalabalık olmasın).
 
 ### GÜVENLİ BÖLGE — 2026-10-22 (Mimar onayı) ← **AKTİF ALT TABAN**
@@ -295,11 +296,11 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
 | ~~H1–H7~~ | Harman | C ile kapandı | ✅ |
 | ~~D1–D6~~ | Araç sözleşmesi | Programlama ~%70 bandı · verify+hub | ✅ 2026-10-22 |
 | ~~inceleme~~ | Mimar bakış | EmirYalan + E + D tutuyor | ✅ 2026-10-22 gece |
-| **P→S→V→M** | Yol haritası | `RUZGAR_YOL_HARITASI.md` | 🔒 · **P✅** · **S✅** (S4 askıda) · **V0✅ V1** |
+| **P→S→V→M** | Yol haritası | `RUZGAR_YOL_HARITASI.md` | 🔒 · **P✅** · **S✅** (S4 askıda) · **V0–V1✅ V2** |
 | ~~P0–P8~~ | Faz P | mühür YEŞİL | ✅ 2026-10-23 |
 | ~~S0~~ | Yalan korpusu | 28 case | ✅ 2026-10-23 |
 
-**Öneri şimdi:** **V1** Whisper/TTS ısınma (port sonrası). S4 için açık `evet` hâlâ bekler.
+**Öneri şimdi:** **V2** STT doğruluk/hız (metadata_errors + VAD). S4 için açık `evet` hâlâ bekler.
 
 ### Sıra D — Araç sözleşmesi genişlemesi (2026-10-22 plan)
 

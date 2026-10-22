@@ -549,6 +549,13 @@ def _sync_startup_warmups() -> None:
             preload_primary_chat_model()
     except Exception:
         pass
+    # V1 — Whisper get_model + TTS pool prime (boot 1–3 / port geciktirmez; bu blok arka plan)
+    try:
+        from ilim_assistant.ses_v1_isinma import run_ses_v1_warmup
+
+        run_ses_v1_warmup()
+    except Exception:
+        pass
     if os.environ.get("RUZGAR_PRINT_READY_SEAL", "1").strip().lower() not in (
         "0",
         "false",
