@@ -3,7 +3,7 @@
 **Kilit:** 2026-10-23 · Mimar onayı («bu planı sevdim, kilitle»)  
 **Kaynak güvenli bölge:** 2026-10-22 · `0c919d60` · `origin/main`  
 **Süre beklentisi:** birkaç gün (faz faz; atlama yok)  
-**Aktif faz:** **S0** (Faz P mühür ✅ 2026-10-23)
+**Aktif faz:** **S1** (S0✅ 2026-10-23)
 
 Bu dosya çok günlük çalışmada **tek sıra kaynağıdır**. Sapma yasak. Güncelleme: dilim yeşil → burada işaretle + `PROJE_DURUMU.md` özet.
 
@@ -63,7 +63,7 @@ Kapılar kapalı: serbest exec · silme · serbest dış yazma.
 
 | Dilim | İş | Çıkış | Durum |
 |-------|-----|--------|--------|
-| **S0** | Yalan/uydurma korpusu (20–30 örnek) | Ölçüm seti | ⬜ |
+| **S0** | Yalan/uydurma korpusu (20–30 örnek) | Ölçüm seti | ✅ 2026-10-23 · 28 case · smoke 8/8 |
 | **S1** | Tek niyet kapısı (SourceRouter) | ≤1 sn struct karar | ⬜ |
 | **S2** | Faz49 kısıt (sayı/güncelde kaynaksız LLM yok) | Fast-fact güvenli | ⬜ |
 | **S3** | Sayı/güncel hard-gate + geniş scrub | Kaynaksız rakam yok | ⬜ |
@@ -108,11 +108,11 @@ Her motor: ölçüm → derin iş → uygulama denemesi → mühür. Önceki mot
 | Faz | Durum |
 |-----|--------|
 | P | ✅ mühürlü (P0–P8) |
-| S | 🔄 sırada **S0** |
+| S | 🔄 S0✅ · sırada **S1** |
 | V | ⬜ S mühürüne bağlı |
 | M | ⬜ V mühürüne bağlı |
 
-**Son işaret:** 2026-10-23 — **Faz P YEŞİL** (agent_ok %70 · 2 pilot · seal) → **S0**.
+**Son işaret:** 2026-10-23 — S0 yeşil (28 case) → S1 SourceRouter.
 
 ---
 
