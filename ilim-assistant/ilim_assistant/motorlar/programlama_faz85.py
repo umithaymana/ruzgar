@@ -15,7 +15,7 @@ import unicodedata
 from pathlib import Path
 from typing import Any, Callable, Iterator
 
-FAZ85_VERSION = "programlama-faz85-v3.2-fields-2026-10-21"
+FAZ85_VERSION = "programlama-faz85-v3.3-p5-scaffold-2026-10-23"
 
 # Karmaşık hedefler → Faz85 atlanır, Faz14/88 ajan yolu (E1/E2).
 # Kısa belirsiz parçalar (bol/ayır) yok — yanlış pozitif riski.
@@ -715,7 +715,22 @@ def try_fast_deterministic_task(
     scope_rel = _resolve_preferred_scope(
         workspace_root, scope_rel, (intent_message or goal or "").strip()
     )
+    def _try_p5_scaffold(
+        workspace_root: str | Path | None,
+        scope_rel: str,
+        goal: str,
+    ) -> dict[str, Any] | None:
+        try:
+            from ilim_assistant.motorlar.programlama_p5_scaffold_boru import (
+                try_p5_fast_scaffold,
+            )
+
+            return try_p5_fast_scaffold(workspace_root, scope_rel, goal)
+        except Exception:
+            return None
+
     handlers: list[Callable[..., dict[str, Any] | None]] = [
+        _try_p5_scaffold,
         _try_scaffold_fastapi,
         _try_fix_health_ok,
         _try_health_fields,
