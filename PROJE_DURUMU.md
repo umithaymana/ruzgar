@@ -10,7 +10,7 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 
 | Faz | İçerik | Durum |
 |-----|--------|--------|
-| **P** | Programlama tavanı + 2 pilot (CLI + web) | 🔄 **P0–P6✅** → **P7** |
+| **P** | Programlama tavanı + 2 pilot (CLI + web) | 🔄 **P0–P7✅** → **P8** |
 | **S** | Sohbet muhakeme (niyet→kaynak→harman) | ⬜ P mühürüne bağlı |
 | **V** | Ses STT/TTS | ⬜ S mühürüne bağlı |
 | **M** | Video→Tercüme→Okuma→Mimar | ⬜ V mühürüne bağlı |
@@ -23,6 +23,7 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 **P4 (2026-10-23):** BOOT=0 format kurtarma (unfenced SEARCH · diff -/+ ) + fewshot · patch **v1.4** · smoke **10/10** · canlı boot0 yeniden ölçüm P8.  
 **P5 (2026-10-23):** scaffold ürün borusu — static · react_vite · fastapi · cli · smoke **15/15** · `programlama_p5_scaffold_boru.py`.  
 **P6 (2026-10-23):** Pilot A `projects/pilot-a-selam-cli` — greet/--upper · **4 pytest** · smoke 6/6.  
+**P7 (2026-10-23):** Pilot B `projects/pilot-b-vitrin` — statik vitrin · smoke **11/11**.  
 **Temizlik:** P+S+V+M bitince `RUZGAR_YOL_HARITASI.md` + FROZEN kural silinir; bu blok kısaltılır (kalabalık olmasın).
 
 ### GÜVENLİ BÖLGE — 2026-10-22 (Mimar onayı) ← **AKTİF ALT TABAN**
@@ -285,7 +286,7 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
 | ~~H1–H7~~ | Harman | C ile kapandı | ✅ |
 | ~~D1–D6~~ | Araç sözleşmesi | Programlama ~%70 bandı · verify+hub | ✅ 2026-10-22 |
 | ~~inceleme~~ | Mimar bakış | EmirYalan + E + D tutuyor | ✅ 2026-10-22 gece |
-| **P→S→V→M** | Yol haritası | `RUZGAR_YOL_HARITASI.md` | 🔒 · P0–P6✅ · **P7** |
+| **P→S→V→M** | Yol haritası | `RUZGAR_YOL_HARITASI.md` | 🔒 · P0–P7✅ · **P8** |
 | ~~P0~~ | Baseline KPI | agent_ok %70 · offline 5/5 | ✅ 2026-10-23 |
 | ~~P1~~ | Pattern kütüphanesi | 5 pattern · smoke 9/9 | ✅ 2026-10-23 |
 | ~~P2~~ | Ray sınıflayıcı | smoke 26/26 | ✅ 2026-10-23 |
@@ -293,8 +294,9 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
 | ~~P4~~ | BOOT=0 yazım kurtarma | patch v1.4 · smoke 10/10 | ✅ 2026-10-23 |
 | ~~P5~~ | Scaffold ürün borusu | smoke 15/15 | ✅ 2026-10-23 |
 | ~~P6~~ | Pilot A CLI | pilot-a-selam-cli · 4 pytest | ✅ 2026-10-23 |
+| ~~P7~~ | Pilot B web | pilot-b-vitrin · 11/11 | ✅ 2026-10-23 |
 
-**Öneri şimdi:** **P7** Pilot B — basit web sitesi. Detay: yol haritası.
+**Öneri şimdi:** **P8** Faz P mühür (KPI + 2 pilot). Detay: yol haritası.
 
 ### Sıra D — Araç sözleşmesi genişlemesi (2026-10-22 plan)
 
