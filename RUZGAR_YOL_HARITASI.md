@@ -3,7 +3,7 @@
 **Kilit:** 2026-10-23 · Mimar onayı («bu planı sevdim, kilitle»)  
 **Kaynak güvenli bölge:** 2026-10-22 · `0c919d60` · `origin/main`  
 **Süre beklentisi:** birkaç gün (faz faz; atlama yok)  
-**Aktif faz:** **S7** (S6✅ 2026-10-23 · S4 bekler Mimar `evet`)
+**Aktif faz:** **V0** (S✅ 2026-10-23 · S4 askıda Mimar `evet`)
 
 Bu dosya çok günlük çalışmada **tek sıra kaynağıdır**. Sapma yasak. Güncelleme: dilim yeşil → burada işaretle + `PROJE_DURUMU.md` özet.
 
@@ -70,7 +70,7 @@ Kapılar kapalı: serbest exec · silme · serbest dış yazma.
 | **S4** | Ümit emri web sırası niyet-koşullu | **Ayrı Mimar `evet`** | ⬜ |
 | **S5** | Fuzzy + doğal sentez sıkı (bilir-gibi yalan ↓) | Yanlış kart özgüvensiz | ✅ 2026-10-23 · fuzzy≥0.85 · smoke 11/11 |
 | **S6** | Anlık kart vs grounded anlat + harman | Çelişkide dürüst miss | ✅ 2026-10-23 · GROUNDED S6 · smoke 11/11 |
-| **S7** | Canlı batarya + Faz S mühür | S kapanır → V | ⬜ |
+| **S7** | Canlı batarya + Faz S mühür | S kapanır → V | ✅ 2026-10-23 · YEŞİL · S4 askıda · `docs/S7_FAZ_S_MUHUR_2026-10-23.md` |
 
 Not: C/H yeşilleri semptom yaması sayılır; S borusu onları geçersiz kılmaz, aşar.
 
@@ -108,11 +108,11 @@ Her motor: ölçüm → derin iş → uygulama denemesi → mühür. Önceki mot
 | Faz | Durum |
 |-----|--------|
 | P | ✅ mühürlü (P0–P8) |
-| S | 🔄 S0–S3·S5–S6✅ · **S4** Mimar `evet` · sırada **S7** |
-| V | ⬜ S mühürüne bağlı |
+| S | ✅ mühürlü (S4 askıda `evet`) |
+| V | 🔄 sırada **V0** |
 | M | ⬜ V mühürüne bağlı |
 
-**Son işaret:** 2026-10-23 — S5 yeşil (fuzzy/sentez) → S6 anlık kart harman (S4 ayrı `evet`).
+**Son işaret:** 2026-10-23 — Faz S mühür YEŞİL (S4 askıda) → Faz V0 STT/TTS baseline.
 
 ---
 
