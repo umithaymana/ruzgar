@@ -980,6 +980,13 @@ def prepare_turn(
     from ilim_assistant.idrak_on_islem import pretreat_user_turn
 
     msg = pretreat_user_turn(msg, history).text
+    # S1 — SourceRouter (niyet/kaynak struct; S2/S3 gate buraya bağlanır)
+    try:
+        from ilim_assistant.sohbet_source_router import attach_source_router
+
+        attach_source_router(msg, orchestration_out)
+    except Exception:
+        pass
     _turn_idrak = None
     try:
         from ilim_assistant.ana_motor_idrak_zihin import analyze_turn, idrak_zihin_enabled

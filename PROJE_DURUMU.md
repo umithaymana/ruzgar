@@ -11,7 +11,7 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 | Faz | İçerik | Durum |
 |-----|--------|--------|
 | **P** | Programlama tavanı + 2 pilot (CLI + web) | ✅ **mühürlü** (P0–P8) |
-| **S** | Sohbet muhakeme (niyet→kaynak→harman) | 🔄 **S0✅ → S1** |
+| **S** | Sohbet muhakeme (niyet→kaynak→harman) | 🔄 **S0–S1✅ → S2** |
 | **V** | Ses STT/TTS | ⬜ S mühürüne bağlı |
 | **M** | Video→Tercüme→Okuma→Mimar | ⬜ V mühürüne bağlı |
 
@@ -26,6 +26,7 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 **P7 (2026-10-23):** Pilot B `projects/pilot-b-vitrin` — statik vitrin · smoke **11/11**.  
 **P8 (2026-10-23):** Faz P mühür **YEŞİL** — agent_ok %70 · seal script · `docs/P8_FAZ_P_MUHUR_2026-10-23.md` → **S0**.  
 **S0 (2026-10-23):** yalan korpusu **28** case · `sohbet_yalan_korpus_s0.json` · smoke 8/8.  
+**S1 (2026-10-23):** SourceRouter · 28/28 korpus hizası · smoke 8/8 · `sohbet_source_router.py` → prepare_turn.  
 **Temizlik:** P+S+V+M bitince `RUZGAR_YOL_HARITASI.md` + FROZEN kural silinir; bu blok kısaltılır (kalabalık olmasın).
 
 ### GÜVENLİ BÖLGE — 2026-10-22 (Mimar onayı) ← **AKTİF ALT TABAN**
@@ -288,11 +289,11 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
 | ~~H1–H7~~ | Harman | C ile kapandı | ✅ |
 | ~~D1–D6~~ | Araç sözleşmesi | Programlama ~%70 bandı · verify+hub | ✅ 2026-10-22 |
 | ~~inceleme~~ | Mimar bakış | EmirYalan + E + D tutuyor | ✅ 2026-10-22 gece |
-| **P→S→V→M** | Yol haritası | `RUZGAR_YOL_HARITASI.md` | 🔒 · **P✅** · **S0✅ S1** |
+| **P→S→V→M** | Yol haritası | `RUZGAR_YOL_HARITASI.md` | 🔒 · **P✅** · **S0–S1✅ S2** |
 | ~~P0–P8~~ | Faz P | mühür YEŞİL | ✅ 2026-10-23 |
 | ~~S0~~ | Yalan korpusu | 28 case | ✅ 2026-10-23 |
 
-**Öneri şimdi:** **S1** SourceRouter. Detay: yol haritası.
+**Öneri şimdi:** **S2** Faz49 kısıt (sayı/güncelde kaynaksız LLM yok). Detay: yol haritası.
 
 ### Sıra D — Araç sözleşmesi genişlemesi (2026-10-22 plan)
 

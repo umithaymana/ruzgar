@@ -3,7 +3,7 @@
 **Kilit:** 2026-10-23 · Mimar onayı («bu planı sevdim, kilitle»)  
 **Kaynak güvenli bölge:** 2026-10-22 · `0c919d60` · `origin/main`  
 **Süre beklentisi:** birkaç gün (faz faz; atlama yok)  
-**Aktif faz:** **S1** (S0✅ 2026-10-23)
+**Aktif faz:** **S2** (S1✅ 2026-10-23)
 
 Bu dosya çok günlük çalışmada **tek sıra kaynağıdır**. Sapma yasak. Güncelleme: dilim yeşil → burada işaretle + `PROJE_DURUMU.md` özet.
 
@@ -64,7 +64,7 @@ Kapılar kapalı: serbest exec · silme · serbest dış yazma.
 | Dilim | İş | Çıkış | Durum |
 |-------|-----|--------|--------|
 | **S0** | Yalan/uydurma korpusu (20–30 örnek) | Ölçüm seti | ✅ 2026-10-23 · 28 case · smoke 8/8 |
-| **S1** | Tek niyet kapısı (SourceRouter) | ≤1 sn struct karar | ⬜ |
+| **S1** | Tek niyet kapısı (SourceRouter) | ≤1 sn struct karar | ✅ 2026-10-23 · 28/28 korpus · smoke 8/8 · `sohbet_source_router.py` |
 | **S2** | Faz49 kısıt (sayı/güncelde kaynaksız LLM yok) | Fast-fact güvenli | ⬜ |
 | **S3** | Sayı/güncel hard-gate + geniş scrub | Kaynaksız rakam yok | ⬜ |
 | **S4** | Ümit emri web sırası niyet-koşullu | **Ayrı Mimar `evet`** | ⬜ |
@@ -108,11 +108,11 @@ Her motor: ölçüm → derin iş → uygulama denemesi → mühür. Önceki mot
 | Faz | Durum |
 |-----|--------|
 | P | ✅ mühürlü (P0–P8) |
-| S | 🔄 S0✅ · sırada **S1** |
+| S | 🔄 S0–S1✅ · sırada **S2** |
 | V | ⬜ S mühürüne bağlı |
 | M | ⬜ V mühürüne bağlı |
 
-**Son işaret:** 2026-10-23 — S0 yeşil (28 case) → S1 SourceRouter.
+**Son işaret:** 2026-10-23 — S1 yeşil (SourceRouter 28/28) → S2 Faz49 kısıt.
 
 ---
 
