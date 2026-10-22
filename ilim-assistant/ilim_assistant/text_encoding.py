@@ -369,23 +369,39 @@ def cila_sohbet_metni(text: str) -> str:
 
 
 def strip_answer_scaffold(text: str) -> str:
-    """Modelin «Niyet / Cevap / Gerekçe» şablonunu kullanıcıya bırakma."""
+    """Modelin «Niyet / Cevap / Gerekçe» şablonunu kullanıcıya bırakma.
+
+    ``**Niyet:**`` ve yalnız ``Soru:`` / ``Cevap:`` yankısı da temizlenir (C1).
+    """
     if not text:
         return text
     import re
 
-    if not re.search(r"(?im)^(?:niyet|sevinç|sevinc|kimlik)\s*:", text):
-        return text
+    def _bare_label(st: str) -> str:
+        t = (st or "").strip()
+        t = re.sub(r"^\*{1,2}\s*", "", t)
+        t = re.sub(r"\s*\*{1,2}\s*$", "", t)
+        return t.strip()
+
     label = re.compile(
         r"(?i)^(?:niyet|kimlik(?:/yakınlık)?|üretim|uretim|sevinç|sevinc|soru)\s*:"
     )
     stop = re.compile(r"(?i)^(?:örnek|ornek|gerekçe|gerekce)\s*:")
+    cevap_re = re.compile(r"(?i)^cevap\s*:")
+    has_scaffold = False
+    for ln in text.splitlines():
+        st = _bare_label(ln)
+        if label.match(st) or cevap_re.match(st):
+            has_scaffold = True
+            break
+    if not has_scaffold:
+        return text
     body: list[str] = []
     capture = False
     saw = False
     for ln in text.splitlines():
-        st = ln.strip()
-        if re.match(r"(?i)^cevap\s*:", st):
+        st = _bare_label(ln)
+        if cevap_re.match(st):
             saw = True
             capture = True
             rest = re.sub(r"(?i)^cevap\s*:\s*", "", st).strip()
@@ -402,7 +418,11 @@ def strip_answer_scaffold(text: str) -> str:
     cleaned = "\n".join(body).strip() if saw else ""
     if cleaned:
         return cleaned
-    kept = [ln for ln in text.splitlines() if ln.strip() and not label.match(ln.strip())]
+    kept = [
+        ln
+        for ln in text.splitlines()
+        if ln.strip() and not label.match(_bare_label(ln))
+    ]
     return "\n".join(kept).strip() or text
 
 

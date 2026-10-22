@@ -161,10 +161,13 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
 41. ~~**B5 anlık düzyazı**~~ — kart→prose · canlı fotosentez/hicret/karadeniz.
 42. ~~**B4 E2 agent_ok**~~ — format kurtarma · canlı agent_ok · KPI **%50** (5/10).
 43. ~~**B6 galaksi**~~ — tanım+örnek (Samanyolu/Andromeda) · smoke 6/6 · canlı yeşil.
-44. ~~**Zayıflık sırası B (B1–B6)**~~ tamam — commit/push emri beklenir.
-45. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
+44. ~~**Zayıflık sırası B (B1–B6)**~~ tamam · commit `c4d18ce2` · `origin/main`.
+45. ~~ŞİMDİ (yarın): Zayıflık sırası C~~ — gece kaydı duruyor; **bugün harman planı** aşağıda.
+46. ~~**C1–C6 + H7 tamam**~~ ✅ 2026-10-22 · commit/push **emri bekle**.
+47. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
+48. **Boot sırası kilitli** (`.cursorrules`) — H turlarında değiştirilmez; «araç sözleşmesi» ≠ boot sırası (aşağı not).
 
-### Zayıflık sırası B — 2026-10-21 gece (yeni)
+### Zayıflık sırası B — 2026-10-21 gece (kapandı)
 
 | # | Zayıf nokta | Kanıt | Hedef | İlk dilim |
 |---|-------------|-------|-------|-----------|
@@ -175,16 +178,80 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
 | **B5** | ~~Anlık kart üslubu~~ | canlı düzyazı | ChatGPT düzyazı | ✅ |
 | **B6** | ~~Galaksi derinlik~~ | canlı tanım+örnek | 1 net + 1 örnek | ✅ |
 
-**Öneri sıra:** B1 → B2 → B3 → B5 → B4 → B6 — **tamam.**
+### Zayıflık sırası C — plan (2026-10-21 gece kaydı · arşiv; bugün H’ye taşındı)
+
+**Amaç (eski):** Birkaç tur daha zayıflık iyileştirmesi. Beklenti: genel otonomi ~%50 → ~%60–65 bandı. Tam otonom (%90+) bu turlarda hedef değil.
+
+**Çalışma kuralı (Mimar):** B gibi — **bir madde yeşil olunca diğerine**; her madde: ölçüm → yama → smoke → canlı → `PROJE_DURUMU` işaretle. Hepsi bitince commit+push emri.
+
+| # | Alan | Zayıf nokta (ölçülecek) | Hedef çıkış | Not |
+|---|------|-------------------------|-------------|-----|
+| **C1** | Sohbet | ~~8b «anlat» sığ/yankı/selam~~ | 1 net + örnek + bağlam; yankı yok | ✅ 2026-10-22 · durum eki eşleşme + scaffold scrub · smoke 7/7 · canlı 3/3 |
+| **C2** | Bilgi/web | ~~Sayı uydurma / meta~~ | Kaynaklı rakam **veya** dürüst yok; meta yok | ✅ 2026-10-22 · smoke B3 10/10 · canlı üni+okul dürüst |
+| **C3** | Hafıza | ~~Zehirli / fuzzy yanlış kart~~ | Invalid scrub + yanlış eşleşme yok | ✅ 2026-10-22 · smoke 5/5 · canlı os/nefs/Karadeniz |
+| **C4** | Programlama | ~~E2 agent_ok %50~~ | ≥%60 (force_heal hariç) | ✅ 2026-10-22 · 3 canlı pil · **%61** (8/13) · heal payı %52 |
+| **C5** | Anlık/üslup | ~~`**başlık**` / liste robotluğu~~ | ChatGPT düzyazı tutarlı | ✅ 2026-10-22 · B5 smoke 10/10 · canlı 3 raf düzyazı |
+| **C6** | (isteğe) Hub niyet | ~~Yanlış motor anlık~~ | Görüş/bilgi ana motorda | ✅ 2026-10-22 · B1 17/17 · 3 tuzak + canlı görüş |
+
+**Eski öneri sıra:** C1 → C2 → C3 → C5 → C4 → C6. *(Bugün yerine H sırası.)*
+
+### Bugün harman planı H — 2026-10-22 (C + ChatGPT/Cursor karşılaştırma)
+
+**Kaynaklar:** (1) Zayıflık C tablosu · (2) sabah mukayese: sohbet parlaklığı 6–7, ajan 5–6, hafıza 9 ama zehir riski, «tek beyin illüzyonu» peşinde koşmama.
+
+**İlke:** ChatGPT ile aynı skor tablosunda yarışma. Kazanç = **ChatGPT hissi** + **kapılı Cursor eylemi** + **sahipli hafıza farkını kirletmeme**.
+
+**Beklenti:** genel kalite ~%50 → ~%60–65. %90+ otonomi bu günde yok.
+
+**Çalışma kuralı:** madde madde — ölçüm → yama → smoke → canlı → bu dosyada işaret. Boot sırası dokunulmaz. Bitince commit+push **emri bekle**.
+
+| # | Eski | Alan | Zayıf / mukayese kökü | Hedef çıkış | Doğrulama |
+|---|------|------|----------------------|-------------|-----------|
+| **H1** | C1 | Sohbet | ~~anlat sığ/yankı~~ | ✅ ≡ C1 |
+| **H2** | C3 | Hafıza moat | ~~zehir/fuzzy~~ | ✅ ≡ C3 |
+| **H3** | C2 | Web/sayı | ~~uydurma/meta~~ | ✅ ≡ C2 |
+| **H4** | C5 | Anlık düzyazı | ~~kart robot~~ | ✅ ≡ C5 |
+| **H5** | C4 | E2 agent_ok | ~~%50~~ → **%61** | ✅ ≡ C4 |
+| **H6** | C6 | Hub niyet | ~~yanlış motor~~ | ✅ ≡ C6 |
+| **H7** | *yeni* | Fark kilidi | ~~moat unutma~~ | ✅ 2026-10-22 · ilim+raf+hatırla · smoke_h7 |
+
+**Mimar emri (2026-10-22):** Önce **C sırası** (C1→C2→C3→C5→C4→C6) madde madde yeşil. C bitince H artıkları — H1–H6 C ile örtüşürse işaretle, **H7** (fark kilidi) ayrıca koş.
+
+**H sırası (C sonrası):** H7 (ve C’de kırmızı kalan varsa H eşleniğine dön).
+
+**Bugün açılış checklist:**
+1. `Ruzgar.ps1 -ForceRestart` (gerekirse)
+2. Health + kısa sohbet smoke
+3. **C1** ölçüm (3 «anlat») → ilk yeşil dilim
+4. C tablosunda işaretle; bitince C2 … C6; sonra H7
+
+**Yapılmaz bugün:** telefon, 32B/70B, boot sırası değişimi, serbest kod/dosya silme, «her şeyi bilen tek model» peşinde model büyütme.
+
+### Not — «Motor boot / araç sözleşmesi genişlemesi» (Mimar sorusu)
+
+**Ne demek değildi:** `.cursorrules` kilitli boot sırası (Ana Motor → çekirdek → 5 ara motor) **değiştirmek**. Bu C turlarında da yok; değiştirmek için açık `evet` şart.
+
+**Ne demekti (iki ayrı şey):**
+
+1. **Araç sözleşmesi (programlama ajanı)** — modelin yazım dili: `@@patch` / `@@write` / search-replace, ne zaman supervised boot, ne zaman heal, hangi dosyaya yazılabilir. Genişleme = daha iyi kurtarma, daha net şablon, daha az «oku-turu», verify zorunluluğu. **Boot sırasına dokunmaz.**  
+   - Bu şartlarda **yapılır** (zaten A/B’de kısmen yaptık; C4 buraya oturur).  
+   - Kazanç: `agent_ok` ↑, heal payı ↓, dar görevlerde otonomi.
+
+2. **Kabiliyet / hub sözleşmesi** — `motor_kabiliyetleri.json` + classifier’lar: hangi cümle hangi motora (ses/video/programlama…) gider. Genişleme = daha az yanlış motor anlık, ana motor bilgi/görüşü kaçırmama. **Boot sırasına dokunmaz.**  
+   - Bu şartlarda **yapılır** (C6).  
+   - Kazanç: sohbet tutarlılığı, yanlış «ses profili» vb. azalır.
+
+**Yapılmaz / ayrı onay:** Ara motorları boot’ta öne almak, ana motoru ertelemek, yardımcı ısınmayı 1–3’ün önüne koymak.
 
 ### Sıradaki (programlama → diğer)
 
 | Sıra | İş | Neden | Çıkış |
 |------|-----|--------|--------|
-| **inceleme** | Mimar detaylı bakış | EmirYalan + E + D + C | onay / revize |
-| **ölçüm** (isteğe) | 14b BOOT=0 tekrar | saf yazım tabanı | rapor |
+| **H1–H7** | Harman (C + mukayese) | Kalite ~%60–65 + moat | madde madde yeşil |
+| **inceleme** | Mimar detaylı bakış | EmirYalan + E + D | onay / revize |
+| **ölçüm** (isteğe) | 14b ılık + E2 | H5 ile birleşik | KPI ≥%60 |
 
-**Öneri:** C yeşil — inceleme / commit sırası sende.
+**Öneri bugün:** C1 ile başla (Mimar: C bitince H).
 
 ### 2026-10-18 / 19 — oturum kaydı (geç yazıldı)
 

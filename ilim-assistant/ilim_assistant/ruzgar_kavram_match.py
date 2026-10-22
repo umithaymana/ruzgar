@@ -27,6 +27,26 @@ def _key_bounded(key: str, low: str) -> bool:
     return bool(re.search(rf"(?<![\w'’]){re.escape(key)}(?![\w'’])", low))
 
 
+# «hicreti / fotosentezi / osmanlıyı anlat» — durum eki kelime sınırını kırıyordu (C1).
+_TR_CASE_AFTER = (
+    r"(?:y?[ıiuü]|y?[ae]|n[ıiuü]n|n[ae]n|d[ae]|t[ae]|l[ae]r[ıiuü]?)?"
+)
+
+
+def _key_in_query(key: str, low: str) -> bool:
+    """Kelime sınırı veya Türkçe durum ekiyle («hicreti») eşle."""
+    if not key:
+        return False
+    if _key_bounded(key, low):
+        return True
+    return bool(
+        re.search(
+            rf"(?<![\w'’]){re.escape(key)}{_TR_CASE_AFTER}(?![\w'’])",
+            low,
+        )
+    )
+
+
 def match_kavram_row(
     msg: str,
     rows: list[dict[str, Any]],
@@ -37,6 +57,7 @@ def match_kavram_row(
 
     Kurallar:
     - eşleşme kelime sınırında (``bilim`` ``bilgisayar`` içinde tutmaz)
+    - durum ekli biçim OK (``hicreti``, ``fotosentezi``)
     - 6 harften kısa tek kelime yalnız «kavram» veya «kavram nedir» ise
     - uzun cümledeki ``alan`` gibi kısa alias kart açmaz
     """
@@ -57,6 +78,17 @@ def match_kavram_row(
             " kimdir",
             " kim kurdu",
             " anlat",
+            " acikla",
+            " açıkla",
+        )
+        explain_cues = (
+            "anlat",
+            "acikla",
+            "açıkla",
+            "daha acik",
+            "daha açık",
+            "biraz",
+            "detay",
         )
         for k in keys:
             if not k:
@@ -67,24 +99,28 @@ def match_kavram_row(
                 score = max(score, 95)
             elif " " not in k and len(k) < 6:
                 continue
-            elif _key_bounded(k, low) and (len(k) >= 6 or " " in k):
+            elif _key_in_query(k, low) and (len(k) >= 6 or " " in k):
                 base = 60 + min(20, len(k))
-                # «hicret ne zaman» — sınırlı anahtar + soru eki → eşiği geçsin
-                if any(p.strip() in low for p in q_particles):
+                # «hicret ne zaman» / «hicreti daha açık anlat»
+                if any(p.strip() in low for p in q_particles) or any(
+                    c in low for c in explain_cues
+                ):
                     base = max(base, 75)
                 score = max(score, base)
             else:
                 parts = [p for p in k.split() if len(p) >= 4]
-                if len(parts) >= 2 and all(_key_bounded(p, low) for p in parts):
+                if len(parts) >= 2 and all(_key_in_query(p, low) for p in parts):
                     score = max(score, 55 + min(15, len(k)))
                 # «karadeniz nedir» ↔ «karadeniz bolgesi»
                 head = parts[0] if parts else ""
-                if head and len(head) >= 5 and _key_bounded(head, low):
+                if head and len(head) >= 5 and _key_in_query(head, low):
                     if low == head or low == f"{head} nedir" or any(
                         low == (head + p).strip() or low.startswith(head + p)
                         for p in q_particles
                     ):
                         score = max(score, 85)
+                    elif any(c in low for c in explain_cues):
+                        score = max(score, 80)
         if score > best_score:
             best_score = score
             best = row
