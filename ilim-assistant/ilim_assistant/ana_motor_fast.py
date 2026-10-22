@@ -176,12 +176,28 @@ def should_fast_direct_llm(
             return False
         if is_casual_conversation_turn(msg, mode_norm, question_plan):
             return False
+        # S2 — sayı/güncel: kaynaksız hızlı yol yok (RAG/web kalsın)
+        try:
+            from ilim_assistant.sohbet_source_router import blocks_faz49_fast
+
+            if blocks_faz49_fast(msg):
+                return False
+        except Exception:
+            pass
         if looks_like_fast_llm_fact_question(msg):
             return True
         if looks_like_encyclopedic_fact_question(msg):
             if fast_local_rag_first_enabled():
                 return False
             return True
+    except Exception:
+        pass
+
+    try:
+        from ilim_assistant.sohbet_source_router import blocks_faz49_fast
+
+        if blocks_faz49_fast(msg):
+            return False
     except Exception:
         pass
 

@@ -249,6 +249,21 @@ def router_enabled() -> bool:
     )
 
 
+def blocks_faz49_fast(message: str) -> bool:
+    """S2 — sayı/güncel niyette kaynaksız Faz49 hızlı LLM yasak."""
+    if not router_enabled():
+        # Router kapalıysa bile kaba sayı/güncel kuşağı
+        low = _fold(message or "")
+        return bool(
+            re.search(
+                r"(?:ka[cç]|n[uü]fus|istatistik|webten|bug[uü]n|şu\s*an|dolar|bitcoin)",
+                low,
+            )
+        )
+    d = classify_source_intent(message)
+    return bool(d.needs_live or d.needs_number)
+
+
 def attach_source_router(
     message: str,
     orchestration_out: dict[str, Any] | None,

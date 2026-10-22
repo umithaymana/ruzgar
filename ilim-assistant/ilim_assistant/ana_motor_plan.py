@@ -208,6 +208,8 @@ def looks_like_fast_llm_fact_question(msg: str) -> bool:
     """
     Genel bilim / kısa «nedir» / gezegen karşılaştırma — DuckDuckGo + sayfa okuma
   genelde gereksiz; doğrudan LLM hızlı yolu (Faz 49).
+
+    S2: sayı / güncel / «kaç» / resmi istatistikte False — kaynaksız parametrik yasak.
     """
     if os.environ.get("RUZGAR_FAZ49_FAST_FACT", "1").strip().lower() in (
         "0",
@@ -218,6 +220,19 @@ def looks_like_fast_llm_fact_question(msg: str) -> bool:
     raw = (msg or "").strip()
     if not raw or len(raw) > 220:
         return False
+    # S2 — SourceRouter: needs_live / needs_number → Faz49 kapalı
+    try:
+        from ilim_assistant.sohbet_source_router import blocks_faz49_fast
+
+        if blocks_faz49_fast(raw):
+            return False
+    except Exception:
+        asc0 = _norm_ascii(raw)
+        if re.search(
+            r"\b(kac|nufus|istatistik|webten|bugun|dolar|bitcoin|euro)\b",
+            asc0,
+        ) or re.search(r"\bkaç\b", raw.lower()):
+            return False
     if looks_like_encyclopedic_fact_question(msg):
         try:
             from ilim_assistant.ruzgar_tek_beyin import personal_hafiza_blocks_bilgi_path
