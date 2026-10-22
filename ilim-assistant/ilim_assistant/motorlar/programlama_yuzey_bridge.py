@@ -13,7 +13,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-YUZEY_BRIDGE_VERSION = "programlama-yuzey-bridge-v1.4-cizim-sunum-2026-10-21"
+YUZEY_BRIDGE_VERSION = "programlama-yuzey-bridge-v1.5-ray-p2-2026-10-23"
 _EPHEMERAL_PROJECT_RE = re.compile(
     r"^(?:smoke[-_]|e2-bat-|e2-boot-|agent-bat-|e2-bat)",
     re.I,
@@ -349,35 +349,15 @@ def build_surface_handoff_payload(
 
 
 def _path_hint_for_goal(goal: str) -> str:
-    """Çalıştırmadan: basit health/version → faz85; çok dosya/mega → ajan."""
-    g = (goal or "").lower()
-    if not g:
-        return "agent"
+    """P2 ray sınıflayıcı — scaffold/faz85/agent_boot/multi/mega."""
     try:
-        from ilim_assistant.motorlar.programlama_faz80 import wants_mega_refactor
+        from ilim_assistant.motorlar.programlama_ray_siniflandirici import (
+            path_hint_for_goal,
+        )
 
-        if wants_mega_refactor(goal):
-            return "agent_mega"
+        return path_hint_for_goal(goal or "")
     except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz56 import looks_like_multi_file_task
-
-        if looks_like_multi_file_task(goal):
-            return "agent_multi"
-    except Exception:
-        pass
-    try:
-        from ilim_assistant.motorlar.programlama_faz85 import goal_wants_agent_path
-
-        if goal_wants_agent_path(goal):
+        g = (goal or "").lower()
+        if not g:
             return "agent"
-    except Exception:
-        pass
-    simple = (
-        ("health" in g and ("version" in g or "ok" in g or "düzelt" in g or "duzelt" in g))
-        or ("pytest" in g and "geçir" in g and len(g) < 80)
-        or ("pytest" in g and "gecir" in g and len(g) < 80)
-        or ("yeni" in g and "api" in g and "health" in g)
-    )
-    return "faz85_fast" if simple else "agent"
+        return "faz85_fast" if "health" in g and "version" in g else "agent"

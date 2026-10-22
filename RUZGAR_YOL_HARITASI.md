@@ -3,7 +3,7 @@
 **Kilit:** 2026-10-23 · Mimar onayı («bu planı sevdim, kilitle»)  
 **Kaynak güvenli bölge:** 2026-10-22 · `0c919d60` · `origin/main`  
 **Süre beklentisi:** birkaç gün (faz faz; atlama yok)  
-**Aktif faz:** **P2** (P0✅ P1✅ 2026-10-23)
+**Aktif faz:** **P3** (P0✅ P1✅ P2✅ 2026-10-23)
 
 Bu dosya çok günlük çalışmada **tek sıra kaynağıdır**. Sapma yasak. Güncelleme: dilim yeşil → burada işaretle + `PROJE_DURUMU.md` özet.
 
@@ -46,7 +46,7 @@ M  Diğer motorlar (Video → Tercüme → Okuma → Mimar)
 |-------|-----|--------|--------|
 | **P0** | Baseline: BOOT=0 / BOOT=1 KPI, görev pili | Sayısal başlangıç | ✅ 2026-10-23 · `docs/P0_BASELINE_2026-10-23.md` |
 | **P1** | Supervised pattern kütüphanesi (VERSION/health ötesi sık niyetler) | Dar görev boot ↑ | ✅ 2026-10-23 · 5 pattern · smoke 9/9 |
-| **P2** | Niyet → ray sınıflayıcı (scaffold / ajan+boot / mega) | Yanlış ray ↓ | ⬜ |
+| **P2** | Niyet → ray sınıflayıcı (scaffold / ajan+boot / mega) | Yanlış ray ↓ | ✅ 2026-10-23 · smoke 26/26 |
 | **P3** | Dosya-dosya verify + heal→kök öğrenme | heal_r10 düşük; verify∧ok | ⬜ |
 | **P4** | BOOT=0 yazım iyileştirme (dürüst KPI; şişirme yok) | boot0 agent_ok ↑ | ⬜ |
 | **P5** | Scaffold ürün borusu (statik / react_vite / FastAPI) | Güvenli greenfield ray | ⬜ |
@@ -107,12 +107,12 @@ Her motor: ölçüm → derin iş → uygulama denemesi → mühür. Önceki mot
 
 | Faz | Durum |
 |-----|--------|
-| P | 🔄 P0✅ P1✅ · sırada P2 |
+| P | 🔄 P0–P2✅ · sırada P3 |
 | S | ⬜ P mühürüne bağlı |
 | V | ⬜ S mühürüne bağlı |
 | M | ⬜ V mühürüne bağlı |
 
-**Son işaret:** 2026-10-23 — P1 yeşil (import_fix · dict_field · ping_route + version/health) → P2.
+**Son işaret:** 2026-10-23 — P2 yeşil (ray: scaffold/faz85/boot/multi/mega) → P3.
 
 ---
 
