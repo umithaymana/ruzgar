@@ -546,6 +546,13 @@ def e2_write_template_nudge(scope_rel: str, goal: str = "") -> str:
         chunks.append(pattern_nudge_hints(scope_rel, goal or ""))
     except Exception:
         pass
+    # P3 — heal dersleri
+    try:
+        from ilim_assistant.motorlar.programlama_p3_file_verify import lessons_nudge_block
+
+        chunks.append(lessons_nudge_block(scope_rel))
+    except Exception:
+        pass
     return "".join(chunks)
 
 

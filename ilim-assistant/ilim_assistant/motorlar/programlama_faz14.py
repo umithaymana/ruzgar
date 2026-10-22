@@ -1810,6 +1810,41 @@ def iter_code_agent_turn_events(
         )
         _faz87_heal = False
         if verify and not verify.ok:
+            # P3: önce kök→pattern heal (import/dict/ping/version/health)
+            try:
+                from ilim_assistant.motorlar.programlama_p3_file_verify import (
+                    try_pattern_heal_from_verify,
+                )
+                from ilim_assistant.motorlar.programlama_motoru import WriteReport
+
+                _p3 = try_pattern_heal_from_verify(
+                    workspace,
+                    task.scope_rel,
+                    task.goal,
+                    verify_output=(verify.output if verify else "") or "",
+                )
+                if _p3.get("writes_ok"):
+                    for rel in _p3.get("paths") or []:
+                        if rel:
+                            summ.writes.append(
+                                WriteReport(
+                                    path=rel,
+                                    ok=True,
+                                    detail=f"P3 pattern heal ({_p3.get('pattern_id')})",
+                                )
+                            )
+                    verify = run_project_verify(
+                        workspace,
+                        task.scope_rel,
+                        goal=task.goal,
+                    )
+                    yield {
+                        "type": "status",
+                        "text": str(_p3.get("detail") or "P3 pattern heal")[:600],
+                    }
+            except Exception:
+                pass
+        if verify and not verify.ok:
             try:
                 from ilim_assistant.motorlar.programlama_faz87 import try_post_verify_heal
 

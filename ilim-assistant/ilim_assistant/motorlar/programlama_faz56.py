@@ -15,7 +15,7 @@ import unicodedata
 from pathlib import Path
 from typing import Any
 
-FAZ56_VERSION = "programlama-faz56-v1-2026-05-26"
+FAZ56_VERSION = "programlama-faz56-v1.1-p3-2026-10-23"
 _V2_MAX_TURNS_DEFAULT = 20
 _V2_BUDGET_SEC_DEFAULT = 1200.0
 _MAX_FILES_PER_TURN_DEFAULT = 8
@@ -192,14 +192,39 @@ def build_multi_file_plan_block(
     touched = set(touched_files or [])
     remaining = [t for t in targets if t not in touched]
     cap = max_files_per_turn()
+    # P3: çok dosyada fiilen 1 dosya/tur öner (sert tavan env'de kalabilir)
+    prefer_cap = 1
+    try:
+        from ilim_assistant.motorlar.programlama_p3_file_verify import (
+            p3_enabled,
+            p3_plan_suffix,
+        )
+
+        if p3_enabled():
+            prefer_cap = 1
+        else:
+            prefer_cap = cap
+    except Exception:
+        prefer_cap = cap
+    show_n = min(prefer_cap, cap)
     lines = [
         f"[ÇOK DOSYA PLANI — Faz 56 — tur {turn}]",
-        f"Bu turda en fazla **{cap}** dosya yaz.",
+        f"Bu turda en fazla **{show_n}** dosya yaz"
+        + (f" (sert tavan {cap})" if show_n < cap else "")
+        + ".",
         f"Kapsam: `{scope_rel}`",
     ]
+    try:
+        from ilim_assistant.motorlar.programlama_p3_file_verify import p3_plan_suffix
+
+        suf = p3_plan_suffix()
+        if suf:
+            lines.append(suf)
+    except Exception:
+        pass
     if remaining:
         lines.append("Öncelikli dosyalar:")
-        for rel in remaining[:cap]:
+        for rel in remaining[:show_n]:
             lines.append(f"  · `{rel}`")
     elif targets:
         lines.append("Hedef dosyaların çoğu işlendi — verify çalıştır.")
@@ -230,6 +255,17 @@ def count_turn_writes(
 
 def multi_file_cap_nudge(write_count: int) -> str | None:
     cap = max_files_per_turn()
+    # P3: 2+ dosya yazıldıysa uyarı (prefer 1)
+    try:
+        from ilim_assistant.motorlar.programlama_p3_file_verify import p3_enabled
+
+        if p3_enabled() and write_count >= 2:
+            return (
+                f"[P3] Bu turda {write_count} dosya yazıldı — limit aşıldı. "
+                "Şimdi verify; sonraki turda yalnız kalan 1 dosya."
+            )
+    except Exception:
+        pass
     if write_count <= cap:
         return None
     return (
