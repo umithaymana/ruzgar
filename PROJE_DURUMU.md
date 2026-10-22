@@ -163,7 +163,8 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
 43. ~~**B6 galaksi**~~ — tanım+örnek (Samanyolu/Andromeda) · smoke 6/6 · canlı yeşil.
 44. ~~**Zayıflık sırası B (B1–B6)**~~ tamam · commit `c4d18ce2` · `origin/main`.
 45. ~~ŞİMDİ (yarın): Zayıflık sırası C~~ — gece kaydı duruyor; **bugün harman planı** aşağıda.
-46. ~~**C1–C6 + H7 tamam**~~ ✅ 2026-10-22 · commit/push **emri bekle**.
+46. ~~**C1–C6 + H7**~~ ✅ commit `9de43125` · `origin/main`.
+47. **← ŞİMDİ:** **Sıra D — Araç sözleşmesi genişlemesi** (aşağı) — hedef programlama otonomi ~%70–75.
 47. Kapalı: dosya silmek, model kodu çalıştırmak, serbest dış yazmak, 32B/70B, telefon.
 48. **Boot sırası kilitli** (`.cursorrules`) — H turlarında değiştirilmez; «araç sözleşmesi» ≠ boot sırası (aşağı not).
 
@@ -247,11 +248,46 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
 
 | Sıra | İş | Neden | Çıkış |
 |------|-----|--------|--------|
-| **H1–H7** | Harman (C + mukayese) | Kalite ~%60–65 + moat | madde madde yeşil |
-| **inceleme** | Mimar detaylı bakış | EmirYalan + E + D | onay / revize |
-| **ölçüm** (isteğe) | 14b ılık + E2 | H5 ile birleşik | KPI ≥%60 |
+| ~~H1–H7~~ | Harman | C ile kapandı | ✅ |
+| **D1–D6** | Araç sözleşmesi | Programlama ~%70–75 tavanına yaklaş | madde madde yeşil |
+| **inceleme** | Mimar bakış | EmirYalan + E + D | onay / revize |
 
-**Öneri bugün:** C1 ile başla (Mimar: C bitince H).
+**Öneri şimdi:** D1 ile başla (Mimar onayı).
+
+### Sıra D — Araç sözleşmesi genişlemesi (2026-10-22 plan)
+
+**Kaynak:** Dün gece «motor boot/araç sözleşmesi» — **boot sırası değil**; programlama yazım dili + hub niyet.
+
+**Şimdi:** E2 `agent_ok` ~**%61** (8/13) · heal payı ~%52 · supervised boot hâlâ yedek.  
+**Hedef tavan (bu PC + 14b):** programlama otonomi **~%70–75** · genel iş bitirme ~%65–70.  
+**%90+ / Cursor seviyesi:** bu planda yok (daha güçlü sürekli beyin gerekir).
+
+**Çalışma kuralı:** C gibi — bir madde yeşil → sonraki; ölçüm → yama → smoke → canlı → bu dosyada işaret. Boot sırası **dokunulmaz**. Serbest kod çalıştırma / dosya silme **açılmaz**.
+
+| # | Katman | Zayıf nokta | Hedef çıkış | Doğrulama |
+|---|--------|-------------|-------------|-----------|
+| **D1** | Yazım dili | Model hâlâ fence/`@@patch` bozar; yazım-önce bazen zayıf | Geçerli patch oranı ↑; bölünmüş fence + çıplak VERSION kurtarma smoke geniş | Offline patch smoke + 1 canlı BOOT=0 |
+| **D2** | Mandate / tur | Keşif turu yazımı geciktirir; mandate tek sefer | 2. turda yazım zorunlu; oku-only tur cezası | Mandate smoke + canlı 1 görev |
+| **D3** | Supervised boot | BOOT=1 yeşil şişirir; BOOT=0 kırılgan | BOOT=0’da dar E2 `agent_ok` ≥%70 (son N=5 pencere) **veya** BOOT şartı net KPI’de ayrı | 3 canlı FORCE_HEAL=0 BOOT=0 |
+| **D4** | Heal payı | Heal ~%50 — otonomi maskeler | Heal payı ≤%35 (force_heal hariç) · agent_ok ≥%65 korunur | `compute_e2_stats` |
+| **D5** | Verify sözleşmesi | Verify yokken başarı sayılabiliyor | Yazım sonrası pytest/scope verify zorunlu; fails → heal kapısı | E2 offline + 1 canlı |
+| **D6** | Hub (hafif) | Yanlış motor anlık kenarda | Bilgi/görüş/programlama cümleleri doğru kapı; ses profil tuzağı yok | 5 tuzak smoke (C6 genişlet) |
+
+**Sıra:** D1 → D2 → D3 → D4 → D5 → D6.
+
+**Yapılır:**
+1. `@@patch` / `@@write` / search-replace sözleşmesini tek belgede netleştir (ajan sistem + tur mesajı).
+2. Kurtarma katmanı: split fence, path’siz search-replace, VERSION şablonu.
+3. Mandate: keşif bitince yazım turu; E2’de salt-okuma yasağı sıkı.
+4. KPI: `agent_ok` / `heal_share` / BOOT=0 ayrı satır.
+5. Hub classifier ince ayar (boot değil).
+
+**Yapılmaz (ayrı onay + açık `evet`):**
+- `.cursorrules` boot sırası değiştirmek
+- Serbest kod çalıştırma / serbest dış yazma / dosya silme
+- 32B/70B, telefon, Ollama’yı ağa açmak
+
+**Beklenen kazanç:** dar görevlerde (VERSION, health, 2–3 dosya patch) daha az heal; `agent_ok` **%61 → ~%70–75** bandı.
 
 ### 2026-10-18 / 19 — oturum kaydı (geç yazıldı)
 
