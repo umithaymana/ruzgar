@@ -10,13 +10,14 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 
 | Faz | İçerik | Durum |
 |-----|--------|--------|
-| **P** | Programlama tavanı + 2 pilot (CLI + web) | 🔄 **P0✅** → **P1** |
+| **P** | Programlama tavanı + 2 pilot (CLI + web) | 🔄 **P0✅ P1✅** → **P2** |
 | **S** | Sohbet muhakeme (niyet→kaynak→harman) | ⬜ P mühürüne bağlı |
 | **V** | Ses STT/TTS | ⬜ S mühürüne bağlı |
 | **M** | Video→Tercüme→Okuma→Mimar | ⬜ V mühürüne bağlı |
 
 **Kural:** birkaç günlük iş; dilim atlama / cila ile geçme yok. Ölçüm→yama→smoke→canlı→✅ · dilim yeşil → commit+push.  
 **P0 (2026-10-23):** agent_ok **%70** · recent5 **%80** · boot0 **%80** · offline E2 **5/5** · mühür YEŞİL · `docs/P0_BASELINE_2026-10-23.md`.  
+**P1 (2026-10-23):** supervised pattern lib — e2_version · health_fields · import_fix · dict_field · ping_route · smoke **9/9** · `programlama_supervised_patterns.py`.  
 **Temizlik:** P+S+V+M bitince `RUZGAR_YOL_HARITASI.md` + FROZEN kural silinir; bu blok kısaltılır (kalabalık olmasın).
 
 ### GÜVENLİ BÖLGE — 2026-10-22 (Mimar onayı) ← **AKTİF ALT TABAN**
@@ -279,10 +280,11 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
 | ~~H1–H7~~ | Harman | C ile kapandı | ✅ |
 | ~~D1–D6~~ | Araç sözleşmesi | Programlama ~%70 bandı · verify+hub | ✅ 2026-10-22 |
 | ~~inceleme~~ | Mimar bakış | EmirYalan + E + D tutuyor | ✅ 2026-10-22 gece |
-| **P→S→V→M** | Yol haritası | `RUZGAR_YOL_HARITASI.md` | 🔒 · P0✅ · **P1** |
+| **P→S→V→M** | Yol haritası | `RUZGAR_YOL_HARITASI.md` | 🔒 · P0✅ P1✅ · **P2** |
 | ~~P0~~ | Baseline KPI | agent_ok %70 · offline 5/5 | ✅ 2026-10-23 |
+| ~~P1~~ | Pattern kütüphanesi | 5 pattern · smoke 9/9 | ✅ 2026-10-23 |
 
-**Öneri şimdi:** **P1** supervised pattern kütüphanesi. Detay: yol haritası.
+**Öneri şimdi:** **P2** niyet→ray sınıflayıcı. Detay: yol haritası.
 
 ### Sıra D — Araç sözleşmesi genişlemesi (2026-10-22 plan)
 

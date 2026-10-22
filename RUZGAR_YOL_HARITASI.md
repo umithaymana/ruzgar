@@ -3,7 +3,7 @@
 **Kilit:** 2026-10-23 · Mimar onayı («bu planı sevdim, kilitle»)  
 **Kaynak güvenli bölge:** 2026-10-22 · `0c919d60` · `origin/main`  
 **Süre beklentisi:** birkaç gün (faz faz; atlama yok)  
-**Aktif faz:** **P1** (P0 ✅ 2026-10-23)
+**Aktif faz:** **P2** (P0✅ P1✅ 2026-10-23)
 
 Bu dosya çok günlük çalışmada **tek sıra kaynağıdır**. Sapma yasak. Güncelleme: dilim yeşil → burada işaretle + `PROJE_DURUMU.md` özet.
 
@@ -45,7 +45,7 @@ M  Diğer motorlar (Video → Tercüme → Okuma → Mimar)
 | Dilim | İş | Çıkış | Durum |
 |-------|-----|--------|--------|
 | **P0** | Baseline: BOOT=0 / BOOT=1 KPI, görev pili | Sayısal başlangıç | ✅ 2026-10-23 · `docs/P0_BASELINE_2026-10-23.md` |
-| **P1** | Supervised pattern kütüphanesi (VERSION/health ötesi sık niyetler) | Dar görev boot ↑ | ⬜ |
+| **P1** | Supervised pattern kütüphanesi (VERSION/health ötesi sık niyetler) | Dar görev boot ↑ | ✅ 2026-10-23 · 5 pattern · smoke 9/9 |
 | **P2** | Niyet → ray sınıflayıcı (scaffold / ajan+boot / mega) | Yanlış ray ↓ | ⬜ |
 | **P3** | Dosya-dosya verify + heal→kök öğrenme | heal_r10 düşük; verify∧ok | ⬜ |
 | **P4** | BOOT=0 yazım iyileştirme (dürüst KPI; şişirme yok) | boot0 agent_ok ↑ | ⬜ |
@@ -107,12 +107,12 @@ Her motor: ölçüm → derin iş → uygulama denemesi → mühür. Önceki mot
 
 | Faz | Durum |
 |-----|--------|
-| P | 🔄 P0✅ · sırada P1 |
+| P | 🔄 P0✅ P1✅ · sırada P2 |
 | S | ⬜ P mühürüne bağlı |
 | V | ⬜ S mühürüne bağlı |
 | M | ⬜ V mühürüne bağlı |
 
-**Son işaret:** 2026-10-23 — P0 yeşil (agent_ok %70 · offline 5/5 · mühür YEŞİL) → P1.
+**Son işaret:** 2026-10-23 — P1 yeşil (import_fix · dict_field · ping_route + version/health) → P2.
 
 ---
 

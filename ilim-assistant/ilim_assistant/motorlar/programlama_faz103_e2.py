@@ -23,7 +23,7 @@ import unicodedata
 from pathlib import Path
 from typing import Any
 
-FAZ103_VERSION = "programlama-faz103-e2-v1.3-2026-10-22"
+FAZ103_VERSION = "programlama-faz103-e2-v1.4-2026-10-23"
 _E2_BATTERY_TARGET = 0.90
 _INTENT_CASES: list[tuple[str, str]] = [
     ("health endpointine version 2.0.0 ekle pytest gecir", "faz85_fast"),
@@ -537,6 +537,15 @@ def e2_write_template_nudge(scope_rel: str, goal: str = "") -> str:
             "ham satır + hemen altında ```search-replace.\n"
             + _e2_multi_version_patch(scope_rel)
         )
+    # P1 — ek pattern şablon ipuçları
+    try:
+        from ilim_assistant.motorlar.programlama_supervised_patterns import (
+            pattern_nudge_hints,
+        )
+
+        chunks.append(pattern_nudge_hints(scope_rel, goal or ""))
+    except Exception:
+        pass
     return "".join(chunks)
 
 
@@ -620,9 +629,8 @@ def try_e2_supervised_write_boot(
     goal: str = "",
 ) -> dict[str, Any]:
     """
-    Tur içinde 0 yazım → deterministik yedek:
-    1) E2 bozuk VERSION patch
-    2) Health status/ok alan yaması (Faz85)
+    Tur içinde 0 yazım → deterministik yedek (P1 pattern kütüphanesi):
+    e2_version · health_fields · import_fix · dict_field · ping_route
     Kapat: RUZGAR_E2_SUPERVISED_BOOT=0
     """
     empty: dict[str, Any] = {
@@ -635,39 +643,28 @@ def try_e2_supervised_write_boot(
     if not _enabled() or not e2_supervised_boot_enabled():
         empty["detail"] = "supervised boot kapalı"
         return empty
-    # 1) Klasik E2 VERSION boot
-    if _e2_multi_goal(goal) and _e2_version_broken_on_disk(workspace_root, scope_rel):
-        try:
-            from ilim_assistant.motorlar.programlama_motoru import repo_root
-            from ilim_assistant.motorlar.programlama_patch import apply_patch_jobs
+    try:
+        from ilim_assistant.motorlar.programlama_supervised_patterns import (
+            try_supervised_pattern_library,
+        )
 
-            root = repo_root(workspace_root)
-            if root is not None:
-                patch = _e2_multi_version_patch(scope_rel)
-                reps = apply_patch_jobs(patch, root)
-                paths = [
-                    getattr(r, "path", "")
-                    for r in reps
-                    if r.ok and getattr(r, "path", "")
-                ]
-                writes = len(paths)
-                if writes >= 1:
-                    return {
-                        "ok": True,
-                        "writes_ok": writes,
-                        "paths": paths,
-                        "detail": f"supervised boot writes={writes}",
-                        "source": "e2_supervised_boot",
-                    }
-        except Exception as exc:
-            empty["detail"] = str(exc)[:200]
-    # 2) Health alan yedek (ajan 0 write)
-    health_boot = try_supervised_health_fields_boot(workspace_root, scope_rel, goal)
-    if health_boot.get("writes_ok"):
-        return health_boot
-    if not empty.get("detail"):
-        empty["detail"] = health_boot.get("detail") or "supervised aday yok"
-    return empty
+        hit = try_supervised_pattern_library(workspace_root, scope_rel, goal)
+        if hit.get("writes_ok"):
+            # Geriye uyum: e2_version klasik source adı
+            src = str(hit.get("source") or "")
+            if hit.get("pattern_id") == "e2_version":
+                hit = dict(hit)
+                hit["source"] = "e2_supervised_boot"
+                hit["detail"] = f"supervised boot writes={hit.get('writes_ok')}"
+            elif hit.get("pattern_id") == "health_fields":
+                hit = dict(hit)
+                hit["source"] = "e2_supervised_health_fields"
+            return hit
+        empty["detail"] = str(hit.get("detail") or "supervised aday yok")
+        return empty
+    except Exception as exc:
+        empty["detail"] = str(exc)[:200]
+        return empty
 
 
 def _run_offline_multi_heal(
