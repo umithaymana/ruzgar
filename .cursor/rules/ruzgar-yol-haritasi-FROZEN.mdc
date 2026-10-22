@@ -1,0 +1,40 @@
+---
+description: Mimar kilitli yol haritası — P→S→V→M sıra ve derin dilim; atlama yasak (2026-10-23)
+alwaysApply: true
+---
+
+# Rüzgar yol haritası kilidi — 2026-10-23
+
+Mimar bu planı beğendi ve kilitledi («sakın kayma olmasın»). Tam metin: kök `RUZGAR_YOL_HARITASI.md`.  
+**Aksini açıkça söyleyene ve açık `evet` verene kadar** sıra ve kurallar bozulmaz.
+
+## Bağlayıcı sıra
+
+1. **Faz P** — Programlama tavanı + 2 pilot ürün  
+2. **Faz S** — Sohbet muhakeme (anla → kaynak → harman → doğru konuş)  
+3. **Faz V** — Ses (STT + TTS gecikme)  
+4. **Faz M** — Video → Tercüme → Okuma → Mimar  
+
+Faz bitmeden (mühür + `RUZGAR_YOL_HARITASI.md` işaret) sonraki faza geçilmez.  
+Dilim atlama / «hızlı cila» / paralel faz açma **yasak**.
+
+## Dilim kuralı
+
+Her dilim: ölçüm → yama → smoke → canlı → dosyada ✅ → sonraki.  
+Yüzeysel cila ile «bitti» sayılmaz.
+
+## Açık istisnalar (ayrı `evet` şart)
+
+- `.cursorrules` motor boot sırası  
+- Serbest kod exec / dosya silme / 32B–70B / telefon  
+- Ümit cevap emrinde web sırasını değiştirmek (S4)
+
+## Ajan davranışı
+
+- Sohbet sıfırlansa bile önce `RUZGAR_YOL_HARITASI.md` + `PROJE_DURUMU.md` oku; aktif dilimi kaçırma.  
+- Mimar «şunu da yap» derse ve sıra dışıysa: önce uyar, onayla; onaysız sapma yok.  
+- Güvenli bölge 2026-10-22 alt taban kalır; P/S/V/M onu bozmadan üstüne iner.
+
+## Temizlik (Mimar 2026-10-23)
+
+P+S+V+M **hepsi mühürlenince**: `RUZGAR_YOL_HARITASI.md` + bu FROZEN kural silinebilir; `PROJE_DURUMU.md` yol bloğu kısaltılır. Erken silme yok.

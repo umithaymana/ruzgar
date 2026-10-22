@@ -1,10 +1,25 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-22 — **GÜVENLİ BÖLGE** (D1–D6 + inceleme + hub ince ayar) · Mimar onayı.
+**Son güncelleme:** 2026-10-23 — **YOL HARİTASI KİLİTLİ** (P→S→V→M) · güvenli bölge alt taban duruyor.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
-### GÜVENLİ BÖLGE — 2026-10-22 (Mimar onayı) ← **AKTİF**
+### YOL HARİTASI — 2026-10-23 (Mimar onayı) ← **KİLİTLİ SIRA**
+
+**Tek kaynak:** `RUZGAR_YOL_HARITASI.md` · kural: `.cursor/rules/ruzgar-yol-haritasi-FROZEN.mdc`
+
+| Faz | İçerik | Durum |
+|-----|--------|--------|
+| **P** | Programlama tavanı + 2 pilot (CLI + web) | 🔄 **P0✅** → **P1** |
+| **S** | Sohbet muhakeme (niyet→kaynak→harman) | ⬜ P mühürüne bağlı |
+| **V** | Ses STT/TTS | ⬜ S mühürüne bağlı |
+| **M** | Video→Tercüme→Okuma→Mimar | ⬜ V mühürüne bağlı |
+
+**Kural:** birkaç günlük iş; dilim atlama / cila ile geçme yok. Ölçüm→yama→smoke→canlı→✅ · dilim yeşil → commit+push.  
+**P0 (2026-10-23):** agent_ok **%70** · recent5 **%80** · boot0 **%80** · offline E2 **5/5** · mühür YEŞİL · `docs/P0_BASELINE_2026-10-23.md`.  
+**Temizlik:** P+S+V+M bitince `RUZGAR_YOL_HARITASI.md` + FROZEN kural silinir; bu blok kısaltılır (kalabalık olmasın).
+
+### GÜVENLİ BÖLGE — 2026-10-22 (Mimar onayı) ← **AKTİF ALT TABAN**
 
 **İlke:** Buradan geri dönüş güvenli. Push `origin/main` ile hizalı kayıt.
 
@@ -263,9 +278,11 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
 |------|-----|--------|--------|
 | ~~H1–H7~~ | Harman | C ile kapandı | ✅ |
 | ~~D1–D6~~ | Araç sözleşmesi | Programlama ~%70 bandı · verify+hub | ✅ 2026-10-22 |
-| **inceleme** | Mimar bakış | EmirYalan + E + D | onay / revize |
+| ~~inceleme~~ | Mimar bakış | EmirYalan + E + D tutuyor | ✅ 2026-10-22 gece |
+| **P→S→V→M** | Yol haritası | `RUZGAR_YOL_HARITASI.md` | 🔒 · P0✅ · **P1** |
+| ~~P0~~ | Baseline KPI | agent_ok %70 · offline 5/5 | ✅ 2026-10-23 |
 
-**Öneri şimdi:** D kapandı — commit+push emri veya sonraki sıra.
+**Öneri şimdi:** **P1** supervised pattern kütüphanesi. Detay: yol haritası.
 
 ### Sıra D — Araç sözleşmesi genişlemesi (2026-10-22 plan)
 
