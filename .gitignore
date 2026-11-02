@@ -85,6 +85,9 @@ ilim-assistant/arsiv/**/*.txt
 ilim-assistant/arsiv/**/*.json.gz
 ilim-assistant/arsiv/**/*.gz
 
+# Bilgisayar eserleri ham indirmeler (PDF/HTML) yerelde kalır; metin/katalog commit edilir
+ilim-assistant/knowledge/ortak_kaynak/alanlar/bilgisayar_eserleri/**/raw/
+
 # Klon sesler — Ümit özel (asla commit / push edilmez)
 ilim-assistant/arsiv/klon-sesler-umit-ozel/**
 !ilim-assistant/arsiv/klon-sesler-umit-ozel/.gitkeep

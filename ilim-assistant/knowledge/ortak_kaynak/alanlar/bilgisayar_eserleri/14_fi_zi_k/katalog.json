@@ -1,0 +1,47 @@
+{
+  "dal": "14_fi_zi_k",
+  "excel": "14 - ) FİZİK.xlsx",
+  "n_list": 150,
+  "sources": 4,
+  "ok_sources": 4,
+  "ilave_rows": 3,
+  "updated_utc": "2026-11-02T23:18:09.139821+00:00",
+  "skills": [
+    "fizik temelleri",
+    "açık ders kitapları yönü"
+  ],
+  "kaynaklar": {
+    "open_data_structures": {
+      "kaynak_id": "14_fi_zi_k_open_data_structures",
+      "baslik": "Open Data Structures",
+      "url": "https://opendatastructures.org/ods-python.pdf",
+      "dal": "14_fi_zi_k",
+      "ok": true,
+      "parca": 10
+    },
+    "algorithms_jeff_erickson_": {
+      "kaynak_id": "14_fi_zi_k_algorithms_jeff_erickson_",
+      "baslik": "Algorithms (Jeff Erickson)",
+      "url": "https://jeffe.cs.illinois.edu/teaching/algorithms/book/Algorithms-JeffE.pdf",
+      "dal": "14_fi_zi_k",
+      "ok": true,
+      "parca": 18
+    },
+    "competitive_programmer_s_handbook": {
+      "kaynak_id": "14_fi_zi_k_competitive_programmer_s_handbook",
+      "baslik": "Competitive Programmer's Handbook",
+      "url": "https://cses.fi/book/book.pdf",
+      "dal": "14_fi_zi_k",
+      "ok": true,
+      "parca": 11
+    },
+    "operating_systems_three_easy_pieces": {
+      "kaynak_id": "14_fi_zi_k_operating_systems_three_easy_pieces",
+      "baslik": "Operating Systems: Three Easy Pieces",
+      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
+      "dal": "14_fi_zi_k",
+      "ok": true,
+      "parca": 1
+    }
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "dal": "08_yazilim_mi_mari_leri_",
+  "excel": "8 - ) YAZILIM MİMARİLERİ.xlsx",
+  "n_list": 100,
+  "sources": 6,
+  "ok_sources": 6,
+  "ilave_rows": 3,
+  "updated_utc": "2026-11-02T23:14:14.425259+00:00",
+  "skills": [
+    "yazılım mimarisi",
+    "desenler",
+    "AOSA",
+    "ölçeklenebilirlik"
+  ],
+  "kaynaklar": {
+    "hpbn": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__hpbn",
+      "baslik": "HPBN",
+      "url": "https://hpbn.co/",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "ok": true,
+      "parca": 1
+    },
+    "segoogle": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__segoogle",
+      "baslik": "SE at Google",
+      "url": "https://abseil.io/resources/swe-book",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "ok": true,
+      "parca": 1
+    },
+    "open_data_structures": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__open_data_structures",
+      "baslik": "Open Data Structures",
+      "url": "https://opendatastructures.org/ods-python.pdf",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "ok": true,
+      "parca": 10
+    },
+    "algorithms_jeff_erickson_": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__algorithms_jeff_erickson_",
+      "baslik": "Algorithms (Jeff Erickson)",
+      "url": "https://jeffe.cs.illinois.edu/teaching/algorithms/book/Algorithms-JeffE.pdf",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "ok": true,
+      "parca": 18
+    },
+    "competitive_programmer_s_handbook": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__competitive_programmer_s_handbook",
+      "baslik": "Competitive Programmer's Handbook",
+      "url": "https://cses.fi/book/book.pdf",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "ok": true,
+      "parca": 11
+    },
+    "operating_systems_three_easy_pieces": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__operating_systems_three_easy_pieces",
+      "baslik": "Operating Systems: Three Easy Pieces",
+      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "ok": true,
+      "parca": 1
+    }
+  }
+}

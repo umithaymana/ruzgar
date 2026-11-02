@@ -1,0 +1,63 @@
+{
+  "dal": "11_c_s",
+  "excel": "11 - ) C-S.xlsx",
+  "n_list": 150,
+  "sources": 6,
+  "ok_sources": 5,
+  "ilave_rows": 3,
+  "updated_utc": "2026-11-02T23:16:30.184621+00:00",
+  "skills": [
+    "bilgisayar bilimine giriş",
+    "temel CS omurgası"
+  ],
+  "kaynaklar": {
+    "n2t": {
+      "kaynak_id": "11_c_s_n2t",
+      "baslik": "NAND2Tetris",
+      "url": "https://www.nand2tetris.org/",
+      "dal": "11_c_s",
+      "ok": true,
+      "parca": 1
+    },
+    "sicp": {
+      "kaynak_id": "11_c_s_sicp",
+      "baslik": "SICP",
+      "url": "https://mitp-content-server.mit.edu/books/content/sectbye/zeichs/sicp.zip",
+      "dal": "11_c_s",
+      "ok": false,
+      "parca": 1
+    },
+    "open_data_structures": {
+      "kaynak_id": "11_c_s_open_data_structures",
+      "baslik": "Open Data Structures",
+      "url": "https://opendatastructures.org/ods-python.pdf",
+      "dal": "11_c_s",
+      "ok": true,
+      "parca": 10
+    },
+    "algorithms_jeff_erickson_": {
+      "kaynak_id": "11_c_s_algorithms_jeff_erickson_",
+      "baslik": "Algorithms (Jeff Erickson)",
+      "url": "https://jeffe.cs.illinois.edu/teaching/algorithms/book/Algorithms-JeffE.pdf",
+      "dal": "11_c_s",
+      "ok": true,
+      "parca": 18
+    },
+    "competitive_programmer_s_handbook": {
+      "kaynak_id": "11_c_s_competitive_programmer_s_handbook",
+      "baslik": "Competitive Programmer's Handbook",
+      "url": "https://cses.fi/book/book.pdf",
+      "dal": "11_c_s",
+      "ok": true,
+      "parca": 11
+    },
+    "operating_systems_three_easy_pieces": {
+      "kaynak_id": "11_c_s_operating_systems_three_easy_pieces",
+      "baslik": "Operating Systems: Three Easy Pieces",
+      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
+      "dal": "11_c_s",
+      "ok": true,
+      "parca": 1
+    }
+  }
+}

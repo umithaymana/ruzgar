@@ -1,0 +1,57 @@
+{
+  "dal": "04_veri_tabanlari",
+  "excel": "4 - ) VERİ TABANLARI.xlsx",
+  "n_list": 100,
+  "sources": 5,
+  "ok_sources": 5,
+  "ilave_rows": 3,
+  "updated_utc": "2026-11-02T23:12:02.611243+00:00",
+  "skills": [
+    "veritabanı modeli",
+    "SQL",
+    "işlem/concurrency",
+    "depolama"
+  ],
+  "kaynaklar": {
+    "open_data_structures": {
+      "kaynak_id": "04_veri_tabanlari_open_data_structures",
+      "baslik": "Open Data Structures",
+      "url": "https://opendatastructures.org/ods-python.pdf",
+      "dal": "04_veri_tabanlari",
+      "ok": true,
+      "parca": 10
+    },
+    "algorithms_jeff_erickson_": {
+      "kaynak_id": "04_veri_tabanlari_algorithms_jeff_erickson_",
+      "baslik": "Algorithms (Jeff Erickson)",
+      "url": "https://jeffe.cs.illinois.edu/teaching/algorithms/book/Algorithms-JeffE.pdf",
+      "dal": "04_veri_tabanlari",
+      "ok": true,
+      "parca": 18
+    },
+    "competitive_programmer_s_handbook": {
+      "kaynak_id": "04_veri_tabanlari_competitive_programmer_s_handbook",
+      "baslik": "Competitive Programmer's Handbook",
+      "url": "https://cses.fi/book/book.pdf",
+      "dal": "04_veri_tabanlari",
+      "ok": true,
+      "parca": 11
+    },
+    "operating_systems_three_easy_pieces": {
+      "kaynak_id": "04_veri_tabanlari_operating_systems_three_easy_pieces",
+      "baslik": "Operating Systems: Three Easy Pieces",
+      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
+      "dal": "04_veri_tabanlari",
+      "ok": true,
+      "parca": 1
+    },
+    "think_stats": {
+      "kaynak_id": "04_veri_tabanlari_think_stats",
+      "baslik": "Think Stats",
+      "url": "https://greenteapress.com/thinkstats2/thinkstats2.pdf",
+      "dal": "04_veri_tabanlari",
+      "ok": true,
+      "parca": 10
+    }
+  }
+}

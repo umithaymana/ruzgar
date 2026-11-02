@@ -1,0 +1,3 @@
+# Büyük ham PDF'ler git'e girmesin (yerelde kalsın)
+paket_*/raw/**
+!paket_*/raw/.gitkeep

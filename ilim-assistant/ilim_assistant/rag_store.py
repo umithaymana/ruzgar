@@ -671,7 +671,10 @@ _ORTAK_DOMAIN_HINTS: tuple[tuple[tuple[str, ...], tuple[str, ...]], ...] = (
             "hash tablosu",
             "birim testi",
         ),
-        ("ortak_kaynak/alanlar/bilgisayar_muhendisligi",),
+        (
+            "ortak_kaynak/alanlar/bilgisayar_muhendisligi",
+            "ortak_kaynak/alanlar/bilgisayar_eserleri",
+        ),
     ),
     (
         (

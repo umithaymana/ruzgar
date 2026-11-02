@@ -1,0 +1,91 @@
+{
+  "paket_id": "paket_01_yasal",
+  "baslik": "Bilgisayar eserleri — yasal paket 1",
+  "updated_utc": "2026-11-02T22:17:48.205946+00:00",
+  "eser_sayisi": 7,
+  "eserler": [
+    {
+      "kaynak_id": "bm_eser_ostep",
+      "baslik": "Operating Systems: Three Easy Pieces (seçme bölümler)",
+      "yazar": "Remzi & Andrea Arpaci-Dusseau",
+      "lisans": "Ücretsiz çevrimiçi bölümler (ostep.org / UW)",
+      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
+      "checksum": "",
+      "parca_sayisi": 42,
+      "durum": "metin_hazir"
+    },
+    {
+      "kaynak_id": "bm_eser_think_python_2",
+      "baslik": "Think Python 2e",
+      "yazar": "Allen B. Downey",
+      "lisans": "CC BY-NC 3.0 (Green Tea Press)",
+      "url": "https://greenteapress.com/thinkpython2/thinkpython2.pdf",
+      "checksum": "6033000bac3f9268",
+      "parca_sayisi": 42,
+      "pdf": "raw/think_python_2.pdf",
+      "durum": "metin_hazir",
+      "max_pages": null
+    },
+    {
+      "kaynak_id": "bm_eser_think_stats_2",
+      "baslik": "Think Stats 2e",
+      "yazar": "Allen B. Downey",
+      "lisans": "CC BY-NC (Green Tea Press)",
+      "url": "https://greenteapress.com/thinkstats2/thinkstats2.pdf",
+      "checksum": "5dbea9094f360647",
+      "parca_sayisi": 33,
+      "pdf": "raw/think_stats_2.pdf",
+      "durum": "metin_hazir",
+      "max_pages": null
+    },
+    {
+      "kaynak_id": "bm_eser_think_bayes",
+      "baslik": "Think Bayes",
+      "yazar": "Allen B. Downey",
+      "lisans": "CC BY-NC (Green Tea Press)",
+      "url": "https://greenteapress.com/thinkbayes/thinkbayes.pdf",
+      "checksum": "e397a764badb0e33",
+      "parca_sayisi": 28,
+      "pdf": "raw/think_bayes_2.pdf",
+      "durum": "metin_hazir",
+      "max_pages": null
+    },
+    {
+      "kaynak_id": "bm_eser_open_data_structures",
+      "baslik": "Open Data Structures (Python)",
+      "yazar": "Pat Morin",
+      "lisans": "CC BY (opendatastructures.org)",
+      "url": "https://opendatastructures.org/ods-python.pdf",
+      "checksum": "2bdd7e8129fff83d",
+      "parca_sayisi": 41,
+      "pdf": "raw/open_data_structures_python.pdf",
+      "durum": "metin_hazir",
+      "max_pages": null
+    },
+    {
+      "kaynak_id": "bm_eser_eloquent_javascript",
+      "baslik": "Eloquent JavaScript",
+      "yazar": "Marijn Haverbeke",
+      "lisans": "CC BY-NC",
+      "url": "https://eloquentjavascript.net/",
+      "checksum": "766bc412d270dc34",
+      "parca_sayisi": 70,
+      "pdf": "raw/eloquent_javascript.pdf",
+      "durum": "metin_hazir",
+      "max_pages": null
+    },
+    {
+      "kaynak_id": "bm_eser_rl_sutton_barto",
+      "baslik": "Reinforcement Learning: An Introduction (2e) — ilk bölümler",
+      "yazar": "Sutton & Barto",
+      "lisans": "Yazar sitesinden ücretsiz PDF (incompleteideas.net)",
+      "url": "http://incompleteideas.net/book/RLbook2020.pdf",
+      "checksum": "2dd0d71d9ee883fb",
+      "parca_sayisi": 21,
+      "pdf": "raw/rl_sutton_barto_2020.pdf",
+      "durum": "metin_hazir",
+      "max_pages": 80
+    }
+  ],
+  "not": "Telifli ticari kitaplar yok. RL PDF'nin tamamı raw'da; metin ilk sayfalar."
+}

@@ -1,0 +1,65 @@
+{
+  "dal": "05_a_teknoloji_leri_",
+  "excel": "5 - ) AĞ TEKNOLOJİLERİ.xlsx",
+  "n_list": 100,
+  "sources": 6,
+  "ok_sources": 6,
+  "ilave_rows": 3,
+  "updated_utc": "2026-11-02T23:12:41.387071+00:00",
+  "skills": [
+    "bilgisayar ağları",
+    "TCP/IP",
+    "protokoller",
+    "Beej/HPBN"
+  ],
+  "kaynaklar": {
+    "hpbn": {
+      "kaynak_id": "05_a_teknoloji_leri__hpbn",
+      "baslik": "HPBN",
+      "url": "https://hpbn.co/",
+      "dal": "05_a_teknoloji_leri_",
+      "ok": true,
+      "parca": 1
+    },
+    "open_data_structures": {
+      "kaynak_id": "05_a_teknoloji_leri__open_data_structures",
+      "baslik": "Open Data Structures",
+      "url": "https://opendatastructures.org/ods-python.pdf",
+      "dal": "05_a_teknoloji_leri_",
+      "ok": true,
+      "parca": 10
+    },
+    "algorithms_jeff_erickson_": {
+      "kaynak_id": "05_a_teknoloji_leri__algorithms_jeff_erickson_",
+      "baslik": "Algorithms (Jeff Erickson)",
+      "url": "https://jeffe.cs.illinois.edu/teaching/algorithms/book/Algorithms-JeffE.pdf",
+      "dal": "05_a_teknoloji_leri_",
+      "ok": true,
+      "parca": 18
+    },
+    "competitive_programmer_s_handbook": {
+      "kaynak_id": "05_a_teknoloji_leri__competitive_programmer_s_handbook",
+      "baslik": "Competitive Programmer's Handbook",
+      "url": "https://cses.fi/book/book.pdf",
+      "dal": "05_a_teknoloji_leri_",
+      "ok": true,
+      "parca": 11
+    },
+    "operating_systems_three_easy_pieces": {
+      "kaynak_id": "05_a_teknoloji_leri__operating_systems_three_easy_pieces",
+      "baslik": "Operating Systems: Three Easy Pieces",
+      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
+      "dal": "05_a_teknoloji_leri_",
+      "ok": true,
+      "parca": 1
+    },
+    "beej_s_guide_to_network_programming": {
+      "kaynak_id": "05_a_teknoloji_leri__beej_s_guide_to_network_programming",
+      "baslik": "Beej's Guide to Network Programming",
+      "url": "https://beej.us/guide/bgnet/pdf/bgnet_usl_c_1.pdf",
+      "dal": "05_a_teknoloji_leri_",
+      "ok": true,
+      "parca": 16
+    }
+  }
+}

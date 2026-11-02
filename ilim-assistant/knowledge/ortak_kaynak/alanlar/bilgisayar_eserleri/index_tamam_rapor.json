@@ -1,0 +1,396 @@
+{
+  "stats": {
+    "1": {
+      "n": 103,
+      "indir": 19,
+      "muadil": 84,
+      "ilave": 3,
+      "sources": null,
+      "ok_sources": null,
+      "skills": [],
+      "ozet": "Yükleme tamamlandı. 100 eser kütüphaneye uygun şekilde yerleştirildi (37 benzersiz yasal kaynak). Konum: knowledge/ortak_kaynak/alanlar/bilgisayar_eserleri/01_programlama/",
+      "kazanim": "Bu dosyadaki eserler / muadiller / ilavelerle Rüzgar şu becerilere sahip oldu: Python temelleri ve otomatikleştirme (Think Python, Automate, PY4E) · Veri yapıları (Open Data Structures) · Klasik CS düşüncesi (SICP) ve UNIX kültürü · Rust dili (resmi kitap + Zero2Prod yönü) · JavaScript (Eloquent JS, YDKJS) ve tarayıcı ağı (HPBN) · Haskell’e giriş (LYAH, Real World Haskell) · Yorumlayıcı / dil tasarımı (Crafting Interpreters) · Yazılım mimarisi örnekleri (AOSA) ve Google SE pratikleri · C/C++ modern rehberler (Modern C, C++ Core Guidelines) · Go / TypeScript / React / Vue / Angular resmi doküman omurgası · Ağ ve IPC (Beej), eşzamanlılık (Little Book of Semaphores) · Güvenli kodlama (OWASP), açık kaynak proje yönetimi (Producing OSS) · Algoritma derinliği (Jeff Erickson) — TAOCP boşluğunun yasal muadili · Geliştirici araçları ve öz-disiplin (Missing Semester)",
+      "excel": "1 - ) PROGRAMLAMA_F_karar.xlsx"
+    },
+    "10": {
+      "n": 153,
+      "indir": 5,
+      "muadil": 148,
+      "ilave": 3,
+      "sources": 6,
+      "ok_sources": 6,
+      "skills": [
+        "veri bilimi",
+        "istatistik (Think Stats/Bayes)",
+        "analiz borusu"
+      ],
+      "ozet": "Yükleme tamamlandı. 150 eser kütüphaneye uygun şekilde yerleştirildi (6 benzersiz yasal kaynak, 3 ilave satır). Konum: knowledge/ortak_kaynak/alanlar/bilgisayar_eserleri/10_veri_bi_li_mi_/",
+      "kazanim": "Bu dosyadaki eserler/muadillerle Rüzgar şu becerilere sahip oldu: veri bilimi · istatistik (Think Stats/Bayes) · analiz borusu",
+      "excel": "10 - ) VERİ BİLİMİ_F_karar.xlsx"
+    },
+    "11": {
+      "n": 153,
+      "indir": 5,
+      "muadil": 148,
+      "ilave": 3,
+      "sources": 6,
+      "ok_sources": 5,
+      "skills": [
+        "bilgisayar bilimine giriş",
+        "temel CS omurgası"
+      ],
+      "ozet": "Yükleme tamamlandı. 150 eser kütüphaneye uygun şekilde yerleştirildi (6 benzersiz yasal kaynak, 3 ilave satır). Konum: knowledge/ortak_kaynak/alanlar/bilgisayar_eserleri/11_c_s/",
+      "kazanim": "Bu dosyadaki eserler/muadillerle Rüzgar şu becerilere sahip oldu: bilgisayar bilimine giriş · temel CS omurgası",
+      "excel": "11 - ) C-S_F_karar.xlsx"
+    },
+    "12": {
+      "n": 153,
+      "indir": 5,
+      "muadil": 148,
+      "ilave": 3,
+      "sources": 6,
+      "ok_sources": 6,
+      "skills": [
+        "bilgisayar mühendisliği",
+        "donanım-yazılım köprüsü",
+        "NAND2Tetris yönü"
+      ],
+      "ozet": "Yükleme tamamlandı. 150 eser kütüphaneye uygun şekilde yerleştirildi (6 benzersiz yasal kaynak, 3 ilave satır). Konum: knowledge/ortak_kaynak/alanlar/bilgisayar_eserleri/12_bi_lgi_sayar_m_hendi_sli_i_/",
+      "kazanim": "Bu dosyadaki eserler/muadillerle Rüzgar şu becerilere sahip oldu: bilgisayar mühendisliği · donanım-yazılım köprüsü · NAND2Tetris yönü",
+      "excel": "12 - ) BİLGİSAYAR MÜHENDİSLİĞİ_F_karar.xlsx"
+    },
+    "13": {
+      "n": 153,
+      "indir": 4,
+      "muadil": 149,
+      "ilave": 3,
+      "sources": 5,
+      "ok_sources": 5,
+      "skills": [
+        "mühendislik matematiği",
+        "kalkülüs/lineer cebir açık kaynaklar"
+      ],
+      "ozet": "Yükleme tamamlandı. 150 eser kütüphaneye uygun şekilde yerleştirildi (5 benzersiz yasal kaynak, 3 ilave satır). Konum: knowledge/ortak_kaynak/alanlar/bilgisayar_eserleri/13_matemati_k/",
+      "kazanim": "Bu dosyadaki eserler/muadillerle Rüzgar şu becerilere sahip oldu: mühendislik matematiği · kalkülüs/lineer cebir açık kaynaklar",
+      "excel": "13 - ) MATEMATİK_F_karar.xlsx"
+    },
+    "14": {
+      "n": 153,
+      "indir": 3,
+      "muadil": 150,
+      "ilave": 3,
+      "sources": 4,
+      "ok_sources": 4,
+      "skills": [
+        "fizik temelleri",
+        "açık ders kitapları yönü"
+      ],
+      "ozet": "Yükleme tamamlandı. 150 eser kütüphaneye uygun şekilde yerleştirildi (4 benzersiz yasal kaynak, 3 ilave satır). Konum: knowledge/ortak_kaynak/alanlar/bilgisayar_eserleri/14_fi_zi_k/",
+      "kazanim": "Bu dosyadaki eserler/muadillerle Rüzgar şu becerilere sahip oldu: fizik temelleri · açık ders kitapları yönü",
+      "excel": "14 - ) FİZİK_F_karar.xlsx"
+    },
+    "15": {
+      "n": 153,
+      "indir": 3,
+      "muadil": 150,
+      "ilave": 3,
+      "sources": 4,
+      "ok_sources": 4,
+      "skills": [
+        "elektronik temelleri",
+        "açık kaynak dersler"
+      ],
+      "ozet": "Yükleme tamamlandı. 150 eser kütüphaneye uygun şekilde yerleştirildi (4 benzersiz yasal kaynak, 3 ilave satır). Konum: knowledge/ortak_kaynak/alanlar/bilgisayar_eserleri/15_elektroni_k/",
+      "kazanim": "Bu dosyadaki eserler/muadillerle Rüzgar şu becerilere sahip oldu: elektronik temelleri · açık kaynak dersler",
+      "excel": "15 - ) ELEKTRONİK_F_karar.xlsx"
+    },
+    "16": {
+      "n": 153,
+      "indir": 4,
+      "muadil": 149,
+      "ilave": 3,
+      "sources": 5,
+      "ok_sources": 5,
+      "skills": [
+        "robotik temelleri",
+        "kontrol/ROS doküman yönü"
+      ],
+      "ozet": "Yükleme tamamlandı. 150 eser kütüphaneye uygun şekilde yerleştirildi (5 benzersiz yasal kaynak, 3 ilave satır). Konum: knowledge/ortak_kaynak/alanlar/bilgisayar_eserleri/16_roboti_k/",
+      "kazanim": "Bu dosyadaki eserler/muadillerle Rüzgar şu becerilere sahip oldu: robotik temelleri · kontrol/ROS doküman yönü",
+      "excel": "16 - ) ROBOTİK_F_karar.xlsx"
+    },
+    "17": {
+      "n": 153,
+      "indir": 3,
+      "muadil": 150,
+      "ilave": 3,
+      "sources": 4,
+      "ok_sources": 4,
+      "skills": [
+        "mekatronik sistem düşüncesi"
+      ],
+      "ozet": "Yükleme tamamlandı. 150 eser kütüphaneye uygun şekilde yerleştirildi (4 benzersiz yasal kaynak, 3 ilave satır). Konum: knowledge/ortak_kaynak/alanlar/bilgisayar_eserleri/17_mekatroni_k/",
+      "kazanim": "Bu dosyadaki eserler/muadillerle Rüzgar şu becerilere sahip oldu: mekatronik sistem düşüncesi",
+      "excel": "17 - ) MEKATRONİK_F_karar.xlsx"
+    },
+    "18": {
+      "n": 153,
+      "indir": 3,
+      "muadil": 150,
+      "ilave": 3,
+      "sources": 4,
+      "ok_sources": 4,
+      "skills": [
+        "bilimsel araştırma yöntemi"
+      ],
+      "ozet": "Yükleme tamamlandı. 150 eser kütüphaneye uygun şekilde yerleştirildi (4 benzersiz yasal kaynak, 3 ilave satır). Konum: knowledge/ortak_kaynak/alanlar/bilgisayar_eserleri/18_bi_li_msel_ara_tirma_y_ntemleri_/",
+      "kazanim": "Bu dosyadaki eserler/muadillerle Rüzgar şu becerilere sahip oldu: bilimsel araştırma yöntemi",
+      "excel": "18 - ) BİLİMSEL ARAŞTIRMA YÖNTEMLERİ_F_karar.xlsx"
+    },
+    "19": {
+      "n": 153,
+      "indir": 3,
+      "muadil": 150,
+      "ilave": 3,
+      "sources": 4,
+      "ok_sources": 4,
+      "skills": [
+        "psikoloji temelleri (açık kaynak/OCW)"
+      ],
+      "ozet": "Yükleme tamamlandı. 150 eser kütüphaneye uygun şekilde yerleştirildi (4 benzersiz yasal kaynak, 3 ilave satır). Konum: knowledge/ortak_kaynak/alanlar/bilgisayar_eserleri/19_psi_koloji_/",
+      "kazanim": "Bu dosyadaki eserler/muadillerle Rüzgar şu becerilere sahip oldu: psikoloji temelleri (açık kaynak/OCW)",
+      "excel": "19 - ) PSİKOLOJİ_F_karar.xlsx"
+    },
+    "2": {
+      "n": 100,
+      "indir": 3,
+      "muadil": 97,
+      "ilave": 0,
+      "sources": 7,
+      "ok_sources": 7,
+      "skills": [
+        "algoritma tasarımı",
+        "karmaşıklık",
+        "graf/ağaç yapıları",
+        "yarışma programlama"
+      ],
+      "ozet": "Yükleme tamamlandı. 100 eser kütüphaneye uygun şekilde yerleştirildi (7 benzersiz yasal kaynak, 0 ilave satır). Konum: knowledge/ortak_kaynak/alanlar/bilgisayar_eserleri/02_algori_tmalar/",
+      "kazanim": "Bu dosyadaki eserler/muadillerle Rüzgar şu becerilere sahip oldu: algoritma tasarımı · karmaşıklık · graf/ağaç yapıları · yarışma programlama",
+      "excel": "2 - ) ALGORİTMALAR_F_karar.xlsx"
+    },
+    "20": {
+      "n": 153,
+      "indir": 3,
+      "muadil": 150,
+      "ilave": 3,
+      "sources": 4,
+      "ok_sources": 4,
+      "skills": [
+        "bilişsel bilimlere giriş"
+      ],
+      "ozet": "Yükleme tamamlandı. 150 eser kütüphaneye uygun şekilde yerleştirildi (4 benzersiz yasal kaynak, 3 ilave satır). Konum: knowledge/ortak_kaynak/alanlar/bilgisayar_eserleri/20_bi_li_sel_bi_li_mler/",
+      "kazanim": "Bu dosyadaki eserler/muadillerle Rüzgar şu becerilere sahip oldu: bilişsel bilimlere giriş",
+      "excel": "20 - ) BİLİŞSEL BİLİMLER_F_karar.xlsx"
+    },
+    "21": {
+      "n": 153,
+      "indir": 5,
+      "muadil": 148,
+      "ilave": 3,
+      "sources": 5,
+      "ok_sources": 5,
+      "skills": [
+        "dil bilimi / NLP (Jurafsky SLP)"
+      ],
+      "ozet": "Yükleme tamamlandı. 150 eser kütüphaneye uygun şekilde yerleştirildi (5 benzersiz yasal kaynak, 3 ilave satır). Konum: knowledge/ortak_kaynak/alanlar/bilgisayar_eserleri/21_di_l_bi_li_mi_/",
+      "kazanim": "Bu dosyadaki eserler/muadillerle Rüzgar şu becerilere sahip oldu: dil bilimi / NLP (Jurafsky SLP)",
+      "excel": "21 - ) DİL BİLİMİ_F_karar.xlsx"
+    },
+    "22": {
+      "n": 153,
+      "indir": 3,
+      "muadil": 150,
+      "ilave": 3,
+      "sources": 4,
+      "ok_sources": 4,
+      "skills": [
+        "felsefe klasik metinlere açık erişim yönü"
+      ],
+      "ozet": "Yükleme tamamlandı. 150 eser kütüphaneye uygun şekilde yerleştirildi (4 benzersiz yasal kaynak, 3 ilave satır). Konum: knowledge/ortak_kaynak/alanlar/bilgisayar_eserleri/22_felsefe/",
+      "kazanim": "Bu dosyadaki eserler/muadillerle Rüzgar şu becerilere sahip oldu: felsefe klasik metinlere açık erişim yönü",
+      "excel": "22 - ) FELSEFE_F_karar.xlsx"
+    },
+    "23": {
+      "n": 153,
+      "indir": 3,
+      "muadil": 150,
+      "ilave": 3,
+      "sources": 4,
+      "ok_sources": 4,
+      "skills": [
+        "ekonomi temelleri (açık ders)"
+      ],
+      "ozet": "Yükleme tamamlandı. 150 eser kütüphaneye uygun şekilde yerleştirildi (4 benzersiz yasal kaynak, 3 ilave satır). Konum: knowledge/ortak_kaynak/alanlar/bilgisayar_eserleri/23_ekonomi_/",
+      "kazanim": "Bu dosyadaki eserler/muadillerle Rüzgar şu becerilere sahip oldu: ekonomi temelleri (açık ders)",
+      "excel": "23 - ) EKONOMİ_F_karar.xlsx"
+    },
+    "24": {
+      "n": 153,
+      "indir": 3,
+      "muadil": 150,
+      "ilave": 3,
+      "sources": 4,
+      "ok_sources": 4,
+      "skills": [
+        "oyun teorisi temelleri (açık ders notları)"
+      ],
+      "ozet": "Yükleme tamamlandı. 150 eser kütüphaneye uygun şekilde yerleştirildi (4 benzersiz yasal kaynak, 3 ilave satır). Konum: knowledge/ortak_kaynak/alanlar/bilgisayar_eserleri/24_oyun_teori_si_/",
+      "kazanim": "Bu dosyadaki eserler/muadillerle Rüzgar şu becerilere sahip oldu: oyun teorisi temelleri (açık ders notları)",
+      "excel": "24 - ) OYUN TEORİSİ_F_karar.xlsx"
+    },
+    "3": {
+      "n": 151,
+      "indir": 3,
+      "muadil": 148,
+      "ilave": 0,
+      "sources": 7,
+      "ok_sources": 7,
+      "skills": [
+        "YZ / ML kavramları",
+        "sinir ağları",
+        "pekiştirmeli öğrenme",
+        "arama/planlama"
+      ],
+      "ozet": "Yükleme tamamlandı. 151 eser kütüphaneye uygun şekilde yerleştirildi (7 benzersiz yasal kaynak, 0 ilave satır). Konum: knowledge/ortak_kaynak/alanlar/bilgisayar_eserleri/03_yapay_zeka/",
+      "kazanim": "Bu dosyadaki eserler/muadillerle Rüzgar şu becerilere sahip oldu: YZ / ML kavramları · sinir ağları · pekiştirmeli öğrenme · arama/planlama",
+      "excel": "3 - ) YAPAY ZEKA_F_karar.xlsx"
+    },
+    "4": {
+      "n": 103,
+      "indir": 3,
+      "muadil": 100,
+      "ilave": 3,
+      "sources": 5,
+      "ok_sources": 5,
+      "skills": [
+        "veritabanı modeli",
+        "SQL",
+        "işlem/concurrency",
+        "depolama"
+      ],
+      "ozet": "Yükleme tamamlandı. 100 eser kütüphaneye uygun şekilde yerleştirildi (5 benzersiz yasal kaynak, 3 ilave satır). Konum: knowledge/ortak_kaynak/alanlar/bilgisayar_eserleri/04_veri_tabanlari/",
+      "kazanim": "Bu dosyadaki eserler/muadillerle Rüzgar şu becerilere sahip oldu: veritabanı modeli · SQL · işlem/concurrency · depolama",
+      "excel": "4 - ) VERİ TABANLARI_F_karar.xlsx"
+    },
+    "5": {
+      "n": 103,
+      "indir": 4,
+      "muadil": 99,
+      "ilave": 3,
+      "sources": 6,
+      "ok_sources": 6,
+      "skills": [
+        "bilgisayar ağları",
+        "TCP/IP",
+        "protokoller",
+        "Beej/HPBN"
+      ],
+      "ozet": "Yükleme tamamlandı. 100 eser kütüphaneye uygun şekilde yerleştirildi (6 benzersiz yasal kaynak, 3 ilave satır). Konum: knowledge/ortak_kaynak/alanlar/bilgisayar_eserleri/05_a_teknoloji_leri_/",
+      "kazanim": "Bu dosyadaki eserler/muadillerle Rüzgar şu becerilere sahip oldu: bilgisayar ağları · TCP/IP · protokoller · Beej/HPBN",
+      "excel": "5 - ) AĞ TEKNOLOJİLERİ_F_karar.xlsx"
+    },
+    "6": {
+      "n": 103,
+      "indir": 5,
+      "muadil": 98,
+      "ilave": 3,
+      "sources": 6,
+      "ok_sources": 6,
+      "skills": [
+        "işletim sistemleri",
+        "süreç/bellek",
+        "dosya sistemleri",
+        "OSTEP"
+      ],
+      "ozet": "Yükleme tamamlandı. 100 eser kütüphaneye uygun şekilde yerleştirildi (6 benzersiz yasal kaynak, 3 ilave satır). Konum: knowledge/ortak_kaynak/alanlar/bilgisayar_eserleri/06_i_leti_m_si_stemleri_/",
+      "kazanim": "Bu dosyadaki eserler/muadillerle Rüzgar şu becerilere sahip oldu: işletim sistemleri · süreç/bellek · dosya sistemleri · OSTEP",
+      "excel": "6 - ) İŞLETİM SİSTEMLERİ_F_karar.xlsx"
+    },
+    "7": {
+      "n": 103,
+      "indir": 3,
+      "muadil": 100,
+      "ilave": 3,
+      "sources": 4,
+      "ok_sources": 4,
+      "skills": [
+        "siber güvenlik temeli",
+        "OWASP",
+        "güvenli kodlama"
+      ],
+      "ozet": "Yükleme tamamlandı. 100 eser kütüphaneye uygun şekilde yerleştirildi (4 benzersiz yasal kaynak, 3 ilave satır). Konum: knowledge/ortak_kaynak/alanlar/bilgisayar_eserleri/07_si_ber_g_venli_k/",
+      "kazanim": "Bu dosyadaki eserler/muadillerle Rüzgar şu becerilere sahip oldu: siber güvenlik temeli · OWASP · güvenli kodlama",
+      "excel": "7 - ) SİBER GÜVENLİK_F_karar.xlsx"
+    },
+    "8": {
+      "n": 103,
+      "indir": 5,
+      "muadil": 98,
+      "ilave": 3,
+      "sources": 6,
+      "ok_sources": 6,
+      "skills": [
+        "yazılım mimarisi",
+        "desenler",
+        "AOSA",
+        "ölçeklenebilirlik"
+      ],
+      "ozet": "Yükleme tamamlandı. 100 eser kütüphaneye uygun şekilde yerleştirildi (6 benzersiz yasal kaynak, 3 ilave satır). Konum: knowledge/ortak_kaynak/alanlar/bilgisayar_eserleri/08_yazilim_mi_mari_leri_/",
+      "kazanim": "Bu dosyadaki eserler/muadillerle Rüzgar şu becerilere sahip oldu: yazılım mimarisi · desenler · AOSA · ölçeklenebilirlik",
+      "excel": "8 - ) YAZILIM MİMARİLERİ_F_karar.xlsx"
+    },
+    "9": {
+      "n": 103,
+      "indir": 3,
+      "muadil": 100,
+      "ilave": 3,
+      "sources": 4,
+      "ok_sources": 4,
+      "skills": [
+        "DevOps",
+        "CI/CD kavramları",
+        "konteyner/orkestrasyon dokümanları"
+      ],
+      "ozet": "Yükleme tamamlandı. 100 eser kütüphaneye uygun şekilde yerleştirildi (4 benzersiz yasal kaynak, 3 ilave satır). Konum: knowledge/ortak_kaynak/alanlar/bilgisayar_eserleri/09_devops_ve_altyapisi/",
+      "kazanim": "Bu dosyadaki eserler/muadillerle Rüzgar şu becerilere sahip oldu: DevOps · CI/CD kavramları · konteyner/orkestrasyon dokümanları",
+      "excel": "9 - ) DEVOPS VE ALTYAPISI_F_karar.xlsx"
+    }
+  },
+  "skills": {
+    "1": "Programlama dillerinin temelleri (Python, JavaScript, Rust yönü), veri yapıları ve günlük yazılım pratiği.",
+    "2": "Algoritma tasarımı, karmaşıklık düşüncesi, graf/ağaç yapıları ve yarışma programlama omurgası.",
+    "3": "Yapay zekâ ve makine öğrenmesi kavramları, sinir ağları, pekiştirmeli öğrenme, arama/planlama.",
+    "4": "Veritabanı modelleme, SQL, işlem/eşzamanlılık ve depolama temelleri.",
+    "5": "Bilgisayar ağları, TCP/IP, protokoller; Beej ve HPBN çizgisinde ağ programlama.",
+    "6": "İşletim sistemleri: süreç, bellek, dosya sistemleri (OSTEP çizgisi).",
+    "7": "Siber güvenlik temeli, OWASP yaklaşımı ve güvenli kodlama alışkanlığı.",
+    "8": "Yazılım mimarisi, tasarım desenleri, açık kaynak mimari örnekleri (AOSA) ve ölçeklenebilirlik.",
+    "9": "DevOps düşüncesi, CI/CD kavramları, konteyner ve orkestrasyon doküman omurgası.",
+    "10": "Veri bilimi borusu, istatistik (Think Stats/Bayes) ve analiz temelleri.",
+    "11": "Bilgisayar bilimine giriş omurgası ve temel CS kavramları.",
+    "12": "Bilgisayar mühendisliği: donanım-yazılım köprüsü, NAND2Tetris yönü.",
+    "13": "Mühendislik matematiği: kalkülüs/lineer cebir açık kaynak yönü.",
+    "14": "Fizik temellerine açık ders kitabı yönü.",
+    "15": "Elektronik temelleri ve açık kaynak ders yönü.",
+    "16": "Robotik temelleri, kontrol ve ROS doküman yönü.",
+    "17": "Mekatronik sistem düşüncesi.",
+    "18": "Bilimsel araştırma yöntemi ve akademik çalışma disiplini.",
+    "19": "Psikoloji temelleri (açık kaynak / OCW yönü).",
+    "20": "Bilişsel bilimlere giriş.",
+    "21": "Dil bilimi ve NLP (Jurafsky SLP çizgisi).",
+    "22": "Felsefe klasik metinlere açık erişim yönü.",
+    "23": "Ekonomi temelleri (açık ders yönü).",
+    "24": "Oyun teorisi temelleri (açık ders notları yönü)."
+  },
+  "utc": "2026-11-02T23:28:50.721260+00:00"
+}

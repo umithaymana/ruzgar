@@ -1,0 +1,64 @@
+{
+  "dal": "10_veri_bi_li_mi_",
+  "excel": "10 - ) VERİ BİLİMİ.xlsx",
+  "n_list": 150,
+  "sources": 6,
+  "ok_sources": 6,
+  "ilave_rows": 3,
+  "updated_utc": "2026-11-02T23:15:59.175761+00:00",
+  "skills": [
+    "veri bilimi",
+    "istatistik (Think Stats/Bayes)",
+    "analiz borusu"
+  ],
+  "kaynaklar": {
+    "think_stats": {
+      "kaynak_id": "10_veri_bi_li_mi__think_stats",
+      "baslik": "Think Stats",
+      "url": "https://greenteapress.com/thinkstats2/thinkstats2.pdf",
+      "dal": "10_veri_bi_li_mi_",
+      "ok": true,
+      "parca": 10
+    },
+    "think_bayes": {
+      "kaynak_id": "10_veri_bi_li_mi__think_bayes",
+      "baslik": "Think Bayes",
+      "url": "https://greenteapress.com/thinkbayes/thinkbayes.pdf",
+      "dal": "10_veri_bi_li_mi_",
+      "ok": true,
+      "parca": 11
+    },
+    "open_data_structures": {
+      "kaynak_id": "10_veri_bi_li_mi__open_data_structures",
+      "baslik": "Open Data Structures",
+      "url": "https://opendatastructures.org/ods-python.pdf",
+      "dal": "10_veri_bi_li_mi_",
+      "ok": true,
+      "parca": 10
+    },
+    "algorithms_jeff_erickson_": {
+      "kaynak_id": "10_veri_bi_li_mi__algorithms_jeff_erickson_",
+      "baslik": "Algorithms (Jeff Erickson)",
+      "url": "https://jeffe.cs.illinois.edu/teaching/algorithms/book/Algorithms-JeffE.pdf",
+      "dal": "10_veri_bi_li_mi_",
+      "ok": true,
+      "parca": 18
+    },
+    "competitive_programmer_s_handbook": {
+      "kaynak_id": "10_veri_bi_li_mi__competitive_programmer_s_handbook",
+      "baslik": "Competitive Programmer's Handbook",
+      "url": "https://cses.fi/book/book.pdf",
+      "dal": "10_veri_bi_li_mi_",
+      "ok": true,
+      "parca": 11
+    },
+    "operating_systems_three_easy_pieces": {
+      "kaynak_id": "10_veri_bi_li_mi__operating_systems_three_easy_pieces",
+      "baslik": "Operating Systems: Three Easy Pieces",
+      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
+      "dal": "10_veri_bi_li_mi_",
+      "ok": true,
+      "parca": 1
+    }
+  }
+}

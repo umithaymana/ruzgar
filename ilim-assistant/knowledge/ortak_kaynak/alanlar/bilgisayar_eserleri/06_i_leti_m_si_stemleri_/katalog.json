@@ -1,0 +1,65 @@
+{
+  "dal": "06_i_leti_m_si_stemleri_",
+  "excel": "6 - ) İŞLETİM SİSTEMLERİ.xlsx",
+  "n_list": 100,
+  "sources": 6,
+  "ok_sources": 6,
+  "ilave_rows": 3,
+  "updated_utc": "2026-11-02T23:13:15.775618+00:00",
+  "skills": [
+    "işletim sistemleri",
+    "süreç/bellek",
+    "dosya sistemleri",
+    "OSTEP"
+  ],
+  "kaynaklar": {
+    "ostep": {
+      "kaynak_id": "06_i_leti_m_si_stemleri__ostep",
+      "baslik": "OSTEP",
+      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
+      "dal": "06_i_leti_m_si_stemleri_",
+      "ok": true,
+      "parca": 1
+    },
+    "n2t": {
+      "kaynak_id": "06_i_leti_m_si_stemleri__n2t",
+      "baslik": "NAND2Tetris",
+      "url": "https://www.nand2tetris.org/",
+      "dal": "06_i_leti_m_si_stemleri_",
+      "ok": true,
+      "parca": 1
+    },
+    "open_data_structures": {
+      "kaynak_id": "06_i_leti_m_si_stemleri__open_data_structures",
+      "baslik": "Open Data Structures",
+      "url": "https://opendatastructures.org/ods-python.pdf",
+      "dal": "06_i_leti_m_si_stemleri_",
+      "ok": true,
+      "parca": 10
+    },
+    "algorithms_jeff_erickson_": {
+      "kaynak_id": "06_i_leti_m_si_stemleri__algorithms_jeff_erickson_",
+      "baslik": "Algorithms (Jeff Erickson)",
+      "url": "https://jeffe.cs.illinois.edu/teaching/algorithms/book/Algorithms-JeffE.pdf",
+      "dal": "06_i_leti_m_si_stemleri_",
+      "ok": true,
+      "parca": 18
+    },
+    "competitive_programmer_s_handbook": {
+      "kaynak_id": "06_i_leti_m_si_stemleri__competitive_programmer_s_handbook",
+      "baslik": "Competitive Programmer's Handbook",
+      "url": "https://cses.fi/book/book.pdf",
+      "dal": "06_i_leti_m_si_stemleri_",
+      "ok": true,
+      "parca": 11
+    },
+    "operating_systems_three_easy_pieces": {
+      "kaynak_id": "06_i_leti_m_si_stemleri__operating_systems_three_easy_pieces",
+      "baslik": "Operating Systems: Three Easy Pieces",
+      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
+      "dal": "06_i_leti_m_si_stemleri_",
+      "ok": true,
+      "parca": 1
+    }
+  }
+}
