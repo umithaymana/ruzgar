@@ -466,7 +466,7 @@ def should_defer_web_for_pro(
     try:
         from ilim_assistant.ruzgar_umed_cevap_emri import should_defer_web_to_rest
 
-        return should_defer_web_to_rest()
+        return should_defer_web_to_rest(message, question_plan=question_plan)
     except Exception:
         return False
 

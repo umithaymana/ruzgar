@@ -22,6 +22,13 @@ Kaynak: `ruzgar_umed_cevap_emri.py` · `ruzgar_genel_faz90.py`
 6. Web ikincil (süre kalırsa)
 7. Süre dolunca veya zincir boşsa: «Ümit abi, bu sorunun cevabını bulamadım. Bana öğretir misin?»
 
+### S4 — Web niyet-koşullu (2026-11-03 Mimar `evet`)
+
+- Varsayılan: web **6. sırada** (ikincil) kalır.
+- **Erken web** yalnız: güncel/canlı (`looks_like_live_web_needed`) veya açık «webden bak / internetten bak».
+- Ansiklopedik «nedir» tek başına web'i öne almaz (local-first).
+- Kapat: `RUZGAR_UMED_S4_WEB_NIYET=0`
+
 ## Süre
 
 - Varsayılan üst sınır: **15 saniye** (tüm sıra bu sürede denenir)

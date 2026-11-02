@@ -1,21 +1,14 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-11-03 — **Faz M mühür YEŞİL** (M1–M4) · S4 askıda · güvenli bölge alt taban duruyor.
+**Son güncelleme:** 2026-11-03 — **P–M tamam · yol haritası kaldırıldı** · S4 web niyet (açık `evet`) · güvenli bölge alt taban duruyor.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
-### YOL HARİTASI — 2026-10-23 (Mimar onayı) ← **KİLİTLİ SIRA**
+### YOL HARİTASI — tamamlandı
 
-**Tek kaynak:** `RUZGAR_YOL_HARITASI.md` · kural: `.cursor/rules/ruzgar-yol-haritasi-FROZEN.mdc`
+**P–M tamam · yol haritası kaldırıldı** (2026-11-03 Mimar `evet`).  
+`RUZGAR_YOL_HARITASI.md` + `.cursor/rules/ruzgar-yol-haritasi-FROZEN.mdc` silindi. Mühürler: `ilim-assistant/docs/*_MUHUR_*.md` · git tarihi.
 
-| Faz | İçerik | Durum |
-|-----|--------|--------|
-| **P** | Programlama tavanı + 2 pilot (CLI + web) | ✅ **mühürlü** (P0–P8) |
-| **S** | Sohbet muhakeme (niyet→kaynak→harman) | ✅ **mühürlü** (S4=`evet` askıda) |
-| **V** | Ses STT/TTS | ✅ **mühürlü** (V0–V5) |
-| **M** | Video→Tercüme→Okuma→Mimar | ✅ **mühürlü** (M1–M4) |
-
-**Kural:** birkaç günlük iş; dilim atlama / cila ile geçme yok. Ölçüm→yama→smoke→canlı→✅ · dilim yeşil → commit+push.  
 **P0 (2026-10-23):** agent_ok **%70** · recent5 **%80** · boot0 **%80** · offline E2 **5/5** · mühür YEŞİL · `ilim-assistant/docs/P0_BASELINE_2026-10-23.md`.  
 **P1 (2026-10-23):** supervised pattern lib — e2_version · health_fields · import_fix · dict_field · ping_route · smoke **9/9** · `programlama_supervised_patterns.py`.  
 **P2 (2026-10-23):** niyet→ray — scaffold · faz85_fast · agent_boot · agent_multi · agent_mega · smoke **26/26** · `programlama_ray_siniflandirici.py`.  
@@ -29,9 +22,10 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 **S1 (2026-10-23):** SourceRouter · 28/28 korpus hizası · smoke 8/8 · `sohbet_source_router.py` → prepare_turn.  
 **S2 (2026-10-23):** Faz49 kısıt · `blocks_faz49_fast` · sayı/güncelde kaynaksız hızlı LLM yok · smoke 8/8.  
 **S3 (2026-10-23):** sayı/güncel hard-gate + geniş scrub · `sohbet_sayi_hard_gate.py` · smoke 12/12.  
-**S5 (2026-10-23):** fuzzy≥0.85 · nedir≠anlat tipi · doğal sentez sıkı · smoke 11/11 (S4=`evet` bekler).  
+**S5 (2026-10-23):** fuzzy≥0.85 · nedir≠anlat tipi · doğal sentez sıkı · smoke 11/11.  
 **S6 (2026-10-23):** anlık kart vs GROUNDED S6 anlat · `resolve_anlik_harman` · smoke 11/11.  
-**S7 (2026-10-23):** Faz S mühür **YEŞİL** · batarya 28/28 · S4 askıda · `ilim-assistant/docs/S7_FAZ_S_MUHUR_2026-10-23.md` → **V0**.  
+**S7 (2026-10-23):** Faz S mühür **YEŞİL** · batarya 28/28 · `ilim-assistant/docs/S7_FAZ_S_MUHUR_2026-10-23.md` → **V0**.  
+**S4 (2026-11-03):** Ümit web sırası **niyet-koşullu** — güncel/canlı/«webden bak» erken; diğer turlar ikincil · Mimar açık `evet` · `ilim-assistant/docs/S4_WEB_NIYET_2026-11-03.md`.  
 **V0 (2026-10-23):** STT ılık get_model **~10.3s** · TTS first-byte **~1.7s** · `ilim-assistant/docs/V0_STT_TTS_BASELINE_2026-10-23.md`.  
 **V1 (2026-10-23):** port sonrası Whisper+TTS ısınma · `ses_v1_isinma.py` · boot 1–3 gecikmez · smoke 9/9.  
 **V2 (2026-10-23):** PyAV19 `metadata_errors` yaması · WAV numpy decode · silent transcribe ~2.5s · smoke 5/5.  
@@ -42,7 +36,7 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 **M2 (2026-11-03):** Tercüme dil çifti (`-ya`/ı fold) + SRT mock · smoke · `ilim-assistant/docs/M2_TERCUME_BASELINE_2026-11-03.md` → **M3**.  
 **M3 (2026-11-03):** Okuma kategori+arsiv anlık · dosya-oku≠faz98 · smoke · `ilim-assistant/docs/M3_OKUMA_BASELINE_2026-11-03.md` → **M4**.
 **M4 (2026-11-03):** Mimar atölye restore/bilgi + hub erken · Faz M mühür **YEŞİL** · `ilim-assistant/docs/M4_MIMAR_BASELINE_2026-11-03.md` · `M4_FAZ_M_MUHUR_2026-11-03.md`.
-**Temizlik:** P+S+V+M mühürlü — `RUZGAR_YOL_HARITASI.md` + FROZEN silme **Mimar `evet`** bekler.
+**Temizlik (2026-11-03):** yol haritası + FROZEN silindi (Mimar `evet`).
 
 ### GÜVENLİ BÖLGE — 2026-10-22 (Mimar onayı) ← **AKTİF ALT TABAN**
 
@@ -304,11 +298,12 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
 | ~~H1–H7~~ | Harman | C ile kapandı | ✅ |
 | ~~D1–D6~~ | Araç sözleşmesi | Programlama ~%70 bandı · verify+hub | ✅ 2026-10-22 |
 | ~~inceleme~~ | Mimar bakış | EmirYalan + E + D tutuyor | ✅ 2026-10-22 gece |
-| **P→S→V→M** | Yol haritası | `RUZGAR_YOL_HARITASI.md` | 🔒 · **P✅** · **S✅** (S4 askıda) · **V0–V2✅ V3** |
+| ~~P→S→V→M~~ | Yol haritası | kaldırıldı | ✅ 2026-11-03 |
 | ~~P0–P8~~ | Faz P | mühür YEŞİL | ✅ 2026-10-23 |
 | ~~S0~~ | Yalan korpusu | 28 case | ✅ 2026-10-23 |
+| ~~S4~~ | Web niyet-koşullu | Ümit emri | ✅ 2026-11-03 |
 
-**Öneri şimdi:** **V3** TTS ilk-byte (retry/chunk). S4 için açık `evet` hâlâ bekler.
+**Öneri şimdi:** canlı masaüstü doğrulama; boot 5↔7 sapması yalnızca ayrı açık `evet` ile.
 
 ### Sıra D — Araç sözleşmesi genişlemesi (2026-10-22 plan)
 

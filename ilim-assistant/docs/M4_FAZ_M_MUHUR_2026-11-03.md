@@ -17,6 +17,6 @@ M1–M4 baseline smokeleri → **YEŞİL**
 
 ## Yol
 
-P ✅ · S ✅ (S4 askıda) · V ✅ · **M ✅**
+P ✅ · S ✅ · V ✅ · **M ✅** · S4 ✅ (2026-11-03)
 
-Temizlik (`RUZGAR_YOL_HARITASI.md` + FROZEN silme) — Mimar açık `evet` ile.
+Temizlik: yol haritası + FROZEN silindi (2026-11-03).

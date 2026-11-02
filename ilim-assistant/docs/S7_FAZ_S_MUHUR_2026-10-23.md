@@ -10,7 +10,7 @@
 | S1 SourceRouter | ✅ |
 | S2 Faz49 kısıt | ✅ |
 | S3 sayı/güncel hard-gate | ✅ |
-| S4 Ümit web sırası niyet-koşullu | ⏸ Mimar `evet` bekler |
+| S4 Ümit web sırası niyet-koşullu | ✅ 2026-11-03 · `S4_WEB_NIYET_2026-11-03.md` |
 | S5 fuzzy + doğal sentez | ✅ |
 | S6 anlık grounded anlat | ✅ |
 | S7 mühür + batarya | ✅ |

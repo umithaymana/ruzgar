@@ -1641,7 +1641,7 @@ def prepare_turn(
                 umed_emri_applies,
             )
 
-            if should_defer_web_to_rest() and umed_emri_applies(
+            if should_defer_web_to_rest(msg, question_plan=turn_plan) and umed_emri_applies(
                 mode_norm=m, coding_mode=coding_mode
             ):
                 has_local = bool(ar_hits or hits)

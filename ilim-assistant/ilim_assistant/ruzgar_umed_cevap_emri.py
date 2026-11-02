@@ -25,8 +25,10 @@ from typing import Any
 
 from ilim_assistant.ruzgar_umed_kurallari import MISS_PHRASE
 
-EMRI_VERSION = "umed-cevap-emri-v2-2026-05-27"
+EMRI_VERSION = "umed-cevap-emri-v2.1-s4-2026-11-03"
 EMRI_FROZEN = True
+# S4: güncel/canlı niyette web ikincil sırayı bozar (Mimar evet 2026-11-03)
+S4_WEB_NIYET_VERSION = "s4-web-niyet-v1-2026-11-03"
 
 _DEFAULT_BUDGET_SEC = 15.0
 _ILIM_BUDGET_SEC = 38.0
@@ -248,9 +250,68 @@ def should_disable_casual_fast_path(message: str = "") -> bool:
     )
 
 
-def should_defer_web_to_rest() -> bool:
-    """Web, Gemini/Groq sonrası ikincil adım."""
-    return umed_emri_enabled()
+def s4_web_niyet_enabled() -> bool:
+    """S4 niyet-koşullu web — varsayılan açık (Mimar 2026-11-03 evet)."""
+    return os.environ.get("RUZGAR_UMED_S4_WEB_NIYET", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
+_EXPLICIT_WEB_RE = re.compile(
+    r"(?:web\s*['’]?den\s+bak|webten\s+bak|internet\s*['’]?ten\s+bak|"
+    r"internetten\s+bak|netten\s+bak|google\s*['’]?da\s+bak|"
+    r"web\s+ara|araştır\s*[:：]|arastir\s*[:：])",
+    re.I,
+)
+
+
+def wants_early_web(
+    message: str = "",
+    *,
+    question_plan: Any | None = None,
+) -> bool:
+    """
+    S4: web'i sıranın sonuna itme — güncel/canlı veya açık «webden bak».
+    Ansiklopedik «nedir» tek başına erken web açmaz (local-first korunur).
+    """
+    if not umed_emri_enabled() or not s4_web_niyet_enabled():
+        return False
+    raw = (message or "").strip()
+    if not raw:
+        return False
+    if _EXPLICIT_WEB_RE.search(raw):
+        return True
+    try:
+        from ilim_assistant.ruzgar_web_arastirma_pro import (
+            looks_like_live_web_needed,
+            should_force_web_despite_local,
+        )
+
+        if looks_like_live_web_needed(raw):
+            return True
+        if should_force_web_despite_local(raw, question_plan):
+            return True
+    except Exception:
+        pass
+    return False
+
+
+def should_defer_web_to_rest(
+    message: str = "",
+    *,
+    question_plan: Any | None = None,
+) -> bool:
+    """
+    Web varsayılan ikincil (Gemini/Groq sonrası).
+    S4: güncel/canlı / açık web isteğinde defer yok → erken açılabilir.
+    """
+    if not umed_emri_enabled():
+        return False
+    if wants_early_web(message, question_plan=question_plan):
+        return False
+    return True
 
 
 def public_meta(message: str = "") -> dict[str, Any]:
@@ -260,4 +321,7 @@ def public_meta(message: str = "") -> dict[str, Any]:
         "budget_sec": turn_budget_sec(message),
         "priority": list(PRIORITY_LABELS),
         "miss_phrase": MISS_PHRASE,
+        "s4_web_niyet": s4_web_niyet_enabled(),
+        "s4_version": S4_WEB_NIYET_VERSION,
+        "early_web": wants_early_web(message),
     }
