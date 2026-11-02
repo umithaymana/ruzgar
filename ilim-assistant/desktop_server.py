@@ -446,11 +446,11 @@ if (_DESKTOP_UI_DIR / "index.html").is_file():
 
 
 def _boot_motorlar_anaonce() -> None:
-    """Ana motor → çekirdek → ara motorlar (sıra kilitli).
+    """Ana motor → çekirdek → 7 ara motor (sıra kilitli).
 
-    Not (2026-11-02 audit): `.cursorrules` metni 5 ara (ses→video→okuma→tercüme→programlama)
-    diyor; canlı listeye mimar + hafıza da giriyor. Sıra değiştirmek Mimar `evet` ister —
-    burada yalnız mevcut davranışı koruyoruz.
+    Kilit: `.cursorrules` · Mimar `evet` 2026-11-03 (5→7 resmileştirme).
+    Sıra: ses → video → okuma → mimar → tercüme → hafıza → programlama.
+    Değiştirmek için yeniden açık `evet` şart; `.cursorrules` ile aynı turda güncellenir.
     """
     import importlib
 

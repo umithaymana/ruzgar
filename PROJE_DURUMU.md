@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-11-03 — **P–M tamam · yol haritası kaldırıldı** · S4 web niyet (açık `evet`) · güvenli bölge alt taban duruyor.
+**Son güncelleme:** 2026-11-03 — **boot 7 ara resmileşti** (Mimar `evet`) · P–M tamam · S4 ✅ · güvenli bölge alt taban.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -277,7 +277,7 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
 
 ### Not — «Motor boot / araç sözleşmesi genişlemesi» (Mimar sorusu)
 
-**Ne demek değildi:** `.cursorrules` kilitli boot sırası (Ana Motor → çekirdek → 5 ara motor) **değiştirmek**. Bu C turlarında da yok; değiştirmek için açık `evet` şart.
+**Ne demek değildi:** `.cursorrules` kilitli boot sırası (Ana Motor → çekirdek → 7 ara motor) **değiştirmek**. Değiştirmek için açık `evet` şart.
 
 **Ne demekti (iki ayrı şey):**
 
@@ -303,7 +303,8 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
 | ~~S0~~ | Yalan korpusu | 28 case | ✅ 2026-10-23 |
 | ~~S4~~ | Web niyet-koşullu | Ümit emri | ✅ 2026-11-03 |
 
-**Öneri şimdi:** canlı masaüstü doğrulama; boot 5↔7 sapması yalnızca ayrı açık `evet` ile.
+**Boot (2026-11-03):** 7 ara motor kilitlendi — ses→video→okuma→**mimar**→tercüme→**hafıza**→programlama (`.cursorrules` = `_boot_motorlar_anaonce`).  
+**Öneri şimdi:** canlı masaüstü doğrulama.
 
 ### Sıra D — Araç sözleşmesi genişlemesi (2026-10-22 plan)
 

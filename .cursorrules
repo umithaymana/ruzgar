@@ -23,12 +23,15 @@ Mimar emri (Ümit & Gökçenur). Aşağıdaki sıra **bağlayıcıdır** ve ajan
    Uygulama her açılışında **ilk** yüklenip hazır işaretlenecek motor budur. Başka hiçbir motor / yardımcı modül bundan önce çalışmaya başlayamaz.
 2. **Çekirdek orkestratör** = `ilim_assistant.motorlar.ruzgar_cekirdegi`.
    Yalnızca ana motor hazır olduktan sonra import edilir; ara motorların yaşam döngüsünü o yönetir.
-3. **5 ara motor** — tam bu sırayla, ana motor + çekirdek orkestratör hazır olduktan sonra hazırlanır:
+3. **7 ara motor** — tam bu sırayla, ana motor + çekirdek orkestratör hazır olduktan sonra hazırlanır
+   (Mimar `evet` 2026-11-03 — canlı liste ile hizalandı; Mimar + Hafıza eklendi):
    1. `ilim_assistant.ses_motoru`
    2. `ilim_assistant.video_motoru`
    3. `ilim_assistant.okuma_motoru`
-   4. `ilim_assistant.tercume_motoru`
-   5. `ilim_assistant.programlama_motoru`
+   4. `ilim_assistant.mimar_motoru`
+   5. `ilim_assistant.tercume_motoru`
+   6. `ilim_assistant.motorlar.hafiza_motoru`
+   7. `ilim_assistant.programlama_motoru`
 4. **Yardımcı ısınmalar** (Whisper STT, Ollama LLM, Edge-TTS havuzu, RAG indeksi, hatırlatıcı DB, günlük kültür senkronu) yalnızca yukarıdaki 1–3 adım tamamlandıktan **sonra** ve uvicorn portu açıldıktan sonra **arka planda** çalışır; hiçbir zaman 1–3'ü geciktirmez.
 
 ### Değiştirme yasağı
