@@ -1164,6 +1164,9 @@ const RUZGAR_TTS_CHUNK_MAX_CHARS = 2800;
 const RUZGAR_TTS_PLAY_PREROLL_MS = 12;
 const RUZGAR_TTS_INTER_CHUNK_PREROLL_MS = 0;
 const RUZGAR_TTS_CHUNK_GAP_MS = 0;
+/** V4 — konuşunca TTS kes + dinle; mic kayıt varken TTS kilitli */
+const RUZGAR_BARGE_IN = true;
+const RUZGAR_BARGE_SETTLE_MS = 80;
 const RUZGAR_TTS_BUFFER_FALLBACK_FIRST_MS = 380;
 const RUZGAR_TTS_BUFFER_FALLBACK_MS = 280;
 /** Paralel akış: ilk konuşma eşiği düşük, sonraki parçalar birleşik (kesik ses yok). */
@@ -11472,6 +11475,50 @@ function silenceVoiceOutputNow() {
   }
 }
 
+/** V4 — mic kayıt / basılı tutma aktif mi? */
+function isMicRecordingActive() {
+  return !!(
+    micPressed ||
+    micBootPromise ||
+    (recState && (recState.kind === "btn" || recState.kind === "menu"))
+  );
+}
+
+/** V4 — kayıt varken TTS çalma/pump yasak (yankı + yarış) */
+function ttsBlockedByMicLock() {
+  return RUZGAR_BARGE_IN && isMicRecordingActive();
+}
+
+/**
+ * V4 barge-in: mic basılınca TTS (ve gerekirse sohbet taşıması) kesilir; dinleme açılır.
+ * @returns {Promise<boolean>} TTS kesildiyse true
+ */
+async function bargeInStopTtsForMic() {
+  if (!RUZGAR_BARGE_IN) return false;
+  const hadTts = isTtsActive();
+  const hadChat = !!(activeChatAbort || activeChatWs || perfBusy);
+  if (!hadTts && !hadChat) return false;
+  silenceVoiceOutputNow();
+  if (hadChat) {
+    try {
+      userRequestedChatStop = true;
+      chatSendInFlight = false;
+      perfBusy = false;
+      if (el.send) el.send.disabled = false;
+      activeChatWs?.close();
+      activeChatAbort?.abort();
+    } catch (_) {
+      /* yok say */
+    }
+    hideThinkingCenter();
+  }
+  syncInterruptButton();
+  await new Promise((r) => window.setTimeout(r, RUZGAR_BARGE_SETTLE_MS));
+  setStatus(hadTts ? "Kestin — dinliyorum…" : "Dinliyorum…", "Rüzgar");
+  return hadTts || hadChat;
+}
+window.bargeInStopTtsForMic = bargeInStopTtsForMic;
+
 /** Yazmaya başlanınca: yalnızca ses/kuyruk gerçekten çalışıyorsa kes (gereksiz oturum sıfırlaması yok) */
 function silenceVoiceOnUserEdit() {
   let synBusy = false;
@@ -15049,6 +15096,10 @@ function bumpTtsSession() {
 /** Ses yankısını azaltmak: ilk parçada kısa tampon; sonraki parçalar prefetch ile arka arkaya. */
 function playTtsBlob(blob) {
   return new Promise((resolve) => {
+    if (ttsBlockedByMicLock()) {
+      resolve();
+      return;
+    }
     try {
       const url = URL.createObjectURL(blob);
       const a = new Audio();
@@ -15148,6 +15199,11 @@ function playTtsBlob(blob) {
  */
 async function runTtsPump(ttsSess, karakter, signal) {
   if (ttsPumping) return;
+  if (ttsBlockedByMicLock()) {
+    ttsArmed = false;
+    syncInterruptButton();
+    return;
+  }
   ttsPumping = true;
   ttsArmed = true;
   syncInterruptButton();
@@ -15207,6 +15263,10 @@ async function runTtsPump(ttsSess, karakter, signal) {
 
     fillPrefetch();
     while (ttsSess === ttsSessionCounter && prefetch != null) {
+      if (ttsBlockedByMicLock()) {
+        bumpTtsSession();
+        break;
+      }
       while (ttsPaused && ttsSess === ttsSessionCounter) {
         await new Promise((r) => setTimeout(r, 120));
       }
@@ -15215,6 +15275,10 @@ async function runTtsPump(ttsSess, karakter, signal) {
       prefetch = null;
       fillPrefetch();
       if (!blob || blob.size <= 80) continue;
+      if (ttsBlockedByMicLock()) {
+        bumpTtsSession();
+        break;
+      }
       ttsEdgeSpokeTurn = true;
       await playTtsBlob(blob);
       if (ttsSess !== ttsSessionCounter) break;
@@ -16994,7 +17058,10 @@ async function finalizeRecording(state) {
 }
 
 async function startBtnRecording() {
-  if (perfBusy || isTtsActive()) {
+  // V4: TTS/sohbet varken barge-in; kilit mic lehine
+  if (RUZGAR_BARGE_IN && (isTtsActive() || perfBusy || activeChatAbort || activeChatWs)) {
+    await bargeInStopTtsForMic();
+  } else if (perfBusy || isTtsActive()) {
     throw new Error("Yanıt veya ses bitene kadar bekleyin.");
   }
   await discardActiveRecording();
@@ -17042,7 +17109,8 @@ async function startBtnRecording() {
 
 function micPointerDown(e) {
   if (e.pointerType === "mouse" && e.button !== 0) return;
-  if (perfBusy || isTtsActive()) {
+  // V4 barge-in: TTS/yanıt varken de mic basılabilir — önce kes, sonra dinle
+  if (!RUZGAR_BARGE_IN && (perfBusy || isTtsActive())) {
     flashRuzgarDurum("Yanıt veya ses bitene kadar bekleyin.");
     return;
   }
@@ -17055,6 +17123,7 @@ function micPointerDown(e) {
   pushSessionSend = true;
   micBootPromise = (async () => {
     try {
+      await bargeInStopTtsForMic();
       await startBtnRecording();
     } catch (err) {
       micPressed = false;
@@ -17100,6 +17169,7 @@ async function menuOpenMic() {
   const sessionId = ++menuMicToken;
   pushSessionSend = true;
   try {
+    await bargeInStopTtsForMic();
     await discardActiveRecording();
     if (!navigator.mediaDevices?.getUserMedia) {
       throw new Error("Mikrofon API yok.");

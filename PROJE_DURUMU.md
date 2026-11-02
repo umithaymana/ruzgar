@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-11-03 — **V3** TTS ilk-byte ✅ · sırada **V4** barge-in · kilit P→S→V→M · güvenli bölge alt taban duruyor.
+**Son güncelleme:** 2026-11-03 — **V4** barge-in ✅ · sırada **V5** sesli mühür · kilit P→S→V→M · güvenli bölge alt taban duruyor.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -12,7 +12,7 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 |-----|--------|--------|
 | **P** | Programlama tavanı + 2 pilot (CLI + web) | ✅ **mühürlü** (P0–P8) |
 | **S** | Sohbet muhakeme (niyet→kaynak→harman) | ✅ **mühürlü** (S4=`evet` askıda) |
-| **V** | Ses STT/TTS | 🔄 **V0–V3✅ → V4** |
+| **V** | Ses STT/TTS | 🔄 **V0–V4✅ → V5** |
 | **M** | Video→Tercüme→Okuma→Mimar | ⬜ V mühürüne bağlı |
 
 **Kural:** birkaç günlük iş; dilim atlama / cila ile geçme yok. Ölçüm→yama→smoke→canlı→✅ · dilim yeşil → commit+push.  
@@ -36,6 +36,7 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 **V1 (2026-10-23):** port sonrası Whisper+TTS ısınma · `ses_v1_isinma.py` · boot 1–3 gecikmez · smoke 9/9.  
 **V2 (2026-10-23):** PyAV19 `metadata_errors` yaması · WAV numpy decode · silent transcribe ~2.5s · smoke 5/5.  
 **V3 (2026-11-03):** TTS kısa yol in-process stream+retry · workers varsayılan 2 · first ~820 ms (V0 1686) · smoke · `ilim-assistant/docs/V3_TTS_ILK_BYTE_2026-11-03.md` → **V4**.  
+**V4 (2026-11-03):** barge-in mic→TTS kes · kayıtta TTS kilit · smoke · `ilim-assistant/docs/V4_BARGE_IN_2026-11-03.md` → **V5**.  
 **Temizlik:** P+S+V+M bitince `RUZGAR_YOL_HARITASI.md` + FROZEN kural silinir; bu blok kısaltılır (kalabalık olmasın).
 
 ### GÜVENLİ BÖLGE — 2026-10-22 (Mimar onayı) ← **AKTİF ALT TABAN**
