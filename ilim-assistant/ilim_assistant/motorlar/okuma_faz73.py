@@ -36,8 +36,9 @@ _INDEX_RE = re.compile(
     re.I,
 )
 _CATEGORIZE_RE = re.compile(
-    r"(?:hadis\s+mi|gazel\s+mi|tasavvuf|metin\s+tür|metin\s+tur|tür\s+analiz|"
-    r"tur\s+analiz|kategorize|siniflandir|sınıflandır|bu\s+metin)",
+    r"(?:hadis\s+mi|gazel\s+mi|tasavvuf|"
+    r"metin(?:in|nin)?\s+tur|metnin\s+tur|turunu\s+soy|"
+    r"tur\s+analiz|kategorize|siniflandir|bu\s+metin)",
     re.I,
 )
 _SOURCE_RE = re.compile(
@@ -46,7 +47,7 @@ _SOURCE_RE = re.compile(
     re.I,
 )
 _ANALYZE_PREFIX_RE = re.compile(
-    r"(?:analiz|kategorize|türünü|turunu)\s*[:：]\s*(.+)$",
+    r"(?:analiz|kategorize|t[uü]r[uü]n[uü](?:\s+s[oö]yle)?)\s*[:：]\s*(.+)$",
     re.I | re.DOTALL,
 )
 
@@ -67,7 +68,9 @@ def faz73_enabled() -> bool:
 
 
 def _ascii_fold(text: str) -> str:
-    t = unicodedata.normalize("NFKD", text or "")
+    # M3: Türkçe ı/İ — arşiv/özet eşlemesi
+    t = (text or "").replace("ı", "i").replace("İ", "i")
+    t = unicodedata.normalize("NFKD", t)
     return "".join(c for c in t if not unicodedata.combining(c)).lower()
 
 

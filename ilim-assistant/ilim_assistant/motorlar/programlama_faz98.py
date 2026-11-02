@@ -889,6 +889,15 @@ def wants_umit_gate(message: str) -> bool:
         )
     ) and not any(k in low for k in ("pip ", "paket kur", "winget")):
         return False
+    # M3: «dosyayı oku …» / «oku: a.md» — Okuma/workspace; taşı-kopyala değilse faz98 değil
+    if re.search(
+        r"(?:dosya(?:y[ıi])?\s+oku\b|\boku(?:ma)?\s*[:：]?\s*[\w./\\-]+\.(?:md|txt|pdf|docx|html|epub))",
+        low,
+    ) and not re.search(
+        r"\b(?:tasi|ta[sş]i|kopyala|sil|move|copy|yaz|degistir|de[gğ]istir)\b",
+        low,
+    ):
+        return False
     if any(
         k in low
         for k in (

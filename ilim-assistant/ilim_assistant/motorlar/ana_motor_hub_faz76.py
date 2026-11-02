@@ -359,8 +359,8 @@ def resolve_hub_target(
     if flags.get("tercume"):
         try:
             from ilim_assistant.motorlar.tercume_faz74 import classify_tercume_intent
-            from ilim_assistant.ruzgar_motor_kernel import INTENT_DO
 
+            # INTENT_DO modul seviyesinden — yerel import UnboundLocalError yapar
             tint = classify_tercume_intent(msg, mode_norm="tercume")
             if tint.get("intent") == INTENT_DO:
                 meta["candidates"].append(
@@ -371,6 +371,27 @@ def resolve_hub_target(
                 return "tercume", meta
         except Exception:
             pass
+
+    # M3: arşiv / metin türü / kaynak — mimar (okuma) erken
+    try:
+        from ilim_assistant.motorlar.okuma_faz73 import classify_okuma_intent
+
+        oint = classify_okuma_intent(msg, mode_norm="okuma")
+        oreason = str(oint.get("reason") or "")
+        if oint.get("intent") in (INTENT_COMMAND, INTENT_DO) and oreason in (
+            "arsiv_status",
+            "index_status",
+            "categorize_text",
+            "source_lookup",
+        ):
+            meta["candidates"].append(
+                {"motor": "mimar", "score": 10, "reason": f"okuma_{oreason}"}
+            )
+            meta["winner"] = "mimar"
+            meta["reason"] = f"okuma_{oreason}"
+            return "mimar", meta
+    except Exception:
+        pass
 
     try:
         from ilim_assistant.motorlar.programlama_faz10 import should_delegate_to_programlama
@@ -477,12 +498,23 @@ def maybe_motor_instant_for_target(
 ) -> tuple[str | None, dict[str, Any]]:
     """Tek hedef motorda anında metin yanıtı (Faz A — hub delegasyon)."""
     mid = (target or "").strip().lower()
-    if mid == "okuma":
-        mid = "mimar"
     raw = (message or "").strip()
     extra: dict[str, Any] = {}
     if not raw or not mid or mid == "genel":
         return None, extra
+
+    # M3: okuma→mimar map’ten önce arşiv/kategori anlığı (faz73)
+    if mid in ("okuma", "mimar"):
+        try:
+            from ilim_assistant.motorlar.okuma_faz73 import maybe_instant_faz73
+
+            ohit = maybe_instant_faz73(raw)
+            if ohit:
+                return ohit, extra
+        except Exception:
+            pass
+    if mid == "okuma":
+        mid = "mimar"
 
     if mid == "hafiza":
         try:
