@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-10-23 — **YOL HARİTASI KİLİTLİ** (P→S→V→M) · güvenli bölge alt taban duruyor.
+**Son güncelleme:** 2026-11-02 — yol haritası **audit** (P/S + V0–V2 smoke yeşil · doc yolları düzeltildi · aktif **V3**) · kilit P→S→V→M · güvenli bölge alt taban duruyor.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -16,7 +16,7 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 | **M** | Video→Tercüme→Okuma→Mimar | ⬜ V mühürüne bağlı |
 
 **Kural:** birkaç günlük iş; dilim atlama / cila ile geçme yok. Ölçüm→yama→smoke→canlı→✅ · dilim yeşil → commit+push.  
-**P0 (2026-10-23):** agent_ok **%70** · recent5 **%80** · boot0 **%80** · offline E2 **5/5** · mühür YEŞİL · `docs/P0_BASELINE_2026-10-23.md`.  
+**P0 (2026-10-23):** agent_ok **%70** · recent5 **%80** · boot0 **%80** · offline E2 **5/5** · mühür YEŞİL · `ilim-assistant/docs/P0_BASELINE_2026-10-23.md`.  
 **P1 (2026-10-23):** supervised pattern lib — e2_version · health_fields · import_fix · dict_field · ping_route · smoke **9/9** · `programlama_supervised_patterns.py`.  
 **P2 (2026-10-23):** niyet→ray — scaffold · faz85_fast · agent_boot · agent_multi · agent_mega · smoke **26/26** · `programlama_ray_siniflandirici.py`.  
 **P3 (2026-10-23):** dosya-dosya verify + heal→P1 pattern · smoke **12/12** · `programlama_p3_file_verify.py` · faz14/56 bağlı.  
@@ -24,15 +24,15 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 **P5 (2026-10-23):** scaffold ürün borusu — static · react_vite · fastapi · cli · smoke **15/15** · `programlama_p5_scaffold_boru.py`.  
 **P6 (2026-10-23):** Pilot A `projects/pilot-a-selam-cli` — greet/--upper · **4 pytest** · smoke 6/6.  
 **P7 (2026-10-23):** Pilot B `projects/pilot-b-vitrin` — statik vitrin · smoke **11/11**.  
-**P8 (2026-10-23):** Faz P mühür **YEŞİL** — agent_ok %70 · seal script · `docs/P8_FAZ_P_MUHUR_2026-10-23.md` → **S0**.  
+**P8 (2026-10-23):** Faz P mühür **YEŞİL** — agent_ok %70 · seal script · `ilim-assistant/docs/P8_FAZ_P_MUHUR_2026-10-23.md` → **S0**.  
 **S0 (2026-10-23):** yalan korpusu **28** case · `sohbet_yalan_korpus_s0.json` · smoke 8/8.  
 **S1 (2026-10-23):** SourceRouter · 28/28 korpus hizası · smoke 8/8 · `sohbet_source_router.py` → prepare_turn.  
 **S2 (2026-10-23):** Faz49 kısıt · `blocks_faz49_fast` · sayı/güncelde kaynaksız hızlı LLM yok · smoke 8/8.  
 **S3 (2026-10-23):** sayı/güncel hard-gate + geniş scrub · `sohbet_sayi_hard_gate.py` · smoke 12/12.  
 **S5 (2026-10-23):** fuzzy≥0.85 · nedir≠anlat tipi · doğal sentez sıkı · smoke 11/11 (S4=`evet` bekler).  
 **S6 (2026-10-23):** anlık kart vs GROUNDED S6 anlat · `resolve_anlik_harman` · smoke 11/11.  
-**S7 (2026-10-23):** Faz S mühür **YEŞİL** · batarya 28/28 · S4 askıda · `docs/S7_FAZ_S_MUHUR_2026-10-23.md` → **V0**.  
-**V0 (2026-10-23):** STT ılık get_model **~10.3s** · TTS first-byte **~1.7s** · `docs/V0_STT_TTS_BASELINE_2026-10-23.md`.  
+**S7 (2026-10-23):** Faz S mühür **YEŞİL** · batarya 28/28 · S4 askıda · `ilim-assistant/docs/S7_FAZ_S_MUHUR_2026-10-23.md` → **V0**.  
+**V0 (2026-10-23):** STT ılık get_model **~10.3s** · TTS first-byte **~1.7s** · `ilim-assistant/docs/V0_STT_TTS_BASELINE_2026-10-23.md`.  
 **V1 (2026-10-23):** port sonrası Whisper+TTS ısınma · `ses_v1_isinma.py` · boot 1–3 gecikmez · smoke 9/9.  
 **V2 (2026-10-23):** PyAV19 `metadata_errors` yaması · WAV numpy decode · silent transcribe ~2.5s · smoke 5/5.  
 **Temizlik:** P+S+V+M bitince `RUZGAR_YOL_HARITASI.md` + FROZEN kural silinir; bu blok kısaltılır (kalabalık olmasın).

@@ -165,17 +165,26 @@ def run_v0_baseline() -> dict[str, Any]:
 
 
 def write_v0_baseline_doc(payload: dict[str, Any], path: Path) -> None:
+    """Yeniden ölçüm notu yazar — mühür `V0_STT_TTS_BASELINE_*.md` dosyasını ezme.
+
+    Varsayılan hedef: `docs/V0_STT_TTS_REMEASURE.md` (veya çağıranın verdiği path).
+    Mühür baseline path’ine yazılırsa no-op (audit 2026-11-02).
+    """
+    if path.name.startswith("V0_STT_TTS_BASELINE"):
+        return
     stt = payload.get("stt") or {}
     tts = payload.get("tts") or {}
     lines = [
-        "# V0 — STT/TTS gecikme baseline — 2026-10-23",
+        "# V0 — STT/TTS yeniden ölçüm (mühür değil)",
         "",
         f"`{payload.get('version')}` · `{payload.get('ts')}`",
         "",
+        "Mühür: `V0_STT_TTS_BASELINE_2026-10-23.md`",
+        "",
         "## STT (Whisper)",
         "",
-        f"| Alan | Değer |",
-        f"|------|--------|",
+        "| Alan | Değer |",
+        "|------|--------|",
         f"| available | {stt.get('available')} |",
         f"| model | {stt.get('model')} |",
         f"| get_model_ms | {stt.get('get_model_ms')} |",
@@ -184,18 +193,14 @@ def write_v0_baseline_doc(payload: dict[str, Any], path: Path) -> None:
         "",
         "## TTS (Edge)",
         "",
-        f"| Alan | Değer |",
-        f"|------|--------|",
+        "| Alan | Değer |",
+        "|------|--------|",
         f"| edge_available | {tts.get('edge_available')} |",
         f"| voice | {tts.get('voice')} |",
         f"| stream_first_byte_ms | {tts.get('stream_first_byte_ms')} |",
         f"| synth_full_ms | {tts.get('synth_full_ms')} |",
         f"| bytes | {tts.get('bytes')} |",
         f"| note | {tts.get('note') or '—'} |",
-        "",
-        "## Sonraki",
-        "",
-        "**V1** — Whisper `get_model` + TTS pool prime (boot 1–3’ü geciktirmeden).",
         "",
         "```json",
         json.dumps(payload, ensure_ascii=False, indent=2),

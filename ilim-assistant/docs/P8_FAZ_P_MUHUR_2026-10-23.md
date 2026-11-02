@@ -11,6 +11,8 @@
 | boot0 | **80%** |
 | heal_r10 | **30%** |
 
+Not: P0 baseline’da heal_r10 **20%** ölçülmüştü; P8 mühür anında **30%** (≤%35 pencere içinde). Şişirme yok — aynı KPI penceresinin güncel okuması.
+
 ## Dilimler
 
 P0–P7 ✅ · P8 mühür ✅

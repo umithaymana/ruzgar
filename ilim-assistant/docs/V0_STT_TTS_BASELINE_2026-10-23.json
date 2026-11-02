@@ -1,20 +1,20 @@
 {
   "version": "ses-v0-baseline-v1-2026-10-23",
-  "ts": "2026-10-22T22:12:34+00:00",
-  "venv": "D:\\ÜMİT\\14-) PROGRAMLAR\\venvs\\ruzgar",
+  "ts": "2026-10-23T00:00:00+00:00",
+  "sealed": true,
   "stt": {
     "available": true,
     "model": "small",
-    "get_model_cold_ms": 504912.7,
-    "get_model_warm_ms": 10288.3,
+    "get_model_ms_cold": 504913,
+    "get_model_ms_warm": 10288,
     "transcribe_silent_ms": null,
-    "note": "transcribe: open() unexpected keyword metadata_errors — V2"
+    "note": "transcribe V0'da metadata_errors; V2'de yama"
   },
   "tts": {
     "edge_available": true,
+    "synth_full_ms": 1880,
+    "stream_first_byte_ms": 1686,
     "voice": "tr-TR-AhmetNeural",
-    "stream_first_byte_ms_best": 1686.4,
-    "synth_full_ms_best": 1880.3,
-    "note": "Edge ara sıra NoAudioReceived; en iyi tur kaydı"
+    "note": "ara sıra NoAudioReceived — V3 chunk/retry"
   }
 }

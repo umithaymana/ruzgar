@@ -44,7 +44,7 @@ M  Diğer motorlar (Video → Tercüme → Okuma → Mimar)
 
 | Dilim | İş | Çıkış | Durum |
 |-------|-----|--------|--------|
-| **P0** | Baseline: BOOT=0 / BOOT=1 KPI, görev pili | Sayısal başlangıç | ✅ 2026-10-23 · `docs/P0_BASELINE_2026-10-23.md` |
+| **P0** | Baseline: BOOT=0 / BOOT=1 KPI, görev pili | Sayısal başlangıç | ✅ 2026-10-23 · `ilim-assistant/docs/P0_BASELINE_2026-10-23.md` |
 | **P1** | Supervised pattern kütüphanesi (VERSION/health ötesi sık niyetler) | Dar görev boot ↑ | ✅ 2026-10-23 · 5 pattern · smoke 9/9 |
 | **P2** | Niyet → ray sınıflayıcı (scaffold / ajan+boot / mega) | Yanlış ray ↓ | ✅ 2026-10-23 · smoke 26/26 |
 | **P3** | Dosya-dosya verify + heal→kök öğrenme | heal_r10 düşük; verify∧ok | ✅ 2026-10-23 · smoke 12/12 |
@@ -52,7 +52,7 @@ M  Diğer motorlar (Video → Tercüme → Okuma → Mimar)
 | **P5** | Scaffold ürün borusu (statik / react_vite / FastAPI) | Güvenli greenfield ray | ✅ 2026-10-23 · smoke 15/15 |
 | **P6** | Pilot A: küçük CLI/araç uçtan uca | Çalışır + pytest | ✅ 2026-10-23 · `projects/pilot-a-selam-cli` · 4 pytest |
 | **P7** | Pilot B: basit web sitesi uçtan uca | Açılır + smoke | ✅ 2026-10-23 · `projects/pilot-b-vitrin` · 11/11 |
-| **P8** | Faz P mühür (KPI + 2 pilot) | P kapanır → S | ✅ 2026-10-23 · seal YEŞİL · `docs/P8_FAZ_P_MUHUR_2026-10-23.md` |
+| **P8** | Faz P mühür (KPI + 2 pilot) | P kapanır → S | ✅ 2026-10-23 · seal YEŞİL · `ilim-assistant/docs/P8_FAZ_P_MUHUR_2026-10-23.md` |
 
 Kapılar açık: şablon · `@@patch` · `run_argv` verify · dar shell onay.  
 Kapılar kapalı: serbest exec · silme · serbest dış yazma.
@@ -70,7 +70,7 @@ Kapılar kapalı: serbest exec · silme · serbest dış yazma.
 | **S4** | Ümit emri web sırası niyet-koşullu | **Ayrı Mimar `evet`** | ⬜ |
 | **S5** | Fuzzy + doğal sentez sıkı (bilir-gibi yalan ↓) | Yanlış kart özgüvensiz | ✅ 2026-10-23 · fuzzy≥0.85 · smoke 11/11 |
 | **S6** | Anlık kart vs grounded anlat + harman | Çelişkide dürüst miss | ✅ 2026-10-23 · GROUNDED S6 · smoke 11/11 |
-| **S7** | Canlı batarya + Faz S mühür | S kapanır → V | ✅ 2026-10-23 · YEŞİL · S4 askıda · `docs/S7_FAZ_S_MUHUR_2026-10-23.md` |
+| **S7** | Canlı batarya + Faz S mühür | S kapanır → V | ✅ 2026-10-23 · YEŞİL · S4 askıda · `ilim-assistant/docs/S7_FAZ_S_MUHUR_2026-10-23.md` |
 
 Not: C/H yeşilleri semptom yaması sayılır; S borusu onları geçersiz kılmaz, aşar.
 
@@ -80,7 +80,7 @@ Not: C/H yeşilleri semptom yaması sayılır; S borusu onları geçersiz kılma
 
 | Dilim | İş | Çıkış | Durum |
 |-------|-----|--------|--------|
-| **V0** | STT/TTS gecikme baseline (ms) | Ölçüm | ✅ 2026-10-23 · STT ılık 10.3s · TTS first ~1.7s · `docs/V0_STT_TTS_BASELINE_2026-10-23.md` |
+| **V0** | STT/TTS gecikme baseline (ms) | Ölçüm | ✅ 2026-10-23 · STT ılık 10.3s · TTS first ~1.7s · `ilim-assistant/docs/V0_STT_TTS_BASELINE_2026-10-23.md` |
 | **V1** | Isınma: Whisper `get_model` + TTS pool prime (boot 1–3’ü geciktirmeden, port sonrası) | Soğuk ilk tur yok | ✅ 2026-10-23 · `ses_v1_isinma` · smoke 9/9 |
 | **V2** | STT doğruluk/hız (model, VAD, cihaz, ffmpeg yolu) | Duyuyor | ✅ 2026-10-23 · PyAV19 decode yaması · silent wav ~2.5s · smoke 5/5 |
 | **V3** | TTS ilk-byte (küçük chunk, workers, rate) | Gecikme ↓ | ⬜ |
@@ -112,7 +112,7 @@ Her motor: ölçüm → derin iş → uygulama denemesi → mühür. Önceki mot
 | V | 🔄 V0–V2✅ · sırada **V3** |
 | M | ⬜ V mühürüne bağlı |
 
-**Son işaret:** 2026-10-23 — V2 STT decode ✅ → V3 TTS ilk-byte.
+**Son işaret:** 2026-11-02 — audit: P/S + V0–V2 smoke yeşil · mühür yolları `ilim-assistant/docs/` · sırada **V3** TTS ilk-byte.
 
 ---
 
