@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-11-03 — **V4** barge-in ✅ · sırada **V5** sesli mühür · kilit P→S→V→M · güvenli bölge alt taban duruyor.
+**Son güncelleme:** 2026-11-03 — **Faz V mühür YEŞİL** · sırada **M1 Video** · kilit P→S→V→M · güvenli bölge alt taban duruyor.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -12,8 +12,8 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 |-----|--------|--------|
 | **P** | Programlama tavanı + 2 pilot (CLI + web) | ✅ **mühürlü** (P0–P8) |
 | **S** | Sohbet muhakeme (niyet→kaynak→harman) | ✅ **mühürlü** (S4=`evet` askıda) |
-| **V** | Ses STT/TTS | 🔄 **V0–V4✅ → V5** |
-| **M** | Video→Tercüme→Okuma→Mimar | ⬜ V mühürüne bağlı |
+| **V** | Ses STT/TTS | ✅ **mühürlü** (V0–V5) |
+| **M** | Video→Tercüme→Okuma→Mimar | 🔄 **M1 Video** |
 
 **Kural:** birkaç günlük iş; dilim atlama / cila ile geçme yok. Ölçüm→yama→smoke→canlı→✅ · dilim yeşil → commit+push.  
 **P0 (2026-10-23):** agent_ok **%70** · recent5 **%80** · boot0 **%80** · offline E2 **5/5** · mühür YEŞİL · `ilim-assistant/docs/P0_BASELINE_2026-10-23.md`.  
@@ -37,6 +37,7 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 **V2 (2026-10-23):** PyAV19 `metadata_errors` yaması · WAV numpy decode · silent transcribe ~2.5s · smoke 5/5.  
 **V3 (2026-11-03):** TTS kısa yol in-process stream+retry · workers varsayılan 2 · first ~820 ms (V0 1686) · smoke · `ilim-assistant/docs/V3_TTS_ILK_BYTE_2026-11-03.md` → **V4**.  
 **V4 (2026-11-03):** barge-in mic→TTS kes · kayıtta TTS kilit · smoke · `ilim-assistant/docs/V4_BARGE_IN_2026-11-03.md` → **V5**.  
+**V5 (2026-11-03):** sesli tur e2e + Faz V mühür **YEŞİL** · `ilim-assistant/docs/V5_FAZ_V_MUHUR_2026-11-03.md` → **M1**.  
 **Temizlik:** P+S+V+M bitince `RUZGAR_YOL_HARITASI.md` + FROZEN kural silinir; bu blok kısaltılır (kalabalık olmasın).
 
 ### GÜVENLİ BÖLGE — 2026-10-22 (Mimar onayı) ← **AKTİF ALT TABAN**

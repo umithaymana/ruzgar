@@ -3,7 +3,7 @@
 **Kilit:** 2026-10-23 · Mimar onayı («bu planı sevdim, kilitle»)  
 **Kaynak güvenli bölge:** 2026-10-22 · `0c919d60` · `origin/main`  
 **Süre beklentisi:** birkaç gün (faz faz; atlama yok)  
-**Aktif faz:** **V5** (V4✅ 2026-11-03 · S4 askıda)
+**Aktif faz:** **M1** (Faz V mühür ✅ 2026-11-03 · S4 askıda)
 
 Bu dosya çok günlük çalışmada **tek sıra kaynağıdır**. Sapma yasak. Güncelleme: dilim yeşil → burada işaretle + `PROJE_DURUMU.md` özet.
 
@@ -85,7 +85,7 @@ Not: C/H yeşilleri semptom yaması sayılır; S borusu onları geçersiz kılma
 | **V2** | STT doğruluk/hız (model, VAD, cihaz, ffmpeg yolu) | Duyuyor | ✅ 2026-10-23 · PyAV19 decode yaması · silent wav ~2.5s · smoke 5/5 |
 | **V3** | TTS ilk-byte (küçük chunk, workers, rate) | Gecikme ↓ | ✅ 2026-11-03 · in-process stream+retry · `ilim-assistant/docs/V3_TTS_ILK_BYTE_2026-11-03.md` |
 | **V4** | Barge-in / mic↔TTS kilidi | Konuşunca kes + dinle | ✅ 2026-11-03 · `ilim-assistant/docs/V4_BARGE_IN_2026-11-03.md` |
-| **V5** | Sesli tur uçtan uca + mühür | V kapanır → M | ⬜ |
+| **V5** | Sesli tur uçtan uca + mühür | V kapanır → M | ✅ 2026-11-03 · seal YEŞİL · `ilim-assistant/docs/V5_FAZ_V_MUHUR_2026-11-03.md` |
 
 ---
 
@@ -96,7 +96,7 @@ Her motor: ölçüm → derin iş → uygulama denemesi → mühür. Önceki mot
 
 | Dilim | Motor | Durum |
 |-------|--------|--------|
-| **M1** | Video | ⬜ |
+| **M1** | Video | ⬜ sırada |
 | **M2** | Tercüme | ⬜ |
 | **M3** | Okuma | ⬜ |
 | **M4** | Mimar | ⬜ |
@@ -109,10 +109,10 @@ Her motor: ölçüm → derin iş → uygulama denemesi → mühür. Önceki mot
 |-----|--------|
 | P | ✅ mühürlü (P0–P8) |
 | S | ✅ mühürlü (S4 askıda `evet`) |
-| V | 🔄 V0–V4✅ · sırada **V5** |
-| M | ⬜ V mühürüne bağlı |
+| V | ✅ mühürlü (V0–V5) |
+| M | 🔄 sırada **M1 Video** |
 
-**Son işaret:** 2026-11-03 — V4 barge-in ✅ → V5 sesli tur mühür.
+**Son işaret:** 2026-11-03 — Faz V mühür YEŞİL → **M1 Video**.
 
 ---
 
