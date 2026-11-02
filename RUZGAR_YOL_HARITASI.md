@@ -3,7 +3,7 @@
 **Kilit:** 2026-10-23 · Mimar onayı («bu planı sevdim, kilitle»)  
 **Kaynak güvenli bölge:** 2026-10-22 · `0c919d60` · `origin/main`  
 **Süre beklentisi:** birkaç gün (faz faz; atlama yok)  
-**Aktif faz:** **M1** (Faz V mühür ✅ 2026-11-03 · S4 askıda)
+**Aktif faz:** **M2** (M1 Video ✅ 2026-11-03 · S4 askıda)
 
 Bu dosya çok günlük çalışmada **tek sıra kaynağıdır**. Sapma yasak. Güncelleme: dilim yeşil → burada işaretle + `PROJE_DURUMU.md` özet.
 
@@ -96,8 +96,8 @@ Her motor: ölçüm → derin iş → uygulama denemesi → mühür. Önceki mot
 
 | Dilim | Motor | Durum |
 |-------|--------|--------|
-| **M1** | Video | ⬜ sırada |
-| **M2** | Tercüme | ⬜ |
+| **M1** | Video | ✅ 2026-11-03 · baseline+hub yama · `ilim-assistant/docs/M1_VIDEO_BASELINE_2026-11-03.md` |
+| **M2** | Tercüme | ⬜ sırada |
 | **M3** | Okuma | ⬜ |
 | **M4** | Mimar | ⬜ |
 
@@ -110,9 +110,9 @@ Her motor: ölçüm → derin iş → uygulama denemesi → mühür. Önceki mot
 | P | ✅ mühürlü (P0–P8) |
 | S | ✅ mühürlü (S4 askıda `evet`) |
 | V | ✅ mühürlü (V0–V5) |
-| M | 🔄 sırada **M1 Video** |
+| M | 🔄 M1✅ · sırada **M2 Tercüme** |
 
-**Son işaret:** 2026-11-03 — Faz V mühür YEŞİL → **M1 Video**.
+**Son işaret:** 2026-11-03 — M1 Video ✅ → **M2 Tercüme**.
 
 ---
 

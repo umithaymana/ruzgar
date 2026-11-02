@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-11-03 — **Faz V mühür YEŞİL** · sırada **M1 Video** · kilit P→S→V→M · güvenli bölge alt taban duruyor.
+**Son güncelleme:** 2026-11-03 — **M1 Video ✅** · sırada **M2 Tercüme** · kilit P→S→V→M · güvenli bölge alt taban duruyor.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -13,7 +13,7 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 | **P** | Programlama tavanı + 2 pilot (CLI + web) | ✅ **mühürlü** (P0–P8) |
 | **S** | Sohbet muhakeme (niyet→kaynak→harman) | ✅ **mühürlü** (S4=`evet` askıda) |
 | **V** | Ses STT/TTS | ✅ **mühürlü** (V0–V5) |
-| **M** | Video→Tercüme→Okuma→Mimar | 🔄 **M1 Video** |
+| **M** | Video→Tercüme→Okuma→Mimar | 🔄 **M1✅ → M2 Tercüme** |
 
 **Kural:** birkaç günlük iş; dilim atlama / cila ile geçme yok. Ölçüm→yama→smoke→canlı→✅ · dilim yeşil → commit+push.  
 **P0 (2026-10-23):** agent_ok **%70** · recent5 **%80** · boot0 **%80** · offline E2 **5/5** · mühür YEŞİL · `ilim-assistant/docs/P0_BASELINE_2026-10-23.md`.  
@@ -38,6 +38,7 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 **V3 (2026-11-03):** TTS kısa yol in-process stream+retry · workers varsayılan 2 · first ~820 ms (V0 1686) · smoke · `ilim-assistant/docs/V3_TTS_ILK_BYTE_2026-11-03.md` → **V4**.  
 **V4 (2026-11-03):** barge-in mic→TTS kes · kayıtta TTS kilit · smoke · `ilim-assistant/docs/V4_BARGE_IN_2026-11-03.md` → **V5**.  
 **V5 (2026-11-03):** sesli tur e2e + Faz V mühür **YEŞİL** · `ilim-assistant/docs/V5_FAZ_V_MUHUR_2026-11-03.md` → **M1**.  
+**M1 (2026-11-03):** Video baseline (ffmpeg trim/concat) + hub atolye spam yaması · smoke · `ilim-assistant/docs/M1_VIDEO_BASELINE_2026-11-03.md` → **M2**.  
 **Temizlik:** P+S+V+M bitince `RUZGAR_YOL_HARITASI.md` + FROZEN kural silinir; bu blok kısaltılır (kalabalık olmasın).
 
 ### GÜVENLİ BÖLGE — 2026-10-22 (Mimar onayı) ← **AKTİF ALT TABAN**

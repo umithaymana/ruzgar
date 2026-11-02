@@ -79,16 +79,24 @@ def detect_video_motor_action(
         except Exception:
             pass
         return None
-    target = normalize_hub_motor_id(
-        str(hub.get("mode") or (hub.get("hub_meta") or {}).get("target") or "")
-    )
+    # M1: yalnız gerçek video işi → atölye. Video modunda «selam/hava» gibi
+    # sohbet her seferinde dock açmasın (önceki: target==video ⇒ her mesaj).
     try:
-        from ilim_assistant.motorlar.ana_motor_hub_faz76 import is_video_workflow_request
+        from ilim_assistant.motorlar.ana_motor_hub_faz76 import (
+            is_video_download_request,
+            is_video_workflow_request,
+        )
 
-        if target == "video" or is_video_workflow_request(raw):
+        if is_video_workflow_request(raw) or is_video_download_request(raw):
             return {"motor": "video", "action": "atolye", "message": raw}
     except Exception:
-        if target == "video":
+        target = normalize_hub_motor_id(
+            str(hub.get("mode") or (hub.get("hub_meta") or {}).get("target") or "")
+        )
+        low = raw.casefold()
+        if target == "video" and any(
+            k in low for k in ("kes", "indir", "kurgu", "altyaz", "ffmpeg", "oynat")
+        ):
             return {"motor": "video", "action": "atolye", "message": raw}
     return None
 
