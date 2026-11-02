@@ -101,7 +101,9 @@ def faz74_enabled() -> bool:
 
 
 def _ascii_fold(text: str) -> str:
-    t = unicodedata.normalize("NFKD", text or "")
+    # M2: Türkçe ı/İ NFKD ile düşmez — dil eşlemesi için i'ye indir
+    t = (text or "").replace("ı", "i").replace("İ", "i")
+    t = unicodedata.normalize("NFKD", t)
     return "".join(c for c in t if not unicodedata.combining(c)).lower()
 
 
@@ -138,7 +140,16 @@ def parse_language_pair(message: str) -> tuple[str, str]:
         lab = _ascii_fold(label)
         if f"{lab}den" in low or f"{lab}dan" in low:
             src = code
-        if f"{lab}ye" in low or f"{lab}e " in low or f"to {code}" in low:
+        # M2: Türkçe yönelme — ye/ya/e/a (arapcaya, turkceye, fransizcaya…)
+        if (
+            f"{lab}ye" in low
+            or f"{lab}ya" in low
+            or f"{lab}'ye" in low
+            or f"{lab}'ya" in low
+            or f"{lab}e " in low
+            or f"to {code}" in low
+            or re.search(rf"\b{re.escape(lab)}(?:ye|ya|e|a)\b", low)
+        ):
             tgt = code
 
     m = re.search(
@@ -155,7 +166,7 @@ def parse_language_pair(message: str) -> tuple[str, str]:
 
     if "turkce" in low or "türkçe" in raw.lower():
         if "ingilizce" in low or "english" in low:
-            if re.search(r"ingilizce\s*(?:ye|e)", low):
+            if re.search(r"ingilizce\s*(?:ye|ya|e)", low):
                 src, tgt = "tr", "en"
             else:
                 src, tgt = "en", "tr"
@@ -182,6 +193,24 @@ def extract_translate_text(message: str) -> str:
                 tail = raw.split(sep, 1)[-1].strip()
                 if len(tail) > 6 and not _TRANSLATE_RE.search(tail[:20]):
                     return tail
+        # M2: «Hello world turkceye cevir» — fiilden önceki gövde
+        m2 = re.search(
+            r"^(.+?)\s+(?:(\w+)(?:ye|ya|e|a)\s+)?(?:çevir|cevir|tercüme|tercume|translate)\s*$",
+            raw,
+            re.I | re.DOTALL,
+        )
+        if m2:
+            head = m2.group(1).strip().strip("«»\"'")
+            head_fold = _ascii_fold(head)
+            # yalnız dil / yönelme değilse metin say
+            if (
+                head
+                and len(head) >= 2
+                and not _TRANSLATE_RE.search(head)
+                and resolve_lang_token(head_fold) is None
+                and resolve_lang_token(re.sub(r"(?:ye|ya|e|a)$", "", head_fold)) is None
+            ):
+                return head
     return ""
 
 
