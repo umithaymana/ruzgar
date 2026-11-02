@@ -3,7 +3,7 @@
 **Kilit:** 2026-10-23 · Mimar onayı («bu planı sevdim, kilitle»)  
 **Kaynak güvenli bölge:** 2026-10-22 · `0c919d60` · `origin/main`  
 **Süre beklentisi:** birkaç gün (faz faz; atlama yok)  
-**Aktif faz:** **M4** (M3 Okuma ✅ 2026-11-03 · S4 askıda)
+**Aktif faz:** **Faz M mühürlü** (M1–M4 ✅ 2026-11-03 · S4 askıda)
 
 Bu dosya çok günlük çalışmada **tek sıra kaynağıdır**. Sapma yasak. Güncelleme: dilim yeşil → burada işaretle + `PROJE_DURUMU.md` özet.
 
@@ -99,7 +99,7 @@ Her motor: ölçüm → derin iş → uygulama denemesi → mühür. Önceki mot
 | **M1** | Video | ✅ 2026-11-03 · baseline+hub yama · `ilim-assistant/docs/M1_VIDEO_BASELINE_2026-11-03.md` |
 | **M2** | Tercüme | ✅ 2026-11-03 · dil çifti+SRT · `ilim-assistant/docs/M2_TERCUME_BASELINE_2026-11-03.md` |
 | **M3** | Okuma | ✅ 2026-11-03 · kategori+arsiv · `ilim-assistant/docs/M3_OKUMA_BASELINE_2026-11-03.md` |
-| **M4** | Mimar | ⬜ sırada |
+| **M4** | Mimar | ✅ 2026-11-03 · atölye+hub · `ilim-assistant/docs/M4_MIMAR_BASELINE_2026-11-03.md` |
 
 ---
 
@@ -110,9 +110,9 @@ Her motor: ölçüm → derin iş → uygulama denemesi → mühür. Önceki mot
 | P | ✅ mühürlü (P0–P8) |
 | S | ✅ mühürlü (S4 askıda `evet`) |
 | V | ✅ mühürlü (V0–V5) |
-| M | 🔄 M1–M3✅ · sırada **M4 Mimar** |
+| M | ✅ mühürlü (M1–M4) · `ilim-assistant/docs/M4_FAZ_M_MUHUR_2026-11-03.md` |
 
-**Son işaret:** 2026-11-03 — M3 Okuma ✅ → **M4 Mimar**.
+**Son işaret:** 2026-11-03 — **Faz M mühür YEŞİL**. Temizlik dosya silme → Mimar `evet`.
 
 ---
 

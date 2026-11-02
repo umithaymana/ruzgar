@@ -310,6 +310,25 @@ def resolve_hub_target(
     except Exception:
         pass
 
+    # M4: Mimar atölye niyeti — registry'den önce (foto restore vb. kaçmasın)
+    if not _hub_stay_on_ana_motor(msg):
+        try:
+            from ilim_assistant.motorlar.mimar_faz5 import classify_mimar_intent
+
+            mint = classify_mimar_intent(msg, mode_norm="mimar")
+            mreason = str(mint.get("reason") or "")
+            if mint.get("intent") in (INTENT_COMMAND, INTENT_DO) and (
+                mreason.startswith("atolye_") or mint.get("atolye")
+            ):
+                meta["candidates"].append(
+                    {"motor": "mimar", "score": 10, "reason": mreason or "atolye"}
+                )
+                meta["winner"] = "mimar"
+                meta["reason"] = mreason or "atolye"
+                return "mimar", meta
+        except Exception:
+            pass
+
     try:
         from ilim_assistant.motorlar.motor_kabiliyetleri import resolve_target_from_registry
 

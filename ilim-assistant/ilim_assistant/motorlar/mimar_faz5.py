@@ -23,7 +23,8 @@ _HELP_RE = re.compile(
     re.I,
 )
 _FOTO_RE = re.compile(
-    r"(?:\bfoto(?:graf)?\b|restorasyon|eski\s+foto|soluk|cizik|gurultu)",
+    r"(?:\bfoto(?:graf\w*)?\b|restorasyon|\brestore\b|eski\s+foto|"
+    r"soluk|cizik|gurultu)",
     re.I,
 )
 _SANAT_RE = re.compile(
@@ -105,6 +106,13 @@ def parse_atolye_action(message: str) -> dict[str, Any] | None:
     if not low:
         return None
 
+    # «fotoğraf nedir» — stüdyo değil, bilgi
+    if re.search(r"\b(nedir|ne\s+demek|kimdir)\b", low) and not re.search(
+        r"\b(ciz|cizim|restore|restorasyon|ocr|kopya|tasarla|yenile|duzelt)\b",
+        low,
+    ):
+        return None
+
     if _HELP_RE.search(low):
         return {
             "tab": None,
@@ -169,7 +177,10 @@ def parse_atolye_action(message: str) -> dict[str, Any] | None:
     if _FOTO_RE.search(low):
         if re.search(r"\bocr\b|metin\s+oku|yaziyi\s+oku", low):
             return {"tab": "fotograf", "action": "ocr", "label_tr": "Fotoğraf OCR"}
-        if re.search(r"restorasyon|yenile|soluk|cizik", low):
+        if re.search(
+            r"restorasyon|\brestore\b|yenile|duzelt|soluk|cizik|eski\s+foto",
+            low,
+        ):
             return {
                 "tab": "fotograf",
                 "action": "restore",
