@@ -36,7 +36,12 @@ def _atexit_shutdown_tts_pool() -> None:
 def get_tts_process_pool() -> ProcessPoolExecutor:
     global _TTS_POOL, _TTS_ATEXIT_DONE
     if _TTS_POOL is None:
-        n = max(1, int(os.environ.get("RUZGAR_TTS_MP_WORKERS", "1")))
+        # V3: varsayılan 2 worker (paralel prefetch); env açıkça set edilirse o geçer
+        raw = os.environ.get("RUZGAR_TTS_MP_WORKERS", "").strip()
+        if raw:
+            n = max(1, int(raw))
+        else:
+            n = 2
         ctx = mp.get_context("spawn")
         _TTS_POOL = ProcessPoolExecutor(max_workers=n, mp_context=ctx)
         if not _TTS_ATEXIT_DONE:
@@ -66,25 +71,47 @@ def prime_tts_process_pool() -> None:
 def _edge_synth_mp3_bytes(job: tuple[str, str, str, str]) -> bytes:
     """
     Alt işlem: Edge-TTS → ham mp3 baytı (pickle için üst düzey fonksiyon).
-    Ümit & Gökçenur paralel seslendirme.
+    V3: NoAudioReceived / boş çıktıda kısa retry.
     """
     text, voice, rate, pitch = job
     import tempfile
 
     import edge_tts
 
-    async def _run() -> bytes:
+    try:
+        retries = max(0, int(os.environ.get("RUZGAR_TTS_V3_RETRIES", "2")))
+    except ValueError:
+        retries = 2
+
+    async def _once() -> bytes:
         fd, path = tempfile.mkstemp(suffix=".mp3")
         os.close(fd)
         try:
             comm = edge_tts.Communicate(text.strip(), voice, rate=rate, pitch=pitch)
             await comm.save(path)
-            return Path(path).read_bytes()
+            data = Path(path).read_bytes()
+            if not data:
+                raise RuntimeError("NoAudioReceived:empty")
+            return data
         finally:
             try:
                 os.unlink(path)
             except OSError:
                 pass
+
+    async def _run() -> bytes:
+        last: BaseException | None = None
+        for attempt in range(retries + 1):
+            try:
+                return await _once()
+            except Exception as exc:
+                last = exc
+                name = type(exc).__name__
+                if "NoAudio" not in name and "NoAudio" not in str(exc) and attempt >= retries:
+                    raise
+                await asyncio.sleep(0.12 * (attempt + 1))
+        assert last is not None
+        raise last
 
     return asyncio.run(_run())
 

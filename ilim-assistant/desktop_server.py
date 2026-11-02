@@ -9869,13 +9869,34 @@ async def api_tts(body: TtsBody):
                     durak_carpani=float(ayar.get("durak", 1.0)),
                 )
             else:
-                out_path = await synthesize_edge_mp3_in_process(
-                    text,
-                    voice=voice,
-                    rate=rate,
-                    pitch=pitch,
-                    meta=meta,
-                )
+                # V3 — kısa sohbet parçası: in-process stream + retry (pool IPC yok)
+                use_v3 = False
+                try:
+                    from ilim_assistant.ses_v3_tts_ilk_byte import (
+                        synthesize_edge_mp3_v3_fast,
+                        wants_v3_fast_path,
+                    )
+
+                    use_v3 = wants_v3_fast_path(text)
+                except Exception:
+                    use_v3 = False
+                if use_v3:
+                    v3_rate = os.environ.get("RUZGAR_TTS_V3_RATE", "").strip() or rate
+                    out_path = await synthesize_edge_mp3_v3_fast(
+                        text,
+                        voice=voice,
+                        rate=v3_rate,
+                        pitch=pitch,
+                        meta=meta,
+                    )
+                else:
+                    out_path = await synthesize_edge_mp3_in_process(
+                        text,
+                        voice=voice,
+                        rate=rate,
+                        pitch=pitch,
+                        meta=meta,
+                    )
     except FileNotFoundError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     except HTTPException:

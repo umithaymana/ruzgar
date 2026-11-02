@@ -3,7 +3,7 @@
 **Kilit:** 2026-10-23 · Mimar onayı («bu planı sevdim, kilitle»)  
 **Kaynak güvenli bölge:** 2026-10-22 · `0c919d60` · `origin/main`  
 **Süre beklentisi:** birkaç gün (faz faz; atlama yok)  
-**Aktif faz:** **V3** (V2✅ 2026-10-23 · S4 askıda)
+**Aktif faz:** **V4** (V3✅ 2026-11-03 · S4 askıda)
 
 Bu dosya çok günlük çalışmada **tek sıra kaynağıdır**. Sapma yasak. Güncelleme: dilim yeşil → burada işaretle + `PROJE_DURUMU.md` özet.
 
@@ -83,7 +83,7 @@ Not: C/H yeşilleri semptom yaması sayılır; S borusu onları geçersiz kılma
 | **V0** | STT/TTS gecikme baseline (ms) | Ölçüm | ✅ 2026-10-23 · STT ılık 10.3s · TTS first ~1.7s · `ilim-assistant/docs/V0_STT_TTS_BASELINE_2026-10-23.md` |
 | **V1** | Isınma: Whisper `get_model` + TTS pool prime (boot 1–3’ü geciktirmeden, port sonrası) | Soğuk ilk tur yok | ✅ 2026-10-23 · `ses_v1_isinma` · smoke 9/9 |
 | **V2** | STT doğruluk/hız (model, VAD, cihaz, ffmpeg yolu) | Duyuyor | ✅ 2026-10-23 · PyAV19 decode yaması · silent wav ~2.5s · smoke 5/5 |
-| **V3** | TTS ilk-byte (küçük chunk, workers, rate) | Gecikme ↓ | ⬜ |
+| **V3** | TTS ilk-byte (küçük chunk, workers, rate) | Gecikme ↓ | ✅ 2026-11-03 · in-process stream+retry · `ilim-assistant/docs/V3_TTS_ILK_BYTE_2026-11-03.md` |
 | **V4** | Barge-in / mic↔TTS kilidi | Konuşunca kes + dinle | ⬜ |
 | **V5** | Sesli tur uçtan uca + mühür | V kapanır → M | ⬜ |
 
@@ -109,10 +109,10 @@ Her motor: ölçüm → derin iş → uygulama denemesi → mühür. Önceki mot
 |-----|--------|
 | P | ✅ mühürlü (P0–P8) |
 | S | ✅ mühürlü (S4 askıda `evet`) |
-| V | 🔄 V0–V2✅ · sırada **V3** |
+| V | 🔄 V0–V3✅ · sırada **V4** |
 | M | ⬜ V mühürüne bağlı |
 
-**Son işaret:** 2026-11-02 — audit: P/S + V0–V2 smoke yeşil · mühür yolları `ilim-assistant/docs/` · sırada **V3** TTS ilk-byte.
+**Son işaret:** 2026-11-03 — V3 TTS ilk-byte ✅ → V4 barge-in.
 
 ---
 
