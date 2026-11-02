@@ -2,62 +2,44 @@
   "dal": "11_c_s",
   "excel": "11 - ) C-S.xlsx",
   "n_list": 150,
-  "sources": 6,
-  "ok_sources": 5,
+  "sources": 3,
+  "ok_sources": 3,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:16:30.184621+00:00",
   "skills": [
-    "bilgisayar bilimine giriş",
-    "temel CS omurgası"
+    "CS omurgası",
+    "self-study haritası"
   ],
   "kaynaklar": {
-    "n2t": {
-      "kaynak_id": "11_c_s_n2t",
-      "baslik": "NAND2Tetris",
-      "url": "https://www.nand2tetris.org/",
+    "teachyourselfcs": {
+      "kaynak_id": "11_c_s_teachyourselfcs",
+      "baslik": "Teach Yourself Computer Science",
+      "url": "https://teachyourselfcs.com/",
       "dal": "11_c_s",
       "ok": true,
-      "parca": 1
+      "telafi": true,
+      "parca": 3
     },
-    "sicp": {
-      "kaynak_id": "11_c_s_sicp",
-      "baslik": "SICP",
-      "url": "https://mitp-content-server.mit.edu/books/content/sectbye/zeichs/sicp.zip",
-      "dal": "11_c_s",
-      "ok": false,
-      "parca": 1
-    },
-    "open_data_structures": {
-      "kaynak_id": "11_c_s_open_data_structures",
-      "baslik": "Open Data Structures",
-      "url": "https://opendatastructures.org/ods-python.pdf",
+    "ossu": {
+      "kaynak_id": "11_c_s_ossu",
+      "baslik": "OSSU Computer Science",
+      "url": "https://github.com/ossu/computer-science",
       "dal": "11_c_s",
       "ok": true,
-      "parca": 10
+      "telafi": true,
+      "parca": 2
     },
-    "algorithms_jeff_erickson_": {
-      "kaynak_id": "11_c_s_algorithms_jeff_erickson_",
-      "baslik": "Algorithms (Jeff Erickson)",
-      "url": "https://jeffe.cs.illinois.edu/teaching/algorithms/book/Algorithms-JeffE.pdf",
+    "cs50": {
+      "kaynak_id": "11_c_s_cs50",
+      "baslik": "CS50 Harvard (açık ders)",
+      "url": "https://cs50.harvard.edu/x/",
       "dal": "11_c_s",
       "ok": true,
-      "parca": 18
-    },
-    "competitive_programmer_s_handbook": {
-      "kaynak_id": "11_c_s_competitive_programmer_s_handbook",
-      "baslik": "Competitive Programmer's Handbook",
-      "url": "https://cses.fi/book/book.pdf",
-      "dal": "11_c_s",
-      "ok": true,
-      "parca": 11
-    },
-    "operating_systems_three_easy_pieces": {
-      "kaynak_id": "11_c_s_operating_systems_three_easy_pieces",
-      "baslik": "Operating Systems: Three Easy Pieces",
-      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
-      "dal": "11_c_s",
-      "ok": true,
+      "telafi": true,
       "parca": 1
     }
-  }
+  },
+  "telafi_purge_utc": "2026-11-02T23:48:57.592241+00:00",
+  "telafi_utc": "2026-11-02T23:46:22.912280+00:00",
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
 }

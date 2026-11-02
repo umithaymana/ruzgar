@@ -2,15 +2,14 @@
   "dal": "03_yapay_zeka",
   "excel": "3 - ) YAPAY ZEKA.xlsx",
   "n_list": 151,
-  "sources": 7,
-  "ok_sources": 7,
+  "sources": 3,
+  "ok_sources": 3,
   "ilave_rows": 0,
   "updated_utc": "2026-11-02T23:11:26.780165+00:00",
   "skills": [
-    "YZ / ML kavramları",
+    "YZ/ML",
     "sinir ağları",
-    "pekiştirmeli öğrenme",
-    "arama/planlama"
+    "pekiştirmeli öğrenme"
   ],
   "kaynaklar": {
     "rlbook": {
@@ -29,45 +28,17 @@
       "ok": true,
       "parca": 1
     },
-    "slp": {
-      "kaynak_id": "03_yapay_zeka_slp",
-      "baslik": "SLP Jurafsky",
-      "url": "https://web.stanford.edu/~jurafsky/slp3/",
+    "fastai": {
+      "kaynak_id": "03_yapay_zeka_fastai",
+      "baslik": "Practical Deep Learning for Coders (fast.ai)",
+      "url": "https://course.fast.ai/",
       "dal": "03_yapay_zeka",
       "ok": true,
-      "parca": 1
-    },
-    "open_data_structures": {
-      "kaynak_id": "03_yapay_zeka_open_data_structures",
-      "baslik": "Open Data Structures",
-      "url": "https://opendatastructures.org/ods-python.pdf",
-      "dal": "03_yapay_zeka",
-      "ok": true,
-      "parca": 10
-    },
-    "algorithms_jeff_erickson_": {
-      "kaynak_id": "03_yapay_zeka_algorithms_jeff_erickson_",
-      "baslik": "Algorithms (Jeff Erickson)",
-      "url": "https://jeffe.cs.illinois.edu/teaching/algorithms/book/Algorithms-JeffE.pdf",
-      "dal": "03_yapay_zeka",
-      "ok": true,
-      "parca": 18
-    },
-    "competitive_programmer_s_handbook": {
-      "kaynak_id": "03_yapay_zeka_competitive_programmer_s_handbook",
-      "baslik": "Competitive Programmer's Handbook",
-      "url": "https://cses.fi/book/book.pdf",
-      "dal": "03_yapay_zeka",
-      "ok": true,
-      "parca": 11
-    },
-    "operating_systems_three_easy_pieces": {
-      "kaynak_id": "03_yapay_zeka_operating_systems_three_easy_pieces",
-      "baslik": "Operating Systems: Three Easy Pieces",
-      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
-      "dal": "03_yapay_zeka",
-      "ok": true,
-      "parca": 1
+      "telafi": true,
+      "parca": 2
     }
-  }
+  },
+  "telafi_purge_utc": "2026-11-02T23:48:57.583240+00:00",
+  "telafi_utc": "2026-11-02T23:46:20.559924+00:00",
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
 }

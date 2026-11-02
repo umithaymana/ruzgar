@@ -2,12 +2,14 @@
   "dal": "21_di_l_bi_li_mi_",
   "excel": "21 - ) DİL BİLİMİ.xlsx",
   "n_list": 150,
-  "sources": 5,
-  "ok_sources": 5,
+  "sources": 3,
+  "ok_sources": 3,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:22:32.906487+00:00",
   "skills": [
-    "dil bilimi / NLP (Jurafsky SLP)"
+    "NLP (SLP)",
+    "NLTK",
+    "Universal Dependencies"
   ],
   "kaynaklar": {
     "slp": {
@@ -18,37 +20,26 @@
       "ok": true,
       "parca": 1
     },
-    "open_data_structures": {
-      "kaynak_id": "21_di_l_bi_li_mi__open_data_structures",
-      "baslik": "Open Data Structures",
-      "url": "https://opendatastructures.org/ods-python.pdf",
+    "nltk_book": {
+      "kaynak_id": "21_di_l_bi_li_mi__nltk_book",
+      "baslik": "NLTK Book",
+      "url": "https://www.nltk.org/book/",
       "dal": "21_di_l_bi_li_mi_",
       "ok": true,
-      "parca": 10
-    },
-    "algorithms_jeff_erickson_": {
-      "kaynak_id": "21_di_l_bi_li_mi__algorithms_jeff_erickson_",
-      "baslik": "Algorithms (Jeff Erickson)",
-      "url": "https://jeffe.cs.illinois.edu/teaching/algorithms/book/Algorithms-JeffE.pdf",
-      "dal": "21_di_l_bi_li_mi_",
-      "ok": true,
-      "parca": 18
-    },
-    "competitive_programmer_s_handbook": {
-      "kaynak_id": "21_di_l_bi_li_mi__competitive_programmer_s_handbook",
-      "baslik": "Competitive Programmer's Handbook",
-      "url": "https://cses.fi/book/book.pdf",
-      "dal": "21_di_l_bi_li_mi_",
-      "ok": true,
-      "parca": 11
-    },
-    "operating_systems_three_easy_pieces": {
-      "kaynak_id": "21_di_l_bi_li_mi__operating_systems_three_easy_pieces",
-      "baslik": "Operating Systems: Three Easy Pieces",
-      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
-      "dal": "21_di_l_bi_li_mi_",
-      "ok": true,
+      "telafi": true,
       "parca": 1
+    },
+    "universal_deps": {
+      "kaynak_id": "21_di_l_bi_li_mi__universal_deps",
+      "baslik": "Universal Dependencies",
+      "url": "https://universaldependencies.org/",
+      "dal": "21_di_l_bi_li_mi_",
+      "ok": true,
+      "telafi": true,
+      "parca": 15
     }
-  }
+  },
+  "telafi_purge_utc": "2026-11-02T23:48:57.601244+00:00",
+  "telafi_utc": "2026-11-02T23:48:12.193766+00:00",
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
 }

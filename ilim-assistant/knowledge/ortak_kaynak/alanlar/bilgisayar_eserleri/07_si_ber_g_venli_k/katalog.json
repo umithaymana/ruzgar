@@ -2,47 +2,45 @@
   "dal": "07_si_ber_g_venli_k",
   "excel": "7 - ) SİBER GÜVENLİK.xlsx",
   "n_list": 100,
-  "sources": 4,
-  "ok_sources": 4,
+  "sources": 3,
+  "ok_sources": 2,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:13:43.542093+00:00",
   "skills": [
-    "siber güvenlik temeli",
-    "OWASP",
-    "güvenli kodlama"
+    "OWASP Top 10",
+    "güvenli kodlama",
+    "ASVS"
   ],
   "kaynaklar": {
-    "open_data_structures": {
-      "kaynak_id": "07_si_ber_g_venli_k_open_data_structures",
-      "baslik": "Open Data Structures",
-      "url": "https://opendatastructures.org/ods-python.pdf",
+    "owasp_top10": {
+      "kaynak_id": "07_si_ber_g_venli_k_owasp_top10",
+      "baslik": "OWASP Top 10",
+      "url": "https://owasp.org/www-project-top-ten/",
       "dal": "07_si_ber_g_venli_k",
       "ok": true,
-      "parca": 10
+      "telafi": true,
+      "parca": 1
     },
-    "algorithms_jeff_erickson_": {
-      "kaynak_id": "07_si_ber_g_venli_k_algorithms_jeff_erickson_",
-      "baslik": "Algorithms (Jeff Erickson)",
-      "url": "https://jeffe.cs.illinois.edu/teaching/algorithms/book/Algorithms-JeffE.pdf",
+    "owasp_cheat": {
+      "kaynak_id": "07_si_ber_g_venli_k_owasp_cheat",
+      "baslik": "OWASP Cheat Sheet Series",
+      "url": "https://cheatsheetseries.owasp.org/Index.html",
       "dal": "07_si_ber_g_venli_k",
-      "ok": true,
-      "parca": 18
+      "ok": false,
+      "telafi": true,
+      "parca": 1
     },
-    "competitive_programmer_s_handbook": {
-      "kaynak_id": "07_si_ber_g_venli_k_competitive_programmer_s_handbook",
-      "baslik": "Competitive Programmer's Handbook",
-      "url": "https://cses.fi/book/book.pdf",
+    "owasp_asvs": {
+      "kaynak_id": "07_si_ber_g_venli_k_owasp_asvs",
+      "baslik": "OWASP ASVS",
+      "url": "https://owasp.org/www-project-application-security-verification-standard/",
       "dal": "07_si_ber_g_venli_k",
       "ok": true,
-      "parca": 11
-    },
-    "operating_systems_three_easy_pieces": {
-      "kaynak_id": "07_si_ber_g_venli_k_operating_systems_three_easy_pieces",
-      "baslik": "Operating Systems: Three Easy Pieces",
-      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
-      "dal": "07_si_ber_g_venli_k",
-      "ok": true,
+      "telafi": true,
       "parca": 1
     }
-  }
+  },
+  "telafi_purge_utc": "2026-11-02T23:48:57.588242+00:00",
+  "telafi_utc": "2026-11-02T23:46:21.425624+00:00",
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
 }

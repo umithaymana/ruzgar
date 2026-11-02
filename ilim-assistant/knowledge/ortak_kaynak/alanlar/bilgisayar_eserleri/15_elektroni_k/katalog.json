@@ -2,46 +2,43 @@
   "dal": "15_elektroni_k",
   "excel": "15 - ) ELEKTRONİK.xlsx",
   "n_list": 150,
-  "sources": 4,
-  "ok_sources": 4,
+  "sources": 3,
+  "ok_sources": 2,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:18:38.111263+00:00",
   "skills": [
-    "elektronik temelleri",
-    "açık kaynak dersler"
+    "DC/AC/yarıiletken (All About Circuits)"
   ],
   "kaynaklar": {
-    "open_data_structures": {
-      "kaynak_id": "15_elektroni_k_open_data_structures",
-      "baslik": "Open Data Structures",
-      "url": "https://opendatastructures.org/ods-python.pdf",
+    "elec_tutorials": {
+      "kaynak_id": "15_elektroni_k_elec_tutorials",
+      "baslik": "Electronics Tutorials",
+      "url": "https://www.electronics-tutorials.ws/",
       "dal": "15_elektroni_k",
-      "ok": true,
-      "parca": 10
-    },
-    "algorithms_jeff_erickson_": {
-      "kaynak_id": "15_elektroni_k_algorithms_jeff_erickson_",
-      "baslik": "Algorithms (Jeff Erickson)",
-      "url": "https://jeffe.cs.illinois.edu/teaching/algorithms/book/Algorithms-JeffE.pdf",
-      "dal": "15_elektroni_k",
-      "ok": true,
-      "parca": 18
-    },
-    "competitive_programmer_s_handbook": {
-      "kaynak_id": "15_elektroni_k_competitive_programmer_s_handbook",
-      "baslik": "Competitive Programmer's Handbook",
-      "url": "https://cses.fi/book/book.pdf",
-      "dal": "15_elektroni_k",
-      "ok": true,
-      "parca": 11
-    },
-    "operating_systems_three_easy_pieces": {
-      "kaynak_id": "15_elektroni_k_operating_systems_three_easy_pieces",
-      "baslik": "Operating Systems: Three Easy Pieces",
-      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
-      "dal": "15_elektroni_k",
-      "ok": true,
+      "ok": false,
+      "telafi": true,
       "parca": 1
+    },
+    "circuitpython": {
+      "kaynak_id": "15_elektroni_k_circuitpython",
+      "baslik": "CircuitPython Documentation",
+      "url": "https://docs.circuitpython.org/en/latest/",
+      "dal": "15_elektroni_k",
+      "ok": true,
+      "telafi": true,
+      "parca": 1
+    },
+    "sparkfun_ohms": {
+      "kaynak_id": "15_elektroni_k_sparkfun_ohms",
+      "baslik": "SparkFun — Voltage, Current, Resistance",
+      "url": "https://learn.sparkfun.com/tutorials/voltage-current-resistance-and-ohm-law",
+      "dal": "15_elektroni_k",
+      "ok": true,
+      "telafi": true,
+      "parca": 2
     }
-  }
+  },
+  "telafi_purge_utc": "2026-11-02T23:48:57.595243+00:00",
+  "telafi_utc": "2026-11-02T23:48:09.467954+00:00",
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
 }

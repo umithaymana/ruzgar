@@ -2,45 +2,43 @@
   "dal": "20_bi_li_sel_bi_li_mler",
   "excel": "20 - ) BİLİŞSEL BİLİMLER.xlsx",
   "n_list": 150,
-  "sources": 4,
-  "ok_sources": 4,
+  "sources": 3,
+  "ok_sources": 3,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:22:01.751668+00:00",
   "skills": [
-    "bilişsel bilimlere giriş"
+    "bilişsel bilim (SEP/OCW)"
   ],
   "kaynaklar": {
-    "open_data_structures": {
-      "kaynak_id": "20_bi_li_sel_bi_li_mler_open_data_structures",
-      "baslik": "Open Data Structures",
-      "url": "https://opendatastructures.org/ods-python.pdf",
+    "cogsci_stanford": {
+      "kaynak_id": "20_bi_li_sel_bi_li_mler_cogsci_stanford",
+      "baslik": "Stanford Encyclopedia — Cognitive Science",
+      "url": "https://plato.stanford.edu/entries/cognitive-science/",
       "dal": "20_bi_li_sel_bi_li_mler",
       "ok": true,
-      "parca": 10
+      "telafi": true,
+      "parca": 4
     },
-    "algorithms_jeff_erickson_": {
-      "kaynak_id": "20_bi_li_sel_bi_li_mler_algorithms_jeff_erickson_",
-      "baslik": "Algorithms (Jeff Erickson)",
-      "url": "https://jeffe.cs.illinois.edu/teaching/algorithms/book/Algorithms-JeffE.pdf",
+    "openmind": {
+      "kaynak_id": "20_bi_li_sel_bi_li_mler_openmind",
+      "baslik": "OpenMind cognitive resources index",
+      "url": "https://www.openmind.org/",
       "dal": "20_bi_li_sel_bi_li_mler",
       "ok": true,
-      "parca": 18
+      "telafi": true,
+      "parca": 1
     },
-    "competitive_programmer_s_handbook": {
-      "kaynak_id": "20_bi_li_sel_bi_li_mler_competitive_programmer_s_handbook",
-      "baslik": "Competitive Programmer's Handbook",
-      "url": "https://cses.fi/book/book.pdf",
+    "cog_wiki": {
+      "kaynak_id": "20_bi_li_sel_bi_li_mler_cog_wiki",
+      "baslik": "Cognitive science overview (WikiBooks)",
+      "url": "https://en.wikibooks.org/wiki/Cognitive_Psychology_and_Cognitive_Neuroscience",
       "dal": "20_bi_li_sel_bi_li_mler",
       "ok": true,
-      "parca": 11
-    },
-    "operating_systems_three_easy_pieces": {
-      "kaynak_id": "20_bi_li_sel_bi_li_mler_operating_systems_three_easy_pieces",
-      "baslik": "Operating Systems: Three Easy Pieces",
-      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
-      "dal": "20_bi_li_sel_bi_li_mler",
-      "ok": true,
+      "telafi": true,
       "parca": 1
     }
-  }
+  },
+  "telafi_purge_utc": "2026-11-02T23:48:57.599243+00:00",
+  "telafi_utc": "2026-11-02T23:48:12.063737+00:00",
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
 }

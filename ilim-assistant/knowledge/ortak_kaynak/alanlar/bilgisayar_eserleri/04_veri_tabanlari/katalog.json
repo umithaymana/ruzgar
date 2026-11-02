@@ -2,56 +2,45 @@
   "dal": "04_veri_tabanlari",
   "excel": "4 - ) VERİ TABANLARI.xlsx",
   "n_list": 100,
-  "sources": 5,
-  "ok_sources": 5,
+  "sources": 3,
+  "ok_sources": 3,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:12:02.611243+00:00",
   "skills": [
-    "veritabanı modeli",
     "SQL",
-    "işlem/concurrency",
-    "depolama"
+    "SQLite/PostgreSQL",
+    "indeksleme"
   ],
   "kaynaklar": {
-    "open_data_structures": {
-      "kaynak_id": "04_veri_tabanlari_open_data_structures",
-      "baslik": "Open Data Structures",
-      "url": "https://opendatastructures.org/ods-python.pdf",
+    "sqlite_lang": {
+      "kaynak_id": "04_veri_tabanlari_sqlite_lang",
+      "baslik": "SQLite Language Reference",
+      "url": "https://www.sqlite.org/lang.html",
       "dal": "04_veri_tabanlari",
       "ok": true,
-      "parca": 10
-    },
-    "algorithms_jeff_erickson_": {
-      "kaynak_id": "04_veri_tabanlari_algorithms_jeff_erickson_",
-      "baslik": "Algorithms (Jeff Erickson)",
-      "url": "https://jeffe.cs.illinois.edu/teaching/algorithms/book/Algorithms-JeffE.pdf",
-      "dal": "04_veri_tabanlari",
-      "ok": true,
-      "parca": 18
-    },
-    "competitive_programmer_s_handbook": {
-      "kaynak_id": "04_veri_tabanlari_competitive_programmer_s_handbook",
-      "baslik": "Competitive Programmer's Handbook",
-      "url": "https://cses.fi/book/book.pdf",
-      "dal": "04_veri_tabanlari",
-      "ok": true,
-      "parca": 11
-    },
-    "operating_systems_three_easy_pieces": {
-      "kaynak_id": "04_veri_tabanlari_operating_systems_three_easy_pieces",
-      "baslik": "Operating Systems: Three Easy Pieces",
-      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
-      "dal": "04_veri_tabanlari",
-      "ok": true,
+      "telafi": true,
       "parca": 1
     },
-    "think_stats": {
-      "kaynak_id": "04_veri_tabanlari_think_stats",
-      "baslik": "Think Stats",
-      "url": "https://greenteapress.com/thinkstats2/thinkstats2.pdf",
+    "pg_tutorial": {
+      "kaynak_id": "04_veri_tabanlari_pg_tutorial",
+      "baslik": "PostgreSQL Tutorial",
+      "url": "https://www.postgresql.org/docs/current/tutorial.html",
       "dal": "04_veri_tabanlari",
       "ok": true,
-      "parca": 10
+      "telafi": true,
+      "parca": 1
+    },
+    "use_the_index": {
+      "kaynak_id": "04_veri_tabanlari_use_the_index",
+      "baslik": "Use The Index, Luke",
+      "url": "https://use-the-index-luke.com/",
+      "dal": "04_veri_tabanlari",
+      "ok": true,
+      "telafi": true,
+      "parca": 1
     }
-  }
+  },
+  "telafi_purge_utc": "2026-11-02T23:48:57.584244+00:00",
+  "telafi_utc": "2026-11-02T23:46:20.732627+00:00",
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
 }

@@ -2,46 +2,44 @@
   "dal": "14_fi_zi_k",
   "excel": "14 - ) FİZİK.xlsx",
   "n_list": 150,
-  "sources": 4,
-  "ok_sources": 4,
+  "sources": 3,
+  "ok_sources": 3,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:18:09.139821+00:00",
   "skills": [
-    "fizik temelleri",
-    "açık ders kitapları yönü"
+    "üniversite fiziği (OpenStax)",
+    "Feynman Lectures erişimi"
   ],
   "kaynaklar": {
-    "open_data_structures": {
-      "kaynak_id": "14_fi_zi_k_open_data_structures",
-      "baslik": "Open Data Structures",
-      "url": "https://opendatastructures.org/ods-python.pdf",
+    "openstax_physics": {
+      "kaynak_id": "14_fi_zi_k_openstax_physics",
+      "baslik": "OpenStax University Physics Volume 1",
+      "url": "https://openstax.org/details/books/university-physics-volume-1",
       "dal": "14_fi_zi_k",
       "ok": true,
-      "parca": 10
+      "telafi": true,
+      "parca": 1
     },
-    "algorithms_jeff_erickson_": {
-      "kaynak_id": "14_fi_zi_k_algorithms_jeff_erickson_",
-      "baslik": "Algorithms (Jeff Erickson)",
-      "url": "https://jeffe.cs.illinois.edu/teaching/algorithms/book/Algorithms-JeffE.pdf",
+    "openstax_colphys": {
+      "kaynak_id": "14_fi_zi_k_openstax_colphys",
+      "baslik": "OpenStax College Physics",
+      "url": "https://openstax.org/details/books/college-physics-2e",
       "dal": "14_fi_zi_k",
       "ok": true,
-      "parca": 18
+      "telafi": true,
+      "parca": 1
     },
-    "competitive_programmer_s_handbook": {
-      "kaynak_id": "14_fi_zi_k_competitive_programmer_s_handbook",
-      "baslik": "Competitive Programmer's Handbook",
-      "url": "https://cses.fi/book/book.pdf",
+    "hyperphysics": {
+      "kaynak_id": "14_fi_zi_k_hyperphysics",
+      "baslik": "HyperPhysics (Georgia State)",
+      "url": "http://hyperphysics.phy-astr.gsu.edu/hbase/index.html",
       "dal": "14_fi_zi_k",
       "ok": true,
-      "parca": 11
-    },
-    "operating_systems_three_easy_pieces": {
-      "kaynak_id": "14_fi_zi_k_operating_systems_three_easy_pieces",
-      "baslik": "Operating Systems: Three Easy Pieces",
-      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
-      "dal": "14_fi_zi_k",
-      "ok": true,
+      "telafi": true,
       "parca": 1
     }
-  }
+  },
+  "telafi_purge_utc": "2026-11-02T23:48:57.594243+00:00",
+  "telafi_utc": "2026-11-02T23:46:36.599776+00:00",
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
 }

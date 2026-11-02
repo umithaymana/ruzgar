@@ -2,45 +2,44 @@
   "dal": "23_ekonomi_",
   "excel": "23 - ) EKONOMİ.xlsx",
   "n_list": 150,
-  "sources": 4,
-  "ok_sources": 4,
+  "sources": 3,
+  "ok_sources": 3,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:23:34.049792+00:00",
   "skills": [
-    "ekonomi temelleri (açık ders)"
+    "ekonomi (OpenStax)",
+    "IMF basics"
   ],
   "kaynaklar": {
-    "open_data_structures": {
-      "kaynak_id": "23_ekonomi__open_data_structures",
-      "baslik": "Open Data Structures",
-      "url": "https://opendatastructures.org/ods-python.pdf",
+    "openstax_econ": {
+      "kaynak_id": "23_ekonomi__openstax_econ",
+      "baslik": "OpenStax Principles of Economics 3e",
+      "url": "https://openstax.org/details/books/principles-economics-3e",
       "dal": "23_ekonomi_",
       "ok": true,
-      "parca": 10
+      "telafi": true,
+      "parca": 1
     },
-    "algorithms_jeff_erickson_": {
-      "kaynak_id": "23_ekonomi__algorithms_jeff_erickson_",
-      "baslik": "Algorithms (Jeff Erickson)",
-      "url": "https://jeffe.cs.illinois.edu/teaching/algorithms/book/Algorithms-JeffE.pdf",
+    "openstax_micro": {
+      "kaynak_id": "23_ekonomi__openstax_micro",
+      "baslik": "OpenStax Principles of Microeconomics 3e",
+      "url": "https://openstax.org/details/books/principles-microeconomics-3e",
       "dal": "23_ekonomi_",
       "ok": true,
-      "parca": 18
+      "telafi": true,
+      "parca": 1
     },
-    "competitive_programmer_s_handbook": {
-      "kaynak_id": "23_ekonomi__competitive_programmer_s_handbook",
-      "baslik": "Competitive Programmer's Handbook",
-      "url": "https://cses.fi/book/book.pdf",
+    "econlib": {
+      "kaynak_id": "23_ekonomi__econlib",
+      "baslik": "Econlib — Library of Economics and Liberty",
+      "url": "https://www.econlib.org/",
       "dal": "23_ekonomi_",
       "ok": true,
-      "parca": 11
-    },
-    "operating_systems_three_easy_pieces": {
-      "kaynak_id": "23_ekonomi__operating_systems_three_easy_pieces",
-      "baslik": "Operating Systems: Three Easy Pieces",
-      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
-      "dal": "23_ekonomi_",
-      "ok": true,
+      "telafi": true,
       "parca": 1
     }
-  }
+  },
+  "telafi_purge_utc": "2026-11-02T23:48:57.603245+00:00",
+  "telafi_utc": "2026-11-02T23:48:16.052400+00:00",
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
 }

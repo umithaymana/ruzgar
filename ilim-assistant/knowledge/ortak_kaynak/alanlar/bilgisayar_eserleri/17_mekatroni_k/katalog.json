@@ -2,45 +2,45 @@
   "dal": "17_mekatroni_k",
   "excel": "17 - ) MEKATRONİK.xlsx",
   "n_list": 150,
-  "sources": 4,
-  "ok_sources": 4,
+  "sources": 3,
+  "ok_sources": 3,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:20:28.783734+00:00",
   "skills": [
-    "mekatronik sistem düşüncesi"
+    "gömülü (ESP-IDF)",
+    "Arduino",
+    "mekatronik OCW"
   ],
   "kaynaklar": {
-    "open_data_structures": {
-      "kaynak_id": "17_mekatroni_k_open_data_structures",
-      "baslik": "Open Data Structures",
-      "url": "https://opendatastructures.org/ods-python.pdf",
+    "embedded_esp": {
+      "kaynak_id": "17_mekatroni_k_embedded_esp",
+      "baslik": "Espressif ESP-IDF Programming Guide",
+      "url": "https://docs.espressif.com/projects/esp-idf/en/latest/esp32/",
       "dal": "17_mekatroni_k",
       "ok": true,
-      "parca": 10
+      "telafi": true,
+      "parca": 1
     },
-    "algorithms_jeff_erickson_": {
-      "kaynak_id": "17_mekatroni_k_algorithms_jeff_erickson_",
-      "baslik": "Algorithms (Jeff Erickson)",
-      "url": "https://jeffe.cs.illinois.edu/teaching/algorithms/book/Algorithms-JeffE.pdf",
+    "arduino_ref": {
+      "kaynak_id": "17_mekatroni_k_arduino_ref",
+      "baslik": "Arduino Language Reference",
+      "url": "https://www.arduino.cc/reference/en/",
       "dal": "17_mekatroni_k",
       "ok": true,
-      "parca": 18
+      "telafi": true,
+      "parca": 1
     },
-    "competitive_programmer_s_handbook": {
-      "kaynak_id": "17_mekatroni_k_competitive_programmer_s_handbook",
-      "baslik": "Competitive Programmer's Handbook",
-      "url": "https://cses.fi/book/book.pdf",
+    "platformio": {
+      "kaynak_id": "17_mekatroni_k_platformio",
+      "baslik": "PlatformIO Documentation",
+      "url": "https://docs.platformio.org/en/latest/",
       "dal": "17_mekatroni_k",
       "ok": true,
-      "parca": 11
-    },
-    "operating_systems_three_easy_pieces": {
-      "kaynak_id": "17_mekatroni_k_operating_systems_three_easy_pieces",
-      "baslik": "Operating Systems: Three Easy Pieces",
-      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
-      "dal": "17_mekatroni_k",
-      "ok": true,
+      "telafi": true,
       "parca": 1
     }
-  }
+  },
+  "telafi_purge_utc": "2026-11-02T23:48:57.597244+00:00",
+  "telafi_utc": "2026-11-02T23:48:10.454327+00:00",
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
 }

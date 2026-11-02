@@ -2,14 +2,13 @@
   "dal": "12_bi_lgi_sayar_m_hendi_sli_i_",
   "excel": "12 - ) BİLGİSAYAR MÜHENDİSLİĞİ.xlsx",
   "n_list": 150,
-  "sources": 6,
-  "ok_sources": 6,
+  "sources": 3,
+  "ok_sources": 2,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:17:01.408936+00:00",
   "skills": [
-    "bilgisayar mühendisliği",
-    "donanım-yazılım köprüsü",
-    "NAND2Tetris yönü"
+    "Nand2Tetris",
+    "donanım-yazılım köprüsü"
   ],
   "kaynaklar": {
     "n2t": {
@@ -20,45 +19,26 @@
       "ok": true,
       "parca": 1
     },
-    "ostep": {
-      "kaynak_id": "12_bi_lgi_sayar_m_hendi_sli_i__ostep",
-      "baslik": "OSTEP",
-      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
+    "computer_systems": {
+      "kaynak_id": "12_bi_lgi_sayar_m_hendi_sli_i__computer_systems",
+      "baslik": "CMU 15-213 / CSAPP course page",
+      "url": "https://www.cs.cmu.edu/~213/",
       "dal": "12_bi_lgi_sayar_m_hendi_sli_i_",
-      "ok": true,
+      "ok": false,
+      "telafi": true,
       "parca": 1
     },
-    "open_data_structures": {
-      "kaynak_id": "12_bi_lgi_sayar_m_hendi_sli_i__open_data_structures",
-      "baslik": "Open Data Structures",
-      "url": "https://opendatastructures.org/ods-python.pdf",
+    "ben_eater": {
+      "kaynak_id": "12_bi_lgi_sayar_m_hendi_sli_i__ben_eater",
+      "baslik": "Ben Eater 8-bit computer (eğitim)",
+      "url": "https://eater.net/8bit",
       "dal": "12_bi_lgi_sayar_m_hendi_sli_i_",
       "ok": true,
-      "parca": 10
-    },
-    "algorithms_jeff_erickson_": {
-      "kaynak_id": "12_bi_lgi_sayar_m_hendi_sli_i__algorithms_jeff_erickson_",
-      "baslik": "Algorithms (Jeff Erickson)",
-      "url": "https://jeffe.cs.illinois.edu/teaching/algorithms/book/Algorithms-JeffE.pdf",
-      "dal": "12_bi_lgi_sayar_m_hendi_sli_i_",
-      "ok": true,
-      "parca": 18
-    },
-    "competitive_programmer_s_handbook": {
-      "kaynak_id": "12_bi_lgi_sayar_m_hendi_sli_i__competitive_programmer_s_handbook",
-      "baslik": "Competitive Programmer's Handbook",
-      "url": "https://cses.fi/book/book.pdf",
-      "dal": "12_bi_lgi_sayar_m_hendi_sli_i_",
-      "ok": true,
-      "parca": 11
-    },
-    "operating_systems_three_easy_pieces": {
-      "kaynak_id": "12_bi_lgi_sayar_m_hendi_sli_i__operating_systems_three_easy_pieces",
-      "baslik": "Operating Systems: Three Easy Pieces",
-      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
-      "dal": "12_bi_lgi_sayar_m_hendi_sli_i_",
-      "ok": true,
+      "telafi": true,
       "parca": 1
     }
-  }
+  },
+  "telafi_purge_utc": "2026-11-02T23:48:57.592241+00:00",
+  "telafi_utc": "2026-11-02T23:46:35.625443+00:00",
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
 }

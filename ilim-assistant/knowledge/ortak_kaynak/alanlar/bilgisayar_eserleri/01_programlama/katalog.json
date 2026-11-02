@@ -42,15 +42,6 @@
       "ok": true,
       "parca_sayisi": 1
     },
-    "ods_python": {
-      "kaynak_id": "bb01_ods_python",
-      "baslik": "Open Data Structures",
-      "lisans": "CC BY",
-      "url": "https://opendatastructures.org/ods-python.pdf",
-      "local": "raw/ods_python.pdf",
-      "ok": true,
-      "parca_sayisi": 41
-    },
     "invent_games": {
       "kaynak_id": "bb01_invent_games",
       "baslik": "Invent Your Own Computer Games with Python",
@@ -87,15 +78,6 @@
       "ok": true,
       "parca_sayisi": 70
     },
-    "erickson": {
-      "kaynak_id": "bb01_erickson",
-      "baslik": "Algorithms Jeff Erickson",
-      "lisans": "CC BY",
-      "url": "https://jeffe.cs.illinois.edu/teaching/algorithms/book/Algorithms-JeffE.pdf",
-      "local": "raw/erickson.pdf",
-      "ok": true,
-      "parca_sayisi": 22
-    },
     "little_semaphores": {
       "kaynak_id": "bb01_little_semaphores",
       "baslik": "Little Book of Semaphores",
@@ -114,39 +96,12 @@
       "ok": true,
       "parca_sayisi": 188
     },
-    "gpp": {
-      "kaynak_id": "bb01_gpp",
-      "baslik": "Game Programming Patterns",
-      "lisans": "Free online",
-      "url": "https://gameprogrammingpatterns.com/",
-      "local": "raw/gpp.html",
-      "ok": true,
-      "parca_sayisi": 1
-    },
     "crafting_interpreters": {
       "kaynak_id": "bb01_crafting_interpreters",
       "baslik": "Crafting Interpreters",
       "lisans": "Free online",
       "url": "https://craftinginterpreters.com/",
       "local": "raw/crafting_interpreters.html",
-      "ok": true,
-      "parca_sayisi": 1
-    },
-    "se_google": {
-      "kaynak_id": "bb01_se_google",
-      "baslik": "Software Engineering at Google",
-      "lisans": "Free online",
-      "url": "https://abseil.io/resources/swe-book",
-      "local": "raw/se_google.html",
-      "ok": true,
-      "parca_sayisi": 1
-    },
-    "aosa": {
-      "kaynak_id": "bb01_aosa",
-      "baslik": "Architecture of Open Source Applications",
-      "lisans": "CC",
-      "url": "https://aosabook.org/en/",
-      "local": "raw/aosa.html",
       "ok": true,
       "parca_sayisi": 1
     },
@@ -177,15 +132,6 @@
       "ok": true,
       "parca_sayisi": 1
     },
-    "hpbn": {
-      "kaynak_id": "bb01_hpbn",
-      "baslik": "High Performance Browser Networking",
-      "lisans": "Free online",
-      "url": "https://hpbn.co/",
-      "local": "raw/hpbn.html",
-      "ok": true,
-      "parca_sayisi": 1
-    },
     "lyah": {
       "kaynak_id": "bb01_lyah",
       "baslik": "Learn You a Haskell",
@@ -204,24 +150,6 @@
       "ok": false,
       "parca_sayisi": 1
     },
-    "beej_net": {
-      "kaynak_id": "bb01_beej_net",
-      "baslik": "Beej's Guide to Network Programming",
-      "lisans": "Free",
-      "url": "https://beej.us/guide/bgnet/pdf/bgnet_usl_c_1.pdf",
-      "local": "raw/beej_net.pdf",
-      "ok": true,
-      "parca_sayisi": 25
-    },
-    "beej_ipc": {
-      "kaynak_id": "bb01_beej_ipc",
-      "baslik": "Beej's Guide to Unix IPC",
-      "lisans": "Free",
-      "url": "https://beej.us/guide/bgipc/pdf/bgipc_usl_c_1.pdf",
-      "local": "raw/beej_ipc.pdf",
-      "ok": true,
-      "parca_sayisi": 16
-    },
     "producing_oss": {
       "kaynak_id": "bb01_producing_oss",
       "baslik": "Producing Open Source Software",
@@ -230,15 +158,6 @@
       "local": "raw/producing_oss.html",
       "ok": true,
       "parca_sayisi": 17
-    },
-    "missing_semester": {
-      "kaynak_id": "bb01_missing_semester",
-      "baslik": "Missing Semester",
-      "lisans": "CC BY-NC-SA / MIT",
-      "url": "https://missing.csail.mit.edu/",
-      "local": "raw/missing_semester.html",
-      "ok": true,
-      "parca_sayisi": 1
     },
     "cpp_core": {
       "kaynak_id": "bb01_cpp_core",
@@ -303,15 +222,6 @@
       "ok": true,
       "parca_sayisi": 18
     },
-    "owasp_scp": {
-      "kaynak_id": "bb01_owasp_scp",
-      "baslik": "OWASP Secure Coding Practices",
-      "lisans": "CC",
-      "url": "https://owasp.org/www-project-secure-coding-practices-quick-reference-guide/",
-      "local": "raw/owasp_scp.html",
-      "ok": true,
-      "parca_sayisi": 1
-    },
     "scala3_book": {
       "kaynak_id": "bb01_scala3_book",
       "baslik": "Scala 3 Book",
@@ -344,5 +254,15 @@
     "Python, JS, Rust, Go, C/C++, Java omurgası (yasal kaynaklar)",
     "Veri yapıları, algoritma, yorumlayıcı, UNIX/ağ",
     "Web framework resmi dokümanları, OWASP, açık kaynak yönetimi"
-  ]
+  ],
+  "sources": 27,
+  "ok_sources": 23,
+  "telafi_purge_utc": "2026-11-02T23:48:57.580238+00:00",
+  "skills": [
+    "Python/JS/Rust temelleri",
+    "veri yapıları",
+    "yazılım pratiği"
+  ],
+  "telafi_utc": "2026-11-02T23:46:20.200561+00:00",
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
 }

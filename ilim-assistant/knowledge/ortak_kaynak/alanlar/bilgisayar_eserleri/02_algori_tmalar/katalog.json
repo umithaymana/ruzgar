@@ -2,14 +2,14 @@
   "dal": "02_algori_tmalar",
   "excel": "2 - ) ALGORİTMALAR.xlsx",
   "n_list": 100,
-  "sources": 7,
-  "ok_sources": 7,
+  "sources": 3,
+  "ok_sources": 3,
   "ilave_rows": 0,
   "updated_utc": "2026-11-02T23:10:11.025283+00:00",
   "skills": [
     "algoritma tasarımı",
     "karmaşıklık",
-    "graf/ağaç yapıları",
+    "graf/ağaç",
     "yarışma programlama"
   ],
   "kaynaklar": {
@@ -21,14 +21,6 @@
       "ok": true,
       "parca": 10
     },
-    "rlbook": {
-      "kaynak_id": "02_algori_tmalar_rlbook",
-      "baslik": "RL Sutton Barto",
-      "url": "http://incompleteideas.net/book/RLbook2020.pdf",
-      "dal": "02_algori_tmalar",
-      "ok": true,
-      "parca": 21
-    },
     "cph": {
       "kaynak_id": "02_algori_tmalar_cph",
       "baslik": "Competitive Programmer Handbook",
@@ -37,37 +29,17 @@
       "ok": true,
       "parca": 11
     },
-    "open_data_structures": {
-      "kaynak_id": "02_algori_tmalar_open_data_structures",
-      "baslik": "Open Data Structures",
-      "url": "https://opendatastructures.org/ods-python.pdf",
-      "dal": "02_algori_tmalar",
-      "ok": true,
-      "parca": 10
-    },
-    "algorithms_jeff_erickson_": {
-      "kaynak_id": "02_algori_tmalar_algorithms_jeff_erickson_",
+    "erickson": {
+      "kaynak_id": "02_algori_tmalar_erickson",
       "baslik": "Algorithms (Jeff Erickson)",
       "url": "https://jeffe.cs.illinois.edu/teaching/algorithms/book/Algorithms-JeffE.pdf",
       "dal": "02_algori_tmalar",
       "ok": true,
+      "telafi": true,
       "parca": 18
-    },
-    "competitive_programmer_s_handbook": {
-      "kaynak_id": "02_algori_tmalar_competitive_programmer_s_handbook",
-      "baslik": "Competitive Programmer's Handbook",
-      "url": "https://cses.fi/book/book.pdf",
-      "dal": "02_algori_tmalar",
-      "ok": true,
-      "parca": 11
-    },
-    "operating_systems_three_easy_pieces": {
-      "kaynak_id": "02_algori_tmalar_operating_systems_three_easy_pieces",
-      "baslik": "Operating Systems: Three Easy Pieces",
-      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
-      "dal": "02_algori_tmalar",
-      "ok": true,
-      "parca": 1
     }
-  }
+  },
+  "telafi_purge_utc": "2026-11-02T23:48:57.581238+00:00",
+  "telafi_utc": "2026-11-02T23:46:20.402435+00:00",
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
 }

@@ -2,47 +2,45 @@
   "dal": "09_devops_ve_altyapisi",
   "excel": "9 - ) DEVOPS VE ALTYAPISI.xlsx",
   "n_list": 100,
-  "sources": 4,
-  "ok_sources": 4,
+  "sources": 3,
+  "ok_sources": 3,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:15:12.905651+00:00",
   "skills": [
-    "DevOps",
-    "CI/CD kavramları",
-    "konteyner/orkestrasyon dokümanları"
+    "Docker",
+    "Kubernetes kavramları",
+    "Missing Semester"
   ],
   "kaynaklar": {
-    "open_data_structures": {
-      "kaynak_id": "09_devops_ve_altyapisi_open_data_structures",
-      "baslik": "Open Data Structures",
-      "url": "https://opendatastructures.org/ods-python.pdf",
+    "docker_start": {
+      "kaynak_id": "09_devops_ve_altyapisi_docker_start",
+      "baslik": "Docker Get Started",
+      "url": "https://docs.docker.com/get-started/",
       "dal": "09_devops_ve_altyapisi",
       "ok": true,
-      "parca": 10
+      "telafi": true,
+      "parca": 1
     },
-    "algorithms_jeff_erickson_": {
-      "kaynak_id": "09_devops_ve_altyapisi_algorithms_jeff_erickson_",
-      "baslik": "Algorithms (Jeff Erickson)",
-      "url": "https://jeffe.cs.illinois.edu/teaching/algorithms/book/Algorithms-JeffE.pdf",
+    "k8s_concepts": {
+      "kaynak_id": "09_devops_ve_altyapisi_k8s_concepts",
+      "baslik": "Kubernetes Concepts",
+      "url": "https://kubernetes.io/docs/concepts/",
       "dal": "09_devops_ve_altyapisi",
       "ok": true,
-      "parca": 18
+      "telafi": true,
+      "parca": 3
     },
-    "competitive_programmer_s_handbook": {
-      "kaynak_id": "09_devops_ve_altyapisi_competitive_programmer_s_handbook",
-      "baslik": "Competitive Programmer's Handbook",
-      "url": "https://cses.fi/book/book.pdf",
+    "missing_cs": {
+      "kaynak_id": "09_devops_ve_altyapisi_missing_cs",
+      "baslik": "MIT Missing Semester",
+      "url": "https://missing.csail.mit.edu/",
       "dal": "09_devops_ve_altyapisi",
       "ok": true,
-      "parca": 11
-    },
-    "operating_systems_three_easy_pieces": {
-      "kaynak_id": "09_devops_ve_altyapisi_operating_systems_three_easy_pieces",
-      "baslik": "Operating Systems: Three Easy Pieces",
-      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
-      "dal": "09_devops_ve_altyapisi",
-      "ok": true,
+      "telafi": true,
       "parca": 1
     }
-  }
+  },
+  "telafi_purge_utc": "2026-11-02T23:48:57.590241+00:00",
+  "telafi_utc": "2026-11-02T23:46:21.668894+00:00",
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
 }

@@ -2,45 +2,43 @@
   "dal": "24_oyun_teori_si_",
   "excel": "24 - ) OYUN TEORİSİ.xlsx",
   "n_list": 150,
-  "sources": 4,
-  "ok_sources": 4,
+  "sources": 3,
+  "ok_sources": 3,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:25:02.286950+00:00",
   "skills": [
-    "oyun teorisi temelleri (açık ders notları)"
+    "oyun teorisi (Yale OYC / SEP)"
   ],
   "kaynaklar": {
-    "open_data_structures": {
-      "kaynak_id": "24_oyun_teori_si__open_data_structures",
-      "baslik": "Open Data Structures",
-      "url": "https://opendatastructures.org/ods-python.pdf",
+    "gametheory_net": {
+      "kaynak_id": "24_oyun_teori_si__gametheory_net",
+      "baslik": "GameTheory.net educational resources",
+      "url": "https://www.gametheory.net/",
       "dal": "24_oyun_teori_si_",
       "ok": true,
-      "parca": 10
+      "telafi": true,
+      "parca": 1
     },
-    "algorithms_jeff_erickson_": {
-      "kaynak_id": "24_oyun_teori_si__algorithms_jeff_erickson_",
-      "baslik": "Algorithms (Jeff Erickson)",
-      "url": "https://jeffe.cs.illinois.edu/teaching/algorithms/book/Algorithms-JeffE.pdf",
+    "sep_game": {
+      "kaynak_id": "24_oyun_teori_si__sep_game",
+      "baslik": "SEP — Game Theory",
+      "url": "https://plato.stanford.edu/entries/game-theory/",
       "dal": "24_oyun_teori_si_",
       "ok": true,
-      "parca": 18
+      "telafi": true,
+      "parca": 15
     },
-    "competitive_programmer_s_handbook": {
-      "kaynak_id": "24_oyun_teori_si__competitive_programmer_s_handbook",
-      "baslik": "Competitive Programmer's Handbook",
-      "url": "https://cses.fi/book/book.pdf",
+    "gametheory_101": {
+      "kaynak_id": "24_oyun_teori_si__gametheory_101",
+      "baslik": "Game Theory 101 (William Spaniel notes index)",
+      "url": "https://gametheory101.com/",
       "dal": "24_oyun_teori_si_",
       "ok": true,
-      "parca": 11
-    },
-    "operating_systems_three_easy_pieces": {
-      "kaynak_id": "24_oyun_teori_si__operating_systems_three_easy_pieces",
-      "baslik": "Operating Systems: Three Easy Pieces",
-      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
-      "dal": "24_oyun_teori_si_",
-      "ok": true,
+      "telafi": true,
       "parca": 1
     }
-  }
+  },
+  "telafi_purge_utc": "2026-11-02T23:48:57.604245+00:00",
+  "telafi_utc": "2026-11-02T23:48:16.640884+00:00",
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
 }

@@ -2,54 +2,44 @@
   "dal": "13_matemati_k",
   "excel": "13 - ) MATEMATİK.xlsx",
   "n_list": 150,
-  "sources": 5,
-  "ok_sources": 5,
+  "sources": 3,
+  "ok_sources": 3,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:17:40.067564+00:00",
   "skills": [
-    "mühendislik matematiği",
-    "kalkülüs/lineer cebir açık kaynaklar"
+    "kalkülüs/cebir (OpenStax)",
+    "lineer cebir sezgi"
   ],
   "kaynaklar": {
-    "think_bayes": {
-      "kaynak_id": "13_matemati_k_think_bayes",
-      "baslik": "Think Bayes",
-      "url": "https://greenteapress.com/thinkbayes/thinkbayes.pdf",
+    "openstax_calc1": {
+      "kaynak_id": "13_matemati_k_openstax_calc1",
+      "baslik": "OpenStax Calculus Volume 1",
+      "url": "https://openstax.org/details/books/calculus-volume-1",
       "dal": "13_matemati_k",
       "ok": true,
-      "parca": 11
+      "telafi": true,
+      "parca": 1
     },
-    "open_data_structures": {
-      "kaynak_id": "13_matemati_k_open_data_structures",
-      "baslik": "Open Data Structures",
-      "url": "https://opendatastructures.org/ods-python.pdf",
+    "openstax_linalg": {
+      "kaynak_id": "13_matemati_k_openstax_linalg",
+      "baslik": "OpenStax Algebra and Trigonometry",
+      "url": "https://openstax.org/details/books/algebra-and-trigonometry",
       "dal": "13_matemati_k",
       "ok": true,
-      "parca": 10
+      "telafi": true,
+      "parca": 1
     },
-    "algorithms_jeff_erickson_": {
-      "kaynak_id": "13_matemati_k_algorithms_jeff_erickson_",
-      "baslik": "Algorithms (Jeff Erickson)",
-      "url": "https://jeffe.cs.illinois.edu/teaching/algorithms/book/Algorithms-JeffE.pdf",
+    "3blue1brown_essence": {
+      "kaynak_id": "13_matemati_k_3blue1brown_essence",
+      "baslik": "Essence of Linear Algebra (3Blue1Brown index)",
+      "url": "https://www.3blue1brown.com/topics/linear-algebra",
       "dal": "13_matemati_k",
       "ok": true,
-      "parca": 18
-    },
-    "competitive_programmer_s_handbook": {
-      "kaynak_id": "13_matemati_k_competitive_programmer_s_handbook",
-      "baslik": "Competitive Programmer's Handbook",
-      "url": "https://cses.fi/book/book.pdf",
-      "dal": "13_matemati_k",
-      "ok": true,
-      "parca": 11
-    },
-    "operating_systems_three_easy_pieces": {
-      "kaynak_id": "13_matemati_k_operating_systems_three_easy_pieces",
-      "baslik": "Operating Systems: Three Easy Pieces",
-      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
-      "dal": "13_matemati_k",
-      "ok": true,
+      "telafi": true,
       "parca": 1
     }
-  }
+  },
+  "telafi_purge_utc": "2026-11-02T23:48:57.593241+00:00",
+  "telafi_utc": "2026-11-02T23:46:35.773806+00:00",
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
 }

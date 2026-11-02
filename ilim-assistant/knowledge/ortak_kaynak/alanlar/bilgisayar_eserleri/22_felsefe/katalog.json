@@ -2,45 +2,44 @@
   "dal": "22_felsefe",
   "excel": "22 - ) FELSEFE.xlsx",
   "n_list": 150,
-  "sources": 4,
-  "ok_sources": 4,
+  "sources": 3,
+  "ok_sources": 3,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:23:03.210833+00:00",
   "skills": [
-    "felsefe klasik metinlere açık erişim yönü"
+    "felsefe (SEP)",
+    "açık klasik metinler"
   ],
   "kaynaklar": {
-    "open_data_structures": {
-      "kaynak_id": "22_felsefe_open_data_structures",
-      "baslik": "Open Data Structures",
-      "url": "https://opendatastructures.org/ods-python.pdf",
+    "sep_index": {
+      "kaynak_id": "22_felsefe_sep_index",
+      "baslik": "Stanford Encyclopedia of Philosophy",
+      "url": "https://plato.stanford.edu/contents.html",
       "dal": "22_felsefe",
       "ok": true,
-      "parca": 10
-    },
-    "algorithms_jeff_erickson_": {
-      "kaynak_id": "22_felsefe_algorithms_jeff_erickson_",
-      "baslik": "Algorithms (Jeff Erickson)",
-      "url": "https://jeffe.cs.illinois.edu/teaching/algorithms/book/Algorithms-JeffE.pdf",
-      "dal": "22_felsefe",
-      "ok": true,
-      "parca": 18
-    },
-    "competitive_programmer_s_handbook": {
-      "kaynak_id": "22_felsefe_competitive_programmer_s_handbook",
-      "baslik": "Competitive Programmer's Handbook",
-      "url": "https://cses.fi/book/book.pdf",
-      "dal": "22_felsefe",
-      "ok": true,
+      "telafi": true,
       "parca": 11
     },
-    "operating_systems_three_easy_pieces": {
-      "kaynak_id": "22_felsefe_operating_systems_three_easy_pieces",
-      "baslik": "Operating Systems: Three Easy Pieces",
-      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
+    "sep_epistemology": {
+      "kaynak_id": "22_felsefe_sep_epistemology",
+      "baslik": "SEP — Epistemology",
+      "url": "https://plato.stanford.edu/entries/epistemology/",
       "dal": "22_felsefe",
       "ok": true,
+      "telafi": true,
+      "parca": 15
+    },
+    "iep_index": {
+      "kaynak_id": "22_felsefe_iep_index",
+      "baslik": "Internet Encyclopedia of Philosophy",
+      "url": "https://iep.utm.edu/",
+      "dal": "22_felsefe",
+      "ok": true,
+      "telafi": true,
       "parca": 1
     }
-  }
+  },
+  "telafi_purge_utc": "2026-11-02T23:48:57.602244+00:00",
+  "telafi_utc": "2026-11-02T23:48:14.896077+00:00",
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
 }

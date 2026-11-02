@@ -309,16 +309,18 @@ def process_excel(xlsx: Path, dal_id: str, skills: list[str]) -> dict:
         if free:
             ingest(*free)
 
-    # pick 5–8 pool items matching dal keywords in filename
+    # YALNIZ etiket eşleşen havuz öğeleri (çapraz-dal kopya YASAK — telafi 2026-11-03)
     dal_low = dal_id.lower() + " " + xlsx.stem.lower()
     picked = 0
     for title, author, url, kind, tags in ILAVE_POOL:
-        if picked >= 8:
+        if picked >= 6:
             break
-        if any(t in dal_low for t in tags.split("/")) or picked < 4:
-            key = re.sub(r"[^a-z0-9]+", "_", title.lower())[:40]
-            ingest(key, title, url, kind)
-            picked += 1
+        tag_hit = any(t.strip() and t.strip() in dal_low for t in tags.split("/"))
+        if not tag_hit:
+            continue
+        key = re.sub(r"[^a-z0-9]+", "_", title.lower())[:40]
+        ingest(key, title, url, kind)
+        picked += 1
 
     # İlave rows if needed (always add 0; if we want complete "indirilen = n_list" narrative OK)
     # Add ilave only when there were true gaps without muadil — here none.
