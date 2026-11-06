@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""3.PLAN+ DIS_EL_ARAC_KATALOGU — Excel (Plan 2'den SONRA).
+"""3.PLAN+ DIS_EL_ARAC_KATALOGU — Excel v2 YÜKSELTME (Plan 2'den SONRA).
 
 Kapı (kilit): Şamile RAG + 1.PLAN + 2.PLAN+ bitmeden aksiyon yok.
-Amaç: Rüzgar'ın dışarıda eli ayağı dolaşmayan profesyonel araç yüzeyi.
+Amaç: Rüzgar dışarıda eli ayağına dolaşmayan; yerinde PROFESYONEL,
+yerinde BEYEFENDİ, yerinde ÇEVİK (yasal) tam bir operatör olsun.
 
 KİMLİK MODLARI (Mimar hayali — yasal çerçeve):
-  · PROFESYONEL — cerrah hassasiyeti; yalansız oldu; kurumsal disiplin
-  · BEYEFENDİ GEZGİN — web'de nazik, hızlı, iz bırakmayan; robots/rate-limit;
-    izinli kapıdan girer; çöp/kaba bot değil
-  · ÇEVİK OPERATÖR — sessiz, isabetli, az adımda iş bitirir (metafor);
-    SUÇ / izinsiz erişim / hırsızlık / exploit YOK — kapalı eylem
+  · PROFESYONEL — cerrah: plan→test→diff→yalansız oldu
+  · BEYEFENDİ GEZGİN — web'de nazik, robots/rate-limit, izinli kapı, iz bırakmayan
+  · ÇEVİK OPERATÖR — az adım, isabet, sessiz (metafor); SUÇ/exploit/hırsızlık YOK
+
+v2 üst katmanlar (21–28): diplomasi · zaman/dünya · öğretmen · egemenlik ·
+  estetik/huzur · ekonomi/kota · ikiz simülasyon · SON DURUM vizyonu.
 
 Çıktı:
   Desktop/.../3.PLAN+_DIS_EL_ARAC_KATALOGU/<KAT>/...
+  + 00_SON_DURUM_3.PLAN_SONRASI.xlsx
 """
 from __future__ import annotations
 
@@ -467,6 +470,228 @@ CATS: dict[str, tuple[str, list[tuple]]] = {
             ("Human rating capture", "İnsan Puanı", "iç", "Ümit abi notu", "eval", "araç", "Beyefendi", "İç"),
             ("Release gate: eval green", "Sürüm Kapısı", "iç", "Kırmızıysa çıkış yok", "eval", "fren", "Profesyonel", "Kritik"),
             ("Public honesty: say fail", "Dürüst Başarısızlık", "iç", "Oldu demeden oldu de", "eval", "politika", "Profesyonel", "Kritik"),
+            ("Chaos monkey safe (own sandbox)", "Kendi Sandbox Kaos", "iç", "Kendi kafesinde kırılganlığı bul", "eval", "suite", "Profesyonel", "Exploit yok"),
+            ("Gentleman politeness score", "Naziklik Skoru", "iç", "Beyefendi sınav metriği", "eval", "metrik", "Beyefendi", "Kritik"),
+            ("Agile step-count score", "Adım Sayısı Skoru", "iç", "Gereksiz el oyunu cezası", "eval", "metrik", "Çevik", "İç"),
+            ("Mimar trust ledger", "Güven Defteri", "iç", "Ümit abi güven puanı birikir", "eval", "şema", "Profesyonel", "İç — kritik"),
+        ],
+    ),
+    "21_DIPLOMASI_MUZAKERE": (
+        "21 DİPLOMASİ / MÜZAKERE / TON (beyefendi dış dünya)",
+        [
+            ("Intent soften / harden dial", "Sertlik-Yumuşaklık Kadranı", "iç", "Yerine göre ton", "diplomasi", "araç", "Beyefendi", "Kritik"),
+            ("Stakeholder map tool", "Paydaş Haritası", "iç", "Kime ne söylenir", "diplomasi", "araç", "Profesyonel", "İç"),
+            ("Negotiation brief builder", "Müzakere Brifingi", "iç", "Önce hedef/kırmızı çizgi", "diplomasi", "araç", "Profesyonel", "İç"),
+            ("Apology / repair script", "Özür / Onarım", "iç", "Hata sonrası beyefendi", "diplomasi", "şablon", "Beyefendi", "İç"),
+            ("Refuse without insult", "Kırmadan Red", "iç", "Yasak işi nazikçe reddet", "diplomasi", "politika", "Beyefendi", "Kritik"),
+            ("Escalate to Mimar card", "Mimara Devret Kartı", "iç", "Ben karar vermemeliyim deme", "diplomasi", "UX", "Profesyonel", "Kritik"),
+            ("Multi-party thread summarizer", "Çok Taraflı Özet", "iç", "Karma konuşmayı netleştir", "diplomasi", "araç", "Çevik", "İç"),
+            ("Cultural etiquette packs TR-AR-EN", "Kültür Adabı Paketi", "iç", "Hitap/selam/üsul", "diplomasi", "paket", "Beyefendi", "Kritik"),
+            ("Conflict de-escalation playbook", "Gerilim Düşürme", "iç", "Kavga büyütme", "diplomasi", "playbook", "Beyefendi", "İç"),
+            ("Promise tracker (said→done)", "Söz Takibi", "iç", "Söz verdiysen bitir", "diplomasi", "araç", "Profesyonel", "Kritik"),
+            ("Silence as tool (when not to speak)", "Sessizlik Eli", "iç", "Her şeye cevap yok", "diplomasi", "politika", "Beyefendi", "İç"),
+            ("Public vs private channel router", "Açık/Kapalı Kanal", "iç", "Mahremi yanlış yere yazma", "diplomasi", "araç", "Profesyonel", "Kritik"),
+            ("Draft→review→send gate (mail/social)", "Taslak-Gözden-Gönder", "ofis", "Acele gönderim yok", "diplomasi", "fren", "Profesyonel", "Kritik"),
+            ("Reputation risk scorer", "İtibar Risk Skoru", "iç", "Bu yazı zarar verir mi", "diplomasi", "araç", "Beyefendi", "İç"),
+            ("Guest / family mode tone", "Misafir-Aile Tonu", "iç", "Ev içi nezaket", "diplomasi", "mod", "Beyefendi", "İç"),
+            ("Crisis comms template", "Kriz İletişim Şablonu", "iç", "Felakette sakin dil", "diplomasi", "şablon", "Profesyonel", "İç"),
+            ("Thank-you / gratitude ledger", "Teşekkür Defteri", "iç", "İyiliği unutma", "diplomasi", "araç", "Beyefendi", "İç"),
+            ("No-manipulation rule", "Manipülasyon Yasağı", "iç", "Kandırma/psikolojik tuzak yok", "diplomasi", "politika", "Profesyonel", "KİLİT"),
+            ("Translate intent not just words", "Niyet Tercümesi", "MT+iç", "Kelime değil mana köprüsü", "diplomasi", "araç", "Beyefendi", "Kritik"),
+            ("Audience-aware rewrite", "Dinleyiciye Göre Yaz", "iç", "Çocuk/usta/avam dili", "diplomasi", "araç", "Çevik", "İç"),
+            ("Meeting chair agenda tool", "Toplantı Başkan Gündem", "ofis", "Dağılmadan yönet", "diplomasi", "araç", "Profesyonel", "İç"),
+            ("Boundary setter (zaman/kapsam)", "Sınır Koyucu", "iç", "Kapsam şişmesin", "diplomasi", "araç", "Profesyonel", "İç"),
+        ],
+    ),
+    "22_ZAMAN_DUNYA_MODEL": (
+        "22 ZAMAN / DÜNYA MODELİ (unutmayan operatör)",
+        [
+            ("Personal world model store", "Kişisel Dünya Modeli", "iç", "Kim/ne/nerede canlı tut", "zaman", "şema", "Profesyonel", "Kritik"),
+            ("Deadline graph + critical path", "Son Tarih Grafı", "iç", "Ne önce bitmeli", "zaman", "araç", "Profesyonel", "Kritik"),
+            ("Habit / ritual scheduler", "Alışkanlık / Ritüel", "iç", "Sabah brifing ritmi", "zaman", "araç", "Beyefendi", "İç"),
+            ("Timezone-aware planner", "Saat Dilimi Planlayıcı", "açık", "Dünya ile uyum", "zaman", "araç", "Beyefendi", "Açık"),
+            ("Seasonal / liturgical calendar hooks", "Mevsim / Takvim Kancası", "iç", "Kültür zamanı (Ramadan vb.)", "zaman", "araç", "Beyefendi", "İç — dikkat"),
+            ("Energy budget (CPU/GPU/insan)", "Enerji Bütçesi", "iç", "Gece ağır, gündüz çevik", "zaman", "politika", "Çevik", "İç"),
+            ("Procrastination detector", "Erteleme Dedektörü", "iç", "İş sürüncemede uyarı", "zaman", "araç", "Profesyonel", "İç"),
+            ("Context restore after sleep", "Uyku Sonrası Bağlam", "iç", "Kalınan yerden devam", "zaman", "araç", "Çevik", "Kritik"),
+            ("Long-horizon project boards", "Uzun Ufuk Panosu", "masa", "Aylar süren iş", "zaman", "UX", "Profesyonel", "İç"),
+            ("Anniversary / promise reminders", "Yıldönümü / Söz Hatırlat", "hatırlatıcı", "İnsanî bellek", "zaman", "araç", "Beyefendi", "İç"),
+            ("Work/rest cadence (pomodoro+)", "Çalış-Dinlen Ritmi", "iç", "Yanma yok", "zaman", "mod", "Beyefendi", "İç"),
+            ("Event bus: time triggers tools", "Zaman Tetikli Eller", "kuyruk", "Saat gelince iş", "zaman", "araç", "Profesyonel", "Kritik"),
+            ("Stale task composting", "Bayat İş Kompostu", "iç", "Ölü işleri göm/arşivle", "zaman", "politika", "Çevik", "İç"),
+            ("World-change journal (what changed)", "Dünya Değişim Günlüğü", "iç", "Dün→bugün fark", "zaman", "araç", "Profesyonel", "İç"),
+            ("Travel / away mode", "Yolda / Uzakta Modu", "iç", "Düşük el, yüksek özet", "zaman", "mod", "Beyefendi", "İç"),
+            ("Sync with external calendars (onaylı)", "Takvim Senkron", "CalDAV", "Çift takvim yok", "zaman", "araç", "Profesyonel", "Onay"),
+            ("Countdown to release gates", "Sürüm Kapısı Geri Sayım", "eval", "Yeşil olmadan çıkma", "zaman", "araç", "Profesyonel", "Kritik"),
+            ("Nightly dream queue (safe ideas)", "Gece Fikir Kuyruğu", "fabrika", "Gündüz onaylanacak fikirler", "zaman", "kuyruk", "Çevik", "İç"),
+            ("Aging of permissions", "İzin Yaşlanması", "fren", "Eski yetki solsun", "zaman", "politika", "Profesyonel", "Kritik"),
+            ("Historical replay of a day", "Gün Replay", "transcript", "O gün ne oldu", "zaman", "araç", "Profesyonel", "İç"),
+            ("Priority iron triangle UI", "Öncelik Üçgeni", "UX", "hız×kalite×kapsam", "zaman", "UX", "Profesyonel", "İç"),
+            ("Do-not-schedule sacred slots", "Kutsal Zaman Dilimleri", "iç", "Aile/ibadet/uyku dokunulmaz", "zaman", "politika", "Beyefendi", "İç — Mimar"),
+        ],
+    ),
+    "23_OGRETMEN_USTA_DONGU": (
+        "23 ÖĞRETMEN / USTA DÖNGÜSÜ (Ümit abi öğretir → kalıcı olur)",
+        [
+            ("Teach capture (hatırla→shelf)", "Öğret Yakalama", "hafıza", "«hatırla» kalıcı", "usta", "araç", "Profesyonel", "Kritik"),
+            ("Correction → rule miner", "Düzelt→Kural", "iç", "Azarlama kurala dönsün", "usta", "araç", "Profesyonel", "Kritik"),
+            ("Socratic quiz back to Mimar", "Sokratik Geri Soru", "iç", "Anladım mı doğrula", "usta", "araç", "Beyefendi", "İç"),
+            ("Curriculum path per skill", "Beceri Müfredatı", "iç", "El becerisi basamak", "usta", "şema", "Profesyonel", "İç"),
+            ("Apprentice / journeyman / master gates", "Çırak-Kalfa-Usta Kapıları", "eval", "El yetkinlik seviyesi", "usta", "fren", "Profesyonel", "Kritik"),
+            ("Mistake museum (what we learned)", "Hata Müzesi", "iç", "Aynı hatayı iki kez yapma", "usta", "arşiv", "Profesyonel", "İç"),
+            ("Show-your-work mode for teaching", "İşini Göster Modu", "iç", "Nasıl yaptığını öğret", "usta", "mod", "Beyefendi", "İç"),
+            ("Flashcard / spaced repetition for facts", "Aralıklı Tekrar", "Anki ruhu", "Künye/kaide unutulmasın", "usta", "araç", "Profesyonel", "Açık"),
+            ("Pair-work: Mimar drives, Rüzgar assists", "Çift Sürüş", "iç", "Siz direksiyon, ben alet", "usta", "mod", "Profesyonel", "Kritik"),
+            ("Invert: Rüzgar drafts, Mimar grades", "Taslak→Not", "eval", "Güven defteri besler", "usta", "mod", "Profesyonel", "İç"),
+            ("Domain mentor agents (fıkıh/kod/sahne)", "Alan Mentor Ajanları", "orkestra", "Her dalda usta sesi", "usta", "ajan", "Profesyonel", "İç"),
+            ("Citation-first teaching", "Alıntılı Öğretiş", "RAG", "Uydurma ders yok", "usta", "politika", "Profesyonel", "Kritik"),
+            ("Skill gap report weekly", "Beceri Boşluğu Raporu", "gözlem", "Nerede zayıfız", "usta", "araç", "Beyefendi", "İç"),
+            ("Safe experiment lab for learners", "Öğrenci Labı", "sandbox", "Kırarak öğren (kafeste)", "usta", "araç", "Çevik", "İç"),
+            ("Glossary / istilâh builder", "Istılah Sözlüğü", "iç", "Terim birliği", "usta", "araç", "Profesyonel", "İç"),
+            ("Oral tradition mode (sesli ders)", "Sözlü Gelenek Modu", "TTS/STT", "Dinleyerek öğren", "usta", "mod", "Beyefendi", "Açık"),
+            ("Exam generator from shelf", "Raftan Sınav", "RAG+eval", "Kütüphane canlı sınav", "usta", "araç", "Profesyonel", "Kritik"),
+            ("No-cheat: refuse exam answers when locked", "Sınav Kilit Reddi", "fren", "Hile yok (Mimar kilidi)", "usta", "politika", "Profesyonel", "İç"),
+            ("Mastery badge → unlock tools", "Ustalık Rozeti→El Aç", "katalog", "Yetkin olmadan tehlikeli el yok", "usta", "fren", "Profesyonel", "Kritik"),
+            ("Teach-back to library (yaz→indeks)", "Öğret→Kütüphane", "kütüphane", "Yeni bilgi rafa", "usta", "araç", "Profesyonel", "Kritik"),
+            ("Patience dial (yavaş anlat)", "Sabır Kadranı", "TTS", "Acele etmeden anlat", "usta", "mod", "Beyefendi", "İç"),
+            ("Respect: never shame the learner", "Utandırmama Kuralı", "diplomasi", "Sert ama kırıcı değil", "usta", "politika", "Beyefendi", "İç"),
+        ],
+    ),
+    "24_EGEMENLIK_HAVA_BOSLUGU": (
+        "24 EGEMENLİK / HAVA BOŞLUĞU (kendi evinin efendisi)",
+        [
+            ("Local-first runtime charter", "Yerel-Önce Sözleşme", "Faz90", "Bulut dilenci değil", "egemen", "politika", "Profesyonel", "Kritik"),
+            ("Air-gap update USB kit", "Hava Boşuğu USB Kiti", "iç", "Offline güncelle", "egemen", "araç", "Profesyonel", "İleri"),
+            ("Model weight vault (Ollama)", "Ağırlık Kasası", "Ollama", "İyi model = yerel ağırlık", "egemen", "araç", "Profesyonel", "Kritik"),
+            ("Key ceremony / rotate secrets", "Anahtar Töreni", "vault", "Sırlar yaşlanır", "egemen", "araç", "Profesyonel", "Kritik"),
+            ("Vendor kill-switch (cloud off)", "Satıcı Kesici", "iç", "Bulutu tek tuş kapat", "egemen", "fren", "Profesyonel", "Kritik"),
+            ("Data residency map", "Veri İkamet Haritası", "iç", "Veri nerede yatıyor", "egemen", "audit", "Profesyonel", "İç"),
+            ("Offline encyclopedia pack", "Offline Ansiklopedi Paketi", "nebula/RAG", "İnetsiz bilge", "egemen", "paket", "Beyefendi", "Kritik"),
+            ("Mirror of critical docs", "Kritik Docs Aynası", "2.PLAN", "Dış bağımlılık kırılınca yaşa", "egemen", "araç", "Profesyonel", "Çapraz"),
+            ("Sovereign backup 3-2-1", "Egemen Yedek 3-2-1", "restic", "Felakette diril", "egemen", "araç", "Profesyonel", "Kritik"),
+            ("Supply-chain pin (hashes)", "Tedarik Zinciri Pin", "SBOM", "Sahte paket yok", "egemen", "fren", "Profesyonel", "Açık"),
+            ("No telemetry by default", "Varsayılan Telemetri Yok", "iç", "Evden dışarı sızma", "egemen", "politika", "Beyefendi", "Kritik"),
+            ("Portable home directory", "Taşınır Ev Dizini", "iç", "PC değişince Rüzgar gelir", "egemen", "araç", "Profesyonel", "İç"),
+            ("Hardware attest notes (TPM ops)", "Donanım Tanıklığı", "TPM opsiyon", "Cihaz güveni", "egemen", "not", "Profesyonel", "Opsiyon"),
+            ("Graceful degrade matrix", "Zarif Düşüş Matrisi", "iç", "GPU/net yokken ne kalır", "egemen", "matris", "Çevik", "Kritik"),
+            ("License freedom prefer FOSS", "Özgür Yazılım Tercihi", "SPDX", "Kilitli kapı azalsın", "egemen", "politika", "Profesyonel", "İç"),
+            ("Nation/lang pack sovereignty TR", "TR Dil Egemenliği", "iç", "Türkçe birinci sınıf", "egemen", "politika", "Beyefendi", "İç"),
+            ("Disaster island mode", "Ada Modu", "iç", "Sadece yerel el seti", "egemen", "mod", "Profesyonel", "Kritik"),
+            ("Export entire brain (portable)", "Beyin Dışa Aktar", "iç", "Hafıza+katalog taşınır", "egemen", "araç", "Profesyonel", "İç"),
+            ("Import brain with verify", "Beyin İçe + Doğrula", "hash", "Bozuk beyin alma", "egemen", "araç", "Profesyonel", "İç"),
+            ("Cloud as guest not landlord", "Bulut Misafir", "kota", "Ev sahibi yerelde", "egemen", "politika", "Beyefendi", "Kritik"),
+            ("Legal custody of family data", "Aile Verisi Vesayeti", "mahrem", "Çocuk/aile verisi kilit", "egemen", "politika", "Profesyonel", "Kritik"),
+            ("Anti-lock-in connector abstraction", "Kilitlenme Karşıtı Soyutlama", "api", "Tek satıcıya mahkûm olma", "egemen", "mimari", "Profesyonel", "Kritik"),
+        ],
+    ),
+    "25_ESTETIK_SAHNE_HUZUR": (
+        "25 ESTETİK / SAHNE / HUZUR (varlık kalitesi)",
+        [
+            ("Presence director (nefes/pace)", "Varlık Yönetmeni", "sahne+TTS", "Acele etmeyen yüz", "estetik", "araç", "Beyefendi", "Kritik"),
+            ("Room tone / ambient scenes", "Oda Tonu / Ambiyans", "sahne", "Huzur atmosferi", "estetik", "UX", "Beyefendi", "İç"),
+            ("Typography / color discipline", "Tipografi / Renk Disiplini", "UI kilit", "Ucuz AI yüzü yok", "estetik", "politika", "Profesyonel", "Çapraz arayüz kilidi"),
+            ("Gesture / idle animation taste", "Jest / Boşta Zarafet", "Godot", "Titreyen bot değil", "estetik", "araç", "Beyefendi", "İç"),
+            ("Silence design (pauses)", "Sessizlik Tasarımı", "TTS", "Nefes alan konuşma", "estetik", "mod", "Beyefendi", "İç"),
+            ("Celebration without spam", "Sade Kutlama", "UX", "İş bitince abartısız sevinç", "estetik", "UX", "Beyefendi", "İç"),
+            ("Error beauty (honest + calm)", "Hata Güzelliği", "UX", "Kırmızı panik değil sakin dürüstlük", "estetik", "şablon", "Profesyonel", "İç"),
+            ("Focus zen workspace layout", "Odak Zen Düzeni", "masa", "Dağınık dashboard yok", "estetik", "UX", "Beyefendi", "İç"),
+            ("Soundscape etiquette", "Ses Peyzajı Adabı", "medya", "Gereksiz bip yok", "estetik", "politika", "Beyefendi", "İç"),
+            ("Night theme circadian", "Gece Teması", "UI", "Gözü yorma", "estetik", "mod", "Beyefendi", "İç"),
+            ("Craft checklist before show", "Gösteri Öncesi Zanaat", "masa", "Teslim kalitesi", "estetik", "şablon", "Profesyonel", "İç"),
+            ("Avatar wardrobe / season", "Avatar Gardırop", "VRM", "Mevsime göre varlık", "estetik", "UX", "Beyefendi", "Opsiyon"),
+            ("Spatial audio for scene", "Uzamsal Ses", "sahne", "Derinlik hissi", "estetik", "araç", "Beyefendi", "İleri"),
+            ("Reduce motion accessibility", "Hareket Azalt", "a11y", "Herkes için huzur", "estetik", "politika", "Profesyonel", "Açık"),
+            ("Museum mode (slow browse library)", "Müze Modu", "kütüphane", "Rafta yavaş gez", "estetik", "mod", "Beyefendi", "İç"),
+            ("Poetry / hikmet interludes (opt-in)", "Hikmet Ara", "nebula", "İsteğe bağlı güzellik", "estetik", "mod", "Beyefendi", "Opt-in"),
+            ("No-emoji-spam / no-cheap-glow", "Ucuz Süs Yasağı", "UI kural", "Marka zevki koru", "estetik", "politika", "Profesyonel", "İç"),
+            ("Stage manager cue sheet", "Sahne Amiri İşaret", "sahne", "Işık/ses/metin senkron", "estetik", "araç", "Profesyonel", "İç"),
+            ("Hospitality welcome ritual", "Misafir Karşılama", "diplomasi+sahne", "Eve gelen beyefendi", "estetik", "ritüel", "Beyefendi", "İç"),
+            ("Clutter debt meter", "Dağınıklık Borcu", "gözlem", "UI/masa şişmesini ölç", "estetik", "metrik", "Çevik", "İç"),
+            ("Beauty regression tests (screenshot)", "Güzellik Regresyonu", "Playwright", "Yüzü bozma", "estetik", "eval", "Profesyonel", "Kritik"),
+            ("Huzur KPI (interrupt rate)", "Huzur KPI", "gözlem", "Ne kadar bölündük", "estetik", "metrik", "Beyefendi", "İç"),
+        ],
+    ),
+    "26_EKONOMI_KOTA_DEGER": (
+        "26 EKONOMİ / KOTA / DEĞER (israfsız güç)",
+        [
+            ("Unit economics per task", "Görev Birim Maliyeti", "iç", "Bu iş kaç token/dk", "ekonomi", "metrik", "Profesyonel", "Kritik"),
+            ("Budget envelopes (gün/hafta)", "Bütçe Zarfı", "iç", "Aşınca yavaşla", "ekonomi", "politika", "Beyefendi", "Kritik"),
+            ("Cheap-path planner", "Ucuz Yol Planlayıcı", "ajan", "Önce yerel/hafif el", "ekonomi", "araç", "Çevik", "Kritik"),
+            ("Expensive-path justify card", "Pahalı Yol Gerekçe", "iç", "Neden bulut yaktın", "ekonomi", "UX", "Profesyonel", "İç"),
+            ("Cache hit rate optimizer", "Önbellek İsabet", "web/RAG", "Tekrar yakma", "ekonomi", "araç", "Çevik", "İç"),
+            ("Disk rent forecast", "Disk Kira Tahmini", "kütüphane", "GB başına değer", "ekonomi", "araç", "Profesyonel", "İç"),
+            ("GPU queue auction (fair share)", "GPU Kuyruk Adaleti", "iç", "Kim ne zaman GPU", "ekonomi", "politika", "Profesyonel", "İç"),
+            ("Value score: impact×urgency/cost", "Değer Skoru", "iç", "Önce yüksek değer", "ekonomi", "araç", "Profesyonel", "İç"),
+            ("Waste report (failed retries)", "İsraf Raporu", "gözlem", "Boşa giden el", "ekonomi", "araç", "Profesyonel", "İç"),
+            ("Subscription / API spend ledger", "Abonelik Defteri", "api", "Dış para takibi", "ekonomi", "audit", "Profesyonel", "İç"),
+            ("Free-tier etiquette", "Ücretsiz Kota Adabı", "beyefendi", "Kota ezme", "ekonomi", "politika", "Beyefendi", "Kritik"),
+            ("Batch night jobs for cost", "Gece Toplu İş", "kuyruk", "Ucuz saatte ağır iş", "ekonomi", "politika", "Çevik", "İç"),
+            ("Stop-loss on runaway agent", "Ajan Zarar Kes", "fren", "Maliyet çılgınlığında kes", "ekonomi", "fren", "Profesyonel", "Kritik"),
+            ("ROI of new organ proposal", "Yeni Organ ROI", "fabrika", "El değmeye değer mi", "ekonomi", "araç", "Profesyonel", "İç"),
+            ("Shared family compute fairness", "Aile Paylaşım Adaleti", "iç", "Tek kişi evi yakmasın", "ekonomi", "politika", "Beyefendi", "İç"),
+            ("Carbon / power awareness note", "Güç Farkındalığı", "iç", "Gereksiz GPU yakma", "ekonomi", "not", "Beyefendi", "İç"),
+            ("Quote before big job", "Büyük İşte Teklif", "UX", "Önce maliyet söyle", "ekonomi", "fren", "Profesyonel", "Kritik"),
+            ("Refund of attention (summarize)", "Dikkat İadesi", "özet", "Uzun iş→kısa özet", "ekonomi", "araç", "Çevik", "İç"),
+            ("Sunk-cost abandon policy", "Batık Maliyet Terk", "iç", "Ölü projeyi bırak", "ekonomi", "politika", "Profesyonel", "İç"),
+            ("Marketplace of internal tools cost tags", "İç Pazar Maliyet Etiketi", "katalog", "Her elin fiyatı", "ekonomi", "şema", "Profesyonel", "Kritik"),
+            ("Graceful degrade to zero-cost mode", "Sıfır Maliyet Modu", "egemen", "Sadece yerel ücretsiz el", "ekonomi", "mod", "Çevik", "Kritik"),
+            ("Mimar monthly economy brief", "Aylık Ekonomi Brifing", "gözlem", "Ne harcadık ne kazandık", "ekonomi", "araç", "Beyefendi", "İç"),
+        ],
+    ),
+    "27_IKIZ_SIMULASYON": (
+        "27 İKİZ / SİMÜLASYON (önce hayalde bitir, sonra gerçekte)",
+        [
+            ("Digital twin of workspace", "Çalışma Alanı İkizi", "iç", "Gerçek bozmadan dene", "ikiz", "mimari", "Profesyonel", "Kritik"),
+            ("Dry-run universe switch", "Kuru Evren Anahtarı", "ajan", "Tüm eller sahte moda", "ikiz", "mod", "Profesyonel", "Kritik"),
+            ("What-if planner", "Ya-Olursa Planlayıcı", "iç", "Senaryo ağacı", "ikiz", "araç", "Çevik", "İç"),
+            ("Shadow mode (observe only)", "Gölge Modu", "ajan", "Yapmadan izle öğren", "ikiz", "mod", "Beyefendi", "Kritik"),
+            ("Canary twin vs prod", "Kanarya İkiz", "eval", "Az trafikte dene", "ikiz", "politika", "Profesyonel", "İç"),
+            ("Replay production trace safely", "Üretim İzini Güvenli Oynat", "transcript", "Dünü tekrarla", "ikiz", "araç", "Profesyonel", "İç"),
+            ("Fault injection in sandbox only", "Sadece Sandbox Arıza", "eval", "Kırılganlığı bul", "ikiz", "suite", "Profesyonel", "Exploit yok"),
+            ("Library twin (index without write)", "Kütüphane İkizi", "RAG", "İndeks denemesi yazmadan", "ikiz", "araç", "Profesyonel", "İç"),
+            ("Browser twin with fixtures", "Tarayıcı İkizi", "Playwright", "Web sınavı sabit sayfa", "ikiz", "suite", "Beyefendi", "Kritik"),
+            ("Home twin (HA mock)", "Ev İkizi", "HA mock", "Fiziksel el öncesi", "ikiz", "araç", "Profesyonel", "İleri"),
+            ("Negotiation simulator", "Müzakere Simülatörü", "diplomasi", "Zor konuşmayı prova", "ikiz", "araç", "Beyefendi", "İç"),
+            ("Time-accelerated night shift sim", "Hızlandırılmış Gece Sim", "zaman", "Uzun işi saniyede prova", "ikiz", "araç", "Çevik", "İç"),
+            ("Promote sim→real checklist", "Sim→Gerçek Kontrol", "fren", "Hayalden gerçeğe kapı", "ikiz", "şablon", "Profesyonel", "Kritik"),
+            ("Never confuse sim success with real", "Sim≠Gerçek Kuralı", "yalansız", "Sim yeşil gerçek kırmızı olabilir", "ikiz", "politika", "Profesyonel", "KİLİT"),
+            ("Multi-agent war-game (tabletop)", "Masaüstü Harp Oyunu", "orkestra", "Felaket tatbikatı", "ikiz", "eval", "Profesyonel", "İç"),
+            ("User-visible sim badge", "Sim Rozeti", "UX", "Mimar simde olduğunu bilsin", "ikiz", "UX", "Beyefendi", "Kritik"),
+            ("Cost of sim vs real estimator", "Sim/Gerçek Maliyet", "ekonomi", "Prova ucuz kalsın", "ikiz", "araç", "Çevik", "İç"),
+            ("Rollback after failed promotion", "Başarısız Terfi Geri Al", "fabrika", "Gerçeğe çıkan bozulursa geri", "ikiz", "araç", "Profesyonel", "İç"),
+            ("Synthetic data generator (privacy-safe)", "Sentetik Veri", "iç", "Mahrem veri ile prova yok", "ikiz", "araç", "Profesyonel", "Kritik"),
+            ("Twin diff: sim plan vs real outcome", "İkiz Diff", "gözlem", "Hayal-gerçek farkı öğren", "ikiz", "araç", "Profesyonel", "Kritik"),
+            ("Permission: sim tools wider, real narrower", "Sim Geniş / Gerçek Dar", "fren", "Gerçekte daha sıkı", "ikiz", "politika", "Profesyonel", "Kritik"),
+            ("Graduation ceremony when twin stable", "İkiz Mezuniyet", "eval", "Stabilse gerçek el aç", "ikiz", "ritüel", "Beyefendi", "İç"),
+        ],
+    ),
+    "28_SON_DURUM_VIZYON": (
+        "28 SON DURUM — 3.PLAN SONRASI RÜZGAR (hedef portre)",
+        [
+            ("Portrait: local scholar with hands", "Portre: Elli Yerel Âlim", "vizyon", "Kütüphane+ajan+eller birleşik", "son", "vizyon", "Profesyonel", "HEDEF"),
+            ("Portrait: gentleman of the web", "Portre: Web Beyefendisi", "vizyon", "İzinli, nazik, hızlı gezgin", "son", "vizyon", "Beyefendi", "HEDEF"),
+            ("Portrait: agile lawful operator", "Portre: Yasal Çevik Operatör", "vizyon", "Az adımda isabet — suçsuz", "son", "vizyon", "Çevik", "HEDEF"),
+            ("Self-indexing library autonomic", "Kendi İndeksleyen Kütüphane", "07", "İndir-yerleştir-indeks-takip kendi", "son", "yetenek", "Profesyonel", "HEDEF"),
+            ("Tool catalog living organism", "Canlı Araç Organizması", "02+16", "Eksik eli üretir, bozuk eli düşürür", "son", "yetenek", "Profesyonel", "HEDEF"),
+            ("Masa as real work not theater", "Masa Gerçek İş", "09", "Belge/tablo/çizim/sunum ellere bağlı", "son", "yetenek", "Profesyonel", "HEDEF"),
+            ("Cursor-grade coding sibling", "Cursor Kardeşi Kod", "08+04", "Repo anlar, yama atar, testler yeşil", "son", "yetenek", "Profesyonel", "HEDEF"),
+            ("Night shift without babysitting", "Bebek Bakıcısız Gece", "15+07", "Takılınca kendi kaldırır, sabah rapor", "son", "yetenek", "Çevik", "HEDEF"),
+            ("Quota-aware brain chain", "Kota Bilinçli Beyin", "Faz90", "Yerel→bulut nazik; bitince öğret sor", "son", "yetenek", "Beyefendi", "HEDEF"),
+            ("Frictionless teach→memory→shelf", "Öğret→Hafıza→Raf Akışı", "23", "Ümit öğretti kalıcı organ olur", "son", "yetenek", "Profesyonel", "HEDEF"),
+            ("Multi-agent under Mimar chair", "Mimar Başkanlı Orkestra", "17", "Roller çalışır, son söz sizde", "son", "yetenek", "Profesyonel", "HEDEF"),
+            ("Default-deny physical world", "Fiziksel Dünya Kapalı", "18", "Madde eli onayla açılır", "son", "güven", "Profesyonel", "HEDEF"),
+            ("Defense without offense", "Saldırısız Savunma", "19", "Korur; exploit öğretmez", "son", "güven", "Profesyonel", "HEDEF"),
+            ("Yalansız oldu as culture", "Yalansız Oldu Kültürü", "20", "Oldu demeden oldu demez", "son", "kültür", "Profesyonel", "HEDEF"),
+            ("Sovereign home AI", "Egemen Ev YZ", "24", "Veri evde, bulut misafir", "son", "kültür", "Beyefendi", "HEDEF"),
+            ("Presence: calm professional face", "Sakin Profesyonel Yüz", "25", "Ucuz bot değil varlık", "son", "kültür", "Beyefendi", "HEDEF"),
+            ("Economy: no waste of attention", "İsrafsız Dikkat", "26", "Pahalı eli boşuna yakmaz", "son", "kültür", "Çevik", "HEDEF"),
+            ("Simulate before you touch", "Dokunmadan Önce Sim", "27", "Önce ikizde bitir", "son", "kültür", "Profesyonel", "HEDEF"),
+            ("Diplomacy as first weapon", "İlk Silah Diplomasi", "21", "Kırmadan net; manipülasyon yok", "son", "kültür", "Beyefendi", "HEDEF"),
+            ("Timeful: remembers world", "Zaman Bilinçli", "22", "Söz, tarih, ritüel unutulmaz", "son", "yetenek", "Beyefendi", "HEDEF"),
+            ("Hands never tangle feet", "El Ayağa Dolanmaz", "13", "Fren+bütçe+onay omurgada", "son", "güven", "Profesyonel", "HEDEF"),
+            ("After 3.PLAN: ready for life ops", "3.PLAN Sonrası: Hayat Operasyonu", "vizyon", "Planlar bitti → yaşayan operatör", "son", "milestone", "hepsi", "KAPI AÇILIR"),
+            ("Not done: GPU scale / robot body", "Henüz Yok: GPU Ölçek / Robot", "not", "Donanım ve madde el sonra", "son", "sınır", "Profesyonel", "Dürüst sınır"),
+            ("Not done: crime or gray-hat", "Asla Yok: Suç / Gri Şapka", "kilit", "Çevik ≠ hırsız; kapalı kalır", "son", "sınır", "Profesyonel", "KİLİT"),
         ],
     ),
 }
@@ -499,7 +724,7 @@ def write_cat(folder: str, title: str, rows: list[tuple]) -> Path:
     ws = wb.active
     ws.title = _safe_sheet(title)
     ws["A1"] = (
-        f"{title} — 3.PLAN+ DIS_EL_ARAC_KATALOGU · {len(rows)} madde · "
+        f"{title} — 3.PLAN+ v2 YÜKSELTME · {len(rows)} madde · "
         f"Kapı: Şamile + 1.PLAN + 2.PLAN+ bitince · "
         f"Modlar: Profesyonel / Beyefendi / Çevik(yasal) · suç/exploit YOK"
     )
@@ -530,14 +755,16 @@ def write_cat(folder: str, title: str, rows: list[tuple]) -> Path:
     ws.auto_filter.ref = f"A2:I{2 + len(rows)}"
     note = wb.create_sheet("NOT")
     note["A1"] = (
-        "3.PLAN+ DIS_EL_ARAC_KATALOGU\n"
+        "3.PLAN+ DIS_EL_ARAC_KATALOGU — v2 YÜKSELTME\n"
         "1.PLAN = Bilgisayar+Sahne eserleri.\n"
         "2.PLAN+ = Motor dalgaları + usta omurgası.\n"
-        "3.PLAN+ = Dış el araç kataloğu — Rüzgar'ın eli ayağına dolaşmasın.\n\n"
+        "3.PLAN+ = Dış el araç kataloğu (01–20 omurga + 21–28 üst katman).\n\n"
         "KİMLİKLER:\n"
         "· PROFESYONEL = cerrah hassasiyeti, test, diff, yalansız oldu.\n"
         "· BEYEFENDİ = web'de nazik, robots/rate-limit, izinli kapı, iz bırakmayan.\n"
         "· ÇEVİK = az adım, isabet, sessiz operatör — METAFOR; suç/hırsızlık/exploit YOK.\n\n"
+        "Üst katman: diplomasi · zaman/dünya · öğretmen · egemenlik · estetik ·\n"
+        "ekonomi · ikiz simülasyon · SON DURUM portresi (kat 28).\n\n"
         "Kapalı: izinsiz erişim, korsan, saldırı PoC, dolandırıcılık, gizlice veri çalma.\n"
         "Kapı: RAG + 1 + 2 bitmeden bu plana aksiyon yok.\n"
         "Kategorileri karıştırmayın."
@@ -572,24 +799,77 @@ def main() -> int:
     for i, r in enumerate(results, 1):
         ws.append([i, r["cat"], r["rows"], Path(r["path"]).name])
     ws.append([])
-    ws.append(["PLAN", "3.PLAN+ DIS_EL_ARAC_KATALOGU"])
+    ws.append(["PLAN", "3.PLAN+ DIS_EL_ARAC_KATALOGU v2 YUKSELTME"])
     ws.append(["ONCEKI", "1.PLAN bilgisayar/sahne · 2.PLAN+ motor/usta"])
     ws.append(["KAPI", "Samile RAG + 1.PLAN + 2.PLAN+ bitince"])
     ws.append(["MODLAR", "Profesyonel | Beyefendi gezgin | Cevik(yasal) — suc yok"])
+    ws.append(["UST KATMAN", "21 diplomasi … 28 SON DURUM vizyon"])
     ws.append(["TOPLAM MADDE", total])
     ws.append(["KOK", str(OUT_ROOT)])
     ozet = OUT_ROOT / "00_OZET_3.PLAN+_DIS_EL_ARAC_KATALOGU.xlsx"
     wb.save(ozet)
+
+    # 3.PLAN sonrası hedef portre (Mimar'a tek bakış)
+    son = Workbook()
+    sw = son.active
+    sw.title = "SON_DURUM"
+    sw["A1"] = (
+        "3.PLAN SONRASI RÜZGAR — hedef portre (uygulama RAG+1+2+3 bitince). "
+        "Suç/exploit yok; çevik = yasal metafor."
+    )
+    sw["A1"].font = Font(name="Calibri", size=12, bold=True, color="C00000")
+    sw.merge_cells("A1:B1")
+    for col, h in enumerate(["BOYUT", "SON DURUM"], 1):
+        c = sw.cell(2, col, h)
+        c.font = Font(bold=True)
+        c.fill = PatternFill("solid", fgColor="DDEBF7")
+    portrait = [
+        ("Kimlik", "Üç kıyafet: Profesyonel cerrah · Web beyefendisi · Yasal çevik operatör — yerinde giyer"),
+        ("Beyin", "Local-first (hafıza→RAG→Ollama→bulut kota bilinçli); uydurmaz, alıntılar; bilmezse öğretir misin der"),
+        ("Eller", "Sicilli araç organizması: dosya, terminal, tarayıcı, git, masa, medya, ofis, API — her el risk+frenli"),
+        ("Kütüphane", "Otonom: indir→yerleştir→indeks→takip→rapor; gece vardiyası bebek bakıcısız"),
+        ("Masa", "Belge/Tablo/Çizim/Sunum sözden gerçek iş; sahne tiyatro değil teslim"),
+        ("Kod", "Cursor kardeşi: repo haritası, yama, test, commit onaylı; yalansız oldu kapısı"),
+        ("Web", "Beyefendi: robots, rate-limit, allowlist, karantina; engelde bypass yok — Mimara sor"),
+        ("Orkestra", "Araştırmacı/kodcu/kütüphaneci/nöbetçi ajanlar; başkan her zaman Mimar"),
+        ("Öğrenme", "Ümit öğretti → kural/hafıza/raf; çırak-kalfa-usta kapısı olmadan tehlikeli el açılmaz"),
+        ("Egemenlik", "Veri evde; bulut misafir; hava boşuğu/ada modu; telemetri varsayılan kapalı"),
+        ("Güven", "Varsayılan red; kill switch; denetim izi; fiziksel dünya kapalı; saldırı seti yok"),
+        ("Simülasyon", "Önce ikizde bitir, sonra gerçek; sim yeşili gerçek sanılmaz"),
+        ("Huzur", "Sakin varlık, israfsız dikkat, diplomasi ilk silah, kutsal zaman dilimleri dokunulmaz"),
+        ("Sınır (dürüst)", "GPU ölçek ve robot beden sonra; suç/gri şapka asla"),
+        ("Milestone", "3.PLAN bitince plan rafı kapanır → yaşayan hayat operatörü başlar"),
+    ]
+    for i, (a, b) in enumerate(portrait, 1):
+        sw.cell(2 + i, 1, a)
+        sw.cell(2 + i, 2, b)
+        sw.cell(2 + i, 1).alignment = Alignment(wrap_text=True, vertical="top")
+        sw.cell(2 + i, 2).alignment = Alignment(wrap_text=True, vertical="top")
+    sw.column_dimensions["A"].width = 22
+    sw.column_dimensions["B"].width = 100
+    sw.freeze_panes = "A3"
+    # kat 28 satırlarını da ek sayfaya
+    if "28_SON_DURUM_VIZYON" in CATS:
+        title28, rows28 = CATS["28_SON_DURUM_VIZYON"]
+        s2 = son.create_sheet("28_MADDELER")
+        s2.append(HEADERS)
+        for i, row in enumerate(rows28, 1):
+            s2.append([i, *row])
+        s2.freeze_panes = "A2"
+    son_path = OUT_ROOT / "00_SON_DURUM_3.PLAN_SONRASI.xlsx"
+    son.save(son_path)
+
     print(
         json.dumps(
             {
                 "ok": True,
-                "plan": "3.PLAN+ DIS_EL_ARAC_KATALOGU",
+                "plan": "3.PLAN+ DIS_EL_ARAC_KATALOGU v2",
                 "cats": len(results),
                 "works": total,
                 "by_cat": {r["cat"]: r["rows"] for r in results},
                 "root": str(OUT_ROOT),
                 "ozet": str(ozet),
+                "son_durum": str(son_path),
                 "commit_hint": "scripts/ruzgar_plan3_arac_katalog_excel.py",
             },
             ensure_ascii=False,
