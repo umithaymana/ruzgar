@@ -708,3 +708,76 @@ Emir (yeni alet)→ programlama organ fabrikası → sahneye panel düşer
 ### 9.7 Başarı cümlesi
 
 **Sahne bağımsızdır = Rüzgar konuşunca tiyatro ayağa kalkar; kütüphane yakıt verir; güncel bilgi isterse web’den şerit gelir; sahne çalışmak için kimseye online dilenmez.**
+
+---
+
+## 10) İleri aşama — yükseltilmiş hayal + eser yakıtı (2026-11-06)
+
+**Kapı (kilit):** Şamile RAG **ve** bu dosyanın §2–§9 (bilgisayar derin + sahne) bitmeden buraya **aksiyon yok**.  
+Sadece kayıtlı vizyon + külliyat listesi. Yol haritası §5 A→F ile birlikte yürür.
+
+### 10.0 Sıra hatırlatması (karıştırma)
+
+```
+Şamile RAG  →  Bilgisayar §2–§9 + sahne  →  Motor A→F  →  §10 ileri senaryolar
+```
+
+### 10.1 Yükseltilmiş hedef (tek tablo)
+
+| Aşama | Hayal (ne yaşarsın) | Gerekli bilgi / eser yakıtı (yasal-açık) |
+|-------|---------------------|------------------------------------------|
+| **A Hafıza** | Odalar; pin; sabah brifing; “geçen kış” | Manning IR; Lucene/OpenSearch docs; SQLite FTS5; CRDT/Automerge yazıları; provenance notları; OpenStax Psychology (bellek) |
+| **B Ses** | Eller serbest süper-el; barge-in; kimlik ses | Whisper + Piper/Coqui/Vosk docs; Web Audio; MDN speech; SLP konuşma bölümleri; Common Voice etik rehber |
+| **C Tercüme** | Klasik→meal→şerh camları; çok dil | Jurafsky SLP; Marian/OPUS/Argos docs; Unicode+ICU; CAMeL/Farasa; kendi terim bankası şeması |
+| **D Video** | Ders filmi; gece render; cam/dünya | Szeliski CV; OpenCV; FFmpeg; OpenTimelineIO; OBS/WebRTC MDN; Three/Godot kamera dili |
+| **E Mimar** | Tek şemada ev; fantastik tiyatro binası | AOSA; SRE Book+Workbook; Electron/FastAPI docs; JSON-RPC/Schema; policy-as-code (OPA); threat model şablonları |
+| **F Programlama** | Organ fabrikası; yalansız oldu; gece onarım | Crafting Interpreters; tree-sitter; Hypothesis/Playwright; Ollama/llama.cpp/LoRA; sandboxed cgroup/seccomp docs |
+| **G Fenni+görsel** | Mat/fizik/coğrafya sahnesi | OpenStax (calc, physics, econ); MIT 6.042; Interactive Linear Algebra; Manim; MapLibre+Natural Earth; Feynman Lectures (açık HTML); HyperPhysics |
+| **H Merkez 7/24** | Kesintisiz Rüzgar evi | Proxmox/Nix; ZFS; Syncthing; age; offline mirror (pip/npm); Prometheus; Google SRE (yine); donanım merdiveni üst basamak |
+| **I Madde el** | Söz→cihaz (yasal) | ESP-IDF; FreeRTOS; Home Assistant docs; ROS2; Firmata/serial; FreeCAD/G-code (sonra) |
+| **J Çok profil** | Aile/mahrem/miras | a11y WCAG; privacy rehberleri; ACM ethics; kendi unutma/miras protokolü |
+
+### 10.2 İleri sahne odaları (ek hayal — A→F oturunca)
+
+Bunlar §9 odalarının **üst seti**; yeni eser + kod ister:
+
+| Oda | Ne olur | Ek yakıt |
+|-----|---------|----------|
+| **Ömür koridoru** | Yıllara göre hafıza odaları yan yana | CRDT + scene.json sürümleme + yerel takvim (CalDAV self-host) |
+| **Mahkeme-i kübra (ilim)** | Delil yağmuru + karşılaştırma + künye | Diff algoritması; kart JSON Schema; Şamile RAG (zaten) |
+| **Dil camı laboratuvarı** | Satır morph; şerh katmanı; sesli okuma | HarfBuzz/FriBidi; TTS; MT modelleri |
+| **Coğrafya + tarih birleşik** | Haritada olay; koridor+harita sync | MapLibre offline; tarih külliyatı; timeline ECS |
+| **Uzay + astro ders** | Orbital; gökyüzü | Astropy; OpenStax physics; CC0 skyboxes |
+| **Atölye gece vardiyası** | Kod+test+render kuyruğu | Dramatiq/RQ veya kendi kuyruk; FFmpeg; Playwright |
+| **Brifing tahtı** | Sabah üç ip; sesle seç | Hafıza API; TTS; sahne HUD |
+| **Güvenlik kapısı odası** | Kırmızı çerçeve; audit | OWASP; policy; append-only log |
+
+### 10.3 Multimodal / yerel beyin (ileri — bulut dilenci değil)
+
+- **LLaVA / CLIP** açık ağırlık+docs — sahne görür-anlar  
+- **Whisper large + Piper çok dil** — nefes egemen  
+- **Embedding + rerank** yerelde (mevcut MiniLM hattını güçlendir)  
+- **LoRA üslup / ilim dili** — Rüzgar’ın kendi ağzı  
+- **Eval harness** — “yalansız oldu” sınavları  
+
+### 10.4 Fenni külliyat (İslami EVET sonrası — G dalgası)
+
+Zaten kısmen ortak_kaynak’ta iskelet var; ileri aşamada **derin**:
+
+- OpenStax tam set (math, physics, chem intro, bio, econ, psych)  
+- MIT OCW seçme (6.000 / 6.006 / 6.042 / 8.01)  
+- D2L + ISLR + ESL (bilgisayar §2 ile paylaşılabilir; burada sahne+ders bağlanır)  
+- Coğrafya: Natural Earth + açık atlas metinleri  
+- Bilim tarihi: açık üniversite notları / kamu malı klasikler  
+
+### 10.5 Bilerek sonra / kapılı
+
+- Korsan eser yok  
+- Exploit / casusluk tarifi yok  
+- Biyoloji-kimya silahlaştırma yok  
+- Madde el ve 7/24 merkez: donanım merdiveni + Mimar `evet`  
+
+### 10.6 Başarı cümlesi (ileri)
+
+**İleri Rüzgar = Şamile bilgesi + bilgisayar ustası + sahne tiyatrosu + hatırlayan ruh + sesli el + çeviren cam + film çeken göz + organ döken usta + (isteğe) maddeye inen el.**  
+Hepsi sırayla; hiçbiri Şamile/bilgisayar/sahne kilidini atlayarak değil.

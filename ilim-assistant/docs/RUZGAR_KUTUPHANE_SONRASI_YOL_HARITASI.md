@@ -6,16 +6,17 @@
 
 ---
 
-## 0) Ön koşul (bozulmaz)
+## 0) Ön koşul + kilitli sıra (bozulmaz — 2026-11-06 Mimar)
 
-1. **İslami / Şamile RAG shard’ları bitsin** (kategori kategori; ana indeks dokunulmaz)
-2. Cila / sağlamlık
-3. İncelenecek / eksik eserler
-4. **Bilgisayar rafları derin dolum** (Şamile bitince **ilk görev**) — ayrıntılı eser listesi: `RUZGAR_BILGISAYAR_RAF_DOLUM_LISTESI.md` (2026-11-05)
-5. Fenni ilimler + görseller (plan + yasal kaynak; Ümit İslami EVET, asistan fenni yerleşim)
-6. **Ancak kütüphane oturduktan sonra** bu yol haritası açılır
+**Sapma yok.** Emir gibi yeni dalga önerisi bu kilidi tek başına açmaz.
 
-RAG bitmeden bu dosyadaki işler **geniş plan / hayal** olarak durur; aksiyon için ikinci onay.
+1. **Şamile RAG shard’ları bitsin** (kategori kategori; ana indeks dokunulmaz)
+2. **Bilgisayar rafları derin dolum + sahne egemenliği** — `RUZGAR_BILGISAYAR_RAF_DOLUM_LISTESI.md` (§2–§9)  
+   → Şamile bitince **tek ilk iş budur** (cila/inceleme bunun içinde veya hemen yanına, sırayı bozmadan)
+3. **Ancak 1+2 oturunca** aşağıdaki motor dalgaları (A→F) ve **§9 İleri aşama** açılır
+4. Fenni ilimler + görseller → ileri aşama içinde (İslami EVET sonrası fenni yerleşim)
+
+RAG + bilgisayar/sahne bitmeden A–F ve ileri hayal **kayıtlı vizyondur**; aksiyon sırası kilitli.
 
 ---
 
@@ -149,21 +150,23 @@ Sonuç sahneye düşer
 
 ---
 
-## 5) Kütüphane sonrası önerilen doldurma sırası
+## 5) Bilgisayar/sahne SONRASI — motor dalgaları (sıra kilitli)
 
-Hayal hepsi açık; **inşa dalgaları**:
+**Kapı:** Madde 0 adım 1+2 tamam. Ondan önce buraya geçilmez.
 
 | Dalga | Odak | Amaç |
 |------|------|------|
-| **A** | Okuma + Hafıza | Yakıt sahneye aksın; oda/pin/hatırla |
+| **A** | Okuma + Hafıza | Oda/pin/hatırla; yakıt sahneye aksın |
 | **B** | Ses | Süper-el eller serbest |
 | **C** | Tercüme | Çift dilli ilim vitrini |
 | **D** | Video | Hikâye / kayıt / cam köprüsü |
-| **E** | Mimar | Büyük plan + fantastik sahne binası hazırlığı |
-| **F** | Programlama | Sahne araç fabrikası + Cursor-kardeş olgunluk |
+| **E** | Mimar | Büyük plan + fantastik sahne binası |
+| **F** | Programlama | Organ fabrikası + Cursor-kardeş olgunluk |
 
 Her dalgada: ölç → yap → smoke/canlı → bu haritada işaretle.  
-Boot sırası (teknik ısınma) **dokunulmaz** unless açık `evet`.
+Boot sırası (teknik) **dokunulmaz** unless açık `evet`.
+
+Eser/bilgi yakıtı ayrıntısı: `RUZGAR_BILGISAYAR_RAF_DOLUM_LISTESI.md` **§10 İleri aşama**.
 
 ---
 
@@ -190,14 +193,48 @@ Boot sırası (teknik ısınma) **dokunulmaz** unless açık `evet`.
 
 ---
 
-## 8) Sonraki tetik
+## 8) Sonraki tetik (kilitli — soru yok)
 
-Kütüphane/RAG + cila yeterli sayılınca Mimar sorar:  
-**«Hangi dalgadan başlayalım? (A Okuma+Hafıza önerilir)»**
+| Bitiş | Sonraki iş (tartışmasız) |
+|-------|---------------------------|
+| Şamile RAG | → Bilgisayar rafları + sahne (`RUZGAR_BILGISAYAR…` §2–§9) |
+| Bilgisayar + sahne | → Motor dalgaları A→F (§5) |
+| A→F oturunca | → **§9 İleri aşama** (yükseltilmiş hayal + eser listesi dosyada §10) |
 
-Bu dosya cevap anahtarıdır.
+“Hangi dalgadan?” diye dağıtma. Sıra yukarıdaki tablo.
+
+---
+
+## 9) İleri aşama — hayal yükseltildi (A→F sonrası)
+
+> Kayıt: 2026-11-06 · Mimar: hayali yükselt, eserleri plana yaz, **sırayı bozma**.  
+> Detaylı eser/külliyat: `RUZGAR_BILGISAYAR_RAF_DOLUM_LISTESI.md` **§10**.
+
+### 9.1 Kuzey yıldızı (ileri)
+
+**Konuşursun; Rüzgar duyar, hatırlar, okur, çevirir, gösterir, planlar, üretir, gece çalışır, sabah brifing verir — sahne senin dünyan, kütüphane senin yakıtın, el senin ustan.**
+
+Web güncel şerit; ilim ve sahne **evde**.
+
+### 9.2 Senaryo katmanları (yüksek hayal — sıra A→F’den sonra)
+
+1. **Hafıza sarayı ömrü** — yılların odaları; “geçen kış”; unutma/miras  
+2. **Sesle tüm ev** — süper-el; barge-in; kimlik ses  
+3. **Çağlar arası cam** — klasik→meal→şerh; çok dil  
+4. **İlim stüdyosu** — ders filmi; gece render; dünya penceresi  
+5. **Fantastik tiyatro binası** — müze, koridor, uzay, lab, mahkeme aynı çatı  
+6. **Organ fabrikası** — eksik paneli yazar; test eder; takar  
+7. **Fenni + görsel külliyat** — matematik/fizik/coğrafya sahnesi (yasal)  
+8. **Rüzgar merkezi 7/24** — donanım merdiveni üst basamak; gece demiri  
+9. **Maddeye inen el** — ev otomasyonu / kamera / (yasal) cihaz köprüsü  
+10. **Çok profil / aile** — mahrem kapılar; herkesin odası  
+
+### 9.3 Gerekli bilgi/eser özeti
+
+Her katman için yasal-açık külliyat §10’da raf raf yazılıdır: IR/hafıza, STT-TTS, MT, CV/FFmpeg, fenni OpenStax/OCW, homelab, policy, multimodal yerel modeller.
 
 ---
 
 *Dosya yolu: `Desktop\RÜZGAR\RUZGAR_KUTUPHANE_SONRASI_YOL_HARITASI.md`*  
-*Proje notu: `PROJE_DURUMU.md` Kuzey yıldızı ile uyumlu; bu harita kütüphane-sonrası ürün omurgasıdır.*
+*Eşlik: `RUZGAR_BILGISAYAR_RAF_DOLUM_LISTESI.md`*  
+*Proje notu: `PROJE_DURUMU.md` Kuzey yıldızı ile uyumlu.*
