@@ -5,7 +5,7 @@
   "sources": 5,
   "ok_sources": 5,
   "ilave_rows": 3,
-  "updated_utc": "2026-11-02T23:21:31.722662+00:00",
+  "updated_utc": "2026-11-09T21:01:38.066545+00:00",
   "skills": [
     "psikoloji (OpenStax)",
     "NIMH sağlık bilgisi"
@@ -22,21 +22,27 @@
     },
     "nih_mental": {
       "kaynak_id": "19_psi_koloji__nih_mental",
-      "baslik": "NIH Mental Health information",
+      "baslik": "NIH mental health info",
       "url": "https://www.nimh.nih.gov/health",
       "dal": "19_psi_koloji_",
       "ok": true,
       "telafi": true,
-      "parca": 1
+      "parca": 1,
+      "parca_sayisi": 1,
+      "dalga_e_raw_derin": true,
+      "updated_utc": "2026-11-09T21:00:18.337046+00:00"
     },
     "simply_psych": {
       "kaynak_id": "19_psi_koloji__simply_psych",
-      "baslik": "Simply Psychology (açık makaleler index)",
+      "baslik": "Simply Psychology hub",
       "url": "https://www.simplypsychology.org/",
       "dal": "19_psi_koloji_",
       "ok": true,
       "telafi": true,
-      "parca": 1
+      "parca": 1,
+      "parca_sayisi": 1,
+      "dalga_e_raw_derin": true,
+      "updated_utc": "2026-11-09T21:00:18.758626+00:00"
     },
     "openstax_psych_page": {
       "kaynak_id": "19_psi_koloji__openstax_psych_page",
@@ -60,7 +66,30 @@
       "raw_files": [
         "sep_bounded_00.html"
       ],
-      "parca": 17
+      "parca": 20,
+      "parca_sayisi": 20,
+      "dalga_e_raw_derin": true,
+      "updated_utc": "2026-11-09T21:00:18.806739+00:00"
+    },
+    "psych_open_hub": {
+      "kaynak_id": "19_psi_koloji__psych_open_hub",
+      "baslik": "Psychology open hubs",
+      "dal": "19_psi_koloji_",
+      "ok": true,
+      "parca": 73,
+      "parca_sayisi": 73,
+      "dalga_e_web_derin": true,
+      "updated_utc": "2026-11-09T21:00:51.548562+00:00"
+    },
+    "psych_sep_hub": {
+      "kaynak_id": "19_psi_koloji__psych_sep_hub",
+      "baslik": "SEP psychology-related",
+      "dal": "19_psi_koloji_",
+      "ok": true,
+      "parca": 52,
+      "parca_sayisi": 52,
+      "dalga_e_web_derin": true,
+      "updated_utc": "2026-11-09T21:01:38.066545+00:00"
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.598244+00:00",

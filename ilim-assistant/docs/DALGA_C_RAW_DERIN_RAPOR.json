@@ -1,0 +1,110 @@
+[
+  {
+    "key": "gpp",
+    "ok": true,
+    "parca": 1,
+    "dal": "08_yazilim_mi_mari_leri_"
+  },
+  {
+    "key": "swe_book",
+    "ok": true,
+    "parca": 2,
+    "dal": "08_yazilim_mi_mari_leri_"
+  },
+  {
+    "key": "azure_patterns",
+    "ok": true,
+    "parca": 2,
+    "dal": "08_yazilim_mi_mari_leri_"
+  },
+  {
+    "key": "aosa_full",
+    "ok": true,
+    "parca": 3,
+    "dal": "08_yazilim_mi_mari_leri_"
+  },
+  {
+    "key": "segoogle",
+    "ok": true,
+    "parca": 1,
+    "dal": "08_yazilim_mi_mari_leri_"
+  },
+  {
+    "key": "twelve_factor",
+    "ok": true,
+    "parca": 6,
+    "dal": "08_yazilim_mi_mari_leri_"
+  },
+  {
+    "key": "docker_start",
+    "ok": true,
+    "parca": 1,
+    "dal": "09_devops_ve_altyapisi"
+  },
+  {
+    "key": "ansible_docs",
+    "ok": true,
+    "parca": 1,
+    "dal": "09_devops_ve_altyapisi"
+  },
+  {
+    "key": "terraform_docs",
+    "ok": true,
+    "parca": 1,
+    "dal": "09_devops_ve_altyapisi"
+  },
+  {
+    "key": "dora",
+    "ok": true,
+    "parca": 1,
+    "dal": "09_devops_ve_altyapisi"
+  },
+  {
+    "key": "owasp_asvs",
+    "ok": true,
+    "parca": 1,
+    "dal": "07_si_ber_g_venli_k"
+  },
+  {
+    "key": "owasp_top10",
+    "ok": true,
+    "parca": 1,
+    "dal": "07_si_ber_g_venli_k"
+  },
+  {
+    "key": "owasp_proactive",
+    "ok": true,
+    "parca": 1,
+    "dal": "07_si_ber_g_venli_k"
+  },
+  {
+    "key": "nist_cyber",
+    "ok": true,
+    "parca": 3,
+    "dal": "07_si_ber_g_venli_k"
+  },
+  {
+    "key": "ben_eater",
+    "ok": true,
+    "parca": 1,
+    "dal": "12_bi_lgi_sayar_m_hendi_sli_i_"
+  },
+  {
+    "key": "computer_systems",
+    "ok": true,
+    "parca": 2,
+    "dal": "12_bi_lgi_sayar_m_hendi_sli_i_"
+  },
+  {
+    "key": "n2t_eng",
+    "ok": true,
+    "parca": 1,
+    "dal": "12_bi_lgi_sayar_m_hendi_sli_i_"
+  },
+  {
+    "key": "nand2tetris_deep",
+    "ok": true,
+    "parca": 11,
+    "dal": "12_bi_lgi_sayar_m_hendi_sli_i_"
+  }
+]

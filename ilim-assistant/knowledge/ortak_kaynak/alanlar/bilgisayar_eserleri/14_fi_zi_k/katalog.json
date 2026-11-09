@@ -5,7 +5,7 @@
   "sources": 6,
   "ok_sources": 6,
   "ilave_rows": 3,
-  "updated_utc": "2026-11-02T23:18:09.139821+00:00",
+  "updated_utc": "2026-11-09T20:59:10.071666+00:00",
   "skills": [
     "üniversite fiziği (OpenStax)",
     "Feynman Lectures erişimi"
@@ -31,12 +31,15 @@
     },
     "hyperphysics": {
       "kaynak_id": "14_fi_zi_k_hyperphysics",
-      "baslik": "HyperPhysics (Georgia State)",
+      "baslik": "HyperPhysics concept map",
       "url": "http://hyperphysics.phy-astr.gsu.edu/hbase/index.html",
       "dal": "14_fi_zi_k",
       "ok": true,
       "telafi": true,
-      "parca": 1
+      "parca": 2,
+      "parca_sayisi": 2,
+      "dalga_d_raw_derin": true,
+      "updated_utc": "2026-11-09T20:55:34.769380+00:00"
     },
     "openstax_up1_pdf": {
       "kaynak_id": "14_fi_zi_k_openstax_up1_pdf",
@@ -60,14 +63,27 @@
     },
     "openstax_up1": {
       "kaynak_id": "14_fi_zi_k_openstax_up1",
-      "baslik": "OpenStax University Physics Vol 1 (sayfalar)",
+      "baslik": "OpenStax University Physics Vol1",
       "lisans": "CC BY",
       "url": "https://openstax.org/books/university-physics-volume-1/pages/15-introduction",
       "local": "raw/openstax_up1_00.html",
       "ok": true,
-      "parca_sayisi": 12,
+      "parca_sayisi": 17,
       "ince_raf_dolum": true,
-      "updated_utc": "2026-11-03T07:51:34.843394+00:00"
+      "updated_utc": "2026-11-09T20:55:36.482931+00:00",
+      "dal": "14_fi_zi_k",
+      "parca": 17,
+      "dalga_d_raw_derin": true
+    },
+    "physics_open_hub": {
+      "kaynak_id": "14_fi_zi_k_physics_open_hub",
+      "baslik": "Open physics hubs (OCW/Wikipedia egitim)",
+      "dal": "14_fi_zi_k",
+      "ok": true,
+      "parca": 56,
+      "parca_sayisi": 56,
+      "dalga_d_web_derin": true,
+      "updated_utc": "2026-11-09T20:59:10.071666+00:00"
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.594243+00:00",

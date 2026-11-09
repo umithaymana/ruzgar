@@ -5,7 +5,7 @@
   "sources": 9,
   "ok_sources": 9,
   "ilave_rows": 3,
-  "updated_utc": "2026-11-03T10:16:07.310327+00:00",
+  "updated_utc": "2026-11-09T20:54:27.983153+00:00",
   "skills": [
     "OWASP Top 10",
     "güvenli kodlama",
@@ -19,7 +19,10 @@
       "dal": "07_si_ber_g_venli_k",
       "ok": true,
       "telafi": true,
-      "parca": 1
+      "parca": 1,
+      "parca_sayisi": 1,
+      "dalga_c_raw_derin": true,
+      "updated_utc": "2026-11-09T20:54:27.634337+00:00"
     },
     "owasp_cheat": {
       "kaynak_id": "07_si_ber_g_venli_k_owasp_cheat",
@@ -44,7 +47,10 @@
       "dal": "07_si_ber_g_venli_k",
       "ok": true,
       "telafi": true,
-      "parca": 1
+      "parca": 1,
+      "parca_sayisi": 1,
+      "dalga_c_raw_derin": true,
+      "updated_utc": "2026-11-09T20:54:27.634337+00:00"
     },
     "owasp_wstg": {
       "kaynak_id": "07_si_ber_g_venli_k_owasp_wstg",
@@ -68,7 +74,10 @@
       "raw_files": [
         "owasp_proactive_00.html"
       ],
-      "parca": 1
+      "parca": 1,
+      "parca_sayisi": 1,
+      "dalga_c_raw_derin": true,
+      "updated_utc": "2026-11-09T20:54:27.776431+00:00"
     },
     "owasp_wstg_deep": {
       "kaynak_id": "07_owasp_wstg_deep",
@@ -81,14 +90,17 @@
     },
     "nist_cyber": {
       "kaynak_id": "07_si_ber_g_venli_k_nist_cyber",
-      "baslik": "NIST Cybersecurity Framework + malware savunma özeti",
+      "baslik": "NIST Cybersecurity overview",
       "lisans": "Public domain US Gov",
       "url": "https://csrc.nist.gov/pubs/sp/800/83/r1/final",
       "local": "raw/nist_cyber_00.html",
       "ok": true,
-      "parca_sayisi": 2,
+      "parca_sayisi": 3,
       "profesyonel_dolum": true,
-      "updated_utc": "2026-11-03T07:38:30.206103+00:00"
+      "updated_utc": "2026-11-09T20:54:27.983153+00:00",
+      "dal": "07_si_ber_g_venli_k",
+      "parca": 3,
+      "dalga_c_raw_derin": true
     },
     "mitre_attack": {
       "kaynak_id": "07_si_ber_g_venli_k_mitre_attack",

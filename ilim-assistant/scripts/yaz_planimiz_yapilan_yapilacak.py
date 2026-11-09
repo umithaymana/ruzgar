@@ -17,6 +17,9 @@ from datetime import datetime
 from pathlib import Path
 
 from docx import Document
+from docx.enum.style import WD_STYLE_TYPE
+from docx.oxml.ns import qn
+from docx.oxml import OxmlElement
 from docx.shared import Pt, RGBColor
 from openpyxl import load_workbook
 
@@ -42,9 +45,13 @@ FACT = {
     "3_ayiklama": "[x]",
     "4_masa": "[x]",
     "4_dalga_a": "[x]",  # 01–06+11 ≥3 derin
-    "4_dalga_b_e": "[~]",
+    "4_dalga_b": "[x]",  # 03/10/21/13 ≥3 derin (2026-11-09)
+    "4_dalga_c": "[x]",  # 08/09/07/12 ≥3 derin
+    "4_dalga_d": "[x]",  # 14/15/16/17 ≥3 derin
+    "4_dalga_e": "[x]",  # 18/19/20/22/23/24 ≥3 derin
+    "4_dalga_b_e": "[x]",  # B–E tamam
     "5_ayik_rag": "[x]",
-    "5_ocr2": "[~]",
+    "5_ocr2": "[x]",  # tam cilt son sayfa + 2 tarama OCR (tur+eng) 2026-11-10
     "6a": "[x]",
     "6b": "[x]",
     "6c": "[x]",  # vitrin 7/7 + atölye mutlu yolu (2026-11-09)
@@ -54,10 +61,77 @@ FACT = {
 }
 
 
-# Navigasyon / başlık renkleri (sağ panelde de görünür)
+# Navigasyon / başlık renkleri — Gezinti paneli STİL rengini okur (koşu rengi yetmez)
 _COLOR_DONE = RGBColor(0x1B, 0x7A, 0x3A)  # yeşil — bitti
 _COLOR_PARTIAL = RGBColor(0xC4, 0x6B, 0x00)  # turuncu — kısmi
 _COLOR_WAIT = None  # hiç başlanmayan — varsayılan
+_STATUS_STYLES_READY = False
+
+
+def _set_style_outline_level(style, outline_level: int) -> None:
+    """Word Gezinti: outlineLvl zorunlu (0=Heading1 …)."""
+    pPr = style.element.get_or_add_pPr()
+    for child in list(pPr):
+        if child.tag == qn("w:outlineLvl"):
+            pPr.remove(child)
+    el = OxmlElement("w:outlineLvl")
+    el.set(qn("w:val"), str(max(0, min(8, outline_level))))
+    pPr.append(el)
+
+
+def _ensure_status_heading_styles(doc: Document) -> None:
+    """Yeşil/turuncu özel başlık stilleri — Gezinti’de renk görünür."""
+    global _STATUS_STYLES_READY
+    if _STATUS_STYLES_READY:
+        return
+    styles = doc.styles
+    for level in range(0, 5):  # 0=Title benzeri, 1–4 Heading
+        base_name = "Title" if level == 0 else f"Heading {level}"
+        try:
+            base = styles[base_name]
+        except KeyError:
+            base = styles["Heading 1"] if level == 0 else None
+            if base is None:
+                continue
+        outline = 0 if level == 0 else level - 1
+        for status, color, label in (
+            ("done", _COLOR_DONE, "Bitti"),
+            ("partial", _COLOR_PARTIAL, "Kismi"),
+        ):
+            name = f"Ruzgar {label} H{level}"
+            try:
+                st = styles[name]
+            except KeyError:
+                st = styles.add_style(name, WD_STYLE_TYPE.PARAGRAPH)
+                st.base_style = base
+            st.font.color.rgb = color
+            st.font.bold = True
+            try:
+                st.paragraph_format.left_indent = Pt(0)
+                st.paragraph_format.first_line_indent = Pt(0)
+                st.paragraph_format.space_before = Pt(10)
+                st.paragraph_format.space_after = Pt(10)
+            except Exception:
+                pass
+            _set_style_outline_level(st, outline)
+    _STATUS_STYLES_READY = True
+
+
+_PREFIX_DONE = "BİTTİ  ·  "
+_PREFIX_PARTIAL = "KISMİ  ·  "
+_PREFIX_STRIP_RE = re.compile(
+    r"^(?:✓|◐|○|■+|【BİTTİ】|【KISMİ】|BİTTİ\s*·\s*|KISMİ\s*·\s*|\[x\]|\[~\]|\[\s\])\s*",
+    re.I,
+)
+
+
+def _flush_left(p) -> None:
+    """Sola sıfır — Gezinti/gövde girintisi yok."""
+    fmt = p.paragraph_format
+    fmt.left_indent = Pt(0)
+    fmt.first_line_indent = Pt(0)
+    fmt.space_before = Pt(10)
+    fmt.space_after = Pt(10)
 
 
 def add_heading(
@@ -66,19 +140,67 @@ def add_heading(
     level: int = 1,
     *,
     status: str | None = None,
+    legend: bool = False,
 ) -> None:
-    """status: 'done' | 'partial' | 'wait'/None — başlık rengi (Word gezgini)."""
-    p = doc.add_heading(text, level=level)
-    color = None
+    """status: 'done' | 'partial' | 'wait'/None.
+
+    Word koyu Gezinti stil rengini beyaza zorlar → kalın metin öneki.
+    legend=True: önek eklemeden olduğu gibi yazar (üst şerit için).
+    """
+    _ensure_status_heading_styles(doc)
     st = (status or "").strip().lower()
-    if st in ("done", "x", "[x]", "bitti"):
+    raw = (text or "").strip()
+    if not legend:
+        raw = _PREFIX_STRIP_RE.sub("", raw).strip()
+    if legend:
+        label = raw
+        if st in ("done", "x", "[x]", "bitti"):
+            style_name = f"Ruzgar Bitti H{level}"
+            color = _COLOR_DONE
+        elif st in ("partial", "~", "[~]", "kismi", "kısmi"):
+            style_name = f"Ruzgar Kismi H{level}"
+            color = _COLOR_PARTIAL
+        else:
+            style_name = "Title" if level == 0 else f"Heading {level}"
+            color = None
+    elif st in ("done", "x", "[x]", "bitti"):
+        style_name = f"Ruzgar Bitti H{level}"
         color = _COLOR_DONE
+        label = f"{_PREFIX_DONE}{raw}"
     elif st in ("partial", "~", "[~]", "kismi", "kısmi"):
+        style_name = f"Ruzgar Kismi H{level}"
         color = _COLOR_PARTIAL
+        label = f"{_PREFIX_PARTIAL}{raw}"
+    else:
+        style_name = "Title" if level == 0 else f"Heading {level}"
+        color = None
+        label = raw  # başlanmayan — işaretsiz
+    try:
+        p = doc.add_paragraph(label, style=style_name)
+    except KeyError:
+        p = doc.add_heading(label, level=level)
+    _flush_left(p)
     if color is not None:
         for run in p.runs:
             run.font.color.rgb = color
+            run.bold = True
+            if legend:
+                run.font.size = Pt(22 if level <= 1 else 16)
+    elif legend:
+        for run in p.runs:
+            run.bold = True
+            run.font.size = Pt(18)
     return None
+
+
+def add_gezinti_legend(doc: Document) -> None:
+    """Gezinti’nin en üstü: çizgi + büyük durum anahtarı (renk yoksa bile okunur)."""
+    line = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    add_heading(doc, line, 1, status="wait", legend=True)
+    add_heading(doc, "BİTTİ  ·  =  İŞ TAMAM", 1, status="done", legend=True)
+    add_heading(doc, "KISMİ  ·  =  YARIM KALDI", 1, status="partial", legend=True)
+    add_heading(doc, "(işaretsiz)  =  HENÜZ BAŞLANMADI", 1, status="wait", legend=True)
+    add_heading(doc, line, 1, status="wait", legend=True)
 
 
 def add_p(doc: Document, text: str, *, bold: bool = False) -> None:
@@ -298,6 +420,8 @@ def fact_mark_for_ana(sira) -> str:
 
 
 def main() -> int:
+    global _STATUS_STYLES_READY
+    _STATUS_STYLES_READY = False
     raf_path = RAF_MD_DESK if RAF_MD_DESK.is_file() else RAF_MD
     if not raf_path.is_file():
         raf_path = RAF_MD
@@ -308,7 +432,9 @@ def main() -> int:
     ana = read_buyuk_ana_sira()
 
     doc = Document()
-    add_heading(doc, _TITLE, 0, status="partial")
+    # Gezinti’nin en başı: çizgi + büyük anahtar (tek bakış)
+    add_gezinti_legend(doc)
+    add_heading(doc, _TITLE, 0, status="wait")  # başlıkta durum gürültüsü yok
     add_p(
         doc,
         f"Güncellendi: {datetime.now().strftime('%Y-%m-%d %H:%M')} · Ümit & Gökçenur",
@@ -316,13 +442,13 @@ def main() -> int:
     )
     add_p(
         doc,
-        "İşaret: [x] bitti · [~] kısmi · [ ] bekliyor · [-] bilerek yok/erte. "
-        "Raf eser işaretleri = disk katalog (derin ≥20 parça).",
+        "Madde işaret: [x] bitti · [~] kısmi · [ ] bekliyor · [-] bilerek yok/erte. "
+        "Raf eser = disk katalog (derin ≥20 parça).",
     )
     add_p(
         doc,
-        "Başlık renkleri (sağ gezgin): YEŞİL = bölüm bitti · TURUNCU = kısmi · "
-        "siyah/varsayılan = henüz başlanmadı veya vizyon.",
+        "Gezinti: üstteki çizgi + «BİTTİ  ·» / «KISMİ  ·» / (işaretsiz). "
+        "Sola sıfır · aralık açık. Word koyu tema rengi göstermez.",
         bold=True,
     )
     add_p(
@@ -482,10 +608,10 @@ def main() -> int:
                 shelf_rows = []
                 # Dalga A omurga kısmen; diğer vizyon başlıkları wait
                 st = "wait"
-                if title.startswith("Dalga A"):
+                if title.startswith("Dalga A") or title.startswith("Dalga B") or title.startswith(
+                    "Dalga C"
+                ) or title.startswith("Dalga D") or title.startswith("Dalga E"):
                     st = "done"
-                elif title.startswith("Dalga B") or title.startswith("Dalga C"):
-                    st = "partial"
                 add_heading(doc, title, 3, status=st)
             continue
         if kind == "h4":
@@ -564,8 +690,9 @@ def main() -> int:
     add_heading(doc, "8) Sıradaki tek iş", 1, status="partial")
     add_p(
         doc,
-        "Dalga B–E raf derinliği (bilgisayar kütüphanesi) + OCR-2 kısmi. "
-        "Motor A→F vitrin/mutlu yol bu turda tamam.",
+        "Sıradaki: Bilgisayar raf dolumunda kalan ince eser indirmeleri / "
+        "plan dışı boşluklar; bilgisayar RAG indeksi EN SONDA. "
+        "Ayıklama 50 tam cilt + OCR-2 tamam. Dalga A–E + Motor A→F tamam.",
         bold=True,
     )
 

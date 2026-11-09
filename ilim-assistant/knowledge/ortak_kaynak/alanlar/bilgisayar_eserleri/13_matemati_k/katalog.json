@@ -5,7 +5,7 @@
   "sources": 6,
   "ok_sources": 6,
   "ilave_rows": 3,
-  "updated_utc": "2026-11-02T23:17:40.067564+00:00",
+  "updated_utc": "2026-11-09T20:21:13.288915+00:00",
   "skills": [
     "kalkülüs/cebir (OpenStax)",
     "lineer cebir sezgi"
@@ -31,12 +31,15 @@
     },
     "3blue1brown_essence": {
       "kaynak_id": "13_matemati_k_3blue1brown_essence",
-      "baslik": "Essence of Linear Algebra (3Blue1Brown index)",
+      "baslik": "Essence of Linear Algebra (3Blue1Brown)",
       "url": "https://www.3blue1brown.com/topics/linear-algebra",
       "dal": "13_matemati_k",
       "ok": true,
       "telafi": true,
-      "parca": 1
+      "parca": 1,
+      "parca_sayisi": 1,
+      "dalga_b_raw_derin": true,
+      "updated_utc": "2026-11-09T20:20:22.176735+00:00"
     },
     "openstax_calc1_pdf": {
       "kaynak_id": "13_matemati_k_openstax_calc1_pdf",
@@ -50,25 +53,42 @@
     },
     "mcs_math": {
       "kaynak_id": "13_matemati_k_mcs_math",
-      "baslik": "Mathematics for Computer Science (MIT 6.042)",
+      "baslik": "Mathematics for Computer Science (MIT)",
       "lisans": "CC BY-SA / MIT",
       "url": "https://courses.csail.mit.edu/6.042/spring18/mcs.pdf",
       "local": "raw/mcs_math_00.html",
       "ok": true,
-      "parca_sayisi": 17,
+      "parca_sayisi": 38,
       "profesyonel_dolum": true,
-      "updated_utc": "2026-11-03T07:28:24.575509+00:00"
+      "updated_utc": "2026-11-09T20:20:28.607693+00:00",
+      "dal": "13_matemati_k",
+      "parca": 38,
+      "dalga_b_raw_derin": true
     },
     "mcs_html_deep": {
       "kaynak_id": "13_matemati_k_mcs_html_deep",
-      "baslik": "MIT MCS textbook HTML + OpenStax Calc",
+      "baslik": "MIT MCS HTML deep",
       "lisans": "CC BY-SA / CC BY",
       "url": "https://openstax.org/books/elementary-algebra-2e/pages/1-introduction",
       "local": "raw/mcs_html_deep_00.html",
       "ok": true,
-      "parca_sayisi": 9,
+      "parca_sayisi": 12,
       "ince_raf_dolum": true,
-      "updated_utc": "2026-11-03T07:52:01.209876+00:00"
+      "updated_utc": "2026-11-09T20:20:23.072722+00:00",
+      "dal": "13_matemati_k",
+      "parca": 12,
+      "dalga_b_raw_derin": true
+    },
+    "discrete_levin": {
+      "kaynak_id": "13_matemati_k_discrete_levin",
+      "baslik": "Discrete Mathematics: An Open Introduction (Levin)",
+      "url": "https://discrete.openmathbooks.org/",
+      "dal": "13_matemati_k",
+      "ok": true,
+      "parca": 44,
+      "parca_sayisi": 44,
+      "dalga_b_raw_derin": true,
+      "updated_utc": "2026-11-09T20:21:13.288915+00:00"
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.593241+00:00",

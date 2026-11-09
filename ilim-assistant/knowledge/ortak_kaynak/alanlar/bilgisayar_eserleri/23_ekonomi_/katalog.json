@@ -5,7 +5,7 @@
   "sources": 5,
   "ok_sources": 5,
   "ilave_rows": 3,
-  "updated_utc": "2026-11-02T23:23:34.049792+00:00",
+  "updated_utc": "2026-11-09T21:01:42.302875+00:00",
   "skills": [
     "ekonomi (OpenStax)",
     "IMF basics"
@@ -31,12 +31,15 @@
     },
     "econlib": {
       "kaynak_id": "23_ekonomi__econlib",
-      "baslik": "Econlib — Library of Economics and Liberty",
+      "baslik": "Econlib / Library of Economics",
       "url": "https://www.econlib.org/",
       "dal": "23_ekonomi_",
       "ok": true,
       "telafi": true,
-      "parca": 1
+      "parca": 1,
+      "parca_sayisi": 1,
+      "dalga_e_raw_derin": true,
+      "updated_utc": "2026-11-09T21:00:19.187078+00:00"
     },
     "openstax_econ_page": {
       "kaynak_id": "23_ekonomi__openstax_econ_page",
@@ -56,9 +59,32 @@
       "lisans": "Public domain",
       "url": "https://www.gutenberg.org/files/3300/3300-0.txt",
       "ok": true,
-      "parca_sayisi": 75,
+      "parca_sayisi": 120,
       "profesyonel_dolum": true,
-      "updated_utc": "2026-11-03T07:43:25.330911+00:00"
+      "updated_utc": "2026-11-09T21:00:19.537883+00:00",
+      "dal": "23_ekonomi_",
+      "parca": 120,
+      "dalga_e_raw_derin": true
+    },
+    "econ_open_hub": {
+      "kaynak_id": "23_ekonomi__econ_open_hub",
+      "baslik": "Economics open hubs",
+      "dal": "23_ekonomi_",
+      "ok": true,
+      "parca": 52,
+      "parca_sayisi": 52,
+      "dalga_e_web_derin": true,
+      "updated_utc": "2026-11-09T21:00:54.818211+00:00"
+    },
+    "econ_sep_hub": {
+      "kaynak_id": "23_ekonomi__econ_sep_hub",
+      "baslik": "SEP economics-related",
+      "dal": "23_ekonomi_",
+      "ok": true,
+      "parca": 61,
+      "parca_sayisi": 61,
+      "dalga_e_web_derin": true,
+      "updated_utc": "2026-11-09T21:01:42.302875+00:00"
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.603245+00:00",

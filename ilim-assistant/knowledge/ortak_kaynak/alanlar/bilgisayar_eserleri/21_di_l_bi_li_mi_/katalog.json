@@ -5,7 +5,7 @@
   "sources": 4,
   "ok_sources": 4,
   "ilave_rows": 3,
-  "updated_utc": "2026-11-02T23:22:32.906487+00:00",
+  "updated_utc": "2026-11-09T20:20:22.031099+00:00",
   "skills": [
     "NLP (SLP)",
     "NLTK",
@@ -14,11 +14,14 @@
   "kaynaklar": {
     "slp": {
       "kaynak_id": "21_di_l_bi_li_mi__slp",
-      "baslik": "SLP Jurafsky",
+      "baslik": "Speech and Language Processing hub",
       "url": "https://web.stanford.edu/~jurafsky/slp3/",
       "dal": "21_di_l_bi_li_mi_",
       "ok": true,
-      "parca": 1
+      "parca": 1,
+      "parca_sayisi": 1,
+      "dalga_b_raw_derin": true,
+      "updated_utc": "2026-11-09T20:20:21.718493+00:00"
     },
     "nltk_book": {
       "kaynak_id": "21_di_l_bi_li_mi__nltk_book",
@@ -34,7 +37,10 @@
         "nltk_book_03.html",
         "nltk_book_04.html"
       ],
-      "parca": 34
+      "parca": 41,
+      "parca_sayisi": 41,
+      "dalga_b_raw_derin": true,
+      "updated_utc": "2026-11-09T20:20:22.031099+00:00"
     },
     "universal_deps": {
       "kaynak_id": "21_di_l_bi_li_mi__universal_deps",

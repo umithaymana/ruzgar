@@ -5,7 +5,7 @@
   "sources": 6,
   "ok_sources": 6,
   "ilave_rows": 3,
-  "updated_utc": "2026-11-02T23:15:59.175761+00:00",
+  "updated_utc": "2026-11-09T20:20:21.683847+00:00",
   "skills": [
     "istatistik",
     "Bayes",
@@ -30,12 +30,15 @@
     },
     "sklearn_ug": {
       "kaynak_id": "10_veri_bi_li_mi__sklearn_ug",
-      "baslik": "scikit-learn User Guide",
+      "baslik": "scikit-learn user guide",
       "url": "https://scikit-learn.org/stable/user_guide.html",
       "dal": "10_veri_bi_li_mi_",
       "ok": true,
       "telafi": true,
-      "parca": 2
+      "parca": 2,
+      "parca_sayisi": 2,
+      "dalga_b_raw_derin": true,
+      "updated_utc": "2026-11-09T20:20:21.350476+00:00"
     },
     "pdsh": {
       "kaynak_id": "10_veri_bi_li_mi__pdsh",
@@ -52,7 +55,10 @@
         "pdsh_04.html",
         "pdsh_05.html"
       ],
-      "parca": 4
+      "parca": 4,
+      "parca_sayisi": 4,
+      "dalga_b_raw_derin": true,
+      "updated_utc": "2026-11-09T20:20:21.683847+00:00"
     },
     "islr_ds": {
       "kaynak_id": "10_veri_bi_li_mi__islr_ds",
@@ -67,7 +73,7 @@
     },
     "pandas_docs": {
       "kaynak_id": "10_veri_bi_li_mi__pandas_docs",
-      "baslik": "pandas Documentation",
+      "baslik": "pandas documentation",
       "url": "https://pandas.pydata.org/docs/",
       "dal": "10_veri_bi_li_mi_",
       "ok": true,
@@ -75,7 +81,10 @@
       "raw_files": [
         "pandas_docs_00.html"
       ],
-      "parca": 1
+      "parca": 1,
+      "parca_sayisi": 1,
+      "dalga_b_raw_derin": true,
+      "updated_utc": "2026-11-09T20:20:21.288000+00:00"
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.591243+00:00",

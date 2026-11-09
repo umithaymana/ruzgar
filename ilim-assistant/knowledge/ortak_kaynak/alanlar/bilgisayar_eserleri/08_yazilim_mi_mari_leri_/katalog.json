@@ -5,7 +5,7 @@
   "sources": 9,
   "ok_sources": 9,
   "ilave_rows": 3,
-  "updated_utc": "2026-11-02T23:14:14.425259+00:00",
+  "updated_utc": "2026-11-09T20:54:27.587012+00:00",
   "skills": [
     "yazılım mimarisi",
     "AOSA",
@@ -14,11 +14,14 @@
   "kaynaklar": {
     "segoogle": {
       "kaynak_id": "08_yazilim_mi_mari_leri__segoogle",
-      "baslik": "SE at Google",
+      "baslik": "Site Reliability / SE Google pages",
       "url": "https://abseil.io/resources/swe-book",
       "dal": "08_yazilim_mi_mari_leri_",
       "ok": true,
-      "parca": 1
+      "parca": 1,
+      "parca_sayisi": 1,
+      "dalga_c_raw_derin": true,
+      "updated_utc": "2026-11-09T20:54:27.573671+00:00"
     },
     "aosa": {
       "kaynak_id": "08_yazilim_mi_mari_leri__aosa",
@@ -36,11 +39,14 @@
       "dal": "08_yazilim_mi_mari_leri_",
       "ok": true,
       "telafi": true,
-      "parca": 1
+      "parca": 1,
+      "parca_sayisi": 1,
+      "dalga_c_raw_derin": true,
+      "updated_utc": "2026-11-09T20:54:27.524600+00:00"
     },
     "aosa_full": {
       "kaynak_id": "08_yazilim_mi_mari_leri__aosa_full",
-      "baslik": "AOSA Volume I selected",
+      "baslik": "Architecture of Open Source Applications",
       "url": "https://aosabook.org/en/posa/introduction.html",
       "dal": "08_yazilim_mi_mari_leri_",
       "ok": true,
@@ -49,11 +55,14 @@
         "aosa_full_00.html",
         "aosa_full_01.html"
       ],
-      "parca": 2
+      "parca": 3,
+      "parca_sayisi": 3,
+      "dalga_c_raw_derin": true,
+      "updated_utc": "2026-11-09T20:54:27.555939+00:00"
     },
     "azure_patterns": {
       "kaynak_id": "08_yazilim_mi_mari_leri__azure_patterns",
-      "baslik": "Azure Cloud Design Patterns",
+      "baslik": "Azure Architecture Patterns",
       "url": "https://learn.microsoft.com/en-us/azure/architecture/patterns/",
       "dal": "08_yazilim_mi_mari_leri_",
       "ok": true,
@@ -61,7 +70,10 @@
       "raw_files": [
         "azure_patterns_00.html"
       ],
-      "parca": 2
+      "parca": 2,
+      "parca_sayisi": 2,
+      "dalga_c_raw_derin": true,
+      "updated_utc": "2026-11-09T20:54:27.550649+00:00"
     },
     "twelve_factor": {
       "kaynak_id": "08_yazilim_mi_mari_leri__twelve_factor",
@@ -73,11 +85,14 @@
       "raw_files": [
         "twelve_factor_00.html"
       ],
-      "parca": 1
+      "parca": 6,
+      "parca_sayisi": 6,
+      "dalga_c_raw_derin": true,
+      "updated_utc": "2026-11-09T20:54:27.587012+00:00"
     },
     "swe_book": {
       "kaynak_id": "08_yazilim_mi_mari_leri__swe_book",
-      "baslik": "Software Engineering at Google (full chapters sample)",
+      "baslik": "Software Engineering at Google",
       "url": "https://abseil.io/resources/swe-book/html/toc.html",
       "dal": "08_yazilim_mi_mari_leri_",
       "ok": true,
@@ -86,7 +101,10 @@
         "swe_book_00.html",
         "swe_book_01.html"
       ],
-      "parca": 2
+      "parca": 2,
+      "parca_sayisi": 2,
+      "dalga_c_raw_derin": true,
+      "updated_utc": "2026-11-09T20:54:27.538264+00:00"
     },
     "aosa_v1_deep": {
       "kaynak_id": "08_yazilim_mi_mari_leri__aosa_v1_deep",

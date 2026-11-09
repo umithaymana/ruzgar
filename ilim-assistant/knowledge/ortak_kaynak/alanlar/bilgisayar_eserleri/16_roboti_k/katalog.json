@@ -5,7 +5,7 @@
   "sources": 7,
   "ok_sources": 9,
   "ilave_rows": 3,
-  "updated_utc": "2026-11-02T23:19:51.240251+00:00",
+  "updated_utc": "2026-11-09T20:56:01.505904+00:00",
   "skills": [
     "ROS 2",
     "modern robotik ders omurgası"
@@ -65,14 +65,17 @@
     },
     "modern_robotics_site": {
       "kaynak_id": "16_roboti_k_modern_robotics_site",
-      "baslik": "Modern Robotics course site + chapters HTML",
+      "baslik": "Modern Robotics site",
       "lisans": "Northwestern free",
       "url": "https://raw.githubusercontent.com/NxRLab/ModernRobotics/master/README.md",
       "local": "raw/modern_robotics_site_00.html",
       "ok": true,
-      "parca_sayisi": 3,
+      "parca_sayisi": 6,
       "ince_raf_dolum": true,
-      "updated_utc": "2026-11-03T07:50:41.298491+00:00"
+      "updated_utc": "2026-11-09T20:56:01.505904+00:00",
+      "dal": "16_roboti_k",
+      "parca": 6,
+      "dalga_d_raw_derin": true
     },
     "ros_docs_deep": {
       "kaynak_id": "16_roboti_k_ros_docs_deep",

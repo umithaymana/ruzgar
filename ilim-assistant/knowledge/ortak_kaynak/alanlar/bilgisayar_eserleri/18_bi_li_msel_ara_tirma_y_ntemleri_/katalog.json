@@ -5,7 +5,7 @@
   "sources": 7,
   "ok_sources": 7,
   "ilave_rows": 3,
-  "updated_utc": "2026-11-02T23:20:58.542544+00:00",
+  "updated_utc": "2026-11-09T21:00:47.448830+00:00",
   "skills": [
     "araştırma yöntemi",
     "Turing Way",
@@ -51,7 +51,10 @@
         "turing_way_01.html",
         "turing_way_02.html"
       ],
-      "parca": 2
+      "parca": 2,
+      "parca_sayisi": 2,
+      "dalga_e_raw_derin": true,
+      "updated_utc": "2026-11-09T21:00:16.769745+00:00"
     },
     "openstax_stats_page": {
       "kaynak_id": "18_bi_li_msel_ara_tirma_y_ntemleri__openstax_stats_page",
@@ -78,14 +81,27 @@
     },
     "how_to_science": {
       "kaynak_id": "18_bi_li_msel_ara_tirma_y_ntemleri__how_to_science",
-      "baslik": "Open science & research methods (PLOS / FOSTER)",
+      "baslik": "How to Science",
       "lisans": "CC / free",
       "url": "https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005510",
       "local": "raw/how_to_science_00.html",
       "ok": true,
-      "parca_sayisi": 9,
+      "parca_sayisi": 10,
       "ince_raf_dolum": true,
-      "updated_utc": "2026-11-03T07:50:33.386133+00:00"
+      "updated_utc": "2026-11-09T21:00:18.270957+00:00",
+      "dal": "18_bi_li_msel_ara_tirma_y_ntemleri_",
+      "parca": 10,
+      "dalga_e_raw_derin": true
+    },
+    "turing_way_web": {
+      "kaynak_id": "18_bi_li_msel_ara_tirma_y_ntemleri__turing_way_web",
+      "baslik": "The Turing Way (web)",
+      "dal": "18_bi_li_msel_ara_tirma_y_ntemleri_",
+      "ok": true,
+      "parca": 4,
+      "parca_sayisi": 4,
+      "dalga_e_web_derin": true,
+      "updated_utc": "2026-11-09T21:00:47.448830+00:00"
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.597244+00:00",

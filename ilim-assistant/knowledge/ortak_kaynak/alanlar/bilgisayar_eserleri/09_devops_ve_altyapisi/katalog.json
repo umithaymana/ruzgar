@@ -5,7 +5,7 @@
   "sources": 10,
   "ok_sources": 10,
   "ilave_rows": 3,
-  "updated_utc": "2026-11-02T23:15:12.905651+00:00",
+  "updated_utc": "2026-11-09T20:54:27.628114+00:00",
   "skills": [
     "Docker",
     "Kubernetes kavramları",
@@ -19,7 +19,10 @@
       "dal": "09_devops_ve_altyapisi",
       "ok": true,
       "telafi": true,
-      "parca": 1
+      "parca": 1,
+      "parca_sayisi": 1,
+      "dalga_c_raw_derin": true,
+      "updated_utc": "2026-11-09T20:54:27.587012+00:00"
     },
     "k8s_concepts": {
       "kaynak_id": "09_devops_ve_altyapisi_k8s_concepts",
@@ -55,7 +58,7 @@
     },
     "terraform_docs": {
       "kaynak_id": "09_devops_ve_altyapisi_terraform_docs",
-      "baslik": "Terraform Documentation",
+      "baslik": "Terraform docs",
       "url": "https://developer.hashicorp.com/terraform/docs",
       "dal": "09_devops_ve_altyapisi",
       "ok": true,
@@ -63,11 +66,14 @@
       "raw_files": [
         "terraform_docs_00.html"
       ],
-      "parca": 1
+      "parca": 1,
+      "parca_sayisi": 1,
+      "dalga_c_raw_derin": true,
+      "updated_utc": "2026-11-09T20:54:27.618702+00:00"
     },
     "ansible_docs": {
       "kaynak_id": "09_devops_ve_altyapisi_ansible_docs",
-      "baslik": "Ansible Documentation",
+      "baslik": "Ansible documentation",
       "url": "https://docs.ansible.com/",
       "dal": "09_devops_ve_altyapisi",
       "ok": true,
@@ -75,7 +81,10 @@
       "raw_files": [
         "ansible_docs_00.html"
       ],
-      "parca": 1
+      "parca": 1,
+      "parca_sayisi": 1,
+      "dalga_c_raw_derin": true,
+      "updated_utc": "2026-11-09T20:54:27.602982+00:00"
     },
     "k8s_tasks": {
       "kaynak_id": "09_devops_ve_altyapisi_k8s_tasks",
@@ -93,7 +102,7 @@
     },
     "dora": {
       "kaynak_id": "09_devops_ve_altyapisi_dora",
-      "baslik": "DORA DevOps Research",
+      "baslik": "DORA / DevOps Research",
       "url": "https://dora.dev/",
       "dal": "09_devops_ve_altyapisi",
       "ok": true,
@@ -101,7 +110,10 @@
       "raw_files": [
         "dora_00.html"
       ],
-      "parca": 1
+      "parca": 1,
+      "parca_sayisi": 1,
+      "dalga_c_raw_derin": true,
+      "updated_utc": "2026-11-09T20:54:27.628114+00:00"
     },
     "missing_sem": {
       "kaynak_id": "09_devops_ve_altyapisi_missing_sem",

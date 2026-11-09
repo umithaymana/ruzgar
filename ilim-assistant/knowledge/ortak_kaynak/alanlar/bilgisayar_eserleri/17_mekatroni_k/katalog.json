@@ -5,7 +5,7 @@
   "sources": 6,
   "ok_sources": 6,
   "ilave_rows": 3,
-  "updated_utc": "2026-11-02T23:20:28.783734+00:00",
+  "updated_utc": "2026-11-09T20:58:42.696135+00:00",
   "skills": [
     "gömülü (ESP-IDF)",
     "Arduino",
@@ -28,16 +28,22 @@
       "dal": "17_mekatroni_k",
       "ok": true,
       "telafi": true,
-      "parca": 1
+      "parca": 1,
+      "parca_sayisi": 1,
+      "dalga_d_raw_derin": true,
+      "updated_utc": "2026-11-09T20:56:00.929494+00:00"
     },
     "platformio": {
       "kaynak_id": "17_mekatroni_k_platformio",
-      "baslik": "PlatformIO Documentation",
+      "baslik": "PlatformIO Docs",
       "url": "https://docs.platformio.org/en/latest/",
       "dal": "17_mekatroni_k",
       "ok": true,
       "telafi": true,
-      "parca": 1
+      "parca": 1,
+      "parca_sayisi": 1,
+      "dalga_d_raw_derin": true,
+      "updated_utc": "2026-11-09T20:56:01.117099+00:00"
     },
     "esp_idf": {
       "kaynak_id": "17_mekatroni_k_esp_idf",
@@ -50,7 +56,10 @@
         "esp_idf_00.html",
         "esp_idf_01.html"
       ],
-      "parca": 1
+      "parca": 2,
+      "parca_sayisi": 2,
+      "dalga_d_raw_derin": true,
+      "updated_utc": "2026-11-09T20:56:01.053986+00:00"
     },
     "ctms": {
       "kaynak_id": "17_mekatroni_k_ctms",
@@ -72,6 +81,16 @@
       "parca_sayisi": 34,
       "ince_raf_dolum": true,
       "updated_utc": "2026-11-03T07:51:54.620754+00:00"
+    },
+    "esp_idf_docs": {
+      "kaynak_id": "17_mekatroni_k_esp_idf_docs",
+      "baslik": "ESP-IDF docs (core hubs)",
+      "dal": "17_mekatroni_k",
+      "ok": true,
+      "parca": 4,
+      "parca_sayisi": 4,
+      "dalga_d_web_derin": true,
+      "updated_utc": "2026-11-09T20:58:42.696135+00:00"
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.597244+00:00",

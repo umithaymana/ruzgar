@@ -5,7 +5,7 @@
   "sources": 7,
   "ok_sources": 6,
   "ilave_rows": 0,
-  "updated_utc": "2026-11-02T23:11:26.780165+00:00",
+  "updated_utc": "2026-11-09T20:20:21.233500+00:00",
   "skills": [
     "YZ/ML",
     "sinir ağları",
@@ -30,16 +30,22 @@
       "raw_files": [
         "nndl.html"
       ],
-      "parca": 1
+      "parca": 1,
+      "parca_sayisi": 1,
+      "dalga_b_raw_derin": true,
+      "updated_utc": "2026-11-09T20:20:21.093550+00:00"
     },
     "fastai": {
       "kaynak_id": "03_yapay_zeka_fastai",
-      "baslik": "Practical Deep Learning for Coders (fast.ai)",
+      "baslik": "fast.ai course docs",
       "url": "https://course.fast.ai/",
       "dal": "03_yapay_zeka",
       "ok": true,
       "telafi": true,
-      "parca": 2
+      "parca": 2,
+      "parca_sayisi": 2,
+      "dalga_b_raw_derin": true,
+      "updated_utc": "2026-11-09T20:20:21.156077+00:00"
     },
     "dlbook": {
       "kaynak_id": "03_yapay_zeka_dlbook",
@@ -75,7 +81,7 @@
     },
     "aima_site": {
       "kaynak_id": "03_yapay_zeka_aima_site",
-      "baslik": "AIMA resmi kaynak sayfası (yasal kod/not)",
+      "baslik": "AIMA site pages",
       "url": "http://aima.cs.berkeley.edu/",
       "dal": "03_yapay_zeka",
       "ok": true,
@@ -83,7 +89,10 @@
       "raw_files": [
         "aima_site_00.html"
       ],
-      "parca": 1
+      "parca": 1,
+      "parca_sayisi": 1,
+      "dalga_b_raw_derin": true,
+      "updated_utc": "2026-11-09T20:20:21.233500+00:00"
     },
     "d2l": {
       "kaynak_id": "03_yapay_zeka_d2l",

@@ -1,0 +1,78 @@
+[
+  {
+    "key": "nndl",
+    "ok": true,
+    "parca": 1,
+    "dal": "03_yapay_zeka"
+  },
+  {
+    "key": "fastai",
+    "ok": true,
+    "parca": 2,
+    "dal": "03_yapay_zeka"
+  },
+  {
+    "key": "aima_site",
+    "ok": true,
+    "parca": 1,
+    "dal": "03_yapay_zeka"
+  },
+  {
+    "key": "pandas_docs",
+    "ok": true,
+    "parca": 1,
+    "dal": "10_veri_bi_li_mi_"
+  },
+  {
+    "key": "sklearn_ug",
+    "ok": true,
+    "parca": 2,
+    "dal": "10_veri_bi_li_mi_"
+  },
+  {
+    "key": "pdsh",
+    "ok": true,
+    "parca": 4,
+    "dal": "10_veri_bi_li_mi_"
+  },
+  {
+    "key": "slp",
+    "ok": true,
+    "parca": 1,
+    "dal": "21_di_l_bi_li_mi_"
+  },
+  {
+    "key": "nltk_book",
+    "ok": true,
+    "parca": 41,
+    "dal": "21_di_l_bi_li_mi_"
+  },
+  {
+    "key": "openstax_calc1",
+    "ok": false,
+    "err": "zayif_raw len=62"
+  },
+  {
+    "key": "openstax_linalg",
+    "ok": false,
+    "err": "zayif_raw len=62"
+  },
+  {
+    "key": "3blue1brown_essence",
+    "ok": true,
+    "parca": 1,
+    "dal": "13_matemati_k"
+  },
+  {
+    "key": "mcs_html_deep",
+    "ok": true,
+    "parca": 12,
+    "dal": "13_matemati_k"
+  },
+  {
+    "key": "mcs_math",
+    "ok": true,
+    "parca": 38,
+    "dal": "13_matemati_k"
+  }
+]

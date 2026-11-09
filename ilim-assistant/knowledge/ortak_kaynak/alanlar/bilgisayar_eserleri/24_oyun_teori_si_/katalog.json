@@ -5,19 +5,22 @@
   "sources": 4,
   "ok_sources": 4,
   "ilave_rows": 3,
-  "updated_utc": "2026-11-02T23:25:02.286950+00:00",
+  "updated_utc": "2026-11-09T21:01:46.989721+00:00",
   "skills": [
     "oyun teorisi (Yale OYC / SEP)"
   ],
   "kaynaklar": {
     "gametheory_net": {
       "kaynak_id": "24_oyun_teori_si__gametheory_net",
-      "baslik": "GameTheory.net educational resources",
+      "baslik": "GameTheory.net",
       "url": "https://www.gametheory.net/",
       "dal": "24_oyun_teori_si_",
       "ok": true,
       "telafi": true,
-      "parca": 1
+      "parca": 1,
+      "parca_sayisi": 1,
+      "dalga_e_raw_derin": true,
+      "updated_utc": "2026-11-09T21:00:19.701917+00:00"
     },
     "sep_game": {
       "kaynak_id": "24_oyun_teori_si__sep_game",
@@ -29,20 +32,26 @@
       "raw_files": [
         "sep_game_00.html"
       ],
-      "parca": 30
+      "parca": 70,
+      "parca_sayisi": 70,
+      "dalga_e_raw_derin": true,
+      "updated_utc": "2026-11-09T21:00:19.934537+00:00"
     },
     "gametheory_101": {
       "kaynak_id": "24_oyun_teori_si__gametheory_101",
-      "baslik": "Game Theory 101 (William Spaniel notes index)",
+      "baslik": "Game Theory 101",
       "url": "https://gametheory101.com/",
       "dal": "24_oyun_teori_si_",
       "ok": true,
       "telafi": true,
-      "parca": 1
+      "parca": 1,
+      "parca_sayisi": 1,
+      "dalga_e_raw_derin": true,
+      "updated_utc": "2026-11-09T21:00:19.650080+00:00"
     },
     "yale_oyc": {
       "kaynak_id": "24_oyun_teori_si__yale_oyc",
-      "baslik": "Yale Open Courses index",
+      "baslik": "Yale OYC Game Theory",
       "url": "https://oyc.yale.edu/political-science",
       "dal": "24_oyun_teori_si_",
       "ok": true,
@@ -50,7 +59,30 @@
       "raw_files": [
         "yale_oyc_00.html"
       ],
-      "parca": 1
+      "parca": 1,
+      "parca_sayisi": 1,
+      "dalga_e_raw_derin": true,
+      "updated_utc": "2026-11-09T21:00:19.785697+00:00"
+    },
+    "game_theory_hub": {
+      "kaynak_id": "24_oyun_teori_si__game_theory_hub",
+      "baslik": "Game theory open hubs",
+      "dal": "24_oyun_teori_si_",
+      "ok": true,
+      "parca": 47,
+      "parca_sayisi": 47,
+      "dalga_e_web_derin": true,
+      "updated_utc": "2026-11-09T21:00:58.023476+00:00"
+    },
+    "game_sep_hub": {
+      "kaynak_id": "24_oyun_teori_si__game_sep_hub",
+      "baslik": "SEP game theory related",
+      "dal": "24_oyun_teori_si_",
+      "ok": true,
+      "parca": 70,
+      "parca_sayisi": 70,
+      "dalga_e_web_derin": true,
+      "updated_utc": "2026-11-09T21:01:46.989721+00:00"
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.604245+00:00",

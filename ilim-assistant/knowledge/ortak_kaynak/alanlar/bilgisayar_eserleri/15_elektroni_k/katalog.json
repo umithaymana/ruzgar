@@ -5,7 +5,7 @@
   "sources": 4,
   "ok_sources": 4,
   "ilave_rows": 3,
-  "updated_utc": "2026-11-02T23:18:38.111263+00:00",
+  "updated_utc": "2026-11-09T20:57:48.604932+00:00",
   "skills": [
     "DC/AC/yarıiletken (All About Circuits)"
   ],
@@ -35,22 +35,38 @@
     },
     "sparkfun_ohms": {
       "kaynak_id": "15_elektroni_k_sparkfun_ohms",
-      "baslik": "SparkFun — Voltage, Current, Resistance",
+      "baslik": "SparkFun Ohms Law",
       "url": "https://learn.sparkfun.com/tutorials/voltage-current-resistance-and-ohm-law",
       "dal": "15_elektroni_k",
       "ok": true,
       "telafi": true,
-      "parca": 2
+      "parca": 2,
+      "parca_sayisi": 2,
+      "dalga_d_raw_derin": true,
+      "updated_utc": "2026-11-09T20:55:36.574939+00:00"
     },
     "kuphaldt": {
       "kaynak_id": "15_elektroni_k_kuphaldt",
-      "baslik": "Lessons in Electric Circuits",
+      "baslik": "Lessons in Electric Circuits (Kuphaldt)",
       "lisans": "Design Science License",
       "url": "http://www.ibiblio.org/kuphaldt/electricCircuits/Digital/DIGI.pdf",
       "ok": true,
-      "parca_sayisi": 48,
+      "parca_sayisi": 120,
       "profesyonel_dolum": true,
-      "updated_utc": "2026-11-03T07:43:11.706174+00:00"
+      "updated_utc": "2026-11-09T20:56:00.748971+00:00",
+      "dal": "15_elektroni_k",
+      "parca": 120,
+      "dalga_d_raw_derin": true
+    },
+    "aac_dc_html": {
+      "kaynak_id": "15_elektroni_k_aac_dc_html",
+      "baslik": "Lessons in Electric Circuits DC (HTML)",
+      "dal": "15_elektroni_k",
+      "ok": true,
+      "parca": 56,
+      "parca_sayisi": 56,
+      "dalga_d_web_derin": true,
+      "updated_utc": "2026-11-09T20:57:48.604932+00:00"
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.595243+00:00",

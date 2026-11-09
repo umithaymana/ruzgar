@@ -5,7 +5,7 @@
   "sources": 6,
   "ok_sources": 7,
   "ilave_rows": 3,
-  "updated_utc": "2026-11-02T23:17:01.408936+00:00",
+  "updated_utc": "2026-11-09T20:54:35.591145+00:00",
   "skills": [
     "Nand2Tetris",
     "donanım-yazılım köprüsü"
@@ -21,18 +21,21 @@
     },
     "computer_systems": {
       "kaynak_id": "12_bi_lgi_sayar_m_hendi_sli_i__computer_systems",
-      "baslik": "Nand2Tetris + CMU 15-213 public course (CSAPP muadili açık materyal)",
+      "baslik": "Computer Systems pages",
       "lisans": "Free course / CC",
       "url": "https://pdos.csail.mit.edu/6.828/2023/overview.html",
       "local": "raw/computer_systems_00.html",
       "ok": true,
       "parca_sayisi": 2,
       "profesyonel_dolum": true,
-      "updated_utc": "2026-11-03T07:28:02.869337+00:00"
+      "updated_utc": "2026-11-09T20:54:29.571259+00:00",
+      "dal": "12_bi_lgi_sayar_m_hendi_sli_i_",
+      "parca": 2,
+      "dalga_c_raw_derin": true
     },
     "ben_eater": {
       "kaynak_id": "12_bi_lgi_sayar_m_hendi_sli_i__ben_eater",
-      "baslik": "Ben Eater 8-bit computer",
+      "baslik": "Ben Eater projects",
       "url": "https://eater.net/8bit",
       "dal": "12_bi_lgi_sayar_m_hendi_sli_i_",
       "ok": true,
@@ -40,11 +43,14 @@
       "raw_files": [
         "ben_eater_00.html"
       ],
-      "parca": 1
+      "parca": 1,
+      "parca_sayisi": 1,
+      "dalga_c_raw_derin": true,
+      "updated_utc": "2026-11-09T20:54:28.632898+00:00"
     },
     "n2t_eng": {
       "kaynak_id": "12_bi_lgi_sayar_m_hendi_sli_i__n2t_eng",
-      "baslik": "Nand2Tetris",
+      "baslik": "Nand2Tetris engineering",
       "url": "https://www.nand2tetris.org/",
       "dal": "12_bi_lgi_sayar_m_hendi_sli_i_",
       "ok": true,
@@ -52,18 +58,24 @@
       "raw_files": [
         "n2t_eng_00.html"
       ],
-      "parca": 1
+      "parca": 1,
+      "parca_sayisi": 1,
+      "dalga_c_raw_derin": true,
+      "updated_utc": "2026-11-09T20:54:30.040913+00:00"
     },
     "nand2tetris_deep": {
       "kaynak_id": "12_bi_lgi_sayar_m_hendi_sli_i__nand2tetris_deep",
-      "baslik": "Nand2Tetris course + project docs",
+      "baslik": "Nand2Tetris deep",
       "lisans": "CC / free course",
       "url": "https://raw.githubusercontent.com/nand2tetris/web-ide/main/README.md",
       "local": "raw/nand2tetris_deep_00.html",
       "ok": true,
-      "parca_sayisi": 12,
+      "parca_sayisi": 11,
       "ince_raf_dolum": true,
-      "updated_utc": "2026-11-03T07:49:29.745324+00:00"
+      "updated_utc": "2026-11-09T20:54:35.591145+00:00",
+      "dal": "12_bi_lgi_sayar_m_hendi_sli_i_",
+      "parca": 11,
+      "dalga_c_raw_derin": true
     },
     "mit_6828": {
       "kaynak_id": "12_bi_lgi_sayar_m_hendi_sli_i__mit_6828",
