@@ -444,6 +444,24 @@ if (_DESKTOP_UI_DIR / "index.html").is_file():
         name="ruzgar_desktop_ui",
     )
 
+# Mobil PWA — ince istemci (plan 11 / Adım 2). Ana yüz kilidine dokunmaz.
+_MOBIL_PWA_DIR = Path(__file__).resolve().parent / "static" / "mobil-pwa"
+if (_MOBIL_PWA_DIR / "index.html").is_file():
+    from fastapi.staticfiles import StaticFiles as _PwaStatic
+
+    @app.get("/mobil", include_in_schema=False)
+    @app.get("/mobil/", include_in_schema=False)
+    def mobil_pwa_index():
+        from fastapi.responses import FileResponse as _FR
+
+        return _FR(_MOBIL_PWA_DIR / "index.html")
+
+    app.mount(
+        "/mobil",
+        _PwaStatic(directory=str(_MOBIL_PWA_DIR), html=True),
+        name="ruzgar_mobil_pwa",
+    )
+
 
 def _boot_motorlar_anaonce() -> None:
     """Ana motor → çekirdek → 7 ara motor (sıra kilitli).
@@ -601,6 +619,8 @@ class ChatRequest(BaseModel):
     # genel | ses | okuma | video | uretim | programlama | gelisim | duzen | dosya | hizli
     # None/boş: eski istemciler veya hatalı JSON; Kod modu açıksa programlama varsayılır (prefetch atlanır).
     mode: str | None = None
+    # Mobil / PWA oturum jetonu (Bearer ile de gelebilir)
+    session_token: str | None = None
     # Electron getRoot() — @@dosya yolları bu köke göre çözülür
     workspace_root: str | None = None
     # Web ara kapalı olsa bile mesajdaki https URL’lerini oku
@@ -1620,6 +1640,41 @@ def _health_lite_build_block() -> dict[str, Any]:
 
 def _health_lite_response() -> dict[str, Any]:
     """Hızlı health — bağlantı kontrolü; ağır motor snapshot'ları yok."""
+    _onay = None
+    try:
+        from ilim_assistant.ruzgar_sohbet_onay_kapisi import public_status
+
+        _onay = public_status()
+    except Exception:
+        _onay = {"enabled": False, "error": "import"}
+    _ayik_st = None
+    try:
+        from ilim_assistant.ruzgar_ayiklama_rag import public_status as _ayik_pub
+
+        _ayik_st = _ayik_pub()
+    except Exception:
+        _ayik_st = {"ready": False}
+    _bb_st = None
+    try:
+        from ilim_assistant.ruzgar_bilgisayar_rag import public_status as _bb_pub
+
+        _bb_st = _bb_pub()
+    except Exception:
+        _bb_st = {"ready": False}
+    _oda_st = None
+    try:
+        from ilim_assistant.ruzgar_hafiza_odalari import public_status as _oda_pub
+
+        _oda_st = _oda_pub()
+    except Exception:
+        _oda_st = {"enabled": False}
+    _ses_st = None
+    try:
+        from ilim_assistant.ruzgar_ses_sohbet_durum import public_status as _ses_pub
+
+        _ses_st = _ses_pub()
+    except Exception:
+        _ses_st = {"enabled": False}
     return {
         "ok": True,
         "lite": True,
@@ -1627,6 +1682,12 @@ def _health_lite_response() -> dict[str, Any]:
         "merkezi_bellek": True,
         "build": _health_lite_build_block(),
         "booting": bool(_WARMUP_BACKGROUND_ACTIVE),
+        "sohbet_onay": _onay,
+        "samile_rag_shards_ready": True,
+        "ayiklama_rag": _ayik_st,
+        "bilgisayar_rag": _bb_st,
+        "hafiza_oda": _oda_st,
+        "ses_sohbet": _ses_st,
     }
 
 
@@ -1923,12 +1984,21 @@ def _health_full_response() -> dict[str, Any]:
 @app.get("/api/health")
 def health(full: Annotated[int, Query()] = 0):
     if _WARMUP_BACKGROUND_ACTIVE:
+        _boot_onay = None
+        try:
+            from ilim_assistant.ruzgar_sohbet_onay_kapisi import public_status
+
+            _boot_onay = public_status()
+        except Exception:
+            _boot_onay = None
         return {
             "ok": True,
             "booting": True,
             "warmup": True,
             "service": "ruzgar-desktop-api",
             "build": _health_lite_build_block(),
+            "sohbet_onay": _boot_onay,
+            "samile_rag_shards_ready": True,
         }
     if full != 1:
         return _health_lite_response()
@@ -2204,6 +2274,17 @@ def api_self_test():
     from ilim_assistant.ruzgar_selftest import run_self_tests
 
     return run_self_tests()
+
+
+@app.get("/api/programlama/usta-vitrin")
+def api_programlama_usta_vitrin(mutlu_yol: int = Query(0)) -> dict[str, Any]:
+    """Motor F — usta vitrini ölçümü (+ isteğe bağlı atölye mutlu yolu)."""
+    from ilim_assistant.ruzgar_programlama_usta_vitrin import atolye_mutlu_yol, measure_vitrin
+
+    want_mutlu = str(mutlu_yol or "0").strip().lower() in ("1", "true", "yes")
+    if want_mutlu:
+        return atolye_mutlu_yol()
+    return measure_vitrin()
 
 
 @app.get("/api/programlama/briefing")
@@ -5046,6 +5127,289 @@ def api_programlama_kpi_dashboard(workspace_root: str | None = None):
     return payload
 
 
+class SohbetOnayActionBody(BaseModel):
+    action: str = ""
+
+
+class MobilRegisterBody(BaseModel):
+    ad: str = ""
+    soyad: str = ""
+    telefon: str = ""
+    kullanici: str = ""
+    sifre: str = ""
+
+
+class MobilApproveBody(BaseModel):
+    pending_id: str = ""
+    code: str = ""
+    approve: bool = True
+
+
+class MobilLoginBody(BaseModel):
+    kullanici: str = ""
+    sifre: str = ""
+    device_name: str = ""
+    device_id: str = ""
+    device_kind: str = ""
+
+
+class MobilLogoutBody(BaseModel):
+    token: str = ""
+
+
+class MobilKickBody(BaseModel):
+    token_prefix: str = ""
+    kullanici: str = ""
+    actor: str = "mimar"
+
+
+class MobilAclBody(BaseModel):
+    kullanici: str = ""
+    motors: dict[str, bool] = Field(default_factory=dict)
+    actor: str = "mimar"
+
+
+class MobilAdminBody(BaseModel):
+    kullanici: str = ""
+    make: bool = True
+    actor: str = "mimar"
+
+
+class MobilPasswordBody(BaseModel):
+    kullanici: str = ""
+    sifre: str = ""
+    actor: str = "mimar"
+
+
+class MobilRecoveryUseBody(BaseModel):
+    code: str = ""
+    yeni_sifre: str = ""
+
+
+class WolBody(BaseModel):
+    mac: str = ""
+    broadcast: str = ""
+    port: int = 9
+
+
+@app.get("/api/sohbet/onay")
+def api_sohbet_onay():
+    """Plan 12 S1 — genel sohbet onay kapısı durumu."""
+    from ilim_assistant.ruzgar_sohbet_onay_kapisi import VERSION, load_pending, public_status
+
+    st = public_status()
+    pend = load_pending()
+    return {
+        "ok": True,
+        **st,
+        "pending_detail": {
+            "kind": (pend or {}).get("kind"),
+            "summary": (pend or {}).get("summary"),
+            "expires_at": (pend or {}).get("expires_at"),
+            "source_message": (pend or {}).get("source_message"),
+        }
+        if pend
+        else None,
+        "module_version": VERSION,
+    }
+
+
+@app.post("/api/sohbet/onay")
+def api_sohbet_onay_action(body: SohbetOnayActionBody):
+    """Plan 12 S1 — «yap» / «yapma»."""
+    from ilim_assistant.ruzgar_sohbet_onay_kapisi import try_handle_sohbet_onay
+
+    action = str(body.action or "").strip().lower()
+    if action in ("yap", "evet", "onayla"):
+        msg = "yap"
+    elif action in ("yapma", "hayir", "hayır", "iptal"):
+        msg = "yapma"
+    else:
+        return {"ok": False, "error": "action yap|yapma olmalı"}
+    hit = try_handle_sohbet_onay(msg, masa_paket=None)
+    if not hit:
+        return {"ok": False, "error": "bekleyen iş yok veya kapı kapalı"}
+    return {"ok": True, "reply": hit.get("reply"), "masa": hit.get("masa"), "orch": hit.get("orch")}
+
+
+class HafizaOdaBody(BaseModel):
+    cmd: str = ""
+    action: str = ""
+    name: str = ""
+    oda: str = ""
+    text: str = ""
+
+
+@app.get("/api/hafiza/oda")
+def api_hafiza_oda():
+    """Motor A — hafıza odaları durumu."""
+    from ilim_assistant.ruzgar_hafiza_odalari import list_rooms, public_status
+
+    return {"ok": True, **public_status(), "liste": list_rooms()}
+
+
+@app.post("/api/hafiza/oda")
+def api_hafiza_oda_cmd(body: HafizaOdaBody):
+    """Motor A — cmd metni veya action/name/text."""
+    from ilim_assistant.ruzgar_hafiza_odalari import (
+        open_room,
+        pin_latest_to_room,
+        set_active,
+        try_consume_oda_command,
+        write_note,
+    )
+
+    cmd = str(body.cmd or "").strip()
+    if cmd:
+        reply = try_consume_oda_command(cmd)
+        return {"ok": bool(reply), "reply": reply}
+    action = str(body.action or "").strip().lower()
+    name = str(body.name or body.oda or "").strip()
+    text = str(body.text or "").strip()
+    if action in ("ac", "aç", "open"):
+        return open_room(name)
+    if action in ("yaz", "write"):
+        return write_note(name, text)
+    if action == "pin":
+        return pin_latest_to_room(name, text)
+    if action == "kapat":
+        set_active(None)
+        return {"ok": True, "aktif": None}
+    return {"ok": False, "error": "action/cmd gerekli"}
+
+
+@app.get("/api/mobil/status")
+def api_mobil_status():
+    from ilim_assistant.ruzgar_mobil_oturum import ensure_mimar_admin, public_status
+
+    ensure_mimar_admin()
+    return {"ok": True, **public_status(), "pwa": "/mobil/"}
+
+
+@app.post("/api/mobil/register")
+def api_mobil_register(body: MobilRegisterBody):
+    from ilim_assistant.ruzgar_mobil_oturum import register_request
+
+    return register_request(
+        ad=body.ad,
+        soyad=body.soyad,
+        telefon=body.telefon,
+        kullanici=body.kullanici,
+        sifre=body.sifre,
+    )
+
+
+@app.get("/api/mobil/pending")
+def api_mobil_pending():
+    from ilim_assistant.ruzgar_mobil_oturum import list_pending
+
+    return {"ok": True, "pending": list_pending()}
+
+
+@app.post("/api/mobil/approve")
+def api_mobil_approve(body: MobilApproveBody):
+    from ilim_assistant.ruzgar_mobil_oturum import approve_pending
+
+    return approve_pending(body.pending_id, code=body.code, approve=bool(body.approve))
+
+
+@app.post("/api/mobil/login")
+def api_mobil_login(body: MobilLoginBody):
+    from ilim_assistant.ruzgar_mobil_oturum import login
+
+    return login(
+        body.kullanici,
+        body.sifre,
+        device_name=body.device_name,
+        device_id=body.device_id,
+        device_kind=body.device_kind,
+    )
+
+
+@app.post("/api/mobil/logout")
+def api_mobil_logout(body: MobilLogoutBody):
+    from ilim_assistant.ruzgar_mobil_oturum import logout
+
+    return logout(body.token)
+
+
+@app.get("/api/mobil/sessions")
+def api_mobil_sessions():
+    from ilim_assistant.ruzgar_mobil_oturum import list_sessions
+
+    return {"ok": True, "sessions": list_sessions()}
+
+
+@app.get("/api/mobil/devices")
+def api_mobil_devices():
+    """Yönetici üçlü: telefon / tablet / dizüstü slotları."""
+    from ilim_assistant.ruzgar_mobil_oturum import list_root_devices
+
+    return {"ok": True, "devices": list_root_devices()}
+
+
+@app.get("/api/mobil/users")
+def api_mobil_users():
+    from ilim_assistant.ruzgar_mobil_oturum import list_users
+
+    return {"ok": True, "users": list_users()}
+
+
+@app.post("/api/mobil/kick")
+def api_mobil_kick(body: MobilKickBody):
+    from ilim_assistant.ruzgar_mobil_oturum import kick_session
+
+    return kick_session(
+        token_prefix=body.token_prefix,
+        kullanici=body.kullanici,
+        actor=body.actor,
+    )
+
+
+@app.post("/api/mobil/acl")
+def api_mobil_acl(body: MobilAclBody):
+    from ilim_assistant.ruzgar_mobil_oturum import set_motor_acl
+
+    return set_motor_acl(body.kullanici, body.motors, actor=body.actor)
+
+
+@app.post("/api/mobil/admin")
+def api_mobil_admin(body: MobilAdminBody):
+    from ilim_assistant.ruzgar_mobil_oturum import set_admin
+
+    return set_admin(body.kullanici, make=bool(body.make), actor=body.actor)
+
+
+@app.post("/api/mobil/password")
+def api_mobil_password(body: MobilPasswordBody):
+    from ilim_assistant.ruzgar_mobil_oturum import set_password
+
+    return set_password(body.kullanici, body.sifre, actor=body.actor)
+
+
+@app.post("/api/mobil/recovery/generate")
+def api_mobil_recovery_generate():
+    from ilim_assistant.ruzgar_mobil_oturum import generate_recovery_code
+
+    return generate_recovery_code()
+
+
+@app.post("/api/mobil/recovery/use")
+def api_mobil_recovery_use(body: MobilRecoveryUseBody):
+    from ilim_assistant.ruzgar_mobil_oturum import use_recovery_code
+
+    return use_recovery_code(body.code, body.yeni_sifre)
+
+
+@app.post("/api/mobil/wol")
+def api_mobil_wol(body: WolBody):
+    """Wake-on-LAN denemesi — PC bu ağdaysa anlamı sınırlı; uzaktan Tailscale+başka cihaz gerekir."""
+    from ilim_assistant.ruzgar_wol import default_mac_hint, send_wol
+
+    mac = (body.mac or "").strip() or default_mac_hint()
+    return send_wol(mac, broadcast=body.broadcast or None, port=int(body.port or 9))
+
+
 @app.get("/api/programlama/umit-onay")
 def api_programlama_umit_onay(workspace_root: str | None = None):
     """Faz 98 — Ümit onay kapısı bekleyen işlem özeti."""
@@ -6297,6 +6661,17 @@ async def api_video_stream_probe(body: VideoStreamProbeBody) -> dict[str, Any]:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
+@app.get("/api/video/hikaye-vitrin")
+def api_video_hikaye_vitrin(mutlu_yol: int = Query(0)) -> dict[str, Any]:
+    """Motor D — hikâye vitrini ölçümü (+ isteğe bağlı atölye mutlu yolu)."""
+    from ilim_assistant.ruzgar_video_hikaye_vitrin import atolye_mutlu_yol, measure_vitrin
+
+    want_mutlu = str(mutlu_yol or "0").strip().lower() in ("1", "true", "yes")
+    if want_mutlu:
+        return atolye_mutlu_yol()
+    return measure_vitrin()
+
+
 @app.post("/api/video/probe")
 async def api_video_probe(
     rel: Annotated[str | None, Form()] = None,
@@ -7509,6 +7884,52 @@ def api_virus_guard_threat_log(limit: int = Query(40, ge=1, le=200)) -> dict[str
     return list_threat_log(limit=limit)
 
 
+@app.get("/api/ruzgar/blue-team/capabilities")
+def api_blue_team_capabilities() -> dict[str, Any]:
+    from ilim_assistant.motorlar import blue_team as bt
+
+    return {
+        "ok": True,
+        "engine": bt.ENGINE_NAME,
+        "version": bt.ENGINE_VERSION,
+        "purpose": "defense-only",
+        "modules": ["integrity_fim", "static_signatures", "anomaly_log"],
+        "db": str(bt.default_db_path()),
+        "rules": str(bt.default_rules_path()),
+    }
+
+
+@app.post("/api/ruzgar/blue-team/scan")
+def api_blue_team_scan(
+    roots: str = Form(""),
+    baseline: str = Form("0"),
+    max_files: int = Form(2000),
+) -> dict[str, Any]:
+    """Savunma taraması: FIM + statik imza + uyarı logu. roots = ; ile ayrılmış yollar."""
+    from ilim_assistant.motorlar import blue_team as bt
+
+    parts = [p.strip() for p in (roots or "").replace("\n", ";").split(";") if p.strip()]
+    if not parts:
+        # Varsayılan: Rüzgar masaüstü + motorlar (küçük güvenli küme)
+        parts = [
+            str(REPO_ROOT / "ruzgar-desktop" / "preload.js"),
+            str(REPO_ROOT / "ilim-assistant" / "ilim_assistant" / "motorlar" / "blue_team"),
+        ]
+    return bt.run_defense_scan(
+        parts,
+        baseline=str(baseline or "").strip().lower() in ("1", "true", "yes"),
+        max_files=max(1, min(int(max_files or 2000), 10000)),
+        log_findings=True,
+    )
+
+
+@app.get("/api/ruzgar/blue-team/alerts")
+def api_blue_team_alerts(limit: int = Query(40, ge=1, le=200)) -> dict[str, Any]:
+    from ilim_assistant.motorlar.blue_team import list_alerts
+
+    return list_alerts(limit=limit)
+
+
 @app.post("/api/tercume/import-url")
 def api_tercume_import_url(
     url: str = Form(""),
@@ -8186,6 +8607,17 @@ def api_tercume_readiness(
 
     net = str(need_internet or "0").strip().lower() in ("1", "true", "yes")
     return collect_tercume_readiness(need_internet=net)
+
+
+@app.get("/api/tercume/ilim-vitrin")
+def api_tercume_ilim_vitrin(mutlu_yol: int = Query(0)) -> dict[str, Any]:
+    """Motor C — çift dilli ilim vitrini ölçümü (+ isteğe bağlı atölye mutlu yolu)."""
+    from ilim_assistant.ruzgar_tercume_ilim_vitrin import atolye_mutlu_yol, measure_vitrin
+
+    want_mutlu = str(mutlu_yol or "0").strip().lower() in ("1", "true", "yes")
+    if want_mutlu:
+        return atolye_mutlu_yol()
+    return measure_vitrin()
 
 
 @app.get("/api/tercume/capabilities")
@@ -8952,6 +9384,17 @@ async def api_mimar_fotograf_restoration_apply(body: MimarFotoModerateBody) -> d
 
 
 # —— Mimar · Sanat (Faz 4S-1) ——
+@app.get("/api/mimar/plan-vitrin")
+def api_mimar_plan_vitrin(mutlu_yol: int = Query(0)) -> dict[str, Any]:
+    """Motor E — büyük plan / sahne niyet vitrini (+ isteğe bağlı mutlu yol)."""
+    from ilim_assistant.ruzgar_mimar_plan_vitrin import atolye_mutlu_yol, measure_vitrin
+
+    want_mutlu = str(mutlu_yol or "0").strip().lower() in ("1", "true", "yes")
+    if want_mutlu:
+        return atolye_mutlu_yol()
+    return measure_vitrin()
+
+
 @app.post("/api/mimar/atolye/parse")
 def api_mimar_atolye_parse(body: MimarAtolyeParseBody) -> dict[str, Any]:
     from ilim_assistant.motorlar import mimar_faz5  # noqa: F401 — ROK kaydı
@@ -9772,6 +10215,129 @@ def api_ses_settings_patch(body: SesSettingsPatchBody):
     return read_ses_ayarlari()
 
 
+class SesSohbetDurumBody(BaseModel):
+    state: str = "idle"
+    barge_in: bool = False
+    note: str = ""
+
+
+@app.get("/api/ses/voice-turn")
+def api_ses_voice_turn_get():
+    """Motor B / S2 — sesli tur durumu."""
+    from ilim_assistant.ruzgar_ses_sohbet_durum import public_status
+
+    return {"ok": True, **public_status()}
+
+
+@app.post("/api/ses/voice-turn")
+def api_ses_voice_turn_set(body: SesSohbetDurumBody):
+    """Motor B / S2 — idle|listening|thinking|speaking."""
+    from ilim_assistant.ruzgar_ses_sohbet_durum import set_state
+
+    meta = {}
+    if body.barge_in:
+        meta["barge_in"] = True
+    if body.note:
+        meta["note"] = body.note[:200]
+    return set_state(body.state, **meta)
+
+
+class SesSohbetTurBody(BaseModel):
+    message: str = ""
+    history: list[dict[str, Any]] = Field(default_factory=list)
+    session_token: str | None = None
+    with_tts: bool = True
+    karakter: str | None = None
+
+
+@app.post("/api/ses/sohbet-tur")
+async def api_ses_sohbet_tur(body: SesSohbetTurBody):
+    """Motor B mutlu yolu: metin (STT sonrası) → thinking → chat → speaking → TTS(base64)."""
+    import base64
+    import time as _time
+    from pathlib import Path as _Path
+
+    from ilim_assistant.ruzgar_ses_sohbet_durum import set_state
+
+    msg = (body.message or "").strip()
+    if len(msg) < 1:
+        return {"ok": False, "error": "message boş"}
+    t0 = _time.perf_counter()
+    set_state("thinking", note="sohbet-tur")
+    req = ChatRequest(
+        message=msg,
+        history=list(body.history or [])[-12:],
+        mode="genel",
+        use_web=False,
+        session_token=body.session_token,
+    )
+    chat = await run_in_threadpool(_chat_full_sync, req)
+    reply = str(chat.get("full_reply") or "").strip()
+    tts_b64 = None
+    tts_err = None
+    if body.with_tts and reply:
+        set_state("speaking", note="tts")
+        try:
+            from ilim_assistant.motorlar.ses_motoru import (
+                EDGE_VOICES,
+                analiz_icerik_yolu,
+                edge_pitch_string,
+                edge_rate_yuzdesi,
+                normalize_ses_karakteri,
+                tts_metadata_kimlik,
+            )
+            from ilim_assistant.tts_service import (
+                edge_available,
+                read_ses_ayarlari,
+                synthesize_edge_mp3_in_process,
+            )
+
+            if not edge_available():
+                tts_err = "edge-tts yok"
+            else:
+                ayar = read_ses_ayarlari()
+                kar = normalize_ses_karakteri(body.karakter or ayar.get("karakter"))
+                icerik = analiz_icerik_yolu(reply[:2000])
+                voice = EDGE_VOICES.get(kar) or "tr-TR-AhmetNeural"
+                rate = edge_rate_yuzdesi(
+                    karakter=kar,
+                    icerik=icerik,
+                    hiz_carpani=float(ayar.get("hiz", 0.92)),
+                    huzur_carpani=float(ayar.get("huzur", 0.88)),
+                )
+                pitch = edge_pitch_string(kar, icerik)
+                meta = tts_metadata_kimlik(
+                    karakter=kar.value,
+                    icerik_yolu=icerik.value,
+                    edge_voice=voice,
+                )
+                out_path = await synthesize_edge_mp3_in_process(
+                    reply[:3000],
+                    voice=voice,
+                    rate=rate,
+                    pitch=pitch,
+                    meta=meta,
+                )
+                p = _Path(str(out_path))
+                if p.is_file() and p.stat().st_size > 32:
+                    tts_b64 = base64.b64encode(p.read_bytes()).decode("ascii")
+                else:
+                    tts_err = "tts dosya yok"
+        except Exception as exc:
+            tts_err = str(exc)[:200]
+    set_state("idle", note="tur-bitti")
+    return {
+        "ok": bool(chat.get("ok", True)),
+        "full_reply": reply,
+        "latency_ms": int((_time.perf_counter() - t0) * 1000),
+        "chat_latency_ms": chat.get("latency_ms"),
+        "tts_base64": tts_b64,
+        "tts_mime": "audio/mpeg" if tts_b64 else None,
+        "tts_error": tts_err,
+        "voice_state": "idle",
+    }
+
+
 @app.post("/api/tts")
 async def api_tts(body: TtsBody):
     """TTS: Edge (prosody) veya XTTS klon (Faz S4). backend: edge | clone | auto."""
@@ -10343,6 +10909,7 @@ def _iter_instant_chat_events(
     delegate_summary_text: str | None = None,
     delegate_from_mode: str | None = None,
     archive_recall: dict[str, Any] | None = None,
+    masa: dict[str, Any] | None = None,
 ) -> Iterator[dict]:
     """Ollama/RAG beklemeden tek tur bitir (SSE/WS)."""
     if orch and isinstance(orch, dict):
@@ -10402,6 +10969,8 @@ def _iter_instant_chat_events(
         }
     if orch and isinstance(orch, dict) and orch.get("motor_action"):
         done["motor_action"] = dict(orch["motor_action"])
+    if masa and isinstance(masa, dict):
+        done["masa"] = masa
     yield done
 
 
@@ -10908,20 +11477,59 @@ async def _async_iter_chat_events(req: ChatRequest):
 def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
     """SSE/WS: Ana motor durumları → prepare_turn (İdrak + orkestra) → LLM."""
     msg_raw = (req.message or "").strip()
+    # Plan 12 S1 — sohbet onay kapısı (sohbet ≠ iş); masa yazmadan önce
     try:
-        from ilim_assistant.ruzgar_masa_soz import masa_sohbet_yaniti
+        from ilim_assistant.ruzgar_masa_soz import masa_sohbet_paket
 
-        _masa_y = masa_sohbet_yaniti(msg_raw)
+        _masa_p = masa_sohbet_paket(msg_raw)
     except Exception:
-        _masa_y = None
-    if _masa_y:
+        _masa_p = None
+    try:
+        from ilim_assistant.ruzgar_sohbet_onay_kapisi import try_handle_sohbet_onay
+
+        _onay_hit = try_handle_sohbet_onay(msg_raw, masa_paket=_masa_p)
+    except Exception:
+        _onay_hit = None
+    if _onay_hit and _onay_hit.get("reply"):
         yield from _iter_instant_chat_events(
-            _masa_y,
+            str(_onay_hit.get("reply") or ""),
+            msg_raw,
+            session_wake_used=req.session_wake_used,
+            msg_for_wake=req.message,
+            orch=_onay_hit.get("orch")
+            if isinstance(_onay_hit.get("orch"), dict)
+            else {"plan": {"primary": "sohbet_onay", "label_tr": "Onay kapısı"}},
+            instant_gundelik=True,
+            masa=_onay_hit.get("masa") if isinstance(_onay_hit.get("masa"), dict) else None,
+        )
+        return
+    if _masa_p and _masa_p.get("reply"):
+        yield from _iter_instant_chat_events(
+            str(_masa_p.get("reply") or ""),
             msg_raw,
             session_wake_used=req.session_wake_used,
             msg_for_wake=req.message,
             orch={"plan": {"primary": "masa", "label_tr": "Masa cümlesi"}},
             instant_gundelik=True,
+            masa=_masa_p.get("masa") if isinstance(_masa_p.get("masa"), dict) else None,
+        )
+        return
+    try:
+        from ilim_assistant.motorlar.programlama_pratik_merdiven import (
+            pratik_sohbet_yaniti,
+        )
+
+        _pratik_y = pratik_sohbet_yaniti(msg_raw)
+    except Exception:
+        _pratik_y = None
+    if _pratik_y:
+        yield from _iter_instant_chat_events(
+            _pratik_y,
+            msg_raw,
+            session_wake_used=req.session_wake_used,
+            msg_for_wake=req.message,
+            orch={"plan": {"primary": "programlama", "label_tr": "Pratik merdiven"}},
+            programlama_instant=True,
         )
         return
     try:
@@ -12199,6 +12807,28 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     session_wake_used=req.session_wake_used,
                     msg_for_wake=req.message,
                     orch=orch_early,
+                    instant_gundelik=True,
+                )
+                return
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ruzgar_hafiza_odalari import try_consume_oda_command
+
+            _oda_reply = try_consume_oda_command(msg_early)
+            if _oda_reply:
+                yield from _iter_instant_chat_events(
+                    _oda_reply,
+                    msg_early,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch={
+                        **(orch_early if isinstance(orch_early, dict) else {}),
+                        "plan": {
+                            "primary": "hafiza_oda",
+                            "label_tr": "Hafıza odası · Motor A",
+                        },
+                    },
                     instant_gundelik=True,
                 )
                 return
@@ -14894,25 +15524,75 @@ async def chat_stream(req: ChatRequest):
 
 
 def _chat_full_sync(req: ChatRequest) -> dict[str, Any]:
+    import time as _time
+
+    _t0 = _time.perf_counter()
+    _auth = None
+    _slot = None
+    try:
+        from ilim_assistant.ruzgar_mobil_oturum import (
+            begin_chat_slot,
+            end_chat_slot,
+            motor_allowed,
+            validate_token,
+        )
+
+        tok = (req.session_token or "").strip()
+        if tok:
+            _auth = validate_token(tok)
+            if _auth is None:
+                return {
+                    "ok": False,
+                    "error": "Oturum geçersiz veya süresi dolmuş. PWA'dan tekrar giriş.",
+                    "latency_ms": 0,
+                }
+            if not motor_allowed(_auth, "sohbet"):
+                return {
+                    "ok": False,
+                    "error": "Sohbet motoru bu kullanıcı için kapalı (panel ACL).",
+                    "latency_ms": 0,
+                    "mobil_auth": {"kullanici": _auth.get("kullanici")},
+                }
+            slot = begin_chat_slot(tok)
+            if not slot.get("ok"):
+                return {
+                    "ok": False,
+                    "error": slot.get("message") or "kuyruk",
+                    "latency_ms": 0,
+                    "queue": True,
+                }
+            _slot = slot.get("slot")
+    except Exception:
+        _auth = None
+
     events: list[dict[str, Any]] = []
     full_reply = ""
     done_event: dict[str, Any] | None = None
-    for obj in iter_chat_turn_events(req):
-        typ = obj.get("type")
-        if typ in ("meta", "status"):
-            events.append(obj)
-        elif typ == "token":
-            full_reply += str(obj.get("text") or "")
-        elif typ == "done":
-            done_event = obj
-            full_reply = str(obj.get("full_reply") or full_reply)
-            break
-        elif typ == "error":
-            return {
-                "ok": False,
-                "error": str(obj.get("text") or "Bilinmeyen hata"),
-                "events": events,
-            }
+    try:
+        for obj in iter_chat_turn_events(req):
+            typ = obj.get("type")
+            if typ in ("meta", "status"):
+                events.append(obj)
+            elif typ == "token":
+                full_reply += str(obj.get("text") or "")
+            elif typ == "done":
+                done_event = obj
+                full_reply = str(obj.get("full_reply") or full_reply)
+                break
+            elif typ == "error":
+                return {
+                    "ok": False,
+                    "error": str(obj.get("text") or "Bilinmeyen hata"),
+                    "events": events,
+                    "latency_ms": int((_time.perf_counter() - _t0) * 1000),
+                }
+    finally:
+        try:
+            from ilim_assistant.ruzgar_mobil_oturum import end_chat_slot as _end
+
+            _end(_slot)
+        except Exception:
+            pass
 
     if done_event is None:
         full_reply = finalize_assistant_reply(full_reply)
@@ -14923,6 +15603,15 @@ def _chat_full_sync(req: ChatRequest) -> dict[str, Any]:
             "user_message": (req.message or "").strip(),
             "new_wake_used": new_wake,
         }
+
+    _latency_ms = int((_time.perf_counter() - _t0) * 1000)
+    _sohbet_onay = None
+    try:
+        from ilim_assistant.ruzgar_sohbet_onay_kapisi import public_status
+
+        _sohbet_onay = public_status()
+    except Exception:
+        _sohbet_onay = None
 
     return {
         "ok": True,
@@ -14935,6 +15624,16 @@ def _chat_full_sync(req: ChatRequest) -> dict[str, Any]:
         "instant_clarify": bool(done_event.get("instant_clarify")),
         "instant_memory": bool(done_event.get("instant_memory")),
         "paket_auto": done_event.get("paket_auto"),
+        "latency_ms": _latency_ms,
+        "sohbet_onay": _sohbet_onay,
+        "mobil_auth": (
+            {
+                "kullanici": _auth.get("kullanici"),
+                "role": _auth.get("role"),
+            }
+            if _auth
+            else None
+        ),
     }
 
 

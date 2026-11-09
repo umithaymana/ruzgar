@@ -2,8 +2,8 @@
   "dal": "02_algori_tmalar",
   "excel": "2 - ) ALGORİTMALAR.xlsx",
   "n_list": 100,
-  "sources": 3,
-  "ok_sources": 3,
+  "sources": 4,
+  "ok_sources": 4,
   "ilave_rows": 0,
   "updated_utc": "2026-11-02T23:10:11.025283+00:00",
   "skills": [
@@ -15,19 +15,21 @@
   "kaynaklar": {
     "ods": {
       "kaynak_id": "02_algori_tmalar_ods",
-      "baslik": "Open Data Structures",
+      "baslik": "Open Data Structures (Python)",
       "url": "https://opendatastructures.org/ods-python.pdf",
       "dal": "02_algori_tmalar",
       "ok": true,
-      "parca": 10
+      "dalga_a_derin": true,
+      "parca": 32
     },
     "cph": {
       "kaynak_id": "02_algori_tmalar_cph",
-      "baslik": "Competitive Programmer Handbook",
+      "baslik": "Competitive Programmer's Handbook",
       "url": "https://cses.fi/book/book.pdf",
       "dal": "02_algori_tmalar",
       "ok": true,
-      "parca": 11
+      "dalga_a_derin": true,
+      "parca": 33
     },
     "erickson": {
       "kaynak_id": "02_algori_tmalar_erickson",
@@ -35,11 +37,40 @@
       "url": "https://jeffe.cs.illinois.edu/teaching/algorithms/book/Algorithms-JeffE.pdf",
       "dal": "02_algori_tmalar",
       "ok": true,
-      "telafi": true,
-      "parca": 18
+      "dalga_a_derin": true,
+      "parca": 58
+    },
+    "mcs_mit": {
+      "kaynak_id": "02_algori_tmalar_mcs_mit",
+      "baslik": "Mathematics for Computer Science (MIT)",
+      "url": "https://courses.csail.mit.edu/6.042/spring18/mcs.pdf",
+      "dal": "02_algori_tmalar",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "raw\\mcs_mit.pdf"
+      ],
+      "parca": 14
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.581238+00:00",
   "telafi_utc": "2026-11-02T23:46:20.402435+00:00",
-  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
+  "otonomi_indir_utc": "2026-11-03T00:00:28.094573+00:00",
+  "dalga_a_derin_utc": "2026-11-09T18:24:04.037185+00:00",
+  "dalga_a_deep_works": 3,
+  "dalga_a_deep_list": [
+    {
+      "key": "erickson",
+      "parca": 58
+    },
+    {
+      "key": "cph",
+      "parca": 33
+    },
+    {
+      "key": "ods",
+      "parca": 32
+    }
+  ]
 }

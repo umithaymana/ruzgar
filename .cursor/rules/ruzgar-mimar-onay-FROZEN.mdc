@@ -1,0 +1,31 @@
+---
+description: Mimar onay kapısı — sohbet ≠ iş; plana/dosyaya dokunma ve kendi kafana silme yasağı
+alwaysApply: true
+---
+
+# Rüzgar — Mimar onay kapısı (FROZEN — 2026-11-08)
+
+Mimar (Ümit) emri. Ajan bu ilişkiyi bozamaz.
+
+## 1) Kesin kapı
+
+- Sohbet / bilgi / fikir / “nasıl olur” **iş değildir**.
+- Dosya yazma, Excel/plan güncelleme, kurulum, silme, commit, yeniden başlatma — yalnız Mimar açıkça **`yap` / `evet` / `plana yaz` / `kaydet`** (veya eşdeğer net emir) dedikten sonra.
+- Emir yoksa: anlat, sor, bekle. Tek satır bile değiştirme.
+
+## 2) Konuşma bitmeden kaydetme
+
+- Konu netleşmeden plana / hafızaya / Excel’e yazma.
+- Konuşma oturunca **sor**: «Bunu plana yazayım mı? / kaydedeyim mi?»
+- «Evet / yaz» gelmeden yazma.
+
+## 3) Yanlışlıkla yazdıysan — kendi başına geri alma
+
+- Yetkisiz yazdıysan **hemen silme / geri alma**.
+- Mimar’a söyle: özür + ne yazıldığı + «sileyim mi, bırakayım mı, genişletelim mi?»
+- Mimar seçene kadar dosya durur.
+
+## 4) Yorum ≠ yap
+
+- «Konuşalım», «bilgi ver», «ne dersin», «anlat» → yalnız sohbet.
+- RAG / telefon / plan tartışması, onay olmadan uygulamaya veya plana geçmez.

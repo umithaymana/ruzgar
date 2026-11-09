@@ -2,8 +2,8 @@
   "dal": "04_veri_tabanlari",
   "excel": "4 - ) VERİ TABANLARI.xlsx",
   "n_list": 100,
-  "sources": 3,
-  "ok_sources": 3,
+  "sources": 8,
+  "ok_sources": 6,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:12:02.611243+00:00",
   "skills": [
@@ -17,8 +17,8 @@
       "baslik": "SQLite Language Reference",
       "url": "https://www.sqlite.org/lang.html",
       "dal": "04_veri_tabanlari",
-      "ok": true,
-      "telafi": true,
+      "ok": false,
+      "dalga_a_derin": true,
       "parca": 1
     },
     "pg_tutorial": {
@@ -26,21 +26,153 @@
       "baslik": "PostgreSQL Tutorial",
       "url": "https://www.postgresql.org/docs/current/tutorial.html",
       "dal": "04_veri_tabanlari",
-      "ok": true,
-      "telafi": true,
+      "ok": false,
+      "dalga_a_derin": true,
       "parca": 1
     },
     "use_the_index": {
       "kaynak_id": "04_veri_tabanlari_use_the_index",
       "baslik": "Use The Index, Luke",
-      "url": "https://use-the-index-luke.com/",
       "dal": "04_veri_tabanlari",
       "ok": true,
-      "telafi": true,
-      "parca": 1
+      "dalga_a_raw_derin": true,
+      "raw_files": [
+        "uti_luke_00.html",
+        "uti_luke_01.html",
+        "uti_luke_02.html",
+        "uti_luke_03.html",
+        "uti_luke_04.html",
+        "uti_luke_05.html",
+        "uti_luke_06.html"
+      ],
+      "parca": 5
+    },
+    "uti_luke": {
+      "kaynak_id": "04_veri_tabanlari_uti_luke",
+      "baslik": "Use The Index Luke",
+      "dal": "04_veri_tabanlari",
+      "ok": true,
+      "parca": 13,
+      "dalga_a_fill2": true
+    },
+    "pg_docs": {
+      "kaynak_id": "04_veri_tabanlari_pg_docs",
+      "baslik": "PostgreSQL Docs (core)",
+      "dal": "04_veri_tabanlari",
+      "ok": true,
+      "dalga_a_raw_derin": true,
+      "raw_files": [
+        "pg_docs_00.html",
+        "pg_docs_01.html",
+        "pg_docs_02.html",
+        "pg_docs_03.html",
+        "pg_docs_04.html",
+        "pg_docs_05.html",
+        "pg_docs_06.html"
+      ],
+      "parca": 3
+    },
+    "sqlite_docs": {
+      "kaynak_id": "04_veri_tabanlari_sqlite_docs",
+      "baslik": "SQLite Documentation",
+      "dal": "04_veri_tabanlari",
+      "ok": true,
+      "dalga_a_raw_derin": true,
+      "raw_files": [
+        "sqlite_docs_00.html",
+        "sqlite_docs_01.html",
+        "sqlite_docs_02.html",
+        "sqlite_docs_03.html"
+      ],
+      "parca": 6
+    },
+    "cmu_15445": {
+      "kaynak_id": "04_veri_tabanlari_cmu_15445",
+      "baslik": "CMU 15-445 notes (GitHub / course archive)",
+      "lisans": "CMU course",
+      "url": "https://web.archive.org/web/20231001000000/https://15445.courses.cs.cmu.edu/fall2023/schedule.html",
+      "local": "raw/cmu_15445_00.html",
+      "ok": true,
+      "parca_sayisi": 1,
+      "profesyonel_dolum": true,
+      "updated_utc": "2026-11-03T07:40:22.523774+00:00"
+    },
+    "db_msan_notes": {
+      "kaynak_id": "04_veri_tabanlari_db_msan_notes",
+      "baslik": "DB course notes (MSAN)",
+      "dal": "04_veri_tabanlari",
+      "ok": true,
+      "dalga_a_raw_derin": true,
+      "raw_files": [
+        "db_msan_notes_00.html",
+        "db_msan_notes_01.html",
+        "db_msan_notes_02.html",
+        "db_msan_notes_03.html",
+        "db_msan_notes_04.html",
+        "db_msan_notes_05.html",
+        "db_msan_notes_06.html",
+        "db_msan_notes_07.html",
+        "db_msan_notes_08.html",
+        "db_msan_notes_09.html"
+      ],
+      "parca": 14
+    },
+    "db_omurga_derin": {
+      "kaynak_id": "04_veri_tabanlari_db_omurga_derin",
+      "baslik": "Veritabanı omurga (SQLite+PG+UTI+MSAN)",
+      "dal": "04_veri_tabanlari",
+      "ok": true,
+      "parca": 36,
+      "dalga_a_fill": true
+    },
+    "sqlite_pack": {
+      "kaynak_id": "04_veri_tabanlari_sqlite_pack",
+      "baslik": "SQLite docs pack",
+      "dal": "04_veri_tabanlari",
+      "ok": true,
+      "parca": 15,
+      "dalga_a_fill2": true
+    },
+    "pg_pack": {
+      "kaynak_id": "04_veri_tabanlari_pg_pack",
+      "baslik": "PostgreSQL docs pack",
+      "dal": "04_veri_tabanlari",
+      "ok": true,
+      "parca": 47,
+      "dalga_a_fill2": true
+    },
+    "sql_index_pack": {
+      "kaynak_id": "04_veri_tabanlari_sql_index_pack",
+      "baslik": "SQLite + Use The Index pack",
+      "dal": "04_veri_tabanlari",
+      "ok": true,
+      "parca": 32
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.584244+00:00",
   "telafi_utc": "2026-11-02T23:46:20.732627+00:00",
-  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
+  "otonomi_indir_utc": "2026-11-03T00:05:39.483638+00:00",
+  "profesyonel_dolum_utc": "2026-11-03T07:40:22.523774+00:00",
+  "ince_raf_dolum_utc": "2026-11-03T07:51:27.693106+00:00",
+  "dalga_a_derin_utc": "2026-11-09T18:24:04.105633+00:00",
+  "dalga_a_deep_works": 3,
+  "dalga_a_deep_list": [
+    {
+      "key": "pg_pack",
+      "parca": 47
+    },
+    {
+      "key": "db_omurga_derin",
+      "parca": 36
+    },
+    {
+      "key": "sql_index_pack",
+      "parca": 32
+    }
+  ],
+  "dalga_a_raw_derin_utc": "2026-11-09T18:25:40.647632+00:00",
+  "dalga_a_fill_utc": "2026-11-09T18:27:28.250886+00:00",
+  "dalga_a_fill2_utc": "2026-11-09T18:28:09.033835+00:00",
+  "dalga_a_fill3_utc": "2026-11-09T18:28:41.527418+00:00"
 }

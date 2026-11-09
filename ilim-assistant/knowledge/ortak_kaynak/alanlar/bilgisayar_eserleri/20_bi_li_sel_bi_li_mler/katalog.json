@@ -2,8 +2,8 @@
   "dal": "20_bi_li_sel_bi_li_mler",
   "excel": "20 - ) BİLİŞSEL BİLİMLER.xlsx",
   "n_list": 150,
-  "sources": 3,
-  "ok_sources": 3,
+  "sources": 6,
+  "ok_sources": 6,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:22:01.751668+00:00",
   "skills": [
@@ -36,9 +36,46 @@
       "ok": true,
       "telafi": true,
       "parca": 1
+    },
+    "sep_cogsci": {
+      "kaynak_id": "20_bi_li_sel_bi_li_mler_sep_cogsci",
+      "baslik": "SEP Cognitive Science",
+      "url": "https://plato.stanford.edu/entries/cognitive-science/",
+      "dal": "20_bi_li_sel_bi_li_mler",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "sep_cogsci_00.html"
+      ],
+      "parca": 4
+    },
+    "cog_wikibooks": {
+      "kaynak_id": "20_bi_li_sel_bi_li_mler_cog_wikibooks",
+      "baslik": "Cognitive Psychology Wikibooks",
+      "url": "https://en.wikibooks.org/wiki/Cognitive_Psychology_and_Cognitive_Neuroscience",
+      "dal": "20_bi_li_sel_bi_li_mler",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "cog_wikibooks_00.html"
+      ],
+      "parca": 1
+    },
+    "cogsci_open": {
+      "kaynak_id": "20_bi_li_sel_bi_li_mler_cogsci_open",
+      "baslik": "Open cognitive science / computational mind",
+      "lisans": "Free / CC",
+      "url": "https://plato.stanford.edu/entries/computational-mind/",
+      "local": "raw/cogsci_open_00.html",
+      "ok": true,
+      "parca_sayisi": 35,
+      "ince_raf_dolum": true,
+      "updated_utc": "2026-11-03T07:51:19.117386+00:00"
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.599243+00:00",
   "telafi_utc": "2026-11-02T23:48:12.063737+00:00",
-  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
+  "otonomi_indir_utc": "2026-11-03T00:04:10.306530+00:00",
+  "ince_raf_dolum_utc": "2026-11-03T07:51:19.117386+00:00"
 }

@@ -2,10 +2,10 @@
   "dal": "07_si_ber_g_venli_k",
   "excel": "7 - ) SİBER GÜVENLİK.xlsx",
   "n_list": 100,
-  "sources": 3,
-  "ok_sources": 2,
+  "sources": 9,
+  "ok_sources": 9,
   "ilave_rows": 3,
-  "updated_utc": "2026-11-02T23:13:43.542093+00:00",
+  "updated_utc": "2026-11-03T10:16:07.310327+00:00",
   "skills": [
     "OWASP Top 10",
     "güvenli kodlama",
@@ -24,11 +24,18 @@
     "owasp_cheat": {
       "kaynak_id": "07_si_ber_g_venli_k_owasp_cheat",
       "baslik": "OWASP Cheat Sheet Series",
-      "url": "https://cheatsheetseries.owasp.org/Index.html",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html",
       "dal": "07_si_ber_g_venli_k",
-      "ok": false,
-      "telafi": true,
-      "parca": 1
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "owasp_cheat_00.html",
+        "owasp_cheat_01.html",
+        "owasp_cheat_02.html",
+        "owasp_cheat_03.html",
+        "owasp_cheat_04.html"
+      ],
+      "parca": 13
     },
     "owasp_asvs": {
       "kaynak_id": "07_si_ber_g_venli_k_owasp_asvs",
@@ -38,9 +45,447 @@
       "ok": true,
       "telafi": true,
       "parca": 1
+    },
+    "owasp_wstg": {
+      "kaynak_id": "07_si_ber_g_venli_k_owasp_wstg",
+      "baslik": "OWASP Web Security Testing Guide",
+      "url": "https://owasp.org/www-project-web-security-testing-guide/",
+      "dal": "07_si_ber_g_venli_k",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "owasp_wstg_00.html"
+      ],
+      "parca": 1
+    },
+    "owasp_proactive": {
+      "kaynak_id": "07_si_ber_g_venli_k_owasp_proactive",
+      "baslik": "OWASP Proactive Controls",
+      "url": "https://owasp.org/www-project-proactive-controls/",
+      "dal": "07_si_ber_g_venli_k",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "owasp_proactive_00.html"
+      ],
+      "parca": 1
+    },
+    "owasp_wstg_deep": {
+      "kaynak_id": "07_owasp_wstg_deep",
+      "baslik": "OWASP WSTG deep",
+      "url": "https://github.com/OWASP/wstg",
+      "ok": true,
+      "parca_sayisi": 31,
+      "profesyonel_dolum": true,
+      "updated_utc": "2026-11-03T07:44:44.481343+00:00"
+    },
+    "nist_cyber": {
+      "kaynak_id": "07_si_ber_g_venli_k_nist_cyber",
+      "baslik": "NIST Cybersecurity Framework + malware savunma özeti",
+      "lisans": "Public domain US Gov",
+      "url": "https://csrc.nist.gov/pubs/sp/800/83/r1/final",
+      "local": "raw/nist_cyber_00.html",
+      "ok": true,
+      "parca_sayisi": 2,
+      "profesyonel_dolum": true,
+      "updated_utc": "2026-11-03T07:38:30.206103+00:00"
+    },
+    "mitre_attack": {
+      "kaynak_id": "07_si_ber_g_venli_k_mitre_attack",
+      "baslik": "MITRE ATT&CK (tespit/savunma — casus yazılım TTPs bilgi)",
+      "lisans": "Apache / free",
+      "url": "https://attack.mitre.org/techniques/T1113/",
+      "local": "raw/mitre_attack_00.html",
+      "ok": true,
+      "parca_sayisi": 33,
+      "profesyonel_dolum": true,
+      "updated_utc": "2026-11-03T07:38:40.495850+00:00"
+    },
+    "owasp_cheat_deep": {
+      "kaynak_id": "07_si_ber_g_venli_k_owasp_cheat_deep",
+      "baslik": "OWASP Cheat Sheets (geniş set)",
+      "lisans": "CC BY-SA",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Secure_Product_Design_Cheat_Sheet.html",
+      "local": "raw/owasp_cheat_deep_00.html",
+      "ok": true,
+      "parca_sayisi": 32,
+      "profesyonel_dolum": true,
+      "updated_utc": "2026-11-03T07:38:51.062161+00:00"
+    },
+    "nist_csf_2": {
+      "kaynak_id": "07_nist_csf_2",
+      "baslik": "NIST Cybersecurity Framework (CSF) 2.0",
+      "lisans": "US Gov public domain",
+      "ok": true,
+      "parca": 5,
+      "blue_team_yasal": true,
+      "updated_utc": "2026-11-03T09:57:48.497491+00:00"
+    },
+    "nist_sp800_61r3": {
+      "kaynak_id": "07_nist_sp800_61r3",
+      "baslik": "NIST SP 800-61r3 Incident Response (CSF 2.0 Community Profile)",
+      "lisans": "US Gov public domain",
+      "ok": true,
+      "parca": 7,
+      "blue_team_yasal": true,
+      "updated_utc": "2026-11-03T09:57:53.827785+00:00"
+    },
+    "nist_sp800_53r5": {
+      "kaynak_id": "07_nist_sp800_53r5",
+      "baslik": "NIST SP 800-53 Rev.5 Security and Privacy Controls (özet PDF)",
+      "lisans": "US Gov public domain",
+      "ok": true,
+      "parca": 33,
+      "blue_team_yasal": true,
+      "updated_utc": "2026-11-03T09:58:12.783197+00:00"
+    },
+    "nist_sp800_61r2_hist": {
+      "kaynak_id": "07_nist_sp800_61r2_hist",
+      "baslik": "NIST SP 800-61r2 (withdrawn historical — IR handbook)",
+      "lisans": "US Gov public domain",
+      "ok": true,
+      "parca": 15,
+      "blue_team_yasal": true,
+      "updated_utc": "2026-11-03T09:58:19.808413+00:00"
+    },
+    "nist_sp800_83r1": {
+      "kaynak_id": "07_nist_sp800_83r1",
+      "baslik": "NIST SP 800-83r1 Guide to Malware Incident Prevention and Handling",
+      "lisans": "US Gov public domain",
+      "ok": true,
+      "parca": 10,
+      "blue_team_yasal": true,
+      "updated_utc": "2026-11-03T09:58:25.272987+00:00"
+    },
+    "nist_sp800_86": {
+      "kaynak_id": "07_nist_sp800_86",
+      "baslik": "NIST SP 800-86 Guide to Integrating Forensic Techniques into Incident Response",
+      "lisans": "US Gov public domain",
+      "ok": true,
+      "parca": 24,
+      "blue_team_yasal": true,
+      "updated_utc": "2026-11-03T09:58:47.333430+00:00"
+    },
+    "nist_sp800_92": {
+      "kaynak_id": "07_nist_sp800_92",
+      "baslik": "NIST SP 800-92 Guide to Computer Security Log Management",
+      "lisans": "US Gov public domain",
+      "ok": true,
+      "parca": 13,
+      "blue_team_yasal": true,
+      "updated_utc": "2026-11-03T09:58:52.827967+00:00"
+    },
+    "cisa_blue_team": {
+      "kaynak_id": "07_cisa_blue_team",
+      "baslik": "CISA ransomware / IR playbooks",
+      "ok": true,
+      "parca": 1,
+      "blue_team_yasal": true,
+      "updated_utc": "2026-11-03T10:16:07.310327+00:00"
+    },
+    "owasp_top10_2021": {
+      "kaynak_id": "07_owasp_top10_2021",
+      "baslik": "OWASP Top 10 2021",
+      "ok": true,
+      "parca": 5,
+      "blue_team_yasal": true,
+      "updated_utc": "2026-11-03T10:16:06.423109+00:00"
+    },
+    "mitre_attack_defend": {
+      "kaynak_id": "07_mitre_attack_defend",
+      "baslik": "MITRE ATT&CK + D3FEND savunma matrisleri",
+      "lisans": "Apache / free",
+      "ok": true,
+      "parca": 7,
+      "blue_team_yasal": true,
+      "updated_utc": "2026-11-03T09:59:13.354914+00:00"
+    },
+    "cis_controls_overview": {
+      "kaynak_id": "07_cis_controls_overview",
+      "baslik": "CIS Controls v8 overview (kamuya açık özet sayfası)",
+      "lisans": "CIS fair use / public overview",
+      "ok": true,
+      "parca": 2,
+      "blue_team_yasal": true,
+      "updated_utc": "2026-11-03T09:59:15.909776+00:00"
+    },
+    "ruzgar_cift_yonlu_analiz_teori": {
+      "kaynak_id": "07_ruzgar_cift_yonlu_analiz_teori",
+      "baslik": "Rüzgar çift yönlü analiz teorik omurgası",
+      "pillar": "dual_analysis",
+      "lisans": "Rüzgar iç",
+      "ok": true,
+      "parca": 3,
+      "akademik_indeks": true,
+      "konu": [
+        "blue-team",
+        "red-team",
+        "teori"
+      ],
+      "updated_utc": "2026-11-03T10:39:02.690715+00:00"
+    },
+    "ietf_rfc9293_tcp": {
+      "kaynak_id": "07_ietf_rfc9293_tcp",
+      "baslik": "RFC 9293 — Transmission Control Protocol (TCP)",
+      "pillar": "standards",
+      "lisans": "IETF RFC (open)",
+      "ok": true,
+      "parca": 22,
+      "akademik_indeks": true,
+      "konu": [
+        "tcp",
+        "ag",
+        "protokol",
+        "zafiyet-analizi-temeli"
+      ],
+      "updated_utc": "2026-11-03T10:39:02.690715+00:00"
+    },
+    "ietf_rfc9110_http": {
+      "kaynak_id": "07_ietf_rfc9110_http",
+      "baslik": "RFC 9110 — HTTP Semantics",
+      "pillar": "standards",
+      "lisans": "IETF RFC (open)",
+      "ok": true,
+      "parca": 42,
+      "akademik_indeks": true,
+      "konu": [
+        "http",
+        "web",
+        "protokol"
+      ],
+      "updated_utc": "2026-11-03T10:39:02.690715+00:00"
+    },
+    "ietf_rfc8446_tls13": {
+      "kaynak_id": "07_ietf_rfc8446_tls13",
+      "baslik": "RFC 8446 — TLS 1.3 (tarihsel ana metin)",
+      "pillar": "standards",
+      "lisans": "IETF RFC (open)",
+      "ok": true,
+      "parca": 29,
+      "akademik_indeks": true,
+      "konu": [
+        "tls",
+        "kriptografi",
+        "protokol"
+      ],
+      "updated_utc": "2026-11-03T10:39:02.690715+00:00"
+    },
+    "ietf_rfc5246_tls12": {
+      "kaynak_id": "07_ietf_rfc5246_tls12",
+      "baslik": "RFC 5246 — TLS 1.2 (karşılaştırmalı güvenlik analizi)",
+      "pillar": "standards",
+      "lisans": "IETF RFC (open)",
+      "ok": true,
+      "parca": 19,
+      "akademik_indeks": true,
+      "konu": [
+        "tls",
+        "legacy",
+        "protokol"
+      ],
+      "updated_utc": "2026-11-03T10:39:02.690715+00:00"
+    },
+    "ietf_rfc8200_ipv6": {
+      "kaynak_id": "07_ietf_rfc8200_ipv6",
+      "baslik": "RFC 8200 — Internet Protocol Version 6 (IPv6)",
+      "pillar": "standards",
+      "lisans": "IETF RFC (open)",
+      "ok": true,
+      "parca": 8,
+      "akademik_indeks": true,
+      "konu": [
+        "ip",
+        "ag",
+        "protokol"
+      ],
+      "updated_utc": "2026-11-03T10:39:02.690715+00:00"
+    },
+    "ietf_rfc791_ipv4": {
+      "kaynak_id": "07_ietf_rfc791_ipv4",
+      "baslik": "RFC 791 — Internet Protocol (IPv4)",
+      "pillar": "standards",
+      "lisans": "IETF RFC (open)",
+      "ok": true,
+      "parca": 8,
+      "akademik_indeks": true,
+      "konu": [
+        "ip",
+        "ag",
+        "protokol"
+      ],
+      "updated_utc": "2026-11-03T10:39:02.690715+00:00"
+    },
+    "ietf_rfc3552_security": {
+      "kaynak_id": "07_ietf_rfc3552_security",
+      "baslik": "RFC 3552 — Guidelines for Writing RFC Text on Security Considerations",
+      "pillar": "standards",
+      "lisans": "IETF RFC (open)",
+      "ok": true,
+      "parca": 10,
+      "akademik_indeks": true,
+      "konu": [
+        "guvenlik-degerlendirme",
+        "protokol-tasarim"
+      ],
+      "updated_utc": "2026-11-03T10:39:02.690715+00:00"
+    },
+    "nist_sp800_115": {
+      "kaynak_id": "07_nist_sp800_115",
+      "baslik": "NIST SP 800-115 — Technical Guide to Information Security Testing and Assessment",
+      "pillar": "dual_analysis",
+      "lisans": "US Gov public domain",
+      "ok": true,
+      "parca": 19,
+      "akademik_indeks": true,
+      "konu": [
+        "pentest-teorisi",
+        "guvenlik-degerlendirme",
+        "red-blue"
+      ],
+      "updated_utc": "2026-11-03T10:39:02.690715+00:00"
+    },
+    "nist_sp800_30r1": {
+      "kaynak_id": "07_nist_sp800_30r1",
+      "baslik": "NIST SP 800-30r1 — Guide for Conducting Risk Assessments",
+      "pillar": "threat_model",
+      "lisans": "US Gov public domain",
+      "ok": true,
+      "parca": 24,
+      "akademik_indeks": true,
+      "konu": [
+        "risk",
+        "tehdit-modelleme"
+      ],
+      "updated_utc": "2026-11-03T10:39:02.690715+00:00"
+    },
+    "nist_sp800_40r4": {
+      "kaynak_id": "07_nist_sp800_40r4",
+      "baslik": "NIST SP 800-40r4 — Guide to Enterprise Patch Management Planning",
+      "pillar": "standards",
+      "lisans": "US Gov public domain",
+      "ok": true,
+      "parca": 6,
+      "akademik_indeks": true,
+      "konu": [
+        "yama",
+        "savunma"
+      ],
+      "updated_utc": "2026-11-03T10:39:02.690715+00:00"
+    },
+    "nist_sp800_154": {
+      "kaynak_id": "07_nist_sp800_154",
+      "baslik": "NIST SP 800-154 — Guide to Data-Centric System Threat Modeling (draft/final)",
+      "pillar": "threat_model",
+      "lisans": "US Gov public domain",
+      "ok": true,
+      "parca": 6,
+      "akademik_indeks": true,
+      "konu": [
+        "threat-modeling",
+        "attack-surface"
+      ],
+      "updated_utc": "2026-11-03T10:39:02.690715+00:00"
+    },
+    "owasp_asvs_raw": {
+      "kaynak_id": "07_owasp_asvs_raw",
+      "baslik": "OWASP ASVS 4.0 — Application Security Verification Standard",
+      "pillar": "standards",
+      "lisans": "CC BY-SA OWASP",
+      "ok": true,
+      "parca": 8,
+      "akademik_indeks": true,
+      "konu": [
+        "owasp",
+        "asvs",
+        "dogrulama"
+      ],
+      "updated_utc": "2026-11-03T10:39:02.690715+00:00"
+    },
+    "owasp_wstg_theory": {
+      "kaynak_id": "07_owasp_wstg_theory",
+      "baslik": "OWASP WSTG teorik",
+      "ok": true,
+      "parca": 8,
+      "akademik_indeks": true,
+      "updated_utc": "2026-11-03T10:39:40.937692+00:00"
+    },
+    "owasp_threat_modeling": {
+      "kaynak_id": "07_owasp_threat_modeling",
+      "baslik": "OWASP Threat Modeling / Cheat Sheets (teorik)",
+      "pillar": "threat_model",
+      "lisans": "CC BY-SA OWASP",
+      "ok": true,
+      "parca": 13,
+      "akademik_indeks": true,
+      "konu": [
+        "threat-modeling",
+        "attack-surface"
+      ],
+      "updated_utc": "2026-11-03T10:39:02.690715+00:00"
+    },
+    "owasp_code_review_sast": {
+      "kaynak_id": "07_owasp_code_review_sast",
+      "baslik": "OWASP Code Review / SAST teorisi",
+      "pillar": "threat_model",
+      "lisans": "CC BY-SA OWASP",
+      "ok": true,
+      "parca": 8,
+      "akademik_indeks": true,
+      "konu": [
+        "sast",
+        "kod-inceleme",
+        "zafiyet"
+      ],
+      "updated_utc": "2026-11-03T10:39:02.690715+00:00"
+    },
+    "mitre_capec_overview": {
+      "kaynak_id": "07_mitre_capec_overview",
+      "baslik": "MITRE CAPEC — Common Attack Pattern Enumeration (özet)",
+      "pillar": "threat_model",
+      "lisans": "Apache / free",
+      "ok": true,
+      "parca": 68,
+      "akademik_indeks": true,
+      "konu": [
+        "capec",
+        "saldiri-kaliplari"
+      ],
+      "updated_utc": "2026-11-03T10:39:02.690715+00:00"
+    },
+    "mitre_attack_detect": {
+      "kaynak_id": "07_mitre_attack_detect",
+      "baslik": "MITRE ATT&CK — tespit / savunma taktikleri",
+      "pillar": "dual_analysis",
+      "lisans": "Apache / free",
+      "ok": true,
+      "parca": 22,
+      "akademik_indeks": true,
+      "konu": [
+        "attck",
+        "blue-team",
+        "tespit"
+      ],
+      "updated_utc": "2026-11-03T10:39:02.690715+00:00"
+    },
+    "ptes_technical_guidelines": {
+      "kaynak_id": "07_ptes_technical_guidelines",
+      "baslik": "PTES Technical Guidelines (teorik özet)",
+      "ok": true,
+      "parca": 1,
+      "akademik_indeks": true,
+      "updated_utc": "2026-11-03T10:39:40.937692+00:00"
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.588242+00:00",
   "telafi_utc": "2026-11-02T23:46:21.425624+00:00",
-  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
+  "otonomi_indir_utc": "2026-11-03T00:03:01.417711+00:00",
+  "profesyonel_dolum_utc": "2026-11-03T07:41:38.457420+00:00",
+  "blue_team_yasal_ok": 9,
+  "akademik_indeks_utc": "2026-11-03T10:39:02.690715+00:00",
+  "akademik_pillars": {
+    "standards": "OWASP/NIST/IETF protokol ve çerçeveler",
+    "threat_model": "zafiyet, SAST/DAST teorisi, attack surface",
+    "dual_analysis": "blue-team tespit + red-team test metodolojisi (teorik)"
+  }
 }

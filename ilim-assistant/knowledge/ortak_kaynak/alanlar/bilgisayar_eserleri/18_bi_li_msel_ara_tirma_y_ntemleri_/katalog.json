@@ -2,8 +2,8 @@
   "dal": "18_bi_li_msel_ara_tirma_y_ntemleri_",
   "excel": "18 - ) BİLİMSEL ARAŞTIRMA YÖNTEMLERİ.xlsx",
   "n_list": 150,
-  "sources": 3,
-  "ok_sources": 3,
+  "sources": 7,
+  "ok_sources": 7,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:20:58.542544+00:00",
   "skills": [
@@ -38,9 +38,59 @@
       "ok": true,
       "telafi": true,
       "parca": 1
+    },
+    "turing_way": {
+      "kaynak_id": "18_bi_li_msel_ara_tirma_y_ntemleri__turing_way",
+      "baslik": "The Turing Way",
+      "url": "https://the-turing-way.netlify.app/project-design/project-design",
+      "dal": "18_bi_li_msel_ara_tirma_y_ntemleri_",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "turing_way_00.html",
+        "turing_way_01.html",
+        "turing_way_02.html"
+      ],
+      "parca": 2
+    },
+    "openstax_stats_page": {
+      "kaynak_id": "18_bi_li_msel_ara_tirma_y_ntemleri__openstax_stats_page",
+      "baslik": "OpenStax Introductory Statistics",
+      "url": "https://openstax.org/details/books/introductory-statistics-2e",
+      "dal": "18_bi_li_msel_ara_tirma_y_ntemleri_",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "openstax_stats_page_00.html"
+      ],
+      "parca": 1
+    },
+    "reproducibility": {
+      "kaynak_id": "18_bi_li_msel_ara_tirma_y_ntemleri__reproducibility",
+      "baslik": "Turing Way + reproducibility guides",
+      "lisans": "CC BY",
+      "url": "https://www.nature.com/articles/d41586-018-05205-x",
+      "local": "raw/reproducibility_00.html",
+      "ok": true,
+      "parca_sayisi": 41,
+      "ince_raf_dolum": true,
+      "updated_utc": "2026-11-03T07:50:22.016977+00:00"
+    },
+    "how_to_science": {
+      "kaynak_id": "18_bi_li_msel_ara_tirma_y_ntemleri__how_to_science",
+      "baslik": "Open science & research methods (PLOS / FOSTER)",
+      "lisans": "CC / free",
+      "url": "https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005510",
+      "local": "raw/how_to_science_00.html",
+      "ok": true,
+      "parca_sayisi": 9,
+      "ince_raf_dolum": true,
+      "updated_utc": "2026-11-03T07:50:33.386133+00:00"
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.597244+00:00",
   "telafi_utc": "2026-11-02T23:48:11.137423+00:00",
-  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
+  "otonomi_indir_utc": "2026-11-03T00:04:05.773436+00:00",
+  "ince_raf_dolum_utc": "2026-11-03T07:50:33.386133+00:00"
 }

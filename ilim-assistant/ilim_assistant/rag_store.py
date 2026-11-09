@@ -776,6 +776,57 @@ def search(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
         ii = int(i)
         _put(chunks[ii].text, chunks[ii].source, float(sim[ii]))
 
+    # Şamile kategori shard'ları (ana indeksi şişirmeden). Ortak/fen hijyeninde eklenmez.
+    if os.environ.get("RUZGAR_SHAMELA_SHARDS", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    ):
+        try:
+            ortak_prefixes = _ortak_path_prefixes_for_query(query)
+            skip_shamela = bool(ortak_prefixes) and _din_hygiene_enabled()
+            if not skip_shamela:
+                from ilim_assistant.shamela_rag_shards import search_shamela_shards
+
+                for text, source, score in search_shamela_shards(
+                    query, top_k=max(int(top_k), 8), q_vec=q
+                ):
+                    _put(text, source, float(score))
+        except Exception:
+            pass
+
+    # Adım 5 — seçili ayıklama yan indeksi (ana RAG MemoryError kaçınır)
+    if os.environ.get("RUZGAR_AYIKLAMA_RAG", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    ):
+        try:
+            from ilim_assistant.ruzgar_ayiklama_rag import search_ayiklama
+
+            for text, source, score in search_ayiklama(
+                query, top_k=max(int(top_k), 6), q_vec=q
+            ):
+                _put(text, source, float(score))
+        except Exception:
+            pass
+
+    # Adım 4 — bilgisayar eserleri yan indeksi (Dalga A omurga)
+    if os.environ.get("RUZGAR_BILGISAYAR_RAG", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    ):
+        try:
+            from ilim_assistant.ruzgar_bilgisayar_rag import search_bilgisayar
+
+            for text, source, score in search_bilgisayar(
+                query, top_k=max(int(top_k), 6), q_vec=q
+            ):
+                _put(text, source, float(score))
+        except Exception:
+            pass
+
     # Ortak alan / fen rafı boost (+ yol ipucu; düşük skorlu kavram md kaçmasın)
     try:
         boost = float(os.environ.get("RUZGAR_RAG_ORTAK_BOOST_SCORE", "0.10") or "0.10")

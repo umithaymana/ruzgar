@@ -1,0 +1,235 @@
+{
+  "updated_utc": "2026-11-03T10:39:02.692222+00:00",
+  "jobs_ok": 17,
+  "jobs_total": 18,
+  "results": [
+    {
+      "key": "ruzgar_cift_yonlu_analiz_teori",
+      "baslik": "Rüzgar çift yönlü analiz teorik omurgası",
+      "pillar": "dual_analysis",
+      "lisans": "Rüzgar iç",
+      "parca": 3,
+      "konu": [
+        "blue-team",
+        "red-team",
+        "teori"
+      ]
+    },
+    {
+      "key": "ietf_rfc9293_tcp",
+      "baslik": "RFC 9293 — Transmission Control Protocol (TCP)",
+      "pillar": "standards",
+      "lisans": "IETF RFC (open)",
+      "parca": 22,
+      "konu": [
+        "tcp",
+        "ag",
+        "protokol",
+        "zafiyet-analizi-temeli"
+      ]
+    },
+    {
+      "key": "ietf_rfc9110_http",
+      "baslik": "RFC 9110 — HTTP Semantics",
+      "pillar": "standards",
+      "lisans": "IETF RFC (open)",
+      "parca": 42,
+      "konu": [
+        "http",
+        "web",
+        "protokol"
+      ]
+    },
+    {
+      "key": "ietf_rfc8446_tls13",
+      "baslik": "RFC 8446 — TLS 1.3 (tarihsel ana metin)",
+      "pillar": "standards",
+      "lisans": "IETF RFC (open)",
+      "parca": 29,
+      "konu": [
+        "tls",
+        "kriptografi",
+        "protokol"
+      ]
+    },
+    {
+      "key": "ietf_rfc5246_tls12",
+      "baslik": "RFC 5246 — TLS 1.2 (karşılaştırmalı güvenlik analizi)",
+      "pillar": "standards",
+      "lisans": "IETF RFC (open)",
+      "parca": 19,
+      "konu": [
+        "tls",
+        "legacy",
+        "protokol"
+      ]
+    },
+    {
+      "key": "ietf_rfc8200_ipv6",
+      "baslik": "RFC 8200 — Internet Protocol Version 6 (IPv6)",
+      "pillar": "standards",
+      "lisans": "IETF RFC (open)",
+      "parca": 8,
+      "konu": [
+        "ip",
+        "ag",
+        "protokol"
+      ]
+    },
+    {
+      "key": "ietf_rfc791_ipv4",
+      "baslik": "RFC 791 — Internet Protocol (IPv4)",
+      "pillar": "standards",
+      "lisans": "IETF RFC (open)",
+      "parca": 8,
+      "konu": [
+        "ip",
+        "ag",
+        "protokol"
+      ]
+    },
+    {
+      "key": "ietf_rfc3552_security",
+      "baslik": "RFC 3552 — Guidelines for Writing RFC Text on Security Considerations",
+      "pillar": "standards",
+      "lisans": "IETF RFC (open)",
+      "parca": 10,
+      "konu": [
+        "guvenlik-degerlendirme",
+        "protokol-tasarim"
+      ]
+    },
+    {
+      "key": "nist_sp800_115",
+      "baslik": "NIST SP 800-115 — Technical Guide to Information Security Testing and Assessment",
+      "pillar": "dual_analysis",
+      "lisans": "US Gov public domain",
+      "parca": 19,
+      "konu": [
+        "pentest-teorisi",
+        "guvenlik-degerlendirme",
+        "red-blue"
+      ]
+    },
+    {
+      "key": "nist_sp800_30r1",
+      "baslik": "NIST SP 800-30r1 — Guide for Conducting Risk Assessments",
+      "pillar": "threat_model",
+      "lisans": "US Gov public domain",
+      "parca": 24,
+      "konu": [
+        "risk",
+        "tehdit-modelleme"
+      ]
+    },
+    {
+      "key": "nist_sp800_40r4",
+      "baslik": "NIST SP 800-40r4 — Guide to Enterprise Patch Management Planning",
+      "pillar": "standards",
+      "lisans": "US Gov public domain",
+      "parca": 6,
+      "konu": [
+        "yama",
+        "savunma"
+      ]
+    },
+    {
+      "key": "nist_sp800_154",
+      "baslik": "NIST SP 800-154 — Guide to Data-Centric System Threat Modeling (draft/final)",
+      "pillar": "threat_model",
+      "lisans": "US Gov public domain",
+      "parca": 6,
+      "konu": [
+        "threat-modeling",
+        "attack-surface"
+      ]
+    },
+    {
+      "key": "owasp_asvs_raw",
+      "baslik": "OWASP ASVS 4.0 — Application Security Verification Standard",
+      "pillar": "standards",
+      "lisans": "CC BY-SA OWASP",
+      "parca": 8,
+      "konu": [
+        "owasp",
+        "asvs",
+        "dogrulama"
+      ]
+    },
+    {
+      "key": "owasp_wstg_theory",
+      "baslik": "OWASP WSTG — test metodolojisi (teorik bölümler)",
+      "pillar": "dual_analysis",
+      "lisans": "CC BY-SA OWASP",
+      "parca": 4,
+      "konu": [
+        "wstg",
+        "pentest-teorisi",
+        "web"
+      ]
+    },
+    {
+      "key": "owasp_threat_modeling",
+      "baslik": "OWASP Threat Modeling / Cheat Sheets (teorik)",
+      "pillar": "threat_model",
+      "lisans": "CC BY-SA OWASP",
+      "parca": 13,
+      "konu": [
+        "threat-modeling",
+        "attack-surface"
+      ]
+    },
+    {
+      "key": "owasp_code_review_sast",
+      "baslik": "OWASP Code Review / SAST teorisi",
+      "pillar": "threat_model",
+      "lisans": "CC BY-SA OWASP",
+      "parca": 8,
+      "konu": [
+        "sast",
+        "kod-inceleme",
+        "zafiyet"
+      ]
+    },
+    {
+      "key": "mitre_capec_overview",
+      "baslik": "MITRE CAPEC — Common Attack Pattern Enumeration (özet)",
+      "pillar": "threat_model",
+      "lisans": "Apache / free",
+      "parca": 68,
+      "konu": [
+        "capec",
+        "saldiri-kaliplari"
+      ]
+    },
+    {
+      "key": "mitre_attack_detect",
+      "baslik": "MITRE ATT&CK — tespit / savunma taktikleri",
+      "pillar": "dual_analysis",
+      "lisans": "Apache / free",
+      "parca": 22,
+      "konu": [
+        "attck",
+        "blue-team",
+        "tespit"
+      ]
+    },
+    {
+      "key": "ptes_technical_guidelines",
+      "baslik": "PTES Technical Guidelines (açık metodoloji — teorik)",
+      "pillar": "dual_analysis",
+      "lisans": "PTES public",
+      "parca": 0,
+      "konu": [
+        "ptes",
+        "pentest-teorisi"
+      ]
+    }
+  ],
+  "purpose": "academic-defense-library",
+  "forbidden": [
+    "exploit-poc",
+    "malware",
+    "copyright-bypass"
+  ]
+}

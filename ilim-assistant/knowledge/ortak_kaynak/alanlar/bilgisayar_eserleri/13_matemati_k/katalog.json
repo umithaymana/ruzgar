@@ -2,8 +2,8 @@
   "dal": "13_matemati_k",
   "excel": "13 - ) MATEMATİK.xlsx",
   "n_list": 150,
-  "sources": 3,
-  "ok_sources": 3,
+  "sources": 6,
+  "ok_sources": 6,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:17:40.067564+00:00",
   "skills": [
@@ -37,9 +37,44 @@
       "ok": true,
       "telafi": true,
       "parca": 1
+    },
+    "openstax_calc1_pdf": {
+      "kaynak_id": "13_matemati_k_openstax_calc1_pdf",
+      "baslik": "OpenStax Calculus Volume 1 PDF",
+      "url": "https://openstax.org/details/books/calculus-volume-1",
+      "dal": "13_matemati_k",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [],
+      "parca": 1
+    },
+    "mcs_math": {
+      "kaynak_id": "13_matemati_k_mcs_math",
+      "baslik": "Mathematics for Computer Science (MIT 6.042)",
+      "lisans": "CC BY-SA / MIT",
+      "url": "https://courses.csail.mit.edu/6.042/spring18/mcs.pdf",
+      "local": "raw/mcs_math_00.html",
+      "ok": true,
+      "parca_sayisi": 17,
+      "profesyonel_dolum": true,
+      "updated_utc": "2026-11-03T07:28:24.575509+00:00"
+    },
+    "mcs_html_deep": {
+      "kaynak_id": "13_matemati_k_mcs_html_deep",
+      "baslik": "MIT MCS textbook HTML + OpenStax Calc",
+      "lisans": "CC BY-SA / CC BY",
+      "url": "https://openstax.org/books/elementary-algebra-2e/pages/1-introduction",
+      "local": "raw/mcs_html_deep_00.html",
+      "ok": true,
+      "parca_sayisi": 9,
+      "ince_raf_dolum": true,
+      "updated_utc": "2026-11-03T07:52:01.209876+00:00"
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.593241+00:00",
   "telafi_utc": "2026-11-02T23:46:35.773806+00:00",
-  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
+  "otonomi_indir_utc": "2026-11-03T00:03:46.507514+00:00",
+  "profesyonel_dolum_utc": "2026-11-03T07:28:24.575509+00:00",
+  "ince_raf_dolum_utc": "2026-11-03T07:52:01.209876+00:00"
 }

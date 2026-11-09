@@ -4,16 +4,16 @@
   "yerlesen_satir": 100,
   "ilave_satir": 3,
   "benzersiz_kaynak": 37,
-  "basarili_kaynak": 33,
+  "basarili_kaynak": 43,
   "kaynaklar": {
     "think_python_2": {
-      "kaynak_id": "bb01_think_python_2",
+      "kaynak_id": "01_programlama_think_python_2",
       "baslik": "Think Python 2e",
-      "lisans": "CC BY-NC",
       "url": "https://greenteapress.com/thinkpython2/thinkpython2.pdf",
-      "local": "raw/think_python_2.pdf",
+      "dal": "01_programlama",
       "ok": true,
-      "parca_sayisi": 42
+      "dalga_a_derin": true,
+      "parca": 45
     },
     "think_java": {
       "kaynak_id": "bb01_think_java",
@@ -37,28 +37,40 @@
       "kaynak_id": "bb01_py4e",
       "baslik": "Python for Everybody",
       "lisans": "CC BY",
-      "url": "https://www.py4e.com/book",
-      "local": "raw/py4e.html",
+      "url": "https://www.py4e.com/html3/01-intro",
+      "local": "raw/py4e_full_00.html",
       "ok": true,
-      "parca_sayisi": 1
+      "parca_sayisi": 34,
+      "ustalik_derin": true,
+      "deep_stem": "py4e_full",
+      "note": "Derinleştirildi → metin/py4e_full",
+      "updated_utc": "2026-11-03T07:01:39.908409+00:00"
     },
     "invent_games": {
       "kaynak_id": "bb01_invent_games",
       "baslik": "Invent Your Own Computer Games with Python",
       "lisans": "CC BY-NC-SA",
-      "url": "https://inventwithpython.com/invent4thed/inventwithpython4thbeginners.pdf",
-      "local": "",
-      "ok": false,
-      "parca_sayisi": 1
+      "url": "https://inventwithpython.com/invent4thed/",
+      "local": "raw/invent_full_00.html",
+      "ok": true,
+      "parca_sayisi": 50,
+      "ustalik_derin": true,
+      "deep_stem": "invent_full",
+      "note": "Derinleştirildi → metin/invent_full",
+      "updated_utc": "2026-11-03T07:02:23.507445+00:00"
     },
     "sicp": {
       "kaynak_id": "bb01_sicp",
       "baslik": "SICP",
       "lisans": "CC BY-SA / MIT free online",
-      "url": "https://sarabander.github.io/sicp/pdf/sicp.pdf",
-      "local": "",
-      "ok": false,
-      "parca_sayisi": 1
+      "url": "https://sarabander.github.io/sicp/html/5_002e5.xhtml",
+      "local": "raw/sicp_full_00.xhtml",
+      "ok": true,
+      "parca_sayisi": 79,
+      "ustalik_derin": true,
+      "deep_stem": "sicp_full",
+      "note": "Derinleştirildi → metin/sicp_full",
+      "updated_utc": "2026-11-03T07:02:02.766801+00:00"
     },
     "taoup": {
       "kaynak_id": "bb01_taoup",
@@ -136,28 +148,39 @@
       "kaynak_id": "bb01_lyah",
       "baslik": "Learn You a Haskell",
       "lisans": "Free online",
-      "url": "https://learnyouahaskell.com/chapters",
-      "local": "",
-      "ok": false,
-      "parca_sayisi": 1
+      "url": "https://learnyouahaskell.github.io/chapters.html",
+      "local": "raw/lyah_full_00.html",
+      "ok": true,
+      "parca_sayisi": 63,
+      "ustalik_derin": true,
+      "deep_stem": "lyah_full",
+      "note": "Derinleştirildi → metin/lyah_full",
+      "updated_utc": "2026-11-03T07:02:34.405401+00:00"
     },
     "rwh": {
       "kaynak_id": "bb01_rwh",
       "baslik": "Real World Haskell",
       "lisans": "Free online",
-      "url": "https://book.realworldhaskell.org/",
-      "local": "",
-      "ok": false,
-      "parca_sayisi": 1
+      "url": "https://web.archive.org/web/20191201120000/http://book.realworldhaskell.org/read/using-parsec.html",
+      "local": "raw/rwh_full_00.html",
+      "ok": true,
+      "parca_sayisi": 78,
+      "ustalik_derin": true,
+      "deep_stem": "rwh_full",
+      "note": "Derinleştirildi → metin/rwh_full",
+      "updated_utc": "2026-11-03T07:04:06.437101+00:00"
     },
     "producing_oss": {
-      "kaynak_id": "bb01_producing_oss",
+      "kaynak_id": "01_programlama_producing_oss",
       "baslik": "Producing Open Source Software",
-      "lisans": "Free",
-      "url": "https://producingoss.com/en/producingoss.html",
-      "local": "raw/producing_oss.html",
+      "url": "https://producingoss.com/en/index.html",
+      "dal": "01_programlama",
       "ok": true,
-      "parca_sayisi": 17
+      "otonomi_indir": true,
+      "raw_files": [
+        "producing_oss_00.html"
+      ],
+      "parca": 1
     },
     "cpp_core": {
       "kaynak_id": "bb01_cpp_core",
@@ -248,15 +271,251 @@
       "local": "raw/spring_docs.html",
       "ok": true,
       "parca_sayisi": 2
+    },
+    "atbs_full": {
+      "kaynak_id": "01_programlama_atbs_full",
+      "baslik": "Automate the Boring Stuff 2e (chapters)",
+      "url": "https://automatetheboringstuff.com/2e/chapter20/",
+      "dal": "01_programlama",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "atbs_full_00.html",
+        "atbs_full_01.html",
+        "atbs_full_02.html",
+        "atbs_full_03.html",
+        "atbs_full_04.html",
+        "atbs_full_05.html",
+        "atbs_full_06.html",
+        "atbs_full_07.html",
+        "atbs_full_08.html",
+        "atbs_full_09.html",
+        "atbs_full_10.html",
+        "atbs_full_11.html",
+        "atbs_full_12.html",
+        "atbs_full_13.html",
+        "atbs_full_14.html",
+        "atbs_full_15.html",
+        "atbs_full_16.html",
+        "atbs_full_17.html",
+        "atbs_full_18.html",
+        "atbs_full_19.html",
+        "atbs_full_20.html"
+      ],
+      "parca": 43
+    },
+    "py4e_pdf": {
+      "kaynak_id": "01_programlama_py4e_pdf",
+      "baslik": "Python for Everybody (PDF)",
+      "url": "https://do1.dr-chuck.com/pythonlearn/EN_us/pythonlearn.pdf",
+      "dal": "01_programlama",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "raw\\py4e_pdf.pdf"
+      ],
+      "parca": 17
+    },
+    "crafting_full": {
+      "kaynak_id": "01_programlama_crafting_full",
+      "baslik": "Crafting Interpreters",
+      "url": "https://craftinginterpreters.com/a-bytecode-virtual-machine.html",
+      "dal": "01_programlama",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "crafting_full_00.html",
+        "crafting_full_01.html",
+        "crafting_full_02.html",
+        "crafting_full_03.html",
+        "crafting_full_04.html",
+        "crafting_full_05.html",
+        "crafting_full_06.html",
+        "crafting_full_07.html",
+        "crafting_full_08.html",
+        "crafting_full_09.html",
+        "crafting_full_10.html",
+        "crafting_full_11.html",
+        "crafting_full_12.html",
+        "crafting_full_13.html"
+      ],
+      "parca": 40
+    },
+    "sicp_html": {
+      "kaynak_id": "01_programlama_sicp_html",
+      "baslik": "SICP (HTML)",
+      "url": "https://sarabander.github.io/sicp/html/Chapter-5.xhtml",
+      "dal": "01_programlama",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "sicp_html_00.html",
+        "sicp_html_01.html",
+        "sicp_html_02.html",
+        "sicp_html_03.html",
+        "sicp_html_04.html",
+        "sicp_html_05.html"
+      ],
+      "parca": 5
+    },
+    "invent_pdf": {
+      "kaynak_id": "01_programlama_invent_pdf",
+      "baslik": "Invent with Python 4e",
+      "url": "https://inventwithpython.com/invent4thed/",
+      "dal": "01_programlama",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [],
+      "parca": 1,
+      "local": "raw/invent_full_00.html",
+      "parca_sayisi": 50,
+      "ustalik_derin": true,
+      "deep_stem": "invent_full",
+      "note": "Derinleştirildi → metin/invent_full",
+      "updated_utc": "2026-11-03T07:02:23.507445+00:00"
+    },
+    "ydkjs_getstarted": {
+      "kaynak_id": "01_programlama_ydkjs_getstarted",
+      "baslik": "You Don't Know JS — Get Started",
+      "url": "https://raw.githubusercontent.com/getify/You-Dont-Know-JS/2nd-ed/scope-closures/ch2.md",
+      "dal": "01_programlama",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "ydkjs_getstarted_00.md",
+        "ydkjs_getstarted_01.md",
+        "ydkjs_getstarted_02.md",
+        "ydkjs_getstarted_03.md",
+        "ydkjs_getstarted_04.md",
+        "ydkjs_getstarted_05.md",
+        "ydkjs_getstarted_06.md",
+        "ydkjs_getstarted_07.md"
+      ],
+      "parca": 15
+    },
+    "rustonomicon": {
+      "kaynak_id": "01_programlama_rustonomicon",
+      "baslik": "The Rustonomicon",
+      "url": "https://doc.rust-lang.org/rust-by-example/",
+      "dal": "01_programlama",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "rustonomicon_00.html",
+        "rustonomicon_01.html",
+        "rustonomicon_02.html",
+        "rustonomicon_03.html",
+        "rustonomicon_04.html",
+        "rustonomicon_05.html",
+        "rustonomicon_06.html"
+      ],
+      "parca": 3
+    },
+    "sicp_full": {
+      "kaynak_id": "01_programlama_sicp_full",
+      "baslik": "SICP (Sarabander HTML tam)",
+      "lisans": "CC BY-SA / MIT",
+      "url": "https://sarabander.github.io/sicp/html/5_002e5.xhtml",
+      "local": "raw/sicp_full_00.xhtml",
+      "ok": true,
+      "parca_sayisi": 79,
+      "ustalik_derin": true,
+      "fetch_ok": 28,
+      "updated_utc": "2026-11-03T07:02:02.766801+00:00"
+    },
+    "eloquent_js_pdf": {
+      "kaynak_id": "01_programlama_eloquent_js_pdf",
+      "baslik": "Eloquent JavaScript PDF",
+      "url": "https://eloquentjavascript.net/Eloquent_JavaScript.pdf",
+      "dal": "01_programlama",
+      "ok": true,
+      "s2_derin": true,
+      "parca": 16
+    },
+    "rust_book_deep": {
+      "kaynak_id": "01_programlama_rust_book_deep",
+      "baslik": "Rust Book deep chapters",
+      "url": "https://doc.rust-lang.org/book/ch13-00-functional-features.html",
+      "dal": "01_programlama",
+      "ok": true,
+      "s2_derin": true,
+      "parca": 3
+    },
+    "ydkjs_scope": {
+      "kaynak_id": "01_programlama_ydkjs_scope",
+      "baslik": "YDKJS Scope Closures + Objects",
+      "url": "https://raw.githubusercontent.com/getify/You-Dont-Know-JS/2nd-ed/objects-classes/ch2.md",
+      "dal": "01_programlama",
+      "ok": true,
+      "s2_derin": true,
+      "parca": 12
+    },
+    "cpp_core_deep": {
+      "kaynak_id": "01_programlama_cpp_core_deep",
+      "baslik": "C++ Core Guidelines",
+      "url": "https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines",
+      "dal": "01_programlama",
+      "ok": true,
+      "s2_derin": true,
+      "parca": 42
+    },
+    "py4e_full": {
+      "kaynak_id": "01_programlama_py4e_full",
+      "baslik": "Python for Everybody (tam html3)",
+      "lisans": "CC BY",
+      "url": "https://www.py4e.com/html3/01-intro",
+      "local": "raw/py4e_full_00.html",
+      "ok": true,
+      "parca_sayisi": 34,
+      "ustalik_derin": true,
+      "fetch_ok": 16,
+      "updated_utc": "2026-11-03T07:01:39.908409+00:00"
+    },
+    "invent_full": {
+      "kaynak_id": "01_programlama_invent_full",
+      "baslik": "Invent Your Own Computer Games with Python 4e (HTML)",
+      "lisans": "CC BY-NC-SA",
+      "url": "https://inventwithpython.com/invent4thed/",
+      "local": "raw/invent_full_00.html",
+      "ok": true,
+      "parca_sayisi": 50,
+      "ustalik_derin": true,
+      "fetch_ok": 22,
+      "updated_utc": "2026-11-03T07:02:23.507445+00:00"
+    },
+    "lyah_full": {
+      "kaynak_id": "01_programlama_lyah_full",
+      "baslik": "Learn You a Haskell (github.io ayna)",
+      "lisans": "Free online (Miran Lipovača)",
+      "url": "https://learnyouahaskell.github.io/chapters.html",
+      "local": "raw/lyah_full_00.html",
+      "ok": true,
+      "parca_sayisi": 63,
+      "ustalik_derin": true,
+      "fetch_ok": 14,
+      "updated_utc": "2026-11-03T07:02:34.404402+00:00"
+    },
+    "rwh_full": {
+      "kaynak_id": "01_programlama_rwh_full",
+      "baslik": "Real World Haskell (archive.org tam)",
+      "lisans": "Free online (O'Sullivan/Goerzen/Stewart)",
+      "url": "https://web.archive.org/web/20160515000000/http://book.realworldhaskell.org/read/",
+      "local": "raw/rwh_full_00.html",
+      "ok": true,
+      "parca_sayisi": 78,
+      "ustalik_derin": true,
+      "fetch_ok": 28
     }
   },
   "beceriler": [
-    "Python, JS, Rust, Go, C/C++, Java omurgası (yasal kaynaklar)",
-    "Veri yapıları, algoritma, yorumlayıcı, UNIX/ağ",
-    "Web framework resmi dokümanları, OWASP, açık kaynak yönetimi"
+    "Python omurgasi: PY4E tam + Automate + Think Python (usta)",
+    "Dil tasarimi / yorumlayici: SICP tam + Crafting Interpreters (profesor)",
+    "Oyun/pratik proje: Invent with Python 4e tam HTML",
+    "Fonksiyonel: Learn You a Haskell + Real World Haskell (derin)",
+    "JS/C++/Rust: onceki S2 derin metinler (Eloquent, C++ Core, Rust Book)"
   ],
-  "sources": 27,
-  "ok_sources": 23,
+  "sources": 43,
+  "ok_sources": 43,
   "telafi_purge_utc": "2026-11-02T23:48:57.580238+00:00",
   "skills": [
     "Python/JS/Rust temelleri",
@@ -264,5 +523,28 @@
     "yazılım pratiği"
   ],
   "telafi_utc": "2026-11-02T23:46:20.200561+00:00",
-  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
+  "otonomi_indir_utc": "2026-11-03T00:05:19.422386+00:00",
+  "ustalik_derin_utc": "2026-11-03T07:04:06.437101+00:00",
+  "seviye_notu": "ciraktan ustaya, ustadan profesorluge — raf muhuru 2026-11-03 (ustalik_derin)",
+  "dalga_a_derin_utc": "2026-11-09T18:24:04.182441+00:00",
+  "dalga_a_deep_works": 4,
+  "dalga_a_deep_list": [
+    {
+      "key": "think_python_2",
+      "parca": 45
+    },
+    {
+      "key": "atbs_full",
+      "parca": 43
+    },
+    {
+      "key": "cpp_core_deep",
+      "parca": 42
+    },
+    {
+      "key": "crafting_full",
+      "parca": 40
+    }
+  ]
 }

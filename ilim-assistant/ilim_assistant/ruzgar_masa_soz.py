@@ -64,12 +64,30 @@ def _parca(raw: str) -> dict | None:
     m = re.match(r"^belgede\s+(.+?)\s+yerine\s+(.+?)\s+yaz$", raw, re.I)
     if m and m.group(1).strip() and m.group(2).strip():
         return {"eylem": "belge.yerine", "eski": m.group(1).strip(), "yeni": m.group(2).strip()}
+    m = re.match(r"^belgeye\s+(\d{1,2})\s*[x×]\s*(\d{1,2})\s+tablo\s+ekle$", raw, re.I)
+    if m:
+        return {"eylem": "belge.tablo", "satir": int(m.group(1)), "sutun": int(m.group(2))}
+    if re.match(r"^belgeye\s+tablo\s+ekle$", raw, re.I):
+        return {"eylem": "belge.tablo", "satir": 3, "sutun": 3}
+    # "belgeye yaz: selam" / "belgeye yaz selam"
+    m = re.match(r"^belgeye\s+yaz\s*[:\-]\s*(.+)$", raw, re.I)
+    if m and m.group(1).strip():
+        return {"eylem": "belge.yaz", "metin": m.group(1).strip()}
     m = re.match(r"^belgeye\s+(.+?)\s+yaz$", raw, re.I)
     if m and m.group(1).strip():
         return {"eylem": "belge.yaz", "metin": m.group(1).strip()}
     m = re.match(r"^belgeye\s+(.+?)\s+ekle$", raw, re.I)
     if m and m.group(1).strip():
         return {"eylem": "belge.ekle", "metin": m.group(1).strip()}
+    m = re.match(r"^(?:notlara|nota)\s+(.+?)\s+yaz$", raw, re.I)
+    if m and m.group(1).strip():
+        return {"eylem": "notlar.yaz", "metin": m.group(1).strip()}
+    m = re.match(r"^(?:notlara|nota)\s+(.+?)\s+ekle$", raw, re.I)
+    if m and m.group(1).strip():
+        return {"eylem": "notlar.ekle", "metin": m.group(1).strip()}
+    m = re.match(r"^(?:goreve|göreve|gorev|görev)\s+(.+?)\s+ekle$", raw, re.I)
+    if m and m.group(1).strip():
+        return {"eylem": "notlar.gorev", "metin": m.group(1).strip()}
     m = re.match(r"^(?:tabloda\s+)?([A-La-l])(\d{1,2})\s+h[üu]cresini\s+sil$", raw, re.I)
     if m:
         return {"eylem": "tablo.sil", "hucre": (m.group(1) + m.group(2)).upper()}
@@ -78,6 +96,18 @@ def _parca(raw: str) -> dict | None:
         return {"eylem": "tablo.topla", "sutun": m.group(1).upper()}
     m = re.match(
         r"^(?:tabloda|tabloya)\s+([A-La-l])(\d{1,2})\s*(?:e|ye|hücresine|hucresine)?\s*(.+?)\s+yaz$",
+        raw,
+        re.I,
+    )
+    if m and m.group(3).strip():
+        return {
+            "eylem": "tablo.hucre",
+            "hucre": (m.group(1) + m.group(2)).upper(),
+            "deger": m.group(3).strip(),
+        }
+    # Kısa: "A1 e 10 yaz" / "A1'e 10 yaz"
+    m = re.match(
+        r"^([A-La-l])(\d{1,2})\s*['’]?\s*(?:e|ye|a|ya)?\s+(.+?)\s+yaz$",
         raw,
         re.I,
     )
@@ -138,6 +168,15 @@ def _parca(raw: str) -> dict | None:
     m = re.match(r"^sunuma\s+(.+?)\s+slayt[ıi]\s+ekle\s*[:\-]\s*(.+)$", raw, re.I)
     if m and (m.group(1).strip() or m.group(2).strip()):
         return {"eylem": "sunum.ekle", "baslik": m.group(1).strip(), "metin": m.group(2).strip()}
+    if re.match(r"^belgede\s+ne\s+yaz[ıi]yor$", raw, re.I):
+        return {"eylem": "belge.oku"}
+    m = re.match(r"^tabloda\s+([A-La-l])(\d{1,2})\s+ne$", raw, re.I)
+    if m:
+        return {"eylem": "tablo.oku", "hucre": (m.group(1) + m.group(2)).upper()}
+    if re.match(r"^slayt[ıi]n\s+ba[sş]l[ıi][gğ][ıi]\s+ne$", raw, re.I):
+        return {"eylem": "sunum.oku"}
+    if re.match(r"^(?:çizimde|cizimde)\s+ne\s+var$", raw, re.I):
+        return {"eylem": "cizim.oku"}
     return None
 
 
@@ -165,11 +204,19 @@ def coz(text: str) -> dict | None:
     return _parca(raw)
 
 
-def masa_sohbet_yaniti(msg: str) -> str | None:
-    """Modelden önce. Masa dosyası sunucuda yoktur; açık sayfa uygular."""
+def masa_sohbet_paket(msg: str) -> dict | None:
+    """Modelden önce. Yanıt + yapısal masa eylemi (istemci uygular)."""
     hit = coz(msg)
     if not hit:
         return None
     if hit.get("red"):
-        return _RED
-    return _YANIT
+        return {"reply": _RED, "masa": None, "red": True}
+    return {"reply": _YANIT, "masa": hit, "red": False}
+
+
+def masa_sohbet_yaniti(msg: str) -> str | None:
+    """Modelden önce. Masa dosyası sunucuda yoktur; açık sayfa uygular."""
+    paket = masa_sohbet_paket(msg)
+    if not paket:
+        return None
+    return str(paket.get("reply") or "") or None

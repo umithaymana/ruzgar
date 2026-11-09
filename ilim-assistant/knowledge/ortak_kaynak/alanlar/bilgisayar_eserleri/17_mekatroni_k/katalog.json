@@ -2,8 +2,8 @@
   "dal": "17_mekatroni_k",
   "excel": "17 - ) MEKATRONİK.xlsx",
   "n_list": 150,
-  "sources": 3,
-  "ok_sources": 3,
+  "sources": 6,
+  "ok_sources": 6,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:20:28.783734+00:00",
   "skills": [
@@ -38,9 +38,46 @@
       "ok": true,
       "telafi": true,
       "parca": 1
+    },
+    "esp_idf": {
+      "kaynak_id": "17_mekatroni_k_esp_idf",
+      "baslik": "ESP-IDF Programming Guide",
+      "url": "https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/index.html",
+      "dal": "17_mekatroni_k",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "esp_idf_00.html",
+        "esp_idf_01.html"
+      ],
+      "parca": 1
+    },
+    "ctms": {
+      "kaynak_id": "17_mekatroni_k_ctms",
+      "baslik": "Feedback Systems / Underactuated (CTMS muadili)",
+      "lisans": "CC / free course",
+      "url": "https://underactuated.csail.mit.edu/acrobot.html",
+      "ok": true,
+      "parca_sayisi": 13,
+      "profesyonel_dolum": true,
+      "updated_utc": "2026-11-03T07:43:21.480291+00:00"
+    },
+    "underactuated_deep": {
+      "kaynak_id": "17_mekatroni_k_underactuated_deep",
+      "baslik": "Underactuated Robotics (MIT) deep",
+      "lisans": "MIT free",
+      "url": "https://underactuated.csail.mit.edu/trajopt.html",
+      "local": "raw/underactuated_deep_00.html",
+      "ok": true,
+      "parca_sayisi": 34,
+      "ince_raf_dolum": true,
+      "updated_utc": "2026-11-03T07:51:54.620754+00:00"
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.597244+00:00",
   "telafi_utc": "2026-11-02T23:48:10.454327+00:00",
-  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
+  "otonomi_indir_utc": "2026-11-03T00:03:59.357813+00:00",
+  "profesyonel_dolum_utc": "2026-11-03T07:41:03.864003+00:00",
+  "ince_raf_dolum_utc": "2026-11-03T07:51:54.620754+00:00"
 }

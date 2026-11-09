@@ -2,8 +2,8 @@
   "dal": "09_devops_ve_altyapisi",
   "excel": "9 - ) DEVOPS VE ALTYAPISI.xlsx",
   "n_list": 100,
-  "sources": 3,
-  "ok_sources": 3,
+  "sources": 10,
+  "ok_sources": 10,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:15:12.905651+00:00",
   "skills": [
@@ -38,9 +38,102 @@
       "ok": true,
       "telafi": true,
       "parca": 1
+    },
+    "gha_docs": {
+      "kaynak_id": "09_devops_ve_altyapisi_gha_docs",
+      "baslik": "GitHub Actions Docs",
+      "url": "https://docs.github.com/en/actions/using-workflows/about-workflows",
+      "dal": "09_devops_ve_altyapisi",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "gha_docs_00.html",
+        "gha_docs_01.html",
+        "gha_docs_02.html"
+      ],
+      "parca": 3
+    },
+    "terraform_docs": {
+      "kaynak_id": "09_devops_ve_altyapisi_terraform_docs",
+      "baslik": "Terraform Documentation",
+      "url": "https://developer.hashicorp.com/terraform/docs",
+      "dal": "09_devops_ve_altyapisi",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "terraform_docs_00.html"
+      ],
+      "parca": 1
+    },
+    "ansible_docs": {
+      "kaynak_id": "09_devops_ve_altyapisi_ansible_docs",
+      "baslik": "Ansible Documentation",
+      "url": "https://docs.ansible.com/",
+      "dal": "09_devops_ve_altyapisi",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "ansible_docs_00.html"
+      ],
+      "parca": 1
+    },
+    "k8s_tasks": {
+      "kaynak_id": "09_devops_ve_altyapisi_k8s_tasks",
+      "baslik": "Kubernetes Tasks",
+      "url": "https://kubernetes.io/docs/tasks/configure-pod-container/",
+      "dal": "09_devops_ve_altyapisi",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "k8s_tasks_00.html",
+        "k8s_tasks_01.html",
+        "k8s_tasks_02.html"
+      ],
+      "parca": 7
+    },
+    "dora": {
+      "kaynak_id": "09_devops_ve_altyapisi_dora",
+      "baslik": "DORA DevOps Research",
+      "url": "https://dora.dev/",
+      "dal": "09_devops_ve_altyapisi",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "dora_00.html"
+      ],
+      "parca": 1
+    },
+    "missing_sem": {
+      "kaynak_id": "09_devops_ve_altyapisi_missing_sem",
+      "baslik": "MIT Missing Semester",
+      "url": "https://missing.csail.mit.edu/2020/data-wrangling/",
+      "dal": "09_devops_ve_altyapisi",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "missing_sem_00.html",
+        "missing_sem_01.html",
+        "missing_sem_02.html",
+        "missing_sem_03.html",
+        "missing_sem_04.html"
+      ],
+      "parca": 8
+    },
+    "devops_deep": {
+      "kaynak_id": "09_devops_ve_altyapisi_devops_deep",
+      "baslik": "Kubernetes + Terraform + Actions derin",
+      "lisans": "Official docs",
+      "url": "https://docs.ansible.com/ansible/latest/getting_started/index.html",
+      "local": "raw/devops_deep_00.html",
+      "ok": true,
+      "parca_sayisi": 34,
+      "ince_raf_dolum": true,
+      "updated_utc": "2026-11-03T07:52:10.674125+00:00"
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.590241+00:00",
   "telafi_utc": "2026-11-02T23:46:21.668894+00:00",
-  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
+  "otonomi_indir_utc": "2026-11-03T00:04:48.108837+00:00",
+  "ince_raf_dolum_utc": "2026-11-03T07:52:10.674125+00:00"
 }

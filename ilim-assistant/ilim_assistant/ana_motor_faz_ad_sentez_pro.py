@@ -53,6 +53,9 @@ def should_synthesize_pro_turn(
         return True
     if has_kutuphane and n_local >= 1:
         return True
+    # 1.C — Şamile / yerel uzun-form: web yokken ≥3 yerel parça yeter
+    if n_local >= 3 and mode_norm in ("genel", "okuma", "uretim"):
+        return True
     return False
 
 

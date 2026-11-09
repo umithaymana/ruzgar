@@ -2,8 +2,8 @@
   "dal": "10_veri_bi_li_mi_",
   "excel": "10 - ) VERİ BİLİMİ.xlsx",
   "n_list": 150,
-  "sources": 3,
-  "ok_sources": 3,
+  "sources": 6,
+  "ok_sources": 6,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:15:59.175761+00:00",
   "skills": [
@@ -36,9 +36,51 @@
       "ok": true,
       "telafi": true,
       "parca": 2
+    },
+    "pdsh": {
+      "kaynak_id": "10_veri_bi_li_mi__pdsh",
+      "baslik": "Python Data Science Handbook",
+      "url": "https://jakevdp.github.io/PythonDataScienceHandbook/05.00-machine-learning.html",
+      "dal": "10_veri_bi_li_mi_",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "pdsh_00.html",
+        "pdsh_01.html",
+        "pdsh_02.html",
+        "pdsh_03.html",
+        "pdsh_04.html",
+        "pdsh_05.html"
+      ],
+      "parca": 4
+    },
+    "islr_ds": {
+      "kaynak_id": "10_veri_bi_li_mi__islr_ds",
+      "baslik": "Introduction to Statistical Learning (ISLR2 PDF)",
+      "lisans": "Free PDF (Hastie et al.)",
+      "url": "https://www.statlearning.com/s/ISLRSeventhPrinting.pdf",
+      "local": "raw/islr_ds_00.html",
+      "ok": true,
+      "parca_sayisi": 25,
+      "profesyonel_dolum": true,
+      "updated_utc": "2026-11-03T07:27:48.035397+00:00"
+    },
+    "pandas_docs": {
+      "kaynak_id": "10_veri_bi_li_mi__pandas_docs",
+      "baslik": "pandas Documentation",
+      "url": "https://pandas.pydata.org/docs/",
+      "dal": "10_veri_bi_li_mi_",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "pandas_docs_00.html"
+      ],
+      "parca": 1
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.591243+00:00",
   "telafi_utc": "2026-11-02T23:46:21.787230+00:00",
-  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
+  "otonomi_indir_utc": "2026-11-03T00:03:40.241930+00:00",
+  "profesyonel_dolum_utc": "2026-11-03T07:27:48.035397+00:00"
 }

@@ -2,8 +2,8 @@
   "dal": "15_elektroni_k",
   "excel": "15 - ) ELEKTRONİK.xlsx",
   "n_list": 150,
-  "sources": 3,
-  "ok_sources": 2,
+  "sources": 4,
+  "ok_sources": 4,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:18:38.111263+00:00",
   "skills": [
@@ -12,20 +12,25 @@
   "kaynaklar": {
     "elec_tutorials": {
       "kaynak_id": "15_elektroni_k_elec_tutorials",
-      "baslik": "Electronics Tutorials",
-      "url": "https://www.electronics-tutorials.ws/",
-      "dal": "15_elektroni_k",
-      "ok": false,
-      "telafi": true,
-      "parca": 1
+      "baslik": "Electronics Tutorials (archive)",
+      "lisans": "Free educational",
+      "url": "https://web.archive.org/web/20230101000000/https://www.electronics-tutorials.ws/logic/logic_1.html",
+      "local": "raw/elec_tutorials_00.html",
+      "ok": true,
+      "parca_sayisi": 10,
+      "profesyonel_dolum": true,
+      "updated_utc": "2026-11-03T07:40:46.931083+00:00"
     },
     "circuitpython": {
       "kaynak_id": "15_elektroni_k_circuitpython",
-      "baslik": "CircuitPython Documentation",
+      "baslik": "CircuitPython Docs",
       "url": "https://docs.circuitpython.org/en/latest/",
       "dal": "15_elektroni_k",
       "ok": true,
-      "telafi": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "circuitpython_00.html"
+      ],
       "parca": 1
     },
     "sparkfun_ohms": {
@@ -36,9 +41,21 @@
       "ok": true,
       "telafi": true,
       "parca": 2
+    },
+    "kuphaldt": {
+      "kaynak_id": "15_elektroni_k_kuphaldt",
+      "baslik": "Lessons in Electric Circuits",
+      "lisans": "Design Science License",
+      "url": "http://www.ibiblio.org/kuphaldt/electricCircuits/Digital/DIGI.pdf",
+      "ok": true,
+      "parca_sayisi": 48,
+      "profesyonel_dolum": true,
+      "updated_utc": "2026-11-03T07:43:11.706174+00:00"
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.595243+00:00",
   "telafi_utc": "2026-11-02T23:48:09.467954+00:00",
-  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
+  "otonomi_indir_utc": "2026-11-03T00:05:22.181293+00:00",
+  "profesyonel_dolum_utc": "2026-11-03T07:40:46.931083+00:00"
 }

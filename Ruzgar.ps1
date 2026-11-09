@@ -208,7 +208,9 @@ function Start-ApiServer {
     foreach ($x in $script:PyArgs) { $uargs += $x }
     $uargs += "run_desktop_api.py"
     $uargs += "--host"
-    $uargs += "127.0.0.1"
+    # Mobil/Tailscale: RUZGAR_API_HOST=0.0.0.0 veya 100.x (varsayılan yalnız localhost)
+    $apiHost = if ($env:RUZGAR_API_HOST -and $env:RUZGAR_API_HOST.Trim()) { $env:RUZGAR_API_HOST.Trim() } else { "127.0.0.1" }
+    $uargs += $apiHost
     $uargs += "--port"
     $uargs += "$ApiPort"
     Log "API: $PyExe $($uargs -join ' ') WD=$Ia stderr=$errPath"
@@ -411,7 +413,8 @@ function Read-ApiErrTail {
     }
     if (-not (Test-Path $path)) { return "(ruzgar-api.err yok)" }
     try {
-        return (Get-Content $path -Tail 25 -ErrorAction Stop) -join "`n"
+        # UTF-8 (BOM'lu/BOM'suz) — cp1254 ile Türkçe bozulup diyalog çöp görünmesin
+        return (Get-Content $path -Tail 25 -Encoding UTF8 -ErrorAction Stop) -join "`n"
     } catch {
         return "(log okunamadi - dosya baska surec tarafindan kilitli olabilir)"
     }
@@ -758,9 +761,11 @@ function Test-ApiBuildCurrent {
     try {
         $r = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 4
         $j = $r.Content | ConvertFrom-Json
-        $rev = [string]$j.build.rev
-        if ($rev -ne $script:RuzgarExpectedBuildRev) {
-            Log "health rev uyumsuz: '$rev' beklenen '$($script:RuzgarExpectedBuildRev)'"
+        # UTF-8 BOM (ï»¿) PowerShell/Set-Content kaynaklı — karşılaştırırken temizle
+        $rev = ([string]$j.build.rev).Trim().TrimStart([char]0xFEFF) -replace '^\xEF\xBB\xBF', ''
+        $expected = ([string]$script:RuzgarExpectedBuildRev).Trim().TrimStart([char]0xFEFF)
+        if ($rev -ne $expected) {
+            Log "health rev uyumsuz: '$rev' beklenen '$expected'"
             return $false
         }
         if ($rev -match "^2024-" -or $rev -match "gemini-env-fix") {
@@ -992,12 +997,16 @@ try {
     } else {
         $finalRc = Invoke-RuzgarPortOps -Command "port-check" -IaRoot $ia -Port $ApiPort
         $buildOk = Test-ApiBuildCurrent -Url $apiUrl
-        if ($finalRc -eq 0 -and $buildOk) {
-            Log "Baglanti aktif - port $ApiPort dinleniyor (health OK, build uyumlu)"
+        # Health/build asıl kapı; netstat Offloaded/FIN_WAIT yalanı yüzünden Electron'u kesme
+        if ($buildOk) {
+            if ($finalRc -ne 0) {
+                Log "UYARI: port-check rc=$finalRc ama health/build OK - Electron aciliyor"
+            }
+            Log "Baglanti aktif - port $ApiPort health OK, build uyumlu"
             if (-not (Test-ApiNebulaBuild -Url $apiUrl)) {
                 Log "UYARI: build.nebula_kitap yok - eski desktop_server, -ForceRestart veya kod guncel mi kontrol edin"
             }
-        } elseif ($finalRc -ne 0) {
+        } elseif (-not $buildOk -and $finalRc -ne 0) {
             Log "HATA: port $ApiPort dinlenmiyor (rc=$finalRc) - API dusmus olabilir"
             [void][System.Windows.Forms.MessageBox]::Show(
                 "Ruzgar API port $ApiPort dinlemiyor.`n`nRuzgar_Port_Temizle.bat sonra Ruzgar_TemizBaslat.bat`nLog: $Log",

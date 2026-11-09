@@ -2,8 +2,8 @@
   "dal": "16_roboti_k",
   "excel": "16 - ) ROBOTİK.xlsx",
   "n_list": 150,
-  "sources": 3,
-  "ok_sources": 3,
+  "sources": 7,
+  "ok_sources": 9,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:19:51.240251+00:00",
   "skills": [
@@ -37,9 +37,77 @@
       "ok": true,
       "telafi": true,
       "parca": 1
+    },
+    "modern_robotics_pdf": {
+      "kaynak_id": "16_roboti_k_modern_robotics_pdf",
+      "baslik": "Modern Robotics (Lynch/Park) PDF",
+      "lisans": "Free PDF (Northwestern)",
+      "url": "https://hades.mech.northwestern.edu/index.php/Modern_Robotics",
+      "local": "raw/modern_robotics_pdf_00.html",
+      "ok": true,
+      "parca_sayisi": 2,
+      "profesyonel_dolum": true,
+      "updated_utc": "2026-11-03T07:38:06.844431+00:00"
+    },
+    "ros2_tut": {
+      "kaynak_id": "16_roboti_k_ros2_tut",
+      "baslik": "ROS 2 Tutorials",
+      "url": "https://docs.ros.org/en/humble/Tutorials/Beginner-Client-Libraries.html",
+      "dal": "16_roboti_k",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "ros2_tut_00.html",
+        "ros2_tut_01.html",
+        "ros2_tut_02.html"
+      ],
+      "parca": 1
+    },
+    "modern_robotics_site": {
+      "kaynak_id": "16_roboti_k_modern_robotics_site",
+      "baslik": "Modern Robotics course site + chapters HTML",
+      "lisans": "Northwestern free",
+      "url": "https://raw.githubusercontent.com/NxRLab/ModernRobotics/master/README.md",
+      "local": "raw/modern_robotics_site_00.html",
+      "ok": true,
+      "parca_sayisi": 3,
+      "ince_raf_dolum": true,
+      "updated_utc": "2026-11-03T07:50:41.298491+00:00"
+    },
+    "ros_docs_deep": {
+      "kaynak_id": "16_roboti_k_ros_docs_deep",
+      "baslik": "ROS 2 documentation (core)",
+      "lisans": "Open Robotics",
+      "url": "https://docs.ros.org/en/humble/Concepts.html",
+      "local": "raw/ros_docs_deep_00.html",
+      "ok": true,
+      "parca_sayisi": 2,
+      "ince_raf_dolum": true,
+      "updated_utc": "2026-11-03T07:50:50.496355+00:00"
+    },
+    "robotics_deep": {
+      "kaynak_id": "16_robotics_deep",
+      "baslik": "ROS wiki + MoveIt + Modern Robotics PDF",
+      "url": "https://docs.ros.org/en/foxy/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Nodes/Understanding-ROS2-Nodes.html",
+      "ok": true,
+      "parca_sayisi": 4,
+      "ince_raf_dolum": true,
+      "updated_utc": "2026-11-03T07:53:06.921023+00:00"
+    },
+    "python_robotics_deep": {
+      "kaynak_id": "16_python_robotics_deep",
+      "baslik": "PythonRobotics + MLS (yasal açık)",
+      "url": "https://github.com/AtsushiSakai/PythonRobotics",
+      "ok": true,
+      "parca_sayisi": 39,
+      "ince_raf_dolum": true,
+      "updated_utc": "2026-11-03T07:54:09.242948+00:00"
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.596243+00:00",
   "telafi_utc": "2026-11-02T23:48:09.631498+00:00",
-  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
+  "otonomi_indir_utc": "2026-11-03T00:05:21.632167+00:00",
+  "profesyonel_dolum_utc": "2026-11-03T07:38:06.844431+00:00",
+  "ince_raf_dolum_utc": "2026-11-03T07:50:50.496355+00:00"
 }

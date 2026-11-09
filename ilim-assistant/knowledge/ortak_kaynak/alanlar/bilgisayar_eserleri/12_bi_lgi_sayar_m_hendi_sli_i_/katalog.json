@@ -2,8 +2,8 @@
   "dal": "12_bi_lgi_sayar_m_hendi_sli_i_",
   "excel": "12 - ) BİLGİSAYAR MÜHENDİSLİĞİ.xlsx",
   "n_list": 150,
-  "sources": 3,
-  "ok_sources": 2,
+  "sources": 6,
+  "ok_sources": 7,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:17:01.408936+00:00",
   "skills": [
@@ -21,24 +21,75 @@
     },
     "computer_systems": {
       "kaynak_id": "12_bi_lgi_sayar_m_hendi_sli_i__computer_systems",
-      "baslik": "CMU 15-213 / CSAPP course page",
-      "url": "https://www.cs.cmu.edu/~213/",
-      "dal": "12_bi_lgi_sayar_m_hendi_sli_i_",
-      "ok": false,
-      "telafi": true,
-      "parca": 1
+      "baslik": "Nand2Tetris + CMU 15-213 public course (CSAPP muadili açık materyal)",
+      "lisans": "Free course / CC",
+      "url": "https://pdos.csail.mit.edu/6.828/2023/overview.html",
+      "local": "raw/computer_systems_00.html",
+      "ok": true,
+      "parca_sayisi": 2,
+      "profesyonel_dolum": true,
+      "updated_utc": "2026-11-03T07:28:02.869337+00:00"
     },
     "ben_eater": {
       "kaynak_id": "12_bi_lgi_sayar_m_hendi_sli_i__ben_eater",
-      "baslik": "Ben Eater 8-bit computer (eğitim)",
+      "baslik": "Ben Eater 8-bit computer",
       "url": "https://eater.net/8bit",
       "dal": "12_bi_lgi_sayar_m_hendi_sli_i_",
       "ok": true,
-      "telafi": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "ben_eater_00.html"
+      ],
       "parca": 1
+    },
+    "n2t_eng": {
+      "kaynak_id": "12_bi_lgi_sayar_m_hendi_sli_i__n2t_eng",
+      "baslik": "Nand2Tetris",
+      "url": "https://www.nand2tetris.org/",
+      "dal": "12_bi_lgi_sayar_m_hendi_sli_i_",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "n2t_eng_00.html"
+      ],
+      "parca": 1
+    },
+    "nand2tetris_deep": {
+      "kaynak_id": "12_bi_lgi_sayar_m_hendi_sli_i__nand2tetris_deep",
+      "baslik": "Nand2Tetris course + project docs",
+      "lisans": "CC / free course",
+      "url": "https://raw.githubusercontent.com/nand2tetris/web-ide/main/README.md",
+      "local": "raw/nand2tetris_deep_00.html",
+      "ok": true,
+      "parca_sayisi": 12,
+      "ince_raf_dolum": true,
+      "updated_utc": "2026-11-03T07:49:29.745324+00:00"
+    },
+    "mit_6828": {
+      "kaynak_id": "12_bi_lgi_sayar_m_hendi_sli_i__mit_6828",
+      "baslik": "MIT 6.828 / 6.S081 Operating System Engineering",
+      "lisans": "MIT course free",
+      "url": "https://pdos.csail.mit.edu/6.828/2012/xv6.html",
+      "local": "raw/mit_6828_00.html",
+      "ok": true,
+      "parca_sayisi": 7,
+      "ince_raf_dolum": true,
+      "updated_utc": "2026-11-03T07:49:36.880536+00:00"
+    },
+    "xv6_book": {
+      "kaynak_id": "12_xv6_book",
+      "baslik": "xv6 book (MIT PDOS)",
+      "url": "https://raw.githubusercontent.com/mit-pdos/xv6-riscv/riscv/README",
+      "ok": true,
+      "parca_sayisi": 64,
+      "ince_raf_dolum": true,
+      "updated_utc": "2026-11-03T07:55:22.841998+00:00"
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.592241+00:00",
   "telafi_utc": "2026-11-02T23:46:35.625443+00:00",
-  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
+  "otonomi_indir_utc": "2026-11-03T00:03:44.344418+00:00",
+  "profesyonel_dolum_utc": "2026-11-03T07:28:02.869337+00:00",
+  "ince_raf_dolum_utc": "2026-11-03T07:50:01.794298+00:00"
 }

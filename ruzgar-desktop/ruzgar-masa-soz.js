@@ -43,6 +43,8 @@
     m = raw.match(/^belgeye\s+(\d{1,2})\s*[x×]\s*(\d{1,2})\s+tablo\s+ekle$/i);
     if (m) return { eylem: "belge.tablo", satir: Number(m[1]), sutun: Number(m[2]) };
     if (/^belgeye\s+tablo\s+ekle$/i.test(raw)) return { eylem: "belge.tablo", satir: 3, sutun: 3 };
+    m = raw.match(/^belgeye\s+yaz\s*[:\-]\s*(.+)$/i);
+    if (m && m[1].trim()) return { eylem: "belge.yaz", metin: m[1].trim() };
     m = raw.match(/^belgeye\s+(.+?)\s+yaz$/i);
     if (m && m[1].trim()) return { eylem: "belge.yaz", metin: m[1].trim() };
     m = raw.match(/^belgeye\s+(.+?)\s+ekle$/i);
@@ -58,6 +60,8 @@
     m = raw.match(/^([A-La-l])\s+s[üu]tununu\s+topla$/i);
     if (m) return { eylem: "tablo.topla", sutun: m[1].toUpperCase() };
     m = raw.match(/^(?:tabloda|tabloya)\s+([A-La-l])(\d{1,2})\s*(?:e|ye|hücresine|hucresine)?\s*(.+?)\s+yaz$/i);
+    if (m && m[3].trim()) return { eylem: "tablo.hucre", hucre: (m[1] + m[2]).toUpperCase(), deger: m[3].trim() };
+    m = raw.match(/^([A-La-l])(\d{1,2})\s*['’]?\s*(?:e|ye|a|ya)?\s+(.+?)\s+yaz$/i);
     if (m && m[3].trim()) return { eylem: "tablo.hucre", hucre: (m[1] + m[2]).toUpperCase(), deger: m[3].trim() };
     if (/^(?:belgeyi temizle|belge temizle)$/i.test(raw)) return { eylem: "belge.temizle" };
     if (/^(?:tabloyu temizle|tablo temizle)$/i.test(raw)) return { eylem: "tablo.temizle" };

@@ -2,8 +2,8 @@
   "dal": "08_yazilim_mi_mari_leri_",
   "excel": "8 - ) YAZILIM MİMARİLERİ.xlsx",
   "n_list": 100,
-  "sources": 3,
-  "ok_sources": 3,
+  "sources": 9,
+  "ok_sources": 9,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:14:14.425259+00:00",
   "skills": [
@@ -37,9 +37,83 @@
       "ok": true,
       "telafi": true,
       "parca": 1
+    },
+    "aosa_full": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__aosa_full",
+      "baslik": "AOSA Volume I selected",
+      "url": "https://aosabook.org/en/posa/introduction.html",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "aosa_full_00.html",
+        "aosa_full_01.html"
+      ],
+      "parca": 2
+    },
+    "azure_patterns": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__azure_patterns",
+      "baslik": "Azure Cloud Design Patterns",
+      "url": "https://learn.microsoft.com/en-us/azure/architecture/patterns/",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "azure_patterns_00.html"
+      ],
+      "parca": 2
+    },
+    "twelve_factor": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__twelve_factor",
+      "baslik": "The Twelve-Factor App",
+      "url": "https://12factor.net/",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "twelve_factor_00.html"
+      ],
+      "parca": 1
+    },
+    "swe_book": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__swe_book",
+      "baslik": "Software Engineering at Google (full chapters sample)",
+      "url": "https://abseil.io/resources/swe-book/html/toc.html",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "swe_book_00.html",
+        "swe_book_01.html"
+      ],
+      "parca": 2
+    },
+    "aosa_v1_deep": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__aosa_v1_deep",
+      "baslik": "AOSA Vol I (doğru bölüm URL)",
+      "lisans": "CC",
+      "url": "https://aosabook.org/en/v1/selenium.html",
+      "local": "raw/aosa_v1_deep_00.html",
+      "ok": true,
+      "parca_sayisi": 39,
+      "profesyonel_dolum": true,
+      "updated_utc": "2026-11-03T07:41:31.608409+00:00"
+    },
+    "twelve_factor_deep": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__twelve_factor_deep",
+      "baslik": "Twelve-Factor App (tüm faktörler)",
+      "lisans": "Free",
+      "url": "https://12factor.net/admin-processes",
+      "local": "raw/twelve_factor_deep_00.html",
+      "ok": true,
+      "parca_sayisi": 5,
+      "profesyonel_dolum": true,
+      "updated_utc": "2026-11-03T07:39:10.297201+00:00"
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.589242+00:00",
   "telafi_utc": "2026-11-02T23:46:21.547630+00:00",
-  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
+  "otonomi_indir_utc": "2026-11-03T00:04:44.404762+00:00",
+  "profesyonel_dolum_utc": "2026-11-03T07:41:31.608409+00:00"
 }

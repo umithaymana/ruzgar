@@ -13,7 +13,8 @@ _FALLBACK = "2026-06-15-ruzgar-programlama-pro-v4"
 
 def read_build_rev() -> str:
     if _REV_FILE.is_file():
-        line = _REV_FILE.read_text(encoding="utf-8").strip().splitlines()[0].strip()
+        # utf-8-sig: PowerShell Set-Content -Encoding utf8 BOM yazar
+        line = _REV_FILE.read_text(encoding="utf-8-sig").strip().splitlines()[0].strip().lstrip("\ufeff")
         if line:
             return line
     ds = _ROOT / "desktop_server.py"

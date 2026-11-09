@@ -3643,6 +3643,22 @@
     }
   };
 
+  /** Ana motor SSE `done.masa` — izinli eylemleri yüzeyde uygula */
+  window.ruzgarMasaSunucuUygula = function (masa) {
+    if (!masa || typeof masa !== "object") return "";
+    if (masa.red) return "";
+    if (masa.bak) {
+      return masaSayfa(String(masa.bak));
+    }
+    if (Array.isArray(masa.liste) && masa.liste.length) {
+      return masaListeUygula(masa.liste);
+    }
+    if (masa.eylem) {
+      return masaUygula(masa);
+    }
+    return "";
+  };
+
   window.ruzgarMasaFence = function (text) {
     const found = String(text || "").match(/```ruzgar-masa\s*([\s\S]{2,6000}?)```/);
     if (!found) return null;

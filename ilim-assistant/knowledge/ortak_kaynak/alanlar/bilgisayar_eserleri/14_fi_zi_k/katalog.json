@@ -2,8 +2,8 @@
   "dal": "14_fi_zi_k",
   "excel": "14 - ) FİZİK.xlsx",
   "n_list": 150,
-  "sources": 3,
-  "ok_sources": 3,
+  "sources": 6,
+  "ok_sources": 6,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:18:09.139821+00:00",
   "skills": [
@@ -37,9 +37,43 @@
       "ok": true,
       "telafi": true,
       "parca": 1
+    },
+    "openstax_up1_pdf": {
+      "kaynak_id": "14_fi_zi_k_openstax_up1_pdf",
+      "baslik": "OpenStax University Physics Vol1",
+      "url": "https://openstax.org/details/books/university-physics-volume-1",
+      "dal": "14_fi_zi_k",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [],
+      "parca": 1
+    },
+    "feynman": {
+      "kaynak_id": "14_fi_zi_k_feynman",
+      "baslik": "OpenStax University/College Physics (Feynman muadili — Caltech 403)",
+      "lisans": "CC BY OpenStax",
+      "url": "https://openstax.org/books/university-physics-volume-1/pages/15-1-simple-harmonic-motion",
+      "ok": true,
+      "parca_sayisi": 10,
+      "profesyonel_dolum": true,
+      "updated_utc": "2026-11-03T07:43:16.671938+00:00"
+    },
+    "openstax_up1": {
+      "kaynak_id": "14_fi_zi_k_openstax_up1",
+      "baslik": "OpenStax University Physics Vol 1 (sayfalar)",
+      "lisans": "CC BY",
+      "url": "https://openstax.org/books/university-physics-volume-1/pages/15-introduction",
+      "local": "raw/openstax_up1_00.html",
+      "ok": true,
+      "parca_sayisi": 12,
+      "ince_raf_dolum": true,
+      "updated_utc": "2026-11-03T07:51:34.843394+00:00"
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.594243+00:00",
   "telafi_utc": "2026-11-02T23:46:36.599776+00:00",
-  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
+  "otonomi_indir_utc": "2026-11-03T00:05:22.387341+00:00",
+  "profesyonel_dolum_utc": "2026-11-03T07:40:30.247242+00:00",
+  "ince_raf_dolum_utc": "2026-11-03T07:51:34.843394+00:00"
 }

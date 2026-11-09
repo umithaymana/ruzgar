@@ -3,7 +3,8 @@ const { coz } = require("./ruzgar-masa-soz.js");
 
 assert.deepStrictEqual(coz("belgeye selam mimar yaz"), { eylem: "belge.yaz", metin: "selam mimar" });
 assert.deepStrictEqual(coz("belgeye bir satır daha ekle"), { eylem: "belge.ekle", metin: "bir satır daha" });
-assert.strictEqual(coz("belgeye yaz: selam"), null);
+assert.deepStrictEqual(coz("belgeye yaz: selam"), { eylem: "belge.yaz", metin: "selam" });
+assert.deepStrictEqual(coz("A1 e 10 yaz"), { eylem: "tablo.hucre", hucre: "A1", deger: "10" });
 assert.deepStrictEqual(coz("tabloda A1 e 10 yaz"), { eylem: "tablo.hucre", hucre: "A1", deger: "10" });
 assert.strictEqual(coz("tablo A1 = 10"), null);
 assert.deepStrictEqual(coz("çizime kutu çiz"), { eylem: "cizim.kutu", x: 80, y: 80, w: 240, h: 140 });

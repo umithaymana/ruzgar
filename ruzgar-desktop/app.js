@@ -15747,6 +15747,19 @@ async function streamChat(userText, streamOpts = {}) {
         const masaFence = window.ruzgarMasaFence(full);
         if (masaFence && masaFence.clean) full = masaFence.clean;
       }
+      // Sunucu masa paketi: istemci kaçırdıysa açık sayfada uygula (izinli eylem)
+      if (
+        (currentMode === "genel" || currentMode === "programlama") &&
+        ev.masa &&
+        typeof window.ruzgarMasaSunucuUygula === "function"
+      ) {
+        try {
+          const masaNot = window.ruzgarMasaSunucuUygula(ev.masa);
+          if (masaNot) full = String(full || "").trim() + (full ? "\n" : "") + String(masaNot);
+        } catch (masaErr) {
+          try { console.warn("[masa] sunucu uygula:", masaErr); } catch (_) { /* ignore */ }
+        }
+      }
       chatSess.sessionWakeUsed = !!ev.new_wake_used;
       hideThinkingCenter();
       const faz85Done = !!(ev.code_agent && ev.code_agent.fast_local);
@@ -16535,16 +16548,17 @@ async function sendMessageWithText(t, opts = {}) {
     }
   }
 
-  if ((currentMode === "genel" || currentMode === "programlama") && !isCasualChatMessage(text)) {
-    if (window.ruzgarMasaKomut) {
-      const masaHit = await Promise.resolve(window.ruzgarMasaKomut(dispatchText));
-      if (masaHit && masaHit.handled) {
-        appendBubble("assistant", String(masaHit.reply || "Tamam."));
-        scrollChatToBottom();
-        finishMotorInstant(currentMode === "programlama" ? "Programlama" : "Ana Motor");
-        return;
-      }
+  // Masa bağları: casual filtresinden ÖNCE — Ana Motor izinli yüzey komutları
+  if ((currentMode === "genel" || currentMode === "programlama") && window.ruzgarMasaKomut) {
+    const masaHit = await Promise.resolve(window.ruzgarMasaKomut(dispatchText));
+    if (masaHit && masaHit.handled) {
+      appendBubble("assistant", String(masaHit.reply || "Tamam."));
+      scrollChatToBottom();
+      finishMotorInstant(currentMode === "programlama" ? "Programlama" : "Ana Motor");
+      return;
     }
+  }
+  if ((currentMode === "genel" || currentMode === "programlama") && !isCasualChatMessage(text)) {
     if (currentMode === "genel") {
       void prefetchGenelOrchestraBridge(dispatchText);
       const hubFast = await withHubCallTimeout(

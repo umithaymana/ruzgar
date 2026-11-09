@@ -2,8 +2,8 @@
   "dal": "03_yapay_zeka",
   "excel": "3 - ) YAPAY ZEKA.xlsx",
   "n_list": 151,
-  "sources": 3,
-  "ok_sources": 3,
+  "sources": 7,
+  "ok_sources": 6,
   "ilave_rows": 0,
   "updated_utc": "2026-11-02T23:11:26.780165+00:00",
   "skills": [
@@ -14,18 +14,22 @@
   "kaynaklar": {
     "rlbook": {
       "kaynak_id": "03_yapay_zeka_rlbook",
-      "baslik": "RL Sutton Barto",
+      "baslik": "Reinforcement Learning (Sutton & Barto)",
       "url": "http://incompleteideas.net/book/RLbook2020.pdf",
       "dal": "03_yapay_zeka",
       "ok": true,
-      "parca": 21
+      "dalga_a_derin": true,
+      "parca": 70
     },
     "nndl": {
       "kaynak_id": "03_yapay_zeka_nndl",
-      "baslik": "NNDL Nielsen",
-      "url": "http://neuralnetworksanddeeplearning.com/",
+      "baslik": "Neural Networks and Deep Learning",
       "dal": "03_yapay_zeka",
       "ok": true,
+      "dalga_a_raw_derin": true,
+      "raw_files": [
+        "nndl.html"
+      ],
       "parca": 1
     },
     "fastai": {
@@ -36,9 +40,80 @@
       "ok": true,
       "telafi": true,
       "parca": 2
+    },
+    "dlbook": {
+      "kaynak_id": "03_yapay_zeka_dlbook",
+      "baslik": "Deep Learning Book (Goodfellow)",
+      "dal": "03_yapay_zeka",
+      "ok": true,
+      "dalga_a_raw_derin": true,
+      "raw_files": [
+        "dlbook_00.html",
+        "dlbook_01.html",
+        "dlbook_02.html",
+        "dlbook_03.html",
+        "dlbook_04.html",
+        "dlbook_05.html",
+        "dlbook_06.html",
+        "dlbook_07.html",
+        "dlbook_08.html",
+        "dlbook_09.html"
+      ],
+      "parca": 88
+    },
+    "islr": {
+      "kaynak_id": "03_yapay_zeka_islr",
+      "baslik": "Introduction to Statistical Learning (ISLR2)",
+      "url": "https://www.statlearning.com/s/ISLRSeventhPrinting.pdf",
+      "dal": "03_yapay_zeka",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "raw\\islr.pdf"
+      ],
+      "parca": 21
+    },
+    "aima_site": {
+      "kaynak_id": "03_yapay_zeka_aima_site",
+      "baslik": "AIMA resmi kaynak sayfası (yasal kod/not)",
+      "url": "http://aima.cs.berkeley.edu/",
+      "dal": "03_yapay_zeka",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "aima_site_00.html"
+      ],
+      "parca": 1
+    },
+    "d2l": {
+      "kaynak_id": "03_yapay_zeka_d2l",
+      "baslik": "Dive into Deep Learning (toc)",
+      "url": "https://d2l.ai/index.html",
+      "dal": "03_yapay_zeka",
+      "ok": false,
+      "dalga_a_derin": true,
+      "parca": 1
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.583240+00:00",
   "telafi_utc": "2026-11-02T23:46:20.559924+00:00",
-  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
+  "otonomi_indir_utc": "2026-11-03T00:01:50.304564+00:00",
+  "dalga_a_derin_utc": "2026-11-09T18:24:04.067452+00:00",
+  "dalga_a_deep_works": 3,
+  "dalga_a_deep_list": [
+    {
+      "key": "dlbook",
+      "parca": 88
+    },
+    {
+      "key": "rlbook",
+      "parca": 70
+    },
+    {
+      "key": "islr",
+      "parca": 21
+    }
+  ],
+  "dalga_a_raw_derin_utc": "2026-11-09T18:26:32.653228+00:00"
 }

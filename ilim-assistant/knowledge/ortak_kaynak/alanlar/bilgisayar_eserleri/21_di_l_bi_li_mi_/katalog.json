@@ -2,8 +2,8 @@
   "dal": "21_di_l_bi_li_mi_",
   "excel": "21 - ) DİL BİLİMİ.xlsx",
   "n_list": 150,
-  "sources": 3,
-  "ok_sources": 3,
+  "sources": 4,
+  "ok_sources": 4,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:22:32.906487+00:00",
   "skills": [
@@ -23,11 +23,18 @@
     "nltk_book": {
       "kaynak_id": "21_di_l_bi_li_mi__nltk_book",
       "baslik": "NLTK Book",
-      "url": "https://www.nltk.org/book/",
+      "url": "https://www.nltk.org/book/ch05.html",
       "dal": "21_di_l_bi_li_mi_",
       "ok": true,
-      "telafi": true,
-      "parca": 1
+      "otonomi_indir": true,
+      "raw_files": [
+        "nltk_book_00.html",
+        "nltk_book_01.html",
+        "nltk_book_02.html",
+        "nltk_book_03.html",
+        "nltk_book_04.html"
+      ],
+      "parca": 34
     },
     "universal_deps": {
       "kaynak_id": "21_di_l_bi_li_mi__universal_deps",
@@ -37,9 +44,27 @@
       "ok": true,
       "telafi": true,
       "parca": 15
+    },
+    "slp3": {
+      "kaynak_id": "21_di_l_bi_li_mi__slp3",
+      "baslik": "Speech and Language Processing draft chapters",
+      "url": "https://web.stanford.edu/~jurafsky/slp3/",
+      "dal": "21_di_l_bi_li_mi_",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "slp3_00.html",
+        "slp3_01.pdf",
+        "slp3_02.pdf",
+        "slp3_03.pdf",
+        "slp3_04.pdf",
+        "slp3_05.pdf"
+      ],
+      "parca": 42
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.601244+00:00",
   "telafi_utc": "2026-11-02T23:48:12.193766+00:00",
-  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
+  "otonomi_indir_utc": "2026-11-03T00:04:37.412445+00:00"
 }

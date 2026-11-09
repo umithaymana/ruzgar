@@ -26,25 +26,47 @@ try:
     from ilim_assistant.ruzgar_api_port import DEFAULT_API_PORT as DEFAULT_PORT
 except ImportError:
     DEFAULT_PORT = 8779
-_NETSTAT_RE_TEMPLATE = r"^\s*TCP\s+\S+:{port}\s+\S+\s+LISTENING\s+(\d+)\s*$"
+_NETSTAT_LISTEN_RE = r"^\s*TCP\s+\S+:{port}\s+\S+\s+LISTENING\s+(\d+)\s*$"
+# Windows bazen 0.0.0.0:port satırını FIN_WAIT_1 / Offloaded gösterir; health yine 200 olabilir
+_NETSTAT_ANY_RE = r"^\s*TCP\s+\S+:{port}\s+\S+\s+\S+\s+(\d+)\s*$"
 
 
-def _pids_listening_on_port(port: int) -> list[int]:
-    pattern = re.compile(_NETSTAT_RE_TEMPLATE.format(port=port), re.IGNORECASE)
+def _netstat_lines() -> list[str]:
     try:
         cp = subprocess.run(
             ["netstat", "-ano"],
             capture_output=True,
-            text=True,
             timeout=8,
             shell=False,
         )
     except (subprocess.TimeoutExpired, OSError) as e:
         print(f"netstat hata: {e}", file=sys.stderr)
         return []
+    raw = cp.stdout or b""
+    text = raw.decode("utf-8", errors="replace")
+    if "\ufffd" in text[:200] or not text.strip():
+        text = raw.decode("cp1254", errors="replace")
+    return text.splitlines()
+
+
+def _pids_listening_on_port(port: int) -> list[int]:
+    pattern = re.compile(_NETSTAT_LISTEN_RE.format(port=port), re.IGNORECASE)
     pids: set[int] = set()
-    for line in (cp.stdout or "").splitlines():
-        m = pattern.match(line)
+    for line in _netstat_lines():
+        m = pattern.match(line.rstrip("\r"))
+        if m:
+            try:
+                pids.add(int(m.group(1)))
+            except ValueError:
+                continue
+    return sorted(p for p in pids if p > 4)
+
+
+def _pids_on_port_any_state(port: int) -> list[int]:
+    pattern = re.compile(_NETSTAT_ANY_RE.format(port=port), re.IGNORECASE)
+    pids: set[int] = set()
+    for line in _netstat_lines():
+        m = pattern.match(line.rstrip("\r"))
         if m:
             try:
                 pids.add(int(m.group(1)))
@@ -55,7 +77,7 @@ def _pids_listening_on_port(port: int) -> list[int]:
 
 def _health_ok(port: int, timeout: float = 2.5) -> bool:
     url = f"http://127.0.0.1:{port}/api/health"
-    expected_rev = (os.environ.get("RUZGAR_EXPECTED_BUILD_REV") or "").strip()
+    expected_rev = (os.environ.get("RUZGAR_EXPECTED_BUILD_REV") or "").strip().lstrip("\ufeff")
     try:
         with urllib.request.urlopen(url, timeout=timeout) as r:
             if r.status != 200:
@@ -65,7 +87,7 @@ def _health_ok(port: int, timeout: float = 2.5) -> bool:
             if not bool(data.get("ok")):
                 return False
             if expected_rev:
-                rev = str((data.get("build") or {}).get("rev") or "")
+                rev = str((data.get("build") or {}).get("rev") or "").strip().lstrip("\ufeff")
                 if rev != expected_rev:
                     print(
                         f"port-check: build.rev uyumsuz '{rev}' != '{expected_rev}'",
@@ -78,15 +100,17 @@ def _health_ok(port: int, timeout: float = 2.5) -> bool:
 
 
 def cmd_port_check(port: int) -> int:
-    pids = _pids_listening_on_port(port)
+    # Health birincil: Offloaded/FIN_WAIT netstat yalanı yüzünden Electron kapanmasın
+    healthy = _health_ok(port)
+    pids = _pids_listening_on_port(port) or _pids_on_port_any_state(port)
+    if healthy:
+        pid_str = ",".join(str(p) for p in pids) if pids else "health"
+        print(f"port-check: {port} DINLENIYOR PID={pid_str} health=OK")
+        return 0
     if not pids:
         print(f"port-check: {port} BOS")
         return 1
-    healthy = _health_ok(port)
     pid_str = ",".join(str(p) for p in pids)
-    if healthy:
-        print(f"port-check: {port} DINLENIYOR PID={pid_str} health=OK")
-        return 0
     print(f"port-check: {port} KILITLI/ZOMBI PID={pid_str} health=FAIL")
     return 2
 

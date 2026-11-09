@@ -2,8 +2,8 @@
   "dal": "22_felsefe",
   "excel": "22 - ) FELSEFE.xlsx",
   "n_list": 150,
-  "sources": 3,
-  "ok_sources": 3,
+  "sources": 6,
+  "ok_sources": 6,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:23:03.210833+00:00",
   "skills": [
@@ -37,9 +37,41 @@
       "ok": true,
       "telafi": true,
       "parca": 1
+    },
+    "republic": {
+      "kaynak_id": "22_felsefe_republic",
+      "baslik": "Republic",
+      "lisans": "Public domain",
+      "url": "https://www.gutenberg.org/files/1497/1497-0.txt",
+      "ok": true,
+      "parca_sayisi": 81,
+      "profesyonel_dolum": true,
+      "updated_utc": "2026-11-03T07:43:28.383185+00:00"
+    },
+    "meditations": {
+      "kaynak_id": "22_felsefe_meditations",
+      "baslik": "Meditations",
+      "lisans": "Public domain",
+      "url": "https://www.gutenberg.org/files/2680/2680-0.txt",
+      "ok": true,
+      "parca_sayisi": 36,
+      "profesyonel_dolum": true,
+      "updated_utc": "2026-11-03T07:43:29.864831+00:00"
+    },
+    "nicomachean": {
+      "kaynak_id": "22_felsefe_nicomachean",
+      "baslik": "Nicomachean Ethics",
+      "lisans": "Public domain",
+      "url": "https://www.gutenberg.org/files/8438/8438-0.txt",
+      "ok": true,
+      "parca_sayisi": 56,
+      "profesyonel_dolum": true,
+      "updated_utc": "2026-11-03T07:43:23.188663+00:00"
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.602244+00:00",
   "telafi_utc": "2026-11-02T23:48:14.896077+00:00",
-  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
+  "otonomi_indir_utc": "2026-11-03T00:05:20.777672+00:00",
+  "profesyonel_dolum_utc": "2026-11-03T07:41:16.268265+00:00"
 }

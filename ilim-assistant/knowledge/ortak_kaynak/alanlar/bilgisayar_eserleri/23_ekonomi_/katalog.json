@@ -2,8 +2,8 @@
   "dal": "23_ekonomi_",
   "excel": "23 - ) EKONOMİ.xlsx",
   "n_list": 150,
-  "sources": 3,
-  "ok_sources": 3,
+  "sources": 5,
+  "ok_sources": 5,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:23:34.049792+00:00",
   "skills": [
@@ -37,9 +37,33 @@
       "ok": true,
       "telafi": true,
       "parca": 1
+    },
+    "openstax_econ_page": {
+      "kaynak_id": "23_ekonomi__openstax_econ_page",
+      "baslik": "OpenStax Principles of Economics 3e",
+      "url": "https://openstax.org/details/books/principles-economics-3e",
+      "dal": "23_ekonomi_",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "openstax_econ_page_00.html"
+      ],
+      "parca": 1
+    },
+    "wealth_nations": {
+      "kaynak_id": "23_ekonomi__wealth_nations",
+      "baslik": "Wealth of Nations",
+      "lisans": "Public domain",
+      "url": "https://www.gutenberg.org/files/3300/3300-0.txt",
+      "ok": true,
+      "parca_sayisi": 75,
+      "profesyonel_dolum": true,
+      "updated_utc": "2026-11-03T07:43:25.330911+00:00"
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.603245+00:00",
   "telafi_utc": "2026-11-02T23:48:16.052400+00:00",
-  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
+  "otonomi_indir_utc": "2026-11-03T00:05:21.116050+00:00",
+  "profesyonel_dolum_utc": "2026-11-03T07:41:20.957389+00:00"
 }

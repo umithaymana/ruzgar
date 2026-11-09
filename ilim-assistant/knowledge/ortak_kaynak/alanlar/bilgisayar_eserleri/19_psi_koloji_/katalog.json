@@ -2,8 +2,8 @@
   "dal": "19_psi_koloji_",
   "excel": "19 - ) PSİKOLOJİ.xlsx",
   "n_list": 150,
-  "sources": 3,
-  "ok_sources": 3,
+  "sources": 5,
+  "ok_sources": 5,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:21:31.722662+00:00",
   "skills": [
@@ -37,9 +37,34 @@
       "ok": true,
       "telafi": true,
       "parca": 1
+    },
+    "openstax_psych_page": {
+      "kaynak_id": "19_psi_koloji__openstax_psych_page",
+      "baslik": "OpenStax Psychology 2e",
+      "url": "https://openstax.org/details/books/psychology-2e",
+      "dal": "19_psi_koloji_",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "openstax_psych_page_00.html"
+      ],
+      "parca": 1
+    },
+    "sep_bounded": {
+      "kaynak_id": "19_psi_koloji__sep_bounded",
+      "baslik": "SEP Bounded Rationality",
+      "url": "https://plato.stanford.edu/entries/bounded-rationality/",
+      "dal": "19_psi_koloji_",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "sep_bounded_00.html"
+      ],
+      "parca": 17
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.598244+00:00",
   "telafi_utc": "2026-11-02T23:48:11.303948+00:00",
-  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
+  "otonomi_indir_utc": "2026-11-03T00:04:08.210749+00:00"
 }

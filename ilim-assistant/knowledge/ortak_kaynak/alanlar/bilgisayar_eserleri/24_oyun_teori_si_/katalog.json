@@ -2,8 +2,8 @@
   "dal": "24_oyun_teori_si_",
   "excel": "24 - ) OYUN TEORİSİ.xlsx",
   "n_list": 150,
-  "sources": 3,
-  "ok_sources": 3,
+  "sources": 4,
+  "ok_sources": 4,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:25:02.286950+00:00",
   "skills": [
@@ -21,12 +21,15 @@
     },
     "sep_game": {
       "kaynak_id": "24_oyun_teori_si__sep_game",
-      "baslik": "SEP — Game Theory",
+      "baslik": "SEP Game Theory",
       "url": "https://plato.stanford.edu/entries/game-theory/",
       "dal": "24_oyun_teori_si_",
       "ok": true,
-      "telafi": true,
-      "parca": 15
+      "otonomi_indir": true,
+      "raw_files": [
+        "sep_game_00.html"
+      ],
+      "parca": 30
     },
     "gametheory_101": {
       "kaynak_id": "24_oyun_teori_si__gametheory_101",
@@ -36,9 +39,22 @@
       "ok": true,
       "telafi": true,
       "parca": 1
+    },
+    "yale_oyc": {
+      "kaynak_id": "24_oyun_teori_si__yale_oyc",
+      "baslik": "Yale Open Courses index",
+      "url": "https://oyc.yale.edu/political-science",
+      "dal": "24_oyun_teori_si_",
+      "ok": true,
+      "otonomi_indir": true,
+      "raw_files": [
+        "yale_oyc_00.html"
+      ],
+      "parca": 1
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.604245+00:00",
   "telafi_utc": "2026-11-02T23:48:16.640884+00:00",
-  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
+  "otonomi_indir_utc": "2026-11-03T00:04:42.544313+00:00"
 }

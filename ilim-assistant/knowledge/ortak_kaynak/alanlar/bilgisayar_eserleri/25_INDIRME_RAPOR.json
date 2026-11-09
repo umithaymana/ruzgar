@@ -1,0 +1,427 @@
+{
+  "utc": "2026-11-03T00:04:49.416638+00:00",
+  "n": 70,
+  "ok": 57,
+  "items": {
+    "atbs_full": {
+      "ok": true,
+      "dal": "01_programlama",
+      "parca": 43,
+      "baslik": "Automate the Boring Stuff 2e (chapters)"
+    },
+    "py4e_pdf": {
+      "ok": false,
+      "dal": "01_programlama",
+      "parca": 1,
+      "baslik": "Python for Everybody (PDF)"
+    },
+    "crafting_full": {
+      "ok": true,
+      "dal": "01_programlama",
+      "parca": 40,
+      "baslik": "Crafting Interpreters"
+    },
+    "sicp_html": {
+      "ok": true,
+      "dal": "01_programlama",
+      "parca": 5,
+      "baslik": "SICP (HTML)"
+    },
+    "invent_pdf": {
+      "ok": false,
+      "dal": "01_programlama",
+      "parca": 1,
+      "baslik": "Invent Your Own Computer Games with Python 4e"
+    },
+    "ydkjs_getstarted": {
+      "ok": true,
+      "dal": "01_programlama",
+      "parca": 15,
+      "baslik": "You Don't Know JS — Get Started"
+    },
+    "rustonomicon": {
+      "ok": true,
+      "dal": "01_programlama",
+      "parca": 3,
+      "baslik": "The Rustonomicon"
+    },
+    "mcs_mit": {
+      "ok": true,
+      "dal": "02_algori_tmalar",
+      "parca": 14,
+      "baslik": "Mathematics for Computer Science (MIT)"
+    },
+    "erickson": {
+      "ok": true,
+      "dal": "02_algori_tmalar",
+      "parca": 22,
+      "baslik": "Algorithms (Jeff Erickson)"
+    },
+    "cph": {
+      "ok": true,
+      "dal": "02_algori_tmalar",
+      "parca": 14,
+      "baslik": "Competitive Programmer's Handbook"
+    },
+    "dlbook": {
+      "ok": true,
+      "dal": "03_yapay_zeka",
+      "parca": 42,
+      "baslik": "Deep Learning Book (Goodfellow)"
+    },
+    "islr": {
+      "ok": true,
+      "dal": "03_yapay_zeka",
+      "parca": 21,
+      "baslik": "Introduction to Statistical Learning (ISLR2)"
+    },
+    "aima_site": {
+      "ok": true,
+      "dal": "03_yapay_zeka",
+      "parca": 1,
+      "baslik": "AIMA resmi kaynak sayfası (yasal kod/not)"
+    },
+    "rlbook": {
+      "ok": true,
+      "dal": "03_yapay_zeka",
+      "parca": 26,
+      "baslik": "Reinforcement Learning Sutton Barto 2020"
+    },
+    "uti_luke": {
+      "ok": true,
+      "dal": "04_veri_tabanlari",
+      "parca": 4,
+      "baslik": "Use The Index, Luke (SQL)"
+    },
+    "pg_docs": {
+      "ok": true,
+      "dal": "04_veri_tabanlari",
+      "parca": 2,
+      "baslik": "PostgreSQL Docs (core)"
+    },
+    "sqlite_docs": {
+      "ok": true,
+      "dal": "04_veri_tabanlari",
+      "parca": 5,
+      "baslik": "SQLite Documentation"
+    },
+    "cmu_15445": {
+      "ok": false,
+      "dal": "04_veri_tabanlari",
+      "parca": 1,
+      "baslik": "CMU 15-445 Database Systems"
+    },
+    "systemsapproach": {
+      "ok": true,
+      "dal": "05_a_teknoloji_leri_",
+      "parca": 2,
+      "baslik": "Computer Networks: A Systems Approach"
+    },
+    "mdn_http": {
+      "ok": true,
+      "dal": "05_a_teknoloji_leri_",
+      "parca": 11,
+      "baslik": "MDN HTTP Guide"
+    },
+    "bind9_docs": {
+      "ok": true,
+      "dal": "05_a_teknoloji_leri_",
+      "parca": 1,
+      "baslik": "BIND 9 Documentation"
+    },
+    "ostep_chapters": {
+      "ok": true,
+      "dal": "06_i_leti_m_si_stemleri_",
+      "parca": 42,
+      "baslik": "OSTEP chapter PDFs"
+    },
+    "lfs": {
+      "ok": true,
+      "dal": "06_i_leti_m_si_stemleri_",
+      "parca": 1,
+      "baslik": "Linux From Scratch"
+    },
+    "kernel_docs": {
+      "ok": true,
+      "dal": "06_i_leti_m_si_stemleri_",
+      "parca": 4,
+      "baslik": "Linux Kernel Documentation"
+    },
+    "owasp_wstg": {
+      "ok": true,
+      "dal": "07_si_ber_g_venli_k",
+      "parca": 1,
+      "baslik": "OWASP Web Security Testing Guide"
+    },
+    "owasp_cheat": {
+      "ok": true,
+      "dal": "07_si_ber_g_venli_k",
+      "parca": 13,
+      "baslik": "OWASP Cheat Sheet Series"
+    },
+    "owasp_proactive": {
+      "ok": true,
+      "dal": "07_si_ber_g_venli_k",
+      "parca": 1,
+      "baslik": "OWASP Proactive Controls"
+    },
+    "aosa_full": {
+      "ok": true,
+      "dal": "08_yazilim_mi_mari_leri_",
+      "parca": 2,
+      "baslik": "AOSA Volume I selected"
+    },
+    "azure_patterns": {
+      "ok": true,
+      "dal": "08_yazilim_mi_mari_leri_",
+      "parca": 2,
+      "baslik": "Azure Cloud Design Patterns"
+    },
+    "twelve_factor": {
+      "ok": true,
+      "dal": "08_yazilim_mi_mari_leri_",
+      "parca": 1,
+      "baslik": "The Twelve-Factor App"
+    },
+    "gha_docs": {
+      "ok": true,
+      "dal": "09_devops_ve_altyapisi",
+      "parca": 3,
+      "baslik": "GitHub Actions Docs"
+    },
+    "terraform_docs": {
+      "ok": true,
+      "dal": "09_devops_ve_altyapisi",
+      "parca": 1,
+      "baslik": "Terraform Documentation"
+    },
+    "ansible_docs": {
+      "ok": true,
+      "dal": "09_devops_ve_altyapisi",
+      "parca": 1,
+      "baslik": "Ansible Documentation"
+    },
+    "k8s_tasks": {
+      "ok": true,
+      "dal": "09_devops_ve_altyapisi",
+      "parca": 7,
+      "baslik": "Kubernetes Tasks"
+    },
+    "dora": {
+      "ok": true,
+      "dal": "09_devops_ve_altyapisi",
+      "parca": 1,
+      "baslik": "DORA DevOps Research"
+    },
+    "pdsh": {
+      "ok": true,
+      "dal": "10_veri_bi_li_mi_",
+      "parca": 4,
+      "baslik": "Python Data Science Handbook"
+    },
+    "islr_ds": {
+      "ok": false,
+      "dal": "10_veri_bi_li_mi_",
+      "parca": 1,
+      "baslik": "Introduction to Statistical Learning (copy note → 03 islr)"
+    },
+    "pandas_docs": {
+      "ok": true,
+      "dal": "10_veri_bi_li_mi_",
+      "parca": 1,
+      "baslik": "pandas Documentation"
+    },
+    "n2t_cs": {
+      "ok": true,
+      "dal": "11_c_s",
+      "parca": 1,
+      "baslik": "Nand2Tetris course materials"
+    },
+    "ossu": {
+      "ok": true,
+      "dal": "11_c_s",
+      "parca": 2,
+      "baslik": "OSSU Computer Science"
+    },
+    "ben_eater": {
+      "ok": true,
+      "dal": "12_bi_lgi_sayar_m_hendi_sli_i_",
+      "parca": 1,
+      "baslik": "Ben Eater 8-bit computer"
+    },
+    "n2t_eng": {
+      "ok": true,
+      "dal": "12_bi_lgi_sayar_m_hendi_sli_i_",
+      "parca": 1,
+      "baslik": "Nand2Tetris"
+    },
+    "openstax_calc1_pdf": {
+      "ok": true,
+      "dal": "13_matemati_k",
+      "parca": 1,
+      "baslik": "OpenStax Calculus Volume 1 PDF"
+    },
+    "mcs_math": {
+      "ok": false,
+      "dal": "13_matemati_k",
+      "parca": 1,
+      "baslik": "Mathematics for Computer Science (MIT) — math dalı referans HTML"
+    },
+    "openstax_up1_pdf": {
+      "ok": true,
+      "dal": "14_fi_zi_k",
+      "parca": 1,
+      "baslik": "OpenStax University Physics Vol1"
+    },
+    "feynman": {
+      "ok": false,
+      "dal": "14_fi_zi_k",
+      "parca": 1,
+      "baslik": "Feynman Lectures Vol I selected"
+    },
+    "kuphaldt": {
+      "ok": false,
+      "dal": "15_elektroni_k",
+      "parca": 1,
+      "baslik": "Lessons In Electric Circuits (Kuphaldt)"
+    },
+    "circuitpython": {
+      "ok": true,
+      "dal": "15_elektroni_k",
+      "parca": 1,
+      "baslik": "CircuitPython Docs"
+    },
+    "modern_robotics_pdf": {
+      "ok": false,
+      "dal": "16_roboti_k",
+      "parca": 1,
+      "baslik": "Modern Robotics PDF"
+    },
+    "ros2_tut": {
+      "ok": true,
+      "dal": "16_roboti_k",
+      "parca": 1,
+      "baslik": "ROS 2 Tutorials"
+    },
+    "esp_idf": {
+      "ok": true,
+      "dal": "17_mekatroni_k",
+      "parca": 1,
+      "baslik": "ESP-IDF Programming Guide"
+    },
+    "ctms": {
+      "ok": false,
+      "dal": "17_mekatroni_k",
+      "parca": 1,
+      "baslik": "CTMS Control Tutorials"
+    },
+    "turing_way": {
+      "ok": true,
+      "dal": "18_bi_li_msel_ara_tirma_y_ntemleri_",
+      "parca": 2,
+      "baslik": "The Turing Way"
+    },
+    "openstax_stats_page": {
+      "ok": true,
+      "dal": "18_bi_li_msel_ara_tirma_y_ntemleri_",
+      "parca": 1,
+      "baslik": "OpenStax Introductory Statistics"
+    },
+    "openstax_psych_page": {
+      "ok": true,
+      "dal": "19_psi_koloji_",
+      "parca": 1,
+      "baslik": "OpenStax Psychology 2e"
+    },
+    "sep_bounded": {
+      "ok": true,
+      "dal": "19_psi_koloji_",
+      "parca": 17,
+      "baslik": "SEP Bounded Rationality"
+    },
+    "sep_cogsci": {
+      "ok": true,
+      "dal": "20_bi_li_sel_bi_li_mler",
+      "parca": 4,
+      "baslik": "SEP Cognitive Science"
+    },
+    "cog_wikibooks": {
+      "ok": true,
+      "dal": "20_bi_li_sel_bi_li_mler",
+      "parca": 1,
+      "baslik": "Cognitive Psychology Wikibooks"
+    },
+    "slp3": {
+      "ok": true,
+      "dal": "21_di_l_bi_li_mi_",
+      "parca": 42,
+      "baslik": "Speech and Language Processing draft chapters"
+    },
+    "nltk_book": {
+      "ok": true,
+      "dal": "21_di_l_bi_li_mi_",
+      "parca": 34,
+      "baslik": "NLTK Book"
+    },
+    "republic": {
+      "ok": false,
+      "dal": "22_felsefe",
+      "parca": 1,
+      "baslik": "Plato — The Republic (Gutenberg)"
+    },
+    "meditations": {
+      "ok": false,
+      "dal": "22_felsefe",
+      "parca": 1,
+      "baslik": "Marcus Aurelius — Meditations"
+    },
+    "nicomachean": {
+      "ok": false,
+      "dal": "22_felsefe",
+      "parca": 1,
+      "baslik": "Aristotle — Nicomachean Ethics"
+    },
+    "openstax_econ_page": {
+      "ok": true,
+      "dal": "23_ekonomi_",
+      "parca": 1,
+      "baslik": "OpenStax Principles of Economics 3e"
+    },
+    "wealth_nations": {
+      "ok": false,
+      "dal": "23_ekonomi_",
+      "parca": 1,
+      "baslik": "Adam Smith — Wealth of Nations"
+    },
+    "sep_game": {
+      "ok": true,
+      "dal": "24_oyun_teori_si_",
+      "parca": 30,
+      "baslik": "SEP Game Theory"
+    },
+    "yale_oyc": {
+      "ok": true,
+      "dal": "24_oyun_teori_si_",
+      "parca": 1,
+      "baslik": "Yale Open Courses index"
+    },
+    "swe_book": {
+      "ok": true,
+      "dal": "08_yazilim_mi_mari_leri_",
+      "parca": 2,
+      "baslik": "Software Engineering at Google (full chapters sample)"
+    },
+    "missing_sem": {
+      "ok": true,
+      "dal": "09_devops_ve_altyapisi",
+      "parca": 8,
+      "baslik": "MIT Missing Semester"
+    },
+    "producing_oss": {
+      "ok": true,
+      "dal": "01_programlama",
+      "parca": 1,
+      "baslik": "Producing Open Source Software"
+    }
+  }
+}

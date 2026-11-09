@@ -187,6 +187,33 @@
       "width": 0,
       "height": 0,
       "updated": "2026-06-01T21:02:24.494921+00:00"
+    },
+    {
+      "id": "0d0fc5b652",
+      "rel": "ilim-assistant/arsiv/mimar-sanat/0d0fc5b652_smoke.jpg",
+      "name": "smoke.jpg",
+      "title": "smoke",
+      "artist": "",
+      "period": "",
+      "technique": "",
+      "notes": "",
+      "identify_summary": "",
+      "identify_source": "",
+      "identify_confidence": "",
+      "identify_at": "",
+      "identify_report": {},
+      "sketch_commands": [],
+      "sketch_svg_rel": "",
+      "sketch_source": "",
+      "sketch_width": 0,
+      "sketch_height": 0,
+      "sketch_at": "",
+      "copy_rel": "ilim-assistant/arsiv/mimar-sanat/copy_0d0fc5b652_pencil.jpg",
+      "copy_mode": "pencil",
+      "copy_at": "2026-11-02T21:38:02.514770+00:00",
+      "width": 32,
+      "height": 32,
+      "updated": "2026-11-02T21:38:02.514770+00:00"
     }
   ]
 }

@@ -2,8 +2,8 @@
   "dal": "06_i_leti_m_si_stemleri_",
   "excel": "6 - ) İŞLETİM SİSTEMLERİ.xlsx",
   "n_list": 100,
-  "sources": 2,
-  "ok_sources": 2,
+  "sources": 7,
+  "ok_sources": 4,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:13:15.775618+00:00",
   "skills": [
@@ -14,10 +14,11 @@
   "kaynaklar": {
     "ostep": {
       "kaynak_id": "06_i_leti_m_si_stemleri__ostep",
-      "baslik": "OSTEP",
+      "baslik": "Operating Systems: Three Easy Pieces",
       "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
       "dal": "06_i_leti_m_si_stemleri_",
-      "ok": true,
+      "ok": false,
+      "dalga_a_derin": true,
       "parca": 1
     },
     "linux_kernel": {
@@ -28,9 +29,133 @@
       "ok": true,
       "telafi": true,
       "parca": 3
+    },
+    "ostep_chapters": {
+      "kaynak_id": "06_i_leti_m_si_stemleri__ostep_chapters",
+      "baslik": "OSTEP chapters",
+      "dal": "06_i_leti_m_si_stemleri_",
+      "ok": true,
+      "dalga_a_raw_derin": true,
+      "raw_files": [
+        "ostep_chapters_00.pdf",
+        "ostep_chapters_01.pdf",
+        "ostep_chapters_02.pdf",
+        "ostep_chapters_03.pdf",
+        "ostep_chapters_04.pdf",
+        "ostep_chapters_05.pdf",
+        "ostep_chapters_06.pdf",
+        "ostep_chapters_07.pdf",
+        "ostep_chapters_08.pdf",
+        "ostep_chapters_09.pdf",
+        "ostep_chapters_10.pdf",
+        "ostep_chapters_11.pdf"
+      ],
+      "parca": 53
+    },
+    "lfs": {
+      "kaynak_id": "06_i_leti_m_si_stemleri__lfs",
+      "baslik": "Linux From Scratch pages",
+      "dal": "06_i_leti_m_si_stemleri_",
+      "ok": true,
+      "dalga_a_raw_derin": true,
+      "raw_files": [
+        "lfs_00.html"
+      ],
+      "parca": 1
+    },
+    "kernel_docs": {
+      "kaynak_id": "06_i_leti_m_si_stemleri__kernel_docs",
+      "baslik": "Linux Kernel docs",
+      "dal": "06_i_leti_m_si_stemleri_",
+      "ok": true,
+      "dalga_a_raw_derin": true,
+      "raw_files": [
+        "kernel_docs_00.html",
+        "kernel_docs_01.html",
+        "kernel_docs_02.html"
+      ],
+      "parca": 4
+    },
+    "xv6_book": {
+      "kaynak_id": "06_i_leti_m_si_stemleri__xv6_book",
+      "baslik": "xv6 book (MIT)",
+      "url": "https://pdos.csail.mit.edu/6.828/2023/xv6/book-riscv-rev3.pdf",
+      "dal": "06_i_leti_m_si_stemleri_",
+      "ok": false,
+      "dalga_a_derin": true,
+      "parca": 1
+    },
+    "linux_cmdline": {
+      "kaynak_id": "06_i_leti_m_si_stemleri__linux_cmdline",
+      "baslik": "The Linux Command Line (Shotts)",
+      "url": "https://linuxcommand.org/tlcl.php",
+      "dal": "06_i_leti_m_si_stemleri_",
+      "ok": false,
+      "dalga_a_derin": true,
+      "parca": 1
+    },
+    "ostep_site": {
+      "kaynak_id": "06_i_leti_m_si_stemleri__ostep_site",
+      "baslik": "OSTEP site index + notes",
+      "dal": "06_i_leti_m_si_stemleri_",
+      "ok": true,
+      "parca": 7,
+      "dalga_a_fill": true
+    },
+    "linux_kernel_pack": {
+      "kaynak_id": "06_i_leti_m_si_stemleri__linux_kernel_pack",
+      "baslik": "Linux kernel + LFS pack",
+      "dal": "06_i_leti_m_si_stemleri_",
+      "ok": true,
+      "parca": 9,
+      "dalga_a_fill": true
+    },
+    "ostep_vol1": {
+      "kaynak_id": "06_i_leti_m_si_stemleri__ostep_vol1",
+      "baslik": "OSTEP volume 1",
+      "dal": "06_i_leti_m_si_stemleri_",
+      "ok": true,
+      "parca": 20,
+      "dalga_a_fill2": true
+    },
+    "ostep_vol2": {
+      "kaynak_id": "06_i_leti_m_si_stemleri__ostep_vol2",
+      "baslik": "OSTEP volume 2",
+      "dal": "06_i_leti_m_si_stemleri_",
+      "ok": true,
+      "parca": 15,
+      "dalga_a_fill2": true
+    },
+    "ostep_vol3": {
+      "kaynak_id": "06_i_leti_m_si_stemleri__ostep_vol3",
+      "baslik": "OSTEP volume 3",
+      "dal": "06_i_leti_m_si_stemleri_",
+      "ok": true,
+      "parca": 27,
+      "dalga_a_fill2": true
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.587242+00:00",
   "telafi_utc": "2026-11-02T23:46:20.943828+00:00",
-  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor."
+  "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
+  "otonomi_indir_utc": "2026-11-03T00:02:55.656788+00:00",
+  "dalga_a_derin_utc": "2026-11-09T18:24:04.161597+00:00",
+  "dalga_a_deep_works": 3,
+  "dalga_a_deep_list": [
+    {
+      "key": "ostep_chapters",
+      "parca": 53
+    },
+    {
+      "key": "ostep_vol3",
+      "parca": 27
+    },
+    {
+      "key": "ostep_vol1",
+      "parca": 20
+    }
+  ],
+  "dalga_a_raw_derin_utc": "2026-11-09T18:25:58.073465+00:00",
+  "dalga_a_fill_utc": "2026-11-09T18:27:28.963694+00:00",
+  "dalga_a_fill2_utc": "2026-11-09T18:28:19.465801+00:00"
 }

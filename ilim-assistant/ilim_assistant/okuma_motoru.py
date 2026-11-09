@@ -255,6 +255,42 @@ def build_motor_context(message: str) -> str:
     elif source == "mektubat":
         ref_hint = "Mektubat kaynagi gibi gorunuyor; Mektup no icin arsiv taramasi surdur."
 
+    ayik_block = ""
+    try:
+        from ilim_assistant.ruzgar_ayiklama_rag import search_ayiklama
+
+        hits = search_ayiklama(prompt, top_k=3)
+        if hits:
+            lines = ["[Seçili ayıklama RAG — Adım 5]"]
+            for text, src, sc in hits:
+                lines.append(f"· ({sc:.2f}) {src}: {text[:280]}")
+            ayik_block = "\n".join(lines) + "\n"
+    except Exception:
+        ayik_block = ""
+
+    bilgisayar_block = ""
+    try:
+        from ilim_assistant.ruzgar_bilgisayar_rag import search_bilgisayar
+
+        bh = search_bilgisayar(prompt, top_k=3)
+        if bh:
+            lines = ["[Bilgisayar rafları RAG — Adım 4]"]
+            for text, src, sc in bh:
+                lines.append(f"· ({sc:.2f}) {src}: {text[:280]}")
+            bilgisayar_block = "\n".join(lines) + "\n"
+    except Exception:
+        bilgisayar_block = ""
+
+    oda_block = ""
+    try:
+        from ilim_assistant.ruzgar_hafiza_odalari import room_context
+
+        oda_block = room_context(limit=4)
+        if oda_block:
+            oda_block = oda_block + "\n"
+    except Exception:
+        oda_block = ""
+
     base = dinamit_heartbeat() + (
         "[OKUMA MOTORU — Kültür ve İlim Hazinesi]\n"
         f"{ARSIV_VIZYONU}\n"
@@ -266,6 +302,9 @@ def build_motor_context(message: str) -> str:
         "RAG kaynak dosya yolunu belirt.\n"
         f"Kaynak sınıfı (Kur'an/Mektubat ipucu): {source}\n"
         f"{ref_hint}\n"
+        f"{ayik_block}"
+        f"{bilgisayar_block}"
+        f"{oda_block}"
         f"Kullanici mesaji: {prompt}"
     )
     try:

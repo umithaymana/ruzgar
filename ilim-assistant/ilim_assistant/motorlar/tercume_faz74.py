@@ -366,6 +366,19 @@ def maybe_instant_faz74(message: str) -> str | None:
     if not raw:
         return None
 
+    # Motor C — sabit ilim sözlüğü (kısa ifadelerde LLM sapmasını kes)
+    try:
+        from ilim_assistant.ruzgar_tercume_sozluk import (
+            format_fixed_reply,
+            lookup_fixed_phrase,
+        )
+
+        hit = lookup_fixed_phrase(raw)
+        if hit:
+            return format_fixed_reply(hit)
+    except Exception:
+        pass
+
     intent = classify_tercume_intent(raw, mode_norm="tercume")
     reason = intent.get("reason") or ""
 

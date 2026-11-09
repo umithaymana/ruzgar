@@ -49,6 +49,32 @@ def format_context_blocks(
     return out
 
 
+def kaynak_izi_footer(
+    hits: list[tuple[str, str, float]] | None,
+    *,
+    max_items: int = 5,
+) -> str:
+    """1.C — yanıt sonu için kısa kaynak izi (path → okunur etiket)."""
+    if not hits:
+        return ""
+    lines = ["", "—", "**Kaynak izi:**"]
+    seen: set[str] = set()
+    n = 0
+    for _text, src, score in hits:
+        label = _enrich_src_label(src)
+        key = label.strip().lower()
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        n += 1
+        lines.append(f"- [K{n}] {label} (benzerlik {float(score):.2f})")
+        if n >= max_items:
+            break
+    if n == 0:
+        return ""
+    return "\n".join(lines)
+
+
 def citation_directive_for_turn(
     *,
     source_count: int,
@@ -102,7 +128,7 @@ def citation_directive_for_turn(
     lines.append(" var.\n")
     lines.append(
         "- Cevabını **önce bu kaynaklara** dayandır; mümkünse cümle sonunda **[K1]** gibi referans kullan.\n"
-        "- Cevabın sonunda veya uygun yerde gerçek kaynak bilgisini göster "
+        "- Cevabın sonunda **Kaynak izi:** başlığı altında [K1]… etiketlerini eser/yol ile listele "
         "(yazar, eser adı; cilt/bölüm/sayfa **yalnızca bağlamda varsa**).\n"
     )
     if archive_primary:

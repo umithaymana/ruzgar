@@ -1,6 +1,6 @@
 # V0 — STT/TTS yeniden ölçüm (mühür değil)
 
-`ses-v0-baseline-v1-2026-10-23` · `2026-11-02T21:03:57.478061+00:00`
+`ses-v0-baseline-v1-2026-10-23` · `2026-11-02T21:17:57.603321+00:00`
 
 Mühür: `V0_STT_TTS_BASELINE_2026-10-23.md`
 
@@ -20,15 +20,15 @@ Mühür: `V0_STT_TTS_BASELINE_2026-10-23.md`
 |------|--------|
 | edge_available | True |
 | voice | tr-TR-AhmetNeural |
-| stream_first_byte_ms | 800.9 |
-| synth_full_ms | 1138.2 |
+| stream_first_byte_ms | 808.7 |
+| synth_full_ms | 1272.4 |
 | bytes | 24336 |
 | note | — |
 
 ```json
 {
   "version": "ses-v0-baseline-v1-2026-10-23",
-  "ts": "2026-11-02T21:03:57.478061+00:00",
+  "ts": "2026-11-02T21:17:57.603321+00:00",
   "stt": {
     "available": true,
     "model": "small",
@@ -38,8 +38,8 @@ Mühür: `V0_STT_TTS_BASELINE_2026-10-23.md`
   },
   "tts": {
     "edge_available": true,
-    "synth_full_ms": 1138.2,
-    "stream_first_byte_ms": 800.9,
+    "synth_full_ms": 1272.4,
+    "stream_first_byte_ms": 808.7,
     "bytes": 24336,
     "voice": "tr-TR-AhmetNeural",
     "note": ""
