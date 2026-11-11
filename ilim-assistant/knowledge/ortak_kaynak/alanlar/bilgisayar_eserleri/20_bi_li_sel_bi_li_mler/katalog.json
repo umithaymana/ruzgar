@@ -2,8 +2,8 @@
   "dal": "20_bi_li_sel_bi_li_mler",
   "excel": "20 - ) BİLİŞSEL BİLİMLER.xlsx",
   "n_list": 150,
-  "sources": 6,
-  "ok_sources": 6,
+  "sources": 8,
+  "ok_sources": 8,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:22:01.751668+00:00",
   "skills": [
@@ -17,7 +17,15 @@
       "dal": "20_bi_li_sel_bi_li_mler",
       "ok": true,
       "telafi": true,
-      "parca": 4
+      "parca": 93,
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T11:09:46.727000+00:00",
+      "parca_sayisi": 93,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 22
     },
     "openmind": {
       "kaynak_id": "20_bi_li_sel_bi_li_mler_openmind",
@@ -26,7 +34,17 @@
       "dal": "20_bi_li_sel_bi_li_mler",
       "ok": true,
       "telafi": true,
-      "parca": 1
+      "parca": 800,
+      "boost_siblings": [
+        "cog_wiki",
+        "sep_cogsci_ext"
+      ],
+      "updated_utc": "2026-11-11T11:39:53.904580+00:00",
+      "html_pages": 5,
+      "html_expected": 22,
+      "parca_sayisi": 800,
+      "tam_eser": true,
+      "derin_yesil": true
     },
     "cog_wiki": {
       "kaynak_id": "20_bi_li_sel_bi_li_mler_cog_wiki",
@@ -35,11 +53,19 @@
       "dal": "20_bi_li_sel_bi_li_mler",
       "ok": true,
       "telafi": true,
-      "parca": 1
+      "parca": 497,
+      "truncated": false,
+      "html_pages": 37,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T11:11:07.754281+00:00",
+      "parca_sayisi": 497,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 37
     },
     "sep_cogsci": {
       "kaynak_id": "20_bi_li_sel_bi_li_mler_sep_cogsci",
-      "baslik": "SEP Cognitive Science",
+      "baslik": "SEP Cognitive Science + ilgili maddeler",
       "url": "https://plato.stanford.edu/entries/cognitive-science/",
       "dal": "20_bi_li_sel_bi_li_mler",
       "ok": true,
@@ -47,7 +73,14 @@
       "raw_files": [
         "sep_cogsci_00.html"
       ],
-      "parca": 4
+      "parca": 290,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 24,
+      "html_expected": 20,
+      "updated_utc": "2026-11-10T08:35:10.605828+00:00",
+      "parca_sayisi": 290,
+      "derin_yesil": true
     },
     "cog_wikibooks": {
       "kaynak_id": "20_bi_li_sel_bi_li_mler_cog_wikibooks",
@@ -59,7 +92,15 @@
       "raw_files": [
         "cog_wikibooks_00.html"
       ],
-      "parca": 1
+      "parca": 83,
+      "truncated": false,
+      "html_pages": 36,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T11:12:11.910892+00:00",
+      "parca_sayisi": 83,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 36
     },
     "cogsci_open": {
       "kaynak_id": "20_bi_li_sel_bi_li_mler_cogsci_open",
@@ -68,14 +109,88 @@
       "url": "https://plato.stanford.edu/entries/computational-mind/",
       "local": "raw/cogsci_open_00.html",
       "ok": true,
-      "parca_sayisi": 35,
+      "parca_sayisi": 87,
       "ince_raf_dolum": true,
-      "updated_utc": "2026-11-03T07:51:19.117386+00:00"
+      "updated_utc": "2026-11-11T11:13:39.517637+00:00",
+      "dal": "20_bi_li_sel_bi_li_mler",
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 22,
+      "parca": 87,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 22
+    },
+    "wikibooks_cog": {
+      "kaynak_id": "20_bi_li_sel_bi_li_mler_wikibooks_cog",
+      "baslik": "WikiBooks Cognitive Psychology / Consciousness",
+      "url": "https://en.wikibooks.org/wiki/Cognitive_Psychology_and_Cognitive_Neuroscience",
+      "dal": "20_bi_li_sel_bi_li_mler",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 52,
+      "html_expected": 12,
+      "updated_utc": "2026-11-10T08:35:58.111633+00:00",
+      "parca": 259,
+      "parca_sayisi": 259,
+      "derin_yesil": true
+    },
+    "sep_cogsci_ext": {
+      "kaynak_id": "20_bi_li_sel_bi_li_mler_sep_cogsci_ext",
+      "baslik": "SEP — cognitive/mind geniş paket",
+      "url": "https://plato.stanford.edu/",
+      "dal": "20_bi_li_sel_bi_li_mler",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 21,
+      "html_expected": 20,
+      "updated_utc": "2026-11-10T08:37:03.435773+00:00",
+      "parca": 308,
+      "parca_sayisi": 308,
+      "derin_yesil": true
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.599243+00:00",
   "telafi_utc": "2026-11-02T23:48:12.063737+00:00",
   "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
   "otonomi_indir_utc": "2026-11-03T00:04:10.306530+00:00",
-  "ince_raf_dolum_utc": "2026-11-03T07:51:19.117386+00:00"
+  "ince_raf_dolum_utc": "2026-11-03T07:51:19.117386+00:00",
+  "deep_full_works": [
+    {
+      "key": "openmind",
+      "parca": 800
+    },
+    {
+      "key": "cog_wiki",
+      "parca": 497
+    },
+    {
+      "key": "sep_cogsci_ext",
+      "parca": 308
+    },
+    {
+      "key": "sep_cogsci",
+      "parca": 290
+    },
+    {
+      "key": "wikibooks_cog",
+      "parca": 259
+    },
+    {
+      "key": "cogsci_stanford",
+      "parca": 93
+    },
+    {
+      "key": "cogsci_open",
+      "parca": 87
+    },
+    {
+      "key": "cog_wikibooks",
+      "parca": 83
+    }
+  ],
+  "deep_full_count": 8,
+  "tam_eser_utc": "2026-11-11T11:39:54.254357+00:00"
 }

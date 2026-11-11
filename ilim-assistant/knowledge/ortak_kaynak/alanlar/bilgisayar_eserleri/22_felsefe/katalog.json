@@ -2,8 +2,8 @@
   "dal": "22_felsefe",
   "excel": "22 - ) FELSEFE.xlsx",
   "n_list": 150,
-  "sources": 6,
-  "ok_sources": 6,
+  "sources": 10,
+  "ok_sources": 10,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:23:03.210833+00:00",
   "skills": [
@@ -18,7 +18,15 @@
       "dal": "22_felsefe",
       "ok": true,
       "telafi": true,
-      "parca": 11
+      "parca": 85,
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T11:29:10.318571+00:00",
+      "parca_sayisi": 85,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 22
     },
     "sep_epistemology": {
       "kaynak_id": "22_felsefe_sep_epistemology",
@@ -27,7 +35,15 @@
       "dal": "22_felsefe",
       "ok": true,
       "telafi": true,
-      "parca": 15
+      "parca": 88,
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T11:30:08.545882+00:00",
+      "parca_sayisi": 88,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 22
     },
     "iep_index": {
       "kaynak_id": "22_felsefe_iep_index",
@@ -36,7 +52,15 @@
       "dal": "22_felsefe",
       "ok": true,
       "telafi": true,
-      "parca": 1
+      "parca": 54,
+      "truncated": false,
+      "html_pages": 42,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T11:31:18.118626+00:00",
+      "parca_sayisi": 54,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 42
     },
     "republic": {
       "kaynak_id": "22_felsefe_republic",
@@ -46,7 +70,9 @@
       "ok": true,
       "parca_sayisi": 81,
       "profesyonel_dolum": true,
-      "updated_utc": "2026-11-03T07:43:28.383185+00:00"
+      "updated_utc": "2026-11-03T07:43:28.383185+00:00",
+      "derin_yesil": true,
+      "tam_eser": true
     },
     "meditations": {
       "kaynak_id": "22_felsefe_meditations",
@@ -54,9 +80,17 @@
       "lisans": "Public domain",
       "url": "https://www.gutenberg.org/files/2680/2680-0.txt",
       "ok": true,
-      "parca_sayisi": 36,
+      "parca_sayisi": 40,
       "profesyonel_dolum": true,
-      "updated_utc": "2026-11-03T07:43:29.864831+00:00"
+      "updated_utc": "2026-11-11T11:31:21.542302+00:00",
+      "dal": "22_felsefe",
+      "truncated": false,
+      "html_pages": 1,
+      "html_expected": 22,
+      "parca": 40,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 1
     },
     "nicomachean": {
       "kaynak_id": "22_felsefe_nicomachean",
@@ -66,12 +100,118 @@
       "ok": true,
       "parca_sayisi": 56,
       "profesyonel_dolum": true,
-      "updated_utc": "2026-11-03T07:43:23.188663+00:00"
+      "updated_utc": "2026-11-03T07:43:23.188663+00:00",
+      "derin_yesil": true,
+      "tam_eser": true
+    },
+    "sep_ethics_ai": {
+      "kaynak_id": "22_felsefe_sep_ethics_ai",
+      "baslik": "SEP — AI/computing ethics + etik çekirdek",
+      "url": "https://plato.stanford.edu/entries/ethics-ai/",
+      "dal": "22_felsefe",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 21,
+      "html_expected": 20,
+      "updated_utc": "2026-11-10T08:46:15.187577+00:00",
+      "parca": 266,
+      "parca_sayisi": 266,
+      "derin_yesil": true
+    },
+    "acm_ethics": {
+      "kaynak_id": "22_felsefe_acm_ethics",
+      "baslik": "ACM/IEEE/SEP ethics + UNESCO/OECD (kalın)",
+      "url": "https://www.acm.org/code-of-ethics",
+      "dal": "22_felsefe",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 21,
+      "html_expected": 15,
+      "updated_utc": "2026-11-10T19:31:16.933740+00:00",
+      "parca": 216,
+      "parca_sayisi": 216,
+      "derin_yesil": true
+    },
+    "mit_classics": {
+      "kaynak_id": "22_felsefe_mit_classics",
+      "baslik": "Internet Classics Archive — Plato/Aristotle/Stoa paket",
+      "url": "https://classics.mit.edu/",
+      "dal": "22_felsefe",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 23,
+      "html_expected": 18,
+      "updated_utc": "2026-11-10T08:46:39.872387+00:00",
+      "parca": 66,
+      "parca_sayisi": 66,
+      "derin_yesil": true
+    },
+    "iep_ethics": {
+      "kaynak_id": "22_felsefe_iep_ethics",
+      "baslik": "Internet Encyclopedia of Philosophy — ethics/AI/klasik paket",
+      "url": "https://iep.utm.edu/",
+      "dal": "22_felsefe",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 18,
+      "html_expected": 18,
+      "updated_utc": "2026-11-10T08:47:28.368206+00:00",
+      "parca": 141,
+      "parca_sayisi": 141,
+      "derin_yesil": true
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.602244+00:00",
   "telafi_utc": "2026-11-02T23:48:14.896077+00:00",
   "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
   "otonomi_indir_utc": "2026-11-03T00:05:20.777672+00:00",
-  "profesyonel_dolum_utc": "2026-11-03T07:41:16.268265+00:00"
+  "profesyonel_dolum_utc": "2026-11-03T07:41:16.268265+00:00",
+  "deep_full_works": [
+    {
+      "key": "sep_ethics_ai",
+      "parca": 266
+    },
+    {
+      "key": "acm_ethics",
+      "parca": 216
+    },
+    {
+      "key": "iep_ethics",
+      "parca": 141
+    },
+    {
+      "key": "sep_epistemology",
+      "parca": 88
+    },
+    {
+      "key": "sep_index",
+      "parca": 85
+    },
+    {
+      "key": "mit_classics",
+      "parca": 66
+    },
+    {
+      "key": "iep_index",
+      "parca": 54
+    },
+    {
+      "key": "meditations",
+      "parca": 40
+    },
+    {
+      "key": "republic",
+      "parca": 0
+    },
+    {
+      "key": "nicomachean",
+      "parca": 0
+    }
+  ],
+  "deep_full_count": 10,
+  "tam_eser_utc": "2026-11-11T11:31:21.560208+00:00"
 }

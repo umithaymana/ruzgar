@@ -2,8 +2,8 @@
   "dal": "14_fi_zi_k",
   "excel": "14 - ) FİZİK.xlsx",
   "n_list": 150,
-  "sources": 6,
-  "ok_sources": 6,
+  "sources": 9,
+  "ok_sources": 9,
   "ilave_rows": 3,
   "updated_utc": "2026-11-09T20:59:10.071666+00:00",
   "skills": [
@@ -18,28 +18,34 @@
       "dal": "14_fi_zi_k",
       "ok": true,
       "telafi": true,
-      "parca": 1
+      "parca": 357,
+      "truncated": false,
+      "html_pages": 5,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T11:39:02.148003+00:00",
+      "parca_sayisi": 357,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 10,
+      "boost_siblings": [
+        "openstax_colphys"
+      ]
     },
     "openstax_colphys": {
       "kaynak_id": "14_fi_zi_k_openstax_colphys",
-      "baslik": "OpenStax College Physics",
-      "url": "https://openstax.org/details/books/college-physics-2e",
+      "baslik": "OpenStax College Physics 2e — HTML tam paket",
+      "url": "https://openstax.org/books/college-physics-2e/",
       "dal": "14_fi_zi_k",
       "ok": true,
       "telafi": true,
-      "parca": 1
-    },
-    "hyperphysics": {
-      "kaynak_id": "14_fi_zi_k_hyperphysics",
-      "baslik": "HyperPhysics concept map",
-      "url": "http://hyperphysics.phy-astr.gsu.edu/hbase/index.html",
-      "dal": "14_fi_zi_k",
-      "ok": true,
-      "telafi": true,
-      "parca": 2,
-      "parca_sayisi": 2,
-      "dalga_d_raw_derin": true,
-      "updated_utc": "2026-11-09T20:55:34.769380+00:00"
+      "parca": 194,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 114,
+      "html_expected": 40,
+      "updated_utc": "2026-11-10T08:24:09.629822+00:00",
+      "parca_sayisi": 194,
+      "derin_yesil": true
     },
     "openstax_up1_pdf": {
       "kaynak_id": "14_fi_zi_k_openstax_up1_pdf",
@@ -49,7 +55,16 @@
       "ok": true,
       "otonomi_indir": true,
       "raw_files": [],
-      "parca": 1
+      "parca": 359,
+      "boost_siblings": [
+        "openstax_physics"
+      ],
+      "updated_utc": "2026-11-11T11:39:05.608991+00:00",
+      "html_pages": 5,
+      "html_expected": 22,
+      "parca_sayisi": 359,
+      "tam_eser": true,
+      "derin_yesil": true
     },
     "feynman": {
       "kaynak_id": "14_fi_zi_k_feynman",
@@ -57,23 +72,40 @@
       "lisans": "CC BY OpenStax",
       "url": "https://openstax.org/books/university-physics-volume-1/pages/15-1-simple-harmonic-motion",
       "ok": true,
-      "parca_sayisi": 10,
+      "parca_sayisi": 772,
       "profesyonel_dolum": true,
-      "updated_utc": "2026-11-03T07:43:16.671938+00:00"
+      "updated_utc": "2026-11-11T11:39:08.934912+00:00",
+      "dal": "14_fi_zi_k",
+      "truncated": false,
+      "html_pages": 5,
+      "html_expected": 22,
+      "parca": 772,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 25,
+      "boost_siblings": [
+        "openstax_up1_pdf",
+        "openstax_physics"
+      ]
     },
     "openstax_up1": {
       "kaynak_id": "14_fi_zi_k_openstax_up1",
-      "baslik": "OpenStax University Physics Vol1",
+      "baslik": "OpenStax University Physics Volume 1 — HTML tam paket",
       "lisans": "CC BY",
-      "url": "https://openstax.org/books/university-physics-volume-1/pages/15-introduction",
+      "url": "https://openstax.org/books/university-physics-volume-1/",
       "local": "raw/openstax_up1_00.html",
       "ok": true,
-      "parca_sayisi": 17,
+      "parca_sayisi": 244,
       "ince_raf_dolum": true,
-      "updated_utc": "2026-11-09T20:55:36.482931+00:00",
+      "updated_utc": "2026-11-10T08:23:38.802774+00:00",
       "dal": "14_fi_zi_k",
-      "parca": 17,
-      "dalga_d_raw_derin": true
+      "parca": 244,
+      "dalga_d_raw_derin": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 133,
+      "html_expected": 50,
+      "derin_yesil": true
     },
     "physics_open_hub": {
       "kaynak_id": "14_fi_zi_k_physics_open_hub",
@@ -83,7 +115,54 @@
       "parca": 56,
       "parca_sayisi": 56,
       "dalga_d_web_derin": true,
-      "updated_utc": "2026-11-09T20:59:10.071666+00:00"
+      "updated_utc": "2026-11-09T20:59:10.071666+00:00",
+      "derin_yesil": true,
+      "tam_eser": true
+    },
+    "hyperphysics_deep": {
+      "kaynak_id": "14_fi_zi_k_hyperphysics_deep",
+      "baslik": "HyperPhysics kalın yaprak ağ",
+      "url": "https://hyperphysics.phy-astr.gsu.edu/hbase/index.html",
+      "dal": "14_fi_zi_k",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 129,
+      "html_expected": 40,
+      "updated_utc": "2026-11-10T18:04:26.219030+00:00",
+      "parca": 51,
+      "parca_sayisi": 51,
+      "derin_yesil": true
+    },
+    "openstax_up2": {
+      "kaynak_id": "14_fi_zi_k_openstax_up2",
+      "baslik": "OpenStax University Physics Vol 2 (Feynman engeli yedeği)",
+      "url": "https://openstax.org/books/university-physics-volume-2/",
+      "dal": "14_fi_zi_k",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 127,
+      "html_expected": 50,
+      "updated_utc": "2026-11-10T17:52:44.821422+00:00",
+      "parca": 203,
+      "parca_sayisi": 203,
+      "derin_yesil": true
+    },
+    "uzay_astro": {
+      "kaynak_id": "14_fi_zi_k_uzay_astro",
+      "baslik": "Uzay+astro ders — Astropy + orbital/sky docs (kalın)",
+      "url": "https://docs.astropy.org/en/stable/",
+      "dal": "14_fi_zi_k",
+      "truncated": false,
+      "html_pages": 39,
+      "html_expected": 22,
+      "updated_utc": "2026-11-10T19:48:03.879441+00:00",
+      "parca": 53,
+      "parca_sayisi": 53,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.594243+00:00",
@@ -91,5 +170,45 @@
   "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
   "otonomi_indir_utc": "2026-11-03T00:05:22.387341+00:00",
   "profesyonel_dolum_utc": "2026-11-03T07:40:30.247242+00:00",
-  "ince_raf_dolum_utc": "2026-11-03T07:51:34.843394+00:00"
+  "ince_raf_dolum_utc": "2026-11-03T07:51:34.843394+00:00",
+  "deep_full_works": [
+    {
+      "key": "feynman",
+      "parca": 772
+    },
+    {
+      "key": "openstax_up1_pdf",
+      "parca": 359
+    },
+    {
+      "key": "openstax_physics",
+      "parca": 357
+    },
+    {
+      "key": "openstax_up1",
+      "parca": 244
+    },
+    {
+      "key": "openstax_up2",
+      "parca": 203
+    },
+    {
+      "key": "openstax_colphys",
+      "parca": 194
+    },
+    {
+      "key": "physics_open_hub",
+      "parca": 56
+    },
+    {
+      "key": "uzay_astro",
+      "parca": 53
+    },
+    {
+      "key": "hyperphysics_deep",
+      "parca": 51
+    }
+  ],
+  "deep_full_count": 9,
+  "tam_eser_utc": "2026-11-11T11:39:09.231670+00:00"
 }

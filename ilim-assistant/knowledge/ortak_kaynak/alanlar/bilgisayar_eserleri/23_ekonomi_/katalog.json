@@ -2,8 +2,8 @@
   "dal": "23_ekonomi_",
   "excel": "23 - ) EKONOMİ.xlsx",
   "n_list": 150,
-  "sources": 5,
-  "ok_sources": 5,
+  "sources": 8,
+  "ok_sources": 8,
   "ilave_rows": 3,
   "updated_utc": "2026-11-09T21:01:42.302875+00:00",
   "skills": [
@@ -13,21 +13,35 @@
   "kaynaklar": {
     "openstax_econ": {
       "kaynak_id": "23_ekonomi__openstax_econ",
-      "baslik": "OpenStax Principles of Economics 3e",
-      "url": "https://openstax.org/details/books/principles-economics-3e",
+      "baslik": "OpenStax principles-economics-3e — HTML tam paket",
+      "url": "https://openstax.org/books/principles-economics-3e/",
       "dal": "23_ekonomi_",
       "ok": true,
       "telafi": true,
-      "parca": 1
+      "parca": 191,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 147,
+      "html_expected": 30,
+      "updated_utc": "2026-11-10T08:41:43.018921+00:00",
+      "parca_sayisi": 191,
+      "derin_yesil": true
     },
     "openstax_micro": {
       "kaynak_id": "23_ekonomi__openstax_micro",
-      "baslik": "OpenStax Principles of Microeconomics 3e",
-      "url": "https://openstax.org/details/books/principles-microeconomics-3e",
+      "baslik": "OpenStax principles-microeconomics-3e — HTML tam paket",
+      "url": "https://openstax.org/books/principles-microeconomics-3e/",
       "dal": "23_ekonomi_",
       "ok": true,
       "telafi": true,
-      "parca": 1
+      "parca": 191,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 146,
+      "html_expected": 30,
+      "updated_utc": "2026-11-10T08:43:05.836846+00:00",
+      "parca_sayisi": 191,
+      "derin_yesil": true
     },
     "econlib": {
       "kaynak_id": "23_ekonomi__econlib",
@@ -36,10 +50,17 @@
       "dal": "23_ekonomi_",
       "ok": true,
       "telafi": true,
-      "parca": 1,
-      "parca_sayisi": 1,
+      "parca": 69,
+      "parca_sayisi": 69,
       "dalga_e_raw_derin": true,
-      "updated_utc": "2026-11-09T21:00:19.187078+00:00"
+      "updated_utc": "2026-11-11T11:39:55.609353+00:00",
+      "boost_siblings": [
+        "econ_open_hub"
+      ],
+      "html_pages": 5,
+      "html_expected": 22,
+      "tam_eser": true,
+      "derin_yesil": true
     },
     "openstax_econ_page": {
       "kaynak_id": "23_ekonomi__openstax_econ_page",
@@ -51,7 +72,18 @@
       "raw_files": [
         "openstax_econ_page_00.html"
       ],
-      "parca": 1
+      "parca": 323,
+      "truncated": false,
+      "html_pages": 5,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T11:39:58.336542+00:00",
+      "parca_sayisi": 323,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 13,
+      "boost_siblings": [
+        "openstax_econ"
+      ]
     },
     "wealth_nations": {
       "kaynak_id": "23_ekonomi__wealth_nations",
@@ -64,7 +96,9 @@
       "updated_utc": "2026-11-09T21:00:19.537883+00:00",
       "dal": "23_ekonomi_",
       "parca": 120,
-      "dalga_e_raw_derin": true
+      "dalga_e_raw_derin": true,
+      "derin_yesil": true,
+      "tam_eser": true
     },
     "econ_open_hub": {
       "kaynak_id": "23_ekonomi__econ_open_hub",
@@ -74,7 +108,9 @@
       "parca": 52,
       "parca_sayisi": 52,
       "dalga_e_web_derin": true,
-      "updated_utc": "2026-11-09T21:00:54.818211+00:00"
+      "updated_utc": "2026-11-09T21:00:54.818211+00:00",
+      "derin_yesil": true,
+      "tam_eser": true
     },
     "econ_sep_hub": {
       "kaynak_id": "23_ekonomi__econ_sep_hub",
@@ -84,12 +120,65 @@
       "parca": 61,
       "parca_sayisi": 61,
       "dalga_e_web_derin": true,
-      "updated_utc": "2026-11-09T21:01:42.302875+00:00"
+      "updated_utc": "2026-11-09T21:01:42.302875+00:00",
+      "derin_yesil": true,
+      "tam_eser": true
+    },
+    "openstax_macro": {
+      "kaynak_id": "23_ekonomi__openstax_macro",
+      "baslik": "OpenStax principles-macroeconomics-3e — HTML tam paket",
+      "url": "https://openstax.org/books/principles-macroeconomics-3e/",
+      "dal": "23_ekonomi_",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 147,
+      "html_expected": 30,
+      "updated_utc": "2026-11-10T08:44:12.513778+00:00",
+      "parca": 178,
+      "parca_sayisi": 178,
+      "derin_yesil": true
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.603245+00:00",
   "telafi_utc": "2026-11-02T23:48:16.052400+00:00",
   "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
   "otonomi_indir_utc": "2026-11-03T00:05:21.116050+00:00",
-  "profesyonel_dolum_utc": "2026-11-03T07:41:20.957389+00:00"
+  "profesyonel_dolum_utc": "2026-11-03T07:41:20.957389+00:00",
+  "deep_full_works": [
+    {
+      "key": "openstax_econ_page",
+      "parca": 323
+    },
+    {
+      "key": "openstax_econ",
+      "parca": 191
+    },
+    {
+      "key": "openstax_micro",
+      "parca": 191
+    },
+    {
+      "key": "openstax_macro",
+      "parca": 178
+    },
+    {
+      "key": "wealth_nations",
+      "parca": 120
+    },
+    {
+      "key": "econlib",
+      "parca": 69
+    },
+    {
+      "key": "econ_sep_hub",
+      "parca": 61
+    },
+    {
+      "key": "econ_open_hub",
+      "parca": 52
+    }
+  ],
+  "deep_full_count": 8,
+  "tam_eser_utc": "2026-11-11T11:39:58.856444+00:00"
 }

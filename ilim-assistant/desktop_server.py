@@ -29,7 +29,6 @@ from pathlib import Path
 from typing import Annotated, Any, Iterator
 
 import uvicorn
-from duckduckgo_search import DDGS
 
 from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
@@ -1661,6 +1660,12 @@ def _health_lite_response() -> dict[str, Any]:
         _bb_st = _bb_pub()
     except Exception:
         _bb_st = {"ready": False}
+    try:
+        from ilim_assistant.shamela_rag_shards import public_status as _samile_pub
+
+        _samile_st = _samile_pub()
+    except Exception:
+        _samile_st = {"ready": False}
     _oda_st = None
     try:
         from ilim_assistant.ruzgar_hafiza_odalari import public_status as _oda_pub
@@ -1683,7 +1688,8 @@ def _health_lite_response() -> dict[str, Any]:
         "build": _health_lite_build_block(),
         "booting": bool(_WARMUP_BACKGROUND_ACTIVE),
         "sohbet_onay": _onay,
-        "samile_rag_shards_ready": True,
+        "samile_rag_shards_ready": bool(_samile_st.get("ready")),
+        "samile_rag_shards": _samile_st,
         "ayiklama_rag": _ayik_st,
         "bilgisayar_rag": _bb_st,
         "hafiza_oda": _oda_st,
@@ -1991,6 +1997,12 @@ def health(full: Annotated[int, Query()] = 0):
             _boot_onay = public_status()
         except Exception:
             _boot_onay = None
+        try:
+            from ilim_assistant.shamela_rag_shards import public_status as _samile_pub
+
+            _boot_samile = _samile_pub()
+        except Exception:
+            _boot_samile = {"ready": False}
         return {
             "ok": True,
             "booting": True,
@@ -1998,7 +2010,8 @@ def health(full: Annotated[int, Query()] = 0):
             "service": "ruzgar-desktop-api",
             "build": _health_lite_build_block(),
             "sohbet_onay": _boot_onay,
-            "samile_rag_shards_ready": True,
+            "samile_rag_shards_ready": bool(_boot_samile.get("ready")),
+            "samile_rag_shards": _boot_samile,
         }
     if full != 1:
         return _health_lite_response()
@@ -15710,6 +15723,10 @@ if __name__ == "__main__":
 
 
 def web_search(query):
+    try:
+        from duckduckgo_search import DDGS
+    except ImportError:
+        return []
     with DDGS() as ddgs:
         results = list(ddgs.text(query, max_results=3))
         return results

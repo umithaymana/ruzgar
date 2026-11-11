@@ -100,4 +100,9 @@ ilim-assistant/.ruzgar_vad_ayarlari.json
 # GitHub tek dosya siniri 100 MB. Ders notlari knowledge/ altinda commit edilir.
 ilim-assistant/.rag_index/*
 !ilim-assistant/.rag_index/.gitkeep
+ilim-assistant/.rag_index_bilgisayar/
+ilim-assistant/.rag_index_bilgisayar_work/
+ilim-assistant/.rag_index_bilgisayar_staging/
+ilim-assistant/.rag_index_bilgisayar_bak/
+ilim-assistant/.rag_index_ayiklama/
 

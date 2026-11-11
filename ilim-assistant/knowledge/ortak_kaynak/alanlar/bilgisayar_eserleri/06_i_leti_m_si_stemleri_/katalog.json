@@ -2,8 +2,8 @@
   "dal": "06_i_leti_m_si_stemleri_",
   "excel": "6 - ) İŞLETİM SİSTEMLERİ.xlsx",
   "n_list": 100,
-  "sources": 7,
-  "ok_sources": 4,
+  "sources": 17,
+  "ok_sources": 17,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:13:15.775618+00:00",
   "skills": [
@@ -17,9 +17,20 @@
       "baslik": "Operating Systems: Three Easy Pieces",
       "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
       "dal": "06_i_leti_m_si_stemleri_",
-      "ok": false,
+      "ok": true,
       "dalga_a_derin": true,
-      "parca": 1
+      "parca": 113,
+      "truncated": false,
+      "html_pages": 5,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T11:36:13.251926+00:00",
+      "parca_sayisi": 113,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 33,
+      "boost_siblings": [
+        "ostep_chapters"
+      ]
     },
     "linux_kernel": {
       "kaynak_id": "06_i_leti_m_si_stemleri__linux_kernel",
@@ -28,7 +39,15 @@
       "dal": "06_i_leti_m_si_stemleri_",
       "ok": true,
       "telafi": true,
-      "parca": 3
+      "parca": 54,
+      "truncated": false,
+      "html_pages": 41,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T10:08:11.818503+00:00",
+      "parca_sayisi": 54,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 41
     },
     "ostep_chapters": {
       "kaynak_id": "06_i_leti_m_si_stemleri__ostep_chapters",
@@ -50,7 +69,9 @@
         "ostep_chapters_10.pdf",
         "ostep_chapters_11.pdf"
       ],
-      "parca": 53
+      "parca": 53,
+      "derin_yesil": true,
+      "tam_eser": true
     },
     "lfs": {
       "kaynak_id": "06_i_leti_m_si_stemleri__lfs",
@@ -61,7 +82,20 @@
       "raw_files": [
         "lfs_00.html"
       ],
-      "parca": 1
+      "parca": 800,
+      "url": "https://www.linuxfromscratch.org/lfs/view/stable/",
+      "truncated": false,
+      "html_pages": 5,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T11:36:22.670401+00:00",
+      "parca_sayisi": 800,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 70,
+      "boost_siblings": [
+        "openai_whisper",
+        "piper_tts"
+      ]
     },
     "kernel_docs": {
       "kaynak_id": "06_i_leti_m_si_stemleri__kernel_docs",
@@ -74,65 +108,221 @@
         "kernel_docs_01.html",
         "kernel_docs_02.html"
       ],
-      "parca": 4
+      "parca": 97,
+      "url": "",
+      "boost_siblings": [
+        "linux_kernel"
+      ],
+      "updated_utc": "2026-11-11T11:36:23.438184+00:00",
+      "html_pages": 5,
+      "html_expected": 22,
+      "parca_sayisi": 97,
+      "tam_eser": true,
+      "derin_yesil": true
     },
     "xv6_book": {
       "kaynak_id": "06_i_leti_m_si_stemleri__xv6_book",
       "baslik": "xv6 book (MIT)",
       "url": "https://pdos.csail.mit.edu/6.828/2023/xv6/book-riscv-rev3.pdf",
       "dal": "06_i_leti_m_si_stemleri_",
-      "ok": false,
+      "ok": true,
       "dalga_a_derin": true,
-      "parca": 1
+      "parca": 800,
+      "truncated": false,
+      "pdf_pages": 105,
+      "extracted_pages": 105,
+      "html_pages": 5,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T11:36:33.169609+00:00",
+      "parca_sayisi": 800,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "boost_siblings": [
+        "openai_whisper",
+        "lfs"
+      ]
     },
     "linux_cmdline": {
       "kaynak_id": "06_i_leti_m_si_stemleri__linux_cmdline",
       "baslik": "The Linux Command Line (Shotts)",
       "url": "https://linuxcommand.org/tlcl.php",
       "dal": "06_i_leti_m_si_stemleri_",
-      "ok": false,
+      "ok": true,
       "dalga_a_derin": true,
-      "parca": 1
+      "parca": 60,
+      "truncated": false,
+      "html_pages": 48,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T10:10:38.838867+00:00",
+      "parca_sayisi": 60,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 48
     },
     "ostep_site": {
       "kaynak_id": "06_i_leti_m_si_stemleri__ostep_site",
       "baslik": "OSTEP site index + notes",
       "dal": "06_i_leti_m_si_stemleri_",
       "ok": true,
-      "parca": 7,
-      "dalga_a_fill": true
+      "parca": 122,
+      "dalga_a_fill": true,
+      "url": "",
+      "boost_siblings": [
+        "ostep"
+      ],
+      "updated_utc": "2026-11-11T11:36:34.466412+00:00",
+      "html_pages": 5,
+      "html_expected": 22,
+      "parca_sayisi": 122,
+      "tam_eser": true,
+      "derin_yesil": true
     },
     "linux_kernel_pack": {
       "kaynak_id": "06_i_leti_m_si_stemleri__linux_kernel_pack",
       "baslik": "Linux kernel + LFS pack",
       "dal": "06_i_leti_m_si_stemleri_",
       "ok": true,
-      "parca": 9,
-      "dalga_a_fill": true
+      "parca": 103,
+      "dalga_a_fill": true,
+      "url": "",
+      "boost_siblings": [
+        "linux_kernel"
+      ],
+      "updated_utc": "2026-11-11T11:36:34.651612+00:00",
+      "html_pages": 5,
+      "html_expected": 22,
+      "parca_sayisi": 103,
+      "tam_eser": true,
+      "derin_yesil": true
     },
     "ostep_vol1": {
       "kaynak_id": "06_i_leti_m_si_stemleri__ostep_vol1",
       "baslik": "OSTEP volume 1",
       "dal": "06_i_leti_m_si_stemleri_",
       "ok": true,
-      "parca": 20,
-      "dalga_a_fill2": true
+      "parca": 140,
+      "dalga_a_fill2": true,
+      "url": "",
+      "boost_siblings": [
+        "ostep"
+      ],
+      "updated_utc": "2026-11-11T11:36:34.954012+00:00",
+      "html_pages": 5,
+      "html_expected": 22,
+      "parca_sayisi": 140,
+      "tam_eser": true,
+      "derin_yesil": true
     },
     "ostep_vol2": {
       "kaynak_id": "06_i_leti_m_si_stemleri__ostep_vol2",
       "baslik": "OSTEP volume 2",
       "dal": "06_i_leti_m_si_stemleri_",
       "ok": true,
-      "parca": 15,
-      "dalga_a_fill2": true
+      "parca": 134,
+      "dalga_a_fill2": true,
+      "url": "",
+      "boost_siblings": [
+        "ostep"
+      ],
+      "updated_utc": "2026-11-11T11:36:35.197660+00:00",
+      "html_pages": 5,
+      "html_expected": 22,
+      "parca_sayisi": 134,
+      "tam_eser": true,
+      "derin_yesil": true
     },
     "ostep_vol3": {
       "kaynak_id": "06_i_leti_m_si_stemleri__ostep_vol3",
       "baslik": "OSTEP volume 3",
       "dal": "06_i_leti_m_si_stemleri_",
       "ok": true,
-      "parca": 27,
-      "dalga_a_fill2": true
+      "parca": 151,
+      "dalga_a_fill2": true,
+      "url": "",
+      "boost_siblings": [
+        "ostep"
+      ],
+      "updated_utc": "2026-11-11T11:36:35.518153+00:00",
+      "html_pages": 5,
+      "html_expected": 22,
+      "parca_sayisi": 151,
+      "tam_eser": true,
+      "derin_yesil": true
+    },
+    "openai_whisper": {
+      "kaynak_id": "06_i_leti_m_si_stemleri__openai_whisper",
+      "baslik": "OpenAI Whisper + whisper.cpp + faster-whisper (STT pack)",
+      "url": "https://github.com/openai/whisper",
+      "dal": "06_i_leti_m_si_stemleri_",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 78,
+      "html_expected": 20,
+      "updated_utc": "2026-11-10T15:32:30.784754+00:00",
+      "parca": 800,
+      "parca_sayisi": 800,
+      "derin_yesil": true
+    },
+    "piper_tts": {
+      "kaynak_id": "06_i_leti_m_si_stemleri__piper_tts",
+      "baslik": "Piper TTS + samples + espeak (kalın)",
+      "url": "https://github.com/rhasspy/piper",
+      "dal": "06_i_leti_m_si_stemleri_",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 147,
+      "html_expected": 30,
+      "updated_utc": "2026-11-10T18:20:53.856856+00:00",
+      "parca": 118,
+      "parca_sayisi": 118,
+      "derin_yesil": true
+    },
+    "coqui_vosk_pack": {
+      "kaynak_id": "06_i_leti_m_si_stemleri__coqui_vosk_pack",
+      "baslik": "Coqui/TTS docs + Vosk + SpeechBrain (açık STT/TTS)",
+      "url": "https://github.com/coqui-ai/TTS",
+      "dal": "06_i_leti_m_si_stemleri_",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 142,
+      "html_expected": 25,
+      "updated_utc": "2026-11-10T15:35:56.599535+00:00",
+      "parca": 98,
+      "parca_sayisi": 98,
+      "derin_yesil": true
+    },
+    "web_audio_mdn": {
+      "kaynak_id": "06_i_leti_m_si_stemleri__web_audio_mdn",
+      "baslik": "MDN Web Audio + Web Speech API (CC-BY-SA)",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API",
+      "dal": "06_i_leti_m_si_stemleri_",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 60,
+      "html_expected": 15,
+      "updated_utc": "2026-11-10T15:31:03.862512+00:00",
+      "parca": 65,
+      "parca_sayisi": 65,
+      "derin_yesil": true
+    },
+    "syncthing_docs": {
+      "kaynak_id": "06_i_leti_m_si_stemleri__syncthing_docs",
+      "baslik": "Syncthing docs — peer yedek / senkron (kalın)",
+      "url": "https://docs.syncthing.net/",
+      "dal": "06_i_leti_m_si_stemleri_",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 87,
+      "html_expected": 40,
+      "updated_utc": "2026-11-10T18:10:55.573557+00:00",
+      "parca": 53,
+      "parca_sayisi": 53,
+      "derin_yesil": true
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.587242+00:00",
@@ -157,5 +347,77 @@
   ],
   "dalga_a_raw_derin_utc": "2026-11-09T18:25:58.073465+00:00",
   "dalga_a_fill_utc": "2026-11-09T18:27:28.963694+00:00",
-  "dalga_a_fill2_utc": "2026-11-09T18:28:19.465801+00:00"
+  "dalga_a_fill2_utc": "2026-11-09T18:28:19.465801+00:00",
+  "deep_full_works": [
+    {
+      "key": "lfs",
+      "parca": 800
+    },
+    {
+      "key": "xv6_book",
+      "parca": 800
+    },
+    {
+      "key": "openai_whisper",
+      "parca": 800
+    },
+    {
+      "key": "ostep_vol3",
+      "parca": 151
+    },
+    {
+      "key": "ostep_vol1",
+      "parca": 140
+    },
+    {
+      "key": "ostep_vol2",
+      "parca": 134
+    },
+    {
+      "key": "ostep_site",
+      "parca": 122
+    },
+    {
+      "key": "piper_tts",
+      "parca": 118
+    },
+    {
+      "key": "ostep",
+      "parca": 113
+    },
+    {
+      "key": "linux_kernel_pack",
+      "parca": 103
+    },
+    {
+      "key": "coqui_vosk_pack",
+      "parca": 98
+    },
+    {
+      "key": "kernel_docs",
+      "parca": 97
+    },
+    {
+      "key": "web_audio_mdn",
+      "parca": 65
+    },
+    {
+      "key": "linux_cmdline",
+      "parca": 60
+    },
+    {
+      "key": "linux_kernel",
+      "parca": 54
+    },
+    {
+      "key": "ostep_chapters",
+      "parca": 53
+    },
+    {
+      "key": "syncthing_docs",
+      "parca": 53
+    }
+  ],
+  "deep_full_count": 17,
+  "tam_eser_utc": "2026-11-11T11:36:35.565659+00:00"
 }

@@ -2,8 +2,8 @@
   "dal": "11_c_s",
   "excel": "11 - ) C-S.xlsx",
   "n_list": 150,
-  "sources": 6,
-  "ok_sources": 5,
+  "sources": 10,
+  "ok_sources": 10,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:16:30.184621+00:00",
   "skills": [
@@ -28,7 +28,17 @@
         "teachyourselfcs_deep_08.html",
         "teachyourselfcs_deep_09.html"
       ],
-      "parca": 9
+      "parca": 226,
+      "url": "",
+      "boost_siblings": [
+        "teachyourselfcs_deep"
+      ],
+      "updated_utc": "2026-11-11T11:38:26.068101+00:00",
+      "html_pages": 5,
+      "html_expected": 22,
+      "parca_sayisi": 226,
+      "tam_eser": true,
+      "derin_yesil": true
     },
     "ossu": {
       "kaynak_id": "11_c_s_ossu",
@@ -42,24 +52,54 @@
         "ossu_cs_00.html",
         "ossu_cs_02.html"
       ],
-      "parca": 10
+      "parca": 456,
+      "url": "",
+      "boost_siblings": [
+        "teachyourselfcs",
+        "teachyourselfcs_deep"
+      ],
+      "updated_utc": "2026-11-11T11:38:28.043023+00:00",
+      "html_pages": 5,
+      "html_expected": 22,
+      "parca_sayisi": 456,
+      "tam_eser": true,
+      "derin_yesil": true
     },
     "cs50": {
       "kaynak_id": "11_c_s_cs50",
       "baslik": "CS50 Harvard",
       "url": "https://cs50.harvard.edu/x/",
       "dal": "11_c_s",
-      "ok": false,
+      "ok": true,
       "dalga_a_derin": true,
-      "parca": 1
+      "parca": 77,
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T10:42:36.157097+00:00",
+      "parca_sayisi": 77,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 22
     },
     "n2t_cs": {
       "kaynak_id": "11_c_s_n2t_cs",
       "baslik": "Nand2Tetris materials",
       "dal": "11_c_s",
       "ok": true,
-      "parca": 1,
-      "dalga_a_fill": true
+      "parca": 681,
+      "dalga_a_fill": true,
+      "url": "",
+      "boost_siblings": [
+        "ossu",
+        "teachyourselfcs"
+      ],
+      "updated_utc": "2026-11-11T11:38:31.711577+00:00",
+      "html_pages": 5,
+      "html_expected": 22,
+      "parca_sayisi": 681,
+      "tam_eser": true,
+      "derin_yesil": true
     },
     "ossu_cs": {
       "kaynak_id": "11_c_s_ossu_cs",
@@ -68,9 +108,20 @@
       "url": "https://teachyourselfcs.com/",
       "local": "raw/ossu_cs_00.html",
       "ok": true,
-      "parca_sayisi": 7,
+      "parca_sayisi": 466,
       "profesyonel_dolum": true,
-      "updated_utc": "2026-11-03T07:39:14.240250+00:00"
+      "updated_utc": "2026-11-11T11:38:32.634860+00:00",
+      "dal": "11_c_s",
+      "truncated": false,
+      "html_pages": 5,
+      "html_expected": 22,
+      "parca": 466,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 2,
+      "boost_siblings": [
+        "ossu"
+      ]
     },
     "teachyourselfcs_deep": {
       "kaynak_id": "11_c_s_teachyourselfcs_deep",
@@ -79,9 +130,17 @@
       "url": "https://cs50.harvard.edu/x/2024/weeks/5/",
       "local": "raw/teachyourselfcs_deep_00.html",
       "ok": true,
-      "parca_sayisi": 7,
+      "parca_sayisi": 109,
       "ince_raf_dolum": true,
-      "updated_utc": "2026-11-03T07:51:44.789767+00:00"
+      "updated_utc": "2026-11-11T10:44:01.085116+00:00",
+      "dal": "11_c_s",
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 22,
+      "parca": 109,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 22
     },
     "ods_pdf": {
       "kaynak_id": "11_c_s_ods_pdf",
@@ -89,23 +148,60 @@
       "dal": "11_c_s",
       "ok": true,
       "parca": 41,
-      "dalga_a_fill": true
+      "dalga_a_fill": true,
+      "derin_yesil": true,
+      "tam_eser": true
     },
     "cs_selfstudy_pack": {
       "kaynak_id": "11_c_s_cs_selfstudy_pack",
       "baslik": "TeachYourselfCS + OSSU pack",
       "dal": "11_c_s",
       "ok": true,
-      "parca": 30,
-      "dalga_a_fill": true
+      "parca": 264,
+      "dalga_a_fill": true,
+      "url": "",
+      "boost_siblings": [
+        "teachyourselfcs"
+      ],
+      "updated_utc": "2026-11-11T11:38:33.343046+00:00",
+      "html_pages": 5,
+      "html_expected": 22,
+      "parca_sayisi": 264,
+      "tam_eser": true,
+      "derin_yesil": true
     },
     "cs50_pack": {
       "kaynak_id": "11_c_s_cs50_pack",
       "baslik": "CS50 + TYCS deep pages",
       "dal": "11_c_s",
       "ok": true,
-      "parca": 22,
-      "dalga_a_fill2": true
+      "parca": 158,
+      "dalga_a_fill2": true,
+      "url": "",
+      "boost_siblings": [
+        "cs50"
+      ],
+      "updated_utc": "2026-11-11T11:38:34.670629+00:00",
+      "html_pages": 5,
+      "html_expected": 22,
+      "parca_sayisi": 158,
+      "tam_eser": true,
+      "derin_yesil": true
+    },
+    "mit_ocw_secme": {
+      "kaynak_id": "11_c_s_mit_ocw_secme",
+      "baslik": "MIT OCW seçme — 6.000/6.006/6.042/8.01 (kalın)",
+      "url": "https://ocw.mit.edu/",
+      "dal": "11_c_s",
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 22,
+      "updated_utc": "2026-11-10T19:52:30.049257+00:00",
+      "parca": 56,
+      "parca_sayisi": 56,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.592241+00:00",
@@ -132,5 +228,49 @@
   ],
   "dalga_a_raw_derin_utc": "2026-11-09T18:26:01.895685+00:00",
   "dalga_a_fill_utc": "2026-11-09T18:27:34.547134+00:00",
-  "dalga_a_fill2_utc": "2026-11-09T18:28:20.575251+00:00"
+  "dalga_a_fill2_utc": "2026-11-09T18:28:20.575251+00:00",
+  "deep_full_works": [
+    {
+      "key": "n2t_cs",
+      "parca": 681
+    },
+    {
+      "key": "ossu_cs",
+      "parca": 466
+    },
+    {
+      "key": "ossu",
+      "parca": 456
+    },
+    {
+      "key": "cs_selfstudy_pack",
+      "parca": 264
+    },
+    {
+      "key": "teachyourselfcs",
+      "parca": 226
+    },
+    {
+      "key": "cs50_pack",
+      "parca": 158
+    },
+    {
+      "key": "teachyourselfcs_deep",
+      "parca": 109
+    },
+    {
+      "key": "cs50",
+      "parca": 77
+    },
+    {
+      "key": "mit_ocw_secme",
+      "parca": 56
+    },
+    {
+      "key": "ods_pdf",
+      "parca": 41
+    }
+  ],
+  "deep_full_count": 10,
+  "tam_eser_utc": "2026-11-11T11:38:34.770286+00:00"
 }

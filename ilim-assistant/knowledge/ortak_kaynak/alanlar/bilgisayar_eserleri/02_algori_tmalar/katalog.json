@@ -20,7 +20,16 @@
       "dal": "02_algori_tmalar",
       "ok": true,
       "dalga_a_derin": true,
-      "parca": 32
+      "parca": 49,
+      "truncated": false,
+      "pdf_pages": 316,
+      "extracted_pages": 316,
+      "html_pages": 316,
+      "html_expected": 316,
+      "updated_utc": "2026-11-11T09:58:37.057214+00:00",
+      "parca_sayisi": 49,
+      "tam_eser": true,
+      "derin_yesil": true
     },
     "cph": {
       "kaynak_id": "02_algori_tmalar_cph",
@@ -29,7 +38,16 @@
       "dal": "02_algori_tmalar",
       "ok": true,
       "dalga_a_derin": true,
-      "parca": 33
+      "parca": 46,
+      "truncated": false,
+      "pdf_pages": 278,
+      "extracted_pages": 278,
+      "html_pages": 278,
+      "html_expected": 278,
+      "updated_utc": "2026-11-11T09:58:43.436139+00:00",
+      "parca_sayisi": 46,
+      "tam_eser": true,
+      "derin_yesil": true
     },
     "erickson": {
       "kaynak_id": "02_algori_tmalar_erickson",
@@ -38,7 +56,9 @@
       "dal": "02_algori_tmalar",
       "ok": true,
       "dalga_a_derin": true,
-      "parca": 58
+      "parca": 58,
+      "derin_yesil": true,
+      "tam_eser": true
     },
     "mcs_mit": {
       "kaynak_id": "02_algori_tmalar_mcs_mit",
@@ -50,7 +70,16 @@
       "raw_files": [
         "raw\\mcs_mit.pdf"
       ],
-      "parca": 14
+      "parca": 88,
+      "truncated": false,
+      "pdf_pages": 500,
+      "extracted_pages": 500,
+      "html_pages": 500,
+      "html_expected": 500,
+      "updated_utc": "2026-11-11T09:59:04.087754+00:00",
+      "parca_sayisi": 88,
+      "tam_eser": true,
+      "derin_yesil": true
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.581238+00:00",
@@ -72,5 +101,21 @@
       "key": "ods",
       "parca": 32
     }
-  ]
+  ],
+  "deep_full_works": [
+    {
+      "key": "mcs_mit",
+      "parca": 88
+    },
+    {
+      "key": "ods",
+      "parca": 49
+    },
+    {
+      "key": "cph",
+      "parca": 46
+    }
+  ],
+  "deep_full_count": 3,
+  "tam_eser_utc": "2026-11-11T09:59:04.166516+00:00"
 }

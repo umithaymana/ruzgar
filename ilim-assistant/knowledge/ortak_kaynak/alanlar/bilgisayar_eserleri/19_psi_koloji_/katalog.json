@@ -2,8 +2,8 @@
   "dal": "19_psi_koloji_",
   "excel": "19 - ) PSİKOLOJİ.xlsx",
   "n_list": 150,
-  "sources": 5,
-  "ok_sources": 5,
+  "sources": 9,
+  "ok_sources": 9,
   "ilave_rows": 3,
   "updated_utc": "2026-11-09T21:01:38.066545+00:00",
   "skills": [
@@ -13,12 +13,19 @@
   "kaynaklar": {
     "openstax_psych": {
       "kaynak_id": "19_psi_koloji__openstax_psych",
-      "baslik": "OpenStax Psychology 2e",
-      "url": "https://openstax.org/details/books/psychology-2e",
+      "baslik": "OpenStax Psychology 2e — HTML tam paket",
+      "url": "https://openstax.org/books/psychology-2e/",
       "dal": "19_psi_koloji_",
       "ok": true,
       "telafi": true,
-      "parca": 1
+      "parca": 230,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 120,
+      "html_expected": 50,
+      "updated_utc": "2026-11-10T08:32:33.596470+00:00",
+      "parca_sayisi": 230,
+      "derin_yesil": true
     },
     "nih_mental": {
       "kaynak_id": "19_psi_koloji__nih_mental",
@@ -27,10 +34,16 @@
       "dal": "19_psi_koloji_",
       "ok": true,
       "telafi": true,
-      "parca": 1,
-      "parca_sayisi": 1,
+      "parca": 48,
+      "parca_sayisi": 48,
       "dalga_e_raw_derin": true,
-      "updated_utc": "2026-11-09T21:00:18.337046+00:00"
+      "updated_utc": "2026-11-11T11:06:48.125727+00:00",
+      "truncated": false,
+      "html_pages": 66,
+      "html_expected": 22,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 66
     },
     "simply_psych": {
       "kaynak_id": "19_psi_koloji__simply_psych",
@@ -39,10 +52,16 @@
       "dal": "19_psi_koloji_",
       "ok": true,
       "telafi": true,
-      "parca": 1,
-      "parca_sayisi": 1,
+      "parca": 53,
+      "parca_sayisi": 53,
       "dalga_e_raw_derin": true,
-      "updated_utc": "2026-11-09T21:00:18.758626+00:00"
+      "updated_utc": "2026-11-11T11:07:14.236038+00:00",
+      "truncated": false,
+      "html_pages": 37,
+      "html_expected": 22,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 37
     },
     "openstax_psych_page": {
       "kaynak_id": "19_psi_koloji__openstax_psych_page",
@@ -54,7 +73,18 @@
       "raw_files": [
         "openstax_psych_page_00.html"
       ],
-      "parca": 1
+      "parca": 429,
+      "truncated": false,
+      "html_pages": 5,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T11:39:46.894211+00:00",
+      "parca_sayisi": 429,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 12,
+      "boost_siblings": [
+        "openstax_psych"
+      ]
     },
     "sep_bounded": {
       "kaynak_id": "19_psi_koloji__sep_bounded",
@@ -66,10 +96,16 @@
       "raw_files": [
         "sep_bounded_00.html"
       ],
-      "parca": 20,
-      "parca_sayisi": 20,
+      "parca": 63,
+      "parca_sayisi": 63,
       "dalga_e_raw_derin": true,
-      "updated_utc": "2026-11-09T21:00:18.806739+00:00"
+      "updated_utc": "2026-11-11T11:08:14.520045+00:00",
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 22,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 22
     },
     "psych_open_hub": {
       "kaynak_id": "19_psi_koloji__psych_open_hub",
@@ -79,7 +115,9 @@
       "parca": 73,
       "parca_sayisi": 73,
       "dalga_e_web_derin": true,
-      "updated_utc": "2026-11-09T21:00:51.548562+00:00"
+      "updated_utc": "2026-11-09T21:00:51.548562+00:00",
+      "derin_yesil": true,
+      "tam_eser": true
     },
     "psych_sep_hub": {
       "kaynak_id": "19_psi_koloji__psych_sep_hub",
@@ -89,11 +127,83 @@
       "parca": 52,
       "parca_sayisi": 52,
       "dalga_e_web_derin": true,
-      "updated_utc": "2026-11-09T21:01:38.066545+00:00"
+      "updated_utc": "2026-11-09T21:01:38.066545+00:00",
+      "derin_yesil": true,
+      "tam_eser": true
+    },
+    "nimh_health": {
+      "kaynak_id": "19_psi_koloji__nimh_health",
+      "baslik": "NIMH Health Topics — kamu bilgilendirme paketi",
+      "url": "https://www.nimh.nih.gov/health/topics",
+      "dal": "19_psi_koloji_",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 77,
+      "html_expected": 20,
+      "updated_utc": "2026-11-10T08:33:53.134948+00:00",
+      "parca": 73,
+      "parca_sayisi": 73,
+      "derin_yesil": true
+    },
+    "sep_mind": {
+      "kaynak_id": "19_psi_koloji__sep_mind",
+      "baslik": "SEP — mind/psychology related entries paket",
+      "url": "https://plato.stanford.edu/",
+      "dal": "19_psi_koloji_",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 23,
+      "html_expected": 20,
+      "updated_utc": "2026-11-10T08:34:21.656209+00:00",
+      "parca": 302,
+      "parca_sayisi": 302,
+      "derin_yesil": true
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.598244+00:00",
   "telafi_utc": "2026-11-02T23:48:11.303948+00:00",
   "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
-  "otonomi_indir_utc": "2026-11-03T00:04:08.210749+00:00"
+  "otonomi_indir_utc": "2026-11-03T00:04:08.210749+00:00",
+  "deep_full_works": [
+    {
+      "key": "openstax_psych_page",
+      "parca": 429
+    },
+    {
+      "key": "sep_mind",
+      "parca": 302
+    },
+    {
+      "key": "openstax_psych",
+      "parca": 230
+    },
+    {
+      "key": "psych_open_hub",
+      "parca": 73
+    },
+    {
+      "key": "nimh_health",
+      "parca": 73
+    },
+    {
+      "key": "sep_bounded",
+      "parca": 63
+    },
+    {
+      "key": "simply_psych",
+      "parca": 53
+    },
+    {
+      "key": "psych_sep_hub",
+      "parca": 52
+    },
+    {
+      "key": "nih_mental",
+      "parca": 48
+    }
+  ],
+  "deep_full_count": 9,
+  "tam_eser_utc": "2026-11-11T11:39:47.019767+00:00"
 }

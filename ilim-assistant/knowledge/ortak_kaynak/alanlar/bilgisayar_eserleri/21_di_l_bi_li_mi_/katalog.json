@@ -2,8 +2,8 @@
   "dal": "21_di_l_bi_li_mi_",
   "excel": "21 - ) DİL BİLİMİ.xlsx",
   "n_list": 150,
-  "sources": 4,
-  "ok_sources": 4,
+  "sources": 11,
+  "ok_sources": 11,
   "ilave_rows": 3,
   "updated_utc": "2026-11-09T20:20:22.031099+00:00",
   "skills": [
@@ -18,15 +18,21 @@
       "url": "https://web.stanford.edu/~jurafsky/slp3/",
       "dal": "21_di_l_bi_li_mi_",
       "ok": true,
-      "parca": 1,
-      "parca_sayisi": 1,
+      "parca": 800,
+      "parca_sayisi": 800,
       "dalga_b_raw_derin": true,
-      "updated_utc": "2026-11-09T20:20:21.718493+00:00"
+      "updated_utc": "2026-11-11T11:27:03.238550+00:00",
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 22,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 22
     },
     "nltk_book": {
       "kaynak_id": "21_di_l_bi_li_mi__nltk_book",
-      "baslik": "NLTK Book",
-      "url": "https://www.nltk.org/book/ch05.html",
+      "baslik": "NLTK Book — Natural Language Processing with Python (tam)",
+      "url": "https://www.nltk.org/book/",
       "dal": "21_di_l_bi_li_mi_",
       "ok": true,
       "otonomi_indir": true,
@@ -37,19 +43,32 @@
         "nltk_book_03.html",
         "nltk_book_04.html"
       ],
-      "parca": 41,
-      "parca_sayisi": 41,
+      "parca": 108,
+      "parca_sayisi": 108,
       "dalga_b_raw_derin": true,
-      "updated_utc": "2026-11-09T20:20:22.031099+00:00"
+      "updated_utc": "2026-11-10T07:39:48.840718+00:00",
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 14,
+      "html_expected": 14,
+      "derin_yesil": true
     },
     "universal_deps": {
       "kaynak_id": "21_di_l_bi_li_mi__universal_deps",
-      "baslik": "Universal Dependencies",
+      "baslik": "Universal Dependencies — guidelines + overview (tam paket)",
       "url": "https://universaldependencies.org/",
       "dal": "21_di_l_bi_li_mi_",
       "ok": true,
       "telafi": true,
-      "parca": 15
+      "parca": 66,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T11:27:38.092143+00:00",
+      "parca_sayisi": 66,
+      "derin_yesil": true,
+      "html_got": 22
     },
     "slp3": {
       "kaynak_id": "21_di_l_bi_li_mi__slp3",
@@ -66,11 +85,169 @@
         "slp3_04.pdf",
         "slp3_05.pdf"
       ],
-      "parca": 42
+      "parca": 42,
+      "derin_yesil": true,
+      "tam_eser": true
+    },
+    "slp3_full": {
+      "kaynak_id": "21_di_l_bi_li_mi__slp3_full",
+      "baslik": "Speech and Language Processing (Jurafsky & Martin) — ed3 book PDF",
+      "url": "https://web.stanford.edu/~jurafsky/slp3/ed3book_aug26.pdf",
+      "dal": "21_di_l_bi_li_mi_",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": true,
+      "pdf_pages": 646,
+      "extracted_pages": 646,
+      "local": "raw/slp3_ed3book_aug26.pdf",
+      "updated_utc": "2026-11-10T07:39:41.118975+00:00",
+      "parca": 232,
+      "parca_sayisi": 232,
+      "derin_yesil": true
+    },
+    "common_voice_ethics": {
+      "kaynak_id": "21_di_l_bi_li_mi__common_voice_ethics",
+      "baslik": "Mozilla Common Voice ethics+guidelines+docs (kalın)",
+      "url": "https://commonvoice.mozilla.org/",
+      "dal": "21_di_l_bi_li_mi_",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": true,
+      "html_pages": 115,
+      "html_expected": 25,
+      "updated_utc": "2026-11-10T18:18:34.426795+00:00",
+      "parca": 800,
+      "parca_sayisi": 800,
+      "derin_yesil": true,
+      "pdf_pages": 0
+    },
+    "marian_opus_argos": {
+      "kaynak_id": "21_di_l_bi_li_mi__marian_opus_argos",
+      "baslik": "Marian NMT + OPUS-MT + Argos Translate — açık MT paketi",
+      "url": "https://github.com/Helsinki-NLP/Opus-MT",
+      "dal": "21_di_l_bi_li_mi_",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 80,
+      "html_expected": 25,
+      "updated_utc": "2026-11-10T17:10:24.663000+00:00",
+      "parca": 49,
+      "parca_sayisi": 49,
+      "derin_yesil": true
+    },
+    "unicode_icu": {
+      "kaynak_id": "21_di_l_bi_li_mi__unicode_icu",
+      "baslik": "Unicode + ICU userguide / UTR — yazı sistemi + lokalizasyon",
+      "url": "https://unicode-org.github.io/icu/userguide/",
+      "dal": "21_di_l_bi_li_mi_",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 145,
+      "html_expected": 25,
+      "updated_utc": "2026-11-10T17:12:07.332006+00:00",
+      "parca": 500,
+      "parca_sayisi": 500,
+      "derin_yesil": true
+    },
+    "camel_farasa": {
+      "kaynak_id": "21_di_l_bi_li_mi__camel_farasa",
+      "baslik": "CAMeL Tools source+docs + Farasa (kalın Arapça NLP)",
+      "url": "https://github.com/CAMeL-Lab/camel_tools",
+      "dal": "21_di_l_bi_li_mi_",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": true,
+      "html_pages": 83,
+      "html_expected": 30,
+      "updated_utc": "2026-11-10T18:16:37.132990+00:00",
+      "parca": 42,
+      "parca_sayisi": 42,
+      "derin_yesil": true,
+      "pdf_pages": 0
+    },
+    "dil_cami": {
+      "kaynak_id": "21_di_l_bi_li_mi__dil_cami",
+      "baslik": "Dil camı laboratuvarı — HarfBuzz/FriBidi/ICU shaping (kalın)",
+      "url": "https://harfbuzz.github.io/",
+      "dal": "21_di_l_bi_li_mi_",
+      "truncated": false,
+      "html_pages": 46,
+      "html_expected": 22,
+      "updated_utc": "2026-11-10T19:47:21.836845+00:00",
+      "parca": 51,
+      "parca_sayisi": 51,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true
+    },
+    "whisper_piper_large": {
+      "kaynak_id": "21_di_l_bi_li_mi__whisper_piper_large",
+      "baslik": "Whisper large + Piper çok dil — nefes egemen (kalın)",
+      "url": "https://github.com/openai/whisper",
+      "dal": "21_di_l_bi_li_mi_",
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 22,
+      "updated_utc": "2026-11-10T19:50:45.966934+00:00",
+      "parca": 57,
+      "parca_sayisi": 57,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.601244+00:00",
   "telafi_utc": "2026-11-02T23:48:12.193766+00:00",
   "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
-  "otonomi_indir_utc": "2026-11-03T00:04:37.412445+00:00"
+  "otonomi_indir_utc": "2026-11-03T00:04:37.412445+00:00",
+  "deep_full_works": [
+    {
+      "key": "slp",
+      "parca": 800
+    },
+    {
+      "key": "common_voice_ethics",
+      "parca": 800
+    },
+    {
+      "key": "unicode_icu",
+      "parca": 500
+    },
+    {
+      "key": "slp3_full",
+      "parca": 232
+    },
+    {
+      "key": "nltk_book",
+      "parca": 108
+    },
+    {
+      "key": "universal_deps",
+      "parca": 66
+    },
+    {
+      "key": "whisper_piper_large",
+      "parca": 57
+    },
+    {
+      "key": "dil_cami",
+      "parca": 51
+    },
+    {
+      "key": "marian_opus_argos",
+      "parca": 49
+    },
+    {
+      "key": "slp3",
+      "parca": 42
+    },
+    {
+      "key": "camel_farasa",
+      "parca": 42
+    }
+  ],
+  "deep_full_count": 11,
+  "tam_eser_utc": "2026-11-11T11:27:38.116524+00:00"
 }

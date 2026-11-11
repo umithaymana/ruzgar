@@ -2,8 +2,8 @@
   "dal": "04_veri_tabanlari",
   "excel": "4 - ) VERİ TABANLARI.xlsx",
   "n_list": 100,
-  "sources": 8,
-  "ok_sources": 6,
+  "sources": 15,
+  "ok_sources": 15,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:12:02.611243+00:00",
   "skills": [
@@ -17,18 +17,37 @@
       "baslik": "SQLite Language Reference",
       "url": "https://www.sqlite.org/lang.html",
       "dal": "04_veri_tabanlari",
-      "ok": false,
+      "ok": true,
       "dalga_a_derin": true,
-      "parca": 1
+      "parca": 74,
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T10:02:24.439784+00:00",
+      "parca_sayisi": 74,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 22
     },
     "pg_tutorial": {
       "kaynak_id": "04_veri_tabanlari_pg_tutorial",
       "baslik": "PostgreSQL Tutorial",
       "url": "https://www.postgresql.org/docs/current/tutorial.html",
       "dal": "04_veri_tabanlari",
-      "ok": false,
+      "ok": true,
       "dalga_a_derin": true,
-      "parca": 1
+      "parca": 81,
+      "truncated": false,
+      "html_pages": 5,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T11:35:44.310835+00:00",
+      "parca_sayisi": 81,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 70,
+      "boost_siblings": [
+        "pg_pack"
+      ]
     },
     "use_the_index": {
       "kaynak_id": "04_veri_tabanlari_use_the_index",
@@ -45,15 +64,33 @@
         "uti_luke_05.html",
         "uti_luke_06.html"
       ],
-      "parca": 5
+      "parca": 57,
+      "url": "https://use-the-index-luke.com/",
+      "truncated": false,
+      "html_pages": 62,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T10:22:43.919087+00:00",
+      "parca_sayisi": 57,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 62
     },
     "uti_luke": {
       "kaynak_id": "04_veri_tabanlari_uti_luke",
       "baslik": "Use The Index Luke",
       "dal": "04_veri_tabanlari",
       "ok": true,
-      "parca": 13,
-      "dalga_a_fill2": true
+      "parca": 56,
+      "dalga_a_fill2": true,
+      "url": "https://use-the-index-luke.com/",
+      "truncated": false,
+      "html_pages": 61,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T10:23:28.699913+00:00",
+      "parca_sayisi": 56,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 61
     },
     "pg_docs": {
       "kaynak_id": "04_veri_tabanlari_pg_docs",
@@ -70,7 +107,19 @@
         "pg_docs_05.html",
         "pg_docs_06.html"
       ],
-      "parca": 3
+      "parca": 127,
+      "url": "https://www.postgresql.org/docs/current/",
+      "truncated": false,
+      "html_pages": 5,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T11:35:45.609114+00:00",
+      "parca_sayisi": 127,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 71,
+      "boost_siblings": [
+        "pg_tutorial"
+      ]
     },
     "sqlite_docs": {
       "kaynak_id": "04_veri_tabanlari_sqlite_docs",
@@ -84,7 +133,16 @@
         "sqlite_docs_02.html",
         "sqlite_docs_03.html"
       ],
-      "parca": 6
+      "parca": 86,
+      "url": "https://www.sqlite.org/docs.html",
+      "truncated": false,
+      "html_pages": 19,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T10:16:14.221757+00:00",
+      "parca_sayisi": 86,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 19
     },
     "cmu_15445": {
       "kaynak_id": "04_veri_tabanlari_cmu_15445",
@@ -93,9 +151,21 @@
       "url": "https://web.archive.org/web/20231001000000/https://15445.courses.cs.cmu.edu/fall2023/schedule.html",
       "local": "raw/cmu_15445_00.html",
       "ok": true,
-      "parca_sayisi": 1,
+      "parca_sayisi": 537,
       "profesyonel_dolum": true,
-      "updated_utc": "2026-11-03T07:40:22.523774+00:00"
+      "updated_utc": "2026-11-11T11:35:50.295040+00:00",
+      "dal": "04_veri_tabanlari",
+      "truncated": false,
+      "html_pages": 5,
+      "html_expected": 22,
+      "parca": 537,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 0,
+      "boost_siblings": [
+        "lucene_core_docs",
+        "pg_docs"
+      ]
     },
     "db_msan_notes": {
       "kaynak_id": "04_veri_tabanlari_db_msan_notes",
@@ -115,23 +185,56 @@
         "db_msan_notes_08.html",
         "db_msan_notes_09.html"
       ],
-      "parca": 14
+      "parca": 800,
+      "url": "",
+      "boost_siblings": [
+        "cmu_15445",
+        "lucene_core_docs"
+      ],
+      "updated_utc": "2026-11-11T11:35:55.292206+00:00",
+      "html_pages": 5,
+      "html_expected": 22,
+      "parca_sayisi": 800,
+      "tam_eser": true,
+      "derin_yesil": true
     },
     "db_omurga_derin": {
       "kaynak_id": "04_veri_tabanlari_db_omurga_derin",
       "baslik": "Veritabanı omurga (SQLite+PG+UTI+MSAN)",
       "dal": "04_veri_tabanlari",
       "ok": true,
-      "parca": 36,
-      "dalga_a_fill": true
+      "parca": 800,
+      "dalga_a_fill": true,
+      "url": "https://web.archive.org/web/20241105181436/https://15445.courses.cs.cmu.edu/fall2024/",
+      "truncated": false,
+      "html_pages": 5,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T11:36:03.459936+00:00",
+      "parca_sayisi": 800,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 0,
+      "boost_siblings": [
+        "db_msan_notes"
+      ]
     },
     "sqlite_pack": {
       "kaynak_id": "04_veri_tabanlari_sqlite_pack",
       "baslik": "SQLite docs pack",
       "dal": "04_veri_tabanlari",
       "ok": true,
-      "parca": 15,
-      "dalga_a_fill2": true
+      "parca": 146,
+      "dalga_a_fill2": true,
+      "url": "",
+      "boost_siblings": [
+        "sqlite_lang"
+      ],
+      "updated_utc": "2026-11-11T11:36:04.537832+00:00",
+      "html_pages": 5,
+      "html_expected": 22,
+      "parca_sayisi": 146,
+      "tam_eser": true,
+      "derin_yesil": true
     },
     "pg_pack": {
       "kaynak_id": "04_veri_tabanlari_pg_pack",
@@ -139,14 +242,71 @@
       "dal": "04_veri_tabanlari",
       "ok": true,
       "parca": 47,
-      "dalga_a_fill2": true
+      "dalga_a_fill2": true,
+      "derin_yesil": true,
+      "tam_eser": true
     },
     "sql_index_pack": {
       "kaynak_id": "04_veri_tabanlari_sql_index_pack",
       "baslik": "SQLite + Use The Index pack",
       "dal": "04_veri_tabanlari",
       "ok": true,
-      "parca": 32
+      "parca": 149,
+      "url": "",
+      "boost_siblings": [
+        "sqlite_lang"
+      ],
+      "updated_utc": "2026-11-11T11:36:05.174001+00:00",
+      "html_pages": 5,
+      "html_expected": 22,
+      "parca_sayisi": 149,
+      "tam_eser": true,
+      "derin_yesil": true
+    },
+    "lucene_core_docs": {
+      "kaynak_id": "04_veri_tabanlari_lucene_core_docs",
+      "baslik": "Apache Lucene — core / query / analyzer docs (yasal Apache)",
+      "url": "https://lucene.apache.org/core/",
+      "dal": "04_veri_tabanlari",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 49,
+      "html_expected": 18,
+      "updated_utc": "2026-11-10T15:27:26.815433+00:00",
+      "parca": 216,
+      "parca_sayisi": 216,
+      "derin_yesil": true
+    },
+    "opensearch_docs": {
+      "kaynak_id": "04_veri_tabanlari_opensearch_docs",
+      "baslik": "OpenSearch documentation — search / query / ingest (Apache-2.0)",
+      "url": "https://opensearch.org/docs/latest/",
+      "dal": "04_veri_tabanlari",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 90,
+      "html_expected": 18,
+      "updated_utc": "2026-11-10T15:28:10.791342+00:00",
+      "parca": 83,
+      "parca_sayisi": 83,
+      "derin_yesil": true
+    },
+    "sqlite_fts5_pack": {
+      "kaynak_id": "04_veri_tabanlari_sqlite_fts5_pack",
+      "baslik": "SQLite FTS5 + planner + JSON1 + session (hafıza odası motoru yakıtı)",
+      "url": "https://www.sqlite.org/fts5.html",
+      "dal": "04_veri_tabanlari",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 25,
+      "html_expected": 20,
+      "updated_utc": "2026-11-10T15:28:39.605450+00:00",
+      "parca": 99,
+      "parca_sayisi": 99,
+      "derin_yesil": true
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.584244+00:00",
@@ -174,5 +334,69 @@
   "dalga_a_raw_derin_utc": "2026-11-09T18:25:40.647632+00:00",
   "dalga_a_fill_utc": "2026-11-09T18:27:28.250886+00:00",
   "dalga_a_fill2_utc": "2026-11-09T18:28:09.033835+00:00",
-  "dalga_a_fill3_utc": "2026-11-09T18:28:41.527418+00:00"
+  "dalga_a_fill3_utc": "2026-11-09T18:28:41.527418+00:00",
+  "deep_full_works": [
+    {
+      "key": "db_msan_notes",
+      "parca": 800
+    },
+    {
+      "key": "db_omurga_derin",
+      "parca": 800
+    },
+    {
+      "key": "cmu_15445",
+      "parca": 537
+    },
+    {
+      "key": "lucene_core_docs",
+      "parca": 216
+    },
+    {
+      "key": "sql_index_pack",
+      "parca": 149
+    },
+    {
+      "key": "sqlite_pack",
+      "parca": 146
+    },
+    {
+      "key": "pg_docs",
+      "parca": 127
+    },
+    {
+      "key": "sqlite_fts5_pack",
+      "parca": 99
+    },
+    {
+      "key": "sqlite_docs",
+      "parca": 86
+    },
+    {
+      "key": "opensearch_docs",
+      "parca": 83
+    },
+    {
+      "key": "pg_tutorial",
+      "parca": 81
+    },
+    {
+      "key": "sqlite_lang",
+      "parca": 74
+    },
+    {
+      "key": "use_the_index",
+      "parca": 57
+    },
+    {
+      "key": "uti_luke",
+      "parca": 56
+    },
+    {
+      "key": "pg_pack",
+      "parca": 47
+    }
+  ],
+  "deep_full_count": 15,
+  "tam_eser_utc": "2026-11-11T11:36:05.228933+00:00"
 }

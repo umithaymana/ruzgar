@@ -17,18 +17,10 @@ from typing import Any
 
 import numpy as np
 
-VERSION = "bilgisayar-rag-v1-2026-11-09"
+VERSION = "bilgisayar-rag-v1-2026-11-10"
 
-# Dalga A omurga + programlama
-_DAL_PREFIXES = (
-    "01_",
-    "02_",
-    "03_",
-    "04_",
-    "05_",
-    "06_",
-    "11_",
-)
+# Dalga A→E (Adım4 mühür 2026-11-10): tüm bilgisayar rafları
+_DAL_PREFIXES = tuple(f"{i:02d}_" for i in range(1, 25))
 
 
 def enabled() -> bool:
@@ -131,14 +123,20 @@ def build_bilgisayar_index(*, batch: int = 64, max_files: int = 0) -> dict[str, 
         parts_emb.append(np.asarray(emb, dtype=np.float32))
     emb_out = np.vstack(parts_emb)
 
-    out = index_dir()
-    with (out / "chunks.jsonl").open("w", encoding="utf-8", newline="\n") as f:
+    # Staging: canlı API embeddings.npy'yi mmap tutabilir (Windows Errno 22).
+    staging = _pkg() / ".rag_index_bilgisayar_staging"
+    if staging.exists():
+        import shutil
+
+        shutil.rmtree(staging, ignore_errors=True)
+    staging.mkdir(parents=True, exist_ok=True)
+    with (staging / "chunks.jsonl").open("w", encoding="utf-8", newline="\n") as f:
         for c in chunks:
             f.write(
                 json.dumps({"text": c.text, "source": c.source}, ensure_ascii=False)
                 + "\n"
             )
-    np.save(str(out / "embeddings.npy"), emb_out)
+    np.save(str(staging / "embeddings.npy"), emb_out)
     payload = {
         "version": VERSION,
         "num_chunks": len(chunks),
@@ -148,12 +146,55 @@ def build_bilgisayar_index(*, batch: int = 64, max_files: int = 0) -> dict[str, 
         "source": str(source_root()),
         "dals": sorted(dals),
     }
-    (out / "manifest.json").write_text(
+    (staging / "manifest.json").write_text(
         json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
+    out = index_dir()
+    import shutil
+
+    bak = _pkg() / ".rag_index_bilgisayar_bak"
+    if bak.exists():
+        shutil.rmtree(bak, ignore_errors=True)
+    swapped = False
+    try:
+        if out.exists():
+            os.replace(out, bak)
+        os.replace(staging, out)
+        swapped = True
+        shutil.rmtree(bak, ignore_errors=True)
+    except OSError as e:
+        # Kilitliyse staging kalsın; ForceRestart sonrası promote edilir
+        payload["swap_error"] = f"{type(e).__name__}: {e}"
+        payload["staging"] = str(staging)
+        payload["swapped"] = False
+    else:
+        payload["swapped"] = True
     global _cache
     _cache = None
     return {"ok": True, **payload}
+
+
+def promote_staging() -> dict[str, Any]:
+    """ForceRestart sonrası staging → canlı indeks (mmap kilidi kalkınca)."""
+    import shutil
+
+    staging = _pkg() / ".rag_index_bilgisayar_staging"
+    out = index_dir()
+    if not (staging / "embeddings.npy").is_file() or not (staging / "manifest.json").is_file():
+        return {"ok": False, "error": "staging yok"}
+    bak = _pkg() / ".rag_index_bilgisayar_bak"
+    if bak.exists():
+        shutil.rmtree(bak, ignore_errors=True)
+    try:
+        if out.exists():
+            os.replace(out, bak)
+        os.replace(staging, out)
+        shutil.rmtree(bak, ignore_errors=True)
+    except OSError as e:
+        return {"ok": False, "error": f"{type(e).__name__}: {e}", "staging": str(staging)}
+    global _cache
+    _cache = None
+    return {"ok": True, **public_status()}
 
 
 _cache: tuple[list[Any], np.ndarray] | None = None

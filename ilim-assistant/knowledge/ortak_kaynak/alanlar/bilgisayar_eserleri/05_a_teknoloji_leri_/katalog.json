@@ -2,8 +2,8 @@
   "dal": "05_a_teknoloji_leri_",
   "excel": "5 - ) AĞ TEKNOLOJİLERİ.xlsx",
   "n_list": 100,
-  "sources": 6,
-  "ok_sources": 5,
+  "sources": 7,
+  "ok_sources": 7,
   "ilave_rows": 3,
   "updated_utc": "2026-11-02T23:12:41.387071+00:00",
   "skills": [
@@ -17,9 +17,17 @@
       "baslik": "High Performance Browser Networking",
       "url": "https://hpbn.co/",
       "dal": "05_a_teknoloji_leri_",
-      "ok": false,
+      "ok": true,
       "dalga_a_derin": true,
-      "parca": 1
+      "parca": 73,
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T10:03:46.034315+00:00",
+      "parca_sayisi": 73,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 22
     },
     "beej_net": {
       "kaynak_id": "05_a_teknoloji_leri__beej_net",
@@ -30,31 +38,70 @@
       "raw_files": [
         "beej_net.html"
       ],
-      "parca": 26
+      "parca": 58,
+      "url": "https://beej.us/guide/bgnet/html/",
+      "truncated": false,
+      "html_pages": 24,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T10:04:45.035922+00:00",
+      "parca_sayisi": 58,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 24
     },
     "beej_ipc": {
       "kaynak_id": "05_a_teknoloji_leri__beej_ipc",
       "baslik": "Beej Unix IPC",
       "dal": "05_a_teknoloji_leri_",
       "ok": true,
-      "parca": 21,
-      "dalga_a_fill": true
+      "parca": 160,
+      "dalga_a_fill": true,
+      "url": "https://beej.us/guide/bgipc/html/split/",
+      "truncated": false,
+      "html_pages": 5,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T11:36:06.921542+00:00",
+      "parca_sayisi": 160,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 43,
+      "boost_siblings": [
+        "beej_net"
+      ]
     },
     "systemsapproach": {
       "kaynak_id": "05_a_teknoloji_leri__systemsapproach",
       "baslik": "Networks Systems Approach",
       "dal": "05_a_teknoloji_leri_",
       "ok": true,
-      "parca": 2,
-      "dalga_a_fill": true
+      "parca": 53,
+      "dalga_a_fill": true,
+      "url": "https://book.systemsapproach.org/",
+      "truncated": false,
+      "html_pages": 39,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T10:06:14.717275+00:00",
+      "parca_sayisi": 53,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 39
     },
     "mdn_http": {
       "kaynak_id": "05_a_teknoloji_leri__mdn_http",
       "baslik": "MDN HTTP",
       "dal": "05_a_teknoloji_leri_",
       "ok": true,
-      "parca": 16,
-      "dalga_a_fill": true
+      "parca": 54,
+      "dalga_a_fill": true,
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP",
+      "truncated": false,
+      "html_pages": 42,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T10:07:00.576362+00:00",
+      "parca_sayisi": 54,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 42
     },
     "bind9_docs": {
       "kaynak_id": "05_a_teknoloji_leri__bind9_docs",
@@ -66,15 +113,34 @@
       "raw_files": [
         "bind9_docs_00.html"
       ],
-      "parca": 1
+      "parca": 255,
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T10:07:08.675101+00:00",
+      "parca_sayisi": 255,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 22
     },
     "web_http_pack": {
       "kaynak_id": "05_a_teknoloji_leri__web_http_pack",
       "baslik": "MDN HTTP + HPBN + BIND",
       "dal": "05_a_teknoloji_leri_",
       "ok": true,
-      "parca": 29,
-      "dalga_a_fill2": true
+      "parca": 682,
+      "dalga_a_fill2": true,
+      "url": "",
+      "boost_siblings": [
+        "bind9_docs",
+        "beej_ipc"
+      ],
+      "updated_utc": "2026-11-11T11:36:10.671462+00:00",
+      "html_pages": 5,
+      "html_expected": 22,
+      "parca_sayisi": 682,
+      "tam_eser": true,
+      "derin_yesil": true
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.585242+00:00",
@@ -99,5 +165,37 @@
   ],
   "dalga_a_raw_derin_utc": "2026-11-09T18:25:43.978047+00:00",
   "dalga_a_fill_utc": "2026-11-09T18:27:28.707271+00:00",
-  "dalga_a_fill2_utc": "2026-11-09T18:28:09.210752+00:00"
+  "dalga_a_fill2_utc": "2026-11-09T18:28:09.210752+00:00",
+  "deep_full_works": [
+    {
+      "key": "web_http_pack",
+      "parca": 682
+    },
+    {
+      "key": "bind9_docs",
+      "parca": 255
+    },
+    {
+      "key": "beej_ipc",
+      "parca": 160
+    },
+    {
+      "key": "hpbn",
+      "parca": 73
+    },
+    {
+      "key": "beej_net",
+      "parca": 58
+    },
+    {
+      "key": "mdn_http",
+      "parca": 54
+    },
+    {
+      "key": "systemsapproach",
+      "parca": 53
+    }
+  ],
+  "deep_full_count": 7,
+  "tam_eser_utc": "2026-11-11T11:36:10.881439+00:00"
 }

@@ -2,8 +2,8 @@
   "dal": "12_bi_lgi_sayar_m_hendi_sli_i_",
   "excel": "12 - ) BİLGİSAYAR MÜHENDİSLİĞİ.xlsx",
   "n_list": 150,
-  "sources": 6,
-  "ok_sources": 7,
+  "sources": 8,
+  "ok_sources": 8,
   "ilave_rows": 3,
   "updated_utc": "2026-11-09T20:54:35.591145+00:00",
   "skills": [
@@ -17,7 +17,15 @@
       "url": "https://www.nand2tetris.org/",
       "dal": "12_bi_lgi_sayar_m_hendi_sli_i_",
       "ok": true,
-      "parca": 1
+      "parca": 165,
+      "truncated": false,
+      "html_pages": 13,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T10:44:08.452865+00:00",
+      "parca_sayisi": 165,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 13
     },
     "computer_systems": {
       "kaynak_id": "12_bi_lgi_sayar_m_hendi_sli_i__computer_systems",
@@ -26,12 +34,18 @@
       "url": "https://pdos.csail.mit.edu/6.828/2023/overview.html",
       "local": "raw/computer_systems_00.html",
       "ok": true,
-      "parca_sayisi": 2,
+      "parca_sayisi": 55,
       "profesyonel_dolum": true,
-      "updated_utc": "2026-11-09T20:54:29.571259+00:00",
+      "updated_utc": "2026-11-11T10:44:52.248726+00:00",
       "dal": "12_bi_lgi_sayar_m_hendi_sli_i_",
-      "parca": 2,
-      "dalga_c_raw_derin": true
+      "parca": 55,
+      "dalga_c_raw_derin": true,
+      "truncated": false,
+      "html_pages": 66,
+      "html_expected": 22,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 66
     },
     "ben_eater": {
       "kaynak_id": "12_bi_lgi_sayar_m_hendi_sli_i__ben_eater",
@@ -43,10 +57,20 @@
       "raw_files": [
         "ben_eater_00.html"
       ],
-      "parca": 1,
-      "parca_sayisi": 1,
+      "parca": 747,
+      "parca_sayisi": 747,
       "dalga_c_raw_derin": true,
-      "updated_utc": "2026-11-09T20:54:28.632898+00:00"
+      "updated_utc": "2026-11-11T11:38:38.588289+00:00",
+      "truncated": false,
+      "html_pages": 5,
+      "html_expected": 22,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 20,
+      "boost_siblings": [
+        "mit_6828",
+        "n2t_eng"
+      ]
     },
     "n2t_eng": {
       "kaynak_id": "12_bi_lgi_sayar_m_hendi_sli_i__n2t_eng",
@@ -58,10 +82,16 @@
       "raw_files": [
         "n2t_eng_00.html"
       ],
-      "parca": 1,
-      "parca_sayisi": 1,
+      "parca": 165,
+      "parca_sayisi": 165,
       "dalga_c_raw_derin": true,
-      "updated_utc": "2026-11-09T20:54:30.040913+00:00"
+      "updated_utc": "2026-11-11T10:45:19.876792+00:00",
+      "truncated": false,
+      "html_pages": 13,
+      "html_expected": 22,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 13
     },
     "nand2tetris_deep": {
       "kaynak_id": "12_bi_lgi_sayar_m_hendi_sli_i__nand2tetris_deep",
@@ -70,32 +100,75 @@
       "url": "https://raw.githubusercontent.com/nand2tetris/web-ide/main/README.md",
       "local": "raw/nand2tetris_deep_00.html",
       "ok": true,
-      "parca_sayisi": 11,
+      "parca_sayisi": 104,
       "ince_raf_dolum": true,
-      "updated_utc": "2026-11-09T20:54:35.591145+00:00",
+      "updated_utc": "2026-11-11T11:38:40.477185+00:00",
       "dal": "12_bi_lgi_sayar_m_hendi_sli_i_",
-      "parca": 11,
-      "dalga_c_raw_derin": true
+      "parca": 104,
+      "dalga_c_raw_derin": true,
+      "boost_siblings": [
+        "nand2tetris"
+      ],
+      "html_pages": 5,
+      "html_expected": 22,
+      "tam_eser": true,
+      "derin_yesil": true
     },
     "mit_6828": {
       "kaynak_id": "12_bi_lgi_sayar_m_hendi_sli_i__mit_6828",
-      "baslik": "MIT 6.828 / 6.S081 Operating System Engineering",
+      "baslik": "MIT 6.S081 / 6.828 Operating System Engineering — tam ders sayfaları",
       "lisans": "MIT course free",
-      "url": "https://pdos.csail.mit.edu/6.828/2012/xv6.html",
+      "url": "https://pdos.csail.mit.edu/6.S081/2023/",
       "local": "raw/mit_6828_00.html",
       "ok": true,
-      "parca_sayisi": 7,
+      "parca_sayisi": 226,
       "ince_raf_dolum": true,
-      "updated_utc": "2026-11-03T07:49:36.880536+00:00"
+      "updated_utc": "2026-11-10T07:50:26.323970+00:00",
+      "dal": "12_bi_lgi_sayar_m_hendi_sli_i_",
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 66,
+      "html_expected": 15,
+      "parca": 226,
+      "derin_yesil": true
     },
     "xv6_book": {
-      "kaynak_id": "12_xv6_book",
-      "baslik": "xv6 book (MIT PDOS)",
-      "url": "https://raw.githubusercontent.com/mit-pdos/xv6-riscv/riscv/README",
+      "kaynak_id": "12_bi_lgi_sayar_m_hendi_sli_i__xv6_book",
+      "baslik": "xv6: a simple, Unix-like teaching operating system (MIT) — tam PDF",
+      "url": "https://pdos.csail.mit.edu/6.828/2023/xv6/book-riscv-rev3.pdf",
       "ok": true,
-      "parca_sayisi": 64,
+      "parca_sayisi": 800,
       "ince_raf_dolum": true,
-      "updated_utc": "2026-11-03T07:55:22.841998+00:00"
+      "updated_utc": "2026-11-11T11:38:50.075572+00:00",
+      "dal": "12_bi_lgi_sayar_m_hendi_sli_i_",
+      "tam_eser": true,
+      "truncated": false,
+      "pdf_pages": 105,
+      "extracted_pages": 105,
+      "local": "raw/xv6_book_riscv_rev3.pdf",
+      "parca": 800,
+      "derin_yesil": true,
+      "html_pages": 5,
+      "html_expected": 22,
+      "boost_siblings": [
+        "ben_eater",
+        "mit_6828"
+      ]
+    },
+    "nand2tetris": {
+      "kaynak_id": "12_bi_lgi_sayar_m_hendi_sli_i__nand2tetris",
+      "baslik": "Nand2Tetris course site — tam",
+      "url": "https://www.nand2tetris.org/",
+      "dal": "12_bi_lgi_sayar_m_hendi_sli_i_",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 15,
+      "html_expected": 10,
+      "updated_utc": "2026-11-10T07:50:31.441639+00:00",
+      "parca": 48,
+      "parca_sayisi": 48,
+      "derin_yesil": true
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.592241+00:00",
@@ -103,5 +176,41 @@
   "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
   "otonomi_indir_utc": "2026-11-03T00:03:44.344418+00:00",
   "profesyonel_dolum_utc": "2026-11-03T07:28:02.869337+00:00",
-  "ince_raf_dolum_utc": "2026-11-03T07:50:01.794298+00:00"
+  "ince_raf_dolum_utc": "2026-11-03T07:50:01.794298+00:00",
+  "deep_full_works": [
+    {
+      "key": "xv6_book",
+      "parca": 800
+    },
+    {
+      "key": "ben_eater",
+      "parca": 747
+    },
+    {
+      "key": "mit_6828",
+      "parca": 226
+    },
+    {
+      "key": "n2t",
+      "parca": 165
+    },
+    {
+      "key": "n2t_eng",
+      "parca": 165
+    },
+    {
+      "key": "nand2tetris_deep",
+      "parca": 104
+    },
+    {
+      "key": "computer_systems",
+      "parca": 55
+    },
+    {
+      "key": "nand2tetris",
+      "parca": 48
+    }
+  ],
+  "deep_full_count": 8,
+  "tam_eser_utc": "2026-11-11T11:38:50.365751+00:00"
 }

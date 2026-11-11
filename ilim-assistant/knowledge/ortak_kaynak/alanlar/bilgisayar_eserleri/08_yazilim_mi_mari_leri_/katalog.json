@@ -2,8 +2,8 @@
   "dal": "08_yazilim_mi_mari_leri_",
   "excel": "8 - ) YAZILIM MİMARİLERİ.xlsx",
   "n_list": 100,
-  "sources": 9,
-  "ok_sources": 9,
+  "sources": 28,
+  "ok_sources": 28,
   "ilave_rows": 3,
   "updated_utc": "2026-11-09T20:54:27.587012+00:00",
   "skills": [
@@ -18,10 +18,16 @@
       "url": "https://abseil.io/resources/swe-book",
       "dal": "08_yazilim_mi_mari_leri_",
       "ok": true,
-      "parca": 1,
-      "parca_sayisi": 1,
+      "parca": 54,
+      "parca_sayisi": 54,
       "dalga_c_raw_derin": true,
-      "updated_utc": "2026-11-09T20:54:27.573671+00:00"
+      "updated_utc": "2026-11-11T10:34:24.346797+00:00",
+      "truncated": false,
+      "html_pages": 61,
+      "html_expected": 22,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 61
     },
     "aosa": {
       "kaynak_id": "08_yazilim_mi_mari_leri__aosa",
@@ -30,19 +36,31 @@
       "dal": "08_yazilim_mi_mari_leri_",
       "ok": true,
       "telafi": true,
-      "parca": 1
+      "parca": 90,
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T10:04:42.002063+00:00",
+      "parca_sayisi": 90,
+      "tam_eser": true,
+      "derin_yesil": true
     },
     "gpp": {
       "kaynak_id": "08_yazilim_mi_mari_leri__gpp",
-      "baslik": "Game Programming Patterns",
+      "baslik": "Game Programming Patterns (Nystrom) — tam",
       "url": "https://gameprogrammingpatterns.com/",
       "dal": "08_yazilim_mi_mari_leri_",
       "ok": true,
       "telafi": true,
-      "parca": 1,
-      "parca_sayisi": 1,
+      "parca": 65,
+      "parca_sayisi": 65,
       "dalga_c_raw_derin": true,
-      "updated_utc": "2026-11-09T20:54:27.524600+00:00"
+      "updated_utc": "2026-11-10T07:45:44.973163+00:00",
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 29,
+      "html_expected": 20,
+      "derin_yesil": true
     },
     "aosa_full": {
       "kaynak_id": "08_yazilim_mi_mari_leri__aosa_full",
@@ -55,10 +73,18 @@
         "aosa_full_00.html",
         "aosa_full_01.html"
       ],
-      "parca": 3,
-      "parca_sayisi": 3,
+      "parca": 168,
+      "parca_sayisi": 168,
       "dalga_c_raw_derin": true,
-      "updated_utc": "2026-11-09T20:54:27.555939+00:00"
+      "updated_utc": "2026-11-11T11:38:00.047679+00:00",
+      "truncated": false,
+      "html_pages": 5,
+      "html_expected": 22,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "boost_siblings": [
+        "aosa"
+      ]
     },
     "azure_patterns": {
       "kaynak_id": "08_yazilim_mi_mari_leri__azure_patterns",
@@ -70,10 +96,15 @@
       "raw_files": [
         "azure_patterns_00.html"
       ],
-      "parca": 2,
-      "parca_sayisi": 2,
+      "parca": 52,
+      "parca_sayisi": 52,
       "dalga_c_raw_derin": true,
-      "updated_utc": "2026-11-09T20:54:27.550649+00:00"
+      "updated_utc": "2026-11-11T10:04:50.537163+00:00",
+      "truncated": false,
+      "html_pages": 30,
+      "html_expected": 22,
+      "tam_eser": true,
+      "derin_yesil": true
     },
     "twelve_factor": {
       "kaynak_id": "08_yazilim_mi_mari_leri__twelve_factor",
@@ -85,15 +116,25 @@
       "raw_files": [
         "twelve_factor_00.html"
       ],
-      "parca": 6,
-      "parca_sayisi": 6,
+      "parca": 800,
+      "parca_sayisi": 800,
       "dalga_c_raw_derin": true,
-      "updated_utc": "2026-11-09T20:54:27.587012+00:00"
+      "updated_utc": "2026-11-11T11:38:07.051089+00:00",
+      "truncated": false,
+      "html_pages": 5,
+      "html_expected": 22,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 70,
+      "boost_siblings": [
+        "aosa_500lines",
+        "automerge_crdt"
+      ]
     },
     "swe_book": {
       "kaynak_id": "08_yazilim_mi_mari_leri__swe_book",
-      "baslik": "Software Engineering at Google",
-      "url": "https://abseil.io/resources/swe-book/html/toc.html",
+      "baslik": "Software Engineering at Google — tam HTML",
+      "url": "https://abseil.io/resources/swe-book/",
       "dal": "08_yazilim_mi_mari_leri_",
       "ok": true,
       "otonomi_indir": true,
@@ -101,10 +142,15 @@
         "swe_book_00.html",
         "swe_book_01.html"
       ],
-      "parca": 2,
-      "parca_sayisi": 2,
+      "parca": 145,
+      "parca_sayisi": 145,
       "dalga_c_raw_derin": true,
-      "updated_utc": "2026-11-09T20:54:27.538264+00:00"
+      "updated_utc": "2026-11-10T07:46:01.143592+00:00",
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 29,
+      "html_expected": 20,
+      "derin_yesil": true
     },
     "aosa_v1_deep": {
       "kaynak_id": "08_yazilim_mi_mari_leri__aosa_v1_deep",
@@ -113,9 +159,19 @@
       "url": "https://aosabook.org/en/v1/selenium.html",
       "local": "raw/aosa_v1_deep_00.html",
       "ok": true,
-      "parca_sayisi": 39,
+      "parca_sayisi": 181,
       "profesyonel_dolum": true,
-      "updated_utc": "2026-11-03T07:41:31.608409+00:00"
+      "updated_utc": "2026-11-11T11:38:07.775638+00:00",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "truncated": false,
+      "html_pages": 5,
+      "html_expected": 22,
+      "parca": 181,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "boost_siblings": [
+        "aosa"
+      ]
     },
     "twelve_factor_deep": {
       "kaynak_id": "08_yazilim_mi_mari_leri__twelve_factor_deep",
@@ -124,14 +180,426 @@
       "url": "https://12factor.net/admin-processes",
       "local": "raw/twelve_factor_deep_00.html",
       "ok": true,
-      "parca_sayisi": 5,
+      "parca_sayisi": 800,
       "profesyonel_dolum": true,
-      "updated_utc": "2026-11-03T07:39:10.297201+00:00"
+      "updated_utc": "2026-11-11T11:38:15.322936+00:00",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "truncated": false,
+      "html_pages": 5,
+      "html_expected": 22,
+      "parca": 800,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 70,
+      "boost_siblings": [
+        "twelve_factor"
+      ]
+    },
+    "aosa_v1": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__aosa_v1",
+      "baslik": "Architecture of Open Source Applications Vol I — tam",
+      "url": "https://aosabook.org/en/v1/",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 53,
+      "html_expected": 12,
+      "updated_utc": "2026-11-10T07:46:22.776536+00:00",
+      "parca": 228,
+      "parca_sayisi": 228,
+      "derin_yesil": true
+    },
+    "automerge_crdt": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__automerge_crdt",
+      "baslik": "Automerge CRDT + Ink&Switch local-first (kalın)",
+      "url": "https://automerge.org/",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 97,
+      "html_expected": 30,
+      "updated_utc": "2026-11-10T17:59:12.044480+00:00",
+      "parca": 263,
+      "parca_sayisi": 263,
+      "derin_yesil": true
+    },
+    "tbx_termbank": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__tbx_termbank",
+      "baslik": "TBX / Okapi / XLIFF — terim bankası kalın paket",
+      "url": "https://www.tbxinfo.net/",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 76,
+      "html_expected": 25,
+      "updated_utc": "2026-11-10T18:01:13.141066+00:00",
+      "parca": 54,
+      "parca_sayisi": 54,
+      "derin_yesil": true
+    },
+    "opentimelineio": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__opentimelineio",
+      "baslik": "OpenTimelineIO docs+examples (kalın)",
+      "url": "https://opentimelineio.readthedocs.io/en/latest/",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 88,
+      "html_expected": 30,
+      "updated_utc": "2026-11-10T18:21:32.418864+00:00",
+      "parca": 60,
+      "parca_sayisi": 60,
+      "derin_yesil": true
+    },
+    "webrtc_media_mdn": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__webrtc_media_mdn",
+      "baslik": "WebRTC + Media MDN / W3C — cam köprüsü yakıtı",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 70,
+      "html_expected": 20,
+      "updated_utc": "2026-11-10T17:19:51.872814+00:00",
+      "parca": 108,
+      "parca_sayisi": 108,
+      "derin_yesil": true
+    },
+    "godot_three_camera": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__godot_three_camera",
+      "baslik": "Godot + Three.js camera/viewport/scene docs",
+      "url": "https://docs.godotengine.org/",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 229,
+      "html_expected": 25,
+      "updated_utc": "2026-11-10T17:23:05.396716+00:00",
+      "parca": 201,
+      "parca_sayisi": 201,
+      "derin_yesil": true
+    },
+    "aosa_500lines": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__aosa_500lines",
+      "baslik": "Architecture of Open Source Applications + 500 Lines or Less",
+      "url": "https://aosabook.org/en/index.html",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 106,
+      "html_expected": 25,
+      "updated_utc": "2026-11-10T17:34:13.617668+00:00",
+      "parca": 331,
+      "parca_sayisi": 331,
+      "derin_yesil": true
+    },
+    "electron_fastapi_schema": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__electron_fastapi_schema",
+      "baslik": "Electron docs + FastAPI docs + JSON Schema/RPC — Rüzgar kabuk sözleşmesi",
+      "url": "https://www.electronjs.org/docs/latest",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 203,
+      "html_expected": 30,
+      "updated_utc": "2026-11-10T17:36:53.979285+00:00",
+      "parca": 232,
+      "parca_sayisi": 232,
+      "derin_yesil": true
+    },
+    "manim_docs": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__manim_docs",
+      "baslik": "Manim Community docs",
+      "url": "https://docs.manim.community/en/stable/",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 96,
+      "html_expected": 25,
+      "updated_utc": "2026-11-10T17:50:18.145827+00:00",
+      "parca": 115,
+      "parca_sayisi": 115,
+      "derin_yesil": true
+    },
+    "maplibre_naturalearth": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__maplibre_naturalearth",
+      "baslik": "MapLibre GL + Natural Earth",
+      "url": "https://maplibre.org/maplibre-gl-js/docs/",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 121,
+      "html_expected": 20,
+      "updated_utc": "2026-11-10T17:51:53.331624+00:00",
+      "parca": 71,
+      "parca_sayisi": 71,
+      "derin_yesil": true
+    },
+    "wcag_a11y": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__wcag_a11y",
+      "baslik": "WCAG + WebAIM + MDN + Wikipedia a11y (kalın)",
+      "url": "https://www.w3.org/WAI/standards-guidelines/wcag/",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "truncated": false,
+      "html_pages": 49,
+      "html_expected": 25,
+      "updated_utc": "2026-11-10T19:34:07.717518+00:00",
+      "parca": 76,
+      "parca_sayisi": 76,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true
+    },
+    "unutma_miras": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__unutma_miras",
+      "baslik": "Unutma/erasure + PROV/Solid/local-first — miras protokolü (kalın)",
+      "url": "https://gdpr.eu/right-to-be-forgotten/",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "truncated": false,
+      "html_pages": 27,
+      "html_expected": 25,
+      "updated_utc": "2026-11-10T19:30:07.994940+00:00",
+      "parca": 51,
+      "parca_sayisi": 51,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true
+    },
+    "omur_koridoru": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__omur_koridoru",
+      "baslik": "Ömür koridoru — Automerge/CRDT + CalDAV + sürümleme (kalın)",
+      "url": "https://automerge.org/",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 22,
+      "updated_utc": "2026-11-10T19:44:24.779485+00:00",
+      "parca": 131,
+      "parca_sayisi": 131,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true
+    },
+    "mahkeme_kubra": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__mahkeme_kubra",
+      "baslik": "Mahkeme-i kübra — diff/patch + JSON Schema + PROV (kalın)",
+      "url": "https://www.w3.org/TR/prov-overview/",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 22,
+      "updated_utc": "2026-11-10T19:46:54.001265+00:00",
+      "parca": 51,
+      "parca_sayisi": 51,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true
+    },
+    "cografya_tarih": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__cografya_tarih",
+      "baslik": "Coğrafya+tarih birleşik — MapLibre offline + Natural Earth (kalın)",
+      "url": "https://maplibre.org/",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 22,
+      "updated_utc": "2026-11-10T19:47:38.927269+00:00",
+      "parca": 77,
+      "parca_sayisi": 77,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true
+    },
+    "atolye_gece": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__atolye_gece",
+      "baslik": "Atölye gece vardiyası — kuyruk + FFmpeg + Playwright (kalın)",
+      "url": "https://dramatiq.io/",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 22,
+      "updated_utc": "2026-11-10T19:48:14.490823+00:00",
+      "parca": 143,
+      "parca_sayisi": 143,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true
+    },
+    "brifing_tahti": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__brifing_tahti",
+      "baslik": "Brifing tahtı — HUD/dashboard kalıpları + bildirim (kalın)",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/API/Notifications_API",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "truncated": false,
+      "html_pages": 40,
+      "html_expected": 22,
+      "updated_utc": "2026-11-10T19:48:46.657886+00:00",
+      "parca": 54,
+      "parca_sayisi": 54,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true
+    },
+    "eval_harness": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__eval_harness",
+      "baslik": "Eval harness — lm-eval / RAGAS / yalansız sınav (kalın)",
+      "url": "https://github.com/EleutherAI/lm-evaluation-harness",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 22,
+      "updated_utc": "2026-11-10T19:51:35.742797+00:00",
+      "parca": 105,
+      "parca_sayisi": 105,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true
+    },
+    "atlas_natural_earth": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__atlas_natural_earth",
+      "baslik": "Natural Earth + açık atlas — coğrafya sahnesi (kalın)",
+      "url": "https://www.naturalearthdata.com/",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 22,
+      "updated_utc": "2026-11-10T19:53:02.762101+00:00",
+      "parca": 76,
+      "parca_sayisi": 76,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.589242+00:00",
   "telafi_utc": "2026-11-02T23:46:21.547630+00:00",
   "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
   "otonomi_indir_utc": "2026-11-03T00:04:44.404762+00:00",
-  "profesyonel_dolum_utc": "2026-11-03T07:41:31.608409+00:00"
+  "profesyonel_dolum_utc": "2026-11-03T07:41:31.608409+00:00",
+  "deep_full_works": [
+    {
+      "key": "twelve_factor",
+      "parca": 800
+    },
+    {
+      "key": "twelve_factor_deep",
+      "parca": 800
+    },
+    {
+      "key": "aosa_500lines",
+      "parca": 331
+    },
+    {
+      "key": "automerge_crdt",
+      "parca": 263
+    },
+    {
+      "key": "electron_fastapi_schema",
+      "parca": 232
+    },
+    {
+      "key": "aosa_v1",
+      "parca": 228
+    },
+    {
+      "key": "godot_three_camera",
+      "parca": 201
+    },
+    {
+      "key": "aosa_v1_deep",
+      "parca": 181
+    },
+    {
+      "key": "aosa_full",
+      "parca": 168
+    },
+    {
+      "key": "swe_book",
+      "parca": 145
+    },
+    {
+      "key": "atolye_gece",
+      "parca": 143
+    },
+    {
+      "key": "omur_koridoru",
+      "parca": 131
+    },
+    {
+      "key": "manim_docs",
+      "parca": 115
+    },
+    {
+      "key": "webrtc_media_mdn",
+      "parca": 108
+    },
+    {
+      "key": "eval_harness",
+      "parca": 105
+    },
+    {
+      "key": "aosa",
+      "parca": 90
+    },
+    {
+      "key": "cografya_tarih",
+      "parca": 77
+    },
+    {
+      "key": "wcag_a11y",
+      "parca": 76
+    },
+    {
+      "key": "atlas_natural_earth",
+      "parca": 76
+    },
+    {
+      "key": "maplibre_naturalearth",
+      "parca": 71
+    },
+    {
+      "key": "gpp",
+      "parca": 65
+    },
+    {
+      "key": "opentimelineio",
+      "parca": 60
+    },
+    {
+      "key": "segoogle",
+      "parca": 54
+    },
+    {
+      "key": "tbx_termbank",
+      "parca": 54
+    },
+    {
+      "key": "brifing_tahti",
+      "parca": 54
+    },
+    {
+      "key": "azure_patterns",
+      "parca": 52
+    },
+    {
+      "key": "unutma_miras",
+      "parca": 51
+    },
+    {
+      "key": "mahkeme_kubra",
+      "parca": 51
+    }
+  ],
+  "deep_full_count": 28,
+  "tam_eser_utc": "2026-11-11T11:38:15.703865+00:00"
 }

@@ -2,8 +2,8 @@
   "dal": "10_veri_bi_li_mi_",
   "excel": "10 - ) VERİ BİLİMİ.xlsx",
   "n_list": 150,
-  "sources": 6,
-  "ok_sources": 6,
+  "sources": 9,
+  "ok_sources": 9,
   "ilave_rows": 3,
   "updated_utc": "2026-11-09T20:20:21.683847+00:00",
   "skills": [
@@ -18,7 +18,15 @@
       "url": "https://greenteapress.com/thinkstats2/thinkstats2.pdf",
       "dal": "10_veri_bi_li_mi_",
       "ok": true,
-      "parca": 10
+      "parca": 40,
+      "dalga_b_derin": true,
+      "updated_utc": "2026-11-10T07:36:02.955233+00:00",
+      "parca_sayisi": 40,
+      "tam_eser": true,
+      "pdf_pages": 264,
+      "extracted_pages": 264,
+      "truncated": true,
+      "derin_yesil": true
     },
     "think_bayes": {
       "kaynak_id": "10_veri_bi_li_mi__think_bayes",
@@ -26,7 +34,20 @@
       "url": "https://greenteapress.com/thinkbayes/thinkbayes.pdf",
       "dal": "10_veri_bi_li_mi_",
       "ok": true,
-      "parca": 11
+      "parca": 118,
+      "dalga_b_derin": true,
+      "updated_utc": "2026-11-11T11:38:24.900355+00:00",
+      "parca_sayisi": 118,
+      "tam_eser": true,
+      "pdf_pages": 201,
+      "extracted_pages": 201,
+      "truncated": false,
+      "derin_yesil": true,
+      "html_pages": 5,
+      "html_expected": 22,
+      "boost_siblings": [
+        "think_stats"
+      ]
     },
     "sklearn_ug": {
       "kaynak_id": "10_veri_bi_li_mi__sklearn_ug",
@@ -35,10 +56,16 @@
       "dal": "10_veri_bi_li_mi_",
       "ok": true,
       "telafi": true,
-      "parca": 2,
-      "parca_sayisi": 2,
+      "parca": 51,
+      "parca_sayisi": 51,
       "dalga_b_raw_derin": true,
-      "updated_utc": "2026-11-09T20:20:21.350476+00:00"
+      "updated_utc": "2026-11-11T10:40:46.898302+00:00",
+      "truncated": false,
+      "html_pages": 26,
+      "html_expected": 22,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 26
     },
     "pdsh": {
       "kaynak_id": "10_veri_bi_li_mi__pdsh",
@@ -55,10 +82,16 @@
         "pdsh_04.html",
         "pdsh_05.html"
       ],
-      "parca": 4,
-      "parca_sayisi": 4,
+      "parca": 56,
+      "parca_sayisi": 56,
       "dalga_b_raw_derin": true,
-      "updated_utc": "2026-11-09T20:20:21.683847+00:00"
+      "updated_utc": "2026-11-11T10:41:10.501472+00:00",
+      "truncated": false,
+      "html_pages": 47,
+      "html_expected": 22,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 47
     },
     "islr_ds": {
       "kaynak_id": "10_veri_bi_li_mi__islr_ds",
@@ -67,9 +100,16 @@
       "url": "https://www.statlearning.com/s/ISLRSeventhPrinting.pdf",
       "local": "raw/islr_ds_00.html",
       "ok": true,
-      "parca_sayisi": 25,
+      "parca_sayisi": 111,
       "profesyonel_dolum": true,
-      "updated_utc": "2026-11-03T07:27:48.035397+00:00"
+      "updated_utc": "2026-11-10T07:36:52.615908+00:00",
+      "parca": 111,
+      "dal": "10_veri_bi_li_mi_",
+      "tam_eser": true,
+      "pdf_pages": 431,
+      "extracted_pages": 431,
+      "truncated": true,
+      "derin_yesil": true
     },
     "pandas_docs": {
       "kaynak_id": "10_veri_bi_li_mi__pandas_docs",
@@ -81,15 +121,123 @@
       "raw_files": [
         "pandas_docs_00.html"
       ],
-      "parca": 1,
-      "parca_sayisi": 1,
+      "parca": 124,
+      "parca_sayisi": 124,
       "dalga_b_raw_derin": true,
-      "updated_utc": "2026-11-09T20:20:21.288000+00:00"
+      "updated_utc": "2026-11-11T10:41:24.816799+00:00",
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 22,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 22
+    },
+    "manning_ir_book": {
+      "kaynak_id": "10_veri_bi_li_mi__manning_ir_book",
+      "baslik": "Introduction to Information Retrieval (Manning/Raghavan/Schütze) — chapter PDF mirror",
+      "url": "https://nlp.stanford.edu/IR-book/",
+      "dal": "10_veri_bi_li_mi_",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": true,
+      "pdf_files": 21,
+      "pdf_expected": 18,
+      "pdf_pages": 489,
+      "updated_utc": "2026-11-10T15:26:57.845819+00:00",
+      "parca": 129,
+      "parca_sayisi": 129,
+      "derin_yesil": true
+    },
+    "embed_rerank": {
+      "kaynak_id": "10_veri_bi_li_mi__embed_rerank",
+      "baslik": "Embedding + rerank yerelde — MiniLM/BGE/cross-encoder (kalın)",
+      "url": "https://www.sbert.net/",
+      "dal": "10_veri_bi_li_mi_",
+      "truncated": false,
+      "html_pages": 23,
+      "html_expected": 22,
+      "updated_utc": "2026-11-10T19:51:03.748981+00:00",
+      "parca": 57,
+      "parca_sayisi": 57,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true
+    },
+    "d2l_islr_esl": {
+      "kaynak_id": "10_veri_bi_li_mi__d2l_islr_esl",
+      "baslik": "D2L + ISLR + ESL — öğrenen veri külliyatı (kalın)",
+      "url": "https://d2l.ai/",
+      "dal": "10_veri_bi_li_mi_",
+      "truncated": false,
+      "html_pages": 33,
+      "html_expected": 22,
+      "updated_utc": "2026-11-10T19:52:47.482356+00:00",
+      "parca": 53,
+      "parca_sayisi": 53,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.591243+00:00",
   "telafi_utc": "2026-11-02T23:46:21.787230+00:00",
   "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
   "otonomi_indir_utc": "2026-11-03T00:03:40.241930+00:00",
-  "profesyonel_dolum_utc": "2026-11-03T07:27:48.035397+00:00"
+  "profesyonel_dolum_utc": "2026-11-03T07:27:48.035397+00:00",
+  "dalga_b_deep_works": 3,
+  "dalga_b_deep_list": [
+    {
+      "key": "think_stats",
+      "parca": 33
+    },
+    {
+      "key": "think_bayes",
+      "parca": 33
+    },
+    {
+      "key": "islr_ds",
+      "parca": 25
+    }
+  ],
+  "dalga_b_derin_utc": "2026-11-10T07:31:59.541445+00:00",
+  "deep_full_works": [
+    {
+      "key": "manning_ir_book",
+      "parca": 129
+    },
+    {
+      "key": "pandas_docs",
+      "parca": 124
+    },
+    {
+      "key": "think_bayes",
+      "parca": 118
+    },
+    {
+      "key": "islr_ds",
+      "parca": 111
+    },
+    {
+      "key": "embed_rerank",
+      "parca": 57
+    },
+    {
+      "key": "pdsh",
+      "parca": 56
+    },
+    {
+      "key": "d2l_islr_esl",
+      "parca": 53
+    },
+    {
+      "key": "sklearn_ug",
+      "parca": 51
+    },
+    {
+      "key": "think_stats",
+      "parca": 40
+    }
+  ],
+  "deep_full_count": 9,
+  "tam_eser_utc": "2026-11-11T11:38:24.939991+00:00"
 }

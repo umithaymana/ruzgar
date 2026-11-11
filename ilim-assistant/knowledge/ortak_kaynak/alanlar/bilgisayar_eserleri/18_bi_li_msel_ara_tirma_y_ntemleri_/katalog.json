@@ -2,8 +2,8 @@
   "dal": "18_bi_li_msel_ara_tirma_y_ntemleri_",
   "excel": "18 - ) BİLİMSEL ARAŞTIRMA YÖNTEMLERİ.xlsx",
   "n_list": 150,
-  "sources": 7,
-  "ok_sources": 7,
+  "sources": 12,
+  "ok_sources": 12,
   "ilave_rows": 3,
   "updated_utc": "2026-11-09T21:00:47.448830+00:00",
   "skills": [
@@ -14,12 +14,19 @@
   "kaynaklar": {
     "openstax_stats": {
       "kaynak_id": "18_bi_li_msel_ara_tirma_y_ntemleri__openstax_stats",
-      "baslik": "OpenStax Introductory Statistics",
-      "url": "https://openstax.org/details/books/introductory-statistics-2e",
+      "baslik": "OpenStax Introductory Statistics 2e — HTML tam paket",
+      "url": "https://openstax.org/books/introductory-statistics-2e/",
       "dal": "18_bi_li_msel_ara_tirma_y_ntemleri_",
       "ok": true,
       "telafi": true,
-      "parca": 1
+      "parca": 81,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 55,
+      "html_expected": 40,
+      "updated_utc": "2026-11-10T08:30:54.577109+00:00",
+      "parca_sayisi": 81,
+      "derin_yesil": true
     },
     "reproducible": {
       "kaynak_id": "18_bi_li_msel_ara_tirma_y_ntemleri__reproducible",
@@ -28,7 +35,19 @@
       "dal": "18_bi_li_msel_ara_tirma_y_ntemleri_",
       "ok": true,
       "telafi": true,
-      "parca": 1
+      "parca": 694,
+      "truncated": false,
+      "html_pages": 5,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T11:39:40.841510+00:00",
+      "parca_sayisi": 694,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 70,
+      "boost_siblings": [
+        "bilim_tarihi",
+        "turing_way"
+      ]
     },
     "zenodo": {
       "kaynak_id": "18_bi_li_msel_ara_tirma_y_ntemleri__zenodo",
@@ -37,12 +56,23 @@
       "dal": "18_bi_li_msel_ara_tirma_y_ntemleri_",
       "ok": true,
       "telafi": true,
-      "parca": 1
+      "parca": 113,
+      "truncated": false,
+      "html_pages": 5,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T11:39:42.186746+00:00",
+      "parca_sayisi": 113,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 35,
+      "boost_siblings": [
+        "zenodo_docs"
+      ]
     },
     "turing_way": {
       "kaynak_id": "18_bi_li_msel_ara_tirma_y_ntemleri__turing_way",
-      "baslik": "The Turing Way",
-      "url": "https://the-turing-way.netlify.app/project-design/project-design",
+      "baslik": "The Turing Way — guide for reproducible data science (GitHub md)",
+      "url": "https://github.com/the-turing-way/the-turing-way",
       "dal": "18_bi_li_msel_ara_tirma_y_ntemleri_",
       "ok": true,
       "otonomi_indir": true,
@@ -51,10 +81,15 @@
         "turing_way_01.html",
         "turing_way_02.html"
       ],
-      "parca": 2,
-      "parca_sayisi": 2,
+      "parca": 115,
+      "parca_sayisi": 115,
       "dalga_e_raw_derin": true,
-      "updated_utc": "2026-11-09T21:00:16.769745+00:00"
+      "updated_utc": "2026-11-10T08:29:47.598916+00:00",
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 119,
+      "html_expected": 40,
+      "derin_yesil": true
     },
     "openstax_stats_page": {
       "kaynak_id": "18_bi_li_msel_ara_tirma_y_ntemleri__openstax_stats_page",
@@ -66,7 +101,18 @@
       "raw_files": [
         "openstax_stats_page_00.html"
       ],
-      "parca": 1
+      "parca": 151,
+      "truncated": false,
+      "html_pages": 5,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T11:39:43.677845+00:00",
+      "parca_sayisi": 151,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 12,
+      "boost_siblings": [
+        "openstax_stats"
+      ]
     },
     "reproducibility": {
       "kaynak_id": "18_bi_li_msel_ara_tirma_y_ntemleri__reproducibility",
@@ -77,7 +123,9 @@
       "ok": true,
       "parca_sayisi": 41,
       "ince_raf_dolum": true,
-      "updated_utc": "2026-11-03T07:50:22.016977+00:00"
+      "updated_utc": "2026-11-03T07:50:22.016977+00:00",
+      "derin_yesil": true,
+      "tam_eser": true
     },
     "how_to_science": {
       "kaynak_id": "18_bi_li_msel_ara_tirma_y_ntemleri__how_to_science",
@@ -86,27 +134,155 @@
       "url": "https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005510",
       "local": "raw/how_to_science_00.html",
       "ok": true,
-      "parca_sayisi": 10,
+      "parca_sayisi": 53,
       "ince_raf_dolum": true,
-      "updated_utc": "2026-11-09T21:00:18.270957+00:00",
+      "updated_utc": "2026-11-11T11:00:54.275824+00:00",
       "dal": "18_bi_li_msel_ara_tirma_y_ntemleri_",
-      "parca": 10,
-      "dalga_e_raw_derin": true
+      "parca": 53,
+      "dalga_e_raw_derin": true,
+      "truncated": false,
+      "html_pages": 34,
+      "html_expected": 22,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 34
     },
     "turing_way_web": {
       "kaynak_id": "18_bi_li_msel_ara_tirma_y_ntemleri__turing_way_web",
       "baslik": "The Turing Way (web)",
       "dal": "18_bi_li_msel_ara_tirma_y_ntemleri_",
       "ok": true,
-      "parca": 4,
-      "parca_sayisi": 4,
+      "parca": 190,
+      "parca_sayisi": 190,
       "dalga_e_web_derin": true,
-      "updated_utc": "2026-11-09T21:00:47.448830+00:00"
+      "updated_utc": "2026-11-11T11:39:43.808277+00:00",
+      "url": "",
+      "boost_siblings": [
+        "turing_way"
+      ],
+      "html_pages": 5,
+      "html_expected": 22,
+      "tam_eser": true,
+      "derin_yesil": true
+    },
+    "osf_docs": {
+      "kaynak_id": "18_bi_li_msel_ara_tirma_y_ntemleri__osf_docs",
+      "baslik": "OSF open science docs (GitHub)",
+      "url": "https://github.com/CenterForOpenScience/osf.io",
+      "dal": "18_bi_li_msel_ara_tirma_y_ntemleri_",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 67,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T11:03:06.251223+00:00",
+      "parca": 43,
+      "parca_sayisi": 43,
+      "derin_yesil": true,
+      "html_got": 67
+    },
+    "zenodo_docs": {
+      "kaynak_id": "18_bi_li_msel_ara_tirma_y_ntemleri__zenodo_docs",
+      "baslik": "Zenodo docs (GitHub) — açık arşiv",
+      "url": "https://github.com/zenodo/zenodo",
+      "dal": "18_bi_li_msel_ara_tirma_y_ntemleri_",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 67,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T11:05:15.252961+00:00",
+      "parca": 45,
+      "parca_sayisi": 45,
+      "derin_yesil": true,
+      "html_got": 67
+    },
+    "r4ds": {
+      "kaynak_id": "18_bi_li_msel_ara_tirma_y_ntemleri__r4ds",
+      "baslik": "R for Data Science (Hadley/Wickham) — araştırma veri iş akışı",
+      "url": "https://github.com/hadley/r4ds",
+      "dal": "18_bi_li_msel_ara_tirma_y_ntemleri_",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 44,
+      "html_expected": 30,
+      "updated_utc": "2026-11-10T08:31:43.853253+00:00",
+      "parca": 67,
+      "parca_sayisi": 67,
+      "derin_yesil": true
+    },
+    "bilim_tarihi": {
+      "kaynak_id": "18_bi_li_msel_ara_tirma_y_ntemleri__bilim_tarihi",
+      "baslik": "Bilim tarihi — açık üniversite / kamu malı klasikler (kalın)",
+      "url": "https://plato.stanford.edu/entries/historiescience/",
+      "dal": "18_bi_li_msel_ara_tirma_y_ntemleri_",
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 22,
+      "updated_utc": "2026-11-10T19:53:31.434827+00:00",
+      "parca": 235,
+      "parca_sayisi": 235,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.597244+00:00",
   "telafi_utc": "2026-11-02T23:48:11.137423+00:00",
   "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
   "otonomi_indir_utc": "2026-11-03T00:04:05.773436+00:00",
-  "ince_raf_dolum_utc": "2026-11-03T07:50:33.386133+00:00"
+  "ince_raf_dolum_utc": "2026-11-03T07:50:33.386133+00:00",
+  "deep_full_works": [
+    {
+      "key": "reproducible",
+      "parca": 694
+    },
+    {
+      "key": "bilim_tarihi",
+      "parca": 235
+    },
+    {
+      "key": "turing_way_web",
+      "parca": 190
+    },
+    {
+      "key": "openstax_stats_page",
+      "parca": 151
+    },
+    {
+      "key": "turing_way",
+      "parca": 115
+    },
+    {
+      "key": "zenodo",
+      "parca": 113
+    },
+    {
+      "key": "openstax_stats",
+      "parca": 81
+    },
+    {
+      "key": "r4ds",
+      "parca": 67
+    },
+    {
+      "key": "how_to_science",
+      "parca": 53
+    },
+    {
+      "key": "zenodo_docs",
+      "parca": 45
+    },
+    {
+      "key": "osf_docs",
+      "parca": 43
+    },
+    {
+      "key": "reproducibility",
+      "parca": 0
+    }
+  ],
+  "deep_full_count": 12,
+  "tam_eser_utc": "2026-11-11T11:39:43.858550+00:00"
 }

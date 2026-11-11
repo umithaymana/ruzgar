@@ -2,8 +2,8 @@
   "dal": "13_matemati_k",
   "excel": "13 - ) MATEMATİK.xlsx",
   "n_list": 150,
-  "sources": 6,
-  "ok_sources": 6,
+  "sources": 12,
+  "ok_sources": 12,
   "ilave_rows": 3,
   "updated_utc": "2026-11-09T20:21:13.288915+00:00",
   "skills": [
@@ -13,12 +13,20 @@
   "kaynaklar": {
     "openstax_calc1": {
       "kaynak_id": "13_matemati_k_openstax_calc1",
-      "baslik": "OpenStax Calculus Volume 1",
-      "url": "https://openstax.org/details/books/calculus-volume-1",
+      "baslik": "OpenStax Calculus Volume 1 (tam PDF)",
+      "url": "https://assets.openstax.org/oscms-prodcms/media/documents/CalculusVolume1-OP.pdf",
       "dal": "13_matemati_k",
       "ok": true,
       "telafi": true,
-      "parca": 1
+      "parca": 137,
+      "tam_eser": true,
+      "truncated": true,
+      "pdf_pages": 873,
+      "extracted_pages": 873,
+      "local": "raw/openstax_calculus_volume1.pdf",
+      "updated_utc": "2026-11-10T07:40:16.931798+00:00",
+      "parca_sayisi": 137,
+      "derin_yesil": true
     },
     "openstax_linalg": {
       "kaynak_id": "13_matemati_k_openstax_linalg",
@@ -27,7 +35,18 @@
       "dal": "13_matemati_k",
       "ok": true,
       "telafi": true,
-      "parca": 1
+      "parca": 251,
+      "truncated": false,
+      "html_pages": 5,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T11:38:53.361936+00:00",
+      "parca_sayisi": 251,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 4,
+      "boost_siblings": [
+        "openstax_calc1"
+      ]
     },
     "3blue1brown_essence": {
       "kaynak_id": "13_matemati_k_3blue1brown_essence",
@@ -36,10 +55,20 @@
       "dal": "13_matemati_k",
       "ok": true,
       "telafi": true,
-      "parca": 1,
-      "parca_sayisi": 1,
+      "parca": 651,
+      "parca_sayisi": 651,
       "dalga_b_raw_derin": true,
-      "updated_utc": "2026-11-09T20:20:22.176735+00:00"
+      "updated_utc": "2026-11-11T11:38:58.848469+00:00",
+      "truncated": false,
+      "html_pages": 5,
+      "html_expected": 22,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 50,
+      "boost_siblings": [
+        "openstax_linalg",
+        "openstax_calc3"
+      ]
     },
     "openstax_calc1_pdf": {
       "kaynak_id": "13_matemati_k_openstax_calc1_pdf",
@@ -49,21 +78,35 @@
       "ok": true,
       "otonomi_indir": true,
       "raw_files": [],
-      "parca": 1
+      "parca": 222,
+      "boost_siblings": [
+        "openstax_calc1"
+      ],
+      "updated_utc": "2026-11-11T11:38:59.695574+00:00",
+      "html_pages": 5,
+      "html_expected": 22,
+      "parca_sayisi": 222,
+      "tam_eser": true,
+      "derin_yesil": true
     },
     "mcs_math": {
       "kaynak_id": "13_matemati_k_mcs_math",
-      "baslik": "Mathematics for Computer Science (MIT)",
+      "baslik": "Mathematics for Computer Science (MIT 6.042) — tam PDF",
       "lisans": "CC BY-SA / MIT",
       "url": "https://courses.csail.mit.edu/6.042/spring18/mcs.pdf",
-      "local": "raw/mcs_math_00.html",
+      "local": "raw/mcs_math.pdf",
       "ok": true,
-      "parca_sayisi": 38,
+      "parca_sayisi": 179,
       "profesyonel_dolum": true,
-      "updated_utc": "2026-11-09T20:20:28.607693+00:00",
+      "updated_utc": "2026-11-10T07:40:37.814120+00:00",
       "dal": "13_matemati_k",
-      "parca": 38,
-      "dalga_b_raw_derin": true
+      "parca": 179,
+      "dalga_b_raw_derin": true,
+      "tam_eser": true,
+      "truncated": true,
+      "pdf_pages": 1048,
+      "extracted_pages": 1048,
+      "derin_yesil": true
     },
     "mcs_html_deep": {
       "kaynak_id": "13_matemati_k_mcs_html_deep",
@@ -72,23 +115,113 @@
       "url": "https://openstax.org/books/elementary-algebra-2e/pages/1-introduction",
       "local": "raw/mcs_html_deep_00.html",
       "ok": true,
-      "parca_sayisi": 12,
+      "parca_sayisi": 41,
       "ince_raf_dolum": true,
-      "updated_utc": "2026-11-09T20:20:23.072722+00:00",
+      "updated_utc": "2026-11-11T10:47:49.316598+00:00",
       "dal": "13_matemati_k",
-      "parca": 12,
-      "dalga_b_raw_derin": true
+      "parca": 41,
+      "dalga_b_raw_derin": true,
+      "truncated": false,
+      "html_pages": 21,
+      "html_expected": 22,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 21
     },
     "discrete_levin": {
       "kaynak_id": "13_matemati_k_discrete_levin",
-      "baslik": "Discrete Mathematics: An Open Introduction (Levin)",
-      "url": "https://discrete.openmathbooks.org/",
+      "baslik": "Discrete Mathematics: An Open Introduction (Levin) — tam PDF",
+      "url": "https://discrete.openmathbooks.org/pdfs/dmoi-tablet.pdf",
       "dal": "13_matemati_k",
       "ok": true,
-      "parca": 44,
-      "parca_sayisi": 44,
+      "parca": 80,
+      "parca_sayisi": 80,
       "dalga_b_raw_derin": true,
-      "updated_utc": "2026-11-09T20:21:13.288915+00:00"
+      "updated_utc": "2026-11-10T07:41:36.058461+00:00",
+      "tam_eser": true,
+      "truncated": true,
+      "html_pages": 3,
+      "html_expected": 12,
+      "derin_yesil": true,
+      "pdf_pages": 414,
+      "extracted_pages": 414,
+      "local": "raw/discrete_levin.pdf"
+    },
+    "openstax_calc2": {
+      "kaynak_id": "13_matemati_k_openstax_calc2",
+      "baslik": "OpenStax Calculus Volume 2 — HTML tam paket",
+      "url": "https://openstax.org/books/calculus-volume-2/",
+      "dal": "13_matemati_k",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 58,
+      "html_expected": 40,
+      "updated_utc": "2026-11-10T17:47:37.915353+00:00",
+      "parca": 171,
+      "parca_sayisi": 171,
+      "derin_yesil": true
+    },
+    "openstax_calc3": {
+      "kaynak_id": "13_matemati_k_openstax_calc3",
+      "baslik": "OpenStax Calculus Volume 3 — HTML tam paket",
+      "url": "https://openstax.org/books/calculus-volume-3/",
+      "dal": "13_matemati_k",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 51,
+      "html_expected": 35,
+      "updated_utc": "2026-11-10T17:47:58.989913+00:00",
+      "parca": 201,
+      "parca_sayisi": 201,
+      "derin_yesil": true
+    },
+    "ila_gatech": {
+      "kaynak_id": "13_matemati_k_ila_gatech",
+      "baslik": "Interactive Linear Algebra (Georgia Tech)",
+      "url": "https://textbooks.math.gatech.edu/ila/",
+      "dal": "13_matemati_k",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 52,
+      "html_expected": 25,
+      "updated_utc": "2026-11-10T17:49:11.616459+00:00",
+      "parca": 49,
+      "parca_sayisi": 49,
+      "derin_yesil": true
+    },
+    "mit_6042": {
+      "kaynak_id": "13_matemati_k_mit_6042",
+      "baslik": "MIT 6.042J MCS OCW notes+PDFs (kalın)",
+      "url": "https://ocw.mit.edu/courses/6-042j-mathematics-for-computer-science-spring-2015/",
+      "dal": "13_matemati_k",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": true,
+      "html_pages": 69,
+      "html_expected": 20,
+      "updated_utc": "2026-11-10T18:15:47.699288+00:00",
+      "parca": 180,
+      "parca_sayisi": 180,
+      "derin_yesil": true,
+      "pdf_pages": 1091
+    },
+    "openstax_derin": {
+      "kaynak_id": "13_matemati_k_openstax_derin",
+      "baslik": "OpenStax kitap sayfaları + LibreTexts (kalın)",
+      "url": "https://openstax.org/subjects",
+      "dal": "13_matemati_k",
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 25,
+      "updated_utc": "2026-11-10T19:54:28.439439+00:00",
+      "parca": 61,
+      "parca_sayisi": 61,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.593241+00:00",
@@ -96,5 +229,57 @@
   "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
   "otonomi_indir_utc": "2026-11-03T00:03:46.507514+00:00",
   "profesyonel_dolum_utc": "2026-11-03T07:28:24.575509+00:00",
-  "ince_raf_dolum_utc": "2026-11-03T07:52:01.209876+00:00"
+  "ince_raf_dolum_utc": "2026-11-03T07:52:01.209876+00:00",
+  "deep_full_works": [
+    {
+      "key": "3blue1brown_essence",
+      "parca": 651
+    },
+    {
+      "key": "openstax_linalg",
+      "parca": 251
+    },
+    {
+      "key": "openstax_calc1_pdf",
+      "parca": 222
+    },
+    {
+      "key": "openstax_calc3",
+      "parca": 201
+    },
+    {
+      "key": "mit_6042",
+      "parca": 180
+    },
+    {
+      "key": "mcs_math",
+      "parca": 179
+    },
+    {
+      "key": "openstax_calc2",
+      "parca": 171
+    },
+    {
+      "key": "openstax_calc1",
+      "parca": 137
+    },
+    {
+      "key": "discrete_levin",
+      "parca": 80
+    },
+    {
+      "key": "openstax_derin",
+      "parca": 61
+    },
+    {
+      "key": "ila_gatech",
+      "parca": 49
+    },
+    {
+      "key": "mcs_html_deep",
+      "parca": 41
+    }
+  ],
+  "deep_full_count": 12,
+  "tam_eser_utc": "2026-11-11T11:38:59.758879+00:00"
 }

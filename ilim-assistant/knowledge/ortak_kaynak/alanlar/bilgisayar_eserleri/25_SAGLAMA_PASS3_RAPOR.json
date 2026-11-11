@@ -1,0 +1,415 @@
+{
+  "ts": "2026-11-11T11:34:47.872174+00:00",
+  "kalin": [
+    "01_programlama/little_semaphores",
+    "01_programlama/zero2prod",
+    "01_programlama/tour_of_go",
+    "03_yapay_zeka/fastai",
+    "04_veri_tabanlari/pg_tutorial",
+    "04_veri_tabanlari/pg_docs",
+    "04_veri_tabanlari/cmu_15445",
+    "04_veri_tabanlari/db_msan_notes",
+    "04_veri_tabanlari/db_omurga_derin",
+    "04_veri_tabanlari/sqlite_pack",
+    "04_veri_tabanlari/sql_index_pack",
+    "05_a_teknoloji_leri_/beej_ipc",
+    "05_a_teknoloji_leri_/web_http_pack",
+    "06_i_leti_m_si_stemleri_/ostep",
+    "06_i_leti_m_si_stemleri_/lfs",
+    "06_i_leti_m_si_stemleri_/kernel_docs",
+    "06_i_leti_m_si_stemleri_/xv6_book",
+    "06_i_leti_m_si_stemleri_/ostep_site",
+    "06_i_leti_m_si_stemleri_/linux_kernel_pack",
+    "06_i_leti_m_si_stemleri_/ostep_vol1",
+    "06_i_leti_m_si_stemleri_/ostep_vol2",
+    "06_i_leti_m_si_stemleri_/ostep_vol3",
+    "07_si_ber_g_venli_k/owasp_top10",
+    "07_si_ber_g_venli_k/owasp_asvs",
+    "07_si_ber_g_venli_k/owasp_proactive",
+    "07_si_ber_g_venli_k/nist_sp800_61r3",
+    "07_si_ber_g_venli_k/nist_sp800_61r2_hist",
+    "07_si_ber_g_venli_k/nist_sp800_83r1",
+    "07_si_ber_g_venli_k/nist_sp800_92",
+    "07_si_ber_g_venli_k/cisa_blue_team",
+    "07_si_ber_g_venli_k/owasp_top10_2021",
+    "07_si_ber_g_venli_k/ruzgar_cift_yonlu_analiz_teori",
+    "07_si_ber_g_venli_k/ietf_rfc9293_tcp",
+    "07_si_ber_g_venli_k/ietf_rfc8446_tls13",
+    "07_si_ber_g_venli_k/ietf_rfc5246_tls12",
+    "07_si_ber_g_venli_k/ietf_rfc8200_ipv6",
+    "07_si_ber_g_venli_k/ietf_rfc791_ipv4",
+    "07_si_ber_g_venli_k/ietf_rfc3552_security",
+    "07_si_ber_g_venli_k/nist_sp800_115",
+    "07_si_ber_g_venli_k/nist_sp800_40r4",
+    "07_si_ber_g_venli_k/nist_sp800_154",
+    "07_si_ber_g_venli_k/owasp_asvs_raw",
+    "07_si_ber_g_venli_k/owasp_wstg_theory",
+    "07_si_ber_g_venli_k/ptes_technical_guidelines",
+    "07_si_ber_g_venli_k/nist_sp800_61r2",
+    "08_yazilim_mi_mari_leri_/aosa_full",
+    "08_yazilim_mi_mari_leri_/twelve_factor",
+    "08_yazilim_mi_mari_leri_/aosa_v1_deep",
+    "08_yazilim_mi_mari_leri_/twelve_factor_deep",
+    "09_devops_ve_altyapisi/k8s_tasks",
+    "10_veri_bi_li_mi_/think_bayes",
+    "11_c_s/teachyourselfcs",
+    "11_c_s/ossu",
+    "11_c_s/n2t_cs",
+    "11_c_s/ossu_cs",
+    "11_c_s/cs_selfstudy_pack",
+    "11_c_s/cs50_pack",
+    "12_bi_lgi_sayar_m_hendi_sli_i_/ben_eater",
+    "12_bi_lgi_sayar_m_hendi_sli_i_/nand2tetris_deep",
+    "12_bi_lgi_sayar_m_hendi_sli_i_/xv6_book",
+    "13_matemati_k/openstax_linalg",
+    "13_matemati_k/3blue1brown_essence",
+    "13_matemati_k/openstax_calc1_pdf",
+    "14_fi_zi_k/openstax_physics",
+    "14_fi_zi_k/openstax_up1_pdf",
+    "14_fi_zi_k/feynman",
+    "15_elektroni_k/elec_tutorials",
+    "15_elektroni_k/circuitpython",
+    "16_roboti_k/modern_robotics_site",
+    "16_roboti_k/ros_docs_deep",
+    "16_roboti_k/robotics_deep",
+    "17_mekatroni_k/arduino_ref",
+    "17_mekatroni_k/platformio",
+    "18_bi_li_msel_ara_tirma_y_ntemleri_/reproducible",
+    "18_bi_li_msel_ara_tirma_y_ntemleri_/zenodo",
+    "18_bi_li_msel_ara_tirma_y_ntemleri_/openstax_stats_page",
+    "18_bi_li_msel_ara_tirma_y_ntemleri_/turing_way_web",
+    "19_psi_koloji_/openstax_psych_page",
+    "20_bi_li_sel_bi_li_mler/openmind",
+    "23_ekonomi_/econlib",
+    "23_ekonomi_/openstax_econ_page"
+  ],
+  "failed": [],
+  "items": {
+    "01_programlama/little_semaphores": {
+      "parca": 800,
+      "pages": 5
+    },
+    "01_programlama/zero2prod": {
+      "parca": 800,
+      "pages": 5
+    },
+    "01_programlama/tour_of_go": {
+      "parca": 800,
+      "pages": 5
+    },
+    "03_yapay_zeka/fastai": {
+      "parca": 800,
+      "pages": 5
+    },
+    "04_veri_tabanlari/pg_tutorial": {
+      "parca": 81,
+      "pages": 5
+    },
+    "04_veri_tabanlari/pg_docs": {
+      "parca": 127,
+      "pages": 5
+    },
+    "04_veri_tabanlari/cmu_15445": {
+      "parca": 537,
+      "pages": 5
+    },
+    "04_veri_tabanlari/db_msan_notes": {
+      "parca": 800,
+      "pages": 5
+    },
+    "04_veri_tabanlari/db_omurga_derin": {
+      "parca": 800,
+      "pages": 5
+    },
+    "04_veri_tabanlari/sqlite_pack": {
+      "parca": 146,
+      "pages": 5
+    },
+    "04_veri_tabanlari/sql_index_pack": {
+      "parca": 149,
+      "pages": 5
+    },
+    "05_a_teknoloji_leri_/beej_ipc": {
+      "parca": 160,
+      "pages": 5
+    },
+    "05_a_teknoloji_leri_/web_http_pack": {
+      "parca": 682,
+      "pages": 5
+    },
+    "06_i_leti_m_si_stemleri_/ostep": {
+      "parca": 113,
+      "pages": 5
+    },
+    "06_i_leti_m_si_stemleri_/lfs": {
+      "parca": 800,
+      "pages": 5
+    },
+    "06_i_leti_m_si_stemleri_/kernel_docs": {
+      "parca": 97,
+      "pages": 5
+    },
+    "06_i_leti_m_si_stemleri_/xv6_book": {
+      "parca": 800,
+      "pages": 5
+    },
+    "06_i_leti_m_si_stemleri_/ostep_site": {
+      "parca": 122,
+      "pages": 5
+    },
+    "06_i_leti_m_si_stemleri_/linux_kernel_pack": {
+      "parca": 103,
+      "pages": 5
+    },
+    "06_i_leti_m_si_stemleri_/ostep_vol1": {
+      "parca": 140,
+      "pages": 5
+    },
+    "06_i_leti_m_si_stemleri_/ostep_vol2": {
+      "parca": 134,
+      "pages": 5
+    },
+    "06_i_leti_m_si_stemleri_/ostep_vol3": {
+      "parca": 151,
+      "pages": 5
+    },
+    "07_si_ber_g_venli_k/owasp_top10": {
+      "parca": 151,
+      "pages": 5
+    },
+    "07_si_ber_g_venli_k/owasp_asvs": {
+      "parca": 197,
+      "pages": 5
+    },
+    "07_si_ber_g_venli_k/owasp_proactive": {
+      "parca": 210,
+      "pages": 5
+    },
+    "07_si_ber_g_venli_k/nist_sp800_61r3": {
+      "parca": 178,
+      "pages": 5
+    },
+    "07_si_ber_g_venli_k/nist_sp800_61r2_hist": {
+      "parca": 218,
+      "pages": 5
+    },
+    "07_si_ber_g_venli_k/nist_sp800_83r1": {
+      "parca": 191,
+      "pages": 5
+    },
+    "07_si_ber_g_venli_k/nist_sp800_92": {
+      "parca": 201,
+      "pages": 5
+    },
+    "07_si_ber_g_venli_k/cisa_blue_team": {
+      "parca": 75,
+      "pages": 5
+    },
+    "07_si_ber_g_venli_k/owasp_top10_2021": {
+      "parca": 153,
+      "pages": 5
+    },
+    "07_si_ber_g_venli_k/ruzgar_cift_yonlu_analiz_teori": {
+      "parca": 800,
+      "pages": 5
+    },
+    "07_si_ber_g_venli_k/ietf_rfc9293_tcp": {
+      "parca": 43,
+      "pages": 1
+    },
+    "07_si_ber_g_venli_k/ietf_rfc8446_tls13": {
+      "parca": 55,
+      "pages": 1
+    },
+    "07_si_ber_g_venli_k/ietf_rfc5246_tls12": {
+      "parca": 79,
+      "pages": 5
+    },
+    "07_si_ber_g_venli_k/ietf_rfc8200_ipv6": {
+      "parca": 150,
+      "pages": 5
+    },
+    "07_si_ber_g_venli_k/ietf_rfc791_ipv4": {
+      "parca": 150,
+      "pages": 5
+    },
+    "07_si_ber_g_venli_k/ietf_rfc3552_security": {
+      "parca": 153,
+      "pages": 5
+    },
+    "07_si_ber_g_venli_k/nist_sp800_115": {
+      "parca": 213,
+      "pages": 5
+    },
+    "07_si_ber_g_venli_k/nist_sp800_40r4": {
+      "parca": 173,
+      "pages": 5
+    },
+    "07_si_ber_g_venli_k/nist_sp800_154": {
+      "parca": 170,
+      "pages": 5
+    },
+    "07_si_ber_g_venli_k/owasp_asvs_raw": {
+      "parca": 165,
+      "pages": 5
+    },
+    "07_si_ber_g_venli_k/owasp_wstg_theory": {
+      "parca": 152,
+      "pages": 5
+    },
+    "07_si_ber_g_venli_k/ptes_technical_guidelines": {
+      "parca": 800,
+      "pages": 5
+    },
+    "07_si_ber_g_venli_k/nist_sp800_61r2": {
+      "parca": 209,
+      "pages": 5
+    },
+    "08_yazilim_mi_mari_leri_/aosa_full": {
+      "parca": 168,
+      "pages": 5
+    },
+    "08_yazilim_mi_mari_leri_/twelve_factor": {
+      "parca": 800,
+      "pages": 5
+    },
+    "08_yazilim_mi_mari_leri_/aosa_v1_deep": {
+      "parca": 181,
+      "pages": 5
+    },
+    "08_yazilim_mi_mari_leri_/twelve_factor_deep": {
+      "parca": 800,
+      "pages": 5
+    },
+    "09_devops_ve_altyapisi/k8s_tasks": {
+      "parca": 127,
+      "pages": 5
+    },
+    "10_veri_bi_li_mi_/think_bayes": {
+      "parca": 118,
+      "pages": 5
+    },
+    "11_c_s/teachyourselfcs": {
+      "parca": 226,
+      "pages": 5
+    },
+    "11_c_s/ossu": {
+      "parca": 456,
+      "pages": 5
+    },
+    "11_c_s/n2t_cs": {
+      "parca": 681,
+      "pages": 5
+    },
+    "11_c_s/ossu_cs": {
+      "parca": 466,
+      "pages": 5
+    },
+    "11_c_s/cs_selfstudy_pack": {
+      "parca": 264,
+      "pages": 5
+    },
+    "11_c_s/cs50_pack": {
+      "parca": 158,
+      "pages": 5
+    },
+    "12_bi_lgi_sayar_m_hendi_sli_i_/ben_eater": {
+      "parca": 747,
+      "pages": 5
+    },
+    "12_bi_lgi_sayar_m_hendi_sli_i_/nand2tetris_deep": {
+      "parca": 104,
+      "pages": 5
+    },
+    "12_bi_lgi_sayar_m_hendi_sli_i_/xv6_book": {
+      "parca": 800,
+      "pages": 5
+    },
+    "13_matemati_k/openstax_linalg": {
+      "parca": 251,
+      "pages": 5
+    },
+    "13_matemati_k/3blue1brown_essence": {
+      "parca": 651,
+      "pages": 5
+    },
+    "13_matemati_k/openstax_calc1_pdf": {
+      "parca": 222,
+      "pages": 5
+    },
+    "14_fi_zi_k/openstax_physics": {
+      "parca": 357,
+      "pages": 5
+    },
+    "14_fi_zi_k/openstax_up1_pdf": {
+      "parca": 359,
+      "pages": 5
+    },
+    "14_fi_zi_k/feynman": {
+      "parca": 772,
+      "pages": 5
+    },
+    "15_elektroni_k/elec_tutorials": {
+      "parca": 408,
+      "pages": 5
+    },
+    "15_elektroni_k/circuitpython": {
+      "parca": 603,
+      "pages": 5
+    },
+    "16_roboti_k/modern_robotics_site": {
+      "parca": 94,
+      "pages": 5
+    },
+    "16_roboti_k/ros_docs_deep": {
+      "parca": 77,
+      "pages": 5
+    },
+    "16_roboti_k/robotics_deep": {
+      "parca": 88,
+      "pages": 5
+    },
+    "17_mekatroni_k/arduino_ref": {
+      "parca": 800,
+      "pages": 5
+    },
+    "17_mekatroni_k/platformio": {
+      "parca": 800,
+      "pages": 5
+    },
+    "18_bi_li_msel_ara_tirma_y_ntemleri_/reproducible": {
+      "parca": 694,
+      "pages": 5
+    },
+    "18_bi_li_msel_ara_tirma_y_ntemleri_/zenodo": {
+      "parca": 113,
+      "pages": 5
+    },
+    "18_bi_li_msel_ara_tirma_y_ntemleri_/openstax_stats_page": {
+      "parca": 151,
+      "pages": 5
+    },
+    "18_bi_li_msel_ara_tirma_y_ntemleri_/turing_way_web": {
+      "parca": 190,
+      "pages": 5
+    },
+    "19_psi_koloji_/openstax_psych_page": {
+      "parca": 429,
+      "pages": 5
+    },
+    "20_bi_li_sel_bi_li_mler/openmind": {
+      "parca": 800,
+      "pages": 5
+    },
+    "23_ekonomi_/econlib": {
+      "parca": 69,
+      "pages": 5
+    },
+    "23_ekonomi_/openstax_econ_page": {
+      "parca": 323,
+      "pages": 5
+    }
+  },
+  "thin_left": 0,
+  "thin_left_list": []
+}

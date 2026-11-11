@@ -2,8 +2,8 @@
   "dal": "17_mekatroni_k",
   "excel": "17 - ) MEKATRONİK.xlsx",
   "n_list": 150,
-  "sources": 6,
-  "ok_sources": 6,
+  "sources": 9,
+  "ok_sources": 9,
   "ilave_rows": 3,
   "updated_utc": "2026-11-09T20:58:42.696135+00:00",
   "skills": [
@@ -19,19 +19,37 @@
       "dal": "17_mekatroni_k",
       "ok": true,
       "telafi": true,
-      "parca": 1
+      "parca": 160,
+      "truncated": false,
+      "html_pages": 44,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T10:54:56.231818+00:00",
+      "parca_sayisi": 160,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 44
     },
     "arduino_ref": {
       "kaynak_id": "17_mekatroni_k_arduino_ref",
-      "baslik": "Arduino Language Reference",
+      "baslik": "Arduino Language Reference — tam paket",
       "url": "https://www.arduino.cc/reference/en/",
       "dal": "17_mekatroni_k",
       "ok": true,
       "telafi": true,
-      "parca": 1,
-      "parca_sayisi": 1,
+      "parca": 800,
+      "parca_sayisi": 800,
       "dalga_d_raw_derin": true,
-      "updated_utc": "2026-11-09T20:56:00.929494+00:00"
+      "updated_utc": "2026-11-11T11:39:29.183725+00:00",
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 5,
+      "html_expected": 22,
+      "derin_yesil": true,
+      "html_got": 1,
+      "boost_siblings": [
+        "esp_idf",
+        "embedded_esp"
+      ]
     },
     "platformio": {
       "kaynak_id": "17_mekatroni_k_platformio",
@@ -40,15 +58,25 @@
       "dal": "17_mekatroni_k",
       "ok": true,
       "telafi": true,
-      "parca": 1,
-      "parca_sayisi": 1,
+      "parca": 800,
+      "parca_sayisi": 800,
       "dalga_d_raw_derin": true,
-      "updated_utc": "2026-11-09T20:56:01.117099+00:00"
+      "updated_utc": "2026-11-11T11:39:36.084175+00:00",
+      "truncated": false,
+      "html_pages": 5,
+      "html_expected": 22,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 69,
+      "boost_siblings": [
+        "esp_idf",
+        "arduino_ref"
+      ]
     },
     "esp_idf": {
       "kaynak_id": "17_mekatroni_k_esp_idf",
-      "baslik": "ESP-IDF Programming Guide",
-      "url": "https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/index.html",
+      "baslik": "ESP-IDF Programming Guide — çekirdek",
+      "url": "https://docs.espressif.com/projects/esp-idf/en/latest/esp32/",
       "dal": "17_mekatroni_k",
       "ok": true,
       "otonomi_indir": true,
@@ -56,10 +84,15 @@
         "esp_idf_00.html",
         "esp_idf_01.html"
       ],
-      "parca": 2,
-      "parca_sayisi": 2,
+      "parca": 800,
+      "parca_sayisi": 800,
       "dalga_d_raw_derin": true,
-      "updated_utc": "2026-11-09T20:56:01.053986+00:00"
+      "updated_utc": "2026-11-10T10:12:02.837612+00:00",
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 16,
+      "html_expected": 15,
+      "derin_yesil": true
     },
     "ctms": {
       "kaynak_id": "17_mekatroni_k_ctms",
@@ -67,9 +100,17 @@
       "lisans": "CC / free course",
       "url": "https://underactuated.csail.mit.edu/acrobot.html",
       "ok": true,
-      "parca_sayisi": 13,
+      "parca_sayisi": 83,
       "profesyonel_dolum": true,
-      "updated_utc": "2026-11-03T07:43:21.480291+00:00"
+      "updated_utc": "2026-11-11T10:56:46.611963+00:00",
+      "dal": "17_mekatroni_k",
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 22,
+      "parca": 83,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 22
     },
     "underactuated_deep": {
       "kaynak_id": "17_mekatroni_k_underactuated_deep",
@@ -78,19 +119,62 @@
       "url": "https://underactuated.csail.mit.edu/trajopt.html",
       "local": "raw/underactuated_deep_00.html",
       "ok": true,
-      "parca_sayisi": 34,
+      "parca_sayisi": 78,
       "ince_raf_dolum": true,
-      "updated_utc": "2026-11-03T07:51:54.620754+00:00"
+      "updated_utc": "2026-11-11T10:57:43.124211+00:00",
+      "dal": "17_mekatroni_k",
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 22,
+      "parca": 78,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 22
     },
-    "esp_idf_docs": {
-      "kaynak_id": "17_mekatroni_k_esp_idf_docs",
-      "baslik": "ESP-IDF docs (core hubs)",
+    "underactuated": {
+      "kaynak_id": "17_mekatroni_k_underactuated",
+      "baslik": "Underactuated Robotics HTML",
+      "url": "https://underactuated.mit.edu/",
       "dal": "17_mekatroni_k",
       "ok": true,
-      "parca": 4,
-      "parca_sayisi": 4,
-      "dalga_d_web_derin": true,
-      "updated_utc": "2026-11-09T20:58:42.696135+00:00"
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 29,
+      "html_expected": 10,
+      "updated_utc": "2026-11-10T08:14:52.339404+00:00",
+      "parca": 99,
+      "parca_sayisi": 99,
+      "derin_yesil": true
+    },
+    "freertos": {
+      "kaynak_id": "17_mekatroni_k_freertos",
+      "baslik": "FreeRTOS Kernel Book (GitHub)",
+      "url": "https://github.com/FreeRTOS/FreeRTOS-Kernel-Book",
+      "dal": "17_mekatroni_k",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 19,
+      "html_expected": 15,
+      "updated_utc": "2026-11-10T08:21:55.038249+00:00",
+      "parca": 63,
+      "parca_sayisi": 63,
+      "derin_yesil": true
+    },
+    "freecad_gcode": {
+      "kaynak_id": "17_mekatroni_k_freecad_gcode",
+      "baslik": "FreeCAD wiki + LinuxCNC/RepRap/Marlin G-code — sahneden parçaya (kalın)",
+      "url": "https://wiki.freecad.org/Main_Page",
+      "dal": "17_mekatroni_k",
+      "truncated": false,
+      "html_pages": 31,
+      "html_expected": 40,
+      "updated_utc": "2026-11-10T19:20:17.294530+00:00",
+      "parca": 80,
+      "parca_sayisi": 80,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.597244+00:00",
@@ -98,5 +182,45 @@
   "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
   "otonomi_indir_utc": "2026-11-03T00:03:59.357813+00:00",
   "profesyonel_dolum_utc": "2026-11-03T07:41:03.864003+00:00",
-  "ince_raf_dolum_utc": "2026-11-03T07:51:54.620754+00:00"
+  "ince_raf_dolum_utc": "2026-11-03T07:51:54.620754+00:00",
+  "deep_full_works": [
+    {
+      "key": "arduino_ref",
+      "parca": 800
+    },
+    {
+      "key": "platformio",
+      "parca": 800
+    },
+    {
+      "key": "esp_idf",
+      "parca": 800
+    },
+    {
+      "key": "embedded_esp",
+      "parca": 160
+    },
+    {
+      "key": "underactuated",
+      "parca": 99
+    },
+    {
+      "key": "ctms",
+      "parca": 83
+    },
+    {
+      "key": "freecad_gcode",
+      "parca": 80
+    },
+    {
+      "key": "underactuated_deep",
+      "parca": 78
+    },
+    {
+      "key": "freertos",
+      "parca": 63
+    }
+  ],
+  "deep_full_count": 9,
+  "tam_eser_utc": "2026-11-11T11:39:36.336289+00:00"
 }

@@ -1,0 +1,826 @@
+{
+  "ts": "2026-11-11T11:33:40.837847+00:00",
+  "items": {
+    "01_programlama/little_semaphores": {
+      "parca": 26,
+      "pages": 215
+    },
+    "01_programlama/zero2prod": {
+      "parca": 4,
+      "pages": 5
+    },
+    "01_programlama/tour_of_go": {
+      "parca": 1,
+      "pages": 0
+    },
+    "03_yapay_zeka/fastai": {
+      "parca": 21,
+      "pages": 41
+    },
+    "04_veri_tabanlari/pg_tutorial": {
+      "parca": 25,
+      "pages": 70
+    },
+    "04_veri_tabanlari/use_the_index": {
+      "parca": 57,
+      "pages": 62
+    },
+    "04_veri_tabanlari/uti_luke": {
+      "parca": 56,
+      "pages": 61
+    },
+    "04_veri_tabanlari/pg_docs": {
+      "parca": 29,
+      "pages": 71
+    },
+    "04_veri_tabanlari/cmu_15445": {
+      "parca": 1,
+      "pages": 0
+    },
+    "04_veri_tabanlari/db_omurga_derin": {
+      "parca": 1,
+      "pages": 0
+    },
+    "05_a_teknoloji_leri_/beej_ipc": {
+      "parca": 29,
+      "pages": 42
+    },
+    "06_i_leti_m_si_stemleri_/ostep": {
+      "parca": 15,
+      "pages": 33
+    },
+    "06_i_leti_m_si_stemleri_/lfs": {
+      "parca": 25,
+      "pages": 70
+    },
+    "06_i_leti_m_si_stemleri_/xv6_book": {
+      "parca": 33,
+      "pages": 105
+    },
+    "07_si_ber_g_venli_k/owasp_top10": {
+      "parca": 37,
+      "pages": 66
+    },
+    "07_si_ber_g_venli_k/owasp_asvs": {
+      "parca": 30,
+      "pages": 61
+    },
+    "07_si_ber_g_venli_k/owasp_wstg": {
+      "parca": 47,
+      "pages": 67
+    },
+    "07_si_ber_g_venli_k/owasp_proactive": {
+      "parca": 39,
+      "pages": 68
+    },
+    "07_si_ber_g_venli_k/nist_sp800_61r3": {
+      "parca": 31,
+      "pages": 1
+    },
+    "07_si_ber_g_venli_k/nist_sp800_61r2_hist": {
+      "parca": 31,
+      "pages": 1
+    },
+    "07_si_ber_g_venli_k/nist_sp800_83r1": {
+      "parca": 16,
+      "pages": 1
+    },
+    "07_si_ber_g_venli_k/cisa_blue_team": {
+      "parca": 1,
+      "pages": 1
+    },
+    "07_si_ber_g_venli_k/owasp_top10_2021": {
+      "parca": 2,
+      "pages": 2
+    },
+    "07_si_ber_g_venli_k/cis_controls_overview": {
+      "parca": 44,
+      "pages": 70
+    },
+    "07_si_ber_g_venli_k/ietf_rfc9293_tcp": {
+      "parca": 18,
+      "pages": 1
+    },
+    "07_si_ber_g_venli_k/ietf_rfc8446_tls13": {
+      "parca": 27,
+      "pages": 1
+    },
+    "07_si_ber_g_venli_k/ietf_rfc5246_tls12": {
+      "parca": 19,
+      "pages": 1
+    },
+    "07_si_ber_g_venli_k/ietf_rfc8200_ipv6": {
+      "parca": 8,
+      "pages": 1
+    },
+    "07_si_ber_g_venli_k/ietf_rfc791_ipv4": {
+      "parca": 6,
+      "pages": 1
+    },
+    "07_si_ber_g_venli_k/ietf_rfc3552_security": {
+      "parca": 11,
+      "pages": 1
+    },
+    "07_si_ber_g_venli_k/nist_sp800_115": {
+      "parca": 31,
+      "pages": 80
+    },
+    "07_si_ber_g_venli_k/nist_sp800_40r4": {
+      "parca": 10,
+      "pages": 28
+    },
+    "07_si_ber_g_venli_k/nist_sp800_154": {
+      "parca": 8,
+      "pages": 25
+    },
+    "07_si_ber_g_venli_k/owasp_asvs_raw": {
+      "parca": 9,
+      "pages": 6
+    },
+    "07_si_ber_g_venli_k/owasp_wstg_theory": {
+      "parca": 1,
+      "pages": 1
+    },
+    "07_si_ber_g_venli_k/owasp_code_review_sast": {
+      "parca": 50,
+      "pages": 68
+    },
+    "07_si_ber_g_venli_k/ptes_technical_guidelines": {
+      "parca": 1,
+      "pages": 0
+    },
+    "07_si_ber_g_venli_k/nist_sp800_61r2": {
+      "parca": 29,
+      "pages": 80
+    },
+    "08_yazilim_mi_mari_leri_/segoogle": {
+      "parca": 54,
+      "pages": 61
+    },
+    "08_yazilim_mi_mari_leri_/aosa_full": {
+      "parca": 2,
+      "pages": 1
+    },
+    "08_yazilim_mi_mari_leri_/twelve_factor": {
+      "parca": 33,
+      "pages": 70
+    },
+    "08_yazilim_mi_mari_leri_/aosa_v1_deep": {
+      "parca": 8,
+      "pages": 1
+    },
+    "08_yazilim_mi_mari_leri_/twelve_factor_deep": {
+      "parca": 32,
+      "pages": 70
+    },
+    "09_devops_ve_altyapisi/missing_cs": {
+      "parca": 51,
+      "pages": 33
+    },
+    "09_devops_ve_altyapisi/gha_docs": {
+      "parca": 42,
+      "pages": 69
+    },
+    "09_devops_ve_altyapisi/terraform_docs": {
+      "parca": 51,
+      "pages": 67
+    },
+    "09_devops_ve_altyapisi/ansible_docs": {
+      "parca": 54,
+      "pages": 62
+    },
+    "09_devops_ve_altyapisi/k8s_tasks": {
+      "parca": 38,
+      "pages": 70
+    },
+    "09_devops_ve_altyapisi/dora": {
+      "parca": 54,
+      "pages": 65
+    },
+    "09_devops_ve_altyapisi/missing_sem": {
+      "parca": 43,
+      "pages": 30
+    },
+    "09_devops_ve_altyapisi/missing_semester": {
+      "parca": 51,
+      "pages": 33
+    },
+    "10_veri_bi_li_mi_/think_bayes": {
+      "parca": 34,
+      "pages": 201
+    },
+    "10_veri_bi_li_mi_/sklearn_ug": {
+      "parca": 51,
+      "pages": 26
+    },
+    "10_veri_bi_li_mi_/pdsh": {
+      "parca": 56,
+      "pages": 47
+    },
+    "10_veri_bi_li_mi_/pandas_docs": {
+      "parca": 124,
+      "pages": 22
+    },
+    "11_c_s/cs50": {
+      "parca": 77,
+      "pages": 22
+    },
+    "11_c_s/ossu_cs": {
+      "parca": 6,
+      "pages": 2
+    },
+    "11_c_s/teachyourselfcs_deep": {
+      "parca": 109,
+      "pages": 22
+    },
+    "12_bi_lgi_sayar_m_hendi_sli_i_/n2t": {
+      "parca": 165,
+      "pages": 13
+    },
+    "12_bi_lgi_sayar_m_hendi_sli_i_/computer_systems": {
+      "parca": 55,
+      "pages": 66
+    },
+    "12_bi_lgi_sayar_m_hendi_sli_i_/ben_eater": {
+      "parca": 5,
+      "pages": 20
+    },
+    "12_bi_lgi_sayar_m_hendi_sli_i_/n2t_eng": {
+      "parca": 165,
+      "pages": 13
+    },
+    "12_bi_lgi_sayar_m_hendi_sli_i_/nand2tetris_deep": {
+      "parca": 11,
+      "pages": 1
+    },
+    "12_bi_lgi_sayar_m_hendi_sli_i_/xv6_book": {
+      "parca": 33,
+      "pages": 105
+    },
+    "13_matemati_k/openstax_linalg": {
+      "parca": 17,
+      "pages": 4
+    },
+    "13_matemati_k/3blue1brown_essence": {
+      "parca": 24,
+      "pages": 50
+    },
+    "13_matemati_k/openstax_calc1_pdf": {
+      "parca": 1,
+      "pages": 0
+    },
+    "13_matemati_k/mcs_html_deep": {
+      "parca": 41,
+      "pages": 21
+    },
+    "14_fi_zi_k/openstax_physics": {
+      "parca": 24,
+      "pages": 10
+    },
+    "14_fi_zi_k/openstax_up1_pdf": {
+      "parca": 1,
+      "pages": 0
+    },
+    "14_fi_zi_k/feynman": {
+      "parca": 31,
+      "pages": 25
+    },
+    "15_elektroni_k/elec_tutorials": {
+      "parca": 0,
+      "pages": 0
+    },
+    "15_elektroni_k/circuitpython": {
+      "parca": 1,
+      "pages": 0
+    },
+    "15_elektroni_k/sparkfun_ohms": {
+      "parca": 55,
+      "pages": 50
+    },
+    "16_roboti_k/modern_robotics_pdf": {
+      "parca": 500,
+      "pages": 22
+    },
+    "16_roboti_k/modern_robotics_site": {
+      "parca": 6,
+      "pages": 1
+    },
+    "16_roboti_k/ros_docs_deep": {
+      "parca": 1,
+      "pages": 2
+    },
+    "16_roboti_k/robotics_deep": {
+      "parca": 1,
+      "pages": 2
+    },
+    "16_roboti_k/python_robotics_deep": {
+      "parca": 53,
+      "pages": 68
+    },
+    "16_roboti_k/moveit2": {
+      "parca": 54,
+      "pages": 60
+    },
+    "17_mekatroni_k/embedded_esp": {
+      "parca": 160,
+      "pages": 44
+    },
+    "17_mekatroni_k/arduino_ref": {
+      "parca": 1,
+      "pages": 2
+    },
+    "17_mekatroni_k/platformio": {
+      "parca": 36,
+      "pages": 69
+    },
+    "17_mekatroni_k/ctms": {
+      "parca": 83,
+      "pages": 22
+    },
+    "17_mekatroni_k/underactuated_deep": {
+      "parca": 78,
+      "pages": 22
+    },
+    "18_bi_li_msel_ara_tirma_y_ntemleri_/reproducible": {
+      "parca": 36,
+      "pages": 70
+    },
+    "18_bi_li_msel_ara_tirma_y_ntemleri_/zenodo": {
+      "parca": 29,
+      "pages": 35
+    },
+    "18_bi_li_msel_ara_tirma_y_ntemleri_/openstax_stats_page": {
+      "parca": 16,
+      "pages": 12
+    },
+    "18_bi_li_msel_ara_tirma_y_ntemleri_/how_to_science": {
+      "parca": 53,
+      "pages": 34
+    },
+    "18_bi_li_msel_ara_tirma_y_ntemleri_/osf_docs": {
+      "parca": 43,
+      "pages": 67
+    },
+    "18_bi_li_msel_ara_tirma_y_ntemleri_/zenodo_docs": {
+      "parca": 45,
+      "pages": 67
+    },
+    "19_psi_koloji_/nih_mental": {
+      "parca": 48,
+      "pages": 66
+    },
+    "19_psi_koloji_/simply_psych": {
+      "parca": 53,
+      "pages": 37
+    },
+    "19_psi_koloji_/openstax_psych_page": {
+      "parca": 25,
+      "pages": 12
+    },
+    "19_psi_koloji_/sep_bounded": {
+      "parca": 63,
+      "pages": 22
+    },
+    "20_bi_li_sel_bi_li_mler/cogsci_stanford": {
+      "parca": 93,
+      "pages": 22
+    },
+    "20_bi_li_sel_bi_li_mler/openmind": {
+      "parca": 1,
+      "pages": 0
+    },
+    "20_bi_li_sel_bi_li_mler/cog_wiki": {
+      "parca": 497,
+      "pages": 37
+    },
+    "20_bi_li_sel_bi_li_mler/cog_wikibooks": {
+      "parca": 83,
+      "pages": 36
+    },
+    "20_bi_li_sel_bi_li_mler/cogsci_open": {
+      "parca": 87,
+      "pages": 22
+    },
+    "21_di_l_bi_li_mi_/slp": {
+      "parca": 800,
+      "pages": 22
+    },
+    "21_di_l_bi_li_mi_/universal_deps": {
+      "parca": 66,
+      "pages": 22
+    },
+    "22_felsefe/sep_index": {
+      "parca": 85,
+      "pages": 22
+    },
+    "22_felsefe/sep_epistemology": {
+      "parca": 88,
+      "pages": 22
+    },
+    "22_felsefe/iep_index": {
+      "parca": 54,
+      "pages": 42
+    },
+    "22_felsefe/meditations": {
+      "parca": 40,
+      "pages": 1
+    },
+    "23_ekonomi_/econlib": {
+      "parca": 1,
+      "pages": 0
+    },
+    "23_ekonomi_/openstax_econ_page": {
+      "parca": 26,
+      "pages": 13
+    },
+    "24_oyun_teori_si_/gametheory_net": {
+      "parca": 64,
+      "pages": 46
+    },
+    "24_oyun_teori_si_/gametheory_101": {
+      "parca": 44,
+      "pages": 70
+    },
+    "24_oyun_teori_si_/yale_oyc": {
+      "parca": 46,
+      "pages": 70
+    }
+  },
+  "kalin": [
+    "04_veri_tabanlari/use_the_index",
+    "04_veri_tabanlari/uti_luke",
+    "07_si_ber_g_venli_k/owasp_wstg",
+    "07_si_ber_g_venli_k/cis_controls_overview",
+    "07_si_ber_g_venli_k/owasp_code_review_sast",
+    "08_yazilim_mi_mari_leri_/segoogle",
+    "09_devops_ve_altyapisi/missing_cs",
+    "09_devops_ve_altyapisi/gha_docs",
+    "09_devops_ve_altyapisi/terraform_docs",
+    "09_devops_ve_altyapisi/ansible_docs",
+    "09_devops_ve_altyapisi/dora",
+    "09_devops_ve_altyapisi/missing_sem",
+    "09_devops_ve_altyapisi/missing_semester",
+    "10_veri_bi_li_mi_/sklearn_ug",
+    "10_veri_bi_li_mi_/pdsh",
+    "10_veri_bi_li_mi_/pandas_docs",
+    "11_c_s/cs50",
+    "11_c_s/teachyourselfcs_deep",
+    "12_bi_lgi_sayar_m_hendi_sli_i_/n2t",
+    "12_bi_lgi_sayar_m_hendi_sli_i_/computer_systems",
+    "12_bi_lgi_sayar_m_hendi_sli_i_/n2t_eng",
+    "13_matemati_k/mcs_html_deep",
+    "15_elektroni_k/sparkfun_ohms",
+    "16_roboti_k/modern_robotics_pdf",
+    "16_roboti_k/python_robotics_deep",
+    "16_roboti_k/moveit2",
+    "17_mekatroni_k/embedded_esp",
+    "17_mekatroni_k/ctms",
+    "17_mekatroni_k/underactuated_deep",
+    "18_bi_li_msel_ara_tirma_y_ntemleri_/how_to_science",
+    "18_bi_li_msel_ara_tirma_y_ntemleri_/osf_docs",
+    "18_bi_li_msel_ara_tirma_y_ntemleri_/zenodo_docs",
+    "19_psi_koloji_/nih_mental",
+    "19_psi_koloji_/simply_psych",
+    "19_psi_koloji_/sep_bounded",
+    "20_bi_li_sel_bi_li_mler/cogsci_stanford",
+    "20_bi_li_sel_bi_li_mler/cog_wiki",
+    "20_bi_li_sel_bi_li_mler/cog_wikibooks",
+    "20_bi_li_sel_bi_li_mler/cogsci_open",
+    "21_di_l_bi_li_mi_/slp",
+    "21_di_l_bi_li_mi_/universal_deps",
+    "22_felsefe/sep_index",
+    "22_felsefe/sep_epistemology",
+    "22_felsefe/iep_index",
+    "22_felsefe/meditations",
+    "24_oyun_teori_si_/gametheory_net",
+    "24_oyun_teori_si_/gametheory_101",
+    "24_oyun_teori_si_/yale_oyc"
+  ],
+  "failed": [
+    {
+      "tag": "01_programlama/little_semaphores",
+      "parca": 26
+    },
+    {
+      "tag": "01_programlama/zero2prod",
+      "parca": 4
+    },
+    {
+      "tag": "01_programlama/tour_of_go",
+      "parca": 1
+    },
+    {
+      "tag": "03_yapay_zeka/fastai",
+      "parca": 21
+    },
+    {
+      "tag": "04_veri_tabanlari/pg_tutorial",
+      "parca": 25
+    },
+    {
+      "tag": "04_veri_tabanlari/pg_docs",
+      "parca": 29
+    },
+    {
+      "tag": "04_veri_tabanlari/cmu_15445",
+      "parca": 1
+    },
+    {
+      "tag": "04_veri_tabanlari/db_msan_notes",
+      "reason": "no_url"
+    },
+    {
+      "tag": "04_veri_tabanlari/db_omurga_derin",
+      "parca": 1
+    },
+    {
+      "tag": "04_veri_tabanlari/sqlite_pack",
+      "reason": "no_url"
+    },
+    {
+      "tag": "04_veri_tabanlari/sql_index_pack",
+      "reason": "no_url"
+    },
+    {
+      "tag": "05_a_teknoloji_leri_/beej_ipc",
+      "parca": 29
+    },
+    {
+      "tag": "05_a_teknoloji_leri_/web_http_pack",
+      "reason": "no_url"
+    },
+    {
+      "tag": "06_i_leti_m_si_stemleri_/ostep",
+      "parca": 15
+    },
+    {
+      "tag": "06_i_leti_m_si_stemleri_/lfs",
+      "parca": 25
+    },
+    {
+      "tag": "06_i_leti_m_si_stemleri_/kernel_docs",
+      "reason": "no_url"
+    },
+    {
+      "tag": "06_i_leti_m_si_stemleri_/xv6_book",
+      "parca": 33
+    },
+    {
+      "tag": "06_i_leti_m_si_stemleri_/ostep_site",
+      "reason": "no_url"
+    },
+    {
+      "tag": "06_i_leti_m_si_stemleri_/linux_kernel_pack",
+      "reason": "no_url"
+    },
+    {
+      "tag": "06_i_leti_m_si_stemleri_/ostep_vol1",
+      "reason": "no_url"
+    },
+    {
+      "tag": "06_i_leti_m_si_stemleri_/ostep_vol2",
+      "reason": "no_url"
+    },
+    {
+      "tag": "06_i_leti_m_si_stemleri_/ostep_vol3",
+      "reason": "no_url"
+    },
+    {
+      "tag": "07_si_ber_g_venli_k/owasp_top10",
+      "parca": 37
+    },
+    {
+      "tag": "07_si_ber_g_venli_k/owasp_asvs",
+      "parca": 30
+    },
+    {
+      "tag": "07_si_ber_g_venli_k/owasp_proactive",
+      "parca": 39
+    },
+    {
+      "tag": "07_si_ber_g_venli_k/nist_sp800_61r3",
+      "parca": 31
+    },
+    {
+      "tag": "07_si_ber_g_venli_k/nist_sp800_61r2_hist",
+      "parca": 31
+    },
+    {
+      "tag": "07_si_ber_g_venli_k/nist_sp800_83r1",
+      "parca": 16
+    },
+    {
+      "tag": "07_si_ber_g_venli_k/nist_sp800_92",
+      "reason": "no_url"
+    },
+    {
+      "tag": "07_si_ber_g_venli_k/cisa_blue_team",
+      "parca": 1
+    },
+    {
+      "tag": "07_si_ber_g_venli_k/owasp_top10_2021",
+      "parca": 2
+    },
+    {
+      "tag": "07_si_ber_g_venli_k/ruzgar_cift_yonlu_analiz_teori",
+      "reason": "no_url"
+    },
+    {
+      "tag": "07_si_ber_g_venli_k/ietf_rfc9293_tcp",
+      "parca": 18
+    },
+    {
+      "tag": "07_si_ber_g_venli_k/ietf_rfc8446_tls13",
+      "parca": 27
+    },
+    {
+      "tag": "07_si_ber_g_venli_k/ietf_rfc5246_tls12",
+      "parca": 19
+    },
+    {
+      "tag": "07_si_ber_g_venli_k/ietf_rfc8200_ipv6",
+      "parca": 8
+    },
+    {
+      "tag": "07_si_ber_g_venli_k/ietf_rfc791_ipv4",
+      "parca": 6
+    },
+    {
+      "tag": "07_si_ber_g_venli_k/ietf_rfc3552_security",
+      "parca": 11
+    },
+    {
+      "tag": "07_si_ber_g_venli_k/nist_sp800_115",
+      "parca": 31
+    },
+    {
+      "tag": "07_si_ber_g_venli_k/nist_sp800_40r4",
+      "parca": 10
+    },
+    {
+      "tag": "07_si_ber_g_venli_k/nist_sp800_154",
+      "parca": 8
+    },
+    {
+      "tag": "07_si_ber_g_venli_k/owasp_asvs_raw",
+      "parca": 9
+    },
+    {
+      "tag": "07_si_ber_g_venli_k/owasp_wstg_theory",
+      "parca": 1
+    },
+    {
+      "tag": "07_si_ber_g_venli_k/ptes_technical_guidelines",
+      "parca": 1
+    },
+    {
+      "tag": "07_si_ber_g_venli_k/nist_sp800_61r2",
+      "parca": 29
+    },
+    {
+      "tag": "08_yazilim_mi_mari_leri_/aosa_full",
+      "parca": 2
+    },
+    {
+      "tag": "08_yazilim_mi_mari_leri_/twelve_factor",
+      "parca": 33
+    },
+    {
+      "tag": "08_yazilim_mi_mari_leri_/aosa_v1_deep",
+      "parca": 8
+    },
+    {
+      "tag": "08_yazilim_mi_mari_leri_/twelve_factor_deep",
+      "parca": 32
+    },
+    {
+      "tag": "09_devops_ve_altyapisi/k8s_tasks",
+      "parca": 38
+    },
+    {
+      "tag": "10_veri_bi_li_mi_/think_bayes",
+      "parca": 34
+    },
+    {
+      "tag": "11_c_s/teachyourselfcs",
+      "reason": "no_url"
+    },
+    {
+      "tag": "11_c_s/ossu",
+      "reason": "no_url"
+    },
+    {
+      "tag": "11_c_s/n2t_cs",
+      "reason": "no_url"
+    },
+    {
+      "tag": "11_c_s/ossu_cs",
+      "parca": 6
+    },
+    {
+      "tag": "11_c_s/cs_selfstudy_pack",
+      "reason": "no_url"
+    },
+    {
+      "tag": "11_c_s/cs50_pack",
+      "reason": "no_url"
+    },
+    {
+      "tag": "12_bi_lgi_sayar_m_hendi_sli_i_/ben_eater",
+      "parca": 5
+    },
+    {
+      "tag": "12_bi_lgi_sayar_m_hendi_sli_i_/nand2tetris_deep",
+      "parca": 11
+    },
+    {
+      "tag": "12_bi_lgi_sayar_m_hendi_sli_i_/xv6_book",
+      "parca": 33
+    },
+    {
+      "tag": "13_matemati_k/openstax_linalg",
+      "parca": 17
+    },
+    {
+      "tag": "13_matemati_k/3blue1brown_essence",
+      "parca": 24
+    },
+    {
+      "tag": "13_matemati_k/openstax_calc1_pdf",
+      "parca": 1
+    },
+    {
+      "tag": "14_fi_zi_k/openstax_physics",
+      "parca": 24
+    },
+    {
+      "tag": "14_fi_zi_k/openstax_up1_pdf",
+      "parca": 1
+    },
+    {
+      "tag": "14_fi_zi_k/feynman",
+      "parca": 31
+    },
+    {
+      "tag": "15_elektroni_k/elec_tutorials",
+      "parca": 0
+    },
+    {
+      "tag": "15_elektroni_k/circuitpython",
+      "parca": 1
+    },
+    {
+      "tag": "16_roboti_k/modern_robotics_site",
+      "parca": 6
+    },
+    {
+      "tag": "16_roboti_k/ros_docs_deep",
+      "parca": 1
+    },
+    {
+      "tag": "16_roboti_k/robotics_deep",
+      "parca": 1
+    },
+    {
+      "tag": "17_mekatroni_k/arduino_ref",
+      "parca": 1
+    },
+    {
+      "tag": "17_mekatroni_k/platformio",
+      "parca": 36
+    },
+    {
+      "tag": "18_bi_li_msel_ara_tirma_y_ntemleri_/reproducible",
+      "parca": 36
+    },
+    {
+      "tag": "18_bi_li_msel_ara_tirma_y_ntemleri_/zenodo",
+      "parca": 29
+    },
+    {
+      "tag": "18_bi_li_msel_ara_tirma_y_ntemleri_/openstax_stats_page",
+      "parca": 16
+    },
+    {
+      "tag": "18_bi_li_msel_ara_tirma_y_ntemleri_/turing_way_web",
+      "reason": "no_url"
+    },
+    {
+      "tag": "19_psi_koloji_/openstax_psych_page",
+      "parca": 25
+    },
+    {
+      "tag": "20_bi_li_sel_bi_li_mler/openmind",
+      "parca": 1
+    },
+    {
+      "tag": "23_ekonomi_/econlib",
+      "parca": 1
+    },
+    {
+      "tag": "23_ekonomi_/openstax_econ_page",
+      "parca": 26
+    }
+  ],
+  "thin_left": 81
+}

@@ -2,8 +2,8 @@
   "dal": "15_elektroni_k",
   "excel": "15 - ) ELEKTRONİK.xlsx",
   "n_list": 150,
-  "sources": 4,
-  "ok_sources": 4,
+  "sources": 11,
+  "ok_sources": 11,
   "ilave_rows": 3,
   "updated_utc": "2026-11-09T20:57:48.604932+00:00",
   "skills": [
@@ -17,9 +17,21 @@
       "url": "https://web.archive.org/web/20230101000000/https://www.electronics-tutorials.ws/logic/logic_1.html",
       "local": "raw/elec_tutorials_00.html",
       "ok": true,
-      "parca_sayisi": 10,
+      "parca_sayisi": 408,
       "profesyonel_dolum": true,
-      "updated_utc": "2026-11-03T07:40:46.931083+00:00"
+      "updated_utc": "2026-11-11T11:39:13.383506+00:00",
+      "dal": "15_elektroni_k",
+      "truncated": false,
+      "html_pages": 5,
+      "html_expected": 22,
+      "parca": 408,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 0,
+      "boost_siblings": [
+        "kuphaldt",
+        "kuphaldt_semiconductors"
+      ]
     },
     "circuitpython": {
       "kaynak_id": "15_elektroni_k_circuitpython",
@@ -31,7 +43,17 @@
       "raw_files": [
         "circuitpython_00.html"
       ],
-      "parca": 1
+      "parca": 603,
+      "boost_siblings": [
+        "elec_tutorials",
+        "kuphaldt"
+      ],
+      "updated_utc": "2026-11-11T11:39:17.098608+00:00",
+      "html_pages": 5,
+      "html_expected": 22,
+      "parca_sayisi": 603,
+      "tam_eser": true,
+      "derin_yesil": true
     },
     "sparkfun_ohms": {
       "kaynak_id": "15_elektroni_k_sparkfun_ohms",
@@ -40,10 +62,16 @@
       "dal": "15_elektroni_k",
       "ok": true,
       "telafi": true,
-      "parca": 2,
-      "parca_sayisi": 2,
+      "parca": 55,
+      "parca_sayisi": 55,
       "dalga_d_raw_derin": true,
-      "updated_utc": "2026-11-09T20:55:36.574939+00:00"
+      "updated_utc": "2026-11-11T10:48:53.852265+00:00",
+      "truncated": false,
+      "html_pages": 50,
+      "html_expected": 22,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 50
     },
     "kuphaldt": {
       "kaynak_id": "15_elektroni_k_kuphaldt",
@@ -56,7 +84,9 @@
       "updated_utc": "2026-11-09T20:56:00.748971+00:00",
       "dal": "15_elektroni_k",
       "parca": 120,
-      "dalga_d_raw_derin": true
+      "dalga_d_raw_derin": true,
+      "derin_yesil": true,
+      "tam_eser": true
     },
     "aac_dc_html": {
       "kaynak_id": "15_elektroni_k_aac_dc_html",
@@ -66,12 +96,155 @@
       "parca": 56,
       "parca_sayisi": 56,
       "dalga_d_web_derin": true,
-      "updated_utc": "2026-11-09T20:57:48.604932+00:00"
+      "updated_utc": "2026-11-09T20:57:48.604932+00:00",
+      "derin_yesil": true,
+      "tam_eser": true
+    },
+    "kuphaldt_dc": {
+      "kaynak_id": "15_elektroni_k_kuphaldt_dc",
+      "baslik": "Lessons in Electric Circuits — Vol DC (tam)",
+      "url": "http://www.ibiblio.org/kuphaldt/electricCircuits/DC/DC.pdf",
+      "dal": "15_elektroni_k",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": true,
+      "pdf_pages": 557,
+      "extracted_pages": 557,
+      "local": "raw/kuphaldt_0.pdf",
+      "updated_utc": "2026-11-10T07:51:19.741350+00:00",
+      "parca": 105,
+      "parca_sayisi": 105,
+      "derin_yesil": true
+    },
+    "kuphaldt_ac": {
+      "kaynak_id": "15_elektroni_k_kuphaldt_ac",
+      "baslik": "Lessons in Electric Circuits — Vol AC (tam)",
+      "url": "http://www.ibiblio.org/kuphaldt/electricCircuits/AC/AC.pdf",
+      "dal": "15_elektroni_k",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": true,
+      "pdf_pages": 574,
+      "extracted_pages": 574,
+      "local": "raw/kuphaldt_1.pdf",
+      "updated_utc": "2026-11-10T07:51:33.352704+00:00",
+      "parca": 109,
+      "parca_sayisi": 109,
+      "derin_yesil": true
+    },
+    "kuphaldt_semiconductors": {
+      "kaynak_id": "15_elektroni_k_kuphaldt_semiconductors",
+      "baslik": "Lessons in Electric Circuits — Vol Semiconductors (tam)",
+      "url": "http://www.ibiblio.org/kuphaldt/electricCircuits/Semi/SEMI.pdf",
+      "dal": "15_elektroni_k",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": true,
+      "pdf_pages": 535,
+      "extracted_pages": 535,
+      "local": "raw/kuphaldt_2.pdf",
+      "updated_utc": "2026-11-10T07:51:47.748957+00:00",
+      "parca": 116,
+      "parca_sayisi": 116,
+      "derin_yesil": true
+    },
+    "esp_idf_docs": {
+      "kaynak_id": "15_elektroni_k_esp_idf_docs",
+      "baslik": "ESP-IDF docs + selected README — gömülü el (kalın)",
+      "url": "https://docs.espressif.com/projects/esp-idf/en/latest/",
+      "dal": "15_elektroni_k",
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 40,
+      "updated_utc": "2026-11-10T19:18:18.442428+00:00",
+      "parca": 72,
+      "parca_sayisi": 72,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true
+    },
+    "freertos_docs": {
+      "kaynak_id": "15_elektroni_k_freertos_docs",
+      "baslik": "FreeRTOS Kernel Book + AWS RTOS guides — gerçek zamanlı el (kalın)",
+      "url": "https://github.com/FreeRTOS/FreeRTOS-Kernel-Book",
+      "dal": "15_elektroni_k",
+      "truncated": false,
+      "html_pages": 21,
+      "html_expected": 20,
+      "updated_utc": "2026-11-10T19:22:50.877160+00:00",
+      "parca": 83,
+      "parca_sayisi": 83,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true
+    },
+    "firmata_serial": {
+      "kaynak_id": "15_elektroni_k_firmata_serial",
+      "baslik": "Firmata + pySerial + UART/SPI/I2C — seri köprü (kalın)",
+      "url": "https://github.com/firmata/protocol",
+      "dal": "15_elektroni_k",
+      "truncated": false,
+      "html_pages": 25,
+      "html_expected": 25,
+      "updated_utc": "2026-11-10T19:23:52.348305+00:00",
+      "parca": 42,
+      "parca_sayisi": 42,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.595243+00:00",
   "telafi_utc": "2026-11-02T23:48:09.467954+00:00",
   "telafi_notu": "Çapraz-dal kopyalar silindi; bu dalda yalnız konu-özel yasal kaynaklar tutuluyor.",
   "otonomi_indir_utc": "2026-11-03T00:05:22.181293+00:00",
-  "profesyonel_dolum_utc": "2026-11-03T07:40:46.931083+00:00"
+  "profesyonel_dolum_utc": "2026-11-03T07:40:46.931083+00:00",
+  "deep_full_works": [
+    {
+      "key": "circuitpython",
+      "parca": 603
+    },
+    {
+      "key": "elec_tutorials",
+      "parca": 408
+    },
+    {
+      "key": "kuphaldt",
+      "parca": 120
+    },
+    {
+      "key": "kuphaldt_semiconductors",
+      "parca": 116
+    },
+    {
+      "key": "kuphaldt_ac",
+      "parca": 109
+    },
+    {
+      "key": "kuphaldt_dc",
+      "parca": 105
+    },
+    {
+      "key": "freertos_docs",
+      "parca": 83
+    },
+    {
+      "key": "esp_idf_docs",
+      "parca": 72
+    },
+    {
+      "key": "aac_dc_html",
+      "parca": 56
+    },
+    {
+      "key": "sparkfun_ohms",
+      "parca": 55
+    },
+    {
+      "key": "firmata_serial",
+      "parca": 42
+    }
+  ],
+  "deep_full_count": 11,
+  "tam_eser_utc": "2026-11-11T11:39:17.319121+00:00"
 }

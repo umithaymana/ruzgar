@@ -1,0 +1,510 @@
+{
+  "ts": "2026-11-11T10:10:38.854564+00:00",
+  "min_parca": 40,
+  "items": {
+    "01_programlama/automate_boring": {
+      "parca": 106,
+      "pages": 22,
+      "ok": true,
+      "url": "https://automatetheboringstuff.com/2e/chapter0/"
+    },
+    "01_programlama/py4e": {
+      "parca": 50,
+      "pages": 59,
+      "ok": true,
+      "url": "https://www.py4e.com/html3/01-intro"
+    },
+    "01_programlama/little_semaphores": {
+      "parca": 26,
+      "pages": 215,
+      "ok": false,
+      "url": "https://greenteapress.com/semaphores/LittleBookOfSemaphores.pdf"
+    },
+    "01_programlama/crafting_interpreters": {
+      "parca": 80,
+      "pages": 22,
+      "ok": true,
+      "url": "https://craftinginterpreters.com/"
+    },
+    "01_programlama/zero2prod": {
+      "parca": 1,
+      "pages": 1,
+      "ok": false,
+      "url": "https://www.zero2prod.com/index.html"
+    },
+    "01_programlama/ydkjs": {
+      "parca": 57,
+      "pages": 22,
+      "ok": true,
+      "url": "https://github.com/getify/You-Dont-Know-JS"
+    },
+    "01_programlama/tour_of_go": {
+      "parca": 1,
+      "pages": 0,
+      "ok": false,
+      "url": "https://go.dev/tour/"
+    },
+    "01_programlama/node_best": {
+      "parca": 11,
+      "pages": 1,
+      "ok": false,
+      "url": "https://raw.githubusercontent.com/goldbergyoni/nodebestpractices/master/README.md"
+    },
+    "01_programlama/py4e_pdf": {
+      "parca": 50,
+      "pages": 231,
+      "ok": true,
+      "url": "https://do1.dr-chuck.com/pythonlearn/EN_us/pythonlearn.pdf"
+    },
+    "01_programlama/sicp_html": {
+      "parca": 91,
+      "pages": 22,
+      "ok": true,
+      "url": "https://sarabander.github.io/sicp/html/Chapter-5.xhtml"
+    },
+    "01_programlama/invent_pdf": {
+      "parca": 52,
+      "pages": 30,
+      "ok": true,
+      "url": "https://inventwithpython.com/invent4thed/"
+    },
+    "01_programlama/ydkjs_getstarted": {
+      "parca": 55,
+      "pages": 22,
+      "ok": true,
+      "url": "https://raw.githubusercontent.com/getify/You-Dont-Know-JS/2nd-ed/scope-closures/ch2.md"
+    },
+    "01_programlama/rustonomicon": {
+      "parca": 50,
+      "pages": 31,
+      "ok": true,
+      "url": "https://doc.rust-lang.org/rust-by-example/"
+    },
+    "01_programlama/eloquent_js_pdf": {
+      "parca": 86,
+      "pages": 462,
+      "ok": true,
+      "url": "https://eloquentjavascript.net/Eloquent_JavaScript.pdf"
+    },
+    "01_programlama/rust_book_deep": {
+      "parca": 201,
+      "pages": 22,
+      "ok": true,
+      "url": "https://doc.rust-lang.org/book/ch13-00-functional-features.html"
+    },
+    "01_programlama/ydkjs_scope": {
+      "parca": 55,
+      "pages": 22,
+      "ok": true,
+      "url": "https://raw.githubusercontent.com/getify/You-Dont-Know-JS/2nd-ed/objects-classes/ch2.md"
+    },
+    "01_programlama/py4e_full": {
+      "parca": 50,
+      "pages": 59,
+      "ok": true,
+      "url": "https://www.py4e.com/html3/01-intro"
+    },
+    "02_algori_tmalar/ods": {
+      "parca": 49,
+      "pages": 316,
+      "ok": true,
+      "url": "https://opendatastructures.org/ods-python.pdf"
+    },
+    "02_algori_tmalar/cph": {
+      "parca": 46,
+      "pages": 278,
+      "ok": true,
+      "url": "https://cses.fi/book/book.pdf"
+    },
+    "02_algori_tmalar/mcs_mit": {
+      "parca": 88,
+      "pages": 500,
+      "ok": true,
+      "url": "https://courses.csail.mit.edu/6.042/spring18/mcs.pdf"
+    },
+    "03_yapay_zeka/nndl": {
+      "parca": 67,
+      "pages": 15,
+      "ok": true,
+      "url": "https://neuralnetworksanddeeplearning.com/"
+    },
+    "03_yapay_zeka/fastai": {
+      "parca": 21,
+      "pages": 41,
+      "ok": false,
+      "url": "https://course.fast.ai/"
+    },
+    "03_yapay_zeka/aima_site": {
+      "parca": 206,
+      "pages": 18,
+      "ok": true,
+      "url": "http://aima.cs.berkeley.edu/"
+    },
+    "03_yapay_zeka/d2l": {
+      "parca": 54,
+      "pages": 26,
+      "ok": true,
+      "url": "https://d2l.ai/index.html"
+    },
+    "04_veri_tabanlari/sqlite_lang": {
+      "parca": 74,
+      "pages": 22,
+      "ok": true,
+      "url": "https://www.sqlite.org/lang.html"
+    },
+    "04_veri_tabanlari/pg_tutorial": {
+      "parca": 26,
+      "pages": 70,
+      "ok": false,
+      "url": "https://www.postgresql.org/docs/current/tutorial.html"
+    },
+    "04_veri_tabanlari/cmu_15445": {
+      "parca": 1,
+      "pages": 0,
+      "ok": false,
+      "url": "https://web.archive.org/web/20231001000000/https://15445.courses.cs.cmu.edu/fall2023/schedule.html"
+    },
+    "04_veri_tabanlari/db_omurga_derin": {
+      "parca": 1,
+      "pages": 0,
+      "ok": false,
+      "url": "https://web.archive.org/web/20241105181436/https://15445.courses.cs.cmu.edu/fall2024/"
+    },
+    "05_a_teknoloji_leri_/hpbn": {
+      "parca": 73,
+      "pages": 22,
+      "ok": true,
+      "url": "https://hpbn.co/"
+    },
+    "05_a_teknoloji_leri_/beej_net": {
+      "parca": 58,
+      "pages": 24,
+      "ok": true,
+      "url": "https://beej.us/guide/bgnet/html/"
+    },
+    "05_a_teknoloji_leri_/beej_ipc": {
+      "parca": 28,
+      "pages": 42,
+      "ok": false,
+      "url": "https://beej.us/guide/bgipc/html/split/"
+    },
+    "05_a_teknoloji_leri_/systemsapproach": {
+      "parca": 53,
+      "pages": 39,
+      "ok": true,
+      "url": "https://book.systemsapproach.org/"
+    },
+    "05_a_teknoloji_leri_/mdn_http": {
+      "parca": 54,
+      "pages": 42,
+      "ok": true,
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP"
+    },
+    "05_a_teknoloji_leri_/bind9_docs": {
+      "parca": 255,
+      "pages": 22,
+      "ok": true,
+      "url": "https://bind9.readthedocs.io/en/latest/"
+    },
+    "06_i_leti_m_si_stemleri_/ostep": {
+      "parca": 15,
+      "pages": 33,
+      "ok": false,
+      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/"
+    },
+    "06_i_leti_m_si_stemleri_/linux_kernel": {
+      "parca": 54,
+      "pages": 41,
+      "ok": true,
+      "url": "https://docs.kernel.org/process/howto.html"
+    },
+    "06_i_leti_m_si_stemleri_/lfs": {
+      "parca": 25,
+      "pages": 70,
+      "ok": false,
+      "url": "https://www.linuxfromscratch.org/lfs/view/stable/"
+    },
+    "06_i_leti_m_si_stemleri_/xv6_book": {
+      "parca": 33,
+      "pages": 105,
+      "ok": false,
+      "url": "https://pdos.csail.mit.edu/6.828/2023/xv6/book-riscv-rev3.pdf"
+    },
+    "06_i_leti_m_si_stemleri_/linux_cmdline": {
+      "parca": 60,
+      "pages": 48,
+      "ok": true,
+      "url": "https://linuxcommand.org/tlcl.php"
+    }
+  },
+  "kalin_keys": [
+    "01_programlama/angular_docs",
+    "01_programlama/atbs_full",
+    "01_programlama/automate_boring",
+    "01_programlama/cpp_core",
+    "01_programlama/cpp_core_deep",
+    "01_programlama/crafting_full",
+    "01_programlama/crafting_interpreters",
+    "01_programlama/crafting_interpreters_html",
+    "01_programlama/eloquent_js",
+    "01_programlama/eloquent_js_pdf",
+    "01_programlama/hypothesis_playwright",
+    "01_programlama/invent_full",
+    "01_programlama/invent_games",
+    "01_programlama/invent_pdf",
+    "01_programlama/lyah",
+    "01_programlama/lyah_full",
+    "01_programlama/modern_c",
+    "01_programlama/ms_csharp",
+    "01_programlama/producing_oss",
+    "01_programlama/py4e",
+    "01_programlama/py4e_full",
+    "01_programlama/py4e_pdf",
+    "01_programlama/react_dev",
+    "01_programlama/rust_book",
+    "01_programlama/rust_book_deep",
+    "01_programlama/rustonomicon",
+    "01_programlama/rwh",
+    "01_programlama/rwh_full",
+    "01_programlama/scala3_book",
+    "01_programlama/sicp",
+    "01_programlama/sicp_full",
+    "01_programlama/sicp_html",
+    "01_programlama/spring_docs",
+    "01_programlama/taoup",
+    "01_programlama/think_java",
+    "01_programlama/think_python_2",
+    "01_programlama/tree_sitter",
+    "01_programlama/ts_handbook",
+    "01_programlama/vue_guide",
+    "01_programlama/ydkjs",
+    "01_programlama/ydkjs_getstarted",
+    "01_programlama/ydkjs_scope",
+    "02_algori_tmalar/cph",
+    "02_algori_tmalar/erickson",
+    "02_algori_tmalar/mcs_mit",
+    "02_algori_tmalar/ods",
+    "03_yapay_zeka/aima_site",
+    "03_yapay_zeka/d2l",
+    "03_yapay_zeka/dlbook",
+    "03_yapay_zeka/islr",
+    "03_yapay_zeka/llama_ollama_lora",
+    "03_yapay_zeka/llava_clip",
+    "03_yapay_zeka/lora_uslup",
+    "03_yapay_zeka/nndl",
+    "03_yapay_zeka/opencv_docs",
+    "03_yapay_zeka/rlbook",
+    "04_veri_tabanlari/lucene_core_docs",
+    "04_veri_tabanlari/opensearch_docs",
+    "04_veri_tabanlari/pg_pack",
+    "04_veri_tabanlari/sqlite_fts5_pack",
+    "04_veri_tabanlari/sqlite_lang",
+    "05_a_teknoloji_leri_/beej_net",
+    "05_a_teknoloji_leri_/bind9_docs",
+    "05_a_teknoloji_leri_/hpbn",
+    "05_a_teknoloji_leri_/mdn_http",
+    "05_a_teknoloji_leri_/systemsapproach",
+    "06_i_leti_m_si_stemleri_/coqui_vosk_pack",
+    "06_i_leti_m_si_stemleri_/linux_cmdline",
+    "06_i_leti_m_si_stemleri_/linux_kernel",
+    "06_i_leti_m_si_stemleri_/openai_whisper",
+    "06_i_leti_m_si_stemleri_/ostep_chapters",
+    "06_i_leti_m_si_stemleri_/piper_tts",
+    "06_i_leti_m_si_stemleri_/syncthing_docs",
+    "06_i_leti_m_si_stemleri_/web_audio_mdn",
+    "07_si_ber_g_venli_k/age_gpg_crypto",
+    "07_si_ber_g_venli_k/guvenlik_kapisi",
+    "07_si_ber_g_venli_k/ietf_rfc9110_http",
+    "07_si_ber_g_venli_k/mitre_capec_overview",
+    "07_si_ber_g_venli_k/nist_sp800_53r5",
+    "07_si_ber_g_venli_k/nist_sp800_86",
+    "07_si_ber_g_venli_k/opa_policy",
+    "07_si_ber_g_venli_k/owasp_threat_modeling",
+    "07_si_ber_g_venli_k/privacy_guides",
+    "07_si_ber_g_venli_k/sandbox_seccomp_cgroup",
+    "07_si_ber_g_venli_k/threat_model_owasp",
+    "08_yazilim_mi_mari_leri_/aosa_500lines",
+    "08_yazilim_mi_mari_leri_/aosa_v1",
+    "08_yazilim_mi_mari_leri_/atlas_natural_earth",
+    "08_yazilim_mi_mari_leri_/atolye_gece",
+    "08_yazilim_mi_mari_leri_/automerge_crdt",
+    "08_yazilim_mi_mari_leri_/brifing_tahti",
+    "08_yazilim_mi_mari_leri_/cografya_tarih",
+    "08_yazilim_mi_mari_leri_/electron_fastapi_schema",
+    "08_yazilim_mi_mari_leri_/eval_harness",
+    "08_yazilim_mi_mari_leri_/godot_three_camera",
+    "08_yazilim_mi_mari_leri_/gpp",
+    "08_yazilim_mi_mari_leri_/mahkeme_kubra",
+    "08_yazilim_mi_mari_leri_/manim_docs",
+    "08_yazilim_mi_mari_leri_/maplibre_naturalearth",
+    "08_yazilim_mi_mari_leri_/omur_koridoru",
+    "08_yazilim_mi_mari_leri_/opentimelineio",
+    "08_yazilim_mi_mari_leri_/swe_book",
+    "08_yazilim_mi_mari_leri_/tbx_termbank",
+    "08_yazilim_mi_mari_leri_/unutma_miras",
+    "08_yazilim_mi_mari_leri_/wcag_a11y",
+    "08_yazilim_mi_mari_leri_/webrtc_media_mdn",
+    "09_devops_ve_altyapisi/nix_nixos",
+    "09_devops_ve_altyapisi/offline_pkg_mirror",
+    "09_devops_ve_altyapisi/openzfs_docs",
+    "09_devops_ve_altyapisi/progit",
+    "09_devops_ve_altyapisi/prometheus_docs",
+    "09_devops_ve_altyapisi/proxmox_ve",
+    "09_devops_ve_altyapisi/sre_book",
+    "09_devops_ve_altyapisi/sre_google_books",
+    "10_veri_bi_li_mi_/d2l_islr_esl",
+    "10_veri_bi_li_mi_/embed_rerank",
+    "10_veri_bi_li_mi_/islr_ds",
+    "10_veri_bi_li_mi_/manning_ir_book",
+    "10_veri_bi_li_mi_/think_stats",
+    "11_c_s/mit_ocw_secme",
+    "11_c_s/ods_pdf",
+    "12_bi_lgi_sayar_m_hendi_sli_i_/mit_6828",
+    "12_bi_lgi_sayar_m_hendi_sli_i_/nand2tetris",
+    "13_matemati_k/discrete_levin",
+    "13_matemati_k/ila_gatech",
+    "13_matemati_k/mcs_math",
+    "13_matemati_k/mit_6042",
+    "13_matemati_k/openstax_calc1",
+    "13_matemati_k/openstax_calc2",
+    "13_matemati_k/openstax_calc3",
+    "13_matemati_k/openstax_derin",
+    "14_fi_zi_k/hyperphysics_deep",
+    "14_fi_zi_k/openstax_colphys",
+    "14_fi_zi_k/openstax_up1",
+    "14_fi_zi_k/openstax_up2",
+    "14_fi_zi_k/physics_open_hub",
+    "14_fi_zi_k/uzay_astro",
+    "15_elektroni_k/aac_dc_html",
+    "15_elektroni_k/esp_idf_docs",
+    "15_elektroni_k/firmata_serial",
+    "15_elektroni_k/freertos_docs",
+    "15_elektroni_k/kuphaldt",
+    "15_elektroni_k/kuphaldt_ac",
+    "15_elektroni_k/kuphaldt_dc",
+    "15_elektroni_k/kuphaldt_semiconductors",
+    "16_roboti_k/ffmpeg_docs",
+    "16_roboti_k/home_assistant_docs",
+    "16_roboti_k/modern_robotics",
+    "16_roboti_k/pythonrobotics",
+    "16_roboti_k/ros2_docs",
+    "17_mekatroni_k/esp_idf",
+    "17_mekatroni_k/freecad_gcode",
+    "17_mekatroni_k/freertos",
+    "17_mekatroni_k/underactuated",
+    "18_bi_li_msel_ara_tirma_y_ntemleri_/bilim_tarihi",
+    "18_bi_li_msel_ara_tirma_y_ntemleri_/openstax_stats",
+    "18_bi_li_msel_ara_tirma_y_ntemleri_/r4ds",
+    "18_bi_li_msel_ara_tirma_y_ntemleri_/reproducibility",
+    "18_bi_li_msel_ara_tirma_y_ntemleri_/turing_way",
+    "19_psi_koloji_/nimh_health",
+    "19_psi_koloji_/openstax_psych",
+    "19_psi_koloji_/psych_open_hub",
+    "19_psi_koloji_/psych_sep_hub",
+    "19_psi_koloji_/sep_mind",
+    "20_bi_li_sel_bi_li_mler/sep_cogsci",
+    "20_bi_li_sel_bi_li_mler/sep_cogsci_ext",
+    "20_bi_li_sel_bi_li_mler/wikibooks_cog",
+    "21_di_l_bi_li_mi_/camel_farasa",
+    "21_di_l_bi_li_mi_/common_voice_ethics",
+    "21_di_l_bi_li_mi_/dil_cami",
+    "21_di_l_bi_li_mi_/marian_opus_argos",
+    "21_di_l_bi_li_mi_/nltk_book",
+    "21_di_l_bi_li_mi_/slp3",
+    "21_di_l_bi_li_mi_/slp3_full",
+    "21_di_l_bi_li_mi_/unicode_icu",
+    "21_di_l_bi_li_mi_/whisper_piper_large",
+    "22_felsefe/acm_ethics",
+    "22_felsefe/iep_ethics",
+    "22_felsefe/mit_classics",
+    "22_felsefe/nicomachean",
+    "22_felsefe/republic",
+    "22_felsefe/sep_ethics_ai",
+    "23_ekonomi_/econ_open_hub",
+    "23_ekonomi_/econ_sep_hub",
+    "23_ekonomi_/openstax_econ",
+    "23_ekonomi_/openstax_macro",
+    "23_ekonomi_/openstax_micro",
+    "23_ekonomi_/wealth_nations",
+    "24_oyun_teori_si_/game_sep_hub",
+    "24_oyun_teori_si_/game_theory_hub",
+    "24_oyun_teori_si_/sep_game",
+    "24_oyun_teori_si_/wiki_game",
+    "24_oyun_teori_si_/yale_econ159"
+  ],
+  "failed": [
+    {
+      "tag": "01_programlama/little_semaphores",
+      "parca": 26,
+      "pages": 215
+    },
+    {
+      "tag": "01_programlama/zero2prod",
+      "parca": 1,
+      "pages": 1
+    },
+    {
+      "tag": "01_programlama/tour_of_go",
+      "parca": 1,
+      "pages": 0
+    },
+    {
+      "tag": "01_programlama/node_best",
+      "parca": 11,
+      "pages": 1
+    },
+    {
+      "tag": "03_yapay_zeka/fastai",
+      "parca": 21,
+      "pages": 41
+    },
+    {
+      "tag": "04_veri_tabanlari/pg_tutorial",
+      "parca": 26,
+      "pages": 70
+    },
+    {
+      "tag": "04_veri_tabanlari/cmu_15445",
+      "parca": 1,
+      "pages": 0
+    },
+    {
+      "tag": "04_veri_tabanlari/db_omurga_derin",
+      "parca": 1,
+      "pages": 0
+    },
+    {
+      "tag": "05_a_teknoloji_leri_/beej_ipc",
+      "parca": 28,
+      "pages": 42
+    },
+    {
+      "tag": "06_i_leti_m_si_stemleri_/ostep",
+      "parca": 15,
+      "pages": 33
+    },
+    {
+      "tag": "06_i_leti_m_si_stemleri_/lfs",
+      "parca": 25,
+      "pages": 70
+    },
+    {
+      "tag": "06_i_leti_m_si_stemleri_/xv6_book",
+      "parca": 33,
+      "pages": 105
+    }
+  ],
+  "skipped_no_url": [
+    "04_veri_tabanlari/use_the_index",
+    "04_veri_tabanlari/uti_luke",
+    "04_veri_tabanlari/pg_docs",
+    "04_veri_tabanlari/sqlite_docs",
+    "04_veri_tabanlari/db_msan_notes",
+    "04_veri_tabanlari/sqlite_pack",
+    "04_veri_tabanlari/sql_index_pack",
+    "05_a_teknoloji_leri_/web_http_pack",
+    "06_i_leti_m_si_stemleri_/kernel_docs"
+  ],
+  "kalin": 193,
+  "n_failed": 12
+}

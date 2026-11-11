@@ -2,8 +2,8 @@
   "dal": "03_yapay_zeka",
   "excel": "3 - ) YAPAY ZEKA.xlsx",
   "n_list": 151,
-  "sources": 7,
-  "ok_sources": 6,
+  "sources": 11,
+  "ok_sources": 11,
   "ilave_rows": 0,
   "updated_utc": "2026-11-09T20:20:21.233500+00:00",
   "skills": [
@@ -14,12 +14,20 @@
   "kaynaklar": {
     "rlbook": {
       "kaynak_id": "03_yapay_zeka_rlbook",
-      "baslik": "Reinforcement Learning (Sutton & Barto)",
+      "baslik": "Reinforcement Learning (Sutton & Barto) — tam PDF",
       "url": "http://incompleteideas.net/book/RLbook2020.pdf",
       "dal": "03_yapay_zeka",
       "ok": true,
       "dalga_a_derin": true,
-      "parca": 70
+      "parca": 191,
+      "tam_eser": true,
+      "truncated": true,
+      "pdf_pages": 548,
+      "extracted_pages": 548,
+      "local": "raw/rlbook.pdf",
+      "updated_utc": "2026-11-10T07:43:08.330574+00:00",
+      "parca_sayisi": 191,
+      "derin_yesil": true
     },
     "nndl": {
       "kaynak_id": "03_yapay_zeka_nndl",
@@ -30,10 +38,17 @@
       "raw_files": [
         "nndl.html"
       ],
-      "parca": 1,
-      "parca_sayisi": 1,
+      "parca": 67,
+      "parca_sayisi": 67,
       "dalga_b_raw_derin": true,
-      "updated_utc": "2026-11-09T20:20:21.093550+00:00"
+      "updated_utc": "2026-11-11T09:59:26.753293+00:00",
+      "url": "https://neuralnetworksanddeeplearning.com/",
+      "truncated": false,
+      "html_pages": 15,
+      "html_expected": 22,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 15
     },
     "fastai": {
       "kaynak_id": "03_yapay_zeka_fastai",
@@ -42,14 +57,24 @@
       "dal": "03_yapay_zeka",
       "ok": true,
       "telafi": true,
-      "parca": 2,
-      "parca_sayisi": 2,
+      "parca": 800,
+      "parca_sayisi": 800,
       "dalga_b_raw_derin": true,
-      "updated_utc": "2026-11-09T20:20:21.156077+00:00"
+      "updated_utc": "2026-11-11T11:35:42.616727+00:00",
+      "truncated": false,
+      "html_pages": 5,
+      "html_expected": 22,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 41,
+      "boost_siblings": [
+        "opencv_docs",
+        "aima_site"
+      ]
     },
     "dlbook": {
       "kaynak_id": "03_yapay_zeka_dlbook",
-      "baslik": "Deep Learning Book (Goodfellow)",
+      "baslik": "Deep Learning Book (Goodfellow et al.) — tam HTML",
       "dal": "03_yapay_zeka",
       "ok": true,
       "dalga_a_raw_derin": true,
@@ -65,11 +90,19 @@
         "dlbook_08.html",
         "dlbook_09.html"
       ],
-      "parca": 88
+      "parca": 191,
+      "url": "https://www.deeplearningbook.org/",
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 32,
+      "html_expected": 15,
+      "updated_utc": "2026-11-10T07:44:24.709298+00:00",
+      "parca_sayisi": 191,
+      "derin_yesil": true
     },
     "islr": {
       "kaynak_id": "03_yapay_zeka_islr",
-      "baslik": "Introduction to Statistical Learning (ISLR2)",
+      "baslik": "Introduction to Statistical Learning (ISLR2) — tam PDF",
       "url": "https://www.statlearning.com/s/ISLRSeventhPrinting.pdf",
       "dal": "03_yapay_zeka",
       "ok": true,
@@ -77,7 +110,15 @@
       "raw_files": [
         "raw\\islr.pdf"
       ],
-      "parca": 21
+      "parca": 111,
+      "tam_eser": true,
+      "truncated": true,
+      "pdf_pages": 431,
+      "extracted_pages": 431,
+      "local": "raw/islr.pdf",
+      "updated_utc": "2026-11-10T07:43:53.761891+00:00",
+      "parca_sayisi": 111,
+      "derin_yesil": true
     },
     "aima_site": {
       "kaynak_id": "03_yapay_zeka_aima_site",
@@ -89,19 +130,93 @@
       "raw_files": [
         "aima_site_00.html"
       ],
-      "parca": 1,
-      "parca_sayisi": 1,
+      "parca": 206,
+      "parca_sayisi": 206,
       "dalga_b_raw_derin": true,
-      "updated_utc": "2026-11-09T20:20:21.233500+00:00"
+      "updated_utc": "2026-11-11T10:00:23.211245+00:00",
+      "truncated": false,
+      "html_pages": 18,
+      "html_expected": 22,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 18
     },
     "d2l": {
       "kaynak_id": "03_yapay_zeka_d2l",
       "baslik": "Dive into Deep Learning (toc)",
       "url": "https://d2l.ai/index.html",
       "dal": "03_yapay_zeka",
-      "ok": false,
+      "ok": true,
       "dalga_a_derin": true,
-      "parca": 1
+      "parca": 54,
+      "truncated": false,
+      "html_pages": 26,
+      "html_expected": 22,
+      "updated_utc": "2026-11-11T10:00:57.054422+00:00",
+      "parca_sayisi": 54,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 26
+    },
+    "opencv_docs": {
+      "kaynak_id": "03_yapay_zeka_opencv_docs",
+      "baslik": "OpenCV 4.x docs + tutorials (Apache-2.0)",
+      "url": "https://docs.opencv.org/4.x/",
+      "dal": "03_yapay_zeka",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 105,
+      "html_expected": 25,
+      "updated_utc": "2026-11-10T17:16:44.008515+00:00",
+      "parca": 299,
+      "parca_sayisi": 299,
+      "derin_yesil": true
+    },
+    "llama_ollama_lora": {
+      "kaynak_id": "03_yapay_zeka_llama_ollama_lora",
+      "baslik": "llama.cpp + Ollama + PEFT/LoRA — yerel organ/üslup",
+      "url": "https://github.com/ggerganov/llama.cpp",
+      "dal": "03_yapay_zeka",
+      "ok": true,
+      "tam_eser": true,
+      "truncated": false,
+      "html_pages": 141,
+      "html_expected": 25,
+      "updated_utc": "2026-11-10T17:43:42.561564+00:00",
+      "parca": 115,
+      "parca_sayisi": 115,
+      "derin_yesil": true
+    },
+    "llava_clip": {
+      "kaynak_id": "03_yapay_zeka_llava_clip",
+      "baslik": "LLaVA + CLIP — yerel multimodal gör-anla (kalın)",
+      "url": "https://llava-vl.github.io/",
+      "dal": "03_yapay_zeka",
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 22,
+      "updated_utc": "2026-11-10T19:50:31.121373+00:00",
+      "parca": 90,
+      "parca_sayisi": 90,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true
+    },
+    "lora_uslup": {
+      "kaynak_id": "03_yapay_zeka_lora_uslup",
+      "baslik": "LoRA üslup / ilim dili — PEFT + llama.cpp (kalın)",
+      "url": "https://huggingface.co/docs/peft",
+      "dal": "03_yapay_zeka",
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 22,
+      "updated_utc": "2026-11-10T19:51:20.855612+00:00",
+      "parca": 61,
+      "parca_sayisi": 61,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.583240+00:00",
@@ -124,5 +239,53 @@
       "parca": 21
     }
   ],
-  "dalga_a_raw_derin_utc": "2026-11-09T18:26:32.653228+00:00"
+  "dalga_a_raw_derin_utc": "2026-11-09T18:26:32.653228+00:00",
+  "deep_full_works": [
+    {
+      "key": "fastai",
+      "parca": 800
+    },
+    {
+      "key": "opencv_docs",
+      "parca": 299
+    },
+    {
+      "key": "aima_site",
+      "parca": 206
+    },
+    {
+      "key": "rlbook",
+      "parca": 191
+    },
+    {
+      "key": "dlbook",
+      "parca": 191
+    },
+    {
+      "key": "llama_ollama_lora",
+      "parca": 115
+    },
+    {
+      "key": "islr",
+      "parca": 111
+    },
+    {
+      "key": "llava_clip",
+      "parca": 90
+    },
+    {
+      "key": "nndl",
+      "parca": 67
+    },
+    {
+      "key": "lora_uslup",
+      "parca": 61
+    },
+    {
+      "key": "d2l",
+      "parca": 54
+    }
+  ],
+  "deep_full_count": 11,
+  "tam_eser_utc": "2026-11-11T11:35:42.927457+00:00"
 }

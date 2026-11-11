@@ -47,9 +47,9 @@ FACT = {
     "4_dalga_a": "[x]",  # 01–06+11 ≥3 derin
     "4_dalga_b": "[x]",  # 03/10/21/13 ≥3 derin (2026-11-09)
     "4_dalga_c": "[x]",  # 08/09/07/12 ≥3 derin
-    "4_dalga_d": "[x]",  # 14/15/16/17 ≥3 derin
-    "4_dalga_e": "[x]",  # 18/19/20/22/23/24 ≥3 derin
-    "4_dalga_b_e": "[x]",  # B–E tamam
+    "4_dalga_d": "[x]",  # 14/15/16/17 ≥3 derin (2026-11-10 tam eser)
+    "4_dalga_e": "[x]",  # 18/19/20/23/24/22 ≥3 tam eser (2026-11-10)
+    "4_dalga_b_e": "[x]",  # B–E tamam (tam eser kuralı)
     "5_ayik_rag": "[x]",
     "5_ocr2": "[x]",  # tam cilt son sayfa + 2 tarama OCR (tur+eng) 2026-11-10
     "6a": "[x]",
@@ -58,6 +58,21 @@ FACT = {
     "6d": "[x]",  # hikâye vitrin 3/3 + mutlu yol (2026-11-09)
     "6e": "[x]",  # plan niyet 5/5 + Büyük Plan + mutlu yol
     "6f": "[x]",  # usta vitrin 5/5 + mutlu yol (2026-11-09)
+    "10a_hafiza": "[x]",  # IR+Lucene+OpenSearch+FTS5+Automerge 2026-11-10
+    "10b_ses": "[x]",  # Whisper/Piper/Coqui-Vosk/MDN/CommonVoice 2026-11-10
+    "10c_tercume": "[x]",  # Marian/OPUS/Argos · ICU · CAMeL/Farasa · TBX 2026-11-10
+    "10d_video": "[x]",  # OpenCV/FFmpeg/OTIO/WebRTC/Godot-Three 2026-11-10
+    "10e_mimar": "[x]",  # AOSA/SRE/Electron-FastAPI/OPA/threat 2026-11-10
+    "10f_programlama": "[x]",  # tree-sitter/Hypothesis/Playwright/llama/sandbox/CI 2026-11-10
+    "10g_fenni": "[x]",  # Calc2/3 ILA MIT6042 Manim MapLibre HyperPhysics UP2 2026-11-10
+    "10h_merkez": "[x]",  # Proxmox/Nix/ZFS/Syncthing/age/mirror/Prometheus + ince iyileştirme 2026-11-10
+    "10i_madde": "[x]",  # ESP-IDF/FreeRTOS/HA/ROS2/Firmata/FreeCAD — 6/6 kalın≥40 2026-11-10
+    "10j_profil": "[x]",  # WCAG/privacy/ACM ethics/unutma-miras — 4/4 kalın≥40 2026-11-10
+    "10_2_sahne": "[x]",  # §10.2 8 sahne odası kalın≥40 2026-11-10
+    "10_3_multimodal": "[x]",  # LLaVA/CLIP Whisper Piper embed/rerank LoRA eval 5/5 kalın≥40 2026-11-10
+    "10_4_fenni": "[x]",  # OpenStax/OCW/D2L/atlas/bilim tarihi 5/5 kalın≥40 2026-11-10
+    "bilgisayar_rag": "[x]",  # 593898 chunk · 61714 dosya · 24 dal · swap 2026-11-11 18:51
+    "donanim_merdiven": "[x]",  # Basamak0 ölçüm+mühür 2026-11-11; alım/aksiyon ayrı Mimar evet
 }
 
 
@@ -459,7 +474,7 @@ def main() -> int:
     )
 
     # ——— BÖLÜM 1: Neredeyiz ———
-    add_heading(doc, "1) Neredeyiz (tek bakış)", 1, status="partial")
+    add_heading(doc, "1) Neredeyiz (tek bakış)", 1, status="done")
     for m, t in [
         (FACT["0_rag"], "Adım 0 — Şamile RAG shard’ları"),
         (FACT["1_sohbet"], "Adım 1 — Rüzgar Sohbet omurgası (S0–S5)"),
@@ -467,31 +482,47 @@ def main() -> int:
         (FACT["3_ayiklama"], "Adım 3 — Kısa ayıklama (~50 seçim)"),
         (FACT["4_masa"], "Adım 4 — Masa omurgası (Belge/Tablo/Çizim/Sunum + onay)"),
         (FACT["4_dalga_a"], "Adım 4 — Dalga A omurga rafları derin (≥3 eser: 01–06, 11)"),
-        (FACT["4_dalga_b_e"], "Adım 4 — Dalga B–E + kalan raflar (devam)"),
+        (FACT["4_dalga_b_e"], "Adım 4 — Dalga B–E + kalan raflar (tamam)"),
         (FACT["5_ayik_rag"], "Adım 5 — Seçili PDF → ayıklama yan RAG"),
         (FACT["5_ocr2"], "Adım 5.d — Tam cilt / OCR 2. dalga"),
         (FACT["6a"], "Motor A — Okuma + Hafıza odaları"),
         (FACT["6b"], "Motor B — Ses süper-el + PWA mikrofon"),
-        (FACT["6c"], "Motor C — Tercüme ← SIRADAKİ"),
+        (FACT["6c"], "Motor C — Tercüme"),
         (FACT["6d"], "Motor D — Video"),
         (FACT["6e"], "Motor E — Mimar / sahne binası"),
         (FACT["6f"], "Motor F — Programlama organ fabrikası"),
+        (FACT["10a_hafiza"], "§10 İleri A — Hafıza yakıtı (IR / Lucene / OpenSearch / FTS5 / Automerge)"),
+        (FACT["10b_ses"], "§10 İleri B — Ses yakıtı (Whisper / Piper / Coqui-Vosk / MDN / Common Voice)"),
+        (FACT["10c_tercume"], "§10 İleri C — Tercüme yakıtı (Marian/OPUS/Argos · ICU · CAMeL/Farasa · TBX)"),
+        (FACT["10d_video"], "§10 İleri D — Video yakıtı (OpenCV / FFmpeg / OTIO / WebRTC / Godot-Three)"),
+        (FACT["10e_mimar"], "§10 İleri E — Mimar yakıtı (AOSA / SRE / Electron-FastAPI / OPA / Threat)"),
+        (FACT["10f_programlama"], "§10 İleri F — Programlama yakıtı (tree-sitter / Hypothesis / Playwright / llama / sandbox)"),
+        (FACT["10g_fenni"], "§10 İleri G — Fenni+görsel (Calc2/3 · ILA · MIT 6.042 · Manim · MapLibre · HyperPhysics · UP2)"),
+        (FACT["10h_merkez"], "§10 İleri H — Merkez 7/24 (Proxmox/Nix/ZFS/Syncthing/age/mirror/Prometheus) KALIN"),
+        (FACT["10i_madde"], "§10 İleri I — Madde el (ESP-IDF/FreeRTOS/HA/ROS2/Firmata/FreeCAD) 6/6 KALIN≥40"),
+        (FACT["10j_profil"], "§10 İleri J — Çok profil (WCAG/privacy/ACM ethics/unutma-miras) 4/4 KALIN≥40"),
+        (FACT["10_2_sahne"], "§10.2 İleri sahne odaları — 8/8 KALIN≥40 (ömür/mahkeme/dil/coğrafya/astro/atölye/brifing/güvenlik)"),
+        (FACT["10_3_multimodal"], "§10.3 Multimodal/yerel beyin — 5/5 KALIN≥40 (LLaVA·CLIP · Whisper/Piper · embed/rerank · LoRA · eval)"),
+        (FACT["10_4_fenni"], "§10.4 Fenni derinleşme — 5/5 KALIN≥40 (OpenStax · MIT OCW · D2L/ISLR · atlas · bilim tarihi)"),
+        (FACT["bilgisayar_rag"], "Bilgisayar RAG yeniden indeks — 593898 chunk · 61714 dosya · 24 dal (sağlama ✓ 2026-11-11 18:51)"),
+        (FACT["donanim_merdiven"], "Donanım merdiveni — Basamak 0 ölçüm mühür (16GB·4060·Ryzen5500); alım sırası kayıtlı, satın alma ayrı evet"),
     ]:
         add_item(doc, m, t)
 
     # ——— BÖLÜM 2: Yol haritası kilit ———
-    add_heading(doc, "2) Yol haritası — kilitli sıra (karşılaştırma)", 1, status="partial")
+    add_heading(doc, "2) Yol haritası — kilitli sıra (karşılaştırma)", 1, status="done")
     add_p(doc, f"Kaynak: {YOL_MD.name if YOL_MD.is_file() else 'RUZGAR_KUTUPHANE_SONRASI_YOL_HARITASI.md'}")
     add_p(doc, "Yol haritası §0 maddeleri × fiili durum:")
     for m, t in [
         (FACT["0_rag"], "YH-1 Şamile RAG bitsin"),
         (FACT["2_mobil"], "YH-2 Telefon/tablet uzaktan sohbet (ince istemci)"),
         (FACT["3_ayiklama"], "YH-3 Kısa ayıklama ~30–50"),
-        ("[~]", "YH-4 Bilgisayar rafları derin + sahne/masa (Dalga A+masa ✓; B–E ve sahne hayali devam)"),
+        (FACT["4_dalga_b_e"], "YH-4 Bilgisayar rafları derin + sahne/masa (Dalga A–E ✓)"),
         (FACT["5_ayik_rag"], "YH-5 Seçilmiş PDF → RAG"),
-        ("[~]", "YH-6 Motor A→F (A+B ✓; C sırada)"),
-        ("[ ]", "YH-7 Fenni ilimler + görseller (ileri)"),
-        ("[ ]", "YH-§9 İleri aşama (A→F sonrası)"),
+        (FACT["6f"], "YH-6 Motor A→F (A–F ✓)"),
+        (FACT["10_4_fenni"], "YH-7 Fenni ilimler + görseller (ileri)"),
+        (FACT["10a_hafiza"], "YH-§9/§10 İleri aşama (A→J + 10.2–10.4 ✓)"),
+        (FACT["bilgisayar_rag"], "YH-son — Bilgisayar RAG yeniden indeks"),
     ]:
         add_item(doc, m, t)
 
@@ -509,7 +540,7 @@ def main() -> int:
     )
 
     # ——— BÖLÜM 3: Büyük Plan Ana_Sıra ———
-    add_heading(doc, "3) Büyük Plan — Ana_Sıra (Excel) × fiili işaret", 1, status="partial")
+    add_heading(doc, "3) Büyük Plan — Ana_Sıra (Excel) × fiili işaret", 1, status="done")
     add_p(doc, f"Kaynak: {BUYUK_XLSX.name if BUYUK_XLSX.is_file() else 'RÜZGAR_BUYUK_PLAN.xlsx'} · sayfa 1_Ana_Sıra")
     if ana:
         for row in ana:
@@ -524,17 +555,17 @@ def main() -> int:
     else:
         add_p(doc, "(Excel okunamadı)")
 
-    add_heading(doc, "3.b Büyük Plan sayfaları (var / fiili)", 2, status="partial")
+    add_heading(doc, "3.b Büyük Plan sayfaları (var / fiili)", 2, status="done")
     for m, t in [
         ("[x]", "11_Mobil_Yonetim — plan yazıldı + PWA/panel uygulandı"),
         ("[x]", "12_Ruzgar_Sohbet — S0–S5 kod yolu"),
-        ("[x]", "2_Bilgisayar_Rafları — Dalga A–E tanımı (içerik A kısmen doldu)"),
+        ("[x]", "2_Bilgisayar_Rafları — Dalga A–E tanımı ve tam eser mühürü"),
         ("[x]", "3_Masa_ve_Yüz — yüz kilidi + masa bağ temel"),
-        ("[~]", "4_Motor_Dalgaları — A+B yapıldı; C–F bekliyor"),
+        ("[x]", "4_Motor_Dalgaları — A→F vitrin + mutlu yol ✓"),
         ("[x]", "5_Orkestra — rol tablosu kayıtlı"),
-        ("[ ]", "6_Donanım_Merdiveni — vizyon; aksiyon sonra"),
+        (FACT["donanim_merdiven"], "6_Donanım_Merdiveni — Basamak 0 ölçüm mühür; alım ayrı evet"),
         ("[x]", "7_rüzgar_indir_Paket — ayıklama seçim ile işlendi"),
-        ("[ ]", "10_Ileri_Sistem_Donanim — ileri"),
+        (FACT["donanim_merdiven"], "10_Ileri_Sistem_Donanim — yazılım omurgası ✓; alım merdiveni kayıtlı"),
     ]:
         add_item(doc, m, t)
 
@@ -687,12 +718,12 @@ def main() -> int:
     ]:
         add_item(doc, m, t)
 
-    add_heading(doc, "8) Sıradaki tek iş", 1, status="partial")
+    add_heading(doc, "8) Sıradaki tek iş", 1, status="done")
     add_p(
         doc,
-        "Sıradaki: Bilgisayar raf dolumunda kalan ince eser indirmeleri / "
-        "plan dışı boşluklar; bilgisayar RAG indeksi EN SONDA. "
-        "Ayıklama 50 tam cilt + OCR-2 tamam. Dalga A–E + Motor A→F tamam.",
+        "Büyük plan yazılım işleri tamam (0→6 + §10 yakıt A→J + 10.2–10.4 + bilgisayar RAG + Basamak0 ölçüm). "
+        "Alım yok. Madde el / 7/24 merkez bilinçli kapalı: bunlar fiziksel kurulum (cihaz/7-24 ev); "
+        "yakıt kalın dolduruldu, canlı bağ/kurulum ayrı açık Mimar «evet» ister — §10.5.",
         bold=True,
     )
 
