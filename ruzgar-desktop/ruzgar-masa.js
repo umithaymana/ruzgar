@@ -106,6 +106,9 @@
   let paperReady = false;
   let sayfa = "sohbet";
   let sahneTimer = 0;
+  const SAHNE_PLACEHOLDER = "Yaz. Cevabı ben buradan söyleyeyim.";
+  let sahneLastSoz = "";
+  let sahnePaintTimer = 0;
   let drawing = false;
   let lastPt = null;
   let shapeStart = null;
@@ -3683,7 +3686,56 @@
     return { clean: (clean ? clean + "\n\n" : "") + "Masa: " + notes.join(" ") };
   };
 
+  function ensureSahneExtras() {
+    const sahne = document.getElementById("ruzgar-sahne");
+    const face = document.getElementById("ruzgar-sahne-face");
+    if (!sahne || !face) return;
+    if (!sahne.getAttribute("aria-label")) sahne.setAttribute("aria-label", "Rüzgar sahne");
+    const sozEl = document.getElementById("ruzgar-sahne-soz");
+    if (sozEl && !sozEl.hasAttribute("tabindex")) sozEl.setAttribute("tabindex", "-1");
+    if (!document.getElementById("ruzgar-sahne-durum")) {
+      const durum = document.createElement("p");
+      durum.id = "ruzgar-sahne-durum";
+      durum.className = "ruzgar-sahne-durum";
+      durum.setAttribute("aria-live", "polite");
+      durum.setAttribute("aria-atomic", "true");
+      durum.setAttribute("role", "status");
+      durum.setAttribute("lang", "tr");
+      durum.textContent = "Hazır";
+      face.appendChild(durum);
+    } else {
+      const d0 = document.getElementById("ruzgar-sahne-durum");
+      if (d0 && !d0.getAttribute("aria-live")) d0.setAttribute("aria-live", "polite");
+      if (d0) d0.setAttribute("aria-atomic", "true");
+      if (d0 && !d0.getAttribute("role")) d0.setAttribute("role", "status");
+      if (d0 && !d0.getAttribute("lang")) d0.setAttribute("lang", "tr");
+    }
+    if (sozEl) {
+      sozEl.setAttribute("aria-live", "polite");
+      if (!sozEl.getAttribute("lang")) sozEl.setAttribute("lang", "tr");
+    }
+    if (!document.getElementById("ruzgar-sahne-dalga")) {
+      const dalga = document.createElement("div");
+      dalga.id = "ruzgar-sahne-dalga";
+      dalga.className = "ruzgar-sahne-dalga";
+      dalga.setAttribute("aria-hidden", "true");
+      for (let i = 0; i < 5; i++) {
+        dalga.appendChild(document.createElement("span"));
+      }
+      const soz = document.getElementById("ruzgar-sahne-soz");
+      if (soz && soz.parentNode === sahne) sahne.insertBefore(dalga, soz);
+      else sahne.appendChild(dalga);
+    }
+  }
+
+  function schedulePaintSpeech() {
+    clearTimeout(sahnePaintTimer);
+    /* mobil sahneYaziTimer(60) ile aynı nabız */
+    sahnePaintTimer = setTimeout(paintSpeech, 60);
+  }
+
   function paintSpeech() {
+    ensureSahneExtras();
     const soz = document.getElementById("ruzgar-sahne-soz");
     const sahneFace = document.getElementById("ruzgar-sahne-face");
     if (!soz) return;
@@ -3694,20 +3746,179 @@
       text = (nodes[i].innerText || "").replace(/\s+\n/g, "\n").trim();
       if (text) break;
     }
-    soz.textContent = text ? (text.length > 700 ? text.slice(0, 700) + "…" : text) : "Yaz. Cevabı ben buradan söyleyeyim.";
-    if (!text || !sahneFace) return;
-    sahneFace.classList.add("is-talking");
-    clearTimeout(sahneTimer);
-    sahneTimer = setTimeout(function () {
-      const live = document.getElementById("ruzgar-face");
-      if (!live || !live.classList.contains("is-talking")) sahneFace.classList.remove("is-talking");
-    }, Math.min(9000, 1400 + text.length * 18));
+    const shown = text
+      ? text.length > 640
+        ? text.slice(0, 640) + "…"
+        : text
+      : SAHNE_PLACEHOLDER;
+    const prev = sahneLastSoz;
+    const sameStream =
+      !!text &&
+      !!prev &&
+      prev !== SAHNE_PLACEHOLDER &&
+      shown.length >= prev.length &&
+      shown.indexOf(prev.replace(/…$/, "")) === 0;
+    const fresh = shown !== prev && !sameStream;
+    sahneLastSoz = shown;
+    soz.textContent = shown;
+    if (fresh || sameStream) {
+      soz.scrollTop = soz.scrollHeight;
+    }
+    if (fresh) {
+      soz.classList.remove("is-fresh");
+      void soz.offsetWidth;
+      soz.classList.add("is-fresh");
+      try {
+        soz.focus({ preventScroll: true });
+      } catch (_) {
+        /* focus opsiyonel */
+      }
+    }
+    if (!text || !sahneFace) {
+      if (sahneFace) sahneFace.classList.remove("is-speaking-text");
+      syncSahneLive();
+      return;
+    }
+    /* TTS yokken ağız: is-talking'i pro-yuz ile çakıştırma; stream'de süre uzat */
+    if (fresh || sameStream) {
+      sahneFace.classList.add("is-speaking-text");
+      clearTimeout(sahneTimer);
+      sahneTimer = setTimeout(function () {
+        sahneFace.classList.remove("is-speaking-text");
+        syncSahneLive();
+      }, Math.min(12000, 1600 + text.length * 22));
+    }
+    syncSahneLive();
+  }
+
+  function isSahneDusunuyor() {
+    const ov = document.getElementById("thinking-center-overlay");
+    if (!ov || ov.hidden) return false;
+    if (ov.getAttribute("aria-hidden") === "true") return false;
+    const st = window.getComputedStyle ? window.getComputedStyle(ov) : null;
+    if (st && (st.display === "none" || st.visibility === "hidden")) return false;
+    return true;
+  }
+
+  function syncSahneLive() {
+    ensureSahneExtras();
+    const on = document.body.classList.contains("ruzgar-sahne-on");
+    const face = document.getElementById("ruzgar-sahne-face");
+    const durum = document.getElementById("ruzgar-sahne-durum");
+    const dalga = document.getElementById("ruzgar-sahne-dalga");
+    if (!on || !face) {
+      document.body.classList.remove(
+        "ruzgar-sahne-live",
+        "ruzgar-sahne-dinle",
+        "ruzgar-sahne-yazi",
+        "ruzgar-sahne-dusun"
+      );
+      const rootOff = document.getElementById("ruzgar-sahne");
+      if (rootOff) {
+        rootOff.setAttribute("data-sahne-mode", "hazir");
+        rootOff.setAttribute("aria-busy", "false");
+        rootOff.title = "Rüzgar sahne · hazir";
+      }
+      if (durum) {
+        durum.textContent = "Hazır";
+        durum.title = "Durum: hazir";
+      }
+      if (dalga) dalga.classList.remove("is-on", "is-dinle", "is-dusun");
+      const faceOff = document.getElementById("ruzgar-sahne-face");
+      if (faceOff) faceOff.classList.remove("is-thinking-sahne", "is-speaking-text");
+      return;
+    }
+    const talk =
+      face.classList.contains("is-talking") || face.classList.contains("is-speaking-text");
+    const dinle = face.classList.contains("is-listening");
+    const yazi = face.classList.contains("is-writing");
+    const dusun = !talk && !dinle && isSahneDusunuyor();
+    document.body.classList.toggle("ruzgar-sahne-live", talk && !dinle);
+    document.body.classList.toggle("ruzgar-sahne-dinle", dinle);
+    document.body.classList.toggle("ruzgar-sahne-yazi", yazi && !talk && !dinle && !dusun);
+    document.body.classList.toggle("ruzgar-sahne-dusun", dusun);
+    face.classList.toggle("is-thinking-sahne", dusun);
+    const mode = dinle
+      ? "dinle"
+      : talk
+        ? "konus"
+        : dusun
+          ? "dusun"
+          : yazi
+            ? "yazi"
+            : "hazir";
+    const sahneRoot = document.getElementById("ruzgar-sahne");
+    const busy = mode !== "hazir" && mode !== "yazi";
+    if (sahneRoot) {
+      sahneRoot.setAttribute("data-sahne-mode", mode);
+      sahneRoot.setAttribute("aria-busy", busy ? "true" : "false");
+      sahneRoot.title = "Rüzgar sahne · " + mode;
+    }
+    if (durum) {
+      durum.textContent =
+        mode === "dinle"
+          ? "Dinliyor"
+          : mode === "konus"
+            ? "Konuşuyor"
+            : mode === "dusun"
+              ? "Düşünüyor"
+              : mode === "yazi"
+                ? "Yazıyorsun"
+                : "Hazır";
+      durum.title = "Durum: " + mode;
+    }
+    if (dalga) {
+      dalga.classList.toggle("is-on", talk && !dinle);
+      dalga.classList.toggle("is-dinle", dinle);
+      dalga.classList.toggle("is-dusun", dusun);
+    }
+    /* Dilim-7: düşünürken son kullanıcı sözünü sahnede tut (mobil ile hiza) */
+    if (dusun) {
+      const soz = document.getElementById("ruzgar-sahne-soz");
+      if (soz) {
+        const users = document.querySelectorAll("#chat-messages .bubble.user");
+        let lastUser = "";
+        for (let i = users.length - 1; i >= 0; i--) {
+          lastUser = (users[i].innerText || "").replace(/\s+\n/g, "\n").trim();
+          if (lastUser) break;
+        }
+        if (lastUser) {
+          const shown =
+            lastUser.length > 640 ? lastUser.slice(0, 640) + "…" : lastUser;
+          if (soz.textContent !== shown) {
+            soz.textContent = shown;
+            soz.classList.remove("is-fresh");
+            void soz.offsetWidth;
+            soz.classList.add("is-fresh");
+          }
+        }
+      }
+    }
   }
 
   function syncSahne() {
     const motor = document.body.dataset.motor || "genel";
+    /* PC: sahne Ana Motor sohbet yüzeyine bağlı (mobil sahne→sohbet kuralı ile hiza) */
     const on = motor === "genel" && sayfa === "sohbet";
     document.body.classList.toggle("ruzgar-sahne-on", on);
+    const sahneEl = document.getElementById("ruzgar-sahne");
+    if (sahneEl) {
+      try {
+        sahneEl.inert = !on;
+      } catch (_) {}
+      sahneEl.setAttribute("aria-hidden", on ? "false" : "true");
+    }
+    if (!on) {
+      document.body.classList.remove(
+        "ruzgar-sahne-live",
+        "ruzgar-sahne-dinle",
+        "ruzgar-sahne-yazi",
+        "ruzgar-sahne-dusun"
+      );
+      const sozOff = document.getElementById("ruzgar-sahne-soz");
+      if (sozOff) sozOff.textContent = SAHNE_PLACEHOLDER;
+      sahneLastSoz = SAHNE_PLACEHOLDER;
+    }
     const back = document.getElementById("ruzgar-masa-sahne");
     if (back) back.hidden = on;
     root.querySelectorAll("[data-masa]").forEach(function (btn) {
@@ -3717,10 +3928,14 @@
       btn.setAttribute("aria-selected", active ? "true" : "false");
     });
     syncChip();
-    if (on) paintSpeech();
+    if (on) {
+      ensureSahneExtras();
+      paintSpeech();
+    } else syncSahneLive();
   }
 
   function wireSahne() {
+    ensureSahneExtras();
     const openDesk = document.getElementById("ruzgar-sahne-masa");
     const backStage = document.getElementById("ruzgar-masa-sahne");
     if (openDesk) {
@@ -3735,11 +3950,44 @@
     }
     const chat = document.getElementById("chat-messages");
     if (chat && window.MutationObserver) {
-      new MutationObserver(function () { paintSpeech(); }).observe(chat, { childList: true, subtree: true });
+      new MutationObserver(function () {
+        schedulePaintSpeech();
+      }).observe(chat, { childList: true, subtree: true, characterData: true });
     }
     if (window.MutationObserver) {
-      new MutationObserver(syncSahne).observe(document.body, { attributes: true, attributeFilter: ["data-motor"] });
+      new MutationObserver(syncSahne).observe(document.body, {
+        attributes: true,
+        attributeFilter: ["data-motor"],
+      });
+      const face = document.getElementById("ruzgar-sahne-face");
+      if (face) {
+        new MutationObserver(syncSahneLive).observe(face, {
+          attributes: true,
+          attributeFilter: ["class"],
+        });
+      }
+      const thinkOv = document.getElementById("thinking-center-overlay");
+      if (thinkOv) {
+        new MutationObserver(syncSahneLive).observe(thinkOv, {
+          attributes: true,
+          attributeFilter: ["hidden", "class", "aria-hidden", "style"],
+        });
+      }
     }
+    window.setInterval(syncSahneLive, 450);
+    function onSahneResume() {
+      if (!document.body.classList.contains("ruzgar-sahne-on")) return;
+      paintSpeech();
+      syncSahneLive();
+    }
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState !== "visible") return;
+      onSahneResume();
+    });
+    window.addEventListener("pageshow", function (ev) {
+      if (ev.persisted) onSahneResume();
+    });
+    window.addEventListener("online", onSahneResume);
   }
 
   load();

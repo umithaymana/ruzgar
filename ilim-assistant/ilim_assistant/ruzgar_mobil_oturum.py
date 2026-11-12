@@ -17,7 +17,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-VERSION = "mobil-oturum-v2-2026-11-09"
+VERSION = "mobil-oturum-v3-2026-11-13"
 _TTL_SEC = 60 * 60 * 24 * 30  # 30 gün — «bir kez giriş»
 _STORE = "mobil_oturum_store.json"
 _DEFAULT_MOTORS = {
@@ -29,7 +29,17 @@ _DEFAULT_MOTORS = {
     "tercume": False,
     "programlama": False,
     "hafiza": False,
+    # Sahne yüzü — varsayılan kapalı; panelden kullanıcıya açılır
+    "sahne": False,
 }
+
+
+def normalize_motors(motors: dict[str, Any] | None) -> dict[str, bool]:
+    cur = dict(_DEFAULT_MOTORS)
+    for k, v in (motors or {}).items():
+        if k in _DEFAULT_MOTORS:
+            cur[k] = bool(v)
+    return cur
 _CONCURRENT_YAZI = int(os.environ.get("RUZGAR_MOBIL_CONCURRENT_YAZI", "8") or "8")
 _active_lock = threading.Lock()
 _active_chats: dict[str, float] = {}
@@ -153,13 +163,26 @@ def ensure_mimar_admin(kullanici: str = "mimar") -> dict[str, Any]:
             "telefon": "",
             "pw_hash": _hash_pw(pw, salt),
             "salt": salt,
-            "motors": {**_DEFAULT_MOTORS, "sohbet": True, "hafiza": True, "mimar": True},
+            "motors": {
+                **_DEFAULT_MOTORS,
+                "sohbet": True,
+                "hafiza": True,
+                "mimar": True,
+                "sahne": True,
+            },
             "role": "mimar",
             "created_at": time.time(),
         }
     if kullanici not in data["admins"]:
         data["admins"].append(kullanici)
     data["users"][kullanici]["role"] = "mimar"
+    # Mimar sahne yüzünü her ensure'da açık tut (eski store'da anahtar yoksa)
+    m = normalize_motors(data["users"][kullanici].get("motors"))
+    m["sohbet"] = True
+    m["hafiza"] = True
+    m["mimar"] = True
+    m["sahne"] = True
+    data["users"][kullanici]["motors"] = m
     _save(data)
     return {"ok": True, "kullanici": kullanici, "role": "mimar"}
 
@@ -352,7 +375,7 @@ def login(
         "expires_at": data["sessions"][token]["expires_at"],
         "kullanici": kullanici,
         "role": role,
-        "motors": user.get("motors") or dict(_DEFAULT_MOTORS),
+        "motors": normalize_motors(user.get("motors")),
         "is_admin": kullanici in (data.get("admins") or []) or role == "mimar",
         "device_kind": kind,
     }
@@ -404,11 +427,20 @@ def validate_token(token: str) -> dict[str, Any] | None:
     return {
         "kullanici": sess.get("kullanici"),
         "role": role,
-        "motors": (user or {}).get("motors") or dict(_DEFAULT_MOTORS),
+        "motors": normalize_motors((user or {}).get("motors")),
         "device_name": sess.get("device_name"),
         "device_id": sess.get("device_id"),
+        "device_kind": sess.get("device_kind") or "",
         "is_admin": sess.get("kullanici") in (data.get("admins") or []) or role == "mimar",
     }
+
+
+def session_me(token: str) -> dict[str, Any]:
+    """Canlı motor izinleri (sahne aç/kapa panelden sonra PWA yenilesin)."""
+    auth = validate_token(token or "")
+    if not auth:
+        return {"ok": False, "error": "oturum yok"}
+    return {"ok": True, **auth, "version": VERSION}
 
 
 def set_motor_acl(kullanici: str, motors: dict[str, bool], *, actor: str = "mimar") -> dict[str, Any]:
@@ -421,10 +453,13 @@ def set_motor_acl(kullanici: str, motors: dict[str, bool], *, actor: str = "mima
         return {"ok": False, "error": "kullanıcı yok"}
     if user.get("role") == "mimar" and actor != "mimar":
         return {"ok": False, "error": "kök: Mimar motorlarına dokunulamaz"}
-    cur = dict(user.get("motors") or _DEFAULT_MOTORS)
+    cur = normalize_motors(user.get("motors"))
     for k, v in (motors or {}).items():
         if k in _DEFAULT_MOTORS:
             cur[k] = bool(v)
+    # Sahne açılırsa sohbet de açık kalsın (yüzün dayandığı kanal)
+    if cur.get("sahne"):
+        cur["sohbet"] = True
     user["motors"] = cur
     _save(data)
     return {"ok": True, "kullanici": kullanici, "motors": cur}
@@ -463,7 +498,7 @@ def list_users() -> list[dict[str, Any]]:
                 "soyad": u.get("soyad"),
                 "telefon": u.get("telefon"),
                 "role": u.get("role"),
-                "motors": u.get("motors"),
+                "motors": normalize_motors(u.get("motors")),
             }
         )
     return out
@@ -554,7 +589,7 @@ def end_chat_slot(slot: str | None) -> None:
 def motor_allowed(auth: dict[str, Any] | None, motor: str) -> bool:
     if auth is None:
         return True  # lokal PC sohbet (token yok)
-    motors = auth.get("motors") or {}
+    motors = normalize_motors(auth.get("motors"))
     if motor == "genel" or motor == "sohbet":
         return bool(motors.get("sohbet", True))
     return bool(motors.get(motor, False))

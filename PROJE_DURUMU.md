@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-11-12 — GÜVENLİ LİMAN mühür (mobil+ses); sırada sahne.
+**Son güncelleme:** 2026-11-13 — Sahne çift otonom dilim-4…38 yeşil (`SMOKE_SAHNE_CIFT=PASS`); «dur» bekleniyor.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -9,7 +9,17 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 - Mağaza şart değil; beyin PC’de; kapı `8779` · mic için HTTPS `8443`.
 - **Sıra:** mobil+ses **bitti** → sahne ikinci.
 - **Yapıldı (2026-11-12 «yap»):** `/mobil/` PWA (manifest 192/512 PNG · install bar · SW) · masaüstü `Rüzgar Mobil.lnk` (`scripts/Masaustune_Mobil_Kisayol.ps1`, Chrome `--app`) · giriş/sohbet/panel · Wi‑Fi + Tailscale · HTTPS köprü · basılı tut Whisper · **Sürekli sohbet** (VAD) · Wake Lock · kayıt autocomplete. Ana yüz kilidine dokunulmadı.
-- **Sırada:** sahne cila. Cursor↔telefon köprüsü ve ekran kapalı native ses sonraya.
+- **Sahne dilim-1 (2026-11-12 «başla»):** soz taze giriş, `is-speaking-text`, canlı/dinle atmosfer.
+- **Sahne dilim-2/3 (2026-11-13 «devam»):** durum etiketi + ses dalgası (JS ile DOM; index.html yok) · stream söz büyürken `is-fresh` spam yok · `smoke_sahne_dilim.js`. Yüz kilidine dokunulmadı.
+- **Sahne dilim-4 (2026-11-13):** idle rüzgar yumuşatma + «Çalışma yüzeyi» düğme cila.
+- **Sahne dilim-5 (2026-11-13):** uzun/stream sözde `scrollTop` + taze cevapta yumuşak odak.
+- **Sahne dilim-6 (2026-11-13):** thinking overlay → «Düşünüyor» + yumuşak dalga/aura (`ruzgar-sahne-dusun`).
+- **Mobil sahne dilim-1 (2026-11-13 «yap»):** motor izni `sahne` (varsayılan kapalı; Mimar açık) · panel checkbox · PWA sahne yüzü · `smoke_mobil_sahne.py`.
+- **Mobil dilim-2 + PC dilim-7 (2026-11-13):** mobil SVG yüz + aura/idle/soz taze · PC düşünürken son kullanıcı sözü sahnede.
+- **Mobil dilim-3 (2026-11-13):** «Yazıyorsun» (input doluyken) — PC `is-writing` ile hiza.
+- **Çift hat kural (Mimar):** her dilimde PC+mobil birlikte; `smoke_sahne_cift` yeşil olmadan sonraki dilime geçilmez; «dur» deyene kadar.
+- **Çift dilim-4…37 (2026-11-13 otonom, her dilim `smoke_sahne_cift`):** a11y… · `--sahne-fade` · reduced-motion 0s · `inert` · **sahne→sohbet**.
+- **Sırada:** dilim-38+ (otonom) veya Mimar «dur» / commit.
 
 ### YOL HARİTASI — tamamlandı
 

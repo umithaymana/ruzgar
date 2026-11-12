@@ -13,7 +13,7 @@
   <link rel="icon" href="favicon-32.png?v=5" type="image/png" sizes="32x32" />
   <title>Rüzgar Mobil</title>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <link rel="stylesheet" href="app.css?v=16" />
+  <link rel="stylesheet" href="app.css?v=38" />
 </head>
 <body>
   <div id="installBar" class="install-bar hidden">
@@ -98,6 +98,34 @@
       </div>
       <div id="who"></div>
       <div id="chatView">
+        <div id="sahneStage" class="sahne-stage hidden" aria-hidden="true">
+          <div class="sahne-wind" aria-hidden="true"></div>
+          <div class="sahne-face" id="sahneFace" aria-hidden="true">
+            <div class="sahne-face-ring"></div>
+            <svg class="sahne-face-svg" viewBox="0 0 160 168" aria-hidden="true">
+              <rect class="sahne-head" x="28" y="22" width="104" height="112" rx="28" />
+              <rect class="sahne-ear" x="14" y="62" width="16" height="28" rx="6" />
+              <rect class="sahne-ear" x="130" y="62" width="16" height="28" rx="6" />
+              <g class="sahne-eyes">
+                <ellipse class="sahne-eye" cx="62" cy="72" rx="8" ry="9" />
+                <ellipse class="sahne-eye" cx="98" cy="72" rx="8" ry="9" />
+              </g>
+              <g class="sahne-mouth">
+                <rect x="58" y="102" width="6" height="8" rx="2" />
+                <rect x="70" y="98" width="6" height="14" rx="2" />
+                <rect x="82" y="102" width="6" height="8" rx="2" />
+                <rect x="94" y="100" width="6" height="11" rx="2" />
+              </g>
+            </svg>
+            <p class="sahne-name">Rüzgar</p>
+          </div>
+          <p id="sahneDurum" class="sahne-durum" role="status">Hazır</p>
+          <div id="sahneDalga" class="sahne-dalga" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <p id="sahneSoz" class="sahne-soz">Yaz. Cevabı ben buradan söyleyeyim.</p>
+          <p class="hint sahne-gate-hint">Sahne açık (panel izin). Diğer kullanıcılara kapalı tutulabilir.</p>
+        </div>
         <div id="chat"></div>
         <div class="composer">
           <textarea id="input" rows="2" placeholder="Mesaj…"></textarea>
@@ -132,6 +160,6 @@
       </div>
     </section>
   </div>
-  <script src="app.js?v=18"></script>
+  <script src="app.js?v=43"></script>
 </body>
 </html>

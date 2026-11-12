@@ -181,3 +181,330 @@ button.tiny { padding: 6px 10px; font-size: 0.8rem; border-radius: 999px; }
 @media (max-width: 520px) {
   .panel-grid { grid-template-columns: 1fr; }
 }
+
+/* —— Mobil sahne (motor izni: sahne) —— */
+.sahne-stage {
+  --sahne-gold: #d4af37;
+  --sahne-gold-soft: rgba(212, 175, 55, 0.35);
+  --sahne-ink: #f7f1e4;
+  --sahne-fade: 0.35s;
+  --sahne-fade-slow: 0.45s;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding:
+    max(16px, env(safe-area-inset-top, 0px))
+    max(12px, env(safe-area-inset-right, 0px))
+    max(14px, env(safe-area-inset-bottom, 0px))
+    max(12px, env(safe-area-inset-left, 0px));
+  border-radius: 16px;
+  border: 1px solid var(--sahne-gold-soft);
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(212, 175, 55, 0.16), transparent 50%),
+    linear-gradient(180deg, #121018 0%, #0f172a 100%);
+  overflow: hidden;
+  transition: background var(--sahne-fade-slow) ease, border-color var(--sahne-fade) ease;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+  color-scheme: dark;
+}
+.sahne-stage.is-live {
+  border-color: rgba(212, 175, 55, 0.7);
+  background:
+    radial-gradient(ellipse at 50% 28%, rgba(212, 175, 55, 0.28), transparent 52%),
+    linear-gradient(180deg, #1a1410 0%, #0f172a 100%);
+}
+.sahne-stage.is-dinle {
+  border-color: rgba(140, 200, 240, 0.55);
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(120, 190, 230, 0.18), transparent 50%),
+    linear-gradient(180deg, #0e1218 0%, #0f172a 100%);
+}
+.sahne-stage.is-dusun {
+  border-color: rgba(201, 162, 39, 0.55);
+}
+.sahne-stage.is-yazi {
+  border-color: rgba(200, 184, 150, 0.45);
+}
+.sahne-stage.is-yazi .sahne-durum { color: #c8b896; }
+.sahne-stage.is-yazi .sahne-soz {
+  border-color: rgba(200, 184, 150, 0.4);
+}
+.sahne-wind {
+  position: absolute;
+  inset: -30%;
+  background: repeating-linear-gradient(
+    100deg,
+    transparent 0 36px,
+    rgba(212, 175, 55, 0.06) 36px 38px
+  );
+  animation: mobil-esinti 12s linear infinite;
+  pointer-events: none;
+  opacity: 0.7;
+}
+.sahne-stage.is-live .sahne-wind { animation-duration: 6s; opacity: 1; }
+.sahne-face {
+  position: relative;
+  z-index: 1;
+  width: 132px;
+  margin-top: 2px;
+  text-align: center;
+  animation: mobil-nefes 4.8s ease-in-out infinite;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+}
+.sahne-face::before {
+  content: "";
+  position: absolute;
+  inset: 6% 14% 22%;
+  border-radius: 48% / 42%;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.2), transparent 70%);
+  filter: blur(10px);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 0;
+}
+.sahne-stage.is-live .sahne-face::before,
+.sahne-stage.is-dusun .sahne-face::before {
+  opacity: 1;
+  transform: scale(1.06);
+}
+.sahne-stage.is-dinle .sahne-face::before {
+  background: radial-gradient(circle, rgba(130, 200, 240, 0.28), transparent 70%);
+  opacity: 0.9;
+}
+.sahne-face-ring {
+  position: absolute;
+  inset: 8px 16px 34px;
+  border-radius: 28px;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  z-index: 1;
+  pointer-events: none;
+  transition: box-shadow var(--sahne-fade, 0.35s) ease, border-color var(--sahne-fade, 0.35s) ease;
+}
+.sahne-stage.is-live .sahne-face-ring {
+  box-shadow: 0 0 0 6px rgba(212, 175, 55, 0.14), 0 0 22px rgba(212, 175, 55, 0.22);
+  border-color: rgba(212, 175, 55, 0.7);
+}
+.sahne-stage.is-dinle .sahne-face-ring {
+  box-shadow: 0 0 0 6px rgba(140, 200, 240, 0.12), 0 0 18px rgba(140, 200, 240, 0.2);
+  border-color: rgba(140, 200, 240, 0.55);
+}
+.sahne-stage.is-dusun .sahne-face-ring {
+  box-shadow: 0 0 0 5px rgba(201, 162, 39, 0.12);
+}
+.sahne-stage.is-yazi .sahne-face-ring {
+  border-color: rgba(200, 184, 150, 0.45);
+  box-shadow: none;
+}
+.sahne-face-svg {
+  position: relative;
+  z-index: 1;
+  width: 118px;
+  height: 124px;
+  display: block;
+  margin: 0 auto;
+}
+.sahne-head,
+.sahne-ear {
+  fill: #2a2a2e;
+  stroke: var(--sahne-gold);
+  stroke-width: 2;
+}
+.sahne-eye {
+  fill: #f2e6c4;
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: mobil-blink 5.5s infinite;
+}
+.sahne-stage.is-dinle .sahne-eye { fill: #9ad7ff; }
+.sahne-mouth rect {
+  fill: var(--sahne-gold);
+  transform-origin: center;
+  transform-box: fill-box;
+}
+.sahne-stage.is-live .sahne-mouth rect {
+  animation: mobil-talk 0.28s ease-in-out infinite alternate;
+}
+.sahne-stage.is-live .sahne-mouth rect:nth-child(2) { animation-delay: 0.06s; }
+.sahne-stage.is-live .sahne-mouth rect:nth-child(3) { animation-delay: 0.12s; }
+.sahne-stage.is-live .sahne-mouth rect:nth-child(4) { animation-delay: 0.04s; }
+.sahne-stage.is-live .sahne-face {
+  animation: mobil-nefes-canli 2.4s ease-in-out infinite;
+}
+.sahne-name {
+  position: relative;
+  z-index: 1;
+  margin: 2px 0 0;
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  color: #f3ead2;
+}
+#chatView.has-sahne #chat {
+  min-height: 28dvh;
+  max-height: 42dvh;
+  transition: opacity 0.35s ease;
+}
+#chatView.has-sahne.sahne-busy #chat {
+  opacity: 0.82;
+}
+.sahne-durum {
+  position: relative;
+  z-index: 1;
+  margin: 2px 0 0;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #b7aa88;
+}
+.sahne-stage.is-live .sahne-durum { color: #e6c86a; }
+.sahne-stage.is-dinle .sahne-durum { color: #9ad7ff; }
+.sahne-stage.is-dusun .sahne-durum {
+  color: #d4b56a;
+  animation: mobil-nabiz 1.4s ease-in-out infinite;
+}
+.sahne-dalga {
+  position: relative;
+  z-index: 1;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  height: 22px;
+}
+.sahne-dalga.is-on,
+.sahne-dalga.is-dinle,
+.sahne-dalga.is-dusun { display: flex; }
+.sahne-dalga span {
+  width: 3px;
+  height: 8px;
+  border-radius: 2px;
+  background: #d4af37;
+  animation: mobil-dalga 0.55s ease-in-out infinite alternate;
+}
+.sahne-dalga span:nth-child(2) { height: 12px; animation-delay: 0.08s; }
+.sahne-dalga span:nth-child(3) { height: 18px; animation-delay: 0.14s; }
+.sahne-dalga span:nth-child(4) { height: 11px; animation-delay: 0.1s; }
+.sahne-dalga span:nth-child(5) { height: 9px; animation-delay: 0.2s; }
+.sahne-dalga.is-dinle span {
+  background: #9ad7ff;
+  animation-duration: 0.85s;
+}
+.sahne-dalga.is-dusun span {
+  background: #c9a227;
+  opacity: 0.75;
+  animation-duration: 1.1s;
+}
+.sahne-stage[data-sahne-mode="konus"] .sahne-durum,
+.sahne-stage[data-sahne-mode="dusun"] .sahne-durum {
+  letter-spacing: 0.16em;
+}
+.sahne-face.is-thinking-sahne {
+  animation: mobil-nefes-dusun 3.2s ease-in-out infinite;
+}
+.sahne-face.is-thinking-sahne::before {
+  opacity: 0.85;
+  background: radial-gradient(circle, rgba(201, 162, 39, 0.28), transparent 70%);
+}
+.sahne-soz {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  max-width: 100%;
+  max-height: 7.5em;
+  overflow: auto;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  color: var(--sahne-ink);
+  font-size: 0.92rem;
+  line-height: 1.4;
+  text-align: center;
+  white-space: pre-wrap;
+  scroll-behavior: smooth;
+  outline: none;
+  user-select: text;
+  -webkit-user-select: text;
+  scrollbar-width: thin;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.sahne-soz:focus-visible {
+  border-color: rgba(212, 175, 55, 0.85);
+}
+.sahne-soz.is-fresh { animation: mobil-soz-gir 0.5s ease; }
+.sahne-stage.is-live .sahne-soz {
+  border-color: rgba(212, 175, 55, 0.65);
+}
+.sahne-stage.is-dinle .sahne-soz {
+  border-color: rgba(140, 200, 240, 0.55);
+}
+@keyframes mobil-nefes-dusun {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-4px) scale(1.02); }
+}
+.sahne-gate-hint { margin: 0; font-size: 0.72rem; position: relative; z-index: 1; }
+.sahne-stage:not(.is-live):not(.is-dinle):not(.is-dusun) .sahne-wind {
+  opacity: 0.45;
+  animation-duration: 16s;
+}
+@keyframes mobil-esinti {
+  from { transform: translateX(0); }
+  to { transform: translateX(-60px); }
+}
+@keyframes mobil-nefes {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+@keyframes mobil-nefes-canli {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-6px) scale(1.03); }
+}
+@keyframes mobil-talk {
+  from { transform: scaleY(0.55); }
+  to { transform: scaleY(1.15); }
+}
+@keyframes mobil-dalga {
+  from { transform: scaleY(0.4); opacity: 0.6; }
+  to { transform: scaleY(1.1); opacity: 1; }
+}
+@keyframes mobil-nabiz {
+  0%, 100% { opacity: 0.65; }
+  50% { opacity: 1; }
+}
+@keyframes mobil-blink {
+  0%, 46%, 50%, 100% { transform: scaleY(1); }
+  48% { transform: scaleY(0.12); }
+}
+@keyframes mobil-soz-gir {
+  from { opacity: 0.35; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sahne-stage {
+    --sahne-fade: 0s;
+    --sahne-fade-slow: 0s;
+  }
+  .sahne-wind,
+  .sahne-face,
+  .sahne-face.is-thinking-sahne,
+  .sahne-stage.is-live .sahne-face,
+  .sahne-stage.is-live .sahne-mouth rect,
+  .sahne-eye,
+  .sahne-dalga span,
+  .sahne-soz.is-fresh,
+  .sahne-stage.is-dusun .sahne-durum {
+    animation: none !important;
+  }
+  .sahne-stage,
+  .sahne-face-ring,
+  .sahne-face::before {
+    transition: none !important;
+  }
+}

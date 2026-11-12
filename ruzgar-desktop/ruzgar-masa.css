@@ -1234,6 +1234,11 @@ body.ruzgar-sade #ruzgar-robot-dock {
 }
 
 body.ruzgar-sahne-on #ruzgar-sahne {
+  --sahne-gold: #d4af37;
+  --sahne-gold-soft: rgba(212, 175, 55, 0.35);
+  --sahne-ink: #f7f1e4;
+  --sahne-fade: 0.35s;
+  --sahne-fade-slow: 0.45s;
   display: flex;
   position: absolute;
   inset: 0;
@@ -1242,11 +1247,36 @@ body.ruzgar-sahne-on #ruzgar-sahne {
   align-items: center;
   justify-content: center;
   gap: 18px;
-  padding: 28px 32px 22px;
+  padding: max(28px, env(safe-area-inset-top, 0px)) max(32px, env(safe-area-inset-right, 0px)) max(22px, env(safe-area-inset-bottom, 0px)) max(32px, env(safe-area-inset-left, 0px));
   background:
-    radial-gradient(ellipse at 50% 38%, rgba(212, 175, 55, 0.16), transparent 46%),
-    linear-gradient(180deg, #121218 0%, #1a1814 100%);
+    radial-gradient(ellipse at 50% 28%, rgba(212, 175, 55, 0.22), transparent 42%),
+    radial-gradient(ellipse at 18% 78%, rgba(90, 140, 180, 0.08), transparent 38%),
+    radial-gradient(ellipse at 82% 72%, rgba(212, 175, 55, 0.07), transparent 36%),
+    linear-gradient(180deg, #0e0e14 0%, #17150f 55%, #1a1814 100%);
   overflow: hidden;
+  transition: background var(--sahne-fade-slow) ease;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+  color-scheme: dark;
+}
+
+body.ruzgar-sahne-on.ruzgar-sahne-live #ruzgar-sahne {
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(212, 175, 55, 0.32), transparent 48%),
+    radial-gradient(ellipse at 50% 70%, rgba(212, 175, 55, 0.08), transparent 50%),
+    linear-gradient(180deg, #121018 0%, #1c1810 100%);
+}
+
+body.ruzgar-sahne-on.ruzgar-sahne-dinle #ruzgar-sahne {
+  background:
+    radial-gradient(ellipse at 50% 32%, rgba(120, 190, 230, 0.2), transparent 46%),
+    linear-gradient(180deg, #0e1218 0%, #14181e 100%);
+}
+
+body.ruzgar-sahne-on.ruzgar-sahne-dusun #ruzgar-sahne {
+  background:
+    radial-gradient(ellipse at 50% 34%, rgba(180, 140, 70, 0.22), transparent 48%),
+    linear-gradient(180deg, #14120e 0%, #1a1610 100%);
 }
 
 body.ruzgar-sahne-on #ruzgar-robot-dock {
@@ -1261,9 +1291,42 @@ body.ruzgar-sahne-on #ruzgar-robot-dock {
       100deg,
       transparent 0 40px,
       rgba(212, 175, 55, 0.05) 40px 42px
+    ),
+    repeating-linear-gradient(
+      108deg,
+      transparent 0 72px,
+      rgba(243, 234, 210, 0.03) 72px 73px
     );
   animation: ruzgar-esinti 14s linear infinite;
   pointer-events: none;
+  opacity: 0.85;
+  transition: opacity 0.45s ease;
+}
+
+body.ruzgar-sahne-live .ruzgar-sahne-wind {
+  animation-duration: 6.5s;
+  opacity: 1;
+  background:
+    repeating-linear-gradient(
+      100deg,
+      transparent 0 36px,
+      rgba(212, 175, 55, 0.11) 36px 39px
+    ),
+    repeating-linear-gradient(
+      108deg,
+      transparent 0 64px,
+      rgba(255, 236, 180, 0.05) 64px 66px
+    );
+}
+
+body.ruzgar-sahne-dinle .ruzgar-sahne-wind {
+  animation-duration: 10s;
+  background:
+    repeating-linear-gradient(
+      100deg,
+      transparent 0 40px,
+      rgba(140, 200, 240, 0.08) 40px 42px
+    );
 }
 
 .ruzgar-sahne-face {
@@ -1272,16 +1335,181 @@ body.ruzgar-sahne-on #ruzgar-robot-dock {
   width: 280px;
   flex: 0 0 auto;
   animation: ruzgar-nefes 4.8s ease-in-out infinite;
+  transition: filter 0.35s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+}
+
+.ruzgar-sahne-face::before {
+  content: "";
+  position: absolute;
+  inset: 4% 12% 18%;
+  border-radius: 48% / 42%;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.18), transparent 68%);
+  filter: blur(18px);
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.ruzgar-sahne-face.is-talking::before,
+.ruzgar-sahne-face.is-speaking-text::before {
+  opacity: 1;
+  transform: scale(1.08);
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.34), transparent 70%);
+}
+
+.ruzgar-sahne-face.is-listening::before {
+  opacity: 0.9;
+  background: radial-gradient(circle, rgba(130, 200, 240, 0.28), transparent 70%);
 }
 
 .ruzgar-sahne-face .ruzgar-face-svg {
+  position: relative;
+  z-index: 1;
   width: 250px;
   height: 262px;
 }
 
 .ruzgar-sahne-face .ruzgar-face-name {
+  position: relative;
+  z-index: 1;
   font-size: 22px;
   letter-spacing: 0.18em;
+}
+
+.ruzgar-sahne-durum {
+  position: relative;
+  z-index: 1;
+  margin: 4px 0 0;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #b7aa88;
+  transition: color 0.3s ease;
+}
+
+body.ruzgar-sahne-live .ruzgar-sahne-durum {
+  color: #e6c86a;
+}
+
+body.ruzgar-sahne-dinle .ruzgar-sahne-durum {
+  color: #9ad7ff;
+}
+
+body.ruzgar-sahne-yazi .ruzgar-sahne-durum {
+  color: #c8b896;
+}
+
+body.ruzgar-sahne-dusun .ruzgar-sahne-durum {
+  color: #d4b56a;
+  animation: ruzgar-durum-nabiz 1.4s ease-in-out infinite;
+}
+
+.ruzgar-sahne-dalga {
+  position: relative;
+  z-index: 1;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 5px;
+  height: 28px;
+  margin: -4px 0 2px;
+}
+
+.ruzgar-sahne-dalga.is-on,
+.ruzgar-sahne-dalga.is-dinle {
+  display: flex;
+}
+
+.ruzgar-sahne-dalga span {
+  display: block;
+  width: 4px;
+  height: 8px;
+  border-radius: 3px;
+  background: #d4af37;
+  transform-origin: bottom center;
+  animation: ruzgar-dalga 0.55s ease-in-out infinite alternate;
+}
+
+.ruzgar-sahne-dalga span:nth-child(2) { animation-delay: 0.08s; height: 14px; }
+.ruzgar-sahne-dalga span:nth-child(3) { animation-delay: 0.16s; height: 20px; }
+.ruzgar-sahne-dalga span:nth-child(4) { animation-delay: 0.1s; height: 12px; }
+.ruzgar-sahne-dalga span:nth-child(5) { animation-delay: 0.2s; height: 9px; }
+
+.ruzgar-sahne-dalga.is-dinle span {
+  background: #9ad7ff;
+  animation-duration: 0.85s;
+}
+
+.ruzgar-sahne-dalga.is-dusun {
+  display: flex;
+}
+
+.ruzgar-sahne-dalga.is-dusun span {
+  background: #c9a227;
+  opacity: 0.75;
+  animation: ruzgar-dalga-dusun 1.1s ease-in-out infinite alternate;
+}
+
+.ruzgar-sahne-face.is-thinking-sahne {
+  animation: ruzgar-nefes-dusun 3.2s ease-in-out infinite;
+}
+
+.ruzgar-sahne-face.is-thinking-sahne::before {
+  opacity: 0.85;
+  background: radial-gradient(circle, rgba(201, 162, 39, 0.28), transparent 70%);
+}
+
+.ruzgar-sahne-face.is-thinking-sahne .ruzgar-eye {
+  animation: ruzgar-blink 2.8s infinite;
+}
+
+.ruzgar-sahne-face.is-speaking-text .ruzgar-mouth rect {
+  animation: ruzgar-talk 0.28s ease-in-out infinite alternate;
+}
+
+.ruzgar-sahne-face.is-speaking-text .ruzgar-mouth rect:nth-child(2) {
+  animation-delay: 0.06s;
+}
+
+.ruzgar-sahne-face.is-speaking-text .ruzgar-mouth rect:nth-child(3) {
+  animation-delay: 0.12s;
+}
+
+.ruzgar-sahne-face.is-speaking-text .ruzgar-mouth rect:nth-child(4) {
+  animation-delay: 0.04s;
+}
+
+.ruzgar-sahne-face.is-speaking-text .ruzgar-face-ring,
+.ruzgar-sahne-face.is-talking .ruzgar-face-ring {
+  box-shadow: 0 0 0 8px rgba(212, 175, 55, 0.14), 0 0 28px rgba(212, 175, 55, 0.22);
+}
+
+body.ruzgar-sahne-dinle .ruzgar-sahne-face .ruzgar-face-ring {
+  box-shadow: 0 0 0 8px rgba(140, 200, 240, 0.14), 0 0 24px rgba(140, 200, 240, 0.2);
+  border-color: rgba(140, 200, 240, 0.55);
+}
+
+body.ruzgar-sahne-dusun .ruzgar-sahne-face .ruzgar-face-ring {
+  box-shadow: 0 0 0 6px rgba(201, 162, 39, 0.12);
+}
+
+body.ruzgar-sahne-yazi .ruzgar-sahne-face .ruzgar-face-ring {
+  border-color: rgba(200, 184, 150, 0.45);
+  box-shadow: none;
+}
+
+#ruzgar-sahne[data-sahne-mode="konus"] .ruzgar-sahne-durum,
+#ruzgar-sahne[data-sahne-mode="dusun"] .ruzgar-sahne-durum {
+  letter-spacing: 0.16em;
+}
+
+.ruzgar-sahne-face.is-talking,
+.ruzgar-sahne-face.is-speaking-text {
+  animation: ruzgar-nefes-canli 2.4s ease-in-out infinite;
 }
 
 .ruzgar-sahne-soz {
@@ -1294,17 +1522,74 @@ body.ruzgar-sahne-on #ruzgar-robot-dock {
   padding: 16px 20px;
   border-radius: 18px;
   background: rgba(20, 18, 14, 0.78);
-  border: 1px solid rgba(212, 175, 55, 0.45);
-  color: #f7f1e4;
+  border: 1px solid var(--sahne-gold-soft, rgba(212, 175, 55, 0.45));
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  color: var(--sahne-ink, #f7f1e4);
   font-size: 18px;
   line-height: 1.5;
   text-align: center;
   white-space: pre-wrap;
+  scroll-behavior: smooth;
+  outline: none;
+  transition: border-color var(--sahne-fade, 0.35s) ease, box-shadow var(--sahne-fade, 0.35s) ease;
+  user-select: text;
+  -webkit-user-select: text;
+  scrollbar-width: thin;
+  overscroll-behavior: contain;
+}
+
+.ruzgar-sahne-soz:focus-visible {
+  border-color: rgba(212, 175, 55, 0.8);
+}
+
+.ruzgar-sahne-soz.is-fresh {
+  animation: ruzgar-soz-gir 0.55s ease;
+}
+
+body.ruzgar-sahne-live .ruzgar-sahne-soz {
+  border-color: rgba(212, 175, 55, 0.7);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(212, 175, 55, 0.12);
+}
+
+body.ruzgar-sahne-dinle .ruzgar-sahne-soz {
+  border-color: rgba(140, 200, 240, 0.55);
+}
+
+body.ruzgar-sahne-yazi .ruzgar-sahne-soz {
+  border-color: rgba(200, 184, 150, 0.4);
 }
 
 #ruzgar-sahne-masa {
   position: relative;
   z-index: 1;
+  min-width: 168px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(212, 175, 55, 0.42);
+  background: rgba(28, 24, 18, 0.72);
+  color: #f3ead2;
+  letter-spacing: 0.04em;
+  transition: border-color 0.25s ease, background 0.25s ease, transform 0.2s ease;
+}
+
+#ruzgar-sahne-masa:hover {
+  border-color: rgba(212, 175, 55, 0.75);
+  background: rgba(40, 34, 24, 0.88);
+  transform: translateY(-1px);
+}
+
+#ruzgar-sahne-masa:focus-visible {
+  outline: 2px solid rgba(212, 175, 55, 0.65);
+  outline-offset: 3px;
+}
+
+body.ruzgar-sahne-on:not(.ruzgar-sahne-live):not(.ruzgar-sahne-dinle):not(.ruzgar-sahne-dusun) .ruzgar-sahne-face {
+  animation-duration: 5.6s;
+}
+
+body.ruzgar-sahne-on:not(.ruzgar-sahne-live):not(.ruzgar-sahne-dinle):not(.ruzgar-sahne-dusun) .ruzgar-sahne-wind {
+  opacity: 0.55;
+  animation-duration: 16s;
 }
 
 @keyframes ruzgar-esinti {
@@ -1315,4 +1600,61 @@ body.ruzgar-sahne-on #ruzgar-robot-dock {
 @keyframes ruzgar-nefes {
   0%, 100% { transform: translateY(0) scale(1); }
   50% { transform: translateY(-8px) scale(1.03); }
+}
+
+@keyframes ruzgar-nefes-canli {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-10px) scale(1.045); }
+}
+
+@keyframes ruzgar-soz-gir {
+  from {
+    opacity: 0.35;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ruzgar-dalga {
+  from { transform: scaleY(0.45); opacity: 0.65; }
+  to { transform: scaleY(1.15); opacity: 1; }
+}
+
+@keyframes ruzgar-dalga-dusun {
+  from { transform: scaleY(0.35); opacity: 0.4; }
+  to { transform: scaleY(0.9); opacity: 0.85; }
+}
+
+@keyframes ruzgar-nefes-dusun {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-5px) scale(1.02); }
+}
+
+@keyframes ruzgar-durum-nabiz {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.ruzgar-sahne-on #ruzgar-sahne {
+    --sahne-fade: 0s;
+    --sahne-fade-slow: 0s;
+  }
+  .ruzgar-sahne-wind,
+  .ruzgar-sahne-face,
+  .ruzgar-sahne-face.is-talking,
+  .ruzgar-sahne-face.is-speaking-text,
+  .ruzgar-sahne-face.is-thinking-sahne,
+  .ruzgar-sahne-dalga span,
+  .ruzgar-sahne-soz.is-fresh,
+  body.ruzgar-sahne-dusun .ruzgar-sahne-durum {
+    animation: none !important;
+  }
+  .ruzgar-sahne-face::before,
+  #ruzgar-sahne-masa {
+    transition: none !important;
+  }
 }

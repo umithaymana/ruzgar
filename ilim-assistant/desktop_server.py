@@ -5361,6 +5361,20 @@ def api_mobil_logout(body: MobilLogoutBody):
     return logout(body.token)
 
 
+@app.get("/api/mobil/me")
+def api_mobil_me(request: Request):
+    """PWA: token ile güncel motors (sahne izni dahil)."""
+    from ilim_assistant.ruzgar_mobil_oturum import session_me
+
+    auth = request.headers.get("Authorization") or ""
+    token = ""
+    if auth.lower().startswith("bearer "):
+        token = auth[7:].strip()
+    if not token:
+        token = (request.query_params.get("token") or "").strip()
+    return session_me(token)
+
+
 @app.get("/api/mobil/sessions")
 def api_mobil_sessions():
     from ilim_assistant.ruzgar_mobil_oturum import list_sessions

@@ -14,6 +14,7 @@
   const gateMsg = el("gateMsg");
   const chat = el("chat");
   const meta = el("meta");
+  const SAHNE_PLACEHOLDER = "Yaz. Cevabı ben buradan söyleyeyim.";
   let history = [];
   let micBusy = false;
 
@@ -68,16 +69,182 @@
     gateMsg.style.color = ok ? "#38bdf8" : "#f43f5e";
   }
 
-  function showChat(who) {
-    el("gate").classList.add("hidden");
-    el("chatWrap").classList.remove("hidden");
+  function readWho() {
+    try {
+      return JSON.parse(localStorage.getItem(LS.who) || "null");
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function sahneAllowed(who) {
+    const w = who || readWho();
+    if (!w) return false;
+    const motors = w.motors || {};
+    return motors.sahne === true;
+  }
+
+  function ensureMobilSahneA11y() {
+    const stage = el("sahneStage");
+    const soz = el("sahneSoz");
+    const durum = el("sahneDurum");
+    if (stage && !stage.getAttribute("aria-label")) {
+      stage.setAttribute("aria-label", "Rüzgar sahne");
+    }
+    if (soz && !soz.hasAttribute("tabindex")) soz.setAttribute("tabindex", "-1");
+    if (soz) {
+      soz.setAttribute("aria-live", "polite");
+      if (!soz.getAttribute("lang")) soz.setAttribute("lang", "tr");
+    }
+    if (durum) {
+      durum.setAttribute("aria-live", "polite");
+      durum.setAttribute("aria-atomic", "true");
+      if (!durum.getAttribute("role")) durum.setAttribute("role", "status");
+      if (!durum.getAttribute("lang")) durum.setAttribute("lang", "tr");
+    }
+  }
+
+  function applySahneGate(who) {
+    const stage = el("sahneStage");
+    if (!stage) return;
+    ensureMobilSahneA11y();
+    const on = sahneAllowed(who);
+    stage.classList.toggle("hidden", !on);
+    stage.setAttribute("aria-hidden", on ? "false" : "true");
+    try {
+      stage.inert = !on;
+    } catch (_) {}
+    if (!on) {
+      stage.setAttribute("data-sahne-mode", "hazir");
+      stage.setAttribute("aria-busy", "false");
+      stage.title = "Rüzgar sahne · hazir";
+      const sozOff = el("sahneSoz");
+      if (sozOff) sozOff.textContent = SAHNE_PLACEHOLDER;
+      const durumOff = el("sahneDurum");
+      if (durumOff) {
+        durumOff.textContent = "Hazır";
+        durumOff.title = "Durum: hazir";
+      }
+      const faceOff = el("sahneFace");
+      if (faceOff) faceOff.classList.remove("is-thinking-sahne");
+      const dalgaOff = el("sahneDalga");
+      if (dalgaOff) dalgaOff.classList.remove("is-on", "is-dinle", "is-dusun");
+      stage.classList.remove("is-live", "is-dinle", "is-dusun", "is-yazi");
+      if (el("chatView")) el("chatView").classList.remove("sahne-busy", "has-sahne");
+    } else if (el("chatView")) {
+      el("chatView").classList.add("has-sahne");
+    }
+    const hint = stage.querySelector(".sahne-gate-hint");
+    const admin = !!(who && (who.is_admin || who.role === "mimar" || who.role === "admin"));
+    if (hint) hint.classList.toggle("hidden", !admin);
+    if (on) setSahneState("hazir");
+  }
+
+  function setSahneState(mode, sozText) {
+    const stage = el("sahneStage");
+    if (!stage || stage.classList.contains("hidden")) return;
+    ensureMobilSahneA11y();
+    const durum = el("sahneDurum");
+    const dalga = el("sahneDalga");
+    const soz = el("sahneSoz");
+    const face = el("sahneFace");
+    stage.classList.remove("is-live", "is-dinle", "is-dusun", "is-yazi");
+    if (dalga) dalga.classList.remove("is-on", "is-dinle", "is-dusun");
+    if (face) face.classList.remove("is-thinking-sahne");
+    const m = mode || "hazir";
+    stage.setAttribute("data-sahne-mode", m);
+    const busy = m !== "hazir" && m !== "yazi";
+    stage.setAttribute("aria-busy", busy ? "true" : "false");
+    if (el("chatView")) {
+      el("chatView").classList.toggle("sahne-busy", busy);
+    }
+    if (durum) durum.title = "Durum: " + m;
+    stage.title = "Rüzgar sahne · " + m;
+    if (m === "konus") {
+      stage.classList.add("is-live");
+      if (dalga) dalga.classList.add("is-on");
+      if (durum) durum.textContent = "Konuşuyor";
+    } else if (m === "dinle") {
+      stage.classList.add("is-dinle");
+      /* PC hiza: is-dinle tek başına görünür; is-on yalnız konuşurken */
+      if (dalga) dalga.classList.add("is-dinle");
+      if (durum) durum.textContent = "Dinliyor";
+    } else if (m === "dusun") {
+      stage.classList.add("is-dusun");
+      if (dalga) dalga.classList.add("is-dusun");
+      if (face) face.classList.add("is-thinking-sahne");
+      if (durum) durum.textContent = "Düşünüyor";
+    } else if (m === "yazi") {
+      stage.classList.add("is-yazi");
+      if (durum) durum.textContent = "Yazıyorsun";
+    } else if (durum) {
+      durum.textContent = "Hazır";
+    }
+    if (soz && sozText != null) {
+      const t = String(sozText);
+      const shown = t.length > 640 ? t.slice(0, 640) + "…" : t;
+      const prev = soz.textContent || "";
+      /* PC paintSpeech hiza: stream büyürken is-fresh spam yok */
+      const sameStream =
+        !!t &&
+        !!prev &&
+        prev !== SAHNE_PLACEHOLDER &&
+        shown.length >= prev.length &&
+        shown.indexOf(prev.replace(/…$/, "")) === 0;
+      const fresh = shown !== prev && !sameStream;
+      soz.textContent = shown;
+      if (fresh || sameStream) soz.scrollTop = soz.scrollHeight;
+      if (fresh) {
+        soz.classList.remove("is-fresh");
+        void soz.offsetWidth;
+        soz.classList.add("is-fresh");
+        try {
+          soz.focus({ preventScroll: true });
+        } catch (_) {}
+      }
+    } else if (soz && m === "hazir" && !String(soz.textContent || "").trim()) {
+      soz.textContent = SAHNE_PLACEHOLDER;
+    }
+  }
+
+  function paintWhoLine(who) {
     el("who").textContent = who
       ? `${who.kullanici} · ${who.role || "user"}${who.is_admin ? " · yönetici" : ""}${
           who.device_kind ? " · " + who.device_kind : ""
-        }`
+        }${sahneAllowed(who) ? " · sahne" : ""}`
       : "";
+  }
+
+  async function refreshWhoMotors() {
+    const token = localStorage.getItem(LS.token);
+    if (!token) return readWho();
+    try {
+      const j = await api("/api/mobil/me", { timeoutMs: 8000 });
+      if (!j || !j.ok) return readWho();
+      const prev = readWho() || {};
+      const next = {
+        ...prev,
+        ...j,
+        token: prev.token || token,
+        ok: true,
+      };
+      localStorage.setItem(LS.who, JSON.stringify(next));
+      paintWhoLine(next);
+      applySahneGate(next);
+      return next;
+    } catch (_) {
+      return readWho();
+    }
+  }
+
+  function showChat(who) {
+    el("gate").classList.add("hidden");
+    el("chatWrap").classList.remove("hidden");
+    paintWhoLine(who);
     const admin = !!(who && (who.is_admin || who.role === "mimar" || who.role === "admin"));
     if (el("btnNavPanel")) el("btnNavPanel").style.display = admin ? "" : "none";
+    applySahneGate(who);
+    void refreshWhoMotors();
     const prefer = sessionStorage.getItem("ruzgar_pwa_tab");
     sessionStorage.removeItem("ruzgar_pwa_tab");
     showChatTab(prefer === "panel" && admin ? "panel" : "chat");
@@ -387,11 +554,22 @@
         sessEl.innerHTML = `<p class="hint">Oturum yok</p>`;
       }
 
-      const motorKeys = ["sohbet", "hafiza", "ses", "video", "mimar", "tercume", "programlama", "okuma"];
+      const motorKeys = [
+        "sohbet",
+        "hafiza",
+        "ses",
+        "sahne",
+        "video",
+        "mimar",
+        "tercume",
+        "programlama",
+        "okuma",
+      ];
       const motorLabels = {
         sohbet: "Sohbet",
         hafiza: "Hafıza",
         ses: "Ses",
+        sahne: "Sahne",
         video: "Video",
         mimar: "Mimar",
         tercume: "Tercüme",
@@ -413,11 +591,13 @@
 
         const body = document.createElement("div");
         body.className = "user-body hidden";
-        body.innerHTML = `<p class="hint user-body-hint">Bu kullanıcı için motor izinleri — işaretle, Kaydet</p>
+        body.innerHTML = `<p class="hint user-body-hint">Bu kullanıcı için motor izinleri — işaretle, Kaydet. <b>Sahne</b>: sohbet yüzü (varsayılan kapalı).</p>
           <div class="motor-grid">${motorKeys
             .map(
               (m) =>
-                `<label class="chk"><input type="checkbox" data-motor="${m}" ${
+                `<label class="chk" title="${
+                  m === "sahne" ? "Sohbet sahne yüzü — kullanıcıya aç/kapa" : esc(motorLabels[m] || m)
+                }"><input type="checkbox" data-motor="${m}" ${
                   motors[m] ? "checked" : ""
                 }/> ${esc(motorLabels[m] || m)}</label>`
             )
@@ -433,6 +613,11 @@
           body.querySelectorAll("input[type=checkbox]").forEach((inp) => {
             payload[inp.dataset.motor] = inp.checked;
           });
+          if (payload.sahne) {
+            payload.sohbet = true;
+            const sohbetInp = body.querySelector('input[data-motor="sohbet"]');
+            if (sohbetInp) sohbetInp.checked = true;
+          }
           try {
             await api("/api/mobil/acl", {
               method: "POST",
@@ -441,6 +626,19 @@
             setMsg(`${u.kullanici} izinleri kaydedildi`);
             const n = motorKeys.filter((m) => payload[m]).length;
             head.querySelector(".user-head-meta").textContent = `${n}/${motorKeys.length} açık · dokun`;
+            const me = readWho();
+            if (me && me.kullanici === u.kullanici) {
+              me.motors = { ...(me.motors || {}), ...payload };
+              localStorage.setItem(LS.who, JSON.stringify(me));
+              applySahneGate(me);
+              if (el("who")) {
+                el("who").textContent = `${me.kullanici} · ${me.role || "user"}${
+                  me.is_admin ? " · yönetici" : ""
+                }${me.device_kind ? " · " + me.device_kind : ""}${
+                  sahneAllowed(me) ? " · sahne" : ""
+                }`;
+              }
+            }
           } catch (e) {
             setMsg(String(e.message || e), false);
           }
@@ -572,6 +770,7 @@
     bubble("user", t);
     history.push({ role: "user", content: t });
     meta.textContent = "düşünüyor…";
+    setSahneState("dusun", t);
     try {
       if (!opts.live) {
         api("/api/ses/voice-turn", {
@@ -592,6 +791,7 @@
       });
       let reply = (j.full_reply || "").trim();
       if (!reply || reply === "(Yanıt yok)") {
+        setSahneState("hazir");
         await askRepeat("empty");
         // Boş cevabı geçmişe gömme
         history.pop();
@@ -601,6 +801,7 @@
       history.push({ role: "assistant", content: reply });
       if (history.length > 24) history = history.slice(-16);
       meta.textContent = "Rüzgar konuşuyor…";
+      setSahneState("konus", reply);
       if (j.tts_base64) await playTtsBase64(j.tts_base64, j.tts_mime);
       else await speakLocal(reply.slice(0, 200));
       const wall = Math.round(performance.now() - t0);
@@ -609,14 +810,39 @@
       if (j.tts_error) bits.push(`tts: ${j.tts_error}`);
       else if (j.tts_base64) bits.push("ses çaldı");
       meta.textContent = bits.join(" · ");
+      setSahneState("hazir", reply);
     } catch (e) {
       bubble("bot", `[Hata] ${e.message || e}`);
       meta.textContent = String(e.message || e);
+      setSahneState("hazir");
       if (opts.live) {
         history.pop();
         await askRepeat("error");
       }
     }
+  }
+
+  let sahneYaziTimer = 0;
+  if (el("input")) {
+    el("input").addEventListener("input", () => {
+      clearTimeout(sahneYaziTimer);
+      /* PC schedulePaintSpeech(60) hiza — yazı modunu spam etme */
+      sahneYaziTimer = window.setTimeout(() => {
+        const stage = el("sahneStage");
+        if (!stage || stage.classList.contains("hidden")) return;
+        if (
+          stage.classList.contains("is-live") ||
+          stage.classList.contains("is-dinle") ||
+          stage.classList.contains("is-dusun")
+        ) {
+          return;
+        }
+        const has = !!(el("input").value || "").trim();
+        const next = has ? "yazi" : "hazir";
+        if (stage.getAttribute("data-sahne-mode") === next) return;
+        setSahneState(next);
+      }, 60);
+    });
   }
 
   el("btnSend").onclick = async () => {
@@ -626,6 +852,7 @@
     bubble("user", t);
     history.push({ role: "user", content: t });
     meta.textContent = "düşünüyor…";
+    setSahneState("dusun", t);
     try {
       const token = localStorage.getItem(LS.token) || "";
       const j = await api("/api/chat/full", {
@@ -645,9 +872,12 @@
       if (j.latency_ms != null) bits.push(`${j.latency_ms} ms`);
       if (j.sohbet_onay && j.sohbet_onay.pending) bits.push("onay bekliyor");
       meta.textContent = bits.join(" · ");
+      setSahneState("konus", reply);
+      window.setTimeout(() => setSahneState("hazir", reply), 2200);
     } catch (e) {
       bubble("bot", `[Hata] ${e.message || e}`);
       meta.textContent = "";
+      setSahneState("hazir");
     }
   };
 
@@ -792,6 +1022,7 @@
   async function stopHoldMic(send) {
     const btn = el("btnMic");
     if (btn) btn.classList.remove("listening");
+    if (!send) setSahneState("hazir");
     holdPointer = null;
     const rec = mediaRecorder;
     mediaRecorder = null;
@@ -857,6 +1088,7 @@
     mediaChunks = [];
     if (el("btnMic")) el("btnMic").classList.add("listening");
     meta.textContent = "dinleniyor… basılı tut, bırakınca gönderilir";
+    setSahneState("dinle");
     void requestWakeLock();
     api("/api/ses/voice-turn", {
       method: "POST",
@@ -959,11 +1191,23 @@
     wakeLock = null;
   }
 
-  // Sekme geri gelince sürekli sohbet açıksa kilidi yenile
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible" && liveMode) {
+  // Sekme / bfcache geri gelince: sahne izin yenile + canlı durum + sürekli sohbet kilidi
+  function onSahneResume() {
+    if (localStorage.getItem(LS.token)) void refreshWhoMotors();
+    if (liveMode) {
       void requestWakeLock();
+      setSahneState("dinle");
     }
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState !== "visible") return;
+    onSahneResume();
+  });
+  window.addEventListener("pageshow", (ev) => {
+    if (ev.persisted) onSahneResume();
+  });
+  window.addEventListener("online", () => {
+    onSahneResume();
   });
 
   function paintLiveBtn() {
@@ -971,6 +1215,8 @@
     if (!b) return;
     b.classList.toggle("listening", liveMode);
     b.textContent = liveMode ? "⏹ Durdur" : "Sürekli sohbet";
+    if (liveMode) setSahneState("dinle");
+    else setSahneState("hazir");
   }
 
   function stopLiveVad() {
