@@ -515,6 +515,15 @@
     const raw = String(text || "").trim();
     if (!raw) return { handled: false };
 
+    // İlim / kütüphane sohbeti — anlık motor çalmasın (LLM / kütüphane yolu)
+    if (
+      motorCtx?.understanding?.preferChat ||
+      motorCtx?.understanding?.instantReason === "kutuphane_ilim" ||
+      global.RuzgarSohbetAnlama?.looksLikeKutuphaneOrIlim?.(raw)
+    ) {
+      return { handled: false };
+    }
+
     if (isHubHelpRequest(raw)) {
       say(await hubHelpText());
       d().setStatus?.("Ana Motor", "Rüzgar");

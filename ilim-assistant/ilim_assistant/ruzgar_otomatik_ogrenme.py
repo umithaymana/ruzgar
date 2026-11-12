@@ -270,10 +270,11 @@ def _try_osmanli_donem_kart(message: str) -> Optional[str]:
             "eğlence ve bahçe/lale kültürü, matbaa ve Avrupa ile kültürel temas. "
             "Askerî fetih dönemi değildir; Pasarofça sonrası barış yıllarının kültürel yükselişidir."
         )
-    # «Nedir / ne zaman / kim?» veya kısa soru — dönem kartı
+    # «Nedir / özet / hakkında» veya kısa soru — dönem kartı (otomatik-öğren zehrinden önce)
     if re.search(
         r"\b(?:nedir|ne\s+demek|ne\s+zaman|kim(?:dir)?|hangi\s+padisah|"
-        r"hangi\s+yil|kac\s+yil|donemi?\s+nedir)\b",
+        r"hangi\s+yil|kac\s+yil|donemi?\s+nedir|"
+        r"ozet|özet|ozetle|özetle|hakkinda|hakkında|anlat|acikla|açıkla)\b",
         low,
     ) or len(low) <= 28:
         return (
@@ -289,6 +290,18 @@ def try_bilgi_kutuphane_instant_reply(message: str) -> Optional[str]:
     donem = _try_osmanli_donem_kart(message)
     if donem:
         return donem
+    # Kütüphane görev (tüm katmanlar): otomatik-öğren anlık kapalı —
+    # yarın yüklenecek eserler de indeksten okunur; zehirli fuzzy kayıt ezemez.
+    try:
+        from ilim_assistant.ruzgar_kutuphane_gorev import (
+            is_kutuphane_bilgi_soru,
+            kutuphane_enabled_hard,
+        )
+
+        if kutuphane_enabled_hard() and is_kutuphane_bilgi_soru(message):
+            return None
+    except Exception:
+        pass
     if not should_check_bilgi_kutuphane_first(message):
         return None
     hint = lookup_bilgi_kutuphane_hint(message)
@@ -337,6 +350,12 @@ def _should_auto_learn_turn(
     if _SKIP_USER.search(_norm(u)):
         return False
     if _MISS_REPLY.search(a):
+        return False
+    # Bilinen uydurma kalıpları hafızaya yazılmasın (kütüphane görev zehiri)
+    al_poison = a.casefold()
+    if "recurrent attention graph" in al_poison:
+        return False
+    if "karakterize eden önemli olaylar" in a and "lale" in _norm(u):
         return False
     try:
         from ilim_assistant.ruzgar_egitim import is_invalid_egitim_pair

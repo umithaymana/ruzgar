@@ -174,7 +174,24 @@
   }
 
   function soruMu(low) {
-    return /\b(nedir|nasil|anlat|neden)\b/.test(low);
+    return /\b(nedir|nasil|anlat|neden|kimdir|ne\s+demek|ozetle|özetle|hakkinda|hakkında|hangi\s+eser|kaynak|ogret|öğret)\b/.test(
+      low,
+    );
+  }
+
+  /** Kütüphane / ilim bilgisi — masa «emir yalanı»na düşmesin */
+  function kutuphaneBilgiMi(low) {
+    if (/\b(?:tefsir|fik[iı]h|hadis|akaid|siyer|kur.?an|ayet|meal|raf|kutuphane|eser|kaynak|nedir|kimdir|ne\s+demek|bilgi\s+ver|ozetle|özetle)\b/.test(low)) {
+      return true;
+    }
+    // «hangi eserden aldığını yaz / kaynağını yaz» → dosya yazma değil
+    if (/\b(?:ald[ıi]g[ıi]n[ıi]|kaynag[ıi]|kaynak|eser(?:den|ini)?)\b.*\byaz\b/.test(low)) {
+      return true;
+    }
+    if (/\b(?:hz|hazreti|peygamber|ebubekir|omer|osman|ali|sahabe)\b/.test(low)) {
+      return true;
+    }
+    return false;
   }
 
   function sozlukBul(low) {
@@ -814,6 +831,7 @@
     return sozluguYukle().then(function () {
       const low = komutGovdesi(raw);
       if (!low || soruMu(low) || !emirGibi(low)) return null;
+      if (kutuphaneBilgiMi(low)) return null;
       if (sozlukBul(low)) return null;
       if (/^(?:projeyi|proje|siteyi|vitrini)\s+(?:goster|ac)\b/.test(low)) return null;
       if (kodAjaniGoreviMi(low)) return null;

@@ -5,7 +5,7 @@
 (function ruzgarSohbetAnlama(global) {
   "use strict";
 
-  const VERSION = "ruzgar-sohbet-anlama-v4-sinema-url-2026-06-06";
+  const VERSION = "ruzgar-sohbet-anlama-v5-kutuphane-ilim-2026-11-12";
 
   /** @type {Record<string, any>|null} */
   let deps = null;
@@ -15,10 +15,17 @@
   }
 
   function fold(text) {
+    // tr-TR: ASCII "I" → "ı"; eşleşme için yumuşak harfleri ASCII'ye çek
     return String(text || "")
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
-      .toLocaleLowerCase("tr-TR");
+      .toLocaleLowerCase("tr-TR")
+      .replace(/ı/g, "i")
+      .replace(/ğ/g, "g")
+      .replace(/ü/g, "u")
+      .replace(/ş/g, "s")
+      .replace(/ö/g, "o")
+      .replace(/ç/g, "c");
   }
 
   function trimHistory(history, max) {
@@ -240,6 +247,44 @@
     return lines.join("\n");
   }
 
+  /** Kütüphane / ilim bilgisi — tercüme/video atölyesine kaçmasın */
+  function looksLikeKutuphaneOrIlim(text) {
+    const raw = String(text || "").trim();
+    if (!raw) return false;
+    const low = fold(raw);
+    // Açık atölye çevirisi → ilim değil
+    if (
+      /\b(?:cevir|çevir|tercume|tercüme|translate)\b/.test(low) &&
+      /\b(?:bu\s+metni|sayfayi|sayfayı|ingilizce|arapca|arapça|almanca|english|arabic)\b/.test(low)
+    ) {
+      return false;
+    }
+    if (
+      /\b(?:nedir|kimdir|ne\s+demek|hakkinda|hakkında|anlat|acikla|açıkla|ozetle|özetle|bilgi\s+ver|ogret|öğret|kimdi|neydi)\b/.test(
+        low,
+      )
+    ) {
+      return true;
+    }
+    if (
+      /\b(?:tefsir|fik[iı]h|hadis|akaid|siyer|teracim|kutuphane|kütüphane|raf|kaynak|hangi\s+eser|eserden|eserini)\b/.test(
+        low,
+      )
+    ) {
+      return true;
+    }
+    if (
+      /\b(?:hz\.?|hazreti|peygamber|ebubekir|ebu\s*bekir|omer|osman|ali|sahabe|halid|muhammed)\b/.test(low) &&
+      /\b(?:kim|nedir|anlat|hakkinda|hakkında|kimdir|neydi|kimdi|bilgi)\b/.test(low)
+    ) {
+      return true;
+    }
+    if (/\b(?:kaynak|eser)\b/.test(low) && /\b(?:yaz|soyle|söyle|goster|göster|ver)\b/.test(low)) {
+      return true;
+    }
+    return false;
+  }
+
   function recentTopicFromHistory(history) {
     const joined = history
       .slice(-10)
@@ -249,7 +294,8 @@
     if (/youtube|youtu\.be|sinema|video|oynat|indir|kes|kurgu|ffmpeg/.test(low)) {
       return "video";
     }
-    if (/terc[üu]me|cevir|eser|ayet|meal|kuran|kur'an/.test(low)) return "tercume";
+    // meal/ayet/kuran/eser tek başına tercüme konusu sayılmaz
+    if (/terc[üu]me|cevir|çevir/.test(low)) return "tercume";
     if (/pytest|git|kod|program|dosya|proje|python|javascript/.test(low)) return "programlama";
     if (/mimar|okuma|pdf|kitap|sayfa/.test(low)) return "mimar";
     if (/haf[ıi]za|hat[ıi]rla|g[öo]rev\s+list/.test(low)) return "hafiza";
@@ -285,6 +331,9 @@
     const mode = String(ctx?.mode || ctx?.chatMode || "genel").toLowerCase();
     if (mode !== "genel") return mode;
 
+    // İlim / kütüphane sorusu → motor atölyesine kayma
+    if (looksLikeKutuphaneOrIlim(text)) return "";
+
     if (ctx?.vision?.motor) {
       const vm = String(ctx.vision.motor || "").trim().toLowerCase();
       return vm === "okuma" ? "mimar" : vm;
@@ -301,7 +350,9 @@
     if (hasCinema && /(?:kes|indir|oynat|kurgu|medya|sinema|video|youtube|ffprobe|trim|mux|altyaz)/.test(low)) {
       return "video";
     }
-    if (/terc[üu]me|cevir|eser\s+ara|meal|ayet|kuran|kur'an|sure\s+\d/i.test(text)) return "tercume";
+    // meal/ayet/kuran tek başına tercüme değil; açık çevir / eser ara kalsın
+    if (/terc[üu]me|cevir|çevir/i.test(text)) return "tercume";
+    if (/\beser\s+ara\b/i.test(text)) return "tercume";
     if (/pytest|git\s+durum|kod\s+mod|programlama|proje\s+tara|briefing/i.test(text)) return "programlama";
     if (/haf[ıi]za|hat[ıi]rla:|g[öo]rev\s+listesi/i.test(text)) return "hafiza";
     if (/whisper|metne\s+d[öo]k|transkript|ses\s+profil/i.test(text)) return "ses";
@@ -320,6 +371,9 @@
     let out = String(text || "").trim();
     const history = trimHistory(ctx?.history || [], ctx?.maxHistory || 40);
     if (!out) return out;
+
+    // İlim sorusunu video/önceki emre yapıştırma
+    if (looksLikeKutuphaneOrIlim(out)) return out;
 
     out = resolveEllipticalFollowUp(out, history);
     if (!history.length) return out;
@@ -424,8 +478,10 @@
     if (!raw) return true;
     const low = fold(raw);
 
+    if (looksLikeKutuphaneOrIlim(raw)) return true;
+
     if (
-      /(?:anlamad|anlamiyor|anlamıyor|anlamadin|anlamadın|anlamiyormusun|anlıyor\s+musun|duymuyor|duymadin|duymadın|yazdiklarim|yazdıklarım|yukaridaki|yukarıdaki|az\s+once|az\s+önce|acikla|açıkla|neden\s+|nas[ıi]l\s+|ne\s+demek|ne\s+ister|sence|dusun|düşün|merak|sohbet|konusalim|konuşalım|hakkinda|hakkında|lutfen|lütfen\s+anla)/.test(
+      /(?:anlamad|anlamiyor|anlamıyor|anlamadin|anlamadın|anlamiyormusun|anlıyor\s+musun|duymuyor|duymadin|duymadın|yazdiklarim|yazdıklarım|yukaridaki|yukarıdaki|az\s+once|az\s+önce|acikla|açıkla|neden\s+|nas[ıi]l\s+|ne\s+demek|ne\s+ister|sence|dusun|düşün|merak|sohbet|konusalim|konuşalım|hakkinda|hakkında|lutfen|lütfen\s+anla|kimdir|nedir)/.test(
         low,
       )
     ) {
@@ -458,6 +514,10 @@
     if (/^eylem\s/i.test(fold(raw))) return { try: true, reason: "eylem" };
 
     const resolved = String(understanding?.text || raw).trim();
+    if (looksLikeKutuphaneOrIlim(raw) || looksLikeKutuphaneOrIlim(resolved)) {
+      return { try: false, reason: "kutuphane_ilim", preferChat: true };
+    }
+
     const explicit =
       hasExplicitMotorSignal(raw, understanding, ctx) ||
       hasExplicitMotorSignal(resolved, understanding, ctx);
@@ -572,6 +632,7 @@
     buildContextBrief,
     buildCinemaContextBrief,
     inferMotorHint,
+    looksLikeKutuphaneOrIlim,
     looksLikeNaturalConversation,
     hasExplicitMotorSignal,
     shouldTryInstantMotor,

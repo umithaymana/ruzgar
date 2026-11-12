@@ -63,6 +63,17 @@ def should_bilgi_cloud_fast(
     msg = (message or "").strip()
     if len(msg) < 8 or len(msg) > 600:
         return False
+    # Kütüphane görev (TÜM katmanlar): bulut uydurmasın — indeks/kart yolu
+    try:
+        from ilim_assistant.ruzgar_kutuphane_gorev import (
+            is_kutuphane_bilgi_soru,
+            kutuphane_enabled_hard,
+        )
+
+        if kutuphane_enabled_hard() and is_kutuphane_bilgi_soru(msg):
+            return False
+    except Exception:
+        pass
     primary = _plan_primary(question_plan)
     if primary not in ("bilgi", "bilim", "dilbilgisi"):
         return False
@@ -156,6 +167,17 @@ def should_fast_direct_llm(
     msg = (message or "").strip()
     if len(msg) < 4 or len(msg) > 500:
         return False
+    # Kütüphane görev: indeks atlayan hızlı LLM kapalı (yarınki eserler dahil)
+    try:
+        from ilim_assistant.ruzgar_kutuphane_gorev import (
+            is_kutuphane_bilgi_soru,
+            kutuphane_enabled_hard,
+        )
+
+        if kutuphane_enabled_hard() and is_kutuphane_bilgi_soru(msg):
+            return False
+    except Exception:
+        pass
 
     primary = _plan_primary(question_plan)
     use_rag = _plan_use_rag(question_plan)

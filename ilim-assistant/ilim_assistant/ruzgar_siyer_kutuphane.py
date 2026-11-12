@@ -21,8 +21,24 @@ _CUES = (
     "sîre",
     "siret",
     "sira nabi",
+    "peygamber",
     "peygamber hayatı",
+    "hz muhammed",
     "hz muhammed hayatı",
+    "resulullah",
+    "ebubekir",
+    "ebu bekir",
+    "ebû bekir",
+    "sıddık",
+    "siddiq",
+    "ömer",
+    "omer",
+    "osman",
+    "hz ali",
+    "sahabe",
+    "sahâbe",
+    "halife",
+    "hulefa",
     "megazi",
     "megâzî",
     "magazi",
@@ -100,6 +116,11 @@ def format_siyer_reply(row: dict[str, Any]) -> str:
 def try_siyer_reply(msg: str) -> Optional[str]:
     if not (msg or "").strip():
         return None
+    # Kavram dosyası güncellenince eski lru cache kalsın istemeyiz
+    try:
+        _load_kavramlar.cache_clear()
+    except Exception:
+        pass
     low = _fold(msg)
     is_cue = looks_like_siyer_question(msg)
     ask = any(
@@ -118,10 +139,12 @@ def try_siyer_reply(msg: str) -> Optional[str]:
     )
     if not is_cue and not ask:
         return None
-    # Cue varken eşiği gevşet — «hicret ne zaman» 66 ile kaçmasın (#5)
+    # Cue veya kimdir varken eşiği gevşet
     from ilim_assistant.ruzgar_kavram_match import match_kavram_row
 
-    row = match_kavram_row(msg, _load_kavramlar(), min_score=55 if is_cue else 70)
+    row = match_kavram_row(
+        msg, _load_kavramlar(), min_score=50 if (is_cue or "kimdir" in low) else 70
+    )
     if row:
         return format_siyer_reply(row)
     field_ask = any(

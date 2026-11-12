@@ -16,13 +16,17 @@ TEK_BEYIN_OZET_VERSION = "tek-beyin-ozet-v1-2026-06-12-faz-g"
 _PKG_ROOT = Path(__file__).resolve().parent.parent
 _CACHE_PATH = _PKG_ROOT / ".ruzgar" / "tek_beyin_ozet_cache.json"
 
+# Yalnız oturum/sohbet özeti — konu «özetle» (Lale Devri vb.) buraya düşmez
 _SUMMARY_QUERY = re.compile(
     r"(?:"
-    r"özetle|ozetle|"
+    r"(?:bugün|bugun|bu\s+oturum|bu\s+sohbet|şimdiye\s+kadar|simdiye\s+kadar)"
+    r".{0,40}(?:özetle|ozetle|özeti|ozeti)|"
+    r"(?:özetle|ozetle)\s+(?:bugün|bugun|bu\s+oturum|bu\s+sohbet|ne\s+konu)|"
     r"ne\s+konu[sş]tuk|neler\s+konu[sş]tuk|"
     r"bugün\s+ne\s+konu[sş]|bugun\s+ne\s+konus|"
     r"oturum\s+özeti|oturum\s+ozeti|"
     r"konu[sş]ma\s+özeti|konusma\s+ozeti|"
+    r"sohbet(?:imizin|in)?\s+özeti|sohbet(?:imizin|in)?\s+ozeti|"
     r"bugünkü\s+sohbet|bugunku\s+sohbet"
     r")",
     re.I,

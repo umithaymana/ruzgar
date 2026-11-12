@@ -1016,6 +1016,28 @@ def prepare_turn(
     except Exception:
         pass
 
+    # Şamile indeks durumu — yanlış hafıza/selam tuzağından önce
+    try:
+        from ilim_assistant.shamela_rag_shards import (
+            format_samile_ready_reply,
+            looks_like_samile_status_question,
+        )
+
+        if looks_like_samile_status_question(msg):
+            return msg, [], "", "", "", format_samile_ready_reply()
+    except Exception:
+        pass
+
+    # Meşhur hadis anlık (niyet hadisi) — LLM uydurmasını kes
+    try:
+        from ilim_assistant.ruzgar_hadis_anlik import try_hadis_instant_reply
+
+        hadis_hi = try_hadis_instant_reply(msg)
+        if hadis_hi:
+            return msg, [], "", "", "", hadis_hi
+    except Exception:
+        pass
+
     # Kur'an anlık — sure adı / ayet meal (yanlış hafıza & pip tuzaklarından önce)
     try:
         from ilim_assistant.ruzgar_kuran_anlik import try_kuran_instant_reply
@@ -1348,6 +1370,18 @@ def prepare_turn(
             search_msg = rag_search_query_for_turn(msg, turn_plan)
         except Exception:
             search_msg = msg
+    # Kütüphane/ilim: arama sorgusunu güçlendir (Türkçe → Arapça anahtar)
+    try:
+        from ilim_assistant.ruzgar_kutuphane_gorev import (
+            expand_kutuphane_search_query,
+            is_kutuphane_bilgi_soru,
+            kutuphane_enabled_hard,
+        )
+
+        if kutuphane_enabled_hard() and is_kutuphane_bilgi_soru(msg):
+            search_msg = expand_kutuphane_search_query(search_msg)
+    except Exception:
+        pass
 
     hits: list = []
     ar_hits: list = []
@@ -1515,6 +1549,28 @@ def prepare_turn(
         else:
             pool_hits = search(search_msg, top_k=pool_k)
             good_hits = [h for h in pool_hits if h[2] >= rag_score_min]
+        # Kütüphane sorusunda lexik örtüşmesi zayıf hit'leri ele
+        try:
+            from ilim_assistant.ruzgar_kutuphane_gorev import (
+                filter_hits_lexically,
+                is_kutuphane_bilgi_soru,
+                kutuphane_enabled_hard,
+            )
+
+            if kutuphane_enabled_hard() and is_kutuphane_bilgi_soru(msg):
+                from ilim_assistant.ruzgar_kutuphane_gorev import hits_usable_for_kutuphane
+
+                filtered = filter_hits_lexically(search_msg, good_hits) or filter_hits_lexically(
+                    msg, good_hits
+                )
+                if not hits_usable_for_kutuphane(msg, filtered) and not hits_usable_for_kutuphane(
+                    search_msg, filtered
+                ):
+                    good_hits = []
+                else:
+                    good_hits = filtered
+        except Exception:
+            pass
         hits = good_hits[:rag_k_clamped]
         ar_hits = [
             h
@@ -1608,6 +1664,55 @@ def prepare_turn(
     )
     if archive_direct is not None:
         return msg, hits, "", "", "", archive_direct
+
+    # Kütüphane bilgi sorusu: kullanılabilir pasaj yoksa öğret.
+    # Pasaj varsa LLM'e bırakılır + grounding_directive (doğal, uydurmasız).
+    _kutup_bilgi_tur = False
+    try:
+        from ilim_assistant.ruzgar_kutuphane_gorev import (
+            is_kutuphane_bilgi_soru,
+            kutuphane_enabled_hard,
+        )
+
+        _kutup_bilgi_tur = (
+            kutuphane_enabled_hard()
+            and is_kutuphane_bilgi_soru(msg)
+            and m in ("genel", "uretim", "gelisim", "okuma", "ilim")
+            and not coding_mode
+        )
+    except Exception:
+        _kutup_bilgi_tur = False
+    if _kutup_bilgi_tur:
+        from ilim_assistant.ruzgar_umed_kurallari import MISS_PHRASE
+
+        try:
+            from ilim_assistant.ruzgar_kutuphane_gorev import (
+                blocks_usable_for_kutuphane,
+                hits_usable_for_kutuphane,
+            )
+
+            _hits_n = []
+            for _h in hits or []:
+                try:
+                    if isinstance(_h, (list, tuple)) and len(_h) >= 3:
+                        _hits_n.append((str(_h[0]), str(_h[1]), float(_h[2])))
+                except Exception:
+                    continue
+            _blocks_n = []
+            for _b in blocks or []:
+                try:
+                    if isinstance(_b, (list, tuple)) and len(_b) >= 2:
+                        _blocks_n.append((str(_b[0]), str(_b[1])))
+                except Exception:
+                    continue
+            _usable = hits_usable_for_kutuphane(msg, _hits_n) or blocks_usable_for_kutuphane(
+                msg, _blocks_n
+            )
+            if not _usable:
+                return msg, [], "", "", "", MISS_PHRASE
+            # usable → aşağıda grounding ile doğal cevap
+        except Exception:
+            return msg, [], "", "", "", MISS_PHRASE
 
     web_on = use_web and (m not in _NOWEB_MODES)
     _web_pro = False
@@ -2297,48 +2402,67 @@ def prepare_turn(
 
         _natural_soft = False
         _web_present = bool((web_extra or "").strip())
+        _kutup_hard = False
         try:
-            from ilim_assistant.ruzgar_dogal_sohbet_faz91 import (
-                dogal_sohbet_enabled,
-                is_natural_conversation_turn,
-                should_suppress_trust_noise,
+            from ilim_assistant.ruzgar_kutuphane_gorev import (
+                grounding_directive,
+                is_kutuphane_bilgi_soru,
+                kutuphane_enabled_hard,
+                user_wants_kaynak,
             )
 
-            if dogal_sohbet_enabled() and (
-                is_natural_conversation_turn(msg, m, turn_plan, history=history)
-                or should_suppress_trust_noise(
-                    msg,
-                    m,
-                    turn_plan,
-                    use_web=use_web,
-                    web_present=_web_present,
-                    source_count=len(hits),
+            if kutuphane_enabled_hard() and is_kutuphane_bilgi_soru(msg):
+                _kutup_hard = True
+                _src_n = max(len(hits or []), len(blocks or []))
+                user_payload += grounding_directive(
+                    want_source=user_wants_kaynak(msg),
+                    source_count=_src_n,
                 )
-            ):
-                _natural_soft = True
         except Exception:
-            _natural_soft = False
-        try:
-            from ilim_assistant.prompts import sohbet_tarz_chatgpt
+            _kutup_hard = False
+        if not _kutup_hard:
+            try:
+                from ilim_assistant.ruzgar_dogal_sohbet_faz91 import (
+                    dogal_sohbet_enabled,
+                    is_natural_conversation_turn,
+                    should_suppress_trust_noise,
+                )
 
-            if sohbet_tarz_chatgpt():
-                _natural_soft = True
-        except Exception:
-            pass
-        if not _natural_soft:
-            user_payload += citation_directive_for_turn(
-                source_count=len(hits),
-                archive_primary=archive_primary_flag,
-                web_present=_web_present,
-            )
-        else:
-            # Sohbet turu: yumuşak atıf; zorunlu «Güven: düşük» yok
-            user_payload += citation_directive_for_turn(
-                source_count=len(hits),
-                archive_primary=archive_primary_flag,
-                web_present=_web_present,
-                soft_natural=True,
-            )
+                if dogal_sohbet_enabled() and (
+                    is_natural_conversation_turn(msg, m, turn_plan, history=history)
+                    or should_suppress_trust_noise(
+                        msg,
+                        m,
+                        turn_plan,
+                        use_web=use_web,
+                        web_present=_web_present,
+                        source_count=len(hits),
+                    )
+                ):
+                    _natural_soft = True
+            except Exception:
+                _natural_soft = False
+            try:
+                from ilim_assistant.prompts import sohbet_tarz_chatgpt
+
+                if sohbet_tarz_chatgpt():
+                    _natural_soft = True
+            except Exception:
+                pass
+            if not _natural_soft:
+                user_payload += citation_directive_for_turn(
+                    source_count=len(hits),
+                    archive_primary=archive_primary_flag,
+                    web_present=_web_present,
+                )
+            else:
+                # Sohbet turu: yumuşak atıf; zorunlu «Güven: düşük» yok
+                user_payload += citation_directive_for_turn(
+                    source_count=len(hits),
+                    archive_primary=archive_primary_flag,
+                    web_present=_web_present,
+                    soft_natural=True,
+                )
     except Exception:
         pass
 

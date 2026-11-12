@@ -16559,7 +16559,11 @@ async function sendMessageWithText(t, opts = {}) {
     }
   }
   if ((currentMode === "genel" || currentMode === "programlama") && !isCasualChatMessage(text)) {
-    if (currentMode === "genel") {
+    if (
+      currentMode === "genel" &&
+      !understanding?.preferChat &&
+      !window.RuzgarSohbetAnlama?.looksLikeKutuphaneOrIlim?.(dispatchText)
+    ) {
       void prefetchGenelOrchestraBridge(dispatchText);
       const hubFast = await withHubCallTimeout(
         tryGenelProgramlamaHubInstant(dispatchText),
@@ -16573,9 +16577,11 @@ async function sendMessageWithText(t, opts = {}) {
   }
 
   const tryInstantMotors =
-    !window.RuzgarSohbetAnlama?.shouldTryInstantMotor
-      ? true
-      : understanding?.instantMotor === true;
+    understanding?.preferChat === true
+      ? false
+      : !window.RuzgarSohbetAnlama?.shouldTryInstantMotor
+        ? true
+        : understanding?.instantMotor === true;
 
   if (tryInstantMotors && window.RuzgarAnaMotorHub?.tryEylemCommand) {
     const eylemHit = await withHubCallTimeout(

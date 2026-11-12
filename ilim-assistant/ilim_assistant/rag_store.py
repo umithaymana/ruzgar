@@ -786,14 +786,65 @@ def search(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
             ortak_prefixes = _ortak_path_prefixes_for_query(query)
             skip_shamela = bool(ortak_prefixes) and _din_hygiene_enabled()
             if not skip_shamela:
-                from ilim_assistant.shamela_rag_shards import search_shamela_shards
+                from ilim_assistant.shamela_rag_shards import (
+                    pick_shamela_cats_for_query,
+                    search_shamela_shards,
+                )
+                from ilim_assistant.shamela_rag_shards import load_registry as _sam_reg
 
+                _ready = dict((_sam_reg().get("ready") or {}))
+                _cats = pick_shamela_cats_for_query(query, _ready)
                 for text, source, score in search_shamela_shards(
-                    query, top_k=max(int(top_k), 8), q_vec=q
+                    query,
+                    top_k=max(int(top_k), 8),
+                    q_vec=q,
+                    cats=_cats,
                 ):
                     _put(text, source, float(score))
         except Exception:
             pass
+
+    # Din / Şamile sorusunda bilgisayar RAG yükleme (870MB+) sohbeti öldürür
+    _din_q = False
+    try:
+        _ql = _fold_q(query)
+        _din_q = any(
+            k in _ql
+            for k in (
+                "samile",
+                "samil",
+                "shamel",
+                "hadis",
+                "buhari",
+                "muslim",
+                "muslim",
+                "tefsir",
+                "fikih",
+                "ayet",
+                "kuran",
+                "kur'an",
+                "akaid",
+                "siyer",
+                "sahih",
+                "niyet",
+                "mezhep",
+                "fetva",
+                "kimdir",
+                "sahabe",
+                "sahabi",
+                "peygamber",
+                "muhammed",
+                "ebubekir",
+                "resulullah",
+                "teracim",
+                "tabakat",
+            )
+        ) or (
+            (" hz " in f" {_ql} " or _ql.startswith("hz "))
+            and any(k in _ql for k in ("omer", "osman", "ali", "hatice", "aise", "ayse", "hamza"))
+        )
+    except Exception:
+        _din_q = False
 
     # Adım 5 — seçili ayıklama yan indeksi (ana RAG MemoryError kaçınır)
     if os.environ.get("RUZGAR_AYIKLAMA_RAG", "1").strip().lower() not in (
@@ -812,10 +863,14 @@ def search(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
             pass
 
     # Adım 4 — bilgisayar eserleri yan indeksi (Dalga A omurga)
-    if os.environ.get("RUZGAR_BILGISAYAR_RAG", "1").strip().lower() not in (
-        "0",
-        "false",
-        "no",
+    if (
+        not _din_q
+        and os.environ.get("RUZGAR_BILGISAYAR_RAG", "1").strip().lower()
+        not in (
+            "0",
+            "false",
+            "no",
+        )
     ):
         try:
             from ilim_assistant.ruzgar_bilgisayar_rag import search_bilgisayar

@@ -10889,18 +10889,45 @@ def api_ses_kolonlar_sil(
 
 
 def _library_instant_or_none(msg: str, try_fn) -> str | None:
-    """Din kütüphanesi anlık: sohbet/anlat niyetinde LLM'e bırak (lookup korunur)."""
-    try:
-        from ilim_assistant.ruzgar_anlik_niyet_gate import should_defer_library_instant
+    """Din/bilgi kütüphanesi anlık: zayıf kart → RAG (kütüphane görev, tüm katmanlar).
 
-        if should_defer_library_instant(msg):
-            return None
-    except Exception:
-        pass
+    Soft «anlat/hakkında» defer'i, kütüphane bilgi sorusunda kartı engellemez —
+    önce raftan/karttan oku; kapsamiyorsa indekse düş.
+    """
+    kutup_hard = False
     try:
-        return try_fn(msg)
+        from ilim_assistant.ruzgar_kutuphane_gorev import (
+            instant_covers_query,
+            is_kutuphane_bilgi_soru,
+            kutuphane_enabled_hard,
+        )
+
+        kutup_hard = kutuphane_enabled_hard() and is_kutuphane_bilgi_soru(msg)
+    except Exception:
+        instant_covers_query = None  # type: ignore[assignment]
+        kutup_hard = False
+    if not kutup_hard:
+        try:
+            from ilim_assistant.ruzgar_anlik_niyet_gate import should_defer_library_instant
+
+            if should_defer_library_instant(msg):
+                return None
+        except Exception:
+            pass
+    try:
+        reply = try_fn(msg)
     except Exception:
         return None
+    if not (reply or "").strip():
+        return None
+    # Tüm raflar: kart soruyu kapsamıyorsa indeksten okusun (yeni eserler dahil)
+    if kutup_hard and instant_covers_query is not None:
+        try:
+            if not instant_covers_query(msg, reply):
+                return None
+        except Exception:
+            pass
+    return reply
 
 
 def _iter_instant_chat_events(
@@ -11389,6 +11416,50 @@ def _collect_fast_lane_chat_events(req: ChatRequest) -> list[dict[str, Any]] | N
 
         if tarif_cumlesi(msg_raw):
             return None
+    except Exception:
+        pass
+    # Şamile indeks durumu — hafıza/selam tuzağına düşmeden (ağır import yok: yalnız shard status)
+    try:
+        from ilim_assistant.shamela_rag_shards import (
+            format_samile_ready_reply,
+            looks_like_samile_status_question,
+        )
+
+        if looks_like_samile_status_question(msg_raw):
+            return list(
+                _iter_instant_chat_events(
+                    format_samile_ready_reply(),
+                    msg_raw,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch={
+                        "plan": {"primary": "samile", "label_tr": "Şamile indeks durumu"},
+                        "fast_lane": True,
+                    },
+                    instant_gundelik=True,
+                )
+            )
+    except Exception:
+        pass
+    # Meşhur hadis anlık — uydurma metin/cilt kes
+    try:
+        from ilim_assistant.ruzgar_hadis_anlik import try_hadis_instant_reply
+
+        hadis_hi = try_hadis_instant_reply(msg_raw)
+        if hadis_hi:
+            return list(
+                _iter_instant_chat_events(
+                    hadis_hi,
+                    msg_raw,
+                    session_wake_used=req.session_wake_used,
+                    msg_for_wake=req.message,
+                    orch={
+                        "plan": {"primary": "hadis", "label_tr": "Hadis anlık (doğru kart)"},
+                        "fast_lane": True,
+                    },
+                    instant_gundelik=True,
+                )
+            )
     except Exception:
         pass
     try:
@@ -12425,7 +12496,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         try:
             from ilim_assistant.ruzgar_kutuphane import try_kutuphane_instant_reply
 
-            _raf = try_kutuphane_instant_reply(msg_early)
+            _raf = _library_instant_or_none(msg_early, try_kutuphane_instant_reply)
             if _raf:
                 _orch_raf = dict(orch_early)
                 _orch_raf.setdefault("plan", {})["primary"] = "bilgi"
@@ -12445,7 +12516,8 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         try:
             from ilim_assistant.ruzgar_otomatik_ogrenme import try_bilgi_kutuphane_instant_reply
 
-            _kut = try_bilgi_kutuphane_instant_reply(msg_early)
+            # Donem/kart önce; zayıf otomatik-öğren metni kütüphane görev kapısından geçer
+            _kut = _library_instant_or_none(msg_early, try_bilgi_kutuphane_instant_reply)
             if _kut:
                 _orch_ku = dict(orch_early)
                 _orch_ku.setdefault("plan", {})["primary"] = "bilgi"
