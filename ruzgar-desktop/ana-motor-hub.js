@@ -515,11 +515,14 @@
     const raw = String(text || "").trim();
     if (!raw) return { handled: false };
 
-    // İlim / kütüphane sohbeti — anlık motor çalmasın (LLM / kütüphane yolu)
+    // Sohbet önce / ilim — anlık motor çalmasın (LLM sohbet yolu)
     if (
       motorCtx?.understanding?.preferChat ||
       motorCtx?.understanding?.instantReason === "kutuphane_ilim" ||
-      global.RuzgarSohbetAnlama?.looksLikeKutuphaneOrIlim?.(raw)
+      motorCtx?.understanding?.instantReason === "sohbet_once" ||
+      global.RuzgarSohbetAnlama?.looksLikeKutuphaneOrIlim?.(raw) ||
+      (global.RuzgarSohbetAnlama?.isNetIsEmri &&
+        !global.RuzgarSohbetAnlama.isNetIsEmri(raw, motorCtx?.understanding, motorCtx))
     ) {
       return { handled: false };
     }
@@ -530,13 +533,9 @@
       return { handled: true };
     }
 
+    // Sohbet önce: şablon selam yok — doğal LLM cevabı
     if (isCasualGreeting(raw)) {
-      say(
-        "Aleyküm selam Ümit abi. **Ana Motor** hazır — buradan video, tercüme, kod, hafıza… " +
-          "Ne istersen söyle. Liste: **hub yardım** · Eylem: **eylem öğret: «…» → video**",
-      );
-      d().setStatus?.("Ana Motor", "Rüzgar");
-      return { handled: true };
+      return { handled: false };
     }
 
     const learnedInstant = await fetchLearnedInstant(raw);

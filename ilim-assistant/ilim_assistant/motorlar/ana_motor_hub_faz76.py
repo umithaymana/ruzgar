@@ -143,6 +143,13 @@ def _hub_stay_on_ana_motor(message: str) -> bool:
     if not raw:
         return False
     try:
+        from ilim_assistant.ruzgar_sohbet_once import sohbet_once_hub_stay
+
+        if sohbet_once_hub_stay(raw):
+            return True
+    except Exception:
+        pass
+    try:
         from ilim_assistant.ana_motor_plan import (
             looks_like_opinion_request,
             should_stay_on_ana_motor_bilgi,

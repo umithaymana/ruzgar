@@ -350,6 +350,14 @@ def should_skip_instant_shortcuts(
         return False
     if mode_norm not in ("genel", "uretim", "gelisim"):
         return False
+    # Sohbet önce: kısa selam da şablona düşmesin — LLM dinlesin
+    try:
+        from ilim_assistant.ruzgar_sohbet_once import sohbet_once_enabled
+
+        if sohbet_once_enabled():
+            return True
+    except Exception:
+        pass
     if is_pure_short_greeting(message):
         return False
     try:

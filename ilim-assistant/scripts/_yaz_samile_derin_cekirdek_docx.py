@@ -1,0 +1,678 @@
+# -*- coding: utf-8 -*-
+"""Şamile derin çekirdek eser listesi — Word öneri (onay öncesi)."""
+from __future__ import annotations
+
+from pathlib import Path
+
+from docx import Document
+from docx.shared import Cm, Pt
+
+OUT = (
+    Path(__file__).resolve().parents[1]
+    / "docs"
+    / "SAMILE_DERIN_CEKIRDEK_ESER_LISTESI_ONERI.docx"
+)
+
+ANA: dict[str, list[str]] = {
+    "01_akaid — Akaid / İtikad (hedef ≥20)": [
+        "el-Fıkhü'l-Ekber — İmâm-ı A'zam Ebû Hanîfe (risâle / şerhleriyle)",
+        "el-Akîdetü't-Tahâviyye — İmâm Tahâvî",
+        "Şerhu'l-Akîdeti't-Tahâviyye — İbn Ebî'l-İzz el-Hanefî",
+        "Akaidü'n-Nesefî — Ömer en-Nesefî",
+        "Şerhu'l-Akâid — Sa'düddîn et-Teftâzânî",
+        "Kitâbü't-Tevhîd — İmâm Mâtürîdî",
+        "Te'vîlâtü'l-Kur'ân (akaidî kısımlar) — Mâtürîdî",
+        "el-İktisâd fi'l-İ'tikâd — İmâm Gazzâlî",
+        "Kavâidü'l-Akâid — Gazzâlî",
+        "el-İrşâd — İmâmü'l-Haremeyn el-Cüveynî",
+        "Temhîdü'l-Evâil — Bâkıllânî",
+        "el-İnsâf — Bâkıllânî",
+        "Usûlü'd-Dîn — Pezdevî",
+        "el-Bidâye min el-Kifâye — Nûreddîn es-Sâbûnî",
+        "el-Musâyara — İbnü'l-Hümâm (akaid)",
+        "Şerhu'l-Fıkhi'l-Ekber — Aliyyü'l-Kârî",
+        "el-Âlim ve'l-Müteallim — Hanefî akaid risâleleri",
+        "et-Târîkatü'l-Muhammediyye (akaidî/ahlâkî çerçeve) — Birgivî",
+        "Mektûbât / akaid risâleleri — İmâm-ı Rabbânî (ihtiyatlı seçim)",
+        "Haşiyetü'l-Kestelli / Hayâlî (Nesefî hattı)",
+    ],
+    "03_tefsir — Tefsir (hedef ≥20)": [
+        "Câmiu'l-Beyân — Taberî",
+        "Tefsîru'l-Kur'âni'l-Azîm — İbn Kesîr",
+        "Meâlimü't-Tenzîl — Begavî",
+        "Mefâtîhu'l-Gayb — Râzî",
+        "Envâru't-Tenzîl — Beyzâvî",
+        "Medârikü't-Tenzîl — Nesefî",
+        "el-Keşşâf — Zemahşerî (dil; akaidde ihtiyat)",
+        "Tefsîru'l-Celâleyn — Mahallî / Süyûtî",
+        "Ruhü'l-Meânî — Âlûsî",
+        "el-Câmi' li-Ahkâmi'l-Kur'ân — Kurtubî",
+        "Ahkâmü'l-Kur'ân — Cessâs",
+        "Ahkâmü'l-Kur'ân — İbnü'l-Arabî (Mâlikî)",
+        "Bahru'l-Ulûm — Semerkandî",
+        "Celâleyn hâşiyeleri (Sâvî / Cemel seçkisi)",
+        "Fetihu'l-Kadîr — Şevkânî",
+        "Tefsîru Ebî's-Suûd",
+        "Ruhü'l-Beyân — İsmail Hakkı Bursevî",
+        "et-Tefsîru'l-Basît — Vâhidî",
+        "Esbâbü'n-Nüzûl — Vâhidî",
+        "ed-Dürrü'l-Mensûr — Süyûtî",
+    ],
+    "06_hadis_sunen — Hadis metinleri (hedef ≥20)": [
+        "Sahîhu'l-Buhârî",
+        "Sahîhu Müslim",
+        "Sünenü Ebî Dâvûd",
+        "Câmiu't-Tirmizî",
+        "Sünenü'n-Nesâî",
+        "Sünenü İbn Mâce",
+        "Muvatta' — İmâm Mâlik",
+        "Müsnedü Ahmed b. Hanbel",
+        "Sünenü'd-Dârimî",
+        "Sahîhu İbn Huzeyme",
+        "Sahîhu İbn Hibbân",
+        "el-Müstedrek — Hâkim",
+        "es-Sünenü'l-Kübrâ — Beyhakî",
+        "Şuabü'l-Îmân — Beyhakî",
+        "el-Edebü'l-Müfred — Buhârî",
+        "Riyâzü's-Sâlihîn — Nevevî",
+        "el-Erbaûn — Nevevî",
+        "Mişkâtü'l-Mesâbîh — Hatîb Tebrîzî",
+        "Câmiu'l-Usûl — İbnü'l-Esîr",
+        "Kenzü'l-Ummâl — Müttakî el-Hindî (seçme)",
+    ],
+    "07_hadis_serh — Hadis şerhleri (hedef ≥20)": [
+        "Fethu'l-Bârî — İbn Hacer",
+        "Umdetü'l-Kârî — Aynî",
+        "İrşâdü's-Sârî — Kastallânî",
+        "el-Minhâc (Şerhu Müslim) — Nevevî",
+        "İkmâl / Müslim şerh hattı — Kâdî İyâz",
+        "Avnu'l-Ma'bûd — Azîmâbâdî",
+        "Bezlü'l-Mechûd — Sehârenpûrî",
+        "Tuhfetü'l-Ahvezî — Mübârekpûrî",
+        "Şerhu'n-Nevevî ale'l-Erbaîn",
+        "Delîlü'l-Fâlihîn — İbn Allân (Riyâz)",
+        "Mirkâtü'l-Mefâtîh — Aliyyü'l-Kârî (Mişkât)",
+        "Fethu'l-Mülhim — Şebbîr Ahmed Osmânî",
+        "Feyzü'l-Bârî — Enver Şâh Keşmîrî",
+        "Lâmiu'd-Derârî — Yahyâ el-Kândehlevî hattı",
+        "Şerhu Meâni'l-Âsâr — Tahâvî (şerhleriyle)",
+        "Şerhu Müsned-i Ebî Hanîfe — Molla Aliyyü'l-Kârî",
+        "et-Tevşîh — Süyûtî (Buhârî)",
+        "el-Kevkebü'd-Dürrî — Reşîd Ahmed Gangohî hattı",
+        "Şerhu Süneni İbn Mâce — Süyûtî / Sindî seçkisi",
+        "Hâşiyetü's-Sindî ale'n-Nesâî",
+    ],
+    "11_usul_fikih — Usûl-i fıkıh (hedef ≥20)": [
+        "el-Usûl — Pezdevî",
+        "Keşfü'l-Esrâr — Abdülazîz el-Buhârî",
+        "Usûlü's-Serahsî",
+        "el-Menâr — Nesefî",
+        "Şerhu'l-Menâr — İbn Melek hattı",
+        "et-Tavzîh — Sadru'ş-Şerîa",
+        "et-Telvîh — Teftâzânî",
+        "et-Tahrîr — İbnü'l-Hümâm",
+        "et-Takrîr ve't-Tahrîr — İbn Emîr Hâc",
+        "Müsellemü's-Sübût — Muhibbullah Bihârî",
+        "Fevâtihu'r-Rahamût — Abdülaliyy Luknevî",
+        "el-Müstasfâ — Gazzâlî",
+        "el-Mahsûl — Râzî",
+        "el-İhkâm — Âmidî",
+        "el-Bahrü'l-Muhît — Zerkâşî",
+        "Cem'u'l-Cevâmi' — Sübkî",
+        "Şerhu Cem'i'l-Cevâmi' — Mahallî",
+        "Ravzatü'n-Nâzır — İbn Kudâme",
+        "el-Muvâfakât — Şâtıbî",
+        "İrşâdü'l-Fuhûl — Şevkânî",
+    ],
+    "14_hanefi — Hanefî fıkhı (hedef ≥20)": [
+        "el-Hidâye — Mergînânî",
+        "el-İnâye — Bâbertî",
+        "Fethu'l-Kadîr — İbnü'l-Hümâm",
+        "el-Binâye — Aynî",
+        "el-İhtiyâr — Mevsılî",
+        "Kenzü'd-Dekâik — Nesefî",
+        "Tebyînü'l-Hakâik — Zeylaî",
+        "el-Bahrü'r-Râik — İbn Nüceym",
+        "Minhatü'l-Hâlik — İbn Âbidîn (hâşiye)",
+        "Reddü'l-Muhtâr — İbn Âbidîn",
+        "ed-Dürrü'l-Muhtâr — Haskefî",
+        "Mecma'u'l-Enhür — Şeyhzâde",
+        "Mülteka'l-Ebhur — İbrâhîm el-Halebî",
+        "el-Fetâva'l-Hindiyye (Âlemgîriyye)",
+        "Bedâiu's-Sanâi' — Kâsânî",
+        "el-Mebsût — Serahsî",
+        "Şerhu'l-Vikâye — Sadrü'ş-Şerîa hattı",
+        "Nûrü'l-Îzâh / Merâkı'l-Felâh — Şürünbülâlî",
+        "Muhtasaru'l-Kudûrî + şerhleri",
+        "el-Kâfî / klasik metin-şerh seçkisi",
+    ],
+    "15_maliki — Mâlikî fıkhı (hedef ≥20)": [
+        "el-Muvatta' — İmâm Mâlik",
+        "el-Müdevvene — Sahnûn",
+        "er-Risâle — İbn Ebî Zeyd el-Kayrevânî",
+        "Şerhu'r-Risâle — Zerkânî seçkisi",
+        "Bidâyetü'l-Müctehid — İbn Rüşd",
+        "el-Kavânînü'l-Fıkhiyye — İbn Cüzeyy",
+        "Muhtasar Halîl",
+        "Şerhu Muhtasari Halîl — Hattâb",
+        "Mevâhibü'l-Celîl — Hattâb",
+        "eş-Şerhu'l-Kebîr — Derdîr",
+        "Hâşiyetü'd-Desûkî",
+        "eş-Şerhu's-Sagîr — Derdîr",
+        "Bulûğu'l-Mesâlik — Sâvî",
+        "el-Fevâkihü'd-Devânî — Nefrâvî",
+        "et-Tâc ve'l-İklîl — Mevvâk",
+        "el-Beyân ve't-Tahsîl — İbn Rüşd el-Cedd",
+        "el-İstizkâr — İbn Abdilberr",
+        "et-Temhîd — İbn Abdilberr",
+        "Ahkâmü'l-Kur'ân — İbnü'l-Arabî",
+        "el-Kâfî — İbn Abdilberr",
+    ],
+    "16_safii — Şâfiî fıkhı (hedef ≥20)": [
+        "el-Ümm — İmâm Şâfiî",
+        "er-Risâle — Şâfiî",
+        "el-Mühezzeb — Şîrâzî",
+        "el-Mecmû' — Nevevî",
+        "Minhâcü't-Tâlibîn — Nevevî",
+        "Tuhfetü'l-Muhtâc — İbn Hacer el-Heytemî",
+        "Nihâyetü'l-Muhtâc — Remlî",
+        "Muğni'l-Muhtâc — Hatîb Şirbînî",
+        "el-İknâ' — Hatîb Şirbînî",
+        "Fethu'l-Muîn — Mellibârî",
+        "İânâtü't-Tâlibîn — Dimyâtî",
+        "el-Hâvî'l-Kebîr — Mâverdî",
+        "Nihâyetü'l-Matlab — Cüveynî",
+        "el-Vasît / el-Vecîz — Gazzâlî",
+        "Ravzatü't-Tâlibîn — Nevevî",
+        "Kılyûbî ve Umeyra hâşiyeleri (Mahallî)",
+        "el-Muharrer / Râfiî hattı",
+        "Buğyetü'l-Müsterşidîn — Bâ-Alevî hattı",
+        "el-Gâyetü'l-Kusvâ — Beyzâvî (fıkıh)",
+        "Fethu'l-Vehhâb — Ensârî hattı",
+    ],
+    "17_hanbeli — Hanbelî fıkhı (hedef ≥20)": [
+        "el-Mugni — İbn Kudâme",
+        "eş-Şerhu'l-Kebîr — İbn Kudâme",
+        "el-Kâfî — İbn Kudâme",
+        "el-Umde — İbn Kudâme",
+        "Zâdü'l-Müsteni' — Huceyvî",
+        "er-Ravzü'l-Mürib' — Bühevî",
+        "Keşşâfü'l-Kinâ' — Bühevî",
+        "el-İknâ' — Huceyvî",
+        "el-Müntahâ — İbnü'n-Neccâr",
+        "Meâlimü Üli'n-Nühâ — Fevtûhî hattı",
+        "el-Furû' — İbn Müflih",
+        "el-İnsâf — Merdâvî",
+        "el-Muharrer — Mecdüddîn İbn Teymiyye",
+        "el-Ahkâmü's-Sultâniyye — Kâdî Ebû Ya'lâ",
+        "Şerhu Müntehe'l-İrâdât",
+        "Hâşiyetü İbn Kâsım / er-Ravz",
+        "el-Mübdi' — İbn Müflih",
+        "Mesâilü Ahmed (Ebû Dâvûd / Abdullah rivayetleri)",
+        "el-Câmi' li-Ulûmi'l-İmâm Ahmed (seçme)",
+        "el-Vâdıh — İbn Akīl seçkisi",
+    ],
+    "24_siyer — Siyer (hedef ≥20)": [
+        "es-Sîretü'n-Nebeviyye — İbn Hişâm",
+        "es-Sîretü'n-Nebeviyye — İbn İshâk (İbn Hişâm üzerinden)",
+        "et-Tabakâtü'l-Kübrâ — İbn Sa'd",
+        "Târîhu'r-Rusül ve'l-Mülûk (siyer) — Taberî",
+        "ed-Dürer fî İhtisâri'l-Megâzî — İbn Abdilberr",
+        "el-İktifâ — Kelâî",
+        "Şemâilü't-Tirmizî",
+        "Şerhu'ş-Şemâil — Aliyyü'l-Kârî / Bâcûrî seçkisi",
+        "el-Hasâisü'l-Kübrâ — Süyûtî",
+        "el-Mevâhibü'l-Ledünniyye — Kastallânî",
+        "Şerhu'l-Mevâhib — Zerkânî",
+        "es-Sîretü'l-Halebiyye — Halebî",
+        "Uyûnü'l-Eser — İbn Seyyidinnâs",
+        "el-Bidâye ve'n-Nihâye (siyer ciltleri) — İbn Kesîr",
+        "Zâdü'l-Meâd — İbnü'l-Kayyim",
+        "er-Rahîku'l-Mahtûm — Mübârekpûrî",
+        "eş-Şifâ — Kâdî İyâz",
+        "Şerhu'ş-Şifâ — Aliyyü'l-Kârî",
+        "el-İsâbe (ashâb) — İbn Hacer",
+        "Fıkhü's-Sîre — Bûtî (ihtiyatlı modern seçim)",
+    ],
+}
+
+DIGER: dict[str, list[str]] = {
+    "02_firak_redler — Fırak / reddiyeler (~10)": [
+        "el-Fark beyne'l-Fırak — Bağdâdî",
+        "el-Milel ve'n-Nihal — Şehristânî",
+        "Makâlâtu'l-İslâmiyyîn — Eş'arî",
+        "el-İbâne — Eş'arî",
+        "er-Red ale'l-Cehmiyye — Dârimî",
+        "el-Fisal — İbn Hazm (ihtiyatlı)",
+        "es-Sayfü's-Sakīl — Sübkî hattı",
+        "Şerhu'l-Akîdeti't-Tahâviyye (reddiyeli kısımlar)",
+        "el-Hucce — Asbahânî seçkisi",
+        "Tesbît delâil / klasik nübüvvet reddiyesi seçkisi",
+    ],
+    "04_kuran_ilim_usul — Ulûmü'l-Kur'ân (~10)": [
+        "el-İtkân — Süyûtî",
+        "el-Burhân — Zerkâşî",
+        "Menâhilü'l-İrfân — Zürkânî",
+        "Esbâbü'n-Nüzûl — Vâhidî",
+        "en-Nâsih ve'l-Mensûh — Nahhâs",
+        "el-Vucûh ve'n-Nezâir — Dâmagânî / İbnü'l-Cevzî seçkisi",
+        "Cemâlü'l-Kurrâ — Sehâvî",
+        "el-Mukaddimetü'l-Câzire — İbnü'l-Cezerî",
+        "et-Tibyân — Nevevî",
+        "Mukaddimetü tefsîr usûlü (klasik) seçkisi",
+    ],
+    "05_tecvid_kiraat — Tecvid / kıraat (~10)": [
+        "en-Neşr fi'l-Kırââti'l-Aşr — İbnü'l-Cezerî",
+        "et-Temhîd — İbnü'l-Cezerî",
+        "Tayyibetü'n-Neşr — İbnü'l-Cezerî",
+        "eş-Şâtıbiyye — Şâtıbî",
+        "Hirzü'l-Emânî şerhleri",
+        "el-Mukaddimetü'l-Cezeriyye + şerhleri",
+        "et-Teysîr — Dânî",
+        "el-İknâ' — Dânî",
+        "Gâyetü'n-Nihâye — İbnü'l-Cezerî",
+        "Klasik tecvid risâleleri seçkisi",
+    ],
+    "08_tahric_etraf — Tahrîc / etrâf (~10)": [
+        "Nasbü'r-Râye — Zeylaî",
+        "ed-Dirâye — İbn Hacer",
+        "Telhîsü'l-Habîr — İbn Hacer",
+        "Mecmeu'z-Zevâid — Heysemî",
+        "Keşfü'l-Estâr — Heysemî",
+        "Tuhfetü'l-Eşrâf — Mizzî",
+        "el-Muğnî an Hamli'l-Esfâr — Irâkî",
+        "Tahrîcü Ehâdîsi'l-İhyâ — Irâkî",
+        "İthâfü'l-Hıyere — Heysemî hattı",
+        "Etrâf seçkisi — Mizzî / İbn Asâkir",
+    ],
+    "09_ilel_sual — İlel / suâl (~10)": [
+        "el-İlel — Dârekutnî",
+        "el-İlel — İbn Ebî Hâtim",
+        "el-İlel — Ahmed b. Hanbel (Abdullah)",
+        "el-İlelül-Kebîr — Tirmizî",
+        "Şerhu İleli't-Tirmizî — İbn Receb",
+        "el-Kifâye — Hatîb",
+        "el-Müdhal — Hâkim",
+        "el-Temyîz — Müslim",
+        "el-Mecrûhîn — İbn Hibbân",
+        "Mîzânü'l-İ'tidâl — Zehebî",
+    ],
+    "10_hadis_ilimleri — Hadis usûlü (~10)": [
+        "Mukaddimetü İbnü's-Salâh",
+        "et-Takrîb — Nevevî",
+        "Tedrîbü'r-Râvî — Süyûtî",
+        "Nuhbetü'l-Fiker + Nüzhetü'n-Nazar — İbn Hacer",
+        "Elfiyyetü'l-Irâkî + şerhi",
+        "Fethu'l-Muğîs — Sehâvî",
+        "el-Bâisü'l-Hasîs — İbn Kesîr",
+        "Tevzîhu'l-Efkâr — San'ânî",
+        "Kavâid fi Ulûmi'l-Hadîs — Tehânevî hattı seçkisi",
+        "el-Kifâye — Hatîb",
+    ],
+    "12_fikih_kaideler — Kâideler (~10)": [
+        "el-Eşbâh ve'n-Nezâir — İbn Nüceym",
+        "el-Eşbâh ve'n-Nezâir — Süyûtî",
+        "el-Eşbâh — İbn Sübkî",
+        "Kavâidü İbn Receb",
+        "el-Furûk — Karâfî",
+        "Kavâidü'l-Ahkâm — İzz b. Abdüsselâm",
+        "Mecelle-i Ahkâm-ı Adliyye (kâideler)",
+        "Şerhu'l-Kavâidi'l-Fıkhiyye — Zerkâ",
+        "el-Menşûr fi'l-Kavâid — Zerkâşî",
+        "İdâhü'l-Kavâid / Mecelle şârihleri seçkisi",
+    ],
+    "13_mantik — Mantık (~10)": [
+        "Îsâgûcî — Ebherî",
+        "Şerhu Îsâgûcî — Fenârî",
+        "eş-Şemsiyye — Kâtibî",
+        "Tahrîru'l-Kavâidi'l-Mantıkıyye — Kutbüddîn Râzî",
+        "Tehzîbü'l-Mantık — Teftâzânî",
+        "el-Âdâbü'l-Bahs — Gelenbevî hattı",
+        "Mi'yârü'l-İlm — Gazzâlî",
+        "el-Kıstâsü'l-Müstakîm — Gazzâlî",
+        "Hâşiyetü's-Seyyid / Mir Zâhid seçkisi",
+        "el-Muğnî (mantık) seçkisi",
+    ],
+    "18_genel_fikih — Genel fıkıh (~10)": [
+        "Bidâyetü'l-Müctehid — İbn Rüşd",
+        "el-Mîzânü'l-Kübrâ — Şi'rânî",
+        "Rahmetü'l-Ümme — Dımeşkî",
+        "el-Fıkhu ale'l-Mezâhibi'l-Erbaa — Cezîrî",
+        "el-Muğnî (mukayese) — İbn Kudâme",
+        "el-Mecmû' (mukayese) — Nevevî",
+        "İcmâ' — İbn Münzir",
+        "el-Evsat — İbn Münzir",
+        "el-İknâ' fî Mesâili'l-İcmâ' — İbnü'l-Kattân",
+        "Klasik mukayese risâleleri seçkisi",
+    ],
+    "19_fikhi_meseleler — Fıkhî meseleler (~10)": [
+        "el-Câmiu's-Sagîr — Şeybânî",
+        "el-Câmiu'l-Kebîr — Şeybânî",
+        "Kitâbü'l-Asl (Mebsût) — Şeybânî",
+        "el-Hucce — Şeybânî",
+        "el-Vâkıât — Sadrü'ş-Şehîd hattı",
+        "el-Fetâvâ ez-Zehiriyye seçkisi",
+        "Mesâilü Ebî Dâvûd li-Ahmed",
+        "el-Vâkıâtü'l-Hüsâmiyye seçkisi",
+        "Klasik nâzile / mesele mecmuaları",
+        "Hanefî/Şâfiî mesele mecmuaları seçkisi",
+    ],
+    "20_siyaset_kaza — Siyaset-i şer'iyye / kazâ (~10)": [
+        "el-Ahkâmü's-Sultâniyye — Mâverdî",
+        "el-Ahkâmü's-Sultâniyye — Ebû Ya'lâ",
+        "es-Siyâsetü'ş-Şer'iyye — İbn Teymiyye",
+        "Tahrîrü'l-Ahkâm — İbn Cemâa",
+        "Muînu'l-Hükkâm — Tarâblusî",
+        "Lisânü'l-Hükkâm — İbnü'ş-Şıhne",
+        "Tabsıratü'l-Hükkâm — İbn Ferhûn",
+        "el-Gıyâsî — Cüveynî",
+        "Dürrü'l-Hükkâm — Ali Haydar (Mecelle)",
+        "Kazâ âdâbı risâleleri seçkisi",
+    ],
+    "21_feraiz — Ferâiz (~10)": [
+        "es-Sirâciyye — Secâvendî",
+        "Şerhu's-Sirâciyye — Cürcânî / Aliyyü'l-Kârî seçkisi",
+        "el-Rahbiyye + şerhleri",
+        "el-İhtiyâr (ferâiz) — Mevsılî",
+        "Reddü'l-Muhtâr (ferâiz) — İbn Âbidîn",
+        "el-Hidâye (ferâiz) — Mergînânî",
+        "Mülteka (ferâiz) — Halebî",
+        "Sirâciyye hâşiyeleri",
+        "el-Ferâizu'l-Hasene seçkisi",
+        "Klasik ferâiz risâleleri",
+    ],
+    "22_fetvalar — Fetvâlar (~10)": [
+        "el-Fetâva'l-Hindiyye",
+        "el-Fetâva'l-Bezzâziyye",
+        "el-Fetâva't-Tâtârhâniyye",
+        "el-Fetâva'l-Hayriyye — Hayreddin er-Remlî",
+        "el-Fetâva'l-Hadîsiyye — İbn Hacer el-Heytemî",
+        "el-Fetâva'l-Kübrâ — İbn Hacer el-Heytemî",
+        "Fetâvâ İbn Teymiyye (seçme; ihtiyatlı)",
+        "Osmanlı şeyhülislâm fetvâ mecmuaları (seçme)",
+        "el-Hâvî li'l-Fetâvâ — Süyûtî",
+        "Klasik fetvâ mecmuaları seçkisi",
+    ],
+    "23_rekaik_adab — Rekâik / âdâb (~10)": [
+        "İhyâu Ulûmi'd-Dîn — Gazzâlî",
+        "Bidâyetü'l-Hidâye — Gazzâlî",
+        "el-Ezkâr — Nevevî",
+        "Riyâzü's-Sâlihîn — Nevevî",
+        "et-Târîkatü'l-Muhammediyye — Birgivî",
+        "Âdâbü'd-Dünyâ ve'd-Dîn — Mâverdî",
+        "el-Edebü'l-Müfred — Buhârî",
+        "Şuabü'l-Îmân — Beyhakî",
+        "Medâricü's-Sâlikîn — İbnü'l-Kayyim (ihtiyatlı)",
+        "Klasik âdâb risâleleri seçkisi",
+    ],
+    "25_tarih — Tarih (~10)": [
+        "Târîhu't-Taberî",
+        "el-Bidâye ve'n-Nihâye — İbn Kesîr",
+        "Târîhu'l-İslâm — Zehebî",
+        "el-Kâmil — İbnü'l-Esîr",
+        "Mukaddime / el-İber — İbn Haldûn",
+        "Târîhu Bağdâd — Hatîb",
+        "Târîhu Dımaşk — İbn Asâkir (seçme)",
+        "el-Muntazam — İbnü'l-Cevzî",
+        "Şezerâtü'z-Zeheb — İbnü'l-İmâd",
+        "Endülüs / İslam tarihi seçkisi",
+    ],
+    "26_teracim — Terâcim / tabakât (~10)": [
+        "et-Tabakâtü'l-Kübrâ — İbn Sa'd",
+        "Siyeru A'lâmi'n-Nübelâ — Zehebî",
+        "Tezkiretü'l-Huffâz — Zehebî",
+        "el-İsâbe — İbn Hacer",
+        "Üsdü'l-Gâbe — İbnü'l-Esîr",
+        "el-İstîâb — İbn Abdilberr",
+        "Tabakâtü'ş-Şâfiiyye — Sübkî",
+        "el-Cevâhirü'l-Mudiyye — Kureşî (Hanefî)",
+        "ed-Dîbâcü'l-Müzehheb — İbn Ferhûn (Mâlikî)",
+        "Tabakâtü'l-Hanâbile — İbn Ebî Ya'lâ",
+    ],
+    "27_ensab — Ensâb (~10)": [
+        "Cemheretü Ensâbi'l-Arab — İbn Hazm",
+        "el-İkmâl — İbn Mâkûlâ",
+        "el-İnsâb — Sem'ânî",
+        "Ensâbü'l-Eşrâf — Belâzürî",
+        "el-Muhtelif ve'l-Mü'telif — Dârekutnî",
+        "Tavzîhu'l-Müştebih — İbn Hacer",
+        "Nihâyetü'l-Ereb (ensâb) — Kalakaşandî",
+        "Cemheretü Nesebi Kureyş seçkisi",
+        "el-Ubâb — Sâgânî",
+        "Klasik ensâb risâleleri",
+    ],
+    "28_buldan — Büldân / seyahat (~10)": [
+        "Mu'cemü'l-Büldân — Yâkût",
+        "Ahsenü't-Takâsîm — Makdisî",
+        "el-Mesâlik ve'l-Memâlik — İstahrî / İbn Havkal",
+        "Nüzhetü'l-Müştâk — İdrîsî",
+        "Rihletü İbn Battûta",
+        "Rihletü İbn Cübeyr",
+        "Futûhu'l-Büldân — Belâzürî",
+        "el-Buldân — Ya'kûbî",
+        "Mu'cemü mâ İsta'cem — Bekrî",
+        "Klasik seyahat / büldân seçkisi",
+    ],
+    "29_dil — Dil (~10)": [
+        "el-Kitâb — Sîbeveyh",
+        "el-Hasâis — İbn Cinnî",
+        "es-Sâhibî — İbn Fâris",
+        "el-Müzhir — Süyûtî",
+        "Fıkhü'l-Luga — Saâlibî",
+        "el-Elfâz — İbnü's-Sikkît",
+        "Edebü'l-Kâtib — İbn Kuteybe",
+        "el-Kâmil — Müberred",
+        "el-Beyân ve't-Tebyîn — Câhiz",
+        "Klasik dil risâleleri seçkisi",
+    ],
+    "30_garib_lugat — Garîb / lügat (~10)": [
+        "Lisânü'l-Arab — İbn Manzûr",
+        "el-Kâmûsü'l-Muhît — Fîrûzâbâdî",
+        "Tâcü'l-Arûs — Zebîdî",
+        "es-Sıhâh — Cevherî",
+        "el-Muhkem — İbn Sîde",
+        "Garîbü'l-Hadîs — Ebû Ubeyd",
+        "en-Nihâye — İbnü'l-Esîr",
+        "Mufradâtü Elfâzi'l-Kur'ân — Râgıb",
+        "Basâirü zevi't-Temyîz — Fîrûzâbâdî",
+        "Tehzîbü'l-Luga — Ezherî",
+    ],
+    "31_nahiv_sarf — Nahiv / sarf (~10)": [
+        "Elfiyye — İbn Mâlik",
+        "Şerhu İbn Akīl",
+        "Evzahu'l-Mesâlik — İbn Hişâm",
+        "Katru'n-Nedâ — İbn Hişâm",
+        "Muğni'l-Lebîb — İbn Hişâm",
+        "el-Âcurrûmiyye + şerhleri",
+        "Şâfiye — İbnü'l-Hâcib + şerh",
+        "Kâfiye — İbnü'l-Hâcib + şerh",
+        "el-Mufassal — Zemahşerî",
+        "Şerhu'l-Katr / Şüzûr seçkisi",
+    ],
+    "32_edebiyat — Edebiyat (~10)": [
+        "el-İkdü'l-Ferîd — İbn Abd Rabbih",
+        "el-Eğânî — Ebü'l-Ferec (seçme)",
+        "Makâmâtü'l-Harîrî",
+        "Makâmâtü'l-Hemedânî",
+        "Dîvânü'l-Mütenebbî (şerhleriyle)",
+        "el-Hamâse — Ebû Temmâm",
+        "Âdâbü'd-Dünyâ ve'd-Dîn — Mâverdî",
+        "el-Kâmil — Müberred",
+        "Zührü'l-Âdâb — Husrî",
+        "Muallakât şerhleri",
+    ],
+    "33_aruz — Arûz / kafiye (~10)": [
+        "el-Arûz — Halîl b. Ahmed hattı",
+        "el-Kâfî fi'l-Arûz — Hatîb Tibrîzî",
+        "el-Kavâfî — Ahfeş",
+        "Şerhu'l-Hazreciyye",
+        "el-Râmize + şerh",
+        "Muhtasarü'l-Kâfî",
+        "Nihâyetü'r-Râgıb seçkisi",
+        "Klasik arûz risâleleri",
+        "Osmanlı arûz risâleleri seçkisi",
+        "Kafiye risâleleri seçkisi",
+    ],
+    "34_divanlar — Divanlar (~10)": [
+        "Dîvânü Hassân b. Sâbit",
+        "Dîvânü Lebîd",
+        "Dîvânü İmri'i'l-Kays",
+        "Dîvânü Ebî Temmâm",
+        "Dîvânü'l-Bühtürî",
+        "Dîvânü'l-Mütenebbî",
+        "Dîvânü Ebî'l-Alâ (seçme)",
+        "Dîvânü'ş-Şâfiî (nispet)",
+        "Muallakât",
+        "Dîvânü İbnü'l-Fârıd (ihtiyatlı)",
+    ],
+    "35_belagat — Belâgat (~10)": [
+        "Miftâhu'l-Ulûm — Sekkâkî",
+        "Telhîsü'l-Miftâh — Hatîb Kazvînî",
+        "el-Îzâh — Kazvînî",
+        "Muhtasarü'l-Meânî — Teftâzânî",
+        "el-Mutavvel — Teftâzânî",
+        "Esâsü'l-Belâga — Zemahşerî",
+        "Delâilü'l-İ'câz — Cürcânî",
+        "Esrârü'l-Belâga — Cürcânî",
+        "el-Keşşâf (belâgat yönü) — Zemahşerî",
+        "Hâşiye / Abdülhakîm seçkisi",
+    ],
+    "36_cevami — Cevâmi / toplu eserler (~10)": [
+        "Kütüb-i Sitte mecmua baskıları (çekirdek)",
+        "Nevevî Mecmû' (toplu fıkıh)",
+        "İbn Kudâme Mugni (toplu)",
+        "Hidâye + şerh külliyatı",
+        "İhyâ külliyatı",
+        "Kastallânî Mevâhib külliyatı",
+        "İbn Abdilberr el-İstizkâr",
+        "Süyûtî el-Hâvî li'l-Fetâvâ",
+        "Mecmûu'l-Fetâvâ seçkisi",
+        "Klasik külliyat / cevâmi seçkisi",
+    ],
+    "37_fihrist — Fihrist / deliller (~10)": [
+        "el-Fihrist — İbnü'n-Nedîm",
+        "Keşfü'z-Zunûn — Kâtip Çelebi",
+        "Îzâhu'l-Meknûn — Bağdatlı İsmâil Paşa",
+        "Hediyyetü'l-Ârifîn — Bağdatlı İsmâil Paşa",
+        "Mu'cemü'l-Müellifîn — Kehhâle",
+        "el-A'lâm — Ziriklî",
+        "Fihristü İbn Hayr",
+        "Miftâhu's-Saâde — Taşköprüzâde",
+        "Program / fihrist risâleleri (Endülüs)",
+        "Klasik delil / fihrist seçkisi",
+    ],
+    "38_tip — Tıp (~10)": [
+        "el-Kânûn fi't-Tıb — İbn Sînâ",
+        "el-Hâvî — Râzî",
+        "Kitâbü'l-Mansûrî — Râzî",
+        "et-Tıbbü'n-Nebevî — Zehebî / Süyûtî seçkisi",
+        "Zâdü'l-Meâd (tıbbî kısımlar) — İbnü'l-Kayyim",
+        "Tazkiratü Üli'l-Elbâb — Dâvûd Antâkî",
+        "el-Mûcez — İbnü'n-Nefîs",
+        "Kâmilü's-Sinâa — Mecûsî",
+        "Takvîmü's-Sıhha — İbn Butlân",
+        "Klasik tıbb-ı nebevî / tıb risâleleri",
+    ],
+    "39_genel — Genel (~10)": [
+        "İhyâu Ulûmi'd-Dîn — Gazzâlî",
+        "Mukaddimetü İbn Haldûn",
+        "Miftâhu's-Saâde — Taşköprüzâde",
+        "Keşfü'z-Zunûn — Kâtip Çelebi",
+        "el-İtkân — Süyûtî",
+        "Tedrîbü'r-Râvî — Süyûtî",
+        "Riyâzü's-Sâlihîn — Nevevî",
+        "el-Ezkâr — Nevevî",
+        "Zâdü'l-Meâd — İbnü'l-Kayyim",
+        "el-Bidâye ve'n-Nihâye — İbn Kesîr",
+    ],
+    "40_diger — Diğer ilimler (~10)": [
+        "İhyâ (diğer ilimler kısımları)",
+        "Miftâhu's-Saâde (ilimler tasnifi)",
+        "Keşfü'z-Zunûn (ilim maddeleri)",
+        "Mukaddime (umrân)",
+        "Âdâbü'd-Dünyâ ve'd-Dîn",
+        "el-Hasâis (dil/ilim)",
+        "et-Tıbbü'n-Nebevî seçkisi",
+        "el-Hayevân — Câhiz (seçme)",
+        "Klasik ilimler ansiklopedisi seçkisi",
+        "Resâilü İhvâni's-Safâ (yalnız referans; ihtiyatlı)",
+    ],
+}
+
+
+def _p(doc: Document, text: str, *, bold: bool = False) -> None:
+    para = doc.add_paragraph()
+    run = para.add_run(text)
+    run.bold = bold
+    run.font.size = Pt(11)
+    run.font.name = "Calibri"
+
+
+def _bullets(doc: Document, items: list[str]) -> None:
+    for it in items:
+        para = doc.add_paragraph(style="List Number")
+        run = para.add_run(it)
+        run.font.size = Pt(11)
+        run.font.name = "Calibri"
+
+
+def main() -> None:
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    doc = Document()
+    for s in doc.sections:
+        s.top_margin = Cm(2)
+        s.bottom_margin = Cm(2)
+        s.left_margin = Cm(2.2)
+        s.right_margin = Cm(2.2)
+
+    doc.add_heading("Şamile — Derin Çekirdek Eser Listesi (ÖNERİ)", 0)
+    _p(doc, "Hazırlayan: Rüzgar geliştirme ortağı (Cursor) — Ümit & Gökçenur onayı bekliyor.")
+    _p(doc, "Tarih: 2026-11-12")
+    _p(doc, "Durum: SADECE ÖNERİ — onaylanmadan derinleştirme uygulanmaz.", bold=True)
+    _p(doc, "")
+    _p(doc, "Amaç", bold=True)
+    _p(
+        doc,
+        "40 Şamile başlığında her şeyi aynı derinlikte tutmak yerine: "
+        "ehli sünnetçe müteber kabul gören çekirdek eserleri derinleştirmek; "
+        "diğer eserleri yüzeyde bırakmak; kullanıcı net/kesin sorarsa yüzeydeki eserlere de inmek.",
+    )
+    _p(doc, "Kural önerisi", bold=True)
+    _p(doc, "• Ana dallar (akaid, tefsir, hadis, usûl, mezhep fıkıhları, siyer…): en az ~20 müteber eser.")
+    _p(doc, "• Diğer başlıklar: ~10 seçilmiş eser.")
+    _p(doc, "• Liste onayından sonra indekste bu eserlere öncelik / daha zengin pasaj; kalanlar hafif.")
+    _p(
+        doc,
+        "• Not: İsimler klasik müteber çizgidedir; kütüphanede birebir DB eşlemesi onay sonrası yapılır. "
+        "Bazı maddelerde «seçkisi / hattı / ihtiyatlı» notu vardır — sen çıkarabilir veya değiştirebilirsin.",
+    )
+
+    doc.add_heading("1) Ana dallar — derin çekirdek (≈20 eser)", 1)
+    _p(doc, "Bu başlıklarda Rüzgar sohbette öncelikle derin baksın.")
+    for title, items in ANA.items():
+        doc.add_heading(title, 2)
+        _p(doc, f"Önerilen sayı: {len(items)}")
+        _bullets(doc, items)
+
+    doc.add_heading("2) Diğer başlıklar — seçilmiş çekirdek (≈10 eser)", 1)
+    _p(doc, "Bu başlıklarda seçilmiş eserler derin; kalanlar yüzey. Net soruda yine inilebilsin.")
+    for title, items in DIGER.items():
+        doc.add_heading(title, 2)
+        _p(doc, f"Önerilen sayı: {len(items)}")
+        _bullets(doc, items)
+
+    doc.add_heading("3) Onay kutusu (Mimar)", 1)
+    _p(doc, "□ Listeyi olduğu gibi onaylıyorum")
+    _p(doc, "□ Şu eserleri çıkar: …")
+    _p(doc, "□ Şu eserleri ekle: …")
+    _p(doc, "□ Ana dallarda sayı 20 kalsın / artsın / azalsın")
+    _p(doc, "□ Onaydan sonra uygulamaya geç (indeks önceliği + derin pasaj)")
+    _p(doc, "")
+    _p(doc, "Not: Bu belge öneridir. «yap / evet / onay» demeden derinleştirme kodu yazılmaz.", bold=True)
+
+    doc.save(OUT)
+    print(f"WROTE {OUT} ({OUT.stat().st_size} bytes)")
+
+
+if __name__ == "__main__":
+    main()

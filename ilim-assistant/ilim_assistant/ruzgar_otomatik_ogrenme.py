@@ -358,6 +358,13 @@ def _should_auto_learn_turn(
     if "karakterize eden önemli olaylar" in a and "lale" in _norm(u):
         return False
     try:
+        from ilim_assistant.ruzgar_metin_sadakati import is_auto_learn_poison
+
+        if is_auto_learn_poison(a):
+            return False
+    except Exception:
+        pass
+    try:
         from ilim_assistant.ruzgar_egitim import is_invalid_egitim_pair
 
         if is_invalid_egitim_pair(u, a):

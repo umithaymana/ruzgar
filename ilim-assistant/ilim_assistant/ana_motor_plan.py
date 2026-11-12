@@ -1851,6 +1851,15 @@ def maybe_gundelik_instant_reply(
     """B3b — net sohbet (nasılsın/selam) için Ollama/Gemini beklemeden kısa yanıt."""
     if mode_norm not in ("genel", "uretim", "gelisim"):
         return None
+    # Sohbet önce (Mimar 2026-11-12): selam/nasılsın şablon veya hafıza kartı yok —
+    # dinle, anla, LLM ile doğal cevap.
+    try:
+        from ilim_assistant.ruzgar_sohbet_once import sohbet_once_enabled
+
+        if sohbet_once_enabled():
+            return None
+    except Exception:
+        pass
     try:
         from ilim_assistant.ruzgar_tek_beyin_karsilama import try_session_resume_greeting
 

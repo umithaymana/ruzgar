@@ -2420,6 +2420,32 @@ def prepare_turn(
                 )
         except Exception:
             _kutup_hard = False
+        # Sohbet önce: tüm konularda doğal bilgi dili (konu kilidi yok)
+        try:
+            from ilim_assistant.ruzgar_sohbet_once import (
+                prefer_sohbet,
+                sohbet_once_bilgi_dil_directive,
+                sohbet_once_selam_dinle_directive,
+            )
+
+            if prefer_sohbet(msg) and m in ("genel", "uretim", "gelisim", "okuma", "ilim"):
+                user_payload += sohbet_once_bilgi_dil_directive()
+                user_payload += sohbet_once_selam_dinle_directive(msg)
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ruzgar_metin_sadakati import fidelity_directive
+
+            user_payload += fidelity_directive(msg)
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.ruzgar_samile_derin_cekirdek import derin_okuma_directive
+
+            if m in ("genel", "uretim", "gelisim", "okuma", "ilim"):
+                user_payload += derin_okuma_directive()
+        except Exception:
+            pass
         if not _kutup_hard:
             try:
                 from ilim_assistant.ruzgar_dogal_sohbet_faz91 import (

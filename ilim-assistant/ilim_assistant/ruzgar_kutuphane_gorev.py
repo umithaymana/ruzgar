@@ -492,9 +492,13 @@ def grounding_directive(*, want_source: bool, source_count: int) -> str:
         f"Bağlamda **{source_count}** yerel kütüphane parçası var ([K1]…). "
         "Bunlar Rüzgar indeksindeki eserlerden gelir (ilim, bilgisayar, fen, ayıklama — "
         "hangi raf doluysa). Cevabını **yalnızca bunlara** dayandır.\n",
-        "- Bağlamda olmayan alıntı, sayı, sayfa, cilt, yazar, hadis/ayet metni **uydurma**.\n",
+        "- Üslup: Ümit abi ile **sohbet eder gibi** anlat. Ders kitabı, kart okuma, "
+        "«kütüphaneden okuduğum pasaj şöyle» şablonu yok; doğrudan konuya gir.\n",
+        "- Bağlamda olmayan alıntı, sayı, sayfa, cilt, yazar, hadis/ayet, boy/özel isim **uydurma**.\n",
+        "- Özel isimleri bağlamdaki harf harf yaz (örn. Kınık ≠ Sınık); yanlış okuma yasak.\n",
         "- Bağlam soruyu karşılamıyorsa öğret cümlesini kullan; genel model bilginle doldurma.\n",
         "- Yarın eklenecek eserler de aynı kurala tabidir: yalnızca bağlamdaki pasaj.\n",
+        "- Derin çekirdek eserlerde sayfa/satır atlama yok: oku → analiz et → sohbet dilinde anlat.\n",
     ]
     if want_source:
         lines.append(
@@ -503,7 +507,7 @@ def grounding_directive(*, want_source: bool, source_count: int) -> str:
         )
     else:
         lines.append(
-            "- Kullanıcı kaynak istemedi: müteber pasajdan **doğal anlat veya özetle**; "
+            "- Kullanıcı kaynak istemedi: müteber pasajdan **doğal sohbet dilinde anlat**; "
             "zorunlu [K1] listesi / «Güven:» satırı yazma. Uydurma yine yasak.\n"
         )
     return "".join(lines)

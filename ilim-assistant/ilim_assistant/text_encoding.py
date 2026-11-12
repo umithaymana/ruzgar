@@ -249,6 +249,12 @@ def finalize_assistant_reply(raw: str, *, channel: str = "") -> str:
     t = repair_utf8_mojibake(raw or "")
     t = strip_answer_scaffold(t)
     t = scrub_leaked_instructions(t)
+    try:
+        from ilim_assistant.ruzgar_metin_sadakati import scrub_proper_name_poison
+
+        t = scrub_proper_name_poison(t)
+    except Exception:
+        pass
     t = strip_wake_greeting_echo(t)
     t = strip_hafiza_robot_phrasing(t)
     t = strip_web_capability_noise(t)
@@ -475,8 +481,29 @@ def scrub_leaked_instructions(text: str) -> str:
             continue
         if re.match(r"(?i)^(?:niyet|güven|guven)\s*:", st):
             continue
+        # İdrak sızıntısı — sohbet cevabına karışmasın
+        if "öncelik sırası" in low or "oncelik sirasi" in low:
+            continue
+        if "yerel bilgi bankası" in low or "yerel bilgi bankasi" in low:
+            continue
+        if "(rag)" in low and ("internet" in low or "özeti" in low or "ozeti" in low):
+            continue
+        if low.startswith("haberdar oldum"):
+            continue
         out_lines.append(ln)
     t = "\n".join(out_lines).strip()
+    # Paragraf başı sızıntı (tek satırda birleşik cevap)
+    t = re.sub(
+        r"(?im)^[ \t]*(?:Bu tur için\s+)?öncelik sırası\s*[—\-–:].*?(?=\n|$)",
+        "",
+        t,
+    )
+    t = re.sub(
+        r"(?im)^[ \t]*Haberdar oldum(?:\s+ki)?[^.!\n]*[.!]?\s*",
+        "",
+        t,
+    )
+    t = re.sub(r"\n{3,}", "\n\n", t).strip()
     # Tek paragraf sızıntısı (satır kırığı yokken)
     if t and "bu soruya" in t.lower() and "yanıt ver" in t.lower() and len(t) < 400:
         if "kaynar" not in t.lower() and "nedir" not in t.lower():

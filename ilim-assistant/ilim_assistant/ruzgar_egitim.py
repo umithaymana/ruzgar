@@ -260,6 +260,14 @@ def lookup_greeting_egitim_reply(message: str) -> Optional[str]:
     """
     Düz «selam» / «merhaba» — hafızadaki «selam rüzgar» vb. öğretilmiş karşılamayı da kullan.
     """
+    # Sohbet önce: hazır selam kartı yok — dinleyip doğal cevap
+    try:
+        from ilim_assistant.ruzgar_sohbet_once import sohbet_once_enabled
+
+        if sohbet_once_enabled():
+            return None
+    except Exception:
+        pass
     if not _egitim_enabled() or not _is_plain_greeting_message(message):
         return None
     try:

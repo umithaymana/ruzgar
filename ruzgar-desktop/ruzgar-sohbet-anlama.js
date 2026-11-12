@@ -5,7 +5,7 @@
 (function ruzgarSohbetAnlama(global) {
   "use strict";
 
-  const VERSION = "ruzgar-sohbet-anlama-v5-kutuphane-ilim-2026-11-12";
+  const VERSION = "ruzgar-sohbet-anlama-v6-sohbet-once-2026-11-12";
 
   /** @type {Record<string, any>|null} */
   let deps = null;
@@ -503,6 +503,29 @@
     return false;
   }
 
+  /** Sohbet önce: yalnız net iş emri motor/masa çalsın */
+  function isNetIsEmri(text, understanding, ctx) {
+    const raw = String(text || "").trim();
+    if (!raw) return false;
+    if (looksLikeKutuphaneOrIlim(raw)) return false;
+    const low = fold(raw);
+    if (/^eylem\s/.test(low)) return true;
+    if (/^(?:gorev|görev|is|iş|yap)\s*:/i.test(raw)) return true;
+    if (
+      /^(?:tamam[,.]?\s+)?(?:yap|uygula|kaydet|baslat|başlat|basla)\s*[.!]*$/.test(low)
+    ) {
+      return true;
+    }
+    if (/^(?:bunu|onu|sunu|şunu)\s+(?:yap|uygula|kaydet)\b/.test(low)) return true;
+    if (/^(?:yapma|yap\s+ma|iptal|vazgec|vazgeç)\s*[.!]*$/.test(low)) return true;
+    if (/\b(?:dosyaya\s+yaz|belgeye\s+yaz|hucreye\s+yaz|dosyaya\s+ekle)\b/.test(low)) {
+      return true;
+    }
+    if (/\b(?:programlamada|kodda|atolyede|atölyede)\s*:/.test(low)) return true;
+    if (hasExplicitMotorSignal(raw, understanding, ctx)) return true;
+    return false;
+  }
+
   /**
    * Net motor komutu mu, yoksa doğal sohbet mi?
    * @returns {{ try: boolean, reason: string, preferChat?: boolean }}
@@ -516,6 +539,11 @@
     const resolved = String(understanding?.text || raw).trim();
     if (looksLikeKutuphaneOrIlim(raw) || looksLikeKutuphaneOrIlim(resolved)) {
       return { try: false, reason: "kutuphane_ilim", preferChat: true };
+    }
+
+    // Varsayılan sohbet — net iş emri yoksa LLM / sohbet
+    if (!isNetIsEmri(raw, understanding, ctx) && !isNetIsEmri(resolved, understanding, ctx)) {
+      return { try: false, reason: "sohbet_once", preferChat: true };
     }
 
     const explicit =
@@ -634,6 +662,7 @@
     inferMotorHint,
     looksLikeKutuphaneOrIlim,
     looksLikeNaturalConversation,
+    isNetIsEmri,
     hasExplicitMotorSignal,
     shouldTryInstantMotor,
   };

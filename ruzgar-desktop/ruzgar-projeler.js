@@ -832,6 +832,14 @@
       const low = komutGovdesi(raw);
       if (!low || soruMu(low) || !emirGibi(low)) return null;
       if (kutuphaneBilgiMi(low)) return null;
+      // Sohbet önce: yalnız açık masa/dosya kalıbında «yapmadım» de; «tamam yap» sohbete kalsın
+      const masaKalip =
+        /\b(?:dosyaya|belgeye|hucreye|sayfaya|klasore)\s+(?:yaz|ekle)\b/.test(low) ||
+        /\b(?:sayfa\s+yap|projeyi\s+goster|klasordekileri|belgeye\s+bak)\b/.test(low) ||
+        /\bsayfasina\b/.test(low) ||
+        /\sdosyasina\b/.test(low) ||
+        /\ssayfasi\s+yap\b/.test(low);
+      if (!masaKalip) return null;
       if (sozlukBul(low)) return null;
       if (/^(?:projeyi|proje|siteyi|vitrini)\s+(?:goster|ac)\b/.test(low)) return null;
       if (kodAjaniGoreviMi(low)) return null;
