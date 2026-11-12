@@ -571,21 +571,45 @@ def extract_audio_for_stt(
         raise FileNotFoundError(src)
     out_path = Path(output_wav)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    argv = ["-y", "-i", str(src), "-vn"]
+    out = str(out_path.resolve())
+    dur_args: list[str] = []
     if max_duration_sec is not None and max_duration_sec > 0:
-        argv.extend(["-t", f"{float(max_duration_sec):.3f}"])
-    argv.extend(
-        [
-            "-acodec",
-            "pcm_s16le",
-            "-ar",
-            str(int(sample_rate)),
-            "-ac",
-            "1",
-            str(out_path.resolve()),
-        ]
-    )
-    run_ffmpeg_args(argv, timeout_sec=timeout_sec)
+        dur_args = ["-t", f"{float(max_duration_sec):.3f}"]
+    pcm = [
+        "-vn",
+        *dur_args,
+        "-acodec",
+        "pcm_s16le",
+        "-ar",
+        str(int(sample_rate)),
+        "-ac",
+        "1",
+        out,
+    ]
+    # Mobil MediaRecorder webm bazen kırık gelir; birkaç deneme
+    attempts: list[list[str]] = [
+        ["-y", "-i", str(src), *pcm],
+        ["-y", "-f", "webm", "-i", str(src), *pcm],
+        ["-y", "-f", "matroska", "-i", str(src), *pcm],
+        ["-y", "-fflags", "+genpts+igndts+discardcorrupt", "-i", str(src), *pcm],
+    ]
+    last_err: Exception | None = None
+    for argv in attempts:
+        try:
+            run_ffmpeg_args(argv, timeout_sec=timeout_sec)
+            if out_path.is_file() and out_path.stat().st_size > 64:
+                return
+        except Exception as e:  # noqa: BLE001 — deneme sırası
+            last_err = e
+            try:
+                out_path.unlink(missing_ok=True)
+            except OSError:
+                pass
+    tip = str(last_err or "ffmpeg dönüşüm başarısız")
+    # Tam ffmpeg sürüm dökümünü kullanıcıya taşıma
+    if "ffmpeg version" in tip.lower():
+        tip = "Mobil webm okunamadı — kaydı biraz daha uzun tutun veya WAV gönderin."
+    raise RuntimeError(tip[:500])
 
 
 def concat_audio_files(

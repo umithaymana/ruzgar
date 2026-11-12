@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Rüzgar" />
+  <link rel="manifest" href="manifest.webmanifest?v=5" />
+  <link rel="icon" href="icon-192.png?v=5" type="image/png" sizes="192x192" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=5" />
+  <link rel="icon" href="favicon-32.png?v=5" type="image/png" sizes="32x32" />
+  <title>Rüzgar Mobil</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <link rel="stylesheet" href="app.css?v=16" />
+</head>
+<body>
+  <div id="installBar" class="install-bar hidden">
+    <span>Rüzgar’ı ana ekrana / masaüstüne ekle</span>
+    <button type="button" id="btnInstall" class="primary tiny">Kur</button>
+    <button type="button" id="btnInstallDismiss" class="ghost-inline tiny">Sonra</button>
+  </div>
+  <div id="app">
+    <header class="top-head">
+      <div class="top-head-text">
+        <h1>RÜZGAR</h1>
+        <p class="hint">İnce istemci · beyin PC’de · Ümit &amp; Gökçenur</p>
+        <p class="hint install-hint" id="installHint"></p>
+      </div>
+      <button type="button" id="btnReload" class="ghost-inline reload-btn" title="Sayfayı yenile">Yenile</button>
+    </header>
+
+    <section id="gate" class="card">
+      <label>Kapı URL
+        <input id="baseUrl" type="url" autocomplete="off" />
+      </label>
+      <div class="tabs">
+        <button type="button" id="tabLogin" class="tab on">Giriş</button>
+        <button type="button" id="tabReg" class="tab">Kayıt</button>
+        <button type="button" id="tabPanel" class="tab">Panel</button>
+      </div>
+      <div id="loginBox">
+        <form id="loginForm" autocomplete="on">
+          <label>Kullanıcı <input id="user" name="username" autocomplete="username" /></label>
+          <label>Şifre <input id="pass" name="password" type="password" autocomplete="current-password" /></label>
+          <label>Cihaz türü
+            <select id="deviceKind" name="device_kind" autocomplete="off">
+              <option value="pc">PC</option>
+              <option value="telefon">Telefon</option>
+              <option value="tablet">Tablet</option>
+              <option value="dizustu">Dizüstü</option>
+            </select>
+          </label>
+          <label>Cihaz adı <input id="device" name="device_name" autocomplete="organization" placeholder="örn. Ümit PC / Ümit telefon" /></label>
+          <p class="hint" id="loginHint">Yönetici ilk giriş: <b>Giriş</b> sekmesi · kullanıcı <code>mimar</code> · Kayıt değil. Şifreyi bilmiyorsan PC’den sıfırlarız.</p>
+          <button type="submit" id="btnLogin" class="primary">Bir kez giriş</button>
+        </form>
+      </div>
+      <div id="regBox" class="hidden">
+        <form id="regForm" autocomplete="on">
+          <label>Ad <input id="ad" name="given-name" autocomplete="given-name" /></label>
+          <label>Soyad <input id="soyad" name="family-name" autocomplete="family-name" /></label>
+          <label>Telefon <input id="tel" name="tel" type="tel" autocomplete="tel" inputmode="tel" /></label>
+          <label>Kullanıcı <input id="regUser" name="username" autocomplete="username" /></label>
+          <label>Şifre <input id="regPass" name="new-password" type="password" autocomplete="new-password" /></label>
+          <p class="hint">Tarayıcı / şifre yöneticisi otomatik doldurabilir; son kayıt alanları da hatırlanır.</p>
+          <button type="submit" id="btnReg" class="primary">Kayıt iste (kod C)</button>
+          <p id="regCode" class="code"></p>
+        </form>
+      </div>
+      <div id="panelBox" class="hidden">
+        <p class="hint">Yönetici paneli · bekleyen / oturum / üçlü cihaz / motor</p>
+        <div class="panel-toolbar">
+          <button type="button" id="btnRefreshPanel">Yenile</button>
+          <button type="button" id="btnWol" class="ghost-inline">WoL dene</button>
+        </div>
+        <div id="panelStatus" class="panel-block"></div>
+        <h3 class="panel-h">Yönetici üçlü</h3>
+        <div id="panelDevices" class="panel-grid"></div>
+        <h3 class="panel-h">Bekleyen kayıtlar</h3>
+        <div id="panelPending" class="panel-list"></div>
+        <h3 class="panel-h">Oturumlar</h3>
+        <div id="panelSessions" class="panel-list"></div>
+        <h3 class="panel-h">Kullanıcılar / motor</h3>
+        <div id="panelUsers" class="panel-list"></div>
+        <pre id="panelOut" class="hidden"></pre>
+      </div>
+      <p id="gateMsg" class="msg"></p>
+    </section>
+
+    <section id="chatWrap" class="hidden">
+      <div class="tabs chat-nav" id="chatNav">
+        <button type="button" id="btnNavChat" class="tab on">Sohbet</button>
+        <button type="button" id="btnNavPanel" class="tab">Panel</button>
+        <button type="button" id="btnNavReload" class="tab">Yenile</button>
+        <button type="button" id="btnNavLogout" class="tab">Çıkış</button>
+      </div>
+      <div id="who"></div>
+      <div id="chatView">
+        <div id="chat"></div>
+        <div class="composer">
+          <textarea id="input" rows="2" placeholder="Mesaj…"></textarea>
+          <button type="button" id="btnSend" class="primary">Gönder</button>
+        </div>
+        <div class="composer voice-row">
+          <button type="button" id="btnMic" class="ghost mic-hold" aria-label="Basılı tut konuş">
+            <span class="mic-label">🎙 Basılı tut</span>
+          </button>
+          <button type="button" id="btnLive" class="primary">Sürekli sohbet</button>
+        </div>
+        <div class="composer voice-row">
+          <button type="button" id="btnVoiceSend" class="ghost">Sesli tur (yazı)</button>
+        </div>
+        <p id="meta" class="hint">Basılı tut veya Sürekli sohbet: konuş → sus → cevap. Sürekli açıkken ekran uyanık tutulur (tam kilitte tarayıcı mikrofonu kesebilir).</p>
+      </div>
+      <div id="panelView" class="hidden">
+        <p class="hint">Yönetici paneli · bekleyen / oturum / cihaz / motor</p>
+        <div class="panel-toolbar">
+          <button type="button" id="btnRefreshPanel2">Yenile</button>
+          <button type="button" id="btnWol2" class="ghost-inline">WoL dene</button>
+        </div>
+        <div id="panelStatus2" class="panel-block"></div>
+        <h3 class="panel-h">Yönetici üçlü</h3>
+        <div id="panelDevices2" class="panel-grid"></div>
+        <h3 class="panel-h">Bekleyen kayıtlar</h3>
+        <div id="panelPending2" class="panel-list"></div>
+        <h3 class="panel-h">Oturumlar</h3>
+        <div id="panelSessions2" class="panel-list"></div>
+        <h3 class="panel-h">Kullanıcılar / motor</h3>
+        <div id="panelUsers2" class="panel-list"></div>
+      </div>
+    </section>
+  </div>
+  <script src="app.js?v=18"></script>
+</body>
+</html>

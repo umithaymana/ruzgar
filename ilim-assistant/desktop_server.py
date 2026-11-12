@@ -453,7 +453,14 @@ if (_MOBIL_PWA_DIR / "index.html").is_file():
     def mobil_pwa_index():
         from fastapi.responses import FileResponse as _FR
 
-        return _FR(_MOBIL_PWA_DIR / "index.html")
+        # PWA/Edge app eski HTML cache'lemesin (cihaz türü PC vb. güncellemeler)
+        return _FR(
+            _MOBIL_PWA_DIR / "index.html",
+            headers={
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+            },
+        )
 
     app.mount(
         "/mobil",

@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "purpose": "defense-only signature hints for Rüzgar Blue Team",
+  "rules": [
+    {
+      "id": "ps_encoded_command",
+      "severity": "high",
+      "description": "PowerShell EncodedCommand kalıbı (tespit)",
+      "strings": ["-EncodedCommand", "-enc ", "FromBase64String"]
+    },
+    {
+      "id": "wmi_persist_hint",
+      "severity": "medium",
+      "description": "WMI kalıcılık ipucu (tespit)",
+      "strings": ["__EventFilter", "CommandLineEventConsumer", "PermanentEvent"]
+    },
+    {
+      "id": "suspicious_download_cradle",
+      "severity": "high",
+      "description": "İndirme beşiği ipucu (tespit)",
+      "strings": [
+        "Invoke-WebRequest",
+        "DownloadString",
+        "DownloadFile",
+        "re:(?i)curl\\s+.*\\|\\s*(ba)?sh"
+      ]
+    },
+    {
+      "id": "office_macro_auto",
+      "severity": "medium",
+      "description": "Ofis makro otomatik çalıştırma ipucu",
+      "strings": ["AutoOpen", "Auto_Open", "Document_Open", "Workbook_Open"]
+    },
+    {
+      "id": "ransom_note_marker",
+      "severity": "critical",
+      "description": "Fidye notu kalıbı (tespit)",
+      "strings": [
+        "YOUR FILES HAVE BEEN ENCRYPTED",
+        "bitcoin wallet",
+        "decrypt your files",
+        "re:(?i)pay\\s+.*ransom"
+      ]
+    },
+    {
+      "id": "shadow_copy_delete",
+      "severity": "high",
+      "description": "Gölge kopya silme komutu ipucu (tespit)",
+      "strings": ["vssadmin delete shadows", "wmic shadowcopy delete", "bcdedit /set"]
+    },
+    {
+      "id": "registry_run_key",
+      "severity": "medium",
+      "description": "Run anahtarı kalıcılık ipucu",
+      "strings": [
+        "Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+        "CurrentVersion\\RunOnce"
+      ]
+    },
+    {
+      "id": "hex_mz_stub",
+      "severity": "high",
+      "description": "Dosya içinde gömülü MZ stub",
+      "strings": ["hex:4d5a9000"]
+    }
+  ]
+}

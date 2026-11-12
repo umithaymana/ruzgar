@@ -299,7 +299,7 @@ def login(
     if _hash_pw(sifre, str(user.get("salt") or "")) != user.get("pw_hash"):
         return {"ok": False, "error": "şifre yanlış"}
     kind = (device_kind or "").strip().lower().replace("ı", "i")
-    if kind in ("dizüstü", "laptop", "pc"):
+    if kind in ("dizüstü", "laptop", "pc", "masaüstü", "masaustu", "desktop"):
         kind = "dizustu"
     if kind not in _DEVICE_KINDS:
         # isimden tahmin

@@ -1,8 +1,15 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-11-03 — **boot 7 ara resmileşti** (Mimar `evet`) · P–M tamam · S4 ✅ · güvenli bölge alt taban.
+**Son güncelleme:** 2026-11-12 — GÜVENLİ LİMAN mühür (mobil+ses); sırada sahne.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
+
+### Mimar not — Mobil PWA (2026-11-12) ← **dilim mühürlü**
+- PWA **telefonda ve masaüstünde** diğer Rüzgar araçları gibi **ikon** (Windows kısayolu / ana ekran).
+- Mağaza şart değil; beyin PC’de; kapı `8779` · mic için HTTPS `8443`.
+- **Sıra:** mobil+ses **bitti** → sahne ikinci.
+- **Yapıldı (2026-11-12 «yap»):** `/mobil/` PWA (manifest 192/512 PNG · install bar · SW) · masaüstü `Rüzgar Mobil.lnk` (`scripts/Masaustune_Mobil_Kisayol.ps1`, Chrome `--app`) · giriş/sohbet/panel · Wi‑Fi + Tailscale · HTTPS köprü · basılı tut Whisper · **Sürekli sohbet** (VAD) · Wake Lock · kayıt autocomplete. Ana yüz kilidine dokunulmadı.
+- **Sırada:** sahne cila. Cursor↔telefon köprüsü ve ekran kapalı native ses sonraya.
 
 ### YOL HARİTASI — tamamlandı
 
@@ -38,9 +45,19 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 **M4 (2026-11-03):** Mimar atölye restore/bilgi + hub erken · Faz M mühür **YEŞİL** · `ilim-assistant/docs/M4_MIMAR_BASELINE_2026-11-03.md` · `M4_FAZ_M_MUHUR_2026-11-03.md`.
 **Temizlik (2026-11-03):** yol haritası + FROZEN silindi (Mimar `evet`).
 
-### GÜVENLİ BÖLGE — 2026-10-22 (Mimar onayı) ← **AKTİF ALT TABAN**
+### GÜVENLİ LİMAN — 2026-11-12 (Mimar onayı) ← **AKTİF KAYIT NOKTASI**
 
-**İlke:** Buradan geri dönüş güvenli. Push `origin/main` ile hizalı kayıt.
+**İlke:** Tüm Rüzgar için son güvenli dönüş. Commit + push sonrası buradan geri gelinir.
+
+- Dal: `cursor/sohbet-akicilik-a-f` (üstünde sohbet akıcılık A–F + mobil PWA/ses).
+- Mobil: `static/mobil-pwa` · `ruzgar_https_proxy.py` · `Masaustune_Mobil_Kisayol.ps1` · `desktop_server` `/mobil` cache · `ruzgar_mobil_oturum` · `video_ffmpeg` STT dayanıklılık.
+- Canlı: LAN `8779/mobil` · Tailscale IP · HTTPS `8443` mic · sürekli sohbet + Wake Lock.
+- **Hariç (bilerek commit yok):** `knowledge/learned` · nebula incremental yığını · `tools/jdk17` · `.ruzgar/certs` · arşiv dumanı.
+- Önceki aktif alt taban: 2026-10-22 (aşağıda) — hâlâ geçerli zemin.
+
+### GÜVENLİ BÖLGE — 2026-10-22 (Mimar onayı) ← **önceki alt taban**
+
+**İlke:** Buradan geri dönüş güvenli. Push `origin/main` ile hizalı eski kayıt.
 
 - **D1–D6** araç sözleşmesi: patch kurtarma, mandate, BOOT=0 KPI, heal≤%35 pencere, verify∧agent_ok, hub niyet.
 - **İnceleme:** verify_ok zinciri (faz14/65/88), @@patch yazım sayımı (faz38/40), ses `yap`/`yapay` tuzağı.
