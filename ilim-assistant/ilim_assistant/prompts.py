@@ -252,6 +252,18 @@ def pick_system(coding_mode: bool, mode_norm: str | None = None) -> str:
         return SES_SYSTEM
     if m == "video":
         return VIDEO_SYSTEM
+    # D+E: ChatGPT tarzında kısa sistem (8B/Gemini dikkat bütçesi)
+    if sohbet_tarz_chatgpt() and m in ("", "genel", "uretim", "gelisim", "hizli"):
+        try:
+            from ilim_assistant.ruzgar_sohbet_akicilik import (
+                compact_prompt_enabled,
+                compact_system_prompt,
+            )
+
+            if compact_prompt_enabled():
+                return compact_system_prompt(include_profil=True)
+        except Exception:
+            pass
     voice = "" if sohbet_tarz_chatgpt() else _bilge_voice_suffix()
     return (
         ASSISTANT_SYSTEM

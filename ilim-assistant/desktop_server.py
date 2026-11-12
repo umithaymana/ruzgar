@@ -566,6 +566,14 @@ def _sync_startup_warmups() -> None:
             "false",
             "no",
         ):
+            try:
+                from ilim_assistant.ruzgar_sohbet_akicilik import (
+                    apply_preferred_chat_model_to_env,
+                )
+
+                apply_preferred_chat_model_to_env()
+            except Exception:
+                pass
             from ilim_assistant.llm_ollama import preload_primary_chat_model
 
             preload_primary_chat_model()

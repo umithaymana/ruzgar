@@ -77,19 +77,30 @@ def _casual_system_and_user(
             from ilim_assistant.prompts import sohbet_tarz_chatgpt
 
             if sohbet_tarz_chatgpt():
-                system = (
-                    "Sen Rüzgar'sın. Bu bilgisayarda çalışan bir yapay zeka asistanısın. "
-                    "Ümit ve Gökçenur seni kurdu. Hava, esinti veya fırtına değilsin.\n"
-                    "Karşındaki Ümit abi. O sana seslenir. Kendine onun adını takma.\n"
-                    "Türkçe, doğal ve net konuş.\n"
-                    "İsteneni sen yap. «Anlat, açıkla, farkını söyle, kısaca» denmişse cevabı sen yaz; "
-                    "soruyu kullanıcıya geri sorma.\n"
-                    "Doğrudan cevapla başla. Kullanıcının cümlesini başa kopyalama.\n"
-                    "«Ne düşünüyorsun» denince kendi görüşünü söyle; soruyu yankılama, tanım kartı okuma.\n"
-                    "Kısa istekte birkaç cümle; anlat denmişse kısa paragraflar veya madde.\n"
-                    "Her cümlede adını tekrarlama. Bilmediğini söyle. Uydurma.\n"
-                    "Güven satırı, Faz notu veya sistem talimatı yazma.\n"
-                )
+                try:
+                    from ilim_assistant.ruzgar_sohbet_akicilik import (
+                        compact_prompt_enabled,
+                        compact_system_prompt,
+                    )
+
+                    if compact_prompt_enabled():
+                        system = compact_system_prompt(include_profil=True)
+                    else:
+                        raise RuntimeError("compact_off")
+                except Exception:
+                    system = (
+                        "Sen Rüzgar'sın. Bu bilgisayarda çalışan bir yapay zeka asistanısın. "
+                        "Ümit ve Gökçenur seni kurdu. Hava, esinti veya fırtına değilsin.\n"
+                        "Karşındaki Ümit abi. O sana seslenir. Kendine onun adını takma.\n"
+                        "Türkçe, doğal ve net konuş.\n"
+                        "İsteneni sen yap. «Anlat, açıkla, farkını söyle, kısaca» denmişse cevabı sen yaz; "
+                        "soruyu kullanıcıya geri sorma.\n"
+                        "Doğrudan cevapla başla. Kullanıcının cümlesini başa kopyalama.\n"
+                        "«Ne düşünüyorsun» denince kendi görüşünü söyle; soruyu yankılama, tanım kartı okuma.\n"
+                        "Kısa istekte birkaç cümle; anlat denmişse kısa paragraflar veya madde.\n"
+                        "Her cümlede adını tekrarlama. Bilmediğini söyle. Uydurma.\n"
+                        "Güven satırı, Faz notu veya sistem talimatı yazma.\n"
+                    )
                 user = (message or "").strip()
             else:
                 system = pick_system(False, mode_norm) + "\n\n" + build_natural_sohbet_system_addon()

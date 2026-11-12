@@ -1362,6 +1362,21 @@ def prepare_turn(
     if turn_plan is not None and m in ("genel", "uretim", "gelisim"):
         ilim_rag = bool(turn_plan.use_ilim_rag)
 
+    # C: selam/görüş/doğal sohbet — ince boru (RAG/web minimum)
+    _thin_pipe = False
+    try:
+        from ilim_assistant.ruzgar_sohbet_akicilik import should_thin_pipeline
+
+        _thin_pipe = should_thin_pipeline(
+            msg, m, turn_plan, history=history
+        )
+        if _thin_pipe:
+            ilim_rag = False
+            if orchestration_out is not None:
+                orchestration_out["thin_pipe"] = True
+    except Exception:
+        _thin_pipe = False
+
     search_msg = msg
     if turn_plan is not None:
         try:
@@ -1390,7 +1405,7 @@ def prepare_turn(
         turn_plan is not None
         and m in ("genel", "uretim", "gelisim")
         and not bool(getattr(turn_plan, "use_ilim_rag", True))
-    )
+    ) or bool(_thin_pipe)
     if skip_rag_for_plan or m in _NO_RAG_MODES or coding_mode:
         pass
     elif weather_q:
@@ -1767,6 +1782,15 @@ def prepare_turn(
         web_on = False
     if me_suppress_web:
         web_on = False
+    # C: ince boru — canlı/web zorunlu niyet yoksa web kapalı
+    if _thin_pipe and not weather_q:
+        try:
+            from ilim_assistant.ruzgar_web_arastirma_pro import should_force_web_despite_local
+
+            if not should_force_web_despite_local(msg, turn_plan):
+                web_on = False
+        except Exception:
+            web_on = False
     if not use_web:
         web_on = False
 
@@ -2489,6 +2513,24 @@ def prepare_turn(
                     web_present=_web_present,
                     soft_natural=True,
                 )
+        # F: önce insan cevabı, sonra gerekirse kaynaklı netleştirme
+        try:
+            from ilim_assistant.ruzgar_sohbet_akicilik import iki_asama_directive
+
+            _bilgi = False
+            try:
+                _bilgi = bool(
+                    turn_plan is not None
+                    and getattr(turn_plan, "primary", "") in ("bilgi", "bilim")
+                )
+            except Exception:
+                _bilgi = False
+            user_payload += iki_asama_directive(
+                has_sources=bool(hits or blocks or _web_present),
+                bilgi_turu=_bilgi,
+            )
+        except Exception:
+            pass
     except Exception:
         pass
 

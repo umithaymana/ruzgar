@@ -488,6 +488,12 @@ def enrich_health_build(build: dict[str, Any] | None) -> dict[str, Any]:
     out = dict(build or {})
     out["dogal_sohbet_faz91"] = dogal_sohbet_enabled()
     out["dogal_budget_sec"] = natural_turn_budget_sec()
+    try:
+        from ilim_assistant.ruzgar_sohbet_akicilik import public_meta as akicilik_meta
+
+        out["sohbet_akicilik"] = akicilik_meta()
+    except Exception:
+        pass
     return out
 
 

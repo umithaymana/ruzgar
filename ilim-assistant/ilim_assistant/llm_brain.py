@@ -132,6 +132,12 @@ def _programlama_chain_ids() -> list[str]:
         ids = local_first_brain_chain(ids)
     except Exception:
         pass
+    try:
+        from ilim_assistant.ruzgar_sohbet_akicilik import strip_gemini_for_programlama
+
+        ids = strip_gemini_for_programlama(ids)
+    except Exception:
+        pass
     return ids
 
 
@@ -322,6 +328,12 @@ def _profile_denge() -> BrainEndpoint | None:
         or os.environ.get("OLLAMA_CHAT_MODEL")
         or DEFAULT_OLLAMA_CHAT_MODEL
     ).strip()
+    try:
+        from ilim_assistant.ruzgar_sohbet_akicilik import resolve_preferred_chat_model
+
+        model = resolve_preferred_chat_model(model)
+    except Exception:
+        pass
     if not model:
         return None
     return BrainEndpoint(
@@ -826,6 +838,27 @@ def select_brain_chain(
             chain_ids = local_first_brain_chain(chain_ids)
         except Exception:
             pass
+        try:
+            from ilim_assistant.ruzgar_sohbet_akicilik import strip_gemini_for_programlama
+
+            chain_ids = strip_gemini_for_programlama(chain_ids)
+        except Exception:
+            pass
+    elif mode_norm in ("genel", "uretim", "gelisim", "hizli") and primary in (
+        "",
+        "gundelik",
+        "islem",
+        "hava",
+        "dosya",
+        "hafiza",
+    ):
+        try:
+            from ilim_assistant.ruzgar_sohbet_akicilik import prefer_gemini_chat_chain
+
+            chain_ids = prefer_gemini_chat_chain(chain_ids)
+            chain_ids = _filter_chain_ids_for_quota(chain_ids)
+        except Exception:
+            pass
 
     chain: list[BrainEndpoint] = []
     seen: set[str] = set()
@@ -935,6 +968,12 @@ def build_casual_fast_chain_ids() -> list[str]:
                 ids = ["groq", "hizli", "denge", "gemini"]
         except Exception:
             ids = ["groq", "hizli", "denge", "gemini"]
+    try:
+        from ilim_assistant.ruzgar_sohbet_akicilik import prefer_gemini_chat_chain
+
+        ids = prefer_gemini_chat_chain(ids)
+    except Exception:
+        pass
     return _filter_chain_ids_for_quota(ids)
 
 
