@@ -2,8 +2,8 @@
   "dal": "07_si_ber_g_venli_k",
   "excel": "7 - ) SİBER GÜVENLİK.xlsx",
   "n_list": 100,
-  "sources": 46,
-  "ok_sources": 46,
+  "sources": 47,
+  "ok_sources": 47,
   "ilave_rows": 3,
   "updated_utc": "2026-11-09T20:54:27.983153+00:00",
   "skills": [
@@ -967,6 +967,22 @@
       "ok": true,
       "tam_eser": true,
       "derin_yesil": true
+    },
+    "aile_cihaz": {
+      "kaynak_id": "07_si_ber_g_venli_k_aile_cihaz",
+      "baslik": "Aile — cihaz defteri, gizlilik, ev camı izin modeli (kalın)",
+      "url": "https://www.home-assistant.io/docs/",
+      "dal": "07_si_ber_g_venli_k",
+      "truncated": false,
+      "html_pages": 25,
+      "html_expected": 20,
+      "updated_utc": "2026-11-13T08:38:00.850941+00:00",
+      "parca": 53,
+      "parca_sayisi": 53,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 25
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.588242+00:00",
@@ -1123,6 +1139,10 @@
       "parca": 53
     },
     {
+      "key": "aile_cihaz",
+      "parca": 53
+    },
+    {
       "key": "owasp_cheat_deep",
       "parca": 51
     },
@@ -1167,6 +1187,6 @@
       "parca": 41
     }
   ],
-  "deep_full_count": 46,
-  "tam_eser_utc": "2026-11-11T11:37:52.125225+00:00"
+  "deep_full_count": 47,
+  "tam_eser_utc": "2026-11-13T08:38:01.002549+00:00"
 }

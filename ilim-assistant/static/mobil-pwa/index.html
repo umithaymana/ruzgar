@@ -13,7 +13,7 @@
   <link rel="icon" href="favicon-32.png?v=5" type="image/png" sizes="32x32" />
   <title>Rüzgar Mobil</title>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <link rel="stylesheet" href="app.css?v=38" />
+  <link rel="stylesheet" href="app.css?v=41" />
 </head>
 <body>
   <div id="installBar" class="install-bar hidden">
@@ -123,24 +123,33 @@
           <div id="sahneDalga" class="sahne-dalga" aria-hidden="true">
             <span></span><span></span><span></span><span></span><span></span>
           </div>
+          <div id="sahneOrgan" class="sahne-organ is-yuz" data-organ="yuz" aria-live="polite">
+            <div id="sahneOrganFrame" class="sahne-organ-frame" hidden></div>
+            <p id="sahneOrganMeta" class="sahne-organ-meta" hidden></p>
+          </div>
           <p id="sahneSoz" class="sahne-soz">Yaz. Cevabı ben buradan söyleyeyim.</p>
           <p class="hint sahne-gate-hint">Sahne açık (panel izin). Diğer kullanıcılara kapalı tutulabilir.</p>
-        </div>
-        <div id="chat"></div>
-        <div class="composer">
-          <textarea id="input" rows="2" placeholder="Mesaj…"></textarea>
-          <button type="button" id="btnSend" class="primary">Gönder</button>
-        </div>
-        <div class="composer voice-row">
-          <button type="button" id="btnMic" class="ghost mic-hold" aria-label="Basılı tut konuş">
-            <span class="mic-label">🎙 Basılı tut</span>
+          <button type="button" id="btnSahneSheet" class="sahne-sheet-toggle" aria-expanded="false" aria-controls="chat">
+            Sohbet şeridi
           </button>
-          <button type="button" id="btnLive" class="primary">Sürekli sohbet</button>
         </div>
-        <div class="composer voice-row">
-          <button type="button" id="btnVoiceSend" class="ghost">Sesli tur (yazı)</button>
+        <div id="sahneDock" class="sahne-dock">
+          <div id="chat"></div>
+          <div class="composer">
+            <textarea id="input" rows="2" placeholder="Mesaj…"></textarea>
+            <button type="button" id="btnSend" class="primary">Gönder</button>
+          </div>
+          <div class="composer voice-row">
+            <button type="button" id="btnMic" class="ghost mic-hold" aria-label="Basılı tut konuş">
+              <span class="mic-label">🎙 Basılı tut</span>
+            </button>
+            <button type="button" id="btnLive" class="primary">Sürekli sohbet</button>
+          </div>
+          <div class="composer voice-row">
+            <button type="button" id="btnVoiceSend" class="ghost">Sesli tur (yazı)</button>
+          </div>
+          <p id="meta" class="hint">Basılı tut veya Sürekli sohbet: konuş → sus → cevap. Sürekli açıkken ekran uyanık tutulur (tam kilitte tarayıcı mikrofonu kesebilir).</p>
         </div>
-        <p id="meta" class="hint">Basılı tut veya Sürekli sohbet: konuş → sus → cevap. Sürekli açıkken ekran uyanık tutulur (tam kilitte tarayıcı mikrofonu kesebilir).</p>
       </div>
       <div id="panelView" class="hidden">
         <p class="hint">Yönetici paneli · bekleyen / oturum / cihaz / motor</p>
@@ -160,6 +169,6 @@
       </div>
     </section>
   </div>
-  <script src="app.js?v=43"></script>
+  <script src="app.js?v=46"></script>
 </body>
 </html>

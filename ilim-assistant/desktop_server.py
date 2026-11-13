@@ -5375,6 +5375,35 @@ def api_mobil_me(request: Request):
     return session_me(token)
 
 
+class SahneSuperElBody(BaseModel):
+    text: str = ""
+
+
+@app.post("/api/sahne/super-el")
+def api_sahne_super_el(body: SahneSuperElBody):
+    """Sahne süper-el: söz → niyet → organ (iskelet; RAG yok)."""
+    from ilim_assistant.sahne_super_el import resolve_super_el
+
+    return resolve_super_el(body.text or "")
+
+
+@app.get("/api/sahne/odalar")
+def api_sahne_odalar():
+    """Meslek odaları + mobil A/B/C (plan 26–32)."""
+    from pathlib import Path
+    import json
+
+    p = (
+        Path(__file__).resolve().parent
+        / "knowledge/ortak_kaynak/alanlar/bilgisayar_eserleri/SAHNE_MESLEK_ODALARI.json"
+    )
+    if not p.is_file():
+        return {"ok": False, "odalar": [], "abc": {}}
+    data = json.loads(p.read_text(encoding="utf-8"))
+    data["ok"] = True
+    return data
+
+
 @app.get("/api/mobil/sessions")
 def api_mobil_sessions():
     from ilim_assistant.ruzgar_mobil_oturum import list_sessions

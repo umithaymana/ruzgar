@@ -1,0 +1,5 @@
+{
+  "status": "sidecar_ok",
+  "num_chunks": 9147,
+  "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+}

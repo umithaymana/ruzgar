@@ -1,0 +1,261 @@
+{
+  "ts": "2026-11-13T08:47:29.531254+00:00",
+  "plan_adim": 18,
+  "n": 23,
+  "rag_not": "Bu tabloda rag_aday işaretli; ingest YALNIZ sıra 33'te",
+  "rows": [
+    {
+      "meslek": "omurga/ortak",
+      "paket": "omurga_harita_maplibre_natural_earth",
+      "baslik": "omurga_harita_maplibre_natural_earth",
+      "yol": "bilgisayar_eserleri + 25_ILERI_10_2 + 10_4",
+      "url": "",
+      "parca": 0,
+      "lisans": "BSD (MapLibre docs)",
+      "rag_aday": "evet",
+      "durum": "zaten_var"
+    },
+    {
+      "meslek": "omurga/ortak",
+      "paket": "omurga_uzay_astro",
+      "baslik": "omurga_uzay_astro",
+      "yol": "bilgisayar_eserleri + 25_ILERI_10_2",
+      "url": "",
+      "parca": 0,
+      "lisans": "Açık dokümantasyon / kamu",
+      "rag_aday": "evet",
+      "durum": "zaten_var"
+    },
+    {
+      "meslek": "omurga/ortak",
+      "paket": "omurga_ffmpeg_video",
+      "baslik": "omurga_ffmpeg_video",
+      "yol": "bilgisayar_eserleri + 25_ILERI_D + 10_2",
+      "url": "",
+      "parca": 0,
+      "lisans": "LGPL/GPL (FFmpeg docs)",
+      "rag_aday": "kismi",
+      "durum": "zaten_var"
+    },
+    {
+      "meslek": "omurga/ortak",
+      "paket": "omurga_openstax_fenni",
+      "baslik": "omurga_openstax_fenni",
+      "yol": "bilgisayar_eserleri + 25_ILERI_10_4",
+      "url": "",
+      "parca": 0,
+      "lisans": "Açık dokümantasyon / kamu",
+      "rag_aday": "evet",
+      "durum": "zaten_var"
+    },
+    {
+      "meslek": "omurga/ortak",
+      "paket": "omurga_ses_stt_tts",
+      "baslik": "omurga_ses_stt_tts",
+      "yol": "bilgisayar_eserleri + 25_ILERI_B",
+      "url": "",
+      "parca": 0,
+      "lisans": "Açık dokümantasyon / kamu",
+      "rag_aday": "kismi",
+      "durum": "zaten_var"
+    },
+    {
+      "meslek": "omurga/ortak",
+      "paket": "omurga_homelab_cam",
+      "baslik": "omurga_homelab_cam",
+      "yol": "bilgisayar_eserleri + 25_ILERI_I",
+      "url": "",
+      "parca": 0,
+      "lisans": "Açık dokümantasyon / kamu",
+      "rag_aday": "kismi",
+      "durum": "zaten_var"
+    },
+    {
+      "meslek": "omurga/ortak",
+      "paket": "omurga_three_webrtc",
+      "baslik": "omurga_three_webrtc",
+      "yol": "bilgisayar_eserleri + 25_ILERI_D",
+      "url": "",
+      "parca": 0,
+      "lisans": "Açık dokümantasyon / kamu",
+      "rag_aday": "kismi",
+      "durum": "zaten_var"
+    },
+    {
+      "meslek": "omurga/ortak",
+      "paket": "yazilimci_programlama",
+      "baslik": "yazilimci_programlama",
+      "yol": "bilgisayar_eserleri + 25_ILERI_F + bilgisayar_muhendisligi + dals 01-12",
+      "url": "",
+      "parca": 0,
+      "lisans": "Açık dokümantasyon / kamu",
+      "rag_aday": "kismi",
+      "durum": "zaten_var"
+    },
+    {
+      "meslek": "omurga/ortak",
+      "paket": "arastirmaci_tercume_hafiza",
+      "baslik": "arastirmaci_tercume_hafiza",
+      "yol": "bilgisayar_eserleri + 25_ILERI_A/C + Şamile/ilim",
+      "url": "",
+      "parca": 0,
+      "lisans": "Açık dokümantasyon / kamu",
+      "rag_aday": "kismi",
+      "durum": "zaten_var_kismi"
+    },
+    {
+      "meslek": "omurga/ortak",
+      "paket": "yazilim_ffmpeg_opencv",
+      "baslik": "yazilim_ffmpeg_opencv",
+      "yol": "bilgisayar_eserleri + tools + sistem",
+      "url": "",
+      "parca": 0,
+      "lisans": "LGPL/GPL (FFmpeg docs)",
+      "rag_aday": "kismi",
+      "durum": "zaten_var"
+    },
+    {
+      "meslek": "mimar/muteahhit",
+      "paket": "mimar_bina_3d",
+      "baslik": "Mimar/müteahhit — çizim, gabari, glTF/Three, fotogrametri, 4D düşünce (kalın)",
+      "yol": "D:\\ÜMİT\\PROJELER\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\knowledge\\ortak_kaynak\\alanlar\\bilgisayar_eserleri\\08_yazilim_mi_mari_leri_\\metin\\mimar_bina_3d",
+      "url": "https://www.khronos.org/gltf/",
+      "parca": 85,
+      "lisans": "Khronos açık spesifikasyon",
+      "rag_aday": "evet",
+      "durum": "kalin"
+    },
+    {
+      "meslek": "yonetmen/editor",
+      "paket": "yonetmen_kurgu",
+      "baslik": "Yönetmen/editör — kurgu dili, OTIO, altyazı, ses post (kalın)",
+      "yol": "D:\\ÜMİT\\PROJELER\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\knowledge\\ortak_kaynak\\alanlar\\bilgisayar_eserleri\\08_yazilim_mi_mari_leri_\\metin\\yonetmen_kurgu",
+      "url": "https://opentimelineio.readthedocs.io/",
+      "parca": 125,
+      "lisans": "Açık dokümantasyon / kamu",
+      "rag_aday": "evet",
+      "durum": "kalin"
+    },
+    {
+      "meslek": "doktor/egitmen",
+      "paket": "egitim_anatomi",
+      "baslik": "Eğitmen/anatomi — açık eğitim atlası+pedagoji (teşhis yok etiketi)",
+      "yol": "D:\\ÜMİT\\PROJELER\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\knowledge\\ortak_kaynak\\alanlar\\bilgisayar_eserleri\\18_bi_li_msel_ara_tirma_y_ntemleri_\\metin\\egitim_anatomi",
+      "url": "https://openstax.org/details/books/anatomy-and-physiology-2e",
+      "parca": 45,
+      "lisans": "CC BY (OpenStax)",
+      "rag_aday": "evet",
+      "durum": "kalin"
+    },
+    {
+      "meslek": "avukat/noter",
+      "paket": "hukuk_dosya_masa",
+      "baslik": "Hukuk dosya masası — diff, kronoloji, arşiv (tavsiye değil)",
+      "yol": "D:\\ÜMİT\\PROJELER\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\knowledge\\ortak_kaynak\\alanlar\\bilgisayar_eserleri\\18_bi_li_msel_ara_tirma_y_ntemleri_\\metin\\hukuk_dosya_masa",
+      "url": "https://www.w3.org/TR/annotation-model/",
+      "parca": 42,
+      "lisans": "W3C Document License / açık TR",
+      "rag_aday": "evet",
+      "durum": "kalin"
+    },
+    {
+      "meslek": "muzisyen",
+      "paket": "muzik_partisyon",
+      "baslik": "Müzisyen — teori, MusicXML, Web Audio, dalga (kalın)",
+      "yol": "D:\\ÜMİT\\PROJELER\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\knowledge\\ortak_kaynak\\alanlar\\bilgisayar_eserleri\\08_yazilim_mi_mari_leri_\\metin\\muzik_partisyon",
+      "url": "https://www.w3.org/2021/03/smufl13/",
+      "parca": 68,
+      "lisans": "W3C Document License / açık TR",
+      "rag_aday": "evet",
+      "durum": "kalin"
+    },
+    {
+      "meslek": "gazeteci",
+      "paket": "gazeteci_acik_veri",
+      "baslik": "Gazeteci — açık veri, kaynak doğrulama, harita haber (kalın)",
+      "yol": "D:\\ÜMİT\\PROJELER\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\knowledge\\ortak_kaynak\\alanlar\\bilgisayar_eserleri\\18_bi_li_msel_ara_tirma_y_ntemleri_\\metin\\gazeteci_acik_veri",
+      "url": "https://opendatahandbook.org/",
+      "parca": 50,
+      "lisans": "Açık dokümantasyon / kamu",
+      "rag_aday": "evet",
+      "durum": "kalin"
+    },
+    {
+      "meslek": "ciftci/saha",
+      "paket": "ciftci_saha",
+      "baslik": "Çiftçi/saha — GeoJSON, açık hava, tarla haritası (kalın)",
+      "yol": "D:\\ÜMİT\\PROJELER\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\knowledge\\ortak_kaynak\\alanlar\\bilgisayar_eserleri\\08_yazilim_mi_mari_leri_\\metin\\ciftci_saha",
+      "url": "https://openweathermap.org/api",
+      "parca": 65,
+      "lisans": "Açık dokümantasyon / kamu",
+      "rag_aday": "evet",
+      "durum": "kalin"
+    },
+    {
+      "meslek": "ogrenci",
+      "paket": "ogrenci_quiz",
+      "baslik": "Öğrenci — spaced repetition, quiz, ders yöntemi (kalın)",
+      "yol": "D:\\ÜMİT\\PROJELER\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\knowledge\\ortak_kaynak\\alanlar\\bilgisayar_eserleri\\18_bi_li_msel_ara_tirma_y_ntemleri_\\metin\\ogrenci_quiz",
+      "url": "https://en.wikipedia.org/wiki/Spaced_repetition",
+      "parca": 87,
+      "lisans": "CC BY-SA",
+      "rag_aday": "evet",
+      "durum": "kalin"
+    },
+    {
+      "meslek": "aile",
+      "paket": "aile_cihaz",
+      "baslik": "Aile — cihaz defteri, gizlilik, ev camı izin modeli (kalın)",
+      "yol": "D:\\ÜMİT\\PROJELER\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\knowledge\\ortak_kaynak\\alanlar\\bilgisayar_eserleri\\07_si_ber_g_venli_k\\metin\\aile_cihaz",
+      "url": "https://www.home-assistant.io/docs/",
+      "parca": 53,
+      "lisans": "Apache-2.0 docs",
+      "rag_aday": "evet",
+      "durum": "kalin"
+    },
+    {
+      "meslek": "muhendis",
+      "paket": "muhendis_sim",
+      "baslik": "Mühendis — şema/simülasyon (sarkaç, yörünge, akış) kalın",
+      "yol": "D:\\ÜMİT\\PROJELER\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\knowledge\\ortak_kaynak\\alanlar\\bilgisayar_eserleri\\14_fi_zi_k\\metin\\muhendis_sim",
+      "url": "https://openstax.org/details/books/university-physics-volume-1",
+      "parca": 53,
+      "lisans": "CC BY (OpenStax)",
+      "rag_aday": "evet",
+      "durum": "kalin"
+    },
+    {
+      "meslek": "gezgin/tarihci",
+      "paket": "gezgin_rehber",
+      "baslik": "Gezgin/tarihçi rehber — OSM, Geo, seyahat coğrafyası (kalın)",
+      "yol": "D:\\ÜMİT\\PROJELER\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\knowledge\\ortak_kaynak\\alanlar\\bilgisayar_eserleri\\08_yazilim_mi_mari_leri_\\metin\\gezgin_rehber",
+      "url": "https://wiki.openstreetmap.org/wiki/Main_Page",
+      "parca": 59,
+      "lisans": "ODbL (OSM) / wiki CC BY-SA",
+      "rag_aday": "evet",
+      "durum": "kalin"
+    },
+    {
+      "meslek": "yazilimci",
+      "paket": "bilgisayar_eserleri_01_12 + ILERI_F",
+      "baslik": "Programlama kalın külliyat",
+      "yol": "D:\\ÜMİT\\PROJELER\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\knowledge\\ortak_kaynak\\alanlar\\bilgisayar_eserleri\\01_programlama",
+      "url": "",
+      "parca": 7034,
+      "lisans": "Açık dokümantasyon / kamu",
+      "rag_aday": "kismi",
+      "durum": "zaten_var"
+    },
+    {
+      "meslek": "arastirmaci",
+      "paket": "ilim+shamile+IR+tercume",
+      "baslik": "İlim/Şamile + IR + MT yakıtı",
+      "yol": "D:\\ÜMİT\\PROJELER\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\knowledge\\ilim",
+      "url": "",
+      "parca": 0,
+      "lisans": "Açık dokümantasyon / kamu",
+      "rag_aday": "kismi",
+      "durum": "zaten_var_kismi"
+    }
+  ]
+}

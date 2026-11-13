@@ -2,8 +2,8 @@
   "dal": "18_bi_li_msel_ara_tirma_y_ntemleri_",
   "excel": "18 - ) BİLİMSEL ARAŞTIRMA YÖNTEMLERİ.xlsx",
   "n_list": 150,
-  "sources": 12,
-  "ok_sources": 12,
+  "sources": 16,
+  "ok_sources": 16,
   "ilave_rows": 3,
   "updated_utc": "2026-11-09T21:00:47.448830+00:00",
   "skills": [
@@ -226,6 +226,70 @@
       "ok": true,
       "tam_eser": true,
       "derin_yesil": true
+    },
+    "egitim_anatomi": {
+      "kaynak_id": "18_bi_li_msel_ara_tirma_y_ntemleri__egitim_anatomi",
+      "baslik": "Eğitmen/anatomi — açık eğitim atlası+pedagoji (teşhis yok etiketi)",
+      "url": "https://openstax.org/details/books/anatomy-and-physiology-2e",
+      "dal": "18_bi_li_msel_ara_tirma_y_ntemleri_",
+      "truncated": false,
+      "html_pages": 11,
+      "html_expected": 24,
+      "updated_utc": "2026-11-13T08:36:48.857959+00:00",
+      "parca": 45,
+      "parca_sayisi": 45,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 11
+    },
+    "hukuk_dosya_masa": {
+      "kaynak_id": "18_bi_li_msel_ara_tirma_y_ntemleri__hukuk_dosya_masa",
+      "baslik": "Hukuk dosya masası — diff, kronoloji, arşiv (tavsiye değil)",
+      "url": "https://www.w3.org/TR/annotation-model/",
+      "dal": "18_bi_li_msel_ara_tirma_y_ntemleri_",
+      "truncated": false,
+      "html_pages": 10,
+      "html_expected": 20,
+      "updated_utc": "2026-11-13T08:36:55.315688+00:00",
+      "parca": 42,
+      "parca_sayisi": 42,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 10
+    },
+    "gazeteci_acik_veri": {
+      "kaynak_id": "18_bi_li_msel_ara_tirma_y_ntemleri__gazeteci_acik_veri",
+      "baslik": "Gazeteci — açık veri, kaynak doğrulama, harita haber (kalın)",
+      "url": "https://opendatahandbook.org/",
+      "dal": "18_bi_li_msel_ara_tirma_y_ntemleri_",
+      "truncated": false,
+      "html_pages": 37,
+      "html_expected": 18,
+      "updated_utc": "2026-11-13T08:37:31.545003+00:00",
+      "parca": 50,
+      "parca_sayisi": 50,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 37
+    },
+    "ogrenci_quiz": {
+      "kaynak_id": "18_bi_li_msel_ara_tirma_y_ntemleri__ogrenci_quiz",
+      "baslik": "Öğrenci — spaced repetition, quiz, ders yöntemi (kalın)",
+      "url": "https://en.wikipedia.org/wiki/Spaced_repetition",
+      "dal": "18_bi_li_msel_ara_tirma_y_ntemleri_",
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 18,
+      "updated_utc": "2026-11-13T08:37:50.534445+00:00",
+      "parca": 87,
+      "parca_sayisi": 87,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 22
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.597244+00:00",
@@ -259,6 +323,10 @@
       "parca": 113
     },
     {
+      "key": "ogrenci_quiz",
+      "parca": 87
+    },
+    {
       "key": "openstax_stats",
       "parca": 81
     },
@@ -271,7 +339,15 @@
       "parca": 53
     },
     {
+      "key": "gazeteci_acik_veri",
+      "parca": 50
+    },
+    {
       "key": "zenodo_docs",
+      "parca": 45
+    },
+    {
+      "key": "egitim_anatomi",
       "parca": 45
     },
     {
@@ -279,10 +355,14 @@
       "parca": 43
     },
     {
+      "key": "hukuk_dosya_masa",
+      "parca": 42
+    },
+    {
       "key": "reproducibility",
       "parca": 0
     }
   ],
-  "deep_full_count": 12,
-  "tam_eser_utc": "2026-11-11T11:39:43.858550+00:00"
+  "deep_full_count": 16,
+  "tam_eser_utc": "2026-11-13T08:37:50.643442+00:00"
 }

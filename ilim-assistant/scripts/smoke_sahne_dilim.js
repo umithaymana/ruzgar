@@ -59,6 +59,12 @@ const needJs = [
   "Durum: hazir",
   "sahneYaziTimer",
   ".inert",
+  "ruzgar-sahne-mini",
+  "ruzgar-sahne-soft",
+  "data-sahne-layout",
+  '"full"',
+  '"mini"',
+  "applySahneOrgan",
 ];
 for (const k of needJs) {
   if (!js.includes(k)) fail("masa.js eksik: " + k);
@@ -93,6 +99,8 @@ const needCss = [
   "ruzgar-sahne-dusun) .ruzgar-sahne-wind",
   "--sahne-fade",
   "--sahne-fade-slow",
+  "ruzgar-sahne-mini #ruzgar-sahne",
+  "ruzgar-sahne-soft",
 ];
 for (const k of needCss) {
   if (!css.includes(k)) fail("masa.css eksik: " + k);

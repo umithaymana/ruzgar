@@ -2,8 +2,8 @@
   "dal": "08_yazilim_mi_mari_leri_",
   "excel": "8 - ) YAZILIM MİMARİLERİ.xlsx",
   "n_list": 100,
-  "sources": 28,
-  "ok_sources": 28,
+  "sources": 33,
+  "ok_sources": 33,
   "ilave_rows": 3,
   "updated_utc": "2026-11-09T20:54:27.587012+00:00",
   "skills": [
@@ -479,6 +479,86 @@
       "ok": true,
       "tam_eser": true,
       "derin_yesil": true
+    },
+    "mimar_bina_3d": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__mimar_bina_3d",
+      "baslik": "Mimar/müteahhit — çizim, gabari, glTF/Three, fotogrametri, 4D düşünce (kalın)",
+      "url": "https://www.khronos.org/gltf/",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 24,
+      "updated_utc": "2026-11-13T08:36:25.454765+00:00",
+      "parca": 85,
+      "parca_sayisi": 85,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 22
+    },
+    "yonetmen_kurgu": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__yonetmen_kurgu",
+      "baslik": "Yönetmen/editör — kurgu dili, OTIO, altyazı, ses post (kalın)",
+      "url": "https://opentimelineio.readthedocs.io/",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 22,
+      "updated_utc": "2026-11-13T08:36:40.094247+00:00",
+      "parca": 125,
+      "parca_sayisi": 125,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 22
+    },
+    "muzik_partisyon": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__muzik_partisyon",
+      "baslik": "Müzisyen — teori, MusicXML, Web Audio, dalga (kalın)",
+      "url": "https://www.w3.org/2021/03/smufl13/",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 20,
+      "updated_utc": "2026-11-13T08:37:13.432170+00:00",
+      "parca": 68,
+      "parca_sayisi": 68,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 22
+    },
+    "ciftci_saha": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__ciftci_saha",
+      "baslik": "Çiftçi/saha — GeoJSON, açık hava, tarla haritası (kalın)",
+      "url": "https://openweathermap.org/api",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 18,
+      "updated_utc": "2026-11-13T08:37:42.676038+00:00",
+      "parca": 65,
+      "parca_sayisi": 65,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 22
+    },
+    "gezgin_rehber": {
+      "kaynak_id": "08_yazilim_mi_mari_leri__gezgin_rehber",
+      "baslik": "Gezgin/tarihçi rehber — OSM, Geo, seyahat coğrafyası (kalın)",
+      "url": "https://wiki.openstreetmap.org/wiki/Main_Page",
+      "dal": "08_yazilim_mi_mari_leri_",
+      "truncated": false,
+      "html_pages": 43,
+      "html_expected": 22,
+      "updated_utc": "2026-11-13T08:38:44.612254+00:00",
+      "parca": 59,
+      "parca_sayisi": 59,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 43
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.589242+00:00",
@@ -536,6 +616,10 @@
       "parca": 131
     },
     {
+      "key": "yonetmen_kurgu",
+      "parca": 125
+    },
+    {
       "key": "manim_docs",
       "parca": 115
     },
@@ -550,6 +634,10 @@
     {
       "key": "aosa",
       "parca": 90
+    },
+    {
+      "key": "mimar_bina_3d",
+      "parca": 85
     },
     {
       "key": "cografya_tarih",
@@ -568,12 +656,24 @@
       "parca": 71
     },
     {
+      "key": "muzik_partisyon",
+      "parca": 68
+    },
+    {
       "key": "gpp",
+      "parca": 65
+    },
+    {
+      "key": "ciftci_saha",
       "parca": 65
     },
     {
       "key": "opentimelineio",
       "parca": 60
+    },
+    {
+      "key": "gezgin_rehber",
+      "parca": 59
     },
     {
       "key": "segoogle",
@@ -600,6 +700,6 @@
       "parca": 51
     }
   ],
-  "deep_full_count": 28,
-  "tam_eser_utc": "2026-11-11T11:38:15.703865+00:00"
+  "deep_full_count": 33,
+  "tam_eser_utc": "2026-11-13T08:38:44.800422+00:00"
 }

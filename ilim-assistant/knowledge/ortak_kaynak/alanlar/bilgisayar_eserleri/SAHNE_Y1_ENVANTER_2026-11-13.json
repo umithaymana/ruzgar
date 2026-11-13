@@ -1,0 +1,221 @@
+{
+  "ts": "2026-11-13T08:35:35.716353+00:00",
+  "plan": "RUZGAR_SAHNE_BASLAMA_PLANI_2026-11-13.docx sıra 2",
+  "kural": "zaten_var → ikinci indirme YOK; RAG yok",
+  "zaten_var": {
+    "omurga_harita_maplibre_natural_earth": {
+      "kaynak": "25_ILERI_10_2 + 10_4",
+      "kanit": [
+        "cografya_tarih (77 parça)",
+        "atlas_natural_earth"
+      ],
+      "durum": "zaten_var"
+    },
+    "omurga_uzay_astro": {
+      "kaynak": "25_ILERI_10_2",
+      "kanit": [
+        "uzay_astro (53 parça)"
+      ],
+      "durum": "zaten_var"
+    },
+    "omurga_ffmpeg_video": {
+      "kaynak": "25_ILERI_D + 10_2",
+      "kanit": [
+        "ffmpeg",
+        "atolye_gece",
+        "sistem ffmpeg winget"
+      ],
+      "durum": "zaten_var"
+    },
+    "omurga_openstax_fenni": {
+      "kaynak": "25_ILERI_10_4",
+      "kanit": [
+        "openstax_derin",
+        "mit_ocw_secme"
+      ],
+      "durum": "zaten_var"
+    },
+    "omurga_ses_stt_tts": {
+      "kaynak": "25_ILERI_B",
+      "kanit": [
+        "whisper",
+        "piper",
+        "web_audio_mdn"
+      ],
+      "durum": "zaten_var"
+    },
+    "omurga_homelab_cam": {
+      "kaynak": "25_ILERI_I",
+      "kanit": [
+        "home_assistant",
+        "esp_idf"
+      ],
+      "durum": "zaten_var"
+    },
+    "omurga_three_webrtc": {
+      "kaynak": "25_ILERI_D",
+      "kanit": [
+        "godot_three_cam",
+        "webrtc_mdn",
+        "opencv"
+      ],
+      "durum": "zaten_var"
+    },
+    "yazilimci_programlama": {
+      "kaynak": "25_ILERI_F + bilgisayar_muhendisligi + dals 01-12",
+      "kanit": [
+        "tree_sitter",
+        "ollama",
+        "playwright",
+        "7034+ md programlama dalı"
+      ],
+      "durum": "zaten_var"
+    },
+    "arastirmaci_tercume_hafiza": {
+      "kaynak": "25_ILERI_A/C + Şamile/ilim",
+      "kanit": [
+        "ir_book",
+        "marian_opus",
+        "camel_farasa",
+        "knowledge/ilim"
+      ],
+      "durum": "zaten_var_kismi"
+    },
+    "yazilim_ffmpeg_opencv": {
+      "kaynak": "tools + sistem",
+      "kanit": [
+        "opencv 5.0.0",
+        "ffmpeg.exe winget",
+        "video_ffmpeg.py"
+      ],
+      "durum": "zaten_var"
+    }
+  },
+  "ince_alan_stublar": {
+    "anatomi_fizyoloji": {
+      "md": 2,
+      "kb": 3.4,
+      "ince_mi": true
+    },
+    "astronomi_derin": {
+      "md": 2,
+      "kb": 3.8,
+      "ince_mi": true
+    },
+    "bilgisayar_muhendisligi": {
+      "md": 8,
+      "kb": 224.0,
+      "ince_mi": true
+    },
+    "bilim": {
+      "md": 6,
+      "kb": 3.2,
+      "ince_mi": true
+    },
+    "cevre_bilimleri": {
+      "md": 2,
+      "kb": 3.5,
+      "ince_mi": true
+    },
+    "cografya": {
+      "md": 6,
+      "kb": 2.6,
+      "ince_mi": true
+    },
+    "dilbilim": {
+      "md": 2,
+      "kb": 3.4,
+      "ince_mi": true
+    },
+    "edebiyat_sanat": {
+      "md": 90,
+      "kb": 4344.4,
+      "ince_mi": false
+    },
+    "egitim_bilimleri": {
+      "md": 2,
+      "kb": 3.5,
+      "ince_mi": true
+    },
+    "ekonomi": {
+      "md": 2,
+      "kb": 3.5,
+      "ince_mi": true
+    },
+    "elektrik_elektronik": {
+      "md": 2,
+      "kb": 3.8,
+      "ince_mi": true
+    },
+    "felsefe": {
+      "md": 72,
+      "kb": 3446.5,
+      "ince_mi": false
+    },
+    "hukuk": {
+      "md": 2,
+      "kb": 3.5,
+      "ince_mi": true
+    },
+    "istatistik_olasilik": {
+      "md": 2,
+      "kb": 3.9,
+      "ince_mi": true
+    },
+    "jeoloji": {
+      "md": 2,
+      "kb": 3.5,
+      "ince_mi": true
+    },
+    "matematik_derin": {
+      "md": 2,
+      "kb": 4.0,
+      "ince_mi": true
+    },
+    "muzik": {
+      "md": 2,
+      "kb": 3.3,
+      "ince_mi": true
+    },
+    "psikoloji": {
+      "md": 32,
+      "kb": 1281.9,
+      "ince_mi": false
+    },
+    "ruzgar_indir_secim": {
+      "md": 7134,
+      "kb": 102795.4,
+      "ince_mi": false
+    },
+    "siyaset": {
+      "md": 2,
+      "kb": 3.3,
+      "ince_mi": true
+    },
+    "sosyoloji": {
+      "md": 2,
+      "kb": 3.1,
+      "ince_mi": true
+    },
+    "teknoloji": {
+      "md": 4,
+      "kb": 1.2,
+      "ince_mi": true
+    }
+  },
+  "siradaki_kalin_dolum": [
+    "mimar_muteahhit_bina_3d_4d",
+    "yonetmen_kurgu_teori",
+    "doktor_egitmen_anatomi",
+    "avukat_noter_dosya",
+    "tarihci_rehber_atlas",
+    "muhendis_simulasyon",
+    "gazeteci_acik_veri",
+    "muzisyen_partisyon",
+    "ciftci_saha_hava",
+    "ogrenci_quiz_hafiza",
+    "aile_cihaz_defteri",
+    "gezgin_dil_cep"
+  ],
+  "bilgisayar_eserleri_not": "On binlerce md; omurga büyük ölçüde burada."
+}

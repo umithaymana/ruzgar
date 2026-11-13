@@ -3726,7 +3726,125 @@
       if (soz && soz.parentNode === sahne) sahne.insertBefore(dalga, soz);
       else sahne.appendChild(dalga);
     }
+    /* Sıra 22–25: organ sahnesi (harita/cam/uzay/belge) — yüz kilidine dokunmaz */
+    if (!document.getElementById("ruzgar-sahne-organ")) {
+      const organ = document.createElement("div");
+      organ.id = "ruzgar-sahne-organ";
+      organ.className = "ruzgar-sahne-organ is-yuz";
+      organ.setAttribute("data-organ", "yuz");
+      organ.setAttribute("aria-live", "polite");
+      organ.innerHTML =
+        '<div class="ruzgar-sahne-organ-frame" id="ruzgar-sahne-organ-frame" hidden></div>' +
+        '<p class="ruzgar-sahne-organ-meta" id="ruzgar-sahne-organ-meta" hidden></p>';
+      const soz2 = document.getElementById("ruzgar-sahne-soz");
+      if (soz2 && soz2.parentNode === sahne) sahne.insertBefore(organ, soz2);
+      else sahne.appendChild(organ);
+    }
   }
+
+  function applySahneOrgan(organ, hedef, metaText) {
+    ensureSahneExtras();
+    const root = document.getElementById("ruzgar-sahne-organ");
+    const frame = document.getElementById("ruzgar-sahne-organ-frame");
+    const meta = document.getElementById("ruzgar-sahne-organ-meta");
+    const face = document.getElementById("ruzgar-sahne-face");
+    if (!root || !frame) return;
+    const o = organ || "yuz";
+    root.setAttribute("data-organ", o);
+    root.className = "ruzgar-sahne-organ is-" + o;
+    frame.replaceChildren();
+    frame.hidden = o === "yuz";
+    if (meta) {
+      meta.hidden = o === "yuz";
+      meta.textContent = metaText || "";
+    }
+    if (face) face.classList.toggle("is-organ-dim", o !== "yuz");
+    if (o === "yuz") return;
+    if (o === "harita") {
+      const iframe = document.createElement("iframe");
+      iframe.title = "Harita";
+      iframe.loading = "lazy";
+      iframe.referrerPolicy = "no-referrer";
+      const q = encodeURIComponent(hedef || "Türkiye");
+      iframe.src = "https://www.openstreetmap.org/export/embed.html?bbox=25,35,45,43&layer=mapnik&marker=39.0,35.0";
+      if (hedef) {
+        iframe.src =
+          "https://www.openstreetmap.org/export/embed.html?bbox=-20,-40,60,70&layer=mapnik&marker=20,0#" +
+          q;
+      }
+      frame.appendChild(iframe);
+      if (meta) meta.textContent = metaText || ("Harita · " + (hedef || "dünya") + " · OSM yasal gömme");
+    } else if (o === "cam") {
+      const p = document.createElement("p");
+      p.className = "ruzgar-sahne-organ-note";
+      p.textContent =
+        metaText ||
+        "Cam/TV: yalnızca senin cihaz defterin veya resmi açık yayın. Bağlantı panelden / süper-el ile.";
+      frame.appendChild(p);
+    } else if (o === "uzay") {
+      const iframe = document.createElement("iframe");
+      iframe.title = "Uzay";
+      iframe.loading = "lazy";
+      iframe.referrerPolicy = "no-referrer";
+      iframe.src = "https://images.nasa.gov/";
+      frame.appendChild(iframe);
+      if (meta) meta.textContent = metaText || "Uzay penceresi · NASA Images (açık kapı)";
+    } else if (o === "belge" || o === "tablo" || o === "sunum" || o === "cizim") {
+      const p = document.createElement("p");
+      p.className = "ruzgar-sahne-organ-note";
+      p.textContent =
+        metaText ||
+        "Belge/tablo/sunum/çizim çalışma yüzeyinde; Sahne köprüledi. «Çalışma yüzeyi» ile aç.";
+      frame.appendChild(p);
+      if (o === "belge" || o === "tablo" || o === "cizim" || o === "sunum") {
+        /* yumuşak yön: mini yüzeye geçiş kullanıcı düğmesiyle */
+      }
+    } else if (o === "foto" || o === "video" || o === "ses" || o === "eser") {
+      const p = document.createElement("p");
+      p.className = "ruzgar-sahne-organ-note";
+      p.textContent = metaText || (o + " organı hazır — içerik sohbet/kütüphane ile gelir.");
+      frame.appendChild(p);
+    }
+  }
+
+  function clearSahneOrgan() {
+    applySahneOrgan("yuz", null, "");
+  }
+
+  /** Sıra 21: süper-el niyet → organ (API varsa) */
+  async function runSuperEl(text) {
+    const t = String(text || "").trim();
+    if (!t) return null;
+    let data = null;
+    try {
+      const base =
+        (window.ruzgarApiBase && String(window.ruzgarApiBase)) ||
+        (document.body && document.body.dataset && document.body.dataset.api) ||
+        "";
+      const url = (base || "").replace(/\/$/, "") + "/api/sahne/super-el";
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: t }),
+      });
+      if (res.ok) data = await res.json();
+    } catch (_) {
+      data = null;
+    }
+    if (!data || !data.ok) return data;
+    if (data.fiil === "temizle") {
+      clearSahneOrgan();
+      return data;
+    }
+    if (data.organ && data.organ !== "yuz") {
+      applySahneOrgan(data.organ, data.hedef, data.fiil + " · " + data.organ);
+    }
+    return data;
+  }
+
+  window.ruzgarSahneSuperEl = runSuperEl;
+  window.ruzgarSahneOrgan = applySahneOrgan;
+  window.ruzgarSahneOrganClear = clearSahneOrgan;
 
   function schedulePaintSpeech() {
     clearTimeout(sahnePaintTimer);
@@ -3802,7 +3920,9 @@
 
   function syncSahneLive() {
     ensureSahneExtras();
-    const on = document.body.classList.contains("ruzgar-sahne-on");
+    const on =
+      document.body.classList.contains("ruzgar-sahne-on") ||
+      document.body.classList.contains("ruzgar-sahne-mini");
     const face = document.getElementById("ruzgar-sahne-face");
     const durum = document.getElementById("ruzgar-sahne-durum");
     const dalga = document.getElementById("ruzgar-sahne-dalga");
@@ -3899,14 +4019,21 @@
   function syncSahne() {
     const motor = document.body.dataset.motor || "genel";
     /* PC: sahne Ana Motor sohbet yüzeyine bağlı (mobil sahne→sohbet kuralı ile hiza) */
-    const on = motor === "genel" && sayfa === "sohbet";
-    document.body.classList.toggle("ruzgar-sahne-on", on);
+    /* S2: tam sahne (sohbet) ↔ mini sahne (çalışma yüzeyi) yumuşak; başka motorlarda kapalı */
+    const full = motor === "genel" && sayfa === "sohbet";
+    const mini = motor === "genel" && sayfa !== "sohbet";
+    const on = full || mini;
+    document.body.classList.toggle("ruzgar-sahne-on", full);
+    document.body.classList.toggle("ruzgar-sahne-mini", mini);
+    document.body.classList.toggle("ruzgar-sahne-soft", on);
     const sahneEl = document.getElementById("ruzgar-sahne");
     if (sahneEl) {
       try {
+        /* mini iken tıklanabilir (sahneye dön); full'da da etkileşim var */
         sahneEl.inert = !on;
       } catch (_) {}
       sahneEl.setAttribute("aria-hidden", on ? "false" : "true");
+      sahneEl.setAttribute("data-sahne-layout", full ? "full" : mini ? "mini" : "off");
     }
     if (!on) {
       document.body.classList.remove(
@@ -3920,17 +4047,22 @@
       sahneLastSoz = SAHNE_PLACEHOLDER;
     }
     const back = document.getElementById("ruzgar-masa-sahne");
-    if (back) back.hidden = on;
+    if (back) back.hidden = full;
+    const openDesk = document.getElementById("ruzgar-sahne-masa");
+    if (openDesk) openDesk.hidden = mini;
     root.querySelectorAll("[data-masa]").forEach(function (btn) {
       const id = btn.getAttribute("data-masa");
-      const active = on ? id === "sohbet" : id === state.mode;
+      const active = full ? id === "sohbet" : id === state.mode;
       btn.classList.toggle("is-on", active);
       btn.setAttribute("aria-selected", active ? "true" : "false");
     });
     syncChip();
-    if (on) {
+    if (full) {
       ensureSahneExtras();
       paintSpeech();
+    } else if (mini) {
+      ensureSahneExtras();
+      syncSahneLive();
     } else syncSahneLive();
   }
 
@@ -3976,9 +4108,24 @@
     }
     window.setInterval(syncSahneLive, 450);
     function onSahneResume() {
-      if (!document.body.classList.contains("ruzgar-sahne-on")) return;
-      paintSpeech();
+      if (
+        !document.body.classList.contains("ruzgar-sahne-on") &&
+        !document.body.classList.contains("ruzgar-sahne-mini")
+      ) {
+        return;
+      }
+      if (document.body.classList.contains("ruzgar-sahne-on")) paintSpeech();
       syncSahneLive();
+    }
+    /* S2: mini sahneye tıklayınca tam sahneye (sohbet) dön */
+    const sahneRootClick = document.getElementById("ruzgar-sahne");
+    if (sahneRootClick && !sahneRootClick.dataset.miniClick) {
+      sahneRootClick.dataset.miniClick = "1";
+      sahneRootClick.addEventListener("click", function (ev) {
+        if (!document.body.classList.contains("ruzgar-sahne-mini")) return;
+        if (ev.target && ev.target.closest && ev.target.closest("button")) return;
+        masaSayfa("sohbet");
+      });
     }
     document.addEventListener("visibilitychange", function () {
       if (document.visibilityState !== "visible") return;

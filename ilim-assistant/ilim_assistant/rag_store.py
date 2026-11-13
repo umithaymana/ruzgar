@@ -862,6 +862,22 @@ def search(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
         except Exception:
             pass
 
+    # Sahne Y1 meslek yan indeksi (9147 chunk sidecar)
+    if os.environ.get("RUZGAR_SAHNE_Y1_RAG", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    ):
+        try:
+            from ilim_assistant.ruzgar_sahne_y1_rag import search_sahne_y1
+
+            for text, source, score in search_sahne_y1(
+                query, top_k=max(int(top_k), 6), q_vec=q
+            ):
+                _put(text, source, float(score))
+        except Exception:
+            pass
+
     # Adım 4 — bilgisayar eserleri yan indeksi (Dalga A omurga)
     if (
         not _din_q

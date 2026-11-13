@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-11-13 — Sahne çift otonom dilim-4…38 yeşil (`SMOKE_SAHNE_CIFT=PASS`); «dur» bekleniyor.
+**Son güncelleme:** 2026-11-13 — Sahne plan **18–33**: envanter Word · S1/S2 · süper-el+organ · 13 oda · A/B/C · meslek RAG **sidecar** `.rag_index/sahne_y1` (9147 chunk; ana indekse birleşim canlı 5GB+OSError yüzünden ertelendi). Smoke CIFT/SUPER_EL/ODALAR PASS. Sıra 34–35.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 

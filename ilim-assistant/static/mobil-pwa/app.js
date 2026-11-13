@@ -130,14 +130,106 @@
       const dalgaOff = el("sahneDalga");
       if (dalgaOff) dalgaOff.classList.remove("is-on", "is-dinle", "is-dusun");
       stage.classList.remove("is-live", "is-dinle", "is-dusun", "is-yazi");
-      if (el("chatView")) el("chatView").classList.remove("sahne-busy", "has-sahne");
+      if (el("chatView")) {
+        el("chatView").classList.remove("sahne-busy", "has-sahne", "sheet-open");
+      }
     } else if (el("chatView")) {
       el("chatView").classList.add("has-sahne");
+      /* Sıra 32: mobil A/B/C — varsayılan A (tam sahne) */
+      if (!el("chatView").getAttribute("data-sahne-abc")) {
+        el("chatView").setAttribute("data-sahne-abc", "A");
+      }
     }
     const hint = stage.querySelector(".sahne-gate-hint");
     const admin = !!(who && (who.is_admin || who.role === "mimar" || who.role === "admin"));
     if (hint) hint.classList.toggle("hidden", !admin);
     if (on) setSahneState("hazir");
+    syncSahneSheetBtn();
+  }
+
+  function syncSahneSheetBtn() {
+    const btn = el("btnSahneSheet");
+    const view = el("chatView");
+    if (!btn || !view) return;
+    const open = view.classList.contains("sheet-open");
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+    btn.textContent = open ? "Şeridi kapat" : "Sohbet şeridi";
+  }
+
+  function toggleSahneSheet(force) {
+    const view = el("chatView");
+    if (!view || !view.classList.contains("has-sahne")) return;
+    const next = typeof force === "boolean" ? force : !view.classList.contains("sheet-open");
+    view.classList.toggle("sheet-open", next);
+    syncSahneSheetBtn();
+    if (next) {
+      const chat = el("chat");
+      if (chat) chat.scrollTop = chat.scrollHeight;
+    }
+  }
+
+  function applySahneOrgan(organ, hedef, metaText) {
+    const root = el("sahneOrgan");
+    const frame = el("sahneOrganFrame");
+    const meta = el("sahneOrganMeta");
+    const face = el("sahneFace");
+    if (!root || !frame) return;
+    const o = organ || "yuz";
+    root.setAttribute("data-organ", o);
+    root.className = "sahne-organ is-" + o;
+    frame.replaceChildren();
+    frame.hidden = o === "yuz";
+    if (meta) {
+      meta.hidden = o === "yuz";
+      meta.textContent = metaText || "";
+    }
+    if (face) face.classList.toggle("is-organ-dim", o !== "yuz");
+    if (o === "yuz") return;
+    if (o === "harita") {
+      const iframe = document.createElement("iframe");
+      iframe.title = "Harita";
+      iframe.loading = "lazy";
+      iframe.referrerPolicy = "no-referrer";
+      iframe.src =
+        "https://www.openstreetmap.org/export/embed.html?bbox=25,35,45,43&layer=mapnik&marker=39.0,35.0";
+      frame.appendChild(iframe);
+      if (meta) meta.textContent = metaText || ("Harita · " + (hedef || "Türkiye"));
+    } else if (o === "uzay") {
+      const iframe = document.createElement("iframe");
+      iframe.title = "Uzay";
+      iframe.loading = "lazy";
+      iframe.src = "https://images.nasa.gov/";
+      frame.appendChild(iframe);
+      if (meta) meta.textContent = metaText || "Uzay · NASA";
+    } else {
+      const p = document.createElement("p");
+      p.className = "hint";
+      p.style.padding = "12px";
+      p.textContent = metaText || (o + " organı (mobil B/C)");
+      frame.appendChild(p);
+    }
+  }
+
+  async function runSuperEl(text) {
+    const stage = el("sahneStage");
+    if (!stage || stage.classList.contains("hidden")) return null;
+    try {
+      const res = await api("/api/sahne/super-el", {
+        method: "POST",
+        body: JSON.stringify({ text: String(text || "") }),
+      });
+      if (!res || !res.ok) return res;
+      if (res.fiil === "temizle") {
+        applySahneOrgan("yuz");
+        return res;
+      }
+      if (res.organ && res.organ !== "yuz") {
+        applySahneOrgan(res.organ, res.hedef, (res.fiil || "") + " · " + res.organ);
+      }
+      return res;
+    } catch (_) {
+      return null;
+    }
   }
 
   function setSahneState(mode, sozText) {
@@ -326,6 +418,17 @@
       if (el("btnLogout")) el("btnLogout").click();
       else void doLogout();
     };
+  }
+  if (el("btnSahneSheet")) {
+    el("btnSahneSheet").onclick = () => toggleSahneSheet();
+  }
+  if (el("input")) {
+    el("input").addEventListener("focus", () => {
+      const view = el("chatView");
+      if (view && view.classList.contains("has-sahne") && !view.classList.contains("sheet-open")) {
+        /* yazıya girince şerit açılmaz — yalnız geçmiş istenirse düğme; sahne birincil */
+      }
+    });
   }
 
   async function softReload() {
@@ -851,6 +954,7 @@
     el("input").value = "";
     bubble("user", t);
     history.push({ role: "user", content: t });
+    void runSuperEl(t);
     meta.textContent = "düşünüyor…";
     setSahneState("dusun", t);
     try {

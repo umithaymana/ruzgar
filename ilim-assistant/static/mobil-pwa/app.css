@@ -345,14 +345,117 @@ button.tiny { padding: 6px 10px; font-size: 0.8rem; border-radius: 999px; }
   letter-spacing: 0.16em;
   color: #f3ead2;
 }
+/* S1 — tam sahne: yüz alan doldurur; sohbet alt şerit (gerekince) */
+#chatView.has-sahne {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - 120px);
+  gap: 0;
+}
+#chatView.has-sahne .sahne-stage {
+  flex: 1 1 auto;
+  min-height: min(62dvh, 520px);
+  margin: 0 0 8px;
+  justify-content: center;
+}
+#chatView.has-sahne .sahne-dock {
+  flex: 0 0 auto;
+  border-top: 1px solid rgba(212, 175, 55, 0.22);
+  padding-top: 8px;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.2), rgba(11, 18, 32, 0.92));
+}
 #chatView.has-sahne #chat {
-  min-height: 28dvh;
-  max-height: 42dvh;
-  transition: opacity 0.35s ease;
+  min-height: 0;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+  pointer-events: none;
+  transition: max-height 0.35s ease, opacity 0.35s ease, padding 0.35s ease;
 }
-#chatView.has-sahne.sahne-busy #chat {
-  opacity: 0.82;
+#chatView.has-sahne.sheet-open #chat {
+  min-height: 18dvh;
+  max-height: 32dvh;
+  opacity: 1;
+  padding: 8px 0;
+  pointer-events: auto;
+  overflow: auto;
 }
+#chatView.has-sahne.sahne-busy:not(.sheet-open) #chat {
+  max-height: 0;
+  opacity: 0;
+}
+#chatView.has-sahne .sahne-gate-hint {
+  display: none;
+}
+#chatView.has-sahne.sheet-open .sahne-gate-hint {
+  display: block;
+}
+.sahne-sheet-toggle {
+  position: relative;
+  z-index: 2;
+  margin-top: 4px;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  background: transparent;
+  color: #e6d7a8;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+.sahne-organ {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+}
+.sahne-organ:not(.is-yuz) { display: flex; }
+.sahne-organ-frame {
+  width: 100%;
+  min-height: 140px;
+  max-height: 36dvh;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--sahne-gold-soft);
+  background: rgba(8, 10, 16, 0.7);
+}
+.sahne-organ-frame iframe {
+  width: 100%;
+  height: 36dvh;
+  border: 0;
+}
+.sahne-organ-meta {
+  margin: 0;
+  font-size: 0.7rem;
+  color: #b7aa88;
+  text-align: center;
+}
+.sahne-face.is-organ-dim {
+  opacity: 0.55;
+  transform: scale(0.9);
+}
+#chatView.has-sahne.sheet-open .sahne-sheet-toggle {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+/* Sıra 32: A tam · B görsel · C kumanda */
+#chatView.has-sahne[data-sahne-abc="B"] .sahne-face-svg {
+  width: 96px;
+  height: 100px;
+}
+#chatView.has-sahne[data-sahne-abc="C"] .sahne-stage {
+  min-height: min(40dvh, 320px);
+}
+#chatView.has-sahne[data-sahne-abc="C"] .sahne-organ {
+  display: none !important;
+}
+#chatView:not(.has-sahne) .sahne-sheet-toggle {
+  display: none;
+}
+.sahne-dock { display: block; }
 .sahne-durum {
   position: relative;
   z-index: 1;

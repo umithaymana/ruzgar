@@ -2,8 +2,8 @@
   "dal": "14_fi_zi_k",
   "excel": "14 - ) FİZİK.xlsx",
   "n_list": 150,
-  "sources": 9,
-  "ok_sources": 9,
+  "sources": 10,
+  "ok_sources": 10,
   "ilave_rows": 3,
   "updated_utc": "2026-11-09T20:59:10.071666+00:00",
   "skills": [
@@ -163,6 +163,22 @@
       "ok": true,
       "tam_eser": true,
       "derin_yesil": true
+    },
+    "muhendis_sim": {
+      "kaynak_id": "14_fi_zi_k_muhendis_sim",
+      "baslik": "Mühendis — şema/simülasyon (sarkaç, yörünge, akış) kalın",
+      "url": "https://openstax.org/details/books/university-physics-volume-1",
+      "dal": "14_fi_zi_k",
+      "truncated": false,
+      "html_pages": 22,
+      "html_expected": 20,
+      "updated_utc": "2026-11-13T08:38:17.076974+00:00",
+      "parca": 53,
+      "parca_sayisi": 53,
+      "ok": true,
+      "tam_eser": true,
+      "derin_yesil": true,
+      "html_got": 22
     }
   },
   "telafi_purge_utc": "2026-11-02T23:48:57.594243+00:00",
@@ -205,10 +221,14 @@
       "parca": 53
     },
     {
+      "key": "muhendis_sim",
+      "parca": 53
+    },
+    {
       "key": "hyperphysics_deep",
       "parca": 51
     }
   ],
-  "deep_full_count": 9,
-  "tam_eser_utc": "2026-11-11T11:39:09.231670+00:00"
+  "deep_full_count": 10,
+  "tam_eser_utc": "2026-11-13T08:38:17.200953+00:00"
 }

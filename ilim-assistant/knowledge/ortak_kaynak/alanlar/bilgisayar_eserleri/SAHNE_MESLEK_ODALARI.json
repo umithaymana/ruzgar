@@ -1,0 +1,24 @@
+{
+  "plan_adim": "26-30",
+  "ts": "2026-11-13",
+  "odalar": [
+    {"id": "mimar", "ad": "Mimar / müteahhit", "organlar": ["harita", "cizim", "foto", "cam"], "mobil": "B"},
+    {"id": "yonetmen", "ad": "Yönetmen / editör", "organlar": ["video", "ses"], "mobil": "B"},
+    {"id": "yazilimci", "ad": "Yazılımcı", "organlar": ["belge"], "mobil": "B"},
+    {"id": "arastirmaci", "ad": "Araştırmacı", "organlar": ["eser", "belge"], "mobil": "A"},
+    {"id": "gezgin", "ad": "Gezgin / tarihçi", "organlar": ["harita", "eser"], "mobil": "A"},
+    {"id": "egitmen", "ad": "Doktor / eğitmen", "organlar": ["belge", "foto"], "mobil": "B", "etiket": "teşhis yok"},
+    {"id": "hukuk", "ad": "Avukat / noter dosya", "organlar": ["belge", "tablo"], "mobil": "B", "etiket": "tavsiye değil"},
+    {"id": "muhendis", "ad": "Mühendis", "organlar": ["tablo", "cizim"], "mobil": "B"},
+    {"id": "gazeteci", "ad": "Gazeteci", "organlar": ["harita", "cam", "belge"], "mobil": "B"},
+    {"id": "muzisyen", "ad": "Müzisyen", "organlar": ["ses"], "mobil": "A"},
+    {"id": "ciftci", "ad": "Çiftçi / saha", "organlar": ["harita", "cam"], "mobil": "A"},
+    {"id": "ogrenci", "ad": "Öğrenci", "organlar": ["belge", "eser"], "mobil": "A"},
+    {"id": "aile", "ad": "Aile", "organlar": ["cam"], "mobil": "A", "etiket": "cihaz defteri"}
+  ],
+  "abc": {
+    "A": "Tam kullan — gör + ses + pin",
+    "B": "Güçlü görsel — önizleme/işaret; ağır üretim PC",
+    "C": "Kumanda — başlat/durdur/onay"
+  }
+}
