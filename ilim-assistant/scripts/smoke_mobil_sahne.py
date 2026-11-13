@@ -57,8 +57,8 @@ def main() -> None:
         "sahneDalga",
         "sahne-face-svg",
         'role="status"',
-        "app.js?v=46",
-        "app.css?v=41",
+        "app.js?v=47",
+        "app.css?v=42",
         "btnSahneSheet",
         "sahneDock",
         "sahneOrgan",
@@ -148,11 +148,11 @@ def main() -> None:
             fail(f"app.css eksik: {needle}")
     ok("PWA sahne işaretler")
     sw = (pwa / "sw.js").read_text(encoding="utf-8")
-    if "ruzgar-pwa-v55" not in sw or "app.js?v=46" not in sw or "app.css?v=41" not in sw:
+    if "ruzgar-pwa-v56" not in sw or "app.js?v=47" not in sw or "app.css?v=42" not in sw:
         fail("sw.js cache sürümü index ile hizasız")
-    ok("SW cache hiza v55")
-    if 'app.css?v=41' not in (pwa / "index.html").read_text(encoding="utf-8"):
-        fail("index.html css sürümü 41 değil")
+    ok("SW cache hiza v56")
+    if 'app.css?v=42' not in (pwa / "index.html").read_text(encoding="utf-8"):
+        fail("index.html css sürümü 42 değil")
     print("SMOKE_MOBIL_SAHNE=PASS")
 
 

@@ -99,6 +99,29 @@ function readLocalApiPortFromDisk() {
   }
 }
 
+/** Mobil/LAN: .env RUZGAR_API_HOST (0.0.0.0) — Electron yedek spawn localhost'a kilitlemesin */
+function readApiHostForSpawn() {
+  const fromEnv = String(process.env.RUZGAR_API_HOST || "").trim();
+  if (fromEnv) return fromEnv;
+  try {
+    const envPath = path.join(WORKSPACE_ROOT, "ilim-assistant", ".env");
+    if (!fs.existsSync(envPath)) return "127.0.0.1";
+    const lines = fs.readFileSync(envPath, "utf8").split(/\r?\n/);
+    for (const raw of lines) {
+      const line = String(raw || "").trim();
+      if (!line || line.startsWith("#") || !line.includes("=")) continue;
+      const i = line.indexOf("=");
+      const key = line.slice(0, i).trim();
+      if (key !== "RUZGAR_API_HOST") continue;
+      let val = line.slice(i + 1).trim().replace(/^["']|["']$/g, "");
+      if (val) return val;
+    }
+  } catch (_) {
+    /* yok say */
+  }
+  return "127.0.0.1";
+}
+
 function probeApiHealth(port) {
   return new Promise((resolve) => {
     const req = http.get(
@@ -328,20 +351,23 @@ async function ensureLocalApiServer() {
   const ia = path.join(WORKSPACE_ROOT, "ilim-assistant");
   if (!fs.existsSync(path.join(ia, "run_desktop_api.py"))) return;
   const { exe: py, argsPrefix } = resolveRuzgarPython();
+  const apiHost = readApiHostForSpawn();
   const args = [
     ...argsPrefix,
     "run_desktop_api.py",
     "--host",
-    "127.0.0.1",
+    apiHost,
     "--port",
     String(port),
   ];
   const env = {
     ...process.env,
     RUZGAR_API_PORT: String(port),
+    RUZGAR_API_HOST: apiHost,
     RUZGAR_SKIP_RAG_WARMUP: process.env.RUZGAR_SKIP_RAG_WARMUP || "1",
     ENABLE_WEB_SEARCH: process.env.ENABLE_WEB_SEARCH || "1",
   };
+  console.info(`[RÜZGAR] API host=${apiHost} port=${port}`);
   try {
     console.info(`[RÜZGAR] Yerel API başlatılıyor: ${py}`);
     const child = spawn(py, args, {

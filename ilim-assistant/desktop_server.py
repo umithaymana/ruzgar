@@ -1695,6 +1695,11 @@ def _health_lite_response() -> dict[str, Any]:
         _ses_st = _ses_pub()
     except Exception:
         _ses_st = {"enabled": False}
+    _erisim = None
+    try:
+        _erisim = _mobil_erisim_payload()
+    except Exception:
+        _erisim = None
     return {
         "ok": True,
         "lite": True,
@@ -1709,6 +1714,8 @@ def _health_lite_response() -> dict[str, Any]:
         "bilgisayar_rag": _bb_st,
         "hafiza_oda": _oda_st,
         "ses_sohbet": _ses_st,
+        "api_host": (os.environ.get("RUZGAR_API_HOST") or "127.0.0.1").strip() or "127.0.0.1",
+        "mobil_erisim": _erisim,
     }
 
 
@@ -5306,12 +5313,61 @@ def api_hafiza_oda_cmd(body: HafizaOdaBody):
     return {"ok": False, "error": "action/cmd gerekli"}
 
 
+def _mobil_erisim_payload() -> dict[str, Any]:
+    """LAN + Tailscale mobil kapı URL'leri (telefonun bağlanacağı adresler)."""
+    import socket
+
+    port = int((os.environ.get("RUZGAR_API_PORT") or os.environ.get("PORT") or "8779").strip() or "8779")
+    listen = (os.environ.get("RUZGAR_API_HOST") or "127.0.0.1").strip() or "127.0.0.1"
+    lan_open = listen in ("0.0.0.0", "::", "*") or not listen.startswith("127.")
+    ips: list[str] = []
+    try:
+        hostname = socket.gethostname()
+        for info in socket.getaddrinfo(hostname, None, socket.AF_INET):
+            ip = info[4][0]
+            if ip and not ip.startswith("127.") and ip not in ips:
+                ips.append(ip)
+    except Exception:
+        pass
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        rip = s.getsockname()[0]
+        s.close()
+        if rip and not rip.startswith("127.") and rip not in ips:
+            ips.insert(0, rip)
+    except Exception:
+        pass
+    urls = [f"http://{ip}:{port}/mobil/" for ip in ips]
+    return {
+        "ok": True,
+        "listen_host": listen,
+        "port": port,
+        "lan_open": bool(lan_open),
+        "ips": ips,
+        "urls": urls,
+        "https_mic_hint": f"https://<ip>:8443/mobil/ (mic için HTTPS köprü)",
+        "note": (
+            "Telefon aynı Wi‑Fi veya Tailscale ile URLs'ten birini açsın."
+            if lan_open
+            else "API yalnız localhost — RUZGAR_API_HOST=0.0.0.0 ile ForceRestart gerekir."
+        ),
+    }
+
+
+@app.get("/api/mobil/erisim")
+def api_mobil_erisim():
+    """Mobil erişim adresleri — LAN/Tailscale teşhis."""
+    return _mobil_erisim_payload()
+
+
 @app.get("/api/mobil/status")
 def api_mobil_status():
     from ilim_assistant.ruzgar_mobil_oturum import ensure_mimar_admin, public_status
 
     ensure_mimar_admin()
-    return {"ok": True, **public_status(), "pwa": "/mobil/"}
+    erisim = _mobil_erisim_payload()
+    return {"ok": True, **public_status(), "pwa": "/mobil/", "erisim": erisim}
 
 
 @app.post("/api/mobil/register")

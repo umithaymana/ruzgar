@@ -16515,6 +16515,13 @@ async function sendMessageWithText(t, opts = {}) {
     appendBubble("user", text);
   }
 
+  /* Sahne süper-el: «haritayı göster» vb. → organ (API + CSP OSM) */
+  try {
+    if (typeof window.ruzgarSahneSuperEl === "function") {
+      void window.ruzgarSahneSuperEl(text);
+    }
+  } catch (_) {}
+
   const finishMotorInstant = (statusLabel) => {
     setStatus(statusLabel || "Rüzgar", "Rüzgar");
     if (el.send) el.send.disabled = false;

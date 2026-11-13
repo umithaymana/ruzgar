@@ -1354,8 +1354,21 @@ body.ruzgar-sahne-soft {
   transform: scale(0.88);
   transition: opacity var(--sahne-fade, 0.35s) ease, transform var(--sahne-fade, 0.35s) ease;
 }
-body.ruzgar-sahne-mini .ruzgar-sahne-organ {
+/* Mini: yalnız yüz gizlenir; harita/organ kısa önizleme (tam görünüm sohbette) */
+body.ruzgar-sahne-mini .ruzgar-sahne-organ.is-yuz {
   display: none !important;
+}
+body.ruzgar-sahne-mini .ruzgar-sahne-organ:not(.is-yuz) {
+  display: flex !important;
+  width: min(280px, 86vw);
+  max-height: 160px;
+}
+body.ruzgar-sahne-mini .ruzgar-sahne-organ-frame {
+  min-height: 96px;
+  max-height: 130px;
+}
+body.ruzgar-sahne-mini .ruzgar-sahne-organ-frame iframe {
+  height: 120px;
 }
 
 body.ruzgar-sahne-on.ruzgar-sahne-live #ruzgar-sahne {

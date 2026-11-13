@@ -45,7 +45,18 @@ def main() -> None:
     server = (ROOT / "desktop_server.py").read_text(encoding="utf-8")
     if "/api/sahne/super-el" not in server or "resolve_super_el" not in server:
         fail("desktop_server super-el yok")
-    print("OK: organ+API")
+    if "/api/mobil/erisim" not in server:
+        fail("mobil erisim API yok")
+    app_js = (ROOT.parent / "ruzgar-desktop" / "app.js").read_text(encoding="utf-8")
+    if "ruzgarSahneSuperEl" not in app_js:
+        fail("app.js süper-el sohbet kancası yok")
+    idx = (ROOT.parent / "ruzgar-desktop" / "index.html").read_text(encoding="utf-8")
+    if "openstreetmap.org" not in idx:
+        fail("CSP OSM frame-src yok — harita engellenir")
+    main_js = (ROOT.parent / "ruzgar-desktop" / "main.js").read_text(encoding="utf-8")
+    if "readApiHostForSpawn" not in main_js:
+        fail("Electron API host .env okumuyor")
+    print("OK: organ+API+CSP+kanca+LAN")
     print("organlar", len(ORGANLAR))
     print("SMOKE_SAHNE_SUPER_EL=PASS")
 

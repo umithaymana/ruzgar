@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-11-13 — Sahne plan **18–33**: envanter Word · S1/S2 · süper-el+organ · 13 oda · A/B/C · meslek RAG **sidecar** `.rag_index/sahne_y1` (9147 chunk; ana indekse birleşim canlı 5GB+OSError yüzünden ertelendi). Smoke CIFT/SUPER_EL/ODALAR PASS. Sıra 34–35.
+**Son güncelleme:** 2026-11-13 — Sahne cila: mobil LAN (`RUZGAR_API_HOST=0.0.0.0` + Electron host `.env`) · PC harita (CSP OSM + sohbet süper-el kancası) · meslek RAG ana indekse **+9147** (toplam ~389341) · `/api/mobil/erisim` · PWA SW v56. Plan Word’e dokunulmadı.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 

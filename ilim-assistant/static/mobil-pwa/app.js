@@ -212,7 +212,14 @@
 
   async function runSuperEl(text) {
     const stage = el("sahneStage");
-    if (!stage || stage.classList.contains("hidden")) return null;
+    if (!stage) return null;
+    /* Organ komutu gelince sahne kapalıysa aç (izin varsa) */
+    if (stage.classList.contains("hidden") && sahneAllowed()) {
+      stage.classList.remove("hidden");
+      const view = el("chatView");
+      if (view) view.classList.add("has-sahne");
+    }
+    if (stage.classList.contains("hidden")) return null;
     try {
       const res = await api("/api/sahne/super-el", {
         method: "POST",
@@ -225,6 +232,11 @@
       }
       if (res.organ && res.organ !== "yuz") {
         applySahneOrgan(res.organ, res.hedef, (res.fiil || "") + " · " + res.organ);
+        const view = el("chatView");
+        if (view && view.classList.contains("has-sahne")) {
+          view.classList.remove("sheet-open");
+          syncSahneSheetBtn();
+        }
       }
       return res;
     } catch (_) {
@@ -1611,17 +1623,35 @@
       .getRegistrations()
       .then((regs) => Promise.all(regs.map((r) => r.update())))
       .catch(() => {});
-    navigator.serviceWorker.register("./sw.js?v=18").catch(() => {});
+    navigator.serviceWorker.register("./sw.js?v=19").catch(() => {});
   }
 
-  // Kapı durumu — görünür sağlık satırı
+  // Kapı durumu — görünür sağlık satırı + LAN/Tailscale ipuçları
   api("/api/mobil/status")
     .then((st) => {
       if (st && st.ok) {
         const bits = [`kapı açık · ${st.version || "mobil"}`];
         if (st.users != null) bits.push(`${st.users} kullanıcı`);
+        const er = st.erisim || null;
+        if (er && er.lan_open === false) {
+          bits.push("LAN kapalı (PC’de 0.0.0.0 gerekir)");
+          setMsg(bits.join(" · "), false);
+          return;
+        }
+        if (er && Array.isArray(er.urls) && er.urls.length && !localStorage.getItem(LS.base)) {
+          const prefer =
+            er.urls.find((u) => String(u).includes("100.")) || er.urls[0];
+          if (prefer && baseInput && /127\.0\.0\.1|localhost/i.test(baseInput.value || "")) {
+            baseInput.value = String(prefer).replace(/\/mobil\/?$/, "");
+          }
+        }
         setMsg(bits.join(" · "), true);
       }
     })
-    .catch(() => setMsg("Kapıya ulaşılamadı — PC’de Rüzgar (8779) açık mı?", false));
+    .catch(() =>
+      setMsg(
+        "Kapıya ulaşılamadı — PC’de Rüzgar açık mı? Wi‑Fi: http://<PC-IP>:8779/mobil/ · Tailscale IP de olur.",
+        false,
+      ),
+    );
 })();

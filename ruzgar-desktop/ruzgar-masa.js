@@ -3750,6 +3750,17 @@
     const face = document.getElementById("ruzgar-sahne-face");
     if (!root || !frame) return;
     const o = organ || "yuz";
+    /* Organ görünür olsun: mini çalışma yüzeyinde harita gizleniyordu → sohbete dön */
+    if (o !== "yuz" && typeof masaSayfa === "function") {
+      try {
+        if (
+          document.body.classList.contains("ruzgar-sahne-mini") ||
+          sayfa !== "sohbet"
+        ) {
+          masaSayfa("sohbet");
+        }
+      } catch (_) {}
+    }
     root.setAttribute("data-organ", o);
     root.className = "ruzgar-sahne-organ is-" + o;
     frame.replaceChildren();
@@ -3765,15 +3776,16 @@
       iframe.title = "Harita";
       iframe.loading = "lazy";
       iframe.referrerPolicy = "no-referrer";
-      const q = encodeURIComponent(hedef || "Türkiye");
-      iframe.src = "https://www.openstreetmap.org/export/embed.html?bbox=25,35,45,43&layer=mapnik&marker=39.0,35.0";
-      if (hedef) {
-        iframe.src =
-          "https://www.openstreetmap.org/export/embed.html?bbox=-20,-40,60,70&layer=mapnik&marker=20,0#" +
-          q;
+      iframe.allow = "fullscreen";
+      /* Türkiye varsayılan; hedef varsa OSM arama gömme */
+      iframe.src =
+        "https://www.openstreetmap.org/export/embed.html?bbox=25.5,35.8,45.0,42.3&layer=mapnik&marker=39.0,35.2";
+      if (hedef && String(hedef).trim()) {
+        const q = encodeURIComponent(String(hedef).trim());
+        iframe.src = "https://www.openstreetmap.org/export/embed.html?bbox=20,30,50,45&layer=mapnik#" + q;
       }
       frame.appendChild(iframe);
-      if (meta) meta.textContent = metaText || ("Harita · " + (hedef || "dünya") + " · OSM yasal gömme");
+      if (meta) meta.textContent = metaText || ("Harita · " + (hedef || "Türkiye") + " · OSM yasal gömme");
     } else if (o === "cam") {
       const p = document.createElement("p");
       p.className = "ruzgar-sahne-organ-note";

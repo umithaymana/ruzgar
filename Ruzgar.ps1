@@ -210,6 +210,11 @@ function Start-ApiServer {
     $uargs += "--host"
     # Mobil/Tailscale: RUZGAR_API_HOST=0.0.0.0 veya 100.x (varsayılan yalnız localhost)
     $apiHost = if ($env:RUZGAR_API_HOST -and $env:RUZGAR_API_HOST.Trim()) { $env:RUZGAR_API_HOST.Trim() } else { "127.0.0.1" }
+    if ($apiHost -eq "127.0.0.1" -or $apiHost -eq "localhost") {
+        Log "UYARI: API host=$apiHost — telefon/LAN baglanamaz; .env RUZGAR_API_HOST=0.0.0.0 onerilir"
+    } else {
+        Log "API host=$apiHost (mobil/LAN acik)"
+    }
     $uargs += $apiHost
     $uargs += "--port"
     $uargs += "$ApiPort"

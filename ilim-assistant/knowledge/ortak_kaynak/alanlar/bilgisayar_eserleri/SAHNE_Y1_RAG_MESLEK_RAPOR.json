@@ -1,0 +1,7 @@
+{
+  "status": "incremental_meslek",
+  "files_changed": 732,
+  "new_chunks": 9147,
+  "total_chunks": 389341,
+  "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+}
