@@ -54,6 +54,24 @@ def main() -> None:
     r2 = resolve_super_el("gelecek sehir goster", geocode=False)
     if r2.get("action") != "era_gelecek":
         fail("era_gelecek")
+    r3 = resolve_super_el("sentinel goster", geocode=False)
+    if r3.get("action") != "mode_sentinel":
+        fail("mode_sentinel")
+    r4 = resolve_super_el("mapillary sokak goruntu", geocode=False)
+    if r4.get("action") != "mode_pano":
+        fail("mode_pano")
+
+    from ilim_assistant.ruzgar_stac import search_sentinel  # noqa: E402
+    from ilim_assistant.ruzgar_pano import pano_nearby  # noqa: E402
+
+    st = search_sentinel(hedef="Bursa", limit=2)
+    if not st.get("ok") or not st.get("best"):
+        fail(f"STAC arama: {st.get('error') or 'best yok'}")
+    print("OK: STAC", (st.get("best") or {}).get("id", "")[:40])
+    pn = pano_nearby(hedef="İstanbul", lat=41.0082, lon=28.9784)
+    if not pn.get("ok") or not pn.get("embed_url"):
+        fail("pano embed")
+    print("OK: pano embed", "token" if pn.get("token_configured") else "web")
 
     server = (ROOT / "desktop_server.py").read_text(encoding="utf-8")
     for n in (
@@ -63,13 +81,21 @@ def main() -> None:
         "/api/sehir-ikiz/kameralar",
         "/api/sehir-ikiz/mediamtx",
         "/api/sehir-ikiz/model/",
+        "/api/sehir-ikiz/stac",
+        "/api/sehir-ikiz/pano",
     ):
         if n not in server:
             fail(f"API {n}")
     viewer = (ROOT.parent / "ruzgar-desktop" / "harita-viewer.html").read_text(encoding="utf-8")
-    for n in ("loadBuildings", "spawnAgents", "loadCameraPins", "era"):
+    for n in ("loadBuildings", "spawnAgents", "loadCameraPins", "era", "paintSentinel", "paintPano"):
         if n not in viewer:
             fail(f"viewer {n}")
+    masa = (ROOT.parent / "ruzgar-desktop" / "ruzgar-masa.js").read_text(encoding="utf-8")
+    if "mode_sentinel" not in masa or "mode_pano" not in masa:
+        fail("masa mode_sentinel/pano")
+    mobil = (ROOT / "static" / "mobil-pwa" / "app.js").read_text(encoding="utf-8")
+    if "mode_sentinel" not in mobil or "mode_pano" not in mobil:
+        fail("mobil mode_sentinel/pano")
     glb = Path(r"D:\ÜMİT\14-) PROGRAMLAR\RuzgarSehirIkiz\models\ornek_bina.glb")
     ifc = Path(r"D:\ÜMİT\14-) PROGRAMLAR\RuzgarSehirIkiz\models\ornek_bina.ifc")
     if not glb.is_file() or not ifc.is_file():

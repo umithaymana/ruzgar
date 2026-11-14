@@ -12,8 +12,16 @@
   <link rel="stylesheet" href="vendor/cesium/Widgets/widgets.css" />
   <style>
     html, body { margin: 0; height: 100%; background: #0b1220; color: #f3e6c4; font-family: "Segoe UI", system-ui, sans-serif; overflow: hidden; }
-    #map, #globe, #f4 { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-    #globe, #f4 { display: none; }
+    #map, #globe, #f4, #pano { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+    #globe, #f4, #pano { display: none; }
+    #stacCard {
+      display: none; position: absolute; right: 10px; top: 10px; z-index: 1100;
+      max-width: min(280px, 42vw); padding: 8px 10px; border-radius: 10px;
+      background: rgba(8,10,16,0.88); border: 1px solid rgba(212,175,55,0.35);
+      font-size: 12px; line-height: 1.35;
+    }
+    #stacCard.on { display: block; }
+    #stacCard img { width: 100%; border-radius: 6px; margin-top: 6px; display: block; }
     #badge {
       position: absolute; left: 10px; bottom: 10px; z-index: 1000;
       padding: 6px 10px; border-radius: 999px;
@@ -44,8 +52,10 @@
 <body>
   <div id="map"></div>
   <iframe id="f4" title="3D Harita yedek (F4map)" allowfullscreen referrerpolicy="no-referrer"></iframe>
+  <iframe id="pano" title="Mapillary sokak görünümü" allowfullscreen referrerpolicy="no-referrer"></iframe>
   <div id="globe"></div>
   <div id="badge">Harita</div>
+  <div id="stacCard" aria-live="polite"></div>
   <div id="yearBar" aria-label="Zaman">
     <label for="year">Zaman</label>
     <input id="year" type="range" min="2000" max="2024" step="1" value="2015" />
@@ -98,6 +108,9 @@
   const yearInput = document.getElementById("year");
   const yearVal = document.getElementById("yearVal");
 
+  const panoEl = document.getElementById("pano");
+  const stacCard = document.getElementById("stacCard");
+
   const MODE_LABEL = {
     "2d": "2D · OpenStreetMap",
     "3d": "3D · Cesium (yerel)",
@@ -105,6 +118,8 @@
     uydu: "Uydu · Esri World Imagery",
     tur: "Tur · Cesium dünya uçuşu",
     f4: "3D · F4map (yedek)",
+    sentinel: "Sentinel-2 · STAC",
+    pano: "Sokak · Mapillary",
   };
 
   function setBadge(extra) {
@@ -115,6 +130,8 @@
     mapEl.style.display = which === "map" ? "block" : "none";
     f4.style.display = which === "f4" ? "block" : "none";
     globe.style.display = which === "globe" ? "block" : "none";
+    panoEl.style.display = which === "pano" ? "block" : "none";
+    if (which !== "map") stacCard.classList.remove("on");
   }
 
   function heightFromZoom(z) {
@@ -492,6 +509,109 @@
     }
   }
 
+  function paintSentinel() {
+    showOnly("map");
+    yearBar.classList.remove("on");
+    setBadge("STAC…");
+    const map = L.map("map", { zoomControl: false, attributionControl: true }).setView([lat, lon], Math.max(zoom, 11));
+    uyduLayer().addTo(map);
+    L.marker([lat, lon]).addTo(map).bindPopup(label);
+    const qCity = encodeURIComponent(label || guessSehirFromLabel() || "");
+    const url =
+      apiRoot() +
+      "/api/sehir-ikiz/stac?hedef=" +
+      qCity +
+      "&lat=" +
+      lat.toFixed(5) +
+      "&lon=" +
+      lon.toFixed(5) +
+      "&limit=3";
+    fetch(url)
+      .then(function (r) {
+        return r.json();
+      })
+      .then(function (data) {
+        if (!data || !data.ok || !data.best) {
+          setBadge("STAC boş");
+          stacCard.classList.add("on");
+          stacCard.textContent = (data && data.error) || "Sentinel sahne bulunamadı";
+          return;
+        }
+        const b = data.best;
+        const cc = b.cloud_cover != null ? Number(b.cloud_cover).toFixed(0) + "% bulut" : "";
+        stacCard.classList.add("on");
+        stacCard.innerHTML =
+          "<b>Sentinel-2</b><br/>" +
+          (b.datetime || "").slice(0, 10) +
+          (cc ? " · " + cc : "") +
+          "<br/><small>" +
+          (b.id || "") +
+          "</small>" +
+          (b.thumbnail
+            ? '<img alt="önizleme" src="' + b.thumbnail + '" />'
+            : "");
+        if (b.bbox && b.bbox.length === 4) {
+          const bounds = [
+            [b.bbox[1], b.bbox[0]],
+            [b.bbox[3], b.bbox[2]],
+          ];
+          L.rectangle(bounds, {
+            color: "#d4af37",
+            weight: 1,
+            fillOpacity: 0.08,
+          }).addTo(map);
+          map.fitBounds(bounds, { padding: [20, 20] });
+        }
+        setBadge((b.datetime || "").slice(0, 10) || "STAC");
+      })
+      .catch(function (err) {
+        console.warn("stac", err);
+        setBadge("STAC hata");
+      });
+    setTimeout(function () {
+      map.invalidateSize();
+    }, 80);
+  }
+
+  function paintPano() {
+    showOnly("pano");
+    yearBar.classList.remove("on");
+    setBadge("Mapillary…");
+    const qCity = encodeURIComponent(label || "");
+    const url =
+      apiRoot() +
+      "/api/sehir-ikiz/pano?hedef=" +
+      qCity +
+      "&lat=" +
+      lat.toFixed(5) +
+      "&lon=" +
+      lon.toFixed(5);
+    fetch(url)
+      .then(function (r) {
+        return r.json();
+      })
+      .then(function (data) {
+        const embed =
+          (data && data.embed_url) ||
+          "https://www.mapillary.com/app/?lat=" +
+            lat.toFixed(6) +
+            "&lng=" +
+            lon.toFixed(6) +
+            "&z=17";
+        panoEl.src = embed;
+        setBadge(data && data.token_configured ? "API+web" : "açık web");
+      })
+      .catch(function () {
+        panoEl.src =
+          "https://www.mapillary.com/app/?lat=" +
+          lat.toFixed(6) +
+          "&lng=" +
+          lon.toFixed(6) +
+          "&z=17";
+        setBadge("web yedek");
+      });
+  }
+
   // 3d: Cesium ana; engine=f4 veya mode=f4 → F4map yedek
   if (mode === "f4" || (mode === "3d" && forceF4)) {
     paintF4();
@@ -499,6 +619,10 @@
     paintCesium3d();
   } else if (mode === "tur") {
     paintTur();
+  } else if (mode === "sentinel") {
+    paintSentinel();
+  } else if (mode === "pano") {
+    paintPano();
   } else if (mode === "uydu") {
     paintLeaflet("uydu");
   } else if (mode === "4d") {

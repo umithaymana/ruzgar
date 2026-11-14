@@ -244,6 +244,8 @@
       '<button type="button" data-h="mode_4d">4D</button>' +
       '<button type="button" data-h="mode_uydu">Uydu</button>' +
       '<button type="button" data-h="mode_tur">Tur</button>' +
+      '<button type="button" data-h="mode_sentinel" title="Sentinel-2">S2</button>' +
+      '<button type="button" data-h="mode_pano" title="Mapillary">Pano</button>' +
       '<button type="button" data-h="mode_f4" title="F4map yedek">F4</button>';
     tools.addEventListener("click", (ev) => {
       const btn = ev.target && ev.target.closest("button[data-h]");
@@ -331,6 +333,14 @@
       st.mode = "f4";
       if ((Number(st.zoom) || 6) < 15) st.zoom = 16;
     }
+    if (action === "mode_sentinel" || action === "sentinel") {
+      st.mode = "sentinel";
+      if ((Number(st.zoom) || 6) < 10) st.zoom = 11;
+    }
+    if (action === "mode_pano" || action === "pano") {
+      st.mode = "pano";
+      if ((Number(st.zoom) || 6) < 15) st.zoom = 17;
+    }
     if (action === "era_gecmis") {
       st.era = "gecmis";
       st.mode = st.mode === "2d" ? "3d" : st.mode;
@@ -347,11 +357,11 @@
       if ((Number(st.zoom) || 6) < 15) st.zoom = 16;
     }
     const isMode =
-      /^mode_(2d|3d|4d|uydu|tur|f4)$/.test(action) ||
-      /^(2d|3d|4d|uydu|tur|f4|era_gecmis|era_gelecek|show_buildings)$/.test(action);
+      /^mode_(2d|3d|4d|uydu|tur|f4|sentinel|pano)$/.test(action) ||
+      /^(2d|3d|4d|uydu|tur|f4|sentinel|pano|era_gecmis|era_gelecek|show_buildings)$/.test(action);
     const hedefStr = c.hedef != null ? String(c.hedef).trim() : "";
     const hedefIsMode =
-      /^(2d|3d|4d|uydu|tur|f4|f4map|panorama|dunya\s*turu|tarihi|historical)$/i.test(hedefStr);
+      /^(2d|3d|4d|uydu|tur|f4|f4map|sentinel|pano|mapillary|panorama|dunya\s*turu|tarihi|historical)$/i.test(hedefStr);
     if (!isMode || (geo && !hedefIsMode)) {
       if (geo && geo.lat != null && geo.lon != null && !hedefIsMode) {
         st.lat = Number(geo.lat);
@@ -469,6 +479,8 @@
         mode_uydu: 1,
         mode_tur: 1,
         mode_f4: 1,
+        mode_sentinel: 1,
+        mode_pano: 1,
         era_gecmis: 1,
         era_gelecek: 1,
         show_buildings: 1,

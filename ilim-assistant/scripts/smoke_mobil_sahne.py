@@ -57,7 +57,7 @@ def main() -> None:
         "sahneDalga",
         "sahne-face-svg",
         'role="status"',
-        "app.js?v=54-sehir",
+        "app.js?v=64-stac-pano",
         "app.css?v=46-sehir",
         "btnSahneSheet",
         "sahneDock",
@@ -148,13 +148,26 @@ def main() -> None:
             fail(f"app.css eksik: {needle}")
     ok("PWA sahne işaretler")
     sw = (pwa / "sw.js").read_text(encoding="utf-8")
-    if "ruzgar-pwa-v63-sehir" not in sw or "app.js?v=54-sehir" not in sw or "app.css?v=46-sehir" not in sw:
+    if "ruzgar-pwa-v64-stac-pano" not in sw or "app.js?v=64-stac-pano" not in sw or "app.css?v=46-sehir" not in sw:
         fail("sw.js cache sürümü index ile hizasız")
-    ok("SW cache hiza v63-sehir")
+    ok("SW cache hiza v64-stac-pano")
     if "app.css?v=46-sehir" not in html:
         fail("index.html css sürümü 46-sehir değil")
+    if "app.js?v=64-stac-pano" not in html:
+        fail("index.html js sürümü 64-stac-pano değil")
     # Harita organı paritesi (PC ile aynı viewer + Cesium/F4 + şehir)
-    for needle in ("harita-viewer.html", "mode_uydu", "mode_tur", "mode_3d", "mode_f4", "runSuperEl", "haritaPilotSehir", "era_gelecek"):
+    for needle in (
+        "harita-viewer.html",
+        "mode_uydu",
+        "mode_tur",
+        "mode_3d",
+        "mode_f4",
+        "mode_sentinel",
+        "mode_pano",
+        "runSuperEl",
+        "haritaPilotSehir",
+        "era_gelecek",
+    ):
         if needle not in js:
             fail(f"app.js harita paritesi eksik: {needle}")
     ok("mobil harita paritesi")

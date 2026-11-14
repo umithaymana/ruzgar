@@ -362,6 +362,21 @@ def resolve_super_el(text: str, *, geocode: bool = True) -> dict[str, Any]:
         fiil = "goster"
         action = "show_buildings"
         guven = 0.9
+    elif re.search(
+        r"\b(sentinel|stac|uydu\s*analiz|copernicus\s*sentinel|sentinel\s*2)\b", n
+    ) or (
+        re.search(r"\b(tarim|orman|yangin)\b", n)
+        and re.search(r"\b(uydu|goruntu|goster|analiz)\b", n)
+    ):
+        fiil = "goster"
+        action = "mode_sentinel"
+        guven = 0.9
+    elif re.search(
+        r"\b(mapillary|kartaview|sokak\s*goruntu|panorama|pano|sokak\s*seviye)\b", n
+    ):
+        fiil = "goster"
+        action = "mode_pano"
+        guven = 0.9
     elif re.search(r"\b(f4map|f4\s*yedek|yedek\s*3d|f4\s*mod)\b", n):
         fiil = "degistir"
         action = "mode_f4"
@@ -474,6 +489,8 @@ def resolve_super_el(text: str, *, geocode: bool = True) -> dict[str, Any]:
         "era_gecmis",
         "era_gelecek",
         "show_buildings",
+        "mode_sentinel",
+        "mode_pano",
     ):
         organ = "harita"
 

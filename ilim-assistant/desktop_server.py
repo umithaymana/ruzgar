@@ -5517,6 +5517,39 @@ def api_sehir_ikiz_postgis():
     return d
 
 
+@app.get("/api/sehir-ikiz/stac")
+def api_sehir_ikiz_stac(
+    hedef: str = "",
+    lat: float | None = None,
+    lon: float | None = None,
+    limit: int = 5,
+    max_cloud: float = 40.0,
+):
+    """Sentinel-2 STAC arama (Element84) — açık API, masaüstü yazılım yok."""
+    from ilim_assistant.ruzgar_stac import search_sentinel
+
+    return search_sentinel(
+        hedef=hedef or None,
+        lat=lat,
+        lon=lon,
+        limit=limit,
+        max_cloud=max_cloud,
+    )
+
+
+@app.get("/api/sehir-ikiz/pano")
+def api_sehir_ikiz_pano(
+    hedef: str = "",
+    lat: float | None = None,
+    lon: float | None = None,
+    limit: int = 8,
+):
+    """Mapillary açık erişim: token API + web gömme yedek."""
+    from ilim_assistant.ruzgar_pano import pano_nearby
+
+    return pano_nearby(hedef=hedef or None, lat=lat, lon=lon, limit=limit)
+
+
 @app.get("/api/sehir-ikiz/geojson")
 def api_sehir_ikiz_geojson(sehir: str = "bursa", kind: str = "buildings", limit: int = 8000):
     """Yerel OSM GeoJSON — Cesium/Leaflet bina-yol katmanı."""

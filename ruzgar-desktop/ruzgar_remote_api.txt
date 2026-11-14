@@ -1,2 +1,2 @@
-﻿# UI -> yerel API (Ruzgar.ps1 yazar, elle degistirmeyin)
+﻿# UI -> yerel API
 http://127.0.0.1:8779

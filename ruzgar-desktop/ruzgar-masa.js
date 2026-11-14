@@ -3840,6 +3840,8 @@
       '<button type="button" data-harita-act="mode_4d" title="4D zamanlı uydu">4D</button>' +
       '<button type="button" data-harita-act="mode_uydu" title="Uydu görüntüsü">Uydu</button>' +
       '<button type="button" data-harita-act="mode_tur" title="Panoramik dünya turu">Tur</button>' +
+      '<button type="button" data-harita-act="mode_sentinel" title="Sentinel-2 STAC">S2</button>' +
+      '<button type="button" data-harita-act="mode_pano" title="Mapillary sokak">Pano</button>' +
       '<button type="button" data-harita-act="mode_f4" title="F4map yedek 3D">F4</button>';
     tools.addEventListener("click", (ev) => {
       const btn = ev.target && ev.target.closest("button[data-harita-act]");
@@ -3920,12 +3922,16 @@
       action === "mode_uydu" ||
       action === "mode_tur" ||
       action === "mode_f4" ||
+      action === "mode_sentinel" ||
+      action === "mode_pano" ||
       action === "2d" ||
       action === "3d" ||
       action === "4d" ||
       action === "uydu" ||
       action === "tur" ||
-      action === "f4";
+      action === "f4" ||
+      action === "sentinel" ||
+      action === "pano";
     if (action === "mode_2d" || action === "2d") st.mode = "2d";
     if (action === "mode_3d" || action === "3d") {
       st.mode = "3d";
@@ -3940,6 +3946,14 @@
     if (action === "mode_f4" || action === "f4") {
       st.mode = "f4";
       if ((Number(st.zoom) || 6) < 15) st.zoom = 16;
+    }
+    if (action === "mode_sentinel" || action === "sentinel") {
+      st.mode = "sentinel";
+      if ((Number(st.zoom) || 6) < 10) st.zoom = 11;
+    }
+    if (action === "mode_pano" || action === "pano") {
+      st.mode = "pano";
+      if ((Number(st.zoom) || 6) < 15) st.zoom = 17;
     }
     if (action === "era_gecmis") {
       st.era = "gecmis";
@@ -3959,7 +3973,7 @@
 
     const hedefStr = c.hedef != null ? String(c.hedef).trim() : "";
     const hedefIsModeToken =
-      /^(2d|3d|4d|uydu|tur|f4|f4map|panorama|uydu\s*goruntu(su)?|dunya\s*turu|uc\s*boyut(lu)?|dort\s*boyut(lu)?|iki\s*boyut(lu)?|tarihi|historical)$/i.test(
+      /^(2d|3d|4d|uydu|tur|f4|f4map|sentinel|pano|mapillary|panorama|uydu\s*goruntu(su)?|dunya\s*turu|uc\s*boyut(lu)?|dort\s*boyut(lu)?|iki\s*boyut(lu)?|tarihi|historical)$/i.test(
         hedefStr,
       );
     // Salt 2D/3D/4D: mevcut konumu koru; «3d» yer sanılmasın
@@ -4128,6 +4142,8 @@
       mode_uydu: 1,
       mode_tur: 1,
       mode_f4: 1,
+      mode_sentinel: 1,
+      mode_pano: 1,
       era_gecmis: 1,
       era_gelecek: 1,
       show_buildings: 1,

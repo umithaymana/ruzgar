@@ -14,6 +14,8 @@
 | 3 | ✅ QGIS/GDAL + **PostGIS 3.6** (`D:\RuzgarSehirIkiz`) + 4 şehir tabloları |
 | 4–9 | ✅ Cesium bina, Blender/IFC, era, ajan, MediaMTX |
 | 10 | ✅ Epic Games Launcher kurulu (UE5 editör Epic’ten indirilir — hesap/login gerekir) |
+| STAC | ✅ Element84 Sentinel-2 (masaüstü yazılım yok) — `/api/sehir-ikiz/stac` + harita S2 |
+| Mapillary | ✅ Açık API/web gömme — `/api/sehir-ikiz/pano` (+ isteğe bağlı `RUZGAR_MAPILLARY_TOKEN`) |
 
 ## PostGIS
 - Bin: `D:\RuzgarSehirIkiz\pgsql\bin`
