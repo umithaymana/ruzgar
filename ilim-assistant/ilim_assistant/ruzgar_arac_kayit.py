@@ -122,9 +122,10 @@ _SABLONLAR: list[dict[str, Any]] = [
         "ad": "PostgreSQL / psql",
         "yetenekler": ["db", "postgis", "sehir_veri"],
         "komutlar": {"which": ["psql"], "paths": [
+            r"D:\RuzgarSehirIkiz\pgsql\bin\psql.exe",
             r"C:\Program Files\PostgreSQL\*\bin\psql.exe",
         ]},
-        "ornek": "psql -U ruzgar -d sehir_ikiz",
+        "ornek": "psql -U postgres -h 127.0.0.1 -d sehir_ikiz",
         "plan_faz": 3,
     },
     {
@@ -132,6 +133,7 @@ _SABLONLAR: list[dict[str, Any]] = [
         "ad": "Blender",
         "yetenekler": ["3d_model", "gltf", "mimari"],
         "komutlar": {"which": ["blender"], "paths": [
+            r"C:\Program Files\Blender Foundation\Blender 4.5\blender.exe",
             r"C:\Program Files\Blender Foundation\Blender*\blender.exe",
         ]},
         "ornek": "blender -b model.blend --python export_gltf.py",
@@ -150,9 +152,10 @@ _SABLONLAR: list[dict[str, Any]] = [
         "ad": "Unreal Engine 5",
         "yetenekler": ["render", "cinematic", "ue5"],
         "komutlar": {"paths": [
+            r"C:\Program Files\Epic Games\Launcher\Portal\Binaries\Win64\EpicGamesLauncher.exe",
             r"C:\Program Files\Epic Games\UE_5*\Engine\Binaries\Win64\UnrealEditor.exe",
         ]},
-        "ornek": "UnrealEditor.exe",
+        "ornek": "EpicGamesLauncher.exe → Unreal Engine kur / UnrealEditor.exe",
         "plan_faz": 10,
     },
 ]

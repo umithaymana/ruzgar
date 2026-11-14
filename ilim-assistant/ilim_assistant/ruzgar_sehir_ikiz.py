@@ -15,6 +15,13 @@ DATA = Path(r"D:\ÜMİT\14-) PROGRAMLAR\RuzgarSehirIkiz")
 OSM = DATA / "osm"
 GPKG = DATA / "cache" / "pilot_sehirler.gpkg"
 MANIFEST = OSM / "PILOT_MANIFEST.json"
+# ASCII-only PG/PostGIS (Türkçe yol initdb kırıyordu)
+PG_BIN = Path(r"D:\RuzgarSehirIkiz\pgsql\bin")
+PG_DATA = Path(r"D:\RuzgarSehirIkiz\pgdata")
+PG_DB = "sehir_ikiz"
+PG_USER = "postgres"
+PG_HOST = "127.0.0.1"
+PG_PORT = 5432
 
 PILOT = {
     "istanbul": {"label": "İstanbul", "lat": 41.0082, "lon": 28.9784, "zoom": 11},
@@ -40,6 +47,51 @@ def _ogr2ogr() -> str | None:
     return shutil.which("ogr2ogr")
 
 
+def postgis_durum() -> dict[str, Any]:
+    """Yerel PostGIS ayakta mı? (şifre env: PGPASSWORD veya RUZGAR_PGPASSWORD)."""
+    psql = PG_BIN / "psql.exe"
+    if not psql.is_file():
+        return {"ok": False, "error": "psql yok", "bin": str(PG_BIN)}
+    import subprocess
+
+    env = os.environ.copy()
+    if not env.get("PGPASSWORD"):
+        env["PGPASSWORD"] = env.get("RUZGAR_PGPASSWORD") or "RuzgarSehir17"
+    try:
+        r = subprocess.run(
+            [
+                str(psql),
+                "-U",
+                PG_USER,
+                "-h",
+                PG_HOST,
+                "-p",
+                str(PG_PORT),
+                "-d",
+                PG_DB,
+                "-tAc",
+                "SELECT PostGIS_Version();",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=15,
+            env=env,
+        )
+        ver = (r.stdout or "").strip()
+        return {
+            "ok": r.returncode == 0 and bool(ver),
+            "postgis": ver or None,
+            "db": PG_DB,
+            "host": PG_HOST,
+            "port": PG_PORT,
+            "bin": str(PG_BIN),
+            "data": str(PG_DATA),
+            "stderr": (r.stderr or "")[-300] if r.returncode else None,
+        }
+    except Exception as ex:
+        return {"ok": False, "error": str(ex), "bin": str(PG_BIN)}
+
+
 def liste_pilot() -> dict[str, Any]:
     dosyalar: dict[str, Any] = {}
     for k, meta in PILOT.items():
@@ -58,6 +110,7 @@ def liste_pilot() -> dict[str, Any]:
         "sehirler": dosyalar,
         "gpkg": str(GPKG) if GPKG.is_file() else None,
         "ogr2ogr": _ogr2ogr(),
+        "postgis": postgis_durum(),
     }
 
 

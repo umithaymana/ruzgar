@@ -5507,6 +5507,16 @@ def api_sehir_ikiz_pilot():
     return liste_pilot()
 
 
+@app.get("/api/sehir-ikiz/postgis")
+def api_sehir_ikiz_postgis():
+    """Yerel PostGIS durumu (D:\\RuzgarSehirIkiz)."""
+    from ilim_assistant.ruzgar_sehir_ikiz import postgis_durum
+
+    d = postgis_durum()
+    d["ok"] = bool(d.get("ok"))
+    return d
+
+
 @app.get("/api/sehir-ikiz/geojson")
 def api_sehir_ikiz_geojson(sehir: str = "bursa", kind: str = "buildings", limit: int = 8000):
     """Yerel OSM GeoJSON — Cesium/Leaflet bina-yol katmanı."""

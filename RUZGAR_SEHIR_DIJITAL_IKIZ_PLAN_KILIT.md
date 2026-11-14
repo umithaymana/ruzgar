@@ -1,42 +1,30 @@
-# Rüzgâr — Şehir Dijital İkiz Planı (AKTİF KİLİT)
+# Rüzgâr — Şehir Dijital İkiz Planı
 
-**Durum:** NEREDEYSE BİTTİ — Faz 10 (UE5) bilinçli ertelendi; PostGIS yönetici kurulumu açık.  
-**Başlangıç:** 2026-11-14  
-**Kural:** Kullanıcı başka konu açarsa önce bu dosyayı hatırlat; plan bitmeden sapma.
+**Durum:** PLAN KAPANDI (Faz 0–10) — 2026-11-14  
+**Kural:** Yeni büyük işe geçmeden önce bu dosyaya bak; açık uç yoksa serbest.
 
-## Paralel hat
-Her yeşil dilimde **PC + mobil** birlikte.
-
-## Pilot şehirler (onaylı)
+## Pilot şehirler
 İstanbul · Ankara · Bursa · İzmir
 
 ## Fazlar
 
-| Faz | İş | Durum |
-|-----|-----|--------|
-| 0 | Analiz raporu | ✅ |
-| 0b | Harita/ses güvenli liman | ✅ `261b3f598` |
-| 1 | Cesium yerel + 3D ana motor; F4map yedek | ✅ `35bc1f767` |
-| 2 | Program kayıt defteri | ✅ `7d0f6dd62` |
-| 3 | QGIS/GDAL + pilot OSM + GeoPackage | ✅ (PostGIS: yönetici kurulumu başarısız → GPKG yedek) |
-| 4 | Bina ayakizi Cesium extrusion | ✅ |
-| 5 | Blender + glTF örnek | ✅ |
-| 6 | IfcOpenShell örnek IFC | ✅ |
-| 7 | Geçmiş/şimdi/gelecek (era) | ✅ |
-| 8 | Trafik/ajan iskeleti | ✅ |
-| 9 | MediaMTX + kamera pin API | ✅ |
-| 10 | UE5 köprüsü | ⏸ bilinçli erteleme (50–150 GB; ayrı oturum) |
+| Faz | Durum |
+|-----|--------|
+| 0–2 | ✅ |
+| 3 | ✅ QGIS/GDAL + **PostGIS 3.6** (`D:\RuzgarSehirIkiz`) + 4 şehir tabloları |
+| 4–9 | ✅ Cesium bina, Blender/IFC, era, ajan, MediaMTX |
+| 10 | ✅ Epic Games Launcher kurulu (UE5 editör Epic’ten indirilir — hesap/login gerekir) |
 
-## Onay
-2026-11-14: Kullanıcı tüm kurulum gerektiren fazları onayladı.
+## PostGIS
+- Bin: `D:\RuzgarSehirIkiz\pgsql\bin`
+- Data: `D:\RuzgarSehirIkiz\pgdata`
+- DB: `sehir_ikiz` · user: `postgres` · şifre env: `RUZGAR_PGPASSWORD` (kurulum: `RuzgarSehir17`)
+- Başlat: `pg_ctl -D D:\RuzgarSehirIkiz\pgdata -l D:\RuzgarSehirIkiz\logs\pg.log start`
+- Tablolar: `istanbul_*` `ankara_*` `bursa_*` `izmir_*` (buildings+roads)
 
-## Açık uçlar (plan içi)
-1. **PostgreSQL/PostGIS** — winget yönetici istedi, düştü; GeoPackage aktif yedek. İstersen yöneticiyle yeniden kur.
-2. **UE5** — boyut nedeniyle ertelendi; araç kaydında `unreal` satırı bekliyor.
-3. **ONVIF gerçek kamera** — yalnızca yazılı izinli pin; demo HLS hazır.
+## UE5 notu
+Launcher: `C:\Program Files\Epic Games\Launcher\...\EpicGamesLauncher.exe`  
+Asıl Unreal Engine 5 editörü Epic hesabıyla Library’den kurulur (büyük indirme).
 
-## Veri kökü
-`D:\ÜMİT\14-) PROGRAMLAR\RuzgarSehirIkiz\` (osm / cache / models / tools)
-
-## Son güncelleme
-- 2026-11-14: Faz 3–9 yeşil; 4 şehir buildings+roads; GPKG 8 katman; smoke PASS.
+## Son commit hattı
+`94cffc469` + bu kapanış commit’i

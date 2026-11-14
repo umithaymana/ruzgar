@@ -1,6 +1,6 @@
 {
   "surum": 1,
-  "guncelleme": "2026-11-14T10:14:04",
+  "guncelleme": "2026-11-14T10:46:00",
   "aciklama": "Rüzgâr araç kayıt defteri — Cursor kurulumları tarama ile eklenir.",
   "araclar": [
     {
@@ -154,7 +154,7 @@
       "kurulu": true,
       "yol": "C:\\Program Files\\QGIS 3.44.15\\bin\\psql.EXE",
       "kaynak": "which",
-      "ornek_komut": "psql -U ruzgar -d sehir_ikiz",
+      "ornek_komut": "psql -U postgres -h 127.0.0.1 -d sehir_ikiz",
       "plan_faz": 3
     },
     {
@@ -193,13 +193,13 @@
         "cinematic",
         "ue5"
       ],
-      "kurulu": false,
-      "yol": null,
-      "kaynak": "yok",
-      "ornek_komut": "UnrealEditor.exe",
+      "kurulu": true,
+      "yol": "C:\\Program Files\\Epic Games\\Launcher\\Portal\\Binaries\\Win64\\EpicGamesLauncher.exe",
+      "kaynak": "path",
+      "ornek_komut": "EpicGamesLauncher.exe → Unreal Engine kur / UnrealEditor.exe",
       "plan_faz": 10
     }
   ],
-  "kurulu_sayisi": 13,
+  "kurulu_sayisi": 14,
   "toplam": 14
 }
