@@ -13,9 +13,9 @@ Her yeşil dilimde **PC + mobil** birlikte; mobilde yeşil olmayan dilime geçil
 |-----|-----|--------|
 | 0 | Analiz raporu | ✅ |
 | 0b | Dünkü harita/ses güvenli liman (commit + smoke) | ✅ `261b3f598` |
-| 1 | Cesium yerel + 3D ana motor; F4map yedek; süper-el | ✅ (commit sıradaki) |
-| 2 | Program kayıt defteri (Rüzgâr araç tanıma) | ⬜ |
-| 3 | GDAL + QGIS + PostGIS (D:) — pilot ilçe | ⬜ (kurulum onayı gerekir) |
+| 1 | Cesium yerel + 3D ana motor; F4map yedek; süper-el | ✅ `35bc1f767` |
+| 2 | Program kayıt defteri (Rüzgâr araç tanıma) | ✅ (commit sıradaki) |
+| 3 | GDAL + QGIS + PostGIS (D:) — pilot ilçe | ⏸ KURULUM ONAYI BEKLİYOR |
 | 4 | Bina ayakizi / parsel + dünya→bina yakınlaşma | ⬜ |
 | 5 | Blender + glTF — yeni/değiştir bina | ⬜ (kurulum onayı) |
 | 6 | IfcOpenShell/Bonsai — IFC görüntüleme | ⬜ (kurulum onayı) |

@@ -1,0 +1,176 @@
+{
+  "surum": 1,
+  "guncelleme": "2026-11-14T09:37:59",
+  "aciklama": "Rüzgâr araç kayıt defteri — Cursor kurulumları tarama ile eklenir.",
+  "araclar": [
+    {
+      "id": "ffmpeg",
+      "ad": "FFmpeg",
+      "yetenekler": [
+        "video",
+        "ses",
+        "medya"
+      ],
+      "kurulu": true,
+      "yol": "C:\\Users\\hayma\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-9.0.2-full_build\\bin\\ffmpeg.EXE",
+      "kaynak": "which",
+      "ornek_komut": "ffmpeg -i girdi.mp4 -c:v libx264 cikti.mp4",
+      "plan_faz": null
+    },
+    {
+      "id": "ffprobe",
+      "ad": "FFprobe",
+      "yetenekler": [
+        "video",
+        "medya",
+        "meta"
+      ],
+      "kurulu": true,
+      "yol": "C:\\Users\\hayma\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-9.0.2-full_build\\bin\\ffprobe.EXE",
+      "kaynak": "which",
+      "ornek_komut": "ffprobe -v quiet -print_format json -show_format dosya.mp4",
+      "plan_faz": null
+    },
+    {
+      "id": "ollama",
+      "ad": "Ollama",
+      "yetenekler": [
+        "llm",
+        "yerel_model"
+      ],
+      "kurulu": true,
+      "yol": "C:\\Users\\hayma\\AppData\\Local\\Programs\\Ollama\\ollama.EXE",
+      "kaynak": "which",
+      "ornek_komut": "ollama run llama3",
+      "plan_faz": null
+    },
+    {
+      "id": "python",
+      "ad": "Python",
+      "yetenekler": [
+        "script",
+        "rag",
+        "gis_boru"
+      ],
+      "kurulu": true,
+      "yol": "D:\\ÜMİT\\14-) PROGRAMLAR\\venvs\\ruzgar\\Scripts\\python.exe",
+      "kaynak": "env",
+      "ornek_komut": "python script.py",
+      "plan_faz": null
+    },
+    {
+      "id": "node",
+      "ad": "Node.js",
+      "yetenekler": [
+        "script",
+        "electron",
+        "web"
+      ],
+      "kurulu": true,
+      "yol": "D:\\ÜMİT\\14-) PROGRAMLAR\\Nodejs\\node.EXE",
+      "kaynak": "which",
+      "ornek_komut": "node app.js",
+      "plan_faz": null
+    },
+    {
+      "id": "cesium",
+      "ad": "CesiumJS (yerel vendor)",
+      "yetenekler": [
+        "harita",
+        "3d",
+        "sehir",
+        "globe"
+      ],
+      "kurulu": true,
+      "yol": "D:\\ÜMİT\\PROJELER\\CURSOR PROJELER\\YAPAY ZEKA\\ruzgar-desktop\\vendor\\cesium\\Cesium.js",
+      "kaynak": "file",
+      "ornek_komut": "harita-viewer mode=3d | tur",
+      "plan_faz": null
+    },
+    {
+      "id": "leaflet",
+      "ad": "Leaflet (yerel vendor)",
+      "yetenekler": [
+        "harita",
+        "2d"
+      ],
+      "kurulu": true,
+      "yol": "D:\\ÜMİT\\PROJELER\\CURSOR PROJELER\\YAPAY ZEKA\\ruzgar-desktop\\vendor\\leaflet\\leaflet.js",
+      "kaynak": "file",
+      "ornek_komut": "harita-viewer mode=2d | uydu | 4d",
+      "plan_faz": null
+    },
+    {
+      "id": "gdal",
+      "ad": "GDAL / ogr2ogr",
+      "yetenekler": [
+        "gis",
+        "donusturme",
+        "vektor"
+      ],
+      "kurulu": false,
+      "yol": null,
+      "kaynak": "yok",
+      "ornek_komut": "ogr2ogr -f GeoJSON out.geojson in.shp",
+      "plan_faz": 3
+    },
+    {
+      "id": "qgis",
+      "ad": "QGIS",
+      "yetenekler": [
+        "gis",
+        "harita_hazirlik",
+        "masaüstü"
+      ],
+      "kurulu": false,
+      "yol": null,
+      "kaynak": "yok",
+      "ornek_komut": "qgis proje.qgz",
+      "plan_faz": 3
+    },
+    {
+      "id": "psql",
+      "ad": "PostgreSQL / psql",
+      "yetenekler": [
+        "db",
+        "postgis",
+        "sehir_veri"
+      ],
+      "kurulu": false,
+      "yol": null,
+      "kaynak": "yok",
+      "ornek_komut": "psql -U ruzgar -d sehir_ikiz",
+      "plan_faz": 3
+    },
+    {
+      "id": "blender",
+      "ad": "Blender",
+      "yetenekler": [
+        "3d_model",
+        "gltf",
+        "mimari"
+      ],
+      "kurulu": false,
+      "yol": null,
+      "kaynak": "yok",
+      "ornek_komut": "blender -b model.blend --python export_gltf.py",
+      "plan_faz": 5
+    },
+    {
+      "id": "ifcopenshell",
+      "ad": "IfcOpenShell (Python)",
+      "yetenekler": [
+        "bim",
+        "ifc",
+        "mimari"
+      ],
+      "kurulu": false,
+      "yol": null,
+      "kaynak": "yok",
+      "ornek_komut": "import ifcopenshell",
+      "plan_faz": 6
+    }
+  ],
+  "kurulu_sayisi": 7,
+  "toplam": 12
+}

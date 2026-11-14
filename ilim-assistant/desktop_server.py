@@ -5499,6 +5499,55 @@ def api_sahne_odalar():
     return data
 
 
+@app.get("/api/araclar")
+def api_araclar_liste():
+    """Rüzgâr araç kayıt defteri (Faz 2) — PC+mobil aynı API."""
+    from ilim_assistant.ruzgar_arac_kayit import oku
+
+    doc = oku()
+    doc["ok"] = True
+    return doc
+
+
+@app.post("/api/araclar/tara")
+def api_araclar_tara():
+    """Kurulu programları yeniden tara ve kaydet."""
+    from ilim_assistant.ruzgar_arac_kayit import tara
+
+    doc = tara()
+    doc["ok"] = True
+    return doc
+
+
+@app.get("/api/araclar/sec")
+def api_araclar_sec(yetenek: str = ""):
+    """Yetenek etiketine göre kurulu araç seç (örn. harita, 3d, gis, bim)."""
+    from ilim_assistant.ruzgar_arac_kayit import sec
+
+    a = sec(yetenek or "")
+    if not a:
+        return {"ok": False, "yetenek": yetenek, "arac": None}
+    return {"ok": True, "yetenek": yetenek, "arac": a}
+
+
+class AracKaydetBody(BaseModel):
+    id: str = ""
+    yol: str = ""
+    yetenekler: list[str] | None = None
+
+
+@app.post("/api/araclar/kaydet")
+def api_araclar_kaydet(body: AracKaydetBody):
+    """Cursor kurulumundan sonra manuel kayıt."""
+    from ilim_assistant.ruzgar_arac_kayit import kaydet_manuel
+
+    if not (body.id or "").strip() or not (body.yol or "").strip():
+        return {"ok": False, "error": "id ve yol gerekli"}
+    doc = kaydet_manuel(body.id.strip(), body.yol.strip(), body.yetenekler)
+    doc["ok"] = True
+    return doc
+
+
 @app.get("/api/mobil/sessions")
 def api_mobil_sessions():
     from ilim_assistant.ruzgar_mobil_oturum import list_sessions
