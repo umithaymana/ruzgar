@@ -1,6 +1,6 @@
 {
   "surum": 1,
-  "guncelleme": "2026-11-14T09:37:59",
+  "guncelleme": "2026-11-14T10:14:04",
   "aciklama": "Rüzgâr araç kayıt defteri — Cursor kurulumları tarama ile eklenir.",
   "araclar": [
     {
@@ -108,9 +108,9 @@
         "donusturme",
         "vektor"
       ],
-      "kurulu": false,
-      "yol": null,
-      "kaynak": "yok",
+      "kurulu": true,
+      "yol": "C:\\Program Files\\QGIS 3.44.15\\bin\\gdalinfo.EXE",
+      "kaynak": "which",
       "ornek_komut": "ogr2ogr -f GeoJSON out.geojson in.shp",
       "plan_faz": 3
     },
@@ -122,11 +122,26 @@
         "harita_hazirlik",
         "masaüstü"
       ],
-      "kurulu": false,
-      "yol": null,
-      "kaynak": "yok",
+      "kurulu": true,
+      "yol": "C:\\Program Files\\QGIS 3.44.15\\bin\\qgis-ltr-bin.exe",
+      "kaynak": "path",
       "ornek_komut": "qgis proje.qgz",
       "plan_faz": 3
+    },
+    {
+      "id": "mediamtx",
+      "ad": "MediaMTX",
+      "yetenekler": [
+        "kamera",
+        "hls",
+        "webrtc",
+        "yayin"
+      ],
+      "kurulu": true,
+      "yol": "D:\\ÜMİT\\14-) PROGRAMLAR\\RuzgarSehirIkiz\\tools\\mediamtx.exe",
+      "kaynak": "path",
+      "ornek_komut": "mediamtx.exe",
+      "plan_faz": 9
     },
     {
       "id": "psql",
@@ -136,9 +151,9 @@
         "postgis",
         "sehir_veri"
       ],
-      "kurulu": false,
-      "yol": null,
-      "kaynak": "yok",
+      "kurulu": true,
+      "yol": "C:\\Program Files\\QGIS 3.44.15\\bin\\psql.EXE",
+      "kaynak": "which",
       "ornek_komut": "psql -U ruzgar -d sehir_ikiz",
       "plan_faz": 3
     },
@@ -150,9 +165,9 @@
         "gltf",
         "mimari"
       ],
-      "kurulu": false,
-      "yol": null,
-      "kaynak": "yok",
+      "kurulu": true,
+      "yol": "C:\\Program Files\\Blender Foundation\\Blender 4.5\\blender.exe",
+      "kaynak": "path",
       "ornek_komut": "blender -b model.blend --python export_gltf.py",
       "plan_faz": 5
     },
@@ -164,13 +179,27 @@
         "ifc",
         "mimari"
       ],
+      "kurulu": true,
+      "yol": "ifcopenshell",
+      "kaynak": "python_mod",
+      "ornek_komut": "import ifcopenshell",
+      "plan_faz": 6
+    },
+    {
+      "id": "unreal",
+      "ad": "Unreal Engine 5",
+      "yetenekler": [
+        "render",
+        "cinematic",
+        "ue5"
+      ],
       "kurulu": false,
       "yol": null,
       "kaynak": "yok",
-      "ornek_komut": "import ifcopenshell",
-      "plan_faz": 6
+      "ornek_komut": "UnrealEditor.exe",
+      "plan_faz": 10
     }
   ],
-  "kurulu_sayisi": 7,
-  "toplam": 12
+  "kurulu_sayisi": 13,
+  "toplam": 14
 }

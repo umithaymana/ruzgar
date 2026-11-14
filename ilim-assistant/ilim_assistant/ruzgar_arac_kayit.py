@@ -87,6 +87,7 @@ _SABLONLAR: list[dict[str, Any]] = [
         "yetenekler": ["gis", "donusturme", "vektor"],
         "komutlar": {"which": ["gdalinfo", "ogr2ogr"], "paths": [
             r"C:\OSGeo4W\bin\ogr2ogr.exe",
+            r"C:\Program Files\QGIS 3.44.15\bin\ogr2ogr.exe",
             r"C:\Program Files\QGIS*\bin\ogr2ogr.exe",
         ]},
         "ornek": "ogr2ogr -f GeoJSON out.geojson in.shp",
@@ -97,11 +98,24 @@ _SABLONLAR: list[dict[str, Any]] = [
         "ad": "QGIS",
         "yetenekler": ["gis", "harita_hazirlik", "masaüstü"],
         "komutlar": {"which": ["qgis"], "paths": [
-            r"C:\Program Files\QGIS*\bin\qgis.exe",
+            r"C:\Program Files\QGIS 3.44.15\bin\qgis-ltr-bin.exe",
+            r"C:\Program Files\QGIS 3.44.15\bin\qgis-bin.exe",
+            r"C:\Program Files\QGIS*\bin\qgis-ltr-bin.exe",
+            r"C:\Program Files\QGIS*\bin\qgis-bin.exe",
             r"C:\OSGeo4W\bin\qgis.exe",
         ]},
         "ornek": "qgis proje.qgz",
         "plan_faz": 3,
+    },
+    {
+        "id": "mediamtx",
+        "ad": "MediaMTX",
+        "yetenekler": ["kamera", "hls", "webrtc", "yayin"],
+        "komutlar": {"paths": [
+            r"D:\ÜMİT\14-) PROGRAMLAR\RuzgarSehirIkiz\tools\mediamtx.exe",
+        ]},
+        "ornek": "mediamtx.exe",
+        "plan_faz": 9,
     },
     {
         "id": "psql",
@@ -130,6 +144,16 @@ _SABLONLAR: list[dict[str, Any]] = [
         "komutlar": {"python_mod": ["ifcopenshell"]},
         "ornek": "import ifcopenshell",
         "plan_faz": 6,
+    },
+    {
+        "id": "unreal",
+        "ad": "Unreal Engine 5",
+        "yetenekler": ["render", "cinematic", "ue5"],
+        "komutlar": {"paths": [
+            r"C:\Program Files\Epic Games\UE_5*\Engine\Binaries\Win64\UnrealEditor.exe",
+        ]},
+        "ornek": "UnrealEditor.exe",
+        "plan_faz": 10,
     },
 ]
 

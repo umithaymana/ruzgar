@@ -195,11 +195,22 @@
     year: 2015,
   };
 
+  function haritaPilotSehir(s) {
+    const L = String(s.label || s.hedef || s.sehir || "").toLowerCase();
+    if (/istanbu/.test(L)) return "istanbul";
+    if (/ankara/.test(L)) return "ankara";
+    if (/bursa/.test(L)) return "bursa";
+    if (/izmir|i̇zmir/.test(L)) return "izmir";
+    return String(s.sehir || "").toLowerCase();
+  }
+
   function haritaViewerUrl(st) {
     const s = st || mobilHaritaState;
     const root = (base() || "").replace(/\/$/, "");
     const label = encodeURIComponent(String(s.label || s.hedef || "Türkiye"));
-    return (
+    const sehir = haritaPilotSehir(s);
+    const era = encodeURIComponent(String(s.era || "simdi"));
+    let url =
       root +
       "/ui/harita-viewer.html?mode=" +
       encodeURIComponent(String(s.mode || "2d")) +
@@ -212,8 +223,11 @@
       "&label=" +
       label +
       "&year=" +
-      (s.year != null ? Number(s.year) : 2015)
-    );
+      (s.year != null ? Number(s.year) : 2015) +
+      "&era=" +
+      era;
+    if (sehir) url += "&sehir=" + encodeURIComponent(sehir) + "&bina=1";
+    return url;
   }
 
   function ensureMobilHaritaTools(frame) {
@@ -317,9 +331,24 @@
       st.mode = "f4";
       if ((Number(st.zoom) || 6) < 15) st.zoom = 16;
     }
+    if (action === "era_gecmis") {
+      st.era = "gecmis";
+      st.mode = st.mode === "2d" ? "3d" : st.mode;
+      if ((Number(st.zoom) || 6) < 14) st.zoom = 15;
+    }
+    if (action === "era_gelecek") {
+      st.era = "gelecek";
+      st.mode = st.mode === "2d" ? "3d" : st.mode;
+      if ((Number(st.zoom) || 6) < 14) st.zoom = 15;
+    }
+    if (action === "show_buildings") {
+      st.bina = 1;
+      st.mode = "3d";
+      if ((Number(st.zoom) || 6) < 15) st.zoom = 16;
+    }
     const isMode =
       /^mode_(2d|3d|4d|uydu|tur|f4)$/.test(action) ||
-      /^(2d|3d|4d|uydu|tur|f4)$/.test(action);
+      /^(2d|3d|4d|uydu|tur|f4|era_gecmis|era_gelecek|show_buildings)$/.test(action);
     const hedefStr = c.hedef != null ? String(c.hedef).trim() : "";
     const hedefIsMode =
       /^(2d|3d|4d|uydu|tur|f4|f4map|panorama|dunya\s*turu|tarihi|historical)$/i.test(hedefStr);
@@ -440,6 +469,9 @@
         mode_uydu: 1,
         mode_tur: 1,
         mode_f4: 1,
+        era_gecmis: 1,
+        era_gelecek: 1,
+        show_buildings: 1,
         show: 1,
         focus: 1,
       };

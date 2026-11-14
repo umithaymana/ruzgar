@@ -3785,6 +3785,15 @@
     return "harita-viewer.html";
   }
 
+  function haritaPilotSehir(state) {
+    const L = String(state.label || state.hedef || state.sehir || "").toLowerCase();
+    if (/istanbu/.test(L)) return "istanbul";
+    if (/ankara/.test(L)) return "ankara";
+    if (/bursa/.test(L)) return "bursa";
+    if (/izmir|i̇zmir/.test(L)) return "izmir";
+    return String(state.sehir || "").toLowerCase();
+  }
+
   function haritaEmbedSrc(state) {
     const lat = Number(state.lat) || 39;
     const lon = Number(state.lon) || 35.2;
@@ -3792,7 +3801,9 @@
     const mode = String(state.mode || "2d").toLowerCase();
     const label = encodeURIComponent(String(state.label || state.hedef || "Türkiye"));
     const year = state.year != null ? Number(state.year) : 2015;
-    return (
+    const sehir = haritaPilotSehir(state);
+    const era = encodeURIComponent(String(state.era || "simdi"));
+    let url =
       haritaViewerBase() +
       "?mode=" +
       encodeURIComponent(mode) +
@@ -3805,8 +3816,13 @@
       "&label=" +
       label +
       "&year=" +
-      year
-    );
+      year +
+      "&era=" +
+      era;
+    if (sehir) {
+      url += "&sehir=" + encodeURIComponent(sehir) + "&bina=1";
+    }
+    return url;
   }
 
   function ensureHaritaTools(frame) {
@@ -3923,6 +3939,21 @@
     }
     if (action === "mode_f4" || action === "f4") {
       st.mode = "f4";
+      if ((Number(st.zoom) || 6) < 15) st.zoom = 16;
+    }
+    if (action === "era_gecmis") {
+      st.era = "gecmis";
+      st.mode = st.mode === "2d" ? "3d" : st.mode;
+      if ((Number(st.zoom) || 6) < 14) st.zoom = 15;
+    }
+    if (action === "era_gelecek") {
+      st.era = "gelecek";
+      st.mode = st.mode === "2d" ? "3d" : st.mode;
+      if ((Number(st.zoom) || 6) < 14) st.zoom = 15;
+    }
+    if (action === "show_buildings") {
+      st.bina = 1;
+      st.mode = "3d";
       if ((Number(st.zoom) || 6) < 15) st.zoom = 16;
     }
 
@@ -4097,6 +4128,9 @@
       mode_uydu: 1,
       mode_tur: 1,
       mode_f4: 1,
+      era_gecmis: 1,
+      era_gelecek: 1,
+      show_buildings: 1,
     };
     const targetOrgan = mapActs[action]
       ? organ === "yuz"

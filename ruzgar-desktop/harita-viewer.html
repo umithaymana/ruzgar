@@ -64,6 +64,31 @@
   const yearDefault = Number(q.get("year")) || 2015;
   // engine=f4 → bilinçli F4map yedek; aksi halde 3d/tur = yerel Cesium
   const forceF4 = String(q.get("engine") || "").toLowerCase() === "f4";
+  const sehir = String(q.get("sehir") || "").toLowerCase();
+  const wantBina = q.get("bina") === "1" || q.get("buildings") === "1" || !!sehir;
+  const era = String(q.get("era") || "simdi").toLowerCase(); // gecmis|simdi|gelecek (Faz 7)
+  const wantAjan = q.get("ajan") === "1" || q.get("trafik") === "1"; // Faz 8
+  const wantCam = q.get("kamera") === "1"; // Faz 9 pin
+  const wantModel = q.get("gltf") === "1"; // Faz 5 örnek glTF
+
+  function apiRoot() {
+    try {
+      if (location.pathname.indexOf("/ui/") >= 0) {
+        return location.origin;
+      }
+    } catch (_) {}
+    return "";
+  }
+
+  function guessSehirFromLabel() {
+    if (sehir) return sehir;
+    const L = (label || "").toLowerCase();
+    if (L.indexOf("istanbu") >= 0) return "istanbul";
+    if (L.indexOf("ankara") >= 0) return "ankara";
+    if (L.indexOf("bursa") >= 0) return "bursa";
+    if (L.indexOf("izmir") >= 0 || L.indexOf("i̇zmir") >= 0) return "izmir";
+    return "";
+  }
 
   const mapEl = document.getElementById("map");
   const f4 = document.getElementById("f4");
@@ -233,6 +258,76 @@
     return viewer;
   }
 
+  function heightMetersFromProps(p) {
+    if (!p) return 12;
+    if (p.height) {
+      const h = parseFloat(String(p.height).replace(",", "."));
+      if (!isNaN(h) && h > 1) return h;
+    }
+    if (p.levels) {
+      const lv = parseFloat(String(p.levels).replace(",", "."));
+      if (!isNaN(lv) && lv > 0) return lv * 3.2;
+    }
+    // Faz 7: era ile hafif görsel fark (simülasyon boyası)
+    if (era === "gecmis") return 8;
+    if (era === "gelecek") return 22;
+    return 12;
+  }
+
+  function loadBuildings(viewer) {
+    const city = guessSehirFromLabel();
+    if (!wantBina || !city || typeof Cesium === "undefined") return;
+    const lim = city === "izmir" || city === "istanbul" ? 6000 : 10000;
+    const url =
+      apiRoot() +
+      "/api/sehir-ikiz/geojson?sehir=" +
+      encodeURIComponent(city) +
+      "&kind=buildings&limit=" +
+      lim;
+    setBadge("binalar…");
+    fetch(url)
+      .then(function (r) {
+        return r.json();
+      })
+      .then(function (gj) {
+        if (!gj || !gj.features || !gj.features.length) {
+          setBadge("yerel · bina yok");
+          return;
+        }
+        const color =
+          era === "gecmis"
+            ? Cesium.Color.fromCssColorString("#8a7355").withAlpha(0.85)
+            : era === "gelecek"
+              ? Cesium.Color.fromCssColorString("#3d8bfd").withAlpha(0.8)
+              : Cesium.Color.fromCssColorString("#d4af37").withAlpha(0.88);
+        const dsPromise = Cesium.GeoJsonDataSource.load(gj, {
+          clampToGround: false,
+          stroke: Cesium.Color.BLACK.withAlpha(0.2),
+          fill: color,
+        });
+        dsPromise.then(function (ds) {
+          viewer.dataSources.add(ds);
+          const ents = ds.entities.values;
+          for (let i = 0; i < ents.length; i++) {
+            const e = ents[i];
+            if (!e.polygon) continue;
+            const hm = heightMetersFromProps(e.properties && e.properties.getValue
+              ? e.properties.getValue(Cesium.JulianDate.now())
+              : null);
+            e.polygon.extrudedHeight = hm;
+            e.polygon.height = 0;
+            e.polygon.material = color;
+            e.polygon.outline = false;
+          }
+          setBadge("yerel · " + ents.length + " bina · " + era);
+        });
+      })
+      .catch(function (err) {
+        console.warn("bina katmanı", err);
+        setBadge("yerel · bina hata");
+      });
+  }
+
   function paintCesium3d() {
     if (typeof Cesium === "undefined") {
       paintF4();
@@ -263,9 +358,80 @@
         duration: 1.6,
       });
       setBadge("yerel");
+      loadBuildings(viewer);
+      if (wantAjan) spawnAgents(viewer);
+      if (wantCam) loadCameraPins(viewer);
+      if (wantModel) loadSampleGltf(viewer);
     } catch (err) {
       console.warn("Cesium 3d başarısız, F4map yedek", err);
       paintF4();
+    }
+  }
+
+  function spawnAgents(viewer) {
+    // Faz 8 — hafif sanal araç noktaları (trafik simülasyon iskeleti)
+    try {
+      for (let i = 0; i < 12; i++) {
+        const dlon = (Math.random() - 0.5) * 0.02;
+        const dlat = (Math.random() - 0.5) * 0.02;
+        viewer.entities.add({
+          position: Cesium.Cartesian3.fromDegrees(lon + dlon, lat + dlat, 2),
+          point: {
+            pixelSize: 8,
+            color: Cesium.Color.fromCssColorString("#37d4a0"),
+            outlineColor: Cesium.Color.BLACK,
+            outlineWidth: 1,
+          },
+          label: i === 0 ? { text: "ajan", font: "11px sans-serif", pixelOffset: new Cesium.Cartesian2(0, -14) } : undefined,
+        });
+      }
+    } catch (e) {
+      console.warn("ajan", e);
+    }
+  }
+
+  function loadCameraPins(viewer) {
+    fetch(apiRoot() + "/api/sehir-ikiz/kameralar")
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        const list = (data && data.kameralar) || [];
+        list.forEach(function (cam) {
+          if (cam.lat == null || cam.lon == null) return;
+          viewer.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(Number(cam.lon), Number(cam.lat), 40),
+            billboard: {
+              image: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><circle cx="12" cy="12" r="8" fill="#e74c3c"/></svg>'),
+              verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+            },
+            label: {
+              text: String(cam.ad || cam.id || "kamera"),
+              font: "12px sans-serif",
+              pixelOffset: new Cesium.Cartesian2(0, -28),
+              fillColor: Cesium.Color.WHITE,
+              showBackground: true,
+            },
+            description: cam.hls || cam.not || "",
+          });
+        });
+      })
+      .catch(function (e) { console.warn("kamera", e); });
+  }
+
+  function loadSampleGltf(viewer) {
+    // Örnek glTF — API üzerinden servis edilmiyorsa sessiz geç
+    const url = apiRoot() + "/api/sehir-ikiz/model/ornek_bina.glb";
+    try {
+      viewer.entities.add({
+        name: "ornek_bina",
+        position: Cesium.Cartesian3.fromDegrees(lon + 0.001, lat + 0.001, 0),
+        model: {
+          uri: url,
+          scale: 1.0,
+          minimumPixelSize: 48,
+        },
+      });
+    } catch (e) {
+      console.warn("gltf", e);
     }
   }
 

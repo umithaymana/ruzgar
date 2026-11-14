@@ -1,8 +1,8 @@
 /* Rüzgar PWA — HTML/ağ öncelikli (eski cache yüzünden PC seçeneği kaybolmasın) */
-const CACHE = "ruzgar-pwa-v62-cesium";
+const CACHE = "ruzgar-pwa-v63-sehir";
 const ASSETS = [
-  "./app.css?v=45-cesium",
-  "./app.js?v=53-cesium",
+  "./app.css?v=46-sehir",
+  "./app.js?v=54-sehir",
   "./manifest.webmanifest?v=5",
   "./icon-192.png?v=5",
   "./icon-512.png?v=5",

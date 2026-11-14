@@ -1,0 +1,17 @@
+{
+  "surum": 1,
+  "aciklama": "Yalnızca yazılı izinli kameralar. İzinsiz ekleme yok.",
+  "kameralar": [
+    {
+      "id": "demo_hls",
+      "ad": "Demo yayın (MediaMTX)",
+      "sehir": "bursa",
+      "lat": 40.1885,
+      "lon": 29.0610,
+      "izin": "yerel-demo",
+      "hls": "http://127.0.0.1:8888/ruzgar_demo/",
+      "aktif": false,
+      "not": "MediaMTX çalışınca açılabilir — ONVIF gerçek kamera için ayrı izin kaydı"
+    }
+  ]
+}

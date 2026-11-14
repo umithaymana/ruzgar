@@ -5499,6 +5499,83 @@ def api_sahne_odalar():
     return data
 
 
+@app.get("/api/sehir-ikiz/pilot")
+def api_sehir_ikiz_pilot():
+    """Pilot şehirler: İstanbul, Ankara, Bursa, İzmir (PC+mobil)."""
+    from ilim_assistant.ruzgar_sehir_ikiz import liste_pilot
+
+    return liste_pilot()
+
+
+@app.get("/api/sehir-ikiz/geojson")
+def api_sehir_ikiz_geojson(sehir: str = "bursa", kind: str = "buildings", limit: int = 8000):
+    """Yerel OSM GeoJSON — Cesium/Leaflet bina-yol katmanı."""
+    from ilim_assistant.ruzgar_sehir_ikiz import geojson_oku
+
+    data = geojson_oku(sehir, kind, limit=max(0, min(int(limit or 0), 50000)))
+    if not data:
+        return {"ok": False, "error": "geojson yok", "sehir": sehir, "kind": kind}
+    data["ok"] = True
+    data["sehir"] = sehir
+    data["kind"] = kind
+    return data
+
+
+@app.post("/api/sehir-ikiz/gpkg")
+def api_sehir_ikiz_gpkg():
+    """GDAL ile GeoPackage üret (PostGIS yokken yedek)."""
+    from ilim_assistant.ruzgar_sehir_ikiz import gpkg_olustur
+
+    return gpkg_olustur()
+
+
+@app.get("/api/sehir-ikiz/kameralar")
+def api_sehir_ikiz_kameralar():
+    """İzinli kamera pin listesi (Faz 9) — ONVIF/MediaMTX köprüsü iskeleti."""
+    from pathlib import Path
+    import json
+
+    p = (
+        Path(__file__).resolve().parent
+        / "knowledge/ortak_kaynak/alanlar/bilgisayar_eserleri/SEHIR_IKIZ_KAMERALAR.json"
+    )
+    if not p.is_file():
+        return {"ok": True, "kameralar": [], "note": "henüz pin yok — izinli kaynak ekle"}
+    data = json.loads(p.read_text(encoding="utf-8"))
+    data["ok"] = True
+    return data
+
+
+@app.get("/api/sehir-ikiz/mediamtx")
+def api_sehir_ikiz_mediamtx():
+    """MediaMTX yolu / durum (çalıştırma onaysız otomatik start yok)."""
+    from pathlib import Path
+
+    exe = Path(r"D:\ÜMİT\14-) PROGRAMLAR\RuzgarSehirIkiz\tools\mediamtx.exe")
+    yml = Path(r"D:\ÜMİT\14-) PROGRAMLAR\RuzgarSehirIkiz\tools\mediamtx.yml")
+    return {
+        "ok": exe.is_file(),
+        "exe": str(exe) if exe.is_file() else None,
+        "config": str(yml) if yml.is_file() else None,
+        "hls": "http://127.0.0.1:8888/ruzgar_demo/",
+        "note": "Yayını elle veya onaylı komutla başlat; izinsiz kamera yok.",
+    }
+
+
+@app.get("/api/sehir-ikiz/model/{name}")
+def api_sehir_ikiz_model(name: str):
+    """Yerel glTF/IFC örnek model (Faz 5–6)."""
+    from pathlib import Path
+    from fastapi.responses import FileResponse
+
+    safe = Path(name).name
+    root = Path(r"D:\ÜMİT\14-) PROGRAMLAR\RuzgarSehirIkiz\models")
+    p = root / safe
+    if not p.is_file():
+        return {"ok": False, "error": "model yok", "name": safe}
+    return FileResponse(p)
+
+
 @app.get("/api/araclar")
 def api_araclar_liste():
     """Rüzgâr araç kayıt defteri (Faz 2) — PC+mobil aynı API."""
