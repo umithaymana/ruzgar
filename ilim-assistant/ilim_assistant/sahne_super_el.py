@@ -344,7 +344,11 @@ def resolve_super_el(text: str, *, geocode: bool = True) -> dict[str, Any]:
         fiil = "degistir"
         action = "mode_4d"
         guven = 0.9
-    elif re.search(r"\b(3d|uc\s*boyut|ucboyut)\b", n) or re.search(
+    elif re.search(r"\b(f4map|f4\s*yedek|yedek\s*3d|f4\s*mod)\b", n):
+        fiil = "degistir"
+        action = "mode_f4"
+        guven = 0.9
+    elif re.search(r"\b(3d|uc\s*boyut|ucboyut|cesium)\b", n) or re.search(
         r"\b(uc|3)\s*boyut", n
     ):
         fiil = "degistir"
@@ -419,7 +423,7 @@ def resolve_super_el(text: str, *, geocode: bool = True) -> dict[str, Any]:
     # Yer adı varsa ve zoom/odak/göster → harita varsay
     hedef = _extract_hedef(n)
     # 2D/3D/4D komutlarında «3d» yer adı sanılmasın
-    if action in ("mode_2d", "mode_3d", "mode_4d", "mode_uydu", "mode_tur") and hedef:
+    if action in ("mode_2d", "mode_3d", "mode_4d", "mode_uydu", "mode_tur", "mode_f4") and hedef:
         hn = _norm(str(hedef))
         if re.fullmatch(
             r"(2d|3d|4d|uydu|tur|panorama|uc|dort|iki|boyut|ucboyut|tarihi|historical|katman|dunya|glob|globe)",
@@ -448,6 +452,7 @@ def resolve_super_el(text: str, *, geocode: bool = True) -> dict[str, Any]:
         "mode_4d",
         "mode_uydu",
         "mode_tur",
+        "mode_f4",
     ):
         organ = "harita"
 

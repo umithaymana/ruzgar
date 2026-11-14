@@ -3820,10 +3820,11 @@
       '<button type="button" data-harita-act="zoom_in" title="Yaklaştır">+</button>' +
       '<button type="button" data-harita-act="zoom_out" title="Uzaklaştır">−</button>' +
       '<button type="button" data-harita-act="mode_2d" title="2D harita">2D</button>' +
-      '<button type="button" data-harita-act="mode_3d" title="3D harita">3D</button>' +
+      '<button type="button" data-harita-act="mode_3d" title="3D Cesium (yerel)">3D</button>' +
       '<button type="button" data-harita-act="mode_4d" title="4D zamanlı uydu">4D</button>' +
       '<button type="button" data-harita-act="mode_uydu" title="Uydu görüntüsü">Uydu</button>' +
-      '<button type="button" data-harita-act="mode_tur" title="Panoramik dünya turu">Tur</button>';
+      '<button type="button" data-harita-act="mode_tur" title="Panoramik dünya turu">Tur</button>' +
+      '<button type="button" data-harita-act="mode_f4" title="F4map yedek 3D">F4</button>';
     tools.addEventListener("click", (ev) => {
       const btn = ev.target && ev.target.closest("button[data-harita-act]");
       if (!btn) return;
@@ -3902,11 +3903,13 @@
       action === "mode_4d" ||
       action === "mode_uydu" ||
       action === "mode_tur" ||
+      action === "mode_f4" ||
       action === "2d" ||
       action === "3d" ||
       action === "4d" ||
       action === "uydu" ||
-      action === "tur";
+      action === "tur" ||
+      action === "f4";
     if (action === "mode_2d" || action === "2d") st.mode = "2d";
     if (action === "mode_3d" || action === "3d") {
       st.mode = "3d";
@@ -3918,10 +3921,14 @@
       st.mode = "tur";
       if ((Number(st.zoom) || 6) < 5) st.zoom = 5;
     }
+    if (action === "mode_f4" || action === "f4") {
+      st.mode = "f4";
+      if ((Number(st.zoom) || 6) < 15) st.zoom = 16;
+    }
 
     const hedefStr = c.hedef != null ? String(c.hedef).trim() : "";
     const hedefIsModeToken =
-      /^(2d|3d|4d|uydu|tur|panorama|uydu\s*goruntu(su)?|dunya\s*turu|uc\s*boyut(lu)?|dort\s*boyut(lu)?|iki\s*boyut(lu)?|tarihi|historical)$/i.test(
+      /^(2d|3d|4d|uydu|tur|f4|f4map|panorama|uydu\s*goruntu(su)?|dunya\s*turu|uc\s*boyut(lu)?|dort\s*boyut(lu)?|iki\s*boyut(lu)?|tarihi|historical)$/i.test(
         hedefStr,
       );
     // Salt 2D/3D/4D: mevcut konumu koru; «3d» yer sanılmasın
@@ -4089,6 +4096,7 @@
       mode_4d: 1,
       mode_uydu: 1,
       mode_tur: 1,
+      mode_f4: 1,
     };
     const targetOrgan = mapActs[action]
       ? organ === "yuz"

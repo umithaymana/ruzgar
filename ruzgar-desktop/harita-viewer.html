@@ -5,10 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <meta
     http-equiv="Content-Security-Policy"
-    content="default-src 'self' data: blob: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cesium.com https://*.cesium.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cesium.com https://*.cesium.com https://cdn.jsdelivr.net; img-src 'self' data: blob: https:; connect-src 'self' https: data: blob:; worker-src 'self' blob: https://cesium.com https://*.cesium.com https://cdn.jsdelivr.net; frame-src 'self' https://demo.f4map.com https://*.f4map.com https://www.openstreetmap.org https://*.openstreetmap.org;"
+    content="default-src 'self' data: blob: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https: data: blob:; worker-src 'self' blob:; frame-src 'self' https://demo.f4map.com https://*.f4map.com;"
   />
   <title>Rüzgar Harita</title>
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
+  <link rel="stylesheet" href="vendor/cesium/Widgets/widgets.css" />
   <style>
     html, body { margin: 0; height: 100%; background: #0b1220; color: #f3e6c4; font-family: "Segoe UI", system-ui, sans-serif; overflow: hidden; }
     #map, #globe, #f4 { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
@@ -33,11 +34,16 @@
     #yearBar span { font-size: 12px; min-width: 3.2em; text-align: right; color: #f3e6c4; }
     .leaflet-control-attribution { background: rgba(8,10,16,0.65) !important; color: #cbb892 !important; }
     .leaflet-control-attribution a { color: #e6c86a !important; }
+    .cesium-viewer-bottom { display: none !important; }
   </style>
+  <script>
+    // Cesium Workers / Assets — yerel vendor (CDN yok)
+    window.CESIUM_BASE_URL = "vendor/cesium/";
+  </script>
 </head>
 <body>
   <div id="map"></div>
-  <iframe id="f4" title="3D Harita" allowfullscreen referrerpolicy="no-referrer"></iframe>
+  <iframe id="f4" title="3D Harita yedek (F4map)" allowfullscreen referrerpolicy="no-referrer"></iframe>
   <div id="globe"></div>
   <div id="badge">Harita</div>
   <div id="yearBar" aria-label="Zaman">
@@ -46,15 +52,18 @@
     <span id="yearVal">2015</span>
   </div>
   <script src="vendor/leaflet/leaflet.js"></script>
+  <script src="vendor/cesium/Cesium.js"></script>
   <script>
 (function () {
   const q = new URLSearchParams(location.search);
   const lat = Number(q.get("lat")) || 39.0;
   const lon = Number(q.get("lon")) || 35.2;
   const zoom = Math.max(2, Math.min(18, Number(q.get("zoom")) || 6));
-  const mode = String(q.get("mode") || "2d").toLowerCase();
+  let mode = String(q.get("mode") || "2d").toLowerCase();
   const label = String(q.get("label") || "Türkiye");
   const yearDefault = Number(q.get("year")) || 2015;
+  // engine=f4 → bilinçli F4map yedek; aksi halde 3d/tur = yerel Cesium
+  const forceF4 = String(q.get("engine") || "").toLowerCase() === "f4";
 
   const mapEl = document.getElementById("map");
   const f4 = document.getElementById("f4");
@@ -66,10 +75,11 @@
 
   const MODE_LABEL = {
     "2d": "2D · OpenStreetMap",
-    "3d": "3D · F4map",
+    "3d": "3D · Cesium (yerel)",
     "4d": "4D · Zamanlı uydu (NASA GIBS)",
     uydu: "Uydu · Esri World Imagery",
-    tur: "Tur · Panoramik dünya",
+    tur: "Tur · Cesium dünya uçuşu",
+    f4: "3D · F4map (yedek)",
   };
 
   function setBadge(extra) {
@@ -80,6 +90,12 @@
     mapEl.style.display = which === "map" ? "block" : "none";
     f4.style.display = which === "f4" ? "block" : "none";
     globe.style.display = which === "globe" ? "block" : "none";
+  }
+
+  function heightFromZoom(z) {
+    // kaba: zoom 6 ≈ ülke, 11 ≈ şehir, 15 ≈ mahalle
+    const zz = Math.max(2, Math.min(18, z || 6));
+    return Math.max(120, 1200000 / Math.pow(2, Math.max(0, zz - 4)));
   }
 
   function osmLayer() {
@@ -131,7 +147,6 @@
       base = gibsLayer(yearDefault);
       let current = base;
       current.addTo(map);
-      // labels overlay for orientation
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 9,
         opacity: 0.22,
@@ -159,9 +174,10 @@
     setTimeout(function () { map.invalidateSize(); }, 80);
   }
 
-  function paint3d() {
+  function paintF4() {
     showOnly("f4");
     yearBar.classList.remove("on");
+    mode = "f4";
     const z = Math.max(15, zoom);
     f4.src =
       "https://demo.f4map.com/#lat=" +
@@ -171,75 +187,91 @@
       "&zoom=" +
       z +
       "&camera.theta=55&camera.phi=10";
-    setBadge();
+    setBadge("yedek");
   }
 
-  function paintTur() {
+  function esriImagery() {
+    return new Cesium.UrlTemplateImageryProvider({
+      url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      maximumLevel: 18,
+      credit: "Esri",
+    });
+  }
+
+  function osmImagery() {
+    return new Cesium.UrlTemplateImageryProvider({
+      url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+      maximumLevel: 18,
+      credit: "© OpenStreetMap",
+    });
+  }
+
+  function makeCesiumViewer(imagery) {
+    const viewer = new Cesium.Viewer("globe", {
+      animation: false,
+      timeline: false,
+      baseLayerPicker: false,
+      geocoder: false,
+      homeButton: false,
+      sceneModePicker: false,
+      navigationHelpButton: false,
+      fullscreenButton: false,
+      infoBox: false,
+      selectionIndicator: false,
+      imageryProvider: false,
+      baseLayer: new Cesium.ImageryLayer(imagery),
+      // Ion token yok — düz elipsoid; arazi Faz 3+ / isteğe bağlı token
+      terrainProvider: new Cesium.EllipsoidTerrainProvider(),
+      requestRenderMode: true,
+      maximumRenderTimeChange: Infinity,
+    });
+    try {
+      viewer.cesiumWidget.creditContainer.style.display = "none";
+    } catch (_) {}
+    viewer.scene.globe.enableLighting = false;
+    viewer.scene.fog.enabled = true;
+    return viewer;
+  }
+
+  function paintCesium3d() {
+    if (typeof Cesium === "undefined") {
+      paintF4();
+      return;
+    }
     showOnly("globe");
     yearBar.classList.remove("on");
     setBadge("yükleniyor");
-    const cesiumCss = document.createElement("link");
-    cesiumCss.rel = "stylesheet";
-    cesiumCss.href = "https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Widgets/widgets.css";
-    document.head.appendChild(cesiumCss);
-    const s = document.createElement("script");
-    s.src = "https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Cesium.js";
-    s.onload = function () {
-      try {
-        const esri = new Cesium.UrlTemplateImageryProvider({
-          url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-          maximumLevel: 18,
-          credit: "Esri",
-        });
-        const viewer = new Cesium.Viewer("globe", {
-          animation: false,
-          timeline: false,
-          baseLayerPicker: false,
-          geocoder: false,
-          homeButton: false,
-          sceneModePicker: false,
-          navigationHelpButton: false,
-          fullscreenButton: false,
-          infoBox: false,
-          selectionIndicator: false,
-          imageryProvider: false,
-          baseLayer: new Cesium.ImageryLayer(esri),
-          terrainProvider: new Cesium.EllipsoidTerrainProvider(),
-          requestRenderMode: true,
-        });
-        try { viewer.cesiumWidget.creditContainer.style.display = "none"; } catch (_) {}
-        const dest = Cesium.Cartesian3.fromDegrees(lon, lat, 1800000);
-        viewer.camera.flyTo({
-          destination: dest,
-          orientation: {
-            heading: Cesium.Math.toRadians(20),
-            pitch: Cesium.Math.toRadians(-45),
-            roll: 0,
-          },
-          duration: 3.2,
-          complete: function () {
-            viewer.camera.flyTo({
-              destination: Cesium.Cartesian3.fromDegrees(lon, lat, Math.max(800, 1200000 / Math.pow(2, Math.max(0, zoom - 4)))),
-              orientation: {
-                heading: Cesium.Math.toRadians(0),
-                pitch: Cesium.Math.toRadians(-35),
-                roll: 0,
-              },
-              duration: 2.8,
-            });
-          },
-        });
-        setBadge("uçuş");
-      } catch (err) {
-        globe.innerHTML =
-          '<p style="padding:24px;line-height:1.45">Dünya turu yüklenemedi. Uydu moda geçebilirsin.<br/><small>' +
-          String(err && err.message ? err.message : err) +
-          "</small></p>";
-        setBadge("hata");
-      }
-    };
-    s.onerror = function () {
-      // CDN yoksa uydu + yumuşak kaydırma yedeği
+    try {
+      const viewer = makeCesiumViewer(esriImagery());
+      const h = heightFromZoom(Math.max(zoom, 14));
+      viewer.camera.setView({
+        destination: Cesium.Cartesian3.fromDegrees(lon, lat, h),
+        orientation: {
+          heading: Cesium.Math.toRadians(20),
+          pitch: Cesium.Math.toRadians(-42),
+          roll: 0,
+        },
+      });
+      // Şehir ölçeğinde yumuşak yaklaşma
+      viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(lon, lat, Math.min(h, heightFromZoom(Math.max(zoom, 15)))),
+        orientation: {
+          heading: Cesium.Math.toRadians(0),
+          pitch: Cesium.Math.toRadians(-35),
+          roll: 0,
+        },
+        duration: 1.6,
+      });
+      setBadge("yerel");
+    } catch (err) {
+      console.warn("Cesium 3d başarısız, F4map yedek", err);
+      paintF4();
+    }
+  }
+
+  function paintTur() {
+    if (typeof Cesium === "undefined") {
+      // CDN yok / yerel yok → Leaflet uydu tur yedeği
       showOnly("map");
       const map = L.map("map", { zoomControl: false }).setView([lat, lon], Math.max(3, zoom - 2));
       uyduLayer().addTo(map);
@@ -256,15 +288,58 @@
         map.flyTo(pts[i], Math.max(3, zoom - 2), { duration: 2.2 });
       }, 2800);
       setBadge("yedek tur");
-    };
-    document.head.appendChild(s);
+      return;
+    }
+    showOnly("globe");
+    yearBar.classList.remove("on");
+    setBadge("yükleniyor");
+    try {
+      const viewer = makeCesiumViewer(esriImagery());
+      const dest = Cesium.Cartesian3.fromDegrees(lon, lat, 1800000);
+      viewer.camera.flyTo({
+        destination: dest,
+        orientation: {
+          heading: Cesium.Math.toRadians(20),
+          pitch: Cesium.Math.toRadians(-45),
+          roll: 0,
+        },
+        duration: 3.2,
+        complete: function () {
+          viewer.camera.flyTo({
+            destination: Cesium.Cartesian3.fromDegrees(lon, lat, heightFromZoom(zoom)),
+            orientation: {
+              heading: Cesium.Math.toRadians(0),
+              pitch: Cesium.Math.toRadians(-35),
+              roll: 0,
+            },
+            duration: 2.8,
+          });
+        },
+      });
+      setBadge("uçuş · yerel");
+    } catch (err) {
+      globe.innerHTML =
+        '<p style="padding:24px;line-height:1.45">Dünya turu yüklenemedi.<br/><small>' +
+        String(err && err.message ? err.message : err) +
+        "</small></p>";
+      setBadge("hata");
+    }
   }
 
-  if (mode === "3d") paint3d();
-  else if (mode === "tur") paintTur();
-  else if (mode === "uydu") paintLeaflet("uydu");
-  else if (mode === "4d") paintLeaflet("4d");
-  else paintLeaflet("2d");
+  // 3d: Cesium ana; engine=f4 veya mode=f4 → F4map yedek
+  if (mode === "f4" || (mode === "3d" && forceF4)) {
+    paintF4();
+  } else if (mode === "3d") {
+    paintCesium3d();
+  } else if (mode === "tur") {
+    paintTur();
+  } else if (mode === "uydu") {
+    paintLeaflet("uydu");
+  } else if (mode === "4d") {
+    paintLeaflet("4d");
+  } else {
+    paintLeaflet("2d");
+  }
 })();
   </script>
 </body>

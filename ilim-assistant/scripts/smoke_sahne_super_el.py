@@ -51,13 +51,27 @@ def main() -> None:
     rt = resolve_super_el("dunya turu", geocode=False)
     if rt.get("action") != "mode_tur":
         fail("tur mode")
-    print("OK: resolve+geo+zoom+3d4d+uydu+tur")
+    rf = resolve_super_el("f4map yedek", geocode=False)
+    if rf.get("action") != "mode_f4":
+        fail("f4 yedek mode")
+    print("OK: resolve+geo+zoom+3d4d+uydu+tur+f4")
     viewer = ROOT.parent / "ruzgar-desktop" / "harita-viewer.html"
     if not viewer.is_file():
         fail("harita-viewer.html yok")
     leaf = ROOT.parent / "ruzgar-desktop" / "vendor" / "leaflet" / "leaflet.js"
     if not leaf.is_file():
         fail("vendor/leaflet yok")
+    cesium = ROOT.parent / "ruzgar-desktop" / "vendor" / "cesium" / "Cesium.js"
+    if not cesium.is_file():
+        fail("vendor/cesium/Cesium.js yok (Faz 1)")
+    viewer_txt = viewer.read_text(encoding="utf-8")
+    if "CESIUM_BASE_URL" not in viewer_txt or "vendor/cesium/" not in viewer_txt:
+        fail("harita-viewer yerel Cesium tabanı yok")
+    if "paintCesium3d" not in viewer_txt and "makeCesiumViewer" not in viewer_txt:
+        fail("harita-viewer Cesium 3d ana motor yok")
+    if "demo.f4map.com" not in viewer_txt:
+        fail("F4map yedek yolu yok")
+    print("OK: Cesium yerel + F4map yedek")
     masa = (ROOT.parent / "ruzgar-desktop" / "ruzgar-masa.js").read_text(encoding="utf-8")
     for needle in (
         "applySahneOrgan",

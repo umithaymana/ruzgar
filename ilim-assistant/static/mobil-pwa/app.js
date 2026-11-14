@@ -226,10 +226,11 @@
       '<button type="button" data-h="zoom_in">+</button>' +
       '<button type="button" data-h="zoom_out">−</button>' +
       '<button type="button" data-h="mode_2d">2D</button>' +
-      '<button type="button" data-h="mode_3d">3D</button>' +
+      '<button type="button" data-h="mode_3d" title="3D Cesium">3D</button>' +
       '<button type="button" data-h="mode_4d">4D</button>' +
       '<button type="button" data-h="mode_uydu">Uydu</button>' +
-      '<button type="button" data-h="mode_tur">Tur</button>';
+      '<button type="button" data-h="mode_tur">Tur</button>' +
+      '<button type="button" data-h="mode_f4" title="F4map yedek">F4</button>';
     tools.addEventListener("click", (ev) => {
       const btn = ev.target && ev.target.closest("button[data-h]");
       if (!btn) return;
@@ -312,12 +313,16 @@
       st.mode = "tur";
       if ((Number(st.zoom) || 6) < 5) st.zoom = 5;
     }
+    if (action === "mode_f4" || action === "f4") {
+      st.mode = "f4";
+      if ((Number(st.zoom) || 6) < 15) st.zoom = 16;
+    }
     const isMode =
-      /^mode_(2d|3d|4d|uydu|tur)$/.test(action) ||
-      /^(2d|3d|4d|uydu|tur)$/.test(action);
+      /^mode_(2d|3d|4d|uydu|tur|f4)$/.test(action) ||
+      /^(2d|3d|4d|uydu|tur|f4)$/.test(action);
     const hedefStr = c.hedef != null ? String(c.hedef).trim() : "";
     const hedefIsMode =
-      /^(2d|3d|4d|uydu|tur|panorama|dunya\s*turu|tarihi|historical)$/i.test(hedefStr);
+      /^(2d|3d|4d|uydu|tur|f4|f4map|panorama|dunya\s*turu|tarihi|historical)$/i.test(hedefStr);
     if (!isMode || (geo && !hedefIsMode)) {
       if (geo && geo.lat != null && geo.lon != null && !hedefIsMode) {
         st.lat = Number(geo.lat);
@@ -434,6 +439,7 @@
         mode_4d: 1,
         mode_uydu: 1,
         mode_tur: 1,
+        mode_f4: 1,
         show: 1,
         focus: 1,
       };

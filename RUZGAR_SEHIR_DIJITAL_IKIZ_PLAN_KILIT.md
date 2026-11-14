@@ -12,8 +12,8 @@ Her yeşil dilimde **PC + mobil** birlikte; mobilde yeşil olmayan dilime geçil
 | Faz | İş | Durum |
 |-----|-----|--------|
 | 0 | Analiz raporu | ✅ |
-| 0b | Dünkü harita/ses güvenli liman (commit + smoke) | 🔄 |
-| 1 | Cesium yerel + 3D ana motor; F4map yedek; süper-el | ⬜ |
+| 0b | Dünkü harita/ses güvenli liman (commit + smoke) | ✅ `261b3f598` |
+| 1 | Cesium yerel + 3D ana motor; F4map yedek; süper-el | ✅ (commit sıradaki) |
 | 2 | Program kayıt defteri (Rüzgâr araç tanıma) | ⬜ |
 | 3 | GDAL + QGIS + PostGIS (D:) — pilot ilçe | ⬜ (kurulum onayı gerekir) |
 | 4 | Bina ayakizi / parsel + dünya→bina yakınlaşma | ⬜ |
