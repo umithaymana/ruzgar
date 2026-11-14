@@ -177,21 +177,70 @@ def _resolve_python() -> str:
     return sys.executable
 
 
+def _read_api_host() -> str:
+    """Mobil/LAN: .env RUZGAR_API_HOST (0.0.0.0) — launcher localhost'a kilitlemesin."""
+    from_env = (os.environ.get("RUZGAR_API_HOST") or "").strip()
+    if from_env:
+        return from_env
+    env_path = ILIM_ASSISTANT / ".env"
+    try:
+        if env_path.is_file():
+            for raw in env_path.read_text(encoding="utf-8", errors="replace").splitlines():
+                line = raw.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, _, val = line.partition("=")
+                if key.strip() != "RUZGAR_API_HOST":
+                    continue
+                host = val.strip().strip('"').strip("'")
+                if host:
+                    return host
+    except OSError:
+        pass
+    return "127.0.0.1"
+
+
+def _api_lan_open() -> bool:
+    """Health 200 yetmez — /api/mobil/erisim lan_open false ise mobil düşer."""
+    try:
+        with urllib.request.urlopen(
+            f"http://127.0.0.1:{API_PORT}/api/mobil/erisim", timeout=2.0
+        ) as r:
+            if r.status != 200:
+                return False
+            import json
+
+            j = json.loads(r.read().decode("utf-8", errors="replace"))
+            return bool(j.get("lan_open"))
+    except (urllib.error.URLError, TimeoutError, OSError, ValueError):
+        return False
+
+
 def _ensure_api() -> None:
     """Sağlıklıysa dokunma; değilse zombileri temizle ve yeni uvicorn aç."""
     global _API_PROC
 
     _kill_port_zombies()
 
+    host = _read_api_host()
+    need_lan = host in ("0.0.0.0", "::", "*")
     if _api_up():
-        _log("API zaten ayakta (saglikli)")
-        return
+        if need_lan and not _api_lan_open():
+            _log("API localhost kilitli (.env 0.0.0.0) — yeniden baslat")
+            _kill_port_zombies()
+            for pid in _pids_listening_on_port(API_PORT):
+                _kill_pid(pid)
+            time.sleep(1.0)
+        else:
+            _log("API zaten ayakta (saglikli)")
+            return
 
     py = _resolve_python()
-    args = [py, "run_desktop_api.py", "--host", "127.0.0.1", "--port", str(API_PORT)]
+    args = [py, "run_desktop_api.py", "--host", host, "--port", str(API_PORT)]
     _log(f"API baslatiliyor: {' '.join(args)}")
     env = os.environ.copy()
     env["RUZGAR_API_PORT"] = str(API_PORT)
+    env["RUZGAR_API_HOST"] = host
     _API_PROC = _win_popen_no_window(args, cwd=str(ILIM_ASSISTANT), env=env)
 
     deadline = time.monotonic() + WAIT_SEC

@@ -5482,6 +5482,62 @@ def api_sahne_super_el(body: SahneSuperElBody):
     return resolve_super_el(body.text or "")
 
 
+@app.get("/api/sahne/harita/reverse")
+def api_sahne_harita_reverse(lat: float, lon: float, network: int = 1):
+    """Harita merkezi reverse-geocode — canlı durum etiketi."""
+    from ilim_assistant.sahne_harita_geo import reverse_geocode
+
+    try:
+        return reverse_geocode(float(lat), float(lon), allow_network=bool(int(network)))
+    except Exception as exc:
+        return {
+            "ok": False,
+            "error": str(exc)[:120],
+            "lat": lat,
+            "lon": lon,
+            "short": f"{lat:.3f}, {lon:.3f}",
+            "label": f"{lat:.4f}, {lon:.4f}",
+        }
+
+
+@app.get("/api/sahne/harita/cesium")
+def api_sahne_harita_cesium():
+    """Cesium Ion token + World Terrain bayrağı (harita-viewer yerel)."""
+    import os
+
+    token = (os.environ.get("CESIUM_ION_TOKEN") or os.environ.get("ION_TOKEN") or "").strip()
+    world = os.environ.get("RUZGAR_CESIUM_WORLD_TERRAIN", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+    return {
+        "ok": bool(token),
+        "world_terrain": bool(token) and world,
+        "ion_token": token if token else None,
+        "provider": "cesium_world_terrain" if (token and world) else "terrarium",
+    }
+
+
+@app.get("/api/sahne/harita/tur")
+def api_sahne_harita_tur(place: str = "", tip: str = "", lat: float | None = None, lon: float | None = None):
+    """H10 Akıllı Dünya Gezgini — aşamalı duraklar + bilgi kartı."""
+    from ilim_assistant.sahne_dunya_gezgini import H10_VERSION, build_tour_payload
+
+    geo = None
+    if lat is not None and lon is not None:
+        geo = {
+            "lat": float(lat),
+            "lon": float(lon),
+            "tip": (tip or "dag").strip().lower() or "dag",
+            "label": (place or "Tur").strip() or "Tur",
+        }
+    tour = build_tour_payload(place=(place or "").strip() or None, geo=geo)
+    if not tour:
+        return {"ok": False, "version": H10_VERSION, "error": "tur_yok"}
+    return tour
+
+
 @app.get("/api/sahne/odalar")
 def api_sahne_odalar():
     """Meslek odaları + mobil A/B/C (plan 26–32)."""

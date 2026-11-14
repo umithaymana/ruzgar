@@ -1,6 +1,6 @@
 {
   "surum": 1,
-  "guncelleme": "2026-11-14T11:05:08",
+  "guncelleme": "2026-11-14T17:56:23",
   "aciklama": "Rüzgâr araç kayıt defteri — Cursor kurulumları tarama ile eklenir.",
   "araclar": [
     {
@@ -109,8 +109,8 @@
         "vektor"
       ],
       "kurulu": true,
-      "yol": "C:\\Program Files\\QGIS 3.44.15\\bin\\gdalinfo.EXE",
-      "kaynak": "which",
+      "yol": "C:\\Program Files\\QGIS 3.44.15\\bin\\ogr2ogr.exe",
+      "kaynak": "path",
       "ornek_komut": "ogr2ogr -f GeoJSON out.geojson in.shp",
       "plan_faz": 3
     },
@@ -152,8 +152,8 @@
         "sehir_veri"
       ],
       "kurulu": true,
-      "yol": "C:\\Program Files\\QGIS 3.44.15\\bin\\psql.EXE",
-      "kaynak": "which",
+      "yol": "D:\\RuzgarSehirIkiz\\pgsql\\bin\\psql.exe",
+      "kaynak": "path",
       "ornek_komut": "psql -U postgres -h 127.0.0.1 -d sehir_ikiz",
       "plan_faz": 3
     },

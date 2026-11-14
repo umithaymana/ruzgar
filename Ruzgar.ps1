@@ -195,15 +195,46 @@ print('desktop_server syntax ok')
     }
 }
 
-function Start-HttpsMicProxy {
-    param([string]$Ia)
-    # Mobil mikrofon: https://0.0.0.0:8443 → http://127.0.0.1:8779
-    $listen = $null
+function Stop-HttpsMicProxy {
+    # ForceRestart / yeniden dogru baslat: 8443 dinleyicilerini dusur
+    for ($try = 0; $try -lt 3; $try++) {
+        try {
+            Get-NetTCPConnection -LocalPort 8443 -State Listen -ErrorAction SilentlyContinue |
+                ForEach-Object {
+                    $pid8443 = $_.OwningProcess
+                    if ($pid8443 -and $pid8443 -gt 4) {
+                        Stop-Process -Id $pid8443 -Force -ErrorAction SilentlyContinue
+                        & taskkill /F /T /PID $pid8443 2>$null | Out-Null
+                    }
+                }
+        } catch {}
+        Start-Sleep -Milliseconds 400
+        $left = $null
+        try {
+            $left = Get-NetTCPConnection -LocalPort 8443 -State Listen -ErrorAction SilentlyContinue |
+                Select-Object -First 1
+        } catch {}
+        if (-not $left) { return }
+    }
+}
+
+function Test-HttpsMicProxyUp {
     try {
-        $listen = Get-NetTCPConnection -LocalPort 8443 -State Listen -ErrorAction SilentlyContinue |
+        $c = Get-NetTCPConnection -LocalPort 8443 -State Listen -ErrorAction SilentlyContinue |
             Select-Object -First 1
-    } catch {}
-    if ($listen) {
+        return [bool]$c
+    } catch {
+        return $false
+    }
+}
+
+function Start-HttpsMicProxy {
+    param([string]$Ia, [switch]$Force)
+    # Mobil mikrofon: https://0.0.0.0:8443 → http://127.0.0.1:8779
+    # NOT: Start-Process -ArgumentList dizi, bosluklu yolda script'i bozar → tek quoted satir.
+    if ($Force) {
+        Stop-HttpsMicProxy
+    } elseif (Test-HttpsMicProxyUp) {
         Log "HTTPS mic proxy zaten dinliyor (8443)"
         return
     }
@@ -220,28 +251,67 @@ function Start-HttpsMicProxy {
     }
     $errPath = Join-Path $env:TEMP "ruzgar-https-proxy.err"
     try {
-        $pargs = @()
-        foreach ($x in $script:PyArgs) { $pargs += $x }
-        $pargs += $scriptPy
-        $pargs += "--host"; $pargs += "0.0.0.0"
-        $pargs += "--port"; $pargs += "8443"
-        $pargs += "--upstream-host"; $pargs += "127.0.0.1"
-        $pargs += "--upstream-port"; $pargs += "$ApiPort"
-        $proc = Start-Process -FilePath $script:PyExe -ArgumentList $pargs -WorkingDirectory $Ia `
+        # Gradio ile ayni: tek ArgumentList string + yollar tirnakli (CURSOR PROJELER boslugu)
+        $argLine = ""
+        foreach ($x in $script:PyArgs) { $argLine += " $x" }
+        $argLine += " `"$scriptPy`" --host 0.0.0.0 --port 8443 --upstream-host 127.0.0.1 --upstream-port $ApiPort --cert `"$cert`" --key `"$key`""
+        $argLine = $argLine.Trim()
+        Log "HTTPS proxy: $PyExe $argLine WD=$Ia"
+        $proc = Start-Process -FilePath $script:PyExe -ArgumentList $argLine -WorkingDirectory $Ia `
             -WindowStyle Hidden -RedirectStandardError $errPath -PassThru
         Start-Sleep -Seconds 1
-        $up = $null
-        try {
-            $up = Get-NetTCPConnection -LocalPort 8443 -State Listen -ErrorAction SilentlyContinue |
-                Select-Object -First 1
-        } catch {}
-        if ($up) {
+        if (Test-HttpsMicProxyUp) {
             Log "HTTPS mic proxy hazir pid=$($proc.Id) https://<PC-IP>:8443/mobil/"
         } else {
             Log "UYARI: HTTPS mic proxy 8443 acilamadi (log=$errPath)"
+            if (Test-Path $errPath) {
+                Get-Content $errPath -Tail 8 -ErrorAction SilentlyContinue | ForEach-Object { Log "https-proxy.err: $_" }
+            }
         }
     } catch {
         Log "UYARI: HTTPS mic proxy baslatilamadi: $($_.Exception.Message)"
+    }
+}
+
+function Get-DesiredApiHost {
+    param([string]$Ia)
+    $apiHost = if ($env:RUZGAR_API_HOST -and $env:RUZGAR_API_HOST.Trim()) { $env:RUZGAR_API_HOST.Trim() } else { "127.0.0.1" }
+    try {
+        $envPath = Join-Path $Ia ".env"
+        if (Test-Path $envPath) {
+            foreach ($raw in Get-Content $envPath -Encoding UTF8) {
+                $line = "$raw".Trim()
+                if (-not $line -or $line.StartsWith("#") -or -not $line.Contains("=")) { continue }
+                $i = $line.IndexOf("=")
+                if ($line.Substring(0, $i).Trim() -ne "RUZGAR_API_HOST") { continue }
+                $fromFile = $line.Substring($i + 1).Trim().Trim('"').Trim("'")
+                if ($fromFile) { $apiHost = $fromFile }
+                break
+            }
+        }
+    } catch {}
+    return $apiHost
+}
+
+function Test-ApiBindMatchesDesired {
+    param([string]$DesiredHost, [int]$Port)
+    # .env 0.0.0.0 iken eski surec 127.0.0.1'de kalirsa mobil dusmesin — yeniden baslat
+    $needLan = ($DesiredHost -eq "0.0.0.0" -or $DesiredHost -eq "::" -or $DesiredHost -eq "*")
+    if (-not $needLan) { return $true }
+    try {
+        $addrs = @(
+            Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue |
+                ForEach-Object { $_.LocalAddress } | Select-Object -Unique
+        )
+        if (-not $addrs -or $addrs.Count -eq 0) { return $false }
+        foreach ($a in $addrs) {
+            if ($a -eq "0.0.0.0" -or $a -eq "::" -or ($a -ne "127.0.0.1" -and $a -ne "::1")) {
+                return $true
+            }
+        }
+        return $false
+    } catch {
+        return $false
     }
 }
 
@@ -259,25 +329,8 @@ function Start-ApiServer {
     $uargs += "run_desktop_api.py"
     $uargs += "--host"
     # Mobil/Tailscale: .env RUZGAR_API_HOST=0.0.0.0 — dosya, process env'deki eski 127.0.0.1'i ezsin
-    $apiHost = if ($env:RUZGAR_API_HOST -and $env:RUZGAR_API_HOST.Trim()) { $env:RUZGAR_API_HOST.Trim() } else { "127.0.0.1" }
-    $envFileHost = $null
-    try {
-        $envPath = Join-Path $Ia ".env"
-        if (Test-Path $envPath) {
-            foreach ($raw in Get-Content $envPath -Encoding UTF8) {
-                $line = "$raw".Trim()
-                if (-not $line -or $line.StartsWith("#") -or -not $line.Contains("=")) { continue }
-                $i = $line.IndexOf("=")
-                if ($line.Substring(0, $i).Trim() -ne "RUZGAR_API_HOST") { continue }
-                $envFileHost = $line.Substring($i + 1).Trim().Trim('"').Trim("'")
-                break
-            }
-        }
-    } catch { }
-    if ($envFileHost -and $envFileHost.Trim()) {
-        $apiHost = $envFileHost.Trim()
-        $env:RUZGAR_API_HOST = $apiHost
-    }
+    $apiHost = Get-DesiredApiHost -Ia $Ia
+    $env:RUZGAR_API_HOST = $apiHost
     if ($apiHost -eq "127.0.0.1" -or $apiHost -eq "localhost") {
         Log "UYARI: API host=$apiHost — telefon/LAN baglanamaz; .env RUZGAR_API_HOST=0.0.0.0 onerilir"
     } else {
@@ -869,8 +922,9 @@ function Test-ApiBuildCurrent {
 
 $script:ForceRestartFreshApi = $false
 if ($ForceRestart) {
-    Log "force-restart: Electron + tum Ruzgar API surecleri (port $ApiPort, 8777)"
+    Log "force-restart: Electron + tum Ruzgar API surecleri (port $ApiPort, 8777) + HTTPS 8443"
     Stop-RuzgarElectron
+    Stop-HttpsMicProxy
     $null = Invoke-RuzgarPortOps -Command "kill-all-api" -IaRoot $ia -Port $ApiPort
     Stop-RuzgarApiPort -Port $ApiPort
     if ($ApiPort -ne 8777) { Stop-RuzgarApiPort -Port 8777 }
@@ -929,6 +983,18 @@ if ($serverUp -and (-not (Test-ApiBuildCurrent -Url $apiUrl))) {
         }
     }
     if (-not $mismatchFixed) {
+        $serverUp = $false
+    }
+}
+
+# Mobil kilit: .env 0.0.0.0 ama surec hala 127.0.0.1 → "saglikli" gorunup telefon dusmesin
+if ($serverUp) {
+    $wantHost = Get-DesiredApiHost -Ia $ia
+    if (-not (Test-ApiBindMatchesDesired -DesiredHost $wantHost -Port $ApiPort)) {
+        Log "API bind uyumsuz (istenen=$wantHost, dinleme localhost) — mobil icin yeniden baslat"
+        Stop-RuzgarApiPort -Port $ApiPort
+        if ($ApiPort -ne 8777) { Stop-RuzgarApiPort -Port 8777 }
+        Start-Sleep -Seconds 2
         $serverUp = $false
     }
 }
@@ -1012,7 +1078,11 @@ Cozum:
 
 # Mobil basili tut / surekli sohbet: HTTP'de mic yok — HTTPS 8443 koprusu
 if (-not $script:RuzgarUseColab) {
-    Start-HttpsMicProxy -Ia $ia
+    Start-HttpsMicProxy -Ia $ia -Force:$script:ForceRestartFreshApi
+    if (-not (Test-HttpsMicProxyUp)) {
+        Log "HTTPS 8443 yok — bir kez daha deneniyor (yol tirnak / bosluk)"
+        Start-HttpsMicProxy -Ia $ia -Force
+    }
 }
 
 if ($WantGradio) {

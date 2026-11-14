@@ -150,6 +150,56 @@ function probeApiHealth(port) {
   });
 }
 
+/** .env 0.0.0.0 iken eski 127.0.0.1 süreci "sağlıklı" kalıp mobil düşmesin */
+function probeApiLanOpen(port) {
+  return new Promise((resolve) => {
+    const req = http.get(
+      `http://127.0.0.1:${port}/api/mobil/erisim`,
+      { timeout: 5000 },
+      (res) => {
+        let body = "";
+        res.on("data", (c) => {
+          body += c;
+        });
+        res.on("end", () => {
+          try {
+            const j = JSON.parse(body);
+            resolve(!!(j && j.lan_open));
+          } catch (_) {
+            resolve(false);
+          }
+        });
+      }
+    );
+    req.on("error", () => resolve(false));
+    req.on("timeout", () => {
+      req.destroy();
+      resolve(false);
+    });
+  });
+}
+
+function killApiListenersOnPort(port) {
+  return new Promise((resolve) => {
+    try {
+      const ps = spawn(
+        "powershell.exe",
+        [
+          "-NoProfile",
+          "-Command",
+          `Get-NetTCPConnection -LocalPort ${Number(port)} -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }`,
+        ],
+        { windowsHide: true, stdio: "ignore" }
+      );
+      ps.on("exit", () => resolve());
+      ps.on("error", () => resolve());
+      setTimeout(() => resolve(), 4000);
+    } catch (_) {
+      resolve();
+    }
+  });
+}
+
 function readExpectedBuildRev() {
   try {
     const p = path.join(WORKSPACE_ROOT, "ilim-assistant", "ruzgar_build_rev.txt");
@@ -347,11 +397,22 @@ async function ensureLocalApiServer() {
     return;
   }
   const port = readLocalApiPortFromDisk();
-  if (await probeApiHealth(port)) return;
+  const apiHost = readApiHostForSpawn();
+  const needLan = apiHost === "0.0.0.0" || apiHost === "::" || apiHost === "*";
+  if (await probeApiHealth(port)) {
+    if (needLan && !(await probeApiLanOpen(port))) {
+      console.warn(
+        "[RÜZGAR] API localhost kilitli (.env 0.0.0.0) — mobil için yeniden başlatılıyor"
+      );
+      await killApiListenersOnPort(port);
+      await new Promise((r) => setTimeout(r, 1200));
+    } else {
+      return;
+    }
+  }
   const ia = path.join(WORKSPACE_ROOT, "ilim-assistant");
   if (!fs.existsSync(path.join(ia, "run_desktop_api.py"))) return;
   const { exe: py, argsPrefix } = resolveRuzgarPython();
-  const apiHost = readApiHostForSpawn();
   const args = [
     ...argsPrefix,
     "run_desktop_api.py",
@@ -385,11 +446,82 @@ async function ensureLocalApiServer() {
   for (let i = 0; i < 180; i++) {
     await new Promise((r) => setTimeout(r, 500));
     if (await probeApiHealth(port)) {
-      console.info(`[RÜZGAR] Yerel API hazır (127.0.0.1:${port})`);
+      const lan = needLan ? await probeApiLanOpen(port) : true;
+      console.info(
+        `[RÜZGAR] Yerel API hazır (${apiHost}:${port}${lan ? "" : " — lan_open henüz yok"})`
+      );
       return;
     }
   }
   console.warn(`[RÜZGAR] API ${port} portunda 90 sn içinde yanıt vermedi`);
+}
+
+/** Mobil yazı+ses tek kapı: https://0.0.0.0:8443 → 127.0.0.1:8779 (Node spawn boşluklu yolu kırmaz) */
+function ensureHttpsMicProxy() {
+  return new Promise((resolve) => {
+    const ia = path.join(WORKSPACE_ROOT, "ilim-assistant");
+    const scriptPy = path.join(ia, "scripts", "ruzgar_https_proxy.py");
+    const cert = path.join(ia, ".ruzgar", "certs", "ruzgar-mobil.crt");
+    const key = path.join(ia, ".ruzgar", "certs", "ruzgar-mobil.key");
+    if (!fs.existsSync(scriptPy) || !fs.existsSync(cert) || !fs.existsSync(key)) {
+      resolve(false);
+      return;
+    }
+    const port = readLocalApiPortFromDisk();
+    const check = spawn(
+      "powershell.exe",
+      [
+        "-NoProfile",
+        "-Command",
+        "(Get-NetTCPConnection -LocalPort 8443 -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1) -ne $null",
+      ],
+      { windowsHide: true }
+    );
+    let out = "";
+    check.stdout.on("data", (c) => {
+      out += String(c);
+    });
+    check.on("close", () => {
+      if (/True/i.test(out)) {
+        console.info("[RÜZGAR] HTTPS mic proxy zaten 8443");
+        resolve(true);
+        return;
+      }
+      const { exe: py, argsPrefix } = resolveRuzgarPython();
+      const args = [
+        ...argsPrefix,
+        scriptPy,
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8443",
+        "--upstream-host",
+        "127.0.0.1",
+        "--upstream-port",
+        String(port),
+        "--cert",
+        cert,
+        "--key",
+        key,
+      ];
+      try {
+        const child = spawn(py, args, {
+          cwd: ia,
+          detached: true,
+          stdio: "ignore",
+          windowsHide: true,
+        });
+        child.unref();
+        console.info("[RÜZGAR] HTTPS mic proxy başlatıldı (8443)");
+        resolve(true);
+      } catch (e) {
+        console.warn("[RÜZGAR] HTTPS proxy açılamadı:", e && e.message ? e.message : e);
+        resolve(false);
+      }
+    });
+    check.on("error", () => resolve(false));
+    setTimeout(() => resolve(false), 5000);
+  });
 }
 
 function activeWindow(fallback) {
@@ -772,6 +904,7 @@ app.whenReady().then(async () => {
   if (!gotSingleInstanceLock) return;
   await ensureFreshApiOnLaunch();
   await ensureLocalApiServer();
+  await ensureHttpsMicProxy();
   /** Mikrofon / ses yakalama — Windows izin diyaloğu ve Electron oturumu için */
   try {
     const defaultSession = session && session.defaultSession;

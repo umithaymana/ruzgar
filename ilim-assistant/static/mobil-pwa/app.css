@@ -459,6 +459,20 @@ button.tiny { padding: 6px 10px; font-size: 0.8rem; border-radius: 999px; }
   opacity: 0.55;
   transform: scale(0.9);
 }
+/* H10.5 sinematik tur — logo gizle, sahne öne */
+body.mobil-harita-cinema .sahne-face,
+.sahne-face.is-cinema-hide {
+  display: none !important;
+}
+body.mobil-harita-cinema .harita-tools {
+  opacity: 0.18;
+  pointer-events: none;
+}
+body.mobil-harita-cinema .sahne-organ-meta {
+  opacity: 0.3;
+  max-height: 1.2em;
+  overflow: hidden;
+}
 .harita-tools {
   position: absolute;
   top: 8px;
@@ -466,22 +480,74 @@ button.tiny { padding: 6px 10px; font-size: 0.8rem; border-radius: 999px; }
   z-index: 7;
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   gap: 3px;
 }
-.harita-tools button {
+.harita-tools > button[data-h="zoom_in"],
+.harita-tools > button[data-h="zoom_out"],
+.harita-tools > .harita-tools-more {
   min-width: 40px;
+  width: 40px;
   height: 30px;
-  padding: 0 6px;
+  padding: 0;
   border: 1px solid rgba(212, 175, 55, 0.45);
   border-radius: 8px;
+  background: rgba(12, 14, 20, 0.9);
+  color: #f3e6c4;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.harita-tools > button[data-h="zoom_in"]:hover,
+.harita-tools > button[data-h="zoom_out"]:hover,
+.harita-tools > .harita-tools-more:hover,
+.harita-tools.is-menu-open > .harita-tools-more {
+  background: rgba(212, 175, 55, 0.3);
+  color: #fff8e8;
+}
+.harita-tools-more-icon {
+  display: block;
+  width: 14px;
+  height: 10px;
+  border-top: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  background: linear-gradient(currentColor, currentColor) center / 100% 2px no-repeat;
+  box-sizing: border-box;
+}
+.harita-tools .harita-tools-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 2px;
+  padding: 4px;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 10px;
+  background: rgba(10, 12, 18, 0.94);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+  max-height: min(48dvh, 300px);
+  overflow: auto;
+}
+.harita-tools .harita-tools-menu[hidden] {
+  display: none !important;
+}
+.harita-tools .harita-tools-menu button {
+  min-width: 40px;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 7px;
   background: rgba(12, 14, 20, 0.9);
   color: #f3e6c4;
   font-size: 0.72rem;
   font-weight: 700;
   cursor: pointer;
+  white-space: nowrap;
 }
-.harita-tools button.is-on,
-.harita-tools button:hover {
+.harita-tools .harita-tools-menu button.is-on,
+.harita-tools .harita-tools-menu button:hover {
   background: rgba(212, 175, 55, 0.3);
   color: #fff8e8;
 }
@@ -518,12 +584,19 @@ body.mobil-sahne-organ-on #chatView.has-sahne .sahne-organ-frame iframe {
 #chatView.has-sahne .sahne-stage.organ-on .sahne-face,
 body.mobil-sahne-organ-on #chatView.has-sahne .sahne-face {
   position: absolute;
-  top: 8px;
-  left: 10px;
+  top: 6px;
+  right: 48px;
+  left: auto;
   z-index: 6;
-  transform: scale(0.38);
-  transform-origin: top left;
+  transform: scale(0.14);
+  transform-origin: top right;
+  opacity: 0.32;
   pointer-events: none;
+  filter: saturate(0.8);
+}
+.sahne-face.is-organ-dim {
+  opacity: 0.32;
+  transform: scale(0.14);
 }
 #chatView.has-sahne .sahne-stage.organ-on .sahne-wind,
 #chatView.has-sahne .sahne-stage.organ-on .sahne-dalga,

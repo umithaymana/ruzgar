@@ -57,8 +57,8 @@ def main() -> None:
         "sahneDalga",
         "sahne-face-svg",
         'role="status"',
-        "app.js?v=64-stac-pano",
-        "app.css?v=46-sehir",
+        "app.js?v=68-harita-katman",
+        "app.css?v=48-harita-katman",
         "btnSahneSheet",
         "sahneDock",
         "sahneOrgan",
@@ -148,13 +148,31 @@ def main() -> None:
             fail(f"app.css eksik: {needle}")
     ok("PWA sahne işaretler")
     sw = (pwa / "sw.js").read_text(encoding="utf-8")
-    if "ruzgar-pwa-v64-stac-pano" not in sw or "app.js?v=64-stac-pano" not in sw or "app.css?v=46-sehir" not in sw:
+    if (
+        "ruzgar-pwa-v68-harita-katman" not in sw
+        or "app.js?v=68-harita-katman" not in sw
+        or "app.css?v=48-harita-katman" not in sw
+    ):
         fail("sw.js cache sürümü index ile hizasız")
-    ok("SW cache hiza v64-stac-pano")
-    if "app.css?v=46-sehir" not in html:
-        fail("index.html css sürümü 46-sehir değil")
-    if "app.js?v=64-stac-pano" not in html:
-        fail("index.html js sürümü 64-stac-pano değil")
+    ok("SW cache hiza v68-harita-katman")
+    if "app.css?v=48-harita-katman" not in html:
+        fail("index.html css sürümü 48-harita-katman değil")
+    if "app.js?v=68-harita-katman" not in html:
+        fail("index.html js sürümü 68-harita-katman değil")
+    if js.count("await runSuperEl(") < 2:
+        fail("yazı+ses runSuperEl çift yolu yok (sahne hakimiyeti)")
+    ok("yazı+ses süper-el")
+    for needle in (
+        "openMobilSahneUi",
+        "closeMobilSahneUi",
+        "stage_open",
+        "stage_close",
+        "Sahne açıldı.",
+        "sahneUiForcedOff",
+    ):
+        if needle not in js:
+            fail(f"app.js sahne UI kapısı eksik: {needle}")
+    ok("sahne UI aç/kapa kapısı")
     # Harita organı paritesi (PC ile aynı viewer + Cesium/F4 + şehir)
     for needle in (
         "harita-viewer.html",
@@ -167,10 +185,18 @@ def main() -> None:
         "runSuperEl",
         "haritaPilotSehir",
         "era_gelecek",
+        "harita-tools-menu",
+        "harita-tools-more",
+        "setMobilHaritaToolsMenuOpen",
+        'mode: "uydu"',
+        'mode || "uydu"',
     ):
         if needle not in js:
             fail(f"app.js harita paritesi eksik: {needle}")
     ok("mobil harita paritesi")
+    if "harita-tools-menu" not in css or "harita-tools-more-icon" not in css:
+        fail("app.css harita menü yok")
+    ok("mobil harita menü css")
     print("SMOKE_MOBIL_SAHNE=PASS")
 
 

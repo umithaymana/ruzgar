@@ -1357,49 +1357,87 @@ body.ruzgar-sahne-on.ruzgar-sahne-organ-on #ruzgar-sahne-organ-frame .ruzgar-sah
   min-height: 100%;
   max-height: none;
 }
+/* H8: harita açıkken robot — küçük, sağ alt, haritayı kapatmaz; gizlenebilir */
 body.ruzgar-sahne-on.ruzgar-sahne-organ-on #ruzgar-sahne-face {
   position: absolute;
-  top: 12px;
-  left: 14px;
+  top: auto;
+  bottom: 56px;
+  right: 14px;
+  left: auto;
   z-index: 6;
-  transform: scale(0.42);
-  transform-origin: top left;
-  opacity: 0.82;
+  width: 280px;
+  transform: scale(0.1);
+  transform-origin: bottom right;
+  opacity: 0.22;
   pointer-events: none;
+  filter: saturate(0.75);
 }
 body.ruzgar-sahne-on.ruzgar-sahne-organ-on #ruzgar-sahne-face.is-organ-dim {
-  opacity: 0.82;
-  transform: scale(0.42);
+  opacity: 0.22;
+  transform: scale(0.1);
+  transform-origin: bottom right;
+}
+body.ruzgar-sahne-on.ruzgar-sahne-organ-on.ruzgar-harita-logo-off #ruzgar-sahne-face {
+  display: none !important;
+}
+/* H10.5 sinematik tur — logo + araç şeridi gizle, sahne öne */
+body.ruzgar-sahne-on.ruzgar-sahne-organ-on.ruzgar-harita-cinema #ruzgar-sahne-face {
+  display: none !important;
+}
+body.ruzgar-sahne-on.ruzgar-sahne-organ-on.ruzgar-harita-cinema .ruzgar-harita-tools {
+  opacity: 0.15;
+  pointer-events: none;
+}
+body.ruzgar-sahne-on.ruzgar-sahne-organ-on.ruzgar-harita-cinema #ruzgar-sahne-soz {
+  opacity: 0.25;
+  max-height: 1.2em;
+}
+body.ruzgar-sahne-on.ruzgar-sahne-organ-on.ruzgar-harita-cinema #ruzgar-sahne-organ-frame {
+  inset: 0;
 }
 body.ruzgar-sahne-on.ruzgar-sahne-organ-on .ruzgar-sahne-wind,
 body.ruzgar-sahne-on.ruzgar-sahne-organ-on .ruzgar-sahne-dalga,
 body.ruzgar-sahne-on.ruzgar-sahne-organ-on #ruzgar-sahne-masa {
   display: none !important;
 }
+/* H8: söz üstte — alt bilgi çubuğu ile çakışmasın */
 body.ruzgar-sahne-on.ruzgar-sahne-organ-on #ruzgar-sahne-soz {
   position: absolute;
   left: 12px;
-  right: 88px;
-  bottom: 10px;
+  right: 120px;
+  top: 10px;
+  bottom: auto;
   z-index: 6;
   margin: 0;
-  max-width: none;
-  font-size: 0.85rem;
+  max-width: min(420px, 55vw);
+  max-height: 3.6em;
+  overflow: hidden;
+  font-size: 0.78rem;
   text-shadow: 0 1px 8px #000;
   pointer-events: none;
 }
 body.ruzgar-sahne-on.ruzgar-sahne-organ-on #ruzgar-sahne-organ-meta {
   position: absolute;
-  top: 10px;
-  right: 88px;
-  left: auto;
+  top: auto;
+  bottom: 14px;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
   z-index: 6;
   margin: 0;
-  padding: 4px 10px;
+  padding: 4px 12px;
   border-radius: 999px;
   background: rgba(8, 10, 16, 0.72);
-  text-align: right;
+  text-align: center;
   pointer-events: none;
+  max-width: min(70vw, 520px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Harita organında üst meta gereksiz (viewer bilgi çubuğu var) */
+body.ruzgar-sahne-on.ruzgar-sahne-organ-on #ruzgar-sahne-organ[data-organ="harita"] #ruzgar-sahne-organ-meta {
+  display: none;
 }
 
 .ruzgar-sahne-organ-frame {
@@ -1425,16 +1463,72 @@ body.ruzgar-sahne-on.ruzgar-sahne-organ-on #ruzgar-sahne-organ-meta {
   z-index: 7;
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   gap: 4px;
   pointer-events: auto;
 }
-.ruzgar-harita-tools button {
+.ruzgar-harita-tools > button[data-harita-act="zoom_in"],
+.ruzgar-harita-tools > button[data-harita-act="zoom_out"],
+.ruzgar-harita-tools > .harita-tools-more {
   min-width: 40px;
-  width: auto;
+  width: 40px;
   height: 32px;
-  padding: 0 7px;
+  padding: 0;
   border: 1px solid rgba(212, 175, 55, 0.45);
   border-radius: 8px;
+  background: rgba(12, 14, 20, 0.88);
+  color: #f3e6c4;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.ruzgar-harita-tools > button[data-harita-act="zoom_in"]:hover,
+.ruzgar-harita-tools > button[data-harita-act="zoom_out"]:hover,
+.ruzgar-harita-tools > .harita-tools-more:hover,
+.ruzgar-harita-tools.is-menu-open > .harita-tools-more {
+  background: rgba(212, 175, 55, 0.28);
+  color: #fff8e8;
+}
+.ruzgar-harita-tools button:focus-visible {
+  outline: 2px solid #d4af37;
+  outline-offset: 1px;
+}
+.harita-tools-more-icon {
+  display: block;
+  width: 14px;
+  height: 10px;
+  border-top: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  background: linear-gradient(currentColor, currentColor) center / 100% 2px no-repeat;
+  box-sizing: border-box;
+}
+.ruzgar-harita-tools .harita-tools-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 2px;
+  padding: 4px;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 10px;
+  background: rgba(10, 12, 18, 0.94);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+  max-height: min(52vh, 320px);
+  overflow: auto;
+}
+.ruzgar-harita-tools .harita-tools-menu[hidden] {
+  display: none !important;
+}
+.ruzgar-harita-tools .harita-tools-menu button {
+  min-width: 40px;
+  width: auto;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 7px;
   background: rgba(12, 14, 20, 0.88);
   color: #f3e6c4;
   font-size: 0.72rem;
@@ -1442,15 +1536,12 @@ body.ruzgar-sahne-on.ruzgar-sahne-organ-on #ruzgar-sahne-organ-meta {
   letter-spacing: 0.02em;
   cursor: pointer;
   line-height: 1;
+  white-space: nowrap;
 }
-.ruzgar-harita-tools button:hover,
-.ruzgar-harita-tools button.is-on {
+.ruzgar-harita-tools .harita-tools-menu button:hover,
+.ruzgar-harita-tools .harita-tools-menu button.is-on {
   background: rgba(212, 175, 55, 0.28);
   color: #fff8e8;
-}
-.ruzgar-harita-tools button:focus-visible {
-  outline: 2px solid #d4af37;
-  outline-offset: 1px;
 }
 .ruzgar-sahne-organ-note {
   margin: 0;

@@ -101,6 +101,60 @@
     return motors.sahne === true;
   }
 
+  /** Kullanıcı «sahneyi kapat» dedi — ACL açık kalsa da yüzü gizle; «aç» ile geri gelir */
+  let sahneUiForcedOff = false;
+
+  function openMobilSahneUi() {
+    if (!sahneAllowed()) {
+      return { ok: false, reason: "izin" };
+    }
+    sahneUiForcedOff = false;
+    const who = readWho();
+    applySahneGate(who);
+    const stage = el("sahneStage");
+    const view = el("chatView");
+    if (stage) {
+      stage.classList.remove("hidden");
+      stage.setAttribute("aria-hidden", "false");
+      try {
+        stage.inert = false;
+      } catch (_) {}
+    }
+    if (view) {
+      view.classList.add("has-sahne");
+      view.classList.remove("sheet-open");
+      if (!view.getAttribute("data-sahne-abc")) {
+        view.setAttribute("data-sahne-abc", "A");
+      }
+    }
+    applySahneOrgan("yuz");
+    setSahneState("hazir");
+    syncSahneSheetBtn();
+    return { ok: true };
+  }
+
+  function closeMobilSahneUi() {
+    sahneUiForcedOff = true;
+    const stage = el("sahneStage");
+    const view = el("chatView");
+    if (stage) {
+      stage.classList.add("hidden");
+      stage.setAttribute("aria-hidden", "true");
+      try {
+        stage.inert = true;
+      } catch (_) {}
+      stage.classList.remove("is-live", "is-dinle", "is-dusun", "is-yazi", "organ-on");
+    }
+    if (view) {
+      view.classList.remove("has-sahne", "sheet-open", "sahne-busy");
+    }
+    try {
+      document.body.classList.remove("mobil-sahne-organ-on");
+    } catch (_) {}
+    syncSahneSheetBtn();
+    return { ok: true };
+  }
+
   function ensureMobilSahneA11y() {
     const stage = el("sahneStage");
     const soz = el("sahneSoz");
@@ -125,7 +179,7 @@
     const stage = el("sahneStage");
     if (!stage) return;
     ensureMobilSahneA11y();
-    const on = sahneAllowed(who);
+    const on = sahneAllowed(who) && !sahneUiForcedOff;
     stage.classList.toggle("hidden", !on);
     stage.setAttribute("aria-hidden", on ? "false" : "true");
     try {
@@ -188,8 +242,9 @@
   const mobilHaritaState = {
     lat: 39.0,
     lon: 35.2,
-    zoom: 6,
-    mode: "2d",
+    zoom: 7,
+    tip: "ulke",
+    mode: "uydu",
     hedef: "Türkiye",
     label: "Türkiye",
     year: 2015,
@@ -213,47 +268,185 @@
     let url =
       root +
       "/ui/harita-viewer.html?mode=" +
-      encodeURIComponent(String(s.mode || "2d")) +
+      encodeURIComponent(String(s.mode || "uydu")) +
       "&lat=" +
       Number(s.lat || 39).toFixed(5) +
       "&lon=" +
       Number(s.lon || 35.2).toFixed(5) +
       "&zoom=" +
-      Math.max(2, Math.min(18, Number(s.zoom) || 6)) +
+      Math.max(2, Math.min(18, Number(s.zoom) || 7)) +
       "&label=" +
       label +
       "&year=" +
       (s.year != null ? Number(s.year) : 2015) +
       "&era=" +
-      era;
+      era +
+      "&fly=1";
+    if (s.tip) url += "&tip=" + encodeURIComponent(String(s.tip));
+    if (s.terrain) url += "&terrain=1";
+    if (s.tour_play || s.tour) {
+      url += "&tour=1&terrain=1";
+      const tp = encodeURIComponent(
+        String(s.tour_place || s.label || s.hedef || "")
+      );
+      if (tp) url += "&tour_place=" + tp;
+    }
     if (sehir) url += "&sehir=" + encodeURIComponent(sehir) + "&bina=1";
+    if (s.bbox && s.bbox.length === 4) {
+      url +=
+        "&bbox=" +
+        [s.bbox[0], s.bbox[1], s.bbox[2], s.bbox[3]]
+          .map(function (n) {
+            return Number(n).toFixed(5);
+          })
+          .join(",");
+    }
     return url;
+  }
+
+  function setMobilHaritaToolsMenuOpen(tools, open) {
+    if (!tools) return;
+    const more = tools.querySelector(".harita-tools-more");
+    const menu = tools.querySelector(".harita-tools-menu");
+    if (!more || !menu) return;
+    const on = !!open;
+    tools.classList.toggle("is-menu-open", on);
+    more.setAttribute("aria-expanded", on ? "true" : "false");
+    menu.hidden = !on;
   }
 
   function ensureMobilHaritaTools(frame) {
     let tools = frame.querySelector(".harita-tools");
+    if (tools && !tools.querySelector(".harita-tools-menu")) {
+      tools.remove();
+      tools = null;
+    }
     if (tools) return tools;
     tools = document.createElement("div");
     tools.className = "harita-tools";
     tools.setAttribute("role", "toolbar");
+    tools.setAttribute("aria-label", "Harita kontrolleri");
     tools.innerHTML =
-      '<button type="button" data-h="zoom_in">+</button>' +
-      '<button type="button" data-h="zoom_out">−</button>' +
-      '<button type="button" data-h="mode_2d">2D</button>' +
-      '<button type="button" data-h="mode_3d" title="3D Cesium">3D</button>' +
-      '<button type="button" data-h="mode_4d">4D</button>' +
-      '<button type="button" data-h="mode_uydu">Uydu</button>' +
-      '<button type="button" data-h="mode_tur">Tur</button>' +
-      '<button type="button" data-h="mode_sentinel" title="Sentinel-2">S2</button>' +
-      '<button type="button" data-h="mode_pano" title="Mapillary">Pano</button>' +
-      '<button type="button" data-h="mode_f4" title="F4map yedek">F4</button>';
+      '<button type="button" data-h="zoom_in" title="Yaklaştır">+</button>' +
+      '<button type="button" data-h="zoom_out" title="Uzaklaştır">−</button>' +
+      '<button type="button" class="harita-tools-more" aria-expanded="false" aria-haspopup="true" title="Diğer kontroller" aria-label="Diğer harita kontrolleri">' +
+      '<span class="harita-tools-more-icon" aria-hidden="true"></span>' +
+      "</button>" +
+      '<div class="harita-tools-menu" hidden role="menu" aria-label="Harita modları">' +
+      '<button type="button" role="menuitem" data-h="mode_2d">2D</button>' +
+      '<button type="button" role="menuitem" data-h="mode_3d" title="3D Cesium">3D</button>' +
+      '<button type="button" role="menuitem" data-h="mode_4d">4D</button>' +
+      '<button type="button" role="menuitem" data-h="mode_uydu">Uydu</button>' +
+      '<button type="button" role="menuitem" data-h="mode_tur">Tur</button>' +
+      '<button type="button" role="menuitem" data-h="tour_start" title="Dünya Gezgini">Gezgin</button>' +
+      '<button type="button" role="menuitem" data-h="tour_prev" title="Önceki durak">Geri</button>' +
+      '<button type="button" role="menuitem" data-h="tour_next" title="Sonraki durak">İleri</button>' +
+      '<button type="button" role="menuitem" data-h="tour_skip" title="Durak atla">Atla</button>' +
+      '<button type="button" role="menuitem" data-h="tour_pause" title="Durdur">Durdur</button>' +
+      '<button type="button" role="menuitem" data-h="tour_resume" title="Devam">Devam</button>' +
+      '<button type="button" role="menuitem" data-h="tour_stop" title="Bitir">Bitir</button>' +
+      '<button type="button" role="menuitem" data-h="mode_sentinel" title="Sentinel-2">S2</button>' +
+      '<button type="button" role="menuitem" data-h="mode_pano" title="Mapillary">Pano</button>' +
+      '<button type="button" role="menuitem" data-h="mode_f4" title="F4map yedek">F4</button>' +
+      "</div>";
     tools.addEventListener("click", (ev) => {
+      const more = ev.target && ev.target.closest(".harita-tools-more");
+      if (more && tools.contains(more)) {
+        setMobilHaritaToolsMenuOpen(tools, !tools.classList.contains("is-menu-open"));
+        return;
+      }
       const btn = ev.target && ev.target.closest("button[data-h]");
-      if (!btn) return;
-      applyMobilHaritaCommand({ action: btn.getAttribute("data-h") });
+      if (!btn || !tools.contains(btn)) return;
+      const act = btn.getAttribute("data-h");
+      if (!act) return;
+      if (String(act).indexOf("mode_") === 0 || String(act).indexOf("tour_") === 0) {
+        setMobilHaritaToolsMenuOpen(tools, false);
+      }
+      applyMobilHaritaCommand({ action: act });
     });
+    if (!window.__ruzgarMobilHaritaToolsDocClose) {
+      window.__ruzgarMobilHaritaToolsDocClose = true;
+      document.addEventListener(
+        "pointerdown",
+        (ev) => {
+          document.querySelectorAll(".harita-tools.is-menu-open").forEach((t) => {
+            if (t.contains(ev.target)) return;
+            setMobilHaritaToolsMenuOpen(t, false);
+          });
+        },
+        true,
+      );
+    }
     frame.appendChild(tools);
     return tools;
+  }
+
+  function formatMobilHaritaLive(st) {
+    const s = st || mobilHaritaState || {};
+    const center = s.centerLabel || s.label || s.hedef || "—";
+    const z = Math.round(Number(s.zoom) || 7);
+    const katman =
+      s.baseLabel ||
+      ({ esri: "Esri Uydu", osm: "OSM", gibs: "NASA GIBS" }[s.base] ||
+        String(s.mode || "UYDU").toUpperCase());
+    let t = "Merkez: " + center + " · Zoom: " + z + " · Katman: " + katman;
+    if (s.buildings != null || s.roads != null) {
+      t +=
+        " · bina " +
+        (s.buildings != null ? s.buildings : "—") +
+        " · yol " +
+        (s.roads != null ? s.roads : "—");
+    }
+    return t;
+  }
+
+  function paintMobilHaritaLiveLabels() {
+    const live = formatMobilHaritaLive(mobilHaritaState);
+    const meta = el("sahneOrganMeta");
+    const soz = el("sahneSoz");
+    if (meta) {
+      meta.hidden = false;
+      meta.textContent = live;
+    }
+    if (soz) soz.textContent = "Harita · " + live;
+  }
+
+  function applyMobilHaritaViewSync(msg) {
+    if (!msg || msg.type !== "ruzgar-harita-view") return;
+    const root = el("sahneOrgan");
+    if (!root || root.getAttribute("data-organ") !== "harita") return;
+    const st = mobilHaritaState;
+    if (msg.lat != null) st.lat = Number(msg.lat);
+    if (msg.lon != null) st.lon = Number(msg.lon);
+    if (msg.zoom != null) st.zoom = Number(msg.zoom);
+    if (msg.centerLabel || msg.label) {
+      st.centerLabel = String(msg.centerLabel || msg.label);
+      st.label = st.centerLabel;
+    }
+    if (msg.base) st.base = String(msg.base);
+    if (msg.baseLabel) st.baseLabel = String(msg.baseLabel);
+    if (msg.terrain != null) st.terrain = !!msg.terrain;
+    if (msg.buildings != null) st.buildings = Number(msg.buildings);
+    if (msg.roads != null) st.roads = Number(msg.roads);
+    paintMobilHaritaLiveLabels();
+  }
+
+  function applyMobilHaritaCinema(msg) {
+    if (!msg || msg.type !== "ruzgar-harita-cinema") return;
+    const on = !!msg.on;
+    document.body.classList.toggle("mobil-harita-cinema", on);
+    const face = el("sahneFace");
+    if (face) face.classList.toggle("is-cinema-hide", on);
+  }
+
+  if (!window.__ruzgarMobilHaritaViewListen) {
+    window.__ruzgarMobilHaritaViewListen = true;
+    window.addEventListener("message", function (ev) {
+      try {
+        applyMobilHaritaViewSync(ev && ev.data);
+        applyMobilHaritaCinema(ev && ev.data);
+      } catch (_) {}
+    });
   }
 
   function paintMobilHarita(metaText) {
@@ -289,28 +482,13 @@
       const a = b.getAttribute("data-h");
       b.classList.toggle("is-on", a === "mode_" + mobilHaritaState.mode);
     });
-    const modeLabel = String(mobilHaritaState.mode || "2d").toUpperCase();
+    const live = formatMobilHaritaLive(mobilHaritaState);
     if (meta) {
       meta.hidden = false;
-      meta.textContent =
-        metaText ||
-        [
-          "Harita",
-          mobilHaritaState.label || mobilHaritaState.hedef || "Türkiye",
-          "zoom " + mobilHaritaState.zoom,
-          modeLabel,
-        ].join(" · ");
+      meta.textContent = live;
     }
     const soz = el("sahneSoz");
-    if (soz) {
-      soz.textContent =
-        "Harita " +
-        modeLabel +
-        ": " +
-        (mobilHaritaState.label || "Türkiye") +
-        " · zoom " +
-        mobilHaritaState.zoom;
-    }
+    if (soz) soz.textContent = "Harita · " + live;
   }
 
   function applyMobilHaritaCommand(cmd) {
@@ -321,40 +499,46 @@
     if (action === "mode_2d" || action === "2d") st.mode = "2d";
     if (action === "mode_3d" || action === "3d") {
       st.mode = "3d";
-      if ((Number(st.zoom) || 6) < 15) st.zoom = 16;
+      const tip3 = String(st.tip || "");
+      if (
+        !/^(dag|gecit|kopru|bina|nokta)$/i.test(tip3) &&
+        (Number(st.zoom) || 7) < 15
+      ) {
+        st.zoom = 16;
+      }
     }
     if (action === "mode_4d" || action === "4d") st.mode = "4d";
     if (action === "mode_uydu" || action === "uydu") st.mode = "uydu";
     if (action === "mode_tur" || action === "tur") {
       st.mode = "tur";
-      if ((Number(st.zoom) || 6) < 5) st.zoom = 5;
+      if ((Number(st.zoom) || 7) < 5) st.zoom = 5;
     }
     if (action === "mode_f4" || action === "f4") {
       st.mode = "f4";
-      if ((Number(st.zoom) || 6) < 15) st.zoom = 16;
+      if ((Number(st.zoom) || 7) < 15) st.zoom = 16;
     }
     if (action === "mode_sentinel" || action === "sentinel") {
       st.mode = "sentinel";
-      if ((Number(st.zoom) || 6) < 10) st.zoom = 11;
+      if ((Number(st.zoom) || 7) < 10) st.zoom = 11;
     }
     if (action === "mode_pano" || action === "pano") {
       st.mode = "pano";
-      if ((Number(st.zoom) || 6) < 15) st.zoom = 17;
+      if ((Number(st.zoom) || 7) < 15) st.zoom = 17;
     }
     if (action === "era_gecmis") {
       st.era = "gecmis";
       st.mode = st.mode === "2d" ? "3d" : st.mode;
-      if ((Number(st.zoom) || 6) < 14) st.zoom = 15;
+      if ((Number(st.zoom) || 7) < 14) st.zoom = 15;
     }
     if (action === "era_gelecek") {
       st.era = "gelecek";
       st.mode = st.mode === "2d" ? "3d" : st.mode;
-      if ((Number(st.zoom) || 6) < 14) st.zoom = 15;
+      if ((Number(st.zoom) || 7) < 14) st.zoom = 15;
     }
     if (action === "show_buildings") {
       st.bina = 1;
       st.mode = "3d";
-      if ((Number(st.zoom) || 6) < 15) st.zoom = 16;
+      if ((Number(st.zoom) || 7) < 15) st.zoom = 16;
     }
     const isMode =
       /^mode_(2d|3d|4d|uydu|tur|f4|sentinel|pano)$/.test(action) ||
@@ -367,8 +551,27 @@
         st.lat = Number(geo.lat);
         st.lon = Number(geo.lon);
         if (geo.zoom != null) st.zoom = Number(geo.zoom);
+        else if (geo.tip) {
+          const tipZ = {
+            ulke: 7,
+            il: 11,
+            ilce: 13,
+            mahalle: 15,
+            dag: 14,
+            gecit: 16,
+            kopru: 17,
+            bina: 18,
+            nokta: 18,
+          };
+          st.zoom = tipZ[String(geo.tip)] || 11;
+        }
+        if (geo.tip) st.tip = String(geo.tip);
+        if (geo.bbox) st.bbox = geo.bbox;
         st.label = geo.label || hedefStr || st.label;
+        st.centerLabel = geo.label || hedefStr || st.centerLabel || st.label;
         st.hedef = hedefStr || st.label;
+        st.base = st.base || "esri";
+        st.baseLabel = st.baseLabel || "Esri Uydu";
       } else if (hedefStr && !hedefIsMode) {
         st.hedef = hedefStr;
         st.label = st.hedef;
@@ -377,17 +580,78 @@
     let delta = Number(c.zoom_delta) || 0;
     if (action === "zoom_in" && !delta) delta = 1;
     if (action === "zoom_out" && !delta) delta = -1;
-    if (delta) st.zoom = Math.max(2, Math.min(18, (Number(st.zoom) || 6) + delta));
+    if (delta) st.zoom = Math.max(2, Math.min(18, (Number(st.zoom) || 7) + delta));
     if ((action === "show" || action === "goster") && !geo && !hedefStr) {
       if (!st.hedef) {
         st.lat = 39;
         st.lon = 35.2;
-        st.zoom = 6;
+        st.zoom = 7;
+        st.tip = "ulke";
         st.hedef = "Türkiye";
         st.label = "Türkiye";
       }
     }
+    // H10.5 Dünya Gezgini (PC ile aynı)
+    if (action === "tour_start") {
+      st.mode = "3d";
+      st.terrain = true;
+      st.tour_play = 1;
+      st.tour = c.tour || null;
+      st.tour_place = c.hedef || (c.tour && c.tour.label) || st.label || st.hedef;
+      if (c.tour && c.tour.tip) st.tip = String(c.tour.tip);
+      if ((Number(st.zoom) || 7) < 11) st.zoom = 12;
+    }
+    if (
+      action === "tour_pause" ||
+      action === "tour_resume" ||
+      action === "tour_stop" ||
+      action === "tour_next" ||
+      action === "tour_prev" ||
+      action === "tour_skip"
+    ) {
+      try {
+        const frame = el("sahneOrganFrame");
+        const ifr = frame && frame.querySelector("iframe[data-sahne-harita]");
+        if (ifr && ifr.contentWindow) {
+          ifr.contentWindow.postMessage(
+            {
+              type: "ruzgar-harita-tour",
+              action: String(action).replace(/^tour_/, ""),
+            },
+            "*"
+          );
+        }
+      } catch (_) {}
+      if (action === "tour_stop") {
+        st.tour_play = 0;
+        st.tour = null;
+        document.body.classList.remove("mobil-harita-cinema");
+      }
+      return { ok: true, organ: "harita", state: { ...st }, tour_ctrl: action };
+    }
     paintMobilHarita(c.metaText);
+    if (action === "tour_start") {
+      const tourPayload = c.tour || st.tour || null;
+      setTimeout(function () {
+        try {
+          const frame = el("sahneOrganFrame");
+          const ifr = frame && frame.querySelector("iframe[data-sahne-harita]");
+          if (!ifr || !ifr.contentWindow) return;
+          ifr.contentWindow.postMessage(
+            {
+              type: "ruzgar-harita-tour",
+              action: "start",
+              tour: tourPayload,
+              place: st.tour_place || st.label || st.hedef,
+              tip: st.tip,
+              lat: st.lat,
+              lon: st.lon,
+            },
+            "*"
+          );
+        } catch (_) {}
+      }, 1600);
+    }
     return { ok: true, organ: "harita", state: { ...st } };
   }
 
@@ -449,27 +713,59 @@
     }
   }
 
+  function shortSahneReply(res, reply) {
+    bubble("bot", reply);
+    history.push({ role: "assistant", content: reply });
+    res._mobilShort = true;
+    return res;
+  }
+
   async function runSuperEl(text) {
     const stage = el("sahneStage");
     if (!stage) return null;
-    /* Organ komutu gelince sahne kapalıysa aç (izin varsa) */
-    if (stage.classList.contains("hidden") && sahneAllowed()) {
-      stage.classList.remove("hidden");
-      const view = el("chatView");
-      if (view) view.classList.add("has-sahne");
-    }
-    if (stage.classList.contains("hidden")) return null;
     try {
       const res = await api("/api/sahne/super-el", {
         method: "POST",
         body: JSON.stringify({ text: String(text || "") }),
       });
       if (!res || !res.ok) return res;
-      if (res.fiil === "temizle" || res.action === "clear") {
-        applySahneOrgan("yuz");
-        return res;
-      }
       const action = String(res.action || "");
+
+      /* Gerçek UI — LLM «sahne açıldı» demesin, yüz gerçekten açılsın/kapansın */
+      if (action === "stage_open") {
+        const opened = openMobilSahneUi();
+        if (!opened.ok) {
+          return shortSahneReply(
+            res,
+            "Sahne motorun kapalı — Panelden bu kullanıcıya «Sahne» iznini aç."
+          );
+        }
+        return shortSahneReply(res, "Sahne açıldı.");
+      }
+      if (action === "stage_close") {
+        closeMobilSahneUi();
+        return shortSahneReply(res, "Sahne kapandı · sohbet şeridi.");
+      }
+
+      /* Organ komutu gelince sahne kapalıysa aç (izin varsa) */
+      if (stage.classList.contains("hidden") && sahneAllowed()) {
+        openMobilSahneUi();
+      }
+      if (stage.classList.contains("hidden")) {
+        /* İzin yok — organ komutunda yalan söyleme */
+        if (res.organ && res.organ !== "yuz") {
+          return shortSahneReply(
+            res,
+            "Sahne kapalı — önce «sahneyi aç» veya panelden sahne izni."
+          );
+        }
+        return null;
+      }
+
+      if (res.fiil === "temizle" || action === "clear") {
+        applySahneOrgan("yuz");
+        return shortSahneReply(res, "Sahne temizlendi · yüz.");
+      }
       const mapActs = {
         zoom_in: 1,
         zoom_out: 1,
@@ -486,8 +782,16 @@
         show_buildings: 1,
         show: 1,
         focus: 1,
+        tour_start: 1,
+        tour_pause: 1,
+        tour_resume: 1,
+        tour_stop: 1,
+        tour_next: 1,
+        tour_prev: 1,
+        tour_skip: 1,
       };
       const organ = res.organ || "yuz";
+      /* show/focus yalnız organ=harita iken harita — «sahneyi aç» yüze kalsın */
       if (organ === "harita" || mapActs[action]) {
         const applied = applyMobilHaritaCommand({
           action: action || "show",
@@ -495,10 +799,12 @@
           hedef: res.hedef,
           zoom_delta: res.zoom_delta || 0,
           geo: res.geo || null,
+          tour: res.tour || null,
           metaText:
             (res.fiil || action) +
             " · harita" +
-            (res.hedef ? " · " + res.hedef : ""),
+            (res.hedef ? " · " + res.hedef : "") +
+            (String(action).indexOf("tour_") === 0 ? " · Dünya Gezgini" : ""),
         });
         res.applied = applied;
         const view = el("chatView");
@@ -506,9 +812,8 @@
           view.classList.remove("sheet-open");
           syncSahneSheetBtn();
         }
-        /* Kısa onay — LLM «gösteremiyorum» demesin */
         if (mapActs[action]) {
-          const mode = String(mobilHaritaState.mode || "2d").toUpperCase();
+          const mode = String(mobilHaritaState.mode || "uydu").toUpperCase();
           let reply =
             "Harita: " +
             (mobilHaritaState.label || res.hedef || "Türkiye") +
@@ -524,9 +829,15 @@
           else if (action === "mode_2d") reply = "2D moda aldım.";
           else if (action === "zoom_in") reply = "Yaklaştırdım · zoom " + mobilHaritaState.zoom;
           else if (action === "zoom_out") reply = "Uzaklaştırdım · zoom " + mobilHaritaState.zoom;
-          bubble("bot", reply);
-          history.push({ role: "assistant", content: reply });
-          res._mobilShort = true;
+          else if (action === "show" || action === "focus") {
+            reply =
+              "Harita: " +
+              (mobilHaritaState.label || res.hedef || "Türkiye") +
+              " · " +
+              mode +
+              ".";
+          }
+          return shortSahneReply(res, reply);
         }
         return res;
       }
@@ -537,6 +848,7 @@
           view.classList.remove("sheet-open");
           syncSahneSheetBtn();
         }
+        return shortSahneReply(res, (res.fiil || "goster") + " · " + organ + " açıldı.");
       }
       return res;
     } catch (_) {
@@ -584,7 +896,13 @@
     } else if (durum) {
       durum.textContent = "Hazır";
     }
-    if (soz && sozText != null) {
+    const haritaOn =
+      document.body.classList.contains("mobil-sahne-organ-on") &&
+      el("sahneOrgan") &&
+      el("sahneOrgan").getAttribute("data-organ") === "harita";
+    if (haritaOn) {
+      paintMobilHaritaLiveLabels();
+    } else if (soz && sozText != null) {
       const t = String(sozText);
       const shown = t.length > 640 ? t.slice(0, 640) + "…" : t;
       const prev = soz.textContent || "";
@@ -1348,6 +1666,13 @@
     meta.textContent = "düşünüyor…";
     setSahneState("dusun", t);
     try {
+      /* Yazı ile aynı: sesli komut da süper-el / harita / organ — sahne hakimiyeti */
+      const se = await runSuperEl(t);
+      if (se && se._mobilShort) {
+        meta.textContent = "sahne";
+        setSahneState("hazir");
+        return;
+      }
       if (!opts.live) {
         api("/api/ses/voice-turn", {
           method: "POST",

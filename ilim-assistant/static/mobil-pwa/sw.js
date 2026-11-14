@@ -1,8 +1,8 @@
 /* Rüzgar PWA — HTML/ağ öncelikli (eski cache yüzünden PC seçeneği kaybolmasın) */
-const CACHE = "ruzgar-pwa-v64-stac-pano";
+const CACHE = "ruzgar-pwa-v73-harita-h4";
 const ASSETS = [
-  "./app.css?v=46-sehir",
-  "./app.js?v=64-stac-pano",
+  "./app.css?v=49-harita-faz2",
+  "./app.js?v=73-harita-h4",
   "./manifest.webmanifest?v=5",
   "./icon-192.png?v=5",
   "./icon-512.png?v=5",

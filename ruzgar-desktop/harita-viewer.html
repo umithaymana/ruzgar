@@ -12,8 +12,8 @@
   <link rel="stylesheet" href="vendor/cesium/Widgets/widgets.css" />
   <style>
     html, body { margin: 0; height: 100%; background: #0b1220; color: #f3e6c4; font-family: "Segoe UI", system-ui, sans-serif; overflow: hidden; }
-    #map, #globe, #f4, #pano { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-    #globe, #f4, #pano { display: none; }
+    #map, #globe, #f4, #panoPanel { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+    #globe, #f4, #panoPanel { display: none; }
     #stacCard {
       display: none; position: absolute; right: 10px; top: 10px; z-index: 1100;
       max-width: min(280px, 42vw); padding: 8px 10px; border-radius: 10px;
@@ -22,12 +22,143 @@
     }
     #stacCard.on { display: block; }
     #stacCard img { width: 100%; border-radius: 6px; margin-top: 6px; display: block; }
+    #panoPanel {
+      box-sizing: border-box; padding: 16px 16px 48px; overflow: auto;
+      background:
+        radial-gradient(ellipse at 50% 20%, rgba(212,175,55,0.12), transparent 55%),
+        #0b1220;
+    }
+    #panoPanel .pano-head { margin: 0 0 10px; font-size: 1.05rem; font-weight: 650; color: #f3ead2; }
+    #panoPanel .pano-note { margin: 0 0 14px; font-size: 0.82rem; line-height: 1.45; color: #cbb892; max-width: 46rem; }
+    #panoPanel .pano-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    #panoPanel .pano-actions a, #panoPanel .pano-actions button {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-height: 36px; padding: 0 12px; border-radius: 9px; border: 1px solid rgba(212,175,55,0.45);
+      background: rgba(212,175,55,0.18); color: #fff8e8; font-size: 0.8rem; font-weight: 650;
+      text-decoration: none; cursor: pointer;
+    }
+    #panoPanel .pano-actions a.ghost, #panoPanel .pano-actions button.ghost {
+      background: rgba(12,14,20,0.7);
+    }
+    #panoPanel .pano-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 8px;
+    }
+    #panoPanel .pano-grid a {
+      display: block; border-radius: 10px; overflow: hidden;
+      border: 1px solid rgba(212,175,55,0.28); background: #121820; color: inherit; text-decoration: none;
+    }
+    #panoPanel .pano-grid img { width: 100%; height: 110px; object-fit: cover; display: block; background: #1a2230; }
+    #panoPanel .pano-grid span { display: block; padding: 6px 8px; font-size: 0.7rem; color: #cbb892; }
     #badge {
-      position: absolute; left: 10px; bottom: 10px; z-index: 1000;
-      padding: 6px 10px; border-radius: 999px;
-      background: rgba(8, 10, 16, 0.78); border: 1px solid rgba(212, 175, 55, 0.4);
-      font-size: 12px; letter-spacing: 0.04em; pointer-events: none;
-      text-shadow: 0 1px 6px #000;
+      display: none;
+    }
+    #mapInfoBar {
+      display: none; position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 1100;
+      padding: 8px 12px; border-radius: 10px;
+      background: rgba(8, 10, 16, 0.9); border: 1px solid rgba(212, 175, 55, 0.42);
+      font-size: 11px; letter-spacing: 0.02em; color: #f3ead2;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+      line-height: 1.45;
+    }
+    #mapInfoBar.on { display: block; }
+    #mapInfoBar .mib-row {
+      display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline;
+    }
+    #mapInfoBar .mib-item { white-space: nowrap; }
+    #mapInfoBar .mib-k { color: #9a8f72; margin-right: 4px; font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; }
+    #mapInfoBar .mib-v { color: #f3ead2; font-weight: 650; }
+    #yearBar.on ~ #mapInfoBar.on,
+    body.year-on #mapInfoBar.on { bottom: 58px; }
+    #lpTerrainStatus {
+      margin: 2px 0 6px 22px; font-size: 0.68rem; color: #cbb892; letter-spacing: 0.03em;
+    }
+    #tourBar {
+      display: none; position: absolute; left: 50%; top: 12px; transform: translateX(-50%);
+      z-index: 1300; width: min(460px, 94vw); padding: 8px 10px 10px;
+      border-radius: 12px; background: rgba(8,10,16,0.92);
+      border: 1px solid rgba(212,175,55,0.45); color: #f3ead2;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4); pointer-events: auto;
+    }
+    #tourBar.on { display: block; }
+    #tourBar .tb-title { font-size: 0.78rem; font-weight: 700; color: #e6c86a; margin: 0 0 4px; }
+    #tourBar .tb-progress {
+      display: flex; align-items: center; gap: 8px; margin: 0 0 6px;
+      font-size: 0.68rem; color: #cbb892;
+    }
+    #tourBar .tb-progress-track {
+      flex: 1; height: 4px; border-radius: 999px; background: rgba(243,234,210,0.12);
+      overflow: hidden;
+    }
+    #tourBar .tb-progress-fill {
+      height: 100%; width: 0%; background: linear-gradient(90deg, #b8922e, #e6c86a);
+      transition: width 0.35s ease;
+    }
+    #tourBar .tb-meta { font-size: 0.66rem; color: #9a8f72; margin: 0 0 6px; }
+    #tourBar .tb-card {
+      display: none; margin: 0 0 8px; padding: 6px 8px; border-radius: 8px;
+      background: rgba(12,14,20,0.75); border: 1px solid rgba(212,175,55,0.28);
+      font-size: 0.68rem; line-height: 1.35;
+    }
+    #tourBar .tb-card.on { display: block; }
+    #tourBar .tb-card .tc-row { display: flex; gap: 6px; margin: 0 0 2px; }
+    #tourBar .tb-card .tc-k { color: #9a8f72; min-width: 4.6em; }
+    #tourBar .tb-card .tc-v { color: #f3ead2; font-weight: 650; }
+    #tourBar .tb-card .tc-ozet { margin: 4px 0 0; color: #e6d9b0; }
+    #tourBar .tb-info { font-size: 0.72rem; line-height: 1.4; color: #f3ead2; margin: 0 0 8px; min-height: 2.4em; }
+    #tourBar .tb-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+    #tourBar .tb-actions button {
+      min-height: 28px; padding: 0 10px; border-radius: 8px; cursor: pointer;
+      border: 1px solid rgba(212,175,55,0.4); background: rgba(12,14,20,0.9);
+      color: #f3e6c4; font-size: 0.7rem; font-weight: 700;
+    }
+    #tourBar .tb-actions button:hover { background: rgba(212,175,55,0.28); }
+    #tourBar .tb-actions button:disabled { opacity: 0.35; cursor: default; }
+    /* H10.5 — sinematik tur: sahne ≥%90 görünür */
+    body.tour-cinema-on #layerPanel,
+    body.tour-cinema-on #mapTools { display: none !important; }
+    body.tour-cinema-on #mapInfoBar {
+      opacity: 0.4; transform: scale(0.9); transform-origin: bottom left;
+      max-width: min(280px, 42vw); font-size: 0.62rem; padding: 4px 8px;
+    }
+    body.tour-cinema-on #tourBar {
+      width: min(300px, 58vw); top: 8px; padding: 5px 7px 7px;
+      background: rgba(8,10,16,0.78); border-color: rgba(212,175,55,0.32);
+    }
+    body.tour-cinema-on #tourBar .tb-title { font-size: 0.7rem; margin: 0 0 2px; }
+    body.tour-cinema-on #tourBar .tb-card {
+      font-size: 0.58rem; padding: 3px 5px; margin: 0 0 4px; max-height: 3.6em; overflow: hidden;
+    }
+    body.tour-cinema-on #tourBar .tb-card .tc-ozet { display: none; }
+    body.tour-cinema-on #tourBar .tb-info {
+      font-size: 0.64rem; min-height: 0; max-height: 2.2em; overflow: hidden; margin: 0 0 5px;
+    }
+    body.tour-cinema-on #tourBar .tb-actions button {
+      min-height: 24px; padding: 0 7px; font-size: 0.62rem;
+    }
+    body.tour-cinema-on #mapToast { top: auto; bottom: 12px; font-size: 0.68rem; opacity: 0.85; }
+    #mapToast {
+      display: none; position: absolute; left: 50%; top: 14px; transform: translateX(-50%);
+      z-index: 1400; padding: 8px 14px; border-radius: 999px;
+      background: rgba(12,14,20,0.92); border: 1px solid rgba(212,175,55,0.5);
+      color: #fff8e8; font-size: 0.78rem; font-weight: 650;
+      box-shadow: 0 8px 22px rgba(0,0,0,0.35); pointer-events: none;
+      opacity: 0; transition: opacity 0.25s ease;
+    }
+    #mapToast.on { display: block; opacity: 1; }
+    #layerPanel .lp-soon {
+      opacity: 0.45; cursor: not-allowed;
+    }
+    #layerPanel .lp-soon input { pointer-events: none; }
+    #layerPanel .lp-tag {
+      margin-left: auto; font-size: 0.62rem; letter-spacing: 0.04em; color: #9a8f72;
+    }
+    /* Uydu detaylarını keskinleştir; vektör üstte kalır */
+    #map .leaflet-tile-pane {
+      filter: contrast(1.14) saturate(1.1) brightness(1.04);
+    }
+    #map .leaflet-overlay-pane {
+      filter: none;
     }
     #yearBar {
       display: none; position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%);
@@ -43,6 +174,42 @@
     .leaflet-control-attribution { background: rgba(8,10,16,0.65) !important; color: #cbb892 !important; }
     .leaflet-control-attribution a { color: #e6c86a !important; }
     .cesium-viewer-bottom { display: none !important; }
+    #layerPanel {
+      display: none; position: absolute; left: 10px; top: 10px; z-index: 1200;
+      width: min(200px, 46vw); padding: 10px 10px 8px;
+      border-radius: 12px; background: rgba(8,10,16,0.92);
+      border: 1px solid rgba(212,175,55,0.4); color: #f3e6c4;
+      font-size: 12px; line-height: 1.35; box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    }
+    #layerPanel.on { display: block; }
+    #layerPanel h3 { margin: 0 0 8px; font-size: 0.78rem; letter-spacing: 0.08em; color: #e6c86a; font-weight: 700; }
+    #layerPanel .lp-sec { margin: 0 0 6px; font-size: 0.68rem; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.06em; }
+    #layerPanel label {
+      display: flex; align-items: center; gap: 8px; margin: 0 0 5px;
+      cursor: pointer; user-select: none;
+    }
+    #layerPanel input { accent-color: #d4af37; }
+    #layerPanel hr { border: 0; border-top: 1px solid rgba(212,175,55,0.22); margin: 8px 0; }
+    #mapTools {
+      display: none; position: absolute; left: 10px; bottom: 48px; z-index: 1200;
+      max-width: min(92vw, 420px); padding: 6px; border-radius: 12px;
+      background: rgba(8,10,16,0.9); border: 1px solid rgba(212,175,55,0.35);
+      gap: 4px; flex-wrap: wrap; align-items: center;
+    }
+    #mapTools.on { display: flex; }
+    #mapTools button {
+      min-height: 30px; padding: 0 9px; border-radius: 8px;
+      border: 1px solid rgba(212,175,55,0.4); background: rgba(12,14,20,0.9);
+      color: #f3e6c4; font-size: 0.7rem; font-weight: 700; cursor: pointer;
+    }
+    #mapTools button.is-on, #mapTools button:hover {
+      background: rgba(212,175,55,0.28); color: #fff8e8;
+    }
+    #measureOut {
+      flex: 1 1 100%; min-height: 1.2em; padding: 2px 4px 0;
+      font-size: 0.72rem; color: #e6c86a;
+    }
+    .leaflet-interactive.ruzgar-draw-path { cursor: crosshair; }
   </style>
   <script>
     // Cesium Workers / Assets — yerel vendor (CDN yok)
@@ -51,8 +218,57 @@
 </head>
 <body>
   <div id="map"></div>
+  <aside id="layerPanel" aria-label="Harita katmanları">
+    <h3>Katmanlar</h3>
+    <div class="lp-sec">Taban</div>
+    <label><input type="radio" name="ruzgarBase" value="esri" checked /> Esri Uydu</label>
+    <label><input type="radio" name="ruzgarBase" value="osm" /> OSM</label>
+    <label><input type="radio" name="ruzgarBase" value="gibs" /> NASA GIBS</label>
+    <hr />
+    <div class="lp-sec">Overlay</div>
+    <label><input type="checkbox" id="lpBuildings" checked /> Binalar</label>
+    <label><input type="checkbox" id="lpRoads" checked /> Yollar</label>
+    <label><input type="checkbox" id="lpTerrain" /> Terrain (Arazi)</label>
+    <div id="lpTerrainStatus" aria-live="polite">Terrain: Kapalı</div>
+    <hr />
+    <div class="lp-sec">Yakında</div>
+    <label class="lp-soon"><input type="checkbox" disabled /> Parseller <span class="lp-tag">hazır değil</span></label>
+    <label class="lp-soon"><input type="checkbox" disabled /> Pano <span class="lp-tag">hazır değil</span></label>
+  </aside>
+  <!-- H8 gezgin hazırlık stub’ları — kullanıcıya görünmez -->
+  <div id="ruzgarHaritaModuleHooks" hidden aria-hidden="true"></div>
+  <div id="mapToast" role="status" aria-live="polite"></div>
+  <div id="tourBar" aria-label="Dünya Gezgini turu" aria-live="polite">
+    <div class="tb-title" id="tourTitle">Dünya Gezgini</div>
+    <div class="tb-progress" id="tourProgressWrap" aria-hidden="true">
+      <span id="tourProgLabel">0/0</span>
+      <div class="tb-progress-track" aria-hidden="true"><div class="tb-progress-fill" id="tourProgFill"></div></div>
+    </div>
+    <div class="tb-meta" id="tourMeta">Durak — · İlerleme —</div>
+    <div class="tb-card" id="tourCard" aria-label="Bilgi kartı"></div>
+    <p class="tb-info" id="tourInfo">Tur hazır.</p>
+    <div class="tb-actions">
+      <button type="button" data-tour-act="prev" title="Önceki durak">Geri</button>
+      <button type="button" data-tour-act="next" title="Sonraki durak">İleri</button>
+      <button type="button" data-tour-act="skip" title="Durak atla">Atla</button>
+      <button type="button" data-tour-act="pause" title="Duraklat">Durdur</button>
+      <button type="button" data-tour-act="resume" title="Devam">Devam Et</button>
+      <button type="button" data-tour-act="stop" title="Bitir">Bitir</button>
+    </div>
+  </div>
+  <div id="mapInfoBar" aria-live="polite"></div>
+  <div id="mapTools" aria-label="Ölçüm ve çizim">
+    <button type="button" data-map-tool="pan" class="is-on" title="Gezin">El</button>
+    <button type="button" data-map-tool="measure-line" title="Mesafe ölç">Mesafe</button>
+    <button type="button" data-map-tool="measure-area" title="Alan ölç">Alan</button>
+    <button type="button" data-map-tool="draw-point" title="Nokta">Nokta</button>
+    <button type="button" data-map-tool="draw-line" title="Çizgi">Çizgi</button>
+    <button type="button" data-map-tool="draw-poly" title="Poligon">Poligon</button>
+    <button type="button" data-map-tool="clear" title="Çizimleri temizle">Temizle</button>
+    <div id="measureOut" role="status"></div>
+  </div>
   <iframe id="f4" title="3D Harita yedek (F4map)" allowfullscreen referrerpolicy="no-referrer"></iframe>
-  <iframe id="pano" title="Mapillary sokak görünümü" allowfullscreen referrerpolicy="no-referrer"></iframe>
+  <div id="panoPanel" role="region" aria-label="Sokak / panorama"></div>
   <div id="globe"></div>
   <div id="badge">Harita</div>
   <div id="stacCard" aria-live="polite"></div>
@@ -66,12 +282,46 @@
   <script>
 (function () {
   const q = new URLSearchParams(location.search);
-  const lat = Number(q.get("lat")) || 39.0;
-  const lon = Number(q.get("lon")) || 35.2;
-  const zoom = Math.max(2, Math.min(18, Number(q.get("zoom")) || 6));
+  // Tek merkez hedef — 2D ve 3D aynı lat/lon (H4)
+  const TARGET = {
+    lat: Number(q.get("lat")) || 39.0,
+    lon: Number(q.get("lon")) || 35.2,
+    tip: String(q.get("tip") || "").toLowerCase(),
+    label: String(q.get("label") || "Türkiye"),
+    zoom: 0,
+  };
+  const lat = TARGET.lat;
+  const lon = TARGET.lon;
+  const TIP_ZOOM = {
+    ulke: 7,
+    il: 11,
+    ilce: 13,
+    mahalle: 15,
+    dag: 14,
+    gecit: 16,
+    kopru: 17,
+    bina: 18,
+    nokta: 18,
+  };
+  const tipQ = String(q.get("tip") || "").toLowerCase();
+  let zoom = Number(q.get("zoom"));
+  if (!isFinite(zoom) || zoom < 2) {
+    zoom = tipQ && TIP_ZOOM[tipQ] != null ? TIP_ZOOM[tipQ] : 7;
+  }
+  zoom = Math.max(2, Math.min(18, zoom));
   let mode = String(q.get("mode") || "2d").toLowerCase();
-  const label = String(q.get("label") || "Türkiye");
+  const label = TARGET.label;
+  TARGET.tip = tipQ || TARGET.tip;
+  TARGET.zoom = zoom;
   const yearDefault = Number(q.get("year")) || 2015;
+  const wantFly = q.get("fly") !== "0";
+  let bboxParam = null;
+  try {
+    const rawBb = String(q.get("bbox") || "").split(",").map(Number);
+    if (rawBb.length === 4 && rawBb.every(function (n) { return isFinite(n); })) {
+      bboxParam = rawBb; // minLon,minLat,maxLon,maxLat
+    }
+  } catch (_) {}
   // engine=f4 → bilinçli F4map yedek; aksi halde 3d/tur = yerel Cesium
   const forceF4 = String(q.get("engine") || "").toLowerCase() === "f4";
   const sehir = String(q.get("sehir") || "").toLowerCase();
@@ -80,6 +330,28 @@
   const wantAjan = q.get("ajan") === "1" || q.get("trafik") === "1"; // Faz 8
   const wantCam = q.get("kamera") === "1"; // Faz 9 pin
   const wantModel = q.get("gltf") === "1"; // Faz 5 örnek glTF
+  // Terrain: 2D = Esri Hillshade; 3D = Cesium World Terrain (Ion) → Terrarium yedek
+  let terrainOn =
+    q.get("terrain") === "1" ||
+    q.get("arazi") === "1" ||
+    String(q.get("terrain") || "").toLowerCase() === "on";
+  let liveCesiumViewer = null;
+  let liveHillshadeLayer = null;
+
+  function logTarget(tag) {
+    try {
+      console.info("[Rüzgar Harita H4]", tag || "hedef", {
+        ad: TARGET.label,
+        tip: TARGET.tip || tipQ || "—",
+        lat: TARGET.lat,
+        lon: TARGET.lon,
+        zoom: TARGET.zoom || zoom,
+        mode: mode,
+        terrain: !!terrainOn,
+      });
+    } catch (_) {}
+  }
+  logTarget("acilis");
 
   function apiRoot() {
     try {
@@ -108,11 +380,24 @@
   const yearInput = document.getElementById("year");
   const yearVal = document.getElementById("yearVal");
 
-  const panoEl = document.getElementById("pano");
+  const panoPanel = document.getElementById("panoPanel");
   const stacCard = document.getElementById("stacCard");
+  const layerPanel = document.getElementById("layerPanel");
+  const mapTools = document.getElementById("mapTools");
+  const measureOut = document.getElementById("measureOut");
+  const mapInfoBar = document.getElementById("mapInfoBar");
+  const mapToast = document.getElementById("mapToast");
+  let toastTimer = 0;
+  let mapStats = { buildings: 0, roads: 0, base: "esri", zoom: zoom };
+  let viewCenterLabel = label || "—";
+  let reverseTimer = 0;
+  let reverseSeq = 0;
+  let liveBuildingsLayer = null;
+  let liveRoadsLayer = null;
+  let liveMapRef = null;
 
   const MODE_LABEL = {
-    "2d": "2D · OpenStreetMap",
+    "2d": "2D · Esri + vektör",
     "3d": "3D · Cesium (yerel)",
     "4d": "4D · Zamanlı uydu (NASA GIBS)",
     uydu: "Uydu · Esri World Imagery",
@@ -122,22 +407,1275 @@
     pano: "Sokak · Mapillary",
   };
 
+  const BASE_LABEL = { esri: "Esri Uydu", osm: "OSM", gibs: "NASA GIBS" };
+
+  function showToast(msg, ms) {
+    if (!mapToast) return;
+    mapToast.textContent = msg || "";
+    mapToast.classList.add("on");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () {
+      mapToast.classList.remove("on");
+    }, ms || 2200);
+  }
+
+  function countVisible(layer, map) {
+    if (!layer || !map || !map.hasLayer(layer)) return 0;
+    let n = 0;
+    try {
+      const b = map.getBounds();
+      layer.eachLayer(function (ly) {
+        try {
+          if (ly.getBounds) {
+            const lb = ly.getBounds();
+            if (lb && lb.isValid && lb.isValid() && b.intersects(lb)) n += 1;
+          } else if (ly.getLatLng && b.contains(ly.getLatLng())) n += 1;
+        } catch (_) {}
+      });
+    } catch (_) {
+      return 0;
+    }
+    return n;
+  }
+
+  function buildViewPayload(map) {
+    const m = map || liveMapRef;
+    let cLat = lat;
+    let cLon = lon;
+    let z = mapStats.zoom;
+    if (m && m.getCenter) {
+      const c = m.getCenter();
+      cLat = c.lat;
+      cLon = c.lng;
+      z = m.getZoom();
+    }
+    z = Math.round(z);
+    mapStats.zoom = z;
+    const buildings =
+      m && liveBuildingsLayer
+        ? countVisible(liveBuildingsLayer, m)
+        : mapStats.buildings;
+    const roads =
+      m && liveRoadsLayer ? countVisible(liveRoadsLayer, m) : mapStats.roads;
+    const baseLab = BASE_LABEL[mapStats.base] || mapStats.base;
+    return {
+      type: "ruzgar-harita-view",
+      lat: cLat,
+      lon: cLon,
+      zoom: z,
+      tip: tipQ || "",
+      centerLabel: viewCenterLabel || label || "—",
+      label: viewCenterLabel || label || "—",
+      base: mapStats.base,
+      baseLabel: terrainOn
+        ? baseLab + " + " + (terrainProviderLabel || "Terrain")
+        : baseLab,
+      terrain: !!terrainOn,
+      terrainProvider: terrainOn ? terrainProviderLabel || "Terrain" : "",
+      buildings: buildings,
+      roads: roads,
+      buildingsTotal: mapStats.buildings,
+      roadsTotal: mapStats.roads,
+      mode: mode,
+    };
+  }
+
+  function publishView(map) {
+    const payload = buildViewPayload(map);
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage(payload, "*");
+      }
+    } catch (_) {}
+    return payload;
+  }
+
+  function updateInfoBar(map) {
+    const p = publishView(map);
+    syncTerrainStatusLabel();
+    if (mapInfoBar) {
+      const modeL = String(p.mode || mode || "2d").toUpperCase();
+      const terr = p.terrain
+        ? /world terrain/i.test(String(p.terrainProvider || ""))
+          ? "World Terrain"
+          : p.terrainProvider || "Açık"
+        : "Kapalı";
+      const katman = BASE_LABEL[p.base] || p.base || "—";
+      mapInfoBar.innerHTML =
+        '<div class="mib-row">' +
+        '<span class="mib-item"><span class="mib-k">Merkez</span><span class="mib-v">' +
+        escapeHtml(p.centerLabel || "—") +
+        "</span></span>" +
+        '<span class="mib-item"><span class="mib-k">Zoom</span><span class="mib-v">' +
+        escapeHtml(String(p.zoom)) +
+        "</span></span>" +
+        '<span class="mib-item"><span class="mib-k">Katman</span><span class="mib-v">' +
+        escapeHtml(katman) +
+        "</span></span>" +
+        '<span class="mib-item"><span class="mib-k">Terrain</span><span class="mib-v">' +
+        escapeHtml(terr) +
+        "</span></span>" +
+        '<span class="mib-item"><span class="mib-k">Görünüm</span><span class="mib-v">' +
+        escapeHtml(modeL) +
+        "</span></span>" +
+        "</div>";
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function hillshadeLayer() {
+    // Esri World Hillshade — ücretsiz gölge rölyef (2D arazi hissi)
+    return L.tileLayer(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}",
+      {
+        maxZoom: 16,
+        opacity: 0.48,
+        attribution: "Esri World Hillshade",
+      }
+    );
+  }
+
+  // H7.5 terrain debug — ?terrainDebug=1
+  const terrainDebugOn =
+    q.get("terrainDebug") === "1" ||
+    String(q.get("terrain_debug") || "").toLowerCase() === "1";
+  const terrainDebugStats = {
+    ok: 0,
+    fail: 0,
+    nanFix: 0,
+    empty: 0,
+    minH: Infinity,
+    maxH: -Infinity,
+  };
+
+  function makeTerrariumTerrainProvider() {
+    // H7.5 KÖK DÜZELTME — Terrarium veri iyi; hata mesh pipeline'da.
+    // Cesium HeightmapTerrainData: satır-major KUZEY→GÜNEY, BATI→DOĞU.
+    // PNG Terrarium da satır 0 = KUZEY. Y-FLIP YASAK (H5/H7 ters çeviriyordu →
+    // tile sınırında km'lik yükseklik kırığı; skirt tavanı 1000 m → siyah yarık).
+    // Kenar "yumuşatma" komşu tile kenarlarını bozuyordu → KALDIRILDI.
+    // WebMercator x/y = XYZ (y=0 kuzey) = Terrarium URL; tile Y flip yok.
+    const W = 129;
+    const H = 129;
+    const MAX_Z = 15;
+
+    function elevFromRgba(data, srcW, col, row) {
+      const p = (row * srcW + col) * 4;
+      return data[p] * 256 + data[p + 1] + data[p + 2] / 256 - 32768;
+    }
+
+    function sampleBilinear(data, srcW, srcH, x, y) {
+      const xc = Math.min(srcW - 1, Math.max(0, x));
+      const yc = Math.min(srcH - 1, Math.max(0, y));
+      const x0 = Math.floor(xc);
+      const y0 = Math.floor(yc);
+      const x1 = Math.min(srcW - 1, x0 + 1);
+      const y1 = Math.min(srcH - 1, y0 + 1);
+      const fx = xc - x0;
+      const fy = yc - y0;
+      const e00 = elevFromRgba(data, srcW, x0, y0);
+      const e10 = elevFromRgba(data, srcW, x1, y0);
+      const e01 = elevFromRgba(data, srcW, x0, y1);
+      const e11 = elevFromRgba(data, srcW, x1, y1);
+      return (
+        e00 * (1 - fx) * (1 - fy) +
+        e10 * fx * (1 - fy) +
+        e01 * (1 - fx) * fy +
+        e11 * fx * fy
+      );
+    }
+
+    function decodeTerrariumPng(img, tileMeta) {
+      const srcW = img.naturalWidth || img.width || 256;
+      const srcH = img.naturalHeight || img.height || 256;
+      if (!srcW || !srcH) {
+        terrainDebugStats.empty++;
+        if (terrainDebugOn) {
+          console.warn("[terrain-debug] empty image", tileMeta);
+        }
+        return undefined;
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = srcW;
+      canvas.height = srcH;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(img, 0, 0);
+      const data = ctx.getImageData(0, 0, srcW, srcH).data;
+      const heights = new Float32Array(W * H);
+      // KUZEY→GÜNEY (Cesium + PNG aynı yön) — flip yok
+      for (let row = 0; row < H; row++) {
+        const v = row / (H - 1);
+        const srcY = v * (srcH - 1);
+        for (let col = 0; col < W; col++) {
+          const u = col / (W - 1);
+          const srcX = u * (srcW - 1);
+          heights[row * W + col] = sampleBilinear(data, srcW, srcH, srcX, srcY);
+        }
+      }
+      let nanFix = 0;
+      let minH = Infinity;
+      let maxH = -Infinity;
+      for (let i = 0; i < heights.length; i++) {
+        let h = heights[i];
+        if (!isFinite(h)) {
+          heights[i] = 0;
+          nanFix++;
+          h = 0;
+        }
+        if (h < minH) minH = h;
+        if (h > maxH) maxH = h;
+      }
+      terrainDebugStats.ok++;
+      terrainDebugStats.nanFix += nanFix;
+      if (minH < terrainDebugStats.minH) terrainDebugStats.minH = minH;
+      if (maxH > terrainDebugStats.maxH) terrainDebugStats.maxH = maxH;
+      if (terrainDebugOn && (terrainDebugStats.ok <= 3 || terrainDebugStats.ok % 25 === 0)) {
+        console.info("[terrain-debug] tile", tileMeta, {
+          src: srcW + "x" + srcH,
+          mesh: W + "x" + H,
+          minH: Math.round(minH),
+          maxH: Math.round(maxH),
+          nanFix: nanFix,
+          stats: Object.assign({}, terrainDebugStats),
+        });
+      }
+      return heights;
+    }
+
+    function fetchTile(x, y, level, attempt) {
+      const meta = { x: x, y: y, z: level, attempt: attempt || 0 };
+      const url =
+        "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/" +
+        level +
+        "/" +
+        x +
+        "/" +
+        y +
+        ".png";
+      return Cesium.Resource.fetchImage({ url: url })
+        .then(function (img) {
+          return decodeTerrariumPng(img, meta);
+        })
+        .catch(function (err) {
+          if ((attempt || 0) < 1) return fetchTile(x, y, level, (attempt || 0) + 1);
+          terrainDebugStats.fail++;
+          if (terrainDebugOn) {
+            console.warn("[terrain-debug] fetch fail", meta, err && err.message);
+          }
+          return undefined;
+        });
+    }
+
+    return new Cesium.CustomHeightmapTerrainProvider({
+      width: W,
+      height: H,
+      tilingScheme: new Cesium.WebMercatorTilingScheme(),
+      credit: "Mapzen/AWS Terrain Tiles (Terrarium) H7.5",
+      callback: function (x, y, level) {
+        if (level > MAX_Z) return undefined;
+        return fetchTile(x, y, level, 0);
+      },
+    });
+  }
+
+  function applyCesiumSceneQuality(viewer, withTerrain) {
+    if (!viewer || !viewer.scene) return;
+    const scene = viewer.scene;
+    const globe = scene.globe;
+    try {
+      // H7: heightmap geometric quality (1.0 = en sıkı mesh tahmini)
+      try {
+        if (
+          Cesium.TerrainProvider &&
+          typeof Cesium.TerrainProvider.heightmapTerrainQuality === "number"
+        ) {
+          Cesium.TerrainProvider.heightmapTerrainQuality = withTerrain ? 1.0 : 0.25;
+        }
+      } catch (_) {}
+      // Dikiş / z-fighting — etekler siyah yarıkları kapatır
+      globe.showSkirts = true;
+      globe.depthTestAgainstTerrain = !!withTerrain;
+      globe.tileCacheSize = withTerrain ? 400 : 200;
+      // Daha düşük SSE = daha yoğun LOD (köşeli dağ azalır); bellek dengesi ~1.1
+      globe.maximumScreenSpaceError = withTerrain ? 1.1 : 2;
+      if (globe.preloadSiblings !== undefined) globe.preloadSiblings = !!withTerrain;
+      if (globe.preloadAncestors !== undefined) globe.preloadAncestors = true;
+      if (globe.loadingDescendantLimit !== undefined) {
+        globe.loadingDescendantLimit = withTerrain ? 4 : 2;
+      }
+      // Siyah boşluk: imagery gelmeden globe siyah kalmasın (Mescit vadileri)
+      try {
+        globe.baseColor = Cesium.Color.fromCssColorString(
+          withTerrain ? "#243528" : "#0b1220"
+        );
+      } catch (_) {}
+      // CustomHeightmap vertex normal vermez — aşırı lighting = siyah yüzler
+      globe.enableLighting = !!withTerrain;
+      globe.atmosphereLightIntensity = withTerrain ? 16.0 : 10.0;
+      if (globe.lambertDiffuseMultiplier !== undefined) {
+        globe.lambertDiffuseMultiplier = withTerrain ? 0.7 : 0.9;
+      }
+      if (globe.dynamicAtmosphereLighting !== undefined) {
+        globe.dynamicAtmosphereLighting = !!withTerrain;
+      }
+      if (globe.lightingFadeInDistance !== undefined) {
+        globe.lightingFadeInDistance = withTerrain ? 5.0e6 : 9.0e6;
+        globe.lightingFadeOutDistance = withTerrain ? 1.5e7 : 2.0e7;
+      }
+      // H7.5: exaggeration=1 — abartı LOD dikişlerini ve «katman ayrılması»nı büyütüyordu
+      if (typeof globe.terrainExaggeration === "number" || "terrainExaggeration" in globe) {
+        globe.terrainExaggeration = 1.0;
+      }
+      if (scene.skyAtmosphere) {
+        scene.skyAtmosphere.show = true;
+        try {
+          scene.skyAtmosphere.hueShift = withTerrain ? -0.02 : 0;
+          scene.skyAtmosphere.saturationShift = withTerrain ? 0.06 : 0;
+          scene.skyAtmosphere.brightnessShift = withTerrain ? 0.08 : 0;
+        } catch (_) {}
+      }
+      if (scene.sun) scene.sun.show = true;
+      if (scene.fog) {
+        scene.fog.enabled = true;
+        // Vadileri karartan yoğun sis azaltıldı (H7)
+        scene.fog.density = withTerrain ? 0.00007 : 0.0004;
+        scene.fog.minimumBrightness = withTerrain ? 0.06 : 0.03;
+      }
+      // Logarithmic depth → yakın/uzak clipping artefaktını azaltır
+      scene.logarithmicDepthBuffer = true;
+      if (scene.highDynamicRange !== undefined) scene.highDynamicRange = false;
+      // Uydu katmanı — relief üstünde daha okunur
+      try {
+        const im = viewer.imageryLayers && viewer.imageryLayers.get(0);
+        if (im) {
+          im.brightness = withTerrain ? 1.06 : 1.0;
+          im.contrast = withTerrain ? 1.1 : 1.0;
+          im.saturation = withTerrain ? 1.05 : 1.0;
+          im.gamma = withTerrain ? 0.96 : 1.0;
+          im.maximumAnisotropy = 16;
+        }
+      } catch (_) {}
+      // Kamera clipping / zoom sınırları
+      const ctrl = scene.screenSpaceCameraController;
+      if (ctrl) {
+        ctrl.minimumZoomDistance = withTerrain ? 60 : 50;
+        ctrl.maximumZoomDistance = 40000000;
+        ctrl.enableCollisionDetection = !!withTerrain;
+      }
+      try {
+        viewer.camera.frustum.near = withTerrain ? 1.0 : 0.5;
+      } catch (_) {}
+      // Terrain yüklenirken sürekli çiz (siyah kare/çizgi kalıntısı olmasın)
+      scene.requestRenderMode = !withTerrain;
+      if (withTerrain) scene.requestRender();
+    } catch (e) {
+      console.warn("scene quality", e);
+    }
+  }
+
+  // H8: Cesium Ion World Terrain (QM) — Terrarium yedek
+  let cesiumIonCfg = null;
+  let terrainProviderLabel = "Terrarium";
+
+  /** H10.5 — sınıf bazlı Dünya Gezgini; Şehir/NASA/Kamera/Uzay kapalı */
+  const RUZGAR_HARITA_MODULES = {
+    version: "h10.5-dunya-gezgini-sinif-v1",
+    dunyaGezgini: { ready: true, enabled: true, smart: true, classBased: true },
+    sehirGezgini: { ready: false, enabled: false },
+    kameraKatmani: { ready: false, enabled: false },
+    nasaKatmani: { ready: false, enabled: false },
+  };
+  try {
+    window.RUZGAR_HARITA_MODULES = RUZGAR_HARITA_MODULES;
+  } catch (_) {}
+
+  // --- H10 Akıllı Dünya Gezgini tur oynatıcı ---
+  const tourBar = document.getElementById("tourBar");
+  const tourTitleEl = document.getElementById("tourTitle");
+  const tourInfoEl = document.getElementById("tourInfo");
+  const tourMetaEl = document.getElementById("tourMeta");
+  const tourCardEl = document.getElementById("tourCard");
+  const tourProgLabel = document.getElementById("tourProgLabel");
+  const tourProgFill = document.getElementById("tourProgFill");
+  const tourState = {
+    active: false,
+    paused: false,
+    index: 0,
+    stops: [],
+    label: "",
+    card: null,
+    timer: 0,
+    flying: false,
+    auto: true,
+  };
+
+  function setTourBarOn(on) {
+    if (tourBar) tourBar.classList.toggle("on", !!on);
+  }
+
+  function setTourCinema(on) {
+    try {
+      document.body.classList.toggle("tour-cinema-on", !!on);
+    } catch (_) {}
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage(
+          { type: "ruzgar-harita-cinema", on: !!on },
+          "*"
+        );
+      }
+    } catch (_) {}
+  }
+
+  function setTourInfo(title, info) {
+    if (tourTitleEl) tourTitleEl.textContent = title || "Dünya Gezgini";
+    if (tourInfoEl) tourInfoEl.textContent = info || "";
+  }
+
+  function clearTourTimer() {
+    if (tourState.timer) {
+      clearTimeout(tourState.timer);
+      tourState.timer = 0;
+    }
+  }
+
+  function renderTourCard(card) {
+    if (!tourCardEl) return;
+    if (!card) {
+      tourCardEl.classList.remove("on");
+      tourCardEl.innerHTML = "";
+      return;
+    }
+    const rows = [
+      ["Yükseklik", card.yukseklik || "—"],
+      ["Bölge", card.bolge || "—"],
+      ["Tür", card.tur || card.tip || "—"],
+    ];
+    let html = "";
+    for (let i = 0; i < rows.length; i++) {
+      html +=
+        '<div class="tc-row"><span class="tc-k">' +
+        rows[i][0] +
+        '</span><span class="tc-v">' +
+        String(rows[i][1]) +
+        "</span></div>";
+    }
+    if (card.ozet) {
+      html += '<p class="tc-ozet">' + String(card.ozet) + "</p>";
+    }
+    tourCardEl.innerHTML = html;
+    tourCardEl.classList.add("on");
+  }
+
+  function updateTourProgress() {
+    const total = tourState.stops.length || 0;
+    const cur = tourState.active && total ? tourState.index + 1 : 0;
+    const pct = total ? Math.round((cur / total) * 100) : 0;
+    if (tourProgLabel) tourProgLabel.textContent = cur + "/" + total;
+    if (tourProgFill) tourProgFill.style.width = pct + "%";
+    const stop = tourState.stops[tourState.index];
+    const phase =
+      (stop && (stop.phase_label || stop.title)) || (tourState.active ? "—" : "—");
+    if (tourMetaEl) {
+      tourMetaEl.textContent =
+        "Durak " +
+        cur +
+        " / " +
+        total +
+        " · " +
+        phase +
+        " · İlerleme %" +
+        pct;
+    }
+    if (tourBar) {
+      const prevBtn = tourBar.querySelector('button[data-tour-act="prev"]');
+      const nextBtn = tourBar.querySelector('button[data-tour-act="next"]');
+      const skipBtn = tourBar.querySelector('button[data-tour-act="skip"]');
+      if (prevBtn) prevBtn.disabled = !tourState.active || tourState.index <= 0;
+      if (nextBtn)
+        nextBtn.disabled = !tourState.active || tourState.index >= total - 1;
+      if (skipBtn)
+        skipBtn.disabled = !tourState.active || tourState.index >= total - 1;
+    }
+  }
+
+  function tourStopAll() {
+    clearTourTimer();
+    tourState.active = false;
+    tourState.paused = false;
+    tourState.index = 0;
+    tourState.stops = [];
+    tourState.card = null;
+    tourState.flying = false;
+    tourState.auto = true;
+    renderTourCard(null);
+    updateTourProgress();
+    setTourBarOn(false);
+    setTourCinema(false);
+    setTourInfo("Dünya Gezgini", "Tur bitti.");
+  }
+
+  function tourPause() {
+    if (!tourState.active) return;
+    tourState.paused = true;
+    tourState.auto = false;
+    clearTourTimer();
+    setTourInfo(
+      tourState.label || "Dünya Gezgini",
+      "Duraklatıldı · " + (tourInfoEl ? tourInfoEl.textContent : "")
+    );
+    updateTourProgress();
+    showToast("Tur duraklatıldı");
+  }
+
+  function tourResume() {
+    if (!tourState.active || !tourState.paused) return;
+    tourState.paused = false;
+    tourState.auto = true;
+    showToast("Tur devam");
+    advanceTourStop(true);
+  }
+
+  function flyTourStop(stop, done) {
+    const viewer = liveCesiumViewer;
+    if (!viewer || !stop || typeof Cesium === "undefined") {
+      if (done) done();
+      return;
+    }
+    tourState.flying = true;
+    try {
+      if (viewer.camera && viewer.camera.cancelFlight) viewer.camera.cancelFlight();
+    } catch (_) {}
+    const dest = Cesium.Cartesian3.fromDegrees(
+      Number(stop.lon),
+      Number(stop.lat),
+      0
+    );
+    const heading = Cesium.Math.toRadians(Number(stop.heading) || 0);
+    const pitch = Cesium.Math.toRadians(Number(stop.pitch) || -30);
+    const range = Math.max(800, Number(stop.range) || 12000);
+    const bs = new Cesium.BoundingSphere(dest, Math.max(400, range * 0.08));
+    const hpr = new Cesium.HeadingPitchRange(heading, pitch, range);
+    const ease =
+      (Cesium.EasingFunction && Cesium.EasingFunction.CUBIC_IN_OUT) || undefined;
+    try {
+      viewer.camera.flyToBoundingSphere(bs, {
+        offset: hpr,
+        duration: 2.8,
+        maximumHeight: Math.max(range * 1.6, 8000),
+        easingFunction: ease,
+        complete: function () {
+          tourState.flying = false;
+          if (done) done();
+        },
+        cancel: function () {
+          tourState.flying = false;
+          if (done) done();
+        },
+      });
+    } catch (e) {
+      tourState.flying = false;
+      console.warn("tour fly", e);
+      if (done) done();
+    }
+  }
+
+  function showCurrentStopAndFly(scheduleAuto) {
+    if (!tourState.active) return;
+    const stops = tourState.stops;
+    if (!stops.length) {
+      tourStopAll();
+      return;
+    }
+    if (tourState.index < 0) tourState.index = 0;
+    if (tourState.index >= stops.length) {
+      showToast("Tur tamam");
+      tourStopAll();
+      return;
+    }
+    const i = tourState.index;
+    const stop = stops[i];
+    const n = i + 1;
+    const phase = stop.phase_label || stop.title || "";
+    const title =
+      (tourState.label || "Tur") +
+      " · " +
+      n +
+      "/" +
+      stops.length +
+      (phase ? " — " + phase : "");
+    setTourInfo(title, stop.info || "");
+    renderTourCard(tourState.card);
+    updateTourProgress();
+    setTourBarOn(true);
+    clearTourTimer();
+    flyTourStop(stop, function () {
+      if (!tourState.active || tourState.paused) return;
+      if (!scheduleAuto || !tourState.auto) return;
+      const dwell = Math.max(2.5, Number(stop.dwell_sec) || 4) * 1000;
+      clearTourTimer();
+      tourState.timer = setTimeout(function () {
+        if (!tourState.active || tourState.paused || !tourState.auto) return;
+        tourState.index += 1;
+        if (tourState.index >= stops.length) {
+          showToast("Tur tamam");
+          tourStopAll();
+        } else {
+          showCurrentStopAndFly(true);
+        }
+      }, dwell);
+    });
+  }
+
+  function advanceTourStop(fromStart) {
+    if (!tourState.active || tourState.paused) return;
+    showCurrentStopAndFly(!!fromStart || tourState.auto);
+  }
+
+  function tourGoTo(index, opts) {
+    opts = opts || {};
+    if (!tourState.active || !tourState.stops.length) return;
+    const max = tourState.stops.length - 1;
+    const next = Math.max(0, Math.min(max, index));
+    clearTourTimer();
+    tourState.index = next;
+    tourState.paused = false;
+    if (opts.manual) tourState.auto = false;
+    showCurrentStopAndFly(!opts.manual);
+  }
+
+  function tourNext() {
+    if (!tourState.active) return;
+    if (tourState.index >= tourState.stops.length - 1) {
+      showToast("Son durak");
+      return;
+    }
+    tourGoTo(tourState.index + 1, { manual: true });
+    showToast("İleri");
+  }
+
+  function tourPrev() {
+    if (!tourState.active) return;
+    if (tourState.index <= 0) {
+      showToast("İlk durak");
+      return;
+    }
+    tourGoTo(tourState.index - 1, { manual: true });
+    showToast("Geri");
+  }
+
+  function tourSkip() {
+    if (!tourState.active) return;
+    if (tourState.index >= tourState.stops.length - 1) {
+      showToast("Atlanacak durak yok");
+      return;
+    }
+    tourGoTo(tourState.index + 1, { manual: true });
+    showToast("Durak atlandı");
+  }
+
+  function startTourWithPayload(tour) {
+    if (!tour || !tour.stops || !tour.stops.length) {
+      showToast("Tur durakları yok");
+      return;
+    }
+    clearTourTimer();
+    tourState.active = true;
+    tourState.paused = false;
+    tourState.auto = true;
+    tourState.index = 0;
+    tourState.stops = tour.stops.slice();
+    tourState.label = tour.label || "Dünya Gezgini";
+    tourState.card = tour.card || null;
+    setTourBarOn(true);
+    setTourCinema(true);
+    renderTourCard(tourState.card);
+    updateTourProgress();
+    setTourInfo(tourState.label, "Akıllı tur başlıyor…");
+    showToast("Dünya Gezgini: " + tourState.label);
+    function kick() {
+      if (!liveCesiumViewer) {
+        setTimeout(kick, 400);
+        return;
+      }
+      if (!terrainOn) {
+        terrainOn = true;
+        const el = document.getElementById("lpTerrain");
+        if (el) el.checked = true;
+        applyCesiumTerrain(liveCesiumViewer, true);
+        setTimeout(function () {
+          showCurrentStopAndFly(true);
+        }, 900);
+      } else {
+        showCurrentStopAndFly(true);
+      }
+    }
+    kick();
+  }
+
+  function fetchAndStartTour(place, tip, lat, lon) {
+    let url = apiRoot() + "/api/sahne/harita/tur?place=" + encodeURIComponent(place || "");
+    if (tip) url += "&tip=" + encodeURIComponent(tip);
+    if (lat != null && lon != null) {
+      url += "&lat=" + encodeURIComponent(lat) + "&lon=" + encodeURIComponent(lon);
+    }
+    fetch(url)
+      .then(function (r) {
+        return r.json();
+      })
+      .then(function (d) {
+        if (!d || !d.ok) {
+          showToast("Tur bulunamadı");
+          return;
+        }
+        startTourWithPayload(d);
+      })
+      .catch(function () {
+        showToast("Tur yüklenemedi");
+      });
+  }
+
+  function wireTourBar() {
+    if (!tourBar || tourBar.getAttribute("data-wired") === "1") return;
+    tourBar.setAttribute("data-wired", "1");
+    tourBar.addEventListener("click", function (ev) {
+      const btn = ev.target && ev.target.closest("button[data-tour-act]");
+      if (!btn) return;
+      const act = btn.getAttribute("data-tour-act");
+      if (act === "pause") tourPause();
+      else if (act === "resume") tourResume();
+      else if (act === "next") tourNext();
+      else if (act === "prev") tourPrev();
+      else if (act === "skip") tourSkip();
+      else if (act === "stop") {
+        tourStopAll();
+        showToast("Tur bitti");
+      }
+    });
+  }
+
+  window.addEventListener("message", function (ev) {
+    const d = ev && ev.data;
+    if (!d || d.type !== "ruzgar-harita-tour") return;
+    const act = String(d.action || "");
+    if (act === "start" && d.tour) startTourWithPayload(d.tour);
+    else if (act === "start" && (d.place || d.lat != null)) {
+      fetchAndStartTour(d.place, d.tip, d.lat, d.lon);
+    } else if (act === "pause") tourPause();
+    else if (act === "resume") tourResume();
+    else if (act === "next") tourNext();
+    else if (act === "prev") tourPrev();
+    else if (act === "skip") tourSkip();
+    else if (act === "stop") tourStopAll();
+  });
+
+  function syncTerrainStatusLabel() {
+    const el = document.getElementById("lpTerrainStatus");
+    if (!el) return;
+    if (!terrainOn) {
+      el.textContent = "Terrain: Kapalı";
+      return;
+    }
+    const lab = terrainProviderLabel || "Terrain";
+    if (/world terrain/i.test(lab)) el.textContent = "Terrain: World Terrain";
+    else if (/terrarium/i.test(lab)) el.textContent = "Terrain: Terrarium";
+    else el.textContent = "Terrain: " + lab;
+  }
+
+  function fetchCesiumIonConfig() {
+    if (cesiumIonCfg) return Promise.resolve(cesiumIonCfg);
+    return fetch(apiRoot() + "/api/sahne/harita/cesium")
+      .then(function (r) {
+        return r.json();
+      })
+      .then(function (d) {
+        cesiumIonCfg = d && typeof d === "object" ? d : { ok: false };
+        return cesiumIonCfg;
+      })
+      .catch(function () {
+        cesiumIonCfg = { ok: false };
+        return cesiumIonCfg;
+      });
+  }
+
+  function applyTerrariumFallback(viewer, reason) {
+    try {
+      viewer.terrainProvider = makeTerrariumTerrainProvider();
+      terrainProviderLabel = "Terrarium";
+      applyCesiumSceneQuality(viewer, true);
+      if (reason) console.warn("terrain fallback terrarium", reason);
+      showToast("Terrain: Terrarium (yedek)");
+      try {
+        viewer.scene.requestRender();
+      } catch (_) {}
+      syncTerrainStatusLabel();
+      updateInfoBar(null);
+    } catch (err) {
+      console.warn("terrain", err);
+      showToast("Terrain yüklenemedi");
+    }
+  }
+
+  function applyCesiumTerrain(viewer, on) {
+    if (!viewer || typeof Cesium === "undefined") return;
+    try {
+      if (!on) {
+        viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
+        terrainProviderLabel = "Kapalı";
+        applyCesiumSceneQuality(viewer, false);
+        try {
+          viewer.scene.globe.terrainExaggeration = 1.0;
+        } catch (_) {}
+        try {
+          viewer.scene.requestRender();
+        } catch (_) {}
+        updateInfoBar(null);
+        return;
+      }
+      fetchCesiumIonConfig().then(function (cfg) {
+        const token = cfg && cfg.ion_token ? String(cfg.ion_token) : "";
+        const wantWt = !!(cfg && cfg.world_terrain && token);
+        if (
+          wantWt &&
+          Cesium.Ion &&
+          typeof Cesium.createWorldTerrainAsync === "function"
+        ) {
+          try {
+            Cesium.Ion.defaultAccessToken = token;
+          } catch (_) {}
+          return Cesium.createWorldTerrainAsync({
+            requestVertexNormals: true,
+            requestWaterMask: false,
+          })
+            .then(function (provider) {
+              viewer.terrainProvider = provider;
+              terrainProviderLabel = "Cesium World Terrain";
+              applyCesiumSceneQuality(viewer, true);
+              showToast("Terrain: Cesium World Terrain");
+              try {
+                viewer.scene.requestRender();
+              } catch (_) {}
+              syncTerrainStatusLabel();
+              updateInfoBar(null);
+            })
+            .catch(function (err) {
+              applyTerrariumFallback(viewer, err);
+            });
+        }
+        applyTerrariumFallback(viewer, "ion yok");
+      });
+    } catch (err) {
+      console.warn("terrain", err);
+      showToast("Terrain yüklenemedi");
+    }
+  }
+
+  function wireTerrainCheckbox() {
+    const el = document.getElementById("lpTerrain");
+    if (!el || el.getAttribute("data-wired") === "1") return;
+    el.setAttribute("data-wired", "1");
+    el.checked = !!terrainOn;
+    el.onchange = function () {
+      terrainOn = !!this.checked;
+      if (liveMapRef && liveHillshadeLayer) {
+        if (terrainOn) {
+          if (!liveMapRef.hasLayer(liveHillshadeLayer)) liveHillshadeLayer.addTo(liveMapRef);
+        } else if (liveMapRef.hasLayer(liveHillshadeLayer)) {
+          liveMapRef.removeLayer(liveHillshadeLayer);
+        }
+        updateInfoBar(liveMapRef);
+      }
+      if (liveCesiumViewer) {
+        applyCesiumTerrain(liveCesiumViewer, terrainOn);
+        // Aynı hedefe yeniden kilitlen — kamera araziye göre optimize
+        flyCesiumToLockedTarget(liveCesiumViewer);
+        updateInfoBar(null);
+      }
+      showToast(terrainOn ? "Terrain açık (Arazi)" : "Terrain kapalı");
+      publishView(liveMapRef);
+    };
+  }
+
+  function scheduleReverseGeocode(map) {
+    if (!map || !map.getCenter) return;
+    clearTimeout(reverseTimer);
+    reverseTimer = setTimeout(function () {
+      const c = map.getCenter();
+      const seq = ++reverseSeq;
+      const url =
+        apiRoot() +
+        "/api/sahne/harita/reverse?lat=" +
+        encodeURIComponent(c.lat.toFixed(6)) +
+        "&lon=" +
+        encodeURIComponent(c.lng.toFixed(6)) +
+        "&network=1";
+      fetch(url)
+        .then(function (r) {
+          return r.json();
+        })
+        .then(function (d) {
+          if (seq !== reverseSeq) return;
+          if (!d || d.ok === false) return;
+          const name = (d.short || d.label || "").trim();
+          if (!name) return;
+          viewCenterLabel = name;
+          updateInfoBar(map);
+        })
+        .catch(function () {});
+    }, 380);
+  }
+
   function setBadge(extra) {
-    badge.textContent = (MODE_LABEL[mode] || mode) + " · " + label + (extra ? " · " + extra : "");
+    if (!badge) return;
+    if (extra) {
+      badge.textContent =
+        "Merkez: " +
+        (viewCenterLabel || label) +
+        " · z" +
+        Math.round(mapStats.zoom || zoom) +
+        " · " +
+        (BASE_LABEL[mapStats.base] || mapStats.base) +
+        " · " +
+        extra;
+    } else {
+      updateInfoBar(liveMapRef);
+    }
+  }
+
+  function syncYearInfoOffset() {
+    const on = !!(yearBar && yearBar.classList.contains("on"));
+    try {
+      document.body.classList.toggle("year-on", on);
+    } catch (_) {}
   }
 
   function showOnly(which) {
     mapEl.style.display = which === "map" ? "block" : "none";
     f4.style.display = which === "f4" ? "block" : "none";
     globe.style.display = which === "globe" ? "block" : "none";
-    panoEl.style.display = which === "pano" ? "block" : "none";
+    panoPanel.style.display = which === "pano" ? "block" : "none";
+    // Katman paneli 2D + 3D (Terrain aç/kapa)
+    if (layerPanel) layerPanel.classList.toggle("on", which === "map" || which === "globe");
+    if (mapTools) mapTools.classList.toggle("on", which === "map");
+    if (mapInfoBar) mapInfoBar.classList.toggle("on", which === "map" || which === "globe");
     if (which !== "map") stacCard.classList.remove("on");
+    syncYearInfoOffset();
+    syncTerrainStatusLabel();
+  }
+
+  function resolveViewZoom(kind) {
+    const rawZ = Number(q.get("zoom"));
+    const hasUrlZoom = isFinite(rawZ) && rawZ >= 2 && rawZ <= 18;
+    let z = 7;
+    if (hasUrlZoom) z = rawZ;
+    else if (tipQ && TIP_ZOOM[tipQ] != null) z = TIP_ZOOM[tipQ];
+    // Eski sabit zoom=6 kalıntısı + hedef varsa tip/metin ile yükselt
+    if (z <= 6) {
+      if (tipQ && TIP_ZOOM[tipQ] != null) z = TIP_ZOOM[tipQ];
+      else {
+        const L = (label || "").toLowerCase();
+        if (/gecit|ge\u00e7it/i.test(L)) z = 16;
+        else if (/kopru|k\u00f6pr\u00fc|bridge/i.test(L)) z = 17;
+        else if (/dag|da\u011f|uluda/i.test(L)) z = 14;
+        else if (/ayasof|cami|saray|kule/i.test(L)) z = 18;
+        else if (guessSehirFromLabel()) z = 11;
+        else if (/(turkiye|t\u00fcrkiye|turkey|anadolu)/i.test(L)) z = 7;
+        else z = 11;
+      }
+    }
+    if (kind === "4d") z = Math.min(z, 9);
+    return Math.max(2, Math.min(18, z));
+  }
+
+  function applyInitialView(map, viewZoom) {
+    const z = Math.max(2, Math.min(18, viewZoom || zoom || 7));
+    if (bboxParam) {
+      try {
+        const bounds = L.latLngBounds(
+          [bboxParam[1], bboxParam[0]],
+          [bboxParam[3], bboxParam[2]],
+        );
+        if (bounds.isValid && bounds.isValid()) {
+          map.fitBounds(bounds, {
+            padding: [28, 28],
+            maxZoom: Math.max(z, tipQ === "bina" || tipQ === "nokta" || tipQ === "kopru" ? 18 : z),
+            animate: wantFly,
+          });
+          return;
+        }
+      } catch (_) {}
+    }
+    if (wantFly && map.flyTo) {
+      map.flyTo([TARGET.lat, TARGET.lon], z, { duration: 0.85, easeLinearity: 0.25 });
+    } else {
+      map.setView([TARGET.lat, TARGET.lon], z);
+    }
   }
 
   function heightFromZoom(z) {
     // kaba: zoom 6 ≈ ülke, 11 ≈ şehir, 15 ≈ mahalle
     const zz = Math.max(2, Math.min(18, z || 6));
     return Math.max(120, 1200000 / Math.pow(2, Math.max(0, zz - 4)));
+  }
+
+  function targetKeyNorm() {
+    return String(TARGET.label || label || "")
+      .toLowerCase()
+      .replace(/ı/g, "i")
+      .replace(/ğ/g, "g")
+      .replace(/ü/g, "u")
+      .replace(/ş/g, "s")
+      .replace(/ö/g, "o")
+      .replace(/ç/g, "c")
+      .replace(/â/g, "a")
+      .replace(/[^a-z0-9]+/g, "");
+  }
+
+  /** H6 sinematik profiller — dağ / geçit özel açı */
+  function cinemaProfileForTarget() {
+    const tip = String(TARGET.tip || tipQ || "").toLowerCase();
+    const key = targetKeyNorm();
+    // İsim bazlı dağ modu (Google Earth tarzı etkileyici açı)
+    // H8: genel bakış — zirve + etek aynı karede (World Terrain için dengeli pitch/range)
+    const DAG = {
+      uludag: { heading: 210, pitch: -32, range: 11000, duration: 3.4, arc: 16000 },
+      agridagi: { heading: 160, pitch: -30, range: 22000, duration: 3.8, arc: 28000 },
+      agri: { heading: 160, pitch: -30, range: 22000, duration: 3.8, arc: 28000 },
+      ararat: { heading: 160, pitch: -30, range: 22000, duration: 3.8, arc: 28000 },
+      kackardaglari: { heading: 320, pitch: -31, range: 24000, duration: 3.6, arc: 30000 },
+      kackar: { heading: 320, pitch: -31, range: 24000, duration: 3.6, arc: 30000 },
+      everest: { heading: 200, pitch: -28, range: 28000, duration: 4.2, arc: 38000 },
+      mounteverest: { heading: 200, pitch: -28, range: 28000, duration: 4.2, arc: 38000 },
+      palandoken: { heading: 200, pitch: -32, range: 12000, duration: 3.2, arc: 16000 },
+    };
+    for (const k in DAG) {
+      if (key.indexOf(k) >= 0) {
+        return Object.assign({ mode: "dag", tip: tip || "dag" }, DAG[k]);
+      }
+    }
+    // Geçit modu — yan açı (sırt boyunca); "kop" yalnız geçit bağlamında
+    if (key.indexOf("mescit") >= 0) {
+      return {
+        mode: "gecit",
+        tip: "gecit",
+        heading: 118,
+        pitch: -22,
+        range: 6800,
+        duration: 3.0,
+        arc: 11000,
+      };
+    }
+    if (key.indexOf("zigana") >= 0) {
+      return {
+        mode: "gecit",
+        tip: "gecit",
+        heading: 250,
+        pitch: -17,
+        range: 4800,
+        duration: 3.0,
+        arc: 8500,
+      };
+    }
+    if (key.indexOf("kopgecit") >= 0 || (tip === "gecit" && key.indexOf("kop") === 0)) {
+      return {
+        mode: "gecit",
+        tip: "gecit",
+        heading: 90,
+        pitch: -16,
+        range: 5000,
+        duration: 3.0,
+        arc: 8800,
+      };
+    }
+    if (tip === "gecit" || /gecit/.test(key)) {
+      return {
+        mode: "gecit",
+        tip: "gecit",
+        heading: 100,
+        pitch: -18,
+        range: 5500,
+        duration: 2.9,
+        arc: 9000,
+      };
+    }
+    if (tip === "dag" || /dag|peak|mountain/.test(key)) {
+      return {
+        mode: "dag",
+        tip: "dag",
+        heading: 200,
+        pitch: -28,
+        range: 12000,
+        duration: 3.2,
+        arc: 16000,
+      };
+    }
+    const z = Math.max(2, Math.min(18, Number(TARGET.zoom || zoom) || 14));
+    let range = heightFromZoom(z);
+    if (tip === "kopru" || tip === "bina" || tip === "nokta") range = Math.max(600, range * 0.35);
+    else if (tip === "il" || tip === "ilce") range = heightFromZoom(Math.max(z, 12));
+    else range = Math.max(2500, range * 0.8);
+    return {
+      mode: "genel",
+      tip: tip,
+      heading: 15,
+      pitch: -40,
+      range: range,
+      duration: 2.4,
+      arc: Math.max(range * 1.4, 5000),
+    };
+  }
+
+  function cameraOptsForTarget() {
+    const p = cinemaProfileForTarget();
+    let pitch = p.pitch;
+    if (pitch < -52) pitch = -52;
+    if (pitch > -16) pitch = -16;
+    return {
+      height: Math.max(terrainOn ? 400 : 250, p.range),
+      pitch: pitch,
+      heading: p.heading,
+      tip: p.tip,
+      duration: p.duration,
+      arc: p.arc,
+      mode: p.mode,
+      range: p.range,
+    };
+  }
+
+  function placeHedefPin(viewer, tLon, tLat, groundH) {
+    try {
+      viewer.entities.removeById("ruzgar-hedef-pin");
+      const hRef = terrainOn
+        ? Cesium.HeightReference.CLAMP_TO_GROUND
+        : Cesium.HeightReference.NONE;
+      viewer.entities.add({
+        id: "ruzgar-hedef-pin",
+        position: Cesium.Cartesian3.fromDegrees(
+          tLon,
+          tLat,
+          isFinite(groundH) ? groundH : 0,
+        ),
+        point: {
+          pixelSize: 11,
+          color: Cesium.Color.fromCssColorString("#d4af37"),
+          outlineColor: Cesium.Color.BLACK,
+          outlineWidth: 1,
+          heightReference: hRef,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        },
+        label: {
+          text: String(TARGET.label || "").slice(0, 48),
+          font: "13px sans-serif",
+          fillColor: Cesium.Color.WHITE,
+          outlineColor: Cesium.Color.BLACK,
+          outlineWidth: 3,
+          style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+          pixelOffset: new Cesium.Cartesian2(0, -16),
+          heightReference: hRef,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        },
+      });
+    } catch (_) {}
+  }
+
+  function flyCesiumToLockedTarget(viewer) {
+    const opts = cameraOptsForTarget();
+    const tLat = TARGET.lat;
+    const tLon = TARGET.lon;
+    logTarget("3d-cinema-" + (opts.mode || "genel"));
+    // Ani setView yok — sıçrama yapıyordu; sadece akıcı flyTo
+    try {
+      viewer.camera.cancelFlight();
+    } catch (_) {}
+
+    const easing =
+      (Cesium.EasingFunction && Cesium.EasingFunction.CUBIC_IN_OUT) || undefined;
+
+    const runCinemaFly = function (groundH) {
+      const gh = isFinite(groundH) ? groundH : 0;
+      // Hedef her zaman merkez: lookAt + HeadingPitchRange
+      const center = Cesium.Cartesian3.fromDegrees(tLon, tLat, gh);
+      const range = Math.max(opts.range || opts.height, terrainOn ? 800 : 500);
+      const offset = new Cesium.HeadingPitchRange(
+        Cesium.Math.toRadians(opts.heading),
+        Cesium.Math.toRadians(opts.pitch),
+        range,
+      );
+      placeHedefPin(viewer, tLon, tLat, gh);
+
+      const bs = new Cesium.BoundingSphere(center, Math.max(80, range * 0.08));
+      const flyOpts = {
+        duration: opts.duration || 2.8,
+        offset: offset,
+        maximumHeight: Math.max(opts.arc || range * 1.5, range + gh + 2000),
+      };
+      if (easing) flyOpts.easingFunction = easing;
+
+      try {
+        viewer.camera.flyToBoundingSphere(bs, flyOpts);
+      } catch (_) {
+        // Yedek: klasik flyTo — yine hedef merkezli offset hesabı
+        const transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+        const offsetCart = new Cesium.Cartesian3();
+        // Basit güney-batı ofset
+        const pitchR = Cesium.Math.toRadians(opts.pitch);
+        const headR = Cesium.Math.toRadians(opts.heading);
+        offsetCart.x = -Math.cos(pitchR) * Math.sin(headR) * range;
+        offsetCart.y = -Math.cos(pitchR) * Math.cos(headR) * range;
+        offsetCart.z = -Math.sin(pitchR) * range;
+        const dest = Cesium.Matrix4.multiplyByPoint(
+          transform,
+          offsetCart,
+          new Cesium.Cartesian3(),
+        );
+        viewer.camera.flyTo({
+          destination: dest,
+          orientation: {
+            heading: headR,
+            pitch: pitchR,
+            roll: 0,
+          },
+          duration: opts.duration || 2.8,
+          maximumHeight: flyOpts.maximumHeight,
+          easingFunction: easing,
+        });
+      }
+
+      // Uçuş bitince lookAt kilidi — hedef merkezde kalsın, sonra serbest bırak
+      const unlockMs = Math.round((opts.duration || 2.8) * 1000) + 80;
+      setTimeout(function () {
+        try {
+          viewer.camera.lookAt(center, offset);
+          viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+        } catch (_) {}
+        try {
+          viewer.scene.requestRender();
+        } catch (_) {}
+      }, unlockMs);
+    };
+
+    if (terrainOn && viewer.terrainProvider && Cesium.sampleTerrainMostDetailed) {
+      const carto = [Cesium.Cartographic.fromDegrees(tLon, tLat)];
+      Cesium.sampleTerrainMostDetailed(viewer.terrainProvider, carto)
+        .then(function (samples) {
+          const ground = samples && samples[0] && samples[0].height;
+          runCinemaFly(isFinite(ground) ? ground : 0);
+        })
+        .catch(function () {
+          runCinemaFly(0);
+        });
+    } else {
+      runCinemaFly(0);
+    }
   }
 
   function osmLayer() {
@@ -152,6 +1690,8 @@
       "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
       {
         maxZoom: 19,
+        maxNativeZoom: 19,
+        detectRetina: true,
         attribution: "Tiles &copy; Esri",
       }
     );
@@ -170,55 +1710,355 @@
         "/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg",
       {
         maxZoom: 9,
+        maxNativeZoom: 9,
         attribution: "NASA GIBS / MODIS",
       }
     );
   }
 
+  function haversineM(a, b) {
+    const R = 6371000;
+    const toR = Math.PI / 180;
+    const dLat = (b.lat - a.lat) * toR;
+    const dLon = (b.lng - a.lng) * toR;
+    const la1 = a.lat * toR;
+    const la2 = b.lat * toR;
+    const h =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(la1) * Math.cos(la2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+  }
+
+  function formatDist(m) {
+    if (m >= 1000) return (m / 1000).toFixed(2) + " km";
+    return Math.round(m) + " m";
+  }
+
+  function ringAreaM2(latlngs) {
+    if (!latlngs || latlngs.length < 3) return 0;
+    const R = 6371000;
+    const toR = Math.PI / 180;
+    let sum = 0;
+    for (let i = 0; i < latlngs.length; i++) {
+      const p1 = latlngs[i];
+      const p2 = latlngs[(i + 1) % latlngs.length];
+      sum += (p2.lng - p1.lng) * toR * (2 + Math.sin(p1.lat * toR) + Math.sin(p2.lat * toR));
+    }
+    return Math.abs((sum * R * R) / 2);
+  }
+
+  function formatArea(m2) {
+    if (m2 >= 1000000) return (m2 / 1000000).toFixed(2) + " km²";
+    if (m2 >= 10000) return (m2 / 10000).toFixed(2) + " ha";
+    return Math.round(m2) + " m²";
+  }
+
   function paintLeaflet(kind) {
     showOnly("map");
-    const map = L.map("map", { zoomControl: false, attributionControl: true }).setView([lat, lon], zoom);
-    let base;
-    if (kind === "uydu") {
-      base = uyduLayer();
-      yearBar.classList.remove("on");
-    } else if (kind === "4d") {
+    const city = guessSehirFromLabel();
+    const viewZoom = resolveViewZoom(kind);
+    mapStats = { buildings: 0, roads: 0, base: kind === "4d" ? "gibs" : "esri", zoom: viewZoom };
+    const map = L.map("map", {
+      zoomControl: false,
+      attributionControl: true,
+      doubleClickZoom: false,
+    });
+    // Tek merkez TARGET — 2D Leaflet
+    logTarget("2d");
+    map.setView([TARGET.lat, TARGET.lon], Math.min(viewZoom, 8));
+    applyInitialView(map, viewZoom);
+
+    const bases = {
+      esri: uyduLayer(),
+      osm: osmLayer(),
+      gibs: gibsLayer(yearDefault),
+    };
+    let activeBaseKey = kind === "4d" ? "gibs" : "esri";
+    let activeBase = bases[activeBaseKey];
+    activeBase.addTo(map);
+    mapStats.base = activeBaseKey;
+
+    const buildingsLayer = L.geoJSON(null, {
+      style: {
+        color: "#ffe08a",
+        weight: 1.4,
+        fillColor: "#d4af37",
+        fillOpacity: 0.48,
+        opacity: 0.95,
+      },
+    });
+    const roadsLayer = L.geoJSON(null, {
+      style: function (feat) {
+        const h = (feat && feat.properties && (feat.properties.highway || feat.properties.type)) || "";
+        const major = /motorway|trunk|primary|secondary/i.test(String(h));
+        return {
+          color: major ? "#8fd4ff" : "#5eb0e6",
+          weight: major ? 3.2 : 2.1,
+          opacity: 0.92,
+          lineCap: "round",
+          lineJoin: "round",
+        };
+      },
+    });
+    buildingsLayer.addTo(map);
+    roadsLayer.addTo(map);
+    liveMapRef = map;
+    liveBuildingsLayer = buildingsLayer;
+    liveRoadsLayer = roadsLayer;
+    viewCenterLabel = label || viewCenterLabel || "—";
+    liveHillshadeLayer = hillshadeLayer();
+    if (terrainOn) liveHillshadeLayer.addTo(map);
+    wireTerrainCheckbox();
+
+    const drawLayer = L.featureGroup().addTo(map);
+    L.marker([lat, lon]).addTo(map).bindPopup(label);
+
+    if (kind === "4d") {
       yearInput.value = String(yearDefault);
       yearVal.textContent = String(yearDefault);
       yearBar.classList.add("on");
-      base = gibsLayer(yearDefault);
-      let current = base;
-      current.addTo(map);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 9,
-        opacity: 0.22,
-        attribution: "",
-      }).addTo(map);
-      yearInput.addEventListener("input", function () {
+      syncYearInfoOffset();
+      yearInput.oninput = function () {
         const y = yearInput.value;
         yearVal.textContent = y;
-        map.removeLayer(current);
-        current = gibsLayer(y);
-        current.addTo(map);
-        setBadge(y);
-      });
-      L.marker([lat, lon]).addTo(map).bindPopup(label);
-      setBadge(String(yearDefault));
-      setTimeout(function () { map.invalidateSize(); }, 80);
-      return;
+        map.removeLayer(activeBase);
+        bases.gibs = gibsLayer(y);
+        if (activeBaseKey === "gibs") {
+          activeBase = bases.gibs;
+          activeBase.addTo(map);
+        }
+        setBadge(y + " · z≤9");
+        updateInfoBar(map);
+        showToast("GIBS zaman: " + y);
+      };
     } else {
-      base = osmLayer();
       yearBar.classList.remove("on");
+      syncYearInfoOffset();
     }
-    base.addTo(map);
-    L.marker([lat, lon]).addTo(map).bindPopup(label);
-    setBadge();
-    setTimeout(function () { map.invalidateSize(); }, 80);
+
+    function setBase(key) {
+      if (!bases[key] || key === activeBaseKey) return;
+      map.removeLayer(activeBase);
+      activeBaseKey = key;
+      mapStats.base = key;
+      if (key === "gibs" && !bases.gibs) bases.gibs = gibsLayer(yearInput.value || yearDefault);
+      activeBase = bases[key];
+      activeBase.addTo(map);
+      const radios = layerPanel.querySelectorAll('input[name="ruzgarBase"]');
+      for (let i = 0; i < radios.length; i++) {
+        radios[i].checked = radios[i].value === key;
+      }
+      if (key === "gibs") {
+        yearBar.classList.add("on");
+      syncYearInfoOffset();
+        if (map.getZoom() > 9) map.setZoom(9);
+      } else if (kind !== "4d") {
+        yearBar.classList.remove("on");
+      syncYearInfoOffset();
+      }
+      updateInfoBar(map);
+      showToast("Taban: " + (BASE_LABEL[key] || key));
+      publishView(map);
+    }
+
+    const radios = layerPanel.querySelectorAll('input[name="ruzgarBase"]');
+    for (let i = 0; i < radios.length; i++) {
+      radios[i].checked = radios[i].value === activeBaseKey;
+      radios[i].onchange = function () {
+        if (this.checked) setBase(this.value);
+      };
+    }
+    document.getElementById("lpBuildings").onchange = function () {
+      if (this.checked) {
+        if (!map.hasLayer(buildingsLayer)) buildingsLayer.addTo(map);
+        showToast("Binalar açık");
+      } else if (map.hasLayer(buildingsLayer)) {
+        map.removeLayer(buildingsLayer);
+        showToast("Binalar kapalı");
+      }
+      updateInfoBar(map);
+    };
+    document.getElementById("lpRoads").onchange = function () {
+      if (this.checked) {
+        if (!map.hasLayer(roadsLayer)) roadsLayer.addTo(map);
+        showToast("Yollar açık");
+      } else if (map.hasLayer(roadsLayer)) {
+        map.removeLayer(roadsLayer);
+        showToast("Yollar kapalı");
+      }
+      updateInfoBar(map);
+    };
+
+    function loadVector(kindName, layer, lim) {
+      if (!city) {
+        updateInfoBar(map);
+        return;
+      }
+      const url =
+        apiRoot() +
+        "/api/sehir-ikiz/geojson?sehir=" +
+        encodeURIComponent(city) +
+        "&kind=" +
+        kindName +
+        "&limit=" +
+        lim;
+      fetch(url)
+        .then(function (r) {
+          return r.json();
+        })
+        .then(function (gj) {
+          const feats = (gj && gj.features) || [];
+          if (!feats.length) {
+            updateInfoBar(map);
+            return;
+          }
+          layer.clearLayers();
+          layer.addData({ type: "FeatureCollection", features: feats });
+          if (kindName === "buildings") mapStats.buildings = feats.length;
+          if (kindName === "roads") mapStats.roads = feats.length;
+          setBadge(city + " · " + kindName + " " + feats.length);
+          updateInfoBar(map);
+        })
+        .catch(function (err) {
+          console.warn("vektör", kindName, err);
+          updateInfoBar(map);
+        });
+    }
+    loadVector("buildings", buildingsLayer, 8000);
+    loadVector("roads", roadsLayer, 8000);
+    map.on("moveend", function () {
+      updateInfoBar(map);
+      scheduleReverseGeocode(map);
+    });
+    map.on("zoomend", function () {
+      updateInfoBar(map);
+      scheduleReverseGeocode(map);
+    });
+    updateInfoBar(map);
+    scheduleReverseGeocode(map);
+    showToast("Rüzgar Harita Hazır");
+
+    let tool = "pan";
+    let draftPts = [];
+    let draftLine = null;
+    let clickHandler = null;
+
+    function setMeasureText(t) {
+      if (measureOut) measureOut.textContent = t || "";
+    }
+
+    function clearDraft() {
+      draftPts = [];
+      if (draftLine) {
+        map.removeLayer(draftLine);
+        draftLine = null;
+      }
+    }
+
+    function setTool(next) {
+      tool = next || "pan";
+      const btns = mapTools.querySelectorAll("button[data-map-tool]");
+      for (let i = 0; i < btns.length; i++) {
+        const id = btns[i].getAttribute("data-map-tool");
+        btns[i].classList.toggle("is-on", id === tool);
+      }
+      map.getContainer().style.cursor = tool === "pan" ? "" : "crosshair";
+      clearDraft();
+      if (tool === "pan") setMeasureText("");
+      else if (tool === "measure-line") setMeasureText("Mesafede iki veya daha fazla nokta · çift tık bitir");
+      else if (tool === "measure-area") setMeasureText("Alan için ≥3 nokta · çift tık kapat");
+      else if (tool === "draw-point") setMeasureText("Haritaya tıkla · nokta koy");
+      else if (tool === "draw-line") setMeasureText("Çizgi · tıkla, çift tık bitir");
+      else if (tool === "draw-poly") setMeasureText("Poligon · ≥3 nokta, çift tık kapat");
+    }
+
+    mapTools.onclick = function (ev) {
+      const btn = ev.target && ev.target.closest("button[data-map-tool]");
+      if (!btn) return;
+      const t = btn.getAttribute("data-map-tool");
+      if (t === "clear") {
+        drawLayer.clearLayers();
+        clearDraft();
+        setMeasureText("Temizlendi");
+        setTool("pan");
+        return;
+      }
+      setTool(t);
+    };
+
+    if (clickHandler) map.off("click", clickHandler);
+    clickHandler = function (e) {
+      if (tool === "pan") return;
+      const ll = e.latlng;
+      if (tool === "draw-point") {
+        L.circleMarker(ll, { radius: 5, color: "#f3e6c4", fillColor: "#d4af37", fillOpacity: 0.9, weight: 1 }).addTo(drawLayer);
+        setMeasureText("Nokta: " + ll.lat.toFixed(5) + ", " + ll.lng.toFixed(5));
+        return;
+      }
+      draftPts.push(ll);
+      if (draftLine) map.removeLayer(draftLine);
+      if (tool === "measure-line" || tool === "draw-line") {
+        draftLine = L.polyline(draftPts, { color: "#ffd76a", weight: 3 }).addTo(map);
+        if (draftPts.length >= 2) {
+          let d = 0;
+          for (let i = 1; i < draftPts.length; i++) d += haversineM(draftPts[i - 1], draftPts[i]);
+          setMeasureText("Mesafe: " + formatDist(d) + " · çift tık bitir");
+        }
+      } else if (tool === "measure-area" || tool === "draw-poly") {
+        draftLine = L.polygon(draftPts, {
+          color: "#ffd76a",
+          weight: 2,
+          fillColor: "#d4af37",
+          fillOpacity: 0.2,
+        }).addTo(map);
+        if (draftPts.length >= 3) {
+          setMeasureText("Alan: " + formatArea(ringAreaM2(draftPts)) + " · çift tık kapat");
+        }
+      }
+    };
+    map.on("click", clickHandler);
+    map.on("dblclick", function (e) {
+      if (tool === "pan" || tool === "draw-point") return;
+      L.DomEvent.preventDefault(e);
+      L.DomEvent.stopPropagation(e);
+      if (tool === "measure-line" || tool === "draw-line") {
+        if (draftPts.length >= 2) {
+          let d = 0;
+          for (let i = 1; i < draftPts.length; i++) d += haversineM(draftPts[i - 1], draftPts[i]);
+          L.polyline(draftPts.slice(), { color: "#f3e6c4", weight: 3 }).addTo(drawLayer);
+          setMeasureText("Ölçüm mesafe: " + formatDist(d));
+        }
+      } else if (tool === "measure-area" || tool === "draw-poly") {
+        if (draftPts.length >= 3) {
+          const area = ringAreaM2(draftPts);
+          L.polygon(draftPts.slice(), {
+            color: "#f3e6c4",
+            weight: 2,
+            fillColor: "#d4af37",
+            fillOpacity: 0.25,
+          }).addTo(drawLayer);
+          setMeasureText("Ölçüm alan: " + formatArea(area));
+        }
+      }
+      clearDraft();
+      setTool("pan");
+    });
+
+    setTool("pan");
+    setBadge(
+      (city ? city + " · " : "") +
+        (activeBaseKey === "esri" ? "Esri" : activeBaseKey.toUpperCase()) +
+        (city ? " · vektör" : ""),
+    );
+    setTimeout(function () {
+      map.invalidateSize();
+    }, 80);
   }
 
   function paintF4() {
     showOnly("f4");
     yearBar.classList.remove("on");
+      syncYearInfoOffset();
     mode = "f4";
     const z = Math.max(15, zoom);
     f4.src =
@@ -236,6 +2076,7 @@
     return new Cesium.UrlTemplateImageryProvider({
       url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
       maximumLevel: 18,
+      tilingScheme: new Cesium.WebMercatorTilingScheme(),
       credit: "Esri",
     });
   }
@@ -244,6 +2085,7 @@
     return new Cesium.UrlTemplateImageryProvider({
       url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
       maximumLevel: 18,
+      tilingScheme: new Cesium.WebMercatorTilingScheme(),
       credit: "© OpenStreetMap",
     });
   }
@@ -262,16 +2104,30 @@
       selectionIndicator: false,
       imageryProvider: false,
       baseLayer: new Cesium.ImageryLayer(imagery),
-      // Ion token yok — düz elipsoid; arazi Faz 3+ / isteğe bağlı token
       terrainProvider: new Cesium.EllipsoidTerrainProvider(),
-      requestRenderMode: true,
+      // Terrain açıkken requestRenderMode kapatılır (H5)
+      requestRenderMode: !terrainOn,
       maximumRenderTimeChange: Infinity,
+      orderIndependentTranslucency: false,
+      contextOptions: {
+        webgl: {
+          alpha: false,
+          antialias: true,
+          powerPreference: "high-performance",
+        },
+      },
     });
     try {
       viewer.cesiumWidget.creditContainer.style.display = "none";
     } catch (_) {}
-    viewer.scene.globe.enableLighting = false;
-    viewer.scene.fog.enabled = true;
+    try {
+      const layer = viewer.imageryLayers.get(0);
+      if (layer) layer.maximumAnisotropy = 16;
+    } catch (_) {}
+    liveCesiumViewer = viewer;
+    wireTerrainCheckbox();
+    if (terrainOn) applyCesiumTerrain(viewer, true);
+    else applyCesiumSceneQuality(viewer, false);
     return viewer;
   }
 
@@ -352,29 +2208,14 @@
     }
     showOnly("globe");
     yearBar.classList.remove("on");
+      syncYearInfoOffset();
     setBadge("yükleniyor");
     try {
+      // Mevcut TARGET korunur — yeni hedef üretilmez (H4)
       const viewer = makeCesiumViewer(esriImagery());
-      const h = heightFromZoom(Math.max(zoom, 14));
-      viewer.camera.setView({
-        destination: Cesium.Cartesian3.fromDegrees(lon, lat, h),
-        orientation: {
-          heading: Cesium.Math.toRadians(20),
-          pitch: Cesium.Math.toRadians(-42),
-          roll: 0,
-        },
-      });
-      // Şehir ölçeğinde yumuşak yaklaşma
-      viewer.camera.flyTo({
-        destination: Cesium.Cartesian3.fromDegrees(lon, lat, Math.min(h, heightFromZoom(Math.max(zoom, 15)))),
-        orientation: {
-          heading: Cesium.Math.toRadians(0),
-          pitch: Cesium.Math.toRadians(-35),
-          roll: 0,
-        },
-        duration: 1.6,
-      });
-      setBadge("yerel");
+      flyCesiumToLockedTarget(viewer);
+      setBadge("3d · " + (TARGET.label || label));
+      updateInfoBar(null);
       loadBuildings(viewer);
       if (wantAjan) spawnAgents(viewer);
       if (wantCam) loadCameraPins(viewer);
@@ -456,15 +2297,15 @@
     if (typeof Cesium === "undefined") {
       // CDN yok / yerel yok → Leaflet uydu tur yedeği
       showOnly("map");
-      const map = L.map("map", { zoomControl: false }).setView([lat, lon], Math.max(3, zoom - 2));
+      const map = L.map("map", { zoomControl: false }).setView([TARGET.lat, TARGET.lon], Math.max(3, zoom - 2));
       uyduLayer().addTo(map);
       let i = 0;
       const pts = [
-        [lat, lon],
-        [lat + 8, lon + 12],
-        [lat - 6, lon + 25],
-        [lat + 2, lon - 18],
-        [lat, lon],
+        [TARGET.lat, TARGET.lon],
+        [TARGET.lat + 8, TARGET.lon + 12],
+        [TARGET.lat - 6, TARGET.lon + 25],
+        [TARGET.lat + 2, TARGET.lon - 18],
+        [TARGET.lat, TARGET.lon],
       ];
       setInterval(function () {
         i = (i + 1) % pts.length;
@@ -475,10 +2316,12 @@
     }
     showOnly("globe");
     yearBar.classList.remove("on");
+      syncYearInfoOffset();
     setBadge("yükleniyor");
     try {
       const viewer = makeCesiumViewer(esriImagery());
-      const dest = Cesium.Cartesian3.fromDegrees(lon, lat, 1800000);
+      logTarget("tur");
+      const dest = Cesium.Cartesian3.fromDegrees(TARGET.lon, TARGET.lat, 1800000);
       viewer.camera.flyTo({
         destination: dest,
         orientation: {
@@ -488,15 +2331,7 @@
         },
         duration: 3.2,
         complete: function () {
-          viewer.camera.flyTo({
-            destination: Cesium.Cartesian3.fromDegrees(lon, lat, heightFromZoom(zoom)),
-            orientation: {
-              heading: Cesium.Math.toRadians(0),
-              pitch: Cesium.Math.toRadians(-35),
-              roll: 0,
-            },
-            duration: 2.8,
-          });
+          flyCesiumToLockedTarget(viewer);
         },
       });
       setBadge("uçuş · yerel");
@@ -511,7 +2346,10 @@
 
   function paintSentinel() {
     showOnly("map");
+    if (layerPanel) layerPanel.classList.remove("on");
+    if (mapTools) mapTools.classList.remove("on");
     yearBar.classList.remove("on");
+      syncYearInfoOffset();
     setBadge("STAC…");
     const map = L.map("map", { zoomControl: false, attributionControl: true }).setView([lat, lon], Math.max(zoom, 11));
     uyduLayer().addTo(map);
@@ -576,7 +2414,18 @@
   function paintPano() {
     showOnly("pano");
     yearBar.classList.remove("on");
+      syncYearInfoOffset();
     setBadge("Mapillary…");
+    // Mapillary.com X-Frame-Options: DENY → iframe = mavi/boş ekran. Panel + dış açılış.
+    const fallbackEmbed =
+      "https://www.mapillary.com/app/?lat=" +
+      lat.toFixed(6) +
+      "&lng=" +
+      lon.toFixed(6) +
+      "&z=17";
+    panoPanel.innerHTML =
+      '<p class="pano-head">Sokak / panorama</p>' +
+      '<p class="pano-note">Yükleniyor…</p>';
     const qCity = encodeURIComponent(label || "");
     const url =
       apiRoot() +
@@ -591,25 +2440,76 @@
         return r.json();
       })
       .then(function (data) {
-        const embed =
-          (data && data.embed_url) ||
-          "https://www.mapillary.com/app/?lat=" +
-            lat.toFixed(6) +
-            "&lng=" +
-            lon.toFixed(6) +
-            "&z=17";
-        panoEl.src = embed;
-        setBadge(data && data.token_configured ? "API+web" : "açık web");
+        const embed = (data && data.embed_url) || fallbackEmbed;
+        const tokenOk = !!(data && data.token_configured);
+        const images = (data && data.images) || [];
+        let note =
+          "Mapillary sitesi iframe’e izin vermiyor (bu yüzden mavi ekran oluyordu). " +
+          "Sokak turunu tarayıcıda aç; yakındaki kareler için <code>RUZGAR_MAPILLARY_TOKEN</code> gerekir.";
+        if (tokenOk && images.length) {
+          note = "Token var · yakındaki sokak kareleri. Tam 360 için «Mapillary’de aç».";
+        } else if (tokenOk) {
+          note = "Token var ama bu noktada sokak görüntüsü bulunamadı. Konumu yaklaştırıp tekrar dene veya Mapillary’de aç.";
+        }
+        let grid = "";
+        if (images.length) {
+          grid =
+            '<div class="pano-grid">' +
+            images
+              .map(function (im) {
+                const href = im.viewer || embed;
+                const src = im.thumb_lg || im.thumb || "";
+                const cap = im.is_pano ? "pano" : "sokak";
+                return (
+                  '<a href="' +
+                  href +
+                  '" target="_blank" rel="noopener noreferrer">' +
+                  (src ? '<img src="' + src + '" alt="' + cap + '" loading="lazy" />' : "") +
+                  "<span>" +
+                  cap +
+                  "</span></a>"
+                );
+              })
+              .join("") +
+            "</div>";
+        }
+        panoPanel.innerHTML =
+          '<p class="pano-head">Sokak / panorama · ' +
+          (label || "konum") +
+          "</p>" +
+          '<p class="pano-note">' +
+          note +
+          "</p>" +
+          '<div class="pano-actions">' +
+          '<a href="' +
+          embed +
+          '" target="_blank" rel="noopener noreferrer">Mapillary’de aç</a>' +
+          '<a class="ghost" href="' +
+          embed +
+          '" target="_blank" rel="noopener noreferrer">Yedek bağlantı</a>' +
+          "</div>" +
+          grid;
+        setBadge(tokenOk ? (images.length ? "API kareler" : "API boş") : "dış açılış");
       })
       .catch(function () {
-        panoEl.src =
-          "https://www.mapillary.com/app/?lat=" +
-          lat.toFixed(6) +
-          "&lng=" +
-          lon.toFixed(6) +
-          "&z=17";
+        panoPanel.innerHTML =
+          '<p class="pano-head">Sokak / panorama</p>' +
+          '<p class="pano-note">API’ye ulaşılamadı. Mapillary sitesini dışarıda açabilirsin (iframe engelli).</p>' +
+          '<div class="pano-actions"><a href="' +
+          fallbackEmbed +
+          '" target="_blank" rel="noopener noreferrer">Mapillary’de aç</a></div>';
         setBadge("web yedek");
       });
+  }
+
+  wireTourBar();
+  const wantTour =
+    q.get("tour") === "1" ||
+    q.get("tour_play") === "1" ||
+    String(q.get("gezgin") || "") === "1";
+  if (wantTour && mode !== "f4") {
+    mode = "3d";
+    terrainOn = true;
   }
 
   // 3d: Cesium ana; engine=f4 veya mode=f4 → F4map yedek
@@ -623,12 +2523,24 @@
     paintSentinel();
   } else if (mode === "pano") {
     paintPano();
-  } else if (mode === "uydu") {
-    paintLeaflet("uydu");
   } else if (mode === "4d") {
     paintLeaflet("4d");
-  } else {
+  } else if (mode === "2d") {
     paintLeaflet("2d");
+  } else {
+    /* varsayılan: Esri uydu (boş OSM hissi yok) */
+    paintLeaflet("uydu");
+  }
+
+  if (wantTour) {
+    setTimeout(function () {
+      fetchAndStartTour(
+        q.get("tour_place") || label,
+        tipQ || TARGET.tip,
+        TARGET.lat,
+        TARGET.lon
+      );
+    }, 1400);
   }
 })();
   </script>
