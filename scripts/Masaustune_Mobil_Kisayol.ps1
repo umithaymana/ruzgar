@@ -1,5 +1,5 @@
-﻿# Rüzgar Mobil — masaüstü ikon (PWA / Chrome app mode)
-# Mimar: 2026-11-12 «sen chrome al» — Chrome öncelik, uzantısız.
+﻿# Rüzgar Mobil — masaüstü ikon (tek PWA: yazı + mikrofon)
+# HTTPS 8443 köprüsü zorunlu (HTTP'de telefon/PC mic kapalı).
 param([switch]$Quiet)
 
 Add-Type -AssemblyName System.Windows.Forms
@@ -10,7 +10,8 @@ if ($PSScriptRoot) {
     $Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 }
 
-$url = "http://127.0.0.1:8779/mobil/?v=8"
+# Tek ikon → HTTPS localhost (SAN + Chrome ignore-certificate-errors; app boş kalmasın)
+$url = "https://localhost:8443/mobil/?v=10"
 $ico = Join-Path $Root "ruzgar-desktop\assets\ruzgar.ico"
 if (-not (Test-Path $ico)) {
     $ico = "$env:SystemRoot\System32\imageres.dll,110"
@@ -38,16 +39,17 @@ function New-MobilShortcut {
     $Sc = $Wsh.CreateShortcut($p)
     if ($chrome) {
         $Sc.TargetPath = $chrome
-        $Sc.Arguments = "--app=`"$url`" --disable-extensions --new-window"
+        # Yerel self-signed tek kapı: app modunda sertifika ekranı boş kalmasın
+        $Sc.Arguments = "--app=`"$url`" --ignore-certificate-errors --allow-insecure-localhost --disable-extensions --new-window"
     } elseif ($edge) {
         $Sc.TargetPath = $edge
-        $Sc.Arguments = "--app=`"$url`" --disable-extensions --new-window"
+        $Sc.Arguments = "--app=`"$url`" --ignore-certificate-errors --allow-insecure-localhost --disable-extensions --new-window"
     } else {
         $Sc.TargetPath = $url
     }
     $Sc.WorkingDirectory = $Root
     $Sc.IconLocation = $ico
-    $Sc.Description = "Rüzgar Mobil PWA — Chrome app (kapı 8779/mobil)"
+    $Sc.Description = "Rüzgar Mobil — tek PWA (yazı+ses) https://localhost:8443/mobil/"
     $Sc.Save()
     return $p
 }
@@ -78,14 +80,18 @@ if (-not $Quiet) {
     try {
         Start-Process "explorer.exe" -ArgumentList "/select,`"$primary`""
     } catch {}
-    $engine = if ($edge) { "Edge app" } elseif ($chrome) { "Chrome app" } else { "varsayilan tarayici" }
+    $engine = if ($chrome) { "Chrome app" } elseif ($edge) { "Edge app" } else { "varsayilan tarayici" }
     $msg = @"
-Rüzgar Mobil masaüstü ikonu hazir.
+Rüzgar Mobil masaüstü ikonu hazır (tek adres).
 
 $primary
 
-Cift tik: $engine ile $url acilir.
-Telefonda: ayni adres → «Ana ekrana ekle».
+Çift tık: $engine → $url
+Yazı + basılı tut + sürekli sohbet aynı pencerede.
+
+Telefon (aynı Wi‑Fi / Tailscale):
+  https://<PC-IP>:8443/mobil/
+İlk açılışta sertifika uyarısı → Gelişmiş → Devam → Ana ekrana ekle.
 "@
     [System.Windows.Forms.MessageBox]::Show($msg, "Rüzgar Mobil") | Out-Null
 }

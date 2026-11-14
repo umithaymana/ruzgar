@@ -23,10 +23,41 @@ def main() -> None:
     if fails:
         fail("; ".join(fails))
     print("OK: super_el cases")
-    r = resolve_super_el("haritayi goster")
+    r = resolve_super_el("haritayi goster", geocode=False)
     if not r.get("ok") or r.get("organ") != "harita":
         fail("harita goster")
-    print("OK: resolve")
+    r_ist = resolve_super_el("istanbulu goster", geocode=True)
+    if not r_ist.get("geo") or r_ist["geo"].get("lat") is None:
+        fail("istanbul geo yok")
+    r_z = resolve_super_el("daha yaklastir", geocode=False)
+    if int(r_z.get("zoom_delta") or 0) <= 0:
+        fail("yaklastir zoom_delta")
+    r3 = resolve_super_el("3d goster", geocode=False)
+    if r3.get("action") != "mode_3d" or r3.get("organ") != "harita":
+        fail("3d mode")
+    if r3.get("hedef"):
+        fail("3d hedef olmamali: " + str(r3.get("hedef")))
+    r3g = resolve_super_el("3d goster", geocode=True)
+    if r3g.get("geo"):
+        fail("3d geo olmamali")
+    r4 = resolve_super_el("4d ye gec", geocode=False)
+    if r4.get("action") != "mode_4d":
+        fail("4d mode")
+    if r4.get("hedef"):
+        fail("4d hedef olmamali")
+    ru = resolve_super_el("uydu goster", geocode=False)
+    if ru.get("action") != "mode_uydu" or ru.get("organ") != "harita":
+        fail("uydu mode")
+    rt = resolve_super_el("dunya turu", geocode=False)
+    if rt.get("action") != "mode_tur":
+        fail("tur mode")
+    print("OK: resolve+geo+zoom+3d4d+uydu+tur")
+    viewer = ROOT.parent / "ruzgar-desktop" / "harita-viewer.html"
+    if not viewer.is_file():
+        fail("harita-viewer.html yok")
+    leaf = ROOT.parent / "ruzgar-desktop" / "vendor" / "leaflet" / "leaflet.js"
+    if not leaf.is_file():
+        fail("vendor/leaflet yok")
     masa = (ROOT.parent / "ruzgar-desktop" / "ruzgar-masa.js").read_text(encoding="utf-8")
     for needle in (
         "applySahneOrgan",
@@ -35,9 +66,27 @@ def main() -> None:
         "ruzgar-sahne-mini",
         "/api/sahne/super-el",
         "clearSahneOrgan",
+        "dispatchSahneOrganCommand",
+        "applyHaritaCommand",
+        "zoom_delta",
+        "mode_3d",
+        "mode_uydu",
+        "mode_tur",
+        "harita-viewer.html",
+        "ruzgar-harita-tools",
+        "ruzgar-sahne-organ-on",
     ):
         if needle not in masa:
             fail(f"masa.js eksik: {needle}")
+    css = (ROOT.parent / "ruzgar-desktop" / "ruzgar-masa.css").read_text(encoding="utf-8")
+    if "ruzgar-sahne-organ-on" not in css or "ruzgar-harita-tools" not in css:
+        fail("masa.css full/3d yok")
+    mobil = (ROOT / "static" / "mobil-pwa" / "app.js").read_text(encoding="utf-8")
+    if "harita-viewer.html" not in mobil or "mode_uydu" not in mobil:
+        fail("mobil harita viewer yok")
+    idx = (ROOT.parent / "ruzgar-desktop" / "index.html").read_text(encoding="utf-8")
+    if "f4map.com" not in idx:
+        fail("CSP 3d frame-src yok")
     css = (ROOT.parent / "ruzgar-desktop" / "ruzgar-masa.css").read_text(encoding="utf-8")
     for needle in ("ruzgar-sahne-organ", "ruzgar-sahne-mini #ruzgar-sahne", "is-organ-dim"):
         if needle not in css:

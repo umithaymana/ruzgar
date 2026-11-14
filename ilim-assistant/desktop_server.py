@@ -450,8 +450,38 @@ if (_MOBIL_PWA_DIR / "index.html").is_file():
 
     @app.get("/mobil", include_in_schema=False)
     @app.get("/mobil/", include_in_schema=False)
-    def mobil_pwa_index():
+    def mobil_pwa_index(request: Request):
         from fastapi.responses import FileResponse as _FR
+        from fastapi.responses import RedirectResponse as _RR
+
+        # Tek ikon: yazı+mikrofon aynı PWA. HTTP:8779 → HTTPS:8443 (köprü).
+        # HTTPS proxy Host'u ":8443" ile iletir; o zaman dosyayı sun (döngü yok).
+        https_port = (os.environ.get("RUZGAR_HTTPS_PORT") or "8443").strip() or "8443"
+        force = (os.environ.get("RUZGAR_MOBIL_FORCE_HTTPS") or "1").strip().lower() not in (
+            "0",
+            "false",
+            "no",
+            "off",
+        )
+        host_hdr = (request.headers.get("host") or "").strip()
+        name = host_hdr
+        port = ""
+        if host_hdr.startswith("["):
+            # [ipv6]:port
+            end = host_hdr.find("]")
+            name = host_hdr[: end + 1] if end >= 0 else host_hdr
+            rest = host_hdr[end + 1 :] if end >= 0 else ""
+            if rest.startswith(":"):
+                port = rest[1:]
+        elif ":" in host_hdr:
+            name, _, port = host_hdr.rpartition(":")
+        already_https = (
+            port == https_port
+            or (request.headers.get("x-forwarded-proto") or "").strip().lower() == "https"
+        )
+        if force and not already_https and name:
+            q = ("?" + request.url.query) if request.url.query else ""
+            return _RR(f"https://{name}:{https_port}/mobil/{q}", status_code=302)
 
         # PWA/Edge app eski HTML cache'lemesin (cihaz türü PC vb. güncellemeler)
         return _FR(
@@ -5338,7 +5368,10 @@ def _mobil_erisim_payload() -> dict[str, Any]:
             ips.insert(0, rip)
     except Exception:
         pass
-    urls = [f"http://{ip}:{port}/mobil/" for ip in ips]
+    https_port = int((os.environ.get("RUZGAR_HTTPS_PORT") or "8443").strip() or "8443")
+    # Tek kapı: mobil PWA her zaman HTTPS (yazı + mikrofon aynı ikon)
+    urls = [f"https://{ip}:{https_port}/mobil/" for ip in ips]
+    http_fallback = [f"http://{ip}:{port}/mobil/" for ip in ips]
     return {
         "ok": True,
         "listen_host": listen,
@@ -5346,9 +5379,15 @@ def _mobil_erisim_payload() -> dict[str, Any]:
         "lan_open": bool(lan_open),
         "ips": ips,
         "urls": urls,
-        "https_mic_hint": f"https://<ip>:8443/mobil/ (mic için HTTPS köprü)",
+        "https_port": https_port,
+        "https_urls": urls,
+        "http_fallback": http_fallback,
+        "https_mic_hint": (
+            f"Tek adres (yazı+ses): {urls[0] if urls else f'https://<ip>:{https_port}/mobil/'}"
+            " — ilk açılışta sertifika: Gelişmiş/Devam"
+        ),
         "note": (
-            "Telefon aynı Wi‑Fi veya Tailscale ile URLs'ten birini açsın."
+            "Tek ikon/URL: https_urls (8443). http:8779/mobil otomatik HTTPS’e yönlenir."
             if lan_open
             else "API yalnız localhost — RUZGAR_API_HOST=0.0.0.0 ile ForceRestart gerekir."
         ),
@@ -15740,23 +15779,29 @@ def _chat_full_sync(req: ChatRequest) -> dict[str, Any]:
         if tok:
             _auth = validate_token(tok)
             if _auth is None:
+                err = "Oturum geçersiz veya süresi dolmuş. PWA'dan tekrar giriş."
                 return {
                     "ok": False,
-                    "error": "Oturum geçersiz veya süresi dolmuş. PWA'dan tekrar giriş.",
+                    "error": err,
+                    "full_reply": err,
                     "latency_ms": 0,
                 }
             if not motor_allowed(_auth, "sohbet"):
+                err = "Sohbet motoru bu kullanıcı için kapalı (panel ACL)."
                 return {
                     "ok": False,
-                    "error": "Sohbet motoru bu kullanıcı için kapalı (panel ACL).",
+                    "error": err,
+                    "full_reply": err,
                     "latency_ms": 0,
                     "mobil_auth": {"kullanici": _auth.get("kullanici")},
                 }
             slot = begin_chat_slot(tok)
             if not slot.get("ok"):
+                err = slot.get("message") or "kuyruk"
                 return {
                     "ok": False,
-                    "error": slot.get("message") or "kuyruk",
+                    "error": err,
+                    "full_reply": err,
                     "latency_ms": 0,
                     "queue": True,
                 }
@@ -15837,8 +15882,13 @@ def _chat_full_sync(req: ChatRequest) -> dict[str, Any]:
 
 
 @app.post("/api/chat/full")
-async def chat_full(req: ChatRequest):
+async def chat_full(req: ChatRequest, request: Request):
     """Streaming kapalı UI yolu: tüm cevabı üret, tek JSON yanıt olarak döndür."""
+    # Mobil PWA: body session_token boşsa Authorization Bearer yedek
+    if not (req.session_token or "").strip():
+        auth = (request.headers.get("Authorization") or "").strip()
+        if auth.lower().startswith("bearer "):
+            req.session_token = auth[7:].strip() or None
     return await run_in_threadpool(_chat_full_sync, req)
 
 

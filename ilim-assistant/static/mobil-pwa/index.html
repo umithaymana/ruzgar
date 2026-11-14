@@ -13,13 +13,17 @@
   <link rel="icon" href="favicon-32.png?v=5" type="image/png" sizes="32x32" />
   <title>Rüzgar Mobil</title>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <link rel="stylesheet" href="app.css?v=42" />
+  <link rel="stylesheet" href="app.css?v=44-harita" />
 </head>
 <body>
   <div id="installBar" class="install-bar hidden">
     <span>Rüzgar’ı ana ekrana / masaüstüne ekle</span>
     <button type="button" id="btnInstall" class="primary tiny">Kur</button>
     <button type="button" id="btnInstallDismiss" class="ghost-inline tiny">Sonra</button>
+  </div>
+  <div id="httpsMicBar" class="https-mic-bar hidden" role="status">
+    <span id="httpsMicText">Mikrofon için HTTPS gerekir (basılı tut / sürekli sohbet).</span>
+    <a id="httpsMicLink" class="primary tiny" href="#">HTTPS aç</a>
   </div>
   <div id="app">
     <header class="top-head">
@@ -169,6 +173,6 @@
       </div>
     </section>
   </div>
-  <script src="app.js?v=47"></script>
+  <script src="app.js?v=52-harita"></script>
 </body>
 </html>

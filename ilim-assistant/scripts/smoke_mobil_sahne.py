@@ -57,8 +57,8 @@ def main() -> None:
         "sahneDalga",
         "sahne-face-svg",
         'role="status"',
-        "app.js?v=47",
-        "app.css?v=42",
+        "app.js?v=52-harita",
+        "app.css?v=44-harita",
         "btnSahneSheet",
         "sahneDock",
         "sahneOrgan",
@@ -148,11 +148,16 @@ def main() -> None:
             fail(f"app.css eksik: {needle}")
     ok("PWA sahne işaretler")
     sw = (pwa / "sw.js").read_text(encoding="utf-8")
-    if "ruzgar-pwa-v56" not in sw or "app.js?v=47" not in sw or "app.css?v=42" not in sw:
+    if "ruzgar-pwa-v61-harita" not in sw or "app.js?v=52-harita" not in sw or "app.css?v=44-harita" not in sw:
         fail("sw.js cache sürümü index ile hizasız")
-    ok("SW cache hiza v56")
-    if 'app.css?v=42' not in (pwa / "index.html").read_text(encoding="utf-8"):
-        fail("index.html css sürümü 42 değil")
+    ok("SW cache hiza v61-harita")
+    if "app.css?v=44-harita" not in html:
+        fail("index.html css sürümü 44-harita değil")
+    # Harita organı paritesi (PC ile aynı viewer)
+    for needle in ("harita-viewer.html", "mode_uydu", "mode_tur", "mode_3d", "runSuperEl"):
+        if needle not in js:
+            fail(f"app.js harita paritesi eksik: {needle}")
+    ok("mobil harita paritesi")
     print("SMOKE_MOBIL_SAHNE=PASS")
 
 

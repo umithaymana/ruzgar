@@ -18,8 +18,25 @@
   let history = [];
   let micBusy = false;
 
+  /* Tek ikon kuralı: yazı+mikrofon aynı PWA. HTTP'de mic ölür → HTTPS:8443'e at. */
+  (function forceHttpsSingleDoor() {
+    try {
+      if (window.isSecureContext) return;
+      if ((location.protocol || "") !== "http:") return;
+      const h = (location.hostname || "").toLowerCase();
+      if (!h) return;
+      if (h === "localhost" || h === "127.0.0.1") {
+        /* PC kısayolu da HTTPS; localhost http ise yine 8443 */
+      }
+      const path = location.pathname || "/mobil/";
+      const dest = `https://${location.hostname}:8443${path}${location.search || ""}${location.hash || ""}`;
+      location.replace(dest);
+    } catch (_) {}
+  })();
+
   function defaultBase() {
-    return window.location.origin || "http://127.0.0.1:8779";
+    // HTTPS köprüde origin zaten https://host:8443 — API de aynı kapıdan
+    return window.location.origin || "https://127.0.0.1:8443";
   }
 
   function deviceId() {
@@ -168,45 +185,223 @@
     }
   }
 
+  const mobilHaritaState = {
+    lat: 39.0,
+    lon: 35.2,
+    zoom: 6,
+    mode: "2d",
+    hedef: "Türkiye",
+    label: "Türkiye",
+    year: 2015,
+  };
+
+  function haritaViewerUrl(st) {
+    const s = st || mobilHaritaState;
+    const root = (base() || "").replace(/\/$/, "");
+    const label = encodeURIComponent(String(s.label || s.hedef || "Türkiye"));
+    return (
+      root +
+      "/ui/harita-viewer.html?mode=" +
+      encodeURIComponent(String(s.mode || "2d")) +
+      "&lat=" +
+      Number(s.lat || 39).toFixed(5) +
+      "&lon=" +
+      Number(s.lon || 35.2).toFixed(5) +
+      "&zoom=" +
+      Math.max(2, Math.min(18, Number(s.zoom) || 6)) +
+      "&label=" +
+      label +
+      "&year=" +
+      (s.year != null ? Number(s.year) : 2015)
+    );
+  }
+
+  function ensureMobilHaritaTools(frame) {
+    let tools = frame.querySelector(".harita-tools");
+    if (tools) return tools;
+    tools = document.createElement("div");
+    tools.className = "harita-tools";
+    tools.setAttribute("role", "toolbar");
+    tools.innerHTML =
+      '<button type="button" data-h="zoom_in">+</button>' +
+      '<button type="button" data-h="zoom_out">−</button>' +
+      '<button type="button" data-h="mode_2d">2D</button>' +
+      '<button type="button" data-h="mode_3d">3D</button>' +
+      '<button type="button" data-h="mode_4d">4D</button>' +
+      '<button type="button" data-h="mode_uydu">Uydu</button>' +
+      '<button type="button" data-h="mode_tur">Tur</button>';
+    tools.addEventListener("click", (ev) => {
+      const btn = ev.target && ev.target.closest("button[data-h]");
+      if (!btn) return;
+      applyMobilHaritaCommand({ action: btn.getAttribute("data-h") });
+    });
+    frame.appendChild(tools);
+    return tools;
+  }
+
+  function paintMobilHarita(metaText) {
+    const root = el("sahneOrgan");
+    const frame = el("sahneOrganFrame");
+    const meta = el("sahneOrganMeta");
+    const face = el("sahneFace");
+    const stage = el("sahneStage");
+    if (!root || !frame) return;
+    root.setAttribute("data-organ", "harita");
+    root.className = "sahne-organ is-harita";
+    if (stage) stage.classList.add("organ-on");
+    document.body.classList.add("mobil-sahne-organ-on");
+    if (face) face.classList.add("is-organ-dim");
+    const tools = ensureMobilHaritaTools(frame);
+    let iframe = frame.querySelector("iframe[data-sahne-harita]");
+    if (!iframe) {
+      iframe = document.createElement("iframe");
+      iframe.title = "Harita";
+      iframe.loading = "eager";
+      iframe.referrerPolicy = "no-referrer";
+      iframe.allow = "fullscreen";
+      iframe.setAttribute("data-sahne-harita", "1");
+      frame.insertBefore(iframe, tools);
+    }
+    frame.hidden = false;
+    const src = haritaViewerUrl(mobilHaritaState);
+    if (iframe.getAttribute("data-src") !== src) {
+      iframe.setAttribute("data-src", src);
+      iframe.src = src;
+    }
+    tools.querySelectorAll("button[data-h]").forEach((b) => {
+      const a = b.getAttribute("data-h");
+      b.classList.toggle("is-on", a === "mode_" + mobilHaritaState.mode);
+    });
+    const modeLabel = String(mobilHaritaState.mode || "2d").toUpperCase();
+    if (meta) {
+      meta.hidden = false;
+      meta.textContent =
+        metaText ||
+        [
+          "Harita",
+          mobilHaritaState.label || mobilHaritaState.hedef || "Türkiye",
+          "zoom " + mobilHaritaState.zoom,
+          modeLabel,
+        ].join(" · ");
+    }
+    const soz = el("sahneSoz");
+    if (soz) {
+      soz.textContent =
+        "Harita " +
+        modeLabel +
+        ": " +
+        (mobilHaritaState.label || "Türkiye") +
+        " · zoom " +
+        mobilHaritaState.zoom;
+    }
+  }
+
+  function applyMobilHaritaCommand(cmd) {
+    const c = cmd || {};
+    const action = String(c.action || c.fiil || "show");
+    const st = mobilHaritaState;
+    const geo = c.geo || null;
+    if (action === "mode_2d" || action === "2d") st.mode = "2d";
+    if (action === "mode_3d" || action === "3d") {
+      st.mode = "3d";
+      if ((Number(st.zoom) || 6) < 15) st.zoom = 16;
+    }
+    if (action === "mode_4d" || action === "4d") st.mode = "4d";
+    if (action === "mode_uydu" || action === "uydu") st.mode = "uydu";
+    if (action === "mode_tur" || action === "tur") {
+      st.mode = "tur";
+      if ((Number(st.zoom) || 6) < 5) st.zoom = 5;
+    }
+    const isMode =
+      /^mode_(2d|3d|4d|uydu|tur)$/.test(action) ||
+      /^(2d|3d|4d|uydu|tur)$/.test(action);
+    const hedefStr = c.hedef != null ? String(c.hedef).trim() : "";
+    const hedefIsMode =
+      /^(2d|3d|4d|uydu|tur|panorama|dunya\s*turu|tarihi|historical)$/i.test(hedefStr);
+    if (!isMode || (geo && !hedefIsMode)) {
+      if (geo && geo.lat != null && geo.lon != null && !hedefIsMode) {
+        st.lat = Number(geo.lat);
+        st.lon = Number(geo.lon);
+        if (geo.zoom != null) st.zoom = Number(geo.zoom);
+        st.label = geo.label || hedefStr || st.label;
+        st.hedef = hedefStr || st.label;
+      } else if (hedefStr && !hedefIsMode) {
+        st.hedef = hedefStr;
+        st.label = st.hedef;
+      }
+    }
+    let delta = Number(c.zoom_delta) || 0;
+    if (action === "zoom_in" && !delta) delta = 1;
+    if (action === "zoom_out" && !delta) delta = -1;
+    if (delta) st.zoom = Math.max(2, Math.min(18, (Number(st.zoom) || 6) + delta));
+    if ((action === "show" || action === "goster") && !geo && !hedefStr) {
+      if (!st.hedef) {
+        st.lat = 39;
+        st.lon = 35.2;
+        st.zoom = 6;
+        st.hedef = "Türkiye";
+        st.label = "Türkiye";
+      }
+    }
+    paintMobilHarita(c.metaText);
+    return { ok: true, organ: "harita", state: { ...st } };
+  }
+
   function applySahneOrgan(organ, hedef, metaText) {
     const root = el("sahneOrgan");
     const frame = el("sahneOrganFrame");
     const meta = el("sahneOrganMeta");
     const face = el("sahneFace");
+    const stage = el("sahneStage");
     if (!root || !frame) return;
     const o = organ || "yuz";
     root.setAttribute("data-organ", o);
     root.className = "sahne-organ is-" + o;
-    frame.replaceChildren();
-    frame.hidden = o === "yuz";
-    if (meta) {
-      meta.hidden = o === "yuz";
-      meta.textContent = metaText || "";
+    if (o === "yuz") {
+      frame.replaceChildren();
+      frame.hidden = true;
+      if (meta) {
+        meta.hidden = true;
+        meta.textContent = "";
+      }
+      if (face) face.classList.remove("is-organ-dim");
+      if (stage) stage.classList.remove("organ-on");
+      document.body.classList.remove("mobil-sahne-organ-on");
+      return;
     }
-    if (face) face.classList.toggle("is-organ-dim", o !== "yuz");
-    if (o === "yuz") return;
+    if (face) face.classList.add("is-organ-dim");
     if (o === "harita") {
-      const iframe = document.createElement("iframe");
-      iframe.title = "Harita";
-      iframe.loading = "lazy";
-      iframe.referrerPolicy = "no-referrer";
-      iframe.src =
-        "https://www.openstreetmap.org/export/embed.html?bbox=25,35,45,43&layer=mapnik&marker=39.0,35.0";
-      frame.appendChild(iframe);
-      if (meta) meta.textContent = metaText || ("Harita · " + (hedef || "Türkiye"));
-    } else if (o === "uzay") {
+      if (hedef) {
+        mobilHaritaState.hedef = String(hedef);
+        mobilHaritaState.label = String(hedef);
+      }
+      paintMobilHarita(metaText);
+      return;
+    }
+    if (stage) stage.classList.add("organ-on");
+    document.body.classList.add("mobil-sahne-organ-on");
+    frame.replaceChildren();
+    frame.hidden = false;
+    if (o === "uzay") {
       const iframe = document.createElement("iframe");
       iframe.title = "Uzay";
       iframe.loading = "lazy";
       iframe.src = "https://images.nasa.gov/";
       frame.appendChild(iframe);
-      if (meta) meta.textContent = metaText || "Uzay · NASA";
+      if (meta) {
+        meta.hidden = false;
+        meta.textContent = metaText || "Uzay · NASA";
+      }
     } else {
       const p = document.createElement("p");
       p.className = "hint";
       p.style.padding = "12px";
-      p.textContent = metaText || (o + " organı (mobil B/C)");
+      p.textContent = metaText || o + " organı";
       frame.appendChild(p);
+      if (meta) {
+        meta.hidden = false;
+        meta.textContent = metaText || o;
+      }
     }
   }
 
@@ -226,12 +421,67 @@
         body: JSON.stringify({ text: String(text || "") }),
       });
       if (!res || !res.ok) return res;
-      if (res.fiil === "temizle") {
+      if (res.fiil === "temizle" || res.action === "clear") {
         applySahneOrgan("yuz");
         return res;
       }
-      if (res.organ && res.organ !== "yuz") {
-        applySahneOrgan(res.organ, res.hedef, (res.fiil || "") + " · " + res.organ);
+      const action = String(res.action || "");
+      const mapActs = {
+        zoom_in: 1,
+        zoom_out: 1,
+        mode_2d: 1,
+        mode_3d: 1,
+        mode_4d: 1,
+        mode_uydu: 1,
+        mode_tur: 1,
+        show: 1,
+        focus: 1,
+      };
+      const organ = res.organ || "yuz";
+      if (organ === "harita" || mapActs[action]) {
+        const applied = applyMobilHaritaCommand({
+          action: action || "show",
+          fiil: res.fiil,
+          hedef: res.hedef,
+          zoom_delta: res.zoom_delta || 0,
+          geo: res.geo || null,
+          metaText:
+            (res.fiil || action) +
+            " · harita" +
+            (res.hedef ? " · " + res.hedef : ""),
+        });
+        res.applied = applied;
+        const view = el("chatView");
+        if (view && view.classList.contains("has-sahne")) {
+          view.classList.remove("sheet-open");
+          syncSahneSheetBtn();
+        }
+        /* Kısa onay — LLM «gösteremiyorum» demesin */
+        if (mapActs[action]) {
+          const mode = String(mobilHaritaState.mode || "2d").toUpperCase();
+          let reply =
+            "Harita: " +
+            (mobilHaritaState.label || res.hedef || "Türkiye") +
+            " · " +
+            mode +
+            " · zoom " +
+            mobilHaritaState.zoom +
+            ".";
+          if (action === "mode_3d") reply = "3D moda aldım.";
+          else if (action === "mode_4d") reply = "4D zamanlı uyduyu açtım.";
+          else if (action === "mode_uydu") reply = "Uydu görüntüsünü açtım.";
+          else if (action === "mode_tur") reply = "Dünya turunu başlattım.";
+          else if (action === "mode_2d") reply = "2D moda aldım.";
+          else if (action === "zoom_in") reply = "Yaklaştırdım · zoom " + mobilHaritaState.zoom;
+          else if (action === "zoom_out") reply = "Uzaklaştırdım · zoom " + mobilHaritaState.zoom;
+          bubble("bot", reply);
+          history.push({ role: "assistant", content: reply });
+          res._mobilShort = true;
+        }
+        return res;
+      }
+      if (organ && organ !== "yuz") {
+        applySahneOrgan(organ, res.hedef, (res.fiil || "") + " · " + organ);
         const view = el("chatView");
         if (view && view.classList.contains("has-sahne")) {
           view.classList.remove("sheet-open");
@@ -803,15 +1053,142 @@
   el("btnWol").onclick = doWol;
   if (el("btnWol2")) el("btnWol2").onclick = doWol;
 
-  function playTtsBase64(b64, mime) {
+  /* Mobil (iOS/Android): async fetch sonrası Audio.play() NotAllowedError yutar.
+     İlk dokunuşta HTMLAudio + AudioContext kilidini aç; TTS'i blob URL ile aynı player'da çal. */
+  let ttsPlayer = null;
+  let audioUnlocked = false;
+  let sharedAudioCtx = null;
+
+  function ensureTtsPlayer() {
+    if (ttsPlayer) return ttsPlayer;
+    ttsPlayer = new Audio();
+    ttsPlayer.setAttribute("playsinline", "");
+    ttsPlayer.setAttribute("webkit-playsinline", "");
+    ttsPlayer.playsInline = true;
+    ttsPlayer.preload = "auto";
+    return ttsPlayer;
+  }
+
+  const SILENT_WAV =
+    "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=";
+  let ttsPlayGen = 0;
+
+  function unlockMobileAudio() {
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx) {
+        if (!sharedAudioCtx) sharedAudioCtx = new Ctx();
+        if (sharedAudioCtx.state === "suspended") void sharedAudioCtx.resume();
+      }
+    } catch (_) {}
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    const unlockGen = ttsPlayGen;
+    try {
+      if (sharedAudioCtx) {
+        const buf = sharedAudioCtx.createBuffer(1, 1, 22050);
+        const src = sharedAudioCtx.createBufferSource();
+        src.buffer = buf;
+        src.connect(sharedAudioCtx.destination);
+        src.start(0);
+      }
+    } catch (_) {}
+    try {
+      // iOS: kilidi açılan element = TTS çalan element (aynı Audio)
+      const a = ensureTtsPlayer();
+      a.src = SILENT_WAV;
+      const p = a.play();
+      if (p && typeof p.then === "function") {
+        p.then(() => {
+          // Gerçek TTS başladıysa (gen arttı) sessiz warm-up'ı kesme
+          if (unlockGen !== ttsPlayGen) return;
+          try {
+            if ((a.currentSrc || a.src || "").indexOf("data:audio/wav") === 0) {
+              a.pause();
+              a.currentTime = 0;
+            }
+          } catch (_) {}
+        }).catch(() => {});
+      }
+    } catch (_) {}
+    try {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.resume();
+        const u = new SpeechSynthesisUtterance(" ");
+        u.volume = 0;
+        window.speechSynthesis.speak(u);
+        window.speechSynthesis.cancel();
+      }
+    } catch (_) {}
+  }
+
+  function b64ToBlob(b64, mime) {
+    const bin = atob(b64);
+    const n = bin.length;
+    const bytes = new Uint8Array(n);
+    for (let i = 0; i < n; i++) bytes[i] = bin.charCodeAt(i);
+    return new Blob([bytes], { type: mime || "audio/mpeg" });
+  }
+
+  function playTtsBlob(blob) {
     return new Promise((resolve) => {
-      if (!b64) return resolve();
-      const audio = new Audio(`data:${mime || "audio/mpeg"};base64,${b64}`);
-      const done = () => resolve();
-      audio.onended = done;
-      audio.onerror = done;
-      audio.play().catch(done);
+      if (!blob || !blob.size) return resolve();
+      unlockMobileAudio();
+      let url = "";
+      try {
+        url = URL.createObjectURL(blob);
+      } catch (_) {
+        if (meta) meta.textContent = "ses blob açılamadı";
+        return resolve();
+      }
+      const audio = ensureTtsPlayer();
+      const myGen = ++ttsPlayGen;
+      try {
+        audio.pause();
+      } catch (_) {}
+      const done = (note) => {
+        if (myGen !== ttsPlayGen) return resolve();
+        try {
+          URL.revokeObjectURL(url);
+        } catch (_) {}
+        audio.onended = null;
+        audio.onerror = null;
+        if (note && meta) {
+          const cur = String(meta.textContent || "");
+          if (!cur.includes(note)) meta.textContent = (cur ? cur + " · " : "") + note;
+        }
+        resolve();
+      };
+      audio.onended = () => done();
+      audio.onerror = () => done("ses dosyası hatası");
+      audio.src = url;
+      try {
+        audio.load();
+      } catch (_) {}
+      const p = audio.play();
+      if (p && typeof p.catch === "function") {
+        p.catch((err) => {
+          const name = String((err && err.name) || err || "");
+          void speakLocal("Cevap hazır.").finally(() =>
+            done(
+              /NotAllowed|NotSupported|AbortError/i.test(name)
+                ? "tarayıcı sesi engelledi — bir kez dokunup tekrar dene"
+                : "ses çalınamadı",
+            ),
+          );
+        });
+      }
     });
+  }
+
+  function playTtsBase64(b64, mime) {
+    if (!b64) return Promise.resolve();
+    try {
+      return playTtsBlob(b64ToBlob(b64, mime || "audio/mpeg"));
+    } catch (_) {
+      if (meta) meta.textContent = "ses verisi okunamadı";
+      return Promise.resolve();
+    }
   }
 
   function trimHistoryForVoice() {
@@ -824,19 +1201,53 @@
 
   function speakLocal(text) {
     return new Promise((resolve) => {
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        resolve();
+      };
       try {
-        if (!window.speechSynthesis) return resolve();
+        if (!window.speechSynthesis) return finish();
+        unlockMobileAudio();
         window.speechSynthesis.cancel();
+        window.speechSynthesis.resume();
         const u = new SpeechSynthesisUtterance(String(text || "").slice(0, 160));
         u.lang = "tr-TR";
         u.rate = 1.05;
-        u.onend = () => resolve();
-        u.onerror = () => resolve();
+        u.onend = finish;
+        u.onerror = finish;
         window.speechSynthesis.speak(u);
+        // iOS bazen onend vermez
+        window.setTimeout(finish, Math.min(12000, 800 + String(text || "").length * 60));
       } catch (_) {
-        resolve();
+        finish();
       }
     });
+  }
+
+  async function speakReply(reply) {
+    const text = String(reply || "").trim();
+    if (!text) return;
+    unlockMobileAudio();
+    try {
+      const token = localStorage.getItem(LS.token) || "";
+      const headers = { "Content-Type": "application/json" };
+      if (token) headers.Authorization = "Bearer " + token;
+      const res = await fetch(base() + "/api/tts", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ text: text.slice(0, 3000), prosody: false }),
+      });
+      if (res.ok) {
+        const blob = await res.blob();
+        if (blob && blob.size > 32) {
+          await playTtsBlob(blob);
+          return;
+        }
+      }
+    } catch (_) {}
+    await speakLocal(text.slice(0, 200));
   }
 
   function sttLooksBad(text) {
@@ -961,43 +1372,80 @@
   }
 
   el("btnSend").onclick = async () => {
+    unlockMobileAudio();
     const t = el("input").value.trim();
     if (!t) return;
     el("input").value = "";
     bubble("user", t);
     history.push({ role: "user", content: t });
-    void runSuperEl(t);
     meta.textContent = "düşünüyor…";
     setSahneState("dusun", t);
     try {
+      const se = await runSuperEl(t);
+      if (se && se._mobilShort) {
+        meta.textContent = "sahne";
+        setSahneState("hazir");
+        return;
+      }
       const token = localStorage.getItem(LS.token) || "";
+      if (!token) {
+        bubble("bot", "[Hata] Oturum yok — Çıkış yapıp tekrar giriş yap.");
+        meta.textContent = "oturum yok";
+        setSahneState("hazir");
+        return;
+      }
+      /* Boş «(Yanıt yok)» geçmişi modeli/anı kirletmesin */
+      const hist = history
+        .slice(-12)
+        .filter((m) => !(m.role === "assistant" && String(m.content || "").trim() === "(Yanıt yok)"));
       const j = await api("/api/chat/full", {
         method: "POST",
+        timeoutMs: 90000,
         body: JSON.stringify({
           message: t,
-          history: history.slice(-12),
+          history: hist,
           mode: "genel",
           use_web: false,
           session_token: token,
         }),
       });
-      const reply = (j.full_reply || "").trim() || "(Yanıt yok)";
+      if (j && j.ok === false) {
+        const err = (j.error || j.full_reply || "Sohbet reddedildi").trim();
+        bubble("bot", `[Hata] ${err}`);
+        meta.textContent = err.slice(0, 80);
+        setSahneState("hazir");
+        if (/oturum|süresi dol/i.test(err)) {
+          localStorage.removeItem(LS.token);
+          setMsg("Oturum düştü — tekrar giriş yap.", false);
+        }
+        return;
+      }
+      const reply = (j.full_reply || j.error || "").trim();
+      if (!reply) {
+        bubble("bot", "[Hata] Sunucu boş döndü — Yenile deyip bir kez daha dene.");
+        meta.textContent = "boş yanıt";
+        setSahneState("hazir");
+        return;
+      }
       bubble("bot", reply);
       history.push({ role: "assistant", content: reply });
       const bits = [];
       if (j.latency_ms != null) bits.push(`${j.latency_ms} ms`);
       if (j.sohbet_onay && j.sohbet_onay.pending) bits.push("onay bekliyor");
-      meta.textContent = bits.join(" · ");
+      meta.textContent = (bits.length ? bits.join(" · ") + " · " : "") + "Rüzgar konuşuyor…";
       setSahneState("konus", reply);
-      window.setTimeout(() => setSahneState("hazir", reply), 2200);
+      await speakReply(reply);
+      meta.textContent = bits.length ? bits.join(" · ") + " · ses" : "ses";
+      setSahneState("hazir", reply);
     } catch (e) {
       bubble("bot", `[Hata] ${e.message || e}`);
-      meta.textContent = "";
+      meta.textContent = String(e.message || e).slice(0, 80);
       setSahneState("hazir");
     }
   };
 
   el("btnVoiceSend").onclick = async () => {
+    unlockMobileAudio();
     const t = el("input").value.trim();
     if (!t) return;
     el("input").value = "";
@@ -1017,9 +1465,45 @@
     return h === "localhost" || h === "127.0.0.1";
   }
 
+  let httpsMicPrefer = "";
+
+  function httpsMicCandidates() {
+    const host = (location.hostname || "").trim();
+    const out = [];
+    if (host && host !== "localhost" && host !== "127.0.0.1") {
+      out.push(`https://${host}:8443/mobil/`);
+    }
+    if (httpsMicPrefer && !out.includes(httpsMicPrefer)) out.unshift(httpsMicPrefer);
+    return out;
+  }
+
+  function paintHttpsMicBar() {
+    const bar = el("httpsMicBar");
+    const link = el("httpsMicLink");
+    const text = el("httpsMicText");
+    if (!bar) return;
+    if (micSecureOk()) {
+      bar.classList.add("hidden");
+      return;
+    }
+    // Yönlendirme olmadıysa (proxy kapalı) tek kapı linki göster — ikinci ikon değil
+    const href = httpsMicCandidates()[0] || "https://127.0.0.1:8443/mobil/";
+    if (text) {
+      text.textContent =
+        "Tek kapı HTTPS hazır değil (PC’de 8443 köprü). Aynı Rüzgar Mobil adresini HTTPS ile aç — yazı+ses birlikte:";
+    }
+    if (link) {
+      link.href = href;
+      link.textContent = "Tek kapıyı aç";
+    }
+    bar.classList.remove("hidden");
+  }
+
   function paintMicBlocked() {
+    paintHttpsMicBar();
+    const href = httpsMicCandidates()[0] || "https://127.0.0.1:8443/mobil/";
     meta.textContent =
-      "Mikrofon kapalı: sayfa http ile açık. Telefonda ses için https gerekir (Tailscale Serve). Şimdilik yazıp «Sesli tur» kullan.";
+      "Mikrofon için güvenli bağlam yok. Tek adres: " + href + " (Gelişmiş → Devam). Ayrı ikon yok.";
   }
 
   function _writeWav(samples, sampleRate) {
@@ -1188,6 +1672,7 @@
   }
 
   async function startHoldMic() {
+    unlockMobileAudio();
     if (micBusy) {
       meta.textContent = "mikrofon zaten dinliyor…";
       return;
@@ -1273,10 +1758,10 @@
     micBtn.addEventListener("contextmenu", (ev) => ev.preventDefault());
   }
 
-  // Açılışta http uyarısı
+  // Açılışta http uyarısı + HTTPS şerit
+  paintHttpsMicBar();
   if (!micSecureOk() && meta) {
-    meta.textContent =
-      "Uyarı: http ile mikrofon genelde kapalı. Ses için https (Tailscale Serve) veya şimdilik yazı + Sesli tur.";
+    paintMicBlocked();
   }
 
   // --- Sürekli sohbet: konuş → sus → cevap → yine dinle (aynı kapı) ---
@@ -1522,6 +2007,7 @@
 
   if (el("btnLive")) {
     el("btnLive").onclick = () => {
+      unlockMobileAudio();
       if (liveMode) {
         liveAbort = true;
         liveMode = false;
@@ -1539,6 +2025,15 @@
       void liveLoop();
     };
   }
+
+  // İlk jest: ses kilidini aç (iOS/Android autoplay)
+  document.addEventListener(
+    "pointerdown",
+    () => {
+      unlockMobileAudio();
+    },
+    { passive: true, once: false },
+  );
 
   async function doLogout() {
     liveAbort = true;
@@ -1623,10 +2118,10 @@
       .getRegistrations()
       .then((regs) => Promise.all(regs.map((r) => r.update())))
       .catch(() => {});
-    navigator.serviceWorker.register("./sw.js?v=19").catch(() => {});
+    navigator.serviceWorker.register("./sw.js?v=23").catch(() => {});
   }
 
-  // Kapı durumu — görünür sağlık satırı + LAN/Tailscale ipuçları
+  // Kapı durumu — görünür sağlık satırı + LAN/Tailscale / HTTPS mic ipuçları
   api("/api/mobil/status")
     .then((st) => {
       if (st && st.ok) {
@@ -1638,19 +2133,38 @@
           setMsg(bits.join(" · "), false);
           return;
         }
-        if (er && Array.isArray(er.urls) && er.urls.length && !localStorage.getItem(LS.base)) {
+        if (er && Array.isArray(er.https_urls) && er.https_urls.length) {
+          httpsMicPrefer =
+            er.https_urls.find((u) => String(u).includes("100.")) || er.https_urls[0];
+        } else if (er && Array.isArray(er.urls) && er.urls.length) {
+          httpsMicPrefer = er.urls.find((u) => String(u).startsWith("https:")) || er.urls[0];
+        }
+        paintHttpsMicBar();
+        if (er && Array.isArray(er.urls) && er.urls.length && baseInput) {
           const prefer =
-            er.urls.find((u) => String(u).includes("100.")) || er.urls[0];
-          if (prefer && baseInput && /127\.0\.0\.1|localhost/i.test(baseInput.value || "")) {
-            baseInput.value = String(prefer).replace(/\/mobil\/?$/, "");
+            er.urls.find((u) => String(u).includes("100.")) ||
+            er.urls.find((u) => String(u).startsWith("https:")) ||
+            er.urls[0];
+          const asBase = String(prefer).replace(/\/mobil\/?$/, "");
+          if (
+            !localStorage.getItem(LS.base) ||
+            /127\.0\.0\.1:8779|localhost:8779/i.test(baseInput.value || "")
+          ) {
+            baseInput.value = asBase;
+            try {
+              localStorage.setItem(LS.base, asBase);
+            } catch (_) {}
           }
         }
-        setMsg(bits.join(" · "), true);
+        if (micSecureOk()) bits.push("tek kapı (yazı+ses)");
+        else bits.push("HTTPS köprü gerekli");
+        setMsg(bits.join(" · "), micSecureOk());
+        if (!micSecureOk()) paintMicBlocked();
       }
     })
     .catch(() =>
       setMsg(
-        "Kapıya ulaşılamadı — PC’de Rüzgar açık mı? Wi‑Fi: http://<PC-IP>:8779/mobil/ · Tailscale IP de olur.",
+        "Kapıya ulaşılamadı — PC’de Rüzgar + HTTPS 8443 açık mı? Tek adres: https://<PC-IP>:8443/mobil/",
         false,
       ),
     );

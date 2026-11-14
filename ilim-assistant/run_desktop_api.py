@@ -86,9 +86,14 @@ def main() -> None:
         port = int(forced)
     else:
         port = int(os.environ.get("RUZGAR_API_PORT", "8779") or "8779")
+    host = _api_host()
+    # Health / mobil erişim gerçek bind ile aynı kalsın (--host CLI env'yi ezmesin)
+    os.environ["RUZGAR_API_HOST"] = host
+    os.environ["RUZGAR_API_PORT"] = str(port)
+    print(f"[Rüzgar] API bind {host}:{port}", file=sys.stderr, flush=True)
     uvicorn.run(
         "desktop_server:app",
-        host=_api_host(),
+        host=host,
         port=port,
         log_level="info",
     )

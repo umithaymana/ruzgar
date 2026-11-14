@@ -3742,16 +3742,241 @@
     }
   }
 
-  function applySahneOrgan(organ, hedef, metaText) {
+  /* Organ komut bus — harita şimdi; diğer katmanlar aynı sözleşmeyi kullanır */
+  const sahneOrganState = {
+    organ: "yuz",
+    harita: {
+      lat: 39.0,
+      lon: 35.2,
+      zoom: 6,
+      mode: "2d",
+      hedef: "Türkiye",
+      label: "Türkiye",
+    },
+  };
+
+  function setSahneOrganOn(on) {
+    try {
+      document.body.classList.toggle("ruzgar-sahne-organ-on", !!on);
+    } catch (_) {}
+  }
+
+  function haritaBbox(lat, lon, zoom) {
+    const z = Math.max(2, Math.min(18, Number(zoom) || 6));
+    const span = 360 / Math.pow(2, z);
+    const spanLat = span * 0.55;
+    const spanLon = span * 0.75;
+    return [
+      lon - spanLon / 2,
+      lat - spanLat / 2,
+      lon + spanLon / 2,
+      lat + spanLat / 2,
+    ];
+  }
+
+  function haritaViewerBase() {
+    try {
+      const base =
+        (window.ruzgarApiBase && String(window.ruzgarApiBase)) ||
+        (document.body && document.body.dataset && document.body.dataset.api) ||
+        "";
+      if (base) return String(base).replace(/\/$/, "") + "/ui/harita-viewer.html";
+    } catch (_) {}
+    return "harita-viewer.html";
+  }
+
+  function haritaEmbedSrc(state) {
+    const lat = Number(state.lat) || 39;
+    const lon = Number(state.lon) || 35.2;
+    const zoom = Math.max(2, Math.min(18, Number(state.zoom) || 6));
+    const mode = String(state.mode || "2d").toLowerCase();
+    const label = encodeURIComponent(String(state.label || state.hedef || "Türkiye"));
+    const year = state.year != null ? Number(state.year) : 2015;
+    return (
+      haritaViewerBase() +
+      "?mode=" +
+      encodeURIComponent(mode) +
+      "&lat=" +
+      lat.toFixed(5) +
+      "&lon=" +
+      lon.toFixed(5) +
+      "&zoom=" +
+      zoom +
+      "&label=" +
+      label +
+      "&year=" +
+      year
+    );
+  }
+
+  function ensureHaritaTools(frame) {
+    let tools = frame.querySelector(".ruzgar-harita-tools");
+    if (tools) return tools;
+    tools = document.createElement("div");
+    tools.className = "ruzgar-harita-tools";
+    tools.setAttribute("role", "toolbar");
+    tools.setAttribute("aria-label", "Harita kontrolleri");
+    tools.innerHTML =
+      '<button type="button" data-harita-act="zoom_in" title="Yaklaştır">+</button>' +
+      '<button type="button" data-harita-act="zoom_out" title="Uzaklaştır">−</button>' +
+      '<button type="button" data-harita-act="mode_2d" title="2D harita">2D</button>' +
+      '<button type="button" data-harita-act="mode_3d" title="3D harita">3D</button>' +
+      '<button type="button" data-harita-act="mode_4d" title="4D zamanlı uydu">4D</button>' +
+      '<button type="button" data-harita-act="mode_uydu" title="Uydu görüntüsü">Uydu</button>' +
+      '<button type="button" data-harita-act="mode_tur" title="Panoramik dünya turu">Tur</button>';
+    tools.addEventListener("click", (ev) => {
+      const btn = ev.target && ev.target.closest("button[data-harita-act]");
+      if (!btn) return;
+      const act = btn.getAttribute("data-harita-act");
+      if (!act) return;
+      dispatchSahneOrganCommand({
+        organ: "harita",
+        action: act,
+        fiil: act.indexOf("mode_") === 0 ? "degistir" : "odakla",
+        zoom_delta: act === "zoom_in" ? 1 : act === "zoom_out" ? -1 : 0,
+      });
+    });
+    frame.appendChild(tools);
+    return tools;
+  }
+
+  function paintHaritaFrame(metaText) {
+    const frame = document.getElementById("ruzgar-sahne-organ-frame");
+    const meta = document.getElementById("ruzgar-sahne-organ-meta");
+    if (!frame) return;
+    const st = sahneOrganState.harita;
+    if (!st.mode) st.mode = "2d";
+    let iframe = frame.querySelector("iframe[data-sahne-harita]");
+    const tools = ensureHaritaTools(frame);
+    if (!iframe) {
+      iframe = document.createElement("iframe");
+      iframe.title = "Harita";
+      iframe.loading = "eager";
+      iframe.referrerPolicy = "no-referrer";
+      iframe.allow = "fullscreen";
+      iframe.setAttribute("data-sahne-harita", "1");
+      frame.insertBefore(iframe, tools);
+    }
+    const src = haritaEmbedSrc(st);
+    if (iframe.getAttribute("data-src") !== src) {
+      iframe.setAttribute("data-src", src);
+      iframe.src = src;
+    }
+    frame.hidden = false;
+    tools.querySelectorAll("button[data-harita-act]").forEach((b) => {
+      const a = b.getAttribute("data-harita-act");
+      b.classList.toggle("is-on", a === "mode_" + st.mode);
+    });
+    const modeLabel = String(st.mode || "2d").toUpperCase();
+    if (meta) {
+      meta.hidden = false;
+      meta.textContent =
+        metaText ||
+        ["Harita", st.label || st.hedef || "Türkiye", "zoom " + st.zoom, modeLabel].join(
+          " · ",
+        );
+    }
+    const soz = document.getElementById("ruzgar-sahne-soz");
+    if (soz) {
+      soz.textContent =
+        "Harita " +
+        modeLabel +
+        ": " +
+        (st.label || st.hedef || "Türkiye") +
+        " · zoom " +
+        st.zoom +
+        " — yaklaş / uzaklaş / 3D / 4D";
+    }
+  }
+
+  function applyHaritaCommand(cmd) {
+    const c = cmd || {};
+    const action = String(c.action || c.fiil || "show");
+    const st = sahneOrganState.harita;
+    if (!st.mode) st.mode = "2d";
+    const geo = c.geo || null;
+
+    const isModeOnly =
+      action === "mode_2d" ||
+      action === "mode_3d" ||
+      action === "mode_4d" ||
+      action === "mode_uydu" ||
+      action === "mode_tur" ||
+      action === "2d" ||
+      action === "3d" ||
+      action === "4d" ||
+      action === "uydu" ||
+      action === "tur";
+    if (action === "mode_2d" || action === "2d") st.mode = "2d";
+    if (action === "mode_3d" || action === "3d") {
+      st.mode = "3d";
+      if ((Number(st.zoom) || 6) < 15) st.zoom = 16;
+    }
+    if (action === "mode_4d" || action === "4d") st.mode = "4d";
+    if (action === "mode_uydu" || action === "uydu") st.mode = "uydu";
+    if (action === "mode_tur" || action === "tur") {
+      st.mode = "tur";
+      if ((Number(st.zoom) || 6) < 5) st.zoom = 5;
+    }
+
+    const hedefStr = c.hedef != null ? String(c.hedef).trim() : "";
+    const hedefIsModeToken =
+      /^(2d|3d|4d|uydu|tur|panorama|uydu\s*goruntu(su)?|dunya\s*turu|uc\s*boyut(lu)?|dort\s*boyut(lu)?|iki\s*boyut(lu)?|tarihi|historical)$/i.test(
+        hedefStr,
+      );
+    // Salt 2D/3D/4D: mevcut konumu koru; «3d» yer sanılmasın
+    if (!isModeOnly || (geo && !hedefIsModeToken)) {
+      if (geo && geo.lat != null && geo.lon != null && !hedefIsModeToken) {
+        st.lat = Number(geo.lat);
+        st.lon = Number(geo.lon);
+        if (geo.zoom != null) st.zoom = Number(geo.zoom);
+        if (geo.bbox) st.bbox = geo.bbox;
+        else delete st.bbox;
+        st.label = geo.label || hedefStr || st.label;
+        st.hedef = hedefStr || st.label;
+      } else if (hedefStr && !hedefIsModeToken) {
+        st.hedef = hedefStr;
+        st.label = st.hedef;
+      }
+    }
+
+    let delta = Number(c.zoom_delta) || 0;
+    if (action === "zoom_in" && !delta) delta = 1;
+    if (action === "zoom_out" && !delta) delta = -1;
+    if (delta) {
+      st.zoom = Math.max(2, Math.min(18, (Number(st.zoom) || 6) + delta));
+      delete st.bbox;
+    }
+    if ((action === "show" || action === "goster") && !geo && !c.hedef) {
+      if (!st.hedef) {
+        st.lat = 39;
+        st.lon = 35.2;
+        st.zoom = 6;
+        st.hedef = "Türkiye";
+        st.label = "Türkiye";
+        delete st.bbox;
+      }
+    }
+
+    sahneOrganState.organ = "harita";
+    setSahneOrganOn(true);
+    paintHaritaFrame(c.metaText);
+    return { ok: true, organ: "harita", state: { ...st } };
+  }
+
+  /** Ortak organ komut bus — tüm katmanlar */
+  function dispatchSahneOrganCommand(cmd) {
     ensureSahneExtras();
+    const c = cmd || {};
+    const organ = c.organ || sahneOrganState.organ || "yuz";
+    const action = String(c.action || "");
+    const face = document.getElementById("ruzgar-sahne-face");
     const root = document.getElementById("ruzgar-sahne-organ");
     const frame = document.getElementById("ruzgar-sahne-organ-frame");
     const meta = document.getElementById("ruzgar-sahne-organ-meta");
-    const face = document.getElementById("ruzgar-sahne-face");
-    if (!root || !frame) return;
-    const o = organ || "yuz";
-    /* Organ görünür olsun: mini çalışma yüzeyinde harita gizleniyordu → sohbete dön */
-    if (o !== "yuz" && typeof masaSayfa === "function") {
+    if (!root || !frame) return { ok: false, error: "organ yok" };
+
+    if (organ !== "yuz" && typeof masaSayfa === "function") {
       try {
         if (
           document.body.classList.contains("ruzgar-sahne-mini") ||
@@ -3761,69 +3986,78 @@
         }
       } catch (_) {}
     }
-    root.setAttribute("data-organ", o);
-    root.className = "ruzgar-sahne-organ is-" + o;
-    frame.replaceChildren();
-    frame.hidden = o === "yuz";
-    if (meta) {
-      meta.hidden = o === "yuz";
-      meta.textContent = metaText || "";
-    }
-    if (face) face.classList.toggle("is-organ-dim", o !== "yuz");
-    if (o === "yuz") return;
-    if (o === "harita") {
-      const iframe = document.createElement("iframe");
-      iframe.title = "Harita";
-      iframe.loading = "lazy";
-      iframe.referrerPolicy = "no-referrer";
-      iframe.allow = "fullscreen";
-      /* Türkiye varsayılan; hedef varsa OSM arama gömme */
-      iframe.src =
-        "https://www.openstreetmap.org/export/embed.html?bbox=25.5,35.8,45.0,42.3&layer=mapnik&marker=39.0,35.2";
-      if (hedef && String(hedef).trim()) {
-        const q = encodeURIComponent(String(hedef).trim());
-        iframe.src = "https://www.openstreetmap.org/export/embed.html?bbox=20,30,50,45&layer=mapnik#" + q;
+
+    if (action === "clear" || c.fiil === "temizle" || organ === "yuz") {
+      sahneOrganState.organ = "yuz";
+      setSahneOrganOn(false);
+      root.setAttribute("data-organ", "yuz");
+      root.className = "ruzgar-sahne-organ is-yuz";
+      frame.replaceChildren();
+      frame.hidden = true;
+      if (meta) {
+        meta.hidden = true;
+        meta.textContent = "";
       }
-      frame.appendChild(iframe);
-      if (meta) meta.textContent = metaText || ("Harita · " + (hedef || "Türkiye") + " · OSM yasal gömme");
-    } else if (o === "cam") {
+      if (face) face.classList.remove("is-organ-dim");
+      return { ok: true, organ: "yuz" };
+    }
+
+    root.setAttribute("data-organ", organ);
+    root.className = "ruzgar-sahne-organ is-" + organ;
+    if (face) face.classList.add("is-organ-dim");
+    setSahneOrganOn(true);
+
+    if (organ === "harita") {
+      return applyHaritaCommand(c);
+    }
+
+    // Diğer organlar (cam/uzay/…) — aynı bus, tam sahne
+    frame.replaceChildren();
+    frame.hidden = false;
+    if (organ === "cam") {
       const p = document.createElement("p");
       p.className = "ruzgar-sahne-organ-note";
       p.textContent =
-        metaText ||
+        c.metaText ||
         "Cam/TV: yalnızca senin cihaz defterin veya resmi açık yayın. Bağlantı panelden / süper-el ile.";
       frame.appendChild(p);
-    } else if (o === "uzay") {
+    } else if (organ === "uzay") {
       const iframe = document.createElement("iframe");
       iframe.title = "Uzay";
       iframe.loading = "lazy";
       iframe.referrerPolicy = "no-referrer";
       iframe.src = "https://images.nasa.gov/";
       frame.appendChild(iframe);
-      if (meta) meta.textContent = metaText || "Uzay penceresi · NASA Images (açık kapı)";
-    } else if (o === "belge" || o === "tablo" || o === "sunum" || o === "cizim") {
+    } else {
       const p = document.createElement("p");
       p.className = "ruzgar-sahne-organ-note";
       p.textContent =
-        metaText ||
-        "Belge/tablo/sunum/çizim çalışma yüzeyinde; Sahne köprüledi. «Çalışma yüzeyi» ile aç.";
-      frame.appendChild(p);
-      if (o === "belge" || o === "tablo" || o === "cizim" || o === "sunum") {
-        /* yumuşak yön: mini yüzeye geçiş kullanıcı düğmesiyle */
-      }
-    } else if (o === "foto" || o === "video" || o === "ses" || o === "eser") {
-      const p = document.createElement("p");
-      p.className = "ruzgar-sahne-organ-note";
-      p.textContent = metaText || (o + " organı hazır — içerik sohbet/kütüphane ile gelir.");
+        c.metaText || organ + " · " + (c.hedef || action || "hazır");
       frame.appendChild(p);
     }
+    if (meta) {
+      meta.hidden = false;
+      meta.textContent = c.metaText || organ + " · " + (c.hedef || action || "hazır");
+    }
+    sahneOrganState.organ = organ;
+    return { ok: true, organ };
+  }
+
+  function applySahneOrgan(organ, hedef, metaText) {
+    return dispatchSahneOrganCommand({
+      organ: organ || "yuz",
+      action: organ === "yuz" ? "clear" : "show",
+      fiil: organ === "yuz" ? "temizle" : "goster",
+      hedef: hedef,
+      metaText: metaText,
+    });
   }
 
   function clearSahneOrgan() {
-    applySahneOrgan("yuz", null, "");
+    return dispatchSahneOrganCommand({ organ: "yuz", action: "clear", fiil: "temizle" });
   }
 
-  /** Sıra 21: süper-el niyet → organ (API varsa) */
+  /** Sıra 21: süper-el niyet → organ komut bus (harita zoom/odak dahil) */
   async function runSuperEl(text) {
     const t = String(text || "").trim();
     if (!t) return null;
@@ -3844,19 +4078,47 @@
       data = null;
     }
     if (!data || !data.ok) return data;
-    if (data.fiil === "temizle") {
-      clearSahneOrgan();
-      return data;
-    }
-    if (data.organ && data.organ !== "yuz") {
-      applySahneOrgan(data.organ, data.hedef, data.fiil + " · " + data.organ);
-    }
+
+    const organ = data.organ || sahneOrganState.organ || "yuz";
+    const action = data.action || (data.fiil === "temizle" ? "clear" : "show");
+    const mapActs = {
+      zoom_in: 1,
+      zoom_out: 1,
+      mode_2d: 1,
+      mode_3d: 1,
+      mode_4d: 1,
+      mode_uydu: 1,
+      mode_tur: 1,
+    };
+    const targetOrgan = mapActs[action]
+      ? organ === "yuz"
+        ? sahneOrganState.organ || "harita"
+        : organ
+      : organ;
+
+    const applied = dispatchSahneOrganCommand({
+      organ: targetOrgan,
+      action: action,
+      fiil: data.fiil,
+      hedef: data.hedef,
+      zoom_delta: data.zoom_delta || 0,
+      geo: data.geo || null,
+      metaText:
+        (data.fiil || action) +
+        " · " +
+        targetOrgan +
+        (data.hedef ? " · " + data.hedef : "") +
+        (data.zoom_delta ? " · Δz " + data.zoom_delta : ""),
+    });
+    data.applied = applied;
     return data;
   }
 
   window.ruzgarSahneSuperEl = runSuperEl;
   window.ruzgarSahneOrgan = applySahneOrgan;
   window.ruzgarSahneOrganClear = clearSahneOrgan;
+  window.ruzgarSahneOrganCommand = dispatchSahneOrganCommand;
+  window.ruzgarSahneOrganState = sahneOrganState;
 
   function schedulePaintSpeech() {
     clearTimeout(sahnePaintTimer);

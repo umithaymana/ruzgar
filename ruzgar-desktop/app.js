@@ -16515,13 +16515,6 @@ async function sendMessageWithText(t, opts = {}) {
     appendBubble("user", text);
   }
 
-  /* Sahne süper-el: «haritayı göster» vb. → organ (API + CSP OSM) */
-  try {
-    if (typeof window.ruzgarSahneSuperEl === "function") {
-      void window.ruzgarSahneSuperEl(text);
-    }
-  } catch (_) {}
-
   const finishMotorInstant = (statusLabel) => {
     setStatus(statusLabel || "Rüzgar", "Rüzgar");
     if (el.send) el.send.disabled = false;
@@ -16529,6 +16522,94 @@ async function sendMessageWithText(t, opts = {}) {
     updatePerformanceIndicators(perfBusy);
     syncInterruptButton();
   };
+
+  /* Sahne süper-el: harita/organ — görsel sahne + LLM'e «gösteremiyorum» yasağı */
+  let sahneSe = null;
+  try {
+    if (typeof window.ruzgarSahneSuperEl === "function") {
+      sahneSe = await window.ruzgarSahneSuperEl(text);
+    }
+  } catch (_) {
+    sahneSe = null;
+  }
+  if (
+    sahneSe &&
+    sahneSe.ok &&
+    sahneSe.applied &&
+    sahneSe.applied.ok &&
+    sahneSe.organ &&
+    sahneSe.organ !== "yuz"
+  ) {
+    const st =
+      (sahneSe.applied && sahneSe.applied.state) ||
+      (window.ruzgarSahneOrganState && window.ruzgarSahneOrganState.harita) ||
+      {};
+    const sahneNote =
+      "SAHNE ORGANI ŞU AN AÇIK: " +
+      sahneSe.organ +
+      ". hedef=" +
+      (st.label || sahneSe.hedef || "") +
+      " zoom=" +
+      (st.zoom != null ? st.zoom : "") +
+      " mod=" +
+      (st.mode || "2d") +
+      ". Görsel sahne bileşeninde harita/organ gösteriliyor. " +
+      'ASLA "gösteremiyorum", "ekranım yok", "piksel değiştiremiyorum", "grafiksel arayüzüm yok" deme. ' +
+      "Kısa ve net onayla: ne açtığını / nereye odaklandığını söyle.";
+    if (!understanding || typeof understanding !== "object") understanding = {};
+    understanding.contextBrief = String(
+      (understanding.contextBrief || "") + "\n\n" + sahneNote,
+    ).trim();
+    motorCtx.contextBrief = understanding.contextBrief;
+    motorCtx.sahneSe = sahneSe;
+
+    const act = String(sahneSe.action || "");
+    const mapCtrl =
+      /^(show|focus|zoom_in|zoom_out|mode_2d|mode_3d|mode_4d|mode_uydu|mode_tur)$/.test(
+        act,
+      );
+    const isQ =
+      /[?？]|(\b)(nedir|nasil|neden|niye|anlat|kac|ne kadar|kim|hangi|ozet)(\b)/i.test(
+        text,
+      );
+    if (mapCtrl && !isQ && sahneSe.organ === "harita") {
+      const mode = String(st.mode || "2d").toUpperCase();
+      let reply = "Haritayı sahnede açtım.";
+      if (act === "focus" || act === "show") {
+        reply =
+          "Haritayı sahnede gösteriyorum: " +
+          (st.label || sahneSe.hedef || "Türkiye") +
+          " · zoom " +
+          (st.zoom != null ? st.zoom : "?") +
+          " · " +
+          mode +
+          ".";
+      } else if (act === "zoom_in") {
+        reply = "Haritayı yaklaştırdım · zoom " + st.zoom + " · " + mode + ".";
+      } else if (act === "zoom_out") {
+        reply = "Haritayı uzaklaştırdım · zoom " + st.zoom + " · " + mode + ".";
+      } else if (act === "mode_3d") {
+        reply = "Haritayı 3D moda aldım.";
+      } else if (act === "mode_4d") {
+        reply = "Haritayı 4D zamanlı uyduya aldım; yıl çubuğundan zamanı kaydırabilirsin.";
+      } else if (act === "mode_uydu") {
+        reply = "Uydu görüntüsünü açtım.";
+      } else if (act === "mode_tur") {
+        reply = "Panoramik dünya turunu başlattım.";
+      } else if (act === "mode_2d") {
+        reply = "Haritayı 2D moda aldım.";
+      }
+      appendBubble("assistant", reply);
+      scrollChatToBottom();
+      try {
+        if (typeof speakTextImmediate === "function") {
+          speakTextImmediate(reply);
+        }
+      } catch (_) {}
+      finishMotorInstant("Ana Motor · sahne");
+      return;
+    }
+  }
 
   if (currentMode === "genel" || currentMode === "programlama") {
     const onayKomut = programlamaOnayMetni(dispatchText);

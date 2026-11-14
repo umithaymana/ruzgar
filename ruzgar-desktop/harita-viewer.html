@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <meta
+    http-equiv="Content-Security-Policy"
+    content="default-src 'self' data: blob: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cesium.com https://*.cesium.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cesium.com https://*.cesium.com https://cdn.jsdelivr.net; img-src 'self' data: blob: https:; connect-src 'self' https: data: blob:; worker-src 'self' blob: https://cesium.com https://*.cesium.com https://cdn.jsdelivr.net; frame-src 'self' https://demo.f4map.com https://*.f4map.com https://www.openstreetmap.org https://*.openstreetmap.org;"
+  />
+  <title>Rüzgar Harita</title>
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
+  <style>
+    html, body { margin: 0; height: 100%; background: #0b1220; color: #f3e6c4; font-family: "Segoe UI", system-ui, sans-serif; overflow: hidden; }
+    #map, #globe, #f4 { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+    #globe, #f4 { display: none; }
+    #badge {
+      position: absolute; left: 10px; bottom: 10px; z-index: 1000;
+      padding: 6px 10px; border-radius: 999px;
+      background: rgba(8, 10, 16, 0.78); border: 1px solid rgba(212, 175, 55, 0.4);
+      font-size: 12px; letter-spacing: 0.04em; pointer-events: none;
+      text-shadow: 0 1px 6px #000;
+    }
+    #yearBar {
+      display: none; position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%);
+      z-index: 1000; width: min(420px, 86vw);
+      padding: 8px 12px; border-radius: 12px;
+      background: rgba(8, 10, 16, 0.82); border: 1px solid rgba(212, 175, 55, 0.35);
+      gap: 8px; align-items: center;
+    }
+    #yearBar.on { display: flex; }
+    #yearBar label { font-size: 11px; opacity: 0.85; white-space: nowrap; }
+    #yearBar input { flex: 1; accent-color: #d4af37; }
+    #yearBar span { font-size: 12px; min-width: 3.2em; text-align: right; color: #f3e6c4; }
+    .leaflet-control-attribution { background: rgba(8,10,16,0.65) !important; color: #cbb892 !important; }
+    .leaflet-control-attribution a { color: #e6c86a !important; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <iframe id="f4" title="3D Harita" allowfullscreen referrerpolicy="no-referrer"></iframe>
+  <div id="globe"></div>
+  <div id="badge">Harita</div>
+  <div id="yearBar" aria-label="Zaman">
+    <label for="year">Zaman</label>
+    <input id="year" type="range" min="2000" max="2024" step="1" value="2015" />
+    <span id="yearVal">2015</span>
+  </div>
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <script>
+(function () {
+  const q = new URLSearchParams(location.search);
+  const lat = Number(q.get("lat")) || 39.0;
+  const lon = Number(q.get("lon")) || 35.2;
+  const zoom = Math.max(2, Math.min(18, Number(q.get("zoom")) || 6));
+  const mode = String(q.get("mode") || "2d").toLowerCase();
+  const label = String(q.get("label") || "Türkiye");
+  const yearDefault = Number(q.get("year")) || 2015;
+
+  const mapEl = document.getElementById("map");
+  const f4 = document.getElementById("f4");
+  const globe = document.getElementById("globe");
+  const badge = document.getElementById("badge");
+  const yearBar = document.getElementById("yearBar");
+  const yearInput = document.getElementById("year");
+  const yearVal = document.getElementById("yearVal");
+
+  const MODE_LABEL = {
+    "2d": "2D · OpenStreetMap",
+    "3d": "3D · F4map",
+    "4d": "4D · Zamanlı uydu (NASA GIBS)",
+    uydu: "Uydu · Esri World Imagery",
+    tur: "Tur · Panoramik dünya",
+  };
+
+  function setBadge(extra) {
+    badge.textContent = (MODE_LABEL[mode] || mode) + " · " + label + (extra ? " · " + extra : "");
+  }
+
+  function showOnly(which) {
+    mapEl.style.display = which === "map" ? "block" : "none";
+    f4.style.display = which === "f4" ? "block" : "none";
+    globe.style.display = which === "globe" ? "block" : "none";
+  }
+
+  function osmLayer() {
+    return L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: "&copy; OpenStreetMap",
+    });
+  }
+
+  function uyduLayer() {
+    return L.tileLayer(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      {
+        maxZoom: 19,
+        attribution: "Tiles &copy; Esri",
+      }
+    );
+  }
+
+  function gibsDate(y) {
+    const yy = Math.max(2000, Math.min(2024, Number(y) || 2015));
+    return yy + "-06-15";
+  }
+
+  function gibsLayer(y) {
+    const date = gibsDate(y);
+    return L.tileLayer(
+      "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default/" +
+        date +
+        "/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg",
+      {
+        maxZoom: 9,
+        attribution: "NASA GIBS / MODIS",
+      }
+    );
+  }
+
+  function paintLeaflet(kind) {
+    showOnly("map");
+    const map = L.map("map", { zoomControl: false, attributionControl: true }).setView([lat, lon], zoom);
+    let base;
+    if (kind === "uydu") {
+      base = uyduLayer();
+      yearBar.classList.remove("on");
+    } else if (kind === "4d") {
+      yearInput.value = String(yearDefault);
+      yearVal.textContent = String(yearDefault);
+      yearBar.classList.add("on");
+      base = gibsLayer(yearDefault);
+      let current = base;
+      current.addTo(map);
+      // labels overlay for orientation
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 9,
+        opacity: 0.22,
+        attribution: "",
+      }).addTo(map);
+      yearInput.addEventListener("input", function () {
+        const y = yearInput.value;
+        yearVal.textContent = y;
+        map.removeLayer(current);
+        current = gibsLayer(y);
+        current.addTo(map);
+        setBadge(y);
+      });
+      L.marker([lat, lon]).addTo(map).bindPopup(label);
+      setBadge(String(yearDefault));
+      setTimeout(function () { map.invalidateSize(); }, 80);
+      return;
+    } else {
+      base = osmLayer();
+      yearBar.classList.remove("on");
+    }
+    base.addTo(map);
+    L.marker([lat, lon]).addTo(map).bindPopup(label);
+    setBadge();
+    setTimeout(function () { map.invalidateSize(); }, 80);
+  }
+
+  function paint3d() {
+    showOnly("f4");
+    yearBar.classList.remove("on");
+    const z = Math.max(15, zoom);
+    f4.src =
+      "https://demo.f4map.com/#lat=" +
+      lat.toFixed(5) +
+      "&lon=" +
+      lon.toFixed(5) +
+      "&zoom=" +
+      z +
+      "&camera.theta=55&camera.phi=10";
+    setBadge();
+  }
+
+  function paintTur() {
+    showOnly("globe");
+    yearBar.classList.remove("on");
+    setBadge("yükleniyor");
+    const cesiumCss = document.createElement("link");
+    cesiumCss.rel = "stylesheet";
+    cesiumCss.href = "https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Widgets/widgets.css";
+    document.head.appendChild(cesiumCss);
+    const s = document.createElement("script");
+    s.src = "https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Cesium.js";
+    s.onload = function () {
+      try {
+        const esri = new Cesium.UrlTemplateImageryProvider({
+          url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+          maximumLevel: 18,
+          credit: "Esri",
+        });
+        const viewer = new Cesium.Viewer("globe", {
+          animation: false,
+          timeline: false,
+          baseLayerPicker: false,
+          geocoder: false,
+          homeButton: false,
+          sceneModePicker: false,
+          navigationHelpButton: false,
+          fullscreenButton: false,
+          infoBox: false,
+          selectionIndicator: false,
+          imageryProvider: false,
+          baseLayer: new Cesium.ImageryLayer(esri),
+          terrainProvider: new Cesium.EllipsoidTerrainProvider(),
+          requestRenderMode: true,
+        });
+        try { viewer.cesiumWidget.creditContainer.style.display = "none"; } catch (_) {}
+        const dest = Cesium.Cartesian3.fromDegrees(lon, lat, 1800000);
+        viewer.camera.flyTo({
+          destination: dest,
+          orientation: {
+            heading: Cesium.Math.toRadians(20),
+            pitch: Cesium.Math.toRadians(-45),
+            roll: 0,
+          },
+          duration: 3.2,
+          complete: function () {
+            viewer.camera.flyTo({
+              destination: Cesium.Cartesian3.fromDegrees(lon, lat, Math.max(800, 1200000 / Math.pow(2, Math.max(0, zoom - 4)))),
+              orientation: {
+                heading: Cesium.Math.toRadians(0),
+                pitch: Cesium.Math.toRadians(-35),
+                roll: 0,
+              },
+              duration: 2.8,
+            });
+          },
+        });
+        setBadge("uçuş");
+      } catch (err) {
+        globe.innerHTML =
+          '<p style="padding:24px;line-height:1.45">Dünya turu yüklenemedi. Uydu moda geçebilirsin.<br/><small>' +
+          String(err && err.message ? err.message : err) +
+          "</small></p>";
+        setBadge("hata");
+      }
+    };
+    s.onerror = function () {
+      // CDN yoksa uydu + yumuşak kaydırma yedeği
+      showOnly("map");
+      const map = L.map("map", { zoomControl: false }).setView([lat, lon], Math.max(3, zoom - 2));
+      uyduLayer().addTo(map);
+      let i = 0;
+      const pts = [
+        [lat, lon],
+        [lat + 8, lon + 12],
+        [lat - 6, lon + 25],
+        [lat + 2, lon - 18],
+        [lat, lon],
+      ];
+      setInterval(function () {
+        i = (i + 1) % pts.length;
+        map.flyTo(pts[i], Math.max(3, zoom - 2), { duration: 2.2 });
+      }, 2800);
+      setBadge("yedek tur");
+    };
+    document.head.appendChild(s);
+  }
+
+  if (mode === "3d") paint3d();
+  else if (mode === "tur") paintTur();
+  else if (mode === "uydu") paintLeaflet("uydu");
+  else if (mode === "4d") paintLeaflet("4d");
+  else paintLeaflet("2d");
+})();
+  </script>
+</body>
+</html>

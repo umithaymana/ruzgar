@@ -195,6 +195,56 @@ print('desktop_server syntax ok')
     }
 }
 
+function Start-HttpsMicProxy {
+    param([string]$Ia)
+    # Mobil mikrofon: https://0.0.0.0:8443 → http://127.0.0.1:8779
+    $listen = $null
+    try {
+        $listen = Get-NetTCPConnection -LocalPort 8443 -State Listen -ErrorAction SilentlyContinue |
+            Select-Object -First 1
+    } catch {}
+    if ($listen) {
+        Log "HTTPS mic proxy zaten dinliyor (8443)"
+        return
+    }
+    $scriptPy = Join-Path $Ia "scripts\ruzgar_https_proxy.py"
+    $cert = Join-Path $Ia ".ruzgar\certs\ruzgar-mobil.crt"
+    $key = Join-Path $Ia ".ruzgar\certs\ruzgar-mobil.key"
+    if (-not (Test-Path $scriptPy)) {
+        Log "UYARI: ruzgar_https_proxy.py yok — mobil mic HTTPS atlandi"
+        return
+    }
+    if (-not (Test-Path $cert) -or -not (Test-Path $key)) {
+        Log "UYARI: .ruzgar/certs eksik — mobil mic HTTPS atlandi"
+        return
+    }
+    $errPath = Join-Path $env:TEMP "ruzgar-https-proxy.err"
+    try {
+        $pargs = @()
+        foreach ($x in $script:PyArgs) { $pargs += $x }
+        $pargs += $scriptPy
+        $pargs += "--host"; $pargs += "0.0.0.0"
+        $pargs += "--port"; $pargs += "8443"
+        $pargs += "--upstream-host"; $pargs += "127.0.0.1"
+        $pargs += "--upstream-port"; $pargs += "$ApiPort"
+        $proc = Start-Process -FilePath $script:PyExe -ArgumentList $pargs -WorkingDirectory $Ia `
+            -WindowStyle Hidden -RedirectStandardError $errPath -PassThru
+        Start-Sleep -Seconds 1
+        $up = $null
+        try {
+            $up = Get-NetTCPConnection -LocalPort 8443 -State Listen -ErrorAction SilentlyContinue |
+                Select-Object -First 1
+        } catch {}
+        if ($up) {
+            Log "HTTPS mic proxy hazir pid=$($proc.Id) https://<PC-IP>:8443/mobil/"
+        } else {
+            Log "UYARI: HTTPS mic proxy 8443 acilamadi (log=$errPath)"
+        }
+    } catch {
+        Log "UYARI: HTTPS mic proxy baslatilamadi: $($_.Exception.Message)"
+    }
+}
+
 function Start-ApiServer {
     param([string]$Ia)
     $errPath = Resolve-RuzgarApiErrPath
@@ -208,8 +258,26 @@ function Start-ApiServer {
     foreach ($x in $script:PyArgs) { $uargs += $x }
     $uargs += "run_desktop_api.py"
     $uargs += "--host"
-    # Mobil/Tailscale: RUZGAR_API_HOST=0.0.0.0 veya 100.x (varsayılan yalnız localhost)
+    # Mobil/Tailscale: .env RUZGAR_API_HOST=0.0.0.0 — dosya, process env'deki eski 127.0.0.1'i ezsin
     $apiHost = if ($env:RUZGAR_API_HOST -and $env:RUZGAR_API_HOST.Trim()) { $env:RUZGAR_API_HOST.Trim() } else { "127.0.0.1" }
+    $envFileHost = $null
+    try {
+        $envPath = Join-Path $Ia ".env"
+        if (Test-Path $envPath) {
+            foreach ($raw in Get-Content $envPath -Encoding UTF8) {
+                $line = "$raw".Trim()
+                if (-not $line -or $line.StartsWith("#") -or -not $line.Contains("=")) { continue }
+                $i = $line.IndexOf("=")
+                if ($line.Substring(0, $i).Trim() -ne "RUZGAR_API_HOST") { continue }
+                $envFileHost = $line.Substring($i + 1).Trim().Trim('"').Trim("'")
+                break
+            }
+        }
+    } catch { }
+    if ($envFileHost -and $envFileHost.Trim()) {
+        $apiHost = $envFileHost.Trim()
+        $env:RUZGAR_API_HOST = $apiHost
+    }
     if ($apiHost -eq "127.0.0.1" -or $apiHost -eq "localhost") {
         Log "UYARI: API host=$apiHost — telefon/LAN baglanamaz; .env RUZGAR_API_HOST=0.0.0.0 onerilir"
     } else {
@@ -940,6 +1008,11 @@ Cozum:
         )
         exit 1
     }
+}
+
+# Mobil basili tut / surekli sohbet: HTTP'de mic yok — HTTPS 8443 koprusu
+if (-not $script:RuzgarUseColab) {
+    Start-HttpsMicProxy -Ia $ia
 }
 
 if ($WantGradio) {
