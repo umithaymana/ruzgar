@@ -29,4 +29,4 @@ Launcher: `C:\Program Files\Epic Games\Launcher\...\EpicGamesLauncher.exe`
 Asıl Unreal Engine 5 editörü Epic hesabıyla Library’den kurulur (büyük indirme).
 
 ## Son commit hattı
-`94cffc469` + bu kapanış commit’i
+`c90ca4677` — Sentinel STAC + Mapillary (PC+mobil)
