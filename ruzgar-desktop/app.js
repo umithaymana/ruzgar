@@ -16565,20 +16565,74 @@ async function sendMessageWithText(t, opts = {}) {
 
     const act = String(sahneSe.action || "");
     const mapCtrl =
-      /^(show|focus|zoom_in|zoom_out|mode_2d|mode_3d|mode_4d|mode_uydu|mode_tur)$/.test(
+      /^(show|focus|zoom_in|zoom_out|mode_2d|mode_3d|mode_4d|mode_uydu|mode_tur|mode_f4|mode_sentinel|mode_pano)$/.test(
         act,
       );
+    const tourCtrl = /^tour_/.test(act);
+    const camCtrl =
+      sahneSe.canli_kamera ||
+      /^cam_/.test(act) ||
+      (sahneSe.organ === "cam" && sahneSe.reply);
     const isQ =
       /[?？]|(\b)(nedir|nasil|neden|niye|anlat|kac|ne kadar|kim|hangi|ozet)(\b)/i.test(
         text,
       );
-    if (mapCtrl && !isQ && sahneSe.organ === "harita") {
+    // Canlı Kamera Merkezi — anlık liste / aç
+    if (camCtrl && !isQ) {
+      let reply =
+        sahneSe.reply ||
+        (sahneSe.cam_pack && sahneSe.cam_pack.reply) ||
+        "Canlı kamera.";
+      const speak =
+        sahneSe.speak ||
+        (sahneSe.cam_pack && sahneSe.cam_pack.speak) ||
+        String(reply).split("\n")[0] ||
+        "Canlı kameralar hazır.";
+      appendBubble("assistant", reply);
+      scrollChatToBottom();
+      try {
+        if (typeof speakTextImmediate === "function") {
+          // Uzun listeyi okutma — TTS yavaşlığın ana nedeniydi
+          speakTextImmediate(String(speak).slice(0, 180));
+        }
+      } catch (_) {}
+      return true;
+    }
+    // Dünya Gezgini / harita organı: anlık onay — soru analizi / hafıza yoluna düşme
+    if ((mapCtrl || tourCtrl) && !isQ && sahneSe.organ === "harita") {
       const mode = String(st.mode || "2d").toUpperCase();
+      const yer = st.label || sahneSe.hedef || "hedef";
       let reply = "Haritayı sahnede açtım.";
-      if (act === "focus" || act === "show") {
+      if (act === "tour_start") {
+        reply =
+          "Dünya Gezgini başladı: " +
+          yer +
+          " · 3D sahne açık. Yürü / Alçal ile gez.";
+      } else if (act === "tour_walk" || act === "tour_camera_yuruyus") {
+        reply = "Yürüyüş kamerası · " + yer + ".";
+      } else if (act.indexOf("tour_camera_") === 0) {
+        reply =
+          "Kamera: " +
+          String(act).replace(/^tour_camera_/, "") +
+          " · " +
+          yer +
+          ".";
+      } else if (act.indexOf("tour_body_") === 0) {
+        reply = "Cisim geçişi: " + String(act).replace(/^tour_body_/, "") + ".";
+      } else if (act === "tour_pano_near") {
+        reply = "Yakın sokak serisini açtım · " + yer + ".";
+      } else if (act === "tour_pause") {
+        reply = "Geziyi duraklattım.";
+      } else if (act === "tour_resume") {
+        reply = "Geziye devam.";
+      } else if (act === "tour_stop") {
+        reply = "Geziyi bitirdim.";
+      } else if (tourCtrl) {
+        reply = "Gezgin · " + act.replace(/^tour_/, "") + " · " + yer + ".";
+      } else if (act === "focus" || act === "show") {
         reply =
           "Haritayı sahnede gösteriyorum: " +
-          (st.label || sahneSe.hedef || "Türkiye") +
+          yer +
           " · zoom " +
           (st.zoom != null ? st.zoom : "?") +
           " · " +
@@ -16598,6 +16652,8 @@ async function sendMessageWithText(t, opts = {}) {
         reply = "Panoramik dünya turunu başlattım.";
       } else if (act === "mode_2d") {
         reply = "Haritayı 2D moda aldım.";
+      } else if (act === "mode_pano") {
+        reply = "Sokak / pano yürüyüşünü açtım · " + yer + ".";
       }
       appendBubble("assistant", reply);
       scrollChatToBottom();

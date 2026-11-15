@@ -304,7 +304,7 @@ def _finalize(hit: dict[str, Any], *, query: str = "") -> dict[str, Any]:
 
 _GEO_VERB_TAIL = re.compile(
     r"\s+(goster|ac|odaklan|odakla|yaklastir|uzaklastir|git|getir|yansit|"
-    r"gezdir|gezgini|turu|tur|haritasini|haritasi)\s*$",
+    r"gezdir|gezgini|gezisi|gezi|turu|tur|haritasini|haritasi)\s*$",
     re.I,
 )
 
@@ -1250,6 +1250,17 @@ def geocode(hedef: str, *, allow_network: bool = True) -> dict[str, Any] | None:
     local = geocode_local(q)
     if local:
         return log_hedef(local, hedef)
+    # Türkiye OSM bölgesel paket (C0) — ağdan önce; Anayasa: sabit tablo değil
+    try:
+        from ilim_assistant.sahne_osm_tr import lookup_place, osm_tr_enabled
+
+        if osm_tr_enabled():
+            osm_hit = lookup_place(q)
+            if osm_hit and osm_hit.get("lat") is not None:
+                _remember_geo(q, osm_hit)
+                return log_hedef(osm_hit, hedef)
+    except Exception:
+        pass
     if not allow_network:
         return None
 

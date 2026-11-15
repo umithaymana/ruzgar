@@ -307,7 +307,7 @@
           })
           .join(",");
     }
-    url += "&hv=pilot-gezi-v1";
+    url += "&hv=gozle-gez-c-pano-v2&mobil=1&qos=mobil";
     return url;
   }
 
@@ -700,6 +700,13 @@
       action === "tour_turn_right" ||
       action === "tour_forward" ||
       action === "tour_back" ||
+      action === "tour_strafe_left" ||
+      action === "tour_strafe_right" ||
+      action === "tour_walk" ||
+      action === "tour_fly" ||
+      action === "tour_labels_on" ||
+      action === "tour_traffic" ||
+      action === "tour_pano_near" ||
       action === "tour_follow_river" ||
       action === "tour_enter_city" ||
       action === "tour_follow_coast" ||
@@ -879,6 +886,13 @@
         tour_turn_right: 1,
         tour_forward: 1,
         tour_back: 1,
+        tour_strafe_left: 1,
+        tour_strafe_right: 1,
+        tour_walk: 1,
+        tour_fly: 1,
+        tour_labels_on: 1,
+        tour_traffic: 1,
+        tour_pano_near: 1,
         tour_follow_river: 1,
         tour_enter_city: 1,
         tour_follow_coast: 1,
@@ -918,7 +932,14 @@
             " · zoom " +
             mobilHaritaState.zoom +
             ".";
-          if (action === "mode_3d") reply = "3D moda aldım.";
+          if (action === "tour_start") {
+            reply =
+              "Dünya Gezgini: " +
+              (mobilHaritaState.label || res.hedef || "hedef") +
+              " · 3D sahne.";
+          } else if (action === "tour_walk") {
+            reply = "Göz hizası · yürüyüş.";
+          } else if (action === "mode_3d") reply = "3D moda aldım.";
           else if (action === "mode_4d") reply = "4D zamanlı uyduyu açtım.";
           else if (action === "mode_uydu") reply = "Uydu görüntüsünü açtım.";
           else if (action === "mode_tur") reply = "Dünya turunu başlattım.";
@@ -932,6 +953,8 @@
               " · " +
               mode +
               ".";
+          } else if (String(action).indexOf("tour_") === 0) {
+            reply = "Gezgin · " + String(action).replace(/^tour_/, "") + ".";
           }
           return shortSahneReply(res, reply);
         }

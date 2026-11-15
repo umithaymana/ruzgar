@@ -878,6 +878,26 @@ def tek_beyin_plan_override(
         return None
     if _skip_hafiza_for_clarification_short(message):
         return None
+    # Dünya Gezgini / harita gezi — eski sohbet hafızasına düşme (sabit bölge yok)
+    try:
+        from ilim_assistant.sahne_super_el import _norm
+        from ilim_assistant.sahne_dunya_gezgini import (
+            looks_like_tour_control,
+            looks_like_tour_start,
+        )
+
+        _n = _norm(message or "")
+        try:
+            from ilim_assistant.ruzgar_canli_kamera_merkezi import looks_like_canli_kamera
+
+            if looks_like_canli_kamera(_n):
+                return None
+        except Exception:
+            pass
+        if looks_like_tour_start(_n) or looks_like_tour_control(_n):
+            return None
+    except Exception:
+        pass
     try:
         from ilim_assistant.ana_motor_plan import looks_like_opinion_request
 

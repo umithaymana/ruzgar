@@ -106,3 +106,7 @@ ilim-assistant/.rag_index_bilgisayar_staging/
 ilim-assistant/.rag_index_bilgisayar_bak/
 ilim-assistant/.rag_index_ayiklama/
 
+# OSM bölgesel extract + indeks (büyük; yerelde kalır)
+ilim-assistant/data/osm/
+!ilim-assistant/data/osm/**/.gitkeep
+

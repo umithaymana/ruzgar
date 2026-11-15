@@ -164,6 +164,56 @@ def main() -> None:
         fail("H8 cesium API yok")
     print("OK: H8 Cesium World Terrain")
     for needle in (
+        "getHaritaQualityProfile",
+        "gozle-gez-a-terrain-v1",
+        "dilim-a-mobil",
+        "imageryMaxLevel",
+        "requestWaterMask",
+    ):
+        if needle not in viewer_h:
+            fail("Dilim A terrain/Esri QoS eksik: " + needle)
+    _masa_a = (ROOT.parent / "ruzgar-desktop" / "ruzgar-masa.js").read_text(
+        encoding="utf-8"
+    )
+    _mobil_a = (ROOT / "static" / "mobil-pwa" / "app.js").read_text(encoding="utf-8")
+    if "gozle-gez-c-pano-v2" not in _masa_a and "gozle-gez-c-pano-v1" not in _masa_a:
+        fail("masa Dilim C cache-bust yok")
+    if "sanitizeGeoJsonForCesium" not in viewer_h:
+        fail("bina RhumbLine sanitize yok")
+    if "renderError" not in viewer_h:
+        fail("cesium renderError kurtarma yok")
+    if "mobil=1" not in _mobil_a or "qos=mobil" not in _mobil_a:
+        fail("mobil Dilim A qos bayragi yok")
+    print("OK: Dilim A terrain+Esri+mobil LOD")
+    for needle in (
+        "guessSehirFromCoords",
+        "buildingLimitForProfile",
+        "radius_deg",
+        "buildingsBusy",
+        "walkEnsureBuildings",
+    ):
+        if needle not in viewer_h:
+            fail("Dilim B bina/walk eksik: " + needle)
+    if "radius_deg" not in (
+        (ROOT / "ilim_assistant" / "ruzgar_sehir_ikiz.py").read_text(encoding="utf-8")
+    ):
+        fail("Dilim B geojson near filtre yok")
+    print("OK: Dilim B OSM bina + walk")
+    for needle in (
+        "panoWalkStrip",
+        "setPanoWalkStrip",
+        "panoAuto",
+        "wirePanoEntityClick",
+        "radius_m=",
+    ):
+        if needle not in viewer_h:
+            fail("Dilim C Mapillary walk eksik: " + needle)
+    if "radius_m" not in (
+        (ROOT / "ilim_assistant" / "ruzgar_pano.py").read_text(encoding="utf-8")
+    ):
+        fail("Dilim C pano radius_m yok")
+    print("OK: Dilim C Mapillary walk birlesimi")
+    for needle in (
         "lpTerrainStatus",
         "Terrain: World Terrain",
         "RUZGAR_HARITA_MODULES",
@@ -263,6 +313,9 @@ def main() -> None:
         ("Kibris Adasi turu", "tour_start"),
         ("Fuji Yanardagi turu", "tour_start"),
         ("Istanbulu gezdir", "tour_start"),
+        ("Paris gezi", "tour_start"),
+        ("Tokyo gezisi", "tour_start"),
+        ("sultan ahmet gezi", "tour_start"),
         ("turu durdur", "tour_pause"),
         ("tura devam", "tour_resume"),
         ("devam et", "tour_resume"),
@@ -446,9 +499,11 @@ def main() -> None:
     print("OK: H10 Akıllı Dünya Gezgini")
     if "tour_forward" not in masa_js or "tour_back" not in masa_js:
         fail("masa pilot forward/back yok")
-    if "pilot-gezi-v1" not in masa_js:
-        fail("masa cache-bust pilot-gezi yok")
-    print("OK: H10.7 pilot gezi (yavaş + steer + anlatım)")
+    if "gozle-gez-c-pano-v2" not in masa_js:
+        fail("masa cache-bust Dilim C v2 yok")
+    if "gozle-gez-c-pano-v2" not in mobil_js:
+        fail("mobil cache-bust Dilim C v2 yok")
+    print("OK: H10.7 + C1 serbest pilot (gözle gez)")
     for phrase in ("Zigana Gecidi", "Kop Gecidi"):
         if infer_tip_from_text(phrase) != "gecit":
             fail(phrase + " gecit sinif")
@@ -640,6 +695,67 @@ def main() -> None:
     if 'ArgumentList $argLine' not in https_fn:
         fail("HTTPS proxy quoted argLine yok")
     print("OK: organ+API+CSP+kanca+LAN")
+    # C0 Türkiye OSM — indeks varsa canlı doğrula; yoksa yapı kontrolü
+    from ilim_assistant.sahne_osm_tr import lookup_place, osm_tr_db_path, status as osm_tr_status
+
+    osm_mod = (ROOT / "ilim_assistant" / "sahne_osm_tr.py").read_text(encoding="utf-8")
+    if "osm-tr-c0-v1" not in osm_mod and "osm-tr-c15-v1" not in osm_mod:
+        fail("sahne_osm_tr C0/C15 yok")
+    if "lookup_place" not in geo_src and "sahne_osm_tr" not in geo_src:
+        fail("geocode OSM TR kancasi yok")
+    if "/api/sahne/osm/tr/status" not in srv:
+        fail("OSM TR status API yok")
+    if "/api/sahne/osm/tr/nearest" not in srv:
+        fail("OSM TR nearest API yok (C2)")
+    if "features_near" not in osm_mod:
+        fail("features_near yok (C2)")
+    from ilim_assistant.sahne_dunya_gezgini import looks_like_tour_control
+
+    if looks_like_tour_control("goz hizasina in") != "tour_walk":
+        fail("C1 tour_walk niyet yok")
+    if looks_like_tour_control("sola git") != "tour_strafe_left":
+        fail("C1 tour_strafe_left niyet yok")
+    if looks_like_tour_control("trafik") != "tour_traffic":
+        fail("C5 tour_traffic niyet yok")
+    if looks_like_tour_control("sokak isimleri") != "tour_labels_on":
+        fail("C2 tour_labels_on niyet yok")
+    if looks_like_tour_control("gercek goruntu") != "tour_pano_near":
+        fail("C3 tour_pano_near niyet yok")
+    hv = (ROOT.parent / "ruzgar-desktop" / "harita-viewer.html").read_text(encoding="utf-8")
+    if "enterWalkMode" not in hv or "WALK_EYE_M" not in hv:
+        fail("C1 walk mode viewer yok")
+    if "ensureFreePilot" not in hv or "walkLookTurn" not in hv or "walkVertical" not in hv:
+        fail("C1 serbest pilot eksenleri yok")
+    if "walkRefreshLabels" not in hv:
+        fail("C2 label overlay yok")
+    if "walkLoadPanoHud" not in hv:
+        fail("C3 pano HUD yok")
+    if "walkPushBuildings" not in hv or "footprints" not in hv:
+        fail("C4 bina itme yok")
+    if "walkEnsureBuildings" not in hv:
+        fail("C4 walk bina yükleme yok")
+    if "spawnSimTraffic" not in hv:
+        fail("C5 trafik sim yok")
+    st = osm_tr_status()
+    if osm_tr_db_path().is_file():
+        if not st.get("ok") or int(st.get("features") or 0) < 100:
+            fail("OSM TR indeks zayif: " + str(st))
+        hit = lookup_place("Istanbul")
+        if not hit or hit.get("lat") is None:
+            fail("OSM TR Istanbul hit yok")
+        if abs(float(hit["lat"]) - 41.0) > 1.5 or abs(float(hit["lon"]) - 29.0) > 2.0:
+            fail("OSM TR Istanbul sapma: " + str(hit.get("lat")) + "," + str(hit.get("lon")))
+        if str(hit.get("source")) != "osm_tr":
+            fail("OSM TR source degil")
+        from ilim_assistant.sahne_osm_tr import features_near
+
+        near = features_near(41.01, 28.97, kind="roads", limit=5)
+        if not near:
+            print("WARN: C2 nearest roads bos (merkez)")
+        print("OK: C0 OSM TR indeks + Istanbul")
+        print("OK: C1-C5 vizyon kancalari")
+    else:
+        print("WARN: C0 OSM TR DB henuz yok (indir+indeks sonrasi)")
     print("organlar", len(ORGANLAR))
     print("SMOKE_SAHNE_SUPER_EL=PASS")
 

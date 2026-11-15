@@ -274,6 +274,41 @@ def resolve_super_el(text: str, *, geocode: bool = True) -> dict[str, Any]:
             "action": None,
         }
 
+    # Canlı Kamera Merkezi — tur/haritadan önce
+    try:
+        from ilim_assistant.ruzgar_canli_kamera_merkezi import (
+            execute_canli_intent,
+            looks_like_canli_kamera,
+        )
+
+        cam_i = looks_like_canli_kamera(n)
+        if cam_i:
+            pack = execute_canli_intent(cam_i)
+            act = str(pack.get("action") or cam_i.get("action") or "cam_list")
+            if pack.get("map_action"):
+                act = str(pack.get("map_action"))
+            return {
+                "ok": True,
+                "fiil": str(cam_i.get("fiil") or pack.get("fiil") or "listele"),
+                "organ": str(pack.get("organ") or cam_i.get("organ") or "cam"),
+                "hedef": cam_i.get("hedef") or cam_i.get("place"),
+                "guven": float(cam_i.get("guven") or 0.94),
+                "action": act,
+                "zoom_delta": 0,
+                "canli_kamera": True,
+                "cam_pack": pack,
+                "reply": pack.get("reply"),
+                "speak": pack.get("speak") or pack.get("reply"),
+                "layout": pack.get("layout") or "browse",
+                "kameralar": pack.get("kameralar"),
+                "geo": pack.get("geo"),
+                "map_action": pack.get("map_action"),
+                "not": "canli_kamera_merkezi",
+                "organlar": list(ORGANLAR),
+            }
+    except Exception:
+        pass
+
     fiil = None
     guven = 0.55
     zoom_delta = 0
@@ -506,6 +541,13 @@ def resolve_super_el(text: str, *, geocode: bool = True) -> dict[str, Any]:
         "tour_turn_right",
         "tour_forward",
         "tour_back",
+        "tour_strafe_left",
+        "tour_strafe_right",
+        "tour_walk",
+        "tour_fly",
+        "tour_labels_on",
+        "tour_traffic",
+        "tour_pano_near",
         "tour_follow_river",
         "tour_enter_city",
         "tour_follow_coast",
@@ -584,6 +626,13 @@ def resolve_super_el(text: str, *, geocode: bool = True) -> dict[str, Any]:
             "tour_turn_right",
             "tour_forward",
             "tour_back",
+            "tour_strafe_left",
+            "tour_strafe_right",
+            "tour_walk",
+            "tour_fly",
+            "tour_labels_on",
+            "tour_traffic",
+            "tour_pano_near",
             "tour_follow_river",
             "tour_enter_city",
             "tour_follow_coast",

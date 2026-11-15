@@ -3820,6 +3820,7 @@
       "&fly=1";
     if (tip) url += "&tip=" + tip;
     if (state.terrain) url += "&terrain=1";
+    if (state.walk) url += "&walk=1";
     if (state.tour_play || state.tour) {
       url += "&tour=1&terrain=1";
       const tp = encodeURIComponent(
@@ -3849,7 +3850,7 @@
         }).join(",");
     }
     // Coğrafi doğruluk cache-bust
-    url += "&hv=pilot-gezi-v1";
+    url += "&hv=kamera-rig-v5";
     return url;
   }
 
@@ -3950,7 +3951,7 @@
       '<button type="button" role="menuitem" data-harita-act="tour_stop" title="Turu bitir">Turu Bitir</button>' +
       '<button type="button" role="menuitem" data-harita-act="tour_skip" title="Bölüm atla">Atla</button>' +
       '<button type="button" role="menuitem" data-harita-act="mode_sentinel" title="Sentinel-2 STAC">S2</button>' +
-      '<button type="button" role="menuitem" data-harita-act="mode_pano" title="Mapillary sokak">Pano</button>' +
+      '<button type="button" role="menuitem" data-harita-act="mode_pano" title="Şehir içi yürü + sokak karesi (sahne içinde)">Pano</button>' +
       '<button type="button" role="menuitem" data-harita-act="mode_f4" title="F4map yedek 3D">F4</button>' +
       '<button type="button" role="menuitem" data-harita-act="toggle_logo" title="Robot logosunu göster/gizle">Logo</button>' +
       "</div>";
@@ -4110,9 +4111,24 @@
     window.__ruzgarHaritaViewListen = true;
     window.addEventListener("message", function (ev) {
       try {
-        applyHaritaViewSync(ev && ev.data);
-        applyHaritaCinema(ev && ev.data);
-        applyHaritaReady(ev && ev.data);
+        const msg = ev && ev.data;
+        if (msg && msg.type === "ruzgar-open-external" && msg.url) {
+          const u = String(msg.url);
+          if (/^https?:\/\//i.test(u)) {
+            if (
+              window.ruzgarApi &&
+              typeof window.ruzgarApi.openExternalUrl === "function"
+            ) {
+              window.ruzgarApi.openExternalUrl(u);
+            } else {
+              window.open(u, "_blank", "noopener,noreferrer");
+            }
+          }
+          return;
+        }
+        applyHaritaViewSync(msg);
+        applyHaritaCinema(msg);
+        applyHaritaReady(msg);
       } catch (_) {}
     });
   }
@@ -4180,9 +4196,13 @@
       action === "f4" ||
       action === "sentinel" ||
       action === "pano";
-    if (action === "mode_2d" || action === "2d") st.mode = "2d";
+    if (action === "mode_2d" || action === "2d") {
+      st.mode = "2d";
+      st.walk = 0;
+    }
     if (action === "mode_3d" || action === "3d") {
       st.mode = "3d";
+      st.walk = 0;
       // H4: mevcut lat/lon/tip korunur — yeni hedef üretilmez
       // Dağ/geçit/köprüde zoom zorla 16 yapılmaz (kamera kayması)
       const tip3 = String(st.tip || "");
@@ -4193,23 +4213,55 @@
         st.zoom = 16;
       }
     }
-    if (action === "mode_4d" || action === "4d") st.mode = "4d";
-    if (action === "mode_uydu" || action === "uydu") st.mode = "uydu";
+    if (action === "mode_4d" || action === "4d") {
+      st.mode = "4d";
+      st.walk = 0;
+    }
+    if (action === "mode_uydu" || action === "uydu") {
+      st.mode = "uydu";
+      st.walk = 0;
+    }
     if (action === "mode_tur" || action === "tur") {
       st.mode = "tur";
+      st.walk = 0;
       if ((Number(st.zoom) || 7) < 5) st.zoom = 5;
     }
     if (action === "mode_f4" || action === "f4") {
       st.mode = "f4";
+      st.walk = 0;
       if ((Number(st.zoom) || 7) < 15) st.zoom = 16;
     }
     if (action === "mode_sentinel" || action === "sentinel") {
       st.mode = "sentinel";
+      st.walk = 0;
       if ((Number(st.zoom) || 7) < 10) st.zoom = 11;
     }
     if (action === "mode_pano" || action === "pano") {
-      st.mode = "pano";
+      // Plan: Mapillary sitesi değil — 3D göz hizası + sahne içi kare
+      const already3d = String(st.mode || "") === "3d";
+      st.mode = "3d";
+      st.terrain = 1;
+      st.walk = 1;
       if ((Number(st.zoom) || 7) < 15) st.zoom = 17;
+      if (already3d) {
+        try {
+          const frame = document.getElementById("ruzgar-sahne-organ-frame");
+          const ifr = frame && frame.querySelector("iframe");
+          if (ifr && ifr.contentWindow) {
+            ifr.contentWindow.postMessage(
+              { type: "ruzgar-harita-tour", action: "walk" },
+              "*",
+            );
+            ifr.contentWindow.postMessage(
+              { type: "ruzgar-harita-tour", action: "pano_near" },
+              "*",
+            );
+            sahneOrganState.organ = "harita";
+            setSahneOrganOn(true);
+            return { ok: true, organ: "harita", state: { ...st }, pano_walk: 1 };
+          }
+        } catch (_) {}
+      }
     }
     if (action === "era_gecmis") {
       st.era = "gecmis";
@@ -4235,6 +4287,13 @@
       st.tour = c.tour || null;
       st.tour_place = c.hedef || (c.tour && c.tour.label) || st.label || st.hedef;
       if ((Number(st.zoom) || 7) < 13) st.zoom = 14;
+      // Şehir/nokta gezi → göz hizası + sokak serisi (sabit bölge yok; tip’ten)
+      const tipTour = String(
+        (c.geo && c.geo.tip) || st.tip || (c.tour && c.tour.tip) || "",
+      ).toLowerCase();
+      if (/^(sehir|il|ilce|mahalle|bina|nokta)$/i.test(tipTour)) {
+        st.walk = 1;
+      }
     }
     if (
       action === "tour_pause" ||
@@ -4253,10 +4312,19 @@
       action === "tour_turn_right" ||
       action === "tour_forward" ||
       action === "tour_back" ||
+      action === "tour_strafe_left" ||
+      action === "tour_strafe_right" ||
+      action === "tour_walk" ||
+      action === "tour_fly" ||
+      action === "tour_labels_on" ||
+      action === "tour_traffic" ||
+      action === "tour_pano_near" ||
       action === "tour_follow_river" ||
       action === "tour_enter_city" ||
       action === "tour_follow_coast" ||
-      action === "tour_enter_crater"
+      action === "tour_enter_crater" ||
+      action.indexOf("tour_camera_") === 0 ||
+      action.indexOf("tour_body_") === 0
     ) {
       // iframe’e postMessage — reload yok
       try {
@@ -4372,6 +4440,123 @@
     return { ok: true, organ: "harita", state: { ...st } };
   }
 
+  function paintCanliKameraMosaic(frame, c) {
+    if (!frame) return;
+    frame.replaceChildren();
+    frame.hidden = false;
+    const pack = c.cam_pack || {};
+    const camsAll = (c.kameralar || pack.kameralar || []).slice();
+    const layout = String(c.layout || pack.layout || "browse");
+    const isBrowse = layout === "browse" || layout === "grid" || !c.layout;
+    const head = document.createElement("div");
+    head.style.cssText =
+      "display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:4px 2px 10px;flex-wrap:wrap;";
+    const title = document.createElement("div");
+    title.style.cssText = "font:650 1.05rem/1.3 system-ui,sans-serif;color:#f3ead2;";
+    title.textContent =
+      (pack.title || "Canlı Kamera Merkezi") +
+      (camsAll.length ? " · " + camsAll.length + " kamera" : "");
+    const hint = document.createElement("div");
+    hint.style.cssText = "font:500 0.78rem/1.3 system-ui,sans-serif;color:#cbb892;";
+    hint.textContent = "aç · tam ekran · dört kamera";
+    head.appendChild(title);
+    head.appendChild(hint);
+    frame.appendChild(head);
+    if (!camsAll.length) {
+      const empty = document.createElement("p");
+      empty.className = "ruzgar-sahne-organ-note";
+      empty.textContent =
+        "Açık lisanslı kamera yok. «uzay kameraları» veya «trafik kameraları» dene.";
+      frame.appendChild(empty);
+      return;
+    }
+    // Browse: kart ızgarası (max 8 görsel — performans)
+    const show = isBrowse ? camsAll.slice(0, 8) : camsAll.slice(0, 8);
+    const wrap = document.createElement("div");
+    wrap.className = "ruzgar-cam-mosaic";
+    let cols = 2;
+    if (layout === "grid4") cols = 2;
+    if (layout === "grid8") cols = 4;
+    if (layout === "full") cols = 1;
+    if (layout === "half") cols = 1;
+    if (isBrowse) cols = show.length >= 3 ? 3 : 2;
+    wrap.style.cssText =
+      "display:grid;gap:10px;width:100%;height:calc(100% - 3.2rem);grid-template-columns:repeat(" +
+      cols +
+      ",minmax(0,1fr));align-content:start;overflow:auto;padding:2px;";
+    if (layout === "half") {
+      wrap.style.width = "50%";
+      wrap.style.marginLeft = "auto";
+      wrap.style.marginRight = "auto";
+    }
+    show.forEach(function (cam, idx) {
+      const cell = document.createElement("div");
+      cell.style.cssText =
+        "position:relative;background:linear-gradient(160deg,#121a22,#0b1220);border:1px solid #3a4a3a;border-radius:10px;overflow:hidden;min-height:" +
+        (layout === "full" ? "280px" : "150px") +
+        ";box-shadow:0 8px 24px rgba(0,0,0,.25);";
+      const badge = document.createElement("div");
+      badge.style.cssText =
+        "position:absolute;top:8px;left:8px;z-index:2;padding:3px 8px;border-radius:999px;background:rgba(0,0,0,.55);color:#e8dcc0;font:600 0.68rem/1 system-ui,sans-serif;";
+      badge.textContent = String(idx + 1);
+      cell.appendChild(badge);
+      const cap = document.createElement("div");
+      cap.style.cssText =
+        "position:absolute;left:0;right:0;bottom:0;padding:8px 10px;background:linear-gradient(transparent,rgba(0,0,0,.82));color:#f3ead2;font:600 0.78rem/1.35 system-ui,sans-serif;z-index:2;";
+      const dist =
+        cam.distance_km != null ? cam.distance_km + " km · " : "";
+      cap.innerHTML =
+        "<div>" +
+        String(cam.ad || cam.id || "kamera") +
+        "</div><div style=\"opacity:.8;font-weight:500;font-size:0.7rem\">" +
+        dist +
+        String(cam.tur || "") +
+        " · " +
+        String(cam.source || "") +
+        " · " +
+        String(cam.media || "") +
+        "</div>";
+      cell.appendChild(cap);
+      const imgUrl = cam.image || "";
+      const hls = cam.hls || "";
+      const page = cam.page || "";
+      if (imgUrl && /^https?:\/\//i.test(imgUrl)) {
+        const img = document.createElement("img");
+        img.loading = "lazy";
+        img.decoding = "async";
+        img.src = imgUrl;
+        img.alt = cam.ad || "kamera";
+        img.style.cssText = "width:100%;height:100%;object-fit:cover;display:block;";
+        cell.appendChild(img);
+      } else if (hls && /^https?:\/\//i.test(hls) && !isBrowse) {
+        const vid = document.createElement("video");
+        vid.controls = true;
+        vid.autoplay = layout === "full";
+        vid.muted = true;
+        vid.playsInline = true;
+        vid.preload = "metadata";
+        vid.src = hls;
+        vid.style.cssText = "width:100%;height:100%;object-fit:cover;background:#000;";
+        cell.appendChild(vid);
+      } else if (page && !isBrowse) {
+        const ifr = document.createElement("iframe");
+        ifr.src = page;
+        ifr.title = cam.ad || "yayın";
+        ifr.loading = "lazy";
+        ifr.style.cssText = "width:100%;height:100%;border:0;background:#000;";
+        cell.appendChild(ifr);
+      } else {
+        const ph = document.createElement("div");
+        ph.style.cssText =
+          "display:flex;align-items:center;justify-content:center;height:100%;min-height:140px;color:#9aa6b2;font:500 0.85rem system-ui,sans-serif;";
+        ph.textContent = String(cam.media || "yayın").toUpperCase();
+        cell.appendChild(ph);
+      }
+      wrap.appendChild(cell);
+    });
+    frame.appendChild(wrap);
+  }
+
   /** Ortak organ komut bus — tüm katmanlar */
   function dispatchSahneOrganCommand(cmd) {
     ensureSahneExtras();
@@ -4423,12 +4608,7 @@
     frame.replaceChildren();
     frame.hidden = false;
     if (organ === "cam") {
-      const p = document.createElement("p");
-      p.className = "ruzgar-sahne-organ-note";
-      p.textContent =
-        c.metaText ||
-        "Cam/TV: yalnızca senin cihaz defterin veya resmi açık yayın. Bağlantı panelden / süper-el ile.";
-      frame.appendChild(p);
+      paintCanliKameraMosaic(frame, c);
     } else if (organ === "uzay") {
       const iframe = document.createElement("iframe");
       iframe.title = "Uzay";
@@ -4520,10 +4700,44 @@
       tour_turn_right: 1,
       tour_forward: 1,
       tour_back: 1,
+      tour_strafe_left: 1,
+      tour_strafe_right: 1,
+      tour_walk: 1,
+      tour_fly: 1,
+      tour_labels_on: 1,
+      tour_traffic: 1,
+      tour_pano_near: 1,
       tour_follow_river: 1,
       tour_enter_city: 1,
       tour_follow_coast: 1,
       tour_enter_crater: 1,
+      tour_camera_yuruyus: 1,
+      tour_camera_bisiklet: 1,
+      tour_camera_arac: 1,
+      tour_camera_drone: 1,
+      tour_camera_serbest: 1,
+      tour_camera_sinematik: 1,
+      tour_camera_yorunge: 1,
+      tour_camera_rover: 1,
+      tour_camera_inis: 1,
+      tour_camera_kokpit: 1,
+      tour_camera_uydu: 1,
+      tour_camera_serbest_uzay: 1,
+      tour_body_earth: 1,
+      tour_body_moon: 1,
+      tour_body_mars: 1,
+      tour_body_space: 1,
+      cam_list: 1,
+      cam_list_space: 1,
+      cam_open: 1,
+      cam_layout_full: 1,
+      cam_layout_half: 1,
+      cam_layout_4: 1,
+      cam_layout_8: 1,
+      cam_layout_n: 1,
+      cam_open_iss: 1,
+      cam_open_nasa: 1,
+      cam_open_earth_view: 1,
     };
     const targetOrgan = mapActs[action]
       ? organ === "yuz"
@@ -4541,13 +4755,19 @@
       tour: data.tour || null,
       tour_meters: data.tour_meters != null ? data.tour_meters : data.meters,
       meters: data.meters != null ? data.meters : data.tour_meters,
+      cam_pack: data.cam_pack || null,
+      kameralar: data.kameralar || (data.cam_pack && data.cam_pack.kameralar) || null,
+      layout: data.layout || (data.cam_pack && data.cam_pack.layout) || null,
+      reply: data.reply || (data.cam_pack && data.cam_pack.reply) || null,
+      speak: data.speak || (data.cam_pack && data.cam_pack.speak) || null,
       metaText:
         (data.fiil || action) +
         " · " +
         targetOrgan +
         (data.hedef ? " · " + data.hedef : "") +
         (data.zoom_delta ? " · Δz " + data.zoom_delta : "") +
-        (action && String(action).indexOf("tour_") === 0 ? " · Dünya Gezgini" : ""),
+        (action && String(action).indexOf("tour_") === 0 ? " · Dünya Gezgini" : "") +
+        (data.canli_kamera ? " · Canlı Kamera" : ""),
     });
     data.applied = applied;
     return data;

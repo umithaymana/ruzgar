@@ -331,12 +331,14 @@ def build_endless_seed(
 
     elif style == "city_cruise":
         # Sınıf şablonu — herhangi şehir; isim özel yolu yok
-        bearing = 25.0 if bearing0 is None else bearing
+        # along derece cinsinden: eski 0.42° (~45 km) kıyı şehirlerinde denize kaçıyordu
+        bearing = 55.0 if bearing0 is None else bearing
         tip_alt = "bogaz" if tip_l == "bogaz" else "sehir"
+        max_along = 0.028 if tip_l == "bogaz" else 0.022
         for i in range(steps):
             t = i / max(1, steps - 1)
-            along = 0.008 + 0.42 * t
-            coast = 0.02 * math.sin(t * math.pi * 2.2)
+            along = 0.003 + max_along * t
+            coast = 0.004 * math.sin(t * math.pi * 2.2)
             pt = _bearing_offset(lat, lon, bearing, along)
             look = _bearing_offset(pt[0], pt[1], bearing + 90.0, coast)
             rng = _alt(tip_alt, t, low_bias=0.72)
@@ -535,7 +537,7 @@ def _card_for_class(tip: str, label: str, *, bolge_hint: str | None = None) -> d
 def _strip_tour_words(n: str) -> str:
     t = n
     t = re.sub(
-        r"\b(gezdir|gezdirelim|turu|turunu|tur|tura|gezgini|gezgin|baslat|basla|baslatin)\b",
+        r"\b(gezdir|gezdirelim|gezelim|gezisi|geziyi|gezi|turu|turunu|tur|tura|gezgini|gezgin|baslat|basla|baslatin)\b",
         " ",
         t,
     )
@@ -591,6 +593,15 @@ def looks_like_tour_control(n: str) -> str | None:
     """Pilot komutları — yeni araştırma değil, kamerayı değiştir."""
     if not n:
         return None
+    # CameraRig mod / cisim geçişi (evrensel — yer hardcode yok)
+    try:
+        from ilim_assistant.ruzgar_kamera_rig import looks_like_camera_mode
+
+        cam = looks_like_camera_mode(n)
+        if cam:
+            return cam
+    except Exception:
+        pass
     # Dur = hareketi duraklat (geziyi öldürme). Bitir = stop.
     if re.search(
         r"\b(turu?\s*(bitir|iptal|kapat|sonlandir)|gezgini?\s*(bitir|kapat)|"
@@ -642,6 +653,21 @@ def looks_like_tour_control(n: str) -> str | None:
         n,
     ):
         return "tour_farther"
+    if re.search(
+        r"\b(goz\s*hiza\w*|goze\s*in|yuru(me)?(\s*modu)?\b|yuruyerek|"
+        r"walk(\s*mode)?|first\s*person|gozle\s*gez)\b",
+        n,
+    ):
+        return "tour_walk"
+    if re.search(
+        r"\b(ucus\s*modu|kus\s*bakisi|bird(\s*view)?|yurumeden\s*cik|walk\s*(off|exit))\b",
+        n,
+    ):
+        return "tour_fly"
+    if re.search(r"\b(sola\s*(git|kay)|sol(a)?\s*yan|strafe\s*left)\b", n):
+        return "tour_strafe_left"
+    if re.search(r"\b(saga\s*(git|kay)|sag(a)?\s*yan|strafe\s*right)\b", n):
+        return "tour_strafe_right"
     if re.search(r"\b(sola\s*don|sol(a)?\s*cevir|turn\s*left|left\s*turn)\b", n):
         return "tour_turn_left"
     if re.search(r"\b(saga\s*don|sag(a)?\s*cevir|turn\s*right|right\s*turn)\b", n):
@@ -650,6 +676,16 @@ def looks_like_tour_control(n: str) -> str | None:
         return "tour_back"
     if re.search(r"\b(ileri\s*git|duz\s*git|ileri|go\s*forward|straight)\b", n):
         return "tour_forward"
+    if re.search(
+        r"\b(sokak\s*(ismi|isimleri|adlari|yazilari)|"
+        r"mahalle\s*(ismi|isimleri|adlari)|etiket(leri)?\s*ac)\b",
+        n,
+    ):
+        return "tour_labels_on"
+    if re.search(r"\b(trafik|arabalar?|gemiler?|kayiklar?|sim(?:ulasyon)?\s*trafik)\b", n):
+        return "tour_traffic"
+    if re.search(r"\b(gercek\s*goruntu|son\s*cekil|mapillary|sokak\s*pano|pano\s*ac)\b", n):
+        return "tour_pano_near"
     if re.search(r"\b(nehri?\s*takip|nehir\s*boyu|irmagi?\s*takip|follow\s*river)\b", n):
         return "tour_follow_river"
     if re.search(r"\b(sehre\s*gir|sehir\s*ici|kente\s*gir|enter\s*city)\b", n):
@@ -671,16 +707,19 @@ def looks_like_tour_control(n: str) -> str | None:
 
 
 def looks_like_tour_start(n: str) -> bool:
+    """Herhangi yer + gezi/tur/gezdir — sabit bölge yok (anayasa)."""
     if looks_like_tour_control(n):
         return False
     if re.search(r"\b(dunya\s*turu|panoramik|kure\s*tur|globe\s*tour|tur\s*mod)\b", n):
-        if not re.search(r"\b(gezdir|gezgin)\b", n):
+        if not re.search(r"\b(gezdir|gezgin|gezi)\b", n):
             return False
     if re.search(
-        r"\b(gezdir|gezdirelim|dunya\s+gezgini|gezgin\s+modu|gezgini)\b", n
+        r"\b(gezdir|gezdirelim|gezelim|dunya\s+gezgini|gezgin\s+modu|gezgini)\b",
+        n,
     ):
         return True
-    if re.search(r"\b\w+\s+(turu|gezgini)\b", n) and not re.search(
+    # «X gezi / gezisi / turu» — yer geocode ile çözülür, listeden değil
+    if re.search(r"\b\w+\s+(turu|gezgini|gezisi|gezi)\b", n) and not re.search(
         r"\b(dunya\s*turu|panorama)\b", n
     ):
         return True
@@ -788,6 +827,12 @@ def try_resolve_tour_intent(norm_text: str) -> dict[str, Any] | None:
     if not looks_like_tour_start(n):
         return None
     place = extract_tour_place(n)
+    # soru kalıntısı / boş hedef → gezi değil (sabit yer listesi yok)
+    if not place or re.search(
+        r"^(nedir|nasil|neden|niye|kim|ne|hangi|nerede|ne\s*zaman)$",
+        place,
+    ):
+        return None
     return {
         "action": "tour_start",
         "fiil": "gezgin",

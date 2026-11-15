@@ -139,15 +139,99 @@ def geojson_yolu(sehir: str, kind: str = "buildings") -> Path | None:
     return p if p.is_file() else None
 
 
-def geojson_oku(sehir: str, kind: str = "buildings", limit: int = 0) -> dict[str, Any] | None:
+def _feat_lon_lat(feat: dict[str, Any]) -> tuple[float, float] | None:
+    """GeoJSON feature → kabaca lon/lat (çokgen ilk halka merkezi)."""
+    try:
+        geom = feat.get("geometry") or {}
+        gtype = str(geom.get("type") or "")
+        coords = geom.get("coordinates")
+        if not coords:
+            return None
+        if gtype == "Point":
+            return float(coords[0]), float(coords[1])
+        # Polygon / MultiPolygon — ilk halkadan ortalama
+        ring = coords
+        if gtype == "Polygon":
+            ring = coords[0]
+        elif gtype == "MultiPolygon":
+            ring = coords[0][0]
+        if not ring:
+            return None
+        sx = sy = 0.0
+        n = 0
+        for pt in ring:
+            if not pt or len(pt) < 2:
+                continue
+            sx += float(pt[0])
+            sy += float(pt[1])
+            n += 1
+            if n >= 24:
+                break
+        if n <= 0:
+            return None
+        return sx / n, sy / n
+    except Exception:
+        return None
+
+
+def geojson_oku(
+    sehir: str,
+    kind: str = "buildings",
+    limit: int = 0,
+    *,
+    lat: float | None = None,
+    lon: float | None = None,
+    radius_deg: float = 0.045,
+) -> dict[str, Any] | None:
+    """Bina/yol GeoJSON. lat/lon verilirse kameraya yakın dilim (Dilim B)."""
     p = geojson_yolu(sehir, kind)
     if not p:
         return None
     data = json.loads(p.read_text(encoding="utf-8"))
-    feats = data.get("features") or []
-    if limit and limit > 0 and len(feats) > limit:
-        data = {"type": "FeatureCollection", "features": feats[:limit], "truncated": True, "total": len(feats)}
+    feats = list(data.get("features") or [])
+    total = len(feats)
+    lim = int(limit or 0)
+    near = lat is not None and lon is not None and isfinite_lat_lon(lat, lon)
+    if near:
+        md = max(0.008, min(0.12, float(radius_deg or 0.045)))
+        md2 = md * md
+        scored: list[tuple[float, dict[str, Any]]] = []
+        for f in feats:
+            ll = _feat_lon_lat(f)
+            if not ll:
+                continue
+            flo, fla = ll
+            d2 = (fla - float(lat)) ** 2 + (flo - float(lon)) ** 2
+            if d2 <= md2:
+                scored.append((d2, f))
+        scored.sort(key=lambda x: x[0])
+        take = lim if lim > 0 else 8000
+        feats = [f for _, f in scored[:take]]
+        data = {
+            "type": "FeatureCollection",
+            "features": feats,
+            "truncated": total > len(feats),
+            "total": total,
+            "near": True,
+            "lat": float(lat),
+            "lon": float(lon),
+            "radius_deg": md,
+        }
+    elif lim > 0 and total > lim:
+        data = {
+            "type": "FeatureCollection",
+            "features": feats[:lim],
+            "truncated": True,
+            "total": total,
+        }
     return data
+
+
+def isfinite_lat_lon(lat: float, lon: float) -> bool:
+    try:
+        return -90.0 <= float(lat) <= 90.0 and -180.0 <= float(lon) <= 180.0
+    except Exception:
+        return False
 
 
 def gpkg_olustur() -> dict[str, Any]:

@@ -1730,6 +1730,13 @@ def _health_lite_response() -> dict[str, Any]:
         _erisim = _mobil_erisim_payload()
     except Exception:
         _erisim = None
+    _osm_tr = None
+    try:
+        from ilim_assistant.sahne_osm_tr import status as _osm_tr_status
+
+        _osm_tr = _osm_tr_status()
+    except Exception:
+        _osm_tr = {"ok": False}
     return {
         "ok": True,
         "lite": True,
@@ -1744,6 +1751,7 @@ def _health_lite_response() -> dict[str, Any]:
         "bilgisayar_rag": _bb_st,
         "hafiza_oda": _oda_st,
         "ses_sohbet": _ses_st,
+        "osm_tr": _osm_tr,
         "api_host": (os.environ.get("RUZGAR_API_HOST") or "127.0.0.1").strip() or "127.0.0.1",
         "mobil_erisim": _erisim,
     }
@@ -5482,6 +5490,38 @@ def api_sahne_super_el(body: SahneSuperElBody):
     return resolve_super_el(body.text or "")
 
 
+@app.get("/api/sahne/osm/tr/status")
+def api_sahne_osm_tr_status():
+    """Türkiye OSM C0 — yerel indeks durumu."""
+    from ilim_assistant.sahne_osm_tr import status as osm_tr_status
+
+    return osm_tr_status()
+
+
+@app.get("/api/sahne/osm/tr/nearest")
+def api_sahne_osm_tr_nearest(
+    lat: float,
+    lon: float,
+    kind: str = "",
+    n: int = 12,
+    max_deg: float = 0.04,
+):
+    """C2 — yakın sokak/mahalle isimleri (yerel OSM)."""
+    from ilim_assistant.sahne_osm_tr import features_near, osm_tr_enabled
+
+    if not osm_tr_enabled():
+        return {"ok": False, "items": [], "note": "osm_tr yok"}
+    kind_s = (kind or "").strip() or None
+    items = features_near(
+        float(lat),
+        float(lon),
+        kind=kind_s,
+        max_deg=max(0.002, min(0.2, float(max_deg))),
+        limit=int(n),
+    )
+    return {"ok": True, "items": items, "count": len(items), "source": "osm_tr"}
+
+
 @app.get("/api/sahne/harita/reverse")
 def api_sahne_harita_reverse(lat: float, lon: float, network: int = 1):
     """Harita merkezi reverse-geocode — canlı durum etiketi."""
@@ -5599,19 +5639,42 @@ def api_sehir_ikiz_pano(
     lat: float | None = None,
     lon: float | None = None,
     limit: int = 8,
+    radius_m: int = 120,
+    mode: str = "",
 ):
-    """Mapillary açık erişim: token API + web gömme yedek."""
+    """Mapillary: mode=seri → hedefe bağlı sıralı yol; aksi yakın kareler."""
     from ilim_assistant.ruzgar_pano import pano_nearby
 
-    return pano_nearby(hedef=hedef or None, lat=lat, lon=lon, limit=limit)
+    return pano_nearby(
+        hedef=hedef or None,
+        lat=lat,
+        lon=lon,
+        limit=limit,
+        radius_m=radius_m,
+        mode=mode or None,
+    )
 
 
 @app.get("/api/sehir-ikiz/geojson")
-def api_sehir_ikiz_geojson(sehir: str = "bursa", kind: str = "buildings", limit: int = 8000):
-    """Yerel OSM GeoJSON — Cesium/Leaflet bina-yol katmanı."""
+def api_sehir_ikiz_geojson(
+    sehir: str = "bursa",
+    kind: str = "buildings",
+    limit: int = 8000,
+    lat: float | None = None,
+    lon: float | None = None,
+    radius_deg: float = 0.045,
+):
+    """Yerel OSM GeoJSON — Cesium/Leaflet bina-yol katmanı (Dilim B: lat/lon dilim)."""
     from ilim_assistant.ruzgar_sehir_ikiz import geojson_oku
 
-    data = geojson_oku(sehir, kind, limit=max(0, min(int(limit or 0), 50000)))
+    data = geojson_oku(
+        sehir,
+        kind,
+        limit=max(0, min(int(limit or 0), 50000)),
+        lat=lat,
+        lon=lon,
+        radius_deg=float(radius_deg or 0.045),
+    )
     if not data:
         return {"ok": False, "error": "geojson yok", "sehir": sehir, "kind": kind}
     data["ok"] = True
@@ -5629,8 +5692,13 @@ def api_sehir_ikiz_gpkg():
 
 
 @app.get("/api/sehir-ikiz/kameralar")
-def api_sehir_ikiz_kameralar():
-    """İzinli kamera pin listesi (Faz 9) — ONVIF/MediaMTX köprüsü iskeleti."""
+def api_sehir_ikiz_kameralar(
+    lat: float | None = None,
+    lon: float | None = None,
+    radius_km: float = 80,
+    open_feeds: int = 1,
+):
+    """İzinli pin + açık lisanslı feed (scrape yok)."""
     from pathlib import Path
     import json
 
@@ -5638,11 +5706,112 @@ def api_sehir_ikiz_kameralar():
         Path(__file__).resolve().parent
         / "knowledge/ortak_kaynak/alanlar/bilgisayar_eserleri/SEHIR_IKIZ_KAMERALAR.json"
     )
-    if not p.is_file():
-        return {"ok": True, "kameralar": [], "note": "henüz pin yok — izinli kaynak ekle"}
-    data = json.loads(p.read_text(encoding="utf-8"))
-    data["ok"] = True
-    return data
+    local: list = []
+    note = "henüz pin yok — izinli kaynak ekle"
+    if p.is_file():
+        data = json.loads(p.read_text(encoding="utf-8"))
+        local = list(data.get("kameralar") or [])
+        note = str(data.get("note") or note)
+    open_pack: dict = {"kameralar": [], "envanter": [], "sources_configured": 0}
+    if open_feeds:
+        try:
+            from ilim_assistant.ruzgar_canli_kamera import (
+                fetch_open_json_cameras,
+                nearby_open_cameras,
+            )
+
+            if lat is not None and lon is not None:
+                open_pack = nearby_open_cameras(
+                    lat=float(lat), lon=float(lon), radius_km=float(radius_km)
+                )
+            else:
+                open_pack = fetch_open_json_cameras()
+        except Exception as ex:
+            open_pack = {"kameralar": [], "error": str(ex), "envanter": []}
+    merged = local + list(open_pack.get("kameralar") or [])
+    return {
+        "ok": True,
+        "kameralar": merged,
+        "count": len(merged),
+        "local_count": len(local),
+        "open_count": len(open_pack.get("kameralar") or []),
+        "sources_configured": open_pack.get("sources_configured"),
+        "envanter": open_pack.get("envanter") or [],
+        "note": note,
+        "open_note": open_pack.get("note"),
+    }
+
+
+@app.get("/api/sahne/kamera-rig")
+def api_sahne_kamera_rig():
+    """CameraRig preset kataloğu (Dünya + Uzay) — hardcode yer yok."""
+    from ilim_assistant.ruzgar_kamera_rig import catalog, UZAY_KAYNAK_ENVANTER
+
+    out = catalog()
+    out["uzay_kaynaklari"] = UZAY_KAYNAK_ENVANTER
+    return out
+
+
+@app.get("/api/sahne/canli-kameralar")
+def api_sahne_canli_kameralar(
+    lat: float | None = None,
+    lon: float | None = None,
+    radius_km: float = 120,
+    kategori: str | None = None,
+    place: str = "",
+    limit: int = 12,
+):
+    """Canlı Kamera Merkezi — açık feed liste (scrape yok)."""
+    from ilim_assistant.ruzgar_canli_kamera_merkezi import (
+        api_gerekenler_rapor,
+        execute_canli_intent,
+        format_uzay_list_reply,
+    )
+
+    if (place or "").strip().lower() in ("uzay", "space"):
+        return {
+            "ok": True,
+            "reply": format_uzay_list_reply(),
+            "space": True,
+            **api_gerekenler_rapor(),
+        }
+    intent = {
+        "action": "cam_list",
+        "kategori": (kategori or None),
+        "place": (place or "").strip() or None,
+        "nearby": lat is not None and lon is not None,
+        "hedef": (place or "").strip() or None,
+    }
+    pack = execute_canli_intent(
+        intent, lat=lat, lon=lon, place_hint=(place or "").strip()
+    )
+    pack.update(api_gerekenler_rapor())
+    return pack
+
+
+@app.post("/api/sahne/canli-kameralar/intent")
+async def api_sahne_canli_kameralar_intent(request: Request):
+    """Metin → canlı kamera niyet + paket."""
+    from ilim_assistant.ruzgar_canli_kamera_merkezi import (
+        api_gerekenler_rapor,
+        execute_canli_intent,
+        looks_like_canli_kamera,
+    )
+    from ilim_assistant.sahne_super_el import _norm
+
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    text = str((body or {}).get("text") or "")
+    n = _norm(text)
+    intent = looks_like_canli_kamera(n)
+    if not intent:
+        return {"ok": False, "not": "niyet_yok", **api_gerekenler_rapor()}
+    pack = execute_canli_intent(intent)
+    pack["intent"] = intent
+    pack.update(api_gerekenler_rapor())
+    return pack
 
 
 @app.get("/api/sehir-ikiz/mediamtx")
