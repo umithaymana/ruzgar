@@ -1,14 +1,23 @@
 # -*- coding: utf-8 -*-
-"""Sahne harita — yer adı → lat/lon/zoom/tip (yerel sözlük + Nominatim yedek)."""
+"""Sahne harita — evrensel yer adı → lat/lon/zoom/tip (Anayasa FROZEN).
+
+Üretim yolu sabit lokasyon tablosuna BAĞLI DEĞİLDİR.
+Geocode: öğrenilmiş disk önbellek + Photon (birincil) + Open-Meteo + Nominatim (yedek).
+Kamera: tip (sınıf) profili. Örnek koordinatlar yalnız test dosyalarında.
+"""
 from __future__ import annotations
 
 import json
+import os
 import re
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
+from pathlib import Path
 from typing import Any
 
-# Tip → zoom (Mimar 2026-11-14)
+# Tip → zoom (sınıf; yer adı değil)
 TIP_ZOOM: dict[str, int] = {
     "ulke": 7,
     "il": 11,
@@ -20,6 +29,7 @@ TIP_ZOOM: dict[str, int] = {
     "kanyon": 14,
     "gol": 12,
     "nehir": 11,
+    "bogaz": 14,
     "volkan": 14,
     "selale": 15,
     "delta": 10,
@@ -29,184 +39,86 @@ TIP_ZOOM: dict[str, int] = {
     "kopru": 17,
     "bina": 18,
     "nokta": 18,
+    "sehir": 12,
 }
 
-# zoom alanları tip ile hizalı; tip her kayıtta tutulur
-_YEREL: dict[str, dict[str, Any]] = {
-    "turkiye": {"lat": 39.0, "lon": 35.2, "zoom": 7, "tip": "ulke", "label": "Türkiye"},
-    "turkey": {"lat": 39.0, "lon": 35.2, "zoom": 7, "tip": "ulke", "label": "Türkiye"},
-    "anadolu": {"lat": 39.2, "lon": 35.5, "zoom": 7, "tip": "ulke", "label": "Anadolu"},
-    "istanbul": {"lat": 41.0082, "lon": 28.9784, "zoom": 11, "tip": "il", "label": "İstanbul"},
-    "ankara": {"lat": 39.9334, "lon": 32.8597, "zoom": 11, "tip": "il", "label": "Ankara"},
-    "izmir": {"lat": 38.4192, "lon": 27.1287, "zoom": 11, "tip": "il", "label": "İzmir"},
-    "bursa": {"lat": 40.1885, "lon": 29.0610, "zoom": 11, "tip": "il", "label": "Bursa"},
-    "antalya": {"lat": 36.8969, "lon": 30.7133, "zoom": 11, "tip": "il", "label": "Antalya"},
-    "adana": {"lat": 37.0, "lon": 35.3213, "zoom": 11, "tip": "il", "label": "Adana"},
-    "konya": {"lat": 37.8746, "lon": 32.4932, "zoom": 11, "tip": "il", "label": "Konya"},
-    "gaziantep": {"lat": 37.0662, "lon": 37.3833, "zoom": 11, "tip": "il", "label": "Gaziantep"},
-    "kayseri": {"lat": 38.7312, "lon": 35.4787, "zoom": 11, "tip": "il", "label": "Kayseri"},
-    "mersin": {"lat": 36.8121, "lon": 34.6415, "zoom": 11, "tip": "il", "label": "Mersin"},
-    "diyarbakir": {"lat": 37.9144, "lon": 40.2306, "zoom": 11, "tip": "il", "label": "Diyarbakır"},
-    "samsun": {"lat": 41.2867, "lon": 36.33, "zoom": 11, "tip": "il", "label": "Samsun"},
-    "trabzon": {"lat": 41.0027, "lon": 39.7168, "zoom": 11, "tip": "il", "label": "Trabzon"},
-    "erzurum": {"lat": 39.9043, "lon": 41.2679, "zoom": 11, "tip": "il", "label": "Erzurum"},
-    "van": {"lat": 38.4891, "lon": 43.4089, "zoom": 11, "tip": "il", "label": "Van"},
-    "eskisehir": {"lat": 39.7767, "lon": 30.5206, "zoom": 11, "tip": "il", "label": "Eskişehir"},
-    "malatya": {"lat": 38.3552, "lon": 38.3095, "zoom": 11, "tip": "il", "label": "Malatya"},
-    "denizli": {"lat": 37.7765, "lon": 29.0864, "zoom": 11, "tip": "il", "label": "Denizli"},
-    "sivas": {"lat": 39.7477, "lon": 37.0179, "zoom": 11, "tip": "il", "label": "Sivas"},
-    "balikesir": {"lat": 39.6484, "lon": 27.8826, "zoom": 11, "tip": "il", "label": "Balıkesir"},
-    "kahramanmaras": {"lat": 37.5858, "lon": 36.9371, "zoom": 11, "tip": "il", "label": "Kahramanmaraş"},
-    "hatay": {"lat": 36.4018, "lon": 36.3498, "zoom": 11, "tip": "il", "label": "Hatay"},
-    "manisa": {"lat": 38.6191, "lon": 27.4289, "zoom": 11, "tip": "il", "label": "Manisa"},
-    "aydin": {"lat": 37.8560, "lon": 27.8416, "zoom": 11, "tip": "il", "label": "Aydın"},
-    "tekirdag": {"lat": 40.9833, "lon": 27.5167, "zoom": 11, "tip": "il", "label": "Tekirdağ"},
-    "sakarya": {"lat": 40.7569, "lon": 30.3781, "zoom": 11, "tip": "il", "label": "Sakarya"},
-    "kocaeli": {"lat": 40.8533, "lon": 29.8815, "zoom": 11, "tip": "il", "label": "Kocaeli"},
-    "mugla": {"lat": 37.2153, "lon": 28.3636, "zoom": 11, "tip": "il", "label": "Muğla"},
-    "canakkale": {"lat": 40.1553, "lon": 26.4142, "zoom": 11, "tip": "il", "label": "Çanakkale"},
-    "ordu": {"lat": 40.9862, "lon": 37.8797, "zoom": 11, "tip": "il", "label": "Ordu"},
-    "rize": {"lat": 41.0201, "lon": 40.5234, "zoom": 11, "tip": "il", "label": "Rize"},
-    "artvin": {"lat": 41.1828, "lon": 41.8183, "zoom": 11, "tip": "il", "label": "Artvin"},
-    "palandoken": {"lat": 39.8700, "lon": 41.3000, "zoom": 14, "tip": "dag", "label": "Palandöken"},
-    "tortum": {"lat": 40.3000, "lon": 41.5500, "zoom": 13, "tip": "ilce", "label": "Tortum"},
-    "oltu": {"lat": 40.5500, "lon": 41.9900, "zoom": 13, "tip": "ilce", "label": "Oltu"},
-    "uludag": {"lat": 40.0705, "lon": 29.2213, "zoom": 14, "tip": "dag", "label": "Uludağ"},
-    "uludagi": {"lat": 40.0705, "lon": 29.2213, "zoom": 14, "tip": "dag", "label": "Uludağ"},
-    # Everest — İstanbul'daki yanlış OSM eşleşmesini engelle (tek merkez)
-    "everest": {"lat": 27.9881, "lon": 86.9250, "zoom": 14, "tip": "dag", "label": "Everest"},
-    "mounteverest": {"lat": 27.9881, "lon": 86.9250, "zoom": 14, "tip": "dag", "label": "Mount Everest"},
-    "everestdagi": {"lat": 27.9881, "lon": 86.9250, "zoom": 14, "tip": "dag", "label": "Everest Dağı"},
-    "everestdag": {"lat": 27.9881, "lon": 86.9250, "zoom": 14, "tip": "dag", "label": "Everest Dağı"},
-    "chomolungma": {"lat": 27.9881, "lon": 86.9250, "zoom": 14, "tip": "dag", "label": "Everest"},
-    "agridagi": {"lat": 39.7019, "lon": 44.2984, "zoom": 14, "tip": "dag", "label": "Ağrı Dağı"},
-    "agrida": {"lat": 39.7019, "lon": 44.2984, "zoom": 14, "tip": "dag", "label": "Ağrı Dağı"},
-    "ararat": {"lat": 39.7019, "lon": 44.2984, "zoom": 14, "tip": "dag", "label": "Ağrı Dağı"},
-    "kackar": {"lat": 40.8330, "lon": 41.1610, "zoom": 13, "tip": "dag", "label": "Kaçkar Dağları"},
-    "kackardaglari": {"lat": 40.8330, "lon": 41.1610, "zoom": 13, "tip": "dag", "label": "Kaçkar Dağları"},
-    "kackardagi": {"lat": 40.8330, "lon": 41.1610, "zoom": 13, "tip": "dag", "label": "Kaçkar Dağı"},
-    "mescitgecidi": {
-        "lat": 40.1230,
-        "lon": 41.4800,
-        "zoom": 16,
-        "tip": "gecit",
-        "label": "Mescit Geçidi",
-    },
-    "mescitgecit": {
-        "lat": 40.1230,
-        "lon": 41.4800,
-        "zoom": 16,
-        "tip": "gecit",
-        "label": "Mescit Geçidi",
-    },
-    "ziganagecidi": {
-        "lat": 40.6450,
-        "lon": 39.5050,
-        "zoom": 15,
-        "tip": "gecit",
-        "label": "Zigana Geçidi",
-    },
-    "zigana": {
-        "lat": 40.6450,
-        "lon": 39.5050,
-        "zoom": 15,
-        "tip": "gecit",
-        "label": "Zigana Geçidi",
-    },
-    "kopgecidi": {
-        "lat": 40.0350,
-        "lon": 40.5150,
-        "zoom": 15,
-        "tip": "gecit",
-        "label": "Kop Geçidi",
-    },
-    "kopgecit": {
-        "lat": 40.0350,
-        "lon": 40.5150,
-        "zoom": 15,
-        "tip": "gecit",
-        "label": "Kop Geçidi",
-    },
-    "bogazkoprusu": {
-        "lat": 41.0450,
-        "lon": 29.0336,
-        "zoom": 17,
-        "tip": "kopru",
-        "label": "Boğaziçi Köprüsü",
-    },
-    "bogazkopru": {
-        "lat": 41.0450,
-        "lon": 29.0336,
-        "zoom": 17,
-        "tip": "kopru",
-        "label": "Boğaziçi Köprüsü",
-    },
-    "bogazicikoprusu": {
-        "lat": 41.0450,
-        "lon": 29.0336,
-        "zoom": 17,
-        "tip": "kopru",
-        "label": "Boğaziçi Köprüsü",
-    },
-    "fsmkoprusu": {
-        "lat": 41.0915,
-        "lon": 29.0615,
-        "zoom": 17,
-        "tip": "kopru",
-        "label": "Fatih Sultan Mehmet Köprüsü",
-    },
-    "ayasofya": {
-        "lat": 41.0086,
-        "lon": 28.9802,
-        "zoom": 18,
-        "tip": "bina",
-        "label": "Ayasofya",
-    },
-    "ayasof": {
-        "lat": 41.0086,
-        "lon": 28.9802,
-        "zoom": 18,
-        "tip": "bina",
-        "label": "Ayasofya",
-    },
-    "almanya": {"lat": 51.1657, "lon": 10.4515, "zoom": 7, "tip": "ulke", "label": "Almanya"},
-    "germany": {"lat": 51.1657, "lon": 10.4515, "zoom": 7, "tip": "ulke", "label": "Almanya"},
-    "fransa": {"lat": 46.2276, "lon": 2.2137, "zoom": 7, "tip": "ulke", "label": "Fransa"},
-    "france": {"lat": 46.2276, "lon": 2.2137, "zoom": 7, "tip": "ulke", "label": "Fransa"},
-    "italya": {"lat": 41.8719, "lon": 12.5674, "zoom": 7, "tip": "ulke", "label": "İtalya"},
-    "ispanya": {"lat": 40.4637, "lon": -3.7492, "zoom": 7, "tip": "ulke", "label": "İspanya"},
-    "yunanistan": {"lat": 39.0742, "lon": 21.8243, "zoom": 7, "tip": "ulke", "label": "Yunanistan"},
-    "suriye": {"lat": 34.8021, "lon": 38.9968, "zoom": 7, "tip": "ulke", "label": "Suriye"},
-    "irak": {"lat": 33.2232, "lon": 43.6793, "zoom": 7, "tip": "ulke", "label": "Irak"},
-    "iran": {"lat": 32.4279, "lon": 53.6880, "zoom": 7, "tip": "ulke", "label": "İran"},
-    "azerbaycan": {"lat": 40.1431, "lon": 47.5769, "zoom": 7, "tip": "ulke", "label": "Azerbaycan"},
-    "gurcistan": {"lat": 42.3154, "lon": 43.3569, "zoom": 7, "tip": "ulke", "label": "Gürcistan"},
-    "rusya": {"lat": 61.5240, "lon": 105.3188, "zoom": 4, "tip": "ulke", "label": "Rusya"},
-    "amerika": {"lat": 37.0902, "lon": -95.7129, "zoom": 4, "tip": "ulke", "label": "ABD"},
-    "abd": {"lat": 37.0902, "lon": -95.7129, "zoom": 4, "tip": "ulke", "label": "ABD"},
-    "japonya": {"lat": 36.2048, "lon": 138.2529, "zoom": 7, "tip": "ulke", "label": "Japonya"},
-    "cin": {"lat": 35.8617, "lon": 104.1954, "zoom": 4, "tip": "ulke", "label": "Çin"},
-    "misir": {"lat": 26.8206, "lon": 30.8025, "zoom": 7, "tip": "ulke", "label": "Mısır"},
-    "mekke": {"lat": 21.3891, "lon": 39.8579, "zoom": 13, "tip": "ilce", "label": "Mekke"},
-    "medine": {"lat": 24.5247, "lon": 39.5692, "zoom": 13, "tip": "ilce", "label": "Medine"},
-    "kudus": {"lat": 31.7683, "lon": 35.2137, "zoom": 15, "tip": "mahalle", "label": "Kudüs"},
+# Sınıf kamera başlangıcı — yer adına bağlı değil (Anayasa §2/§6)
+CAMERA_BY_TIP: dict[str, dict[str, float]] = {
+    "ulke": {"heading": 0, "pitch": -40, "range_m": 800000},
+    "il": {"heading": 35, "pitch": -30, "range_m": 2500},
+    "sehir": {"heading": 40, "pitch": -22, "range_m": 90},
+    "ilce": {"heading": 40, "pitch": -24, "range_m": 200},
+    "mahalle": {"heading": 50, "pitch": -22, "range_m": 120},
+    "nehir": {"heading": 8, "pitch": -20, "range_m": 60},
+    "bogaz": {"heading": 18, "pitch": -20, "range_m": 90},
+    "gol": {"heading": 20, "pitch": -24, "range_m": 200},
+    "dag": {"heading": 200, "pitch": -22, "range_m": 220},
+    "volkan": {"heading": 210, "pitch": -22, "range_m": 180},
+    "kanyon": {"heading": 250, "pitch": -20, "range_m": 100},
+    "vadi": {"heading": 140, "pitch": -22, "range_m": 120},
+    "ada": {"heading": 90, "pitch": -22, "range_m": 150},
+    "gecit": {"heading": 120, "pitch": -20, "range_m": 140},
+    "sirt": {"heading": 180, "pitch": -22, "range_m": 180},
+    "selale": {"heading": 160, "pitch": -20, "range_m": 80},
+    "delta": {"heading": 30, "pitch": -24, "range_m": 160},
+    "col": {"heading": 0, "pitch": -28, "range_m": 300},
+    "kopru": {"heading": 90, "pitch": -20, "range_m": 80},
+    "bina": {"heading": 180, "pitch": -22, "range_m": 80},
+    "nokta": {"heading": 0, "pitch": -22, "range_m": 100},
 }
 
-# Son ek kırpımından bozulan gövdeler → doğru sorgu
+# Biçimsel ekler (yer listesi değil)
+_INFLECT_SUFFIX: frozenset[str] = frozenset(
+    {
+        "dagi",
+        "dag",
+        "daglari",
+        "daglar",
+        "nehri",
+        "nehir",
+        "river",
+        "adasi",
+        "ada",
+        "yanardagi",
+        "yanardag",
+        "volcano",
+        "kulesi",
+        "kule",
+        "tower",
+        "koprusu",
+        "kopru",
+        "bridge",
+        "gecidi",
+        "gecit",
+        "mountain",
+        "peak",
+        "strait",
+        "bogazi",
+        "bogaz",
+        "canyon",
+        "kanyonu",
+        "golu",
+        "lake",
+        "island",
+    }
+)
+
+# Üretimde boş — sabit dünya noktası yok (Anayasa §2)
+# İsteğe bağlı acil önbellek: RUZGAR_GEO_LOCAL_CACHE=1 + dışarıdan doldurma
+_YEREL: dict[str, dict[str, Any]] = {}
+
+# Öğrenilmiş önbellek (Nominatim/Photon başarısından yazılır — sabit tablo değil)
+_GEO_DISK_PATH = Path(__file__).resolve().parents[1] / "hafiza" / "geo_learned_cache.json"
+_GEO_DISK: dict[str, dict[str, Any]] = {}
+_GEO_DISK_LOADED = False
+_NETWORK_BUDGET = max(1, int(os.environ.get("RUZGAR_GEO_NET_BUDGET", "3") or "3"))
+_PHOTON_LAST_TS = 0.0
+_NOMINATIM_BLOCKED_UNTIL = 0.0
+
+# Biçimsel onarım (yer adı değil)
 _REPAIR: dict[str, str] = {
-    "ayasof": "ayasofya",
     "koprus": "kopru",
-    "bogazkoprus": "bogaz koprusu",
-    "bogazicikoprus": "bogazici koprusu",
-    "mescitgecid": "mescit gecidi",
-    "uludag": "uludag",
     "gecid": "gecit",
-    "everestdag": "everest dagi",
-    "agridag": "agri dagi",
-    "kackardaglar": "kackar daglari",
-    "kackardag": "kackar dagi",
-    "ziganagecid": "zigana gecidi",
-    "kopgecid": "kop gecidi",
 }
 
 
@@ -225,17 +137,32 @@ def zoom_for_tip(tip: str | None, fallback: int = 11) -> int:
     return int(TIP_ZOOM.get(str(tip).lower(), fallback))
 
 
+def camera_for_tip(tip: str | None, lat: float | None = None, lon: float | None = None) -> dict[str, Any]:
+    """Sınıf tabanlı kamera başlangıcı — herhangi bir dünya noktası için."""
+    t = str(tip or "nokta").lower()
+    base = dict(CAMERA_BY_TIP.get(t) or CAMERA_BY_TIP["nokta"])
+    out: dict[str, Any] = {
+        "heading": float(base.get("heading", 0)),
+        "pitch": float(base.get("pitch", -28)),
+        "range_m": float(base.get("range_m", 200)),
+    }
+    if lat is not None:
+        out["lat"] = float(lat)
+    if lon is not None:
+        out["lon"] = float(lon)
+    return out
+
+
 def infer_tip_from_text(hedef: str) -> str | None:
-    """Metin ipuçlarından tip — doğal sınıflar önce (H10.5)."""
+    """Metin ipuçlarından tip — doğal sınıflar; yer listesi yok."""
     if not hedef:
         return None
     from ilim_assistant.sahne_super_el import _norm
 
     n = _norm(hedef)
     compact = n.replace(" ", "")
-    if re.search(r"\b(ulke|country|nation)\b", n) or compact in ("turkiye", "turkey", "anadolu"):
+    if re.search(r"\b(ulke|country|nation)\b", n):
         return "ulke"
-    # Doğal sınıf (nehir/göl/… dağdan önce) — isim listesi değil
     try:
         from ilim_assistant.sahne_dunya_gezgini import classify_nature_tip
 
@@ -249,22 +176,27 @@ def infer_tip_from_text(hedef: str) -> str | None:
     if re.search(r"\b(kopru|koprusu|bridge)\b", n) or "kopru" in compact:
         return "kopru"
     if (
+        re.search(r"\b(bogaz|bogazi|bosphorus|bosporus|strait)\b", n)
+        or "bogaz" in compact
+        or "strait" in compact
+    ) and "kopru" not in compact:
+        return "bogaz"
+    if (
         re.search(r"\b(dag|dagi|daglar|mountain|peak)\b", n)
         or compact.endswith("dag")
-        or "uludag" in compact
-        or "palandoken" in compact
+        or compact.endswith("dagi")
     ):
         return "dag"
     if re.search(
-        r"\b(cami|camii|kilise|katedral|saray|kule|muze|bina|ayasofya|ayasof)\b",
+        r"\b(cami|camii|kilise|katedral|saray|kule|muze|bina|tower)\b",
         n,
-    ) or "ayasof" in compact:
+    ) or "kulesi" in compact:
         return "bina"
     if re.search(r"\b(mahalle|mah|semt|quarter|neighbourhood|neighborhood)\b", n):
         return "mahalle"
     if re.search(r"\b(ilce|ilcesi|district|county)\b", n):
         return "ilce"
-    if re.search(r"\b(il|ili|sehir|city|province)\b", n):
+    if re.search(r"\b(il|ili|sehir|city|province|town)\b", n):
         return "il"
     return None
 
@@ -275,8 +207,6 @@ def tip_from_osm(osm_class: str, osm_type: str, hedef: str) -> str:
         return text_tip
     kind = (osm_type or "").lower()
     cls = (osm_class or "").lower()
-    if kind in ("country", "nation") or cls == "boundary" and kind == "administrative":
-        pass
     if kind in ("country", "nation"):
         return "ulke"
     if kind in ("state", "province", "region"):
@@ -289,7 +219,6 @@ def tip_from_osm(osm_class: str, osm_type: str, hedef: str) -> str:
         return "mahalle"
     if kind in ("village", "hamlet", "locality"):
         return "ilce"
-    # Doğal / su sınıfları (H10.5)
     if kind in ("volcano",) or (cls == "natural" and kind == "volcano"):
         return "volkan"
     if kind in ("peak", "mountain") or (cls == "natural" and kind in ("peak", "mountain")):
@@ -302,6 +231,8 @@ def tip_from_osm(osm_class: str, osm_type: str, hedef: str) -> str:
         return "vadi"
     if kind in ("canyon", "gorge", "ravine") or (cls == "natural" and kind in ("canyon", "gorge")):
         return "kanyon"
+    if kind in ("strait", "channel", "sound") or (cls == "natural" and kind in ("strait", "bay")):
+        return "bogaz"
     if kind in ("river", "stream", "canal") or cls == "waterway":
         return "nehir"
     if kind in ("lake", "reservoir", "lagoon", "pond") or (
@@ -314,7 +245,7 @@ def tip_from_osm(osm_class: str, osm_type: str, hedef: str) -> str:
         return "ada"
     if kind in ("desert", "dune", "sand") or (cls == "natural" and kind in ("desert", "dune", "sand")):
         return "col"
-    if kind in ("bridge",) or cls == "man_made" and kind == "bridge":
+    if kind in ("bridge",) or (cls == "man_made" and kind == "bridge"):
         return "kopru"
     if cls in ("building", "tourism", "historic", "amenity") or kind in (
         "attraction",
@@ -324,11 +255,11 @@ def tip_from_osm(osm_class: str, osm_type: str, hedef: str) -> str:
         "mosque",
         "church",
         "palace",
+        "tower",
     ):
         return "bina"
     if cls == "place" and kind in ("city", "town"):
         return "il"
-    # OSM tipi doğal sınıf ipucu olabilir
     try:
         from ilim_assistant.sahne_dunya_gezgini import classify_nature_tip
 
@@ -341,7 +272,6 @@ def tip_from_osm(osm_class: str, osm_type: str, hedef: str) -> str:
 
 
 def bbox_from_center(lat: float, lon: float, zoom: int) -> list[float]:
-    """OSM embed bbox: minLon,minLat,maxLon,maxLat."""
     z = max(2, min(18, int(zoom)))
     span = 360.0 / (2**z)
     span_lat = span * 0.55
@@ -354,6 +284,12 @@ def bbox_from_center(lat: float, lon: float, zoom: int) -> list[float]:
     ]
 
 
+def _attach_camera(out: dict[str, Any], query: str = "") -> dict[str, Any]:
+    tip = str(out.get("tip") or infer_tip_from_text(query) or "nokta")
+    out["camera"] = camera_for_tip(tip, out.get("lat"), out.get("lon"))
+    return out
+
+
 def _finalize(hit: dict[str, Any], *, query: str = "") -> dict[str, Any]:
     out = dict(hit)
     tip = out.get("tip") or infer_tip_from_text(query) or infer_tip_from_text(str(out.get("label") or ""))
@@ -363,14 +299,35 @@ def _finalize(hit: dict[str, Any], *, query: str = "") -> dict[str, Any]:
     out["zoom"] = zoom_for_tip(tip, int(out.get("zoom") or TIP_ZOOM.get(tip, 11)))
     if not out.get("bbox"):
         out["bbox"] = bbox_from_center(float(out["lat"]), float(out["lon"]), int(out["zoom"]))
-    return out
+    return _attach_camera(out, query)
+
+
+_GEO_VERB_TAIL = re.compile(
+    r"\s+(goster|ac|odaklan|odakla|yaklastir|uzaklastir|git|getir|yansit|"
+    r"gezdir|gezgini|turu|tur|haritasini|haritasi)\s*$",
+    re.I,
+)
+
+
+def _strip_geo_verbs(hedef: str) -> str:
+    from ilim_assistant.sahne_super_el import _norm
+
+    t = (hedef or "").strip()
+    if not t:
+        return ""
+    n = _norm(t)
+    prev = None
+    while prev != n:
+        prev = n
+        n = _GEO_VERB_TAIL.sub("", n).strip()
+    return n or t
 
 
 def _query_variants(hedef: str) -> list[str]:
     raw = (hedef or "").strip()
     if not raw:
         return []
-    from ilim_assistant.sahne_super_el import _norm
+    from ilim_assistant.sahne_super_el import _norm, _strip_case_suffix
 
     variants: list[str] = []
 
@@ -379,14 +336,22 @@ def _query_variants(hedef: str) -> list[str]:
         if t and t not in variants:
             variants.append(t)
 
+    stripped = _strip_geo_verbs(raw)
     add(raw)
+    add(stripped)
     add(_norm(raw))
-    compact = _norm_key(raw)
+    add(_norm(stripped))
+    for base in (stripped, raw):
+        parts = _norm(base).split()
+        if not parts:
+            continue
+        stemmed = " ".join(_strip_case_suffix(p) for p in parts)
+        add(stemmed)
+        add(_norm_key(stemmed))
+    compact = _norm_key(stripped or raw)
     add(compact)
-    # onarım
     if compact in _REPAIR:
         add(_REPAIR[compact])
-    # boşluklu: mescitgecidi → mescit gecidi
     for a, b in (
         ("gecidi", " gecidi"),
         ("gecit", " gecit"),
@@ -394,23 +359,97 @@ def _query_variants(hedef: str) -> list[str]:
         ("kopru", " kopru"),
         ("dagi", " dagi"),
         ("dag", " dag"),
+        ("nehri", " nehri"),
+        ("bogazi", " bogazi"),
+        ("kanyonu", " kanyonu"),
+        ("adasi", " adasi"),
+        ("golu", " golu"),
+        ("kulesi", " kulesi"),
     ):
         if compact.endswith(a) and len(compact) > len(a) + 2:
             add(compact[: -len(a)] + b)
-    # agresif kırpım onarımı: ayasof → ayasofya
-    if compact.endswith("sof") or compact == "ayasof":
-        add("ayasofya")
-    if "koprus" in compact and "kopru" not in variants:
-        add(compact.replace("koprus", "koprusu"))
-        add("bogaz koprusu")
     if compact.endswith("gecid"):
         add(compact + "i")
-        add(compact[:-5] + " gecidi" if len(compact) > 5 else "mescit gecidi")
+        add(compact[:-5] + " gecidi" if len(compact) > 5 else compact)
     return variants
 
 
+def _ensure_disk_cache() -> None:
+    global _GEO_DISK_LOADED, _GEO_DISK
+    if _GEO_DISK_LOADED:
+        return
+    _GEO_DISK_LOADED = True
+    try:
+        if _GEO_DISK_PATH.is_file():
+            raw = json.loads(_GEO_DISK_PATH.read_text(encoding="utf-8"))
+            if isinstance(raw, dict):
+                _GEO_DISK = {str(k): v for k, v in raw.items() if isinstance(v, dict)}
+    except Exception:
+        _GEO_DISK = {}
+
+
+def _remember_geo(hedef: str, geo: dict[str, Any]) -> None:
+    """Başarılı ağ sonucunu öğren — sabit şehir listesi değil."""
+    if not geo or geo.get("lat") is None or geo.get("lon") is None:
+        return
+    _ensure_disk_cache()
+    keys = {_norm_key(v) for v in _query_variants(hedef) if _norm_key(v)}
+    label = str(geo.get("label") or "")
+    if label:
+        keys.add(_norm_key(label.split(",")[0]))
+    payload = {
+        "lat": float(geo["lat"]),
+        "lon": float(geo["lon"]),
+        "zoom": int(geo.get("zoom") or zoom_for_tip(geo.get("tip"))),
+        "tip": geo.get("tip") or "nokta",
+        "label": geo.get("label") or hedef,
+        "source": "learned",
+    }
+    if geo.get("bbox"):
+        payload["bbox"] = geo["bbox"]
+    changed = False
+    for k in keys:
+        if not k or len(k) < 2:
+            continue
+        prev = _GEO_DISK.get(k)
+        if prev and abs(float(prev.get("lat", 0)) - payload["lat"]) < 1e-5:
+            continue
+        _GEO_DISK[k] = payload
+        changed = True
+    if not changed:
+        return
+    try:
+        _GEO_DISK_PATH.parent.mkdir(parents=True, exist_ok=True)
+        _GEO_DISK_PATH.write_text(
+            json.dumps(_GEO_DISK, ensure_ascii=False, indent=0),
+            encoding="utf-8",
+        )
+    except Exception:
+        pass
+
+
+def geocode_disk(hedef: str) -> dict[str, Any] | None:
+    """Öğrenilmiş disk önbelleği — Anayasa: sabit üretim tablosu değil."""
+    if os.environ.get("RUZGAR_GEO_DISK_CACHE", "1").strip() in ("0", "false", "no"):
+        return None
+    _ensure_disk_cache()
+    if not _GEO_DISK or not hedef:
+        return None
+    for cand in _query_variants(hedef):
+        key = _norm_key(cand)
+        hit = _GEO_DISK.get(key)
+        if hit and hit.get("lat") is not None:
+            out = _finalize(hit, query=hedef)
+            out["source"] = "learned"
+            return out
+    return None
+
+
 def geocode_local(hedef: str) -> dict[str, Any] | None:
-    if not hedef:
+    """Opsiyonel boş önbellek — varsayılan kapalı (Anayasa: sabit tablo yok)."""
+    if os.environ.get("RUZGAR_GEO_LOCAL_CACHE", "0").strip() not in ("1", "true", "yes"):
+        return None
+    if not hedef or not _YEREL:
         return None
     for cand in _query_variants(hedef):
         key = _norm_key(cand)
@@ -421,21 +460,68 @@ def geocode_local(hedef: str) -> dict[str, Any] | None:
             out = _finalize(hit, query=hedef)
             out["source"] = "local"
             return out
+        best = None
+        best_score = -1
         for k, v in _YEREL.items():
-            if key.startswith(k) or k.startswith(key):
-                out = _finalize(v, query=hedef)
-                out["source"] = "local"
-                return out
+            score = -1
+            if key == k:
+                score = 100000 + len(k)
+            elif key.startswith(k) and len(k) >= 4:
+                rest = key[len(k) :]
+                if not rest or rest in _INFLECT_SUFFIX:
+                    score = 10000 + len(k)
+            elif k.startswith(key) and len(key) >= 5:
+                score = 100 + len(key)
+            if score > best_score:
+                best_score = score
+                best = v
+        if best is not None and best_score >= 0:
+            out = _finalize(best, query=hedef)
+            out["source"] = "local"
+            return out
     return None
 
 
+def _class_query_suffixes(tip: str | None) -> list[str]:
+    """Sınıfa göre evrensel sorgu ekleri — ülke/şehir listesi yok."""
+    t = (tip or "").lower()
+    if t in ("dag",):
+        return ["mountain", "peak", "dağ", "dagi"]
+    if t in ("volkan",):
+        return ["volcano", "yanardağ", "yanardagi"]
+    if t in ("nehir",):
+        return ["river", "nehri"]
+    if t in ("gol",):
+        return ["lake", "gölü", "golu"]
+    if t in ("kanyon",):
+        return ["canyon", "kanyonu"]
+    if t in ("bogaz",):
+        return ["strait", "boğazı", "bogazi"]
+    if t in ("ada",):
+        return ["island", "adası", "adasi"]
+    if t in ("gecit",):
+        return ["pass", "geçidi", "gecidi"]
+    if t in ("selale",):
+        return ["waterfall", "falls"]
+    if t in ("col",):
+        return ["desert"]
+    if t in ("vadi",):
+        return ["valley", "vadisi"]
+    if t in ("kopru",):
+        return ["bridge", "köprüsü"]
+    if t in ("bina",):
+        return ["tower", "monument"]
+    return []
+
+
 def _nominatim_queries(hedef: str) -> list[str]:
-    """Dağ/zirve/geçit için yanlış şehir eşleşmesini azalt."""
+    """Sınıf-bilinçli evrensel sorgular — sabit yer özel yolu yok."""
     from ilim_assistant.sahne_super_el import _norm
 
-    raw = (hedef or "").strip()
+    raw = _strip_geo_verbs((hedef or "").strip())
+    if not raw:
+        return []
     n = _norm(raw)
-    compact = _norm_key(raw)
     out: list[str] = []
 
     def add(x: str) -> None:
@@ -444,99 +530,672 @@ def _nominatim_queries(hedef: str) -> list[str]:
             out.append(t)
 
     text_tip = infer_tip_from_text(raw)
-    if "everest" in compact or "chomolungma" in compact:
-        add("Mount Everest, Nepal")
-        add("Everest")
-        return out
-    if text_tip in ("dag", "gecit") or re.search(r"\b(dag|dagi|daglar|peak|mountain|gecit)\b", n):
-        add(f"{raw}")
-        add(f"{raw}, Türkiye")
-        if text_tip == "dag" or "dag" in n:
-            add(f"{raw} peak")
-            add(f"{raw} mountain")
-        if text_tip == "gecit" or "gecit" in n:
-            add(f"{raw} pass")
-        for v in _query_variants(hedef):
-            add(v)
-        return out
-    for v in _query_variants(hedef):
+    for v in _query_variants(raw):
         add(v)
-        if not re.search(r"turkey|turkiye|nepal|china|tibet", v, re.I):
-            add(f"{v}, Türkiye")
-    return out
+    add(raw)
+    add(n)
+    for suf in _class_query_suffixes(text_tip):
+        add(f"{raw} {suf}")
+        add(f"{n} {suf}")
+    # Çıplak ad (tip yok): az sayıda evrensel sınıf eki (rate-limit dostu)
+    tokens = [t for t in n.split() if t]
+    if not text_tip and 1 <= len(tokens) <= 3:
+        for suf in ("mountain", "peak", "river", "volcano", "canyon", "strait", "island"):
+            add(f"{raw} {suf}")
+    # Türkiye'ye zorlama YOK — en fazla 8 sorgu
+    return out[:8]
 
 
-def geocode_nominatim(hedef: str, timeout: float = 4.0) -> dict[str, Any] | None:
-    for q_try in _nominatim_queries(hedef):
-        if len(q_try) < 2:
-            continue
-        params = urllib.parse.urlencode(
-            {
-                "q": q_try,
-                "format": "json",
-                "limit": "1",
-                "addressdetails": "1",
-            }
-        )
-        url = f"https://nominatim.openstreetmap.org/search?{params}"
-        req = urllib.request.Request(
-            url,
-            headers={
-                "User-Agent": "RuzgarSahne/1.0 (local desktop; umit-gokcenur)",
-                "Accept": "application/json",
-            },
-        )
-        try:
-            with urllib.request.urlopen(req, timeout=timeout) as resp:
-                raw = resp.read().decode("utf-8", errors="replace")
-            data = json.loads(raw)
-            if not data:
+_PREFERRED_OSM: dict[str, tuple[tuple[str, str], ...]] = {
+    "dag": (("natural", "peak"), ("natural", "mountain"), ("place", "locality")),
+    "volkan": (("natural", "volcano"), ("natural", "peak")),
+    "nehir": (("waterway", "river"), ("waterway", "stream"), ("natural", "water")),
+    "gol": (("natural", "water"), ("natural", "lake")),
+    "kanyon": (("natural", "gorge"), ("natural", "valley"), ("tourism", "yes")),
+    "bogaz": (("natural", "strait"), ("natural", "bay"), ("waterway", "river")),
+    "ada": (("place", "island"), ("natural", "coastline")),
+    "gecit": (("mountain_pass", "yes"), ("natural", "saddle")),
+    "bina": (("tourism", "attraction"), ("historic", "yes"), ("building", "yes"), ("man_made", "tower")),
+    "kopru": (("man_made", "bridge"),),
+    "ulke": (("boundary", "administrative"), ("place", "country")),
+    "il": (("place", "city"), ("place", "town"), ("place", "state")),
+    "sehir": (("place", "city"), ("place", "town"), ("place", "municipality")),
+}
+
+
+def _score_osm_row(row: dict[str, Any], want_tip: str | None) -> float:
+    cls = str(row.get("class") or "").lower()
+    kind = str(row.get("type") or "").lower()
+    try:
+        importance = float(row.get("importance") or 0.0)
+    except (TypeError, ValueError):
+        importance = 0.0
+    score = importance * 100.0
+    naturalish = cls == "natural" and kind in (
+        "peak",
+        "mountain",
+        "volcano",
+        "ridge",
+        "gorge",
+        "valley",
+        "strait",
+        "bay",
+        "desert",
+        "water",
+    )
+    waterish = cls == "waterway" and kind in ("river", "stream", "canal", "waterfall")
+    # Tip yokken doğal sınıf öne; şehir aramasında doğal ceza
+    if want_tip in ("il", "sehir", "ulke", "ilce", "mahalle"):
+        if naturalish or waterish:
+            score -= 70.0
+        if kind in ("city", "town", "country", "state", "province", "municipality"):
+            score += 55.0
+    else:
+        if naturalish:
+            score += 40.0
+        if waterish:
+            score += 35.0
+        if kind in ("island",) or (cls == "place" and kind == "island"):
+            score += 30.0
+    if want_tip and want_tip in _PREFERRED_OSM:
+        prefs = _PREFERRED_OSM[want_tip]
+        for i, (pc, pt) in enumerate(prefs):
+            if cls == pc and (pt == "yes" or kind == pt or pt in kind):
+                score += 80.0 - i * 5.0
+                break
+        if want_tip in ("dag", "volkan", "nehir", "kanyon", "bogaz", "gecit", "ada") and kind in (
+            "city",
+            "town",
+            "village",
+            "suburb",
+            "neighbourhood",
+            "hamlet",
+            "residential",
+        ):
+            score -= 60.0
+        if want_tip == "gecit" and kind in ("mosque", "place_of_worship", "fuel"):
+            score -= 80.0
+        if want_tip == "dag" and kind in ("peak", "mountain", "volcano"):
+            score += 50.0
+        if want_tip == "nehir" and kind in ("river", "stream"):
+            score += 50.0
+    elif kind in ("village", "hamlet", "suburb", "neighbourhood"):
+        # küçük yer — zirve/nehir keşfinde geride; şehir/ülke cezalanmaz
+        score -= 15.0
+    return score
+
+
+_NOMINATIM_CACHE: dict[str, list[dict[str, Any]]] = {}
+_NOMINATIM_LAST_TS = 0.0
+_PHOTON_CACHE: dict[str, list[dict[str, Any]]] = {}
+
+
+def _photon_tags_for_tip(tip: str | None) -> list[str]:
+    t = (tip or "").lower()
+    if t in ("dag",):
+        return ["natural:peak", "natural:volcano"]
+    if t in ("volkan",):
+        return ["natural:volcano", "natural:peak"]
+    if t in ("nehir",):
+        return ["waterway:river", "waterway:stream"]
+    if t in ("gol",):
+        return ["natural:water"]
+    if t in ("kanyon",):
+        return ["natural:gorge", "natural:valley"]
+    if t in ("bogaz",):
+        return ["natural:strait", "natural:bay"]
+    if t in ("ada",):
+        return ["place:island"]
+    if t in ("gecit",):
+        return ["natural:saddle"]
+    if t in ("col",):
+        return ["natural:desert"]
+    if t in ("vadi",):
+        return ["natural:valley"]
+    if t in ("selale",):
+        return ["waterway:waterfall"]
+    if t in ("il", "sehir"):
+        return ["place:city", "place:town"]
+    if t in ("ulke",):
+        return ["place:country"]
+    return []
+
+
+_NAME_STOP = frozenset(
+    {
+        "nehri",
+        "nehir",
+        "river",
+        "dagi",
+        "dag",
+        "daglari",
+        "mountain",
+        "peak",
+        "volcano",
+        "yanardagi",
+        "yanardag",
+        "adasi",
+        "ada",
+        "island",
+        "kanyonu",
+        "canyon",
+        "bogazi",
+        "bogaz",
+        "strait",
+        "golu",
+        "gol",
+        "lake",
+        "gecidi",
+        "gecit",
+        "pass",
+        "mount",
+        "mt",
+    }
+)
+
+
+def _name_match_score(query: str, name: str) -> float:
+    from ilim_assistant.sahne_super_el import _norm
+
+    q = _norm_key(query)
+    n = _norm_key(name)
+    if not q or not n:
+        return 0.0
+    if q == n:
+        return 90.0
+    # Tam ad eşleşmesi (Boğaz/ Cadde uzantılı sonuçları ezmesin)
+    n_first = _norm_key((name or "").split(",")[0].split(" ")[0] if name else "")
+    q_tokens = [t for t in _norm(query).split() if t and t not in _NAME_STOP]
+    n_tokens = [t for t in _norm(name).split() if t and t not in _NAME_STOP]
+    if q_tokens and n_tokens and q_tokens == n_tokens[: len(q_tokens)]:
+        return 85.0
+    if q_tokens and set(q_tokens) <= set(n_tokens):
+        return 70.0
+    if n.startswith(q) and len(q) >= 4:
+        # istanbul → istanbulbogazi zayıf; yalnız sınırlı
+        if len(n) <= len(q) + 2:
+            return 60.0
+        return 25.0
+    if q.startswith(n) and len(n) >= 4:
+        return 45.0
+    if q_tokens and n_tokens and (set(q_tokens) & set(n_tokens)):
+        return 40.0
+    if n_first and q_tokens and n_first == _norm_key(q_tokens[0]):
+        return 55.0
+    return 0.0
+
+
+def _photon_search(
+    q_try: str,
+    *,
+    osm_tags: list[str] | None = None,
+    timeout: float = 4.0,
+) -> list[dict[str, Any]]:
+    """Photon (Komoot) — hızlı evrensel geocode; sabit yer listesi yok."""
+    global _PHOTON_LAST_TS
+    tag_key = ",".join(osm_tags or ())
+    cache_key = f"{q_try.strip().lower()}|{tag_key}"
+    if cache_key in _PHOTON_CACHE:
+        return _PHOTON_CACHE[cache_key]
+    wait = 0.35 - (time.monotonic() - _PHOTON_LAST_TS)
+    if wait > 0:
+        time.sleep(wait)
+    params: list[tuple[str, str]] = [("q", q_try), ("limit", "8")]
+    for tag in osm_tags or ():
+        params.append(("osm_tag", tag))
+    url = "https://photon.komoot.io/api/?" + urllib.parse.urlencode(params)
+    req = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": "RuzgarSahne/1.0 (local desktop; umit-gokcenur)",
+            "Accept": "application/json",
+        },
+    )
+    rows: list[dict[str, Any]] = []
+    try:
+        _PHOTON_LAST_TS = time.monotonic()
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            data = json.loads(resp.read().decode("utf-8", errors="replace"))
+        for feat in data.get("features") or []:
+            props = feat.get("properties") or {}
+            geom = feat.get("geometry") or {}
+            coords = geom.get("coordinates") or []
+            if len(coords) < 2:
                 continue
-            row = data[0]
-            lat = float(row["lat"])
-            lon = float(row["lon"])
-            tip = tip_from_osm(str(row.get("class") or ""), str(row.get("type") or ""), hedef or q_try)
-            # Metin dağ/geçit diyorsa OSM şehir tipini ez
-            text_tip = infer_tip_from_text(hedef)
-            if text_tip in (
-                "dag",
-                "gecit",
-                "kopru",
-                "bina",
-                "nehir",
-                "gol",
-                "vadi",
-                "kanyon",
-                "volkan",
-                "selale",
-                "delta",
-                "col",
-                "ada",
-                "sirt",
+            rows.append(
+                {
+                    "lat": float(coords[1]),
+                    "lon": float(coords[0]),
+                    "class": str(props.get("osm_key") or ""),
+                    "type": str(props.get("osm_value") or props.get("type") or ""),
+                    "display_name": str(
+                        props.get("name")
+                        or props.get("street")
+                        or q_try
+                    ),
+                    "importance": 0.55,
+                    "country": str(props.get("country") or ""),
+                }
+            )
+    except Exception:
+        rows = []
+    # Boş cevap önbelleğe yazılmaz — geçici rate-limit kalıcı "yok" olmasın
+    if rows:
+        _PHOTON_CACHE[cache_key] = rows
+    return rows
+
+
+def _open_meteo_search(q_try: str, *, timeout: float = 4.0) -> list[dict[str, Any]]:
+    """Open-Meteo geocoding — şehir/yer yedek (API anahtarı yok)."""
+    params = urllib.parse.urlencode(
+        {
+            "name": q_try,
+            "count": "5",
+            "language": "tr",
+            "format": "json",
+        }
+    )
+    url = f"https://geocoding-api.open-meteo.com/v1/search?{params}"
+    req = urllib.request.Request(
+        url,
+        headers={"User-Agent": "RuzgarSahne/1.0 (local desktop; umit-gokcenur)"},
+    )
+    rows: list[dict[str, Any]] = []
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            data = json.loads(resp.read().decode("utf-8", errors="replace"))
+        for item in data.get("results") or []:
+            code = str(item.get("feature_code") or "")
+            kind = "city"
+            cls = "place"
+            if code.startswith("PCLI") or code == "PCLC":
+                kind = "country"
+            elif code.startswith("ADM"):
+                kind = "state"
+            elif code.startswith("MT") or code == "MTS":
+                kind, cls = "peak", "natural"
+            elif code.startswith("VOL"):
+                kind, cls = "volcano", "natural"
+            elif code.startswith("STM"):
+                kind, cls = "river", "waterway"
+            elif code.startswith("LK"):
+                kind, cls = "lake", "natural"
+            elif code.startswith("ISL"):
+                kind = "island"
+            rows.append(
+                {
+                    "lat": float(item["latitude"]),
+                    "lon": float(item["longitude"]),
+                    "class": cls,
+                    "type": kind,
+                    "display_name": str(item.get("name") or q_try),
+                    "importance": min(0.9, float(item.get("population") or 0) / 5_000_000.0 + 0.3),
+                }
+            )
+    except Exception:
+        rows = []
+    return rows
+
+
+def _nominatim_search(q_try: str, *, timeout: float = 3.0) -> list[dict[str, Any]]:
+    """Nominatim GET — önbellek + rate limit; 429'da devre kesici."""
+    global _NOMINATIM_LAST_TS, _NOMINATIM_BLOCKED_UNTIL
+    if time.monotonic() < _NOMINATIM_BLOCKED_UNTIL:
+        return []
+    key = q_try.strip().lower()
+    if key in _NOMINATIM_CACHE:
+        return _NOMINATIM_CACHE[key]
+    wait = 1.05 - (time.monotonic() - _NOMINATIM_LAST_TS)
+    if wait > 0:
+        time.sleep(wait)
+    params = urllib.parse.urlencode(
+        {
+            "q": q_try,
+            "format": "json",
+            "limit": "5",
+            "addressdetails": "1",
+        }
+    )
+    url = f"https://nominatim.openstreetmap.org/search?{params}"
+    req = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": "RuzgarSahne/1.0 (local desktop; umit-gokcenur)",
+            "Accept": "application/json",
+        },
+    )
+    rows: list[dict[str, Any]] = []
+    try:
+        _NOMINATIM_LAST_TS = time.monotonic()
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            raw = resp.read().decode("utf-8", errors="replace")
+        data = json.loads(raw)
+        rows = data if isinstance(data, list) else []
+    except urllib.error.HTTPError as exc:
+        if int(getattr(exc, "code", 0) or 0) == 429:
+            _NOMINATIM_BLOCKED_UNTIL = time.monotonic() + 120.0
+        rows = []
+    except Exception:
+        rows = []
+    if rows:
+        _NOMINATIM_CACHE[key] = rows
+    return rows
+
+
+def _row_to_geo(row: dict[str, Any], *, hedef: str, q_try: str, want_tip: str | None) -> dict[str, Any]:
+    lat = float(row["lat"])
+    lon = float(row["lon"])
+    tip = tip_from_osm(str(row.get("class") or ""), str(row.get("type") or ""), hedef or q_try)
+    if want_tip in (
+        "dag",
+        "gecit",
+        "kopru",
+        "bina",
+        "nehir",
+        "bogaz",
+        "gol",
+        "vadi",
+        "kanyon",
+        "volkan",
+        "selale",
+        "delta",
+        "col",
+        "ada",
+        "sirt",
+    ):
+        tip = want_tip
+    elif tip in ("nokta", ""):
+        osm_tip = tip_from_osm(
+            str(row.get("class") or ""),
+            str(row.get("type") or ""),
+            hedef or q_try,
+        )
+        if osm_tip != "nokta":
+            tip = osm_tip
+    # place=city/town her zaman il
+    kind = str(row.get("type") or "").lower()
+    cls = str(row.get("class") or "").lower()
+    if kind in ("city", "town", "municipality") or (cls == "place" and kind in ("city", "town")):
+        tip = "il"
+    if kind in ("country",) or (cls == "place" and kind == "country"):
+        tip = "ulke"
+    zoom = zoom_for_tip(tip)
+    bb = row.get("boundingbox")
+    if bb and len(bb) == 4 and tip in ("ulke", "il", "ilce", "mahalle", "dag"):
+        bbox = [float(bb[2]), float(bb[0]), float(bb[3]), float(bb[1])]
+    else:
+        bbox = bbox_from_center(lat, lon, zoom)
+    return {
+        "lat": lat,
+        "lon": lon,
+        "zoom": zoom,
+        "tip": tip,
+        "label": row.get("display_name") or q_try,
+        "bbox": bbox,
+        "source": "nominatim",
+    }
+
+
+def _is_strong_place_hit(row: dict[str, Any]) -> bool:
+    kind = str(row.get("type") or "").lower()
+    cls = str(row.get("class") or "").lower()
+    try:
+        imp = float(row.get("importance") or 0)
+    except (TypeError, ValueError):
+        imp = 0.0
+    if kind in ("city", "town", "country", "state", "province", "municipality") and imp >= 0.4:
+        return True
+    if cls == "boundary" and kind == "administrative" and imp >= 0.5:
+        return True
+    return False
+
+
+def _pick_best_row(
+    rows: list[dict[str, Any]],
+    *,
+    hedef: str,
+    q_try: str,
+    want_tip: str | None,
+) -> tuple[dict[str, Any] | None, float, dict[str, Any] | None]:
+    best: dict[str, Any] | None = None
+    best_score = -1e18
+    best_row: dict[str, Any] | None = None
+    q_low = (q_try or "").lower()
+    mount_query = q_low.startswith("mount ") or want_tip in ("dag", "volkan")
+    # Mount Everest: OSM sırasındaki ilk peak (Chomolungma) — Latin isimdeş Florida'yı ezmesin
+    if mount_query:
+        for i, row in enumerate(rows):
+            kind = str(row.get("type") or "").lower()
+            cls = str(row.get("class") or "").lower()
+            if kind in ("peak", "volcano", "mountain") or (
+                cls == "natural" and kind in ("peak", "volcano", "ridge")
             ):
-                tip = text_tip
-            zoom = zoom_for_tip(tip)
-            bb = row.get("boundingbox")
-            if bb and len(bb) == 4 and tip in ("ulke", "il", "ilce", "mahalle", "dag"):
-                bbox = [float(bb[2]), float(bb[0]), float(bb[3]), float(bb[1])]
-            else:
-                bbox = bbox_from_center(lat, lon, zoom)
-            return {
-                "lat": lat,
-                "lon": lon,
-                "zoom": zoom,
-                "tip": tip,
-                "label": row.get("display_name") or q_try,
-                "bbox": bbox,
-                "source": "nominatim",
-            }
-        except Exception:
+                geo = _row_to_geo(row, hedef=hedef, q_try=q_try, want_tip=want_tip or "dag")
+                return geo, 200.0 - float(i), row
+    for i, row in enumerate(rows):
+        sc = _score_osm_row(row, want_tip)
+        sc += _name_match_score(q_try, str(row.get("display_name") or ""))
+        sc += _name_match_score(hedef, str(row.get("display_name") or ""))
+        # Photon/Nominatim sırası kalite sinyali
+        sc += max(0.0, 24.0 - float(i) * 4.0)
+        if sc <= best_score:
             continue
-    return None
+        best_score = sc
+        best_row = row
+        best = _row_to_geo(row, hedef=hedef, q_try=q_try, want_tip=want_tip)
+    return best, best_score, best_row
+
+
+def geocode_photon(hedef: str, timeout: float = 2.5) -> dict[str, Any] | None:
+    """Photon birincil — tek istek (UI donmasın)."""
+    want_tip = infer_tip_from_text(hedef)
+    try:
+        from ilim_assistant.sahne_dunya_gezgini import classify_gezgin_tip
+
+        if not want_tip:
+            want_tip = classify_gezgin_tip(hedef)
+    except Exception:
+        pass
+    raw = _strip_geo_verbs(hedef) or (hedef or "").strip()
+    from ilim_assistant.sahne_super_el import _norm, _strip_case_suffix
+
+    variants: list[str] = []
+
+    def _add_var(x: str | None) -> None:
+        t = (x or "").strip()
+        if t and len(t) >= 2 and t not in variants:
+            variants.append(t)
+
+    _add_var(raw)
+    stemmed_parts = [_strip_case_suffix(p) for p in _norm(raw).split()]
+    stemmed = " ".join(stemmed_parts)
+    _add_var(stemmed)
+    core_parts = [p for p in stemmed_parts if p not in _NAME_STOP]
+    core = " ".join(core_parts) if core_parts else stemmed
+    _add_var(core)
+    for suf in _class_query_suffixes(want_tip):
+        if core:
+            _add_var(f"{core} {suf}")
+    if not want_tip and core:
+        for suf in ("mountain", "peak", "river", "volcano", "canyon", "island"):
+            _add_var(f"{core} {suf}")
+    if not variants:
+        return None
+
+    q_tagged = None
+    for cand in variants:
+        low = cand.lower()
+        if any(
+            s in low
+            for s in ("river", "mountain", "peak", "volcano", "canyon", "island", "strait")
+        ):
+            q_tagged = cand
+            break
+    if want_tip in ("il", "sehir", "ulke"):
+        q0 = core or raw
+        tags = _photon_tags_for_tip(want_tip)
+    else:
+        q0 = q_tagged or (core if core else variants[0])
+        tags = _photon_tags_for_tip(want_tip) or (
+            None
+            if want_tip
+            else [
+                "natural:peak",
+                "natural:volcano",
+                "waterway:river",
+                "natural:gorge",
+                "place:island",
+            ]
+        )
+
+    rows = _photon_search(q0, osm_tags=tags, timeout=timeout)
+    # Volkan/dağ: etiket boşsa etiketsiz tek deneme
+    if not rows and want_tip in ("volkan", "dag", "ada") and tags:
+        rows = _photon_search(core or raw, osm_tags=None, timeout=timeout)
+    best, _sc, _row = _pick_best_row(rows, hedef=hedef, q_try=q0, want_tip=want_tip)
+    if not best:
+        return None
+    best["source"] = "photon"
+    return _finalize(best, query=hedef)
+
+
+def geocode_open_meteo(hedef: str, timeout: float = 2.5) -> dict[str, Any] | None:
+    """Open-Meteo — hızlı evrensel yedek/birincil (anahtar yok)."""
+    want_tip = infer_tip_from_text(hedef)
+    try:
+        from ilim_assistant.sahne_dunya_gezgini import classify_gezgin_tip
+
+        if not want_tip:
+            want_tip = classify_gezgin_tip(hedef)
+    except Exception:
+        pass
+    raw = _strip_geo_verbs(hedef) or (hedef or "").strip()
+    from ilim_assistant.sahne_super_el import _norm, _strip_case_suffix
+
+    stemmed_parts = [_strip_case_suffix(p) for p in _norm(raw).split()]
+    core_parts = [p for p in stemmed_parts if p not in _NAME_STOP]
+    core = " ".join(core_parts) if core_parts else " ".join(stemmed_parts)
+    queries: list[str] = []
+
+    def _addq(x: str | None) -> None:
+        t = (x or "").strip()
+        if t and len(t) >= 2 and t not in queries:
+            queries.append(t)
+
+    # Sınıf-bilinçli EN ad (Everest → Mount Everest; Nil → Nile River)
+    if want_tip == "dag" and core:
+        _addq(f"Mount {core.title()}")
+        _addq(f"{core.title()} Mountain")
+    if want_tip == "volkan" and core:
+        _addq(f"Mount {core.title()}")
+        _addq(f"{core.title()} Volcano")
+    if want_tip == "nehir" and core:
+        _addq(raw)
+        _addq(f"{core.title()} River")
+    if want_tip == "kanyon" and core:
+        _addq(raw)
+        _addq(f"{core.title()} Canyon")
+    if want_tip == "ada" and core:
+        _addq(core.title())
+        _addq(f"{core.title()} Island")
+    if not want_tip and core:
+        # Tip yok: zirve adları için Mount dene (Everest kasaba tuzağı)
+        _addq(f"Mount {core.title()}")
+    _addq(raw)
+    _addq(core)
+    if not queries:
+        return None
+
+    best: dict[str, Any] | None = None
+    best_score = -1e18
+    best_row: dict[str, Any] | None = None
+    for q in queries[:3]:
+        rows = _open_meteo_search(q, timeout=timeout)
+        geo, sc, row = _pick_best_row(rows, hedef=hedef, q_try=q, want_tip=want_tip)
+        if geo and sc > best_score:
+            best, best_score, best_row = geo, sc, row
+        if best_row and best_score >= 80:
+            break
+    if not best or best_score < 25:
+        return None
+    # Dağ/nehir: feature_code MT/STM tercih; şehir PPL ceza zaten skorda
+    if want_tip in ("dag", "volkan") and best_row:
+        kind = str(best_row.get("type") or "")
+        if kind not in ("peak", "volcano", "mountain") and best_score < 100:
+            # Mount Everest MT gelir; düz Everest kasabasını ele
+            return None
+    best["source"] = "open-meteo"
+    return _finalize(best, query=hedef)
+
+
+def geocode_nominatim(hedef: str, timeout: float = 2.5) -> dict[str, Any] | None:
+    """Nominatim yedek — tek sorgu; 429'da hemen çık (donma yok)."""
+    if time.monotonic() < _NOMINATIM_BLOCKED_UNTIL:
+        return None
+    want_tip = infer_tip_from_text(hedef)
+    try:
+        from ilim_assistant.sahne_dunya_gezgini import classify_gezgin_tip
+
+        if not want_tip:
+            want_tip = classify_gezgin_tip(hedef)
+    except Exception:
+        pass
+    raw = _strip_geo_verbs(hedef) or (hedef or "").strip()
+    from ilim_assistant.sahne_super_el import _norm, _strip_case_suffix
+
+    stemmed_parts = [_strip_case_suffix(p) for p in _norm(raw).split()]
+    core_parts = [p for p in stemmed_parts if p not in _NAME_STOP]
+    core = " ".join(core_parts) if core_parts else " ".join(stemmed_parts)
+    # Tek en iyi sorgu — rate-limit dostu
+    if want_tip == "dag" and core:
+        q_try = f"Mount {core.title()}"
+    elif want_tip == "volkan" and core:
+        q_try = f"Mount {core.title()}"
+    elif want_tip == "nehir" and core:
+        # Amazon River / Nile River OSM'de daha isabetli; TR ham ad ikinci
+        q_try = f"{core.title()} River"
+    elif want_tip == "kanyon" and core:
+        q_try = raw if ("canyon" in _norm(raw) or "kanyon" in _norm(raw)) else f"{core.title()} Canyon"
+    elif want_tip == "ada" and core:
+        q_try = core.title()
+    elif not want_tip and core and " " not in core.strip():
+        # Tipsiz tek sözcük: önce Mount (Everest); kasaba tuzağını skor ezer
+        q_try = f"Mount {core.title()}"
+    else:
+        q_try = core or raw
+    if len(q_try) < 2:
+        return None
+    try:
+        data = _nominatim_search(q_try, timeout=timeout)
+    except Exception:
+        data = []
+    if not data and q_try != raw:
+        try:
+            data = _nominatim_search(raw, timeout=timeout)
+        except Exception:
+            data = []
+    # Tipsiz Mount sonucu zayıfsa çıplak adı dene
+    best, sc, row = _pick_best_row(data, hedef=hedef, q_try=q_try, want_tip=want_tip)
+    if (not want_tip) and core and (
+        not best
+        or (
+            row
+            and str(row.get("type") or "") in ("census", "administrative", "hamlet", "suburb")
+        )
+    ):
+        try:
+            data2 = _nominatim_search(core, timeout=timeout)
+        except Exception:
+            data2 = []
+        best2, sc2, row2 = _pick_best_row(data2, hedef=hedef, q_try=core, want_tip=want_tip)
+        if best2 and sc2 > sc:
+            best, sc, row = best2, sc2, row2
+    if not best:
+        return None
+    return _finalize(best, query=hedef)
 
 
 def log_hedef(geo: dict[str, Any] | None, query: str = "") -> dict[str, Any] | None:
-    """Hedef adı / tip / koordinat — tek merkez log."""
     if not geo:
         return None
     out = dict(geo)
@@ -577,11 +1236,80 @@ def log_hedef(geo: dict[str, Any] | None, query: str = "") -> dict[str, Any] | N
 
 
 def geocode(hedef: str, *, allow_network: bool = True) -> dict[str, Any] | None:
-    local = geocode_local(hedef)
+    """Evrensel geocode: öğrenilmiş önbellek → Photon → Open-Meteo → (opsiyonel) Nominatim.
+
+    Sabit şehir/dağ tablosuna bağlı değil (Anayasa §2).
+    Üst süre varsayılan ~2.8s — UI donmasını keser.
+    """
+    q = _strip_geo_verbs(hedef) or (hedef or "").strip()
+    if not q:
+        return None
+    learned = geocode_disk(q)
+    if learned:
+        return log_hedef(learned, hedef)
+    local = geocode_local(q)
     if local:
         return log_hedef(local, hedef)
-    if allow_network:
-        return log_hedef(geocode_nominatim(hedef), hedef)
+    if not allow_network:
+        return None
+
+    deadline = time.monotonic() + float(os.environ.get("RUZGAR_GEO_DEADLINE_SEC", "2.8") or "2.8")
+    # Photon varsayılan kapalı (sık timeout)
+    use_photon = os.environ.get("RUZGAR_GEO_PHOTON", "0").strip() in ("1", "true", "yes")
+    use_nominatim = os.environ.get("RUZGAR_GEO_NOMINATIM", "1").strip() not in ("0", "false", "no")
+    tip_now = infer_tip_from_text(q)
+    try:
+        if not tip_now:
+            from ilim_assistant.sahne_dunya_gezgini import classify_gezgin_tip
+
+            tip_now = classify_gezgin_tip(q)
+    except Exception:
+        pass
+    # Open-Meteo şehir/ülkede iyi; dağ/nehir/kanyon + tipsiz ad → Nominatim
+    nature = tip_now in (
+        "dag",
+        "volkan",
+        "nehir",
+        "kanyon",
+        "bogaz",
+        "gecit",
+        "ada",
+        "selale",
+        "col",
+        "vadi",
+        "gol",
+        "sirt",
+    )
+    providers: list[str] = []
+    if nature or not tip_now:
+        if use_nominatim:
+            providers.append("nominatim")
+        providers.append("open-meteo")
+    else:
+        providers.append("open-meteo")
+        if use_nominatim:
+            providers.append("nominatim")
+    if use_photon:
+        providers.append("photon")
+
+    for name in providers:
+        if time.monotonic() >= deadline:
+            break
+        if name == "nominatim" and time.monotonic() < _NOMINATIM_BLOCKED_UNTIL:
+            continue
+        remain = max(0.35, deadline - time.monotonic())
+        try:
+            if name == "open-meteo":
+                hit = geocode_open_meteo(q, timeout=min(2.0, remain))
+            elif name == "photon":
+                hit = geocode_photon(q, timeout=min(1.8, remain))
+            else:
+                hit = geocode_nominatim(q, timeout=min(1.8, remain))
+        except Exception:
+            hit = None
+        if hit and hit.get("lat") is not None:
+            _remember_geo(q, hit)
+            return log_hedef(hit, hedef)
     return None
 
 
@@ -596,7 +1324,9 @@ def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 
 
 def reverse_local(lat: float, lon: float, max_km: float = 80.0) -> dict[str, Any] | None:
-    """En yakın yerel nokta (hızlı merkez adı)."""
+    """Yerel tablo boşsa None (Anayasa)."""
+    if not _YEREL:
+        return None
     best: dict[str, Any] | None = None
     best_d = 1e18
     seen_labels: set[str] = set()
@@ -665,10 +1395,7 @@ def reverse_nominatim(lat: float, lon: float, timeout: float = 3.5) -> dict[str,
             or ""
         )
         city = addr.get("city") or addr.get("town") or addr.get("province") or addr.get("state") or ""
-        if short and city and short.lower() != str(city).lower():
-            display_short = f"{short}"
-        else:
-            display_short = short or city or (row.get("display_name") or "").split(",")[0]
+        display_short = short or city or (row.get("display_name") or "").split(",")[0]
         tip = tip_from_osm(str(row.get("class") or ""), str(row.get("type") or ""), display_short)
         return {
             "ok": True,
@@ -679,18 +1406,17 @@ def reverse_nominatim(lat: float, lon: float, timeout: float = 3.5) -> dict[str,
             "city": city,
             "tip": tip,
             "source": "nominatim",
+            "camera": camera_for_tip(tip, lat, lon),
         }
     except Exception:
         return None
 
 
 def reverse_geocode(lat: float, lon: float, *, allow_network: bool = True) -> dict[str, Any]:
-    """Harita merkezi → yer adı (yerel hızlı + Nominatim ince)."""
     local = reverse_local(lat, lon)
     if allow_network:
         nom = reverse_nominatim(lat, lon)
         if nom:
-            # Yerel il adı yedek; nominatim mahalle/ilçe öncelikli
             if local and not nom.get("short"):
                 nom["short"] = local.get("short")
             return nom
@@ -704,4 +1430,5 @@ def reverse_geocode(lat: float, lon: float, *, allow_network: bool = True) -> di
         "short": f"{lat:.3f}, {lon:.3f}",
         "tip": "nokta",
         "source": "coord",
+        "camera": camera_for_tip("nokta", lat, lon),
     }

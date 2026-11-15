@@ -459,19 +459,16 @@ button.tiny { padding: 6px 10px; font-size: 0.8rem; border-radius: 999px; }
   opacity: 0.55;
   transform: scale(0.9);
 }
-/* H10.5 sinematik tur — logo gizle, sahne öne */
+/* H10.6 sinematik tur — logo/panel gizle, sahne öne */
 body.mobil-harita-cinema .sahne-face,
 .sahne-face.is-cinema-hide {
   display: none !important;
 }
 body.mobil-harita-cinema .harita-tools {
-  opacity: 0.18;
-  pointer-events: none;
+  display: none !important;
 }
 body.mobil-harita-cinema .sahne-organ-meta {
-  opacity: 0.3;
-  max-height: 1.2em;
-  overflow: hidden;
+  display: none !important;
 }
 .harita-tools {
   position: absolute;

@@ -1,0 +1,46 @@
+---
+description: Rüzgar geliştirme anayasası — evrensel coğrafya, hardcode yasağı, mobil eşitlik, gezgin amacı (FROZEN)
+alwaysApply: true
+---
+
+# Rüzgar Geliştirme Anayasası (FROZEN — Mimar emri)
+
+Bu kurallar **değiştirilemez**. Dışına çıkan tasarım reddedilir. Açık Mimar `evet` olmadan gevşetilmez.
+
+## 1) Evrensel dünya
+
+Rüzgar belirli şehir/nokta için geliştirilmez. Herhangi bir şehir, köy, nehir, göl, dağ, kanyon, ada, kıyı, ülke veya koordinat için çalışmalıdır. Kod lokasyon bağımlı olamaz.
+
+## 2) Hardcode yasağı
+
+Yasak: sabit şehir/dağ/nehir listeleri, sabit koordinatlar, özel lokasyon tabloları, elle yazılmış dünya noktaları.
+
+Örnekler yalnız **test** için. Kod örneklere bağlı çalışamaz (`GEO_TRUTH` tarzı üretim tablosu yasak).
+
+## 3) Demo yasağı
+
+İstanbul’da çalışıp dünyada çalışmayan; Paris’te çalışıp Peru’da çalışmayan çözüm kabul edilmez. Örnek odaklı geliştirme yasak; genel çözüm zorunlu.
+
+## 4) Coğrafi genelleme
+
+Her özellik: «Dünyanın herhangi bir yerinde çalışıyor mu?» — HAYIR ise mimari yanlış.
+
+## 5) Mobil eşitlik
+
+Desktop’ta olan her özellik Mobil PWA’da aynı davranır. Mobil sonradan iş değildir. Desktop-only = tamamlanmamış.
+
+## 6) Gezgin kuralı
+
+Amaç nokta göstermek değil **gezdirmek**: duraklara ışınlanmak yerine keşif, arazi takibi, kullanıcı yönlendirmesi.
+
+## 7) Ölçeklenebilirlik
+
+Norveç fiyortları, Peru kanyonları, Kanada gölleri, Japonya kıyıları, Afrika nehirleri, Antarktika, Yeni Zelanda, Grönland — yarın istenince çalışmalı.
+
+## 8) Raporlama
+
+Tüm raporlar **tek kod bloğu** içinde; blok dışına açıklama yok.
+
+## 9) Temel hedef
+
+Herhangi geçerli coğrafi konumun keşfi. Birkaç örneği çalıştırmak amaç değildir.

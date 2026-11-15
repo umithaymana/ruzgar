@@ -178,28 +178,14 @@ def _strip_case_suffix(word: str) -> str:
     for suf in ("sina", "sini", "suna", "sunu", "nda", "nde", "dan", "den"):
         if w.endswith(suf) and len(w) - len(suf) >= 3:
             return w[: -len(suf)]
-    # ye/ya/yu/yi/na… yalnız sözlükte kök varsa (istanbulu→istanbul)
+    # ye/ya/yu/yi/na… kök ≥4 (sözlük yok — Anayasa)
     for suf in ("ye", "ya", "yu", "yi", "na", "ne", "nu", "ni"):
         if w.endswith(suf) and len(w) - len(suf) >= 4:
-            stem = w[: -len(suf)]
-            try:
-                from ilim_assistant.sahne_harita_geo import _YEREL, _norm_key
-
-                if _norm_key(stem) in _YEREL:
-                    return stem
-            except Exception:
-                pass
-    # tek harf: yalnız bilinen il ekleri (bursa'y → hayır; istanbulu → u)
+            return w[: -len(suf)]
+    # tek harf ek: u/i (istanbulu → istanbul)
     for suf in ("u", "i"):
         if w.endswith(suf) and len(w) >= 6:
-            stem = w[:-1]
-            try:
-                from ilim_assistant.sahne_harita_geo import _YEREL, _norm_key
-
-                if _norm_key(stem) in _YEREL:
-                    return stem
-            except Exception:
-                pass
+            return w[:-1]
     return w
 
 
@@ -233,40 +219,7 @@ def _extract_hedef(n: str) -> str | None:
     if not n:
         return None
 
-    # Bilinen yer sözlüğü önce (çoklu kelime); mod kelimelerini at
-    try:
-        from ilim_assistant.sahne_harita_geo import _YEREL, _norm_key
-
-        tokens = [
-            t
-            for t in n.replace(",", " ").split()
-            if t
-            not in _STOP
-            and t
-            not in (
-                "2d",
-                "3d",
-                "4d",
-                "uydu",
-                "tur",
-                "panorama",
-                "panoramik",
-                "goster",
-                "ac",
-            )
-        ]
-        for i in range(len(tokens)):
-            for j in range(len(tokens), i, -1):
-                chunk = " ".join(tokens[i:j])
-                key = _norm_key(chunk)
-                key2 = _norm_key(_strip_case_suffix(chunk))
-                if key in _YEREL:
-                    return chunk
-                if key2 in _YEREL:
-                    return key2
-    except Exception:
-        pass
-
+    # Sabit yer sözlüğü yok (Anayasa) — çok kelimeli adları fiilden ayır
     patterns = [
         # fiil + yer
         r"(?:odaklan|odakla|yaklastir|uzaklastir|git|goster|ac|getir|yansit)\s+(?:harita(?:yi|ya|nin)?\s+)?(.+)$",
@@ -372,6 +325,7 @@ def resolve_super_el(text: str, *, geocode: bool = True) -> dict[str, Any]:
         fiil = str(_tour_once.get("fiil") or "gezgin")
         action = str(_tour_once.get("action") or "tour_start")
         guven = float(_tour_once.get("guven") or 0.93)
+        # tur_meters aşağıda out'a yazılır
     elif re.search(
         r"\b(dunya\s*turu|panorama|panoramik|kure\s*tur|globe\s*tour|tur\s*mod)\b",
         n,
@@ -542,6 +496,20 @@ def resolve_super_el(text: str, *, geocode: bool = True) -> dict[str, Any]:
         "tour_next",
         "tour_prev",
         "tour_skip",
+        "tour_faster",
+        "tour_slower",
+        "tour_closer",
+        "tour_farther",
+        "tour_altitude",
+        "tour_altitude_reset",
+        "tour_turn_left",
+        "tour_turn_right",
+        "tour_forward",
+        "tour_back",
+        "tour_follow_river",
+        "tour_enter_city",
+        "tour_follow_coast",
+        "tour_enter_crater",
         "era_gecmis",
         "era_gelecek",
         "show_buildings",
@@ -585,6 +553,12 @@ def resolve_super_el(text: str, *, geocode: bool = True) -> dict[str, Any]:
         "organlar": list(ORGANLAR),
         "geo": None,
     }
+    if _tour_once and _tour_once.get("tour_meters") is not None:
+        try:
+            out["tour_meters"] = float(_tour_once["tour_meters"])
+            out["meters"] = out["tour_meters"]
+        except (TypeError, ValueError):
+            pass
 
     # Zoom'da yer arama yok; mod+şehir («istanbul uydu») ve show/focus geocode
     if (
@@ -600,6 +574,20 @@ def resolve_super_el(text: str, *, geocode: bool = True) -> dict[str, Any]:
             "tour_next",
             "tour_prev",
             "tour_skip",
+            "tour_faster",
+            "tour_slower",
+            "tour_closer",
+            "tour_farther",
+            "tour_altitude",
+            "tour_altitude_reset",
+            "tour_turn_left",
+            "tour_turn_right",
+            "tour_forward",
+            "tour_back",
+            "tour_follow_river",
+            "tour_enter_city",
+            "tour_follow_coast",
+            "tour_enter_crater",
         )
         and (
             hedef

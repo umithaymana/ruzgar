@@ -1380,17 +1380,13 @@ body.ruzgar-sahne-on.ruzgar-sahne-organ-on #ruzgar-sahne-face.is-organ-dim {
 body.ruzgar-sahne-on.ruzgar-sahne-organ-on.ruzgar-harita-logo-off #ruzgar-sahne-face {
   display: none !important;
 }
-/* H10.5 sinematik tur — logo + araç şeridi gizle, sahne öne */
+/* H10.6 sinematik tur — logo + araç + söz gizle, sahne öne */
 body.ruzgar-sahne-on.ruzgar-sahne-organ-on.ruzgar-harita-cinema #ruzgar-sahne-face {
   display: none !important;
 }
-body.ruzgar-sahne-on.ruzgar-sahne-organ-on.ruzgar-harita-cinema .ruzgar-harita-tools {
-  opacity: 0.15;
-  pointer-events: none;
-}
+body.ruzgar-sahne-on.ruzgar-sahne-organ-on.ruzgar-harita-cinema .ruzgar-harita-tools,
 body.ruzgar-sahne-on.ruzgar-sahne-organ-on.ruzgar-harita-cinema #ruzgar-sahne-soz {
-  opacity: 0.25;
-  max-height: 1.2em;
+  display: none !important;
 }
 body.ruzgar-sahne-on.ruzgar-sahne-organ-on.ruzgar-harita-cinema #ruzgar-sahne-organ-frame {
   inset: 0;

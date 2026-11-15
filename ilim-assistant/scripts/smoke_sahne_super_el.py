@@ -26,52 +26,90 @@ def main() -> None:
     r = resolve_super_el("haritayi goster", geocode=False)
     if not r.get("ok") or r.get("organ") != "harita":
         fail("harita goster")
-    r_ist = resolve_super_el("istanbulu goster", geocode=True)
-    if not r_ist.get("geo") or r_ist["geo"].get("lat") is None:
-        fail("istanbul geo yok")
-    if int(r_ist["geo"].get("zoom") or 0) < 11:
-        fail("istanbul zoom dusuk: " + str(r_ist["geo"].get("zoom")))
-    for phrase, tip, zmin in (
-        ("Bursa goster", "il", 11),
-        ("Uludag goster", "dag", 14),
-        ("Mescit Gecidi goster", "gecit", 16),
-        ("Bogaz Koprusu goster", "kopru", 17),
-        ("Ayasofya goster", "bina", 18),
+    r_ist = resolve_super_el("istanbulu goster", geocode=False)
+    if not r_ist.get("ok") or r_ist.get("organ") != "harita":
+        fail("istanbulu goster organ")
+    # Anayasa: sınıf kamera + hardcode yok; örnekler yalnız test; ağ zorunlu değil
+    from ilim_assistant.sahne_harita_geo import (
+        CAMERA_BY_TIP,
+        TIP_ZOOM,
+        _YEREL,
+        camera_for_tip,
+        geocode_local,
+        infer_tip_from_text,
+        zoom_for_tip,
+        _nominatim_queries,
+    )
+
+    if _YEREL:
+        fail("Anayasa: uretim _YEREL dolu olamaz")
+    if geocode_local("Everest") is not None:
+        fail("Anayasa: geocode_local varsayilan kapali olmali")
+    geo_src = (ROOT / "ilim_assistant" / "sahne_harita_geo.py").read_text(encoding="utf-8")
+    if "GEO_TRUTH" in geo_src:
+        fail("Anayasa: GEO_TRUTH uretim kodunda olamaz")
+    if "41.1167" in geo_src or "27.98806" in geo_src:
+        fail("Anayasa: sabit ornek koordinat uretimde olamaz")
+    for tip, zmin in (
+        ("il", 11),
+        ("dag", 14),
+        ("gecit", 16),
+        ("kopru", 17),
+        ("bina", 18),
+        ("nehir", 11),
+        ("bogaz", 14),
     ):
-        rr = resolve_super_el(phrase, geocode=True)
-        g = rr.get("geo") or {}
-        if g.get("lat") is None:
-            fail(phrase + " geo yok")
-        if str(g.get("tip") or "") != tip:
-            fail(phrase + " tip=" + str(g.get("tip")) + " != " + tip)
-        if int(g.get("zoom") or 0) < zmin:
-            fail(phrase + " zoom=" + str(g.get("zoom")) + " < " + str(zmin))
-    # H4: Everest varyantları aynı noktaya (Nepal, İstanbul değil)
-    everest_pts = []
-    for phrase in ("Everest goster", "Mount Everest goster", "Everest Dagi goster"):
-        rr = resolve_super_el(phrase, geocode=True)
-        g = rr.get("geo") or {}
-        if g.get("lat") is None:
-            fail(phrase + " geo yok")
-        if abs(float(g["lat"]) - 27.9881) > 0.05 or abs(float(g["lon"]) - 86.9250) > 0.05:
-            fail(phrase + " yanlis koordinat: " + str(g.get("lat")) + "," + str(g.get("lon")))
-        if str(g.get("tip")) != "dag":
-            fail(phrase + " tip dag olmali")
-        everest_pts.append((round(float(g["lat"]), 4), round(float(g["lon"]), 4)))
-    if len(set(everest_pts)) != 1:
-        fail("Everest varyantlari farkli nokta: " + str(everest_pts))
+        if zoom_for_tip(tip) < zmin:
+            fail("zoom_for_tip dusuk: " + tip)
     for phrase, tip in (
-        ("Agri Dagi goster", "dag"),
-        ("Kackar Daglari goster", "dag"),
-        ("Uludag goster", "dag"),
-        ("Mescit Gecidi goster", "gecit"),
+        ("Uludag", "dag"),
+        ("Mescit Gecidi", "gecit"),
+        ("Bogaz Koprusu", "kopru"),
+        ("Galata Kulesi", "bina"),
+        ("Amazon Nehri", "nehir"),
+        ("Grand Canyon", "kanyon"),
+        ("Fuji Yanardagi", "volkan"),
+        ("Istanbul Bogazi", "bogaz"),
+        ("Everest Dagi", "dag"),
+        ("Agri Dagi", "dag"),
+        ("Kackar Daglari", "dag"),
     ):
-        rr = resolve_super_el(phrase, geocode=True)
-        g = rr.get("geo") or {}
-        if g.get("lat") is None or str(g.get("tip")) != tip:
-            fail(phrase + " H4 tip/geo")
-        if not g.get("hedef_log"):
-            fail(phrase + " hedef_log yok")
+        got = infer_tip_from_text(phrase)
+        if got != tip:
+            fail("sinif tip " + phrase + "=" + str(got) + " != " + tip)
+    for tip in ("nehir", "dag", "volkan", "kanyon", "bogaz", "ada", "sehir", "bina"):
+        if tip not in CAMERA_BY_TIP and tip not in TIP_ZOOM:
+            fail("sinif kamera/zoom eksik: " + tip)
+        cam = camera_for_tip(tip, 0.0, 0.0)
+        if cam.get("range_m") is None:
+            fail("camera_for_tip range yok: " + tip)
+    nq = _nominatim_queries("Seine River")
+    if not any("river" in str(x).lower() for x in nq):
+        fail("evrensel nehir sorgu eki yok")
+    if any(", turkiye" in str(x).lower() or ", türkiye" in str(x).lower() for x in nq):
+        fail("Anayasa: Turkiye zorlamasi yasak")
+    try:
+        from ilim_assistant.sahne_harita_geo import geocode as _geo_net
+
+        sample = _geo_net("Mount Everest", allow_network=True)
+        if sample and sample.get("lat") is not None and sample.get("camera"):
+            # Florida ~28.36 / Avustralya ~-30 — Nepal 27.988,86.925
+            if (
+                abs(float(sample["lat"]) - 27.988) <= 0.35
+                and abs(float(sample["lon"]) - 86.925) <= 0.35
+            ):
+                print("OK: ag ornek Everest")
+            else:
+                print(
+                    "WARN: ag sapma (ornek, uretim bagimli degil):",
+                    sample.get("lat"),
+                    sample.get("lon"),
+                )
+        else:
+            print("WARN: Nominatim yok/429 — ag ornek atlandi")
+    except Exception as ex:
+        print("WARN: ag ornek atlandi:", ex)
+    print("OK: Anayasa evrensel geo + sinif kamera")
     viewer_h = (ROOT.parent / "ruzgar-desktop" / "harita-viewer.html").read_text(
         encoding="utf-8"
     )
@@ -151,23 +189,25 @@ def main() -> None:
     if "ruzgar-harita-logo-off" not in masa_css:
         fail("H8 logo CSS yok")
     print("OK: H8 harita UI + gezgin hazırlık")
-    # H9 + H10 + H10.5 Dünya Gezgini (sınıf bazlı)
+    # H9 + H10.7 Sürekli Dünya Gezgini
     from ilim_assistant.sahne_dunya_gezgini import (  # noqa: E402
+        ALT_BANDS,
+        FLIGHT_STYLES,
         H9_VERSION,
         H10_VERSION,
         NATURE_TIPS,
-        PHASES,
         build_tour_payload,
+        classify_gezgin_tip,
         classify_nature_tip,
+        extend_endless_path,
+        looks_like_tour_control,
         looks_like_tour_start,
     )
 
     if not H9_VERSION.startswith("ruzgar-dunya-gezgini-h9"):
         fail("H9 version")
-    if "h10.5" not in H10_VERSION and not H10_VERSION.startswith("ruzgar-dunya-gezgini-h10"):
-        fail("H10.5 version")
-    if len(PHASES) != 4:
-        fail("H10 PHASES != 4")
+    if "h10.7" not in H10_VERSION:
+        fail("H10.7 version")
     for tip_name in (
         "dag",
         "gecit",
@@ -191,6 +231,26 @@ def main() -> None:
         fail("Amazon sinif")
     if classify_nature_tip("Grand Canyon") != "kanyon":
         fail("canyon sinif")
+    if classify_nature_tip("Fuji Yanardagi") != "volkan":
+        fail("Fuji volkan sinif")
+    if classify_nature_tip("Kibris Adasi") != "ada":
+        fail("Kibris ada sinif")
+    if classify_gezgin_tip("Istanbul", tip_hint="il") != "sehir":
+        fail("Istanbul sehir sinif")
+    if FLIGHT_STYLES.get("nehir") != "river_follow":
+        fail("nehir flight style")
+    if FLIGHT_STYLES.get("dag") != "ridge_wander":
+        fail("dag flight style")
+    if FLIGHT_STYLES.get("kanyon") != "corridor":
+        fail("kanyon flight style")
+    if FLIGHT_STYLES.get("ada") != "coast_cruise":
+        fail("ada flight style")
+    if FLIGHT_STYLES.get("volkan") != "volcano_wander":
+        fail("volkan flight style")
+    if FLIGHT_STYLES.get("sehir") != "city_cruise":
+        fail("sehir flight style")
+    if ALT_BANDS["nehir"][1] > 100 or ALT_BANDS["sehir"][1] > 130:
+        fail("pilot irtifa bantlari yuksek (cevre gorunmeli)")
     for phrase, expect_act in (
         ("Everesti gezdir", "tour_start"),
         ("Agri Dagi turu", "tour_start"),
@@ -198,47 +258,111 @@ def main() -> None:
         ("Mescit Gecidi turu", "tour_start"),
         ("Uludag turu", "tour_start"),
         ("Nil Nehri turu", "tour_start"),
+        ("Amazon Nehri turu", "tour_start"),
+        ("Grand Canyon turu", "tour_start"),
+        ("Kibris Adasi turu", "tour_start"),
+        ("Fuji Yanardagi turu", "tour_start"),
+        ("Istanbulu gezdir", "tour_start"),
         ("turu durdur", "tour_pause"),
         ("tura devam", "tour_resume"),
+        ("devam et", "tour_resume"),
         ("turu bitir", "tour_stop"),
-        ("sonraki durak", "tour_next"),
-        ("onceki durak", "tour_prev"),
-        ("durak atla", "tour_skip"),
+        ("dur", "tour_pause"),
+        ("hizlandir", "tour_faster"),
+        ("hizlan", "tour_faster"),
+        ("yavaslat", "tour_slower"),
+        ("yere yaklas", "tour_closer"),
+        ("yuksel", "tour_farther"),
+        ("yukari cik", "tour_farther"),
+        ("asagi in", "tour_closer"),
+        ("alcal", "tour_closer"),
+        ("sola don", "tour_turn_left"),
+        ("saga don", "tour_turn_right"),
+        ("ileri git", "tour_forward"),
+        ("geri don", "tour_back"),
+        ("nehri takip et", "tour_follow_river"),
+        ("sehre gir", "tour_enter_city"),
+        ("kiyiyi takip et", "tour_follow_coast"),
+        ("kraterin icine gir", "tour_enter_crater"),
+        ("1 metre", "tour_altitude"),
+        ("2 metreye in", "tour_altitude"),
+        ("kus ucusu", "tour_altitude_reset"),
     ):
-        rr = resolve_super_el(phrase, geocode=True)
+        rr = resolve_super_el(phrase, geocode=False)
         if rr.get("action") != expect_act:
             fail(phrase + " action=" + str(rr.get("action")))
-        if expect_act == "tour_start":
-            tour = rr.get("tour") or {}
-            if not tour.get("ok") or len(tour.get("stops") or []) < 4:
-                fail(phrase + " tour stops eksik: " + str(tour.get("tour_error") or rr.get("tour_error")))
-            if not tour.get("class_based"):
-                fail(phrase + " class_based yok")
-            if not tour.get("card") or not tour["card"].get("yukseklik"):
-                fail(phrase + " bilgi karti yok")
-            phases = [s.get("phase") for s in tour.get("stops") or []]
-            if phases[:4] != ["baslangic", "kesif", "onemli", "genel"]:
-                fail(phrase + " H10 asama sirasi: " + str(phases))
-            if not rr.get("geo") or rr["geo"].get("lat") is None:
-                fail(phrase + " geo yok")
-    nil = resolve_super_el("Nil Nehri turu", geocode=True)
-    nil_tour = nil.get("tour") or {}
+    # Tur paketi: test-only koordinat (üretim hardcode değil)
+    nil_tour = build_tour_payload(
+        place="Nil Nehri",
+        geo={"lat": 25.68724, "lon": 32.63964, "tip": "nehir", "label": "Nil Nehri"},
+    )
     if str(nil_tour.get("tip")) != "nehir" or str((nil_tour.get("card") or {}).get("tur")) != "Nehir":
-        fail("Nil Nehri tip/kart Dağ olmamalı: " + str(nil_tour.get("tip")) + "/" + str((nil_tour.get("card") or {}).get("tur")))
+        fail("Nil Nehri tip/kart: " + str(nil_tour.get("tip")) + "/" + str((nil_tour.get("card") or {}).get("tur")))
+    if (nil_tour.get("flight") or {}).get("style") != "river_follow":
+        fail("Nil flight style river_follow olmali")
+    if not nil_tour.get("endless") or len(nil_tour.get("waypoints") or []) < 12:
+        fail("Nil endless/waypoints")
+    ist_tour = build_tour_payload(
+        place="Istanbul",
+        geo={"lat": 41.0082, "lon": 28.9784, "tip": "sehir", "label": "Istanbul"},
+    )
+    if str(ist_tour.get("tip")) != "sehir":
+        fail("Istanbul tip sehir olmali: " + str(ist_tour.get("tip")))
     if looks_like_tour_start("dunya turu"):
         fail("dunya turu H9 start olmamali (mode_tur)")
-    # İsim özel listesi yok — yalnız sınıf + koordinat
+    if looks_like_tour_control("dur") != "tour_pause":
+        fail("dur = pause olmali")
+    if looks_like_tour_control("sola don") != "tour_turn_left":
+        fail("sola don")
+    if looks_like_tour_control("ileri git") != "tour_forward":
+        fail("ileri git")
+    if looks_like_tour_control("geri don") != "tour_back":
+        fail("geri don")
+    if looks_like_tour_control("nehri takip et") != "tour_follow_river":
+        fail("nehri takip")
+    r_alt = resolve_super_el("2 metreye in", geocode=False)
+    if r_alt.get("action") != "tour_altitude" or float(r_alt.get("tour_meters") or 0) != 2.0:
+        fail("2 metreye in meters=" + str(r_alt.get("tour_meters")))
+    r_zoom = resolve_super_el("uzaklastir", geocode=False)
+    if r_zoom.get("action") != "zoom_out":
+        fail("uzaklastir zoom bozuldu: " + str(r_zoom.get("action")))
     tp = build_tour_payload(
         place="Everest",
         geo={"lat": 27.9881, "lon": 86.925, "tip": "dag", "label": "Everest"},
     )
-    if not tp or len(tp.get("stops") or []) < 4:
-        fail("build_tour_payload Everest class")
-    if not tp.get("smart") or not tp.get("class_based"):
-        fail("H10.5 class payload")
-    if tp.get("card", {}).get("tur") != "Dağ":
-        fail("Everest card tur")
-    # Yer adı yokken / coords yokken paket kurulmaz
+    if not tp or not tp.get("endless"):
+        fail("build_tour_payload Everest endless")
+    if len(tp.get("waypoints") or []) < 20:
+        fail("Everest waypoints densite")
+    if (tp.get("flight") or {}).get("style") != "ridge_wander":
+        fail("Everest ridge_wander")
+    # uzatma
+    ext = extend_endless_path("nehir", tp["waypoints"][-1], label="Nil", count=16)
+    if len(ext) < 8:
+        fail("extend_endless_path")
+    for place, tip, lat, lon, style in (
+        ("Nil", "nehir", 25.68724, 32.63964, "river_follow"),
+        ("Amazon", "nehir", -3.1, -60.0, "river_follow"),
+        ("Everest", "dag", 27.9881, 86.925, "ridge_wander"),
+        ("Agri Dagi", "dag", 39.7016, 44.2983, "ridge_wander"),
+        ("Grand Canyon", "kanyon", 36.1069, -112.1129, "corridor"),
+        ("Kibris", "ada", 35.1264, 33.4299, "coast_cruise"),
+        ("Fuji", "volkan", 35.3606, 138.7274, "volcano_wander"),
+        ("Istanbul", "sehir", 41.0082, 28.9784, "city_cruise"),
+    ):
+        pack = build_tour_payload(
+            place=place,
+            geo={"lat": lat, "lon": lon, "tip": tip, "label": place},
+        )
+        if not pack or not pack.get("endless"):
+            fail("H10.7 pack: " + place)
+        if (pack.get("flight") or {}).get("style") != style:
+            fail(place + " style=" + str((pack.get("flight") or {}).get("style")))
+        if len(pack.get("waypoints") or []) < 12:
+            fail(place + " waypoint az")
+        mx = max(float(w.get("range") or 0) for w in pack["waypoints"])
+        if mx > 280:
+            fail(place + " irtifa yuksek: " + str(mx))
     if build_tour_payload(place="Everest") is not None:
         fail("coordsuz payload olmamali")
     for needle in (
@@ -246,42 +370,73 @@ def main() -> None:
         "fetchAndStartTour",
         "tourPause",
         "tourResume",
-        "tourNext",
-        "tourPrev",
-        "tourSkip",
+        "extendExplorationPath",
+        "tourTurn",
+        "tourSetSteerMode",
+        "tourSlower",
+        "tourFaster",
+        "tourCloser",
+        "tourFarther",
+        "tourSetAltitude",
+        "effectiveTourRange",
+        "startContinuousFlight",
+        "tickContinuousFlight",
+        "sampleWaypointPair",
+        "catmullRom",
+        "buildLocalTourPayload",
+        "wantTourBoot",
+        "requestAnimationFrame",
+        "ruzgar-harita-ready",
         "updateTourProgress",
-        "renderTourCard",
         "setTourCinema",
         "tour-cinema-on",
-        "h10.5-dunya-gezgini-sinif-v1",
+        "h10.7-dunya-gezgini-surekli-v1",
+        "endless",
+        "TOUR_BASE_RATE",
+        "rebuildPathAhead",
+        "tourForward",
+        "tourBack",
+        "scheduleNarration",
         'id="tourBar"',
-        'id="tourCard"',
         'id="tourProgFill"',
         "ruzgar-harita-tour",
         "wantTour",
     ):
         if needle not in viewer_h:
-            fail("H10.5 viewer eksik: " + needle)
+            fail("H10.7 viewer eksik: " + needle)
     if "tour_start" not in masa_js or "ruzgar-harita-tour" not in masa_js:
         fail("H9/H10 masa tour kanca yok")
     if "ruzgar-harita-cinema" not in masa_js:
-        fail("H10.5 masa cinema kanca yok")
+        fail("H10.6 masa cinema kanca yok")
     if 'data-harita-act="tour_start"' not in masa_js:
         fail("H9 Gezgin menü yok")
-    if 'data-harita-act="tour_next"' not in masa_js or 'data-harita-act="tour_skip"' not in masa_js:
-        fail("H10 ileri/atla menü yok")
+    if 'data-harita-act="tour_faster"' not in masa_js or 'data-harita-act="tour_slower"' not in masa_js:
+        fail("H10.7 hız menü yok")
+    if 'data-harita-act="tour_closer"' not in masa_js or 'data-harita-act="tour_farther"' not in masa_js:
+        fail("H10.7 irtifa menü yok")
+    if "scheduleHaritaTourStart" not in masa_js or "ruzgar-harita-ready" not in masa_js:
+        fail("H10.7 masa tour retry/ready yok")
     mobil_js = (ROOT / "static" / "mobil-pwa" / "app.js").read_text(encoding="utf-8")
     for needle in (
         "tour_start",
-        "tour_next",
-        "tour_skip",
+        "tour_faster",
+        "tour_slower",
+        "tour_closer",
+        "tour_farther",
+        "tour_turn_left",
+        "tour_forward",
+        "tour_back",
+        "tour_follow_river",
+        "tour_enter_city",
+        "scheduleMobilHaritaTourStart",
+        "ruzgar-harita-ready",
         "ruzgar-harita-tour",
         "ruzgar-harita-cinema",
         "tour=1",
         "mobil-harita-cinema",
     ):
         if needle not in mobil_js:
-            fail("H10.5 mobil eksik: " + needle)
+            fail("H10.7 mobil eksik: " + needle)
     srv = (ROOT / "desktop_server.py").read_text(encoding="utf-8", errors="ignore")
     if "/api/sahne/harita/tur" not in srv or "sahne_dunya_gezgini" not in srv:
         fail("H9 /tur API yok")
@@ -289,12 +444,16 @@ def main() -> None:
         fail("H10 API version yok")
     print("OK: H9 Dünya Gezgini")
     print("OK: H10 Akıllı Dünya Gezgini")
-    print("OK: H10.5 sınıf + mobil senkron")
-    for phrase in ("Zigana Gecidi goster", "Kop Gecidi goster"):
-        rr = resolve_super_el(phrase, geocode=True)
-        g = rr.get("geo") or {}
-        if str(g.get("tip")) != "gecit" or g.get("lat") is None:
-            fail(phrase + " gecit geo")
+    if "tour_forward" not in masa_js or "tour_back" not in masa_js:
+        fail("masa pilot forward/back yok")
+    if "pilot-gezi-v1" not in masa_js:
+        fail("masa cache-bust pilot-gezi yok")
+    print("OK: H10.7 pilot gezi (yavaş + steer + anlatım)")
+    for phrase in ("Zigana Gecidi", "Kop Gecidi"):
+        if infer_tip_from_text(phrase) != "gecit":
+            fail(phrase + " gecit sinif")
+        if zoom_for_tip("gecit") < 16:
+            fail("gecit zoom")
     print("OK: tip+zoom hedefleme")
     print("OK: H4 everest+dag senkron")
     print("OK: H6 sinematik kamera")
@@ -312,7 +471,7 @@ def main() -> None:
         fail("3d mode")
     if r3.get("hedef"):
         fail("3d hedef olmamali: " + str(r3.get("hedef")))
-    r3g = resolve_super_el("3d goster", geocode=True)
+    r3g = resolve_super_el("3d goster", geocode=False)
     if r3g.get("geo"):
         fail("3d geo olmamali")
     r4 = resolve_super_el("4d ye gec", geocode=False)

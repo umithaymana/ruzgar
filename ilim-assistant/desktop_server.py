@@ -5521,7 +5521,7 @@ def api_sahne_harita_cesium():
 
 @app.get("/api/sahne/harita/tur")
 def api_sahne_harita_tur(place: str = "", tip: str = "", lat: float | None = None, lon: float | None = None):
-    """H10 Akıllı Dünya Gezgini — aşamalı duraklar + bilgi kartı."""
+    """H10.6 Dünya Gezgini — sürekli sinematik uçuş waypoint'leri."""
     from ilim_assistant.sahne_dunya_gezgini import H10_VERSION, build_tour_payload
 
     geo = None

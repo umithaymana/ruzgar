@@ -3787,11 +3787,7 @@
   }
 
   function haritaPilotSehir(state) {
-    const L = String(state.label || state.hedef || state.sehir || "").toLowerCase();
-    if (/istanbu/.test(L)) return "istanbul";
-    if (/ankara/.test(L)) return "ankara";
-    if (/bursa/.test(L)) return "bursa";
-    if (/izmir|i̇zmir/.test(L)) return "izmir";
+    // Anayasa: sabit şehir listesi yok — yalnız açık sehir alanı
     return String(state.sehir || "").toLowerCase();
   }
 
@@ -3834,6 +3830,16 @@
     if (sehir) {
       url += "&sehir=" + encodeURIComponent(sehir) + "&bina=1";
     }
+    const cam = state.camera;
+    if (cam && isFinite(Number(cam.range_m))) {
+      url +=
+        "&cam_h=" +
+        Number(cam.heading || 0).toFixed(1) +
+        "&cam_p=" +
+        Number(cam.pitch || -28).toFixed(1) +
+        "&cam_r=" +
+        Number(cam.range_m).toFixed(0);
+    }
     const bb = state.bbox;
     if (bb && bb.length === 4) {
       url +=
@@ -3842,7 +3848,58 @@
           return Number(n).toFixed(5);
         }).join(",");
     }
+    // Coğrafi doğruluk cache-bust
+    url += "&hv=pilot-gezi-v1";
     return url;
+  }
+
+  function postHaritaTourStart(ifr, tourPayload, st) {
+    if (!ifr || !ifr.contentWindow) return false;
+    try {
+      ifr.contentWindow.postMessage(
+        {
+          type: "ruzgar-harita-tour",
+          action: "start",
+          tour: tourPayload || null,
+          place: st.tour_place || st.label || st.hedef,
+          tip: st.tip,
+          lat: st.lat,
+          lon: st.lon,
+        },
+        "*",
+      );
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function scheduleHaritaTourStart(tourPayload) {
+    const st = sahneOrganState.harita;
+    const payload = tourPayload || st.tour || null;
+    let attempts = 0;
+    function trySend() {
+      attempts += 1;
+      const frame = document.getElementById("ruzgar-sahne-organ-frame");
+      const ifr = frame && frame.querySelector("iframe[data-sahne-harita]");
+      if (!ifr) {
+        if (attempts < 25) setTimeout(trySend, 300);
+        return;
+      }
+      // iframe henüz yükleniyorsa load'u bekle
+      if (!ifr.getAttribute("data-tour-listen")) {
+        ifr.setAttribute("data-tour-listen", "1");
+        ifr.addEventListener("load", function onLoad() {
+          setTimeout(function () {
+            postHaritaTourStart(ifr, payload, st);
+          }, 400);
+        });
+      }
+      postHaritaTourStart(ifr, payload, st);
+      // Cesium geç açılırsa tekrar dene
+      if (attempts < 8) setTimeout(trySend, 900);
+    }
+    setTimeout(trySend, 500);
   }
 
   function setHaritaToolsMenuOpen(tools, open) {
@@ -3881,12 +3938,17 @@
       '<button type="button" role="menuitem" data-harita-act="mode_uydu" title="Uydu görüntüsü">Uydu</button>' +
       '<button type="button" role="menuitem" data-harita-act="mode_tur" title="Panoramik dünya turu">Tur</button>' +
       '<button type="button" role="menuitem" data-harita-act="tour_start" title="Dünya Gezgini — mevcut hedef turu">Gezgin</button>' +
-      '<button type="button" role="menuitem" data-harita-act="tour_prev" title="Önceki durak">Geri</button>' +
-      '<button type="button" role="menuitem" data-harita-act="tour_next" title="Sonraki durak">İleri</button>' +
-      '<button type="button" role="menuitem" data-harita-act="tour_skip" title="Durak atla">Atla</button>' +
-      '<button type="button" role="menuitem" data-harita-act="tour_pause" title="Turu duraklat">Durdur</button>' +
-      '<button type="button" role="menuitem" data-harita-act="tour_resume" title="Tura devam">Devam</button>' +
-      '<button type="button" role="menuitem" data-harita-act="tour_stop" title="Turu bitir">Bitir</button>' +
+      '<button type="button" role="menuitem" data-harita-act="tour_prev" title="Önceki bölüm">Geri</button>' +
+      '<button type="button" role="menuitem" data-harita-act="tour_next" title="Sonraki bölüm">İleri</button>' +
+      '<button type="button" role="menuitem" data-harita-act="tour_pause" title="Turu duraklat">Duraklat</button>' +
+      '<button type="button" role="menuitem" data-harita-act="tour_resume" title="Tura devam">Devam Et</button>' +
+      '<button type="button" role="menuitem" data-harita-act="tour_closer" title="Alçal / yaklaş">Alçal</button>' +
+      '<button type="button" role="menuitem" data-harita-act="tour_farther" title="Yüksel / uzaklaş">Yüksel</button>' +
+      '<button type="button" role="menuitem" data-harita-act="tour_altitude_reset" title="Kuş irtifası">Kuş</button>' +
+      '<button type="button" role="menuitem" data-harita-act="tour_slower" title="Hız azalt">Yavaş</button>' +
+      '<button type="button" role="menuitem" data-harita-act="tour_faster" title="Hızlandır">Hızlı</button>' +
+      '<button type="button" role="menuitem" data-harita-act="tour_stop" title="Turu bitir">Turu Bitir</button>' +
+      '<button type="button" role="menuitem" data-harita-act="tour_skip" title="Bölüm atla">Atla</button>' +
       '<button type="button" role="menuitem" data-harita-act="mode_sentinel" title="Sentinel-2 STAC">S2</button>' +
       '<button type="button" role="menuitem" data-harita-act="mode_pano" title="Mapillary sokak">Pano</button>' +
       '<button type="button" role="menuitem" data-harita-act="mode_f4" title="F4map yedek 3D">F4</button>' +
@@ -4037,12 +4099,20 @@
     }
   }
 
+  function applyHaritaReady(msg) {
+    if (!msg || msg.type !== "ruzgar-harita-ready") return;
+    const st = sahneOrganState.harita;
+    if (!(st && (st.tour_play || st.tour))) return;
+    scheduleHaritaTourStart(st.tour || null);
+  }
+
   if (!window.__ruzgarHaritaViewListen) {
     window.__ruzgarHaritaViewListen = true;
     window.addEventListener("message", function (ev) {
       try {
         applyHaritaViewSync(ev && ev.data);
         applyHaritaCinema(ev && ev.data);
+        applyHaritaReady(ev && ev.data);
       } catch (_) {}
     });
   }
@@ -4172,20 +4242,37 @@
       action === "tour_stop" ||
       action === "tour_next" ||
       action === "tour_prev" ||
-      action === "tour_skip"
+      action === "tour_skip" ||
+      action === "tour_faster" ||
+      action === "tour_slower" ||
+      action === "tour_closer" ||
+      action === "tour_farther" ||
+      action === "tour_altitude" ||
+      action === "tour_altitude_reset" ||
+      action === "tour_turn_left" ||
+      action === "tour_turn_right" ||
+      action === "tour_forward" ||
+      action === "tour_back" ||
+      action === "tour_follow_river" ||
+      action === "tour_enter_city" ||
+      action === "tour_follow_coast" ||
+      action === "tour_enter_crater"
     ) {
       // iframe’e postMessage — reload yok
       try {
         const frame = document.getElementById("ruzgar-sahne-organ-frame");
         const ifr = frame && frame.querySelector("iframe");
         if (ifr && ifr.contentWindow) {
-          ifr.contentWindow.postMessage(
-            {
-              type: "ruzgar-harita-tour",
-              action: String(action).replace(/^tour_/, ""),
-            },
-            "*",
-          );
+          const payload = {
+            type: "ruzgar-harita-tour",
+            action: String(action).replace(/^tour_/, ""),
+          };
+          const meters = c.tour_meters != null ? c.tour_meters : c.meters;
+          if (meters != null && isFinite(Number(meters))) {
+            payload.meters = Number(meters);
+            payload.tour_meters = Number(meters);
+          }
+          ifr.contentWindow.postMessage(payload, "*");
         }
       } catch (_) {}
       sahneOrganState.organ = "harita";
@@ -4212,6 +4299,11 @@
             mahalle: 15,
             dag: 14,
             gecit: 16,
+            vadi: 13,
+            kanyon: 14,
+            nehir: 11,
+            bogaz: 14,
+            volkan: 14,
             kopru: 17,
             bina: 18,
             nokta: 18,
@@ -4224,6 +4316,17 @@
         st.label = geo.label || hedefStr || st.label;
         st.centerLabel = geo.label || hedefStr || st.centerLabel || st.label;
         st.hedef = hedefStr || st.label;
+        if (geo.camera && typeof geo.camera === "object") {
+          st.camera = {
+            lat: Number(geo.camera.lat != null ? geo.camera.lat : st.lat),
+            lon: Number(geo.camera.lon != null ? geo.camera.lon : st.lon),
+            heading: Number(geo.camera.heading) || 0,
+            pitch: Number(geo.camera.pitch) || -28,
+            range_m: Number(geo.camera.range_m) || 500,
+          };
+        } else {
+          delete st.camera;
+        }
         st.base = st.base || "esri";
         st.baseLabel = st.baseLabel || "Esri Uydu";
         try {
@@ -4264,26 +4367,7 @@
     setSahneOrganOn(true);
     paintHaritaFrame(c.metaText);
     if (action === "tour_start") {
-      const tourPayload = c.tour || st.tour || null;
-      setTimeout(function () {
-        try {
-          const frame = document.getElementById("ruzgar-sahne-organ-frame");
-          const ifr = frame && frame.querySelector("iframe");
-          if (!ifr || !ifr.contentWindow) return;
-          ifr.contentWindow.postMessage(
-            {
-              type: "ruzgar-harita-tour",
-              action: "start",
-              tour: tourPayload,
-              place: st.tour_place || st.label || st.hedef,
-              tip: st.tip,
-              lat: st.lat,
-              lon: st.lon,
-            },
-            "*",
-          );
-        } catch (_) {}
-      }, 1600);
+      scheduleHaritaTourStart(c.tour || st.tour || null);
     }
     return { ok: true, organ: "harita", state: { ...st } };
   }
@@ -4426,6 +4510,20 @@
       tour_next: 1,
       tour_prev: 1,
       tour_skip: 1,
+      tour_faster: 1,
+      tour_slower: 1,
+      tour_closer: 1,
+      tour_farther: 1,
+      tour_altitude: 1,
+      tour_altitude_reset: 1,
+      tour_turn_left: 1,
+      tour_turn_right: 1,
+      tour_forward: 1,
+      tour_back: 1,
+      tour_follow_river: 1,
+      tour_enter_city: 1,
+      tour_follow_coast: 1,
+      tour_enter_crater: 1,
     };
     const targetOrgan = mapActs[action]
       ? organ === "yuz"
@@ -4441,6 +4539,8 @@
       zoom_delta: data.zoom_delta || 0,
       geo: data.geo || null,
       tour: data.tour || null,
+      tour_meters: data.tour_meters != null ? data.tour_meters : data.meters,
+      meters: data.meters != null ? data.meters : data.tour_meters,
       metaText:
         (data.fiil || action) +
         " · " +
