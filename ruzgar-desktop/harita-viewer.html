@@ -128,66 +128,50 @@
       margin: 2px 0 6px 22px; font-size: 0.68rem; color: #cbb892; letter-spacing: 0.03em;
     }
     #tourBar {
-      display: none; position: absolute; left: 50%; top: 12px; transform: translateX(-50%);
-      z-index: 1300; width: min(460px, 94vw); padding: 8px 10px 10px;
-      border-radius: 12px; background: rgba(8,10,16,0.92);
-      border: 1px solid rgba(212,175,55,0.45); color: #f3ead2;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.4); pointer-events: auto;
+      display: none; position: absolute; left: 0; right: 0; top: 0; transform: none;
+      z-index: 1300; width: 100%; max-width: none; padding: 7px 14px 8px;
+      border-radius: 0; background: linear-gradient(180deg, rgba(6,8,14,0.88), rgba(6,8,14,0.55));
+      border: 0; border-bottom: 1px solid rgba(212,175,55,0.28); color: #f3ead2;
+      box-shadow: none; pointer-events: none;
     }
     #tourBar.on { display: block; }
-    #tourBar .tb-title { font-size: 0.78rem; font-weight: 700; color: #e6c86a; margin: 0 0 4px; }
-    #tourBar .tb-progress {
-      display: flex; align-items: center; gap: 8px; margin: 0 0 6px;
-      font-size: 0.68rem; color: #cbb892;
+    #tourBar .tb-strip {
+      display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+      flex-wrap: wrap; pointer-events: none;
     }
-    #tourBar .tb-progress-track {
-      flex: 1; height: 4px; border-radius: 999px; background: rgba(243,234,210,0.12);
-      overflow: hidden;
+    #tourBar .tb-title {
+      font-size: 0.82rem; font-weight: 700; color: #e6c86a; margin: 0;
+      letter-spacing: 0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: min(52vw, 520px);
     }
-    #tourBar .tb-progress-fill {
-      height: 100%; width: 0%; background: linear-gradient(90deg, #b8922e, #e6c86a);
-      transition: width 0.35s ease;
+    #tourBar .tb-progress { display: none !important; }
+    #tourBar .tb-meta {
+      font-size: 0.72rem; color: #d9ceb0; margin: 0; flex: 1 1 auto;
+      text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    #tourBar .tb-meta { font-size: 0.66rem; color: #9a8f72; margin: 0 0 6px; }
-    #tourBar .tb-card {
-      display: none; margin: 0 0 8px; padding: 6px 8px; border-radius: 8px;
-      background: rgba(12,14,20,0.75); border: 1px solid rgba(212,175,55,0.28);
-      font-size: 0.68rem; line-height: 1.35;
-    }
-    #tourBar .tb-card.on { display: block; }
-    #tourBar .tb-card .tc-row { display: flex; gap: 6px; margin: 0 0 2px; }
-    #tourBar .tb-card .tc-k { color: #9a8f72; min-width: 4.6em; }
-    #tourBar .tb-card .tc-v { color: #f3ead2; font-weight: 650; }
-    #tourBar .tb-card .tc-ozet { margin: 4px 0 0; color: #e6d9b0; }
-    #tourBar .tb-info { font-size: 0.72rem; line-height: 1.4; color: #f3ead2; margin: 0 0 8px; min-height: 2.4em; }
-    #tourBar .tb-actions { display: flex; flex-wrap: wrap; gap: 6px; }
-    #tourBar .tb-actions button {
-      min-height: 28px; padding: 0 10px; border-radius: 8px; cursor: pointer;
-      border: 1px solid rgba(212,175,55,0.4); background: rgba(12,14,20,0.9);
-      color: #f3e6c4; font-size: 0.7rem; font-weight: 700;
-    }
-    #tourBar .tb-actions button:hover { background: rgba(212,175,55,0.28); }
-    #tourBar .tb-actions button:disabled { opacity: 0.35; cursor: default; }
-    /* H10.6 — temiz sinematik tur: sahne ≥%90, kart/panel kapalı */
+    #tourBar .tb-card,
+    #tourBar .tb-info { display: none !important; }
+    #tourBar .tb-actions { display: none !important; } /* tuş yok — fare + ses */
+    /* Temiz sinematik: sahne dolu, yalnız üst şerit */
     body.tour-cinema-on #layerPanel,
     body.tour-cinema-on #mapTools,
     body.tour-cinema-on #stacCard,
     body.tour-cinema-on #yearBar,
-    body.tour-cinema-on #panoPanel { display: none !important; }
+    body.tour-cinema-on #panoPanel,
+    body.tour-cinema-on #panoWalkStrip,
+    body.tour-cinema-on #panoWalkPreview { display: none !important; }
     body.tour-cinema-on #mapInfoBar { display: none !important; }
     body.tour-cinema-on #tourBar {
-      width: min(280px, 56vw); top: 8px; padding: 5px 8px 7px;
-      background: rgba(8,10,16,0.72); border-color: rgba(212,175,55,0.28);
+      padding: 8px 16px;
+      background: linear-gradient(180deg, rgba(4,6,12,0.9) 0%, rgba(4,6,12,0.35) 85%, transparent 100%);
+      border-bottom-color: rgba(212,175,55,0.22);
     }
-    body.tour-cinema-on #tourBar .tb-title { font-size: 0.68rem; margin: 0 0 2px; }
-    body.tour-cinema-on #tourBar .tb-card,
-    body.tour-cinema-on #tourBar .tb-info { display: none !important; }
-    body.tour-cinema-on #tourBar .tb-meta { font-size: 0.62rem; margin: 0 0 4px; }
-    body.tour-cinema-on #tourBar .tb-actions button {
-      min-height: 24px; padding: 0 7px; font-size: 0.62rem;
-    }
-    body.tour-cinema-on #badge { opacity: 0.35; }
-    body.tour-cinema-on #mapToast { top: auto; bottom: 12px; font-size: 0.68rem; opacity: 0.85; }
+    body.tour-cinema-on #tourBar .tb-title { font-size: 0.8rem; }
+    body.tour-cinema-on #tourBar .tb-meta { font-size: 0.7rem; color: #e8dcc0; }
+    body.tour-cinema-on #badge { display: none !important; }
+    body.tour-cinema-on #mapToast { top: auto; bottom: 14px; font-size: 0.7rem; opacity: 0.8; }
+    body.tour-cinema-on #globe { cursor: grab; }
+    body.tour-cinema-on #globe.is-drag { cursor: grabbing; }
     #mapToast {
       display: none; position: absolute; left: 50%; top: 14px; transform: translateX(-50%);
       z-index: 1400; padding: 8px 14px; border-radius: 999px;
@@ -314,29 +298,32 @@
   <div id="ruzgarHaritaModuleHooks" hidden aria-hidden="true"></div>
   <div id="mapToast" role="status" aria-live="polite"></div>
   <div id="tourBar" aria-label="Dünya Gezgini turu" aria-live="polite">
-    <div class="tb-title" id="tourTitle">Dünya Gezgini</div>
-    <div class="tb-progress" id="tourProgressWrap" aria-hidden="true">
+    <div class="tb-strip">
+      <div class="tb-title" id="tourTitle">Dünya Gezgini</div>
+      <div class="tb-meta" id="tourMeta">Adres · mesafe</div>
+    </div>
+    <div class="tb-progress" id="tourProgressWrap" hidden aria-hidden="true">
       <span id="tourProgLabel">%0</span>
       <div class="tb-progress-track" aria-hidden="true"><div class="tb-progress-fill" id="tourProgFill"></div></div>
     </div>
-    <div class="tb-meta" id="tourMeta">Bölüm — · Kalan —</div>
-    <div class="tb-card" id="tourCard" aria-label="Bilgi kartı"></div>
-    <p class="tb-info" id="tourInfo">Tur hazır.</p>
-    <div class="tb-actions">
-      <button type="button" data-tour-act="pause" title="Duraklat">Duraklat</button>
-      <button type="button" data-tour-act="resume" title="Devam Et">Devam Et</button>
-      <button type="button" data-tour-act="closer" title="Alçal / yaklaş">Alçal</button>
-      <button type="button" data-tour-act="farther" title="Yüksel / uzaklaş">Yüksel</button>
-      <button type="button" data-tour-act="slower" title="Hız azalt">Yavaş</button>
-      <button type="button" data-tour-act="faster" title="Hızlandır">Hızlı</button>
-      <button type="button" data-tour-act="walk" title="Göz hizası / yürü">Yürü</button>
-      <button type="button" data-tour-act="strafe_left" title="Sola kay">←</button>
-      <button type="button" data-tour-act="forward" title="İleri">↑</button>
-      <button type="button" data-tour-act="strafe_right" title="Sağa kay">→</button>
-      <button type="button" data-tour-act="back" title="Geri">↓</button>
-      <button type="button" data-tour-act="labels_on" title="Sokak/mahalle">Etiket</button>
-      <button type="button" data-tour-act="traffic" title="Araba/gemi sim">Trafik</button>
-      <button type="button" data-tour-act="stop" title="Turu Bitir">Turu Bitir</button>
+    <div class="tb-card" id="tourCard" hidden aria-hidden="true"></div>
+    <p class="tb-info" id="tourInfo" hidden aria-hidden="true">Tur hazır.</p>
+    <!-- Tuşlar gizli; sesli komut / postMessage hâlâ data-tour-act ile çalışır -->
+    <div class="tb-actions" hidden aria-hidden="true">
+      <button type="button" data-tour-act="pause">Duraklat</button>
+      <button type="button" data-tour-act="resume">Devam Et</button>
+      <button type="button" data-tour-act="closer">Alçal</button>
+      <button type="button" data-tour-act="farther">Yüksel</button>
+      <button type="button" data-tour-act="slower">Yavaş</button>
+      <button type="button" data-tour-act="faster">Hızlı</button>
+      <button type="button" data-tour-act="walk">Yürü</button>
+      <button type="button" data-tour-act="strafe_left">←</button>
+      <button type="button" data-tour-act="forward">↑</button>
+      <button type="button" data-tour-act="strafe_right">→</button>
+      <button type="button" data-tour-act="back">↓</button>
+      <button type="button" data-tour-act="labels_on">Etiket</button>
+      <button type="button" data-tour-act="traffic">Trafik</button>
+      <button type="button" data-tour-act="stop">Turu Bitir</button>
     </div>
   </div>
   <div id="mapInfoBar" aria-live="polite"></div>
@@ -1081,12 +1068,21 @@
     placeLabel: "",
     narrTs: 0,
     narrBusy: false,
+    keys: Object.create(null),
+    keyWired: false,
+    reverse: false,
+    speedPhase: 0,
+    suppressClickUntil: 0,
+    dragActive: false,
+    dragFwd: 0,
+    dragTurn: 0,
+    dragThrust: 0,
   };
 
-  // Gezi hissi: yavaş varsayılan (hız öncelik değil)
-  const TOUR_SPEED_MIN = 0.12;
-  const TOUR_SPEED_MAX = 1.15;
-  const TOUR_BASE_RATE = 0.42;
+  // Hızlı akış varsayılan (fare + ses yönlendirir)
+  const TOUR_SPEED_MIN = 0.2;
+  const TOUR_SPEED_MAX = 2.2;
+  const TOUR_BASE_RATE = 0.92;
   const TOUR_RANGE_MIN = 1;
   const TOUR_RANGE_MAX = 80000;
   const TOUR_RANGE_MULT_MIN = 0.002;
@@ -1506,8 +1502,9 @@
       try {
         ground = Number(resolveLookHeight(lon, lat)) || 0;
       } catch (_) {}
-      const eye = Math.max(0.8, cameraRigEye());
-      const minH = ground + Math.min(0.8, eye * 0.5);
+      const eye = Math.max(1.5, cameraRigEye());
+      // Terrain 0 gelirse bile gömülme: en az ground+1.5
+      const minH = ground + 1.5;
       const maxH = ground + Math.max(140, eye + 40);
       let h = carto.height;
       // Yere gömüldüyse veya hedeften çok saptıysa göze çek
@@ -1588,6 +1585,15 @@
       Array.isArray(walkState.panoSeries) &&
       walkState.panoSeries.length > 1;
     try {
+      // Seri pano olsa da WASD dünya hareketi — yalnızca kare adımı yetmez
+      if (k.KeyW || k.ArrowUp) cam.moveForward(spd);
+      if (k.KeyS || k.ArrowDown) cam.moveBackward(spd);
+      if (k.KeyA) cam.moveLeft(spd);
+      if (k.KeyD) cam.moveRight(spd);
+      if (k.ArrowLeft) cam.lookLeft(Cesium.Math.toRadians(turn * dt));
+      if (k.ArrowRight) cam.lookRight(Cesium.Math.toRadians(turn * dt));
+      if (k.KeyQ || k.PageDown) cam.moveDown(spd * 0.55);
+      if (k.KeyE || k.PageUp) cam.moveUp(spd * 0.55);
       if (seriesWalk) {
         const now = Date.now();
         if (
@@ -1603,19 +1609,6 @@
           walkState.panoSeriesStepTs = now;
           panoSeriesStep(-1);
         }
-        if (k.KeyA) cam.moveLeft(spd);
-        if (k.KeyD) cam.moveRight(spd);
-        if (k.ArrowLeft) cam.lookLeft(Cesium.Math.toRadians(turn * dt));
-        if (k.ArrowRight) cam.lookRight(Cesium.Math.toRadians(turn * dt));
-      } else {
-        if (k.KeyW || k.ArrowUp) cam.moveForward(spd);
-        if (k.KeyS || k.ArrowDown) cam.moveBackward(spd);
-        if (k.KeyA) cam.moveLeft(spd);
-        if (k.KeyD) cam.moveRight(spd);
-        if (k.ArrowLeft) cam.lookLeft(Cesium.Math.toRadians(turn * dt));
-        if (k.ArrowRight) cam.lookRight(Cesium.Math.toRadians(turn * dt));
-        if (k.KeyQ || k.PageDown) cam.moveDown(spd * 0.55);
-        if (k.KeyE || k.PageUp) cam.moveUp(spd * 0.55);
       }
     } catch (_) {}
     if (!seriesWalk) walkClampHeight();
@@ -1671,6 +1664,11 @@
     tourState.paused = true;
     tourState.auto = false;
     walkState.on = true;
+    focusOrbit.locked = false;
+    try {
+      if (liveCesiumViewer)
+        liveCesiumViewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    } catch (_) {}
     if (!CAMERA_PRESETS[cameraRig.mode] || CAMERA_PRESETS[cameraRig.mode].kind === "cinema") {
       cameraRigApplyPreset(CAMERA_PRESETS.yuruyus, false);
     }
@@ -2632,6 +2630,35 @@
     );
   }
 
+  function tourIsCityishTip(tip) {
+    return /^(sehir|il|ilce|mahalle|bina|nokta|bogaz)$/i.test(
+      String(tip || tourState.tip || "")
+    );
+  }
+
+  function sampleRangeFloor() {
+    // Eski Math.max(800) şehir turunu denize çekiyordu (Taksim→Boğaz).
+    if (tourIsCityishTip()) return 12;
+    const tip = String(tourState.tip || "").toLowerCase();
+    if (/^(nehir|delta|kanyon|vadi|selale)$/.test(tip)) return 25;
+    return 60;
+  }
+
+  function clampToTourCenter(lat, lon, maxDeg) {
+    const cLat = Number(tourState.centerLat);
+    const cLon = Number(tourState.centerLon);
+    if (!isFinite(cLat) || !isFinite(cLon) || (cLat === 0 && cLon === 0)) {
+      return { lat: lat, lon: lon };
+    }
+    const lim = maxDeg != null ? maxDeg : tourIsCityishTip() ? 0.012 : 0.08;
+    const dLat = lat - cLat;
+    const dLon = lon - cLon;
+    const dist = Math.sqrt(dLat * dLat + dLon * dLon);
+    if (dist <= lim || dist < 1e-9) return { lat: lat, lon: lon };
+    const s = lim / dist;
+    return { lat: cLat + dLat * s, lon: cLon + dLon * s };
+  }
+
   function sampleWaypointPair(i, t) {
     const wps = tourState.waypoints;
     const n = wps.length;
@@ -2643,14 +2670,16 @@
     const a = wps[i1];
     const b = wps[i2];
     const u = smoothstep(t);
-    const lat = catmullRom(
+    const floorR = sampleRangeFloor();
+    const defR = tourIsCityishTip() ? 80 : 12000;
+    let lat = catmullRom(
       Number(wps[i0].lat),
       Number(a.lat),
       Number(b.lat),
       Number(wps[i3].lat),
       u
     );
-    const lon = catmullRom(
+    let lon = catmullRom(
       Number(wps[i0].lon),
       Number(a.lon),
       Number(b.lon),
@@ -2658,10 +2687,10 @@
       u
     );
     const range = catmullRom(
-      Number(wps[i0].range) || 12000,
-      Number(a.range) || 12000,
-      Number(b.range) || 12000,
-      Number(wps[i3].range) || 12000,
+      Number(wps[i0].range) || defR,
+      Number(a.range) || defR,
+      Number(b.range) || defR,
+      Number(wps[i3].range) || defR,
       u
     );
     const heading = lerpAngleDeg(Number(a.heading) || 0, Number(b.heading) || 0, u);
@@ -2672,12 +2701,20 @@
       lookLat = lerp(lookLat, Number(b.look_lat), u);
       lookLon = lerp(lookLon, Number(b.look_lon), u);
     }
+    if (tourIsCityishTip()) {
+      const p = clampToTourCenter(lat, lon);
+      lat = p.lat;
+      lon = p.lon;
+      const lk = clampToTourCenter(lookLat, lookLon);
+      lookLat = lk.lat;
+      lookLon = lk.lon;
+    }
     return {
       lat: lat,
       lon: lon,
       heading: heading,
       pitch: pitch,
-      range: Math.max(800, range),
+      range: Math.max(floorR, range),
       look_lat: lookLat,
       look_lon: lookLon,
       phase: t < 0.5 ? a.phase : b.phase,
@@ -2689,13 +2726,21 @@
   function resolveLookHeight(lon, lat) {
     const viewer = liveCesiumViewer;
     if (!viewer || !viewer.scene || !viewer.scene.globe || typeof Cesium === "undefined") {
-      return 0;
+      return tourState._lastGround != null ? Number(tourState._lastGround) : 35;
     }
     try {
       const carto = Cesium.Cartographic.fromDegrees(Number(lon), Number(lat));
       const h = viewer.scene.globe.getHeight(carto);
-      if (typeof h === "number" && isFinite(h)) return h;
+      if (typeof h === "number" && isFinite(h)) {
+        tourState._lastGround = h;
+        return h;
+      }
     } catch (_) {}
+    // Terrain henüz yokken 0 kullanmak → yere gömülme (gri yüzey). Son bilinen / TR şehir varsayılanı.
+    if (tourState._lastGround != null && isFinite(Number(tourState._lastGround))) {
+      return Number(tourState._lastGround);
+    }
+    if (tourIsCityishTip()) return 35;
     return 0;
   }
 
@@ -2722,26 +2767,30 @@
   }
 
   function applyCameraSample(sample) {
-    const viewer = liveCesiumViewer;
-    if (!viewer || !sample || typeof Cesium === "undefined") return;
+    if (!sample || typeof Cesium === "undefined") return;
     try {
-      const lookLat = Number(sample.look_lat);
-      const lookLon = Number(sample.look_lon);
-      const height = resolveLookHeight(lookLon, lookLat);
-      const target = Cesium.Cartesian3.fromDegrees(lookLon, lookLat, height);
-      const heading = Cesium.Math.toRadians(Number(sample.heading) || 0);
+      const lookLat = Number(
+        sample.look_lat != null ? sample.look_lat : sample.lat
+      );
+      const lookLon = Number(
+        sample.look_lon != null ? sample.look_lon : sample.lon
+      );
+      if (!isFinite(lookLat) || !isFinite(lookLon)) return;
       let pitchDeg = Number(sample.pitch) || -30;
       const range = effectiveTourRange(sample.range);
-      // Çok alçakta yerin içine gömülmeyi azalt: hafif daha yatay bakış
       if (range < 25) pitchDeg = Math.max(pitchDeg, -18);
       else if (range < 80) pitchDeg = Math.max(pitchDeg, -22);
-      const pitch = Cesium.Math.toRadians(pitchDeg);
-      tourState.liveRangeM = range;
-      viewer.camera.lookAt(
-        target,
-        new Cesium.HeadingPitchRange(heading, pitch, range)
-      );
-      viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+      // Tek yol: focus orbit lookAt — setView/IDENTITY yok (merkez kaymaz)
+      focusOrbit.lat = lookLat;
+      focusOrbit.lon = lookLon;
+      let g = Number(resolveLookHeight(lookLon, lookLat));
+      if (!isFinite(g) || g < 5) g = tourIsCityishTip() ? 45 : 20;
+      focusOrbit.height = g;
+      focusOrbit.heading = Number(sample.heading) || 0;
+      focusOrbit.pitch = pitchDeg;
+      focusOrbit.range = Math.max(20, range);
+      focusOrbit.mode = "focus";
+      focusOrbitApply();
     } catch (e) {
       console.warn("tour sample", e);
     }
@@ -2784,16 +2833,24 @@
         ? " · " + formatAltitude(tourState.liveRangeM)
         : "";
     if (tourMetaEl) {
+      const addr =
+        tourState.placeLabel ||
+        tourState.phaseLabel ||
+        section ||
+        "—";
       tourMetaEl.textContent =
-        (tourState.endless ? "Sürekli · " : "") +
-        section +
-        " · " +
-        formatRemain(elapse) +
+        addr +
         alt +
-        spd;
+        (tourState.endless ? " · sürekli" : "") +
+        spd +
+        " · WASD/oklar · fare · ses";
     }
     if (tourTitleEl && tourState.active) {
-      tourTitleEl.textContent = tourState.label || "Dünya Gezgini";
+      const titleBits = [tourState.label || "Dünya Gezgini"];
+      if (tourState.placeLabel && tourState.placeLabel !== tourState.label) {
+        titleBits[0] = String(tourState.placeLabel).split(",")[0].trim() || titleBits[0];
+      }
+      tourTitleEl.textContent = titleBits[0];
     }
   }
 
@@ -2835,24 +2892,558 @@
     setTourBarOn(false);
     setTourCinema(false);
     setTourInfo("Dünya Gezgini", "Gezi bitti.");
+    setTourNativeControls(true);
   }
 
-  function tourPause() {
-    if (!tourState.active || tourState.paused) return;
+  const TOUR_SPEED_TIERS = [0.55, 0.85, 1.15, 1.55, 2.1];
+
+  /**
+   * Focus Orbit — Google Earth mantığı
+   * Tek kaynak: focus + heading/pitch/range → camera.lookAt
+   * lookAtTransform(IDENTITY) odak modunda YASAK (merkez kayması).
+   */
+  const focusOrbit = {
+    mode: "focus", // focus | free
+    lat: 0,
+    lon: 0,
+    height: 0,
+    heading: 35,
+    pitch: -42,
+    range: 150,
+    locked: true,
+    logN: 0,
+  };
+
+  function focusOrbitKillInertia() {
+    const viewer = liveCesiumViewer;
+    if (!viewer || !viewer.scene) return;
+    try {
+      const c = viewer.scene.screenSpaceCameraController;
+      if (!c) return;
+      c.inertiaSpin = 0;
+      c.inertiaTranslate = 0;
+      c.inertiaZoom = 0;
+    } catch (_) {}
+  }
+
+  /** Turdayken Cesium’un kendi mausu kapalı — kontrol yalnız bizde */
+  function setTourNativeControls(enabled) {
+    const viewer = liveCesiumViewer;
+    if (!viewer || !viewer.scene) return;
+    try {
+      const c = viewer.scene.screenSpaceCameraController;
+      if (!c) return;
+      c.enableRotate = !!enabled;
+      c.enableTranslate = !!enabled;
+      c.enableZoom = !!enabled;
+      c.enableTilt = !!enabled;
+      c.enableLook = !!enabled;
+      if (c.enableInputs != null) c.enableInputs = !!enabled;
+      c.inertiaSpin = 0;
+      c.inertiaTranslate = 0;
+      c.inertiaZoom = 0;
+    } catch (_) {}
+  }
+
+  function focusOrbitTargetCartesian() {
+    const h = isFinite(Number(focusOrbit.height)) ? Number(focusOrbit.height) : 0;
+    return Cesium.Cartesian3.fromDegrees(
+      Number(focusOrbit.lon),
+      Number(focusOrbit.lat),
+      h
+    );
+  }
+
+  function focusOrbitLog() {
+    const viewer = liveCesiumViewer;
+    if (!viewer || typeof Cesium === "undefined") return;
+    focusOrbit.logN += 1;
+    let cam = null;
+    try {
+      // Nadir lookAt'ta cartographic bozulabilir — beklenen göz yüksekliği yaz
+      if (Math.abs(Number(focusOrbit.pitch)) > 88) {
+        cam = {
+          lat: +Number(focusOrbit.lat).toFixed(6),
+          lon: +Number(focusOrbit.lon).toFixed(6),
+          h: Math.round(focusOrbit.height + focusOrbit.range),
+        };
+      } else {
+        const wc = viewer.camera.positionWC || viewer.camera.position;
+        const c = viewer.scene.globe.ellipsoid.cartesianToCartographic(wc);
+        cam = {
+          lat: +Cesium.Math.toDegrees(c.latitude).toFixed(6),
+          lon: +Cesium.Math.toDegrees(c.longitude).toFixed(6),
+          h: Math.round(c.height),
+        };
+      }
+    } catch (_) {}
+    const snap = {
+      n: focusOrbit.logN,
+      mode: focusOrbit.mode,
+      cam: cam,
+      heading: Math.round(focusOrbit.heading * 10) / 10,
+      pitch: Math.round(focusOrbit.pitch * 10) / 10,
+      roll: 0,
+      range: Math.round(focusOrbit.range),
+      focus: {
+        lat: +Number(focusOrbit.lat).toFixed(6),
+        lon: +Number(focusOrbit.lon).toFixed(6),
+        h: Math.round(focusOrbit.height),
+      },
+      locked: !!focusOrbit.locked,
+    };
+    try {
+      window.__RUZGAR_CAM__ = snap;
+    } catch (_) {}
+    if (focusOrbit.logN <= 5 || focusOrbit.logN % 45 === 0) {
+      console.info("[Rüzgar CAM]", snap);
+    }
+  }
+
+  function focusOrbitEnsureOnScreen() {
+    const viewer = liveCesiumViewer;
+    if (!viewer || !focusOrbit.locked || focusOrbit.mode !== "focus") return;
+    if (focusOrbit._applying) return;
+    try {
+      const target = focusOrbitTargetCartesian();
+      const win = viewer.scene.cartesianToCanvasCoordinates(target);
+      const canvas = viewer.scene.canvas;
+      if (!canvas) return;
+      if (
+        !win ||
+        win.x < 4 ||
+        win.y < 4 ||
+        win.x > canvas.clientWidth - 4 ||
+        win.y > canvas.clientHeight - 4
+      ) {
+        // Doğrudan lookAt — apply çağırma (özyineleme yok)
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+        viewer.camera.lookAt(
+          target,
+          new Cesium.HeadingPitchRange(
+            Cesium.Math.toRadians(focusOrbit.heading),
+            Cesium.Math.toRadians(focusOrbit.pitch),
+            focusOrbit.range
+          )
+        );
+        if (focusOrbit.logN % 90 === 1) showToast("Odak yeniden merkez");
+      }
+    } catch (_) {}
+  }
+
+  function focusOrbitApply() {
+    const viewer = liveCesiumViewer;
+    if (!viewer || typeof Cesium === "undefined") return;
+    if (!isFinite(Number(focusOrbit.lat)) || !isFinite(Number(focusOrbit.lon)))
+      return;
+    focusOrbitKillInertia();
+    setTourNativeControls(false);
+    tourCancelCameraFlight();
+    // pitch -90 kuşbakışı için açık; -5'ten yataylaşma
+    focusOrbit.pitch = Math.max(
+      -89.9,
+      Math.min(-0.5, Number(focusOrbit.pitch) || -40)
+    );
+    focusOrbit.range = Math.max(
+      20,
+      Math.min(80000, Number(focusOrbit.range) || 150)
+    );
+    focusOrbit.heading =
+      ((Number(focusOrbit.heading) % 360) + 360) % 360;
+    focusOrbit._applying = true;
+    try {
+      const target = focusOrbitTargetCartesian();
+      const offset = new Cesium.HeadingPitchRange(
+        Cesium.Math.toRadians(focusOrbit.heading),
+        Cesium.Math.toRadians(focusOrbit.pitch),
+        focusOrbit.range
+      );
+      // Doğru sıra: eski kilidi temizle → yeni lookAt.
+      // (lookAt SONRASI IDENTITY = merkez kaybı; ÖNCE IDENTITY = güvenli reset)
+      viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+      viewer.camera.lookAt(target, offset);
+      focusOrbit.locked = true;
+    } catch (e) {
+      console.warn("focusOrbitApply", e);
+      try {
+        const g = Number(focusOrbit.height) || 0;
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+        viewer.camera.setView({
+          destination: Cesium.Cartesian3.fromDegrees(
+            focusOrbit.lon,
+            focusOrbit.lat,
+            g + focusOrbit.range
+          ),
+          orientation: {
+            heading: Cesium.Math.toRadians(focusOrbit.heading),
+            pitch: Cesium.Math.toRadians(focusOrbit.pitch),
+            roll: 0,
+          },
+        });
+      } catch (_) {}
+    }
+    tourState.liveRangeM = focusOrbit.range;
+    tourState.forceRangeM = focusOrbit.range;
+    tourState.centerLat = focusOrbit.lat;
+    tourState.centerLon = focusOrbit.lon;
+    focusOrbitLog();
+    focusOrbitEnsureOnScreen();
+    focusOrbit._applying = false;
+    try {
+      viewer.scene.requestRender();
+    } catch (_) {}
+  }
+
+  // Test / dış API
+  try {
+    window.__RUZGAR_FOCUS__ = {
+      set: function (lat, lon, opts) {
+        focusOrbitSet(lat, lon, opts || {});
+      },
+      softGoto: focusOrbitSoftGoto,
+      apply: focusOrbitApply,
+      overhead: focusOrbitOverhead,
+      drag: focusOrbitDrag,
+      state: focusOrbit,
+    };
+  } catch (_) {}
+
+  function focusOrbitHeightForKind(kind) {
+    const k = String(kind || "").toLowerCase();
+    if (k === "bina" || k === "building") return 50;
+    if (k === "mahalle" || k === "neighborhood") return 150;
+    if (k === "sehir" || k === "city" || k === "il") return 300;
+    if (k === "dag" || k === "kanyon" || k === "volkan") return 1200;
+    if (k === "kiyi" || k === "ada" || k === "gol") return 400;
+    if (tourIsCityishTip()) return 150;
+    return 300;
+  }
+
+  function focusOrbitSet(lat, lon, opts) {
+    opts = opts || {};
+    focusOrbit.lat = Number(lat);
+    focusOrbit.lon = Number(lon);
+    let g = Number(resolveLookHeight(lon, lat));
+    if (!isFinite(g) || g < 5) g = tourIsCityishTip() ? 45 : 20;
+    focusOrbit.height = g;
+    if (opts.range != null) focusOrbit.range = Number(opts.range);
+    if (opts.heading != null) focusOrbit.heading = Number(opts.heading);
+    if (opts.pitch != null) focusOrbit.pitch = Number(opts.pitch);
+    if (opts.mode) focusOrbit.mode = opts.mode;
+    TARGET.lat = focusOrbit.lat;
+    TARGET.lon = focusOrbit.lon;
+    tourState.centerLat = focusOrbit.lat;
+    tourState.centerLon = focusOrbit.lon;
+    tourPause({ silent: true });
+    if (opts.fly) {
+      focusOrbit.range =
+        opts.range != null
+          ? Number(opts.range)
+          : focusOrbitHeightForKind(opts.kind || tourState.tip);
+      showToast(opts.toast || "Odak · uçuş");
+      const viewer = liveCesiumViewer;
+      if (!viewer) {
+        focusOrbitApply();
+        return;
+      }
+      try {
+        viewer.camera.flyTo({
+          destination: Cesium.Cartesian3.fromDegrees(
+            focusOrbit.lon,
+            focusOrbit.lat,
+            focusOrbit.height + focusOrbit.range
+          ),
+          orientation: {
+            heading: Cesium.Math.toRadians(focusOrbit.heading),
+            pitch: Cesium.Math.toRadians(
+              Math.max(-89.5, Number(focusOrbit.pitch) || -45)
+            ),
+            roll: 0,
+          },
+          duration: opts.duration != null ? opts.duration : 1.15,
+          complete: function () {
+            focusOrbit.mode = "focus";
+            focusOrbitApply();
+            tourPause({ toast: opts.toast || "Odak kilitli" });
+          },
+        });
+      } catch (_) {
+        focusOrbit.mode = "focus";
+        focusOrbitApply();
+      }
+      return;
+    }
+    focusOrbitApply();
+    if (!opts.silent) showToast(opts.toast || "Odak merkez");
+  }
+
+  function focusOrbitOverhead() {
+    focusOrbit.heading = 0;
+    focusOrbit.pitch = -90;
+    focusOrbit.mode = "focus";
+    focusOrbitApply();
+    showToast("Üzerine çık · kuşbakışı");
+  }
+
+  /**
+   * Sol sürükle = haritayı elle tut (Google Earth pan).
+   * Sağa → görüntü sağa · Yukarı → ileri · Aşağı → geri
+   * (Orbit/heading değiştirmez — yükseklik tekerlekte kalır)
+   * dx/dy: ekran pikseli; mesafe kamera yüksekliğine göre 1:1 hissi.
+   */
+  function focusOrbitDrag(dx, dy) {
+    if (!isFinite(dx) || !isFinite(dy)) return;
+    if (Math.abs(dx) + Math.abs(dy) < 0.5) return;
+    if (tourState.active) tourPause({ silent: true });
+    tourCancelCameraFlight();
+    focusOrbitKillInertia();
+    const mpdLat = 111320;
+    const mpdLon =
+      111320 * Math.max(0.2, Math.cos((focusOrbit.lat * Math.PI) / 180));
+    // Ekran yüksekliğine göre metre/piksel — tutunca harita ele yapışır
+    let metersPerPixel = Math.max(0.35, Number(focusOrbit.range) * 0.0018);
+    try {
+      const viewer = liveCesiumViewer;
+      const canvas = viewer && viewer.scene && viewer.scene.canvas;
+      const hPx = (canvas && (canvas.clientHeight || canvas.height)) || 0;
+      const frustum = viewer && viewer.camera && viewer.camera.frustum;
+      const fovy =
+        frustum && isFinite(frustum.fovy) ? Number(frustum.fovy) : 0.9;
+      if (hPx > 40 && isFinite(fovy) && fovy > 0.05) {
+        const pitchRad = Math.abs(
+          (Number(focusOrbit.pitch) || -40) * (Math.PI / 180)
+        );
+        const groundFactor = 1 / Math.max(0.28, Math.sin(pitchRad));
+        metersPerPixel =
+          ((2 * Math.max(20, Number(focusOrbit.range) || 150) *
+            Math.tan(fovy * 0.5)) /
+            hPx) *
+          groundFactor;
+      }
+    } catch (_) {}
+    const step = Math.max(0.35, metersPerPixel);
+    const rad = (focusOrbit.heading * Math.PI) / 180;
+    // Yukarı (dy<0) = ileri · Sağa (dx>0) = görüntü sağa → odak sola (ters)
+    const fwd = -dy * step;
+    const right = -dx * step;
+    focusOrbit.lat +=
+      (Math.cos(rad) * fwd - Math.sin(rad) * right) / mpdLat;
+    focusOrbit.lon +=
+      (Math.sin(rad) * fwd + Math.cos(rad) * right) / mpdLon;
+    let g = Number(resolveLookHeight(focusOrbit.lon, focusOrbit.lat));
+    if (isFinite(g) && g >= 5) focusOrbit.height = g;
+    focusOrbit.mode = "focus";
+    focusOrbitApply();
+  }
+
+  /** Çift tık: yumuşak geçiş — yükseklik ASLA sıfırlanmaz · max 300 m adım */
+  function focusOrbitSoftGoto(lat, lon, opts) {
+    opts = opts || {};
+    if (!isFinite(Number(lat)) || !isFinite(Number(lon))) return;
+    tourPause({ silent: true });
+    tourCancelCameraFlight();
+    focusOrbitKillInertia();
+    const keepRange = Math.max(
+      20,
+      Number(focusOrbit.range) || Number(tourState.liveRangeM) || 150
+    );
+    const keepPitch = Number(focusOrbit.pitch);
+    const keepHeading = Number(focusOrbit.heading);
+    const from = { lat: Number(focusOrbit.lat), lon: Number(focusOrbit.lon) };
+    const to = { lat: Number(lat), lon: Number(lon) };
+    let dist = 0;
+    try {
+      dist = haversineM(from, to);
+    } catch (_) {
+      dist = 0;
+    }
+    let tLat = to.lat;
+    let tLon = to.lon;
+    if (isFinite(dist) && dist > 300) {
+      const f = 300 / dist;
+      tLat = from.lat + (to.lat - from.lat) * f;
+      tLon = from.lon + (to.lon - from.lon) * f;
+    }
+    const startLat = from.lat;
+    const startLon = from.lon;
+    const endLat = tLat;
+    const endLon = tLon;
+    if (focusOrbit._softRaf) {
+      try {
+        cancelAnimationFrame(focusOrbit._softRaf);
+      } catch (_) {}
+      focusOrbit._softRaf = 0;
+    }
+    const t0 =
+      typeof performance !== "undefined" && performance.now
+        ? performance.now()
+        : Date.now();
+    const dur = 420;
+    function step(now) {
+      const u = Math.min(
+        1,
+        ((typeof now === "number" ? now : Date.now()) - t0) / dur
+      );
+      const e = u * u * (3 - 2 * u); // smoothstep
+      focusOrbit.lat = startLat + (endLat - startLat) * e;
+      focusOrbit.lon = startLon + (endLon - startLon) * e;
+      let g = Number(resolveLookHeight(focusOrbit.lon, focusOrbit.lat));
+      if (!isFinite(g) || g < 5) g = focusOrbit.height || 40;
+      focusOrbit.height = g;
+      focusOrbit.range = keepRange;
+      if (isFinite(keepPitch)) focusOrbit.pitch = keepPitch;
+      if (isFinite(keepHeading)) focusOrbit.heading = keepHeading;
+      focusOrbitApply();
+      if (u < 1) {
+        focusOrbit._softRaf = requestAnimationFrame(step);
+      } else {
+        focusOrbit._softRaf = 0;
+        if (!opts.silent) showToast(opts.toast || "Oraya · yükseklik korundu");
+      }
+    }
+    focusOrbit._softRaf = requestAnimationFrame(step);
+  }
+
+  function focusOrbitWheel(deltaY) {
+    tourPause({ silent: true });
+    tourCancelCameraFlight();
+    if (deltaY < 0) focusOrbit.range = Math.min(80000, focusOrbit.range * 1.2);
+    else focusOrbit.range = Math.max(20, focusOrbit.range * 0.84);
+    focusOrbitApply();
+  }
+
+  function focusOrbitWasd(dt) {
+    const k = tourState.keys || {};
+    let fwd = 0;
+    let right = 0;
+    const sp = Math.max(12, focusOrbit.range * 0.45) * dt;
+    if (k.KeyW || k.ArrowUp) fwd += sp;
+    if (k.KeyS || k.ArrowDown) fwd -= sp;
+    if (k.KeyD) right += sp;
+    if (k.KeyA) right -= sp;
+    if (k.ArrowLeft) focusOrbit.heading -= 70 * dt;
+    if (k.ArrowRight) focusOrbit.heading += 70 * dt;
+    if (!fwd && !right && !k.ArrowLeft && !k.ArrowRight) return;
+    if (fwd || right) {
+      const mpdLat = 111320;
+      const mpdLon =
+        111320 * Math.max(0.2, Math.cos((focusOrbit.lat * Math.PI) / 180));
+      const rad = (focusOrbit.heading * Math.PI) / 180;
+      focusOrbit.lat +=
+        (Math.cos(rad) * fwd - Math.sin(rad) * right) / mpdLat;
+      focusOrbit.lon +=
+        (Math.sin(rad) * fwd + Math.cos(rad) * right) / mpdLon;
+      let g = Number(resolveLookHeight(focusOrbit.lon, focusOrbit.lat));
+      if (isFinite(g) && g >= 5) focusOrbit.height = g;
+    }
+    tourPause({ silent: true });
+    focusOrbitApply();
+  }
+
+  function tourCancelCameraFlight() {
+    const viewer = liveCesiumViewer;
+    if (!viewer || !viewer.camera) return;
+    try {
+      if (viewer.camera.cancelFlight) viewer.camera.cancelFlight();
+    } catch (_) {}
+  }
+
+  function tourPause(opts) {
+    opts = opts || {};
+    if (!tourState.active) return;
+    tourCancelCameraFlight();
     tourState.paused = true;
     tourState.auto = false;
+    tourState.dragActive = false;
+    tourState.dragThrust = 0;
     tourState.lastTs = 0;
     updateTourProgress();
-    showToast("Tur duraklatıldı");
+    if (!opts.silent) showToast(opts.toast || "Durdu");
   }
 
-  function tourResume() {
-    if (!tourState.active || !tourState.paused) return;
+  function syncAndRebuildFromCamera() {
+    const viewer = liveCesiumViewer;
+    if (!viewer || typeof Cesium === "undefined") return;
+    try {
+      const carto = Cesium.Cartographic.fromCartesian(viewer.camera.position);
+      const lat = Cesium.Math.toDegrees(carto.latitude);
+      const lon = Cesium.Math.toDegrees(carto.longitude);
+      const hdg =
+        (Cesium.Math.toDegrees(viewer.camera.heading) + 360) % 360;
+      tourState.centerLat = lat;
+      tourState.centerLon = lon;
+      tourState.headingBias = 0;
+      TARGET.lat = lat;
+      TARGET.lon = lon;
+      const pack = buildLocalTourPayload(
+        tourState.label,
+        tourState.tip,
+        lat,
+        lon,
+        { bearing0: hdg, count: 32 }
+      );
+      if (!pack || !pack.waypoints || pack.waypoints.length < 2) return;
+      tourState.waypoints = pack.waypoints;
+      tourState.segIndex = 0;
+      tourState.segT = 0;
+      tourState.index = 0;
+      tourState.lastTs = 0;
+      tourState.totalSec = pack.waypoints.reduce(function (a, w) {
+        return a + (Number(w.seg_sec) || 3);
+      }, 0);
+    } catch (_) {}
+  }
+
+  function tourResume(opts) {
+    opts = opts || {};
+    if (!tourState.active) return;
+    if (walkState.on) exitWalkMode("");
+    if (tourState._manualDirty) {
+      syncAndRebuildFromCamera();
+      tourState._manualDirty = false;
+    }
     tourState.paused = false;
     tourState.auto = true;
     tourState.lastTs = 0;
-    showToast("Tur devam");
+    if (!tourState.removeTick) {
+      try {
+        attachTourTick();
+      } catch (_) {}
+    }
+    showToast(opts.toast || "Devam");
     updateTourProgress();
+  }
+
+  function tourManualDrive(dx, dy) {
+    focusOrbitDrag(dx, dy);
+    tourState._manualDirty = true;
+    updateTourProgress();
+  }
+
+  /** Tek tık: yumuşak git — yükseklik korunur */
+  function tourFocusAndDescend(lat, lon) {
+    if (!isFinite(Number(lat)) || !isFinite(Number(lon))) return;
+    focusOrbitSoftGoto(lat, lon, { toast: "Odak · yükseklik korundu" });
+  }
+
+  /** Tur açılış: hedefte sabit orbit */
+  function tourLockStartPose() {
+    const lat = Number(tourState.centerLat) || Number(TARGET.lat);
+    const lon = Number(tourState.centerLon) || Number(TARGET.lon);
+    if (!isFinite(lat) || !isFinite(lon)) return;
+    const eye = Math.max(
+      tourIsCityishTip() ? 150 : 300,
+      Number(tourState.forceRangeM) ||
+        Number(tourState.bandMin) ||
+        focusOrbitHeightForKind(tourState.tip)
+    );
+    focusOrbit.mode = "focus";
+    focusOrbitSet(lat, lon, {
+      range: eye,
+      heading: 35,
+      pitch: tourIsCityishTip() ? -42 : -36,
+      silent: true,
+    });
   }
 
   function tourSetSpeed(mult) {
@@ -2873,6 +3464,156 @@
 
   function tourFaster() {
     tourSetSpeed((tourState.speed || 1) * 1.33);
+  }
+
+  /** Çift tık: hız kademesi + otomatik devam */
+  function tourCycleSpeedTierAndGo() {
+    let i = Number(tourState.speedTierIndex);
+    if (!isFinite(i) || i < 0) i = 1;
+    i = (i + 1) % TOUR_SPEED_TIERS.length;
+    tourState.speedTierIndex = i;
+    const sp = TOUR_SPEED_TIERS[i];
+    tourState.speed = sp;
+    if (walkState.on) {
+      walkState.speedMps = 1.4 * Math.max(0.5, sp / 0.4);
+    }
+    tourResume({
+      toast:
+        "Devam · kademe " +
+        (i + 1) +
+        "/" +
+        TOUR_SPEED_TIERS.length +
+        " · ×" +
+        sp.toFixed(1),
+    });
+  }
+
+  function tourCycleSpeed() {
+    tourCycleSpeedTierAndGo();
+  }
+
+  function bearingDegBetween(lat1, lon1, lat2, lon2) {
+    const φ1 = (Number(lat1) * Math.PI) / 180;
+    const φ2 = (Number(lat2) * Math.PI) / 180;
+    const Δλ = ((Number(lon2) - Number(lon1)) * Math.PI) / 180;
+    const y = Math.sin(Δλ) * Math.cos(φ2);
+    const x =
+      Math.cos(φ1) * Math.sin(φ2) -
+      Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+    return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+  }
+
+  function pickGlobeLatLonFromEvent(ev) {
+    const viewer = liveCesiumViewer;
+    if (!viewer || !viewer.scene || typeof Cesium === "undefined") return null;
+    try {
+      const canvas = viewer.scene.canvas;
+      const rect = canvas.getBoundingClientRect();
+      if (!rect.width || !rect.height) return null;
+      // CSS boyutu ≠ canvas buffer — oranla (DPI/iframe)
+      const x = ((ev.clientX - rect.left) / rect.width) * canvas.clientWidth;
+      const y = ((ev.clientY - rect.top) / rect.height) * canvas.clientHeight;
+      const pt = new Cesium.Cartesian2(x, y);
+      let cartesian = null;
+      try {
+        if (viewer.scene.pickPositionSupported) {
+          cartesian = viewer.scene.pickPosition(pt);
+        }
+      } catch (_) {}
+      if (!cartesian || !Cesium.defined(cartesian)) {
+        try {
+          const ray = viewer.camera.getPickRay(pt);
+          if (ray) cartesian = viewer.scene.globe.pick(ray, viewer.scene);
+        } catch (_) {}
+      }
+      if (!cartesian || !Cesium.defined(cartesian)) {
+        try {
+          cartesian = viewer.camera.pickEllipsoid(
+            pt,
+            viewer.scene.globe.ellipsoid
+          );
+        } catch (_) {}
+      }
+      if (!cartesian || !Cesium.defined(cartesian)) return null;
+      const carto = Cesium.Cartographic.fromCartesian(cartesian);
+      if (!carto) return null;
+      return {
+        lat: Cesium.Math.toDegrees(carto.latitude),
+        lon: Cesium.Math.toDegrees(carto.longitude),
+      };
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function tourGoTowardLatLon(lat, lon, toast) {
+    if (!tourState.active) return;
+    if (!isFinite(Number(lat)) || !isFinite(Number(lon))) return;
+    if (walkState.on) exitWalkMode("");
+    const cur = currentLookSample();
+    const lat0 = cur
+      ? Number(cur.look_lat != null ? cur.look_lat : cur.lat)
+      : Number(tourState.centerLat);
+    const lon0 = cur
+      ? Number(cur.look_lon != null ? cur.look_lon : cur.lon)
+      : Number(tourState.centerLon);
+    const brg = bearingDegBetween(lat0, lon0, lat, lon);
+    rebuildPathAhead(brg, toast || "Oraya doğru");
+  }
+
+  /** Tekerlek: orbit mesafesi (odak sabit) */
+  function tourWheelZoom(deltaY) {
+    if (!tourState.active) return;
+    if (walkState.on) {
+      if (Number(deltaY) < 0) exitWalkMode("");
+      else {
+        walkVertical(-1);
+        return;
+      }
+    }
+    focusOrbitWheel(deltaY);
+    ensureTourFlightVisuals();
+    const now = Date.now();
+    if (now - (tourState._wheelToastTs || 0) > 400) {
+      tourState._wheelToastTs = now;
+      showToast(
+        (Number(deltaY) < 0 ? "Uzaklaş · " : "Yakınlaş · ") +
+          formatAltitude(focusOrbit.range)
+      );
+    }
+  }
+
+  /** Harekette uydu/terrain LOD boşalmasın */
+  function ensureTourFlightVisuals() {
+    const viewer = liveCesiumViewer;
+    if (!viewer || !viewer.scene || !viewer.scene.globe) return;
+    try {
+      const globe = viewer.scene.globe;
+      const qp = getHaritaQualityProfile();
+      const fast = (Number(tourState.speed) || 1) > 1.25;
+      globe.maximumScreenSpaceError = Math.min(
+        qp.sse,
+        qp.mobil ? (fast ? 1.6 : 1.9) : fast ? 0.72 : 0.85
+      );
+      globe.tileCacheSize = Math.max(
+        Number(globe.tileCacheSize) || 0,
+        qp.mobil ? 240 : fast ? 640 : 520
+      );
+      if (globe.preloadSiblings !== undefined) globe.preloadSiblings = true;
+      if (globe.preloadAncestors !== undefined) globe.preloadAncestors = true;
+      if (globe.loadingDescendantLimit !== undefined) {
+        globe.loadingDescendantLimit = Math.max(
+          Number(globe.loadingDescendantLimit) || 0,
+          qp.mobil ? 3 : 6
+        );
+      }
+      viewer.scene.requestRenderMode = false;
+      try {
+        if (viewer.scene.postProcessStages && viewer.scene.postProcessStages.fxaa) {
+          viewer.scene.postProcessStages.fxaa.enabled = !!qp.fxaa;
+        }
+      } catch (_) {}
+    } catch (_) {}
   }
 
   function tourRefreshCameraNow() {
@@ -2917,7 +3658,17 @@
   }
 
   function tourFarther() {
+    // Yürüme/yeraltı (1.7 m gri) iken "yukarı" → güvenli kuş irtifasına çık
     if (walkState.on) {
+      const live = Number(tourState.liveRangeM) || 0;
+      if (tourIsCityishTip() || live < 12) {
+        exitWalkMode();
+        tourState.forceRangeM = Math.max(80, live * 1.55, 60);
+        tourState.rangeMult = 1;
+        tourRefreshCameraNow();
+        showToast("Yükseldi · " + formatAltitude(tourState.liveRangeM));
+        return;
+      }
       walkVertical(1);
       return;
     }
@@ -2927,6 +3678,13 @@
         TOUR_RANGE_MAX,
         Number(tourState.forceRangeM) * 1.55
       );
+    } else if (tourIsCityishTip()) {
+      // Şehirde rangeMult yerine irtifa (göz yüksekliği) büyüt
+      const cur = Math.max(
+        35,
+        Number(tourState.liveRangeM) || Number(tourState.bandMin) || 60
+      );
+      tourState.forceRangeM = Math.min(TOUR_RANGE_MAX, cur * 1.55);
     } else {
       tourState.rangeMult = Math.min(
         TOUR_RANGE_MULT_MAX,
@@ -3019,25 +3777,59 @@
     if (toast) showToast(toast);
   }
 
+  function tourCurrentHeading() {
+    const cur = currentLookSample();
+    return (
+      (Number((cur && cur.heading) || 0) + Number(tourState.headingBias || 0) + 360) %
+      360
+    );
+  }
+
   function tourTurn(dir) {
-    // C1: serbest pilot — bakış dönüşü (kuş yolu rebuild değil)
-    if (walkState.on || !tourState.active) {
+    if (!tourState.active) return;
+    if (walkState.on) {
       walkLookTurn(dir);
       return;
     }
-    const cur = currentLookSample();
-    const baseH = Number((cur && cur.heading) || 0) + Number(tourState.headingBias || 0);
-    const delta = dir < 0 ? -35 : 35;
-    rebuildPathAhead((baseH + delta + 360) % 360, dir < 0 ? "Sola dönüldü" : "Sağa dönüldü");
+    const delta = dir < 0 ? -40 : 40;
+    rebuildPathAhead(
+      (tourCurrentHeading() + delta + 360) % 360,
+      dir < 0 ? "Sola" : "Sağa"
+    );
   }
 
   function tourForward() {
-    // C1: ileri = serbest pilot adımı
-    walkStepForward(false);
+    if (!tourState.active) return;
+    if (walkState.on) {
+      walkStepForward(false);
+      return;
+    }
+    rebuildPathAhead(tourCurrentHeading(), "İleri");
+    tourState.speed = Math.min(
+      TOUR_SPEED_MAX,
+      Math.max(0.85, (Number(tourState.speed) || 0.9) * 1.12)
+    );
   }
 
   function tourBack() {
-    walkStepForward(true);
+    if (!tourState.active) return;
+    if (walkState.on) {
+      walkStepForward(true);
+      return;
+    }
+    rebuildPathAhead((tourCurrentHeading() + 180) % 360, "Geri");
+  }
+
+  function tourStrafe(dir) {
+    if (!tourState.active) return;
+    if (walkState.on) {
+      walkStrafe(dir);
+      return;
+    }
+    rebuildPathAhead(
+      (tourCurrentHeading() + (dir < 0 ? -90 : 90) + 360) % 360,
+      dir < 0 ? "Sola kay" : "Sağa kay"
+    );
   }
 
   function tourSetSteerMode(mode, toast) {
@@ -3164,6 +3956,16 @@
     const wps = tourState.waypoints;
     if (!wps || !wps.length) return;
     const last = wps[wps.length - 1];
+    // Şehirde son noktadan devam = Boğaz'a kaçış. Merkez etrafında dön.
+    const cityish = tourIsCityishTip(
+      tourState.steerMode === "sehir" ? "sehir" : tourState.tip
+    );
+    const seedLat = cityish
+      ? Number(tourState.centerLat) || Number(last.lat)
+      : Number(last.look_lat != null ? last.look_lat : last.lat);
+    const seedLon = cityish
+      ? Number(tourState.centerLon) || Number(last.lon)
+      : Number(last.look_lon != null ? last.look_lon : last.lon);
     const pack = buildLocalTourPayload(
       tourState.label,
       tourState.steerMode === "nehir"
@@ -3177,10 +3979,14 @@
               : tourState.steerMode === "kanyon"
                 ? "kanyon"
                 : tourState.tip,
-      Number(last.look_lat != null ? last.look_lat : last.lat),
-      Number(last.look_lon != null ? last.look_lon : last.lon),
+      seedLat,
+      seedLon,
       {
-        bearing0: Number(last.heading || 0) + Number(tourState.headingBias || 0),
+        bearing0:
+          (Number(last.heading || 0) +
+            Number(tourState.headingBias || 0) +
+            (cityish ? 40 : 0)) %
+          360,
         count: 28,
       }
     );
@@ -3217,7 +4023,74 @@
     tourState.lastTs = ts;
     if (dt > 0.08) dt = 0.08;
     if (dt < 0) dt = 0;
-    dt *= (tourState.speed || 0.4) * TOUR_BASE_RATE;
+
+    // Basılı tuşlar + maus sürükleme: çekilen yöne yürü
+    const k = tourState.keys || {};
+    const holdW = !!(k.KeyW || k.ArrowUp);
+    const holdS = !!(k.KeyS || k.ArrowDown);
+    const holdA = !!(k.KeyA || k.ArrowLeft);
+    const holdD = !!(k.KeyD || k.ArrowRight);
+    const dragOn = !!tourState.dragActive;
+    if (holdA) tourState.headingBias = (Number(tourState.headingBias) || 0) - 95 * dt;
+    if (holdD) tourState.headingBias = (Number(tourState.headingBias) || 0) + 95 * dt;
+    if (dragOn) {
+      // Sürükleme yönü = gidiş yönü (ekran: sağ +, yukarı = ileri)
+      const turn = Number(tourState.dragTurn) || 0;
+      const fwd = Number(tourState.dragFwd) || 0;
+      tourState.headingBias =
+        (Number(tourState.headingBias) || 0) + turn * 1.15 * dt * 60;
+      tourState.dragTurn *= 0.72;
+      tourState.dragFwd *= 0.82;
+      tourState._steerAcc = (tourState._steerAcc || 0) + dt;
+      const needRebuild =
+        Math.abs(turn) > 0.35 || Math.abs(fwd) > 0.5 || tourState._steerAcc > 0.4;
+      if (needRebuild && tourState._steerAcc > 0.32) {
+        tourState._steerAcc = 0;
+        if (fwd < -0.8 && Math.abs(fwd) > Math.abs(turn) + 0.2) {
+          rebuildPathAhead((tourCurrentHeading() + 180) % 360, null);
+        } else {
+          rebuildPathAhead(tourCurrentHeading(), null);
+        }
+        wps = tourState.waypoints;
+        ensureTourFlightVisuals();
+      }
+    } else if (holdA || holdD) {
+      tourState._steerAcc = (tourState._steerAcc || 0) + dt;
+      const steerGap = (Number(tourState.speed) || 1) > 1.25 ? 0.75 : 0.5;
+      if (tourState._steerAcc > steerGap) {
+        tourState._steerAcc = 0;
+        rebuildPathAhead(tourCurrentHeading(), null);
+        wps = tourState.waypoints;
+        ensureTourFlightVisuals();
+      }
+    }
+    if (k.KeyQ || k.PageDown) {
+      const cur = Math.max(18, Number(tourState.liveRangeM) || 60);
+      tourState.forceRangeM = Math.max(12, cur * (1 - 0.55 * dt));
+    }
+    if (k.KeyE || k.PageUp) {
+      const cur = Math.max(
+        18,
+        Number(tourState.forceRangeM) || Number(tourState.liveRangeM) || 60
+      );
+      tourState.forceRangeM = Math.min(TOUR_RANGE_MAX, cur * (1 + 0.7 * dt));
+    }
+
+    let rate = (tourState.speed || 0.9) * TOUR_BASE_RATE;
+    if (holdW) rate *= 1.85;
+    if (holdS) rate *= 1.55;
+    if (dragOn) {
+      const thrust = Math.max(
+        0.35,
+        Math.min(1.8, Number(tourState.dragThrust) || 0.8)
+      );
+      const fwd = Number(tourState.dragFwd) || 0;
+      // İleri/geri çekince mutlaka aksın
+      rate *= 2.1 * thrust * (fwd < -0.5 ? 1.35 : 1.55);
+    }
+    // Şehirde yavaş “donmuş uydu” hissi olmasın
+    if (tourIsCityishTip() && rate < 0.85) rate = 0.85;
+    dt *= rate;
 
     let seg = tourState.segIndex;
     let t = tourState.segT;
@@ -3269,6 +4142,19 @@
     tourState.flying = true;
     updateTourProgress();
     scheduleNarration(false);
+    // Tur sırasında beyaz kutu + sokak adı (yalnızca yürüyüşe bırakma)
+    tourState._binaTick = (tourState._binaTick || 0) + 1;
+    const fastFlight = (Number(tourState.speed) || 1) > 1.25;
+    const binaEvery = fastFlight ? 160 : 100;
+    if (tourState._binaTick % 120 === 1) ensureTourFlightVisuals();
+    if (!walkState.buildingsBusy && tourState._binaTick % binaEvery === 0) {
+      try {
+        walkEnsureBuildings(false);
+      } catch (_) {}
+      try {
+        if (walkState.labelsOn && !fastFlight) walkRefreshLabels(false);
+      } catch (_) {}
+    }
   }
 
   function attachTourTick() {
@@ -3285,13 +4171,24 @@
         tourRafId = 0;
         return;
       }
-      tickContinuousFlight(
+      const now =
         typeof ts === "number"
           ? ts
           : typeof performance !== "undefined" && performance.now
             ? performance.now()
-            : Date.now()
-      );
+            : Date.now();
+      // Dururken WASD; log seyrek
+      if (tourState.paused) {
+        const last = tourState._wasdTs || now;
+        const dt = Math.min(0.05, Math.max(0.001, (now - last) / 1000));
+        tourState._wasdTs = now;
+        focusOrbitWasd(dt);
+        if ((focusOrbit.logN || 0) % 30 === 0) focusOrbitLog();
+        focusOrbitEnsureOnScreen();
+      } else {
+        tourState._wasdTs = now;
+        tickContinuousFlight(now);
+      }
       try {
         viewer.scene.requestRender();
       } catch (_) {}
@@ -3327,17 +4224,28 @@
     tourState.segT = 0;
     tourState.elapsed = 0;
     tourState.progress = 0;
-    tourState.paused = false;
-    tourState.auto = true;
     tourState.lastTs = 0;
+    setTourNativeControls(false);
+    tourLockStartPose();
     const first = sampleWaypointPair(0, 0);
     if (first) {
       tourState.phaseLabel = first.phase_label || "Başlangıç";
-      applyCameraSample(first);
+      // Başlangıç karesi merkezde; yol hazır ama otomatik akış kapalı
+      if (!tourState.forceRangeM) applyCameraSample(first);
     }
     updateTourProgress();
+    ensureTourFlightVisuals();
     attachTourTick();
-    showToast("Şimdi süzülüyoruz · " + (tourState.label || "Keşif"));
+    // Açılışta DUR — kontrol sende; çift tık / «devam» ile akar
+    tourPause({ silent: true });
+    showToast(
+      "Başlangıç · tut=elle gez · tık=odak · çift tık=devam"
+    );
+    // Terrain gelince başlangıç karesini bir kez daha kilitle
+    setTimeout(function () {
+      if (!tourState.active || !tourState.paused) return;
+      tourLockStartPose();
+    }, 900);
   }
 
   function bearingOffset(lat0, lon0, bearingDeg, distDeg) {
@@ -3432,23 +4340,23 @@
         );
       }
     } else if (tipL === "sehir" || tipL === "bogaz") {
-      // distDeg: şehir ölçeği (~0.5–3 km). Eski 0.4° (~45 km) kıyı/deniz kaçışı yapıyordu.
+      // Şehir: kısa yay; seg kısa → akış/yürüme hissedilir
       const flow = bearing0 != null ? bearing0 : 55;
-      const maxAlong = tipL === "bogaz" ? 0.028 : 0.022;
+      const maxAlong = tipL === "bogaz" ? 0.014 : 0.011;
       for (let i = 0; i < steps; i++) {
         const t = i / (steps - 1);
-        const along = 0.003 + maxAlong * t;
-        const side = 0.004 * Math.sin(t * Math.PI * 2.2);
+        const along = 0.0012 + maxAlong * t;
+        const side = 0.0022 * Math.sin(t * Math.PI * 2.2);
         const pt = bearingOffset(la, lo, flow, along);
         const look = bearingOffset(pt.lat, pt.lon, flow + 90, side);
         let rng = bandAlt(tipL === "bogaz" ? "bogaz" : "sehir", t);
-        if (Math.floor(i / 5) % 2 === 1) rng = Math.max(35, rng * 0.78);
+        if (Math.floor(i / 5) % 2 === 1) rng = Math.max(28, rng * 0.72);
         pushWp(
           look,
           (flow + 6 + 8 * Math.sin(t * 3)) % 360,
-          -18,
+          -16,
           rng,
-          11.0,
+          2.6,
           "sehir"
         );
       }
@@ -3599,7 +4507,11 @@
     tourState.label = pack.label || "Dünya Gezgini";
     tourState.tip = String(pack.tip || guessTourTip(null, tourState.label) || "dag");
     tourState.card = null;
-    tourState.speed = 0.4;
+    tourState.speed = tourIsCityishTip(pack.tip) ? 1.15 : 0.85;
+    tourState.speedTierIndex = tourIsCityishTip(pack.tip) ? 2 : 1;
+    tourState.dragActive = false;
+    tourState.dragThrust = 0;
+    tourState._manualDirty = false;
     tourState.rangeMult = 1;
     tourState.forceRangeM = null;
     tourState.liveRangeM = 0;
@@ -3626,8 +4538,24 @@
     tourState.placeLabel = "";
     tourState.narrTs = 0;
     setTourInfo(tourState.label, "Konum doğrulanıyor…");
-    showToast("Gezi başladı · yavaş keşif");
+    showToast("Başlangıç hazır · tutarak gez");
     scheduleNarration(true);
+    walkState.labelsOn = true;
+    walkState.panoAuto = false; // Mapillary şeridi/overlay turu bozmasın
+    walkState.panoFillOn = false;
+    walkState.panoUserClosed = true;
+    if (walkState.on) exitWalkMode("");
+    // Şehir kuşu: göz hizasına düşmesin
+    if (tourIsCityishTip(pack.tip)) {
+      tourState.forceRangeM = Math.max(
+        75,
+        Number(tourState.bandMin) || 80
+      );
+    }
+    tourState._binaTick = 0;
+    wireTourMousePilot();
+    wireTourKeys();
+    tourState.keys = Object.create(null);
     let tries = 0;
     function kick() {
       tries += 1;
@@ -3638,6 +4566,25 @@
       }
       try {
         liveCesiumViewer.scene.requestRenderMode = false;
+      } catch (_) {}
+      // Canvas kesin var — tut-sürükle pan’ı yeniden bağla
+      try {
+        wireTourMousePilot._on = false;
+        wireTourMousePilot._bindKey = "";
+        wireTourMousePilot();
+        setTourNativeControls(false);
+      } catch (_) {}
+      // Beyaz kutu + sokak adı — tur başında hemen
+      try {
+        const cityWarm = guessSehirFromLabel();
+        const root = apiRoot();
+        if (root && cityWarm) {
+          fetch(root + "/api/sehir-ikiz/warm?sehir=" + encodeURIComponent(cityWarm), {
+            method: "POST",
+          }).catch(function () {});
+        }
+        walkEnsureBuildings(true);
+        walkRefreshLabels(true);
       } catch (_) {}
       if (!terrainOn) {
         terrainOn = true;
@@ -3652,16 +4599,44 @@
     kick();
   }
 
+  function placeLooksTurkey(place) {
+    const p = String(place || "")
+      .toLowerCase()
+      .replace(/i̇/g, "i");
+    return /istanbul|ankara|izmir|bursa|turkiye|t\u00fcrkiye|halkali|halkal\u0131|atakent|beyoglu|galata|talimhane|taksim/.test(
+      p
+    );
+  }
+
+  function coordsInTurkey(lat, lon) {
+    const a = Number(lat);
+    const o = Number(lon);
+    return isFinite(a) && isFinite(o) && a >= 35.8 && a <= 42.3 && o >= 25.5 && o <= 45.0;
+  }
+
   function fetchAndStartTour(place, tip, lat, lon) {
+    // TR yer adı + yurt dışı koordinat (eski İtalya TARGET) → lat/lon at, sunucu geocode etsin
+    let useLat = lat;
+    let useLon = lon;
+    if (
+      placeLooksTurkey(place) &&
+      useLat != null &&
+      useLon != null &&
+      !coordsInTurkey(useLat, useLon)
+    ) {
+      useLat = null;
+      useLon = null;
+      showToast("Konum düzeltiliyor · Türkiye");
+    }
     const local = function () {
-      const pack = buildLocalTourPayload(place, tip, lat, lon);
+      const pack = buildLocalTourPayload(place, tip, useLat, useLon);
       if (pack) startTourWithPayload(pack);
-      else showToast("Tur yüklenemedi");
+      else showToast("Tur yüklenemedi · konumu yeniden söyle");
     };
     let url = apiRoot() + "/api/sahne/harita/tur?place=" + encodeURIComponent(place || "");
     if (tip) url += "&tip=" + encodeURIComponent(tip);
-    if (lat != null && lon != null) {
-      url += "&lat=" + encodeURIComponent(lat) + "&lon=" + encodeURIComponent(lon);
+    if (useLat != null && useLon != null) {
+      url += "&lat=" + encodeURIComponent(useLat) + "&lon=" + encodeURIComponent(useLon);
     }
     // apiRoot boşsa (file://) doğrudan yerel spline
     if (!apiRoot()) {
@@ -3682,6 +4657,16 @@
           local();
           return;
         }
+        // Sunucu TR dışı dönerse ve yer TR ise yine reddet
+        if (
+          placeLooksTurkey(place) &&
+          d.lat != null &&
+          d.lon != null &&
+          !coordsInTurkey(d.lat, d.lon)
+        ) {
+          showToast("Yanlış ülke sonucu elendi · tekrar dene");
+          return;
+        }
         startTourWithPayload(d);
       })
       .catch(function () {
@@ -3689,9 +4674,294 @@
       });
   }
 
+  function wireTourKeys() {
+    if (tourState.keyWired) return;
+    tourState.keyWired = true;
+    window.addEventListener("keydown", function (ev) {
+      if (!tourState.active) return;
+      // Yürüme açıkken sürekli hareket walkTick’te; burada yalnızca kuş yönü
+      if (walkState.on) return;
+      const t = ev.target;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
+      const code = ev.code;
+      const steerKey =
+        code === "KeyW" ||
+        code === "KeyA" ||
+        code === "KeyS" ||
+        code === "KeyD" ||
+        code === "ArrowUp" ||
+        code === "ArrowDown" ||
+        code === "ArrowLeft" ||
+        code === "ArrowRight" ||
+        code === "KeyQ" ||
+        code === "KeyE" ||
+        code === "PageUp" ||
+        code === "PageDown" ||
+        code === "Space";
+      if (!steerKey && code !== "KeyO" && code !== "KeyF" && code !== "KeyG")
+        return;
+      tourState.keys[code] = true;
+      ev.preventDefault();
+      // Dururken WASD = odak kaydır (focusOrbitWasd); otomatik turu açma
+      if (tourState.paused && code !== "Space") {
+        if (code === "KeyO") focusOrbitOverhead();
+        else if (code === "KeyF") {
+          focusOrbit.mode = "focus";
+          focusOrbitApply();
+          showToast("Odak takibi");
+        } else if (code === "KeyG") {
+          focusOrbit.mode = "free";
+          showToast("Serbest bakış");
+        } else if (code === "KeyQ" || code === "PageDown") {
+          focusOrbitWheel(120);
+        } else if (code === "KeyE" || code === "PageUp") {
+          focusOrbitWheel(-120);
+        }
+        return;
+      }
+      if (ev.repeat) return;
+      if (code === "KeyW" || code === "ArrowUp") tourForward();
+      else if (code === "KeyS" || code === "ArrowDown") tourBack();
+      else if (code === "KeyA") tourStrafe(-1);
+      else if (code === "KeyD") tourStrafe(1);
+      else if (code === "ArrowLeft") tourTurn(-1);
+      else if (code === "ArrowRight") tourTurn(1);
+      else if (code === "KeyQ" || code === "PageDown") tourCloser();
+      else if (code === "KeyE" || code === "PageUp") tourFarther();
+      else if (code === "KeyO") focusOrbitOverhead();
+      else if (code === "KeyF") {
+        focusOrbit.mode = "focus";
+        showToast("Odak takibi");
+      } else if (code === "KeyG") {
+        focusOrbit.mode = "free";
+        showToast("Serbest bakış");
+      } else if (code === "Space") {
+        if (tourState.paused) tourResume();
+        else tourPause();
+      }
+    });
+    window.addEventListener("keyup", function (ev) {
+      tourState.keys[ev.code] = false;
+    });
+    window.addEventListener("blur", function () {
+      tourState.keys = Object.create(null);
+    });
+  }
+
+  function tourMousePilotAllowed() {
+    if (walkState.on) return false;
+    // Tur açıkken veya odak kilitliyken sol sürükle çalışır
+    return !!(tourState.active || focusOrbit.locked);
+  }
+
+  function wireTourMousePilot() {
+    const el = document.getElementById("globe");
+    if (!el) return;
+    // Canvas / viewer hazır olunca yeniden bağlanabilsin
+    const viewer = liveCesiumViewer;
+    const canvas =
+      (viewer && viewer.scene && viewer.scene.canvas) ||
+      el.querySelector("canvas");
+    const bindKey = canvas ? "canvas" : "globe";
+    if (wireTourMousePilot._bindKey === bindKey && wireTourMousePilot._on) {
+      return;
+    }
+    // Eski dinleyicileri temizle — çift pan birikmesin
+    try {
+      if (wireTourMousePilot._abort) wireTourMousePilot._abort.abort();
+    } catch (_) {}
+    const ac = new AbortController();
+    wireTourMousePilot._abort = ac;
+    const sig = { signal: ac.signal };
+    wireTourMousePilot._on = true;
+    wireTourMousePilot._bindKey = bindKey;
+
+    let drag = false;
+    let lastX = 0;
+    let lastY = 0;
+    let moved = 0;
+    let clickTimer = 0;
+    let downX = 0;
+    let downY = 0;
+    let pointerId = null;
+
+    function beginDrag(clientX, clientY, ev) {
+      if (!tourMousePilotAllowed()) return false;
+      if (walkState.on) exitWalkMode("");
+      setTourNativeControls(false);
+      tourState._heldFromPlay = !!(tourState.active && !tourState.paused);
+      if (tourState.active) tourPause({ silent: true });
+      tourCancelCameraFlight();
+      drag = true;
+      moved = 0;
+      lastX = clientX;
+      lastY = clientY;
+      downX = clientX;
+      downY = clientY;
+      tourState.dragActive = true;
+      el.classList.add("is-drag");
+      try {
+        if (ev && ev.target && ev.pointerId != null && ev.target.setPointerCapture) {
+          pointerId = ev.pointerId;
+          ev.target.setPointerCapture(ev.pointerId);
+        }
+      } catch (_) {}
+      return true;
+    }
+
+    function moveDrag(clientX, clientY) {
+      if (!drag) return;
+      if (!tourMousePilotAllowed()) return;
+      const dx = clientX - lastX;
+      const dy = clientY - lastY;
+      lastX = clientX;
+      lastY = clientY;
+      if (Math.abs(dx) + Math.abs(dy) < 1) return;
+      moved += Math.abs(dx) + Math.abs(dy);
+      // focusOrbit pan — Cesium native kapalı; kontrol yalnız bizde
+      tourManualDrive(dx, dy);
+    }
+
+    function endDrag(ev) {
+      if (!drag) return;
+      drag = false;
+      tourState.dragActive = false;
+      try {
+        el.classList.remove("is-drag");
+      } catch (_) {}
+      try {
+        if (
+          pointerId != null &&
+          ev &&
+          ev.target &&
+          ev.target.releasePointerCapture
+        ) {
+          ev.target.releasePointerCapture(pointerId);
+        }
+      } catch (_) {}
+      pointerId = null;
+      if (!tourState.active && !focusOrbit.locked) return;
+      if (tourState.active) {
+        tourPause({ silent: moved >= 6, toast: "Durdu" });
+      }
+      if (moved >= 6) {
+        focusOrbitKillInertia();
+        focusOrbitApply();
+        showToast("Elimde · bırakıldı");
+        return;
+      }
+      // Tek tık → yumuşak odak (yükseklik korunur)
+      if (moved < 6 && (!ev || ev.button === 0 || ev.button == null)) {
+        const hx = downX;
+        const hy = downY;
+        tourState._heldFromPlay = false;
+        if (clickTimer) clearTimeout(clickTimer);
+        clickTimer = setTimeout(function () {
+          clickTimer = 0;
+          if (Date.now() < (tourState.suppressClickUntil || 0)) return;
+          if (tourState.active) tourPause({ silent: true });
+          const hit = pickGlobeLatLonFromEvent({ clientX: hx, clientY: hy });
+          if (hit) tourFocusAndDescend(hit.lat, hit.lon);
+          else showToast("Odak yok · noktaya tekrar tıkla");
+        }, 200);
+      }
+    }
+
+    // Pointer capture — tutunca olay canvas’tan kaçmaz (iframe/Electron)
+    const surface = canvas || el;
+    surface.addEventListener(
+      "pointerdown",
+      function (ev) {
+        if (ev.button !== 0) return;
+        if (!beginDrag(ev.clientX, ev.clientY, ev)) return;
+        ev.preventDefault();
+      },
+      { capture: true, signal: ac.signal }
+    );
+    window.addEventListener(
+      "pointermove",
+      function (ev) {
+        if (!drag) return;
+        moveDrag(ev.clientX, ev.clientY);
+        try {
+          ev.preventDefault();
+        } catch (_) {}
+      },
+      { capture: true, signal: ac.signal }
+    );
+    window.addEventListener(
+      "pointerup",
+      function (ev) {
+        endDrag(ev);
+      },
+      { capture: true, signal: ac.signal }
+    );
+    window.addEventListener(
+      "pointercancel",
+      function (ev) {
+        endDrag(ev);
+      },
+      { capture: true, signal: ac.signal }
+    );
+
+    // Cesium native sürüklemeyi her bağlanışta kapat (orbit/uzay yok)
+    setTourNativeControls(false);
+
+    el.addEventListener(
+      "wheel",
+      function (ev) {
+        if (!tourState.active && !focusOrbit.locked) return;
+        ev.preventDefault();
+        tourWheelZoom(ev.deltaY);
+      },
+      { passive: false, signal: ac.signal }
+    );
+    el.addEventListener(
+      "dblclick",
+      function (ev) {
+        if (!tourState.active && !focusOrbit.locked) return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (clickTimer) {
+          clearTimeout(clickTimer);
+          clickTimer = 0;
+        }
+        tourState.suppressClickUntil = Date.now() + 450;
+        setTourNativeControls(false);
+        focusOrbitKillInertia();
+        tourCancelCameraFlight();
+        const hit = pickGlobeLatLonFromEvent(ev);
+        if (!hit) {
+          showToast("Odak yok · tekrar çift tıkla");
+          return;
+        }
+        focusOrbitSoftGoto(hit.lat, hit.lon, {
+          toast:
+            "Oraya · " +
+            formatAltitude(Number(focusOrbit.range) || 0) +
+            " korundu",
+        });
+      },
+      sig
+    );
+    el.addEventListener(
+      "contextmenu",
+      function (ev) {
+        if (!tourState.active && !focusOrbit.locked) return;
+        ev.preventDefault();
+        if (tourState.active) tourPause({ toast: "Durdu" });
+        focusOrbitKillInertia();
+        focusOrbitApply();
+      },
+      sig
+    );
+  }
+
   function wireTourBar() {
     if (!tourBar || tourBar.getAttribute("data-wired") === "1") return;
     tourBar.setAttribute("data-wired", "1");
+    // Butonlar gizli; ses / postMessage handleTourMessage üzerinden gelir.
+    // Eski tıklama yolu (gizli buton) yine çalışsın diye bırakıldı.
     tourBar.addEventListener("click", function (ev) {
       const btn = ev.target && ev.target.closest("button[data-tour-act]");
       if (!btn) return;
@@ -3709,8 +4979,8 @@
       else if (act === "back") tourBack();
       else if (act === "walk") setCameraMode("yuruyus");
       else if (act === "fly") setCameraMode("sinematik");
-      else if (act === "strafe_left") walkStrafe(-1);
-      else if (act === "strafe_right") walkStrafe(1);
+      else if (act === "strafe_left") tourStrafe(-1);
+      else if (act === "strafe_right") tourStrafe(1);
       else if (act === "labels_on") {
         walkState.labelsOn = true;
         walkRefreshLabels(true);
@@ -3768,12 +5038,26 @@
       }
       return;
     }
-    if (act === "pause") tourPause();
-    else if (act === "resume") {
-      if (walkState.on) {
-        tourState.paused = false;
-        showToast("Yürüme devam");
-      } else tourResume();
+    if (act === "pause" || act === "dur") {
+      tourPause({ toast: "Durdu" });
+      focusOrbitKillInertia();
+      focusOrbitApply();
+    } else if (act === "resume" || act === "devam") {
+      if (walkState.on) exitWalkMode("");
+      tourResume({ toast: "Devam" });
+    } else if (
+      act === "overhead" ||
+      act === "uzerine_cik" ||
+      act === "kusbakisi"
+    ) {
+      focusOrbitOverhead();
+    } else if (act === "focus_mode" || act === "odak_takibi") {
+      focusOrbit.mode = "focus";
+      focusOrbitApply();
+      showToast("Odak takibi");
+    } else if (act === "free_mode" || act === "serbest_bakis") {
+      focusOrbit.mode = "free";
+      showToast("Serbest bakış");
     }
     else if (act === "slower") tourSlower();
     else if (act === "faster") tourFaster();
@@ -3791,8 +5075,8 @@
     else if (act === "back") tourBack();
     else if (act === "walk") setCameraMode("yuruyus");
     else if (act === "fly") setCameraMode("sinematik");
-    else if (act === "strafe_left") walkStrafe(-1);
-    else if (act === "strafe_right") walkStrafe(1);
+    else if (act === "strafe_left") tourStrafe(-1);
+    else if (act === "strafe_right") tourStrafe(1);
     else if (act === "labels_on") {
       walkState.labelsOn = true;
       if (!walkState.on) setCameraMode("yuruyus", { toast: "Etiketler" });
@@ -3810,8 +5094,10 @@
     }
     else if (act === "follow_river") tourSetSteerMode("nehir", "Nehri takip");
     else if (act === "enter_city") {
+      if (walkState.on) exitWalkMode("");
       tourSetSteerMode("sehir", "Şehir içi");
-      enterWalkMode("Şehir · göz hizası");
+      tourState.forceRangeM = Math.max(40, Number(tourState.bandMin) || 50);
+      tourRefreshCameraNow();
     }
     else if (act === "follow_coast") tourSetSteerMode("kiyi", "Kıyı takip");
     else if (act === "enter_crater") tourSetSteerMode("volkan", "Krater yönü");
@@ -4844,6 +6130,33 @@
       }
     } catch (_) {}
     liveCesiumViewer = viewer;
+    // Cesium varsayılan çift tık zoom/yörünge — KAPAT (uzaya fırlama)
+    try {
+      const h = viewer.screenSpaceEventHandler;
+      if (h && typeof Cesium !== "undefined") {
+        h.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+      }
+    } catch (_) {}
+    try {
+      const c = viewer.scene.screenSpaceCameraController;
+      if (c) {
+        c.enableRotate = false;
+        c.enableTranslate = false;
+        c.enableTilt = false;
+        c.enableLook = false;
+        c.enableZoom = false;
+        if (c.enableInputs != null) c.enableInputs = false;
+        c.inertiaSpin = 0;
+        c.inertiaTranslate = 0;
+        c.inertiaZoom = 0;
+      }
+    } catch (_) {}
+    // Canvas hazır — sol tut-sürükle pan’ı canvas’a bağla
+    try {
+      wireTourMousePilot._on = false;
+      wireTourMousePilot._bindKey = "";
+      wireTourMousePilot();
+    } catch (_) {}
     // Bina GeoJSON yinelenen nokta → EllipsoidRhumbLine crash; render'ı öldürmesin
     try {
       viewer.scene.renderError.addEventListener(function (_scene, err) {
@@ -4965,7 +6278,8 @@
 
   function loadBuildings(viewer, forceWalk) {
     const city = guessSehirFromLabel();
-    if ((!wantBina && !forceWalk) || !city || typeof Cesium === "undefined") return;
+    // Pilot şehir (istanbul/ankara/bursa/izmir) tanıdıysa yerel beyaz kutuyu yükle
+    if (!city || typeof Cesium === "undefined") return;
     if (walkState.buildingsBusy) return;
     const root = apiRoot();
     if (!root) return;

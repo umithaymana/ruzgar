@@ -114,9 +114,8 @@ def liste_pilot() -> dict[str, Any]:
     }
 
 
-def geojson_yolu(sehir: str, kind: str = "buildings") -> Path | None:
+def _sehir_key(sehir: str) -> str | None:
     key = (sehir or "").strip().lower()
-    # Türkçe karakter sadeleştir
     key = (
         key.replace("ı", "i")
         .replace("İ", "i")
@@ -132,11 +131,20 @@ def geojson_yolu(sehir: str, kind: str = "buildings") -> Path | None:
         "bursa": "bursa",
         "izmir": "izmir",
     }
-    k = aliases.get(key)
+    return aliases.get(key)
+
+
+def geojson_yolu(sehir: str, kind: str = "buildings") -> Path | None:
+    k = _sehir_key(sehir)
     if not k:
         return None
     p = OSM / f"{k}_{kind}.geojson"
     return p if p.is_file() else None
+
+
+# Bellek + ızgara: 90MB GeoJSON her istekte parse edilmesin
+_FEAT_CACHE: dict[str, dict[str, Any]] = {}
+_GRID_CELL = 0.02  # ~2 km
 
 
 def _feat_lon_lat(feat: dict[str, Any]) -> tuple[float, float] | None:
@@ -174,6 +182,64 @@ def _feat_lon_lat(feat: dict[str, Any]) -> tuple[float, float] | None:
         return None
 
 
+def _load_feat_index(path: Path) -> dict[str, Any]:
+    """Şehir GeoJSON → bellek + hücre ızgarası (tekrar parse yok)."""
+    key = str(path.resolve())
+    try:
+        mtime = path.stat().st_mtime
+    except OSError:
+        mtime = 0.0
+    hit = _FEAT_CACHE.get(key)
+    if hit and hit.get("mtime") == mtime:
+        return hit
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    feats = list(raw.get("features") or [])
+    cell = float(_GRID_CELL)
+    grid: dict[tuple[int, int], list[tuple[float, float, dict[str, Any]]]] = {}
+    for f in feats:
+        ll = _feat_lon_lat(f)
+        if not ll:
+            continue
+        flo, fla = ll
+        gx = int(flo / cell) if flo >= 0 else int(flo / cell) - 1
+        gy = int(fla / cell) if fla >= 0 else int(fla / cell) - 1
+        grid.setdefault((gx, gy), []).append((flo, fla, f))
+    pack = {
+        "mtime": mtime,
+        "feats": feats,
+        "grid": grid,
+        "cell": cell,
+        "path": key,
+    }
+    _FEAT_CACHE[key] = pack
+    return pack
+
+
+def warm_geojson_cache(sehir: str | None = None) -> dict[str, Any]:
+    """İlk boyamada gecikme olmasın diye indeks ısıt."""
+    keys = [_sehir_key(sehir)] if sehir else list(PILOT.keys())
+    out: list[dict[str, Any]] = []
+    for k in keys:
+        if not k:
+            continue
+        for kind in ("buildings", "roads"):
+            p = geojson_yolu(k, kind)
+            if not p:
+                out.append({"sehir": k, "kind": kind, "ok": False})
+                continue
+            pack = _load_feat_index(p)
+            out.append(
+                {
+                    "sehir": k,
+                    "kind": kind,
+                    "ok": True,
+                    "features": len(pack.get("feats") or []),
+                    "cells": len(pack.get("grid") or {}),
+                }
+            )
+    return {"ok": True, "items": out, "cached": list(_FEAT_CACHE.keys())}
+
+
 def geojson_oku(
     sehir: str,
     kind: str = "buildings",
@@ -187,44 +253,56 @@ def geojson_oku(
     p = geojson_yolu(sehir, kind)
     if not p:
         return None
-    data = json.loads(p.read_text(encoding="utf-8"))
-    feats = list(data.get("features") or [])
-    total = len(feats)
+    pack = _load_feat_index(p)
+    feats_all = list(pack.get("feats") or [])
+    total = len(feats_all)
     lim = int(limit or 0)
     near = lat is not None and lon is not None and isfinite_lat_lon(lat, lon)
     if near:
         md = max(0.008, min(0.12, float(radius_deg or 0.045)))
         md2 = md * md
+        cell = float(pack.get("cell") or _GRID_CELL)
+        lat_f = float(lat)
+        lon_f = float(lon)
+        gx0 = int(lon_f / cell) if lon_f >= 0 else int(lon_f / cell) - 1
+        gy0 = int(lat_f / cell) if lat_f >= 0 else int(lat_f / cell) - 1
+        span = max(1, int(md / cell) + 1)
         scored: list[tuple[float, dict[str, Any]]] = []
-        for f in feats:
-            ll = _feat_lon_lat(f)
-            if not ll:
-                continue
-            flo, fla = ll
-            d2 = (fla - float(lat)) ** 2 + (flo - float(lon)) ** 2
-            if d2 <= md2:
-                scored.append((d2, f))
+        grid = pack.get("grid") or {}
+        for dx in range(-span, span + 1):
+            for dy in range(-span, span + 1):
+                for flo, fla, f in grid.get((gx0 + dx, gy0 + dy), ()):
+                    d2 = (fla - lat_f) ** 2 + (flo - lon_f) ** 2
+                    if d2 <= md2:
+                        scored.append((d2, f))
         scored.sort(key=lambda x: x[0])
         take = lim if lim > 0 else 8000
         feats = [f for _, f in scored[:take]]
-        data = {
+        return {
             "type": "FeatureCollection",
             "features": feats,
             "truncated": total > len(feats),
             "total": total,
             "near": True,
-            "lat": float(lat),
-            "lon": float(lon),
+            "lat": lat_f,
+            "lon": lon_f,
             "radius_deg": md,
+            "cached": True,
         }
-    elif lim > 0 and total > lim:
-        data = {
+    if lim > 0 and total > lim:
+        return {
             "type": "FeatureCollection",
-            "features": feats[:lim],
+            "features": feats_all[:lim],
             "truncated": True,
             "total": total,
+            "cached": True,
         }
-    return data
+    return {
+        "type": "FeatureCollection",
+        "features": feats_all,
+        "total": total,
+        "cached": True,
+    }
 
 
 def isfinite_lat_lon(lat: float, lon: float) -> bool:

@@ -690,6 +690,15 @@ def looks_like_tour_control(n: str) -> str | None:
         return "tour_follow_river"
     if re.search(r"\b(sehre\s*gir|sehir\s*ici|kente\s*gir|enter\s*city)\b", n):
         return "tour_enter_city"
+    if re.search(
+        r"\b(uzerine\s*cik|üstüne\s*çık|kus\s*bakisi|kuşbakışı|overhead|top\s*down)\b",
+        n,
+    ):
+        return "tour_uzerine_cik"
+    if re.search(r"\b(odak\s*takibi|focus\s*mode|odak\s*modu)\b", n):
+        return "tour_odak_takibi"
+    if re.search(r"\b(serbest\s*bakis|serbest\s*bakış|free\s*look|free\s*mode)\b", n):
+        return "tour_serbest_bakis"
     if re.search(r"\b(kiyi(yi)?\s*takip|sahili?\s*takip|follow\s*coast)\b", n):
         return "tour_follow_coast"
     if re.search(
@@ -760,7 +769,29 @@ def build_tour_payload(
         label = place
         tip_hint = None
 
+    # place var, lat/lon yok → geocode et (API yalnız place ile gelince tur_yok olmasın)
+    if (lat is None or lon is None) and (place or label):
+        try:
+            from ilim_assistant.sahne_harita_geo import geocode
+
+            hit = geocode(str(place or label), allow_network=True)
+            if hit and hit.get("lat") is not None and hit.get("lon") is not None:
+                lat = float(hit["lat"])
+                lon = float(hit["lon"])
+                label = str(hit.get("label") or place or label or "Keşif")
+                tip_hint = tip_hint or str(hit.get("tip") or "").lower() or None
+                bolge_hint = bolge_hint or hit.get("bolge") or hit.get("country")
+        except Exception:
+            pass
+
     tip = classify_gezgin_tip(place or "", label, tip_hint=tip_hint)
+    # Geocode şehir/ülke döndüyse tipsiz bırakma (Halkalı vb.)
+    if not tip and tip_hint in ("sehir", "il", "ilce", "mahalle", "nokta", "city", "town"):
+        tip = "sehir"
+    if not tip and lat is not None and lon is not None:
+        # Türkiye kara kutusu içindeyse şehir turu varsay
+        if 35.8 <= float(lat) <= 42.3 and 25.5 <= float(lon) <= 45.0:
+            tip = "sehir"
     if not tip:
         return None
     if lat is None or lon is None:

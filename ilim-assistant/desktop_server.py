@@ -5683,6 +5683,14 @@ def api_sehir_ikiz_geojson(
     return data
 
 
+@app.post("/api/sehir-ikiz/warm")
+def api_sehir_ikiz_warm(sehir: str | None = Query(None)):
+    """Pilot bina/yol GeoJSON bellek indeksini ısıt (ilk boyama gecikmesini kes)."""
+    from ilim_assistant.ruzgar_sehir_ikiz import warm_geojson_cache
+
+    return warm_geojson_cache(sehir)
+
+
 @app.post("/api/sehir-ikiz/gpkg")
 def api_sehir_ikiz_gpkg():
     """GDAL ile GeoPackage üret (PostGIS yokken yedek)."""

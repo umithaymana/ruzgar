@@ -3787,8 +3787,40 @@
   }
 
   function haritaPilotSehir(state) {
-    // Anayasa: sabit şehir listesi yok — yalnız açık sehir alanı
-    return String(state.sehir || "").toLowerCase();
+    // Açık sehir alanı öncelikli. Yoksa diskteki yerel bina dosyasını
+    // seçmek için etiket/koordinat çıkarımı (coğrafya sabitleme değil).
+    const explicit = String(state.sehir || "").toLowerCase().trim();
+    if (explicit) return explicit;
+    const blob = [state.label, state.hedef, state.tour_place]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase()
+      .replace(/i̇/g, "i");
+    if (blob.indexOf("istanbu") >= 0) return "istanbul";
+    if (blob.indexOf("ankara") >= 0) return "ankara";
+    if (blob.indexOf("bursa") >= 0) return "bursa";
+    if (blob.indexOf("izmir") >= 0) return "izmir";
+    const lat = Number(state.lat);
+    const lon = Number(state.lon);
+    if (!isFinite(lat) || !isFinite(lon)) return "";
+    const pilots = [
+      { k: "istanbul", lat: 41.0082, lon: 28.9784 },
+      { k: "ankara", lat: 39.9334, lon: 32.8597 },
+      { k: "bursa", lat: 40.1885, lon: 29.061 },
+      { k: "izmir", lat: 38.4192, lon: 27.1287 },
+    ];
+    let best = "";
+    let bestD = 0.32 * 0.32; // ~35 km
+    for (let i = 0; i < pilots.length; i++) {
+      const c = pilots[i];
+      const d =
+        (lat - c.lat) * (lat - c.lat) + (lon - c.lon) * (lon - c.lon);
+      if (d < bestD) {
+        bestD = d;
+        best = c.k;
+      }
+    }
+    return best;
   }
 
   function haritaEmbedSrc(state) {
@@ -3849,8 +3881,8 @@
           return Number(n).toFixed(5);
         }).join(",");
     }
-    // Coğrafi doğruluk cache-bust
-    url += "&hv=kamera-rig-v5";
+    // Coğrafi doğruluk cache-bust (üst şerit + fare akış)
+    url += "&hv=kamera-rig-v19-grab";
     return url;
   }
 
@@ -4277,6 +4309,8 @@
       st.bina = 1;
       st.mode = "3d";
       if ((Number(st.zoom) || 7) < 15) st.zoom = 16;
+      const sehirBina = haritaPilotSehir(st);
+      if (sehirBina) st.sehir = sehirBina;
     }
 
     // H9 Dünya Gezgini
@@ -4287,12 +4321,13 @@
       st.tour = c.tour || null;
       st.tour_place = c.hedef || (c.tour && c.tour.label) || st.label || st.hedef;
       if ((Number(st.zoom) || 7) < 13) st.zoom = 14;
-      // Şehir/nokta gezi → göz hizası + sokak serisi (sabit bölge yok; tip’ten)
-      const tipTour = String(
-        (c.geo && c.geo.tip) || st.tip || (c.tour && c.tour.tip) || "",
-      ).toLowerCase();
-      if (/^(sehir|il|ilce|mahalle|bina|nokta)$/i.test(tipTour)) {
-        st.walk = 1;
+      // Şehir turunda otomatik walk=1 KULLANMA — yürüyüş sinemayı dondurup
+      // eski TARGET (İtalya vb.) üzerinde sabit görüntü bırakıyordu. Kullanıcı Yürü der.
+      // Yerel bina dosyası varsa sehir+bina bağla (ekranda kutu çıksın)
+      const sehirTour = haritaPilotSehir(st);
+      if (sehirTour) {
+        st.sehir = sehirTour;
+        st.bina = 1;
       }
     }
     if (
@@ -4321,6 +4356,9 @@
       action === "tour_pano_near" ||
       action === "tour_follow_river" ||
       action === "tour_enter_city" ||
+      action === "tour_uzerine_cik" ||
+      action === "tour_odak_takibi" ||
+      action === "tour_serbest_bakis" ||
       action === "tour_follow_coast" ||
       action === "tour_enter_crater" ||
       action.indexOf("tour_camera_") === 0 ||
@@ -4709,6 +4747,9 @@
       tour_pano_near: 1,
       tour_follow_river: 1,
       tour_enter_city: 1,
+      tour_uzerine_cik: 1,
+      tour_odak_takibi: 1,
+      tour_serbest_bakis: 1,
       tour_follow_coast: 1,
       tour_enter_crater: 1,
       tour_camera_yuruyus: 1,

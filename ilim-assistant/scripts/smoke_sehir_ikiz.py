@@ -36,6 +36,24 @@ def main() -> None:
         fail("bursa geojson")
     print("OK: bursa geojson", len(g["features"]))
 
+    # İstanbul yakın dilim + bellek indeks (Faz A-min: beyaz kutu hızı)
+    from ilim_assistant.ruzgar_sehir_ikiz import warm_geojson_cache  # noqa: E402
+
+    warm = warm_geojson_cache("istanbul")
+    if not warm.get("ok"):
+        fail("warm istanbul")
+    gi = geojson_oku(
+        "istanbul",
+        "buildings",
+        limit=100,
+        lat=41.0256,
+        lon=28.9744,
+        radius_deg=0.02,
+    )
+    if not gi or not gi.get("features") or not gi.get("cached"):
+        fail("istanbul near geojson/cache")
+    print("OK: istanbul near", len(gi["features"]), "cached")
+
     tools = tara()
     for tid in ("gdal", "blender", "cesium", "mediamtx", "ifcopenshell"):
         a = next((x for x in tools["araclar"] if x["id"] == tid), None)
@@ -58,8 +76,8 @@ def main() -> None:
     if r3.get("action") != "mode_sentinel":
         fail("mode_sentinel")
     r4 = resolve_super_el("mapillary sokak goruntu", geocode=False)
-    if r4.get("action") != "mode_pano":
-        fail("mode_pano")
+    if r4.get("action") not in ("mode_pano", "tour_pano_near"):
+        fail(f"mode_pano/tour_pano_near: {r4.get('action')}")
 
     from ilim_assistant.ruzgar_stac import search_sentinel  # noqa: E402
     from ilim_assistant.ruzgar_pano import pano_nearby  # noqa: E402
@@ -77,6 +95,7 @@ def main() -> None:
     for n in (
         "/api/sehir-ikiz/pilot",
         "/api/sehir-ikiz/geojson",
+        "/api/sehir-ikiz/warm",
         "/api/sehir-ikiz/gpkg",
         "/api/sehir-ikiz/kameralar",
         "/api/sehir-ikiz/mediamtx",
@@ -87,12 +106,23 @@ def main() -> None:
         if n not in server:
             fail(f"API {n}")
     viewer = (ROOT.parent / "ruzgar-desktop" / "harita-viewer.html").read_text(encoding="utf-8")
-    for n in ("loadBuildings", "spawnAgents", "loadCameraPins", "era", "paintSentinel", "paintPano"):
+    for n in (
+        "loadBuildings",
+        "spawnAgents",
+        "loadCameraPins",
+        "era",
+        "paintSentinel",
+        "paintPano",
+        "/api/sehir-ikiz/warm",
+        "walkEnsureBuildings",
+    ):
         if n not in viewer:
             fail(f"viewer {n}")
     masa = (ROOT.parent / "ruzgar-desktop" / "ruzgar-masa.js").read_text(encoding="utf-8")
     if "mode_sentinel" not in masa or "mode_pano" not in masa:
         fail("masa mode_sentinel/pano")
+    if "Yerel bina dosyası" not in masa and "st.bina = 1" not in masa:
+        fail("masa sehir/bina tur bagı")
     mobil = (ROOT / "static" / "mobil-pwa" / "app.js").read_text(encoding="utf-8")
     if "mode_sentinel" not in mobil or "mode_pano" not in mobil:
         fail("mobil mode_sentinel/pano")

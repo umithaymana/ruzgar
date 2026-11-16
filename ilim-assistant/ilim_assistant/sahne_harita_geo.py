@@ -848,14 +848,15 @@ def _nominatim_search(q_try: str, *, timeout: float = 3.0) -> list[dict[str, Any
     wait = 1.05 - (time.monotonic() - _NOMINATIM_LAST_TS)
     if wait > 0:
         time.sleep(wait)
-    params = urllib.parse.urlencode(
-        {
-            "q": q_try,
-            "format": "json",
-            "limit": "5",
-            "addressdetails": "1",
-        }
-    )
+    params_dict: dict[str, str] = {
+        "q": q_try,
+        "format": "json",
+        "limit": "5",
+        "addressdetails": "1",
+    }
+    if _query_wants_turkey(q_try):
+        params_dict["countrycodes"] = "tr"
+    params = urllib.parse.urlencode(params_dict)
     url = f"https://nominatim.openstreetmap.org/search?{params}"
     req = urllib.request.Request(
         url,
@@ -1235,6 +1236,35 @@ def log_hedef(geo: dict[str, Any] | None, query: str = "") -> dict[str, Any] | N
     return out
 
 
+def _query_wants_turkey(q: str) -> bool:
+    """Sorguda TR ipucu varsa yurt dışı (İtalya vb.) sonucu reddet."""
+    n = (q or "").strip().lower().replace("ı", "i").replace("İ", "i")
+    n = n.replace("ş", "s").replace("ğ", "g").replace("ü", "u").replace("ö", "o").replace("ç", "c")
+    return bool(
+        re.search(
+            r"\b(turkiye|turkey|tr|istanbul|ankara|izmir|bursa|antalya|halkali|"
+            r"atakent|beyoglu|galata|taksim|kadikoy|uskudar|fatih|besiktas|"
+            r"talimhane|kucukcekmece|cekmece)\b",
+            n,
+        )
+    )
+
+
+def _in_turkey_bbox(lat: float, lon: float) -> bool:
+    try:
+        return 35.8 <= float(lat) <= 42.3 and 25.5 <= float(lon) <= 45.0
+    except (TypeError, ValueError):
+        return False
+
+
+def _geo_hit_ok_for_query(q: str, hit: dict[str, Any] | None) -> bool:
+    if not hit or hit.get("lat") is None or hit.get("lon") is None:
+        return False
+    if _query_wants_turkey(q) and not _in_turkey_bbox(float(hit["lat"]), float(hit["lon"])):
+        return False
+    return True
+
+
 def geocode(hedef: str, *, allow_network: bool = True) -> dict[str, Any] | None:
     """Evrensel geocode: öğrenilmiş önbellek → Photon → Open-Meteo → (opsiyonel) Nominatim.
 
@@ -1245,10 +1275,10 @@ def geocode(hedef: str, *, allow_network: bool = True) -> dict[str, Any] | None:
     if not q:
         return None
     learned = geocode_disk(q)
-    if learned:
+    if learned and _geo_hit_ok_for_query(q, learned):
         return log_hedef(learned, hedef)
     local = geocode_local(q)
-    if local:
+    if local and _geo_hit_ok_for_query(q, local):
         return log_hedef(local, hedef)
     # Türkiye OSM bölgesel paket (C0) — ağdan önce; Anayasa: sabit tablo değil
     try:
@@ -1256,7 +1286,7 @@ def geocode(hedef: str, *, allow_network: bool = True) -> dict[str, Any] | None:
 
         if osm_tr_enabled():
             osm_hit = lookup_place(q)
-            if osm_hit and osm_hit.get("lat") is not None:
+            if osm_hit and osm_hit.get("lat") is not None and _geo_hit_ok_for_query(q, osm_hit):
                 _remember_geo(q, osm_hit)
                 return log_hedef(osm_hit, hedef)
     except Exception:
@@ -1318,7 +1348,7 @@ def geocode(hedef: str, *, allow_network: bool = True) -> dict[str, Any] | None:
                 hit = geocode_nominatim(q, timeout=min(1.8, remain))
         except Exception:
             hit = None
-        if hit and hit.get("lat") is not None:
+        if hit and hit.get("lat") is not None and _geo_hit_ok_for_query(q, hit):
             _remember_geo(q, hit)
             return log_hedef(hit, hedef)
     return None
