@@ -186,6 +186,54 @@ def build_genel_orchestra_preview(
                 route_patch["hub_target"] = mid
     except Exception:
         pass
+    # Dilim 1 — Ses tek yüz quiet handoff (6c/E kalıbı; profil anlığı çalmaz)
+    try:
+        from ilim_assistant.ana_motor_faz_ses_tek_yuz import enrich_orchestra_faz_ses
+
+        orch = enrich_orchestra_faz_ses(orch, message)
+        if orch.get("faz_ses") and orch.get("ui_action", {}).get("type") == "surface_handoff":
+            ua = dict(orch.get("ui_action") or {})
+            route_patch["tek_sohbet"] = ua
+            route_patch["faz_ses"] = True
+            route_patch["hub_target"] = "ses"
+    except Exception:
+        pass
+    # Dilim 2 — Hafıza tek yüz (panel doldur; otomatik kart yazmaz)
+    try:
+        from ilim_assistant.ana_motor_faz_hafiza_tek_yuz import enrich_orchestra_faz_hafiza
+
+        orch = enrich_orchestra_faz_hafiza(orch, message)
+        if orch.get("faz_hafiza") and orch.get("ui_action", {}).get("type") == "surface_handoff":
+            ua = dict(orch.get("ui_action") or {})
+            route_patch["tek_sohbet"] = ua
+            route_patch["faz_hafiza"] = True
+            route_patch["hub_target"] = "hafiza"
+    except Exception:
+        pass
+    # Dilim 3 — Mimar tek yüz (ilim kaçmasın)
+    try:
+        from ilim_assistant.ana_motor_faz_mimar_tek_yuz import enrich_orchestra_faz_mimar
+
+        orch = enrich_orchestra_faz_mimar(orch, message)
+        if orch.get("faz_mimar") and orch.get("ui_action", {}).get("type") == "surface_handoff":
+            ua = dict(orch.get("ui_action") or {})
+            route_patch["tek_sohbet"] = ua
+            route_patch["faz_mimar"] = True
+            route_patch["hub_target"] = "mimar"
+    except Exception:
+        pass
+    # Dilim 8 — Hızır tek yüz (panel; pazar API uydurma yok)
+    try:
+        from ilim_assistant.ana_motor_faz_hizir_tek_yuz import enrich_orchestra_faz_hizir
+
+        orch = enrich_orchestra_faz_hizir(orch, message)
+        if orch.get("faz_hizir") and orch.get("ui_action", {}).get("type") == "surface_handoff":
+            ua = dict(orch.get("ui_action") or {})
+            route_patch["tek_sohbet"] = ua
+            route_patch["faz_hizir"] = True
+            route_patch["hub_target"] = "hizir"
+    except Exception:
+        pass
     return orch, route_patch
 
 

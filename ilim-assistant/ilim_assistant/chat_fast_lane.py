@@ -31,6 +31,19 @@ def try_instant_reply(message: str, mode_norm: str = "genel") -> str | None:
     raw = (message or "").strip()
     if not raw or len(raw) > 120:
         return None
+    # Tek yüz / atölye önekleri — selam kelimesi içinde olsa bile fast-lane ezmesin
+    _a = _ascii(_norm(raw))
+    if re.match(
+        r"^(?:seste|ses\s+atolyesinde|ses\s+paneline|"
+        r"hafizada|hafiza\s+atolyesinde|hafiza\s+paneline|"
+        r"mimarda|mimar\s+atolyesinde|mimar\s+paneline|"
+        r"fotograf\s+paneli|tasarimda|"
+        r"gorev\s*:|programlamada|videoda|video\s+atolyesinde|"
+        r"tercumede|tercume\s+atolyesinde|sesle\s+oku|"
+        r"hizirda|hizir\s+atolyesinde|hizir\s+paneline)\b",
+        _a,
+    ):
+        return None
     try:
         from ilim_assistant.motorlar.programlama_proje_masasi import tarif_cumlesi
 

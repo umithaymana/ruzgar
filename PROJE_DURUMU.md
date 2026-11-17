@@ -1,22 +1,24 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-11-17 — F8.3 üst/arşiv ayrımı · aktif plan: `RUZGAR_SOHBET_KUTUPHANE_SES_PLAN_2026-11-17.md`.
+**Son güncelleme:** 2026-11-17 gece — Çırak gelişim planı hazır · yarın A dilimi · `RUZGAR_CIRAK_GELISIM_PLAN_2026-11-18.md`.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
 ---
 
-## ŞİMDİ SIRADA (tek güncel üst — 2026-11-17)
+## ŞİMDİ SIRADA (tek güncel üst — 2026-11-17/18)
 
 | Öncelik | Konu | Not |
 |---------|------|-----|
-| **Plan mühür** | Sohbet · Kütüphane · Ses · Mobil | `RUZGAR_SOHBET_KUTUPHANE_SES_PLAN_2026-11-17.md` F0–F9 `[x]` |
+| **Çırak gelişim** | A→F eksik giderme · yarın başla | `RUZGAR_CIRAK_GELISIM_PLAN_2026-11-18.md` · çırak yapar, usta kontrol |
+| **Motor bağ** | Usta/çırak 0–8 mühür (arka) | `RUZGAR_MOTOR_USTA_CIRAK_PLAN_2026-11-17.md` |
+| **Mühürlü arka** | Sohbet · Kütüphane · Ses · Mobil F0–F9 | `RUZGAR_SOHBET_KUTUPHANE_SES_PLAN_2026-11-17.md` `[x]` |
 | **Saha (sen)** | F6.3 5 dk sürekli sohbet | Kod hazır; kopma oranı telefon ölçümü |
 | **Bilinçli erteli** | Sahne / OSM / Dünya Gezgini yeni dilim | Mimar «sahneye dön» deyene kadar yok |
-| **P3 kapalı** | Serbest kod · %90 programlama · halka açılış | Bu planda yok |
+| **P3 kapalı** | Serbest kod · %90 programlama · halka açılış | Kapılı çırak dilimi (#6) ayrı |
 | **Kapı** | `8779` · mic HTTPS `8443` · PWA `/mobil/` | Boot sırası kilitli |
 
-**Başarı cümlesi:** İlimde raftan; günlükte doğal; telefonda sürekli ses; `?`/öz-bilgi aynı kart.
+**Başarı cümlesi:** Motorlar ana motora tam iş bağlı; çırak her yeşilde ders yazar; kırılgan yerde usta keser.
 
 ---
 

@@ -760,6 +760,21 @@ def iter_fast_path_early(
     new_wake: bool = False,
 ) -> Iterator[dict[str, Any]] | None:
     """Faz 85 hızlı yol — LLM turundan önce."""
+    # Çırak supervised (LLM yok) — Faz85 kapalı olsa bile
+    try:
+        from ilim_assistant.ruzgar_cirak_ders import try_cirak_supervised_write
+
+        cirak_fast = try_cirak_supervised_write(message, workspace_root)
+        if cirak_fast is not None:
+            return iter_fast_task_events(
+                message=message,
+                task=task,
+                fast=cirak_fast,
+                new_wake=new_wake,
+                workspace_root=workspace_root,
+            )
+    except Exception:
+        pass
     if not _enabled():
         return None
     try:

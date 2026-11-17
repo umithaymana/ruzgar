@@ -1598,6 +1598,27 @@ def looks_like_casual_social_chat(message: str) -> bool:
     raw = (message or "").strip().lower()
     if not raw:
         return False
+    # Tek yüz / atölye önekleri casual anlığı ezmesin (Ses/Hafıza/Mimar/6c/E)
+    _fold_raw = (
+        raw.replace("ı", "i")
+        .replace("İ", "i")
+        .replace("ş", "s")
+        .replace("ğ", "g")
+        .replace("ü", "u")
+        .replace("ö", "o")
+        .replace("ç", "c")
+    )
+    if re.match(
+        r"^(?:seste|ses\s+atolyesinde|ses\s+paneline|"
+        r"hafizada|hafiza\s+atolyesinde|hafiza\s+paneline|"
+        r"mimarda|mimar\s+atolyesinde|mimar\s+paneline|"
+        r"fotograf\s+paneli|tasarimda|"
+        r"gorev\s*:|programlamada|videoda|video\s+atolyesinde|"
+        r"tercumede|tercume\s+atolyesinde|"
+        r"sesle\s+oku|hizirda|hizir\s+atolyesinde|hizir\s+paneline)\b",
+        _fold_raw,
+    ):
+        return False
     try:
         from ilim_assistant.ruzgar_tek_beyin import looks_like_friend_mood_chat
 

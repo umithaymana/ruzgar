@@ -11,7 +11,7 @@ import unicodedata
 from pathlib import Path
 from typing import Any
 
-OZ_BILGI_VERSION = "ruzgar-oz-bilgi-f9-v1.1-2026-11-17"
+OZ_BILGI_VERSION = "ruzgar-oz-bilgi-f9-v1.2-motor-bag-2026-11-17"
 MIMAR = "Ümit & Gökçenur"
 
 _CACHE: dict[str, Any] = {"ts": 0.0, "inv": None}
@@ -89,10 +89,11 @@ MOTOR_KARTLARI: list[dict[str, Any]] = [
         "ad": "Ses",
         "hub": True,
         "boot": 1,
-        "huner": "STT/TTS, profil Alim/Edip/Asistan, tilavet",
-        "guclu": "Edge first-byte / VAD mobil",
+        "huner": "STT/TTS, profil Alim/Edip/Asistan, tilavet, tek yüz handoff",
+        "guclu": "Edge first-byte / VAD mobil / sohbet→ses atölye",
         "zayif": "İnsan klonu varsayılan değil",
-        "ornek": "alim moduna geç",
+        "ornek": "seste: merhaba",
+        "tek_yuz": True,
     },
     {
         "id": "video",
@@ -109,20 +110,23 @@ MOTOR_KARTLARI: list[dict[str, Any]] = [
         "ad": "Okuma",
         "hub": False,
         "boot": 3,
-        "huner": "Arşiv / metin türü (sohbet Ana Motor'da)",
-        "guclu": "Arşiv durumu",
-        "zayif": "Görsel mimar paneli değil (F5.1)",
+        "bag": "kismi_kasten",
+        "huner": "Arşiv / metin türü; ilim sohbeti Ana Motor'da (yetim değil)",
+        "guclu": "Arşiv durumu; bilinçli hub dışı sohbet",
+        "zayif": "Bağımsız hub hedefi yok — kasıtlı (F5)",
         "ornek": "arsiv durumu",
+        "tek_yuz": False,
     },
     {
         "id": "mimar",
         "ad": "Mimar",
         "hub": True,
         "boot": 4,
-        "huner": "Fotoğraf / tasarım / sanat atölyesi",
-        "guclu": "Görsel işler",
+        "huner": "Fotoğraf / tasarım / sanat atölyesi, tek yüz",
+        "guclu": "Görsel işler; ilim sohbeti Ana Motor'da",
         "zayif": "İlim «nedir» buraya düşmez",
-        "ornek": "fotoğraf paneli aç",
+        "ornek": "mimarda: logo",
+        "tek_yuz": True,
     },
     {
         "id": "tercume",
@@ -139,10 +143,11 @@ MOTOR_KARTLARI: list[dict[str, Any]] = [
         "ad": "Hafıza",
         "hub": True,
         "boot": 6,
-        "huner": "Hatırla, görev, sohbet arşivi",
-        "guclu": "Kalıcı kartlar",
+        "huner": "Hatırla, görev, sohbet arşivi, tek yüz panel",
+        "guclu": "Kalıcı kartlar; panel handoff kayıt yazmaz",
         "zayif": "Zehirli otomatik kayıt kapılı (F3)",
-        "ornek": "bunu hatırla",
+        "ornek": "hafızada: not",
+        "tek_yuz": True,
     },
     {
         "id": "programlama",
@@ -159,10 +164,11 @@ MOTOR_KARTLARI: list[dict[str, Any]] = [
         "ad": "Hızır",
         "hub": True,
         "boot": None,
-        "huner": "Ticaret / tarama yardımcı",
-        "guclu": "Hub ROK hedefi",
+        "huner": "Ticaret / tarama yardımcı, tek yüz panel",
+        "guclu": "Hub ROK + sohbet→panel handoff",
         "zayif": "Canlı pazar API yok (bilinçli)",
-        "ornek": "pazar yerini tara",
+        "ornek": "hizirda: not",
+        "tek_yuz": True,
     },
 ]
 

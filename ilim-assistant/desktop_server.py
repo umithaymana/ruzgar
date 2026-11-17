@@ -1412,6 +1412,36 @@ def _health_build_block() -> dict:
             base["faz_e"] = faz_e_status()
         except Exception:
             base["faz_e"] = {"enabled": False}
+        try:
+            from ilim_assistant.ana_motor_faz_ses_tek_yuz import faz_ses_status
+
+            base["faz_ses"] = faz_ses_status()
+        except Exception:
+            base["faz_ses"] = {"enabled": False}
+        try:
+            from ilim_assistant.ana_motor_faz_hafiza_tek_yuz import faz_hafiza_status
+
+            base["faz_hafiza"] = faz_hafiza_status()
+        except Exception:
+            base["faz_hafiza"] = {"enabled": False}
+        try:
+            from ilim_assistant.ana_motor_faz_mimar_tek_yuz import faz_mimar_status
+
+            base["faz_mimar"] = faz_mimar_status()
+        except Exception:
+            base["faz_mimar"] = {"enabled": False}
+        try:
+            from ilim_assistant.ana_motor_faz_hizir_tek_yuz import faz_hizir_status
+
+            base["faz_hizir"] = faz_hizir_status()
+        except Exception:
+            base["faz_hizir"] = {"enabled": False}
+        try:
+            from ilim_assistant.ruzgar_cirak_ders import cirak_status
+
+            base["cirak_ders"] = cirak_status()
+        except Exception:
+            base["cirak_ders"] = {"enabled": False}
     except Exception:
         pass
     try:
@@ -11840,10 +11870,19 @@ def _iter_gorev_faz85_fast_only(
     new_wake: bool,
     delegated_from_genel: bool = False,
     route_meta: dict[str, Any] | None = None,
+    allow_agent_fallback: bool = False,
 ) -> Iterator[dict[str, Any]]:
-    """`görev:` satırı — yalnızca Faz 85; başarısızsa kırmızı done (tam LLM ajanı yok)."""
+    """`görev:` satırı — Faz 85; miss'te isteğe çırak/tam ajan borusu."""
     from ilim_assistant.motorlar.programlama_faz20 import resolve_agent_task
     from ilim_assistant.motorlar.programlama_faz85 import iter_fast_path_early
+
+    try:
+        from ilim_assistant.ruzgar_cirak_ders import wants_full_code_agent
+
+        if wants_full_code_agent(msg):
+            allow_agent_fallback = True
+    except Exception:
+        pass
 
     task = resolve_agent_task(
         msg,
@@ -11893,13 +11932,38 @@ def _iter_gorev_faz85_fast_only(
             else:
                 yield ev
         return
+    if allow_agent_fallback:
+        yield {
+            "type": "status",
+            "text": "Faz 85 yok — çırak/tam ajan borusu açılıyor…",
+        }
+        yield from _iter_programlama_agent_pipeline(
+            msg=msg,
+            req=req,
+            mode_norm=mode_norm,
+            coding=True,
+            turn_plan=None,
+            orch={
+                "cirak_agent_fallback": True,
+                "plan": {"primary": "programlama", "label_tr": "Çırak / tam ajan"},
+            },
+            delegated_from_genel=delegated_from_genel,
+            prior=[],
+            new_wake=new_wake,
+            system="",
+            user_payload=msg,
+            model="",
+            hits=[],
+        )
+        return
     body = (
         "Ümit abi, Faz 85 hızlı yol bu görevde devreye girmedi (tam ajan atlandı).\n\n"
         f"Proje: `{task.scope_rel}`\n"
         f"Hedef: {task.goal}\n\n"
         "· `Ruzgar_YenidenBaslat.bat` ile sunucuyu yenile ve tekrar dene.\n"
         "· Proje `projects/` altında mı kontrol et.\n"
-        "· Zorunlu tam ajan: mesaja `tam ajan` ekle veya `RUZGAR_FAZ85=0`."
+        "· Zorunlu tam ajan: mesaja `tam ajan` veya `cirak` ekle; "
+        "ya da `RUZGAR_FAZ85=0`."
     )
     done_ev: dict[str, Any] = {
         "type": "done",
@@ -12123,6 +12187,33 @@ def _collect_fast_lane_chat_events(req: ChatRequest) -> list[dict[str, Any]] | N
     msg_raw = (req.message or "").strip()
     if not msg_raw or len(msg_raw) > 400:
         return None
+    # Tek yüz / atölye önekleri fast-lane'e girmez — orchestra ui_action kaçmasın
+    try:
+        import re as _re_fl
+        import unicodedata as _ud_fl
+
+        _fl = _ud_fl.normalize("NFKC", msg_raw).strip().lower()
+        _fl = (
+            _fl.replace("ı", "i")
+            .replace("ş", "s")
+            .replace("ğ", "g")
+            .replace("ü", "u")
+            .replace("ö", "o")
+            .replace("ç", "c")
+        )
+        if _re_fl.match(
+            r"^(?:seste|ses\s+atolyesinde|ses\s+paneline|"
+            r"hafizada|hafiza\s+atolyesinde|hafiza\s+paneline|"
+            r"mimarda|mimar\s+atolyesinde|mimar\s+paneline|"
+            r"fotograf\s+paneli|tasarimda|"
+            r"gorev\s*:|programlamada|videoda|video\s+atolyesinde|"
+            r"tercumede|tercume\s+atolyesinde|sesle\s+oku|"
+            r"hizirda|hizir\s+atolyesinde|hizir\s+paneline)\b",
+            _fl,
+        ):
+            return None
+    except Exception:
+        pass
     try:
         from ilim_assistant.motorlar.programlama_proje_masasi import tarif_cumlesi
 
@@ -12266,6 +12357,23 @@ async def _async_iter_chat_events(req: ChatRequest):
             else:
                 yield obj
         return
+    # Erken tek yüz meta — UI handoff LLM / ağır tur beklemesin
+    try:
+        from ilim_assistant.ruzgar_orkestrasyon_faz_c import build_genel_orchestra_preview
+
+        _early_orch, _ = build_genel_orchestra_preview(
+            req.message or "",
+            getattr(req, "workspace_root", None),
+        )
+        _eua = (_early_orch or {}).get("ui_action") or {}
+        if isinstance(_eua, dict) and _eua.get("type") == "surface_handoff":
+            yield {
+                "type": "meta",
+                "orchestra": _early_orch,
+                "tek_yuz_early": True,
+            }
+    except Exception:
+        pass
     async for obj in iterate_in_threadpool(iter_chat_turn_events(req)):
         yield obj
 
@@ -12371,6 +12479,23 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
     if fast:
         yield from fast
         return
+    # Erken tek yüz meta (sync stream) — UI handoff LLM beklemesin
+    try:
+        from ilim_assistant.ruzgar_orkestrasyon_faz_c import build_genel_orchestra_preview
+
+        _early_orch_s, _ = build_genel_orchestra_preview(
+            msg_raw,
+            getattr(req, "workspace_root", None),
+        )
+        _eua_s = (_early_orch_s or {}).get("ui_action") or {}
+        if isinstance(_eua_s, dict) and _eua_s.get("type") == "surface_handoff":
+            yield {
+                "type": "meta",
+                "orchestra": _early_orch_s,
+                "tek_yuz_early": True,
+            }
+    except Exception:
+        pass
     orch_early: dict[str, Any] = {}
     try:
         from ilim_assistant.ruzgar_tek_beyin import resolve_effective_user_query
@@ -14290,13 +14415,9 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             )
         except Exception:
             _meta_out["programlama_delegated"] = True
-    # Tek sohbet / 6c / Faz E preview — meta + turn orch (done'da ui_action kaybolmasın)
+    # Tek sohbet / 6c / Faz E / Ses-Hafıza-Mimar preview — ui_action casual'da da gelsin
     _orch_prev_turn: dict[str, Any] = {}
-    if (
-        mode_norm in ("genel", "uretim", "gelisim")
-        and not coding
-        and not _casual_social_turn
-    ):
+    if mode_norm in ("genel", "uretim", "gelisim") and not coding:
         try:
             from ilim_assistant.ruzgar_orkestrasyon_faz_c import build_genel_orchestra_preview
 
@@ -14310,10 +14431,17 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             if _route_patch:
                 route_meta.update(_route_patch)
                 _meta_out["chat_route"] = route_meta
-            if (
-                _orch_prev_turn.get("motors")
-                or _orch_prev_turn.get("active_motor")
-                or _orch_prev_turn.get("ui_action")
+            _has_ua = (
+                isinstance(_orch_prev_turn.get("ui_action"), dict)
+                and _orch_prev_turn["ui_action"].get("type") == "surface_handoff"
+            )
+            # Casual turda yalnız tek yüz handoff varsa orchestra taşı (köprü kaçmasın)
+            if _has_ua or (
+                not _casual_social_turn
+                and (
+                    _orch_prev_turn.get("motors")
+                    or _orch_prev_turn.get("active_motor")
+                )
             ):
                 _meta_out["orchestra"] = _orch_prev_turn
         except Exception:

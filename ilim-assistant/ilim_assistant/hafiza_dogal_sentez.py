@@ -50,6 +50,32 @@ def should_skip_hafiza_dogal(message: str) -> bool:
     m = (message or "").strip()
     if not m or len(m) > 4000:
         return True
+    # Tek yüz atölye önekleri — kişisel hafıza anlığı handoff'u ezmesin
+    try:
+        import unicodedata as _ud
+
+        _a = _ud.normalize("NFKC", m).strip().lower()
+        _a = (
+            _a.replace("ı", "i")
+            .replace("ş", "s")
+            .replace("ğ", "g")
+            .replace("ü", "u")
+            .replace("ö", "o")
+            .replace("ç", "c")
+        )
+        if re.match(
+            r"^(?:seste|ses\s+atolyesinde|ses\s+paneline|"
+            r"hafizada|hafiza\s+atolyesinde|hafiza\s+paneline|"
+            r"mimarda|mimar\s+atolyesinde|mimar\s+paneline|"
+            r"fotograf\s+paneli|tasarimda|"
+            r"gorev\s*:|programlamada|videoda|video\s+atolyesinde|"
+            r"tercumede|tercume\s+atolyesinde|sesle\s+oku|"
+            r"hizirda|hizir\s+atolyesinde|hizir\s+paneline)\b",
+            _a,
+        ):
+            return True
+    except Exception:
+        pass
     if "=" in m:
         return True
     if bool(_INGEST_SKIP.search(m)):

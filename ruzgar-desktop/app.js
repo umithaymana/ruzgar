@@ -3523,6 +3523,54 @@ function maybeRunTekSohbetUiAction(orch) {
     setStatus("Tek sohbet → Video", "Rüzgar");
     return true;
   }
+  // Dilim 1: Ses atölye transcript doldur (quiet; profil anlığı değil)
+  if (motor === "ses" && kind === "ses_gorev") {
+    const text = String(a.text || taskLine || "").trim();
+    openMotorWorkbenchQuiet("ses");
+    if (text) fillMotorWorkbenchFields("ses", text);
+    updateDynamicWorkbench();
+    flashRuzgarDurum(
+      `Tek yüz → Ses · ${String(a.action || "panel").slice(0, 24)}`,
+    );
+    setStatus("Tek sohbet → Ses", "Rüzgar");
+    return true;
+  }
+  // Dilim 2: Hafıza paneli doldur (quiet; otomatik kart yazılmaz)
+  if (motor === "hafiza" && kind === "hafiza_gorev") {
+    const text = String(a.text || taskLine || "").trim();
+    openMotorWorkbenchQuiet("hafiza");
+    if (text) fillMotorWorkbenchFields("hafiza", text);
+    updateDynamicWorkbench();
+    flashRuzgarDurum(
+      `Tek yüz → Hafıza · ${String(a.action || "panel").slice(0, 24)}`,
+    );
+    setStatus("Tek sohbet → Hafıza", "Rüzgar");
+    return true;
+  }
+  // Dilim 3: Mimar paneli (quiet; ilim sohbeti buraya düşmez)
+  if (motor === "mimar" && kind === "mimar_gorev") {
+    const text = String(a.text || taskLine || "").trim();
+    openMotorWorkbenchQuiet("mimar");
+    if (text) fillMotorWorkbenchFields("mimar", text);
+    updateDynamicWorkbench();
+    flashRuzgarDurum(
+      `Tek yüz → Mimar · ${String(a.action || "panel").slice(0, 24)}`,
+    );
+    setStatus("Tek sohbet → Mimar", "Rüzgar");
+    return true;
+  }
+  // Dilim 8: Hızır paneli (quiet; canlı pazar API yok)
+  if (motor === "hizir" && kind === "hizir_gorev") {
+    const text = String(a.text || taskLine || "").trim();
+    openMotorWorkbenchQuiet("hizir");
+    if (text) fillMotorWorkbenchFields("hizir", text);
+    updateDynamicWorkbench();
+    flashRuzgarDurum(
+      `Tek yüz → Hızır · ${String(a.action || "panel").slice(0, 24)}`,
+    );
+    setStatus("Tek sohbet → Hızır", "Rüzgar");
+    return true;
+  }
   if (typeof window.ruzgarYuzey?.gonder === "function") {
     try {
       const reply = window.ruzgarYuzey.gonder(motor);

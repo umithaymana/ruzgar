@@ -657,6 +657,13 @@ def should_use_personal_hafiza_first(
 ) -> bool:
     if not tek_beyin_enabled():
         return False
+    try:
+        from ilim_assistant.hafiza_dogal_sentez import should_skip_hafiza_dogal
+
+        if should_skip_hafiza_dogal(message):
+            return False
+    except Exception:
+        pass
     # analyze_turn reentry: yalnızca hafif kontroller (döngü / ağır lookup yok).
     if getattr(_idrak_reentry, "active", False):
         target = resolve_memory_query_message(message, client_history)
