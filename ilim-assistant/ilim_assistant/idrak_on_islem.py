@@ -179,6 +179,20 @@ def pretreat_user_turn(message: str | None, history: list[Any] | None = None) ->
             reps.append(f"{pat.pattern}->{repl}")
         s = s2
 
+    # Niyet / yazım / STT kayması (foto senrez → fotosentez)
+    try:
+        from ilim_assistant.ruzgar_soru_yazim import resolve_user_niyet
+
+        s2, yaz = resolve_user_niyet(s)
+        if yaz.get("changed") and s2:
+            for r in yaz.get("replacements") or []:
+                if isinstance(r, dict):
+                    reps.append(f"{r.get('from')}->{r.get('to')}")
+            s = s2
+            reps.append("soru_yazim->niyet")
+    except Exception:
+        pass
+
     s, cont = _expand_continuation(s, history)
     if cont:
         reps.append("continuation->history_context")

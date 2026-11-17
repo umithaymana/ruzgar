@@ -138,14 +138,77 @@ def _split_text(text: str, max_chars: int = 900, overlap: int = 80) -> List[str]
     return parts
 
 
+def _is_dokunma_markdown(path: Path, text: str | None = None) -> bool:
+    """F3.5 — «dokunma» etiketi: indeks/ingest dışı bırak.
+
+    Kurallar (herhangi biri yeterli):
+    - yan dosya: ``name.md.dokunma`` veya aynı klasörde ``.dokunma``
+    - dosya adı ``_DOKUNMA_`` ile başlar
+    - içerik başında ``dokunma: true`` / ``<!-- dokunma -->``
+    """
+    name = path.name
+    if name.upper().startswith("_DOKUNMA_"):
+        return True
+    try:
+        if path.with_suffix(path.suffix + ".dokunma").is_file():
+            return True
+        if (path.parent / ".dokunma").is_file():
+            return True
+    except OSError:
+        pass
+    head = (text if text is not None else "")[:400].lower()
+    if not head and text is None:
+        try:
+            head = path.read_text(encoding="utf-8", errors="ignore")[:400].lower()
+        except OSError:
+            return False
+    if "<!-- dokunma -->" in head or "dokunma: true" in head or "dokunma:true" in head:
+        return True
+    return False
+
+
 def _load_markdown_files(root: Path) -> List[Tuple[str, str]]:
     out: List[Tuple[str, str]] = []
     for path in sorted(root.rglob("*.md")):
         try:
-            out.append((str(path.relative_to(root)), path.read_text(encoding="utf-8")))
+            raw = path.read_text(encoding="utf-8")
+            if _is_dokunma_markdown(path, raw):
+                continue
+            out.append((str(path.relative_to(root)), raw))
         except OSError:
             continue
     return out
+
+
+def nebula_dokunma_inventory(nebula_root: Path | None = None) -> dict:
+    """F3.5 — nebula incremental: dokunma / aday sayımı (karar görünürlüğü)."""
+    root = nebula_root
+    if root is None:
+        root = _PKG_ROOT / "knowledge" / "nebula"
+    tagged: list[str] = []
+    open_md: list[str] = []
+    if not root.is_dir():
+        return {"ok": True, "root": str(root), "dokunma": 0, "aday": 0, "tagged": [], "open": []}
+    for path in sorted(root.rglob("*.md")):
+        rel = str(path.relative_to(root)).replace("\\", "/")
+        try:
+            raw = path.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            continue
+        if _is_dokunma_markdown(path, raw):
+            tagged.append(rel)
+        else:
+            open_md.append(rel)
+    return {
+        "ok": True,
+        "root": str(root),
+        "policy": "dokunma_etiketi_veya_ingest",
+        "hint": "İndekslenmesin istenen paketlere «dokunma: true» veya .dokunma koyun; diğerleri ingest adayı.",
+        "dokunma": len(tagged),
+        "aday": len(open_md),
+        "tagged": tagged[:40],
+        "open": open_md[:40],
+    }
 
 
 def _embed_model():
@@ -422,6 +485,12 @@ def warmup_index() -> None:
         return
     _get_embedder()
     _get_cached_index()
+    try:
+        from ilim_assistant.ruzgar_tur_teshis_f0 import mark_warmup
+
+        mark_warmup("rag", True)
+    except Exception:
+        pass
 
 
 def _source_is_archive(rel: str) -> bool:
@@ -794,13 +863,65 @@ def search(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
 
                 _ready = dict((_sam_reg().get("ready") or {}))
                 _cats = pick_shamela_cats_for_query(query, _ready)
-                for text, source, score in search_shamela_shards(
-                    query,
-                    top_k=max(int(top_k), 8),
-                    q_vec=q,
-                    cats=_cats,
-                ):
+                try:
+                    from ilim_assistant.ruzgar_tur_teshis_f0 import note_shamela_cats
+
+                    note_shamela_cats(list(_cats or []))
+                except Exception:
+                    pass
+                _sham1 = list(
+                    search_shamela_shards(
+                        query,
+                        top_k=max(int(top_k), 8),
+                        q_vec=q,
+                        cats=_cats,
+                    )
+                )
+                for text, source, score in _sham1:
                     _put(text, source, float(score))
+                # F2.2 kademe-2: zayıf ilk geçiş + süre varsa derin Şamile
+                try:
+                    from ilim_assistant.ruzgar_umed_cevap_emri import remaining_sec
+
+                    _rem = float(remaining_sec())
+                except Exception:
+                    _rem = 0.0
+                try:
+                    _min_rem = float(
+                        os.environ.get("RUZGAR_SHAMELA_DEEP_MIN_REMAIN_SEC", "7") or "7"
+                    )
+                except ValueError:
+                    _min_rem = 7.0
+                _deep_on = os.environ.get("RUZGAR_SHAMELA_DEEP", "1").strip().lower() not in (
+                    "0",
+                    "false",
+                    "no",
+                )
+                if (
+                    _deep_on
+                    and _rem >= _min_rem
+                    and len(_sham1) < max(2, int(top_k) // 2 + 1)
+                    and _cats is not None
+                ):
+                    _deep_cats = pick_shamela_cats_for_query(
+                        query, _ready, deep=True, exclude=_cats
+                    )
+                    if _deep_cats:
+                        try:
+                            from ilim_assistant.ruzgar_tur_teshis_f0 import note_shamela_cats
+
+                            note_shamela_cats(list(_cats) + list(_deep_cats))
+                        except Exception:
+                            pass
+                        for text, source, score in search_shamela_shards(
+                            query,
+                            top_k=max(int(top_k), 8),
+                            q_vec=q,
+                            cats=_deep_cats,
+                            deep=True,
+                            exclude_cats=_cats,
+                        ):
+                            _put(text, source, float(score))
         except Exception:
             pass
 

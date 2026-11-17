@@ -25,12 +25,17 @@ _SKIP_USER = re.compile(
 )
 _MISS_REPLY = re.compile(
     r"(?:bulamad[ıi]m|öğrenmedim|ogrenmedim|emin\s+değilim|"
-    r"hangi\s+konuda\s+sohbet|netleştiremedim)",
+    r"hangi\s+konuda\s+sohbet|netleştiremedim|"
+    r"süre\s+yetmedi|sure\s+yetmedi|öğretir\s+misin|ogretir\s+misin|"
+    r"bilmiyorum\s*/\s*öğret)",
     re.I,
 )
 
 _index_lock = threading.Lock()
 _last_index_ts = 0.0
+_index_pending = False
+_index_pending_since: float | None = None
+_index_last_error: str = ""
 
 
 def otomatik_ogrenme_enabled() -> bool:
@@ -329,6 +334,65 @@ def kutuphane_blocks_web_path(message: str) -> bool:
     return lookup_bilgi_kutuphane_hint(message) is not None
 
 
+def learn_trust_ok(
+    user_message: str,
+    assistant_message: str,
+    *,
+    plan_primary: str = "",
+    web_used: bool = False,
+    hits: list | None = None,
+) -> tuple[bool, str]:
+    """F3.1 — tek doğruluk kapısı: miss/timeout/zehir/kaynaksız zayıf cevap yazılmaz."""
+    a = (assistant_message or "").strip()
+    u = (user_message or "").strip()
+    if not a or not u:
+        return False, "empty"
+    try:
+        from ilim_assistant.ruzgar_umed_kurallari import MISS_PHRASE, TIMEOUT_PHRASE
+
+        if MISS_PHRASE in a or a == MISS_PHRASE:
+            return False, "miss_phrase"
+        if TIMEOUT_PHRASE in a or a == TIMEOUT_PHRASE:
+            return False, "timeout_phrase"
+    except Exception:
+        pass
+    if _MISS_REPLY.search(a):
+        return False, "miss_regex"
+    if "süre yetmedi" in a.casefold() or "sure yetmedi" in a.casefold():
+        return False, "timeout_text"
+    # Tercih/öğret cümleleri kapıdan geçer
+    ul = _norm(u)
+    if any(
+        x in ul
+        for x in (
+            "hatırla",
+            "hatirla",
+            "öğren",
+            "ogren",
+            "doğrusu",
+            "dogrusu",
+        )
+    ):
+        return True, "user_teach"
+    hit_n = len(hits or [])
+    prim = (plan_primary or "").strip().lower()
+    if prim in ("bilgi", "bilim", "dilbilgisi") or is_kutuphane_ish(u):
+        if hit_n <= 0 and not web_used and len(a) < 400:
+            # Raftan/webden dayanak yok — üçlü zehir riski
+            return False, "no_source_short"
+    return True, "ok"
+
+
+def is_kutuphane_ish(message: str) -> bool:
+    try:
+        from ilim_assistant.ruzgar_kutuphane_gorev import is_kutuphane_bilgi_soru
+
+        return bool(is_kutuphane_bilgi_soru(message))
+    except Exception:
+        low = _norm(message)
+        return any(x in low for x in ("nedir", "kimdir", "anlat", "hakkinda", "hakkında"))
+
+
 def _should_auto_learn_turn(
     user_message: str,
     assistant_message: str,
@@ -336,6 +400,7 @@ def _should_auto_learn_turn(
     plan_primary: str = "",
     instant: bool = False,
     web_used: bool = False,
+    hits: list | None = None,
 ) -> bool:
     if not otomatik_ogrenme_enabled():
         return False
@@ -348,6 +413,11 @@ def _should_auto_learn_turn(
     if len(a) < _min_answer_len() or len(a) > 4500:
         return False
     if _SKIP_USER.search(_norm(u)):
+        return False
+    ok, _why = learn_trust_ok(
+        u, a, plan_primary=plan_primary, web_used=web_used, hits=hits
+    )
+    if not ok:
         return False
     if _MISS_REPLY.search(a):
         return False
@@ -424,32 +494,67 @@ def _should_auto_learn_turn(
         return False
 
 
-def _schedule_rag_index() -> None:
-    """Ağır indeks güncellemesini arka planda — sohbeti bekletmez."""
-    global _last_index_ts
+def rag_index_pending_status() -> dict[str, Any]:
+    """F3.4 — «kaydedildi ama indeks yok» dürüst durum."""
+    import time
+
+    pending = bool(_index_pending)
+    since = _index_pending_since
+    age = (time.time() - since) if (pending and since) else None
+    return {
+        "index_pending": pending,
+        "index_pending_since": since,
+        "index_pending_age_sec": round(age, 1) if age is not None else None,
+        "index_last_error": _index_last_error or "",
+        "hint": (
+            "Kayıt yazıldı; vektör indeksi arka planda bekliyor — hemen aramada görünmeyebilir."
+            if pending
+            else "İndeks kuyruğu boş."
+        ),
+    }
+
+
+def _schedule_rag_index() -> bool:
+    """Ağır indeks güncellemesini arka planda — sohbeti bekletmez.
+
+    Returns:
+        True if a new index job was scheduled (or already pending / debounced).
+    """
+    global _last_index_ts, _index_pending, _index_pending_since, _index_last_error
     import time
 
     debounce = 45.0
     now = time.time()
+    # Debounce olsa bile F3.4: kayıt sonrası «indeks bekliyor» görünsün
+    _index_pending = True
+    if _index_pending_since is None:
+        _index_pending_since = now
     if now - _last_index_ts < debounce:
-        return
+        return True
     with _index_lock:
         if now - _last_index_ts < debounce:
-            return
+            return True
         _last_index_ts = now
 
     def _run() -> None:
+        global _index_pending, _index_pending_since, _index_last_error
         try:
             from ilim_assistant.rag_store import build_index
 
             build_index(force=False, incremental=True)
-        except Exception:
-            pass
+            _index_last_error = ""
+        except Exception as exc:
+            _index_last_error = str(exc)[:200]
+        finally:
+            _index_pending = False
+            _index_pending_since = None
 
     threading.Thread(target=_run, daemon=True).start()
+    return True
 
 
-def _save_to_learned_md(user_message: str, assistant_message: str) -> None:
+def _save_to_learned_md(user_message: str, assistant_message: str) -> bool:
+    """Returns True if learned md yazıldı (indeks bekliyor olabilir)."""
     try:
         from ilim_assistant.memory import save_exchange
 
@@ -460,8 +565,9 @@ def _save_to_learned_md(user_message: str, assistant_message: str) -> None:
             rebuild_index=False,
         )
         _schedule_rag_index()
+        return True
     except Exception:
-        pass
+        return False
 
 
 def auto_learn_from_turn(
@@ -480,12 +586,24 @@ def auto_learn_from_turn(
     - knowledge/learned/*.md (RAG)
     """
     meta: dict[str, Any] = {"saved": False, "version": OTOMATIK_OGRENME_VERSION}
+    _web = web_used or force_web
+    _trust_ok, _trust_why = learn_trust_ok(
+        user_message,
+        assistant_message,
+        plan_primary=plan_primary,
+        web_used=_web,
+        hits=hits,
+    )
+    if not _trust_ok:
+        meta["skipped"] = _trust_why
+        return meta
     if not _should_auto_learn_turn(
         user_message,
         assistant_message,
         plan_primary=plan_primary,
         instant=instant,
-        web_used=web_used or force_web,
+        web_used=_web,
+        hits=hits,
     ):
         return meta
 
@@ -516,8 +634,12 @@ def auto_learn_from_turn(
         meta["error"] = str(exc)
         return meta
 
-    _save_to_learned_md(u, cevap_kayit)
-    meta["learned_md"] = True
+    _md_ok = _save_to_learned_md(u, cevap_kayit)
+    meta["learned_md"] = bool(_md_ok)
+    # F3.4 — dosya yazıldı; vektör indeksi henüz hazır olmayabilir
+    _idx = rag_index_pending_status()
+    meta["index_pending"] = bool(_idx.get("index_pending"))
+    meta["index_status"] = _idx.get("hint") or ""
     meta["ts"] = datetime.now(timezone.utc).isoformat()
 
     nb = maybe_nebula_bridge_from_learn(
@@ -654,6 +776,14 @@ def otomatik_ogrenme_status() -> dict[str, Any]:
         job = get_nebula_apply_job_status()
     except Exception:
         pass
+    idx = rag_index_pending_status()
+    nebula_inv: dict[str, Any] = {}
+    try:
+        from ilim_assistant.rag_store import nebula_dokunma_inventory
+
+        nebula_inv = nebula_dokunma_inventory()
+    except Exception:
+        nebula_inv = {}
     return {
         "enabled": otomatik_ogrenme_enabled(),
         "kutuphane_once": kutuphane_once_enabled(),
@@ -662,6 +792,14 @@ def otomatik_ogrenme_status() -> dict[str, Any]:
         "version": OTOMATIK_OGRENME_VERSION,
         "motor_tipi": MOTOR_TIPI_BILGI,
         "nebula_job": job,
+        "index_pending": idx.get("index_pending"),
+        "index_status": idx,
+        "nebula_dokunma": {
+            "dokunma": nebula_inv.get("dokunma"),
+            "aday": nebula_inv.get("aday"),
+            "policy": nebula_inv.get("policy"),
+            "hint": nebula_inv.get("hint"),
+        },
     }
 
 

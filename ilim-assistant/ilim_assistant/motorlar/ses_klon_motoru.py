@@ -374,7 +374,16 @@ def should_use_clone(
         return True
     if not clone_enabled() or not xtts_runtime_available():
         return False
-    return coz_referans_yolu(karakter, ayar=ayar, speaker_rel=speaker_rel) is not None
+    # F7.4 — auto: yalnız ayarda açık tercih / onay (sessiz klon şişirmesin)
+    a = ayar if isinstance(ayar, dict) else {}
+    prefer = str(a.get("tts_backend") or a.get("backend") or "").strip().lower()
+    onay = a.get("klon_onay") or a.get("clone_onay") or a.get("prefer_clone")
+    if prefer == "clone" or onay in (True, 1, "1", "true", "yes", "on"):
+        return coz_referans_yolu(karakter, ayar=ayar, speaker_rel=speaker_rel) is not None
+    # Açık speaker_rel = kullanıcı seçimi → izin
+    if speaker_rel and str(speaker_rel).strip():
+        return coz_referans_yolu(karakter, ayar=ayar, speaker_rel=speaker_rel) is not None
+    return False
 
 
 def clone_status_snapshot() -> dict[str, Any]:

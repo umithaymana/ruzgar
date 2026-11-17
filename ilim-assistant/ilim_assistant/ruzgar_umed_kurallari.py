@@ -5,6 +5,11 @@ from __future__ import annotations
 
 # --- Anında yanıt metinleri ---
 MISS_PHRASE = "Ümit abi, bu sorunun cevabını bulamadım. Bana öğretir misin?"
+# F1.5 — süre/timeout ≠ kütüphane «öğret» (eğitim kuyruğuna yazılmaz)
+TIMEOUT_PHRASE = (
+    "Ümit abi, süre yetmedi; cevap yarım kaldı. "
+    "Bu bir «bilmiyorum / öğret» değil — biraz sonra tekrar dene veya soruyu kısalt."
+)
 WRONG_PROMPT = (
     "Ümit abi, doğrusunu bana öğret; doğru cevabı yaz, hafızama kaydedeceğim."
 )

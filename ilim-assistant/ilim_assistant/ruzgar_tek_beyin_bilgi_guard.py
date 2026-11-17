@@ -107,6 +107,27 @@ def query_anchor_tokens(message: str) -> set[str]:
     return out
 
 
+def _fuzzy_token_hit(anchor: str, rep_tokens: set[str], head: str) -> bool:
+    """Yazım hatası / kısmi kök: foto↔fotosentez, senrez↔sentez."""
+    from difflib import SequenceMatcher
+
+    a = (anchor or "").strip().lower()
+    if not a or len(a) < 3:
+        return False
+    if a in head or a in rep_tokens:
+        return True
+    for t in rep_tokens:
+        if len(t) < 3:
+            continue
+        if a[:4] == t[:4] and (len(a) >= 4 or len(t) >= 4):
+            return True
+        if SequenceMatcher(None, a, t).ratio() >= 0.78:
+            return True
+        if len(a) >= 4 and (a in t or t in a):
+            return True
+    return False
+
+
 def assess_bilgi_topic_alignment(
     message: str,
     reply: str,
@@ -114,11 +135,23 @@ def assess_bilgi_topic_alignment(
     """
     Cevap sorunun konusuna kaymış mı?
     Dönüş: (ok, overlap_skoru, neden)
+
+    F2 hotfix: yazım hatası («foto senrez») + doğru cevap («fotosentez») → drift sanma.
     """
     body = (reply or "").strip()
     if not body or len(body) < 24:
         return True, 1.0, ""
-    anchors = query_anchor_tokens(message)
+    # Yazım düzeltilmiş soru ile de dene
+    msg_use = message
+    try:
+        from ilim_assistant.ruzgar_soru_yazim import rewrite_soru_yazim
+
+        fixed, meta = rewrite_soru_yazim(message)
+        if meta.get("changed") and fixed:
+            msg_use = fixed
+    except Exception:
+        msg_use = message
+    anchors = query_anchor_tokens(msg_use) or query_anchor_tokens(message)
     if not anchors:
         return True, 1.0, ""
     head = _norm(body[: min(420, len(body))])
@@ -131,7 +164,21 @@ def assess_bilgi_topic_alignment(
             rep_tokens.add(w[:5])
     if not rep_tokens:
         return False, 0.0, "empty_head"
-    overlap = len(anchors & rep_tokens) / max(1, len(anchors))
+    # Birleşik typo: foto+senrez ↔ fotosentez
+    try:
+        from difflib import SequenceMatcher
+
+        compact = re.sub(r"[^\wçğıöşü]", "", _norm(message), flags=re.I)
+        for t in rep_tokens:
+            if len(t) >= 6 and len(compact) >= 6 and SequenceMatcher(None, compact, t).ratio() >= 0.72:
+                return True, 0.72, "compact_fuzzy"
+    except Exception:
+        pass
+    hit_n = sum(1 for a in anchors if _fuzzy_token_hit(a, rep_tokens, head))
+    overlap = hit_n / max(1, len(anchors))
+    # Klasik kesişim de say
+    exact = len(anchors & rep_tokens) / max(1, len(anchors))
+    overlap = max(overlap, exact)
     try:
         min_ov = max(0.15, min(float(os.environ.get("RUZGAR_TEK_BEYIN_BILGI_MIN_OVERLAP", "0.34")), 0.8))
     except ValueError:

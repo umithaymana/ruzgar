@@ -75,12 +75,57 @@ def kaynak_izi_footer(
     return "\n".join(lines)
 
 
+def _source_key(src: str) -> str:
+    """Aynı eser farklı chunk → tek anahtar; klasör+dosya ile kardeş eser ayrılır."""
+    s = (src or "").strip().replace("\\", "/").lower()
+    if not s:
+        return ""
+    parts = [p for p in s.split("/") if p]
+    if len(parts) >= 2:
+        return "/".join(parts[-2:])
+    return parts[-1] if parts else s
+
+
+def distinct_source_count(hits: list[tuple[str, str, float]] | None) -> int:
+    """F2.3 — benzersiz eser/yol sayısı."""
+    seen: set[str] = set()
+    for h in hits or []:
+        try:
+            key = _source_key(str(h[1] or ""))
+        except Exception:
+            continue
+        if key:
+            seen.add(key)
+    return len(seen)
+
+
+def cok_eser_sentez_directive(
+    *,
+    source_count: int,
+    distinct_sources: int,
+) -> str:
+    """F2.3 — 3+ pasaj / çok eser: kaynaklı kısa sentez talimatı."""
+    if source_count < 2 or distinct_sources < 2:
+        return ""
+    n = min(5, max(2, distinct_sources))
+    return (
+        "\n\n[TALİMAT — F2.3 ÇOK ESER SENTEZ]\n"
+        f"Bağlamda **{source_count}** parça, yaklaşık **{distinct_sources}** ayrı eser/yol var.\n"
+        f"- Cevabı **{min(3, n)}–{n}** farklı [K#] pasajına dayandır; tek parçadan ezberleme.\n"
+        "- 4–8 cümlede **kaynaklı kısa özet**: ortak nokta + varsa ayrım.\n"
+        "- Her önemli iddiada [K1]/[K2]… kullan; bağlamda yoksa uydurma.\n"
+        "- Sonunda **Kaynak izi:** ile kullandığın [K#] eserlerini listele.\n"
+        "- Madde bombardımanı yok; sohbet dilinde sentez.\n"
+    )
+
+
 def citation_directive_for_turn(
     *,
     source_count: int,
     archive_primary: bool,
     web_present: bool,
     soft_natural: bool = False,
+    distinct_sources: int = 0,
 ) -> str:
     """Modele zorunlu kaynak / güven talimatı."""
     no_fabricate = (
@@ -109,6 +154,12 @@ def citation_directive_for_turn(
             "sohbet akışını bozma.\n"
         )
         lines.append(no_fabricate)
+        if distinct_sources >= 2:
+            lines.append(
+                cok_eser_sentez_directive(
+                    source_count=source_count, distinct_sources=distinct_sources
+                )
+            )
         return "".join(lines)
     if source_count <= 0 and not web_present:
         return (
@@ -142,4 +193,10 @@ def citation_directive_for_turn(
         "- Kaynaklar çelişirse ikisini de söyle; tek doğru uydurma.\n"
         "- Yanıtın **son satırı** şu biçimde bitsin: **Güven: yüksek|orta|düşük** — (kısa gerekçe).\n"
     )
+    if distinct_sources >= 2:
+        lines.append(
+            cok_eser_sentez_directive(
+                source_count=source_count, distinct_sources=distinct_sources
+            )
+        )
     return "".join(lines)

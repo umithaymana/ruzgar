@@ -1,25 +1,36 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-11-13 — Sahne cila: mobil LAN (`RUZGAR_API_HOST=0.0.0.0` + Electron host `.env`) · PC harita (CSP OSM + sohbet süper-el kancası) · meslek RAG ana indekse **+9147** (toplam ~389341) · `/api/mobil/erisim` · PWA SW v56. Plan Word’e dokunulmadı.
+**Son güncelleme:** 2026-11-17 — F8.3 üst/arşiv ayrımı · aktif plan: `RUZGAR_SOHBET_KUTUPHANE_SES_PLAN_2026-11-17.md`.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
-### Mimar not — Mobil PWA (2026-11-12) ← **dilim mühürlü**
+---
+
+## ŞİMDİ SIRADA (tek güncel üst — 2026-11-17)
+
+| Öncelik | Konu | Not |
+|---------|------|-----|
+| **Plan mühür** | Sohbet · Kütüphane · Ses · Mobil | `RUZGAR_SOHBET_KUTUPHANE_SES_PLAN_2026-11-17.md` F0–F9 `[x]` |
+| **Saha (sen)** | F6.3 5 dk sürekli sohbet | Kod hazır; kopma oranı telefon ölçümü |
+| **Bilinçli erteli** | Sahne / OSM / Dünya Gezgini yeni dilim | Mimar «sahneye dön» deyene kadar yok |
+| **P3 kapalı** | Serbest kod · %90 programlama · halka açılış | Bu planda yok |
+| **Kapı** | `8779` · mic HTTPS `8443` · PWA `/mobil/` | Boot sırası kilitli |
+
+**Başarı cümlesi:** İlimde raftan; günlükte doğal; telefonda sürekli ses; `?`/öz-bilgi aynı kart.
+
+---
+
+## ARŞİV — Sahne / mobil dilimler (2026-11-12…13) ← üst sıradan çıkarıldı
+
+> Aşağısı tarihçe. «Sırada dilim-38+» **artık geçerli değil**; sahne bu turda donduruldu.
+
+### Mimar not — Mobil PWA (2026-11-12) ← **dilim mühürlü / arşiv**
 - PWA **telefonda ve masaüstünde** diğer Rüzgar araçları gibi **ikon** (Windows kısayolu / ana ekran).
 - Mağaza şart değil; beyin PC’de; kapı `8779` · mic için HTTPS `8443`.
-- **Sıra:** mobil+ses **bitti** → sahne ikinci.
-- **Yapıldı (2026-11-12 «yap»):** `/mobil/` PWA (manifest 192/512 PNG · install bar · SW) · masaüstü `Rüzgar Mobil.lnk` (`scripts/Masaustune_Mobil_Kisayol.ps1`, Chrome `--app`) · giriş/sohbet/panel · Wi‑Fi + Tailscale · HTTPS köprü · basılı tut Whisper · **Sürekli sohbet** (VAD) · Wake Lock · kayıt autocomplete. Ana yüz kilidine dokunulmadı.
-- **Sahne dilim-1 (2026-11-12 «başla»):** soz taze giriş, `is-speaking-text`, canlı/dinle atmosfer.
-- **Sahne dilim-2/3 (2026-11-13 «devam»):** durum etiketi + ses dalgası (JS ile DOM; index.html yok) · stream söz büyürken `is-fresh` spam yok · `smoke_sahne_dilim.js`. Yüz kilidine dokunulmadı.
-- **Sahne dilim-4 (2026-11-13):** idle rüzgar yumuşatma + «Çalışma yüzeyi» düğme cila.
-- **Sahne dilim-5 (2026-11-13):** uzun/stream sözde `scrollTop` + taze cevapta yumuşak odak.
-- **Sahne dilim-6 (2026-11-13):** thinking overlay → «Düşünüyor» + yumuşak dalga/aura (`ruzgar-sahne-dusun`).
-- **Mobil sahne dilim-1 (2026-11-13 «yap»):** motor izni `sahne` (varsayılan kapalı; Mimar açık) · panel checkbox · PWA sahne yüzü · `smoke_mobil_sahne.py`.
-- **Mobil dilim-2 + PC dilim-7 (2026-11-13):** mobil SVG yüz + aura/idle/soz taze · PC düşünürken son kullanıcı sözü sahnede.
-- **Mobil dilim-3 (2026-11-13):** «Yazıyorsun» (input doluyken) — PC `is-writing` ile hiza.
-- **Çift hat kural (Mimar):** her dilimde PC+mobil birlikte; `smoke_sahne_cift` yeşil olmadan sonraki dilime geçilmez; «dur» deyene kadar.
-- **Çift dilim-4…37 (2026-11-13 otonom, her dilim `smoke_sahne_cift`):** a11y… · `--sahne-fade` · reduced-motion 0s · `inert` · **sahne→sohbet**.
-- **Sırada:** dilim-38+ (otonom) veya Mimar «dur» / commit.
+- **O dönem sıra:** mobil+ses → sahne ikinci — **2026-11-17:** sahne erteli; sohbet/kütüphane/ses planı önde.
+- **Yapıldı (2026-11-12 «yap»):** `/mobil/` PWA · `Rüzgar Mobil.lnk` · Wi‑Fi + Tailscale · HTTPS · basılı tut Whisper · **Sürekli sohbet** (VAD) · Wake Lock. Ana yüz kilidine dokunulmadı.
+- **Sahne dilim-1…6 + mobil dilim-1…3 + çift dilim-4…37 (2026-11-12/13):** mühürlü tarihçe; yeni sahne dilimi yok (plan kiliti).
+- Eski «sırada dilim-38+» iptal — yerine yukarıdaki **ŞİMDİ SIRADA**.
 
 ### YOL HARİTASI — tamamlandı
 
@@ -123,7 +134,9 @@ Doğrulama: `tests/test_ruzgar_foto_yuz.py` **7/7** (Lena boru hattı dahil).
 - Telif: modern/yakın dönem **tam metin yok** — yalnızca kavram/özet + kamu malı çerçeve
 - Felsefe/psikoloji/edebiyat/bilim/coğrafya/teknoloji: Faz 1+2 tamam
 
-### Şimdi kaldığımız yer (öncelik)
+### ARŞİV — eski «Şimdi kaldığımız yer» (raf/RAG tarihçe; üst sırayı ezmez)
+
+> Güncel sıra: dosya başındaki **ŞİMDİ SIRADA (2026-11-17)**.
 
 1. ~~P2 / Ollama / tasavvuf anlık~~ — tamam
 2. ~~Kimyâ anlık sapma~~ — `kimya-yi` / `kimya yi` Gazâlî yoluna düşüyor (smoke 10/10)

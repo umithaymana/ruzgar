@@ -7,6 +7,7 @@
     deviceKind: "ruzgar_pwa_device_kind",
     regDraft: "ruzgar_pwa_reg_draft",
     deviceName: "ruzgar_pwa_device_name",
+    livePref: "ruzgar_pwa_live", // 1=sürekli sohbet açık (varsayılan)
   };
 
   const el = (id) => document.getElementById(id);
@@ -338,7 +339,7 @@
           })
           .join(",");
     }
-    url += "&hv=gozle-gez-c-pano-v2&mobil=1&qos=mobil";
+    url += "&hv=kamera-rig-v20-fwd-fix&mobil=1&qos=mobil";
     return url;
   }
 
@@ -1127,6 +1128,10 @@
     const prefer = sessionStorage.getItem("ruzgar_pwa_tab");
     sessionStorage.removeItem("ruzgar_pwa_tab");
     showChatTab(prefer === "panel" && admin ? "panel" : "chat");
+    // Sohbet açılınca sürekli sohbet varsayılan açık
+    try {
+      scheduleLiveAutoStart();
+    } catch (_) {}
   }
 
   function showGate() {
@@ -1655,6 +1660,21 @@
     return new Blob([bytes], { type: mime || "audio/mpeg" });
   }
 
+  function stopAllSpeech(reason) {
+    // F6.4 barge-in — TTS / yerel konuşmayı kes
+    ttsPlayGen += 1;
+    try {
+      const a = ensureTtsPlayer();
+      a.pause();
+      a.removeAttribute("src");
+      a.load();
+    } catch (_) {}
+    try {
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+    } catch (_) {}
+    if (reason && meta) meta.textContent = String(reason);
+  }
+
   function playTtsBlob(blob) {
     return new Promise((resolve) => {
       if (!blob || !blob.size) return resolve();
@@ -1668,11 +1688,16 @@
       }
       const audio = ensureTtsPlayer();
       const myGen = ++ttsPlayGen;
+      let bargeTimer = 0;
       try {
         audio.pause();
       } catch (_) {}
       const done = (note) => {
         if (myGen !== ttsPlayGen) return resolve();
+        if (bargeTimer) {
+          clearInterval(bargeTimer);
+          bargeTimer = 0;
+        }
         try {
           URL.revokeObjectURL(url);
         } catch (_) {}
@@ -1690,6 +1715,28 @@
       try {
         audio.load();
       } catch (_) {}
+      // F6.4 — sürekli sohbette konuşunca TTS kes (V4 barge-in)
+      if (liveMode && liveVad) {
+        let speechTicks = 0;
+        bargeTimer = setInterval(() => {
+          if (myGen !== ttsPlayGen || !liveMode) {
+            clearInterval(bargeTimer);
+            bargeTimer = 0;
+            return;
+          }
+          try {
+            if (liveVad.rms() >= 0.028) {
+              speechTicks += 1;
+              if (speechTicks >= 3) {
+                stopAllSpeech("sürekli: kesildi — dinliyorum");
+                done("barge-in");
+              }
+            } else {
+              speechTicks = 0;
+            }
+          } catch (_) {}
+        }, 80);
+      }
       const p = audio.play();
       if (p && typeof p.catch === "function") {
         p.catch((err) => {
@@ -1718,10 +1765,16 @@
 
   function trimHistoryForVoice() {
     // Kısa bağlam = daha hızlı + az sapma
-    return history.slice(-6).map((m) => ({
+    return history.slice(-4).map((m) => ({
       role: m.role,
-      content: String(m.content || "").slice(0, 500),
+      content: String(m.content || "").slice(0, 280),
     }));
+  }
+
+  function looksLikeSahneCmd(t) {
+    return /\b(sahne|harita|tur(u)?|gezgin|duraklat|devam|yakla[sş]|uzakla[sş]|üzerine|uzerine|odak|kuşbak|kusbak|3d|uydu|bas[iı]l[iı]|mikrofon)\b/i.test(
+      String(t || ""),
+    );
   }
 
   function speakLocal(text) {
@@ -1751,28 +1804,61 @@
     });
   }
 
+  function splitTtsChunks(text, maxFirst) {
+    // F7.2 — ilk cümle/kısa parça önce; gerisi sonra (geriden his azalır)
+    const t = String(text || "").trim();
+    if (!t) return [];
+    const lim = maxFirst || 180;
+    if (t.length <= lim) return [t];
+    const m = t.match(/^(.+?[.!?…])(\s+|$)/u);
+    if (m && m[1].length >= 24 && m[1].length <= lim + 40) {
+      const rest = t.slice(m[0].length).trim();
+      return rest ? [m[1].trim(), rest.slice(0, liveMode ? 280 : 520)] : [m[1].trim()];
+    }
+    const cut = t.slice(0, lim);
+    const sp = cut.lastIndexOf(" ");
+    const first = (sp > 40 ? cut.slice(0, sp) : cut).trim();
+    const rest = t.slice(first.length).trim();
+    return rest ? [first, rest.slice(0, liveMode ? 280 : 520)] : [first];
+  }
+
+  async function fetchTtsBlob(say) {
+    const token = localStorage.getItem(LS.token) || "";
+    const headers = { "Content-Type": "application/json" };
+    if (token) headers.Authorization = "Bearer " + token;
+    const res = await fetch(base() + "/api/tts", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ text: say, prosody: false }),
+    });
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    return blob && blob.size > 32 ? blob : null;
+  }
+
   async function speakReply(reply) {
     const text = String(reply || "").trim();
     if (!text) return;
     unlockMobileAudio();
+    const chunks = splitTtsChunks(text, liveMode ? 160 : 220);
     try {
-      const token = localStorage.getItem(LS.token) || "";
-      const headers = { "Content-Type": "application/json" };
-      if (token) headers.Authorization = "Bearer " + token;
-      const res = await fetch(base() + "/api/tts", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ text: text.slice(0, 3000), prosody: false }),
-      });
-      if (res.ok) {
-        const blob = await res.blob();
-        if (blob && blob.size > 32) {
-          await playTtsBlob(blob);
-          return;
+      // İlk chunk'ı oynat; ikinciyi paralel hazırla
+      const firstP = fetchTtsBlob(chunks[0]);
+      const secondP = chunks[1] ? fetchTtsBlob(chunks[1]) : Promise.resolve(null);
+      const first = await firstP;
+      if (first) {
+        const genAtStart = ttsPlayGen;
+        const play1 = playTtsBlob(first);
+        const second = await secondP;
+        await play1;
+        // barge-in stopAllSpeech gen'i artırır → ikinci chunk atlanır
+        if (second && !liveAbort && ttsPlayGen === genAtStart + 1) {
+          await playTtsBlob(second);
         }
+        return;
       }
     } catch (_) {}
-    await speakLocal(text.slice(0, 200));
+    await speakLocal(chunks[0].slice(0, 200));
   }
 
   function sttLooksBad(text) {
@@ -1803,7 +1889,10 @@
           : "Anlayamadım, bir daha söyler misin?";
     meta.textContent = msg;
     bubble("bot", msg);
+    // Sürekli sohbette kendi sesini tekrar duymasın
+    if (liveMode) setLiveMicEnabled(false);
     await speakLocal(msg);
+    if (liveMode && !liveAbort) await liveQuietGap(450);
   }
 
   async function voiceTurn(text, opts = {}) {
@@ -1823,12 +1912,14 @@
     meta.textContent = "düşünüyor…";
     setSahneState("dusun", t);
     try {
-      /* Yazı ile aynı: sesli komut da süper-el / harita / organ — sahne hakimiyeti */
-      const se = await runSuperEl(t);
-      if (se && se._mobilShort) {
-        meta.textContent = "sahne";
-        setSahneState("hazir");
-        return;
+      /* Canlı sohbette sahne komutu değilse süper-el atla (1 tur kazanç) */
+      if (!opts.live || looksLikeSahneCmd(t)) {
+        const se = await runSuperEl(t);
+        if (se && se._mobilShort) {
+          meta.textContent = "sahne";
+          setSahneState("hazir");
+          return;
+        }
       }
       if (!opts.live) {
         api("/api/ses/voice-turn", {
@@ -1837,41 +1928,71 @@
         }).catch(() => ({}));
       }
       const token = localStorage.getItem(LS.token) || "";
+      /* F6.6 — with_tts politikası: sohbet turunda metin önce (false);
+         ses ayrı /api/tts veya speakLocal. Tek canlı yol: ikisi de aynı reply. */
+      const WITH_TTS_IN_CHAT = false;
       const j = await api("/api/ses/sohbet-tur", {
         method: "POST",
         body: JSON.stringify({
           message: t,
-          history: opts.live ? trimHistoryForVoice() : history.slice(-12),
+          history: opts.live ? trimHistoryForVoice() : history.slice(-8),
           session_token: token,
-          with_tts: true,
+          with_tts: WITH_TTS_IN_CHAT,
         }),
-        timeoutMs: 45000,
+        /* F1.2 / F6.5 — canlı 22sn ilim turunu kesiyordu; ilim bütçesiyle hizalı */
+        timeoutMs: opts.live
+          ? /nedir|kimdir|anlat|hakkında|hakkinda|hadis|ayet|tarih|ilim/i.test(t)
+            ? 55000
+            : 38000
+          : /nedir|kimdir|anlat|hakkında|hakkinda/i.test(t)
+            ? 90000
+            : 45000,
       });
       let reply = (j.full_reply || "").trim();
       if (!reply || reply === "(Yanıt yok)") {
         setSahneState("hazir");
+        // F6.5 — F0 miss dili (öğret / boş)
+        meta.textContent = "cevap yok (miss) — tekrar dene";
         await askRepeat("empty");
-        // Boş cevabı geçmişe gömme
         history.pop();
         return;
       }
       bubble("bot", reply);
       history.push({ role: "assistant", content: reply });
       if (history.length > 24) history = history.slice(-16);
-      meta.textContent = "Rüzgar konuşuyor…";
+      meta.textContent = "cevap hazır · ses…";
       setSahneState("konus", reply);
-      if (j.tts_base64) await playTtsBase64(j.tts_base64, j.tts_mime);
-      else await speakLocal(reply.slice(0, 200));
+      if (liveMode) setLiveMicEnabled(false);
+      // Metin ekranda — TTS arka planda / kısa yerel ses
+      try {
+        await speakReply(reply);
+      } catch (_) {
+        try {
+          await speakLocal(reply.slice(0, 160));
+        } catch (__) {}
+      }
+      if (liveMode && !liveAbort) setLiveMicEnabled(false);
       const wall = Math.round(performance.now() - t0);
       const bits = [`${wall} ms`];
       if (j.latency_ms != null) bits.push(`sunucu ${j.latency_ms} ms`);
-      if (j.tts_error) bits.push(`tts: ${j.tts_error}`);
-      else if (j.tts_base64) bits.push("ses çaldı");
+      bits.push("metin önce");
       meta.textContent = bits.join(" · ");
       setSahneState("hazir", reply);
     } catch (e) {
-      bubble("bot", `[Hata] ${e.message || e}`);
-      meta.textContent = String(e.message || e);
+      const raw = String(e.message || e || "");
+      // F6.5 — F0/F1 sınıflarıyla aynı dil
+      let cls = "hata";
+      if (/abort|timeout|süre|sure|timed?\s*out/i.test(raw)) cls = "timeout";
+      else if (/öğretir|ogretir|bulamadım|bulamadim|miss/i.test(raw)) cls = "miss";
+      else if (/stt|whisper|ses → metin/i.test(raw)) cls = "stt";
+      const shown =
+        cls === "timeout"
+          ? "Ümit abi, süre yetmedi — biraz sonra tekrar dene."
+          : cls === "miss"
+            ? "Ümit abi, bu turda net cevap çıkmadı. Bana öğretir misin?"
+            : `[Hata · ${cls}] ${raw}`;
+      bubble("bot", shown);
+      meta.textContent = cls === "timeout" ? "timeout (F1)" : cls === "miss" ? "miss (F0)" : raw;
       setSahneState("hazir");
       if (opts.live) {
         history.pop();
@@ -1932,7 +2053,12 @@
         .filter((m) => !(m.role === "assistant" && String(m.content || "").trim() === "(Yanıt yok)"));
       const j = await api("/api/chat/full", {
         method: "POST",
-        timeoutMs: 90000,
+        /* F1.2 — bilgi turları 90sn sınırında kesilmesin */
+        timeoutMs: /nedir|kimdir|anlat|hakkında|hakkinda|hadis|ayet|tarih|ilim|açıkla|acikla/i.test(
+          t
+        )
+          ? 120000
+          : 90000,
         body: JSON.stringify({
           message: t,
           history: hist,
@@ -2098,27 +2224,36 @@
     }
   }
 
-  async function sttBlob(blob) {
+  async function sttBlob(blob, opts) {
+    const fast = !!(opts && opts.fast);
     const token = localStorage.getItem(LS.token) || "";
     let upload = blob;
     let name = "mobil.webm";
-    try {
-      const wav = await blobToWav16k(blob);
-      if (wav && wav.size > 100) {
-        upload = wav;
-        name = "mobil.wav";
+    // Canlı sohbet: telefonda OfflineAudio WAV dönüşümü çok yavaş — ham webm/mp4 gönder
+    if (!fast) {
+      try {
+        const wav = await blobToWav16k(blob);
+        if (wav && wav.size > 100) {
+          upload = wav;
+          name = "mobil.wav";
+        }
+      } catch (_) {
+        const ext = (mediaMime || "").includes("mp4") ? "m4a" : "webm";
+        name = `mobil.${ext}`;
       }
-    } catch (_) {
-      // webm yedek
-      const ext = (mediaMime || "").includes("mp4") ? "m4a" : "webm";
-      name = `mobil.${ext}`;
+    } else {
+      const t = String((blob && blob.type) || mediaMime || "");
+      if (t.includes("mp4") || t.includes("m4a") || t.includes("aac")) name = "mobil.m4a";
+      else if (t.includes("ogg")) name = "mobil.ogg";
+      else if (t.includes("wav")) name = "mobil.wav";
+      else name = "mobil.webm";
     }
     const fd = new FormData();
     fd.append("file", upload, name);
     const headers = {};
     if (token) headers.Authorization = `Bearer ${token}`;
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 90000);
+    const timer = setTimeout(() => ctrl.abort(), fast ? 35000 : 90000);
     try {
       const res = await fetch(`${base()}/api/stt?lang=tr`, {
         method: "POST",
@@ -2191,7 +2326,7 @@
     }
     meta.textContent = "ses → metin (PC Whisper)…";
     try {
-      const text = await sttBlob(blob);
+      const text = await sttBlob(blob, { fast: true });
       if (!text) {
         meta.textContent = "Algılanamadı — daha net / biraz daha uzun konuş.";
         return;
@@ -2298,10 +2433,74 @@
 
   // --- Sürekli sohbet: konuş → sus → cevap → yine dinle (aynı kapı) ---
   let liveMode = false;
+  let liveStartPending = false;
+
+  function livePrefOn() {
+    const v = localStorage.getItem(LS.livePref);
+    // Yoksa veya 1 → açık (kullanıcı Durdur demedikçe)
+    return v !== "0";
+  }
+
+  function setLivePref(on) {
+    try {
+      localStorage.setItem(LS.livePref, on ? "1" : "0");
+    } catch (_) {}
+  }
+
+  function beginLiveSession() {
+    if (liveMode) return;
+    if (micBusy && !liveMode) {
+      if (meta) meta.textContent = "Önce basılı tutmayı bırak / bekleyin.";
+      return;
+    }
+    if (!micSecureOk()) {
+      paintMicBlocked();
+      if (meta) meta.textContent = "sürekli sohbet: HTTPS + mikrofon gerekli";
+      return;
+    }
+    liveAbort = false;
+    liveMode = true;
+    liveStartPending = false;
+    setLivePref(true);
+    void liveLoop();
+  }
+
+  function scheduleLiveAutoStart() {
+    if (!livePrefOn()) return;
+    if (liveMode) return;
+    liveStartPending = true;
+    if (meta) meta.textContent = "sürekli sohbet açılıyor…";
+    paintLiveBtn();
+    // Jest gerekebilir — hemen dene; olmazsa ilk dokunuşta aç
+    setTimeout(function () {
+      if (!liveStartPending || liveMode || !livePrefOn()) return;
+      beginLiveSession();
+    }, 350);
+  }
   let liveStream = null;
   let liveVad = null;
   let liveAbort = false;
+  let liveMuted = false; // TTS / tekrar sırasında mic kapalı (yankı yok)
+  let liveRestartN = 0;
   let wakeLock = null;
+
+  function setLiveMicEnabled(on) {
+    liveMuted = !on;
+    try {
+      if (!liveStream) return;
+      liveStream.getAudioTracks().forEach(function (t) {
+        try {
+          t.enabled = !!on;
+        } catch (_) {}
+      });
+    } catch (_) {}
+  }
+
+  async function liveQuietGap(ms) {
+    setLiveMicEnabled(false);
+    await sleep(Math.max(200, ms || 900));
+    if (liveMode && !liveAbort) setLiveMicEnabled(true);
+  }
 
   async function requestWakeLock() {
     try {
@@ -2330,6 +2529,8 @@
     if (liveMode) {
       void requestWakeLock();
       setSahneState("dinle");
+    } else if (livePrefOn() && localStorage.getItem(LS.token)) {
+      scheduleLiveAutoStart();
     }
   }
   document.addEventListener("visibilitychange", () => {
@@ -2404,12 +2605,16 @@
   }
 
   async function recordUntilSilence(stream) {
+    if (liveMuted) {
+      await sleep(200);
+      return null;
+    }
     if (!liveVad) liveVad = attachVad(stream);
-    const SPEECH = 0.03;
-    const SILENCE_MS = 750;
-    const WAIT_SPEECH_MS = 20000;
-    const MAX_REC_MS = 18000;
-    const MIN_SPEECH_MS = 350;
+    const SPEECH = 0.022;
+    const SILENCE_MS = 520;
+    const WAIT_SPEECH_MS = 25000;
+    const MAX_REC_MS = 16000;
+    const MIN_SPEECH_MS = 320;
     const tick = 50;
     meta.textContent = "sürekli: dinliyorum — konuşun";
 
@@ -2418,21 +2623,35 @@
     while (!liveAbort && liveMode && waited < WAIT_SPEECH_MS) {
       await sleep(tick);
       waited += tick;
+      if (liveMuted) continue;
       if ((liveVad ? liveVad.rms() : 0) >= SPEECH) break;
     }
-    if (liveAbort || !liveMode) return null;
+    if (liveAbort || !liveMode || liveMuted) return null;
     if ((liveVad ? liveVad.rms() : 0) < SPEECH && waited >= WAIT_SPEECH_MS) return null;
 
     // 2) Kaydı konuşma başında aç
     const chunks = [];
     const types = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg"];
     const mime = types.find((t) => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) || "";
-    const rec = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+    let rec;
+    try {
+      rec = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+    } catch (e) {
+      meta.textContent = "sürekli: kayıt açılamadı — yeniden…";
+      await sleep(400);
+      return null;
+    }
     const useMime = mime || rec.mimeType || "audio/webm";
     rec.ondataavailable = (ev) => {
       if (ev.data && ev.data.size) chunks.push(ev.data);
     };
-    rec.start(150);
+    try {
+      rec.start(150);
+    } catch (e) {
+      meta.textContent = "sürekli: kayıt start hatası — yeniden…";
+      await sleep(400);
+      return null;
+    }
 
     let speechMs = 0;
     let silenceMs = 0;
@@ -2441,6 +2660,7 @@
     while (!liveAbort && liveMode && recMs < MAX_REC_MS) {
       await sleep(tick);
       recMs += tick;
+      if (liveMuted) break;
       const level = liveVad ? liveVad.rms() : 0;
       if (level >= SPEECH) {
         speechMs += tick;
@@ -2461,15 +2681,16 @@
       }
     });
     await stopped;
-    if (speechMs < MIN_SPEECH_MS) return null;
+    if (liveMuted || speechMs < MIN_SPEECH_MS) return null;
     const blob = new Blob(chunks, { type: useMime });
-    if (blob.size < 700) return null;
+    if (blob.size < 900) return null;
     return blob;
   }
 
   async function liveLoop() {
     micBusy = true;
     paintLiveBtn();
+    let fatal = false;
     try {
       if (!micSecureOk()) {
         paintMicBlocked();
@@ -2478,6 +2699,13 @@
         return;
       }
       const woke = await requestWakeLock();
+      // F7.5 — STT ısınma (soğuk ilk turu kes); beklemeden fire-and-forget
+      try {
+        const token = localStorage.getItem(LS.token) || "";
+        const headers = {};
+        if (token) headers.Authorization = "Bearer " + token;
+        fetch(base() + "/api/stt/warmup", { method: "POST", headers }).catch(() => {});
+      } catch (_) {}
       liveStream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -2486,52 +2714,85 @@
         },
       });
       liveVad = attachVad(liveStream);
+      liveMuted = false;
+      liveRestartN = 0;
       meta.textContent = woke
-        ? "sürekli: ekran açık tutulacak — konuşun"
-        : "sürekli: dinliyorum (ekran kilidi desteklenmiyor — ekranı elle açık tut)";
+        ? "sürekli: dinliyorum — konuşun"
+        : "sürekli: dinliyorum (ekranı açık tut) — konuşun";
 
       while (liveMode && !liveAbort) {
-        const blob = await recordUntilSilence(liveStream);
-        if (!liveMode || liveAbort) break;
-        if (!blob) {
-          meta.textContent = "sürekli: ses yok — yine dinliyorum";
+        let blob = null;
+        try {
+          blob = await recordUntilSilence(liveStream);
+        } catch (e) {
+          meta.textContent = "sürekli kayıt: " + String(e.message || e);
+          await liveQuietGap(600);
           continue;
         }
+        if (!liveMode || liveAbort) break;
+        if (!blob) {
+          meta.textContent = "sürekli: dinliyorum — konuşun";
+          continue;
+        }
+        // STT / cevap sırasında mic kapalı — yankı ve kendini duyma yok
+        setLiveMicEnabled(false);
         meta.textContent = "sürekli: ses → metin…";
         let text = "";
         try {
           mediaMime = blob.type || "audio/webm";
-          text = await sttBlob(blob);
+          text = await sttBlob(blob, { fast: true });
         } catch (e) {
           meta.textContent = "sürekli STT: " + String(e.message || e);
-          await sleep(400);
+          await liveQuietGap(400);
           continue;
         }
         if (!text) {
           await askRepeat("short");
           if (!liveMode || liveAbort) break;
-          await sleep(500);
+          await liveQuietGap(500);
           continue;
         }
-        // Algılananı göster — saçma olsa bile kullanıcı görsün
         meta.textContent = "algı: " + text.slice(0, 80);
-        await voiceTurn(text, { live: true });
+        try {
+          await voiceTurn(text, { live: true });
+        } catch (e) {
+          meta.textContent = "sürekli tur: " + String(e.message || e);
+        }
         if (!liveMode || liveAbort) break;
-        // TTS / yerel ses yankısı karışmasın
-        meta.textContent = "sürekli: kısa bekleme…";
-        await sleep(1000);
+        // Cevap bitti — kısa nefes, yine dinle
         meta.textContent = "sürekli: yine dinliyorum…";
+        await liveQuietGap(450);
       }
     } catch (e) {
+      fatal = true;
       meta.textContent = "Sürekli sohbet açılamadı: " + String(e.message || e);
     } finally {
+      // Durdur: setLivePref(false). Düşme/hata: pref açık kalır → otomatik yeniden
+      const autoRestart = livePrefOn();
       liveMode = false;
       liveAbort = false;
+      liveMuted = false;
       micBusy = false;
       stopLiveStream();
       await releaseWakeLock();
       paintLiveBtn();
-      if (meta && !/açılamadı|STT|Hata/i.test(String(meta.textContent || ""))) {
+      if (autoRestart) {
+        liveRestartN += 1;
+        if (liveRestartN <= 8) {
+          liveStartPending = true;
+          if (meta && !/açılamadı|HTTPS/i.test(String(meta.textContent || ""))) {
+            meta.textContent = "sürekli: yeniden bağlanıyor…";
+          }
+          setTimeout(function () {
+            if (!livePrefOn() || liveMode) return;
+            beginLiveSession();
+          }, fatal ? 1200 : 500);
+        } else {
+          liveRestartN = 0;
+          liveStartPending = true;
+          if (meta) meta.textContent = "sürekli: dokun → yeniden aç";
+        }
+      } else if (meta && !/açılamadı|STT|Hata/i.test(String(meta.textContent || ""))) {
         meta.textContent = "sürekli sohbet kapalı";
       }
     }
@@ -2543,26 +2804,25 @@
       if (liveMode) {
         liveAbort = true;
         liveMode = false;
+        liveStartPending = false;
+        setLivePref(false);
         void releaseWakeLock();
         meta.textContent = "sürekli: durduruluyor…";
         paintLiveBtn();
         return;
       }
-      if (micBusy) {
-        meta.textContent = "Önce basılı tutmayı bırak / bekleyin.";
-        return;
-      }
-      liveAbort = false;
-      liveMode = true;
-      void liveLoop();
+      beginLiveSession();
     };
   }
 
-  // İlk jest: ses kilidini aç (iOS/Android autoplay)
+  // İlk jest: ses kilidi + bekleyen sürekli sohbeti aç (iOS/Android)
   document.addEventListener(
     "pointerdown",
     () => {
       unlockMobileAudio();
+      if (liveStartPending && livePrefOn() && !liveMode) {
+        beginLiveSession();
+      }
     },
     { passive: true, once: false },
   );

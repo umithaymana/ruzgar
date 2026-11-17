@@ -38,9 +38,11 @@ _MOTOR_LABEL = {
     "tercume": "Tercüme",
     "ses": "Ses",
     "mimar": "Mimar atölyesi",
-    "okuma": "Mimar (eski ad)",
+    "okuma": "Okuma / arşiv (hub)",
     "hizir": "Hızır / Ticaret",
     "genel": "Ana Motor",
+    "bilim": "İlim sohbeti (Ana Motor)",
+    "ilim": "İlim sohbeti (Ana Motor)",
 }
 
 _HELP_RE = re.compile(
@@ -398,7 +400,8 @@ def resolve_hub_target(
         except Exception:
             pass
 
-    # M3: arşiv / metin türü / kaynak — mimar (okuma) erken
+    # M3: arşiv / indeks komutu — Ana Motor'da kal (F5.1: görsel mimar paneline zorlama yok)
+    # Atölye foto/restore niyeti yukarıda mimar_faz5 ile ayrı yakalanır.
     try:
         from ilim_assistant.motorlar.okuma_faz73 import classify_okuma_intent
 
@@ -410,12 +413,20 @@ def resolve_hub_target(
             "categorize_text",
             "source_lookup",
         ):
+            if _hub_stay_on_ana_motor(msg):
+                meta["winner"] = "genel"
+                meta["reason"] = f"okuma_{oreason}_stay_genel"
+                return "genel", meta
             meta["candidates"].append(
-                {"motor": "mimar", "score": 10, "reason": f"okuma_{oreason}"}
+                {
+                    "motor": "genel",
+                    "score": 8,
+                    "reason": f"okuma_{oreason}",
+                }
             )
-            meta["winner"] = "mimar"
+            meta["winner"] = "genel"
             meta["reason"] = f"okuma_{oreason}"
-            return "mimar", meta
+            return "genel", meta
     except Exception:
         pass
 
@@ -451,10 +462,8 @@ def resolve_hub_target(
         except Exception:
             continue
         sc = _score_intent(spec)
-        if flags.get(mid) or (
-            mid == "mimar"
-            and (flags.get("okuma") or flags.get("bilim") or flags.get("mimar"))
-        ):
+        # F5.2: bilim/okuma bayrağı mimar skorunu şişirmesin (ilim sohbeti ≠ atölye)
+        if flags.get(mid) or (mid == "mimar" and flags.get("mimar")):
             sc += 1
         if flags.get("bellek") and mid == "hafiza":
             sc += 1

@@ -105,8 +105,10 @@ _MODE_ALIASES = {
     "düzen": "duzen",
     "hızlı": "hizli",
     "tercüme": "tercume",
-    "okuma": "mimar",
-    "bilim": "mimar",
+    # F5.1/F5.2 — ilim/okuma/bilim sohbeti görsel mimar paneline zorla düşmesin
+    "okuma": "genel",
+    "bilim": "genel",
+    "ilim": "genel",
 }
 
 
@@ -979,7 +981,14 @@ def prepare_turn(
     msg = message.strip()
     from ilim_assistant.idrak_on_islem import pretreat_user_turn
 
-    msg = pretreat_user_turn(msg, history).text
+    _pre = pretreat_user_turn(msg, history)
+    msg = _pre.text
+    if orchestration_out is not None and _pre.changed:
+        orchestration_out["pretreat"] = {
+            "changed": True,
+            "replacements": list(_pre.replacements)[:12],
+            "continuation": bool(_pre.continuation),
+        }
     # S1 — SourceRouter (niyet/kaynak struct; S2/S3 gate buraya bağlanır)
     try:
         from ilim_assistant.sohbet_source_router import attach_source_router
@@ -1013,6 +1022,20 @@ def prepare_turn(
         owner_hi = maybe_owner_instant_reply(msg, m)
         if owner_hi and m != "programlama":
             return msg, [], "", "", "", owner_hi
+    except Exception:
+        pass
+
+    # F9 — öz-bilgi / dürüst kapasite (LLM uydurmasın; kart + canlı envanter)
+    try:
+        from ilim_assistant.ruzgar_oz_bilgi import format_oz_bilgi_reply
+
+        _oz = format_oz_bilgi_reply(msg, mode=m)
+        if _oz:
+            if orchestration_out is not None:
+                orchestration_out["provider"] = "oz_bilgi"
+                orchestration_out["provider_rozet"] = "yerel"
+                orchestration_out["oz_bilgi"] = True
+            return msg, [], "", "", "", _oz
     except Exception:
         pass
 
@@ -1385,6 +1408,17 @@ def prepare_turn(
             search_msg = rag_search_query_for_turn(msg, turn_plan)
         except Exception:
             search_msg = msg
+    # F2 — «foto senrez» → fotosentez (RAG 0 hit + guard drift)
+    try:
+        from ilim_assistant.ruzgar_soru_yazim import rewrite_soru_yazim
+
+        _yaz_msg, _yaz_meta = rewrite_soru_yazim(search_msg)
+        if _yaz_meta.get("changed") and _yaz_msg:
+            search_msg = _yaz_msg
+            if orchestration_out is not None:
+                orchestration_out["soru_yazim"] = _yaz_meta
+    except Exception:
+        pass
     # Kütüphane/ilim: arama sorgusunu güçlendir (Türkçe → Arapça anahtar)
     try:
         from ilim_assistant.ruzgar_kutuphane_gorev import (
@@ -1460,9 +1494,11 @@ def prepare_turn(
             _bundle_in = None
 
         good_hits: list = []
+        _hits_raw_count = 0
 
         if _bundle_in is not None:
             bh = list(_bundle_in.hits)
+            _hits_raw_count = len(bh)
             good_hits = [h for h in bh if float(h[2]) >= rag_score_min]
             try:
                 from ilim_assistant.ruzgar_anlam_koruma import filter_rag_hits
@@ -1479,6 +1515,7 @@ def prepare_turn(
         elif tdk_exact_on and tdk_lem:
             # TDK: yalnızca `##` başlığı tam eşleşmesi — semantik yakınlıkla başka maddeye sıçrama yok.
             good_hits = search_tdk_exact_lemma(tdk_lem, top_k=rag_k_clamped)
+            _hits_raw_count = len(good_hits)
         elif use_tarih_rag_branch:
             pool_k_use = pool_k
             tarih_scan = max(32, int(os.environ.get("RUZGAR_TARIH_SCAN_CAP", "96")))
@@ -1511,6 +1548,7 @@ def prepare_turn(
             pool_hits = search(search_msg, top_k=pool_k_use)
             good_hits = [h for h in pool_hits if h[2] >= rag_score_min]
             good_hits = [h for h in good_hits if not source_is_tdk(h[1])]
+            _hits_raw_count = len(pool_hits)
             th = search_tarih_hafiza(search_msg, top_k=tarih_top, scan_cap=tarih_scan)
             th_ok = [h for h in th if h[2] >= rag_score_min]
             if not th_ok and th:
@@ -1548,6 +1586,7 @@ def prepare_turn(
                 session_id=ana_motor_session_id,
             )
             bh = list(me_bundle.hits)
+            _hits_raw_count = len(bh)
             good_hits = [h for h in bh if float(h[2]) >= rag_score_min]
             try:
                 from ilim_assistant.ruzgar_anlam_koruma import filter_rag_hits
@@ -1563,7 +1602,9 @@ def prepare_turn(
             archive_primary_flag = bool(me_bundle.archive_was_primary)
         else:
             pool_hits = search(search_msg, top_k=pool_k)
+            _hits_raw_count = len(pool_hits)
             good_hits = [h for h in pool_hits if h[2] >= rag_score_min]
+        _hits_before_lex = len(good_hits)
         # Kütüphane sorusunda lexik örtüşmesi zayıf hit'leri ele
         try:
             from ilim_assistant.ruzgar_kutuphane_gorev import (
@@ -1575,18 +1616,37 @@ def prepare_turn(
             if kutuphane_enabled_hard() and is_kutuphane_bilgi_soru(msg):
                 from ilim_assistant.ruzgar_kutuphane_gorev import hits_usable_for_kutuphane
 
+                _pre_lex = list(good_hits)
                 filtered = filter_hits_lexically(search_msg, good_hits) or filter_hits_lexically(
                     msg, good_hits
                 )
-                if not hits_usable_for_kutuphane(msg, filtered) and not hits_usable_for_kutuphane(
+                if hits_usable_for_kutuphane(msg, filtered) or hits_usable_for_kutuphane(
                     search_msg, filtered
                 ):
-                    good_hits = []
-                else:
                     good_hits = filtered
+                elif hits_usable_for_kutuphane(msg, _pre_lex, soft=True) or hits_usable_for_kutuphane(
+                    search_msg, _pre_lex, soft=True
+                ):
+                    # F2.1: lexik boşalttı ama soft usable — en iyi 3'ü koru
+                    good_hits = sorted(_pre_lex, key=lambda h: float(h[2]), reverse=True)[:3]
+                else:
+                    good_hits = []
         except Exception:
             pass
         hits = good_hits[:rag_k_clamped]
+        try:
+            from ilim_assistant.ruzgar_tur_teshis_f0 import MISS_FILTERED, note_rag_retrieval
+
+            _raw_n = max(int(_hits_raw_count or 0), int(_hits_before_lex or 0))
+            _filt_miss = _raw_n > 0 and len(hits) == 0
+            note_rag_retrieval(
+                orchestration_out,
+                hits=list(hits),
+                hits_raw_count=_raw_n,
+                miss_class=MISS_FILTERED if _filt_miss else None,
+            )
+        except Exception:
+            pass
         ar_hits = [
             h
             for h in good_hits
@@ -1723,10 +1783,71 @@ def prepare_turn(
             _usable = hits_usable_for_kutuphane(msg, _hits_n) or blocks_usable_for_kutuphane(
                 msg, _blocks_n
             )
+            # F2.2 kademe-1: usable değilse extractive özet dene (LLM/öğret öncesi)
+            if not _usable and (_hits_n or _blocks_n):
+                try:
+                    from ilim_assistant.ruzgar_kutuphane_gorev import (
+                        format_kutuphane_extractive_reply,
+                    )
+
+                    _ext = (format_kutuphane_extractive_reply(msg, _hits_n, _blocks_n) or "").strip()
+                    if len(_ext) >= 48 and "öğretir" not in _ext.lower():
+                        try:
+                            from ilim_assistant.ruzgar_tur_teshis_f0 import note_rag_retrieval
+
+                            note_rag_retrieval(
+                                orchestration_out,
+                                hits=_hits_n,
+                                hits_raw_count=len(_hits_n),
+                                usable=True,
+                            )
+                            if orchestration_out is not None:
+                                orchestration_out["kutuphane_extractive"] = True
+                                orchestration_out["provider"] = "kutuphane_extractive"
+                                orchestration_out["provider_rozet"] = "raftan"
+                        except Exception:
+                            pass
+                        return msg, hits, "", "", "", _ext
+                except Exception:
+                    pass
+            try:
+                from ilim_assistant.ruzgar_tur_teshis_f0 import (
+                    MISS_KUTUPHANE,
+                    MISS_NO_HITS,
+                    note_rag_retrieval,
+                )
+
+                note_rag_retrieval(
+                    orchestration_out,
+                    hits=_hits_n,
+                    hits_raw_count=len(_hits_n),
+                    usable=bool(_usable),
+                    miss_class=(MISS_NO_HITS if not _hits_n else MISS_KUTUPHANE)
+                    if not _usable
+                    else None,
+                )
+            except Exception:
+                pass
             if not _usable:
+                # F4.4 İlim-A: raftan usable yok → buluta «bilgi uydur» yok
+                if orchestration_out is not None:
+                    orchestration_out["ilim_no_cloud_invent"] = True
+                    orchestration_out["provider"] = "miss_kutuphane"
+                    orchestration_out["provider_rozet"] = "raftan"
                 return msg, [], "", "", "", MISS_PHRASE
             # usable → aşağıda grounding ile doğal cevap
         except Exception:
+            try:
+                from ilim_assistant.ruzgar_tur_teshis_f0 import MISS_KUTUPHANE, note_rag_retrieval
+
+                note_rag_retrieval(
+                    orchestration_out,
+                    hits=[],
+                    usable=False,
+                    miss_class=MISS_KUTUPHANE,
+                )
+            except Exception:
+                pass
             return msg, [], "", "", "", MISS_PHRASE
 
     web_on = use_web and (m not in _NOWEB_MODES)
@@ -2499,11 +2620,19 @@ def prepare_turn(
                     _natural_soft = True
             except Exception:
                 pass
+            _distinct = 0
+            try:
+                from ilim_assistant.ana_motor_kaynak import distinct_source_count
+
+                _distinct = distinct_source_count(hits)
+            except Exception:
+                _distinct = 0
             if not _natural_soft:
                 user_payload += citation_directive_for_turn(
                     source_count=len(hits),
                     archive_primary=archive_primary_flag,
                     web_present=_web_present,
+                    distinct_sources=_distinct,
                 )
             else:
                 # Sohbet turu: yumuşak atıf; zorunlu «Güven: düşük» yok
@@ -2512,6 +2641,7 @@ def prepare_turn(
                     archive_primary=archive_primary_flag,
                     web_present=_web_present,
                     soft_natural=True,
+                    distinct_sources=_distinct,
                 )
         # F: önce insan cevabı, sonra gerekirse kaynaklı netleştirme
         try:
@@ -2632,7 +2762,7 @@ def prepare_turn(
         try:
             from ilim_assistant.motorlar.ruzgar_cekirdegi import build_core_context
 
-            _oc = build_core_context(msg).strip()
+            _oc = build_core_context(msg, motor_flags=motor_flags).strip()
             if _oc:
                 user_payload = (
                     "[ORKESTRA ŞEFİ — dahili rehber; kullanıcıya aynen okuma]\n"
@@ -2711,7 +2841,7 @@ def prepare_turn(
         session_wake_already_done=session_wake_used,
     )
 
-    system = pick_system(coding_mode, m)
+    system = pick_system(coding_mode, m, thin_pipe=bool(_thin_pipe))
     if m in ("genel", "uretim", "gelisim") and not coding_mode:
         try:
             from ilim_assistant.ruzgar_dogal_sohbet_faz91 import (

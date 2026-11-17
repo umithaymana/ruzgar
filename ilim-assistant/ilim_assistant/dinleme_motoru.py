@@ -1,11 +1,16 @@
 # Created by Ümit & Gökçenur
 """
-Rüzgar dinleme (STT) — SpeechRecognition + isteğe bağlı PyAudio canlı mikrofon.
+Rüzgar dinleme (STT) — Ses motorunun alt katmanı (F5.5 tek yüzey).
 
-- HTTP: tarayıcı ses dosyası (`/api/stt`) — arka planda thread pool (FastAPI threadpool).
-- Yerel: `record_and_transcribe_pyaudio` — bloklayan dinleme ayrı iş parçacığında.
+Tek canlı HTTP yolu: tarayıcı MediaRecorder → ``/api/stt`` →
+``ses_stt_pipeline.transcribe_media_path`` (faster-whisper).
 
-Hata ayıklama imzası: Ümit & Gökçenur — tüm RuntimeError mesajlarında tutarlı.
+Bu modül:
+- PyAudio canlı mikrofon (masaüstü yardımcı)
+- SpeechRecognition yalnızca Whisper yoksa / PyAudio yolunda yedek
+- ``transcribe_with_best_backend`` → mümkünse aynı Whisper borusu
+
+Çift STT yüzeyi (ayrı «dinleme paneli» vs Ses) yok — hepsi Ses/STT alt katmanı.
 """
 
 from __future__ import annotations
@@ -340,14 +345,34 @@ def record_and_transcribe_pyaudio(
     return _record_and_transcribe_pyaudio_impl(duration_s, language)
 
 
+def stt_surface_status() -> dict[str, Any]:
+    """F5.5 — tek yüzey teşhisi (health / öz-bilgi)."""
+    whisper = False
+    try:
+        from ilim_assistant.stt_whisper import whisper_available
+
+        whisper = bool(whisper_available()) and not _ruzygar_stt_disabled()
+    except Exception:
+        whisper = False
+    return {
+        "surface": "ses_stt_pipeline",
+        "http_path": "/api/stt",
+        "primary": "faster-whisper",
+        "fallback": "SpeechRecognition" if speech_recognition_available() else None,
+        "whisper_ready": whisper,
+        "speech_recognition_ready": speech_recognition_available(),
+        "pyaudio_ready": pyaudio_available(),
+        "hint": "PC/mobil: MediaRecorder → /api/stt; dinleme_motoru = Ses alt katmanı.",
+    }
+
+
 def transcribe_with_best_backend(
     path: str | Path,
     language: str | None = "tr",
 ) -> tuple[str, str]:
     """
-    Önce faster-whisper; yok veya hata durumunda SpeechRecognition.
-    (HTTP katmanında zaten threadpool'da çağrılır — burada çift thread oluşmasın diye senkron.)
-    Sonra: stt_postprocess.cilala_stt_metni — niyet/akış cilası, O(n), ek ağ gecikmesi yok.
+    F5.5: önce ses_stt_pipeline (Whisper); yoksa SpeechRecognition yedek.
+    HTTP /api/stt aynı boruyu kullanır — çift yüzey yok.
     """
     from ilim_assistant.stt_postprocess import cilala_stt_metni
 
@@ -355,14 +380,26 @@ def transcribe_with_best_backend(
     text = ""
     lang = (language or "tr-TR").strip() or "tr-TR"
     whisper_ok = False
-    try:
-        from ilim_assistant.stt_whisper import transcribe_file, whisper_available
+    if not _ruzygar_stt_disabled():
+        try:
+            from ilim_assistant.motorlar.ses_stt_pipeline import transcribe_media_path
 
-        if whisper_available() and not _ruzygar_stt_disabled():
-            text, lang = transcribe_file(path, language)
-            whisper_ok = True
-    except Exception:
-        whisper_ok = False
+            result = transcribe_media_path(path, language=language)
+            text = (getattr(result, "text", None) or "").strip()
+            if text:
+                whisper_ok = True
+                lang = str(getattr(result, "language", None) or lang)
+        except Exception:
+            whisper_ok = False
+        if not whisper_ok:
+            try:
+                from ilim_assistant.stt_whisper import transcribe_file, whisper_available
+
+                if whisper_available():
+                    text, lang = transcribe_file(path, language)
+                    whisper_ok = True
+            except Exception:
+                whisper_ok = False
     if not whisper_ok:
         if not speech_recognition_available():
             raise RuntimeError(

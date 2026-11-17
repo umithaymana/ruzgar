@@ -111,6 +111,23 @@ def _plan_primary(question_plan: Any | None) -> str:
     return ""
 
 
+def shamela_search_budget_sec(
+    message: str = "",
+    *,
+    mode_norm: str = "genel",
+    question_plan: Any | None = None,
+) -> float:
+    """F1.1 — Şamile arama, tur bütçesinin ~%40'ını aşmasın (LLM'e yer kalsın)."""
+    try:
+        configured = float(os.environ.get("RUZGAR_SHAMELA_SEARCH_BUDGET_SEC", "20") or "20")
+    except ValueError:
+        configured = 20.0
+    tur = turn_budget_sec(message, mode_norm=mode_norm, question_plan=question_plan)
+    # Genel 15sn turda arama ≤6; ilim ~38sn turda ≤15 (eski 20 ile LLM eziliyordu)
+    capped = max(4.0, min(configured, tur * 0.40))
+    return max(4.0, min(45.0, capped))
+
+
 def turn_budget_sec(
     message: str = "",
     *,

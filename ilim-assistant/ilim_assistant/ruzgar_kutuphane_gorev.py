@@ -285,7 +285,10 @@ def filter_hits_lexically(
             blob_raw = f"{text}\n{src}"
             overlap = sum(1 for t in toks if _token_in_blob(t, blob_f, blob_raw))
             if multi:
-                if overlap >= 2 or (overlap >= 1 and float(sc) >= 0.88):
+                # F2.1: 0.88 → 0.42 (tek örtüşme + makul skor); semantik güçlüyse skor-only
+                if overlap >= 2 or (overlap >= 1 and float(sc) >= 0.42):
+                    kept0.append((text, src, float(sc)))
+                elif (not kimdir_q) and overlap == 0 and float(sc) >= max(0.50, min_score_keep - 0.15):
                     kept0.append((text, src, float(sc)))
             elif overlap >= 1:
                 # kimdir: skor yetmez — isim metinde/ Arapça köprüde olmalı
@@ -348,37 +351,79 @@ def filter_hits_lexically(
 def hits_usable_for_kutuphane(
     query: str,
     hits: Sequence[tuple[str, str, float]],
+    *,
+    soft: bool | None = None,
 ) -> bool:
-    """İndeks isabeti soruyu gerçekten taşıyor mu — yoksa öğret cümlesi."""
+    """İndeks isabeti soruyu gerçekten taşıyor mu — yoksa öğret cümlesi.
+
+    F2.1: soft=True (varsayılan) — yüksek skor + tek örtüşme veya Arapça köprü
+    yeterli; kör «≥2 token yok → öğret» azaltılır. Sıkı mod: RUZGAR_KUTUPHANE_USABLE_SOFT=0
+    """
     if not hits:
         return False
+    if soft is None:
+        soft = os.environ.get("RUZGAR_KUTUPHANE_USABLE_SOFT", "1").strip().lower() not in (
+            "0",
+            "false",
+            "no",
+        )
     toks = _query_tokens(query)
     if not toks:
         return True
     best = 0
-    for text, src, _sc in hits[:8]:
+    best_sc = 0.0
+    for text, src, sc in hits[:8]:
         blob_f = _fold(f"{text}\n{src}")
         blob_raw = f"{text}\n{src}"
-        best = max(best, sum(1 for t in toks if _token_in_blob(t, blob_f, blob_raw)))
+        ov = sum(1 for t in toks if _token_in_blob(t, blob_f, blob_raw))
+        if ov > best:
+            best = ov
+        try:
+            best_sc = max(best_sc, float(sc))
+        except Exception:
+            pass
     if len(toks) >= 2:
-        return best >= 2
-    return best >= 1
+        if best >= 2:
+            return True
+        if soft and best >= 1 and best_sc >= 0.36:
+            return True
+        # Tek kavramlı «X nedir» — skor güçlüyse lexik 1 yeter (Arapça pasaj)
+        if soft and best >= 1 and best_sc >= 0.28 and len(toks) <= 4:
+            return True
+        if soft and best == 0 and best_sc >= 0.52:
+            # Yüksek semantik; lexik Türkçe/Arapça kopuk — yumuşak kabul
+            return True
+        return False
+    return best >= 1 or (soft and best_sc >= 0.40)
 
 
 def blocks_usable_for_kutuphane(
     query: str,
     blocks: Sequence[tuple[str, str]],
+    *,
+    soft: bool | None = None,
 ) -> bool:
     """Bağlam blokları (raf/tefsir vb.) soruyla örtüşüyor mu."""
     if not blocks:
         return False
+    if soft is None:
+        soft = os.environ.get("RUZGAR_KUTUPHANE_USABLE_SOFT", "1").strip().lower() not in (
+            "0",
+            "false",
+            "no",
+        )
     toks = _query_tokens(query)
     if not toks:
         return True
     need = 2 if len(toks) >= 2 else 1
     blob_raw = "\n".join(f"{t}\n{s}" for t, s in list(blocks)[:12])
     blob_f = _fold(blob_raw)
-    return sum(1 for t in toks if _token_in_blob(t, blob_f, blob_raw)) >= need
+    covered = sum(1 for t in toks if _token_in_blob(t, blob_f, blob_raw))
+    if covered >= need:
+        return True
+    if soft and covered >= 1 and len(toks) >= 2:
+        return True
+    return False
 
 
 def kutuphane_enabled_hard() -> bool:
@@ -437,40 +482,70 @@ def format_kutuphane_extractive_reply(
     blocks: Sequence[tuple[str, str]] | None = None,
     *,
     want_source: bool = False,
+    multi_source: bool = True,
 ) -> str:
-    """LLM yok — indeksteki pasajı oku, anlat. Uydurma kapalı; yarınki eserler aynı yol."""
+    """LLM yok — indeksteki pasaj(lar)ı oku. F2.3: mümkünse 2–3 ayrı eser."""
     pieces: list[tuple[str, str]] = []
     for text, src, _sc in list(hits or [])[:8]:
         t = " ".join((text or "").split())
         if len(t) >= 40 and not _looks_like_question_only_blob(t):
-            pieces.append((t[:1100], str(src or "").strip()))
+            pieces.append((t[:900], str(src or "").strip()))
     if not pieces:
         for text, src in list(blocks or [])[:8]:
             t = " ".join((text or "").split())
             if len(t) >= 40 and not _looks_like_question_only_blob(t):
-                pieces.append((t[:1100], str(src or "").strip()))
+                pieces.append((t[:900], str(src or "").strip()))
     if not pieces:
         return (
             "Ümit abi, bu sorunun cevabını bulamadım. Bana öğretir misin?"
         )
     toks = _query_tokens(query)
-    # En örtüşen pasajı öne al
+
     def _ov(p: tuple[str, str]) -> int:
         blob = _fold(p[0] + "\n" + p[1])
         return sum(1 for t in toks if t in blob)
 
     pieces.sort(key=_ov, reverse=True)
-    body = pieces[0][0]
-    lines = [
-        "Ümit abi — kütüphaneden okuduğum pasaj şöyle:",
-        "",
-        body,
-    ]
-    if want_source:
-        lines.append("")
+    # F2.3 — ayrı eserlerden en fazla 3 pasaj
+    picked: list[tuple[str, str]] = []
+    seen_src: set[str] = set()
+    if multi_source:
+        for text, src in pieces:
+            try:
+                from ilim_assistant.ana_motor_kaynak import _source_key
+
+                key = _source_key(src) or (src or "")
+            except Exception:
+                key = (src or "").replace("\\", "/").rsplit("/", 1)[-1].lower() or src
+            if key in seen_src and len(picked) > 0:
+                continue
+            seen_src.add(key)
+            picked.append((text, src))
+            if len(picked) >= 3:
+                break
+    if not picked:
+        picked = [pieces[0]]
+
+    if len(picked) == 1:
+        lines = [
+            "Ümit abi — kütüphaneden okuduğum pasaj şöyle:",
+            "",
+            picked[0][0],
+        ]
+    else:
+        lines = [
+            "Ümit abi — birkaç eserden okuduğum kısa sentez:",
+            "",
+        ]
+        for i, (text, _src) in enumerate(picked, 1):
+            snippet = text if len(text) <= 420 else text[:400].rstrip() + "…"
+            lines.append(f"**[K{i}]** {snippet}")
+            lines.append("")
+    want_src = want_source or len(picked) >= 2
+    if want_src:
         lines.append("**Kaynak izi:**")
         seen: set[str] = set()
-        for i, (_t, src) in enumerate(pieces[:4], 1):
+        for i, (_t, src) in enumerate(picked, 1):
             if not src or src in seen:
                 continue
             seen.add(src)

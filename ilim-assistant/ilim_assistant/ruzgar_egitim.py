@@ -1507,7 +1507,10 @@ def should_emit_miss_reply(
 def wrap_miss_if_needed(
     reply: str, user_message: str, elapsed_sec: float
 ) -> tuple[str, bool]:
-    """Gerekirse miss metni döner ve öğretme bekler."""
+    """Gerekirse miss metni döner ve öğretme bekler.
+
+    F1.5: süre aşımı → TIMEOUT_PHRASE (öğret kuyruğuna yazılmaz).
+    """
     try:
         from ilim_assistant.motorlar.programlama_motoru import (
             is_programlama_reserved_command,
@@ -1535,6 +1538,23 @@ def wrap_miss_if_needed(
         return reply, False
     if not should_emit_miss_reply(reply, elapsed_sec, user_message=user_message):
         return reply, False
+    # Süre/timeout vs kütüphane «öğret» ayrımı (F1.5)
+    from ilim_assistant.ruzgar_umed_kurallari import TIMEOUT_PHRASE
+
+    try:
+        from ilim_assistant.ruzgar_umed_cevap_emri import turn_budget_sec, umed_emri_enabled
+
+        if umed_emri_enabled():
+            limit = float(turn_budget_sec(user_message))
+        else:
+            limit = float(os.environ.get("RUZGAR_EGITIM_MISS_SEC", "15"))
+    except Exception:
+        limit = 15.0
+    t = (reply or "").strip()
+    timed_out = float(elapsed_sec or 0) >= limit * 0.92
+    if timed_out:
+        # Öğret bekletme — timeout zehiri olmasın (F3.2 / F1.5)
+        return TIMEOUT_PHRASE, True
     soru = (user_message or "").strip()
     if soru:
         set_pending("await_teaching", soru)
@@ -1638,6 +1658,24 @@ def on_chat_turn_done(req: Any, done: dict[str, Any]) -> dict[str, Any]:
             done = dict(done)
             done["full_reply"] = reply2
             done["egitim_miss"] = True
+            try:
+                from ilim_assistant.ruzgar_tur_teshis_f0 import classify_miss
+
+                orch = done.get("orchestra") if isinstance(done.get("orchestra"), dict) else {}
+                _mc = classify_miss(
+                    reply=reply2,
+                    orch=orch,
+                    elapsed_sec=elapsed,
+                    egitim_miss=True,
+                )
+                if _mc:
+                    done["miss_class"] = _mc
+                    if isinstance(orch, dict):
+                        orch = dict(orch)
+                        orch["miss_class"] = _mc
+                        done["orchestra"] = orch
+            except Exception:
+                pass
     if done.get("instant_gundelik") or done.get("session_echo") or done.get("instant_clarify"):
         return done
     hist = list(getattr(req, "history", None) or [])

@@ -180,6 +180,7 @@ def should_stay_on_ana_motor_bilgi(message: str) -> bool:
     Ansiklopedi/tarih sorusu — Hafıza motoru lookup veya yavaş sentez yerine Ana Motor bilgi turu.
 
     «Osman Bey kimdir?» gibi sorular hafıza Faz 75'te yanlışlıkla lookup sayılıyordu.
+    F4.5: kısa «nedir/anlat» bilgi niyeti atölye/hub'a kaçmasın.
     """
     raw = (message or "").strip()
     if not raw or len(raw) > 400:
@@ -198,6 +199,17 @@ def should_stay_on_ana_motor_bilgi(message: str) -> bool:
         if re.search(
             r"\b(osman|padisah|padişah|sultan|bey|devlet|imparator|hanedan|"
             r"selcuk|selçuk|bizans|fatih|murat|kanuni|yavuz)\b",
+            asc,
+        ):
+            return True
+    # F4.5 — fen/genel kültür kısa tanım (mimar/video çalmasın)
+    if len(raw) <= 160 and re.search(
+        r"\b(nedir|ne demek|acikla|açıkla|anlat|nasil olur|nasıl olur)\b",
+        asc,
+    ):
+        if not re.search(
+            r"\b(indir|download|kes|kurgu|montaj|panel|galeri|cevir|çevir|"
+            r"pytest|commit|foto\s*duzen|foto\s*düzen|restore|ffmpeg)\b",
             asc,
         ):
             return True
@@ -1986,16 +1998,16 @@ def rag_top_k_for_turn(
     plan: QuestionPlan | None,
     message: str | None = None,
 ) -> int:
-    """C3 — mod ve plana göre RAG parça sayısı (varsayılan genel: 4)."""
+    """C3 — mod ve plana göre RAG parça sayısı (F2.3: genel/bilgi varsayılan 5)."""
     try:
         base = int(os.environ.get("RAG_TOP_K", "2"))
     except ValueError:
         base = 2
     if mode_norm == "genel":
         try:
-            base = max(base, int(os.environ.get("RUZGAR_GENEL_RAG_TOP_K", "4")))
+            base = max(base, int(os.environ.get("RUZGAR_GENEL_RAG_TOP_K", "5")))
         except ValueError:
-            base = max(base, 4)
+            base = max(base, 5)
     if plan is not None:
         if plan.primary == "bilim":
             try:
@@ -2004,9 +2016,9 @@ def rag_top_k_for_turn(
                 base = max(base, 5)
         elif plan.primary == "bilgi":
             try:
-                base = max(base, int(os.environ.get("RUZGAR_BILGI_RAG_TOP_K", "4")))
+                base = max(base, int(os.environ.get("RUZGAR_BILGI_RAG_TOP_K", "5")))
             except ValueError:
-                base = max(base, 4)
+                base = max(base, 5)
         elif plan.primary == "dilbilgisi":
             try:
                 base = max(base, int(os.environ.get("RUZGAR_DILBILGISI_RAG_TOP_K", "3")))

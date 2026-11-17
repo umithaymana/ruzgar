@@ -623,15 +623,30 @@ def _sync_startup_warmups() -> None:
         run_ses_v1_warmup()
     except Exception:
         pass
+    try:
+        from ilim_assistant.ruzgar_tur_teshis_f0 import mark_warmup, warmup_snapshot
+
+        mark_warmup("boot_bg_done", True)
+        _warm = warmup_snapshot(booting=False)
+    except Exception:
+        _warm = {"state": "kismi", "ilik": False}
     if os.environ.get("RUZGAR_PRINT_READY_SEAL", "1").strip().lower() not in (
         "0",
         "false",
         "no",
     ):
-        print(
-            "Rüzgar Kullanıma Hazır, Sistemi Yeniden Başlatabilirsiniz.",
-            flush=True,
-        )
+        # F1.3 — soğukken «tam hazır» iddiası yumuşasın
+        if _warm.get("ilik"):
+            print(
+                "Rüzgar Kullanıma Hazır, Sistemi Yeniden Başlatabilirsiniz.",
+                flush=True,
+            )
+        else:
+            print(
+                "Rüzgar port açık — beyin hâlâ ısınıyor (ilk turlar yavaş olabilir). "
+                f"Durum: {_warm.get('label_tr') or _warm.get('state')}.",
+                flush=True,
+            )
     _WARMUP_BACKGROUND_ACTIVE = False
 
 
@@ -1321,6 +1336,24 @@ def _sample_gpu_percent() -> float | None:
         return None
 
 
+def _safe_stt_surface_status() -> dict:
+    try:
+        from ilim_assistant.dinleme_motoru import stt_surface_status
+
+        return stt_surface_status()
+    except Exception as exc:
+        return {"surface": "unknown", "error": str(exc)[:120]}
+
+
+def _safe_cekirdek_envanter() -> dict:
+    try:
+        from ilim_assistant.motorlar.ruzgar_cekirdegi import cekirdek_envanter
+
+        return cekirdek_envanter()
+    except Exception as exc:
+        return {"version": "error", "error": str(exc)[:120]}
+
+
 def _health_build_block() -> dict:
     import os as _os
 
@@ -1754,6 +1787,7 @@ def _health_lite_response() -> dict[str, Any]:
         "osm_tr": _osm_tr,
         "api_host": (os.environ.get("RUZGAR_API_HOST") or "127.0.0.1").strip() or "127.0.0.1",
         "mobil_erisim": _erisim,
+        "brain_warmth": _brain_warmth_lite(),
     }
 
 
@@ -1800,6 +1834,8 @@ def _health_full_response() -> dict[str, Any]:
         "service": "ruzgar-desktop-api",
         "stt": stt_runtime_available(),
         "whisper_model": whisper_model_name() if stt_runtime_available() else None,
+        "stt_surface": _safe_stt_surface_status(),
+        "cekirdek_envanter": _safe_cekirdek_envanter(),
         "tts_clone": __import__(
             "ilim_assistant.motorlar.ses_klon_motoru",
             fromlist=["clone_status_snapshot"],
@@ -6684,6 +6720,41 @@ def api_programlama_serve(body: ProgramlamaRunBody):
     return result
 
 
+def _brain_warmth_lite() -> dict:
+    """F0.3 — ılık/soğuk; health spam'sız özet."""
+    try:
+        from ilim_assistant.ruzgar_tur_teshis_f0 import warmup_snapshot
+
+        return warmup_snapshot(booting=bool(_WARMUP_BACKGROUND_ACTIVE))
+    except Exception:
+        return {
+            "ok": False,
+            "state": "isiniyor" if _WARMUP_BACKGROUND_ACTIVE else "soguk",
+            "ilik": False,
+            "label_tr": "Isınıyor" if _WARMUP_BACKGROUND_ACTIVE else "Soğuk",
+        }
+
+
+@app.get("/api/tur-teshis")
+@app.get("/api/tur-teshis/recent")
+def api_tur_teshis_recent(limit: int = 10):
+    """F0 — son tur teşhis kartları (hits/usable/miss_class/provider/süre)."""
+    from ilim_assistant.ruzgar_tur_teshis_f0 import FAZ_F0_VERSION, recent_cards, warmup_snapshot
+
+    return {
+        "ok": True,
+        "version": FAZ_F0_VERSION,
+        "items": recent_cards(limit),
+        "warmup": warmup_snapshot(booting=bool(_WARMUP_BACKGROUND_ACTIVE)),
+    }
+
+
+@app.get("/api/tur-teshis/warmup")
+def api_tur_teshis_warmup():
+    """F0.3 — beyin ılık/soğuk."""
+    return _brain_warmth_lite()
+
+
 @app.get("/api/system-health-report")
 def api_system_health_report(mode: str = "genel"):
     """Kısa kişisel asistan sağlık raporu: aktif mod + hafıza kapasitesi."""
@@ -6696,10 +6767,12 @@ def api_system_health_report(mode: str = "genel"):
     memory = memory_capacity_snapshot()
     super_brain = h.get("super_brain") or {}
     ana_motor = h.get("ana_motor") or {}
+    _bw = _brain_warmth_lite()
     lines = [
         "Sistem Sağlık Raporu",
         f"- Aktif mod: {mode_norm}",
         f"- Faz: {manifest.get('current_phase_label')}",
+        f"- Beyin ısısı: {_bw.get('label_tr') or _bw.get('state')}",
         f"- Gemini: {'hazır' if super_brain.get('gemini_configured') else 'kapalı/eksik'}",
         f"- Ana Motor ajan: {'aktif' if ana_motor.get('ana_motor_agent_enabled') else 'kapalı'}",
         (
@@ -10450,6 +10523,13 @@ async def api_stt(
             from ilim_assistant.stt_whisper import segments_to_srt
 
             payload["srt"] = segments_to_srt(result.segments)
+        # Yazım/STT niyet düzeltme — metin bozulsa bile sohbet doğru niyeti alsın
+        try:
+            from ilim_assistant.ruzgar_soru_yazim import apply_stt_niyet_fix
+
+            payload = apply_stt_niyet_fix(payload)
+        except Exception:
+            pass
         return payload
     except HTTPException:
         raise
@@ -10758,6 +10838,83 @@ def api_ses_settings_get():
     from ilim_assistant.tts_service import read_ses_ayarlari
 
     return read_ses_ayarlari()
+
+
+@app.get("/api/oz-bilgi")
+def api_oz_bilgi(force: bool = False):
+    """F9 — dürüst kapasite + motor kartları + canlı envanter."""
+    from ilim_assistant.ruzgar_oz_bilgi import (
+        canli_envanter,
+        invalidate_oz_bilgi_cache,
+        oz_bilgi_public_payload,
+    )
+
+    if force:
+        invalidate_oz_bilgi_cache()
+        canli_envanter(force=True)
+    return oz_bilgi_public_payload()
+
+
+@app.get("/api/ses/f7-status")
+def api_ses_f7_status():
+    """F7 — son rapor / profil / klon politikası (ölçüm yok)."""
+    from ilim_assistant.ses_f7_kalite import (
+        F7_VERSION,
+        clone_policy_snapshot,
+        f7_enabled,
+        last_f7_report,
+        profile_ton_snapshot,
+    )
+    from ilim_assistant.ses_v1_isinma import last_warmup_status
+
+    return {
+        "ok": True,
+        "version": F7_VERSION,
+        "enabled": f7_enabled(),
+        "last": last_f7_report(),
+        "profiles": profile_ton_snapshot(),
+        "clone": clone_policy_snapshot(),
+        "v1_warmup": last_warmup_status(),
+    }
+
+
+@app.post("/api/ses/f7-baseline")
+async def api_ses_f7_baseline(warm_stt: bool = True, measure_tts: bool = True):
+    """F7.1/F7.5 — TTS first-byte + STT ısınma yeniden ölçüm."""
+    from ilim_assistant.ses_f7_kalite import measure_stt_warmup_f7, measure_tts_first_byte_f7
+    from ilim_assistant.ses_f7_kalite import F7_VERSION, last_f7_report
+
+    report: dict[str, Any] = {
+        "ok": True,
+        "version": F7_VERSION,
+        "stt_warmup": {},
+        "tts_first_byte": {},
+    }
+    if warm_stt:
+        report["stt_warmup"] = await run_in_threadpool(measure_stt_warmup_f7)
+    if measure_tts:
+        report["tts_first_byte"] = await measure_tts_first_byte_f7()
+    try:
+        from ilim_assistant import ses_f7_kalite as _f7
+
+        _f7._LAST = {
+            **(last_f7_report() or {}),
+            **report,
+            "ts": __import__("datetime").datetime.now(
+                __import__("datetime").timezone.utc
+            ).isoformat(),
+        }
+    except Exception:
+        pass
+    return report
+
+
+@app.post("/api/stt/warmup")
+def api_stt_warmup():
+    """F7.5 — mobil sürekli öncesi Whisper ısınma (hafif)."""
+    from ilim_assistant.ses_f7_kalite import measure_stt_warmup_f7
+
+    return {"ok": True, **measure_stt_warmup_f7()}
 
 
 @app.post("/api/ses/settings")
@@ -15834,6 +15991,32 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             "user_message": msg,
             "new_wake_used": new_wake,
         }
+        # F4.2 — provider rozeti (log + orchestra)
+        try:
+            from ilim_assistant.ruzgar_provider_rozet import (
+                last_brain_profile,
+                provider_rozet_label,
+            )
+
+            _bp = last_brain_profile()
+            if _bp and not done_llm.get("provider"):
+                done_llm["provider"] = _bp
+                done_llm["llm_provider"] = _bp
+            _roz = provider_rozet_label(
+                _bp or str((orch or {}).get("provider") or ""),
+                raftan=bool(
+                    (orch or {}).get("kutuphane_extractive")
+                    or (orch or {}).get("ilim_no_cloud_invent")
+                ),
+                extractive=bool((orch or {}).get("kutuphane_extractive")),
+            )
+            done_llm["provider_rozet"] = _roz
+            if orch is not None:
+                if _bp and not orch.get("provider"):
+                    orch["provider"] = _bp
+                orch["provider_rozet"] = _roz
+        except Exception:
+            pass
         if orch:
             try:
                 from ilim_assistant.ana_motor_agent import mark_agent_answer_done
@@ -16067,6 +16250,11 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     pass
             if _learn_meta.get("saved"):
                 orch["otomatik_ogrenme"] = _learn_meta
+                if _learn_meta.get("index_pending"):
+                    orch["index_pending"] = True
+                    orch["index_status"] = _learn_meta.get("index_status") or (
+                        "Kayıt yazıldı; vektör indeksi arka planda bekliyor."
+                    )
         except Exception:
             pass
         yield done_llm
@@ -16101,6 +16289,13 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
                 from ilim_assistant.ruzgar_egitim import on_chat_turn_done
 
                 obj = on_chat_turn_done(req, obj)
+            except Exception:
+                pass
+            try:
+                from ilim_assistant.ruzgar_tur_teshis_f0 import attach_teshis_to_done
+
+                _mode_teshis = normalize_mode(_effective_chat_mode_raw(req))
+                obj = attach_teshis_to_done(obj, mode=_mode_teshis)
             except Exception:
                 pass
             try:

@@ -246,6 +246,12 @@ def preload_primary_chat_model(*, timeout_sec: float = 120.0) -> dict:
         ok = r.status_code == 200
         if ok:
             print(f"[Rüzgar] Ollama ön yükleme OK: {model} (keep_alive={payload['keep_alive']})", flush=True)
+            try:
+                from ilim_assistant.ruzgar_tur_teshis_f0 import mark_warmup
+
+                mark_warmup("ollama", True)
+            except Exception:
+                pass
         else:
             print(f"[Rüzgar] Ollama ön yükleme HTTP {r.status_code}: {model}", flush=True)
         return {"ok": ok, "model": model, "status": r.status_code}

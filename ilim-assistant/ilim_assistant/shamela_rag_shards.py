@@ -573,20 +573,30 @@ def pick_shamela_cats_for_query(
     ready: dict | Sequence[str],
     *,
     max_cats: int | None = None,
+    deep: bool = False,
+    exclude: Sequence[str] | None = None,
 ) -> list[str]:
-    """Sorguya göre en fazla N hazır shard seç (bellek/süre koruması)."""
+    """Sorguya göre en fazla N hazır shard seç (bellek/süre koruması).
+
+    F2.2 deep=True → daha geniş kategori/MB; exclude ile kademe-1 cats atlanır.
+    """
     if max_cats is None:
+        env_key = "RUZGAR_SHAMELA_DEEP_MAX_CATS" if deep else "RUZGAR_SHAMELA_MAX_CATS"
+        default = "5" if deep else "3"
         try:
-            max_cats = int(os.environ.get("RUZGAR_SHAMELA_MAX_CATS", "3") or "3")
+            max_cats = int(os.environ.get(env_key, default) or default)
         except ValueError:
-            max_cats = 3
-    max_cats = max(1, min(8, int(max_cats)))
+            max_cats = 5 if deep else 3
+    max_cats = max(1, min(10 if deep else 8, int(max_cats)))
+    mb_key = "RUZGAR_SHAMELA_DEEP_MAX_MB" if deep else "RUZGAR_SHAMELA_MAX_MB"
+    mb_default = "1100" if deep else "700"
     try:
-        max_mb = float(os.environ.get("RUZGAR_SHAMELA_MAX_MB", "700") or "700")
+        max_mb = float(os.environ.get(mb_key, mb_default) or mb_default)
     except ValueError:
-        max_mb = 700.0
+        max_mb = 1100.0 if deep else 700.0
     max_bytes = max(50.0, max_mb) * 1_000_000.0
-    ready_keys = set(ready.keys() if isinstance(ready, dict) else ready)
+    _exclude = {str(x) for x in (exclude or []) if x}
+    ready_keys = set(ready.keys() if isinstance(ready, dict) else ready) - _exclude
     if not ready_keys:
         return []
 
@@ -600,6 +610,54 @@ def pick_shamela_cats_for_query(
     low = _fold_simple(query)
     picked: list[str] = []
     used_bytes = 0
+
+    # F2.4 — fen/seküler soruda Şamile din shard'ına sapma (süre + yanlış bağlam)
+    _fen = (
+        "fotosentez",
+        "solunum",
+        "klorofil",
+        "mitokondri",
+        "elektron",
+        "molekul",
+        "molekül",
+        "dna",
+        "rna",
+        "galaksi",
+        "gezegen",
+        "yercekimi",
+        "yerçekimi",
+        "newton",
+        "einstein",
+        "hubble",
+        "fizik",
+        "kimya",
+        "biyoloji",
+        "matematik",
+        "algoritma",
+        "bilgisayar",
+        "python",
+        "javascript",
+    )
+    _din_lock = (
+        "hadis",
+        "ayet",
+        "kuran",
+        "kur'an",
+        "peygamber",
+        "fikih",
+        "fıkıh",
+        "tefsir",
+        "sahabe",
+        "buhari",
+        "muslim",
+        "namaz",
+        "oruc",
+        "oruç",
+        "akaid",
+        "meal",
+    )
+    if any(k in low for k in _fen) and not any(k in low for k in _din_lock):
+        return []
 
     def _add(cat: str, *, force: bool = False) -> bool:
         nonlocal used_bytes
@@ -692,18 +750,29 @@ def search_shamela_shards(
     *,
     q_vec: np.ndarray | None = None,
     cats: Sequence[str] | None = None,
+    deep: bool = False,
+    budget_sec: float | None = None,
+    exclude_cats: Sequence[str] | None = None,
 ) -> List[Tuple[str, str, float]]:
-    """Hazır shard'larda mmap kosinüs; sorguya göre az kategori + süre bütçesi."""
+    """Hazır shard'larda mmap kosinüs; sorguya göre az kategori + süre bütçesi.
+
+    F2.2 deep=True: kalan tur süresinden ikinci kademe (daha çok kategori).
+    """
     reg = load_registry()
     ready = dict(reg.get("ready") or {})
     if not ready:
         return []
     if cats is None:
-        use = pick_shamela_cats_for_query(query, ready)
+        use = pick_shamela_cats_for_query(
+            query, ready, deep=deep, exclude=exclude_cats
+        )
     else:
-        use = [c for c in cats if c in ready]
+        _ex = {str(x) for x in (exclude_cats or []) if x}
+        use = [c for c in cats if c in ready and c not in _ex]
         if not use:
-            use = pick_shamela_cats_for_query(query, ready)
+            use = pick_shamela_cats_for_query(
+                query, ready, deep=deep, exclude=exclude_cats
+            )
     if not use:
         return []
 
@@ -717,11 +786,34 @@ def search_shamela_shards(
     # Küçük shard önce — süre bütçesi dolmadan en az bir isabet şansı
     use = sorted(use, key=_sz)
 
-    try:
-        budget = float(os.environ.get("RUZGAR_SHAMELA_SEARCH_BUDGET_SEC", "20") or "20")
-    except ValueError:
-        budget = 20.0
-    budget = max(5.0, min(45.0, budget))
+    if budget_sec is not None:
+        try:
+            budget = float(budget_sec)
+        except (TypeError, ValueError):
+            budget = 12.0
+    elif deep:
+        try:
+            from ilim_assistant.ruzgar_umed_cevap_emri import remaining_sec
+
+            rem = float(remaining_sec())
+        except Exception:
+            rem = 12.0
+        try:
+            deep_cap = float(os.environ.get("RUZGAR_SHAMELA_DEEP_BUDGET_SEC", "14") or "14")
+        except ValueError:
+            deep_cap = 14.0
+        budget = max(5.0, min(deep_cap, rem * 0.50))
+    else:
+        try:
+            from ilim_assistant.ruzgar_umed_cevap_emri import shamela_search_budget_sec
+
+            budget = float(shamela_search_budget_sec(query or ""))
+        except Exception:
+            try:
+                budget = float(os.environ.get("RUZGAR_SHAMELA_SEARCH_BUDGET_SEC", "12") or "12")
+            except ValueError:
+                budget = 12.0
+    budget = max(4.0, min(45.0, budget))
 
     # Embedder yükü bütçeye dahil edilmez (yoksa 6sn dolup 0 hit dönüyordu)
     if q_vec is None:

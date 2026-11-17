@@ -190,6 +190,31 @@
   }
 
   async function hubHelpText() {
+    // F9.5 — UI `?` = /api/oz-bilgi hub_help (sohbet kartı ile aynı gerçek)
+    try {
+      const oz = await fetchJsonTimeout(`${d().getApi?.()}/api/oz-bilgi`, 4000);
+      if (oz?.ok && typeof oz.hub_help === "string" && oz.hub_help.trim().length > 40) {
+        return oz.hub_help.trim();
+      }
+      if (oz?.ok && oz.kapasite && Array.isArray(oz.motorlar)) {
+        const kap = oz.kapasite;
+        const kim = kap.kim || {};
+        const lines = [
+          `**${kim.ad || "Rüzgar"}** — ${kim.ozet || ""}`,
+          `Mimar: ${kim.mimar || "Ümit & Gökçenur"}`,
+          "",
+          "**Motorlar (hub):**",
+        ];
+        for (const m of oz.motorlar) {
+          if (!m?.hub) continue;
+          lines.push(`· **${m.ad}** — ${m.huner || ""} · örn. «${m.ornek || "…"}»`);
+        }
+        lines.push("", "Genel moda yaz; sohbet kopmaz. (`oz-bilgi`)");
+        return lines.join("\n");
+      }
+    } catch {
+      /* fallback */
+    }
     const cap = await fetchCapabilities();
     if (!cap?.motors) return hubHelpTextFallback();
     const lines = [
@@ -215,7 +240,8 @@
 
   function normalizeMotorId(target) {
     const t = String(target || "").trim().toLowerCase();
-    if (t === "okuma") return "mimar";
+    // F5.1/F5.2 — ilim/okuma/bilim sohbeti görsel mimar paneline düşmesin
+    if (t === "okuma" || t === "bilim" || t === "ilim" || t === "bilgi") return "genel";
     return t;
   }
 

@@ -87,6 +87,13 @@ def run_ses_v1_warmup(*, dry_run: bool = False) -> dict[str, Any]:
     report["tts"] = prime_tts_pool()
     _LAST = report
     try:
+        from ilim_assistant.ruzgar_tur_teshis_f0 import mark_warmup
+
+        if report["stt"].get("ok") or report["tts"].get("ok"):
+            mark_warmup("whisper_tts", True)
+    except Exception:
+        pass
+    try:
         print(
             f"[Rüzgar V1] STT ısınma ok={report['stt'].get('ok')} "
             f"ms={report['stt'].get('ms')} · TTS ok={report['tts'].get('ok')} "

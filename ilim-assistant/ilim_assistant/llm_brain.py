@@ -25,6 +25,12 @@ from ilim_assistant.llm_gemini import (
     gemini_configured,
 )
 from ilim_assistant.llm_ollama import chat_completion_stream, format_llm_user_error
+from ilim_assistant.ruzgar_provider_rozet import (
+    last_brain_kind,
+    last_brain_profile,
+    note_brain_used,
+    provider_rozet_label,
+)
 
 MIMAR_IMZA = "Ümit & Gökçenur"
 
@@ -42,6 +48,14 @@ _ERROR_PREFIXES = (
     "API anahtarı",
     "kotası",
     "kota",
+)
+
+# F4.2 re-export — eski import yolları bozulmasın
+__all_rozet__ = (
+    "note_brain_used",
+    "last_brain_profile",
+    "last_brain_kind",
+    "provider_rozet_label",
 )
 
 
@@ -191,9 +205,14 @@ def _filter_chain_ids_for_quota(
     try:
         from ilim_assistant.config import gemini_disabled
         from ilim_assistant.prompts import sohbet_tarz_chatgpt
+        from ilim_assistant.ruzgar_genel_faz90 import genel_hibrit_b_enabled
 
+        # F4.3: B hibrit açıkken Gemini'yi öne kilitleme
         preserve_gemini_first = (
-            sohbet_tarz_chatgpt() and "gemini" in out and not gemini_disabled()
+            sohbet_tarz_chatgpt()
+            and "gemini" in out
+            and not gemini_disabled()
+            and not genel_hibrit_b_enabled()
         )
     except Exception:
         preserve_gemini_first = False
@@ -705,14 +724,25 @@ def select_brain_chain(
                 )
                 from ilim_assistant.ruzgar_umed_cevap_emri import is_ilim_heavy_question
 
-                use_ilim_cloud = ilim_rag_cloud_first_enabled() and (
-                    primary in ("bilgi", "bilim", "dilbilgisi")
-                    or is_ilim_heavy_question(message)
+                _ilim_turn = primary in ("bilgi", "bilim", "dilbilgisi") or is_ilim_heavy_question(
+                    message
                 )
+                use_ilim_cloud = bool(ilim_rag_cloud_first_enabled() and _ilim_turn)
             except Exception:
                 use_ilim_cloud = False
+                _ilim_turn = False
             if use_ilim_cloud:
                 chain_ids = build_ilim_rag_brain_chain_ids()
+            elif _ilim_turn:
+                # F2.6 İlim-A: ChatGPT-tarz genel zincir Gemini'yi öne almasın
+                try:
+                    from ilim_assistant.ruzgar_genel_faz90 import (
+                        build_ilim_local_first_chain_ids,
+                    )
+
+                    chain_ids = build_ilim_local_first_chain_ids()
+                except Exception:
+                    chain_ids = brain_chain_ids_for_emri()
             else:
                 chain_ids = brain_chain_ids_for_emri()
             chain_ids = _inject_denge70_chain(
@@ -1236,6 +1266,7 @@ def _stream_brain_chain_loop(
                 any_content = True
                 yield piece
             if got_content:
+                note_brain_used(ep.profile_id, provider=ep.provider)
                 return
         except Exception as e:
             if ep.provider == "gemini":
@@ -1251,6 +1282,7 @@ def _stream_brain_chain_loop(
 
             soft = soft_library_synth_fallback(message or user)
             if soft:
+                note_brain_used("raftan", provider="library")
                 yield soft
                 return
         except Exception:
@@ -1358,6 +1390,7 @@ def stream_chat_with_brain(
                 any_content = True
                 yield piece
             if got_content:
+                note_brain_used(ep.profile_id, provider=ep.provider)
                 return
         except Exception as e:
             if ep.provider == "gemini":
@@ -1373,6 +1406,7 @@ def stream_chat_with_brain(
 
             soft = soft_library_synth_fallback(message or user)
             if soft:
+                note_brain_used("raftan", provider="library")
                 yield soft
                 return
         except Exception:
