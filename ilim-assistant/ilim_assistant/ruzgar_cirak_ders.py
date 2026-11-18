@@ -14,7 +14,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-CIRAK_DERS_VERSION = "ruzgar-cirak-ders-v1.9-llm-handoff-2026-11-18"
+CIRAK_DERS_VERSION = "ruzgar-cirak-ders-v1.10-sozlesme-5eksi-2026-11-18"
 
 CIRAK_ATOLYE_SCOPE = "projects/cirak-atolyesi"
 
@@ -53,6 +53,7 @@ CIRAK_GOREV_TURLERI: tuple[str, ...] = (
     "yardimci_is",
     "istek_plan",
     "proje_oku",
+    "gercek_paket",
 )
 
 # Usta işi — çırağa verilmez
@@ -1703,8 +1704,136 @@ def wants_llm_cirak_handoff(message: str) -> bool:
         "implement",
         "ekle ve test",
         "def carp",
+        "filtre_satirlar",
+        "gercek_paket",
+        "gerçek paket",
+        "sozlesme",
+        "sözleşme",
     )
     return any(m in low for m in markers)
+
+
+def try_cirak_dilim_gercek_paket(
+    message: str,
+    workspace_root: str | Path | None,
+) -> dict[str, Any] | None:
+    """Atölyede gerçekçi çok-dosya paket (boot/hub açılmaz — tavan korunur).
+
+    «tam ajan» + gercek_paket → None (LLM el).
+    Aksi halde supervised iskelet + pytest + ders.
+    """
+    if not looks_like_cirak_gorev(message):
+        return None
+    low = (message or "").lower()
+    if "gercek_paket" not in low and "gerçek paket" not in low and "dilim gercek" not in low:
+        return None
+    # LLM çırağa bırak
+    if wants_llm_cirak_handoff(message) and _fence_body(message) is None:
+        return None
+
+    root = _resolve_repo_root(workspace_root)
+    pkg = "paket_is"
+    yardim = (
+        "# Created by Ümit & Gökçenur — Dilim gercek_paket\n"
+        "def normalize(s: str) -> str:\n"
+        "    return (s or '').strip().lower()\n"
+    )
+    servis = (
+        "# Created by Ümit & Gökçenur — Dilim gercek_paket\n"
+        "from paket_is.yardim import normalize\n\n"
+        "def isle(satirlar, anahtar: str) -> list[str]:\n"
+        "    key = normalize(anahtar)\n"
+        "    out = []\n"
+        "    for s in satirlar or []:\n"
+        "        if key and key in normalize(str(s)):\n"
+        "            out.append(s)\n"
+        "    return out\n"
+    )
+    init = (
+        "# Created by Ümit & Gökçenur — Dilim gercek_paket\n"
+        "from paket_is.servis import isle\n"
+        "from paket_is.yardim import normalize\n\n"
+        "__all__ = ['isle', 'normalize']\n"
+    )
+    test = (
+        "# Created by Ümit & Gökçenur — Dilim gercek_paket\n"
+        "from paket_is import isle, normalize\n\n"
+        "def test_normalize():\n"
+        "    assert normalize('  AbC ') == 'abc'\n\n"
+        "def test_isle():\n"
+        "    assert isle(['Merhaba', 'x', 'MERHABA'], 'merhaba') == ['Merhaba', 'MERHABA']\n"
+        "    assert isle([], 'a') == []\n"
+    )
+    ders = "\n".join(
+        [
+            "# Dilim — Gerçek paket (atölye içi)",
+            "",
+            f"**Sürüm:** {CIRAK_DERS_VERSION}",
+            "",
+            "## Ders",
+            "1. Gerçek iş çok dosyalıdır: paket + servis + test.",
+            "2. Boot/hub/ana kod hâlâ kapalı (tavan) — ama atölyede gerçekçi yapı kurulur.",
+            "3. Sözleşme: `normalize` + `isle` imzaları zorunlu; uydurma API yetmez.",
+            "4. Hedef pytest yeşil olmadan «bitti» yok.",
+            "",
+            "## Written",
+            f"- `{CIRAK_ATOLYE_SCOPE}/paket_is/__init__.py`",
+            f"- `{CIRAK_ATOLYE_SCOPE}/paket_is/yardim.py`",
+            f"- `{CIRAK_ATOLYE_SCOPE}/paket_is/servis.py`",
+            f"- `{CIRAK_ATOLYE_SCOPE}/tests/test_paket_is.py`",
+            "",
+        ]
+    )
+    base = root / "projects" / "cirak-atolyesi" / pkg
+    tests_dir = root / "projects" / "cirak-atolyesi" / "tests"
+    wrote = 0
+    try:
+        base.mkdir(parents=True, exist_ok=True)
+        tests_dir.mkdir(parents=True, exist_ok=True)
+        (base / "__init__.py").write_text(init, encoding="utf-8")
+        (base / "yardim.py").write_text(yardim, encoding="utf-8")
+        (base / "servis.py").write_text(servis, encoding="utf-8")
+        (tests_dir / "__init__.py").write_text("", encoding="utf-8")
+        (tests_dir / "test_paket_is.py").write_text(test, encoding="utf-8")
+        _atolye_write(root, "DERS_GERCEK_PAKET.md", ders)
+        wrote = 5
+    except OSError as exc:
+        return {
+            "ok": False,
+            "verify_ok": False,
+            "writes_ok": 0,
+            "scope_rel": CIRAK_ATOLYE_SCOPE,
+            "source": "cirak_dilim_gercek_paket",
+            "detail": f"Paket yazılamadı: {exc}",
+            "version": CIRAK_DERS_VERSION,
+        }
+
+    import subprocess
+    import sys as _sys
+
+    pr = subprocess.run(
+        [_sys.executable, "-m", "pytest", "-q", "tests/test_paket_is.py"],
+        capture_output=True,
+        text=True,
+        timeout=60,
+        cwd=str(root / "projects" / "cirak-atolyesi"),
+    )
+    pytest_ok = pr.returncode == 0
+    ok = bool(pytest_ok and wrote >= 4)
+    return {
+        "ok": ok,
+        "verify_ok": ok,
+        "writes_ok": wrote,
+        "scope_rel": CIRAK_ATOLYE_SCOPE,
+        "source": "cirak_dilim_gercek_paket",
+        "detail": (
+            f"Dilim gercek_paket {'OK' if ok else 'FAIL'} · çok dosya paket\n"
+            f"pytest={pytest_ok}\n({CIRAK_DERS_VERSION})"
+        ),
+        "version": CIRAK_DERS_VERSION,
+        "written": f"{CIRAK_ATOLYE_SCOPE}/paket_is/servis.py",
+        "pytest_ok": pytest_ok,
+    }
 
 
 def try_cirak_supervised_write(
@@ -1724,6 +1853,7 @@ def try_cirak_supervised_write(
         return None
 
     for fn in (
+        try_cirak_dilim_gercek_paket,
         try_cirak_dilim_h_yardimci,
         try_cirak_dilim_p_plan,
         try_cirak_dilim_r_proje_oku,

@@ -568,14 +568,19 @@ def test_health_has_version() -> None:
 def _run_pytest_in_scope(
     workspace_root: str | Path | None,
     scope_rel: str,
+    *,
+    extra_args: list[str] | None = None,
 ) -> ExecReport | None:
     proj = _scope_project_dir(workspace_root, scope_rel)
     if proj is None:
         return None
     from ilim_assistant.approved_executor import run_argv
 
+    argv = ["python", "-m", "pytest", "-q", "--tb=short"]
+    if extra_args:
+        argv.extend(list(extra_args))
     code, out, err = run_argv(
-        ["python", "-m", "pytest", "-q", "--tb=short"],
+        argv,
         timeout_sec=300,
         cwd=str(proj),
     )
@@ -610,13 +615,32 @@ def run_project_verify(
 
     ensure_pytest_bootstrap(workspace_root, scope_rel, goal=goal)
 
+    # Çırak: yalnız hedef test dosyaları — atölye geneli yalan yeşil olmasın.
+    _cirak_targets: list[str] = []
+    try:
+        from ilim_assistant.motorlar.programlama_faz34 import is_cirak_yazim_gorev
+        from ilim_assistant.ruzgar_cirak_sozlesme import cirak_pytest_targets
+
+        if is_cirak_yazim_gorev(goal, scope_rel):
+            _cirak_targets = cirak_pytest_targets(goal, scope_rel)
+    except Exception:
+        _cirak_targets = []
+
     if _scope_has_tests(workspace_root, scope_rel):
-        rep = _run_pytest_in_scope(workspace_root, scope_rel)
+        rep = _run_pytest_in_scope(
+            workspace_root,
+            scope_rel,
+            extra_args=_cirak_targets or None,
+        )
         if rep and (rep.ok or rep.exit_code != _PYTEST_NO_TESTS_EXIT):
             return rep
         if rep and rep.exit_code == _PYTEST_NO_TESTS_EXIT:
             ensure_pytest_bootstrap(workspace_root, scope_rel, goal="pytest")
-            rep2 = _run_pytest_in_scope(workspace_root, scope_rel)
+            rep2 = _run_pytest_in_scope(
+                workspace_root,
+                scope_rel,
+                extra_args=_cirak_targets or None,
+            )
             if rep2:
                 return rep2
 
@@ -1965,6 +1989,7 @@ def iter_code_agent_turn_events(
             _cirak_gate = False
         # Çırak: yazım yoksa tur asla yeşil sayılmaz (pytest başka testlerle yalan yeşil olmasın).
         _missing_req_early: list[str] = []
+        _missing_syms_early: list[str] = []
         if _cirak_gate and writes_ok == 0:
             ok = False
             if "cirak_no_write" not in (_faz34_violations or []):
@@ -1974,17 +1999,28 @@ def iter_code_agent_turn_events(
                 from ilim_assistant.motorlar.programlama_faz34 import (
                     cirak_missing_required_files,
                 )
+                from ilim_assistant.ruzgar_cirak_sozlesme import cirak_missing_symbols
 
                 _missing_req_early = cirak_missing_required_files(
                     workspace, task.goal, task.scope_rel
                 )
+                _missing_syms_early = cirak_missing_symbols(
+                    workspace, task.goal, task.scope_rel
+                )
             except Exception:
                 _missing_req_early = []
+                _missing_syms_early = []
             if _missing_req_early:
                 ok = False
                 if "cirak_missing_files" not in (_faz34_violations or []):
                     _faz34_violations = list(_faz34_violations or []) + [
                         "cirak_missing_files"
+                    ]
+            if _missing_syms_early:
+                ok = False
+                if "cirak_missing_api" not in (_faz34_violations or []):
+                    _faz34_violations = list(_faz34_violations or []) + [
+                        "cirak_missing_api"
                     ]
         elapsed = time.perf_counter() - t_turn
         if step_tracker is not None:
@@ -2108,6 +2144,7 @@ def iter_code_agent_turn_events(
             )
 
             _missing_req = list(_missing_req_early or [])
+            _missing_syms = list(_missing_syms_early or [])
             if task_mode_active():
                 v_ok = bool(verify.ok if verify else False) and ok
                 if _cirak_gate and writes_ok == 0:
@@ -2121,9 +2158,19 @@ def iter_code_agent_turn_events(
                             + ", ".join(_missing_req[:6])
                         ),
                     }
+                if _missing_syms:
+                    v_ok = False
+                    yield {
+                        "type": "status",
+                        "text": (
+                            "ÇIRAK SÖZLEŞME — eksik imza/API: "
+                            + ", ".join(_missing_syms[:8])
+                        ),
+                    }
                 if (
                     task_success_met(verify_ok=v_ok, writes_ok=writes_ok)
                     and not _missing_req
+                    and not _missing_syms
                 ):
                     st47 = load_agent_state(workspace)
                     strict_verify = bool(
@@ -2141,12 +2188,20 @@ def iter_code_agent_turn_events(
                     else:
                         success = True
                         break
-            elif ok and not _missing_req and not (_cirak_gate and writes_ok == 0):
+            elif (
+                ok
+                and not _missing_req
+                and not _missing_syms
+                and not (_cirak_gate and writes_ok == 0)
+            ):
                 success = True
                 break
         except Exception:
-            if ok and not (_missing_req_early or []) and not (
-                _cirak_gate and writes_ok == 0
+            if (
+                ok
+                and not (_missing_req_early or [])
+                and not (_missing_syms_early or [])
+                and not (_cirak_gate and writes_ok == 0)
             ):
                 success = True
                 break
@@ -2159,14 +2214,15 @@ def iter_code_agent_turn_events(
                     "Sonraki turda yalnızca @@write / ruzgar-tool write."
                 )
             yield {"type": "status", "text": _msg}
-        elif _missing_req_early:
+        elif _missing_req_early or _missing_syms_early:
+            bits = []
+            if _missing_req_early:
+                bits.append("dosya=" + ",".join(_missing_req_early[:3]))
+            if _missing_syms_early:
+                bits.append("api=" + ",".join(_missing_syms_early[:4]))
             yield {
                 "type": "status",
-                "text": (
-                    "ÇIRAK DOSYA KAPISI — eksik: "
-                    + ", ".join(_missing_req_early[:4])
-                    + " (pytest yeşili yetmez)"
-                ),
+                "text": "ÇIRAK SÖZLEŞME — eksik: " + " · ".join(bits),
             }
 
         if turn >= max_turns_total:
@@ -2178,21 +2234,23 @@ def iter_code_agent_turn_events(
                 "YAZIM YOK — tur geçersiz. Salt grep/read kabul edilmez.\n"
                 + (last_fail_snippet or "")
             )
-        if _missing_req_early:
+        if _missing_req_early or _missing_syms_early:
             try:
-                from ilim_assistant.motorlar.programlama_faz34 import (
-                    cirak_missing_files_nudge,
-                )
+                from ilim_assistant.ruzgar_cirak_sozlesme import cirak_sozlesme_nudge
 
                 last_fail_snippet = (
-                    cirak_missing_files_nudge(_missing_req_early, turn + 1)
+                    cirak_sozlesme_nudge(
+                        missing_files=_missing_req_early,
+                        missing_symbols=_missing_syms_early,
+                        turn=turn + 1,
+                    )
                     + "\n"
                     + (last_fail_snippet or "")
                 )
             except Exception:
                 last_fail_snippet = (
-                    "EKSİK DOSYA: "
-                    + ", ".join(_missing_req_early)
+                    "EKSİK: "
+                    + ", ".join((_missing_req_early or []) + (_missing_syms_early or []))
                     + "\n"
                     + (last_fail_snippet or "")
                 )

@@ -14,7 +14,7 @@ import unicodedata
 from pathlib import Path
 from typing import Any
 
-FAZ34_VERSION = "programlama-faz34-v1.2-cirak-dosya-kapisi-2026-11-18"
+FAZ34_VERSION = "programlama-faz34-v1.3-cirak-sozlesme-2026-11-18"
 
 _DISCOVERY_TOOLS = frozenset({"read", "grep", "symbol"})
 _WRITE_TOOLS = frozenset({"write"})
@@ -366,10 +366,15 @@ def build_tool_first_nudge(violations: list[str], turn: int) -> str:
     if not violations:
         return ""
     lines = [f"[Faz 34 — araç sırası — tur {turn}]"]
-    if "cirak_no_write" in violations or "cirak_missing_files" in violations:
+    if (
+        "cirak_no_write" in violations
+        or "cirak_missing_files" in violations
+        or "cirak_missing_api" in violations
+    ):
         lines.append(
-            "ÇIRAK YAZIM KAPISI: Bu tur geçersiz — hedef dosya yazılmadı / eksik.\n"
-            "Salt `grep`/`read` YASAK. İlk çıktın `@@write` veya ruzgar-tool write olsun.\n"
+            "ÇIRAK YAZIM/SÖZLEŞME KAPISI: Bu tur geçersiz.\n"
+            "Salt `grep`/`read` YASAK. Hedefteki dosya + doğru `def` zorunlu "
+            "(kendi uydurduğun API yetmez).\n"
             "Örnek:\n"
             "@@write projects/cirak-atolyesi/carp_is.py\n"
             "```python\ndef carp(a, b):\n    return int(a) * int(b)\n```\n"

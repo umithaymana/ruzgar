@@ -58,13 +58,23 @@ def should_mid_turn_followup(
     llm_body: str,
     *,
     tool_block: str = "",
+    goal: str = "",
+    scope_rel: str = "",
 ) -> bool:
     """Keşif yapıldı ama yazım yok → aynı turda takip LLM."""
     if not mid_turn_enabled() or max_followups_per_turn() < 1:
         return False
-    if not tool_results:
-        return False
     if _body_has_write(llm_body) or _tool_results_have_write(tool_results):
+        return False
+    # Çırak: yazım yoksa aynı turda yazımı zorla (grep döngüsünü kır).
+    try:
+        from ilim_assistant.motorlar.programlama_faz34 import is_cirak_yazim_gorev
+
+        if is_cirak_yazim_gorev(goal, scope_rel):
+            return True
+    except Exception:
+        pass
+    if not tool_results:
         return False
     useful = [
         r
@@ -140,10 +150,40 @@ def run_mid_turn_followup(
     (llm_body, round_body, tool_results, extra_profiles, did_followup)
     """
     block = (tool_block or "").strip()
-    if not should_mid_turn_followup(tool_results, llm_body, tool_block=block):
+    if not should_mid_turn_followup(
+        tool_results,
+        llm_body,
+        tool_block=block,
+        goal=goal,
+        scope_rel=scope_rel,
+    ):
         return llm_body, round_body, tool_results, [], False
 
+    # Sözleşme nudge: eksik imza varsa mid-turn metnine ekle
     mid_user = build_mid_turn_user_message(block, goal=goal, turn=turn)
+    try:
+        from ilim_assistant.ruzgar_cirak_sozlesme import (
+            cirak_missing_symbols,
+            cirak_sozlesme_nudge,
+        )
+        from ilim_assistant.motorlar.programlama_faz34 import (
+            cirak_missing_required_files,
+            is_cirak_yazim_gorev,
+        )
+
+        if is_cirak_yazim_gorev(goal, scope_rel):
+            mf = cirak_missing_required_files(workspace_root, goal, scope_rel)
+            ms = cirak_missing_symbols(workspace_root, goal, scope_rel)
+            if mf or ms:
+                mid_user = (
+                    cirak_sozlesme_nudge(
+                        missing_files=mf, missing_symbols=ms, turn=turn
+                    )
+                    + "\n\n"
+                    + mid_user
+                )
+    except Exception:
+        pass
     mid_prior = list(active_prior) + [
         {"role": "assistant", "content": (llm_body or "").strip()},
         {"role": "user", "content": mid_user},
