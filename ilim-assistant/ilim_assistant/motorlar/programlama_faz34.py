@@ -14,7 +14,7 @@ import unicodedata
 from pathlib import Path
 from typing import Any
 
-FAZ34_VERSION = "programlama-faz34-v1-2026-05-25"
+FAZ34_VERSION = "programlama-faz34-v1.2-cirak-dosya-kapisi-2026-11-18"
 
 _DISCOVERY_TOOLS = frozenset({"read", "grep", "symbol"})
 _WRITE_TOOLS = frozenset({"write"})
@@ -46,6 +46,99 @@ def tool_first_enabled() -> bool:
 def _ascii_fold(text: str) -> str:
     t = unicodedata.normalize("NFKD", text or "")
     return "".join(c for c in t if not unicodedata.combining(c)).lower()
+
+
+def is_cirak_yazim_gorev(goal: str = "", scope_rel: str = "") -> bool:
+    """Çırak atölyesi: salt keşif turu yasak — yazım önce."""
+    scope = (scope_rel or "").replace("\\", "/").lower()
+    if "cirak-atolyesi" in scope:
+        return True
+    low = _ascii_fold(goal or "")
+    g_raw = (goal or "").lower()
+    return "cirak-atolyesi" in low or (
+        "cirak" in low and ("atolye" in low or "atölye" in g_raw)
+    )
+
+
+def cirak_goal_required_paths(goal: str, scope_rel: str = "") -> list[str]:
+    """Hedefte yazılması beklenen .py yolları (görev .md okuma dosyaları hariç)."""
+    text = (goal or "").replace("\\", "/")
+    found: list[str] = []
+    for m in re.finditer(
+        r"(?:projects/[\w.\-/]+\.py|tests/[\w.\-/]+\.py)",
+        text,
+        flags=re.I,
+    ):
+        rel = m.group(0).replace("\\", "/")
+        if not rel.startswith("projects/") and scope_rel:
+            scope = scope_rel.replace("\\", "/").rstrip("/")
+            rel = f"{scope}/{rel.lstrip('/')}"
+        if rel not in found:
+            found.append(rel)
+    # çıplak dosya adları: carp_is.py, test_carp.py
+    scope = (scope_rel or "projects/cirak-atolyesi").replace("\\", "/").rstrip("/")
+    for m in re.finditer(r"\b([\w\-]+\.py)\b", text, flags=re.I):
+        name = m.group(1)
+        low = name.lower()
+        # Görev/brief md değil; sahte ana dosya adlarını ele.
+        if low in {"main.py", "conftest.py", "__init__.py"}:
+            continue
+        if name.startswith("test_"):
+            rel = f"{scope}/tests/{name}"
+        else:
+            rel = f"{scope}/{name}"
+        if rel not in found and "projects/" in rel:
+            found.append(rel)
+    return found
+
+
+def cirak_missing_files_nudge(missing: list[str], turn: int = 1) -> str:
+    if not missing:
+        return ""
+    lines = [
+        f"[ÇIRAK DOSYA KAPISI — tur {turn}]",
+        "Pytest yeşil olsa bile eksik hedef dosya var — görev BİTMEDİ.",
+        "Şimdi yalnızca şu dosyaları @@write ile yaz:",
+    ]
+    for rel in missing[:6]:
+        lines.append(f"@@write {rel}")
+        if rel.endswith("test_carp.py") or "/tests/test_" in rel.replace("\\", "/"):
+            lines.append(
+                "```python\nfrom carp_is import carp\n\n"
+                "def test_carp():\n"
+                "    assert carp(3, 4) == 12\n"
+                "    assert carp(-2, 5) == -10\n```"
+            )
+        else:
+            lines.append("```python\n# hedef dosya içeriği\n```")
+    return "\n".join(lines)
+
+
+def cirak_missing_required_files(
+    workspace_root: str | Path | None,
+    goal: str,
+    scope_rel: str = "",
+) -> list[str]:
+    """Diskte olmayan zorunlu yollar — yoksa görev bitmiş sayılmaz."""
+    if not is_cirak_yazim_gorev(goal, scope_rel):
+        return []
+    paths = cirak_goal_required_paths(goal, scope_rel)
+    if not paths:
+        return []
+    try:
+        from ilim_assistant.motorlar.programlama_motoru import repo_root
+
+        root = repo_root(workspace_root)
+    except Exception:
+        root = Path(workspace_root) if workspace_root else None
+    if root is None:
+        return paths
+    missing: list[str] = []
+    for rel in paths:
+        p = root / rel.replace("/", os.sep)
+        if not p.is_file():
+            missing.append(rel)
+    return missing
 
 
 def goal_wants_verify(goal: str) -> bool:
@@ -82,6 +175,7 @@ def compliance_violations(
     *,
     turn: int,
     goal: str = "",
+    scope_rel: str = "",
 ) -> list[str]:
     """İhlal kodları — bir sonraki tur uyarısı için."""
     if not tool_first_enabled():
@@ -91,8 +185,12 @@ def compliance_violations(
     wrote = executed_write_in_results(results)
     discovered = bool(ids & _DISCOVERY_TOOLS)
     verified = bool(ids & _VERIFY_TOOLS)
+    cirak = is_cirak_yazim_gorev(goal, scope_rel)
 
-    if turn <= 2 and wrote and not discovered:
+    # Çırak: yazmadan keşif = asıl ihlal (grep döngüsünü kırmaya).
+    if cirak and not wrote:
+        violations.append("cirak_no_write")
+    elif turn <= 2 and wrote and not discovered and not cirak:
         violations.append("write_without_discovery")
     if wrote and goal_wants_verify(goal) and not verified:
         violations.append("write_without_verify")
@@ -223,6 +321,7 @@ def apply_turn_tool_first(
 
     ids = tool_ids_from_results(combined)
     executed_write = executed_write_in_results(combined)
+    cirak = is_cirak_yazim_gorev(goal, scope_rel)
     llm_planned_write = False
     try:
         from ilim_assistant.motorlar.programlama_faz20 import extract_tool_calls
@@ -235,7 +334,13 @@ def apply_turn_tool_first(
     except Exception:
         pass
 
-    if turn <= 2 and (executed_write or llm_planned_write) and not (ids & _DISCOVERY_TOOLS):
+    # Çırak yazım görevlerinde otomatik keşif EKLEME — grep döngüsünü beslemesin.
+    if (
+        (not cirak)
+        and turn <= 2
+        and (executed_write or llm_planned_write)
+        and not (ids & _DISCOVERY_TOOLS)
+    ):
         auto_specs.extend(
             discovery_tool_specs(workspace_root, scope_rel, goal=goal)
         )
@@ -251,7 +356,9 @@ def apply_turn_tool_first(
         if auto_block:
             extra_blocks.append(auto_block)
 
-    violations = compliance_violations(combined, turn=turn, goal=goal)
+    violations = compliance_violations(
+        combined, turn=turn, goal=goal, scope_rel=scope_rel
+    )
     return combined, "\n\n".join(extra_blocks), violations
 
 
@@ -259,6 +366,18 @@ def build_tool_first_nudge(violations: list[str], turn: int) -> str:
     if not violations:
         return ""
     lines = [f"[Faz 34 — araç sırası — tur {turn}]"]
+    if "cirak_no_write" in violations or "cirak_missing_files" in violations:
+        lines.append(
+            "ÇIRAK YAZIM KAPISI: Bu tur geçersiz — hedef dosya yazılmadı / eksik.\n"
+            "Salt `grep`/`read` YASAK. İlk çıktın `@@write` veya ruzgar-tool write olsun.\n"
+            "Örnek:\n"
+            "@@write projects/cirak-atolyesi/carp_is.py\n"
+            "```python\ndef carp(a, b):\n    return int(a) * int(b)\n```\n"
+            "@@write projects/cirak-atolyesi/tests/test_carp.py\n"
+            "```python\nfrom carp_is import carp\n\ndef test_carp():\n"
+            "    assert carp(3, 4) == 12\n```"
+        )
+        return "\n".join(lines)
     if "write_without_discovery" in violations:
         lines.append(
             "Önce `read` / `grep` / `symbol` ile keşif yap, sonra `write`."
@@ -273,9 +392,20 @@ def build_tool_first_nudge(violations: list[str], turn: int) -> str:
     return "\n".join(lines)
 
 
-def augment_turn_user_message(base: str, *, turn: int, goal: str = "") -> str:
+def augment_turn_user_message(
+    base: str, *, turn: int, goal: str = "", scope_rel: str = ""
+) -> str:
     if not tool_first_enabled():
         return base
+    if is_cirak_yazim_gorev(goal, scope_rel):
+        rules = (
+            "\n\n[Faz 34 — ÇIRAK YAZIM ÖNCE]\n"
+            "Sıra: 1) doğrudan @@write / ruzgar-tool write  2) verify.\n"
+            "Salt grep/read turu YASAK — en az bir dosya diske yazılmalı.\n"
+        )
+        if goal_wants_verify(goal):
+            rules += "Hedefte test var — yazımdan sonra verify.\n"
+        return base.rstrip() + rules
     e2_multi = False
     try:
         from ilim_assistant.motorlar.programlama_faz56 import looks_like_multi_file_task

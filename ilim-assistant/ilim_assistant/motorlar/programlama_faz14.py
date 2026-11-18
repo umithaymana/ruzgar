@@ -28,9 +28,10 @@ FAZ14_VERSION = "programlama-faz14-v3-2026-05-25"
 
 _PYTEST_NO_TESTS_EXIT = 5
 
+# DOTALL: çok satırlı çırak/rapor görevlerinde hedef ilk satırda kesilmesin
 _TASK_PREFIX_RE = re.compile(
-    r"^\s*(?:görev|gorev)\s*:\s*(.+)$",
-    re.I | re.M,
+    r"^\s*(?:görev|gorev)\s*:\s*(.+)",
+    re.I | re.S,
 )
 _TASK_INLINE_RE = re.compile(
     r"^\s*(?:görev|gorev)\s+([\w.\-]+)\s+(.+)$",
@@ -159,17 +160,30 @@ def _parse_code_agent_task_body(raw: str) -> CodeAgentTask | None:
     m = _TASK_PREFIX_RE.search(text)
     if m:
         rest = m.group(1).strip()
-        parts = rest.split(None, 1)
+        # Proje slug yalnız ilk satırın ilk token'ı; hedef = kalan tüm satırlar
+        first_line, _, rest_after_nl = rest.partition("\n")
+        parts = first_line.split(None, 1)
         if not parts:
             return None
         first = parts[0].strip()
-        goal = parts[1].strip() if len(parts) > 1 else rest
+        goal_head = parts[1].strip() if len(parts) > 1 else ""
+        goal_tail = rest_after_nl.strip()
+        goal = f"{goal_head}\n{goal_tail}".strip() if goal_tail else goal_head
+        if not goal:
+            goal = rest
         if first.startswith(f"{_projects_base()}/"):
             scope = _norm_rel(first)
             slug = scope.split("/")[-1]
         else:
             scope = _scope_from_slug(first)
             slug = first
+        # Çırak kısayolu: "görev: cirak …" → projects/cirak-atolyesi (yanlış projects/cirak olmasın)
+        if slug.lower() in ("cirak", "çırak") or scope.lower().rstrip("/") in (
+            f"{_projects_base()}/cirak",
+            "projects/cirak",
+        ):
+            scope = f"{_projects_base()}/cirak-atolyesi"
+            slug = "cirak-atolyesi"
         if scope and goal:
             task = CodeAgentTask(scope_rel=scope, goal=goal, project_slug=slug)
             try:
@@ -365,25 +379,53 @@ def build_agent_turn_user_message(
 ) -> str:
     e2_nudge = ""
     e2_multi = False
+    cirak_yazim = False
     try:
         from ilim_assistant.motorlar.programlama_faz103_e2 import e2_write_template_nudge
+        from ilim_assistant.motorlar.programlama_faz34 import is_cirak_yazim_gorev
         from ilim_assistant.motorlar.programlama_faz56 import looks_like_multi_file_task
         from ilim_assistant.motorlar.programlama_faz85 import goal_wants_agent_path
 
         e2_nudge = e2_write_template_nudge(task.scope_rel, task.goal) or ""
+        cirak_yazim = is_cirak_yazim_gorev(task.goal, task.scope_rel)
         e2_multi = bool(
-            looks_like_multi_file_task(task.goal) or goal_wants_agent_path(task.goal)
+            cirak_yazim
+            or looks_like_multi_file_task(task.goal)
+            or goal_wants_agent_path(task.goal)
         )
     except Exception:
         e2_nudge = ""
         e2_multi = False
+        cirak_yazim = False
+    bilgi_block = ""
+    try:
+        from ilim_assistant.ruzgar_cirak_bilgi_kopru import build_cirak_bilgi_context
+
+        _bk = build_cirak_bilgi_context(
+            task.goal,
+            scope_rel=task.scope_rel,
+            message=task.goal,
+        )
+        if not _bk.get("skipped") and _bk.get("block"):
+            bilgi_block = "\n" + str(_bk["block"]) + "\n"
+    except Exception:
+        bilgi_block = ""
+
     if turn <= 1:
         if e2_multi:
             # Saf yazım dilimi: plan/read-first küçük modelleri 0 write'a iter.
+            # Çırak atölyesi de buraya zorlanır (grep döngüsü kırıcı).
+            _cirak_line = (
+                "ÇIRAK: salt grep/read YASAK — ilk çıktın yazım olsun.\n"
+                if cirak_yazim
+                else ""
+            )
             body = (
                 f"[OTONOM GÖREV — Faz 14 — tur {turn}/{max_turns} — YAZIM ÖNCE]\n"
                 f"Proje: `{task.scope_rel}`\n"
                 f"Hedef: {task.goal}\n\n"
+                f"{bilgi_block}"
+                f"{_cirak_line}"
                 "İLK ÇIKTI: plan yazma, salt okuma yapma.\n"
                 "Doğrudan `@@patch yol` + ```search-replace``` (veya `@@write`) üret.\n"
                 "Sonra pytest/verify. Gereksiz refaktör yok.\n"
@@ -393,12 +435,13 @@ def build_agent_turn_user_message(
                 f"[OTONOM GÖREV — Faz 14 — tur {turn}/{max_turns}]\n"
                 f"Proje: `{task.scope_rel}`\n"
                 f"Hedef: {task.goal}\n\n"
+                f"{bilgi_block}"
                 "Adımlar:\n"
-                "1) Kısa plan (madde)\n"
+                "1) Kısa plan (madde) — bilgi köprüsü kaynaklarını kullan\n"
                 "2) Gerekli dosyaları `@@read` ile oku (veya zaten bağlamda)\n"
                 "3) `@@write yol` + kod bloğu ile patch\n"
                 "4) Test isteniyorsa `tests/test_health.py` ve health'te `version` alanı\n"
-                "5) Gereksiz refaktör yok\n"
+                "5) Gereksiz refaktör yok; kaynak yolu uydurma\n"
             )
         return body + e2_nudge
     # D2: E2 düzeltme turunda da salt okuma yasak — önce patch.
@@ -964,6 +1007,19 @@ def iter_code_agent_turn_events(
         return
 
     workspace = req.workspace_root
+    # Çırak / açık görev: oturumdaki yapışkan eski proje (live-bat vb.) ezmesin
+    try:
+        from ilim_assistant.motorlar.programlama_faz5 import load_session, save_session
+
+        _sess = load_session(workspace)
+        _proj = dict(_sess.get("project") or {})
+        _proj["name"] = task.project_slug
+        _proj["goal"] = (task.goal or "")[:400]
+        _sess["project"] = _proj
+        _sess["active_project"] = task.project_slug
+        save_session(workspace, _sess)
+    except Exception:
+        pass
     try:
         from ilim_assistant.motorlar.programlama_faz85 import iter_fast_path_early
 
@@ -998,6 +1054,15 @@ def iter_code_agent_turn_events(
         max_turns = code_agent_max_turns_effective()
     except Exception:
         max_turns = code_agent_max_turns()
+    # Çırak atölyesi: biraz daha tur (timeout riskini azalt; ana kod değil)
+    try:
+        from ilim_assistant.ruzgar_cirak_ders import looks_like_cirak_gorev
+
+        _scope_l = str(task.scope_rel or "").replace("\\", "/").lower()
+        if "cirak-atolyesi" in _scope_l or looks_like_cirak_gorev(message):
+            max_turns = max(int(max_turns), min(int(max_turns) + 4, 16))
+    except Exception:
+        pass
     try:
         from ilim_assistant.motorlar.programlama_faz55 import faz55b_bonus_turn_count
 
@@ -1891,6 +1956,36 @@ def iter_code_agent_turn_events(
 
         writes_ok = len([w for w in summ.writes if w.ok])
         ok = verify.ok if verify else bool(writes_ok)
+        _cirak_gate = False
+        try:
+            from ilim_assistant.motorlar.programlama_faz34 import is_cirak_yazim_gorev
+
+            _cirak_gate = is_cirak_yazim_gorev(task.goal, task.scope_rel)
+        except Exception:
+            _cirak_gate = False
+        # Çırak: yazım yoksa tur asla yeşil sayılmaz (pytest başka testlerle yalan yeşil olmasın).
+        _missing_req_early: list[str] = []
+        if _cirak_gate and writes_ok == 0:
+            ok = False
+            if "cirak_no_write" not in (_faz34_violations or []):
+                _faz34_violations = list(_faz34_violations or []) + ["cirak_no_write"]
+        if _cirak_gate:
+            try:
+                from ilim_assistant.motorlar.programlama_faz34 import (
+                    cirak_missing_required_files,
+                )
+
+                _missing_req_early = cirak_missing_required_files(
+                    workspace, task.goal, task.scope_rel
+                )
+            except Exception:
+                _missing_req_early = []
+            if _missing_req_early:
+                ok = False
+                if "cirak_missing_files" not in (_faz34_violations or []):
+                    _faz34_violations = list(_faz34_violations or []) + [
+                        "cirak_missing_files"
+                    ]
         elapsed = time.perf_counter() - t_turn
         if step_tracker is not None:
             write_paths = [w.path for w in summ.writes if w.ok and w.path]
@@ -1918,6 +2013,9 @@ def iter_code_agent_turn_events(
 
                 rec_fn = record_turn_metrics  # type: ignore[assignment]
 
+            _v_ok_rec = bool(verify.ok if verify else False)
+            if _cirak_gate and writes_ok == 0:
+                _v_ok_rec = False
             rec_fn(
                 workspace,
                 scope_rel=task.scope_rel,
@@ -1925,7 +2023,7 @@ def iter_code_agent_turn_events(
                 tool_results=_tool_res,
                 violations=_faz34_violations,
                 mid_turn_followup=_faz35_followup,
-                verify_ok=bool(verify.ok if verify else False),
+                verify_ok=_v_ok_rec,
                 writes_ok=writes_ok,
             )
         except Exception:
@@ -2009,9 +2107,24 @@ def iter_code_agent_turn_events(
                 task_success_met,
             )
 
+            _missing_req = list(_missing_req_early or [])
             if task_mode_active():
-                v_ok = bool(verify.ok if verify else False)
-                if task_success_met(verify_ok=v_ok, writes_ok=writes_ok):
+                v_ok = bool(verify.ok if verify else False) and ok
+                if _cirak_gate and writes_ok == 0:
+                    v_ok = False
+                if _missing_req:
+                    v_ok = False
+                    yield {
+                        "type": "status",
+                        "text": (
+                            "ÇIRAK DOSYA KAPISI — hedef dosyalar eksik: "
+                            + ", ".join(_missing_req[:6])
+                        ),
+                    }
+                if (
+                    task_success_met(verify_ok=v_ok, writes_ok=writes_ok)
+                    and not _missing_req
+                ):
                     st47 = load_agent_state(workspace)
                     strict_verify = bool(
                         st47.get("proje_uret")
@@ -2028,24 +2141,61 @@ def iter_code_agent_turn_events(
                     else:
                         success = True
                         break
-            elif ok:
+            elif ok and not _missing_req and not (_cirak_gate and writes_ok == 0):
                 success = True
                 break
         except Exception:
-            if ok:
+            if ok and not (_missing_req_early or []) and not (
+                _cirak_gate and writes_ok == 0
+            ):
                 success = True
                 break
 
         if writes_ok == 0:
+            _msg = "Tur atlandı — model @@write yazmadı; tekrar deneniyor…"
+            if _cirak_gate:
+                _msg = (
+                    "ÇIRAK YAZIM KAPISI — bu tur geçersiz (write=0). "
+                    "Sonraki turda yalnızca @@write / ruzgar-tool write."
+                )
+            yield {"type": "status", "text": _msg}
+        elif _missing_req_early:
             yield {
                 "type": "status",
-                "text": "Tur atlandı — model @@write yazmadı; tekrar deneniyor…",
+                "text": (
+                    "ÇIRAK DOSYA KAPISI — eksik: "
+                    + ", ".join(_missing_req_early[:4])
+                    + " (pytest yeşili yetmez)"
+                ),
             }
 
         if turn >= max_turns_total:
             break
 
         last_fail_snippet = (verify.output if verify else "") or "Doğrulama başarısız."
+        if _cirak_gate and writes_ok == 0:
+            last_fail_snippet = (
+                "YAZIM YOK — tur geçersiz. Salt grep/read kabul edilmez.\n"
+                + (last_fail_snippet or "")
+            )
+        if _missing_req_early:
+            try:
+                from ilim_assistant.motorlar.programlama_faz34 import (
+                    cirak_missing_files_nudge,
+                )
+
+                last_fail_snippet = (
+                    cirak_missing_files_nudge(_missing_req_early, turn + 1)
+                    + "\n"
+                    + (last_fail_snippet or "")
+                )
+            except Exception:
+                last_fail_snippet = (
+                    "EKSİK DOSYA: "
+                    + ", ".join(_missing_req_early)
+                    + "\n"
+                    + (last_fail_snippet or "")
+                )
         snippet = last_fail_snippet
         fail_msg = build_agent_turn_user_message(
             task,
@@ -2060,7 +2210,10 @@ def iter_code_agent_turn_events(
             )
 
             fail_msg = augment_turn_user_message(
-                fail_msg, turn=turn + 1, goal=task.goal
+                fail_msg,
+                turn=turn + 1,
+                goal=task.goal,
+                scope_rel=task.scope_rel,
             )
             nudge = build_tool_first_nudge(_faz34_violations, turn + 1)
             if nudge:

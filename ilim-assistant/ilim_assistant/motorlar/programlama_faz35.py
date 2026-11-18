@@ -84,13 +84,29 @@ def build_mid_turn_user_message(
     goal: str = "",
     turn: int = 1,
 ) -> str:
-    return (
+    cirak = False
+    try:
+        from ilim_assistant.motorlar.programlama_faz34 import is_cirak_yazim_gorev
+
+        cirak = is_cirak_yazim_gorev(goal or "")
+    except Exception:
+        cirak = False
+    head = (
         f"[Faz 35 — tur-içi takip — tur {turn}]\n"
         "Araç sonuçları hazır. Şimdi hedefe uygun `@@write` veya "
         "`ruzgar-tool` write ile dosyayı güncelle.\n"
         "Gereksiz tekrar okuma yok; doğrudan patch yaz.\n\n"
-        f"{tool_block.strip()}\n\n"
-        f"Hedef: {(goal or '').strip()}\n"
+    )
+    if cirak:
+        head = (
+            f"[Faz 35 — ÇIRAK YAZIM KAPISI — tur {turn}]\n"
+            "Keşif bitti. Salt grep/read YASAK.\n"
+            "Şimdi ZORUNLU: `@@write` veya ruzgar-tool write — dosyayı diske yaz.\n\n"
+        )
+    return (
+        head
+        + f"{tool_block.strip()}\n\n"
+        + f"Hedef: {(goal or '').strip()}\n"
     )
 
 
