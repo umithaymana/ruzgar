@@ -1,3 +1,1 @@
-﻿# Cirak atolyesi
-Dar gorevler icin. Pazar API yok.
-
+# cirak is 4

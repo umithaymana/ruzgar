@@ -14,7 +14,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-CIRAK_DERS_VERSION = "ruzgar-cirak-ders-v1.10-sozlesme-5eksi-2026-11-18"
+CIRAK_DERS_VERSION = "ruzgar-cirak-ders-v1.12-her2-tavan-2026-11-18"
 
 CIRAK_ATOLYE_SCOPE = "projects/cirak-atolyesi"
 
@@ -67,10 +67,22 @@ USTA_KIRILGAN: tuple[str, ...] = (
 )
 
 # Tavan — Mimar onayı olmadan yükselmez
-# 2026-11-18 Mimar «yap»: +1 basamak (genel saha hâlâ kapalı)
-TAVAN_ONCEKI = "atolye_kapili"
-TAVAN_SU_AN = "atolye_hibrit_ajan_ok"
-MIMAR_ONAY_TAVAN = "mimar-onay-2026-11-18-yap"
+# Merdiven: projects mini → … (boot/hub/ana_kod/genel_saha HÂLÂ yasak)
+TAVAN_MERDIVEN: tuple[str, ...] = (
+    "atolye_kapili",
+    "atolye_hibrit_ajan_ok",
+    "atolye_komsu_proje_ok",
+    "projects_mini_serbest_ok",  # herhangi projects/<slug> mini
+    "projects_cok_modul_ok",
+    "projects_cli_mini_ok",
+    "projects_iki_klasor_ok",
+    "projects_entegrasyon_ok",
+    "projects_mini_urun_ok",
+)
+# Çalışma anı: load_persist / raise_tavan_one_step günceller
+TAVAN_ONCEKI = "atolye_hibrit_ajan_ok"
+TAVAN_SU_AN = "atolye_komsu_proje_ok"
+MIMAR_ONAY_TAVAN = "mimar-onay-2026-11-18-10is-her2-tavan"
 TAVAN_USTU_YASAK: tuple[str, ...] = (
     "genel_saha",
     "serbest_ajan_yuzde90",
@@ -79,8 +91,16 @@ TAVAN_USTU_YASAK: tuple[str, ...] = (
 )
 TAVAN_IZINLI_SIMDI: tuple[str, ...] = (
     "atolye_supervised",
-    "atolye_hibrit_g",  # written+disk+smoke
-    "atolye_tam_ajan_dar",  # yalnız cirak-atolyesi; G kapısı geçerli
+    "atolye_hibrit_g",
+    "atolye_tam_ajan_dar",
+    "atolye_komsu_proje_ok",
+    "atolye_hibrit_ajan_ok",
+    "projects_mini_serbest_ok",
+    "projects_cok_modul_ok",
+    "projects_cli_mini_ok",
+    "projects_iki_klasor_ok",
+    "projects_entegrasyon_ok",
+    "projects_mini_urun_ok",
 )
 
 DERS_ZORUNLU_ALANLAR: tuple[str, ...] = (
@@ -1486,6 +1506,87 @@ def try_cirak_dilim_0b_vizyon(
     }
 
 
+def _tavan_state_path(root: Path) -> Path:
+    return root / ".ruzgar" / "cirak_tavan_state.json"
+
+
+def load_persist_tavan(workspace_root: str | Path | None) -> None:
+    """Diskteki tavan durumunu modüle yükle."""
+    global TAVAN_SU_AN, TAVAN_ONCEKI, MIMAR_ONAY_TAVAN
+    try:
+        root = _resolve_repo_root(workspace_root)
+        p = _tavan_state_path(root)
+        if not p.is_file():
+            return
+        import json
+
+        data = json.loads(p.read_text(encoding="utf-8"))
+        cur = str(data.get("tavan") or "").strip()
+        prev = str(data.get("onceki") or "").strip()
+        onay = str(data.get("mimar_onay") or "").strip()
+        if cur in TAVAN_MERDIVEN:
+            TAVAN_SU_AN = cur
+        if prev:
+            TAVAN_ONCEKI = prev
+        if onay:
+            MIMAR_ONAY_TAVAN = onay
+    except Exception:
+        return
+
+
+def raise_tavan_one_step(
+    workspace_root: str | Path | None,
+    *,
+    mimar_onay: str,
+) -> dict[str, Any]:
+    """Merdivende +1. Genel saha / boot / hub açmaz."""
+    global TAVAN_SU_AN, TAVAN_ONCEKI, MIMAR_ONAY_TAVAN
+    load_persist_tavan(workspace_root)
+    root = _resolve_repo_root(workspace_root)
+    cur = TAVAN_SU_AN
+    try:
+        idx = list(TAVAN_MERDIVEN).index(cur)
+    except ValueError:
+        idx = 2
+    if idx >= len(TAVAN_MERDIVEN) - 1:
+        return {
+            "ok": False,
+            "onceki": cur,
+            "simdi": cur,
+            "detail": "Merdiven sonu — genel_saha/boot/hub ayrı Mimar emri ister",
+        }
+    nxt = TAVAN_MERDIVEN[idx + 1]
+    TAVAN_ONCEKI = cur
+    TAVAN_SU_AN = nxt
+    MIMAR_ONAY_TAVAN = mimar_onay or MIMAR_ONAY_TAVAN
+    try:
+        import json
+
+        sp = _tavan_state_path(root)
+        sp.parent.mkdir(parents=True, exist_ok=True)
+        sp.write_text(
+            json.dumps(
+                {
+                    "tavan": TAVAN_SU_AN,
+                    "onceki": TAVAN_ONCEKI,
+                    "mimar_onay": MIMAR_ONAY_TAVAN,
+                    "version": CIRAK_DERS_VERSION,
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+    except Exception:
+        pass
+    return {
+        "ok": True,
+        "onceki": cur,
+        "simdi": nxt,
+        "detail": f"{cur} → {nxt}",
+    }
+
+
 def try_cirak_tavan_yukselt(
     message: str,
     workspace_root: str | Path | None,
@@ -1527,7 +1628,7 @@ def try_cirak_tavan_yukselt(
             "scope_rel": CIRAK_ATOLYE_SCOPE,
             "source": "cirak_tavan_yukselt",
             "detail": (
-                "Tavan +1 OK ama genel saha/%90 RED — ayrı Mimar emri ister\n"
+                "Tavan +1 RED — genel saha/%90 ayrı Mimar emri ister\n"
                 f"tavan_kalan={TAVAN_SU_AN}\n"
                 f"({CIRAK_DERS_VERSION})"
             ),
@@ -1537,33 +1638,37 @@ def try_cirak_tavan_yukselt(
             "tavan": TAVAN_SU_AN,
         }
 
+    step = raise_tavan_one_step(
+        workspace_root,
+        mimar_onay=MIMAR_ONAY_TAVAN,
+    )
     card = "\n".join(
         [
             "# Tavan yükseltme mühürü",
             "",
             f"**Sürüm:** {CIRAK_DERS_VERSION}",
-            f"**Mimar onay:** `{MIMAR_ONAY_TAVAN}` (sohbet: «yap»)",
-            f"**Önceki:** `{TAVAN_ONCEKI}`",
-            f"**Şimdi:** `{TAVAN_SU_AN}`",
+            f"**Mimar onay:** `{MIMAR_ONAY_TAVAN}`",
+            f"**Önceki:** `{step.get('onceki')}`",
+            f"**Şimdi:** `{step.get('simdi')}`",
             "",
-            "## Açılan",
+            "## Açılan (kümülatif izinler)",
             *[f"- `{x}`" for x in TAVAN_IZINLI_SIMDI],
             "",
             "## Hâlâ kapalı",
             *[f"- `{x}`" for x in TAVAN_USTU_YASAK],
             "",
             "## Hibrit kural (G) duruyor",
-            "Yeşil = written + disk + smoke. İddia kanıtsızsa kırmızı.",
+            "Yeşil = written + disk + smoke/pytest. Sözleşme imzası zorunlu.",
             "",
         ]
     )
-    p, w = _atolye_write(root, "TAVAN_YUKSELTME_2026-11-18.md", card)
-    # Ders kartını da yeni tavana göre yenile
+    seal_name = f"TAVAN_YUKSELTME_{step.get('simdi')}.md"
+    p, w = _atolye_write(root, seal_name, card)
     try_cirak_dilim_t_tavan(
         "görev: projects/cirak-atolyesi cirak tavan_ders — Dilim T tavan ders · tam ajan",
         workspace_root,
     )
-    ok = bool(w and p.is_file() and TAVAN_SU_AN == "atolye_hibrit_ajan_ok")
+    ok = bool(w and p.is_file() and step.get("ok"))
     return {
         "ok": ok,
         "verify_ok": ok,
@@ -1571,13 +1676,13 @@ def try_cirak_tavan_yukselt(
         "scope_rel": CIRAK_ATOLYE_SCOPE,
         "source": "cirak_tavan_yukselt",
         "detail": (
-            f"Tavan +1 {'OK' if ok else 'FAIL'} · `{TAVAN_ONCEKI}` → `{TAVAN_SU_AN}`\n"
+            f"Tavan +1 {'OK' if ok else 'FAIL'} · `{step.get('onceki')}` → `{step.get('simdi')}`\n"
             f"mimar={MIMAR_ONAY_TAVAN}\n"
-            f"genel_saha=KAPALI\n"
+            f"genel_saha=KAPALI · boot/hub=KAPALI\n"
             f"({CIRAK_DERS_VERSION})"
         ),
         "version": CIRAK_DERS_VERSION,
-        "written": f"{CIRAK_ATOLYE_SCOPE}/TAVAN_YUKSELTME_2026-11-18.md",
+        "written": f"{CIRAK_ATOLYE_SCOPE}/{seal_name}",
         "tavan": TAVAN_SU_AN,
         "tavan_onceki": TAVAN_ONCEKI,
     }

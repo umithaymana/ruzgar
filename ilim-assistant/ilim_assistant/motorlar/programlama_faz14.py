@@ -1412,7 +1412,19 @@ def iter_code_agent_turn_events(
             from ilim_assistant.motorlar.programlama_faz34 import augment_turn_user_message
 
             turn_user = augment_turn_user_message(
-                turn_user, turn=turn, goal=task.goal
+                turn_user, turn=turn, goal=task.goal, scope_rel=task.scope_rel
+            )
+        except Exception:
+            pass
+        # Çırak teknik tecrübe defteri (F3) — tur başı 3–5 kural
+        try:
+            from ilim_assistant.ruzgar_cirak_tecrube import augment_turn_with_cirak_tecrube
+
+            turn_user = augment_turn_with_cirak_tecrube(
+                turn_user,
+                workspace,
+                goal=task.goal,
+                scope_rel=task.scope_rel,
             )
         except Exception:
             pass
@@ -2413,6 +2425,26 @@ def iter_code_agent_turn_events(
                 success=success,
                 root_cause=str((_out_rec or {}).get("root_cause") or ""),
             )
+        except Exception:
+            pass
+        # Çırak tecrübe defteri (F2) — yalnız çırak görevlerinde
+        try:
+            from ilim_assistant.ruzgar_cirak_tecrube import (
+                record_cirak_tecrube_from_outcome,
+                write_tecrube_ozet_md,
+            )
+
+            record_cirak_tecrube_from_outcome(
+                workspace,
+                goal=task.goal,
+                scope_rel=task.scope_rel,
+                success=bool(success),
+                verify_ok=bool(_verify_ok_task),
+                writes_ok=int(writes_total),
+                root_cause=str((_out_rec or {}).get("root_cause") or ""),
+                usta_kurtarma=False,
+            )
+            write_tecrube_ozet_md(workspace)
         except Exception:
             pass
     except Exception:

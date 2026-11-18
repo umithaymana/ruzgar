@@ -49,12 +49,14 @@ def _ascii_fold(text: str) -> str:
 
 
 def is_cirak_yazim_gorev(goal: str = "", scope_rel: str = "") -> bool:
-    """Çırak atölyesi: salt keşif turu yasak — yazım önce."""
+    """Çırak atölyesi / komşu cirak-is-*: salt keşif turu yasak — yazım önce."""
     scope = (scope_rel or "").replace("\\", "/").lower()
-    if "cirak-atolyesi" in scope:
+    if "cirak-atolyesi" in scope or "/cirak-is-" in f"/{scope}" or "/is-b" in f"/{scope}":
         return True
     low = _ascii_fold(goal or "")
     g_raw = (goal or "").lower()
+    if "cirak-is-" in low.replace("\\", "/") or "/is-b" in low.replace("\\", "/"):
+        return True
     return "cirak-atolyesi" in low or (
         "cirak" in low and ("atolye" in low or "atölye" in g_raw)
     )
@@ -75,20 +77,67 @@ def cirak_goal_required_paths(goal: str, scope_rel: str = "") -> list[str]:
             rel = f"{scope}/{rel.lstrip('/')}"
         if rel not in found:
             found.append(rel)
-    # çıplak dosya adları: carp_is.py, test_carp.py
+    # göreli yollar: paket/cekirdek.py, paket/__init__.py
     scope = (scope_rel or "projects/cirak-atolyesi").replace("\\", "/").rstrip("/")
+    for m in re.finditer(r"\b([\w\-]+(?:/[\w\-]+)+\.py)\b", text, flags=re.I):
+        rel = f"{scope}/{m.group(1)}"
+        if rel not in found and "projects/" in rel:
+            found.append(rel)
+    # çıplak dosya adları: carp_is.py, test_carp.py
     for m in re.finditer(r"\b([\w\-]+\.py)\b", text, flags=re.I):
         name = m.group(1)
         low = name.lower()
         # Görev/brief md değil; sahte ana dosya adlarını ele.
-        if low in {"main.py", "conftest.py", "__init__.py"}:
+        if low in {"main.py", "conftest.py"}:
             continue
         if name.startswith("test_"):
             rel = f"{scope}/tests/{name}"
+        elif low == "__init__.py":
+            continue
         else:
             rel = f"{scope}/{name}"
+        # paket/cekirdek.py varken kök cekirdek.py ekleme
+        if any(x.endswith("/" + name) or x.endswith("/" + low) for x in found):
+            continue
         if rel not in found and "projects/" in rel:
             found.append(rel)
+    # util.normalize / servis.isle → util.py, servis.py (is-b çok-modül)
+    _skip_mod = {
+        "str",
+        "list",
+        "dict",
+        "int",
+        "float",
+        "bool",
+        "self",
+        "cls",
+        "os",
+        "sys",
+        "re",
+        "json",
+        "path",
+        "pathlib",
+        "projects",
+        "tests",
+        "cirak",
+        "tam",
+        "ajan",
+    }
+    for m in re.finditer(r"\b([a-z_][\w]*)\.([a-z_][\w]*)\b", text):
+        mod = m.group(1)
+        if mod.lower() in _skip_mod:
+            continue
+        if mod.startswith("test"):
+            continue
+        rel = f"{scope}/{mod}.py"
+        if rel not in found and "projects/" in rel:
+            found.append(rel)
+    # paket.cekirdek → paket/__init__.py + paket/cekirdek.py
+    for m in re.finditer(r"\bpaket\.([a-z_][\w]*)\b", text, flags=re.I):
+        sub = m.group(1)
+        for rel in (f"{scope}/paket/__init__.py", f"{scope}/paket/{sub}.py"):
+            if rel not in found:
+                found.append(rel)
     return found
 
 

@@ -27,6 +27,13 @@ _KNOWN_API = (
     "topla",
     "isle",
     "ozetle",
+    "mod",
+    "mutlak",
+    "ters",
+    "ortalama",
+    "selam",
+    "ozet",
+    "birlestir",
 )
 
 _DEF_RE = re.compile(r"\bdef\s+([a-z_][a-z0-9_]*)\s*\(", re.I)
