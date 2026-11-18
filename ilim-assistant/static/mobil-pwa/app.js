@@ -1224,7 +1224,7 @@
   }
 
   async function softReload() {
-    // Tam SW silme ekranı boşaltıyordu; yumuşak yenile + SW update
+    // Tam SW silme ekranı boşaltıyordu; yumuşak yenile + SW update (skipWaiting)
     try {
       const onPanel =
         el("panelView") && !el("panelView").classList.contains("hidden") &&
@@ -1232,7 +1232,14 @@
       sessionStorage.setItem("ruzgar_pwa_tab", onPanel ? "panel" : "chat");
       if ("serviceWorker" in navigator) {
         const regs = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map((r) => r.update().catch(() => {})));
+        for (const r of regs) {
+          try {
+            await r.update();
+            if (r.waiting) {
+              r.waiting.postMessage({ type: "SKIP_WAITING" });
+            }
+          } catch (_) {}
+        }
       }
     } catch (_) {}
     const u = new URL(window.location.href);
@@ -1270,6 +1277,85 @@
     }
   }
 
+  let _regPollTimer = null;
+  let _regPollPass = "";
+  function stopRegPoll() {
+    if (_regPollTimer) {
+      clearInterval(_regPollTimer);
+      _regPollTimer = null;
+    }
+  }
+  function paintRegWait(text, ok) {
+    const w = el("regWait");
+    if (!w) return;
+    w.classList.remove("hidden");
+    w.textContent = text || "";
+    w.style.color = ok === false ? "#f87171" : "";
+  }
+  async function softLoginAfterApprove(kullanici, sifre) {
+    if (el("user")) el("user").value = kullanici || "";
+    if (el("pass") && sifre) el("pass").value = sifre;
+    setTab("login");
+    setMsg("Onaylandı — girişe geçiliyor…");
+    paintRegWait("Onaylandı ✓ Giriş yapılıyor…", true);
+    try {
+      const kind = (el("deviceKind") && el("deviceKind").value) || "telefon";
+      const dname = (el("device") && el("device").value.trim()) || kind;
+      const j = await api("/api/mobil/login", {
+        method: "POST",
+        body: JSON.stringify({
+          kullanici: kullanici,
+          sifre: sifre,
+          device_name: dname,
+          device_id: deviceId(),
+          device_kind: kind,
+        }),
+      });
+      if (!j.ok) throw new Error(j.error || "giriş");
+      localStorage.setItem(LS.token, j.token);
+      localStorage.setItem(LS.who, JSON.stringify(j));
+      setMsg("Onaylandı ve giriş tamam.");
+      showChat(j);
+    } catch (e) {
+      setMsg("Onaylandı — şifrenizle Giriş’e basın. (" + String(e.message || e) + ")", true);
+      paintRegWait("Onaylandı ✓ Giriş sekmesine geçin.", true);
+    }
+  }
+  function startRegPoll(pendingId, kullanici, sifre) {
+    stopRegPoll();
+    _regPollPass = sifre || "";
+    let ticks = 0;
+    paintRegWait("Onay bekleniyor… Mimar panelden Onayla.", true);
+    _regPollTimer = setInterval(async () => {
+      ticks += 1;
+      if (ticks > 180) {
+        stopRegPoll();
+        paintRegWait("Hâlâ bekleniyor — Mimar’a sorun veya sonra Giriş deneyin.", false);
+        return;
+      }
+      try {
+        const st = await api(
+          `/api/mobil/register/status?pending_id=${encodeURIComponent(pendingId)}`,
+        );
+        if (!st || !st.ok) return;
+        if (st.status === "approved" || st.login_ready) {
+          stopRegPoll();
+          void softLoginAfterApprove(st.kullanici || kullanici, _regPollPass);
+          _regPollPass = "";
+          return;
+        }
+        if (st.status === "rejected") {
+          stopRegPoll();
+          _regPollPass = "";
+          paintRegWait("Kayıt reddedildi.", false);
+          setMsg("Kayıt reddedildi.", false);
+          return;
+        }
+        paintRegWait(`Onay bekleniyor… (${ticks * 2} sn)`, true);
+      } catch (_) {}
+    }, 2000);
+  }
+
   async function doRegister(ev) {
     if (ev) ev.preventDefault();
     localStorage.setItem(LS.base, base());
@@ -1295,8 +1381,9 @@
         body: JSON.stringify(payload),
       });
       if (!j.ok) throw new Error(j.error || "kayıt başarısız");
-      el("regCode").textContent = `Kod: ${j.code}  (pending: ${j.pending_id})`;
-      setMsg("Mimar panelinden onay bekleniyor.");
+      el("regCode").textContent = `Bekleyen kod: ${j.code}`;
+      setMsg("Mimar panelinden onay bekleniyor — bu ekran otomatik yenilenir.");
+      startRegPoll(j.pending_id, payload.kullanici, payload.sifre);
     } catch (e) {
       setMsg(String(e.message || e), false);
     }
@@ -1313,6 +1400,96 @@
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
+  }
+
+  function paintPanelInvite(suffix, erisim) {
+    const box = el("panelInvite" + (suffix || ""));
+    if (!box) return;
+    const inv = (erisim && erisim.mimar_invite) || null;
+    if (!inv) {
+      box.classList.add("hidden");
+      box.innerHTML = "";
+      return;
+    }
+    box.classList.remove("hidden");
+    const sticky = inv.sticky_url || (erisim && erisim.sticky_urls && erisim.sticky_urls[0]) || "";
+    const adminUrl = inv.admin_users_url || "https://login.tailscale.com/admin/users";
+    const steps = Array.isArray(inv.steps_tr) ? inv.steps_tr : [];
+    box.innerHTML = `
+      <strong>${esc(inv.title || "Tailscale davet")}</strong>
+      <div class="invite-actions">
+        <a class="primary tiny" href="${esc(adminUrl)}" target="_blank" rel="noopener">Davet / kullanıcı yönetimi</a>
+        <button type="button" class="tiny" id="btnCopySticky${suffix || ""}">Sticky link kopyala</button>
+        <button type="button" class="tiny" id="btnCopyAdmin${suffix || ""}">Admin URL kopyala</button>
+      </div>
+      <ol>${steps.map((t) => `<li>${esc(t)}</li>`).join("")}</ol>
+      <p class="hint">Sertifika: ${esc((erisim && erisim.cert_kind) || "?")}${
+        erisim && erisim.cert_warning ? " · self-signed ise arkadaş bir kez Devam basar" : " · LE — uyarı yok"
+      }</p>`;
+    const copySticky = el("btnCopySticky" + (suffix || ""));
+    if (copySticky) {
+      copySticky.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(sticky || "");
+          setMsg("Sticky Rüzgar linki kopyalandı");
+        } catch (_) {
+          setMsg(sticky || "link yok", !!sticky);
+        }
+      };
+    }
+    const copyAdmin = el("btnCopyAdmin" + (suffix || ""));
+    if (copyAdmin) {
+      copyAdmin.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(adminUrl);
+          setMsg("Tailscale admin URL kopyalandı");
+        } catch (_) {
+          setMsg(adminUrl, true);
+        }
+      };
+    }
+  }
+
+  function paintFriendGuide(erisim) {
+    const wrap = el("friendGuide");
+    const list = el("friendGuideSteps");
+    const certEl = el("friendGuideCert");
+    if (!wrap || !list) return;
+    const guide = erisim && erisim.friend_guide;
+    const steps = guide && Array.isArray(guide.steps) ? guide.steps : [];
+    if (!steps.length) {
+      wrap.classList.add("hidden");
+      return;
+    }
+    wrap.classList.remove("hidden");
+    list.innerHTML = steps
+      .map((s) => {
+        const links = Array.isArray(s.links)
+          ? s.links
+              .map(
+                (L) =>
+                  `<a href="${esc(L.url)}" target="_blank" rel="noopener">${esc(L.label || L.url)}</a>`,
+              )
+              .join(" · ")
+          : "";
+        const urlBit = s.url
+          ? ` <a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.url)}</a>`
+          : "";
+        return `<li><b>${esc(s.title || "")}</b> — ${esc(s.body || "")}${urlBit}${
+          links ? `<br/>${links}` : ""
+        }</li>`;
+      })
+      .join("");
+    if (certEl) {
+      if (erisim && erisim.cert_kind === "tailscale_le") {
+        certEl.textContent = "Sertifika: Let’s Encrypt (Tailscale) — tarayıcı uyarısı beklenmez.";
+      } else if (erisim && erisim.cert_warning) {
+        certEl.textContent =
+          "Sertifika self-signed: ilk açılışta Gelişmiş → Devam (tek ekran). Sonra Yenile yeterli.";
+      } else {
+        certEl.textContent = "";
+      }
+    }
   }
 
   let _panelBusy = false;
@@ -1340,6 +1517,8 @@
         api("/api/mobil/users"),
         api("/api/mobil/devices").catch(() => ({ devices: [] })),
       ]);
+      paintPanelInvite(s, st.erisim || null);
+      paintFriendGuide(st.erisim || null);
       statusEl.innerHTML = [
         `v${esc(st.version)}`,
         `kullanıcı ${esc(st.users)}`,
@@ -1347,7 +1526,10 @@
         `bekleyen ${esc(st.pending)}`,
         `admin ${esc(st.admins)}`,
         st.enabled ? "açık" : "kapalı",
-      ].join(" · ");
+        st.erisim && st.erisim.cert_kind ? `cert ${esc(st.erisim.cert_kind)}` : "",
+      ]
+        .filter(Boolean)
+        .join(" · ");
 
       (devices.devices || []).forEach((d) => {
         const card = document.createElement("div");
@@ -1374,7 +1556,7 @@
         ok.textContent = "Onayla";
         ok.onclick = async () => {
           try {
-            await api("/api/mobil/approve", {
+            const res = await api("/api/mobil/approve", {
               method: "POST",
               body: JSON.stringify({
                 pending_id: p.pending_id,
@@ -1382,7 +1564,11 @@
                 approve: true,
               }),
             });
-            setMsg(`${p.kullanici} onaylandı`);
+            setMsg(
+              res && res.login_ready
+                ? `${p.kullanici} onaylandı — arkadaş otomatik girişe geçer`
+                : `${p.kullanici} onaylandı`,
+            );
             again();
           } catch (e) {
             setMsg(String(e.message || e), false);
@@ -1584,7 +1770,40 @@
   if (el("btnWol2")) el("btnWol2").onclick = doWol;
 
   /* Mobil (iOS/Android): async fetch sonrası Audio.play() NotAllowedError yutar.
-     İlk dokunuşta HTMLAudio + AudioContext kilidini aç; TTS'i blob URL ile aynı player'da çal. */
+     İlk dokunuşta HTMLAudio + AudioContext kilidini aç; TTS'i blob URL ile aynı player'da çal.
+     Aşama B sabitleri = ilim_assistant.ses_v4_barge_in (PC↔mobil contract). */
+  const RUZGAR_BARGE_IN = true;
+  const RUZGAR_BARGE_SETTLE_MS = 40;
+  /** Aşama C — text_ready→first_audio (A/B barge bozulmaz) */
+  const RUZGAR_ASAMA_C_TTS_LAT = true;
+  let _ttsTextReadyAt = 0;
+  function markTtsTextReady(src) {
+    _ttsTextReadyAt = performance.now();
+    try {
+      window.__ruzgarTtsTextReadyAt = _ttsTextReadyAt;
+      window.__ruzgarTtsTextReadySrc = src || "";
+    } catch (_) {}
+  }
+  function markTtsFirstAudio(src) {
+    if (!_ttsTextReadyAt || !RUZGAR_ASAMA_C_TTS_LAT) return;
+    const ms = Math.round(performance.now() - _ttsTextReadyAt);
+    try {
+      window.__ruzgarTtsTextToFirstAudioMs = ms;
+      window.__ruzgarTtsLatLog = window.__ruzgarTtsLatLog || [];
+      window.__ruzgarTtsLatLog.push({
+        ms,
+        src: src || "",
+        under1s: ms < 1000,
+        t: Date.now(),
+      });
+      if (window.__ruzgarTtsLatLog.length > 48) window.__ruzgarTtsLatLog.shift();
+    } catch (_) {}
+    _ttsTextReadyAt = 0;
+  }
+  const MOBIL_BARGE_RMS = 0.03;
+  const MOBIL_BARGE_TICK_MS = 50;
+  const MOBIL_BARGE_TICKS = 2;
+
   let ttsPlayer = null;
   let audioUnlocked = false;
   let sharedAudioCtx = null;
@@ -1596,12 +1815,76 @@
     ttsPlayer.setAttribute("webkit-playsinline", "");
     ttsPlayer.playsInline = true;
     ttsPlayer.preload = "auto";
+    try {
+      ttsPlayer.setAttribute("x-webkit-airplay", "allow");
+    } catch (_) {}
     return ttsPlayer;
   }
 
   const SILENT_WAV =
     "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=";
   let ttsPlayGen = 0;
+
+  function isLikelyIos() {
+    const ua = navigator.userAgent || "";
+    if (/iPad|iPhone|iPod/i.test(ua)) return true;
+    try {
+      return navigator.platform === "MacIntel" && (navigator.maxTouchPoints || 0) > 1;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function preferredRecorderMimes() {
+    const base = [
+      "audio/webm;codecs=opus",
+      "audio/webm",
+      "audio/mp4",
+      "audio/aac",
+      "audio/ogg",
+    ];
+    if (isLikelyIos()) {
+      return ["audio/mp4", "audio/aac", "audio/wav", "audio/webm;codecs=opus", "audio/webm", "audio/ogg"];
+    }
+    return base;
+  }
+
+  function buildMicAudioConstraints() {
+    // sampleRate zorlama yok — Android/iOS cihaz değişken; fallback getMicStream'te
+    return {
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: true,
+    };
+  }
+
+  async function getMicStream() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error("getUserMedia yok");
+    }
+    try {
+      return await navigator.mediaDevices.getUserMedia({
+        audio: buildMicAudioConstraints(),
+      });
+    } catch (e1) {
+      // Android/eski WebView: kısıtlı constraint reddeder → sade audio:true
+      try {
+        return await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (e2) {
+        throw e2 || e1;
+      }
+    }
+  }
+
+  async function probeMicPermission() {
+    try {
+      if (!navigator.permissions || !navigator.permissions.query) return null;
+      const st = await navigator.permissions.query({ name: "microphone" });
+      return st && st.state ? String(st.state) : null;
+    } catch (_) {
+      return null; // Safari çoğu sürümde Permissions API vermez
+    }
+  }
 
   function unlockMobileAudio() {
     try {
@@ -1660,8 +1943,38 @@
     return new Blob([bytes], { type: mime || "audio/mpeg" });
   }
 
+  /** Aşama A — Sus/Dur/Kes */
+  function looksLikeVoiceStopCommand(text) {
+    const t = String(text || "")
+      .trim()
+      .toLocaleLowerCase("tr-TR")
+      .replace(/[!?.…,]+$/g, "")
+      .trim();
+    if (!t || t.length > 24) return false;
+    return /^(sus|dur|kes|sessiz|sus\s*ol|kes\s*sesi|sus\s*lütfen|sus\s*lutfen)$/i.test(
+      t,
+    );
+  }
+
+  function notifyVoiceTurnListening(barge) {
+    try {
+      api("/api/ses/voice-turn", {
+        method: "POST",
+        body: JSON.stringify({
+          state: "listening",
+          barge_in: !!barge,
+          note: barge ? "asama-a-barge" : "asama-a-listen",
+        }),
+      }).catch(() => ({}));
+    } catch (_) {}
+  }
+
+  // Aşama A — stopAllSpeech'ten önce declare (TDZ / ReferenceError yok)
+  let liveHoldRecord = false;
+
   function stopAllSpeech(reason) {
-    // F6.4 barge-in — TTS / yerel konuşmayı kes
+    // F6.4 / Aşama A barge-in — TTS / yerel konuşmayı kes + kuyruk gen
+    const t0 = performance.now();
     ttsPlayGen += 1;
     try {
       const a = ensureTtsPlayer();
@@ -1672,7 +1985,13 @@
     try {
       if (window.speechSynthesis) window.speechSynthesis.cancel();
     } catch (_) {}
-    if (reason && meta) meta.textContent = String(reason);
+    liveHoldRecord = false;
+    notifyVoiceTurnListening(true);
+    const ms = Math.round(performance.now() - t0);
+    try {
+      window.__ruzgarLastBargeMs = ms;
+    } catch (_) {}
+    if (reason && meta) meta.textContent = String(reason) + ` (${ms} ms)`;
   }
 
   function playTtsBlob(blob) {
@@ -1715,8 +2034,8 @@
       try {
         audio.load();
       } catch (_) {}
-      // F6.4 — sürekli sohbette konuşunca TTS kes (V4 barge-in)
-      if (liveMode && liveVad) {
+      // Aşama A/B — TTS sırasında mic VAD açık; ticks×tick_ms ≈ kesilme (ses_v4)
+      if (RUZGAR_BARGE_IN && liveMode && liveVad) {
         let speechTicks = 0;
         bargeTimer = setInterval(() => {
           if (myGen !== ttsPlayGen || !liveMode) {
@@ -1725,9 +2044,13 @@
             return;
           }
           try {
-            if (liveVad.rms() >= 0.028) {
+            if (liveMuted) {
+              speechTicks = 0;
+              return;
+            }
+            if (liveVad.rms() >= MOBIL_BARGE_RMS) {
               speechTicks += 1;
-              if (speechTicks >= 3) {
+              if (speechTicks >= MOBIL_BARGE_TICKS) {
                 stopAllSpeech("sürekli: kesildi — dinliyorum");
                 done("barge-in");
               }
@@ -1735,8 +2058,9 @@
               speechTicks = 0;
             }
           } catch (_) {}
-        }, 80);
+        }, MOBIL_BARGE_TICK_MS);
       }
+      markTtsFirstAudio("playTtsBlob");
       const p = audio.play();
       if (p && typeof p.catch === "function") {
         p.catch((err) => {
@@ -1805,58 +2129,109 @@
   }
 
   function splitTtsChunks(text, maxFirst) {
-    // F7.2 — ilk cümle/kısa parça önce; gerisi sonra (geriden his azalır)
-    const t = String(text || "").trim();
+    // Aşama D — erken ilk parça + tüm metin cümle/noktalama sınırında; yarım kelime yok
+    const t = String(text || "").replace(/\s+/g, " ").trim();
     if (!t) return [];
-    const lim = maxFirst || 180;
-    if (t.length <= lim) return [t];
-    const m = t.match(/^(.+?[.!?…])(\s+|$)/u);
-    if (m && m[1].length >= 24 && m[1].length <= lim + 40) {
-      const rest = t.slice(m[0].length).trim();
-      return rest ? [m[1].trim(), rest.slice(0, liveMode ? 280 : 520)] : [m[1].trim()];
+    const firstLim = maxFirst || (liveMode ? 110 : 150);
+    const mergeLim = liveMode ? 280 : 380;
+    const out = [];
+    let rest = t;
+    let first = true;
+    while (rest) {
+      const lim = first ? firstLim : mergeLim;
+      if (rest.length <= lim) {
+        out.push(rest);
+        break;
+      }
+      if (first) {
+        const m = rest.match(/^(.+?[.!?…])(\s+|$)/u);
+        if (m && m[1].length >= 20 && m[1].length <= lim + 48) {
+          out.push(m[1].trim());
+          rest = rest.slice(m[0].length).trim();
+          first = false;
+          continue;
+        }
+      }
+      const window = rest.slice(0, lim + 1);
+      let cut = -1;
+      let sepLen = 1;
+      for (const sep of [". ", "! ", "? ", "… ", "; ", ": ", ", ", " — ", " - "]) {
+        const i = window.lastIndexOf(sep);
+        if (i >= 18 && i > cut) {
+          cut = i;
+          sepLen = sep.length;
+        }
+      }
+      if (cut < 18) {
+        const sp = window.lastIndexOf(" ");
+        cut = sp > 18 ? sp : -1;
+        sepLen = 1;
+      }
+      if (cut < 18) {
+        out.push(rest);
+        break;
+      }
+      const head = rest.slice(0, cut + (sepLen > 1 ? sepLen : 0)).trim();
+      rest = rest.slice(cut + (sepLen > 1 ? sepLen : 1)).trim();
+      if (head) out.push(head);
+      first = false;
     }
-    const cut = t.slice(0, lim);
-    const sp = cut.lastIndexOf(" ");
-    const first = (sp > 40 ? cut.slice(0, sp) : cut).trim();
-    const rest = t.slice(first.length).trim();
-    return rest ? [first, rest.slice(0, liveMode ? 280 : 520)] : [first];
+    return out.filter((c) => c.length >= 2);
   }
 
   async function fetchTtsBlob(say) {
     const token = localStorage.getItem(LS.token) || "";
     const headers = { "Content-Type": "application/json" };
     if (token) headers.Authorization = "Bearer " + token;
-    const res = await fetch(base() + "/api/tts", {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ text: say, prosody: false }),
-    });
-    if (!res.ok) return null;
-    const blob = await res.blob();
-    return blob && blob.size > 32 ? blob : null;
+    let lastErr = "";
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const res = await fetch(base() + "/api/tts", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ text: say, prosody: false }),
+        });
+        if (!res.ok) {
+          lastErr = "tts_http_" + res.status;
+          if (attempt === 0) continue;
+          return null;
+        }
+        const blob = await res.blob();
+        if (blob && blob.size > 32) return blob;
+        lastErr = "tts_empty";
+      } catch (e) {
+        lastErr = String((e && e.message) || e || "tts_net").slice(0, 60);
+      }
+    }
+    try {
+      if (meta && lastErr) meta.textContent = "TTS: " + lastErr;
+    } catch (_) {}
+    return null;
   }
 
   async function speakReply(reply) {
     const text = String(reply || "").trim();
     if (!text) return;
     unlockMobileAudio();
-    const chunks = splitTtsChunks(text, liveMode ? 160 : 220);
+    const chunks = splitTtsChunks(text, liveMode ? 110 : 150);
+    markTtsTextReady("speakReply");
     try {
-      // İlk chunk'ı oynat; ikinciyi paralel hazırla
-      const firstP = fetchTtsBlob(chunks[0]);
-      const secondP = chunks[1] ? fetchTtsBlob(chunks[1]) : Promise.resolve(null);
-      const first = await firstP;
-      if (first) {
-        const genAtStart = ttsPlayGen;
-        const play1 = playTtsBlob(first);
-        const second = await secondP;
-        await play1;
-        // barge-in stopAllSpeech gen'i artırır → ikinci chunk atlanır
-        if (second && !liveAbort && ttsPlayGen === genAtStart + 1) {
-          await playTtsBlob(second);
+      // Aşama D — uzun cevap: prefetch kuyruğu; barge gen değişince kes
+      let prefetch = chunks[0] ? fetchTtsBlob(chunks[0]) : null;
+      const genAtStart = ttsPlayGen;
+      for (let i = 0; i < chunks.length; i++) {
+        if (liveAbort || ttsPlayGen !== genAtStart) return;
+        const blob = await prefetch;
+        prefetch = null;
+        if (i + 1 < chunks.length && !liveAbort && ttsPlayGen === genAtStart) {
+          prefetch = fetchTtsBlob(chunks[i + 1]);
         }
-        return;
+        if (!blob) continue;
+        if (liveAbort || ttsPlayGen !== genAtStart) return;
+        await playTtsBlob(blob);
       }
+      if (ttsPlayGen === genAtStart) return;
+      return;
     } catch (_) {}
     await speakLocal(chunks[0].slice(0, 200));
   }
@@ -1889,9 +2264,10 @@
           : "Anlayamadım, bir daha söyler misin?";
     meta.textContent = msg;
     bubble("bot", msg);
-    // Sürekli sohbette kendi sesini tekrar duymasın
-    if (liveMode) setLiveMicEnabled(false);
+    // Aşama A: kısa uyarıda da barge duyulsun; sonra yankı penceresi
+    if (liveMode) setLiveTtsListenMode(true);
     await speakLocal(msg);
+    if (liveMode) setLiveTtsListenMode(false);
     if (liveMode && !liveAbort) await liveQuietGap(450);
   }
 
@@ -1962,8 +2338,8 @@
       if (history.length > 24) history = history.slice(-16);
       meta.textContent = "cevap hazır · ses…";
       setSahneState("konus", reply);
-      if (liveMode) setLiveMicEnabled(false);
-      // Metin ekranda — TTS arka planda / kısa yerel ses
+      // Aşama A: TTS sırasında mic açık (barge VAD); kayıt tutulur (yankı→STT yok)
+      if (liveMode) setLiveTtsListenMode(true);
       try {
         await speakReply(reply);
       } catch (_) {
@@ -1971,7 +2347,7 @@
           await speakLocal(reply.slice(0, 160));
         } catch (__) {}
       }
-      if (liveMode && !liveAbort) setLiveMicEnabled(false);
+      if (liveMode) setLiveTtsListenMode(false);
       const wall = Math.round(performance.now() - t0);
       const bits = [`${wall} ms`];
       if (j.latency_ms != null) bits.push(`sunucu ${j.latency_ms} ms`);
@@ -2352,26 +2728,30 @@
       meta.textContent = "Bu tarayıcıda mikrofon yok.";
       return;
     }
+    const perm = await probeMicPermission();
+    if (perm === "denied") {
+      meta.textContent =
+        "Mikrofon engelli — tarayıcı site ayarından izin ver" +
+        (isLikelyIos() ? " (iOS: Ayarlar → Safari/Rüzgar → Mikrofon)." : ".");
+      return;
+    }
+    // PC parity: mic basınca TTS kes + kısa settle (ses_v4)
+    if (RUZGAR_BARGE_IN) {
+      stopAllSpeech("basılı tut — dinliyorum");
+      try {
+        await sleep(RUZGAR_BARGE_SETTLE_MS);
+      } catch (_) {}
+    }
     micBusy = true;
     mediaChunks = [];
     if (el("btnMic")) el("btnMic").classList.add("listening");
     meta.textContent = "dinleniyor… basılı tut, bırakınca gönderilir";
     setSahneState("dinle");
     void requestWakeLock();
-    api("/api/ses/voice-turn", {
-      method: "POST",
-      body: JSON.stringify({ state: "listening" }),
-    }).catch(() => ({}));
+    notifyVoiceTurnListening(true);
     try {
-      mediaStream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true },
-      });
-      const types = [
-        "audio/webm;codecs=opus",
-        "audio/webm",
-        "audio/mp4",
-        "audio/ogg",
-      ];
+      mediaStream = await getMicStream();
+      const types = preferredRecorderMimes();
       mediaMime = types.find((t) => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) || "";
       mediaRecorder = mediaMime
         ? new MediaRecorder(mediaStream, { mimeType: mediaMime })
@@ -2380,17 +2760,22 @@
       mediaRecorder.ondataavailable = (ev) => {
         if (ev.data && ev.data.size) mediaChunks.push(ev.data);
       };
-      // timeslice yok — tek parça webm (mobilde daha sağlam); bırakınca stop
+      // timeslice yok — tek parça (mobilde daha sağlam); bırakınca stop
       mediaRecorder.start();
     } catch (e) {
       micBusy = false;
       stopMediaTracks();
       if (el("btnMic")) el("btnMic").classList.remove("listening");
+      const name = String((e && e.name) || "");
       const msg = String(e && e.message ? e.message : e);
-      if (/NotAllowed|Permission|Denied/i.test(msg)) {
-        meta.textContent = "Mikrofon izni reddedildi — site ayarından izin ver.";
+      if (/NotAllowed|Permission|Denied|NotAllowedError/i.test(name + " " + msg)) {
+        meta.textContent =
+          "Mikrofon izni reddedildi — site ayarından izin ver" +
+          (isLikelyIos() ? " (iOS: Ayarlar → Safari → Mikrofon)." : ".");
       } else if (/secure|Only secure|getUserMedia/i.test(msg) || !micSecureOk()) {
         paintMicBlocked();
+      } else if (/NotFound|DevicesNotFound|NotReadable/i.test(name + " " + msg)) {
+        meta.textContent = "Mikrofon bulunamadı / meşgul — başka uygulama kullanıyor olabilir.";
       } else {
         meta.textContent = "Mikrofon açılamadı: " + msg;
       }
@@ -2448,6 +2833,7 @@
   }
 
   function beginLiveSession() {
+    unlockMobileAudio();
     if (liveMode) return;
     if (micBusy && !liveMode) {
       if (meta) meta.textContent = "Önce basılı tutmayı bırak / bekleyin.";
@@ -2458,6 +2844,7 @@
       if (meta) meta.textContent = "sürekli sohbet: HTTPS + mikrofon gerekli";
       return;
     }
+    if (RUZGAR_BARGE_IN) stopAllSpeech("sürekli sohbet — dinliyorum");
     liveAbort = false;
     liveMode = true;
     liveStartPending = false;
@@ -2480,7 +2867,7 @@
   let liveStream = null;
   let liveVad = null;
   let liveAbort = false;
-  let liveMuted = false; // TTS / tekrar sırasında mic kapalı (yankı yok)
+  let liveMuted = false; // kısa sessizlik / yankı penceresi (track kapalı)
   let liveRestartN = 0;
   let wakeLock = null;
 
@@ -2496,7 +2883,16 @@
     } catch (_) {}
   }
 
+  /** Aşama A — TTS sırasında mic açık (barge), kayıt kapalı (yankıyı STT'ye alma) */
+  function setLiveTtsListenMode(on) {
+    liveHoldRecord = !!on;
+    if (on) {
+      setLiveMicEnabled(true);
+    }
+  }
+
   async function liveQuietGap(ms) {
+    setLiveTtsListenMode(false);
     setLiveMicEnabled(false);
     await sleep(Math.max(200, ms || 900));
     if (liveMode && !liveAbort) setLiveMicEnabled(true);
@@ -2605,7 +3001,7 @@
   }
 
   async function recordUntilSilence(stream) {
-    if (liveMuted) {
+    if (liveMuted || liveHoldRecord) {
       await sleep(200);
       return null;
     }
@@ -2623,15 +3019,15 @@
     while (!liveAbort && liveMode && waited < WAIT_SPEECH_MS) {
       await sleep(tick);
       waited += tick;
-      if (liveMuted) continue;
+      if (liveMuted || liveHoldRecord) continue;
       if ((liveVad ? liveVad.rms() : 0) >= SPEECH) break;
     }
-    if (liveAbort || !liveMode || liveMuted) return null;
+    if (liveAbort || !liveMode || liveMuted || liveHoldRecord) return null;
     if ((liveVad ? liveVad.rms() : 0) < SPEECH && waited >= WAIT_SPEECH_MS) return null;
 
     // 2) Kaydı konuşma başında aç
     const chunks = [];
-    const types = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg"];
+    const types = preferredRecorderMimes();
     const mime = types.find((t) => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) || "";
     let rec;
     try {
@@ -2656,11 +3052,11 @@
     let speechMs = 0;
     let silenceMs = 0;
     let recMs = 0;
-    meta.textContent = "sürekli: duyuyorum…";
+      meta.textContent = "sürekli: duyuyorum…";
     while (!liveAbort && liveMode && recMs < MAX_REC_MS) {
       await sleep(tick);
       recMs += tick;
-      if (liveMuted) break;
+      if (liveMuted || liveHoldRecord) break;
       const level = liveVad ? liveVad.rms() : 0;
       if (level >= SPEECH) {
         speechMs += tick;
@@ -2706,15 +3102,10 @@
         if (token) headers.Authorization = "Bearer " + token;
         fetch(base() + "/api/stt/warmup", { method: "POST", headers }).catch(() => {});
       } catch (_) {}
-      liveStream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
-      });
+      liveStream = await getMicStream();
       liveVad = attachVad(liveStream);
       liveMuted = false;
+      liveHoldRecord = false;
       liveRestartN = 0;
       meta.textContent = woke
         ? "sürekli: dinliyorum — konuşun"
@@ -2752,6 +3143,15 @@
           await liveQuietGap(500);
           continue;
         }
+        // Aşama A — Sus/Dur/Kes
+        if (looksLikeVoiceStopCommand(text)) {
+          stopAllSpeech("komut: susturuldu — dinliyorum");
+          bubble("user", text);
+          meta.textContent = "komut: sus/dur/kes";
+          setSahneState("dinle");
+          await liveQuietGap(350);
+          continue;
+        }
         meta.textContent = "algı: " + text.slice(0, 80);
         try {
           await voiceTurn(text, { live: true });
@@ -2765,13 +3165,25 @@
       }
     } catch (e) {
       fatal = true;
-      meta.textContent = "Sürekli sohbet açılamadı: " + String(e.message || e);
+      const name = String((e && e.name) || "");
+      const msg = String(e && e.message ? e.message : e);
+      if (/NotAllowed|Permission|Denied/i.test(name + " " + msg)) {
+        meta.textContent =
+          "Sürekli sohbet: mikrofon izni yok" +
+          (isLikelyIos() ? " — iOS Ayarlar → Safari/Rüzgar → Mikrofon." : " — site ayarından izin ver.");
+      } else if (/secure|Only secure/i.test(msg) || !micSecureOk()) {
+        paintMicBlocked();
+        meta.textContent = "Sürekli sohbet: HTTPS + mikrofon gerekli";
+      } else {
+        meta.textContent = "Sürekli sohbet açılamadı: " + msg;
+      }
     } finally {
       // Durdur: setLivePref(false). Düşme/hata: pref açık kalır → otomatik yeniden
       const autoRestart = livePrefOn();
       liveMode = false;
       liveAbort = false;
       liveMuted = false;
+      liveHoldRecord = false;
       micBusy = false;
       stopLiveStream();
       await releaseWakeLock();
@@ -2905,12 +3317,52 @@
     };
   }
 
+  // Aşama B — ilk jestte autoplay/AudioContext kilidini aç (iOS/Android)
+  (function bindGestureAudioUnlock() {
+    let once = false;
+    const arm = () => {
+      if (once) return;
+      once = true;
+      unlockMobileAudio();
+      try {
+        document.removeEventListener("pointerdown", arm, true);
+        document.removeEventListener("touchstart", arm, true);
+        document.removeEventListener("click", arm, true);
+      } catch (_) {}
+    };
+    try {
+      document.addEventListener("pointerdown", arm, { capture: true, passive: true });
+      document.addEventListener("touchstart", arm, { capture: true, passive: true });
+      document.addEventListener("click", arm, { capture: true, passive: true });
+    } catch (_) {}
+  })();
+
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker
       .getRegistrations()
       .then((regs) => Promise.all(regs.map((r) => r.update())))
       .catch(() => {});
-    navigator.serviceWorker.register("./sw.js?v=23").catch(() => {});
+    navigator.serviceWorker
+      .register("./sw.js?v=20261118-onboard")
+      .then((reg) => {
+        const kick = () => {
+          if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" });
+        };
+        if (reg.waiting) kick();
+        reg.addEventListener("updatefound", () => {
+          const nw = reg.installing;
+          if (!nw) return;
+          nw.addEventListener("statechange", () => {
+            if (nw.state === "installed" && navigator.serviceWorker.controller) {
+              nw.postMessage({ type: "SKIP_WAITING" });
+            }
+          });
+        });
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+          /* Yenile sonrası yeni SW — softReload zaten sayfayı çeker */
+        });
+      })
+      .catch(() => {});
   }
 
   // Kapı durumu — görünür sağlık satırı + LAN/Tailscale / HTTPS mic ipuçları
@@ -2920,27 +3372,45 @@
         const bits = [`kapı açık · ${st.version || "mobil"}`];
         if (st.users != null) bits.push(`${st.users} kullanıcı`);
         const er = st.erisim || null;
+        paintFriendGuide(er);
         if (er && er.lan_open === false) {
           bits.push("LAN kapalı (PC’de 0.0.0.0 gerekir)");
           setMsg(bits.join(" · "), false);
           return;
         }
+        // Aşama D+sabit: MagicDNS / sticky önce (LAN 103↔105 kırılmaz)
+        const preferStickyHttps = (list, erObj) => {
+          const sticky = Array.isArray(erObj && erObj.sticky_urls)
+            ? erObj.sticky_urls.map(String)
+            : [];
+          const stickyHit = sticky.find((u) => u.startsWith("https:"));
+          if (stickyHit) return stickyHit;
+          if (erObj && erObj.sticky_host) {
+            return `https://${erObj.sticky_host}:8443/mobil/`;
+          }
+          const arr = Array.isArray(list) ? list.map(String) : [];
+          const https = arr.filter((u) => u.startsWith("https:"));
+          return (
+            https.find((u) => /\.ts\.net(?::|\b)/i.test(u)) ||
+            https.find((u) => /:\/\/100\./.test(u)) ||
+            https.find((u) => /:\/\/(192\.168\.|10\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(u)) ||
+            https[0] ||
+            arr[0] ||
+            ""
+          );
+        };
         if (er && Array.isArray(er.https_urls) && er.https_urls.length) {
-          httpsMicPrefer =
-            er.https_urls.find((u) => String(u).includes("100.")) || er.https_urls[0];
+          httpsMicPrefer = preferStickyHttps(er.https_urls, er);
         } else if (er && Array.isArray(er.urls) && er.urls.length) {
-          httpsMicPrefer = er.urls.find((u) => String(u).startsWith("https:")) || er.urls[0];
+          httpsMicPrefer = preferStickyHttps(er.urls, er);
         }
         paintHttpsMicBar();
         if (er && Array.isArray(er.urls) && er.urls.length && baseInput) {
-          const prefer =
-            er.urls.find((u) => String(u).includes("100.")) ||
-            er.urls.find((u) => String(u).startsWith("https:")) ||
-            er.urls[0];
+          const prefer = preferStickyHttps(er.urls, er);
           const asBase = String(prefer).replace(/\/mobil\/?$/, "");
           if (
             !localStorage.getItem(LS.base) ||
-            /127\.0\.0\.1:8779|localhost:8779/i.test(baseInput.value || "")
+            /127\.0\.0\.1:8779|localhost:8779|192\.168\.\d+\.\d+/i.test(baseInput.value || "")
           ) {
             baseInput.value = asBase;
             try {
@@ -2950,6 +3420,7 @@
         }
         if (micSecureOk()) bits.push("tek kapı (yazı+ses)");
         else bits.push("HTTPS köprü gerekli");
+        if (er && er.cert_kind) bits.push(`cert ${er.cert_kind}`);
         setMsg(bits.join(" · "), micSecureOk());
         if (!micSecureOk()) paintMicBlocked();
       }

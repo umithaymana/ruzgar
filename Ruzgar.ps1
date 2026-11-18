@@ -239,8 +239,19 @@ function Start-HttpsMicProxy {
         return
     }
     $scriptPy = Join-Path $Ia "scripts\ruzgar_https_proxy.py"
-    $cert = Join-Path $Ia ".ruzgar\certs\ruzgar-mobil.crt"
-    $key = Join-Path $Ia ".ruzgar\certs\ruzgar-mobil.key"
+    # Tercih: Tailscale Let's Encrypt (uyarı yok); yedek: self-signed
+    $leCert = Join-Path $Ia ".ruzgar\certs\tailscale-le.crt"
+    $leKey = Join-Path $Ia ".ruzgar\certs\tailscale-le.key"
+    $ssCert = Join-Path $Ia ".ruzgar\certs\ruzgar-mobil.crt"
+    $ssKey = Join-Path $Ia ".ruzgar\certs\ruzgar-mobil.key"
+    $cert = $ssCert
+    $key = $ssKey
+    $certKind = "self_signed"
+    if ((Test-Path $leCert) -and (Test-Path $leKey)) {
+        $cert = $leCert
+        $key = $leKey
+        $certKind = "tailscale_le"
+    }
     if (-not (Test-Path $scriptPy)) {
         Log "UYARI: ruzgar_https_proxy.py yok — mobil mic HTTPS atlandi"
         return
@@ -249,6 +260,7 @@ function Start-HttpsMicProxy {
         Log "UYARI: .ruzgar/certs eksik — mobil mic HTTPS atlandi"
         return
     }
+    Log "HTTPS cert kind=$certKind path=$cert"
     $errPath = Join-Path $env:TEMP "ruzgar-https-proxy.err"
     try {
         # Gradio ile ayni: tek ArgumentList string + yollar tirnakli (CURSOR PROJELER boslugu)

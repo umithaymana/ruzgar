@@ -1161,21 +1161,55 @@ const RUZGAR_TTS_MAX_SPEECH_CHARS = 3200;
 const RUZGAR_TTS_MAX_SENTENCES = 80;
 const RUZGAR_TTS_CHUNK_MAX_CHARS = 2800;
 /** İlk parça hızlı başlasın; sonraki parçalar prefetch ile arka arkaya. */
-const RUZGAR_TTS_PLAY_PREROLL_MS = 12;
+/** Aşama D — ilk sesi öne al; cümle arası ekstra bekleme yok */
+const RUZGAR_TTS_PLAY_PREROLL_MS = 0;
 const RUZGAR_TTS_INTER_CHUNK_PREROLL_MS = 0;
 const RUZGAR_TTS_CHUNK_GAP_MS = 0;
-/** V4 — konuşunca TTS kes + dinle; mic kayıt varken TTS kilitli */
+const RUZGAR_ASAMA_D_TTS = true;
+/** V4.2 Aşama A+B — konuşunca TTS kes + dinle; mic kayıt varken TTS kilitli
+ *  Ortak contract: ilim_assistant.ses_v4_barge_in (settle/stop-words; mobil RMS ayrı) */
 const RUZGAR_BARGE_IN = true;
-const RUZGAR_BARGE_SETTLE_MS = 80;
-const RUZGAR_TTS_BUFFER_FALLBACK_FIRST_MS = 380;
-const RUZGAR_TTS_BUFFER_FALLBACK_MS = 280;
-/** Paralel akış: ilk konuşma eşiği düşük, sonraki parçalar birleşik (kesik ses yok). */
-const RUZGAR_TTS_STREAM_MIN_FIRST_CHARS = 36;
-const RUZGAR_TTS_STREAM_FIRST_CHARS = 130;
-const RUZGAR_TTS_STREAM_EARLY_CHARS = 88;
-const RUZGAR_TTS_STREAM_MERGE_CHARS = 520;
-const RUZGAR_TTS_MERGE_TARGET_CHARS = 520;
-const RUZGAR_TTS_MIN_QUEUE_CHARS = 24;
+/** Settle: yankı/yarış (ms) — Aşama A: 80→40; Aşama B PC↔mobil aynı */
+const RUZGAR_BARGE_SETTLE_MS = 40;
+/** Aşama C — text_ready→first_audio telemetri (A/B barge bozulmaz) */
+const RUZGAR_ASAMA_C_TTS_LAT = true;
+let _ttsTextReadyAt = 0;
+function markTtsTextReady(src) {
+  _ttsTextReadyAt = performance.now();
+  try {
+    window.__ruzgarTtsTextReadyAt = _ttsTextReadyAt;
+    window.__ruzgarTtsTextReadySrc = src || "";
+  } catch (_) {
+    /* yok say */
+  }
+}
+function markTtsFirstAudio(src) {
+  if (!_ttsTextReadyAt || !RUZGAR_ASAMA_C_TTS_LAT) return;
+  const ms = Math.round(performance.now() - _ttsTextReadyAt);
+  try {
+    window.__ruzgarTtsTextToFirstAudioMs = ms;
+    window.__ruzgarTtsLatLog = window.__ruzgarTtsLatLog || [];
+    window.__ruzgarTtsLatLog.push({
+      ms,
+      src: src || "",
+      under1s: ms < 1000,
+      t: Date.now(),
+    });
+    if (window.__ruzgarTtsLatLog.length > 48) window.__ruzgarTtsLatLog.shift();
+  } catch (_) {
+    /* yok say */
+  }
+  _ttsTextReadyAt = 0;
+}
+const RUZGAR_TTS_BUFFER_FALLBACK_FIRST_MS = 280;
+const RUZGAR_TTS_BUFFER_FALLBACK_MS = 180;
+/** Aşama D — ilk parça daha erken; noktalama/kelime sınırı (yarım kelime yok). */
+const RUZGAR_TTS_STREAM_MIN_FIRST_CHARS = 28;
+const RUZGAR_TTS_STREAM_FIRST_CHARS = 110;
+const RUZGAR_TTS_STREAM_EARLY_CHARS = 72;
+const RUZGAR_TTS_STREAM_MERGE_CHARS = 380;
+const RUZGAR_TTS_MERGE_TARGET_CHARS = 380;
+const RUZGAR_TTS_MIN_QUEUE_CHARS = 20;
 
 /** TTS sentez — arka iş parçacığı (Web Worker); yoksa fetch ile düşme (Ümit & Gökçenur). */
 let _ttsWorker = null;
@@ -11513,11 +11547,50 @@ function setStatus(right, left) {
 }
 window.setStatus = setStatus;
 
+/** Aşama A — Sus/Dur/Kes (metin veya STT) */
+function looksLikeVoiceStopCommand(text) {
+  const t = String(text || "")
+    .trim()
+    .toLocaleLowerCase("tr-TR")
+    .replace(/[!?.…,]+$/g, "")
+    .trim();
+  if (!t || t.length > 24) return false;
+  return /^(sus|dur|kes|sessiz|sus\s*ol|kes\s*sesi|sus\s*lütfen|sus\s*lutfen)$/i.test(
+    t
+  );
+}
+window.looksLikeVoiceStopCommand = looksLikeVoiceStopCommand;
+
+function notifyVoiceTurnListening(barge) {
+  try {
+    void fetch(`${API}/api/ses/voice-turn`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        state: "listening",
+        barge_in: !!barge,
+        note: barge ? "asama-a-barge" : "asama-a-listen",
+      }),
+    });
+  } catch (_) {
+    /* yok say */
+  }
+}
+
 /** Ses motoru (Edge + Web Speech) — yazarken veya yeni turda anında sustur */
 function silenceVoiceOutputNow() {
   bumpTtsSession();
   try {
     window.speechSynthesis.cancel();
+  } catch (_) {
+    /* yok say */
+  }
+  try {
+    if (ttsPlayingEl) {
+      ttsPlayingEl.pause();
+      ttsPlayingEl.removeAttribute("src");
+      ttsPlayingEl = null;
+    }
   } catch (_) {
     /* yok say */
   }
@@ -11543,6 +11616,7 @@ function ttsBlockedByMicLock() {
  */
 async function bargeInStopTtsForMic() {
   if (!RUZGAR_BARGE_IN) return false;
+  const t0 = performance.now();
   const hadTts = isTtsActive();
   const hadChat = !!(activeChatAbort || activeChatWs || perfBusy);
   if (!hadTts && !hadChat) return false;
@@ -11561,8 +11635,18 @@ async function bargeInStopTtsForMic() {
     hideThinkingCenter();
   }
   syncInterruptButton();
+  notifyVoiceTurnListening(true);
   await new Promise((r) => window.setTimeout(r, RUZGAR_BARGE_SETTLE_MS));
-  setStatus(hadTts ? "Kestin — dinliyorum…" : "Dinliyorum…", "Rüzgar");
+  const ms = Math.round(performance.now() - t0);
+  setStatus(
+    hadTts ? `Kestin — dinliyorum… (${ms} ms)` : `Dinliyorum… (${ms} ms)`,
+    "Rüzgar"
+  );
+  try {
+    window.__ruzgarLastBargeMs = ms;
+  } catch (_) {
+    /* yok say */
+  }
   return hadTts || hadChat;
 }
 window.bargeInStopTtsForMic = bargeInStopTtsForMic;
@@ -11666,6 +11750,15 @@ function interruptRuzgar() {
     /* yok say */
   }
   try {
+    if (ttsPlayingEl) {
+      ttsPlayingEl.pause();
+      ttsPlayingEl.removeAttribute("src");
+      ttsPlayingEl = null;
+    }
+  } catch (_) {
+    /* yok say */
+  }
+  try {
     activeChatWs?.close();
   } catch (_) {
     /* yok say */
@@ -11677,7 +11770,8 @@ function interruptRuzgar() {
   }
   hideThinkingCenter();
   renderDashboardAgentSteps([]);
-  setStatus("Durduruldu", "Rüzgar");
+  notifyVoiceTurnListening(true);
+  setStatus("Durduruldu — dinliyorum…", "Rüzgar");
   syncInterruptButton();
 }
 
@@ -14882,11 +14976,13 @@ function prepareTtsSpeechText(text) {
 }
 
 function ttsRequestPayload(text, karakter, extra) {
+  // Aşama D: sohbet akışında prosody=false → gereksiz cümle-arası sessizlik yok;
+  // uzun özel içerikte yüz katmanı / extra ile açılabilir.
   const payload = {
     text,
     karakter: normalizeKarakterForTts(karakter),
     backend: "auto",
-    prosody: true,
+    prosody: false,
   };
   try {
     if (typeof window.ruzgarProVoicePayload === "function") {
@@ -14989,7 +15085,8 @@ function pullNextParallelTtsChunk(opts) {
   }
 
   if (isFirst && pending.length >= RUZGAR_TTS_STREAM_EARLY_CHARS) {
-    for (const sep of [", ", "; ", ": ", " — ", " - "]) {
+    // Aşama D: önce cümle sonu; yoksa virgül/boşluk — asla kelime ortası
+    for (const sep of [". ", "! ", "? ", "… ", ", ", "; ", ": ", " — ", " - "]) {
       const i = pending.lastIndexOf(sep, RUZGAR_TTS_STREAM_EARLY_CHARS);
       if (i >= minLen) {
         return {
@@ -15190,6 +15287,7 @@ function playTtsBlob(blob) {
             resolve();
             return;
           }
+          if (isFirst) markTtsFirstAudio("playTtsBlob");
           void a.play();
         } catch (_) {
           try {
@@ -15261,6 +15359,9 @@ async function runTtsPump(ttsSess, karakter, signal) {
 
     const synthOne = async (chunk) => {
       const k = normalizeKarakterForTts(karakter);
+      if (ttsPlayedChunksThisTurn === 0 && !_ttsTextReadyAt) {
+        markTtsTextReady("runTtsPump");
+      }
       try {
         const b = await synthEdgeMp3ViaWorker(
           API,
@@ -16496,6 +16597,14 @@ async function sendMessageWithText(t, opts = {}) {
   const skipUser = !!opts.skipUserBubble;
   const text = (t || "").trim();
   if (!text) return;
+  // Aşama A — Sus/Dur/Kes: kuyruk flush + dinle (sohbet turuna gitme)
+  if (looksLikeVoiceStopCommand(text)) {
+    if (!skipUser) appendBubble("user", text);
+    interruptRuzgar();
+    notifyVoiceTurnListening(true);
+    setStatus("Susturuldu — dinliyorum…", "Rüzgar");
+    return;
+  }
   if (perfBusy || chatSendInFlight) {
     flashRuzgarDurum("Önceki yanıt bitene kadar bekleyin veya DURDUR'a basın.");
     return;
@@ -17604,6 +17713,7 @@ function speakTextImmediate(text) {
   syncInterruptButton();
   bumpTtsSession();
   const ttsSess = ttsSessionCounter;
+  markTtsTextReady("speakTextImmediate");
   void (async () => {
     try {
       let kar = "asistan";

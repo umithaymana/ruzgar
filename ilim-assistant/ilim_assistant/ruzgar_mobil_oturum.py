@@ -17,9 +17,11 @@ import time
 from pathlib import Path
 from typing import Any
 
-VERSION = "mobil-oturum-v3-2026-11-13"
+VERSION = "mobil-oturum-v3e-onboard-2026-11-18"
 _TTL_SEC = 60 * 60 * 24 * 30  # 30 gün — «bir kez giriş»
 _STORE = "mobil_oturum_store.json"
+# Aşama D+sabit: eşzamanlı cihaz/oturum tavanı (2–3 kullanıcı ayrı oturum)
+_MAX_SESSIONS_PER_USER = int(os.environ.get("RUZGAR_MOBIL_MAX_SESSIONS_PER_USER", "3") or "3")
 _DEFAULT_MOTORS = {
     "sohbet": True,
     "ses": False,
@@ -74,42 +76,29 @@ def _path() -> Path:
 
 def _load() -> dict[str, Any]:
     p = _path()
+    empty = {
+        "users": {},
+        "sessions": {},
+        "pending": {},
+        "pending_outcomes": {},
+        "admins": [],
+        "root_devices": [],
+        "recovery": {},
+        "version": VERSION,
+    }
     if not p.is_file():
-        return {
-            "users": {},
-            "sessions": {},
-            "pending": {},
-            "admins": [],
-            "root_devices": [],
-            "recovery": {},
-            "version": VERSION,
-        }
+        return dict(empty)
     try:
         data = json.loads(p.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
-        return {
-            "users": {},
-            "sessions": {},
-            "pending": {},
-            "admins": [],
-            "root_devices": [],
-            "recovery": {},
-            "version": VERSION,
-        }
+        return dict(empty)
     if not isinstance(data, dict):
-        return {
-            "users": {},
-            "sessions": {},
-            "pending": {},
-            "admins": [],
-            "root_devices": [],
-            "recovery": {},
-            "version": VERSION,
-        }
+        return dict(empty)
     for k, default in (
         ("users", {}),
         ("sessions", {}),
         ("pending", {}),
+        ("pending_outcomes", {}),
         ("admins", []),
         ("root_devices", []),
         ("recovery", {}),
@@ -145,7 +134,12 @@ def public_status() -> dict[str, Any]:
         "has_recovery": bool((data.get("recovery") or {}).get("code_hash")),
         "concurrent_yazi_limit": _CONCURRENT_YAZI,
         "concurrent_active": active,
-        "note": "PWA /api/mobil/pwa · Tailscale kurulum ayrı · kök: Mimar PC + telefon.",
+        "max_sessions_per_user": _MAX_SESSIONS_PER_USER,
+        "session_isolation": True,
+        "note": (
+            "PWA /api/mobil/pwa · Tailscale MagicDNS sabit adres · "
+            "oturum token izolasyonu · kök: Mimar PC + telefon."
+        ),
     }
 
 
@@ -264,8 +258,62 @@ def register_request(
         "code": code,
         "created_at": time.time(),
     }
+    # Eski outcome temizle — arkadaş poll taze beklesin
+    outcomes = data.setdefault("pending_outcomes", {})
+    outcomes.pop(pid, None)
     _save(data)
-    return {"ok": True, "pending_id": pid, "code": code, "message": "Mimar panelinden onay bekleniyor"}
+    return {
+        "ok": True,
+        "pending_id": pid,
+        "code": code,
+        "message": "Mimar panelinden onay bekleniyor",
+        "poll": f"/api/mobil/register/status?pending_id={pid}",
+    }
+
+
+def _prune_outcomes(data: dict[str, Any], *, ttl_sec: float = 60 * 60 * 12) -> None:
+    now = time.time()
+    out = data.setdefault("pending_outcomes", {})
+    dead = [k for k, v in list(out.items()) if now - float((v or {}).get("at") or 0) > ttl_sec]
+    for k in dead:
+        out.pop(k, None)
+
+
+def pending_status(pending_id: str) -> dict[str, Any]:
+    """Arkadaş cihazı: kayıt sonrası onay poll (şifre sızdırmaz)."""
+    if not enabled():
+        return {"ok": False, "error": "mobil oturum kapalı"}
+    pid = (pending_id or "").strip()
+    if not pid:
+        return {"ok": False, "error": "pending_id gerekli"}
+    data = _load()
+    _prune_outcomes(data)
+    if pid in (data.get("pending") or {}):
+        pend = data["pending"][pid]
+        return {
+            "ok": True,
+            "status": "waiting",
+            "pending_id": pid,
+            "kullanici": pend.get("kullanici"),
+            "message": "Mimar onayını bekliyor",
+        }
+    outcome = (data.get("pending_outcomes") or {}).get(pid)
+    if outcome:
+        return {
+            "ok": True,
+            "status": str(outcome.get("status") or "unknown"),
+            "pending_id": pid,
+            "kullanici": outcome.get("kullanici"),
+            "message": outcome.get("message") or "",
+            "login_ready": str(outcome.get("status")) == "approved",
+        }
+    return {
+        "ok": True,
+        "status": "unknown",
+        "pending_id": pid,
+        "message": "Kayıt bulunamadı veya süresi doldu",
+        "login_ready": False,
+    }
 
 
 def approve_pending(pending_id: str, *, code: str, approve: bool, actor: str = "mimar") -> dict[str, Any]:
@@ -282,9 +330,17 @@ def approve_pending(pending_id: str, *, code: str, approve: bool, actor: str = "
     if str(pend.get("code")) != str(code).strip():
         return {"ok": False, "error": "kod uyuşmadı"}
     del data["pending"][pending_id]
+    _prune_outcomes(data)
+    outcomes = data.setdefault("pending_outcomes", {})
     if not approve:
+        outcomes[pending_id] = {
+            "status": "rejected",
+            "kullanici": pend.get("kullanici"),
+            "at": time.time(),
+            "message": "Kayıt reddedildi",
+        }
         _save(data)
-        return {"ok": True, "status": "rejected"}
+        return {"ok": True, "status": "rejected", "login_ready": False}
     kullanici = pend["kullanici"]
     data["users"][kullanici] = {
         "ad": pend.get("ad"),
@@ -296,8 +352,20 @@ def approve_pending(pending_id: str, *, code: str, approve: bool, actor: str = "
         "role": "user",
         "created_at": time.time(),
     }
+    outcomes[pending_id] = {
+        "status": "approved",
+        "kullanici": kullanici,
+        "at": time.time(),
+        "message": "Onaylandı — girişe geçebilirsiniz",
+    }
     _save(data)
-    return {"ok": True, "status": "approved", "kullanici": kullanici}
+    return {
+        "ok": True,
+        "status": "approved",
+        "kullanici": kullanici,
+        "login_ready": True,
+        "message": "Onaylandı — arkadaş giriş ekranına geçebilir",
+    }
 
 
 _DEVICE_KINDS = ("telefon", "tablet", "dizustu")
@@ -334,6 +402,21 @@ def login(
         else:
             kind = "telefon"
     name = (device_name or "").strip()[:80] or kind
+    # Aşama D — aynı kullanıcının eski oturumlarını tavanla (2–3 eşzamanlı cihaz)
+    # Başka kullanıcıların oturumuna dokunulmaz (izolasyon).
+    now = time.time()
+    own: list[tuple[str, float]] = []
+    for tok, s in list((data.get("sessions") or {}).items()):
+        if float(s.get("expires_at") or 0) < now:
+            del data["sessions"][tok]
+            continue
+        if s.get("kullanici") == kullanici:
+            own.append((tok, float(s.get("created_at") or 0)))
+    own.sort(key=lambda x: x[1])  # eski → yeni
+    while len(own) >= max(1, _MAX_SESSIONS_PER_USER):
+        old_tok, _ = own.pop(0)
+        data["sessions"].pop(old_tok, None)
+
     token = secrets.token_urlsafe(32)
     data["sessions"][token] = {
         "kullanici": kullanici,
@@ -342,6 +425,7 @@ def login(
         "device_kind": kind,
         "created_at": time.time(),
         "expires_at": time.time() + _TTL_SEC,
+        "ns": f"u:{kullanici}",  # sohbet/veri ad alanı — çapraz erişim yok
     }
     # Yönetici cihaz kaydı (telefon / tablet / dizüstü üçlüsü)
     role = user.get("role") or "user"
@@ -424,14 +508,17 @@ def validate_token(token: str) -> dict[str, Any] | None:
         return None
     user = (data.get("users") or {}).get(sess.get("kullanici") or "")
     role = (user or {}).get("role") or "user"
+    kullanici = sess.get("kullanici")
     return {
-        "kullanici": sess.get("kullanici"),
+        "kullanici": kullanici,
         "role": role,
         "motors": normalize_motors((user or {}).get("motors")),
         "device_name": sess.get("device_name"),
         "device_id": sess.get("device_id"),
         "device_kind": sess.get("device_kind") or "",
-        "is_admin": sess.get("kullanici") in (data.get("admins") or []) or role == "mimar",
+        "is_admin": kullanici in (data.get("admins") or []) or role == "mimar",
+        "ns": sess.get("ns") or (f"u:{kullanici}" if kullanici else ""),
+        "isolation": True,
     }
 
 
@@ -562,8 +649,18 @@ def list_root_devices() -> list[dict[str, Any]]:
 
 
 def begin_chat_slot(token: str | None) -> dict[str, Any]:
-    """Eşzamanlı yazı tavanı (plan 9.2)."""
-    key = token or f"anon:{threading.get_ident()}"
+    """Eşzamanlı yazı tavanı (plan 9.2) — slot token/ns ile izole."""
+    auth = validate_token(token) if token else None
+    if token and auth is None:
+        return {
+            "ok": False,
+            "error": "oturum",
+            "message": "Oturum geçersiz — başka kullanıcının slotu kullanılamaz.",
+        }
+    ns = (auth or {}).get("ns") or ""
+    key = (f"{ns}:{token[:12]}" if token and ns else None) or (
+        token or f"anon:{threading.get_ident()}"
+    )
     with _active_lock:
         now = time.time()
         dead = [k for k, t in _active_chats.items() if t < now - 180]
@@ -576,7 +673,7 @@ def begin_chat_slot(token: str | None) -> dict[str, Any]:
                 "message": f"Eşzamanlı yazı tavanı ({_CONCURRENT_YAZI}). Biraz sonra tekrar.",
             }
         _active_chats[key] = now
-    return {"ok": True, "slot": key}
+    return {"ok": True, "slot": key, "ns": ns or None, "kullanici": (auth or {}).get("kullanici")}
 
 
 def end_chat_slot(slot: str | None) -> None:

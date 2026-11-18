@@ -49,12 +49,13 @@ _CUMLE_SON = re.compile(r"[.!?…؟][\"»')\]]*\s*$")
 _VIRGUL_SON = re.compile(r"[,،]\s*$")
 _ORTA_SON = re.compile(r"[;:]\s*$")
 
+# Aşama D — taban süreler kısaltıldı (eski: 280/420/650/1100…); doğal durak korunur
 _DURAK_TABAN_MS: dict[DurakTuru, int] = {
     DurakTuru.yok: 0,
-    DurakTuru.virgul: 280,
-    DurakTuru.orta: 420,
-    DurakTuru.cumle: 650,
-    DurakTuru.paragraf: 1100,
+    DurakTuru.virgul: 140,
+    DurakTuru.orta: 220,
+    DurakTuru.cumle: 320,
+    DurakTuru.paragraf: 520,
     DurakTuru.ayet: 1650,
     DurakTuru.vakif: 1950,
     DurakTuru.besmele: 1400,
@@ -218,7 +219,16 @@ def durak_suresi_ms(
     huzur = max(0.45, min(1.0, float(huzur_carpani)))
     durak = max(0.55, min(1.6, float(durak_carpani)))
     huzur_factor = 1.0 + (1.0 - huzur) * 0.85
-    return max(0, int(ms * durak * huzur_factor))
+    out = max(0, int(ms * durak * huzur_factor))
+    # Aşama D: genel sohbet / tilavet dışı ekstra sessizliği daha da kısalt
+    if not tilavet and icerik == IcerikYolu.genel:
+        try:
+            from ilim_assistant.ses_asama_d import apply_lean_pause_ms
+
+            out = apply_lean_pause_ms(out)
+        except Exception:
+            pass
+    return out
 
 
 def prosody_ozet(parcalar: list[KonusmaParcasi]) -> dict[str, int | bool]:

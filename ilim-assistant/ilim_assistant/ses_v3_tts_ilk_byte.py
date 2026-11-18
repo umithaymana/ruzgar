@@ -16,8 +16,17 @@ from typing import Any
 V3_VERSION = "ses-v3-tts-ilk-byte-v1-2026-11-03"
 
 # UI ilk cümle tamponu ~130; birleşik parçalar ~520 — üstü pool yoluna düşer.
-_DEFAULT_FAST_CHARS = 520
+# Aşama D: erken parçalar biraz daha geniş V3 sıcak yolda kalsın.
+_DEFAULT_FAST_CHARS = 560
 
+# Aşama C/D — son ölçüm (text_ready→first_byte sunucu tarafı)
+_LAST_FIRST_BYTE: dict[str, Any] = {}
+ASAMA_C_TTS_TARGET_MS = 1000.0
+ASAMA_D_TTS_KEEP_MS = 886.0
+
+
+def last_tts_first_byte() -> dict[str, Any]:
+    return dict(_LAST_FIRST_BYTE)
 
 def v3_enabled() -> bool:
     return os.environ.get("RUZGAR_TTS_V3", "1").strip().lower() not in (
@@ -84,13 +93,19 @@ async def edge_stream_collect_mp3(
 ) -> dict[str, Any]:
     """
     Edge stream → ham mp3 bayt. İlk audio chunk ms + retry sayacı.
-    NoAudioReceived / boş stream'te yeniden dener.
+    NoAudioReceived / boş stream / ağ hatalarında yeniden dener (Aşama D).
     """
     from ilim_assistant.tts_service import edge_tts_import
+
+    try:
+        from ilim_assistant.ses_asama_d import classify_edge_error
+    except Exception:
+        classify_edge_error = None  # type: ignore
 
     attempts = v3_retries() if retries is None else max(0, retries)
     edge_tts = edge_tts_import()
     last_err = ""
+    last_kind = ""
     for attempt in range(attempts + 1):
         t0 = time.perf_counter()
         first_ms: float | None = None
@@ -107,24 +122,53 @@ async def edge_stream_collect_mp3(
                     first_ms = (time.perf_counter() - t0) * 1000.0
                 buf.extend(data)
             if buf:
-                return {
+                result = {
                     "ok": True,
                     "bytes": bytes(buf),
                     "first_byte_ms": round(first_ms, 1) if first_ms is not None else None,
                     "total_ms": round((time.perf_counter() - t0) * 1000.0, 1),
                     "attempts": attempt + 1,
                     "note": "",
+                    "metric": "text_ready→first_audio_chunk",
+                    "under_1s": (
+                        first_ms is not None and float(first_ms) < ASAMA_C_TTS_TARGET_MS
+                    ),
+                    "under_d_keep": (
+                        first_ms is not None and float(first_ms) <= ASAMA_D_TTS_KEEP_MS
+                    ),
+                    "asama_d": True,
                 }
+                _LAST_FIRST_BYTE.clear()
+                _LAST_FIRST_BYTE.update(
+                    {
+                        k: v
+                        for k, v in result.items()
+                        if k != "bytes"
+                    }
+                )
+                _LAST_FIRST_BYTE["bytes_len"] = len(result["bytes"])
+                return result
             last_err = "stream:no_audio_chunk"
+            last_kind = "no_audio"
         except Exception as exc:
             last_err = f"{type(exc).__name__}:{exc}"[:180]
-            if not _is_no_audio(exc) and "no_audio" not in last_err.lower():
-                # Ağ dışı beklenmeyen hata — bir kez daha dene, sonra kır
+            if classify_edge_error is not None:
+                info = classify_edge_error(exc)
+                last_kind = str(info.get("kind") or "")
+                if not info.get("retryable", True) or attempt >= attempts:
+                    break
+            elif not _is_no_audio(exc) and "no_audio" not in last_err.lower():
                 if attempt >= attempts:
                     break
-            await asyncio.sleep(0.12 * (attempt + 1))
+            # Aşama D: kısa üstel bekleme (0.08 / 0.16 / 0.24…)
+            await asyncio.sleep(0.08 * (attempt + 1))
             continue
-        await asyncio.sleep(0.12 * (attempt + 1))
+        await asyncio.sleep(0.08 * (attempt + 1))
+    user_msg = last_err or "empty"
+    if classify_edge_error is not None:
+        info = classify_edge_error(last_err)
+        user_msg = str(info.get("user_message") or user_msg)
+        last_kind = str(info.get("kind") or last_kind)
     return {
         "ok": False,
         "bytes": b"",
@@ -132,6 +176,9 @@ async def edge_stream_collect_mp3(
         "total_ms": None,
         "attempts": attempts + 1,
         "note": last_err or "empty",
+        "error_kind": last_kind,
+        "user_message": user_msg,
+        "asama_d": True,
     }
 
 
@@ -170,7 +217,12 @@ def measure_v3_compare(text: str | None = None) -> dict[str, Any]:
     """Smoke/ölçüm: V3 stream first-byte (senkron sarmalayıcı)."""
     sample = (text or "Merhaba Ümit abi, Rüzgar V3 ses testi.").strip()
     voice = os.environ.get("RUZGAR_TTS_VOICE", "tr-TR-AhmetNeural").strip() or "tr-TR-AhmetNeural"
-    rate = os.environ.get("RUZGAR_TTS_V3_RATE", "+0%").strip() or "+0%"
+    try:
+        from ilim_assistant.ses_asama_d import default_rate
+
+        rate = default_rate()
+    except Exception:
+        rate = os.environ.get("RUZGAR_TTS_V3_RATE", "+3%").strip() or "+3%"
     pitch = "+0Hz"
 
     async def _run() -> dict[str, Any]:

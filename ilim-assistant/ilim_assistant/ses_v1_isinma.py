@@ -29,30 +29,51 @@ def last_warmup_status() -> dict[str, Any]:
 
 
 def prime_stt_whisper() -> dict[str, Any]:
-    """Whisper get_model — soğuk ilk STT turunu keser."""
-    out: dict[str, Any] = {"ok": False, "ms": None, "model": None, "note": ""}
+    """Whisper get_model + Aşama C warm infer — soğuk ilk STT turunu keser."""
+    out: dict[str, Any] = {
+        "ok": False,
+        "ms": None,
+        "model": None,
+        "note": "",
+        "load_ms": None,
+        "infer_ms": None,
+    }
     if os.environ.get("RUZGAR_STT", "").strip().lower() in ("0", "false", "no"):
         out["note"] = "RUZGAR_STT=0"
         return out
     try:
-        from ilim_assistant.stt_whisper import get_model, stt_runtime_available, whisper_model_name
+        from ilim_assistant.stt_whisper import (
+            stt_runtime_available,
+            warm_stt_model,
+            whisper_model_name,
+        )
 
         if not stt_runtime_available():
             out["note"] = "faster-whisper yok"
             return out
         out["model"] = whisper_model_name()
         t0 = time.perf_counter()
-        get_model()
+        warm = warm_stt_model()
         out["ms"] = round((time.perf_counter() - t0) * 1000.0, 1)
-        out["ok"] = True
+        out["load_ms"] = warm.get("load_ms")
+        out["infer_ms"] = warm.get("infer_ms")
+        out["meta"] = warm.get("meta") or {}
+        out["ok"] = bool(warm.get("ok"))
+        out["note"] = warm.get("note") or ""
     except Exception as exc:
         out["note"] = str(exc)[:200]
     return out
 
 
 def prime_tts_pool() -> dict[str, Any]:
-    """Edge-TTS ProcessPool uyandırma."""
-    out: dict[str, Any] = {"ok": False, "ms": None, "note": ""}
+    """Edge-TTS ProcessPool + Aşama C kısa stream ısınma (TLS/Edge yolu)."""
+    out: dict[str, Any] = {
+        "ok": False,
+        "ms": None,
+        "note": "",
+        "pool_ms": None,
+        "edge_first_byte_ms": None,
+    }
     try:
         from ilim_assistant.tts_service import edge_available, prime_tts_process_pool
 
@@ -61,12 +82,39 @@ def prime_tts_pool() -> dict[str, Any]:
             return out
         t0 = time.perf_counter()
         prime_tts_process_pool()
+        out["pool_ms"] = round((time.perf_counter() - t0) * 1000.0, 1)
+        # Aşama C — idle Edge stream ısınma (barge flush bozulmaz; yalnız warm)
+        try:
+            from ilim_assistant.ses_v3_tts_ilk_byte import edge_stream_collect_mp3
+
+            voice = (
+                os.environ.get("RUZGAR_TTS_VOICE", "tr-TR-AhmetNeural").strip()
+                or "tr-TR-AhmetNeural"
+            )
+
+            async def _warm() -> dict[str, Any]:
+                return await edge_stream_collect_mp3(
+                    "Merhaba.",
+                    voice=voice,
+                    rate="+0%",
+                    pitch="+0Hz",
+                    retries=1,
+                )
+
+            import asyncio
+
+            warm_r = asyncio.run(_warm())
+            out["edge_first_byte_ms"] = warm_r.get("first_byte_ms")
+            out["edge_ok"] = bool(warm_r.get("ok"))
+            if not warm_r.get("ok"):
+                out["note"] = (warm_r.get("note") or "edge_warm_fail")[:160]
+        except Exception as exc:
+            out["note"] = f"edge_warm:{exc}"[:160]
         out["ms"] = round((time.perf_counter() - t0) * 1000.0, 1)
         out["ok"] = True
     except Exception as exc:
         out["note"] = str(exc)[:200]
     return out
-
 
 def run_ses_v1_warmup(*, dry_run: bool = False) -> dict[str, Any]:
     """STT + TTS ısınma; dry_run=sadece kapı/versiyon (smoke)."""

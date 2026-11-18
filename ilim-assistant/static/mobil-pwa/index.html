@@ -13,7 +13,7 @@
   <link rel="icon" href="favicon-32.png?v=5" type="image/png" sizes="32x32" />
   <title>Rüzgar Mobil</title>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <link rel="stylesheet" href="app.css?v=20261114-harita-h105" />
+  <link rel="stylesheet" href="app.css?v=20261118-onboard" />
 </head>
 <body>
   <div id="installBar" class="install-bar hidden">
@@ -32,8 +32,14 @@
         <p class="hint">İnce istemci · beyin PC’de · Ümit &amp; Gökçenur</p>
         <p class="hint install-hint" id="installHint"></p>
       </div>
-      <button type="button" id="btnReload" class="ghost-inline reload-btn" title="Sayfayı yenile">Yenile</button>
+      <button type="button" id="btnReload" class="ghost-inline reload-btn" title="Sayfayı yenile / güncelle">Yenile</button>
     </header>
+
+    <section id="friendGuide" class="card friend-guide hidden" aria-live="polite">
+      <h2 class="panel-h" style="margin-top:0">Arkadaş — 3 adım</h2>
+      <ol id="friendGuideSteps" class="friend-steps"></ol>
+      <p class="hint" id="friendGuideCert"></p>
+    </section>
 
     <section id="gate" class="card">
       <label>Kapı URL
@@ -68,17 +74,19 @@
           <label>Telefon <input id="tel" name="tel" type="tel" autocomplete="tel" inputmode="tel" /></label>
           <label>Kullanıcı <input id="regUser" name="username" autocomplete="username" /></label>
           <label>Şifre <input id="regPass" name="new-password" type="password" autocomplete="new-password" /></label>
-          <p class="hint">Tarayıcı / şifre yöneticisi otomatik doldurabilir; son kayıt alanları da hatırlanır.</p>
-          <button type="submit" id="btnReg" class="primary">Kayıt iste (kod C)</button>
+          <p class="hint">Kayıt sonrası Mimar Onayla deyince bu ekran otomatik girişe geçer.</p>
+          <button type="submit" id="btnReg" class="primary">Kayıt iste</button>
           <p id="regCode" class="code"></p>
+          <p id="regWait" class="hint reg-wait hidden" aria-live="polite"></p>
         </form>
       </div>
       <div id="panelBox" class="hidden">
-        <p class="hint">Yönetici paneli · bekleyen / oturum / üçlü cihaz / motor</p>
+        <p class="hint">Yönetici · davet + onay + motor</p>
         <div class="panel-toolbar">
           <button type="button" id="btnRefreshPanel">Yenile</button>
           <button type="button" id="btnWol" class="ghost-inline">WoL dene</button>
         </div>
+        <div id="panelInvite" class="panel-invite hidden"></div>
         <div id="panelStatus" class="panel-block"></div>
         <h3 class="panel-h">Yönetici üçlü</h3>
         <div id="panelDevices" class="panel-grid"></div>
@@ -156,11 +164,12 @@
         </div>
       </div>
       <div id="panelView" class="hidden">
-        <p class="hint">Yönetici paneli · bekleyen / oturum / cihaz / motor</p>
+        <p class="hint">Yönetici · davet + onay + motor</p>
         <div class="panel-toolbar">
           <button type="button" id="btnRefreshPanel2">Yenile</button>
           <button type="button" id="btnWol2" class="ghost-inline">WoL dene</button>
         </div>
+        <div id="panelInvite2" class="panel-invite hidden"></div>
         <div id="panelStatus2" class="panel-block"></div>
         <h3 class="panel-h">Yönetici üçlü</h3>
         <div id="panelDevices2" class="panel-grid"></div>
@@ -173,6 +182,6 @@
       </div>
     </section>
   </div>
-  <script src="app.js?v=20261117-f7-chunk"></script>
+  <script src="app.js?v=20261118-onboard"></script>
 </body>
 </html>

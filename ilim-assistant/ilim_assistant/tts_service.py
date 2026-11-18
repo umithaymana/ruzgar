@@ -107,9 +107,19 @@ def _edge_synth_mp3_bytes(job: tuple[str, str, str, str]) -> bytes:
             except Exception as exc:
                 last = exc
                 name = type(exc).__name__
-                if "NoAudio" not in name and "NoAudio" not in str(exc) and attempt >= retries:
+                msg = str(exc)
+                # Aşama D: NoAudio + ağ/timeout'ta retry; diğerlerinde de bir kez daha dene
+                retryable = (
+                    "NoAudio" in name
+                    or "NoAudio" in msg
+                    or "timeout" in msg.lower()
+                    or "connect" in msg.lower()
+                    or "network" in msg.lower()
+                    or attempt < retries
+                )
+                if not retryable or attempt >= retries:
                     raise
-                await asyncio.sleep(0.12 * (attempt + 1))
+                await asyncio.sleep(0.08 * (attempt + 1))
         assert last is not None
         raise last
 

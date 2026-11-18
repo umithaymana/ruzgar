@@ -1,8 +1,8 @@
-/* Rüzgar PWA — HTML/ağ öncelikli (eski cache yüzünden PC seçeneği kaybolmasın) */
-const CACHE = "ruzgar-pwa-v73-harita-h4";
+/* Rüzgar PWA — HTML/ağ öncelikli; Yenile = güncelleme (skipWaiting + claim) */
+const CACHE = "ruzgar-pwa-v20261118-onboard";
 const ASSETS = [
-  "./app.css?v=49-harita-faz2",
-  "./app.js?v=73-harita-h4",
+  "./app.css?v=20261118-onboard",
+  "./app.js?v=20261118-onboard",
   "./manifest.webmanifest?v=5",
   "./icon-192.png?v=5",
   "./icon-512.png?v=5",
@@ -27,6 +27,13 @@ self.addEventListener("activate", (e) => {
   );
 });
 
+/* Yeni SW indirgendiğinde hemen devral — Yenile yeterli olsun */
+self.addEventListener("message", (e) => {
+  if (e && e.data && e.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
   if (url.pathname.includes("/api/")) return;
@@ -39,11 +46,18 @@ self.addEventListener("fetch", (e) => {
     url.pathname.endsWith("/index.html") ||
     url.pathname.endsWith("/mobil");
 
-  if (isHtml) {
+  // app.js / app.css — ağ öncelikli (eski SW query ile kilitlenmesin)
+  const isAppShell =
+    /\/app\.js(?:\?|$)/.test(url.pathname + url.search) ||
+    /\/app\.css(?:\?|$)/.test(url.pathname + url.search) ||
+    url.pathname.endsWith("/app.js") ||
+    url.pathname.endsWith("/app.css");
+
+  if (isHtml || isAppShell) {
     e.respondWith(
       fetch(e.request)
         .then((res) => res)
-        .catch(() => caches.match("./index.html")),
+        .catch(() => caches.match(e.request).then((hit) => hit || caches.match("./index.html"))),
     );
     return;
   }

@@ -5418,8 +5418,108 @@ def api_hafiza_oda_cmd(body: HafizaOdaBody):
 
 
 def _mobil_erisim_payload() -> dict[str, Any]:
-    """LAN + Tailscale mobil kapı URL'leri (telefonun bağlanacağı adresler)."""
+    """LAN + Tailscale mobil kapı URL'leri — sabit MagicDNS öncelikli (Aşama D+sabit erişim)."""
+    import ipaddress
+    import json
     import socket
+    from pathlib import Path
+
+    def _ip_kind(ip: str) -> int:
+        """Tailscale sabit (0), aynı Wi‑Fi (1), diğer (2). LAN DHCP değişir → sticky değil."""
+        try:
+            addr = ipaddress.ip_address(ip)
+        except ValueError:
+            return 2
+        if addr.is_loopback:
+            return 3
+        # Tailscale / CGNAT 100.64/10 — MagicDNS ile sabit; LAN'dan önce
+        if addr in ipaddress.ip_network("100.64.0.0/10"):
+            return 0
+        if addr.is_private:
+            return 1
+        return 2
+
+    def _detect_magicdns() -> dict[str, str]:
+        """Tailscale MagicDNS hostname (reboot/kod sonrası aynı adres)."""
+        sticky_path = Path(__file__).resolve().parent / ".ruzgar" / "mobil_sticky_host.json"
+        env_host = (os.environ.get("RUZGAR_MOBIL_STICKY_HOST") or "").strip().lower()
+        magic = ""
+        ts_ip = ""
+        # 1) env / sticky dosya
+        if env_host:
+            magic = env_host
+        elif sticky_path.is_file():
+            try:
+                cur = json.loads(sticky_path.read_text(encoding="utf-8"))
+                magic = str(cur.get("magicdns") or cur.get("host") or "").strip().lower()
+                ts_ip = str(cur.get("ts_ip") or "").strip()
+            except Exception:
+                pass
+        # 2) tailscale status / dns
+        if not magic:
+            try:
+                import subprocess
+
+                out = subprocess.check_output(
+                    ["tailscale", "status", "--json"],
+                    text=True,
+                    encoding="utf-8",
+                    errors="ignore",
+                    timeout=4,
+                )
+                data = json.loads(out)
+                self_node = data.get("Self") or {}
+                dns_name = str(self_node.get("DNSName") or "").strip().rstrip(".").lower()
+                if dns_name:
+                    magic = dns_name
+                addrs = self_node.get("TailscaleIPs") or []
+                for a in addrs:
+                    if str(a).startswith("100."):
+                        ts_ip = str(a)
+                        break
+            except Exception:
+                pass
+        if not magic:
+            try:
+                import subprocess
+                import re
+
+                out = subprocess.check_output(
+                    ["tailscale", "dns", "status"],
+                    text=True,
+                    encoding="utf-8",
+                    errors="ignore",
+                    timeout=4,
+                )
+                m = re.search(
+                    r"reach this device at\s+([a-z0-9.-]+\.ts\.net)",
+                    out,
+                    re.I,
+                )
+                if m:
+                    magic = m.group(1).strip().lower()
+            except Exception:
+                pass
+        if magic:
+            try:
+                sticky_path.parent.mkdir(parents=True, exist_ok=True)
+                sticky_path.write_text(
+                    json.dumps(
+                        {
+                            "magicdns": magic,
+                            "ts_ip": ts_ip,
+                            "note": "Sabit mobil adres — LAN IP değişse de bu host kalır",
+                            "updated": __import__("time").strftime("%Y-%m-%d %H:%M:%S"),
+                        },
+                        ensure_ascii=False,
+                        indent=2,
+                    )
+                    + "\n",
+                    encoding="utf-8",
+                )
+            except Exception:
+                pass
+        return {"magicdns": magic, "ts_ip": ts_ip}
 
     port = int((os.environ.get("RUZGAR_API_PORT") or os.environ.get("PORT") or "8779").strip() or "8779")
     listen = (os.environ.get("RUZGAR_API_HOST") or "127.0.0.1").strip() or "127.0.0.1"
@@ -5439,13 +5539,95 @@ def _mobil_erisim_payload() -> dict[str, Any]:
         rip = s.getsockname()[0]
         s.close()
         if rip and not rip.startswith("127.") and rip not in ips:
-            ips.insert(0, rip)
+            ips.append(rip)
     except Exception:
         pass
+    sticky = _detect_magicdns()
+    magic = sticky.get("magicdns") or ""
+    ts_ip = sticky.get("ts_ip") or ""
+    if ts_ip and ts_ip not in ips:
+        ips.append(ts_ip)
+    ips.sort(key=_ip_kind)
     https_port = int((os.environ.get("RUZGAR_HTTPS_PORT") or "8443").strip() or "8443")
-    # Tek kapı: mobil PWA her zaman HTTPS (yazı + mikrofon aynı ikon)
-    urls = [f"https://{ip}:{https_port}/mobil/" for ip in ips]
+    # Sabit kapı önce: MagicDNS hostname (LAN 103↔105 kırılmaz)
+    sticky_urls: list[str] = []
+    if magic:
+        sticky_urls.append(f"https://{magic}:{https_port}/mobil/")
+    if ts_ip:
+        u = f"https://{ts_ip}:{https_port}/mobil/"
+        if u not in sticky_urls:
+            sticky_urls.append(u)
+    lan_urls = [f"https://{ip}:{https_port}/mobil/" for ip in ips]
+    urls: list[str] = []
+    for u in sticky_urls + lan_urls:
+        if u not in urls:
+            urls.append(u)
     http_fallback = [f"http://{ip}:{port}/mobil/" for ip in ips]
+    primary = sticky_urls[0] if sticky_urls else (urls[0] if urls else f"https://<ip>:{https_port}/mobil/")
+    # Sertifika: Tailscale LE (gerçek) tercih; yoksa self-signed + tek ekran rehber
+    cert_dir = Path(__file__).resolve().parent / ".ruzgar" / "certs"
+    le_crt = cert_dir / "tailscale-le.crt"
+    le_key = cert_dir / "tailscale-le.key"
+    ss_crt = cert_dir / "ruzgar-mobil.crt"
+    cert_kind = "none"
+    if le_crt.is_file() and le_key.is_file():
+        cert_kind = "tailscale_le"
+    elif ss_crt.is_file():
+        cert_kind = "self_signed"
+    cert_warning = cert_kind != "tailscale_le"
+    admin_users = "https://login.tailscale.com/admin/users"
+    friend_steps = [
+        {
+            "n": 1,
+            "title": "Tailscale kur",
+            "body": "Telefona Tailscale indir, aynı ağa (tailnet) katıl. Port açma yok.",
+            "links": [
+                {"label": "Android", "url": "https://play.google.com/store/apps/details?id=com.tailscale.ipn"},
+                {"label": "iPhone", "url": "https://apps.apple.com/app/tailscale/id1470499037"},
+            ],
+        },
+        {
+            "n": 2,
+            "title": "Rüzgar linkini aç",
+            "body": "Aşağıdaki sabit (MagicDNS) adresi telefonda aç:",
+            "url": primary if sticky_urls else None,
+        },
+        {
+            "n": 3,
+            "title": "Kayıt ol",
+            "body": "Ad / kullanıcı / şifre → gönder. Mimar panelden Onayla deyince giriş hazır.",
+        },
+    ]
+    if cert_warning:
+        friend_steps.insert(
+            2,
+            {
+                "n": "2b",
+                "title": "Sertifika (bir kez)",
+                "body": "Uyarı çıkarsa Gelişmiş → Devam / Visit anyway. LE cert yoksa bu adım kalır.",
+            },
+        )
+    mimar_invite = {
+        "title": "Tailscale’e kullanıcı davet et",
+        "admin_users_url": admin_users,
+        "copy_hint": "Admin console → Users → Invite user (e‑posta veya link).",
+        "invite_url": None,  # CLI davet yok; admin console tek tık
+        "sticky_url": primary if sticky_urls else None,
+        "steps_tr": [
+            "1) Aşağıdaki «Davet / kullanıcı yönetimi» ile Tailscale admin’i aç.",
+            "2) Invite user → arkadaşa link veya e‑posta gönder.",
+            "3) Arkadaş Tailscale kurup daveti kabul etsin.",
+            f"4) Sticky Rüzgar linkini kopyala / gönder: {primary}",
+            "5) Arkadaş kayıt olsun → Panelde Onayla.",
+        ],
+    }
+    https_hint = (
+        f"Sabit adres (Tailscale): {primary} — telefon+PC aynı tailnet. Port forward YOK."
+    )
+    if cert_kind == "tailscale_le":
+        https_hint += " Sertifika: Let’s Encrypt (Tailscale) — tarayıcı uyarısı olmamalı."
+    else:
+        https_hint += " Sertifika self-signed — ilk açılışta Gelişmiş/Devam (tek ekran)."
     return {
         "ok": True,
         "listen_host": listen,
@@ -5456,15 +5638,31 @@ def _mobil_erisim_payload() -> dict[str, Any]:
         "https_port": https_port,
         "https_urls": urls,
         "http_fallback": http_fallback,
-        "https_mic_hint": (
-            f"Tek adres (yazı+ses): {urls[0] if urls else f'https://<ip>:{https_port}/mobil/'}"
-            " — ilk açılışta sertifika: Gelişmiş/Devam"
-        ),
+        "sticky_host": magic or None,
+        "sticky_urls": sticky_urls,
+        "tailscale_ip": ts_ip or None,
+        "access_method": "tailscale_magicdns" if magic else ("tailscale_ip" if ts_ip else "lan_dhcp"),
+        "cert_kind": cert_kind,
+        "cert_warning": bool(cert_warning),
+        "friend_guide": {
+            "title": "Arkadaş — 3 adım",
+            "steps": friend_steps,
+            "primary_url": primary if sticky_urls else None,
+        },
+        "mimar_invite": mimar_invite,
+        "https_mic_hint": https_hint,
         "note": (
-            "Tek ikon/URL: https_urls (8443). http:8779/mobil otomatik HTTPS’e yönlenir."
+            "Sabit mobil: sticky_urls (MagicDNS) önce; LAN yedek (DHCP değişebilir). "
+            "HTTPS 8443; gereksiz port internete açma. http:8779 → HTTPS yönlenir."
             if lan_open
             else "API yalnız localhost — RUZGAR_API_HOST=0.0.0.0 ile ForceRestart gerekir."
         ),
+        "mimar_actions": [
+            "Panel: davet butonu → Tailscale Users (invite).",
+            "Sticky linki kopyala → arkadaşa gönder.",
+            "Kayıt gelince Onayla — ekstra el işi yok.",
+            "Port forward önerme.",
+        ],
     }
 
 
@@ -5494,6 +5692,14 @@ def api_mobil_register(body: MobilRegisterBody):
         kullanici=body.kullanici,
         sifre=body.sifre,
     )
+
+
+@app.get("/api/mobil/register/status")
+def api_mobil_register_status(pending_id: str = ""):
+    """Arkadaş PWA: onay poll — şifre yok, yalnız durum."""
+    from ilim_assistant.ruzgar_mobil_oturum import pending_status
+
+    return pending_status(pending_id)
 
 
 @app.get("/api/mobil/pending")
@@ -11190,7 +11396,7 @@ async def api_tts(body: TtsBody):
                     durak_carpani=float(ayar.get("durak", 1.0)),
                 )
             else:
-                # V3 — kısa sohbet parçası: in-process stream + retry (pool IPC yok)
+                # V3/D — kısa sohbet parçası: in-process stream + retry (pool IPC yok)
                 use_v3 = False
                 try:
                     from ilim_assistant.ses_v3_tts_ilk_byte import (
@@ -11202,7 +11408,16 @@ async def api_tts(body: TtsBody):
                 except Exception:
                     use_v3 = False
                 if use_v3:
-                    v3_rate = os.environ.get("RUZGAR_TTS_V3_RATE", "").strip() or rate
+                    try:
+                        from ilim_assistant.ses_asama_d import default_rate
+
+                        v3_rate = (
+                            os.environ.get("RUZGAR_TTS_V3_RATE", "").strip()
+                            or default_rate()
+                            or rate
+                        )
+                    except Exception:
+                        v3_rate = os.environ.get("RUZGAR_TTS_V3_RATE", "").strip() or rate
                     out_path = await synthesize_edge_mp3_v3_fast(
                         text,
                         voice=voice,
@@ -11223,12 +11438,44 @@ async def api_tts(body: TtsBody):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        # Aşama D — net hata mesajı (retry zaten V3/pool içinde)
+        detail = str(e)
+        try:
+            from ilim_assistant.ses_asama_d import classify_edge_error
 
+            info = classify_edge_error(e)
+            detail = str(info.get("user_message") or detail)
+            if info.get("detail"):
+                detail = f"{detail} [{info.get('kind')}: {info.get('detail')}]"
+        except Exception:
+            pass
+        raise HTTPException(status_code=500, detail=detail[:400]) from e
+
+    # Aşama C/D — text_ready→first_audio telemetri (A/B barge yok)
+    tts_headers: dict[str, str] = {
+        "X-Ruzgar-Asama-C": "1",
+        "X-Ruzgar-Asama-D": "1",
+    }
+    try:
+        from ilim_assistant.ses_v3_tts_ilk_byte import last_tts_first_byte
+
+        last_fb = last_tts_first_byte()
+        if last_fb.get("first_byte_ms") is not None:
+            tts_headers["X-Ruzgar-Tts-First-Byte-Ms"] = str(last_fb["first_byte_ms"])
+            tts_headers["X-Ruzgar-Tts-Under-1s"] = (
+                "1" if last_fb.get("under_1s") else "0"
+            )
+            if last_fb.get("under_d_keep") is not None:
+                tts_headers["X-Ruzgar-Tts-Under-D-Keep"] = (
+                    "1" if last_fb.get("under_d_keep") else "0"
+                )
+    except Exception:
+        pass
     return FileResponse(
         str(out_path),
         media_type="audio/mpeg",
         filename="ruzgar-tts.mp3",
+        headers=tts_headers,
     )
 
 

@@ -461,8 +461,13 @@ function ensureHttpsMicProxy() {
   return new Promise((resolve) => {
     const ia = path.join(WORKSPACE_ROOT, "ilim-assistant");
     const scriptPy = path.join(ia, "scripts", "ruzgar_https_proxy.py");
-    const cert = path.join(ia, ".ruzgar", "certs", "ruzgar-mobil.crt");
-    const key = path.join(ia, ".ruzgar", "certs", "ruzgar-mobil.key");
+    const leCert = path.join(ia, ".ruzgar", "certs", "tailscale-le.crt");
+    const leKey = path.join(ia, ".ruzgar", "certs", "tailscale-le.key");
+    const ssCert = path.join(ia, ".ruzgar", "certs", "ruzgar-mobil.crt");
+    const ssKey = path.join(ia, ".ruzgar", "certs", "ruzgar-mobil.key");
+    const useLe = fs.existsSync(leCert) && fs.existsSync(leKey);
+    const cert = useLe ? leCert : ssCert;
+    const key = useLe ? leKey : ssKey;
     if (!fs.existsSync(scriptPy) || !fs.existsSync(cert) || !fs.existsSync(key)) {
       resolve(false);
       return;
@@ -512,7 +517,9 @@ function ensureHttpsMicProxy() {
           windowsHide: true,
         });
         child.unref();
-        console.info("[RÜZGAR] HTTPS mic proxy başlatıldı (8443)");
+        console.info(
+          `[RÜZGAR] HTTPS mic proxy başlatıldı (8443) cert=${useLe ? "tailscale_le" : "self_signed"}`
+        );
         resolve(true);
       } catch (e) {
         console.warn("[RÜZGAR] HTTPS proxy açılamadı:", e && e.message ? e.message : e);

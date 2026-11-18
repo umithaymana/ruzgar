@@ -150,6 +150,23 @@ input, textarea, select {
 .ghost-inline { background: transparent; color: var(--muted); margin: 0; }
 .panel-h { margin: 12px 0 6px; font-size: 0.95rem; color: var(--accent); }
 .panel-block { font-size: 0.85rem; color: var(--muted); }
+.friend-guide { margin-bottom: 10px; }
+.friend-steps { margin: 0; padding-left: 1.2rem; display: grid; gap: 8px; font-size: 0.9rem; }
+.friend-steps li { line-height: 1.35; }
+.friend-steps a { color: var(--accent); }
+.reg-wait { color: var(--accent); font-weight: 600; }
+.panel-invite {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid #243047;
+  border-radius: 12px;
+  background: #0f172a;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+}
+.panel-invite .invite-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.panel-invite ol { margin: 0; padding-left: 1.15rem; display: grid; gap: 4px; color: var(--muted); }
 .panel-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .device-card {
   border: 1px dashed #334155;
