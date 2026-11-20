@@ -1,24 +1,25 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-11-17 gece — Çırak gelişim planı hazır · yarın A dilimi · `RUZGAR_CIRAK_GELISIM_PLAN_2026-11-18.md`.
+**Son güncelleme:** 2026-11-21 gece — Masa M1–M3 mühür YEŞİL · sırada Çırak Dilim A. Askıda Ses+Okuma. Sohbet güvenli `8da0da320`.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
 ---
 
-## ŞİMDİ SIRADA (tek güncel üst — 2026-11-17/18)
+## ŞİMDİ SIRADA (tek güncel üst — 2026-11-21 · Mimar `evet`)
 
 | Öncelik | Konu | Not |
 |---------|------|-----|
-| **Çırak gelişim** | A→F eksik giderme · yarın başla | `RUZGAR_CIRAK_GELISIM_PLAN_2026-11-18.md` · çırak yapar, usta kontrol |
-| **Motor bağ** | Usta/çırak 0–8 mühür (arka) | `RUZGAR_MOTOR_USTA_CIRAK_PLAN_2026-11-17.md` |
-| **Mühürlü arka** | Sohbet · Kütüphane · Ses · Mobil F0–F9 | `RUZGAR_SOHBET_KUTUPHANE_SES_PLAN_2026-11-17.md` `[x]` |
-| **Saha (sen)** | F6.3 5 dk sürekli sohbet | Kod hazır; kopma oranı telefon ölçümü |
+| **1 — Masa gerçek iş** | **M1–M3 MÜHÜR YEŞİL** | `docs/M3_MASA_ANA_MOTOR_MUHUR_2026-11-21.md` · `smoke_masa_m3_muhur.py` |
+| **2 — Çırak / programlama** | **Kapı açık → Dilim A** · usta kontrol · kalfa merdiveni | `RUZGAR_CIRAK_GELISIM_PLAN_2026-11-18.md` · masa mühüründen sonra |
+| **3 — Askıda (Mimar vizyon)** | Ses yükselt → Okuma güçlendir → sesle kitap okut | Silinmedi; 1–2 bitince açılır. Okuma ≠ RAG (RAG sohbet omurgasında) |
+| **Güvenli nokta** | Sohbet RAG A/B/C | `8da0da320` · dal `cursor/sohbet-akicilik-a-f` · `docs/SOHBET_RAG_ABC_GUVENLI_NOKTA_2026-11-20.md` |
+| **Mühürlü arka** | Sohbet · Kütüphane · Ses V0–V5 · Mobil F0–F9 | Bozma; üzerine ekle |
 | **Bilinçli erteli** | Sahne / OSM / Dünya Gezgini yeni dilim | Mimar «sahneye dön» deyene kadar yok |
-| **P3 kapalı** | Serbest kod · %90 programlama · halka açılış | Kapılı çırak dilimi (#6) ayrı |
+| **P3 kapalı** | Serbest kod · %90 programlama · halka açılış | Kapılı çırak dilimi ayrı |
 | **Kapı** | `8779` · mic HTTPS `8443` · PWA `/mobil/` | Boot sırası kilitli |
 
-**Başarı cümlesi:** Motorlar ana motora tam iş bağlı; çırak her yeşilde ders yazar; kırılgan yerde usta keser.
+**Başarı cümlesi:** Masa sohbetten gerçek iş yapar; çırak yeşilde ders yazar; Ses+Okuma kitap okutma sırada bekler (askıda, iptal değil).
 
 ---
 

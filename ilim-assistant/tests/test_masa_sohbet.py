@@ -7,7 +7,9 @@ from ilim_assistant.ruzgar_masa_soz import coz, masa_sohbet_yaniti
 def test_dort_masa_cumlesi_eyleme_cozulur():
     assert coz("belgeye selam mimar yaz") == {"eylem": "belge.yaz", "metin": "selam mimar"}
     assert coz("belgeye bir satır daha ekle") == {"eylem": "belge.ekle", "metin": "bir satır daha"}
-    assert coz("belgeye yaz: selam") is None
+    assert coz("belgeye yaz: selam") == {"eylem": "belge.yaz", "metin": "selam"}
+    assert coz("belgeye selam yaz lütfen") == {"eylem": "belge.yaz", "metin": "selam"}
+    assert coz("lütfen belgeye selam yaz") == {"eylem": "belge.yaz", "metin": "selam"}
     assert coz("tabloda A1 e 10 yaz") == {"eylem": "tablo.hucre", "hucre": "A1", "deger": "10"}
     assert coz("tablo A1 = 10") is None
     assert coz("çizime kutu çiz") == {"eylem": "cizim.kutu", "x": 80, "y": 80, "w": 240, "h": 140}
@@ -36,6 +38,35 @@ def test_masa_zinciri_bak_ve_red():
     assert liste["liste"][0]["metin"] == "selam"
     assert liste["liste"][1]["hucre"] == "A1"
     assert liste["liste"][3]["baslik"] == "Hoş geldin"
+    # Dilim M2 — doğal + zincir
+    assert coz("belgeye bunu yaz: merhaba mimar") == {
+        "eylem": "belge.yaz",
+        "metin": "merhaba mimar",
+    }
+    assert coz("belgeye yaz selam") == {"eylem": "belge.yaz", "metin": "selam"}
+    assert coz("belgeye ekle: ikinci satır") == {
+        "eylem": "belge.ekle",
+        "metin": "ikinci satır",
+    }
+    assert coz("belgeye not ekle: toplantı yarın") == {
+        "eylem": "belge.ekle",
+        "metin": "toplantı yarın",
+    }
+    assert coz("A1 hücresine 42 yaz") == {
+        "eylem": "tablo.hucre",
+        "hucre": "A1",
+        "deger": "42",
+    }
+    assert coz("sunuma bir slayt ekle: Başlık | metin burası") == {
+        "eylem": "sunum.ekle",
+        "baslik": "Başlık",
+        "metin": "metin burası",
+    }
+    assert coz("belgeyi oku") == {"eylem": "belge.oku"}
+    assert coz("belgede ne var") == {"eylem": "belge.oku"}
+    assert coz("tabloda A1 ne yazıyor") == {"eylem": "tablo.oku", "hucre": "A1"}
+    ardindan = coz("belgeye selam yaz ardından tabloda A1 e 10 yaz")
+    assert [a["eylem"] for a in ardindan["liste"]] == ["belge.yaz", "tablo.hucre"]
     assert coz("belgeye bak ve söyle") == {"bak": "belge"}
     assert coz("çizime bak ve söyle") == {"bak": "cizim"}
     assert coz("belgede selam yerine merhaba yaz") == {

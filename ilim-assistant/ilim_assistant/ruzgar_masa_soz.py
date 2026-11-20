@@ -69,13 +69,27 @@ def _parca(raw: str) -> dict | None:
         return {"eylem": "belge.tablo", "satir": int(m.group(1)), "sutun": int(m.group(2))}
     if re.match(r"^belgeye\s+tablo\s+ekle$", raw, re.I):
         return {"eylem": "belge.tablo", "satir": 3, "sutun": 3}
-    # "belgeye yaz: selam" / "belgeye yaz selam"
+    # "belgeye yaz: selam" / "belgeye bunu yaz: …" / "belgeye yaz selam"
+    m = re.match(
+        r"^belgeye\s+(?:bunu|şunu|sunu)\s+yaz\s*[:\-]\s*(.+)$",
+        raw,
+        re.I,
+    )
+    if m and m.group(1).strip():
+        return {"eylem": "belge.yaz", "metin": m.group(1).strip()}
     m = re.match(r"^belgeye\s+yaz\s*[:\-]\s*(.+)$", raw, re.I)
+    if m and m.group(1).strip():
+        return {"eylem": "belge.yaz", "metin": m.group(1).strip()}
+    m = re.match(r"^belgeye\s+yaz\s+(.+)$", raw, re.I)
     if m and m.group(1).strip():
         return {"eylem": "belge.yaz", "metin": m.group(1).strip()}
     m = re.match(r"^belgeye\s+(.+?)\s+yaz$", raw, re.I)
     if m and m.group(1).strip():
         return {"eylem": "belge.yaz", "metin": m.group(1).strip()}
+    # "belgeye ekle: …" / "belgeye not ekle: …" / "belgeye X ekle"
+    m = re.match(r"^belgeye\s+(?:not\s+)?ekle\s*[:\-]\s*(.+)$", raw, re.I)
+    if m and m.group(1).strip():
+        return {"eylem": "belge.ekle", "metin": m.group(1).strip()}
     m = re.match(r"^belgeye\s+(.+?)\s+ekle$", raw, re.I)
     if m and m.group(1).strip():
         return {"eylem": "belge.ekle", "metin": m.group(1).strip()}
@@ -94,6 +108,18 @@ def _parca(raw: str) -> dict | None:
     m = re.match(r"^([A-La-l])\s+s[üu]tununu\s+topla$", raw, re.I)
     if m:
         return {"eylem": "tablo.topla", "sutun": m.group(1).upper()}
+    # "A1 hücresine 42 yaz" (kısa A1 kalıbından önce — aksi «hücresine 42» yutardı)
+    m = re.match(
+        r"^(?:tabloda\s+|tabloya\s+)?([A-La-l])(\d{1,2})\s+h[üu]cresine\s+(.+?)\s+yaz$",
+        raw,
+        re.I,
+    )
+    if m and m.group(3).strip():
+        return {
+            "eylem": "tablo.hucre",
+            "hucre": (m.group(1) + m.group(2)).upper(),
+            "deger": m.group(3).strip(),
+        }
     m = re.match(
         r"^(?:tabloda|tabloya)\s+([A-La-l])(\d{1,2})\s*(?:e|ye|hücresine|hucresine)?\s*(.+?)\s+yaz$",
         raw,
@@ -162,15 +188,27 @@ def _parca(raw: str) -> dict | None:
     m = re.match(r"^slayt[ıi]n\s+ba[sş]l[ıi][gğ][ıi]n[ıi]\s+(.+?)\s+yap$", raw, re.I)
     if m and m.group(1).strip():
         return {"eylem": "sunum.baslik", "baslik": m.group(1).strip()}
-    m = re.match(r"^sunuma\s+slayt\s+ekle\s*[:\-]\s*(.+?)\s*\|\s*(.+)$", raw, re.I)
+    m = re.match(
+        r"^sunuma\s+(?:bir\s+)?slayt\s+ekle\s*[:\-]\s*(.+?)\s*\|\s*(.+)$",
+        raw,
+        re.I,
+    )
     if m and (m.group(1).strip() or m.group(2).strip()):
         return {"eylem": "sunum.ekle", "baslik": m.group(1).strip(), "metin": m.group(2).strip()}
     m = re.match(r"^sunuma\s+(.+?)\s+slayt[ıi]\s+ekle\s*[:\-]\s*(.+)$", raw, re.I)
     if m and (m.group(1).strip() or m.group(2).strip()):
         return {"eylem": "sunum.ekle", "baslik": m.group(1).strip(), "metin": m.group(2).strip()}
-    if re.match(r"^belgede\s+ne\s+yaz[ıi]yor$", raw, re.I):
+    if re.match(
+        r"^(?:belgede\s+ne\s+yaz[ıi]yor|belgede\s+ne\s+var|belgeyi\s+oku|belgeyi\s+g[öo]ster)$",
+        raw,
+        re.I,
+    ):
         return {"eylem": "belge.oku"}
-    m = re.match(r"^tabloda\s+([A-La-l])(\d{1,2})\s+ne$", raw, re.I)
+    m = re.match(
+        r"^tabloda\s+([A-La-l])(\d{1,2})\s+ne(?:\s+yaz[ıi]yor)?$",
+        raw,
+        re.I,
+    )
     if m:
         return {"eylem": "tablo.oku", "hucre": (m.group(1) + m.group(2)).upper()}
     if re.match(r"^slayt[ıi]n\s+ba[sş]l[ıi][gğ][ıi]\s+ne$", raw, re.I):
@@ -183,6 +221,9 @@ def _parca(raw: str) -> dict | None:
 def coz(text: str) -> dict | None:
     raw = re.sub(r"\s+", " ", str(text or "")).strip()
     raw = re.sub(r"[.!?…]+$", "", raw).strip()
+    # Nezaket ekleri eylem kalıbını bozmasın (Dilim M1)
+    raw = re.sub(r"^(?:lütfen|lutfen|please)\s+", "", raw, flags=re.I).strip()
+    raw = re.sub(r"\s+(?:lütfen|lutfen|please)$", "", raw, flags=re.I).strip()
     if not raw or len(raw) > 9000:
         return None
     bak = _bak_masa(raw)
@@ -190,7 +231,12 @@ def coz(text: str) -> dict | None:
         return {"bak": bak}
     if re.match(r"^masay[ıi]\s+ba[sş]tan\s+tasarla$", raw, re.I):
         return {"red": True}
-    parcalar = [p.strip() for p in re.split(r"\s*,\s*|\s+sonra\s+", raw) if p.strip()]
+    # Zincir: virgül / sonra / ardından / noktalı virgül (Dilim M2)
+    parcalar = [
+        p.strip()
+        for p in re.split(r"\s*,\s*|\s*;\s*|\s+sonra\s+|\s+ard[ıi]ndan\s+", raw)
+        if p.strip()
+    ]
     if len(parcalar) >= 2:
         liste = []
         for parca in parcalar:
