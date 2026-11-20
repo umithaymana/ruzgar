@@ -22,3 +22,4 @@ Protokol: [CIRAK_HAFIZA_OKU.md](CIRAK_HAFIZA_OKU.md) · Şablon: [SABLON.md](SAB
 
 **Kullanım:** Bundan sonra her çırak / ajan Rüzgar işinde bu deftere **sürekli** bakar ve yazar (`.cursor/rules/cirak-hafiza-FROZEN.mdc`).  
 **Not:** Uygulama «çırak günlüğü» (tercüme paneli) ≠ bu hafıza.
+- 2026-11-20_kalan-aciklar-rag-ollama-main.md — kalan açıklar (RAG/Ollama/main)
