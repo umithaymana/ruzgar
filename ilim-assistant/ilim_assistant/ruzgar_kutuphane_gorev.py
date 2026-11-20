@@ -269,10 +269,23 @@ def filter_hits_lexically(
 
     Çok sözcüklü soruda yalnız skor yetmez: en az bir içerik örtüşmesi şart
     (yüksek skorlu yanlış raf → uydurma LLM yolu kapanır).
+
+    Faz 3: Türkçe soru + Arapça pasaj — genişletilmiş sorgu tokenları;
+    yüksek skorlu hit’te overlap≥1 yeterli (0.88 → 0.75).
     """
     if not hits:
         return []
     toks = _query_tokens(query)
+    # Genişletilmiş sorgu (Arapça köprü) — örtüşmeyi ölçülü gevşet
+    try:
+        expanded = expand_kutuphane_search_query(query)
+        if expanded and expanded != (query or "").strip():
+            for t in _query_tokens(expanded):
+                if t not in toks:
+                    toks.append(t)
+            toks = toks[:36]
+    except Exception:
+        pass
     low = _fold(query)
     kimdir_q = "kimdir" in low or "kim idi" in low
     if not toks:
@@ -285,7 +298,8 @@ def filter_hits_lexically(
             blob_raw = f"{text}\n{src}"
             overlap = sum(1 for t in toks if _token_in_blob(t, blob_f, blob_raw))
             if multi:
-                if overlap >= 2 or (overlap >= 1 and float(sc) >= 0.88):
+                # Ölçülü gevşetme: 1 örtüşme + skor≥0.75 veya 2+ örtüşme
+                if overlap >= 2 or (overlap >= 1 and float(sc) >= 0.75):
                     kept0.append((text, src, float(sc)))
             elif overlap >= 1:
                 # kimdir: skor yetmez — isim metinde/ Arapça köprüde olmalı
@@ -349,19 +363,39 @@ def hits_usable_for_kutuphane(
     query: str,
     hits: Sequence[tuple[str, str, float]],
 ) -> bool:
-    """İndeks isabeti soruyu gerçekten taşıyor mu — yoksa öğret cümlesi."""
+    """İndeks isabeti soruyu gerçekten taşıyor mu — yoksa öğret cümlesi.
+
+    Faz 3: usable false → hemen boşaltma yok; yüksek skor + 1 örtüşme yeterli.
+    """
     if not hits:
         return False
     toks = _query_tokens(query)
+    try:
+        expanded = expand_kutuphane_search_query(query)
+        if expanded and expanded != (query or "").strip():
+            for t in _query_tokens(expanded):
+                if t not in toks:
+                    toks.append(t)
+    except Exception:
+        pass
     if not toks:
         return True
     best = 0
-    for text, src, _sc in hits[:8]:
+    best_sc = 0.0
+    for text, src, sc in hits[:8]:
         blob_f = _fold(f"{text}\n{src}")
         blob_raw = f"{text}\n{src}"
-        best = max(best, sum(1 for t in toks if _token_in_blob(t, blob_f, blob_raw)))
+        ov = sum(1 for t in toks if _token_in_blob(t, blob_f, blob_raw))
+        if ov > best or (ov == best and float(sc) > best_sc):
+            best = ov
+            best_sc = float(sc)
     if len(toks) >= 2:
-        return best >= 2
+        if best >= 2:
+            return True
+        # Tek örtüşme ama güçlü skor / Arapça pasaj — yanlış MISS etme
+        if best >= 1 and best_sc >= 0.72:
+            return True
+        return False
     return best >= 1
 
 

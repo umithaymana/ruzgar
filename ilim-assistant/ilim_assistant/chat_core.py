@@ -1558,15 +1558,33 @@ def prepare_turn(
             )
 
             if kutuphane_enabled_hard() and is_kutuphane_bilgi_soru(msg):
-                from ilim_assistant.ruzgar_kutuphane_gorev import hits_usable_for_kutuphane
+                from ilim_assistant.ruzgar_kutuphane_gorev import (
+                    expand_kutuphane_search_query,
+                    hits_usable_for_kutuphane,
+                )
 
                 filtered = filter_hits_lexically(search_msg, good_hits) or filter_hits_lexically(
                     msg, good_hits
                 )
-                if not hits_usable_for_kutuphane(msg, filtered) and not hits_usable_for_kutuphane(
+                usable = hits_usable_for_kutuphane(msg, filtered) or hits_usable_for_kutuphane(
                     search_msg, filtered
-                ):
-                    good_hits = []
+                )
+                # İkinci geçiş: genişletilmiş sorgu — hemen MISS/öğret yok
+                if not usable and good_hits:
+                    try:
+                        exp_q = expand_kutuphane_search_query(msg)
+                        filtered2 = filter_hits_lexically(exp_q, good_hits)
+                        if hits_usable_for_kutuphane(exp_q, filtered2) or hits_usable_for_kutuphane(
+                            msg, filtered2
+                        ):
+                            filtered = filtered2
+                            usable = True
+                    except Exception:
+                        pass
+                if not usable:
+                    # Yüksek skorlu hit varsa tamamen boşaltma — çeşitlilik yolu açık kalsın
+                    strong = [h for h in good_hits if float(h[2]) >= 0.80][:6]
+                    good_hits = strong if strong else []
                 else:
                     good_hits = filtered
         except Exception:
@@ -1583,12 +1601,37 @@ def prepare_turn(
                 )
         except Exception:
             pass
-        hits = good_hits[:rag_k_clamped]
+        # Dilim: pack'e 3–5 eser kalsın (rag_k=2 ile kesme)
+        pack_k = rag_k_clamped
+        try:
+            from ilim_assistant.ruzgar_cok_kaynak_sentez import (
+                cok_kaynak_enabled,
+                library_rag_top_k_boost,
+            )
+
+            if cok_kaynak_enabled() and good_hits:
+                pack_k = max(rag_k_clamped, library_rag_top_k_boost(rag_k_clamped, msg))
+                pack_k = max(pack_k, min(5, len(good_hits)))
+        except Exception:
+            pass
+        pack_k = max(1, min(int(pack_k), 12))
+        try:
+            import logging as _logging
+
+            _logging.getLogger("ruzgar.chat_core").info(
+                "rag_k_clamped=%s pack_k=%s good_hits=%s",
+                rag_k_clamped,
+                pack_k,
+                len(good_hits or []),
+            )
+        except Exception:
+            pass
+        hits = good_hits[:pack_k]
         ar_hits = [
             h
             for h in good_hits
             if _rag_source_is_archive(h[1])
-        ][:rag_k_clamped]
+        ][:pack_k]
         try:
             from ilim_assistant.ana_motor_kaynak import format_context_blocks
 

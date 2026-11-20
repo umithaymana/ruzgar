@@ -14,6 +14,7 @@ Protokol: [CIRAK_HAFIZA_OKU.md](CIRAK_HAFIZA_OKU.md) · Şablon: [SABLON.md](SAB
 | cirak-hafiza, main, ana-koda-al, surekli-kullanim | [2026-11-20_cirak-hafiza-ana-koda.md](kayitlar/2026-11-20_cirak-hafiza-ana-koda.md) | Ümit ANA KODA AL; `origin/main` @ `2d00ce120` |
 | anlik, registry, instant_covers, hadis, RAG, faz1, onarim | [2026-11-20_onarim-faz1-anlik-kapi.md](kayitlar/2026-11-20_onarim-faz1-anlik-kapi.md) | Çift anlık blok → tek registry; covers sıkı; niyet/karşılaştır/anlat → RAG |
 | selam, resume, sohbet-once, history, faz2, onarim | [2026-11-20_onarim-faz2-selam-oturum.md](kayitlar/2026-11-20_onarim-faz2-selam-oturum.md) | history’li selam; SOHBET_ONCE istisnası; has_prior_session=False kalktı |
+| RAG, diversify, lexical, MISS, pack_k, faz3, onarim | [2026-11-20_onarim-faz3-rag-cesitlilik.md](kayitlar/2026-11-20_onarim-faz3-rag-cesitlilik.md) | pack_k 3–5 eser; lexical/usable ölçülü gevşetme |
 
 **Kullanım:** Bundan sonra her çırak / ajan Rüzgar işinde bu deftere **sürekli** bakar ve yazar (`.cursor/rules/cirak-hafiza-FROZEN.mdc`).  
 **Not:** Uygulama «çırak günlüğü» (tercüme paneli) ≠ bu hafıza.
