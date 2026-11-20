@@ -1,0 +1,13 @@
+---
+description: Çırak hafıza defteri — işe başlamadan oku, bitince kaydet
+alwaysApply: true
+---
+
+# Çırak hafıza (bağlayıcı)
+
+Rüzgar işlerinde Cursor ajan / çırak:
+
+1. **İşe başlamadan** `docs/cirak_hafiza/CIRAK_HAFIZA_OKU.md` + `INDEX.md` oku; benzer kayıtta tuzak/çözüm/yasaklara bak.
+2. **İş bitince** `SABLON.md` alanlarını doldur → `kayitlar/` + `kayitlar.jsonl` + `INDEX.md`.
+3. Bu defter ≠ UI tercüme «çırak günlüğü», ≠ `ruzgar_genel_hafiza.json`.
+4. Mimar «yap/uygula/al» demeden büyük uygulama yok; «al» yoksa main’e basma.
