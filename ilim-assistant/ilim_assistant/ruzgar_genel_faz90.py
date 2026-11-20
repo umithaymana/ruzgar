@@ -74,20 +74,10 @@ def build_ilim_rag_brain_chain_ids() -> list[str]:
 
 
 def build_genel_brain_chain_ids() -> list[str]:
-    """Genel sohbet LLM zinciri — yerel öncelik; kota soğukken Gemini atlanır."""
-    try:
-        from ilim_assistant.config import gemini_disabled
-        from ilim_assistant.prompts import sohbet_tarz_chatgpt
+    """Genel sohbet LLM zinciri — yerel öncelik; kota soğukken Gemini atlanır.
 
-        if sohbet_tarz_chatgpt():
-            if gemini_disabled():
-                return ["denge", "hizli"]
-            ids = ["gemini", "denge", "hizli"]
-            if _gemini_on_cooldown():
-                ids = ["denge", "hizli"]
-            return ids
-    except Exception:
-        pass
+    `RUZGAR_SOHBET_TARZ` yalnız üsluptur — zinciri Gemini-önce'ye çevirmez (Faz T2).
+    """
     custom = (os.environ.get("RUZGAR_GENEL_BRAIN_CHAIN") or "").strip()
     if custom:
         ids = [x.strip() for x in custom.split(",") if x.strip()]
@@ -102,10 +92,20 @@ def build_genel_brain_chain_ids() -> list[str]:
                 if p not in out:
                     out.append(p)
         else:
+            # Local-first: Ollama sonrası Groq, sonra Gemini (umed v2)
             for p in ("groq", "gemini"):
                 if p not in out:
                     out.append(p)
         ids = out or ["groq", "gemini"]
+        # Ollama yoksa ve Gemini açıksa bulutu öne al (erişilebilirlik)
+        if not (_enabled() and ollama_available()):
+            try:
+                from ilim_assistant.config import gemini_disabled
+
+                if not gemini_disabled() and not _gemini_on_cooldown():
+                    ids = ["gemini"] + [x for x in ids if x != "gemini"]
+            except Exception:
+                pass
     if _gemini_on_cooldown():
         ids = [x for x in ids if x != "gemini"]
         if "groq" not in ids:

@@ -1305,7 +1305,20 @@ def _health_build_block() -> dict:
         "memory_first": True,
         "bilissel_analiz": True,
         "egitim_routing": "bilissel>gundelik>egitim",
+        "sohbet_tek_kapi": _os.environ.get("RUZGAR_SOHBET_TEK_KAPI", "1").strip(),
     }
+    try:
+        from ilim_assistant.ruzgar_sohbet_tek_kapi import public_meta as _tek_kapi_meta
+
+        base["sohbet_tek_kapi_meta"] = _tek_kapi_meta()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_genel_faz90 import enrich_health_build as _faz90_enrich
+
+        base = _faz90_enrich(base)
+    except Exception:
+        pass
     try:
         from ilim_assistant.ruzgar_tek_ses_faz_b import tek_ses_status
 

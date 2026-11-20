@@ -7,7 +7,7 @@ import re
 import unicodedata
 from typing import Any
 
-FAST_LANE_VERSION = "chat-fast-lane-v1-2026-06-19"
+FAST_LANE_VERSION = "chat-fast-lane-v2-tek-kapi-2026-11-20"
 
 
 def _norm(s: str) -> str:
@@ -71,10 +71,15 @@ def try_instant_reply(message: str, mode_norm: str = "genel") -> str | None:
         r"\b(?:selam|merhaba|günayd[ıi]n|gunaydin|iyi\s+akşam|iyi\s+aksam|iyi\s+geceler)\b",
         blob,
     ):
-        return (
-            "Selam Ümit abi — Rüzgar burada, seninle konuşmaya hazırım. "
-            "Nasılsın, ne konuşalım?"
-        )
+        try:
+            from ilim_assistant.ruzgar_sohbet_tek_kapi import canonical_selam_reply
+
+            return canonical_selam_reply(raw, history=None, has_prior_session=False)
+        except Exception:
+            return (
+                "Selam Ümit abi — Rüzgar burada, seninle konuşmaya hazırım. "
+                "Nasılsın, ne konuşalım?"
+            )
 
     if re.search(
         r"\b(?:neredesin|nerede\s+sin|sen\s+nerede|burada\s+m[ıi]s[ıi]n|"

@@ -122,6 +122,33 @@ def memory_capacity_snapshot() -> dict[str, Any]:
     }
 
 
+def build_turn_memory_pack(
+    message: str,
+    *,
+    mode_norm: str = "genel",
+    history: list | None = None,
+    include_chat_history: bool = True,
+) -> str:
+    """Tek hafıza yüzeyi (Faz T4): selamda ağır paket yok; diğer turda session pack.
+
+    Genel hafıza / merkezi zihin / eğitim aynı blokta birleşir; boş oturumda
+    «dün konuştuk» üreten ayrı selam metni yoktur (bkz. ruzgar_umed_kurallari).
+    """
+    try:
+        from ilim_assistant.ruzgar_sohbet_tek_kapi import looks_like_pure_greeting
+
+        if looks_like_pure_greeting(message):
+            return ""
+    except Exception:
+        pass
+    return build_session_memory_context(
+        message,
+        mode_norm=mode_norm,
+        history=history,
+        include_chat_history=include_chat_history,
+    )
+
+
 def build_session_memory_context(
     message: str,
     *,

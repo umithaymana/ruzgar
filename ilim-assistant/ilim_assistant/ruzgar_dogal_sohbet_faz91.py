@@ -345,12 +345,25 @@ def should_skip_instant_shortcuts(
     """Şablon selam/empati yanıtlarını atla — LLM üretsin.
 
     Din kütüphanesi anlık yolları ayrıca `ruzgar_anlik_niyet_gate` ile yönetilir.
+    Tek kapı (Faz T1): saf kısa selam/teşekkür şablonda kalır (fast_lane = plan).
     """
     if not dogal_sohbet_enabled():
         return False
     if mode_norm not in ("genel", "uretim", "gelisim"):
         return False
-    # Sohbet önce: kısa selam da şablona düşmesin — LLM dinlesin
+    # Tek selam kapısı: saf selamda şablon serbest — Sohbet Önce LLM zorlamaz
+    try:
+        from ilim_assistant.ruzgar_sohbet_tek_kapi import allow_instant_greeting_shortcut
+
+        if allow_instant_greeting_shortcut(
+            message, mode_norm, question_plan=question_plan
+        ):
+            return False
+    except Exception:
+        pass
+    if is_pure_short_greeting(message):
+        return False
+    # Sohbet önce: doğal muhabbet LLM; saf selam yukarıda kaldı
     try:
         from ilim_assistant.ruzgar_sohbet_once import sohbet_once_enabled
 
@@ -358,8 +371,6 @@ def should_skip_instant_shortcuts(
             return True
     except Exception:
         pass
-    if is_pure_short_greeting(message):
-        return False
     try:
         from ilim_assistant.ruzgar_anlik_niyet_gate import should_defer_library_instant
 

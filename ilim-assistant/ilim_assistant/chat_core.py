@@ -2084,16 +2084,26 @@ def prepare_turn(
 
     session_mem_ctx = ""
     try:
-        from ilim_assistant.ruzgar_session_context import build_session_memory_context
+        from ilim_assistant.ruzgar_session_context import build_turn_memory_pack
 
-        session_mem_ctx = build_session_memory_context(
+        session_mem_ctx = build_turn_memory_pack(
             msg,
             mode_norm=m,
             history=history,
             include_chat_history=not _bilgi_isolated,
         )
     except Exception:
-        session_mem_ctx = ""
+        try:
+            from ilim_assistant.ruzgar_session_context import build_session_memory_context
+
+            session_mem_ctx = build_session_memory_context(
+                msg,
+                mode_norm=m,
+                history=history,
+                include_chat_history=not _bilgi_isolated,
+            )
+        except Exception:
+            session_mem_ctx = ""
 
     bilissel_ctx = ""
     if not _prog_light:
@@ -2453,17 +2463,22 @@ def prepare_turn(
                 )
         except Exception:
             _kutup_hard = False
-        # Sohbet önce: tüm konularda doğal bilgi dili (konu kilidi yok)
+        # Sohbet önce: tüm konularda doğal bilgi dili (konu kilidi yok).
+        # Tek kapı: saf selamda yalnız kısa selam direktifi — bilgi dili yığılmaz.
         try:
             from ilim_assistant.ruzgar_sohbet_once import (
                 prefer_sohbet,
                 sohbet_once_bilgi_dil_directive,
                 sohbet_once_selam_dinle_directive,
             )
+            from ilim_assistant.ruzgar_sohbet_tek_kapi import looks_like_pure_greeting
 
             if prefer_sohbet(msg) and m in ("genel", "uretim", "gelisim", "okuma", "ilim"):
-                user_payload += sohbet_once_bilgi_dil_directive()
-                user_payload += sohbet_once_selam_dinle_directive(msg)
+                if looks_like_pure_greeting(msg):
+                    user_payload += sohbet_once_selam_dinle_directive(msg)
+                else:
+                    user_payload += sohbet_once_bilgi_dil_directive()
+                    user_payload += sohbet_once_selam_dinle_directive(msg)
         except Exception:
             pass
         try:
@@ -2704,6 +2719,14 @@ def prepare_turn(
 
     system = pick_system(coding_mode, m)
     if m in ("genel", "uretim", "gelisim") and not coding_mode:
+        # Saf selamda Faz91 uzun addon yok (tek üslup + tek kapı)
+        _skip_natural_addon = False
+        try:
+            from ilim_assistant.ruzgar_sohbet_tek_kapi import looks_like_pure_greeting
+
+            _skip_natural_addon = looks_like_pure_greeting(msg)
+        except Exception:
+            _skip_natural_addon = False
         try:
             from ilim_assistant.ruzgar_dogal_sohbet_faz91 import (
                 build_natural_sohbet_system_addon,
@@ -2711,8 +2734,12 @@ def prepare_turn(
                 is_natural_conversation_turn,
             )
 
-            if dogal_sohbet_enabled() and is_natural_conversation_turn(
-                msg, m, turn_plan, history=history
+            if (
+                not _skip_natural_addon
+                and dogal_sohbet_enabled()
+                and is_natural_conversation_turn(
+                    msg, m, turn_plan, history=history
+                )
             ):
                 system = system + "\n\n" + build_natural_sohbet_system_addon()
         except Exception:

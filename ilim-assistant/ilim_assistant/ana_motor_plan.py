@@ -1930,24 +1930,22 @@ def maybe_gundelik_instant_reply(
     ):
         if _info_query_blocks_casual(message):
             return None
-        if re.search(r"\b(?:ruzgar|rüzgar)\b", blob) and len((message or "").split()) >= 2:
-            try:
-                from ilim_assistant.ruzgar_umed_kurallari import SELAM_RUZGAR
-
-                return SELAM_RUZGAR
-            except Exception:
-                return None
         try:
             from ilim_assistant.ruzgar_egitim import lookup_greeting_egitim_reply
-            from ilim_assistant.ruzgar_umed_kurallari import SELAM_STANDART
 
             taught = lookup_greeting_egitim_reply(message)
-            return taught or SELAM_STANDART
+            if taught:
+                return taught
         except Exception:
-            return (
-                "Ümit kardeşim, seninle sohbet etmek benim için bir onur. "
-                "Hangi konuda sohbet edelim?"
-            )
+            pass
+        try:
+            from ilim_assistant.ruzgar_sohbet_tek_kapi import canonical_selam_reply
+
+            return canonical_selam_reply(message, history=None, has_prior_session=False)
+        except Exception:
+            from ilim_assistant.ruzgar_umed_kurallari import SELAM_STANDART
+
+            return SELAM_STANDART
     if any(x in blob for x in ("ben geldim", "geldim", "buradayim", "buradayım")):
         return (
             "Hoş geldin Ümit abi — Rüzgar burada, seni dinliyorum. "

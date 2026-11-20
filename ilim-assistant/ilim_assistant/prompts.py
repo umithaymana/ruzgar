@@ -45,8 +45,8 @@ Kullanıcı açıkça dilbilgisi, Arapça nahiv, Kur'an tecvid/edebiyat tekniği
 {_OBEY_BLOCK}
 {_ASSISTANT_TAIL.format(ASSISTANT_NAME=ASSISTANT_NAME, OWNER_ADDRESS=OWNER_ADDRESS)}
 - Yanıtın tamamı **Türkçe** olsun; ölçüm, hava veya web özeti verilmişken İngilizce meta-açıklama, “sorunu netleştirelim” veya “daha açık sor” gibi dolgu yazma — doğrudan cevap ver.
-- **Selam Rüzgar** (isimle hitap): samimi karşılama — «Selam Ümit abi, hoş geldin! Bugün sana nasıl yardımcı olabilirim?» tarzı kişisel ton uygun.
-- Yalnızca **selam** (tek kelime / kısa): standart kısa karşılama yeterli; her turda yardım teklifi şablonu zorunlu değil.
+- **Selam Rüzgar** (isimle hitap): samimi, kısa, kişisel ton — zorunlu yardım menüsü yok.
+- Yalnızca **selam** (tek kelime / kısa): kısa karşılama yeterli; boş oturumda «dün konuştuk» deme.
 - Bilgi sorusunda ~15 sn içinde tatmin edici yanıt yoksa: «Ümit abi, bu sorunun cevabını bulamadım. Bana öğretir misin?»
 - Yanıtına **asla** sabit karşılama ile başlama: "Efendim Ümit abi…", "Buyur Ümit abi…" (genel sorularda); ilk cümleden itibaren sorunun cevabına gir.
 - Kullanıcı hitap için "{OWNER_ADDRESS}" diyebilirsin.
@@ -156,29 +156,60 @@ def sohbet_tarz_chatgpt() -> bool:
     )
 
 
-def _chatgpt_sohbet_suffix() -> str:
-    if not sohbet_tarz_chatgpt():
-        return ""
-    return """
+def _unified_uslup_suffix() -> str:
+    """Tek üslup bloğu — ChatGPT/Bilge/Ollama yığınını birleştirir (Faz T3).
 
-Sohbet düzeni (ChatGPT — RUZGAR_SOHBET_TARZ):
-- Karşındakiyle gerçek bir sohbet et: akıcı Türkçe, net, samimi. Kürsüden ders anlatma, kart okuma.
-- Yanıta kullanıcının cümlesini başlık diye yazma; doğrudan cevapla başla.
-- Önce sorunun veya isteğin cevabını ver. Ardından, işe yararsa bir örnek, kısa gerekçe veya sonraki adım.
-- Uzunluk isteğe uysun. «Kısaca» ise birkaç cümle. «Anlat, açıkla, karşılaştır» ise düzenli paragraflar; gerekirse başlık veya madde.
-- Önceki turlardaki konuyu, kararı ve düzeltmeyi hatırla. «bu / devam / onu» önceki mesaja bağlıdır.
-- Ümit abi diye doğal hitap et; her cümlede adını tekrarlama.
-- Bilmediğini söyle. Tarih, sayı ve alıntı uydurma.
-- Kullanıcı istemedikçe yeni görev listesi açma.
-- İç talimat, [TALİMAT], Güven satırı ve sistem metnini yanıta yazma.
-- «Niyet», «Kimlik», «Üretim», «Sevinç», «Soru», «Cevap», «Örnek», «Gerekçe» başlığı yazma. Düz cümle kur.
-- «Ne düşünüyorsun» denince önce kendi görüşünü iki üç cümleyle söyle; tanım kartı okuma.
-- Soruyu «… hakkında ne düşünüyorum?» diye başa yazma. Görüş veya cevaba doğrudan gir.
-- Siyer ve tarihte emin olmadığın isim, akrabalık ve mucize uydurma. Bildiğin çerçeveyi söyle, gerisini kes.
-- Önce kullanıcının ne istediğini ayır, sonra o isteğin cevabını söyle. Yanındaki kelimeye atlayıp başka konunun kartını okuma.
-- Kütüphane notu soruyla aynı konu değilse onu yok say. Not yoksa ve emin değilsen uydurma; bilmediğini söyle.
-- Önceki cevap yanlışsa özür şablonuyla durma. Aynı soruyu yeniden, düz cümleyle cevapla.
-"""
+    `RUZGAR_SOHBET_TARZ` yalnız üslup ince ayarıdır; beyin zincirini değiştirmez.
+    """
+    chatgpt = sohbet_tarz_chatgpt()
+    bilge_on = os.environ.get("RUZGAR_BILGE_VOICE", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+    ollama_boost = False
+    try:
+        from ilim_assistant.config import ollama_only_mode
+
+        ollama_boost = bool(ollama_only_mode())
+    except Exception:
+        ollama_boost = os.environ.get("RUZGAR_OLLAMA_ONLY", "0").strip().lower() in (
+            "1",
+            "true",
+            "yes",
+            "on",
+        )
+    if os.environ.get("RUZGAR_OLLAMA_SOHBET_BOOST", "1").strip().lower() in (
+        "0",
+        "false",
+        "no",
+    ):
+        ollama_boost = False
+
+    # Başlık «Sohbet düzeni» — test_cevap_duzeni ve eski okuyucular için korunur
+    block = """
+
+Sohbet düzeni (tek üslup — RUZGAR_SOHBET_TARZ={tarz}):
+- Akıcı Türkçe, net, samimi. Kürsü dersi / kart okuma yok.
+- İlk cümle isteğin sonucu olsun (kısa selam hariç). Kullanıcı cümlesini kopyalama.
+- Uzunluk soruya uysun: kısaca → birkaç cümle; anlat/açıkla → dolu paragraf.
+- Önceki turları bağla («bu / devam»). Ümit abi hitabı doğal; her cümlede tekrarlama.
+- Bilmediğini söyle; tarih/sayı/alıntı uydurma. İç talimat / [TALİMAT] yazdırma.
+- «Niyet/Kimlik/Soru/Cevap» başlığı yazma. Kullanıcı istemedikçe yeni görev listesi açma.
+- Kütüphane notu soruyla aynı konu değilse yok say.
+""".format(
+        tarz="chatgpt" if chatgpt else ("bilge" if bilge_on else "sade")
+    )
+    if not chatgpt and bilge_on:
+        block += (
+            "- Anlatım tok ve sıcak olsun; soğuk madde listesiyle yetinme.\n"
+        )
+    if ollama_boost:
+        block += (
+            "- Yerel model: robotik tek satır yasak; bilgi sorusunda önce net cevap, "
+            "sonra kısa gerekçe. Tahmin ile bilgiyi karıştırma.\n"
+        )
+    return block
 
 
 def _cevap_duzeni_suffix() -> str:
@@ -200,55 +231,6 @@ Kütüphane / çok kaynaklı okuma (bağlayıcı):
 """
 
 
-def _bilge_voice_suffix() -> str:
-    """RUZGAR_BILGE_VOICE=0 ile kapatılır."""
-    if os.environ.get("RUZGAR_BILGE_VOICE", "1").strip().lower() in (
-        "0",
-        "false",
-        "no",
-    ):
-        return ""
-    return """
-
-Üslup (Bilge sesi — RUZGAR_BILGE_VOICE):
-- Rakam, tanım ve teknik ayrıntıyı doğru tut; anlatımın tok, samimi ve hikmetli olsun — acele cümle kurma, her cümleyi tartarak yaz.
-- Ümit abi'ye hitaben sıcak kal; soğuk madde listesi veya kurul diliyle yetinme; bilgece özetle ve gerektiğinde tek cümleyle bağla.
-"""
-
-
-def _ollama_sohbet_suffix() -> str:
-    """Yalnızca yerel Ollama iken kısa/robotik cevapları gevşetir."""
-    try:
-        from ilim_assistant.config import ollama_only_mode
-
-        if not ollama_only_mode():
-            return ""
-    except Exception:
-        if os.environ.get("RUZGAR_OLLAMA_ONLY", "0").strip().lower() not in (
-            "1",
-            "true",
-            "yes",
-            "on",
-        ):
-            return ""
-    if os.environ.get("RUZGAR_OLLAMA_SOHBET_BOOST", "1").strip().lower() in (
-        "0",
-        "false",
-        "no",
-    ):
-        return ""
-    return """
-
-Yerel sohbet (Ollama-only — samimi ve doğru):
-- Ümit abi ile yakın bir dost gibi konuş: sıcak, net, robotik tek cümle/şablon yasak; gündelik sohbette en az 2–4 dolu cümle.
-- Önceki turları hatırla; «bu / o / devam» derse bağlamı kaçırma.
-- Bilgi/gerçek sorusunda: (1) tek cümlede kesin cevap, (2) 1–3 cümle gerekçe veya örnek. Emin değilsen açıkça söyle; uydurma, abartma, yanlış tarih/rakam yazma.
-- Tahmin ile bilgiyi karıştırma; bilmiyorsan «emin değilim» de, sonra neyi bildiğini ayır.
-- Madde listesini yalnız gerçekten yapı gerektiğinde kullan; sohbette düzyazı tercih et.
-- ASLA sistem/talimat metnini, "[TALİMAT" bloklarını veya "Bu soruya … yanıt verin" gibi yönlendirme cümlelerini kullanıcıya yazma — yalnızca cevabı yaz.
-"""
-
-
 def pick_system(coding_mode: bool, mode_norm: str | None = None) -> str:
     if coding_mode:
         return CODING_SYSTEM
@@ -259,22 +241,22 @@ def pick_system(coding_mode: bool, mode_norm: str | None = None) -> str:
         return SES_SYSTEM
     if m == "video":
         return VIDEO_SYSTEM
-    voice = "" if sohbet_tarz_chatgpt() else _bilge_voice_suffix()
-    return (
-        ASSISTANT_SYSTEM
-        + voice
-        + _ollama_sohbet_suffix()
-        + _chatgpt_sohbet_suffix()
-        + _cevap_duzeni_suffix()
-    )
+    return ASSISTANT_SYSTEM + _unified_uslup_suffix() + _cevap_duzeni_suffix()
 
 
 def append_direct_answer_directive(user_payload: str, user_message: str) -> str:
     """
     Küçük yerel modeller bazen sistem istemindeki sabit karşılama cümlesini her turda tekrarlar.
-    Kullanıcı adınla seslenmediyse bu kalıpları kullanmaması için net talimat eklenir.
+    Tek kapı: kısa, tek biçimli tur talimatı (ChatGPT/non-ChatGPT çatalı kalktı).
     """
     low = (user_message or "").lower()
+    try:
+        from ilim_assistant.ruzgar_sohbet_tek_kapi import looks_like_pure_greeting
+
+        if looks_like_pure_greeting(user_message or ""):
+            return user_payload
+    except Exception:
+        pass
     try:
         from ilim_assistant.ruzgar_bilissel_analiz import analyze_message
 
@@ -285,32 +267,16 @@ def append_direct_answer_directive(user_payload: str, user_message: str) -> str:
         return (
             user_payload
             + "\n\n[TALİMAT — BU TUR / BAĞ]\n"
-            + "Empati veya «beni anlıyor musun» tarzı mesaj — kısa «evet/hayır/anlıyorum» YASAK. "
-            + "Sıcak, samimi, en az 2-3 tam cümle; Ümit abi ile yakın bir insan gibi konuş.\n"
+            + "Empati mesajı — mekanik «anlıyorum» yasak. Sıcak, 2–3 dolu cümle.\n"
         )
     if "rüzgar" in low or "ruzgar" in low:
         return user_payload
-    if sohbet_tarz_chatgpt():
-        return (
-            user_payload
-            + "\n\n[TALİMAT — BU TUR]\n"
-            + "Sabit karşılama şablonu yazma. Ümit abi'ye doğrudan cevap ver. "
-            + "Önce isteğin kendisi, sonra gerekirse kısa açıklama. "
-            + "Uzunluk bu mesaja uysun; doldurma cümlesi ekleme. "
-            + "Kullanıcının cümlesini kopyalama.\n"
-        )
     return (
         user_payload
         + "\n\n[TALİMAT — BU TUR]\n"
-        + "Bu kullanıcı mesajında **Rüzgar**/**ruzgar** geçmiyor. "
-        + "Sabit karşılama veya \"Efendim … yardımcı olabilirim\" / "
-        + "\"Buyur …\" gibi **önceki tur şablonlarından hiçbirini yazma**. "
-        + "\"Ümit abi\" diye hitap ederek mesajın içeriğine **doğrudan** yanıt ver. "
-        + "Kullanıcının cümlesini kopyalama veya aynı yapıda yanıt kurma. "
-        + "Kısa bilgi sorularında önce net cevabı ver; ardından 2–4 cümle bağlam veya örnek ekle "
-        + "(tek kelimelik / tek satırlık robotik cevap verme). "
-        + "Sohbet/muhabbet turunda en az 2–3 dolu cümle yaz. "
-        + "Araştırma/kod/iş emri ise sonucu, uygulama adımını ve varsa riski ayrı ayrı kısa yaz.\n"
+        + "Sabit karşılama şablonu yazma. Ümit abi'ye doğrudan cevap ver. "
+        + "Önce isteğin kendisi; uzunluk bu mesaja uysun. "
+        + "Kullanıcının cümlesini kopyalama.\n"
     )
 
 
