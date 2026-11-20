@@ -1,6 +1,7 @@
 # Programlama motoru — offline SLO + canli API smoke (Faz 18)
 
 name: Programlama Smoke
+# cirak-hafiza durum land trigger
 
 on:
   push:
