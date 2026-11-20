@@ -393,19 +393,32 @@ def instant_covers_query(query: str, reply: str) -> bool:
     """Anlık kart soruyu gerçekten karşılıyor mu? (tüm raflar / yarınki eserler).
 
     «Python generator» sorusuna yalnız «Python dili» kartı basılmasın → RAG'e bırak.
+    Tek token = True gevşekliği yok; karşılaştır/anlat/çok-kaynak → False (RAG).
     """
     reply_s = (reply or "").strip()
     if not reply_s:
         return False
+    # Bilgi/karşılaştır/anlat niyeti — kart yasak (numaralı matın hariç, registry'de)
+    try:
+        from ilim_assistant.ruzgar_library_instant_registry import forces_library_rag
+
+        if forces_library_rag(query):
+            return False
+    except Exception:
+        pass
     toks = _query_tokens(query)
-    if len(toks) <= 1:
-        return True
+    if not toks:
+        # Soru ekleri elenince boş kaldıysa kartı kabul etme — RAG
+        return False
     blob = _fold(reply_s) + "\n" + reply_s
     covered = sum(1 for t in toks if t in blob)
+    # Tek anlamlı sözcük: kartta geçmeli (eski «len<=1 → True» kaldırıldı)
+    if len(toks) == 1:
+        return covered >= 1
     # İki+ anlamlı sözcükten en az ikisi kartta olsun; yoksa indeks yolu
-    if len(toks) >= 2 and covered < 2:
+    if covered < 2:
         return False
-    need = max(1, (len(toks) + 1) // 2)
+    need = max(2, (len(toks) + 1) // 2)
     return covered >= need
 
 

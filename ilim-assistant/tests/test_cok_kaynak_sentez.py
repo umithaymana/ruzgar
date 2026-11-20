@@ -80,13 +80,15 @@ def test_grounding_directive_blocks_narrow_field_lock():
     assert "3–5" in text or "3-5" in text or "ÇOK KAYNAK" in text
 
 
-def test_hadis_instant_offers_comparison():
+def test_hadis_instant_nedir_defers_to_rag():
+    """Faz 1: «niyet hadisi nedir» anlık kart değil → RAG/çok kaynak."""
     from ilim_assistant.ruzgar_hadis_anlik import try_hadis_instant_reply
+    from ilim_assistant.ruzgar_hadis_kutuphane import try_hadis_reply
+    from ilim_assistant.ruzgar_library_instant_registry import forces_library_rag
 
-    out = try_hadis_instant_reply("niyet hadisi nedir")
-    assert out is not None
-    assert "Buhârî" in out or "Buhari" in out
-    assert "karşılaştır" in out.lower() or "rivayet" in out.lower()
+    assert forces_library_rag("niyet hadisi nedir") is True
+    assert try_hadis_instant_reply("niyet hadisi nedir") is None
+    assert try_hadis_reply("niyet hadisi nedir") is None
 
 
 def test_hadis_compare_request_defers_to_rag():

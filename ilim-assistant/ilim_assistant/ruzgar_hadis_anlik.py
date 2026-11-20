@@ -37,10 +37,21 @@ def _looks_niyet_hadis(msg: str) -> bool:
 
 
 def try_hadis_instant_reply(message: str) -> str | None:
-    """Eşleşirse sabit doğru metin + karşılaştırma teklifi; yoksa None."""
+    """Eşleşirse sabit doğru metin + karşılaştırma teklifi; yoksa None.
+
+    Tek politika (hadis_kutuphane ile): bilgi/karşılaştır/anlat → RAG'e bırak.
+    Kısa niyet hatırlatması (nedir/anlat yok) hâlâ anlık kalabilir.
+    """
     if not _looks_niyet_hadis(message):
         return None
-    # Kullanıcı açıkça karşılaştırma/çok kaynak istiyorsa anlık kartı atla → RAG sentez
+    # Derin soru / çok kaynak — anlık kart yok (Faz 1 orkestra)
+    try:
+        from ilim_assistant.ruzgar_library_instant_registry import forces_library_rag
+
+        if forces_library_rag(message):
+            return None
+    except Exception:
+        pass
     low = _fold(message)
     if any(
         k in low
@@ -58,6 +69,11 @@ def try_hadis_instant_reply(message: str) -> str | None:
             "serh",
             "şerh",
             "rivayetler",
+            "nedir",
+            "ne demek",
+            "anlat",
+            "acikla",
+            "açıkla",
         )
     ):
         return None

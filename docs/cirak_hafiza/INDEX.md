@@ -1,6 +1,6 @@
 # Çırak Hafıza — İndeks
 
-Son güncelleme: 2026-11-20 (Europe/Istanbul)  
+Son güncelleme: 2026-11-20 ~11:47 (Europe/Istanbul)  
 Protokol: [CIRAK_HAFIZA_OKU.md](CIRAK_HAFIZA_OKU.md) · Şablon: [SABLON.md](SABLON.md)  
 **Kilit:** 20 zorunlu alan (doğru/yanlış/nerede/nasıl + el rahatlatma).
 
@@ -12,6 +12,7 @@ Protokol: [CIRAK_HAFIZA_OKU.md](CIRAK_HAFIZA_OKU.md) · Şablon: [SABLON.md](SAB
 | cirak-hafiza, protokol, apprentice-memory | [2026-11-20_cirak-hafiza-kurulum.md](kayitlar/2026-11-20_cirak-hafiza-kurulum.md) | Defter ilk kuruldu; UI çırak günlüğü ≠ bu — **ana-koda-alindi** |
 | cirak-hafiza, sablon, zorunlu-alanlar, el-rahatlatma | [2026-11-20_cirak-hafiza-maddeler-kilit.md](kayitlar/2026-11-20_cirak-hafiza-maddeler-kilit.md) | 20 madde + SABLON + cursor kuralı kilitlendi — **ana-koda-alindi** |
 | cirak-hafiza, main, ana-koda-al, surekli-kullanim | [2026-11-20_cirak-hafiza-ana-koda.md](kayitlar/2026-11-20_cirak-hafiza-ana-koda.md) | Ümit ANA KODA AL; `origin/main` @ `2d00ce120` |
+| anlik, registry, instant_covers, hadis, RAG, faz1, onarim | [2026-11-20_onarim-faz1-anlik-kapi.md](kayitlar/2026-11-20_onarim-faz1-anlik-kapi.md) | Çift anlık blok → tek registry; covers sıkı; niyet/karşılaştır/anlat → RAG |
 
 **Kullanım:** Bundan sonra her çırak / ajan Rüzgar işinde bu deftere **sürekli** bakar ve yazar (`.cursor/rules/cirak-hafiza-FROZEN.mdc`).  
 **Not:** Uygulama «çırak günlüğü» (tercüme paneli) ≠ bu hafıza.
