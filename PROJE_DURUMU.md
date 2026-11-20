@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-11-21 gece — Masa M3 · Çırak A–G YEŞİL · sırada Dilim T. Askıda Ses+Okuma. Sohbet `8da0da320`.
+**Son güncelleme:** 2026-11-21 gece — Masa M3 · Çırak A–G+T YEŞİL (tavan) · sırada askıda Ses+Okuma. Sohbet `8da0da320`.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -11,8 +11,8 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 | Öncelik | Konu | Not |
 |---------|------|-----|
 | **1 — Masa gerçek iş** | **M1–M3 MÜHÜR YEŞİL** | `docs/M3_MASA_ANA_MOTOR_MUHUR_2026-11-21.md` · `smoke_masa_m3_muhur.py` |
-| **2 — Çırak / programlama** | **A–G✓** · sırada **T** (tavan ders) | `hibrit_g_modul.py` · `smoke_cirak_dilim_g.py` |
-| **3 — Askıda (Mimar vizyon)** | Ses yükselt → Okuma güçlendir → sesle kitap okut | Silinmedi; 1–2 bitince açılır. Okuma ≠ RAG (RAG sohbet omurgasında) |
+| **2 — Çırak / programlama** | **A–G+T✓** tavan mühür | `TAVAN_DERS.md` · `smoke_cirak_dilim_t.py` |
+| **3 — Sırada (askıdan açıldı)** | Ses yükselt → Okuma güçlendir → sesle kitap okut | 1–2 bitti; Mimar «ok» ile Ses dilimine girilir. Okuma ≠ RAG |
 | **Güvenli nokta** | Sohbet RAG A/B/C | `8da0da320` · dal `cursor/sohbet-akicilik-a-f` · `docs/SOHBET_RAG_ABC_GUVENLI_NOKTA_2026-11-20.md` |
 | **Mühürlü arka** | Sohbet · Kütüphane · Ses V0–V5 · Mobil F0–F9 | Bozma; üzerine ekle |
 | **Bilinçli erteli** | Sahne / OSM / Dünya Gezgini yeni dilim | Mimar «sahneye dön» deyene kadar yok |
