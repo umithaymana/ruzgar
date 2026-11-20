@@ -22,11 +22,11 @@ from ilim_assistant.ana_motor_plan import looks_like_encyclopedic_fact_question
 
 # --- Anlık durum (frontend / WebSocket) ---
 
-STATUS_MEKTUBAT_SHELVES = "Şu an Mektubat / arşiv raflarına bakılıyor…"
+STATUS_MEKTUBAT_SHELVES = "Şu an yerel arşiv raflarına bakılıyor…"
 STATUS_ILIM_SCAN = "İlim Hazinesi klasörü taranıyor (md/txt disk; ana vektör indeksinde değil)…"
 STATUS_ARCHIVE_MATCH = "Arşivde eşleşme bulundu — alıntı zemini hazırlanıyor…"
-STATUS_INTERNET_HADITH = "İnternette hadisler ve ilgili metinler araştırılıyor…"
-STATUS_WEB_SCAN = "İnternette hızlı tarama yapılıyor (DuckDuckGo)…"
+STATUS_INTERNET_HADITH = "Arşiv zayıf — yerel knowledge indeksine geçiliyor…"
+STATUS_WEB_SCAN = "Yerel indeks taraması genişletiliyor…"
 STATUS_FULL_INDEX = "Yerel knowledge indeksi taranıyor…"
 STATUS_BILGI_INDEX = "Genel bilgi — yerel ilim indeksi taranıyor…"
 STATUS_TEFSIR_KUTUPHANE = "Tefsir kütüphanesi — tüm eserler taranıyor…"

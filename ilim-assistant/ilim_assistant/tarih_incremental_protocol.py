@@ -33,7 +33,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from ilim_assistant.rag_store import _KNOWLEDGE_ROOT, build_index
+from ilim_assistant.rag_store import _KNOWLEDGE_ROOT, index_knowledge_files
 from ilim_assistant.tarih_kaynak_fetch import load_tarih_entries_for_ingest
 
 _STATE_PATH = Path(__file__).resolve().parent.parent / ".rag_index" / "tarih_protocol_state.json"
@@ -139,8 +139,8 @@ def _flush_tarih_batch(
     out_path = _TARIH_INC_DIR / f"tarih_batch_{batches_written:05d}.md"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(_entries_to_markdown(batch, batches_written), encoding="utf-8")
-    info = build_index(force=False, incremental=True)
     rel = f"TARIH_VE_KULTUR/incremental/{out_path.name}"
+    info = index_knowledge_files([rel])
     n_items = len(batch)
     _tarih_batch_report(n_items, batches_written, rel, info)
     st.update(
@@ -276,7 +276,8 @@ def cmd_finalize() -> None:
         raise SystemExit("Önce init + ingest ile in_progress durumuna gelin.")
     if int(st.get("lines_ingested") or 0) <= 0:
         raise SystemExit("Henüz indekslenecek tarih maddesi yok (ingest çalıştırılmamış olabilir).")
-    info = build_index(force=False, incremental=True)
+    last_rel = str(st.get("last_batch_relpath") or "").strip()
+    info = index_knowledge_files([last_rel]) if last_rel else {"status": "cached"}
     st.update(
         {
             "status": "complete",

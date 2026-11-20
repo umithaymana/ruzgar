@@ -175,39 +175,48 @@ def classify_miss(
 ) -> str | None:
     """Cevap miss/öğret ise sınıf; değilse None."""
     o = orch if isinstance(orch, dict) else {}
-    preset = str(o.get("miss_class") or "").strip()
-    if preset in _MISS_CLASSES:
-        return preset
     from ilim_assistant.ruzgar_umed_kurallari import MISS_PHRASE, TIMEOUT_PHRASE
 
     t = (reply or "").strip()
     is_timeout_phrase = bool(TIMEOUT_PHRASE and (TIMEOUT_PHRASE in t or t == TIMEOUT_PHRASE))
+    if not is_timeout_phrase:
+        low0 = t.lower()
+        if "süre yetmedi" in low0 or "sure yetmedi" in low0:
+            is_timeout_phrase = True
+    # TIMEOUT her zaman preset'ten önce — no_hits damgası süre maskesini ezmesin.
+    if is_timeout_phrase:
+        return MISS_TIMEOUT
+
+    preset = str(o.get("miss_class") or "").strip()
+    if preset in _MISS_CLASSES:
+        return preset
+
     is_miss = (
         bool(egitim_miss)
         or (MISS_PHRASE in t)
         or t == MISS_PHRASE
-        or is_timeout_phrase
     )
     if not is_miss:
         low = t.lower()
         if "bulamadım" in low and ("öğret" in low or "ogret" in low):
             is_miss = True
-        if "süre yetmedi" in low or "sure yetmedi" in low:
-            is_miss = True
-            is_timeout_phrase = True
     if not is_miss:
         return None
-
-    if is_timeout_phrase:
-        return MISS_TIMEOUT
 
     el = float(elapsed_sec) if elapsed_sec is not None else None
     bud = budget_sec
     if bud is None:
         try:
-            from ilim_assistant.ruzgar_umed_cevap_emri import turn_budget_sec
+            raw_b = o.get("budget_sec")
+            if raw_b is not None:
+                bud = float(raw_b)
+        except Exception:
+            bud = None
+    if bud is None:
+        try:
+            from ilim_assistant.ruzgar_umed_cevap_emri import resolve_active_budget_sec
 
-            bud = float(turn_budget_sec(""))
+            bud = float(resolve_active_budget_sec(""))
         except Exception:
             bud = 15.0
     # Süre önce — hits=0 timeout'u «no_hits» diye yazmasın
@@ -281,12 +290,28 @@ def build_tur_kart(
     cats = o.get("shamela_cats")
     if not cats:
         cats = get_last_shamela_cats()
+    _bud_kart = None
+    try:
+        if o.get("budget_sec") is not None:
+            _bud_kart = float(o.get("budget_sec"))
+    except Exception:
+        _bud_kart = None
+    if _bud_kart is None:
+        try:
+            from ilim_assistant.ruzgar_umed_cevap_emri import get_turn_budget_sec
+
+            _stored = get_turn_budget_sec()
+            if _stored is not None:
+                _bud_kart = float(_stored)
+        except Exception:
+            _bud_kart = None
     miss_class = classify_miss(
         reply=reply,
         orch=o,
         hits_count=hits_count,
         elapsed_sec=elapsed_sec,
         egitim_miss=egitim_miss,
+        budget_sec=_bud_kart,
     )
     prov = (provider or o.get("provider") or o.get("llm_provider") or "").strip() or None
     if not prov:

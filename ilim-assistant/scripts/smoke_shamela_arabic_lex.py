@@ -69,12 +69,19 @@ def main() -> int:
     kept2 = filter_rag_hits(q, only_ar, min_score=0.32, soft=False)
     failed += _ok(len(kept2) == 1, "tek Arapça hit soft=False kalır")
 
-    from ilim_assistant.ruzgar_kutuphane_gorev import filter_hits_lexically
+    from ilim_assistant.ruzgar_kutuphane_gorev import (
+        filter_hits_lexically,
+        hits_usable_for_kutuphane,
+    )
 
     lex = filter_hits_lexically(q, [(ar, src, 0.48)])
     failed += _ok(len(lex) >= 1, "kutuphane lex Arapça tutar")
 
-    total = 11
+    # Usable: Arapça skor 0.28+ soft kabul (lexik 0 olsa bile)
+    usable = hits_usable_for_kutuphane(q, [(ar, src, 0.30)], soft=True)
+    failed += _ok(usable is True, "usable Arapça skor 0.30")
+
+    total = 12
     print(f"result: {total - failed}/{total} pass")
     return 1 if failed else 0
 

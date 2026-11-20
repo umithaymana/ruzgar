@@ -26,7 +26,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from ilim_assistant.rag_store import _KNOWLEDGE_ROOT, build_index
+from ilim_assistant.rag_store import _KNOWLEDGE_ROOT, index_knowledge_files
 
 _STATE_PATH = Path(__file__).resolve().parent.parent / ".rag_index" / "tdk_protocol_state.json"
 _TDK_INC_DIR = _KNOWLEDGE_ROOT / "tdk" / "incremental"
@@ -155,8 +155,8 @@ def cmd_ingest(source: Path, batch_size: int) -> None:
                 out_path = _TDK_INC_DIR / f"tdk_batch_{batches_written:05d}.md"
                 out_path.parent.mkdir(parents=True, exist_ok=True)
                 out_path.write_text(_entries_to_markdown(batch, batches_written), encoding="utf-8")
-                info = build_index(force=False, incremental=True)
                 rel = f"tdk/incremental/{out_path.name}"
+                info = index_knowledge_files([rel])
                 print(
                     f"{n_words} kelime başarıyla vektör hafızasına eklendi "
                     f"(paket {batches_written:05d}, dosya: {rel}). İndeks: {info}"
@@ -178,8 +178,8 @@ def cmd_ingest(source: Path, batch_size: int) -> None:
         out_path = _TDK_INC_DIR / f"tdk_batch_{batches_written:05d}.md"
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_text(_entries_to_markdown(batch, batches_written), encoding="utf-8")
-        info = build_index(force=False, incremental=True)
         rel = f"tdk/incremental/{out_path.name}"
+        info = index_knowledge_files([rel])
         print(
             f"{n_words} kelime başarıyla vektör hafızasına eklendi "
             f"(paket {batches_written:05d}, dosya: {rel}). İndeks: {info}"
@@ -218,8 +218,8 @@ def cmd_finalize() -> None:
         raise SystemExit("Önce init + ingest ile in_progress durumuna gelin.")
     if int(st.get("lines_ingested") or 0) <= 0:
         raise SystemExit("Henüz indekslenecek TDK maddesi yok (ingest çalıştırılmamış olabilir).")
-    # Son tutarlılık: incremental bir tur daha (çoğunlukla no-op).
-    info = build_index(force=False, incremental=True)
+    last_rel = str(st.get("last_batch_relpath") or "").strip()
+    info = index_knowledge_files([last_rel]) if last_rel else {"status": "cached"}
     st.update(
         {
             "status": "complete",

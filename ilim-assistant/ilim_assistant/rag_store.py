@@ -5,10 +5,11 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import time
 import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Tuple
+from typing import Any, List, Tuple
 
 import numpy as np
 
@@ -712,6 +713,31 @@ def upsert_learned_into_main_index(*, knowledge_root: Path | None = None) -> dic
     out = upsert_sources_into_main_index(rels, knowledge_root=root)
     out["learned_scanned"] = len(rels)
     return out
+
+
+def index_knowledge_files(
+    rels: list[str] | str,
+    *,
+    knowledge_root: Path | None = None,
+) -> dict:
+    """Nebula / TDK / Tarih / learned ince yol — `build_index(restrict_new)` yerine.
+
+    ``rels`` knowledge köküne göre relative (örn. ``nebula/x/incremental/batch.md``).
+    Şamile yolları reddedilir. Kör full rebuild yok.
+    """
+    if isinstance(rels, str):
+        rels = [rels]
+    cleaned: list[str] = []
+    for raw in rels:
+        r = str(raw or "").strip().replace("\\", "/")
+        if not r:
+            continue
+        if r.startswith("knowledge/"):
+            r = r[len("knowledge/") :]
+        cleaned.append(r)
+    if not cleaned:
+        return {"status": "empty", "changed_files": 0}
+    return upsert_sources_into_main_index(cleaned, knowledge_root=knowledge_root)
 
 
 def _load_chunks() -> List[Chunk]:
@@ -1550,6 +1576,82 @@ _ARSIV_SKIP_DIR_NAMES = frozenset(
     }
 )
 
+# Dosya listesi mtime önbelleği — her aramada full rglob maliyetini keser (M4).
+_arsiv_file_list_cache: dict[str, Any] = {
+    "root": None,
+    "sig": None,
+    "files": None,
+    "built_at": 0.0,
+}
+_arsiv_disk_last_meta: dict[str, Any] = {
+    "scanned": 0,
+    "cap": 0,
+    "truncated": False,
+    "deadline_hit": False,
+    "cache_hit": False,
+}
+
+
+def arsiv_disk_last_meta() -> dict[str, Any]:
+    return dict(_arsiv_disk_last_meta)
+
+
+def _arsiv_root_mtime_sig(root: Path) -> str:
+    """Üst dizin mtime imzası — liste tazeliği için ucuz kontrol."""
+    try:
+        parts = [f"{root.stat().st_mtime_ns}"]
+        for child in sorted(root.iterdir(), key=lambda p: p.name.lower())[:48]:
+            try:
+                parts.append(f"{child.name}:{child.stat().st_mtime_ns}")
+            except OSError:
+                continue
+        return "|".join(parts)
+    except OSError:
+        return str(time.time())
+
+
+def _arsiv_list_searchable_files(root: Path, max_files: int) -> tuple[list[Path], bool]:
+    """md/txt listesi — mtime imzası ile önbellek; (paths, cache_hit)."""
+    global _arsiv_file_list_cache
+    sig = _arsiv_root_mtime_sig(root)
+    root_s = str(root.resolve()) if root.exists() else str(root)
+    cached = _arsiv_file_list_cache
+    if (
+        cached.get("root") == root_s
+        and cached.get("sig") == sig
+        and isinstance(cached.get("files"), list)
+    ):
+        files = list(cached["files"])
+        return files[:max_files], True
+
+    out: list[Path] = []
+    for path in root.rglob("*"):
+        if not path.is_file():
+            continue
+        if path.suffix.lower() not in (".md", ".txt"):
+            continue
+        try:
+            parts_l = [p.lower() for p in path.relative_to(root).parts]
+        except ValueError:
+            continue
+        if any(
+            p.startswith("_backup") or p.startswith("_virus") or p.startswith("_legacy")
+            for p in parts_l
+        ):
+            continue
+        if parts_l and parts_l[0] in _ARSIV_SKIP_DIR_NAMES:
+            continue
+        out.append(path)
+        if len(out) >= max_files:
+            break
+    _arsiv_file_list_cache = {
+        "root": root_s,
+        "sig": sig,
+        "files": out,
+        "built_at": time.time(),
+    }
+    return list(out), False
+
 
 def arsiv_search_status() -> dict:
     """Dürüst durum: ana vektör indeksinde arsiv/ yok; disk ince arama ayrı."""
@@ -1575,6 +1677,7 @@ def arsiv_search_status() -> dict:
         "disk_md_approx": md_n,
         "disk_search_enabled": _arsiv_disk_search_enabled() and root is not None,
         "mode": "disk_keyword" if _arsiv_disk_search_enabled() else "off",
+        "last_disk_meta": arsiv_disk_last_meta(),
         "hint": (
             "arsiv/ ana RAG indeksinde değil; sohbet md/txt disk aramasıyla bakar "
             "(Şamile/knowledge ayrı). Kapat: RUZGAR_ARSIV_DISK_SEARCH=0"
@@ -1598,8 +1701,19 @@ def _arsiv_query_tokens(query: str) -> list[str]:
 
 
 def search_arsiv_disk(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
-    """İnce yol: arsiv/ altı md/txt — gömme/full rebuild yok."""
+    """İnce yol: arsiv/ altı md/txt — gömme/full rebuild yok.
+
+    Dosya listesi mtime önbellekli; tur deadline varsa erken keser (M4).
+    """
+    global _arsiv_disk_last_meta
     if not _arsiv_disk_search_enabled():
+        _arsiv_disk_last_meta = {
+            "scanned": 0,
+            "cap": 0,
+            "truncated": False,
+            "deadline_hit": False,
+            "cache_hit": False,
+        }
         return []
     root = _arsiv_root()
     if root is None:
@@ -1617,31 +1731,48 @@ def search_arsiv_disk(query: str, top_k: int = 5) -> List[Tuple[str, str, float]
     except ValueError:
         max_bytes = 120_000
 
+    files, cache_hit = _arsiv_list_searchable_files(root, max_files)
+    remaining_fn = None
+    try:
+        from ilim_assistant.ruzgar_umed_cevap_emri import remaining_sec as _rem
+
+        remaining_fn = _rem
+    except Exception:
+        remaining_fn = None
+
     scored: list[tuple[float, str, str]] = []
     seen = 0
-    for path in root.rglob("*"):
-        if not path.is_file():
-            continue
-        if path.suffix.lower() not in (".md", ".txt"):
-            continue
-        # yedek / medya / gizli ağaçları atla
-        parts_l = [p.lower() for p in path.relative_to(root).parts]
-        if any(p.startswith("_backup") or p.startswith("_virus") or p.startswith("_legacy") for p in parts_l):
-            continue
-        if parts_l and parts_l[0] in _ARSIV_SKIP_DIR_NAMES:
-            continue
+    truncated = False
+    deadline_hit = False
+    for path in files:
+        if remaining_fn is not None:
+            try:
+                if float(remaining_fn()) < 0.35:
+                    deadline_hit = True
+                    truncated = True
+                    break
+            except Exception:
+                pass
         seen += 1
         if seen > max_files:
+            truncated = True
             break
         rel = "arsiv/" + str(path.relative_to(root)).replace("\\", "/")
-        name_l = path.name.lower()
         try:
             raw = path.read_text(encoding="utf-8", errors="ignore")[:max_bytes]
         except OSError:
             continue
-        body_l = raw.lower()
-        hit_name = sum(1 for t in toks if t in name_l)
-        hit_body = sum(1 for t in toks if t in body_l)
+        # Token'lar fold_ascii; ad/gövde de katlanmalı (ş→s) — aksi Türkçe isabet kaçıyor.
+        try:
+            from ilim_assistant.ruzgar_anlam_koruma import fold_ascii
+
+            name_f = fold_ascii(path.name)
+            body_f = fold_ascii(raw)
+        except Exception:
+            name_f = path.name.lower()
+            body_f = raw.lower()
+        hit_name = sum(1 for t in toks if t in name_f)
+        hit_body = sum(1 for t in toks if t in body_f)
         if hit_name == 0 and hit_body == 0:
             continue
         cov = (hit_name * 2 + hit_body) / float(len(toks) * 3)
@@ -1651,18 +1782,28 @@ def search_arsiv_disk(query: str, top_k: int = 5) -> List[Tuple[str, str, float]
         # kısa pasaj
         snippet = raw.strip().replace("\r\n", "\n")
         if len(snippet) > 900:
-            # ilk eşleşen token civarı
             pos = -1
             for t in toks:
-                pos = body_l.find(t)
+                pos = body_f.find(t)
                 if pos >= 0:
                     break
             if pos < 0:
                 pos = 0
-            start = max(0, pos - 120)
+            # fold boyutu ≈ ham boyuta yakın; ham dilimde kes
+            start = max(0, min(pos - 120, max(0, len(snippet) - 900)))
             snippet = snippet[start : start + 900]
         scored.append((score, snippet, rel))
 
+    if len(files) >= max_files:
+        truncated = True
+    _arsiv_disk_last_meta = {
+        "scanned": seen,
+        "cap": max_files,
+        "truncated": truncated,
+        "deadline_hit": deadline_hit,
+        "cache_hit": cache_hit,
+        "hits": len(scored),
+    }
     scored.sort(key=lambda x: -x[0])
     return [(text, src, float(sc)) for sc, text, src in scored[:tk]]
 

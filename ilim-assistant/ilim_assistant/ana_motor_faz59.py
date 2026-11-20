@@ -212,8 +212,9 @@ def begin_umed_turn_budget(
     coding_mode: bool = False,
     motor_flags: dict[str, bool] | None = None,
     question_plan: Any | None = None,
+    force: bool = True,
 ) -> float:
-    """Ümit emri deadline — Faz 59 bütçe çözümü."""
+    """Ümit emri deadline — Faz 59 bütçe çözümü (budget_sec + deadline tek kapı)."""
     budget = resolve_umed_budget_sec(
         message,
         mode_norm=mode_norm,
@@ -222,12 +223,23 @@ def begin_umed_turn_budget(
         question_plan=question_plan,
     )
     try:
-        from ilim_assistant.ruzgar_umed_cevap_emri import set_turn_deadline
+        from ilim_assistant.ruzgar_umed_cevap_emri import begin_turn_budget
 
-        set_turn_deadline(time.monotonic() + budget)
+        return begin_turn_budget(
+            message,
+            mode_norm=mode_norm,
+            question_plan=question_plan,
+            budget=budget,
+            force=force,
+        )
     except Exception:
-        pass
-    return budget
+        try:
+            from ilim_assistant.ruzgar_umed_cevap_emri import set_turn_deadline
+
+            set_turn_deadline(time.monotonic() + budget)
+        except Exception:
+            pass
+        return budget
 
 
 def build_delegation_summary(

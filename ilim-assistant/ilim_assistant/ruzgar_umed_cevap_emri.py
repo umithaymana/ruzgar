@@ -36,6 +36,12 @@ _ILIM_BUDGET_SEC = 38.0
 _turn_deadline: contextvars.ContextVar[float | None] = contextvars.ContextVar(
     "umed_turn_deadline", default=None
 )
+_turn_budget_sec: contextvars.ContextVar[float | None] = contextvars.ContextVar(
+    "umed_turn_budget_sec", default=None
+)
+_answer_truncated: contextvars.ContextVar[bool] = contextvars.ContextVar(
+    "umed_answer_truncated", default=False
+)
 
 PRIORITY_LABELS = (
     "kendi_hafiza",
@@ -167,16 +173,95 @@ def get_turn_deadline() -> float | None:
     return _turn_deadline.get()
 
 
+def set_turn_budget_sec(budget: float | None) -> None:
+    _turn_budget_sec.set(budget)
+
+
+def get_turn_budget_sec() -> float | None:
+    return _turn_budget_sec.get()
+
+
+def mark_answer_truncated(flag: bool = True) -> None:
+    """Süre dolunca yarım LLM cevabı — otomatik öğrenmeye yazılmaz."""
+    _answer_truncated.set(bool(flag))
+
+
+def is_answer_truncated() -> bool:
+    return bool(_answer_truncated.get())
+
+
+def clear_turn_budget_state() -> None:
+    set_turn_deadline(None)
+    set_turn_budget_sec(None)
+    mark_answer_truncated(False)
+
+
+def resolve_active_budget_sec(
+    message: str = "",
+    *,
+    mode_norm: str = "genel",
+    question_plan: Any | None = None,
+) -> float:
+    """Tur başına tek bütçe: önce ContextVar, yoksa turn_budget_sec."""
+    stored = get_turn_budget_sec()
+    if stored is not None:
+        try:
+            return float(stored)
+        except (TypeError, ValueError):
+            pass
+    return float(
+        turn_budget_sec(message, mode_norm=mode_norm, question_plan=question_plan)
+    )
+
+
 def begin_turn_budget(
     message: str,
     *,
     mode_norm: str = "genel",
     question_plan: Any | None = None,
+    budget: float | None = None,
+    force: bool = False,
 ) -> float:
-    budget = turn_budget_sec(message, mode_norm=mode_norm, question_plan=question_plan)
-    deadline = time.monotonic() + budget
-    set_turn_deadline(deadline)
-    return budget
+    """Tur deadline + budget_sec. force=False iken ikinci çağrı sıfırlamaz (N4)."""
+    if (
+        not force
+        and get_turn_deadline() is not None
+        and get_turn_budget_sec() is not None
+    ):
+        try:
+            return float(get_turn_budget_sec() or 0.0)
+        except (TypeError, ValueError):
+            pass
+    if budget is not None:
+        try:
+            bud = float(budget)
+        except (TypeError, ValueError):
+            bud = turn_budget_sec(
+                message, mode_norm=mode_norm, question_plan=question_plan
+            )
+    else:
+        bud = turn_budget_sec(
+            message, mode_norm=mode_norm, question_plan=question_plan
+        )
+    set_turn_budget_sec(bud)
+    set_turn_deadline(time.monotonic() + bud)
+    mark_answer_truncated(False)
+    return bud
+
+
+def ensure_turn_budget(
+    message: str,
+    *,
+    mode_norm: str = "genel",
+    question_plan: Any | None = None,
+) -> float:
+    """LLM zinciri: deadline yoksa başlat; varsa dokunma."""
+    return begin_turn_budget(
+        message,
+        mode_norm=mode_norm,
+        question_plan=question_plan,
+        force=False,
+    )
 
 
 def remaining_sec() -> float:
@@ -351,10 +436,11 @@ def public_meta(message: str = "") -> dict[str, Any]:
     return {
         "version": EMRI_VERSION,
         "frozen": EMRI_FROZEN,
-        "budget_sec": turn_budget_sec(message),
+        "budget_sec": resolve_active_budget_sec(message),
         "priority": list(PRIORITY_LABELS),
         "miss_phrase": MISS_PHRASE,
         "s4_web_niyet": s4_web_niyet_enabled(),
         "s4_version": S4_WEB_NIYET_VERSION,
         "early_web": wants_early_web(message),
+        "answer_truncated": is_answer_truncated(),
     }

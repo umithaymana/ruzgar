@@ -36,6 +36,7 @@ _last_index_ts = 0.0
 _index_pending = False
 _index_pending_since: float | None = None
 _index_last_error: str = ""
+_index_debounce_timer: threading.Timer | None = None
 
 
 def otomatik_ogrenme_enabled() -> bool:
@@ -521,6 +522,7 @@ def _schedule_rag_index() -> bool:
         True if a new index job was scheduled (or already pending / debounced).
     """
     global _last_index_ts, _index_pending, _index_pending_since, _index_last_error
+    global _index_debounce_timer
     import time
 
     debounce = 45.0
@@ -529,26 +531,53 @@ def _schedule_rag_index() -> bool:
     _index_pending = True
     if _index_pending_since is None:
         _index_pending_since = now
-    if now - _last_index_ts < debounce:
-        return True
-    with _index_lock:
-        if now - _last_index_ts < debounce:
-            return True
-        _last_index_ts = now
 
     def _run() -> None:
-        global _index_pending, _index_pending_since, _index_last_error
+        global _index_pending, _index_pending_since, _index_last_error, _last_index_ts
         try:
             # İnce yol: yalnız learned — Şamile/ortak ana indekse çekilmez.
             from ilim_assistant.rag_store import upsert_learned_into_main_index
 
-            upsert_learned_into_main_index()
-            _index_last_error = ""
+            out = upsert_learned_into_main_index()
+            st = str((out or {}).get("status") or "")
+            if st in ("no_base_index", "index_corrupt", "manifest_error"):
+                _index_last_error = st
+            else:
+                _index_last_error = ""
+            _last_index_ts = time.time()
         except Exception as exc:
             _index_last_error = str(exc)[:200]
         finally:
             _index_pending = False
             _index_pending_since = None
+
+    remaining = debounce - (now - _last_index_ts)
+    if remaining > 0.05:
+        # Debounce: iş kaybolmasın — kalan süreye Timer
+        with _index_lock:
+            if _index_debounce_timer is not None:
+                try:
+                    _index_debounce_timer.cancel()
+                except Exception:
+                    pass
+            _index_debounce_timer = threading.Timer(remaining, _run)
+            _index_debounce_timer.daemon = True
+            _index_debounce_timer.start()
+        return True
+
+    with _index_lock:
+        if now - _last_index_ts < debounce:
+            remaining2 = debounce - (now - _last_index_ts)
+            if _index_debounce_timer is not None:
+                try:
+                    _index_debounce_timer.cancel()
+                except Exception:
+                    pass
+            _index_debounce_timer = threading.Timer(max(0.05, remaining2), _run)
+            _index_debounce_timer.daemon = True
+            _index_debounce_timer.start()
+            return True
+        _last_index_ts = now
 
     threading.Thread(target=_run, daemon=True).start()
     return True
@@ -587,6 +616,14 @@ def auto_learn_from_turn(
     - knowledge/learned/*.md (RAG)
     """
     meta: dict[str, Any] = {"saved": False, "version": OTOMATIK_OGRENME_VERSION}
+    try:
+        from ilim_assistant.ruzgar_umed_cevap_emri import is_answer_truncated
+
+        if is_answer_truncated():
+            meta["skipped"] = "answer_truncated"
+            return meta
+    except Exception:
+        pass
     _web = web_used or force_web
     _trust_ok, _trust_why = learn_trust_ok(
         user_message,

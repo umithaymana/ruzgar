@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterator
 
-from ilim_assistant.rag_store import _KNOWLEDGE_ROOT, build_index
+from ilim_assistant.rag_store import _KNOWLEDGE_ROOT, index_knowledge_files
 
 _PKG_ROOT = Path(__file__).resolve().parent.parent
 _NEBULA_ROOT = _KNOWLEDGE_ROOT / "nebula"
@@ -212,6 +212,7 @@ def ingest_structured_source(
     batch_no = len(existing)
     total = 0
     batch: list[tuple[str, str]] = []
+    written_rels: list[str] = []
 
     for title, body in _iter_entries_from_path(src):
         batch.append((title, body))
@@ -221,6 +222,7 @@ def ingest_structured_source(
                 _batch_markdown(batch, batch_no, slug, src.name),
                 encoding="utf-8",
             )
+            written_rels.append(f"nebula/{slug}/incremental/{path.name}")
             batch_no += 1
             total += len(batch)
             batch = []
@@ -231,6 +233,7 @@ def ingest_structured_source(
             _batch_markdown(batch, batch_no, slug, src.name),
             encoding="utf-8",
         )
+        written_rels.append(f"nebula/{slug}/incremental/{path.name}")
         total += len(batch)
         batch_no += 1
 
@@ -242,7 +245,7 @@ def ingest_structured_source(
 
     info: dict[str, Any] = {"status": "skipped", "chunks": "?"}
     if rebuild_index:
-        info = build_index(force=False, incremental=True)
+        info = index_knowledge_files(written_rels)
 
     meta_path = _NEBULA_ROOT / slug / "meta.json"
     meta_path.parent.mkdir(parents=True, exist_ok=True)

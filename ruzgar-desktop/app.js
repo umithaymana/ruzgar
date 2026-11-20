@@ -16340,13 +16340,14 @@ async function streamChat(userText, streamOpts = {}) {
         if (ev.type === "done") gotDoneFromEvents = true;
         processChatEvent(ev);
       });
-      if (!gotDoneFromEvents && (j.full_reply || full.trim())) {
+      if (!gotDoneFromEvents && (j.full_reply || full.trim() || j.masa)) {
         processChatEvent({
           type: "done",
           full_reply: j.full_reply || "",
           user_message: j.user_message || userText,
           new_wake_used: !!j.new_wake_used,
           orchestra: j.orchestra,
+          masa: j.masa || null,
           instant_gundelik: !!j.instant_gundelik,
           instant_clarify: !!j.instant_clarify,
           instant_memory: !!j.instant_memory,

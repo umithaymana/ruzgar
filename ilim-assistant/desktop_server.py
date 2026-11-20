@@ -12399,20 +12399,21 @@ def _persist_done_chat_turn(req: ChatRequest, done: dict[str, Any]) -> dict[str,
 def _finalize_done_chat_turn(req: ChatRequest, done: dict[str, Any]) -> dict[str, Any]:
     """done sonrası ortak kancalar — stream ve /api/chat/full aynı kapı.
 
-    Persist · eğitim/öğrenme · F0 teşhis · paket · programlama oturum.
+    Sıra: eğitim wrap (TIMEOUT≠MISS) → persist → F0 teşhis → paket → programlama.
     İdempotent persist (`chat_persisted`); full yolu break etse bile buradan tamamlanır.
     """
     obj = dict(done or {})
     if not obj:
         return obj
-    try:
-        obj = _persist_done_chat_turn(req, obj)
-    except Exception:
-        pass
+    # Önce wrap — persist MISS metnini TIMEOUT'tan önce yazmasın.
     try:
         from ilim_assistant.ruzgar_egitim import on_chat_turn_done
 
         obj = on_chat_turn_done(req, obj)
+    except Exception:
+        pass
+    try:
+        obj = _persist_done_chat_turn(req, obj)
     except Exception:
         pass
     try:
@@ -12643,11 +12644,14 @@ async def _async_iter_chat_events(req: ChatRequest):
                 obj = dict(obj)
                 obj.setdefault("elapsed_sec", 0.05)
                 obj["fast_lane"] = True
-                yield obj
                 try:
-                    await run_in_threadpool(_fast_lane_post_done, req, obj)
+                    obj = await run_in_threadpool(_finalize_done_chat_turn, req, obj)
                 except Exception:
-                    pass
+                    try:
+                        await run_in_threadpool(_fast_lane_post_done, req, obj)
+                    except Exception:
+                        pass
+                yield obj
             else:
                 yield obj
         return
@@ -15780,9 +15784,11 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             deadline_exceeded,
             umed_emri_applies,
             umed_miss_reply,
+            umed_timeout_reply,
         )
 
         if umed_emri_applies(mode_norm=mode_norm, coding_mode=coding):
+            _bud_started: float | None = None
             try:
                 from ilim_assistant.ana_motor_faz59 import begin_umed_turn_budget
 
@@ -15793,19 +15799,31 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                     _mf_budget = motor_niyeti_heuristic(req.message or "")
                 except Exception:
                     pass
-                begin_umed_turn_budget(
+                _bud_started = begin_umed_turn_budget(
                     req.message or "",
                     mode_norm=mode_norm,
                     coding_mode=coding,
                     motor_flags=_mf_budget,
                     question_plan=turn_plan,
+                    force=True,
                 )
             except Exception:
-                begin_turn_budget(
+                _bud_started = begin_turn_budget(
                     req.message or "",
                     mode_norm=mode_norm,
                     question_plan=turn_plan,
+                    force=True,
                 )
+            if _bud_started is not None:
+                try:
+                    orch["budget_sec"] = float(_bud_started)
+                    umed_block = orch.get("umed_cevap_emri")
+                    if isinstance(umed_block, dict):
+                        umed_block = dict(umed_block)
+                        umed_block["budget_sec"] = float(_bud_started)
+                        orch["umed_cevap_emri"] = umed_block
+                except Exception:
+                    pass
         if umed_emri_applies(mode_norm=mode_norm, coding_mode=coding) and deadline_exceeded():
             from ilim_assistant.ruzgar_egitim import (
                 maybe_egitim_learned_reply,
@@ -15816,8 +15834,9 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
             _lated = taught_reply_for_message(_mdead) or maybe_egitim_learned_reply(
                 _mdead, history=req.history
             )
+            # Süre bitti → TIMEOUT (MISS/öğret değil)
             yield from _iter_instant_chat_events(
-                _lated or umed_miss_reply(),
+                _lated or umed_timeout_reply(),
                 _mdead,
                 session_wake_used=req.session_wake_used,
                 msg_for_wake=req.message,
@@ -16649,43 +16668,61 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         except Exception:
             pass
         try:
-            from ilim_assistant.ruzgar_otomatik_ogrenme import auto_learn_from_turn
+            from ilim_assistant.ruzgar_umed_cevap_emri import is_answer_truncated
 
-            _learn_meta = auto_learn_from_turn(
-                msg,
-                body_fixed,
-                plan_primary=_plan_prim,
-                instant=bool(orch.get("instant_gundelik")),
-                web_used=web_used,
-                force_web=bool(orch.get("force_web_research")),
-                hits=hits,
-            )
-            if orch.get("sentez_pro"):
-                try:
-                    from ilim_assistant.ana_motor_faz_ae_pro_ogrenme import (
-                        maybe_boost_learn_after_pro_turn,
-                    )
-
-                    _learn_meta = maybe_boost_learn_after_pro_turn(
-                        msg,
-                        body_fixed,
-                        _learn_meta,
-                        sentez_pro=True,
-                        plan_primary=_plan_prim,
-                        web_used=web_used,
-                        hits=hits,
-                    )
-                except Exception:
-                    pass
-            if _learn_meta.get("saved"):
-                orch["otomatik_ogrenme"] = _learn_meta
-                if _learn_meta.get("index_pending"):
-                    orch["index_pending"] = True
-                    orch["index_status"] = _learn_meta.get("index_status") or (
-                        "Kayıt yazıldı; vektör indeksi arka planda bekliyor."
-                    )
+            if is_answer_truncated():
+                orch["answer_truncated"] = True
         except Exception:
             pass
+        _skip_learn = bool(
+            orch.get("answer_truncated")
+            or orch.get("timeout_miss")
+            or done_llm.get("timeout_miss")
+        )
+        if not _skip_learn:
+            try:
+                from ilim_assistant.ruzgar_otomatik_ogrenme import auto_learn_from_turn
+
+                _learn_meta = auto_learn_from_turn(
+                    msg,
+                    body_fixed,
+                    plan_primary=_plan_prim,
+                    instant=bool(orch.get("instant_gundelik")),
+                    web_used=web_used,
+                    force_web=bool(orch.get("force_web_research")),
+                    hits=hits,
+                )
+                if orch.get("sentez_pro"):
+                    try:
+                        from ilim_assistant.ana_motor_faz_ae_pro_ogrenme import (
+                            maybe_boost_learn_after_pro_turn,
+                        )
+
+                        _learn_meta = maybe_boost_learn_after_pro_turn(
+                            msg,
+                            body_fixed,
+                            _learn_meta,
+                            sentez_pro=True,
+                            plan_primary=_plan_prim,
+                            web_used=web_used,
+                            hits=hits,
+                        )
+                    except Exception:
+                        pass
+                if _learn_meta.get("saved"):
+                    orch["otomatik_ogrenme"] = _learn_meta
+                    if _learn_meta.get("index_pending"):
+                        orch["index_pending"] = True
+                        orch["index_status"] = _learn_meta.get("index_status") or (
+                            "Kayıt yazıldı; vektör indeksi arka planda bekliyor."
+                        )
+            except Exception:
+                pass
+        elif orch.get("answer_truncated"):
+            orch["otomatik_ogrenme"] = {
+                "saved": False,
+                "skipped": "answer_truncated",
+            }
         yield done_llm
     except Exception as e:
         yield {"type": "error", "text": format_llm_user_error(e)}
@@ -16708,12 +16745,12 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
         if obj.get("type") == "done":
             obj = dict(obj)
             obj.setdefault("elapsed_sec", time.perf_counter() - t0)
-            # Önce done — istemci DURDUR/Gönder ve TTS kilidi hemen açılsın (finalize sonra).
-            yield obj
+            # Finalize önce — tur_teshis / TIMEOUT wrap / paket_auto istemciye ulaşsın.
             try:
-                _finalize_done_chat_turn(req, obj)
+                obj = _finalize_done_chat_turn(req, obj)
             except Exception:
                 pass
+            yield obj
             continue
         yield obj
 
@@ -16847,6 +16884,7 @@ def _chat_full_sync(req: ChatRequest) -> dict[str, Any]:
         "user_message": done_event.get("user_message", (req.message or "").strip()),
         "new_wake_used": bool(done_event.get("new_wake_used")),
         "orchestra": done_event.get("orchestra"),
+        "masa": done_event.get("masa"),
         "instant_gundelik": bool(done_event.get("instant_gundelik")),
         "instant_clarify": bool(done_event.get("instant_clarify")),
         "instant_memory": bool(done_event.get("instant_memory")),

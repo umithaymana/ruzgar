@@ -1227,19 +1227,22 @@ def _stream_brain_chain_loop(
     is_real_user_question = lambda _m: True  # type: ignore[assignment, misc]
     remaining_sec = lambda: 9999.0  # type: ignore[assignment, misc]
     umed_empty_chain_reply = lambda: ""  # type: ignore[assignment, misc]
+    mark_answer_truncated = lambda _f=True: None  # type: ignore[assignment, misc]
     if use_turn_budget:
         try:
             from ilim_assistant.ruzgar_umed_cevap_emri import (
-                begin_turn_budget,
+                ensure_turn_budget,
+                mark_answer_truncated as _mark_trunc,
                 remaining_sec as _rem,
                 umed_emri_applies,
                 umed_empty_chain_reply as _empty,
             )
             from ilim_assistant.ruzgar_egitim import is_real_user_question as _irq
 
+            mark_answer_truncated = _mark_trunc
             _umed = umed_emri_applies(mode_norm=mode_norm, coding_mode=coding_mode)
             if _umed:
-                begin_turn_budget(message or user, mode_norm=mode_norm)
+                ensure_turn_budget(message or user, mode_norm=mode_norm)
             is_real_user_question = _irq
             remaining_sec = _rem
             umed_empty_chain_reply = _empty
@@ -1248,6 +1251,11 @@ def _stream_brain_chain_loop(
 
     for ep in chain:
         if _umed and remaining_sec() < 0.8:
+            if any_content:
+                try:
+                    mark_answer_truncated(True)
+                except Exception:
+                    pass
             break
         last_provider = ep.profile_id
         attempted.append(ep.profile_id)
@@ -1255,8 +1263,13 @@ def _stream_brain_chain_loop(
             got_content = False
             for piece in _stream_endpoint(ep, system, user, prior_messages):
                 if _umed and remaining_sec() <= 0:
-                    if got_content and piece:
-                        yield piece
+                    if got_content:
+                        try:
+                            mark_answer_truncated(True)
+                        except Exception:
+                            pass
+                        if piece:
+                            yield piece
                     break
                 if not got_content and _looks_like_error_chunk(piece):
                     last_err = piece.strip()
@@ -1348,18 +1361,21 @@ def stream_chat_with_brain(
     is_real_user_question = lambda _m: True  # type: ignore[assignment, misc]
     remaining_sec = lambda: 9999.0  # type: ignore[assignment, misc]
     umed_empty_chain_reply = lambda: ""  # type: ignore[assignment, misc]
+    mark_answer_truncated = lambda _f=True: None  # type: ignore[assignment, misc]
     try:
         from ilim_assistant.ruzgar_umed_cevap_emri import (
-            begin_turn_budget,
+            ensure_turn_budget,
+            mark_answer_truncated as _mark_trunc,
             remaining_sec as _rem,
             umed_emri_applies,
             umed_empty_chain_reply as _empty,
         )
         from ilim_assistant.ruzgar_egitim import is_real_user_question as _irq
 
+        mark_answer_truncated = _mark_trunc
         _umed = umed_emri_applies(mode_norm=mode_norm, coding_mode=coding_mode)
         if _umed:
-            begin_turn_budget(
+            ensure_turn_budget(
                 message or user,
                 mode_norm=mode_norm,
                 question_plan=question_plan,
@@ -1372,6 +1388,11 @@ def stream_chat_with_brain(
 
     for ep in sel.chain:
         if _umed and remaining_sec() < 0.8:
+            if any_content:
+                try:
+                    mark_answer_truncated(True)
+                except Exception:
+                    pass
             break
         last_provider = ep.profile_id
         attempted.append(ep.profile_id)
@@ -1379,8 +1400,13 @@ def stream_chat_with_brain(
             got_content = False
             for piece in _stream_endpoint(ep, system, user, prior_messages):
                 if _umed and remaining_sec() <= 0:
-                    if got_content and piece:
-                        yield piece
+                    if got_content:
+                        try:
+                            mark_answer_truncated(True)
+                        except Exception:
+                            pass
+                        if piece:
+                            yield piece
                     break
                 if not got_content and _looks_like_error_chunk(piece):
                     last_err = piece.strip()

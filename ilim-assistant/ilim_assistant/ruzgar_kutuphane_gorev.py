@@ -394,6 +394,23 @@ def hits_usable_for_kutuphane(
             best_sc = max(best_sc, float(sc))
         except Exception:
             pass
+    # Arapça ağır pasaj (Şamile): Latin örtüşme 0 olsa da skor eşiği ile usable
+    # Eşik soft «X nedir» yolu ile hizalı (0.28); RAG_SCORE_MIN tabanı ayrı kalır.
+    try:
+        ar_floor = float(os.environ.get("RUZGAR_KUTUPHANE_ARABIC_SCORE_MIN", "0.28") or "0.28")
+    except ValueError:
+        ar_floor = 0.28
+    ar_ok = False
+    try:
+        from ilim_assistant.ruzgar_anlam_koruma import chunk_is_arabic_heavy
+
+        for text, _src, sc in hits[:8]:
+            if chunk_is_arabic_heavy(text or "") and float(sc) >= ar_floor:
+                ar_ok = True
+                break
+    except Exception:
+        ar_ok = False
+
     if len(toks) >= 2:
         if best >= 2:
             return True
@@ -402,11 +419,15 @@ def hits_usable_for_kutuphane(
         # Tek kavramlı «X nedir» — skor güçlüyse lexik 1 yeter (Arapça pasaj)
         if soft and best >= 1 and best_sc >= 0.28 and len(toks) <= 4:
             return True
-        if soft and best == 0 and best_sc >= 0.52:
+        if soft and ar_ok:
+            return True
+        if soft and best == 0 and best_sc >= 0.48:
             # Yüksek semantik; lexik Türkçe/Arapça kopuk — yumuşak kabul
             return True
+        if soft and best == 0 and ar_ok and best_sc >= ar_floor:
+            return True
         return False
-    return best >= 1 or (soft and best_sc >= 0.40)
+    return best >= 1 or (soft and best_sc >= 0.40) or (soft and ar_ok)
 
 
 def blocks_usable_for_kutuphane(

@@ -289,15 +289,22 @@ def _run_index_worker(batch_meta: dict[str, Any]) -> None:
     try:
         with _job_lock:
             _bg_job["progress"] = "Vektör indeksi güncelleniyor…"
-        from ilim_assistant.rag_store import build_index
+        from ilim_assistant.rag_store import index_knowledge_files
 
-        idx_info = build_index(force=False, incremental=True)
+        rel = str((batch_meta or {}).get("batch_path") or "").strip()
+        if rel:
+            idx_info = index_knowledge_files([rel])
+        else:
+            idx_info = {"status": "empty", "hint": "batch_path yok"}
+        st = str(idx_info.get("status") or "")
+        ok_st = st in ("upsert", "learned_upsert", "cached")
         with _job_lock:
             _bg_job.update(
                 running=False,
-                progress="Tamamlandı",
-                index=idx_info.get("status") or "ok",
+                progress="Tamamlandı" if ok_st else f"Uyarı: {st or 'bilinmiyor'}",
+                index=st or "ok",
                 chunks=idx_info.get("chunks"),
+                changed_files=idx_info.get("changed_files"),
                 finished_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
             )
     except Exception as exc:
@@ -355,9 +362,10 @@ def apply_nebula_oneri(
     if not batch.get("ok"):
         return batch
     try:
-        from ilim_assistant.rag_store import build_index
+        from ilim_assistant.rag_store import index_knowledge_files
 
-        idx_info = build_index(force=False, incremental=True)
+        rel = batch["batch_path"]
+        idx_info = index_knowledge_files([rel])
     except Exception as exc:
         return {
             "ok": True,

@@ -1450,12 +1450,12 @@ def should_emit_miss_reply(
         pass
     try:
         from ilim_assistant.ruzgar_umed_cevap_emri import (
-            turn_budget_sec,
+            resolve_active_budget_sec,
             umed_emri_enabled,
         )
 
         if umed_emri_enabled():
-            limit = turn_budget_sec(user_message)
+            limit = resolve_active_budget_sec(user_message)
         else:
             limit = float(os.environ.get("RUZGAR_EGITIM_MISS_SEC", "15"))
     except ValueError:
@@ -1550,10 +1550,13 @@ def wrap_miss_if_needed(
     from ilim_assistant.ruzgar_umed_kurallari import TIMEOUT_PHRASE
 
     try:
-        from ilim_assistant.ruzgar_umed_cevap_emri import turn_budget_sec, umed_emri_enabled
+        from ilim_assistant.ruzgar_umed_cevap_emri import (
+            resolve_active_budget_sec,
+            umed_emri_enabled,
+        )
 
         if umed_emri_enabled():
-            limit = float(turn_budget_sec(user_message))
+            limit = float(resolve_active_budget_sec(user_message))
         else:
             limit = float(os.environ.get("RUZGAR_EGITIM_MISS_SEC", "15"))
     except Exception:
