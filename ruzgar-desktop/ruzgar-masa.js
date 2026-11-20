@@ -4712,6 +4712,19 @@
     }
     if (!data || !data.ok) return data;
 
+    // Sohbet cümlesi zayıf sahne niyeti → yüzeyi değiştirme (takılma / sahneye kaçma)
+    const guven = Number(data.guven || 0);
+    const act0 = String(data.action || "");
+    const strongAct =
+      /^(zoom_|mode_|tour_|cam_|stage_|era_|show_buildings)/.test(act0) ||
+      act0 === "focus" ||
+      act0 === "clear" ||
+      data.canli_kamera;
+    if (!strongAct && guven < 0.72) {
+      data.applied = { ok: false, skipped: "low_guven_sohbet" };
+      return data;
+    }
+
     const organ = data.organ || sahneOrganState.organ || "yuz";
     const action = data.action || (data.fiil === "temizle" ? "clear" : "show");
     const mapActs = {

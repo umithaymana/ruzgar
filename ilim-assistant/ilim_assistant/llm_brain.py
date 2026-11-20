@@ -1396,6 +1396,19 @@ def stream_chat_with_brain(
             break
         last_provider = ep.profile_id
         attempted.append(ep.profile_id)
+        # Ollama ilk token 900sn bekleyebilir — tur bütçesine sıkıştır (Gemini'ye erken failover)
+        _old_ollama_read = None
+        _ollama_cap_set = False
+        if _umed and getattr(ep, "provider", "") == "ollama":
+            try:
+                rem = float(remaining_sec())
+                # en az 4sn, en fazla kalan bütçe (+1s pay); soğuk model tüm turu yutmasın
+                cap = max(4.0, min(rem + 0.5, 22.0))
+                _old_ollama_read = os.environ.get("RUZGAR_OLLAMA_READ_TIMEOUT_SEC")
+                os.environ["RUZGAR_OLLAMA_READ_TIMEOUT_SEC"] = str(cap)
+                _ollama_cap_set = True
+            except Exception:
+                _ollama_cap_set = False
         try:
             got_content = False
             for piece in _stream_endpoint(ep, system, user, prior_messages):
@@ -1425,6 +1438,12 @@ def stream_chat_with_brain(
                 last_err = format_llm_user_error(e)
             _mark_cloud_rate_limit(ep.profile_id, last_err)
             continue
+        finally:
+            if _ollama_cap_set:
+                if _old_ollama_read is None:
+                    os.environ.pop("RUZGAR_OLLAMA_READ_TIMEOUT_SEC", None)
+                else:
+                    os.environ["RUZGAR_OLLAMA_READ_TIMEOUT_SEC"] = _old_ollama_read
 
     if _umed and not any_content and is_real_user_question(message or user):
         try:

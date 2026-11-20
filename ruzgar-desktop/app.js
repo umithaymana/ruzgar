@@ -15722,17 +15722,8 @@ async function streamChat(userText, streamOpts = {}) {
       handleAnaMotorProgramlamaBridge(ev);
       if (ev.orchestra) {
         renderOrchestraBridge(ev.orchestra);
-        // 6c / Faz E / tek_sohbet: ui_action meta'da da gelsin (done beklemeden)
-        if (ev.orchestra.ui_action && maybeRunTekSohbetUiAction(ev.orchestra)) {
-          /* handoff uygulandı */
-        } else if (
-          currentMode === "genel" &&
-          ev.orchestra.active_motor &&
-          !ev.orchestra.ui_action &&
-          isHubSseFazDEnabled()
-        ) {
-          openMotorWorkbenchQuiet(ev.orchestra.active_motor);
-        }
+        // ui_action / workbench: stream ortasında yüzey değiştirme — cevap bitince (done)
+        // (meta'da açmak sohbeti sahne/atölyeye kaydırıp takılma hissi veriyordu)
       }
     }
     if (ev.type === "meta" && ev.research_card) {
@@ -16681,10 +16672,13 @@ async function sendMessageWithText(t, opts = {}) {
     syncInterruptButton();
   };
 
-  /* Sahne süper-el: harita/organ — görsel sahne + LLM'e «gösteremiyorum» yasağı */
+  /* Sahne süper-el: yalnız açık sahne/harita niyetinde — sohbeti sahneye çalma */
   let sahneSe = null;
+  const _sahneNiyet = /\b(harita|sahne|gezgin|odaklan|odakla|yakla[sş]tır|uzakla[sş]tır|2d|3d|4d|uydu|cesium|kamera|iss|nasa|pinle|temizle)\b|sahneye\s+(koy|yaz)|haritay[ıi]\s+(a[cç]|g[oö]ster)|g[oö]ster\b/i.test(
+    text,
+  );
   try {
-    if (typeof window.ruzgarSahneSuperEl === "function") {
+    if (_sahneNiyet && typeof window.ruzgarSahneSuperEl === "function") {
       sahneSe = await window.ruzgarSahneSuperEl(text);
     }
   } catch (_) {

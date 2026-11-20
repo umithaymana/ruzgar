@@ -368,7 +368,14 @@ def resolve_super_el(text: str, *, geocode: bool = True) -> dict[str, Any]:
         fiil = "degistir"
         action = "mode_tur"
         guven = 0.92
-    elif re.search(r"\b(4d|dort\s*boyut|tarih[iî]|zaman\s*katman|zamanli\s*uydu|historical|gibs)\b", n):
+    elif re.search(
+        r"\b(4d|dort\s*boyut|zaman\s*katman|zamanli\s*uydu|historical|gibs)\b",
+        n,
+    ) or re.search(
+        # «osmanlı tarihi» sohbet ≠ 4D; yalnız açık katman/mod niyeti
+        r"\btarih[iî]\s*(harita|katman|mod|gorunum|uydu)\b|\b(harita|katman)\s*tarih[iî]\b",
+        n,
+    ):
         fiil = "degistir"
         action = "mode_4d"
         guven = 0.9
@@ -437,7 +444,10 @@ def resolve_super_el(text: str, *, geocode: bool = True) -> dict[str, Any]:
         if re.search(r"\b(iki|2|cok|biraz fazla|daha da)\b", n):
             zoom_delta = 2
         guven = 0.88
-    elif re.search(r"(odak|fokus|merkez|git\b)", n):
+    elif re.search(r"(odaklan|odakla|fokus|merkeze\s+al)\b", n) or (
+        re.search(r"\bgit\b", n)
+        and re.search(r"\b(harita|sahne|sehir|ulke|kasaba|odak)\b", n)
+    ):
         fiil = "odakla"
         action = "focus"
         guven = 0.84
@@ -451,20 +461,32 @@ def resolve_super_el(text: str, *, geocode: bool = True) -> dict[str, Any]:
         fiil = "degistir"
         action = "replace"
         guven = 0.65
-    elif re.search(r"\b(goster|ac|sahneye koy|yansit|getir|bak)\b", n):
+    elif re.search(r"\b(goster|sahneye koy|yansit|getir)\b", n) or (
+        re.search(r"\b(ac|bak)\b", n)
+        and re.search(
+            # «bak/aç» yalnız sahne/harita/organ bağlamında — sohbet «bak ne güzel» değil
+            r"\b(harita|sahne|dunya|gezgin|kamera|cam|uzay|belge|tablo|sunum|cizim|"
+            r"foto|resim|video|eser|kitap|yayin|iss|nasa)\b",
+            n,
+        )
+    ):
         fiil = "goster"
         action = "show"
         guven = 0.78
 
     # --- organ ---
+    # Kısa kökler kelime sınırlı (osmanli≠osm, fotosentez≠foto)
     organ = "yuz"
-    if re.search(r"(harita|earth|cograf|atlas|osm|maplibre|\bmap\b)", n):
+    if re.search(
+        r"(harita|earth|cograf|atlas|\bosm\b|maplibre|\bmap\b)",
+        n,
+    ):
         organ = "harita"
-    elif re.search(r"(kamera|\bcam\b|rtsp|yayin|iss|\btv\b)", n):
+    elif re.search(r"(kamera|\bcam\b|rtsp|yayin|\biss\b|\btv\b)", n):
         organ = "cam"
     elif re.search(r"(uzay|nasa|hubble|astro|gezegen|teleskop)", n):
         organ = "uzay"
-    elif re.search(r"(belge|pdf|metin|\byaz\b)", n):
+    elif re.search(r"(belge|pdf|\bmetin\b|\byaz\b)", n):
         organ = "belge"
     elif re.search(r"(tablo|excel|metraj)", n):
         organ = "tablo"
@@ -472,13 +494,13 @@ def resolve_super_el(text: str, *, geocode: bool = True) -> dict[str, Any]:
         organ = "sunum"
     elif re.search(r"(cizim|kroki|\bplan\b)", n):
         organ = "cizim"
-    elif re.search(r"(foto|resim|goruntu)", n):
+    elif re.search(r"(\bfoto\b|fotograf|resim|\bgoruntu\b)", n):
         organ = "foto"
     elif re.search(r"(video|klip|montaj)", n):
         organ = "video"
     elif re.search(r"(\bses\b|muzik|dalga)", n):
         organ = "ses"
-    elif re.search(r"(eser|kitap|ayet|hadis|pasaj|tefsir|meal)", n):
+    elif re.search(r"(eser|\bkitap\b|ayet|hadis|pasaj|tefsir|meal)", n):
         organ = "eser"
 
     # Yer adı varsa ve zoom/odak/göster → harita varsay
@@ -565,10 +587,8 @@ def resolve_super_el(text: str, *, geocode: bool = True) -> dict[str, Any]:
         organ = "yuz"
         hedef = None
 
-    if fiil is None and organ != "yuz":
-        fiil = "goster"
-        action = action or "show"
-        guven = min(guven, 0.6)
+    # Organ kelimesi tek başına sahne açmaz (kitap/metin/foto sohbeti ≠ göster komutu).
+    # Eski: fiil=None + organ≠yuz → otomatik goster — sohbeti sahneye çalıyordu.
 
     if fiil == "odakla" and action == "focus" and zoom_delta == 0 and hedef:
         # yer + odak → hafif yakınlaştır
