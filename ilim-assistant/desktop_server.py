@@ -1079,22 +1079,18 @@ def _resolve_workspace_run_dir(workspace_root: str, cwd_rel: str | None) -> str 
 
 @app.post("/api/hafiza/genel-bak")
 def api_genel_hafiza_bak(body: GenelHafizaBakBody):
-    """Ana sohbet ön kontrol: ham JSON cevabı (dogal sentez açıkken devre dışı)."""
-    m = (body.message or "").strip()
-    if not m:
-        return {"ok": True, "hit": False, "answer": None}
-    try:
-        from ilim_assistant.hafiza_dogal_sentez import dogal_konus_enabled
+    """BAKIMDA (Faz 6) — UI `skipGenelBak=true`; ham JSON ön-cevap kapalı.
 
-        if dogal_konus_enabled():
-            return {"ok": True, "hit": False, "answer": None, "dogal_sentez": True}
-    except Exception:
-        pass
-    ans = genel_hafiza_lookup(m)
-    if ans is None:
-        return {"ok": True, "hit": False, "answer": None}
-    out = finalize_assistant_reply(ans)
-    return {"ok": True, "hit": True, "answer": out}
+    Doğal sentez (`hafiza_dogal_sentez`) sohbet yolunda kullanılır.
+    Bu uç bilerek hit döndürmez — ölü vaat kalmasın.
+    """
+    return {
+        "ok": True,
+        "hit": False,
+        "answer": None,
+        "bakim": True,
+        "note": "genel-bak bakıma alındı; UI skipGenelBak — doğal sentez sohbet yolunda",
+    }
 
 
 @app.post("/api/idrak/pretreat")
@@ -10902,31 +10898,38 @@ def api_ses_kolonlar_sil(
 
 
 def _library_instant_or_none(msg: str, try_fn) -> str | None:
-    """Din/bilgi kütüphanesi anlık: zayıf kart → RAG (kütüphane görev, tüm katmanlar).
+    """Din/bilgi kütüphanesi anlık: zayıf / derin kart → RAG (tek politika).
 
-    Soft «anlat/hakkında» defer'i, kütüphane bilgi sorusunda kartı engellemez —
-    önce raftan/karttan oku; kapsamiyorsa indekse düş.
+    Bilgi/karşılaştır/anlat → kart yok. Covers sıkı. Soft defer her zaman uygulanır.
     """
+    try:
+        from ilim_assistant.ruzgar_library_instant_registry import forces_library_rag
+
+        if forces_library_rag(msg):
+            return None
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_anlik_niyet_gate import should_defer_library_instant
+
+        if should_defer_library_instant(msg):
+            return None
+    except Exception:
+        pass
     kutup_hard = False
+    instant_covers_query = None  # type: ignore[assignment]
     try:
         from ilim_assistant.ruzgar_kutuphane_gorev import (
-            instant_covers_query,
+            instant_covers_query as _icq,
             is_kutuphane_bilgi_soru,
             kutuphane_enabled_hard,
         )
 
+        instant_covers_query = _icq
         kutup_hard = kutuphane_enabled_hard() and is_kutuphane_bilgi_soru(msg)
     except Exception:
         instant_covers_query = None  # type: ignore[assignment]
         kutup_hard = False
-    if not kutup_hard:
-        try:
-            from ilim_assistant.ruzgar_anlik_niyet_gate import should_defer_library_instant
-
-            if should_defer_library_instant(msg):
-                return None
-        except Exception:
-            pass
     try:
         reply = try_fn(msg)
     except Exception:
@@ -10934,12 +10937,13 @@ def _library_instant_or_none(msg: str, try_fn) -> str | None:
     if not (reply or "").strip():
         return None
     # Tüm raflar: kart soruyu kapsamıyorsa indeksten okusun (yeni eserler dahil)
-    if kutup_hard and instant_covers_query is not None:
+    if instant_covers_query is not None:
         try:
             if not instant_covers_query(msg, reply):
                 return None
         except Exception:
-            pass
+            if kutup_hard:
+                return None
     return reply
 
 
@@ -11529,7 +11533,11 @@ def _collect_fast_lane_chat_events(req: ChatRequest) -> list[dict[str, Any]] | N
                     )
             except Exception:
                 pass
-        reply = try_instant_reply(msg_raw, mode_norm)
+        reply = try_instant_reply(
+            msg_raw,
+            mode_norm,
+            history=getattr(req, "history", None),
+        )
         if not reply:
             return None
         orch: dict[str, Any] = {
@@ -12084,7 +12092,12 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 return
 
             if looks_like_casual_social_chat(msg_early):
-                _gund_early = maybe_gundelik_instant_reply(msg_early, "genel", {})
+                _gund_early = maybe_gundelik_instant_reply(
+                    msg_early,
+                    "genel",
+                    {},
+                    history=getattr(req, "history", None),
+                )
                 if _gund_early:
                     _orch_ge = dict(orch_early)
                     _orch_ge.setdefault("plan", {})["primary"] = "gundelik"
@@ -12226,327 +12239,42 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 return
         except Exception:
             pass
+        # Tek kütüphane anlık registry (Faz 1 — çift blok birleştirildi)
         try:
-            from ilim_assistant.ruzgar_akaid_kutuphane import try_akaid_reply
+            from ilim_assistant.ruzgar_library_instant_registry import (
+                try_library_instant_from_registry,
+            )
 
-            _akaid_e = _library_instant_or_none(msg_early, try_akaid_reply)
-            if _akaid_e:
-                _orch_ak = dict(orch_early)
-                _orch_ak.setdefault("plan", {})["primary"] = "ilim"
-                _orch_ak["plan"]["label_tr"] = "Akaid (anında)"
-                _orch_ak["akaid_anlik"] = True
+            _lib_hit = try_library_instant_from_registry(
+                msg_early, gate_fn=_library_instant_or_none
+            )
+            if _lib_hit:
+                _lib_reply, _lib_patch = _lib_hit
+                _orch_lib = dict(orch_early)
+                _plan = _lib_patch.get("plan") or {}
+                _orch_lib.setdefault("plan", {})
+                if isinstance(_orch_lib["plan"], dict):
+                    _orch_lib["plan"] = dict(_orch_lib["plan"])
+                    if _plan.get("primary"):
+                        _orch_lib["plan"]["primary"] = _plan["primary"]
+                    if _plan.get("label_tr"):
+                        _orch_lib["plan"]["label_tr"] = _plan["label_tr"]
+                for _k, _v in _lib_patch.items():
+                    if _k == "plan":
+                        continue
+                    _orch_lib[_k] = _v
                 yield from _iter_instant_chat_events(
-                    _akaid_e,
+                    _lib_reply,
                     msg_early,
                     session_wake_used=req.session_wake_used,
                     msg_for_wake=req.message,
-                    orch=_orch_ak,
+                    orch=_orch_lib,
                     instant_gundelik=True,
                 )
                 return
         except Exception:
             pass
-        try:
-            from ilim_assistant.ruzgar_hadis_kutuphane import try_hadis_reply
 
-            _hadis_e = _library_instant_or_none(msg_early, try_hadis_reply)
-            if _hadis_e:
-                _orch_hd = dict(orch_early)
-                _orch_hd.setdefault("plan", {})["primary"] = "ilim"
-                _orch_hd["plan"]["label_tr"] = "Hadis (anında)"
-                _orch_hd["hadis_anlik"] = True
-                yield from _iter_instant_chat_events(
-                    _hadis_e,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_hd,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_siyer_kutuphane import try_siyer_reply
-
-            _siyer_e = _library_instant_or_none(msg_early, try_siyer_reply)
-            if _siyer_e:
-                _orch_sy = dict(orch_early)
-                _orch_sy.setdefault("plan", {})["primary"] = "ilim"
-                _orch_sy["plan"]["label_tr"] = "Siyer (anında)"
-                _orch_sy["siyer_anlik"] = True
-                yield from _iter_instant_chat_events(
-                    _siyer_e,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_sy,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_tasavvuf_kutuphane import try_tasavvuf_reply
-
-            _tasavvuf_e = _library_instant_or_none(msg_early, try_tasavvuf_reply)
-            if _tasavvuf_e:
-                _orch_tv = dict(orch_early)
-                _orch_tv.setdefault("plan", {})["primary"] = "ilim"
-                _orch_tv["plan"]["label_tr"] = "Tasavvuf (anında)"
-                _orch_tv["tasavvuf_anlik"] = True
-                yield from _iter_instant_chat_events(
-                    _tasavvuf_e,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_tv,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_felsefe_kutuphane import try_felsefe_reply
-
-            _felsefe_e = _library_instant_or_none(msg_early, try_felsefe_reply)
-            if _felsefe_e:
-                _orch_fl = dict(orch_early)
-                _orch_fl.setdefault("plan", {})["primary"] = "ilim"
-                _orch_fl["plan"]["label_tr"] = "Felsefe (anında)"
-                _orch_fl["felsefe_anlik"] = True
-                yield from _iter_instant_chat_events(
-                    _felsefe_e,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_fl,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_psikoloji_kutuphane import try_psikoloji_reply
-
-            _psikoloji_e = _library_instant_or_none(msg_early, try_psikoloji_reply)
-            if _psikoloji_e:
-                _orch_ps = dict(orch_early)
-                _orch_ps.setdefault("plan", {})["primary"] = "ilim"
-                _orch_ps["plan"]["label_tr"] = "Psikoloji (anında)"
-                _orch_ps["psikoloji_anlik"] = True
-                yield from _iter_instant_chat_events(
-                    _psikoloji_e,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_ps,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_edebiyat_kutuphane import try_edebiyat_reply
-
-            _edebiyat_e = _library_instant_or_none(msg_early, try_edebiyat_reply)
-            if _edebiyat_e:
-                _orch_ed = dict(orch_early)
-                _orch_ed.setdefault("plan", {})["primary"] = "ilim"
-                _orch_ed["plan"]["label_tr"] = "Edebiyat (anında)"
-                _orch_ed["edebiyat_anlik"] = True
-                yield from _iter_instant_chat_events(
-                    _edebiyat_e,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_ed,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_ek_raflar import try_ek_raf_reply
-
-            _ek_e = _library_instant_or_none(msg_early, try_ek_raf_reply)
-            if _ek_e:
-                _orch_ek = dict(orch_early)
-                _orch_ek.setdefault("plan", {})["primary"] = "bilgi"
-                _orch_ek["plan"]["label_tr"] = "İlim rafı (anında)"
-                _orch_ek["ek_raf_anlik"] = True
-                yield from _iter_instant_chat_events(
-                    _ek_e,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_ek,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_bilim_kutuphane import try_bilim_reply
-
-            _bilim_e = _library_instant_or_none(msg_early, try_bilim_reply)
-            if _bilim_e:
-                _orch_bl = dict(orch_early)
-                _orch_bl.setdefault("plan", {})["primary"] = "bilgi"
-                _orch_bl["plan"]["label_tr"] = "Bilim (anında)"
-                _orch_bl["bilim_anlik"] = True
-                yield from _iter_instant_chat_events(
-                    _bilim_e,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_bl,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_cografya_kutuphane import try_cografya_reply
-
-            _cografya_e = _library_instant_or_none(msg_early, try_cografya_reply)
-            if _cografya_e:
-                _orch_cg = dict(orch_early)
-                _orch_cg.setdefault("plan", {})["primary"] = "bilgi"
-                _orch_cg["plan"]["label_tr"] = "Coğrafya (anında)"
-                _orch_cg["cografya_anlik"] = True
-                yield from _iter_instant_chat_events(
-                    _cografya_e,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_cg,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_bilgisayar_kutuphane import try_bilgisayar_reply
-
-            _bilgisayar_e = _library_instant_or_none(msg_early, try_bilgisayar_reply)
-            if _bilgisayar_e:
-                _orch_bm = dict(orch_early)
-                _orch_bm.setdefault("plan", {})["primary"] = "bilgi"
-                _orch_bm["plan"]["label_tr"] = "Bilgisayar mühendisliği (anında)"
-                _orch_bm["bilgisayar_anlik"] = True
-                yield from _iter_instant_chat_events(
-                    _bilgisayar_e,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_bm,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_teknoloji_kutuphane import try_teknoloji_reply
-
-            _teknoloji_e = _library_instant_or_none(msg_early, try_teknoloji_reply)
-            if _teknoloji_e:
-                _orch_tk = dict(orch_early)
-                _orch_tk.setdefault("plan", {})["primary"] = "bilgi"
-                _orch_tk["plan"]["label_tr"] = "Teknoloji (anında)"
-                _orch_tk["teknoloji_anlik"] = True
-                yield from _iter_instant_chat_events(
-                    _teknoloji_e,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_tk,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_usul_fikh_kutuphane import try_usul_fikh_reply
-
-            _usul_e = _library_instant_or_none(msg_early, try_usul_fikh_reply)
-            if _usul_e:
-                _orch_us = dict(orch_early)
-                _orch_us.setdefault("plan", {})["primary"] = "ilim"
-                _orch_us["plan"]["label_tr"] = "Usûl-i fıkıh (anında)"
-                _orch_us["usul_fikh_anlik"] = True
-                yield from _iter_instant_chat_events(
-                    _usul_e,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_us,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_fikh_kutuphane import try_fikh_reply
-
-            _fikh_e = _library_instant_or_none(msg_early, try_fikh_reply)
-            if _fikh_e:
-                _orch_fk = dict(orch_early)
-                _orch_fk.setdefault("plan", {})["primary"] = "ilim"
-                _orch_fk["plan"]["label_tr"] = "Fıkıh (anında)"
-                _orch_fk["fikh_anlik"] = True
-                yield from _iter_instant_chat_events(
-                    _fikh_e,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_fk,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_kutuphane import try_kutuphane_instant_reply
-
-            _raf = _library_instant_or_none(msg_early, try_kutuphane_instant_reply)
-            if _raf:
-                _orch_raf = dict(orch_early)
-                _orch_raf.setdefault("plan", {})["primary"] = "bilgi"
-                _orch_raf["plan"]["label_tr"] = "Rüzgar Kütüphanesi"
-                _orch_raf["kutuphane_raf_hit"] = True
-                yield from _iter_instant_chat_events(
-                    _raf,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_raf,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_otomatik_ogrenme import try_bilgi_kutuphane_instant_reply
-
-            # Donem/kart önce; zayıf otomatik-öğren metni kütüphane görev kapısından geçer
-            _kut = _library_instant_or_none(msg_early, try_bilgi_kutuphane_instant_reply)
-            if _kut:
-                _orch_ku = dict(orch_early)
-                _orch_ku.setdefault("plan", {})["primary"] = "bilgi"
-                _orch_ku["plan"]["label_tr"] = "Bilgi kütüphanesi"
-                _orch_ku["kutuphane_hit"] = True
-                yield from _iter_instant_chat_events(
-                    _kut,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_ku,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
         try:
             from ilim_assistant.ruzgar_tek_beyin_konusma_akisi import (
                 looks_like_flow_teaching,
@@ -12948,338 +12676,8 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 return
         except Exception:
             pass
-        try:
-            from ilim_assistant.ruzgar_tek_beyin import try_assistant_identity_reply
+        # (Faz 1) İkinci anlık kütüphane/kimlik zinciri kaldırıldı — tek registry yukarıda.
 
-            _id_early = try_assistant_identity_reply(msg_early)
-            if _id_early:
-                _orch_id2 = dict(orch_early)
-                _orch_id2.setdefault("plan", {})["primary"] = "gundelik"
-                _orch_id2["plan"]["label_tr"] = "Kimlik (anında)"
-                _orch_id2["assistant_identity"] = True
-                yield from _iter_instant_chat_events(
-                    _id_early,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_id2,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_kuran_anlik import try_kuran_instant_reply
-
-            _kuran_early = try_kuran_instant_reply(msg_early)
-            if _kuran_early:
-                yield from _iter_instant_chat_events(
-                    _kuran_early,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=orch_early,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_arapca_lugat import try_arapca_lugat_reply
-
-            _ar_early = try_arapca_lugat_reply(msg_early)
-            if _ar_early:
-                yield from _iter_instant_chat_events(
-                    _ar_early,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=orch_early,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_akaid_kutuphane import try_akaid_reply
-
-            _akaid_early = _library_instant_or_none(msg_early, try_akaid_reply)
-            if _akaid_early:
-                _orch_ak2 = dict(orch_early)
-                _orch_ak2.setdefault("plan", {})["primary"] = "ilim"
-                _orch_ak2["plan"]["label_tr"] = "Akaid (anında)"
-                _orch_ak2["akaid_anlik"] = True
-                yield from _iter_instant_chat_events(
-                    _akaid_early,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_ak2,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_hadis_kutuphane import try_hadis_reply
-
-            _hadis_early = _library_instant_or_none(msg_early, try_hadis_reply)
-            if _hadis_early:
-                _orch_hd2 = dict(orch_early)
-                _orch_hd2.setdefault("plan", {})["primary"] = "ilim"
-                _orch_hd2["plan"]["label_tr"] = "Hadis (anında)"
-                _orch_hd2["hadis_anlik"] = True
-                yield from _iter_instant_chat_events(
-                    _hadis_early,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_hd2,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_siyer_kutuphane import try_siyer_reply
-
-            _siyer_early = _library_instant_or_none(msg_early, try_siyer_reply)
-            if _siyer_early:
-                _orch_sy2 = dict(orch_early)
-                _orch_sy2.setdefault("plan", {})["primary"] = "ilim"
-                _orch_sy2["plan"]["label_tr"] = "Siyer (anında)"
-                _orch_sy2["siyer_anlik"] = True
-                yield from _iter_instant_chat_events(
-                    _siyer_early,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_sy2,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_tasavvuf_kutuphane import try_tasavvuf_reply
-
-            _tasavvuf_early = _library_instant_or_none(msg_early, try_tasavvuf_reply)
-            if _tasavvuf_early:
-                _orch_tv2 = dict(orch_early)
-                _orch_tv2.setdefault("plan", {})["primary"] = "ilim"
-                _orch_tv2["plan"]["label_tr"] = "Tasavvuf (anında)"
-                _orch_tv2["tasavvuf_anlik"] = True
-                yield from _iter_instant_chat_events(
-                    _tasavvuf_early,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_tv2,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_felsefe_kutuphane import try_felsefe_reply
-
-            _felsefe_early = _library_instant_or_none(msg_early, try_felsefe_reply)
-            if _felsefe_early:
-                _orch_fl2 = dict(orch_early)
-                _orch_fl2.setdefault("plan", {})["primary"] = "ilim"
-                _orch_fl2["plan"]["label_tr"] = "Felsefe (anında)"
-                _orch_fl2["felsefe_anlik"] = True
-                yield from _iter_instant_chat_events(
-                    _felsefe_early,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_fl2,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_psikoloji_kutuphane import try_psikoloji_reply
-
-            _psikoloji_early = _library_instant_or_none(msg_early, try_psikoloji_reply)
-            if _psikoloji_early:
-                _orch_ps2 = dict(orch_early)
-                _orch_ps2.setdefault("plan", {})["primary"] = "ilim"
-                _orch_ps2["plan"]["label_tr"] = "Psikoloji (anında)"
-                _orch_ps2["psikoloji_anlik"] = True
-                yield from _iter_instant_chat_events(
-                    _psikoloji_early,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_ps2,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_edebiyat_kutuphane import try_edebiyat_reply
-
-            _edebiyat_early = _library_instant_or_none(msg_early, try_edebiyat_reply)
-            if _edebiyat_early:
-                _orch_ed2 = dict(orch_early)
-                _orch_ed2.setdefault("plan", {})["primary"] = "ilim"
-                _orch_ed2["plan"]["label_tr"] = "Edebiyat (anında)"
-                _orch_ed2["edebiyat_anlik"] = True
-                yield from _iter_instant_chat_events(
-                    _edebiyat_early,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_ed2,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_ek_raflar import try_ek_raf_reply
-
-            _ek_early = _library_instant_or_none(msg_early, try_ek_raf_reply)
-            if _ek_early:
-                _orch_ek2 = dict(orch_early)
-                _orch_ek2.setdefault("plan", {})["primary"] = "bilgi"
-                _orch_ek2["plan"]["label_tr"] = "İlim rafı (anında)"
-                _orch_ek2["ek_raf_anlik"] = True
-                yield from _iter_instant_chat_events(
-                    _ek_early,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_ek2,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_bilim_kutuphane import try_bilim_reply
-
-            _bilim_early = _library_instant_or_none(msg_early, try_bilim_reply)
-            if _bilim_early:
-                _orch_bl2 = dict(orch_early)
-                _orch_bl2.setdefault("plan", {})["primary"] = "bilgi"
-                _orch_bl2["plan"]["label_tr"] = "Bilim (anında)"
-                _orch_bl2["bilim_anlik"] = True
-                yield from _iter_instant_chat_events(
-                    _bilim_early,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_bl2,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_cografya_kutuphane import try_cografya_reply
-
-            _cografya_early = _library_instant_or_none(msg_early, try_cografya_reply)
-            if _cografya_early:
-                _orch_cg2 = dict(orch_early)
-                _orch_cg2.setdefault("plan", {})["primary"] = "bilgi"
-                _orch_cg2["plan"]["label_tr"] = "Coğrafya (anında)"
-                _orch_cg2["cografya_anlik"] = True
-                yield from _iter_instant_chat_events(
-                    _cografya_early,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_cg2,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_bilgisayar_kutuphane import try_bilgisayar_reply
-
-            _bilgisayar_early = _library_instant_or_none(msg_early, try_bilgisayar_reply)
-            if _bilgisayar_early:
-                _orch_bm2 = dict(orch_early)
-                _orch_bm2.setdefault("plan", {})["primary"] = "bilgi"
-                _orch_bm2["plan"]["label_tr"] = "Bilgisayar mühendisliği (anında)"
-                _orch_bm2["bilgisayar_anlik"] = True
-                yield from _iter_instant_chat_events(
-                    _bilgisayar_early,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_bm2,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_teknoloji_kutuphane import try_teknoloji_reply
-
-            _teknoloji_early = _library_instant_or_none(msg_early, try_teknoloji_reply)
-            if _teknoloji_early:
-                _orch_tk2 = dict(orch_early)
-                _orch_tk2.setdefault("plan", {})["primary"] = "bilgi"
-                _orch_tk2["plan"]["label_tr"] = "Teknoloji (anında)"
-                _orch_tk2["teknoloji_anlik"] = True
-                yield from _iter_instant_chat_events(
-                    _teknoloji_early,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_tk2,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_usul_fikh_kutuphane import try_usul_fikh_reply
-
-            _usul_early = _library_instant_or_none(msg_early, try_usul_fikh_reply)
-            if _usul_early:
-                _orch_us2 = dict(orch_early)
-                _orch_us2.setdefault("plan", {})["primary"] = "ilim"
-                _orch_us2["plan"]["label_tr"] = "Usûl-i fıkıh (anında)"
-                _orch_us2["usul_fikh_anlik"] = True
-                yield from _iter_instant_chat_events(
-                    _usul_early,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_us2,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
-        try:
-            from ilim_assistant.ruzgar_fikh_kutuphane import try_fikh_reply
-
-            _fikh_early = _library_instant_or_none(msg_early, try_fikh_reply)
-            if _fikh_early:
-                _orch_fk2 = dict(orch_early)
-                _orch_fk2.setdefault("plan", {})["primary"] = "ilim"
-                _orch_fk2["plan"]["label_tr"] = "Fıkıh (anında)"
-                _orch_fk2["fikh_anlik"] = True
-                yield from _iter_instant_chat_events(
-                    _fikh_early,
-                    msg_early,
-                    session_wake_used=req.session_wake_used,
-                    msg_for_wake=req.message,
-                    orch=_orch_fk2,
-                    instant_gundelik=True,
-                )
-                return
-        except Exception:
-            pass
         try:
             from ilim_assistant.chat_core import normalize_mode
             from ilim_assistant.motorlar.programlama_motoru import (
@@ -13800,7 +13198,12 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         try:
             from ilim_assistant.ana_motor_plan import maybe_gundelik_instant_reply
 
-            instant_hi = maybe_gundelik_instant_reply(req.message, mode_norm, {})
+            instant_hi = maybe_gundelik_instant_reply(
+                req.message,
+                mode_norm,
+                {},
+                history=getattr(req, "history", None),
+            )
             if instant_hi:
                 yield from _iter_instant_chat_events(
                     instant_hi,
@@ -14087,6 +13490,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                         mode_norm,
                         motor_flags,
                         question_plan=turn_plan,
+                        history=getattr(req, "history", None),
                     )
                     if instant:
                         yield from _iter_instant_chat_events(
@@ -14574,6 +13978,41 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         import time as _time_prog
 
         _prefetch_t0 = _time_prog.monotonic()
+        # Faz 4: umed bütçesi prefetch ile aynı t0'dan başlar (bitince sıfırlanmaz)
+        try:
+            from ilim_assistant.ruzgar_umed_cevap_emri import (
+                begin_turn_budget,
+                umed_emri_applies,
+            )
+
+            if umed_emri_applies(mode_norm=mode_norm, coding_mode=coding):
+                try:
+                    from ilim_assistant.ana_motor_faz59 import begin_umed_turn_budget
+
+                    _mf_pre: dict[str, bool] = {}
+                    try:
+                        from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
+
+                        _mf_pre = motor_niyeti_heuristic(req.message or "")
+                    except Exception:
+                        pass
+                    begin_umed_turn_budget(
+                        req.message or "",
+                        mode_norm=mode_norm,
+                        coding_mode=coding,
+                        motor_flags=_mf_pre,
+                        question_plan=turn_plan,
+                        started_monotonic=_prefetch_t0,
+                    )
+                except Exception:
+                    begin_turn_budget(
+                        req.message or "",
+                        mode_norm=mode_norm,
+                        question_plan=turn_plan,
+                        started_monotonic=_prefetch_t0,
+                    )
+        except Exception:
+            pass
         bundle = None
         _had_status = False
         _upload_ids = list(getattr(req, "ana_motor_upload_ids", None) or [])
@@ -14662,29 +14101,37 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         )
 
         if umed_emri_applies(mode_norm=mode_norm, coding_mode=coding):
+            # Prefetch'te bütçe zaten açıldıysa yeniden sıfırlama (Faz 4)
             try:
-                from ilim_assistant.ana_motor_faz59 import begin_umed_turn_budget
+                from ilim_assistant.ruzgar_umed_cevap_emri import get_turn_deadline
 
-                _mf_budget: dict[str, bool] = {}
-                try:
-                    from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
-
-                    _mf_budget = motor_niyeti_heuristic(req.message or "")
-                except Exception:
-                    pass
-                begin_umed_turn_budget(
-                    req.message or "",
-                    mode_norm=mode_norm,
-                    coding_mode=coding,
-                    motor_flags=_mf_budget,
-                    question_plan=turn_plan,
-                )
+                _have_deadline = get_turn_deadline() is not None
             except Exception:
-                begin_turn_budget(
-                    req.message or "",
-                    mode_norm=mode_norm,
-                    question_plan=turn_plan,
-                )
+                _have_deadline = False
+            if not _have_deadline:
+                try:
+                    from ilim_assistant.ana_motor_faz59 import begin_umed_turn_budget
+
+                    _mf_budget: dict[str, bool] = {}
+                    try:
+                        from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
+
+                        _mf_budget = motor_niyeti_heuristic(req.message or "")
+                    except Exception:
+                        pass
+                    begin_umed_turn_budget(
+                        req.message or "",
+                        mode_norm=mode_norm,
+                        coding_mode=coding,
+                        motor_flags=_mf_budget,
+                        question_plan=turn_plan,
+                    )
+                except Exception:
+                    begin_turn_budget(
+                        req.message or "",
+                        mode_norm=mode_norm,
+                        question_plan=turn_plan,
+                    )
         if umed_emri_applies(mode_norm=mode_norm, coding_mode=coding) and deadline_exceeded():
             from ilim_assistant.ruzgar_egitim import (
                 maybe_egitim_learned_reply,
@@ -14812,7 +14259,11 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
 
             _instant_g = bool(
                 maybe_gundelik_instant_reply(
-                    msg, mode_norm, motor_flags, question_plan=turn_plan
+                    msg,
+                    mode_norm,
+                    motor_flags,
+                    question_plan=turn_plan,
+                    history=getattr(req, "history", None),
                 )
             )
         except Exception:

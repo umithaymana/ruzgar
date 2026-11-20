@@ -1847,27 +1847,58 @@ def maybe_gundelik_instant_reply(
     mode_norm: str,
     motor_flags: dict[str, bool] | None = None,
     question_plan: QuestionPlan | None = None,
+    *,
+    history: list | None = None,
 ) -> str | None:
-    """B3b — net sohbet (nasılsın/selam) için Ollama/Gemini beklemeden kısa yanıt."""
+    """B3b — net sohbet (nasılsın/selam) için Ollama/Gemini beklemeden kısa yanıt.
+
+    Faz 2: history → canonical_selam; SOHBET_ONCE altında saf selam+resume istisnası.
+    """
     if mode_norm not in ("genel", "uretim", "gelisim"):
         return None
-    # Sohbet önce (Mimar 2026-11-12): selam/nasılsın şablon veya hafıza kartı yok —
-    # dinle, anla, LLM ile doğal cevap.
+    # Sohbet önce: genel şablon yok — ama saf selam / resume anlık kalır (tek kapı).
+    _sohbet_once = False
     try:
-        from ilim_assistant.ruzgar_sohbet_once import sohbet_once_enabled
+        from ilim_assistant.ruzgar_sohbet_once import (
+            allow_selam_resume_instant,
+            sohbet_once_enabled,
+        )
 
-        if sohbet_once_enabled():
+        _sohbet_once = sohbet_once_enabled()
+        if _sohbet_once and not allow_selam_resume_instant(message):
             return None
     except Exception:
         pass
+    # Şikayet / «selam vermedin» → zengin resume; saf selamda tek kapı (çift metin yok)
     try:
-        from ilim_assistant.ruzgar_tek_beyin_karsilama import try_session_resume_greeting
+        from ilim_assistant.ruzgar_tek_beyin_karsilama import (
+            looks_like_greeting_complaint,
+            try_session_resume_greeting,
+        )
 
-        karsilama = try_session_resume_greeting(message)
-        if karsilama:
-            return karsilama
+        if looks_like_greeting_complaint(message):
+            karsilama = try_session_resume_greeting(
+                message, client_history=history
+            )
+            if karsilama:
+                return karsilama
     except Exception:
         pass
+    # Sohbet-once: yalnız selam kapısı; nasılsın/görüş vb. LLM'e
+    if _sohbet_once:
+        try:
+            from ilim_assistant.ruzgar_sohbet_tek_kapi import (
+                canonical_selam_reply,
+                looks_like_pure_greeting,
+            )
+
+            if looks_like_pure_greeting(message):
+                if _info_query_blocks_casual(message):
+                    return None
+                return canonical_selam_reply(message, history=history)
+        except Exception:
+            pass
+        return None
     # Görüş: anlık tutum — LLM tanım kartına düşmesin (B1)
     op = maybe_opinion_instant_reply(message)
     if op:
@@ -1941,7 +1972,7 @@ def maybe_gundelik_instant_reply(
         try:
             from ilim_assistant.ruzgar_sohbet_tek_kapi import canonical_selam_reply
 
-            return canonical_selam_reply(message, history=None, has_prior_session=False)
+            return canonical_selam_reply(message, history=history)
         except Exception:
             from ilim_assistant.ruzgar_umed_kurallari import SELAM_STANDART
 

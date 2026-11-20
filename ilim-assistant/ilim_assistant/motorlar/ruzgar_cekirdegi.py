@@ -1,11 +1,19 @@
 # Created by Ümit & Gökçenur
 """Ruzgar Cekirdegi: coklu motorlari tek merkezde orkestre eder.
-Bilim motoru Kultur ve Ilim Hazinesi vizyonuyla (dort kuliyat arsivi + metin turu) beslenir.
 
-Motor bağlamları tembel yüklenir (Ümit & Gökçenur hız paketi — tek seferde tüm motor importu yok).
+Boot vs orkestra (Faz 5 — net hikâye):
+- Boot (`desktop_server._boot_motorlar_anaonce`): 7 motor ısınır —
+  ses → video → **okuma** → **mimar** → tercüme → **hafıza** → programlama
+  (+ ana motor + bu çekirdek modülü).
+- Orkestra (`build_core_context`): 5’li bağlam birleştirir —
+  Ses, Video, **Bilim** (okuma_motoru yüzü / `bilim_motoru` shim), Tercüme, Programlama.
+- **Mimar** ve **Hafıza** boot’ta ısınır ama bu fonksiyon onları çağırmaz;
+  UI «Mimar» / «Hafıza» / «Okuma» modlarında `prepare_turn` kendi `build_motor_context`
+  yolunu kullanır (5’li çekirdek zorlanmaz).
 
-Kuvve-i Hafıza (kalıcı sohbet + kişisel veri) ana yolda `prepare_turn` ile modele enjekte edilir;
-SQLite: `ilim-assistant/hafiza/gecmis_sohbetler.db`.
+Bilim motoru = Okuma/İlim arşivi yüzü (isim kayması bilinçli shim).
+
+Kuvve-i Hafıza (kalıcı sohbet): SQLite `hafiza/gecmis_sohbetler.db` + hafiza modu bağlamı.
 """
 
 from ilim_assistant.dinamit_gelisme import dinamit_heartbeat

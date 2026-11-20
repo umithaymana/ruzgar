@@ -155,11 +155,37 @@ def begin_turn_budget(
     *,
     mode_norm: str = "genel",
     question_plan: Any | None = None,
+    started_monotonic: float | None = None,
 ) -> float:
+    """Tur bütçesi. started_monotonic verilirse prefetch süresi bütçeye dahildir."""
     budget = turn_budget_sec(message, mode_norm=mode_norm, question_plan=question_plan)
-    deadline = time.monotonic() + budget
+    t0 = float(started_monotonic) if started_monotonic is not None else time.monotonic()
+    deadline = t0 + budget
     set_turn_deadline(deadline)
     return budget
+
+
+def apply_prefetch_to_budget(prefetch_started_monotonic: float | None) -> None:
+    """Prefetch bitince bütçeyi sıfırlama — deadline prefetch başlangıcına göre kalsın.
+
+    Eğer deadline henüz yoksa no-op. Varsa ve prefetch_started verilmişse
+    deadline = prefetch_started + (deadline - now_at_begin) kaymasını düzeltmez;
+    çağıran begin_*_budget(..., started_monotonic=prefetch_t0) kullanmalı.
+    Bu yardımcı: sonradan başlatılmış bütçeyi prefetch_t0'a çeker.
+    """
+    if prefetch_started_monotonic is None:
+        return
+    d = get_turn_deadline()
+    if d is None:
+        return
+    # Mevcut kalan = d - now; hedef: prefetch_t0 + (orijinal bütçe)
+    # Orijinal bütçe ≈ (d - now) + (now - prefetch_t0) = d - prefetch_t0 ... hayır
+    # begin sonrası d = now_begin + budget. İstediğimiz: prefetch_t0 + budget
+    # = d - (now_begin - prefetch_t0) ≈ d - elapsed_before_begin
+    now = time.monotonic()
+    # begin hemen prefetch sonrası çağrıldıysa: elapsed ≈ now - prefetch_t0
+    elapsed = max(0.0, now - float(prefetch_started_monotonic))
+    set_turn_deadline(d - elapsed)
 
 
 def remaining_sec() -> float:

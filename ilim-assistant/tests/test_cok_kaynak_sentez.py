@@ -80,13 +80,15 @@ def test_grounding_directive_blocks_narrow_field_lock():
     assert "3–5" in text or "3-5" in text or "ÇOK KAYNAK" in text
 
 
-def test_hadis_instant_offers_comparison():
+def test_hadis_instant_nedir_defers_to_rag():
+    """Faz 1: «niyet hadisi nedir» anlık kart değil → RAG/çok kaynak."""
     from ilim_assistant.ruzgar_hadis_anlik import try_hadis_instant_reply
+    from ilim_assistant.ruzgar_hadis_kutuphane import try_hadis_reply
+    from ilim_assistant.ruzgar_library_instant_registry import forces_library_rag
 
-    out = try_hadis_instant_reply("niyet hadisi nedir")
-    assert out is not None
-    assert "Buhârî" in out or "Buhari" in out
-    assert "karşılaştır" in out.lower() or "rivayet" in out.lower()
+    assert forces_library_rag("niyet hadisi nedir") is True
+    assert try_hadis_instant_reply("niyet hadisi nedir") is None
+    assert try_hadis_reply("niyet hadisi nedir") is None
 
 
 def test_hadis_compare_request_defers_to_rag():
@@ -122,3 +124,47 @@ def test_isolation_marks_kutuphane_bilgi():
     from ilim_assistant.ruzgar_tek_beyin_izolasyon import looks_like_bilgi_isolation_turn
 
     assert looks_like_bilgi_isolation_turn("Fotosentez nedir? Kütüphaneden özetle.")
+
+
+def test_lexical_keeps_high_score_arabic_passage():
+    """Faz 3: Türkçe soru + Arapça pasaj — yanlış MISS yok."""
+    from ilim_assistant.ruzgar_kutuphane_gorev import (
+        filter_hits_lexically,
+        hits_usable_for_kutuphane,
+    )
+
+    hits = [
+        (
+            "إنما الأعمال بالنيات وإنما لكل امرئ ما نوى",
+            "knowledge/ilim/din/05_hadis/kutub_i_sitte/buhari/1.jsonl",
+            0.91,
+        ),
+        (
+            "حديث النية في صحيح البخاري",
+            "knowledge/ilim/din/05_hadis/kutub_i_sitte/buhari/2.jsonl",
+            0.78,
+        ),
+    ]
+    filtered = filter_hits_lexically("niyet hadisi nedir", hits)
+    assert len(filtered) >= 1
+    assert hits_usable_for_kutuphane("niyet hadisi nedir", filtered) is True
+
+
+def test_diversify_then_pack_keeps_3_books():
+    """Faz 3: diversify sonrası dilim 3–5 eser bırakır (RAG_TOP_K=2 tuzağı)."""
+    from ilim_assistant.ruzgar_cok_kaynak_sentez import (
+        count_distinct_books,
+        diversify_hits_by_book,
+        library_rag_top_k_boost,
+        pack_multi_source_context,
+    )
+
+    base = 2
+    pack_k = max(base, library_rag_top_k_boost(base, "niyet hadisi nedir"))
+    pack_k = max(pack_k, min(5, len(_hits())))
+    diversified = diversify_hits_by_book(_hits(), max_books=5, max_total=max(pack_k, 8))
+    sliced = diversified[:pack_k]
+    assert count_distinct_books(sliced) >= 3
+    packed = pack_multi_source_context(sliced, max_books=5)
+    assert "[K1]" in packed and "[K2]" in packed
+    assert "[K3]" in packed or count_distinct_books(sliced) >= 3

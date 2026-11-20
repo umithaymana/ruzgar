@@ -98,15 +98,16 @@ _NOWEB_MODES = frozenset(
     {"ses", "mimar", "okuma", "tercume", "uretim", "hizli", "hafiza", "programlama"}
 )
 
-# İstemciden Türkçe karakterli veya ASCII mod adı gelebilir
+# İstemciden Türkçe karakterli veya ASCII mod adı gelebilir.
+# Faz 5: okuma/bilim ≠ mimar (görsel atölye). bilim → okuma köprüsü (ilim arşivi).
 _MODE_ALIASES = {
     "üretim": "uretim",
     "gelişim": "gelisim",
     "düzen": "duzen",
     "hızlı": "hizli",
     "tercüme": "tercume",
-    "okuma": "mimar",
-    "bilim": "mimar",
+    "okuma": "okuma",
+    "bilim": "okuma",
 }
 
 
@@ -889,8 +890,17 @@ def _genel_no_context_directive() -> str:
 def _orkestra_context_for_turn(mode_norm: str, motor_flags: dict[str, bool]) -> bool:
     if os.environ.get("RUZGAR_ORKESTRA_CONTEXT", "1").strip().lower() in ("0", "false", "no"):
         return False
-    # Programlama atölyesi: yalnızca programlama motoru bağlamı (ağır çekirdek orkestra yok).
-    if mode_norm == "programlama":
+    # Atölye / özel modlar: kendi motor bağlamı; 5’li çekirdek (ses/video/…) zorlanmaz.
+    if mode_norm in (
+        "programlama",
+        "hafiza",
+        "mimar",
+        "okuma",
+        "ses",
+        "video",
+        "tercume",
+        "hizir",
+    ):
         return False
     if mode_norm != "genel":
         return True
@@ -1287,7 +1297,7 @@ def prepare_turn(
         from ilim_assistant.ana_motor_plan import maybe_gundelik_instant_reply
 
         gundelik_direct = maybe_gundelik_instant_reply(
-            msg, m, motor_flags, question_plan=turn_plan
+            msg, m, motor_flags, question_plan=turn_plan, history=history
         )
         if gundelik_direct:
             return msg, [], "", "", "", gundelik_direct
@@ -1558,15 +1568,33 @@ def prepare_turn(
             )
 
             if kutuphane_enabled_hard() and is_kutuphane_bilgi_soru(msg):
-                from ilim_assistant.ruzgar_kutuphane_gorev import hits_usable_for_kutuphane
+                from ilim_assistant.ruzgar_kutuphane_gorev import (
+                    expand_kutuphane_search_query,
+                    hits_usable_for_kutuphane,
+                )
 
                 filtered = filter_hits_lexically(search_msg, good_hits) or filter_hits_lexically(
                     msg, good_hits
                 )
-                if not hits_usable_for_kutuphane(msg, filtered) and not hits_usable_for_kutuphane(
+                usable = hits_usable_for_kutuphane(msg, filtered) or hits_usable_for_kutuphane(
                     search_msg, filtered
-                ):
-                    good_hits = []
+                )
+                # İkinci geçiş: genişletilmiş sorgu — hemen MISS/öğret yok
+                if not usable and good_hits:
+                    try:
+                        exp_q = expand_kutuphane_search_query(msg)
+                        filtered2 = filter_hits_lexically(exp_q, good_hits)
+                        if hits_usable_for_kutuphane(exp_q, filtered2) or hits_usable_for_kutuphane(
+                            msg, filtered2
+                        ):
+                            filtered = filtered2
+                            usable = True
+                    except Exception:
+                        pass
+                if not usable:
+                    # Yüksek skorlu hit varsa tamamen boşaltma — çeşitlilik yolu açık kalsın
+                    strong = [h for h in good_hits if float(h[2]) >= 0.80][:6]
+                    good_hits = strong if strong else []
                 else:
                     good_hits = filtered
         except Exception:
@@ -1583,12 +1611,37 @@ def prepare_turn(
                 )
         except Exception:
             pass
-        hits = good_hits[:rag_k_clamped]
+        # Dilim: pack'e 3–5 eser kalsın (rag_k=2 ile kesme)
+        pack_k = rag_k_clamped
+        try:
+            from ilim_assistant.ruzgar_cok_kaynak_sentez import (
+                cok_kaynak_enabled,
+                library_rag_top_k_boost,
+            )
+
+            if cok_kaynak_enabled() and good_hits:
+                pack_k = max(rag_k_clamped, library_rag_top_k_boost(rag_k_clamped, msg))
+                pack_k = max(pack_k, min(5, len(good_hits)))
+        except Exception:
+            pass
+        pack_k = max(1, min(int(pack_k), 12))
+        try:
+            import logging as _logging
+
+            _logging.getLogger("ruzgar.chat_core").info(
+                "rag_k_clamped=%s pack_k=%s good_hits=%s",
+                rag_k_clamped,
+                pack_k,
+                len(good_hits or []),
+            )
+        except Exception:
+            pass
+        hits = good_hits[:pack_k]
         ar_hits = [
             h
             for h in good_hits
             if _rag_source_is_archive(h[1])
-        ][:rag_k_clamped]
+        ][:pack_k]
         try:
             from ilim_assistant.ana_motor_kaynak import format_context_blocks
 
@@ -2632,6 +2685,74 @@ def prepare_turn(
             _mc = mimar_ctx(msg).strip()
             if _mc:
                 user_payload = _mc.rstrip() + "\n\n---\n" + user_payload
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.motorlar.motor_shared_bridge import publish_motor_note
+
+            publish_motor_note("mimar", "last_turn", (msg or "")[:240])
+        except Exception:
+            pass
+    elif m == "okuma":
+        try:
+            from ilim_assistant.okuma_motoru import build_motor_context as okuma_ctx
+
+            _ocx = okuma_ctx(msg).strip()
+            if _ocx:
+                user_payload = _ocx.rstrip() + "\n\n---\n" + user_payload
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.motorlar.motor_shared_bridge import publish_motor_note
+
+            publish_motor_note("okuma", "last_turn", (msg or "")[:240])
+        except Exception:
+            pass
+    elif m == "hafiza":
+        try:
+            from ilim_assistant.motorlar.hafiza_motoru import (
+                build_motor_context as hafiza_ctx,
+            )
+
+            _hc = hafiza_ctx(msg).strip()
+            if _hc:
+                user_payload = _hc.rstrip() + "\n\n---\n" + user_payload
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.motorlar.motor_shared_bridge import publish_motor_note
+
+            publish_motor_note("hafiza", "last_turn", (msg or "")[:240])
+        except Exception:
+            pass
+    elif m == "ses":
+        try:
+            from ilim_assistant.ses_motoru import build_motor_context as ses_ctx
+
+            _sc = ses_ctx(msg).strip()
+            if _sc:
+                user_payload = _sc.rstrip() + "\n\n---\n" + user_payload
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.motorlar.motor_shared_bridge import publish_motor_note
+
+            publish_motor_note("ses", "last_turn", (msg or "")[:240])
+        except Exception:
+            pass
+    elif m == "tercume":
+        try:
+            from ilim_assistant.tercume_motoru import build_motor_context as terc_ctx
+
+            _tc = terc_ctx(msg).strip()
+            if _tc:
+                user_payload = _tc.rstrip() + "\n\n---\n" + user_payload
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.motorlar.motor_shared_bridge import publish_motor_note
+
+            publish_motor_note("tercume", "last_turn", (msg or "")[:240])
         except Exception:
             pass
     elif _orkestra_context_for_turn(m, motor_flags) and not _hub_directive:

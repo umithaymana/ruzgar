@@ -6,11 +6,11 @@
   python scripts/programlama_smoke.py --slo
 
 Canlı API (sunucu ayakta):
-  python scripts/programlama_smoke.py --live http://127.0.0.1:8777
+  python scripts/programlama_smoke.py --live http://127.0.0.1:8779
 
 CI paketi (offline + SLO + isteğe bağlı live):
   python scripts/programlama_smoke.py --ci
-  python scripts/programlama_smoke.py --ci --live http://127.0.0.1:8777
+  python scripts/programlama_smoke.py --ci --live http://127.0.0.1:8779
 """
 
 from __future__ import annotations
@@ -3546,7 +3546,7 @@ def run_parity(*, live_base: str | None = None) -> int:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--live", metavar="URL", help="Örn. http://127.0.0.1:8777")
+    ap.add_argument("--live", metavar="URL", help="Örn. http://127.0.0.1:8779")
     ap.add_argument("--slo", action="store_true", help="Faz 18 SLO senaryoları (offline)")
     ap.add_argument(
         "--parity",
@@ -3605,7 +3605,7 @@ def main() -> int:
     if args.live:
         fails += run_live(args.live)
     elif args.ci:
-        print("(CI: canlı API atlandı — sunucu için --ci --live http://127.0.0.1:8777)")
+        print("(CI: canlı API atlandı — sunucu için --ci --live http://127.0.0.1:8779)")
     if args.upgrade:
         print("=== Programlama Upgrade Gate ===")
         from ilim_assistant.approved_executor import run_argv

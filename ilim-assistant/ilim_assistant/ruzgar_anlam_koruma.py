@@ -240,22 +240,68 @@ def rag_default_score_min() -> float:
     return max(0.0, min(1.0, v))
 
 
+# Türkçe sorgu → Arapça Şamile/kütüphane metin köprüsü (fold_ascii Arapçayı siler).
+_QUERY_AR_BRIDGE: dict[str, tuple[str, ...]] = {
+    "niyet": ("نية", "النية", "نيات", "النيات", "نوى", "بالنيات"),
+    "hadis": ("حديث", "الحديث", "أحاديث", "رواه", "حدثنا"),
+    "hadisi": ("حديث", "الحديث", "أحاديث", "رواه", "حدثنا"),
+    "buhari": ("بخاري", "البخاري", "بخارى"),
+    "tirmizi": ("ترمذي", "الترمذي", "ترمذى"),
+    "muslim": ("مسلم", "مسلم"),
+    "hicret": ("هجرة", "الهجرة", "هاجر", "مهاجر"),
+    "hicreti": ("هجرة", "الهجرة", "هاجر", "مهاجر"),
+    "siyer": ("سيرة", "السيرة", "مغازي", "المغازي"),
+    "tefsir": ("تفسير", "التفسير"),
+    "ayet": ("آية", "الآية", "آيات"),
+    "kuran": ("قرآن", "القرآن", "قران"),
+    "peygamber": ("نبي", "النبي", "رسول", "الرسول"),
+    "sahabe": ("صحابة", "الصحابة", "صحابي"),
+    "fikih": ("فقه", "الفقه"),
+    "akaid": ("عقيدة", "العقيدة", "عقائد"),
+}
+
+
+def _strip_harakat(text: str) -> str:
+    """Arapça hareke / tatvil kaldır — köprü eşlemesi için."""
+    return re.sub(r"[\u064B-\u065F\u0670\u0640]", "", text or "")
+
+
+def _bridge_keys_for_token(tok: str) -> list[str]:
+    """hadisi→hadis gibi hafif Türkçe sonekleri de köprü anahtarına çevir."""
+    t = (tok or "").strip()
+    if not t:
+        return []
+    keys = [t]
+    for suf in ("si", "i", "leri", "lar", "ler"):
+        if len(t) > len(suf) + 3 and t.endswith(suf):
+            keys.append(t[: -len(suf)])
+            break
+    return keys
+
+
 def chunk_fits_query(sorgu: str, chunk_text: str) -> bool:
-    """RAG parçası sorunun anlam kelimesini taşıyor mu?"""
+    """RAG parçası sorunun anlam kelimesini taşıyor mu?
+
+    Latin/Türkçe örtüşme + Türkçe→Arapça köprü (Şamile metni fold_ascii'de kaybolmasın).
+    """
     toks = content_tokens(sorgu, min_len=4)
     if not toks:
         toks = content_tokens(sorgu, min_len=3)
     if not toks:
         return True
-    blob = fold_ascii(chunk_text or "")
-    if not blob:
-        return False
-    ctoks = content_tokens(chunk_text or "", min_len=3)
+    raw = chunk_text or ""
+    blob = fold_ascii(raw)
+    raw_stripped = _strip_harakat(raw)
+    ctoks = content_tokens(raw, min_len=3)
     for t in toks:
         if _token_hit(t, ctoks):
             return True
         if len(t) >= 4 and t in blob:
             return True
+        for key in _bridge_keys_for_token(t):
+            for ar in _QUERY_AR_BRIDGE.get(key, ()):
+                if ar and (ar in raw or ar in raw_stripped):
+                    return True
     return False
 
 

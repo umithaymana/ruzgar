@@ -151,3 +151,34 @@ def sohbet_once_selam_dinle_directive(message: str) -> str:
         "Ümit abi’yi dinlemiş gibi doğal, sıcak cevap ver; hazır şablon yok. "
         "İstersen kısaca halini sor; «öncelik sırası / RAG» yazma.\n"
     )
+
+
+def allow_selam_resume_instant(message: str) -> bool:
+    """Sohbet-once açıkken bile saf selam / resume anlık kalsın (Faz 2).
+
+    Diğer gündelik şablonlar hâlâ LLM'e gider; yalnız selam kapısı istisna.
+    """
+    if not sohbet_once_enabled():
+        return True
+    try:
+        from ilim_assistant.ruzgar_sohbet_tek_kapi import looks_like_pure_greeting
+
+        if looks_like_pure_greeting(message):
+            return True
+    except Exception:
+        pass
+    low = _fold(message or "")
+    if re.match(
+        r"^(?:selam|merhaba|slm|hey|gunaydin|iyi\s+aksam|iyi\s+geceler)"
+        r"(?:\s+ruzgar)?\s*[!.?]*$",
+        low,
+    ):
+        return True
+    try:
+        from ilim_assistant.ruzgar_tek_beyin_karsilama import looks_like_greeting_complaint
+
+        if looks_like_greeting_complaint(message):
+            return True
+    except Exception:
+        pass
+    return False

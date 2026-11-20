@@ -39,7 +39,11 @@ def _bootstrap() -> None:
 
 
 def _boot_motorlar_locked() -> None:
-    """.cursorrules — port açılmadan ana motor → çekirdek → 5 ara motor (sıra kilitli)."""
+    """.cursorrules — port açılmadan ana motor → çekirdek → 7 ara motor (sıra kilitli).
+
+    Sıra: ses → video → okuma → mimar → tercüme → hafıza → programlama.
+    (Eski «5 motor» handoff metni geçersiz — Faz 6.)
+    """
     import importlib
 
     importlib.import_module("ilim_assistant.main_engine")
@@ -54,7 +58,11 @@ def _boot_motorlar_locked() -> None:
         "ilim_assistant.programlama_motoru",
     ):
         importlib.import_module(name)
-    print("[Rüzgar] Motor boot tamam (port öncesi).", file=sys.stderr, flush=True)
+    print(
+        "[Rüzgar] Motor boot tamam (7 ara + ana + çekirdek, port öncesi).",
+        file=sys.stderr,
+        flush=True,
+    )
 
 
 def main() -> None:

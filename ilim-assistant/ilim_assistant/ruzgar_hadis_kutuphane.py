@@ -242,12 +242,24 @@ def try_hadis_number_reply(msg: str) -> Optional[str]:
 
 
 def try_hadis_reply(msg: str) -> Optional[str]:
-    """Hadis niyeti: önce numaralı matın, sonra kavram."""
+    """Hadis niyeti: önce numaralı matın, sonra kavram.
+
+    hadis_anlik ile aynı politika: derin bilgi/karşılaştır/anlat → None (RAG).
+    Numaralı matın (buhari 1) anlık kalır.
+    """
     if not (msg or "").strip():
         return None
     numbered = try_hadis_number_reply(msg)
     if numbered:
         return numbered
+    # Kavramsal / derin — anlık kart basma; indeks sentezi çalışsın
+    try:
+        from ilim_assistant.ruzgar_library_instant_registry import forces_library_rag
+
+        if forces_library_rag(msg):
+            return None
+    except Exception:
+        pass
     low = _fold(msg)
     is_cue = looks_like_hadis_question(msg)
     ask = any(p in low for p in ("nedir", "ne demek", "kimdir", "anlat", "nelerdir", "ne demektir"))

@@ -1,6 +1,6 @@
 # Çırak Hafıza — İndeks
 
-Son güncelleme: 2026-11-20 (Europe/Istanbul)  
+Son güncelleme: 2026-11-20 ~11:47 (Europe/Istanbul)  
 Protokol: [CIRAK_HAFIZA_OKU.md](CIRAK_HAFIZA_OKU.md) · Şablon: [SABLON.md](SABLON.md)  
 **Kilit:** 20 zorunlu alan (doğru/yanlış/nerede/nasıl + el rahatlatma).
 
@@ -12,6 +12,14 @@ Protokol: [CIRAK_HAFIZA_OKU.md](CIRAK_HAFIZA_OKU.md) · Şablon: [SABLON.md](SAB
 | cirak-hafiza, protokol, apprentice-memory | [2026-11-20_cirak-hafiza-kurulum.md](kayitlar/2026-11-20_cirak-hafiza-kurulum.md) | Defter ilk kuruldu; UI çırak günlüğü ≠ bu — **ana-koda-alindi** |
 | cirak-hafiza, sablon, zorunlu-alanlar, el-rahatlatma | [2026-11-20_cirak-hafiza-maddeler-kilit.md](kayitlar/2026-11-20_cirak-hafiza-maddeler-kilit.md) | 20 madde + SABLON + cursor kuralı kilitlendi — **ana-koda-alindi** |
 | cirak-hafiza, main, ana-koda-al, surekli-kullanim | [2026-11-20_cirak-hafiza-ana-koda.md](kayitlar/2026-11-20_cirak-hafiza-ana-koda.md) | Ümit ANA KODA AL; `origin/main` @ `2d00ce120` |
+| anlik, registry, instant_covers, hadis, RAG, faz1, onarim | [2026-11-20_onarim-faz1-anlik-kapi.md](kayitlar/2026-11-20_onarim-faz1-anlik-kapi.md) | Çift anlık blok → tek registry; covers sıkı; niyet/karşılaştır/anlat → RAG |
+| selam, resume, sohbet-once, history, faz2, onarim | [2026-11-20_onarim-faz2-selam-oturum.md](kayitlar/2026-11-20_onarim-faz2-selam-oturum.md) | history’li selam; SOHBET_ONCE istisnası; has_prior_session=False kalktı |
+| RAG, diversify, lexical, MISS, pack_k, faz3, onarim | [2026-11-20_onarim-faz3-rag-cesitlilik.md](kayitlar/2026-11-20_onarim-faz3-rag-cesitlilik.md) | pack_k 3–5 eser; lexical/usable ölçülü gevşetme |
+| umed, local-first, prefetch, timeout, faz4, onarim | [2026-11-20_onarim-faz4-beyin-sure.md](kayitlar/2026-11-20_onarim-faz4-beyin-sure.md) | İlim cloud-first varsayılan kapalı; prefetch bütçede; UI dili güncel |
+| motor, okuma, mimar, hafiza, alias, faz5, onarim | [2026-11-20_onarim-faz5-motor-routing.md](kayitlar/2026-11-20_onarim-faz5-motor-routing.md) | okuma≠mimar; hafıza bağlamı; boot↔çekirdek doküman; shared bridge |
+| temizlik, genel-bak, 8779, cirak, faz6, onarim | [2026-11-20_onarim-faz6-temizlik.md](kayitlar/2026-11-20_onarim-faz6-temizlik.md) | Ölü modül etiket; 7-motor docstring; genel-bak bakım; çırak isim ayrımı |
+| dogrulama, smoke, faz7, onarim, indeks | [2026-11-20_onarim-faz7-dogrulama.md](kayitlar/2026-11-20_onarim-faz7-dogrulama.md) | 37 pytest + 9 smoke; indeks sınırlı; plan durum tablosu |
 
 **Kullanım:** Bundan sonra her çırak / ajan Rüzgar işinde bu deftere **sürekli** bakar ve yazar (`.cursor/rules/cirak-hafiza-FROZEN.mdc`).  
 **Not:** Uygulama «çırak günlüğü» (tercüme paneli) ≠ bu hafıza.
+- 2026-11-20_kalan-aciklar-rag-ollama-main.md — kalan açıklar (RAG/Ollama/main)

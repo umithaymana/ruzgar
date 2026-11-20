@@ -48,21 +48,36 @@ _STRICT_LOOKUP_RE = re.compile(
     re.I,
 )
 
-_LIBRARY_TRYERS: tuple[tuple[str, str, str], ...] = (
-    ("ilim_assistant.ruzgar_siyer_kutuphane", "try_siyer_reply", "Siyer"),
-    ("ilim_assistant.ruzgar_usul_fikh_kutuphane", "try_usul_fikh_reply", "Usûl"),
-    ("ilim_assistant.ruzgar_fikh_kutuphane", "try_fikh_reply", "Fıkıh"),
-    ("ilim_assistant.ruzgar_hadis_kutuphane", "try_hadis_reply", "Hadis"),
-    ("ilim_assistant.ruzgar_akaid_kutuphane", "try_akaid_reply", "Akaid"),
-    ("ilim_assistant.ruzgar_felsefe_kutuphane", "try_felsefe_reply", "Felsefe"),
-    ("ilim_assistant.ruzgar_psikoloji_kutuphane", "try_psikoloji_reply", "Psikoloji"),
-    ("ilim_assistant.ruzgar_edebiyat_kutuphane", "try_edebiyat_reply", "Edebiyat"),
-    ("ilim_assistant.ruzgar_ek_raflar", "try_ek_raf_reply", "Ek raf"),
-    ("ilim_assistant.ruzgar_bilim_kutuphane", "try_bilim_reply", "Bilim"),
-    ("ilim_assistant.ruzgar_cografya_kutuphane", "try_cografya_reply", "Coğrafya"),
-    ("ilim_assistant.ruzgar_bilgisayar_kutuphane", "try_bilgisayar_reply", "Bilgisayar"),
-    ("ilim_assistant.ruzgar_teknoloji_kutuphane", "try_teknoloji_reply", "Teknoloji"),
-)
+def _library_tryers() -> tuple[tuple[str, str, str], ...]:
+    """Registry ile aynı raflar (etiket kısa)."""
+    try:
+        from ilim_assistant.ruzgar_library_instant_registry import LIBRARY_INSTANT_ENTRIES
+
+        return tuple(
+            (mod, fn, (label.split("(")[0].strip() or key))
+            for mod, fn, key, _pri, label in LIBRARY_INSTANT_ENTRIES
+        )
+    except Exception:
+        return (
+            ("ilim_assistant.ruzgar_siyer_kutuphane", "try_siyer_reply", "Siyer"),
+            ("ilim_assistant.ruzgar_usul_fikh_kutuphane", "try_usul_fikh_reply", "Usûl"),
+            ("ilim_assistant.ruzgar_fikh_kutuphane", "try_fikh_reply", "Fıkıh"),
+            ("ilim_assistant.ruzgar_hadis_kutuphane", "try_hadis_reply", "Hadis"),
+            ("ilim_assistant.ruzgar_akaid_kutuphane", "try_akaid_reply", "Akaid"),
+            ("ilim_assistant.ruzgar_tasavvuf_kutuphane", "try_tasavvuf_reply", "Tasavvuf"),
+            ("ilim_assistant.ruzgar_felsefe_kutuphane", "try_felsefe_reply", "Felsefe"),
+            ("ilim_assistant.ruzgar_psikoloji_kutuphane", "try_psikoloji_reply", "Psikoloji"),
+            ("ilim_assistant.ruzgar_edebiyat_kutuphane", "try_edebiyat_reply", "Edebiyat"),
+            ("ilim_assistant.ruzgar_ek_raflar", "try_ek_raf_reply", "Ek raf"),
+            ("ilim_assistant.ruzgar_bilim_kutuphane", "try_bilim_reply", "Bilim"),
+            ("ilim_assistant.ruzgar_cografya_kutuphane", "try_cografya_reply", "Coğrafya"),
+            ("ilim_assistant.ruzgar_bilgisayar_kutuphane", "try_bilgisayar_reply", "Bilgisayar"),
+            ("ilim_assistant.ruzgar_teknoloji_kutuphane", "try_teknoloji_reply", "Teknoloji"),
+        )
+
+
+# Geriye uyum — statik tuple bekleyen eski kod
+_LIBRARY_TRYERS: tuple[tuple[str, str, str], ...] = _library_tryers()
 
 
 def anlik_niyet_gate_enabled() -> bool:
@@ -132,7 +147,14 @@ def library_instant_would_match(message: str) -> bool:
     raw = (message or "").strip()
     if not raw:
         return False
-    for mod_path, fn_name, _label in _LIBRARY_TRYERS:
+    try:
+        from ilim_assistant.ruzgar_library_instant_registry import forces_library_rag
+
+        if forces_library_rag(raw):
+            return False
+    except Exception:
+        pass
+    for mod_path, fn_name, _label in _library_tryers():
         if _call_try(mod_path, fn_name, raw):
             return True
     return False
@@ -175,12 +197,19 @@ def resolve_anlik_harman(message: str) -> dict:
     defer = should_defer_library_instant(raw)
     out["defer"] = defer
     card = None
-    for mod_path, fn_name, _label in _LIBRARY_TRYERS:
-        card = _call_try(mod_path, fn_name, raw)
-        if card:
-            break
+    try:
+        from ilim_assistant.ruzgar_library_instant_registry import forces_library_rag
+
+        _force_rag = forces_library_rag(raw)
+    except Exception:
+        _force_rag = False
+    if not _force_rag:
+        for mod_path, fn_name, _label in _library_tryers():
+            card = _call_try(mod_path, fn_name, raw)
+            if card:
+                break
     out["has_card"] = bool(card)
-    if is_strict_library_lookup(raw) and not defer and card:
+    if is_strict_library_lookup(raw) and not defer and card and not _force_rag:
         out["mode"] = "kart"
         return out
     if defer and card and _wants_grounded_anlat(raw):
@@ -203,7 +232,7 @@ def collect_library_llm_context(message: str, *, max_chars: int = 2800) -> str:
         return ""
     parts: list[str] = []
     used = 0
-    for mod_path, fn_name, label in _LIBRARY_TRYERS:
+    for mod_path, fn_name, label in _library_tryers():
         hit = _call_try(mod_path, fn_name, raw)
         if not hit:
             continue
@@ -251,7 +280,7 @@ def soft_library_synth_fallback(message: str) -> Optional[str]:
         return None
     raw = (message or "").strip()
     hit = None
-    for mod_path, fn_name, _label in _LIBRARY_TRYERS:
+    for mod_path, fn_name, _label in _library_tryers():
         hit = _call_try(mod_path, fn_name, raw)
         if hit:
             break
