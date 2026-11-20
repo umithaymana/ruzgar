@@ -45,32 +45,63 @@ def _gemini_on_cooldown() -> bool:
 
 
 def ilim_rag_cloud_first_enabled() -> bool:
-    """RAG bağlamlı bilgi/bilim — yavaş yerel 3B yerine bulut önce (varsayılan açık)."""
-    return os.environ.get("RUZGAR_ILIM_RAG_CLOUD_FIRST", "1").strip().lower() not in (
-        "0",
-        "false",
-        "no",
+    """İlim/RAG turunda bulut-önce — varsayılan KAPALI (umed local-first kazanır).
+
+    Tek karar tablosu (Faz 4):
+    | Bayrak | Sonuç |
+    | RUZGAR_ILIM_RAG_CLOUD_FIRST=1 | Gemini/Groq önce (açık istek) |
+    | =0 / yok (varsayılan) | Ollama denge/hızlı → Groq → Gemini (umed) |
+    | RUZGAR_ILIM_BRAIN_CHAIN=... | Özel zincir (bayrağı ezer) |
+    """
+    return os.environ.get("RUZGAR_ILIM_RAG_CLOUD_FIRST", "0").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
     )
 
 
 def build_ilim_rag_brain_chain_ids() -> list[str]:
-    """İlim/tarih/bilim turları — Gemini/Groq önce; Ollama yedek."""
+    """İlim/tarih/bilim turları — cloud-first yalnız açık bayrakla; değilse local-first."""
     custom = (os.environ.get("RUZGAR_ILIM_BRAIN_CHAIN") or "").strip()
     if custom:
         ids = [x.strip() for x in custom.split(",") if x.strip()]
-    else:
-        ids = []
-        if not _gemini_on_cooldown():
-            ids.append("gemini")
-        if "groq" not in ids:
-            ids.append("groq")
-        if not ids:
-            ids = ["groq", "gemini"]
+        if _gemini_on_cooldown():
+            ids = [x for x in ids if x != "gemini"]
+            if "groq" not in ids:
+                ids.insert(0, "groq")
+        return ids
+    if not ilim_rag_cloud_first_enabled():
+        # umed / Faz 90 local-first — ilim turunda da aynı sıra
+        return build_genel_brain_chain_ids()
+    ids: list[str] = []
+    if not _gemini_on_cooldown():
+        ids.append("gemini")
+    if "groq" not in ids:
+        ids.append("groq")
+    if not ids:
+        ids = ["groq", "gemini"]
+    # Yerel yedek sonda
+    if ollama_available():
+        for p in ("denge", "hizli"):
+            if p not in ids:
+                ids.append(p)
     if _gemini_on_cooldown():
         ids = [x for x in ids if x != "gemini"]
         if "groq" not in ids:
             ids.insert(0, "groq")
     return ids
+
+
+def brain_order_decision_table() -> dict[str, Any]:
+    """Smoke / health — hangi zincir neden seçilir."""
+    return {
+        "genel_local_first": genel_local_first_enabled(),
+        "ilim_rag_cloud_first": ilim_rag_cloud_first_enabled(),
+        "genel_chain": build_genel_brain_chain_ids()[:5],
+        "ilim_chain": build_ilim_rag_brain_chain_ids()[:5],
+        "note": "İlim turunda local-first varsayılan; cloud-first yalnız RUZGAR_ILIM_RAG_CLOUD_FIRST=1",
+    }
 
 
 def build_genel_brain_chain_ids() -> list[str]:
@@ -118,6 +149,9 @@ def enrich_health_build(build: dict[str, Any] | None) -> dict[str, Any]:
     out["genel_faz90"] = genel_local_first_enabled()
     out["genel_local_first"] = genel_local_first_enabled() and ollama_available()
     out["genel_brain_chain"] = build_genel_brain_chain_ids()[:4]
+    out["ilim_rag_cloud_first"] = ilim_rag_cloud_first_enabled()
+    out["ilim_brain_chain"] = build_ilim_rag_brain_chain_ids()[:4]
+    out["brain_order"] = brain_order_decision_table()
     return out
 
 

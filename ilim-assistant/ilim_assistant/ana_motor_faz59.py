@@ -212,8 +212,12 @@ def begin_umed_turn_budget(
     coding_mode: bool = False,
     motor_flags: dict[str, bool] | None = None,
     question_plan: Any | None = None,
+    started_monotonic: float | None = None,
 ) -> float:
-    """Ümit emri deadline — Faz 59 bütçe çözümü."""
+    """Ümit emri deadline — Faz 59 bütçe çözümü.
+
+    started_monotonic: prefetch başlangıcı — bütçe prefetch süresini içerir.
+    """
     budget = resolve_umed_budget_sec(
         message,
         mode_norm=mode_norm,
@@ -223,8 +227,14 @@ def begin_umed_turn_budget(
     )
     try:
         from ilim_assistant.ruzgar_umed_cevap_emri import set_turn_deadline
+        import time as _t
 
-        set_turn_deadline(time.monotonic() + budget)
+        t0 = (
+            float(started_monotonic)
+            if started_monotonic is not None
+            else _t.monotonic()
+        )
+        set_turn_deadline(t0 + budget)
     except Exception:
         pass
     return budget

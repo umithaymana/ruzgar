@@ -2080,22 +2080,28 @@ function hideThinkingCenter() {
 
 function classifyChatError(errText) {
   const body = String(errText || "").trim();
-  const low = body.toLowerCase();
   let kind = "generic";
   let title = "Yanıt üretilemedi";
   const hints = [];
-  if (/zaman aşımı|timed out|timeout/i.test(body) && !/ollama/i.test(body)) {
+  // Süre sözleşmesi: UI tam tur ~180sn bekler; umed bütçesi sohbet ~15sn / ilim ~38sn
+  // (prefetch bu bütçeye dahildir). Local-first: Ollama → Groq → Gemini.
+  if (/zaman aşımı|timed out|timeout|umed|bütçe|butce/i.test(body) && !/ollama/i.test(body)) {
     kind = "timeout";
     title = "Yanıt zaman aşımı";
     hints.push(
-      "Ana Motor RAG + Gemini bazen 60–120 sn sürebilir; tekrar deneyin veya soruyu kısaltın."
+      "Ümit emri bütçesi: sohbet ~15 sn, ilim/RAG ~38 sn (prefetch dahil). Soruyu kısaltın veya tekrar deneyin."
     );
-    hints.push("Health şeridinde «Gemini ✓ … (daemon)» görünmeli; yoksa Ruzgar.ps1 ile yeniden başlatın.");
+    hints.push(
+      "Local-first açık (RUZGAR_GENEL_LOCAL_FIRST=1): önce Ollama, sonra bulut. İlimde bulut-önce için RUZGAR_ILIM_RAG_CLOUD_FIRST=1."
+    );
+    hints.push(
+      `UI tam tur en fazla ~${Math.round(RUZGAR_CHAT_FULL_TIMEOUT_MS / 1000)} sn bekler; sunucu daha erken MISS dönebilir.`
+    );
   } else if (/ollama.*yanıt vermedi|ollama.*zaman aşımı/i.test(body)) {
     kind = "timeout";
     title = "Ollama yanıt vermedi";
-    hints.push("GLOBAL_API_KEY (.env) varken Gemini kullanılmalı — API'yi yeniden başlatın.");
-    hints.push("Ollama isteğe bağlı: `ollama serve` veya `ollama pull llama3.2:3b`");
+    hints.push("Local-first: `ollama serve` çalışıyor mu? `ollama pull` ile modeli indirin.");
+    hints.push("Ollama yoksa zincir Groq/Gemini’ye düşer — API’yi yeniden başlatın.");
   } else if (/bağlanılamadı|connection|refused|10061|actively refused/i.test(body)) {
     kind = "connection";
     title = "Bağlantı kurulamadı";
@@ -2112,9 +2118,9 @@ function classifyChatError(errText) {
     hints.push("RUZGAR_MAIN_ONLY_GENEL_HAFIZA=0 yapın ve API’yi yeniden başlatın.");
   } else if (/gemini|global_api_key|google_gemini/i.test(body)) {
     kind = "gemini";
-    title = "Gemini bağlantısı";
-    hints.push("Anahtar kalıcı: ilim-assistant/.env → GLOBAL_API_KEY (tekrar girmeniz gerekmez).");
-    hints.push("Ruzgar.ps1 ile başlatın; health’te «Gemini ✓ … (daemon)» görünmeli.");
+    title = "Bulut beyin (Gemini) bağlantısı";
+    hints.push("Anahtar: ilim-assistant/.env → GLOBAL_API_KEY. Local-first’te Gemini yedektir.");
+    hints.push("Health’te Ollama/Gemini durumuna bakın; Ruzgar.ps1 ile yeniden başlatın.");
   } else {
     hints.push("Sunucu ve Ollama günlüklerine bakın; ? ile yardım panelini açın.");
   }

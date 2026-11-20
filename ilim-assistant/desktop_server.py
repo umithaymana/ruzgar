@@ -13982,6 +13982,41 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         import time as _time_prog
 
         _prefetch_t0 = _time_prog.monotonic()
+        # Faz 4: umed bütçesi prefetch ile aynı t0'dan başlar (bitince sıfırlanmaz)
+        try:
+            from ilim_assistant.ruzgar_umed_cevap_emri import (
+                begin_turn_budget,
+                umed_emri_applies,
+            )
+
+            if umed_emri_applies(mode_norm=mode_norm, coding_mode=coding):
+                try:
+                    from ilim_assistant.ana_motor_faz59 import begin_umed_turn_budget
+
+                    _mf_pre: dict[str, bool] = {}
+                    try:
+                        from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
+
+                        _mf_pre = motor_niyeti_heuristic(req.message or "")
+                    except Exception:
+                        pass
+                    begin_umed_turn_budget(
+                        req.message or "",
+                        mode_norm=mode_norm,
+                        coding_mode=coding,
+                        motor_flags=_mf_pre,
+                        question_plan=turn_plan,
+                        started_monotonic=_prefetch_t0,
+                    )
+                except Exception:
+                    begin_turn_budget(
+                        req.message or "",
+                        mode_norm=mode_norm,
+                        question_plan=turn_plan,
+                        started_monotonic=_prefetch_t0,
+                    )
+        except Exception:
+            pass
         bundle = None
         _had_status = False
         _upload_ids = list(getattr(req, "ana_motor_upload_ids", None) or [])
@@ -14070,29 +14105,37 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         )
 
         if umed_emri_applies(mode_norm=mode_norm, coding_mode=coding):
+            # Prefetch'te bütçe zaten açıldıysa yeniden sıfırlama (Faz 4)
             try:
-                from ilim_assistant.ana_motor_faz59 import begin_umed_turn_budget
+                from ilim_assistant.ruzgar_umed_cevap_emri import get_turn_deadline
 
-                _mf_budget: dict[str, bool] = {}
-                try:
-                    from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
-
-                    _mf_budget = motor_niyeti_heuristic(req.message or "")
-                except Exception:
-                    pass
-                begin_umed_turn_budget(
-                    req.message or "",
-                    mode_norm=mode_norm,
-                    coding_mode=coding,
-                    motor_flags=_mf_budget,
-                    question_plan=turn_plan,
-                )
+                _have_deadline = get_turn_deadline() is not None
             except Exception:
-                begin_turn_budget(
-                    req.message or "",
-                    mode_norm=mode_norm,
-                    question_plan=turn_plan,
-                )
+                _have_deadline = False
+            if not _have_deadline:
+                try:
+                    from ilim_assistant.ana_motor_faz59 import begin_umed_turn_budget
+
+                    _mf_budget: dict[str, bool] = {}
+                    try:
+                        from ilim_assistant.idrak_entegrasyon import motor_niyeti_heuristic
+
+                        _mf_budget = motor_niyeti_heuristic(req.message or "")
+                    except Exception:
+                        pass
+                    begin_umed_turn_budget(
+                        req.message or "",
+                        mode_norm=mode_norm,
+                        coding_mode=coding,
+                        motor_flags=_mf_budget,
+                        question_plan=turn_plan,
+                    )
+                except Exception:
+                    begin_turn_budget(
+                        req.message or "",
+                        mode_norm=mode_norm,
+                        question_plan=turn_plan,
+                    )
         if umed_emri_applies(mode_norm=mode_norm, coding_mode=coding) and deadline_exceeded():
             from ilim_assistant.ruzgar_egitim import (
                 maybe_egitim_learned_reply,
