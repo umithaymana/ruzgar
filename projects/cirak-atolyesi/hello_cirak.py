@@ -1,1 +1,2 @@
-print("PASS cirak-d9")
+# Çırak atölyesi — minimal selam (Dilim A kanıt dosyası)
+print("PASS cirak-hello")

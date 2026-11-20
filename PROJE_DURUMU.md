@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-11-21 gece — Masa M1–M3 mühür YEŞİL · sırada Çırak Dilim A. Askıda Ses+Okuma. Sohbet güvenli `8da0da320`.
+**Son güncelleme:** 2026-11-21 gece — Masa M3 mühür · Çırak Dilim A YEŞİL · sırada Dilim B. Askıda Ses+Okuma. Sohbet `8da0da320`.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -11,7 +11,7 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 | Öncelik | Konu | Not |
 |---------|------|-----|
 | **1 — Masa gerçek iş** | **M1–M3 MÜHÜR YEŞİL** | `docs/M3_MASA_ANA_MOTOR_MUHUR_2026-11-21.md` · `smoke_masa_m3_muhur.py` |
-| **2 — Çırak / programlama** | **Kapı açık → Dilim A** · usta kontrol · kalfa merdiveni | `RUZGAR_CIRAK_GELISIM_PLAN_2026-11-18.md` · masa mühüründen sonra |
+| **2 — Çırak / programlama** | **Dilim A YEŞİL** · sırada **B** (yazdım=disk) | `oz_analiz_raporu_v2.md` · `smoke_cirak_dilim_a.py` · plan `RUZGAR_CIRAK_GELISIM_PLAN_2026-11-18.md` |
 | **3 — Askıda (Mimar vizyon)** | Ses yükselt → Okuma güçlendir → sesle kitap okut | Silinmedi; 1–2 bitince açılır. Okuma ≠ RAG (RAG sohbet omurgasında) |
 | **Güvenli nokta** | Sohbet RAG A/B/C | `8da0da320` · dal `cursor/sohbet-akicilik-a-f` · `docs/SOHBET_RAG_ABC_GUVENLI_NOKTA_2026-11-20.md` |
 | **Mühürlü arka** | Sohbet · Kütüphane · Ses V0–V5 · Mobil F0–F9 | Bozma; üzerine ekle |
