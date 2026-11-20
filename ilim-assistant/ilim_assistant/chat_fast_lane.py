@@ -24,8 +24,16 @@ def mode_norm_from_request(mode: Any) -> str:
     return m if m in ("genel", "gelisim", "uretim") else "genel"
 
 
-def try_instant_reply(message: str, mode_norm: str = "genel") -> str | None:
-    """Selam / teşekkür / kısa nezaket — LLM/RAG/thread pool yok."""
+def try_instant_reply(
+    message: str,
+    mode_norm: str = "genel",
+    *,
+    history: list | None = None,
+) -> str | None:
+    """Selam / teşekkür / kısa nezaket — LLM/RAG/thread pool yok.
+
+    history verilirse canonical_selam resume seçebilir (has_prior_session=False sabiti yok).
+    """
     if mode_norm not in ("genel", "gelisim", "uretim"):
         return None
     raw = (message or "").strip()
@@ -74,7 +82,7 @@ def try_instant_reply(message: str, mode_norm: str = "genel") -> str | None:
         try:
             from ilim_assistant.ruzgar_sohbet_tek_kapi import canonical_selam_reply
 
-            return canonical_selam_reply(raw, history=None, has_prior_session=False)
+            return canonical_selam_reply(raw, history=history)
         except Exception:
             return (
                 "Selam Ümit abi — Rüzgar burada, seninle konuşmaya hazırım. "

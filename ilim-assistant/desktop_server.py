@@ -11537,7 +11537,11 @@ def _collect_fast_lane_chat_events(req: ChatRequest) -> list[dict[str, Any]] | N
                     )
             except Exception:
                 pass
-        reply = try_instant_reply(msg_raw, mode_norm)
+        reply = try_instant_reply(
+            msg_raw,
+            mode_norm,
+            history=getattr(req, "history", None),
+        )
         if not reply:
             return None
         orch: dict[str, Any] = {
@@ -12092,7 +12096,12 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                 return
 
             if looks_like_casual_social_chat(msg_early):
-                _gund_early = maybe_gundelik_instant_reply(msg_early, "genel", {})
+                _gund_early = maybe_gundelik_instant_reply(
+                    msg_early,
+                    "genel",
+                    {},
+                    history=getattr(req, "history", None),
+                )
                 if _gund_early:
                     _orch_ge = dict(orch_early)
                     _orch_ge.setdefault("plan", {})["primary"] = "gundelik"
@@ -13193,7 +13202,12 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         try:
             from ilim_assistant.ana_motor_plan import maybe_gundelik_instant_reply
 
-            instant_hi = maybe_gundelik_instant_reply(req.message, mode_norm, {})
+            instant_hi = maybe_gundelik_instant_reply(
+                req.message,
+                mode_norm,
+                {},
+                history=getattr(req, "history", None),
+            )
             if instant_hi:
                 yield from _iter_instant_chat_events(
                     instant_hi,
@@ -13480,6 +13494,7 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
                         mode_norm,
                         motor_flags,
                         question_plan=turn_plan,
+                        history=getattr(req, "history", None),
                     )
                     if instant:
                         yield from _iter_instant_chat_events(
@@ -14205,7 +14220,11 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
 
             _instant_g = bool(
                 maybe_gundelik_instant_reply(
-                    msg, mode_norm, motor_flags, question_plan=turn_plan
+                    msg,
+                    mode_norm,
+                    motor_flags,
+                    question_plan=turn_plan,
+                    history=getattr(req, "history", None),
                 )
             )
         except Exception:

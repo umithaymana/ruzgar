@@ -90,3 +90,44 @@ def test_turn_memory_pack_skips_greeting():
     from ilim_assistant.ruzgar_session_context import build_turn_memory_pack
 
     assert build_turn_memory_pack("selam", mode_norm="genel") == ""
+
+
+def test_fast_lane_selam_respects_history():
+    from ilim_assistant.chat_fast_lane import try_instant_reply
+    from ilim_assistant.ruzgar_umed_kurallari import SELAM_STANDART, SELAM_WITH_RESUME
+
+    assert try_instant_reply("selam", "genel", history=None) == SELAM_STANDART
+    hist = [
+        {"role": "user", "content": "merhaba"},
+        {"role": "assistant", "content": "selam"},
+    ]
+    assert try_instant_reply("selam", "genel", history=hist) == SELAM_WITH_RESUME
+    assert "dün konuştuk" not in SELAM_WITH_RESUME.lower()
+
+
+def test_sohbet_once_still_allows_selam_resume(monkeypatch):
+    from ilim_assistant.ana_motor_plan import maybe_gundelik_instant_reply
+    from ilim_assistant.ruzgar_umed_kurallari import SELAM_STANDART, SELAM_WITH_RESUME
+
+    monkeypatch.setenv("RUZGAR_SOHBET_ONCE", "1")
+    empty = maybe_gundelik_instant_reply("selam", "genel", {}, history=None)
+    assert empty == SELAM_STANDART
+    assert "dün konuştuk" not in (empty or "").lower()
+
+    hist = [
+        {"role": "user", "content": "merhaba"},
+        {"role": "assistant", "content": "selam"},
+    ]
+    resumed = maybe_gundelik_instant_reply("selam", "genel", {}, history=hist)
+    assert resumed == SELAM_WITH_RESUME
+
+    # Sohbet-once: nasılsın şablonu değil → None (LLM)
+    assert maybe_gundelik_instant_reply("nasılsın", "genel", {}) is None
+
+
+def test_allow_selam_resume_instant_helper():
+    from ilim_assistant.ruzgar_sohbet_once import allow_selam_resume_instant
+
+    assert allow_selam_resume_instant("selam") is True
+    assert allow_selam_resume_instant("merhaba rüzgar") is True
+    assert allow_selam_resume_instant("niyet hadisi nedir") is False

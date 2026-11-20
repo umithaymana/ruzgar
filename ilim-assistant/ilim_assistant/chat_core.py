@@ -1287,7 +1287,7 @@ def prepare_turn(
         from ilim_assistant.ana_motor_plan import maybe_gundelik_instant_reply
 
         gundelik_direct = maybe_gundelik_instant_reply(
-            msg, m, motor_flags, question_plan=turn_plan
+            msg, m, motor_flags, question_plan=turn_plan, history=history
         )
         if gundelik_direct:
             return msg, [], "", "", "", gundelik_direct
