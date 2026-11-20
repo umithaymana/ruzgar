@@ -56,6 +56,15 @@ def should_synthesize_pro_turn(
     # 1.C — Şamile / yerel uzun-form: web yokken ≥3 yerel parça yeter
     if n_local >= 3 and mode_norm in ("genel", "okuma", "uretim"):
         return True
+    try:
+        from ilim_assistant.ruzgar_cok_kaynak_sentez import should_force_library_synthesis
+
+        if should_force_library_synthesis(
+            hits=hits, mode_norm=mode_norm, message=""
+        ):
+            return True
+    except Exception:
+        pass
     return False
 
 

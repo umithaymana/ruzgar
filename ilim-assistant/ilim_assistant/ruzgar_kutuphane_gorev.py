@@ -438,9 +438,17 @@ def format_kutuphane_extractive_reply(
     *,
     want_source: bool = False,
 ) -> str:
-    """LLM yok — indeksteki pasajı oku, anlat. Uydurma kapalı; yarınki eserler aynı yol."""
+    """LLM yok — 3–5 eserden pasaj oku, sentezle. Tek alana/tek karta sıkışma yok."""
+    hit_list = list(hits or [])
+    try:
+        from ilim_assistant.ruzgar_cok_kaynak_sentez import diversify_hits_by_book
+
+        if hit_list:
+            hit_list = diversify_hits_by_book(hit_list, max_books=5, max_total=8)
+    except Exception:
+        pass
     pieces: list[tuple[str, str]] = []
-    for text, src, _sc in list(hits or [])[:8]:
+    for text, src, _sc in hit_list[:8]:
         t = " ".join((text or "").split())
         if len(t) >= 40 and not _looks_like_question_only_blob(t):
             pieces.append((t[:1100], str(src or "").strip()))
@@ -454,23 +462,41 @@ def format_kutuphane_extractive_reply(
             "Ümit abi, bu sorunun cevabını bulamadım. Bana öğretir misin?"
         )
     toks = _query_tokens(query)
-    # En örtüşen pasajı öne al
+    # Örtüşmeye göre sırala; tek pasajla yetinme — çok kaynaklı özet
     def _ov(p: tuple[str, str]) -> int:
         blob = _fold(p[0] + "\n" + p[1])
         return sum(1 for t in toks if t in blob)
 
     pieces.sort(key=_ov, reverse=True)
-    body = pieces[0][0]
+    take = pieces[:5] if len(pieces) >= 2 else pieces[:1]
     lines = [
-        "Ümit abi — kütüphaneden okuduğum pasaj şöyle:",
+        "Ümit abi — kütüphaneden okuduğum ilgili pasajların özeti:",
         "",
-        body,
     ]
+    for i, (body, src) in enumerate(take, 1):
+        label = src.split("/")[-1] if src else f"kaynak-{i}"
+        lines.append(f"**[{i}]** ({label})")
+        lines.append(body)
+        lines.append("")
+    if len(take) >= 2:
+        lines.append(
+            "Bu parçaları birlikte okuyunca tutarlı bir resim çıkıyor; "
+            "tek bir tarih veya akrabalık alanına indirgemiyorum."
+        )
+        lines.append("")
+    try:
+        from ilim_assistant.ruzgar_cok_kaynak_sentez import comparison_offer_line
+
+        offer = comparison_offer_line(query, hit_list)
+        if offer:
+            lines.append(offer)
+    except Exception:
+        pass
     if want_source:
         lines.append("")
         lines.append("**Kaynak izi:**")
         seen: set[str] = set()
-        for i, (_t, src) in enumerate(pieces[:4], 1):
+        for i, (_t, src) in enumerate(take, 1):
             if not src or src in seen:
                 continue
             seen.add(src)
@@ -478,25 +504,37 @@ def format_kutuphane_extractive_reply(
     return "\n".join(lines).strip()
 
 
-def grounding_directive(*, want_source: bool, source_count: int) -> str:
+def grounding_directive(
+    *,
+    want_source: bool,
+    source_count: int,
+    message: str = "",
+    distinct_books: int = 0,
+) -> str:
     """Tüm katmanlar — soft sohbet uydurmayı ezer. Eser listesine bağlı değil."""
     if source_count <= 0:
         return (
             "\n\n[TALİMAT — KÜTÜPHANE GÖREV — İNDEKS İSABETİ YOK]\n"
             "Bu tur **kütüphane bilgi sorusu**. Yerel indekste (tüm raflar/Şamile/ayıklama) "
             "kullanılabilir parça yok. Metin, sayı, alıntı, sayfa, eser künyesi **UYDURMA**. "
+            "Önceki turlardaki kalıp cevapları tekrarlama. "
             "Tek cümle: «Ümit abi, bu sorunun cevabını bulamadım. Bana öğretir misin?»\n"
         )
     lines = [
         "\n\n[TALİMAT — KÜTÜPHANE GÖREV — TÜM KATMANLAR — ZORUNLU]\n",
         f"Bağlamda **{source_count}** yerel kütüphane parçası var ([K1]…). "
-        "Bunlar Rüzgar indeksindeki eserlerden gelir (ilim, bilgisayar, fen, ayıklama — "
-        "hangi raf doluysa). Cevabını **yalnızca bunlara** dayandır.\n",
+        "Bunlar Rüzgar indeksindeki eserlerden gelir (ilim, bilgisayar, fen, ayıklama, "
+        "Şamile — hangi raf doluysa). Cevabını **yalnızca bunlara** dayandır.\n",
         "- Üslup: Ümit abi ile **sohbet eder gibi** anlat. Ders kitabı, kart okuma, "
         "«kütüphaneden okuduğum pasaj şöyle» şablonu yok; doğrudan konuya gir.\n",
+        "- **Dar alan kilidi yok:** yalnız doğum/vefat tarihi, anne/baba adı veya tek bir "
+        "alan kartına sıkışma. Sorunun istediği derinlikte oku, özetle, sentezle.\n",
+        "- Mümkünse **3–5 farklı eser/kitaptan** bilgiyi birleştir; hangi bilginin hangi "
+        "kaynaktan geldiğini doğal cümleyle söyle.\n",
         "- Bağlamda olmayan alıntı, sayı, sayfa, cilt, yazar, hadis/ayet, boy/özel isim **uydurma**.\n",
         "- Özel isimleri bağlamdaki harf harf yaz (örn. Kınık ≠ Sınık); yanlış okuma yasak.\n",
         "- Bağlam soruyu karşılamıyorsa öğret cümlesini kullan; genel model bilginle doldurma.\n",
+        "- Önceki sohbet kalıplarını / alakasız bağlamı bu cevaba sızdırma.\n",
         "- Yarın eklenecek eserler de aynı kurala tabidir: yalnızca bağlamdaki pasaj.\n",
         "- Derin çekirdek eserlerde sayfa/satır atlama yok: oku → analiz et → sohbet dilinde anlat.\n",
     ]
@@ -510,4 +548,17 @@ def grounding_directive(*, want_source: bool, source_count: int) -> str:
             "- Kullanıcı kaynak istemedi: müteber pasajdan **doğal sohbet dilinde anlat**; "
             "zorunlu [K1] listesi / «Güven:» satırı yazma. Uydurma yine yasak.\n"
         )
+    try:
+        from ilim_assistant.ruzgar_cok_kaynak_sentez import multi_source_grounding_addon
+
+        lines.append(
+            multi_source_grounding_addon(
+                source_count=source_count,
+                distinct_books=distinct_books,
+                want_source=want_source,
+                message=message,
+            )
+        )
+    except Exception:
+        pass
     return "".join(lines)

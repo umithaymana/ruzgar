@@ -9,8 +9,11 @@ from typing import Any
 
 _SENTEZ_SYSTEM = (
     "Sen Rüzgar asistanının araştırma özetleyicisisin (Ümit & Gökçenur). "
-    "Verilen yerel parçalar ve web metninden **tek Türkçe özet** üret. "
-    "Çelişkileri açıkça belirt; uydurma ekleme. En fazla 6 madde veya 2 kısa paragraf."
+    "Verilen yerel parçalar ve (varsa) web metninden **tek Türkçe sentez** üret. "
+    "Mümkünse 3–5 farklı eser/kitaptan bilgiyi birleştir; hangi bilginin hangi "
+    "kaynaktan geldiğini belirt. Cevabı yalnız doğum/vefat/anne-baba gibi dar "
+    "alanlara sıkıştırma. Çelişkileri açıkça belirt; uydurma ekleme. "
+    "En fazla 8 madde veya 3 kısa paragraf."
 )
 
 
@@ -55,20 +58,33 @@ def should_synthesize_turn(
     hits: list[tuple[str, str, float]] | None,
     web_extra: str,
     mode_norm: str,
+    user_message: str = "",
 ) -> bool:
-    """Yerel + web birlikteyken tek özet turu."""
+    """Yerel + web birlikteyken tek özet turu; yerel çok kaynakta web şart değil."""
     if not sentez_enabled():
         return False
     if mode_norm not in ("genel", "uretim", "gelisim", "okuma", "hafiza"):
         return False
     primary = _plan_primary(question_plan)
-    if primary not in ("bilgi", "bilim"):
-        return False
+    # Kütüphane çok kaynak: plan primary boş/gundelik olsa bile sentez açılabilir
     n_local = len(hits or [])
     has_web = bool((web_extra or "").strip())
+    kinds = _distinct_source_kinds(hits or [])
+    try:
+        from ilim_assistant.ruzgar_cok_kaynak_sentez import should_force_library_synthesis
+
+        if should_force_library_synthesis(
+            hits=hits, mode_norm=mode_norm, message=user_message
+        ):
+            return True
+    except Exception:
+        pass
+    if primary not in ("bilgi", "bilim"):
+        return False
+    if n_local >= 3 and len(kinds) >= 2:
+        return True
     if n_local < 1 or not has_web:
         return False
-    kinds = _distinct_source_kinds(hits or [])
     # En az iki kaynak türü veya yerel+web
     if len(kinds) >= 2:
         return True
@@ -150,13 +166,22 @@ def build_research_summary(
         hits=hits,
         web_extra=web_extra,
         mode_norm=mode_norm,
+        user_message=user_message,
     ):
         return ""
     try:
         cap = max(2000, int(os.environ.get("RUZGAR_SENTEZ_SOURCE_MAX", "6000")))
     except ValueError:
         cap = 6000
-    packed = _pack_sources(hits or [], web_extra, max_chars=cap)
+    # Önce eser çeşitliliği
+    use_hits = list(hits or [])
+    try:
+        from ilim_assistant.ruzgar_cok_kaynak_sentez import diversify_hits_by_book
+
+        use_hits = diversify_hits_by_book(use_hits, max_books=5, max_total=10)
+    except Exception:
+        pass
+    packed = _pack_sources(use_hits, web_extra, max_chars=cap)
     if not packed:
         return ""
     q = (user_message or "").strip()[:400]

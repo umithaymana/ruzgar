@@ -91,6 +91,17 @@ def looks_like_bilgi_isolation_turn(
         return True
     if _KIM_SORUSU.search(raw):
         return True
+    # Kütüphane bilgi sorusu — önceki tur kalıplarının sızmasını kes
+    try:
+        from ilim_assistant.ruzgar_kutuphane_gorev import (
+            is_kutuphane_bilgi_soru,
+            kutuphane_enabled_hard,
+        )
+
+        if kutuphane_enabled_hard() and is_kutuphane_bilgi_soru(raw):
+            return True
+    except Exception:
+        pass
     try:
         from ilim_assistant.ana_motor_plan import looks_like_encyclopedic_fact_question
 
@@ -203,7 +214,10 @@ def bilgi_isolation_user_addon(message: str) -> str:
     return (
         "\n\n[TALİMAT — BİLGİ TURU İZOLASYONU]\n"
         f"Yanıt yalnızca şu soruya: «{q[:240]}».\n"
-        "Önceki sohbet konularını bu cevaba karıştırma; farklı kişi/konu uydurma.\n"
+        "Önceki sohbet konularını, istek kuyruğundaki eski kalıpları ve alakasız "
+        "bağlamı bu cevaba karıştırma; farklı kişi/konu uydurma.\n"
+        "Cevabı yalnız doğum/vefat/anne-baba gibi dar alanlara sıkıştırma; "
+        "sorunun istediği kapsamda kütüphane pasajlarından oku ve özetle.\n"
         "[/TALİMAT]\n"
     )
 

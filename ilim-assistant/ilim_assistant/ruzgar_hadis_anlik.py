@@ -37,14 +37,45 @@ def _looks_niyet_hadis(msg: str) -> bool:
 
 
 def try_hadis_instant_reply(message: str) -> str | None:
-    """Eşleşirse sabit doğru metin; yoksa None (normal zincire bırak)."""
+    """Eşleşirse sabit doğru metin + karşılaştırma teklifi; yoksa None."""
     if not _looks_niyet_hadis(message):
         return None
+    # Kullanıcı açıkça karşılaştırma/çok kaynak istiyorsa anlık kartı atla → RAG sentez
+    low = _fold(message)
+    if any(
+        k in low
+        for k in (
+            "karsilastir",
+            "karşılaştır",
+            "diger kaynak",
+            "diğer kaynak",
+            "tirmizi",
+            "tirmizî",
+            "muslim",
+            "müslim",
+            "nesai",
+            "nesâî",
+            "serh",
+            "şerh",
+            "rivayetler",
+        )
+    ):
+        return None
+    offer = (
+        "İstersen diğer kaynaklardaki rivayet ve şerhlerle de karşılaştırabilirim."
+    )
+    try:
+        from ilim_assistant.ruzgar_cok_kaynak_sentez import comparison_offer_line
+
+        offer = comparison_offer_line(message, None) or offer
+    except Exception:
+        pass
     return (
         "Ümit abi — Sahîh-i Buhârî’deki meşhur **niyet hadisi** şöyledir:\n\n"
         "Arapça: «إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى»\n\n"
         "Türkçe meal: «Ameller niyetlere göredir; herkese niyet ettiği vardır.»\n\n"
         "Kaynak: Sahîh-i Buhârî, Kitâbü’l-Îmân (Îman kitabı), hadis no. 1 "
         "(Buhârî’nin ilk hadisi). "
-        "Uydurma cilt/kitap numarası veya başka metin söylemem."
+        "Uydurma cilt/kitap numarası veya başka metin söylemem.\n\n"
+        f"{offer}"
     )

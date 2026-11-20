@@ -2018,6 +2018,13 @@ def rag_top_k_for_turn(
         base = apply_bilim_derin_rag_top_k(base, plan, message, mode_norm)
     except Exception:
         pass
+    # Kütüphane bilgi sorusu → 3–5+ eser için top_k yükselt (dar tek-hit sıkışmasını kır)
+    try:
+        from ilim_assistant.ruzgar_cok_kaynak_sentez import library_rag_top_k_boost
+
+        base = library_rag_top_k_boost(base, message or "")
+    except Exception:
+        pass
     return max(1, min(base, 12))
 
 

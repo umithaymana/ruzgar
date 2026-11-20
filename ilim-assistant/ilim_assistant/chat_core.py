@@ -1571,6 +1571,18 @@ def prepare_turn(
                     good_hits = filtered
         except Exception:
             pass
+        # Çok kaynak: farklı eserlerden dengeli seç (tek raf / tek alan sıkışmasını kır)
+        try:
+            from ilim_assistant.ruzgar_cok_kaynak_sentez import diversify_hits_by_book
+
+            if good_hits:
+                good_hits = diversify_hits_by_book(
+                    good_hits,
+                    max_books=5,
+                    max_total=max(rag_k_clamped, 8),
+                )
+        except Exception:
+            pass
         hits = good_hits[:rag_k_clamped]
         ar_hits = [
             h
@@ -1592,10 +1604,20 @@ def prepare_turn(
         from ilim_assistant.ruzgar_kutuphane import build_kutuphane_context, kutuphane_enabled
 
         if kutuphane_enabled() and m in ("genel", "uretim", "gelisim", "okuma"):
-            _kx = build_kutuphane_context(msg, max_eser=3, max_chars=3200)
+            _kx = build_kutuphane_context(msg, max_eser=5, max_chars=4500)
             if _kx:
                 blocks = list(blocks or [])
                 blocks.insert(0, (_kx, "knowledge/kutuphane"))
+    except Exception:
+        pass
+    # Çok kaynaklı pasaj paketi — dar alan (doğum/vefat/anne-baba) sıkışmasını kır
+    try:
+        from ilim_assistant.ruzgar_cok_kaynak_sentez import pack_multi_source_context
+
+        _pack = pack_multi_source_context(hits, max_books=5, max_chars=7000)
+        if _pack and m in ("genel", "uretim", "gelisim", "okuma", "ilim"):
+            blocks = list(blocks or [])
+            blocks.insert(0, (_pack, "cok_kaynak_sentez"))
     except Exception:
         pass
 
@@ -2414,9 +2436,20 @@ def prepare_turn(
             if kutuphane_enabled_hard() and is_kutuphane_bilgi_soru(msg):
                 _kutup_hard = True
                 _src_n = max(len(hits or []), len(blocks or []))
+                _books_n = 0
+                try:
+                    from ilim_assistant.ruzgar_cok_kaynak_sentez import (
+                        count_distinct_books,
+                    )
+
+                    _books_n = count_distinct_books(hits)
+                except Exception:
+                    _books_n = 0
                 user_payload += grounding_directive(
                     want_source=user_wants_kaynak(msg),
                     source_count=_src_n,
+                    message=msg,
+                    distinct_books=_books_n,
                 )
         except Exception:
             _kutup_hard = False
