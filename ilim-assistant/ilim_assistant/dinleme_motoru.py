@@ -2,6 +2,9 @@
 """
 Rüzgar dinleme (STT) — SpeechRecognition + isteğe bağlı PyAudio canlı mikrofon.
 
+DURUM (Faz 6 — P2 temizlik): **yan / boot dışı.** Üretim STT yolu `stt_whisper`
+(desktop_server `/api/stt` ve ses pipeline). Bu modül eski yardımcı; yeni STT burada değil.
+
 - HTTP: tarayıcı ses dosyası (`/api/stt`) — arka planda thread pool (FastAPI threadpool).
 - Yerel: `record_and_transcribe_pyaudio` — bloklayan dinleme ayrı iş parçacığında.
 

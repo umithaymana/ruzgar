@@ -16052,7 +16052,7 @@ async function streamChat(userText, streamOpts = {}) {
       };
     });
 
-  // Ham JSON anında cevap kapatıldı — sunucu hafızayı Ollama ile doğal sentezler (hafiza_dogal_sentez).
+  // Faz 6: /api/hafiza/genel-bak bakıma alındı (ölü vaat yok). Hafıza → doğal sentez sohbet yolu.
   const skipGenelBak = true;
   const nebulaKitapCmd =
     /\.(?:json|txt|md)\b/i.test(String(userText || "")) &&

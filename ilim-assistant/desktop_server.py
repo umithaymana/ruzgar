@@ -1079,22 +1079,18 @@ def _resolve_workspace_run_dir(workspace_root: str, cwd_rel: str | None) -> str 
 
 @app.post("/api/hafiza/genel-bak")
 def api_genel_hafiza_bak(body: GenelHafizaBakBody):
-    """Ana sohbet ön kontrol: ham JSON cevabı (dogal sentez açıkken devre dışı)."""
-    m = (body.message or "").strip()
-    if not m:
-        return {"ok": True, "hit": False, "answer": None}
-    try:
-        from ilim_assistant.hafiza_dogal_sentez import dogal_konus_enabled
+    """BAKIMDA (Faz 6) — UI `skipGenelBak=true`; ham JSON ön-cevap kapalı.
 
-        if dogal_konus_enabled():
-            return {"ok": True, "hit": False, "answer": None, "dogal_sentez": True}
-    except Exception:
-        pass
-    ans = genel_hafiza_lookup(m)
-    if ans is None:
-        return {"ok": True, "hit": False, "answer": None}
-    out = finalize_assistant_reply(ans)
-    return {"ok": True, "hit": True, "answer": out}
+    Doğal sentez (`hafiza_dogal_sentez`) sohbet yolunda kullanılır.
+    Bu uç bilerek hit döndürmez — ölü vaat kalmasın.
+    """
+    return {
+        "ok": True,
+        "hit": False,
+        "answer": None,
+        "bakim": True,
+        "note": "genel-bak bakıma alındı; UI skipGenelBak — doğal sentez sohbet yolunda",
+    }
 
 
 @app.post("/api/idrak/pretreat")

@@ -17,6 +17,7 @@ Protokol: [CIRAK_HAFIZA_OKU.md](CIRAK_HAFIZA_OKU.md) · Şablon: [SABLON.md](SAB
 | RAG, diversify, lexical, MISS, pack_k, faz3, onarim | [2026-11-20_onarim-faz3-rag-cesitlilik.md](kayitlar/2026-11-20_onarim-faz3-rag-cesitlilik.md) | pack_k 3–5 eser; lexical/usable ölçülü gevşetme |
 | umed, local-first, prefetch, timeout, faz4, onarim | [2026-11-20_onarim-faz4-beyin-sure.md](kayitlar/2026-11-20_onarim-faz4-beyin-sure.md) | İlim cloud-first varsayılan kapalı; prefetch bütçede; UI dili güncel |
 | motor, okuma, mimar, hafiza, alias, faz5, onarim | [2026-11-20_onarim-faz5-motor-routing.md](kayitlar/2026-11-20_onarim-faz5-motor-routing.md) | okuma≠mimar; hafıza bağlamı; boot↔çekirdek doküman; shared bridge |
+| temizlik, genel-bak, 8779, cirak, faz6, onarim | [2026-11-20_onarim-faz6-temizlik.md](kayitlar/2026-11-20_onarim-faz6-temizlik.md) | Ölü modül etiket; 7-motor docstring; genel-bak bakım; çırak isim ayrımı |
 
 **Kullanım:** Bundan sonra her çırak / ajan Rüzgar işinde bu deftere **sürekli** bakar ve yazar (`.cursor/rules/cirak-hafiza-FROZEN.mdc`).  
 **Not:** Uygulama «çırak günlüğü» (tercüme paneli) ≠ bu hafıza.

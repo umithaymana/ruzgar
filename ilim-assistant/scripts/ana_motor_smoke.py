@@ -5,7 +5,7 @@
   python scripts/ana_motor_smoke.py
 
 İsteğe bağlı canlı API:
-  python scripts/ana_motor_smoke.py --live http://127.0.0.1:8777
+  python scripts/ana_motor_smoke.py --live http://127.0.0.1:8779
 """
 
 from __future__ import annotations
@@ -4832,7 +4832,7 @@ def main() -> int:
     ap.add_argument(
         "--live",
         metavar="URL",
-        help="Canlı health kontrolü (ör. http://127.0.0.1:8777)",
+        help="Canlı health kontrolü (ör. http://127.0.0.1:8779)",
     )
     ap.add_argument(
         "--slo-pack",
