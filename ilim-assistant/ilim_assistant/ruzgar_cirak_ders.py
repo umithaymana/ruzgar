@@ -842,7 +842,7 @@ def try_cirak_dilim_f_muhur(
         "C": (atolye / "cok_satir_modul.py").is_file(),
         "D": (atolye / "dar_patch_d1.py").is_file()
         and (atolye / "smoke_dar_patch_d3.py").is_file(),
-        "E": True,  # red damarı kodda; yazım yok = başarı
+        "E": (atolye / "DERS_E_KIRILGAN.md").is_file(),
     }
     yesil = [k for k, v in checks.items() if v]
     kirmizi = [k for k, v in checks.items() if not v]
