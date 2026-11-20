@@ -45,7 +45,7 @@ Mimar «SEN YAP» deyince maddeleri protokole ve şablona işledik; cursor kural
 `cirak-hafiza`, `sablon`, `zorunlu-alanlar`, `el-rahatlatma`
 
 ## 11) Durum
-`mimar-onay-bekliyor` (ana koda almak için «al» lazım)
+`ana-koda-alindi` (Ümit «ANA KODA AL» — `origin/main` @ `2d00ce120`)
 
 ---
 

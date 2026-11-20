@@ -1,9 +1,9 @@
 # 2026-11-20 — Çırak hafıza deposu kurulumu
 
 - **tarih:** 2026-11-20 (Europe/Istanbul)
-- **branch:** `cursor/cirak-hafiza-9eeb`
-- **commit:** `8b13d9024` (+ bu güncelleme)
-- **durum:** hazir (bu kayıtla birlikte)
+- **branch:** `main` (landed via `cursor/cirak-hafiza-main-al-9eeb`)
+- **commit:** `2d00ce120` (kurulum kökü `8b13d9024`)
+- **durum:** ana-koda-alindi
 - **benzer_anahtarlar:** cirak-hafiza, protokol, apprentice-memory, playbook, lessons-learned
 
 ## is_ozeti
