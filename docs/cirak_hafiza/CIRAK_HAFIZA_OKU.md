@@ -1,7 +1,7 @@
 # Çırak Hafıza — Defter (bağlayıcı)
 
 **Amaç (Mimar Ümit):** Çırak yaptığı işi unutmasın. Doğru/yanlış, nerede uygulandı, sonraki işte örnek alınacak ince detay burada dursun.  
-**Yer:** `docs/cirak_hafiza/`  
+**Yer:** `docs/cirak_hafiza/` — **ana kodda (main); bundan sonra her çırak sürekli kullanır.**  
 **Bu defter ≠** uygulama sohbet hafızası, ≠ UI «Çırak günlüğü» (tercüme paneli).
 
 ---
