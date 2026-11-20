@@ -188,6 +188,6 @@ Onarım başlayınca çırak önce `docs/cirak_hafiza/CIRAK_HAFIZA_OKU.md` + `IN
 | 4 Beyin+süre | **yeşil** | `05d0b3081` | cloud-first default off; prefetch bütçe |
 | 5 Motor routing | **yeşil** | `f08c1c675` | okuma≠mimar; hafıza bağlamı |
 | 6 Temizlik P2 | **yeşil** | `ae54db39f` | genel-bak bakım; 7-motor docstring |
-| 7 Doğrulama | **yeşil** | 3fdef95a6 | 37 pytest + 9 smoke senaryo |
+| 7 Doğrulama | **yeşil** | 6360de98e | 37 pytest + 9 smoke senaryo |
 
 PR açılmadı.
