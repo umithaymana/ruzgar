@@ -98,15 +98,16 @@ _NOWEB_MODES = frozenset(
     {"ses", "mimar", "okuma", "tercume", "uretim", "hizli", "hafiza", "programlama"}
 )
 
-# İstemciden Türkçe karakterli veya ASCII mod adı gelebilir
+# İstemciden Türkçe karakterli veya ASCII mod adı gelebilir.
+# Faz 5: okuma/bilim ≠ mimar (görsel atölye). bilim → okuma köprüsü (ilim arşivi).
 _MODE_ALIASES = {
     "üretim": "uretim",
     "gelişim": "gelisim",
     "düzen": "duzen",
     "hızlı": "hizli",
     "tercüme": "tercume",
-    "okuma": "mimar",
-    "bilim": "mimar",
+    "okuma": "okuma",
+    "bilim": "okuma",
 }
 
 
@@ -889,8 +890,17 @@ def _genel_no_context_directive() -> str:
 def _orkestra_context_for_turn(mode_norm: str, motor_flags: dict[str, bool]) -> bool:
     if os.environ.get("RUZGAR_ORKESTRA_CONTEXT", "1").strip().lower() in ("0", "false", "no"):
         return False
-    # Programlama atölyesi: yalnızca programlama motoru bağlamı (ağır çekirdek orkestra yok).
-    if mode_norm == "programlama":
+    # Atölye / özel modlar: kendi motor bağlamı; 5’li çekirdek (ses/video/…) zorlanmaz.
+    if mode_norm in (
+        "programlama",
+        "hafiza",
+        "mimar",
+        "okuma",
+        "ses",
+        "video",
+        "tercume",
+        "hizir",
+    ):
         return False
     if mode_norm != "genel":
         return True
@@ -2675,6 +2685,74 @@ def prepare_turn(
             _mc = mimar_ctx(msg).strip()
             if _mc:
                 user_payload = _mc.rstrip() + "\n\n---\n" + user_payload
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.motorlar.motor_shared_bridge import publish_motor_note
+
+            publish_motor_note("mimar", "last_turn", (msg or "")[:240])
+        except Exception:
+            pass
+    elif m == "okuma":
+        try:
+            from ilim_assistant.okuma_motoru import build_motor_context as okuma_ctx
+
+            _ocx = okuma_ctx(msg).strip()
+            if _ocx:
+                user_payload = _ocx.rstrip() + "\n\n---\n" + user_payload
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.motorlar.motor_shared_bridge import publish_motor_note
+
+            publish_motor_note("okuma", "last_turn", (msg or "")[:240])
+        except Exception:
+            pass
+    elif m == "hafiza":
+        try:
+            from ilim_assistant.motorlar.hafiza_motoru import (
+                build_motor_context as hafiza_ctx,
+            )
+
+            _hc = hafiza_ctx(msg).strip()
+            if _hc:
+                user_payload = _hc.rstrip() + "\n\n---\n" + user_payload
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.motorlar.motor_shared_bridge import publish_motor_note
+
+            publish_motor_note("hafiza", "last_turn", (msg or "")[:240])
+        except Exception:
+            pass
+    elif m == "ses":
+        try:
+            from ilim_assistant.ses_motoru import build_motor_context as ses_ctx
+
+            _sc = ses_ctx(msg).strip()
+            if _sc:
+                user_payload = _sc.rstrip() + "\n\n---\n" + user_payload
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.motorlar.motor_shared_bridge import publish_motor_note
+
+            publish_motor_note("ses", "last_turn", (msg or "")[:240])
+        except Exception:
+            pass
+    elif m == "tercume":
+        try:
+            from ilim_assistant.tercume_motoru import build_motor_context as terc_ctx
+
+            _tc = terc_ctx(msg).strip()
+            if _tc:
+                user_payload = _tc.rstrip() + "\n\n---\n" + user_payload
+        except Exception:
+            pass
+        try:
+            from ilim_assistant.motorlar.motor_shared_bridge import publish_motor_note
+
+            publish_motor_note("tercume", "last_turn", (msg or "")[:240])
         except Exception:
             pass
     elif _orkestra_context_for_turn(m, motor_flags) and not _hub_directive:

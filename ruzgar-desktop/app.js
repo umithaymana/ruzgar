@@ -2143,7 +2143,8 @@ function renderChatErrorHtml(errText) {
 
 function scrollFaz7HelpToMotor(mode) {
   const norm = String(mode || currentMode || "genel").trim().toLowerCase();
-  const map = { okuma: "mimar" };
+  // Faz 5: okuma ≠ mimar — yardım panelinde kendi motoruna kaydır
+  const map = { bilim: "okuma" };
   const target = map[norm] || norm;
   const node =
     document.getElementById(`faz7-help-motor-${target}`) ||
