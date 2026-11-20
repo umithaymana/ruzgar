@@ -2,6 +2,7 @@
 
 - **tarih:** 2026-11-20 (Europe/Istanbul)
 - **branch:** `cursor/cirak-hafiza-9eeb`
+- **commit:** `8b13d9024` (+ bu güncelleme)
 - **durum:** hazir (bu kayıtla birlikte)
 - **benzer_anahtarlar:** cirak-hafiza, protokol, apprentice-memory, playbook, lessons-learned
 
