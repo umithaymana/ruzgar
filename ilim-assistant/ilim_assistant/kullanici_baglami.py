@@ -44,9 +44,108 @@ def _save(data: dict[str, Any]) -> None:
     p.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+_OWNER_DISPLAY = "Ümit abi"
+_OWNER_SLUGS = frozenset({"umit_abi", "umit", "gokcenur", "gokcenur_abi"})
+
+# Cümle kırıntısı / selam — kişi adı değil
+_NAME_BLOCK_TOKENS = frozenset(
+    {
+        "var",
+        "yok",
+        "burada",
+        "geldim",
+        "hazirim",
+        "hazırım",
+        "nasilsin",
+        "nasılsın",
+        "iyi",
+        "gunaydin",
+        "günaydın",
+        "merhaba",
+        "selam",
+        "tesekkur",
+        "teşekkür",
+        "soracagim",
+        "soracağım",
+        "soyleyeyim",
+        "söyleyeyim",
+        "diyeyim",
+        "yasindayim",
+        "yaşındayım",
+        "kac",
+        "kaç",
+        "diyorum",
+        "usudum",
+        "üşüdüm",
+        "kactim",
+        "kaçtım",
+        "uzuluyorum",
+        "üzülüyorum",
+        "seviyorum",
+        "kullaniyorum",
+        "kullanıyorum",
+        "kesfettim",
+        "keşfettim",
+        "iyiyim",
+        "degilim",
+        "değilim",
+        "miyim",
+        "misin",
+        "mısın",
+        "musun",
+        "müsün",
+        "hangi",
+        "ne",
+        "nedir",
+        "kim",
+        "kimim",
+        "benim",
+        "senin",
+        "sana",
+        "seni",
+        "bana",
+        "beni",
+        "cok",
+        "çok",
+        "daha",
+        "bir",
+        "sey",
+        "şey",
+        "de",
+        "da",
+        "ki",
+        "ve",
+        "ile",
+        "icin",
+        "için",
+        "ruzgar",
+        "rüzgar",
+        "bak",
+        "ama",
+        "yoksa",
+        "ol",
+        "olma",
+        "yolunda",
+        "ugrasan",
+        "uğraşan",
+    }
+)
+
+_VERB_TAIL = re.compile(
+    r"(?i)(?:"
+    r"yorum|iyorum|uyoruz|ece[gğ]im|aca[gğ]im|eceksin|acaksın|"
+    r"yeyim|yay[ıi]m|yayim|"
+    r"day[ıi]m|deyim|dayim|"
+    r"dim|d[ıi]m|duk|dük|dik|dık|di[gk]|dı[gk]|"
+    r"misin|m[ıi]s[ıi]n|musun|müsün|miyim|mıyım|"
+    r"sin|sın|sun|sün"
+    r")$"
+)
+
+
 def _norm_name(name: str) -> str:
     n = re.sub(r"\s+", " ", (name or "").strip())
-    n = n.strip(" \t\r\n.,:;!?")
+    n = n.strip(" \t\r\n.,:;!?\"'`")
     if not n:
         return ""
     bits = []
@@ -67,25 +166,105 @@ def _slug(name: str) -> str:
     return re.sub(r"\s+", "_", s).strip("_")[:80]
 
 
+def is_plausible_person_name(name: str) -> bool:
+    """Cümle kırıntısı ≠ kişi adı. Sahte profil kapısı."""
+    raw = (name or "").strip()
+    if not raw or "?" in raw or "!" in raw:
+        return False
+    n = _norm_name(raw)
+    if not n or len(n) < 2 or len(n) > 40:
+        return False
+    if _slug(n) in _OWNER_SLUGS:
+        return True
+    tokens = [t for t in n.split(" ") if t]
+    if not tokens or len(tokens) > 4:
+        return False
+    # En az bir «özad» benzeri parça (abi/abla tek başına yetmez)
+    core = [t for t in tokens if t.lower() not in ("abi", "abla", "bey", "hanim", "hanım")]
+    if not core:
+        return False
+    for t in tokens:
+        low = t.lower()
+        if low in _NAME_BLOCK_TOKENS:
+            return False
+        if _VERB_TAIL.search(low) and low not in ("abi", "abla"):
+            # Kısa özel adlar (Can, Ali) fiil eki gibi görünmesin diye len>=4
+            if len(low) >= 4:
+                return False
+    if not re.match(
+        r"^[A-Za-zÇĞİÖŞÜçğıöşü][A-Za-zÇĞİÖŞÜçğıöşü\-]*"
+        r"(?:\s+[A-Za-zÇĞİÖŞÜçğıöşü][A-Za-zÇĞİÖŞÜçğıöşü\-]*){0,3}$",
+        n,
+    ):
+        return False
+    # 3+ kelime ve unvan yoksa cümle şüphesi
+    if len(tokens) >= 3 and not any(
+        t.lower() in ("abi", "abla", "bey", "hanım", "hanim") for t in tokens
+    ):
+        return False
+    return True
+
+
 def _detect_user_intro(message: str) -> str:
+    """Yalnız açık ad tanıtımı. «Ben …» cümlesi kişi adı sayılmaz."""
     msg = (message or "").strip()
     patterns = (
-        r"(?i)\bbenim\s+ad[ıi]m\s+(?P<name>[a-zA-ZçğıöşüÇĞİÖŞÜ][\wçğıöşüÇĞİÖŞÜ\- ]{1,48})",
-        r"(?i)\bad[ıi]m\s+(?P<name>[a-zA-ZçğıöşüÇĞİÖŞÜ][\wçğıöşüÇĞİÖŞÜ\- ]{1,48})",
-        r"(?i)\bben\s+(?P<name>[a-zA-ZçğıöşüÇĞİÖŞÜ][\wçğıöşüÇĞİÖŞÜ\- ]{1,48})",
+        r"(?i)\bbenim\s+ad[ıi]m\s+(?P<name>[a-zA-ZçğıöşüÇĞİÖŞÜ][\wçğıöşüÇĞİÖŞÜ\- ]{1,40})",
+        r"(?i)\bad[ıi]m\s+(?P<name>[a-zA-ZçğıöşüÇĞİÖŞÜ][\wçğıöşüÇĞİÖŞÜ\- ]{1,40})",
+        r"(?i)\bbeni\s+(?P<name>[a-zA-ZçğıöşüÇĞİÖŞÜ][\wçğıöşüÇĞİÖŞÜ\- ]{1,32})\s+"
+        r"diye\s+(?:[cç]a[gğ][ıi]r|hitap|seslen)",
+        r"(?i)\bbana\s+(?P<name>[a-zA-ZçğıöşüÇĞİÖŞÜ][\wçğıöşüÇĞİÖŞÜ\- ]{1,32})\s+de\b",
     )
     for pat in patterns:
         m = re.search(pat, msg)
         if not m:
             continue
         raw = _norm_name(m.group("name"))
-        if not raw:
-            continue
-        low = raw.lower()
-        if low in ("var", "yok", "burada", "geldim", "hazirim"):
-            continue
-        return raw
+        # Trailing cümle artığını kes (ilk 1–3 token)
+        parts = raw.split()
+        if len(parts) > 3:
+            raw = _norm_name(" ".join(parts[:3]))
+        if is_plausible_person_name(raw):
+            return raw
     return ""
+
+
+def list_suspect_profiles(*, data: dict[str, Any] | None = None) -> list[dict[str, str]]:
+    """Silme yok — sahte kişi adayı listesi (Mimar onayı için)."""
+    blob = data if isinstance(data, dict) else _load()
+    out: list[dict[str, str]] = []
+    for uid, prof in (blob.get("profiles") or {}).items():
+        if not isinstance(prof, dict):
+            continue
+        dn = str(prof.get("display_name") or "")
+        if uid in _OWNER_SLUGS or is_plausible_person_name(dn):
+            continue
+        out.append(
+            {
+                "slug": str(uid),
+                "display_name": dn,
+                "reason": "cumle_kirintisi_veya_sahte_kisi",
+            }
+        )
+    out.sort(key=lambda x: x.get("slug") or "")
+    return out
+
+
+def heal_active_user_if_poisoned(data: dict[str, Any]) -> bool:
+    """Aktif kullanıcı sahteyse Ümit abi'ye çek — profil silmez."""
+    active = str(data.get("active_user") or "")
+    profiles = data.setdefault("profiles", {})
+    changed = False
+    if active and active in profiles:
+        dn = str(profiles[active].get("display_name") or "")
+        if active not in _OWNER_SLUGS and not is_plausible_person_name(dn):
+            changed = True
+            active = ""
+    if not active or active not in profiles:
+        _ensure_profile(data, _OWNER_DISPLAY)
+        data["active_user"] = _slug(_OWNER_DISPLAY)
+        return True
+    return changed
 
 
 def _ensure_profile(data: dict[str, Any], user_name: str) -> dict[str, Any]:
@@ -157,6 +336,8 @@ def _add_relation(profile: dict[str, Any], subject: str, predicate: str, obj: st
     o = _norm_name(obj)
     if not s or not o:
         return
+    if not is_plausible_person_name(s) or not is_plausible_person_name(o):
+        return
     rels = profile.setdefault("relations", [])
     key = (s.lower(), predicate.strip().lower(), o.lower())
     for r in rels:
@@ -225,6 +406,9 @@ def ingest_message(message: str) -> None:
         _save(data)
         return
 
+    # Sahte aktif kişi varsa önce iyileştir (silmeden).
+    heal_active_user_if_poisoned(data)
+
     intro_name = _detect_user_intro(raw)
     active = str(data.get("active_user") or "")
     if intro_name:
@@ -233,10 +417,13 @@ def ingest_message(message: str) -> None:
         profile = _ensure_profile(data, intro_name)
     elif active and active in data.get("profiles", {}):
         profile = data["profiles"][active]
+        dn = str(profile.get("display_name") or "")
+        if active not in _OWNER_SLUGS and not is_plausible_person_name(dn):
+            profile = _ensure_profile(data, _OWNER_DISPLAY)
+            data["active_user"] = _slug(_OWNER_DISPLAY)
     else:
-        # Varsayılanı bozmadan yeni anonim profil aç.
-        profile = _ensure_profile(data, "Ümit abi")
-        data["active_user"] = _slug(profile.get("display_name") or "umit abi")
+        profile = _ensure_profile(data, _OWNER_DISPLAY)
+        data["active_user"] = _slug(_OWNER_DISPLAY)
 
     _extract_relations(profile, raw)
     _add_topic_note(profile, raw)
@@ -246,10 +433,14 @@ def ingest_message(message: str) -> None:
 
 def active_user_display(default_name: str = "Ümit abi") -> str:
     data = _load()
+    if heal_active_user_if_poisoned(data):
+        _save(data)
     active = str(data.get("active_user") or "")
     prof = data.get("profiles", {}).get(active or "", {})
     name = _norm_name(str(prof.get("display_name") or ""))
-    return name or default_name
+    if name and (active in _OWNER_SLUGS or is_plausible_person_name(name)):
+        return name
+    return default_name
 
 
 def active_style_prefs(limit: int = 6) -> list[str]:
@@ -276,13 +467,25 @@ def build_programming_style_directive() -> str:
 
 def build_context_block() -> str:
     data = _load()
+    if heal_active_user_if_poisoned(data):
+        _save(data)
     active = str(data.get("active_user") or "")
     prof = data.get("profiles", {}).get(active or "", {})
     if not prof:
         return ""
-    name = _norm_name(str(prof.get("display_name") or "")) or "Ümit abi"
+    name = _norm_name(str(prof.get("display_name") or ""))
+    if not name or (
+        active not in _OWNER_SLUGS and not is_plausible_person_name(name)
+    ):
+        name = _OWNER_DISPLAY
     topics = list(prof.get("topic_notes") or [])[-4:]
-    rels = list(prof.get("relations") or [])[-8:]
+    rels = [
+        r
+        for r in list(prof.get("relations") or [])[-12:]
+        if isinstance(r, dict)
+        and is_plausible_person_name(str(r.get("subject") or ""))
+        and is_plausible_person_name(str(r.get("object") or ""))
+    ][-8:]
     prefs = list(prof.get("style_prefs") or [])[-4:]
 
     lines = [

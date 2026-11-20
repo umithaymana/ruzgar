@@ -85,8 +85,9 @@ def cekirdek_envanter() -> dict[str, Any]:
         "hub_disi_yardimcilar": dict(HUB_DISI_YARDIMCILAR),
         "notlar": {
             "okuma_bilim": "Sohbet/ilim sorusu → genel (Ana Motor); mimar = görsel atölye",
-            "hizir": "Boot listesinde yok; hub ROK hedefi (bilinçli yardımcı)",
-            "bilim_motoru": "Külliyat bağlamı — hub paneli değil, ilim sohbet beslemesi",
+            "hizir": "Boot listesinde yok; hub ROK + çekirdek tool_bridge bağlamı",
+            "bilim_motoru": "Külliyat bağlamı — hub paneli değil; okuma_motoru sarmalayıcı",
+            "okuma_dal": "Çekirdek pick bilim tercih eder; okuma dalı doğrudan da bağlanır",
             "dinleme": "STT alt katmanı (Ses); çift yüzey yok — /api/stt → ses_stt_pipeline",
         },
     }
@@ -164,11 +165,25 @@ def _motor_context(mid: str, prompt: str) -> str:
         elif mid == "hafiza":
             from ilim_assistant.motorlar.hafiza_motoru import build_motor_context as fn
         elif mid == "hizir":
+            # hizir_faz84'te build_motor_context yok — tool_bridge + sabit yüz
             try:
-                from ilim_assistant.motorlar.hizir_faz84 import build_motor_context as fn
+                from ilim_assistant.hizir.tool_bridge import (
+                    build_dynamic_operasyon_context,
+                )
+
+                dyn = (
+                    build_dynamic_operasyon_context(prompt, mode_norm="hizir") or ""
+                ).strip()
             except Exception:
-                return ""
+                dyn = ""
+            head = (
+                "[HIZIR MOTORU — Ümit & Gökçenur]\n"
+                "Ticaret / pazar / fırsat turu. Uydurma fiyat veya stok yazma; "
+                "yalnız araç/bellek çıktısına dayan."
+            )
+            return (head + ("\n\n" + dyn if dyn else "")).strip()
         elif mid == "okuma":
+            # Ölü dal değil: bilim yolu tercih; doğrudan okuma da bağlanır
             from ilim_assistant.okuma_motoru import build_motor_context as fn
         else:
             return ""

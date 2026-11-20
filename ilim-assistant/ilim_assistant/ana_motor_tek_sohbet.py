@@ -24,28 +24,34 @@ _MOTOR_MAP = {
     "videoya": "video",
     "hafizaya": "hafiza",
     "hafızaya": "hafiza",
-    "okumaya": "okuma",
+    # Arşiv atölyesi M3 mühürü: okuma yüzü → Mimar (ilim sohbeti ayrı, hub bilgi_stay)
+    "okumaya": "mimar",
     "mimara": "mimar",
+    "hizira": "hizir",
+    "hızıra": "hizir",
     "tercume": "tercume",
     "programlama": "programlama",
     "ses": "ses",
     "video": "video",
     "hafiza": "hafiza",
-    "okuma": "okuma",
+    "okuma": "mimar",
     "mimar": "mimar",
+    "hizir": "hizir",
+    "hızır": "hizir",
 }
 
 _SURFACE_SEND_RE = re.compile(
     r"^(?:bunu|belgeyi|kodu|notlari|notları|metni|yuzeyi|yüzeyi|tabloyu|sunumu|"
     r"okumayi|okumayı)\s+"
     r"(tercumeye|tercümeye|ceviriye|programlamaya|koda|sese|videoya|"
-    r"hafizaya|hafızaya|okumaya|mimara)\s+g[öo]nder[.!?]*$",
+    r"hafizaya|hafızaya|okumaya|mimara|hizira|hızıra)\s+g[öo]nder[.!?]*$",
     re.I,
 )
 
 _KOPRU_RE = re.compile(
     r"^(?:kopru|köprü)\s*[:\-]?\s*"
-    r"(tercume|tercüme|programlama|ses|video|hafiza|hafıza|okuma|mimar)[.!?]*$",
+    r"(tercume|tercüme|programlama|ses|video|hafiza|hafıza|okuma|mimar|"
+    r"hizir|hızır)[.!?]*$",
     re.I,
 )
 
@@ -86,8 +92,7 @@ def parse_surface_motor_send(message: str) -> dict[str, Any] | None:
     if m2:
         key = m2.group(1).lower().replace("ü", "u").replace("ı", "i")
         mid = _MOTOR_MAP.get(key) or _MOTOR_MAP.get(m2.group(1).lower())
-        if mid == "okuma":
-            mid = "mimar"
+        # okuma → mimar artık _MOTOR_MAP'te; ekstra remap yok
         if mid:
             return {
                 "motor": mid,

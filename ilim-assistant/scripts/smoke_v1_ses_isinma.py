@@ -41,9 +41,13 @@ def main() -> int:
     i_warm = ds.find("run_ses_v1_warmup")
     failed += _ok(i_boot > 0 and i_warm > i_boot, "kanca boot tanımından sonra")
 
-    # Manifest: ana motor hâlâ ilk import
+    # Manifest: kilitli boot tek kaynak (ana motor ilk)
+    boot = (ROOT / "ilim_assistant" / "ruzgar_boot_kilit.py").read_text(encoding="utf-8")
     failed += _ok(
-        'importlib.import_module("ilim_assistant.main_engine")' in ds, "ana motor ilk"
+        'ANA_MOTOR: Final = "ilim_assistant.main_engine"' in boot
+        and "ruzgar_boot_kilit" in ds
+        and "boot_motorlar_anaonce" in ds,
+        "ana motor ilk",
     )
 
     total = 9

@@ -295,7 +295,9 @@ $env:RUZGAR_API_MANAGED = "1"
 
 $env:RUZGAR_SKIP_RAG_WARMUP = "1"
 
-$env:RUZGAR_DEFER_MOTOR_BOOT = "1"
+# Motor boot kilidi atlanmaz (ruzgar_boot_kilit). Eski DEFER=1 kaldırıldı — 2026-11-20.
+# Yardımcı ısınma (RAG) SKIP_RAG_WARMUP ile ertelenir; sıra gevşetilmez.
+$env:RUZGAR_DEFER_MOTOR_BOOT = "0"
 
 $env:RUZGAR_CORS_PERMISSIVE = "1"
 

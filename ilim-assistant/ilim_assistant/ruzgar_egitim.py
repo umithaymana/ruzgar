@@ -1441,21 +1441,11 @@ def should_emit_miss_reply(
     if user_message and not is_real_user_question(user_message):
         return False
     t = (reply or "").strip()
-    if _MISS_PHRASE in t or t == _MISS_PHRASE:
-        return False
     try:
-        from ilim_assistant.ana_motor_plan import (
-            is_casual_conversation_turn,
-            looks_like_casual_social_chat,
-        )
-        from ilim_assistant.ruzgar_bilissel_analiz import is_anlama_empati_sorusu
+        from ilim_assistant.ruzgar_umed_kurallari import TIMEOUT_PHRASE as _TP
 
-        if looks_like_casual_social_chat(user_message) or is_anlama_empati_sorusu(
-            user_message
-        ):
-            return False
-        if is_casual_conversation_turn(user_message, "genel", None):
-            return False
+        if _TP and (_TP in t or t == _TP):
+            return False  # zaten süre mesajı
     except Exception:
         pass
     try:
@@ -1475,6 +1465,24 @@ def should_emit_miss_reply(
             limit = float(os.environ.get("RUZGAR_EGITIM_MISS_SEC", "15"))
         except ValueError:
             limit = 15.0
+    # MISS cümlesi gelmiş ama süre aşılmışsa wrap TIMEOUT'a çevirebilsin
+    if _MISS_PHRASE in t or t == _MISS_PHRASE:
+        return float(elapsed_sec or 0) >= float(limit) * 0.92
+    try:
+        from ilim_assistant.ana_motor_plan import (
+            is_casual_conversation_turn,
+            looks_like_casual_social_chat,
+        )
+        from ilim_assistant.ruzgar_bilissel_analiz import is_anlama_empati_sorusu
+
+        if looks_like_casual_social_chat(user_message) or is_anlama_empati_sorusu(
+            user_message
+        ):
+            return False
+        if is_casual_conversation_turn(user_message, "genel", None):
+            return False
+    except Exception:
+        pass
     t = (reply or "").strip()
     if len(t) >= 72:
         return False
@@ -1657,7 +1665,20 @@ def on_chat_turn_done(req: Any, done: dict[str, Any]) -> dict[str, Any]:
         if miss:
             done = dict(done)
             done["full_reply"] = reply2
-            done["egitim_miss"] = True
+            _is_timeout = False
+            try:
+                from ilim_assistant.ruzgar_umed_kurallari import TIMEOUT_PHRASE
+
+                _is_timeout = bool(
+                    TIMEOUT_PHRASE
+                    and (TIMEOUT_PHRASE in reply2 or reply2 == TIMEOUT_PHRASE)
+                )
+            except Exception:
+                _is_timeout = False
+            # Timeout ≠ öğret bekletme
+            done["egitim_miss"] = not _is_timeout
+            if _is_timeout:
+                done["timeout_miss"] = True
             try:
                 from ilim_assistant.ruzgar_tur_teshis_f0 import classify_miss
 
@@ -1666,7 +1687,7 @@ def on_chat_turn_done(req: Any, done: dict[str, Any]) -> dict[str, Any]:
                     reply=reply2,
                     orch=orch,
                     elapsed_sec=elapsed,
-                    egitim_miss=True,
+                    egitim_miss=bool(done.get("egitim_miss")),
                 )
                 if _mc:
                     done["miss_class"] = _mc

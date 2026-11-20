@@ -59,9 +59,11 @@ def stage_hub() -> dict[str, Any]:
     from ilim_assistant.motorlar.ana_motor_hub_faz76 import resolve_hub_target
     from ilim_assistant.motorlar.programlama_faz98 import wants_umit_gate
 
+    # F5.2+: okuma arşiv/kategori niyeti Ana Motor'da kalır (okuma_*_stay_genel).
+    # Atölye yüzü hâlâ Mimar; hub ROK hedefi ilim kaçmasın diye genel.
     cases = [
-        ("arsiv durum", "mimar"),
-        ("bu metin hadis mi: rivayet isnad buhari sahih kutub sitte", "mimar"),
+        ("arsiv durum", "genel"),
+        ("bu metin hadis mi: rivayet isnad buhari sahih kutub sitte", "genel"),
         ("fotosentez nedir", "genel"),
         ("nasilsin", "genel"),
     ]

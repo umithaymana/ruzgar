@@ -23,7 +23,7 @@ import re
 import time
 from typing import Any
 
-from ilim_assistant.ruzgar_umed_kurallari import MISS_PHRASE
+from ilim_assistant.ruzgar_umed_kurallari import MISS_PHRASE, TIMEOUT_PHRASE
 
 EMRI_VERSION = "umed-cevap-emri-v2.1-s4-2026-11-03"
 EMRI_FROZEN = True
@@ -191,7 +191,23 @@ def deadline_exceeded() -> bool:
 
 
 def umed_miss_reply() -> str:
+    """Gerçekten bulunamadı / zincir boş — öğret kapısı."""
     return MISS_PHRASE
+
+
+def umed_timeout_reply() -> str:
+    """Süre bitti — öğret kuyruğuna yazılmaz (≠ MISS)."""
+    return TIMEOUT_PHRASE
+
+
+def umed_empty_chain_reply() -> str:
+    """Boş zincir sonu: süre aşımıysa TIMEOUT, değilse MISS."""
+    try:
+        if deadline_exceeded() or remaining_sec() < 0.85:
+            return umed_timeout_reply()
+    except Exception:
+        pass
+    return umed_miss_reply()
 
 
 def brain_chain_ids_for_emri() -> list[str]:

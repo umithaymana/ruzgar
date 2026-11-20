@@ -6,7 +6,7 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 
-from ilim_assistant.rag_store import _KNOWLEDGE_ROOT, build_index
+from ilim_assistant.rag_store import _KNOWLEDGE_ROOT
 
 
 def _slug(text: str, max_len: int = 60) -> str:
@@ -47,6 +47,8 @@ def save_exchange(
 
     msg = f"Kaydedildi: {path}"
     if rebuild_index:
-        info = build_index(force=False, incremental=True)
+        from ilim_assistant.rag_store import upsert_learned_into_main_index
+
+        info = upsert_learned_into_main_index()
         msg += f" | İndeks: {info.get('status')} ({info.get('chunks', '?')} parça)"
     return path, msg

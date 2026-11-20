@@ -155,7 +155,12 @@ def skip_rag_warmup() -> bool:
 
 
 def defer_motor_boot() -> bool:
-    """Açılışta tüm motorları import etme — ilk istekte yüklenir (hızlı UI)."""
+    """Eski bayrak — motor 1–3 kilidini ATLAMAZ.
+
+    2026-11-20: `run_desktop_api` / `_boot_motorlar_anaonce` her zaman kilitli sırayı
+    yükler. Bu bayrak yalnız yardımcı ısınma / light-chat yollarında anlam taşır;
+    ana motor → çekirdek → 7 ara motor sırasını gevşetmez (.cursorrules).
+    """
     if light_chat_mode():
         return True
     return os.environ.get("RUZGAR_DEFER_MOTOR_BOOT", "0").strip().lower() in (

@@ -284,14 +284,26 @@ def filter_hits_lexically(
             blob_f = _fold(f"{text}\n{src}")
             blob_raw = f"{text}\n{src}"
             overlap = sum(1 for t in toks if _token_in_blob(t, blob_f, blob_raw))
+            ar_heavy = False
+            try:
+                from ilim_assistant.ruzgar_anlam_koruma import chunk_is_arabic_heavy
+
+                ar_heavy = chunk_is_arabic_heavy(text)
+            except Exception:
+                ar_heavy = False
             if multi:
                 # F2.1: 0.88 → 0.42 (tek örtüşme + makul skor); semantik güçlüyse skor-only
                 if overlap >= 2 or (overlap >= 1 and float(sc) >= 0.42):
                     kept0.append((text, src, float(sc)))
                 elif (not kimdir_q) and overlap == 0 and float(sc) >= max(0.50, min_score_keep - 0.15):
                     kept0.append((text, src, float(sc)))
+                elif ar_heavy and float(sc) >= 0.32:
+                    # Arapça Şamile gövdesi — Latin token yok; skor + kaynak yolu yeter
+                    kept0.append((text, src, float(sc)))
             elif overlap >= 1:
                 # kimdir: skor yetmez — isim metinde/ Arapça köprüde olmalı
+                kept0.append((text, src, float(sc)))
+            elif ar_heavy and float(sc) >= 0.32:
                 kept0.append((text, src, float(sc)))
             elif (not kimdir_q) and float(sc) >= min_score_keep:
                 kept0.append((text, src, float(sc)))

@@ -3882,7 +3882,7 @@
         }).join(",");
     }
     // Coğrafi doğruluk cache-bust (üst şerit + fare akış)
-    url += "&hv=kamera-rig-v19-grab";
+    url += "&hv=kamera-rig-v20-fwd-fix";
     return url;
   }
 
@@ -4183,8 +4183,15 @@
       frame.insertBefore(iframe, tools);
     }
     const src = haritaEmbedSrc(st);
+    // hv değişince veya aynı URL cache’te kalırsa zorla yenile
     if (iframe.getAttribute("data-src") !== src) {
       iframe.setAttribute("data-src", src);
+      iframe.src = src;
+    } else if (
+      String(src).indexOf("kamera-rig-v20-fwd-fix") >= 0 &&
+      iframe.getAttribute("data-hv-applied") !== "v20-fwd-fix"
+    ) {
+      iframe.setAttribute("data-hv-applied", "v20-fwd-fix");
       iframe.src = src;
     }
     frame.hidden = false;

@@ -126,6 +126,17 @@ def is_auto_learn_poison(cevap: str) -> bool:
         r"sel[cç]uk|o[gğ]uz", low
     ):
         return True
+    # Bilinen uydurma / boş cevap kalıpları
+    if "para deliği" in low or "para deligi" in low:
+        return True
+    if "net yanıt veremedim" in low or "net yanit veremedim" in low:
+        return True
+    if "recurrent attention graph" in low:
+        return True
+    if "bulamadım" in low and "öğretir misin" in low:
+        return True
+    if "süre yetmedi" in low or "sure yetmedi" in low:
+        return True
     return False
 
 

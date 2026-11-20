@@ -120,6 +120,45 @@ def fold_ascii(text: str) -> str:
     return re.sub(r"\s+", " ", t).strip()
 
 
+def arabic_letter_ratio(text: str) -> float:
+    """Harf içinde Arapça yazı oranı (0–1). Kısa metinde 0."""
+    n_letter = 0
+    n_ar = 0
+    for c in text or "":
+        if not c.isalpha():
+            continue
+        n_letter += 1
+        o = ord(c)
+        if (
+            0x0600 <= o <= 0x06FF
+            or 0x0750 <= o <= 0x077F
+            or 0x08A0 <= o <= 0x08FF
+            or 0xFB50 <= o <= 0xFDFF
+            or 0xFE70 <= o <= 0xFEFF
+        ):
+            n_ar += 1
+    if n_letter < 8:
+        return 0.0
+    return float(n_ar) / float(n_letter)
+
+
+def chunk_is_arabic_heavy(text: str, *, min_ratio: float = 0.40) -> bool:
+    """Şamile gövdesi gibi Arapça ağır metin — ASCII lexik süzgeç boşa düşer."""
+    return arabic_letter_ratio(text) >= float(min_ratio)
+
+
+def arabic_lex_bypass_enabled() -> bool:
+    """Kapat: RUZGAR_RAG_ARABIC_LEX_BYPASS=0"""
+    import os
+
+    return os.environ.get("RUZGAR_RAG_ARABIC_LEX_BYPASS", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+        "off",
+    )
+
+
 def content_tokens(text: str, *, min_len: int = 3) -> frozenset[str]:
     """Stopword'siz içerik kelimeleri (ASCII fold)."""
     raw = fold_ascii(text)
@@ -240,15 +279,41 @@ def rag_default_score_min() -> float:
     return max(0.0, min(1.0, v))
 
 
-def chunk_fits_query(sorgu: str, chunk_text: str) -> bool:
-    """RAG parçası sorunun anlam kelimesini taşıyor mu?"""
+def chunk_fits_query(sorgu: str, chunk_text: str, *, source: str = "") -> bool:
+    """RAG parçası sorunun anlam kelimesini taşıyor mu?
+
+    Arapça ağır gövde (Şamile): ``fold_ascii`` boşaltır → eski kod her zaman False.
+    Bypass açıkken (varsayılan): kaynak yolunda Latin ipucu veya semantik skor
+    yeter; lexik ASCII zorunlu değil. Kapat: ``RUZGAR_RAG_ARABIC_LEX_BYPASS=0``.
+    """
     toks = content_tokens(sorgu, min_len=4)
     if not toks:
         toks = content_tokens(sorgu, min_len=3)
     if not toks:
         return True
+
+    src = source or ""
+    if arabic_lex_bypass_enabled() and chunk_is_arabic_heavy(chunk_text):
+        src_blob = fold_ascii(src)
+        if src_blob:
+            for t in toks:
+                if len(t) >= 4 and t in src_blob:
+                    return True
+            src_toks = content_tokens(src, min_len=3)
+            for t in toks:
+                if _token_hit(t, src_toks):
+                    return True
+        # Skor eşiği filter_rag_hits'te zaten uygulandı — Arapça gövdeyi lexikle silme
+        return True
+
     blob = fold_ascii(chunk_text or "")
     if not blob:
+        # Saf Arapça / boş ASCII: bypass kapalıysa kaynak yoluna bak
+        src_blob = fold_ascii(src)
+        if src_blob:
+            for t in toks:
+                if len(t) >= 4 and t in src_blob:
+                    return True
         return False
     ctoks = content_tokens(chunk_text or "", min_len=3)
     for t in toks:
@@ -270,6 +335,7 @@ def filter_rag_hits(
 
     soft=True: anlam süzgeci boşaltırsa skora göre ilk 1–2 zayıf adayı bırakır
     (eski davranışa yakın yedek). Varsayılan hard: boş liste > yanlış bağlam.
+    Arapça ağır hit'ler kaynak yolu + skor ile tutulur (ASCII lexik tuzak yok).
     """
     if not hits:
         return []
@@ -286,7 +352,9 @@ def filter_rag_hits(
     if not scored:
         return []
 
-    fitted = [h for h in scored if chunk_fits_query(sorgu, h[0])]
+    fitted = [
+        h for h in scored if chunk_fits_query(sorgu, h[0], source=str(h[1] or ""))
+    ]
     if fitted:
         return fitted
     if soft and scored:

@@ -56,11 +56,6 @@ from ilim_assistant.hafiza_i_ruzgar import (
 from ilim_assistant.text_encoding import finalize_assistant_reply
 from ilim_assistant.llm_brain import select_brain_chain, stream_chat_with_brain
 from ilim_assistant.llm_ollama import format_llm_user_error
-from ilim_assistant.motorlar.programlama_motoru import (
-    apply_assistant_reply_tools,
-    code_debug_max_retries,
-    wants_autonomous_code_debug,
-)
 from ilim_assistant.stt_whisper import (
     stt_runtime_available,
     whisper_model_name,
@@ -504,36 +499,22 @@ def _boot_motorlar_anaonce() -> None:
 
     Kilit: `.cursorrules` · Mimar `evet` 2026-11-03 (5→7 resmileştirme).
     Sıra: ses → video → okuma → mimar → tercüme → hafıza → programlama.
+    Tek kaynak: `ruzgar_boot_kilit.boot_motorlar_anaonce`.
     Değiştirmek için yeniden açık `evet` şart; `.cursorrules` ile aynı turda güncellenir.
     """
-    import importlib
+    from ilim_assistant.ruzgar_boot_kilit import boot_motorlar_anaonce
 
-    importlib.import_module("ilim_assistant.main_engine")
-    importlib.import_module("ilim_assistant.motorlar.ruzgar_cekirdegi")
-    for name in (
-        "ilim_assistant.ses_motoru",
-        "ilim_assistant.video_motoru",
-        "ilim_assistant.okuma_motoru",
-        "ilim_assistant.mimar_motoru",
-        "ilim_assistant.tercume_motoru",
-        "ilim_assistant.motorlar.hafiza_motoru",
-        "ilim_assistant.programlama_motoru",
-    ):
-        importlib.import_module(name)
+    boot_motorlar_anaonce(announce=False)
 
 
 def _sync_startup_warmups() -> None:
     """Port açıldıktan sonra arka planda — RAG, hafıza, hatırlatıcı (motor boot port öncesi)."""
     global _WARMUP_BACKGROUND_ACTIVE
     _WARMUP_BACKGROUND_ACTIVE = True
-    import sys as _sys
 
+    # Kilit: DEFER yardımcı ısınmayı erteler; motor sırasını atlamaz.
     try:
-        from ilim_assistant.config import defer_motor_boot
-
-        if "ilim_assistant.main_engine" not in _sys.modules:
-            if not defer_motor_boot():
-                _boot_motorlar_anaonce()
+        _boot_motorlar_anaonce()
     except Exception:
         pass
     try:
@@ -12415,12 +12396,78 @@ def _persist_done_chat_turn(req: ChatRequest, done: dict[str, Any]) -> dict[str,
         return done
 
 
-def _fast_lane_post_done(req: ChatRequest, done: dict[str, Any]) -> None:
+def _finalize_done_chat_turn(req: ChatRequest, done: dict[str, Any]) -> dict[str, Any]:
+    """done sonrası ortak kancalar — stream ve /api/chat/full aynı kapı.
+
+    Persist · eğitim/öğrenme · F0 teşhis · paket · programlama oturum.
+    İdempotent persist (`chat_persisted`); full yolu break etse bile buradan tamamlanır.
+    """
+    obj = dict(done or {})
+    if not obj:
+        return obj
     try:
-        d = _persist_done_chat_turn(req, done)
+        obj = _persist_done_chat_turn(req, obj)
+    except Exception:
+        pass
+    try:
         from ilim_assistant.ruzgar_egitim import on_chat_turn_done
 
-        on_chat_turn_done(req, d)
+        obj = on_chat_turn_done(req, obj)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_tur_teshis_f0 import attach_teshis_to_done
+
+        _mode_teshis = normalize_mode(_effective_chat_mode_raw(req))
+        obj = attach_teshis_to_done(obj, mode=_mode_teshis)
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ana_motor_paket_auto import maybe_queue_auto_paket
+
+        obj = maybe_queue_auto_paket(req, obj)
+    except Exception:
+        pass
+    try:
+        _mode_done = normalize_mode(_effective_chat_mode_raw(req))
+        if _mode_done == "programlama":
+            from ilim_assistant.motorlar.programlama_faz5 import (
+                record_chat_turn,
+                sync_client_editor_state,
+            )
+
+            cd = obj.get("code_debug")
+            pytest_ok = None
+            pytest_exit = None
+            if isinstance(cd, dict):
+                if cd.get("phase") == "pytest_ok":
+                    pytest_ok = True
+                    pytest_exit = cd.get("exit")
+                elif cd.get("phase") == "pytest_failed":
+                    pytest_ok = False
+                    pytest_exit = cd.get("exit")
+            record_chat_turn(
+                req.workspace_root,
+                user_message=req.message or "",
+                assistant_reply=str(obj.get("full_reply") or ""),
+                pytest_ok=pytest_ok,
+                pytest_exit=pytest_exit,
+                active_file=req.programlama_active_file,
+            )
+            sync_client_editor_state(
+                req.workspace_root,
+                active_file=req.programlama_active_file,
+                editor_snippet=req.programlama_editor_snippet,
+                language=req.programlama_language,
+            )
+    except Exception:
+        pass
+    return obj
+
+
+def _fast_lane_post_done(req: ChatRequest, done: dict[str, Any]) -> None:
+    try:
+        _finalize_done_chat_turn(req, done)
     except Exception:
         pass
 
@@ -15973,6 +16020,13 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         return
     reply_body = ""
     try:
+        # Programlama araçları — boot kilidinde en son; erken top-level import yok.
+        from ilim_assistant.motorlar.programlama_motoru import (
+            apply_assistant_reply_tools,
+            code_debug_max_retries,
+            wants_autonomous_code_debug,
+        )
+
         wants_dbg = mode_norm == "programlama" and (
             _scan_fix_approved
             or _p11_repair_approved
@@ -16654,65 +16708,10 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
         if obj.get("type") == "done":
             obj = dict(obj)
             obj.setdefault("elapsed_sec", time.perf_counter() - t0)
-            # Önce done — istemci DURDUR/Gönder ve TTS kilidi hemen açılsın (persist sonra).
+            # Önce done — istemci DURDUR/Gönder ve TTS kilidi hemen açılsın (finalize sonra).
             yield obj
             try:
-                obj = _persist_done_chat_turn(req, obj)
-            except Exception:
-                pass
-            try:
-                from ilim_assistant.ruzgar_egitim import on_chat_turn_done
-
-                obj = on_chat_turn_done(req, obj)
-            except Exception:
-                pass
-            try:
-                from ilim_assistant.ruzgar_tur_teshis_f0 import attach_teshis_to_done
-
-                _mode_teshis = normalize_mode(_effective_chat_mode_raw(req))
-                obj = attach_teshis_to_done(obj, mode=_mode_teshis)
-            except Exception:
-                pass
-            try:
-                from ilim_assistant.ana_motor_paket_auto import maybe_queue_auto_paket
-
-                obj = maybe_queue_auto_paket(req, obj)
-            except Exception:
-                pass
-            try:
-                _mode_done = normalize_mode(_effective_chat_mode_raw(req))
-                if _mode_done == "programlama":
-                    from ilim_assistant.motorlar.programlama_faz5 import record_chat_turn
-
-                    cd = obj.get("code_debug")
-                    pytest_ok = None
-                    pytest_exit = None
-                    if isinstance(cd, dict):
-                        if cd.get("phase") == "pytest_ok":
-                            pytest_ok = True
-                            pytest_exit = cd.get("exit")
-                        elif cd.get("phase") == "pytest_failed":
-                            pytest_ok = False
-                            pytest_exit = cd.get("exit")
-                    record_chat_turn(
-                        req.workspace_root,
-                        user_message=req.message or "",
-                        assistant_reply=str(obj.get("full_reply") or ""),
-                        pytest_ok=pytest_ok,
-                        pytest_exit=pytest_exit,
-                        active_file=req.programlama_active_file,
-                    )
-                    if _mode_done == "programlama":
-                        from ilim_assistant.motorlar.programlama_faz5 import (
-                            sync_client_editor_state,
-                        )
-
-                        sync_client_editor_state(
-                            req.workspace_root,
-                            active_file=req.programlama_active_file,
-                            editor_snippet=req.programlama_editor_snippet,
-                            language=req.programlama_language,
-                        )
+                _finalize_done_chat_turn(req, obj)
             except Exception:
                 pass
             continue
@@ -16794,6 +16793,7 @@ def _chat_full_sync(req: ChatRequest) -> dict[str, Any]:
             elif typ == "done":
                 done_event = obj
                 full_reply = str(obj.get("full_reply") or full_reply)
+                # break: jeneratör kancaları çalışmaz — aşağıda ortak finalize
                 break
             elif typ == "error":
                 return {
@@ -16818,7 +16818,18 @@ def _chat_full_sync(req: ChatRequest) -> dict[str, Any]:
             "full_reply": full_reply,
             "user_message": (req.message or "").strip(),
             "new_wake_used": new_wake,
+            "elapsed_sec": _time.perf_counter() - _t0,
         }
+
+    # Mobil/full: done break sonrası kancalar (persist · öğrenme · F0 · paket)
+    try:
+        if not done_event.get("elapsed_sec"):
+            done_event = dict(done_event)
+            done_event["elapsed_sec"] = _time.perf_counter() - _t0
+        done_event = _finalize_done_chat_turn(req, done_event)
+        full_reply = str(done_event.get("full_reply") or full_reply)
+    except Exception:
+        pass
 
     _latency_ms = int((_time.perf_counter() - _t0) * 1000)
     _sohbet_onay = None
@@ -16840,6 +16851,9 @@ def _chat_full_sync(req: ChatRequest) -> dict[str, Any]:
         "instant_clarify": bool(done_event.get("instant_clarify")),
         "instant_memory": bool(done_event.get("instant_memory")),
         "paket_auto": done_event.get("paket_auto"),
+        "chat_persisted": bool(done_event.get("chat_persisted")),
+        "tur_teshis": done_event.get("tur_teshis"),
+        "egitim_miss": bool(done_event.get("egitim_miss")),
         "latency_ms": _latency_ms,
         "sohbet_onay": _sohbet_onay,
         "mobil_auth": (

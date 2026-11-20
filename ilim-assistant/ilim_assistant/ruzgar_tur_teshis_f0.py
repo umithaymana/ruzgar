@@ -200,6 +200,22 @@ def classify_miss(
 
     if is_timeout_phrase:
         return MISS_TIMEOUT
+
+    el = float(elapsed_sec) if elapsed_sec is not None else None
+    bud = budget_sec
+    if bud is None:
+        try:
+            from ilim_assistant.ruzgar_umed_cevap_emri import turn_budget_sec
+
+            bud = float(turn_budget_sec(""))
+        except Exception:
+            bud = 15.0
+    # Süre önce — hits=0 timeout'u «no_hits» diye yazmasın
+    if el is not None and el >= float(bud) * 0.92:
+        return MISS_TIMEOUT if el >= float(bud) else MISS_BUDGET
+    if egitim_miss and el is not None and el >= float(bud) * 0.8:
+        return MISS_TIMEOUT
+
     if o.get("sayi_hard_gate"):
         return MISS_SAYI_GATE
     if o.get("kutuphane_usable") is False or o.get("miss_class") == MISS_KUTUPHANE:
@@ -219,27 +235,14 @@ def classify_miss(
 
     if hc == 0 and raw_n_i is not None and raw_n_i > 0:
         return MISS_FILTERED
-    if hc == 0 or (hc is None and o.get("thin_pipe")):
-        if hc == 0:
-            return MISS_NO_HITS
-
-    el = float(elapsed_sec) if elapsed_sec is not None else None
-    bud = budget_sec
-    if bud is None:
-        try:
-            from ilim_assistant.ruzgar_umed_cevap_emri import turn_budget_sec
-
-            bud = float(turn_budget_sec(""))
-        except Exception:
-            bud = 15.0
-    if el is not None and el >= float(bud) * 0.92:
-        return MISS_TIMEOUT if el >= float(bud) else MISS_BUDGET
+    if hc == 0:
+        return MISS_NO_HITS
+    if hc is None and o.get("thin_pipe"):
+        return MISS_NO_HITS
 
     low = t.lower()
     if "ollama" in low or "gemini kota" in low or "yanıt yok" in low:
         return MISS_WEAK_LLM
-    if egitim_miss and el is not None and el >= float(bud) * 0.8:
-        return MISS_TIMEOUT
     if egitim_miss:
         return MISS_WEAK_LLM
     return MISS_UNKNOWN

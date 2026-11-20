@@ -1226,14 +1226,14 @@ def _stream_brain_chain_loop(
     _umed = False
     is_real_user_question = lambda _m: True  # type: ignore[assignment, misc]
     remaining_sec = lambda: 9999.0  # type: ignore[assignment, misc]
-    umed_miss_reply = lambda: ""  # type: ignore[assignment, misc]
+    umed_empty_chain_reply = lambda: ""  # type: ignore[assignment, misc]
     if use_turn_budget:
         try:
             from ilim_assistant.ruzgar_umed_cevap_emri import (
                 begin_turn_budget,
                 remaining_sec as _rem,
                 umed_emri_applies,
-                umed_miss_reply as _miss,
+                umed_empty_chain_reply as _empty,
             )
             from ilim_assistant.ruzgar_egitim import is_real_user_question as _irq
 
@@ -1242,7 +1242,7 @@ def _stream_brain_chain_loop(
                 begin_turn_budget(message or user, mode_norm=mode_norm)
             is_real_user_question = _irq
             remaining_sec = _rem
-            umed_miss_reply = _miss
+            umed_empty_chain_reply = _empty
         except Exception:
             pass
 
@@ -1287,7 +1287,7 @@ def _stream_brain_chain_loop(
                 return
         except Exception:
             pass
-        yield umed_miss_reply()
+        yield umed_empty_chain_reply()
         return
     if not any_content and (coding_mode or mode_norm == "programlama"):
         chain_hint = ",".join(attempted) or "?"
@@ -1347,13 +1347,13 @@ def stream_chat_with_brain(
     _umed = False
     is_real_user_question = lambda _m: True  # type: ignore[assignment, misc]
     remaining_sec = lambda: 9999.0  # type: ignore[assignment, misc]
-    umed_miss_reply = lambda: ""  # type: ignore[assignment, misc]
+    umed_empty_chain_reply = lambda: ""  # type: ignore[assignment, misc]
     try:
         from ilim_assistant.ruzgar_umed_cevap_emri import (
             begin_turn_budget,
             remaining_sec as _rem,
             umed_emri_applies,
-            umed_miss_reply as _miss,
+            umed_empty_chain_reply as _empty,
         )
         from ilim_assistant.ruzgar_egitim import is_real_user_question as _irq
 
@@ -1366,7 +1366,7 @@ def stream_chat_with_brain(
             )
         is_real_user_question = _irq
         remaining_sec = _rem
-        umed_miss_reply = _miss
+        umed_empty_chain_reply = _empty
     except Exception:
         pass
 
@@ -1411,7 +1411,7 @@ def stream_chat_with_brain(
                 return
         except Exception:
             pass
-        yield umed_miss_reply()
+        yield umed_empty_chain_reply()
         return
 
     if not any_content and (coding_mode or mode_norm == "programlama"):
@@ -1457,7 +1457,7 @@ def stream_chat_with_brain(
                             return
                     except Exception:
                         pass
-                    yield umed_miss_reply()
+                    yield umed_empty_chain_reply()
                     return
                 yield (
                     "Gemini kotası dolu — Ollama/Groq denendi ama yanıt üretilemedi. "
@@ -1476,7 +1476,7 @@ def stream_chat_with_brain(
                     return
             except Exception:
                 pass
-            yield umed_miss_reply()
+            yield umed_empty_chain_reply()
             return
         if last_err and not _looks_like_error_chunk(last_err):
             yield last_err
@@ -1498,7 +1498,7 @@ def stream_chat_with_brain(
                 return
         except Exception:
             pass
-        yield umed_miss_reply()
+        yield umed_empty_chain_reply()
         return
     yield (
         "Hiçbir beyin profili yanıt üretemedi. "

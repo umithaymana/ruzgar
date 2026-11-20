@@ -3223,8 +3223,8 @@
     } catch (_) {}
     const step = Math.max(0.35, metersPerPixel);
     const rad = (focusOrbit.heading * Math.PI) / 180;
-    // Yukarı (dy<0) = ileri · Sağa (dx>0) = görüntü sağa → odak sola (ters)
-    const fwd = -dy * step;
+    // Yukarı (dy<0) = görüntü ileri · Sağa (dx>0) = görüntü sağa → odak sola
+    const fwd = dy * step;
     const right = -dx * step;
     focusOrbit.lat +=
       (Math.cos(rad) * fwd - Math.sin(rad) * right) / mpdLat;

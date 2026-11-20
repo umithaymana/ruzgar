@@ -859,6 +859,56 @@ def genel_hafiza_lookup_detayli(
     return detay
 
 
+def list_suspect_hafiza_entries(*, limit: int = 40) -> list[dict]:
+    """Silme yok — zehir/uydurma adayları (Mimar onayı için)."""
+    try:
+        from ilim_assistant.ruzgar_metin_sadakati import is_auto_learn_poison
+    except Exception:
+        def is_auto_learn_poison(cevap: str) -> bool:  # type: ignore
+            return False
+
+    motor = get_hafiza_motor()
+    path = getattr(motor, "_dosya_yolu", None)
+    rows: list = []
+    try:
+        if path is not None and Path(path).is_file():
+            raw = json.loads(Path(path).read_text(encoding="utf-8"))
+            if isinstance(raw, list):
+                rows = raw
+    except Exception:
+        rows = []
+    if not rows:
+        rows = list(getattr(motor, "_kayitlar", None) or getattr(motor, "kayitlar", None) or [])
+
+    out: list[dict] = []
+    for i, it in enumerate(rows):
+        if not isinstance(it, dict):
+            continue
+        soru = str(it.get("soru") or "")
+        cevap = str(it.get("cevap") or "")
+        reason = ""
+        if is_auto_learn_poison(cevap) or is_auto_learn_poison(soru):
+            reason = "auto_learn_poison"
+        low_q = soru.casefold()
+        if "para delik" in low_q:
+            reason = reason or "para_delik"
+        if not reason:
+            continue
+        out.append(
+            {
+                "index": i,
+                "soru": soru[:120],
+                "cevap": cevap[:120],
+                "motor_tipi": str(it.get("motor_tipi") or ""),
+                "ts": str(it.get("ts") or ""),
+                "reason": reason,
+            }
+        )
+        if len(out) >= max(1, int(limit)):
+            break
+    return out
+
+
 def etkileşimli_mod() -> None:
     """
     Hızlı test için basit bir komut satırı arayüzü.

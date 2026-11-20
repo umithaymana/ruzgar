@@ -539,9 +539,10 @@ def _schedule_rag_index() -> bool:
     def _run() -> None:
         global _index_pending, _index_pending_since, _index_last_error
         try:
-            from ilim_assistant.rag_store import build_index
+            # İnce yol: yalnız learned — Şamile/ortak ana indekse çekilmez.
+            from ilim_assistant.rag_store import upsert_learned_into_main_index
 
-            build_index(force=False, incremental=True)
+            upsert_learned_into_main_index()
             _index_last_error = ""
         except Exception as exc:
             _index_last_error = str(exc)[:200]

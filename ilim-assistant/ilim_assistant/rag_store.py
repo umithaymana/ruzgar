@@ -167,16 +167,131 @@ def _is_dokunma_markdown(path: Path, text: str | None = None) -> bool:
     return False
 
 
-def _load_markdown_files(root: Path) -> List[Tuple[str, str]]:
+def _norm_rel(rel: str) -> str:
+    return (rel or "").replace("\\", "/").strip()
+
+
+def _is_shamela_main_skip(rel: str) -> bool:
+    """Şamile ana indekse çekilmez — shard indeksi sahibidir."""
+    r = _norm_rel(rel).lower()
+    return r == "ilim/din/shamela" or r.startswith("ilim/din/shamela/")
+
+
+def _is_thin_auto_ingest_rel(rel: str) -> bool:
+    """Otomatik ince yol: yalnız learned/ (kör ortak/Şamile yutma yok)."""
+    return _norm_rel(rel).lower().startswith("learned/")
+
+
+def _allow_new_main_rel(rel: str) -> bool:
+    if _is_shamela_main_skip(rel):
+        return False
+    flag = os.environ.get("RUZGAR_RAG_ALLOW_NEW_MAIN", "0").strip().lower()
+    if flag in ("1", "true", "yes", "on"):
+        return True
+    return _is_thin_auto_ingest_rel(rel)
+
+
+def _rel_known(rel: str, known_norm: set[str]) -> bool:
+    return _norm_rel(rel) in known_norm
+
+
+def _load_markdown_files(
+    root: Path,
+    *,
+    known_norm: set[str] | None = None,
+    restrict_new: bool = False,
+) -> List[Tuple[str, str]]:
+    """knowledge altı md yükle.
+
+    - Şamile her zaman atlanır (ana indeks / shard ayrımı).
+    - ``restrict_new``: bilinen (manifest) + ince yol (learned) dışında yeni dosya yüklenmez.
+      Böylece incremental 66k ortak / 298k Şamile'yi ana indekse çekmez.
+    """
     out: List[Tuple[str, str]] = []
+    known = known_norm or set()
     for path in sorted(root.rglob("*.md")):
         try:
+            rel = str(path.relative_to(root))
+            if _is_shamela_main_skip(rel):
+                continue
+            if restrict_new and known:
+                if not _rel_known(rel, known) and not _allow_new_main_rel(rel):
+                    continue
             raw = path.read_text(encoding="utf-8")
             if _is_dokunma_markdown(path, raw):
                 continue
-            out.append((str(path.relative_to(root)), raw))
+            out.append((rel, raw))
         except OSError:
             continue
+    return out
+
+
+def invalidate_rag_cache() -> None:
+    """Disk indeksi değişince bellek önbelleğini düşür."""
+    global _index_mtime_ns, _cached_chunks_list, _cached_emb_arr
+    global _tarih_chunk_row_indices, _tdk_chunk_row_indices, _nebula_chunk_row_indices
+    _index_mtime_ns = None
+    _cached_chunks_list = None
+    _cached_emb_arr = None
+    _tarih_chunk_row_indices = None
+    _tdk_chunk_row_indices = None
+    _nebula_chunk_row_indices = None
+
+
+def index_health_report(knowledge_root: Path | None = None) -> dict:
+    """İndeks vs disk ölçümü — kör rebuild yok, yalnız rapor."""
+    root = Path(knowledge_root or _knowledge_root())
+    man_path = _index_dir() / "manifest.json"
+    out: dict = {
+        "ok": True,
+        "knowledge_root": str(root),
+        "index_dir": str(_index_dir()),
+        "manifest_present": man_path.is_file(),
+        "manifest_mtime": None,
+        "manifest_files": 0,
+        "manifest_chunks": 0,
+        "learned_disk": 0,
+        "learned_in_index": 0,
+        "learned_missing": 0,
+        "learned_missing_sample": [],
+        "shamela_policy": "main_index_skip_shards_own",
+        "hint": "learned eksikse upsert_learned_into_main_index; Şamile ana indekse çekilmez.",
+    }
+    if not man_path.is_file():
+        out["ok"] = False
+        out["hint"] = "manifest yok — önce güvenli indeks kurulumu gerekir."
+        return out
+    try:
+        out["manifest_mtime"] = man_path.stat().st_mtime
+        man = json.loads(man_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        out["ok"] = False
+        out["error"] = str(exc)[:200]
+        return out
+    fd = man.get("file_digests") or {}
+    known = {_norm_rel(k) for k in fd}
+    out["manifest_files"] = len(fd)
+    out["manifest_chunks"] = int(man.get("num_chunks") or 0)
+    out["model"] = man.get("model")
+    learned_dir = root / "learned"
+    missing: list[str] = []
+    if learned_dir.is_dir():
+        for p in sorted(learned_dir.glob("*.md")):
+            try:
+                if _is_dokunma_markdown(p):
+                    continue
+            except OSError:
+                continue
+            rel = str(p.relative_to(root))
+            out["learned_disk"] += 1
+            if _norm_rel(rel) in known:
+                out["learned_in_index"] += 1
+            else:
+                missing.append(_norm_rel(rel))
+    out["learned_missing"] = len(missing)
+    out["learned_missing_sample"] = missing[:12]
+    sham_in = sum(1 for k in known if _is_shamela_main_skip(k))
+    out["shamela_frozen_in_main"] = sham_in
     return out
 
 
@@ -233,6 +348,22 @@ def _get_embedder():
     return _cached_embedder
 
 
+def _file_digest(rel: str, body: str) -> str:
+    one_h = hashlib.sha256()
+    one_h.update(rel.encode("utf-8"))
+    one_h.update(b"\0")
+    one_h.update(body.encode("utf-8"))
+    return one_h.hexdigest()
+
+
+def _overall_digest(file_digests: dict[str, str]) -> str:
+    overall_h = hashlib.sha256()
+    for rel in sorted(file_digests.keys(), key=_norm_rel):
+        overall_h.update(rel.encode("utf-8"))
+        overall_h.update(file_digests[rel].encode("utf-8"))
+    return overall_h.hexdigest()
+
+
 def build_index(
     knowledge_root: Path | None = None,
     force: bool = False,
@@ -246,22 +377,39 @@ def build_index(
 
     _index_dir().mkdir(parents=True, exist_ok=True)
 
-    files_payload = _load_markdown_files(root)
+    old: dict = {}
+    old_file_digests: dict[str, str] = {}
+    if manifest_path.is_file():
+        try:
+            old = json.loads(manifest_path.read_text(encoding="utf-8"))
+            if isinstance(old.get("file_digests"), dict):
+                old_file_digests = dict(old.get("file_digests") or {})
+        except (OSError, json.JSONDecodeError):
+            old, old_file_digests = {}, {}
+
+    known_norm = {_norm_rel(k) for k in old_file_digests}
+    # force=True: Şamile hariç tüm md (bilinçli tam rebuild).
+    # aksi: yalnız bilinen + ince yol (learned) — kör yutma yok.
+    files_payload = _load_markdown_files(
+        root,
+        known_norm=known_norm if (old_file_digests and not force) else None,
+        restrict_new=bool(old_file_digests and not force),
+    )
     payload_map = {rel: body for rel, body in files_payload}
 
     # Dosya bazlı hash: incremental (kademeli) gömme güncellemeleri için.
     file_digests: dict[str, str] = {}
-    overall_h = hashlib.sha256()
     for rel, body in files_payload:
-        one_h = hashlib.sha256()
-        one_h.update(rel.encode("utf-8"))
-        one_h.update(b"\0")
-        one_h.update(body.encode("utf-8"))
-        fd = one_h.hexdigest()
-        file_digests[rel] = fd
-        overall_h.update(rel.encode("utf-8"))
-        overall_h.update(fd.encode("utf-8"))
-    digest = overall_h.hexdigest()
+        file_digests[rel] = _file_digest(rel, body)
+
+    # Şamile: diskten yüklenmez; incremental'da eski manifest girdilerini dondur.
+    if not force:
+        frozen_norm = {_norm_rel(k) for k in file_digests}
+        for rel, fd in old_file_digests.items():
+            if _is_shamela_main_skip(rel) and _norm_rel(rel) not in frozen_norm:
+                file_digests[rel] = fd
+
+    digest = _overall_digest(file_digests)
 
     if (
         not force
@@ -269,7 +417,6 @@ def build_index(
         and chunks_path.is_file()
         and emb_path.is_file()
     ):
-        old = json.loads(manifest_path.read_text(encoding="utf-8"))
         old_digest = old.get("digest")
         if not incremental and old_digest == digest:
             return {
@@ -278,11 +425,25 @@ def build_index(
                 "digest": digest,
             }
 
-        # Incremental: sadece değişen/eklenen/çıkarılan md dosyalarının chunk'larını yeniden gömecek.
-        if incremental and old.get("model") == _MODEL_NAME and isinstance(old.get("file_digests"), dict):
-            old_file_digests: dict[str, str] = old.get("file_digests") or {}
-            changed_rels = [rel for rel, fd in file_digests.items() if old_file_digests.get(rel) != fd]
-            removed_rels = [rel for rel in old_file_digests.keys() if rel not in file_digests]
+        # Incremental: sadece değişen/eklenen/çıkarılan md.
+        # Kör full rebuild koruması: digest kaymış + force yok → incremental.
+        use_inc = incremental or (
+            not force
+            and old.get("model") == _MODEL_NAME
+            and bool(old_file_digests)
+        )
+        if use_inc and old.get("model") == _MODEL_NAME and old_file_digests:
+            new_norm = {_norm_rel(k) for k in file_digests}
+            changed_rels = [
+                rel
+                for rel, fd in file_digests.items()
+                if old_file_digests.get(rel) != fd and not _is_shamela_main_skip(rel)
+            ]
+            removed_rels = [
+                rel
+                for rel in old_file_digests.keys()
+                if _norm_rel(rel) not in new_norm and not _is_shamela_main_skip(rel)
+            ]
 
             if not changed_rels and not removed_rels:
                 return {
@@ -298,69 +459,85 @@ def build_index(
                 old_chunks, old_emb = [], None
 
             if not old_chunks or old_emb is None or len(old_chunks) != len(old_emb):
-                # Eski indeks bozuksa veya uyumsuzsa tam rebuild yap.
-                force = True
-            else:
-                changed_set = set(changed_rels)
-                removed_set = set(removed_rels)
-
-                keep_indices: list[int] = []
-                kept_chunks: List[Chunk] = []
-                for i, c in enumerate(old_chunks):
-                    if c.source in removed_set:
-                        continue
-                    if c.source in changed_set:
-                        continue
-                    # Kaynak hâlâ mevcutsa tut.
-                    if c.source in file_digests:
-                        keep_indices.append(i)
-                        kept_chunks.append(c)
-
-                texts_kept = None  # sadece emtpy tutucu
-                keep_emb = old_emb[keep_indices] if keep_indices else old_emb[:0]
-
-                # Değişen kaynakların chunk'larını yeniden üret + embed et.
-                changed_payload = [(rel, payload_map[rel]) for rel in sorted(changed_rels) if rel in payload_map]
-                new_chunks: List[Chunk] = []
-                for rel, body in changed_payload:
-                    for piece in _split_text(body):
-                        new_chunks.append(Chunk(text=piece, source=rel))
-
-                if new_chunks:
-                    model = _get_embedder()
-                    texts_new = [c.text for c in new_chunks]
-                    emb_new = model.encode(texts_new, normalize_embeddings=True, show_progress_bar=True)
-                    emb_out = np.vstack([keep_emb, emb_new]) if len(keep_indices) else emb_new
-                else:
-                    emb_out = keep_emb
-
-                chunks_out = kept_chunks + new_chunks
-                # Persist (tmp → replace)
-                _atomic_save_npy(emb_path, emb_out)
-                _atomic_write_chunks_jsonl(chunks_path, chunks_out)
-                _atomic_write_text(
-                    manifest_path,
-                    json.dumps(
-                        {
-                            "digest": digest,
-                            "num_chunks": len(chunks_out),
-                            "model": _MODEL_NAME,
-                            "file_digests": file_digests,
-                        },
-                        ensure_ascii=False,
-                        indent=2,
-                    )
-                    + "\n",
-                )
                 return {
-                    "status": "incremental",
-                    "chunks": len(chunks_out),
-                    "digest": digest,
-                    "changed_files": len(changed_rels),
-                    "removed_files": len(removed_rels),
+                    "status": "index_corrupt",
+                    "hint": "İndeks bozuk; kör full rebuild yok. Bilinçli: build_index(force=True).",
+                    "chunks": int(old.get("num_chunks") or 0),
                 }
 
-    # Tam rebuild (cached / incremental koşulları dışında kalır).
+            changed_set = set(changed_rels)
+            removed_set = set(removed_rels)
+
+            keep_indices: list[int] = []
+            kept_chunks: List[Chunk] = []
+            for i, c in enumerate(old_chunks):
+                if c.source in removed_set:
+                    continue
+                if c.source in changed_set:
+                    continue
+                # Kaynak hâlâ mevcutsa veya Şamile dondurulmuşsa tut.
+                if c.source in file_digests or _is_shamela_main_skip(c.source):
+                    keep_indices.append(i)
+                    kept_chunks.append(c)
+
+            keep_emb = old_emb[keep_indices] if keep_indices else old_emb[:0]
+
+            changed_payload = [
+                (rel, payload_map[rel]) for rel in sorted(changed_rels) if rel in payload_map
+            ]
+            new_chunks: List[Chunk] = []
+            for rel, body in changed_payload:
+                for piece in _split_text(body):
+                    new_chunks.append(Chunk(text=piece, source=rel))
+
+            if new_chunks:
+                model = _get_embedder()
+                texts_new = [c.text for c in new_chunks]
+                emb_new = model.encode(
+                    texts_new, normalize_embeddings=True, show_progress_bar=True
+                )
+                emb_out = np.vstack([keep_emb, emb_new]) if len(keep_indices) else emb_new
+            else:
+                emb_out = keep_emb
+
+            chunks_out = kept_chunks + new_chunks
+            _atomic_save_npy(emb_path, emb_out)
+            _atomic_write_chunks_jsonl(chunks_path, chunks_out)
+            _atomic_write_text(
+                manifest_path,
+                json.dumps(
+                    {
+                        "digest": digest,
+                        "num_chunks": len(chunks_out),
+                        "model": _MODEL_NAME,
+                        "file_digests": file_digests,
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                )
+                + "\n",
+            )
+            invalidate_rag_cache()
+            return {
+                "status": "incremental",
+                "chunks": len(chunks_out),
+                "digest": digest,
+                "changed_files": len(changed_rels),
+                "removed_files": len(removed_rels),
+            }
+
+    # Tam rebuild yalnız force=True ile (kör yutma engeli).
+    if not force:
+        return {
+            "status": "refused_full_rebuild",
+            "hint": (
+                "Kör full rebuild engellendi. Learned için upsert_learned_into_main_index; "
+                "bilinçli tam rebuild: build_index(force=True)."
+            ),
+            "chunks": int(old.get("num_chunks") or 0),
+            "digest": digest,
+        }
+
     chunks: List[Chunk] = []
     for rel, body in files_payload:
         for piece in _split_text(body):
@@ -385,7 +562,156 @@ def build_index(
         )
         + "\n",
     )
+    invalidate_rag_cache()
     return {"status": "built", "chunks": len(chunks), "digest": digest}
+
+
+def upsert_sources_into_main_index(
+    rels: list[str],
+    *,
+    knowledge_root: Path | None = None,
+) -> dict:
+    """İnce yol: yalnız verilen relative md yollarını ana indekse ekle/güncelle.
+
+    Full knowledge taraması yok. Şamile yolları reddedilir.
+    """
+    root = Path(knowledge_root or _knowledge_root())
+    manifest_path = _index_dir() / "manifest.json"
+    chunks_path = _index_dir() / "chunks.jsonl"
+    emb_path = _index_dir() / "embeddings.npy"
+    if not (manifest_path.is_file() and chunks_path.is_file() and emb_path.is_file()):
+        return {
+            "status": "no_base_index",
+            "hint": "Ana indeks yok; ince yol taban ister.",
+            "changed_files": 0,
+        }
+
+    try:
+        man = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return {"status": "manifest_error", "error": str(exc)[:200], "changed_files": 0}
+
+    file_digests: dict[str, str] = dict(man.get("file_digests") or {})
+    known_by_norm = {_norm_rel(k): k for k in file_digests}
+
+    try:
+        old_chunks = _load_chunks()
+        old_emb = _load_embeddings()
+    except Exception as exc:
+        return {"status": "index_corrupt", "error": str(exc)[:200], "changed_files": 0}
+    if not old_chunks or old_emb is None or len(old_chunks) != len(old_emb):
+        return {
+            "status": "index_corrupt",
+            "hint": "chunk/emb uyumsuz; ince yol durdu.",
+            "changed_files": 0,
+        }
+
+    changed: list[tuple[str, str, str]] = []  # key, body, digest
+    skipped_shamela = 0
+    for raw_rel in rels:
+        rel = str(raw_rel).strip()
+        if not rel:
+            continue
+        if _is_shamela_main_skip(rel):
+            skipped_shamela += 1
+            continue
+        path = root / rel
+        if not path.is_file():
+            # OS ayırıcı dene
+            path = root / _norm_rel(rel)
+            if not path.is_file():
+                continue
+            rel = str(path.relative_to(root))
+        try:
+            body = path.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        if _is_dokunma_markdown(path, body):
+            continue
+        # Manifest anahtarı: varsa eski anahtarı koru (slash tutarlılığı)
+        key = known_by_norm.get(_norm_rel(rel), rel)
+        fd = _file_digest(key, body)
+        if file_digests.get(key) == fd:
+            continue
+        changed.append((key, body, fd))
+
+    if not changed:
+        return {
+            "status": "cached",
+            "chunks": int(man.get("num_chunks") or len(old_chunks)),
+            "changed_files": 0,
+            "skipped_shamela": skipped_shamela,
+        }
+
+    drop_norm = {_norm_rel(k) for k, _, _ in changed}
+    keep_indices: list[int] = []
+    kept_chunks: List[Chunk] = []
+    for i, c in enumerate(old_chunks):
+        if _norm_rel(c.source) in drop_norm:
+            continue
+        keep_indices.append(i)
+        kept_chunks.append(c)
+    keep_emb = old_emb[keep_indices] if keep_indices else old_emb[:0]
+
+    new_chunks: List[Chunk] = []
+    for key, body, fd in changed:
+        for piece in _split_text(body):
+            new_chunks.append(Chunk(text=piece, source=key))
+        file_digests[key] = fd
+
+    model = _get_embedder()
+    emb_new = model.encode(
+        [c.text for c in new_chunks],
+        normalize_embeddings=True,
+        show_progress_bar=False,
+    )
+    emb_out = np.vstack([keep_emb, emb_new]) if len(keep_indices) else emb_new
+    chunks_out = kept_chunks + new_chunks
+    digest = _overall_digest(file_digests)
+
+    _atomic_save_npy(emb_path, emb_out)
+    _atomic_write_chunks_jsonl(chunks_path, chunks_out)
+    _atomic_write_text(
+        manifest_path,
+        json.dumps(
+            {
+                "digest": digest,
+                "num_chunks": len(chunks_out),
+                "model": _MODEL_NAME,
+                "file_digests": file_digests,
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n",
+    )
+    invalidate_rag_cache()
+    return {
+        "status": "learned_upsert" if all(_is_thin_auto_ingest_rel(k) for k, _, _ in changed) else "upsert",
+        "chunks": len(chunks_out),
+        "digest": digest,
+        "changed_files": len(changed),
+        "skipped_shamela": skipped_shamela,
+    }
+
+
+def upsert_learned_into_main_index(*, knowledge_root: Path | None = None) -> dict:
+    """learned/*.md ince yol — sohbet öğrenmesi ana indekse girsin, Şamile/ortak yutulmasın."""
+    root = Path(knowledge_root or _knowledge_root())
+    learned = root / "learned"
+    if not learned.is_dir():
+        return {"status": "empty", "changed_files": 0, "chunks": 0}
+    rels: list[str] = []
+    for p in sorted(learned.glob("*.md")):
+        try:
+            if _is_dokunma_markdown(p):
+                continue
+            rels.append(str(p.relative_to(root)))
+        except OSError:
+            continue
+    out = upsert_sources_into_main_index(rels, knowledge_root=root)
+    out["learned_scanned"] = len(rels)
+    return out
 
 
 def _load_chunks() -> List[Chunk]:
@@ -1134,7 +1460,8 @@ def search(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
                 dom_fit = [
                     h
                     for h in dom_sorted
-                    if h[2] >= max(0.15, floor - 0.16) and chunk_fits_query(query, h[0])
+                    if h[2] >= max(0.15, floor - 0.16)
+                    and chunk_fits_query(query, h[0], source=str(h[1] or ""))
                 ][: max(tk * 2, 8)]
             if not dom_fit:
                 dom_fit = [h for h in dom_sorted if h[2] >= 0.28][:tk]
@@ -1189,13 +1516,187 @@ def search(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
     return raw[:tk]
 
 
+def _arsiv_root() -> Path | None:
+    try:
+        from ilim_assistant.ruzgar_public_mode import shared_arsiv_root
+
+        p = shared_arsiv_root()
+        if p is not None and p.is_dir():
+            return p
+    except Exception:
+        pass
+    p = _PKG_ROOT / "arsiv"
+    return p if p.is_dir() else None
+
+
+def _arsiv_disk_search_enabled() -> bool:
+    return os.environ.get("RUZGAR_ARSIV_DISK_SEARCH", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
+_ARSIV_SKIP_DIR_NAMES = frozenset(
+    {
+        "klon-sesler",
+        "klon-sesler-umit-ozel",
+        "ses-referans",
+        "mimar-fotograf",
+        "mimar-sanat",
+        "mimar-tasarim",
+        "ana_motor_uploads",
+        "hafiza_karantina",
+    }
+)
+
+
+def arsiv_search_status() -> dict:
+    """Dürüst durum: ana vektör indeksinde arsiv/ yok; disk ince arama ayrı."""
+    root = _arsiv_root()
+    man = _index_dir() / "manifest.json"
+    vec_n = 0
+    if man.is_file():
+        try:
+            fd = (json.loads(man.read_text(encoding="utf-8")).get("file_digests") or {})
+            vec_n = sum(1 for k in fd if _source_is_archive(str(k)))
+        except (OSError, json.JSONDecodeError, TypeError):
+            vec_n = 0
+    md_n = 0
+    if root is not None:
+        try:
+            md_n = sum(1 for _ in root.rglob("*.md"))
+        except OSError:
+            md_n = 0
+    return {
+        "ok": True,
+        "arsiv_root": str(root) if root else None,
+        "vector_in_main_index": vec_n,
+        "disk_md_approx": md_n,
+        "disk_search_enabled": _arsiv_disk_search_enabled() and root is not None,
+        "mode": "disk_keyword" if _arsiv_disk_search_enabled() else "off",
+        "hint": (
+            "arsiv/ ana RAG indeksinde değil; sohbet md/txt disk aramasıyla bakar "
+            "(Şamile/knowledge ayrı). Kapat: RUZGAR_ARSIV_DISK_SEARCH=0"
+        ),
+    }
+
+
+def _arsiv_query_tokens(query: str) -> list[str]:
+    try:
+        from ilim_assistant.ruzgar_anlam_koruma import content_tokens
+
+        toks = list(content_tokens(query, min_len=3))
+        if toks:
+            return toks[:12]
+    except Exception:
+        pass
+    import re as _re
+
+    raw = _re.findall(r"[A-Za-zÇĞİÖŞÜçğıöşü0-9]{3,}", (query or "").lower())
+    return raw[:12]
+
+
+def search_arsiv_disk(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
+    """İnce yol: arsiv/ altı md/txt — gömme/full rebuild yok."""
+    if not _arsiv_disk_search_enabled():
+        return []
+    root = _arsiv_root()
+    if root is None:
+        return []
+    toks = _arsiv_query_tokens(query)
+    if not toks:
+        return []
+    tk = max(1, int(top_k))
+    try:
+        max_files = max(50, int(os.environ.get("RUZGAR_ARSIV_DISK_MAX_FILES", "600") or "600"))
+    except ValueError:
+        max_files = 600
+    try:
+        max_bytes = max(8_000, int(os.environ.get("RUZGAR_ARSIV_DISK_MAX_BYTES", "120000") or "120000"))
+    except ValueError:
+        max_bytes = 120_000
+
+    scored: list[tuple[float, str, str]] = []
+    seen = 0
+    for path in root.rglob("*"):
+        if not path.is_file():
+            continue
+        if path.suffix.lower() not in (".md", ".txt"):
+            continue
+        # yedek / medya / gizli ağaçları atla
+        parts_l = [p.lower() for p in path.relative_to(root).parts]
+        if any(p.startswith("_backup") or p.startswith("_virus") or p.startswith("_legacy") for p in parts_l):
+            continue
+        if parts_l and parts_l[0] in _ARSIV_SKIP_DIR_NAMES:
+            continue
+        seen += 1
+        if seen > max_files:
+            break
+        rel = "arsiv/" + str(path.relative_to(root)).replace("\\", "/")
+        name_l = path.name.lower()
+        try:
+            raw = path.read_text(encoding="utf-8", errors="ignore")[:max_bytes]
+        except OSError:
+            continue
+        body_l = raw.lower()
+        hit_name = sum(1 for t in toks if t in name_l)
+        hit_body = sum(1 for t in toks if t in body_l)
+        if hit_name == 0 and hit_body == 0:
+            continue
+        cov = (hit_name * 2 + hit_body) / float(len(toks) * 3)
+        score = min(0.82, 0.18 + 0.64 * cov)
+        if hit_name:
+            score = min(0.85, score + 0.08)
+        # kısa pasaj
+        snippet = raw.strip().replace("\r\n", "\n")
+        if len(snippet) > 900:
+            # ilk eşleşen token civarı
+            pos = -1
+            for t in toks:
+                pos = body_l.find(t)
+                if pos >= 0:
+                    break
+            if pos < 0:
+                pos = 0
+            start = max(0, pos - 120)
+            snippet = snippet[start : start + 900]
+        scored.append((score, snippet, rel))
+
+    scored.sort(key=lambda x: -x[0])
+    return [(text, src, float(sc)) for sc, text, src in scored[:tk]]
+
+
+def _arsiv_vector_count_cached() -> int:
+    """Ana indekste arsiv/ satırı var mı — gömme yüklemeden."""
+    man = _index_dir() / "manifest.json"
+    if not man.is_file():
+        return 0
+    try:
+        fd = json.loads(man.read_text(encoding="utf-8")).get("file_digests") or {}
+        return sum(1 for k in fd if _source_is_archive(str(k)))
+    except (OSError, json.JSONDecodeError, TypeError):
+        return 0
+
+
 def search_arsiv(query: str, top_k: int = 5) -> List[Tuple[str, str, float]]:
-    """Yalnızca arşiv külliyatı kaynakları; geniş aday kümeden süzülür (tek gömme sorgusu)."""
+    """Arşiv araması: önce (nadiren) ana indeksteki arsiv/ satırları; yoksa disk ince yol.
+
+    Not: `arsiv/` bilinçli olarak ana RAG gömmesine alınmaz (Şamile/knowledge ayrımı).
+    """
     tk = max(1, top_k)
+    # Ana indekste arsiv yoksa gömme modelini boşuna yükleme.
+    if _arsiv_vector_count_cached() <= 0:
+        return search_arsiv_disk(query, top_k=tk)
     pool = max(tk * 4, 16)
-    wide = search(query, top_k=min(pool, 48))
-    out = [(t, s, sc) for t, s, sc in wide if _source_is_archive(s)]
-    return out[:tk]
+    try:
+        wide = search(query, top_k=min(pool, 48))
+        vec = [(t, s, sc) for t, s, sc in wide if _source_is_archive(s)]
+        if vec:
+            return vec[:tk]
+    except Exception:
+        pass
+    return search_arsiv_disk(query, top_k=tk)
 
 
 def _tarih_row_indices(chunks: List[Chunk]) -> np.ndarray:
