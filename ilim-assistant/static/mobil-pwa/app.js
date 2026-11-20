@@ -849,13 +849,31 @@
   async function runSuperEl(text) {
     const stage = el("sahneStage");
     if (!stage) return null;
+    // İstemci niyet kapısı — API'ye gereksiz gitme (desktop parity)
+    if (!looksLikeSahneCmd(text)) {
+      return { ok: false, skipped: "no_sahne_niyet" };
+    }
     try {
       const res = await api("/api/sahne/super-el", {
         method: "POST",
         body: JSON.stringify({ text: String(text || "") }),
       });
       if (!res || !res.ok) return res;
-      const action = String(res.action || "");
+
+      // Zayıf güven → yüzeyi değiştirme (desktop ruzgar-masa guven<0.72)
+      const guven = Number(res.guven || 0);
+      const act0 = String(res.action || "");
+      const strongAct =
+        /^(zoom_|mode_|tour_|cam_|stage_|era_|show_buildings)/.test(act0) ||
+        act0 === "focus" ||
+        act0 === "clear" ||
+        res.canli_kamera;
+      if (!strongAct && guven < 0.72) {
+        res.applied = { ok: false, skipped: "low_guven_sohbet" };
+        return res;
+      }
+
+      const action = act0;
 
       /* Gerçek UI — LLM «sahne açıldı» demesin, yüz gerçekten açılsın/kapansın */
       if (action === "stage_open") {
@@ -2095,9 +2113,11 @@
     }));
   }
 
+  /** Desktop `_sahneNiyet` ile hizalı — sohbet cümlesinde süper-el çağırma */
   function looksLikeSahneCmd(t) {
-    return /\b(sahne|harita|tur(u)?|gezgin|duraklat|devam|yakla[sş]|uzakla[sş]|üzerine|uzerine|odak|kuşbak|kusbak|3d|uydu|bas[iı]l[iı]|mikrofon)\b/i.test(
-      String(t || ""),
+    const s = String(t || "");
+    return /\b(harita|sahne|gezgin|odaklan|odakla|yakla[sş]t[iı]r|uzakla[sş]t[iı]r|2d|3d|4d|uydu|cesium|kamera|iss|nasa|pinle|temizle|tur(u)?|duraklat|kuşbak|kusbak|üzerine|uzerine)\b|sahneye\s+(koy|yaz)|haritay[ıi]\s+(a[cç]|g[oö]ster)|(?:harita|sahne|gezgin).{0,24}g[oö]ster\b|g[oö]ster.{0,24}(?:harita|sahne)\b/i.test(
+      s,
     );
   }
 
@@ -2288,8 +2308,8 @@
     meta.textContent = "düşünüyor…";
     setSahneState("dusun", t);
     try {
-      /* Canlı sohbette sahne komutu değilse süper-el atla (1 tur kazanç) */
-      if (!opts.live || looksLikeSahneCmd(t)) {
+      /* Sohbet ≠ sahne: yalnız niyet varsa süper-el (desktop parity) */
+      if (looksLikeSahneCmd(t)) {
         const se = await runSuperEl(t);
         if (se && se._mobilShort) {
           meta.textContent = "sahne";
@@ -2410,11 +2430,13 @@
     meta.textContent = "düşünüyor…";
     setSahneState("dusun", t);
     try {
-      const se = await runSuperEl(t);
-      if (se && se._mobilShort) {
-        meta.textContent = "sahne";
-        setSahneState("hazir");
-        return;
+      if (looksLikeSahneCmd(t)) {
+        const se = await runSuperEl(t);
+        if (se && se._mobilShort) {
+          meta.textContent = "sahne";
+          setSahneState("hazir");
+          return;
+        }
       }
       const token = localStorage.getItem(LS.token) || "";
       if (!token) {

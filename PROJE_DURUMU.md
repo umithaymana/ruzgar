@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-11-21 gece — Masa M3 · Çırak A–G+T YEŞİL (tavan) · sırada askıda Ses+Okuma. Sohbet `8da0da320`.
+**Son güncelleme:** 2026-11-21 gece — Sohbet sahne-kaçma + mobil kilit MÜHÜR · sırada Ses.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -12,9 +12,9 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 |---------|------|-----|
 | **1 — Masa gerçek iş** | **M1–M3 MÜHÜR YEŞİL** | `docs/M3_MASA_ANA_MOTOR_MUHUR_2026-11-21.md` · `smoke_masa_m3_muhur.py` |
 | **2 — Çırak / programlama** | **A–G+T✓** tavan mühür | `TAVAN_DERS.md` · `smoke_cirak_dilim_t.py` |
-| **3 — Sırada (askıdan açıldı)** | Ses yükselt → Okuma güçlendir → sesle kitap okut | 1–2 bitti; Mimar «ok» ile Ses dilimine girilir. Okuma ≠ RAG |
-| **Güvenli nokta** | Sohbet RAG A/B/C | `8da0da320` · dal `cursor/sohbet-akicilik-a-f` · `docs/SOHBET_RAG_ABC_GUVENLI_NOKTA_2026-11-20.md` |
-| **Mühürlü arka** | Sohbet · Kütüphane · Ses V0–V5 · Mobil F0–F9 | Bozma; üzerine ekle |
+| **3 — Sırada** | Ses yükselt → Okuma → sesle kitap | Mobil sahne-kilit mühürlü; Ses dilimine girilebilir. Okuma ≠ RAG |
+| **Güvenli nokta** | Sohbet RAG A/B/C + sahne-kaçma | `docs/MUHUR_SOHBET_SAHNE_KACMA_MOBIL_2026-11-21.md` · dal `cursor/sohbet-akicilik-a-f` |
+| **Mühürlü arka** | Sohbet · Kütüphane · Ses V0–V5 · Mobil F0–F9 · sahne-kilit | Bozma; üzerine ekle |
 | **Bilinçli erteli** | Sahne / OSM / Dünya Gezgini yeni dilim | Mimar «sahneye dön» deyene kadar yok |
 | **P3 kapalı** | Serbest kod · %90 programlama · halka açılış | Kapılı çırak dilimi ayrı |
 | **Kapı** | `8779` · mic HTTPS `8443` · PWA `/mobil/` | Boot sırası kilitli |

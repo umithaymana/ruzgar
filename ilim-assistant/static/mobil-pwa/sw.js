@@ -1,8 +1,8 @@
 /* Rüzgar PWA — HTML/ağ öncelikli; Yenile = güncelleme (skipWaiting + claim) */
-const CACHE = "ruzgar-pwa-v20261118-onboard";
+const CACHE = "ruzgar-pwa-v20261121-sahne-kilit";
 const ASSETS = [
   "./app.css?v=20261118-onboard",
-  "./app.js?v=20261118-onboard",
+  "./app.js?v=20261121-sahne-kilit",
   "./manifest.webmanifest?v=5",
   "./icon-192.png?v=5",
   "./icon-512.png?v=5",
