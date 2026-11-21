@@ -13,11 +13,11 @@ import time
 from pathlib import Path
 from typing import Any
 
-V3_VERSION = "ses-v3-tts-ilk-byte-v1-2026-11-03"
+V3_VERSION = "ses-v3-tts-ilk-byte-v1-2026-11-21"
 
 # UI ilk cümle tamponu ~130; birleşik parçalar ~520 — üstü pool yoluna düşer.
-# Aşama D: erken parçalar biraz daha geniş V3 sıcak yolda kalsın.
-_DEFAULT_FAST_CHARS = 560
+# FB cila: sohbet ilk parçaları V3'te kalsın (prosody concat first-byte şişirmesin).
+_DEFAULT_FAST_CHARS = 640
 
 # Aşama C/D — son ölçüm (text_ready→first_byte sunucu tarafı)
 _LAST_FIRST_BYTE: dict[str, Any] = {}
@@ -136,6 +136,9 @@ async def edge_stream_collect_mp3(
                     "under_d_keep": (
                         first_ms is not None and float(first_ms) <= ASAMA_D_TTS_KEEP_MS
                     ),
+                    "under_900": (
+                        first_ms is not None and float(first_ms) < 900.0
+                    ),
                     "asama_d": True,
                 }
                 _LAST_FIRST_BYTE.clear()
@@ -147,6 +150,13 @@ async def edge_stream_collect_mp3(
                     }
                 )
                 _LAST_FIRST_BYTE["bytes_len"] = len(result["bytes"])
+                # FB cila — başarılı stream ılık işaretle
+                try:
+                    import ilim_assistant.ses_fb_cila as _fb
+
+                    _fb._LAST_WARM = time.time()
+                except Exception:
+                    pass
                 return result
             last_err = "stream:no_audio_chunk"
             last_kind = "no_audio"

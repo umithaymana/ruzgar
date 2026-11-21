@@ -1,0 +1,72 @@
+{
+  "version": "ses-s3-klon-yolu-v1-2026-11-21",
+  "ts": "2026-11-21T14:31:12.935342+00:00",
+  "referans": {
+    "clone_enabled": true,
+    "xtts": true,
+    "edge": true,
+    "klon_onay": true,
+    "tts_backend": "auto",
+    "refs": {
+      "muhabbet": {
+        "path": "D:\\ÜMİT\\PROJELER\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\arsiv\\klon-sesler-umit-ozel\\BUSENAZ ses.wav",
+        "name": "BUSENAZ ses.wav"
+      },
+      "alim": {
+        "path": "D:\\ÜMİT\\PROJELER\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\arsiv\\klon-sesler-umit-ozel\\BUSENAZ ses.wav",
+        "name": "BUSENAZ ses.wav"
+      },
+      "tilavet": {
+        "path": "D:\\ÜMİT\\PROJELER\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\arsiv\\ses-referans\\kuran.wav",
+        "name": "kuran.wav"
+      },
+      "kuran": {
+        "path": "D:\\ÜMİT\\PROJELER\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\arsiv\\ses-referans\\kuran.wav",
+        "name": "kuran.wav"
+      }
+    },
+    "busenaz_ok": true,
+    "tilavet_kuran_ok": true,
+    "should_auto_muhabbet": true,
+    "should_clone_muhabbet": true,
+    "status": {
+      "enabled": true,
+      "xtts": true,
+      "coqui_import": true,
+      "cuda": true,
+      "ilim_voice": "D:/ÜMİT/PROJELER/CURSOR PROJELER/YAPAY ZEKA/ilim-voice",
+      "referans_dir": "ilim-assistant/arsiv/ses-referans",
+      "referans": {
+        "muhabbet": true,
+        "alim": false,
+        "tilavet": false,
+        "edip": false,
+        "asistan": true,
+        "kuran": true,
+        "gazel": true,
+        "ilahi": true,
+        "BUSENAZ ses": true
+      },
+      "s3": {
+        "muhabbet_ref": "D:\\ÜMİT\\PROJELER\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\arsiv\\klon-sesler-umit-ozel\\BUSENAZ ses.wav",
+        "tilavet_ref": "D:\\ÜMİT\\PROJELER\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\arsiv\\ses-referans\\kuran.wav",
+        "edge_yedek": true,
+        "xtts_runtime": true
+      },
+      "max_chars": 2500,
+      "hint_tr": "Klon hazır — BUSENAZ (muhabbet) + kuran (tilavet); auto+klon_onay.",
+      "version": "ses-klon-s4-2026-06-06",
+      "mimarlar": "Ümit & Gökçenur"
+    }
+  },
+  "edge_yedek": {
+    "ok": true,
+    "missing": [],
+    "kural": "XTTS yok veya klon hata → Edge yedek; STRICT=1 ile 503"
+  },
+  "xtts_runtime": true,
+  "klon_canli": true,
+  "s3_yesil": true,
+  "not": "XTTS hazır — auto+klon_onay ile BUSENAZ / kuran klon yolu açık.",
+  "sonraki": "S4 tamam — V1 video dublaj veya kulak turu"
+}

@@ -75,6 +75,17 @@ def resolve_whisper_device_compute() -> tuple[str, str]:
     return "cpu", ctype_env or "int8"
 
 
+def unload_model() -> dict[str, Any]:
+    """VRAM hakemi — Whisper modelini bellekten bırak."""
+    global _MODEL, _MODEL_META, _WARM_DONE
+    had = _MODEL is not None
+    device = str((_MODEL_META or {}).get("device") or "")
+    _MODEL = None
+    _MODEL_META = {}
+    _WARM_DONE = False
+    return {"ok": True, "had_model": had, "device": device}
+
+
 def get_model():
     global _MODEL, _MODEL_META
     from faster_whisper import WhisperModel

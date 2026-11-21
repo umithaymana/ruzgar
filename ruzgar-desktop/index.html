@@ -2410,10 +2410,10 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
                   </div>
 
                   <div class="video-v2-panel video-v6-panel" id="video-anchor-dub">
-                    <h4 class="video-v2-title">Dublaj prototipi (Faz S6)</h4>
+                    <h4 class="video-v2-title">Dublaj (V1.2 kalite mux)</h4>
                     <p class="video-v2-intro">
-                      Video → Whisper → çeviri → tek anlatıcı TTS → yeni ses izi.
-                      Kısa klip ile test edin (≈15 dk, 48 segment üst sınır). Dudak uyumu yok.
+                      Video → Whisper → çeviri → S1–S3 TTS → normalize / soft_fit / isteğe bağlı orijinal miks.
+                      Kısa klip (≈15 dk, 48 segment). Tek anlatıcı; dudak uyumu yok.
                     </p>
                     <label class="video-file-label" for="video-rel-dub">Video (göreli yol)</label>
                     <input
@@ -2443,6 +2443,28 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
                         <option value="edge">Edge TTS</option>
                         <option value="clone">XTTS klon</option>
                       </select>
+                    </div>
+                    <div class="video-sub-factory-row video-dub-v12-row">
+                      <label class="video-file-label" title="V1.2 loudnorm">
+                        <input type="checkbox" id="video-dub-normalize" checked />
+                        Normalize
+                      </label>
+                      <label class="video-file-label" title="Kısık orijinal + dublaj">
+                        <input type="checkbox" id="video-dub-mix-original" />
+                        Orijinal miks
+                      </label>
+                      <label class="video-file-label" for="video-dub-orig-duck">Duck dB</label>
+                      <input
+                        id="video-dub-orig-duck"
+                        type="number"
+                        class="video-text-input"
+                        value="-16"
+                        step="1"
+                        min="-40"
+                        max="0"
+                        style="max-width: 5.5rem"
+                        title="Orijinal ses seviyesi (dB)"
+                      />
                     </div>
                     <div class="video-toolbar">
                       <button type="button" class="btn-primary btn-compact" id="btn-video-dub">
@@ -2849,10 +2871,10 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
 
           <section class="motor-page" id="page-ses" hidden>
             <div class="atelier-info-strip">
-              <span class="phase-badge">Faz S1–S6 ✓</span>
+              <span class="phase-badge">S0–S4 · V1.2 ✓</span>
               <span class="atelier-promise">
                 <strong>Ses Atölyesi</strong> — Whisper, prosody, XTTS klon,
-                <strong>tilavet modu</strong>, <strong>dublaj prototipi (S6)</strong>.
+                <strong>tilavet</strong>, <strong>dublaj V1.2</strong> (normalize / miks / soft_fit).
               </span>
             </div>
             <h3>Ses Motoru — Stüdyo</h3>
@@ -2891,6 +2913,17 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
                   <button type="button" class="btn-primary btn-compact" id="btn-ses-speak">Metni seslendir</button>
                   <button type="button" class="btn-primary btn-compact" id="btn-ses-tilavet" title="Kuran / hadis / Arapca vakur okuma">
                     Tilavet oku
+                  </button>
+                  <input
+                    type="search"
+                    id="ses-raf-q"
+                    class="ses-raf-q"
+                    placeholder="Raftan ara (örn. fotosentez)"
+                    maxlength="120"
+                    aria-label="Raftan eser ara"
+                  />
+                  <button type="button" class="btn-primary btn-compact" id="btn-ses-raftan" title="Kütüphaneden kısa pasaj sesle oku (S4)">
+                    Raftan oku
                   </button>
                   <button type="button" class="btn-secondary btn-compact" id="btn-ses-clear">Temizle</button>
                   <span class="ses-meta" id="ses-stt-meta"></span>
@@ -3061,9 +3094,10 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
               </div>
             </section>
             <div class="ses-dub-panel" id="ses-dub-panel">
-              <h4 class="ses-section-title">Dublaj prototipi (Faz S6)</h4>
+              <h4 class="ses-section-title">Dublaj (V1.2 kalite mux)</h4>
               <p class="ses-hint ses-dub-intro">
-                Video → Whisper → çeviri → TTS → yeni ses izi. Kısa klip ile test edin (≈15 dk, 48 segment).
+                Video → Whisper → çeviri → S1–S3 TTS → normalize / soft_fit / isteğe bağlı orijinal miks.
+                Kısa klip ile test edin (≈15 dk, 48 segment).
               </p>
               <label class="ses-file-label" for="ses-dub-rel">Video (göreli yol veya dosya seç)</label>
               <div class="ses-stt-row">
@@ -3107,6 +3141,29 @@ Dosya seçip «Medya bilgisi» ile süre ve kodek bilgisi alın.</pre>
                 <button type="button" class="btn-secondary btn-compact" id="btn-ses-dub-video-panel" title="Video motorunda aynı panel">
                   Video motorunda aç
                 </button>
+              </div>
+              <div class="ses-stt-row ses-dub-v12-row">
+                <label class="ses-lang-label" title="V1.2 loudnorm">
+                  <input type="checkbox" id="ses-dub-normalize" checked />
+                  Normalize
+                </label>
+                <label class="ses-lang-label" title="Kısık orijinal + dublaj">
+                  <input type="checkbox" id="ses-dub-mix-original" />
+                  Orijinal miks
+                </label>
+                <label class="ses-lang-label" for="ses-dub-orig-duck">
+                  Duck dB
+                  <input
+                    id="ses-dub-orig-duck"
+                    type="number"
+                    class="video-text-input"
+                    value="-16"
+                    step="1"
+                    min="-40"
+                    max="0"
+                    style="max-width: 5.5rem"
+                  />
+                </label>
               </div>
               <p id="ses-dub-meta" class="ses-hint"></p>
             </div>

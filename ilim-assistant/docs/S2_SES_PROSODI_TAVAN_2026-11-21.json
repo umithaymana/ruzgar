@@ -1,0 +1,104 @@
+{
+  "version": "ses-s2-prosodi-tavan-v1-2026-11-21",
+  "ts": "2026-11-21T13:58:02.871667+00:00",
+  "enabled": true,
+  "profiller": {
+    "muhabbet": {
+      "tavan": "muhabbet",
+      "hiz": 1.0,
+      "huzur": 0.94,
+      "durak_carpani": 0.88,
+      "tilavet_durak": false,
+      "param": {
+        "hiz_ust": 1.0,
+        "huzur_ust": 0.96,
+        "durak_carpani": 0.88,
+        "rate_extra_pct": 0.0,
+        "pitch_override": null,
+        "prosody_tercih": false,
+        "tilavet_durak": false,
+        "aciklama": "Günlük muhabbet — kısa durak, doğal tempo"
+      },
+      "s2": true,
+      "version": "ses-s2-prosodi-tavan-v1-2026-11-21",
+      "rate": "-11%",
+      "pitch": "+1Hz",
+      "rate_base": "-11%",
+      "pause_cumle_ms": 170
+    },
+    "alim": {
+      "tavan": "alim",
+      "hiz": 0.86,
+      "huzur": 0.8,
+      "durak_carpani": 1.22,
+      "tilavet_durak": false,
+      "param": {
+        "hiz_ust": 0.86,
+        "huzur_ust": 0.8,
+        "durak_carpani": 1.22,
+        "rate_extra_pct": -3.0,
+        "pitch_override": null,
+        "prosody_tercih": true,
+        "tilavet_durak": false,
+        "aciklama": "Âlim — hadis/tefsir vakur; orta-uzun durak"
+      },
+      "s2": true,
+      "version": "ses-s2-prosodi-tavan-v1-2026-11-21",
+      "rate": "-36%",
+      "pitch": "-3Hz",
+      "rate_base": "-33%",
+      "pause_cumle_ms": 525
+    },
+    "tilavet": {
+      "tavan": "tilavet",
+      "hiz": 0.74,
+      "huzur": 0.7,
+      "durak_carpani": 1.42,
+      "tilavet_durak": true,
+      "param": {
+        "hiz_ust": 0.74,
+        "huzur_ust": 0.7,
+        "durak_carpani": 1.42,
+        "rate_extra_pct": -8.0,
+        "pitch_override": "-5Hz",
+        "prosody_tercih": true,
+        "tilavet_durak": true,
+        "aciklama": "Tilavet — huşû; ayet/vakıf uzun nefes"
+      },
+      "s2": true,
+      "version": "ses-s2-prosodi-tavan-v1-2026-11-21",
+      "rate": "-48%",
+      "pitch": "-5Hz",
+      "rate_base": "-48%",
+      "pause_cumle_ms": 939
+    }
+  },
+  "tilavet_ornek": {
+    "rate": "-48%",
+    "pitch": "-5Hz",
+    "ayet_durak_ms": 5456
+  },
+  "distinct_pause_ok": true,
+  "distinct_rate_ok": true,
+  "kulak_liste": [
+    {
+      "id": "muhabbet",
+      "metin": "Merhaba Ümit abi, nasılsın? Kısa bir muhabbet cümlesi.",
+      "beklenen": "Doğal, robot değil, kısa durak"
+    },
+    {
+      "id": "alim",
+      "metin": "Hadis-i şerifte buyurulur ki: Ameller niyetlere göredir.",
+      "beklenen": "Vakur, tane tane, acele yok"
+    },
+    {
+      "id": "tilavet",
+      "metin": "Rahmân ve Rahîm olan Allah'ın adıyla. Elhamdülillâhi rabbil âlemîn.",
+      "beklenen": "Huşû, uzun nefes / vakıf hissi"
+    }
+  ],
+  "kulak_skoru_0_5": null,
+  "kulak_not": "Mimar kulak onayı — yapı yeşili kulak mühürü değildir.",
+  "s2_yesil": true,
+  "sonraki": "S3 — klon yolu (BUSENAZ ses + kuran.wav) / Edge yedek"
+}

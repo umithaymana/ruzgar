@@ -1,5 +1,9 @@
-# Coqui TTS (XTTS / ses klonlama) — kurulumu ağır; Google Colab'da sık başarısız olur.
-# Önce: pip install -r requirements.txt
-# Sonra (yerel GPU önerilir): pip install -r requirements-tts.txt
+# Coqui TTS (XTTS / ses klonlama) — Python 3.12+ için maintained fork.
+# Önce: pip install torch torchaudio (CUDA uyumlu, mevcut venv'te zaten var).
+# Sonra: pip install -r requirements-tts.txt
+#
+# Eski paket `TTS>=0.22` Python <3.12 ister; kullanma.
+# Import yolu aynı: from TTS.api import TTS
 
-TTS>=0.22.0
+coqui-tts>=0.27.0
+soundfile>=0.12.1

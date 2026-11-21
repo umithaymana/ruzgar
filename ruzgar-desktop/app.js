@@ -631,6 +631,8 @@ const el = {
   btnSesToChat: document.getElementById("btn-ses-to-chat"),
   btnSesSpeak: document.getElementById("btn-ses-speak"),
   btnSesTilavet: document.getElementById("btn-ses-tilavet"),
+  sesRafQ: document.getElementById("ses-raf-q"),
+  btnSesRaftan: document.getElementById("btn-ses-raftan"),
   btnSesClear: document.getElementById("btn-ses-clear"),
   sesSttMeta: document.getElementById("ses-stt-meta"),
   sesCloneRefInput: document.getElementById("ses-clone-ref-input"),
@@ -643,6 +645,9 @@ const el = {
   sesDubSrcLang: document.getElementById("ses-dub-src-lang"),
   sesDubTgtLang: document.getElementById("ses-dub-tgt-lang"),
   sesDubVoice: document.getElementById("ses-dub-voice"),
+  sesDubNormalize: document.getElementById("ses-dub-normalize"),
+  sesDubMixOriginal: document.getElementById("ses-dub-mix-original"),
+  sesDubOrigDuck: document.getElementById("ses-dub-orig-duck"),
   btnSesDub: document.getElementById("btn-ses-dub"),
   btnSesDubVideoPanel: document.getElementById("btn-ses-dub-video-panel"),
   sesDubMeta: document.getElementById("ses-dub-meta"),
@@ -720,6 +725,9 @@ const el = {
   videoDubSrcLang: document.getElementById("video-dub-src-lang"),
   videoDubTgtLang: document.getElementById("video-dub-tgt-lang"),
   videoDubVoice: document.getElementById("video-dub-voice"),
+  videoDubNormalize: document.getElementById("video-dub-normalize"),
+  videoDubMixOriginal: document.getElementById("video-dub-mix-original"),
+  videoDubOrigDuck: document.getElementById("video-dub-orig-duck"),
   btnVideoDub: document.getElementById("btn-video-dub"),
   videoDubMeta: document.getElementById("video-dub-meta"),
   videoRelTranscribe: document.getElementById("video-rel-transcribe"),
@@ -7463,10 +7471,13 @@ async function refreshSesDubHint() {
       el.sesDubMeta.textContent = "Dublaj kapalı — RUZGAR_VIDEO_DUB=1 ile açın.";
       return;
     }
+    const v1 = j.v1 || {};
     el.sesDubMeta.textContent = [
-      "Dublaj hazır",
+      j.version ? String(j.version) : "Dublaj hazır",
+      v1.kalite_mux ? "V1.2 mux" : "",
       j.max_segments ? `max ${j.max_segments} segment` : "",
       j.max_duration_sec ? `max ${Math.round(j.max_duration_sec / 60)} dk` : "",
+      "normalize / miks / soft_fit",
     ]
       .filter(Boolean)
       .join(" · ");
@@ -7671,6 +7682,21 @@ function wireSesAtolye() {
   if (el.btnSesTilavet) {
     el.btnSesTilavet.addEventListener("click", () => {
       void speakStudioTilavet(el.sesTranscript?.value || "");
+    });
+  }
+  if (el.btnSesRaftan) {
+    el.btnSesRaftan.addEventListener("click", () => {
+      const q = String(el.sesRafQ?.value || "").trim();
+      void speakRaftanPasaj(q, { action: "oku" });
+    });
+  }
+  if (el.sesRafQ) {
+    el.sesRafQ.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter") {
+        ev.preventDefault();
+        const q = String(el.sesRafQ?.value || "").trim();
+        void speakRaftanPasaj(q, { action: "oku" });
+      }
     });
   }
   if (el.btnSesClear) {
@@ -8686,7 +8712,8 @@ async function refreshVideoEngineHint() {
     parts.push(`Video oluştur: ${createBits.join(", ")}`);
     const vd = j.video_dub || {};
     if (vd.enabled) {
-      parts.push(`Dublaj S6 ✓ (max ${vd.max_segments || "?"} seg)`);
+      const mux = vd.v1 && vd.v1.kalite_mux ? "V1.2 mux ✓" : "V1 ✓";
+      parts.push(`Dublaj ${mux} (max ${vd.max_segments || "?"} seg)`);
     }
     el.videoEngineHint.textContent = `${parts.join(" · ")} · Çıktı: .ruzgar-video-export/ · Paneller: üst düğmeler veya Düzen menüsü`;
   } catch {
@@ -9080,14 +9107,42 @@ async function runDubbingJob(options = {}) {
     flashRuzgarDurum("Dublaj icin video goreli yolu girin veya dosya secin.");
     return;
   }
+  const mixCb =
+    options.mixOriginalEl ||
+    (relInput === el.sesDubRel ? el.sesDubMixOriginal : el.videoDubMixOriginal);
+  const normCb =
+    options.normalizeEl ||
+    (relInput === el.sesDubRel ? el.sesDubNormalize : el.videoDubNormalize);
+  const duckInp =
+    options.origDuckEl ||
+    (relInput === el.sesDubRel ? el.sesDubOrigDuck : el.videoDubOrigDuck);
+  const wantMix =
+    options.mixOriginal != null
+      ? !!options.mixOriginal
+      : !!(mixCb && mixCb.checked);
+  const wantNorm =
+    options.normalize != null
+      ? !!options.normalize
+      : normCb
+        ? !!normCb.checked
+        : true;
+  let duckDb = "-16";
+  if (options.origDuckDb != null && String(options.origDuckDb).trim() !== "") {
+    duckDb = String(options.origDuckDb);
+  } else if (duckInp && String(duckInp.value || "").trim() !== "") {
+    duckDb = String(duckInp.value).trim();
+  }
   const fd = new FormData();
   fd.append("rel", rel);
   fd.append("src_lang", String(srcSelect?.value || "auto"));
   fd.append("tgt_lang", String(tgtSelect?.value || "tr"));
   fd.append("voice", String(voiceSelect?.value || "auto"));
-  fd.append("karakter", "asistan");
-  flashRuzgarDurum("Dublaj basladi — STT + ceviri + TTS (uzun surebilir)…");
-  setStatus("Dublaj S6…", "Rüzgar");
+  fd.append("karakter", String(options.karakter || "asistan"));
+  fd.append("mix_original", wantMix ? "1" : "0");
+  fd.append("orig_duck_db", duckDb);
+  fd.append("normalize", wantNorm ? "1" : "0");
+  flashRuzgarDurum("Dublaj basladi — STT + ceviri + TTS + V1.2 mux…");
+  setStatus("Dublaj V1.2…", "Rüzgar");
   setVideoJobProgress(true, "Dublaj pipeline…");
   try {
     const res = await fetch(`${API}/api/video/dub`, { method: "POST", body: fd });
@@ -9101,9 +9156,15 @@ async function runDubbingJob(options = {}) {
       flashRuzgarDurum(formatVideoApiError(j.detail, res, "Dublaj basarisiz"));
       return;
     }
+    const qm = j.quality_mux || {};
     const metaLine = [
       j.segment_count != null ? `${j.segment_count} segment` : "",
       j.voice_mode ? `ses: ${j.voice_mode}` : "",
+      j.tavan ? `tavan: ${j.tavan}` : "",
+      wantMix ? `miks ${duckDb}dB` : "miks kapalı",
+      wantNorm ? "normalize" : "normalize kapalı",
+      qm.mixed ? "mix✓" : "",
+      qm.normalized ? "loudnorm✓" : "",
       j.detected_language ? `kaynak: ${j.detected_language}` : "",
       j.target_language ? `hedef: ${j.target_language}` : "",
       j.srt_rel ? `SRT: ${j.srt_rel}` : "",
@@ -11621,6 +11682,12 @@ async function bargeInStopTtsForMic() {
   const hadChat = !!(activeChatAbort || activeChatWs || perfBusy);
   if (!hadTts && !hadChat) return false;
   silenceVoiceOutputNow();
+  // XTTS sunucu iptal — arka plan sentezi boşa dönmesin
+  try {
+    void fetch(`${API}/api/tts/cancel`, { method: "POST" }).catch(() => {});
+  } catch (_) {
+    /* yok say */
+  }
   if (hadChat) {
     try {
       userRequestedChatStop = true;
@@ -14937,10 +15004,12 @@ function normalizeKarakterForTts(k) {
   const s = String(k || "")
     .toLowerCase()
     .trim();
-  if (s === "bilge" || s === "kari") return "alim";
+  if (s === "bilge" || s === "kari" || s === "âlim") return "alim";
   if (s === "sair") return "edip";
-  if (s === "alim" || s === "edip" || s === "asistan") return s;
-  return "asistan";
+  if (s === "asistan" || s === "sohbet" || s === "gunluk" || s === "günlük") return "muhabbet";
+  if (s === "kuran" || s === "tecvid") return "tilavet";
+  if (s === "muhabbet" || s === "alim" || s === "tilavet" || s === "edip") return s;
+  return "muhabbet";
 }
 
 function ttsPlainForSpeech(t) {
@@ -17628,7 +17697,74 @@ async function speakStudioTranscript(raw) {
   speakTextImmediate(plain);
 }
 
-/** Tilavet modu — Kuran / gazel / ilahi referans klonu (Faz S5). @returns {Promise<boolean>} */
+/** S4 — raftan kısa pasaj sesle oku (pasaj API → /api/tts; sesle birleşik yol da var). */
+async function speakRaftanPasaj(query, opts) {
+  const options = opts && typeof opts === "object" ? opts : {};
+  const q = String(query || options.q || "").trim();
+  const action = String(options.action || "oku").trim() || "oku";
+  if (!q && !["devam", "tekrar", "yavas", "husulu"].includes(action)) {
+    flashRuzgarDurum("Raftan okumak için bir anahtar yaz (örn. fotosentez).");
+    return false;
+  }
+  flashRuzgarDurum(`Raftan pasaj… «${q || action}»`);
+  setStatus("Raftan okuma…", "Rüzgar");
+  try {
+    const pj = await fetch(`${API}/api/okuma/pasaj`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ q, action, session_id: "desktop" }),
+    });
+    if (!pj.ok) {
+      let detail = "Raftan pasaj bulunamadı";
+      try {
+        const j = await pj.json();
+        detail = String(j.detail || j.error || detail);
+      } catch (_) {
+        /* ignore */
+      }
+      flashRuzgarDurum(detail);
+      setStatus("Hazır", "Rüzgar");
+      return false;
+    }
+    const meta = await pj.json();
+    const plain = String(meta.pasaj || "").trim();
+    const kar = normalizeKarakterForTts(meta.karakter || "alim");
+    if (!plain) {
+      flashRuzgarDurum("Pasaj boş.");
+      setStatus("Hazır", "Rüzgar");
+      return false;
+    }
+    if (el.sesTranscript) el.sesTranscript.value = plain;
+    const res = await fetch(`${API}/api/tts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(
+        ttsRequestPayload(plain, kar, {
+          backend: typeof sesTtsBackendPreference === "function" ? sesTtsBackendPreference() : "auto",
+          prosody: true,
+        })
+      ),
+    });
+    if (!res.ok) {
+      flashRuzgarDurum("TTS başarısız — pasaj metne yazıldı.");
+      setStatus("Hazır", "Rüzgar");
+      return false;
+    }
+    const blob = await res.blob();
+    await playTtsBlob(blob);
+    const eser = meta.eser_id || meta.baslik || "";
+    flashRuzgarDurum(`Raftan okundu${eser ? " — " + eser : ""} (${kar})`);
+    setStatus("Hazır", "Rüzgar");
+    return true;
+  } catch (e) {
+    flashRuzgarDurum(e && e.message ? e.message : String(e));
+    setStatus("Hazır", "Rüzgar");
+    return false;
+  }
+}
+window.speakRaftanPasaj = speakRaftanPasaj;
+
+/** Tilavet modu — Kuran / hadis / Arapca vakur okuma (Faz S5). @returns {Promise<boolean>} */
 async function speakStudioTilavet(raw, opts) {
   const options = opts && typeof opts === "object" ? opts : {};
   const tilavetReferans = String(options.tilavetReferans || options.profil || "").trim().toLowerCase();

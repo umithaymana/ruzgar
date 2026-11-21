@@ -27,7 +27,8 @@ def main() -> int:
     failed += _ok("v4-barge-in" in V4_VERSION, f"ver {V4_VERSION}")
     c = v4_contract()
     failed += _ok(c.get("barge_in") is True, "contract barge_in")
-    failed += _ok(int(c.get("settle_ms") or 0) == 80, "settle_ms=80")
+    # Aşama D — settle 80→40 (ses_v4_barge_in.BARGE_SETTLE_MS / app.js)
+    failed += _ok(int(c.get("settle_ms") or 0) == 40, "settle_ms=40")
 
     app = desktop_app_js()
     failed += _ok(app.is_file(), f"app.js {app}")

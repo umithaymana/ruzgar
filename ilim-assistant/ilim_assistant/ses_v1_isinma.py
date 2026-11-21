@@ -83,30 +83,16 @@ def prime_tts_pool() -> dict[str, Any]:
         t0 = time.perf_counter()
         prime_tts_process_pool()
         out["pool_ms"] = round((time.perf_counter() - t0) * 1000.0, 1)
-        # Aşama C — idle Edge stream ısınma (barge flush bozulmaz; yalnız warm)
+        # FB cila — Edge TLS/stream ılık (barge flush bozulmaz)
         try:
-            from ilim_assistant.ses_v3_tts_ilk_byte import edge_stream_collect_mp3
-
-            voice = (
-                os.environ.get("RUZGAR_TTS_VOICE", "tr-TR-AhmetNeural").strip()
-                or "tr-TR-AhmetNeural"
-            )
-
-            async def _warm() -> dict[str, Any]:
-                return await edge_stream_collect_mp3(
-                    "Merhaba.",
-                    voice=voice,
-                    rate="+0%",
-                    pitch="+0Hz",
-                    retries=1,
-                )
-
             import asyncio
 
-            warm_r = asyncio.run(_warm())
+            from ilim_assistant.ses_fb_cila import warm_edge_stream
+
+            warm_r = asyncio.run(warm_edge_stream(force=True))
             out["edge_first_byte_ms"] = warm_r.get("first_byte_ms")
-            out["edge_ok"] = bool(warm_r.get("ok"))
-            if not warm_r.get("ok"):
+            out["edge_ok"] = bool(warm_r.get("ok") or warm_r.get("skipped"))
+            if not out["edge_ok"]:
                 out["note"] = (warm_r.get("note") or "edge_warm_fail")[:160]
         except Exception as exc:
             out["note"] = f"edge_warm:{exc}"[:160]

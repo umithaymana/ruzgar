@@ -1,0 +1,29 @@
+{
+  "version": "ses-s4-okuma-bag-v1-2026-11-21",
+  "ts": "2026-11-21T13:14:47.586451+00:00",
+  "kutuphane": {
+    "enabled": true,
+    "eser_sayisi": 51
+  },
+  "demo": {
+    "query": "fotosentez",
+    "ok": true,
+    "chars": 355,
+    "karakter": "alim",
+    "eser_id": "001_hucre_fotosentez",
+    "baslik": "Hücre ve fotosentez",
+    "pasaj_onizleme": "Hücre ve fotosentez Hücre Canlıların temel yapı birimidir. Prokaryot (çekirdeksiz) ve ökaryot (çekirdekli) ayrımı vardır. Bitki hücrelerinde genelde hücre duvar"
+  },
+  "devam_ok": true,
+  "tekrar_ok": true,
+  "api_hooks": true,
+  "masa_hook": true,
+  "mobil_hook": true,
+  "s4_yesil": true,
+  "kulak_liste": [
+    "Raftan kısa pasaj — âlim edası doğal mı?",
+    "Devam / tekrar aynı yerden mi?",
+    "Mobil + masa aynı pasaj / profil?"
+  ],
+  "sonraki": "V1 — video dublaj omurga profili · veya kulak turu S0–S4"
+}

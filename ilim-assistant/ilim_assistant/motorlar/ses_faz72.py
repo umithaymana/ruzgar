@@ -29,7 +29,9 @@ _QUESTION_RE = re.compile(
     r"\b(?:mi|mı|mu|mü)\s*[?？]?\s*$)",
     re.I,
 )
-_PROFILE_RE = re.compile(r"\b(alim|edip|asistan)\b", re.I)
+_PROFILE_RE = re.compile(
+    r"\b(muhabbet|alim|âlim|tilavet|edip|asistan|sohbet)\b", re.I
+)
 # D6/inceleme: «yap» çıkarıldı (yapay tuzağı + «asistan yap» belirsiz);
 # yalnız açık geçiş: geç / seç / kullan / mod / profil / karakter
 _PROFILE_SWITCH_RE = re.compile(
@@ -216,7 +218,7 @@ def format_ses_settings() -> str:
         "",
         profil_aciklamasi(kar),
         "",
-        "Profil değiştir: «alim moduna geç» · «edip profili» · «asistan sesi»",
+        "Profil değiştir: «muhabbet» · «alim» · «tilavet» (eski: asistan→muhabbet)",
         f"({FAZ72_VERSION})",
     ]
     return "\n".join(lines)

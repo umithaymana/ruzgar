@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-11-21 gece — Sohbet sahne-kaçma + mobil kilit MÜHÜR · sırada Ses.
+**Son güncelleme:** 2026-11-21 — **S0–S4 YEŞİL** · duygu/etiket v2 · **V1.0–V1.2 dublaj YEŞİL** · FB/iptal/VRAM · sırada mobil dublaj paneli ince ayar / V2 efekt.
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -12,14 +12,20 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 |---------|------|-----|
 | **1 — Masa gerçek iş** | **M1–M3 MÜHÜR YEŞİL** | `docs/M3_MASA_ANA_MOTOR_MUHUR_2026-11-21.md` · `smoke_masa_m3_muhur.py` |
 | **2 — Çırak / programlama** | **A–G+T✓** tavan mühür | `TAVAN_DERS.md` · `smoke_cirak_dilim_t.py` |
-| **3 — Sırada** | Ses yükselt → Okuma → sesle kitap | Mobil sahne-kilit mühürlü; Ses dilimine girilebilir. Okuma ≠ RAG |
+| **3 — Sırada** | **Mobil dublaj UI ince ayar** veya **V2 efekt** | V1.2 API+chat hazır; panel checkbox masaüstü |
+| **S0–S4 mühür** | Ölçüm→profil→prosodi→klon→**okuma bağ** + XTTS canlı | S4 26/26 · `docs/S4_OKUMA_SES_BAG_2026-11-21.md` |
+| **V1 dublaj** | Omurga · iptal/VRAM · kalite mux | `smoke_v1_video_dublaj` 56/56 · masa+mobil Form |
+| **Duygu / etiket** | STT→TTS + köşeli etiket v2 clamp | `smoke_duygu_etiket_hat` 46/46 |
+| **FB / iptal / VRAM** | First-byte cila · XTTS iptal · 8GB hakemi | medyan **~870–920 ms** · `smoke_fb_xtts_vram_cila` 27/27 |
+| **Ses / A3** | XTTS canlı YEŞİL (coqui-tts 0.28) | Edge yedek hâlâ var · Fish/F5 yoksa o hat KISMI (ayrı) |
+| **Ses ref** | Tilavet=`kuran.wav` · Klon=`BUSENAZ ses` | `klon_onay` · auto→klon |
 | **Güvenli nokta** | Sohbet RAG A/B/C + sahne-kaçma | `docs/MUHUR_SOHBET_SAHNE_KACMA_MOBIL_2026-11-21.md` · dal `cursor/sohbet-akicilik-a-f` |
 | **Mühürlü arka** | Sohbet · Kütüphane · Ses V0–V5 · Mobil F0–F9 · sahne-kilit | Bozma; üzerine ekle |
 | **Bilinçli erteli** | Sahne / OSM / Dünya Gezgini yeni dilim | Mimar «sahneye dön» deyene kadar yok |
 | **P3 kapalı** | Serbest kod · %90 programlama · halka açılış | Kapılı çırak dilimi ayrı |
 | **Kapı** | `8779` · mic HTTPS `8443` · PWA `/mobil/` | Boot sırası kilitli |
 
-**Başarı cümlesi:** Masa sohbetten gerçek iş yapar; çırak yeşilde ders yazar; Ses+Okuma kitap okutma sırada bekler (askıda, iptal değil).
+**Başarı cümlesi:** Kur’an’da huşû; hadis/tefsirde vakur; sohbette doğal; video dublaj/efekt aynı ses omurgasından — mobil = PC.
 
 ---
 

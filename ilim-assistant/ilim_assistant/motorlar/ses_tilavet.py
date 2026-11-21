@@ -116,23 +116,39 @@ def edge_ses_tilavet(
 def tilavet_rate_pitch(
     metin: str,
     *,
-    karakter: str = "alim",
+    karakter: str = "tilavet",
     hiz_carpani: float = 0.88,
     huzur_carpani: float = 0.82,
 ) -> tuple[str, str]:
-    """Tilavet icin ekstra yavas rate ve dusuk pitch."""
+    """Tilavet icin ekstra yavas rate ve dusuk pitch (S2 tavan)."""
     kar = normalize_ses_karakteri(karakter)
+    # S2: tilavet/alim karakterini tavan adına çöz
+    tavan = "tilavet"
+    if kar == SesKarakteri.alim:
+        tavan = "alim"
+    elif kar == SesKarakteri.muhabbet:
+        tavan = "muhabbet"
+    try:
+        from ilim_assistant.ses_s2_prosodi_tavan import ayarla_hiz_huzur
+
+        hiz_carpani, huzur_carpani = ayarla_hiz_huzur(
+            tavan, hiz=hiz_carpani, huzur=huzur_carpani
+        )
+    except Exception:
+        pass
     mod = tespit_tilavet_modu(metin)
     yol = IcerikYolu.kuran if mod in (TilavetMod.kuran_ar, TilavetMod.kuran_meal) else IcerikYolu.tasavvuf_hadis
     if mod == TilavetMod.genel_vakur:
         yol = analiz_icerik_yolu(metin)
+    # Edge rate hesabında tilavet karakteri kullan (S1+)
+    rate_kar = SesKarakteri.tilavet if tavan == "tilavet" else kar
     rate = edge_rate_yuzdesi(
-        karakter=kar,
+        karakter=rate_kar,
         icerik=yol,
         hiz_carpani=min(hiz_carpani, 0.9),
         huzur_carpani=min(huzur_carpani, 0.85),
     )
-    # Tilavet ekstra yavaslik
+    # Tilavet ekstra yavaslik (+ S2 rate_extra)
     try:
         pct = float(rate.rstrip("%"))
         pct -= 6.0 if mod == TilavetMod.kuran_ar else 4.0
@@ -140,9 +156,19 @@ def tilavet_rate_pitch(
         rate = f"{pct:.0f}%"
     except ValueError:
         pass
-    pitch = edge_pitch_string(kar, yol)
+    pitch = edge_pitch_string(rate_kar, yol)
     if mod == TilavetMod.kuran_ar:
         pitch = "-2Hz"
+    try:
+        from ilim_assistant.ses_s2_prosodi_tavan import (
+            ayarla_pitch_string,
+            ayarla_rate_string,
+        )
+
+        rate = ayarla_rate_string(rate, tavan)
+        pitch = ayarla_pitch_string(pitch, tavan)
+    except Exception:
+        pass
     return rate, pitch
 
 
@@ -233,6 +259,13 @@ def tilavet_durak_ms(
     huzur_carpani: float = 0.82,
 ) -> int:
     yol = IcerikYolu.kuran if mod in (TilavetMod.kuran_ar, TilavetMod.kuran_meal) else IcerikYolu.tasavvuf_hadis
+    try:
+        from ilim_assistant.ses_s2_prosodi_tavan import ayarla_durak_carpani
+
+        tavan = "tilavet" if yol == IcerikYolu.kuran else "alim"
+        durak_carpani = ayarla_durak_carpani(tavan, durak_carpani)
+    except Exception:
+        pass
     ms = durak_suresi_ms(
         tur,
         icerik=yol,

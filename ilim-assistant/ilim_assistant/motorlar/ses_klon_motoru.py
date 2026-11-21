@@ -136,24 +136,73 @@ def coz_referans_yolu(
         p = rp.resolve() if rp.is_absolute() else (_REPO_ROOT / rel).resolve()
         adaylar.append(p)
 
+    # S3 — tilavet profili: kuran.wav (kız sesi tilavete bağlanmaz)
+    if kar == SesKarakteri.tilavet:
+        try:
+            tv = coz_tilavet_referans_yolu("kuran", ayar=ayar)
+            if tv:
+                adaylar.insert(0, tv)
+        except Exception:
+            pass
+
     try:
         from ilim_assistant.motorlar.ses_kolon_kutuphanesi import coz_aktif_kolon_wav
 
-        aktif = coz_aktif_kolon_wav("sohbet", ayar=ayar)
-        if aktif:
-            adaylar.insert(0, aktif)
+        motor = "tilavet" if kar == SesKarakteri.tilavet else "sohbet"
+        if kar == SesKarakteri.alim:
+            # Âlim: önce sohbet klonu (BUSENAZ), yoksa tilavet ref
+            aktif_s = coz_aktif_kolon_wav("sohbet", ayar=ayar)
+            if aktif_s:
+                adaylar.append(aktif_s)
+        else:
+            aktif = coz_aktif_kolon_wav(motor, ayar=ayar)
+            if aktif:
+                adaylar.insert(0, aktif)
+        if kar in (SesKarakteri.muhabbet, SesKarakteri.asistan, SesKarakteri.edip):
+            aktif_o = coz_aktif_kolon_wav("okuma", ayar=ayar)
+            if aktif_o:
+                adaylar.append(aktif_o)
     except Exception:
         pass
 
     refs = (ayar or {}).get("referans") or {}
     if isinstance(refs, dict):
-        rel2 = refs.get(kar.value) or refs.get(str(kar.value))
-        if rel2:
-            adaylar.append((_REPO_ROOT / str(rel2).strip()).resolve())
+        for key in (
+            kar.value,
+            str(kar.value),
+            "busenaz-ses",
+            "BUSENAZ ses",
+            "kolon_sohbet",
+            "asistan",
+            "muhabbet",
+        ):
+            rel2 = refs.get(key)
+            if rel2:
+                adaylar.append((_REPO_ROOT / str(rel2).strip()).resolve())
 
     adaylar.append(varsayilan_referans_dosyasi(kar))
+    # S3 alias dosyaları
+    ref_dir = referans_klasoru()
+    if kar in (SesKarakteri.muhabbet, SesKarakteri.asistan):
+        adaylar.extend(
+            [
+                ref_dir / "BUSENAZ ses.wav",
+                ref_dir / "muhabbet.wav",
+                ref_dir / "asistan.wav",
+            ]
+        )
+    if kar == SesKarakteri.alim:
+        adaylar.extend([ref_dir / "alim.wav", ref_dir / "asistan.wav", ref_dir / "BUSENAZ ses.wav"])
 
+    seen: set[str] = set()
     for p in adaylar:
+        try:
+            key = str(p.resolve())
+        except OSError:
+            key = str(p)
+        if key in seen:
+            continue
+        seen.add(key)
         if p.is_file() and p.stat().st_size > 4096:
             return p
     return None
@@ -237,15 +286,62 @@ def kaydet_referans_upload(
     return out, rel
 
 
+_XTTS_API = None
+_XTTS_DEVICE: str | None = None
+_XTTS_LOCK = __import__("threading").RLock()
+
+
+def _get_xtts_cached():
+    """Tek XTTS örneği — her çağrıda model yeniden yükleme VRAM/süre katiliydi."""
+    global _XTTS_API, _XTTS_DEVICE
+    with _XTTS_LOCK:
+        device = "cuda" if torch_cuda_available() else "cpu"
+        if _XTTS_API is not None and _XTTS_DEVICE == device:
+            return _XTTS_API
+        from TTS.api import TTS
+
+        # Eski örneği bırak
+        _XTTS_API = None
+        try:
+            import torch
+
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+        except Exception:
+            pass
+        _XTTS_API = TTS(model_name=_XTTS_MODEL).to(device)
+        _XTTS_DEVICE = device
+        return _XTTS_API
+
+
+def unload_xtts_cached() -> dict[str, Any]:
+    global _XTTS_API, _XTTS_DEVICE
+    with _XTTS_LOCK:
+        had = _XTTS_API is not None
+        _XTTS_API = None
+        _XTTS_DEVICE = None
+    try:
+        import torch
+
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+    except Exception:
+        pass
+    return {"ok": True, "had": had}
+
+
 def _synthesize_xtts_direct(
     text: str,
     speaker_wav: Path,
     *,
     language: str,
     out_wav: Path,
+    cancel_token: int | None = None,
 ) -> None:
-    from TTS.api import TTS
+    from ilim_assistant.ses_xtts_iptal import check as xtts_check
 
+    if cancel_token is not None:
+        xtts_check(cancel_token)
     lang = (language or "tr").strip().lower()[:2]
     xtts_lang = {
         "tr": "tr",
@@ -256,14 +352,17 @@ def _synthesize_xtts_direct(
         "ru": "ru",
         "id": "id",
     }.get(lang, "tr")
-    gpu = torch_cuda_available()
-    tts = TTS(model_name=_XTTS_MODEL, gpu=gpu)
+    tts = _get_xtts_cached()
+    if cancel_token is not None:
+        xtts_check(cancel_token)
     tts.tts_to_file(
         text=text.strip(),
         file_path=str(out_wav),
         speaker_wav=str(speaker_wav),
         language=xtts_lang,
     )
+    if cancel_token is not None:
+        xtts_check(cancel_token)
 
 
 def _synthesize_via_ilim_voice(
@@ -288,11 +387,21 @@ def synthesize_clone_wav(
     *,
     language: str = "tr",
     out_wav: Path | None = None,
+    cancel_token: int | None = None,
 ) -> Path:
-    """XTTS ile klon ses WAV üretir."""
+    """XTTS ile klon ses WAV üretir (iptal + VRAM hakemi)."""
+    from ilim_assistant.ses_xtts_iptal import (
+        CloneCancelled,
+        begin_job,
+        check as xtts_check,
+        end_job,
+        iptal_enabled,
+    )
+    from ilim_assistant.ses_vram_hakem import hold as vram_hold
+
     if not xtts_runtime_available():
         raise RuntimeError(
-            "XTTS kullanılamıyor. Kurulum: pip install TTS torch — "
+            "XTTS kullanılamıyor. Kurulum: pip install coqui-tts torch — "
             "veya ilim-voice/requirements-tts.txt (CPU yavaş, GPU önerilir)."
         )
     body = (text or "").strip()
@@ -305,11 +414,21 @@ def synthesize_clone_wav(
     if not sp.is_file():
         raise FileNotFoundError(f"Referans ses yok: {sp}")
 
+    token = cancel_token
+    if token is None and iptal_enabled():
+        token = begin_job()
+    owned_begin = cancel_token is None and token is not None
+
     fd, tmp_norm = tempfile.mkstemp(suffix=".wav")
     os.close(fd)
     norm_path = Path(tmp_norm)
+    out_path: Path | None = None
     try:
+        if token is not None:
+            xtts_check(token)
         normalize_reference_to_wav(sp, norm_path)
+        if token is not None:
+            xtts_check(token)
         if out_wav is None:
             fd2, tmp_out = tempfile.mkstemp(suffix=".wav")
             os.close(fd2)
@@ -318,20 +437,43 @@ def synthesize_clone_wav(
             out_path = Path(out_wav)
             out_path.parent.mkdir(parents=True, exist_ok=True)
 
-        prefer_ilim = os.environ.get("RUZGAR_TTS_CLONE_ILIM_VOICE", "1").strip().lower() not in (
-            "0",
-            "false",
-            "no",
-        )
-        if prefer_ilim and _ensure_ilim_voice_import():
+        with vram_hold("xtts", prepare=True, restore=False):
+            if token is not None:
+                xtts_check(token)
+            prefer_ilim = os.environ.get(
+                "RUZGAR_TTS_CLONE_ILIM_VOICE", "0"
+            ).strip().lower() not in ("0", "false", "no")
+            # Varsayılan: doğrudan cached XTTS (ilim-voice ayrı yükleme çakışmasın)
+            if prefer_ilim and _ensure_ilim_voice_import():
+                try:
+                    _synthesize_via_ilim_voice(
+                        body, norm_path, language=language, out_wav=out_path
+                    )
+                    if token is not None:
+                        xtts_check(token)
+                    return out_path
+                except Exception:
+                    pass
+            _synthesize_xtts_direct(
+                body,
+                norm_path,
+                language=language,
+                out_wav=out_path,
+                cancel_token=token,
+            )
+            if token is not None:
+                xtts_check(token)
+            return out_path
+    except CloneCancelled:
+        if out_path is not None:
             try:
-                _synthesize_via_ilim_voice(body, norm_path, language=language, out_wav=out_path)
-                return out_path
-            except Exception:
+                out_path.unlink(missing_ok=True)
+            except OSError:
                 pass
-        _synthesize_xtts_direct(body, norm_path, language=language, out_wav=out_path)
-        return out_path
+        raise
     finally:
+        if owned_begin and token is not None:
+            end_job(token)
         try:
             norm_path.unlink(missing_ok=True)
         except OSError:
@@ -392,9 +534,15 @@ def clone_status_snapshot() -> dict[str, Any]:
         refs[k.value] = varsayilan_referans_dosyasi(k).is_file()
     for prof in ("kuran", "gazel", "ilahi"):
         refs[prof] = (referans_klasoru() / f"{prof}.wav").is_file()
+    busenaz = referans_klasoru() / "BUSENAZ ses.wav"
+    ozel = _ILIM_ROOT / "arsiv" / "klon-sesler-umit-ozel" / "BUSENAZ ses.wav"
+    refs["BUSENAZ ses"] = busenaz.is_file() or ozel.is_file()
+    muhabbet_ref = coz_referans_yolu("muhabbet", ayar=None)
+    tilavet_ref = coz_tilavet_referans_yolu("kuran", ayar=None)
+    xtts_ok = xtts_runtime_available()
     return {
         "enabled": clone_enabled(),
-        "xtts": xtts_runtime_available(),
+        "xtts": xtts_ok,
         "coqui_import": coqui_tts_importable(),
         "cuda": torch_cuda_available(),
         "ilim_voice": _ilim_voice_root().as_posix() if _ilim_voice_root() else None,
@@ -402,15 +550,21 @@ def clone_status_snapshot() -> dict[str, Any]:
         if str(referans_klasoru()).startswith(str(_REPO_ROOT.resolve()))
         else str(referans_klasoru()),
         "referans": refs,
+        "s3": {
+            "muhabbet_ref": str(muhabbet_ref) if muhabbet_ref else None,
+            "tilavet_ref": str(tilavet_ref) if tilavet_ref else None,
+            "edge_yedek": True,
+            "xtts_runtime": xtts_ok,
+        },
         "max_chars": clone_max_chars(),
         "hint_tr": (
-            "Referans yukleyin: Ses atolyesi - Klon referans (30-120 sn temiz konusma). "
+            "S3: Referanslar hazır (BUSENAZ / kuran). XTTS yok → Edge yedek. "
             "Kurulum: pip install TTS torch soundfile"
-            if not xtts_runtime_available()
+            if not xtts_ok
             else (
-                "Klon hazır — referans profil dosyası varsa «auto» backend kullanılır."
-                if any(refs.values())
-                else "XTTS kurulu; arsiv/ses-referans/{alim|edip|asistan}.wav bekleniyor."
+                "Klon hazır — BUSENAZ (muhabbet) + kuran (tilavet); auto+klon_onay."
+                if muhabbet_ref and tilavet_ref
+                else "XTTS kurulu; muhabbet/tilavet referansı eksik."
             )
         ),
         "version": KLON_VERSION,

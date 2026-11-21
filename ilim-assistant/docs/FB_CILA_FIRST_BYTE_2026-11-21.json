@@ -1,0 +1,23 @@
+{
+  "version": "ses-fb-cila-v1-2026-11-21",
+  "ts": "2026-11-21T14:31:13.520815+00:00",
+  "target_ms": 900.0,
+  "s0_ref_ms": 1311.0,
+  "v3_seal_ms": 820.0,
+  "ok": true,
+  "samples_ms": [
+    898.7,
+    917.1,
+    923.6
+  ],
+  "median_ms": 917.1,
+  "min_ms": 898.7,
+  "under_900": false,
+  "warm": {
+    "ok": true,
+    "skipped": false,
+    "first_byte_ms": 926.5,
+    "note": ""
+  },
+  "delta_vs_s0": 393.9
+}

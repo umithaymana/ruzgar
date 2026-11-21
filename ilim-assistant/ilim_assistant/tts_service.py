@@ -394,6 +394,9 @@ async def synthesize_edge_mp3_prosody(
     hiz_carpani: float = 0.92,
     huzur_carpani: float = 0.88,
     durak_carpani: float = 1.0,
+    tilavet: bool = False,
+    koru_etiket_durak: bool = False,
+    etiket_hedef_ms: int | None = None,
 ) -> Path:
     """
     Faz S1: metni parçalara böl, parçalar arası sessizlik ekle, MP3 birleştir.
@@ -463,6 +466,9 @@ async def synthesize_edge_mp3_prosody(
                 icerik=icerik,
                 durak_carpani=durak_carpani,
                 huzur_carpani=huzur_carpani,
+                tilavet=bool(tilavet) or icerik.value == "kuran",
+                koru_etiket_durak=bool(koru_etiket_durak),
+                etiket_hedef_ms=etiket_hedef_ms,
             )
             if pause_ms <= 0:
                 continue
@@ -517,12 +523,20 @@ async def synthesize_clone_mp3(
     referans_wav: Path | None = None,
     meta: dict[str, Any],
     ayar: dict[str, Any] | None = None,
+    cancel_token: int | None = None,
 ) -> Path:
-    """Faz S4: XTTS klon ses → MP3 (ffmpeg)."""
+    """Faz S4: XTTS klon ses → MP3 (ffmpeg). İptal: cancel_token / RUZGAR_XTTS_IPTAL."""
     from ilim_assistant.motorlar.ses_klon_motoru import (
         coz_referans_yolu,
         synthesize_clone_wav,
         wav_to_mp3,
+    )
+    from ilim_assistant.ses_xtts_iptal import (
+        CloneCancelled,
+        begin_job,
+        cancel_all,
+        end_job,
+        iptal_enabled,
     )
 
     ref = None
@@ -535,14 +549,22 @@ async def synthesize_clone_mp3(
     if ref is None:
         raise FileNotFoundError(
             "Klon referans sesi yok. Ses atölyesinden 30–120 sn .wav yükleyin "
-            "(arsiv/ses-referans/{alim|edip|asistan}.wav)."
+            "(arsiv/ses-referans/{alim|edip|asistan|muhabbet}.wav)."
         )
+
+    # Yeni istek → önceki klonu iptal et
+    token = cancel_token
+    if token is None and iptal_enabled():
+        cancel_all(reason="new_clone_request")
+        token = begin_job()
 
     wav_tmp: Path | None = None
 
     def _run() -> Path:
         nonlocal wav_tmp
-        wav_tmp = synthesize_clone_wav(text, ref, language=language)
+        wav_tmp = synthesize_clone_wav(
+            text, ref, language=language, cancel_token=token
+        )
         fd, mp3_path = tempfile.mkstemp(suffix=".mp3")
         os.close(fd)
         mp3_out = Path(mp3_path)
@@ -553,6 +575,7 @@ async def synthesize_clone_mp3(
             "mimarlar": _MIMAR,
             "referans": ref.name,
             "language": language,
+            "cancel_token": token,
         }
         apply_mp3_metadata(mp3_out, meta_full)
         return mp3_out
@@ -561,7 +584,11 @@ async def synthesize_clone_mp3(
 
     try:
         return await run_in_threadpool(_run)
+    except CloneCancelled:
+        raise
     finally:
+        if token is not None and cancel_token is None:
+            end_job(token)
         if wav_tmp and wav_tmp.is_file():
             try:
                 wav_tmp.unlink(missing_ok=True)

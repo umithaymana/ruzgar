@@ -2,10 +2,12 @@
 """
 RÜZGAR Ses Motoru — nihai karakter profilleri ve Edge-TTS uyumu.
 
-Profiller:
-  • Alim — Kur'an ve Hadis: yavaş, vakur, tane tane, derin (tilavet/hadis hattı).
-  • Edip — edebiyat ve gazeller: lirik, duygusal, yumuşak.
-  • Asistan — günlük sohbet: net, yardımcı, nazik.
+Profiller (S1 tavan omurga: muhabbet / alim / tilavet):
+  • Muhabbet — günlük sohbet: net, sıcak, doğal (eski asistan).
+  • Alim — hadis / tefsir / fıkıh: vakur, ağırbaşlı.
+  • Tilavet — Kur'an: huşû, yavaş, vakıf bilinci (Edge edası; klon S3).
+  • Edip — edebiyat ve gazeller: lirik, duygusal, yumuşak (eski menü).
+  • Asistan — muhabbet alias (geri uyum).
 
 Arka uç: edge-tts. Metadata: Ümit & Gökçenur imzası (tts_service + ID3).
 Paralel TTS: desktop_server RUZGAR_TTS_MP + ruzgar_perf hattı.
@@ -36,43 +38,57 @@ MIMAR_IMZA = RUZGAR_PERF_MIMAR
 PROJE_ADI = "RÜZGAR"
 
 _PROFILE_ALIM = (
-    "[Alim] Kur'an ve Hadis hattında ses: yavaş, vakur, tane tane ve derin; "
-    "her kelimede duruş payı; acele yok; hürmet ve sükûnet önde."
+    "[Âlim] Hadis / tefsir / fıkıh hattında ses: vakur, ağırbaşlı, tane tane; "
+    "dinleyen edası; acele yok; hürmet ve sükûnet önde."
 )
 _PROFILE_EDIP = (
     "[Edip] Edebiyat ve gazel okumasında: lirik, duygusal, yumuşak; "
     "sesin müzikliliği ve imgelerin tadı öne çıksın."
 )
-_PROFILE_ASISTAN = (
-    "[Asistan] Günlük sohbet: net, yardımcı, nazik; doğal tempo; gereksiz ağırlık yok."
+_PROFILE_MUHABBET = (
+    "[Muhabbet] Günlük sohbet: net, sıcak, yardımcı; doğal tempo; gereksiz ağırlık yok."
 )
+_PROFILE_TILAVET = (
+    "[Tilavet] Kur'an hattı: huşû, yavaş tempo, vakıf / nefes payı; "
+    "imam edasına yaklaşan Edge parametreleri (klon referansı S3)."
+)
+_PROFILE_ASISTAN = _PROFILE_MUHABBET
 
 
 class SesKarakteri(str, Enum):
     """Rüzgar ses profili — menü ve .ruzgar_ses_ayarlari.json ile seçilir."""
 
+    muhabbet = "muhabbet"
     alim = "alim"
+    tilavet = "tilavet"
     edip = "edip"
-    asistan = "asistan"
+    asistan = "asistan"  # alias → muhabbet (geri uyum)
 
 
-# Eski kayıtlar (bilge/sair/kari) normalize_ses_karakteri ile taşınır.
+# Eski / tavan alias kayıtları
 _ESKI_PROFILLER = {
     "bilge": SesKarakteri.alim,
     "sair": SesKarakteri.edip,
     "kari": SesKarakteri.alim,
+    "asistan": SesKarakteri.muhabbet,
+    "sohbet": SesKarakteri.muhabbet,
+    "gunluk": SesKarakteri.muhabbet,
+    "günlük": SesKarakteri.muhabbet,
+    "âlim": SesKarakteri.alim,
+    "kuran": SesKarakteri.tilavet,
+    "tecvid": SesKarakteri.tilavet,
 }
 
 
 def normalize_ses_karakteri(raw: str | None) -> SesKarakteri:
-    """Menü/API metnini enum'a çevirir; bilinmeyen → asistan."""
+    """Menü/API metnini enum'a çevirir; bilinmeyen → muhabbet."""
     s = (raw or "").strip().lower()
     if s in _ESKI_PROFILLER:
         return _ESKI_PROFILLER[s]
     try:
         return SesKarakteri(s)
     except ValueError:
-        return SesKarakteri.asistan
+        return SesKarakteri.muhabbet
 
 
 class IcerikYolu(str, Enum):
@@ -83,16 +99,22 @@ class IcerikYolu(str, Enum):
 
 
 def profil_aciklamasi(k: SesKarakteri) -> str:
+    if k == SesKarakteri.tilavet:
+        return _PROFILE_TILAVET
     if k == SesKarakteri.alim:
         return _PROFILE_ALIM
     if k == SesKarakteri.edip:
         return _PROFILE_EDIP
+    if k == SesKarakteri.muhabbet:
+        return _PROFILE_MUHABBET
     return _PROFILE_ASISTAN
 
 
 # Edge-TTS: Türkçe neural (profil bazlı ses seçimi)
 EDGE_VOICES = {
+    SesKarakteri.muhabbet: "tr-TR-EmelNeural",
     SesKarakteri.alim: "tr-TR-AhmetNeural",
+    SesKarakteri.tilavet: "tr-TR-AhmetNeural",
     SesKarakteri.edip: "tr-TR-EmelNeural",
     SesKarakteri.asistan: "tr-TR-EmelNeural",
 }
@@ -127,24 +149,23 @@ def analiz_icerik_yolu(metin: str) -> IcerikYolu:
 
 def ton_metni_icerik(yol: IcerikYolu) -> str:
     if yol == IcerikYolu.kuran:
-        return (
-            "[Tecvid / tilavet çizgisi] Med ve duraklar için zaman genişletme; vakıf yerlerinde nefes; "
-            "Diyanet/hoca tilavet üslubuna yaklaşan yavaş taban tempo (simülasyon, öğretmenlik değil)."
-        )
+        return _PROFILE_TILAVET
     if yol == IcerikYolu.klasik_edebiyat:
         return _PROFILE_EDIP
     if yol == IcerikYolu.tasavvuf_hadis:
         return _PROFILE_ALIM
-    return _PROFILE_ASISTAN
+    return _PROFILE_MUHABBET
 
 
 def varsayilan_karakter_icerige(yol: IcerikYolu) -> SesKarakteri:
     """İçerik türüne göre önerilen profil (menü seçimi yoksa ipucu)."""
     if yol == IcerikYolu.klasik_edebiyat:
         return SesKarakteri.edip
-    if yol in (IcerikYolu.kuran, IcerikYolu.tasavvuf_hadis):
+    if yol == IcerikYolu.kuran:
+        return SesKarakteri.tilavet
+    if yol == IcerikYolu.tasavvuf_hadis:
         return SesKarakteri.alim
-    return SesKarakteri.asistan
+    return SesKarakteri.muhabbet
 
 
 def edge_rate_yuzdesi(
@@ -157,11 +178,14 @@ def edge_rate_yuzdesi(
     hiz_carpani = max(0.55, min(1.0, float(hiz_carpani)))
     huzur_carpani = max(0.55, min(1.0, float(huzur_carpani)))
     base = -5.0
-    if karakter == SesKarakteri.alim:
+    if karakter == SesKarakteri.tilavet:
+        base -= 22.0
+    elif karakter == SesKarakteri.alim:
         base -= 14.0
     elif karakter == SesKarakteri.edip:
         base -= 8.0
     else:
+        # muhabbet / asistan
         base -= 2.0
     if icerik == IcerikYolu.kuran:
         base -= 10.0
@@ -178,7 +202,9 @@ def edge_rate_yuzdesi(
 def edge_pitch_string(karakter: SesKarakteri, icerik: IcerikYolu) -> str:
     if karakter == SesKarakteri.edip:
         return "+3Hz"
-    if karakter == SesKarakteri.alim or icerik == IcerikYolu.kuran:
+    if karakter == SesKarakteri.tilavet or icerik == IcerikYolu.kuran:
+        return "-5Hz"
+    if karakter == SesKarakteri.alim:
         return "-3Hz"
     return "+1Hz"
 
@@ -197,7 +223,7 @@ def tts_metadata_kimlik(
         "created_by": MIMAR_IMZA,
         "ses_profili": karakter,
         "icerik_yolu": icerik_yolu,
-        "vizyon": "RÜZGAR — Alim / Edip / Asistan ses profilleri (Edge-TTS)",
+        "vizyon": "RÜZGAR — Muhabbet / Âlim / Tilavet ses omurgası (Edge-TTS)",
     }
     if ses_dosyasi_yolu:
         meta["cikti_yolu"] = ses_dosyasi_yolu

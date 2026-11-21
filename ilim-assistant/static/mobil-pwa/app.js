@@ -18,6 +18,8 @@
   const SAHNE_PLACEHOLDER = "Yaz. Cevabı ben buradan söyleyeyim.";
   let history = [];
   let micBusy = false;
+  /** STT duygu hattı → /api/tts emotion (masa lastVoiceEmotion ile aynı rol) */
+  let lastVoiceEmotion = null;
 
   /* Tek ikon kuralı: yazı+mikrofon aynı PWA. HTTP'de mic ölür → HTTPS:8443'e at. */
   (function forceHttpsSingleDoor() {
@@ -1995,6 +1997,9 @@
     const t0 = performance.now();
     ttsPlayGen += 1;
     try {
+      void fetch(base() + "/api/tts/cancel", { method: "POST" }).catch(() => {});
+    } catch (_) {}
+    try {
       const a = ensureTtsPlayer();
       a.pause();
       a.removeAttribute("src");
@@ -2199,17 +2204,28 @@
     return out.filter((c) => c.length >= 2);
   }
 
-  async function fetchTtsBlob(say) {
+  async function fetchTtsBlob(say, ttsOpts) {
+    const opts = ttsOpts && typeof ttsOpts === "object" ? ttsOpts : {};
     const token = localStorage.getItem(LS.token) || "";
     const headers = { "Content-Type": "application/json" };
     if (token) headers.Authorization = "Bearer " + token;
     let lastErr = "";
+    const payload = {
+      text: say,
+      prosody: opts.prosody != null ? !!opts.prosody : false,
+    };
+    if (opts.karakter) payload.karakter = String(opts.karakter);
+    const emo =
+      (opts.emotion && String(opts.emotion)) ||
+      (lastVoiceEmotion && String(lastVoiceEmotion)) ||
+      "";
+    if (emo && emo !== "notr") payload.emotion = emo;
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const res = await fetch(base() + "/api/tts", {
           method: "POST",
           headers,
-          body: JSON.stringify({ text: say, prosody: false }),
+          body: JSON.stringify(payload),
         });
         if (!res.ok) {
           lastErr = "tts_http_" + res.status;
@@ -2228,6 +2244,147 @@
     } catch (_) {}
     return null;
   }
+
+  /** S4 — raftan kısa pasaj (masa ile aynı /api/okuma/pasaj + /api/tts). */
+  async function speakRaftanPasaj(query, opts) {
+    const options = opts && typeof opts === "object" ? opts : {};
+    const q = String(query || options.q || "").trim();
+    const action = String(options.action || "oku").trim() || "oku";
+    if (!q && !["devam", "tekrar", "yavas", "husulu"].includes(action)) {
+      return { ok: false, error: "sorgu yok" };
+    }
+    const j = await api("/api/okuma/pasaj", {
+      method: "POST",
+      timeoutMs: 20000,
+      body: JSON.stringify({ q, action, session_id: "mobil" }),
+    });
+    const pasaj = String((j && j.pasaj) || "").trim();
+    if (!pasaj) return { ok: false, error: "pasaj boş" };
+    const kar = String((j && j.karakter) || "alim");
+    const title = j.baslik || j.eser_id || "Raftan";
+    const reply = `📖 ${title}\n\n${pasaj}`;
+    bubble("bot", reply);
+    history.push({ role: "assistant", content: reply });
+    setSahneState("konus", pasaj);
+    await speakReplyWithKarakter(pasaj, kar);
+    setSahneState("hazir", pasaj);
+    return { ok: true, ...j };
+  }
+
+  async function speakReplyWithKarakter(reply, karakter) {
+    const text = String(reply || "").trim();
+    if (!text) return;
+    unlockMobileAudio();
+    const chunks = splitTtsChunks(text, liveMode ? 110 : 150);
+    markTtsTextReady("speakRaftanPasaj");
+    try {
+      let prefetch = chunks[0]
+        ? fetchTtsBlob(chunks[0], { karakter, prosody: true })
+        : null;
+      const genAtStart = ttsPlayGen;
+      for (let i = 0; i < chunks.length; i++) {
+        if (liveAbort || ttsPlayGen !== genAtStart) return;
+        const blob = await prefetch;
+        prefetch = null;
+        if (i + 1 < chunks.length && !liveAbort && ttsPlayGen === genAtStart) {
+          prefetch = fetchTtsBlob(chunks[i + 1], { karakter, prosody: true });
+        }
+        if (!blob) continue;
+        if (liveAbort || ttsPlayGen !== genAtStart) return;
+        await playTtsBlob(blob);
+      }
+    } catch (_) {
+      await speakLocal(chunks[0] ? chunks[0].slice(0, 200) : text.slice(0, 200));
+    }
+  }
+
+  function parseRaftanChatCmd(raw) {
+    const t = String(raw || "").trim();
+    if (!t) return null;
+    const m = t.match(
+      /^(?:raftan\s+(?:sesle\s+)?oku|kitaptan\s+(?:sesle\s+)?oku|kütüphaneden\s+(?:sesle\s+)?oku|kutuphaneden\s+(?:sesle\s+)?oku|sesle\s+oku\s+raftan|raf(?:tan)?\s+oku)\s*[:\-]?\s*(.+)$/i
+    );
+    if (m && String(m[1] || "").trim().length >= 2) {
+      return { q: String(m[1]).trim(), action: "oku" };
+    }
+    const low = t.toLowerCase();
+    if (/^(devam oku|okumaya devam|raftan devam|devam et oku)$/i.test(t)) {
+      return { q: "", action: "devam" };
+    }
+    if (/^tekrar oku$/i.test(t)) return { q: "", action: "tekrar" };
+    if (/^daha yava[sş] oku$/i.test(t)) return { q: "", action: "yavas" };
+    if (/^daha hu[sşûu]+lu oku$/i.test(t) || low === "daha huşûlu oku") {
+      return { q: "", action: "husulu" };
+    }
+    return null;
+  }
+  window.speakRaftanPasaj = speakRaftanPasaj;
+
+  /**
+   * V1.2 dublaj — masa ile aynı Form: mix_original / orig_duck_db / normalize.
+   * Chat: «dublaj: yol/klip.mp4» veya «dublaj miks: yol/klip.mp4»
+   */
+  function parseDubChatCmd(raw) {
+    const t = String(raw || "").trim();
+    if (!t) return null;
+    const m = t.match(
+      /^dublaj(?:\s+(miks|mix))?\s*[:\-]?\s*(.+)$/i
+    );
+    if (!m) return null;
+    const rel = String(m[2] || "").trim();
+    if (rel.length < 3) return null;
+    const mix = !!(m[1] && /miks|mix/i.test(m[1]));
+    return {
+      rel,
+      mix_original: mix,
+      orig_duck_db: "-16",
+      normalize: true,
+      voice: "auto",
+      karakter: "asistan",
+    };
+  }
+
+  async function runVideoDub(opts) {
+    const o = opts && typeof opts === "object" ? opts : {};
+    const rel = String(o.rel || "").trim();
+    if (!rel) throw new Error("rel gerekli (göreli video yolu)");
+    const token = localStorage.getItem(LS.token) || "";
+    const fd = new FormData();
+    fd.append("rel", rel);
+    fd.append("src_lang", String(o.src_lang || "auto"));
+    fd.append("tgt_lang", String(o.tgt_lang || "tr"));
+    fd.append("voice", String(o.voice || "auto"));
+    fd.append("karakter", String(o.karakter || "asistan"));
+    fd.append("mix_original", o.mix_original ? "1" : "0");
+    fd.append(
+      "orig_duck_db",
+      o.orig_duck_db != null && String(o.orig_duck_db).trim() !== ""
+        ? String(o.orig_duck_db)
+        : "-16"
+    );
+    fd.append("normalize", o.normalize === false ? "0" : "1");
+    const headers = {};
+    if (token) headers.Authorization = "Bearer " + token;
+    const res = await fetch(base() + "/api/video/dub", {
+      method: "POST",
+      headers,
+      body: fd,
+    });
+    const text = await res.text();
+    let j = {};
+    try {
+      j = JSON.parse(text);
+    } catch (_) {
+      j = {};
+    }
+    if (!res.ok) {
+      throw new Error(
+        String(j.detail || j.error || text.slice(0, 160) || res.statusText)
+      );
+    }
+    return j;
+  }
+  window.runVideoDub = runVideoDub;
 
   async function speakReply(reply) {
     const text = String(reply || "").trim();
@@ -2430,6 +2587,51 @@
     meta.textContent = "düşünüyor…";
     setSahneState("dusun", t);
     try {
+      const rafCmd = parseRaftanChatCmd(t);
+      if (rafCmd) {
+        meta.textContent = "raftan okuma…";
+        try {
+          const r = await speakRaftanPasaj(rafCmd.q, { action: rafCmd.action });
+          meta.textContent = r && r.ok ? "raftan · ses" : "raftan hata";
+          setSahneState("hazir");
+          return;
+        } catch (re) {
+          bubble("bot", `[Raftan] ${re.message || re}`);
+          meta.textContent = "raftan hata";
+          setSahneState("hazir");
+          return;
+        }
+      }
+      const dubCmd = parseDubChatCmd(t);
+      if (dubCmd) {
+        meta.textContent = "dublaj V1.2…";
+        try {
+          const j = await runVideoDub(dubCmd);
+          const qm = j.quality_mux || {};
+          const line = [
+            j.ok ? "Dublaj hazır" : "Dublaj",
+            j.output_rel || j.audio_rel || "",
+            j.srt_rel ? `SRT ${j.srt_rel}` : "",
+            j.tavan ? `tavan ${j.tavan}` : "",
+            j.voice_mode ? `ses ${j.voice_mode}` : "",
+            dubCmd.mix_original ? "miks -16dB" : "",
+            qm.normalized ? "loudnorm✓" : "",
+            qm.mixed ? "mix✓" : "",
+          ]
+            .filter(Boolean)
+            .join(" · ");
+          bubble("bot", line);
+          history.push({ role: "assistant", content: line });
+          meta.textContent = j.ok ? "dublaj · ok" : "dublaj hata";
+          setSahneState("hazir");
+          return;
+        } catch (de) {
+          bubble("bot", `[Dublaj] ${de.message || de}`);
+          meta.textContent = "dublaj hata";
+          setSahneState("hazir");
+          return;
+        }
+      }
       if (looksLikeSahneCmd(t)) {
         const se = await runSuperEl(t);
         if (se && se._mobilShort) {
@@ -2667,7 +2869,10 @@
         throw new Error(text.slice(0, 200) || res.statusText);
       }
       if (!res.ok) throw new Error(j.detail || j.error || text.slice(0, 200));
-      return String(j.text || j.transcript || "").trim();
+      const out = String(j.text || j.transcript || "").trim();
+      const emo = typeof j.emotion === "string" ? j.emotion : "notr";
+      lastVoiceEmotion = emo && emo !== "notr" ? emo : null;
+      return out;
     } finally {
       clearTimeout(timer);
     }

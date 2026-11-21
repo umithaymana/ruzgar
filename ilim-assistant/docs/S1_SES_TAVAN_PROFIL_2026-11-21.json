@@ -1,0 +1,69 @@
+{
+  "version": "ses-s1-tavan-profil-v1-2026-11-21",
+  "ts": "2026-11-21T11:18:06.878068+00:00",
+  "snapshot": {
+    "version": "ses-s1-tavan-profil-v1-2026-11-21",
+    "aktif_tavan": "muhabbet",
+    "aktif_kayit": "muhabbet",
+    "profiller": {
+      "muhabbet": {
+        "tavan": "muhabbet",
+        "karakter": "muhabbet",
+        "voice": "tr-TR-EmelNeural",
+        "rate": "-8%",
+        "pitch": "+1Hz",
+        "icerik_yolu": "genel",
+        "aciklama": "[Muhabbet] Günlük sohbet: net, sıcak, yardımcı; doğal tempo; gereksiz ağırlık yok."
+      },
+      "alim": {
+        "tavan": "alim",
+        "karakter": "alim",
+        "voice": "tr-TR-AhmetNeural",
+        "rate": "-27%",
+        "pitch": "-3Hz",
+        "icerik_yolu": "tasavvuf_hadis",
+        "aciklama": "[Âlim] Hadis / tefsir / fıkıh hattında ses: vakur, ağırbaşlı, tane tane; dinleyen edası; acele yok; hürmet ve sükûnet önde."
+      },
+      "tilavet": {
+        "tavan": "tilavet",
+        "karakter": "tilavet",
+        "voice": "tr-TR-AhmetNeural",
+        "rate": "-38%",
+        "pitch": "-5Hz",
+        "icerik_yolu": "kuran",
+        "aciklama": "[Tilavet] Kur'an hattı: huşû, yavaş tempo, vakıf / nefes payı; imam edasına yaklaşan Edge parametreleri (klon referansı S3)."
+      }
+    },
+    "alias": {
+      "asistan": "muhabbet",
+      "sohbet": "muhabbet",
+      "gunluk": "muhabbet",
+      "günlük": "muhabbet",
+      "muhabbet": "muhabbet",
+      "alim": "alim",
+      "âlim": "alim",
+      "bilge": "alim",
+      "kari": "alim",
+      "tilavet": "tilavet",
+      "kuran": "tilavet",
+      "tecvid": "tilavet",
+      "edip": "muhabbet",
+      "sair": "muhabbet"
+    },
+    "kural": "sohbet/API karakter=muhabbet|alim|tilavet (asistan→muhabbet)"
+  },
+  "rates": {
+    "muhabbet": "-8%",
+    "alim": "-27%",
+    "tilavet": "-38%"
+  },
+  "pitches": {
+    "muhabbet": "+1Hz",
+    "alim": "-3Hz",
+    "tilavet": "-5Hz"
+  },
+  "distinct_ok": true,
+  "alias_ok": true,
+  "s1_yesil": true,
+  "sonraki": "S2 — prosodi + tilavet/âlim parametre tavanı (kulak)"
+}

@@ -204,7 +204,15 @@ def durak_suresi_ms(
     durak_carpani: float = 1.0,
     huzur_carpani: float = 0.88,
     tilavet: bool = False,
+    koru_etiket_durak: bool = False,
+    etiket_hedef_ms: int | None = None,
 ) -> int:
+    """
+    Durak süresi (ms).
+
+    koru_etiket_durak: köşeli [duraksama:…] hedefi — lean kısaltmayı atla,
+    genel sohbette tek ara durak ≤1200 ms tavanı.
+    """
     if tur == DurakTuru.yok:
         return 0
     ms = float(_DURAK_TABAN_MS.get(tur, 650))
@@ -220,14 +228,24 @@ def durak_suresi_ms(
     durak = max(0.55, min(1.6, float(durak_carpani)))
     huzur_factor = 1.0 + (1.0 - huzur) * 0.85
     out = max(0, int(ms * durak * huzur_factor))
+    # Etiket hedefi: lean atlanır; mümkünse hedefe yaklaş (paragraf kırığı)
+    if koru_etiket_durak and etiket_hedef_ms and etiket_hedef_ms > 0:
+        hedef = max(80, min(1200, int(etiket_hedef_ms)))
+        # Hesap ile hedef arasında dengeli ortalama (aşırı şişme/kısalma yok)
+        out = int(round((out + hedef) / 2.0))
+        out = max(80, min(1200, out))
+        return out
     # Aşama D: genel sohbet / tilavet dışı ekstra sessizliği daha da kısalt
-    if not tilavet and icerik == IcerikYolu.genel:
+    # (etiket durak koruması varken lean uygulama)
+    if not tilavet and icerik == IcerikYolu.genel and not koru_etiket_durak:
         try:
             from ilim_assistant.ses_asama_d import apply_lean_pause_ms
 
             out = apply_lean_pause_ms(out)
         except Exception:
             pass
+    elif koru_etiket_durak and not tilavet and icerik == IcerikYolu.genel:
+        out = max(80, min(1200, out))
     return out
 
 

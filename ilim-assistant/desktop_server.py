@@ -3864,6 +3864,88 @@ def api_kutuphane_search(q: str = "", limit: int = 8) -> dict[str, Any]:
     return {"ok": True, "query": q, "count": len(hits), "hits": hits}
 
 
+class OkumaSesBody(BaseModel):
+    """S4 — raftan kısa pasaj → sesle oku."""
+
+    q: str = ""
+    query: str = ""
+    action: str = "oku"
+    yol: str | None = None
+    eser_id: str | None = None
+    offset: int | None = None
+    max_chars: int | None = None
+    karakter: str | None = None
+    session_id: str = "default"
+    backend: str = "auto"
+    prosody: bool | None = None
+
+
+@app.post("/api/okuma/pasaj")
+def api_okuma_pasaj(body: OkumaSesBody) -> dict[str, Any]:
+    """S4 — raftan kısa pasaj (TTS yok; masa+mobil aynı)."""
+    from ilim_assistant.ses_s4_okuma_bag import prepare_okuma_ses, s4_enabled
+
+    if not s4_enabled():
+        raise HTTPException(status_code=403, detail="S4 okuma bağ kapalı (RUZGAR_SES_S4=0).")
+    q = (body.q or body.query or "").strip()
+    out = prepare_okuma_ses(
+        q,
+        action=body.action or "oku",
+        yol=body.yol,
+        eser_id=body.eser_id,
+        offset=body.offset,
+        max_chars=body.max_chars,
+        karakter=body.karakter,
+        session_id=body.session_id or "default",
+    )
+    if not out.get("ok"):
+        raise HTTPException(status_code=404, detail=str(out.get("error") or "Pasaj yok"))
+    return out
+
+
+@app.post("/api/okuma/sesle")
+async def api_okuma_sesle(body: OkumaSesBody):
+    """S4 — raftan pasaj + TTS (Edge/klon; /api/tts omurgası)."""
+    from ilim_assistant.ses_s4_okuma_bag import prepare_okuma_ses, s4_enabled
+
+    if not s4_enabled():
+        raise HTTPException(status_code=403, detail="S4 okuma bağ kapalı (RUZGAR_SES_S4=0).")
+    q = (body.q or body.query or "").strip()
+    prep = prepare_okuma_ses(
+        q,
+        action=body.action or "oku",
+        yol=body.yol,
+        eser_id=body.eser_id,
+        offset=body.offset,
+        max_chars=body.max_chars,
+        karakter=body.karakter,
+        session_id=body.session_id or "default",
+    )
+    if not prep.get("ok"):
+        raise HTTPException(status_code=404, detail=str(prep.get("error") or "Pasaj yok"))
+    text = str(prep.get("pasaj") or "").strip()
+    kar = str(prep.get("karakter") or "alim")
+    # yavas: S2 âlim zaten yavaş; ekstra için tilavet-bitişik alim + prosody
+    tts_body = TtsBody(
+        text=text,
+        karakter=kar,
+        backend=body.backend or "auto",
+        prosody=True if body.prosody is None else body.prosody,
+    )
+    # Mevcut /api/tts yolunu yeniden kullan
+    resp = await api_tts(tts_body)
+    # Meta başlıklar (istemci / smoke)
+    try:
+        resp.headers["X-Ruzgar-S4"] = "1"
+        resp.headers["X-Ruzgar-Karakter"] = kar
+        resp.headers["X-Ruzgar-Eser"] = str(prep.get("eser_id") or "")[:80]
+        resp.headers["X-Ruzgar-Offset"] = str(prep.get("offset") or 0)
+        resp.headers["X-Ruzgar-Next-Offset"] = str(prep.get("next_offset") or 0)
+    except Exception:
+        pass
+    return resp
+
+
 @app.get("/api/ana-motor/sesli-tur/vad")
 def api_ana_motor_sesli_tur_vad_get() -> dict[str, Any]:
     """Faz AC3 — sesli tur VAD ayarları (health + kullanıcı dosyası)."""
@@ -10687,6 +10769,7 @@ async def api_stt(
     file: UploadFile = File(...),
     lang: Annotated[str | None, Query()] = "tr",
     segments: Annotated[bool, Query()] = False,
+    mic_energy: Annotated[str | None, Form()] = None,
 ):
     """Tarayıcıdan gelen ses dosyasını yerel Whisper ile metne çevirir (internet şart değil)."""
     if not stt_runtime_available():
@@ -10723,6 +10806,13 @@ async def api_stt(
 
     wl = _normalize_stt_lang(lang)
 
+    energy_01: float | None = None
+    if mic_energy is not None and str(mic_energy).strip() != "":
+        try:
+            energy_01 = float(str(mic_energy).strip().replace(",", "."))
+        except ValueError:
+            energy_01 = None
+
     tmp_path = None
     try:
         fd, tmp_path = tempfile.mkstemp(suffix=sfx)
@@ -10747,6 +10837,16 @@ async def api_stt(
             payload = apply_stt_niyet_fix(payload)
         except Exception:
             pass
+        # Duygu hattı — metin + mic_energy → fuse_emotion (istemci TTS'e taşır)
+        try:
+            from ilim_assistant.dinamit_gelisme import fuse_emotion
+
+            stt_text = str(payload.get("text") or payload.get("transcript") or "")
+            payload["emotion"] = fuse_emotion(stt_text, energy_01)
+            if energy_01 is not None:
+                payload["mic_energy"] = round(max(0.0, min(1.0, float(energy_01))), 4)
+        except Exception:
+            payload.setdefault("emotion", "notr")
         return payload
     except HTTPException:
         raise
@@ -10967,7 +11067,7 @@ async def api_video_subtitles_pipeline(
 
 @app.get("/api/video/dub/status")
 def api_video_dub_status():
-    """Faz S6 — dublaj prototipi durumu."""
+    """V1 — dublaj durumu (omurga S1–S3 + iptal/VRAM)."""
     from ilim_assistant.motorlar.video_dublaj import dubbing_status_snapshot
 
     return {"ok": True, **dubbing_status_snapshot()}
@@ -10980,10 +11080,13 @@ async def api_video_dub(
     src_lang: Annotated[str, Form()] = "auto",
     voice: Annotated[str, Form()] = "auto",
     karakter: Annotated[str, Form()] = "asistan",
+    mix_original: Annotated[str, Form()] = "0",
+    orig_duck_db: Annotated[str, Form()] = "-16",
+    normalize: Annotated[str, Form()] = "1",
 ):
     """
-    Faz S6: video → STT → çeviri → TTS → yeni ses izi → mux.
-    Kisa klipler icin (varsayilan max 15 dk, 48 segment).
+    V1.2 dublaj: STT → çeviri → S1–S3 TTS → kalite mux (normalize / soft_fit / miks).
+    mix_original=1 → kısık orijinal + dublaj. İptal: /api/tts/cancel.
     """
     if not stt_runtime_available():
         raise HTTPException(status_code=503, detail="Whisper/STT gerekli.")
@@ -11000,6 +11103,12 @@ async def api_video_dub(
         ".mov",
         ".m4v",
     }
+    want_mix = str(mix_original or "0").strip().lower() in ("1", "true", "yes", "on")
+    want_norm = str(normalize or "1").strip().lower() not in ("0", "false", "no", "off")
+    try:
+        duck = float(str(orig_duck_db or "-16").replace(",", "."))
+    except ValueError:
+        duck = -16.0
 
     def _run():
         from ilim_assistant.motorlar.video_dublaj import run_dubbing_pipeline
@@ -11015,6 +11124,9 @@ async def api_video_dub(
             ayar=read_ses_ayarlari(),
             export_dir=out_dir,
             video_path=media_path if is_video else None,
+            mix_original=want_mix,
+            orig_duck_db=duck,
+            normalize=want_norm,
         )
         if not result.ok:
             raise RuntimeError(result.error or "Dublaj basarisiz")
@@ -11300,12 +11412,38 @@ async def api_tts(body: TtsBody):
         synthesize_edge_mp3_prosody,
     )
     from ilim_assistant.motorlar.ses_prosody import prosody_etkin, prosody_gerekli
+    from ilim_assistant.dinamit_gelisme import (
+        emotion_ses_adjustments,
+        infer_emotion_from_text,
+        merge_pitch,
+    )
+    from ilim_assistant.ses_etiket_prosodi import (
+        apply_rate_pitch_extras,
+        parse_ses_etiketleri,
+    )
 
-    text = (body.text or "").strip()
-    if len(text) < 2:
+    raw_text = (body.text or "").strip()
+    if len(raw_text) < 2:
         raise HTTPException(status_code=400, detail="Metin çok kısa.")
-    if len(text) > 12_000:
-        text = text[:12_000]
+    if len(raw_text) > 12_000:
+        raw_text = raw_text[:12_000]
+
+    # Köşeli etiketler — ham [korku]/[duraksama:…] seslendirilmez
+    etiket = parse_ses_etiketleri(raw_text)
+    text = (etiket.temiz_metin or "").strip()
+    if len(text) < 1:
+        raise HTTPException(status_code=400, detail="Metin çok kısa.")
+
+    # Duygu: istemci emotion > etiket hint > metin çıkarımı
+    _EMO_OK = {"yorgun", "mutlu", "ciddi", "notr"}
+    emo_raw = (body.emotion or etiket.emotion_hint or "").strip().lower()
+    if emo_raw in _EMO_OK and emo_raw != "notr":
+        emotion_kind = emo_raw  # type: ignore[assignment]
+    elif emo_raw == "notr":
+        emotion_kind = infer_emotion_from_text(text)
+    else:
+        emotion_kind = infer_emotion_from_text(text)
+    emo_hiz, emo_huzur, emo_pitch_extra = emotion_ses_adjustments(emotion_kind)
 
     ayar = read_ses_ayarlari()
     kar = normalize_ses_karakteri(body.karakter or ayar.get("karakter"))
@@ -11315,7 +11453,15 @@ async def api_tts(body: TtsBody):
         karakter=kar.value,
         icerik_yolu=icerik.value,
         edge_voice=EDGE_VOICES.get(kar),
-        ek={"emotion": body.emotion} if body.emotion else None,
+        ek={
+            "emotion": emotion_kind,
+            "emotion_applied": True,
+            **(
+                {"etiketler": list(etiket.etiketler)}
+                if etiket.etiketler
+                else {}
+            ),
+        },
     )
 
     use_clone = should_use_clone(
@@ -11325,56 +11471,175 @@ async def api_tts(body: TtsBody):
         speaker_rel=body.speaker_rel,
     )
 
+    # S3 — XTTS yoksa Edge yedek (strict: RUZGAR_TTS_CLONE_STRICT=1 → 503)
+    edge_yedek_meta = False
     if use_clone:
         if not xtts_runtime_available():
-            if (body.backend or "auto").strip().lower() == "clone":
+            import os as _os
+
+            strict = _os.environ.get("RUZGAR_TTS_CLONE_STRICT", "0").strip().lower() in (
+                "1",
+                "true",
+                "yes",
+                "on",
+            )
+            if strict and (body.backend or "auto").strip().lower() == "clone":
                 raise HTTPException(
                     status_code=503,
                     detail="XTTS yok: pip install TTS torch (ilim-voice/requirements-tts.txt)",
                 )
             use_clone = False
+            edge_yedek_meta = True
 
     try:
         if use_clone:
-            out_path = await synthesize_clone_mp3(
-                text,
-                karakter=kar.value,
-                language=lang,
-                speaker_rel=body.speaker_rel,
-                meta=meta,
-                ayar=ayar,
-            )
-        else:
+            try:
+                out_path = await synthesize_clone_mp3(
+                    text,
+                    karakter=kar.value,
+                    language=lang,
+                    speaker_rel=body.speaker_rel,
+                    meta=meta,
+                    ayar=ayar,
+                )
+            except Exception as clone_exc:
+                # S3 — klon hata → Edge yedek (strict değilse)
+                import os as _os
+
+                strict = _os.environ.get("RUZGAR_TTS_CLONE_STRICT", "0").strip().lower() in (
+                    "1",
+                    "true",
+                    "yes",
+                    "on",
+                )
+                if strict:
+                    raise
+                use_clone = False
+                edge_yedek_meta = True
+                meta = {
+                    **(meta or {}),
+                    "clone_fallback": "edge",
+                    "clone_error": str(clone_exc)[:160],
+                }
+        if not use_clone:
             if not edge_available():
                 raise HTTPException(
                     status_code=503,
                     detail="Edge-TTS yok: pip install edge-tts",
                 )
+            if edge_yedek_meta:
+                meta = {
+                    **(meta or {}),
+                    "clone_fallback": "edge",
+                    "s3_edge_yedek": True,
+                }
             voice = EDGE_VOICES[kar]
+            # S2 — tavan: muhabbet akıcı; âlim/tilavet huşû-vakur parametre
+            try:
+                from ilim_assistant.ses_s2_prosodi_tavan import (
+                    coz_tts_tavan_paketi,
+                    wants_prosody as s2_wants_prosody,
+                )
+
+                s2 = coz_tts_tavan_paketi(kar.value, ayar=ayar)
+                hiz_s2 = float(s2["hiz"])
+                huzur_s2 = float(s2["huzur"])
+                durak_s2 = float(s2["durak_carpani"])
+                tilavet_pause = bool(s2.get("tilavet_durak"))
+            except Exception:
+                hiz_s2 = float(ayar.get("hiz", 0.92))
+                huzur_s2 = float(ayar.get("huzur", 0.88))
+                durak_s2 = float(ayar.get("durak", 1.0))
+                tilavet_pause = kar.value == "tilavet"
+                s2 = None
+            # Duygu + köşeli etiket → hiz/huzur/durak (yalnız meta değil)
+            hiz_s2 = float(hiz_s2) * float(emo_hiz) * float(etiket.hiz_carpani)
+            huzur_s2 = float(huzur_s2) * float(emo_huzur) * float(etiket.huzur_carpani)
+            durak_s2 = float(durak_s2) * float(etiket.durak_carpani)
             rate = edge_rate_yuzdesi(
                 karakter=kar,
                 icerik=icerik,
-                hiz_carpani=float(ayar.get("hiz", 0.92)),
-                huzur_carpani=float(ayar.get("huzur", 0.88)),
+                hiz_carpani=hiz_s2,
+                huzur_carpani=huzur_s2,
             )
             pitch = edge_pitch_string(kar, icerik)
-            if body.prosody is False:
+            if s2 is not None:
+                from ilim_assistant.ses_s2_prosodi_tavan import (
+                    ayarla_pitch_string,
+                    ayarla_rate_string,
+                )
+
+                rate = ayarla_rate_string(rate, kar.value)
+                pitch = ayarla_pitch_string(pitch, kar.value)
+            pitch = merge_pitch(pitch, emo_pitch_extra)
+            rate, pitch = apply_rate_pitch_extras(rate, pitch, etiket)
+            meta = {
+                **(meta or {}),
+                "rate": rate,
+                "pitch": pitch,
+                "hiz_carpani": hiz_s2,
+                "huzur_carpani": huzur_s2,
+                "durak_carpani": durak_s2,
+            }
+            metin_prosody = prosody_gerekli(text, icerik) or (
+                tilavet_pause and len(text) >= 40
+            ) or bool(etiket.force_prosody)
+            if body.prosody is False and not etiket.force_prosody:
                 use_prosody = False
-            elif body.prosody is True:
-                use_prosody = prosody_etkin(ayar) and prosody_gerekli(text, icerik)
+            elif body.prosody is True or etiket.force_prosody:
+                use_prosody = prosody_etkin(ayar) and (
+                    metin_prosody or etiket.force_prosody
+                )
             else:
-                use_prosody = prosody_etkin(ayar) and prosody_gerekli(text, icerik)
+                try:
+                    use_prosody = prosody_etkin(ayar) and s2_wants_prosody(
+                        kar.value,
+                        metin_gerekli=metin_prosody,
+                        ayar_prosody=bool(ayar.get("prosody", True)),
+                    )
+                except Exception:
+                    use_prosody = prosody_etkin(ayar) and prosody_gerekli(text, icerik)
+            # FB cila — kısa muhabbet: V3 sıcak yol, prosody concat atla
+            # (etiket durak/vurgu zorlaması varsa V3'e düşme)
+            if not etiket.force_prosody:
+                try:
+                    from ilim_assistant.ses_fb_cila import prefer_v3_over_prosody
+
+                    if prefer_v3_over_prosody(
+                        text,
+                        karakter=kar.value,
+                        icerik_genel=(icerik.value == "genel"),
+                    ):
+                        use_prosody = False
+                except Exception:
+                    pass
             if use_prosody:
                 out_path = await synthesize_edge_mp3_prosody(
                     text,
                     voice=voice,
                     rate=rate,
                     pitch=pitch,
-                    meta=meta,
+                    meta={
+                        **(meta or {}),
+                        "s2_tavan": kar.value,
+                        **(
+                            {
+                                "koru_etiket_durak": True,
+                                "etiket_hedef_ms": int(etiket.durak_ek_ms),
+                            }
+                            if etiket.koru_etiket_durak
+                            else {}
+                        ),
+                    },
                     icerik_yolu=icerik.value,
-                    hiz_carpani=float(ayar.get("hiz", 0.92)),
-                    huzur_carpani=float(ayar.get("huzur", 0.88)),
-                    durak_carpani=float(ayar.get("durak", 1.0)),
+                    hiz_carpani=hiz_s2,
+                    huzur_carpani=huzur_s2,
+                    durak_carpani=durak_s2,
+                    tilavet=tilavet_pause,
+                    koru_etiket_durak=bool(etiket.koru_etiket_durak),
+                    etiket_hedef_ms=(
+                        int(etiket.durak_ek_ms) if etiket.koru_etiket_durak else None
+                    ),
                 )
             else:
                 # V3/D — kısa sohbet parçası: in-process stream + retry (pool IPC yok)
@@ -11399,6 +11664,16 @@ async def api_tts(body: TtsBody):
                         )
                     except Exception:
                         v3_rate = os.environ.get("RUZGAR_TTS_V3_RATE", "").strip() or rate
+                    # Duygu/etiket rate V3 yoluna da uygula
+                    if emotion_kind != "notr" or etiket.etiketler:
+                        v3_rate = rate
+                    # FB cila — Edge TLS ılık değilse kısa warm
+                    try:
+                        from ilim_assistant.ses_fb_cila import warm_edge_stream
+
+                        await warm_edge_stream(force=False)
+                    except Exception:
+                        pass
                     out_path = await synthesize_edge_mp3_v3_fast(
                         text,
                         voice=voice,
@@ -11460,6 +11735,29 @@ async def api_tts(body: TtsBody):
     )
 
 
+@app.post("/api/tts/cancel")
+async def api_tts_cancel():
+    """Barge/durdur — XTTS arka plan üretimini iptal et."""
+    from ilim_assistant.ses_xtts_iptal import cancel_all, snapshot
+    from ilim_assistant.ses_vram_hakem import snapshot as vram_snap
+
+    info = cancel_all(reason="api_tts_cancel")
+    return {
+        "ok": True,
+        "cancel": info,
+        "iptal": snapshot(),
+        "vram": vram_snap(),
+    }
+
+
+@app.get("/api/tts/vram")
+def api_tts_vram():
+    """8 GB VRAM hakemi özeti."""
+    from ilim_assistant.ses_vram_hakem import snapshot
+
+    return {"ok": True, **snapshot()}
+
+
 @app.get("/api/tts/tilavet/info")
 def api_tts_tilavet_info(text: Annotated[str, Query()] = ""):
     """Faz S5 — tilavet modu onizleme (metin verilirse)."""
@@ -11483,11 +11781,23 @@ async def api_tts_tilavet(body: TtsBody):
     from ilim_assistant.motorlar.ses_tilavet import tilavet_etkin
     from ilim_assistant.tts_service import edge_available, read_ses_ayarlari, synthesize_tilavet_mp3
 
-    text = (body.text or "").strip()
+    raw_text = (body.text or "").strip()
+    if len(raw_text) < 2:
+        raise HTTPException(status_code=400, detail="Metin cok kisa.")
+    if len(raw_text) > 12_000:
+        raw_text = raw_text[:12_000]
+    # Köşeli etiketler tilavet yolunda da ham okunmasın
+    try:
+        from ilim_assistant.ses_etiket_prosodi import parse_ses_etiketleri
+
+        et = parse_ses_etiketleri(raw_text)
+        text = (et.temiz_metin or "").strip() or raw_text
+        etiketler = list(et.etiketler)
+    except Exception:
+        text = raw_text
+        etiketler = []
     if len(text) < 2:
         raise HTTPException(status_code=400, detail="Metin cok kisa.")
-    if len(text) > 12_000:
-        text = text[:12_000]
     if not tilavet_etkin():
         raise HTTPException(status_code=503, detail="Tilavet modu kapali (RUZGAR_TTS_TILAVET=0).")
     if not edge_available():
@@ -11499,7 +11809,11 @@ async def api_tts_tilavet(body: TtsBody):
     meta = tts_metadata_kimlik(
         karakter=kar.value,
         icerik_yolu=icerik.value,
-        ek={"tilavet": True, **({"emotion": body.emotion} if body.emotion else {})},
+        ek={
+            "tilavet": True,
+            **({"emotion": body.emotion} if body.emotion else {}),
+            **({"etiketler": etiketler} if etiketler else {}),
+        },
     )
     try:
         out_path = await synthesize_tilavet_mp3(

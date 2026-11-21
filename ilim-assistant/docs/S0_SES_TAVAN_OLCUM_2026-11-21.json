@@ -1,0 +1,156 @@
+{
+  "version": "ses-s0-tavan-olcum-v1-2026-11-21",
+  "ts": "2026-11-21T11:01:53.952004+00:00",
+  "enabled": true,
+  "basari_cumlesi": "Kur’an’da huşû; hadis/tefsirde vakur; sohbette doğal; video aynı ses omurgası — mobil = PC.",
+  "sealed_refs": {
+    "v0_tts_first_byte_ms": 1686.0,
+    "v0_stt_warm_ms": 10288.0,
+    "v3_measured_first_byte_ms": 820.0,
+    "v3_target_first_byte_ms": 900.0,
+    "asama_d_keep_ms": 886.0,
+    "docs": {
+      "v0": "docs/V0_STT_TTS_BASELINE_2026-10-23.md",
+      "v3": "docs/V3_TTS_ILK_BYTE_2026-11-03.md",
+      "v5": "docs/V5_FAZ_V_MUHUR_2026-11-03.md"
+    }
+  },
+  "robot": {
+    "yapi_skoru_0_5": 5.0,
+    "checks": {
+      "ses_prosody": true,
+      "ses_tilavet": true,
+      "ses_klon_motoru": true,
+      "ses_v3_ilk_byte": true,
+      "ses_v4_barge_in": true,
+      "ses_f7_kalite": true
+    },
+    "kulak_skoru_0_5": null,
+    "kulak_not": "Mimar kulak onayı S1+ mühür için zorunlu; S0 skor bırakmaz.",
+    "robot_hissi_ozet": "Edge neural + prosody/tilavet iskelet var; tavan profil ayrımı (S1) ve klon referansı (S3) gelmeden robot hissi yüksek kalabilir."
+  },
+  "profiller": {
+    "aktif": "asistan",
+    "mevcut_edge_profiller": [
+      "alim",
+      "asistan",
+      "edip"
+    ],
+    "tavan_hedef": [
+      "muhabbet",
+      "alim",
+      "tilavet"
+    ],
+    "tavan_opsiyon": "anlatici",
+    "esleme_not": {
+      "muhabbet": "asistan (şimdi)",
+      "alim": "alim (şimdi; hadis/tefsir vakur — tilavet ayrı değil)",
+      "tilavet": "yok ayrı profil — ses_tilavet + /api/tts/tilavet iskelet",
+      "anlatici": "edip yakın / S1+ opsiyon"
+    },
+    "gap": [
+      "muhabbet",
+      "tilavet"
+    ],
+    "detail": {
+      "aktif": "asistan",
+      "profiller": {
+        "alim": {
+          "voice": "tr-TR-AhmetNeural",
+          "rate": "-20%",
+          "pitch": "-3Hz",
+          "aciklama": "[Alim] Kur'an ve Hadis hattında ses: yavaş, vakur, tane tane ve derin; her kelimede duruş payı; acele yok; hürmet ve sükûnet önde."
+        },
+        "edip": {
+          "voice": "tr-TR-EmelNeural",
+          "rate": "-14%",
+          "pitch": "+3Hz",
+          "aciklama": "[Edip] Edebiyat ve gazel okumasında: lirik, duygusal, yumuşak; sesin müzikliliği ve imgelerin tadı öne çıksın."
+        },
+        "asistan": {
+          "voice": "tr-TR-EmelNeural",
+          "rate": "-8%",
+          "pitch": "+1Hz",
+          "aciklama": "[Asistan] Günlük sohbet: net, yardımcı, nazik; doğal tempo; gereksiz ağırlık yok."
+        }
+      }
+    }
+  },
+  "mobil_esitlik": {
+    "ayni_api_tts": true,
+    "desktop_barge_ok": true,
+    "mobil_barge_ok": true,
+    "esitlik_ok": true,
+    "desktop": {
+      "ok": true,
+      "missing": []
+    },
+    "mobil": {
+      "ok": true,
+      "missing": []
+    },
+    "not": "Canlı kulak mobil=PC ölçümü S1+; S0 sözleşme/marker tabanı."
+  },
+  "klon_tilavet": {
+    "clone": {
+      "enabled_env": true,
+      "xtts_ready": false,
+      "policy": "auto_yalniz_ayar_veya_backend_clone",
+      "hint": "RUZGAR_TTS_CLONE=0 ile kapat; backend=clone veya ayar tercih ile aç.",
+      "status": {
+        "enabled": true,
+        "xtts": false,
+        "coqui_import": false,
+        "cuda": true,
+        "ilim_voice": "D:/ÜMİT/PROJELER/CURSOR PROJELER/YAPAY ZEKA/ilim-voice",
+        "referans_dir": "ilim-assistant/arsiv/ses-referans",
+        "referans": {
+          "alim": false,
+          "edip": false,
+          "asistan": false,
+          "kuran": true,
+          "gazel": true,
+          "ilahi": true
+        },
+        "max_chars": 2500,
+        "hint_tr": "Referans yukleyin: Ses atolyesi - Klon referans (30-120 sn temiz konusma). Kurulum: pip install TTS torch soundfile",
+        "version": "ses-klon-s4-2026-06-06",
+        "mimarlar": "Ümit & Gökçenur"
+      }
+    },
+    "tilavet_referans_wav": "D:\\ÜMİT\\PROJELER\\CURSOR PROJELER\\YAPAY ZEKA\\ilim-assistant\\arsiv\\ses-referans\\kuran.wav",
+    "mimar_kilit": {
+      "klon": "kız sesi (önceden alınmış) verilecek",
+      "tilavet_wav": "şimdi yok — sonra"
+    }
+  },
+  "tts_live": {
+    "ran": true,
+    "ok": true,
+    "first_byte_ms": 1311.2,
+    "total_ms": 1669.3,
+    "vs_v0": {
+      "delta_ms": 374.8,
+      "faster_than_v0": true,
+      "under_v3_target": false
+    },
+    "vs_v3_target": {
+      "under_target": false,
+      "delta_to_target_ms": -411.2
+    },
+    "note": "",
+    "attempts": 1
+  },
+  "sonraki": "S1 — üç profil seçici (muhabbet / âlim / tilavet) Edge üzerinde",
+  "ozet": {
+    "yapi_robot_0_5": 5.0,
+    "mobil_esitlik_ok": true,
+    "profil_gap": [
+      "muhabbet",
+      "tilavet"
+    ],
+    "tts_first_byte_ms": 1311.2,
+    "tts_live_ran": true,
+    "s0_yesil": true
+  }
+}
