@@ -382,6 +382,24 @@ class _RuzgarUserContextMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(_RuzgarUserContextMiddleware)
 
+# Madde 3 — cihaz/kullanıcı kapsamı (saf ASGI; Bearer varsa tembel çözülür)
+try:
+    from ilim_assistant.ruzgar_kapsam import KapsamASGIMiddleware
+
+    app.add_middleware(KapsamASGIMiddleware)
+except Exception as _kapsam_exc:  # pragma: no cover
+    print(f"[kapsam] ara katman yüklenemedi: {_kapsam_exc}", flush=True)
+
+
+def _bind_chat_scope(req: Any) -> None:
+    """Sohbet turu başında kapsamı (kullanıcı+cihaz+konuşma) bağla; asla tur akışını bozmaz."""
+    try:
+        from ilim_assistant.ruzgar_kapsam import bind_scope_for_request
+
+        bind_scope_for_request(req)
+    except Exception:
+        pass
+
 # Masaüstü kabuk — http://127.0.0.1:PORT/ui (file:// yok; sunucu health ile şerit yeşil)
 _DESKTOP_UI_DIR = REPO_ROOT / "ruzgar-desktop"
 if (_DESKTOP_UI_DIR / "index.html").is_file():
@@ -780,6 +798,9 @@ class ChatRequest(BaseModel):
     mode: str | None = None
     # Mobil / PWA oturum jetonu (Bearer ile de gelebilir)
     session_token: str | None = None
+    # Madde 3 — istemci cihaz/konuşma kimliği (token'daki device_id önceliklidir)
+    device_id: str | None = None
+    conversation_id: str | None = None
     # Electron getRoot() — @@dosya yolları bu köke göre çözülür
     workspace_root: str | None = None
     # Web ara kapalı olsa bile mesajdaki https URL’lerini oku
@@ -1665,6 +1686,12 @@ def _health_build_block() -> dict:
         from ilim_assistant.ruzgar_niyet_karari import niyet_karari_status
 
         base["niyet_karari"] = niyet_karari_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_kapsam import kapsam_status
+
+        base["kapsam"] = kapsam_status()
     except Exception:
         pass
     try:
@@ -13101,6 +13128,7 @@ def _collect_fast_lane_chat_events(req: ChatRequest) -> list[dict[str, Any]] | N
 
 async def _async_iter_chat_events(req: ChatRequest):
     """Önce hızlı şerit (thread yok), sonra tam tur."""
+    _bind_chat_scope(req)
     fast = _collect_fast_lane_chat_events(req)
     if fast:
         for obj in fast:
@@ -17210,6 +17238,7 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
     import re
 
     t0 = time.perf_counter()
+    _bind_chat_scope(req)
     _msg0 = (req.message or "").strip()
     # Yalnızca komut: «ara …» — Bakara/… içindeki «ara» alt dizisini yakalama
     if re.match(r"(?i)^ara\s+\S", _msg0):
@@ -17235,6 +17264,7 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
 async def chat_stream(req: ChatRequest):
     async def generate():
         yield ":ruzgar-events\n\n"
+        _bind_chat_scope(req)
         async for obj in _async_iter_chat_events(req):
             yield _sse(obj)
 
@@ -17249,6 +17279,7 @@ def _chat_full_sync(req: ChatRequest) -> dict[str, Any]:
     import time as _time
 
     _t0 = _time.perf_counter()
+    _bind_chat_scope(req)
     _auth = None
     _slot = None
     try:
@@ -17415,6 +17446,7 @@ async def websocket_chat(ws: WebSocket) -> None:
         await ws.close()
         return
     try:
+        _bind_chat_scope(req)
         async for obj in _async_iter_chat_events(req):
             await ws.send_json(obj)
     except Exception as exc:

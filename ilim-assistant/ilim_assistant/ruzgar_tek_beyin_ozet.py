@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import threading
 import time
 import unicodedata
 from pathlib import Path
@@ -217,7 +218,23 @@ def rebuild_session_summary(
     }
 
 
-def _load_cache() -> dict[str, Any]:
+_CACHE_LOCK = threading.Lock()
+_CACHE_MAX_SCOPES = 64
+
+
+def _scope_key() -> str:
+    """Özet önbelleği anahtarı — cihaz/kullanıcı kapsamı (Madde 3)."""
+    try:
+        from ilim_assistant.ruzgar_kapsam import current_scope, kapsam_enabled
+
+        if not kapsam_enabled():
+            return "pc"
+        return current_scope().key
+    except Exception:
+        return "pc"
+
+
+def _read_cache_file() -> dict[str, Any]:
     if not _CACHE_PATH.is_file():
         return {}
     try:
@@ -227,13 +244,43 @@ def _load_cache() -> dict[str, Any]:
         return {}
 
 
+def _scopes_of(data: dict[str, Any]) -> dict[str, Any]:
+    """Dosya içeriğinden kapsam→özet haritası (eski düz biçim PC'ye aittir)."""
+    sc = data.get("scopes")
+    if isinstance(sc, dict):
+        return dict(sc)
+    if data.get("summary_text"):
+        return {"pc": data}
+    return {}
+
+
+def _load_cache() -> dict[str, Any]:
+    """Geçerli kapsamın özeti (yoksa boş)."""
+    got = _scopes_of(_read_cache_file()).get(_scope_key())
+    return got if isinstance(got, dict) else {}
+
+
 def _save_cache(payload: dict[str, Any]) -> None:
     try:
-        _CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
-        _CACHE_PATH.write_text(
-            json.dumps(payload, ensure_ascii=False, indent=0) + "\n",
-            encoding="utf-8",
-        )
+        with _CACHE_LOCK:
+            scopes = _scopes_of(_read_cache_file())
+            scopes[_scope_key()] = payload
+            if len(scopes) > _CACHE_MAX_SCOPES:
+                # en eski güncellenenleri at (PC hariç)
+                order = sorted(
+                    (k for k in scopes if k != "pc"),
+                    key=lambda k: float((scopes[k] or {}).get("updated_at") or 0),
+                )
+                for k in order[: len(scopes) - _CACHE_MAX_SCOPES]:
+                    scopes.pop(k, None)
+            _CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+            tmp = _CACHE_PATH.with_suffix(".json.tmp")
+            tmp.write_text(
+                json.dumps({"v": 2, "scopes": scopes}, ensure_ascii=False, indent=0)
+                + "\n",
+                encoding="utf-8",
+            )
+            tmp.replace(_CACHE_PATH)
     except Exception:
         pass
 
@@ -275,6 +322,10 @@ def load_summary_addon(
 
 def _sync_to_oturum_ozet_hafiza(summary: dict[str, Any]) -> dict[str, Any]:
     """Periyodik köprü — OturumOzet motor tipine yaz."""
+    # Ortak hafıza tek havuzdur: mobil/başka cihaz özeti buraya yazılırsa PC'ye
+    # sızar. Yalnız PC (sahip) kapsamı yazar; diğerleri kendi önbelleğinde kalır.
+    if _scope_key() != "pc":
+        return {"ok": True, "stored": False, "reason": "scope_non_pc"}
     try:
         from ilim_assistant.ana_motor_oturum_ozet import oturum_ozet_enabled
 

@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import threading
 import time
 import unicodedata
 from pathlib import Path
@@ -39,14 +40,60 @@ def _normalize_query(q: str) -> str:
     return t
 
 
+_FILE_LOCK = threading.RLock()
+_TRIM_SLACK = 50
+
+
+def _scope_now() -> str:
+    """Satıra yazılacak kapsam anahtarı (kapalıysa boş — eski davranış)."""
+    try:
+        from ilim_assistant.ruzgar_kapsam import current_scope, kapsam_enabled
+
+        return current_scope().key if kapsam_enabled() else ""
+    except Exception:
+        return ""
+
+
+def _row_visible(row: dict[str, Any]) -> bool:
+    try:
+        from ilim_assistant.ruzgar_kapsam import row_visible
+
+        return row_visible(row)
+    except Exception:
+        return True
+
+
+def _line_scope(line: str) -> str:
+    try:
+        row = json.loads(line)
+        return str(row.get("scope") or "") if isinstance(row, dict) else ""
+    except Exception:
+        return ""
+
+
 def _trim_history_file() -> None:
+    """Kapsam başına en fazla ``_MAX_STORE`` tur: gürültülü bir cihaz diğerini silmesin."""
     if not _HISTORY_PATH.is_file():
         return
     try:
-        lines = _HISTORY_PATH.read_text(encoding="utf-8").splitlines()
-        if len(lines) <= _MAX_STORE:
-            return
-        _HISTORY_PATH.write_text("\n".join(lines[-_MAX_STORE:]) + "\n", encoding="utf-8")
+        with _FILE_LOCK:
+            lines = [
+                ln for ln in _HISTORY_PATH.read_text(encoding="utf-8").splitlines() if ln.strip()
+            ]
+            if len(lines) <= _MAX_STORE + _TRIM_SLACK:
+                return
+            counts: dict[str, int] = {}
+            keep = [True] * len(lines)
+            for i in range(len(lines) - 1, -1, -1):
+                k = _line_scope(lines[i])
+                counts[k] = counts.get(k, 0) + 1
+                if counts[k] > _MAX_STORE:
+                    keep[i] = False
+            kept = [ln for ln, ok in zip(lines, keep) if ok]
+            hard_cap = _MAX_STORE * 4
+            if len(kept) > hard_cap:
+                kept = kept[-hard_cap:]
+            _HISTORY_PATH.write_text("\n".join(kept) + "\n", encoding="utf-8")
     except Exception:
         pass
 
@@ -74,11 +121,15 @@ def append_chat_turn(
     }
     if session_id:
         entry["session_id"] = str(session_id)[:64]
+    sk = _scope_now()
+    if sk:
+        entry["scope"] = sk
     try:
         _HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
-        with _HISTORY_PATH.open("a", encoding="utf-8") as fh:
-            fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
-        _trim_history_file()
+        with _FILE_LOCK:
+            with _HISTORY_PATH.open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+            _trim_history_file()
         return {"ok": True, "stored": True, "version": FAZ_AA_CHAT_VERSION}
     except Exception as exc:
         return {"ok": False, "stored": False, "error": str(exc)[:160]}
@@ -99,7 +150,7 @@ def _load_entries(*, limit: int | None = None) -> list[dict[str, Any]]:
                 row = json.loads(line)
             except json.JSONDecodeError:
                 continue
-            if isinstance(row, dict):
+            if isinstance(row, dict) and _row_visible(row):
                 items.append(row)
             if len(items) >= cap:
                 break
@@ -142,7 +193,15 @@ def chat_history_stats() -> dict[str, Any]:
     stored = 0
     if _HISTORY_PATH.is_file():
         try:
-            stored = sum(1 for line in _HISTORY_PATH.read_text(encoding="utf-8").splitlines() if line.strip())
+            for line in _HISTORY_PATH.read_text(encoding="utf-8").splitlines():
+                if not line.strip():
+                    continue
+                try:
+                    row = json.loads(line)
+                except Exception:
+                    continue
+                if isinstance(row, dict) and _row_visible(row):
+                    stored += 1
         except Exception:
             stored = 0
     recent = _load_entries(limit=1)
@@ -206,40 +265,55 @@ def clear_chat_history(
     sid = (session_id or "").strip()
     if not _HISTORY_PATH.is_file():
         return {"ok": True, "cleared": 0, "version": FAZ_AA_CHAT_VERSION}
-    if not mode_norm and not sid:
+    try:
+        from ilim_assistant.ruzgar_kapsam import kapsam_enabled
+
+        _scoped = kapsam_enabled()
+    except Exception:
+        _scoped = False
+    if not mode_norm and not sid and not _scoped:
         try:
-            count = len(_HISTORY_PATH.read_text(encoding="utf-8").splitlines())
-            _HISTORY_PATH.unlink(missing_ok=True)
+            with _FILE_LOCK:
+                count = len(_HISTORY_PATH.read_text(encoding="utf-8").splitlines())
+                _HISTORY_PATH.unlink(missing_ok=True)
             return {"ok": True, "cleared": count, "all": True, "version": FAZ_AA_CHAT_VERSION}
         except Exception as exc:
             return {"ok": False, "error": str(exc)[:200], "version": FAZ_AA_CHAT_VERSION}
     try:
         kept: list[str] = []
         removed = 0
-        for line in _HISTORY_PATH.read_text(encoding="utf-8").splitlines():
-            if not line.strip():
-                continue
-            try:
-                row = json.loads(line)
-            except Exception:
-                kept.append(line)
-                continue
-            drop = False
-            if mode_norm and str(row.get("mode") or "genel").lower() == mode_norm:
-                drop = True
-            if sid and str(row.get("session_id") or "") == sid:
-                drop = True
-            if drop:
-                removed += 1
+        with _FILE_LOCK:
+            for line in _HISTORY_PATH.read_text(encoding="utf-8").splitlines():
+                if not line.strip():
+                    continue
+                try:
+                    row = json.loads(line)
+                except Exception:
+                    kept.append(line)
+                    continue
+                # Başka cihazın/kullanıcının satırına dokunma (Madde 3)
+                if not isinstance(row, dict) or not _row_visible(row):
+                    kept.append(line)
+                    continue
+                drop = False
+                if not mode_norm and not sid:
+                    drop = True  # «tümünü temizle» = yalnız kendi kapsamın
+                if mode_norm and str(row.get("mode") or "genel").lower() == mode_norm:
+                    drop = True
+                if sid and str(row.get("session_id") or "") == sid:
+                    drop = True
+                if drop:
+                    removed += 1
+                else:
+                    kept.append(line)
+            if kept:
+                _HISTORY_PATH.write_text("\n".join(kept) + "\n", encoding="utf-8")
             else:
-                kept.append(line)
-        if kept:
-            _HISTORY_PATH.write_text("\n".join(kept) + "\n", encoding="utf-8")
-        else:
-            _HISTORY_PATH.unlink(missing_ok=True)
+                _HISTORY_PATH.unlink(missing_ok=True)
         return {
             "ok": True,
             "cleared": removed,
+            "all": (not mode_norm and not sid),
             "mode": mode_norm or None,
             "session_id": sid or None,
             "version": FAZ_AA_CHAT_VERSION,
