@@ -10,6 +10,7 @@ Profiller:
 from __future__ import annotations
 
 import os
+import time
 from dataclasses import dataclass, field
 from typing import Any, Iterator, Literal
 
@@ -1166,6 +1167,93 @@ def _hedged_stream(
             ev.set()
 
 
+_HEAVY_LOCAL_PROFILES = frozenset({"denge", "denge_yeni"})
+_RESIDENT_CACHE: dict[str, Any] = {"ts": 0.0, "val": None}
+
+
+def cold_defer_enabled() -> bool:
+    """Soğuk (bellekte olmayan) ağır yerel model zincirde sona alınsın (varsayılan: açık)."""
+    return os.environ.get("RUZGAR_COLD_DEFER", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+        "off",
+    )
+
+
+def _resident_models_cached() -> set[str] | None:
+    now = time.monotonic()
+    if now - float(_RESIDENT_CACHE["ts"]) < 3.0:
+        return _RESIDENT_CACHE["val"]
+    try:
+        from ilim_assistant.llm_ollama import ollama_resident_models
+
+        val = ollama_resident_models(timeout_sec=1.0)
+    except Exception:
+        val = None
+    _RESIDENT_CACHE["ts"] = now
+    _RESIDENT_CACHE["val"] = val
+    return val
+
+
+def _defer_cold_heavy(
+    chain: list[BrainEndpoint], *, small_local_after_cloud: bool = False
+) -> list[BrainEndpoint]:
+    """Ağır yerel model (14B) bellekte değilse sona al.
+
+    Soğuk 14B'nin ilk token'ı dakikalar sürebilir ve tur bütçesini yutup Gemini/hızlı
+    beyne sıra bırakmaz (donma). Model bellekteyse sıra aynen korunur; hiçbir uç
+    silinmez, yalnız yeri değişir (son çare olarak yine denenir).
+
+    ``small_local_after_cloud``: bilgi sorularında küçük yerel model (3B) ağır bağlamla
+    konu dışı cevap üretebilir; ağır model soğuksa bulut uçları ona göre öne alınır.
+    """
+    if not cold_defer_enabled() or len(chain) < 2:
+        return chain
+    heavy_idx = [
+        i
+        for i, e in enumerate(chain)
+        if e.provider == "ollama" and e.profile_id in _HEAVY_LOCAL_PROFILES
+    ]
+    if not heavy_idx:
+        return chain
+    resident = _resident_models_cached()
+    if resident is None:  # Ollama yanıt vermedi → mevcut sırayı bozma
+        return chain
+    try:
+        from ilim_assistant.llm_ollama import ollama_model_resident
+    except Exception:
+        return chain
+    cold = [
+        chain[i] for i in heavy_idx if not ollama_model_resident(chain[i].model, resident)
+    ]
+    if not cold:
+        return chain
+    cold_ids = {id(e) for e in cold}
+    rest = [e for e in chain if id(e) not in cold_ids]
+    if not rest:
+        return chain
+    if small_local_after_cloud:
+        cloud = [e for e in rest if e.provider != "ollama"]
+        if cloud:
+            local_small = [e for e in rest if e.provider == "ollama"]
+            rest = cloud + local_small
+    return rest + cold
+
+
+def _ollama_turn_cap(remaining: float, *, is_last: bool) -> float:
+    """Yerel uç için ilk-bayt üst sınırı: bütçenin yarısı; son uçsa tamamı."""
+    try:
+        rem = float(remaining)
+    except (TypeError, ValueError):
+        rem = 15.0
+    if rem > 600:  # bütçe yok (sınırsız)
+        rem = 22.0
+    if is_last:
+        return max(6.0, min(rem + 0.5, 22.0))
+    return max(6.0, min(rem * 0.5, 12.0))
+
+
 def _stream_endpoint(
     ep: BrainEndpoint,
     system: str,
@@ -1175,6 +1263,7 @@ def _stream_endpoint(
     gemini_read_cap: float | None = None,
     gemini_max_candidates: int | None = None,
     gemini_hedge_sec: float | None = None,
+    ollama_read_cap: float | None = None,
 ) -> Iterator[str]:
     if ep.profile_id == "groq":
         try:
@@ -1210,6 +1299,9 @@ def _stream_endpoint(
         else:
             yield from _gem()
         return
+    _ollama_kw: dict[str, Any] = {}
+    if ollama_read_cap and ep.provider == "ollama":
+        _ollama_kw["read_timeout_cap"] = ollama_read_cap
     yield from chat_completion_stream(
         system,
         user,
@@ -1217,6 +1309,7 @@ def _stream_endpoint(
         base_url=ep.base_url,
         api_key=ep.api_key,
         prior_messages=prior_messages,
+        **_ollama_kw,
     )
 
 
@@ -1330,6 +1423,14 @@ def _casual_gemini_fast_model(chain: list[BrainEndpoint]) -> list[BrainEndpoint]
     return out
 
 
+def _casual_ollama_cap_value(raw: Any) -> float:
+    """Gündelik sohbette yerel uç ilk-bayt sınırı (sn); bozuk değerde 12."""
+    try:
+        return max(6.0, min(float(raw), 22.0))
+    except (TypeError, ValueError):
+        return 12.0
+
+
 def stream_chat_casual_fast(
     system: str,
     user: str,
@@ -1347,9 +1448,9 @@ def stream_chat_casual_fast(
         chain = _chain_from_ids(_filter_chain_ids_for_quota(["hizli", "denge", "gemini"]))
     chain = _casual_gemini_fast_model(chain)
     try:
-        ollama_cap = os.environ.get("RUZGAR_CASUAL_OLLAMA_READ_TIMEOUT_SEC", "22")
+        ollama_cap = os.environ.get("RUZGAR_CASUAL_OLLAMA_READ_TIMEOUT_SEC", "12")
     except Exception:
-        ollama_cap = "22"
+        ollama_cap = "12"
     old_read = os.environ.get("RUZGAR_OLLAMA_READ_TIMEOUT_SEC")
     os.environ["RUZGAR_OLLAMA_READ_TIMEOUT_SEC"] = str(ollama_cap)
     try:
@@ -1365,6 +1466,7 @@ def stream_chat_casual_fast(
             gemini_read_cap=casual_gemini_read_cap(),
             gemini_max_candidates=2,
             gemini_hedge_sec=casual_gemini_hedge_sec(),
+            ollama_read_cap=_casual_ollama_cap_value(ollama_cap),
         )
     finally:
         if old_read is None:
@@ -1386,7 +1488,9 @@ def _stream_brain_chain_loop(
     gemini_read_cap: float | None = None,
     gemini_max_candidates: int | None = None,
     gemini_hedge_sec: float | None = None,
+    ollama_read_cap: float | None = None,
 ) -> Iterator[str]:
+    chain = _defer_cold_heavy(list(chain))
     last_err = ""
     last_provider = ""
     any_content = False
@@ -1437,6 +1541,7 @@ def _stream_brain_chain_loop(
                 gemini_read_cap=gemini_read_cap,
                 gemini_max_candidates=gemini_max_candidates,
                 gemini_hedge_sec=gemini_hedge_sec,
+                ollama_read_cap=ollama_read_cap,
             ):
                 if _umed and remaining_sec() <= 0:
                     if got_content:
@@ -1566,7 +1671,8 @@ def stream_chat_with_brain(
     except Exception:
         pass
 
-    for ep in sel.chain:
+    _chain = _defer_cold_heavy(list(sel.chain), small_local_after_cloud=True)
+    for _ep_i, ep in enumerate(_chain):
         if _umed and remaining_sec() < 0.8:
             if any_content:
                 try:
@@ -1576,6 +1682,16 @@ def stream_chat_with_brain(
             break
         last_provider = ep.profile_id
         attempted.append(ep.profile_id)
+        # Açık (env'siz) ilk-bayt sınırı: soğuk yerel model tüm turu yutmasın.
+        # Programlama (_umed dışı) uzun istemler için sınırlanmaz.
+        _ollama_read_cap: float | None = None
+        if _umed and getattr(ep, "provider", "") == "ollama":
+            try:
+                _ollama_read_cap = _ollama_turn_cap(
+                    remaining_sec(), is_last=(_ep_i == len(_chain) - 1)
+                )
+            except Exception:
+                _ollama_read_cap = None
         # Ollama ilk token 900sn bekleyebilir — tur bütçesine sıkıştır (Gemini'ye erken failover)
         _old_ollama_read = None
         _ollama_cap_set = False
@@ -1591,7 +1707,9 @@ def stream_chat_with_brain(
                 _ollama_cap_set = False
         try:
             got_content = False
-            for piece in _stream_endpoint(ep, system, user, prior_messages):
+            for piece in _stream_endpoint(
+                ep, system, user, prior_messages, ollama_read_cap=_ollama_read_cap
+            ):
                 if _umed and remaining_sec() <= 0:
                     if got_content:
                         try:

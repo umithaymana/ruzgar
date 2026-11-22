@@ -105,6 +105,39 @@ def ollama_list_model_names(timeout_sec: float = 3.0) -> list[str]:
         return []
 
 
+def ollama_resident_models(timeout_sec: float = 1.0) -> set[str] | None:
+    """Şu an bellekte (VRAM/RAM) yüklü modeller (/api/ps). None = bilinmiyor/erişilemedi."""
+    try:
+        r = _http_session_singleton().get(
+            f"{_ollama_api_root()}/api/ps",
+            timeout=max(0.3, min(timeout_sec, 3.0)),
+        )
+        if r.status_code != 200:
+            return None
+        out: set[str] = set()
+        for entry in (r.json() or {}).get("models") or []:
+            if isinstance(entry, dict):
+                for key in ("name", "model"):
+                    v = str(entry.get(key) or "").strip().lower()
+                    if v:
+                        out.add(v)
+        return out
+    except Exception:
+        return None
+
+
+def ollama_model_resident(model: str, resident: set[str] | None) -> bool:
+    """``resident`` içinde model var mı (etiketsiz ad ``:latest`` ile eşleşir)."""
+    want = (model or "").strip().lower()
+    if not want or resident is None:
+        return False
+    if want in resident:
+        return True
+    if ":" not in want and f"{want}:latest" in resident:
+        return True
+    return False
+
+
 def ollama_model_available(model: str, *, timeout_sec: float = 3.0) -> bool:
     """Model Ollama'da indirilmiş mi? (llama3 / llama3-instruct vb.)"""
     want = (model or "").strip()
@@ -323,10 +356,14 @@ def chat_completion_stream(
     prior_messages: Optional[list] = None,
     *,
     max_tokens: Optional[int] = None,
+    read_timeout_cap: Optional[float] = None,
 ) -> Iterator[str]:
     """
     OpenAI uyumlu streaming (SSE). Her parça assistant içeriğinden bir metin parçası.
     Hata durumunda tek seferlik bir hata metni verilir.
+
+    ``read_timeout_cap``: bu çağrı için ilk-bayt/okuma üst sınırı (sn). Env'den bağımsızdır;
+    soğuk modelin tüm tur bütçesini yutmasını önler (eşzamanlı isteklere sızmaz).
     """
     base = base_url or os.environ.get("OLLAMA_API_BASE") or os.environ.get(
         "OPENAI_COMPAT_BASE", "http://127.0.0.1:11434/v1"
@@ -352,13 +389,16 @@ def chat_completion_stream(
         "Content-Type": "application/json",
         "Authorization": f"Bearer {key}",
     }
+    _req_timeout = _ollama_http_timeout(streaming=True)
+    if read_timeout_cap and read_timeout_cap > 0 and isinstance(_req_timeout, tuple):
+        _req_timeout = (_req_timeout[0], max(3.0, min(_req_timeout[1], float(read_timeout_cap))))
     try:
         with _http_session_singleton().post(
             url,
             json=payload,
             headers=headers,
             stream=True,
-            timeout=_ollama_http_timeout(streaming=True),
+            timeout=_req_timeout,
         ) as resp:
             resp.encoding = "utf-8"
             if resp.status_code >= 400:
