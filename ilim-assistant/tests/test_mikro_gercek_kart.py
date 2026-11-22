@@ -7,7 +7,9 @@ from ilim_assistant.ruzgar_tek_beyin_analiz import (
 )
 
 
-def test_dunya_hangi_galakside_karti_durur():
+def test_dunya_hangi_galakside_karti_durur(monkeypatch):
+    # Madde 1: sabit kart yalnız ezber açıkken (RUZGAR_EZBER_INSTANT=1)
+    monkeypatch.setenv("RUZGAR_EZBER_INSTANT", "1")
     yanit = try_simple_factual_reply("dünyamız hangi galakside")
     assert yanit
     assert "Samanyolu" in yanit
@@ -20,7 +22,8 @@ def test_yildiz_sayisi_galaksi_kartini_okumaz():
     assert yanit is None
 
 
-def test_takvim_karti_durur():
+def test_takvim_karti_durur(monkeypatch):
+    monkeypatch.setenv("RUZGAR_EZBER_INSTANT", "1")
     yanit = try_simple_factual_reply("bir yılda kaç ay var")
     assert yanit
     assert "12" in yanit
@@ -29,3 +32,11 @@ def test_takvim_karti_durur():
 def test_bilgi_notu_kart_gibi_okunmaz():
     ek = build_analiz_system_addon("samanyolu galaksisinde kaç yıldız vardır")
     assert "notu okuma" in ek
+
+
+def test_sabit_kartlar_varsayilan_kapali(monkeypatch):
+    """Madde 1: varsayılanda sabit kart yok; model/RAG üretir."""
+    monkeypatch.delenv("RUZGAR_EZBER_INSTANT", raising=False)
+    assert try_simple_factual_reply("dünyamız hangi galakside") is None
+    assert try_simple_factual_reply("bir yılda kaç ay var") is None
+

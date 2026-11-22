@@ -14,13 +14,12 @@ from ilim_assistant.persona import OWNER_ADDRESS
 _SESSION = requests.Session()
 _TIMEOUT = float(os.environ.get("WEATHER_HTTP_TIMEOUT", "6"))
 
-# Büyükşehir ve sık geçen adlar — alt dize eşleşmesi (ör. "istanbulda"); uzun iğne önce.
-_CITY_NEEDLES: list[tuple[str, str]] = [
+# Yazım yardımcısı (whitelist DEĞİL) — serbest çıkarılan ad geocode öncesi düzeltilir.
+# Üretim kararı şehir listesine bağlı değildir; liste dışı yerler de geocode edilir.
+_CITY_ALIASES: list[tuple[str, str]] = [
     ("kahramanmaras", "Kahramanmaras"),
-    ("maraş", "Kahramanmaras"),
     ("maras", "Kahramanmaras"),
     ("sanliurfa", "Sanliurfa"),
-    ("şanlıurfa", "Sanliurfa"),
     ("urfa", "Sanliurfa"),
     ("gaziantep", "Gaziantep"),
     ("antalya", "Antalya"),
@@ -33,10 +32,8 @@ _CITY_NEEDLES: list[tuple[str, str]] = [
     ("konya", "Konya"),
     ("mersin", "Mersin"),
     ("diyarbakir", "Diyarbakir"),
-    ("diyarbakır", "Diyarbakir"),
     ("kayseri", "Kayseri"),
     ("eskisehir", "Eskisehir"),
-    ("eskişehir", "Eskisehir"),
     ("trabzon", "Trabzon"),
     ("malatya", "Malatya"),
     ("erzurum", "Erzurum"),
@@ -44,10 +41,76 @@ _CITY_NEEDLES: list[tuple[str, str]] = [
     ("denizli", "Denizli"),
     ("bodrum", "Bodrum"),
     ("edirne", "Edirne"),
-    ("çanakkale", "Canakkale"),
     ("canakkale", "Canakkale"),
 ]
-_CITY_NEEDLES.sort(key=lambda x: len(x[0]), reverse=True)
+_CITY_ALIASES.sort(key=lambda x: len(x[0]), reverse=True)
+
+# Geriye dönük importlar için (test/eski kod)
+_CITY_NEEDLES = _CITY_ALIASES
+
+_PLACE_STOP = frozenset(
+    {
+        "hava",
+        "havasi",
+        "havası",
+        "durumu",
+        "durumuna",
+        "durum",
+        "nasil",
+        "nasıl",
+        "bugun",
+        "bugün",
+        "yarin",
+        "yarın",
+        "icin",
+        "için",
+        "bana",
+        "bak",
+        "soyle",
+        "söyle",
+        "nedir",
+        "ne",
+        "kadar",
+        "derece",
+        "sicaklik",
+        "sıcaklık",
+        "yagmur",
+        "yağmur",
+        "var",
+        "mi",
+        "mı",
+        "mu",
+        "mü",
+        "lutfen",
+        "lütfen",
+        "abi",
+        "umit",
+        "ümit",
+        "ruzgar",
+        "rüzgar",
+        "simdi",
+        "şimdi",
+        "olacak",
+        "olur",
+        "met",
+        "the",
+        "weather",
+        "in",
+        "for",
+        "of",
+        "gun",
+        "gün",
+        "aksam",
+        "akşam",
+        "sabah",
+        "gece",
+        "kabaca",
+        "yaklasik",
+        "yaklaşık",
+        "kac",
+        "kaç",
+    }
+)
 
 _CITY_DISPLAY_TR: dict[str, str] = {
     "Istanbul": "İstanbul",
@@ -236,15 +299,114 @@ def is_weather_query(message: str) -> bool:
     if "hava" in nm and any(k in nm for k in ("olacak", "nasil", "nasıl", "durumu", "derece")):
         return True
     s = low.strip().strip("?!.")
-    return s in ("hava", "hava bugün", "hava bugun", "hava şimdi", "hava simdi")
+    if s in ("hava", "hava bugün", "hava bugun", "hava şimdi", "hava simdi"):
+        return True
+    # «Oslo hava» / «Erzurum hava» — kısa yer + hava (whitelist yok)
+    if "hava" in nm and len(s.split()) <= 6:
+        try:
+            if _extract_city_from_message(low):
+                return True
+        except Exception:
+            pass
+    return False
+
+
+def _clean_place_candidate(raw: str) -> str | None:
+    words: list[str] = []
+    for w in re.split(r"\s+", (raw or "").strip(" ?!.,;:")):
+        nw = _norm_match(w)
+        if not nw or nw in _PLACE_STOP or len(nw) < 2:
+            continue
+        words.append(w.strip(" ?!.,;:'\"“”"))
+    if not words:
+        return None
+    out = " ".join(words[:3]).strip()
+    if len(out) < 2 or len(out) > 48:
+        return None
+    return out
+
+
+def _normalize_place_query(place: str) -> str:
+    """Serbest yer adını geocode sorgusuna çevir; alias yalnız yazım yardımı."""
+    p = (place or "").strip()
+    if not p:
+        return p
+    nm = _norm_match(p)
+    for needle, geo in _CITY_ALIASES:
+        if nm == needle or nm.replace(" ", "") == needle.replace(" ", ""):
+            return geo
+        # «istanbulda» gibi ekli biçim
+        if nm.startswith(needle) and len(nm) <= len(needle) + 3:
+            return geo
+    return p
 
 
 def _extract_city_from_message(message: str) -> str | None:
-    nm = _norm_match(message)
-    for needle, geo in _CITY_NEEDLES:
-        if needle in nm:
-            return geo
+    """
+    Madde 1 / anayasa: sabit şehir whitelist'e bağlı değil.
+    Mesajdan yer adını serbest çıkarır; geocode herhangi bir yer için çalışır.
+    """
+    raw = (message or "").strip()
+    if not raw:
+        return None
+    patterns = (
+        r"(?i)(?:hava\s+(?:durumu|nasıl|nasil)?|sıcaklık|sicaklik|yağmur|yagmur)"
+        r"\s+(?:için\s+|icin\s+)?([A-Za-zÀ-ÖØ-öø-ÿÇĞİÖŞÜçğıöşü][A-Za-zÀ-ÖØ-öø-ÿÇĞİÖŞÜçğıöşü\s\-']{1,48})",
+        r"(?i)\b([A-Za-zÀ-ÖØ-öø-ÿÇĞİÖŞÜçğıöşü][A-Za-zÀ-ÖØ-öø-ÿÇĞİÖŞÜçğıöşü\s\-']{1,40}?)"
+        r"\s*(?:'|’)?(?:de|da|te|ta|deki|daki)\s+"
+        r"(?:hava|yağmur|yagmur|sıcaklık|sicaklik)",
+        r"(?i)\b([A-Za-zÀ-ÖØ-öø-ÿÇĞİÖŞÜçğıöşü][A-Za-zÀ-ÖØ-öø-ÿÇĞİÖŞÜçğıöşü\s\-']{1,40}?)"
+        r"\s+(?:hava\s+durumu|hava\s+nasıl|hava\s+nasil|havası|havasi|hava)",
+        r"(?i)(?:için|icin)\s+([A-Za-zÀ-ÖØ-öø-ÿÇĞİÖŞÜçğıöşü][A-Za-zÀ-ÖØ-öø-ÿÇĞİÖŞÜçğıöşü\s\-']{1,40})\s+hava",
+        r"(?i)\b(?:in|for)\s+([A-Za-z][A-Za-z\s\-]{1,40})\b",
+    )
+    for pat in patterns:
+        m = re.search(pat, raw)
+        if not m:
+            continue
+        cand = _clean_place_candidate(m.group(1))
+        if cand:
+            return _normalize_place_query(cand)
+    # Kısa «Oslo hava» / «Erzurum hava durumu» yedek: ilk anlamlı özel ad + hava kelimesi
+    nm = _norm_match(raw)
+    if "hava" in nm or "yagmur" in nm or "sicaklik" in nm or "derece" in nm:
+        tokens = re.findall(
+            r"[A-Za-zÀ-ÖØ-öø-ÿÇĞİÖŞÜçğıöşü][A-Za-zÀ-ÖØ-öø-ÿÇĞİÖŞÜçğıöşü\-']{1,}",
+            raw,
+        )
+        for tok in tokens:
+            nt = _norm_match(tok)
+            if nt in _PLACE_STOP or len(nt) < 3:
+                continue
+            # Soru kelimelerini atla
+            if nt in ("nasil", "nedir", "hangi", "ne"):
+                continue
+            return _normalize_place_query(tok)
     return None
+
+
+def _extract_city_from_history(history: list | None) -> str | None:
+    if not history:
+        return None
+    for turn in reversed(list(history)[-10:]):
+        if not isinstance(turn, dict):
+            continue
+        role = str(turn.get("role") or turn.get("speaker") or "").lower()
+        text = str(turn.get("content") or turn.get("text") or turn.get("message") or "")
+        if role and role not in ("user", "human", "mimar", "ümit", "umit"):
+            # role yoksa da dene; role varsa yalnız kullanıcı
+            if role in ("assistant", "bot", "ruzgar", "rüzgar", "system"):
+                continue
+        if not text.strip():
+            continue
+        found = _extract_city_from_message(text)
+        if found:
+            return found
+    return None
+
+
+def _ask_place_reply() -> str:
+    return f"{OWNER_ADDRESS}, hangi yerin hava durumuna bakayım?"
 
 
 def _wants_tomorrow(message: str) -> bool:
@@ -269,7 +431,8 @@ def _wants_today_focus(message: str) -> bool:
 
 
 def _open_meteo_forecast_json(lat: float, lon: float) -> dict[str, Any] | None:
-    tz = os.environ.get("OPEN_METEO_TIMEZONE", "Europe/Istanbul")
+    # auto = konumun yerel saati (dünya geneli); eski TR kilidi yok
+    tz = os.environ.get("OPEN_METEO_TIMEZONE", "auto")
     url = (
         "https://api.open-meteo.com/v1/forecast"
         f"?latitude={lat}&longitude={lon}"
@@ -386,8 +549,11 @@ def fetch_live_weather_context(city: str | None = None) -> str:
     """
     API anahtarı yoksa Open-Meteo kullanır (ücretsiz).
     OPENWEATHER_API_KEY varsa önce OpenWeatherMap denenir.
+
+    Madde 1: varsayılan İstanbul YOK — city veya OPENWEATHER_DEFAULT_CITY
+    (yalnız açıkça set edilirse) gerekir; aksi halde boş döner.
     """
-    city = (city or os.environ.get("OPENWEATHER_DEFAULT_CITY", "Istanbul")).strip()
+    city = (city or os.environ.get("OPENWEATHER_DEFAULT_CITY", "") or "").strip()
     if not city:
         return ""
     ow = _openweather_block(city)
@@ -571,22 +737,36 @@ def maybe_weather_instant_reply(
     if "http://" in low or "https://" in low or "```" in msg:
         return None
     try:
-        _ctx, instant = compute_live_weather_outcome(msg)
+        _ctx, instant = compute_live_weather_outcome(msg, history=history)
     except Exception:
         return None
     return (instant or "").strip() or None
 
 
-def compute_live_weather_outcome(message: str) -> tuple[str, str | None]:
+def compute_live_weather_outcome(
+    message: str,
+    history: list | None = None,
+) -> tuple[str, str | None]:
     """
     (LLM bağlam bloğu, anında Türkçe yanıt veya None).
     Tek tahmin isteği; OPENWEATHER_API_KEY varsa anlık satır OW'dan gelir.
+
+    Madde 1: yer yoksa İstanbul'a düşmez — net soru döner.
+    Yer listesi dışı (Oslo, Lima, …) geocode ile bulunur.
     """
     msg = (message or "").strip()
     if not msg:
         return "", None
-    default = (os.environ.get("OPENWEATHER_DEFAULT_CITY") or "Istanbul").strip() or "Istanbul"
-    city = _extract_city_from_message(msg) or default
+    explicit_default = (os.environ.get("OPENWEATHER_DEFAULT_CITY") or "").strip()
+    city = (
+        _extract_city_from_message(msg)
+        or _extract_city_from_history(history)
+        or (explicit_default or None)
+    )
+    if not city:
+        ask = _ask_place_reply()
+        return "", ask
+
     want_tom = _wants_tomorrow(msg)
     want_td = _wants_today_focus(msg)
     tomorrow_one = not want_tom and not want_td
@@ -617,6 +797,11 @@ def compute_live_weather_outcome(message: str) -> tuple[str, str | None]:
                 want_today=False,
                 tomorrow_one_liner=False,
             )
+        elif not geo:
+            instant = (
+                f"{OWNER_ADDRESS}, «{city}» yerini haritada bulamadım. "
+                "Başka yazım veya daha net bir yer adı dener misin?"
+            )
 
     if not geo:
         return (ow, instant)
@@ -639,9 +824,9 @@ def compute_live_weather_outcome(message: str) -> tuple[str, str | None]:
     return (ctx, instant)
 
 
-def fetch_live_weather_for_message(message: str) -> str:
+def fetch_live_weather_for_message(message: str, history: list | None = None) -> str:
     """
-    Mesajdan şehir ve 'yarın' niyetini çıkarır; tek Open-Meteo isteğiyle özet üretir.
+    Mesajdan yer ve 'yarın' niyetini çıkarır; tek Open-Meteo isteğiyle özet üretir.
     OPENWEATHER_API_KEY varsa anlık özet önce OW'dan gelir, OM günlük satırları eklenir.
     """
-    return compute_live_weather_outcome(message)[0]
+    return compute_live_weather_outcome(message, history=history)[0]

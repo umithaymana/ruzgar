@@ -1072,11 +1072,109 @@ def stream_ilim_cloud_reply(
             return
 
 
+def _hedged_stream(
+    factories: list[Any],
+    delay: float,
+    is_error: Any,
+) -> Iterator[str]:
+    """
+    Aynı isteği gecikmeli paralel dener; içerik üreten ilk girişimin akışını verir.
+
+    - İlk girişim hemen başlar; ``delay`` sn içinde içerik (boş/hata olmayan parça)
+      gelmezse sıradaki girişim paralel başlar (ya da biri hata verirse hemen).
+    - Kazanan belli olunca diğerleri iptal bayrağı alır (ağ okuması bitince sessizce kapanır).
+    - Hiçbiri içerik üretemezse ilk hata parçası verilir (zincir üst katmanda sürer).
+    Hata/boş durumda davranış, tek girişimle aynıdır; yalnız yavaş turlar hızlanır.
+    """
+    import queue
+    import threading
+    import time
+
+    q: "queue.Queue[tuple[int, str, Any]]" = queue.Queue()
+    stops = [threading.Event() for _ in factories]
+    state = {"started": 0}
+
+    def _run(i: int) -> None:
+        try:
+            for piece in factories[i]():
+                if stops[i].is_set():
+                    return
+                q.put((i, "p", piece))
+        except Exception as e:  # noqa: BLE001
+            q.put((i, "x", e))
+            return
+        q.put((i, "end", None))
+
+    def _start_next() -> None:
+        i = state["started"]
+        if i >= len(factories):
+            return
+        state["started"] = i + 1
+        threading.Thread(target=_run, args=(i,), daemon=True).start()
+
+    winner: int | None = None
+    finished: set[int] = set()
+    first_err: str = ""
+    _start_next()
+    next_at = time.monotonic() + max(0.2, delay)
+    try:
+        while True:
+            wait: float | None = None
+            if winner is None and state["started"] < len(factories):
+                wait = max(0.05, next_at - time.monotonic())
+            try:
+                i, kind, piece = q.get(timeout=wait) if wait is not None else q.get()
+            except queue.Empty:
+                _start_next()
+                next_at = time.monotonic() + max(0.2, delay)
+                continue
+            if kind == "p":
+                if winner == i:
+                    yield piece
+                    continue
+                if winner is not None:
+                    continue
+                if not (piece or "").strip():
+                    continue
+                if is_error(piece):
+                    if not first_err:
+                        first_err = piece
+                    continue
+                winner = i
+                for j, ev in enumerate(stops):
+                    if j != i:
+                        ev.set()
+                yield piece
+                continue
+            # kind in ("end", "x")
+            if kind == "x" and not first_err:
+                first_err = str(piece)
+            finished.add(i)
+            if winner == i:
+                return
+            if winner is None:
+                if len(finished) >= state["started"]:
+                    if state["started"] < len(factories):
+                        _start_next()
+                        next_at = time.monotonic() + max(0.2, delay)
+                    else:
+                        if first_err:
+                            yield first_err
+                        return
+    finally:
+        for ev in stops:
+            ev.set()
+
+
 def _stream_endpoint(
     ep: BrainEndpoint,
     system: str,
     user: str,
     prior_messages: list | None,
+    *,
+    gemini_read_cap: float | None = None,
+    gemini_max_candidates: int | None = None,
+    gemini_hedge_sec: float | None = None,
 ) -> Iterator[str]:
     if ep.profile_id == "groq":
         try:
@@ -1094,15 +1192,23 @@ def _stream_endpoint(
                 return
         except Exception:
             pass
-        yield from chat_completion_stream_gemini(
-            system,
-            user,
-            model=ep.model,
-            api_key=ep.api_key,
-            prior_messages=prior_messages,
-            max_output_tokens=ep.max_tokens,
-            temperature=ep.temperature,
-        )
+        def _gem() -> Iterator[str]:
+            return chat_completion_stream_gemini(
+                system,
+                user,
+                model=ep.model,
+                api_key=ep.api_key,
+                prior_messages=prior_messages,
+                max_output_tokens=ep.max_tokens,
+                temperature=ep.temperature,
+                read_timeout_cap=gemini_read_cap,
+                max_candidates=gemini_max_candidates,
+            )
+
+        if gemini_hedge_sec and gemini_hedge_sec > 0:
+            yield from _hedged_stream([_gem, _gem], gemini_hedge_sec, _looks_like_error_chunk)
+        else:
+            yield from _gem()
         return
     yield from chat_completion_stream(
         system,
@@ -1169,6 +1275,61 @@ def resolve_brain_model(
     return sel.primary.model
 
 
+def casual_gemini_model() -> str:
+    """
+    Kısa sohbet için tutarlı hızlı Gemini modeli.
+    Ölçüm (2026-11-22, aralıklı 5'er çağrı): 3.1-flash-lite ilk token 0,64–1,26 sn;
+    3.5-flash-lite 0,8–12 sn dalgalı. Yalnız sohbet yolunda; bilgi/RAG etkilenmez.
+    Kapat: RUZGAR_CASUAL_GEMINI_MODEL=- (eski profil modeli kalır).
+    """
+    m = (os.environ.get("RUZGAR_CASUAL_GEMINI_MODEL") or "gemini-3.1-flash-lite").strip()
+    return "" if m in ("", "-", "0", "off", "false", "no") else m
+
+
+def casual_gemini_read_cap() -> float | None:
+    """
+    Sohbet turunda Gemini ilk-token / akış-arası bekleme üst sınırı (sn).
+    Takılan bağlantı 18 sn + model geçişi ile 25+ sn'ye çıkıyordu (canlı ölçüm 2026-11-22).
+    Kapat: RUZGAR_CASUAL_GEMINI_READ_SEC=0
+    """
+    try:
+        v = float(os.environ.get("RUZGAR_CASUAL_GEMINI_READ_SEC", "7"))
+    except ValueError:
+        v = 7.0
+    return v if v > 0 else None
+
+
+def casual_gemini_hedge_sec() -> float | None:
+    """
+    Sohbet turunda Gemini ilk token bu süre içinde gelmezse 2. paralel istek (sn).
+    Canlı A/B (2026-11-22, 24 çağrı): Google ücretsiz API'si ~%10-15 istekte 3-30 sn takılıyor
+    veya 503 veriyor; bağlantı yenilemek çözmüyor. Yalnız yavaş turlarda ek istek açılır.
+    Kapat: RUZGAR_CASUAL_GEMINI_HEDGE_SEC=0
+    """
+    try:
+        v = float(os.environ.get("RUZGAR_CASUAL_GEMINI_HEDGE_SEC", "2.5"))
+    except ValueError:
+        v = 2.5
+    return v if v > 0 else None
+
+
+def _casual_gemini_fast_model(chain: list[BrainEndpoint]) -> list[BrainEndpoint]:
+    model = casual_gemini_model()
+    if not model:
+        return chain
+    out: list[BrainEndpoint] = []
+    for ep in chain:
+        if ep.provider == "gemini" and ep.model != model:
+            try:
+                from dataclasses import replace as _dc_replace
+
+                ep = _dc_replace(ep, model=model)
+            except Exception:
+                pass
+        out.append(ep)
+    return out
+
+
 def stream_chat_casual_fast(
     system: str,
     user: str,
@@ -1184,6 +1345,7 @@ def stream_chat_casual_fast(
     chain = _chain_from_ids(build_casual_fast_chain_ids())
     if not chain:
         chain = _chain_from_ids(_filter_chain_ids_for_quota(["hizli", "denge", "gemini"]))
+    chain = _casual_gemini_fast_model(chain)
     try:
         ollama_cap = os.environ.get("RUZGAR_CASUAL_OLLAMA_READ_TIMEOUT_SEC", "22")
     except Exception:
@@ -1200,6 +1362,9 @@ def stream_chat_casual_fast(
             coding_mode=False,
             message=message,
             use_turn_budget=False,
+            gemini_read_cap=casual_gemini_read_cap(),
+            gemini_max_candidates=2,
+            gemini_hedge_sec=casual_gemini_hedge_sec(),
         )
     finally:
         if old_read is None:
@@ -1218,6 +1383,9 @@ def _stream_brain_chain_loop(
     coding_mode: bool,
     message: str,
     use_turn_budget: bool,
+    gemini_read_cap: float | None = None,
+    gemini_max_candidates: int | None = None,
+    gemini_hedge_sec: float | None = None,
 ) -> Iterator[str]:
     last_err = ""
     last_provider = ""
@@ -1261,7 +1429,15 @@ def _stream_brain_chain_loop(
         attempted.append(ep.profile_id)
         try:
             got_content = False
-            for piece in _stream_endpoint(ep, system, user, prior_messages):
+            for piece in _stream_endpoint(
+                ep,
+                system,
+                user,
+                prior_messages,
+                gemini_read_cap=gemini_read_cap,
+                gemini_max_candidates=gemini_max_candidates,
+                gemini_hedge_sec=gemini_hedge_sec,
+            ):
                 if _umed and remaining_sec() <= 0:
                     if got_content:
                         try:
@@ -1275,6 +1451,10 @@ def _stream_brain_chain_loop(
                     last_err = piece.strip()
                     _mark_cloud_rate_limit(ep.profile_id, last_err)
                     break
+                # Madde 1.5 (kalite kapısı, ince): baştaki boş/whitespace parça
+                # «cevap geldi» sayılmaz — zincir sonraki beyne geçebilsin.
+                if not got_content and not (piece or "").strip():
+                    continue
                 got_content = True
                 any_content = True
                 yield piece

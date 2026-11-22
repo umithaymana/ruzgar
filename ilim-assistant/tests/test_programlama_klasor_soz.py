@@ -1941,9 +1941,27 @@ def test_selam_iceren_olcu_cumlesi_selamlamaz():
     cumle = "orta ölçüsünde kelime say: selam ikinci"
     assert tarif_cumlesi(cumle) is True
     assert try_instant_reply(cumle, "genel") is None
-    assert try_instant_reply("selam", "genel")
-    assert "konuşmaya hazırım" in try_instant_reply("selam", "genel")
+    # Madde 1: ezber selam kapalı (varsayılan) — LLM yoluna düşer
+    assert try_instant_reply("selam", "genel") is None
     assert is_code_agent_task_message(cumle, "programlama") is False
+
+
+def test_ezber_instant_acikken_selam_sablonu():
+    import os
+
+    from ilim_assistant.chat_fast_lane import try_instant_reply
+
+    prev = os.environ.get("RUZGAR_EZBER_INSTANT")
+    os.environ["RUZGAR_EZBER_INSTANT"] = "1"
+    try:
+        reply = try_instant_reply("selam", "genel")
+        assert reply
+        assert "konuşmaya hazırım" in reply
+    finally:
+        if prev is None:
+            os.environ.pop("RUZGAR_EZBER_INSTANT", None)
+        else:
+            os.environ["RUZGAR_EZBER_INSTANT"] = prev
 
 
 def test_olcu_satiri_yalniz_bilinen_satiri_yazar(masa):

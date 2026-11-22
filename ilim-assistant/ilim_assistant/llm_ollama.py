@@ -214,13 +214,15 @@ def _apply_ollama_runtime_options(payload: dict) -> None:
         payload["keep_alive"] = raw_ka
 
 
-def preload_primary_chat_model(*, timeout_sec: float = 120.0) -> dict:
+def preload_primary_chat_model(*, timeout_sec: float = 120.0, model: str | None = None) -> dict:
     """
     Arka plan ısınması: denge (veya OLLAMA_CHAT_MODEL) VRAM'de tutulsun.
     Motor boot'undan sonra çağrılmalı; soğuk ilk bilgi sorusunu kısaltır.
+    ``model`` verilirse (ör. hafif «hizli» model) o yüklenir.
     """
     model = (
-        os.environ.get("RUZGAR_BRAIN_DENGE_MODEL")
+        model
+        or os.environ.get("RUZGAR_BRAIN_DENGE_MODEL")
         or os.environ.get("OLLAMA_CHAT_MODEL")
         or DEFAULT_OLLAMA_CHAT_MODEL
     ).strip()

@@ -267,6 +267,17 @@ def looks_like_arapca_lugat_question(msg: str) -> bool:
     low = _fold_tr(msg)
     if not low:
         return False
+    # Madde 1: kısa selam/nezaket → sohbet; lügat/kök kartına düşmez.
+    # Açık soru («selam kökü nedir») aşağıda cue ile geçer.
+    if re.fullmatch(
+        r"(?:selam|merhaba|slm|hey|sa|naber|ne\s+haber|"
+        r"nasilsin|iyi\s+misin|gunaydin|iyi\s+aksam|iyi\s+geceler|"
+        r"tesekkur(?:ler)?|sagol|eyvallah|ben\s+geldim|geldim)"
+        r"(?:\s+(?:ruzgar|rüzgar|abi|umit|ümit|kardesim|kardeşim))?"
+        r"[\s!.?…]*",
+        low,
+    ):
+        return False
     cues = (
         "lugat", "lügat", "sozluk", "sözlük", "kok", "kök", "mushtaq", "mushtak",
         "mustak", "nahiv", "sarf", "irab", "i'rab", "vezin", "masdar", "ism-i fail",
@@ -303,6 +314,12 @@ def looks_like_arapca_lugat_question(msg: str) -> bool:
         )
     )
     if chatty and len(words) > 3:
+        return False
+    # Tek başına kök sözcüğü (selam/islam) sohbet veya genel kelime olabilir —
+    # lügat yalnız açık soru ipucuyla.
+    if len(words) <= 2 and not any(
+        x in low for x in ("nedir", "ne demek", "anlam", "koku", "kok", "kök", "mana")
+    ):
         return False
     if len(words) <= 4:
         return True

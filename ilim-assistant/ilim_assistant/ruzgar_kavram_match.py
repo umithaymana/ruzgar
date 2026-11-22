@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from functools import lru_cache
 from typing import Any, Optional
 
 
@@ -16,15 +17,16 @@ def fold_query(s: str) -> str:
     return t.lower().strip()
 
 
-def norm_query(msg: str) -> str:
+@lru_cache(maxsize=60000)
+def _norm_query_cached(msg: str) -> str:
     low = fold_query(msg)
     low = re.sub(r"[-_/]+", " ", low)
     return re.sub(r"\s+", " ", low).strip()
 
 
-def _key_bounded(key: str, low: str) -> bool:
-    """Anahtar, daha uzun bir kelimenin içine gizlenmesin (bilim/bilgisayar)."""
-    return bool(re.search(rf"(?<![\w'’]){re.escape(key)}(?![\w'’])", low))
+def norm_query(msg: str) -> str:
+    # Sonuç aynı; kütüphane satır anahtarları her turda yeniden katlanmasın.
+    return _norm_query_cached(msg or "")
 
 
 # «hicreti / fotosentezi / osmanlıyı anlat» — durum eki kelime sınırını kırıyordu (C1).
@@ -33,18 +35,31 @@ _TR_CASE_AFTER = (
 )
 
 
+# Python'un yerleşik re önbelleği 512 desenle sınırlı; kütüphane binlerce
+# anahtar tarayınca her turda yeniden derleniyordu (sohbet 5-7 sn takılıyordu).
+# Derlenmiş desenleri burada tutarız — eşleşme mantığı değişmez.
+@lru_cache(maxsize=60000)
+def _bounded_pat(key: str) -> "re.Pattern[str]":
+    return re.compile(rf"(?<![\w'’]){re.escape(key)}(?![\w'’])")
+
+
+@lru_cache(maxsize=60000)
+def _case_pat(key: str) -> "re.Pattern[str]":
+    return re.compile(rf"(?<![\w'’]){re.escape(key)}{_TR_CASE_AFTER}(?![\w'’])")
+
+
+def _key_bounded(key: str, low: str) -> bool:
+    """Anahtar, daha uzun bir kelimenin içine gizlenmesin (bilim/bilgisayar)."""
+    return bool(_bounded_pat(key).search(low))
+
+
 def _key_in_query(key: str, low: str) -> bool:
     """Kelime sınırı veya Türkçe durum ekiyle («hicreti») eşle."""
     if not key:
         return False
     if _key_bounded(key, low):
         return True
-    return bool(
-        re.search(
-            rf"(?<![\w'’]){re.escape(key)}{_TR_CASE_AFTER}(?![\w'’])",
-            low,
-        )
-    )
+    return bool(_case_pat(key).search(low))
 
 
 def match_kavram_row(

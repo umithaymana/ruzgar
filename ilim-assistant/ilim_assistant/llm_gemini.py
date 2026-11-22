@@ -285,8 +285,16 @@ def chat_completion_stream_gemini(
     prior_messages: Optional[list] = None,
     max_output_tokens: Optional[int] = None,
     temperature: Optional[float] = None,
+    read_timeout_cap: Optional[float] = None,
+    max_candidates: Optional[int] = None,
 ) -> Iterator[str]:
-    """Gemini streamGenerateContent (SSE)."""
+    """
+    Gemini streamGenerateContent (SSE).
+
+    ``read_timeout_cap`` / ``max_candidates``: yalnız sohbet yolu için kısa ilk-token
+    sınırı ve en fazla N model denemesi (takılan bağlantı kullanıcıyı 18+ sn bekletmesin).
+    Verilmezse davranış eskisi gibidir.
+    """
     try:
         from ilim_assistant.gemini_quota_guard import gemini_cooldown_active
 
@@ -305,6 +313,12 @@ def chat_completion_stream_gemini(
         model or os.environ.get("RUZGAR_GEMINI_MODEL") or DEFAULT_GEMINI_MODEL
     )
     candidates = _gemini_model_candidates(preferred)
+    if max_candidates is not None and max_candidates > 0:
+        candidates = candidates[:max_candidates]
+    _conn_t, _read_t = _gemini_timeout()
+    if read_timeout_cap is not None and read_timeout_cap > 0:
+        _read_t = min(_read_t, float(read_timeout_cap))
+    _req_timeout = (_conn_t, _read_t)
 
     try:
         mt = int(
@@ -342,13 +356,14 @@ def chat_completion_stream_gemini(
     last_error = ""
     for model_id in candidates:
         url = f"{_GEMINI_API_ROOT}/models/{model_id}:streamGenerateContent?alt=sse"
+        accumulated = ""
         try:
             with _session().post(
                 url,
                 json=payload,
                 headers=headers,
                 stream=True,
-                timeout=_gemini_timeout(),
+                timeout=_req_timeout,
             ) as resp:
                 if resp.status_code >= 400:
                     err_body = resp.text[:800]
@@ -371,7 +386,6 @@ def chat_completion_stream_gemini(
                     yield last_error
                     return
                 resp.encoding = "utf-8"
-                accumulated = ""
                 stream_deadline = time.monotonic() + _gemini_stream_wall_sec()
                 for raw_line in resp.iter_lines(decode_unicode=False):
                     if time.monotonic() > stream_deadline:
@@ -401,6 +415,10 @@ def chat_completion_stream_gemini(
                     return
                 last_error = "Gemini boş yanıt döndürdü."
         except requests.RequestException as e:
+            if accumulated:
+                # Cevap akarken bağlantı koptu: başka modelle baştan başlayıp
+                # metni çiftlemek yerine gelen kısmı bırak.
+                return
             last_error = format_gemini_user_error(e)
             continue
     if last_error:

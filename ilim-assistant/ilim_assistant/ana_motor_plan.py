@@ -1056,6 +1056,22 @@ def plan_question(
             ambiguous = True
         elif len(secondary) >= 2 and second_top >= 1.8:
             ambiguous = True
+    # Madde 1: kısa onay/teşekkür/veda sözü ve günlük sohbet «netleştir» sorusu üretmez;
+    # kaynak (RAG/web/arşiv) aramaz — sohbet olarak anlaşılır.
+    try:
+        from ilim_assistant.ruzgar_kisa_soz import looks_like_short_ack
+
+        if mode_norm in ("genel", "uretim", "gelisim") and looks_like_short_ack(message):
+            primary = "gundelik"
+            secondary = []
+            use_ilim_rag = False
+            prefer_web = False
+            prefer_archive = False
+            ambiguous = False
+        elif ambiguous and primary == "gundelik":
+            ambiguous = False
+    except Exception:
+        pass
     if ambiguous:
         clarification = _build_clarification(primary, secondary, message)
 
@@ -1846,7 +1862,17 @@ def apply_casual_plan_overrides(
 
 
 def maybe_opinion_instant_reply(message: str) -> str | None:
-    """Görüş sorusu — tanım kartı yerine 2–4 cümle tutum (B1)."""
+    """Görüş sorusu — tanım kartı yerine 2–4 cümle tutum (B1).
+
+    Madde 1: varsayılan ezber kapalı — görüşü LLM üretir (RUZGAR_EZBER_INSTANT=1 ile eski kart).
+    """
+    try:
+        from ilim_assistant.ruzgar_ezber_instant import ezber_instant_enabled
+
+        if not ezber_instant_enabled():
+            return None
+    except Exception:
+        return None
     if not looks_like_opinion_request(message):
         return None
     asc = _norm_ascii(message)
@@ -1883,6 +1909,14 @@ def maybe_gundelik_instant_reply(
 ) -> str | None:
     """B3b — net sohbet (nasılsın/selam) için Ollama/Gemini beklemeden kısa yanıt."""
     if mode_norm not in ("genel", "uretim", "gelisim"):
+        return None
+    # Madde 1: ezber gündelik şablon kapalı (varsayılan).
+    try:
+        from ilim_assistant.ruzgar_ezber_instant import ezber_instant_enabled
+
+        if not ezber_instant_enabled():
+            return None
+    except Exception:
         return None
     # Sohbet önce (Mimar 2026-11-12): selam/nasılsın şablon veya hafıza kartı yok —
     # dinle, anla, LLM ile doğal cevap.

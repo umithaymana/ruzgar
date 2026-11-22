@@ -507,6 +507,19 @@ def _boot_motorlar_anaonce() -> None:
     boot_motorlar_anaonce(announce=False)
 
 
+def _wtime(name: str, fn: Any, *args: Any, **kwargs: Any) -> Any:
+    """Isınma adımı süre ölçümü (log). Davranışı değiştirmez; yalnız 0.5 sn üstü yazar."""
+    import time as _t
+
+    t0 = _t.perf_counter()
+    try:
+        return fn(*args, **kwargs)
+    finally:
+        dt = _t.perf_counter() - t0
+        if dt >= 0.5:
+            print(f"[Rüzgar] ısınma · {name}: {dt:.1f} sn", flush=True)
+
+
 def _sync_startup_warmups() -> None:
     """Port açıldıktan sonra arka planda — RAG, hafıza, hatırlatıcı (motor boot port öncesi)."""
     global _WARMUP_BACKGROUND_ACTIVE
@@ -514,7 +527,7 @@ def _sync_startup_warmups() -> None:
 
     # Kilit: DEFER yardımcı ısınmayı erteler; motor sırasını atlamaz.
     try:
-        _boot_motorlar_anaonce()
+        _wtime("motor boot", _boot_motorlar_anaonce)
     except Exception:
         pass
     try:
@@ -523,7 +536,7 @@ def _sync_startup_warmups() -> None:
         if not skip_rag_warmup():
             from ilim_assistant.rag_store import warmup_index
 
-            warmup_index()
+            _wtime("rag warmup_index", warmup_index)
     except Exception:
         pass
     try:
@@ -534,15 +547,15 @@ def _sync_startup_warmups() -> None:
             sync_greeting_egitim_aliases,
         )
 
-        ensure_canonical_egitim_pairs()
-        ng = sync_greeting_egitim_aliases()
+        _wtime("egitim canonical", ensure_canonical_egitim_pairs)
+        ng = _wtime("egitim selam alias", sync_greeting_egitim_aliases)
         if ng:
             print(f"[Rüzgar] Selam tetikleyicileri eşlendi: {ng} kayıt.", flush=True)
-        n = sanitize_egitim_hafiza()
+        n = _wtime("egitim sanitize", sanitize_egitim_hafiza)
         try:
             from ilim_assistant.ruzgar_bilissel_analiz import sanitize_empati_hafiza
 
-            ne = sanitize_empati_hafiza()
+            ne = _wtime("empati sanitize", sanitize_empati_hafiza)
             if ne:
                 print(f"[Rüzgar] Empati hafızası temizlendi: {ne} kayıt.", flush=True)
         except Exception:
@@ -568,13 +581,26 @@ def _sync_startup_warmups() -> None:
     try:
         from ilim_assistant.ana_motor_faz_ad_slo_gece import maybe_schedule_gece_slo_on_startup
 
-        maybe_schedule_gece_slo_on_startup()
+        _wtime("gece slo", maybe_schedule_gece_slo_on_startup)
     except Exception:
         pass
     try:
         from ilim_assistant.ruzgar_denge70_faz_k import maybe_auto_pull_on_startup
 
-        maybe_auto_pull_on_startup()
+        _wtime("denge70 auto pull", maybe_auto_pull_on_startup)
+    except Exception:
+        pass
+    # Sohbet planlayıcı ısınması (arka plan, port açıldıktan sonra): kütüphane regex'leri
+    # ilk kullanıcı turunda 3-6 sn derlenmesin. Motor sırası etkilenmez.
+    try:
+        if os.environ.get("RUZGAR_PLAN_WARMUP", "1").strip().lower() not in (
+            "0",
+            "false",
+            "no",
+        ):
+            from ilim_assistant.ana_motor_plan import plan_question as _warm_plan
+
+            _wtime("plan warmup", _warm_plan, "nasılsın", "genel", {})
     except Exception:
         pass
     # Port + motor boot sonrası: denge modelini VRAM'de tut (ilk bilgi sorusu soğuk yüklenmesin).
@@ -594,14 +620,29 @@ def _sync_startup_warmups() -> None:
                 pass
             from ilim_assistant.llm_ollama import preload_primary_chat_model
 
-            preload_primary_chat_model()
+            # Ölçüm (2026-11-22): 14B «denge» açılışta ~126 sn CPU/GPU/disk'i doldurup
+            # sunucuyu donduruyordu (health 19 sn, ilk sohbet 37-150 sn). Varsayılan:
+            # hafif «hizli» model; ağır modeli açılışta yüklemek için
+            # RUZGAR_OLLAMA_PRELOAD_MODE=denge (kapatmak için off).
+            _pl_mode = (os.environ.get("RUZGAR_OLLAMA_PRELOAD_MODE", "hizli") or "hizli").strip().lower()
+            if _pl_mode in ("off", "0", "false", "no"):
+                pass
+            elif _pl_mode == "denge":
+                _wtime("ollama preload (denge)", preload_primary_chat_model)
+            else:
+                _fast = (
+                    os.environ.get("RUZGAR_BRAIN_HIZLI_MODEL")
+                    or os.environ.get("OLLAMA_CHAT_MODEL_FAST")
+                    or "llama3.2:3b"
+                ).strip()
+                _wtime("ollama preload (hizli)", preload_primary_chat_model, model=_fast)
     except Exception:
         pass
     # V1 — Whisper get_model + TTS pool prime (boot 1–3 / port geciktirmez; bu blok arka plan)
     try:
         from ilim_assistant.ses_v1_isinma import run_ses_v1_warmup
 
-        run_ses_v1_warmup()
+        _wtime("ses v1 (whisper+tts)", run_ses_v1_warmup)
     except Exception:
         pass
     try:
@@ -640,6 +681,84 @@ async def _warmup_rag() -> None:
         await run_in_threadpool(_sync_startup_warmups)
 
     asyncio.create_task(_bg())
+    _start_lag_watchdog()
+
+
+def _start_lag_watchdog() -> None:
+    """
+    Teşhis: olay döngüsü >2 sn gecikirse hangi iş parçacıkları ne yapıyordu → dosyaya yaz.
+    Varsayılan KAPALI. Aç: RUZGAR_LAG_TRACE=1  (log: %TEMP%\\ruzgar-lag.log)
+    """
+    if os.environ.get("RUZGAR_LAG_TRACE", "0").strip().lower() not in ("1", "true", "yes", "on"):
+        return
+    import asyncio
+    import sys
+    import threading
+    import time
+    import traceback
+
+    beat = {"t": time.monotonic()}
+
+    async def _beat() -> None:
+        while True:
+            beat["t"] = time.monotonic()
+            await asyncio.sleep(0.25)
+
+    asyncio.create_task(_beat())
+    probe: dict[str, float | None] = {"sent": None}
+
+    async def _pool_probe() -> None:
+        # İş parçacığı havuzunda bir iş ne kadar bekliyor? (health/sohbet de aynı kuyrukta)
+        while True:
+            probe["sent"] = time.monotonic()
+            await run_in_threadpool(lambda: None)
+            probe["sent"] = None
+            await asyncio.sleep(1.0)
+
+    asyncio.create_task(_pool_probe())
+    log_path = Path(os.environ.get("TEMP", ".")) / "ruzgar-lag.log"
+    idle_files = ("threading.py", "queue.py", "selectors.py", "thread.py", "_base.py")
+
+    def _wd() -> None:
+        last_dump = 0.0
+        while True:
+            time.sleep(0.5)
+            now = time.monotonic()
+            loop_lag = now - beat["t"]
+            sent = probe.get("sent")
+            pool_lag = (now - sent) if sent else 0.0
+            lag = max(loop_lag, pool_lag)
+            if lag <= 2.0 or now - last_dump < 3.0:
+                continue
+            last_dump = now
+            lines = [
+                f"[LAG] {time.strftime('%H:%M:%S')} döngü={loop_lag:.1f}s havuz-kuyruğu={pool_lag:.1f}s "
+                f"(canlı iş parçacığı={threading.active_count()})"
+            ]
+            try:
+                frames = sys._current_frames()
+                me = threading.get_ident()
+                for th in threading.enumerate():
+                    fr = frames.get(th.ident)
+                    if fr is None or th.ident == me:
+                        continue
+                    st = traceback.extract_stack(fr)
+                    if not st or os.path.basename(st[-1].filename) in idle_files:
+                        continue
+                    chain = " <- ".join(
+                        f"{os.path.basename(s.filename)}:{s.lineno}:{s.name}"
+                        for s in reversed(st[-7:])
+                    )
+                    lines.append(f"   [{th.name}] {chain}")
+            except Exception as exc:  # noqa: BLE001
+                lines.append(f"   (iz alınamadı: {exc})")
+            try:
+                with log_path.open("a", encoding="utf-8") as fh:
+                    fh.write("\n".join(lines) + "\n")
+            except OSError:
+                pass
+
+    threading.Thread(target=_wd, name="lag-watchdog", daemon=True).start()
 
 
 def _default_fetch_pages() -> float:
@@ -1534,6 +1653,18 @@ def _health_build_block() -> dict:
         from ilim_assistant.ruzgar_tek_beyin_karsilama import tek_beyin_karsilama_status
 
         base["tek_beyin_karsilama"] = tek_beyin_karsilama_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_ezber_instant import ezber_instant_status
+
+        base["ezber_instant"] = ezber_instant_status()
+    except Exception:
+        pass
+    try:
+        from ilim_assistant.ruzgar_niyet_karari import niyet_karari_status
+
+        base["niyet_karari"] = niyet_karari_status()
     except Exception:
         pass
     try:
@@ -12902,6 +13033,20 @@ def _collect_fast_lane_chat_events(req: ChatRequest) -> list[dict[str, Any]] | N
                     )
             except Exception:
                 pass
+            # Madde 1.2 — tek niyet (meta); ezber cevap üretmez
+            _niyet_meta: dict[str, Any] | None = None
+            try:
+                from ilim_assistant.ruzgar_niyet_karari import (
+                    decide_intent,
+                    niyet_karari_enabled,
+                )
+
+                if niyet_karari_enabled():
+                    _niyet_meta = decide_intent(
+                        msg_raw, getattr(req, "history", None)
+                    ).as_dict()
+            except Exception:
+                _niyet_meta = None
             try:
                 from ilim_assistant.weather_live import maybe_weather_instant_reply
 
@@ -12916,6 +13061,8 @@ def _collect_fast_lane_chat_events(req: ChatRequest) -> list[dict[str, Any]] | N
                         "weather_live": True,
                         "fast_lane": True,
                     }
+                    if _niyet_meta:
+                        orch_w["niyet"] = _niyet_meta
                     return list(
                         _iter_instant_chat_events(
                             weather_hi,
@@ -12928,6 +13075,9 @@ def _collect_fast_lane_chat_events(req: ChatRequest) -> list[dict[str, Any]] | N
                     )
             except Exception:
                 pass
+            # Sohbet niyeti → ezber şeridine hiç girme (LLM üretecek)
+            if _niyet_meta and _niyet_meta.get("kind") == "sohbet":
+                return None
         reply = try_instant_reply(msg_raw, mode_norm)
         if not reply:
             return None
@@ -13643,9 +13793,21 @@ def _iter_chat_turn_events_impl(req: ChatRequest) -> Iterator[dict]:
         except Exception:
             pass
         try:
+            # Madde 1: kısa sohbet niyeti Arapça lügat anlık kartına düşmesin
+            _skip_ar = False
+            try:
+                from ilim_assistant.ruzgar_niyet_karari import (
+                    decide_intent,
+                    niyet_karari_enabled,
+                )
+
+                if niyet_karari_enabled() and decide_intent(msg_early).kind == "sohbet":
+                    _skip_ar = True
+            except Exception:
+                _skip_ar = False
             from ilim_assistant.ruzgar_arapca_lugat import try_arapca_lugat_reply
 
-            _ar_e = try_arapca_lugat_reply(msg_early)
+            _ar_e = None if _skip_ar else try_arapca_lugat_reply(msg_early)
             if _ar_e:
                 _orch_ar = dict(orch_early)
                 _orch_ar.setdefault("plan", {})["primary"] = "ilim"

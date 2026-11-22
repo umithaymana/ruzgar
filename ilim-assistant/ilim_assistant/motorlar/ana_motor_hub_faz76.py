@@ -252,6 +252,26 @@ def resolve_hub_target(
     except Exception:
         pass
 
+    # Madde 1: «tamam / evet / peki» çıplak sözü — bekleyen onay yoksa sohbettir,
+    # programlama kapısına (faz98) gitmez.
+    try:
+        from ilim_assistant.ruzgar_kisa_soz import looks_like_short_ack
+
+        if looks_like_short_ack(msg):
+            _pending = None
+            try:
+                from ilim_assistant.motorlar.programlama_faz98 import load_pending
+
+                _pending = load_pending(workspace_root)
+            except Exception:
+                _pending = None
+            if not _pending:
+                meta["winner"] = "genel"
+                meta["reason"] = "kisa_soz_sohbet"
+                return "genel", meta
+    except Exception:
+        pass
+
     try:
         from ilim_assistant.motorlar.motor_ogrenilen_eylemler import match_learned_action
 

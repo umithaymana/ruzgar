@@ -52,7 +52,58 @@ def _opinion_system_addon(message: str) -> str:
     )
 
 
+_GUN_TR = ("Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar")
+_AY_TR = (
+    "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
+    "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık",
+)
+
+
+def _simdi_satiri() -> str:
+    """Modelin «sabah/akşam» yanılmaması için yerel saat (kısa, tek satır)."""
+    if os.environ.get("RUZGAR_SOHBET_ZAMAN", "1").strip().lower() in ("0", "false", "no"):
+        return ""
+    try:
+        from datetime import datetime
+
+        n = datetime.now()
+        h = n.hour
+        if 5 <= h < 12:
+            part = "sabah"
+        elif 12 <= h < 18:
+            part = "öğleden sonra"
+        elif 18 <= h < 22:
+            part = "akşam"
+        else:
+            part = "gece"
+        return (
+            f"\n[ŞİMDİ] {n.day} {_AY_TR[n.month - 1]} {n.year} {_GUN_TR[n.weekday()]}, "
+            f"saat {n.hour:02d}:{n.minute:02d} ({part}). "
+            "Selam/hal hatırda bu saate uy; yanlış vakit söyleme.\n"
+        )
+    except Exception:
+        return ""
+
+
 def _casual_system_and_user(
+    message: str,
+    mode_norm: str,
+    *,
+    system_addon: str | None = None,
+    max_tokens_override: int | None = None,
+    prior_depth_override: int | None = None,
+) -> tuple[str, str, float, int, int]:
+    system, user, temp, max_tok, prior_n = _casual_system_and_user_core(
+        message,
+        mode_norm,
+        system_addon=system_addon,
+        max_tokens_override=max_tokens_override,
+        prior_depth_override=prior_depth_override,
+    )
+    return (system or "") + _simdi_satiri(), user, temp, max_tok, prior_n
+
+
+def _casual_system_and_user_core(
     message: str,
     mode_norm: str,
     *,

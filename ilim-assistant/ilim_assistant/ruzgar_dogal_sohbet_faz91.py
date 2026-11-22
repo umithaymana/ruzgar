@@ -124,6 +124,14 @@ def is_natural_conversation_turn(
     raw = (message or "").strip()
     if not raw:
         return False
+    # Madde 1: kısa onay/teşekkür/veda sözü ezber değil, modelin üreteceği sohbet turudur
+    try:
+        from ilim_assistant.ruzgar_kisa_soz import looks_like_short_ack
+
+        if looks_like_short_ack(raw):
+            return True
+    except Exception:
+        pass
     try:
         from ilim_assistant.ana_motor_plan import looks_like_instant_social_ack
 

@@ -413,11 +413,19 @@ def try_simple_factual_reply(message: str) -> Optional[str]:
             return None
     except Exception:
         pass
-    for pat, ans in _SIMPLE_FACTS:
-        if pat.search(_norm(raw)):
-            if _card_soruyu_kacirir(raw, ans):
-                continue
-            return ans
+    # Madde 1: sabit mikro-gerçek kartları varsayılan kapalı (LLM/RAG).
+    try:
+        from ilim_assistant.ruzgar_ezber_instant import ezber_instant_enabled
+
+        _ezber_ok = ezber_instant_enabled()
+    except Exception:
+        _ezber_ok = False
+    if _ezber_ok:
+        for pat, ans in _SIMPLE_FACTS:
+            if pat.search(_norm(raw)):
+                if _card_soruyu_kacirir(raw, ans):
+                    continue
+                return ans
     try:
         from ilim_assistant.ana_motor_bilgi_turu import should_route_bilgi_turu_pipeline
 

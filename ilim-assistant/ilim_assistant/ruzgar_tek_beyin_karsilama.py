@@ -49,6 +49,15 @@ _RESUME_CUE = re.compile(
 def tek_beyin_karsilama_enabled() -> bool:
     if os.environ.get("RUZGAR_TEK_BEYIN", "1").strip().lower() in ("0", "false", "no"):
         return False
+    # Madde 1: ezber karşılama varsayılan kapalı (LLM üretir). Açmak: RUZGAR_EZBER_INSTANT=1
+    # ve RUZGAR_TEK_BEYIN_KARSILAMA=1.
+    try:
+        from ilim_assistant.ruzgar_ezber_instant import ezber_instant_enabled
+
+        if not ezber_instant_enabled():
+            return False
+    except Exception:
+        return False
     return os.environ.get("RUZGAR_TEK_BEYIN_KARSILAMA", "1").strip().lower() not in (
         "0",
         "false",

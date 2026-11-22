@@ -1277,7 +1277,9 @@ def prepare_turn(
         try:
             from ilim_assistant.weather_live import compute_live_weather_outcome
 
-            live_weather_ctx, weather_instant = compute_live_weather_outcome(msg)
+            live_weather_ctx, weather_instant = compute_live_weather_outcome(
+                msg, history=history
+            )
         except Exception:
             live_weather_ctx = ""
             weather_instant = None

@@ -885,6 +885,14 @@ def tek_beyin_plan_override(
         return None
     if _skip_hafiza_for_clarification_short(message):
         return None
+    # Madde 1: «tamam / sağ ol / ok» gibi kısa sözler eski kayıtlara bulanık bağlanmasın
+    try:
+        from ilim_assistant.ruzgar_kisa_soz import looks_like_short_ack
+
+        if looks_like_short_ack(message):
+            return None
+    except Exception:
+        pass
     # Dünya Gezgini / harita gezi — eski sohbet hafızasına düşme (sabit bölge yok)
     try:
         from ilim_assistant.sahne_super_el import _norm

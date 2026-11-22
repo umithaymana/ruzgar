@@ -25,7 +25,11 @@ def mode_norm_from_request(mode: Any) -> str:
 
 
 def try_instant_reply(message: str, mode_norm: str = "genel") -> str | None:
-    """Selam / teşekkür / kısa nezaket — LLM/RAG/thread pool yok."""
+    """Selam / teşekkür / kısa nezaket — LLM/RAG/thread pool yok.
+
+    Madde 1 (2026-11-22): varsayılan kapalı — ezber metin yok, beyin üretir.
+    Eski şerit: RUZGAR_EZBER_INSTANT=1
+    """
     if mode_norm not in ("genel", "gelisim", "uretim"):
         return None
     raw = (message or "").strip()
@@ -51,6 +55,14 @@ def try_instant_reply(message: str, mode_norm: str = "genel") -> str | None:
             return None
     except Exception:
         pass
+    # Atölye koruması yukarıda bitti; ezber şerit kapalıysa LLM yoluna bırak
+    try:
+        from ilim_assistant.ruzgar_ezber_instant import ezber_instant_enabled
+
+        if not ezber_instant_enabled():
+            return None
+    except Exception:
+        return None
     blob = _norm(raw) + " " + _ascii(raw)
 
     if re.search(
