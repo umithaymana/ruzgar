@@ -1314,6 +1314,13 @@
     acik: () => sadeOn(),
   };
 
+  /* Yeni sohbet yüzü (ruzgar-yuz.js) için küçük kapı: cevabı oku / sustur.
+     Mevcut mantığı değiştirmez; yalnız var olan işlevleri dışarı verir. */
+  window.ruzgarMobil = {
+    oku: (t) => speakReply(t),
+    sustur: (r) => stopAllSpeech(r || "yuz-sustur"),
+  };
+
   function setTab(which) {
     const map = {
       login: ["loginBox", "tabLogin"],

@@ -1,0 +1,304 @@
+/* Rüzgar — yeni sohbet yüzü (mobil) · 2026-11-23
+   Tüm kurallar `html.ry` altında: yüz kapalıyken eski görünüm HİÇ değişmez.
+   Vurgu rengi `--accent` (menüden seçilir). */
+
+/* Eski yüzdeki «Yeni yüz» düğmesi; yeni yüzde gizli */
+#btnYuzYeni { margin-top: 2px; border: 1px solid #334155; border-radius: 999px; padding: 8px 14px; color: var(--accent); background: transparent; }
+html.ry #btnYuzYeni { display: none !important; }
+#ryUstBtn { display: none; }
+.ry-menu-kok[hidden] { display: none !important; }
+
+/* ——— genel çerçeve ——— */
+html.ry body {
+  background: radial-gradient(900px 520px at 50% -18%, color-mix(in srgb, var(--accent) 17%, #0b1220) 0%, var(--bg) 62%);
+}
+html.ry #app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-width: 760px;
+  padding: max(10px, env(safe-area-inset-top, 0px)) 12px max(10px, env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+}
+html.ry .top-head { align-items: center; margin: 0 0 2px; flex: 0 0 auto; }
+html.ry .top-head .hint,
+html.ry #btnReload,
+html.ry #who,
+html.ry #chatNav,
+html.ry #installHint { display: none !important; }
+html.ry .top-head h1 {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.42em;
+  opacity: 0.8;
+}
+html.ry #app:has(#chatWrap:not(.hidden)) #ryUstBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.ry-ust-btn { display: none; width: 36px; height: 36px; padding: 0; border-radius: 50%; border: 1px solid #243047; background: transparent; color: var(--muted); }
+.ry-ust-btn svg { width: 18px; height: 18px; }
+
+html.ry #chatWrap { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+html.ry #chatView { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; position: relative; }
+html.ry #sahneDock { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; border: 0; padding: 0; background: none; }
+
+/* ——— eski sahne yüzü gizli (harita/belge organı açıkken görünür) ——— */
+html.ry #chatView .sahne-stage:not(.organ-on) { display: none !important; }
+html.ry #chatView .sahne-stage.organ-on { flex: 0 0 auto; min-height: 38dvh; margin: 0 0 8px; border-radius: 18px; }
+html.ry .sahne-sheet-toggle,
+html.ry .sahne-gate-hint,
+html.ry #sadeDurum,
+html.ry #sadeLog,
+html.ry #meta:empty { display: none !important; }
+html.ry #sahneDock > .composer { display: none !important; }
+html.ry #meta { margin: 0; text-align: center; font-size: 0.72rem; opacity: 0.6; }
+
+/* ——— konuşma akışı: balonsuz bot, kapsül kullanıcı ——— */
+html.ry #chatView #chat,
+html.ry #chatView.has-sahne #chat,
+html.ry #chatView.has-sahne.sahne-busy:not(.sheet-open) #chat,
+html.ry #chatView.sade-ses #chat {
+  display: flex !important;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  opacity: 1;
+  overflow-y: auto;
+  gap: 14px;
+  padding: 10px 2px 14px;
+  margin: 0;
+  pointer-events: auto;
+  -webkit-overflow-scrolling: touch;
+}
+html.ry #chatView.has-sahne .sahne-stage.organ-on ~ .sahne-dock #chat { max-height: 30dvh; }
+html.ry #chatView.ry-bos-on #chat { display: none !important; }
+html.ry .bubble {
+  max-width: 100%;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  line-height: 1.6;
+  font-size: 1.02rem;
+  animation: ry-gir 0.32s ease both;
+}
+html.ry .bubble.bot { align-self: stretch; color: var(--ink); background: transparent; }
+html.ry .bubble.user {
+  align-self: flex-end;
+  max-width: 86%;
+  padding: 9px 15px;
+  border-radius: 20px 20px 6px 20px;
+  background: color-mix(in srgb, var(--accent) 24%, #0f172a);
+  border: 1px solid color-mix(in srgb, var(--accent) 38%, transparent);
+}
+@keyframes ry-gir { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+
+/* ——— boş ekran ——— */
+.ry-bos { display: none; }
+html.ry #chatView.ry-bos-on .ry-bos {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  text-align: center;
+  padding: 0 8px;
+}
+.ry-bos-ad {
+  font-size: 2.1rem;
+  font-weight: 300;
+  letter-spacing: 0.46em;
+  padding-left: 0.46em;
+  background: linear-gradient(100deg, var(--ink) 20%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.ry-bos-selam { color: var(--muted); font-size: 1.05rem; }
+.ry-ciplar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 8px; max-width: 520px; }
+.ry-cip {
+  background: color-mix(in srgb, var(--card) 85%, transparent);
+  border: 1px solid #243047;
+  color: var(--ink);
+  border-radius: 16px;
+  padding: 10px 14px;
+  font-size: 0.92rem;
+}
+.ry-cip:active { border-color: var(--accent); }
+
+/* ——— rüzgar çizgisi ——— */
+.ry-alt { flex: 0 0 auto; display: flex; flex-direction: column; gap: 4px; padding-bottom: 2px; }
+.ry-cizgi {
+  --ry-amp-a: 0.34;
+  --ry-amp-b: 0.22;
+  --ry-hiz-a: 14s;
+  --ry-hiz-b: 19s;
+  position: relative;
+  height: 30px;
+  overflow: hidden;
+  color: var(--accent);
+  cursor: default;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+.ry-w { position: absolute; inset: 0; transform: scaleY(var(--ry-amp-a)); transition: transform 0.7s ease; }
+.ry-w svg { display: block; width: 200%; height: 100%; animation: ry-kay var(--ry-hiz-a) linear infinite; }
+.ry-w-a { opacity: 0.95; }
+.ry-w-b { opacity: 0.38; transform: scaleY(var(--ry-amp-b)); }
+.ry-w-b svg { animation-duration: var(--ry-hiz-b); animation-direction: reverse; }
+@keyframes ry-kay { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.ry-supurge { position: absolute; top: 0; bottom: 0; width: 34%; left: -40%; opacity: 0; pointer-events: none;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 55%, transparent), transparent); }
+
+.ry-cizgi[data-durum="dinle"] { --ry-amp-a: 0.72; --ry-amp-b: 0.45; --ry-hiz-a: 3.2s; --ry-hiz-b: 5s; }
+.ry-cizgi[data-durum="dusun"] { --ry-amp-a: 0.55; --ry-amp-b: 0.35; --ry-hiz-a: 2.2s; --ry-hiz-b: 3.4s; }
+.ry-cizgi[data-durum="dusun"] .ry-supurge { opacity: 1; animation: ry-supur 1.25s ease-in-out infinite; }
+.ry-cizgi[data-durum="konus"] { --ry-amp-a: 1; --ry-amp-b: 0.7; --ry-hiz-a: 2.4s; --ry-hiz-b: 3.6s; cursor: pointer; }
+.ry-cizgi[data-durum="dusun"] { cursor: pointer; }
+@keyframes ry-supur { from { left: -40%; } to { left: 106%; } }
+.ry-altyazi { text-align: center; font-size: 0.74rem; color: var(--muted); min-height: 1em; opacity: 0; transition: opacity 0.25s; }
+.ry-altyazi.on { opacity: 0.85; }
+
+/* ——— alt çubuk ——— */
+.ry-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 28px;
+  background: color-mix(in srgb, var(--card) 92%, #000);
+  border: 1px solid #243047;
+  transition: border-color 0.2s;
+}
+.ry-bar:focus-within { border-color: color-mix(in srgb, var(--accent) 60%, #243047); }
+.ry-plus { flex: 0 0 auto; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; color: var(--muted); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }
+.ry-plus:active { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
+.ry-alan { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; }
+html.ry .ry-alan textarea {
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  resize: none;
+  padding: 11px 2px;
+  font-size: 1rem;
+  line-height: 1.35;
+  max-height: 132px;
+  overflow-y: auto;
+  outline: none;
+}
+.ry-act { flex: 0 0 auto; position: relative; width: 44px; height: 44px; }
+html.ry .ry-act button {
+  position: absolute;
+  inset: 0;
+  width: 44px;
+  height: 44px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 0;
+  border: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+html.ry .ry-act button::before {
+  content: "";
+  width: 22px;
+  height: 22px;
+  background: currentColor;
+  -webkit-mask: var(--ry-i) center / contain no-repeat;
+  mask: var(--ry-i) center / contain no-repeat;
+}
+html.ry .ry-act #btnMic {
+  --ry-i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='9' y='3' width='6' height='11' rx='3'/%3E%3Cpath d='M5 11a7 7 0 0 0 14 0M12 18v3'/%3E%3C/svg%3E");
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+  touch-action: none;
+}
+html.ry .ry-act #btnMic.listening {
+  background: var(--accent);
+  color: #0b1220;
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 28%, transparent);
+  animation: ry-nabiz 1.2s ease-in-out infinite;
+}
+html.ry .ry-act #btnSend {
+  --ry-i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 19V5M5 12l7-7 7 7'/%3E%3C/svg%3E");
+  background: var(--accent);
+  color: #0b1220;
+  display: none;
+}
+html.ry .ry-bar.ry-yazili #btnSend { display: flex; }
+html.ry .ry-bar.ry-yazili #btnMic { display: none; }
+@keyframes ry-nabiz { 50% { box-shadow: 0 0 0 11px color-mix(in srgb, var(--accent) 6%, transparent); } }
+html.ry .mic-label { display: none; }
+
+/* ——— cevap altı sessiz şerit ——— */
+.ry-serit { display: flex; gap: 6px; flex-wrap: wrap; margin: -6px 0 0; animation: ry-gir 0.2s ease both; }
+.ry-serit-d {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid #243047;
+}
+.ry-serit-d svg { width: 16px; height: 16px; }
+.ry-serit-d:active { color: var(--accent); border-color: var(--accent); }
+
+/* ——— «+» menüsü ——— */
+.ry-menu-kok { position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-end; justify-content: center; }
+.ry-perde { position: absolute; inset: 0; background: rgba(5, 8, 16, 0.6); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); animation: ry-sol 0.2s ease both; }
+.ry-menu {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  max-height: 86dvh;
+  overflow-y: auto;
+  padding: 8px 16px max(18px, env(safe-area-inset-bottom, 0px));
+  border-radius: 26px 26px 0 0;
+  background: color-mix(in srgb, var(--card) 96%, #000);
+  border: 1px solid #243047;
+  border-bottom: 0;
+  animation: ry-yuksel 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.ry-tutac { width: 38px; height: 4px; border-radius: 4px; background: #334155; margin: 4px auto 12px; }
+.ry-izgara { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.ry-liste { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.ry-oge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 74px;
+  padding: 10px 6px;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--accent) 7%, #0f172a);
+  border: 1px solid #243047;
+  font-size: 0.82rem;
+  color: var(--ink);
+}
+.ry-oge svg { color: var(--accent); }
+.ry-liste .ry-oge { flex-direction: row; justify-content: flex-start; gap: 10px; min-height: 52px; padding: 10px 14px; }
+.ry-oge:active { border-color: var(--accent); }
+.ry-baslik { margin: 16px 2px 8px; font-size: 0.78rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.ry-renkler { display: flex; gap: 12px; padding: 2px 2px 4px; }
+.ry-renk { width: 34px; height: 34px; padding: 0; border-radius: 50%; background: var(--c); border: 2px solid transparent; }
+.ry-renk.on { border-color: var(--ink); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 40%, transparent); }
+body.ry-menu-acik { overflow: hidden; }
+@keyframes ry-sol { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ry-yuksel { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .ry-w svg, .ry-supurge, .bubble, .ry-menu, .ry-perde, .ry-serit,
+  html.ry .ry-act #btnMic.listening { animation: none !important; }
+  .ry-w { transition: none; }
+}

@@ -1,9 +1,11 @@
 /* Rüzgar PWA — HTML/ağ öncelikli; Yenile = güncelleme (skipWaiting + claim) */
-const CACHE = "ruzgar-pwa-v20261123-madde2";
+const CACHE = "ruzgar-pwa-v20261123-yuz";
 const ASSETS = [
-  "./app.css?v=20261123-madde2",
-  "./ruzgar-tur-ses.js?v=20261123-madde2",
-  "./app.js?v=20261123-madde2",
+  "./app.css?v=20261123-yuz",
+  "./ruzgar-yuz.css?v=20261123-yuz",
+  "./ruzgar-tur-ses.js?v=20261123-yuz",
+  "./app.js?v=20261123-yuz",
+  "./ruzgar-yuz.js?v=20261123-yuz",
   "./manifest.webmanifest?v=5",
   "./icon-192.png?v=5",
   "./icon-512.png?v=5",
@@ -47,12 +49,12 @@ self.addEventListener("fetch", (e) => {
     url.pathname.endsWith("/index.html") ||
     url.pathname.endsWith("/mobil");
 
-  // app.js / app.css — ağ öncelikli (eski SW query ile kilitlenmesin)
+  // app.js / app.css / yüz dosyaları — ağ öncelikli (eski SW query ile kilitlenmesin)
   const isAppShell =
-    /\/app\.js(?:\?|$)/.test(url.pathname + url.search) ||
-    /\/app\.css(?:\?|$)/.test(url.pathname + url.search) ||
-    /\/ruzgar-tur-ses\.js(?:\?|$)/.test(url.pathname + url.search) ||
+    /\/(app|ruzgar-yuz|ruzgar-tur-ses)\.(js|css)(?:\?|$)/.test(url.pathname + url.search) ||
     url.pathname.endsWith("/ruzgar-tur-ses.js") ||
+    url.pathname.endsWith("/ruzgar-yuz.js") ||
+    url.pathname.endsWith("/ruzgar-yuz.css") ||
     url.pathname.endsWith("/app.js") ||
     url.pathname.endsWith("/app.css");
 
