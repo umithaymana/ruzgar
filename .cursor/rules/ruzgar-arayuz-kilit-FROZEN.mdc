@@ -27,3 +27,7 @@ Mimar bu düzeni beğendi ve kilitledi (2026-10-16 gece: «sakın bozma, sadece 
 `ruzgar-desktop/index.html`, `app.js`, `ruzgar-sade.css`, `ruzgar-pro.css`, `ruzgar-split.js`, `ruzgar-ui-prebody.js` içinde yukarıdaki davranışı bozan satır. `ruzgar-masa.js` ve `ruzgar-masa.css` geliştirilebilir; sahneyi, dört masayı ve sağ tık kes/kopyala/yapıştırı kaldırmak bozmaktır.
 
 Motorların kendi atölye kodu (ses, video, tercüme, programlama) bu kuralın konusu değildir; yüz ölçüsünü bozmadan düzeltilebilir.
+
+## Dar izin — sohbet yüzü (Mimar, 2026-11-23)
+
+Mimar «masaüstünü de aynı şekilde ayarla» dedi ve yönetici izni verdi. Kapsam YALNIZ sohbet paneli içidir: `ruzgar-desktop/ruzgar-yuz.js` + `ruzgar-yuz.css` (yeni, eklemeli) ve `index.html`'e bunları yükleyen iki satır. Mevcut düğmeler taşınır, silinmez; `app.js` ve diğer dokunulmaz dosyalara satır eklenmez. Motor listesi, geri/ileri/yenile, tutamaç, dört masa ve Rüzgar sahnesi bu izinle açılmaz. Yüz varsayılan açıktır; «+» → «Eski sohbete dön» ya da `?yuz=0` ile kapanır. `tests/test_masaustu_yuz_statik.py` kilitli parçaların yerinde olduğunu denetler.

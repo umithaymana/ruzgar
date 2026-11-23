@@ -48,14 +48,49 @@ def whisper_runtime_meta() -> dict[str, Any]:
     return dict(_MODEL_META)
 
 
+_CPU_ZORLA = False  # CUDA çalışma anında patladıysa oturum boyunca CPU
+_DLL_HAZIR = False
+
+
+def _cuda_dll_hazirla() -> None:
+    """
+    ctranslate2 cublas/cudnn DLL'lerini bulamazsa (cublas64_12.dll) model yüklenir
+    ama ilk çözümlemede patlar. XTTS için kurulu PyTorch zaten bu DLL'leri taşır:
+    torch/lib klasörünü (torch'u import etmeden) DLL arama yoluna ekle.
+    """
+    global _DLL_HAZIR
+    if _DLL_HAZIR:
+        return
+    _DLL_HAZIR = True
+    try:
+        import importlib.util
+
+        spec = importlib.util.find_spec("torch")
+        origin = getattr(spec, "origin", None) if spec else None
+        if not origin:
+            return
+        lib = Path(origin).parent / "lib"
+        if not lib.is_dir():
+            return
+        if hasattr(os, "add_dll_directory"):
+            os.add_dll_directory(str(lib))
+        os.environ["PATH"] = str(lib) + os.pathsep + os.environ.get("PATH", "")
+    except Exception:
+        pass
+
+
 def resolve_whisper_device_compute() -> tuple[str, str]:
     """
-    Varsayılan: cpu + int8 (bozulmaz).
-    RUZGAR_WHISPER_DEVICE=cuda|auto → CUDA dene, olmazsa cpu/int8'e düş.
+    Varsayılan: auto → CUDA varsa GPU (float16), yoksa/başarısızsa cpu + int8.
+    RUZGAR_WHISPER_DEVICE=cpu → her zaman CPU (kilitli yedek).
+    RUZGAR_WHISPER_DEVICE=cuda → CUDA dene, olmazsa cpu/int8'e düş.
     """
-    raw = (os.environ.get("RUZGAR_WHISPER_DEVICE", "cpu") or "cpu").strip().lower()
+    raw = (os.environ.get("RUZGAR_WHISPER_DEVICE", "auto") or "auto").strip().lower()
     ctype_env = (os.environ.get("RUZGAR_WHISPER_COMPUTE", "") or "").strip()
+    if _CPU_ZORLA:
+        return "cpu", "int8"
     if raw in ("cuda", "auto"):
+        _cuda_dll_hazirla()
         try:
             import ctranslate2  # type: ignore
 
@@ -283,12 +318,26 @@ def warm_stt_model(*, force: bool = False) -> dict[str, Any]:
     # ~0.6 sn sessizlik — decode yolu ısınır, metin beklenmez
     audio = np.zeros(int(16000 * 0.6), dtype=np.float32)
     t1 = time.perf_counter()
-    try:
+    global _CPU_ZORLA
+
+    def _isin(m):
         kw = build_transcribe_kwargs("tr", duration_sec=0.6)
         kw["vad_filter"] = False  # sessizlikte VAD atlanır
-        segs, _info = model.transcribe(audio, **kw)
+        segs, _info = m.transcribe(audio, **kw)
         for _ in segs:
             pass
+
+    try:
+        try:
+            _isin(model)
+        except Exception:
+            if (_MODEL_META or {}).get("device") != "cuda":
+                raise
+            # GPU DLL/VRAM sorunu → CPU/int8 yedeği
+            _CPU_ZORLA = True
+            unload_model()
+            model = get_model()
+            _isin(model)
         out["infer_ms"] = round((time.perf_counter() - t1) * 1000.0, 1)
         out["ok"] = True
         _WARM_DONE = True
@@ -425,7 +474,6 @@ def transcribe_file_detailed(
     path = Path(path)
     if not path.is_file():
         raise FileNotFoundError(path)
-    model = get_model()
     duration_hint: float | None = None
     audio = None
     # V2: önce numpy (PyAV metadata_errors tuzağını atlar); gerekirse yol
@@ -436,13 +484,32 @@ def transcribe_file_detailed(
     except Exception:
         audio = None
     kwargs = build_transcribe_kwargs(language, duration_sec=duration_hint)
+
+    def _cevir():
+        model = get_model()
+        try:
+            if audio is not None:
+                raw, inf = model.transcribe(audio, **kwargs)
+            else:
+                raw, inf = model.transcribe(str(path), **kwargs)
+        except Exception:
+            raw, inf = model.transcribe(str(path), **kwargs)
+        # segmentler tembel üretilir; CUDA hatası burada (yineleme anında) çıkar
+        liste: list[Any] = []
+        for seg in raw:
+            liste.append(seg)
+        return liste, inf
+
     try:
-        if audio is not None:
-            raw_segments, info = model.transcribe(audio, **kwargs)
-        else:
-            raw_segments, info = model.transcribe(str(path), **kwargs)
+        raw_segments, info = _cevir()
     except Exception:
-        raw_segments, info = model.transcribe(str(path), **kwargs)
+        # GPU çalışma anında bozulduysa (DLL/VRAM) kilitli yedeğe: CPU + int8
+        global _CPU_ZORLA  # noqa: PLW0603
+        if (_MODEL_META or {}).get("device") != "cuda":
+            raise
+        _CPU_ZORLA = True
+        unload_model()
+        raw_segments, info = _cevir()
     segments: list[SttSegment] = []
     parts: list[str] = []
     for s in raw_segments:
