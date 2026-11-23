@@ -214,6 +214,97 @@ class KapsamASGIMiddleware:
         await self.app(scope, receive, send)
 
 
+# ── Madde 3.6: SSE / WS kimlik kapısı (/api/chat/full ile aynı kurallar) ────────
+
+MSG_OTURUM_GECERSIZ = "Oturum geçersiz veya süresi dolmuş. PWA'dan tekrar giriş."
+MSG_SOHBET_ACL = "Sohbet motoru bu kullanıcı için kapalı (panel ACL)."
+
+
+def _env_on(name: str, default: str = "1") -> bool:
+    return (os.environ.get(name, default) or default).strip().lower() not in (
+        "0",
+        "false",
+        "no",
+        "off",
+    )
+
+
+def stream_auth_enabled() -> bool:
+    """``RUZGAR_STREAM_AUTH=0`` → stream/WS eski davranış (doğrulama yok)."""
+    return _env_on("RUZGAR_STREAM_AUTH")
+
+
+def stream_slot_enabled() -> bool:
+    """``RUZGAR_STREAM_SLOT=0`` → stream/WS kuyruk (eşzamanlı yazı tavanı) uygulanmaz."""
+    return _env_on("RUZGAR_STREAM_SLOT")
+
+
+def stream_auth_gate(session_token: str | None) -> dict[str, Any]:
+    """Token varsa doğrula + sohbet ACL + (açıksa) kuyruk yuvası al.
+
+    Token YOKSA (masaüstü) hiçbir şey yapmaz: ``{"ok": True}``.
+    Dönüş: ``{"ok": True, "auth": dict|None, "slot": str|None}`` veya
+    ``{"ok": False, "code": ..., "error": ...}``. Yuva alındıysa
+    ``stream_auth_release`` ile bırakılmalı.
+    """
+    tok = (session_token or "").strip()
+    if not tok or not stream_auth_enabled():
+        return {"ok": True, "auth": None, "slot": None}
+    from ilim_assistant.ruzgar_mobil_oturum import (
+        begin_chat_slot,
+        motor_allowed,
+        validate_token,
+    )
+
+    auth = validate_token(tok)
+    if auth is None:
+        return {"ok": False, "code": "oturum_gecersiz", "error": MSG_OTURUM_GECERSIZ}
+    if not motor_allowed(auth, "sohbet"):
+        return {"ok": False, "code": "motor_acl", "error": MSG_SOHBET_ACL}
+    slot = None
+    if stream_slot_enabled():
+        res = begin_chat_slot(tok)
+        if not res.get("ok"):
+            return {
+                "ok": False,
+                "code": "kuyruk",
+                "error": str(res.get("message") or "kuyruk"),
+                "queue": True,
+            }
+        slot = res.get("slot")
+    return {"ok": True, "auth": auth, "slot": slot}
+
+
+def stream_auth_release(gate: dict[str, Any] | None) -> None:
+    """Kapıdan alınan kuyruk yuvasını bırak (her koşulda güvenli, idempotent)."""
+    try:
+        slot = (gate or {}).get("slot")
+        if slot:
+            from ilim_assistant.ruzgar_mobil_oturum import end_chat_slot
+
+            end_chat_slot(slot)
+            gate["slot"] = None  # type: ignore[index]
+    except Exception:
+        pass
+
+
+def stream_auth_error_events(gate: dict[str, Any], user_message: str = "") -> list[dict[str, Any]]:
+    """Reddedilen istek için istemcinin anladığı olay çifti (error + done)."""
+    err = str(gate.get("error") or MSG_OTURUM_GECERSIZ)
+    code = str(gate.get("code") or "oturum_gecersiz")
+    return [
+        {"type": "error", "text": err, "code": code, "auth_error": True},
+        {
+            "type": "done",
+            "full_reply": err,
+            "user_message": (user_message or "").strip(),
+            "stream_error": True,
+            "auth_error": True,
+            "code": code,
+        },
+    ]
+
+
 def kapsam_status() -> dict[str, Any]:
     sc = current_scope()
     return {

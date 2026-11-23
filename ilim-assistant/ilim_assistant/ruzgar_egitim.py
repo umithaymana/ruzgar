@@ -31,9 +31,25 @@ def _egitim_enabled() -> bool:
     )
 
 
+_PC_DURUM_YOLU = Path(__file__).resolve().parents[1] / "ruzgar_egitim_durum.json"
+
+
 def _durum_path() -> Path:
-    proje_koku = Path(__file__).resolve().parents[1]
-    return proje_koku / "ruzgar_egitim_durum.json"
+    """Bekleyen öğretme durumu. PC kapsamı eski tek dosyayı aynen kullanır (Madde 3);
+    mobil/cihaz kapsamları kendi dosyasına yazar — bir cihazın «öğretir misin?» beklemesi
+    başka cihazın/PC'nin sonraki mesajını yutmaz. Kapatma: ``RUZGAR_KAPSAM=0``."""
+    try:
+        from ilim_assistant.ruzgar_kapsam import current_scope, kapsam_enabled
+
+        if kapsam_enabled():
+            sc = current_scope()
+            if not sc.is_pc:
+                from ilim_assistant.ruzgar_kapsam_hafiza import _dosya_adi, kapsam_hafiza_dizini
+
+                return kapsam_hafiza_dizini() / ("egitim_durum_" + _dosya_adi(sc.key))
+    except Exception:
+        pass
+    return _PC_DURUM_YOLU
 
 
 def _load_durum() -> dict[str, Any]:

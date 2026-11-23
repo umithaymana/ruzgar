@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-11-21 — **S0–S4 YEŞİL** · duygu/etiket v2 · **V1.0–V1.2 dublaj YEŞİL** · FB/iptal/VRAM · sırada mobil dublaj paneli ince ayar / V2 efekt.
+**Son güncelleme:** 2026-11-23 sabah — Elektrik kesintisi sonrası tam denetim: **Madde 1 + 2 + 3 kod/test YEŞİL** (pytest **387 geçti · 0 hata**; node testleri yeşil) · açık kalanlar: **masaüstü sade ses yüzü** (arayüz kilidi) · **istemcide parça parça (MSE) ses çalma** · mobil girişli uçtan uca kulak turu (bkz. «DENETİM 2026-11-23»).
 
 Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan önce «durumu güncelle» denmesi yeterli (çarpı ile kapanışta otomatik yazılamaz).
 
@@ -12,7 +12,9 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 |---------|------|-----|
 | **1 — Masa gerçek iş** | **M1–M3 MÜHÜR YEŞİL** | `docs/M3_MASA_ANA_MOTOR_MUHUR_2026-11-21.md` · `smoke_masa_m3_muhur.py` |
 | **2 — Çırak / programlama** | **A–G+T✓** tavan mühür | `TAVAN_DERS.md` · `smoke_cirak_dilim_t.py` |
-| **3 — Sırada** | **Mobil dublaj UI ince ayar** veya **V2 efekt** | V1.2 API+chat hazır; panel checkbox masaüstü |
+| **0 — Açık** | **TTS sıkışıklık / geç ses** | Kod: klon 8sn→Edge · cancel · sohbet≠TTS · mobil parity — Mimar: «sorunlar devam» · dönüşte canlı teşhis |
+| **0b — Donma** | v1.2 yüklü | listening/thinking/speaking idle + health unlock |
+| **3 — Sonra** | Kulak turu → mobil dublaj UI / V2 | Sıkışıklık yeşil olunca |
 | **S0–S4 mühür** | Ölçüm→profil→prosodi→klon→**okuma bağ** + XTTS canlı | S4 26/26 · `docs/S4_OKUMA_SES_BAG_2026-11-21.md` |
 | **V1 dublaj** | Omurga · iptal/VRAM · kalite mux | `smoke_v1_video_dublaj` 56/56 · masa+mobil Form |
 | **Duygu / etiket** | STT→TTS + köşeli etiket v2 clamp | `smoke_duygu_etiket_hat` 46/46 |
@@ -26,6 +28,41 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 | **Kapı** | `8779` · mic HTTPS `8443` · PWA `/mobil/` | Boot sırası kilitli |
 
 **Başarı cümlesi:** Kur’an’da huşû; hadis/tefsirde vakur; sohbette doğal; video dublaj/efekt aynı ses omurgasından — mobil = PC.
+
+---
+
+## KARAR KAYDI — Madde 1 + Madde 3 (2026-11-22 · Mimar `plana yaz`)
+
+**Madde 1 — Rüzgar'ın kullanıcıyı anlaması: TAMAMLANDI** (commit `bca0f6e34` · dal `cursor/sohbet-akicilik-a-f` · repo `https://github.com/umithaymana/ruzgar.git`)
+- **Ezber/sabit kalıp cevap kapalı** (selam vb. artık kendi üretiyor). Açma anahtarı `RUZGAR_EZBER_INSTANT=1` (varsayılan kapalı) — ezber/kalıp **geri eklenmez**.
+- **Tek niyet kararı:** `ilim_assistant/ruzgar_niyet_karari.py`; araçlar niyete bağlı. Hava durumunda sabit şehir listesi / varsayılan İstanbul **yok**, şehir yoksa sorar (anayasa: hardcode yasağı).
+- **Kısa onay sözleri** (tamam, ok, evet, teşekkürler, görüşürüz…) doğal sohbet; bekleyen onay yoksa hub `faz98_gate` ele geçirmez (`ilim_assistant/ruzgar_kisa_soz.py`).
+- **Gecikme:** sohbet Gemini okuma sınırı 7 sn, en fazla 2 model, 2.5 sn'de paralel yedek istek (`RUZGAR_CASUAL_GEMINI_READ_SEC` / `_HEDGE_SEC`).
+- **Açılışta yalnız hafif model** (`llama3.2:3b`); 14B (`qwen2.5:14b`) açılışta yüklenmez — RTX 4060 8 GB'ta 120 sn zaman aşımı sunucuyu donduruyordu (`RUZGAR_OLLAMA_PRELOAD_MODE=hizli|denge|off`).
+- **1.4 «kalıp ≠ bilgi»: YEŞİL** (2026-11-23) — öğretilmiş selam/«nasılsın» kalıpları sohbette dönmez; gerçek bilgi («adım Ümit») şablonla sarılmadan korunur · `tests/test_madde1_kalip_bilgi.py` (9).
+- **1.5 kalite kapısı (ince): YEŞİL** (2026-11-23) — boş/whitespace çıktı «başarılı» sayılmaz, zincir sonraki beyne geçer · `tests/test_madde1_kalite_kapisi.py` (4).
+
+**Madde 3 — PC/mobil/kullanıcı izolasyonu: Sprint C kodlandı** (25 test geçti · canlı doğrulama sürüyor · commit/push ayrı ajanda)
+- `ilim_assistant/ruzgar_kapsam.py`: kapsam anahtarı `pc` | `u:<kullanici>` | `d:<cihaz>` | `anon:<hash>` (geçersiz token PC gibi davranmaz); ContextVar + saf ASGI ara katman. `RUZGAR_KAPSAM=0` kapatır; `RUZGAR_KAPSAM_LEGACY=pc|all|none` (varsayılan `pc`: eski kapsamsız sohbet satırları yalnız PC'ye görünür, silinmez).
+- Sohbet arşivi ve tek_beyin özet önbelleği kapsamlı; ortak hafıza (OturumOzet) yalnız PC yazar; kırpma kapsam başına.
+- **Bulgu:** yankı yolu varsayılanda kapalı (`sohbet_tarz_chatgpt`); karışmanın asıl yolları özet önbelleği ve geçmiş hatırlamaydı.
+- **Sprint D: YEŞİL** — 3.4 iki hafıza katmanı (tercih = kullanıcı katmanı ortak · «az önce konuştuk» = cihazda kalır) · 3.5 `ruzgar_genel_hafiza.json` kullanıcı/cihaz kapsamı (`ruzgar_kapsam_hafiza.py`; PC dosyası dokunulmaz) · 3.6 SSE/WS kimlik kapısı (`stream_auth_gate`) · 3.7 kabul (`tests/test_madde3_iki_katman.py`).
+- **Yeni (2026-11-23):** öğretme «bekleyen durum» (`ruzgar_egitim_durum.json`) artık kapsamlı — PC eski dosyayı aynen kullanır, mobil/cihaz kendi dosyasına yazar (bir cihazın «öğretir misin?» beklemesi başkasının mesajını yutmaz) · `tests/test_madde3_egitim_durum.py` (4). Canlıda doğrulandı.
+- **«iki artı iki» donması: ÇÖZÜLDÜ** (canlı: doğru cevap, 6–9 sn; önceden 45 sn+). Kalan: aritmetik soru «gündelik» hızlı şeride düşmüyor → normal şerit/Gemini ~6 sn (selam 1,6 sn). Donma değil, yönlendirme gecikmesi; isteğe bağlı iyileştirme.
+
+---
+
+## Madde 2 — Metin + ses aynı anda (2026-11-23 durum)
+
+**Yeşil:** 2.1 mobil SSE (`/api/chat/stream`, `/api/chat/full` yedek; kimlik hatası temiz) · 2.2 ortak TTS kuyruğu (`static/mobil-pwa/ruzgar-tur-ses.js`) · 2.4 tur kilidi (`turn_id`, barge-in, sunucuda 409; `ilim_assistant/ses_tur_kilidi.py`) · 2.5 mobil sade ses yüzü · 2.6 telemetri (`/api/ses/telemetri`, `/api/health/full` → `ses_tur`). Tarayıcıda gerçek `streamTurn` canlı sunucuya karşı çalıştı (token akışı + done).
+**2.3 kısmen:** `POST /api/tts/stream` (Edge chunked MP3; `ilim_assistant/ses_tts_akis.py`, `RUZGAR_TTS_AKIS=0` kapatır) sunucuda yeşil ve ölçüldü: ilk bayt ~0,95 sn (tam dosya yolu ~1,4 sn). **İstemciye bağlanmadı** — kazanç ancak parça parça (MediaSource) çalmayla olur; mevcut `playTtsBlob` barge-in/VAD mantığını riske atmamak için ayrı dilime bırakıldı.
+**Yapılamadı (kural):** masaüstü sade ses yüzü — `ruzgar-desktop/index.html, app.js, ruzgar-sade.css, ruzgar-pro.css, ruzgar-split.js, ruzgar-ui-prebody.js` ARAYÜZ KİLİDİ altında; Mimar kilidi açmadıkça yapılmaz (ses/tur mantığı backend + mobil PWA + `ruzgar-masa.*` üzerinden ilerletilebilir).
+
+## DENETİM 2026-11-23 (elektrik kesintisi sonrası)
+- Kesinti kod dosyalarını bozmadı (derleme + `node --check` temiz). Tam `pytest`: **387 geçti · 0 hata** (önceden 3 «bilinen hata» vardı: 2'si test/kod uyumsuzluğu → kısa sistem metnine kimlik cümlesi eklendi + test iki yolu kapsıyor; 1'i gerçek regresyon → okul/üniversite sayı filtresi kaynaklı `https://` bağlantısını yeniden kaynak sayıyor).
+- Ek düzeltme: ortak raf değişim imzası Windows zaman damgası adımında kaçabiliyordu (flaky) → imzaya PC dosya boyutu eklendi.
+- Canlı: sunucu ForceRestart sonrası sağlıklı; mobil PWA `/mobil/index.html` açılıyor, `RuzgarTurSes` yüklü. **Mobil girişli (token) uçtan uca kulak turu yapılmadı** (kullanıcı şifresine dokunulmaz) — Mimar telefonda denemeli.
+- Commit'e girmeyenler (bilinçli): `.ruzgar_ses_ayarlari.json`, `ruzgar-desktop/ruzgar_remote_api.txt` (çalışma durumu), `docs/*_2026-11-21.json|md` yeniden üretilmiş ölçüm dosyaları, yüzlerce izlenmeyen bilgi/arşiv/betik dosyası.
 
 ---
 

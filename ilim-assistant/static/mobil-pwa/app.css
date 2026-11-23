@@ -818,3 +818,83 @@ body.mobil-sahne-organ-on #chatView.has-sahne .sahne-organ-meta {
     transition: none !important;
   }
 }
+
+/* ===== Madde 2.5 — Sade ses yüzü: balon yok, metin zorunlu değil =====
+   Mikrofon + durum (Dinliyor / Düşünüyor / Konuşuyor) ile iletişim; sessiz kayıt isteğe bağlı.
+   Kapalıyken hiçbir mevcut düzen değişmez (yalnız #chatView.sade-ses altında geçerli). */
+.sade-durum {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 6px 0 10px;
+  padding: 12px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  background: rgba(15, 23, 42, 0.6);
+  color: #e6d7a8;
+  font-size: 1.05rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+#chatView.sade-ses .sade-durum { display: flex; }
+.sade-durum-nokta {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #64748b;
+  box-shadow: 0 0 0 0 rgba(100, 116, 139, 0.5);
+}
+.sade-durum[data-durum="dinle"] .sade-durum-nokta {
+  background: #9ad7ff;
+  animation: sade-nabiz 1.2s ease-out infinite;
+}
+.sade-durum[data-durum="dusun"] .sade-durum-nokta {
+  background: #d4b56a;
+  animation: sade-nabiz 0.9s ease-in-out infinite;
+}
+.sade-durum[data-durum="konus"] .sade-durum-nokta {
+  background: #e6c86a;
+  animation: sade-nabiz 0.7s ease-out infinite;
+}
+.sade-durum[data-durum="dinle"] { color: #9ad7ff; border-color: rgba(154, 215, 255, 0.5); }
+.sade-durum[data-durum="dusun"] { color: #d4b56a; }
+.sade-durum[data-durum="konus"] { color: #e6c86a; border-color: rgba(230, 200, 106, 0.6); }
+@keyframes sade-nabiz {
+  0% { box-shadow: 0 0 0 0 rgba(230, 200, 106, 0.55); }
+  100% { box-shadow: 0 0 0 14px rgba(230, 200, 106, 0); }
+}
+/* balon kapalı; yazı satırları gizli (mikrofon + sürekli sohbet kalır) */
+#chatView.sade-ses #chat,
+#chatView.sade-ses .sade-yazi,
+#chatView.sade-ses .sahne-sheet-toggle,
+#chatView.sade-ses .sahne-soz {
+  display: none !important;
+}
+#chatView.sade-ses .mic-hold { min-height: 72px; font-size: 1.1rem; }
+#chatView.sade-ses #btnLive { min-height: 72px; font-size: 1.05rem; }
+/* sessiz kayıt (isteğe bağlı) */
+.sade-log {
+  max-height: 26dvh;
+  overflow: auto;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px dashed #334155;
+  background: rgba(15, 23, 42, 0.55);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+.sade-log div { margin: 2px 0; }
+.sade-log .sl-u { color: #9ad7ff; }
+.sade-log .sl-b { color: #e6d7a8; }
+#chatView:not(.sade-ses) .sade-log,
+#chatView:not(.sade-ses) #btnSadeLog { display: none !important; }
+#btnSade[aria-pressed="true"], #btnSadeLog[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .sade-durum-nokta { animation: none !important; }
+}

@@ -20,6 +20,8 @@
   let micBusy = false;
   /** STT duygu hattı → /api/tts emotion (masa lastVoiceEmotion ile aynı rol) */
   let lastVoiceEmotion = null;
+  /** Son mic RMS (0–1) — /api/stt mic_energy → fuse_emotion (masa parity) */
+  let lastMicEnergy01 = 0.45;
 
   /* Tek ikon kuralı: yazı+mikrofon aynı PWA. HTTP'de mic ölür → HTTPS:8443'e at. */
   (function forceHttpsSingleDoor() {
@@ -1035,6 +1037,9 @@
   }
 
   function setSahneState(mode, sozText) {
+    try {
+      paintSadeDurum(mode); // sade yüz: sahne izni olmasa da durum görünür
+    } catch (_) {}
     const stage = el("sahneStage");
     if (!stage || stage.classList.contains("hidden")) return;
     ensureMobilSahneA11y();
@@ -1201,7 +1206,113 @@
     d.textContent = text;
     chat.appendChild(d);
     chat.scrollTop = chat.scrollHeight;
+    try {
+      sadeLogPush(role === "user" ? "user" : "bot", text);
+    } catch (_) {}
   }
+
+  /* ---- Madde 2.5 — Sade ses yüzü: balon yok · mikrofon + durum · isteğe bağlı sessiz kayıt ----
+     Varsayılan KAPALI (mevcut yüz aynen). Aç/kapa: «Sade ses» düğmesi (localStorage ruzgar_pwa_sade_ses). */
+  const SADE_KEY = "ruzgar_pwa_sade_ses";
+  const SADE_LOG_KEY = "ruzgar_pwa_sade_log";
+  const sadeLogRows = [];
+  function sadeOn() {
+    try {
+      return localStorage.getItem(SADE_KEY) === "1";
+    } catch (_) {
+      return false;
+    }
+  }
+  function sadeLogOn() {
+    try {
+      return localStorage.getItem(SADE_LOG_KEY) === "1";
+    } catch (_) {
+      return false;
+    }
+  }
+  function paintSadeDurum(mode) {
+    const box = el("sadeDurum");
+    if (!box) return;
+    const m = mode === "dinle" || mode === "konus" || mode === "dusun" ? mode : "hazir";
+    box.setAttribute("data-durum", m);
+    const mt = el("sadeDurumMetin");
+    if (mt) {
+      mt.textContent =
+        m === "dinle" ? "Dinliyor" : m === "konus" ? "Konuşuyor" : m === "dusun" ? "Düşünüyor" : "Hazır";
+    }
+  }
+  function paintSadeLog() {
+    const box = el("sadeLog");
+    if (!box) return;
+    const show = sadeOn() && sadeLogOn();
+    box.classList.toggle("hidden", !show);
+    if (!show) return;
+    box.textContent = "";
+    sadeLogRows.forEach((r) => {
+      const d = document.createElement("div");
+      d.className = r.role === "user" ? "sl-u" : "sl-b";
+      d.textContent = (r.role === "user" ? "Sen: " : "Rüzgar: ") + r.text;
+      box.appendChild(d);
+    });
+    box.scrollTop = box.scrollHeight;
+  }
+  function sadeLogPush(role, text) {
+    const t = String(text == null ? "" : text).trim();
+    if (!t) return;
+    sadeLogRows.push({ role, text: t.length > 600 ? t.slice(0, 600) + "…" : t });
+    while (sadeLogRows.length > 24) sadeLogRows.shift();
+    if (sadeOn() && sadeLogOn()) paintSadeLog();
+  }
+  function applySadeUi() {
+    const on = sadeOn();
+    const view = el("chatView");
+    if (view) view.classList.toggle("sade-ses", on);
+    const b = el("btnSade");
+    if (b) {
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+      b.textContent = on ? "Yazılı yüze dön" : "Sade ses";
+    }
+    const bl = el("btnSadeLog");
+    if (bl) {
+      bl.classList.toggle("hidden", !on);
+      bl.setAttribute("aria-pressed", sadeLogOn() ? "true" : "false");
+      bl.textContent = sadeLogOn() ? "Kaydı gizle" : "Kayıt";
+    }
+    const box = el("sadeDurum");
+    if (box) box.classList.toggle("hidden", !on);
+    paintSadeLog();
+  }
+  if (el("btnSade")) {
+    el("btnSade").onclick = () => {
+      try {
+        localStorage.setItem(SADE_KEY, sadeOn() ? "0" : "1");
+      } catch (_) {}
+      applySadeUi();
+    };
+  }
+  if (el("btnSadeLog")) {
+    el("btnSadeLog").onclick = () => {
+      try {
+        localStorage.setItem(SADE_LOG_KEY, sadeLogOn() ? "0" : "1");
+      } catch (_) {}
+      applySadeUi();
+    };
+  }
+  window.ruzgarSadeSes = {
+    ac: () => {
+      try {
+        localStorage.setItem(SADE_KEY, "1");
+      } catch (_) {}
+      applySadeUi();
+    },
+    kapat: () => {
+      try {
+        localStorage.setItem(SADE_KEY, "0");
+      } catch (_) {}
+      applySadeUi();
+    },
+    acik: () => sadeOn(),
+  };
 
   function setTab(which) {
     const map = {
@@ -1845,6 +1956,62 @@
     "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=";
   let ttsPlayGen = 0;
 
+  /* ---- Madde 2 (Sprint E+F): ortak tur/ses mantığı — ruzgar-tur-ses.js ----
+     SSE akışı + cümle çekici + TTS kuyruğu + tur kilidi (turn_id) + telemetri.
+     Kapatma: localStorage ruzgar_pwa_tur_ses=0 → eski /api/chat/full yolu. */
+  const TUR = typeof window !== "undefined" ? window.RuzgarTurSes || null : null;
+  const turLock = TUR ? TUR.createTurnLock() : null;
+  /** çalan sesin (playTtsBlob) hemen serbest bırakılması için */
+  let _activePlayEnd = null;
+  function turSesOn() {
+    try {
+      return !!TUR && !!turLock && localStorage.getItem("ruzgar_pwa_tur_ses") !== "0";
+    } catch (_) {
+      return !!TUR && !!turLock;
+    }
+  }
+  function convId() {
+    try {
+      let c = sessionStorage.getItem("ruzgar_pwa_conv");
+      if (!c) {
+        c = "m" + Math.random().toString(36).slice(2, 10);
+        sessionStorage.setItem("ruzgar_pwa_conv", c);
+      }
+      return c;
+    } catch (_) {
+      return "m-oturum";
+    }
+  }
+  /** «ilk token» ve «duyulan ilk ses» ayrı telemetri (yalnız sayı; kişisel veri yok) */
+  function postSesTelemetri(rec) {
+    try {
+      const r = rec || {};
+      window.__ruzgarTurTelemetri = window.__ruzgarTurTelemetri || [];
+      window.__ruzgarTurTelemetri.push({
+        ilk_token_ms: r.ilk_token_ms,
+        ilk_ses_ms: r.ilk_ses_ms,
+        yol: r.ilk_ses_yolu,
+        parca: r.parca,
+        iptal: !!r.iptal,
+      });
+      if (window.__ruzgarTurTelemetri.length > 32) window.__ruzgarTurTelemetri.shift();
+      void fetch(base() + "/api/ses/telemetri", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kanal: "mobil",
+          turn_id: r.turn_id || null,
+          ilk_token_ms: r.ilk_token_ms,
+          ilk_ses_ms: r.ilk_ses_ms,
+          ilk_ses_yolu: r.ilk_ses_yolu || null,
+          parca: r.parca,
+          iptal: !!r.iptal,
+        }),
+        keepalive: true,
+      }).catch(() => {});
+    } catch (_) {}
+  }
+
   function isLikelyIos() {
     const ua = navigator.userAgent || "";
     if (/iPad|iPhone|iPod/i.test(ua)) return true;
@@ -1989,15 +2156,67 @@
     } catch (_) {}
   }
 
+  function notifyVoiceTurnIdle(note) {
+    try {
+      api("/api/ses/voice-turn", {
+        method: "POST",
+        body: JSON.stringify({
+          state: "idle",
+          note: String(note || "client-idle").slice(0, 80),
+        }),
+      }).catch(() => ({}));
+    } catch (_) {}
+  }
+
+  let _voiceTurnQuietTimer = 0;
+  function scheduleVoiceTurnIdleIfQuiet(ms, note) {
+    const wait = Math.max(400, Number(ms) || 2200);
+    if (_voiceTurnQuietTimer) {
+      clearTimeout(_voiceTurnQuietTimer);
+      _voiceTurnQuietTimer = 0;
+    }
+    _voiceTurnQuietTimer = window.setTimeout(() => {
+      _voiceTurnQuietTimer = 0;
+      try {
+        if (liveMode || liveHoldRecord) return;
+        try {
+          const a = ensureTtsPlayer();
+          if (a && !a.paused && !a.ended) return;
+        } catch (_) {}
+        notifyVoiceTurnIdle(note || "quiet-watchdog");
+      } catch (_) {}
+    }, wait);
+  }
+
   // Aşama A — stopAllSpeech'ten önce declare (TDZ / ReferenceError yok)
   let liveHoldRecord = false;
 
   function stopAllSpeech(reason) {
-    // F6.4 / Aşama A barge-in — TTS / yerel konuşmayı kes + kuyruk gen
+    // F6.4 / Aşama A barge-in — YALNIZ TTS / yerel konuşma kesilir; sohbet abort yok
     const t0 = performance.now();
     ttsPlayGen += 1;
+    /* Madde 2.4 — tur kilidi: aktif turun TTS kuyruğu (ve sunucudaki bekleyen parçaları) durur */
+    let curTurnId = null;
     try {
-      void fetch(base() + "/api/tts/cancel", { method: "POST" }).catch(() => {});
+      const curTurn = turLock && turLock.current();
+      if (curTurn) {
+        curTurnId = curTurn.id;
+        curTurn.cancelTts(String(reason || "barge").slice(0, 40));
+      }
+    } catch (_) {}
+    try {
+      if (_activePlayEnd) _activePlayEnd(); // çalan parçanın söz'ü serbest kalsın (sızıntı yok)
+    } catch (_) {}
+    try {
+      void fetch(base() + "/api/tts/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          turn_id: curTurnId,
+          device_id: deviceId(),
+          sebep: String(reason || "barge").slice(0, 40),
+        }),
+      }).catch(() => {});
     } catch (_) {}
     try {
       const a = ensureTtsPlayer();
@@ -2009,7 +2228,13 @@
       if (window.speechSynthesis) window.speechSynthesis.cancel();
     } catch (_) {}
     liveHoldRecord = false;
-    notifyVoiceTurnListening(true);
+    // Canlı sohbet dışı: idle; canlıda kısa dinleme sonra quiet watchdog
+    if (liveMode) {
+      notifyVoiceTurnListening(true);
+      scheduleVoiceTurnIdleIfQuiet(3500, "mobil-barge-quiet");
+    } else {
+      notifyVoiceTurnIdle(reason || "stop-speech");
+    }
     const ms = Math.round(performance.now() - t0);
     try {
       window.__ruzgarLastBargeMs = ms;
@@ -2017,7 +2242,7 @@
     if (reason && meta) meta.textContent = String(reason) + ` (${ms} ms)`;
   }
 
-  function playTtsBlob(blob) {
+  function playTtsBlob(blob, popts) {
     return new Promise((resolve) => {
       if (!blob || !blob.size) return resolve();
       unlockMobileAudio();
@@ -2034,11 +2259,20 @@
       try {
         audio.pause();
       } catch (_) {}
+      let finished = false;
       const done = (note) => {
-        if (myGen !== ttsPlayGen) return resolve();
         if (bargeTimer) {
           clearInterval(bargeTimer);
           bargeTimer = 0;
+        }
+        if (finished) return resolve();
+        finished = true;
+        if (_activePlayEnd === endNow) _activePlayEnd = null;
+        if (myGen !== ttsPlayGen) {
+          try {
+            URL.revokeObjectURL(url);
+          } catch (_) {}
+          return resolve();
         }
         try {
           URL.revokeObjectURL(url);
@@ -2051,8 +2285,21 @@
         }
         resolve();
       };
+      const endNow = () => done();
+      _activePlayEnd = endNow;
       audio.onended = () => done();
       audio.onerror = () => done("ses dosyası hatası");
+      if (popts && typeof popts.onPlaying === "function") {
+        // Madde 2.6 — «duyulan ilk ses» = tarayıcının gerçek 'playing' olayı (play() çağrısı değil)
+        const onPlaying = () => {
+          audio.removeEventListener("playing", onPlaying);
+          if (myGen !== ttsPlayGen) return;
+          try {
+            popts.onPlaying();
+          } catch (_) {}
+        };
+        audio.addEventListener("playing", onPlaying);
+      }
       audio.src = url;
       try {
         audio.load();
@@ -2088,6 +2335,12 @@
       if (p && typeof p.catch === "function") {
         p.catch((err) => {
           const name = String((err && err.name) || err || "");
+          // Madde 2.4: kesilmiş (barge/yeni tur) parçanın play() reddi → sessizce bitir
+          // (eski sürüm burada «Cevap hazır.» diye konuşup yeni cevaba biniyordu)
+          if (myGen !== ttsPlayGen) {
+            done();
+            return;
+          }
           void speakLocal("Cevap hazır.").finally(() =>
             done(
               /NotAllowed|NotSupported|AbortError/i.test(name)
@@ -2204,40 +2457,161 @@
     return out.filter((c) => c.length >= 2);
   }
 
+  /** S1 tavan — masa normalizeKarakterForTts ile aynı alias */
+  function normalizeKarakterForTts(k) {
+    const s = String(k || "")
+      .toLowerCase()
+      .trim();
+    if (s === "bilge" || s === "kari" || s === "âlim") return "alim";
+    if (s === "sair") return "edip";
+    if (s === "asistan" || s === "sohbet" || s === "gunluk" || s === "günlük")
+      return "muhabbet";
+    if (s === "kuran" || s === "tecvid") return "tilavet";
+    if (s === "muhabbet" || s === "alim" || s === "tilavet" || s === "edip")
+      return s;
+    return "muhabbet";
+  }
+
   async function fetchTtsBlob(say, ttsOpts) {
     const opts = ttsOpts && typeof ttsOpts === "object" ? ttsOpts : {};
     const token = localStorage.getItem(LS.token) || "";
     const headers = { "Content-Type": "application/json" };
     if (token) headers.Authorization = "Bearer " + token;
     let lastErr = "";
-    const payload = {
-      text: say,
-      prosody: opts.prosody != null ? !!opts.prosody : false,
+    const kar = normalizeKarakterForTts(
+      opts.profil || opts.karakter || "muhabbet",
+    );
+    const hasEtiket =
+      typeof say === "string" && /\[[^\]]{2,24}\]/.test(say);
+    const be = String(opts.backend || "auto").trim().toLowerCase() || "auto";
+    const softDeadlineMs =
+      opts.softDeadlineMs != null
+        ? Number(opts.softDeadlineMs)
+        : be === "clone"
+          ? 0
+          : 8000;
+    const buildPayload = (backendForce) => {
+      const payload = {
+        text: say,
+        karakter: kar,
+        profil: kar,
+        backend: backendForce || be,
+        prosody:
+          opts.prosody != null ? !!opts.prosody : hasEtiket ? true : false,
+      };
+      const emo =
+        (opts.emotion && String(opts.emotion)) ||
+        (lastVoiceEmotion && String(lastVoiceEmotion)) ||
+        "";
+      if (emo && emo !== "notr") payload.emotion = emo;
+      // Madde 2.4 — tur kimliği: sunucu iptal/eski turun parçasını sentezlemez (409)
+      if (opts.turnId) {
+        payload.turn_id = String(opts.turnId);
+        payload.device_id = deviceId();
+      }
+      return payload;
     };
-    if (opts.karakter) payload.karakter = String(opts.karakter);
-    const emo =
-      (opts.emotion && String(opts.emotion)) ||
-      (lastVoiceEmotion && String(lastVoiceEmotion)) ||
-      "";
-    if (emo && emo !== "notr") payload.emotion = emo;
-    for (let attempt = 0; attempt < 2; attempt++) {
+    const IPTAL_TTS = { iptal: true };
+    const sigAborted = () => !!(opts.signal && opts.signal.aborted);
+    const once = async (backendForce, deadlineMs) => {
+      if (sigAborted()) return IPTAL_TTS;
+      const payload = buildPayload(backendForce);
+      const ctrl = new AbortController();
+      let tid = 0;
+      let unbindSig = null;
+      if (opts.signal && typeof opts.signal.addEventListener === "function") {
+        const onSigAbort = () => {
+          try {
+            ctrl.abort();
+          } catch (_) {}
+        };
+        opts.signal.addEventListener("abort", onSigAbort, { once: true });
+        unbindSig = () => {
+          try {
+            opts.signal.removeEventListener("abort", onSigAbort);
+          } catch (_) {}
+        };
+      }
+      if (deadlineMs > 0) {
+        tid = window.setTimeout(() => {
+          try {
+            ctrl.abort();
+          } catch (_) {}
+        }, deadlineMs);
+      }
       try {
         const res = await fetch(base() + "/api/tts", {
           method: "POST",
           headers,
           body: JSON.stringify(payload),
+          signal: ctrl.signal,
         });
+        if (res.status === 409 && opts.turnId) {
+          // Madde 2.4: sunucu «bu tur iptal/eski» dedi → çalma, yeniden deneme yok
+          let jj = null;
+          try {
+            jj = await res.json();
+          } catch (_) {}
+          if (jj && jj.iptal) {
+            lastErr = "tts_tur_iptal";
+            return IPTAL_TTS;
+          }
+        }
         if (!res.ok) {
           lastErr = "tts_http_" + res.status;
-          if (attempt === 0) continue;
           return null;
         }
         const blob = await res.blob();
+        if (sigAborted()) return IPTAL_TTS;
         if (blob && blob.size > 32) return blob;
         lastErr = "tts_empty";
+        return null;
       } catch (e) {
+        if (sigAborted()) return IPTAL_TTS;
+        if (e && e.name === "AbortError") {
+          lastErr = "tts_deadline";
+          throw e;
+        }
         lastErr = String((e && e.message) || e || "tts_net").slice(0, 60);
+        return null;
+      } finally {
+        if (tid) window.clearTimeout(tid);
+        if (unbindSig) unbindSig();
       }
+    };
+    /* IPTAL_TTS → çağırana (kuyruk) iptal işareti; eski çağıranlar blob/null bekler */
+    const retIptal = () => (opts.turnId && TUR ? TUR.IPTAL : null);
+    try {
+      const blob = await once(be, softDeadlineMs);
+      if (blob === IPTAL_TTS) return retIptal();
+      if (blob) return blob;
+    } catch (e) {
+      if (!(e && e.name === "AbortError")) {
+        /* net */
+      } else if (be !== "edge") {
+        try {
+          void fetch(base() + "/api/tts/cancel", { method: "POST" }).catch(
+            () => {},
+          );
+        } catch (_) {}
+        try {
+          if (meta) meta.textContent = "Klon yavaş — Edge ile okuyorum…";
+        } catch (_) {}
+        try {
+          const edgeBlob = await once("edge", 0);
+          if (edgeBlob === IPTAL_TTS) return retIptal();
+          if (edgeBlob) return edgeBlob;
+        } catch (_) {}
+      }
+    }
+    // Normal retry (deadline dışı)
+    for (let attempt = 0; attempt < 2; attempt++) {
+      if (sigAborted()) return retIptal();
+      try {
+        const blob = await once(be === "clone" ? "clone" : "edge", 0);
+        if (blob === IPTAL_TTS) return retIptal();
+        if (blob) return blob;
+      } catch (_) {}
     }
     try {
       if (meta && lastErr) meta.textContent = "TTS: " + lastErr;
@@ -2413,6 +2787,229 @@
     await speakLocal(chunks[0].slice(0, 200));
   }
 
+  /* ================= Madde 2.1/2.2/2.4 — akış + ortak TTS kuyruğu (mobil) =================
+     Mantık `ruzgar-tur-ses.js`'te (masaüstü takeFirstTtsSentence/ttsSessionCounter ile hizalı).
+     Burada yalnız DOM/ses bağları: balon, sahne durumu, playTtsBlob, fetchTtsBlob. */
+
+  /** Tur için TTS kuyruğu kancaları: sentez (turn_id'li /api/tts) + çalma (tek paylaşılan Audio) */
+  function ttsHooksFor(turn, ttsExtra) {
+    return {
+      ttsFetch: (text, o) =>
+        fetchTtsBlob(text, Object.assign({}, ttsExtra || {}, { turnId: turn.id, signal: o && o.signal })),
+      ttsPlay: (blob, text, idx, ctx) => {
+        if (liveAbort) return Promise.resolve();
+        return playTtsBlob(blob, {
+          onPlaying: () => {
+            try {
+              ctx.markFirstAudio("blob");
+            } catch (_) {}
+          },
+        });
+      },
+    };
+  }
+
+  /** Yedek yol (/api/chat/full) cevabı da aynı kuyruk + tur kilidiyle konuşulur */
+  function speakWithTurn(reply, turn, onDone) {
+    const text = String(reply || "").trim();
+    if (!text || !TUR || !turn) return Promise.resolve();
+    unlockMobileAudio();
+    const hooks = ttsHooksFor(turn);
+    const puller = TUR.createPuller();
+    const q = TUR.createTtsQueue({
+      turn,
+      fetchChunk: hooks.ttsFetch,
+      play: (blob, t, idx) => hooks.ttsPlay(blob, t, idx, { markFirstAudio: () => {} }),
+    });
+    markTtsTextReady("speakWithTurn");
+    puller.push(text);
+    puller.flush().forEach((c) => q.push(c));
+    q.finish();
+    return q.done.then(() => {
+      if (typeof onDone === "function") onDone();
+    });
+  }
+
+  /** (Yanıt yok) / boş cevap seslendirilmesin */
+  function skipTtsChunk(chunk) {
+    return /^\(?\s*yanıt yok\s*\)?\.?$/i.test(String(chunk || "").trim());
+  }
+
+  /**
+   * SSE turu (metin akarken ses). Dönüş:
+   *  { fallback:true, turn }  → akış açılamadı/boş: çağıran /api/chat/full yedeğine geçer
+   *  { authError:true, message, code }
+   *  { ok:true, reply, ttsDone, turn, stream, bubbleEl }
+   */
+  async function chatViaStream(t, o) {
+    const opts = o || {};
+    const token = localStorage.getItem(LS.token) || "";
+    const turn = turLock.begin("yeni_tur");
+    const t0 = opts.t0 != null ? opts.t0 : performance.now();
+    let botEl = null;
+    let raf = 0;
+    let lastFull = "";
+    const ensureBot = () => {
+      if (botEl) return botEl;
+      botEl = document.createElement("div");
+      botEl.className = "bubble bot";
+      chat.appendChild(botEl);
+      return botEl;
+    };
+    const paint = () => {
+      raf = 0;
+      if (!botEl) return;
+      botEl.textContent = lastFull;
+      chat.scrollTop = chat.scrollHeight;
+    };
+    const hooks = ttsHooksFor(turn);
+    const sess = TUR.createSession({
+      turn,
+      t0,
+      url: base() + "/api/chat/stream",
+      headers: token ? { Authorization: "Bearer " + token } : {},
+      body: {
+        message: t,
+        history: opts.hist || [],
+        mode: "genel",
+        use_web: false,
+        session_token: token,
+        device_id: deviceId(),
+        conversation_id: convId(),
+        turn_id: turn.id,
+      },
+      ttsFetch: hooks.ttsFetch,
+      ttsPlay: hooks.ttsPlay,
+      skipChunk: skipTtsChunk,
+      postTelemetry: postSesTelemetri,
+      onToken: (txt, full) => {
+        lastFull = full;
+        if (!raf) raf = window.requestAnimationFrame(paint);
+        ensureBot();
+        if (opts.onToken) opts.onToken(txt, full);
+      },
+      onStatus: (ev) => {
+        const s = String((ev && ev.text) || "").trim();
+        if (s && !lastFull && meta) meta.textContent = s.slice(0, 120);
+      },
+      onFirstChunk: () => {
+        markTtsTextReady("stream-ilk-parca");
+        if (opts.onFirstChunk) opts.onFirstChunk();
+      },
+      onFirstAudio: (ms) => {
+        if (opts.onFirstAudio) opts.onFirstAudio(ms);
+      },
+    });
+    let r;
+    try {
+      r = await sess.run();
+    } finally {
+      if (raf) {
+        window.cancelAnimationFrame(raf);
+        raf = 0;
+      }
+    }
+    const stream = r.stream || {};
+    if (turn.streamAborted || stream.aborted) {
+      // Yeni tur bu turun yerini aldı: kalan işi yeni tur yürütür; eski sesi/akışı hiçbir şey sürdürmez
+      if (botEl && botEl.parentNode && !lastFull) botEl.parentNode.removeChild(botEl);
+      else if (botEl) botEl.textContent = lastFull + " …";
+      return { superseded: true, turn, partial: lastFull };
+    }
+    if (stream.authError) {
+      if (botEl && botEl.parentNode) botEl.parentNode.removeChild(botEl);
+      return {
+        authError: true,
+        message: String(stream.error || "Oturum geçersiz veya süresi dolmuş. PWA'dan tekrar giriş."),
+        code: String(stream.code || ""),
+        turn,
+      };
+    }
+    if (stream.fallback || (!r.finalText && !stream.done)) {
+      if (botEl && botEl.parentNode) botEl.parentNode.removeChild(botEl);
+      return { fallback: true, turn, why: stream.networkError || "bos" };
+    }
+    const reply = String(r.finalText || "").trim();
+    if (botEl) {
+      if (reply) botEl.textContent = reply;
+      else if (botEl.parentNode) botEl.parentNode.removeChild(botEl);
+    } else if (reply && !skipTtsChunk(reply)) {
+      botEl = ensureBot();
+      botEl.textContent = reply;
+    }
+    chat.scrollTop = chat.scrollHeight;
+    if (reply && !skipTtsChunk(reply)) sadeLogPush("bot", reply);
+    return {
+      ok: true,
+      reply,
+      ttsDone: r.ttsDone,
+      turn,
+      stream,
+      broke: !!stream.broke,
+      bubbleEl: botEl,
+      session: sess,
+    };
+  }
+
+  /**
+   * Tek giriş: önce SSE akışı (token + ses aynı anda), olmazsa verilen yedek (fallbackFn).
+   * Dönüş: {superseded} | {authError,message,code} | {kind:"stream",ok,reply,ttsDone,turn,bubbleShown,...}
+   *        | {kind:"full", turn, fb}  (fb = fallbackFn sonucu; çağıran biçimler)
+   */
+  async function runChatTurn(t, o) {
+    const opts = o || {};
+    const t0 = opts.t0 != null ? opts.t0 : performance.now();
+    let turn = null;
+    if (turSesOn()) {
+      let seen = "";
+      let audioStarted = false;
+      let sahneRaf = 0;
+      const paintSahne = () => {
+        sahneRaf = 0;
+        setSahneState(audioStarted ? "konus" : "dusun", seen);
+      };
+      const sv = await chatViaStream(t, {
+        hist: opts.hist,
+        t0,
+        onFirstChunk: opts.onFirstChunk,
+        onToken: (txt, full) => {
+          if (!seen && meta) meta.textContent = "yazıyor…";
+          seen = full;
+          if (!sahneRaf) sahneRaf = window.requestAnimationFrame(paintSahne);
+        },
+        onFirstAudio: (ms) => {
+          audioStarted = true;
+          setSahneState("konus", seen);
+          if (meta) meta.textContent = `ilk ses ${ms} ms · konuşuyor…`;
+        },
+      });
+      if (sahneRaf) {
+        window.cancelAnimationFrame(sahneRaf);
+        sahneRaf = 0;
+      }
+      if (sv.superseded) return { superseded: true };
+      if (sv.authError) return { authError: true, message: sv.message, code: sv.code };
+      if (sv.ok) {
+        return {
+          kind: "stream",
+          ok: true,
+          reply: sv.reply,
+          ttsDone: sv.ttsDone,
+          turn: sv.turn,
+          bubbleShown: !!sv.bubbleEl,
+          bubbleEl: sv.bubbleEl,
+          stream: sv.stream,
+          session: sv.session,
+          broke: sv.broke,
+          wallMs: Math.round(performance.now() - t0),
+        };
+      }
+      turn = sv.turn || null; // akış açılamadı → yedek yol (aynı tur kimliğiyle)
+    }
+    const fb = await opts.fallbackFn(turn);
+    return { kind: "full", turn, fb, wallMs: Math.round(performance.now() - t0) };
+  }
+
   function sttLooksBad(text) {
     const t = (text || "").trim();
     if (t.length < 2) return "short";
@@ -2448,6 +3045,7 @@
     if (liveMode && !liveAbort) await liveQuietGap(450);
   }
 
+  let mobilChatInFlight = false;
   async function voiceTurn(text, opts = {}) {
     const t = (text || "").trim();
     if (!t) {
@@ -2459,11 +3057,20 @@
       await askRepeat(bad);
       return;
     }
+    // Masa parity: önceki TTS'i kes (VRAM sıkışıklığı yok) — sohbet abort yok
+    stopAllSpeech(opts.live ? "live-yeni-tur" : "yazı-yeni-tur");
+    // Klavye/metin turu: eski mic duygusu sızmasın (canlı ses opts.live tutar)
+    if (!opts.live) lastVoiceEmotion = null;
+    if (mobilChatInFlight && !opts.live) {
+      if (meta) meta.textContent = "Önceki yanıt bitene kadar bekleyin…";
+      return;
+    }
     const t0 = performance.now();
     bubble("user", t);
     history.push({ role: "user", content: t });
     meta.textContent = "düşünüyor…";
     setSahneState("dusun", t);
+    if (!opts.live) mobilChatInFlight = true;
     try {
       /* Sohbet ≠ sahne: yalnız niyet varsa süper-el (desktop parity) */
       if (looksLikeSahneCmd(t)) {
@@ -2474,7 +3081,7 @@
           return;
         }
       }
-      if (!opts.live) {
+      if (!opts.live || turSesOn()) {
         api("/api/ses/voice-turn", {
           method: "POST",
           body: JSON.stringify({ state: "thinking" }),
@@ -2484,25 +3091,59 @@
       /* F6.6 — with_tts politikası: sohbet turunda metin önce (false);
          ses ayrı /api/tts veya speakLocal. Tek canlı yol: ikisi de aynı reply. */
       const WITH_TTS_IN_CHAT = false;
-      const j = await api("/api/ses/sohbet-tur", {
-        method: "POST",
-        body: JSON.stringify({
-          message: t,
-          history: opts.live ? trimHistoryForVoice() : history.slice(-8),
-          session_token: token,
-          with_tts: WITH_TTS_IN_CHAT,
-        }),
-        /* F1.2 / F6.5 — canlı 22sn ilim turunu kesiyordu; ilim bütçesiyle hizalı */
-        timeoutMs: opts.live
-          ? /nedir|kimdir|anlat|hakkında|hakkinda|hadis|ayet|tarih|ilim/i.test(t)
-            ? 55000
-            : 38000
-          : /nedir|kimdir|anlat|hakkında|hakkinda/i.test(t)
-            ? 90000
-            : 45000,
+      const turnTimeoutMs = opts.live
+        ? /nedir|kimdir|anlat|hakkında|hakkinda|hadis|ayet|tarih|ilim/i.test(t)
+          ? 55000
+          : 38000
+        : /nedir|kimdir|anlat|hakkında|hakkinda/i.test(t)
+          ? 90000
+          : 45000;
+      const histForTurn = opts.live ? trimHistoryForVoice() : history.slice(-8);
+      /* Madde 2.1 — önce SSE akışı (metin akarken ses); olmazsa eski /api/ses/sohbet-tur yedeği */
+      const res = await runChatTurn(t, {
+        hist: histForTurn,
+        t0,
+        onFirstChunk: () => {
+          // Aşama A: TTS sırasında mic açık (barge VAD); kayıt tutulur (yankı→STT yok)
+          if (liveMode) setLiveTtsListenMode(true);
+        },
+        fallbackFn: () =>
+          api("/api/ses/sohbet-tur", {
+            method: "POST",
+            body: JSON.stringify({
+              message: t,
+              history: histForTurn,
+              session_token: token,
+              with_tts: WITH_TTS_IN_CHAT,
+            }),
+            /* F1.2 / F6.5 — canlı 22sn ilim turunu kesiyordu; ilim bütçesiyle hizalı */
+            timeoutMs: turnTimeoutMs,
+          }),
       });
-      let reply = (j.full_reply || "").trim();
+      if (res.superseded) return;
+      if (res.authError) {
+        setSahneState("hazir");
+        bubble("bot", `[Hata] ${res.message}`);
+        meta.textContent = String(res.message || "oturum").slice(0, 80);
+        history.pop();
+        if (/oturum|süresi dol/i.test(String(res.message || "")) || /oturum/i.test(String(res.code || ""))) {
+          localStorage.removeItem(LS.token);
+          setMsg("Oturum düştü — tekrar giriş yap.", false);
+        }
+        notifyVoiceTurnIdle("mobil-auth-err");
+        return;
+      }
+      const streamed = res.kind === "stream";
+      const j = streamed ? null : res.fb;
+      let reply = streamed ? String(res.reply || "").trim() : (j.full_reply || "").trim();
       if (!reply || reply === "(Yanıt yok)") {
+        if (streamed) {
+          try {
+            res.turn.cancelTts("bos-cevap");
+          } catch (_) {}
+          if (res.bubbleEl && res.bubbleEl.parentNode) res.bubbleEl.parentNode.removeChild(res.bubbleEl);
+          if (liveMode) setLiveTtsListenMode(false);
+        }
         setSahneState("hazir");
         // F6.5 — F0 miss dili (öğret / boş)
         meta.textContent = "cevap yok (miss) — tekrar dene";
@@ -2510,27 +3151,63 @@
         history.pop();
         return;
       }
-      bubble("bot", reply);
+      if (!res.bubbleShown && !(streamed && res.bubbleShown)) bubble("bot", reply);
       history.push({ role: "assistant", content: reply });
       if (history.length > 24) history = history.slice(-16);
-      meta.textContent = "cevap hazır · ses…";
-      setSahneState("konus", reply);
-      // Aşama A: TTS sırasında mic açık (barge VAD); kayıt tutulur (yankı→STT yok)
-      if (liveMode) setLiveTtsListenMode(true);
-      try {
-        await speakReply(reply);
-      } catch (_) {
-        try {
-          await speakLocal(reply.slice(0, 160));
-        } catch (__) {}
+      // Metin bitti — sohbet kilidi kalksın; ses arka planda (masa parity)
+      if (!opts.live) mobilChatInFlight = false;
+      if (streamed) {
+        const ft = res.stream && res.stream.firstTokenMs;
+        meta.textContent = `cevap hazır${ft != null ? " · ilk token " + ft + " ms" : ""} · ses sürüyor…`;
+        notifyVoiceTurnIdle("mobil-stream-metin"); // sohbet-tur ile aynı: metin bitince idle
+        const afterTts = () => {
+          if (liveMode) setLiveTtsListenMode(false);
+          const wall = Math.round(performance.now() - t0);
+          const fa = res.session && res.session.state ? res.session.state.firstAudioMs : null;
+          const bits = [`${wall} ms`];
+          if (ft != null) bits.push(`ilk token ${ft} ms`);
+          bits.push(fa != null ? `ilk ses ${fa} ms` : "ses");
+          meta.textContent = bits.join(" · ");
+          setSahneState("hazir", reply);
+          if (!liveMode) scheduleVoiceTurnIdleIfQuiet(400, "mobil-chat-done");
+        };
+        if (opts.live) {
+          try {
+            await res.ttsDone;
+          } finally {
+            afterTts();
+          }
+        } else {
+          void res.ttsDone.then(afterTts, afterTts);
+        }
+        return;
       }
-      if (liveMode) setLiveTtsListenMode(false);
+      meta.textContent = "cevap hazır · ses… (sohbet serbest)";
+      setSahneState("konus", reply);
+      const playVoice = async () => {
+        // Aşama A: TTS sırasında mic açık (barge VAD); kayıt tutulur (yankı→STT yok)
+        if (liveMode) setLiveTtsListenMode(true);
+        try {
+          await speakReply(reply);
+        } catch (_) {
+          try {
+            await speakLocal(reply.slice(0, 160));
+          } catch (__) {}
+        }
+        if (liveMode) setLiveTtsListenMode(false);
+      };
+      if (opts.live) {
+        await playVoice();
+      } else {
+        void playVoice();
+      }
       const wall = Math.round(performance.now() - t0);
       const bits = [`${wall} ms`];
       if (j.latency_ms != null) bits.push(`sunucu ${j.latency_ms} ms`);
       bits.push("metin önce");
       meta.textContent = bits.join(" · ");
       setSahneState("hazir", reply);
+      if (!liveMode) scheduleVoiceTurnIdleIfQuiet(400, "mobil-chat-done");
     } catch (e) {
       const raw = String(e.message || e || "");
       // F6.5 — F0/F1 sınıflarıyla aynı dil
@@ -2547,10 +3224,13 @@
       bubble("bot", shown);
       meta.textContent = cls === "timeout" ? "timeout (F1)" : cls === "miss" ? "miss (F0)" : raw;
       setSahneState("hazir");
+      notifyVoiceTurnIdle("mobil-chat-err");
       if (opts.live) {
         history.pop();
         await askRepeat("error");
       }
+    } finally {
+      if (!opts.live) mobilChatInFlight = false;
     }
   }
 
@@ -2581,6 +3261,8 @@
     unlockMobileAudio();
     const t = el("input").value.trim();
     if (!t) return;
+    // Masa parity: önceki TTS kes — yeni sohbet sıkışmasın
+    stopAllSpeech("btnSend-yeni-tur");
     el("input").value = "";
     bubble("user", t);
     history.push({ role: "user", content: t });
@@ -2651,22 +3333,75 @@
       const hist = history
         .slice(-12)
         .filter((m) => !(m.role === "assistant" && String(m.content || "").trim() === "(Yanıt yok)"));
-      const j = await api("/api/chat/full", {
-        method: "POST",
-        /* F1.2 — bilgi turları 90sn sınırında kesilmesin */
-        timeoutMs: /nedir|kimdir|anlat|hakkında|hakkinda|hadis|ayet|tarih|ilim|açıkla|acikla/i.test(
-          t
-        )
-          ? 120000
-          : 90000,
-        body: JSON.stringify({
-          message: t,
-          history: hist,
-          mode: "genel",
-          use_web: false,
-          session_token: token,
-        }),
+      /* Madde 2.1 — önce SSE akışı (metin akarken ses, PC ile aynı mantık);
+         akış açılamazsa /api/chat/full yedeği (eski davranış) */
+      const tSend = performance.now();
+      const res = await runChatTurn(t, {
+        hist,
+        t0: tSend,
+        fallbackFn: (turnFb) =>
+          api("/api/chat/full", {
+            method: "POST",
+            /* F1.2 — bilgi turları 90sn sınırında kesilmesin */
+            timeoutMs: /nedir|kimdir|anlat|hakkında|hakkinda|hadis|ayet|tarih|ilim|açıkla|acikla/i.test(
+              t
+            )
+              ? 120000
+              : 90000,
+            body: JSON.stringify({
+              message: t,
+              history: hist,
+              mode: "genel",
+              use_web: false,
+              session_token: token,
+              device_id: deviceId(),
+              conversation_id: convId(),
+              turn_id: turnFb ? turnFb.id : undefined,
+            }),
+          }),
       });
+      if (res.superseded) return;
+      if (res.authError) {
+        const err = String(res.message || "Oturum geçersiz").trim();
+        bubble("bot", `[Hata] ${err}`);
+        meta.textContent = err.slice(0, 80);
+        setSahneState("hazir");
+        if (/oturum|süresi dol/i.test(err) || /oturum/i.test(String(res.code || ""))) {
+          localStorage.removeItem(LS.token);
+          setMsg("Oturum düştü — tekrar giriş yap.", false);
+        }
+        return;
+      }
+      if (res.kind === "stream") {
+        const reply = String(res.reply || "").trim();
+        if (!reply) {
+          try {
+            res.turn.cancelTts("bos-cevap");
+          } catch (_) {}
+          bubble("bot", "[Hata] Sunucu boş döndü — Yenile deyip bir kez daha dene.");
+          meta.textContent = "boş yanıt";
+          setSahneState("hazir");
+          return;
+        }
+        history.push({ role: "assistant", content: reply });
+        const st = res.stream || {};
+        const bits = [];
+        if (st.firstTokenMs != null) bits.push(`ilk token ${st.firstTokenMs} ms`);
+        if (res.wallMs != null) bits.push(`${res.wallMs} ms`);
+        if (res.broke) bits.push("bağlantı koptu (kısmi)");
+        meta.textContent =
+          (bits.length ? bits.join(" · ") + " · " : "") + "ses… (sohbet serbest)";
+        // Ses akış sırasında başladı; bitince durum güncellenir (Gönder kilitlenmez)
+        const afterTts = () => {
+          const fa = res.session && res.session.state ? res.session.state.firstAudioMs : null;
+          if (fa != null) bits.push(`ilk ses ${fa} ms`);
+          meta.textContent = bits.length ? bits.join(" · ") + " · ses" : "ses";
+          setSahneState("hazir", reply);
+        };
+        void res.ttsDone.then(afterTts, afterTts);
+        return;
+      }
+      const j = res.fb;
       if (j && j.ok === false) {
         const err = (j.error || j.full_reply || "Sohbet reddedildi").trim();
         bubble("bot", `[Hata] ${err}`);
@@ -2690,11 +3425,19 @@
       const bits = [];
       if (j.latency_ms != null) bits.push(`${j.latency_ms} ms`);
       if (j.sohbet_onay && j.sohbet_onay.pending) bits.push("onay bekliyor");
-      meta.textContent = (bits.length ? bits.join(" · ") + " · " : "") + "Rüzgar konuşuyor…";
+      meta.textContent =
+        (bits.length ? bits.join(" · ") + " · " : "") + "ses… (sohbet serbest)";
       setSahneState("konus", reply);
-      await speakReply(reply);
-      meta.textContent = bits.length ? bits.join(" · ") + " · ses" : "ses";
-      setSahneState("hazir", reply);
+      // Ses arka planda — Gönder kilitlenmesin (masa parity). Yedek yol da tur kilidine katılır.
+      const afterSpeak = () => {
+        meta.textContent = bits.length ? bits.join(" · ") + " · ses" : "ses";
+        setSahneState("hazir", reply);
+      };
+      if (res.turn && turSesOn()) {
+        void speakWithTurn(reply, res.turn).then(afterSpeak, afterSpeak);
+      } else {
+        void speakReply(reply).then(afterSpeak);
+      }
     } catch (e) {
       bubble("bot", `[Hata] ${e.message || e}`);
       meta.textContent = String(e.message || e).slice(0, 80);
@@ -2850,6 +3593,15 @@
     }
     const fd = new FormData();
     fd.append("file", upload, name);
+    try {
+      if (liveVad && typeof liveVad.rms === "function") {
+        const r = Number(liveVad.rms());
+        if (Number.isFinite(r)) lastMicEnergy01 = Math.min(1, Math.max(0, r));
+      }
+      fd.append("mic_energy", String(lastMicEnergy01));
+    } catch (_) {
+      fd.append("mic_energy", String(lastMicEnergy01));
+    }
     const headers = {};
     if (token) headers.Authorization = `Bearer ${token}`;
     const ctrl = new AbortController();
@@ -3483,6 +4235,7 @@
     setMsg("Çıkış yapıldı.");
   }
   if (el("btnLogout")) el("btnLogout").onclick = doLogout;
+  applySadeUi(); // Madde 2.5 — kayıtlı sade ses tercihi
 
   const tok = localStorage.getItem(LS.token);
   const whoRaw = localStorage.getItem(LS.who);

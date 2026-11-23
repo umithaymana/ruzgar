@@ -672,7 +672,19 @@ def auto_learn_from_turn(
         meta["error"] = str(exc)
         return meta
 
-    _md_ok = _save_to_learned_md(u, cevap_kayit)
+    # Madde 3.5 — PC dışı kapsamda kullanıcı mesajı ORTAK RAG külliyatına (knowledge/learned)
+    # yazılmaz; öğrenme kişisel hafıza dosyasında kalır. Açmak: RUZGAR_KAPSAM_ORTAK_RAG_YAZ=1.
+    _md_ok = False
+    try:
+        from ilim_assistant.ruzgar_kapsam import current_scope
+
+        _pc_disi = not current_scope().is_pc
+    except Exception:
+        _pc_disi = False
+    if _pc_disi and (os.environ.get("RUZGAR_KAPSAM_ORTAK_RAG_YAZ", "0") or "0").strip() not in ("1", "true", "yes"):
+        meta["learned_md_skipped"] = "kapsam"
+    else:
+        _md_ok = _save_to_learned_md(u, cevap_kayit)
     meta["learned_md"] = bool(_md_ok)
     # F3.4 — dosya yazıldı; vektör indeksi henüz hazır olmayabilir
     _idx = rag_index_pending_status()

@@ -1,8 +1,9 @@
 /* Rüzgar PWA — HTML/ağ öncelikli; Yenile = güncelleme (skipWaiting + claim) */
-const CACHE = "ruzgar-pwa-v20261121-sahne-kilit";
+const CACHE = "ruzgar-pwa-v20261123-madde2";
 const ASSETS = [
-  "./app.css?v=20261118-onboard",
-  "./app.js?v=20261121-sahne-kilit",
+  "./app.css?v=20261123-madde2",
+  "./ruzgar-tur-ses.js?v=20261123-madde2",
+  "./app.js?v=20261123-madde2",
   "./manifest.webmanifest?v=5",
   "./icon-192.png?v=5",
   "./icon-512.png?v=5",
@@ -50,6 +51,8 @@ self.addEventListener("fetch", (e) => {
   const isAppShell =
     /\/app\.js(?:\?|$)/.test(url.pathname + url.search) ||
     /\/app\.css(?:\?|$)/.test(url.pathname + url.search) ||
+    /\/ruzgar-tur-ses\.js(?:\?|$)/.test(url.pathname + url.search) ||
+    url.pathname.endsWith("/ruzgar-tur-ses.js") ||
     url.pathname.endsWith("/app.js") ||
     url.pathname.endsWith("/app.css");
 

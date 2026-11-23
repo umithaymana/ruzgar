@@ -1,16 +1,19 @@
 /**
  * Edge TTS ağ çağrıları — ana UI iş parçacığından ayrı (Ümit & Gökçenur Işık Hızı).
- * postMessage: { id, api, text, karakter }
+ * postMessage: { id, api, text, karakter, profil?, emotion?, backend? }
  * response: { id, ok, buf } veya { id, ok:false, err }
  */
 self.onmessage = async (ev) => {
   const d = ev.data || {};
-  const { id, api, text, karakter, emotion } = d;
+  const { id, api, text, karakter, profil, emotion, backend } = d;
   if (id == null || !api || text == null) {
     self.postMessage({ id: id ?? -1, ok: false, err: "bad-args" });
     return;
   }
   const root = String(api).replace(/\/$/, "");
+  const kar = String(profil || karakter || "muhabbet");
+  const hasEtiket = /\[[^\]]{2,24}\]/.test(String(text));
+  const be = String(backend || "auto").trim().toLowerCase() || "auto";
   try {
     const res = await fetch(`${root}/api/tts`, {
       method: "POST",
@@ -22,9 +25,10 @@ self.onmessage = async (ev) => {
       },
       body: JSON.stringify({
         text: String(text),
-        karakter: String(karakter || "asistan"),
-        backend: "edge",
-        prosody: false,
+        karakter: kar,
+        profil: kar,
+        backend: be,
+        prosody: hasEtiket,
         ...(emotion && emotion !== "notr" ? { emotion: String(emotion) } : {}),
       }),
     });

@@ -1244,7 +1244,7 @@ let lastVoiceEmotion = null;
 /** 0..1 mikrofon ortalama (VAD çubuğu ile) */
 let lastMicEnergy01 = 0.45;
 
-function synthEdgeMp3ViaWorker(apiRoot, text, karakter, signal, emotion) {
+function synthEdgeMp3ViaWorker(apiRoot, text, karakter, signal, emotion, backend) {
   return new Promise((resolve, reject) => {
     const w = getTtsWorker();
     if (!w) {
@@ -1270,13 +1270,24 @@ function synthEdgeMp3ViaWorker(apiRoot, text, karakter, signal, emotion) {
       else reject(new Error(data.err || "tts-worker"));
     };
     w.addEventListener("message", onMsg);
+    const kar = normalizeKarakterForTts(karakter);
+    const be =
+      backend ||
+      (typeof sesTtsBackendPreference === "function"
+        ? sesTtsBackendPreference()
+        : "auto");
     const payload = {
       id,
       api: apiRoot,
       text,
-      karakter,
+      karakter: kar,
+      profil: kar,
+      backend: be || "auto",
     };
     if (emotion && emotion !== "notr") payload.emotion = emotion;
+    else if (lastVoiceEmotion && lastVoiceEmotion !== "notr") {
+      payload.emotion = lastVoiceEmotion;
+    }
     w.postMessage(payload);
   });
 }
@@ -2034,14 +2045,28 @@ function updateDashboardLastSpeech() {
     : "Son konuşma: (bekleniyor)";
 }
 
+let _ttsPrepShownAt = 0;
 function syncTtsStatusPill() {
   if (!el.ttsStatusPill) return;
   const busy = isTtsActive();
   el.ttsStatusPill.hidden = !busy;
   if (busy) {
-    if (ttsPaused) el.ttsStatusPill.textContent = "Duraklatıldı";
-    else if (ttsPlayingEl) el.ttsStatusPill.textContent = "Sesli okuma…";
-    else el.ttsStatusPill.textContent = "Ses hazırlanıyor…";
+    if (ttsPaused) {
+      el.ttsStatusPill.textContent = "Duraklatıldı";
+      _ttsPrepShownAt = 0;
+    } else if (ttsPlayingEl) {
+      el.ttsStatusPill.textContent = "Sesli okuma…";
+      _ttsPrepShownAt = 0;
+    } else {
+      if (!_ttsPrepShownAt) _ttsPrepShownAt = Date.now();
+      const sec = Math.max(0, Math.floor((Date.now() - _ttsPrepShownAt) / 1000));
+      el.ttsStatusPill.textContent =
+        sec > 0 ? `Ses hazırlanıyor… ${sec} sn` : "Ses hazırlanıyor…";
+      el.ttsStatusPill.title =
+        "Sohbet serbest — yazıp Gönder’e basabilirsin; ses arka planda. Yavaşsa Edge yedeğe düşer.";
+    }
+  } else {
+    _ttsPrepShownAt = 0;
   }
 }
 
@@ -3085,6 +3110,15 @@ function switchMode(mode) {
     interruptRuzgar();
     if (el.send) el.send.disabled = false;
     perfBusy = false;
+  }
+  // Motor değişince ses durumu + mic UI kilidi temizlensin (donma önlemi)
+  try {
+    notifyVoiceTurnIdle("switch-mode");
+    micPressed = false;
+    void discardActiveRecording();
+    el.mic?.classList.remove("recording", "listening");
+  } catch (_) {
+    /* yok say */
   }
   currentMode = next;
   window.currentMode = currentMode;
@@ -11638,9 +11672,55 @@ function notifyVoiceTurnListening(barge) {
   }
 }
 
+/** Takılı listening/thinking/speaking → idle (donma / kopukluk önlemi) */
+function notifyVoiceTurnIdle(note) {
+  try {
+    void fetch(`${API}/api/ses/voice-turn`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        state: "idle",
+        note: String(note || "client-idle").slice(0, 80),
+      }),
+    });
+  } catch (_) {
+    /* yok say */
+  }
+}
+window.notifyVoiceTurnIdle = notifyVoiceTurnIdle;
+
+let _voiceTurnQuietTimer = 0;
+/** Mic/TTS/sohbet sessizse kısa süre sonra idle — barge sonrası takılı listening önler */
+function scheduleVoiceTurnIdleIfQuiet(ms, note) {
+  const wait = Math.max(400, Number(ms) || 2200);
+  if (_voiceTurnQuietTimer) {
+    clearTimeout(_voiceTurnQuietTimer);
+    _voiceTurnQuietTimer = 0;
+  }
+  _voiceTurnQuietTimer = window.setTimeout(() => {
+    _voiceTurnQuietTimer = 0;
+    try {
+      if (isMicRecordingActive()) return;
+      if (isTtsActive()) return;
+      if (perfBusy || chatSendInFlight) return;
+      if (sesliTurResumePending) return;
+      notifyVoiceTurnIdle(note || "quiet-watchdog");
+    } catch (_) {
+      /* yok say */
+    }
+  }, wait);
+}
+window.scheduleVoiceTurnIdleIfQuiet = scheduleVoiceTurnIdleIfQuiet;
+
 /** Ses motoru (Edge + Web Speech) — yazarken veya yeni turda anında sustur */
 function silenceVoiceOutputNow() {
   bumpTtsSession();
+  // XTTS sunucu sentezini de kes — yoksa 1 dk VRAM sıkışıklığı devam eder
+  try {
+    void fetch(`${API}/api/tts/cancel`, { method: "POST" }).catch(() => {});
+  } catch (_) {
+    /* yok say */
+  }
   try {
     window.speechSynthesis.cancel();
   } catch (_) {
@@ -11655,6 +11735,7 @@ function silenceVoiceOutputNow() {
   } catch (_) {
     /* yok say */
   }
+  syncInterruptButton();
 }
 
 /** V4 — mic kayıt / basılı tutma aktif mi? */
@@ -11672,15 +11753,15 @@ function ttsBlockedByMicLock() {
 }
 
 /**
- * V4 barge-in: mic basılınca TTS (ve gerekirse sohbet taşıması) kesilir; dinleme açılır.
+ * V4 barge-in: mic basılınca YALNIZ aktif TTS kesilir; sohbet abort edilmez.
  * @returns {Promise<boolean>} TTS kesildiyse true
  */
 async function bargeInStopTtsForMic() {
   if (!RUZGAR_BARGE_IN) return false;
   const t0 = performance.now();
   const hadTts = isTtsActive();
-  const hadChat = !!(activeChatAbort || activeChatWs || perfBusy);
-  if (!hadTts && !hadChat) return false;
+  if (!hadTts) return false;
+  // Sohbet (activeChatAbort / WS / perfBusy) bilinçli bırakılır — kopukluk önlemi
   silenceVoiceOutputNow();
   // XTTS sunucu iptal — arka plan sentezi boşa dönmesin
   try {
@@ -11688,33 +11769,19 @@ async function bargeInStopTtsForMic() {
   } catch (_) {
     /* yok say */
   }
-  if (hadChat) {
-    try {
-      userRequestedChatStop = true;
-      chatSendInFlight = false;
-      perfBusy = false;
-      if (el.send) el.send.disabled = false;
-      activeChatWs?.close();
-      activeChatAbort?.abort();
-    } catch (_) {
-      /* yok say */
-    }
-    hideThinkingCenter();
-  }
   syncInterruptButton();
   notifyVoiceTurnListening(true);
+  // Mic gelmezse listening takılı kalmasın
+  scheduleVoiceTurnIdleIfQuiet(2800, "barge-quiet");
   await new Promise((r) => window.setTimeout(r, RUZGAR_BARGE_SETTLE_MS));
   const ms = Math.round(performance.now() - t0);
-  setStatus(
-    hadTts ? `Kestin — dinliyorum… (${ms} ms)` : `Dinliyorum… (${ms} ms)`,
-    "Rüzgar"
-  );
+  setStatus(`Kestin — dinliyorum… (${ms} ms)`, "Rüzgar");
   try {
     window.__ruzgarLastBargeMs = ms;
   } catch (_) {
     /* yok say */
   }
-  return hadTts || hadChat;
+  return true;
 }
 window.bargeInStopTtsForMic = bargeInStopTtsForMic;
 
@@ -11746,6 +11813,35 @@ function releaseChatTransportLocks() {
   if (el.send) el.send.disabled = false;
   syncInterruptButton();
 }
+
+/**
+ * Health `ses_sohbet.idle_reset` / stuck-timeout → UI kilitlerini aç.
+ * Dikkat: Ana Motor sohbet sırasında sunucu çoğu zaman idle kalır;
+ * yalnız sunucu takılı durumdan idle'a çektiyse temizle.
+ */
+function applySesSohbetHealthUnlock(health) {
+  try {
+    const ss = health && health.ses_sohbet;
+    if (!ss || typeof ss !== "object") return false;
+    const meta = ss.meta && typeof ss.meta === "object" ? ss.meta : {};
+    const stuck =
+      ss.idle_reset === true ||
+      meta.idle_timeout === true ||
+      /-(idle)$/.test(String(meta.note || ""));
+    if (!stuck) return false;
+    hideThinkingCenter();
+    releaseChatTransportLocks();
+    micPressed = false;
+    void discardActiveRecording();
+    el.mic?.classList.remove("recording", "listening");
+    notifyVoiceTurnIdle("health-idle-reset");
+    setStatus("Ses durumu sıfırlandı", "Rüzgar");
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+window.applySesSohbetHealthUnlock = applySesSohbetHealthUnlock;
 
 function syncInterruptButton() {
   const ttsBusy = isTtsActive();
@@ -11837,8 +11933,9 @@ function interruptRuzgar() {
   }
   hideThinkingCenter();
   renderDashboardAgentSteps([]);
-  notifyVoiceTurnListening(true);
-  setStatus("Durduruldu — dinliyorum…", "Rüzgar");
+  // DURDUR = idle (listening değil) — dün akşam takılı listening kökü
+  notifyVoiceTurnIdle("interrupt");
+  setStatus("Durduruldu", "Rüzgar");
   syncInterruptButton();
 }
 
@@ -13073,6 +13170,7 @@ async function checkApi(opts = {}) {
         if (sb.gemini_daemon?.ok) apiTitle += " (daemon bağlı)";
       }
       setStatus("Hazır", "Rüzgar");
+      applySesSohbetHealthUnlock(j);
       if (currentMode === "hizir") syncHizirWorkbenchStripVisibility();
       void tryShowHafizaReminder();
       return true;
@@ -15047,17 +15145,28 @@ function prepareTtsSpeechText(text) {
 function ttsRequestPayload(text, karakter, extra) {
   // Aşama D: sohbet akışında prosody=false → gereksiz cümle-arası sessizlik yok;
   // uzun özel içerikte yüz katmanı / extra ile açılabilir.
+  // S1 tavan: karakter + profil (muhabbet|alim|tilavet) tutarlı; etiket/duygu sunucuda.
+  const kar = normalizeKarakterForTts(karakter);
+  const prefer =
+    typeof sesTtsBackendPreference === "function"
+      ? sesTtsBackendPreference()
+      : "auto";
   const payload = {
     text,
-    karakter: normalizeKarakterForTts(karakter),
-    backend: "auto",
+    karakter: kar,
+    profil: kar,
+    backend: prefer || "auto",
     prosody: false,
   };
   try {
     if (typeof window.ruzgarProVoicePayload === "function") {
       const chosen = window.ruzgarProVoicePayload();
       if (chosen && typeof chosen === "object") {
-        if (chosen.karakter) payload.karakter = normalizeKarakterForTts(chosen.karakter);
+        if (chosen.karakter || chosen.profil) {
+          const k = normalizeKarakterForTts(chosen.profil || chosen.karakter);
+          payload.karakter = k;
+          payload.profil = k;
+        }
         if (chosen.backend) payload.backend = String(chosen.backend);
         if (typeof chosen.prosody === "boolean") payload.prosody = chosen.prosody;
       }
@@ -15070,6 +15179,19 @@ function ttsRequestPayload(text, karakter, extra) {
   }
   if (extra && typeof extra === "object") {
     Object.assign(payload, extra);
+    if (extra.karakter || extra.profil) {
+      const k = normalizeKarakterForTts(extra.profil || extra.karakter);
+      payload.karakter = k;
+      payload.profil = k;
+    }
+  }
+  // Köşeli etiket varken sunucu force_prosody uygular; istemci bayrağı net olsun
+  if (
+    payload.prosody !== true &&
+    typeof text === "string" &&
+    /\[[^\]]{2,24}\]/.test(text)
+  ) {
+    payload.prosody = true;
   }
   return payload;
 }
@@ -15422,7 +15544,16 @@ async function runTtsPump(ttsSess, karakter, signal) {
   ttsPumping = true;
   ttsArmed = true;
   syncInterruptButton();
+  let prepTick = 0;
   try {
+    prepTick = window.setInterval(() => {
+      if (!ttsPumping || ttsPlayingEl) {
+        if (prepTick) window.clearInterval(prepTick);
+        prepTick = 0;
+        return;
+      }
+      syncTtsStatusPill();
+    }, 1000);
     /** @type {Promise<Blob | null> | null} */
     let prefetch = null;
 
@@ -15431,44 +15562,103 @@ async function runTtsPump(ttsSess, karakter, signal) {
       if (ttsPlayedChunksThisTurn === 0 && !_ttsTextReadyAt) {
         markTtsTextReady("runTtsPump");
       }
-      try {
-        const b = await synthEdgeMp3ViaWorker(
-          API,
-          chunk,
-          k,
-          signal,
-          lastVoiceEmotion
-        );
-        if (ttsSess !== ttsSessionCounter) return null;
-        return b;
-      } catch (wErr) {
-        if (wErr && wErr.name === "AbortError") throw wErr;
-        const res = await fetch(`${API}/api/tts`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(ttsRequestPayload(chunk, k)),
-          signal,
-        });
-        if (ttsSess !== ttsSessionCounter) return null;
-        if (!res.ok) {
-          let detail = `TTS HTTP ${res.status}`;
+      const be =
+        typeof sesTtsBackendPreference === "function"
+          ? sesTtsBackendPreference()
+          : "auto";
+      // İlk chunk: klon ısınması uzun sürebilir — 8 sn sonra Edge zorla (sıkışıklık önlemi)
+      const firstChunk = ttsPlayedChunksThisTurn === 0;
+      const softDeadlineMs = firstChunk && be !== "clone" ? 8000 : 0;
+      const mergeSoftDeadline = (parent, ms) => {
+        if (!ms || ms <= 0) return parent;
+        const c = new AbortController();
+        let tid = 0;
+        const trip = () => {
           try {
-            const j = await res.json();
-            if (j && j.detail) detail = String(j.detail);
+            c.abort();
           } catch (_) {
             /* yok say */
           }
-          if (!window.__ruzgarTtsFailNoted) {
-            window.__ruzgarTtsFailNoted = true;
+        };
+        if (parent) {
+          if (parent.aborted) trip();
+          else parent.addEventListener("abort", trip, { once: true });
+        }
+        tid = window.setTimeout(trip, ms);
+        c.signal.addEventListener(
+          "abort",
+          () => {
+            if (tid) window.clearTimeout(tid);
+          },
+          { once: true }
+        );
+        return c.signal;
+      };
+      const runFetch = async (backendForce, deadlineMs) => {
+        const payload = ttsRequestPayload(chunk, k, {
+          backend: backendForce || be,
+        });
+        const ctrl = mergeSoftDeadline(signal, deadlineMs || 0);
+        try {
+          const b = await synthEdgeMp3ViaWorker(
+            API,
+            chunk,
+            k,
+            ctrl,
+            lastVoiceEmotion,
+            payload.backend
+          );
+          if (ttsSess !== ttsSessionCounter) return null;
+          return b;
+        } catch (wErr) {
+          if (wErr && wErr.name === "AbortError") throw wErr;
+          const res = await fetch(`${API}/api/tts`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+            signal: ctrl,
+          });
+          if (ttsSess !== ttsSessionCounter) return null;
+          if (!res.ok) {
+            let detail = `TTS HTTP ${res.status}`;
             try {
-              setStatus(`Sesli yanıt çalışmadı: ${detail}`, "Rüzgar");
+              const j = await res.json();
+              if (j && j.detail) detail = String(j.detail);
             } catch (_) {
               /* yok say */
             }
+            if (!window.__ruzgarTtsFailNoted) {
+              window.__ruzgarTtsFailNoted = true;
+              try {
+                setStatus(`Sesli yanıt çalışmadı: ${detail}`, "Rüzgar");
+              } catch (_) {
+                /* yok say */
+              }
+            }
+            return null;
           }
-          return null;
+          return res.blob();
         }
-        return res.blob();
+      };
+      try {
+        return await runFetch(be, softDeadlineMs);
+      } catch (err) {
+        if (err && err.name === "AbortError" && signal.aborted) throw err;
+        // Soft deadline / klon gecikmesi → Edge yedek + sunucu iptal
+        if (firstChunk && be !== "edge") {
+          try {
+            void fetch(`${API}/api/tts/cancel`, { method: "POST" }).catch(() => {});
+          } catch (_) {
+            /* yok say */
+          }
+          try {
+            setStatus("Klon yavaş — Edge ile okuyorum…", "Rüzgar");
+          } catch (_) {
+            /* yok say */
+          }
+          return await runFetch("edge", 0);
+        }
+        throw err;
       }
     };
 
@@ -15509,6 +15699,10 @@ async function runTtsPump(ttsSess, karakter, signal) {
   } catch (_) {
     /* iptal veya ağ */
   } finally {
+    if (prepTick) {
+      window.clearInterval(prepTick);
+      prepTick = 0;
+    }
     ttsPumping = false;
     if (!ttsPlayingEl && ttsTextQueue.length === 0 && !isWebSpeechActive()) {
       ttsArmed = false;
@@ -16662,17 +16856,31 @@ async function sendMessageWithText(t, opts = {}) {
   if (looksLikeVoiceStopCommand(text)) {
     if (!skipUser) appendBubble("user", text);
     interruptRuzgar();
-    notifyVoiceTurnListening(true);
-    setStatus("Susturuldu — dinliyorum…", "Rüzgar");
+    notifyVoiceTurnIdle("voice-stop");
+    setStatus("Susturuldu", "Rüzgar");
     return;
   }
-  if (perfBusy || chatSendInFlight) {
+  // Metin yanıtı bitmeden yeni tur yok; yalnız TTS hazırlanıyorsa serbest (sesi kes)
+  const chatTransportBusy = !!(
+    chatSendInFlight ||
+    activeChatAbort ||
+    activeChatWs
+  );
+  if (chatTransportBusy) {
     flashRuzgarDurum("Önceki yanıt bitene kadar bekleyin veya DURDUR'a basın.");
     return;
   }
+  if (perfBusy && !isTtsActive()) {
+    flashRuzgarDurum("Önceki yanıt bitene kadar bekleyin veya DURDUR'a basın.");
+    return;
+  }
+  if (perfBusy) perfBusy = false;
+  if (isTtsActive()) silenceVoiceOutputNow();
   chatSendInFlight = true;
   syncInterruptButton();
   try {
+  // Klavye turu: eski mic duygusu TTS'e sızmasın (ses turu fromVoice=true tutar)
+  if (!opts.fromVoice) lastVoiceEmotion = null;
   setStatus("Gönderiliyor…", "Rüzgar");
   chatStickToBottom = true;
   dismissChatWelcome();
@@ -17072,6 +17280,10 @@ async function sendMessageWithText(t, opts = {}) {
     if (!perfBusy && !(activeChatAbort || activeChatWs)) {
       setStatus(`Hazır · UI ${window.__RUZGAR_UI_REV || "?"}`, "Rüzgar");
       if (el.send) el.send.disabled = false;
+      // Sesli tur beklenmiyorsa sunucu durumunu idle'a çek
+      if (!sesliTurResumePending) {
+        scheduleVoiceTurnIdleIfQuiet(600, "chat-done");
+      }
     }
     syncInterruptButton();
   }
@@ -17315,6 +17527,7 @@ async function discardActiveRecording() {
   }
   el.mic.classList.remove("recording");
   el.mic.classList.remove("listening");
+  scheduleVoiceTurnIdleIfQuiet(500, "mic-discard");
 }
 
 function blobFromStoppedRecorder(state) {
@@ -17394,6 +17607,7 @@ async function finalizeRecording(state) {
     el.mic.classList.remove("listening");
     setStatus(String(e && e.message ? e.message : e), "Rüzgar");
     pushSessionSend = false;
+    notifyVoiceTurnIdle("mic-finalize-err");
     return;
   }
   if (!blob || blob.size < 64) {
@@ -17401,6 +17615,7 @@ async function finalizeRecording(state) {
     el.mic.classList.remove("listening");
     setStatus("Ses kaydı çok kısa", "Rüzgar");
     pushSessionSend = false;
+    notifyVoiceTurnIdle("mic-too-short");
     return;
   }
   let text = "";

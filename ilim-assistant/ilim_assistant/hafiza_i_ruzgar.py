@@ -828,6 +828,16 @@ def get_hafiza_motor() -> HafizaIRuzgar:
             return motor
     except Exception:
         pass
+    # Madde 3.5 — PC dışı kapsam (mobil kullanıcı / cihaz) kişisel dosyaya yönlenir;
+    # PC kapsamı ve hatalar eski tekil motoru aynen kullanır.
+    try:
+        from ilim_assistant.ruzgar_kapsam_hafiza import secili_motor_veya_none
+
+        _kisisel = secili_motor_veya_none()
+        if _kisisel is not None:
+            return _kisisel
+    except Exception:
+        pass
     if _hafiza_singleton is None:
         _hafiza_singleton = HafizaIRuzgar()
     return _hafiza_singleton

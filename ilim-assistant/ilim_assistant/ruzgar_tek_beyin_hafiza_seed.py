@@ -419,7 +419,12 @@ def ensure_core_hafiza_profiles() -> dict[str, Any]:
     if _SEEDED:
         return {"ok": True, "skipped": True}
     try:
-        from ilim_assistant.hafiza_i_ruzgar import get_hafiza_motor
+        # Madde 3.5 — çekirdek aile profilleri yalnız PC hafızasına yazılır
+        # (mobil kullanıcı kapsamında bile kişisel dosyaya tohum yazılmaz).
+        try:
+            from ilim_assistant.ruzgar_kapsam_hafiza import pc_hafiza_motoru as get_hafiza_motor
+        except Exception:
+            from ilim_assistant.hafiza_i_ruzgar import get_hafiza_motor
 
         motor = get_hafiza_motor()
         stored_version = ""

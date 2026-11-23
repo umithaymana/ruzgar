@@ -137,6 +137,16 @@ def main() -> int:
     check("lastVoiceEmotion" in mob_txt, "mobil lastVoiceEmotion")
     check("payload.emotion" in mob_txt, "mobil TTS emotion")
     check("j.emotion" in mob_txt, "mobil STT emotion oku")
+    check('fd.append("mic_energy"' in mob_txt or "mic_energy" in mob_txt, "mobil STT mic_energy")
+    check(
+        "if (!opts.fromVoice) lastVoiceEmotion = null" in desk_txt
+        or "lastVoiceEmotion = null" in desk_txt,
+        "desktop klavye duygu sıfır",
+    )
+    check(
+        "if (!opts.live) lastVoiceEmotion = null" in mob_txt,
+        "mobil klavye duygu sıfır",
+    )
 
     # AST — api_stt Form mic_energy
     try:

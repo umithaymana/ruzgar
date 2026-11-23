@@ -801,6 +801,8 @@ class ChatRequest(BaseModel):
     # Madde 3 — istemci cihaz/konuşma kimliği (token'daki device_id önceliklidir)
     device_id: str | None = None
     conversation_id: str | None = None
+    # Madde 2.4 — istemci tur kimliği (mobil PWA); aynı cihazda yeni tur eskisinin TTS'ini iptal eder
+    turn_id: str | None = None
     # Electron getRoot() — @@dosya yolları bu köke göre çözülür
     workspace_root: str | None = None
     # Web ara kapalı olsa bile mesajdaki https URL’lerini oku
@@ -1041,12 +1043,17 @@ class IdrakPretreatBody(BaseModel):
 class TtsBody(BaseModel):
     text: str = ""
     karakter: str = "asistan"
+    # S1 tavan alias (muhabbet|alim|tilavet) — varsa karakter'den önce
+    profil: str | None = None
     backend: str = "auto"
     emotion: str | None = None
     lang: str | None = "tr"
     speaker_rel: str | None = None
     tilavet_referans: str | None = None
     prosody: bool | None = None
+    # Madde 2.4 — tur kilidi: istemci tur kimliği (iptal/eski tur → 409, ses çalınmaz)
+    turn_id: str | None = None
+    device_id: str | None = None
 
 
 class SesSettingsPatchBody(BaseModel):
@@ -2239,6 +2246,9 @@ def _health_full_response() -> dict[str, Any]:
         "super_brain": _sb,
         "connection": _connection_ui_block(super_brain=_sb),
         "build": _health_build_block(),
+        "ses_tur": __import__(
+            "ilim_assistant.ses_tur_kilidi", fromlist=["tel_ozet"]
+        ).tel_ozet(),
         "ruzgar_mode": _ruzgar_mode_health_snapshot(),
         "hizir": {
             "mock_marketplace": _m,
@@ -11475,83 +11485,138 @@ async def api_ses_sohbet_tur(body: SesSohbetTurBody):
     if len(msg) < 1:
         return {"ok": False, "error": "message boş"}
     t0 = _time.perf_counter()
-    set_state("thinking", note="sohbet-tur")
-    req = ChatRequest(
-        message=msg,
-        history=list(body.history or [])[-12:],
-        mode="genel",
-        use_web=False,
-        session_token=body.session_token,
-    )
-    chat = await run_in_threadpool(_chat_full_sync, req)
-    reply = str(chat.get("full_reply") or "").strip()
+    chat: dict[str, Any] = {}
+    reply = ""
     tts_b64 = None
     tts_err = None
-    if body.with_tts and reply:
-        set_state("speaking", note="tts")
-        try:
-            from ilim_assistant.motorlar.ses_motoru import (
-                EDGE_VOICES,
-                analiz_icerik_yolu,
-                edge_pitch_string,
-                edge_rate_yuzdesi,
-                normalize_ses_karakteri,
-                tts_metadata_kimlik,
-            )
-            from ilim_assistant.tts_service import (
-                edge_available,
-                read_ses_ayarlari,
-                synthesize_edge_mp3_in_process,
-            )
+    try:
+        set_state("thinking", note="sohbet-tur")
+        req = ChatRequest(
+            message=msg,
+            history=list(body.history or [])[-12:],
+            mode="genel",
+            use_web=False,
+            session_token=body.session_token,
+        )
+        chat = await run_in_threadpool(_chat_full_sync, req)
+        reply = str(chat.get("full_reply") or "").strip()
+        if body.with_tts and reply:
+            set_state("speaking", note="tts")
+            try:
+                from ilim_assistant.motorlar.ses_motoru import (
+                    EDGE_VOICES,
+                    analiz_icerik_yolu,
+                    edge_pitch_string,
+                    edge_rate_yuzdesi,
+                    normalize_ses_karakteri,
+                    tts_metadata_kimlik,
+                )
+                from ilim_assistant.tts_service import (
+                    edge_available,
+                    read_ses_ayarlari,
+                    synthesize_edge_mp3_in_process,
+                )
 
-            if not edge_available():
-                tts_err = "edge-tts yok"
-            else:
-                ayar = read_ses_ayarlari()
-                kar = normalize_ses_karakteri(body.karakter or ayar.get("karakter"))
-                icerik = analiz_icerik_yolu(reply[:2000])
-                voice = EDGE_VOICES.get(kar) or "tr-TR-AhmetNeural"
-                rate = edge_rate_yuzdesi(
-                    karakter=kar,
-                    icerik=icerik,
-                    hiz_carpani=float(ayar.get("hiz", 0.92)),
-                    huzur_carpani=float(ayar.get("huzur", 0.88)),
-                )
-                pitch = edge_pitch_string(kar, icerik)
-                meta = tts_metadata_kimlik(
-                    karakter=kar.value,
-                    icerik_yolu=icerik.value,
-                    edge_voice=voice,
-                )
-                out_path = await synthesize_edge_mp3_in_process(
-                    reply[:3000],
-                    voice=voice,
-                    rate=rate,
-                    pitch=pitch,
-                    meta=meta,
-                )
-                p = _Path(str(out_path))
-                if p.is_file() and p.stat().st_size > 32:
-                    tts_b64 = base64.b64encode(p.read_bytes()).decode("ascii")
+                if not edge_available():
+                    tts_err = "edge-tts yok"
                 else:
-                    tts_err = "tts dosya yok"
-        except Exception as exc:
-            tts_err = str(exc)[:200]
-    set_state("idle", note="tur-bitti")
-    return {
-        "ok": bool(chat.get("ok", True)),
-        "full_reply": reply,
-        "latency_ms": int((_time.perf_counter() - t0) * 1000),
-        "chat_latency_ms": chat.get("latency_ms"),
-        "tts_base64": tts_b64,
-        "tts_mime": "audio/mpeg" if tts_b64 else None,
-        "tts_error": tts_err,
-        "voice_state": "idle",
-    }
+                    ayar = read_ses_ayarlari()
+                    kar = normalize_ses_karakteri(body.karakter or ayar.get("karakter"))
+                    icerik = analiz_icerik_yolu(reply[:2000])
+                    voice = EDGE_VOICES.get(kar) or "tr-TR-AhmetNeural"
+                    rate = edge_rate_yuzdesi(
+                        karakter=kar,
+                        icerik=icerik,
+                        hiz_carpani=float(ayar.get("hiz", 0.92)),
+                        huzur_carpani=float(ayar.get("huzur", 0.88)),
+                    )
+                    pitch = edge_pitch_string(kar, icerik)
+                    meta = tts_metadata_kimlik(
+                        karakter=kar.value,
+                        icerik_yolu=icerik.value,
+                        edge_voice=voice,
+                    )
+                    out_path = await synthesize_edge_mp3_in_process(
+                        reply[:3000],
+                        voice=voice,
+                        rate=rate,
+                        pitch=pitch,
+                        meta=meta,
+                    )
+                    p = _Path(str(out_path))
+                    if p.is_file() and p.stat().st_size > 32:
+                        tts_b64 = base64.b64encode(p.read_bytes()).decode("ascii")
+                    else:
+                        tts_err = "tts dosya yok"
+            except Exception as exc:
+                tts_err = str(exc)[:200]
+        return {
+            "ok": bool(chat.get("ok", True)),
+            "full_reply": reply,
+            "latency_ms": int((_time.perf_counter() - t0) * 1000),
+            "chat_latency_ms": chat.get("latency_ms"),
+            "tts_base64": tts_b64,
+            "tts_mime": "audio/mpeg" if tts_b64 else None,
+            "tts_error": tts_err,
+            "voice_state": "idle",
+        }
+    except Exception as exc:
+        return {
+            "ok": False,
+            "error": str(exc)[:240],
+            "full_reply": "",
+            "latency_ms": int((_time.perf_counter() - t0) * 1000),
+            "tts_base64": None,
+            "tts_mime": None,
+            "tts_error": None,
+            "voice_state": "idle",
+        }
+    finally:
+        # Hata / erken return olsa bile takılı thinking|speaking bırakma
+        set_state("idle", note="tur-bitti")
+
+
+def _tts_tur_kanal(body: Any, request: Request | None) -> str:
+    """Madde 2.4 — TTS isteğinin kanal anahtarı (cihaz kimliği / Bearer; ham değer saklanmaz)."""
+    try:
+        from ilim_assistant.ses_tur_kilidi import kanal_anahtari
+
+        tok = ""
+        if request is not None:
+            _a = (request.headers.get("Authorization") or "").strip()
+            if _a.lower().startswith("bearer "):
+                tok = _a[7:].strip()
+        dev = getattr(body, "device_id", None) or (
+            request.headers.get("X-Ruzgar-Device") if request is not None else ""
+        )
+        return kanal_anahtari(dev, tok)
+    except Exception:
+        return "pc"
+
+
+def _tts_tur_gate(body: Any, request: Request | None, *, asama: str = "once") -> Any:
+    """İptal/eski turun TTS isteği → 409 JSON (istemci çalmaz, yeniden denemez). Uygunsa None."""
+    tid = getattr(body, "turn_id", None)
+    if not tid:
+        return None
+    try:
+        from fastapi.responses import JSONResponse
+        from ilim_assistant.ses_tur_kilidi import tts_izin
+
+        ok, st = tts_izin(tid, _tts_tur_kanal(body, request))
+        if ok:
+            return None
+        return JSONResponse(
+            status_code=409,
+            content={"ok": False, "iptal": True, "neden": st, "asama": asama},
+            headers={"X-Ruzgar-Tur-Iptal": st},
+        )
+    except Exception:
+        return None
 
 
 @app.post("/api/tts")
-async def api_tts(body: TtsBody):
+async def api_tts(body: TtsBody, request: Request = None):  # type: ignore[assignment]
     """TTS: Edge (prosody) veya XTTS klon (Faz S4). backend: edge | clone | auto."""
     from ilim_assistant.motorlar.ses_klon_motoru import should_use_clone, xtts_runtime_available
     from ilim_assistant.motorlar.ses_motoru import (
@@ -11586,6 +11651,11 @@ async def api_tts(body: TtsBody):
     if len(raw_text) > 12_000:
         raw_text = raw_text[:12_000]
 
+    # Madde 2.4 — tur kilidi: iptal/eski turun parçası sentezlenmez (turn_id yoksa no-op)
+    _tts_gate = _tts_tur_gate(body, request)
+    if _tts_gate is not None:
+        return _tts_gate
+
     # Köşeli etiketler — ham [korku]/[duraksama:…] seslendirilmez
     etiket = parse_ses_etiketleri(raw_text)
     text = (etiket.temiz_metin or "").strip()
@@ -11604,7 +11674,10 @@ async def api_tts(body: TtsBody):
     emo_hiz, emo_huzur, emo_pitch_extra = emotion_ses_adjustments(emotion_kind)
 
     ayar = read_ses_ayarlari()
-    kar = normalize_ses_karakteri(body.karakter or ayar.get("karakter"))
+    # Ana Motor / istemci: profil (S1) > karakter > kayıtlı ayar
+    kar = normalize_ses_karakteri(
+        body.profil or body.karakter or ayar.get("karakter")
+    )
     icerik = analiz_icerik_yolu(text)
     lang = (body.lang or "tr").strip().lower()[:2] or "tr"
     meta = tts_metadata_kimlik(
@@ -11614,6 +11687,7 @@ async def api_tts(body: TtsBody):
         ek={
             "emotion": emotion_kind,
             "emotion_applied": True,
+            "profil": kar.value,
             **(
                 {"etiketler": list(etiket.etiketler)}
                 if etiket.etiketler
@@ -11652,18 +11726,68 @@ async def api_tts(body: TtsBody):
     try:
         if use_clone:
             try:
-                out_path = await synthesize_clone_mp3(
-                    text,
-                    karakter=kar.value,
-                    language=lang,
-                    speaker_rel=body.speaker_rel,
-                    meta=meta,
-                    ayar=ayar,
-                )
-            except Exception as clone_exc:
-                # S3 — klon hata → Edge yedek (strict değilse)
+                import asyncio as _asyncio
                 import os as _os
 
+                def _clone_deadline_sec() -> float:
+                    raw = (_os.environ.get("RUZGAR_TTS_CLONE_DEADLINE_SEC") or "").strip()
+                    if raw:
+                        try:
+                            return max(2.0, float(raw))
+                        except ValueError:
+                            pass
+                    # Sohbet/muhabbet: kısa; tilavet/âlim: biraz daha tolerans
+                    if kar.value in ("tilavet", "alim"):
+                        raw_t = (
+                            _os.environ.get("RUZGAR_TTS_CLONE_DEADLINE_TILAVET_SEC") or "25"
+                        ).strip()
+                        try:
+                            return max(4.0, float(raw_t))
+                        except ValueError:
+                            return 25.0
+                    raw_s = (
+                        _os.environ.get("RUZGAR_TTS_CLONE_DEADLINE_SOHBET_SEC") or "8"
+                    ).strip()
+                    try:
+                        return max(3.0, float(raw_s))
+                    except ValueError:
+                        return 8.0
+
+                deadline = _clone_deadline_sec()
+                out_path = await _asyncio.wait_for(
+                    synthesize_clone_mp3(
+                        text,
+                        karakter=kar.value,
+                        language=lang,
+                        speaker_rel=body.speaker_rel,
+                        meta=meta,
+                        ayar=ayar,
+                    ),
+                    timeout=deadline,
+                )
+            except Exception as clone_exc:
+                # S3 — klon hata / zaman aşımı → Edge yedek (strict değilse)
+                import os as _os
+
+                is_timeout = isinstance(clone_exc, TimeoutError) or type(clone_exc).__name__ in (
+                    "TimeoutError",
+                    "CancelledError",
+                )
+                # Python 3.11+ asyncio.TimeoutError is alias of TimeoutError
+                try:
+                    import asyncio as _asyncio
+
+                    if isinstance(clone_exc, _asyncio.TimeoutError):
+                        is_timeout = True
+                except Exception:
+                    pass
+                if is_timeout:
+                    try:
+                        from ilim_assistant.ses_xtts_iptal import cancel_all as _xtts_cancel_all
+
+                        _xtts_cancel_all(reason="clone_deadline")
+                    except Exception:
+                        pass
                 strict = _os.environ.get("RUZGAR_TTS_CLONE_STRICT", "0").strip().lower() in (
                     "1",
                     "true",
@@ -11677,7 +11801,7 @@ async def api_tts(body: TtsBody):
                 meta = {
                     **(meta or {}),
                     "clone_fallback": "edge",
-                    "clone_error": str(clone_exc)[:160],
+                    "clone_error": ("deadline" if is_timeout else str(clone_exc)[:160]),
                 }
         if not use_clone:
             if not edge_available():
@@ -11885,6 +12009,10 @@ async def api_tts(body: TtsBody):
                 )
     except Exception:
         pass
+    # Madde 2.4 — sentez sürerken tur iptal/eskidiyse sesi istemciye verme (binmesin)
+    _tts_gate2 = _tts_tur_gate(body, request, asama="sonra")
+    if _tts_gate2 is not None:
+        return _tts_gate2
     return FileResponse(
         str(out_path),
         media_type="audio/mpeg",
@@ -11894,18 +12022,159 @@ async def api_tts(body: TtsBody):
 
 
 @app.post("/api/tts/cancel")
-async def api_tts_cancel():
-    """Barge/durdur — XTTS arka plan üretimini iptal et."""
+async def api_tts_cancel(request: Request = None):  # type: ignore[assignment]
+    """Barge/durdur — XTTS arka plan üretimini iptal et.
+
+    Madde 2.4: isteğe bağlı JSON gövde ``{turn_id, device_id}`` → o turun (yoksa kanalın
+    aktif turunun) bekleyen TTS parçaları da reddedilir. Gövdesiz çağrı eskisi gibi çalışır."""
     from ilim_assistant.ses_xtts_iptal import cancel_all, snapshot
     from ilim_assistant.ses_vram_hakem import snapshot as vram_snap
 
+    tur_iptal: list[str] = []
+    try:
+        if request is not None:
+            raw = await request.body()
+            if raw and raw.strip():
+                jb = json.loads(raw.decode("utf-8", "ignore"))
+                if isinstance(jb, dict):
+                    from ilim_assistant.ses_tur_kilidi import cancel as _tur_cancel
+
+                    from types import SimpleNamespace as _NS
+
+                    kn = _tts_tur_kanal(_NS(device_id=jb.get("device_id")), request)
+                    tur_iptal = _tur_cancel(
+                        jb.get("turn_id"), kanal=kn, sebep=str(jb.get("sebep") or "barge")
+                    )
+    except Exception:
+        tur_iptal = []
     info = cancel_all(reason="api_tts_cancel")
     return {
         "ok": True,
         "cancel": info,
         "iptal": snapshot(),
         "vram": vram_snap(),
+        "tur_iptal": tur_iptal,
     }
+
+
+@app.post("/api/tts/stream")
+async def api_tts_stream(body: TtsBody, request: Request):
+    """Madde 2.3 — Edge-TTS gerçek ses akışı (chunked MP3). Uygun değilse 409 → /api/tts."""
+    from fastapi.responses import JSONResponse
+    from ilim_assistant.ses_tts_akis import (
+        AkisYok,
+        coz_edge_paket,
+        edge_akis,
+        ilk_parca_ile,
+    )
+    from ilim_assistant.ses_tur_kilidi import durum as _tur_durum
+    from ilim_assistant.ses_tur_kilidi import tel_kaydet as _tel_kaydet
+
+    if len((body.text or "").strip()) < 2:
+        raise HTTPException(status_code=400, detail="Metin çok kısa.")
+    _g = _tts_tur_gate(body, request)
+    if _g is not None:
+        return _g
+    try:
+        paket = coz_edge_paket(
+            text=body.text,
+            karakter=body.karakter,
+            profil=body.profil,
+            emotion=body.emotion,
+            backend=body.backend,
+            speaker_rel=body.speaker_rel,
+            prosody=body.prosody,
+        )
+    except AkisYok as e:
+        return JSONResponse(
+            status_code=409,
+            content={"ok": False, "akis_yok": True, "neden": e.neden},
+            headers={"X-Ruzgar-Tts-Akis": "yok"},
+        )
+    kanal = _tts_tur_kanal(body, request)
+    tid = body.turn_id or ""
+    try:
+        from ilim_assistant.ses_fb_cila import warm_edge_stream
+
+        await warm_edge_stream(force=False)
+    except Exception:
+        pass
+    agen = edge_akis(
+        paket["text"],
+        voice=paket["voice"],
+        rate=paket["rate"],
+        pitch=paket["pitch"],
+        iptal_mi=(lambda: _tur_durum(tid, kanal) != "ok") if tid else None,
+    )
+    try:
+        _first, first_ms, rest = await ilk_parca_ile(agen)
+    except StopAsyncIteration:
+        raise HTTPException(status_code=502, detail="Edge-TTS boş akış") from None
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=str(e)[:300]) from e
+    # Tur akış sırasında iptal olduysa ilk parçayı da verme
+    _g2 = _tts_tur_gate(body, request, asama="sonra")
+    if _g2 is not None:
+        try:
+            await rest.aclose()  # type: ignore[attr-defined]
+        except BaseException:
+            pass
+        return _g2
+    try:
+        _tel_kaydet(
+            kanal="tts", kaynak="sunucu", tts_ilk_bayt_ms=first_ms, ilk_ses_yolu="akis"
+        )
+    except Exception:
+        pass
+    return StreamingResponse(
+        rest,
+        media_type="audio/mpeg",
+        headers={
+            "Cache-Control": "no-store",
+            "X-Accel-Buffering": "no",
+            "X-Ruzgar-Tts-Akis": "1",
+            "X-Ruzgar-Tts-First-Byte-Ms": str(first_ms),
+            "X-Ruzgar-Tts-Under-1s": "1" if first_ms < 1000.0 else "0",
+        },
+    )
+
+
+class SesTelemetriBody(BaseModel):
+    """Madde 2.6 — istemci ölçümü. Yalnız sayı/etiket; serbest metin alanı YOK."""
+
+    kanal: str = "mobil"
+    turn_id: str | None = None
+    ilk_token_ms: float | None = None
+    ilk_ses_ms: float | None = None
+    tts_ilk_bayt_ms: float | None = None
+    ilk_ses_yolu: str | None = None
+    parca: int | None = None
+    iptal: bool = False
+
+
+@app.get("/api/ses/telemetri")
+def api_ses_telemetri_get():
+    """Madde 2.6 — «ilk token» ve «duyulan ilk ses» özeti (kişisel veri yok)."""
+    from ilim_assistant.ses_tur_kilidi import tel_ozet
+
+    return {"ok": True, **tel_ozet()}
+
+
+@app.post("/api/ses/telemetri")
+def api_ses_telemetri_post(body: SesTelemetriBody):
+    from ilim_assistant.ses_tur_kilidi import tel_kaydet
+
+    rec = tel_kaydet(
+        kanal=body.kanal,
+        kaynak="istemci",
+        ilk_token_ms=body.ilk_token_ms,
+        ilk_ses_ms=body.ilk_ses_ms,
+        tts_ilk_bayt_ms=body.tts_ilk_bayt_ms,
+        ilk_ses_yolu=body.ilk_ses_yolu,
+        parca=body.parca,
+        iptal=body.iptal,
+    )
+    return {"ok": True, "kaydedildi": rec is not None}
 
 
 @app.get("/api/tts/vram")
@@ -17260,13 +17529,85 @@ def iter_chat_turn_events(req: ChatRequest) -> Iterator[dict]:
         yield obj
 
 
+async def _stream_auth_gate(req: ChatRequest, authorization: str = "") -> dict[str, Any]:
+    """Madde 3.6 — SSE/WS kimlik kapısı. Token yoksa (masaüstü) hiçbir şey yapmaz.
+
+    Hata durumunda açılmaz (full yolu ile aynı: doğrulama istisnası sohbeti kesmez;
+    kapsam zaten ``anon:`` ile yalıtılır)."""
+    try:
+        from ilim_assistant.ruzgar_kapsam import stream_auth_gate
+
+        tok = (req.session_token or "").strip()
+        if not tok and (authorization or "").lower().startswith("bearer "):
+            tok = authorization[7:].strip()
+            req.session_token = tok or None
+        if not tok:
+            return {"ok": True, "auth": None, "slot": None}
+        return await run_in_threadpool(stream_auth_gate, tok)
+    except Exception:
+        return {"ok": True, "auth": None, "slot": None}
+
+
 @app.post("/api/chat/stream")
-async def chat_stream(req: ChatRequest):
+async def chat_stream(req: ChatRequest, request: Request):
+    import time as _time
+
+    _authz = request.headers.get("Authorization") or ""
+    _t_req = _time.perf_counter()
+
     async def generate():
         yield ":ruzgar-events\n\n"
-        _bind_chat_scope(req)
-        async for obj in _async_iter_chat_events(req):
-            yield _sse(obj)
+        _gate = await _stream_auth_gate(req, _authz)
+        if not _gate.get("ok"):
+            from ilim_assistant.ruzgar_kapsam import stream_auth_error_events
+
+            for _ev in stream_auth_error_events(_gate, req.message or ""):
+                yield _sse(_ev)
+            return
+        # Madde 2.4/2.6 — tur kilidi + sunucu tarafı «ilk token» ölçümü (istemciye ek olay yok)
+        _tur_id, _ilk_ms, _kanal_et = "", None, "pc"
+        try:
+            from ilim_assistant.ses_tur_kilidi import (
+                begin as _tur_begin,
+                kanal_anahtari as _kn_key,
+                kanal_etiketi as _kn_et,
+                temiz_id as _tid_clean,
+            )
+
+            _tok = (req.session_token or "").strip()
+            _kanal_et = _kn_et(req.device_id, _tok)
+            _tur_id = _tid_clean(req.turn_id)
+            if _tur_id:
+                _tur_begin(_kn_key(req.device_id, _tok), _tur_id)
+        except Exception:
+            _tur_id = ""
+        try:
+            _bind_chat_scope(req)
+            async for obj in _async_iter_chat_events(req):
+                if _ilk_ms is None:
+                    _ot = obj.get("type")
+                    if (_ot == "token" and obj.get("text")) or (
+                        _ot == "done" and str(obj.get("full_reply") or "").strip()
+                    ):
+                        _ilk_ms = (_time.perf_counter() - _t_req) * 1000.0
+                yield _sse(obj)
+        finally:
+            try:
+                from ilim_assistant.ses_tur_kilidi import bitir as _tur_bitir
+                from ilim_assistant.ses_tur_kilidi import tel_kaydet as _tel_kaydet
+
+                if _tur_id:
+                    _tur_bitir(_tur_id)
+                if _ilk_ms is not None:
+                    _tel_kaydet(kanal=_kanal_et, kaynak="sunucu", ilk_token_ms=_ilk_ms)
+            except Exception:
+                pass
+            try:
+                from ilim_assistant.ruzgar_kapsam import stream_auth_release
+
+                stream_auth_release(_gate)
+            except Exception:
+                pass
 
     return StreamingResponse(
         generate(),
@@ -17420,6 +17761,17 @@ async def chat_full(req: ChatRequest, request: Request):
         auth = (request.headers.get("Authorization") or "").strip()
         if auth.lower().startswith("bearer "):
             req.session_token = auth[7:].strip() or None
+    # Madde 2.4 — yedek (fallback) yol da tur kilidine katılır (turn_id yoksa no-op)
+    try:
+        from ilim_assistant.ses_tur_kilidi import begin as _tur_begin
+        from ilim_assistant.ses_tur_kilidi import kanal_anahtari as _kn_key
+        from ilim_assistant.ses_tur_kilidi import temiz_id as _tid_clean
+
+        _tid = _tid_clean(req.turn_id)
+        if _tid:
+            _tur_begin(_kn_key(req.device_id, req.session_token), _tid)
+    except Exception:
+        pass
     return await run_in_threadpool(_chat_full_sync, req)
 
 
@@ -17445,24 +17797,46 @@ async def websocket_chat(ws: WebSocket) -> None:
             pass
         await ws.close()
         return
-    try:
-        _bind_chat_scope(req)
-        async for obj in _async_iter_chat_events(req):
-            await ws.send_json(obj)
-    except Exception as exc:
+    _gate = await _stream_auth_gate(req, ws.headers.get("authorization") or "")
+    if not _gate.get("ok"):
         try:
-            from ilim_assistant.chat_core import empty_reply_fallback
+            from ilim_assistant.ruzgar_kapsam import stream_auth_error_events
 
-            fb = empty_reply_fallback(req.message or "", req.history)
-            await ws.send_json({"type": "error", "text": str(exc)[:240]})
-            await ws.send_json(
-                {
-                    "type": "done",
-                    "full_reply": fb,
-                    "user_message": (req.message or "").strip(),
-                    "stream_error": True,
-                }
-            )
+            for _ev in stream_auth_error_events(_gate, req.message or ""):
+                await ws.send_json(_ev)
+        except Exception:
+            pass
+        try:
+            await ws.close()
+        except Exception:
+            pass
+        return
+    try:
+        try:
+            _bind_chat_scope(req)
+            async for obj in _async_iter_chat_events(req):
+                await ws.send_json(obj)
+        except Exception as exc:
+            try:
+                from ilim_assistant.chat_core import empty_reply_fallback
+
+                fb = empty_reply_fallback(req.message or "", req.history)
+                await ws.send_json({"type": "error", "text": str(exc)[:240]})
+                await ws.send_json(
+                    {
+                        "type": "done",
+                        "full_reply": fb,
+                        "user_message": (req.message or "").strip(),
+                        "stream_error": True,
+                    }
+                )
+            except Exception:
+                pass
+    finally:
+        try:
+            from ilim_assistant.ruzgar_kapsam import stream_auth_release
+
+            stream_auth_release(_gate)
         except Exception:
             pass
     try:

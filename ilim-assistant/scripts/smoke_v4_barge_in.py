@@ -47,11 +47,22 @@ def main() -> int:
         "micPointerDown barge-aware",
     )
     failed += _ok("await bargeInStopTtsForMic()" in text, "await bargeIn")
+    # Barge sohbeti abort etmesin (kopukluk önlemi)
+    barge_fn = ""
+    i0 = text.find("async function bargeInStopTtsForMic")
+    if i0 >= 0:
+        i1 = text.find("\nwindow.bargeInStopTtsForMic", i0)
+        barge_fn = text[i0 : i1 if i1 > i0 else i0 + 2200]
+    failed += _ok(
+        "activeChatAbort?.abort()" not in barge_fn
+        and "activeChatAbort.abort()" not in barge_fn,
+        "barge TTS-only (no chat abort)",
+    )
 
     doc = ROOT / "docs" / "V4_BARGE_IN_2026-11-03.md"
     failed += _ok(doc.is_file() and doc.stat().st_size > 60, f"doc {doc.name}")
 
-    total = 12
+    total = 13
     print(f"result: {total - failed}/{total} pass")
     return 1 if failed else 0
 

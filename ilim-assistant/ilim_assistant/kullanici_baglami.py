@@ -8,6 +8,16 @@ from typing import Any
 
 
 def _path() -> Path:
+    # Madde 3.5 — PC dışı kapsamda (mobil kullanıcı / cihaz) kişisel bağlam dosyası;
+    # PC kapsamı ve hatalar eski yolu aynen kullanır.
+    try:
+        from ilim_assistant.ruzgar_kapsam_hafiza import baglam_yolu_veya_none
+
+        _kp = baglam_yolu_veya_none()
+        if _kp is not None:
+            return _kp
+    except Exception:
+        pass
     try:
         from ilim_assistant.ruzgar_public_mode import current_user_id, kullanici_baglami_path
 

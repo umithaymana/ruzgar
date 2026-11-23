@@ -13,7 +13,7 @@
   <link rel="icon" href="favicon-32.png?v=5" type="image/png" sizes="32x32" />
   <title>Rüzgar Mobil</title>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <link rel="stylesheet" href="app.css?v=20261118-onboard" />
+  <link rel="stylesheet" href="app.css?v=20261123-madde2" />
 </head>
 <body>
   <div id="installBar" class="install-bar hidden">
@@ -146,8 +146,12 @@
           </button>
         </div>
         <div id="sahneDock" class="sahne-dock">
+          <div id="sadeDurum" class="sade-durum hidden" role="status" aria-live="polite" data-durum="hazir">
+            <span class="sade-durum-nokta" aria-hidden="true"></span>
+            <span id="sadeDurumMetin" class="sade-durum-metin">Hazır</span>
+          </div>
           <div id="chat"></div>
-          <div class="composer">
+          <div class="composer sade-yazi">
             <textarea id="input" rows="2" placeholder="Mesaj…"></textarea>
             <button type="button" id="btnSend" class="primary">Gönder</button>
           </div>
@@ -157,9 +161,14 @@
             </button>
             <button type="button" id="btnLive" class="primary">Sürekli sohbet</button>
           </div>
-          <div class="composer voice-row">
+          <div class="composer voice-row sade-yazi">
             <button type="button" id="btnVoiceSend" class="ghost">Sesli tur (yazı)</button>
           </div>
+          <div class="composer voice-row sade-bar">
+            <button type="button" id="btnSade" class="ghost" aria-pressed="false" title="Sade ses yüzü: balon yok, yalnız mikrofon + durum">Sade ses</button>
+            <button type="button" id="btnSadeLog" class="ghost hidden" aria-pressed="false" aria-controls="sadeLog" title="Sessiz kayıt: konuşmanın yazılı izi">Kayıt</button>
+          </div>
+          <div id="sadeLog" class="sade-log hidden" aria-label="Sessiz kayıt" aria-live="off"></div>
           <p id="meta" class="hint">Basılı tut veya Sürekli sohbet: konuş → sus → cevap. Sürekli açıkken ekran uyanık tutulur (tam kilitte tarayıcı mikrofonu kesebilir).</p>
         </div>
       </div>
@@ -182,6 +191,7 @@
       </div>
     </section>
   </div>
-  <script src="app.js?v=20261121-sahne-kilit"></script>
+  <script src="ruzgar-tur-ses.js?v=20261123-madde2"></script>
+  <script src="app.js?v=20261123-madde2"></script>
 </body>
 </html>
