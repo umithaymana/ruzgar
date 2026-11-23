@@ -113,6 +113,8 @@
     kopyala: "M9 9h10v11H9zM5 15V4h10",
     oku: "M4 10v4h4l5 4V6L8 10zM16 9a4 4 0 0 1 0 6",
     tekrar: "M4 13a8 8 0 0 0 14 4M20 11A8 8 0 0 0 6 7M4 5v4h4M20 19v-4h-4",
+    duraklat: "M9 5v14M15 5v14",
+    devam: "M8 5l11 7-11 7z",
   };
 
   function ikonSvg(ad) {
@@ -236,8 +238,48 @@
     } else {
       canli.style.display = "none";
     }
+    /* duraklat / devam: Rüzgar konuşurken görünür; basınca susar, tekrar basınca kaldığı yerden sürer */
+    var dur = e("button", "ry-dur", ikonSvg("duraklat"));
+    dur.type = "button";
+    dur.id = "ryDur";
+    dur.setAttribute("aria-label", "Duraklat");
+    var duraklatik = false;
+    function sesDurumu() {
+      try {
+        return (window.ruzgarMobil && window.ruzgarMobil.sesDurumu && window.ruzgarMobil.sesDurumu()) || "yok";
+      } catch (_) {
+        return "yok";
+      }
+    }
+    function durYenile() {
+      var st = sesDurumu();
+      var konus = cizgi && cizgi.getAttribute("data-durum") === "konus";
+      var paused = st === "duraklatildi";
+      var goster = st !== "yok" || konus;
+      dur.classList.toggle("ry-goster", goster);
+      dur.classList.toggle("ry-duraklatik", paused);
+      dur.innerHTML = ikonSvg(paused ? "devam" : "duraklat");
+      dur.setAttribute("aria-label", paused ? "Devam" : "Duraklat");
+      if (paused !== duraklatik) {
+        duraklatik = paused;
+        if (cizgi) {
+          cizgi.classList.toggle("ry-durak", paused);
+          durumBas(cizgi.getAttribute("data-durum"));
+        }
+      }
+    }
+    dur.addEventListener("click", function () {
+      try {
+        var rm = window.ruzgarMobil;
+        if (!rm) return;
+        if (sesDurumu() === "duraklatildi") rm.devam();
+        else rm.duraklat();
+      } catch (_) {}
+      durYenile();
+    });
     bar.appendChild(plus);
     bar.appendChild(alan);
+    bar.appendChild(dur);
     bar.appendChild(canli);
     bar.appendChild(act);
 
@@ -295,9 +337,10 @@
     function durumBas(d) {
       var n = durumNormal(d);
       cizgi.setAttribute("data-durum", n);
-      altyazi.textContent = durumMetni(n);
-      altyazi.classList.toggle("on", n !== "hazir");
-      cizgi.setAttribute("aria-label", "Rüzgar: " + (durumMetni(n) || "hazır"));
+      var metin = duraklatik ? "Duraklatıldı · devam için ▶" : durumMetni(n);
+      altyazi.textContent = metin;
+      altyazi.classList.toggle("on", duraklatik || n !== "hazir");
+      cizgi.setAttribute("aria-label", "Rüzgar: " + (metin || "hazır"));
     }
     var sade = d.getElementById("sadeDurum");
     if (sade) {
@@ -306,6 +349,8 @@
         durumBas(sade.getAttribute("data-durum"));
       }).observe(sade, { attributes: true, attributeFilter: ["data-durum"] });
     }
+    setInterval(durYenile, 350);
+    durYenile();
     function cizgiDokun() {
       var n = cizgi.getAttribute("data-durum");
       if (n === "konus" || n === "dusun") {
@@ -329,6 +374,8 @@
       input.style.height = "auto";
       var h = Math.min(input.scrollHeight || 0, 132);
       if (h > 0) input.style.height = h + "px";
+      /* tek satırda her şey ortada; çok satırda düğmeler alta hizalanır */
+      bar.classList.toggle("ry-cok", h > 52);
     }
     input.addEventListener("input", barYenile);
     btnSend.addEventListener("click", function () {

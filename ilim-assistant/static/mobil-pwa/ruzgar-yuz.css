@@ -183,7 +183,8 @@ html.ry #chatView.ry-bos-on .ry-bos {
 /* ——— alt çubuk ——— */
 .ry-bar {
   display: flex;
-  align-items: flex-end;
+  flex-wrap: nowrap;
+  align-items: center; /* tek satır: + · yazı · düğmeler tam ortada */
   gap: 8px;
   padding: 6px;
   border-radius: 28px;
@@ -191,7 +192,25 @@ html.ry #chatView.ry-bos-on .ry-bos {
   border: 1px solid #243047;
   transition: border-color 0.2s;
 }
+.ry-bar.ry-cok { align-items: flex-end; } /* çok satırlı yazıda düğmeler alta */
 .ry-bar:focus-within { border-color: color-mix(in srgb, var(--accent) 60%, #243047); }
+.ry-dur {
+  display: none;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  background: transparent;
+  color: var(--accent);
+  align-items: center;
+  justify-content: center;
+}
+.ry-dur.ry-goster { display: inline-flex; }
+.ry-dur.ry-duraklatik { background: var(--accent); color: #0b1220; }
+.ry-dur svg path { stroke-width: 2.6; }
+.ry-cizgi.ry-durak { --ry-amp-a: 0.06 !important; --ry-amp-b: 0.04 !important; opacity: 0.7; }
 .ry-plus { flex: 0 0 auto; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; color: var(--muted); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }
 .ry-plus:active { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
 .ry-alan { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; }
@@ -200,6 +219,8 @@ html.ry .ry-alan textarea {
   background: transparent;
   font-family: inherit;
   resize: none;
+  box-sizing: border-box;
+  min-height: 44px;
   padding: 11px 2px;
   font-size: 1rem;
   line-height: 1.35;

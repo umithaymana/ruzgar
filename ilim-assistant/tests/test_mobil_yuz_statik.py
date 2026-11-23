@@ -57,8 +57,8 @@ def test_yuz_dosyalari_baglanti_ve_onbellek():
         assert ad in sw, f"sw.js {ad} önbelleğe/ağ-öncelikli listeye almıyor"
     # her iki yerde aynı sürüm etiketi
     v_html = set(re.findall(r"\?v=(\d{8}-[a-z0-9]+)", html))
-    assert "20261123-yuz2" in v_html
-    assert "20261123-yuz2" in sw
+    assert "20261123-yuz3" in v_html
+    assert "20261123-yuz3" in sw
     assert 'id="btnYuzYeni"' in html
 
 

@@ -1,11 +1,11 @@
 /* Rüzgar PWA — HTML/ağ öncelikli; Yenile = güncelleme (skipWaiting + claim) */
-const CACHE = "ruzgar-pwa-v20261123-yuz2";
+const CACHE = "ruzgar-pwa-v20261123-yuz3";
 const ASSETS = [
-  "./app.css?v=20261123-yuz2",
-  "./ruzgar-yuz.css?v=20261123-yuz2",
-  "./ruzgar-tur-ses.js?v=20261123-yuz2",
-  "./app.js?v=20261123-yuz2",
-  "./ruzgar-yuz.js?v=20261123-yuz2",
+  "./app.css?v=20261123-yuz3",
+  "./ruzgar-yuz.css?v=20261123-yuz3",
+  "./ruzgar-tur-ses.js?v=20261123-yuz3",
+  "./app.js?v=20261123-yuz3",
+  "./ruzgar-yuz.js?v=20261123-yuz3",
   "./manifest.webmanifest?v=5",
   "./icon-192.png?v=5",
   "./icon-512.png?v=5",

@@ -22,6 +22,8 @@
   let lastVoiceEmotion = null;
   /** Son mic RMS (0–1) — /api/stt mic_energy → fuse_emotion (masa parity) */
   let lastMicEnergy01 = 0.45;
+  /** Son STT çıktısı düşük güvenli mi (Whisper log-olasılık) — saçma cevap yerine tekrar iste */
+  let lastSttDusuk = false;
 
   /* Tek ikon kuralı: yazı+mikrofon aynı PWA. HTTP'de mic ölür → HTTPS:8443'e at. */
   (function forceHttpsSingleDoor() {
@@ -1316,9 +1318,44 @@
 
   /* Yeni sohbet yüzü (ruzgar-yuz.js) için küçük kapı: cevabı oku / sustur.
      Mevcut mantığı değiştirmez; yalnız var olan işlevleri dışarı verir. */
+  function ttsDuraklat() {
+    ttsHold = true;
+    try {
+      if (ttsPlayer && !ttsPlayer.paused) ttsPlayer.pause();
+    } catch (_) {}
+    try {
+      if (window.speechSynthesis && window.speechSynthesis.speaking) window.speechSynthesis.pause();
+    } catch (_) {}
+  }
+  function ttsDevam() {
+    ttsHold = false;
+    try {
+      if (ttsPlayer && ttsPlayer.src && ttsPlayer.paused && !ttsPlayer.ended) {
+        const p = ttsPlayer.play();
+        if (p && typeof p.catch === "function") p.catch(() => {});
+      }
+    } catch (_) {}
+    try {
+      if (window.speechSynthesis && window.speechSynthesis.paused) window.speechSynthesis.resume();
+    } catch (_) {}
+  }
+  /** "caliyor" | "duraklatildi" | "yok" */
+  function ttsSesDurumu() {
+    if (ttsHold) return "duraklatildi";
+    const calan = !!(ttsPlayer && ttsPlayer.src && !ttsPlayer.paused && !ttsPlayer.ended);
+    const yerel = !!(
+      window.speechSynthesis &&
+      window.speechSynthesis.speaking &&
+      !window.speechSynthesis.paused
+    );
+    return calan || yerel ? "caliyor" : "yok";
+  }
   window.ruzgarMobil = {
     oku: (t) => speakReply(t),
     sustur: (r) => stopAllSpeech(r || "yuz-sustur"),
+    duraklat: ttsDuraklat,
+    devam: ttsDevam,
+    sesDurumu: ttsSesDurumu,
   };
 
   function setTab(which) {
@@ -1941,8 +1978,15 @@
   const MOBIL_BARGE_RMS = 0.03;
   const MOBIL_BARGE_TICK_MS = 50;
   const MOBIL_BARGE_TICKS = 2;
+  /* Yankı koruması (2026-11-23): sözleşme sabitleri (üstte) aynen; üstüne eklenen ayar.
+     Telefon hoparlörü sızıntısı eski eşikle (0.03 × 2 tick = 100 ms) Rüzgar'ı yarıda kesiyordu. */
+  const MOBIL_BARGE_ECHO_TICKS = 6; // 6 × 50 ms = 300 ms yankı tabanı ölçümü
+  const MOBIL_BARGE_ECHO_MULT = 2.4; // eşik = taban × 2.4 + 0.012 (en az MOBIL_BARGE_RMS)
+  const MOBIL_BARGE_EXTRA_TICKS = 3; // gerçek konuşma ≈ 250 ms sürmeli
 
   let ttsPlayer = null;
+  /** Kullanıcı «duraklat» dedi: çalan ses durur, kuyruk beklemede kalır; «devam» kaldığı yerden sürdürür */
+  let ttsHold = false;
   let audioUnlocked = false;
   let sharedAudioCtx = null;
 
@@ -2201,6 +2245,7 @@
   function stopAllSpeech(reason) {
     // F6.4 / Aşama A barge-in — YALNIZ TTS / yerel konuşma kesilir; sohbet abort yok
     const t0 = performance.now();
+    ttsHold = false; // gerçek durdurma/yeni tur: duraklatma bayrağı kalmasın
     ttsPlayGen += 1;
     /* Madde 2.4 — tur kilidi: aktif turun TTS kuyruğu (ve sunucudaki bekleyen parçaları) durur */
     let curTurnId = null;
@@ -2314,6 +2359,10 @@
       // Aşama A/B — TTS sırasında mic VAD açık; ticks×tick_ms ≈ kesilme (ses_v4)
       if (RUZGAR_BARGE_IN && liveMode && liveVad) {
         let speechTicks = 0;
+        // Yankı tabanı: ilk ~300 ms'de hoparlörden mikrofona sızan ses düzeyi ölçülür;
+        // kesme eşiği bunun üstünde olmalı (telefon hoparlörü Rüzgar'ı kendi kendine susturmasın).
+        let echoTick = 0;
+        let echoBase = 0;
         bargeTimer = setInterval(() => {
           if (myGen !== ttsPlayGen || !liveMode) {
             clearInterval(bargeTimer);
@@ -2321,13 +2370,20 @@
             return;
           }
           try {
-            if (liveMuted) {
+            if (liveMuted || ttsHold) {
               speechTicks = 0;
               return;
             }
-            if (liveVad.rms() >= MOBIL_BARGE_RMS) {
+            const rmsNow = liveVad.rms();
+            if (echoTick < MOBIL_BARGE_ECHO_TICKS) {
+              echoTick += 1;
+              echoBase = Math.max(echoBase, rmsNow);
+              return;
+            }
+            const esik = Math.max(MOBIL_BARGE_RMS, echoBase * MOBIL_BARGE_ECHO_MULT + 0.012);
+            if (rmsNow >= esik) {
               speechTicks += 1;
-              if (speechTicks >= MOBIL_BARGE_TICKS) {
+              if (speechTicks >= MOBIL_BARGE_TICKS + MOBIL_BARGE_EXTRA_TICKS) {
                 stopAllSpeech("sürekli: kesildi — dinliyorum");
                 done("barge-in");
               }
@@ -2338,7 +2394,8 @@
         }, MOBIL_BARGE_TICK_MS);
       }
       markTtsFirstAudio("playTtsBlob");
-      const p = audio.play();
+      // Duraklatılmışken yeni parça yüklenir ama çalmaz; «devam» ile başlar
+      const p = ttsHold ? null : audio.play();
       if (p && typeof p.catch === "function") {
         p.catch((err) => {
           const name = String((err && err.name) || err || "");
@@ -3064,6 +3121,12 @@
       await askRepeat(bad);
       return;
     }
+    // Whisper kendi çıktısından emin değilse uydurma cevap üretme: tekrar iste
+    if (opts.live && lastSttDusuk) {
+      lastSttDusuk = false;
+      await askRepeat("unclear");
+      return;
+    }
     // Masa parity: önceki TTS'i kes (VRAM sıkışıklığı yok) — sohbet abort yok
     stopAllSpeech(opts.live ? "live-yeni-tur" : "yazı-yeni-tur");
     // Klavye/metin turu: eski mic duygusu sızmasın (canlı ses opts.live tutar)
@@ -3629,6 +3692,7 @@
       }
       if (!res.ok) throw new Error(j.detail || j.error || text.slice(0, 200));
       const out = String(j.text || j.transcript || "").trim();
+      lastSttDusuk = !!j.dusuk_guven && out.length > 0;
       const emo = typeof j.emotion === "string" ? j.emotion : "notr";
       lastVoiceEmotion = emo && emo !== "notr" ? emo : null;
       return out;
@@ -3691,6 +3755,17 @@
       const text = await sttBlob(blob, { fast: true });
       if (!text) {
         meta.textContent = "Algılanamadı — daha net / biraz daha uzun konuş.";
+        return;
+      }
+      if (lastSttDusuk) {
+        // Emin değil: gönderme, yazı alanına koy — kullanıcı düzeltip gönderir ya da tekrar söyler
+        lastSttDusuk = false;
+        const inp = el("input");
+        if (inp) {
+          inp.value = text;
+          inp.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+        meta.textContent = "Tam anlayamadım — düzeltip gönder ya da tekrar söyle.";
         return;
       }
       meta.textContent = `algılandı: ${text}`;

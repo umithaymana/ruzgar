@@ -125,6 +125,86 @@ def _env_int(name: str, default: int) -> int:
         return default
 
 
+_VARSAYILAN_IPUCU = "Türkçe günlük sohbet. Rüzgar, Ümit, Gökçenur."
+
+# Whisper'ın sessizlik/gürültüde uydurduğu bilinen kalıplar (tüm metin bunlardan ibaretse at)
+_HALUSINASYON = (
+    "altyazı m.k.",
+    "altyazı m.k",
+    "izlediğiniz için teşekkürler",
+    "izlediğiniz için teşekkür ederim",
+    "abone olmayı unutmayın",
+    "iyi seyirler",
+)
+
+
+def stt_baglam_ipucu() -> str:
+    """Whisper `initial_prompt`: Türkçe yazım + özel adlar. RUZGAR_WHISPER_PROMPT=0 kapatır."""
+    raw = os.environ.get("RUZGAR_WHISPER_PROMPT")
+    if raw is None:
+        return _VARSAYILAN_IPUCU
+    raw = raw.strip()
+    if raw.lower() in ("0", "false", "no", "off", ""):
+        return ""
+    return raw[:240]
+
+
+def temizle_halusinasyon(text: str, ipucu: str = "") -> str:
+    """İpucu yankısını ve bilinen uydurma kalıpları metinden temizler."""
+    t = (text or "").strip()
+    if not t:
+        return ""
+    def _kucuk(s: str) -> str:
+        # Türkçe: İ→i, I→ı (str.lower() «İ»yi birleşik noktalı i yapıp karşılaştırmayı bozar)
+        return s.replace("İ", "i").replace("I", "ı").lower()
+
+    ip = (ipucu or "").strip()
+    if ip and _kucuk(t).startswith(_kucuk(ip)):
+        t = t[len(ip) :].strip(" .,\n")
+    norm = _kucuk(t).strip(" .!?,…")
+    if norm in {_kucuk(h).strip(" .!?,…") for h in _HALUSINASYON}:
+        return ""
+    return t
+
+
+def degerlendir_guven(
+    parcalar: list[tuple[float, float | None, float | None]],
+    *,
+    logprob_min: float | None = None,
+    no_speech_max: float | None = None,
+) -> tuple[float | None, bool]:
+    """
+    parcalar: (süre_sn, avg_logprob, no_speech_prob) listesi.
+    Dönüş: (guven 0–1 | None, dusuk_guven).
+    Süre ağırlıklı ortalama log-olasılık → exp ile 0–1; düşükse istemci «anlayamadım» der.
+    """
+    lp_min = logprob_min if logprob_min is not None else float(
+        os.environ.get("RUZGAR_STT_LOGPROB_MIN", "-1.0") or -1.0
+    )
+    ns_max = no_speech_max if no_speech_max is not None else float(
+        os.environ.get("RUZGAR_STT_NO_SPEECH_MAX", "0.8") or 0.8
+    )
+    top_w = 0.0
+    top_lp = 0.0
+    en_ns = 0.0
+    for sure, lp, ns in parcalar:
+        if lp is None:
+            continue
+        w = max(0.2, float(sure or 0.0))
+        top_w += w
+        top_lp += w * float(lp)
+        if ns is not None:
+            en_ns = max(en_ns, float(ns))
+    if top_w <= 0:
+        return None, False
+    ort = top_lp / top_w
+    import math
+
+    guven = max(0.0, min(1.0, math.exp(ort)))
+    dusuk = ort < lp_min or en_ns > ns_max
+    return round(guven, 3), bool(dusuk)
+
+
 def build_transcribe_kwargs(
     language: str | None = "tr",
     *,
@@ -135,7 +215,8 @@ def build_transcribe_kwargs(
     Varsayılan beam=1 (kısa utterance); uzun klipte beam env ile artar.
     """
     short = duration_sec is None or float(duration_sec) <= 45.0
-    beam = max(1, _env_int("RUZGAR_WHISPER_BEAM", 1 if short else 3))
+    # 2026-11-23: kısa klipte de beam=3 (beam=1 «mantıksız» kelime üretiyordu; env ile düşürülebilir)
+    beam = max(1, _env_int("RUZGAR_WHISPER_BEAM", 3))
     best_of = max(1, _env_int("RUZGAR_WHISPER_BEST_OF", beam))
     kwargs: dict[str, Any] = {
         "beam_size": beam,
@@ -144,6 +225,16 @@ def build_transcribe_kwargs(
         "condition_on_previous_text": False,
         "vad_filter": _env_bool("RUZGAR_WHISPER_VAD", True),
     }
+    # Güvensiz çözümde (düşük log-olasılık / tekrar) sıcaklık yedeği: tek seferde saçmalamak yerine
+    # biraz farklı örnekleyip en iyisini seç. Kapat: RUZGAR_WHISPER_TEMP_FALLBACK=0
+    if _env_bool("RUZGAR_WHISPER_TEMP_FALLBACK", True):
+        kwargs["temperature"] = (0.0, 0.2, 0.4)
+        kwargs["log_prob_threshold"] = -1.0
+        kwargs["compression_ratio_threshold"] = 2.4
+        kwargs["no_speech_threshold"] = 0.6
+    prompt = stt_baglam_ipucu()
+    if prompt:
+        kwargs["initial_prompt"] = prompt
     if language:
         kwargs["language"] = language
     # Kısa ses: zaman damgası/VAD pad hafif; dil algılama yok (tr zorlu)
@@ -291,6 +382,8 @@ class SttSegment:
     start: float
     end: float
     text: str
+    avg_logprob: float | None = None
+    no_speech_prob: float | None = None
 
     def to_dict(self) -> dict[str, float | str]:
         return {"start": self.start, "end": self.end, "text": self.text}
@@ -303,6 +396,8 @@ class TranscribeResult:
     segments: list[SttSegment]
     language_probability: float | None = None
     duration_sec: float | None = None
+    guven: float | None = None
+    dusuk_guven: bool = False
 
     def to_dict(self, *, include_segments: bool = True) -> dict:
         out: dict = {
@@ -310,6 +405,8 @@ class TranscribeResult:
             "language": self.language,
             "language_probability": self.language_probability,
             "duration_sec": self.duration_sec,
+            "guven": self.guven,
+            "dusuk_guven": self.dusuk_guven,
         }
         if include_segments:
             out["segments"] = [s.to_dict() for s in self.segments]
@@ -354,9 +451,24 @@ def transcribe_file_detailed(
             continue
         start = float(getattr(s, "start", 0.0) or 0.0)
         end = float(getattr(s, "end", start) or start)
-        segments.append(SttSegment(start=start, end=end, text=t))
+        lp = getattr(s, "avg_logprob", None)
+        ns = getattr(s, "no_speech_prob", None)
+        segments.append(
+            SttSegment(
+                start=start,
+                end=end,
+                text=t,
+                avg_logprob=float(lp) if lp is not None else None,
+                no_speech_prob=float(ns) if ns is not None else None,
+            )
+        )
         parts.append(t)
-    text = " ".join(parts).strip()
+    text = temizle_halusinasyon(" ".join(parts).strip(), kwargs.get("initial_prompt", ""))
+    guven, dusuk = degerlendir_guven(
+        [(sg.end - sg.start, sg.avg_logprob, sg.no_speech_prob) for sg in segments]
+    )
+    if not text:
+        guven, dusuk = None, False
     lang = getattr(info, "language", None) or language or "unknown"
     prob = getattr(info, "language_probability", None)
     dur = getattr(info, "duration", None)
@@ -366,6 +478,8 @@ def transcribe_file_detailed(
         segments=segments,
         language_probability=float(prob) if prob is not None else None,
         duration_sec=float(dur) if dur is not None else None,
+        guven=guven,
+        dusuk_guven=dusuk,
     )
 
 
