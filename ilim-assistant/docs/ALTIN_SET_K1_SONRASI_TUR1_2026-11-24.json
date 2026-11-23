@@ -1,0 +1,127 @@
+{
+  "n": 240,
+  "gecti_pct": 73.8,
+  "bulamadim_pct": 5.4,
+  "ort_kapsama": 0.779,
+  "ham_dokum": 0,
+  "umit_abi_pct": 21.2,
+  "medyan_sn": 4.12,
+  "p90_sn": 14.92,
+  "saglayici": {
+    "gemini": 165,
+    "None": 57,
+    "hizli": 10,
+    "miss_kutuphane": 8
+  },
+  "hata_sayisi": 0,
+  "raflar": {
+    "cografya": {
+      "n": 20,
+      "gecti_pct": 85.0,
+      "bulamadim_pct": 5.0,
+      "ort_kapsama": 0.887,
+      "ham_dokum": 0,
+      "umit_abi_pct": 15.0,
+      "medyan_sn": 7.38
+    },
+    "dil_edebiyat": {
+      "n": 20,
+      "gecti_pct": 60.0,
+      "bulamadim_pct": 0.0,
+      "ort_kapsama": 0.733,
+      "ham_dokum": 0,
+      "umit_abi_pct": 20.0,
+      "medyan_sn": 5.22
+    },
+    "din": {
+      "n": 20,
+      "gecti_pct": 35.0,
+      "bulamadim_pct": 40.0,
+      "ort_kapsama": 0.35,
+      "ham_dokum": 0,
+      "umit_abi_pct": 80.0,
+      "medyan_sn": 2.93
+    },
+    "felsefe": {
+      "n": 20,
+      "gecti_pct": 70.0,
+      "bulamadim_pct": 0.0,
+      "ort_kapsama": 0.8,
+      "ham_dokum": 0,
+      "umit_abi_pct": 15.0,
+      "medyan_sn": 3.59
+    },
+    "fizik": {
+      "n": 20,
+      "gecti_pct": 90.0,
+      "bulamadim_pct": 0.0,
+      "ort_kapsama": 0.854,
+      "ham_dokum": 0,
+      "umit_abi_pct": 25.0,
+      "medyan_sn": 4.44
+    },
+    "genel_kultur": {
+      "n": 20,
+      "gecti_pct": 55.0,
+      "bulamadim_pct": 10.0,
+      "ort_kapsama": 0.633,
+      "ham_dokum": 0,
+      "umit_abi_pct": 5.0,
+      "medyan_sn": 6.3
+    },
+    "hukuk": {
+      "n": 20,
+      "gecti_pct": 95.0,
+      "bulamadim_pct": 0.0,
+      "ort_kapsama": 0.958,
+      "ham_dokum": 0,
+      "umit_abi_pct": 25.0,
+      "medyan_sn": 3.16
+    },
+    "kimya": {
+      "n": 20,
+      "gecti_pct": 90.0,
+      "bulamadim_pct": 0.0,
+      "ort_kapsama": 0.858,
+      "ham_dokum": 0,
+      "umit_abi_pct": 25.0,
+      "medyan_sn": 3.89
+    },
+    "matematik": {
+      "n": 20,
+      "gecti_pct": 70.0,
+      "bulamadim_pct": 0.0,
+      "ort_kapsama": 0.758,
+      "ham_dokum": 0,
+      "umit_abi_pct": 15.0,
+      "medyan_sn": 2.57
+    },
+    "tarih": {
+      "n": 20,
+      "gecti_pct": 75.0,
+      "bulamadim_pct": 5.0,
+      "ort_kapsama": 0.817,
+      "ham_dokum": 0,
+      "umit_abi_pct": 10.0,
+      "medyan_sn": 7.09
+    },
+    "teknoloji": {
+      "n": 20,
+      "gecti_pct": 75.0,
+      "bulamadim_pct": 5.0,
+      "ort_kapsama": 0.775,
+      "ham_dokum": 0,
+      "umit_abi_pct": 10.0,
+      "medyan_sn": 3.06
+    },
+    "tip_biyoloji": {
+      "n": 20,
+      "gecti_pct": 85.0,
+      "bulamadim_pct": 0.0,
+      "ort_kapsama": 0.925,
+      "ham_dokum": 0,
+      "umit_abi_pct": 10.0,
+      "medyan_sn": 7.67
+    }
+  }
+}

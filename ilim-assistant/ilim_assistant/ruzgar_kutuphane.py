@@ -350,11 +350,29 @@ def build_kutuphane_context(query: str, *, max_eser: int = 3, max_chars: int = 3
         f"Soru odaklı eser: {len(hits)}",
     ]
     used = 0
-    for i, h in enumerate(hits, 1):
+    # K1: başlık/yol eşleşmesi «nedir/nelerdir» gibi soru kalıplarına da takılıyordu
+    # (Elektroliz → «Güneş Sistemi»). Kanıt paketine yalnız içerik sözcüğü örtüşen eser girer.
+    try:
+        from ilim_assistant.ruzgar_kutuphane_gorev import (
+            ham_dokum_enabled,
+            kanit_metni_alakali_mi,
+        )
+
+        _kanit_suzgec = not ham_dokum_enabled()
+    except Exception:
+        _kanit_suzgec = False
+        kanit_metni_alakali_mi = None  # type: ignore[assignment]
+    n_yazilan = 0
+    for h in hits:
         yol = str(h.get("yol") or "")
         excerpt = read_eser_excerpt(yol, max_chars=1400)
         if not excerpt:
             continue
+        if _kanit_suzgec and kanit_metni_alakali_mi is not None:
+            _blob = f"{h.get('raf_ad') or ''} {h.get('id') or ''} {' '.join(h.get('basliklar') or [])}\n{excerpt}"
+            if not kanit_metni_alakali_mi(query, _blob):
+                continue
+        i = n_yazilan + 1
         block = (
             f"\n--- Eser #{i}: {h.get('raf_ad')} / {h.get('id')} (skor={h.get('skor')}) ---\n"
             f"{excerpt}"
@@ -363,8 +381,10 @@ def build_kutuphane_context(query: str, *, max_eser: int = 3, max_chars: int = 3
             break
         parts.append(block)
         used += len(block)
+        n_yazilan += 1
     if len(parts) <= 2:
         return ""
+    parts[1] = f"Soru odaklı eser: {n_yazilan}"
     return "\n".join(parts)
 
 

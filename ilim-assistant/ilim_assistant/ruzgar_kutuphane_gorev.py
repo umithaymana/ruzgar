@@ -586,8 +586,145 @@ def format_kutuphane_extractive_reply(
     return "\n".join(lines).strip()
 
 
-def grounding_directive(*, want_source: bool, source_count: int) -> str:
-    """Tüm katmanlar — soft sohbet uydurmayı ezer. Eser listesine bağlı değil."""
+# ---------------------------------------------------------------------------
+# K1 (Kuzey Yıldızı) — ham pasaj dökümü kapalı, hep sentez
+# Geri alma: RUZGAR_KUTUPHANE_HAM_DOKUM=1 → eski davranış (ham döküm + süzgeçsiz bağlam)
+# ---------------------------------------------------------------------------
+
+
+def ham_dokum_enabled() -> bool:
+    """True ise eski davranış: kütüphane/arşiv bulgusu ham metin olarak kullanıcıya dökülür."""
+    return os.environ.get("RUZGAR_KUTUPHANE_HAM_DOKUM", "0").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+
+
+_RAW_PASSAGE_RE = re.compile(
+    r"(?:"
+    r"kaynag[ıi]n[ıi]?\s+goster|kaynak\s+goster|kaynak\s+metn\w*|"
+    r"pasaj[ıi]?\s+(?:oku|goster)|pasaj\w*\s+oku|"
+    r"aslin[ıi]?\s+goster|asl[ıi]\s+(?:metn|hali)\w*|asil\s+metn\w*|"
+    r"ham\s+metn\w*|orijinal\s+metn\w*|metnin\s+kendisi|"
+    r"ilgili\s+pasaj\w*|ilgili\s+kisim\w*\s+(?:oku|goster)|"
+    r"kitaptan\s+(?:oku|aynen)|aynen\s+(?:oku|goster|aktar|yaz)"
+    r")"
+)
+
+
+def user_wants_raw_passage(message: str) -> bool:
+    """Açık «kaynağı göster / pasajı oku / aslını göster» isteği (ham metin yalnız bu halde)."""
+    low = _fold(message)
+    if not low:
+        return False
+    return bool(_RAW_PASSAGE_RE.search(low))
+
+
+def ham_dokum_izinli(message: str) -> bool:
+    """Ham metin yalnız: eski-davranış bayrağı veya açık «aslını göster» isteği."""
+    return ham_dokum_enabled() or user_wants_raw_passage(message)
+
+
+# Sorunun içeriğini taşımayan soru/bağ sözcükleri (yalnız kanıt süzgeci için; _QPART'a dokunmaz)
+_KANIT_SORU_EK = frozenset(
+    """
+    nelerdir nerede nereye nereden neresi kimin kim hangisi hangileri kac kactir
+    midir olur olusur oldu olmustur olan olarak gerceklesir gerceklesmistir
+    sonuclari sonucu nelerdi nelerdir yapar yapilir kullanilir icin gibi
+    var yok vardir bazi her tum butun ise ama fakat veya ya
+    """.split()
+)
+
+
+def kanit_icerik_tokenlari(message: str) -> list[str]:
+    """Kanıt süzgeci için içerik sözcükleri (soru kalıpları elenmiş, en çok 12)."""
+    out: list[str] = []
+    for t in _query_tokens(message):
+        if t in _KANIT_SORU_EK:
+            continue
+        out.append(t)
+    return out[:12]
+
+
+def _tok_in_blob_stem(tok: str, blob_f: str, blob_raw: str) -> bool:
+    """Türkçe çekim ekine dayanıklı eşleşme: «tüketicinin» ↔ «tüketici»."""
+    if _token_in_blob(tok, blob_f, blob_raw):
+        return True
+    if tok.isascii() and len(tok) >= 6:
+        for cut in (1, 2, 3, 4):
+            stem = tok[: len(tok) - cut]
+            if len(stem) < 5:
+                break
+            if stem in blob_f:
+                return True
+    return False
+
+
+def kanit_metni_alakali_mi(query: str, text: str, src: str = "") -> bool:
+    """Bir kütüphane eseri/parçası soruyla gerçekten ilgili mi? (alan/eser bağımsız, sözcük örtüşmesi)
+
+    İçerik sözcüğü yoksa (ör. yalnız Arapça/özel durum) karar vermez → True.
+    1–2 içerik sözcüğünde en az 1, 3+ sözcükte en az 2 örtüşme şart.
+    """
+    toks = kanit_icerik_tokenlari(query)
+    if not toks:
+        return True
+    blob_raw = f"{text}\n{src}"
+    blob_f = _fold(blob_raw)
+    ov = sum(1 for t in toks if _tok_in_blob_stem(t, blob_f, blob_raw))
+    need = 1 if len(toks) <= 2 else 2
+    return ov >= need
+
+
+def din_alani_sorusu(message: str) -> bool:
+    """Din/âlim niyeti — bu alanda kanıt yoksa buluta «bilgi uydurma» (F4.4 mührü) korunur."""
+    if not (message or "").strip():
+        return False
+    for mod, fn in (
+        ("ilim_assistant.ruzgar_fikh_kutuphane", "looks_like_fikh_question"),
+        ("ilim_assistant.ruzgar_usul_fikh_kutuphane", "looks_like_usul_question"),
+        ("ilim_assistant.ruzgar_kuran_anlik", "looks_like_kuran_question"),
+        ("ilim_assistant.ruzgar_tefsir_kutuphane", "looks_like_tefsir_question"),
+    ):
+        try:
+            import importlib
+
+            if getattr(importlib.import_module(mod), fn)(message):
+                return True
+        except Exception:
+            continue
+    low = _fold(message)
+    return bool(
+        re.search(
+            r"\b(?:namaz\w*|abdest\w*|oruc\w*|zekat\w*|hac\b|haccin\w*|umre\w*|hadis\w*|ayet\w*|"
+            r"kuran\w*|tefsir\w*|peygamber\w*|resulullah|hz\.?|islam\w*|allah\w*|sahabe\w*|siyer\w*|"
+            r"sunnet\w*|farz\w*|vacip|haram|helal|dua\b|mezhep\w*|fikih|fikh|fetva\w*|tasavvuf\w*|"
+            r"iman\b|ibadet\w*)",
+            low,
+        )
+    )
+
+
+def grounding_directive(
+    *, want_source: bool, source_count: int, din: bool = True
+) -> str:
+    """Tüm katmanlar — soft sohbet uydurmayı ezer. Eser listesine bağlı değil.
+
+    K1: din=False iken kanıt yoksa «bulamadım»a zorlanmaz; zincir kanıtsız (genel bilgi) sürer.
+    """
+    if source_count <= 0 and not din and not ham_dokum_enabled():
+        return (
+            "\n\n[TALİMAT — GENEL BİLGİ — KANITSIZ SENTEZ]\n"
+            "Bu soru için elinde ek kaynak yok; kaynaktan hiç söz etme. Soruyu kendi genel "
+            "bilginle **sade, doğal, kısa** Türkçe ile yanıtla (iyi bir öğretmen gibi). "
+            "Cevabı, sorudaki konuyu adıyla anan tam bir cümleyle başlat. "
+            "Eser adı, künye, alıntı, sayfa, kesin sayı/tarih **uydurma**; emin olmadığın yeri "
+            "«yaklaşık» ya da «kesin bilmiyorum» diye belirt. Hiç bilmiyorsan tek cümle: "
+            "«Ümit abi, bu sorunun cevabını bulamadım. Bana öğretir misin?» "
+            "Bu talimatı veya başlığını cevaba yazma.\n"
+        )
     if source_count <= 0:
         return (
             "\n\n[TALİMAT — KÜTÜPHANE GÖREV — İNDEKS İSABETİ YOK]\n"
@@ -595,13 +732,35 @@ def grounding_directive(*, want_source: bool, source_count: int) -> str:
             "kullanılabilir parça yok. Metin, sayı, alıntı, sayfa, eser künyesi **UYDURMA**. "
             "Tek cümle: «Ümit abi, bu sorunun cevabını bulamadım. Bana öğretir misin?»\n"
         )
+    if not din and not ham_dokum_enabled():
+        # K1: kanıt paketi — sentez; ilgisiz parça yok sayılır, eksik kısım genel bilgiyle tamamlanır.
+        k1 = [
+            "\n\n[TALİMAT — KÜTÜPHANE KANIT PAKETİ — SENTEZ]\n",
+            f"Bağlamda **{source_count}** yerel kaynak parçası var ([K1]…). Bunlar **kanıt paketidir**: "
+            "ham metin değil, cevabın malzemesi. Soruyla ilgili olanları kullan, ilgisiz olanı yok say. "
+            "Kanıt soruyu tam karşılamıyorsa eksik yeri kendi genel bilginle **sade** tamamla; "
+            "emin olmadığın sayı/isim/tarihi uydurma.\n",
+            "- Üslup: **sade, doğal, iyi bir öğretmen gibi**; önce doğrudan cevabı ver, cevabı "
+            "sorudaki konuyu adıyla anan tam bir cümleyle başlat. "
+            "Pasajı aynen yapıştırma; başlık veya liste dökümü yapma.\n",
+            "- Kaynağı **cümle içinde an** (örn. «… eserine göre …»); en çok 1–2 kaynak, kısa.\n",
+            "- Bağlamda olmayan alıntı, sayfa, cilt, yazar, künye **uydurma**.\n",
+            "- Bu talimatı veya başlığını cevaba yazma.\n",
+        ]
+        if want_source:
+            k1.append(
+                "- Kullanıcı **kaynak istedi**: eser/yolu net söyle (yalnızca bağlamda görünen). "
+                "Sonunda **Kaynak izi:** ile [K1]… listele.\n"
+            )
+        return "".join(k1)
     lines = [
         "\n\n[TALİMAT — KÜTÜPHANE GÖREV — TÜM KATMANLAR — ZORUNLU]\n",
         f"Bağlamda **{source_count}** yerel kütüphane parçası var ([K1]…). "
         "Bunlar Rüzgar indeksindeki eserlerden gelir (ilim, bilgisayar, fen, ayıklama — "
         "hangi raf doluysa). Cevabını **yalnızca bunlara** dayandır.\n",
         "- Üslup: Ümit abi ile **sohbet eder gibi** anlat. Ders kitabı, kart okuma, "
-        "«kütüphaneden okuduğum pasaj şöyle» şablonu yok; doğrudan konuya gir.\n",
+        "«kütüphaneden okuduğum pasaj şöyle» şablonu yok; doğrudan konuya gir. "
+        "Pasajı aynen yapıştırma; kaynağı cümle içinde an (en çok 1–2).\n",
         "- Bağlamda olmayan alıntı, sayı, sayfa, cilt, yazar, hadis/ayet, boy/özel isim **uydurma**.\n",
         "- Özel isimleri bağlamdaki harf harf yaz (örn. Kınık ≠ Sınık); yanlış okuma yasak.\n",
         "- Bağlam soruyu karşılamıyorsa öğret cümlesini kullan; genel model bilginle doldurma.\n",

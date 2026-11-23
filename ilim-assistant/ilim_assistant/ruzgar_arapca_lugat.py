@@ -322,6 +322,16 @@ def looks_like_arapca_lugat_question(msg: str) -> bool:
     ):
         return False
     if len(words) <= 4:
+        # K1: «Kalp kaç odacıklıdır?» gibi bilgi soruları (kaç/nerede/nasıl…) kök kartına düşmez.
+        _bilgi_soru = re.search(
+            r"\b(?:kac|kactir|nerede|nereden|nereye|nasil|neden|nicin|niye|hangi|kimdir|kim|"
+            r"ne\s+zaman|ne\s+kadar)\b",
+            low,
+        )
+        if _bilgi_soru and not any(
+            x in low for x in ("nedir", "ne demek", "anlam", "koku", "kok", "mana", "lugat", "sozluk")
+        ):
+            return False
         return True
     return any(x in low for x in ("nedir", "ne demek", "anlam", "koku", "kok"))
 

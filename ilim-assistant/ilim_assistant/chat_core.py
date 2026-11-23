@@ -255,6 +255,10 @@ def try_archive_rag_direct_reply(
     Güçlü arşiv (RAG) eşleşmesinde LLM beklemeden doğrudan pasaj döndürür.
     Kapatmak: ENABLE_RAG_ARCHIVE_FAST=0
     Sohbet/anlat niyeti: RUZGAR_ANLIK_NIYET_GATE (varsayılan açık) → LLM sentezine bırak.
+
+    K1 (Kuzey Yıldızı): ham pasaj dökümü VARSAYILAN KAPALI — arşiv bulgusu kanıt paketi olarak
+    sentez modeline gider. Yalnız açık «kaynağı göster / pasajı oku / aslını göster» isteğinde
+    veya RUZGAR_KUTUPHANE_HAM_DOKUM=1 (eski davranış) iken ham metin döner.
     """
     if os.environ.get("ENABLE_RAG_ARCHIVE_FAST", "1").strip().lower() in (
         "0",
@@ -263,9 +267,17 @@ def try_archive_rag_direct_reply(
     ):
         return None
     try:
-        from ilim_assistant.ruzgar_anlik_niyet_gate import should_defer_archive_fast
+        from ilim_assistant.ruzgar_kutuphane_gorev import ham_dokum_izinli
 
-        if should_defer_archive_fast(message):
+        if not ham_dokum_izinli(message):
+            return None
+    except Exception:
+        return None
+    try:
+        from ilim_assistant.ruzgar_anlik_niyet_gate import should_defer_archive_fast
+        from ilim_assistant.ruzgar_kutuphane_gorev import user_wants_raw_passage
+
+        if not user_wants_raw_passage(message) and should_defer_archive_fast(message):
             return None
     except Exception:
         pass
@@ -1785,8 +1797,21 @@ def prepare_turn(
             _usable = hits_usable_for_kutuphane(msg, _hits_n) or blocks_usable_for_kutuphane(
                 msg, _blocks_n
             )
-            # F2.2 kademe-1: usable değilse extractive özet dene (LLM/öğret öncesi)
-            if not _usable and (_hits_n or _blocks_n):
+            # K1: ham döküm yalnız (a) eski davranış bayrağı + usable değil (F2.2 kademe-1) ya da
+            # (b) açık «aslını göster / pasajı oku» isteği + usable bulgu. Aksi halde hep sentez.
+            try:
+                from ilim_assistant.ruzgar_kutuphane_gorev import (
+                    ham_dokum_enabled as _ham_flag,
+                    user_wants_raw_passage as _ham_acik,
+                )
+
+                _ham_yolu = bool(
+                    (_hits_n or _blocks_n)
+                    and ((_ham_flag() and not _usable) or (_ham_acik(msg) and _usable))
+                )
+            except Exception:
+                _ham_yolu = False
+            if _ham_yolu:
                 try:
                     from ilim_assistant.ruzgar_kutuphane_gorev import (
                         format_kutuphane_extractive_reply,
@@ -1831,13 +1856,35 @@ def prepare_turn(
             except Exception:
                 pass
             if not _usable:
-                # F4.4 İlim-A: raftan usable yok → buluta «bilgi uydur» yok
+                _k1_din = True
+                try:
+                    from ilim_assistant.ruzgar_kutuphane_gorev import (
+                        din_alani_sorusu,
+                        ham_dokum_enabled,
+                    )
+
+                    _k1_din = bool(din_alani_sorusu(msg))
+                    _k1_eski = bool(ham_dokum_enabled())
+                except Exception:
+                    _k1_eski = True
+                if _k1_din or _k1_eski:
+                    # F4.4 İlim-A: raftan usable yok → buluta «bilgi uydur» yok
+                    # (din/âlim alanı mührü + eski davranış bayrağı)
+                    if orchestration_out is not None:
+                        orchestration_out["ilim_no_cloud_invent"] = True
+                        orchestration_out["provider"] = "miss_kutuphane"
+                        orchestration_out["provider_rozet"] = "raftan"
+                    return msg, [], "", "", "", MISS_PHRASE
+                # K1: kanıt yetersiz (ilgisiz/zayıf bulgu) → kanıt paketine GİRMEZ; zincir
+                # kanıtsız sürer (Ollama → Gemini → Groq → web ikincil → «bulamadım»).
+                hits = []
+                blocks = []
+                ar_hits = []
+                ilim_merge_tail = ""
                 if orchestration_out is not None:
-                    orchestration_out["ilim_no_cloud_invent"] = True
-                    orchestration_out["provider"] = "miss_kutuphane"
-                    orchestration_out["provider_rozet"] = "raftan"
-                return msg, [], "", "", "", MISS_PHRASE
-            # usable → aşağıda grounding ile doğal cevap
+                    orchestration_out["kanit_yetersiz"] = True
+                    orchestration_out["kanit_elenen"] = len(_hits_n) + len(_blocks_n)
+            # usable → aşağıda grounding ile doğal cevap (kanıt paketi = süzülmüş hits/blocks)
         except Exception:
             try:
                 from ilim_assistant.ruzgar_tur_teshis_f0 import MISS_KUTUPHANE, note_rag_retrieval
@@ -2561,9 +2608,16 @@ def prepare_turn(
             if kutuphane_enabled_hard() and is_kutuphane_bilgi_soru(msg):
                 _kutup_hard = True
                 _src_n = max(len(hits or []), len(blocks or []))
+                try:
+                    from ilim_assistant.ruzgar_kutuphane_gorev import din_alani_sorusu
+
+                    _k1_din_gd = bool(din_alani_sorusu(msg))
+                except Exception:
+                    _k1_din_gd = True
                 user_payload += grounding_directive(
                     want_source=user_wants_kaynak(msg),
                     source_count=_src_n,
+                    din=_k1_din_gd,
                 )
         except Exception:
             _kutup_hard = False
