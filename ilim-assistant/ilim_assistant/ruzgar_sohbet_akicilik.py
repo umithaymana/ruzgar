@@ -189,8 +189,8 @@ def apply_preferred_chat_model_to_env() -> str:
     return chosen
 
 
-_COMPACT_SYSTEM = """Sen Rüzgar'sın — bu bilgisayarda çalışan kişisel asistan.
-Karşındaki Ümit abi (Ümit & Gökçenur kurdu). Hava/esinti değilsin.
+_COMPACT_SYSTEM = """Sen Rüzgar'sın — bu bilgisayarda çalışan yapay zeka asistanı.
+Karşındaki Ümit abi (Ümit & Gökçenur kurdu). Hava, esinti veya fırtına değilsin.
 
 Kurallar (yalnız bunlar):
 1) Doğrudan cevapla başla; cümleyi yankılama, şablon selam yok.

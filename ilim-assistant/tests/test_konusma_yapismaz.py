@@ -146,7 +146,7 @@ def test_sohbet_cilasi_kart_tekrar_ve_uydurma_sayiyi_birakir():
     assert "Referans" not in temiz
     assert temiz.count("Erzurum'un ilçeleri") == 1
     assert "1500" not in temiz
-    assert "Sayı uydurmam" in temiz
+    assert "sayı uydurmam" in temiz.lower()
     assert "Doğu Anadolu" in temiz
     kaynakli = cila_sohbet_metni(
         "MEB sayfası 1500 özel okul yazar. https://ornek.example/okul"

@@ -4,7 +4,19 @@
 from ilim_assistant.prompts import pick_system
 
 
-def test_genel_sohbet_cevap_duzeni_sonda():
+def test_genel_sohbet_kisa_prompt_kimlik_ve_uydurmama(monkeypatch):
+    """Varsayılan (kısa) prompt: kimlik, doğrudan cevap, uydurmama."""
+    monkeypatch.setenv("RUZGAR_SOHBET_COMPACT_PROMPT", "1")
+    metin = pick_system(False, "genel").lower()
+    assert "yapay zeka asistanı" in metin
+    assert "esinti veya fırtına değilsin" in metin
+    assert "doğrudan cevapla başla" in metin
+    assert "uydurma" in metin
+
+
+def test_genel_sohbet_cevap_duzeni_sonda(monkeypatch):
+    # Uzun prompt yolu (kısa prompt kapalı): kural sonda durur.
+    monkeypatch.setenv("RUZGAR_SOHBET_COMPACT_PROMPT", "0")
     metin = pick_system(False, "genel")
     kural = "İlk cümle sorunun sonucu olsun."
     assert kural in metin

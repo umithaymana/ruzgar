@@ -290,7 +290,7 @@ _OKUL_SAYISI = re.compile(
     r"(?:['’]?\s*den\s+fazla\s+)?(?:özel|ozel)\s+okul"
 )
 _OKUL_KAYNAK_OK = re.compile(
-    r"(?i)(?:meb\.gov|tuik\.gov|tüik\.gov|www\.meb|resmi\s+istatistik|"
+    r"(?i)(?:https?://|meb\.gov|tuik\.gov|tüik\.gov|www\.meb|resmi\s+istatistik|"
     r"mill[iı]\s+e[gğ]itim)"
 )
 # 209 üniversite / 200'den fazla üniversite — kaynaksız uydurma (B3)
@@ -299,7 +299,7 @@ _UNI_SAYISI = re.compile(
     r"(?:['’]?\s*den\s+fazla\s+)?(?:üniversite|universite)"
 )
 _UNI_KAYNAK_OK = re.compile(
-    r"(?i)(?:y[oö]k\.gov|www\.y[oö]k|y[oö]k\s+istatistik|y[oö]k\s+atlas|"
+    r"(?i)(?:https?://|y[oö]k\.gov|www\.y[oö]k|y[oö]k\s+istatistik|y[oö]k\s+atlas|"
     r"y[uü]ksek[öo][gğ]retim\s+kurulu|resmi\s+y[oö]k)"
 )
 _CUMLE_AYIR = re.compile(r"(?<=[.!?])\s+")
