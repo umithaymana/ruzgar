@@ -12,7 +12,7 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 |---------|------|-----|
 | **1 — Masa gerçek iş** | **M1–M3 MÜHÜR YEŞİL** | `docs/M3_MASA_ANA_MOTOR_MUHUR_2026-11-21.md` · `smoke_masa_m3_muhur.py` |
 | **2 — Çırak / programlama** | **A–G+T✓** tavan mühür | `TAVAN_DERS.md` · `smoke_cirak_dilim_t.py` |
-| **0 — Açık** | **TTS sıkışıklık / geç ses** | Kod: klon 8sn→Edge · cancel · sohbet≠TTS · mobil parity — Mimar: «sorunlar devam» · dönüşte canlı teşhis |
+| **0 — Kod tamam, kulak testi bekliyor** | **TTS sıkışıklık / geç ses** | 2026-11-23 kök neden: XTTS 8 sn'ye yetişemiyor → her cümle 8 sn boşa + Edge (mobil kuyruk: ilk ses 25–30 sn). Çözüm: `ses_klon_devre.py` devre kesici (klon kaçırınca 10 dk doğrudan Edge, yarı açık tek deneme, ardışık hatada 2×, en çok 1 sa). Ölçüm: cümle başına ~9–10 sn → ~1,6 sn. Kapatma `RUZGAR_TTS_KLON_DEVRE=0`; durum `/api/ses/telemetri` → `klon_devre`. Muaf: açık `clone`, tilavet/âlim |
 | **0b — Donma** | v1.2 yüklü | listening/thinking/speaking idle + health unlock |
 | **3 — Sonra** | Kulak turu → mobil dublaj UI / V2 | Sıkışıklık yeşil olunca |
 | **S0–S4 mühür** | Ölçüm→profil→prosodi→klon→**okuma bağ** + XTTS canlı | S4 26/26 · `docs/S4_OKUMA_SES_BAG_2026-11-21.md` |

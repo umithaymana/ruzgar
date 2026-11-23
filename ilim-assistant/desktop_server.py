@@ -11703,6 +11703,22 @@ async def api_tts(body: TtsBody, request: Request = None):  # type: ignore[assig
         speaker_rel=body.speaker_rel,
     )
 
+    # Klon devre kesici: XTTS sohbet süresine yetişemediyse bir süre doğrudan Edge
+    # (her cümlede 8 sn boşa beklemeyi önler). Açık `clone` isteği ve tilavet/âlim muaf.
+    _devre_aktif = False
+    if use_clone:
+        try:
+            from ilim_assistant import ses_klon_devre as _devre
+
+            if _devre.uygulanir(kar.value, body.backend):
+                _devre_aktif = True
+                if _devre.acik_mi():
+                    _devre.atla_say()
+                    use_clone = False
+                    meta = {**(meta or {}), "clone_fallback": "edge", "clone_error": "devre_acik"}
+        except Exception:
+            _devre_aktif = False
+
     # S3 — XTTS yoksa Edge yedek (strict: RUZGAR_TTS_CLONE_STRICT=1 → 503)
     edge_yedek_meta = False
     if use_clone:
@@ -11765,6 +11781,11 @@ async def api_tts(body: TtsBody, request: Request = None):  # type: ignore[assig
                     ),
                     timeout=deadline,
                 )
+                if _devre_aktif:
+                    try:
+                        _devre.basari_kaydet()
+                    except Exception:
+                        pass
             except Exception as clone_exc:
                 # S3 — klon hata / zaman aşımı → Edge yedek (strict değilse)
                 import os as _os
@@ -11786,6 +11807,12 @@ async def api_tts(body: TtsBody, request: Request = None):  # type: ignore[assig
                         from ilim_assistant.ses_xtts_iptal import cancel_all as _xtts_cancel_all
 
                         _xtts_cancel_all(reason="clone_deadline")
+                    except Exception:
+                        pass
+                if _devre_aktif:
+                    # Süre aşımı da hata da klonun şu an güvenilmez olduğunu gösterir
+                    try:
+                        _devre.hata_kaydet()
                     except Exception:
                         pass
                 strict = _os.environ.get("RUZGAR_TTS_CLONE_STRICT", "0").strip().lower() in (
@@ -12157,7 +12184,14 @@ def api_ses_telemetri_get():
     """Madde 2.6 — «ilk token» ve «duyulan ilk ses» özeti (kişisel veri yok)."""
     from ilim_assistant.ses_tur_kilidi import tel_ozet
 
-    return {"ok": True, **tel_ozet()}
+    out = {"ok": True, **tel_ozet()}
+    try:
+        from ilim_assistant.ses_klon_devre import durum as _klon_devre_durum
+
+        out["klon_devre"] = _klon_devre_durum()
+    except Exception:
+        pass
+    return out
 
 
 @app.post("/api/ses/telemetri")

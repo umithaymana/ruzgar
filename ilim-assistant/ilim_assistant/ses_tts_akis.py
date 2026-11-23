@@ -109,7 +109,16 @@ def coz_edge_paket(
         speaker_rel=speaker_rel,
     )
     if use_clone and xtts_runtime_available():
-        raise AkisYok("klon")
+        # Klon devre kesici açıksa /api/tts de Edge'e düşer → akış (Edge) uygundur
+        devre_acik = False
+        try:
+            from ilim_assistant import ses_klon_devre as _devre
+
+            devre_acik = _devre.uygulanir(kar.value, backend) and _devre.acik_mi()
+        except Exception:
+            devre_acik = False
+        if not devre_acik:
+            raise AkisYok("klon")
 
     voice = EDGE_VOICES[kar]
     try:
