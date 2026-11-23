@@ -12,10 +12,24 @@ html.ry #btnYuzYeni { display: none !important; }
 html.ry body {
   background: radial-gradient(900px 520px at 50% -18%, color-mix(in srgb, var(--accent) 17%, #0b1220) 0%, var(--bg) 62%);
 }
+/* Sohbet çubuğu HER ZAMAN görünür kalsın: sayfa görünür alana (klavye dahil) kilitlenir;
+   kayan tek yer konuşma akışıdır. Üstteki kurulum/HTTPS şeritleri de bu yüksekliğin içinde. */
+html.ry,
+html.ry body {
+  height: var(--ry-vh, 100dvh);
+  min-height: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+html.ry body { display: flex; flex-direction: column; }
+html.ry .install-bar,
+html.ry .https-mic-bar { flex: 0 0 auto; }
 html.ry #app {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
   max-width: 760px;
   padding: max(10px, env(safe-area-inset-top, 0px)) 12px max(10px, env(safe-area-inset-bottom, 0px));
   overflow-y: auto;
@@ -137,7 +151,7 @@ html.ry #chatView.ry-bos-on .ry-bos {
   --ry-hiz-a: 14s;
   --ry-hiz-b: 19s;
   position: relative;
-  height: 30px;
+  height: 40px;
   overflow: hidden;
   color: var(--accent);
   cursor: default;
@@ -148,7 +162,9 @@ html.ry #chatView.ry-bos-on .ry-bos {
 }
 .ry-w { position: absolute; inset: 0; transform: scaleY(var(--ry-amp-a)); transition: transform 0.7s ease; }
 .ry-w svg { display: block; width: 200%; height: 100%; animation: ry-kay var(--ry-hiz-a) linear infinite; }
-.ry-w-a { opacity: 0.95; }
+.ry-w path { stroke-width: 3.8px; stroke-linecap: round; }
+.ry-w-b path { stroke-width: 2.4px; }
+.ry-w-a { opacity: 0.95; filter: drop-shadow(0 0 5px color-mix(in srgb, var(--accent) 55%, transparent)); }
 .ry-w-b { opacity: 0.38; transform: scaleY(var(--ry-amp-b)); }
 .ry-w-b svg { animation-duration: var(--ry-hiz-b); animation-direction: reverse; }
 @keyframes ry-kay { from { transform: translateX(0); } to { transform: translateX(-50%); } }
@@ -191,6 +207,26 @@ html.ry .ry-alan textarea {
   overflow-y: auto;
   outline: none;
 }
+.ry-canli {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  background: transparent;
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.ry-canli.on {
+  background: var(--accent);
+  color: #0b1220;
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 28%, transparent);
+  animation: ry-nabiz 1.2s ease-in-out infinite;
+}
+.ry-bar.ry-yazili .ry-canli { display: none; }
 .ry-act { flex: 0 0 auto; position: relative; width: 44px; height: 44px; }
 html.ry .ry-act button {
   position: absolute;
@@ -270,7 +306,7 @@ html.ry .mic-label { display: none; }
   animation: ry-yuksel 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 .ry-tutac { width: 38px; height: 4px; border-radius: 4px; background: #334155; margin: 4px auto 12px; }
-.ry-izgara { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.ry-izgara { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .ry-liste { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
 .ry-oge {
   display: flex;
@@ -299,6 +335,7 @@ body.ry-menu-acik { overflow: hidden; }
 
 @media (prefers-reduced-motion: reduce) {
   .ry-w svg, .ry-supurge, .bubble, .ry-menu, .ry-perde, .ry-serit,
-  html.ry .ry-act #btnMic.listening { animation: none !important; }
+  html.ry .ry-act #btnMic.listening,
+  .ry-canli.on { animation: none !important; }
   .ry-w { transition: none; }
 }

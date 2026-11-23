@@ -215,9 +215,51 @@
     var act = e("div", "ry-act");
     act.appendChild(btnMic);
     act.appendChild(btnSend);
+    /* sürekli sohbet: dışarıda, tek dokunuş; açıkken dolu + nabız (btnLive'ı tetikler, onun durumunu yansıtır) */
+    var canli = e("button", "ry-canli", ikonSvg("canli"));
+    canli.type = "button";
+    canli.id = "ryCanli";
+    canli.setAttribute("aria-label", "Sürekli sohbet");
+    canli.setAttribute("aria-pressed", "false");
+    if (btnLive) {
+      canli.addEventListener("click", function () {
+        btnLive.click();
+      });
+      var canliYansit = function () {
+        var acik = btnLive.classList.contains("listening");
+        canli.classList.toggle("on", acik);
+        canli.setAttribute("aria-pressed", acik ? "true" : "false");
+        canli.setAttribute("aria-label", acik ? "Sürekli sohbeti durdur" : "Sürekli sohbet");
+      };
+      new MutationObserver(canliYansit).observe(btnLive, { attributes: true, attributeFilter: ["class"] });
+      canliYansit();
+    } else {
+      canli.style.display = "none";
+    }
     bar.appendChild(plus);
     bar.appendChild(alan);
+    bar.appendChild(canli);
     bar.appendChild(act);
+
+    /* sayfa yüksekliği = görünür alan (klavye açılınca küçülür) → çubuk asla ekran dışına çıkmaz */
+    function gorunurYukseklik() {
+      var h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+      if (h > 0) html.style.setProperty("--ry-vh", Math.round(h) + "px");
+      if (window.scrollY || (d.scrollingElement && d.scrollingElement.scrollTop)) window.scrollTo(0, 0);
+      try {
+        chat.scrollTop = chat.scrollHeight;
+      } catch (_) {}
+    }
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", gorunurYukseklik);
+      window.visualViewport.addEventListener("scroll", gorunurYukseklik);
+    }
+    window.addEventListener("resize", gorunurYukseklik);
+    window.addEventListener("orientationchange", gorunurYukseklik);
+    input.addEventListener("focus", function () {
+      setTimeout(gorunurYukseklik, 250);
+    });
+    gorunurYukseklik();
 
     /* --- rüzgar çizgisi --- */
     var cizgi = e("div", "ry-cizgi");
@@ -465,17 +507,7 @@
     function menuKur() {
       sayfa.textContent = "";
       sayfa.appendChild(e("div", "ry-tutac"));
-      var canliEtiket =
-        btnLive && /durdur|kapat|bitir/i.test(btnLive.textContent || "")
-          ? "Sürekli sohbeti durdur"
-          : "Sürekli sohbet";
       var izgara = e("div", "ry-izgara");
-      izgara.appendChild(
-        kutu("canli", canliEtiket, function () {
-          menuKapat();
-          if (btnLive) btnLive.click();
-        }),
-      );
       izgara.appendChild(kutu("belge", "Belge", hazirla("Bir belge hazırla: ")));
       izgara.appendChild(kutu("tablo", "Tablo", hazirla("Bir tablo hazırla: ")));
       izgara.appendChild(kutu("cizim", "Çizim", hazirla("Bir çizim yap: ")));
