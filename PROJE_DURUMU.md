@@ -1,6 +1,6 @@
 # RÜZGAR — oturum özeti (kalıcı)
 
-**Son güncelleme:** 2026-11-24 gece — D2 künye yolu + K3 BM25 dilimi (pano emri: sorusuz devam).
+**Son güncelleme:** 2026-11-24 23:16 — din_d2_bm25 ölçüldü (doğru %73,1; kaynak %66,7).
 
 ## YÖNETİCİ İZNİ — 2026-11-24 gece (Mimar, «özellikle not al»)
 
@@ -27,13 +27,13 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 
 ---
 
-## KALDIĞIMIZ YER — 2026-11-24 gece (D2+K3 BM25 dilimi)
+## KALDIĞIMIZ YER — 2026-11-24 23:16 (din_d2_bm25 ölçüm bitti)
 
-1. **D2 kök neden kapandı:** `idrak_entegrasyon.append_idrak_agent_layer` `orchestration_out.clear()` ile RAG/künye notlarını siliyordu → canlıda hits=0 + Gemini uydurma «Kaynak izi». Artık clear yok; `cevap_kaynak_izi_uygula` uydurma izi silip kanıt künyesini yazar. Canlı: «Cuma namazı… Kaynak göster» → hits 5 · usable True · gerçek künye (Zâdü'l-Meâd, Bedâi‘, er-Rimî…).
-2. **K3 BM25 dilimi:** aday havuzunda Okapi BM25 (saf Python, indirme yok) · `RUZGAR_K3_BM25=0` kapatır · terimli parça alakasız yoğun skoru geçer.
-3. **Yeşil sayaç:** hâlâ **3/23** (K0·K1·D1). D2 ve K3 🟡 — tam yeşil için din 130 yeniden ölçüm + bge-m3 gece işi (05:30) + reranker.
-4. **Sıradaki:** (a) din 130 yeniden koşu (BM25+D2 etkisi) · (b) 05:30 bge-m3 yan indeks · (c) D2 çoklu eser/sentez ölçümü · (d) K2 üslup.
-5. **Dal:** `cursor/sohbet-akicilik-a-f` · son uzak `5e8ad8e4a` + bu dilim commit.
+1. **Din 130 (`din_d2_bm25`):** doğru **%57,7 → %73,1** · bulamadım %31,5→**%3,8** · kapsama 0,57→**0,71** · ham 1 · kaynak verme **%66,7** (önce %0) · çoklu eser **%59,2** · uydurma şüphe 15 soru. Rapor: `docs/DIN_RAPOR_DIN_D2_BM25_2026-11-24.md`.
+2. **D2/K3 kod:** künye yolu + BM25 canlı (`5ff8ff691`).
+3. **Yeşil sayaç:** **3/23** (K0·K1·D1). D2/K3 hâlâ 🟡 — kalan zayıf: akaid/tasavvuf/siyer listeleri, bazı «kaynak göster», 1 ham, uydurma şüphe; bge-m3 05:30.
+4. **Sıradaki:** K2 üslup **veya** zayıf din sorularına nokta atışı · 05:30 bge-m3.
+5. **Dal:** `cursor/sohbet-akicilik-a-f` @ `5ff8ff691`.
 
 ---
 
@@ -41,7 +41,7 @@ Bu dosya sohbet sıfırlanınca bağlamı taşımak için tutulur. Kapatmadan ö
 
 | Öncelik | Konu | Not |
 |---------|------|-----|
-| **YENİ ANA PLAN — kart panosu (2026-11-23 · Mimar `kaydet`)** | **Kuzey Yıldızı Yol Haritası** | `docs/KUZEY_YILDIZI_YOL_HARITASI.md` · **3/23 yeşil**: **K0 🟢** · **K1 🟢** · **D1 🟢** · **K3 🟡** (TR→AR + BM25; din %57,7; kalan bge-m3 05:30 + reranker + 130 yeniden ölçüm) · **D2 🟡** (künye yolu canlı; uydurma izi kesildi; tam yeşil = din ölçümünde kaynak/çoklu eser hedefi). Sıradaki: din 130 ölçüm → K2/O1. |
+| **YENİ ANA PLAN — kart panosu (2026-11-23 · Mimar `kaydet`)** | **Kuzey Yıldızı Yol Haritası** | `docs/KUZEY_YILDIZI_YOL_HARITASI.md` · **3/23 yeşil**: K0·K1·D1 🟢 · **K3/D2 🟡** ölçüldü (`din_d2_bm25`): doğru **%73,1** · kaynak **%66,7** · çoklu eser **%59,2** · fıkıh **%72**. Rapor `DIN_RAPOR_DIN_D2_BM25_*`. Sıradaki: K2 veya zayıf akaid/tefsir; bge-m3 05:30. |
 | **1 — Masa gerçek iş** | **M1–M3 MÜHÜR YEŞİL** | `docs/M3_MASA_ANA_MOTOR_MUHUR_2026-11-21.md` · `smoke_masa_m3_muhur.py` |
 | **2 — Çırak / programlama** | **A–G+T✓** tavan mühür | `TAVAN_DERS.md` · `smoke_cirak_dilim_t.py` |
 | **1 — Kod tamam, Mimar gözü bekliyor** | **Sade sohbet yüzü (MASAÜSTÜ) — mobille aynı «rüzgar çizgisi» (2026-11-23, Mimar izni)** | `ruzgar-desktop/ruzgar-yuz.js` + `.css` (+ `index.html`'e 2 satır). **Yalnız sohbet paneli içi**: balonsuz cevap, kapsül kullanıcı, alt çubuk (+ · yazı · durdur · duraklat/devam · mikrofon⇄gönder), çizgi durumu **Rüzgar sahnesinin `data-sahne-mode` değerinden** okunur (sahne ile çizgi ayrışmaz), 6 renk (masaüstü varsayılanı Altın), cevaba tıklayınca Kopyala/Oku/Yeniden dene. «+» menüsü: Belge/Tablo/Çizim/Sunum hazır cümleleri, mevcut seçenek kutuları (Web ara, Sesli yanıt, Konuşunca gönder, Bağlantı oku, Kod modu, Otonom, Sayfa oku) **taşınır** (aynı DOM, durumları korunur), Sohbette ara/temizle/dışa aktar, Ses seç. **AÇIK gelir**; «+» → «Eski sohbete dön» ya da `?yuz=0` kapatır (`?yuz=1` açar). Motor listesi, geri/ileri/yenile, tutamaç, dört masa ve sahne **dokunulmadı** (`tests/test_masaustu_yuz_statik.py` bunu denetler). Not: app.js'teki duraklat/devam SVG simgesi `hidden` özelliğiyle değiştiği için ekranda değişmiyordu; yüz bunu çubukta düzeltir |

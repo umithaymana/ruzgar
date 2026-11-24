@@ -233,3 +233,4 @@ Rüzgar, birden çok motordan oluşur; her motor kendi dalında **usta** olma yo
 | 2026-11-24 | K3 | Mimar yönetici izni + «05:30 indir». Görev `Ruzgar-BGE-M3-Gece` 25.11.2026 05:30: bge-m3 iner, gömme yan klasöre (`shamela_bge_m3`). Canlı MiniLM silinmez, arama kendiliğinden geçmez. |
 | 2026-11-24 | D2 | 🟡 Künye yolu: idrak `clear()` bug kapandı; canlı kaynak izi gerçek künyeden. Test `test_d2_kunye_orch`. |
 | 2026-11-24 | K3 | 🟡 BM25 hibrit (aday Okapi, indirme yok). Kapat `RUZGAR_K3_BM25=0`. Din 130 yeniden ölçüm sırada. |
+| 2026-11-24 | K3+D2 | Ölçüm `din_d2_bm25`: doğru %57,7→**%73,1** · bulamadım %31,5→**%3,8** · kaynak %0→**%66,7** · çoklu eser %0→**%59,2** · fıkıh %33→**%72**. Rapor `DIN_RAPOR_DIN_D2_BM25_2026-11-24.md`. Kalan: akaid/tefsir zayıf, uydurma şüphe 15, bge-m3 05:30. |
